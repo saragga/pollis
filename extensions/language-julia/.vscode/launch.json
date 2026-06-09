@@ -1,0 +1,86 @@
+// A launch configuration that compiles the extension and then opens it inside a new window
+{
+    "version": "0.1.0",
+    "configurations": [
+        {
+            "name": "Run Extension",
+            "type": "extensionHost",
+            "request": "launch",
+            "runtimeExecutable": "${execPath}",
+            "args": [
+                "--extensionDevelopmentPath=${workspaceRoot}"
+            ],
+            "sourceMaps": true,
+            "outFiles": [
+                "${workspaceRoot}/dist/**/*.js"
+            ],
+            "preLaunchTask": "npm: bundle",
+            "env": {
+                "DEBUG_MODE": "true"
+            }
+        },
+        {
+            "name": "Run Extension Tests",
+            "type": "extensionHost",
+            "request": "launch",
+            "runtimeExecutable": "${execPath}",
+            "args": [
+                "--extensionDevelopmentPath=${workspaceFolder}",
+                "--extensionTestsPath=${workspaceFolder}/out/test/suite/index"
+            ],
+            "outFiles": [
+                "${workspaceFolder}/out/test/**/*.js"
+            ],
+            "preLaunchTask": "npm: test-compile"
+        },
+        {
+            "name": "Run LS",
+            "type": "julia",
+            "request": "launch",
+            "program": "${workspaceFolder}/scripts/languageserver/main.jl",
+            "stopOnEntry": false,
+            "cwd": "${workspaceFolder}/scripts/languageserver",
+            "juliaEnv": "${workspaceFolder}/scripts/environments/languageserver",
+            "args": [
+                "", // Environment
+                "--debug=yes",
+                "", // Telemetry pipename
+                "", // Old depot path,
+                "${workspaceFolder}/globalstorage", // Storage path
+                "download", // useSymserverDownloads
+                "https://www.julia-vscode.org/symbolcache", // symbolcache_upstream
+                "--detached=yes",
+                "julia",
+                "1.12.5"
+            ]
+        },
+        {
+            "name": "Run Extension with detached LS",
+            "type": "extensionHost",
+            "request": "launch",
+            "runtimeExecutable": "${execPath}",
+            "args": [
+                "--extensionDevelopmentPath=${workspaceRoot}"
+            ],
+            "stopOnEntry": false,
+            "sourceMaps": true,
+            "outFiles": [
+                "${workspaceRoot}/dist/**/*.js"
+            ],
+            "preLaunchTask": "npm: bundle",
+            "env": {
+                "DEBUG_MODE": "true",
+                "DETACHED_LS": "true"
+            }
+        }
+    ],
+    "compounds": [
+        {
+            "name": "Run Extension and LSP",
+            "configurations": [
+                "Run Extension with detached LS",
+                "Run LS"
+            ]
+        }
+    ]
+}

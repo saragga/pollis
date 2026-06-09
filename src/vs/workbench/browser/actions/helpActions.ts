@@ -6,10 +6,11 @@
 import { localize, localize2 } from '../../../nls.js';
 import product from '../../../platform/product/common/product.js';
 import { isMacintosh, isLinux, language, isWeb } from '../../../base/common/platform.js';
+import { FileAccess, AppResourcePath } from '../../../base/common/network.js';
 import { ITelemetryService } from '../../../platform/telemetry/common/telemetry.js';
 import { IOpenerService } from '../../../platform/opener/common/opener.js';
 import { URI } from '../../../base/common/uri.js';
-import { MenuId, Action2, registerAction2, MenuRegistry } from '../../../platform/actions/common/actions.js';
+import { MenuId, Action2, registerAction2 } from '../../../platform/actions/common/actions.js';
 import { KeyChord, KeyMod, KeyCode } from '../../../base/common/keyCodes.js';
 import { IProductService } from '../../../platform/product/common/productService.js';
 import { ServicesAccessor } from '../../../platform/instantiation/common/instantiation.js';
@@ -37,11 +38,6 @@ class KeybindingsReferenceAction extends Action2 {
 				weight: KeybindingWeight.WorkbenchContrib,
 				when: null,
 				primary: KeyChord(KeyMod.CtrlCmd | KeyCode.KeyK, KeyMod.CtrlCmd | KeyCode.KeyR)
-			},
-			menu: {
-				id: MenuId.MenubarHelpMenu,
-				group: '2_reference',
-				order: 1
 			}
 		});
 	}
@@ -70,12 +66,7 @@ class OpenIntroductoryVideosUrlAction extends Action2 {
 				mnemonicTitle: localize({ key: 'miVideoTutorials', comment: ['&& denotes a mnemonic'] }, "&&Video Tutorials"),
 			},
 			category: Categories.Help,
-			f1: true,
-			menu: {
-				id: MenuId.MenubarHelpMenu,
-				group: '2_reference',
-				order: 2
-			}
+			f1: true
 		});
 	}
 
@@ -102,12 +93,7 @@ class OpenTipsAndTricksUrlAction extends Action2 {
 				mnemonicTitle: localize({ key: 'miTipsAndTricks', comment: ['&& denotes a mnemonic'] }, "Tips and Tri&&cks"),
 			},
 			category: Categories.Help,
-			f1: true,
-			menu: {
-				id: MenuId.MenubarHelpMenu,
-				group: '2_reference',
-				order: 3
-			}
+			f1: true
 		});
 	}
 
@@ -189,12 +175,7 @@ class OpenYouTubeUrlAction extends Action2 {
 				mnemonicTitle: localize({ key: 'miYouTube', comment: ['&& denotes a mnemonic'] }, "&&Join Us on YouTube"),
 			},
 			category: Categories.Help,
-			f1: true,
-			menu: {
-				id: MenuId.MenubarHelpMenu,
-				group: '3_feedback',
-				order: 1
-			}
+			f1: true
 		});
 	}
 
@@ -221,12 +202,7 @@ class OpenRequestFeatureUrlAction extends Action2 {
 				mnemonicTitle: localize({ key: 'miUserVoice', comment: ['&& denotes a mnemonic'] }, "&&Search Feature Requests"),
 			},
 			category: Categories.Help,
-			f1: true,
-			menu: {
-				id: MenuId.MenubarHelpMenu,
-				group: '3_feedback',
-				order: 2
-			}
+			f1: true
 		});
 	}
 
@@ -253,12 +229,7 @@ class OpenLicenseUrlAction extends Action2 {
 				mnemonicTitle: localize({ key: 'miLicense', comment: ['&& denotes a mnemonic'] }, "View &&License"),
 			},
 			category: Categories.Help,
-			f1: true,
-			menu: {
-				id: MenuId.MenubarHelpMenu,
-				group: '4_legal',
-				order: 1
-			}
+			f1: true
 		});
 	}
 
@@ -291,12 +262,7 @@ class OpenPrivacyStatementUrlAction extends Action2 {
 				mnemonicTitle: localize({ key: 'miPrivacyStatement', comment: ['&& denotes a mnemonic'] }, "Privac&&y Statement"),
 			},
 			category: Categories.Help,
-			f1: true,
-			menu: {
-				id: MenuId.MenubarHelpMenu,
-				group: '4_legal',
-				order: 2
-			}
+			f1: true
 		});
 	}
 
@@ -320,13 +286,7 @@ class GetStartedWithAccessibilityFeatures extends Action2 {
 			title: localize2('getStartedWithAccessibilityFeatures', 'Get Started with Accessibility Features'),
 			category: Categories.Help,
 			f1: true,
-			precondition: IsSessionsWindowContext.negate(),
-			menu: {
-				id: MenuId.MenubarHelpMenu,
-				group: '1_welcome',
-				order: 6,
-				when: IsSessionsWindowContext.negate()
-			}
+			precondition: IsSessionsWindowContext.negate()
 		});
 	}
 	run(accessor: ServicesAccessor): void {
@@ -355,15 +315,75 @@ class AskVSCodeCopilot extends Action2 {
 	}
 }
 
-MenuRegistry.appendMenuItem(MenuId.MenubarHelpMenu, {
-	command: {
-		id: AskVSCodeCopilot.ID,
-		title: localize2('askVScode', 'Ask @vscode'),
-	},
-	order: 7,
-	group: '1_welcome',
-	when: ContextKeyExpr.and(ContextKeyExpr.equals('chatSetupHidden', false), ContextKeyExpr.equals('chatSetupDisabledInWorkspace', false), IsSessionsWindowContext.negate())
-});
+
+class ShowLicenseAction extends Action2 {
+
+	static readonly ID = 'pollis.action.showLicense';
+
+	constructor() {
+		super({
+			id: ShowLicenseAction.ID,
+			title: {
+				...localize2('showLicense', "View License"),
+				mnemonicTitle: localize({ key: 'miShowLicense', comment: ['&& denotes a mnemonic'] }, "View &&License"),
+			},
+			category: Categories.Help,
+			f1: true,
+		});
+	}
+
+	run(accessor: ServicesAccessor): void {
+		const commandService = accessor.get(ICommandService);
+		const uri = FileAccess.asFileUri('vs/workbench/browser/media/pollis-license.md' as AppResourcePath);
+		commandService.executeCommand('markdown.showPreview', uri);
+	}
+}
+
+class ShowThirdPartyNoticesAction extends Action2 {
+
+	static readonly ID = 'pollis.action.showThirdPartyNotices';
+
+	constructor() {
+		super({
+			id: ShowThirdPartyNoticesAction.ID,
+			title: {
+				...localize2('showThirdPartyNotices', "View Third-Party Notices"),
+				mnemonicTitle: localize({ key: 'miShowThirdPartyNotices', comment: ['&& denotes a mnemonic'] }, "View &&Third-Party Notices"),
+			},
+			category: Categories.Help,
+			f1: true,
+		});
+	}
+
+	run(accessor: ServicesAccessor): void {
+		const commandService = accessor.get(ICommandService);
+		const uri = FileAccess.asFileUri('vs/workbench/browser/media/pollis-notice.md' as AppResourcePath);
+		commandService.executeCommand('markdown.showPreview', uri);
+	}
+}
+
+class ShowReleaseNotesAction extends Action2 {
+
+	static readonly ID = 'pollis.action.showReleaseNotes';
+
+	constructor() {
+		super({
+			id: ShowReleaseNotesAction.ID,
+			title: {
+				...localize2('showReleaseNotes', "Show Release Notes"),
+				mnemonicTitle: localize({ key: 'miReleaseNotes', comment: ['&& denotes a mnemonic'] }, "Show &&Release Notes"),
+			},
+			category: Categories.Help,
+			f1: true,
+		});
+	}
+
+	run(accessor: ServicesAccessor): void {
+		const commandService = accessor.get(ICommandService);
+		const uri = FileAccess.asFileUri('vs/workbench/browser/media/pollis-release-notes.md' as AppResourcePath);
+		commandService.executeCommand('markdown.showPreview', uri);
+	}
+}
 
 // --- Actions Registration
 
@@ -406,3 +426,7 @@ if (OpenPrivacyStatementUrlAction.AVAILABLE) {
 registerAction2(GetStartedWithAccessibilityFeatures);
 
 registerAction2(AskVSCodeCopilot);
+
+registerAction2(ShowReleaseNotesAction);
+registerAction2(ShowLicenseAction);
+registerAction2(ShowThirdPartyNoticesAction);

@@ -1,9 +1,9 @@
 {
-  "name": "code-oss-dev",
+  "name": "pollis",
   "version": "1.117.0",
   "distro": "53515a4534020f9b4ffb3172649d2fdd0a5d9f63",
   "author": {
-    "name": "Microsoft Corporation"
+    "name": "Antonio Saragga Seabra"
   },
   "license": "MIT",
   "main": "./out/main.js",

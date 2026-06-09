@@ -310,28 +310,33 @@ export class Menubar extends Disposable {
 		}
 
 		// Selection
-		if (this.shouldDrawMenu('Selection')) {
-			const selectionMenu = new Menu();
-			const selectionMenuItem = new MenuItem({ label: this.mnemonicLabel(nls.localize({ key: 'mSelection', comment: ['&& denotes a mnemonic'] }, "&&Selection")), submenu: selectionMenu });
-			this.setMenuById(selectionMenu, 'Selection');
-			menubar.append(selectionMenuItem);
-		}
+		//if (this.shouldDrawMenu('Selection')) {
+		//	const selectionMenu = new Menu();
+		//	const selectionMenuItem = new MenuItem({ label: this.mnemonicLabel(nls.localize({ key: 'mSelection', comment: ['&& denotes a mnemonic'] }, "&&Selection")), submenu: selectionMenu });
+		//	this.setMenuById(selectionMenu, 'Selection');
+		//	menubar.append(selectionMenuItem);
+		//}
 
 		// View
 		if (this.shouldDrawMenu('View')) {
 			const viewMenu = new Menu();
 			const viewMenuItem = new MenuItem({ label: this.mnemonicLabel(nls.localize({ key: 'mView', comment: ['&& denotes a mnemonic'] }, "&&View")), submenu: viewMenu });
 			this.setMenuById(viewMenu, 'View');
+			// Prevent macOS from auto-injecting "Enter Full Screen" by claiming the
+			// togglefullscreen role ourselves, hidden.
+			if (isMacintosh) {
+				viewMenu.append(new MenuItem({ role: 'togglefullscreen', visible: false }));
+			}
 			menubar.append(viewMenuItem);
 		}
 
 		// Go
-		if (this.shouldDrawMenu('Go')) {
-			const gotoMenu = new Menu();
-			const gotoMenuItem = new MenuItem({ label: this.mnemonicLabel(nls.localize({ key: 'mGoto', comment: ['&& denotes a mnemonic'] }, "&&Go")), submenu: gotoMenu });
-			this.setMenuById(gotoMenu, 'Go');
-			menubar.append(gotoMenuItem);
-		}
+		// if (this.shouldDrawMenu('Go')) {
+		//	const gotoMenu = new Menu();
+		//	const gotoMenuItem = new MenuItem({ label: this.mnemonicLabel(nls.localize({ key: 'mGoto', comment: ['&& denotes a mnemonic'] }, "&&Go")), submenu: gotoMenu });
+		//	this.setMenuById(gotoMenu, 'Go');
+		//	menubar.append(gotoMenuItem);
+		//}
 
 		// Debug
 		if (this.shouldDrawMenu('Run')) {
@@ -341,12 +346,36 @@ export class Menubar extends Disposable {
 			menubar.append(debugMenuItem);
 		}
 
-		// Terminal
-		if (this.shouldDrawMenu('Terminal')) {
-			const terminalMenu = new Menu();
-			const terminalMenuItem = new MenuItem({ label: this.mnemonicLabel(nls.localize({ key: 'mTerminal', comment: ['&& denotes a mnemonic'] }, "&&Terminal")), submenu: terminalMenu });
-			this.setMenuById(terminalMenu, 'Terminal');
-			menubar.append(terminalMenuItem);
+		// Explore
+		if (this.shouldDrawMenu('Explore')) {
+			const exploreMenu = new Menu();
+			const exploreMenuItem = new MenuItem({ label: this.mnemonicLabel(nls.localize({ key: 'mExplore', comment: ['&& denotes a mnemonic'] }, "&&Explore")), submenu: exploreMenu });
+			this.setMenuById(exploreMenu, 'Explore');
+			menubar.append(exploreMenuItem);
+		}
+
+		// Infer
+		if (this.shouldDrawMenu('Infer')) {
+			const modelMenu = new Menu();
+			const modelMenuItem = new MenuItem({ label: this.mnemonicLabel(nls.localize({ key: 'mModel', comment: ['&& denotes a mnemonic'] }, "&&Infer")), submenu: modelMenu });
+			this.setMenuById(modelMenu, 'Infer');
+			menubar.append(modelMenuItem);
+		}
+
+		// Simulate
+		if (this.shouldDrawMenu('Simulate')) {
+			const simulateMenu = new Menu();
+			const simulateMenuItem = new MenuItem({ label: this.mnemonicLabel(nls.localize({ key: 'mSimulate', comment: ['&& denotes a mnemonic'] }, "&&Simulate")), submenu: simulateMenu });
+			this.setMenuById(simulateMenu, 'Simulate');
+			menubar.append(simulateMenuItem);
+		}
+
+		// Optimise
+		if (this.shouldDrawMenu('Optimise')) {
+			const optimiseMenu = new Menu();
+			const optimiseMenuItem = new MenuItem({ label: this.mnemonicLabel(nls.localize({ key: 'mOptimise', comment: ['&& denotes a mnemonic'] }, "&&Optimise")), submenu: optimiseMenu });
+			this.setMenuById(optimiseMenu, 'Optimise');
+			menubar.append(optimiseMenuItem);
 		}
 
 		// Mac: Window
@@ -358,14 +387,14 @@ export class Menubar extends Disposable {
 		}
 
 		if (macWindowMenuItem) {
-			menubar.append(macWindowMenuItem);
+			// menubar.append(macWindowMenuItem);
 		}
 
-		// Help
-		if (this.shouldDrawMenu('Help')) {
+		// Compose
+		if (this.shouldDrawMenu('Compose')) {
 			const helpMenu = new Menu();
-			const helpMenuItem = new MenuItem({ label: this.mnemonicLabel(nls.localize({ key: 'mHelp', comment: ['&& denotes a mnemonic'] }, "&&Help")), submenu: helpMenu, role: 'help' });
-			this.setMenuById(helpMenu, 'Help');
+			const helpMenuItem = new MenuItem({ label: this.mnemonicLabel(nls.localize({ key: 'mHelp', comment: ['&& denotes a mnemonic'] }, "&&Compose")), submenu: helpMenu, role: 'help' });
+			this.setMenuById(helpMenu, 'Compose');
 			menubar.append(helpMenuItem);
 		}
 
@@ -403,7 +432,12 @@ export class Menubar extends Disposable {
 
 	private setMacApplicationMenu(macApplicationMenu: Menu): void {
 		const about = this.createMenuItem(nls.localize('mAbout', "About {0}", this.productService.nameLong), 'workbench.action.showAboutDialog');
-		const checkForUpdates = this.getUpdateMenuItems();
+		const showReleaseNotes = this.createMenuItem(nls.localize('mReleaseNotes', "Show Release Notes"), 'pollis.action.showReleaseNotes');
+		const checkForUpdates = new MenuItem({ label: this.mnemonicLabel(nls.localize('miCheckForUpdates', "Check for &&Updates...")), click: () => setTimeout(() => { this.reportMenuActionTelemetry('CheckForUpdate'); this.updateService.checkForUpdates(true); }, 0) });
+		const featureRequest = this.createMenuItem(nls.localize('mFeatureRequest', "Feature Request"), 'pollis.action.openFeatureRequestReporter');
+		const reportIssue = this.createMenuItem(nls.localize('mReportIssue', "Report Issue"), 'workbench.action.openIssueReporter');
+		const viewLicense = this.createMenuItem(nls.localize('mLicense', "View License"), 'pollis.action.showLicense');
+		const viewThirdPartyNotices = this.createMenuItem(nls.localize('mThirdPartyNotices', "View Third-Party Notices"), 'pollis.action.showThirdPartyNotices');
 
 		let preferences;
 		if (this.shouldDrawMenu('Preferences')) {
@@ -433,8 +467,15 @@ export class Menubar extends Disposable {
 			}
 		}));
 
-		const actions = [about];
-		actions.push(...checkForUpdates);
+		const actions = [about, __separator__(), showReleaseNotes, checkForUpdates];
+		actions.push(...[
+			__separator__(),
+			featureRequest,
+			reportIssue,
+			__separator__(),
+			viewLicense,
+			viewThirdPartyNotices,
+		]);
 
 		if (preferences) {
 			actions.push(...[
@@ -486,7 +527,7 @@ export class Menubar extends Disposable {
 
 		switch (menuId) {
 			case 'File':
-			case 'Help':
+			case 'Compose':
 				if (isMacintosh) {
 					return (this.windowsMainService.getWindowCount() === 0 && this.closedLastWindow) || (this.windowsMainService.getWindowCount() > 0 && this.noActiveMainWindow) || (!!this.menubarMenus && !!this.menubarMenus[menuId]);
 				}
@@ -595,6 +636,7 @@ export class Menubar extends Disposable {
 
 		return new MenuItem(this.withKeybinding(commandId, options));
 	}
+
 
 	private setMacWindowMenu(macWindowMenu: Menu): void {
 		const minimize = new MenuItem({ label: nls.localize('mMinimize', "Minimize"), role: 'minimize', accelerator: 'Command+M', enabled: this.windowsMainService.getWindowCount() > 0 });

@@ -135,6 +135,11 @@ export class MenuId {
 	static readonly MenubarTerminalSuggestStatusMenu = new MenuId('MenubarTerminalSuggestStatusMenu');
 	static readonly MenubarViewMenu = new MenuId('MenubarViewMenu');
 	static readonly MenubarHomeMenu = new MenuId('MenubarHomeMenu');
+	static readonly MenubarExploreMenu = new MenuId('MenubarExploreMenu');
+	static readonly MenubarModelMenu = new MenuId('MenubarModelMenu');
+	static readonly MenubarSimulateMenu = new MenuId('MenubarSimulateMenu');
+	static readonly MenubarOptimiseMenu = new MenuId('MenubarOptimiseMenu');
+	static readonly MenubarComposeMenu = new MenuId('MenubarComposeMenu');
 	static readonly OpenEditorsContext = new MenuId('OpenEditorsContext');
 	static readonly OpenEditorsContextShare = new MenuId('OpenEditorsContextShare');
 	static readonly ProblemsPanelContext = new MenuId('ProblemsPanelContext');

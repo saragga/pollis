@@ -81,8 +81,7 @@ export function activate(context: vscode.ExtensionContext, serializer: vscode.No
 	});
 
 	context.subscriptions.push(vscode.commands.registerCommand('ipynb.newUntitledIpynb', async () => {
-		const language = 'python';
-		const cell = new vscode.NotebookCellData(vscode.NotebookCellKind.Code, '', language);
+		const cell = new vscode.NotebookCellData(vscode.NotebookCellKind.Code, '', 'julia');
 		const data = new vscode.NotebookData([cell]);
 		data.metadata = {
 			cells: [],

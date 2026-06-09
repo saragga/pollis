@@ -28,11 +28,18 @@ export class ToggleColumnSelectionAction extends Action2 {
 			},
 			f1: true,
 			toggled: ContextKeyExpr.equals('config.editor.columnSelection', true),
-			menu: {
-				id: MenuId.MenubarSelectionMenu,
-				group: '4_config',
-				order: 2
-			}
+			menu: [
+				{
+					id: MenuId.MenubarSelectionMenu,
+					group: '4_config',
+					order: 2
+				},
+				{
+					id: MenuId.MenubarViewMenu,
+					group: '7_editor',
+					order: 1
+				}
+			]
 		});
 	}
 

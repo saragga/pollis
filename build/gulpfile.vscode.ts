@@ -99,6 +99,19 @@ const vscodeResourceIncludes = [
 	'out-build/vs/workbench/contrib/welcomeGettingStarted/common/media/**/*.{svg,png}',
 	'out-build/vs/workbench/contrib/welcomeOnboarding/browser/media/*.svg',
 
+	// Pollis app documents (Release Notes, License)
+	'out-build/vs/workbench/browser/media/pollis-*.md',
+
+	// Mermaid (concept-map rendering in webviews)
+	'out-build/vs/workbench/contrib/mermaid/dist/**',
+
+	// Model webviews
+	'out-build/vs/workbench/contrib/model/browser/webviews/**/*.{html,css,js}',
+	'out-build/vs/workbench/contrib/model/browser/common/**/*.json',
+	'out-build/vs/workbench/contrib/model/browser/media/wiki/**/*.md',
+	'out-build/vs/workbench/contrib/model/browser/media/notebooks/**/*.ipynb',
+	'out-build/vs/workbench/contrib/model/browser/media/notebooks/**/*.jl',
+
 	// Sessions
 	'out-build/vs/sessions/contrib/chat/browser/media/*.svg',
 	'out-build/vs/sessions/contrib/welcome/browser/media/*.svg',

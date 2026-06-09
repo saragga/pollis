@@ -1,0 +1,6 @@
+libs/** linguist-vendored
+
+package.json eol=lf
+package-lock.json eol=lf
+libs/** eol=lf
+syntaxes/*.json eol=lf

@@ -44,43 +44,6 @@ export function setupTerminalMenus(): void {
 			{
 				id: MenuId.MenubarTerminalMenu,
 				item: {
-					group: TerminalMenuBarGroup.Create,
-					command: {
-						id: TerminalCommandId.New,
-						title: localize({ key: 'miNewTerminal', comment: ['&& denotes a mnemonic'] }, "&&New Terminal")
-					},
-					order: 1
-				}
-			},
-			{
-				id: MenuId.MenubarTerminalMenu,
-				item: {
-					group: TerminalMenuBarGroup.Create,
-					command: {
-						id: TerminalCommandId.NewInNewWindow,
-						title: localize({ key: 'miNewInNewWindow', comment: ['&& denotes a mnemonic'] }, "New Terminal &&Window"),
-						precondition: ContextKeyExpr.has(TerminalContextKeyStrings.IsOpen)
-					},
-					order: 2,
-					when: TerminalContextKeys.processSupported
-				}
-			},
-			{
-				id: MenuId.MenubarTerminalMenu,
-				item: {
-					group: TerminalMenuBarGroup.Create,
-					command: {
-						id: TerminalCommandId.Split,
-						title: localize({ key: 'miSplitTerminal', comment: ['&& denotes a mnemonic'] }, "&&Split Terminal"),
-						precondition: ContextKeyExpr.has(TerminalContextKeyStrings.IsOpen)
-					},
-					order: 2,
-					when: TerminalContextKeys.processSupported
-				}
-			},
-			{
-				id: MenuId.MenubarTerminalMenu,
-				item: {
 					group: TerminalMenuBarGroup.Run,
 					command: {
 						id: TerminalCommandId.RunActiveFile,

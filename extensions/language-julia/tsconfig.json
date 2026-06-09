@@ -1,0 +1,16 @@
+{
+    "compilerOptions": {
+        "module": "node20",
+        "target": "es2022",
+        "outDir": "out",
+        "lib": ["es2024"],
+        "sourceMap": true,
+        "rootDir": "src",
+        "strict": false,
+        "noUnusedLocals": true,
+        "esModuleInterop": true,
+        "types": ["node", "mocha"]
+    },
+    "include": ["src"],
+    "exclude": ["node_modules", ".vscode-test", "libs"]
+}

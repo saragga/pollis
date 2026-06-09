@@ -66,53 +66,42 @@ MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
 });
 
 MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
-	submenu: MenuId.MenubarSelectionMenu,
-	title: {
-		value: 'Selection',
-		original: 'Selection',
-		mnemonicTitle: localize({ key: 'mSelection', comment: ['&& denotes a mnemonic'] }, "&&Selection")
-	},
-	order: 3
-});
-
-MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
 	submenu: MenuId.MenubarViewMenu,
 	title: {
 		value: 'View',
 		original: 'View',
 		mnemonicTitle: localize({ key: 'mView', comment: ['&& denotes a mnemonic'] }, "&&View")
 	},
-	order: 4
+	order: 3
+});
+
+MenuRegistry.appendMenuItem(MenuId.MenubarViewMenu, {
+	command: {
+		id: 'workbench.action.terminal.toggleTerminal',
+		title: localize({ key: 'mTerminal', comment: ['&& denotes a mnemonic'] }, "&&Terminal")
+	},
+	group: '5_panel',
+	order: 1
 });
 
 MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
-	submenu: MenuId.MenubarGoMenu,
+	submenu: MenuId.MenubarExploreMenu,
 	title: {
-		value: 'Go',
-		original: 'Go',
-		mnemonicTitle: localize({ key: 'mGoto', comment: ['&& denotes a mnemonic'] }, "&&Go")
+		value: 'Explore',
+		original: 'Explore',
+		mnemonicTitle: localize({ key: 'mExplore', comment: ['&& denotes a mnemonic'] }, "&&Explore")
 	},
-	order: 5
+	order: 4.1
 });
 
 MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
-	submenu: MenuId.MenubarTerminalMenu,
+	submenu: MenuId.MenubarComposeMenu,
 	title: {
-		value: 'Terminal',
-		original: 'Terminal',
-		mnemonicTitle: localize({ key: 'mTerminal', comment: ['&& denotes a mnemonic'] }, "&&Terminal")
+		value: 'Compose',
+		original: 'Compose',
+		mnemonicTitle: localize({ key: 'mHelp', comment: ['&& denotes a mnemonic'] }, "&&Compose")
 	},
-	order: 7
-});
-
-MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
-	submenu: MenuId.MenubarHelpMenu,
-	title: {
-		value: 'Help',
-		original: 'Help',
-		mnemonicTitle: localize({ key: 'mHelp', comment: ['&& denotes a mnemonic'] }, "&&Help")
-	},
-	order: 8
+	order: 9
 });
 
 MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
@@ -123,7 +112,7 @@ MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
 		mnemonicTitle: localize({ key: 'mPreferences', comment: ['&& denotes a mnemonic'] }, "Preferences")
 	},
 	when: IsMacNativeContext,
-	order: 9
+	order: 10
 });
 
 export abstract class MenubarControl extends Disposable {
@@ -211,12 +200,25 @@ export abstract class MenubarControl extends Disposable {
 		this.topLevelTitles = {};
 
 		const [, mainMenuActions] = this.mainMenu.getActions()[0];
+
+		console.log('DEBUG: setupMainMenu - found', mainMenuActions.length, 'menu actions');
+		mainMenuActions.forEach((action, i) => {
+			if (action instanceof SubmenuItemAction && typeof action.item.title !== 'string') {
+				console.log(`  [${i}] SubmenuItemAction: "${action.item.title.original}" (order: ${action.item.order})`);
+			} else {
+				console.log(`  [${i}] ${action.constructor.name}`);
+			}
+		});
+
 		for (const mainMenuAction of mainMenuActions) {
 			if (mainMenuAction instanceof SubmenuItemAction && typeof mainMenuAction.item.title !== 'string') {
 				this.menus[mainMenuAction.item.title.original] = this.mainMenuDisposables.add(this.menuService.createMenu(mainMenuAction.item.submenu, this.contextKeyService, { emitEventsForSubmenuChanges: true }));
 				this.topLevelTitles[mainMenuAction.item.title.original] = mainMenuAction.item.title.mnemonicTitle ?? mainMenuAction.item.title.value;
 			}
 		}
+
+		console.log('DEBUG: topLevelTitles keys:', Object.keys(this.topLevelTitles));
+		console.log('DEBUG: menus keys:', Object.keys(this.menus));
 	}
 
 	protected updateMenubar(): void {
@@ -707,10 +709,13 @@ export class CustomMenubarControl extends MenubarControl {
 				updateActions(this.toActionsArray(menu), actions, title, this.updateActionsDisposables);
 			}
 
+			console.log(`DEBUG doUpdateMenubar: title="${title}", actions.length=${actions.length}, menubar=${!!this.menubar}`);
+
 			if (this.menubar) {
 				if (!firstTime) {
 					this.menubar.updateMenu({ actions, label: mnemonicMenuLabel(this.topLevelTitles[title]) });
 				} else {
+					console.log(`  -> calling menubar.push() for title="${title}"`);
 					this.menubar.push({ actions, label: mnemonicMenuLabel(this.topLevelTitles[title]) });
 				}
 			}
@@ -856,7 +861,7 @@ export class CustomMenubarControl extends MenubarControl {
 		return this.container;
 	}
 
-	layout(dimension: Dimension) {
+	layout() {
 		this.menubar?.update(this.getMenuBarOptions());
 	}
 

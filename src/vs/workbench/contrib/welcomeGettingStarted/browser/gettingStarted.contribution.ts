@@ -7,7 +7,7 @@ import { localize, localize2 } from '../../../../nls.js';
 import { GettingStartedInputSerializer, GettingStartedPage, inWelcomeContext } from './gettingStarted.js';
 import { Registry } from '../../../../platform/registry/common/platform.js';
 import { EditorExtensions, IEditorFactoryRegistry } from '../../../common/editor.js';
-import { MenuId, registerAction2, Action2 } from '../../../../platform/actions/common/actions.js';
+import { registerAction2, Action2 } from '../../../../platform/actions/common/actions.js';
 import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
 import { ContextKeyExpr, IContextKeyService, RawContextKey } from '../../../../platform/contextkey/common/contextkey.js';
 import { IEditorService, SIDE_GROUP } from '../../../services/editor/common/editorService.js';
@@ -44,11 +44,6 @@ registerAction2(class extends Action2 {
 			title: localize2('miWelcome', 'Welcome'),
 			category: Categories.Help,
 			f1: true,
-			menu: {
-				id: MenuId.MenubarHelpMenu,
-				group: '1_welcome',
-				order: 1,
-			},
 			metadata: {
 				description: localize2('minWelcomeDescription', 'Opens a Walkthrough to help you get started in VS Code.')
 			}
@@ -204,11 +199,6 @@ registerAction2(class extends Action2 {
 			title: localize2('welcome.showAllWalkthroughs', 'Open Walkthrough...'),
 			category,
 			f1: true,
-			menu: {
-				id: MenuId.MenubarHelpMenu,
-				group: '1_welcome',
-				order: 3,
-			},
 		});
 	}
 

@@ -339,7 +339,6 @@ MenuRegistry.appendMenuItem(MenuId.MenubarViewMenu, {
 		id: TOGGLE_WORD_WRAP_ID,
 		title: nls.localize({ key: 'miToggleWordWrap', comment: ['&& denotes a mnemonic'] }, "&&Word Wrap"),
 		toggled: EDITOR_WORD_WRAP,
-		precondition: CAN_TOGGLE_WORD_WRAP
 	},
 	order: 1,
 	group: '6_editor'

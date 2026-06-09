@@ -10,7 +10,7 @@ import { IWorkbenchContribution } from '../../../common/contributions.js';
 import { IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
 import { IEditorService } from '../../../services/editor/common/editorService.js';
 import { onUnexpectedError } from '../../../../base/common/errors.js';
-import { IWorkspaceContextService, UNKNOWN_EMPTY_WINDOW_WORKSPACE, WorkbenchState } from '../../../../platform/workspace/common/workspace.js';
+import { IWorkspaceContextService, UNKNOWN_EMPTY_WINDOW_WORKSPACE } from '../../../../platform/workspace/common/workspace.js';
 import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
 import { ILifecycleService, LifecyclePhase, StartupKind } from '../../../services/lifecycle/common/lifecycle.js';
 import { Disposable, } from '../../../../base/common/lifecycle.js';
@@ -39,7 +39,6 @@ export const restoreWalkthroughsConfigurationKey = 'workbench.welcomePage.restor
 export type RestoreWalkthroughsConfigurationValue = { folder: string; category?: string; step?: string };
 
 const configurationKey = 'workbench.startupEditor';
-const oldConfigurationKey = 'workbench.welcome.enabled';
 const telemetryOptOutStorageKey = 'workbench.telemetryOptOutShown';
 
 export class StartupPageEditorResolverContribution extends Disposable implements IWorkbenchContribution {
@@ -262,21 +261,10 @@ export class StartupPageRunnerContribution extends Disposable implements IWorkbe
 	}
 }
 
-function isStartupPageEnabled(configurationService: IConfigurationService, contextService: IWorkspaceContextService, environmentService: IWorkbenchEnvironmentService) {
+function isStartupPageEnabled(_configurationService: IConfigurationService, _contextService: IWorkspaceContextService, environmentService: IWorkbenchEnvironmentService) {
 	if (environmentService.skipWelcome) {
 		return false;
 	}
 
-	const startupEditor = configurationService.inspect<string>(configurationKey);
-	if (!startupEditor.userValue && !startupEditor.workspaceValue) {
-		const welcomeEnabled = configurationService.inspect(oldConfigurationKey);
-		if (welcomeEnabled.value !== undefined && welcomeEnabled.value !== null) {
-			return welcomeEnabled.value;
-		}
-	}
-
-	return startupEditor.value === 'welcomePage'
-		|| startupEditor.value === 'readme'
-		|| (contextService.getWorkbenchState() === WorkbenchState.EMPTY && startupEditor.value === 'welcomePageInEmptyWorkbench')
-		|| startupEditor.value === 'terminal';
+	return true;
 }

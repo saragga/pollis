@@ -1,0 +1,3 @@
+# Static Plot
+
+Coming soon.

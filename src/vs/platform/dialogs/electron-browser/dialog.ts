@@ -3,42 +3,46 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { fromNow } from '../../../base/common/date.js';
-import { isLinuxSnap } from '../../../base/common/platform.js';
 import { localize } from '../../../nls.js';
-import { IOSProperties } from '../../native/common/native.js';
 import { IProductService } from '../../product/common/productService.js';
-import { process } from '../../../base/parts/sandbox/electron-browser/globals.js';
 
-export function createNativeAboutDialogDetails(productService: IProductService, osProps: IOSProperties): { title: string; details: string; detailsToCopy: string } {
-	let version = productService.version;
-	if (productService.target) {
-		version = `${version} (${productService.target} setup)`;
-	} else if (productService.darwinUniversalAssetId) {
-		version = `${version} (Universal)`;
+export function createNativeAboutDialogDetails(productService: IProductService): { title: string; details: string; detailsToCopy: string } {
+	const buildDate = productService.date
+		? new Date(productService.date).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })
+		: 'Unknown';
+
+	const poweredBy = productService.poweredBy;
+	const poweredByLines = [
+		localize('poweredByHeader', "Powered by"),
+		localize('poweredByGemma', "· AI: Gemma {0}", poweredBy?.gemma ?? 'Unknown'),
+		localize('poweredByJulia', "· Analytics: Julia {0}", poweredBy?.julia ?? 'Unknown'),
+		localize('poweredByDatabases', "· Databases: DuckDB {0}, LanceDB {1}", poweredBy?.duckdb ?? 'Unknown', poweredBy?.lancedb ?? 'Unknown'),
+		localize('poweredByCodeOSS', "· Platform: Code OSS {0}", poweredBy?.codeoss ?? productService.version),
+	].join('\n');
+
+	const copyrightYear = productService.date ? new Date(productService.date).getFullYear() : new Date().getFullYear();
+
+	const legalLines: string[] = [];
+	if (productService.licenseUrl) {
+		legalLines.push(localize('aboutLicense', "License: {0}", productService.licenseUrl));
+	}
+	if (productService.privacyStatementUrl) {
+		legalLines.push(localize('aboutPrivacy', "Privacy: {0}", productService.privacyStatementUrl));
 	}
 
-	const getDetails = (useAgo: boolean): string => {
-		return localize({ key: 'aboutDetail', comment: ['Electron, Chromium, Node.js and V8 are product names that need no translation'] },
-			"Version: {0}\nCommit: {1}\nDate: {2}\nElectron: {3}\nElectronBuildId: {4}\nChromium: {5}\nNode.js: {6}\nV8: {7}\nOS: {8}",
-			version,
-			productService.commit || 'Unknown',
-			productService.date ? `${productService.date}${useAgo ? ' (' + fromNow(new Date(productService.date), true) + ')' : ''}` : 'Unknown',
-			process.versions['electron'],
-			process.versions['microsoft-build'],
-			process.versions['chrome'],
-			process.versions['node'],
-			process.versions['v8'],
-			`${osProps.type} ${osProps.arch} ${osProps.release}${isLinuxSnap ? ' snap' : ''}`
-		);
-	};
-
-	const details = getDetails(true);
-	const detailsToCopy = getDetails(false);
+	const details = [
+		localize('aboutVersion', "Version: {0}", productService.pollisVersion ?? productService.version),
+		localize('aboutBuildDate', "Build Date: {0}", buildDate),
+		// allow-any-unicode-next-line
+		localize('aboutCopyright', "© {0} Antonio Saragga Seabra", copyrightYear),
+		'',
+		poweredByLines,
+		...(legalLines.length ? ['', ...legalLines] : []),
+	].join('\n');
 
 	return {
 		title: productService.nameLong,
 		details: details,
-		detailsToCopy: detailsToCopy
+		detailsToCopy: details
 	};
 }

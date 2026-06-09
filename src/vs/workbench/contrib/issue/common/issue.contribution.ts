@@ -121,10 +121,10 @@ export class BaseIssueContribution extends Disposable implements IWorkbenchContr
 		this._register(MenuRegistry.appendMenuItem(MenuId.CommandPalette, { command: reportIssue }));
 
 		this._register(MenuRegistry.appendMenuItem(MenuId.MenubarHelpMenu, {
-			group: '3_feedback',
+			group: '4_feedback',
 			command: {
 				id: OpenIssueReporterActionId,
-				title: localize({ key: 'miReportIssue', comment: ['&& denotes a mnemonic', 'Translate this to "Report Issue in English" in all languages please!'] }, "Report &&Issue")
+				title: localize({ key: 'miReportIssue', comment: ['&& denotes a mnemonic'] }, "Report &&Issue")
 			},
 			order: 3
 		}));

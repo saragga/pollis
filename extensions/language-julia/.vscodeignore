@@ -1,0 +1,15 @@
+.github/**
+.vscode/**
+.vscode-test/**
+out/**
+src/**
+node_modules/**
+.gitignore
+.gitmodules
+tsconfig.json
+scripts/languageserver/julia_pkgdir/**
+scripts/testenvironments
+CONTRIBUTING.md
+*.vsix
+azure-pipelines.yml
+projectmanagement

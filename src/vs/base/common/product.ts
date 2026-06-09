@@ -66,6 +66,10 @@ export type ExtensionVirtualWorkspaceSupport = {
 
 export interface IProductConfiguration {
 	readonly version: string;
+	readonly pollisVersion?: string;
+	readonly startup?: {
+		readonly onlyCreateJuliaRepl?: boolean;
+	};
 	readonly date?: string;
 	readonly quality?: string;
 	readonly commit?: string;
@@ -241,6 +245,14 @@ export interface IProductConfiguration {
 	readonly onboardingThemes?: readonly IProductOnboardingTheme[];
 
 	readonly embedded?: IEmbeddedProductConfiguration;
+
+	readonly poweredBy?: {
+		readonly gemma?: string;
+		readonly julia?: string;
+		readonly duckdb?: string;
+		readonly lancedb?: string;
+		readonly codeoss?: string;
+	};
 
 	/**
 	 * When running as an embedded app, the parent VS Code's policy

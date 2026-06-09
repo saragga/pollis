@@ -37,7 +37,7 @@ export class DialogHandlerContribution extends Disposable implements IWorkbenchC
 		@IInstantiationService instantiationService: IInstantiationService,
 		@IProductService private productService: IProductService,
 		@IClipboardService clipboardService: IClipboardService,
-		@INativeHostService private nativeHostService: INativeHostService,
+		@INativeHostService nativeHostService: INativeHostService,
 		@IWorkbenchEnvironmentService private environmentService: IWorkbenchEnvironmentService,
 	) {
 		super();
@@ -85,15 +85,10 @@ export class DialogHandlerContribution extends Disposable implements IWorkbenchC
 						await this.nativeImpl.value.prompt(args.prompt);
 				}
 
-				// About
+				// About — always use the browser dialog so we can control width
 				else {
-					const aboutDialogDetails = createNativeAboutDialogDetails(this.productService, await this.nativeHostService.getOSProperties());
-
-					if (this.useCustomDialog) {
-						await this.browserImpl.value.about(aboutDialogDetails.title, aboutDialogDetails.details, aboutDialogDetails.detailsToCopy);
-					} else {
-						await this.nativeImpl.value.about(aboutDialogDetails.title, aboutDialogDetails.details, aboutDialogDetails.detailsToCopy);
-					}
+					const aboutDialogDetails = createNativeAboutDialogDetails(this.productService);
+					await this.browserImpl.value.about(aboutDialogDetails.title, aboutDialogDetails.details, aboutDialogDetails.detailsToCopy);
 				}
 			} catch (error) {
 				result = error;

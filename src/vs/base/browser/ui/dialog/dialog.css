@@ -21,6 +21,10 @@
 }
 
 /** Dialog: Container */
+.monaco-dialog-box.about-dialog-wide {
+	min-width: 600px;
+}
+
 .monaco-dialog-box {
 	display: flex;
 	flex-direction: column-reverse;

@@ -288,6 +288,14 @@ const desktopResourcePatterns = [
 	// Sessions - built-in prompts and skills
 	'vs/sessions/prompts/*.prompt.md',
 	'vs/sessions/skills/**/SKILL.md',
+
+	// Pollis app documents (Release Notes, License)
+	'vs/workbench/browser/media/pollis-*.md',
+
+	// Model - bundled wikis and notebooks
+	'vs/workbench/contrib/model/browser/media/wiki/**/*.md',
+	'vs/workbench/contrib/model/browser/media/notebooks/**/*.ipynb',
+	'vs/workbench/contrib/model/browser/media/notebooks/**/*.jl',
 ];
 
 // Resources for server target (minimal - no UI)

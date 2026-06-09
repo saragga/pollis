@@ -139,6 +139,21 @@ const apiMenus: IAPIMenu[] = [
 		supportsSubmenus: false
 	},
 	{
+		key: 'menuBar/explore',
+		id: MenuId.MenubarExploreMenu,
+		description: localize('menus.explore', "The explore toolbar menu")
+	},
+	{
+		key: 'menuBar/model',
+		id: MenuId.MenubarModelMenu,
+		description: localize('menus.model', "The model toolbar menu")
+	},
+	{
+		key: 'menuBar/optimise',
+		id: MenuId.MenubarOptimiseMenu,
+		description: localize('menus.optimise', "The optimise toolbar menu")
+	},
+	{
 		key: 'menuBar/edit/copy',
 		id: MenuId.MenubarCopy,
 		description: localize('menus.opy', "'Copy as' submenu in the top level Edit menu")

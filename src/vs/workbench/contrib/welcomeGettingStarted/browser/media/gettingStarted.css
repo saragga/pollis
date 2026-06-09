@@ -106,10 +106,10 @@
 
 .monaco-workbench .part.editor > .content .gettingStartedContainer .gettingStartedSlideCategories > .gettingStartedCategoriesContainer {
 	display: grid;
-	height: 100%;
+	min-height: 100%;
 	max-width: 1200px;
 	margin: 0 auto;
-	grid-template-rows: 25% minmax(min-content, auto) min-content;
+	grid-template-rows: min-content minmax(min-content, auto) min-content;
 	grid-template-columns: 1fr 6fr 1fr 6fr 1fr;
 	grid-template-areas:
 		".  header header header ."
@@ -134,8 +134,7 @@
 	grid-template-areas: "left-column" "right-column" "footer";
 }
 
-.monaco-workbench .part.editor > .content .gettingStartedContainer.width-constrained .gettingStartedSlideCategories > .gettingStartedCategoriesContainer > .header,
-.monaco-workbench .part.editor > .content .gettingStartedContainer.height-constrained .gettingStartedSlideCategories > .gettingStartedCategoriesContainer > .header {
+.monaco-workbench .part.editor > .content .gettingStartedContainer.width-constrained .gettingStartedSlideCategories > .gettingStartedCategoriesContainer > .header {
 	display: none;
 }
 
@@ -167,7 +166,33 @@
 
 .monaco-workbench .part.editor > .content .gettingStartedContainer .gettingStartedSlideCategories > .gettingStartedCategoriesContainer > .header {
 	grid-area: header;
-	align-self: end;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 16px;
+	padding-top: 80px;
+	margin-bottom: 40px;
+}
+
+.monaco-workbench .part.editor > .content .gettingStartedContainer .gettingStartedSlideCategories > .gettingStartedCategoriesContainer > .header .pollis-logo {
+	width: 72px;
+	height: 72px;
+	object-fit: contain;
+	flex-shrink: 0;
+}
+
+.monaco-workbench .part.editor > .content .gettingStartedContainer .gettingStartedSlideCategories > .gettingStartedCategoriesContainer > .header .header-text {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+}
+
+.monaco-workbench .part.editor > .content .gettingStartedContainer .gettingStartedSlideCategories > .gettingStartedCategoriesContainer > .header .header-text > * {
+	margin: 0;
+}
+
+.monaco-workbench .part.editor > .content .gettingStartedContainer .gettingStartedSlideCategories > .gettingStartedCategoriesContainer > .header .header-text .subtitle {
+	margin-top: 8px;
 }
 
 .monaco-workbench .part.editor > .content .gettingStartedContainer .gettingStartedSlideCategories > .gettingStartedCategoriesContainer > .footer {
@@ -914,6 +939,14 @@
 
 .monaco-workbench .part.editor > .content .gettingStartedContainer .gettingStartedSlideCategories > .gettingStartedCategoriesContainer > .footer p {
 	margin: 0;
+}
+
+.monaco-workbench .part.editor > .content .gettingStartedContainer .gettingStartedSlideCategories > .gettingStartedCategoriesContainer > .footer .chiara-footer-logo {
+	width: 16px;
+	height: 16px;
+	object-fit: contain;
+	vertical-align: middle;
+	margin-right: 5px;
 }
 
 .monaco-workbench .part.editor > .content .gettingStartedContainer .gettingStartedSlideCategories > .gettingStartedCategoriesContainer > .footer > .agents-banner {

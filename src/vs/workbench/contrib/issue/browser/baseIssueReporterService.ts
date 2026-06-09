@@ -960,8 +960,8 @@ export class BaseIssueReporterService extends Disposable {
 		const typeSelect = this.getElementById('issue-type')! as HTMLSelectElement;
 		const { issueType } = this.issueReporterModel.getData();
 		reset(typeSelect,
-			makeOption(IssueType.Bug, localize('bugReporter', "Bug Report")),
 			makeOption(IssueType.FeatureRequest, localize('featureRequest', "Feature Request")),
+			makeOption(IssueType.Bug, localize('bugReporter', "Bug Report")),
 			makeOption(IssueType.PerformanceIssue, localize('performanceIssue', "Performance Issue (freeze, slow, crash)"))
 		);
 

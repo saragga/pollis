@@ -1,0 +1,87 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+    tags:
+      - '*'
+
+concurrency:
+  # Skip intermediate builds: all builds except for builds on the `master` branch
+  # Cancel intermediate builds: only pull request builds
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.ref != 'refs/heads/master' || github.run_number }}
+  cancel-in-progress: ${{ startsWith(github.ref, 'refs/pull/') }}
+
+jobs:
+  finalize:
+    needs: [format, test]
+    timeout-minutes: 5
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+      - run: |
+          echo format: ${{ needs.format.result }}
+          echo test: ${{ needs.test.result }}
+
+      - run: exit 1
+        if: |
+          (needs.format.result != 'success') ||
+          (needs.test.result != 'success')
+
+  format:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v6
+      - uses: julia-actions/setup-julia@v3
+      - run: julia --project=.format .format/format.jl
+      - run: git diff --color --exit-code
+
+  test:
+    name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        version:
+          - 'min'
+          - '1'
+          - 'nightly'
+        os:
+          - ubuntu-latest
+          - windows-latest
+          - macOS-latest
+        arch:
+          - x64
+        exclude:
+          - version: 'min'
+            os: windows-latest
+          - os: macOS-latest
+            arch: x64
+        include:
+          - version: 'min'
+            os: macOS-latest
+            arch: x64
+            force_arch: true
+          - version: '1'
+            os: macOS-latest
+            arch: aarch64
+          - version: 'nightly'
+            os: macOS-latest
+            arch: aarch64
+    steps:
+      - uses: actions/checkout@v6
+      - uses: julia-actions/setup-julia@v3
+        with:
+          version: ${{ matrix.version }}
+          arch: ${{ matrix.arch }}
+          include-all-prereleases: true
+          force-arch: ${{ matrix.force_arch || false }}
+      - uses: pandoc/actions/setup@v1
+      - uses: julia-actions/cache@v2
+      - uses: julia-actions/julia-buildpkg@v1
+      - uses: julia-actions/julia-runtest@v1
+        continue-on-error: ${{ matrix.version == 'nightly' }}

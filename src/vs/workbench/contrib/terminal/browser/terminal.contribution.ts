@@ -127,7 +127,6 @@ Registry.as<IViewsRegistry>(ViewContainerExtensions.ViewsRegistry).registerViews
 	windowVisibility: WindowVisibility.Both,
 	openCommandActionDescriptor: {
 		id: TerminalCommandId.Toggle,
-		mnemonicTitle: nls.localize({ key: 'miToggleIntegratedTerminal', comment: ['&& denotes a mnemonic'] }, "&&Terminal"),
 		keybindings: {
 			primary: KeyMod.CtrlCmd | KeyCode.Backquote,
 			mac: { primary: KeyMod.WinCtrl | KeyCode.Backquote }

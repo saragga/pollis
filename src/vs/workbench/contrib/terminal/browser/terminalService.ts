@@ -41,6 +41,7 @@ import { columnToEditorGroup } from '../../../services/editor/common/editorGroup
 import { IEditorGroupsService } from '../../../services/editor/common/editorGroupsService.js';
 import { ACTIVE_GROUP, ACTIVE_GROUP_TYPE, AUX_WINDOW_GROUP, AUX_WINDOW_GROUP_TYPE, IEditorService, SIDE_GROUP, SIDE_GROUP_TYPE } from '../../../services/editor/common/editorService.js';
 import { IWorkbenchEnvironmentService } from '../../../services/environment/common/environmentService.js';
+import { IProductService } from '../../../../platform/product/common/productService.js';
 import { IExtensionService } from '../../../services/extensions/common/extensions.js';
 import { ILifecycleService, ShutdownReason, StartupKind, WillShutdownEvent } from '../../../services/lifecycle/common/lifecycle.js';
 import { IRemoteAgentService } from '../../../services/remote/common/remoteAgentService.js';
@@ -175,6 +176,7 @@ export class TerminalService extends Disposable implements ITerminalService {
 		@IRemoteAgentService private _remoteAgentService: IRemoteAgentService,
 		@IConfigurationService private readonly _configurationService: IConfigurationService,
 		@IWorkbenchEnvironmentService private readonly _environmentService: IWorkbenchEnvironmentService,
+		@IProductService private readonly _productService: IProductService,
 		@ITerminalConfigurationService private readonly _terminalConfigurationService: ITerminalConfigurationService,
 		@ITerminalEditorService private readonly _terminalEditorService: ITerminalEditorService,
 		@ITerminalGroupService private readonly _terminalGroupService: ITerminalGroupService,
@@ -309,7 +311,12 @@ export class TerminalService extends Disposable implements ITerminalService {
 
 		mark('code/terminal/willReconnect');
 		let reconnectedPromise: Promise<unknown>;
-		if (isPersistentRemote) {
+		// Product-level flag to skip restoring previous terminal sessions on startup.
+		// When enabled, only extension-created terminals (e.g. Julia REPL) will appear initially.
+		const skipTerminalRestore = !!(this._productService?.startup?.onlyCreateJuliaRepl);
+		if (skipTerminalRestore) {
+			reconnectedPromise = Promise.resolve();
+		} else if (isPersistentRemote) {
 			reconnectedPromise = this._reconnectToRemoteTerminals();
 		} else if (enableTerminalReconnection) {
 			reconnectedPromise = this._reconnectToLocalTerminals();

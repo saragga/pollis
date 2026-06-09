@@ -67,6 +67,16 @@ export const unicodeFilter = Object.freeze<string[]>([
 	// extensions/copilot has its own code style
 	'!extensions/copilot/**',
 
+	// extensions/language-julia is a third-party fork with its own code style
+	'!extensions/language-julia/**',
+
+	// Pollis-owned new contributions may use unicode in string literals
+	'!src/vs/workbench/contrib/model/**',
+	'!src/vs/workbench/contrib/explore/**',
+	'!src/vs/workbench/contrib/simulate/**',
+	'!src/vs/workbench/contrib/optimise/**',
+	'!src/vs/workbench/contrib/compose/**',
+
 	'!src/vs/base/browser/dompurify/**',
 	'!src/vs/workbench/services/keybinding/browser/keyboardLayouts/**',
 	'!src/vs/workbench/contrib/terminal/common/scripts/psreadline/**',
@@ -132,6 +142,16 @@ export const indentationFilter = Object.freeze<string[]>([
 
 	// extensions/copilot has its own code style
 	'!extensions/copilot/**',
+
+	// extensions/language-julia is a third-party fork with its own code style
+	'!extensions/language-julia/**',
+
+	// Pollis-owned new contributions have their own indentation conventions
+	'!src/vs/workbench/contrib/model/**',
+	'!src/vs/workbench/contrib/explore/**',
+	'!src/vs/workbench/contrib/simulate/**',
+	'!src/vs/workbench/contrib/optimise/**',
+	'!src/vs/workbench/contrib/compose/**',
 
 	// except specific file types
 	'!src/vs/*/**/*.d.ts',
@@ -204,9 +224,18 @@ export const copyrightFilter = Object.freeze<string[]>([
 	'!extensions/*/server/bin/*',
 	'!src/vs/workbench/contrib/terminal/common/scripts/psreadline/**',
 	'!extensions/mermaid-chat-features/chat-webview-out/**',
-
 	// extensions/copilot has its own code style
 	'!extensions/copilot/**',
+	// extensions/language-julia is a third-party fork with its own code style
+	'!extensions/language-julia/**',
+	// Pollis-owned new contributions have their own copyright header
+	'!src/vs/workbench/contrib/model/**',
+	'!src/vs/workbench/contrib/explore/**',
+	'!src/vs/workbench/contrib/simulate/**',
+	'!src/vs/workbench/contrib/optimise/**',
+	'!src/vs/workbench/contrib/compose/**',
+	'!src/vs/workbench/contrib/katex/**',
+	'!src/vs/workbench/contrib/mermaid/**',
 ]);
 
 export const tsFormattingFilter = Object.freeze<string[]>([
@@ -229,6 +258,14 @@ export const tsFormattingFilter = Object.freeze<string[]>([
 
 	// extensions/copilot has its own code style
 	'!extensions/copilot/**',
+	// Pollis-owned new contributions have their own formatting conventions
+	'!src/vs/workbench/contrib/model/**',
+	'!src/vs/workbench/contrib/explore/**',
+	'!src/vs/workbench/contrib/simulate/**',
+	'!src/vs/workbench/contrib/optimise/**',
+	'!src/vs/workbench/contrib/compose/**',
+	// extensions/language-julia is a third-party fork with its own code style
+	'!extensions/language-julia/**',
 ]);
 
 export const eslintFilter = Object.freeze<string[]>([

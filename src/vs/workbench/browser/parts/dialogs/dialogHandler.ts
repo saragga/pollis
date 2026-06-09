@@ -83,7 +83,12 @@ export class BrowserDialogHandler extends AbstractDialogHandler {
 				localize('ok', "OK")
 			],
 			details,
-			1
+			1,
+			undefined,
+			undefined,
+			undefined,
+			undefined,
+			['about-dialog-wide']
 		);
 
 		if (button === 0) {
@@ -91,7 +96,7 @@ export class BrowserDialogHandler extends AbstractDialogHandler {
 		}
 	}
 
-	private async doShow(type: Severity | DialogType | undefined, message: string, buttons?: string[], detail?: string, cancelId?: number, checkbox?: ICheckbox, inputs?: IInputElement[], customOptions?: ICustomDialogOptions, token?: CancellationToken): Promise<IDialogResult> {
+	private async doShow(type: Severity | DialogType | undefined, message: string, buttons?: string[], detail?: string, cancelId?: number, checkbox?: ICheckbox, inputs?: IInputElement[], customOptions?: ICustomDialogOptions, token?: CancellationToken, extraClasses?: string[]): Promise<IDialogResult> {
 		const dialogDisposables = new DisposableStore();
 
 		const renderBody = customOptions ? (parent: HTMLElement) => {
@@ -121,7 +126,8 @@ export class BrowserDialogHandler extends AbstractDialogHandler {
 				buttonOptions: customOptions?.buttonDetails?.map(detail => ({ sublabel: detail })),
 				checkboxLabel: checkbox?.label,
 				checkboxChecked: checkbox?.checked,
-				inputs
+				inputs,
+				extraClasses
 			}, this.keybindingService, this.layoutService, this.hostService, BrowserDialogHandler.ALLOWABLE_COMMANDS)
 		);
 
