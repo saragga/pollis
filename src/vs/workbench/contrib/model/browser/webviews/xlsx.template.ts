@@ -19,8 +19,8 @@ export function getXlsxHtml(mermaidJs?: string): string {
 			return;`,
 		extraCss: `
 			.refs-container { display: flex; gap: 16px; height: 400px; }
-			.refs-list-panel { flex: 0 0 45%; overflow-y: auto; padding-right: 8px; }
-			.refs-actions-panel { flex: 0 0 55%; border-left: 1px solid var(--vscode-widget-border); padding-left: 16px; overflow-y: auto; }
+			.refs-list-panel { flex: 0 0 60%; overflow-y: auto; padding-right: 8px; }
+			.refs-actions-panel { flex: 0 0 40%; border-left: 1px solid var(--vscode-widget-border); padding-left: 16px; overflow-y: auto; }
 			.references-list { display: flex; flex-direction: column; gap: 8px; }
 			.reference-item { background: var(--vscode-list-hoverBackground); border: 1px solid var(--vscode-widget-border); border-radius: 4px; padding: 10px; text-align: left; cursor: pointer; transition: all 0.2s; }
 			.reference-item:hover { background: var(--vscode-list-activeSelectionBackground); border-color: var(--vscode-focusBorder); }
@@ -378,10 +378,7 @@ export function getXlsxHtml(mermaidJs?: string): string {
 		}
 
 		function renderReferenceDetails(ref) {
-			var desc = (ref.authors || '') + ' · ' + (ref.year || '');
-			if (ref.openAccess) { desc += ' · Open Access'; }
-			var html = '<div style="font-weight: 600; margin-bottom: 8px; color: var(--vscode-foreground);">' + esc(ref.title || '') + '</div>'
-				+ '<div style="font-size: 12px; color: var(--vscode-descriptionForeground); margin-bottom: 12px;">' + esc(desc) + '</div>'
+			var html = '<div style="font-weight: 600; margin-bottom: 16px; color: var(--vscode-foreground); word-break: break-word;">' + esc(ref.title || '') + '</div>'
 				+ '<button class="action-btn" id="btn-open-ref">Open in Browser</button>'
 				+ '<button class="action-btn" id="btn-copy-bibtex">Copy BibTeX to Clipboard</button>';
 			var actionsPanel = document.querySelector('.refs-actions-panel');
