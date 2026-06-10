@@ -1,0 +1,26 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Antonio Saragga Seabra. All rights reserved.
+ *  Proprietary and confidential. Unauthorised copying or distribution is prohibited.
+ *--------------------------------------------------------------------------------------------*/
+
+import { IModelPackage, IModelNotebook, IModelNotebookSection, IModelWiki, IModelReference, IConceptMap } from './model.types.js';
+
+export interface IXlsxMetadata {
+	readonly xlsx: {
+		readonly packages: IModelPackage[];
+		readonly notebooks: IModelNotebook[];
+		readonly notebookSections: IModelNotebookSection[];
+		readonly wikis: IModelWiki[];
+		readonly references: IModelReference[];
+		readonly conceptMap?: IConceptMap;
+	};
+}
+
+export type XlsxWebviewMessage =
+	| { command: 'openDocs'; target: 'paper' | 'repository' }
+	| { command: 'openNotebook'; target: string }
+	| { command: 'openWiki'; target: string }
+	| { command: 'openVideoList' }
+	| { command: 'openUrl'; url: string }
+	| { command: 'runCode'; target: 'newFile' | 'terminal' | 'juliaRepl' | 'notebook'; code: string }
+	| { command: 'cancelAction' };

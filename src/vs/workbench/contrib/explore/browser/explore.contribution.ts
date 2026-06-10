@@ -47,6 +47,7 @@ import { openHmdWebview } from '../../model/browser/commands/hmd.command.js';
 import { openIdatWebview } from '../../model/browser/commands/idat.command.js';
 import { openHfmWebview } from '../../model/browser/commands/hfm.command.js';
 import { openKgmWebview } from '../../model/browser/commands/kgm.command.js';
+import { openXlsxWebview } from '../../model/browser/commands/xlsx.command.js';
 
 const EXPL_COMMAND_ID = 'workbench.action.showExplore';
 const RDYN_ID = 'chiara.explore.rt.1_rdyn';
@@ -59,8 +60,9 @@ const ANDE_ID = 'chiara.explore.ande';
 const NOVD_ID = 'chiara.explore.novd';
 const HMD_ID = 'chiara.explore.hmd';
 const IDAT_ID = 'chiara.explore.idat';
-const HFM_ID = 'chiara.explore.hfm';
-const KGM_ID = 'chiara.explore.kgm';
+const HFM_ID  = 'chiara.explore.hfm';
+const KGM_ID  = 'chiara.explore.kgm';
+const XLSX_ID = 'chiara.explore.conn.xlsx';
 const CVIZ_SCATTER_ID   = 'chiara.explore.dvcs.scatter';
 const CVIZ_BAR_ID       = 'chiara.explore.dvcs.bar';
 const CVIZ_HISTOGRAM_ID = 'chiara.explore.dvcs.histogram';
@@ -181,6 +183,22 @@ CommandsRegistry.registerCommand(KGM_ID, (accessor: ServicesAccessor) => {
 		accessor.get(ILanguageService),
 		accessor.get(IThemeService),
 		accessor.get(IRequestService),
+	);
+});
+
+CommandsRegistry.registerCommand(XLSX_ID, (accessor: ServicesAccessor) => {
+	openXlsxWebview(
+		accessor.get(IWebviewWorkbenchService),
+		accessor.get(IOpenerService),
+		accessor.get(IEditorService),
+		accessor.get(IQuickInputService),
+		accessor.get(ICommandService),
+		accessor.get(IClipboardService),
+		accessor.get(INotificationService),
+		accessor.get(INotebookEditorModelResolverService),
+		accessor.get(INotebookKernelService),
+		accessor.get(ILanguageService),
+		accessor.get(IThemeService),
 	);
 });
 
@@ -1430,8 +1448,8 @@ MenuRegistry.appendMenuItem(CONNSubmenuId, {
 MenuRegistry.appendMenuItem(CONNSubmenuId, {
 	group: '2_conn',
 	command: {
-		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
-		title: localize('conn.excel', 'Excel Workbook'),
+		id: XLSX_ID,
+		title: localize('conn.excel', 'Excel Workbooks'),
 	},
 	order: 1,
 });  // XLSX.jl
@@ -1440,9 +1458,19 @@ MenuRegistry.appendMenuItem(CONNSubmenuId, {
 	group: '2_conn',
 	command: {
 		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
-		title: localize('conn.json', 'JSON Files'),
+		title: localize('conn.gs', 'Google Sheets'),
 	},
 	order: 2,
+});  // XLSX.jl
+
+
+MenuRegistry.appendMenuItem(CONNSubmenuId, {
+	group: '2_conn',
+	command: {
+		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
+		title: localize('conn.json', 'JSON Files'),
+	},
+	order: 3,
 });  // JSON.jl
 
 MenuRegistry.appendMenuItem(CONNSubmenuId, {
@@ -1451,7 +1479,7 @@ MenuRegistry.appendMenuItem(CONNSubmenuId, {
 		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
 		title: localize('conn.xml', 'XML and XPath'),
 	},
-	order: 3,
+	order: 4,
 });  // EzXML.jl
 
 MenuRegistry.appendMenuItem(CONNSubmenuId, {
