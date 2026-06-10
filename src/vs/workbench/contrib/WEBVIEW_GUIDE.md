@@ -336,12 +336,13 @@ All five must always be present. Classes differ:
 
 > ⚠️ **Multimedia Tutorials must always be included.** It is easy to omit by mistake — the button ID is `btn-documentation` and the message command is `openVideoList` (not `openMultimedia`). Add `| { command: 'openVideoList' }` to `XxxWebviewMessage` and `case 'openVideoList'` to the handler. If no videos exist yet, `openVideoList` will show an empty QuickPick — that is acceptable.
 
-### Explore References — two-panel layout in right panel
+### Explore References — two-pane side-by-side layout in right panel
 
-**NEW:** Explore References now displays references in a **right panel instead of a QuickPick**, using a two-pane layout:
-- **Left pane (45%):** Reference list with title, authors, year, and "Open Access" badge when applicable
-- **Right pane (55%):** Selected reference details with two action buttons: "Open in Browser" and "Copy BibTeX to Clipboard"
+**NEW:** Explore References now displays references in a **right panel instead of a QuickPick**, using a true two-pane side-by-side layout:
+- **Left pane (60%):** Scrollable reference list with title, authors, year, and "Open Access" badge when applicable
+- **Right pane (40%):** Selected reference title (as header) with two action buttons: "Open in Browser" and "Copy BibTeX to Clipboard"
 - **Placeholder:** "Select a reference to view details" when nothing is selected
+- **Active state:** Selected reference item highlighted with `.active` class for clear visual feedback
 
 This two-pane layout scales better than QuickPick for reference lists and keeps the user in the webview context without switching to external windows.
 
@@ -377,14 +378,18 @@ case 'openReference': {
 
 ```typescript
 extraCss: `
-    .references-list { display: flex; flex-direction: column; gap: 12px; }
-    .reference-item { background: var(--vscode-list-hoverBackground); border: 1px solid var(--vscode-widget-border); border-radius: 4px; padding: 12px; text-align: left; cursor: pointer; transition: all 0.2s; }
+    .refs-container { display: flex; gap: 16px; height: 400px; }
+    .refs-list-panel { flex: 0 0 60%; overflow-y: auto; padding-right: 8px; }
+    .refs-actions-panel { flex: 0 0 40%; border-left: 1px solid var(--vscode-widget-border); padding-left: 16px; overflow-y: auto; }
+    .references-list { display: flex; flex-direction: column; gap: 8px; }
+    .reference-item { background: var(--vscode-list-hoverBackground); border: 1px solid var(--vscode-widget-border); border-radius: 4px; padding: 10px; text-align: left; cursor: pointer; transition: all 0.2s; }
     .reference-item:hover { background: var(--vscode-list-activeSelectionBackground); border-color: var(--vscode-focusBorder); }
     .reference-item.active { background: var(--vscode-list-activeSelectionBackground); border-color: var(--vscode-focusBorder); }
     .ref-title { display: block; font-weight: 500; color: var(--vscode-foreground); margin-bottom: 4px; word-break: break-word; }
     .ref-desc { display: block; font-size: 11px; color: var(--vscode-descriptionForeground); }
     .action-btn { display: block; width: 100%; margin-bottom: 8px; padding: 8px 12px; background: var(--vscode-button-background); color: var(--vscode-button-foreground); border: none; border-radius: 3px; cursor: pointer; font-size: 12px; transition: background 0.2s; }
     .action-btn:hover { background: var(--vscode-button-hoverBackground); }
+    .ref-placeholder { font-size: 12px; color: var(--vscode-descriptionForeground); text-align: center; padding: 20px 10px; }
 `,
 extraJs: `
     var currentReferences = [];
@@ -398,12 +403,14 @@ extraJs: `
         }
     });
 
-    function renderReferencesPanel() {
+    function renderReferencesList() {
         if (currentReferences.length === 0) { return; }
         var html = '<div class="panel-header">'
             + '<span class="right-panel-title">Explore References</span>'
             + '<button class="panel-close" id="btn-refs-close">&#xd7;</button>'
             + '</div>'
+            + '<div class="refs-container">'
+            + '<div class="refs-list-panel">'
             + '<div class="references-list">';
         currentReferences.forEach(function(ref, idx) {
             var desc = (ref.authors || '') + ' · ' + (ref.year || '');
@@ -413,7 +420,11 @@ extraJs: `
                 + '<span class="ref-desc">' + esc(desc) + '</span>'
                 + '</button>';
         });
-        html += '</div>';
+        html += '</div></div>'
+            + '<div class="refs-actions-panel">'
+            + '<div class="ref-placeholder">Select a reference to view details</div>'
+            + '</div>'
+            + '</div>';
         rightPanel.innerHTML = html;
         rightPanel.style.display = 'block';
         document.getElementById('btn-refs-close').addEventListener('click', function() {
@@ -424,26 +435,21 @@ extraJs: `
             btn.addEventListener('click', function() {
                 var idx = parseInt(btn.dataset.idx, 10);
                 var ref = currentReferences[idx];
-                if (ref) { renderReferenceActions(ref); }
+                if (ref) {
+                    document.querySelectorAll('.reference-item').forEach(function(b) { b.classList.remove('active'); });
+                    btn.classList.add('active');
+                    renderReferenceDetails(ref);
+                }
             });
         });
     }
 
-    function renderReferenceActions(ref) {
-        var desc = (ref.authors || '') + ' · ' + (ref.year || '');
-        if (ref.openAccess) { desc += ' · Open Access'; }
-        var html = '<div class="panel-header">'
-            + '<button class="panel-close" id="btn-ref-back" style="margin-right: auto;">← Back</button>'
-            + '<span class="right-panel-title" style="flex: 1; text-align: center;">' + esc(ref.title || '') + '</span>'
-            + '</div>'
-            + '<div style="font-size: 12px; color: var(--vscode-descriptionForeground); margin-bottom: 12px;">' + esc(desc) + '</div>'
+    function renderReferenceDetails(ref) {
+        var html = '<div style="font-weight: 600; margin-bottom: 16px; color: var(--vscode-foreground); word-break: break-word;">' + esc(ref.title || '') + '</div>'
             + '<button class="action-btn" id="btn-open-ref">Open in Browser</button>'
             + '<button class="action-btn" id="btn-copy-bibtex">Copy BibTeX to Clipboard</button>';
-        rightPanel.innerHTML = html;
-        rightPanel.style.display = 'block';
-        document.getElementById('btn-ref-back').addEventListener('click', function() {
-            renderReferencesPanel();
-        });
+        var actionsPanel = document.querySelector('.refs-actions-panel');
+        actionsPanel.innerHTML = html;
         document.getElementById('btn-open-ref').addEventListener('click', function() {
             vscode.postMessage({ command: 'openReference', id: ref.title });
         });
@@ -476,10 +482,12 @@ extraJs: `
 
 **Key differences from QuickPick:**
 1. No modal dialog — references stay visible alongside the webview
-2. Two-step interaction: click reference in list → view details + actions
-3. Back button returns to the reference list
-4. BibTeX copy includes visual feedback ("Copied!" text)
-5. Open in Browser uses the `openInBrowser` handler from `model.handler.ts`
+2. True side-by-side two-pane layout: list (60%) + actions (40%)
+3. Left pane has all reference details (title, authors, year, open access badge)
+4. Right pane shows only selected reference's title + action buttons
+5. Active reference item highlighted with `.active` class
+6. BibTeX copy includes visual feedback ("Copied!" text for 2 seconds)
+7. Open in Browser uses the `openInBrowser` handler from `model.handler.ts`
 
 > **Concept Map (new-layout / scaffold webviews only).** Lives entirely in `webviewScaffold.ts` (button id `btn-concept`, `panel-toggle`). It renders a **Mermaid `flowchart`** in the right panel — a genuine concept map, not a link list: a `center` node, abstract `concept` groupings, the webview's own `topic` toggles, `related` Pollis webviews and `external` resources, joined by **labelled relationship edges**. Each node carries at most one jump target — `model` (switches a toggle in the same webview, client-side `setModel`), `command` (a Pollis command id → `openTopic` message → `commandService.executeCommand`), or `url` (external → existing `openUrl`); `concept`/`center` nodes have none. Mermaid is loaded **lazily** on first open (no cost until used). The data comes from `IConceptMap` (`center` + `nodes` + `edges`, see `model.types.ts`) on the webview metadata; the handler posts it via `{ command: 'conceptMap', map }` in its `setTimeout`. **A webview with no `conceptMap` (or no Mermaid URI) shows a "Coming soon!" stub — that is acceptable.**
 >
