@@ -332,9 +332,154 @@ All five must always be present. Classes differ:
 | Notebook Tutorials | `panel-toggle` | Opens right panel with `.nb-card` sections |
 | Multimedia Tutorials | `has-actions` | VS Code QuickPick via `openVideoList` |
 | Concept Map | `panel-toggle` | Opens right panel with an inline-SVG relationship graph (see below) |
-| Explore References | `has-actions` | VS Code QuickPick via `openDocs paper` |
+| Explore References | `has-actions` | Two-panel right panel (list + details) via `openDocs paper` |
 
 > ⚠️ **Multimedia Tutorials must always be included.** It is easy to omit by mistake — the button ID is `btn-documentation` and the message command is `openVideoList` (not `openMultimedia`). Add `| { command: 'openVideoList' }` to `XxxWebviewMessage` and `case 'openVideoList'` to the handler. If no videos exist yet, `openVideoList` will show an empty QuickPick — that is acceptable.
+
+### Explore References — two-panel layout in right panel
+
+**NEW:** Explore References now displays references in a **right panel instead of a QuickPick**, using a two-pane layout:
+- **Left pane (45%):** Reference list with title, authors, year, and "Open Access" badge when applicable
+- **Right pane (55%):** Selected reference details with two action buttons: "Open in Browser" and "Copy BibTeX to Clipboard"
+- **Placeholder:** "Select a reference to view details" when nothing is selected
+
+This two-pane layout scales better than QuickPick for reference lists and keeps the user in the webview context without switching to external windows.
+
+**Handler wiring** — send references to webview instead of using QuickPick:
+
+```typescript
+case 'openDocs':
+    if (msg.target === 'paper') {
+        const papers = data.references.filter((r): r is IModelPaper => !('separator' in r));
+        webviewInput.webview.postMessage({ command: 'showReferences', references: papers });
+    } else if (msg.target === 'repository') {
+        // ... existing repository logic ...
+    }
+    break;
+case 'openReference': {
+    const papers = data.references.filter((r): r is IModelPaper => !('separator' in r));
+    const paper = papers.find(p => p.title === msg.id);
+    if (paper) {
+        const url = paper.doi ? `https://doi.org/${paper.doi}` : paper.url;
+        if (url) { await openInBrowser(url, commandService); }
+    }
+    break;
+}
+```
+
+**Webview message types** — add to `XxxWebviewMessage`:
+```typescript
+| { command: 'showReferences'; references: IModelPaper[] }
+| { command: 'openReference'; id: string }
+```
+
+**JS implementation** — use `extraJs` and `extraCss` in the template to avoid modifying the shared scaffold:
+
+```typescript
+extraCss: `
+    .references-list { display: flex; flex-direction: column; gap: 12px; }
+    .reference-item { background: var(--vscode-list-hoverBackground); border: 1px solid var(--vscode-widget-border); border-radius: 4px; padding: 12px; text-align: left; cursor: pointer; transition: all 0.2s; }
+    .reference-item:hover { background: var(--vscode-list-activeSelectionBackground); border-color: var(--vscode-focusBorder); }
+    .reference-item.active { background: var(--vscode-list-activeSelectionBackground); border-color: var(--vscode-focusBorder); }
+    .ref-title { display: block; font-weight: 500; color: var(--vscode-foreground); margin-bottom: 4px; word-break: break-word; }
+    .ref-desc { display: block; font-size: 11px; color: var(--vscode-descriptionForeground); }
+    .action-btn { display: block; width: 100%; margin-bottom: 8px; padding: 8px 12px; background: var(--vscode-button-background); color: var(--vscode-button-foreground); border: none; border-radius: 3px; cursor: pointer; font-size: 12px; transition: background 0.2s; }
+    .action-btn:hover { background: var(--vscode-button-hoverBackground); }
+`,
+extraJs: `
+    var currentReferences = [];
+    var selectedRefIdx = null;
+    var rightPanel = document.getElementById('right-panel');
+
+    window.addEventListener('message', function(event) {
+        if (event.data.command === 'showReferences') {
+            currentReferences = event.data.references || [];
+            renderReferencesPanel();
+        }
+    });
+
+    function renderReferencesPanel() {
+        if (currentReferences.length === 0) { return; }
+        var html = '<div class="panel-header">'
+            + '<span class="right-panel-title">Explore References</span>'
+            + '<button class="panel-close" id="btn-refs-close">&#xd7;</button>'
+            + '</div>'
+            + '<div class="references-list">';
+        currentReferences.forEach(function(ref, idx) {
+            var desc = (ref.authors || '') + ' · ' + (ref.year || '');
+            if (ref.openAccess) { desc += ' · Open Access'; }
+            html += '<button class="reference-item" data-idx="' + idx + '">'
+                + '<span class="ref-title">' + esc(ref.title || '') + '</span>'
+                + '<span class="ref-desc">' + esc(desc) + '</span>'
+                + '</button>';
+        });
+        html += '</div>';
+        rightPanel.innerHTML = html;
+        rightPanel.style.display = 'block';
+        document.getElementById('btn-refs-close').addEventListener('click', function() {
+            rightPanel.innerHTML = '';
+            rightPanel.style.display = 'none';
+        });
+        document.querySelectorAll('.reference-item').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var idx = parseInt(btn.dataset.idx, 10);
+                var ref = currentReferences[idx];
+                if (ref) { renderReferenceActions(ref); }
+            });
+        });
+    }
+
+    function renderReferenceActions(ref) {
+        var desc = (ref.authors || '') + ' · ' + (ref.year || '');
+        if (ref.openAccess) { desc += ' · Open Access'; }
+        var html = '<div class="panel-header">'
+            + '<button class="panel-close" id="btn-ref-back" style="margin-right: auto;">← Back</button>'
+            + '<span class="right-panel-title" style="flex: 1; text-align: center;">' + esc(ref.title || '') + '</span>'
+            + '</div>'
+            + '<div style="font-size: 12px; color: var(--vscode-descriptionForeground); margin-bottom: 12px;">' + esc(desc) + '</div>'
+            + '<button class="action-btn" id="btn-open-ref">Open in Browser</button>'
+            + '<button class="action-btn" id="btn-copy-bibtex">Copy BibTeX to Clipboard</button>';
+        rightPanel.innerHTML = html;
+        rightPanel.style.display = 'block';
+        document.getElementById('btn-ref-back').addEventListener('click', function() {
+            renderReferencesPanel();
+        });
+        document.getElementById('btn-open-ref').addEventListener('click', function() {
+            vscode.postMessage({ command: 'openReference', id: ref.title });
+        });
+        document.getElementById('btn-copy-bibtex').addEventListener('click', function() {
+            var bibtex = generateBibTeX(ref);
+            navigator.clipboard.writeText(bibtex).then(function() {
+                var btn = document.getElementById('btn-copy-bibtex');
+                var original = btn.textContent;
+                btn.textContent = 'Copied!';
+                setTimeout(function() { btn.textContent = original; }, 2000);
+            });
+        });
+    }
+
+    function generateBibTeX(ref) {
+        var type = ref.doi ? 'online' : 'misc';
+        var key = (ref.title || 'ref').toLowerCase().replace(/[^a-z0-9]/g, '').substring(0, 20);
+        var bibtex = '@' + type + '{' + key + ',\\n'
+            + '  title={' + (ref.title || '') + '},\\n'
+            + '  author={' + (ref.authors || '') + '},\\n'
+            + '  year={' + (ref.year || '') + '},\\n';
+        if (ref.journal) { bibtex += '  journal={' + ref.journal + '},\\n'; }
+        if (ref.doi) { bibtex += '  doi={' + ref.doi + '},\\n'; }
+        if (ref.url) { bibtex += '  url={' + ref.url + '},\\n'; }
+        bibtex += '}';
+        return bibtex;
+    }
+`,
+```
+
+**Key differences from QuickPick:**
+1. No modal dialog — references stay visible alongside the webview
+2. Two-step interaction: click reference in list → view details + actions
+3. Back button returns to the reference list
+4. BibTeX copy includes visual feedback ("Copied!" text)
+5. Open in Browser uses the `openInBrowser` handler from `model.handler.ts`
 
 > **Concept Map (new-layout / scaffold webviews only).** Lives entirely in `webviewScaffold.ts` (button id `btn-concept`, `panel-toggle`). It renders a **Mermaid `flowchart`** in the right panel — a genuine concept map, not a link list: a `center` node, abstract `concept` groupings, the webview's own `topic` toggles, `related` Pollis webviews and `external` resources, joined by **labelled relationship edges**. Each node carries at most one jump target — `model` (switches a toggle in the same webview, client-side `setModel`), `command` (a Pollis command id → `openTopic` message → `commandService.executeCommand`), or `url` (external → existing `openUrl`); `concept`/`center` nodes have none. Mermaid is loaded **lazily** on first open (no cost until used). The data comes from `IConceptMap` (`center` + `nodes` + `edges`, see `model.types.ts`) on the webview metadata; the handler posts it via `{ command: 'conceptMap', map }` in its `setTimeout`. **A webview with no `conceptMap` (or no Mermaid URI) shows a "Coming soon!" stub — that is acceptable.**
 >
