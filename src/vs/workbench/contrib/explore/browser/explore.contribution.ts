@@ -27,6 +27,7 @@ import { INotebookEditorModelResolverService } from '../../notebook/common/noteb
 import { INotebookKernelService } from '../../notebook/common/notebookKernelService.js';
 import { ILanguageService } from '../../../../editor/common/languages/language.js';
 import { IThemeService } from '../../../../platform/theme/common/themeService.js';
+import { IRequestService } from '../../../../platform/request/common/request.js';
 import { openRdynWebview } from '../../model/browser/commands/rdyn.command.js';
 import { openRctlWebview } from '../../model/browser/commands/rctl.command.js';
 import { openMcatWebview } from '../../model/browser/commands/mcat.command.js';
@@ -45,6 +46,7 @@ import { openSfvizWebview } from '../../model/browser/commands/sfviz.command.js'
 import { openHmdWebview } from '../../model/browser/commands/hmd.command.js';
 import { openIdatWebview } from '../../model/browser/commands/idat.command.js';
 import { openHfmWebview } from '../../model/browser/commands/hfm.command.js';
+import { openKgmWebview } from '../../model/browser/commands/kgm.command.js';
 
 const EXPL_COMMAND_ID = 'workbench.action.showExplore';
 const RDYN_ID = 'chiara.explore.rt.1_rdyn';
@@ -58,6 +60,7 @@ const NOVD_ID = 'chiara.explore.novd';
 const HMD_ID = 'chiara.explore.hmd';
 const IDAT_ID = 'chiara.explore.idat';
 const HFM_ID = 'chiara.explore.hfm';
+const KGM_ID = 'chiara.explore.kgm';
 const CVIZ_SCATTER_ID   = 'chiara.explore.dvcs.scatter';
 const CVIZ_BAR_ID       = 'chiara.explore.dvcs.bar';
 const CVIZ_HISTOGRAM_ID = 'chiara.explore.dvcs.histogram';
@@ -160,6 +163,24 @@ CommandsRegistry.registerCommand(HFM_ID, (accessor: ServicesAccessor) => {
 		accessor.get(INotebookKernelService),
 		accessor.get(ILanguageService),
 		accessor.get(IThemeService),
+		accessor.get(IRequestService),
+	);
+});
+
+CommandsRegistry.registerCommand(KGM_ID, (accessor: ServicesAccessor) => {
+	openKgmWebview(
+		accessor.get(IWebviewWorkbenchService),
+		accessor.get(IOpenerService),
+		accessor.get(IEditorService),
+		accessor.get(IQuickInputService),
+		accessor.get(ICommandService),
+		accessor.get(IClipboardService),
+		accessor.get(INotificationService),
+		accessor.get(INotebookEditorModelResolverService),
+		accessor.get(INotebookKernelService),
+		accessor.get(ILanguageService),
+		accessor.get(IThemeService),
+		accessor.get(IRequestService),
 	);
 });
 
@@ -959,16 +980,16 @@ const E_RTSubmenuId = new MenuId('menubarE_RTSubmenu');
 
 MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
 	group: '1_explore',
-	submenu: ADRSubmenuId,
-	title: localize('showExplore.adr', 'Access Dataset Repositories'),
-	order: 2,
+	submenu: AMRSubmenuId,
+	title: localize('showExplore.amr', 'Access Model Repositories'),
+	order: 1,
 });
 
 MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
 	group: '1_explore',
-	submenu: AMRSubmenuId,
-	title: localize('showExplore.amr', 'Access Model Repositories'),
-	order: 3,
+	submenu: ADRSubmenuId,
+	title: localize('showExplore.adr', 'Access Data Libraries'),
+	order: 2,
 });
 
 MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
@@ -984,7 +1005,6 @@ MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
 	title: localize('showExplore.rc', 'Cloud Computing Platforms'),
 	order: 5,
 });
-
 
 MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
 	group: '2_explore',
@@ -1112,24 +1132,32 @@ MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
 
 MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
 	group: '5_explore',
-	submenu: E_GEOSubmenuId,
-	title: localize('showStatistics.geo', 'Geoscience Toolbox'),
-	order: 1,
-});
-
-MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
-	group: '5_explore',
 	submenu: E_HSTSubmenuId,
 	title: localize('showStatistics.geo', 'History Toolbox'),
-	order: 2,
+	order: 1,
 });
 
 MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
 	group: '5_explore',
 	submenu: E_NHSTSubmenuId,
 	title: localize('showStatistics.geo', 'Natural History Toolbox'),
-	order: 3,
+	order: 2,
 });
+
+MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
+	group: '5_explore',
+	command: {id: 'showStatistics.eco',
+	title: localize('showStatistics.mt', 'Ecology Toolbox'),},
+	order: 3,
+}); // AlgebraicDynamics.jl
+
+MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
+	group: '5_explore',
+	submenu: E_GEOSubmenuId,
+	title: localize('showStatistics.geo', 'Geoscience Toolbox'),
+	order: 4,
+});
+
 
 // ----------------------------------------------------------------------
 
@@ -1169,13 +1197,6 @@ MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
 // ├── Clinical Laboratory Processing
 // ├── Precision and Personalized Medicine
 // └── Clinical Decision Support Systems (CDSS)
-
-MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
-	group: '6_explore',
-	command: {id: 'showStatistics.eco',
-	title: localize('showStatistics.mt', 'Ecology Toolbox'),},
-	order: 3,
-}); // AlgebraicDynamics.jl
 
 // -------------------------------------------------------------------
 
@@ -1227,83 +1248,6 @@ MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
 	order: 3,
 });
 
-// ===================================================
-// SUBMENU: ACESSING DATASET REPOSITORIES
-// ===================================================
-
-MenuRegistry.appendMenuItem(ADRSubmenuId, {
-	group: '1_ds',
-	command: {
-		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
-		title: localize('ds.hf', 'Hugging Face Datasets'),
-	},
-	order: 1,
-}); // HuggingFaceDatasets.jl,
-
-MenuRegistry.appendMenuItem(ADRSubmenuId, {
-	group: '1_ds',
-	command: {
-		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
-		title: localize('ds.kaggle', 'Kaggle Datasets'),
-	},
-	order: 2,
-});
-
-MenuRegistry.appendMenuItem(ADRSubmenuId, {
-	group: '2_ds',
-	command: {
-		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
-		title: localize('ds.openml', 'OpenML Datasets'),
-	},
-	order: 1,
-}); // https://www.openml.org/
-
-MenuRegistry.appendMenuItem(ADRSubmenuId, {
-	group: '2_ds',
-	command: {
-		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
-		title: localize('ds.uci', 'UCI Machine Learning Repository'),
-	},
-	order: 2,
-}); // https://archive.ics.uci.edu/
-// MLDatasets.jl (many UCI datasets are mirrored here)
-
-MenuRegistry.appendMenuItem(ADRSubmenuId, {
-	group: '2_ds',
-	command: {
-		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
-		title: localize('ds.ucruea', 'UCR/UEA Time Series Repository'),
-	},
-	order: 3,
-}); //  TimeSeriesClassification.jl
-
-MenuRegistry.appendMenuItem(ADRSubmenuId, {
- 	group: '1_ds',
- 	command: {
- 		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
- 		title: localize('ds.mld', 'Machine Learning Datasets'),
- 	},
- 	order: 3,
-}); // MLDatasets.jl
-
-MenuRegistry.appendMenuItem(ADRSubmenuId, {
-	group: '2_ds',
-	command: {
-		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
-		title: localize('ds.rd', 'R Datasets'),
-	},
-	order: 3,
-}); // RDatasets.jl
-
-// MenuRegistry.appendMenuItem(ADRSubmenuId, {
-// 	group: '1_ds',
-// 	command: {
-// 		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
-// 		title: localize('ds.m4m5', 'M4, M5 Competition Datasets'),
-// 	},
-// 	order: 6,
-// });
-
 
 // ===================================================
 // SUBMENU: ACESSING MODEL REPOSITORTIES
@@ -1323,11 +1267,151 @@ MenuRegistry.appendMenuItem(AMRSubmenuId, {
 MenuRegistry.appendMenuItem(AMRSubmenuId, {
 	group: '1_ds',
 	command: {
-		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
+		id: KGM_ID,
 		title: localize('ds.km', 'Kaggle Models'),
 	},
-	order: 1,
+	order: 2,
 }); // https://www.kaggle.com/models
+
+
+// ===================================================
+// SUBMENU: ACESSING LIBRARIES
+// ===================================================
+
+MenuRegistry.appendMenuItem(ADRSubmenuId, {
+	group: '1_ds',
+	command: {
+		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
+		title: localize('fit.yahoo', 'Yahoo Finance'),
+	},
+	order: 1,
+}); // YFinance.jl
+
+MenuRegistry.appendMenuItem(ADRSubmenuId, {
+	group: '1_ds',
+	command: {
+		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
+		title: localize('fit.alpha', 'Alpha Vantage'),
+	},
+	order: 2,
+}); // AlphaVantage.jl
+
+MenuRegistry.appendMenuItem(ADRSubmenuId, {
+	group: '2_ds',
+	command: {
+		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
+		title: localize('ft.edgar', 'US SEC EDGAR'),
+	},
+	order: 1,
+}); // ScrapeSEC.jl
+
+MenuRegistry.appendMenuItem(ADRSubmenuId, {
+	group: '2_ds',
+	command: {
+		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
+		title: localize('ft.xbrl', 'Generic XBRL'),
+	},
+	order: 2,
+});  // XbrlXML.jl
+// Regulatory filings
+
+MenuRegistry.appendMenuItem(ADRSubmenuId, {
+	group: '3_ds',
+	command: {
+		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
+		title: localize('ft.fred', 'FRED Repository'),
+	},
+	order: 1,
+});  // FRED.jl
+
+MenuRegistry.appendMenuItem(ADRSubmenuId, {
+	group: '3_ds',
+	command: {
+		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
+		title: localize('ft.ecb', 'ECB Repository'),
+	},
+	order: 2,
+});  // European Central Bank
+
+
+// ----------------------------------------------------------------
+
+MenuRegistry.appendMenuItem(ADRSubmenuId, {
+	group: '4_ds',
+	command: {
+		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
+		title: localize('ds.hf', 'Hugging Face Datasets'),
+	},
+	order: 1,
+}); // HuggingFaceDatasets.jl,
+
+MenuRegistry.appendMenuItem(ADRSubmenuId, {
+	group: '4_ds',
+	command: {
+		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
+		title: localize('ds.kaggle', 'Kaggle Datasets'),
+	},
+	order: 2,
+});
+
+// -----------------------Static Datasets -------------------------
+
+MenuRegistry.appendMenuItem(ADRSubmenuId, {
+	group: '5_ds',
+	command: {
+		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
+		title: localize('ds.openml', 'OpenML Datasets'),
+	},
+	order: 1,
+}); // https://www.openml.org/
+
+MenuRegistry.appendMenuItem(ADRSubmenuId, {
+	group: '5_ds',
+	command: {
+		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
+		title: localize('ds.uci', 'UCI Machine Learning Repository'),
+	},
+	order: 2,
+}); // https://archive.ics.uci.edu/
+// MLDatasets.jl (many UCI datasets are mirrored here)
+
+MenuRegistry.appendMenuItem(ADRSubmenuId, {
+	group: '5_ds',
+	command: {
+		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
+		title: localize('ds.ucruea', 'UCR/UEA Time Series Repository'),
+	},
+	order: 3,
+}); //  TimeSeriesClassification.jl
+
+MenuRegistry.appendMenuItem(ADRSubmenuId, {
+ 	group: '5_ds',
+ 	command: {
+ 		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
+ 		title: localize('ds.mld', 'Machine Learning Datasets'),
+ 	},
+ 	order: 4,
+}); // MLDatasets.jl
+
+MenuRegistry.appendMenuItem(ADRSubmenuId, {
+	group: '5_ds',
+	command: {
+		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
+		title: localize('ds.rd', 'R Datasets'),
+	},
+	order: 5,
+}); // RDatasets.jl
+
+
+// MenuRegistry.appendMenuItem(ADRSubmenuId, {
+// 	group: '5_ds',
+// 	command: {
+// 		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
+// 		title: localize('ds.m4m5', 'M4, M5 Competition Datasets'),
+// 	},
+// 	order: 6,
+// });
+
 
 
 // ===================================================
@@ -1819,44 +1903,6 @@ MenuRegistry.appendMenuItem(E_FTSubmenuId, {
 	title: localize('ft.dataSources', 'Data Sources'),
 	order: 1,
 });
-
-MenuRegistry.appendMenuItem(E_FTDataSourcesSubmenuId, {
-	group: '1_fitds',
-	command: {
-		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
-		title: localize('fit.yahoo', 'Yahoo Finance'),
-	},
-	order: 1,
-}); // YFinance.jl
-
-MenuRegistry.appendMenuItem(E_FTDataSourcesSubmenuId, {
-	group: '1_fitds',
-	command: {
-		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
-		title: localize('fit.alpha', 'Alpha Vantage'),
-	},
-	order: 2,
-}); // AlphaVantage.jl
-
-// Regulatory filings
-MenuRegistry.appendMenuItem(E_FTDataSourcesSubmenuId, {
-	group: '1_ftds',
-	command: {
-		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
-		title: localize('ft.xbrl', 'XBRL'),
-	},
-	order: 0,
-});  // XbrlXML.jl
-
-
-MenuRegistry.appendMenuItem(E_FTDataSourcesSubmenuId, {
-	group: '1_ftds',
-	command: {
-		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
-		title: localize('ft.edgar', 'US SEC EDGAR'),
-	},
-	order: 1,
-}); // ScrapeSEC.jl
 
 MenuRegistry.appendMenuItem(E_FTDataSourcesSubmenuId, {
 	group: '1_ftds',

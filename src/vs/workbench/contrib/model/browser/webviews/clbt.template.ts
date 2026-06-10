@@ -366,6 +366,7 @@ export function getClbtHtml(): string {
 				section.wikis.forEach(function(w) {
 					html += '<button class="nb-card" data-wiki="' + esc(w.file) + '">'
 						+ '<span class="nb-label">' + esc(w.name) + '</span>'
+						+ (w.description ? '<span class="nb-desc">' + esc(w.description) + '</span>' : '')
 						+ '</button>';
 				});
 				html += '</div>';

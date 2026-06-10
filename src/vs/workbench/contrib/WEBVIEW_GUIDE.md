@@ -1,9 +1,31 @@
 # Pollis Webview Creation Guide
 
-Reference implementations:
-- **`lp.template.ts`** — current standard (new left-strip + right-panel layout, three-group references, IModelVideo)
-- `clh.template.ts` — legacy layout (columns-grid, still works, see §14 for upgrade path)
-- `clp.template.ts` — legacy multi-model (columns-grid)
+---
+
+## ⚠️ MANDATORY: Always use `buildWebviewHtml()` — never write raw HTML in a template
+
+**Every new template file MUST call `buildWebviewHtml()` from `webviewScaffold.ts` and supply only the webview-specific parts.** The scaffold owns all shared CSS, layout, boilerplate JS (helpers, right-panel logic, message handling, code-action buttons, Mermaid wiring, collapsible panes, etc.). A template that re-implements any of this is wrong.
+
+```typescript
+import { buildWebviewHtml } from './webviewScaffold.js';
+
+export function getXxxHtml(mermaidJs?: string): string {
+    return buildWebviewHtml({
+        title: 'My Webview',
+        mermaidJs,
+        defaultModel: 'foo',
+        modelsLiteral: "['foo', 'bar']",
+        togglesJs: `...`,
+        bullets: `...`,
+        decisionRows: `...`,
+        miniChartsJs: `...`,
+        codeBranchesJs: `...`,
+        actionsJs: `...`,
+    });
+}
+```
+
+A correct template file should be **~150–450 lines** — all of that content being webview-specific data (toggle buttons, bullet text, decision table rows, mini-chart SVG functions, code-branch functions, action arrays). If a template exceeds ~500 lines, it is almost certainly re-implementing scaffold boilerplate that belongs in `webviewScaffold.ts`.
 
 **Sync rule:** This file has a mirror in memory at
 `/Users/antonio/.claude/projects/-Users-antonio-vscode/memory/project_pollis_webview_guide.md`.
@@ -570,6 +592,7 @@ function renderWikiPanel() {
         section.wikis.forEach(function(w) {
             html += '<button class="nb-card" data-wiki="' + esc(w.file) + '">'
                 + '<span class="nb-label">' + esc(w.name) + '</span>'
+                + (w.description ? '<span class="nb-desc">' + esc(w.description) + '</span>' : '')
                 + '</button>';
         });
         html += '</div>';
@@ -584,6 +607,8 @@ function renderWikiPanel() {
     });
 }
 ```
+
+Wiki cards support an optional `description` field (same pattern as notebook cards). When present it is rendered in `.nb-desc` below the title. Omitting it leaves a title-only card.
 
 **Button wiring** (panel-toggle, same as `btn-notebook-tutorials`):
 ```javascript
@@ -720,10 +745,12 @@ Add `| { command: 'openVideoList' }` to `XxxWebviewMessage`.
 `IModelWiki` in `model.types.ts` supports three variants:
 ```typescript
 export type IModelWiki =
-    | { readonly name: string; readonly file: string; readonly bundled: true }
-    | { readonly name: string; readonly url: string; readonly bundled: false }
+    | { readonly name: string; readonly description?: string; readonly file: string; readonly bundled: true }
+    | { readonly name: string; readonly description?: string; readonly url: string; readonly bundled: false }
     | { readonly separator: true; readonly label?: string };
 ```
+
+`description` is optional. When provided it appears below the card title using the `.nb-desc` style, identical to notebook tutorial cards.
 
 The `model.handler.ts` uses a type guard `isWikiEntry` to distinguish separators from real entries:
 ```typescript
@@ -776,19 +803,25 @@ Used for webviews that browse or interact with external model hubs (Hugging Face
 |---|------|------|---------|
 | 1 | `Factsheet` | `<topic>/factsheet.md` | One-page reference: what the hub is, key packages, authentication requirements |
 | 2 | `Overview` | `<topic>/overview.md` | Model taxonomy, pipeline tags, how Julia connects to this hub |
-| 3 | `Download & Load` | `<topic>/download-load.md` | Step-by-step: caching, tokens, `load_model` / `load_tokenizer` patterns |
-| 4 | `Run Inference` | `<topic>/run-inference.md` | Tokenise → forward → decode; patterns per modality (text, image, audio) |
-| 5 | `Choosing a Model` | `<topic>/choosing-a-model.md` | How to read model cards, benchmark scores, size vs. accuracy tradeoffs |
-| 6 | `Package Guide` | `<topic>/package-guide.md` | Key API functions from both packages; common pitfalls and workarounds |
+| 3 | `Authentication` | `<topic>/authentication.md` | Create and use API tokens/keys; gated models, rate limits, secure storage |
+| 4 | `API Reference` | `<topic>/api-reference.md` | Full hub REST API: model search, metadata, file downloads, pagination, error codes |
+| 5 | `Download & Load` | `<topic>/download-load.md` | Step-by-step: caching, tokens, `load_model` / `load_tokenizer` patterns |
+| 6 | `Run Inference` | `<topic>/run-inference.md` | Tokenise → forward → decode; patterns per modality (text, image, audio) |
+| 7 | `Choosing a Model` | `<topic>/choosing-a-model.md` | How to read model cards, benchmark scores, size vs. accuracy tradeoffs |
+| 8 | `Package Guide` | `<topic>/package-guide.md` | Key API functions from both packages; common pitfalls and workarounds |
+
+> **Naming convention:** The authentication wiki is always called `Authentication` (not "Access Tokens", "API Key", or any hub-specific name). The REST API wiki is always called `API Reference`. Both names are identical across all Family B webviews so users know where to look.
 
 ```typescript
 wikis: [
-    { name: 'Factsheet',        file: '<topic>/factsheet.md',       bundled: true },
-    { name: 'Overview',         file: '<topic>/overview.md',        bundled: true },
-    { name: 'Download & Load',  file: '<topic>/download-load.md',   bundled: true },
-    { name: 'Run Inference',    file: '<topic>/run-inference.md',   bundled: true },
+    { name: 'Factsheet',        file: '<topic>/factsheet.md',        bundled: true },
+    { name: 'Overview',         file: '<topic>/overview.md',         bundled: true },
+    { name: 'Authentication',   file: '<topic>/authentication.md',   bundled: true },
+    { name: 'API Reference',    file: '<topic>/api-reference.md',    bundled: true },
+    { name: 'Download & Load',  file: '<topic>/download-load.md',    bundled: true },
+    { name: 'Run Inference',    file: '<topic>/run-inference.md',    bundled: true },
     { name: 'Choosing a Model', file: '<topic>/choosing-a-model.md', bundled: true },
-    { name: 'Package Guide',    file: '<topic>/package-guide.md',   bundled: true },
+    { name: 'Package Guide',    file: '<topic>/package-guide.md',    bundled: true },
     // Separator + topic-specific wikis (omit if none)
     { separator: true, label: 'Packages' },
     { name: 'Transformers.jl', file: '<topic>/transformers-jl.md', bundled: true },
@@ -970,6 +1003,32 @@ Never try to escape the Julia transpose operator `.'` in code strings inside JS.
 line('S, F, L = ' + fn('dare') + '(' + fn('transpose') + '(A), ' + fn('transpose') + '(C), W, V)')
 ```
 
+### Shell heredoc `<<'EOF'` inside a template literal — CRITICAL
+A quoted heredoc marker (`<<'EOF'`) contains an apostrophe. Inside a TypeScript backtick template literal that apostrophe terminates any surrounding single-quoted JS string early, producing a **silent JS syntax error that blanks the entire webview**.
+
+**Fix:** always use the unquoted form `<<EOF`. For inline scripts where variable expansion is irrelevant, `<<EOF` and `<<'EOF'` behave identically, so there is no downside:
+```javascript
+// Wrong — apostrophe in <<'EOF' breaks string:
+line(kw('# ') + 'python3 - <<\'EOF\'')
+
+// Correct:
+line(kw('# ') + 'python3 - <<EOF')
+```
+
+### Python f-string `${...}` inside a template literal — CRITICAL
+Python f-string placeholders use `{expr}` or `{expr:.Nf}` syntax. Inside a TypeScript backtick template literal, `${...}` is **TypeScript template interpolation** — it evaluates the expression and injects its value into the string. If the expression is undefined the result is the literal string `"undefined"`, corrupting the code preview. Even a `{x:.1f}` fragment where `x` is not defined in TypeScript scope silently injects `"undefined"`.
+
+**Fix:** escape every `${` in Python f-string content as `\${`:
+```javascript
+// Wrong — TypeScript interpolates ${(time.perf_counter()-t0)*1000:.1f}:
+line(kw('# ') + 'print(f"elapsed: ${(time.perf_counter()-t0)*1000:.1f} ms")')
+
+// Correct — escaped, TypeScript leaves it alone:
+line(kw('# ') + 'print(f"elapsed: \\${(time.perf_counter()-t0)*1000:.1f} ms")')
+```
+
+> These two pitfalls (`<<'EOF'` and Python `${...}`) were confirmed in production: both caused completely non-functional HFM and KGM webviews — all UI silent, no visible error.
+
 ### Model-specific row visibility: use `'flex'`, not `''`
 `el.style.display = ''` removes the inline style, letting the CSS `display: none` rule win — the row stays hidden. Always use `'flex'`:
 ```javascript
@@ -1027,14 +1086,14 @@ export function registerXxxWebviewHandlers(
         const packages = data.packages.map(pkg => ({ name: pkg.name, url: pkg.github }));
         const hasReferences = data.references.some(r => !('separator' in r));
         // Build wiki sections for the right panel (same pattern as notebook sections)
-        const wikiSections: Array<{ label: string; wikis: Array<{ name: string; file: string }> }> = [];
-        let currentWikiSection: { label: string; wikis: Array<{ name: string; file: string }> } = { label: '', wikis: [] };
+        const wikiSections: Array<{ label: string; wikis: Array<{ name: string; file: string; description?: string }> }> = [];
+        let currentWikiSection: { label: string; wikis: Array<{ name: string; file: string; description?: string }> } = { label: '', wikis: [] };
         for (const w of data.wikis) {
             if ('separator' in w) {
                 wikiSections.push(currentWikiSection);
                 currentWikiSection = { label: w.label ?? '', wikis: [] };
             } else {
-                currentWikiSection.wikis.push({ name: w.name, file: w.bundled ? w.file : '' });
+                currentWikiSection.wikis.push({ name: w.name, file: w.bundled ? w.file : '', description: w.description });
             }
         }
         if (currentWikiSection.wikis.length > 0) { wikiSections.push(currentWikiSection); }
@@ -1336,21 +1395,60 @@ The **Illustration pane** is the standard collapsible pane for any supplementary
 **Single-model webviews:** pane starts collapsed; content is rendered lazily on first open.
 **Multi-model webviews:** pane starts **open** (no `collapsed` class); `renderIllustration()` is called inside `setModel()` every time the model changes, so content always reflects the active model.
 
+### Number of panes
+
+A webview can have **zero, one, or more** illustration panes:
+
+- **Zero** — omit the `<div class="illus-section">` block entirely. Use this when the webview is purely interactive (no diagrams, equations, or gallery) or when visual content is deferred to a future release.
+- **One** — the common case. One pane for a diagram, SVG gallery, or task explorer.
+- **More than one** — place additional `illus-section` blocks in the same position (all after the model toggle, before the form inputs). Give each a **unique `id`** (`illus-section`, `illus-section-2`, etc.) and a distinct toggle label (see below).
+
+### Overriding the pane label
+
+The default label is **"Illustration"**. Override it per pane by setting a different text label on the toggle button. In **scaffold-based webviews** (`buildWebviewHtml`), use the `illustrationLabel` property:
+
+```typescript
+buildWebviewHtml({
+    // ...
+    illustrationLabel: 'Explore by Task',   // replaces "Illustration" on the toggle button
+})
+```
+
+For **non-scaffold webviews** (hand-written HTML), change the text node inside the toggle button directly:
+
+```html
+<button class="illus-toggle" id="illus-toggle">
+  <span class="illus-chevron"><!-- chevron SVG --></span>
+  Explore by Task
+</button>
+```
+
+Use a label that describes the **purpose** of the pane rather than its format — "Explore by Task", "Model Comparison", "Key Equations", "Field Panorama" are all better than the generic "Illustration".
+
 ### Placement in HTML
 
-Place the Illustration pane immediately **after the model toggle buttons and before the form inputs**:
+Place illustration panes immediately **after the model toggle buttons and before the form inputs**:
 
 ```html
 <!-- Model toggle -->
 <div class="model-toggle" id="model-group">...</div>
 
-<!-- Illustration pane -->
+<!-- Illustration pane (one or more, each with a unique id and descriptive label) -->
 <div class="illus-section" id="illus-section">
   <button class="illus-toggle" id="illus-toggle">
     <span class="illus-chevron"><!-- chevron SVG --></span>
-    Illustration
+    Explore by Task
   </button>
   <div class="illus-body" id="illus-body"></div>
+</div>
+
+<!-- Optional second pane -->
+<div class="illus-section collapsed" id="illus-section-2">
+  <button class="illus-toggle" id="illus-toggle-2">
+    <span class="illus-chevron"><!-- chevron SVG --></span>
+    Model Comparison
+  </button>
+  <div class="illus-body" id="illus-body-2"></div>
 </div>
 
 <!-- Parameter form -->
@@ -1360,7 +1458,7 @@ Place the Illustration pane immediately **after the model toggle buttons and bef
 <div class="code-preview-wrapper">...</div>
 ```
 
-> ⚠️ **CRITICAL — position rule:** The Illustration pane MUST appear between the model toggle buttons and the input fields. It must NEVER be placed below the input fields. This rule was confirmed explicitly and is non-negotiable.
+> ⚠️ **CRITICAL — position rule:** Illustration panes MUST appear between the model toggle buttons and the input fields. They must NEVER be placed below the input fields. This rule was confirmed explicitly and is non-negotiable.
 
 ### CSS (add to the shared block)
 
@@ -1489,11 +1587,13 @@ Animated GIFs play automatically in the webview — no video controls or JS need
 
 ### Checklist additions (append to §13)
 
-- [ ] Illustration pane: choose content type (svg / image / mermaid)
+- [ ] Illustration pane(s): decide count — zero, one, or more; give each a unique `id` and descriptive label
+- [ ] Use `illustrationLabel` on `buildWebviewHtml` (or change the text node directly) — never leave "Illustration" unless it genuinely describes the pane's purpose
+- [ ] Choose content type per pane (svg / image / mermaid)
 - [ ] If SVG: use `currentColor` for all strokes and fills
 - [ ] If SVG: use `viewBox="-20 0 360 180"` and `max-width:480px` — prevents caption clipping (see §9)
 - [ ] If image: add `img-src vscode-resource: data:;` to CSP; pass URI via `getXxxHtml(imageUri)` parameter; place file under `media/illustrations/`
-- [ ] **Position:** Illustration pane placed after model toggle buttons, before form inputs — NEVER below the input fields
+- [ ] **Position:** all panes placed after model toggle buttons, before form inputs — NEVER below the input fields
 - [ ] Single-model: `illusRendered` flag + lazy render on first open; pane has `class="illus-section collapsed"`
 
 ---
@@ -1926,3 +2026,67 @@ cells: [{ cellKind: CellKind.Code, source: code, language: 'julia', /* … */ }]
 This replaced an earlier attempt that swapped GLMakie → WGLMakie on the notebook branch to get *interactive inline* plots. **WGLMakie inline does not render in this VS Code notebook environment** (Bonito starts an HTTP server, nothing draws — confirmed with a bare `scatter`). Rather than maintain a per-target backend that silently shows nothing, the rule is **GLMakie everywhere (window)**, with the `Interactive` checkbox toggling static (CairoMakie / `inline!`) only where Cairo can actually render. So the checkbox governs **all** targets uniformly; the handler does no notebook-specific transform.
 
 **Display gotcha — `display(fig)` vs bare `fig`:** the **code box** must end with `display(fig)` / `display(f)`. A bare `fig` is not reliably auto-displayed when a block is pasted into the **terminal**, and a trailing **assignment** (`f, ax, ct = contour(...)`) does **not** auto-render in a notebook either — so always wrap the final figure in `display(...)`.
+
+## 20. Wiki card descriptions
+
+Every `IModelWiki` entry (non-separator) accepts an optional `description` string. When present it is rendered in `.nb-desc` below the card title, matching the notebook tutorial card style exactly.
+
+### 20.1 How to add descriptions
+
+In the command file (`commands/<acronym>.command.ts`), add `description:` to each wiki entry:
+
+```typescript
+wikis: [
+    { name: 'Factsheet',      description: 'Quick-reference: plot types, packages, and when to use each', file: '<topic>/factsheet.md',      bundled: true },
+    { name: 'Overview',       description: 'Motivation and guidance for choosing this plot family',        file: '<topic>/overview.md',       bundled: true },
+    { name: 'Assumptions',    description: 'Data requirements and conditions for valid plots',             file: '<topic>/assumptions.md',    bundled: true },
+    { name: 'Diagnostics',    description: 'How to detect misleading charts and data quality issues',      file: '<topic>/diagnostics.md',    bundled: true },
+    { name: 'Interpretation', description: 'How to read and communicate the plot correctly',               file: '<topic>/interpretation.md', bundled: true },
+    { name: 'Decision Guide', description: 'Which plot to use given your data type and question',          file: '<topic>/decision-guide.md', bundled: true },
+    { separator: true, label: 'Plot Types' },
+    { name: 'My Plot',        description: 'One sentence saying what this plot shows',                     file: '<topic>/myplot.md',         bundled: true },
+],
+```
+
+Keep descriptions short — one clause, no full stop. The card is narrow; two lines is the maximum before it looks cluttered.
+
+### 20.2 How the description reaches the webview
+
+The handler builds `wikiSections` and must forward `description`:
+
+```typescript
+currentWikiSection.wikis.push({ name: w.name, file: w.bundled ? w.file : '', description: w.description });
+```
+
+The type annotation for `wikiSections` must include `description?`:
+
+```typescript
+const wikiSections: Array<{ label: string; wikis: Array<{ name: string; file: string; description?: string }> }> = [];
+let currentWikiSection: { label: string; wikis: Array<{ name: string; file: string; description?: string }> } = { label: '', wikis: [] };
+```
+
+The scaffold's `renderWikiPanel()` already renders it:
+
+```javascript
+html += '<button class="nb-card" data-wiki="' + esc(w.file) + '">'
+    + '<span class="nb-label">' + esc(w.name) + '</span>'
+    + (w.description ? '<span class="nb-desc">' + esc(w.description) + '</span>' : '')
+    + '</button>';
+```
+
+### 20.3 The `out/` compiled files must be patched manually when the build watch is not running
+
+The app loads from `out/`, not `src/`. If the build watch task (`VS Code - Build`) is not running, edits to `src/` TS files are **not** reflected in `out/` JS files and the change will be invisible at runtime.
+
+**Symptom:** descriptions added to `src/` command and handler files do not appear in the running webview even after reload.
+
+**Fix:** directly patch the corresponding `out/` JS file:
+
+```bash
+# Patch the handler to forward description (run once per handler you changed)
+perl -i -pe \
+  "s|currentWikiSection\.wikis\.push\(\{ name: w\.name, file: w\.bundled \? w\.file : \"\" \}\);|currentWikiSection.wikis.push({ name: w.name, file: w.bundled ? w.file : \"\", description: w.description });|g" \
+  out/vs/workbench/contrib/model/browser/handlers/<acronym>.handler.js
+```
+
+The permanent fix is to have the build watch task running. The `out/` patch is a workaround for interactive development sessions only; it will be overwritten the next time the watch task compiles the file.

@@ -369,7 +369,7 @@ export function getCamHtml(): string {
 				if (section.label) { html += '<div class="nb-section-title">' + esc(section.label) + '</div>'; }
 				html += '<div class="right-action-grid">';
 				section.wikis.forEach(function(w) {
-					html += '<button class="nb-card" data-wiki="' + esc(w.file) + '"><span class="nb-label">' + esc(w.name) + '</span></button>';
+					html += '<button class="nb-card" data-wiki="' + esc(w.file) + '"><span class="nb-label">' + esc(w.name) + '</span>' + (w.description ? '<span class="nb-desc">' + esc(w.description) + '</span>' : '') + '</button>';
 				});
 				html += '</div>';
 			});

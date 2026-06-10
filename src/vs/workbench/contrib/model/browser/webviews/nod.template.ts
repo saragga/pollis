@@ -353,7 +353,7 @@ export function getNodHtml(): string {
 			wikiSections.forEach(function(s) {
 				if (s.label) { html += '<div class="nb-section-title">' + esc(s.label) + '</div>'; }
 				html += '<div class="right-action-grid">';
-				s.wikis.forEach(function(w) { html += '<button class="nb-card" data-wiki="' + esc(w.file) + '"><span class="nb-label">' + esc(w.name) + '</span></button>'; });
+				s.wikis.forEach(function(w) { html += '<button class="nb-card" data-wiki="' + esc(w.file) + '"><span class="nb-label">' + esc(w.name) + '</span>' + (w.description ? '<span class="nb-desc">' + esc(w.description) + '</span>' : '') + '</button>'; });
 				html += '</div>';
 			});
 			html += '</div>';

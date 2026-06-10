@@ -449,7 +449,7 @@ export function getAndeHtml(): string {
 		function renderWikiPanel() {
 			if (!wikiSections.length) { return; }
 			var html = '<div class="panel-header"><span class="right-panel-title">Local Wikis</span><button class="panel-close" id="btn-panel-close">&#xd7;</button></div><div class="nb-panel-scroll">';
-			wikiSections.forEach(function(s) { if (s.label) { html += '<div class="nb-section-title">' + esc(s.label) + '</div>'; } html += '<div class="right-action-grid">'; s.wikis.forEach(function(w) { html += '<button class="nb-card" data-wiki="' + esc(w.file) + '"><span class="nb-label">' + esc(w.name) + '</span></button>'; }); html += '</div>'; });
+			wikiSections.forEach(function(s) { if (s.label) { html += '<div class="nb-section-title">' + esc(s.label) + '</div>'; } html += '<div class="right-action-grid">'; s.wikis.forEach(function(w) { html += '<button class="nb-card" data-wiki="' + esc(w.file) + '"><span class="nb-label">' + esc(w.name) + '</span>' + (w.description ? '<span class="nb-desc">' + esc(w.description) + '</span>' : '') + '</button>'; }); html += '</div>'; });
 			html += '</div>';
 			rightPanel.innerHTML = html;
 			document.getElementById('btn-panel-close').addEventListener('click', hideRightPanel);

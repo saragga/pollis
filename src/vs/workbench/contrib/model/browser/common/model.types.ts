@@ -34,8 +34,8 @@ export type IModelNotebook =
 	| { readonly name: string; readonly description: string; readonly url: string; readonly bundled: false };
 
 export type IModelWiki =
-	| { readonly name: string; readonly file: string; readonly bundled: true }
-	| { readonly name: string; readonly url: string; readonly bundled: false }
+	| { readonly name: string; readonly description?: string; readonly file: string; readonly bundled: true }
+	| { readonly name: string; readonly description?: string; readonly url: string; readonly bundled: false }
 	| { readonly separator: true; readonly label?: string };
 
 export type IModelReference = IModelPaper | { readonly separator: true; readonly label?: string };

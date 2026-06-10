@@ -31,14 +31,14 @@ export function registerRdynWebviewHandlers(
 	setTimeout(() => {
 		const packages = rdynData.packages.map(pkg => ({ name: pkg.name, url: pkg.github }));
 		const hasReferences = rdynData.references.some(r => !('separator' in r));
-		const wikiSections: Array<{ label: string; wikis: Array<{ name: string; file: string }> }> = [];
-		let currentWikiSection: { label: string; wikis: Array<{ name: string; file: string }> } = { label: '', wikis: [] };
+		const wikiSections: Array<{ label: string; wikis: Array<{ name: string; file: string; description?: string }> }> = [];
+		let currentWikiSection: { label: string; wikis: Array<{ name: string; file: string; description?: string }> } = { label: '', wikis: [] };
 		for (const w of rdynData.wikis) {
 			if ('separator' in w) {
 				wikiSections.push(currentWikiSection);
 				currentWikiSection = { label: w.label ?? '', wikis: [] };
 			} else {
-				currentWikiSection.wikis.push({ name: w.name, file: w.bundled ? w.file : '' });
+				currentWikiSection.wikis.push({ name: w.name, file: w.bundled ? w.file : '', description: w.description });
 			}
 		}
 		if (currentWikiSection.wikis.length > 0) { wikiSections.push(currentWikiSection); }

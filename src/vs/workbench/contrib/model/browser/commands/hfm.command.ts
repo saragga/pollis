@@ -14,6 +14,7 @@ import { INotebookEditorModelResolverService } from '../../../notebook/common/no
 import { INotebookKernelService } from '../../../notebook/common/notebookKernelService.js';
 import { ILanguageService } from '../../../../../editor/common/languages/language.js';
 import { IThemeService } from '../../../../../platform/theme/common/themeService.js';
+import { IRequestService } from '../../../../../platform/request/common/request.js';
 import { getMermaidUris } from '../../../mermaid/browser/mermaidHelper.js';
 import { IHfmMetadata } from '../common/hfm.types.js';
 import { IModelReference, IModelNotebookSection } from '../common/model.types.js';
@@ -46,7 +47,7 @@ const HFM_REFERENCES: IModelReference[] = [
 		authors: 'JuliaML contributors',
 		year: 2024,
 		journal: 'GitHub',
-		url: 'https://github.com/JuliaML/HuggingFaceHub.jl',
+		url: 'https://github.com/cjdoris/HuggingFaceHub.jl',
 		openAccess: true,
 	},
 	{ separator: true, label: 'Foundational Papers' },
@@ -98,23 +99,62 @@ const HFM_METADATA: IHfmMetadata = {
 			},
 			{
 				name: 'HuggingFaceHub.jl',
-				github: 'https://github.com/JuliaML/HuggingFaceHub.jl',
+				github: 'https://github.com/cjdoris/HuggingFaceHub.jl',
+				papers: [],
+			},
+			{
+				name: 'ONNX.jl',
+				github: 'https://github.com/FluxML/ONNX.jl',
 				papers: [],
 			},
 		],
 		notebooks: HFM_NOTEBOOK_SECTIONS.flatMap(s => s.notebooks),
 		notebookSections: HFM_NOTEBOOK_SECTIONS,
 		wikis: [
-			{ name: 'Factsheet',        file: 'hfm/factsheet.md',         bundled: true },
-			{ name: 'Overview',         file: 'hfm/overview.md',          bundled: true },
-			{ name: 'Download & Load',  file: 'hfm/download-load.md',     bundled: true },
-			{ name: 'Run Inference',    file: 'hfm/run-inference.md',     bundled: true },
-			{ name: 'Choosing a Model', file: 'hfm/choosing-a-model.md',  bundled: true },
-			{ name: 'Package Guide',    file: 'hfm/package-guide.md',     bundled: true },
+			{ name: 'Factsheet',        description: 'Architecture overview and quick-start for Hugging Face models in Julia',  file: 'hfm/factsheet.md',        bundled: true },
+			{ name: 'Overview',         description: 'Task families, pipeline tags, and the HF model ecosystem',                file: 'hfm/overview.md',         bundled: true },
+			{ name: 'Authentication',   description: 'Create and use HF tokens; gated models, the Hub API, and rate limits',    file: 'hfm/access-tokens.md',   bundled: true },
+			{ name: 'API Reference',    description: 'Full Hub REST API: model search, metadata, file downloads, Inference API', file: 'hfm/api-reference.md',   bundled: true },
+			{ name: 'Download & Load',  description: 'Download weights from the Hub and load them with Transformers.jl',        file: 'hfm/download-load.md',    bundled: true },
+			{ name: 'Run Inference',    description: 'Run text, image, audio, and multimodal inference on loaded models',       file: 'hfm/run-inference.md',    bundled: true },
+			{ name: 'Choosing a Model', description: 'Pick the right model by task, benchmark, size, and licence',              file: 'hfm/choosing-a-model.md', bundled: true },
+			{ name: 'Package Guide',    description: 'Full API reference for Transformers.jl and HuggingFaceHub.jl',            file: 'hfm/package-guide.md',    bundled: true },
 			{ separator: true, label: 'Packages' },
-			{ name: 'Transformers.jl',  file: 'hfm/transformers-jl.md',   bundled: true },
+			{ name: 'Transformers.jl',  description: 'Architecture reference, inference patterns, GPU, and fine-tuning',        file: 'hfm/transformers-jl.md',  bundled: true },
+			{ name: 'ONNX.jl',          description: 'Export HF models to ONNX and run inference in Julia without Python',      file: 'hfm/onnx-jl.md',          bundled: true },
 		],
 		references: HFM_REFERENCES,
+		conceptMap: {
+			center: 'Hugging Face Models',
+			nodes: [
+				{ id: 'root',        label: 'Hugging Face Models',      kind: 'center' },
+				{ id: 'q_hub',       label: 'Model Hub & weights',      kind: 'concept' },
+				{ id: 'q_task',      label: 'Task families',            kind: 'concept' },
+				{ id: 'q_arch',      label: 'Transformer architecture', kind: 'concept' },
+				{ id: 'q_fine',      label: 'Fine-tuning & training',   kind: 'concept' },
+				{ id: 'load',        label: 'Download & Load',          kind: 'topic', model: 'download' },
+				{ id: 'infer',       label: 'Run Inference',            kind: 'topic', model: 'inference' },
+				{ id: 'choose',      label: 'Choosing a Model',         kind: 'topic', model: 'choosing' },
+				{ id: 'r_trans',     label: 'Transformer Networks',     kind: 'related', command: 'chiara.statistics.nn.transformer' },
+				{ id: 'r_embed',     label: 'Embeddings',               kind: 'related', command: 'chiara.statistics.pm.embedding' },
+				{ id: 'ext_hf',      label: 'HuggingFaceHub.jl',        kind: 'external', url: 'https://github.com/cjdoris/HuggingFaceHub.jl' },
+				{ id: 'ext_trans',   label: 'Transformers.jl',          kind: 'external', url: 'https://github.com/chengchingwen/Transformers.jl' },
+			],
+			edges: [
+				{ from: 'root',    to: 'q_hub',     label: 'accessed via' },
+				{ from: 'root',    to: 'q_task',    label: 'organised by' },
+				{ from: 'root',    to: 'q_arch',    label: 'built on' },
+				{ from: 'root',    to: 'q_fine',    label: 'adapted by' },
+				{ from: 'q_hub',   to: 'load',      label: 'downloaded in' },
+				{ from: 'q_task',  to: 'infer',     label: 'run in' },
+				{ from: 'q_arch',  to: 'choose',    label: 'guides' },
+				{ from: 'q_fine',  to: 'choose',    label: 'considered in' },
+				{ from: 'q_arch',  to: 'r_trans',   label: 'detailed in' },
+				{ from: 'q_task',  to: 'r_embed',   label: 'text repr. in' },
+				{ from: 'q_hub',   to: 'ext_hf',    label: 'via' },
+				{ from: 'q_arch',  to: 'ext_trans', label: 'loaded with' },
+			],
+		},
 	},
 };
 
@@ -130,6 +170,7 @@ export function openHfmWebview(
 	notebookKernelService: INotebookKernelService,
 	languageService: ILanguageService,
 	themeService: IThemeService,
+	requestService: IRequestService,
 	initialModel?: string,
 ): void {
 	const mermaid = getMermaidUris();
@@ -165,6 +206,7 @@ export function openHfmWebview(
 		notebookKernelService,
 		languageService,
 		themeService,
+		requestService,
 		initialModel,
 	);
 }

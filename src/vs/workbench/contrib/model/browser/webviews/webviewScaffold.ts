@@ -40,6 +40,10 @@ export interface WebviewParts {
 	readonly mermaidJs?: string;
 	/** Experimental: lay Next Steps / Learn More out as horizontal rows and render the opened panel full-width below them, instead of in a side panel. */
 	readonly wideLayout?: boolean;
+	/** Override the "Illustration" label on the collapsible pane toggle. Default: "Illustration". */
+	readonly illustrationLabel?: string;
+	/** Override the first column header of the decision table. Default: "Plot". */
+	readonly decisionFirstColumn?: string;
 }
 
 /**
@@ -222,7 +226,7 @@ ${parts.bullets}</ul>
 				<table class="decision-table">
 					<thead>
 						<tr>
-							<th>Plot</th>
+							<th>${parts.decisionFirstColumn ?? 'Plot'}</th>
 							<th>Data Type</th>
 							<th>Use when</th>
 						</tr>
@@ -237,7 +241,7 @@ ${parts.decisionRows}</tbody>
 		<div class="illus-section collapsed" id="illus-section">
 			<button class="illus-toggle" id="illus-toggle">
 				<span class="illus-chevron"><svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M7.976 10.072l-4.054-4.014-.92.92 4.49 4.45.978.01 4.525-4.46-.918-.92-4.101 4.014z"/></svg></span>
-				Illustration
+				${parts.illustrationLabel ?? 'Illustration'}
 			</button>
 			<div class="illus-body" id="illus-body"></div>
 		</div>
@@ -549,6 +553,7 @@ ${parts.setModelExtraJs ?? ''}			document.querySelectorAll('#model-group .toggle
 				section.wikis.forEach(function(w) {
 					html += '<button class="nb-card" data-wiki="' + esc(w.file) + '">'
 						+ '<span class="nb-label">' + esc(w.name) + '</span>'
+						+ (w.description ? '<span class="nb-desc">' + esc(w.description) + '</span>' : '')
 						+ '</button>';
 				});
 				html += '</div>';
