@@ -18,14 +18,18 @@ export function getXlsxHtml(mermaidJs?: string): string {
 		illustrationOverrideJs: `			body.innerHTML = '<div style="text-align:center;padding:24px 0;font-size:13px;color:var(--vscode-descriptionForeground);">Excel file reader and writer for the Julia language.</div>';
 			return;`,
 		extraCss: `
+			.refs-container { display: flex; gap: 16px; height: 400px; }
+			.refs-list-panel { flex: 0 0 45%; overflow-y: auto; padding-right: 8px; }
+			.refs-actions-panel { flex: 0 0 55%; border-left: 1px solid var(--vscode-widget-border); padding-left: 16px; overflow-y: auto; }
 			.references-list { display: flex; flex-direction: column; gap: 8px; }
 			.reference-item { background: var(--vscode-list-hoverBackground); border: 1px solid var(--vscode-widget-border); border-radius: 4px; padding: 10px; text-align: left; cursor: pointer; transition: all 0.2s; }
 			.reference-item:hover { background: var(--vscode-list-activeSelectionBackground); border-color: var(--vscode-focusBorder); }
+			.reference-item.active { background: var(--vscode-list-activeSelectionBackground); border-color: var(--vscode-focusBorder); }
 			.ref-title { display: block; font-weight: 500; color: var(--vscode-foreground); margin-bottom: 4px; word-break: break-word; }
 			.ref-desc { display: block; font-size: 11px; color: var(--vscode-descriptionForeground); }
 			.action-btn { display: block; width: 100%; margin-bottom: 8px; padding: 8px 12px; background: var(--vscode-button-background); color: var(--vscode-button-foreground); border: none; border-radius: 3px; cursor: pointer; font-size: 12px; transition: background 0.2s; }
 			.action-btn:hover { background: var(--vscode-button-hoverBackground); }
-			.icon { margin-right: 6px; }
+			.ref-placeholder { font-size: 12px; color: var(--vscode-descriptionForeground); text-align: center; padding: 20px 10px; }
 		`,
 		togglesJs: `			<button class="toggle-btn active" data-model="write">Write</button>
 			<button class="toggle-btn" data-model="read">Read</button>
@@ -324,31 +328,38 @@ export function getXlsxHtml(mermaidJs?: string): string {
 		});`,
 		extraJs: `
 		var currentReferences = [];
+		var selectedRefIdx = null;
 		var rightPanel = document.getElementById('right-panel');
 
 		window.addEventListener('message', function(event) {
 			if (event.data.command === 'showReferences') {
 				currentReferences = event.data.references || [];
-				renderReferencesPanel();
+				renderReferencesList();
 			}
 		});
 
-		function renderReferencesPanel() {
+		function renderReferencesList() {
 			if (currentReferences.length === 0) { return; }
 			var html = '<div class="panel-header">'
 				+ '<span class="right-panel-title">Explore References</span>'
 				+ '<button class="panel-close" id="btn-refs-close">&#xd7;</button>'
 				+ '</div>'
+				+ '<div class="refs-container">'
+				+ '<div class="refs-list-panel">'
 				+ '<div class="references-list">';
-			currentReferences.forEach(function(ref) {
+			currentReferences.forEach(function(ref, idx) {
 				var desc = (ref.authors || '') + ' · ' + (ref.year || '');
 				if (ref.openAccess) { desc += ' · Open Access'; }
-				html += '<button class="reference-item" data-idx="' + currentReferences.indexOf(ref) + '">'
+				html += '<button class="reference-item" data-idx="' + idx + '">'
 					+ '<span class="ref-title">' + esc(ref.title || '') + '</span>'
 					+ '<span class="ref-desc">' + esc(desc) + '</span>'
 					+ '</button>';
 			});
-			html += '</div>';
+			html += '</div></div>'
+				+ '<div class="refs-actions-panel">'
+				+ '<div class="ref-placeholder">Select a reference to view details</div>'
+				+ '</div>'
+				+ '</div>';
 			rightPanel.innerHTML = html;
 			rightPanel.style.display = 'block';
 			document.getElementById('btn-refs-close').addEventListener('click', function() {
@@ -358,27 +369,23 @@ export function getXlsxHtml(mermaidJs?: string): string {
 			document.querySelectorAll('.reference-item').forEach(function(btn) {
 				btn.addEventListener('click', function() {
 					var idx = parseInt(btn.dataset.idx, 10);
-					var ref = currentReferences[idx];
-					if (ref) { renderReferenceActions(ref); }
+					selectedRefIdx = idx;
+					document.querySelectorAll('.reference-item').forEach(function(b) { b.classList.remove('active'); });
+					btn.classList.add('active');
+					renderReferenceDetails(currentReferences[idx]);
 				});
 			});
 		}
 
-		function renderReferenceActions(ref) {
+		function renderReferenceDetails(ref) {
 			var desc = (ref.authors || '') + ' · ' + (ref.year || '');
 			if (ref.openAccess) { desc += ' · Open Access'; }
-			var html = '<div class="panel-header">'
-				+ '<button class="panel-close" id="btn-ref-back" style="margin-right: auto;">← Back</button>'
-				+ '<span class="right-panel-title" style="flex: 1; text-align: center;">' + esc(ref.title || '') + '</span>'
-				+ '</div>'
+			var html = '<div style="font-weight: 600; margin-bottom: 8px; color: var(--vscode-foreground);">' + esc(ref.title || '') + '</div>'
 				+ '<div style="font-size: 12px; color: var(--vscode-descriptionForeground); margin-bottom: 12px;">' + esc(desc) + '</div>'
 				+ '<button class="action-btn" id="btn-open-ref">Open in Browser</button>'
 				+ '<button class="action-btn" id="btn-copy-bibtex">Copy BibTeX to Clipboard</button>';
-			rightPanel.innerHTML = html;
-			rightPanel.style.display = 'block';
-			document.getElementById('btn-ref-back').addEventListener('click', function() {
-				renderReferencesPanel();
-			});
+			var actionsPanel = document.querySelector('.refs-actions-panel');
+			actionsPanel.innerHTML = html;
 			document.getElementById('btn-open-ref').addEventListener('click', function() {
 				vscode.postMessage({ command: 'openReference', id: ref.title });
 			});
