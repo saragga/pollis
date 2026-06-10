@@ -17,6 +17,16 @@ export function getXlsxHtml(mermaidJs?: string): string {
 		illustrationLabel: 'Illustration',
 		illustrationOverrideJs: `			body.innerHTML = '<div style="text-align:center;padding:24px 0;font-size:13px;color:var(--vscode-descriptionForeground);">Excel file reader and writer for the Julia language.</div>';
 			return;`,
+		extraCss: `
+			.references-list { display: flex; flex-direction: column; gap: 8px; }
+			.reference-item { background: var(--vscode-list-hoverBackground); border: 1px solid var(--vscode-widget-border); border-radius: 4px; padding: 10px; text-align: left; cursor: pointer; transition: all 0.2s; }
+			.reference-item:hover { background: var(--vscode-list-activeSelectionBackground); border-color: var(--vscode-focusBorder); }
+			.ref-title { display: block; font-weight: 500; color: var(--vscode-foreground); margin-bottom: 4px; word-break: break-word; }
+			.ref-desc { display: block; font-size: 11px; color: var(--vscode-descriptionForeground); }
+			.action-btn { display: block; width: 100%; margin-bottom: 8px; padding: 8px 12px; background: var(--vscode-button-background); color: var(--vscode-button-foreground); border: none; border-radius: 3px; cursor: pointer; font-size: 12px; transition: background 0.2s; }
+			.action-btn:hover { background: var(--vscode-button-hoverBackground); }
+			.icon { margin-right: 6px; }
+		`,
 		togglesJs: `			<button class="toggle-btn active" data-model="write">Write</button>
 			<button class="toggle-btn" data-model="read">Read</button>
 			<button class="toggle-btn" data-model="formula">Formula</button>`,
@@ -312,5 +322,92 @@ export function getXlsxHtml(mermaidJs?: string): string {
 		document.getElementById('btn-xlsx-read').addEventListener('click', function() {
 			showRightPanel(READ_ACTIONS, 'Read Formats', 'btn-xlsx-read');
 		});`,
+		extraJs: `
+		var currentReferences = [];
+		var rightPanel = document.getElementById('right-panel');
+
+		window.addEventListener('message', function(event) {
+			if (event.data.command === 'showReferences') {
+				currentReferences = event.data.references || [];
+				renderReferencesPanel();
+			}
+		});
+
+		function renderReferencesPanel() {
+			if (currentReferences.length === 0) { return; }
+			var html = '<div class="panel-header">'
+				+ '<span class="right-panel-title">Explore References</span>'
+				+ '<button class="panel-close" id="btn-refs-close">&#xd7;</button>'
+				+ '</div>'
+				+ '<div class="references-list">';
+			currentReferences.forEach(function(ref) {
+				var desc = (ref.authors || '') + ' · ' + (ref.year || '');
+				if (ref.openAccess) { desc += ' · Open Access'; }
+				html += '<button class="reference-item" data-idx="' + currentReferences.indexOf(ref) + '">'
+					+ '<span class="ref-title">' + esc(ref.title || '') + '</span>'
+					+ '<span class="ref-desc">' + esc(desc) + '</span>'
+					+ '</button>';
+			});
+			html += '</div>';
+			rightPanel.innerHTML = html;
+			rightPanel.style.display = 'block';
+			document.getElementById('btn-refs-close').addEventListener('click', function() {
+				rightPanel.innerHTML = '';
+				rightPanel.style.display = 'none';
+			});
+			document.querySelectorAll('.reference-item').forEach(function(btn) {
+				btn.addEventListener('click', function() {
+					var idx = parseInt(btn.dataset.idx, 10);
+					var ref = currentReferences[idx];
+					if (ref) { renderReferenceActions(ref); }
+				});
+			});
+		}
+
+		function renderReferenceActions(ref) {
+			var desc = (ref.authors || '') + ' · ' + (ref.year || '');
+			if (ref.openAccess) { desc += ' · Open Access'; }
+			var html = '<div class="panel-header">'
+				+ '<button class="panel-close" id="btn-ref-back" style="margin-right: auto;">← Back</button>'
+				+ '<span class="right-panel-title" style="flex: 1; text-align: center;">' + esc(ref.title || '') + '</span>'
+				+ '</div>'
+				+ '<div style="font-size: 12px; color: var(--vscode-descriptionForeground); margin-bottom: 12px;">' + esc(desc) + '</div>'
+				+ '<button class="action-btn" id="btn-open-ref">Open in Browser</button>'
+				+ '<button class="action-btn" id="btn-copy-bibtex">Copy BibTeX to Clipboard</button>';
+			rightPanel.innerHTML = html;
+			rightPanel.style.display = 'block';
+			document.getElementById('btn-ref-back').addEventListener('click', function() {
+				renderReferencesPanel();
+			});
+			document.getElementById('btn-open-ref').addEventListener('click', function() {
+				vscode.postMessage({ command: 'openReference', id: ref.title });
+			});
+			document.getElementById('btn-copy-bibtex').addEventListener('click', function() {
+				var bibtex = generateBibTeX(ref);
+				navigator.clipboard.writeText(bibtex).then(function() {
+					var btn = document.getElementById('btn-copy-bibtex');
+					var original = btn.textContent;
+					btn.textContent = 'Copied!';
+					setTimeout(function() { btn.textContent = original; }, 2000);
+				});
+			});
+		}
+
+		function generateBibTeX(ref) {
+			var type = ref.doi ? 'online' : 'misc';
+			var key = (ref.title || 'ref').toLowerCase().replace(/[^a-z0-9]/g, '').substring(0, 20);
+			var bibtex = '@' + type + '{' + key + ',\\n'
+				+ '  title={' + (ref.title || '') + '},\\n'
+				+ '  author={' + (ref.authors || '') + '},\\n'
+				+ '  year={' + (ref.year || '') + '},\\n';
+			if (ref.journal) { bibtex += '  journal={' + ref.journal + '},\\n'; }
+			if (ref.doi) { bibtex += '  doi={' + ref.doi + '},\\n'; }
+			if (ref.url) { bibtex += '  url={' + ref.url + '},\\n'; }
+			bibtex += '}';
+			return bibtex;
+		}
+
+		function esc(s) { return (s || '').replace(/[&<>"']/g, function(c) { return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]; }); }
+		`,
 	});
 }

@@ -4,7 +4,40 @@
 
 ## ⚠️ MANDATORY: Always use `buildWebviewHtml()` — never write raw HTML in a template
 
-**Every new template file MUST call `buildWebviewHtml()` from `webviewScaffold.ts` and supply only the webview-specific parts.** The scaffold owns all shared CSS, layout, boilerplate JS (helpers, right-panel logic, message handling, code-action buttons, Mermaid wiring, collapsible panes, etc.). A template that re-implements any of this is wrong.
+**Every new template file MUST call `buildWebviewHtml()` and supply only the webview-specific parts.** The scaffold owns all shared CSS, layout, boilerplate JS (helpers, right-panel logic, message handling, code-action buttons, Mermaid wiring, collapsible panes, etc.). A template that re-implements any of this is wrong.
+
+### 🚀 **RECOMMENDED FOR NEW WEBVIEWS: Use `webviewScaffoldLite.ts`**
+
+**For all new webviews (especially TOML-based ones), import from `webviewScaffoldLite.ts` instead of `webviewScaffold.ts`.** The Lite scaffold is simpler, faster, and eliminates the need for `kw()`, `fn()`, `ty()` helper functions entirely:
+
+```typescript
+import { buildWebviewHtml } from './webviewScaffoldLite.js';
+
+export function getXxxHtml(mermaidJs?: string): string {
+    return buildWebviewHtml({
+        title: 'My Webview',
+        mermaidJs,
+        defaultModel: 'foo',
+        modelsLiteral: "['foo', 'bar']",
+        togglesJs: `...`,
+        bullets: `...`,
+        decisionRows: `...`,
+        miniChartsJs: `...`,
+        codeBranchesJs: `currentPlainCode = "using Foo\\n...";`,  // Plain Julia, no kw()/fn()/ty()!
+        actionsJs: `...`,
+    });
+}
+```
+
+**Why `webviewScaffoldLite`:**
+- ✅ `codeBranchesJs` contains **plain Julia code** (no HTML building)
+- ✅ No `kw()`, `fn()`, `ty()` helper functions needed
+- ✅ Cleaner, more readable code
+- ✅ Theme-aware syntax highlighting via Monaco tokenizer (automatic)
+- ✅ Perfect match for TOML-based template generation
+- ✅ Shorter template files (~150–400 lines vs. ~300–500 with helpers)
+
+**Old `webviewScaffold.ts` is still supported** for backward compatibility with existing templates that use `kw()`/`fn()`/`ty()` spans. Do **not** use it for new work.
 
 ```typescript
 import { buildWebviewHtml } from './webviewScaffold.js';
@@ -695,6 +728,36 @@ document.getElementById('btn-copy').addEventListener('click', function() {
 });
 ```
 Note: `'\\n'` in the TypeScript template literal becomes the literal `'\n'` in the rendered HTML — correct.
+
+### Code preview rendering: two paths (HTML spans vs. plain text)
+
+The scaffold supports **two rendering paths** for code preview, controlled by how `codeBranchesJs` is written:
+
+**Old path (existing templates):** `codeBranchesJs` builds HTML with helper functions
+
+The template's `codeBranchesJs` constructs `c += cline(kw('using') + ' ' + ty('XLSX'), '...')` chains. The scaffold:
+1. Executes `codeBranchesJs` to build HTML into variable `c` with `<span>` tags for keywords, functions, types
+2. Injects `c` into the code box via `box.innerHTML = c`
+3. Extracts plain text from the DOM via `extractCode()`
+4. Sends plain text to handler via `vscode.postMessage({ command: 'colorize', code: plainText })`
+5. Handler tokenizes with Monaco using the active theme's color map, returns theme-aware HTML
+6. Theme-aware HTML replaces the temporary span-based HTML
+
+**New path (TOML-based templates):** `codeBranchesJs` sets `currentPlainCode` directly
+
+For templates generated from TOML with plain Julia code, `codeBranchesJs` skips HTML building and sets the plain text directly:
+```javascript
+currentPlainCode = `using XLSX\nmktempdir() do dir\n    ...`;
+```
+The scaffold:
+1. Detects that `currentPlainCode` is set (not null) instead of `c` being built
+2. Skips the span-building and DOM injection entirely
+3. Sends plain text directly via `vscode.postMessage({ command: 'colorize', code: currentPlainCode })`
+4. Handler tokenizes and returns theme-aware HTML (same as old path, step 5 above)
+
+**How the scaffold detects which path:** If `codeBranchesJs` builds HTML into variable `c`, the old path executes. If it sets `currentPlainCode` directly without populating `c`, the new path executes. Both paths converge at the `colorize` → `colorizedCode` round-trip for theme-aware highlighting.
+
+**Why two paths:** Existing templates are already written using the `kw()`, `fn()`, `ty()` pattern and work correctly. New TOML-based templates use plain Julia code (no helper functions) for better readability and maintainability. Both must coexist during migration.
 
 ---
 
@@ -2090,3 +2153,13 @@ perl -i -pe \
 ```
 
 The permanent fix is to have the build watch task running. The `out/` patch is a workaround for interactive development sessions only; it will be overwritten the next time the watch task compiles the file.
+
+## 21. Julia package policy — no DataFrames.jl
+
+**Never reference `DataFrames.jl` in any webview** — not in example code, notebooks, wiki pages, concept maps, package lists, or references. Use the **Tables.jl** interface instead:
+
+- Row iteration: `XLSX.eachtablerow(ws)` (or equivalent Tables.jl-compatible iterator)
+- Collecting rows: `[NamedTuple(row) for row in iterator]`
+- Tabular interop: `Tables.rows(...)`, `Tables.columns(...)`
+
+DataFrames.jl is a heavy dependency that users may not have installed and is not needed for the data-access patterns Pollis demonstrates. Tables.jl is lightweight, composable, and already a transitive dependency of most Julia data packages.

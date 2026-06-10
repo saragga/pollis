@@ -18,11 +18,12 @@ ws = XLSX.readxlsx("data.xlsx")["Sheet1"]
 println(ws["A1:D5"])   # print a range as a matrix
 ```
 
-### DataFrame has wrong column count
-`readtable` expects a contiguous header row at the top of the table. If the file has title rows above the data, specify the anchor cell:
+### Row iterator returns wrong columns
+`eachtablerow` expects a contiguous header row at the top of the table. If the file has title rows above the data, specify the anchor cell:
 
 ```julia
-df = DataFrame(XLSX.readtable("data.xlsx", "Sheet1"; anchor_cell=XLSX.CellRef("A3"))...)
+rows = collect(XLSX.eachtablerow(xf["Sheet1"]; anchor_cell=XLSX.CellRef("A3")))
+nt = [NamedTuple(r) for r in rows]
 ```
 
 ### Dates read as `Float64`
@@ -30,7 +31,8 @@ The cell has a date serial number but no date format applied in Excel. Cast manu
 
 ```julia
 using Dates
-df.date_col = Date.(Dates.epochdays.(round.(Int, df.date_col)) .+ Dates.value(Date(1899,12,30)))
+rows = [NamedTuple(r) for r in XLSX.eachtablerow(xf["Sheet1"])]
+dates = Date.(Dates.epochdays.(round.(Int, getfield.(rows, :date_col))) .+ Dates.value(Date(1899,12,30)))
 ```
 
 ### File saved but formatting not visible

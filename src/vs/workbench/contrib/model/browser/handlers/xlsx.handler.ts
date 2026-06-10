@@ -22,7 +22,7 @@ import { generateTokensCSSForColorMap } from '../../../../../editor/common/langu
 import { Event } from '../../../../../base/common/event.js';
 import { IUntitledTextResourceEditorInput } from '../../../../common/editor.js';
 import { CellEditType, CellKind } from '../../../notebook/common/notebookCommon.js';
-import { openWikiByFile, openNotebookByFile, openPackageItem, openReferenceList, openVideoList, openInBrowser, autoSelectJuliaKernel } from './model.handler.js';
+import { openWikiByFile, openNotebookByFile, openPackageItem, openVideoList, openInBrowser, autoSelectJuliaKernel } from './model.handler.js';
 
 export function registerXlsxWebviewHandlers(
 	webviewInput: ReturnType<IWebviewWorkbenchService['openWebview']>,
@@ -84,16 +84,26 @@ export function registerXlsxWebviewHandlers(
 		const msg = e.message;
 		switch (msg.command) {
 			case 'openDocs':
-				try {
-					if (msg.target === 'paper') {
-						await openReferenceList(xlsxData.references, quickInputService, commandService, clipboardService, notificationService);
-					} else if (msg.target === 'repository') {
+				if (msg.target === 'paper') {
+					const papers = xlsxData.references.filter((r): r is import('../common/model.types.js').IModelPaper => !('separator' in r));
+					webviewInput.webview.postMessage({ command: 'showReferences', references: papers });
+				} else if (msg.target === 'repository') {
+					try {
 						await openPackageItem('repository', xlsxData.packages, commandService, quickInputService, clipboardService, notificationService);
+					} finally {
+						webviewInput.webview.postMessage({ command: 'actionDone' });
 					}
-				} finally {
-					webviewInput.webview.postMessage({ command: 'actionDone' });
 				}
 				break;
+			case 'openReference': {
+				const papers = xlsxData.references.filter((r): r is import('../common/model.types.js').IModelPaper => !('separator' in r));
+				const paper = papers.find(p => p.title === msg.id);
+				if (paper) {
+					const url = paper.doi ? `https://doi.org/${paper.doi}` : paper.url;
+					if (url) { await openInBrowser(url, commandService); }
+				}
+				break;
+			}
 			case 'openNotebook':
 				await openNotebookByFile(msg.target, xlsxData.notebooks, openerService, editorService, notebookKernelService, notebookEditorModelResolverService);
 				break;
@@ -134,6 +144,9 @@ export function registerXlsxWebviewHandlers(
 				}
 				break;
 			}
+			case 'colorize':
+				if (msg.code) { await postColorized(msg.code, msg.target || ''); }
+				break;
 			case 'openUrl':
 				if (msg.url) { await openInBrowser(msg.url, commandService); }
 				break;

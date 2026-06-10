@@ -1,4 +1,4 @@
-# Excel Workbook — Assumptions
+# Excel Workbook — Constraints
 
 ## File Format
 - XLSX.jl reads and writes **Office Open XML** (`.xlsx`) only. Legacy `.xls` (BIFF8) files are not supported — convert them to `.xlsx` first (e.g. with LibreOffice or Python's `xlrd`).

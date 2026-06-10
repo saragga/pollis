@@ -1013,7 +1013,7 @@ MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
 MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
 	group: '1_explore',
 	submenu: CONNSubmenuId,
-	title: localize('showExplore.amr', 'Connect'),
+	title: localize('showExplore.amr', 'Formats and Protocols'),
 	order: 4,
 });
 
@@ -1433,17 +1433,17 @@ MenuRegistry.appendMenuItem(ADRSubmenuId, {
 
 
 // ===================================================
-// SUBMENU: CONNECT
+// SUBMENU: FORMATS AND PROTOCOLS
 // ===================================================
 
 MenuRegistry.appendMenuItem(CONNSubmenuId, {
-	group: '1_conn',
+	group: '2_conn',
 	command: {
-		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
-		title: localize('conn.http', 'HTTP / REST APIs'),
+		id: XLSX_ID, precondition: ContextKeyExpr.false(),
+		title: localize('conn.csv', 'CSV Files'),
 	},
 	order: 1,
-});  // HTTP.jl
+});  // CSV.jl
 
 MenuRegistry.appendMenuItem(CONNSubmenuId, {
 	group: '2_conn',
@@ -1453,16 +1453,6 @@ MenuRegistry.appendMenuItem(CONNSubmenuId, {
 	},
 	order: 1,
 });  // XLSX.jl
-
-MenuRegistry.appendMenuItem(CONNSubmenuId, {
-	group: '2_conn',
-	command: {
-		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
-		title: localize('conn.gs', 'Google Sheets'),
-	},
-	order: 2,
-});  // XLSX.jl
-
 
 MenuRegistry.appendMenuItem(CONNSubmenuId, {
 	group: '2_conn',
@@ -1483,15 +1473,22 @@ MenuRegistry.appendMenuItem(CONNSubmenuId, {
 });  // EzXML.jl
 
 MenuRegistry.appendMenuItem(CONNSubmenuId, {
-	group: '4_conn',
+	group: '2_conn',
 	command: {
 		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
-		title: localize('conn.http', 'Google Drive'),
+		title: localize('conn.parquet', 'Parquet Files'),
+	},
+	order: 5,
+});  // CSV.jl
+
+MenuRegistry.appendMenuItem(CONNSubmenuId, {
+	group: '3_conn',
+	command: {
+		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
+		title: localize('conn.http', 'HTTP / REST APIs'),
 	},
 	order: 1,
-});  // GoogleDrive.jl
-
-
+});  // HTTP.jl
 
 // ===================================================
 // SUBMENU: CLOUD COMPUTING PLATFORMS
@@ -1510,9 +1507,29 @@ MenuRegistry.appendMenuItem(RCSubmenuId, {
 	group: '1_ccp',
 	command: {
 		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
-		title: localize('ccp.azure', 'Microsoft Azure'),
+		title: localize('conn.gs', 'Google Sheets'),
 	},
 	order: 2,
+});  //
+
+
+MenuRegistry.appendMenuItem(RCSubmenuId, {
+	group: '1_ccp',
+	command: {
+		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
+		title: localize('conn.gd', 'Google Drive'),
+	},
+	order: 3,
+});  // GoogleDrive.jl
+
+
+MenuRegistry.appendMenuItem(RCSubmenuId, {
+	group: '2_ccp',
+	command: {
+		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
+		title: localize('ccp.azure', 'Microsoft Azure'),
+	},
+	order: 1,
 });  // Becomes active only if the Extension Azure is installed
 
 

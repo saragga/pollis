@@ -23,4 +23,6 @@ export type XlsxWebviewMessage =
 	| { command: 'openVideoList' }
 	| { command: 'openUrl'; url: string }
 	| { command: 'runCode'; target: 'newFile' | 'terminal' | 'juliaRepl' | 'notebook'; code: string }
+	| { command: 'colorize'; code: string; target?: string }
+	| { command: 'openReference'; id: string }
 	| { command: 'cancelAction' };

@@ -57,6 +57,8 @@ export interface WebviewParts {
 	 * call `showRightPanel(MY_ACTIONS, 'Label', 'btn-XXX')` on click.
 	 */
 	readonly nextStepsWiringJs?: string;
+	/** Extra JS appended at the end of the main script block (e.g. message handlers for custom panels). */
+	readonly extraJs?: string;
 }
 
 /**
@@ -976,7 +978,8 @@ ${parts.nextStepsWiringJs ?? `		document.getElementById('btn-viz').addEventListe
 		});
 
 		setModel('${parts.defaultModel}');
-${parts.tailScriptJs ?? ''}	</script>
+${parts.tailScriptJs ?? ''}
+${parts.extraJs ?? ''}	</script>
 </body>
 </html>`;
 }

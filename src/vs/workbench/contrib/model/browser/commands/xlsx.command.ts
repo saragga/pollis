@@ -46,7 +46,7 @@ const XLSX_METADATA: IXlsxMetadata = {
 		wikis: [
 			{ name: 'Factsheet',      description: 'Quick-reference: XLSX.jl API, key functions, and when to use each task mode',     file: 'xlsx/factsheet.md',      bundled: true },
 			{ name: 'Overview',       description: 'Reading, writing, and formatting Excel files from Julia with XLSX.jl',             file: 'xlsx/overview.md',        bundled: true },
-			{ name: 'Assumptions',    description: 'File format constraints, data types, and encoding requirements',                   file: 'xlsx/assumptions.md',     bundled: true },
+			{ name: 'Constraints',    description: 'File format constraints, data types, and encoding requirements',                   file: 'xlsx/constraints.md',     bundled: true },
 			{ name: 'Diagnostics',    description: 'Common errors: missing sheets, type mismatches, merged cells, encoding issues',    file: 'xlsx/diagnostics.md',     bundled: true },
 			{ name: 'Interpretation', description: 'Understanding workbook structure: sheets, cells, ranges, and named regions',       file: 'xlsx/interpretation.md',  bundled: true },
 		],
