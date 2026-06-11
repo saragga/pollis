@@ -3,7 +3,7 @@
  *  Proprietary and confidential. Unauthorised copying or distribution is prohibited.
  *--------------------------------------------------------------------------------------------*/
 
-import { IModelPackage, IModelNotebook, IModelNotebookSection, IModelWiki, IModelReference, IConceptMap } from './model.types.js';
+import { IModelPackage, IModelNotebook, IModelNotebookSection, IModelWiki, IModelReference, IConceptMap, IModelBullet, IModelDecisionRow, IModelMiniChart, IModelCodeBranch, IModelActionGroup } from './model.types.js';
 
 export interface IXlsxMetadata {
 	readonly xlsx: {
@@ -13,6 +13,11 @@ export interface IXlsxMetadata {
 		readonly wikis: IModelWiki[];
 		readonly references: IModelReference[];
 		readonly conceptMap?: IConceptMap;
+		readonly bullets?: IModelBullet[];
+		readonly decisionRows?: IModelDecisionRow[];
+		readonly miniCharts?: IModelMiniChart[];
+		readonly codeBranches?: IModelCodeBranch[];
+		readonly actionGroups?: IModelActionGroup[];
 	};
 }
 

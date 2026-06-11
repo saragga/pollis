@@ -47,3 +47,5 @@ dist
 # doc-search index
 .doc-search-index
 .codex/
+# TOML-generated webview data files
+src/vs/workbench/contrib/model/browser/webviews/*.data.ts

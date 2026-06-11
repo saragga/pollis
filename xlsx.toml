@@ -1,0 +1,526 @@
+# Excel Workbook (XLSX.jl) Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/xlsx.data.ts
+
+[meta]
+title = "Excel Workbook"
+viewType = "pollis.xlsx"
+defaultModel = "write"
+models = ["write", "read", "formula"]
+wideLayout = true
+illusCollapsed = true
+illustrationText = "Excel file reader and writer for the Julia language."
+
+[[packages]]
+name = "XLSX.jl"
+github = "https://github.com/felipenoris/XLSX.jl"
+
+[[packages]]
+name = "Tables.jl"
+github = "https://github.com/JuliaData/Tables.jl"
+
+[[notebookSections]]
+label = "Excel Workbook"
+
+[[notebookSections.notebooks]]
+name = "Read and Explore"
+file = "xlsx/tutorial-01-read.ipynb"
+bundled = true
+description = "Load sheets and ranges from an .xlsx file using the Tables.jl interface"
+
+[[notebookSections.notebooks]]
+name = "Write and Format"
+file = "xlsx/tutorial-02-write.ipynb"
+bundled = true
+description = "Create a styled multi-sheet workbook with fonts, fills, and borders"
+
+[[notebookSections.notebooks]]
+name = "Formulas and Names"
+file = "xlsx/tutorial-03-formula.ipynb"
+bundled = true
+description = "Embed Excel formulas and defined names for downstream spreadsheet users"
+
+[[notebookSections.notebooks]]
+name = "Conditional Formatting"
+file = "xlsx/tutorial-04-cond.ipynb"
+bundled = true
+description = "Highlight cells automatically using rule-based conditional formatting"
+
+[[wikis]]
+name = "Factsheet"
+file = "xlsx/factsheet.md"
+bundled = true
+description = "Quick-reference: XLSX.jl API, key functions, and when to use each task mode"
+
+[[wikis]]
+name = "Overview"
+file = "xlsx/overview.md"
+bundled = true
+description = "Reading, writing, and formatting Excel files from Julia with XLSX.jl"
+
+[[wikis]]
+name = "Constraints"
+file = "xlsx/constraints.md"
+bundled = true
+description = "File format constraints, data types, and encoding requirements"
+
+[[wikis]]
+name = "Diagnostics"
+file = "xlsx/diagnostics.md"
+bundled = true
+description = "Common errors: missing sheets, type mismatches, merged cells, encoding issues"
+
+[[wikis]]
+name = "Interpretation"
+file = "xlsx/interpretation.md"
+bundled = true
+description = "Understanding workbook structure: sheets, cells, ranges, and named regions"
+
+[[references]]
+title = "XLSX.jl: Read and write Excel files in pure Julia"
+authors = "Noris, Felipe; contributors"
+year = 2024
+journal = "GitHub"
+url = "https://github.com/felipenoris/XLSX.jl"
+openAccess = true
+
+[[references]]
+title = "Tables.jl: An Interface for Tabular Data"
+authors = "Quinn, Jacob; contributors"
+year = 2023
+journal = "GitHub"
+url = "https://github.com/JuliaData/Tables.jl"
+openAccess = true
+
+[[references]]
+title = "Office Open XML File Formats — Part 1: Fundamentals and Markup Language Reference"
+authors = "Ecma International"
+year = 2016
+journal = "ECMA-376 5th Edition"
+url = "https://www.ecma-international.org/publications-and-standards/standards/ecma-376/"
+openAccess = true
+
+[conceptMap]
+center = "Excel Workbook"
+
+[[conceptMap.nodes]]
+id = "root"
+label = "Excel Workbook"
+kind = "center"
+
+[[conceptMap.nodes]]
+id = "q_read"
+label = "Load data"
+kind = "concept"
+
+[[conceptMap.nodes]]
+id = "q_write"
+label = "Generate report"
+kind = "concept"
+
+[[conceptMap.nodes]]
+id = "q_fmt"
+label = "Style cells"
+kind = "concept"
+
+[[conceptMap.nodes]]
+id = "q_form"
+label = "Embed formulas"
+kind = "concept"
+
+[[conceptMap.nodes]]
+id = "read"
+label = "Read"
+kind = "topic"
+model = "read"
+
+[[conceptMap.nodes]]
+id = "write"
+label = "Write"
+kind = "topic"
+model = "write"
+
+[[conceptMap.nodes]]
+id = "format"
+label = "Format"
+kind = "topic"
+model = "formula"
+
+[[conceptMap.nodes]]
+id = "formula"
+label = "Formula"
+kind = "topic"
+model = "formula"
+
+[[conceptMap.nodes]]
+id = "r_df"
+label = "Tables.jl"
+kind = "related"
+command = "chiara.statistics.data.df"
+
+[[conceptMap.nodes]]
+id = "ext"
+label = "XLSX.jl"
+kind = "external"
+url = "https://github.com/felipenoris/XLSX.jl"
+
+[[conceptMap.edges]]
+from = "root"
+to = "q_read"
+label = "asks about"
+
+[[conceptMap.edges]]
+from = "root"
+to = "q_write"
+label = "asks about"
+
+[[conceptMap.edges]]
+from = "root"
+to = "q_fmt"
+label = "asks about"
+
+[[conceptMap.edges]]
+from = "root"
+to = "q_form"
+label = "asks about"
+
+[[conceptMap.edges]]
+from = "q_read"
+to = "read"
+label = "done with"
+
+[[conceptMap.edges]]
+from = "q_write"
+to = "write"
+label = "done with"
+
+[[conceptMap.edges]]
+from = "q_fmt"
+to = "format"
+label = "done with"
+
+[[conceptMap.edges]]
+from = "q_form"
+to = "formula"
+label = "done with"
+
+[[conceptMap.edges]]
+from = "q_read"
+to = "r_df"
+label = "loads into"
+
+[[conceptMap.edges]]
+from = "root"
+to = "ext"
+label = "built with"
+
+[[bullets]]
+text = "Read"
+detail = "load sheets and ranges from any <code>.xlsx</code> file into Julia arrays or Tables.jl-compatible structures"
+
+[[bullets]]
+text = "Write"
+detail = "create workbooks with multiple sheets from Julia arrays or any Tables.jl source"
+
+[[bullets]]
+text = "Formula"
+detail = "embed Excel formulas, defined names, and rich text (AnnotatedStrings) in cells"
+
+[[bullets]]
+text = "Format"
+detail = "apply fonts, fills, borders, alignment, conditional formatting, and merged cells"
+
+[[decisionRows]]
+task = "Read"
+context = "Existing file"
+purpose = "Load sheet data into Julia for analysis or transformation"
+
+[[decisionRows]]
+task = "Write"
+context = "New file"
+purpose = "Generate workbooks programmatically from Julia data"
+
+[[decisionRows]]
+task = "Format"
+context = "Presentation"
+purpose = "Style cells with fonts, colours, borders, and conditional rules"
+
+[[decisionRows]]
+task = "Formula"
+context = "Excel logic"
+purpose = "Embed formulas or defined names for downstream Excel users"
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon
+
+[miniCharts.write]
+# Rectangle with filled rows
+svg = '''
+var s = '<rect x="4" y="8" width="46" height="68" rx="2" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.4"/>';
+s += '<rect x="10" y="18" width="34" height="10" rx="1" fill="currentColor" opacity="0.25"/>';
+s += '<rect x="10" y="32" width="34" height="10" rx="1" fill="currentColor" opacity="0.15"/>';
+s += '<rect x="10" y="46" width="34" height="10" rx="1" fill="currentColor" opacity="0.15"/>';
+s += '<text x="27" y="70" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Write</text>';
+return s;
+'''
+
+[miniCharts.read]
+# Rectangle with grid lines
+svg = '''
+var s = '<rect x="4" y="8" width="46" height="68" rx="2" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.4"/>';
+s += '<line x1="4" y1="22" x2="50" y2="22" stroke="currentColor" stroke-width="0.5" opacity="0.4"/>';
+s += '<line x1="4" y1="36" x2="50" y2="36" stroke="currentColor" stroke-width="0.5" opacity="0.3"/>';
+s += '<line x1="4" y1="50" x2="50" y2="50" stroke="currentColor" stroke-width="0.5" opacity="0.3"/>';
+s += '<line x1="20" y1="8" x2="20" y2="76" stroke="currentColor" stroke-width="0.5" opacity="0.3"/>';
+s += '<text x="27" y="56" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Read</text>';
+return s;
+'''
+
+[miniCharts.formula]
+# Formula symbols
+svg = '''
+var s = '<rect x="4" y="8" width="46" height="68" rx="2" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.4"/>';
+s += '<text x="10" y="28" font-size="9" fill="currentColor" opacity="0.6">=SUM</text>';
+s += '<text x="10" y="42" font-size="9" fill="currentColor" opacity="0.4">=IF</text>';
+s += '<text x="10" y="56" font-size="9" fill="currentColor" opacity="0.4">=AVG</text>';
+return s;
+'''
+
+[[codeBranches]]
+model = "read"
+code = """
+using XLSX
+
+mktempdir() do dir
+	path = joinpath(dir, "demo.xlsx")
+
+	XLSX.openxlsx(path; mode="w") do xf
+		ws = xf[1]
+		ws["A1"] = "name";  ws["B1"] = "score"
+		ws["A2"] = "Alice"; ws["B2"] = 95
+		ws["A3"] = "Bob";   ws["B3"] = 87
+	end
+
+	XLSX.openxlsx(path) do xf
+		ws  = xf[1]
+		println("Sheets: ", XLSX.sheetnames(xf))
+		println("A1:B3 = ", ws["A1:B3"])
+		tbl = XLSX.gettable(ws)
+		for row in XLSX.eachtablerow(ws)
+			println(row[1], "  ", row[2])
+		end
+	end
+end
+"""
+
+[[codeBranches]]
+model = "write"
+code = """
+using XLSX
+
+mktempdir() do dir
+	path = joinpath(dir, "output.xlsx")
+	XLSX.openxlsx(path; mode="w") do xf
+		XLSX.rename!(xf[1], "Results")
+		ws1 = xf[1]
+		ws1["A1"] = "name";  ws1["B1"] = "score"
+		ws1["A2"] = "Alice"; ws1["B2"] = 95
+		ws1["A3"] = "Bob";   ws1["B3"] = 87
+
+		XLSX.addsheet!(xf, "Inventory")
+		ws2 = xf["Inventory"]
+		ws2["A1"] = "product"; ws2["B1"] = "qty"
+		ws2["A2"] = "A";       ws2["B2"] = 10
+		ws2["A3"] = "B";       ws2["B3"] = 20
+	end
+	println("Written: ", path)
+end
+"""
+
+[[codeBranches]]
+model = "formula"
+code = """
+using XLSX
+
+mktempdir() do dir
+	path = joinpath(dir, "model.xlsx")
+	XLSX.openxlsx(path; mode="w") do xf
+		ws = xf[1]
+		ws["A1"] = "Jan"; ws["B1"] = 12000.0; ws["C1"] = 8000.0
+		ws["A2"] = "Feb"; ws["B2"] = 15000.0; ws["C2"] = 9500.0
+		ws["A3"] = "Mar"; ws["B3"] = 11000.0; ws["C3"] = 7500.0
+
+		XLSX.setFormula(ws, "D1", "B1-C1")
+		XLSX.setFormula(ws, "D2", "B2-C2")
+		XLSX.setFormula(ws, "D3", "B3-C3")
+		XLSX.addDefinedName(xf, "Revenue", "Sheet1!$B$1:$B$3")
+	end
+end
+"""
+
+# Next Steps action groups
+[[actionGroups]]
+id = "write"
+label = "Write Workbook"
+
+[[actionGroups.actions]]
+id = "xlsx-write-cells"
+label = "Write Cells"
+desc = "Create a workbook with two sheets by writing cells directly"
+code = """
+using XLSX
+
+mktempdir() do dir
+	path = joinpath(dir, "output.xlsx")
+	XLSX.openxlsx(path; mode="w") do xf
+		XLSX.rename!(xf[1], "Results")
+		ws1 = xf[1]
+		ws1["A1"] = "name";  ws1["B1"] = "score"
+		ws1["A2"] = "Alice"; ws1["B2"] = 95
+		ws1["A3"] = "Bob";   ws1["B3"] = 87
+
+		XLSX.addsheet!(xf, "Inventory")
+		ws2 = xf["Inventory"]
+		ws2["A1"] = "product"; ws2["B1"] = "qty"
+		ws2["A2"] = "A";       ws2["B2"] = 10
+		ws2["A3"] = "B";       ws2["B3"] = 20
+	end
+	println("Written: ", path)
+end
+"""
+
+[[actionGroups]]
+id = "format"
+label = "Format Cells"
+
+[[actionGroups.actions]]
+id = "xlsx-write-format"
+label = "Write and Format"
+desc = "Write data and apply bold header, fill, and conditional formatting in one block"
+code = """
+using XLSX
+
+mktempdir() do dir
+	path = joinpath(dir, "report.xlsx")
+	XLSX.openxlsx(path; mode="w") do xf
+		ws = xf[1]
+		ws["A1"] = "Product"; ws["B1"] = "Revenue"
+		ws["A2"] = "Alpha";   ws["B2"] = 5200.0
+		ws["A3"] = "Beta";    ws["B3"] = 800.0
+
+		for col in ["A", "B"]
+			XLSX.setFont(ws, col * "1"; bold=true, color="FFFFFF")
+			XLSX.setFill(ws, col * "1"; fgColor="4472C4")
+		end
+		XLSX.setConditionalFormat(ws, "B2:B3"; rule="<1000", fgColor="FFC7CE")
+	end
+end
+"""
+
+[[actionGroups]]
+id = "inspect"
+label = "Inspect"
+
+[[actionGroups.actions]]
+id = "xlsx-inspect"
+label = "Inspect Workbook"
+desc = "Write an Excel file then inspect its sheets and cell dimensions"
+code = """
+using XLSX
+
+mktempdir() do dir
+	path = joinpath(dir, "demo.xlsx")
+	XLSX.openxlsx(path; mode="w") do xf
+		XLSX.rename!(xf[1], "Sales")
+		ws1 = xf[1]
+		ws1["A1"] = "item"; ws1["B1"] = "qty"
+		ws1["A2"] = "X";    ws1["B2"] = 10
+		XLSX.addsheet!(xf, "Costs")
+	end
+
+	XLSX.openxlsx(path) do xf
+		println("Sheets: ", XLSX.sheetnames(xf))
+		for name in XLSX.sheetnames(xf)
+			dim = XLSX.get_dimension(xf[name])
+			println(name, " → ", dim)
+		end
+	end
+end
+"""
+
+[[actionGroups]]
+id = "read"
+label = "Read Formats"
+
+[[actionGroups.actions]]
+id = "xlsx-read-cells"
+label = "Read as Matrix"
+desc = "Write an Excel file then read back a cell range as a Matrix{Any}"
+code = """
+using XLSX
+
+mktempdir() do dir
+	path = joinpath(dir, "demo.xlsx")
+	XLSX.openxlsx(path; mode="w") do xf
+		ws = xf[1]
+		ws["A1"] = "name";  ws["B1"] = "score"
+		ws["A2"] = "Alice"; ws["B2"] = 95
+		ws["A3"] = "Bob";   ws["B3"] = 87
+	end
+
+	XLSX.openxlsx(path) do xf
+		ws  = xf[1]
+		mat = ws["A1:B3"]
+		println(mat)
+	end
+end
+"""
+
+[[actionGroups.actions]]
+id = "xlsx-read-table"
+label = "Read as Table"
+desc = "Write an Excel file then read it back as a Tables.jl table"
+code = """
+using XLSX
+
+mktempdir() do dir
+	path = joinpath(dir, "demo.xlsx")
+	XLSX.openxlsx(path; mode="w") do xf
+		ws = xf[1]
+		ws["A1"] = "name";  ws["B1"] = "score"
+		ws["A2"] = "Alice"; ws["B2"] = 95
+		ws["A3"] = "Bob";   ws["B3"] = 87
+	end
+
+	XLSX.openxlsx(path) do xf
+		for row in XLSX.eachtablerow(xf[1])
+			println(row[:name], "  ", row[:score])
+		end
+	end
+end
+"""
+
+[[actionGroups.actions]]
+id = "xlsx-read-all-sheets"
+label = "Read as Dict"
+desc = "Write a two-sheet Excel workbook then read every sheet into a Dict"
+code = """
+using XLSX
+
+mktempdir() do dir
+	path = joinpath(dir, "demo.xlsx")
+	XLSX.openxlsx(path; mode="w") do xf
+		XLSX.rename!(xf[1], "A")
+		ws1 = xf[1]
+		ws1["A1"] = "x"; ws1["A2"] = 1
+		XLSX.addsheet!(xf, "B")
+		xf["B"]["A1"] = "y"; xf["B"]["A2"] = 2
+	end
+
+	XLSX.openxlsx(path) do xf
+		for name in XLSX.sheetnames(xf)
+			println(name, ": ", xf[name]["A1:A2"])
+		end
+	end
+end
+"""

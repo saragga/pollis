@@ -10,6 +10,7 @@ import gulp from 'gulp';
 import { createRequire } from 'node:module';
 import { monacoTypecheckTask /* , monacoTypecheckWatchTask */ } from './gulpfile.editor.ts';
 import { compileExtensionMediaTask, compileExtensionsTask, watchExtensionsTask } from './gulpfile.extensions.ts';
+import { compileTomlTask } from './gulpfile.toml.ts';
 import * as compilation from './lib/compilation.ts';
 import * as task from './lib/task.ts';
 import * as util from './lib/util.ts';
@@ -33,7 +34,7 @@ const transpileClientTask = task.define('transpile-client', task.series(util.rim
 gulp.task(transpileClientTask);
 
 // Fast compile for development time
-const compileClientTask = task.define('compile-client', task.series(util.rimraf('out'), compilation.copyCodiconsTask, compilation.compileApiProposalNamesTask, compilation.compileExtensionPointNamesTask, compilation.compileTask('src', 'out', false)));
+const compileClientTask = task.define('compile-client', task.series(compileTomlTask, util.rimraf('out'), compilation.copyCodiconsTask, compilation.compileApiProposalNamesTask, compilation.compileExtensionPointNamesTask, compilation.compileTask('src', 'out', false)));
 gulp.task(compileClientTask);
 
 const watchClientTask = useEsbuildTranspile

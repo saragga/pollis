@@ -78,3 +78,43 @@ export interface IConceptMap {
 	readonly nodes: IConceptMapNode[];
 	readonly edges: IConceptMapEdge[];
 }
+
+/** A bullet point in the webview subtitle list. */
+export interface IModelBullet {
+	readonly text: string;
+	readonly detail: string;
+}
+
+/** A row in the decision/comparison table. */
+export interface IModelDecisionRow {
+	readonly task: string;
+	readonly context: string;
+	readonly purpose: string;
+}
+
+/** An SVG mini-chart function body for a model toggle (raw JS string). */
+export interface IModelMiniChart {
+	readonly model: string;
+	readonly svg: string;
+}
+
+/** A plain-text code example for a model toggle (Julia source). */
+export interface IModelCodeBranch {
+	readonly model: string;
+	readonly code: string;
+}
+
+/** A single action inside a Next Steps action group. */
+export interface IModelAction {
+	readonly id: string;
+	readonly label: string;
+	readonly desc: string;
+	readonly code: string;
+}
+
+/** A Next Steps action group shown in the right panel. */
+export interface IModelActionGroup {
+	readonly id: string;
+	readonly label: string;
+	readonly actions: IModelAction[];
+}
