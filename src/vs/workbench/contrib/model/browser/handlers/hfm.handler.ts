@@ -26,7 +26,7 @@ import type { IHfApiModel } from '../common/hfm.types.js';
 import { IRequestService, asJson } from '../../../../../platform/request/common/request.js';
 import { CancellationToken } from '../../../../../base/common/cancellation.js';
 
-import { openWikiByFile, openNotebookByFile, openPackageItem, openReferenceList, openVideoList, openInBrowser, autoSelectJuliaKernel } from './model.handler.js';
+import { openWikiByFile, openNotebookByFile, openPackageItem, openVideoList, openInBrowser, autoSelectJuliaKernel } from './model.handler.js';
 
 export function registerHfmWebviewHandlers(
 	webviewInput: ReturnType<IWebviewWorkbenchService['openWebview']>,
@@ -95,16 +95,26 @@ export function registerHfmWebviewHandlers(
 		const msg = e.message;
 		switch (msg.command) {
 			case 'openDocs':
-				try {
-					if (msg.target === 'paper') {
-						await openReferenceList(hfmData.references, quickInputService, commandService, clipboardService, notificationService);
-					} else if (msg.target === 'repository') {
+				if (msg.target === 'paper') {
+					const papers = hfmData.references.filter((r): r is import('../common/model.types.js').IModelPaper => !('separator' in r));
+					webviewInput.webview.postMessage({ command: 'showReferences', references: papers });
+				} else if (msg.target === 'repository') {
+					try {
 						await openPackageItem('repository', hfmData.packages, commandService, quickInputService, clipboardService, notificationService);
+					} finally {
+						webviewInput.webview.postMessage({ command: 'actionDone' });
 					}
-				} finally {
-					webviewInput.webview.postMessage({ command: 'actionDone' });
 				}
 				break;
+			case 'openReference': {
+				const papers = hfmData.references.filter((r): r is import('../common/model.types.js').IModelPaper => !('separator' in r));
+				const paper = papers.find(p => p.title === msg.id);
+				if (paper) {
+					const url = paper.doi ? `https://doi.org/${paper.doi}` : paper.url;
+					if (url) { await openInBrowser(url, commandService); }
+				}
+				break;
+			}
 			case 'openNotebook':
 				await openNotebookByFile(msg.target, hfmData.notebooks, openerService, editorService, notebookKernelService, notebookEditorModelResolverService);
 				break;

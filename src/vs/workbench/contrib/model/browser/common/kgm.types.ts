@@ -36,5 +36,7 @@ export type KgmWebviewMessage =
 	| { command: 'openUrl'; url: string }
 	| { command: 'runCode'; target: 'newFile' | 'juliaRepl' | 'notebook' | 'pluto'; code: string }
 	| { command: 'colorize'; code: string; target?: string }
+	| { command: 'showReferences'; references: Array<Extract<IModelReference, { readonly title: string }>> }
+	| { command: 'openReference'; id: string }
 	| { command: 'cancelAction' }
 	| { command: 'fetchKgmModels'; sortBy: string; frameworks: string[]; authors: string[]; search: string; pageSize: number; seq?: number };
