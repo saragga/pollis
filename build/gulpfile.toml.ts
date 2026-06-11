@@ -15,7 +15,7 @@ const repoRoot = path.join(__dirname, '..');
 const tomlOutDir = path.join(repoRoot, 'src/vs/workbench/contrib/model/browser/webviews');
 
 export const compileTomlTask = task.define('compile-toml', () => {
-	const tomlPath = path.join(repoRoot, 'xlsx.toml');
+	const tomlPath = path.join(tomlOutDir, 'xlsx.toml');
 	const outPath = path.join(tomlOutDir, 'xlsx.data.ts');
 	const ts = generateTypeScriptFromToml(tomlPath, 'xlsx');
 	fs.writeFileSync(outPath, ts, 'utf-8');

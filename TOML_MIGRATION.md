@@ -60,7 +60,7 @@ openAccess = true
 
 ### Step 1: Create a TOML file
 
-Create `acronym.toml` in the repository root (same level as `xlsx.toml`).
+Create `acronym.toml` in the webviews folder alongside the other webview files.
 
 ### Step 2: Run the transformer
 
@@ -266,8 +266,8 @@ Check that your TOML structure matches the expected interface. Common issues:
 Ensure the `.toml` file is in the repository root and has correct naming:
 
 ```
-/Users/antonio/vscode/acronym.toml  ✅ Correct
-/Users/antonio/vscode/src/acronym.toml  ❌ Wrong location
+src/vs/workbench/contrib/model/browser/webviews/acronym.toml  ✅ Correct
+/Users/antonio/vscode/acronym.toml  ❌ Wrong location (repo root)
 ```
 
 ### Can't import generated file

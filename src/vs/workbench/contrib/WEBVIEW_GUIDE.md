@@ -2316,3 +2316,73 @@ The permanent fix is to have the build watch task running. The `out/` patch is a
 - Tabular interop: `Tables.rows(...)`, `Tables.columns(...)`
 
 DataFrames.jl is a heavy dependency that users may not have installed and is not needed for the data-access patterns Pollis demonstrates. Tables.jl is lightweight, composable, and already a transitive dependency of most Julia data packages.
+
+## 22. TOML-driven webview architecture
+
+Pollis webviews can be fully declared in a `.toml` file. The build pipeline auto-generates a typed TypeScript data file from it — no manual editing of generated files.
+
+### 22.1 How it works
+
+```
+xlsx.toml  →  [compile-toml]  →  xlsx.data.ts  →  [compile-client]  →  out/
+```
+
+1. `xlsx.toml` (in `src/.../webviews/`, alongside template/handler/types) is the **single source of truth** for all webview metadata.
+2. `npm run gulp compile-toml` runs `build/lib/toml-to-ts.ts` — a hand-written TOML parser (no third-party library, only Node built-ins `fs` and `path`) — and writes `src/.../webviews/xlsx.data.ts`.
+3. `compile-toml` is the **first step** of `compile-client`, so it runs automatically on every build.
+4. `*.data.ts` files are gitignored — only the `.toml` source is committed.
+
+### 22.2 What TOML drives
+
+Every field visible in the webview is declared in the TOML:
+
+| TOML section | Interface type | Webview area |
+|---|---|---|
+| `[[packages]]` | `IModelPackage` | Learn More → Repository |
+| `[[notebookSections]]` / `[[notebookSections.notebooks]]` | `IModelNotebookSection` | Learn More → Notebooks |
+| `[[wikis]]` | `IModelWiki` | Learn More → Local Wikis |
+| `[[references]]` | `IModelReference` | Learn More → Explore References |
+| `[conceptMap]` + `[[conceptMap.nodes]]` + `[[conceptMap.edges]]` | `IConceptMap` | Learn More → Concept Map |
+| `[[bullets]]` | `IModelBullet` | Subtitle bullet list |
+| `[[decisionRows]]` | `IModelDecisionRow` | Decision table |
+| `[miniCharts.modelName]` | `IModelMiniChart` | Illustration mini-charts |
+| `[[codeBranches]]` | `IModelCodeBranch` | Code preview per model toggle |
+| `[[actionGroups]]` / `[[actionGroups.actions]]` | `IModelActionGroup` | Next Steps right panel |
+
+### 22.3 Development workflow
+
+```bash
+# One-time: generate xlsx.data.ts
+npm run gulp compile-toml
+
+# During development (watch compiles TS automatically):
+# 1. Edit xlsx.toml
+# 2. npm run gulp compile-toml   (~2 ms)
+# 3. Reload VS Code window (Ctrl+R)
+```
+
+`npm run watch` does NOT watch `.toml` files — step 2 is always manual.
+
+### 22.4 Key files
+
+| File | Purpose |
+|---|---|
+| `src/.../webviews/xlsx.toml` | Declarative source (edit this) |
+| `build/lib/toml-to-ts.ts` | Hand-written TOML parser + TS generator |
+| `build/gulpfile.toml.ts` | Gulp task wiring (`compile-toml`) |
+| `src/.../webviews/xlsx.data.ts` | Generated — never edit |
+| `src/.../webviews/xlsx.template.ts` | Calls `buildWebviewHtml()` using metadata from `xlsx.data.ts` |
+| `src/.../commands/xlsx.command.ts` | Imports `XLSX_METADATA` from `xlsx.data.ts` |
+| `TOML_MIGRATION.md` | Full TOML syntax reference and field guide |
+
+### 22.5 TOML parser notes
+
+The parser (`build/lib/toml-to-ts.ts`) supports the subset of TOML used by Pollis:
+
+- `[section]` and `[[array-of-tables]]`
+- Nested array-of-tables: `[[notebookSections.notebooks]]`, `[[actionGroups.actions]]`, `[[conceptMap.nodes]]`
+- Multiline strings: triple single-quotes `'''` (literal, no escapes)
+- Inline arrays: `models = ["write", "read"]`
+- Booleans, integers, floats, single- and double-quoted strings
+
+**No third-party TOML library is used.** The parser depends only on Node built-ins.
