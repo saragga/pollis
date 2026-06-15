@@ -26,7 +26,15 @@ import type { IHfApiModel } from '../common/hfm.types.js';
 import { IRequestService, asJson } from '../../../../../platform/request/common/request.js';
 import { CancellationToken } from '../../../../../base/common/cancellation.js';
 
-import { openWikiByFile, openNotebookByFile, openPackageItem, openVideoList, openInBrowser, autoSelectJuliaKernel } from './model.handler.js';
+import { IFileService } from '../../../../../platform/files/common/files.js';
+import { IPathService } from '../../../../services/path/common/pathService.js';
+import { IWorkspaceContextService } from '../../../../../platform/workspace/common/workspace.js';
+import { ISecretStorageService } from '../../../../../platform/secrets/common/secrets.js';
+import { IWebviewService } from '../../../webview/browser/webview.js';
+import { openWikiByFile, openNotebookByFile, openPackageItem, openVideoList, openInBrowser, autoSelectJuliaKernel, createPackageStatusWiring, createApiKeyWiring } from './model.handler.js';
+import { CREDENTIALS } from '../common/credentials.js';
+
+const HFM_API_KEY = { label: 'Hugging Face', noun: 'token', fields: [{ ...CREDENTIALS.huggingFace, prompt: 'Hugging Face access token' }] };
 
 export function registerHfmWebviewHandlers(
 	webviewInput: ReturnType<IWebviewWorkbenchService['openWebview']>,
@@ -42,10 +50,17 @@ export function registerHfmWebviewHandlers(
 	languageService: ILanguageService,
 	themeService: IThemeService,
 	requestService: IRequestService,
+	fileService: IFileService,
+	pathService: IPathService,
+	workspaceContextService: IWorkspaceContextService,
+	secretStorageService: ISecretStorageService,
+	webviewService: IWebviewService,
 	initialModel?: string,
 ): DisposableStore {
 	const disposables = new DisposableStore();
 	const hfmData = metadata.hfm;
+	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, hfmData.packages.map(p => p.name), fileService, pathService, commandService, notificationService, workspaceContextService);
+	const apiKey = createApiKeyWiring(webviewInput.webview, HFM_API_KEY, secretStorageService, quickInputService, webviewService);
 
 	const lastCode: { [target: string]: string } = {};
 	const postColorized = async (code: string, target: string): Promise<void> => {
@@ -87,6 +102,8 @@ export function registerHfmWebviewHandlers(
 		if (initialModel) {
 			webviewInput.webview.postMessage({ command: 'setModel', model: initialModel });
 		}
+		void pkgStatus.postStatus();
+		void apiKey.postStatus();
 	}, 100);
 
 	disposables.add(webviewInput.webview.onDidDispose(() => disposables.dispose()));
@@ -131,8 +148,9 @@ export function registerHfmWebviewHandlers(
 					};
 					await editorService.openEditor(input);
 				} else if (msg.target === 'juliaRepl') {
+					const prefix = await apiKey.replPrefix(msg.target);
 					await commandService.executeCommand('language-julia.startREPL');
-					await commandService.executeCommand('workbench.action.terminal.sendSequence', { text: code + '\n' });
+					await commandService.executeCommand('workbench.action.terminal.sendSequence', { text: prefix + code + '\n' });
 				} else if (msg.target === 'notebook') {
 					const ref = await notebookEditorModelResolverService.resolve({ untitledResource: undefined }, 'jupyter-notebook');
 					const notebook = ref.object.notebook;
@@ -155,6 +173,7 @@ export function registerHfmWebviewHandlers(
 				} else if (msg.target === 'pluto') {
 					await commandService.executeCommand('pollis.action.sendToPluto', code);
 				}
+				await pkgStatus.nudgeIfMissing(msg.target);
 				break;
 			}
 			case 'openUrl':
@@ -170,8 +189,17 @@ export function registerHfmWebviewHandlers(
 			case 'colorize':
 				await postColorized(msg.code, msg.target ?? 'main');
 				break;
+			case 'installPackages':
+				await pkgStatus.handleInstall();
+				break;
 			case 'cancelAction':
 				await quickInputService.cancel();
+				break;
+			case 'setApiKey':
+				await apiKey.handleSet();
+				break;
+			case 'clearApiKey':
+				await apiKey.handleClear();
 				break;
 			case 'fetchHfModels': {
 				const sortMap: Record<string, string> = {
@@ -182,11 +210,11 @@ export function registerHfmWebviewHandlers(
 				const limit = msg.limit ?? 30;
 				const authors: string[] = msg.authors ?? [];
 				const filters: string[] = msg.filters ?? [];
-				const fetchSlice = async (tag: string | null, author: string | null): Promise<IHfApiModel[]> => {
+				const fetchSlice = async (tag: string | null, author: string | null, filter: string | null): Promise<IHfApiModel[]> => {
 					let url = `https://huggingface.co/api/models?sort=${hfSort}&limit=${limit}&full=true`;
 					if (tag) { url += `&pipeline_tag=${tag}`; }
 					if (author) { url += `&author=${author}`; }
-					for (const f of filters) { url += `&filter=${encodeURIComponent(f)}`; }
+					if (filter) { url += `&filter=${encodeURIComponent(filter)}`; }
 					const ctx = await requestService.request({ url, callSite: 'hfm.fetchModels' }, CancellationToken.None);
 					const raw = await asJson<Array<Record<string, unknown>>>(ctx);
 					if (!Array.isArray(raw)) { throw new Error('HF API returned unexpected response'); }
@@ -203,10 +231,12 @@ export function registerHfmWebviewHandlers(
 				try {
 					const tags = msg.tags.length > 0 ? msg.tags : [null];
 					const authorList = authors.length > 0 ? authors : [null];
-					// cross product of tags × authors, then deduplicate
-					const pairs: Array<[string | null, string | null]> = [];
-					for (const t of tags) { for (const a of authorList) { pairs.push([t, a]); } }
-					const results = await Promise.all(pairs.map(([t, a]) => fetchSlice(t, a)));
+					const filterList = filters.length > 0 ? filters : [null];
+					// cross product of tags × authors × frameworks, then deduplicate: selections are
+					// OR-ed within each axis (separate requests, merged) and AND-ed across the axes.
+					const combos: Array<[string | null, string | null, string | null]> = [];
+					for (const t of tags) { for (const a of authorList) { for (const f of filterList) { combos.push([t, a, f]); } } }
+					const results = await Promise.all(combos.map(([t, a, f]) => fetchSlice(t, a, f)));
 					const seen = new Set<string>();
 					const merged = results.flat().filter(m => { if (seen.has(m.id)) { return false; } seen.add(m.id); return true; });
 					const models = merged.sort((a, b) => {

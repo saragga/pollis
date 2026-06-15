@@ -22,6 +22,18 @@ export function getSfvizHtml(mermaidJs?: string): string {
 		.interact-toggle input:checked::after { content: ''; position: absolute; left: 4px; top: 1px; width: 3px; height: 7px; border: solid var(--vscode-textLink-foreground); border-width: 0 2px 2px 0; transform: rotate(45deg); }
 		.interact-toggle:hover input:checked::after { border-color: var(--vscode-textLink-activeForeground); }
 		.interact-toggle input { appearance: none; -webkit-appearance: none; margin: 0; width: 14px; height: 14px; flex-shrink: 0; position: relative; border: 1px solid var(--vscode-textLink-foreground); border-radius: 3px; background: transparent; cursor: pointer; }
+		.refs-container { display: flex; gap: 16px; height: 400px; }
+		.refs-list-panel { flex: 0 0 45%; overflow-y: auto; padding-right: 8px; }
+		.refs-actions-panel { flex: 0 0 55%; border-left: 1px solid var(--vscode-widget-border); padding-left: 16px; overflow-y: auto; }
+		.references-list { display: flex; flex-direction: column; gap: 8px; }
+		.reference-item { background: var(--vscode-list-hoverBackground); border: 1px solid var(--vscode-widget-border); border-radius: 4px; padding: 10px; text-align: left; cursor: pointer; transition: all 0.2s; }
+		.reference-item:hover { background: var(--vscode-list-activeSelectionBackground); border-color: var(--vscode-focusBorder); }
+		.reference-item.active { background: var(--vscode-list-activeSelectionBackground); border-color: var(--vscode-focusBorder); }
+		.ref-title { display: block; font-weight: 500; color: var(--vscode-foreground); margin-bottom: 4px; word-break: break-word; }
+		.ref-desc { display: block; font-size: 11px; color: var(--vscode-descriptionForeground); }
+		.action-btn { display: block; width: 100%; margin-bottom: 8px; padding: 8px 12px; background: var(--vscode-button-background); color: var(--vscode-button-foreground); border: none; border-radius: 3px; cursor: pointer; font-size: 12px; transition: background 0.2s; }
+		.action-btn:hover { background: var(--vscode-button-hoverBackground); }
+		.ref-placeholder { font-size: 12px; color: var(--vscode-descriptionForeground); text-align: center; padding: 20px 10px; }
 `,
 		interactiveLabelHtml: `<label class="interact-toggle" id="interact-label" title="Interactive plots open a GLMakie window. Uncheck for a static inline render (CairoMakie) where supported."><input type="checkbox" id="interact-cb" checked> Interactive</label>`,
 		headScriptJs: `		var interactive = true;   // Interactive checkbox: GLMakie (true) vs CairoMakie/static (false)
@@ -258,6 +270,87 @@ export function getSfvizHtml(mermaidJs?: string): string {
 				c += cline(fn('display') + '(fig)', 'open the GLMakie window');
 				c += cline('# ' + fn('volume') + '(cube; algorithm = :mip)', 'alternative: direct (maximum-intensity) volume render');
 			}`,
+		extraJs: `
+		var currentReferences = [];
+		var rightPanel = document.getElementById('right-panel');
+
+		window.addEventListener('message', function(event) {
+			if (event.data.command === 'showReferences') {
+				currentReferences = event.data.references || [];
+				renderReferencesList();
+			}
+		});
+
+		function renderReferencesList() {
+			if (currentReferences.length === 0) { return; }
+			var html = '<div class="panel-header">'
+				+ '<span class="right-panel-title">Explore References</span>'
+				+ '<button class="panel-close" id="btn-refs-close">&#xd7;</button>'
+				+ '</div>'
+				+ '<div class="refs-container">'
+				+ '<div class="refs-list-panel"><div class="references-list">';
+			currentReferences.forEach(function(ref, idx) {
+				var desc = (ref.authors || '') + ' \xb7 ' + (ref.year || '');
+				if (ref.openAccess) { desc += ' \xb7 Open Access'; }
+				html += '<button class="reference-item" data-idx="' + idx + '">'
+					+ '<span class="ref-title">' + esc(ref.title || '') + '</span>'
+					+ '<span class="ref-desc">' + esc(desc) + '</span>'
+					+ '</button>';
+			});
+			html += '</div></div>'
+				+ '<div class="refs-actions-panel"><div class="ref-placeholder">Select a reference to view details</div></div>'
+				+ '</div>';
+			rightPanel.innerHTML = html;
+			rightPanel.style.display = 'block';
+			document.getElementById('btn-refs-close').addEventListener('click', function() {
+				rightPanel.innerHTML = '';
+				rightPanel.style.display = 'none';
+			});
+			document.querySelectorAll('.reference-item').forEach(function(btn) {
+				btn.addEventListener('click', function() {
+					var idx = parseInt(btn.dataset.idx, 10);
+					document.querySelectorAll('.reference-item').forEach(function(b) { b.classList.remove('active'); });
+					btn.classList.add('active');
+					renderReferenceDetails(currentReferences[idx]);
+				});
+			});
+		}
+
+		function renderReferenceDetails(ref) {
+			var html = '<div style="font-weight:600;margin-bottom:16px;color:var(--vscode-foreground);word-break:break-word;">' + esc(ref.title || '') + '</div>'
+				+ '<button class="action-btn" id="btn-open-ref">Open in Browser</button>'
+				+ '<button class="action-btn" id="btn-copy-bibtex">Copy BibTeX to Clipboard</button>';
+			document.querySelector('.refs-actions-panel').innerHTML = html;
+			document.getElementById('btn-open-ref').addEventListener('click', function() {
+				vscode.postMessage({ command: 'openReference', id: ref.title });
+			});
+			document.getElementById('btn-copy-bibtex').addEventListener('click', function() {
+				var bibtex = generateBibTeX(ref);
+				navigator.clipboard.writeText(bibtex).then(function() {
+					var btn = document.getElementById('btn-copy-bibtex');
+					var orig = btn.textContent;
+					btn.textContent = 'Copied!';
+					setTimeout(function() { btn.textContent = orig; }, 2000);
+				});
+			});
+		}
+
+		function generateBibTeX(ref) {
+			var type = ref.doi ? 'online' : 'misc';
+			var key = (ref.title || 'ref').toLowerCase().replace(/[^a-z0-9]/g, '').substring(0, 20);
+			var bib = '@' + type + '{' + key + ',\\n'
+				+ '  title={' + (ref.title || '') + '},\\n'
+				+ '  author={' + (ref.authors || '') + '},\\n'
+				+ '  year={' + (ref.year || '') + '},\\n';
+			if (ref.journal) { bib += '  journal={' + ref.journal + '},\\n'; }
+			if (ref.doi) { bib += '  doi={' + ref.doi + '},\\n'; }
+			if (ref.url) { bib += '  url={' + ref.url + '},\\n'; }
+			bib += '}';
+			return bib;
+		}
+
+		function esc(s) { return (s || '').replace(/[&<>"']/g, function(c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+		`,
 		actionsJs: `var VISUALISE_ACTIONS = [
 			{
 				id: 'sfviz-filled-contour',

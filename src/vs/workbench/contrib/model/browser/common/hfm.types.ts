@@ -36,5 +36,8 @@ export type HfmWebviewMessage =
 	| { command: 'colorize'; code: string; target?: string }
 	| { command: 'showReferences'; references: Array<Extract<IModelReference, { readonly title: string }>> }
 	| { command: 'openReference'; id: string }
+	| { command: 'installPackages' }
 	| { command: 'cancelAction' }
+	| { command: 'setApiKey' }
+	| { command: 'clearApiKey' }
 	| { command: 'fetchHfModels'; sort: string; tags: string[]; authors: string[]; filters: string[]; limit: number; seq?: number };

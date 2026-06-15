@@ -104,21 +104,27 @@ Then in `model.contribution.ts`:
 - `.hl-keyword / .hl-fn / .hl-type` — VS Code token colour variables
 - `.code-comment` — `color: #6A9955` (green, italic)
 
-### New layout CSS (left strip + right panel)
+### New layout CSS (collapsible sections + right panel)
 
 ```css
-.bottom-layout { display: grid; grid-template-columns: 160px 1fr; gap: 24px; margin-top: 20px; align-items: start; }
+.bottom-layout { display: block; margin-top: 0; }
 .left-strip { display: flex; flex-direction: column; }
-.strip-title { font-size: 1.5em; font-weight: 400; color: var(--vscode-foreground); margin: 0 0 5px 0; line-height: initial; }
-.strip-divider { border: none; border-top: 1px solid var(--vscode-widget-border); margin: 10px 0; }
-.column-list { list-style: none; padding: 0; margin: 0; }
+.section { margin: 0 0 20px 0; }
+.section-toggle { display: flex; align-items: center; gap: 6px; width: 100%; text-align: left; background: transparent; border: none; color: var(--vscode-foreground); font-size: 15px; font-weight: 500; font-family: var(--vscode-font-family); cursor: pointer; padding: 4px 0; user-select: none; }
+.section-toggle:hover { text-decoration: underline; }
+.section-toggle .illus-chevron { display: inline-flex; transition: transform 0.15s; flex-shrink: 0; }
+.section.collapsed .section-toggle .illus-chevron { transform: rotate(-90deg); }
+.section.collapsed .section-body { display: none; }
+.section-body { padding: 6px 0 0 0; }
+.column-list { list-style: none; display: flex; flex-direction: row; flex-wrap: wrap; gap: 18px; padding-left: 22px; margin: 0; }
 .column-list li { margin: 0; }
-.list-btn { display: flex; align-items: center; gap: 6px; background: transparent; border: none; color: var(--vscode-textLink-foreground); font-size: 13px; font-family: var(--vscode-font-family); cursor: pointer; padding: 3px 0; text-align: left; width: 100%; }
+.list-btn { display: flex; align-items: center; gap: 6px; background: transparent; border: none; color: var(--vscode-textLink-foreground); font-size: 13px; font-family: var(--vscode-font-family); cursor: pointer; padding: 3px 0; text-align: left; width: auto; white-space: nowrap; }
+.list-btn svg { flex-shrink: 0; }
 .list-btn:hover { color: var(--vscode-textLink-activeForeground); text-decoration: underline; }
 .panel-active { color: var(--vscode-textLink-activeForeground); text-decoration: underline; }
 .paper-links { display: none; }
-.right-panel { border-left: 1px solid var(--vscode-widget-border); padding-left: 20px; display: none; min-width: 0; }  /* min-width: 0 is CRITICAL */
-.right-panel-title { font-size: 13px; font-weight: 600; margin-bottom: 10px; color: var(--vscode-foreground); }
+.right-panel { padding-left: 22px; padding-top: 4px; display: none; min-width: 0; margin: 0 0 20px 0; }  /* min-width: 0 is CRITICAL */
+.right-panel-title { font-size: 13px; font-weight: 600; margin-bottom: 10px; color: var(--vscode-descriptionForeground); }
 .right-action-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)); gap: 8px; }
 .action-card { background: transparent; border: 1px solid var(--vscode-widget-border); border-radius: 4px; padding: 8px 10px; cursor: pointer; text-align: left; font-family: var(--vscode-font-family); display: flex; flex-direction: column; width: 100%; }
 .action-card:hover { background: var(--vscode-list-hoverBackground); }
@@ -147,7 +153,7 @@ These rules apply to both the Notebook Tutorials and Local Wikis right panels. *
 .nb-desc { font-size: 11px; color: var(--vscode-descriptionForeground); line-height: 1.4; }
 ```
 
-Cards use `.right-action-grid` (`repeat(auto-fill, minmax(155px, 1fr))`), which fills the right panel width and naturally produces **at most 3 cards per row** given the `160px 1fr` bottom-layout grid. Do not change the grid rule or the card padding — they are calibrated together to produce the correct 3-column layout.
+Cards use `.right-action-grid` (`repeat(auto-fill, minmax(155px, 1fr))`), which fills the right panel width. Do not change the grid rule or the card padding.
 
 **Model-specific row visibility** (multi-model webviews only):
 ```css
@@ -219,25 +225,32 @@ Rules:
     <button class="copy-btn" id="btn-copy">Copy</button>
   </div>
 
-  <!-- NEW: left strip + right panel -->
+  <!-- Collapsible Next Steps + Learn More + right panel -->
   <div class="bottom-layout">
     <div class="left-strip">
-      <div class="strip-title">Next Steps</div>
-      <ul class="column-list">
-        <li><button class="list-btn panel-toggle" id="btn-viz"><!-- SVG -->Visualise</button></li>
-        <li><button class="list-btn panel-toggle" id="btn-diagnose"><!-- SVG -->Diagnose</button></li>
-        <li><button class="list-btn panel-toggle" id="btn-predict"><!-- SVG -->Predict</button></li>
-        <li><button class="list-btn panel-toggle" id="btn-compare"><!-- SVG -->Compare</button></li>
-        <li><button class="list-btn panel-toggle" id="btn-interpret"><!-- SVG -->Interpret</button></li>
-      </ul>
-      <hr class="strip-divider">
-      <div class="strip-title">Learn More</div>
-      <ul class="column-list">
-        <li><button class="list-btn panel-toggle" id="btn-wiki"><!-- SVG -->Local Wikis</button></li>
-        <li><button class="list-btn panel-toggle" id="btn-notebook-tutorials"><!-- SVG -->Notebook Tutorials</button></li>
-        <li><button class="list-btn has-actions" id="btn-documentation"><!-- SVG -->Multimedia Tutorials</button></li>
-        <li><button class="list-btn has-actions" id="btn-paper"><!-- SVG -->Explore References</button></li>
-      </ul>
+      <div class="section" id="sec-next">
+        <button class="section-toggle"><span class="illus-chevron"><!-- down chevron SVG --></span>Next Steps</button>
+        <div class="section-body">
+          <ul class="column-list">
+            <li><button class="list-btn panel-toggle" id="btn-viz"><!-- SVG -->Visualise</button></li>
+            <li><button class="list-btn panel-toggle" id="btn-diagnose"><!-- SVG -->Diagnose</button></li>
+            <li><button class="list-btn panel-toggle" id="btn-predict"><!-- SVG -->Predict</button></li>
+            <li><button class="list-btn panel-toggle" id="btn-compare"><!-- SVG -->Compare</button></li>
+            <li><button class="list-btn panel-toggle" id="btn-interpret"><!-- SVG -->Interpret</button></li>
+          </ul>
+        </div>
+      </div>
+      <div class="section" id="sec-learn">
+        <button class="section-toggle"><span class="illus-chevron"><!-- down chevron SVG --></span>Learn More</button>
+        <div class="section-body">
+          <ul class="column-list">
+            <li><button class="list-btn panel-toggle" id="btn-wiki"><!-- SVG -->Local Wikis</button></li>
+            <li><button class="list-btn panel-toggle" id="btn-notebook-tutorials"><!-- SVG -->Notebook Tutorials</button></li>
+            <li><button class="list-btn has-actions" id="btn-documentation"><!-- SVG -->Multimedia Tutorials</button></li>
+            <li><button class="list-btn panel-toggle" id="btn-paper"><!-- SVG -->Explore References</button></li>
+          </ul>
+        </div>
+      </div>
       <div class="paper-links" id="paper-links"></div>
     </div>
     <div class="right-panel" id="right-panel"></div>
@@ -332,7 +345,7 @@ All five must always be present. Classes differ:
 | Notebook Tutorials | `panel-toggle` | Opens right panel with `.nb-card` sections |
 | Multimedia Tutorials | `has-actions` | VS Code QuickPick via `openVideoList` |
 | Concept Map | `panel-toggle` | Opens right panel with an inline-SVG relationship graph (see below) |
-| Explore References | `has-actions` | Two-panel right panel (list + details) via `openDocs paper` |
+| Explore References | `panel-toggle` | Two-pane right panel (list + details) via `openDocs paper` → `showReferences` |
 
 > ⚠️ **Multimedia Tutorials must always be included.** It is easy to omit by mistake — the button ID is `btn-documentation` and the message command is `openVideoList` (not `openMultimedia`). Add `| { command: 'openVideoList' }` to `XxxWebviewMessage` and `case 'openVideoList'` to the handler. If no videos exist yet, `openVideoList` will show an empty QuickPick — that is acceptable.
 
@@ -380,14 +393,14 @@ case 'openReference': {
 extraCss: `
     .refs-container { display: flex; gap: 16px; height: 400px; }
     .refs-list-panel { flex: 0 0 60%; overflow-y: auto; padding-right: 8px; }
-    .refs-actions-panel { flex: 0 0 40%; border-left: 1px solid var(--vscode-widget-border); padding-left: 16px; overflow-y: auto; }
+    .refs-actions-panel { flex: 1; min-width: 0; border-left: 1px solid var(--vscode-widget-border); padding-left: 16px; overflow-y: auto; }
     .references-list { display: flex; flex-direction: column; gap: 8px; }
-    .reference-item { background: var(--vscode-list-hoverBackground); border: 1px solid var(--vscode-widget-border); border-radius: 4px; padding: 10px; text-align: left; cursor: pointer; transition: all 0.2s; }
+    .reference-item { background: var(--vscode-list-hoverBackground); border: 1px solid var(--vscode-widget-border); border-radius: 4px; padding: 10px; text-align: left; cursor: pointer; transition: all 0.2s; width: 100%; font-family: var(--vscode-font-family); }
     .reference-item:hover { background: var(--vscode-list-activeSelectionBackground); border-color: var(--vscode-focusBorder); }
     .reference-item.active { background: var(--vscode-list-activeSelectionBackground); border-color: var(--vscode-focusBorder); }
     .ref-title { display: block; font-weight: 500; color: var(--vscode-foreground); margin-bottom: 4px; word-break: break-word; }
     .ref-desc { display: block; font-size: 11px; color: var(--vscode-descriptionForeground); }
-    .action-btn { display: block; width: 100%; margin-bottom: 8px; padding: 8px 12px; background: var(--vscode-button-background); color: var(--vscode-button-foreground); border: none; border-radius: 3px; cursor: pointer; font-size: 12px; transition: background 0.2s; }
+    .action-btn { display: block; width: 100%; margin-bottom: 8px; padding: 8px 12px; background: var(--vscode-button-background); color: var(--vscode-button-foreground); border: none; border-radius: 3px; cursor: pointer; font-size: 12px; font-family: var(--vscode-font-family); transition: background 0.2s; }
     .action-btn:hover { background: var(--vscode-button-hoverBackground); }
     .ref-placeholder { font-size: 12px; color: var(--vscode-descriptionForeground); text-align: center; padding: 20px 10px; }
 `,
@@ -426,6 +439,7 @@ extraJs: `
             + '</div>'
             + '</div>';
         rightPanel.innerHTML = html;
+        placePanel('sec-learn'); // CRITICAL: moves the panel below Learn More (wide-layout webviews); omit and it renders above it
         rightPanel.style.display = 'block';
         document.getElementById('btn-refs-close').addEventListener('click', function() {
             rightPanel.innerHTML = '';
@@ -511,7 +525,7 @@ extraJs: `
 > ⚠️ **Do not use a partial or custom SVG path for the Interpret button.** The `lightbulb-sparkle` codicon requires the full multi-segment path from the codicon library. Copying only the sparkle segment (as happened with the `M8.199 2.782…` path) renders as an invisible dot in the upper-right corner of the 16×16 viewBox.
 
 ### Learn More — always five buttons
-See table above. Three use `class="list-btn panel-toggle"` (right panel): Local Wikis, Notebook Tutorials and Concept Map. Two use `class="list-btn has-actions"` (QuickPick): Multimedia Tutorials and Explore References. The `has-actions` class adds an underline on hover for QuickPick buttons. Concept Map is provided by the shared scaffold for new-layout webviews; legacy `columns-grid` webviews keep the original four.
+See table above. Four use `class="list-btn panel-toggle"` (right panel): Local Wikis, Notebook Tutorials, Concept Map, and Explore References. One uses `class="list-btn has-actions"` (QuickPick): Multimedia Tutorials only. Concept Map is provided by the shared scaffold for new-layout webviews; legacy `columns-grid` webviews keep the original four.
 
 ### Form inputs
 - Always put all inputs into a single `<div class="form-row">` — never separate rows unless there are many (>4) parameters.
@@ -714,11 +728,21 @@ var DIAGNOSE_ACTIONS = [
 ];
 ```
 
-### `pressBtn` / `releaseBtn` — for Learn More picker buttons
+### Section-toggle wiring (Next Steps and Learn More)
 
-Picker buttons (Multimedia Tutorials, Explore References) use underline (`panel-active`) to indicate an active QuickPick. The `pickerJustClosed` flag prevents re-opening immediately after the picker closes on focus loss.
+Both sections use `.section-toggle` buttons that collapse/expand their `.section-body`. Wire them all at once:
 
-> **Local Wikis and Notebook Tutorials are NOT picker buttons.** They use `panel-toggle` and open the right panel directly — no `pressBtn`/`releaseBtn`, no `pickerJustClosed` guard needed.
+```javascript
+document.querySelectorAll('.section-toggle').forEach(function(btn) {
+    btn.addEventListener('click', function() { this.closest('.section').classList.toggle('collapsed'); });
+});
+```
+
+### `pressBtn` / `releaseBtn` — for Multimedia Tutorials (the only picker button)
+
+Multimedia Tutorials uses underline (`panel-active`) to indicate an active QuickPick. The `pickerJustClosed` flag prevents re-opening immediately after the picker closes on focus loss.
+
+> **All other Learn More buttons (Local Wikis, Notebook Tutorials, Explore References) are NOT picker buttons.** They use `panel-toggle` and open the right panel directly — no `pressBtn`/`releaseBtn`, no `pickerJustClosed` guard needed.
 
 ```javascript
 var activeBtn = null;
@@ -735,22 +759,25 @@ function releaseBtn() {
     setTimeout(function() { pickerJustClosed = false; }, 300);
 }
 
-// Picker buttons only (has-actions):
+// Picker button only (has-actions) — Multimedia Tutorials:
 document.getElementById('btn-documentation').addEventListener('click', function() {
     if (pickerJustClosed) { return; }
     if (activeBtn === this) { releaseBtn(); vscode.postMessage({ command: 'cancelAction' }); return; }
     pressBtn(this);
     vscode.postMessage({ command: 'openVideoList' });
 });
+
+// Explore References — panel-toggle (NOT a picker button):
 document.getElementById('btn-paper').addEventListener('click', function() {
-    if (pickerJustClosed) { return; }
-    if (activeBtn === this) { releaseBtn(); vscode.postMessage({ command: 'cancelAction' }); return; }
-    pressBtn(this);
+    if (currentPanelId === 'btn-paper') { hideRightPanel(); return; }
+    currentPanelId = 'btn-paper';
+    document.querySelectorAll('.panel-toggle').forEach(function(b) { b.classList.remove('panel-active'); });
+    document.getElementById('btn-paper').classList.add('panel-active');
     vscode.postMessage({ command: 'openDocs', target: 'paper' });
 });
 ```
 
-The `pickerJustClosed` guard is essential: when the user clicks an underlined button, the picker loses focus → VS Code fires `actionDone` → `releaseBtn()` runs → the click event then fires → without the guard the picker reopens immediately.
+The `pickerJustClosed` guard is essential for Multimedia Tutorials: when the user clicks the underlined button, the picker loses focus → VS Code fires `actionDone` → `releaseBtn()` runs → the click event then fires → without the guard the picker reopens immediately.
 
 ### `renderWikiPanel()` — Local Wikis right panel
 
@@ -860,6 +887,12 @@ document.querySelectorAll('.tooltip-icon').forEach(function(icon) {
     });
 });
 ```
+
+**Two tooltip flavours, both global (no per-webview JS/CSS):**
+
+1. **Static (sibling) — the default.** `<span class="tooltip-icon">?</span><span class="tooltip-text">…</span>` as adjacent siblings inside a `position: relative` parent (e.g. `.form-label-with-tooltip`). Shown by CSS hover, pinned by the JS above. Use for fixed form labels. The tooltip is absolutely positioned, so it must **not** live in a clipping/scrolling container.
+
+2. **Floating (`data-tip`) — for dynamic or clipped contexts.** Put the text in a `data-tip` attribute on the icon and **omit** the sibling `.tooltip-text`: `<span class="tooltip-icon" data-tip="…">?</span>`. The scaffold runs one shared, `position: fixed` tooltip via **document-level delegation** (`.tooltip-floating`), so it works for icons **created after load** and **inside `overflow:auto`/scrolling containers** (where the static one would be clipped). Same look and hover/pin/dismiss behaviour. This is what the `hfds` Explore-pane chips use — the chip text comes from the TOML `IModelExploreChip.tooltip` field, and the renderer just emits the `data-tip` icon; no webview-local tooltip code. Prefer this in any JS-built or scrollable UI.
 
 ### Textarea key capture (prevent VS Code keybindings)
 ```javascript
@@ -1178,9 +1211,9 @@ Create stub notebooks as valid JSON `.ipynb` files. **Never use XML-like or text
 
 Place them at `media/notebooks/<topic>/tutorial-NN-<name>.ipynb`.
 
----
+Each code cell must include `"execution_count": null` and `"outputs": []` (strip outputs — see the size note in the memory guide). The notebook editor opens bundled `.ipynb` files **directly** (`editorService.openEditor({ resource })` in `openNotebookItem`) — there is **no conversion step**, so the file must already be valid Jupyter JSON.
 
-## 9. Known pitfalls
+> ⚠️ **CRITICAL — do not author `.ipynb` files from what the Read tool shows you.** When you Read an existing `.ipynb`, the harness *renders* it as `<cell id="cell-0"><cell_type>markdown</cell_type>…</cell id="cell-0">` blocks. **That is a display rendering, not the file's bytes.** If you copy that shape into a new `.ipynb`, you write invalid JSON and the notebook fails to open with *"The editor could not be opened due to an unexpected error."* Always write notebooks as the real JSON structure shown above. To see a notebook's true bytes, use `head -c` / `cat` via Bash (or `python3 -c "import json; json.load(open('…'))"` to validate), **not** the Read tool. This bit the FRED and ECB webviews in production.
 
 ### Any `'` inside a JS single-quoted string — CRITICAL
 `\'` inside a TypeScript template literal is consumed as an escaped `'`. The backslash disappears, so the `'` lands unescaped in the rendered HTML. If that `'` is inside a single-quoted JS string, it terminates the string early, producing a **JavaScript syntax error that silently prevents the entire `<script>` block from running**.
@@ -1461,23 +1494,25 @@ export type XxxWebviewMessage =
 - [ ] `handlers/<acronym>.handler.ts` — copy structure from `lp.handler.ts`
 - [ ] `commands/<acronym>.command.ts` — fill in METADATA, VIEW_TYPE, TITLE; define `XXX_REFERENCES` with three groups
 - [ ] `webviews/<acronym>.template.ts` — copy CSS verbatim from `lp.template.ts`
-- [ ] HTML: left-strip layout, subtitle (`methods-list` bullets), toggle buttons, all inputs in one `form-row`
-- [ ] HTML: Next Steps buttons have `class="list-btn panel-toggle"` (no `has-actions`)
-- [ ] HTML: Learn More — Local Wikis and Notebook Tutorials use `class="list-btn panel-toggle"` (right panel); Multimedia Tutorials and Explore References use `class="list-btn has-actions"` (QuickPick)
+- [ ] HTML: collapsible section layout, subtitle (`methods-list` bullets), toggle buttons, all inputs in one `form-row`
+- [ ] HTML: Next Steps inside `<div class="section" id="sec-next">` with `section-toggle` + `section-body`; all five buttons have `class="list-btn panel-toggle"`
+- [ ] HTML: Learn More inside `<div class="section" id="sec-learn">` with `section-toggle` + `section-body`; Local Wikis, Notebook Tutorials, Explore References = `panel-toggle`; Multimedia Tutorials = `has-actions`
 - [ ] HTML: All Learn More buttons present (Local Wikis, Notebook Tutorials, Multimedia Tutorials, Explore References; + Concept Map in scaffold/new-layout webviews)
 - [ ] JS: **grep the template for `\'` — any occurrence silently kills the entire webview** (see §9)
 - [ ] JS: boilerplate helpers (`esc`, `kw`, `fn`, `ty`, `line`, `cline`, `blank`, `val`)
 - [ ] JS: `hideRightPanel`, `renderRightList`, `renderRightCode`, `showRightPanel`
 - [ ] JS: flat action arrays — `VISUALISE_ACTIONS`, `DIAGNOSE_ACTIONS`, `PREDICT_ACTIONS`, `COMPARE_ACTIONS`, `INTERPRET_ACTIONS`
+- [ ] JS: section-toggle wiring — `document.querySelectorAll('.section-toggle').forEach(...)` toggles `.collapsed` on closest `.section`
 - [ ] JS: `pressBtn`/`releaseBtn` use `panel-active` class (not `was-pressed`)
 - [ ] JS: `wikiSections` state variable + `renderWikiPanel()` function (see §4)
 - [ ] JS: `btn-wiki` wired as `panel-toggle` (NOT a picker button — no `pressBtn`/`pickerJustClosed` guard)
-- [ ] JS: picker buttons (Multimedia Tutorials, Explore References) guard with `if (pickerJustClosed) { return; }`
+- [ ] JS: `btn-paper` wired as `panel-toggle` — posts `openDocs paper` → handler sends `showReferences` → `renderReferencesList()` builds two-pane panel
+- [ ] JS: only Multimedia Tutorials (`btn-documentation`) uses `pressBtn`/`pickerJustClosed` guard
 - [ ] JS: `setModel('default')` as final statement
 - [ ] Handler: `setTimeout(..., 100)` for initial postMessage calls
 - [ ] Handler: `hasPapers` computed from `references` (not `packages[].papers`)
 - [ ] Handler: `setTimeout` sends `wikiSections` (build from `data.wikis`, same pattern as §10)
-- [ ] Handler: `'paper'` case calls `openReferenceList`, `'repository'` case calls `openPackageItem` (no `'wiki'` case in `openDocs`)
+- [ ] Handler: `'paper'` case filters separators and sends `showReferences`; `'repository'` case calls `openPackageItem` (no `'wiki'` case in `openDocs`)
 - [ ] Media: `.md` files at `media/wiki/<topic>/` (factsheet, overview, assumptions, diagnostics, interpretation, decision-guide, + model-specific)
 - [ ] Media: `.ipynb` files at `media/notebooks/<topic>/` (valid JSON, Julia kernelspec, stripped outputs)
 - [ ] Media: **every `file:` in the command's `wikis`/`notebooks` exists on disk** — a referenced-but-missing file makes the card fail with "file not found" (see §17). Cross-check src, then copy the new `<topic>` folders into `out/` (the watch task does not copy media)
@@ -1500,18 +1535,20 @@ Old webviews (e.g. `clh`, `clp`) use the legacy `columns-grid` layout with a `sh
 
 ### HTML changes
 1. Replace the `<div class="columns-grid">` block with the new `<div class="bottom-layout">` structure.
-2. Move Next Steps buttons to the left strip with `class="list-btn panel-toggle"` (remove `has-actions`).
-3. Move Learn More buttons to the left strip with `class="list-btn has-actions"`.
+2. Wrap Next Steps in `<div class="section" id="sec-next">` with `section-toggle` + `section-body`; all five buttons use `class="list-btn panel-toggle"`.
+3. Wrap Learn More in `<div class="section" id="sec-learn">` with `section-toggle` + `section-body`; Local Wikis / Notebook Tutorials / Explore References = `panel-toggle`; Multimedia Tutorials = `has-actions`.
 4. Remove the old `<div class="action-panel" id="action-panel">`.
-5. Add `<div class="right-panel" id="right-panel"></div>` as the second grid column.
+5. Add `<div class="right-panel" id="right-panel"></div>` below `left-strip`.
 
 ### JS changes
 1. Remove `showActionList` and `showActionCode` functions.
 2. Add `hideRightPanel`, `renderRightList`, `renderRightCode`, `showRightPanel`.
-3. Replace action arrays `{ ..., has-actions panel }` wiring with `showRightPanel(DIAGNOSE_ACTIONS, 'Diagnose', 'btn-diagnose')` etc.
+3. Replace action arrays wiring with `showRightPanel(DIAGNOSE_ACTIONS, 'Diagnose', 'btn-diagnose')` etc.
 4. Update `pressBtn`/`releaseBtn` to use `panel-active` instead of `was-pressed`.
 5. Add `pickerJustClosed = false` declaration and the 300 ms debounce in `releaseBtn`.
-6. Add `if (pickerJustClosed) { return; }` at the top of each Learn More button handler.
+6. Add `if (pickerJustClosed) { return; }` guard only on `btn-documentation` (Multimedia Tutorials).
+7. Add section-toggle wiring: `document.querySelectorAll('.section-toggle').forEach(...)`.
+8. Wire `btn-paper` as `panel-toggle` (not picker) — `openDocs paper` → `showReferences`.
 
 ### Types changes (IHareMetadata / IXxxMetadata)
 1. Add `readonly references: IModelReference[]` to the metadata interface.
@@ -1526,7 +1563,7 @@ Old webviews (e.g. `clh`, `clp`) use the legacy `columns-grid` layout with a `sh
 
 ### Handler changes
 1. Update `hasPapers` to check `data.references.some(r => !('separator' in r))`.
-2. Change the `'paper'` case to call `openReferenceList(data.references, ...)`.
+2. Change the `'paper'` case to filter separators and send `showReferences` to the webview.
 3. Add `openVideoList` case if the webview has videos.
 
 ---
@@ -2348,6 +2385,8 @@ Every field visible in the webview is declared in the TOML:
 | `[miniCharts.modelName]` | `IModelMiniChart` | Illustration mini-charts |
 | `[[codeBranches]]` | `IModelCodeBranch` | Code preview per model toggle |
 | `[[actionGroups]]` / `[[actionGroups.actions]]` | `IModelActionGroup` | Next Steps right panel |
+| `[explore]` + `[[explore.groups]]` + `[[explore.groups.chips]]` | `IModelExplorePane` | Interactive Explore pane (§25) |
+| `[notes.<pane>]` (`keyPoints`/`decision`/`explore`) | `IModelPaneNotes` | Per-pane intro/footnote (§26) |
 
 ### 22.3 Development workflow
 
@@ -2386,3 +2425,199 @@ The parser (`build/lib/toml-to-ts.ts`) supports the subset of TOML used by Polli
 - Booleans, integers, floats, single- and double-quoted strings
 
 **No third-party TOML library is used.** The parser depends only on Node built-ins.
+
+## 23. Package install-status indicator (Powered-by check / Install nudge)
+
+A small status indicator on the **"Powered by:"** line shows whether the webview's declared packages are installed in the active Julia environment: a **green check** when all are present, or a clickable **Install** icon when some are missing (which the user may ignore). Reference implementation: `yfin` (Yahoo Finance).
+
+### 23.1 How detection works — silent, reads `Project.toml`, never runs Julia
+
+There is **no way to spawn a hidden Julia process** from the webview (browser) layer — the only ways to run Julia are the user's visible REPL (`language-julia.startREPL` + `terminal.sendSequence`) or the pluto-style file handshake. So the indicator does **not** run `using …`. Instead it reads the active environment's `Project.toml` `[deps]` from disk:
+
+- Helper `checkJuliaPackagesInstalled(packageNames, fileService, pathService, workspaceContextService)` in `model.handler.ts` parses a `Project.toml` `[deps]` table and reports each declared package (`"YFinance.jl"` → checks dependency `YFinance`, i.e. the display name minus `.jl`). Returns `IJuliaEnvStatus` (`{ statuses: { name, installed }[]; env }`), where `env` is a human label of the environment that was inspected.
+- **Which environment:** it prefers an **activated project** — a `Project.toml` at a workspace folder root (`readWorkspaceProject` via `IWorkspaceContextService`, the env the Julia extension defaults to when one is present) — and otherwise falls back to the **shared default environment** `~/.julia/environments/<newest vX.Y>/Project.toml` (resolved via `IPathService.userHome({ preferLocal: true })`). The shared env is the one shown in the status bar that throws **"Package X not found in current path"** when a dependency is missing.
+- **Tradeoff (still inherent):** it checks *declared* deps, not a live `using`, and the browser layer cannot know which env the REPL actually activated. So the `env` label is surfaced in the indicator **tooltip** (e.g. `All packages declared in @v1.12 (shared environment)` / `… in MyProject (project environment)`) so the user can see the basis. The **Install** action and `runCode` runs still target whatever env is active in the REPL — only the check's basis is the inspected `Project.toml`. Any read failure → the package is reported not installed (advisory only).
+- `installJuliaPackages(packageNames, commandService)` runs `import Pkg; Pkg.add([...])` in the Julia REPL for the missing packages (display names accepted; `.jl` stripped).
+
+> **Why not run `using`?** `IPathService`/`IFileService` are browser-safe (workbench layer); spawning `julia -e` is not available here, and auto-starting a REPL on every open is intrusive. Reading `Project.toml` is instant and completely silent.
+
+### 23.2 Scaffold rendering (shared, additive, inert by default)
+
+`webviewScaffold.ts` owns the rendering — webviews that never send `packageStatus` show nothing, so this is backward-compatible:
+
+- HTML: `<span class="package-status" id="package-status"></span>` immediately after `#package-links` in the `.powered-by` line.
+- CSS: `.pkg-check` (`var(--vscode-charts-green)`, **green** — a status, not a link, so deliberately **not** the blue link colour of the package names beside it), `.pkg-install` (link-coloured icon + "Install" text), `.pkg-installing` (italic "installing…").
+- JS `renderPackageStatus(statuses, env)` + a `if (msg.command === 'packageStatus')` branch in the message listener (passes `msg.env`). All installed → green `&#10003;` whose tooltip names the inspected env (`All packages declared in <env>`); any missing → an **Install** affordance (download glyph) whose click posts `{ command: 'installPackages' }` and shows the "installing…" state. Install tooltip lists the missing packages and notes they install **into your active Julia environment**. The `env`-bearing tooltips are set via the `.title` DOM property (auto-escaped), since `env` originates from a file.
+
+### 23.3 Handler wiring (per webview that wants it)
+
+In the webview's handler (see `yfin.handler.ts`) the wiring is centralised in `createPackageStatusWiring(webview, disposables, names, fileService, pathService, commandService, notificationService, workspaceContextService)`:
+- Add params `fileService: IFileService`, `pathService: IPathService`, and `workspaceContextService: IWorkspaceContextService` (the last sits **right after `pathService`** in handler, command, and `accessor.get` order).
+- `pkgStatus.postStatus()` calls `checkJuliaPackagesInstalled(…, workspaceContextService)` and posts `{ command: 'packageStatus', statuses, env }`; call it once in the open `setTimeout`.
+- Add a `scheduleRecheck(attempt)` that re-posts status every 5s (cap ~72 attempts ≈ 6 min) until all installed — because `Pkg.add` rewrites `Project.toml` only when it finishes, polling the file flips the icon to green.
+- Add message case `installPackages`: recompute missing, `installJuliaPackages(missing, commandService)`, then `scheduleRecheck(0)`.
+- **Install nudge on executing runCode targets:** at the end of the `runCode` case, for the targets that actually execute code (`juliaRepl`, `notebook` — note there is **no "Send to Terminal"** button in the current scaffold; §18's list is stale, and `pluto` manages its own per-notebook packages so it is excluded), check for missing packages and, if any, show a **non-blocking** `notificationService.prompt(Severity.Info, "Install missing: {0}", [{ label: "Install", run: … }])` — the code still runs (a nudge, not a gate). `Copy`/`Send to Editor` do not execute, so they never warn.
+
+Add `| { command: 'installPackages' }` to the webview's `XxxWebviewMessage`. Thread `IFileService` + `IPathService` + `IWorkspaceContextService` through the command (`openXxxWebview`) and every `CommandsRegistry.registerCommand` (`accessor.get(IFileService)`, `accessor.get(IPathService)`, `accessor.get(IWorkspaceContextService)`). Imports: `IPathService` from `vs/workbench/services/path/common/pathService.js`; `IWorkspaceContextService` from `vs/platform/workspace/common/workspace.js`.
+
+### 23.4 Checklist additions
+
+- [ ] Handler: params `fileService`, `pathService`, `workspaceContextService` (use `createPackageStatusWiring`); `postStatus()` in open `setTimeout`; `scheduleRecheck`; `installPackages` case; install-nudge in `runCode` for `juliaRepl`/`notebook`.
+- [ ] Types: `| { command: 'installPackages' }`.
+- [ ] Command + contribution: thread + `accessor.get(IFileService)` / `accessor.get(IPathService)` / `accessor.get(IWorkspaceContextService)` (workspace right after path).
+- [ ] Keep the check **green** (`charts-green`) — it is a status, not a clickable link.
+- [ ] Detection prefers a workspace-root `Project.toml`, else the shared default env; the inspected env is named in the indicator tooltip (`env`).
+
+## 24. Provider API keys (Secret Storage + key indicator)
+
+Some data providers need a **free API key** (Alpha Vantage, FRED, and the HF/Kaggle hubs). Pollis stores the key in VS Code **Secret Storage** — never in settings, generated code, or saved files — and shows a key indicator on the "Powered by:" line next to the package indicator (§23). Reference implementation: `alpv` (Alpha Vantage).
+
+### 24.1 Shared wiring — `createApiKeyWiring` (model.handler.ts)
+
+`createApiKeyWiring(webview, provider, secretStorageService, quickInputService)` returns `{ postStatus, handleSet, handleClear, replPrefix }`, where `provider: IApiKeyProvider = { secretKey, envVar, label }` (e.g. `{ secretKey: 'pollis.apiKey.alphavantage', envVar: 'ALPHA_VANTAGE_API_KEY', label: 'Alpha Vantage' }`).
+
+- `postStatus()` — posts `{ command: 'apiKeyStatus', hasKey, label }` to the webview.
+- `handleSet()` — opens a **masked** `quickInputService.input({ password: true, … })`, stores the value via `ISecretStorageService.set(secretKey, …)`, re-posts status.
+- `handleClear()` — `ISecretStorageService.delete(secretKey)`, re-posts.
+- `replPrefix(target)` — for the `juliaRepl` target only, returns `ENV["<envVar>"] = "<key>";\n` (empty otherwise). The handler **prepends** it to the code sent to the REPL, so the key is set as a session env var and never lands in a file.
+
+### 24.2 Generated code reads the env var — never embeds the key
+
+All code branches/actions read the key from the environment (e.g. AlphaVantage.jl's global client reads `ENV["ALPHA_VANTAGE_API_KEY"]`). The literal key is injected **only** into the Julia REPL session via `replPrefix`. **Send to Editor / Notebook do NOT inject it** (those persist to disk) — the user sets the env var in that session themselves; document this in the **Authentication** wiki.
+
+### 24.3 Scaffold rendering (shared, additive, inert by default)
+
+`webviewScaffold.ts` owns it: a `#api-key-status` span after `#package-status`; CSS `.apikey-ok` (green, saved state), `.apikey-link` (Set / change / clear links), `.apikey-icon` (a monochrome **inline SVG key**, `fill="currentColor"`, shown in both states — emoji rendered unreliably in webviews); `renderApiKeyStatus(msg)` + an `apiKeyStatus` message branch. The whole `.powered-by` line is `display: flex` and the `#api-key-status` is pushed to the right with `margin-left: auto` (no separator). The links post `setApiKey` / `clearApiKey`. Webviews that never send `apiKeyStatus` show nothing.
+
+### 24.4 Per-webview wiring (see `alpv.handler.ts`)
+
+- Add params `fileService`, `pathService` (for §23) **and** `secretStorageService: ISecretStorageService`.
+- `const apiKey = createApiKeyWiring(webviewInput.webview, PROVIDER, secretStorageService, quickInputService);`
+- In the open `setTimeout`: `void apiKey.postStatus();`
+- In the `runCode` `juliaRepl` branch: `const prefix = await apiKey.replPrefix(msg.target);` then send `prefix + code + '\n'`.
+- Message cases: `setApiKey → apiKey.handleSet()`, `clearApiKey → apiKey.handleClear()`.
+- Types: add `| { command: 'setApiKey' }` and `| { command: 'clearApiKey' }`.
+- Command + contribution: thread `ISecretStorageService` (`accessor.get(ISecretStorageService)`), import from `platform/secrets/common/secrets.js`.
+- Wikis: include an **Authentication** page (Family B naming) explaining how to get a free key and that Pollis stores it in Secret Storage.
+
+### 24.5 Checklist additions
+
+- [ ] Provider constant `{ secretKey: 'pollis.apiKey.<name>', envVar, label }`.
+- [ ] Handler/command/contribution thread `ISecretStorageService`; `apiKey.postStatus()` on open; `setApiKey`/`clearApiKey` cases; `replPrefix` injected in the `juliaRepl` branch.
+- [ ] Generated code reads `ENV[envVar]` — the literal key appears in **no** file.
+- [ ] Authentication wiki present.
+
+## 25. Interactive Explore pane (`[explore]`) — live, axis-filtered hub browser
+
+Some hub webviews replace the static **Illustration** pane with an interactive **Explore** pane: a left column of collapsible filter **axes** (e.g. Task, Domain) whose checked **chips** drive a **live query** against a REST hub, rendering result cards on the right with a **sort** control. Reference implementation: `hfds` (Hugging Face Datasets). The legacy `hfm` (Hugging Face Models) pane is the same UX hand-written inline — **do not copy `hfm`**; it predates this and hardcodes its taxonomy in one giant JS string.
+
+### 25.1 TOML-driven, grouped, generic over axes
+
+The taxonomy lives entirely in TOML as an **ordered list of collapsible groups** (matching the HF website's left sidebar). Each group has an `axis`, a `label`, a `filterPrefix`, an optional `separatorBefore` divider, and its `chips`. **Crucially, the left-column layout is per-group, but the query treats groups that share an `axis` as one OR-set** — so the Task sub-groups (Multimodal, Computer Vision, NLP, Audio, Tabular, Reinforcement Learning) all behave as one "Task" filter, AND-ed against Domain. This mirrors the HF website exactly and keeps the renderer generic (migrating `hfm` to TOML later is just declaring its Task sub-groups + Framework + Author groups).
+
+```toml
+[explore]
+label = "Explore by Task / Domain"     # becomes the pane (illustration) label
+
+[[explore.groups]]
+axis = "task"                          # groups sharing an axis are OR-ed in the query
+label = "Computer Vision"              # a collapsible sub-group header
+filterPrefix = "task_categories:"      # prepended to each chip value to form the hub filter token
+[[explore.groups.chips]]
+label = "Image Classification"
+value = "image-classification"
+# ... more task sub-groups (Multimodal, NLP, Audio, Tabular, ...) ...
+
+[[explore.groups]]
+axis = "domain"
+label = "Domain"
+filterPrefix = ""                      # plain tags (no prefix)
+separatorBefore = true                 # draw a divider above this group
+[[explore.groups.chips]]
+label = "Medical"
+value = "medical"
+```
+
+**Specialised filters that don't fit Task/Domain — category vs single-criterion.** For filters outside the main taxonomy (e.g. Benchmarks, Agent Traces) there are two supported shapes; pick by how they relate:
+
+- **A distinct category (preferred when you have ≥2 related filters).** A normal collapsible group with its own `axis`, placed below the others with `separatorBefore = true`. OR-within, AND-across — so the two read as "benchmarks **or** traces", and the whole category AND-s with Task/Domain. This is what `hfds` ships (a single **AI Systems** category with chips *Benchmarks* / *Agent Traces*); it avoids the items looking like stray options of the group above.
+  ```toml
+  [[explore.groups]]
+  axis = "ai"
+  label = "AI Systems"
+  filterPrefix = ""
+  separatorBefore = true
+  [[explore.groups.chips]]
+  label = "Benchmarks"
+  value = "benchmark"
+  tooltip = "Datasets that define an evaluation benchmark; model results are aggregated into a leaderboard."
+  ```
+
+- **Single-criterion (`toggle`) axis — an un-grouped standalone filter.** A group with `toggle = true` and **exactly one chip**, given its own `axis` so it AND-s with everything else. It renders as a flat checkbox (no collapsible header), typically with `separatorBefore = true`. Use this for a genuinely standalone binary flag that has no siblings to OR with. (The reference renderer in `hfds.template.ts` supports it even though `hfds` currently uses the category form.)
+  ```toml
+  [[explore.groups]]
+  axis = "verified"
+  label = "Verified"
+  filterPrefix = ""
+  toggle = true
+  separatorBefore = true
+  [[explore.groups.chips]]
+  label = "Verified only"
+  value = "verified"
+  ```
+
+Per-chip **`tooltip`** adds a hover explanation (works for chips in either shape). An intro/footnote above or below the pane is **not** part of `[explore]` — it comes from the shared `[notes.explore]` mechanism (see §26). Types live in `model.types.ts` (`IModelExploreChip` (optional `tooltip`) / `IModelExploreGroup` (optional `separatorBefore` / `toggle`) / `IModelExplorePane`) and are added to the webview's metadata interface as `readonly explore?: IModelExplorePane;`. The generator (`build/lib/toml-to-ts.ts`) emits `explore` by reading `data.explore` and pushing an optional field — no generator change is needed for new nesting since `toTypeScriptLiteral` is recursive. `*.data.ts` is regenerated by `compile-toml`.
+
+### 25.2 Query semantics — OR within an axis, AND across axes
+
+Each checked chip forms one filter token (`filterPrefix + value`). The webview groups the checked tokens **by `axis`** (not by visual group) and posts them as `filterGroups: string[][]` (one inner array per distinct axis). The handler takes the **cross-product** across non-empty axis-groups (so multiple chips in one axis are OR-ed via separate requests; chips from different axes are AND-ed in one request), fetches each combination with `IRequestService`, merges, **dedupes by id**, and re-sorts. Empty selection → one request with no filters (the whole catalogue). Mirror `hfds.handler.ts`'s `fetchHfDatasets` case; the hub filter param is repeated `&filter=<token>` (verify a sample query returns results before shipping the chip values).
+
+### 25.3 Rendering — injected as the Illustration override
+
+The pane is built in the template as the `illustrationOverrideJs` string (set `illusCollapsed: false` and `illustrationLabel: metadata.<acr>.explore?.label`). Two template helpers: `buildExploreCss()` (`.hfds-*`-style classes — copy from `hfds.template.ts`, including `.hfds-section-sep` for `separatorBefore`) and `buildExploreOverrideJs(metadata)` which embeds `JSON.stringify(metadata.<acr>.explore.groups)` and renders the grouped, collapsible left column (all groups collapsed by default), the sort dropdown, and live cards. The override runs in `renderIllustration()` scope where `body` (the `#illus-body` element), `esc`, and `vscode` are in scope.
+
+> ⚠️ **Build-once guard — mandatory.** `renderIllustration()` is called from **`setModel()`**, so it re-runs on **every topic toggle**. Without a guard the pane is rebuilt on each toggle — wiping the user's chip selections and **stacking a duplicate `window.addEventListener('message', …)` each time**. Start the override with:
+> ```javascript
+> if (body.dataset.hfdsBuilt) { return; }
+> body.dataset.hfdsBuilt = '1';
+> ```
+> The Explore pane is independent of the code-preview topic, so building it once is correct. (`hfm` lacks this guard — fix it on migration.)
+
+### 25.4 Service wiring
+
+Live fetch needs `IRequestService` threaded through the handler, command (`openXxxWebview`), and the `CommandsRegistry.registerCommand` in the contribution (`accessor.get(IRequestService)` — placed right after `IThemeService`, matching `hfm`/`hfds`). Add the outbound message to `XxxWebviewMessage`: `| { command: 'fetchHfDatasets'; sort: string; filterGroups: string[][]; limit: number; seq?: number }` (rename per webview). The inbound `hfDatasets` / `hfDatasetsError` responses are handled in the override's own `message` listener (extension→webview, not in the union). Carry a `seq` and discard stale responses (`msg.seq !== currentSeq`).
+
+### 25.5 Checklist additions
+
+- [ ] `[explore]` block in TOML: ordered `[[explore.groups]]` (collapsible sub-categories) each with `axis` + `label` + `filterPrefix` + chips (and `separatorBefore` where a divider is wanted); groups sharing an `axis` are OR-ed. Verify chip filter tokens return live results.
+- [ ] `explore?: IModelExplorePane` on the metadata interface; generator emits it; `compile-toml` run.
+- [ ] Template: `illusCollapsed: false`, `illustrationLabel` from `explore.label`, `buildExploreCss()` + `buildExploreOverrideJs()`.
+- [ ] **Build-once guard** (`body.dataset.<acr>Built`) at the top of the override.
+- [ ] Handler `fetchHfDatasets`-style case: cross-product groups, dedupe by id, re-sort, `seq` guard; `IRequestService` threaded through handler/command/contribution.
+- [ ] Sort dropdown kept (signal-vs-noise control); cards open the hub item via `openUrl`.
+
+## 26. Per-pane notes (`[notes]`) — optional intro / footnote on content panes
+
+Any **content pane** can carry an optional **intro** (rendered above its body) and/or **footnote** (rendered below), declared once under a `[notes]` table keyed by pane id. Every field is optional and **inert when absent** — most webviews carry none, which is the default. Values are raw HTML (so `<em>` / `<strong>` work); they are inserted unescaped, same as bullet `detail`.
+
+```toml
+[notes.keyPoints]
+intro = "Optional framing shown above the Key Points bullets."
+
+[notes.decision]
+footnote = "Shown below the Decision Table (this replaced the old flat `decisionNote`)."
+
+[notes.explore]
+intro = "Shown above the Explore pane (e.g. explaining the OR/AND filter semantics)."
+```
+
+Supported pane ids today: **`keyPoints`**, **`decision`**, **`explore`** (the three content panes). The Next Steps / Learn More navigation sections deliberately have no notes. Adding another pane later is a small, additive change.
+
+### 26.1 Wiring
+
+- **Types** (`model.types.ts`): `IModelPaneNote { intro?; footnote? }` and `IModelPaneNotes { keyPoints?; decision?; explore? }`. Add `readonly notes?: IModelPaneNotes;` to the webview's metadata interface.
+- **Generator** (`build/lib/toml-to-ts.ts`): emits `notes` from `data.notes` (optional field; recursive literal, no special-casing).
+- **Scaffold** (`webviewScaffold.ts`): owns the Key Points and Decision panes — parts `keyPointsIntro` / `keyPointsFootnote` / `decisionIntro` / `decisionFootnote` render a `<p class="pane-intro">` / `<p class="pane-note">` only when present. Shared CSS `.pane-intro` / `.pane-note` (muted, left-accent bar; `em`/`strong` lift to foreground).
+- **Template**: pass the parts through, e.g. `decisionFootnote: metadata.<acr>.notes?.decision?.footnote`. The **Explore** notes use the dedicated scaffold parts `illustrationIntro` / `illustrationFootnote` (= `metadata.<acr>.notes?.explore?.{intro,footnote}`); the scaffold renders them as `.pane-intro` / `.pane-note` **above and below the bordered `illus-body` box** (inside `illus-section`, so they collapse with the pane). The template override builds only the widget inside `illus-body` — it does **not** render the notes. All three panes share the `.pane-intro` / `.pane-note` styling (muted, left-accent; `em`/`strong`/`code` lift to foreground).
+
+> The old flat `decisionNote` field (read from `[meta]`) is **gone** — it is now `[notes.decision].footnote`. `explore.intro`/`explore.footnote` likewise moved to `[notes.explore]`. One uniform convention.

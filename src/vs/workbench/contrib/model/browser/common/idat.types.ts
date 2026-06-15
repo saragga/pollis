@@ -20,6 +20,6 @@ export type IdatWebviewMessage =
 	| { command: 'openNotebook'; target: string }
 	| { command: 'openWiki'; target: string }
 	| { command: 'openUrl'; url: string }
-	| { command: 'getPaperLinks' }
+	| { command: 'openReference'; id: string }
 	| { command: 'openVideoList' }
 	| { command: 'cancelAction' };

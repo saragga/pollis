@@ -17,6 +17,9 @@ import { INotebookEditorModelResolverService } from '../../../notebook/common/no
 import { INotebookKernelService } from '../../../notebook/common/notebookKernelService.js';
 import { ILanguageService } from '../../../../../editor/common/languages/language.js';
 import { IThemeService } from '../../../../../platform/theme/common/themeService.js';
+import { IFileService } from '../../../../../platform/files/common/files.js';
+import { IPathService } from '../../../../services/path/common/pathService.js';
+import { IWorkspaceContextService } from '../../../../../platform/workspace/common/workspace.js';
 import { registerCvizWebviewHandlers } from '../handlers/cviz.handler.js';
 import { getCvizHtml } from '../webviews/cviz.template.js';
 
@@ -196,6 +199,9 @@ export function openCvizWebview(
 	notebookKernelService: INotebookKernelService,
 	languageService: ILanguageService,
 	themeService: IThemeService,
+	fileService: IFileService,
+	pathService: IPathService,
+	workspaceContextService: IWorkspaceContextService,
 	initialModel?: string,
 ): void {
 	const mermaid = getMermaidUris();
@@ -227,6 +233,9 @@ export function openCvizWebview(
 		notebookKernelService,
 		languageService,
 		themeService,
+		fileService,
+		pathService,
+		workspaceContextService,
 		initialModel,
 	);
 }

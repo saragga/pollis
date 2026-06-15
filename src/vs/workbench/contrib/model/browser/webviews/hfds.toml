@@ -1,0 +1,784 @@
+# Hugging Face Datasets Webview Configuration
+# Declarative source. The build script generates hfds.data.ts.
+# Run: npm run gulp compile-toml
+#
+# Approach: the Hugging Face Hub exposes a public REST API at huggingface.co/api
+# that returns JSON — no token needed for public datasets. Browsing, file listings
+# and metadata use HTTP.jl + JSON3.jl (pure Julia). Loading splits into Julia uses
+# HuggingFaceDatasets.jl, which wraps the Python `datasets` library via PythonCall.
+# A personal access token (shared with the Hugging Face Models webview) is only
+# required for gated or private datasets; it is injected into the REPL session as
+# ENV["HUGGING_FACE_HUB_TOKEN"] and never written to a file.
+
+[meta]
+title = "Hugging Face Datasets"
+viewType = "pollis.hfds"
+defaultModel = "browse"
+models = ["browse", "load", "inspect", "files", "info"]
+wideLayout = true
+illusCollapsed = true
+illustrationText = "Search the Hugging Face Hub, then load datasets into Julia: browse the catalogue over the REST API, load splits with HuggingFaceDatasets.jl, inspect rows, download the underlying Parquet files, and read dataset metadata."
+
+# Per-pane intro/footnote notes (optional, keyed by pane: keyPoints / decision / explore).
+[notes.decision]
+footnote = "Browse, Download Files, and Dataset Info use the Hub REST API directly (HTTP.jl + JSON3.jl) — pure Julia, no Python, no token for public datasets. Load and Inspect use HuggingFaceDatasets.jl, which wraps the Python `datasets` library through PythonCall, so the first call triggers a one-time CondaPkg environment setup."
+
+[notes.explore]
+intro = "The sub-categories (Computer Vision, Natural Language Processing, …) are visual groupings that all belong to one Task category. A query joins your selections with <strong>OR</strong> inside a category and <strong>AND</strong> across categories. For example, picking <em>Image Classification</em> plus <em>Text Classification</em> under Task, plus <em>Medical</em> plus <em>Biology</em> under Domain, builds: <code>(Image Classification OR Text Classification) AND (Medical OR Biology)</code>"
+
+# Interactive Explore pane (replaces the static Illustration pane). Groups are the
+# collapsible sub-categories shown in the left column; groups sharing an `axis` are
+# OR-ed in the query, different axes AND-ed. A chip's filter token is filterPrefix +
+# value. `separatorBefore` draws a divider above a group. Queried live against the Hub.
+[explore]
+label = "Explore by Task / Domain"
+
+[[explore.groups]]
+axis = "task"
+label = "Multimodal"
+filterPrefix = "task_categories:"
+[[explore.groups.chips]]
+label = "Image-Text-to-Text"
+value = "image-text-to-text"
+[[explore.groups.chips]]
+label = "Image-Text-to-Image"
+value = "image-text-to-image"
+[[explore.groups.chips]]
+label = "Image-Text-to-Video"
+value = "image-text-to-video"
+[[explore.groups.chips]]
+label = "Video-Text-to-Text"
+value = "video-text-to-text"
+[[explore.groups.chips]]
+label = "Visual Question Answering"
+value = "visual-question-answering"
+[[explore.groups.chips]]
+label = "Visual Document Retrieval"
+value = "visual-document-retrieval"
+[[explore.groups.chips]]
+label = "Any-to-Any"
+value = "any-to-any"
+
+[[explore.groups]]
+axis = "task"
+label = "Natural Language Processing"
+filterPrefix = "task_categories:"
+[[explore.groups.chips]]
+label = "Text Classification"
+value = "text-classification"
+[[explore.groups.chips]]
+label = "Token Classification"
+value = "token-classification"
+[[explore.groups.chips]]
+label = "Table Question Answering"
+value = "table-question-answering"
+[[explore.groups.chips]]
+label = "Question Answering"
+value = "question-answering"
+[[explore.groups.chips]]
+label = "Zero-Shot Classification"
+value = "zero-shot-classification"
+[[explore.groups.chips]]
+label = "Translation"
+value = "translation"
+[[explore.groups.chips]]
+label = "Summarization"
+value = "summarization"
+[[explore.groups.chips]]
+label = "Feature Extraction"
+value = "feature-extraction"
+[[explore.groups.chips]]
+label = "Text Generation"
+value = "text-generation"
+[[explore.groups.chips]]
+label = "Fill-Mask"
+value = "fill-mask"
+[[explore.groups.chips]]
+label = "Sentence Similarity"
+value = "sentence-similarity"
+[[explore.groups.chips]]
+label = "Table to Text"
+value = "table-to-text"
+[[explore.groups.chips]]
+label = "Multiple Choice"
+value = "multiple-choice"
+[[explore.groups.chips]]
+label = "Text Ranking"
+value = "text-ranking"
+[[explore.groups.chips]]
+label = "Text Retrieval"
+value = "text-retrieval"
+
+[[explore.groups]]
+axis = "task"
+label = "Computer Vision"
+filterPrefix = "task_categories:"
+[[explore.groups.chips]]
+label = "Depth Estimation"
+value = "depth-estimation"
+[[explore.groups.chips]]
+label = "Image Classification"
+value = "image-classification"
+[[explore.groups.chips]]
+label = "Object Detection"
+value = "object-detection"
+[[explore.groups.chips]]
+label = "Image Segmentation"
+value = "image-segmentation"
+[[explore.groups.chips]]
+label = "Text-to-Image"
+value = "text-to-image"
+[[explore.groups.chips]]
+label = "Image-to-Text"
+value = "image-to-text"
+[[explore.groups.chips]]
+label = "Image-to-Image"
+value = "image-to-image"
+[[explore.groups.chips]]
+label = "Image-to-Video"
+value = "image-to-video"
+[[explore.groups.chips]]
+label = "Unconditional Image Generation"
+value = "unconditional-image-generation"
+[[explore.groups.chips]]
+label = "Video Classification"
+value = "video-classification"
+[[explore.groups.chips]]
+label = "Text-to-Video"
+value = "text-to-video"
+[[explore.groups.chips]]
+label = "Zero-Shot Image Classification"
+value = "zero-shot-image-classification"
+[[explore.groups.chips]]
+label = "Mask Generation"
+value = "mask-generation"
+[[explore.groups.chips]]
+label = "Zero-Shot Object Detection"
+value = "zero-shot-object-detection"
+[[explore.groups.chips]]
+label = "Text-to-3D"
+value = "text-to-3d"
+[[explore.groups.chips]]
+label = "Image-to-3D"
+value = "image-to-3d"
+[[explore.groups.chips]]
+label = "Image Feature Extraction"
+value = "image-feature-extraction"
+
+[[explore.groups]]
+axis = "task"
+label = "Audio"
+filterPrefix = "task_categories:"
+[[explore.groups.chips]]
+label = "Text-to-Speech"
+value = "text-to-speech"
+[[explore.groups.chips]]
+label = "Text-to-Audio"
+value = "text-to-audio"
+[[explore.groups.chips]]
+label = "Automatic Speech Recognition"
+value = "automatic-speech-recognition"
+[[explore.groups.chips]]
+label = "Audio-to-Audio"
+value = "audio-to-audio"
+[[explore.groups.chips]]
+label = "Audio Classification"
+value = "audio-classification"
+[[explore.groups.chips]]
+label = "Voice Activity Detection"
+value = "voice-activity-detection"
+
+[[explore.groups]]
+axis = "task"
+label = "Tabular"
+filterPrefix = "task_categories:"
+[[explore.groups.chips]]
+label = "Tabular Classification"
+value = "tabular-classification"
+[[explore.groups.chips]]
+label = "Tabular Regression"
+value = "tabular-regression"
+[[explore.groups.chips]]
+label = "Tabular to Text"
+value = "tabular-to-text"
+[[explore.groups.chips]]
+label = "Time Series Forecasting"
+value = "time-series-forecasting"
+
+[[explore.groups]]
+axis = "task"
+label = "Learning & Robotics"
+filterPrefix = "task_categories:"
+[[explore.groups.chips]]
+label = "Reinforcement Learning"
+value = "reinforcement-learning"
+[[explore.groups.chips]]
+label = "Graph Machine Learning"
+value = "graph-ml"
+[[explore.groups.chips]]
+label = "Robotics"
+value = "robotics"
+
+[[explore.groups]]
+axis = "domain"
+label = "Domain"
+filterPrefix = ""
+separatorBefore = true
+[[explore.groups.chips]]
+label = "Art"
+value = "art"
+[[explore.groups.chips]]
+label = "Synthetic"
+value = "synthetic"
+[[explore.groups.chips]]
+label = "Medical"
+value = "medical"
+[[explore.groups.chips]]
+label = "Code"
+value = "code"
+[[explore.groups.chips]]
+label = "Biology"
+value = "biology"
+[[explore.groups.chips]]
+label = "Finance"
+value = "finance"
+[[explore.groups.chips]]
+label = "Legal"
+value = "legal"
+[[explore.groups.chips]]
+label = "Chemistry"
+value = "chemistry"
+[[explore.groups.chips]]
+label = "Agent"
+value = "agent"
+[[explore.groups.chips]]
+label = "Music"
+value = "music"
+[[explore.groups.chips]]
+label = "Climate"
+value = "climate"
+
+# Specialised AI-era dataset types not captured by Task/Domain, growing fast with AI.
+# Its own category (OR within, AND against Task/Domain), distinct from Domain.
+[[explore.groups]]
+axis = "ai"
+label = "AI Systems"
+filterPrefix = ""
+separatorBefore = true
+[[explore.groups.chips]]
+label = "Benchmarks"
+value = "benchmark"
+tooltip = "Benchmark datasets automatically aggregate evaluation results from model repositories across the Hugging Face Hub into a live leaderboard of top-performing models."
+[[explore.groups.chips]]
+label = "Agent Traces"
+value = "traces"
+tooltip = "Recorded runs of AI agents — tool-calling sequences, decisions, retries, and step-by-step reasoning trajectories — used for evaluation, debugging, and fine-tuning."
+
+[[packages]]
+name = "HuggingFaceDatasets.jl"
+github = "https://github.com/CarloLucibello/HuggingFaceDatasets.jl"
+
+[[packages]]
+name = "HTTP.jl"
+github = "https://github.com/JuliaWeb/HTTP.jl"
+
+[[packages]]
+name = "JSON3.jl"
+github = "https://github.com/quinnj/JSON3.jl"
+
+[[packages]]
+name = "Parquet2.jl"
+github = "https://github.com/ExpandingMan/Parquet2.jl"
+
+[[packages]]
+name = "Tables.jl"
+github = "https://github.com/JuliaData/Tables.jl"
+
+[[notebookSections]]
+label = "Hugging Face Datasets"
+
+[[notebookSections.notebooks]]
+name = "Load a Dataset"
+file = "hfds/tutorial-01-load-dataset.ipynb"
+bundled = true
+description = "Load an IMDb split with HuggingFaceDatasets.jl, convert to Julia objects, and inspect rows"
+
+[[notebookSections.notebooks]]
+name = "Browse the Hub"
+file = "hfds/tutorial-02-browse-hub.ipynb"
+bundled = true
+description = "Search the dataset catalogue over the REST API and read a dataset's metadata"
+
+[[wikis]]
+name = "Factsheet"
+file = "hfds/factsheet.md"
+bundled = true
+description = "Quick-reference: the Hub API endpoints, the token rule, and the Julia stack"
+
+[[wikis]]
+name = "Overview"
+file = "hfds/overview.md"
+bundled = true
+description = "What the Hugging Face Hub is, how datasets are organised, and the two access paths"
+
+[[wikis]]
+name = "Authentication"
+file = "hfds/authentication.md"
+bundled = true
+description = "Create an access token, when it is needed (gated/private), and how Pollis stores it"
+
+[[wikis]]
+name = "Browsing the Hub"
+file = "hfds/browsing-the-hub.md"
+bundled = true
+description = "Search, sort, and filter the dataset catalogue with the REST API"
+
+[[wikis]]
+name = "Loading Datasets"
+file = "hfds/loading-datasets.md"
+bundled = true
+description = "load_dataset, splits, with_format(\"julia\"), and indexing observations"
+
+[[wikis]]
+name = "Dataset Files"
+file = "hfds/dataset-files.md"
+bundled = true
+description = "The auto-generated Parquet shards, the listing endpoint, and reading them with Parquet2.jl"
+
+[[wikis]]
+name = "Choosing a Dataset"
+file = "hfds/choosing-a-dataset.md"
+bundled = true
+description = "Pick a dataset by task, size, licence, and split layout"
+
+[[wikis]]
+separator = true
+label = "Packages"
+
+[[wikis]]
+name = "HuggingFaceDatasets.jl"
+file = "hfds/huggingfacedatasets-jl.md"
+bundled = true
+description = "Package reference: load_dataset, DatasetDict, with_format, and the PythonCall backend"
+
+[[references]]
+title = "Datasets: A Community Library for Natural Language Processing"
+authors = "Lhoest, Quentin; Villanova del Moral, Albert; Jernite, Yacine; Thakur, Abhishek; von Platen, Patrick; Patil, Suraj; Chaumond, Julien; Drame, Mariama; Plu, Julien; Tunstall, Lewis; et al."
+year = 2021
+journal = "EMNLP (System Demonstrations)"
+url = "https://aclanthology.org/2021.emnlp-demo.21/"
+openAccess = true
+
+[[references]]
+title = "HuggingFaceDatasets.jl: Julia Interface to the Hugging Face Datasets Library"
+authors = "Lucibello, Carlo; contributors"
+year = 2024
+journal = "GitHub"
+url = "https://github.com/CarloLucibello/HuggingFaceDatasets.jl"
+openAccess = true
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[conceptMap]
+center = "HF Datasets"
+
+[[conceptMap.nodes]]
+id = "root"
+label = "HF Datasets"
+kind = "center"
+
+[[conceptMap.nodes]]
+id = "q_find"
+label = "Find a dataset"
+kind = "concept"
+
+[[conceptMap.nodes]]
+id = "q_load"
+label = "Load it into Julia"
+kind = "concept"
+
+[[conceptMap.nodes]]
+id = "q_files"
+label = "Get the raw files"
+kind = "concept"
+
+[[conceptMap.nodes]]
+id = "q_meta"
+label = "Read its metadata"
+kind = "concept"
+
+[[conceptMap.nodes]]
+id = "browse"
+label = "Browse the Hub"
+kind = "topic"
+model = "browse"
+
+[[conceptMap.nodes]]
+id = "load"
+label = "Load a Dataset"
+kind = "topic"
+model = "load"
+
+[[conceptMap.nodes]]
+id = "files"
+label = "Download Files"
+kind = "topic"
+model = "files"
+
+[[conceptMap.nodes]]
+id = "info"
+label = "Dataset Info"
+kind = "topic"
+model = "info"
+
+[[conceptMap.nodes]]
+id = "r_hfm"
+label = "Hugging Face Models"
+kind = "related"
+command = "chiara.explore.hfm"
+
+[[conceptMap.nodes]]
+id = "ext"
+label = "HuggingFaceDatasets.jl"
+kind = "external"
+url = "https://github.com/CarloLucibello/HuggingFaceDatasets.jl"
+
+[[conceptMap.edges]]
+from = "root"
+to = "q_find"
+label = "asks about"
+
+[[conceptMap.edges]]
+from = "root"
+to = "q_load"
+label = "asks about"
+
+[[conceptMap.edges]]
+from = "root"
+to = "q_files"
+label = "asks about"
+
+[[conceptMap.edges]]
+from = "root"
+to = "q_meta"
+label = "asks about"
+
+[[conceptMap.edges]]
+from = "q_find"
+to = "browse"
+label = "done with"
+
+[[conceptMap.edges]]
+from = "q_load"
+to = "load"
+label = "done with"
+
+[[conceptMap.edges]]
+from = "q_files"
+to = "files"
+label = "done with"
+
+[[conceptMap.edges]]
+from = "q_meta"
+to = "info"
+label = "done with"
+
+[[conceptMap.edges]]
+from = "root"
+to = "r_hfm"
+label = "pairs with"
+
+[[conceptMap.edges]]
+from = "q_load"
+to = "ext"
+label = "loaded with"
+
+[[bullets]]
+text = "Every modality"
+detail = "hundreds of thousands of datasets spanning text, image, audio, video, tabular, time-series, geospatial, document, and 3D data"
+
+[[bullets]]
+text = "Community-curated"
+detail = "open datasets for tasks like translation, automatic speech recognition, and image classification, each with a dataset card and many with an interactive Dataset Viewer (e.g. GLUE)"
+
+[[bullets]]
+text = "Git-backed repositories"
+detail = "each dataset is a Git repository whose data files define the train, evaluation, and test splits"
+
+[[bullets]]
+text = "Benchmarks and leaderboards"
+detail = "benchmark datasets (e.g. MMLU-Pro, HLE, GPQA) automatically aggregate evaluation results from models across the Hub into a live leaderboard of top performing models"
+
+[[bullets]]
+text = "Agent traces"
+detail = "trace datasets capture tool-calling sequences and step-by-step reasoning trajectories of AI agents for evaluation, debugging, and fine-tuning"
+
+[[decisionRows]]
+task = "Browse"
+context = "Discovery"
+purpose = "Find datasets by popularity, task, or tag over the REST API"
+
+[[decisionRows]]
+task = "Load"
+context = "In-memory"
+purpose = "Load a split into Julia and index it as a collection (HuggingFaceDatasets.jl)"
+
+[[decisionRows]]
+task = "Inspect"
+context = "Exploration"
+purpose = "Check fields, row counts, and sample observations before training"
+
+[[decisionRows]]
+task = "Download Files"
+context = "Bulk / offline"
+purpose = "Grab the raw Parquet shards for streaming or out-of-core work"
+
+[[decisionRows]]
+task = "Dataset Info"
+context = "Metadata"
+purpose = "Read tags, licence, splits, and size without downloading the data"
+
+[miniCharts]
+
+[miniCharts.browse]
+svg = '''
+var s = '<circle cx="24" cy="28" r="11" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.55"/>';
+s += '<line x1="32" y1="36" x2="42" y2="46" stroke="currentColor" stroke-width="1.8" opacity="0.55"/>';
+s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Browse</text>';
+return s;
+'''
+
+[miniCharts.load]
+svg = '''
+var s = '<rect x="14" y="30" width="26" height="20" rx="2" fill="none" stroke="currentColor" stroke-width="1.3" opacity="0.55"/>';
+s += '<line x1="27" y1="12" x2="27" y2="28" stroke="currentColor" stroke-width="1.5" opacity="0.6"/>';
+s += '<polyline points="22,23 27,29 32,23" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.6"/>';
+s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Load</text>';
+return s;
+'''
+
+[miniCharts.inspect]
+svg = '''
+var s = '<rect x="12" y="16" width="30" height="34" rx="2" fill="none" stroke="currentColor" stroke-width="1.3" opacity="0.5"/>';
+s += '<line x1="12" y1="27" x2="42" y2="27" stroke="currentColor" stroke-width="0.8" opacity="0.45"/>';
+s += '<line x1="12" y1="38" x2="42" y2="38" stroke="currentColor" stroke-width="0.8" opacity="0.45"/>';
+s += '<line x1="27" y1="16" x2="27" y2="50" stroke="currentColor" stroke-width="0.8" opacity="0.4"/>';
+s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Inspect</text>';
+return s;
+'''
+
+[miniCharts.files]
+svg = '''
+var s = '<rect x="16" y="14" width="22" height="28" rx="2" fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.4"/>';
+s += '<rect x="12" y="20" width="22" height="28" rx="2" fill="var(--vscode-editor-background)" stroke="currentColor" stroke-width="1.3" opacity="0.6"/>';
+s += '<line x1="17" y1="29" x2="29" y2="29" stroke="currentColor" stroke-width="1" opacity="0.5"/>';
+s += '<line x1="17" y1="35" x2="29" y2="35" stroke="currentColor" stroke-width="1" opacity="0.5"/>';
+s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Files</text>';
+return s;
+'''
+
+[miniCharts.info]
+svg = '''
+var s = '<circle cx="27" cy="30" r="13" fill="none" stroke="currentColor" stroke-width="1.4" opacity="0.55"/>';
+s += '<circle cx="27" cy="23" r="1.6" fill="currentColor" opacity="0.7"/>';
+s += '<line x1="27" y1="28" x2="27" y2="38" stroke="currentColor" stroke-width="1.8" opacity="0.6"/>';
+s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Info</text>';
+return s;
+'''
+
+[[codeBranches]]
+model = "browse"
+code = """
+using HTTP, JSON3
+
+# The Hub catalogue is a public REST API. A token is only needed for gated or
+# private datasets; click "Set token" on the Powered-by line to add one (it is
+# injected into this REPL session as ENV["HUGGING_FACE_HUB_TOKEN"], never saved).
+auth = haskey(ENV, "HUGGING_FACE_HUB_TOKEN") ? ["Authorization" => "Bearer $(ENV["HUGGING_FACE_HUB_TOKEN"])"] : Pair{String, String}[]
+get_json(url) = JSON3.read(HTTP.get(url, auth).body)
+
+# List the most-downloaded datasets, full metadata included
+url = "https://huggingface.co/api/datasets?sort=downloads&direction=-1&limit=10&full=true"
+datasets = get_json(url)
+
+for d in datasets
+    println(d.id, "  downloads=", get(d, :downloads, 0), "  likes=", get(d, :likes, 0))
+end
+"""
+
+[[codeBranches]]
+model = "load"
+code = """
+using HuggingFaceDatasets
+
+# load_dataset wraps the Python `datasets` library (PythonCall + CondaPkg). The
+# first call sets up a one-time Conda environment. A token in
+# ENV["HUGGING_FACE_HUB_TOKEN"] is used automatically for gated datasets.
+# with_format("julia") returns native Julia objects rather than Python ones.
+train = load_dataset("imdb", split = "train").with_format("julia")
+
+println("rows: ", length(train))   # number of observations in the split
+first_row = train[1]                # one observation as a Julia object
+println(first_row)
+"""
+
+[[codeBranches]]
+model = "inspect"
+code = """
+using HuggingFaceDatasets
+
+train = load_dataset("imdb", split = "train").with_format("julia")
+
+# A Dataset behaves like a Julia collection: length, indexing, and slicing
+println("rows:   ", length(train))
+sample = train[1]                   # one observation (a Dict of fields)
+println("fields: ", keys(sample))
+batch = train[1:4]                  # a small batch of observations
+
+# Index-based iteration is memory-friendly for large splits
+for i in 1:3
+    println(i, "  label=", train[i]["label"])
+end
+"""
+
+[[codeBranches]]
+model = "files"
+code = """
+using HTTP, JSON3, Parquet2, Tables
+
+auth = haskey(ENV, "HUGGING_FACE_HUB_TOKEN") ? ["Authorization" => "Bearer $(ENV["HUGGING_FACE_HUB_TOKEN"])"] : Pair{String, String}[]
+
+# Hugging Face auto-converts every dataset to Parquet. List the shards (the
+# response is nested: config => split => [shard URLs]).
+listing = JSON3.read(HTTP.get("https://huggingface.co/api/datasets/imdb/parquet", auth).body)
+println(listing)
+
+# Download one Parquet shard and read it lazily through the Tables.jl interface
+shard = "https://huggingface.co/api/datasets/imdb/parquet/plain_text/train/0.parquet"
+path = download(shard)
+ds = Parquet2.Dataset(path)
+println(Tables.schema(ds))          # column names and types, without loading all rows
+"""
+
+[[codeBranches]]
+model = "info"
+code = """
+using HTTP, JSON3
+
+auth = haskey(ENV, "HUGGING_FACE_HUB_TOKEN") ? ["Authorization" => "Bearer $(ENV["HUGGING_FACE_HUB_TOKEN"])"] : Pair{String, String}[]
+get_json(url) = JSON3.read(HTTP.get(url, auth).body)
+
+# Full metadata for one dataset: tags, licence, downloads, likes, ...
+info = get_json("https://huggingface.co/api/datasets/imdb")
+
+println("id:        ", info.id)
+println("downloads: ", get(info, :downloads, 0))
+println("likes:     ", get(info, :likes, 0))
+println("tags:      ", get(info, :tags, String[]))
+"""
+
+[[actionGroups]]
+id = "browse"
+label = "Browse the Hub"
+
+[[actionGroups.actions]]
+id = "hfds-browse-search"
+label = "Search by Query"
+desc = "Filter the catalogue by a free-text search string"
+code = """
+using HTTP, JSON3
+
+auth = haskey(ENV, "HUGGING_FACE_HUB_TOKEN") ? ["Authorization" => "Bearer $(ENV["HUGGING_FACE_HUB_TOKEN"])"] : Pair{String, String}[]
+
+q = HTTP.escapeuri("sentiment")
+res = JSON3.read(HTTP.get("https://huggingface.co/api/datasets?search=$q&limit=10", auth).body)
+for d in res
+    println(d.id)
+end
+"""
+
+[[actionGroups.actions]]
+id = "hfds-browse-tag"
+label = "Filter by Task"
+desc = "List the top datasets for a task category, by downloads"
+code = """
+using HTTP, JSON3
+
+auth = haskey(ENV, "HUGGING_FACE_HUB_TOKEN") ? ["Authorization" => "Bearer $(ENV["HUGGING_FACE_HUB_TOKEN"])"] : Pair{String, String}[]
+
+# Task tags follow the form task_categories:<name> (text-classification, etc.)
+url = "https://huggingface.co/api/datasets?filter=task_categories:text-classification&sort=downloads&direction=-1&limit=10"
+for d in JSON3.read(HTTP.get(url, auth).body)
+    println(d.id)
+end
+"""
+
+[[actionGroups]]
+id = "load"
+label = "Load a Dataset"
+
+[[actionGroups.actions]]
+id = "hfds-load-dict"
+label = "Load All Splits"
+desc = "Omit split to get a DatasetDict keyed by split name"
+code = """
+using HuggingFaceDatasets
+
+# Omit `split` to load every split as a DatasetDict
+dd = load_dataset("imdb")
+println(dd)                         # shows the available splits and features
+
+train = dd["train"].with_format("julia")
+println("train rows: ", length(train))
+"""
+
+[[actionGroups.actions]]
+id = "hfds-load-subset"
+label = "Take a Subset"
+desc = "Slice a small subset for quick experiments"
+code = """
+using HuggingFaceDatasets
+
+train = load_dataset("imdb", split = "train").with_format("julia")
+
+subset = train[1:100]               # first 100 observations
+labels = [train[i]["label"] for i in 1:100]
+println("positive in first 100: ", count(==(1), labels))
+"""
+
+[[actionGroups]]
+id = "files"
+label = "Download Files"
+
+[[actionGroups.actions]]
+id = "hfds-files-list"
+label = "List Parquet Shards"
+desc = "See the auto-generated Parquet shards per config and split"
+code = """
+using HTTP, JSON3
+
+auth = haskey(ENV, "HUGGING_FACE_HUB_TOKEN") ? ["Authorization" => "Bearer $(ENV["HUGGING_FACE_HUB_TOKEN"])"] : Pair{String, String}[]
+
+# Nested listing: config => split => [shard URLs]
+tree = JSON3.read(HTTP.get("https://huggingface.co/api/datasets/imdb/parquet", auth).body)
+println(tree)
+"""
+
+[[actionGroups.actions]]
+id = "hfds-files-read"
+label = "Read a Shard"
+desc = "Download one Parquet shard and read it via Tables.jl"
+code = """
+using HTTP, Parquet2, Tables
+
+shard = "https://huggingface.co/api/datasets/imdb/parquet/plain_text/train/0.parquet"
+path = download(shard)
+ds = Parquet2.Dataset(path)
+println(Tables.schema(ds))          # column names and types, lazily
+"""

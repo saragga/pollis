@@ -23,7 +23,22 @@ import type { IKgmApiModel } from '../common/kgm.types.js';
 import { IRequestService, asJson } from '../../../../../platform/request/common/request.js';
 import { CancellationToken } from '../../../../../base/common/cancellation.js';
 
-import { openWikiByFile, openNotebookByFile, openPackageItem, openVideoList, openInBrowser, autoSelectJuliaKernel } from './model.handler.js';
+import { IFileService } from '../../../../../platform/files/common/files.js';
+import { IPathService } from '../../../../services/path/common/pathService.js';
+import { IWorkspaceContextService } from '../../../../../platform/workspace/common/workspace.js';
+import { ISecretStorageService } from '../../../../../platform/secrets/common/secrets.js';
+import { IWebviewService } from '../../../webview/browser/webview.js';
+import { openWikiByFile, openNotebookByFile, openPackageItem, openVideoList, openInBrowser, autoSelectJuliaKernel, createPackageStatusWiring, createApiKeyWiring } from './model.handler.js';
+import { CREDENTIALS } from '../common/credentials.js';
+
+const KGM_API_KEY = {
+	label: 'Kaggle',
+	noun: 'credentials',
+	fields: [
+		{ ...CREDENTIALS.kaggleUsername, prompt: 'Kaggle username', password: false },
+		{ ...CREDENTIALS.kaggleKey, prompt: 'Kaggle API key' },
+	],
+};
 import { Event } from '../../../../../base/common/event.js';
 import { IUntitledTextResourceEditorInput } from '../../../../common/editor.js';
 import { CellEditType, CellKind } from '../../../notebook/common/notebookCommon.js';
@@ -42,10 +57,17 @@ export function registerKgmWebviewHandlers(
 	languageService: ILanguageService,
 	themeService: IThemeService,
 	requestService: IRequestService,
+	fileService: IFileService,
+	pathService: IPathService,
+	workspaceContextService: IWorkspaceContextService,
+	secretStorageService: ISecretStorageService,
+	webviewService: IWebviewService,
 	initialModel?: string,
 ): DisposableStore {
 	const disposables = new DisposableStore();
 	const kgmData = metadata.kgm;
+	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, kgmData.packages.map(p => p.name), fileService, pathService, commandService, notificationService, workspaceContextService);
+	const apiKey = createApiKeyWiring(webviewInput.webview, KGM_API_KEY, secretStorageService, quickInputService, webviewService);
 
 	const lastCode: { [target: string]: string } = {};
 	const postColorized = async (code: string, target: string): Promise<void> => {
@@ -87,6 +109,8 @@ export function registerKgmWebviewHandlers(
 		if (initialModel) {
 			webviewInput.webview.postMessage({ command: 'setModel', model: initialModel });
 		}
+		void pkgStatus.postStatus();
+		void apiKey.postStatus();
 	}, 100);
 
 	disposables.add(webviewInput.webview.onDidDispose(() => disposables.dispose()));
@@ -131,8 +155,9 @@ export function registerKgmWebviewHandlers(
 					};
 					await editorService.openEditor(input);
 				} else if (msg.target === 'juliaRepl') {
+					const prefix = await apiKey.replPrefix(msg.target);
 					await commandService.executeCommand('language-julia.startREPL');
-					await commandService.executeCommand('workbench.action.terminal.sendSequence', { text: code + '\n' });
+					await commandService.executeCommand('workbench.action.terminal.sendSequence', { text: prefix + code + '\n' });
 				} else if (msg.target === 'notebook') {
 					const ref = await notebookEditorModelResolverService.resolve({ untitledResource: undefined }, 'jupyter-notebook');
 					const notebook = ref.object.notebook;
@@ -155,6 +180,7 @@ export function registerKgmWebviewHandlers(
 				} else if (msg.target === 'pluto') {
 					await commandService.executeCommand('pollis.action.sendToPluto', code);
 				}
+				await pkgStatus.nudgeIfMissing(msg.target);
 				break;
 			}
 			case 'openUrl':
@@ -170,8 +196,17 @@ export function registerKgmWebviewHandlers(
 			case 'colorize':
 				await postColorized(msg.code, msg.target ?? 'main');
 				break;
+			case 'installPackages':
+				await pkgStatus.handleInstall();
+				break;
 			case 'cancelAction':
 				await quickInputService.cancel();
+				break;
+			case 'setApiKey':
+				await apiKey.handleSet();
+				break;
+			case 'clearApiKey':
+				await apiKey.handleClear();
 				break;
 			case 'fetchKgmModels': {
 				const sortMap: Record<string, string> = {

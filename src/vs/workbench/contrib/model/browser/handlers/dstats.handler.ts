@@ -12,7 +12,8 @@ import { INotificationService } from '../../../../../platform/notification/commo
 import { ICommandService } from '../../../../../platform/commands/common/commands.js';
 import { IWebviewWorkbenchService } from '../../../webviewPanel/browser/webviewWorkbenchService.js';
 import { IDstatsMetadata, DstatsWebviewMessage } from '../common/dstats.types.js';
-import { openWikiByFile, openNotebookByFile, openPackageItem, openReferenceList, openVideoList, openInBrowser } from './model.handler.js';
+import { IModelPaper } from '../common/model.types.js';
+import { openWikiByFile, openNotebookByFile, openPackageItem, openVideoList, openInBrowser } from './model.handler.js';
 
 export function registerDstatsWebviewHandlers(
 	webviewInput: ReturnType<IWebviewWorkbenchService['openWebview']>,
@@ -63,7 +64,8 @@ export function registerDstatsWebviewHandlers(
 			case 'openDocs':
 				try {
 					if (msg.target === 'paper') {
-						await openReferenceList(dstatsData.references, quickInputService, commandService, clipboardService, notificationService);
+						const papers = dstatsData.references.filter((r): r is IModelPaper => !('separator' in r));
+						webviewInput.webview.postMessage({ command: 'showReferences', references: papers });
 					} else {
 						await openPackageItem('repository', dstatsData.packages, commandService, quickInputService, clipboardService, notificationService);
 					}
@@ -71,6 +73,15 @@ export function registerDstatsWebviewHandlers(
 					webviewInput.webview.postMessage({ command: 'actionDone' });
 				}
 				break;
+			case 'openReference': {
+				const papers = dstatsData.references.filter((r): r is IModelPaper => !('separator' in r));
+				const paper = papers.find(p => p.title === msg.id);
+				if (paper) {
+					const url = paper.doi ? `https://doi.org/${paper.doi}` : paper.url;
+					if (url) { await openInBrowser(url, commandService); }
+				}
+				break;
+			}
 			case 'openNotebook':
 				await openNotebookByFile(msg.target, dstatsData.notebooks, openerService, editorService);
 				break;

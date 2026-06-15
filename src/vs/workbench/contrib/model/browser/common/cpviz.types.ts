@@ -26,4 +26,6 @@ export type CpvizWebviewMessage =
 	| { command: 'openVideoList' }
 	| { command: 'runCode'; target: 'newFile' | 'juliaRepl' | 'notebook' | 'pluto'; code: string }
 	| { command: 'colorize'; code: string; target?: 'main' | 'panel' }
+	| { command: 'openReference'; id: string }
+	| { command: 'installPackages' }
 	| { command: 'cancelAction' };

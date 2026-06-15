@@ -51,28 +51,23 @@ MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
 
 MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
 	group: '1_welcome',
-	command: { id: 'workbench.action.docs', title: localize('welcome.docs', 'Documentation') },
+	submenu: ConsultSubmenuId,
+	title: localize('welcome.consult', 'Consult AI'),
 	order: 2,
-}); // See Stata
-
-MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
-	group: '1_welcome',
-	command: { id: 'welcome.showAllWalkthroughs', title: localize('welcome.showAllWalkthroughs', 'Open Walkthrough') },
-	order: 3,
 });
 
 MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
 	group: '1_welcome',
-	submenu: TrainSubmenuId,
-	title: localize('welcome.train', 'Training'),
-	order: 5,
+	command: { id: 'workbench.action.docs', precondition: ContextKeyExpr.false(),
+		title: localize('welcome.docs', 'Documentation') },
+	order: 3,
 }); // See Stata
 
 MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
 	group: '1_welcome',
-	submenu: ConsultSubmenuId,
-	title: localize('welcome.consult', 'Consult AI'),
-	order: 6,
+	command: { id: COMPOSE_COMMAND_ID, precondition: ContextKeyExpr.false(),
+		title: localize('welcome.thesis', 'Thesis') },
+	order: 4,
 });
 
 MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
@@ -80,46 +75,82 @@ MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
 	command: {
 		id: COMPOSE_COMMAND_ID, precondition: ContextKeyExpr.false(),
 	title: localize('welcome.colab', 'Collaborate'),},
-	order: 7,
-});
-
-
-// ============================================
-// MENU GROUP 2: AI COMPOSITION
-// ============================================
-
-MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
-	group: '2_ai',
-	submenu: AgentsSubmenuId,
-	title: localize('compose.agents', 'Coding Agents'),
-	order: 1,
-}); // Coding agents are autonomous AI systems that plan, reason, and execute multi-step software engineering tasks — reading and writing files, running commands, searching codebases, and invoking external tools. Unlike chat assistants, they operate with a degree of autonomy: given a goal, an agent breaks it into steps, acts on the environment, observes the results, and iterates until the task is complete.
-
-MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
-	group: '2_ai',
-	submenu: SkillsSubmenuId,
-	title: localize('compose.skills', 'Skills'),
-	order: 2,
-}); // Skills are named, reusable instruction sets that AI agents activate for specific tasks — encoding domain knowledge, preferred workflows, and behavioural guidelines. Each skill defines when it applies, what context to load, and how the agent should behave, allowing a general-purpose model to specialise on demand without retraining.
-
-MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
-	group: '2_ai',
-	submenu: MCPSubmenuId,
-	title: localize('compose.mpc', 'Model Context Protocol Servers'),
-	order: 3,
-}); // MCP Servers expose tools, resources, and prompts that AI models can use to interact with external systems — databases, APIs, file systems, and local applications — through a standardised protocol. By connecting to these servers, models can take actions, retrieve live data, and execute workflows beyond their training context.
-
-MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
-	group: '2_ai',
-	command: { id: COMPOSE_COMMAND_ID, precondition: ContextKeyExpr.false(), title: localize('compose.rag', 'Knowledge Retrieval') },
-	order: 4,
-}); // RAGTools.jl, DocsScraper.jl
-
-MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
-	group: '2_ai',
-	command: { id: COMPOSE_COMMAND_ID, precondition: ContextKeyExpr.false(), title: localize('compose.ft', 'Fine-Tune Model') },
 	order: 5,
 });
+
+MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
+	group: '1_welcome',
+	submenu: TrainSubmenuId,
+	title: localize('welcome.train', 'Training'),
+	order: 6,
+}); // See Stata
+
+MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
+	group: '2_welcome',
+	command: {
+		id: COMPOSE_COMMAND_ID, precondition: ContextKeyExpr.false(),
+	title: localize('welcome.colab', 'Collaborate'),},
+	order: 1,
+});
+
+// ============================================
+// MENU GROUP 2:
+// ============================================
+
+MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
+	group: '2_kaggle',
+	command: {
+		id: COMPOSE_COMMAND_ID, precondition: ContextKeyExpr.false(),
+	title: localize('kaggle.kc', 'Kaggle Competitions'),},
+	order: 1,
+}); // https://www.kaggle.com/competitions
+
+MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
+	group: '2_kaggle',
+	command: {
+		id: COMPOSE_COMMAND_ID, precondition: ContextKeyExpr.false(),
+	title: localize('kaggle.kga', 'Kaggle Game Arena'),},
+	order: 2,
+});
+
+
+
+// ============================================
+// MENU GROUP 3: AI COMPOSITION
+// ============================================
+
+// MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
+// 	group: '2_ai',
+// 	submenu: AgentsSubmenuId,
+// 	title: localize('compose.agents', 'Coding Agents'),
+// 	order: 1,
+// }); // Coding agents are autonomous AI systems that plan, reason, and execute multi-step software engineering tasks — reading and writing files, running commands, searching codebases, and invoking external tools. Unlike chat assistants, they operate with a degree of autonomy: given a goal, an agent breaks it into steps, acts on the environment, observes the results, and iterates until the task is complete.
+
+// MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
+// 	group: '2_ai',
+// 	submenu: SkillsSubmenuId,
+// 	title: localize('compose.skills', 'Skills'),
+// 	order: 2,
+// }); // Skills are named, reusable instruction sets that AI agents activate for specific tasks — encoding domain knowledge, preferred workflows, and behavioural guidelines. Each skill defines when it applies, what context to load, and how the agent should behave, allowing a general-purpose model to specialise on demand without retraining.
+
+// MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
+// 	group: '2_ai',
+// 	submenu: MCPSubmenuId,
+// 	title: localize('compose.mpc', 'Model Context Protocol Servers'),
+// 	order: 3,
+// }); // MCP Servers expose tools, resources, and prompts that AI models can use to interact with external systems — databases, APIs, file systems, and local applications — through a standardised protocol. By connecting to these servers, models can take actions, retrieve live data, and execute workflows beyond their training context.
+
+// MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
+// 	group: '2_ai',
+// 	command: { id: COMPOSE_COMMAND_ID, precondition: ContextKeyExpr.false(), title: localize('compose.rag', 'Knowledge Retrieval') },
+// 	order: 4,
+// }); // RAGTools.jl, DocsScraper.jl
+
+// MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
+// 	group: '2_ai',
+// 	command: { id: COMPOSE_COMMAND_ID, precondition: ContextKeyExpr.false(), title: localize('compose.ft', 'Fine-Tune Model') },
+// 	order: 5,
+// });
 
 // ============================================
 // MENU GROUP 3: TASKS
@@ -136,11 +167,12 @@ MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
 // MENU GROUP 4: PACKAGES & EXTENSIONS
 // ============================================
 
+
 MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
 	group: '4_pe',
 	command: {
 		id: COMPOSE_COMMAND_ID, precondition: ContextKeyExpr.false(),
-		title: localize('compose.packages', 'Create Julia Package'),
+		title: localize('compose.themes', 'Create Menu Item and Webview'),
 	},
 	order: 1,
 });
@@ -149,7 +181,7 @@ MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
 	group: '4_pe',
 	command: {
 		id: COMPOSE_COMMAND_ID, precondition: ContextKeyExpr.false(),
-		title: localize('compose.themes', 'Create Menu Item and Webview'),
+		title: localize('compose.packages', 'Create Julia Package'),
 	},
 	order: 2,
 });
@@ -160,50 +192,8 @@ MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
 		id: COMPOSE_COMMAND_ID, precondition: ContextKeyExpr.false(),
 		title: localize('compose.extensions', 'Create Pollis Extension'),
 	},
-	order: 2,
-});
-
-
-// ============================================
-// SUBMENU: TRAINING
-// ============================================
-
-MenuRegistry.appendMenuItem(TrainSubmenuId, {
-	group: '1_train',
-	command: { id: COMPOSE_COMMAND_ID, precondition: ContextKeyExpr.false(), title: localize('train.netcourses', 'Net Courses') },
-	order: 1,
-}); // See Stata
-
-MenuRegistry.appendMenuItem(TrainSubmenuId, {
-	group: '1_train',
-	command: { id: COMPOSE_COMMAND_ID, precondition: ContextKeyExpr.false(), title: localize('train.classroom', 'Classroom and Net Training') },
-	order: 2,
-}); // See Stata
-
-MenuRegistry.appendMenuItem(TrainSubmenuId, {
-	group: '1_train',
-	command: { id: COMPOSE_COMMAND_ID, precondition: ContextKeyExpr.false(), title: localize('train.organisational', 'Organizational Training') },
 	order: 3,
-}); // See Stata
-
-MenuRegistry.appendMenuItem(TrainSubmenuId, {
-	group: '1_train',
-	command: { id: COMPOSE_COMMAND_ID, precondition: ContextKeyExpr.false(), title: localize('train.organisational', 'Video Tutorials') },
-	order: 4,
-}); // See Stata
-
-MenuRegistry.appendMenuItem(TrainSubmenuId, {
-	group: '1_train',
-	command: { id: COMPOSE_COMMAND_ID, precondition: ContextKeyExpr.false(), title: localize('train.organisational', 'Webinars') },
-	order: 5,
-}); // See Stata
-
-MenuRegistry.appendMenuItem(TrainSubmenuId, {
-	group: '1_train',
-	command: { id: COMPOSE_COMMAND_ID, precondition: ContextKeyExpr.false(), title: localize('train.organisational', 'Third-Party Courses') },
-	order: 6,
-}); // See Stata
-
+});
 
 
 // ============================================
@@ -222,6 +212,42 @@ MenuRegistry.appendMenuItem(ConsultSubmenuId, {
 	command: { id: COMPOSE_COMMAND_ID, precondition: ContextKeyExpr.false(), title: localize('consult.repl', 'REPL AI Interface') },
 	order: 2,
 }); // Zana.jl
+
+
+
+// ============================================
+// SUBMENU: CREATE TRAINING
+// ============================================
+
+MenuRegistry.appendMenuItem(TrainSubmenuId, {
+	group: '1_train',
+	command: { id: COMPOSE_COMMAND_ID, precondition: ContextKeyExpr.false(), title: localize('train.netcourses', 'Net Courses') },
+	order: 2,
+}); // See Stata
+
+MenuRegistry.appendMenuItem(TrainSubmenuId, {
+	group: '1_train',
+	command: { id: COMPOSE_COMMAND_ID, precondition: ContextKeyExpr.false(), title: localize('train.classroom', 'Classroom and Net Training') },
+	order: 3,
+}); // See Stata
+
+MenuRegistry.appendMenuItem(TrainSubmenuId, {
+	group: '1_train',
+	command: { id: COMPOSE_COMMAND_ID, precondition: ContextKeyExpr.false(), title: localize('train.organisational', 'Organizational Training') },
+	order: 4,
+}); // See Stata
+
+MenuRegistry.appendMenuItem(TrainSubmenuId, {
+	group: '1_train',
+	command: { id: COMPOSE_COMMAND_ID, precondition: ContextKeyExpr.false(), title: localize('train.organisational', 'Video Tutorials') },
+	order: 5,
+}); // See Stata
+
+MenuRegistry.appendMenuItem(TrainSubmenuId, {
+	group: '1_train',
+	command: { id: COMPOSE_COMMAND_ID, precondition: ContextKeyExpr.false(), title: localize('train.organisational', 'Webinars') },
+	order: 6,
+}); // See Stata
 
 
 // ============================================

@@ -126,14 +126,14 @@ export function getXlsxHtml(mermaidJs: string | undefined, metadata: IXlsxMetada
 		extraCss: `
 			.refs-container { display: flex; gap: 16px; height: 400px; }
 			.refs-list-panel { flex: 0 0 60%; overflow-y: auto; padding-right: 8px; }
-			.refs-actions-panel { flex: 0 0 40%; border-left: 1px solid var(--vscode-widget-border); padding-left: 16px; overflow-y: auto; }
+			.refs-actions-panel { flex: 1; min-width: 0; border-left: 1px solid var(--vscode-widget-border); padding-left: 16px; overflow-y: auto; }
 			.references-list { display: flex; flex-direction: column; gap: 8px; }
-			.reference-item { background: var(--vscode-list-hoverBackground); border: 1px solid var(--vscode-widget-border); border-radius: 4px; padding: 10px; text-align: left; cursor: pointer; transition: all 0.2s; }
+			.reference-item { background: var(--vscode-list-hoverBackground); border: 1px solid var(--vscode-widget-border); border-radius: 4px; padding: 10px; text-align: left; cursor: pointer; transition: all 0.2s; width: 100%; font-family: var(--vscode-font-family); }
 			.reference-item:hover { background: var(--vscode-list-activeSelectionBackground); border-color: var(--vscode-focusBorder); }
 			.reference-item.active { background: var(--vscode-list-activeSelectionBackground); border-color: var(--vscode-focusBorder); }
 			.ref-title { display: block; font-weight: 500; color: var(--vscode-foreground); margin-bottom: 4px; word-break: break-word; }
 			.ref-desc { display: block; font-size: 11px; color: var(--vscode-descriptionForeground); }
-			.action-btn { display: block; width: 100%; margin-bottom: 8px; padding: 8px 12px; background: var(--vscode-button-background); color: var(--vscode-button-foreground); border: none; border-radius: 3px; cursor: pointer; font-size: 12px; transition: background 0.2s; }
+			.action-btn { display: block; width: 100%; margin-bottom: 8px; padding: 8px 12px; background: var(--vscode-button-background); color: var(--vscode-button-foreground); border: none; border-radius: 3px; cursor: pointer; font-size: 12px; font-family: var(--vscode-font-family); transition: background 0.2s; }
 			.action-btn:hover { background: var(--vscode-button-hoverBackground); }
 			.ref-placeholder { font-size: 12px; color: var(--vscode-descriptionForeground); text-align: center; padding: 20px 10px; }
 		`,
@@ -181,6 +181,7 @@ export function getXlsxHtml(mermaidJs: string | undefined, metadata: IXlsxMetada
 				+ '</div>'
 				+ '</div>';
 			rightPanel.innerHTML = html;
+			placePanel('sec-learn');
 			rightPanel.style.display = 'block';
 			document.getElementById('btn-refs-close').addEventListener('click', function() {
 				rightPanel.innerHTML = '';

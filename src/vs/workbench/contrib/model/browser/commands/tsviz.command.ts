@@ -17,6 +17,9 @@ import { IThemeService } from '../../../../../platform/theme/common/themeService
 import { getMermaidUris } from '../../../mermaid/browser/mermaidHelper.js';
 import { ITsvizMetadata } from '../common/tsviz.types.js';
 import { IModelReference, IModelNotebookSection } from '../common/model.types.js';
+import { IFileService } from '../../../../../platform/files/common/files.js';
+import { IPathService } from '../../../../services/path/common/pathService.js';
+import { IWorkspaceContextService } from '../../../../../platform/workspace/common/workspace.js';
 import { registerTsvizWebviewHandlers } from '../handlers/tsviz.handler.js';
 import { getTsvizHtml } from '../webviews/tsviz.template.js';
 
@@ -173,6 +176,9 @@ export function openTsvizWebview(
 	notebookKernelService: INotebookKernelService,
 	languageService: ILanguageService,
 	themeService: IThemeService,
+	fileService: IFileService,
+	pathService: IPathService,
+	workspaceContextService: IWorkspaceContextService,
 	initialModel?: string,
 ): void {
 	const mermaid = getMermaidUris();
@@ -204,6 +210,9 @@ export function openTsvizWebview(
 		notebookKernelService,
 		languageService,
 		themeService,
+		fileService,
+		pathService,
+		workspaceContextService,
 		initialModel,
 	);
 }

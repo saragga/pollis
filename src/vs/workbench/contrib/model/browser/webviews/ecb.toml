@@ -1,0 +1,583 @@
+# ECB Data Portal Webview Configuration
+# Declarative source. The build script generates ecb.data.ts.
+# Run: npm run gulp compile-toml
+#
+# Approach: the ECB Data Portal exposes a standard SDMX 2.1 REST API at
+# https://data-api.ecb.europa.eu/service/ and needs NO API key. We request
+# format=csvdata (a flat table) and read it with HTTP.jl + CSV.jl into a
+# Tables.jl-compatible table; the user pipes that into DataFrames, TimeSeries,
+# or any other Tables.jl sink downstream.
+
+[meta]
+title = "ECB Data Portal"
+viewType = "pollis.ecb"
+defaultModel = "exchange"
+models = ["exchange", "rates", "inflation", "money", "yields"]
+wideLayout = true
+illusCollapsed = true
+illustrationText = "Pull euro-area statistics from the ECB Data Portal into Julia: exchange rates, the key ECB interest rates, HICP inflation, monetary aggregates, and the yield curve."
+
+[[packages]]
+name = "HTTP.jl"
+github = "https://github.com/JuliaWeb/HTTP.jl"
+
+[[packages]]
+name = "CSV.jl"
+github = "https://github.com/JuliaData/CSV.jl"
+
+[[packages]]
+name = "Tables.jl"
+github = "https://github.com/JuliaData/Tables.jl"
+
+[[packages]]
+name = "TimeSeries.jl"
+github = "https://github.com/JuliaStats/TimeSeries.jl"
+
+[[notebookSections]]
+label = "ECB Data Portal"
+
+[[notebookSections.notebooks]]
+name = "First Series"
+file = "ecb/tutorial-01-first-series.ipynb"
+bundled = true
+description = "Fetch the US dollar / euro reference rate with format=csvdata and read it into a table"
+
+[[notebookSections.notebooks]]
+name = "Several Series"
+file = "ecb/tutorial-02-multiple-series.ipynb"
+bundled = true
+description = "Download a handful of series and align them on TIME_PERIOD into one panel"
+
+[[notebookSections.notebooks]]
+name = "Query Options"
+file = "ecb/tutorial-03-query-options.ipynb"
+bundled = true
+description = "startPeriod and endPeriod, lastNObservations, and the detail parameter"
+
+[[notebookSections.notebooks]]
+name = "Building a Dashboard"
+file = "ecb/tutorial-04-dashboard.ipynb"
+bundled = true
+description = "Combine the policy rate, HICP inflation, and an exchange rate into one chart"
+
+[[wikis]]
+name = "Factsheet"
+file = "ecb/factsheet.md"
+bundled = true
+description = "Quick-reference: the base URL, the flowRef/key structure, formats, and the Julia stack"
+
+[[wikis]]
+name = "Overview"
+file = "ecb/overview.md"
+bundled = true
+description = "What the ECB Data Portal is, the SDMX REST API, and how series keys are built"
+
+[[wikis]]
+name = "Accessing Data"
+file = "ecb/accessing-data.md"
+bundled = true
+description = "The HTTP + CSV + Tables recipe: no API key, format=csvdata, into a Tables.jl table"
+
+[[wikis]]
+name = "Finding Series"
+file = "ecb/finding-series.md"
+bundled = true
+description = "Browse the data categories, read a series key off the portal, and a table of common keys"
+
+[[wikis]]
+name = "Query Options"
+file = "ecb/query-options.md"
+bundled = true
+description = "Query parameters: startPeriod, endPeriod, lastNObservations, detail, and updatedAfter"
+
+[[wikis]]
+name = "SDMX and Alternatives"
+file = "ecb/sdmx-alternatives.md"
+bundled = true
+description = "The SDMX formats explained, and SDMX.jl as a parsed-metadata alternative to raw CSV"
+
+[[references]]
+title = "ECB Data Portal: API Documentation"
+authors = "European Central Bank"
+year = 2024
+journal = "data.ecb.europa.eu"
+url = "https://data.ecb.europa.eu/help/api/overview"
+openAccess = true
+
+[[references]]
+title = "SDMX 2.1 RESTful Web Services Specification"
+authors = "SDMX Technical Working Group"
+year = 2023
+journal = "sdmx.org"
+url = "https://sdmx.org/?page_id=5008"
+openAccess = true
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[conceptMap]
+center = "ECB"
+
+[[conceptMap.nodes]]
+id = "root"
+label = "ECB"
+kind = "center"
+
+[[conceptMap.nodes]]
+id = "q_fx"
+label = "Track the euro"
+kind = "concept"
+
+[[conceptMap.nodes]]
+id = "q_policy"
+label = "Follow monetary policy"
+kind = "concept"
+
+[[conceptMap.nodes]]
+id = "q_prices"
+label = "Measure inflation"
+kind = "concept"
+
+[[conceptMap.nodes]]
+id = "q_market"
+label = "Read the bond market"
+kind = "concept"
+
+[[conceptMap.nodes]]
+id = "exchange"
+label = "Exchange Rates"
+kind = "topic"
+model = "exchange"
+
+[[conceptMap.nodes]]
+id = "rates"
+label = "Key Interest Rates"
+kind = "topic"
+model = "rates"
+
+[[conceptMap.nodes]]
+id = "inflation"
+label = "HICP Inflation"
+kind = "topic"
+model = "inflation"
+
+[[conceptMap.nodes]]
+id = "money"
+label = "Monetary Aggregates"
+kind = "topic"
+model = "money"
+
+[[conceptMap.nodes]]
+id = "yields"
+label = "Yield Curve"
+kind = "topic"
+model = "yields"
+
+[[conceptMap.nodes]]
+id = "r_fred"
+label = "FRED"
+kind = "related"
+command = "chiara.explore.adr.fred"
+
+[[conceptMap.nodes]]
+id = "ext"
+label = "ECB Data Portal"
+kind = "external"
+url = "https://data.ecb.europa.eu/"
+
+[[conceptMap.edges]]
+from = "root"
+to = "q_fx"
+label = "asks about"
+
+[[conceptMap.edges]]
+from = "root"
+to = "q_policy"
+label = "asks about"
+
+[[conceptMap.edges]]
+from = "root"
+to = "q_prices"
+label = "asks about"
+
+[[conceptMap.edges]]
+from = "root"
+to = "q_market"
+label = "asks about"
+
+[[conceptMap.edges]]
+from = "q_fx"
+to = "exchange"
+label = "done with"
+
+[[conceptMap.edges]]
+from = "q_policy"
+to = "rates"
+label = "done with"
+
+[[conceptMap.edges]]
+from = "q_policy"
+to = "money"
+label = "done with"
+
+[[conceptMap.edges]]
+from = "q_prices"
+to = "inflation"
+label = "done with"
+
+[[conceptMap.edges]]
+from = "q_market"
+to = "yields"
+label = "done with"
+
+[[conceptMap.edges]]
+from = "root"
+to = "r_fred"
+label = "compare with"
+
+[[conceptMap.edges]]
+from = "root"
+to = "ext"
+label = "served by"
+
+[[bullets]]
+text = "Exchange Rates"
+detail = "the euro reference rates against the US dollar, sterling, the yen, and more"
+
+[[bullets]]
+text = "Key Interest Rates"
+detail = "the main refinancing, deposit facility, and marginal lending rates, plus the €STR"
+
+[[bullets]]
+text = "HICP Inflation"
+detail = "the Harmonised Index of Consumer Prices, headline and core, as annual rates of change"
+
+[[bullets]]
+text = "Monetary Aggregates"
+detail = "the M1, M2, and M3 money stocks and their annual growth rates"
+
+[[bullets]]
+text = "Yield Curve"
+detail = "the euro area AAA government bond spot rates across maturities"
+
+[[decisionRows]]
+task = "Exchange Rates"
+context = "Currency"
+purpose = "Chart a euro reference rate such as USD/EUR over time"
+
+[[decisionRows]]
+task = "Key Interest Rates"
+context = "Policy"
+purpose = "Follow the deposit facility rate or the €STR"
+
+[[decisionRows]]
+task = "HICP Inflation"
+context = "Prices"
+purpose = "Read euro area or country HICP inflation, headline or core"
+
+[[decisionRows]]
+task = "Monetary Aggregates"
+context = "Money"
+purpose = "Track M3 (or M1) growth in the euro area"
+
+[[decisionRows]]
+task = "Yield Curve"
+context = "Bonds"
+purpose = "Pull AAA government bond spot yields at chosen maturities"
+
+[miniCharts]
+
+[miniCharts.exchange]
+svg = '''
+var s = '<text x="14" y="40" font-size="18" fill="currentColor" opacity="0.6">&#8364;</text>';
+s += '<path d="M24 32 l10 0 m-3 -3 l3 3 l-3 3" fill="none" stroke="currentColor" stroke-width="1.3" opacity="0.55"/>';
+s += '<text x="36" y="40" font-size="18" fill="currentColor" opacity="0.6">$</text>';
+s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">FX</text>';
+return s;
+'''
+
+[miniCharts.rates]
+svg = '''
+var s = '<polyline points="6,52 18,52 18,40 32,40 32,28 46,28 46,20 54,20" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.55"/>';
+s += '<line x1="6" y1="64" x2="54" y2="64" stroke="currentColor" stroke-width="0.6" opacity="0.4"/>';
+s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Rates</text>';
+return s;
+'''
+
+[miniCharts.inflation]
+svg = '''
+var s = '<polyline points="6,50 16,44 26,46 36,32 46,28 52,20" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.55"/>';
+s += '<text x="12" y="20" font-size="13" fill="currentColor" opacity="0.5">%</text>';
+s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">HICP</text>';
+return s;
+'''
+
+[miniCharts.money]
+svg = '''
+var s = '<circle cx="20" cy="30" r="11" fill="none" stroke="currentColor" stroke-width="1.4" opacity="0.5"/>';
+s += '<circle cx="34" cy="30" r="11" fill="none" stroke="currentColor" stroke-width="1.4" opacity="0.4"/>';
+s += '<text x="27" y="35" text-anchor="middle" font-size="12" fill="currentColor" opacity="0.6">M3</text>';
+s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Money</text>';
+return s;
+'''
+
+[miniCharts.yields]
+svg = '''
+var s = '<path d="M6 52 C 18 34, 36 24, 52 20" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.55"/>';
+s += '<line x1="6" y1="64" x2="54" y2="64" stroke="currentColor" stroke-width="0.6" opacity="0.4"/>';
+s += '<line x1="6" y1="18" x2="6" y2="64" stroke="currentColor" stroke-width="0.6" opacity="0.4"/>';
+s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Yields</text>';
+return s;
+'''
+
+[[codeBranches]]
+model = "exchange"
+code = """
+using HTTP, CSV, Tables
+
+# The ECB Data Portal needs no API key. format=csvdata returns a flat table.
+base = "https://data-api.ecb.europa.eu/service/data"
+
+# US dollar / euro reference rate (EXR dataflow), daily
+url = "$base/EXR/D.USD.EUR.SP00.A?startPeriod=2015-01-01&format=csvdata"
+tbl = CSV.File(HTTP.get(url).body)
+
+# tbl is Tables.jl-compatible: pull only the columns you need
+dates = Tables.getcolumn(tbl, :TIME_PERIOD)
+rates = Tables.getcolumn(tbl, :OBS_VALUE)
+println(last(dates, 5))
+println(last(rates, 5))
+
+# ...or pipe it into the container of your choice:
+# using TimeSeries, Dates; ta = TimeArray(Date.(dates), rates, [:USD])
+# using DataFrames;        df = DataFrame(tbl)
+"""
+
+[[codeBranches]]
+model = "rates"
+code = """
+using HTTP, CSV, Tables
+
+base = "https://data-api.ecb.europa.eu/service/data"
+
+# Key ECB interest rates (FM dataflow), daily on business days
+fetch(key) = CSV.File(HTTP.get("$base/FM/$key?format=csvdata").body)
+
+mro = fetch("B.U2.EUR.4F.KR.MRR_FR.LEV")   # main refinancing operations
+dfr = fetch("B.U2.EUR.4F.KR.DFR.LEV")      # deposit facility
+mlf = fetch("B.U2.EUR.4F.KR.MLFR.LEV")     # marginal lending facility
+
+println("Deposit facility rate, latest 5 changes:")
+println(last(Tables.getcolumn(dfr, :OBS_VALUE), 5))
+"""
+
+[[codeBranches]]
+model = "inflation"
+code = """
+using HTTP, CSV, Tables
+
+base = "https://data-api.ecb.europa.eu/service/data"
+
+# HICP, euro area, annual rate of change (ICP dataflow), monthly
+url = "$base/ICP/M.U2.N.000000.4.ANR?startPeriod=2010-01&format=csvdata"
+hicp = CSV.File(HTTP.get(url).body)
+
+dates = Tables.getcolumn(hicp, :TIME_PERIOD)
+infl  = Tables.getcolumn(hicp, :OBS_VALUE)
+println(last(dates, 12))
+println(last(infl, 12))
+"""
+
+[[codeBranches]]
+model = "money"
+code = """
+using HTTP, CSV, Tables
+
+base = "https://data-api.ecb.europa.eu/service/data"
+
+# Monetary aggregate M3, annual growth rate (BSI dataflow), monthly
+url = "$base/BSI/M.U2.Y.V.M30.X.I.U2.2300.Z01.A?startPeriod=2010-01&format=csvdata"
+m3 = CSV.File(HTTP.get(url).body)
+
+println("M3 annual growth, latest 12 months (%):")
+println(last(Tables.getcolumn(m3, :OBS_VALUE), 12))
+"""
+
+[[codeBranches]]
+model = "yields"
+code = """
+using HTTP, CSV, Tables
+
+base = "https://data-api.ecb.europa.eu/service/data"
+
+# AAA euro area government bond yield curve (YC dataflow), 10-year spot, daily
+url = "$base/YC/B.U2.EUR.4F.G_N_A.SV_C_YM.SR_10Y?startPeriod=2020-01-01&format=csvdata"
+y10 = CSV.File(HTTP.get(url).body)
+
+println("10-year AAA spot yield, latest 5 (% p.a.):")
+println(last(Tables.getcolumn(y10, :OBS_VALUE), 5))
+"""
+
+# Next Steps action groups (task-oriented, matched to the ECB Data Portal series)
+[[actionGroups]]
+id = "exchange"
+label = "Exchange Rates"
+
+[[actionGroups.actions]]
+id = "ecb-fx-majors"
+label = "Major Pairs"
+desc = "Download the USD, GBP, and JPY euro reference rates"
+code = """
+using HTTP, CSV, Tables
+
+base = "https://data-api.ecb.europa.eu/service/data"
+fx(ccy) = CSV.File(HTTP.get("$base/EXR/D.$ccy.EUR.SP00.A?startPeriod=2020-01-01&format=csvdata").body)
+
+usd = fx("USD")
+gbp = fx("GBP")
+jpy = fx("JPY")
+println(last(Tables.getcolumn(usd, :OBS_VALUE), 5))
+"""
+
+[[actionGroups.actions]]
+id = "ecb-fx-range"
+label = "Date Range"
+desc = "Pull USD/EUR between two dates with startPeriod and endPeriod"
+code = """
+using HTTP, CSV, Tables
+
+base = "https://data-api.ecb.europa.eu/service/data"
+url  = "$base/EXR/D.USD.EUR.SP00.A?startPeriod=2023-01-01&endPeriod=2023-12-31&format=csvdata"
+usd  = CSV.File(HTTP.get(url).body)
+println(Tables.getcolumn(usd, :OBS_VALUE))
+"""
+
+[[actionGroups]]
+id = "rates"
+label = "Key Interest Rates"
+
+[[actionGroups.actions]]
+id = "ecb-rt-corridor"
+label = "Rate Corridor"
+desc = "The three key ECB rates that bound the money market"
+code = """
+using HTTP, CSV, Tables
+
+base = "https://data-api.ecb.europa.eu/service/data"
+rate(key) = CSV.File(HTTP.get("$base/FM/$key?format=csvdata").body)
+
+mro = rate("B.U2.EUR.4F.KR.MRR_FR.LEV")   # main refinancing
+dfr = rate("B.U2.EUR.4F.KR.DFR.LEV")      # deposit facility (floor)
+mlf = rate("B.U2.EUR.4F.KR.MLFR.LEV")     # marginal lending (ceiling)
+println(last(Tables.getcolumn(mro, :OBS_VALUE), 3))
+"""
+
+[[actionGroups.actions]]
+id = "ecb-rt-estr"
+label = "€STR"
+desc = "The euro short-term rate, the ECB's overnight benchmark"
+code = """
+using HTTP, CSV, Tables
+
+base = "https://data-api.ecb.europa.eu/service/data"
+# Euro short-term rate, volume-weighted trimmed mean (EST dataflow)
+url  = "$base/EST/B.EU000A2X2A25.WT?startPeriod=2023-01-01&format=csvdata"
+estr = CSV.File(HTTP.get(url).body)
+println(last(Tables.getcolumn(estr, :OBS_VALUE), 5))
+"""
+
+[[actionGroups]]
+id = "inflation"
+label = "HICP Inflation"
+
+[[actionGroups.actions]]
+id = "ecb-inf-core"
+label = "Core HICP"
+desc = "HICP excluding energy and food, the underlying-inflation gauge"
+code = """
+using HTTP, CSV, Tables
+
+base = "https://data-api.ecb.europa.eu/service/data"
+# Overall and core (excl. energy and food) HICP, annual rate of change
+all  = CSV.File(HTTP.get("$base/ICP/M.U2.N.000000.4.ANR?startPeriod=2015-01&format=csvdata").body)
+core = CSV.File(HTTP.get("$base/ICP/M.U2.N.XEF000.4.ANR?startPeriod=2015-01&format=csvdata").body)
+println(last(Tables.getcolumn(core, :OBS_VALUE), 12))
+"""
+
+[[actionGroups.actions]]
+id = "ecb-inf-country"
+label = "Country HICP"
+desc = "HICP inflation for a single member state (e.g. Germany)"
+code = """
+using HTTP, CSV, Tables
+
+base = "https://data-api.ecb.europa.eu/service/data"
+# Reference area DE = Germany; swap for FR, IT, ES, ...
+url = "$base/ICP/M.DE.N.000000.4.ANR?startPeriod=2015-01&format=csvdata"
+de  = CSV.File(HTTP.get(url).body)
+println(last(Tables.getcolumn(de, :OBS_VALUE), 12))
+"""
+
+[[actionGroups]]
+id = "money"
+label = "Monetary Aggregates"
+
+[[actionGroups.actions]]
+id = "ecb-mn-aggregates"
+label = "M1 / M2 / M3"
+desc = "Annual growth of the three monetary aggregates"
+code = """
+using HTTP, CSV, Tables
+
+base = "https://data-api.ecb.europa.eu/service/data"
+agg(code) = CSV.File(HTTP.get("$base/BSI/M.U2.Y.V.$code.X.I.U2.2300.Z01.A?startPeriod=2015-01&format=csvdata").body)
+
+m1 = agg("M10")
+m2 = agg("M20")
+m3 = agg("M30")
+println("M1 / M2 / M3 annual growth, latest:")
+println(last(Tables.getcolumn(m1, :OBS_VALUE), 1))
+println(last(Tables.getcolumn(m2, :OBS_VALUE), 1))
+println(last(Tables.getcolumn(m3, :OBS_VALUE), 1))
+"""
+
+[[actionGroups]]
+id = "yields"
+label = "Yield Curve"
+
+[[actionGroups.actions]]
+id = "ecb-yc-curve"
+label = "Maturities"
+desc = "AAA spot rates at the 1, 5, and 10-year maturities"
+code = """
+using HTTP, CSV, Tables
+
+base = "https://data-api.ecb.europa.eu/service/data"
+spot(mat) = CSV.File(HTTP.get("$base/YC/B.U2.EUR.4F.G_N_A.SV_C_YM.SR_$mat?startPeriod=2023-01-01&format=csvdata").body)
+
+y1  = spot("1Y")
+y5  = spot("5Y")
+y10 = spot("10Y")
+println(last(Tables.getcolumn(y10, :OBS_VALUE), 5))
+"""
+
+[[actionGroups.actions]]
+id = "ecb-yc-slope"
+label = "Curve Slope"
+desc = "The 10-year minus 2-year spread, a classic recession gauge"
+code = """
+using HTTP, CSV, Tables
+
+base = "https://data-api.ecb.europa.eu/service/data"
+spot(mat) = CSV.File(HTTP.get("$base/YC/B.U2.EUR.4F.G_N_A.SV_C_YM.SR_$mat?startPeriod=2020-01-01&format=csvdata").body)
+
+y2  = Tables.getcolumn(spot("2Y"),  :OBS_VALUE)
+y10 = Tables.getcolumn(spot("10Y"), :OBS_VALUE)
+slope = last(y10, 1)[1] - last(y2, 1)[1]
+println("10Y - 2Y slope (pp): ", round(slope; digits = 2))
+"""

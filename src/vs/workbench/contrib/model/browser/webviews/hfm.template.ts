@@ -154,7 +154,7 @@ const HF_TASK_GROUPS: IHfTaskGroup[] = [
 		],
 	},
 	{
-		group: 'Vision',
+		group: 'Computer Vision',
 		tasks: [
 			{ label: 'Depth Estimation',               tag: 'depth-estimation',               models: [{ id: 'depth-anything/Depth-Anything-V2-Large', name: 'Depth Anything V2',       task: 'Depth Estimation',          size: '335M',  updated: '8 mo ago',  downloads: 3200000, likes: 2890 }, { id: 'Intel/dpt-large',                        name: 'DPT Large',              task: 'Depth Estimation',          size: '343M',  updated: '1 yr ago',  downloads: 1800000, likes: 610 }] },
 			{ label: 'Image Feature Extraction',       tag: 'image-feature-extraction',       models: [{ id: 'google/vit-base-patch16-224',             name: 'ViT Base',                 task: 'Image Feature Extraction',  size: '86M',   updated: '1 yr ago',  downloads: 6100000, likes: 1450 }, { id: 'facebook/dinov2-large',                  name: 'DINOv2 Large',           task: 'Image Feature Extraction',  size: '307M',  updated: '10 mo ago', downloads: 2400000, likes: 2230 }] },
@@ -216,6 +216,7 @@ export function getHfmHtml(mermaidJs?: string): string {
 		chartW: 54,
 		illusCollapsed: false,
 		illustrationLabel: 'Explore by Task / Framework / Author',
+		illustrationIntro: 'The Task sub-categories (Computer Vision, Natural Language Processing, …) are visual groupings that all belong to one Task category. A query joins your selections with <strong>OR</strong> inside a category and <strong>AND</strong> across categories. For example, picking <em>Text Generation</em> plus <em>Summarization</em> under Task, plus <em>PyTorch</em> under Framework, builds: <code>(Text Generation OR Summarization) AND (PyTorch)</code>',
 		togglesJs: `			<button class="toggle-btn" data-model="multimodal">Multimodal</button>
 			<button class="toggle-btn active" data-model="nlp">NLP</button>
 			<button class="toggle-btn" data-model="vision">Vision</button>
@@ -303,7 +304,13 @@ export function getHfmHtml(mermaidJs?: string): string {
 function buildIllustrationOverrideJs(): string {
 	const groupsJson = JSON.stringify(HF_TASK_GROUPS);
 
-	return `			var HFM_TASK_GROUPS = ${groupsJson};
+	return `			// renderIllustration() re-runs on every topic toggle; the Explore pane is independent
+			// of the code-preview topic, so build it once and skip rebuilds (this also avoids stacking
+			// duplicate message listeners and losing the user's filter selections).
+			if (body.dataset.hfmBuilt) { return; }
+			body.dataset.hfmBuilt = '1';
+
+			var HFM_TASK_GROUPS = ${groupsJson};
 			var hfmChecked = {};  // tag -> true
 			var hfmAuthorChecked = {};  // hf org slug -> true
 			var hfmFilterChecked = {};  // filter tag -> true
@@ -427,7 +434,7 @@ function buildIllustrationOverrideJs(): string {
 						+ '<span class="nb-label">' + esc(name) + '</span>'
 						+ '<span class="nb-desc hfm-task-tag">' + esc(task) + '</span>'
 						+ '<span class="hfm-model-meta">'
-						+ '<span class="hfm-meta-chip" title="Last updated">&#8987; ' + esc(hfmRelTime(m.lastModified)) + '</span>'
+						+ '<span class="hfm-meta-chip" title="Last updated">' + pollisClockSvg + ' ' + esc(hfmRelTime(m.lastModified)) + '</span>'
 						+ '<span class="hfm-meta-chip" title="Downloads">&#8595; ' + hfmFmt(m.downloads) + '</span>'
 						+ '<span class="hfm-meta-chip" title="Likes">&#9825; ' + hfmFmt(m.likes) + '</span>'
 						+ '</span>'

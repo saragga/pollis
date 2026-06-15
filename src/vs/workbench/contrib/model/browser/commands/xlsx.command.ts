@@ -16,6 +16,9 @@ import { XLSX_METADATA } from '../webviews/xlsx.data.js';
 import { INotebookKernelService } from '../../../notebook/common/notebookKernelService.js';
 import { ILanguageService } from '../../../../../editor/common/languages/language.js';
 import { IThemeService } from '../../../../../platform/theme/common/themeService.js';
+import { IFileService } from '../../../../../platform/files/common/files.js';
+import { IPathService } from '../../../../services/path/common/pathService.js';
+import { IWorkspaceContextService } from '../../../../../platform/workspace/common/workspace.js';
 import { registerXlsxWebviewHandlers } from '../handlers/xlsx.handler.js';
 import { getXlsxHtml } from '../webviews/xlsx.template.js';
 
@@ -34,6 +37,9 @@ export function openXlsxWebview(
 	notebookKernelService: INotebookKernelService,
 	languageService: ILanguageService,
 	themeService: IThemeService,
+	fileService: IFileService,
+	pathService: IPathService,
+	workspaceContextService: IWorkspaceContextService,
 ): void {
 	const mermaid = getMermaidUris();
 	const webviewInput = webviewWorkbenchService.openWebview(
@@ -64,5 +70,8 @@ export function openXlsxWebview(
 		notebookKernelService,
 		languageService,
 		themeService,
+		fileService,
+		pathService,
+		workspaceContextService,
 	);
 }

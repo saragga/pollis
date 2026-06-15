@@ -1,0 +1,712 @@
+# Kaggle Datasets Webview Configuration
+# Declarative source. The build script generates kgds.data.ts.
+# Run: npm run gulp compile-toml
+#
+# Approach: Kaggle exposes a REST API at www.kaggle.com/api/v1. The dataset
+# catalogue (datasets/list) is public — browse, search, and filter need no
+# credentials. Listing a dataset's files and downloading it require a free Kaggle
+# API token (username + key). Datasets are mostly CSV/SQLite, so the Julia stack is
+# HTTP.jl + JSON3.jl to talk to the API, ZipFile.jl to unpack a download, and
+# CSV.jl + Tables.jl to read the data (no DataFrames.jl).
+
+[meta]
+title = "Kaggle Datasets"
+viewType = "pollis.kgds"
+defaultModel = "browse"
+models = ["browse", "info", "files", "download", "load"]
+wideLayout = true
+illusCollapsed = false
+illustrationText = "Search the Kaggle catalogue, then pull datasets into Julia: browse and filter over the public REST API, read a dataset's metadata and file list, download the archive, and load the CSVs with CSV.jl + Tables.jl."
+
+# Per-pane intro/footnote notes (optional, keyed by pane: keyPoints / decision / explore).
+[notes.decision]
+footnote = "Browse and Dataset Info use the public Kaggle REST API directly (HTTP.jl + JSON3.jl) — no credentials needed. List Files, Download, and Load require a free Kaggle API token (click \"Set credentials\"); the download is a .zip read with ZipFile.jl and the CSVs with CSV.jl + Tables.jl."
+
+[notes.explore]
+intro = "A query joins your selections with <strong>OR</strong> inside a category and <strong>AND</strong> across categories, matched by Kaggle's full-text search. For example, picking <em>Classification</em> under Task plus <em>Medicine</em> plus <em>Finance</em> under Domain builds: <code>(Classification) AND (Medicine OR Finance)</code>"
+
+# Kaggle has no task or subject filter parameters, so both axes are matched by full-text
+# search: each chip value is a search term, a combo's terms are joined into one search query,
+# OR-ed within an axis (separate requests, merged) and AND-ed across axes (joined terms).
+[explore]
+label = "Explore by Task / Domain"
+
+[[explore.groups]]
+axis = "task"
+label = "Tabular & Classic ML"
+filterPrefix = ""
+[[explore.groups.chips]]
+label = "Classification"
+value = "classification"
+[[explore.groups.chips]]
+label = "Regression"
+value = "regression"
+[[explore.groups.chips]]
+label = "Clustering"
+value = "clustering"
+[[explore.groups.chips]]
+label = "Forecasting"
+value = "forecasting"
+[[explore.groups.chips]]
+label = "Anomaly Detection"
+value = "anomaly detection"
+[[explore.groups.chips]]
+label = "Recommendation"
+value = "recommendation"
+
+[[explore.groups]]
+axis = "task"
+label = "Natural Language Processing"
+filterPrefix = ""
+[[explore.groups.chips]]
+label = "Text Classification"
+value = "text classification"
+[[explore.groups.chips]]
+label = "Sentiment Analysis"
+value = "sentiment analysis"
+[[explore.groups.chips]]
+label = "Named Entity Recognition"
+value = "named entity recognition"
+[[explore.groups.chips]]
+label = "Translation"
+value = "translation"
+[[explore.groups.chips]]
+label = "Summarization"
+value = "summarization"
+[[explore.groups.chips]]
+label = "Question Answering"
+value = "question answering"
+[[explore.groups.chips]]
+label = "Topic Modeling"
+value = "topic modeling"
+
+[[explore.groups]]
+axis = "task"
+label = "Computer Vision"
+filterPrefix = ""
+[[explore.groups.chips]]
+label = "Image Classification"
+value = "image classification"
+[[explore.groups.chips]]
+label = "Object Detection"
+value = "object detection"
+[[explore.groups.chips]]
+label = "Image Segmentation"
+value = "image segmentation"
+[[explore.groups.chips]]
+label = "Face Recognition"
+value = "face recognition"
+[[explore.groups.chips]]
+label = "OCR"
+value = "ocr"
+
+[[explore.groups]]
+axis = "task"
+label = "Audio & Speech"
+filterPrefix = ""
+[[explore.groups.chips]]
+label = "Speech Recognition"
+value = "speech recognition"
+[[explore.groups.chips]]
+label = "Audio Classification"
+value = "audio classification"
+[[explore.groups.chips]]
+label = "Text-to-Speech"
+value = "text-to-speech"
+
+[[explore.groups]]
+axis = "domain"
+label = "Health & Science"
+filterPrefix = ""
+separatorBefore = true
+[[explore.groups.chips]]
+label = "Medicine"
+value = "medicine"
+[[explore.groups.chips]]
+label = "Healthcare"
+value = "healthcare"
+[[explore.groups.chips]]
+label = "Biology"
+value = "biology"
+[[explore.groups.chips]]
+label = "Chemistry"
+value = "chemistry"
+[[explore.groups.chips]]
+label = "Physics"
+value = "physics"
+[[explore.groups.chips]]
+label = "Astronomy"
+value = "astronomy"
+[[explore.groups.chips]]
+label = "Psychology"
+value = "psychology"
+[[explore.groups.chips]]
+label = "Climate"
+value = "climate"
+[[explore.groups.chips]]
+label = "Energy"
+value = "energy"
+[[explore.groups.chips]]
+label = "Agriculture"
+value = "agriculture"
+
+[[explore.groups]]
+axis = "domain"
+label = "Business & Society"
+filterPrefix = ""
+[[explore.groups.chips]]
+label = "Finance"
+value = "finance"
+[[explore.groups.chips]]
+label = "Economics"
+value = "economics"
+[[explore.groups.chips]]
+label = "Business"
+value = "business"
+[[explore.groups.chips]]
+label = "Marketing"
+value = "marketing"
+[[explore.groups.chips]]
+label = "Retail"
+value = "retail"
+[[explore.groups.chips]]
+label = "Real Estate"
+value = "real estate"
+[[explore.groups.chips]]
+label = "Government"
+value = "government"
+[[explore.groups.chips]]
+label = "Law"
+value = "law"
+[[explore.groups.chips]]
+label = "Crime"
+value = "crime"
+[[explore.groups.chips]]
+label = "Education"
+value = "education"
+
+[[explore.groups]]
+axis = "domain"
+label = "Culture & Daily Life"
+filterPrefix = ""
+[[explore.groups.chips]]
+label = "Sports"
+value = "sports"
+[[explore.groups.chips]]
+label = "Gaming"
+value = "gaming"
+[[explore.groups.chips]]
+label = "Music"
+value = "music"
+[[explore.groups.chips]]
+label = "Movies"
+value = "movies"
+[[explore.groups.chips]]
+label = "Travel"
+value = "travel"
+[[explore.groups.chips]]
+label = "Food"
+value = "food"
+[[explore.groups.chips]]
+label = "Transportation"
+value = "transportation"
+[[explore.groups.chips]]
+label = "Social Media"
+value = "social media"
+
+[[packages]]
+name = "HTTP.jl"
+github = "https://github.com/JuliaWeb/HTTP.jl"
+
+[[packages]]
+name = "JSON3.jl"
+github = "https://github.com/quinnj/JSON3.jl"
+
+[[packages]]
+name = "ZipFile.jl"
+github = "https://github.com/fhs/ZipFile.jl"
+
+[[packages]]
+name = "CSV.jl"
+github = "https://github.com/JuliaData/CSV.jl"
+
+[[packages]]
+name = "Tables.jl"
+github = "https://github.com/JuliaData/Tables.jl"
+
+[[notebookSections]]
+label = "Kaggle Datasets"
+
+[[notebookSections.notebooks]]
+name = "Browse the Catalogue"
+file = "kgds/tutorial-01-browse.ipynb"
+bundled = true
+description = "Search and filter the public Kaggle dataset catalogue over the REST API"
+
+[[notebookSections.notebooks]]
+name = "Download and Load"
+file = "kgds/tutorial-02-download-load.ipynb"
+bundled = true
+description = "Download a dataset with your Kaggle token, unzip it, and read the CSV with CSV.jl + Tables.jl"
+
+[[wikis]]
+name = "Factsheet"
+file = "kgds/factsheet.md"
+bundled = true
+description = "Quick-reference: the Kaggle REST endpoints, the credentials rule, and the Julia stack"
+
+[[wikis]]
+name = "Overview"
+file = "kgds/overview.md"
+bundled = true
+description = "What Kaggle Datasets are, how they are organised, and the two access paths"
+
+[[wikis]]
+name = "Authentication"
+file = "kgds/authentication.md"
+bundled = true
+description = "Create a Kaggle API token, when it is needed, and how Pollis stores it"
+
+[[wikis]]
+name = "Browsing the Catalogue"
+file = "kgds/browsing.md"
+bundled = true
+description = "Search, sort, and filter datasets/list by file type, license, and size"
+
+[[wikis]]
+name = "Downloading & Loading"
+file = "kgds/downloading-loading.md"
+bundled = true
+description = "Download a dataset archive, unzip with ZipFile.jl, and read CSVs with CSV.jl + Tables.jl"
+
+[[wikis]]
+name = "Choosing a Dataset"
+file = "kgds/choosing-a-dataset.md"
+bundled = true
+description = "Pick a dataset by usability, size, file type, and licence"
+
+[[references]]
+title = "Kaggle: Your Machine Learning and Data Science Community"
+authors = "Kaggle"
+year = 2024
+journal = "kaggle.com"
+url = "https://www.kaggle.com/docs/api"
+openAccess = true
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[conceptMap]
+center = "Kaggle Datasets"
+
+[[conceptMap.nodes]]
+id = "root"
+label = "Kaggle Datasets"
+kind = "center"
+
+[[conceptMap.nodes]]
+id = "q_find"
+label = "Find a dataset"
+kind = "concept"
+
+[[conceptMap.nodes]]
+id = "q_inspect"
+label = "Inspect it"
+kind = "concept"
+
+[[conceptMap.nodes]]
+id = "q_get"
+label = "Get the files"
+kind = "concept"
+
+[[conceptMap.nodes]]
+id = "q_load"
+label = "Load into Julia"
+kind = "concept"
+
+[[conceptMap.nodes]]
+id = "browse"
+label = "Browse"
+kind = "topic"
+model = "browse"
+
+[[conceptMap.nodes]]
+id = "info"
+label = "Dataset Info"
+kind = "topic"
+model = "info"
+
+[[conceptMap.nodes]]
+id = "download"
+label = "Download"
+kind = "topic"
+model = "download"
+
+[[conceptMap.nodes]]
+id = "load"
+label = "Load"
+kind = "topic"
+model = "load"
+
+[[conceptMap.nodes]]
+id = "r_kgm"
+label = "Kaggle Models"
+kind = "related"
+command = "chiara.explore.kgm"
+
+[[conceptMap.nodes]]
+id = "r_hfds"
+label = "Hugging Face Datasets"
+kind = "related"
+command = "chiara.explore.adr.hfds"
+
+[[conceptMap.nodes]]
+id = "ext"
+label = "Kaggle API"
+kind = "external"
+url = "https://www.kaggle.com/docs/api"
+
+[[conceptMap.edges]]
+from = "root"
+to = "q_find"
+label = "asks about"
+
+[[conceptMap.edges]]
+from = "root"
+to = "q_inspect"
+label = "asks about"
+
+[[conceptMap.edges]]
+from = "root"
+to = "q_get"
+label = "asks about"
+
+[[conceptMap.edges]]
+from = "root"
+to = "q_load"
+label = "asks about"
+
+[[conceptMap.edges]]
+from = "q_find"
+to = "browse"
+label = "done with"
+
+[[conceptMap.edges]]
+from = "q_inspect"
+to = "info"
+label = "done with"
+
+[[conceptMap.edges]]
+from = "q_get"
+to = "download"
+label = "done with"
+
+[[conceptMap.edges]]
+from = "q_load"
+to = "load"
+label = "done with"
+
+[[conceptMap.edges]]
+from = "root"
+to = "r_kgm"
+label = "pairs with"
+
+[[conceptMap.edges]]
+from = "root"
+to = "r_hfds"
+label = "compare with"
+
+[[conceptMap.edges]]
+from = "root"
+to = "ext"
+label = "served by"
+
+[[bullets]]
+text = "Community datasets"
+detail = "hundreds of thousands of public datasets across every domain, each versioned, documented, and rated for usability"
+
+[[bullets]]
+text = "Mostly tabular"
+detail = "most datasets are CSV or SQLite — ready to read straight into Julia with CSV.jl and the Tables.jl interface"
+
+[[bullets]]
+text = "Rich metadata"
+detail = "votes, downloads, usability rating, licence, file types, and tags on every dataset, all over the public API"
+
+[[bullets]]
+text = "Competition heritage"
+detail = "many are the canonical datasets behind ML competitions, tutorials, and benchmarks"
+
+[[bullets]]
+text = "Notebooks and community"
+detail = "datasets link to public notebooks (kernels) that show how others have explored and modelled them"
+
+[[decisionRows]]
+task = "Browse"
+context = "Discovery"
+purpose = "Search and rank the catalogue by votes, downloads, or recency over the public API"
+
+[[decisionRows]]
+task = "Dataset Info"
+context = "Metadata"
+purpose = "Read a dataset's title, size, licence, votes, and downloads without authenticating"
+
+[[decisionRows]]
+task = "List Files"
+context = "Contents"
+purpose = "See the files inside a dataset before downloading (needs a token)"
+
+[[decisionRows]]
+task = "Download"
+context = "Bulk"
+purpose = "Pull the dataset archive (.zip) with your Kaggle token and unzip it"
+
+[[decisionRows]]
+task = "Load"
+context = "In-memory"
+purpose = "Read a downloaded CSV into Julia through the Tables.jl interface"
+
+[miniCharts]
+
+[miniCharts.browse]
+svg = '''
+var s = '<circle cx="24" cy="28" r="11" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.55"/>';
+s += '<line x1="32" y1="36" x2="42" y2="46" stroke="currentColor" stroke-width="1.8" opacity="0.55"/>';
+s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Browse</text>';
+return s;
+'''
+
+[miniCharts.info]
+svg = '''
+var s = '<circle cx="27" cy="30" r="13" fill="none" stroke="currentColor" stroke-width="1.4" opacity="0.55"/>';
+s += '<circle cx="27" cy="23" r="1.6" fill="currentColor" opacity="0.7"/>';
+s += '<line x1="27" y1="28" x2="27" y2="38" stroke="currentColor" stroke-width="1.8" opacity="0.6"/>';
+s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Info</text>';
+return s;
+'''
+
+[miniCharts.files]
+svg = '''
+var s = '<rect x="16" y="14" width="22" height="28" rx="2" fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.4"/>';
+s += '<rect x="12" y="20" width="22" height="28" rx="2" fill="var(--vscode-editor-background)" stroke="currentColor" stroke-width="1.3" opacity="0.6"/>';
+s += '<line x1="17" y1="29" x2="29" y2="29" stroke="currentColor" stroke-width="1" opacity="0.5"/>';
+s += '<line x1="17" y1="35" x2="29" y2="35" stroke="currentColor" stroke-width="1" opacity="0.5"/>';
+s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Files</text>';
+return s;
+'''
+
+[miniCharts.download]
+svg = '''
+var s = '<rect x="14" y="34" width="26" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1.3" opacity="0.55"/>';
+s += '<line x1="27" y1="12" x2="27" y2="30" stroke="currentColor" stroke-width="1.5" opacity="0.6"/>';
+s += '<polyline points="22,25 27,31 32,25" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.6"/>';
+s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Download</text>';
+return s;
+'''
+
+[miniCharts.load]
+svg = '''
+var s = '<rect x="12" y="16" width="30" height="34" rx="2" fill="none" stroke="currentColor" stroke-width="1.3" opacity="0.5"/>';
+s += '<line x1="12" y1="27" x2="42" y2="27" stroke="currentColor" stroke-width="0.8" opacity="0.45"/>';
+s += '<line x1="12" y1="38" x2="42" y2="38" stroke="currentColor" stroke-width="0.8" opacity="0.45"/>';
+s += '<line x1="27" y1="16" x2="27" y2="50" stroke="currentColor" stroke-width="0.8" opacity="0.4"/>';
+s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Load</text>';
+return s;
+'''
+
+[[codeBranches]]
+model = "browse"
+code = """
+using HTTP, JSON3
+
+# The Kaggle dataset catalogue is public — no credentials needed to browse.
+get_json(url) = JSON3.read(HTTP.get(url).body)
+
+# Most-voted datasets; sortBy is one of hottest, votes, updated, published
+res = get_json("https://www.kaggle.com/api/v1/datasets/list?sortBy=votes&pageSize=10")
+
+for d in res
+    println(d.ref, "  votes=", d.voteCount, "  downloads=", d.downloadCount)
+end
+"""
+
+[[codeBranches]]
+model = "info"
+code = """
+using HTTP, JSON3
+
+# Public metadata via the list endpoint, searched by slug (no credentials needed)
+get_json(url) = JSON3.read(HTTP.get(url).body)
+
+res = get_json("https://www.kaggle.com/api/v1/datasets/list?search=iris&pageSize=5")
+d = first(res)
+
+println("ref:       ", d.ref)
+println("title:     ", d.title)
+println("size:      ", d.totalBytes, " bytes")
+println("downloads: ", d.downloadCount, ",  votes: ", d.voteCount)
+println("license:   ", d.licenseName)
+"""
+
+[[codeBranches]]
+model = "files"
+code = """
+using HTTP, JSON3, Base64
+
+# Listing a dataset's files needs a Kaggle token. Click "Set credentials" on the
+# Powered-by line; it is injected into this REPL as KAGGLE_USERNAME / KAGGLE_KEY.
+auth = ["Authorization" => "Basic " * base64encode(ENV["KAGGLE_USERNAME"] * ":" * ENV["KAGGLE_KEY"])]
+get_json(url) = JSON3.read(HTTP.get(url, auth).body)
+
+ref = "uciml/iris"   # ownerSlug/datasetSlug
+res = get_json("https://www.kaggle.com/api/v1/datasets/list-files/$ref")
+
+for f in res.datasetFiles
+    println(f.name, "  ", f.totalBytes, " bytes")
+end
+"""
+
+[[codeBranches]]
+model = "download"
+code = """
+using HTTP, Base64, ZipFile
+
+# Downloading needs a Kaggle token (KAGGLE_USERNAME / KAGGLE_KEY via "Set credentials").
+ref = "uciml/iris"
+auth = ["Authorization" => "Basic " * base64encode(ENV["KAGGLE_USERNAME"] * ":" * ENV["KAGGLE_KEY"])]
+
+# The download endpoint returns a .zip of the dataset's files
+r = HTTP.get("https://www.kaggle.com/api/v1/datasets/download/$ref", auth)
+write("dataset.zip", r.body)
+
+z = ZipFile.Reader("dataset.zip")
+for f in z.files
+    println(f.name, "  ", f.uncompressedsize, " bytes")
+end
+close(z)
+"""
+
+[[codeBranches]]
+model = "load"
+code = """
+using ZipFile, CSV, Tables
+
+# Read a CSV straight out of the downloaded archive (no DataFrames needed)
+z = ZipFile.Reader("dataset.zip")
+entry = first(filter(f -> endswith(f.name, ".csv"), z.files))
+
+rows = CSV.File(read(entry))           # CSV.File is a Tables.jl source
+println("columns: ", Tables.columnnames(rows))
+println("rows:    ", length(rows))
+println(first(rows))
+close(z)
+"""
+
+[[actionGroups]]
+id = "browse"
+label = "Browse"
+
+[[actionGroups.actions]]
+id = "kgds-browse-search"
+label = "Search by Keyword"
+desc = "Find datasets matching a free-text query"
+code = """
+using HTTP, JSON3
+
+get_json(url) = JSON3.read(HTTP.get(url).body)
+
+q = HTTP.escapeuri("housing prices")
+res = get_json("https://www.kaggle.com/api/v1/datasets/list?search=$q&sortBy=votes&pageSize=10")
+for d in res
+    println(d.ref, "  ", d.title)
+end
+"""
+
+[[actionGroups.actions]]
+id = "kgds-browse-filter"
+label = "Filter by File Type"
+desc = "List CSV datasets sorted by hotness"
+code = """
+using HTTP, JSON3
+
+get_json(url) = JSON3.read(HTTP.get(url).body)
+
+res = get_json("https://www.kaggle.com/api/v1/datasets/list?fileType=csv&sortBy=hottest&pageSize=10")
+for d in res
+    println(d.ref, "  ", d.totalBytes, " bytes")
+end
+"""
+
+[[actionGroups]]
+id = "download"
+label = "Download"
+
+[[actionGroups.actions]]
+id = "kgds-download-cli"
+label = "Use the Kaggle CLI"
+desc = "Shell out to the official kaggle CLI (reads the same KAGGLE_* env vars)"
+code = """
+# The official Kaggle CLI reads KAGGLE_USERNAME / KAGGLE_KEY from the environment.
+# Pollis injects them into this REPL session when you click "Set credentials".
+run(`kaggle datasets download -d uciml/iris -p . --unzip`)
+
+# Now the CSV files are in the current directory, ready for CSV.jl
+println(filter(f -> endswith(f, ".csv"), readdir()))
+"""
+
+[[actionGroups.actions]]
+id = "kgds-download-version"
+label = "Download a Specific Version"
+desc = "Pin a dataset version with the datasetVersionNumber query parameter"
+code = """
+using HTTP, Base64
+
+ref = "uciml/iris"
+auth = ["Authorization" => "Basic " * base64encode(ENV["KAGGLE_USERNAME"] * ":" * ENV["KAGGLE_KEY"])]
+
+url = "https://www.kaggle.com/api/v1/datasets/download/$ref?datasetVersionNumber=1"
+r = HTTP.get(url, auth)
+write("dataset-v1.zip", r.body)
+println("saved ", length(r.body), " bytes")
+"""
+
+[[actionGroups]]
+id = "load"
+label = "Load"
+
+[[actionGroups.actions]]
+id = "kgds-load-columns"
+label = "Read Selected Columns"
+desc = "Read only some columns from a CSV with CSV.jl"
+code = """
+using ZipFile, CSV, Tables
+
+z = ZipFile.Reader("dataset.zip")
+entry = first(filter(f -> endswith(f.name, ".csv"), z.files))
+
+# select restricts the parsed columns; CSV.File stays a Tables.jl source
+rows = CSV.File(read(entry); select = [:SepalLengthCm, :Species])
+println(Tables.columnnames(rows))
+close(z)
+"""
+
+[[actionGroups.actions]]
+id = "kgds-load-rows"
+label = "Collect Rows as NamedTuples"
+desc = "Materialise rows without DataFrames, using the Tables.jl interface"
+code = """
+using ZipFile, CSV, Tables
+
+z = ZipFile.Reader("dataset.zip")
+entry = first(filter(f -> endswith(f.name, ".csv"), z.files))
+
+rows = [NamedTuple(r) for r in CSV.File(read(entry))]
+println("rows: ", length(rows))
+println(first(rows))
+close(z)
+"""

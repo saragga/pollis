@@ -22,7 +22,10 @@ import { generateTokensCSSForColorMap } from '../../../../../editor/common/langu
 import { Event } from '../../../../../base/common/event.js';
 import { IUntitledTextResourceEditorInput } from '../../../../common/editor.js';
 import { CellEditType, CellKind } from '../../../notebook/common/notebookCommon.js';
-import { openWikiByFile, openNotebookByFile, openPackageItem, openVideoList, openInBrowser, autoSelectJuliaKernel } from './model.handler.js';
+import { IFileService } from '../../../../../platform/files/common/files.js';
+import { IPathService } from '../../../../services/path/common/pathService.js';
+import { IWorkspaceContextService } from '../../../../../platform/workspace/common/workspace.js';
+import { openWikiByFile, openNotebookByFile, openPackageItem, openVideoList, openInBrowser, autoSelectJuliaKernel, createPackageStatusWiring } from './model.handler.js';
 
 export function registerXlsxWebviewHandlers(
 	webviewInput: ReturnType<IWebviewWorkbenchService['openWebview']>,
@@ -37,6 +40,9 @@ export function registerXlsxWebviewHandlers(
 	notebookKernelService: INotebookKernelService,
 	languageService: ILanguageService,
 	themeService: IThemeService,
+	fileService: IFileService,
+	pathService: IPathService,
+	workspaceContextService: IWorkspaceContextService,
 ): DisposableStore {
 	const disposables = new DisposableStore();
 	const lastCode: { [target: string]: string } = {};
@@ -51,6 +57,7 @@ export function registerXlsxWebviewHandlers(
 		for (const t of Object.keys(lastCode)) { void postColorized(lastCode[t], t); }
 	}));
 	const xlsxData = metadata.xlsx;
+	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, xlsxData.packages.map(p => p.name), fileService, pathService, commandService, notificationService, workspaceContextService);
 
 	setTimeout(() => {
 		const packages = xlsxData.packages.map(pkg => ({ name: pkg.name, url: pkg.github }));
@@ -77,6 +84,7 @@ export function registerXlsxWebviewHandlers(
 		if (xlsxData.conceptMap) {
 			webviewInput.webview.postMessage({ command: 'conceptMap', map: xlsxData.conceptMap });
 		}
+		void pkgStatus.postStatus();
 	}, 0);
 
 	disposables.add(webviewInput.webview.onDidDispose(() => disposables.dispose()));
@@ -141,7 +149,10 @@ export function registerXlsxWebviewHandlers(
 					Event.once(notebook.onWillDispose)(() => ref.dispose());
 					await editorService.openEditor({ resource: notebook.uri, options: { override: 'jupyter-notebook' } });
 					autoSelectJuliaKernel(notebook, notebookKernelService);
+				} else if (msg.target === 'pluto') {
+					await commandService.executeCommand('pollis.action.sendToPluto', code);
 				}
+				await pkgStatus.nudgeIfMissing(msg.target);
 				break;
 			}
 			case 'colorize':
@@ -156,6 +167,9 @@ export function registerXlsxWebviewHandlers(
 				} finally {
 					webviewInput.webview.postMessage({ command: 'actionDone' });
 				}
+				break;
+			case 'installPackages':
+				await pkgStatus.handleInstall();
 				break;
 			case 'cancelAction':
 				await quickInputService.cancel();

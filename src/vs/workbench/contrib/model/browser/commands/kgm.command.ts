@@ -18,6 +18,11 @@ import { IRequestService } from '../../../../../platform/request/common/request.
 import { getMermaidUris } from '../../../mermaid/browser/mermaidHelper.js';
 import { IKgmMetadata } from '../common/kgm.types.js';
 import { IModelReference, IModelNotebookSection } from '../common/model.types.js';
+import { IFileService } from '../../../../../platform/files/common/files.js';
+import { IPathService } from '../../../../services/path/common/pathService.js';
+import { IWorkspaceContextService } from '../../../../../platform/workspace/common/workspace.js';
+import { ISecretStorageService } from '../../../../../platform/secrets/common/secrets.js';
+import { IWebviewService } from '../../../webview/browser/webview.js';
 import { registerKgmWebviewHandlers } from '../handlers/kgm.handler.js';
 import { getKgmHtml } from '../webviews/kgm.template.js';
 
@@ -153,6 +158,11 @@ export function openKgmWebview(
 	languageService: ILanguageService,
 	themeService: IThemeService,
 	requestService: IRequestService,
+	fileService: IFileService,
+	pathService: IPathService,
+	workspaceContextService: IWorkspaceContextService,
+	secretStorageService: ISecretStorageService,
+	webviewService: IWebviewService,
 	initialModel?: string,
 ): void {
 	const mermaid = getMermaidUris();
@@ -189,6 +199,11 @@ export function openKgmWebview(
 		languageService,
 		themeService,
 		requestService,
+		fileService,
+		pathService,
+		workspaceContextService,
+		secretStorageService,
+		webviewService,
 		initialModel,
 	);
 }

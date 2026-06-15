@@ -1,0 +1,583 @@
+# FRED (FredData.jl) Webview Configuration
+# Declarative source. The build script generates fred.data.ts.
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Federal Reserve Economic Data"
+viewType = "pollis.fred"
+defaultModel = "growth"
+models = ["growth", "inflation", "labor", "rates", "money"]
+wideLayout = true
+illusCollapsed = true
+illustrationText = "Pull U.S. and international macroeconomic time series from FRED into Julia: output and growth, inflation, the labour market, interest rates, and money and exchange rates."
+
+[[packages]]
+name = "FredData.jl"
+github = "https://github.com/micahjsmith/FredData.jl"
+
+[[packages]]
+name = "TimeSeries.jl"
+github = "https://github.com/JuliaStats/TimeSeries.jl"
+
+[[notebookSections]]
+label = "FRED"
+
+[[notebookSections.notebooks]]
+name = "First Series"
+file = "fred/tutorial-01-first-series.ipynb"
+bundled = true
+description = "Connect with an API key and pull your first series (real GDP) into a DataFrame"
+
+[[notebookSections.notebooks]]
+name = "Transformations"
+file = "fred/tutorial-02-transformations.ipynb"
+bundled = true
+description = "Resample frequency and apply units: levels, year-over-year, and percent change"
+
+[[notebookSections.notebooks]]
+name = "Vintages and Revisions"
+file = "fred/tutorial-03-vintages.ipynb"
+bundled = true
+description = "Fetch real-time vintages with vintage_dates to study data revisions (ALFRED)"
+
+[[notebookSections.notebooks]]
+name = "Building a Dashboard"
+file = "fred/tutorial-04-dashboard.ipynb"
+bundled = true
+description = "Combine several series (rates, inflation, unemployment) into one tidy frame and plot"
+
+[[wikis]]
+name = "Factsheet"
+file = "fred/factsheet.md"
+bundled = true
+description = "Quick-reference: FredData.jl API, get_data keywords, and the free API key"
+
+[[wikis]]
+name = "Overview"
+file = "fred/overview.md"
+bundled = true
+description = "Accessing the 800,000+ FRED time series from Julia by series ID"
+
+[[wikis]]
+name = "Authentication"
+file = "fred/authentication.md"
+bundled = true
+description = "Get a free FRED API key and store it securely with the Set API key link"
+
+[[wikis]]
+name = "Finding Series"
+file = "fred/finding-series.md"
+bundled = true
+description = "Browse categories, releases, and popular series; copy a series ID from the FRED site"
+
+[[wikis]]
+name = "Transformations"
+file = "fred/transformations.md"
+bundled = true
+description = "Units and frequency: levels, percent change, year-over-year, aggregation methods"
+
+[[wikis]]
+name = "Interpretation"
+file = "fred/interpretation.md"
+bundled = true
+description = "Reading the FredSeries fields, seasonal adjustment, real vs nominal, and vintages"
+
+[[references]]
+title = "FredData.jl: A Julia interface to the St. Louis Fed FRED API"
+authors = "Smith, Micah J.; contributors"
+year = 2024
+journal = "GitHub"
+url = "https://github.com/micahjsmith/FredData.jl"
+openAccess = true
+
+[[references]]
+title = "FRED API Documentation"
+authors = "Federal Reserve Bank of St. Louis"
+year = 2024
+journal = "fred.stlouisfed.org"
+url = "https://fred.stlouisfed.org/docs/api/fred/"
+openAccess = true
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[conceptMap]
+center = "FRED"
+
+[[conceptMap.nodes]]
+id = "root"
+label = "FRED"
+kind = "center"
+
+[[conceptMap.nodes]]
+id = "q_growth"
+label = "Measure the economy"
+kind = "concept"
+
+[[conceptMap.nodes]]
+id = "q_prices"
+label = "Track prices"
+kind = "concept"
+
+[[conceptMap.nodes]]
+id = "q_jobs"
+label = "Watch the labour market"
+kind = "concept"
+
+[[conceptMap.nodes]]
+id = "q_rates"
+label = "Follow policy and rates"
+kind = "concept"
+
+[[conceptMap.nodes]]
+id = "growth"
+label = "Output & Growth"
+kind = "topic"
+model = "growth"
+
+[[conceptMap.nodes]]
+id = "inflation"
+label = "Inflation & Prices"
+kind = "topic"
+model = "inflation"
+
+[[conceptMap.nodes]]
+id = "labor"
+label = "Labour Market"
+kind = "topic"
+model = "labor"
+
+[[conceptMap.nodes]]
+id = "rates"
+label = "Interest Rates"
+kind = "topic"
+model = "rates"
+
+[[conceptMap.nodes]]
+id = "money"
+label = "Money & Exchange"
+kind = "topic"
+model = "money"
+
+[[conceptMap.nodes]]
+id = "r_av"
+label = "Alpha Vantage"
+kind = "related"
+command = "chiara.explore.adr.alpv"
+
+[[conceptMap.nodes]]
+id = "ext"
+label = "FredData.jl"
+kind = "external"
+url = "https://github.com/micahjsmith/FredData.jl"
+
+[[conceptMap.edges]]
+from = "root"
+to = "q_growth"
+label = "asks about"
+
+[[conceptMap.edges]]
+from = "root"
+to = "q_prices"
+label = "asks about"
+
+[[conceptMap.edges]]
+from = "root"
+to = "q_jobs"
+label = "asks about"
+
+[[conceptMap.edges]]
+from = "root"
+to = "q_rates"
+label = "asks about"
+
+[[conceptMap.edges]]
+from = "q_growth"
+to = "growth"
+label = "done with"
+
+[[conceptMap.edges]]
+from = "q_prices"
+to = "inflation"
+label = "done with"
+
+[[conceptMap.edges]]
+from = "q_jobs"
+to = "labor"
+label = "done with"
+
+[[conceptMap.edges]]
+from = "q_rates"
+to = "rates"
+label = "done with"
+
+[[conceptMap.edges]]
+from = "q_rates"
+to = "money"
+label = "done with"
+
+[[conceptMap.edges]]
+from = "root"
+to = "r_av"
+label = "compare with"
+
+[[conceptMap.edges]]
+from = "root"
+to = "ext"
+label = "built with"
+
+[[bullets]]
+text = "Output & Growth"
+detail = "real and nominal GDP, industrial production, and other activity series"
+
+[[bullets]]
+text = "Inflation & Prices"
+detail = "the Consumer Price Index, core CPI, and the PCE price index"
+
+[[bullets]]
+text = "Labour Market"
+detail = "the unemployment rate, nonfarm payrolls, participation, and jobless claims"
+
+[[bullets]]
+text = "Interest Rates"
+detail = "the federal funds rate, treasury yields, the yield curve, and mortgage rates"
+
+[[bullets]]
+text = "Money & Exchange"
+detail = "the M2 money stock and bilateral exchange rates"
+
+[[decisionRows]]
+task = "Output & Growth"
+context = "Activity"
+purpose = "Chart real GDP or industrial production over time"
+
+[[decisionRows]]
+task = "Inflation & Prices"
+context = "Price level"
+purpose = "Read CPI or PCE inflation, in levels or year-over-year"
+
+[[decisionRows]]
+task = "Labour Market"
+context = "Jobs"
+purpose = "Track unemployment, payrolls, or weekly jobless claims"
+
+[[decisionRows]]
+task = "Interest Rates"
+context = "Yields"
+purpose = "Follow the policy rate, treasury yields, or the yield curve"
+
+[[decisionRows]]
+task = "Money & Exchange"
+context = "Monetary"
+purpose = "Pull the M2 money stock or an exchange-rate series"
+
+[miniCharts]
+
+[miniCharts.growth]
+svg = '''
+var s = '<rect x="8"  y="42" width="8" height="22" fill="currentColor" opacity="0.4"/>';
+s += '<rect x="20" y="34" width="8" height="30" fill="currentColor" opacity="0.45"/>';
+s += '<rect x="32" y="24" width="8" height="40" fill="currentColor" opacity="0.5"/>';
+s += '<rect x="44" y="16" width="8" height="48" fill="currentColor" opacity="0.55"/>';
+s += '<line x1="6" y1="64" x2="54" y2="64" stroke="currentColor" stroke-width="0.6" opacity="0.4"/>';
+s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Growth</text>';
+return s;
+'''
+
+[miniCharts.inflation]
+svg = '''
+var s = '<polyline points="6,52 16,46 26,48 36,34 46,30 52,22" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.55"/>';
+s += '<text x="13" y="20" font-size="13" fill="currentColor" opacity="0.5">%</text>';
+s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Prices</text>';
+return s;
+'''
+
+[miniCharts.labor]
+svg = '''
+var s = '<circle cx="20" cy="26" r="6" fill="none" stroke="currentColor" stroke-width="1.3" opacity="0.55"/>';
+s += '<path d="M12 44 q8 -10 16 0" fill="none" stroke="currentColor" stroke-width="1.3" opacity="0.55"/>';
+s += '<circle cx="38" cy="26" r="6" fill="currentColor" opacity="0.3"/>';
+s += '<path d="M30 44 q8 -10 16 0" fill="currentColor" opacity="0.25"/>';
+s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Labour</text>';
+return s;
+'''
+
+[miniCharts.rates]
+svg = '''
+var s = '<path d="M6 50 C 18 30, 34 22, 52 18" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.55"/>';
+s += '<line x1="6" y1="64" x2="54" y2="64" stroke="currentColor" stroke-width="0.6" opacity="0.4"/>';
+s += '<line x1="6" y1="18" x2="6" y2="64" stroke="currentColor" stroke-width="0.6" opacity="0.4"/>';
+s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Rates</text>';
+return s;
+'''
+
+[miniCharts.money]
+svg = '''
+var s = '<circle cx="27" cy="32" r="15" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.5"/>';
+s += '<text x="27" y="38" text-anchor="middle" font-size="16" fill="currentColor" opacity="0.6">$</text>';
+s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Money</text>';
+return s;
+'''
+
+[[codeBranches]]
+model = "growth"
+code = """
+using FredData
+
+# Fred() reads ENV["FRED_API_KEY"] (or ~/.freddatarc) automatically.
+# Use the "Set API key" link above the page to store yours securely.
+f = Fred()
+
+# Real Gross Domestic Product (GDPC1), quarterly, chained 2017 dollars
+gdp = get_data(f, "GDPC1")
+println(gdp.data)
+
+# Industrial Production index (INDPRO), monthly
+indpro = get_data(f, "INDPRO")
+println(indpro.title, " — ", indpro.units)
+"""
+
+[[codeBranches]]
+model = "inflation"
+code = """
+using FredData
+
+f = Fred()
+
+# Consumer Price Index, all items (CPIAUCSL), as a year-over-year percent change
+cpi = get_data(f, "CPIAUCSL"; units="pc1")
+println(cpi.data)
+
+# Core PCE price index (PCEPILFE), the Fed's preferred inflation gauge
+core_pce = get_data(f, "PCEPILFE"; units="pc1")
+println(core_pce.data)
+"""
+
+[[codeBranches]]
+model = "labor"
+code = """
+using FredData
+
+f = Fred()
+
+# Civilian unemployment rate (UNRATE), monthly, percent
+unrate = get_data(f, "UNRATE")
+println(unrate.data)
+
+# Total nonfarm payroll employment (PAYEMS), monthly change in thousands
+payrolls = get_data(f, "PAYEMS"; units="chg")
+println(payrolls.data)
+"""
+
+[[codeBranches]]
+model = "rates"
+code = """
+using FredData
+
+f = Fred()
+
+# Effective federal funds rate (FEDFUNDS), monthly
+funds = get_data(f, "FEDFUNDS")
+println(funds.data)
+
+# 10-year minus 2-year treasury spread (T10Y2Y) — the classic yield-curve gauge
+spread = get_data(f, "T10Y2Y")
+println(spread.data)
+"""
+
+[[codeBranches]]
+model = "money"
+code = """
+using FredData
+
+f = Fred()
+
+# M2 money stock (M2SL), monthly, billions of dollars
+m2 = get_data(f, "M2SL")
+println(m2.data)
+
+# U.S. / Euro foreign-exchange rate (DEXUSEU), daily
+fx = get_data(f, "DEXUSEU")
+println(fx.data)
+"""
+
+# Next Steps action groups (task-oriented, matched to the FredData.jl workflow)
+[[actionGroups]]
+id = "growth"
+label = "Output & Growth"
+
+[[actionGroups.actions]]
+id = "fred-gr-gdp"
+label = "Real GDP"
+desc = "Download quarterly real GDP and convert to annualised growth"
+code = """
+using FredData
+
+f = Fred()
+
+# Real GDP (GDPC1), quarterly. units="pca" = compounded annual rate of change
+gdp_growth = get_data(f, "GDPC1"; units="pca")
+println(gdp_growth.data)
+"""
+
+[[actionGroups.actions]]
+id = "fred-gr-indpro"
+label = "Industrial Production"
+desc = "Pull the industrial production index over a date range"
+code = """
+using FredData
+
+f = Fred()
+
+indpro = get_data(f, "INDPRO"; observation_start="2000-01-01")
+println(indpro.data)
+"""
+
+[[actionGroups.actions]]
+id = "fred-gr-recession"
+label = "Recession Bars"
+desc = "Fetch the NBER recession indicator to shade plots"
+code = """
+using FredData
+
+f = Fred()
+
+# USREC = 1 during NBER-dated recessions, 0 otherwise
+recession = get_data(f, "USREC")
+println(recession.data)
+"""
+
+[[actionGroups]]
+id = "inflation"
+label = "Inflation & Prices"
+
+[[actionGroups.actions]]
+id = "fred-inf-cpi"
+label = "CPI Inflation"
+desc = "Headline and core CPI as year-over-year inflation"
+code = """
+using FredData
+
+f = Fred()
+
+cpi      = get_data(f, "CPIAUCSL"; units="pc1")
+core_cpi = get_data(f, "CPILFESL"; units="pc1")
+println(cpi.data)
+println(core_cpi.data)
+"""
+
+[[actionGroups.actions]]
+id = "fred-inf-pce"
+label = "PCE Inflation"
+desc = "The Fed's preferred PCE and core-PCE price measures"
+code = """
+using FredData
+
+f = Fred()
+
+pce      = get_data(f, "PCEPI"; units="pc1")
+core_pce = get_data(f, "PCEPILFE"; units="pc1")
+println(pce.data)
+println(core_pce.data)
+"""
+
+[[actionGroups]]
+id = "labor"
+label = "Labour Market"
+
+[[actionGroups.actions]]
+id = "fred-lab-unrate"
+label = "Unemployment"
+desc = "Pull the unemployment rate and labour-force participation"
+code = """
+using FredData
+
+f = Fred()
+
+unrate  = get_data(f, "UNRATE")
+partcip = get_data(f, "CIVPART")
+println(unrate.data)
+println(partcip.data)
+"""
+
+[[actionGroups.actions]]
+id = "fred-lab-claims"
+label = "Jobless Claims"
+desc = "Fetch weekly initial unemployment claims"
+code = """
+using FredData
+
+f = Fred()
+
+# Initial claims (ICSA), weekly, seasonally adjusted
+claims = get_data(f, "ICSA")
+println(claims.data)
+"""
+
+[[actionGroups]]
+id = "rates"
+label = "Interest Rates"
+
+[[actionGroups.actions]]
+id = "fred-rt-curve"
+label = "Yield Curve"
+desc = "Download the 2-year and 10-year treasury yields"
+code = """
+using FredData
+
+f = Fred()
+
+dgs2  = get_data(f, "DGS2")
+dgs10 = get_data(f, "DGS10")
+println(dgs2.data)
+println(dgs10.data)
+"""
+
+[[actionGroups.actions]]
+id = "fred-rt-mortgage"
+label = "Mortgage Rate"
+desc = "Pull the 30-year fixed mortgage rate"
+code = """
+using FredData
+
+f = Fred()
+
+mortgage = get_data(f, "MORTGAGE30US")
+println(mortgage.data)
+"""
+
+[[actionGroups]]
+id = "money"
+label = "Money & Exchange"
+
+[[actionGroups.actions]]
+id = "fred-mn-m2"
+label = "Money Supply"
+desc = "Pull the M2 money stock as a year-over-year growth rate"
+code = """
+using FredData
+
+f = Fred()
+
+m2 = get_data(f, "M2SL"; units="pc1")
+println(m2.data)
+"""
+
+[[actionGroups.actions]]
+id = "fred-mn-fx"
+label = "Exchange Rates"
+desc = "Download a bilateral USD exchange-rate series"
+code = """
+using FredData
+
+f = Fred()
+
+# U.S. dollars to one euro (DEXUSEU), daily
+fx = get_data(f, "DEXUSEU")
+println(fx.data)
+"""

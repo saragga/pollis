@@ -12,7 +12,8 @@ import { INotificationService } from '../../../../../platform/notification/commo
 import { ICommandService } from '../../../../../platform/commands/common/commands.js';
 import { IWebviewWorkbenchService } from '../../../webviewPanel/browser/webviewWorkbenchService.js';
 import { IIdatMetadata, IdatWebviewMessage } from '../common/idat.types.js';
-import { openWikiByFile, openNotebookByFile, openPackageItem, openReferenceList, openVideoList, openInBrowser } from './model.handler.js';
+import { IModelPaper } from '../common/model.types.js';
+import { openWikiByFile, openNotebookByFile, openPackageItem, openVideoList, openInBrowser } from './model.handler.js';
 
 export function registerIdatWebviewHandlers(
 	webviewInput: ReturnType<IWebviewWorkbenchService['openWebview']>,
@@ -61,16 +62,26 @@ export function registerIdatWebviewHandlers(
 		const msg = e.message;
 		switch (msg.command) {
 			case 'openDocs':
-				try {
-					if (msg.target === 'paper') {
-						await openReferenceList(idatData.references, quickInputService, commandService, clipboardService, notificationService);
-					} else if (msg.target === 'repository') {
+				if (msg.target === 'paper') {
+					const papers = idatData.references.filter((r): r is IModelPaper => !('separator' in r));
+					webviewInput.webview.postMessage({ command: 'showReferences', references: papers });
+				} else if (msg.target === 'repository') {
+					try {
 						await openPackageItem('repository', idatData.packages, commandService, quickInputService, clipboardService, notificationService);
+					} finally {
+						webviewInput.webview.postMessage({ command: 'actionDone' });
 					}
-				} finally {
-					webviewInput.webview.postMessage({ command: 'actionDone' });
 				}
 				break;
+			case 'openReference': {
+				const papers = idatData.references.filter((r): r is IModelPaper => !('separator' in r));
+				const paper = papers.find(p => p.title === msg.id);
+				if (paper) {
+					const url = paper.doi ? `https://doi.org/${paper.doi}` : paper.url;
+					if (url) { await openInBrowser(url, commandService); }
+				}
+				break;
+			}
 			case 'openNotebook':
 				await openNotebookByFile(msg.target, idatData.notebooks, openerService, editorService);
 				break;

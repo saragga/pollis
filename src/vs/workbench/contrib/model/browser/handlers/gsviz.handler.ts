@@ -22,7 +22,10 @@ import { generateTokensCSSForColorMap } from '../../../../../editor/common/langu
 import { Event } from '../../../../../base/common/event.js';
 import { IUntitledTextResourceEditorInput } from '../../../../common/editor.js';
 import { CellEditType, CellKind } from '../../../notebook/common/notebookCommon.js';
-import { openWikiByFile, openNotebookByFile, openPackageItem, openReferenceList, openVideoList, openInBrowser, autoSelectJuliaKernel } from './model.handler.js';
+import { IFileService } from '../../../../../platform/files/common/files.js';
+import { IPathService } from '../../../../services/path/common/pathService.js';
+import { IWorkspaceContextService } from '../../../../../platform/workspace/common/workspace.js';
+import { openWikiByFile, openNotebookByFile, openPackageItem, openVideoList, openInBrowser, autoSelectJuliaKernel, createPackageStatusWiring } from './model.handler.js';
 
 export function registerGsvizWebviewHandlers(
 	webviewInput: ReturnType<IWebviewWorkbenchService['openWebview']>,
@@ -37,6 +40,9 @@ export function registerGsvizWebviewHandlers(
 	notebookKernelService: INotebookKernelService,
 	languageService: ILanguageService,
 	themeService: IThemeService,
+	fileService: IFileService,
+	pathService: IPathService,
+	workspaceContextService: IWorkspaceContextService,
 	initialModel?: string,
 ): DisposableStore {
 	const disposables = new DisposableStore();
@@ -52,6 +58,7 @@ export function registerGsvizWebviewHandlers(
 		for (const t of Object.keys(lastCode)) { void postColorized(lastCode[t], t); }
 	}));
 	const gsvizData = metadata.gsviz;
+	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, gsvizData.packages.map(p => p.name), fileService, pathService, commandService, notificationService, workspaceContextService);
 
 	setTimeout(() => {
 		const packages = gsvizData.packages.map(pkg => ({ name: pkg.name, url: pkg.github }));
@@ -81,6 +88,7 @@ export function registerGsvizWebviewHandlers(
 		if (initialModel) {
 			webviewInput.webview.postMessage({ command: 'setModel', model: initialModel });
 		}
+		void pkgStatus.postStatus();
 	}, 100);
 
 	disposables.add(webviewInput.webview.onDidDispose(() => disposables.dispose()));
@@ -91,7 +99,8 @@ export function registerGsvizWebviewHandlers(
 			case 'openDocs':
 				try {
 					if (msg.target === 'paper') {
-						await openReferenceList(gsvizData.references, quickInputService, commandService, clipboardService, notificationService);
+						const papers = gsvizData.references.filter((r): r is import('../common/model.types.js').IModelPaper => !('separator' in r));
+						webviewInput.webview.postMessage({ command: 'showReferences', references: papers });
 					} else if (msg.target === 'repository') {
 						await openPackageItem('repository', gsvizData.packages, commandService, quickInputService, clipboardService, notificationService);
 					}
@@ -143,6 +152,16 @@ export function registerGsvizWebviewHandlers(
 				} else if (msg.target === 'pluto') {
 					await commandService.executeCommand('pollis.action.sendToPluto', code);
 				}
+				await pkgStatus.nudgeIfMissing(msg.target);
+				break;
+			}
+			case 'openReference': {
+				const papers = gsvizData.references.filter((r): r is import('../common/model.types.js').IModelPaper => !('separator' in r));
+				const paper = papers.find(p => p.title === msg.id);
+				if (paper) {
+					const url = paper.doi ? `https://doi.org/${paper.doi}` : paper.url;
+					if (url) { await openInBrowser(url, commandService); }
+				}
 				break;
 			}
 			case 'openUrl':
@@ -157,6 +176,9 @@ export function registerGsvizWebviewHandlers(
 				break;
 			case 'colorize':
 				await postColorized(msg.code, msg.target ?? 'main');
+				break;
+			case 'installPackages':
+				await pkgStatus.handleInstall();
 				break;
 			case 'cancelAction':
 				await quickInputService.cancel();

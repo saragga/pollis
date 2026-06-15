@@ -17,6 +17,7 @@ import {
 } from '../../model/browser/model.contribution.js';
 import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
+import { IWebviewService } from '../../webview/browser/webview.js';
 import { IOpenerService } from '../../../../platform/opener/common/opener.js';
 import { IEditorService } from '../../../services/editor/common/editorService.js';
 import { IQuickInputService } from '../../../../platform/quickinput/common/quickInput.js';
@@ -48,6 +49,17 @@ import { openIdatWebview } from '../../model/browser/commands/idat.command.js';
 import { openHfmWebview } from '../../model/browser/commands/hfm.command.js';
 import { openKgmWebview } from '../../model/browser/commands/kgm.command.js';
 import { openXlsxWebview } from '../../model/browser/commands/xlsx.command.js';
+import { openYfinWebview } from '../../model/browser/commands/yfin.command.js';
+import { openAlpvWebview } from '../../model/browser/commands/alpv.command.js';
+import { openFredWebview } from '../../model/browser/commands/fred.command.js';
+import { openEcbWebview } from '../../model/browser/commands/ecb.command.js';
+import { openEdgarWebview } from '../../model/browser/commands/edgar.command.js';
+import { openHfdsWebview } from '../../model/browser/commands/hfds.command.js';
+import { openKgdsWebview } from '../../model/browser/commands/kgds.command.js';
+import { ISecretStorageService } from '../../../../platform/secrets/common/secrets.js';
+import { IFileService } from '../../../../platform/files/common/files.js';
+import { IPathService } from '../../../services/path/common/pathService.js';
+import { IWorkspaceContextService } from '../../../../platform/workspace/common/workspace.js';
 
 const EXPL_COMMAND_ID = 'workbench.action.showExplore';
 const RDYN_ID = 'chiara.explore.rt.1_rdyn';
@@ -63,6 +75,13 @@ const IDAT_ID = 'chiara.explore.idat';
 const HFM_ID  = 'chiara.explore.hfm';
 const KGM_ID  = 'chiara.explore.kgm';
 const XLSX_ID = 'chiara.explore.conn.xlsx';
+const YFIN_ID = 'chiara.explore.adr.yfin';
+const ALPV_ID = 'chiara.explore.adr.alpv';
+const FRED_ID = 'chiara.explore.adr.fred';
+const ECB_ID = 'chiara.explore.adr.ecb';
+const EDGAR_ID = 'chiara.explore.adr.edgar';
+const HFDS_ID = 'chiara.explore.adr.hfds';
+const KGDS_ID = 'chiara.explore.adr.kgds';
 const CVIZ_SCATTER_ID   = 'chiara.explore.dvcs.scatter';
 const CVIZ_BAR_ID       = 'chiara.explore.dvcs.bar';
 const CVIZ_HISTOGRAM_ID = 'chiara.explore.dvcs.histogram';
@@ -166,6 +185,11 @@ CommandsRegistry.registerCommand(HFM_ID, (accessor: ServicesAccessor) => {
 		accessor.get(ILanguageService),
 		accessor.get(IThemeService),
 		accessor.get(IRequestService),
+		accessor.get(IFileService),
+		accessor.get(IPathService),
+		accessor.get(IWorkspaceContextService),
+		accessor.get(ISecretStorageService),
+		accessor.get(IWebviewService),
 	);
 });
 
@@ -183,6 +207,11 @@ CommandsRegistry.registerCommand(KGM_ID, (accessor: ServicesAccessor) => {
 		accessor.get(ILanguageService),
 		accessor.get(IThemeService),
 		accessor.get(IRequestService),
+		accessor.get(IFileService),
+		accessor.get(IPathService),
+		accessor.get(IWorkspaceContextService),
+		accessor.get(ISecretStorageService),
+		accessor.get(IWebviewService),
 	);
 });
 
@@ -199,6 +228,154 @@ CommandsRegistry.registerCommand(XLSX_ID, (accessor: ServicesAccessor) => {
 		accessor.get(INotebookKernelService),
 		accessor.get(ILanguageService),
 		accessor.get(IThemeService),
+		accessor.get(IFileService),
+		accessor.get(IPathService),
+		accessor.get(IWorkspaceContextService),
+	);
+});
+
+CommandsRegistry.registerCommand(YFIN_ID, (accessor: ServicesAccessor) => {
+	openYfinWebview(
+		accessor.get(IWebviewWorkbenchService),
+		accessor.get(IOpenerService),
+		accessor.get(IEditorService),
+		accessor.get(IQuickInputService),
+		accessor.get(ICommandService),
+		accessor.get(IClipboardService),
+		accessor.get(INotificationService),
+		accessor.get(INotebookEditorModelResolverService),
+		accessor.get(INotebookKernelService),
+		accessor.get(ILanguageService),
+		accessor.get(IThemeService),
+		accessor.get(IFileService),
+		accessor.get(IPathService),
+		accessor.get(IWorkspaceContextService),
+	);
+});
+
+CommandsRegistry.registerCommand(ALPV_ID, (accessor: ServicesAccessor) => {
+	openAlpvWebview(
+		accessor.get(IWebviewWorkbenchService),
+		accessor.get(IOpenerService),
+		accessor.get(IEditorService),
+		accessor.get(IQuickInputService),
+		accessor.get(ICommandService),
+		accessor.get(IClipboardService),
+		accessor.get(INotificationService),
+		accessor.get(INotebookEditorModelResolverService),
+		accessor.get(INotebookKernelService),
+		accessor.get(ILanguageService),
+		accessor.get(IThemeService),
+		accessor.get(IFileService),
+		accessor.get(IPathService),
+		accessor.get(IWorkspaceContextService),
+		accessor.get(ISecretStorageService),
+		accessor.get(IWebviewService),
+	);
+});
+
+CommandsRegistry.registerCommand(HFDS_ID, (accessor: ServicesAccessor) => {
+	openHfdsWebview(
+		accessor.get(IWebviewWorkbenchService),
+		accessor.get(IOpenerService),
+		accessor.get(IEditorService),
+		accessor.get(IQuickInputService),
+		accessor.get(ICommandService),
+		accessor.get(IClipboardService),
+		accessor.get(INotificationService),
+		accessor.get(INotebookEditorModelResolverService),
+		accessor.get(INotebookKernelService),
+		accessor.get(ILanguageService),
+		accessor.get(IThemeService),
+		accessor.get(IRequestService),
+		accessor.get(IFileService),
+		accessor.get(IPathService),
+		accessor.get(IWorkspaceContextService),
+		accessor.get(ISecretStorageService),
+		accessor.get(IWebviewService),
+	);
+});
+
+CommandsRegistry.registerCommand(KGDS_ID, (accessor: ServicesAccessor) => {
+	openKgdsWebview(
+		accessor.get(IWebviewWorkbenchService),
+		accessor.get(IOpenerService),
+		accessor.get(IEditorService),
+		accessor.get(IQuickInputService),
+		accessor.get(ICommandService),
+		accessor.get(IClipboardService),
+		accessor.get(INotificationService),
+		accessor.get(INotebookEditorModelResolverService),
+		accessor.get(INotebookKernelService),
+		accessor.get(ILanguageService),
+		accessor.get(IThemeService),
+		accessor.get(IRequestService),
+		accessor.get(IFileService),
+		accessor.get(IPathService),
+		accessor.get(IWorkspaceContextService),
+		accessor.get(ISecretStorageService),
+		accessor.get(IWebviewService),
+	);
+});
+
+CommandsRegistry.registerCommand(FRED_ID, (accessor: ServicesAccessor) => {
+	openFredWebview(
+		accessor.get(IWebviewWorkbenchService),
+		accessor.get(IOpenerService),
+		accessor.get(IEditorService),
+		accessor.get(IQuickInputService),
+		accessor.get(ICommandService),
+		accessor.get(IClipboardService),
+		accessor.get(INotificationService),
+		accessor.get(INotebookEditorModelResolverService),
+		accessor.get(INotebookKernelService),
+		accessor.get(ILanguageService),
+		accessor.get(IThemeService),
+		accessor.get(IFileService),
+		accessor.get(IPathService),
+		accessor.get(IWorkspaceContextService),
+		accessor.get(ISecretStorageService),
+		accessor.get(IWebviewService),
+	);
+});
+
+CommandsRegistry.registerCommand(ECB_ID, (accessor: ServicesAccessor) => {
+	openEcbWebview(
+		accessor.get(IWebviewWorkbenchService),
+		accessor.get(IOpenerService),
+		accessor.get(IEditorService),
+		accessor.get(IQuickInputService),
+		accessor.get(ICommandService),
+		accessor.get(IClipboardService),
+		accessor.get(INotificationService),
+		accessor.get(INotebookEditorModelResolverService),
+		accessor.get(INotebookKernelService),
+		accessor.get(ILanguageService),
+		accessor.get(IThemeService),
+		accessor.get(IFileService),
+		accessor.get(IPathService),
+		accessor.get(IWorkspaceContextService),
+	);
+});
+
+CommandsRegistry.registerCommand(EDGAR_ID, (accessor: ServicesAccessor) => {
+	openEdgarWebview(
+		accessor.get(IWebviewWorkbenchService),
+		accessor.get(IOpenerService),
+		accessor.get(IEditorService),
+		accessor.get(IQuickInputService),
+		accessor.get(ICommandService),
+		accessor.get(IClipboardService),
+		accessor.get(INotificationService),
+		accessor.get(INotebookEditorModelResolverService),
+		accessor.get(INotebookKernelService),
+		accessor.get(ILanguageService),
+		accessor.get(IThemeService),
+		accessor.get(IFileService),
+		accessor.get(IPathService),
+		accessor.get(IWorkspaceContextService),
+		accessor.get(ISecretStorageService),
+		accessor.get(IWebviewService),
 	);
 });
 
@@ -288,6 +465,9 @@ CommandsRegistry.registerCommand(CVIZ_SCATTER_ID, (accessor: ServicesAccessor) =
 		accessor.get(INotebookKernelService),
 		accessor.get(ILanguageService),
 		accessor.get(IThemeService),
+		accessor.get(IFileService),
+		accessor.get(IPathService),
+		accessor.get(IWorkspaceContextService),
 		'scatter',
 	);
 });
@@ -305,6 +485,9 @@ CommandsRegistry.registerCommand(CVIZ_BAR_ID, (accessor: ServicesAccessor) => {
 		accessor.get(INotebookKernelService),
 		accessor.get(ILanguageService),
 		accessor.get(IThemeService),
+		accessor.get(IFileService),
+		accessor.get(IPathService),
+		accessor.get(IWorkspaceContextService),
 		'bar',
 	);
 });
@@ -322,6 +505,9 @@ CommandsRegistry.registerCommand(CVIZ_HISTOGRAM_ID, (accessor: ServicesAccessor)
 		accessor.get(INotebookKernelService),
 		accessor.get(ILanguageService),
 		accessor.get(IThemeService),
+		accessor.get(IFileService),
+		accessor.get(IPathService),
+		accessor.get(IWorkspaceContextService),
 		'histogram',
 	);
 });
@@ -339,6 +525,9 @@ CommandsRegistry.registerCommand(CVIZ_BOX_ID, (accessor: ServicesAccessor) => {
 		accessor.get(INotebookKernelService),
 		accessor.get(ILanguageService),
 		accessor.get(IThemeService),
+		accessor.get(IFileService),
+		accessor.get(IPathService),
+		accessor.get(IWorkspaceContextService),
 		'box',
 	);
 });
@@ -356,6 +545,9 @@ CommandsRegistry.registerCommand(CVIZ_VIOLIN_ID, (accessor: ServicesAccessor) =>
 		accessor.get(INotebookKernelService),
 		accessor.get(ILanguageService),
 		accessor.get(IThemeService),
+		accessor.get(IFileService),
+		accessor.get(IPathService),
+		accessor.get(IWorkspaceContextService),
 		'violin',
 	);
 });
@@ -373,6 +565,9 @@ CommandsRegistry.registerCommand(CVIZ_PIE_ID, (accessor: ServicesAccessor) => {
 		accessor.get(INotebookKernelService),
 		accessor.get(ILanguageService),
 		accessor.get(IThemeService),
+		accessor.get(IFileService),
+		accessor.get(IPathService),
+		accessor.get(IWorkspaceContextService),
 		'pie',
 	);
 });
@@ -390,6 +585,9 @@ CommandsRegistry.registerCommand(CVIZ_LINE_ID, (accessor: ServicesAccessor) => {
 		accessor.get(INotebookKernelService),
 		accessor.get(ILanguageService),
 		accessor.get(IThemeService),
+		accessor.get(IFileService),
+		accessor.get(IPathService),
+		accessor.get(IWorkspaceContextService),
 		'line',
 	);
 });
@@ -407,6 +605,9 @@ CommandsRegistry.registerCommand(DCMP_ECDF_ID, (accessor: ServicesAccessor) => {
 		accessor.get(INotebookKernelService),
 		accessor.get(ILanguageService),
 		accessor.get(IThemeService),
+		accessor.get(IFileService),
+		accessor.get(IPathService),
+		accessor.get(IWorkspaceContextService),
 		'ecdf',
 	);
 });
@@ -424,6 +625,9 @@ CommandsRegistry.registerCommand(DCMP_QQ_ID, (accessor: ServicesAccessor) => {
 		accessor.get(INotebookKernelService),
 		accessor.get(ILanguageService),
 		accessor.get(IThemeService),
+		accessor.get(IFileService),
+		accessor.get(IPathService),
+		accessor.get(IWorkspaceContextService),
 		'qq',
 	);
 });
@@ -441,6 +645,9 @@ CommandsRegistry.registerCommand(DCMP_MARGINAL_ID, (accessor: ServicesAccessor) 
 		accessor.get(INotebookKernelService),
 		accessor.get(ILanguageService),
 		accessor.get(IThemeService),
+		accessor.get(IFileService),
+		accessor.get(IPathService),
+		accessor.get(IWorkspaceContextService),
 		'marginal',
 	);
 });
@@ -458,6 +665,9 @@ CommandsRegistry.registerCommand(DCMP_CORRELOGRAM_ID, (accessor: ServicesAccesso
 		accessor.get(INotebookKernelService),
 		accessor.get(ILanguageService),
 		accessor.get(IThemeService),
+		accessor.get(IFileService),
+		accessor.get(IPathService),
+		accessor.get(IWorkspaceContextService),
 		'correlogram',
 	);
 });
@@ -475,6 +685,9 @@ CommandsRegistry.registerCommand(MVIZ_CORNER_ID, (accessor: ServicesAccessor) =>
 		accessor.get(INotebookKernelService),
 		accessor.get(ILanguageService),
 		accessor.get(IThemeService),
+		accessor.get(IFileService),
+		accessor.get(IPathService),
+		accessor.get(IWorkspaceContextService),
 		'corner',
 	);
 });
@@ -492,6 +705,9 @@ CommandsRegistry.registerCommand(MVIZ_PARALLEL_ID, (accessor: ServicesAccessor) 
 		accessor.get(INotebookKernelService),
 		accessor.get(ILanguageService),
 		accessor.get(IThemeService),
+		accessor.get(IFileService),
+		accessor.get(IPathService),
+		accessor.get(IWorkspaceContextService),
 		'parallel',
 	);
 });
@@ -509,6 +725,9 @@ CommandsRegistry.registerCommand(MVIZ_BUBBLE_ID, (accessor: ServicesAccessor) =>
 		accessor.get(INotebookKernelService),
 		accessor.get(ILanguageService),
 		accessor.get(IThemeService),
+		accessor.get(IFileService),
+		accessor.get(IPathService),
+		accessor.get(IWorkspaceContextService),
 		'bubble',
 	);
 });
@@ -526,6 +745,9 @@ CommandsRegistry.registerCommand(MVIZ_HEATMAP_ID, (accessor: ServicesAccessor) =
 		accessor.get(INotebookKernelService),
 		accessor.get(ILanguageService),
 		accessor.get(IThemeService),
+		accessor.get(IFileService),
+		accessor.get(IPathService),
+		accessor.get(IWorkspaceContextService),
 		'heatmap',
 	);
 });
@@ -543,6 +765,9 @@ CommandsRegistry.registerCommand(CPVIZ_MOSAIC_ID, (accessor: ServicesAccessor) =
 		accessor.get(INotebookKernelService),
 		accessor.get(ILanguageService),
 		accessor.get(IThemeService),
+		accessor.get(IFileService),
+		accessor.get(IPathService),
+		accessor.get(IWorkspaceContextService),
 		'mosaic',
 	);
 });
@@ -560,6 +785,9 @@ CommandsRegistry.registerCommand(CPVIZ_NIGHTINGALE_ID, (accessor: ServicesAccess
 		accessor.get(INotebookKernelService),
 		accessor.get(ILanguageService),
 		accessor.get(IThemeService),
+		accessor.get(IFileService),
+		accessor.get(IPathService),
+		accessor.get(IWorkspaceContextService),
 		'nightingale',
 	);
 });
@@ -577,6 +805,9 @@ CommandsRegistry.registerCommand(CPVIZ_WATERFALL_ID, (accessor: ServicesAccessor
 		accessor.get(INotebookKernelService),
 		accessor.get(ILanguageService),
 		accessor.get(IThemeService),
+		accessor.get(IFileService),
+		accessor.get(IPathService),
+		accessor.get(IWorkspaceContextService),
 		'waterfall',
 	);
 });
@@ -594,6 +825,9 @@ CommandsRegistry.registerCommand(CPVIZ_TREEMAP_ID, (accessor: ServicesAccessor) 
 		accessor.get(INotebookKernelService),
 		accessor.get(ILanguageService),
 		accessor.get(IThemeService),
+		accessor.get(IFileService),
+		accessor.get(IPathService),
+		accessor.get(IWorkspaceContextService),
 		'treemap',
 	);
 });
@@ -611,6 +845,9 @@ CommandsRegistry.registerCommand(CPVIZ_SANKEY_ID, (accessor: ServicesAccessor) =
 		accessor.get(INotebookKernelService),
 		accessor.get(ILanguageService),
 		accessor.get(IThemeService),
+		accessor.get(IFileService),
+		accessor.get(IPathService),
+		accessor.get(IWorkspaceContextService),
 		'sankey',
 	);
 });
@@ -628,6 +865,9 @@ CommandsRegistry.registerCommand(GSVIZ_NETWORK_ID, (accessor: ServicesAccessor) 
 		accessor.get(INotebookKernelService),
 		accessor.get(ILanguageService),
 		accessor.get(IThemeService),
+		accessor.get(IFileService),
+		accessor.get(IPathService),
+		accessor.get(IWorkspaceContextService),
 		'network',
 	);
 });
@@ -645,6 +885,9 @@ CommandsRegistry.registerCommand(GSVIZ_TREE_ID, (accessor: ServicesAccessor) => 
 		accessor.get(INotebookKernelService),
 		accessor.get(ILanguageService),
 		accessor.get(IThemeService),
+		accessor.get(IFileService),
+		accessor.get(IPathService),
+		accessor.get(IWorkspaceContextService),
 		'tree',
 	);
 });
@@ -662,6 +905,9 @@ CommandsRegistry.registerCommand(GSVIZ_CHOROPLETH_ID, (accessor: ServicesAccesso
 		accessor.get(INotebookKernelService),
 		accessor.get(ILanguageService),
 		accessor.get(IThemeService),
+		accessor.get(IFileService),
+		accessor.get(IPathService),
+		accessor.get(IWorkspaceContextService),
 		'choropleth',
 	);
 });
@@ -679,6 +925,9 @@ CommandsRegistry.registerCommand(GSVIZ_VORONOI_ID, (accessor: ServicesAccessor) 
 		accessor.get(INotebookKernelService),
 		accessor.get(ILanguageService),
 		accessor.get(IThemeService),
+		accessor.get(IFileService),
+		accessor.get(IPathService),
+		accessor.get(IWorkspaceContextService),
 		'voronoi',
 	);
 });
@@ -696,6 +945,9 @@ CommandsRegistry.registerCommand(SFVIZ_CONTOUR_ID, (accessor: ServicesAccessor) 
 		accessor.get(INotebookKernelService),
 		accessor.get(ILanguageService),
 		accessor.get(IThemeService),
+		accessor.get(IFileService),
+		accessor.get(IPathService),
+		accessor.get(IWorkspaceContextService),
 		'contour',
 	);
 });
@@ -713,6 +965,9 @@ CommandsRegistry.registerCommand(SFVIZ_CONTOUR3D_ID, (accessor: ServicesAccessor
 		accessor.get(INotebookKernelService),
 		accessor.get(ILanguageService),
 		accessor.get(IThemeService),
+		accessor.get(IFileService),
+		accessor.get(IPathService),
+		accessor.get(IWorkspaceContextService),
 		'contour3d',
 	);
 });
@@ -730,6 +985,9 @@ CommandsRegistry.registerCommand(SFVIZ_SURFACE_ID, (accessor: ServicesAccessor) 
 		accessor.get(INotebookKernelService),
 		accessor.get(ILanguageService),
 		accessor.get(IThemeService),
+		accessor.get(IFileService),
+		accessor.get(IPathService),
+		accessor.get(IWorkspaceContextService),
 		'surface',
 	);
 });
@@ -747,6 +1005,9 @@ CommandsRegistry.registerCommand(SFVIZ_VOLUME_ID, (accessor: ServicesAccessor) =
 		accessor.get(INotebookKernelService),
 		accessor.get(ILanguageService),
 		accessor.get(IThemeService),
+		accessor.get(IFileService),
+		accessor.get(IPathService),
+		accessor.get(IWorkspaceContextService),
 		'volume',
 	);
 });
@@ -764,6 +1025,9 @@ CommandsRegistry.registerCommand(SFVIZ_PHASE_ID, (accessor: ServicesAccessor) =>
 		accessor.get(INotebookKernelService),
 		accessor.get(ILanguageService),
 		accessor.get(IThemeService),
+		accessor.get(IFileService),
+		accessor.get(IPathService),
+		accessor.get(IWorkspaceContextService),
 		'phase',
 	);
 });
@@ -781,6 +1045,9 @@ CommandsRegistry.registerCommand(SFVIZ_MESH_ID, (accessor: ServicesAccessor) => 
 		accessor.get(INotebookKernelService),
 		accessor.get(ILanguageService),
 		accessor.get(IThemeService),
+		accessor.get(IFileService),
+		accessor.get(IPathService),
+		accessor.get(IWorkspaceContextService),
 		'mesh',
 	);
 });
@@ -798,6 +1065,9 @@ CommandsRegistry.registerCommand(SFVIZ_VOXELS_ID, (accessor: ServicesAccessor) =
 		accessor.get(INotebookKernelService),
 		accessor.get(ILanguageService),
 		accessor.get(IThemeService),
+		accessor.get(IFileService),
+		accessor.get(IPathService),
+		accessor.get(IWorkspaceContextService),
 		'voxels',
 	);
 });
@@ -815,6 +1085,9 @@ CommandsRegistry.registerCommand(TSVIZ_TSPLOT_ID, (accessor: ServicesAccessor) =
 		accessor.get(INotebookKernelService),
 		accessor.get(ILanguageService),
 		accessor.get(IThemeService),
+		accessor.get(IFileService),
+		accessor.get(IPathService),
+		accessor.get(IWorkspaceContextService),
 		'tsplot',
 	);
 });
@@ -833,6 +1106,9 @@ CommandsRegistry.registerCommand(TSVIZ_RIBBON_ID, (accessor: ServicesAccessor) =
 		accessor.get(INotebookKernelService),
 		accessor.get(ILanguageService),
 		accessor.get(IThemeService),
+		accessor.get(IFileService),
+		accessor.get(IPathService),
+		accessor.get(IWorkspaceContextService),
 		'ribbon',
 	);
 });
@@ -850,6 +1126,9 @@ CommandsRegistry.registerCommand(TSVIZ_STACKED_ID, (accessor: ServicesAccessor) 
 		accessor.get(INotebookKernelService),
 		accessor.get(ILanguageService),
 		accessor.get(IThemeService),
+		accessor.get(IFileService),
+		accessor.get(IPathService),
+		accessor.get(IWorkspaceContextService),
 		'stacked',
 	);
 });
@@ -867,6 +1146,9 @@ CommandsRegistry.registerCommand(TSVIZ_OHLC_ID, (accessor: ServicesAccessor) => 
 		accessor.get(INotebookKernelService),
 		accessor.get(ILanguageService),
 		accessor.get(IThemeService),
+		accessor.get(IFileService),
+		accessor.get(IPathService),
+		accessor.get(IWorkspaceContextService),
 		'ohlc',
 	);
 });
@@ -886,8 +1168,14 @@ const DVSubmenuId = new MenuId('menubarDVSubmenu');
 // Define a new submenu ID for "Anomalies and Novelties"
 const ANSubmenuId = new MenuId('menubarANSubmenu');
 
-// Define a new submenu ID for "Remote Compute"
+// Define a new submenu ID for "Cloud Computing"
 const RCSubmenuId = new MenuId('menubarRCSubmenu');
+
+// Define a new submenu ID for "Cloud Storage"
+const CSSubmenuId = new MenuId('menubarCSSubmenu');
+
+// Define a new submenu ID for "Cloud Collaboration"
+const CCSubmenuId = new MenuId('menubarCCSubmenu');
 
 
 // ----------------------------------------------------
@@ -1020,8 +1308,22 @@ MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
 MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
 	group: '1_explore',
 	submenu: RCSubmenuId,
-	title: localize('showExplore.rc', 'Cloud Computing Platforms'),
+	title: localize('showExplore.cc', 'Cloud Computing'),
 	order: 5,
+});
+
+MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
+	group: '1_explore',
+	submenu: CSSubmenuId,
+	title: localize('showExplore.cs', 'Cloud Storage'),
+	order: 6,
+});
+
+MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
+	group: '1_explore',
+	submenu: CCSubmenuId,
+	title: localize('showExplore.cs', 'Cloud Collaboration'),
+	order: 7,
 });
 
 MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
@@ -1067,124 +1369,124 @@ MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
 // ------------------- TOOLBOXES ------------------------
 
 
-MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
-	group: '3_explore',
-	submenu: E_MTSubmenuId,
-	title: localize('showStatistics.mt', 'Economics Toolbox'),
-	order: 1,
-});
+// MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
+// 	group: '3_explore',
+// 	submenu: E_MTSubmenuId,
+// 	title: localize('showStatistics.mt', 'Economics Toolbox'),
+// 	order: 1,
+// });
 
-MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
-	group: '3_explore',
-	submenu: E_ETSubmenuId,
-	title: localize('showStatistics.et', 'Econometrics Toolbox'),
-	order: 2,
-});
+// MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
+// 	group: '3_explore',
+// 	submenu: E_ETSubmenuId,
+// 	title: localize('showStatistics.et', 'Econometrics Toolbox'),
+// 	order: 2,
+// });
 
-MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
-	group: '3_explore',
-	submenu: E_FTSubmenuId,
-	title: localize('showStatistics.ft', 'Finance Toolbox'),
-	order: 3,
-});
+// MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
+// 	group: '3_explore',
+// 	submenu: E_FTSubmenuId,
+// 	title: localize('showStatistics.ft', 'Finance Toolbox'),
+// 	order: 3,
+// });
 
-MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
-	group: '3_explore',
-	submenu: E_FITSubmenuId,
-	title: localize('showStatistics.fit', 'Financial Instruments Toolbox'),
-	order: 4,
-});
+// MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
+// 	group: '3_explore',
+// 	submenu: E_FITSubmenuId,
+// 	title: localize('showStatistics.fit', 'Financial Instruments Toolbox'),
+// 	order: 4,
+// });
 
-MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
-	group: '3_explore',
-	submenu: E_RMTSubmenuId,
-	title: localize('showStatistics.rmt', 'Risk Management Toolbox'),
-	order: 4,
-});
+// MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
+// 	group: '3_explore',
+// 	submenu: E_RMTSubmenuId,
+// 	title: localize('showStatistics.rmt', 'Risk Management Toolbox'),
+// 	order: 4,
+// });
 
-MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
-	group: '3_explore',
-	submenu: E_BATSubmenuId,
-	title: localize('showStatistics.bat', 'Business Advantage Toolbox'),
-	order: 5,
-});
+// MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
+// 	group: '3_explore',
+// 	submenu: E_BATSubmenuId,
+// 	title: localize('showStatistics.bat', 'Business Advantage Toolbox'),
+// 	order: 5,
+// });
 
 // ----------------------------------------------------------------------
 
-MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
-	group: '4_explore',
-	submenu: E_SMTSubmenuId,
-	title: localize('showStatistics.smt', 'Sound of Music Toolbox'),
-	order: 1,
-});
+// MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
+// 	group: '4_explore',
+// 	submenu: E_SMTSubmenuId,
+// 	title: localize('showStatistics.smt', 'Sound of Music Toolbox'),
+// 	order: 1,
+// });
 
-MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
-	group: '4_explore',
-	submenu: E_SVTSubmenuId,
-	title: localize('showStatistics.svt', 'Sound of Voice Toolbox'),
-	order: 2,
-});
+// MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
+// 	group: '4_explore',
+// 	submenu: E_SVTSubmenuId,
+// 	title: localize('showStatistics.svt', 'Sound of Voice Toolbox'),
+// 	order: 2,
+// });
 
-MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
-	group: '4_explore',
-	submenu: E_LTSubmenuId,
-	title: localize('showStatistics.lt', 'Literature Toolbox'),
-	order: 3,
-});
+// MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
+// 	group: '4_explore',
+// 	submenu: E_LTSubmenuId,
+// 	title: localize('showStatistics.lt', 'Literature Toolbox'),
+// 	order: 3,
+// });
 
-MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
-	group: '4_explore',
-	submenu: E_ARTTSubmenuId,
-	title: localize('showStatistics.art', 'Art Toolbox'),
-	order: 4,
-});
+// MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
+// 	group: '4_explore',
+// 	submenu: E_ARTTSubmenuId,
+// 	title: localize('showStatistics.art', 'Art Toolbox'),
+// 	order: 4,
+// });
 
-MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
-	group: '4_explore',
-	submenu: E_LAWSubmenuId,
-	title: localize('showStatistics.law', 'Law and Jurisprudence Toolbox'),
-	order: 5,
-});
+// MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
+// 	group: '4_explore',
+// 	submenu: E_LAWSubmenuId,
+// 	title: localize('showStatistics.law', 'Law and Jurisprudence Toolbox'),
+// 	order: 5,
+// });
 
 // --------------------------------------------------------------------
 
-MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
-	group: '5_explore',
-	submenu: E_HSTSubmenuId,
-	title: localize('showStatistics.geo', 'History Toolbox'),
-	order: 1,
-});
+// MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
+// 	group: '5_explore',
+// 	submenu: E_HSTSubmenuId,
+// 	title: localize('showStatistics.geo', 'History Toolbox'),
+// 	order: 1,
+// });
 
-MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
-	group: '5_explore',
-	submenu: E_NHSTSubmenuId,
-	title: localize('showStatistics.geo', 'Natural History Toolbox'),
-	order: 2,
-});
+// MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
+// 	group: '5_explore',
+// 	submenu: E_NHSTSubmenuId,
+// 	title: localize('showStatistics.geo', 'Natural History Toolbox'),
+// 	order: 2,
+// });
 
-MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
-	group: '5_explore',
-	command: {id: 'showStatistics.eco',
-	title: localize('showStatistics.mt', 'Ecology Toolbox'),},
-	order: 3,
-}); // AlgebraicDynamics.jl
+// MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
+// 	group: '5_explore',
+// 	command: {id: 'showStatistics.eco',
+// 	title: localize('showStatistics.mt', 'Ecology Toolbox'),},
+// 	order: 3,
+// }); // AlgebraicDynamics.jl
 
-MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
-	group: '5_explore',
-	submenu: E_GEOSubmenuId,
-	title: localize('showStatistics.geo', 'Geoscience Toolbox'),
-	order: 4,
-});
+// MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
+// 	group: '5_explore',
+// 	submenu: E_GEOSubmenuId,
+// 	title: localize('showStatistics.geo', 'Geoscience Toolbox'),
+// 	order: 4,
+// });
 
 
 // ----------------------------------------------------------------------
 
-MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
-	group: '6_explore',
-	submenu: E_BCTSubmenuId,
-	title: localize('showStatistics.mt', 'Biomedical Computing Toolbox'),
-	order: 1,
-});
+// MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
+// 	group: '6_explore',
+// 	submenu: E_BCTSubmenuId,
+// 	title: localize('showStatistics.mt', 'Biomedical Computing Toolbox'),
+// 	order: 1,
+// });
 // The broad field of applied biology and biochemistry that seeks to understand the underlying mechanisms of health and disease.
 // Biomedical Computing
 // ├── Bioinformatics
@@ -1205,12 +1507,12 @@ MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
 // ├── Biomedical Image Processing (Medical Image Computing)
 // └── Biomedical Data Sources (e.g. Genomics and Proteomics)
 
-MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
-	group: '6_explore',
-	submenu: E_CMTSubmenuId,
-	title: localize('showStatistics.mt', 'Clinical Medicine Toolbox'),
-	order: 2,
-});
+// MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
+// 	group: '6_explore',
+// 	submenu: E_CMTSubmenuId,
+// 	title: localize('showStatistics.mt', 'Clinical Medicine Toolbox'),
+// 	order: 2,
+// });
 // Clinical Medicine
 // ├── Clinical Laboratory Processing
 // ├── Precision and Personalized Medicine
@@ -1218,19 +1520,19 @@ MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
 
 // -------------------------------------------------------------------
 
-MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
-	group: '7_explore',
-	submenu: E_PHYTSubmenuId,
-	title: localize('showStatistics.phyt', 'Physics Toolbox'),
-	order: 1,
-}); //
+// MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
+// 	group: '7_explore',
+// 	submenu: E_PHYTSubmenuId,
+// 	title: localize('showStatistics.phyt', 'Physics Toolbox'),
+// 	order: 1,
+// }); //
 
-MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
-	group: '7_explore',
-	submenu: E_CETSubmenuId,
-	title: localize('showStatistics.femt', 'Computational Engineering Toolbox'),
-	order: 2,
-});
+// MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
+// 	group: '7_explore',
+// 	submenu: E_CETSubmenuId,
+// 	title: localize('showStatistics.femt', 'Computational Engineering Toolbox'),
+// 	order: 2,
+// });
 // Computational Engineering
 // ├── Finite Elements
 // ├── Multiphysics
@@ -1245,26 +1547,26 @@ MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
 // └── High-Performance Computing
 
 
-MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
-	group: '7_explore',
-	submenu: E_DSPSubmenuId,
-	title: localize('showStatistics.dsp', 'Signal Processing Toolbox'),
-	order: 2.5,
-});
+// MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
+// 	group: '7_explore',
+// 	submenu: E_DSPSubmenuId,
+// 	title: localize('showStatistics.dsp', 'Signal Processing Toolbox'),
+// 	order: 2.5,
+// });
 
-MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
-	group: '7_explore',
-	submenu: E_MSCCSubmenuId,
-	title: localize('showStatistics.mscc', 'Materials Science and Chemistry Toolbox'),
-	order: 2.7,
-});
+// MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
+// 	group: '7_explore',
+// 	submenu: E_MSCCSubmenuId,
+// 	title: localize('showStatistics.mscc', 'Materials Science and Chemistry Toolbox'),
+// 	order: 2.7,
+// });
 
-MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
-	group: '7_explore',
-	submenu: E_RTSubmenuId,
-	title: localize('showStatistics.robot', 'Robotics Toolbox'),
-	order: 3,
-});
+// MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
+// 	group: '7_explore',
+// 	submenu: E_RTSubmenuId,
+// 	title: localize('showStatistics.robot', 'Robotics Toolbox'),
+// 	order: 3,
+// });
 
 
 // ===================================================
@@ -1299,7 +1601,7 @@ MenuRegistry.appendMenuItem(AMRSubmenuId, {
 MenuRegistry.appendMenuItem(ADRSubmenuId, {
 	group: '1_ds',
 	command: {
-		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
+		id: YFIN_ID,
 		title: localize('fit.yahoo', 'Yahoo Finance'),
 	},
 	order: 1,
@@ -1308,7 +1610,7 @@ MenuRegistry.appendMenuItem(ADRSubmenuId, {
 MenuRegistry.appendMenuItem(ADRSubmenuId, {
 	group: '1_ds',
 	command: {
-		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
+		id: ALPV_ID,
 		title: localize('fit.alpha', 'Alpha Vantage'),
 	},
 	order: 2,
@@ -1317,7 +1619,7 @@ MenuRegistry.appendMenuItem(ADRSubmenuId, {
 MenuRegistry.appendMenuItem(ADRSubmenuId, {
 	group: '2_ds',
 	command: {
-		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
+		id: EDGAR_ID,
 		title: localize('ft.edgar', 'US SEC EDGAR'),
 	},
 	order: 1,
@@ -1327,7 +1629,7 @@ MenuRegistry.appendMenuItem(ADRSubmenuId, {
 	group: '2_ds',
 	command: {
 		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
-		title: localize('ft.xbrl', 'Generic XBRL'),
+		title: localize('ft.xbrl', 'Generic iXBRL'),
 	},
 	order: 2,
 });  // XbrlXML.jl
@@ -1336,17 +1638,17 @@ MenuRegistry.appendMenuItem(ADRSubmenuId, {
 MenuRegistry.appendMenuItem(ADRSubmenuId, {
 	group: '3_ds',
 	command: {
-		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
-		title: localize('ft.fred', 'FRED Repository'),
+		id: FRED_ID,
+		title: localize('ft.fred', 'Federal Reserve Economic Data'),
 	},
 	order: 1,
-});  // FRED.jl
+});  // FredData.jl
 
 MenuRegistry.appendMenuItem(ADRSubmenuId, {
 	group: '3_ds',
 	command: {
-		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
-		title: localize('ft.ecb', 'ECB Repository'),
+		id: ECB_ID,
+		title: localize('ft.ecb', 'European Central Bank Data Portal'),
 	},
 	order: 2,
 });  // European Central Bank
@@ -1357,68 +1659,68 @@ MenuRegistry.appendMenuItem(ADRSubmenuId, {
 MenuRegistry.appendMenuItem(ADRSubmenuId, {
 	group: '4_ds',
 	command: {
-		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
-		title: localize('ds.hf', 'Hugging Face Datasets'),
+		id: HFDS_ID,
+		title: localize('ds.hfds', 'Hugging Face Datasets'),
 	},
 	order: 1,
-}); // HuggingFaceDatasets.jl,
+}); // HuggingFaceDatasets.jl
 
 MenuRegistry.appendMenuItem(ADRSubmenuId, {
 	group: '4_ds',
 	command: {
-		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
+		id: KGDS_ID,
 		title: localize('ds.kaggle', 'Kaggle Datasets'),
 	},
 	order: 2,
-});
+}); // Kaggle API + CSV.jl
 
 // -----------------------Static Datasets -------------------------
 
-MenuRegistry.appendMenuItem(ADRSubmenuId, {
-	group: '5_ds',
-	command: {
-		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
-		title: localize('ds.openml', 'OpenML Datasets'),
-	},
-	order: 1,
-}); // https://www.openml.org/
+// MenuRegistry.appendMenuItem(ADRSubmenuId, {
+// 	group: '5_ds',
+// 	command: {
+// 		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
+// 		title: localize('ds.openml', 'OpenML Datasets'),
+// 	},
+// 	order: 1,
+// }); // https://www.openml.org/
 
-MenuRegistry.appendMenuItem(ADRSubmenuId, {
-	group: '5_ds',
-	command: {
-		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
-		title: localize('ds.uci', 'UCI Machine Learning Repository'),
-	},
-	order: 2,
-}); // https://archive.ics.uci.edu/
+// MenuRegistry.appendMenuItem(ADRSubmenuId, {
+// 	group: '5_ds',
+// 	command: {
+// 		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
+// 		title: localize('ds.uci', 'UCI Machine Learning Repository'),
+// 	},
+// 	order: 2,
+// }); // https://archive.ics.uci.edu/
 // MLDatasets.jl (many UCI datasets are mirrored here)
 
-MenuRegistry.appendMenuItem(ADRSubmenuId, {
-	group: '5_ds',
-	command: {
-		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
-		title: localize('ds.ucruea', 'UCR/UEA Time Series Repository'),
-	},
-	order: 3,
-}); //  TimeSeriesClassification.jl
+// MenuRegistry.appendMenuItem(ADRSubmenuId, {
+// 	group: '5_ds',
+// 	command: {
+// 		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
+// 		title: localize('ds.ucruea', 'UCR/UEA Time Series Repository'),
+// 	},
+// 	order: 3,
+// }); //  TimeSeriesClassification.jl
 
-MenuRegistry.appendMenuItem(ADRSubmenuId, {
- 	group: '5_ds',
- 	command: {
- 		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
- 		title: localize('ds.mld', 'Machine Learning Datasets'),
- 	},
- 	order: 4,
-}); // MLDatasets.jl
+// MenuRegistry.appendMenuItem(ADRSubmenuId, {
+// 	group: '5_ds',
+//  	command: {
+// 		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
+// 		title: localize('ds.mld', 'Machine Learning Datasets'),
+// 	},
+// 	order: 4,
+// }); // MLDatasets.jl
 
-MenuRegistry.appendMenuItem(ADRSubmenuId, {
-	group: '5_ds',
-	command: {
-		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
-		title: localize('ds.rd', 'R Datasets'),
-	},
-	order: 5,
-}); // RDatasets.jl
+// MenuRegistry.appendMenuItem(ADRSubmenuId, {
+// 	group: '5_ds',
+// 	command: {
+// 		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
+// 		title: localize('ds.rd', 'R Datasets'),
+// 	},
+// 	order: 5,
+// }); // RDatasets.jl
 
 
 // MenuRegistry.appendMenuItem(ADRSubmenuId, {
@@ -1435,15 +1737,6 @@ MenuRegistry.appendMenuItem(ADRSubmenuId, {
 // ===================================================
 // SUBMENU: FORMATS AND PROTOCOLS
 // ===================================================
-
-MenuRegistry.appendMenuItem(CONNSubmenuId, {
-	group: '2_conn',
-	command: {
-		id: XLSX_ID, precondition: ContextKeyExpr.false(),
-		title: localize('conn.csv', 'CSV Files'),
-	},
-	order: 1,
-});  // CSV.jl
 
 MenuRegistry.appendMenuItem(CONNSubmenuId, {
 	group: '2_conn',
@@ -1475,11 +1768,20 @@ MenuRegistry.appendMenuItem(CONNSubmenuId, {
 MenuRegistry.appendMenuItem(CONNSubmenuId, {
 	group: '2_conn',
 	command: {
-		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
-		title: localize('conn.parquet', 'Parquet Files'),
+		id: XLSX_ID, precondition: ContextKeyExpr.false(),
+		title: localize('conn.csv', 'CSV Files'),
 	},
 	order: 5,
 });  // CSV.jl
+
+MenuRegistry.appendMenuItem(CONNSubmenuId, {
+	group: '2_conn',
+	command: {
+		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
+		title: localize('conn.parquet', 'Parquet Files'),
+	},
+	order: 6,
+});  // Parquet.jl
 
 MenuRegistry.appendMenuItem(CONNSubmenuId, {
 	group: '3_conn',
@@ -1512,17 +1814,6 @@ MenuRegistry.appendMenuItem(RCSubmenuId, {
 	order: 2,
 });  //
 
-
-MenuRegistry.appendMenuItem(RCSubmenuId, {
-	group: '1_ccp',
-	command: {
-		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
-		title: localize('conn.gd', 'Google Drive'),
-	},
-	order: 3,
-});  // GoogleDrive.jl
-
-
 MenuRegistry.appendMenuItem(RCSubmenuId, {
 	group: '2_ccp',
 	command: {
@@ -1531,6 +1822,90 @@ MenuRegistry.appendMenuItem(RCSubmenuId, {
 	},
 	order: 1,
 });  // Becomes active only if the Extension Azure is installed
+
+MenuRegistry.appendMenuItem(RCSubmenuId, {
+	group: '2_ccp',
+	command: {
+		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
+		title: localize('ccp.aws', 'AWS'),
+	},
+	order: 2,
+});  // Becomes active only if the Extension AWS is installed
+
+
+// ===================================================
+// SUBMENU: CLOUD STORAGE
+// ===================================================
+
+MenuRegistry.appendMenuItem(CSSubmenuId, {
+	group: '1_cs',
+	command: {
+		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
+		title: localize('conn.gd', 'Google Drive'),
+	},
+	order: 1,
+});  // GoogleDrive.jl
+
+MenuRegistry.appendMenuItem(CSSubmenuId, {
+	group: '1_cs',
+	command: {
+		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
+		title: localize('conn.mo', 'Microsoft OneDrive'),
+	},
+	order: 2,
+});  //
+
+MenuRegistry.appendMenuItem(CSSubmenuId, {
+	group: '1_cs',
+	command: {
+		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
+		title: localize('conn.aic', 'Apple iCloud'),
+	},
+	order: 3,
+});  //
+
+MenuRegistry.appendMenuItem(CSSubmenuId, {
+	group: '1_cs',
+	command: {
+		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
+		title: localize('conn.box', 'Box'),
+	},
+	order: 4,
+});  //
+
+MenuRegistry.appendMenuItem(CSSubmenuId, {
+	group: '1_cs',
+	command: {
+		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
+		title: localize('conn.nc', 'NextCloud'),
+	},
+	order: 5,
+});  //
+
+// ===================================================
+// SUBMENU: CLOUD COLLABORATION
+// ===================================================
+
+MenuRegistry.appendMenuItem(CCSubmenuId, {
+	group: '1_col',
+	command: {
+		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
+		title: localize('conn.fio', 'Fast.io'),
+	},
+	order: 1,
+});
+//
+// Collaborative: https://fast.io/product/collaboration/
+// Pollis collaborative: https://pollis.fast.io/workspace/
+
+MenuRegistry.appendMenuItem(CCSubmenuId, {
+	group: '1_col',
+	command: {
+		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
+		title: localize('conn.fio', 'Frame.io'),
+	},
+	order: 2,
+});  // https:frame.io/
 
 
 
@@ -1810,7 +2185,7 @@ MenuRegistry.appendMenuItem(E_MTDataSourcesSubmenuId, {
 MenuRegistry.appendMenuItem(E_MTDataSourcesSubmenuId, {
 	group: '1_mtds',
 	command: {
-		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
+		id: FRED_ID,
 		title: localize('mt.fred', 'Federal Reserve Economic Data (FRED)'),
 	},
 	order: 2,

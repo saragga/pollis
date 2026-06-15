@@ -329,9 +329,18 @@ export class JuliaKernel {
 
             const args = ['--color=yes', `--project=${pkgenvpath}`, '--history-file=no']
 
+            // Pollis keeps provider credentials (the SEC contact and the FRED / Alpha Vantage / Hugging
+            // Face / Kaggle keys) in Secret Storage and injects them into terminals, but a notebook kernel
+            // is a separate process that does not inherit that. Fetch them from Pollis core and merge them
+            // here so the corresponding Julia packages work in notebooks without writing the values into a
+            // cell or file. Falls back to {} when the command is unavailable (e.g. plain VS Code).
+            const credentialEnv = await vscode.commands
+                .executeCommand<Record<string, string>>('pollis.credentialEnv')
+                .then(e => e ?? {}, () => ({} as Record<string, string>))
             const env = {
                 ...process.env,
                 ...getCustomEnvironmentVariables(),
+                ...credentialEnv,
             }
 
             if (nthreads === 'auto') {

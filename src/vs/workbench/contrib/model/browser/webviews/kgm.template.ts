@@ -120,7 +120,13 @@ function buildKgmIllustrationJs(): string {
 
 	const authorsJson = JSON.stringify(KGM_AUTHORS);
 
-	return `			var KGM_TASK_GROUPS = ${groupsJson};
+	return `			// renderIllustration() re-runs on every topic toggle; the Explore pane is independent
+			// of the code-preview topic, so build it once and skip rebuilds (this also avoids stacking
+			// duplicate message listeners and losing the user's filter selections).
+			if (body.dataset.kgmBuilt) { return; }
+			body.dataset.kgmBuilt = '1';
+
+			var KGM_TASK_GROUPS = ${groupsJson};
 			var KGM_FRAMEWORKS = ${frameworksJson};
 			var KGM_SORT_OPTIONS = ${sortJson};
 			var KGM_AUTHORS = ${authorsJson};
@@ -190,7 +196,7 @@ function buildKgmIllustrationJs(): string {
 						+ '<span class="nb-label">' + esc(m.ref) + '</span>'
 						+ '<span class="nb-desc hfm-task-tag">' + esc(fwLabel) + '</span>'
 						+ '<span class="hfm-model-meta">'
-						+ '<span class="hfm-meta-chip" title="Last updated">&#8987; ' + esc(kgmRelTime(m.updateTime)) + '</span>'
+						+ '<span class="hfm-meta-chip" title="Last updated">' + pollisClockSvg + ' ' + esc(kgmRelTime(m.updateTime)) + '</span>'
 						+ '<span class="hfm-meta-chip" title="Votes">&#9825; ' + kgmFmt(m.voteCount) + '</span>'
 						+ '</span>'
 						+ '</button>';
@@ -394,6 +400,7 @@ export function getKgmHtml(mermaidJs?: string): string {
 			<button class="toggle-btn" data-model="rl">RL</button>`,
 		illusCollapsed: false,
 		illustrationLabel: 'Explore by Task / Framework / Author',
+		illustrationIntro: 'Pick a Task to search the catalogue, then narrow with Framework and Author. Selecting several Frameworks or Authors matches any of them (<strong>OR</strong>), and the categories combine with <strong>AND</strong>. For example, <em>PyTorch</em> plus <em>TensorFlow</em> under Framework plus an Author builds: <code>(PyTorch OR TensorFlow) AND (Author)</code>',
 		illustrationOverrideJs: buildKgmIllustrationJs(),
 		extraCss: `	.hfm-task-layout { display: grid; grid-template-columns: 220px 1fr; gap: 16px; height: 560px; }
 	.hfm-task-list { overflow-y: auto; height: 100%; padding-right: 4px; scrollbar-width: none; }

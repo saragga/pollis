@@ -1,0 +1,621 @@
+# US SEC EDGAR Webview Configuration
+# Declarative source. The build script generates edgar.data.ts.
+# Run: npm run gulp compile-toml
+#
+# Approach: the SEC EDGAR REST APIs (data.sec.gov) return clean JSON and need NO
+# API key — but every request MUST send a User-Agent header declaring your app and
+# a contact email, or the SEC returns 403. We use EDGAR.jl (which wraps HTTP.jl +
+# JSON3.jl) and stop at JSON3 objects / NamedTuples; the user pipes those into
+# DataFrames or TimeSeries downstream. EDGAR.jl reads the contact from the
+# SEC_USER_AGENT env var that Pollis injects. Fair-access limit: 10 requests/sec.
+
+[meta]
+title = "US SEC EDGAR"
+viewType = "pollis.edgar"
+defaultModel = "submissions"
+models = ["submissions", "facts", "concept", "frames", "search"]
+wideLayout = true
+illusCollapsed = true
+illustrationText = "Pull company filings and financial data from the SEC EDGAR REST APIs into Julia: submission histories, XBRL company facts and concepts, cross-filer frames, and full-text search."
+
+# Per-pane intro/footnote notes (optional, keyed by pane: keyPoints / decision / explore).
+[notes.decision]
+footnote = "The rows above are the structured-data JSON APIs on data.sec.gov. They return parsed facts and metadata, never the filing documents themselves. To download the raw 10-K/10-Q text or HTML in bulk, use ScrapeSEC.jl instead (last row) — it is the complement to these APIs, not a substitute for any single one."
+
+[[packages]]
+name = "EDGAR.jl"
+github = "https://github.com/Trumpingtons/EDGAR.jl"
+
+[[packages]]
+name = "ScrapeSEC.jl"
+github = "https://github.com/tylerjthomas9/ScrapeSEC.jl"
+
+[[notebookSections]]
+label = "SEC EDGAR"
+
+[[notebookSections.notebooks]]
+name = "First Submission"
+file = "edgar/tutorial-01-first-submission.ipynb"
+bundled = true
+description = "Set the required User-Agent, resolve a ticker to a CIK, and list a filer's recent filings"
+
+[[notebookSections.notebooks]]
+name = "XBRL Concept"
+file = "edgar/tutorial-02-xbrl-concept.ipynb"
+bundled = true
+description = "Pull one us-gaap concept over time and tidy it into a NamedTuple table"
+
+[[notebookSections.notebooks]]
+name = "Cross-Filer Frames"
+file = "edgar/tutorial-03-frames.ipynb"
+bundled = true
+description = "Fetch one concept for one period across every filer and rank the largest values"
+
+[[notebookSections.notebooks]]
+name = "Full-Text Search"
+file = "edgar/tutorial-04-full-text-search.ipynb"
+bundled = true
+description = "Search filing text with the EFTS API and turn the hits into filing URLs"
+
+[[wikis]]
+name = "Factsheet"
+file = "edgar/factsheet.md"
+bundled = true
+description = "Quick-reference: the data.sec.gov endpoints, the User-Agent rule, and the Julia stack"
+
+[[wikis]]
+name = "Overview"
+file = "edgar/overview.md"
+bundled = true
+description = "What EDGAR is, the REST data APIs, and how filings and XBRL facts fit together"
+
+[[wikis]]
+name = "Accessing Data"
+file = "edgar/accessing-data.md"
+bundled = true
+description = "The HTTP + JSON3 recipe: the mandatory User-Agent header, no key, and the rate limit"
+
+[[wikis]]
+name = "Finding a Company"
+file = "edgar/finding-a-company.md"
+bundled = true
+description = "CIK numbers, the company_tickers.json map, and zero-padding the CIK for data.sec.gov"
+
+[[wikis]]
+name = "XBRL Financial Data"
+file = "edgar/xbrl-financial-data.md"
+bundled = true
+description = "Company facts, company concept, and frames; us-gaap tags, units, and period frames"
+
+[[wikis]]
+name = "Search Modes"
+file = "edgar/search-modes.md"
+bundled = true
+description = "Full-text search (EFTS), company/ticker lookup, and browsing a filer's filing index"
+
+[[wikis]]
+name = "Downloading Filings"
+file = "edgar/downloading-filings.md"
+bundled = true
+description = "Fetch raw filing documents in bulk with ScrapeSEC.jl, the complement to the JSON APIs"
+
+[[references]]
+title = "EDGAR Application Programming Interfaces"
+authors = "U.S. Securities and Exchange Commission"
+year = 2024
+journal = "sec.gov"
+url = "https://www.sec.gov/search-filings/edgar-application-programming-interfaces"
+openAccess = true
+
+[[references]]
+title = "Financial Statement and Notes Data Sets (XBRL)"
+authors = "U.S. Securities and Exchange Commission"
+year = 2024
+journal = "sec.gov"
+url = "https://www.sec.gov/dera/data/financial-statement-data-sets"
+openAccess = true
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[conceptMap]
+center = "EDGAR"
+
+[[conceptMap.nodes]]
+id = "root"
+label = "EDGAR"
+kind = "center"
+
+[[conceptMap.nodes]]
+id = "q_who"
+label = "Identify a filer"
+kind = "concept"
+
+[[conceptMap.nodes]]
+id = "q_what"
+label = "List what they filed"
+kind = "concept"
+
+[[conceptMap.nodes]]
+id = "q_numbers"
+label = "Read the financials"
+kind = "concept"
+
+[[conceptMap.nodes]]
+id = "q_text"
+label = "Search filing text"
+kind = "concept"
+
+[[conceptMap.nodes]]
+id = "submissions"
+label = "Submissions"
+kind = "topic"
+model = "submissions"
+
+[[conceptMap.nodes]]
+id = "facts"
+label = "Company Facts"
+kind = "topic"
+model = "facts"
+
+[[conceptMap.nodes]]
+id = "concept"
+label = "Company Concept"
+kind = "topic"
+model = "concept"
+
+[[conceptMap.nodes]]
+id = "frames"
+label = "Frames"
+kind = "topic"
+model = "frames"
+
+[[conceptMap.nodes]]
+id = "search"
+label = "Full-Text Search"
+kind = "topic"
+model = "search"
+
+[[conceptMap.nodes]]
+id = "r_fred"
+label = "FRED"
+kind = "related"
+command = "chiara.explore.adr.fred"
+
+[[conceptMap.nodes]]
+id = "ext"
+label = "EDGAR APIs"
+kind = "external"
+url = "https://www.sec.gov/search-filings/edgar-application-programming-interfaces"
+
+[[conceptMap.edges]]
+from = "root"
+to = "q_who"
+label = "asks about"
+
+[[conceptMap.edges]]
+from = "root"
+to = "q_what"
+label = "asks about"
+
+[[conceptMap.edges]]
+from = "root"
+to = "q_numbers"
+label = "asks about"
+
+[[conceptMap.edges]]
+from = "root"
+to = "q_text"
+label = "asks about"
+
+[[conceptMap.edges]]
+from = "q_who"
+to = "search"
+label = "done with"
+
+[[conceptMap.edges]]
+from = "q_what"
+to = "submissions"
+label = "done with"
+
+[[conceptMap.edges]]
+from = "q_numbers"
+to = "facts"
+label = "done with"
+
+[[conceptMap.edges]]
+from = "q_numbers"
+to = "concept"
+label = "done with"
+
+[[conceptMap.edges]]
+from = "q_numbers"
+to = "frames"
+label = "done with"
+
+[[conceptMap.edges]]
+from = "root"
+to = "r_fred"
+label = "compare with"
+
+[[conceptMap.edges]]
+from = "root"
+to = "ext"
+label = "served by"
+
+[[bullets]]
+text = "Submissions"
+detail = "the filing history for a company by CIK: forms, dates, and document links"
+
+[[bullets]]
+text = "Company Facts"
+detail = "every XBRL fact a company has reported, in one JSON document"
+
+[[bullets]]
+text = "Company Concept"
+detail = "a single us-gaap concept (such as net income) reported over time"
+
+[[bullets]]
+text = "Frames"
+detail = "one concept for one period across every filer that reported it"
+
+[[bullets]]
+text = "Full-Text Search"
+detail = "search the text of filings since 2001 and resolve tickers to CIK numbers"
+
+[[decisionRows]]
+task = "Submissions"
+context = "Filings"
+purpose = "List a company's recent forms (10-K, 10-Q, 8-K) and their document URLs"
+
+[[decisionRows]]
+task = "Company Facts"
+context = "Financials"
+purpose = "Get every XBRL concept a company has reported in one request"
+
+[[decisionRows]]
+task = "Company Concept"
+context = "Time series"
+purpose = "Track one line item (such as revenue) across reporting periods"
+
+[[decisionRows]]
+task = "Frames"
+context = "Cross-section"
+purpose = "Compare one concept across all filers for a single period"
+
+[[decisionRows]]
+task = "Full-Text Search"
+context = "Discovery"
+purpose = "Find filings mentioning a phrase, or look up a CIK from a ticker"
+
+[[decisionRows]]
+task = "Raw Documents"
+context = "Filing text"
+purpose = "Download the full 10-K/10-Q documents in bulk with ScrapeSEC.jl (not the JSON APIs)"
+
+[miniCharts]
+
+[miniCharts.submissions]
+svg = '''
+var s = '<rect x="14" y="14" width="26" height="36" rx="2" fill="none" stroke="currentColor" stroke-width="1.3" opacity="0.55"/>';
+s += '<line x1="19" y1="22" x2="35" y2="22" stroke="currentColor" stroke-width="1" opacity="0.5"/>';
+s += '<line x1="19" y1="28" x2="35" y2="28" stroke="currentColor" stroke-width="1" opacity="0.5"/>';
+s += '<line x1="19" y1="34" x2="31" y2="34" stroke="currentColor" stroke-width="1" opacity="0.5"/>';
+s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Filings</text>';
+return s;
+'''
+
+[miniCharts.facts]
+svg = '''
+var s = '<rect x="12" y="16" width="30" height="34" rx="2" fill="none" stroke="currentColor" stroke-width="1.3" opacity="0.5"/>';
+s += '<line x1="27" y1="16" x2="27" y2="50" stroke="currentColor" stroke-width="0.8" opacity="0.4"/>';
+s += '<line x1="12" y1="27" x2="42" y2="27" stroke="currentColor" stroke-width="0.8" opacity="0.4"/>';
+s += '<line x1="12" y1="38" x2="42" y2="38" stroke="currentColor" stroke-width="0.8" opacity="0.4"/>';
+s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Facts</text>';
+return s;
+'''
+
+[miniCharts.concept]
+svg = '''
+var s = '<polyline points="8,46 18,40 28,42 38,30 48,26" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.55"/>';
+s += '<circle cx="18" cy="40" r="1.6" fill="currentColor" opacity="0.6"/>';
+s += '<circle cx="38" cy="30" r="1.6" fill="currentColor" opacity="0.6"/>';
+s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Concept</text>';
+return s;
+'''
+
+[miniCharts.frames]
+svg = '''
+var s = '<rect x="10" y="44" width="7" height="8"  fill="currentColor" opacity="0.35"/>';
+s += '<rect x="20" y="36" width="7" height="16" fill="currentColor" opacity="0.45"/>';
+s += '<rect x="30" y="26" width="7" height="26" fill="currentColor" opacity="0.55"/>';
+s += '<rect x="40" y="32" width="7" height="20" fill="currentColor" opacity="0.4"/>';
+s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Frames</text>';
+return s;
+'''
+
+[miniCharts.search]
+svg = '''
+var s = '<circle cx="24" cy="28" r="11" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.55"/>';
+s += '<line x1="32" y1="36" x2="42" y2="46" stroke="currentColor" stroke-width="1.8" opacity="0.55"/>';
+s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Search</text>';
+return s;
+'''
+
+[[codeBranches]]
+model = "submissions"
+code = """
+using EDGAR
+
+# SEC requires a User-Agent with your name and a contact email (no API key).
+# Click "Set contact" on the Powered-by line once; Pollis injects it as
+# ENV["SEC_USER_AGENT"], which EDGAR.jl reads automatically on every request.
+
+# Submissions history by 10-digit zero-padded CIK (Apple Inc. = 320193)
+sub = fetch_submissions("0000320193")
+
+println(sub.name, " - ", sub.sicDescription)
+
+# filings.recent holds parallel arrays: form, filingDate, accessionNumber, ...
+recent = sub.filings.recent
+for i in 1:5
+    println(recent.filingDate[i], "  ", recent.form[i], "  ", recent.primaryDocument[i])
+end
+"""
+
+[[codeBranches]]
+model = "facts"
+code = """
+using EDGAR
+# Contact is injected by Pollis as ENV["SEC_USER_AGENT"] and read automatically.
+
+# Every XBRL fact a company has reported, in one document
+facts = company_facts("320193")
+
+# Concepts live under taxonomies; us-gaap has a hyphen, so index by Symbol
+gaap = facts.facts[Symbol("us-gaap")]
+tags = collect(keys(gaap))
+println("us-gaap concepts reported: ", length(tags))
+println(first(tags, 10))
+"""
+
+[[codeBranches]]
+model = "concept"
+code = """
+using EDGAR
+# Contact is injected by Pollis as ENV["SEC_USER_AGENT"] and read automatically.
+
+# One us-gaap concept over time: net income (NetIncomeLoss)
+concept = company_concept("320193", "us-gaap", "NetIncomeLoss")
+
+# Values are grouped by unit (here USD); each entry has end, form, val, ...
+for o in last(concept.units.USD, 5)
+    println(o.end, "  ", o.form, "  ", o.val)
+end
+"""
+
+[[codeBranches]]
+model = "frames"
+code = """
+using EDGAR
+# Contact is injected by Pollis as ENV["SEC_USER_AGENT"] and read automatically.
+
+# One concept, one period, every filer that reported it.
+# Trailing "I" = instantaneous (a point in time); omit it for durations.
+frame = xbrl_frames("us-gaap", "AccountsPayableCurrent", "USD", "CY2019Q1I")
+
+println("Filers reporting: ", length(frame.data))
+for d in first(frame.data, 5)
+    println(d.entityName, "  ", d.val)
+end
+"""
+
+[[codeBranches]]
+model = "search"
+code = """
+using EDGAR
+# Contact is injected by Pollis as ENV["SEC_USER_AGENT"] and read automatically.
+
+# Full-text search across filing contents (2001 onward), limited to 10-K forms
+res = full_text_search("climate risk"; forms = "10-K")
+
+println("Total matches: ", res.hits.total.value)
+for h in first(res.hits.hits, 5)
+    src = h._source
+    println(src.file_date, "  ", src.form, "  ", first(src.display_names))
+end
+"""
+
+# Next Steps action groups (task-oriented, matched to the EDGAR REST APIs)
+[[actionGroups]]
+id = "submissions"
+label = "Submissions"
+
+[[actionGroups.actions]]
+id = "edgar-sub-recent"
+label = "Recent 10-K / 10-Q"
+desc = "List only the annual and quarterly report filings"
+code = """
+using EDGAR
+# Contact is injected by Pollis as ENV["SEC_USER_AGENT"] and read automatically.
+
+recent = fetch_submissions("0000320193").filings.recent
+
+for i in eachindex(recent.form)
+    if recent.form[i] in ("10-K", "10-Q")
+        println(recent.filingDate[i], "  ", recent.form[i])
+    end
+end
+"""
+
+[[actionGroups.actions]]
+id = "edgar-sub-url"
+label = "Filing Document URL"
+desc = "Build the public URL for a filing's primary document"
+code = """
+using EDGAR
+# Contact is injected by Pollis as ENV["SEC_USER_AGENT"] and read automatically.
+
+cik = 320193
+recent = fetch_submissions(lpad(cik, 10, '0')).filings.recent
+
+acc = replace(recent.accessionNumber[1], "-" => "")
+doc = recent.primaryDocument[1]
+println("https://www.sec.gov/Archives/edgar/data/$cik/$acc/$doc")
+"""
+
+[[actionGroups.actions]]
+id = "edgar-sub-download"
+label = "Download Filings (ScrapeSEC)"
+desc = "Pull the raw 10-K documents in bulk with ScrapeSEC.jl"
+code = """
+using ScrapeSEC
+
+# The JSON APIs give metadata and XBRL facts; ScrapeSEC.jl fetches the
+# actual filing DOCUMENTS. It works off EDGAR's quarterly index files.
+
+# 1) download the metadata index files for a year range
+download_metadata_files(2023, 2023)
+
+# 2) consolidate them into one index
+create_main_index()
+
+# 3) download just the 10-K documents listed in that index
+download_filings("./metadata/main_idx.tsv"; filing_types = ["10-K"])
+"""
+
+[[actionGroups]]
+id = "facts"
+label = "Company Facts"
+
+[[actionGroups.actions]]
+id = "edgar-facts-concept"
+label = "Pick One Concept"
+desc = "Read a single concept's latest annual value out of company facts"
+code = """
+using EDGAR
+# Contact is injected by Pollis as ENV["SEC_USER_AGENT"] and read automatically.
+
+facts = company_facts("320193")
+
+assets = facts.facts[Symbol("us-gaap")].Assets.units.USD
+annual = filter(o -> o.form == "10-K", assets)
+println("Latest reported total assets: ", last(annual).val)
+"""
+
+[[actionGroups.actions]]
+id = "edgar-facts-units"
+label = "List Reported Units"
+desc = "See which units (USD, shares, ...) a concept is reported in"
+code = """
+using EDGAR
+# Contact is injected by Pollis as ENV["SEC_USER_AGENT"] and read automatically.
+
+facts = company_facts("320193")
+
+shares = facts.facts[Symbol("us-gaap")].CommonStockSharesOutstanding
+println("Units available: ", collect(keys(shares.units)))
+"""
+
+[[actionGroups]]
+id = "concept"
+label = "Company Concept"
+
+[[actionGroups.actions]]
+id = "edgar-con-revenue"
+label = "Revenue Over Time"
+desc = "Annual revenue from the contract-with-customer concept"
+code = """
+using EDGAR
+# Contact is injected by Pollis as ENV["SEC_USER_AGENT"] and read automatically.
+
+tag = "RevenueFromContractWithCustomerExcludingAssessedTax"
+rev = company_concept("320193", "us-gaap", tag).units.USD
+
+for o in filter(o -> o.form == "10-K", rev)
+    println(o.fy, "  ", o.val)
+end
+"""
+
+[[actionGroups.actions]]
+id = "edgar-con-compare"
+label = "Compare Two Filers"
+desc = "Pull the same concept for two companies and compare"
+code = """
+using EDGAR
+# Contact is injected by Pollis as ENV["SEC_USER_AGENT"] and read automatically.
+
+function latest_net_income(cik)
+    concept = company_concept(string(cik), "us-gaap", "NetIncomeLoss")
+    annual = filter(o -> o.form == "10-K", concept.units.USD)
+    return last(annual).val
+end
+
+println("Apple:     ", latest_net_income(320193))
+println("Microsoft: ", latest_net_income(789019))
+"""
+
+[[actionGroups]]
+id = "frames"
+label = "Frames"
+
+[[actionGroups.actions]]
+id = "edgar-fr-top"
+label = "Largest Filers"
+desc = "Rank filers by a concept for a single period"
+code = """
+using EDGAR
+# Contact is injected by Pollis as ENV["SEC_USER_AGENT"] and read automatically.
+
+data = xbrl_frames("us-gaap", "Assets", "USD", "CY2022Q4I").data
+
+top = sort(collect(data); by = d -> d.val, rev = true)
+for d in first(top, 5)
+    println(d.entityName, "  ", d.val)
+end
+"""
+
+[[actionGroups.actions]]
+id = "edgar-fr-duration"
+label = "Duration Concept"
+desc = "A flow concept (revenue) summed over a full year, across filers"
+code = """
+using EDGAR
+# Contact is injected by Pollis as ENV["SEC_USER_AGENT"] and read automatically.
+
+# No trailing "I": CY2022 is a duration (the whole year), used for flows
+data = xbrl_frames("us-gaap", "Revenues", "USD", "CY2022").data
+println("Filers with full-year revenue: ", length(data))
+"""
+
+[[actionGroups]]
+id = "search"
+label = "Full-Text Search"
+
+[[actionGroups.actions]]
+id = "edgar-se-phrase"
+label = "Phrase in 10-Ks"
+desc = "Search an exact phrase, restricted to annual reports and a date range"
+code = """
+using EDGAR
+# Contact is injected by Pollis as ENV["SEC_USER_AGENT"] and read automatically.
+
+res = full_text_search("supply chain disruption"; forms = "10-K", startdate = "2023-01-01", enddate = "2023-12-31")
+println("Matches in 2023 10-Ks: ", res.hits.total.value)
+"""
+
+[[actionGroups.actions]]
+id = "edgar-se-ticker"
+label = "Ticker to CIK"
+desc = "Resolve a stock ticker to its CIK using the SEC's ticker map"
+code = """
+using EDGAR
+# Contact is injected by Pollis as ENV["SEC_USER_AGENT"] and read automatically.
+
+println("AAPL -> CIK ", cik_for_ticker("AAPL"))
+"""

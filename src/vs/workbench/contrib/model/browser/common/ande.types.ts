@@ -21,4 +21,5 @@ export type AndeWebviewMessage =
 	| { command: 'openWiki'; target: string }
 	| { command: 'openVideoList' }
 	| { command: 'openUrl'; url: string }
+	| { command: 'openReference'; id: string }
 	| { command: 'cancelAction' };

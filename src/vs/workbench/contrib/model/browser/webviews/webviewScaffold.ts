@@ -7,6 +7,15 @@ export interface WebviewParts {
 	readonly title: string;
 	readonly bullets: string;
 	readonly decisionRows: string;
+	/** Optional HTML rendered above / below the Key Points pane (from `[notes.keyPoints]`). */
+	readonly keyPointsIntro?: string;
+	readonly keyPointsFootnote?: string;
+	/** Optional HTML rendered above / below the Decision Table pane (from `[notes.decision]`). */
+	readonly decisionIntro?: string;
+	readonly decisionFootnote?: string;
+	/** Optional HTML rendered above / below the Illustration pane (from `[notes.explore]`). */
+	readonly illustrationIntro?: string;
+	readonly illustrationFootnote?: string;
 	readonly defaultModel: string;
 	readonly modelsLiteral: string;
 	readonly chartW: number;
@@ -94,9 +103,25 @@ export function buildWebviewHtml(parts: WebviewParts): string {
 		.section.collapsed .section-toggle .illus-chevron { transform: rotate(-90deg); }
 		.section.collapsed .section-body { display: none; }
 		.section-body { padding: 6px 0 0 0; }
-		.powered-by { margin: 4px 0 16px 0; line-height: 1.4; }
+		/* Key Points (.methods-list), Next Steps / Learn More (.column-list) and the Explore intro
+		   (.illus-note) self-indent by 22px to align under the pane title. The Decision Table and
+		   Example Code panes have no self-indenting child, so indent their bodies here to match. */
+		#sec-table .section-body, #sec-code .section-body { padding-left: 22px; }
+		.powered-by { margin: 4px 0 16px 0; line-height: 1.4; display: flex; align-items: baseline; flex-wrap: wrap; }
 		.package-link { color: var(--vscode-textLink-foreground); text-decoration: none; cursor: pointer; }
 		.package-link:hover { text-decoration: underline; }
+		.package-status { margin-left: 7px; }
+		.pkg-check { color: var(--vscode-charts-green); font-weight: 700; }
+		.pkg-install { color: var(--vscode-textLink-foreground); cursor: pointer; font-size: 12px; }
+		.pkg-install:hover { text-decoration: underline; }
+		.pkg-install svg { width: 13px; height: 13px; vertical-align: -2px; margin-right: 2px; }
+		.pkg-installing { color: var(--vscode-descriptionForeground); font-style: italic; font-size: 12px; }
+		.api-key-status { margin-left: auto; padding-left: 12px; font-size: 12px; }
+		.apikey-ok { color: var(--vscode-charts-green); }
+		.apikey-link { color: var(--vscode-textLink-foreground); cursor: pointer; }
+		.apikey-link:hover { text-decoration: underline; }
+		.apikey-sep { color: var(--vscode-descriptionForeground); opacity: 0.5; margin: 0 6px; }
+		.apikey-icon { width: 12px; height: 12px; vertical-align: -2px; margin-right: 3px; }
 		.subtitle { font-size: 14px; color: var(--vscode-descriptionForeground); margin: 0 0 16px 0; }
 		.methods-list { list-style: none; padding-left: 22px; margin: 5px 0; }
 		.methods-list li { margin: 2px 0; padding-left: 20px; position: relative; }
@@ -109,6 +134,11 @@ export function buildWebviewHtml(parts: WebviewParts): string {
 		.decision-table tr:last-child td { border-bottom: none; }
 		.decision-table td:first-child { color: var(--vscode-textLink-foreground); font-weight: 500; white-space: nowrap; }
 		.decision-table td:nth-child(2) { white-space: nowrap; }
+		.pane-intro { margin: 0 0 12px; font-size: 12px; line-height: 1.5; color: var(--vscode-descriptionForeground); border-left: 2px solid var(--vscode-textLink-foreground); padding-left: 10px; }
+		.pane-note { margin: 10px 0 0; font-size: 12px; line-height: 1.5; color: var(--vscode-descriptionForeground); border-left: 2px solid var(--vscode-textLink-foreground); padding-left: 10px; }
+		.pane-intro em, .pane-note em { font-style: italic; color: var(--vscode-foreground); }
+		.pane-intro strong, .pane-note strong { color: var(--vscode-foreground); }
+		.pane-intro code, .pane-note code { font-family: var(--vscode-editor-font-family, monospace); font-size: 11px; background: var(--vscode-textCodeBlock-background); color: var(--vscode-foreground); padding: 1px 5px; border-radius: 3px; }
 		.model-toggle { display: flex; flex-wrap: wrap; gap: 0; margin: 0; border: none; background: var(--vscode-editorGroupHeader-tabsBackground, transparent); overflow: visible; }
 		.toggle-btn { background: var(--vscode-tab-inactiveBackground); border: none; border-right: 1px solid var(--vscode-tab-border); border-top: 1px solid transparent; color: var(--vscode-tab-inactiveForeground); font-size: 13px; font-family: var(--vscode-font-family); cursor: pointer; padding: 0 16px; height: 35px; line-height: 33px; transition: background 0.1s; white-space: nowrap; margin-bottom: -1px; position: relative; }
 		.toggle-btn.active { background: var(--vscode-textCodeBlock-background); color: var(--vscode-tab-activeForeground); border-top: 1px solid var(--vscode-tab-activeBorderTop, transparent); z-index: 1; }
@@ -119,6 +149,8 @@ export function buildWebviewHtml(parts: WebviewParts): string {
 		.illus-chevron { display: inline-flex; align-items: center; transition: transform 0.15s; flex-shrink: 0; }
 		.illus-section.collapsed .illus-chevron { transform: rotate(-90deg); }
 		.illus-section.collapsed .illus-body { display: none; }
+		.illus-section.collapsed .illus-note { display: none; }
+		.illus-note { margin-left: 22px; }
 		.illus-body { background: var(--vscode-textCodeBlock-background); border: 1px solid var(--vscode-widget-border); border-radius: 6px; padding: 16px 20px; overflow-x: auto; }
 		.form-group { display: flex; flex-direction: column; margin-bottom: 12px; }
 		.form-row { display: flex; gap: 15px; margin-bottom: 12px; flex-wrap: wrap; }
@@ -130,6 +162,9 @@ export function buildWebviewHtml(parts: WebviewParts): string {
 		.tooltip-icon.pinned { background-color: var(--vscode-charts-green); }
 		.tooltip-text { position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background-color: var(--vscode-editor-background); color: var(--vscode-editor-foreground); padding: 8px 12px; border-radius: 4px; border: 1px solid var(--vscode-widget-border); box-shadow: 0 2px 8px rgba(0,0,0,0.2); font-size: 12px; line-height: 1.4; white-space: normal; width: 300px; z-index: 1000; display: none; margin-bottom: 5px; }
 		.tooltip-icon:hover + .tooltip-text, .tooltip-text:hover, .tooltip-text.pinned { display: block; }
+		/* Floating variant: a single shared tooltip positioned 'fixed' by JS for .tooltip-icon[data-tip]
+		   (works for dynamically-created icons and inside scrolling/overflow containers). */
+		.tooltip-floating { position: fixed; bottom: auto; left: auto; transform: none; margin: 0; z-index: 10000; pointer-events: none; }
 		.form-input { background-color: var(--vscode-input-background); color: var(--vscode-input-foreground); border: 1px solid var(--vscode-input-border); border-radius: 4px; padding: 8px 10px; font-size: 13px; font-family: 'Consolas', 'Monaco', 'Courier New', monospace; outline: none; width: 100%; }
 		.form-input:focus { border-color: var(--vscode-focusBorder); outline: 1px solid var(--vscode-focusBorder); }
 		textarea.form-input { resize: none; overflow-x: auto; overflow-y: hidden; white-space: nowrap; height: 37px; line-height: 1.4; }
@@ -227,17 +262,17 @@ ${parts.extraCss ?? ''}	</style>
 				<button class="voice-stub" title="Send voice (microphone) — coming soon"><svg width="26" height="26" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M8 1a2 2 0 0 0-2 2v5a2 2 0 1 0 4 0V3a2 2 0 0 0-2-2zM5 7H4v1a4 4 0 0 0 3.5 3.969V14H5v1h6v-1H8.5v-2.031A4 4 0 0 0 12 8V7h-1v1a3 3 0 0 1-6 0V7z"/></svg></button>
 				<button class="voice-stub" title="Receive voice (speaker) — coming soon"><svg width="26" height="26" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M8.69398 2.03934C8.8792 2.11749 8.99961 2.29898 8.99961 2.50001V13.5C8.99961 13.7014 8.87875 13.8832 8.693 13.9611C8.50725 14.039 8.29289 13.9978 8.14921 13.8567L5.22278 10.9817H3.49963C2.67121 10.9817 1.99963 10.3101 1.99963 9.48172V6.49273C1.99963 5.66431 2.67121 4.99273 3.49963 4.99273H5.22402L8.15073 2.14185C8.29474 2.00157 8.50875 1.96119 8.69398 2.03934ZM7.99961 3.68507L5.77617 5.85089C5.68281 5.94184 5.55763 5.99273 5.42729 5.99273H3.49963C3.22349 5.99273 2.99963 6.21659 2.99963 6.49273V9.48172C2.99963 9.75786 3.22349 9.98172 3.49963 9.98172H5.42729C5.55836 9.98172 5.68419 10.0332 5.77769 10.125L7.99961 12.3079V3.68507ZM10.1109 5.18874C10.2828 4.97264 10.5973 4.93682 10.8135 5.10873L10.8143 5.1094L10.8152 5.11015L10.8174 5.11188L10.8228 5.11628L10.8377 5.12882C10.8495 5.13885 10.8648 5.15224 10.8831 5.16904C10.9197 5.20261 10.9685 5.2499 11.0254 5.31119C11.1389 5.43362 11.2853 5.61296 11.4303 5.85143C11.7218 6.33096 12.0039 7.04439 12.0039 7.99855C12.0039 8.95268 11.7218 9.66687 11.4305 10.1471C11.2857 10.3859 11.1393 10.5657 11.0259 10.6884C10.9692 10.7498 10.9204 10.7973 10.8839 10.8309C10.8642 10.849 10.8441 10.8666 10.8236 10.8838L10.8152 10.8907L10.8143 10.8914C10.8143 10.8914 10.368 11.1337 10.1116 10.8129C9.94006 10.5983 9.97396 10.2858 10.1868 10.1128L10.1883 10.1115L10.1876 10.1122L10.1892 10.1108L10.1883 10.1115C10.1912 10.109 10.1975 10.1036 10.2066 10.0952C10.2248 10.0784 10.2543 10.05 10.2914 10.0098C10.3659 9.92923 10.47 9.80248 10.5755 9.62847C10.7851 9.28301 11.0039 8.74609 11.0039 7.99855C11.0039 7.25106 10.7851 6.71522 10.5758 6.3709C10.4703 6.19744 10.3663 6.07121 10.292 5.99105C10.2549 5.95104 10.2255 5.92278 10.2073 5.90613C10.1982 5.89781 10.192 5.89242 10.1891 5.88995L10.1901 5.89071C9.97439 5.71873 9.93908 5.40472 10.1109 5.18874ZM11.8127 3.10886C11.5966 2.93686 11.2821 2.97255 11.1101 3.18858C10.9382 3.40451 10.9743 3.71932 11.19 3.89138L11.2011 3.9006C11.2119 3.90975 11.2295 3.92484 11.2528 3.94582C11.2994 3.98781 11.369 4.05318 11.4538 4.14133C11.6239 4.31792 11.8537 4.58411 12.0841 4.93509C12.5446 5.63643 13.0029 6.66847 13.0029 8.00405C13.0029 9.33953 12.5446 10.3694 12.0845 11.0685C11.8541 11.4184 11.6244 11.6835 11.4545 11.8593C11.3697 11.947 11.3002 12.0121 11.2536 12.0538C11.2303 12.0747 11.2128 12.0897 11.202 12.0988L11.1904 12.1083L11.1895 12.1091C10.9742 12.2808 10.9382 12.5945 11.1093 12.8105C11.2808 13.0269 11.596 13.0628 11.8125 12.8913L11.8455 12.8642C11.864 12.8487 11.8895 12.8268 11.9209 12.7986C11.9838 12.7423 12.0707 12.6607 12.1735 12.5543C12.3789 12.3418 12.6496 12.0286 12.9197 11.6183C13.4604 10.797 14.0029 9.57884 14.0029 8.00405C14.0029 6.42934 13.4605 5.20938 12.9201 4.38627C12.6501 3.97503 12.3795 3.66089 12.1742 3.4477C12.0714 3.34097 11.9846 3.25908 11.9217 3.20255C11.8903 3.17426 11.8649 3.15228 11.8464 3.13665L11.8239 3.11798L11.8169 3.11222L11.8144 3.11024L11.8127 3.10886ZM10.1891 5.88995L10.1877 5.88874L10.1891 5.88995Z"/></svg></button>			</span>
 		</div>
-		<div class="powered-by">Powered by: <span id="package-links"></span></div>
+		<div class="powered-by">Powered by:&nbsp;<span id="package-links"></span><span class="package-status" id="package-status"></span><span class="api-key-status" id="api-key-status"></span></div>
 		<div class="section" id="sec-points">
 			<button class="section-toggle"><span class="illus-chevron"><svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M7.976 10.072l-4.054-4.014-.92.92 4.49 4.45.978.01 4.525-4.46-.918-.92-4.101 4.014z"/></svg></span>Key Points</button>
-			<div class="section-body subtitle">
+			<div class="section-body subtitle">${parts.keyPointsIntro ? `\n\t\t\t\t<p class="pane-intro">${parts.keyPointsIntro}</p>` : ''}
 				<ul class="methods-list">
-${parts.bullets}</ul>
+${parts.bullets}</ul>${parts.keyPointsFootnote ? `\n\t\t\t\t<p class="pane-note">${parts.keyPointsFootnote}</p>` : ''}
 			</div>
 		</div>
 		<div class="section collapsed" id="sec-table">
 			<button class="section-toggle"><span class="illus-chevron"><svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M7.976 10.072l-4.054-4.014-.92.92 4.49 4.45.978.01 4.525-4.46-.918-.92-4.101 4.014z"/></svg></span>Decision Table</button>
-			<div class="section-body">
+			<div class="section-body">${parts.decisionIntro ? `\n\t\t\t\t<p class="pane-intro">${parts.decisionIntro}</p>` : ''}
 				<table class="decision-table">
 					<thead>
 						<tr>
@@ -248,17 +283,17 @@ ${parts.bullets}</ul>
 					</thead>
 					<tbody>
 ${parts.decisionRows}</tbody>
-				</table>
+				</table>${parts.decisionFootnote ? `\n\t\t\t\t<p class="pane-note">${parts.decisionFootnote}</p>` : ''}
 			</div>
 		</div>
 
 
-		<div class="illus-section collapsed" id="illus-section">
+		<div class="illus-section ${parts.illusCollapsed === false ? '' : 'collapsed'}" id="illus-section">
 			<button class="illus-toggle" id="illus-toggle">
 				<span class="illus-chevron"><svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M7.976 10.072l-4.054-4.014-.92.92 4.49 4.45.978.01 4.525-4.46-.918-.92-4.101 4.014z"/></svg></span>
 				${parts.illustrationLabel ?? 'Illustration'}
-			</button>
-			<div class="illus-body" id="illus-body"></div>
+			</button>${parts.illustrationIntro ? `\n\t\t\t<p class="pane-intro illus-note">${parts.illustrationIntro}</p>` : ''}
+			<div class="illus-body" id="illus-body"></div>${parts.illustrationFootnote ? `\n\t\t\t<p class="pane-note illus-note">${parts.illustrationFootnote}</p>` : ''}
 		</div>
 
 		<div class="section" id="sec-code">
@@ -337,6 +372,9 @@ ${parts.nextStepsHtml ?? `					<li><button class="list-btn panel-toggle" id="btn
 			if (sec && sec.parentNode) { sec.parentNode.insertBefore(rightPanel, sec.nextSibling); }
 		}
 ${parts.headScriptJs ?? ''}
+		// Shared inline "last updated" clock icon for explore-pane cards (webviews do not load the
+		// codicon font; there is no hourglass codicon). Monochrome, theme-coloured via currentColor.
+		var pollisClockSvg = '<svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" style="vertical-align:-1px;"><circle cx="8" cy="8" r="6"/><path d="M8 8V4.6M8 8l2.6 1.4"/></svg>';
 		var MODELS = ${parts.modelsLiteral};
 
 		// Every code box is rendered via the core tokenizer (the user's active theme); see updateCodePreview.
@@ -894,6 +932,44 @@ ${parts.nextStepsWiringJs ?? `		document.getElementById('btn-viz').addEventListe
 			});
 		});
 
+		// Floating tooltips: any .tooltip-icon carrying a data-tip attribute shows a single shared,
+		// position:fixed tooltip (hover to show, click to pin, click away to dismiss). Document-level
+		// delegation so it covers icons created after load and inside scrolling/overflow containers,
+		// where the sibling .tooltip-text pattern above would be clipped. Plain (non-data-tip) icons
+		// keep using the sibling pattern, so this is purely additive.
+		(function() {
+			var floatTip = document.createElement('div');
+			floatTip.className = 'tooltip-text tooltip-floating';
+			floatTip.style.display = 'none';
+			document.body.appendChild(floatTip);
+			var pinnedIcon = null;
+			function showFloatTip(icon) {
+				floatTip.textContent = icon.dataset.tip;
+				floatTip.style.display = 'block';
+				var r = icon.getBoundingClientRect();
+				var left = Math.min(r.left, window.innerWidth - floatTip.offsetWidth - 8);
+				floatTip.style.left = Math.round(Math.max(8, left)) + 'px';
+				floatTip.style.top = Math.round(r.bottom + 6) + 'px';
+			}
+			function hideFloatTip() { floatTip.style.display = 'none'; }
+			document.addEventListener('mouseover', function(e) {
+				var icon = e.target.closest ? e.target.closest('.tooltip-icon[data-tip]') : null;
+				if (icon && !pinnedIcon) { showFloatTip(icon); }
+			});
+			document.addEventListener('mouseout', function(e) {
+				if (!pinnedIcon && e.target.closest && e.target.closest('.tooltip-icon[data-tip]')) { hideFloatTip(); }
+			});
+			document.addEventListener('click', function(e) {
+				var icon = e.target.closest ? e.target.closest('.tooltip-icon[data-tip]') : null;
+				if (icon) {
+					e.preventDefault();
+					e.stopPropagation();
+					if (pinnedIcon === icon) { icon.classList.remove('pinned'); pinnedIcon = null; hideFloatTip(); }
+					else { if (pinnedIcon) { pinnedIcon.classList.remove('pinned'); } pinnedIcon = icon; icon.classList.add('pinned'); showFloatTip(icon); }
+				} else if (pinnedIcon) { pinnedIcon.classList.remove('pinned'); pinnedIcon = null; hideFloatTip(); }
+			});
+		})();
+
 		// Bracket-pair colourisation, mirroring the editor: colour () [] {} by nesting depth using
 		// the active theme's bracket colours. Open and matching close share a colour; depth cycles 1..6.
 		function colorizeBrackets(root) {
@@ -941,9 +1017,54 @@ ${parts.nextStepsWiringJs ?? `		document.getElementById('btn-viz').addEventListe
 			});
 		}
 
+		function renderPackageStatus(statuses, env) {
+			var el = document.getElementById('package-status');
+			if (!el) { return; }
+			if (!statuses.length) { el.innerHTML = ''; return; }
+			var missing = statuses.filter(function(s) { return !s.installed; });
+			if (missing.length === 0) {
+				el.innerHTML = '<span class="pkg-check">&#10003;</span>';
+				el.firstChild.title = env ? 'All packages declared in ' + env : 'All packages installed';
+				return;
+			}
+			var names = missing.map(function(s) { return s.name; }).join(', ');
+			el.innerHTML = '<span class="pkg-install" id="pkg-install-btn">'
+				+ '<svg viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M7.5 1v7.585L5.207 6.293l-.707.707L8 10.5l3.5-3.5-.707-.707L8.5 8.585V1h-1z"/><path d="M2 13h12v1H2z"/></svg>'
+				+ 'Install</span>';
+			var btn = document.getElementById('pkg-install-btn');
+			if (btn) {
+				btn.title = 'Install missing: ' + names + ' — into your active Julia environment';
+				btn.addEventListener('click', function() {
+					el.innerHTML = '<span class="pkg-installing" title="Installing in the Julia REPL…">installing&#8230;</span>';
+					vscode.postMessage({ command: 'installPackages' });
+				});
+			}
+		}
+
+		function renderApiKeyStatus(msg) {
+			var el = document.getElementById('api-key-status');
+			if (!el) { return; }
+			var label = msg.label || '';
+			var noun = msg.noun || 'API key';
+			var keyIcon = '<svg class="apikey-icon" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M10 1a5 5 0 0 0-4.9 6.02L1 11.12V15h3.88l.62-.62v-1.5h1.5v-1.5h1.5l.48-.48A5 5 0 1 0 10 1zm1.75 4.25a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5z"/></svg>';
+			if (msg.hasKey) {
+				el.innerHTML = '<span class="apikey-ok" title="' + label + ' ' + noun + ' saved in VS Code Secret Storage">' + keyIcon + noun + '</span>'
+					+ '<span class="apikey-sep">|</span>'
+					+ '<a class="apikey-link" id="apikey-change">change</a>'
+					+ '<span class="apikey-sep">|</span>'
+					+ '<a class="apikey-link" id="apikey-clear">clear</a>';
+				document.getElementById('apikey-change').addEventListener('click', function() { vscode.postMessage({ command: 'setApiKey' }); });
+				document.getElementById('apikey-clear').addEventListener('click', function() { vscode.postMessage({ command: 'clearApiKey' }); });
+			} else {
+				el.innerHTML = '<a class="apikey-link" id="apikey-set" title="Store your ' + label + ' ' + noun + ' securely in VS Code Secret Storage">' + keyIcon + 'Set ' + noun + '</a>';
+				document.getElementById('apikey-set').addEventListener('click', function() { vscode.postMessage({ command: 'setApiKey' }); });
+			}
+		}
+
 		window.addEventListener('message', function(event) {
 			var msg = event.data;
 			if (!msg) { return; }
+			if (msg.command === 'apiKeyStatus') { renderApiKeyStatus(msg); }
 			if (msg.command === 'packageLinks') {
 				var container = document.getElementById('package-links');
 				container.innerHTML = '';
@@ -958,6 +1079,7 @@ ${parts.nextStepsWiringJs ?? `		document.getElementById('btn-viz').addEventListe
 					if (i < pkgs.length - 1) { container.appendChild(document.createTextNode(', ')); }
 				});
 			}
+			if (msg.command === 'packageStatus') { renderPackageStatus(msg.statuses || [], msg.env || ''); }
 			if (msg.command === 'paperLinks') {
 				var btn = document.getElementById('btn-paper');
 				if (btn) { btn.classList.toggle('has-actions', !!msg.hasPapers); }

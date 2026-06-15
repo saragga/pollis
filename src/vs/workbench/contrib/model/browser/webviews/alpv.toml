@@ -1,0 +1,533 @@
+# Alpha Vantage (AlphaVantage.jl) Webview Configuration
+# Declarative source. The build script generates alpv.data.ts.
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Alpha Vantage"
+viewType = "pollis.alpv"
+defaultModel = "equity"
+models = ["equity", "forex", "crypto", "indicators", "economic"]
+wideLayout = true
+illusCollapsed = true
+illustrationText = "Download market and economic data from Alpha Vantage into Julia: equities, forex, crypto, indicators, and macro series."
+
+[[packages]]
+name = "AlphaVantage.jl"
+github = "https://github.com/ellisvalentiner/AlphaVantage.jl"
+
+[[notebookSections]]
+label = "Alpha Vantage"
+
+[[notebookSections.notebooks]]
+name = "Equity Time Series"
+file = "alpv/tutorial-01-equities.ipynb"
+bundled = true
+description = "Download intraday and daily OHLC bars and a latest global quote"
+
+[[notebookSections.notebooks]]
+name = "Forex and Crypto"
+file = "alpv/tutorial-02-forex-crypto.ipynb"
+bundled = true
+description = "Fetch exchange rates, FX series, and digital-currency prices"
+
+[[notebookSections.notebooks]]
+name = "Technical Indicators"
+file = "alpv/tutorial-03-indicators.ipynb"
+bundled = true
+description = "Compute SMA, EMA, RSI, and other indicators server-side"
+
+[[notebookSections.notebooks]]
+name = "Economic Indicators"
+file = "alpv/tutorial-04-economic.ipynb"
+bundled = true
+description = "Pull macro series: real GDP, CPI, treasury yields, and the federal funds rate"
+
+[[wikis]]
+name = "Factsheet"
+file = "alpv/factsheet.md"
+bundled = true
+description = "Quick-reference: AlphaVantage.jl API, key functions, and the free API key"
+
+[[wikis]]
+name = "Overview"
+file = "alpv/overview.md"
+bundled = true
+description = "Accessing Alpha Vantage market and economic data from Julia"
+
+[[wikis]]
+name = "Authentication"
+file = "alpv/authentication.md"
+bundled = true
+description = "Get a free API key and store it securely with the Set API key link"
+
+[[wikis]]
+name = "Constraints"
+file = "alpv/constraints.md"
+bundled = true
+description = "Free-tier rate limits, premium endpoints, and valid intervals"
+
+[[wikis]]
+name = "Diagnostics"
+file = "alpv/diagnostics.md"
+bundled = true
+description = "Common errors: missing key, rate-limit notes, premium-only endpoints"
+
+[[wikis]]
+name = "Interpretation"
+file = "alpv/interpretation.md"
+bundled = true
+description = "Understanding the returned series, quotes, indicators, and macro data"
+
+[[references]]
+title = "AlphaVantage.jl: A Julia wrapper for the Alpha Vantage API"
+authors = "Valentiner, Ellis; contributors"
+year = 2024
+journal = "GitHub"
+url = "https://github.com/ellisvalentiner/AlphaVantage.jl"
+openAccess = true
+
+[[references]]
+title = "Alpha Vantage API Documentation"
+authors = "Alpha Vantage Inc."
+year = 2024
+journal = "alphavantage.co"
+url = "https://www.alphavantage.co/documentation/"
+openAccess = true
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[conceptMap]
+center = "Alpha Vantage"
+
+[[conceptMap.nodes]]
+id = "root"
+label = "Alpha Vantage"
+kind = "center"
+
+[[conceptMap.nodes]]
+id = "q_price"
+label = "Get prices"
+kind = "concept"
+
+[[conceptMap.nodes]]
+id = "q_fx"
+label = "Convert currency"
+kind = "concept"
+
+[[conceptMap.nodes]]
+id = "q_ind"
+label = "Add indicators"
+kind = "concept"
+
+[[conceptMap.nodes]]
+id = "q_macro"
+label = "Read macro data"
+kind = "concept"
+
+[[conceptMap.nodes]]
+id = "equity"
+label = "Equities"
+kind = "topic"
+model = "equity"
+
+[[conceptMap.nodes]]
+id = "forex"
+label = "Forex"
+kind = "topic"
+model = "forex"
+
+[[conceptMap.nodes]]
+id = "crypto"
+label = "Crypto"
+kind = "topic"
+model = "crypto"
+
+[[conceptMap.nodes]]
+id = "indicators"
+label = "Indicators"
+kind = "topic"
+model = "indicators"
+
+[[conceptMap.nodes]]
+id = "economic"
+label = "Economic"
+kind = "topic"
+model = "economic"
+
+[[conceptMap.nodes]]
+id = "r_yf"
+label = "Yahoo Finance"
+kind = "related"
+command = "chiara.explore.adr.yfin"
+
+[[conceptMap.nodes]]
+id = "ext"
+label = "AlphaVantage.jl"
+kind = "external"
+url = "https://github.com/ellisvalentiner/AlphaVantage.jl"
+
+[[conceptMap.edges]]
+from = "root"
+to = "q_price"
+label = "asks about"
+
+[[conceptMap.edges]]
+from = "root"
+to = "q_fx"
+label = "asks about"
+
+[[conceptMap.edges]]
+from = "root"
+to = "q_ind"
+label = "asks about"
+
+[[conceptMap.edges]]
+from = "root"
+to = "q_macro"
+label = "asks about"
+
+[[conceptMap.edges]]
+from = "q_price"
+to = "equity"
+label = "done with"
+
+[[conceptMap.edges]]
+from = "q_fx"
+to = "forex"
+label = "done with"
+
+[[conceptMap.edges]]
+from = "q_fx"
+to = "crypto"
+label = "done with"
+
+[[conceptMap.edges]]
+from = "q_ind"
+to = "indicators"
+label = "done with"
+
+[[conceptMap.edges]]
+from = "q_macro"
+to = "economic"
+label = "done with"
+
+[[conceptMap.edges]]
+from = "root"
+to = "r_yf"
+label = "compare with"
+
+[[conceptMap.edges]]
+from = "root"
+to = "ext"
+label = "built with"
+
+[[bullets]]
+text = "Equities"
+detail = "intraday, daily, weekly, and monthly OHLC time series plus latest global quotes"
+
+[[bullets]]
+text = "Forex"
+detail = "real-time and historical foreign-exchange rates for any currency pair"
+
+[[bullets]]
+text = "Crypto"
+detail = "daily and intraday digital-currency prices in a chosen market"
+
+[[bullets]]
+text = "Indicators"
+detail = "50+ technical indicators computed server-side (SMA, EMA, RSI, MACD, VWAP, ...)"
+
+[[bullets]]
+text = "Economic"
+detail = "macro series: real GDP, CPI, treasury yields, and the federal funds rate"
+
+[[decisionRows]]
+task = "Equities"
+context = "OHLC + quote"
+purpose = "Chart stocks or ETFs and read a latest global quote"
+
+[[decisionRows]]
+task = "Forex"
+context = "FX rates"
+purpose = "Convert currencies or chart a pair over time"
+
+[[decisionRows]]
+task = "Crypto"
+context = "Digital prices"
+purpose = "Track cryptocurrency prices in a chosen market"
+
+[[decisionRows]]
+task = "Indicators"
+context = "Technical"
+purpose = "Compute SMA, EMA, RSI, or MACD on a series"
+
+[[decisionRows]]
+task = "Economic"
+context = "Macro series"
+purpose = "Pull GDP, CPI, yields, or policy-rate history"
+
+[miniCharts]
+
+[miniCharts.equity]
+svg = '''
+var s = '<line x1="14" y1="20" x2="14" y2="60" stroke="currentColor" stroke-width="1" opacity="0.6"/>';
+s += '<rect x="9" y="30" width="10" height="20" fill="currentColor" opacity="0.3"/>';
+s += '<line x1="30" y1="14" x2="30" y2="52" stroke="currentColor" stroke-width="1" opacity="0.6"/>';
+s += '<rect x="25" y="22" width="10" height="22" fill="currentColor" opacity="0.45"/>';
+s += '<line x1="46" y1="26" x2="46" y2="66" stroke="currentColor" stroke-width="1" opacity="0.6"/>';
+s += '<rect x="41" y="36" width="10" height="18" fill="currentColor" opacity="0.3"/>';
+s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Equities</text>';
+return s;
+'''
+
+[miniCharts.forex]
+svg = '''
+var s = '<text x="14" y="34" font-size="16" fill="currentColor" opacity="0.5">$</text>';
+s += '<path d="M22 26 L34 26 M30 22 L34 26 L30 30" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.5"/>';
+s += '<text x="36" y="34" font-size="16" fill="currentColor" opacity="0.5">&#8364;</text>';
+s += '<path d="M34 46 L22 46 M26 42 L22 46 L26 50" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.5"/>';
+s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Forex</text>';
+return s;
+'''
+
+[miniCharts.crypto]
+svg = '''
+var s = '<circle cx="27" cy="34" r="16" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.5"/>';
+s += '<text x="27" y="40" text-anchor="middle" font-size="18" fill="currentColor" opacity="0.6">&#3647;</text>';
+s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Crypto</text>';
+return s;
+'''
+
+[miniCharts.indicators]
+svg = '''
+var s = '<polyline points="6,50 16,38 26,44 36,26 46,32 52,20" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.55"/>';
+s += '<polyline points="6,44 16,42 26,40 36,36 46,34 52,30" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="3,2" opacity="0.4"/>';
+s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Indic.</text>';
+return s;
+'''
+
+[miniCharts.economic]
+svg = '''
+var s = '<rect x="8"  y="42" width="8" height="22" fill="currentColor" opacity="0.4"/>';
+s += '<rect x="20" y="32" width="8" height="32" fill="currentColor" opacity="0.45"/>';
+s += '<rect x="32" y="22" width="8" height="42" fill="currentColor" opacity="0.5"/>';
+s += '<rect x="44" y="30" width="8" height="34" fill="currentColor" opacity="0.4"/>';
+s += '<line x1="6" y1="64" x2="54" y2="64" stroke="currentColor" stroke-width="0.6" opacity="0.4"/>';
+s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Econ.</text>';
+return s;
+'''
+
+[[codeBranches]]
+model = "equity"
+code = """
+using AlphaVantage
+
+# The global client reads ENV["ALPHA_VANTAGE_API_KEY"] automatically.
+# Use the "Set API key" link above the page to store yours securely.
+
+# Daily OHLC time series for a stock or ETF
+daily = time_series_daily("AAPL"; outputsize="compact")
+println(daily)
+
+# Intraday bars at a chosen interval
+intraday = time_series_intraday("AAPL"; interval="5min")
+
+# Latest global quote: price, change, and volume
+quote = stock_quote("AAPL")
+println(quote)
+"""
+
+[[codeBranches]]
+model = "forex"
+code = """
+using AlphaVantage
+
+# Real-time exchange rate between two currencies
+rate = currency_exchange_rate("USD", "EUR")
+println(rate)
+
+# Daily FX time series for a currency pair
+fx = fx_daily("EUR", "USD"; outputsize="compact")
+println(fx)
+"""
+
+[[codeBranches]]
+model = "crypto"
+code = """
+using AlphaVantage
+
+# Daily digital-currency prices in a given market
+btc = digital_currency_daily("BTC", "USD")
+println(btc)
+
+# FCAS rating: a fundamental health score for a coin
+rating = crypto_rating("BTC")
+println(rating)
+"""
+
+[[codeBranches]]
+model = "indicators"
+code = """
+using AlphaVantage
+
+# Simple moving average over a daily series (computed by Alpha Vantage)
+sma = SMA("AAPL"; interval="daily", time_period=20, series_type="close")
+println(sma)
+
+# Relative Strength Index
+rsi = RSI("AAPL"; interval="daily", time_period=14, series_type="close")
+println(rsi)
+"""
+
+[[codeBranches]]
+model = "economic"
+code = """
+using AlphaVantage
+
+# US real GDP (annual or quarterly)
+gdp = real_gdp(; interval="annual")
+println(gdp)
+
+# Consumer Price Index and the 10-year treasury yield
+inflation = cpi(; interval="monthly")
+yield10y  = treasury_yield(; interval="monthly", maturity="10year")
+println(yield10y)
+"""
+
+# Next Steps action groups (task-oriented, matched to the AlphaVantage.jl data types)
+[[actionGroups]]
+id = "equities"
+label = "Equities"
+
+[[actionGroups.actions]]
+id = "alpv-eq-daily"
+label = "Daily Series"
+desc = "Download the full daily-adjusted OHLC history for a symbol"
+code = """
+using AlphaVantage
+
+# outputsize="full" returns 20+ years; "compact" returns the latest 100 points
+daily = time_series_daily_adjusted("AAPL"; outputsize="full")
+println(daily)
+"""
+
+[[actionGroups.actions]]
+id = "alpv-eq-intraday"
+label = "Intraday Bars"
+desc = "Fetch intraday bars at a chosen interval"
+code = """
+using AlphaVantage
+
+intraday = time_series_intraday("MSFT"; interval="15min", outputsize="compact")
+println(intraday)
+"""
+
+[[actionGroups.actions]]
+id = "alpv-eq-quote"
+label = "Global Quote"
+desc = "Read the latest price, change, and volume for a symbol"
+code = """
+using AlphaVantage
+
+quote = stock_quote("AAPL")
+println(quote)
+"""
+
+[[actionGroups]]
+id = "fxcrypto"
+label = "Forex and Crypto"
+
+[[actionGroups.actions]]
+id = "alpv-fx-rate"
+label = "Exchange Rate"
+desc = "Get the real-time rate between two currencies"
+code = """
+using AlphaVantage
+
+rate = currency_exchange_rate("USD", "JPY")
+println(rate)
+"""
+
+[[actionGroups.actions]]
+id = "alpv-fx-daily"
+label = "FX Daily"
+desc = "Download the daily time series for a currency pair"
+code = """
+using AlphaVantage
+
+fx = fx_daily("GBP", "USD"; outputsize="compact")
+println(fx)
+"""
+
+[[actionGroups.actions]]
+id = "alpv-crypto-daily"
+label = "Crypto Daily"
+desc = "Download daily digital-currency prices in a market"
+code = """
+using AlphaVantage
+
+eth = digital_currency_daily("ETH", "USD")
+println(eth)
+"""
+
+[[actionGroups]]
+id = "indicators"
+label = "Indicators"
+
+[[actionGroups.actions]]
+id = "alpv-ind-sma"
+label = "Moving Average"
+desc = "Compute a simple moving average server-side"
+code = """
+using AlphaVantage
+
+sma = SMA("AAPL"; interval="daily", time_period=50, series_type="close")
+println(sma)
+"""
+
+[[actionGroups.actions]]
+id = "alpv-ind-rsi"
+label = "RSI"
+desc = "Compute the Relative Strength Index server-side"
+code = """
+using AlphaVantage
+
+rsi = RSI("AAPL"; interval="daily", time_period=14, series_type="close")
+println(rsi)
+"""
+
+[[actionGroups]]
+id = "economic"
+label = "Economic"
+
+[[actionGroups.actions]]
+id = "alpv-econ-gdp"
+label = "GDP and CPI"
+desc = "Pull US real GDP and the Consumer Price Index"
+code = """
+using AlphaVantage
+
+gdp = real_gdp(; interval="annual")
+inflation = cpi(; interval="monthly")
+println(gdp)
+println(inflation)
+"""
+
+[[actionGroups.actions]]
+id = "alpv-econ-rates"
+label = "Rates and Yields"
+desc = "Pull treasury yields and the federal funds rate"
+code = """
+using AlphaVantage
+
+yield10y = treasury_yield(; interval="monthly", maturity="10year")
+funds    = federal_fund_rate(; interval="monthly")
+println(yield10y)
+println(funds)
+"""

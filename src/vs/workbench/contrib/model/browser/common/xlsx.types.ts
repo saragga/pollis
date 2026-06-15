@@ -27,7 +27,8 @@ export type XlsxWebviewMessage =
 	| { command: 'openWiki'; target: string }
 	| { command: 'openVideoList' }
 	| { command: 'openUrl'; url: string }
-	| { command: 'runCode'; target: 'newFile' | 'terminal' | 'juliaRepl' | 'notebook'; code: string }
+	| { command: 'runCode'; target: 'newFile' | 'terminal' | 'juliaRepl' | 'notebook' | 'pluto'; code: string }
 	| { command: 'colorize'; code: string; target?: string }
 	| { command: 'openReference'; id: string }
+	| { command: 'installPackages' }
 	| { command: 'cancelAction' };

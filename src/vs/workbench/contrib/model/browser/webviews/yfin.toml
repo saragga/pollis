@@ -1,0 +1,699 @@
+# Yahoo Finance (YFinance.jl) Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/yfin.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Yahoo Finance"
+viewType = "pollis.yfin"
+defaultModel = "price"
+models = ["price", "quote", "fundamental", "options", "search"]
+wideLayout = true
+illusCollapsed = true
+illustrationText = "Download market data from Yahoo Finance into Julia: prices, fundamentals, options, and news."
+
+[[packages]]
+name = "YFinance.jl"
+github = "https://github.com/eohne/YFinance.jl"
+
+[[packages]]
+name = "Tables.jl"
+github = "https://github.com/JuliaData/Tables.jl"
+
+[[packages]]
+name = "TimeSeries.jl"
+github = "https://github.com/JuliaStats/TimeSeries.jl"
+
+[[notebookSections]]
+label = "Yahoo Finance"
+
+[[notebookSections.notebooks]]
+name = "Prices and Charts"
+file = "yfin/tutorial-01-prices.ipynb"
+bundled = true
+description = "Download OHLC bars, sink into a TimeArray, and plot adjusted closes"
+
+[[notebookSections.notebooks]]
+name = "Fundamentals"
+file = "yfin/tutorial-02-fundamentals.ipynb"
+bundled = true
+description = "Pull income statement, balance sheet, cash flow, and valuation history"
+
+[[notebookSections.notebooks]]
+name = "Options Chains"
+file = "yfin/tutorial-03-options.ipynb"
+bundled = true
+description = "Fetch calls and puts with strikes, prices, and open interest"
+
+[[notebookSections.notebooks]]
+name = "Symbol and News Search"
+file = "yfin/tutorial-04-search.ipynb"
+bundled = true
+description = "Resolve tickers from company names and scan recent news headlines"
+
+[[wikis]]
+name = "Factsheet"
+file = "yfin/factsheet.md"
+bundled = true
+description = "Quick-reference: YFinance.jl API, key functions, and when to use each data type"
+
+[[wikis]]
+name = "Overview"
+file = "yfin/overview.md"
+bundled = true
+description = "Accessing Yahoo Finance market data from Julia with YFinance.jl"
+
+[[wikis]]
+name = "Constraints"
+file = "yfin/constraints.md"
+bundled = true
+description = "Personal-use terms, rate limits, valid ranges and intervals, and symbol formats"
+
+[[wikis]]
+name = "Diagnostics"
+file = "yfin/diagnostics.md"
+bundled = true
+description = "Common errors: invalid symbols, empty responses, throttling, and time-zone handling"
+
+[[wikis]]
+name = "Interpretation"
+file = "yfin/interpretation.md"
+bundled = true
+description = "Understanding the returned data: OHLC bars, adjusted close, statement items, and chains"
+
+[[wikis]]
+name = "Decision Guide"
+file = "yfin/decision-guide.md"
+bundled = true
+description = "When to use simple vs log returns: cross-sectional vs temporal aggregation"
+
+[[references]]
+title = "YFinance.jl: A Julia interface to Yahoo Finance"
+authors = "Ohne, Eric; contributors"
+year = 2024
+journal = "GitHub"
+url = "https://github.com/eohne/YFinance.jl"
+openAccess = true
+
+[[references]]
+title = "Tables.jl: An Interface for Tabular Data"
+authors = "Quinn, Jacob; contributors"
+year = 2023
+journal = "GitHub"
+url = "https://github.com/JuliaData/Tables.jl"
+openAccess = true
+
+[[references]]
+title = "TimeSeries.jl: Time series toolkit for Julia"
+authors = "JuliaStats contributors"
+year = 2024
+journal = "GitHub"
+url = "https://github.com/JuliaStats/TimeSeries.jl"
+openAccess = true
+
+[conceptMap]
+center = "Yahoo Finance"
+
+[[conceptMap.nodes]]
+id = "root"
+label = "Yahoo Finance"
+kind = "center"
+
+[[conceptMap.nodes]]
+id = "q_price"
+label = "Get prices"
+kind = "concept"
+
+[[conceptMap.nodes]]
+id = "q_quote"
+label = "Read a quote"
+kind = "concept"
+
+[[conceptMap.nodes]]
+id = "q_fund"
+label = "Analyse fundamentals"
+kind = "concept"
+
+[[conceptMap.nodes]]
+id = "q_opt"
+label = "Inspect options"
+kind = "concept"
+
+[[conceptMap.nodes]]
+id = "price"
+label = "Prices"
+kind = "topic"
+model = "price"
+
+[[conceptMap.nodes]]
+id = "quote"
+label = "Quote"
+kind = "topic"
+model = "quote"
+
+[[conceptMap.nodes]]
+id = "fundamental"
+label = "Fundamental"
+kind = "topic"
+model = "fundamental"
+
+[[conceptMap.nodes]]
+id = "options"
+label = "Options"
+kind = "topic"
+model = "options"
+
+[[conceptMap.nodes]]
+id = "search"
+label = "Search"
+kind = "topic"
+model = "search"
+
+[[conceptMap.nodes]]
+id = "r_ta"
+label = "TimeSeries.jl"
+kind = "related"
+url = "https://github.com/JuliaStats/TimeSeries.jl"
+
+[[conceptMap.nodes]]
+id = "ext"
+label = "YFinance.jl"
+kind = "external"
+url = "https://github.com/eohne/YFinance.jl"
+
+[[conceptMap.edges]]
+from = "root"
+to = "q_price"
+label = "asks about"
+
+[[conceptMap.edges]]
+from = "root"
+to = "q_quote"
+label = "asks about"
+
+[[conceptMap.edges]]
+from = "root"
+to = "q_fund"
+label = "asks about"
+
+[[conceptMap.edges]]
+from = "root"
+to = "q_opt"
+label = "asks about"
+
+[[conceptMap.edges]]
+from = "q_price"
+to = "price"
+label = "done with"
+
+[[conceptMap.edges]]
+from = "q_quote"
+to = "quote"
+label = "done with"
+
+[[conceptMap.edges]]
+from = "q_fund"
+to = "fundamental"
+label = "done with"
+
+[[conceptMap.edges]]
+from = "q_opt"
+to = "options"
+label = "done with"
+
+[[conceptMap.edges]]
+from = "q_price"
+to = "r_ta"
+label = "sinks into"
+
+[[conceptMap.edges]]
+from = "root"
+to = "ext"
+label = "built with"
+
+[[bullets]]
+text = "Prices"
+detail = "download historical and intraday OHLC bars for stocks, FX, futures, ETFs, and crypto"
+
+[[bullets]]
+text = "Quote"
+detail = "fetch the quote summary: profile, key statistics, calendar events, and earnings estimates"
+
+[[bullets]]
+text = "Fundamental"
+detail = "retrieve income statement, balance sheet, cash flow, and valuation history"
+
+[[bullets]]
+text = "Options"
+detail = "pull the full options chain (calls and puts) with strikes, prices, and open interest"
+
+[[bullets]]
+text = "Search"
+detail = "look up ticker symbols by company name and scan recent news headlines"
+
+[[decisionRows]]
+task = "Prices"
+context = "OHLC bars"
+purpose = "Chart prices or compute returns over a date range or intraday window"
+
+[[decisionRows]]
+task = "Quote"
+context = "Snapshot"
+purpose = "Read company profile, key statistics, and upcoming earnings dates"
+
+[[decisionRows]]
+task = "Fundamental"
+context = "Statements"
+purpose = "Analyse income, balance-sheet, cash-flow, or valuation trends"
+
+[[decisionRows]]
+task = "Options"
+context = "Chain"
+purpose = "Inspect calls and puts, strikes, prices, and open interest"
+
+[[decisionRows]]
+task = "Search"
+context = "Lookup"
+purpose = "Find a ticker symbol from a name or scan the latest news"
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon
+
+[miniCharts.price]
+# Candlestick bars
+svg = '''
+var s = '<line x1="14" y1="20" x2="14" y2="60" stroke="currentColor" stroke-width="1" opacity="0.6"/>';
+s += '<rect x="9" y="30" width="10" height="20" fill="currentColor" opacity="0.3"/>';
+s += '<line x1="30" y1="14" x2="30" y2="52" stroke="currentColor" stroke-width="1" opacity="0.6"/>';
+s += '<rect x="25" y="22" width="10" height="22" fill="currentColor" opacity="0.45"/>';
+s += '<line x1="46" y1="26" x2="46" y2="66" stroke="currentColor" stroke-width="1" opacity="0.6"/>';
+s += '<rect x="41" y="36" width="10" height="18" fill="currentColor" opacity="0.3"/>';
+s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Prices</text>';
+return s;
+'''
+
+[miniCharts.quote]
+# Info card
+svg = '''
+var s = '<rect x="6" y="10" width="44" height="56" rx="3" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.4"/>';
+s += '<circle cx="16" cy="22" r="5" fill="currentColor" opacity="0.35"/>';
+s += '<line x1="26" y1="20" x2="44" y2="20" stroke="currentColor" stroke-width="2" opacity="0.4"/>';
+s += '<line x1="26" y1="26" x2="40" y2="26" stroke="currentColor" stroke-width="2" opacity="0.25"/>';
+s += '<line x1="12" y1="40" x2="44" y2="40" stroke="currentColor" stroke-width="0.6" opacity="0.3"/>';
+s += '<line x1="12" y1="48" x2="44" y2="48" stroke="currentColor" stroke-width="0.6" opacity="0.3"/>';
+s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Quote</text>';
+return s;
+'''
+
+[miniCharts.fundamental]
+# Statement bars
+svg = '''
+var s = '<rect x="8"  y="40" width="8" height="24" fill="currentColor" opacity="0.4"/>';
+s += '<rect x="20" y="28" width="8" height="36" fill="currentColor" opacity="0.45"/>';
+s += '<rect x="32" y="18" width="8" height="46" fill="currentColor" opacity="0.5"/>';
+s += '<rect x="44" y="34" width="8" height="30" fill="currentColor" opacity="0.4"/>';
+s += '<line x1="6" y1="64" x2="54" y2="64" stroke="currentColor" stroke-width="0.6" opacity="0.4"/>';
+s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Fund.</text>';
+return s;
+'''
+
+[miniCharts.options]
+# Chain rows
+svg = '''
+var s = '<rect x="6" y="14" width="20" height="46" rx="2" fill="currentColor" opacity="0.12"/>';
+s += '<rect x="32" y="14" width="20" height="46" rx="2" fill="currentColor" opacity="0.12"/>';
+s += '<line x1="9" y1="24" x2="23" y2="24" stroke="currentColor" stroke-width="1.5" opacity="0.45"/>';
+s += '<line x1="9" y1="32" x2="23" y2="32" stroke="currentColor" stroke-width="1.5" opacity="0.35"/>';
+s += '<line x1="35" y1="24" x2="49" y2="24" stroke="currentColor" stroke-width="1.5" opacity="0.45"/>';
+s += '<line x1="35" y1="32" x2="49" y2="32" stroke="currentColor" stroke-width="1.5" opacity="0.35"/>';
+s += '<text x="16" y="52" text-anchor="middle" font-size="6" fill="currentColor" opacity="0.6">C</text>';
+s += '<text x="42" y="52" text-anchor="middle" font-size="6" fill="currentColor" opacity="0.6">P</text>';
+s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Options</text>';
+return s;
+'''
+
+[miniCharts.search]
+# Magnifier
+svg = '''
+var s = '<circle cx="24" cy="30" r="14" fill="none" stroke="currentColor" stroke-width="2" opacity="0.5"/>';
+s += '<line x1="34" y1="40" x2="46" y2="52" stroke="currentColor" stroke-width="2.5" opacity="0.5"/>';
+s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Search</text>';
+return s;
+'''
+
+[[codeBranches]]
+model = "price"
+code = """
+using YFinance, TimeSeries, Tables
+
+# Daily OHLC bars for the past month (an OrderedDict of column vectors)
+prices = get_prices("AAPL"; range="1mo", interval="1d")
+println("Ticker:     ", prices["ticker"])
+println("Last close: ", last(prices["close"]))
+
+# Sink straight into a TimeArray for time-indexed analysis
+ta = get_prices(TimeArray, "AAPL"; range="6mo", interval="1d")
+
+# A TimeArray implements the Tables.jl interface, so it works
+# anywhere a table is expected (iterate rows, collect columns, ...)
+for row in first(Tables.rows(ta), 3)
+    println(row.timestamp, "  close=", row.close)
+end
+
+# Intraday bars and explicit date ranges are supported too
+intraday = get_prices("BTC-USD"; range="1d", interval="5m")
+println("Bars: ", length(intraday["timestamp"]))
+"""
+
+[[codeBranches]]
+model = "quote"
+code = """
+using YFinance
+
+# Full quote summary as a nested JSON object
+summary = get_quoteSummary("AAPL")
+println("Modules: ", keys(summary))
+
+# Pull a single module rather than the whole summary
+qtype = get_quoteSummary("AAPL"; item="quoteType")
+println(qtype)
+
+# Convenience helpers built on top of the quote summary
+cal = get_calendar_events("AAPL")
+eps = get_eps("AAPL")
+println("Calendar events: ", cal)
+println("EPS:             ", eps)
+"""
+
+[[codeBranches]]
+model = "fundamental"
+code = """
+using YFinance, Dates
+
+# Annual income statement for the last three years
+# (each statement line item comes back as a named column vector)
+inc = get_Fundamental("AMD", "income_statement", "annual", today() - Year(3), today())
+println("Line items: ", keys(inc))
+
+# Valuation multiples: PE, PB, EV/EBITDA, PEG, ...
+val = get_Fundamental("NFLX", "valuation", "annual", today() - Year(3), today())
+println("Periods: ", val["timestamp"])
+
+# Other statements: "balance_sheet", "cash_flow"
+cf = get_Fundamental("AMD", "cash_flow", "quarterly", today() - Year(1), today())
+println("Cash-flow items: ", length(keys(cf)))
+"""
+
+[[codeBranches]]
+model = "options"
+code = """
+using YFinance
+
+# Full options chain: calls and puts for the nearest expiry
+op = get_Options("AMD")
+println("Sections: ", keys(op))
+
+calls = op["calls"]
+puts  = op["puts"]
+
+println("Call strikes:      ", calls["strike"])
+println("Call last prices:  ", calls["lastPrice"])
+println("Put open interest: ", puts["openInterest"])
+"""
+
+[[codeBranches]]
+model = "search"
+code = """
+using YFinance
+
+# Resolve ticker symbols from a company or security name
+hits = get_symbols("micro")
+println(hits)
+
+# Every symbol listed on a given exchange
+nyse = get_all_symbols("NYSE")
+println("NYSE symbols: ", length(nyse))
+
+# Latest news headlines mentioning a ticker
+news = search_news("MSFT")
+println(titles(news))
+"""
+
+# Next Steps action groups (task-oriented, matched to the YFinance.jl data types)
+[[actionGroups]]
+id = "prices"
+label = "Chart Prices"
+
+[[actionGroups.actions]]
+id = "yfin-viz-adjclose"
+label = "Adjusted Close Line"
+desc = "Plot the adjusted closing price of a ticker over time"
+code = """
+using YFinance, TimeSeries, Plots
+
+ta = get_prices(TimeArray, "AAPL"; range="1y", interval="1d")
+
+plot(ta[:adjclose]; label="AAPL", lw=2, legend=:topleft)
+title!("Adjusted Close")
+"""
+
+[[actionGroups.actions]]
+id = "yfin-viz-volume"
+label = "Price and Volume"
+desc = "Overlay closing price with a trading-volume panel"
+code = """
+using YFinance, TimeSeries, Plots
+
+ta = get_prices(TimeArray, "MSFT"; range="6mo", interval="1d")
+
+p1 = plot(ta[:close];  label="Close", lw=2)
+p2 = bar(timestamp(ta), values(ta[:vol]); label="Volume", alpha=0.5)
+plot(p1, p2; layout=(2, 1), link=:x)
+"""
+
+[[actionGroups.actions]]
+id = "yfin-viz-compare"
+label = "Compare Tickers"
+desc = "Plot two tickers rebased to 100 at the start of the window"
+code = """
+using YFinance, TimeSeries, Plots
+
+a = get_prices(TimeArray, "AAPL"; range="1y", interval="1d")[:adjclose]
+b = get_prices(TimeArray, "MSFT"; range="1y", interval="1d")[:adjclose]
+
+ra = 100 .* a ./ values(a)[1]
+rb = 100 .* b ./ values(b)[1]
+
+plot(ra;  label="AAPL", lw=2)
+plot!(rb; label="MSFT", lw=2)
+title!("Rebased to 100")
+"""
+
+[[actionGroups]]
+id = "returns"
+label = "Analyse Returns"
+
+[[actionGroups.actions]]
+id = "yfin-ret-daily"
+label = "Daily Returns"
+desc = "Compute both simple and log daily returns from the adjusted close"
+code = """
+using YFinance, TimeSeries, Statistics
+
+ta = get_prices(TimeArray, "AAPL"; range="1y", interval="1d")
+px = ta[:adjclose]
+
+# Simple (arithmetic) returns: r_t = P_t / P_(t-1) - 1
+simple = percentchange(px, :simple)
+
+# Log (continuously compounded) returns: r_t = log(P_t / P_(t-1))
+logret = percentchange(px, :log)
+
+println("Mean simple return: ", round(100 * mean(values(simple)); digits=4), "%")
+println("Mean log return:    ", round(100 * mean(values(logret)); digits=4), "%")
+"""
+
+[[actionGroups.actions]]
+id = "yfin-ret-aggregate"
+label = "Aggregate Returns"
+desc = "Aggregate returns across assets (simple) and across time (log)"
+code = """
+using YFinance, TimeSeries, Statistics
+
+# Cross-sectional aggregation (across assets, single period) uses SIMPLE returns:
+# a portfolio return is the weighted sum of its holding-level simple returns.
+a = values(percentchange(get_prices(TimeArray, "AAPL"; range="1mo", interval="1d")[:adjclose]))
+b = values(percentchange(get_prices(TimeArray, "MSFT"; range="1mo", interval="1d")[:adjclose]))
+n = min(length(a), length(b))
+w = (0.6, 0.4)
+portfolio = w[1] .* a[1:n] .+ w[2] .* b[1:n]
+println("Mean portfolio return: ", round(100 * mean(portfolio); digits=4), "%")
+
+# Temporal aggregation (across time, single asset) uses LOG returns:
+# a multi-period log return is the SUM of single-period log returns.
+logret = percentchange(get_prices(TimeArray, "AAPL"; range="1y", interval="1d")[:adjclose], :log)
+cumulative = exp(sum(values(logret))) - 1
+println("Cumulative 1y return: ", round(100 * cumulative; digits=2), "%")
+
+# Why simple for cross-sectional and log for temporal aggregation is explained
+# in the Decision Guide (open it from the Local Wikis panel under Learn More).
+"""
+
+[[actionGroups.actions]]
+id = "yfin-ret-sma"
+label = "Moving Average"
+desc = "Compute a 20-bar simple moving average of the close"
+code = """
+using YFinance, TimeSeries, Statistics, Plots
+
+ta  = get_prices(TimeArray, "AAPL"; range="1y", interval="1d")
+sma = moving(mean, ta[:close], 20)
+
+plot(ta[:close]; label="Close", lw=1, alpha=0.6)
+plot!(sma; label="SMA(20)", lw=2)
+"""
+
+[[actionGroups.actions]]
+id = "yfin-ret-stats"
+label = "Return Statistics"
+desc = "Summarise daily-return mean, volatility, and annualised figures"
+code = """
+using YFinance, TimeSeries, Statistics
+
+ta  = get_prices(TimeArray, "AAPL"; range="1y", interval="1d")
+ret = values(percentchange(ta[:adjclose]))
+
+mu  = mean(ret)
+sig = std(ret)
+
+println("Mean daily:     ", round(100 * mu; digits=4), "%")
+println("Daily vol:      ", round(100 * sig; digits=4), "%")
+println("Annualised vol: ", round(100 * sig * sqrt(252); digits=2), "%")
+"""
+
+[[actionGroups.actions]]
+id = "yfin-ret-multi"
+label = "Multiple Symbols"
+desc = "Download many tickers at once and align them into one TimeArray"
+code = """
+using YFinance, TimeSeries
+
+tickers = ["AAPL", "MSFT", "GOOG", "AMZN"]
+
+# Elegant: broadcast get_prices over the vector of tickers with dot syntax
+arrays = get_prices.(TimeArray, tickers; range="6mo", interval="1d")
+data   = Dict(zip(tickers, arrays))
+
+for t in tickers
+    println(t, "  last close = ", values(data[t][:adjclose])[end])
+end
+
+# Combine every adjusted close into one aligned, multi-column TimeArray
+closes = reduce((x, y) -> merge(x, y; method=:inner),
+    [rename(data[t][:adjclose], Symbol(t)) for t in tickers])
+println(closes)
+"""
+
+[[actionGroups]]
+id = "fundamentals"
+label = "Fundamentals"
+
+[[actionGroups.actions]]
+id = "yfin-fund-income"
+label = "Income Statement"
+desc = "Read annual income-statement line items for a ticker"
+code = """
+using YFinance, Dates
+
+inc = get_Fundamental("AMD", "income_statement", "annual", today() - Year(3), today())
+
+println("Periods:       ", inc["timestamp"])
+println("Total revenue: ", inc["TotalRevenue"])
+println("EBIT:          ", inc["EBIT"])
+"""
+
+[[actionGroups.actions]]
+id = "yfin-fund-valuation"
+label = "Valuation Multiples"
+desc = "Read valuation ratios such as PE, PB, and EV/EBITDA"
+code = """
+using YFinance, Dates
+
+val = get_Fundamental("NFLX", "valuation", "annual", today() - Year(3), today())
+
+println("PE ratio:        ", val["PeRatio"])
+println("PB ratio:        ", val["PbRatio"])
+println("PEG ratio:       ", val["PegRatio"])
+println("EV/EBITDA ratio: ", val["EnterprisesValueEBITDARatio"])
+"""
+
+[[actionGroups]]
+id = "options"
+label = "Options Chain"
+
+[[actionGroups.actions]]
+id = "yfin-opt-chain"
+label = "Calls and Puts"
+desc = "List the call and put strikes with their last prices"
+code = """
+using YFinance
+
+op    = get_Options("AMD")
+calls = op["calls"]
+puts  = op["puts"]
+
+for i in eachindex(calls["strike"])
+    println("CALL ", calls["strike"][i], "  last=", calls["lastPrice"][i])
+end
+println("Put strikes: ", puts["strike"])
+"""
+
+[[actionGroups.actions]]
+id = "yfin-opt-filter"
+label = "Filter by Open Interest"
+desc = "Keep only the call contracts with the largest open interest"
+code = """
+using YFinance
+
+calls = get_Options("AMD")["calls"]
+
+oi   = calls["openInterest"]
+keep = sortperm(oi; rev=true)[1:min(5, length(oi))]
+
+for i in keep
+    println(calls["contractSymbol"][i], "  OI=", oi[i], "  strike=", calls["strike"][i])
+end
+"""
+
+[[actionGroups]]
+id = "search"
+label = "Search"
+
+[[actionGroups.actions]]
+id = "yfin-search-symbol"
+label = "Symbol Lookup"
+desc = "Resolve ticker symbols from a company or security name"
+code = """
+using YFinance
+
+hits = get_symbols("micro")
+println(hits)
+
+nyse = get_all_symbols("NYSE")
+println("NYSE symbols: ", length(nyse))
+"""
+
+[[actionGroups.actions]]
+id = "yfin-search-news"
+label = "Latest News"
+desc = "Fetch recent news headlines and links for a ticker"
+code = """
+using YFinance
+
+news = search_news("MSFT")
+
+for (title, link) in zip(titles(news), links(news))
+    println(title)
+    println("  ", link)
+end
+"""

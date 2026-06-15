@@ -92,6 +92,64 @@ export interface IModelDecisionRow {
 	readonly purpose: string;
 }
 
+/** One selectable chip in an explore-pane group (a Hub filter value). */
+export interface IModelExploreChip {
+	readonly label: string;
+	readonly value: string;
+	/** Optional hover tooltip explaining the chip (e.g. what a Benchmark dataset is). */
+	readonly tooltip?: string;
+}
+
+/**
+ * One collapsible group of chips in the interactive "Explore" pane (e.g. the
+ * "Computer Vision" sub-group of Task, or the "Domain" group). Groups that share
+ * the same `axis` are OR-ed together in the query; different axes are AND-ed — so
+ * the several Task sub-groups all behave as one Task filter. `filterPrefix` is
+ * prepended to each chip `value` to form the Hub filter token (e.g.
+ * `task_categories:` + `image-classification`); leave empty for plain tags.
+ * `separatorBefore` draws a divider above the group header (e.g. before Domain).
+ */
+export interface IModelExploreGroup {
+	readonly axis: string;
+	readonly label: string;
+	readonly filterPrefix: string;
+	readonly separatorBefore?: boolean;
+	/**
+	 * Render this group as a single flat checkbox (no collapsible header) using its one
+	 * chip — for a standalone, un-grouped binary criterion that AND-s with the other axes.
+	 * A `toggle` group must contain exactly one chip. (Prefer a normal collapsible category
+	 * when you have two or more related single filters — OR-within usually reads better.)
+	 */
+	readonly toggle?: boolean;
+	readonly chips: IModelExploreChip[];
+}
+
+/**
+ * Declarative description of the interactive Explore pane that can replace the
+ * Illustration pane: a labelled, ordered list of collapsible groups whose checked
+ * chips drive a live Hub query.
+ */
+export interface IModelExplorePane {
+	readonly label: string;
+	readonly groups: IModelExploreGroup[];
+}
+
+/** Optional HTML rendered above (`intro`) and/or below (`footnote`) a collapsible content pane. */
+export interface IModelPaneNote {
+	readonly intro?: string;
+	readonly footnote?: string;
+}
+
+/**
+ * Per-pane intro/footnote notes, declared once under `[notes]` in TOML and keyed by pane.
+ * Every field is optional and inert when absent — most webviews carry none.
+ */
+export interface IModelPaneNotes {
+	readonly keyPoints?: IModelPaneNote;
+	readonly decision?: IModelPaneNote;
+	readonly explore?: IModelPaneNote;
+}
+
 /** An SVG mini-chart function body for a model toggle (raw JS string). */
 export interface IModelMiniChart {
 	readonly model: string;

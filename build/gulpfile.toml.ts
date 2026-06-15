@@ -15,11 +15,15 @@ const repoRoot = path.join(__dirname, '..');
 const tomlOutDir = path.join(repoRoot, 'src/vs/workbench/contrib/model/browser/webviews');
 
 export const compileTomlTask = task.define('compile-toml', () => {
-	const tomlPath = path.join(tomlOutDir, 'xlsx.toml');
-	const outPath = path.join(tomlOutDir, 'xlsx.data.ts');
-	const ts = generateTypeScriptFromToml(tomlPath, 'xlsx');
-	fs.writeFileSync(outPath, ts, 'utf-8');
-	console.log(`[toml] Generated xlsx.data.ts`);
+	const tomlFiles = fs.readdirSync(tomlOutDir).filter(f => f.endsWith('.toml'));
+	for (const file of tomlFiles) {
+		const acronym = file.replace(/\.toml$/, '');
+		const tomlPath = path.join(tomlOutDir, file);
+		const outPath = path.join(tomlOutDir, `${acronym}.data.ts`);
+		const ts = generateTypeScriptFromToml(tomlPath, acronym);
+		fs.writeFileSync(outPath, ts, 'utf-8');
+		console.log(`[toml] Generated ${acronym}.data.ts`);
+	}
 	return Promise.resolve();
 });
 
