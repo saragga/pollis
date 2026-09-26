@@ -8,11 +8,13 @@ import { renderFormattedText } from '../../../../base/browser/formattedTextRende
 import { status } from '../../../../base/browser/ui/aria/aria.js';
 import { StandardKeyboardEvent } from '../../../../base/browser/keyboardEvent.js';
 import { Button } from '../../../../base/browser/ui/button/button.js';
+import { getDefaultHoverDelegate } from '../../../../base/browser/ui/hover/hoverDelegateFactory.js';
 import { renderLabelWithIcons } from '../../../../base/browser/ui/iconLabel/iconLabels.js';
 import { DomScrollableElement } from '../../../../base/browser/ui/scrollbar/scrollableElement.js';
 import { coalesce, equals } from '../../../../base/common/arrays.js';
 import { Delayer, Throttler } from '../../../../base/common/async.js';
 import { CancellationToken } from '../../../../base/common/cancellation.js';
+import { Codicon } from '../../../../base/common/codicons.js';
 import { KeyCode } from '../../../../base/common/keyCodes.js';
 import { DisposableStore, toDisposable } from '../../../../base/common/lifecycle.js';
 import { ILink, LinkedText } from '../../../../base/common/linkedText.js';
@@ -25,6 +27,7 @@ import { URI } from '../../../../base/common/uri.js';
 import { generateUuid } from '../../../../base/common/uuid.js';
 import './media/gettingStarted.css';
 import { ILanguageService } from '../../../../editor/common/languages/language.js';
+import { IHoverService } from '../../../../platform/hover/browser/hover.js';
 import { IMarkdownRendererService } from '../../../../platform/markdown/browser/markdownRenderer.js';
 import { localize } from '../../../../nls.js';
 import { IAccessibilityService } from '../../../../platform/accessibility/common/accessibility.js';
@@ -188,6 +191,7 @@ export class GettingStartedPage extends EditorPane {
 		@IWorkspaceContextService private readonly workspaceContextService: IWorkspaceContextService,
 		@IAccessibilityService private readonly accessibilityService: IAccessibilityService,
 		@IMarkdownRendererService private readonly markdownRendererService: IMarkdownRendererService,
+		@IHoverService private readonly hoverService: IHoverService,
 	) {
 
 		super(GettingStartedPage.ID, group, telemetryService, themeService, storageService);
@@ -1015,8 +1019,9 @@ export class GettingStartedPage extends EditorPane {
 
 	/**
 	 * Pollis: the Discover Pollis section shows one feature at a time: a picture, where it is in the menus, and a
-	 * link that opens it. The arrows and dots change the slide; nothing changes it automatically. A slide with an
-	 * animated picture shows its still version while reduced motion is on.
+	 * link that opens it. The arrows and dots change the slide; nothing changes it automatically. Pictures start
+	 * still: the Run button next to the heading plays the animated version (from the start) on this and later
+	 * slides until Stop is pressed.
 	 */
 	private buildDiscoverSection(): HTMLElement {
 		const entries = discoverPollisEntries;
@@ -1028,12 +1033,24 @@ export class GettingStartedPage extends EditorPane {
 		const previous = $('button.pollis-discover-arrow', { 'aria-label': localize('pollis.discoverPrevious', "Previous") }, $('span.codicon.codicon-chevron-left'));
 		const next = $('button.pollis-discover-arrow', { 'aria-label': localize('pollis.discoverNext', "Next") }, $('span.codicon.codicon-chevron-right'));
 		const dots = entries.map(entry => $('button.pollis-discover-dot', { 'aria-label': localize('pollis.discoverShow', "Show {0}", entry.title) }, $('span')));
+		const runIcon = $('span.codicon');
+		const run = $<HTMLButtonElement>('button.pollis-discover-arrow.pollis-discover-run', {}, runIcon);
+		const runHover = this.categoriesSlideDisposables.add(this.hoverService.setupManagedHover(getDefaultHoverDelegate('element'), run, ''));
 
 		let index = 0;
+		let playing = false;
+		const updateRun = () => {
+			const label = playing ? localize('pollis.discoverStop', "Stop Animation") : localize('pollis.discoverRun', "Run Animation");
+			runIcon.className = `codicon ${ThemeIcon.asClassName(playing ? Codicon.debugStop : Codicon.play)}`;
+			run.setAttribute('aria-label', label);
+			run.setAttribute('aria-pressed', String(playing));
+			run.disabled = !entries[index].animatedMedia;
+			runHover.update(label);
+		};
 		const show = (i: number) => {
 			index = (i + entries.length) % entries.length;
 			const entry = entries[index];
-			const file = entry.animatedMedia && !this.accessibilityService.isMotionReduced() ? entry.animatedMedia : entry.media;
+			const file = playing && entry.animatedMedia ? entry.animatedMedia : entry.media;
 			media.src = FileAccess.asBrowserUri(`vs/workbench/contrib/welcomeGettingStarted/common/media/discover/${file}`).toString(true);
 			media.alt = entry.title;
 			menuPath.textContent = entry.menuPath;
@@ -1044,10 +1061,14 @@ export class GettingStartedPage extends EditorPane {
 				dot.classList.toggle('active', j === index);
 				dot.setAttribute('aria-current', String(j === index));
 			});
+			updateRun();
 		};
 		show(0);
 
-		this.categoriesSlideDisposables.add(this.accessibilityService.onDidChangeReducedMotion(() => show(index)));
+		this.categoriesSlideDisposables.add(addDisposableListener(run, 'click', () => {
+			playing = !playing;
+			show(index);
+		}));
 		this.categoriesSlideDisposables.add(addDisposableListener(previous, 'click', () => show(index - 1)));
 		this.categoriesSlideDisposables.add(addDisposableListener(next, 'click', () => show(index + 1)));
 		dots.forEach((dot, j) => this.categoriesSlideDisposables.add(addDisposableListener(dot, 'click', () => show(j))));
@@ -1057,7 +1078,10 @@ export class GettingStartedPage extends EditorPane {
 		}));
 
 		return $('.pollis-discover-section', {},
-			$('h2.section-header', {}, localize('pollis.discoverPollis', "Discover Pollis")),
+			$('.pollis-discover-heading', {},
+				$('h2.section-header', {}, localize('pollis.discoverPollis', "Discover Pollis")),
+				run,
+			),
 			$('.pollis-discover-card', {},
 				$('.pollis-discover-frame', {}, media),
 				$('.pollis-discover-body', { 'aria-live': 'polite' }, menuPath, title, description),
