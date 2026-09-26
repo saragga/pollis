@@ -15,7 +15,6 @@ import { INotebookKernelService } from '../../../notebook/common/notebookKernelS
 import { ILanguageService } from '../../../../../editor/common/languages/language.js';
 import { IThemeService } from '../../../../../platform/theme/common/themeService.js';
 import { IRequestService } from '../../../../../platform/request/common/request.js';
-import { getMermaidUris } from '../../../mermaid/browser/mermaidHelper.js';
 import { IKgmMetadata } from '../common/kgm.types.js';
 import { IModelReference, IModelNotebookSection } from '../common/model.types.js';
 import { IFileService } from '../../../../../platform/files/common/files.js';
@@ -116,32 +115,6 @@ const KGM_METADATA: IKgmMetadata = {
 			{ name: 'ONNX.jl',          description: 'Load ONNX model files exported from PyTorch or TensorFlow',           file: 'kgm/onnx-jl.md',          bundled: true },
 		],
 		references: KGM_REFERENCES,
-		conceptMap: {
-			center: 'Kaggle Models',
-			nodes: [
-				{ id: 'root',       label: 'Kaggle Models',            kind: 'center' },
-				{ id: 'q_hub',      label: 'Model Hub & weights',      kind: 'concept' },
-				{ id: 'q_task',     label: 'Task families',            kind: 'concept' },
-				{ id: 'q_fw',       label: 'Framework formats',        kind: 'concept' },
-				{ id: 'load',       label: 'Download & Load',          kind: 'topic', model: 'explore' },
-				{ id: 'infer',      label: 'Run Inference',            kind: 'topic', model: 'explore' },
-				{ id: 'r_hfm',      label: 'Hugging Face Models',      kind: 'related', command: 'chiara.statistics.ml.hfm' },
-				{ id: 'ext_kaggle', label: 'Kaggle Models Hub',        kind: 'external', url: 'https://www.kaggle.com/models' },
-				{ id: 'ext_flux',   label: 'Flux.jl',                  kind: 'external', url: 'https://github.com/FluxML/Flux.jl' },
-				{ id: 'ext_onnx',   label: 'ONNX.jl',                  kind: 'external', url: 'https://github.com/FluxML/ONNX.jl' },
-			],
-			edges: [
-				{ from: 'root',    to: 'q_hub',      label: 'accessed via' },
-				{ from: 'root',    to: 'q_task',     label: 'organised by' },
-				{ from: 'root',    to: 'q_fw',       label: 'exported as' },
-				{ from: 'q_hub',   to: 'load',       label: 'downloaded in' },
-				{ from: 'q_task',  to: 'infer',      label: 'run in' },
-				{ from: 'q_fw',    to: 'ext_onnx',   label: 'loaded with' },
-				{ from: 'q_fw',    to: 'ext_flux',   label: 'trained with' },
-				{ from: 'root',    to: 'r_hfm',      label: 'compare with' },
-				{ from: 'q_hub',   to: 'ext_kaggle', label: 'via' },
-			],
-		},
 	},
 };
 
@@ -165,15 +138,13 @@ export function openKgmWebview(
 	webviewService: IWebviewService,
 	initialModel?: string,
 ): void {
-	const mermaid = getMermaidUris();
-
 	const webviewInput = webviewWorkbenchService.openWebview(
 		{
 			title: KGM_TITLE,
 			options: { retainContextWhenHidden: true },
 			contentOptions: {
 				allowScripts: true,
-				localResourceRoots: [mermaid.distRoot],
+				localResourceRoots: [],
 			},
 			extension: undefined,
 		},
@@ -183,7 +154,7 @@ export function openKgmWebview(
 		{ group: undefined, preserveFocus: false }
 	);
 
-	webviewInput.webview.setHtml(getKgmHtml(mermaid.js));
+	webviewInput.webview.setHtml(getKgmHtml());
 
 	registerKgmWebviewHandlers(
 		webviewInput,

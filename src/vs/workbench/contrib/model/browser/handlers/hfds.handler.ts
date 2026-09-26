@@ -29,7 +29,7 @@ import { generateTokensCSSForColorMap } from '../../../../../editor/common/langu
 import { Event } from '../../../../../base/common/event.js';
 import { IUntitledTextResourceEditorInput } from '../../../../common/editor.js';
 import { CellEditType, CellKind } from '../../../notebook/common/notebookCommon.js';
-import { openWikiByFile, openNotebookByFile, openPackageItem, openVideoList, openInBrowser, autoSelectJuliaKernel, createPackageStatusWiring, createExampleCodeWiring, createApiKeyWiring, sendToJuliaRepl } from './model.handler.js';
+import { openWikiByFile, openNotebookByFile, openPackageItem, openInBrowser, autoSelectJuliaKernel, createPackageStatusWiring, createExampleCodeWiring, createCustomCopyWiring, createReferenceWiring, createVideoWiring, createApiKeyWiring, sendToJuliaRepl } from './model.handler.js';
 import { CREDENTIALS } from '../common/credentials.js';
 import { hasKey } from '../../../../../base/common/types.js';
 
@@ -73,6 +73,9 @@ export function registerHfdsWebviewHandlers(
 	const hfdsData = metadata.hfds;
 	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, hfdsData.packages.map(p => p.name), fileService, pathService, commandService, notificationService, workspaceContextService);
 	createExampleCodeWiring(webviewInput.webview, disposables, 'hfds', fileService, pathService, notificationService);
+	createCustomCopyWiring(webviewInput.webview, disposables, hfdsData.wikis, hfdsData.notebooks, fileService, pathService, editorService, commandService, notificationService);
+	createReferenceWiring(webviewInput.webview, disposables, 'hfds', hfdsData.references, fileService, pathService, commandService, notificationService);
+	createVideoWiring(webviewInput.webview, disposables, 'hfds', hfdsData.packages, fileService, pathService, commandService, notificationService);
 	const apiKey = createApiKeyWiring(webviewInput.webview, HFDS_API_KEY, secretStorageService, quickInputService, webviewService);
 
 	setTimeout(() => {
@@ -97,9 +100,6 @@ export function registerHfdsWebviewHandlers(
 		webviewInput.webview.postMessage({ command: 'paperLinks', papers: [], hasPapers: hasReferences });
 		webviewInput.webview.postMessage({ command: 'notebookSections', sections: notebookSections });
 		webviewInput.webview.postMessage({ command: 'wikiSections', sections: wikiSections });
-		if (hfdsData.conceptMap) {
-			webviewInput.webview.postMessage({ command: 'conceptMap', map: hfdsData.conceptMap });
-		}
 		void pkgStatus.postStatus();
 		void apiKey.postStatus();
 	}, 0);
@@ -109,10 +109,7 @@ export function registerHfdsWebviewHandlers(
 		const msg = e.message;
 		switch (msg.command) {
 			case 'openDocs':
-				if (msg.target === 'paper') {
-					const papers = hfdsData.references.filter((r): r is import('../common/model.types.js').IModelPaper => !hasKey(r, { separator: true }));
-					webviewInput.webview.postMessage({ command: 'showReferences', references: papers });
-				} else if (msg.target === 'repository') {
+				if (msg.target === 'repository') {
 					try {
 						await openPackageItem('repository', hfdsData.packages, commandService, quickInputService, clipboardService, notificationService);
 					} finally {
@@ -120,15 +117,6 @@ export function registerHfdsWebviewHandlers(
 					}
 				}
 				break;
-			case 'openReference': {
-				const papers = hfdsData.references.filter((r): r is import('../common/model.types.js').IModelPaper => !hasKey(r, { separator: true }));
-				const paper = papers.find(p => p.title === msg.id);
-				if (paper) {
-					const url = paper.doi ? `https://doi.org/${paper.doi}` : paper.url;
-					if (url) { await openInBrowser(url, commandService); }
-				}
-				break;
-			}
 			case 'openNotebook':
 				await openNotebookByFile(msg.target, hfdsData.notebooks, openerService, editorService, notebookKernelService, notebookEditorModelResolverService);
 				break;
@@ -179,13 +167,6 @@ export function registerHfdsWebviewHandlers(
 				break;
 			case 'openUrl':
 				if (msg.url) { await openInBrowser(msg.url, commandService); }
-				break;
-			case 'openVideoList':
-				try {
-					await openVideoList(hfdsData.packages, quickInputService, commandService);
-				} finally {
-					webviewInput.webview.postMessage({ command: 'actionDone' });
-				}
 				break;
 			case 'installPackages':
 				await pkgStatus.handleInstall();

@@ -27,7 +27,7 @@ import { IPathService } from '../../../../services/path/common/pathService.js';
 import { IWorkspaceContextService } from '../../../../../platform/workspace/common/workspace.js';
 import { ISecretStorageService } from '../../../../../platform/secrets/common/secrets.js';
 import { IWebviewService } from '../../../webview/browser/webview.js';
-import { openWikiByFile, openNotebookByFile, openPackageItem, openVideoList, openInBrowser, autoSelectJuliaKernel, createPackageStatusWiring, createExampleCodeWiring, createApiKeyWiring, sendToJuliaRepl } from './model.handler.js';
+import { openWikiByFile, openNotebookByFile, openPackageItem, openInBrowser, autoSelectJuliaKernel, createPackageStatusWiring, createExampleCodeWiring, createCustomCopyWiring, createReferenceWiring, createVideoWiring, createApiKeyWiring, sendToJuliaRepl } from './model.handler.js';
 import { CREDENTIALS } from '../common/credentials.js';
 
 const KGM_API_KEY = {
@@ -68,6 +68,9 @@ export function registerKgmWebviewHandlers(
 	const kgmData = metadata.kgm;
 	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, kgmData.packages.map(p => p.name), fileService, pathService, commandService, notificationService, workspaceContextService);
 	createExampleCodeWiring(webviewInput.webview, disposables, 'kgm', fileService, pathService, notificationService);
+	createCustomCopyWiring(webviewInput.webview, disposables, kgmData.wikis, kgmData.notebooks, fileService, pathService, editorService, commandService, notificationService);
+	createReferenceWiring(webviewInput.webview, disposables, 'kgm', kgmData.references, fileService, pathService, commandService, notificationService);
+	createVideoWiring(webviewInput.webview, disposables, 'kgm', kgmData.packages, fileService, pathService, commandService, notificationService);
 	const apiKey = createApiKeyWiring(webviewInput.webview, KGM_API_KEY, secretStorageService, quickInputService, webviewService);
 
 	const lastCode: { [target: string]: string } = {};
@@ -104,9 +107,6 @@ export function registerKgmWebviewHandlers(
 		webviewInput.webview.postMessage({ command: 'paperLinks', papers: [], hasPapers: hasReferences });
 		webviewInput.webview.postMessage({ command: 'notebookSections', sections: notebookSections });
 		webviewInput.webview.postMessage({ command: 'wikiSections', sections: wikiSections });
-		if (kgmData.conceptMap) {
-			webviewInput.webview.postMessage({ command: 'conceptMap', map: kgmData.conceptMap });
-		}
 		if (initialModel) {
 			webviewInput.webview.postMessage({ command: 'setModel', model: initialModel });
 		}
@@ -120,10 +120,7 @@ export function registerKgmWebviewHandlers(
 		const msg = e.message;
 		switch (msg.command) {
 			case 'openDocs':
-				if (msg.target === 'paper') {
-					const papers = kgmData.references.filter((r): r is import('../common/model.types.js').IModelPaper => !hasKey(r, { separator: true }));
-					webviewInput.webview.postMessage({ command: 'showReferences', references: papers });
-				} else if (msg.target === 'repository') {
+				if (msg.target === 'repository') {
 					try {
 						await openPackageItem('repository', kgmData.packages, commandService, quickInputService, clipboardService, notificationService);
 					} finally {
@@ -131,15 +128,6 @@ export function registerKgmWebviewHandlers(
 					}
 				}
 				break;
-			case 'openReference': {
-				const papers = kgmData.references.filter((r): r is import('../common/model.types.js').IModelPaper => !hasKey(r, { separator: true }));
-				const paper = papers.find(p => p.title === msg.id);
-				if (paper) {
-					const url = paper.doi ? `https://doi.org/${paper.doi}` : paper.url;
-					if (url) { await openInBrowser(url, commandService); }
-				}
-				break;
-			}
 			case 'openNotebook':
 				await openNotebookByFile(msg.target, kgmData.notebooks, openerService, editorService, notebookKernelService, notebookEditorModelResolverService);
 				break;
@@ -185,13 +173,6 @@ export function registerKgmWebviewHandlers(
 			}
 			case 'openUrl':
 				if (msg.url) { await openInBrowser(msg.url, commandService); }
-				break;
-			case 'openVideoList':
-				try {
-					await openVideoList(kgmData.packages, quickInputService, commandService);
-				} finally {
-					webviewInput.webview.postMessage({ command: 'actionDone' });
-				}
 				break;
 			case 'colorize':
 				await postColorized(msg.code, msg.target ?? 'main');

@@ -10,7 +10,6 @@ import { INotificationService } from '../../../../../platform/notification/commo
 import { ICommandService } from '../../../../../platform/commands/common/commands.js';
 import { IQuickInputService } from '../../../../../platform/quickinput/common/quickInput.js';
 import { IWebviewWorkbenchService } from '../../../webviewPanel/browser/webviewWorkbenchService.js';
-import { getMermaidUris } from '../../../mermaid/browser/mermaidHelper.js';
 import { ICpvizMetadata } from '../common/cpviz.types.js';
 import { IModelReference, IModelNotebookSection } from '../common/model.types.js';
 import { INotebookEditorModelResolverService } from '../../../notebook/common/notebookEditorModelResolverService.js';
@@ -134,38 +133,6 @@ const CPVIZ_METADATA: ICpvizMetadata = {
 			{ name: 'Sankey Diagram',       description: 'Flow and transfer volumes between stages or categories',              file: 'cpviz/sankey.md',      bundled: true },
 		],
 		references: CPVIZ_REFERENCES,
-		conceptMap: {
-			center: 'Categories and Proportions',
-			nodes: [
-				{ id: 'root', label: 'Categories and Proportions', kind: 'center' },
-				{ id: 'q_contig', label: 'Two-way categories', kind: 'concept' },
-				{ id: 'q_partwhole', label: 'Parts of a whole', kind: 'concept' },
-				{ id: 'q_flow', label: 'Flows and changes', kind: 'concept' },
-				{ id: 'c_hier', label: 'Hierarchy', kind: 'concept' },
-				{ id: 'mosaic', label: 'Mosaic Plot', kind: 'topic', model: 'mosaic' },
-				{ id: 'nightingale', label: 'Nightingale Rose', kind: 'topic', model: 'nightingale' },
-				{ id: 'waterfall', label: 'Waterfall', kind: 'topic', model: 'waterfall' },
-				{ id: 'treemap', label: 'Treemap', kind: 'topic', model: 'treemap' },
-				{ id: 'sankey', label: 'Sankey Diagram', kind: 'topic', model: 'sankey' },
-				{ id: 'r_cviz', label: 'Core Statistical Plots', kind: 'related', command: 'chiara.explore.dvcs.bar' },
-				{ id: 'r_gsviz', label: 'Graph and Spatial', kind: 'related', command: 'chiara.explore.dvgs.network' },
-				{ id: 'ext', label: 'StatsPlots.jl', kind: 'external', url: 'https://github.com/JuliaPlots/StatsPlots.jl' },
-			],
-			edges: [
-				{ from: 'root', to: 'q_contig', label: 'asks about' },
-				{ from: 'root', to: 'q_partwhole', label: 'asks about' },
-				{ from: 'root', to: 'q_flow', label: 'asks about' },
-				{ from: 'q_contig', to: 'mosaic', label: 'tiled in' },
-				{ from: 'q_partwhole', to: 'nightingale', label: 'polar wedges in' },
-				{ from: 'q_partwhole', to: 'c_hier', label: 'organised as' },
-				{ from: 'c_hier', to: 'treemap', label: 'nested in' },
-				{ from: 'q_flow', to: 'waterfall', label: 'running total in' },
-				{ from: 'q_flow', to: 'sankey', label: 'as ribbons in' },
-				{ from: 'root', to: 'r_cviz', label: 'single category in' },
-				{ from: 'q_flow', to: 'r_gsviz', label: 'as a graph in' },
-				{ from: 'root', to: 'ext', label: 'plotted with' },
-			],
-		},
 	},
 };
 
@@ -186,12 +153,11 @@ export function openCpvizWebview(
 	workspaceContextService: IWorkspaceContextService,
 	initialModel?: string,
 ): void {
-	const mermaid = getMermaidUris();
 	const webviewInput = webviewWorkbenchService.openWebview(
 		{
 			title: CPVIZ_TITLE,
 			options: { retainContextWhenHidden: true },
-			contentOptions: { allowScripts: true, localResourceRoots: [mermaid.distRoot] },
+			contentOptions: { allowScripts: true, localResourceRoots: [] },
 			extension: undefined,
 		},
 		CPVIZ_VIEW_TYPE,
@@ -200,7 +166,7 @@ export function openCpvizWebview(
 		{ group: undefined, preserveFocus: false }
 	);
 
-	webviewInput.webview.setHtml(getCpvizHtml(mermaid.js));
+	webviewInput.webview.setHtml(getCpvizHtml());
 
 	registerCpvizWebviewHandlers(
 		webviewInput,

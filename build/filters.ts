@@ -233,7 +233,6 @@ export const copyrightFilter = Object.freeze<string[]>([
 	'!src/vs/workbench/contrib/simulate/**',
 	'!src/vs/workbench/contrib/optimise/**',
 	'!src/vs/workbench/contrib/katex/**',
-	'!src/vs/workbench/contrib/mermaid/**',
 ]);
 
 export const tsFormattingFilter = Object.freeze<string[]>([

@@ -45,40 +45,6 @@ export interface IModelNotebookSection {
 	readonly notebooks: IModelNotebook[];
 }
 
-/**
- * A node in a webview's concept map, rendered as a Mermaid graph node.
- *
- * `kind` drives styling: `center` is the webview itself; `concept` is an abstract
- * grouping (no jump); `topic` is one of the webview's own toggles; `related` is
- * another Pollis webview; `external` is an outside resource.
- *
- * At most one jump target should be set: `model` switches a toggle within the same
- * webview (client-side), `topic`/command executes a Pollis command (opens another
- * webview), and `url` opens an external link. Plain `concept` nodes set none.
- */
-export interface IConceptMapNode {
-	readonly id: string;
-	readonly label: string;
-	readonly kind?: 'center' | 'concept' | 'topic' | 'related' | 'external';
-	readonly model?: string;
-	readonly command?: string;
-	readonly url?: string;
-}
-
-/** A directed, optionally-labelled relationship between two concept-map nodes. */
-export interface IConceptMapEdge {
-	readonly from: string;
-	readonly to: string;
-	readonly label?: string;
-}
-
-/** A relationship graph shown (via Mermaid) in the Learn More → Concept Maps panel. */
-export interface IConceptMap {
-	readonly center: string;
-	readonly nodes: IConceptMapNode[];
-	readonly edges: IConceptMapEdge[];
-}
-
 /** A bullet point in the webview subtitle list. */
 export interface IModelBullet {
 	readonly text: string;

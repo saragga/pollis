@@ -15,7 +15,6 @@ import { INotebookKernelService } from '../../../notebook/common/notebookKernelS
 import { ILanguageService } from '../../../../../editor/common/languages/language.js';
 import { IThemeService } from '../../../../../platform/theme/common/themeService.js';
 import { IRequestService } from '../../../../../platform/request/common/request.js';
-import { getMermaidUris } from '../../../mermaid/browser/mermaidHelper.js';
 import { IHfmMetadata } from '../common/hfm.types.js';
 import { IModelReference, IModelNotebookSection } from '../common/model.types.js';
 import { IFileService } from '../../../../../platform/files/common/files.js';
@@ -129,37 +128,6 @@ const HFM_METADATA: IHfmMetadata = {
 			{ name: 'ONNX.jl',          description: 'Export HF models to ONNX and run inference in Julia without Python',      file: 'hfm/onnx-jl.md',          bundled: true },
 		],
 		references: HFM_REFERENCES,
-		conceptMap: {
-			center: 'Hugging Face Models',
-			nodes: [
-				{ id: 'root',        label: 'Hugging Face Models',      kind: 'center' },
-				{ id: 'q_hub',       label: 'Model Hub & weights',      kind: 'concept' },
-				{ id: 'q_task',      label: 'Task families',            kind: 'concept' },
-				{ id: 'q_arch',      label: 'Transformer architecture', kind: 'concept' },
-				{ id: 'q_fine',      label: 'Fine-tuning & training',   kind: 'concept' },
-				{ id: 'load',        label: 'Download & Load',          kind: 'topic', model: 'download' },
-				{ id: 'infer',       label: 'Run Inference',            kind: 'topic', model: 'inference' },
-				{ id: 'choose',      label: 'Choosing a Model',         kind: 'topic', model: 'choosing' },
-				{ id: 'r_trans',     label: 'Transformer Networks',     kind: 'related', command: 'chiara.statistics.nn.transformer' },
-				{ id: 'r_embed',     label: 'Embeddings',               kind: 'related', command: 'chiara.statistics.pm.embedding' },
-				{ id: 'ext_hf',      label: 'HuggingFaceHub.jl',        kind: 'external', url: 'https://github.com/cjdoris/HuggingFaceHub.jl' },
-				{ id: 'ext_trans',   label: 'Transformers.jl',          kind: 'external', url: 'https://github.com/chengchingwen/Transformers.jl' },
-			],
-			edges: [
-				{ from: 'root',    to: 'q_hub',     label: 'accessed via' },
-				{ from: 'root',    to: 'q_task',    label: 'organised by' },
-				{ from: 'root',    to: 'q_arch',    label: 'built on' },
-				{ from: 'root',    to: 'q_fine',    label: 'adapted by' },
-				{ from: 'q_hub',   to: 'load',      label: 'downloaded in' },
-				{ from: 'q_task',  to: 'infer',     label: 'run in' },
-				{ from: 'q_arch',  to: 'choose',    label: 'guides' },
-				{ from: 'q_fine',  to: 'choose',    label: 'considered in' },
-				{ from: 'q_arch',  to: 'r_trans',   label: 'detailed in' },
-				{ from: 'q_task',  to: 'r_embed',   label: 'text repr. in' },
-				{ from: 'q_hub',   to: 'ext_hf',    label: 'via' },
-				{ from: 'q_arch',  to: 'ext_trans', label: 'loaded with' },
-			],
-		},
 	},
 };
 
@@ -183,15 +151,13 @@ export function openHfmWebview(
 	webviewService: IWebviewService,
 	initialModel?: string,
 ): void {
-	const mermaid = getMermaidUris();
-
 	const webviewInput = webviewWorkbenchService.openWebview(
 		{
 			title: HFM_TITLE,
 			options: { retainContextWhenHidden: true },
 			contentOptions: {
 				allowScripts: true,
-				localResourceRoots: [mermaid.distRoot],
+				localResourceRoots: [],
 			},
 			extension: undefined,
 		},
@@ -201,7 +167,7 @@ export function openHfmWebview(
 		{ group: undefined, preserveFocus: false }
 	);
 
-	webviewInput.webview.setHtml(getHfmHtml(mermaid.js));
+	webviewInput.webview.setHtml(getHfmHtml());
 
 	registerHfmWebviewHandlers(
 		webviewInput,

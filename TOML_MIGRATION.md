@@ -136,28 +136,6 @@ Array of reference papers:
 - `url` (optional) — Direct URL to paper
 - `openAccess` (optional) — Boolean, true if open access
 
-### `[conceptMap]` — Concept relationship graph
-
-Optional section defining a Mermaid flowchart for the Concept Map button. Structure:
-
-```toml
-[conceptMap]
-center = "Central Node Label"
-
-[[conceptMap.nodes]]
-id = "node-id"
-label = "Node Label"
-kind = "center|concept|topic|related|external"
-model = "modelName"       # Only for "topic" nodes
-command = "pollis.cmd.id" # Only for "related" nodes
-url = "https://..."       # Only for "external" nodes
-
-[[conceptMap.edges]]
-from = "source-node"
-to = "target-node"
-label = "relationship"
-```
-
 ### `[[bullets]]` — Subtitle bullet points
 
 Array of methods or capabilities:
@@ -237,7 +215,6 @@ export const ACRONYM_METADATA: IModelAcronymMetadata = {
 		notebookSections: [...],
 		wikis: [...],
 		references: [...],
-		conceptMap: {...}, // optional
 	},
 };
 ```

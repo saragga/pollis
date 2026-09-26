@@ -10,7 +10,6 @@ import { INotificationService } from '../../../../../platform/notification/commo
 import { ICommandService } from '../../../../../platform/commands/common/commands.js';
 import { IQuickInputService } from '../../../../../platform/quickinput/common/quickInput.js';
 import { IWebviewWorkbenchService } from '../../../webviewPanel/browser/webviewWorkbenchService.js';
-import { getMermaidUris } from '../../../mermaid/browser/mermaidHelper.js';
 import { IGsvizMetadata } from '../common/gsviz.types.js';
 import { IModelReference, IModelNotebookSection } from '../common/model.types.js';
 import { INotebookEditorModelResolverService } from '../../../notebook/common/notebookEditorModelResolverService.js';
@@ -133,36 +132,6 @@ const GSVIZ_METADATA: IGsvizMetadata = {
 			{ name: 'Voronoi',         description: 'Spatial partition of a plane into regions nearest each seed point',       file: 'gsviz/voronoi.md',     bundled: true },
 		],
 		references: GSVIZ_REFERENCES,
-		conceptMap: {
-			center: 'Relationships and Space',
-			nodes: [
-				{ id: 'root', label: 'Relationships and Space', kind: 'center' },
-				{ id: 'q_rel', label: 'Relational structure', kind: 'concept' },
-				{ id: 'q_geo', label: 'Geographic data', kind: 'concept' },
-				{ id: 'q_part', label: 'Spatial partition', kind: 'concept' },
-				{ id: 'c_hier', label: 'Hierarchy', kind: 'concept' },
-				{ id: 'network', label: 'Network Diagram', kind: 'topic', model: 'network' },
-				{ id: 'tree', label: 'Tree Diagram', kind: 'topic', model: 'tree' },
-				{ id: 'choropleth', label: 'Choropleth', kind: 'topic', model: 'choropleth' },
-				{ id: 'voronoi', label: 'Voronoi', kind: 'topic', model: 'voronoi' },
-				{ id: 'r_mviz', label: 'Multivariate Plots', kind: 'related', command: 'chiara.explore.dvmulti.corner' },
-				{ id: 'r_sfviz', label: 'Surfaces and Fields', kind: 'related', command: 'chiara.explore.dvsf.contour' },
-				{ id: 'ext', label: 'Graphs.jl', kind: 'external', url: 'https://github.com/JuliaGraphs/Graphs.jl' },
-			],
-			edges: [
-				{ from: 'root', to: 'q_rel', label: 'asks about' },
-				{ from: 'root', to: 'q_geo', label: 'asks about' },
-				{ from: 'root', to: 'q_part', label: 'asks about' },
-				{ from: 'q_rel', to: 'network', label: 'nodes + edges in' },
-				{ from: 'q_rel', to: 'c_hier', label: 'special case' },
-				{ from: 'c_hier', to: 'tree', label: 'drawn by' },
-				{ from: 'q_geo', to: 'choropleth', label: 'regions in' },
-				{ from: 'q_part', to: 'voronoi', label: 'cells in' },
-				{ from: 'q_rel', to: 'r_mviz', label: 'from data in' },
-				{ from: 'q_geo', to: 'r_sfviz', label: 'as a field in' },
-				{ from: 'root', to: 'ext', label: 'built with' },
-			],
-		},
 	},
 };
 
@@ -183,12 +152,11 @@ export function openGsvizWebview(
 	workspaceContextService: IWorkspaceContextService,
 	initialModel?: string,
 ): void {
-	const mermaid = getMermaidUris();
 	const webviewInput = webviewWorkbenchService.openWebview(
 		{
 			title: GSVIZ_TITLE,
 			options: { retainContextWhenHidden: true },
-			contentOptions: { allowScripts: true, localResourceRoots: [mermaid.distRoot] },
+			contentOptions: { allowScripts: true, localResourceRoots: [] },
 			extension: undefined,
 		},
 		GSVIZ_VIEW_TYPE,
@@ -197,7 +165,7 @@ export function openGsvizWebview(
 		{ group: undefined, preserveFocus: false }
 	);
 
-	webviewInput.webview.setHtml(getGsvizHtml(mermaid.js));
+	webviewInput.webview.setHtml(getGsvizHtml());
 
 	registerGsvizWebviewHandlers(
 		webviewInput,

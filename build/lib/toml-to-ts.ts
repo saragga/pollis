@@ -283,7 +283,6 @@ export function generateTypeScriptFromToml(tomlPath: string, acronym: string): s
 	});
 	const wikis = (data.wikis as unknown[] | undefined) ?? [];
 	const references = (data.references as unknown[] | undefined) ?? [];
-	const conceptMap = (data.conceptMap as TomlValue | undefined) ?? null;
 	const bullets = (data.bullets as unknown[] | undefined) ?? [];
 	const decisionRows = (data.decisionRows as unknown[] | undefined) ?? [];
 	const notes = (data.notes as TomlValue | undefined) ?? null;
@@ -299,7 +298,6 @@ export function generateTypeScriptFromToml(tomlPath: string, acronym: string): s
 	}));
 
 	const optionalFields = [
-		conceptMap ? `\n\t\tconceptMap: ${toTypeScriptLiteral(conceptMap, '\t\t')},` : '',
 		bullets.length ? `\n\t\tbullets: ${toTypeScriptLiteral(bullets, '\t\t')},` : '',
 		decisionRows.length ? `\n\t\tdecisionRows: ${toTypeScriptLiteral(decisionRows, '\t\t')},` : '',
 		notes ? `\n\t\tnotes: ${toTypeScriptLiteral(notes, '\t\t')},` : '',

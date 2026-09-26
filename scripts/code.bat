@@ -33,7 +33,7 @@ for %%A in (%*) do (
 	)
 )
 
-set DISABLE_COPILOT_CHAT_EXTENSION="--disable-extension=GitHub.copilot-chat"
+set DISABLE_COPILOT_CHAT_EXTENSION=--disable-extension=GitHub.copilot-chat --disable-extension=vscode.mermaid-chat-features
 
 :: Launch Code
 %CODE% . %DISABLE_TEST_EXTENSION% %DISABLE_COPILOT_CHAT_EXTENSION% %*

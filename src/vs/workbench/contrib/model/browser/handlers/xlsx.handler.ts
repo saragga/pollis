@@ -25,7 +25,7 @@ import { CellEditType, CellKind } from '../../../notebook/common/notebookCommon.
 import { IFileService } from '../../../../../platform/files/common/files.js';
 import { IPathService } from '../../../../services/path/common/pathService.js';
 import { IWorkspaceContextService } from '../../../../../platform/workspace/common/workspace.js';
-import { openWikiByFile, openNotebookByFile, openPackageItem, openVideoList, openInBrowser, autoSelectJuliaKernel, createPackageStatusWiring, createExampleCodeWiring, sendToJuliaRepl } from './model.handler.js';
+import { openWikiByFile, openNotebookByFile, openPackageItem, openInBrowser, autoSelectJuliaKernel, createPackageStatusWiring, createExampleCodeWiring, createCustomCopyWiring, createReferenceWiring, createVideoWiring, sendToJuliaRepl } from './model.handler.js';
 import { hasKey } from '../../../../../base/common/types.js';
 
 export function registerXlsxWebviewHandlers(
@@ -60,6 +60,9 @@ export function registerXlsxWebviewHandlers(
 	const xlsxData = metadata.xlsx;
 	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, xlsxData.packages.map(p => p.name), fileService, pathService, commandService, notificationService, workspaceContextService);
 	createExampleCodeWiring(webviewInput.webview, disposables, 'xlsx', fileService, pathService, notificationService);
+	createCustomCopyWiring(webviewInput.webview, disposables, xlsxData.wikis, xlsxData.notebooks, fileService, pathService, editorService, commandService, notificationService);
+	createReferenceWiring(webviewInput.webview, disposables, 'xlsx', xlsxData.references, fileService, pathService, commandService, notificationService);
+	createVideoWiring(webviewInput.webview, disposables, 'xlsx', xlsxData.packages, fileService, pathService, commandService, notificationService);
 
 	setTimeout(() => {
 		const packages = xlsxData.packages.map(pkg => ({ name: pkg.name, url: pkg.github }));
@@ -83,9 +86,6 @@ export function registerXlsxWebviewHandlers(
 		webviewInput.webview.postMessage({ command: 'paperLinks', papers: [], hasPapers: hasReferences });
 		webviewInput.webview.postMessage({ command: 'notebookSections', sections: notebookSections });
 		webviewInput.webview.postMessage({ command: 'wikiSections', sections: wikiSections });
-		if (xlsxData.conceptMap) {
-			webviewInput.webview.postMessage({ command: 'conceptMap', map: xlsxData.conceptMap });
-		}
 		void pkgStatus.postStatus();
 	}, 0);
 
@@ -94,10 +94,7 @@ export function registerXlsxWebviewHandlers(
 		const msg = e.message;
 		switch (msg.command) {
 			case 'openDocs':
-				if (msg.target === 'paper') {
-					const papers = xlsxData.references.filter((r): r is import('../common/model.types.js').IModelPaper => !hasKey(r, { separator: true }));
-					webviewInput.webview.postMessage({ command: 'showReferences', references: papers });
-				} else if (msg.target === 'repository') {
+				if (msg.target === 'repository') {
 					try {
 						await openPackageItem('repository', xlsxData.packages, commandService, quickInputService, clipboardService, notificationService);
 					} finally {
@@ -105,15 +102,6 @@ export function registerXlsxWebviewHandlers(
 					}
 				}
 				break;
-			case 'openReference': {
-				const papers = xlsxData.references.filter((r): r is import('../common/model.types.js').IModelPaper => !hasKey(r, { separator: true }));
-				const paper = papers.find(p => p.title === msg.id);
-				if (paper) {
-					const url = paper.doi ? `https://doi.org/${paper.doi}` : paper.url;
-					if (url) { await openInBrowser(url, commandService); }
-				}
-				break;
-			}
 			case 'openNotebook':
 				await openNotebookByFile(msg.target, xlsxData.notebooks, openerService, editorService, notebookKernelService, notebookEditorModelResolverService);
 				break;
@@ -161,13 +149,6 @@ export function registerXlsxWebviewHandlers(
 				break;
 			case 'openUrl':
 				if (msg.url) { await openInBrowser(msg.url, commandService); }
-				break;
-			case 'openVideoList':
-				try {
-					await openVideoList(xlsxData.packages, quickInputService, commandService);
-				} finally {
-					webviewInput.webview.postMessage({ command: 'actionDone' });
-				}
 				break;
 			case 'installPackages':
 				await pkgStatus.handleInstall();

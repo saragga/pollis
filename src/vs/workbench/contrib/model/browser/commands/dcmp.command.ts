@@ -10,7 +10,6 @@ import { INotificationService } from '../../../../../platform/notification/commo
 import { ICommandService } from '../../../../../platform/commands/common/commands.js';
 import { IQuickInputService } from '../../../../../platform/quickinput/common/quickInput.js';
 import { IWebviewWorkbenchService } from '../../../webviewPanel/browser/webviewWorkbenchService.js';
-import { getMermaidUris } from '../../../mermaid/browser/mermaidHelper.js';
 import { IDcmpMetadata } from '../common/dcmp.types.js';
 import { IModelReference, IModelNotebookSection } from '../common/model.types.js';
 import { INotebookEditorModelResolverService } from '../../../notebook/common/notebookEditorModelResolverService.js';
@@ -131,45 +130,6 @@ const DCMP_METADATA: IDcmpMetadata = {
 			{ name: 'Correlogram',    description: 'Pairwise correlations across all variables as a matrix',                    file: 'dcmp/correlogram.md',     bundled: true },
 		],
 		references: DCMP_REFERENCES,
-		conceptMap: {
-			center: 'Comparing Distributions',
-			nodes: [
-				{ id: 'root', label: 'Comparing Distributions', kind: 'center' },
-				// Questions the comparison answers (concepts)
-				{ id: 'q_shape', label: 'Overall shape', kind: 'concept' },
-				{ id: 'q_ref', label: 'Fit to a reference law', kind: 'concept' },
-				{ id: 'q_dep', label: 'Dependence between variables', kind: 'concept' },
-				// Underlying statistical notions (concepts)
-				{ id: 'c_quant', label: 'Quantiles', kind: 'concept' },
-				{ id: 'c_corr', label: 'Correlation', kind: 'concept' },
-				// Plots that answer them (this webview's toggles)
-				{ id: 'ecdf', label: 'ECDF', kind: 'topic', model: 'ecdf' },
-				{ id: 'qq', label: 'QQ Plot', kind: 'topic', model: 'qq' },
-				{ id: 'marginal', label: 'Marginal Plot', kind: 'topic', model: 'marginal' },
-				{ id: 'correlogram', label: 'Correlogram', kind: 'topic', model: 'correlogram' },
-				// Where the idea continues (related webviews / package)
-				{ id: 'r_cviz', label: 'Core Statistical Plots', kind: 'related', command: 'chiara.explore.dvcs.histogram' },
-				{ id: 'r_mviz', label: 'Multivariate Plots', kind: 'related', command: 'chiara.explore.dvmulti.corner' },
-				{ id: 'r_dstats', label: 'Descriptive Statistics', kind: 'related', command: 'chiara.explore.dstats' },
-				{ id: 'ext', label: 'StatsPlots.jl', kind: 'external', url: 'https://github.com/JuliaPlots/StatsPlots.jl' },
-			],
-			edges: [
-				{ from: 'root', to: 'q_shape', label: 'asks about' },
-				{ from: 'root', to: 'q_ref', label: 'asks about' },
-				{ from: 'root', to: 'q_dep', label: 'asks about' },
-				{ from: 'q_shape', to: 'ecdf', label: 'read from' },
-				{ from: 'q_shape', to: 'c_quant', label: 'summarised by' },
-				{ from: 'c_quant', to: 'qq', label: 'compared in' },
-				{ from: 'q_ref', to: 'qq', label: 'read from' },
-				{ from: 'q_dep', to: 'marginal', label: 'shown by' },
-				{ from: 'q_dep', to: 'c_corr', label: 'measured by' },
-				{ from: 'c_corr', to: 'correlogram', label: 'visualised by' },
-				{ from: 'q_shape', to: 'r_cviz', label: 'per variable in' },
-				{ from: 'q_dep', to: 'r_mviz', label: 'many variables in' },
-				{ from: 'root', to: 'r_dstats', label: 'numerically in' },
-				{ from: 'root', to: 'ext', label: 'plotted with' },
-			],
-		},
 	},
 };
 
@@ -190,12 +150,11 @@ export function openDcmpWebview(
 	workspaceContextService: IWorkspaceContextService,
 	initialModel?: string,
 ): void {
-	const mermaid = getMermaidUris();
 	const webviewInput = webviewWorkbenchService.openWebview(
 		{
 			title: DCMP_TITLE,
 			options: { retainContextWhenHidden: true },
-			contentOptions: { allowScripts: true, localResourceRoots: [mermaid.distRoot] },
+			contentOptions: { allowScripts: true, localResourceRoots: [] },
 			extension: undefined,
 		},
 		DCMP_VIEW_TYPE,
@@ -204,7 +163,7 @@ export function openDcmpWebview(
 		{ group: undefined, preserveFocus: false }
 	);
 
-	webviewInput.webview.setHtml(getDcmpHtml(mermaid.js));
+	webviewInput.webview.setHtml(getDcmpHtml());
 
 	registerDcmpWebviewHandlers(
 		webviewInput,

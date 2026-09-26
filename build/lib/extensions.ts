@@ -313,6 +313,7 @@ const nativeExtensions = [
 
 const excludedExtensions = [
 	'copilot',
+	'mermaid-chat-features', // Pollis: Mermaid diagrams in AI chat; AI is off and no chat provider ships
 	'vscode-api-tests',
 	'vscode-colorize-tests',
 	'vscode-colorize-perf-tests',
@@ -622,7 +623,6 @@ const esbuildMediaScripts = [
 	'markdown-language-features/esbuild.notebook.mts',
 	'markdown-language-features/esbuild.webview.mts',
 	'markdown-math/esbuild.notebook.mts',
-	'mermaid-chat-features/esbuild.webview.mts',
 	'notebook-renderers/esbuild.notebook.mts',
 	'simple-browser/esbuild.webview.mts',
 ];

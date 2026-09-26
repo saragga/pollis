@@ -10,7 +10,6 @@ import { INotificationService } from '../../../../../platform/notification/commo
 import { ICommandService } from '../../../../../platform/commands/common/commands.js';
 import { IQuickInputService } from '../../../../../platform/quickinput/common/quickInput.js';
 import { IWebviewWorkbenchService } from '../../../webviewPanel/browser/webviewWorkbenchService.js';
-import { getMermaidUris } from '../../../mermaid/browser/mermaidHelper.js';
 import { INotebookEditorModelResolverService } from '../../../notebook/common/notebookEditorModelResolverService.js';
 import { YFIN_METADATA } from '../webviews/yfin.data.js';
 import { INotebookKernelService } from '../../../notebook/common/notebookKernelService.js';
@@ -41,12 +40,11 @@ export function openYfinWebview(
 	pathService: IPathService,
 	workspaceContextService: IWorkspaceContextService,
 ): void {
-	const mermaid = getMermaidUris();
 	const webviewInput = webviewWorkbenchService.openWebview(
 		{
 			title: YFIN_TITLE,
 			options: { retainContextWhenHidden: true },
-			contentOptions: { allowScripts: true, localResourceRoots: [mermaid.distRoot] },
+			contentOptions: { allowScripts: true, localResourceRoots: [] },
 			extension: undefined,
 		},
 		YFIN_VIEW_TYPE,
@@ -55,7 +53,7 @@ export function openYfinWebview(
 		{ group: undefined, preserveFocus: false }
 	);
 
-	webviewInput.webview.setHtml(getYfinHtml(mermaid.js, YFIN_METADATA));
+	webviewInput.webview.setHtml(getYfinHtml(YFIN_METADATA));
 
 	registerYfinWebviewHandlers(
 		webviewInput,

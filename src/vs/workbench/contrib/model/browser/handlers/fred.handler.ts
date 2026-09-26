@@ -27,7 +27,7 @@ import { generateTokensCSSForColorMap } from '../../../../../editor/common/langu
 import { Event } from '../../../../../base/common/event.js';
 import { IUntitledTextResourceEditorInput } from '../../../../common/editor.js';
 import { CellEditType, CellKind } from '../../../notebook/common/notebookCommon.js';
-import { openWikiByFile, openNotebookByFile, openPackageItem, openVideoList, openInBrowser, autoSelectJuliaKernel, createPackageStatusWiring, createExampleCodeWiring, createApiKeyWiring, sendToJuliaRepl } from './model.handler.js';
+import { openWikiByFile, openNotebookByFile, openPackageItem, openInBrowser, autoSelectJuliaKernel, createPackageStatusWiring, createExampleCodeWiring, createCustomCopyWiring, createReferenceWiring, createVideoWiring, createApiKeyWiring, sendToJuliaRepl } from './model.handler.js';
 import { CREDENTIALS } from '../common/credentials.js';
 import { hasKey } from '../../../../../base/common/types.js';
 
@@ -67,6 +67,9 @@ export function registerFredWebviewHandlers(
 	const fredData = metadata.fred;
 	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, fredData.packages.map(p => p.name), fileService, pathService, commandService, notificationService, workspaceContextService);
 	createExampleCodeWiring(webviewInput.webview, disposables, 'fred', fileService, pathService, notificationService);
+	createCustomCopyWiring(webviewInput.webview, disposables, fredData.wikis, fredData.notebooks, fileService, pathService, editorService, commandService, notificationService);
+	createReferenceWiring(webviewInput.webview, disposables, 'fred', fredData.references, fileService, pathService, commandService, notificationService);
+	createVideoWiring(webviewInput.webview, disposables, 'fred', fredData.packages, fileService, pathService, commandService, notificationService);
 	const apiKey = createApiKeyWiring(webviewInput.webview, FRED_API_KEY, secretStorageService, quickInputService, webviewService);
 
 	setTimeout(() => {
@@ -91,9 +94,6 @@ export function registerFredWebviewHandlers(
 		webviewInput.webview.postMessage({ command: 'paperLinks', papers: [], hasPapers: hasReferences });
 		webviewInput.webview.postMessage({ command: 'notebookSections', sections: notebookSections });
 		webviewInput.webview.postMessage({ command: 'wikiSections', sections: wikiSections });
-		if (fredData.conceptMap) {
-			webviewInput.webview.postMessage({ command: 'conceptMap', map: fredData.conceptMap });
-		}
 		void pkgStatus.postStatus();
 		void apiKey.postStatus();
 	}, 0);
@@ -103,10 +103,7 @@ export function registerFredWebviewHandlers(
 		const msg = e.message;
 		switch (msg.command) {
 			case 'openDocs':
-				if (msg.target === 'paper') {
-					const papers = fredData.references.filter((r): r is import('../common/model.types.js').IModelPaper => !hasKey(r, { separator: true }));
-					webviewInput.webview.postMessage({ command: 'showReferences', references: papers });
-				} else if (msg.target === 'repository') {
+				if (msg.target === 'repository') {
 					try {
 						await openPackageItem('repository', fredData.packages, commandService, quickInputService, clipboardService, notificationService);
 					} finally {
@@ -114,15 +111,6 @@ export function registerFredWebviewHandlers(
 					}
 				}
 				break;
-			case 'openReference': {
-				const papers = fredData.references.filter((r): r is import('../common/model.types.js').IModelPaper => !hasKey(r, { separator: true }));
-				const paper = papers.find(p => p.title === msg.id);
-				if (paper) {
-					const url = paper.doi ? `https://doi.org/${paper.doi}` : paper.url;
-					if (url) { await openInBrowser(url, commandService); }
-				}
-				break;
-			}
 			case 'openNotebook':
 				await openNotebookByFile(msg.target, fredData.notebooks, openerService, editorService, notebookKernelService, notebookEditorModelResolverService);
 				break;
@@ -173,13 +161,6 @@ export function registerFredWebviewHandlers(
 				break;
 			case 'openUrl':
 				if (msg.url) { await openInBrowser(msg.url, commandService); }
-				break;
-			case 'openVideoList':
-				try {
-					await openVideoList(fredData.packages, quickInputService, commandService);
-				} finally {
-					webviewInput.webview.postMessage({ command: 'actionDone' });
-				}
 				break;
 			case 'installPackages':
 				await pkgStatus.handleInstall();

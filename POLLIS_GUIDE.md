@@ -80,14 +80,15 @@ Previously these only looked absent in the dev build because they had been hidde
 
 ### 1.5 Copilot Chat not shipped; AI features off by default
 
-**Files:** `build/gulpfile.vscode.ts`, `build/next/index.ts`, `build/buildfile.ts`, `src/vs/workbench/contrib/chat/browser/chat.contribution.ts`, `src/vs/workbench/contrib/chat/browser/chatTipCatalog.ts`, `src/vs/workbench/contrib/chat/electron-browser/chat.contribution.ts`, `src/vs/platform/windows/electron-main/windowsMainService.ts`
+**Files:** `build/gulpfile.vscode.ts`, `build/gulpfile.extensions.ts`, `build/lib/extensions.ts`, `build/npm/dirs.ts`, `scripts/code.sh`, `scripts/code.bat`, `build/next/index.ts`, `build/buildfile.ts`, `src/vs/workbench/contrib/chat/browser/chat.contribution.ts`, `src/vs/workbench/contrib/chat/browser/chatTipCatalog.ts`, `src/vs/workbench/contrib/chat/electron-browser/chat.contribution.ts`, `src/vs/platform/windows/electron-main/windowsMainService.ts`
 
 - **Copilot Chat is not packaged.** `extensions/copilot` is already excluded from the general extension list (`excludedExtensions` in `build/lib/extensions.ts`); it only entered the app through `compileCopilotExtensionBuildTask` and `prepareBuiltInCopilotExtensionShims`. Both are removed from `gulpfile.vscode.ts` (the import, the two task series, and the shim step in `copyCopilotNativeDepsTask`), which saves ~416 MB. `copyCopilotNativeDeps` and `getCopilotExcludeFilter` stay, because core's agent host uses the `@github/copilot` SDK from the root `node_modules`. `gulpfile.reh.ts` (remote server) is untouched. The dev launcher `scripts/code.sh` already passes `--disable-extension=GitHub.copilot-chat`.
+- **Mermaid chat extension not packaged.** `extensions/mermaid-chat-features` only renders Mermaid diagrams in AI chat replies, which do nothing with AI off and no chat provider shipped. It is in `excludedExtensions` (`build/lib/extensions.ts`), and it is removed from the compiled extension projects (`gulpfile.extensions.ts`), the extension-media esbuild scripts (`esbuildMediaScripts` in `build/lib/extensions.ts`) and the npm install folders (`build/npm/dirs.ts`). The dev launchers `scripts/code.sh` / `code.bat` pass `--disable-extension=vscode.mermaid-chat-features`. The source folder and its `build/filters.ts` hygiene entries are left as upstream has them, to keep rebases simple. As a result Pollis ships no Mermaid, so `pollis-notice.md` does not list it.
 - **AI features off by default.** The `chat.disableAIFeatures` default is `true` (was `false`), which hides the chat view, the title-bar chat control and other AI entry points. Users can turn AI back on in Settings. The default is set in the setting's registration because `product.json` `configurationDefaults` is not read by anything (its `extensions.verifySignature` entry has no effect either).
 - **Agents window not shipped.** Upstream's standalone Agents window (`src/vs/sessions/`, a Copilot Chat front end) is still compiled but never opened or packaged. `windowsMainService.openAgentsWindow` opens a regular window instead (this covers `--agents`, which upstream only blocks for `stable` quality, and Pollis builds as `oss`), and `isSessionsWindow` is always `false`, so the agent-sessions workspace opens as a regular window too. `OpenAgentsWindowAction` is not registered (which also hides the Agents banner) and the `tip.openAgentsWindow` chat tip is removed. `AgentHostTerminalContribution` (agent-host terminal profiles) is not registered in `terminal.contribution.ts`: it needs `IRemoteAgentHostService`, which only `sessions.desktop.main.ts` registers, so upstream logs "Unable to create workbench contribution 'workbench.contrib.agentHostTerminal'" at every startup of the regular workbench. The `vs/sessions` entry points, HTML and resources are omitted from `build/next/index.ts`, `build/buildfile.ts` and `gulpfile.vscode.ts` (including the product checksums). The embedded Agents app is not built because `product.json` has no `embedded` block.
 - **No source maps in the app.** `gulpfile.vscode.ts` always strips `*.js.map` / `*.css.map` from the package (upstream does so only on CI, so local builds shipped ~195 MB of maps) and never points `sourceMappingURL` at Microsoft's CDN.
 
-**After a rebase:** remove `compileCopilotExtensionBuildTask` and the shim preparation from `gulpfile.vscode.ts` again (new upstream Copilot build steps may appear; the packaged `Contents/Resources/app/extensions/` must not contain `copilot`), and set the `chat.disableAIFeatures` default to `true` again. Re-apply the Agents window guards and build omissions (new upstream `vs/sessions` entry points may appear; the packaged `Contents/Resources/app/out/vs/sessions/` must not exist) and the source-map settings.
+**After a rebase:** remove `compileCopilotExtensionBuildTask` and the shim preparation from `gulpfile.vscode.ts` again (new upstream Copilot build steps may appear; the packaged `Contents/Resources/app/extensions/` must not contain `copilot`), keep `mermaid-chat-features` excluded and out of the compile, media and npm lists (the packaged `extensions/` must not contain it either), and set the `chat.disableAIFeatures` default to `true` again. Re-apply the Agents window guards and build omissions (new upstream `vs/sessions` entry points may appear; the packaged `Contents/Resources/app/out/vs/sessions/` must not exist) and the source-map settings.
 
 ### 1.6 New windows open maximized
 
@@ -144,7 +145,7 @@ Four new top-level menu IDs are declared:
 
 ```typescript
 static readonly MenubarExploreMenu  = new MenuId('MenubarExploreMenu');
-static readonly MenubarModelMenu    = new MenuId('MenubarModelMenu');   // "Infer"
+static readonly MenubarModelMenu    = new MenuId('MenubarModelMenu');   // "Model"
 static readonly MenubarSimulateMenu = new MenuId('MenubarSimulateMenu');
 static readonly MenubarOptimiseMenu = new MenuId('MenubarOptimiseMenu');
 ```
@@ -168,7 +169,7 @@ The native menu bar is assembled in `_updateMenubar()`. Pollis makes the followi
 | Pollis menu | MenuId | Notes |
 |---|---|---|
 | Explore | `MenubarExploreMenu` | Data discovery, toolboxes (Economics, Robotics, etc.) |
-| Infer | `MenubarModelMenu` | Statistical and ML model webviews |
+| Model | `MenubarModelMenu` | Statistical and ML model webviews |
 | Simulate | `MenubarSimulateMenu` | Simulation methods |
 | Optimise | `MenubarOptimiseMenu` | Optimisation methods |
 
@@ -298,12 +299,11 @@ These are entirely new directories with no upstream equivalent. They do not conf
 
 ```
 src/vs/workbench/contrib/
-  model/      — Statistical / ML model webviews (Infer menu)
+  model/      — Statistical / ML model webviews (Model menu)
   explore/    — Data discovery and toolbox webviews (Explore menu)
   simulate/   — Simulation method webviews (Simulate menu)
   optimise/   — Optimisation method webviews (Optimise menu)
   katex/      — Bundled KaTeX for equation rendering in webviews
-  mermaid/    — Bundled Mermaid for diagram rendering in Pollis webviews
 ```
 
 Each contribution follows the four-file architecture documented in:
@@ -344,16 +344,17 @@ Both files use the glob `vs/workbench/browser/media/pollis-*.md` (step 1, in `de
 
 ### 5.5 Bundled third-party libraries in `contrib/`
 
-Two third-party JS/CSS libraries are vendored directly into `src/vs/workbench/contrib/` so that Pollis webviews can load them as local resources without any npm dependency or network request. Both are used exclusively via their respective `*Helper.ts` files; nothing outside those helpers should reference the `dist/` folders directly.
+One third-party JS/CSS library is vendored directly into `src/vs/workbench/contrib/` so that Pollis webviews can load it as a local resource without any npm dependency or network request. It is used exclusively via its `*Helper.ts` file; nothing outside that helper should reference the `dist/` folder directly.
 
 | Library | Location | Helper | Purpose |
 |---|---|---|---|
 | **KaTeX** v0.16 | `contrib/katex/dist/` | `contrib/katex/browser/katexHelper.ts` | Equation rendering (`$…$`, `$$…$$`) in Pollis webviews |
-| **Mermaid** v11 | `contrib/mermaid/dist/` | `contrib/mermaid/browser/mermaidHelper.ts` | Diagram rendering (` ```mermaid ``` ` blocks) in Pollis webviews |
 
-`getMermaidUris()` and the KaTeX equivalent return webview-safe URIs; callers must add `distRoot` to `localResourceRoots` in the webview content options.
+The helper returns webview-safe URIs; callers must add `distRoot` to `localResourceRoots` in the webview content options.
 
-**After a rebase:** these folders are entirely Pollis-owned and will not be touched by upstream. However, verify the Mermaid and KaTeX versions against the npm packages used by any upstream extension that also bundles them, and upgrade `dist/` if a significant security patch has been released.
+Mermaid used to be vendored the same way (`contrib/mermaid/`) for the Learn More Concept Map. Both have been removed, and Pollis no longer ships Mermaid at all (see §1.5 for the Mermaid chat extension).
+
+**After a rebase:** this folder is entirely Pollis-owned and will not be touched by upstream. However, verify the KaTeX version against the npm packages used by any upstream extension that also bundles it, and upgrade `dist/` if a significant security patch has been released.
 
 ### 5.6 Forked built-in extensions
 
@@ -642,7 +643,7 @@ When pulling a new upstream VS Code version, work through this list in order:
 - [ ] **Branding** — restore `product.json` fields (§1.1, §1.2), restore Pollis icon (§1.3)
 - [ ] **Welcome page** — re-add the excluded walkthroughs (`Setup`, `Beginner`, Copilot welcome), remove the empty Overview heading and the first-launch walkthrough branch, default `experimentalOnboarding` to `false`, re-add the "Julia is not installed" alert, and re-add Discover Pollis and the two-column layout (§1.4)
 - [ ] **New windows maximized** — `window.newWindowDimensions` default `maximized` and the fallback in `windowsStateHandler.ts` (§1.6)
-- [ ] **Copilot and AI** — keep Copilot Chat out of the packaged app in `build/gulpfile.vscode.ts` and default `chat.disableAIFeatures` to `true` in `chat.contribution.ts`; re-apply the Agents window guards, the `vs/sessions` build omissions and the source-map settings (§1.5)
+- [ ] **Copilot and AI** — keep Copilot Chat out of the packaged app in `build/gulpfile.vscode.ts`, keep `mermaid-chat-features` excluded (`build/lib/extensions.ts`, `gulpfile.extensions.ts`, `build/npm/dirs.ts`, `scripts/code.sh`/`.bat`), and default `chat.disableAIFeatures` to `true` in `chat.contribution.ts`; re-apply the Agents window guards, the `vs/sessions` build omissions and the source-map settings (§1.5)
 - [ ] **Product interface** — re-add `pollisVersion`, `poweredBy`, `licenseName` and `sourceUrl` to `IProductConfiguration` (§1.2)
 - [ ] **About dialog** — re-add `createNativeAboutDialogDetails` to `dialog.ts`, and the licence + source lines to `createBrowserAboutDialogDetails` (§2)
 - [ ] **Menus open to extensions** — re-add the `menuBar/*` Pollis entries to `menusExtensionPoint.ts` (§3.5)
@@ -656,7 +657,7 @@ When pulling a new upstream VS Code version, work through this list in order:
 - [ ] **`workbench.common.main.ts`** — verify all Pollis contribution imports are intact (§5.2)
 - [ ] **Credential environment injection** — verify the `credentialEnvironment.contribution.js` import in `model/browser/model.contribution.ts`; re-add the `watch-julia` entry to the root `package.json` `watch` script (§5.7)
 - [ ] **App document build pipeline** — re-add `pollis-*.md` glob to both `build/next/index.ts` (`desktopResourcePatterns`) and `build/gulpfile.vscode.ts` (§5.4)
-- [ ] **Bundled libraries** — verify `contrib/katex/dist/` and `contrib/mermaid/dist/` are intact; check for security updates (§5.5)
+- [ ] **Bundled libraries** — verify `contrib/katex/dist/` is intact; check for security updates (§5.5)
 - [ ] **Forked extensions** — re-apply all Pollis patches to `extensions/language-julia`: rebranding, telemetry shim, `lmtool.ts`, `extension.ts` removals, `repl.ts` additions, `documentation.ts` rework, `plots.ts` table removal, `workspace.ts`/`notebookFeature.ts` kernel display name, `notebookKernel.ts` credential env merge, `smallcommands.ts` linter removal, and all deleted upstream files (§5.6)
 - [ ] **Notebook blank-on-revisit patch — DROP if base > 2026-04-23** — Pollis reverses the `notebookEditorWidget.ts` hunks of `618c5ea3667`. Upstream fixed this properly by ~Apr 23 2026, so on any newer base **do not re-apply**; instead leave `notebookEditorWidget.ts` pristine and run the two-notebook test to confirm upstream's fix. Only re-apply if rebasing onto a base in the Apr 14–22 2026 window (§6.1)
 - [ ] **CI and headers** — re-apply the Pollis header patterns in `build/hygiene.ts` and `eslint.config.js`; re-delete upstream workflows and Microsoft `.github/` files that reappear, keeping `copilot-instructions.md` (§5.8)

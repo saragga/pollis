@@ -25,7 +25,7 @@ import { CellEditType, CellKind } from '../../../notebook/common/notebookCommon.
 import { IFileService } from '../../../../../platform/files/common/files.js';
 import { IPathService } from '../../../../services/path/common/pathService.js';
 import { IWorkspaceContextService } from '../../../../../platform/workspace/common/workspace.js';
-import { openWikiByFile, openNotebookByFile, openPackageItem, openVideoList, openInBrowser, autoSelectJuliaKernel, createPackageStatusWiring, createExampleCodeWiring, sendToJuliaRepl } from './model.handler.js';
+import { openWikiByFile, openNotebookByFile, openPackageItem, openInBrowser, autoSelectJuliaKernel, createPackageStatusWiring, createExampleCodeWiring, createCustomCopyWiring, createReferenceWiring, createVideoWiring, sendToJuliaRepl } from './model.handler.js';
 import { hasKey } from '../../../../../base/common/types.js';
 
 export function registerSfvizWebviewHandlers(
@@ -61,6 +61,9 @@ export function registerSfvizWebviewHandlers(
 	const sfvizData = metadata.sfviz;
 	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, sfvizData.packages.map(p => p.name), fileService, pathService, commandService, notificationService, workspaceContextService);
 	createExampleCodeWiring(webviewInput.webview, disposables, 'sfviz', fileService, pathService, notificationService);
+	createCustomCopyWiring(webviewInput.webview, disposables, sfvizData.wikis, sfvizData.notebooks, fileService, pathService, editorService, commandService, notificationService);
+	createReferenceWiring(webviewInput.webview, disposables, 'sfviz', sfvizData.references, fileService, pathService, commandService, notificationService);
+	createVideoWiring(webviewInput.webview, disposables, 'sfviz', sfvizData.packages, fileService, pathService, commandService, notificationService);
 
 	setTimeout(() => {
 		const packages = sfvizData.packages.map(pkg => ({ name: pkg.name, url: pkg.github }));
@@ -84,9 +87,6 @@ export function registerSfvizWebviewHandlers(
 		webviewInput.webview.postMessage({ command: 'paperLinks', papers: [], hasPapers: hasReferences });
 		webviewInput.webview.postMessage({ command: 'notebookSections', sections: notebookSections });
 		webviewInput.webview.postMessage({ command: 'wikiSections', sections: wikiSections });
-		if (sfvizData.conceptMap) {
-			webviewInput.webview.postMessage({ command: 'conceptMap', map: sfvizData.conceptMap });
-		}
 		if (initialModel) {
 			webviewInput.webview.postMessage({ command: 'setModel', model: initialModel });
 		}
@@ -100,10 +100,7 @@ export function registerSfvizWebviewHandlers(
 		switch (msg.command) {
 			case 'openDocs':
 				try {
-					if (msg.target === 'paper') {
-						const papers = sfvizData.references.filter((r): r is import('../common/model.types.js').IModelPaper => !hasKey(r, { separator: true }));
-						webviewInput.webview.postMessage({ command: 'showReferences', references: papers });
-					} else if (msg.target === 'repository') {
+					if (msg.target === 'repository') {
 						await openPackageItem('repository', sfvizData.packages, commandService, quickInputService, clipboardService, notificationService);
 					}
 				} finally {
@@ -115,9 +112,6 @@ export function registerSfvizWebviewHandlers(
 				break;
 			case 'openWiki':
 				await openWikiByFile(msg.target, sfvizData.wikis, openerService, editorService, commandService);
-				break;
-			case 'openTopic':
-				if (msg.target) { await commandService.executeCommand(msg.target); }
 				break;
 			case 'runCode': {
 				const code = msg.code;
@@ -156,24 +150,8 @@ export function registerSfvizWebviewHandlers(
 				await pkgStatus.nudgeIfMissing(msg.target);
 				break;
 			}
-			case 'openReference': {
-				const papers = sfvizData.references.filter((r): r is import('../common/model.types.js').IModelPaper => !hasKey(r, { separator: true }));
-				const paper = papers.find(p => p.title === msg.id);
-				if (paper) {
-					const url = paper.doi ? `https://doi.org/${paper.doi}` : paper.url;
-					if (url) { await openInBrowser(url, commandService); }
-				}
-				break;
-			}
 			case 'openUrl':
 				if (msg.url) { await openInBrowser(msg.url, commandService); }
-				break;
-			case 'openVideoList':
-				try {
-					await openVideoList(sfvizData.packages, quickInputService, commandService);
-				} finally {
-					webviewInput.webview.postMessage({ command: 'actionDone' });
-				}
 				break;
 			case 'colorize':
 				await postColorized(msg.code, msg.target ?? 'main');

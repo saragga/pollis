@@ -25,7 +25,7 @@ import { CellEditType, CellKind } from '../../../notebook/common/notebookCommon.
 import { IFileService } from '../../../../../platform/files/common/files.js';
 import { IPathService } from '../../../../services/path/common/pathService.js';
 import { IWorkspaceContextService } from '../../../../../platform/workspace/common/workspace.js';
-import { openWikiByFile, openNotebookByFile, openPackageItem, openVideoList, openInBrowser, autoSelectJuliaKernel, createPackageStatusWiring, createExampleCodeWiring, sendToJuliaRepl } from './model.handler.js';
+import { openWikiByFile, openNotebookByFile, openPackageItem, openInBrowser, autoSelectJuliaKernel, createPackageStatusWiring, createExampleCodeWiring, createCustomCopyWiring, createReferenceWiring, createVideoWiring, sendToJuliaRepl } from './model.handler.js';
 import { hasKey } from '../../../../../base/common/types.js';
 
 export function registerDcmpWebviewHandlers(
@@ -61,6 +61,9 @@ export function registerDcmpWebviewHandlers(
 	const dcmpData = metadata.dcmp;
 	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, dcmpData.packages.map(p => p.name), fileService, pathService, commandService, notificationService, workspaceContextService);
 	createExampleCodeWiring(webviewInput.webview, disposables, 'dcmp', fileService, pathService, notificationService);
+	createCustomCopyWiring(webviewInput.webview, disposables, dcmpData.wikis, dcmpData.notebooks, fileService, pathService, editorService, commandService, notificationService);
+	createReferenceWiring(webviewInput.webview, disposables, 'dcmp', dcmpData.references, fileService, pathService, commandService, notificationService);
+	createVideoWiring(webviewInput.webview, disposables, 'dcmp', dcmpData.packages, fileService, pathService, commandService, notificationService);
 
 	setTimeout(() => {
 		const packages = dcmpData.packages.map(pkg => ({ name: pkg.name, url: pkg.github }));
@@ -84,9 +87,6 @@ export function registerDcmpWebviewHandlers(
 		webviewInput.webview.postMessage({ command: 'paperLinks', papers: [], hasPapers: hasReferences });
 		webviewInput.webview.postMessage({ command: 'notebookSections', sections: notebookSections });
 		webviewInput.webview.postMessage({ command: 'wikiSections', sections: wikiSections });
-		if (dcmpData.conceptMap) {
-			webviewInput.webview.postMessage({ command: 'conceptMap', map: dcmpData.conceptMap });
-		}
 		if (initialModel) {
 			webviewInput.webview.postMessage({ command: 'setModel', model: initialModel });
 		}
@@ -100,10 +100,7 @@ export function registerDcmpWebviewHandlers(
 		switch (msg.command) {
 			case 'openDocs':
 				try {
-					if (msg.target === 'paper') {
-						const papers = dcmpData.references.filter((r): r is import('../common/model.types.js').IModelPaper => !hasKey(r, { separator: true }));
-						webviewInput.webview.postMessage({ command: 'showReferences', references: papers });
-					} else if (msg.target === 'repository') {
+					if (msg.target === 'repository') {
 						await openPackageItem('repository', dcmpData.packages, commandService, quickInputService, clipboardService, notificationService);
 					}
 				} finally {
@@ -115,9 +112,6 @@ export function registerDcmpWebviewHandlers(
 				break;
 			case 'openWiki':
 				await openWikiByFile(msg.target, dcmpData.wikis, openerService, editorService, commandService);
-				break;
-			case 'openTopic':
-				if (msg.target) { await commandService.executeCommand(msg.target); }
 				break;
 			case 'runCode': {
 				const code = msg.code;
@@ -156,24 +150,8 @@ export function registerDcmpWebviewHandlers(
 				await pkgStatus.nudgeIfMissing(msg.target);
 				break;
 			}
-			case 'openReference': {
-				const papers = dcmpData.references.filter((r): r is import('../common/model.types.js').IModelPaper => !hasKey(r, { separator: true }));
-				const paper = papers.find(p => p.title === msg.id);
-				if (paper) {
-					const url = paper.doi ? `https://doi.org/${paper.doi}` : paper.url;
-					if (url) { await openInBrowser(url, commandService); }
-				}
-				break;
-			}
 			case 'openUrl':
 				if (msg.url) { await openInBrowser(msg.url, commandService); }
-				break;
-			case 'openVideoList':
-				try {
-					await openVideoList(dcmpData.packages, quickInputService, commandService);
-				} finally {
-					webviewInput.webview.postMessage({ command: 'actionDone' });
-				}
 				break;
 			case 'colorize':
 				await postColorized(msg.code, msg.target ?? 'main');

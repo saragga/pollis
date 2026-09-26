@@ -48,6 +48,7 @@ import { registerPlutoCommands } from './commands/pluto.command.js';
 import { registerNewJuliaFileCommand } from './commands/juliaFile.command.js';
 import './juliaNotebookKernel.contribution.js';
 import './credentialEnvironment.contribution.js';
+import './customCopyFileSystem.contribution.js';
 import { openCnnWebview } from './commands/cnn.command.js';
 import { openGnnWebview } from './commands/gnn.command.js';
 import { openTransformerWebview } from './commands/transformer.command.js';

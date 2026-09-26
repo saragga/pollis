@@ -14,7 +14,6 @@ import { INotebookEditorModelResolverService } from '../../../notebook/common/no
 import { INotebookKernelService } from '../../../notebook/common/notebookKernelService.js';
 import { ILanguageService } from '../../../../../editor/common/languages/language.js';
 import { IThemeService } from '../../../../../platform/theme/common/themeService.js';
-import { getMermaidUris } from '../../../mermaid/browser/mermaidHelper.js';
 import { ITsvizMetadata } from '../common/tsviz.types.js';
 import { IModelReference, IModelNotebookSection } from '../common/model.types.js';
 import { IFileService } from '../../../../../platform/files/common/files.js';
@@ -131,36 +130,6 @@ const TSVIZ_METADATA: ITsvizMetadata = {
 			{ name: 'OHLC',              description: 'Open-high-low-close bars for financial price series',                    file: 'tsviz/ohlc.md',           bundled: true },
 		],
 		references: TSVIZ_REFERENCES,
-		conceptMap: {
-			center: 'Patterns over Time',
-			nodes: [
-				{ id: 'root', label: 'Patterns over Time', kind: 'center' },
-				{ id: 'q_trend', label: 'Level and trend', kind: 'concept' },
-				{ id: 'q_uncert', label: 'Uncertainty over time', kind: 'concept' },
-				{ id: 'q_comp', label: 'Composition over time', kind: 'concept' },
-				{ id: 'c_range', label: 'Range per period', kind: 'concept' },
-				{ id: 'tsplot', label: 'Time Series Plot', kind: 'topic', model: 'tsplot' },
-				{ id: 'ribbon', label: 'Ribbon Plot', kind: 'topic', model: 'ribbon' },
-				{ id: 'stacked', label: 'Stacked Area', kind: 'topic', model: 'stacked' },
-				{ id: 'ohlc', label: 'OHLC', kind: 'topic', model: 'ohlc' },
-				{ id: 'r_cviz', label: 'Core Statistical Plots', kind: 'related', command: 'chiara.explore.dvcs.line' },
-				{ id: 'r_cpviz', label: 'Categorical and Proportional', kind: 'related', command: 'chiara.explore.dvcp.mosaic' },
-				{ id: 'ext', label: 'Plots.jl', kind: 'external', url: 'https://github.com/JuliaPlots/Plots.jl' },
-			],
-			edges: [
-				{ from: 'root', to: 'q_trend', label: 'asks about' },
-				{ from: 'root', to: 'q_uncert', label: 'asks about' },
-				{ from: 'root', to: 'q_comp', label: 'asks about' },
-				{ from: 'q_trend', to: 'tsplot', label: 'drawn by' },
-				{ from: 'q_uncert', to: 'ribbon', label: 'as a band in' },
-				{ from: 'q_comp', to: 'stacked', label: 'as areas in' },
-				{ from: 'q_uncert', to: 'c_range', label: 'summarised by' },
-				{ from: 'c_range', to: 'ohlc', label: 'open-high-low-close in' },
-				{ from: 'q_trend', to: 'r_cviz', label: 'ordered x, y in' },
-				{ from: 'q_comp', to: 'r_cpviz', label: 'as proportions in' },
-				{ from: 'root', to: 'ext', label: 'plotted with' },
-			],
-		},
 	},
 };
 
@@ -181,12 +150,11 @@ export function openTsvizWebview(
 	workspaceContextService: IWorkspaceContextService,
 	initialModel?: string,
 ): void {
-	const mermaid = getMermaidUris();
 	const webviewInput = webviewWorkbenchService.openWebview(
 		{
 			title: TSVIZ_TITLE,
 			options: { retainContextWhenHidden: true },
-			contentOptions: { allowScripts: true, localResourceRoots: [mermaid.distRoot] },
+			contentOptions: { allowScripts: true, localResourceRoots: [] },
 			extension: undefined,
 		},
 		TSVIZ_VIEW_TYPE,
@@ -195,7 +163,7 @@ export function openTsvizWebview(
 		{ group: undefined, preserveFocus: false }
 	);
 
-	webviewInput.webview.setHtml(getTsvizHtml(mermaid.js));
+	webviewInput.webview.setHtml(getTsvizHtml());
 
 	registerTsvizWebviewHandlers(
 		webviewInput,

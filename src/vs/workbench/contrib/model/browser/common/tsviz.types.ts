@@ -3,7 +3,7 @@
  *  Licensed under the GNU Affero General Public License v3.0 or later. See LICENSE.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IModelPackage, IModelNotebook, IModelNotebookSection, IModelWiki, IModelReference, IConceptMap } from './model.types.js';
+import { IModelPackage, IModelNotebook, IModelNotebookSection, IModelWiki, IModelReference } from './model.types.js';
 
 export interface ITsvizMetadata {
 	readonly tsviz: {
@@ -12,7 +12,6 @@ export interface ITsvizMetadata {
 		readonly notebookSections: IModelNotebookSection[];
 		readonly wikis: IModelWiki[];
 		readonly references: IModelReference[];
-		readonly conceptMap?: IConceptMap;
 	};
 }
 

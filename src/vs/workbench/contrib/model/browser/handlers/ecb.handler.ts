@@ -25,7 +25,7 @@ import { generateTokensCSSForColorMap } from '../../../../../editor/common/langu
 import { Event } from '../../../../../base/common/event.js';
 import { IUntitledTextResourceEditorInput } from '../../../../common/editor.js';
 import { CellEditType, CellKind } from '../../../notebook/common/notebookCommon.js';
-import { openWikiByFile, openNotebookByFile, openPackageItem, openVideoList, openInBrowser, autoSelectJuliaKernel, createPackageStatusWiring, createExampleCodeWiring, sendToJuliaRepl } from './model.handler.js';
+import { openWikiByFile, openNotebookByFile, openPackageItem, openInBrowser, autoSelectJuliaKernel, createPackageStatusWiring, createExampleCodeWiring, createCustomCopyWiring, createReferenceWiring, createVideoWiring, sendToJuliaRepl } from './model.handler.js';
 import { hasKey } from '../../../../../base/common/types.js';
 
 export function registerEcbWebviewHandlers(
@@ -60,6 +60,9 @@ export function registerEcbWebviewHandlers(
 	const ecbData = metadata.ecb;
 	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, ecbData.packages.map(p => p.name), fileService, pathService, commandService, notificationService, workspaceContextService);
 	createExampleCodeWiring(webviewInput.webview, disposables, 'ecb', fileService, pathService, notificationService);
+	createCustomCopyWiring(webviewInput.webview, disposables, ecbData.wikis, ecbData.notebooks, fileService, pathService, editorService, commandService, notificationService);
+	createReferenceWiring(webviewInput.webview, disposables, 'ecb', ecbData.references, fileService, pathService, commandService, notificationService);
+	createVideoWiring(webviewInput.webview, disposables, 'ecb', ecbData.packages, fileService, pathService, commandService, notificationService);
 
 	setTimeout(() => {
 		const packages = ecbData.packages.map(pkg => ({ name: pkg.name, url: pkg.github }));
@@ -83,9 +86,6 @@ export function registerEcbWebviewHandlers(
 		webviewInput.webview.postMessage({ command: 'paperLinks', papers: [], hasPapers: hasReferences });
 		webviewInput.webview.postMessage({ command: 'notebookSections', sections: notebookSections });
 		webviewInput.webview.postMessage({ command: 'wikiSections', sections: wikiSections });
-		if (ecbData.conceptMap) {
-			webviewInput.webview.postMessage({ command: 'conceptMap', map: ecbData.conceptMap });
-		}
 		void pkgStatus.postStatus();
 	}, 0);
 
@@ -94,10 +94,7 @@ export function registerEcbWebviewHandlers(
 		const msg = e.message;
 		switch (msg.command) {
 			case 'openDocs':
-				if (msg.target === 'paper') {
-					const papers = ecbData.references.filter((r): r is import('../common/model.types.js').IModelPaper => !hasKey(r, { separator: true }));
-					webviewInput.webview.postMessage({ command: 'showReferences', references: papers });
-				} else if (msg.target === 'repository') {
+				if (msg.target === 'repository') {
 					try {
 						await openPackageItem('repository', ecbData.packages, commandService, quickInputService, clipboardService, notificationService);
 					} finally {
@@ -105,15 +102,6 @@ export function registerEcbWebviewHandlers(
 					}
 				}
 				break;
-			case 'openReference': {
-				const papers = ecbData.references.filter((r): r is import('../common/model.types.js').IModelPaper => !hasKey(r, { separator: true }));
-				const paper = papers.find(p => p.title === msg.id);
-				if (paper) {
-					const url = paper.doi ? `https://doi.org/${paper.doi}` : paper.url;
-					if (url) { await openInBrowser(url, commandService); }
-				}
-				break;
-			}
 			case 'openNotebook':
 				await openNotebookByFile(msg.target, ecbData.notebooks, openerService, editorService, notebookKernelService, notebookEditorModelResolverService);
 				break;
@@ -162,13 +150,6 @@ export function registerEcbWebviewHandlers(
 				break;
 			case 'openUrl':
 				if (msg.url) { await openInBrowser(msg.url, commandService); }
-				break;
-			case 'openVideoList':
-				try {
-					await openVideoList(ecbData.packages, quickInputService, commandService);
-				} finally {
-					webviewInput.webview.postMessage({ command: 'actionDone' });
-				}
 				break;
 			case 'installPackages':
 				await pkgStatus.handleInstall();

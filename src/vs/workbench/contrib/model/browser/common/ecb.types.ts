@@ -3,7 +3,7 @@
  *  Licensed under the GNU Affero General Public License v3.0 or later. See LICENSE.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IModelPackage, IModelNotebook, IModelNotebookSection, IModelWiki, IModelReference, IConceptMap, IModelBullet, IModelDecisionRow, IModelMiniChart, IModelCodeBranch, IModelActionGroup } from './model.types.js';
+import { IModelPackage, IModelNotebook, IModelNotebookSection, IModelWiki, IModelReference, IModelBullet, IModelDecisionRow, IModelMiniChart, IModelCodeBranch, IModelActionGroup } from './model.types.js';
 
 export interface IEcbMetadata {
 	readonly ecb: {
@@ -12,7 +12,6 @@ export interface IEcbMetadata {
 		readonly notebookSections: IModelNotebookSection[];
 		readonly wikis: IModelWiki[];
 		readonly references: IModelReference[];
-		readonly conceptMap?: IConceptMap;
 		readonly bullets?: IModelBullet[];
 		readonly decisionRows?: IModelDecisionRow[];
 		readonly miniCharts?: IModelMiniChart[];

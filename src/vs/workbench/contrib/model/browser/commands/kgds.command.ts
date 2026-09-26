@@ -10,7 +10,6 @@ import { INotificationService } from '../../../../../platform/notification/commo
 import { ICommandService } from '../../../../../platform/commands/common/commands.js';
 import { IQuickInputService } from '../../../../../platform/quickinput/common/quickInput.js';
 import { IWebviewWorkbenchService } from '../../../webviewPanel/browser/webviewWorkbenchService.js';
-import { getMermaidUris } from '../../../mermaid/browser/mermaidHelper.js';
 import { INotebookEditorModelResolverService } from '../../../notebook/common/notebookEditorModelResolverService.js';
 import { KGDS_METADATA } from '../webviews/kgds.data.js';
 import { INotebookKernelService } from '../../../notebook/common/notebookKernelService.js';
@@ -47,12 +46,11 @@ export function openKgdsWebview(
 	secretStorageService: ISecretStorageService,
 	webviewService: IWebviewService,
 ): void {
-	const mermaid = getMermaidUris();
 	const webviewInput = webviewWorkbenchService.openWebview(
 		{
 			title: KGDS_TITLE,
 			options: { retainContextWhenHidden: true },
-			contentOptions: { allowScripts: true, localResourceRoots: [mermaid.distRoot] },
+			contentOptions: { allowScripts: true, localResourceRoots: [] },
 			extension: undefined,
 		},
 		KGDS_VIEW_TYPE,
@@ -61,7 +59,7 @@ export function openKgdsWebview(
 		{ group: undefined, preserveFocus: false }
 	);
 
-	webviewInput.webview.setHtml(getKgdsHtml(mermaid.js, KGDS_METADATA));
+	webviewInput.webview.setHtml(getKgdsHtml(KGDS_METADATA));
 
 	registerKgdsWebviewHandlers(
 		webviewInput,

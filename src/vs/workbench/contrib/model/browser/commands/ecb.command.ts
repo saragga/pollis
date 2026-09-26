@@ -10,7 +10,6 @@ import { INotificationService } from '../../../../../platform/notification/commo
 import { ICommandService } from '../../../../../platform/commands/common/commands.js';
 import { IQuickInputService } from '../../../../../platform/quickinput/common/quickInput.js';
 import { IWebviewWorkbenchService } from '../../../webviewPanel/browser/webviewWorkbenchService.js';
-import { getMermaidUris } from '../../../mermaid/browser/mermaidHelper.js';
 import { INotebookEditorModelResolverService } from '../../../notebook/common/notebookEditorModelResolverService.js';
 import { ECB_METADATA } from '../webviews/ecb.data.js';
 import { INotebookKernelService } from '../../../notebook/common/notebookKernelService.js';
@@ -41,12 +40,11 @@ export function openEcbWebview(
 	pathService: IPathService,
 	workspaceContextService: IWorkspaceContextService,
 ): void {
-	const mermaid = getMermaidUris();
 	const webviewInput = webviewWorkbenchService.openWebview(
 		{
 			title: ECB_TITLE,
 			options: { retainContextWhenHidden: true },
-			contentOptions: { allowScripts: true, localResourceRoots: [mermaid.distRoot] },
+			contentOptions: { allowScripts: true, localResourceRoots: [] },
 			extension: undefined,
 		},
 		ECB_VIEW_TYPE,
@@ -55,7 +53,7 @@ export function openEcbWebview(
 		{ group: undefined, preserveFocus: false }
 	);
 
-	webviewInput.webview.setHtml(getEcbHtml(mermaid.js, ECB_METADATA));
+	webviewInput.webview.setHtml(getEcbHtml(ECB_METADATA));
 
 	registerEcbWebviewHandlers(
 		webviewInput,

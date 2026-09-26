@@ -10,7 +10,6 @@ import { INotificationService } from '../../../../../platform/notification/commo
 import { ICommandService } from '../../../../../platform/commands/common/commands.js';
 import { IQuickInputService } from '../../../../../platform/quickinput/common/quickInput.js';
 import { IWebviewWorkbenchService } from '../../../webviewPanel/browser/webviewWorkbenchService.js';
-import { getMermaidUris } from '../../../mermaid/browser/mermaidHelper.js';
 import { ICvizMetadata } from '../common/cviz.types.js';
 import { IModelReference, IModelNotebookSection } from '../common/model.types.js';
 import { INotebookEditorModelResolverService } from '../../../notebook/common/notebookEditorModelResolverService.js';
@@ -136,54 +135,6 @@ const CVIZ_METADATA: ICvizMetadata = {
 			{ name: 'Line Plot',      description: 'Trends and changes in a continuous variable over an ordered axis',          file: 'cviz/line.md',            bundled: true },
 		],
 		references: CVIZ_REFERENCES,
-		conceptMap: {
-			center: 'Core Statistical Plots',
-			nodes: [
-				{ id: 'cviz', label: 'Core Statistical Plots', kind: 'center' },
-				// Intent groupings (concepts)
-				{ id: 'dist', label: 'Distribution', kind: 'concept' },
-				{ id: 'rel', label: 'Relationship', kind: 'concept' },
-				{ id: 'cmp', label: 'Group Comparison', kind: 'concept' },
-				{ id: 'ptw', label: 'Part-to-Whole', kind: 'concept' },
-				// This webview's own plot toggles (jump = switch tab)
-				{ id: 'histogram', label: 'Histogram', kind: 'topic', model: 'histogram' },
-				{ id: 'box', label: 'Box Plot', kind: 'topic', model: 'box' },
-				{ id: 'violin', label: 'Violin Plot', kind: 'topic', model: 'violin' },
-				{ id: 'scatter', label: 'Scatter', kind: 'topic', model: 'scatter' },
-				{ id: 'regression', label: 'Regression', kind: 'topic', model: 'regression' },
-				{ id: 'line', label: 'Line', kind: 'topic', model: 'line' },
-				{ id: 'bar', label: 'Bar Chart', kind: 'topic', model: 'bar' },
-				{ id: 'pie', label: 'Pie Chart', kind: 'topic', model: 'pie' },
-				// Related Pollis webviews (jump = open command)
-				{ id: 'dcmp', label: 'Distribution Comparison', kind: 'related', command: 'chiara.explore.dvdist.ecdf' },
-				{ id: 'mviz', label: 'Multivariate Plots', kind: 'related', command: 'chiara.explore.dvmulti.corner' },
-				{ id: 'tsviz', label: 'Time-Series Plots', kind: 'related', command: 'chiara.explore.dvts.tsplot' },
-				{ id: 'dstats', label: 'Descriptive Statistics', kind: 'related', command: 'chiara.explore.dstats' },
-				// External
-				{ id: 'statsplots', label: 'StatsPlots.jl', kind: 'external', url: 'https://docs.juliaplots.org/latest/generated/statsplots/' },
-			],
-			edges: [
-				{ from: 'cviz', to: 'dist', label: 'shape of one variable' },
-				{ from: 'cviz', to: 'rel', label: 'two variables' },
-				{ from: 'cviz', to: 'cmp', label: 'across groups' },
-				{ from: 'cviz', to: 'ptw', label: 'composition' },
-				{ from: 'dist', to: 'histogram' },
-				{ from: 'dist', to: 'box' },
-				{ from: 'dist', to: 'violin' },
-				{ from: 'rel', to: 'scatter' },
-				{ from: 'rel', to: 'regression' },
-				{ from: 'rel', to: 'line' },
-				{ from: 'cmp', to: 'bar' },
-				{ from: 'cmp', to: 'box' },
-				{ from: 'cmp', to: 'violin' },
-				{ from: 'ptw', to: 'pie' },
-				{ from: 'box', to: 'dcmp', label: 'compare distributions' },
-				{ from: 'scatter', to: 'mviz', label: 'more variables' },
-				{ from: 'line', to: 'tsviz', label: 'ordered in time' },
-				{ from: 'cviz', to: 'dstats', label: 'summarise first' },
-				{ from: 'cviz', to: 'statsplots', label: 'built with' },
-			],
-		},
 	},
 };
 
@@ -204,12 +155,11 @@ export function openCvizWebview(
 	workspaceContextService: IWorkspaceContextService,
 	initialModel?: string,
 ): void {
-	const mermaid = getMermaidUris();
 	const webviewInput = webviewWorkbenchService.openWebview(
 		{
 			title: CVIZ_TITLE,
 			options: { retainContextWhenHidden: true },
-			contentOptions: { allowScripts: true, localResourceRoots: [mermaid.distRoot] },
+			contentOptions: { allowScripts: true, localResourceRoots: [] },
 			extension: undefined,
 		},
 		CVIZ_VIEW_TYPE,
@@ -218,7 +168,7 @@ export function openCvizWebview(
 		{ group: undefined, preserveFocus: false }
 	);
 
-	webviewInput.webview.setHtml(getCvizHtml(mermaid.js));
+	webviewInput.webview.setHtml(getCvizHtml());
 
 	registerCvizWebviewHandlers(
 		webviewInput,

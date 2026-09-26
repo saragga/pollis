@@ -10,7 +10,6 @@ import { INotificationService } from '../../../../../platform/notification/commo
 import { ICommandService } from '../../../../../platform/commands/common/commands.js';
 import { IQuickInputService } from '../../../../../platform/quickinput/common/quickInput.js';
 import { IWebviewWorkbenchService } from '../../../webviewPanel/browser/webviewWorkbenchService.js';
-import { getMermaidUris } from '../../../mermaid/browser/mermaidHelper.js';
 import { ISfvizMetadata } from '../common/sfviz.types.js';
 import { IModelReference, IModelNotebookSection } from '../common/model.types.js';
 import { INotebookEditorModelResolverService } from '../../../notebook/common/notebookEditorModelResolverService.js';
@@ -130,42 +129,6 @@ const SFVIZ_METADATA: ISfvizMetadata = {
 			{ name: 'Voxels',         description: 'Discrete 3D grid of scalar values shown as coloured cubes',                file: 'sfviz/voxels.md',      bundled: true },
 		],
 		references: SFVIZ_REFERENCES,
-		conceptMap: {
-			center: 'Surfaces and Fields',
-			nodes: [
-				{ id: 'root', label: 'Surfaces and Fields', kind: 'center' },
-				{ id: 'q_s2d', label: 'Scalar field f(x, y)', kind: 'concept' },
-				{ id: 'q_s3d', label: 'Scalar field f(x, y, z)', kind: 'concept' },
-				{ id: 'q_vec', label: 'Vector field', kind: 'concept' },
-				{ id: 'q_geom', label: 'Explicit geometry', kind: 'concept' },
-				{ id: 'contour', label: 'Contour', kind: 'topic', model: 'contour' },
-				{ id: 'contour3d', label: '3D Contour', kind: 'topic', model: 'contour3d' },
-				{ id: 'surface', label: 'Surface', kind: 'topic', model: 'surface' },
-				{ id: 'volume', label: 'Volume', kind: 'topic', model: 'volume' },
-				{ id: 'phase', label: 'Phase Portrait', kind: 'topic', model: 'phase' },
-				{ id: 'mesh', label: 'Mesh', kind: 'topic', model: 'mesh' },
-				{ id: 'voxels', label: 'Voxels', kind: 'topic', model: 'voxels' },
-				{ id: 'r_mviz', label: 'Multivariate Plots', kind: 'related', command: 'chiara.explore.dvmulti.heatmap' },
-				{ id: 'r_gsviz', label: 'Graph and Spatial', kind: 'related', command: 'chiara.explore.dvgs.choropleth' },
-				{ id: 'ext', label: 'Makie.jl', kind: 'external', url: 'https://github.com/MakieOrg/Makie.jl' },
-			],
-			edges: [
-				{ from: 'root', to: 'q_s2d', label: 'asks about' },
-				{ from: 'root', to: 'q_s3d', label: 'asks about' },
-				{ from: 'root', to: 'q_vec', label: 'asks about' },
-				{ from: 'root', to: 'q_geom', label: 'asks about' },
-				{ from: 'q_s2d', to: 'contour', label: 'level sets in' },
-				{ from: 'q_s2d', to: 'surface', label: 'as height in' },
-				{ from: 'q_s3d', to: 'contour3d', label: 'isosurfaces in' },
-				{ from: 'q_s3d', to: 'volume', label: 'by opacity in' },
-				{ from: 'q_s3d', to: 'voxels', label: 'as cells in' },
-				{ from: 'q_vec', to: 'phase', label: 'streamlines in' },
-				{ from: 'q_geom', to: 'mesh', label: 'triangles in' },
-				{ from: 'q_s2d', to: 'r_mviz', label: 'as a heatmap in' },
-				{ from: 'q_geom', to: 'r_gsviz', label: 'on a map in' },
-				{ from: 'root', to: 'ext', label: 'plotted with' },
-			],
-		},
 	},
 };
 
@@ -186,12 +149,11 @@ export function openSfvizWebview(
 	workspaceContextService: IWorkspaceContextService,
 	initialModel?: string,
 ): void {
-	const mermaid = getMermaidUris();
 	const webviewInput = webviewWorkbenchService.openWebview(
 		{
 			title: SFVIZ_TITLE,
 			options: { retainContextWhenHidden: true },
-			contentOptions: { allowScripts: true, localResourceRoots: [mermaid.distRoot] },
+			contentOptions: { allowScripts: true, localResourceRoots: [] },
 			extension: undefined,
 		},
 		SFVIZ_VIEW_TYPE,
@@ -200,7 +162,7 @@ export function openSfvizWebview(
 		{ group: undefined, preserveFocus: false }
 	);
 
-	webviewInput.webview.setHtml(getSfvizHtml(mermaid.js));
+	webviewInput.webview.setHtml(getSfvizHtml());
 
 	registerSfvizWebviewHandlers(
 		webviewInput,

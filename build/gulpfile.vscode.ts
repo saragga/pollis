@@ -102,9 +102,6 @@ const vscodeResourceIncludes = [
 	// Pollis app documents (Release Notes, License)
 	'out-build/vs/workbench/browser/media/pollis-*.md',
 
-	// Mermaid (concept-map rendering in webviews)
-	'out-build/vs/workbench/contrib/mermaid/dist/**',
-
 	// Model webviews
 	'out-build/vs/workbench/contrib/model/browser/webviews/**/*.{html,css,js}',
 	'out-build/vs/workbench/contrib/model/browser/common/**/*.json',

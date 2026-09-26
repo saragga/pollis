@@ -10,7 +10,6 @@ import { INotificationService } from '../../../../../platform/notification/commo
 import { ICommandService } from '../../../../../platform/commands/common/commands.js';
 import { IQuickInputService } from '../../../../../platform/quickinput/common/quickInput.js';
 import { IWebviewWorkbenchService } from '../../../webviewPanel/browser/webviewWorkbenchService.js';
-import { getMermaidUris } from '../../../mermaid/browser/mermaidHelper.js';
 import { INotebookEditorModelResolverService } from '../../../notebook/common/notebookEditorModelResolverService.js';
 import { EDGAR_METADATA } from '../webviews/edgar.data.js';
 import { INotebookKernelService } from '../../../notebook/common/notebookKernelService.js';
@@ -45,12 +44,11 @@ export function openEdgarWebview(
 	secretStorageService: ISecretStorageService,
 	webviewService: IWebviewService,
 ): void {
-	const mermaid = getMermaidUris();
 	const webviewInput = webviewWorkbenchService.openWebview(
 		{
 			title: EDGAR_TITLE,
 			options: { retainContextWhenHidden: true },
-			contentOptions: { allowScripts: true, localResourceRoots: [mermaid.distRoot] },
+			contentOptions: { allowScripts: true, localResourceRoots: [] },
 			extension: undefined,
 		},
 		EDGAR_VIEW_TYPE,
@@ -59,7 +57,7 @@ export function openEdgarWebview(
 		{ group: undefined, preserveFocus: false }
 	);
 
-	webviewInput.webview.setHtml(getEdgarHtml(mermaid.js, EDGAR_METADATA));
+	webviewInput.webview.setHtml(getEdgarHtml(EDGAR_METADATA));
 
 	registerEdgarWebviewHandlers(
 		webviewInput,

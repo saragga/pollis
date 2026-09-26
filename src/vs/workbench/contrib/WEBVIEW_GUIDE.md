@@ -4,59 +4,32 @@
 
 ## ⚠️ MANDATORY: Always use `buildWebviewHtml()` — never write raw HTML in a template
 
-**Every new template file MUST call `buildWebviewHtml()` and supply only the webview-specific parts.** The scaffold owns all shared CSS, layout, boilerplate JS (helpers, right-panel logic, message handling, code-action buttons, Mermaid wiring, collapsible panes, etc.). A template that re-implements any of this is wrong.
+**Every new template file MUST call `buildWebviewHtml()` and supply only the webview-specific parts.** The scaffold owns all shared CSS, layout, boilerplate JS (helpers, right-panel logic, message handling, code-action buttons, collapsible panes, etc.). A template that re-implements any of this is wrong.
 
-### 🚀 **RECOMMENDED FOR NEW WEBVIEWS: Use `webviewScaffoldLite.ts`**
+### The scaffold: `webviewScaffold.ts`
 
-**For all new webviews (especially TOML-based ones), import from `webviewScaffoldLite.ts` instead of `webviewScaffold.ts`.** The Lite scaffold is simpler, faster, and eliminates the need for `kw()`, `fn()`, `ty()` helper functions entirely:
-
-```typescript
-import { buildWebviewHtml } from './webviewScaffoldLite.js';
-
-export function getXxxHtml(mermaidJs?: string): string {
-    return buildWebviewHtml({
-        title: 'My Webview',
-        mermaidJs,
-        defaultModel: 'foo',
-        modelsLiteral: "['foo', 'bar']",
-        togglesJs: `...`,
-        bullets: `...`,
-        decisionRows: `...`,
-        miniChartsJs: `...`,
-        codeBranchesJs: `currentPlainCode = "using Foo\\n...";`,  // Plain Julia, no kw()/fn()/ty()!
-        actionsJs: `...`,
-    });
-}
-```
-
-**Why `webviewScaffoldLite`:**
-- ✅ `codeBranchesJs` contains **plain Julia code** (no HTML building)
-- ✅ No `kw()`, `fn()`, `ty()` helper functions needed
-- ✅ Cleaner, more readable code
-- ✅ Theme-aware syntax highlighting via Monaco tokenizer (automatic)
-- ✅ Perfect match for TOML-based template generation
-- ✅ Shorter template files (~150–400 lines vs. ~300–500 with helpers)
-
-**Old `webviewScaffold.ts` is still supported** for backward compatibility with existing templates that use `kw()`/`fn()`/`ty()` spans. Do **not** use it for new work.
+There is one scaffold, `webviews/webviewScaffold.ts`. Import `buildWebviewHtml` from it and pass the webview-specific parts (`WebviewParts`):
 
 ```typescript
 import { buildWebviewHtml } from './webviewScaffold.js';
 
-export function getXxxHtml(mermaidJs?: string): string {
+export function getXxxHtml(metadata: IXxxMetadata): string {
     return buildWebviewHtml({
         title: 'My Webview',
-        mermaidJs,
         defaultModel: 'foo',
         modelsLiteral: "['foo', 'bar']",
+        chartW: 54,
         togglesJs: `...`,
         bullets: `...`,
         decisionRows: `...`,
         miniChartsJs: `...`,
-        codeBranchesJs: `...`,
+        codeBranchesJs: `if (currentModel === 'foo') { c += line('using Foo'); }`,  // plain Julia
         actionsJs: `...`,
     });
 }
 ```
+
+**Example code is plain Julia.** `codeBranchesJs` runs inside `updateCodePreview()` and appends lines to `c` with `line('...')`. After building, the scaffold re-renders every code box through the core tokenizer (a `colorize` message), so highlighting follows the user's theme automatically. The `kw()`, `fn()` and `ty()` span helpers still exist for older templates (e.g. `cviz`), but new templates do not need them. TOML-based templates generate `codeBranchesJs` from `[[codeBranches]]`; reference implementation: `yfin.template.ts` (`buildCodeBranchesJs`).
 
 A correct template file should be **~150–450 lines** — all of that content being webview-specific data (toggle buttons, bullet text, decision table rows, mini-chart SVG functions, code-branch functions, action arrays). If a template exceeds ~500 lines, it is almost certainly re-implementing scaffold boilerplate that belongs in `webviewScaffold.ts`.
 
@@ -335,19 +308,18 @@ Add `white-space: nowrap` to specific columns when their content must stay on on
 All five use `class="list-btn panel-toggle"` — they all open the right panel. None use `has-actions`.
 
 ### Learn More order — mandatory
-`Local Wikis → Notebook Tutorials → Multimedia Tutorials → Concept Map → Explore References`
+`Local Wikis → Notebook Tutorials → Multimedia Tutorials → Explore References`
 
-All five must always be present. Classes differ:
+All four must always be present. Classes differ:
 
 | Button | Class | Behaviour |
 |---|---|---|
 | Local Wikis | `panel-toggle` | Opens right panel with `.nb-card` sections (same pattern as Notebook Tutorials) |
 | Notebook Tutorials | `panel-toggle` | Opens right panel with `.nb-card` sections |
-| Multimedia Tutorials | `has-actions` | VS Code QuickPick via `openVideoList` |
-| Concept Map | `panel-toggle` | Opens right panel with an inline-SVG relationship graph (see below) |
+| Multimedia Tutorials | `panel-toggle` (scaffold) / `has-actions` (legacy) | Scaffold: two-pane right panel with Add/Edit/Remove, wired by `createVideoWiring`. Legacy templates: QuickPick via `openVideoList` |
 | Explore References | `panel-toggle` | Two-pane right panel (list + details) via `openDocs paper` → `showReferences` |
 
-> ⚠️ **Multimedia Tutorials must always be included.** It is easy to omit by mistake — the button ID is `btn-documentation` and the message command is `openVideoList` (not `openMultimedia`). Add `| { command: 'openVideoList' }` to `XxxWebviewMessage` and `case 'openVideoList'` to the handler. If no videos exist yet, `openVideoList` will show an empty QuickPick — that is acceptable.
+> ⚠️ **Multimedia Tutorials must always be included.** The button ID is `btn-documentation`. Scaffold webviews get it for free: the handler calls `createVideoWiring(webview, disposables, '<id>', xData.packages, …)` next to `createReferenceWiring`. Legacy templates post `openVideoList` (not `openMultimedia`): add `| { command: 'openVideoList' }` to `XxxWebviewMessage` and `case 'openVideoList'` to the handler. An empty video list is acceptable.
 
 ### Explore References — two-pane side-by-side layout in right panel
 
@@ -503,10 +475,6 @@ extraJs: `
 6. BibTeX copy includes visual feedback ("Copied!" text for 2 seconds)
 7. Open in Browser uses the `openInBrowser` handler from `model.handler.ts`
 
-> **Concept Map (new-layout / scaffold webviews only).** Lives entirely in `webviewScaffold.ts` (button id `btn-concept`, `panel-toggle`). It renders a **Mermaid `flowchart`** in the right panel — a genuine concept map, not a link list: a `center` node, abstract `concept` groupings, the webview's own `topic` toggles, `related` Pollis webviews and `external` resources, joined by **labelled relationship edges**. Each node carries at most one jump target — `model` (switches a toggle in the same webview, client-side `setModel`), `command` (a Pollis command id → `openTopic` message → `commandService.executeCommand`), or `url` (external → existing `openUrl`); `concept`/`center` nodes have none. Mermaid is loaded **lazily** on first open (no cost until used). The data comes from `IConceptMap` (`center` + `nodes` + `edges`, see `model.types.ts`) on the webview metadata; the handler posts it via `{ command: 'conceptMap', map }` in its `setTimeout`. **A webview with no `conceptMap` (or no Mermaid URI) shows a "Coming soon!" stub — that is acceptable.**
->
-> **Mermaid wiring (per webview that wants a live map).** Mermaid (`window.mermaid`, v11) is vendored at `vs/workbench/contrib/mermaid/dist/mermaid.min.js` with helper `getMermaidUris()` (mirrors `getKatexUris`). In the command: `const mermaid = getMermaidUris();` add `localResourceRoots: [mermaid.distRoot]` to `contentOptions`, and pass `mermaid.js` into the template (`getXxxHtml(mermaid.js)` → `buildWebviewHtml({ …, mermaidJs })`). The scaffold CSP already allows `https://*.vscode-resource.vscode-cdn.net` for `script-src`. Add `| { command: 'openTopic'; target: string }` to `XxxWebviewMessage` and a `case 'openTopic'` to the handler only when the map has `command` nodes. Reference implementation: `cviz` (command + template + handler + data). Legacy `columns-grid` webviews (e.g. the Neural Networks family) do **not** carry Concept Map.
-
 ### Button codicons — copy from existing templates, do not invent
 
 | Button | Codicon ID |
@@ -519,13 +487,12 @@ extraJs: `
 | Local Wikis | `book` |
 | Notebook Tutorials | `notebook` |
 | Multimedia Tutorials | `play-circle` |
-| Concept Map | custom node-graph glyph (three connected circles — see `webviewScaffold.ts`) |
 | Explore References | `link` |
 
 > ⚠️ **Do not use a partial or custom SVG path for the Interpret button.** The `lightbulb-sparkle` codicon requires the full multi-segment path from the codicon library. Copying only the sparkle segment (as happened with the `M8.199 2.782…` path) renders as an invisible dot in the upper-right corner of the 16×16 viewBox.
 
-### Learn More — always five buttons
-See table above. Four use `class="list-btn panel-toggle"` (right panel): Local Wikis, Notebook Tutorials, Concept Map, and Explore References. One uses `class="list-btn has-actions"` (QuickPick): Multimedia Tutorials only. Concept Map is provided by the shared scaffold for new-layout webviews; legacy `columns-grid` webviews keep the original four.
+### Learn More — always four buttons
+See table above. In scaffold webviews all four use `class="list-btn panel-toggle"` (right panel). Legacy templates use `class="list-btn has-actions"` (QuickPick) for Multimedia Tutorials only.
 
 ### Form inputs
 - Always put all inputs into a single `<div class="form-row">` — never separate rows unless there are many (>4) parameters.
@@ -1014,7 +981,7 @@ Every webview belongs to exactly one wiki family. The family determines which 6 
 
 ---
 
-#### Family A — Infer / Simulate / Optimise webviews
+#### Family A — Model / Simulate / Optimise webviews
 
 Used for all statistical, machine-learning, simulation, and optimisation webviews (the vast majority of Pollis webviews).
 
@@ -1497,7 +1464,7 @@ export type XxxWebviewMessage =
 - [ ] HTML: collapsible section layout, subtitle (`methods-list` bullets), toggle buttons, all inputs in one `form-row`
 - [ ] HTML: Next Steps inside `<div class="section" id="sec-next">` with `section-toggle` + `section-body`; all five buttons have `class="list-btn panel-toggle"`
 - [ ] HTML: Learn More inside `<div class="section" id="sec-learn">` with `section-toggle` + `section-body`; Local Wikis, Notebook Tutorials, Explore References = `panel-toggle`; Multimedia Tutorials = `has-actions`
-- [ ] HTML: All Learn More buttons present (Local Wikis, Notebook Tutorials, Multimedia Tutorials, Explore References; + Concept Map in scaffold/new-layout webviews)
+- [ ] HTML: All Learn More buttons present (Local Wikis, Notebook Tutorials, Multimedia Tutorials, Explore References)
 - [ ] JS: **grep the template for `\'` — any occurrence silently kills the entire webview** (see §9)
 - [ ] JS: boilerplate helpers (`esc`, `kw`, `fn`, `ty`, `line`, `cline`, `blank`, `val`)
 - [ ] JS: `hideRightPanel`, `renderRightList`, `renderRightCode`, `showRightPanel`
@@ -1636,14 +1603,13 @@ document.getElementById('eq-toggle').addEventListener('click', function() {
 
 ## 16. Illustration pane (generalised collapsible pane)
 
-The **Illustration pane** is the standard collapsible pane for any supplementary visual content. It generalises the equations pane and supports four content types:
+The **Illustration pane** is the standard collapsible pane for any supplementary visual content. It generalises the equations pane and supports three content types:
 
 | Type | Content | Mechanism |
 |---|---|---|
 | `html` | Inline HTML — Unicode equations, rich text, tables | Direct `innerHTML` |
 | `svg` | Inline SVG diagram — flowcharts, concept maps, comparison diagrams | Direct `innerHTML` |
 | `image` | Bundled PNG/GIF — photos, animations, convergence plots | `asWebviewUri()` + `<img>` |
-| `mermaid` | Mermaid diagram source | Mermaid.js (see note below) |
 
 **Single-model webviews:** pane starts collapsed; content is rendered lazily on first open.
 **Multi-model webviews:** pane starts **open** (no `collapsed` class); `renderIllustration()` is called inside `setModel()` every time the model changes, so content always reflects the active model.
@@ -1834,15 +1800,11 @@ Place media files at `media/illustrations/<topic>/<filename>.<ext>`.
 
 Animated GIFs play automatically in the webview — no video controls or JS needed.
 
-### Type: Mermaid diagrams
-
-**Available now.** Mermaid v11 is vendored at `vs/workbench/contrib/mermaid/dist/mermaid.min.js` (a self-contained classic script that assigns `window.mermaid`) with helper `getMermaidUris()` in `vs/workbench/contrib/mermaid/browser/mermaidHelper.ts` — same pattern as KaTeX (§15). Load it via `localResourceRoots: [getMermaidUris().distRoot]` and a `<script src>` (the scaffold loads it lazily). `mermaid.initialize({ startOnLoad: false, securityLevel: 'loose', theme: <dark?'dark':'default'> })` then `await mermaid.render(id, def)`; call `out.bindFunctions(container)` after injecting `out.svg` so `click … call fn()` directives work. The **Concept Map** Learn More panel is the reference use (see §"Learn More order"). The build copies the dist via the `out-build/vs/workbench/contrib/mermaid/dist/**` glob in `build/gulpfile.vscode.ts`; during dev the watch does not copy it, so `cp` it into `out/` once (like media). The markdown preview's own copy under `extensions/mermaid-chat-features/node_modules/mermaid/dist/` is the extension's, not for workbench use — keep the vendored workbench copy independent.
-
 ### Checklist additions (append to §13)
 
 - [ ] Illustration pane(s): decide count — zero, one, or more; give each a unique `id` and descriptive label
 - [ ] Use `illustrationLabel` on `buildWebviewHtml` (or change the text node directly) — never leave "Illustration" unless it genuinely describes the pane's purpose
-- [ ] Choose content type per pane (svg / image / mermaid)
+- [ ] Choose content type per pane (html / svg / image)
 - [ ] If SVG: use `currentColor` for all strokes and fills
 - [ ] If SVG: use `viewBox="-20 0 360 180"` and `max-width:480px` — prevents caption clipping (see §9)
 - [ ] If image: add `img-src vscode-resource: data:;` to CSP; pass URI via `getXxxHtml(imageUri)` parameter; place file under `media/illustrations/`
@@ -2347,7 +2309,7 @@ The permanent fix is to have the build watch task running. The `out/` patch is a
 
 ## 21. Julia package policy — no DataFrames.jl
 
-**Never reference `DataFrames.jl` in any webview** — not in example code, notebooks, wiki pages, concept maps, package lists, or references. Use the **Tables.jl** interface instead:
+**Never reference `DataFrames.jl` in any webview** — not in example code, notebooks, wiki pages, package lists, or references. Use the **Tables.jl** interface instead:
 
 - Row iteration: `XLSX.eachtablerow(ws)` (or equivalent Tables.jl-compatible iterator)
 - Collecting rows: `[NamedTuple(row) for row in iterator]`
@@ -2380,7 +2342,6 @@ Every field visible in the webview is declared in the TOML:
 | `[[notebookSections]]` / `[[notebookSections.notebooks]]` | `IModelNotebookSection` | Learn More → Notebooks |
 | `[[wikis]]` | `IModelWiki` | Learn More → Local Wikis |
 | `[[references]]` | `IModelReference` | Learn More → Explore References |
-| `[conceptMap]` + `[[conceptMap.nodes]]` + `[[conceptMap.edges]]` | `IConceptMap` | Learn More → Concept Map |
 | `[[bullets]]` | `IModelBullet` | Subtitle bullet list |
 | `[[decisionRows]]` | `IModelDecisionRow` | Decision table |
 | `[miniCharts.modelName]` | `IModelMiniChart` | Illustration mini-charts |
@@ -2420,7 +2381,7 @@ npm run gulp compile-toml
 The parser (`build/lib/toml-to-ts.ts`) supports the subset of TOML used by Pollis:
 
 - `[section]` and `[[array-of-tables]]`
-- Nested array-of-tables: `[[notebookSections.notebooks]]`, `[[actionGroups.actions]]`, `[[conceptMap.nodes]]`
+- Nested array-of-tables: `[[notebookSections.notebooks]]`, `[[actionGroups.actions]]`
 - Multiline strings: triple single-quotes `'''` (literal, no escapes)
 - Inline arrays: `models = ["write", "read"]`
 - Booleans, integers, floats, single- and double-quoted strings

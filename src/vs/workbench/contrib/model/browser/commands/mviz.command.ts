@@ -10,7 +10,6 @@ import { INotificationService } from '../../../../../platform/notification/commo
 import { ICommandService } from '../../../../../platform/commands/common/commands.js';
 import { IQuickInputService } from '../../../../../platform/quickinput/common/quickInput.js';
 import { IWebviewWorkbenchService } from '../../../webviewPanel/browser/webviewWorkbenchService.js';
-import { getMermaidUris } from '../../../mermaid/browser/mermaidHelper.js';
 import { IMvizMetadata } from '../common/mviz.types.js';
 import { IModelReference, IModelNotebookSection } from '../common/model.types.js';
 import { INotebookEditorModelResolverService } from '../../../notebook/common/notebookEditorModelResolverService.js';
@@ -131,38 +130,6 @@ const MVIZ_METADATA: IMvizMetadata = {
 			{ name: 'Heatmap',              description: 'Matrix of values encoded as colour intensity',                        file: 'mviz/heatmap.md',          bundled: true },
 		],
 		references: MVIZ_REFERENCES,
-		conceptMap: {
-			center: 'Exploring Many Variables',
-			nodes: [
-				{ id: 'root', label: 'Exploring Many Variables', kind: 'center' },
-				{ id: 'q_pair', label: 'Pairwise relationships', kind: 'concept' },
-				{ id: 'q_highdim', label: 'High-dimensional patterns', kind: 'concept' },
-				{ id: 'q_extra', label: 'Extra dimensions at once', kind: 'concept' },
-				{ id: 'c_corr', label: 'Correlation structure', kind: 'concept' },
-				{ id: 'corner', label: 'Corner Plot', kind: 'topic', model: 'corner' },
-				{ id: 'parallel', label: 'Parallel Coordinates', kind: 'topic', model: 'parallel' },
-				{ id: 'bubble', label: 'Bubble Chart', kind: 'topic', model: 'bubble' },
-				{ id: 'heatmap', label: 'Heatmap', kind: 'topic', model: 'heatmap' },
-				{ id: 'r_cviz', label: 'Core Statistical Plots', kind: 'related', command: 'chiara.explore.dvcs.scatter' },
-				{ id: 'r_dcmp', label: 'Distribution Comparison', kind: 'related', command: 'chiara.explore.dvdist.correlogram' },
-				{ id: 'r_gsviz', label: 'Graph and Spatial', kind: 'related', command: 'chiara.explore.dvgs.network' },
-				{ id: 'ext', label: 'PairPlots.jl', kind: 'external', url: 'https://github.com/sefffal/PairPlots.jl' },
-			],
-			edges: [
-				{ from: 'root', to: 'q_pair', label: 'asks about' },
-				{ from: 'root', to: 'q_highdim', label: 'asks about' },
-				{ from: 'root', to: 'q_extra', label: 'asks about' },
-				{ from: 'q_pair', to: 'corner', label: 'shown by' },
-				{ from: 'q_pair', to: 'c_corr', label: 'summarised by' },
-				{ from: 'c_corr', to: 'heatmap', label: 'as a matrix in' },
-				{ from: 'q_highdim', to: 'parallel', label: 'traced by' },
-				{ from: 'q_extra', to: 'bubble', label: 'size + colour in' },
-				{ from: 'q_pair', to: 'r_dcmp', label: 'per pair in' },
-				{ from: 'q_highdim', to: 'r_gsviz', label: 'as a graph in' },
-				{ from: 'root', to: 'r_cviz', label: 'two variables in' },
-				{ from: 'root', to: 'ext', label: 'plotted with' },
-			],
-		},
 	},
 };
 
@@ -183,12 +150,11 @@ export function openMvizWebview(
 	workspaceContextService: IWorkspaceContextService,
 	initialModel?: string,
 ): void {
-	const mermaid = getMermaidUris();
 	const webviewInput = webviewWorkbenchService.openWebview(
 		{
 			title: MVIZ_TITLE,
 			options: { retainContextWhenHidden: true },
-			contentOptions: { allowScripts: true, localResourceRoots: [mermaid.distRoot] },
+			contentOptions: { allowScripts: true, localResourceRoots: [] },
 			extension: undefined,
 		},
 		MVIZ_VIEW_TYPE,
@@ -197,7 +163,7 @@ export function openMvizWebview(
 		{ group: undefined, preserveFocus: false }
 	);
 
-	webviewInput.webview.setHtml(getMvizHtml(mermaid.js));
+	webviewInput.webview.setHtml(getMvizHtml());
 
 	registerMvizWebviewHandlers(
 		webviewInput,
