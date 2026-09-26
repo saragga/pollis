@@ -62,6 +62,24 @@ readonly sourceUrl?: string;     // next to licenseUrl
 
 Replaced with the Pollis icon. **After a rebase:** restore the Pollis `.icns` file.
 
+### 1.4 Welcome page
+
+**Files:** `src/vs/workbench/contrib/welcomeGettingStarted/browser/gettingStartedService.ts`, `…/browser/gettingStarted.ts`
+
+- **Excluded walkthroughs.** `POLLIS_EXCLUDED_WALKTHROUGHS` (compared lower-cased by `isPollisExcludedWalkthrough`) lists walkthroughs that are never registered: the built-in `Setup` ("Get started with VS Code") and the Copilot Chat extension's `GitHub.copilot-chat#copilotWelcome`. Both registration paths skip them: `registerWalkthroughs()` for built-ins and the extension-contribution loop for extensions. `SetupAccessibility` names `Setup` as its `next`; with `Setup` gone it just shows no "Next Section" button.
+- **No "Overview" heading.** Upstream's `buildOverviewSection()` produced only an empty "Overview" heading under the walkthroughs; it was removed, so the right column shows the walkthrough list alone.
+
+Previously these only looked absent in the dev build because they had been hidden with × in the `code-oss-dev` profile; the packaged app showed them. **After a rebase:** re-add the exclusion set and both early returns in `gettingStartedService.ts`, and drop the Overview section again in `gettingStarted.ts`.
+
+### 1.5 Copilot Chat not shipped; AI features off by default
+
+**Files:** `build/gulpfile.vscode.ts`, `src/vs/workbench/contrib/chat/browser/chat.contribution.ts`
+
+- **Copilot Chat is not packaged.** `extensions/copilot` is already excluded from the general extension list (`excludedExtensions` in `build/lib/extensions.ts`); it only entered the app through `compileCopilotExtensionBuildTask` and `prepareBuiltInCopilotExtensionShims`. Both are removed from `gulpfile.vscode.ts` (the import, the two task series, and the shim step in `copyCopilotNativeDepsTask`), which saves ~416 MB. `copyCopilotNativeDeps` and `getCopilotExcludeFilter` stay, because core's agent host uses the `@github/copilot` SDK from the root `node_modules`. `gulpfile.reh.ts` (remote server) is untouched. The dev launcher `scripts/code.sh` already passes `--disable-extension=GitHub.copilot-chat`.
+- **AI features off by default.** The `chat.disableAIFeatures` default is `true` (was `false`), which hides the chat view, the title-bar chat control and other AI entry points. Users can turn AI back on in Settings. The default is set in the setting's registration because `product.json` `configurationDefaults` is not read by anything (its `extensions.verifySignature` entry has no effect either).
+
+**After a rebase:** remove `compileCopilotExtensionBuildTask` and the shim preparation from `gulpfile.vscode.ts` again (new upstream Copilot build steps may appear; the packaged `Contents/Resources/app/extensions/` must not contain `copilot`), and set the `chat.disableAIFeatures` default to `true` again.
+
 ---
 
 ## 2. About Dialog
@@ -571,6 +589,8 @@ this._overlayLayout.reapplyLayoutStyles();   // re-applies anchor styles, cleari
 When pulling a new upstream VS Code version, work through this list in order:
 
 - [ ] **Branding** — restore `product.json` fields (§1.1, §1.2), restore Pollis icon (§1.3)
+- [ ] **Welcome page** — re-add the excluded walkthroughs (`Setup`, Copilot welcome) and remove the empty Overview heading (§1.4)
+- [ ] **Copilot and AI** — keep Copilot Chat out of the packaged app in `build/gulpfile.vscode.ts` and default `chat.disableAIFeatures` to `true` in `chat.contribution.ts` (§1.5)
 - [ ] **Product interface** — re-add `pollisVersion`, `poweredBy`, `licenseName` and `sourceUrl` to `IProductConfiguration` (§1.2)
 - [ ] **About dialog** — re-add `createNativeAboutDialogDetails` to `dialog.ts`, and the licence + source lines to `createBrowserAboutDialogDetails` (§2)
 - [ ] **Menus open to extensions** — re-add the `menuBar/*` Pollis entries to `menusExtensionPoint.ts` (§3.5)

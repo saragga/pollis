@@ -115,6 +115,16 @@ export interface IWalkthroughsService {
 }
 
 // Show walkthrough as "new" for 7 days after first install
+/**
+ * Pollis: walkthroughs that are never registered, by category id. The built-in VS Code setup
+ * walkthrough and the Copilot Chat welcome do not apply to Pollis. Ids are compared lower-cased.
+ */
+const POLLIS_EXCLUDED_WALKTHROUGHS = new Set(['setup', 'github.copilot-chat#copilotwelcome']);
+
+function isPollisExcludedWalkthrough(categoryId: string): boolean {
+	return POLLIS_EXCLUDED_WALKTHROUGHS.has(categoryId.toLowerCase());
+}
+
 const DAYS = 24 * 60 * 60 * 1000;
 const NEW_WALKTHROUGH_TIME = 7 * DAYS;
 
@@ -182,6 +192,9 @@ export class WalkthroughsService extends Disposable implements IWalkthroughsServ
 	private registerWalkthroughs() {
 
 		walkthroughs.forEach(async (category, index) => {
+			if (isPollisExcludedWalkthrough(category.id)) {
+				return;
+			}
 
 			this._registerWalkthrough({
 				...category,
@@ -320,6 +333,9 @@ export class WalkthroughsService extends Disposable implements IWalkthroughsServ
 		let sectionToOpenIndex = Math.min(); // '+Infinity';
 		await Promise.all(extension.contributes?.walkthroughs?.map(async (walkthrough, index) => {
 			const categoryID = extension.identifier.value + '#' + walkthrough.id;
+			if (isPollisExcludedWalkthrough(categoryID)) {
+				return;
+			}
 
 			const isNewlyInstalled = !this.metadata.get(categoryID);
 			if (isNewlyInstalled) {

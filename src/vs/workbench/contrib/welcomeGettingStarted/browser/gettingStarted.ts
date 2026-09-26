@@ -885,7 +885,6 @@ export class GettingStartedPage extends EditorPane {
 
 		const startList = this.buildStartList();
 		const announcementsSection = this.buildAnnouncementsSection();
-		const overviewSection = this.buildOverviewSection();
 		const gettingStartedList = this.buildGettingStartedWalkthroughsList();
 
 		const footerChildren: HTMLElement[] = [];
@@ -906,7 +905,8 @@ export class GettingStartedPage extends EditorPane {
 		const layoutLists = () => {
 			if (gettingStartedList.itemCount) {
 				this.container.classList.remove('noWalkthroughs');
-				reset(rightColumn, gettingStartedList.getDomElement(), overviewSection);
+				// Pollis: upstream's "Overview" section is only a heading with no content, so it is not shown.
+				reset(rightColumn, gettingStartedList.getDomElement());
 			}
 			else {
 				this.container.classList.add('noWalkthroughs');
@@ -982,12 +982,6 @@ export class GettingStartedPage extends EditorPane {
 	private buildAnnouncementsSection(): HTMLElement {
 		return $('.announcements-section', {},
 			$('h2.section-header', {}, localize('alertsAndAnnouncements', "Alerts and Announcements")),
-		);
-	}
-
-	private buildOverviewSection(): HTMLElement {
-		return $('.overview-section', {},
-			$('h2.section-header', {}, localize('overview', "Overview")),
 		);
 	}
 
