@@ -8,7 +8,7 @@ import { IXlsxMetadata } from '../common/xlsx.types.js';
 
 /** Escape a string for safe embedding in a JS single-quoted string literal. */
 function jsEscape(s: string): string {
-	return s.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\r?\n/g, '\\n');
+	return s.replace(/\\/g, '\\\\').replace(/'/g, '\\\'').replace(/\r?\n/g, '\\n');
 }
 
 /** Escape HTML special characters. */
@@ -117,7 +117,7 @@ export function getXlsxHtml(mermaidJs: string | undefined, metadata: IXlsxMetada
 		mermaidJs,
 		wideLayout: true,
 		defaultModel: 'write',
-		modelsLiteral: "['write', 'read', 'formula']",
+		modelsLiteral: `['write', 'read', 'formula']`,
 		chartW: 54,
 		illusCollapsed: true,
 		illustrationLabel: 'Illustration',

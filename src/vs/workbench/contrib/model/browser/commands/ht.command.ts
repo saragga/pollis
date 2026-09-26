@@ -26,7 +26,7 @@ const HT_METADATA: IHtMetadata = {
 			{ name: 'Parametric Tests', file: 'ht/tutorial-01-parametric.ipynb', bundled: true, description: 'z-test, t-test, F-test, ANOVA and chi-squared tests' },
 			{ name: 'Nonparametric Tests', file: 'ht/tutorial-02-nonparametric.ipynb', bundled: true, description: 'Rank-based, permutation, and distribution-free tests' },
 			{ name: 'Time-Series Tests', file: 'ht/tutorial-03-timeseries.ipynb', bundled: true, description: 'Stationarity, autocorrelation, and forecast evaluation tests' },
-			{ name: 'Multivariate Tests', file: 'ht/tutorial-04-multivariate.ipynb', bundled: true as const, description: "Hotelling's T², covariance equality, and correlation tests" },
+			{ name: 'Multivariate Tests', file: 'ht/tutorial-04-multivariate.ipynb', bundled: true as const, description: 'Hotelling\'s T², covariance equality, and correlation tests' },
 		],
 		wikis: [
 			{ name: 'Overview',        file: 'ht/overview.md',        bundled: true },

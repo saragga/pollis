@@ -18,8 +18,7 @@ import { IThemeService } from '../../../../../platform/theme/common/themeService
 import { tokenizeToString } from '../../../../../editor/common/languages/textToHtmlTokenizer.js';
 import { TokenizationRegistry } from '../../../../../editor/common/languages.js';
 import { generateTokensCSSForColorMap } from '../../../../../editor/common/languages/supports/tokenization.js';
-import { IKgmMetadata, KgmWebviewMessage } from '../common/kgm.types.js';
-import type { IKgmApiModel } from '../common/kgm.types.js';
+import { IKgmMetadata, KgmWebviewMessage, IKgmApiModel } from '../common/kgm.types.js';
 import { IRequestService, asJson } from '../../../../../platform/request/common/request.js';
 import { CancellationToken } from '../../../../../base/common/cancellation.js';
 
@@ -42,6 +41,7 @@ const KGM_API_KEY = {
 import { Event } from '../../../../../base/common/event.js';
 import { IUntitledTextResourceEditorInput } from '../../../../common/editor.js';
 import { CellEditType, CellKind } from '../../../notebook/common/notebookCommon.js';
+import { hasKey } from '../../../../../base/common/types.js';
 
 export function registerKgmWebviewHandlers(
 	webviewInput: ReturnType<IWebviewWorkbenchService['openWebview']>,
@@ -83,7 +83,7 @@ export function registerKgmWebviewHandlers(
 
 	setTimeout(() => {
 		const packages = kgmData.packages.map(pkg => ({ name: pkg.name, url: pkg.github }));
-		const hasReferences = kgmData.references.some(r => !('separator' in r));
+		const hasReferences = kgmData.references.some(r => !hasKey(r, { separator: true }));
 		const notebookSections = kgmData.notebookSections.map(s => ({
 			label: s.label,
 			notebooks: s.notebooks.map(n => ({ name: n.name, file: n.bundled ? n.file : '', description: n.description })),
@@ -91,7 +91,7 @@ export function registerKgmWebviewHandlers(
 		const wikiSections: Array<{ label: string; wikis: Array<{ name: string; file: string; description?: string }> }> = [];
 		let currentWikiSection: { label: string; wikis: Array<{ name: string; file: string; description?: string }> } = { label: '', wikis: [] };
 		for (const w of kgmData.wikis) {
-			if ('separator' in w) {
+			if (hasKey(w, { separator: true })) {
 				wikiSections.push(currentWikiSection);
 				currentWikiSection = { label: w.label ?? '', wikis: [] };
 			} else {
@@ -120,7 +120,7 @@ export function registerKgmWebviewHandlers(
 		switch (msg.command) {
 			case 'openDocs':
 				if (msg.target === 'paper') {
-					const papers = kgmData.references.filter((r): r is import('../common/model.types.js').IModelPaper => !('separator' in r));
+					const papers = kgmData.references.filter((r): r is import('../common/model.types.js').IModelPaper => !hasKey(r, { separator: true }));
 					webviewInput.webview.postMessage({ command: 'showReferences', references: papers });
 				} else if (msg.target === 'repository') {
 					try {
@@ -131,7 +131,7 @@ export function registerKgmWebviewHandlers(
 				}
 				break;
 			case 'openReference': {
-				const papers = kgmData.references.filter((r): r is import('../common/model.types.js').IModelPaper => !('separator' in r));
+				const papers = kgmData.references.filter((r): r is import('../common/model.types.js').IModelPaper => !hasKey(r, { separator: true }));
 				const paper = papers.find(p => p.title === msg.id);
 				if (paper) {
 					const url = paper.doi ? `https://doi.org/${paper.doi}` : paper.url;

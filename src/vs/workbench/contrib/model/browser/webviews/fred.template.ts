@@ -8,7 +8,7 @@ import { IFredMetadata } from '../common/fred.types.js';
 
 /** Escape a string for safe embedding in a JS single-quoted string literal. */
 function jsEscape(s: string): string {
-	return s.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\r?\n/g, '\\n');
+	return s.replace(/\\/g, '\\\\').replace(/'/g, '\\\'').replace(/\r?\n/g, '\\n');
 }
 
 /** Escape HTML special characters. */
@@ -115,7 +115,7 @@ export function getFredHtml(mermaidJs: string | undefined, metadata: IFredMetada
 		mermaidJs,
 		wideLayout: true,
 		defaultModel: 'growth',
-		modelsLiteral: "['growth', 'inflation', 'labor', 'rates', 'money']",
+		modelsLiteral: `['growth', 'inflation', 'labor', 'rates', 'money']`,
 		chartW: 54,
 		illusCollapsed: true,
 		illustrationLabel: 'Illustration',

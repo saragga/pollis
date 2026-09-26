@@ -59,7 +59,7 @@ export function registerCtsvWebviewHandlers(
 				break;
 			case 'openNotebookList':
 				try {
-					await openNotebookList(ctsvData.notebooks, quickInputService, openerService, editorService)
+					await openNotebookList(ctsvData.notebooks, quickInputService, openerService, editorService);
 				} finally {
 					webviewInput.webview.postMessage({ command: 'actionDone' });
 				}

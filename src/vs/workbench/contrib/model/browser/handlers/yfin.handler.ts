@@ -26,6 +26,7 @@ import { Event } from '../../../../../base/common/event.js';
 import { IUntitledTextResourceEditorInput } from '../../../../common/editor.js';
 import { CellEditType, CellKind } from '../../../notebook/common/notebookCommon.js';
 import { openWikiByFile, openNotebookByFile, openPackageItem, openVideoList, openInBrowser, autoSelectJuliaKernel, createPackageStatusWiring } from './model.handler.js';
+import { hasKey } from '../../../../../base/common/types.js';
 
 export function registerYfinWebviewHandlers(
 	webviewInput: ReturnType<IWebviewWorkbenchService['openWebview']>,
@@ -61,7 +62,7 @@ export function registerYfinWebviewHandlers(
 
 	setTimeout(() => {
 		const packages = yfinData.packages.map(pkg => ({ name: pkg.name, url: pkg.github }));
-		const hasReferences = yfinData.references.some(r => !('separator' in r));
+		const hasReferences = yfinData.references.some(r => !hasKey(r, { separator: true }));
 		const notebookSections = yfinData.notebookSections.map(s => ({
 			label: s.label,
 			notebooks: s.notebooks.map(n => ({ name: n.name, file: n.bundled ? n.file : '', description: n.description })),
@@ -69,7 +70,7 @@ export function registerYfinWebviewHandlers(
 		const wikiSections: Array<{ label: string; wikis: Array<{ name: string; file: string; description?: string }> }> = [];
 		let currentWikiSection: { label: string; wikis: Array<{ name: string; file: string; description?: string }> } = { label: '', wikis: [] };
 		for (const w of yfinData.wikis) {
-			if ('separator' in w) {
+			if (hasKey(w, { separator: true })) {
 				wikiSections.push(currentWikiSection);
 				currentWikiSection = { label: w.label ?? '', wikis: [] };
 			} else {
@@ -93,7 +94,7 @@ export function registerYfinWebviewHandlers(
 		switch (msg.command) {
 			case 'openDocs':
 				if (msg.target === 'paper') {
-					const papers = yfinData.references.filter((r): r is import('../common/model.types.js').IModelPaper => !('separator' in r));
+					const papers = yfinData.references.filter((r): r is import('../common/model.types.js').IModelPaper => !hasKey(r, { separator: true }));
 					webviewInput.webview.postMessage({ command: 'showReferences', references: papers });
 				} else if (msg.target === 'repository') {
 					try {
@@ -104,7 +105,7 @@ export function registerYfinWebviewHandlers(
 				}
 				break;
 			case 'openReference': {
-				const papers = yfinData.references.filter((r): r is import('../common/model.types.js').IModelPaper => !('separator' in r));
+				const papers = yfinData.references.filter((r): r is import('../common/model.types.js').IModelPaper => !hasKey(r, { separator: true }));
 				const paper = papers.find(p => p.title === msg.id);
 				if (paper) {
 					const url = paper.doi ? `https://doi.org/${paper.doi}` : paper.url;

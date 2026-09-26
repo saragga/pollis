@@ -13,6 +13,7 @@ import { ICommandService } from '../../../../../platform/commands/common/command
 import { IWebviewWorkbenchService } from '../../../webviewPanel/browser/webviewWorkbenchService.js';
 import { IPplMetadata, PplWebviewMessage } from '../common/ppl.types.js';
 import { openWikiList, openWikiByFile, openNotebookByFile, openReferenceList, openPackageItem, openVideoList, openInBrowser } from './model.handler.js';
+import { hasKey } from '../../../../../base/common/types.js';
 
 export function registerPplWebviewHandlers(
 	webviewInput: ReturnType<IWebviewWorkbenchService['openWebview']>,
@@ -29,7 +30,7 @@ export function registerPplWebviewHandlers(
 
 	setTimeout(() => {
 		const packages = data.packages.map(pkg => ({ name: pkg.name, url: pkg.github }));
-		const hasReferences = data.references.some(r => !('separator' in r));
+		const hasReferences = data.references.some(r => !hasKey(r, { separator: true }));
 		const sections = data.notebookSections.map(s => ({
 			label: s.label,
 			notebooks: s.notebooks.map(n => ({ name: n.name, file: n.bundled ? n.file : '', description: n.description })),

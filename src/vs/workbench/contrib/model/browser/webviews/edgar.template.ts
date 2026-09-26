@@ -8,7 +8,7 @@ import { IEdgarMetadata } from '../common/edgar.types.js';
 
 /** Escape a string for safe embedding in a JS single-quoted string literal. */
 function jsEscape(s: string): string {
-	return s.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\r?\n/g, '\\n');
+	return s.replace(/\\/g, '\\\\').replace(/'/g, '\\\'').replace(/\r?\n/g, '\\n');
 }
 
 /** Escape HTML special characters. */
@@ -115,7 +115,7 @@ export function getEdgarHtml(mermaidJs: string | undefined, metadata: IEdgarMeta
 		mermaidJs,
 		wideLayout: true,
 		defaultModel: 'submissions',
-		modelsLiteral: "['submissions', 'facts', 'concept', 'frames', 'search']",
+		modelsLiteral: `['submissions', 'facts', 'concept', 'frames', 'search']`,
 		chartW: 54,
 		illusCollapsed: true,
 		illustrationLabel: 'Illustration',

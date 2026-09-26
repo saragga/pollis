@@ -13,6 +13,7 @@ import { ICommandService } from '../../../../../platform/commands/common/command
 import { IWebviewWorkbenchService } from '../../../webviewPanel/browser/webviewWorkbenchService.js';
 import { ISproMetadata, SproWebviewMessage } from '../common/spro.types.js';
 import { openWikiByFile, openNotebookByFile, openPackageItem, openReferenceList, openVideoList, openInBrowser } from './model.handler.js';
+import { hasKey } from '../../../../../base/common/types.js';
 
 export function registerSproWebviewHandlers(
 	webviewInput: ReturnType<IWebviewWorkbenchService['openWebview']>,
@@ -30,7 +31,7 @@ export function registerSproWebviewHandlers(
 
 	setTimeout(() => {
 		const packages = sproData.packages.map(pkg => ({ name: pkg.name, url: pkg.github }));
-		const hasReferences = sproData.references.some(r => !('separator' in r));
+		const hasReferences = sproData.references.some(r => !hasKey(r, { separator: true }));
 		const notebookSections = sproData.notebookSections.map(s => ({
 			label: s.label,
 			notebooks: s.notebooks.map(n => ({ name: n.name, file: n.bundled ? n.file : '', description: n.description })),
@@ -38,7 +39,7 @@ export function registerSproWebviewHandlers(
 		const wikiSections: Array<{ label: string; wikis: Array<{ name: string; file: string; description?: string }> }> = [];
 		let currentWikiSection: { label: string; wikis: Array<{ name: string; file: string; description?: string }> } = { label: '', wikis: [] };
 		for (const w of sproData.wikis) {
-			if ('separator' in w) {
+			if (hasKey(w, { separator: true })) {
 				wikiSections.push(currentWikiSection);
 				currentWikiSection = { label: w.label ?? '', wikis: [] };
 			} else {

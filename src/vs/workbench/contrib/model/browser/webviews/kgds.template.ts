@@ -8,7 +8,7 @@ import { IKgdsMetadata } from '../common/kgds.types.js';
 
 /** Escape a string for safe embedding in a JS single-quoted string literal. */
 function jsEscape(s: string): string {
-	return s.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\r?\n/g, '\\n');
+	return s.replace(/\\/g, '\\\\').replace(/'/g, '\\\'').replace(/\r?\n/g, '\\n');
 }
 
 /** Escape HTML special characters. */
@@ -355,7 +355,7 @@ export function getKgdsHtml(mermaidJs: string | undefined, metadata: IKgdsMetada
 		mermaidJs,
 		wideLayout: true,
 		defaultModel: 'browse',
-		modelsLiteral: "['browse', 'info', 'files', 'download', 'load']",
+		modelsLiteral: `['browse', 'info', 'files', 'download', 'load']`,
 		chartW: 54,
 		illusCollapsed: false,
 		illustrationLabel: metadata.kgds.explore?.label ?? 'Illustration',

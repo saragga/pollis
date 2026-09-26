@@ -55,7 +55,7 @@ export function registerGlmmWebviewHandlers(
 				break;
 			case 'openNotebookList':
 				try {
-					await openNotebookList(glmmData.notebooks, quickInputService, openerService, editorService)
+					await openNotebookList(glmmData.notebooks, quickInputService, openerService, editorService);
 				} finally {
 					webviewInput.webview.postMessage({ command: 'actionDone' });
 				}

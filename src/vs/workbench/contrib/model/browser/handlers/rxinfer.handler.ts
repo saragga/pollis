@@ -13,6 +13,7 @@ import { ICommandService } from '../../../../../platform/commands/common/command
 import { IWebviewWorkbenchService } from '../../../webviewPanel/browser/webviewWorkbenchService.js';
 import { IRxinferMetadata, RxinferWebviewMessage } from '../common/rxinfer.types.js';
 import { openWikiList, openWikiByFile, openNotebookList, openNotebookByFile, openPackageItem, openVideoList, openReferenceList, buildPaperLinks, openInBrowser } from './model.handler.js';
+import { hasKey } from '../../../../../base/common/types.js';
 
 export function registerRxinferWebviewHandlers(
 	webviewInput: ReturnType<IWebviewWorkbenchService['openWebview']>,
@@ -31,7 +32,7 @@ export function registerRxinferWebviewHandlers(
 	setTimeout(() => {
 		const packages = rxinferData.packages.map(pkg => ({ name: pkg.name, url: pkg.github }));
 		const papers = buildPaperLinks(rxinferData.packages);
-		const hasReferences = rxinferData.references.some(r => !('separator' in r));
+		const hasReferences = rxinferData.references.some(r => !hasKey(r, { separator: true }));
 		const sections = rxinferData.notebookSections.map(s => ({
 			label: s.label,
 			notebooks: s.notebooks.map(n => ({ name: n.name, file: n.bundled ? n.file : '', description: n.description })),

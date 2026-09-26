@@ -14,6 +14,7 @@ import { IWebviewWorkbenchService } from '../../../webviewPanel/browser/webviewW
 import { IDstatsMetadata, DstatsWebviewMessage } from '../common/dstats.types.js';
 import { IModelPaper } from '../common/model.types.js';
 import { openWikiByFile, openNotebookByFile, openPackageItem, openVideoList, openInBrowser } from './model.handler.js';
+import { hasKey } from '../../../../../base/common/types.js';
 
 export function registerDstatsWebviewHandlers(
 	webviewInput: ReturnType<IWebviewWorkbenchService['openWebview']>,
@@ -31,7 +32,7 @@ export function registerDstatsWebviewHandlers(
 
 	setTimeout(() => {
 		const packages = dstatsData.packages.map(pkg => ({ name: pkg.name, url: pkg.github }));
-		const hasReferences = dstatsData.references.some(r => !('separator' in r));
+		const hasReferences = dstatsData.references.some(r => !hasKey(r, { separator: true }));
 		const notebookSections = dstatsData.notebookSections.map(s => ({
 			label: s.label,
 			notebooks: s.notebooks.map(n => ({ name: n.name, file: n.bundled ? n.file : '', description: n.description })),
@@ -39,7 +40,7 @@ export function registerDstatsWebviewHandlers(
 		const wikiSections: Array<{ label: string; wikis: Array<{ name: string; file: string; description?: string }> }> = [];
 		let currentWikiSection: { label: string; wikis: Array<{ name: string; file: string; description?: string }> } = { label: '', wikis: [] };
 		for (const w of dstatsData.wikis) {
-			if ('separator' in w) {
+			if (hasKey(w, { separator: true })) {
 				wikiSections.push(currentWikiSection);
 				currentWikiSection = { label: w.label ?? '', wikis: [] };
 			} else {
@@ -64,7 +65,7 @@ export function registerDstatsWebviewHandlers(
 			case 'openDocs':
 				try {
 					if (msg.target === 'paper') {
-						const papers = dstatsData.references.filter((r): r is IModelPaper => !('separator' in r));
+						const papers = dstatsData.references.filter((r): r is IModelPaper => !hasKey(r, { separator: true }));
 						webviewInput.webview.postMessage({ command: 'showReferences', references: papers });
 					} else {
 						await openPackageItem('repository', dstatsData.packages, commandService, quickInputService, clipboardService, notificationService);
@@ -74,7 +75,7 @@ export function registerDstatsWebviewHandlers(
 				}
 				break;
 			case 'openReference': {
-				const papers = dstatsData.references.filter((r): r is IModelPaper => !('separator' in r));
+				const papers = dstatsData.references.filter((r): r is IModelPaper => !hasKey(r, { separator: true }));
 				const paper = papers.find(p => p.title === msg.id);
 				if (paper) {
 					const url = paper.doi ? `https://doi.org/${paper.doi}` : paper.url;

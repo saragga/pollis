@@ -29,6 +29,7 @@ import { IUntitledTextResourceEditorInput } from '../../../../common/editor.js';
 import { CellEditType, CellKind } from '../../../notebook/common/notebookCommon.js';
 import { openWikiByFile, openNotebookByFile, openPackageItem, openVideoList, openInBrowser, autoSelectJuliaKernel, createPackageStatusWiring, createApiKeyWiring } from './model.handler.js';
 import { CREDENTIALS } from '../common/credentials.js';
+import { hasKey } from '../../../../../base/common/types.js';
 
 // EDGAR needs no API key, but the SEC requires a User-Agent (your name + contact email) on every
 // request. We reuse the credential wiring to capture it once (non-masked, noun "contact") and inject
@@ -72,7 +73,7 @@ export function registerEdgarWebviewHandlers(
 
 	setTimeout(() => {
 		const packages = edgarData.packages.map(pkg => ({ name: pkg.name, url: pkg.github }));
-		const hasReferences = edgarData.references.some(r => !('separator' in r));
+		const hasReferences = edgarData.references.some(r => !hasKey(r, { separator: true }));
 		const notebookSections = edgarData.notebookSections.map(s => ({
 			label: s.label,
 			notebooks: s.notebooks.map(n => ({ name: n.name, file: n.bundled ? n.file : '', description: n.description })),
@@ -80,7 +81,7 @@ export function registerEdgarWebviewHandlers(
 		const wikiSections: Array<{ label: string; wikis: Array<{ name: string; file: string; description?: string }> }> = [];
 		let currentWikiSection: { label: string; wikis: Array<{ name: string; file: string; description?: string }> } = { label: '', wikis: [] };
 		for (const w of edgarData.wikis) {
-			if ('separator' in w) {
+			if (hasKey(w, { separator: true })) {
 				wikiSections.push(currentWikiSection);
 				currentWikiSection = { label: w.label ?? '', wikis: [] };
 			} else {
@@ -105,7 +106,7 @@ export function registerEdgarWebviewHandlers(
 		switch (msg.command) {
 			case 'openDocs':
 				if (msg.target === 'paper') {
-					const papers = edgarData.references.filter((r): r is import('../common/model.types.js').IModelPaper => !('separator' in r));
+					const papers = edgarData.references.filter((r): r is import('../common/model.types.js').IModelPaper => !hasKey(r, { separator: true }));
 					webviewInput.webview.postMessage({ command: 'showReferences', references: papers });
 				} else if (msg.target === 'repository') {
 					try {
@@ -116,7 +117,7 @@ export function registerEdgarWebviewHandlers(
 				}
 				break;
 			case 'openReference': {
-				const papers = edgarData.references.filter((r): r is import('../common/model.types.js').IModelPaper => !('separator' in r));
+				const papers = edgarData.references.filter((r): r is import('../common/model.types.js').IModelPaper => !hasKey(r, { separator: true }));
 				const paper = papers.find(p => p.title === msg.id);
 				if (paper) {
 					const url = paper.doi ? `https://doi.org/${paper.doi}` : paper.url;

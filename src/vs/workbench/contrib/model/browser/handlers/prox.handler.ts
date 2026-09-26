@@ -13,6 +13,7 @@ import { ICommandService } from '../../../../../platform/commands/common/command
 import { IWebviewWorkbenchService } from '../../../webviewPanel/browser/webviewWorkbenchService.js';
 import { IProxMetadata, ProxWebviewMessage } from '../common/prox.types.js';
 import { openWikiByFile, openNotebookByFile, openPackageItem, openReferenceList, openVideoList, openInBrowser } from './model.handler.js';
+import { hasKey } from '../../../../../base/common/types.js';
 
 export function registerProxWebviewHandlers(
 	webviewInput: ReturnType<IWebviewWorkbenchService['openWebview']>,
@@ -30,7 +31,7 @@ export function registerProxWebviewHandlers(
 
 	setTimeout(() => {
 		const packages = proxData.packages.map(pkg => ({ name: pkg.name, url: pkg.github }));
-		const hasReferences = proxData.references.some(r => !('separator' in r));
+		const hasReferences = proxData.references.some(r => !hasKey(r, { separator: true }));
 		const notebookSections = proxData.notebookSections.map(s => ({
 			label: s.label,
 			notebooks: s.notebooks.map(n => ({ name: n.name, file: n.bundled ? n.file : '', description: n.description })),
@@ -38,7 +39,7 @@ export function registerProxWebviewHandlers(
 		const wikiSections: Array<{ label: string; wikis: Array<{ name: string; file: string; description?: string }> }> = [];
 		let currentWikiSection: { label: string; wikis: Array<{ name: string; file: string; description?: string }> } = { label: '', wikis: [] };
 		for (const w of proxData.wikis) {
-			if ('separator' in w) {
+			if (hasKey(w, { separator: true })) {
 				wikiSections.push(currentWikiSection);
 				currentWikiSection = { label: w.label ?? '', wikis: [] };
 			} else {
@@ -81,7 +82,7 @@ export function registerProxWebviewHandlers(
 				if (msg.url) { await openInBrowser(msg.url, commandService); }
 				break;
 			case 'getPaperLinks':
-				webviewInput.webview.postMessage({ command: 'paperLinks', papers: [], hasPapers: proxData.references.some(r => !('separator' in r)) });
+				webviewInput.webview.postMessage({ command: 'paperLinks', papers: [], hasPapers: proxData.references.some(r => !hasKey(r, { separator: true })) });
 				break;
 			case 'openVideoList':
 				try {

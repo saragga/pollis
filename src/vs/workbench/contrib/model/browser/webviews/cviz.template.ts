@@ -11,7 +11,7 @@ export function getCvizHtml(mermaidJs?: string): string {
 		mermaidJs,
 		wideLayout: true,
 		defaultModel: 'scatter',
-		modelsLiteral: "['scatter', 'regression', 'bar', 'histogram', 'box', 'violin', 'pie', 'line']",
+		modelsLiteral: `['scatter', 'regression', 'bar', 'histogram', 'box', 'violin', 'pie', 'line']`,
 		chartW: 54,
 		hiddenRowCss: '.bar-row, .histogram-row, .box-row, .violin-row { display: none; }',
 		togglesJs: `			<button class="toggle-btn active" data-model="scatter">Scatter</button>

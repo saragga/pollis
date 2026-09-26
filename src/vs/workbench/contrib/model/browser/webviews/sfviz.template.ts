@@ -11,7 +11,7 @@ export function getSfvizHtml(mermaidJs?: string): string {
 		mermaidJs,
 		wideLayout: true,
 		defaultModel: 'contour',
-		modelsLiteral: "['contour', 'contour3d', 'surface', 'volume', 'phase', 'mesh', 'voxels']",
+		modelsLiteral: `['contour', 'contour3d', 'surface', 'volume', 'phase', 'mesh', 'voxels']`,
 		chartW: 54,
 		hiddenRowCss: '.bar-row, .histogram-row, .box-row, .violin-row { display: none; }',
 		extraCss: `		.code-btn-bar-split { justify-content: space-between; }

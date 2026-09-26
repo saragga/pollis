@@ -29,6 +29,7 @@ import { IUntitledTextResourceEditorInput } from '../../../../common/editor.js';
 import { CellEditType, CellKind } from '../../../notebook/common/notebookCommon.js';
 import { openWikiByFile, openNotebookByFile, openPackageItem, openVideoList, openInBrowser, autoSelectJuliaKernel, createPackageStatusWiring, createApiKeyWiring } from './model.handler.js';
 import { CREDENTIALS } from '../common/credentials.js';
+import { hasKey } from '../../../../../base/common/types.js';
 
 const ALPV_API_KEY = { label: 'Alpha Vantage', fields: [{ ...CREDENTIALS.alphaVantage, prompt: 'Alpha Vantage API key' }] };
 
@@ -69,7 +70,7 @@ export function registerAlpvWebviewHandlers(
 
 	setTimeout(() => {
 		const packages = alpvData.packages.map(pkg => ({ name: pkg.name, url: pkg.github }));
-		const hasReferences = alpvData.references.some(r => !('separator' in r));
+		const hasReferences = alpvData.references.some(r => !hasKey(r, { separator: true }));
 		const notebookSections = alpvData.notebookSections.map(s => ({
 			label: s.label,
 			notebooks: s.notebooks.map(n => ({ name: n.name, file: n.bundled ? n.file : '', description: n.description })),
@@ -77,7 +78,7 @@ export function registerAlpvWebviewHandlers(
 		const wikiSections: Array<{ label: string; wikis: Array<{ name: string; file: string; description?: string }> }> = [];
 		let currentWikiSection: { label: string; wikis: Array<{ name: string; file: string; description?: string }> } = { label: '', wikis: [] };
 		for (const w of alpvData.wikis) {
-			if ('separator' in w) {
+			if (hasKey(w, { separator: true })) {
 				wikiSections.push(currentWikiSection);
 				currentWikiSection = { label: w.label ?? '', wikis: [] };
 			} else {
@@ -102,7 +103,7 @@ export function registerAlpvWebviewHandlers(
 		switch (msg.command) {
 			case 'openDocs':
 				if (msg.target === 'paper') {
-					const papers = alpvData.references.filter((r): r is import('../common/model.types.js').IModelPaper => !('separator' in r));
+					const papers = alpvData.references.filter((r): r is import('../common/model.types.js').IModelPaper => !hasKey(r, { separator: true }));
 					webviewInput.webview.postMessage({ command: 'showReferences', references: papers });
 				} else if (msg.target === 'repository') {
 					try {
@@ -113,7 +114,7 @@ export function registerAlpvWebviewHandlers(
 				}
 				break;
 			case 'openReference': {
-				const papers = alpvData.references.filter((r): r is import('../common/model.types.js').IModelPaper => !('separator' in r));
+				const papers = alpvData.references.filter((r): r is import('../common/model.types.js').IModelPaper => !hasKey(r, { separator: true }));
 				const paper = papers.find(p => p.title === msg.id);
 				if (paper) {
 					const url = paper.doi ? `https://doi.org/${paper.doi}` : paper.url;

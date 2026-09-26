@@ -14,6 +14,7 @@ import { IWebviewWorkbenchService } from '../../../webviewPanel/browser/webviewW
 import { INodMetadata, NodWebviewMessage } from '../common/nod.types.js';
 import { IModelPaper } from '../common/model.types.js';
 import { openWikiByFile, openNotebookByFile, openPackageItem, openVideoList, openInBrowser } from './model.handler.js';
+import { hasKey } from '../../../../../base/common/types.js';
 
 export function registerNodWebviewHandlers(
 	webviewInput: ReturnType<IWebviewWorkbenchService['openWebview']>,
@@ -31,7 +32,7 @@ export function registerNodWebviewHandlers(
 
 	setTimeout(() => {
 		const packages = nodData.packages.map(pkg => ({ name: pkg.name, url: pkg.github }));
-		const hasReferences = nodData.references.some(r => !('separator' in r));
+		const hasReferences = nodData.references.some(r => !hasKey(r, { separator: true }));
 		const notebookSections = nodData.notebookSections.map(s => ({
 			label: s.label,
 			notebooks: s.notebooks.map(n => ({ name: n.name, file: n.bundled ? n.file : '', description: n.description })),
@@ -39,7 +40,7 @@ export function registerNodWebviewHandlers(
 		const wikiSections: Array<{ label: string; wikis: Array<{ name: string; file: string; description?: string }> }> = [];
 		let currentWikiSection: { label: string; wikis: Array<{ name: string; file: string; description?: string }> } = { label: '', wikis: [] };
 		for (const w of nodData.wikis) {
-			if ('separator' in w) {
+			if (hasKey(w, { separator: true })) {
 				wikiSections.push(currentWikiSection);
 				currentWikiSection = { label: w.label ?? '', wikis: [] };
 			} else {
@@ -64,7 +65,7 @@ export function registerNodWebviewHandlers(
 			case 'openDocs':
 				try {
 					if (msg.target === 'paper') {
-						const papers = nodData.references.filter((r): r is IModelPaper => !('separator' in r));
+						const papers = nodData.references.filter((r): r is IModelPaper => !hasKey(r, { separator: true }));
 						webviewInput.webview.postMessage({ command: 'showReferences', references: papers });
 					} else {
 						await openPackageItem('repository', nodData.packages, commandService, quickInputService, clipboardService, notificationService);
@@ -74,7 +75,7 @@ export function registerNodWebviewHandlers(
 				}
 				break;
 			case 'openReference': {
-				const papers = nodData.references.filter((r): r is IModelPaper => !('separator' in r));
+				const papers = nodData.references.filter((r): r is IModelPaper => !hasKey(r, { separator: true }));
 				const paper = papers.find(p => p.title === msg.id);
 				if (paper) {
 					const url = paper.doi ? `https://doi.org/${paper.doi}` : paper.url;

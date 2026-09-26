@@ -13,6 +13,7 @@ import { ICommandService } from '../../../../../platform/commands/common/command
 import { IWebviewWorkbenchService } from '../../../webviewPanel/browser/webviewWorkbenchService.js';
 import { ICovShrinkageMetadata, CovShrinkageWebviewMessage } from '../common/cov-shrinkage.types.js';
 import { openWikiList, openWikiByFile, openNotebookList, openNotebookByFile, openPackageItem, openVideoList, openReferenceList, openInBrowser } from './model.handler.js';
+import { hasKey } from '../../../../../base/common/types.js';
 
 export function registerCovShrinkageWebviewHandlers(
 	webviewInput: ReturnType<IWebviewWorkbenchService['openWebview']>,
@@ -30,7 +31,7 @@ export function registerCovShrinkageWebviewHandlers(
 
 	setTimeout(() => {
 		const packages = data.packages.map(pkg => ({ name: pkg.name, url: pkg.github }));
-		const hasReferences = data.references.some(r => !('separator' in r));
+		const hasReferences = data.references.some(r => !hasKey(r, { separator: true }));
 		webviewInput.webview.postMessage({ command: 'packageLinks', packages });
 		webviewInput.webview.postMessage({ command: 'paperLinks', papers: [], hasPapers: hasReferences });
 		if (initialModel) {

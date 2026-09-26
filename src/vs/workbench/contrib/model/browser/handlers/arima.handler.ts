@@ -59,7 +59,7 @@ export function registerArimaWebviewHandlers(
 				break;
 			case 'openNotebookList':
 				try {
-					await openNotebookList(arimaData.notebooks, quickInputService, openerService, editorService)
+					await openNotebookList(arimaData.notebooks, quickInputService, openerService, editorService);
 				} finally {
 					webviewInput.webview.postMessage({ command: 'actionDone' });
 				}

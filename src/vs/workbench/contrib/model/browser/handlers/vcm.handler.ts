@@ -59,7 +59,7 @@ export function registerVcmWebviewHandlers(
 				break;
 			case 'openNotebookList':
 				try {
-					await openNotebookList(vcmData.notebooks, quickInputService, openerService, editorService)
+					await openNotebookList(vcmData.notebooks, quickInputService, openerService, editorService);
 				} finally {
 					webviewInput.webview.postMessage({ command: 'actionDone' });
 				}

@@ -16,8 +16,7 @@ import { IClipboardService } from '../../../../../platform/clipboard/common/clip
 import { INotificationService } from '../../../../../platform/notification/common/notification.js';
 import { ICommandService } from '../../../../../platform/commands/common/commands.js';
 import { IWebviewWorkbenchService } from '../../../webviewPanel/browser/webviewWorkbenchService.js';
-import { IKgdsMetadata, KgdsWebviewMessage } from '../common/kgds.types.js';
-import type { IKgApiDataset } from '../common/kgds.types.js';
+import { IKgdsMetadata, KgdsWebviewMessage, IKgApiDataset } from '../common/kgds.types.js';
 import { IRequestService, asJson } from '../../../../../platform/request/common/request.js';
 import { CancellationToken } from '../../../../../base/common/cancellation.js';
 import { INotebookEditorModelResolverService } from '../../../notebook/common/notebookEditorModelResolverService.js';
@@ -32,6 +31,7 @@ import { IUntitledTextResourceEditorInput } from '../../../../common/editor.js';
 import { CellEditType, CellKind } from '../../../notebook/common/notebookCommon.js';
 import { openWikiByFile, openNotebookByFile, openPackageItem, openVideoList, openInBrowser, autoSelectJuliaKernel, createPackageStatusWiring, createApiKeyWiring } from './model.handler.js';
 import { CREDENTIALS } from '../common/credentials.js';
+import { hasKey } from '../../../../../base/common/types.js';
 
 // Kaggle uses a personal API token (username + key). The same credentials are shared with the
 // Kaggle Models webview, so reuse its Secret Storage keys and the env vars the Kaggle CLI/lib
@@ -83,7 +83,7 @@ export function registerKgdsWebviewHandlers(
 
 	setTimeout(() => {
 		const packages = kgdsData.packages.map(pkg => ({ name: pkg.name, url: pkg.github }));
-		const hasReferences = kgdsData.references.some(r => !('separator' in r));
+		const hasReferences = kgdsData.references.some(r => !hasKey(r, { separator: true }));
 		const notebookSections = kgdsData.notebookSections.map(s => ({
 			label: s.label,
 			notebooks: s.notebooks.map(n => ({ name: n.name, file: n.bundled ? n.file : '', description: n.description })),
@@ -91,7 +91,7 @@ export function registerKgdsWebviewHandlers(
 		const wikiSections: Array<{ label: string; wikis: Array<{ name: string; file: string; description?: string }> }> = [];
 		let currentWikiSection: { label: string; wikis: Array<{ name: string; file: string; description?: string }> } = { label: '', wikis: [] };
 		for (const w of kgdsData.wikis) {
-			if ('separator' in w) {
+			if (hasKey(w, { separator: true })) {
 				wikiSections.push(currentWikiSection);
 				currentWikiSection = { label: w.label ?? '', wikis: [] };
 			} else {
@@ -116,7 +116,7 @@ export function registerKgdsWebviewHandlers(
 		switch (msg.command) {
 			case 'openDocs':
 				if (msg.target === 'paper') {
-					const papers = kgdsData.references.filter((r): r is import('../common/model.types.js').IModelPaper => !('separator' in r));
+					const papers = kgdsData.references.filter((r): r is import('../common/model.types.js').IModelPaper => !hasKey(r, { separator: true }));
 					webviewInput.webview.postMessage({ command: 'showReferences', references: papers });
 				} else if (msg.target === 'repository') {
 					try {
@@ -127,7 +127,7 @@ export function registerKgdsWebviewHandlers(
 				}
 				break;
 			case 'openReference': {
-				const papers = kgdsData.references.filter((r): r is import('../common/model.types.js').IModelPaper => !('separator' in r));
+				const papers = kgdsData.references.filter((r): r is import('../common/model.types.js').IModelPaper => !hasKey(r, { separator: true }));
 				const paper = papers.find(p => p.title === msg.id);
 				if (paper) {
 					const url = paper.doi ? `https://doi.org/${paper.doi}` : paper.url;

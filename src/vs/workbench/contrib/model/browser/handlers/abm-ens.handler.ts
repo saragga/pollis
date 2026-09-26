@@ -13,6 +13,7 @@ import { ICommandService } from '../../../../../platform/commands/common/command
 import { IWebviewWorkbenchService } from '../../../webviewPanel/browser/webviewWorkbenchService.js';
 import { IAbmEnsMetadata, AbmEnsWebviewMessage } from '../common/abm-ens.types.js';
 import { openWikiList, openWikiByFile, openNotebookList, openNotebookByFile, openPackageItem, openReferenceList, openVideoList, openInBrowser } from './model.handler.js';
+import { hasKey } from '../../../../../base/common/types.js';
 
 export function registerAbmEnsWebviewHandlers(
 	webviewInput: ReturnType<IWebviewWorkbenchService['openWebview']>,
@@ -30,7 +31,7 @@ export function registerAbmEnsWebviewHandlers(
 
 	setTimeout(() => {
 		const packages = abmEnsData.packages.map(pkg => ({ name: pkg.name, url: pkg.github }));
-		const hasReferences = abmEnsData.references.some(r => !('separator' in r));
+		const hasReferences = abmEnsData.references.some(r => !hasKey(r, { separator: true }));
 		webviewInput.webview.postMessage({ command: 'packageLinks', packages });
 		webviewInput.webview.postMessage({ command: 'paperLinks', papers: [], hasPapers: hasReferences });
 		if (initialModel) {

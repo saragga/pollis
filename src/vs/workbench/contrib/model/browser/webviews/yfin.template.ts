@@ -8,7 +8,7 @@ import { IYfinMetadata } from '../common/yfin.types.js';
 
 /** Escape a string for safe embedding in a JS single-quoted string literal. */
 function jsEscape(s: string): string {
-	return s.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\r?\n/g, '\\n');
+	return s.replace(/\\/g, '\\\\').replace(/'/g, '\\\'').replace(/\r?\n/g, '\\n');
 }
 
 /** Escape HTML special characters. */
@@ -117,7 +117,7 @@ export function getYfinHtml(mermaidJs: string | undefined, metadata: IYfinMetada
 		mermaidJs,
 		wideLayout: true,
 		defaultModel: 'price',
-		modelsLiteral: "['price', 'quote', 'fundamental', 'options', 'search']",
+		modelsLiteral: `['price', 'quote', 'fundamental', 'options', 'search']`,
 		chartW: 54,
 		illusCollapsed: true,
 		illustrationLabel: 'Illustration',

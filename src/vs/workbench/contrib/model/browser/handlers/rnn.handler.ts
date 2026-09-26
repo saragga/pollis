@@ -59,7 +59,7 @@ export function registerRnnWebviewHandlers(
 				break;
 			case 'openNotebookList':
 				try {
-					await openNotebookList(rnnData.notebooks, quickInputService, openerService, editorService)
+					await openNotebookList(rnnData.notebooks, quickInputService, openerService, editorService);
 				} finally {
 					webviewInput.webview.postMessage({ command: 'actionDone' });
 				}

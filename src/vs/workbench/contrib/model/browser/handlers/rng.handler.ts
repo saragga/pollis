@@ -55,7 +55,7 @@ export function registerRngWebviewHandlers(
 				break;
 			case 'openNotebookList':
 				try {
-					await openNotebookList(rngData.notebooks, quickInputService, openerService, editorService)
+					await openNotebookList(rngData.notebooks, quickInputService, openerService, editorService);
 				} finally {
 					webviewInput.webview.postMessage({ command: 'actionDone' });
 				}

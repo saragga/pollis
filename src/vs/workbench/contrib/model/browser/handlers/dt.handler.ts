@@ -59,7 +59,7 @@ export function registerDtWebviewHandlers(
 				break;
 			case 'openNotebookList':
 				try {
-					await openNotebookList(dtData.notebooks, quickInputService, openerService, editorService)
+					await openNotebookList(dtData.notebooks, quickInputService, openerService, editorService);
 				} finally {
 					webviewInput.webview.postMessage({ command: 'actionDone' });
 				}

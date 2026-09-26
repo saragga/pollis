@@ -59,7 +59,7 @@ export function registerNscrWebviewHandlers(
 				break;
 			case 'openNotebookList':
 				try {
-					await openNotebookList(nscrData.notebooks, quickInputService, openerService, editorService)
+					await openNotebookList(nscrData.notebooks, quickInputService, openerService, editorService);
 				} finally {
 					webviewInput.webview.postMessage({ command: 'actionDone' });
 				}

@@ -55,7 +55,7 @@ export function registerKnnWebviewHandlers(
 				break;
 			case 'openNotebookList':
 				try {
-					await openNotebookList(knnData.notebooks, quickInputService, openerService, editorService)
+					await openNotebookList(knnData.notebooks, quickInputService, openerService, editorService);
 				} finally {
 					webviewInput.webview.postMessage({ command: 'actionDone' });
 				}

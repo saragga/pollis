@@ -19,7 +19,7 @@ function navigatePath(root: TomlValue, dotPath: string): { parent: TomlValue; ke
 	let current: TomlValue = root;
 	for (let i = 0; i < parts.length - 1; i++) {
 		const part = parts[i];
-		if (!(part in current)) {
+		if (!Object.hasOwn(current, part)) {
 			current[part] = {};
 		}
 		current = current[part] as TomlValue;
@@ -104,7 +104,7 @@ export function parseToml(content: string): TomlValue {
 			const sectionPath = line.slice(1, -1).trim();
 
 			const { parent, key } = navigatePath(result, sectionPath);
-			if (!(key in parent)) {
+			if (!Object.hasOwn(parent, key)) {
 				parent[key] = {};
 			}
 			currentSection = parent[key] as TomlValue;
@@ -119,7 +119,7 @@ export function parseToml(content: string): TomlValue {
 			const valueStart = line.slice(eqIndex + 1).trim();
 
 			// Multiline string: triple single or double quotes
-			if (valueStart === "'''" || valueStart === '"""') {
+			if (valueStart === `'''` || valueStart === '"""') {
 				const quote = valueStart;
 				i++;
 				const mlLines: string[] = [];
@@ -136,7 +136,7 @@ export function parseToml(content: string): TomlValue {
 			}
 
 			// Value on the same line as key (might start with triple-quote inline)
-			if (valueStart.startsWith("'''") && valueStart !== "'''" && valueStart.endsWith("'''") && valueStart.length > 6) {
+			if (valueStart.startsWith(`'''`) && valueStart !== `'''` && valueStart.endsWith(`'''`) && valueStart.length > 6) {
 				currentSection[key] = valueStart.slice(3, -3);
 				i++;
 				continue;
@@ -160,7 +160,7 @@ export function parseToml(content: string): TomlValue {
 
 function parseValue(str: string): unknown {
 	// Multiline / triple-quoted strings that are complete on one token
-	if (str.startsWith("'''") && str.endsWith("'''") && str.length >= 6) {
+	if (str.startsWith(`'''`) && str.endsWith(`'''`) && str.length >= 6) {
 		return str.slice(3, -3);
 	}
 	if (str.startsWith('"""') && str.endsWith('"""') && str.length >= 6) {
@@ -173,7 +173,7 @@ function parseValue(str: string): unknown {
 	}
 
 	// Single-quoted string (literal — no escapes)
-	if (str.startsWith("'") && str.endsWith("'") && str.length >= 2) {
+	if (str.startsWith('\'') && str.endsWith('\'') && str.length >= 2) {
 		return str.slice(1, -1);
 	}
 
@@ -197,7 +197,7 @@ function parseValue(str: string): unknown {
 			if (inQuote) {
 				current += ch;
 				if (ch === inQuote) { inQuote = null; }
-			} else if (ch === '"' || ch === "'") {
+			} else if (ch === '"' || ch === '\'') {
 				inQuote = ch;
 				current += ch;
 			} else if (ch === ',') {
@@ -230,7 +230,7 @@ function toTypeScriptLiteral(value: unknown, indent: string = ''): string {
 	if (typeof value === 'string') {
 		const escaped = value
 			.replace(/\\/g, '\\\\')
-			.replace(/'/g, "\\'")
+			.replace(/'/g, '\\\'')
 			.replace(/\n/g, '\\n')
 			.replace(/\r/g, '\\r')
 			.replace(/\t/g, '\\t');

@@ -6,7 +6,7 @@
 // import { METHODS } from 'http';
 import { localize } from '../../../../../vs/nls.js';
 import { MenuRegistry, MenuId } from '../../../../platform/actions/common/actions.js';
-import { CommandsRegistry } from '../../../../platform/commands/common/commands.js';
+import { CommandsRegistry, ICommandService } from '../../../../platform/commands/common/commands.js';
 import { ContextKeyExpr } from '../../../../platform/contextkey/common/contextkey.js';
 import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
@@ -14,7 +14,6 @@ import { IWebviewService } from '../../webview/browser/webview.js';
 import { IOpenerService } from '../../../../platform/opener/common/opener.js';
 import { IEditorService } from '../../../services/editor/common/editorService.js';
 import { IQuickInputService } from '../../../../platform/quickinput/common/quickInput.js';
-import { ICommandService } from '../../../../platform/commands/common/commands.js';
 import { IClipboardService } from '../../../../platform/clipboard/common/clipboardService.js';
 import { INotificationService } from '../../../../platform/notification/common/notification.js';
 import { INotebookEditorModelResolverService } from '../../notebook/common/notebookEditorModelResolverService.js';
@@ -1189,7 +1188,7 @@ MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
 MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
 	group: '1_explore',
 	submenu: CONNSubmenuId,
-	title: localize('showExplore.amr', 'Formats and Protocols'),
+	title: localize('showExplore.formats', 'Formats and Protocols'),
 	order: 3,
 });
 

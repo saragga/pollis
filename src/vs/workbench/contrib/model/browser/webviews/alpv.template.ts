@@ -8,7 +8,7 @@ import { IAlpvMetadata } from '../common/alpv.types.js';
 
 /** Escape a string for safe embedding in a JS single-quoted string literal. */
 function jsEscape(s: string): string {
-	return s.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\r?\n/g, '\\n');
+	return s.replace(/\\/g, '\\\\').replace(/'/g, '\\\'').replace(/\r?\n/g, '\\n');
 }
 
 /** Escape HTML special characters. */
@@ -115,7 +115,7 @@ export function getAlpvHtml(mermaidJs: string | undefined, metadata: IAlpvMetada
 		mermaidJs,
 		wideLayout: true,
 		defaultModel: 'equity',
-		modelsLiteral: "['equity', 'forex', 'crypto', 'indicators', 'economic']",
+		modelsLiteral: `['equity', 'forex', 'crypto', 'indicators', 'economic']`,
 		chartW: 54,
 		illusCollapsed: true,
 		illustrationLabel: 'Illustration',

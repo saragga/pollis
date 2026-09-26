@@ -8,7 +8,7 @@ import { IEcbMetadata } from '../common/ecb.types.js';
 
 /** Escape a string for safe embedding in a JS single-quoted string literal. */
 function jsEscape(s: string): string {
-	return s.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\r?\n/g, '\\n');
+	return s.replace(/\\/g, '\\\\').replace(/'/g, '\\\'').replace(/\r?\n/g, '\\n');
 }
 
 /** Escape HTML special characters. */
@@ -115,7 +115,7 @@ export function getEcbHtml(mermaidJs: string | undefined, metadata: IEcbMetadata
 		mermaidJs,
 		wideLayout: true,
 		defaultModel: 'exchange',
-		modelsLiteral: "['exchange', 'rates', 'inflation', 'money', 'yields']",
+		modelsLiteral: `['exchange', 'rates', 'inflation', 'money', 'yields']`,
 		chartW: 54,
 		illusCollapsed: true,
 		illustrationLabel: 'Illustration',

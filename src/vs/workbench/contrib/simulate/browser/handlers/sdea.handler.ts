@@ -13,6 +13,7 @@ import { ICommandService } from '../../../../../platform/commands/common/command
 import { IWebviewWorkbenchService } from '../../../webviewPanel/browser/webviewWorkbenchService.js';
 import { ISdeaMetadata, SdeaWebviewMessage } from '../common/sdea.types.js';
 import { openNotebookByFile, openReferenceList, openPackageItem, openVideoList, openWikiByFile, openInBrowser } from '../../../model/browser/handlers/model.handler.js';
+import { hasKey } from '../../../../../base/common/types.js';
 
 export function registerSdeaWebviewHandlers(
 	webviewInput: ReturnType<IWebviewWorkbenchService['openWebview']>,
@@ -30,11 +31,11 @@ export function registerSdeaWebviewHandlers(
 
 	setTimeout(() => {
 		const packages = sdeaData.packages.map(pkg => ({ name: pkg.name, url: pkg.github }));
-		const hasReferences = sdeaData.references.some(r => !('separator' in r));
+		const hasReferences = sdeaData.references.some(r => !hasKey(r, { separator: true }));
 		const wikiSections: Array<{ label: string; wikis: Array<{ name: string; file: string }> }> = [];
 		let currentWikiSection: { label: string; wikis: Array<{ name: string; file: string }> } = { label: '', wikis: [] };
 		for (const w of sdeaData.wikis) {
-			if ('separator' in w) {
+			if (hasKey(w, { separator: true })) {
 				wikiSections.push(currentWikiSection);
 				currentWikiSection = { label: w.label ?? '', wikis: [] };
 			} else {

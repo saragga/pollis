@@ -255,6 +255,22 @@
 			"project": "vscode-workbench"
 		},
 		{
+			"name": "vs/workbench/contrib/explore",
+			"project": "vscode-workbench"
+		},
+		{
+			"name": "vs/workbench/contrib/model",
+			"project": "vscode-workbench"
+		},
+		{
+			"name": "vs/workbench/contrib/optimise",
+			"project": "vscode-workbench"
+		},
+		{
+			"name": "vs/workbench/contrib/simulate",
+			"project": "vscode-workbench"
+		},
+		{
 			"name": "vs/workbench/contrib/trust",
 			"project": "vscode-workbench"
 		},

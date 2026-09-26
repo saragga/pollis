@@ -13,6 +13,7 @@ import { ICommandService } from '../../../../../platform/commands/common/command
 import { IWebviewWorkbenchService } from '../../../webviewPanel/browser/webviewWorkbenchService.js';
 import { IAcmMetadata, AcmWebviewMessage } from '../common/acm.types.js';
 import { openWikiByFile, openNotebookByFile, openPackageItem, openVideoList, openReferenceList, buildPaperLinks, openInBrowser } from './model.handler.js';
+import { hasKey } from '../../../../../base/common/types.js';
 
 export function registerACMWebviewHandlers(
 	webviewInput: ReturnType<IWebviewWorkbenchService['openWebview']>,
@@ -31,7 +32,7 @@ export function registerACMWebviewHandlers(
 	setTimeout(() => {
 		const packages = acmData.packages.map(pkg => ({ name: pkg.name, url: pkg.github }));
 		const papers = buildPaperLinks(acmData.packages);
-		const hasReferences = acmData.references.some(r => !('separator' in r));
+		const hasReferences = acmData.references.some(r => !hasKey(r, { separator: true }));
 		const notebookSections = [{
 			label: '',
 			notebooks: acmData.notebooks.map(n => ({ name: n.name, file: n.bundled ? n.file : '', description: n.description })),
@@ -39,7 +40,7 @@ export function registerACMWebviewHandlers(
 		const wikiSections: Array<{ label: string; wikis: Array<{ name: string; file: string; description?: string }> }> = [];
 		let currentWikiSection: { label: string; wikis: Array<{ name: string; file: string; description?: string }> } = { label: '', wikis: [] };
 		for (const w of acmData.wikis) {
-			if ('separator' in w) {
+			if (hasKey(w, { separator: true })) {
 				wikiSections.push(currentWikiSection);
 				currentWikiSection = { label: w.label ?? '', wikis: [] };
 			} else {

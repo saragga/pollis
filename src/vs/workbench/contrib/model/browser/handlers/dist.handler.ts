@@ -52,7 +52,7 @@ export function registerDistWebviewHandlers(
 				break;
 			case 'openNotebookList':
 				try {
-					await openNotebookList(distData.notebooks, quickInputService, openerService, editorService)
+					await openNotebookList(distData.notebooks, quickInputService, openerService, editorService);
 				} finally {
 					webviewInput.webview.postMessage({ command: 'actionDone' });
 				}

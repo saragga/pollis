@@ -11,7 +11,7 @@ export function getMvizHtml(mermaidJs?: string): string {
 		mermaidJs,
 		wideLayout: true,
 		defaultModel: 'corner',
-		modelsLiteral: "['corner', 'parallel', 'bubble', 'heatmap']",
+		modelsLiteral: `['corner', 'parallel', 'bubble', 'heatmap']`,
 		chartW: 54,
 		illusCollapsed: true,
 		togglesJs: `			<button class="toggle-btn active" data-model="corner">Corner Plot</button>

@@ -14,6 +14,7 @@ import { IWebviewWorkbenchService } from '../../../webviewPanel/browser/webviewW
 import { IHmdMetadata, HmdWebviewMessage } from '../common/hmd.types.js';
 import { IModelPaper } from '../common/model.types.js';
 import { openWikiByFile, openNotebookByFile, openPackageItem, openVideoList, openInBrowser } from './model.handler.js';
+import { hasKey } from '../../../../../base/common/types.js';
 
 export function registerHmdWebviewHandlers(
 	webviewInput: ReturnType<IWebviewWorkbenchService['openWebview']>,
@@ -31,7 +32,7 @@ export function registerHmdWebviewHandlers(
 
 	setTimeout(() => {
 		const packages = hmdData.packages.map(pkg => ({ name: pkg.name, url: pkg.github }));
-		const hasReferences = hmdData.references.some(r => !('separator' in r));
+		const hasReferences = hmdData.references.some(r => !hasKey(r, { separator: true }));
 		const notebookSections = hmdData.notebookSections.map(s => ({
 			label: s.label,
 			notebooks: s.notebooks.map(n => ({ name: n.name, file: n.bundled ? n.file : '', description: n.description })),
@@ -39,7 +40,7 @@ export function registerHmdWebviewHandlers(
 		const wikiSections: Array<{ label: string; wikis: Array<{ name: string; file: string; description?: string }> }> = [];
 		let currentWikiSection: { label: string; wikis: Array<{ name: string; file: string; description?: string }> } = { label: '', wikis: [] };
 		for (const w of hmdData.wikis) {
-			if ('separator' in w) {
+			if (hasKey(w, { separator: true })) {
 				wikiSections.push(currentWikiSection);
 				currentWikiSection = { label: w.label ?? '', wikis: [] };
 			} else {
@@ -63,7 +64,7 @@ export function registerHmdWebviewHandlers(
 		switch (msg.command) {
 			case 'openDocs':
 				if (msg.target === 'paper') {
-					const papers = hmdData.references.filter((r): r is IModelPaper => !('separator' in r));
+					const papers = hmdData.references.filter((r): r is IModelPaper => !hasKey(r, { separator: true }));
 					webviewInput.webview.postMessage({ command: 'showReferences', references: papers });
 				} else if (msg.target === 'repository') {
 					try {
@@ -74,7 +75,7 @@ export function registerHmdWebviewHandlers(
 				}
 				break;
 			case 'openReference': {
-				const papers = hmdData.references.filter((r): r is IModelPaper => !('separator' in r));
+				const papers = hmdData.references.filter((r): r is IModelPaper => !hasKey(r, { separator: true }));
 				const paper = papers.find(p => p.title === msg.id);
 				if (paper) {
 					const url = paper.doi ? `https://doi.org/${paper.doi}` : paper.url;

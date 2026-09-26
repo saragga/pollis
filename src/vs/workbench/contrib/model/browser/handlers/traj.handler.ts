@@ -13,6 +13,7 @@ import { ICommandService } from '../../../../../platform/commands/common/command
 import { IWebviewWorkbenchService } from '../../../webviewPanel/browser/webviewWorkbenchService.js';
 import { ITrajMetadata, TrajWebviewMessage } from '../common/traj.types.js';
 import { openNotebookByFile, openPackageItem, openVideoList, openReferenceList, openWikiByFile, openInBrowser } from './model.handler.js';
+import { hasKey } from '../../../../../base/common/types.js';
 
 export function registerTrajWebviewHandlers(
 	webviewInput: ReturnType<IWebviewWorkbenchService['openWebview']>,
@@ -30,11 +31,11 @@ export function registerTrajWebviewHandlers(
 
 	setTimeout(() => {
 		const packages = trajData.packages.map(pkg => ({ name: pkg.name, url: pkg.github }));
-		const hasReferences = trajData.references.some(r => !('separator' in r));
+		const hasReferences = trajData.references.some(r => !hasKey(r, { separator: true }));
 		const wikiSections: Array<{ label: string; wikis: Array<{ name: string; file: string; description?: string }> }> = [];
 		let currentWikiSection: { label: string; wikis: Array<{ name: string; file: string; description?: string }> } = { label: '', wikis: [] };
 		for (const w of trajData.wikis) {
-			if ('separator' in w) {
+			if (hasKey(w, { separator: true })) {
 				wikiSections.push(currentWikiSection);
 				currentWikiSection = { label: w.label ?? '', wikis: [] };
 			} else {

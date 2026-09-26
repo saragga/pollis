@@ -57,7 +57,7 @@ const ABM_VIZ_REFERENCES: IModelReference[] = [
 		title: 'Interactive data visualization for the web',
 		authors: 'Murray, Scott',
 		year: 2017,
-		journal: "O'Reilly Media (2nd ed.)",
+		journal: 'O\'Reilly Media (2nd ed.)',
 		openAccess: false,
 	},
 ];

@@ -8,7 +8,7 @@ import { IHfdsMetadata } from '../common/hfds.types.js';
 
 /** Escape a string for safe embedding in a JS single-quoted string literal. */
 function jsEscape(s: string): string {
-	return s.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\r?\n/g, '\\n');
+	return s.replace(/\\/g, '\\\\').replace(/'/g, '\\\'').replace(/\r?\n/g, '\\n');
 }
 
 /** Escape HTML special characters. */
@@ -366,7 +366,7 @@ export function getHfdsHtml(mermaidJs: string | undefined, metadata: IHfdsMetada
 		mermaidJs,
 		wideLayout: true,
 		defaultModel: 'browse',
-		modelsLiteral: "['browse', 'load', 'inspect', 'files', 'info']",
+		modelsLiteral: `['browse', 'load', 'inspect', 'files', 'info']`,
 		chartW: 54,
 		illusCollapsed: false,
 		illustrationLabel: metadata.hfds.explore?.label ?? 'Illustration',

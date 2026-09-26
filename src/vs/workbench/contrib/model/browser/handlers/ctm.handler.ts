@@ -13,6 +13,7 @@ import { ICommandService } from '../../../../../platform/commands/common/command
 import { IWebviewWorkbenchService } from '../../../webviewPanel/browser/webviewWorkbenchService.js';
 import { ICtmMetadata, CtmWebviewMessage } from '../common/ctm.types.js';
 import { openWikiList, openWikiByFile, openNotebookList, openNotebookByFile, openPackageItem, openVideoList, openReferenceList, buildPaperLinks, openInBrowser } from './model.handler.js';
+import { hasKey } from '../../../../../base/common/types.js';
 
 export function registerCtmWebviewHandlers(
 	webviewInput: ReturnType<IWebviewWorkbenchService['openWebview']>,
@@ -31,7 +32,7 @@ export function registerCtmWebviewHandlers(
 	setTimeout(() => {
 		const packages = ctmData.packages.map(pkg => ({ name: pkg.name, url: pkg.github }));
 		const papers = buildPaperLinks(ctmData.packages);
-		const hasReferences = ctmData.references.some(r => !('separator' in r));
+		const hasReferences = ctmData.references.some(r => !hasKey(r, { separator: true }));
 		webviewInput.webview.postMessage({ command: 'packageLinks', packages });
 		webviewInput.webview.postMessage({ command: 'paperLinks', papers, hasPapers: hasReferences });
 		if (initialModel) {

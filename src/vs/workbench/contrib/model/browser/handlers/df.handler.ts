@@ -52,7 +52,7 @@ export function registerDfWebviewHandlers(
 				break;
 			case 'openNotebookList':
 				try {
-					await openNotebookList(dfData.notebooks, quickInputService, openerService, editorService)
+					await openNotebookList(dfData.notebooks, quickInputService, openerService, editorService);
 				} finally {
 					webviewInput.webview.postMessage({ command: 'actionDone' });
 				}

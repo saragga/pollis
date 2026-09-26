@@ -13,6 +13,7 @@ import { ICommandService } from '../../../../../platform/commands/common/command
 import { IWebviewWorkbenchService } from '../../../webviewPanel/browser/webviewWorkbenchService.js';
 import { ICrnMetadata, CrnWebviewMessage } from '../common/crn.types.js';
 import { openWikiList, openWikiByFile, openNotebookList, openNotebookByFile, openPackageItem, openReferenceList, openVideoList, openInBrowser } from './model.handler.js';
+import { hasKey } from '../../../../../base/common/types.js';
 
 export function registerCrnWebviewHandlers(
 	webviewInput: ReturnType<IWebviewWorkbenchService['openWebview']>,
@@ -30,7 +31,7 @@ export function registerCrnWebviewHandlers(
 
 	setTimeout(() => {
 		const packages = crnData.packages.map(pkg => ({ name: pkg.name, url: pkg.github }));
-		const hasReferences = crnData.references.some(r => !('separator' in r));
+		const hasReferences = crnData.references.some(r => !hasKey(r, { separator: true }));
 		webviewInput.webview.postMessage({ command: 'packageLinks', packages });
 		webviewInput.webview.postMessage({ command: 'paperLinks', papers: [], hasPapers: hasReferences });
 		if (initialModel) {

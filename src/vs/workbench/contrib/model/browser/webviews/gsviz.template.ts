@@ -11,7 +11,7 @@ export function getGsvizHtml(mermaidJs?: string): string {
 		mermaidJs,
 		wideLayout: true,
 		defaultModel: 'network',
-		modelsLiteral: "['network', 'tree', 'choropleth', 'voronoi']",
+		modelsLiteral: `['network', 'tree', 'choropleth', 'voronoi']`,
 		chartW: 54,
 		hiddenRowCss: '.bar-row, .histogram-row, .box-row, .violin-row { display: none; }',
 		togglesJs: `			<button class="toggle-btn active" data-model="network">Network Diagram</button>

@@ -3,11 +3,10 @@
  *  Licensed under the GNU Affero General Public License v3.0 or later. See LICENSE.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CommandsRegistry } from '../../../../../platform/commands/common/commands.js';
+import { CommandsRegistry, ICommandService } from '../../../../../platform/commands/common/commands.js';
 import { MenuRegistry, MenuId } from '../../../../../platform/actions/common/actions.js';
 import { ServicesAccessor } from '../../../../../platform/instantiation/common/instantiation.js';
 import { IFileService } from '../../../../../platform/files/common/files.js';
-import { ICommandService } from '../../../../../platform/commands/common/commands.js';
 import { INotificationService } from '../../../../../platform/notification/common/notification.js';
 import { IEnvironmentService } from '../../../../../platform/environment/common/environment.js';
 import { IProgressService, ProgressLocation } from '../../../../../platform/progress/common/progress.js';

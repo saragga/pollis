@@ -13,6 +13,7 @@ import { ICommandService } from '../../../../../platform/commands/common/command
 import { IWebviewWorkbenchService } from '../../../webviewPanel/browser/webviewWorkbenchService.js';
 import { IEsMetadata, EsWebviewMessage } from '../common/es.types.js';
 import { openWikiByFile, openNotebookByFile, openPackageItem, openReferenceList, openVideoList, openInBrowser } from './model.handler.js';
+import { hasKey } from '../../../../../base/common/types.js';
 
 export function registerEsWebviewHandlers(
 	webviewInput: ReturnType<IWebviewWorkbenchService['openWebview']>,
@@ -30,7 +31,7 @@ export function registerEsWebviewHandlers(
 
 	setTimeout(() => {
 		const packages = esData.packages.map(pkg => ({ name: pkg.name, url: pkg.github }));
-		const hasReferences = esData.references.some(r => !('separator' in r));
+		const hasReferences = esData.references.some(r => !hasKey(r, { separator: true }));
 		const notebookSections = esData.notebookSections.map(s => ({
 			label: s.label,
 			notebooks: s.notebooks.map(n => ({ name: n.name, file: n.bundled ? n.file : '', description: n.description })),
@@ -38,7 +39,7 @@ export function registerEsWebviewHandlers(
 		const wikiSections: Array<{ label: string; wikis: Array<{ name: string; file: string; description?: string }> }> = [];
 		let currentWikiSection: { label: string; wikis: Array<{ name: string; file: string; description?: string }> } = { label: '', wikis: [] };
 		for (const w of esData.wikis) {
-			if ('separator' in w) {
+			if (hasKey(w, { separator: true })) {
 				wikiSections.push(currentWikiSection);
 				currentWikiSection = { label: w.label ?? '', wikis: [] };
 			} else {
@@ -81,7 +82,7 @@ export function registerEsWebviewHandlers(
 				if (msg.url) { await openInBrowser(msg.url, commandService); }
 				break;
 			case 'getPaperLinks':
-				webviewInput.webview.postMessage({ command: 'paperLinks', papers: [], hasPapers: esData.references.some(r => !('separator' in r)) });
+				webviewInput.webview.postMessage({ command: 'paperLinks', papers: [], hasPapers: esData.references.some(r => !hasKey(r, { separator: true })) });
 				break;
 			case 'openVideoList':
 				try {

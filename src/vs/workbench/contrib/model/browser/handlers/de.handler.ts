@@ -54,7 +54,7 @@ export function registerDeWebviewHandlers(
 				break;
 			case 'openNotebookList':
 				try {
-					await openNotebookList(deData.notebooks, quickInputService, openerService, editorService)
+					await openNotebookList(deData.notebooks, quickInputService, openerService, editorService);
 				} finally {
 					webviewInput.webview.postMessage({ command: 'actionDone' });
 				}

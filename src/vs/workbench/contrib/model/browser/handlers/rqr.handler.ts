@@ -59,7 +59,7 @@ export function registerRqrWebviewHandlers(
 				break;
 			case 'openNotebookList':
 				try {
-					await openNotebookList(rqrData.notebooks, quickInputService, openerService, editorService)
+					await openNotebookList(rqrData.notebooks, quickInputService, openerService, editorService);
 				} finally {
 					webviewInput.webview.postMessage({ command: 'actionDone' });
 				}

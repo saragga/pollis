@@ -55,7 +55,7 @@ export function registerCnnWebviewHandlers(
 				break;
 			case 'openNotebookList':
 				try {
-					await openNotebookList(cnnData.notebooks, quickInputService, openerService, editorService)
+					await openNotebookList(cnnData.notebooks, quickInputService, openerService, editorService);
 				} finally {
 					webviewInput.webview.postMessage({ command: 'actionDone' });
 				}

@@ -13,6 +13,7 @@ import { ICommandService } from '../../../../../platform/commands/common/command
 import { IWebviewWorkbenchService } from '../../../webviewPanel/browser/webviewWorkbenchService.js';
 import { IPtpsMetadata, PtpsWebviewMessage } from '../common/ptps.types.js';
 import { openWikiList, openWikiByFile, openNotebookByFile, openPackageItem, openReferenceList, openVideoList, openInBrowser } from '../../../model/browser/handlers/model.handler.js';
+import { hasKey } from '../../../../../base/common/types.js';
 
 export function registerPtpsWebviewHandlers(
 	webviewInput: ReturnType<IWebviewWorkbenchService['openWebview']>,
@@ -30,7 +31,7 @@ export function registerPtpsWebviewHandlers(
 
 	setTimeout(() => {
 		const packages = ptpsData.packages.map(pkg => ({ name: pkg.name, url: pkg.github }));
-		const hasReferences = ptpsData.references.some(r => !('separator' in r));
+		const hasReferences = ptpsData.references.some(r => !hasKey(r, { separator: true }));
 		const sections = ptpsData.notebookSections.map(s => ({
 			label: s.label,
 			notebooks: s.notebooks.map(n => ({ name: n.name, file: n.bundled ? n.file : '', description: n.description })),

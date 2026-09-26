@@ -52,7 +52,7 @@ export function registerHtWebviewHandlers(
 				break;
 			case 'openNotebookList':
 				try {
-					await openNotebookList(htData.notebooks, quickInputService, openerService, editorService)
+					await openNotebookList(htData.notebooks, quickInputService, openerService, editorService);
 				} finally {
 					webviewInput.webview.postMessage({ command: 'actionDone' });
 				}

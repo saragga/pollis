@@ -13,6 +13,7 @@ import { ICommandService } from '../../../../../platform/commands/common/command
 import { IWebviewWorkbenchService } from '../../../webviewPanel/browser/webviewWorkbenchService.js';
 import { IAzeroMetadata, AzeroWebviewMessage } from '../common/azero.types.js';
 import { openWikiByFile, openNotebookByFile, openPackageItem, openVideoList, openReferenceList, buildPaperLinks, openInBrowser } from './model.handler.js';
+import { hasKey } from '../../../../../base/common/types.js';
 
 export function registerAzeroWebviewHandlers(
 	webviewInput: ReturnType<IWebviewWorkbenchService['openWebview']>,
@@ -29,7 +30,7 @@ export function registerAzeroWebviewHandlers(
 
 	setTimeout(() => {
 		const packages = azeroData.packages.map(pkg => ({ name: pkg.name, url: pkg.github }));
-		const hasReferences = azeroData.references.some(r => !('separator' in r));
+		const hasReferences = azeroData.references.some(r => !hasKey(r, { separator: true }));
 		const notebookSections = [{
 			label: '',
 			notebooks: azeroData.notebooks.map(n => ({ name: n.name, file: n.bundled ? n.file : '', description: n.description })),
@@ -37,7 +38,7 @@ export function registerAzeroWebviewHandlers(
 		const wikiSections: Array<{ label: string; wikis: Array<{ name: string; file: string; description?: string }> }> = [];
 		let currentWikiSection: { label: string; wikis: Array<{ name: string; file: string; description?: string }> } = { label: '', wikis: [] };
 		for (const w of azeroData.wikis) {
-			if ('separator' in w) {
+			if (hasKey(w, { separator: true })) {
 				wikiSections.push(currentWikiSection);
 				currentWikiSection = { label: w.label ?? '', wikis: [] };
 			} else {

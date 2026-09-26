@@ -11,7 +11,7 @@ export function getTsvizHtml(mermaidJs?: string): string {
 		mermaidJs,
 		wideLayout: true,
 		defaultModel: 'tsplot',
-		modelsLiteral: "['tsplot', 'ribbon', 'stacked', 'ohlc']",
+		modelsLiteral: `['tsplot', 'ribbon', 'stacked', 'ohlc']`,
 		chartW: 54,
 		illusCollapsed: true,
 		togglesJs: `			<button class="toggle-btn active" data-model="tsplot">Time Series Plot</button>

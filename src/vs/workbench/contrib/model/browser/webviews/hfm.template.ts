@@ -212,7 +212,7 @@ export function getHfmHtml(mermaidJs?: string): string {
 		mermaidJs,
 		wideLayout: true,
 		defaultModel: 'nlp',
-		modelsLiteral: "['multimodal','nlp','vision','audio','tabular','rl','graphml','embedding']",
+		modelsLiteral: `['multimodal','nlp','vision','audio','tabular','rl','graphml','embedding']`,
 		chartW: 54,
 		illusCollapsed: false,
 		illustrationLabel: 'Explore by Task / Framework / Author',

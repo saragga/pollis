@@ -37,7 +37,7 @@ const TRAD_REFERENCES: IModelReference[] = [
 	},
 	{
 		title: 'Market Microstructure Theory',
-		authors: "O'Hara, Maureen",
+		authors: 'O\'Hara, Maureen',
 		year: 1995,
 		journal: 'Blackwell',
 		openAccess: false,

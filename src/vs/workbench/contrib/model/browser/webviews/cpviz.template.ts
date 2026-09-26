@@ -11,7 +11,7 @@ export function getCpvizHtml(mermaidJs?: string): string {
 		mermaidJs,
 		wideLayout: true,
 		defaultModel: 'mosaic',
-		modelsLiteral: "['mosaic', 'nightingale', 'waterfall', 'treemap', 'sankey']",
+		modelsLiteral: `['mosaic', 'nightingale', 'waterfall', 'treemap', 'sankey']`,
 		chartW: 54,
 		hiddenRowCss: '.bar-row, .histogram-row, .box-row, .violin-row { display: none; }',
 		togglesJs: `			<button class="toggle-btn active" data-model="mosaic">Mosaic Plot</button>

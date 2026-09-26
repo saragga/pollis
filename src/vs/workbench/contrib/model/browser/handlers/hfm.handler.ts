@@ -21,8 +21,7 @@ import { IThemeService } from '../../../../../platform/theme/common/themeService
 import { tokenizeToString } from '../../../../../editor/common/languages/textToHtmlTokenizer.js';
 import { TokenizationRegistry } from '../../../../../editor/common/languages.js';
 import { generateTokensCSSForColorMap } from '../../../../../editor/common/languages/supports/tokenization.js';
-import { IHfmMetadata, HfmWebviewMessage } from '../common/hfm.types.js';
-import type { IHfApiModel } from '../common/hfm.types.js';
+import { IHfmMetadata, HfmWebviewMessage, IHfApiModel } from '../common/hfm.types.js';
 import { IRequestService, asJson } from '../../../../../platform/request/common/request.js';
 import { CancellationToken } from '../../../../../base/common/cancellation.js';
 
@@ -33,6 +32,7 @@ import { ISecretStorageService } from '../../../../../platform/secrets/common/se
 import { IWebviewService } from '../../../webview/browser/webview.js';
 import { openWikiByFile, openNotebookByFile, openPackageItem, openVideoList, openInBrowser, autoSelectJuliaKernel, createPackageStatusWiring, createApiKeyWiring } from './model.handler.js';
 import { CREDENTIALS } from '../common/credentials.js';
+import { hasKey } from '../../../../../base/common/types.js';
 
 const HFM_API_KEY = { label: 'Hugging Face', noun: 'token', fields: [{ ...CREDENTIALS.huggingFace, prompt: 'Hugging Face access token' }] };
 
@@ -76,7 +76,7 @@ export function registerHfmWebviewHandlers(
 
 	setTimeout(() => {
 		const packages = hfmData.packages.map(pkg => ({ name: pkg.name, url: pkg.github }));
-		const hasReferences = hfmData.references.some(r => !('separator' in r));
+		const hasReferences = hfmData.references.some(r => !hasKey(r, { separator: true }));
 		const notebookSections = hfmData.notebookSections.map(s => ({
 			label: s.label,
 			notebooks: s.notebooks.map(n => ({ name: n.name, file: n.bundled ? n.file : '', description: n.description })),
@@ -84,7 +84,7 @@ export function registerHfmWebviewHandlers(
 		const wikiSections: Array<{ label: string; wikis: Array<{ name: string; file: string; description?: string }> }> = [];
 		let currentWikiSection: { label: string; wikis: Array<{ name: string; file: string; description?: string }> } = { label: '', wikis: [] };
 		for (const w of hfmData.wikis) {
-			if ('separator' in w) {
+			if (hasKey(w, { separator: true })) {
 				wikiSections.push(currentWikiSection);
 				currentWikiSection = { label: w.label ?? '', wikis: [] };
 			} else {
@@ -113,7 +113,7 @@ export function registerHfmWebviewHandlers(
 		switch (msg.command) {
 			case 'openDocs':
 				if (msg.target === 'paper') {
-					const papers = hfmData.references.filter((r): r is import('../common/model.types.js').IModelPaper => !('separator' in r));
+					const papers = hfmData.references.filter((r): r is import('../common/model.types.js').IModelPaper => !hasKey(r, { separator: true }));
 					webviewInput.webview.postMessage({ command: 'showReferences', references: papers });
 				} else if (msg.target === 'repository') {
 					try {
@@ -124,7 +124,7 @@ export function registerHfmWebviewHandlers(
 				}
 				break;
 			case 'openReference': {
-				const papers = hfmData.references.filter((r): r is import('../common/model.types.js').IModelPaper => !('separator' in r));
+				const papers = hfmData.references.filter((r): r is import('../common/model.types.js').IModelPaper => !hasKey(r, { separator: true }));
 				const paper = papers.find(p => p.title === msg.id);
 				if (paper) {
 					const url = paper.doi ? `https://doi.org/${paper.doi}` : paper.url;

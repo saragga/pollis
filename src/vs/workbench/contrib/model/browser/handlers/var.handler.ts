@@ -59,7 +59,7 @@ export function registerVarWebviewHandlers(
 				break;
 			case 'openNotebookList':
 				try {
-					await openNotebookList(varData.notebooks, quickInputService, openerService, editorService)
+					await openNotebookList(varData.notebooks, quickInputService, openerService, editorService);
 				} finally {
 					webviewInput.webview.postMessage({ command: 'actionDone' });
 				}

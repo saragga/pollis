@@ -55,7 +55,7 @@ export function registerLmmWebviewHandlers(
 				break;
 			case 'openNotebookList':
 				try {
-					await openNotebookList(lmmData.notebooks, quickInputService, openerService, editorService)
+					await openNotebookList(lmmData.notebooks, quickInputService, openerService, editorService);
 				} finally {
 					webviewInput.webview.postMessage({ command: 'actionDone' });
 				}

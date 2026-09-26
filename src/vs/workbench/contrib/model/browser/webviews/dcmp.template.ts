@@ -11,7 +11,7 @@ export function getDcmpHtml(mermaidJs?: string): string {
 		mermaidJs,
 		wideLayout: true,
 		defaultModel: 'ecdf',
-		modelsLiteral: "['ecdf', 'qq', 'marginal', 'correlogram']",
+		modelsLiteral: `['ecdf', 'qq', 'marginal', 'correlogram']`,
 		chartW: 66,
 		illusCollapsed: true,
 		hiddenRowCss: '.qq-row, .marginal-row, .correlogram-row { display: none; }',

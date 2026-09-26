@@ -26,6 +26,7 @@ import { IFileService } from '../../../../../platform/files/common/files.js';
 import { IPathService } from '../../../../services/path/common/pathService.js';
 import { IWorkspaceContextService } from '../../../../../platform/workspace/common/workspace.js';
 import { openWikiByFile, openNotebookByFile, openPackageItem, openVideoList, openInBrowser, autoSelectJuliaKernel, createPackageStatusWiring } from './model.handler.js';
+import { hasKey } from '../../../../../base/common/types.js';
 
 export function registerMvizWebviewHandlers(
 	webviewInput: ReturnType<IWebviewWorkbenchService['openWebview']>,
@@ -62,7 +63,7 @@ export function registerMvizWebviewHandlers(
 
 	setTimeout(() => {
 		const packages = mvizData.packages.map(pkg => ({ name: pkg.name, url: pkg.github }));
-		const hasReferences = mvizData.references.some(r => !('separator' in r));
+		const hasReferences = mvizData.references.some(r => !hasKey(r, { separator: true }));
 		const notebookSections = mvizData.notebookSections.map(s => ({
 			label: s.label,
 			notebooks: s.notebooks.map(n => ({ name: n.name, file: n.bundled ? n.file : '', description: n.description })),
@@ -70,7 +71,7 @@ export function registerMvizWebviewHandlers(
 		const wikiSections: Array<{ label: string; wikis: Array<{ name: string; file: string; description?: string }> }> = [];
 		let currentWikiSection: { label: string; wikis: Array<{ name: string; file: string; description?: string }> } = { label: '', wikis: [] };
 		for (const w of mvizData.wikis) {
-			if ('separator' in w) {
+			if (hasKey(w, { separator: true })) {
 				wikiSections.push(currentWikiSection);
 				currentWikiSection = { label: w.label ?? '', wikis: [] };
 			} else {
@@ -99,7 +100,7 @@ export function registerMvizWebviewHandlers(
 			case 'openDocs':
 				try {
 					if (msg.target === 'paper') {
-						const papers = mvizData.references.filter((r): r is import('../common/model.types.js').IModelPaper => !('separator' in r));
+						const papers = mvizData.references.filter((r): r is import('../common/model.types.js').IModelPaper => !hasKey(r, { separator: true }));
 						webviewInput.webview.postMessage({ command: 'showReferences', references: papers });
 					} else if (msg.target === 'repository') {
 						await openPackageItem('repository', mvizData.packages, commandService, quickInputService, clipboardService, notificationService);
@@ -156,7 +157,7 @@ export function registerMvizWebviewHandlers(
 				break;
 			}
 			case 'openReference': {
-				const papers = mvizData.references.filter((r): r is import('../common/model.types.js').IModelPaper => !('separator' in r));
+				const papers = mvizData.references.filter((r): r is import('../common/model.types.js').IModelPaper => !hasKey(r, { separator: true }));
 				const paper = papers.find(p => p.title === msg.id);
 				if (paper) {
 					const url = paper.doi ? `https://doi.org/${paper.doi}` : paper.url;

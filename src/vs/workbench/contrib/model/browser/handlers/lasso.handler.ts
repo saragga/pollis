@@ -56,7 +56,7 @@ export function registerLassoWebviewHandlers(
 				break;
 			case 'openNotebookList':
 				try {
-					await openNotebookList(lassoData.notebooks, quickInputService, openerService, editorService)
+					await openNotebookList(lassoData.notebooks, quickInputService, openerService, editorService);
 				} finally {
 					webviewInput.webview.postMessage({ command: 'actionDone' });
 				}
