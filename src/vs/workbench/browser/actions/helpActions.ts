@@ -10,7 +10,7 @@ import { FileAccess, AppResourcePath } from '../../../base/common/network.js';
 import { ITelemetryService } from '../../../platform/telemetry/common/telemetry.js';
 import { IOpenerService } from '../../../platform/opener/common/opener.js';
 import { URI } from '../../../base/common/uri.js';
-import { MenuId, Action2, registerAction2 } from '../../../platform/actions/common/actions.js';
+import { MenuId, Action2, registerAction2, MenuRegistry } from '../../../platform/actions/common/actions.js';
 import { KeyChord, KeyMod, KeyCode } from '../../../base/common/keyCodes.js';
 import { IProductService } from '../../../platform/product/common/productService.js';
 import { ServicesAccessor } from '../../../platform/instantiation/common/instantiation.js';
@@ -18,6 +18,7 @@ import { KeybindingWeight } from '../../../platform/keybinding/common/keybinding
 import { Categories } from '../../../platform/action/common/actionCommonCategories.js';
 import { ICommandService } from '../../../platform/commands/common/commands.js';
 import { ContextKeyExpr } from '../../../platform/contextkey/common/contextkey.js';
+import { IsMacNativeContext } from '../../../platform/contextkey/common/contextkeys.js';
 import { IsSessionsWindowContext } from '../../common/contextkeys.js';
 
 class KeybindingsReferenceAction extends Action2 {
@@ -329,6 +330,11 @@ class ShowLicenseAction extends Action2 {
 			},
 			category: Categories.Help,
 			f1: true,
+			menu: {
+				id: MenuId.MenubarHelpMenu,
+				group: '3_legal',
+				order: 1
+			}
 		});
 	}
 
@@ -352,6 +358,11 @@ class ShowThirdPartyNoticesAction extends Action2 {
 			},
 			category: Categories.Help,
 			f1: true,
+			menu: {
+				id: MenuId.MenubarHelpMenu,
+				group: '3_legal',
+				order: 2
+			}
 		});
 	}
 
@@ -430,3 +441,24 @@ registerAction2(AskVSCodeCopilot);
 registerAction2(ShowReleaseNotesAction);
 registerAction2(ShowLicenseAction);
 registerAction2(ShowThirdPartyNoticesAction);
+
+// Pollis: the Help menu holds About (Windows and Linux only; on macOS it is in the Pollis application
+// menu), Welcome, then View License and View Third-Party Notices (registered above).
+MenuRegistry.appendMenuItem(MenuId.MenubarHelpMenu, {
+	group: '1_about',
+	command: {
+		id: 'workbench.action.showAboutDialog',
+		title: localize({ key: 'miAboutProduct', comment: ['&& denotes a mnemonic', '{0} is the product name'] }, "&&About {0}", product.nameLong)
+	},
+	order: 1,
+	when: IsMacNativeContext.toNegated()
+});
+
+MenuRegistry.appendMenuItem(MenuId.MenubarHelpMenu, {
+	group: '2_welcome',
+	command: {
+		id: 'workbench.action.openWalkthrough',
+		title: localize({ key: 'miWelcome', comment: ['&& denotes a mnemonic'] }, "&&Welcome")
+	},
+	order: 1
+});

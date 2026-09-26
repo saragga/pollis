@@ -199,6 +199,29 @@ The extension exception in `LICENSE.txt` names these contribution points as part
 
 **After a rebase:** upstream will not have these entries; re-add them.
 
+### 3.6 Help menu
+
+**Files:** `src/vs/workbench/browser/parts/titlebar/menubarControl.ts`, `src/vs/platform/menubar/electron-main/menubar.ts`, `src/vs/workbench/browser/actions/helpActions.ts`, `src/vs/workbench/browser/actions/windowActions.ts`
+
+Pollis has a Help menu on every platform, last in the menu bar. It holds:
+
+| Group | Item | Platforms |
+|---|---|---|
+| `1_about` | About Pollis | Windows and Linux (`when: IsMacNativeContext.toNegated()`) |
+| `2_welcome` | Welcome (`workbench.action.openWalkthrough`) | all |
+| `3_legal` | View License, View Third-Party Notices | all |
+
+On macOS, About Pollis stays in the Pollis application menu (`setMacApplicationMenu`), which otherwise holds only Preferences, Services, Hide/Show and Quit. Welcome, View License and View Third-Party Notices were moved out of it into Help.
+
+- `menubarControl.ts` registers Help into `MenubarMainMenu` (order 11). This drives the custom title bar, and its `original: 'Help'` key is what `menubar.ts` asks for.
+- `menubar.ts` draws Help after Toolboxes in `_updateMenubar()`, with `role: 'help'` (macOS adds its menu search field).
+- `helpActions.ts` registers About and Welcome with `MenuRegistry.appendMenuItem`, and adds `menu` entries to `ShowLicenseAction` and `ShowThirdPartyNoticesAction`.
+- `windowActions.ts`: the upstream `ShowAboutDialogAction` Help entry (group `z_about`, last) is removed so that About comes first.
+
+Upstream's other Help items (Documentation, Release Notes, Report Issue, and so on) do not register, because Pollis's `product.json` has no URLs for them.
+
+**After a rebase:** upstream has its own Help menu. Keep its registration and drawing block. Remove the About entry from `ShowAboutDialogAction`, remove Welcome, View License and View Third-Party Notices from `setMacApplicationMenu`, and re-add the `helpActions.ts` entries.
+
 ---
 
 ## 4. View Menu Additions
@@ -283,7 +306,7 @@ These are entirely Pollis-owned and will not conflict with upstream.
 
 **Files:** `src/vs/workbench/browser/media/pollis-release-notes.md`, `src/vs/workbench/browser/media/pollis-license.md`
 
-Two Markdown files are bundled with every Pollis release so that "Show Release Notes" and "View License" in the Pollis app menu open locally without requiring an internet connection.
+Two Markdown files are bundled with every Pollis release so that "Show Release Notes" and "View License" (Help menu) open locally without requiring an internet connection.
 
 Getting these files into the production build requires changes in **two separate places**. Omitting either one causes a "cannot be found" error at runtime:
 
@@ -598,6 +621,7 @@ When pulling a new upstream VS Code version, work through this list in order:
 - [ ] **Menu bar construction** — re-comment Selection/Go/Terminal; re-add four Pollis menu blocks in `menubar.ts` (§3.2)
 - [ ] **Terminal menu items** — remove New Terminal / New Terminal Window / Split Terminal from `terminalMenus.ts` and the `&&Terminal` mnemonic title (§3.3)
 - [ ] **`menubarControl.ts`** — re-add Pollis menu registrations to `MenubarMainMenu` (§3.4)
+- [ ] **Help menu** — About first (non-mac), Welcome, View License, View Third-Party Notices on all platforms; macOS app menu keeps only About (§3.6)
 - [ ] **Column Selection Mode** — re-add `MenubarViewMenu` entry to `toggleColumnSelection.ts` (§4.1)
 - [ ] **Word Wrap** — remove `precondition: CAN_TOGGLE_WORD_WRAP` from View menu registration in `toggleWordWrap.ts` (§4.2)
 - [ ] **`workbench.common.main.ts`** — verify all Pollis contribution imports are intact (§5.2)

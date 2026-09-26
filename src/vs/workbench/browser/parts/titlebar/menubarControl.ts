@@ -105,6 +105,18 @@ MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
 	order: 10
 });
 
+// Pollis: Help menu with Welcome, View License and View Third-Party Notices, plus About on
+// Windows and Linux (on macOS About stays in the Pollis application menu).
+MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
+	submenu: MenuId.MenubarHelpMenu,
+	title: {
+		value: 'Help',
+		original: 'Help',
+		mnemonicTitle: localize({ key: 'mHelp', comment: ['&& denotes a mnemonic'] }, "&&Help")
+	},
+	order: 11
+});
+
 export abstract class MenubarControl extends Disposable {
 
 	protected keys = [

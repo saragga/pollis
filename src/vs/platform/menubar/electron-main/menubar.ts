@@ -398,6 +398,14 @@ export class Menubar extends Disposable {
 			menubar.append(toolboxesMenuItem);
 		}
 
+		// Help
+		if (this.shouldDrawMenu('Help')) {
+			const helpMenu = new Menu();
+			const helpMenuItem = new MenuItem({ label: this.mnemonicLabel(nls.localize({ key: 'mHelp', comment: ['&& denotes a mnemonic'] }, "&&Help")), submenu: helpMenu, role: 'help' });
+			this.setMenuById(helpMenu, 'Help');
+			menubar.append(helpMenuItem);
+		}
+
 		if (menubar.items && menubar.items.length > 0) {
 			this.doSetApplicationMenu(menubar);
 		} else {
@@ -432,12 +440,10 @@ export class Menubar extends Disposable {
 
 	private setMacApplicationMenu(macApplicationMenu: Menu): void {
 		const about = this.createMenuItem(nls.localize('mAbout', "About {0}", this.productService.nameLong), 'workbench.action.showAboutDialog');
-		const welcome = this.createMenuItem(nls.localize('mWelcome', "Welcome"), 'workbench.action.openWalkthrough');
+		// Pollis: Welcome, View License and View Third-Party Notices are in the Help menu
 		//const showReleaseNotes = this.createMenuItem(nls.localize('mReleaseNotes', "Show Release Notes"), 'pollis.action.showReleaseNotes');
 		//const checkForUpdates = new MenuItem({ label: this.mnemonicLabel(nls.localize('miCheckForUpdates', "Check for &&Updates...")), click: () => setTimeout(() => { this.reportMenuActionTelemetry('CheckForUpdate'); this.updateService.checkForUpdates(true); }, 0) });
 		//const reportIssue = this.createMenuItem(nls.localize('mReportIssue', "Report Issue"), 'workbench.action.openIssueReporter');
-		const viewLicense = this.createMenuItem(nls.localize('mLicense', "View License"), 'pollis.action.showLicense');
-		const viewThirdPartyNotices = this.createMenuItem(nls.localize('mThirdPartyNotices', "View Third-Party Notices"), 'pollis.action.showThirdPartyNotices');
 
 		let preferences;
 		if (this.shouldDrawMenu('Preferences')) {
@@ -467,12 +473,7 @@ export class Menubar extends Disposable {
 			}
 		}));
 
-		const actions = [about, __separator__(), welcome];
-		actions.push(...[
-			__separator__(),
-			viewLicense,
-			viewThirdPartyNotices,
-		]);
+		const actions = [about];
 
 		if (preferences) {
 			actions.push(...[
