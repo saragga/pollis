@@ -61,6 +61,11 @@ jobs:
         run: npm run typecheck
         working-directory: build
 
+      - name: Generate webview data
+        # The *.data.ts modules are generated from the webview *.toml files and are gitignored.
+        # Only compile-client runs compile-toml, so type checks and vscode-min need it first.
+        run: npm run gulp compile-toml
+
       - name: Type check sources
         run: npm run compile-check-ts-native
 
