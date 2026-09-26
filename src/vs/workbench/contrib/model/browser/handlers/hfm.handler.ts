@@ -30,7 +30,7 @@ import { IPathService } from '../../../../services/path/common/pathService.js';
 import { IWorkspaceContextService } from '../../../../../platform/workspace/common/workspace.js';
 import { ISecretStorageService } from '../../../../../platform/secrets/common/secrets.js';
 import { IWebviewService } from '../../../webview/browser/webview.js';
-import { openWikiByFile, openNotebookByFile, openPackageItem, openInBrowser, autoSelectJuliaKernel, createPackageStatusWiring, createExampleCodeWiring, createCustomCopyWiring, createReferenceWiring, createVideoWiring, createApiKeyWiring, sendToJuliaRepl } from './model.handler.js';
+import { openWikiByFile, openNotebookByFile, openInBrowser, autoSelectJuliaKernel, createPackageStatusWiring, createExampleCodeWiring, createCustomCopyWiring, createReferenceWiring, createVideoWiring, createApiKeyWiring, sendToJuliaRepl } from './model.handler.js';
 import { CREDENTIALS } from '../common/credentials.js';
 import { hasKey } from '../../../../../base/common/types.js';
 
@@ -112,15 +112,6 @@ export function registerHfmWebviewHandlers(
 	disposables.add(webviewInput.webview.onMessage(async (e: { message: HfmWebviewMessage }) => {
 		const msg = e.message;
 		switch (msg.command) {
-			case 'openDocs':
-				if (msg.target === 'repository') {
-					try {
-						await openPackageItem('repository', hfmData.packages, commandService, quickInputService, clipboardService, notificationService);
-					} finally {
-						webviewInput.webview.postMessage({ command: 'actionDone' });
-					}
-				}
-				break;
 			case 'openNotebook':
 				await openNotebookByFile(msg.target, hfmData.notebooks, openerService, editorService, notebookKernelService, notebookEditorModelResolverService);
 				break;
@@ -172,9 +163,6 @@ export function registerHfmWebviewHandlers(
 				break;
 			case 'installPackages':
 				await pkgStatus.handleInstall();
-				break;
-			case 'cancelAction':
-				await quickInputService.cancel();
 				break;
 			case 'setApiKey':
 				await apiKey.handleSet();

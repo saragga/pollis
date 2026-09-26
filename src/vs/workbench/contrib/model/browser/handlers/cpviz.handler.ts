@@ -25,7 +25,7 @@ import { CellEditType, CellKind } from '../../../notebook/common/notebookCommon.
 import { IFileService } from '../../../../../platform/files/common/files.js';
 import { IPathService } from '../../../../services/path/common/pathService.js';
 import { IWorkspaceContextService } from '../../../../../platform/workspace/common/workspace.js';
-import { openWikiByFile, openNotebookByFile, openPackageItem, openInBrowser, autoSelectJuliaKernel, createPackageStatusWiring, createExampleCodeWiring, createCustomCopyWiring, createReferenceWiring, createVideoWiring, sendToJuliaRepl } from './model.handler.js';
+import { openWikiByFile, openNotebookByFile, openInBrowser, autoSelectJuliaKernel, createPackageStatusWiring, createExampleCodeWiring, createCustomCopyWiring, createReferenceWiring, createVideoWiring, sendToJuliaRepl } from './model.handler.js';
 import { hasKey } from '../../../../../base/common/types.js';
 
 export function registerCpvizWebviewHandlers(
@@ -98,15 +98,6 @@ export function registerCpvizWebviewHandlers(
 	disposables.add(webviewInput.webview.onMessage(async (e: { message: CpvizWebviewMessage }) => {
 		const msg = e.message;
 		switch (msg.command) {
-			case 'openDocs':
-				try {
-					if (msg.target === 'repository') {
-						await openPackageItem('repository', cpvizData.packages, commandService, quickInputService, clipboardService, notificationService);
-					}
-				} finally {
-					webviewInput.webview.postMessage({ command: 'actionDone' });
-				}
-				break;
 			case 'openNotebook':
 				await openNotebookByFile(msg.target, cpvizData.notebooks, openerService, editorService, notebookKernelService, notebookEditorModelResolverService);
 				break;
@@ -158,9 +149,6 @@ export function registerCpvizWebviewHandlers(
 				break;
 			case 'installPackages':
 				await pkgStatus.handleInstall();
-				break;
-			case 'cancelAction':
-				await quickInputService.cancel();
 				break;
 		}
 	}));

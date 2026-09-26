@@ -25,7 +25,7 @@ import { generateTokensCSSForColorMap } from '../../../../../editor/common/langu
 import { Event } from '../../../../../base/common/event.js';
 import { IUntitledTextResourceEditorInput } from '../../../../common/editor.js';
 import { CellEditType, CellKind } from '../../../notebook/common/notebookCommon.js';
-import { openWikiByFile, openNotebookByFile, openPackageItem, openInBrowser, autoSelectJuliaKernel, createPackageStatusWiring, createExampleCodeWiring, createCustomCopyWiring, createReferenceWiring, createVideoWiring, sendToJuliaRepl } from './model.handler.js';
+import { openWikiByFile, openNotebookByFile, openInBrowser, autoSelectJuliaKernel, createPackageStatusWiring, createExampleCodeWiring, createCustomCopyWiring, createReferenceWiring, createVideoWiring, sendToJuliaRepl } from './model.handler.js';
 import { hasKey } from '../../../../../base/common/types.js';
 
 export function registerYfinWebviewHandlers(
@@ -93,15 +93,6 @@ export function registerYfinWebviewHandlers(
 	disposables.add(webviewInput.webview.onMessage(async (e: { message: YfinWebviewMessage }) => {
 		const msg = e.message;
 		switch (msg.command) {
-			case 'openDocs':
-				if (msg.target === 'repository') {
-					try {
-						await openPackageItem('repository', yfinData.packages, commandService, quickInputService, clipboardService, notificationService);
-					} finally {
-						webviewInput.webview.postMessage({ command: 'actionDone' });
-					}
-				}
-				break;
 			case 'openNotebook':
 				await openNotebookByFile(msg.target, yfinData.notebooks, openerService, editorService, notebookKernelService, notebookEditorModelResolverService);
 				break;
@@ -153,9 +144,6 @@ export function registerYfinWebviewHandlers(
 				break;
 			case 'installPackages':
 				await pkgStatus.handleInstall();
-				break;
-			case 'cancelAction':
-				await quickInputService.cancel();
 				break;
 		}
 	}));

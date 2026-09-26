@@ -21,13 +21,10 @@ export interface IYfinMetadata {
 }
 
 export type YfinWebviewMessage =
-	| { command: 'openDocs'; target: 'paper' | 'repository' }
 	| { command: 'openNotebook'; target: string }
 	| { command: 'openWiki'; target: string }
-	| { command: 'openVideoList' }
 	| { command: 'openUrl'; url: string }
 	| { command: 'runCode'; target: 'newFile' | 'terminal' | 'juliaRepl' | 'notebook' | 'pluto'; code: string }
 	| { command: 'colorize'; code: string; target?: string }
 	| { command: 'openReference'; id: string }
-	| { command: 'installPackages' }
-	| { command: 'cancelAction' };
+	| { command: 'installPackages' };

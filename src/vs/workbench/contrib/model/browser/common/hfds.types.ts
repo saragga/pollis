@@ -31,10 +31,8 @@ export interface IHfApiDataset {
 }
 
 export type HfdsWebviewMessage =
-	| { command: 'openDocs'; target: 'paper' | 'repository' }
 	| { command: 'openNotebook'; target: string }
 	| { command: 'openWiki'; target: string }
-	| { command: 'openVideoList' }
 	| { command: 'openUrl'; url: string }
 	| { command: 'runCode'; target: 'newFile' | 'terminal' | 'juliaRepl' | 'notebook' | 'pluto'; code: string }
 	| { command: 'colorize'; code: string; target?: string }
@@ -42,5 +40,4 @@ export type HfdsWebviewMessage =
 	| { command: 'installPackages' }
 	| { command: 'setApiKey' }
 	| { command: 'clearApiKey' }
-	| { command: 'cancelAction' }
 	| { command: 'fetchHfDatasets'; sort: string; filterGroups: string[][]; limit: number; seq?: number };
