@@ -8,7 +8,6 @@ import { localize } from '../../../../nls.js';
 import { ContextKeyExpr, ContextKeyExpression } from '../../../../platform/contextkey/common/contextkey.js';
 import { IKeybindingService } from '../../../../platform/keybinding/common/keybinding.js';
 import { MenuRegistry } from '../../../../platform/actions/common/actions.js';
-import { ProductQualityContext } from '../../../../platform/contextkey/common/contextkeys.js';
 import { ChatContextKeys } from '../common/actions/chatContextKeys.js';
 import { ChatConfiguration, ChatModeKind } from '../common/constants.js';
 import { IsSessionsWindowContext } from '../../../common/contextkeys.js';
@@ -412,25 +411,7 @@ export const TIP_CATALOG: readonly ITipDefinition[] = [
 		when: ChatContextKeys.chatSessionType.isEqualTo(localChatSessionType),
 		excludeWhenToolsInvoked: ['listDebugEvents'],
 	},
-	{
-		id: 'tip.openAgentsWindow',
-		tier: ChatTipTier.Qol,
-		buildMessage() {
-			return new MarkdownString(
-				localize(
-					'tip.openAgentsWindow',
-					"Try the [Agents Application](command:workbench.action.openAgentsWindow \"Open Agents Application\") to run multiple agents simultaneously and manage your coding sessions."
-				)
-			);
-		},
-		when: ContextKeyExpr.and(
-			ProductQualityContext.notEqualsTo('stable'),
-			IsSessionsWindowContext.negate(),
-			ChatContextKeys.chatModeKind.isEqualTo(ChatModeKind.Agent),
-		),
-		excludeWhenCommandsExecuted: ['workbench.action.openAgentsWindow'],
-		dismissWhenCommandsClicked: ['workbench.action.openAgentsWindow'],
-	},
+	// Pollis: 'tip.openAgentsWindow' removed; the Agents window is not shipped.
 	{
 		id: 'tip.copilotCli',
 		tier: ChatTipTier.Qol,

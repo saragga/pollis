@@ -67,7 +67,7 @@ const vscodeResourceIncludes = [
 
 	// Workbench
 	'out-build/vs/code/electron-browser/workbench/workbench.html',
-	'out-build/vs/sessions/electron-browser/sessions.html',
+	// Pollis: 'out-build/vs/sessions/electron-browser/sessions.html' omitted; the Agents window is not shipped.
 
 	// Electron Preload
 	'out-build/vs/base/parts/sandbox/electron-browser/preload.js',
@@ -112,11 +112,7 @@ const vscodeResourceIncludes = [
 	'out-build/vs/workbench/contrib/model/browser/media/notebooks/**/*.ipynb',
 	'out-build/vs/workbench/contrib/model/browser/media/notebooks/**/*.jl',
 
-	// Sessions
-	'out-build/vs/sessions/contrib/chat/browser/media/*.svg',
-	'out-build/vs/sessions/contrib/welcome/browser/media/*.svg',
-	'out-build/vs/sessions/prompts/*.prompt.md',
-	'out-build/vs/sessions/skills/**/SKILL.md',
+	// Pollis: Sessions resources omitted; the Agents window is not shipped.
 
 	// Extensions
 	'out-build/vs/workbench/contrib/extensions/browser/media/{theme-icon.png,language-icon.svg}',
@@ -254,9 +250,9 @@ function runTsGoTypeCheck(): Promise<void> {
 }
 
 const sourceMappingURLBase = `https://main.vscode-cdn.net/sourcemaps/${commit}`;
-const isCI = !!process.env['CI'] || !!process.env['BUILD_ARTIFACTSTAGINGDIRECTORY'] || !!process.env['GITHUB_WORKSPACE'];
-const useCdnSourceMapsForPackagingTasks = isCI;
-const stripSourceMapsInPackagingTasks = isCI;
+// Pollis: source maps are never shipped in the app, and there is no CDN to point them at.
+const useCdnSourceMapsForPackagingTasks = false;
+const stripSourceMapsInPackagingTasks = true;
 const minifyVSCodeTask = task.define('minify-vscode', task.series(
 	bundleVSCodeTask,
 	util.rimraf('out-vscode-min'),
@@ -348,11 +344,8 @@ function packageTask(platform: string, arch: string, sourceFolderName: string, d
 			'vs/workbench/workbench.desktop.main.css',
 			'vs/workbench/api/node/extensionHostProcess.js',
 			'vs/code/electron-browser/workbench/workbench.html',
-			'vs/code/electron-browser/workbench/workbench.js',
-			'vs/sessions/sessions.desktop.main.js',
-			'vs/sessions/sessions.desktop.main.css',
-			'vs/sessions/electron-browser/sessions.html',
-			'vs/sessions/electron-browser/sessions.js'
+			'vs/code/electron-browser/workbench/workbench.js'
+			// Pollis: the vs/sessions files are omitted; the Agents window is not shipped.
 		]);
 
 		const src = gulp.src(out + '/**', { base: '.' })

@@ -97,7 +97,7 @@ const desktopWorkerEntryPoints = [
 // Desktop workbench and code entry points
 const desktopEntryPoints = [
 	'vs/workbench/workbench.desktop.main',
-	'vs/sessions/sessions.desktop.main',
+	// Pollis: 'vs/sessions/sessions.desktop.main' omitted; the Agents window is not shipped.
 	'vs/workbench/contrib/debug/node/telemetryApp',
 	'vs/platform/files/node/watcher/watcherMain',
 	'vs/platform/terminal/node/ptyHostMain',
@@ -110,7 +110,7 @@ const codeEntryPoints = [
 	'vs/code/node/cliProcessMain',
 	'vs/code/electron-utility/sharedProcess/sharedProcessMain',
 	'vs/code/electron-browser/workbench/workbench',
-	'vs/sessions/electron-browser/sessions',
+	// Pollis: 'vs/sessions/electron-browser/sessions' omitted; the Agents window is not shipped.
 ];
 
 // Web entry points (used in server-web and vscode-web)
@@ -207,8 +207,7 @@ function getCssBundleEntryPointsForTarget(target: BuildTarget): Set<string> {
 			return new Set([
 				'vs/workbench/workbench.desktop.main',
 				'vs/code/electron-browser/workbench/workbench',
-				'vs/sessions/sessions.desktop.main',
-				'vs/sessions/electron-browser/sessions',
+				// Pollis: the vs/sessions entry points are omitted; the Agents window is not shipped.
 			]);
 		case 'server':
 			return new Set(); // Server has no UI
@@ -239,7 +238,7 @@ const commonResourcePatterns = [
 	// SVGs referenced from CSS (needed for transpile/dev builds where CSS is copied as-is)
 	'vs/workbench/browser/media/code-icon.svg',
 	'vs/workbench/browser/parts/editor/media/letterpress*.svg',
-	'vs/sessions/contrib/chat/browser/media/*.svg'
+	// Pollis: 'vs/sessions/contrib/chat/browser/media/*.svg' omitted; the Agents window is not shipped.
 ];
 
 // Resources for desktop target
@@ -249,8 +248,7 @@ const desktopResourcePatterns = [
 	// HTML
 	'vs/code/electron-browser/workbench/workbench.html',
 	'vs/code/electron-browser/workbench/workbench-dev.html',
-	'vs/sessions/electron-browser/sessions.html',
-	'vs/sessions/electron-browser/sessions-dev.html',
+	// Pollis: vs/sessions/electron-browser/sessions{,-dev}.html omitted; the Agents window is not shipped.
 	'vs/workbench/services/extensions/worker/webWorkerExtensionHostIframe.html',
 	'vs/workbench/contrib/webview/browser/pre/*.html',
 
@@ -285,9 +283,7 @@ const desktopResourcePatterns = [
 	'vs/workbench/browser/parts/editor/media/*.png',
 	'vs/workbench/contrib/debug/browser/media/*.png',
 
-	// Sessions - built-in prompts and skills
-	'vs/sessions/prompts/*.prompt.md',
-	'vs/sessions/skills/**/SKILL.md',
+	// Pollis: Sessions prompts and skills omitted; the Agents window is not shipped.
 
 	// Pollis app documents (Release Notes, License)
 	'vs/workbench/browser/media/pollis-*.md',

@@ -45,7 +45,6 @@ import { IPluginGitService } from '../common/plugins/pluginGitService.js';
 import { registerChatDeveloperActions } from './actions/chatDeveloperActions.js';
 import { registerChatExportZipAction } from './actions/chatExportZip.js';
 import { HoldToVoiceChatInChatViewAction, InlineVoiceChatAction, KeywordActivationContribution, QuickVoiceChatAction, ReadChatResponseAloud, StartVoiceChatAction, StopListeningAction, StopListeningAndSubmitAction, StopReadAloud, StopReadChatItemAloud, VoiceChatInChatViewAction } from './actions/voiceChatActions.js';
-import { OpenAgentsWindowAction } from './agentSessions/agentSessionsActions.js';
 import { NativeBuiltinToolsContribution } from './builtInTools/tools.js';
 import { NativePluginGitCommandService } from './pluginGitCommandService.js';
 
@@ -227,7 +226,7 @@ class ChatLifecycleHandler extends Disposable {
 	}
 }
 
-registerAction2(OpenAgentsWindowAction);
+// Pollis: OpenAgentsWindowAction is not registered; the Agents window is not shipped.
 registerAction2(StartVoiceChatAction);
 
 registerAction2(VoiceChatInChatViewAction);
