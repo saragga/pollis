@@ -1,0 +1,133 @@
+name: Pollis Windows
+
+# Trial of Pollis on Windows, on a GitHub-hosted runner. Runs the same fast checks as
+# pollis-build.yml, then the full minified build (`gulp vscode-win32-x64-min`), which assembles
+# the app into ../VSCode-win32-x64.
+#
+# The build step runs even when a check fails, so that one run reports both. Manual trigger only:
+# hosted Windows minutes on a private repository count double, and nothing is cached yet.
+
+on:
+  workflow_dispatch:
+    inputs:
+      package:
+        description: Build the minified app after the checks
+        type: boolean
+        default: true
+      upload:
+        description: Upload the packaged app as a workflow artifact (kept for 3 days)
+        type: boolean
+        default: false
+
+concurrency:
+  group: pollis-windows-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  VSCODE_QUALITY: 'oss'
+  VSCODE_ARCH: x64
+
+jobs:
+  windows:
+    name: Windows (x64)
+    runs-on: windows-2022
+    timeout-minutes: 240
+
+    steps:
+      - name: Allow long paths
+        # node_modules paths can exceed MAX_PATH (260 characters) under the runner's work folder.
+        run: git config --system core.longpaths true
+
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          lfs: true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+
+      - name: Setup Python
+        # node-gyp needs Python to build the native modules.
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        shell: pwsh
+        run: |
+          . build/azure-pipelines/win32/exec.ps1
+          $ErrorActionPreference = "Stop"
+
+          for ($i = 1; $i -le 3; $i++) {
+            try {
+              exec { npm ci }
+              break
+            }
+            catch {
+              if ($i -eq 3) {
+                Write-Error "npm ci failed after 3 attempts"
+                throw
+              }
+              Write-Host "npm ci failed attempt $i, retrying..."
+              Start-Sleep -Seconds 5
+            }
+          }
+        env:
+          npm_config_arch: x64
+          npm_config_foreground_scripts: 'true'
+          # Only packaging needs the Electron and Playwright binaries.
+          ELECTRON_SKIP_BINARY_DOWNLOAD: ${{ inputs.package && '' || '1' }}
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+          # Raises the GitHub API rate limit for the ripgrep and Electron downloads.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate webview data
+        # The *.data.ts modules are generated from the webview *.toml files and are gitignored.
+        run: npm run gulp compile-toml
+
+      - name: Type check build scripts
+        run: npm run typecheck
+        working-directory: build
+
+      - name: Type check sources
+        run: npm run compile-check-ts-native
+
+      - name: Check layering
+        if: ${{ !cancelled() }}
+        run: npm run valid-layers-check
+
+      - name: Lint
+        if: ${{ !cancelled() }}
+        run: npm run eslint
+
+      - name: Unit tests
+        if: ${{ !cancelled() }}
+        run: npm run test-node
+
+      - name: Build minified app
+        if: ${{ !cancelled() && inputs.package }}
+        run: npm run gulp vscode-win32-x64-min
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Report build output
+        if: ${{ !cancelled() && inputs.package }}
+        shell: bash
+        run: |
+          set -e
+          echo "packaged app:"
+          du -sh ../VSCode-win32-x64
+          ls -1 ../VSCode-win32-x64
+
+      - name: Upload packaged app
+        if: ${{ !cancelled() && inputs.package && inputs.upload }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: Pollis-win32-x64
+          path: ${{ github.workspace }}/../VSCode-win32-x64
+          retention-days: 3
