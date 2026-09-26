@@ -140,7 +140,6 @@ export class MenuId {
 	static readonly MenubarModelMenu = new MenuId('MenubarModelMenu');
 	static readonly MenubarSimulateMenu = new MenuId('MenubarSimulateMenu');
 	static readonly MenubarOptimiseMenu = new MenuId('MenubarOptimiseMenu');
-	static readonly MenubarComposeMenu = new MenuId('MenubarComposeMenu');
 	static readonly OpenEditorsContext = new MenuId('OpenEditorsContext');
 	static readonly OpenEditorsContextShare = new MenuId('OpenEditorsContextShare');
 	static readonly ProblemsPanelContext = new MenuId('ProblemsPanelContext');

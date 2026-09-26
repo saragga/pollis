@@ -123,17 +123,16 @@ Pollis significantly restructures the native macOS menu bar relative to upstream
 
 **File:** `src/vs/platform/actions/common/actions.ts`
 
-Five new top-level menu IDs are declared:
+Four new top-level menu IDs are declared:
 
 ```typescript
 static readonly MenubarExploreMenu  = new MenuId('MenubarExploreMenu');
 static readonly MenubarModelMenu    = new MenuId('MenubarModelMenu');   // "Infer"
 static readonly MenubarSimulateMenu = new MenuId('MenubarSimulateMenu');
 static readonly MenubarOptimiseMenu = new MenuId('MenubarOptimiseMenu');
-static readonly MenubarComposeMenu  = new MenuId('MenubarComposeMenu');
 ```
 
-**After a rebase:** upstream will not have these; re-add all five.
+**After a rebase:** upstream will not have these; re-add all four.
 
 ### 3.2 Menu bar construction
 
@@ -146,7 +145,7 @@ The native menu bar is assembled in `_updateMenubar()`. Pollis makes the followi
 |---|---|
 | Selection | Commented out — items available via Command Palette and View menu |
 | Go | Commented out — navigation via keybindings |
-| Terminal | Commented out as a top-level menu — items redistributed (see §3.3) |
+| Terminal | Commented out as a top-level menu (see §3.3) |
 
 #### Menus added (in order after Run)
 | Pollis menu | MenuId | Notes |
@@ -155,26 +154,25 @@ The native menu bar is assembled in `_updateMenubar()`. Pollis makes the followi
 | Infer | `MenubarModelMenu` | Statistical and ML model webviews |
 | Simulate | `MenubarSimulateMenu` | Simulation methods |
 | Optimise | `MenubarOptimiseMenu` | Optimisation methods |
-| Compose | `MenubarComposeMenu` | Workflow composition + Tasks (moved from Terminal) |
 
 The Run menu is upstream VS Code — no changes.
 
-**After a rebase:** the upstream file will restore Selection, Go, and Terminal as top-level menus, and will not have the five Pollis menus. Re-apply all commented-out blocks and re-add the five new menu blocks.
+**After a rebase:** the upstream file will restore Selection, Go, and Terminal as top-level menus, and will not have the four Pollis menus. Re-apply all commented-out blocks and re-add the four new menu blocks.
 
-### 3.3 Tasks moved from Terminal to Compose
+### 3.3 Terminal and Tasks menus removed
 
 **File:** `src/vs/workbench/contrib/terminal/browser/terminalMenus.ts`  
 **File:** `src/vs/workbench/contrib/terminal/browser/terminal.contribution.ts`
 
-All task-related menu items that upstream registers under `MenubarTerminalMenu` are re-registered under `MenubarComposeMenu` in Pollis. Terminal-specific items (new terminal, split, kill, etc.) remain in the terminal contribution but are no longer exposed at the top-level menu since the Terminal top-level menu is removed.
+Pollis has no Terminal top-level menu, so `MenubarTerminalMenu` (including the Tasks items that `task.contribution.ts` registers there) is not reachable from the menu bar. Tasks remain available from the Command Palette. The New Terminal, New Terminal Window and Split Terminal items are removed from `terminalMenus.ts`, and the `&&Terminal` mnemonic title is removed from the terminal view's `openCommandActionDescriptor`.
 
-**After a rebase:** upstream will re-add terminal items to `MenubarTerminalMenu`; re-move task items to `MenubarComposeMenu`.
+**After a rebase:** remove those three `terminalMenus.ts` items and the mnemonic title again.
 
 ### 3.4 Pollis menus registered in `menubarControl.ts`
 
 **File:** `src/vs/workbench/browser/parts/titlebar/menubarControl.ts`
 
-The five Pollis menus are registered into `MenubarMainMenu` with their display titles and ordering. Terminal is registered into `MenubarViewMenu` as a panel toggle (View → Terminal) rather than as a standalone top-level menu.
+The four Pollis menus are registered into `MenubarMainMenu` with their display titles and ordering. Terminal is registered into `MenubarViewMenu` as a panel toggle (View → Terminal) rather than as a standalone top-level menu.
 
 **After a rebase:** upstream will not have these registrations; re-add them.
 
@@ -193,8 +191,7 @@ to them from its `package.json` (`contributes.menus`):
 | `menuBar/simulate` | `MenubarSimulateMenu` |
 | `menuBar/optimise` | `MenubarOptimiseMenu` |
 
-Compose is not exposed while its top-level registration is commented out in `menubarControl.ts`. The
-extension exception in `LICENSE.txt` names these contribution points as part of the Extension API.
+The extension exception in `LICENSE.txt` names these contribution points as part of the Extension API.
 
 **After a rebase:** upstream will not have these entries; re-add them.
 
@@ -255,7 +252,6 @@ src/vs/workbench/contrib/
   explore/    — Data discovery and toolbox webviews (Explore menu)
   simulate/   — Simulation method webviews (Simulate menu)
   optimise/   — Optimisation method webviews (Optimise menu)
-  compose/    — Workflow composition (Compose menu)
   katex/      — Bundled KaTeX for equation rendering in webviews
   mermaid/    — Bundled Mermaid for diagram rendering in Pollis webviews
 ```
@@ -594,9 +590,9 @@ When pulling a new upstream VS Code version, work through this list in order:
 - [ ] **Product interface** — re-add `pollisVersion`, `poweredBy`, `licenseName` and `sourceUrl` to `IProductConfiguration` (§1.2)
 - [ ] **About dialog** — re-add `createNativeAboutDialogDetails` to `dialog.ts`, and the licence + source lines to `createBrowserAboutDialogDetails` (§2)
 - [ ] **Menus open to extensions** — re-add the `menuBar/*` Pollis entries to `menusExtensionPoint.ts` (§3.5)
-- [ ] **MenuId registrations** — re-add five `MenubarXxxMenu` IDs to `actions.ts` (§3.1)
-- [ ] **Menu bar construction** — re-comment Selection/Go/Terminal; re-add five Pollis menu blocks in `menubar.ts` (§3.2)
-- [ ] **Tasks → Compose** — re-move task items from `MenubarTerminalMenu` to `MenubarComposeMenu` (§3.3)
+- [ ] **MenuId registrations** — re-add four `MenubarXxxMenu` IDs to `actions.ts` (§3.1)
+- [ ] **Menu bar construction** — re-comment Selection/Go/Terminal; re-add four Pollis menu blocks in `menubar.ts` (§3.2)
+- [ ] **Terminal menu items** — remove New Terminal / New Terminal Window / Split Terminal from `terminalMenus.ts` and the `&&Terminal` mnemonic title (§3.3)
 - [ ] **`menubarControl.ts`** — re-add Pollis menu registrations to `MenubarMainMenu` (§3.4)
 - [ ] **Column Selection Mode** — re-add `MenubarViewMenu` entry to `toggleColumnSelection.ts` (§4.1)
 - [ ] **Word Wrap** — remove `precondition: CAN_TOGGLE_WORD_WRAP` from View menu registration in `toggleWordWrap.ts` (§4.2)

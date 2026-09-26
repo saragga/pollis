@@ -265,8 +265,7 @@ import './contrib/debug/browser/callStackEditorContribution.js';
 import './contrib/debug/browser/repl.js';
 import './contrib/debug/browser/debugViewlet.js';
 
-// Compose, Explore, Model, Simulate, Optimise and Toolboxes
-import './contrib/compose/browser/compose.contribution.js';
+// Explore, Model, Simulate, Optimise and Toolboxes
 import './contrib/explore/browser/explore.contribution.js';
 import './contrib/model/browser/model.contribution.js';
 import './contrib/simulate/browser/simulate.contribution.js';

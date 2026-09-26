@@ -390,14 +390,6 @@ export class Menubar extends Disposable {
 			// menubar.append(macWindowMenuItem);
 		}
 
-		// Compose
-		if (this.shouldDrawMenu('Compose')) {
-			const helpMenu = new Menu();
-			const helpMenuItem = new MenuItem({ label: this.mnemonicLabel(nls.localize({ key: 'mHelp', comment: ['&& denotes a mnemonic'] }, "&&Compose")), submenu: helpMenu, role: 'help' });
-			this.setMenuById(helpMenu, 'Compose');
-			menubar.append(helpMenuItem);
-		}
-
 		// Toolboxes
 		if (this.shouldDrawMenu('Toolboxes')) {
 			const toolboxesMenu = new Menu();
@@ -443,7 +435,6 @@ export class Menubar extends Disposable {
 		const welcome = this.createMenuItem(nls.localize('mWelcome', "Welcome"), 'workbench.action.openWalkthrough');
 		//const showReleaseNotes = this.createMenuItem(nls.localize('mReleaseNotes', "Show Release Notes"), 'pollis.action.showReleaseNotes');
 		//const checkForUpdates = new MenuItem({ label: this.mnemonicLabel(nls.localize('miCheckForUpdates', "Check for &&Updates...")), click: () => setTimeout(() => { this.reportMenuActionTelemetry('CheckForUpdate'); this.updateService.checkForUpdates(true); }, 0) });
-		//const featureRequest = this.createMenuItem(nls.localize('mFeatureRequest', "Feature Request"), 'pollis.action.openFeatureRequestReporter');
 		//const reportIssue = this.createMenuItem(nls.localize('mReportIssue', "Report Issue"), 'workbench.action.openIssueReporter');
 		const viewLicense = this.createMenuItem(nls.localize('mLicense', "View License"), 'pollis.action.showLicense');
 		const viewThirdPartyNotices = this.createMenuItem(nls.localize('mThirdPartyNotices', "View Third-Party Notices"), 'pollis.action.showThirdPartyNotices');
@@ -533,7 +524,6 @@ export class Menubar extends Disposable {
 
 		switch (menuId) {
 			case 'File':
-			case 'Compose':
 				if (isMacintosh) {
 					return (this.windowsMainService.getWindowCount() === 0 && this.closedLastWindow) || (this.windowsMainService.getWindowCount() > 0 && this.noActiveMainWindow) || (!!this.menubarMenus && !!this.menubarMenus[menuId]);
 				}
