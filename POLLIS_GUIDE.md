@@ -22,6 +22,8 @@ The following fields are set to Pollis-specific values:
 | `pollisVersion` | `"0.2.0"` | Pollis-specific version shown in About dialog |
 | `date` | `"2026-05-31T00:00:00.000Z"` | Build date shown in About dialog |
 | `poweredBy` | object | Runtime version strings shown in About dialog (see §1.2) |
+| `licenseName` | `"AGPL-3.0-or-later"` | SPDX id; shown in About dialog, written into Linux packages |
+| `sourceUrl` | `"https://github.com/Trumpingtons/pollis"` | Source link shown in About dialog (AGPL section 13) |
 
 **After a rebase:** re-apply these values; upstream will reset them to VS Code defaults.
 
@@ -33,10 +35,7 @@ A custom `poweredBy` object records the versions of the runtimes bundled with Po
 
 ```json
 "poweredBy": {
-  "gemma":   "...",
   "julia":   "...",
-  "duckdb":  "...",
-  "lancedb": "...",
   "codeoss": "..."
 }
 ```
@@ -48,12 +47,11 @@ The `IProductConfiguration` interface is extended with:
 ```typescript
 readonly pollisVersion?: string;
 readonly poweredBy?: {
-  readonly gemma?: string;
   readonly julia?: string;
-  readonly duckdb?: string;
-  readonly lancedb?: string;
   readonly codeoss?: string;
 };
+readonly licenseName?: string;   // next to licenseUrl
+readonly sourceUrl?: string;     // next to licenseUrl
 ```
 
 **After a rebase:** upstream will not have these fields; re-add both the `product.json` values and the interface extension.
@@ -78,11 +76,17 @@ Build Date: <date formatted as "31 May 2026">
 © <year> Antonio Saragga Seabra
 
 Powered by
-· AI: Gemma <version>
 · Analytics: Julia <version>
-· Databases: DuckDB <version>, LanceDB <version>
 · Platform: Code OSS <version>
+
+License: <licenseName>. This program comes with ABSOLUTELY NO WARRANTY.
+Source code: <sourceUrl>
 ```
+
+The last two lines are the "Appropriate Legal Notices" (AGPL section 5d) and the source offer (section 13).
+The web/server About dialog, `createBrowserAboutDialogDetails()` in
+`src/vs/workbench/browser/parts/dialogs/dialog.ts`, appends the same two lines. That matters most there,
+because section 13 covers users who reach Pollis over a network.
 
 Key decisions:
 - Copyright appears immediately below Build Date (not at the bottom).
@@ -155,6 +159,26 @@ All task-related menu items that upstream registers under `MenubarTerminalMenu` 
 The five Pollis menus are registered into `MenubarMainMenu` with their display titles and ordering. Terminal is registered into `MenubarViewMenu` as a panel toggle (View → Terminal) rather than as a standalone top-level menu.
 
 **After a rebase:** upstream will not have these registrations; re-add them.
+
+### 3.5 Pollis menus open to extensions
+
+**File:** `src/vs/workbench/services/actions/common/menusExtensionPoint.ts`
+
+The Pollis top menus are stable (non-proposed) menu contribution points, so any extension can add items
+to them from its `package.json` (`contributes.menus`):
+
+| Contribution key | MenuId |
+|---|---|
+| `menuBar/explore` | `MenubarExploreMenu` |
+| `menuBar/toolboxes` | `MenubarToolboxesMenu` |
+| `menuBar/model` | `MenubarModelMenu` |
+| `menuBar/simulate` | `MenubarSimulateMenu` |
+| `menuBar/optimise` | `MenubarOptimiseMenu` |
+
+Compose is not exposed while its top-level registration is commented out in `menubarControl.ts`. The
+extension exception in `LICENSE.txt` names these contribution points as part of the Extension API.
+
+**After a rebase:** upstream will not have these entries; re-add them.
 
 ---
 
@@ -382,6 +406,21 @@ Same display-name fix as `workspace.ts`: `updateNotebookWithSelectedKernel` now 
 
 **After a rebase:** re-apply the signature change and display-name logic.
 
+#### `src/notebook/notebookKernel.ts` — Pollis credentials injected into the kernel env
+
+The kernel is spawned with `env = { ...process.env, ...getCustomEnvironmentVariables() }` — the **extension host's** environment, which does **not** inherit VS Code's terminal env-var collection. So a notebook kernel would not see the credentials Pollis injects into terminals (EDGAR's `SEC_USER_AGENT` and the FRED / Alpha Vantage / Hugging Face / Kaggle keys; see §5.7). The kernel-spawn `env` now also merges the result of the Pollis core command `pollis.credentialEnv`:
+
+```ts
+const credentialEnv = await vscode.commands
+    .executeCommand<Record<string, string>>('pollis.credentialEnv')
+    .then(e => e ?? {}, () => ({} as Record<string, string>))
+const env = { ...process.env, ...getCustomEnvironmentVariables(), ...credentialEnv }
+```
+
+Falls back to `{}` when the command is absent (plain VS Code). This is what makes EDGAR / FRED / Kaggle / HF notebooks authenticate — including **hand-created** notebooks, not just webview-generated ones — without writing the secret into a cell or file. The core side (the `pollis.credentialEnv` command, the registry, the terminal injection) is §5.7.
+
+**After a rebase:** re-apply the `pollis.credentialEnv` fetch and the `...credentialEnv` merge in `notebookKernel.ts`.
+
 #### `src/smallcommands.ts` — linter toggle removed
 
 - `toggleLinter()` function deleted
@@ -402,6 +441,79 @@ Same display-name fix as `workspace.ts`: `updateNotebookWithSelectedKernel` now 
 | `src/weave.ts` | Weave feature not used |
 
 **After a rebase:** ensure none of these files are imported or activated. Their imports have been removed from `extension.ts`.
+
+### 5.7 Credential environment injection
+
+Provider credentials (FRED / Alpha Vantage / Hugging Face / Kaggle API keys, stored masked) and EDGAR's non-secret SEC contact live in VS Code **Secret Storage**. Pollis mirrors them into the **process environment** so any Julia REPL, editor-run, terminal command, or notebook kernel picks them up — without opening a webview and without the values ever landing in a file. New and Pollis-owned; documented for webview authors in `WEBVIEW_GUIDE.md` §24.6.
+
+**Files (Pollis-owned, no upstream conflict):**
+
+| File | Role |
+|---|---|
+| `model/browser/common/credentials.ts` | Single source of truth: `CREDENTIALS` (named) + `POLLIS_CREDENTIAL_FIELDS` — every `secretKey → envVar` pair. The per-webview handlers spread these into their `createApiKeyWiring` fields. |
+| `model/browser/credentialEnvironment.contribution.ts` | Workbench contribution (`AfterRestored`): reads the secrets, registers a **non-persistent** `IEnvironmentVariableService` collection (`Replace` + `applyAtProcessCreation`) so every terminal / REPL / editor-run gets the env vars; re-applies on `onDidChangeSecret`. Also registers the `pollis.credentialEnv` command (returns `{ envVar: value }`) consumed by the Julia notebook kernel (§5.6). |
+
+Imported from `model/browser/model.contribution.ts` (alongside `juliaNotebookKernel.contribution.js`).
+
+- **Off-disk:** the collection is registered **without** the `persistent` flag, so secret values are never serialized to workspace storage — kept in memory, re-read each session.
+- **Notebook kernels** are a separate process that don't inherit the terminal collection; they are covered via the `pollis.credentialEnv` command + the `notebookKernel.ts` merge (§5.6).
+- **Build wiring:** `extensions/language-julia` is bundled by its own esbuild and is **not** part of the default `watch-extensions` gulp task. The root `package.json` `watch` script therefore adds a **`watch-julia`** entry (mirroring `watch-copilot`) so the bundle rebuilds on change; otherwise edits to `notebookKernel.ts` (and any other `language-julia` change) silently won't take effect until a manual `node esbuild.mts`.
+
+**After a rebase:** these files are Pollis-owned (no upstream equivalent) — verify the `model.contribution.ts` import survives, and re-add the `watch-julia` entry to the root `package.json` `watch` script.
+
+### 5.8 Continuous integration and commit checks (`.github/`, `.githooks/`)
+
+Upstream's 15 workflows were **removed** — they encode Microsoft's engineering process (API proposal checks, telemetry metadata, Monaco packaging, component screenshots, the multi-platform `pr.yml` matrix calling `pr-{darwin,linux,win32}-test.yml`, Copilot cache checks) and either fail or burn CI minutes on infrastructure Pollis does not have. `check-clean-git-state.sh` was **kept**: it is not a workflow and is still referenced by `build/azure-pipelines/dependencies-check.yml`.
+
+The rest of Microsoft's `.github/` infrastructure was removed too: `CODEOWNERS`, `CODENOTIFY`, `ISSUE_TEMPLATE/`, `pull_request_template.md`, `dependabot.yml`, the triage-bot files (`classifier.json`, `commands.json`, `commands/`, `similarity.yml`, `insiders.yml`, `endgame/`), `hooks/`, `agents/`, and the AI guidance tied to Microsoft's process (Kusto/telemetry, Azure Pipelines, issue triage, CI screenshots, policies, Copilot chat, the Agents window). The generic engineering guidance is **kept**: 7 files in `instructions/` (plus `resources/`), 7 in `prompts/`, 7 in `skills/`. `copilot-instructions.md` **must stay** — `build/npm/postinstall.ts` links `.claude/CLAUDE.md` to it and `AGENTS.md` points to it.
+
+**Pollis-owned files:**
+
+| File | Role |
+|---|---|
+| `.github/workflows/pollis-build.yml` | Fast checks. `push`/`pull_request` on `main` plus `workflow_dispatch`, **self-hosted macOS runner**, 45 min timeout, cancels superseded runs. Steps: build-script typecheck → `compile-check-ts-native` → `valid-layers-check` → `eslint` → `test-node`. |
+| `.github/workflows/pollis-package.yml` | Full minified build, **manual trigger only** (`workflow_dispatch`, 180 min timeout). Optionally runs the fast type and layer checks first (`run_checks`, default on), then `npm run gulp vscode-min`, which assembles the app into `../VSCode-darwin-arm64`, and reports the output sizes. The only job that proves Pollis actually ships; too slow for every push. |
+| `.github/actions/pollis-setup/action.yml` | Composite action shared by both workflows: Node from `.nvmrc`, clean leftovers, cached `npm ci`. Input `install-binaries` (default `false`) — `true` for packaging, which needs the real Electron. |
+| `.githooks/pre-commit` | Runs `npm run precommit` (`build/hygiene.ts` over the staged files): tabs, copyright header, unicode allowlist (which is what rejects accented and Greek characters in sources), TypeScript formatting, stylelint. |
+
+Why each fast check is there (the full build does not cover them all):
+
+- **`compile-check-ts-native`** — the packaged build type-checks too, so this adds no coverage; it just fails in seconds instead of minutes.
+- **`valid-layers-check`** — type-checks against the restricted lib sets (browser / worker / node / electron-*). The build uses one permissive config, so a browser-layer file importing a node built-in compiles and bundles, then fails at runtime.
+- **`eslint`** — unexternalized strings, disposable leaks, DI patterns: all type-correct and invisible to the compiler.
+- **`test-node`** — behaviour rather than compilation; mainly a rebase safety net.
+
+**Hygiene runs as a git hook, not in CI**, because indentation, formatting and headers have no runtime effect. The hook is not active until each clone enables it once:
+
+```sh
+git config core.hooksPath .githooks
+```
+
+Bypass it for a single commit with `git commit --no-verify`. To check files outside a commit, pass them to `node build/hygiene.ts` (use `xargs -0` for long lists; zsh does not word-split a variable).
+
+Details that matter and are easy to lose:
+
+- **`clean: false` on `actions/checkout`.** A default checkout runs `git clean -ffdx`, which deletes `node_modules` and `.build` and forces a full `npm ci` every run — by far the slowest step. With `clean: false` they persist between runs; the setup action's `git clean -fd` removes everything else except `node_modules`, `.build`, `out`, `out-build` and `out-vscode-min`.
+- **Cached `npm ci`.** The setup action stores `<sha256 of package-lock.json> <variant>` in `.build/npm-ci-stamp` and skips the install when it matches. The variant (`full` or `skip-binaries`) is part of the stamp because the two produce different trees — so alternating between the two workflows re-runs `npm ci`. Installs are retried up to three times.
+- **Binary downloads.** Without `install-binaries`, `ELECTRON_SKIP_BINARY_DOWNLOAD` and `PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD` are set to `1`; with it they are set to empty, not `'0'`, because they are tested for presence and `'0'` is truthy. `pollis-build.yml` therefore covers type checking, linting and node unit tests but **not** Electron or browser integration tests — those stay local via `scripts/test.sh`.
+- **`ELECTRON_RUN_AS_NODE: ''`** in both workflows. It is inherited from the Electron process tree when the runner is started from an editor terminal, and it breaks the build. Set to empty rather than unset so `if (process.env.ELECTRON_RUN_AS_NODE)` checks stay falsy.
+
+**Upstream files modified for the Pollis header.** Pollis-authored files (847) carry:
+
+```
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) 2026 Antonio Saragga Seabra
+ *  Licensed under the GNU Affero General Public License v3.0 or later. See LICENSE.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+```
+
+Upstream checks Microsoft's header by exact match in two places, so both accept a second form. In each, the year is matched as `\d{4}(?:-\d{4})?`, so adding a file in a later year needs no change.
+
+- **`build/hygiene.ts`** — `copyrightHeaderLines` is kept unchanged; `pollisCopyrightHeaderPatterns` (four regexes) and `hasValidCopyrightHeader(lines)` (Microsoft exact match **or** Pollis patterns) were added, and the `copyrights` stream calls it instead of the inline loop.
+- **`eslint.config.js`** — in the `header/header` rule, the Microsoft copyright and licence lines were replaced with `{ pattern: … }` entries that accept either the Microsoft or the Pollis wording. Microsoft files keep their MIT line; Pollis files must use the AGPL line.
+- **`build/lib/toml-to-ts.ts`** — emits the Pollis header into generated `*.data.ts` files.
+
+**After a rebase:** re-apply the `build/hygiene.ts` and `eslint.config.js` changes (upstream will restore the exact-match checks). Re-delete any upstream workflows or other Microsoft `.github/` files that reappear, but keep `copilot-instructions.md`. `pollis-build.yml`, `pollis-package.yml`, `pollis-setup` and `.githooks/` are Pollis-owned and will not conflict.
 
 ---
 
@@ -459,8 +571,9 @@ this._overlayLayout.reapplyLayoutStyles();   // re-applies anchor styles, cleari
 When pulling a new upstream VS Code version, work through this list in order:
 
 - [ ] **Branding** — restore `product.json` fields (§1.1, §1.2), restore Pollis icon (§1.3)
-- [ ] **Product interface** — re-add `pollisVersion` and `poweredBy` to `IProductConfiguration` (§1.2)
-- [ ] **About dialog** — re-add `createNativeAboutDialogDetails` to `dialog.ts` (§2)
+- [ ] **Product interface** — re-add `pollisVersion`, `poweredBy`, `licenseName` and `sourceUrl` to `IProductConfiguration` (§1.2)
+- [ ] **About dialog** — re-add `createNativeAboutDialogDetails` to `dialog.ts`, and the licence + source lines to `createBrowserAboutDialogDetails` (§2)
+- [ ] **Menus open to extensions** — re-add the `menuBar/*` Pollis entries to `menusExtensionPoint.ts` (§3.5)
 - [ ] **MenuId registrations** — re-add five `MenubarXxxMenu` IDs to `actions.ts` (§3.1)
 - [ ] **Menu bar construction** — re-comment Selection/Go/Terminal; re-add five Pollis menu blocks in `menubar.ts` (§3.2)
 - [ ] **Tasks → Compose** — re-move task items from `MenubarTerminalMenu` to `MenubarComposeMenu` (§3.3)
@@ -468,8 +581,10 @@ When pulling a new upstream VS Code version, work through this list in order:
 - [ ] **Column Selection Mode** — re-add `MenubarViewMenu` entry to `toggleColumnSelection.ts` (§4.1)
 - [ ] **Word Wrap** — remove `precondition: CAN_TOGGLE_WORD_WRAP` from View menu registration in `toggleWordWrap.ts` (§4.2)
 - [ ] **`workbench.common.main.ts`** — verify all Pollis contribution imports are intact (§5.2)
+- [ ] **Credential environment injection** — verify the `credentialEnvironment.contribution.js` import in `model/browser/model.contribution.ts`; re-add the `watch-julia` entry to the root `package.json` `watch` script (§5.7)
 - [ ] **App document build pipeline** — re-add `pollis-*.md` glob to both `build/next/index.ts` (`desktopResourcePatterns`) and `build/gulpfile.vscode.ts` (§5.4)
 - [ ] **Bundled libraries** — verify `contrib/katex/dist/` and `contrib/mermaid/dist/` are intact; check for security updates (§5.5)
-- [ ] **Forked extensions** — re-apply all Pollis patches to `extensions/language-julia`: rebranding, telemetry shim, `lmtool.ts`, `extension.ts` removals, `repl.ts` additions, `documentation.ts` rework, `plots.ts` table removal, `workspace.ts`/`notebookFeature.ts` kernel display name, `smallcommands.ts` linter removal, and all deleted upstream files (§5.6)
+- [ ] **Forked extensions** — re-apply all Pollis patches to `extensions/language-julia`: rebranding, telemetry shim, `lmtool.ts`, `extension.ts` removals, `repl.ts` additions, `documentation.ts` rework, `plots.ts` table removal, `workspace.ts`/`notebookFeature.ts` kernel display name, `notebookKernel.ts` credential env merge, `smallcommands.ts` linter removal, and all deleted upstream files (§5.6)
 - [ ] **Notebook blank-on-revisit patch — DROP if base > 2026-04-23** — Pollis reverses the `notebookEditorWidget.ts` hunks of `618c5ea3667`. Upstream fixed this properly by ~Apr 23 2026, so on any newer base **do not re-apply**; instead leave `notebookEditorWidget.ts` pristine and run the two-notebook test to confirm upstream's fix. Only re-apply if rebasing onto a base in the Apr 14–22 2026 window (§6.1)
+- [ ] **CI and headers** — re-apply the Pollis header patterns in `build/hygiene.ts` and `eslint.config.js`; re-delete upstream workflows and Microsoft `.github/` files that reappear, keeping `copilot-instructions.md` (§5.8)
 - [ ] **Compile** — run `npm run compile-check-ts-native`, zero errors before declaring done

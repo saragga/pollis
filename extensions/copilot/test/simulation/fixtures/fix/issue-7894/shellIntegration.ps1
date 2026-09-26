@@ -317,7 +317,7 @@ using assembly <.NET-assembly-path>
 			Remove-PSReadLineKeyHandler -Chord 'F12,g'
 		}
 		Set-PSReadLineKeyHandler -Chord 'F12,h' -ScriptBlock {
-			Import-Module "$PSScriptRoot\CodeTabExpansion.psm1"
+			Import-Module "$PSScriptRoot\textttTabExpansion.psm1"
 			Remove-PSReadLineKeyHandler -Chord 'F12,h'
 		}
 	}

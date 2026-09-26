@@ -100,7 +100,7 @@ if (!opts.web) {
 	}
 
 	if (!fs.existsSync(electronPath || '')) {
-		fail(`Cannot find VSCode at ${electronPath}. Please run VSCode once first (scripts/code.sh, scripts\\code.bat) and try again.`);
+		fail(`Cannot find VSCode at ${electronPath}. Please run VSCode once first (scripts/code.sh, scripts\\texttt.bat) and try again.`);
 	}
 
 	quality = parseQuality();
@@ -230,7 +230,7 @@ export async function getApplication({ recordVideo, workspacePath }: { recordVid
 	const testCodePath = getDevElectronPath();
 	const electronPath = testCodePath;
 	if (!fs.existsSync(electronPath || '')) {
-		throw new Error(`Cannot find VSCode at ${electronPath}. Please run VSCode once first (scripts/code.sh, scripts\\code.bat) and try again.`);
+		throw new Error(`Cannot find VSCode at ${electronPath}. Please run VSCode once first (scripts/code.sh, scripts\\texttt.bat) and try again.`);
 	}
 	process.env.VSCODE_REPOSITORY = rootPath;
 	process.env.VSCODE_DEV = '1';

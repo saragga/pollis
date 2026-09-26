@@ -27,7 +27,7 @@ if not exist "%NODE%" (
 popd
 
 :: Launch Server
-call "%NODE%" %ROOT_DIR%\scripts\code-server.js %*
+call "%NODE%" %ROOT_DIR%\scripts\texttt-server.js %*
 
 
 endlocal

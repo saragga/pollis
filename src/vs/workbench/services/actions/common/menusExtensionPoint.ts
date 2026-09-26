@@ -144,9 +144,19 @@ const apiMenus: IAPIMenu[] = [
 		description: localize('menus.explore', "The explore toolbar menu")
 	},
 	{
+		key: 'menuBar/toolboxes',
+		id: MenuId.MenubarToolboxesMenu,
+		description: localize('menus.toolboxes', "The toolboxes toolbar menu")
+	},
+	{
 		key: 'menuBar/model',
 		id: MenuId.MenubarModelMenu,
 		description: localize('menus.model', "The model toolbar menu")
+	},
+	{
+		key: 'menuBar/simulate',
+		id: MenuId.MenubarSimulateMenu,
+		description: localize('menus.simulate', "The simulate toolbar menu")
 	},
 	{
 		key: 'menuBar/optimise',

@@ -14,15 +14,19 @@ export function createNativeAboutDialogDetails(productService: IProductService):
 	const poweredBy = productService.poweredBy;
 	const poweredByLines = [
 		localize('poweredByHeader', "Powered by"),
-		localize('poweredByGemma', "· AI: Gemma {0}", poweredBy?.gemma ?? 'Unknown'),
 		localize('poweredByJulia', "· Analytics: Julia {0}", poweredBy?.julia ?? 'Unknown'),
-		localize('poweredByDatabases', "· Databases: DuckDB {0}, LanceDB {1}", poweredBy?.duckdb ?? 'Unknown', poweredBy?.lancedb ?? 'Unknown'),
 		localize('poweredByCodeOSS', "· Platform: Code OSS {0}", poweredBy?.codeoss ?? productService.version),
 	].join('\n');
 
 	const copyrightYear = productService.date ? new Date(productService.date).getFullYear() : new Date().getFullYear();
 
 	const legalLines: string[] = [];
+	if (productService.licenseName) {
+		legalLines.push(localize('aboutLicenseName', "License: {0}. This program comes with ABSOLUTELY NO WARRANTY.", productService.licenseName));
+	}
+	if (productService.sourceUrl) {
+		legalLines.push(localize('aboutSourceUrl', "Source code: {0}", productService.sourceUrl));
+	}
 	if (productService.licenseUrl) {
 		legalLines.push(localize('aboutLicense', "License: {0}", productService.licenseUrl));
 	}

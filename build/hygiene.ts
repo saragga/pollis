@@ -23,6 +23,28 @@ const copyrightHeaderLines = [
 	' *--------------------------------------------------------------------------------------------*/',
 ];
 
+/**
+ * Files authored for Pollis carry their own copyright line instead of Microsoft's. The year is
+ * matched loosely so that adding a file in a later year does not require touching this check.
+ */
+const pollisCopyrightHeaderPatterns = [
+	/^\/\*-{10,}$/,
+	/^ \*  Copyright \(c\) \d{4}(?:-\d{4})? Antonio Saragga Seabra$/,
+	/^ \*  Licensed under the GNU Affero General Public License v3\.0 or later\. See LICENSE\.txt in the project root for license information\.$/,
+	/^ \*-{10,}\*\/$/,
+];
+
+/**
+ * Checks a file's leading lines against the Microsoft header or the Pollis header.
+ */
+function hasValidCopyrightHeader(lines: string[]): boolean {
+	if (copyrightHeaderLines.every((line, i) => lines[i] === line)) {
+		return true;
+	}
+
+	return pollisCopyrightHeaderPatterns.every((pattern, i) => pattern.test(lines[i] ?? ''));
+}
+
 interface VinylFileWithLines extends VinylFile {
 	__lines: string[];
 }
@@ -122,12 +144,9 @@ export function hygiene(some: NodeJS.ReadWriteStream | string[] | undefined, run
 	const copyrights = es.through(function (file: VinylFileWithLines) {
 		const lines = file.__lines;
 
-		for (let i = 0; i < copyrightHeaderLines.length; i++) {
-			if (lines[i] !== copyrightHeaderLines[i]) {
-				console.error(file.relative + ': Missing or bad copyright statement');
-				errorCount++;
-				break;
-			}
+		if (!hasValidCopyrightHeader(lines)) {
+			console.error(file.relative + ': Missing or bad copyright statement');
+			errorCount++;
 		}
 
 		this.emit('data', file);

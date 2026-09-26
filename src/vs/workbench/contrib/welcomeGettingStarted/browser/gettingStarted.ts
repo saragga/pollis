@@ -876,7 +876,7 @@ export class GettingStartedPage extends EditorPane {
 			pollisLogo,
 			$('.header-text', {},
 				$('h1.product-name.caption', {}, this.productService.nameLong),
-				$('p.subtitle.description', {}, localize({ key: 'gettingStarted.editingEvolved', comment: ['Shown as subtitle on the Welcome page.'] }, "Built on Chiara for the Polytechnic University of Lisbon"))
+				$('p.subtitle.description', {}, localize({ key: 'gettingStarted.editingEvolved', comment: ['Shown as subtitle on the Welcome page.'] }, "Bright Insights through Statistical Learning, Simulation and Optimisation"))
 			)
 		);
 
@@ -901,8 +901,6 @@ export class GettingStartedPage extends EditorPane {
 			this.categoriesSlideDisposables.add(agentsBanner.disposables);
 			footerChildren.push(agentsBanner.element);
 		}
-		footerChildren.push($('p.created-by', {}, localize('createdBy', "Bright Insights through Statistical Learning, Simulation and Optimisation")));
-
 		const footer = $('.footer', {}, ...footerChildren);
 
 		const layoutLists = () => {

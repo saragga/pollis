@@ -2561,7 +2561,7 @@ suite('WorkspaceConfigurationService-Multiroot', () => {
 					'type': 'shell',
 					'command': './scripts/code.sh',
 					'windows': {
-						'command': '.\\scripts\\code.bat'
+						'command': '.\\scripts\\texttt.bat'
 					},
 					'problemMatcher': []
 				}
@@ -2582,7 +2582,7 @@ suite('WorkspaceConfigurationService-Multiroot', () => {
 					'type': 'shell',
 					'command': './scripts/code.sh',
 					'windows': {
-						'command': '.\\scripts\\code.bat'
+						'command': '.\\scripts\\texttt.bat'
 					},
 					'problemMatcher': []
 				}

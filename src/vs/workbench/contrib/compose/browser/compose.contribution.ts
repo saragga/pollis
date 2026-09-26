@@ -1,20 +1,16 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Antonio Saragga Seabra. All rights reserved.
- *  Proprietary and confidential. Unauthorised copying or distribution is prohibited.
+ *  Copyright (c) 2026 Antonio Saragga Seabra
+ *  Licensed under the GNU Affero General Public License v3.0 or later. See LICENSE.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
 import { localize } from '../../../../../vs/nls.js';
 import { MenuRegistry, MenuId } from '../../../../platform/actions/common/actions.js';
 import { CommandsRegistry, ICommandService } from '../../../../platform/commands/common/commands.js';
-import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
 import { ContextKeyExpr } from '../../../../platform/contextkey/common/contextkey.js';
 import { IsSessionsWindowContext } from '../../../common/contextkeys.js';
-import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
-import { openKaimonWebview } from './kaimon.js';
 
 const COMPOSE_COMMAND_ID = 'workbench.action.showCompose';
 const FEATURE_REQUEST_COMMAND_ID = 'pollis.action.openFeatureRequestReporter';
-const KAIMON_COMMAND_ID = 'pollis.action.openKaimon';
 
 CommandsRegistry.registerCommand(COMPOSE_COMMAND_ID, () => {
 	console.log('Compose command executed!');
@@ -24,176 +20,134 @@ CommandsRegistry.registerCommand(FEATURE_REQUEST_COMMAND_ID, accessor => {
 	return accessor.get(ICommandService).executeCommand('workbench.action.openIssueReporter', { issueType: 2 });
 });
 
-CommandsRegistry.registerCommand(KAIMON_COMMAND_ID, (accessor: ServicesAccessor) => {
-	openKaimonWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(ICommandService),
-	);
-});
-
 // Submenus
 const ConsultSubmenuId = new MenuId('menubarConsultSubmenu');
 const SkillsSubmenuId = new MenuId('menubarSkillsSubmenu');
 const AgentsSubmenuId = new MenuId('menubarAgentsSubmenu');
 const TrainSubmenuId = new MenuId('menubarTrainSubmenu');
-const MCPSubmenuId = new MenuId('menubarMCPSubmenu');
-
+const ColabSubmenuId = new MenuId('menubarColabSubmenu');
 
 // ============================================
-// MENU GROUP 1: WELCOME
+// TOP MENU COMPOSE
 // ============================================
 
-MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
-	group: '1_welcome',
-	command: { id: 'workbench.action.openWalkthrough', title: localize('welcome.welcome', 'Welcome') },
-	order: 1,
-});
+//MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
+//	group: '1_welcome',
+//	command: { id: 'workbench.action.openWalkthrough', title: localize('welcome.welcome', 'Welcome') },
+//	order: 1,
+//}); // Moved to Pollis app menu (macOS)
+
+//MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
+//	group: '1_welcome',
+//	submenu: ConsultSubmenuId,
+//	title: localize('welcome.consult', 'Consult AI'),
+//	order: 2,
+//});
 
 MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
-	group: '1_welcome',
-	submenu: ConsultSubmenuId,
-	title: localize('welcome.consult', 'Consult AI'),
-	order: 2,
-});
-
-MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
-	group: '1_welcome',
-	command: { id: 'workbench.action.docs', precondition: ContextKeyExpr.false(),
-		title: localize('welcome.docs', 'Documentation') },
-	order: 3,
-}); // See Stata
-
-MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
-	group: '1_welcome',
-	command: { id: COMPOSE_COMMAND_ID, precondition: ContextKeyExpr.false(),
-		title: localize('welcome.thesis', 'Thesis') },
-	order: 4,
-});
-
-MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
-	group: '1_welcome',
+	group: '2_welcome',
 	command: {
-		id: COMPOSE_COMMAND_ID, precondition: ContextKeyExpr.false(),
-	title: localize('welcome.colab', 'Collaborate'),},
-	order: 5,
-});
-
-MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
-	group: '1_welcome',
-	submenu: TrainSubmenuId,
-	title: localize('welcome.train', 'Training'),
-	order: 6,
+		id: 'workbench.action.docs', precondition: ContextKeyExpr.false(),
+		title: localize('welcome.docs', 'Pollis Documentation')
+	},
+	order: 3,
 }); // See Stata
 
 MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
 	group: '2_welcome',
 	command: {
-		id: COMPOSE_COMMAND_ID, precondition: ContextKeyExpr.false(),
-	title: localize('welcome.colab', 'Collaborate'),},
+		id: 'workbench.action.docs', precondition: ContextKeyExpr.false(),
+		title: localize('welcome.report', 'Report')
+	},
+	order: 3.5,
+});
+
+MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
+	group: '3_welcome',
+	submenu: ColabSubmenuId,
+	title: localize('welcome.colab', 'Colaborate'),
 	order: 1,
 });
 
-// ============================================
-// MENU GROUP 2:
-// ============================================
+//MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
+//	group: '1_welcome',
+//	command: {
+//		id: COMPOSE_COMMAND_ID, precondition: ContextKeyExpr.false(),
+//		title: localize('welcome.article', 'Article')
+//	},
+//	order: 4,
+//});
+
+// MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
+//	group: '1_welcome',
+//	command: {
+//		id: COMPOSE_COMMAND_ID, precondition: ContextKeyExpr.false(),
+//		title: localize('welcome.thesis', 'Thesis')
+//	},
+//	order: 5,
+//});
+
+//MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
+//	group: '1_welcome',
+//	submenu: TrainSubmenuId,
+//	title: localize('welcome.train', 'Training'),
+//	order: 6,
+//}); // See Stata
+
+
+//MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
+//	group: '2_kaggle',
+//	command: {
+//		id: COMPOSE_COMMAND_ID, precondition: ContextKeyExpr.false(),
+//		title: localize('kaggle.kc', 'Kaggle Competitions'),
+//	},
+//	order: 1,
+//}); // https://www.kaggle.com/competitions
+
+//MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
+//	group: '2_kaggle',
+//	command: {
+//		id: COMPOSE_COMMAND_ID, precondition: ContextKeyExpr.false(),
+//		title: localize('kaggle.kga', 'Kaggle Game Arena'),
+//	},
+//	order: 2,
+//});
 
 MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
-	group: '2_kaggle',
-	command: {
-		id: COMPOSE_COMMAND_ID, precondition: ContextKeyExpr.false(),
-	title: localize('kaggle.kc', 'Kaggle Competitions'),},
-	order: 1,
-}); // https://www.kaggle.com/competitions
-
-MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
-	group: '2_kaggle',
-	command: {
-		id: COMPOSE_COMMAND_ID, precondition: ContextKeyExpr.false(),
-	title: localize('kaggle.kga', 'Kaggle Game Arena'),},
-	order: 2,
-});
-
-
-
-// ============================================
-// MENU GROUP 3: AI COMPOSITION
-// ============================================
-
-// MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
-// 	group: '2_ai',
-// 	submenu: AgentsSubmenuId,
-// 	title: localize('compose.agents', 'Coding Agents'),
-// 	order: 1,
-// }); // Coding agents are autonomous AI systems that plan, reason, and execute multi-step software engineering tasks — reading and writing files, running commands, searching codebases, and invoking external tools. Unlike chat assistants, they operate with a degree of autonomy: given a goal, an agent breaks it into steps, acts on the environment, observes the results, and iterates until the task is complete.
-
-// MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
-// 	group: '2_ai',
-// 	submenu: SkillsSubmenuId,
-// 	title: localize('compose.skills', 'Skills'),
-// 	order: 2,
-// }); // Skills are named, reusable instruction sets that AI agents activate for specific tasks — encoding domain knowledge, preferred workflows, and behavioural guidelines. Each skill defines when it applies, what context to load, and how the agent should behave, allowing a general-purpose model to specialise on demand without retraining.
-
-// MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
-// 	group: '2_ai',
-// 	submenu: MCPSubmenuId,
-// 	title: localize('compose.mpc', 'Model Context Protocol Servers'),
-// 	order: 3,
-// }); // MCP Servers expose tools, resources, and prompts that AI models can use to interact with external systems — databases, APIs, file systems, and local applications — through a standardised protocol. By connecting to these servers, models can take actions, retrieve live data, and execute workflows beyond their training context.
-
-// MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
-// 	group: '2_ai',
-// 	command: { id: COMPOSE_COMMAND_ID, precondition: ContextKeyExpr.false(), title: localize('compose.rag', 'Knowledge Retrieval') },
-// 	order: 4,
-// }); // RAGTools.jl, DocsScraper.jl
-
-// MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
-// 	group: '2_ai',
-// 	command: { id: COMPOSE_COMMAND_ID, precondition: ContextKeyExpr.false(), title: localize('compose.ft', 'Fine-Tune Model') },
-// 	order: 5,
-// });
-
-// ============================================
-// MENU GROUP 3: TASKS
-// ============================================
-
-MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
-	group: '3_tasks',
+	group: '4_tasks',
 	submenu: MenuId.MenubarTerminalMenu,
 	title: localize('compose.tasks', 'Tasks'),
 	order: 1,
 });
 
-// ============================================
-// MENU GROUP 4: PACKAGES & EXTENSIONS
-// ============================================
 
 
-MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
-	group: '4_pe',
-	command: {
-		id: COMPOSE_COMMAND_ID, precondition: ContextKeyExpr.false(),
-		title: localize('compose.themes', 'Create Menu Item and Webview'),
-	},
-	order: 1,
-});
+// MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
+//	group: '4_pe',
+//	command: {
+//		id: COMPOSE_COMMAND_ID, precondition: ContextKeyExpr.false(),
+//		title: localize('compose.themes', 'Create Menu Item and Webview'),
+//	},
+//	order: 1,
+//});
 
-MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
-	group: '4_pe',
-	command: {
-		id: COMPOSE_COMMAND_ID, precondition: ContextKeyExpr.false(),
-		title: localize('compose.packages', 'Create Julia Package'),
-	},
-	order: 2,
-});
+//MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
+//	group: '4_pe',
+//	command: {
+//		id: COMPOSE_COMMAND_ID, precondition: ContextKeyExpr.false(),
+//		title: localize('compose.packages', 'Create Julia Package'),
+//	},
+//	order: 2,
+//});
 
-MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
-	group: '4_pe',
-	command: {
-		id: COMPOSE_COMMAND_ID, precondition: ContextKeyExpr.false(),
-		title: localize('compose.extensions', 'Create Pollis Extension'),
-	},
-	order: 3,
-});
+//MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
+//	group: '4_pe',
+//	command: {
+//		id: COMPOSE_COMMAND_ID, precondition: ContextKeyExpr.false(),
+//		title: localize('compose.extensions', 'Create Pollis Extension'),
+//	},
+//	order: 3,
+//});
 
 
 // ============================================
@@ -250,6 +204,7 @@ MenuRegistry.appendMenuItem(TrainSubmenuId, {
 }); // See Stata
 
 
+
 // ============================================
 // SUBMENU: SKILLS
 // ============================================
@@ -271,22 +226,6 @@ MenuRegistry.appendMenuItem(SkillsSubmenuId, {
 	command: { id: COMPOSE_COMMAND_ID, precondition: ContextKeyExpr.false(), title: localize('skills.dhas', 'Datasets Housekeeping Agent Skill') },
 	order: 3,
 }); //
-
-
-// ============================================
-// SUBMENU: Model Context Protocol (MCP)
-// ============================================
-// Kaimon is an MCP server that connects AI agents to a live Julia runtime. It exposes 32+ tools
-// covering code execution, package introspection, debugging, testing, and semantic code search —
-// allowing agents such as Claude Code or Cursor to read, run, and reason about Julia code in real
-// time rather than generating it blindly.
-
-MenuRegistry.appendMenuItem(MCPSubmenuId, {
-	group: '1_agents',
-	command: { id: KAIMON_COMMAND_ID, title: localize('compose.mpc.kaimon', 'Kaimon') },
-	order: 1,
-}); // https://github.com/kahliburke/Kaimon.jl — connects AI agents to a live Julia runtime
-
 
 
 // ============================================
@@ -353,3 +292,28 @@ MenuRegistry.appendMenuItem(AgentsSubmenuId, {
 	order: 1,
 });
 
+
+// ============================================
+// SUBMENU: COLABORATE
+// ============================================
+
+MenuRegistry.appendMenuItem(ColabSubmenuId, {
+ 	group: '1_col',
+ 	command: {
+ 		id: COMPOSE_COMMAND_ID, precondition: ContextKeyExpr.false(),
+ 		title: localize('liveshare', 'P2P Live Share'),
+ 	},
+ 	order: 1,
+});
+// https://github.com/kermanx/p2p-live-share
+
+
+MenuRegistry.appendMenuItem(ColabSubmenuId, {
+ 	group: '1_col',
+ 	command: {
+ 		id: COMPOSE_COMMAND_ID, precondition: ContextKeyExpr.false(),
+ 		title: localize('multiplayer', 'Multiplayer Webapp'),
+ 	},
+ 	order: 2,
+});
+// https://github.com/dmotz/trystero

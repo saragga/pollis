@@ -1,99 +1,104 @@
-# Contributing to VS Code
+# Contributing to Pollis
 
-Welcome, and thank you for your interest in contributing to VS Code!
+Thank you for your interest in Pollis. This is a small, early-stage project maintained by one
+person, so a short conversation before you write code will save everyone time.
 
-There are several ways in which you can contribute, beyond writing code. The goal of this document is to provide a high-level overview of how you can get involved.
+## Before you start
 
-## Asking Questions
+**Open an issue first** for anything beyond a typo or an obvious bug fix. Pollis has opinionated
+conventions, particularly around the guided panels, and a pull request that ignores them is painful
+to review and to merge. Describing what you intend to do first avoids that.
 
+## Reporting issues
 
-Have a question? Instead of opening an issue, please ask on [Stack Overflow](https://stackoverflow.com/questions/tagged/visual-studio-code) using the tag `visual-studio-code`.
+Please search the [open issues](../../issues) before filing a new one.
 
-The active community will be eager to assist you. Your well-worded question will serve as a resource to others searching for help.
+A useful report contains:
 
-## Providing Feedback
+- the Pollis version (**Pollis → About**), and your operating system;
+- what you did, what you expected, and what happened instead;
+- the exact steps to reproduce it;
+- the generated Julia code, if the problem is with generated code;
+- any errors from **Help → Toggle Developer Tools → Console**.
 
-Your comments and feedback are welcome, and the development team is available via a handful of different channels.
+Please do not report security vulnerabilities as public issues — see [`SECURITY.md`](SECURITY.md).
 
-See the [Feedback Channels](https://github.com/microsoft/vscode/wiki/Feedback-Channels) wiki page for details on how to share your thoughts.
+## Building
 
-## Reporting Issues
+See the build instructions in [`README.md`](README.md).
 
-Have you identified a reproducible problem in VS Code? Do you have a feature request? We want to hear about it! Here's how you can report your issue as effectively as possible.
+## Coding conventions
 
-### Identify Where to Report
+Pollis inherits VS Code's conventions, which are non-negotiable because most of the codebase is
+upstream code:
 
-The VS Code project is distributed across multiple repositories. Try to file the issue against the correct repository. Check the list of [Related Projects](https://github.com/microsoft/vscode/wiki/Related-Projects) if you aren't sure which repo is correct.
+- **Tabs, not spaces.**
+- `PascalCase` for types and enum values; `camelCase` for functions, methods, properties and locals.
+- Single quotes for internal strings, double quotes for user-facing strings, which must be localised
+  through `vs/nls` using placeholders (`{0}`) rather than concatenation.
+- Curly braces on the same line, and always around loop and conditional bodies.
+- Arrow functions over anonymous function expressions, but `export function x() {}` at top level.
+- Services are injected through the constructor, never resolved later via `IInstantiationService`.
+- Register disposables immediately after creating them; return an `IDisposable` from a method that
+  is called repeatedly rather than registering to the containing class.
+- Avoid `any` and `unknown`.
 
-Can you recreate the issue even after [disabling all extensions](https://code.visualstudio.com/docs/editor/extension-gallery#_disable-an-extension)? If you find the issue is caused by an extension you have installed, please file an issue on the extension's repo directly.
+Every file carries the Pollis copyright header. Do not add `any`-typed public API, and do not
+duplicate a utility that already exists — look for it first.
 
-### Look For an Existing Issue
+### Validating a change
 
-Before you create a new issue, please do a search in [open issues](https://github.com/microsoft/vscode/issues) to see if the issue or feature request has already been filed.
+Always type-check before running tests or opening a pull request:
 
-Be sure to scan through the [most popular](https://github.com/microsoft/vscode/issues?q=is%3Aopen+is%3Aissue+label%3Afeature-request+sort%3Areactions-%2B1-desc) feature requests.
+```sh
+npm run compile-check-ts-native   # sources under src/
+npm run gulp compile-extensions   # if you changed extensions/
+npm run valid-layers-check        # layering violations
+```
 
-If you find your issue already exists, make relevant comments and add your [reaction](https://github.com/blog/2119-add-reactions-to-pull-requests-issues-and-comments). Use a reaction in place of a "+1" comment:
+Do not run `npm run compile`. Unit tests are run with `scripts/test.sh` (`scripts\test.bat` on
+Windows), optionally with `--grep <pattern>`.
 
-* 👍 - upvote
-* 👎 - downvote
+## Changing upstream code
 
-If you cannot find an existing issue that describes your bug or feature, create a new issue using the guidelines below.
+`POLLIS_GUIDE.md` records every intentional deviation from upstream `Code - OSS`, file by file, with
+the reason and how to re-apply it after a rebase. **If you change upstream code, record it there in
+the same pull request.** An unrecorded deviation will be silently lost at the next rebase.
 
-### Writing Good Bug Reports and Feature Requests
+## Adding a guided panel
 
-File a single issue per problem and feature request. Do not enumerate multiple bugs or feature requests in the same issue.
+Read [`src/vs/workbench/contrib/WEBVIEW_GUIDE.md`](src/vs/workbench/contrib/WEBVIEW_GUIDE.md) first.
+It is the specification, not a suggestion. In particular, every panel builds its HTML through
+`buildWebviewHtml()` from `webviewScaffold.ts`, and templates that re-implement that scaffolding will
+be sent back.
 
-Do not add your issue as a comment to an existing issue unless it's for the identical input. Many issues look similar but have different causes.
+## Pull requests
 
-The more information you can provide, the more likely someone will be successful at reproducing the issue and finding a fix.
+Keep them focused — one concern per pull request. Include what you changed and why, and say how you
+verified it. Opening a pull request means you accept the Contributor Licence Agreement below.
 
-The built-in tool for reporting an issue, which you can access by using `Report Issue` in VS Code's Help menu, can help streamline this process by automatically providing the version of VS Code, all your installed extensions, and your system info. Additionally, the tool will search among existing issues to see if a similar issue already exists.
+## Contributor Licence Agreement
 
-Please include the following with each issue:
+Pollis is licensed to everyone under the [GNU Affero General Public License v3.0 or
+later](LICENSE.txt). Contributions are accepted under a broader grant, so that the maintainer can also
+distribute course-specific builds of Pollis to students, and keep the option of offering Pollis under
+other licence terms in the future. You keep the copyright of what you write.
 
-* Version of VS Code
-* Your operating system
-* List of extensions that you have installed
-* Reproducible steps (1... 2... 3...) that cause the issue
-* What you expected to see, versus what you actually saw
-* Images, animations, or a link to a video showing the issue occurring
-* A code snippet that demonstrates the issue or a link to a code repository the developers can easily pull down to recreate the issue locally
-  * **Note:** Because the developers need to copy and paste the code snippet, including a code snippet as a media file (i.e. .gif) is not sufficient.
-* Errors from the Dev Tools Console (open from the menu: Help > Toggle Developer Tools)
+By submitting a contribution (code, documentation, or any other material) to Pollis, you agree to the
+following:
 
-### Creating Pull Requests
-
-* Please refer to the article on [creating pull requests](https://github.com/microsoft/vscode/wiki/How-to-Contribute#pull-requests) and contributing to this project.
-
-### Final Checklist
-
-Please remember to do the following:
-
-* [ ] Search the issue repository to ensure your report is a new issue
-* [ ] Recreate the issue after disabling all extensions
-* [ ] Simplify your code around the issue to better isolate the problem
-
-Don't feel bad if the developers can't reproduce the issue right away. They will simply ask for more information!
-
-### Follow Your Issue
-
-Once submitted, your report will go into the [issue tracking](https://github.com/microsoft/vscode/wiki/Issue-Tracking) workflow. Be sure to understand what will happen next, so you know what to expect and how to continue to assist throughout the process.
-
-## Automated Issue Management
-
-We use GitHub Actions to help us manage issues. These Actions and their descriptions can be [viewed here](https://github.com/microsoft/vscode-github-triage-actions). Some examples of what these Actions do are:
-
-* Automatically close any issue marked `info-needed` if there has been no response in the past 7 days.
-* Automatically lock issues 45 days after they are closed.
-* Automatically implement the VS Code [feature request pipeline](https://github.com/microsoft/vscode/wiki/Issues-Triaging#managing-feature-requests).
-
-If you believe the bot got something wrong, please open a new issue and let us know.
-
-## Contributing Fixes
-
-If you are interested in writing code to fix issues, please see [How to Contribute](https://github.com/microsoft/vscode/wiki/How-to-Contribute) in the wiki.
-
-## Thank You
-
-Your contributions to open source, large or small, make great projects like this possible. Thank you for taking the time to contribute.
+1. **Copyright licence.** You grant Antonio Saragga Seabra, and anyone who receives Pollis from him, a
+   perpetual, worldwide, non-exclusive, royalty-free, irrevocable licence to use, copy, modify,
+   distribute, sublicense and relicense your contribution, under any terms, including proprietary
+   terms.
+2. **Patent licence.** If your contribution is covered by a patent you own or control, you grant the
+   same parties a perpetual, worldwide, non-exclusive, royalty-free, irrevocable licence under that
+   patent to make, use, sell and distribute Pollis with your contribution.
+3. **Your right to contribute.** The contribution is your own original work, or you otherwise have
+   the right to submit it under this agreement. If it includes material written by someone else, or
+   covered by another licence, you say so in the pull request.
+4. **AI-generated material.** If an AI tool produced any part of the contribution, you have reviewed
+   it, you take responsibility for it as your submission, and to the best of your knowledge it does
+   not reproduce third-party code under terms incompatible with this agreement.
+5. **No other obligations.** You are not expected to provide support for your contribution, and it
+   is provided "as is", without warranty of any kind.

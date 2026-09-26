@@ -1,0 +1,66 @@
+name: Pollis Setup
+description: Sets up Node.js and installs dependencies, reusing node_modules between runs on a self-hosted runner.
+
+inputs:
+  install-binaries:
+    description: >
+      Download the Electron and Playwright binaries. Needed to package the app, not to type-check,
+      lint or run node unit tests. Changing this re-runs `npm ci`, because the two variants produce
+      different trees.
+    required: false
+    default: 'false'
+
+runs:
+  using: composite
+
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v6
+      with:
+        node-version-file: .nvmrc
+
+    - name: Discard leftovers from a previous run
+      shell: bash
+      # The checkout step uses `clean: false` so that node_modules survives; everything else that
+      # is not tracked is removed here instead.
+      run: >
+        git clean -fd
+        --exclude=node_modules
+        --exclude=.build
+        --exclude=out
+        --exclude=out-build
+        --exclude=out-vscode-min
+
+    - name: Install dependencies
+      shell: bash
+      run: |
+        set -e
+
+        if [ "${{ inputs.install-binaries }}" = "true" ]; then
+          variant=full
+        else
+          variant=skip-binaries
+        fi
+
+        want="$(shasum -a 256 package-lock.json | cut -d' ' -f1) $variant"
+        stamp=.build/npm-ci-stamp
+
+        if [ -d node_modules ] && [ "$(cat "$stamp" 2>/dev/null)" = "$want" ]; then
+          echo "node_modules matches package-lock.json ($variant), skipping install."
+          exit 0
+        fi
+
+        for i in 1 2 3; do
+          npm ci && break
+          if [ "$i" = "3" ]; then
+            echo "npm ci failed three times" >&2
+            exit 1
+          fi
+          echo "npm ci failed ($i), retrying..."
+        done
+
+        mkdir -p .build && printf '%s' "$want" > "$stamp"
+      env:
+        # Empty rather than '0': these are tested for presence, and the string '0' is truthy.
+        ELECTRON_SKIP_BINARY_DOWNLOAD: ${{ inputs.install-binaries == 'true' && '' || '1' }}
+        PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: ${{ inputs.install-binaries == 'true' && '' || '1' }}

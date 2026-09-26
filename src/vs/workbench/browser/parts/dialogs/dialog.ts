@@ -46,14 +46,23 @@ export function createWorkbenchDialogOptions(options: Partial<IDialogOptions>, k
 }
 
 export function createBrowserAboutDialogDetails(productService: IProductService): { title: string; details: string; detailsToCopy: string } {
+	const legalLines: string[] = [];
+	if (productService.licenseName) {
+		legalLines.push(localize('aboutLicenseName', "License: {0}. This program comes with ABSOLUTELY NO WARRANTY.", productService.licenseName));
+	}
+	if (productService.sourceUrl) {
+		legalLines.push(localize('aboutSourceUrl', "Source code: {0}", productService.sourceUrl));
+	}
+
 	const detailString = (useAgo: boolean): string => {
-		return localize('aboutDetail',
+		const detail = localize('aboutDetail',
 			"Version: {0}\nCommit: {1}\nDate: {2}\nBrowser: {3}",
 			productService.version || 'Unknown',
 			productService.commit || 'Unknown',
 			productService.date ? `${productService.date}${useAgo ? ' (' + fromNow(new Date(productService.date), true) + ')' : ''}` : 'Unknown',
 			navigator.userAgent
 		);
+		return legalLines.length ? [detail, '', ...legalLines].join('\n') : detail;
 	};
 
 	const details = detailString(true);

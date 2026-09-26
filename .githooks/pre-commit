@@ -1,0 +1,15 @@
+#!/bin/sh
+#
+# Pollis: run hygiene over the staged files before committing.
+#
+# Covers indentation (tabs), the copyright header, the unicode allowlist (which is what forbids
+# accented characters and Greek letters in sources), TypeScript formatting and stylelint. None of
+# these affect runtime, which is why they live here rather than in CI.
+#
+# Enable once with:
+#
+#   git config core.hooksPath .githooks
+#
+# Bypass for a single commit with `git commit --no-verify`.
+
+exec npm run --silent precommit

@@ -13,9 +13,8 @@
 	"applicationName": "pollis",
 	"dataFolderName": ".pollis",
 	"win32MutexName": "pollis",
-	"licenseName": "MIT",
-	"licenseUrl": "https://github.com/microsoft/vscode/blob/main/LICENSE.txt",
-	"serverLicenseUrl": "https://github.com/microsoft/vscode/blob/main/LICENSE.txt",
+	"licenseName": "AGPL-3.0-or-later",
+	"sourceUrl": "https://github.com/Trumpingtons/pollis",
 	"serverGreeting": [],
 	"serverLicense": [],
 	"serverLicensePrompt": "",
@@ -38,12 +37,6 @@
 	"darwinProfilePayloadUUID": "CF808BE7-53F3-46C6-A7E2-7EDB98A5E959",
 	"linuxIconName": "pollis",
 	"licenseFileName": "LICENSE.txt",
-	"reportIssueUrl": "https://github.com/microsoft/vscode/issues/new",
-	"requestFeatureUrl": "https://github.com/microsoft/vscode/issues/new?labels=feature-request&template=feature_request.md",
-	"privacyStatementUrl": "https://privacy.microsoft.com/en-us/privacystatement",
-	"introductoryVideosUrl": "https://code.visualstudio.com/docs/getstarted/introvideos",
-	"tipsAndTricksUrl": "https://code.visualstudio.com/docs/getstarted/tips-and-tricks",
-	"youTubeUrl": "https://www.youtube.com/@code",
 	"nodejsRepository": "https://nodejs.org",
 	"urlProtocol": "code-oss",
 "builtInExtensions": [
@@ -293,10 +286,7 @@
 	],
 	"date": "2026-05-31T00:00:00.000Z",
 	"poweredBy": {
-		"gemma": "3.2",
 		"julia": "1.12.6",
-		"duckdb": "1.5.2",
-		"lancedb": "0.28",
 		"codeoss": "1.117.0"
 	}
 }

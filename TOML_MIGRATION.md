@@ -267,7 +267,7 @@ Ensure the `.toml` file is in the repository root and has correct naming:
 
 ```
 src/vs/workbench/contrib/model/browser/webviews/acronym.toml  ✅ Correct
-/Users/antonio/vscode/acronym.toml  ❌ Wrong location (repo root)
+acronym.toml                                                  ❌ Wrong location (repo root)
 ```
 
 ### Can't import generated file

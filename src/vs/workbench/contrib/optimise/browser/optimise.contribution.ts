@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Antonio Saragga Seabra. All rights reserved.
- *  Proprietary and confidential. Unauthorised copying or distribution is prohibited.
+ *  Copyright (c) 2026 Antonio Saragga Seabra
+ *  Licensed under the GNU Affero General Public License v3.0 or later. See LICENSE.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
 import { localize } from '../../../../../vs/nls.js';
@@ -927,12 +927,12 @@ MenuRegistry.appendMenuItem(MenuId.MenubarOptimiseMenu, {
 // GROUP 4: DO-IT-YOURSELF ESTIMATION METHODS
 // ============================================
 
-MenuRegistry.appendMenuItem(MenuId.MenubarOptimiseMenu, {
-	group: '9_optimisation',
-	submenu: DIYSubmenuId,
-	title: localize('showOptimisation.DIY', 'DO-IT-YOURSELF Estimation Methods'),
-	order: 1,
-});
+//MenuRegistry.appendMenuItem(MenuId.MenubarOptimiseMenu, {
+//	group: '9_optimisation',
+//	submenu: DIYSubmenuId,
+//	title: localize('showOptimisation.DIY', 'DO-IT-YOURSELF Estimation Methods'),
+//	order: 1,
+//});
 
 // ============================================
 // SUBMENU: GRADIENT-BASED OPTIMIZATION

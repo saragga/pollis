@@ -4,7 +4,7 @@
 #'
 #' @param x A number.
 #' @param y A number.
-#' @return The sum of \code{x} and \code{y}.
+#' @return The sum of \texttt{x} and \texttt{y}.
 #' @examples
 #' add(1, 1)
 #' add(10, 1)

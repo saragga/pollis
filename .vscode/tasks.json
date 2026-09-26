@@ -249,7 +249,7 @@
 			"type": "shell",
 			"command": "./scripts/code.sh",
 			"windows": {
-				"command": ".\\scripts\\code.bat"
+				"command": ".\\scripts\\texttt.bat"
 			},
 			"problemMatcher": []
 		},
@@ -258,7 +258,7 @@
 			"type": "shell",
 			"command": "./scripts/code.sh",
 			"windows": {
-				"command": ".\\scripts\\code.bat"
+				"command": ".\\scripts\\texttt.bat"
 			},
 			"args": [
 				"--agents",
@@ -301,7 +301,7 @@
 			"type": "shell",
 			"command": "./scripts/code-server.sh",
 			"windows": {
-				"command": ".\\scripts\\code-server.bat"
+				"command": ".\\scripts\\texttt-server.bat"
 			},
 			"args": [
 				"--no-launch",
@@ -329,7 +329,7 @@
 			"type": "shell",
 			"command": "./scripts/code-web.sh",
 			"windows": {
-				"command": ".\\scripts\\code-web.bat"
+				"command": ".\\scripts\\texttt-web.bat"
 			},
 			"args": [
 				"--port",

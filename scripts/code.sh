@@ -48,8 +48,10 @@ function code() {
 		DISABLE_TEST_EXTENSION=""
 	fi
 
+	DISABLE_COPILOT_CHAT_EXTENSION="--disable-extension=GitHub.copilot-chat"
+
 	# Launch Code
-	exec "$CODE" . $DISABLE_TEST_EXTENSION "$@"
+	exec "$CODE" . $DISABLE_TEST_EXTENSION $DISABLE_COPILOT_CHAT_EXTENSION "$@"
 }
 
 function code-wsl()

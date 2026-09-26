@@ -320,7 +320,7 @@
 		}
 	},
 	{
-		"c": " The sum of \\code{x} and \\code{y}.",
+		"c": " The sum of \\texttt{x} and \\texttt{y}.",
 		"t": "source.r comment.line.roxygen.r",
 		"r": {
 			"dark_plus": "comment: #6A9955",

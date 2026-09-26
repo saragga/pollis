@@ -354,11 +354,11 @@ export class Menubar extends Disposable {
 			menubar.append(exploreMenuItem);
 		}
 
-		// Infer
-		if (this.shouldDrawMenu('Infer')) {
+		// Model
+		if (this.shouldDrawMenu('Model')) {
 			const modelMenu = new Menu();
-			const modelMenuItem = new MenuItem({ label: this.mnemonicLabel(nls.localize({ key: 'mModel', comment: ['&& denotes a mnemonic'] }, "&&Infer")), submenu: modelMenu });
-			this.setMenuById(modelMenu, 'Infer');
+			const modelMenuItem = new MenuItem({ label: this.mnemonicLabel(nls.localize({ key: 'mModel', comment: ['&& denotes a mnemonic'] }, "&&Model")), submenu: modelMenu });
+			this.setMenuById(modelMenu, 'Model');
 			menubar.append(modelMenuItem);
 		}
 
@@ -398,6 +398,14 @@ export class Menubar extends Disposable {
 			menubar.append(helpMenuItem);
 		}
 
+		// Toolboxes
+		if (this.shouldDrawMenu('Toolboxes')) {
+			const toolboxesMenu = new Menu();
+			const toolboxesMenuItem = new MenuItem({ label: this.mnemonicLabel(nls.localize({ key: 'mToolboxes', comment: ['&& denotes a mnemonic'] }, "&&Toolboxes")), submenu: toolboxesMenu });
+			this.setMenuById(toolboxesMenu, 'Toolboxes');
+			menubar.append(toolboxesMenuItem);
+		}
+
 		if (menubar.items && menubar.items.length > 0) {
 			this.doSetApplicationMenu(menubar);
 		} else {
@@ -432,10 +440,11 @@ export class Menubar extends Disposable {
 
 	private setMacApplicationMenu(macApplicationMenu: Menu): void {
 		const about = this.createMenuItem(nls.localize('mAbout', "About {0}", this.productService.nameLong), 'workbench.action.showAboutDialog');
-		const showReleaseNotes = this.createMenuItem(nls.localize('mReleaseNotes', "Show Release Notes"), 'pollis.action.showReleaseNotes');
-		const checkForUpdates = new MenuItem({ label: this.mnemonicLabel(nls.localize('miCheckForUpdates', "Check for &&Updates...")), click: () => setTimeout(() => { this.reportMenuActionTelemetry('CheckForUpdate'); this.updateService.checkForUpdates(true); }, 0) });
-		const featureRequest = this.createMenuItem(nls.localize('mFeatureRequest', "Feature Request"), 'pollis.action.openFeatureRequestReporter');
-		const reportIssue = this.createMenuItem(nls.localize('mReportIssue', "Report Issue"), 'workbench.action.openIssueReporter');
+		const welcome = this.createMenuItem(nls.localize('mWelcome', "Welcome"), 'workbench.action.openWalkthrough');
+		//const showReleaseNotes = this.createMenuItem(nls.localize('mReleaseNotes', "Show Release Notes"), 'pollis.action.showReleaseNotes');
+		//const checkForUpdates = new MenuItem({ label: this.mnemonicLabel(nls.localize('miCheckForUpdates', "Check for &&Updates...")), click: () => setTimeout(() => { this.reportMenuActionTelemetry('CheckForUpdate'); this.updateService.checkForUpdates(true); }, 0) });
+		//const featureRequest = this.createMenuItem(nls.localize('mFeatureRequest', "Feature Request"), 'pollis.action.openFeatureRequestReporter');
+		//const reportIssue = this.createMenuItem(nls.localize('mReportIssue', "Report Issue"), 'workbench.action.openIssueReporter');
 		const viewLicense = this.createMenuItem(nls.localize('mLicense', "View License"), 'pollis.action.showLicense');
 		const viewThirdPartyNotices = this.createMenuItem(nls.localize('mThirdPartyNotices', "View Third-Party Notices"), 'pollis.action.showThirdPartyNotices');
 
@@ -467,11 +476,8 @@ export class Menubar extends Disposable {
 			}
 		}));
 
-		const actions = [about, __separator__(), showReleaseNotes, checkForUpdates];
+		const actions = [about, __separator__(), welcome];
 		actions.push(...[
-			__separator__(),
-			featureRequest,
-			reportIssue,
 			__separator__(),
 			viewLicense,
 			viewThirdPartyNotices,

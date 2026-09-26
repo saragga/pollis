@@ -89,7 +89,7 @@ echo }
 :: Figure out which Electron to use for running tests
 if "%INTEGRATION_TEST_ELECTRON_PATH%"=="" (
 	chcp 65001
-	set INTEGRATION_TEST_ELECTRON_PATH=.\scripts\code.bat
+	set INTEGRATION_TEST_ELECTRON_PATH=.\scripts\texttt.bat
 	set VSCODE_BUILD_BUILTIN_EXTENSIONS_SILENCE_PLEASE=1
 
 	echo Running integration tests out of sources.

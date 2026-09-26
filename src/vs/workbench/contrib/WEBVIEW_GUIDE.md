@@ -60,9 +60,9 @@ export function getXxxHtml(mermaidJs?: string): string {
 
 A correct template file should be **~150–450 lines** — all of that content being webview-specific data (toggle buttons, bullet text, decision table rows, mini-chart SVG functions, code-branch functions, action arrays). If a template exceeds ~500 lines, it is almost certainly re-implementing scaffold boilerplate that belongs in `webviewScaffold.ts`.
 
-**Sync rule:** This file has a mirror in memory at
-`/Users/antonio/.claude/projects/-Users-antonio-vscode/memory/project_pollis_webview_guide.md`.
-Whenever this file is updated, the memory file must be updated to match (and vice versa). Always keep both in sync.
+**Sync rule:** This file is mirrored by a `project_pollis_webview_guide` note in the coding
+assistant's project memory. Whenever this file is updated, that note must be updated to match
+(and vice versa). Always keep both in sync.
 
 **Location:** `src/vs/workbench/contrib/WEBVIEW_GUIDE.md` — applies to all Pollis menu contributions: `model/`, `explore/`, `simulate/`, `optimise/`, `compose/`.
 
@@ -2198,6 +2198,7 @@ openXxxWebview(
 - **Stray empty cell** — use `count: notebook.cells.length`, not `0`.
 - **Execution needs a kernel** — *opening* the notebook works with no Julia kernel; *running* the cell needs IJulia installed and selected. This is expected; it is the main thing to compare against the Julia REPL path when deciding which button works best under which circumstances.
 - **`runCode` is per-webview** — the message type, handler case, and service threading are duplicated into each webview that wants the buttons. There is no shared helper yet; copy the `tsviz` implementation verbatim.
+- **The Send-to-Pluto button is rendered for EVERY webview by the shared scaffold — so every webview's handler MUST handle the `'pluto'` target.** The scaffold's button bars (`webviewScaffold.ts`: the main bar **and** the `renderRightCode` panel bar) include **Send to Pluto** *unconditionally*. A webview that omits the `'pluto'` case from its `runCode` switch (or `'pluto'` from its types union) therefore ships a **dead button** — clicking does nothing, Pluto never starts. This was a real bug across the 8 data-source webviews (EDGAR, FRED, Alpha Vantage, ECB, HF datasets, Kaggle datasets, yfin, xlsx); the viz webviews had the case, the data webviews didn't. See §18.11.
 - **Button style** — keep the secondary-button look; do **not** convert to `.toggle-btn` pills (pills imply mutually-exclusive selection, which these are not).
 
 ### 18.11 Send to Pluto
@@ -2206,7 +2207,7 @@ Unlike the other code-action targets (whose logic is duplicated per handler), **
 
 - **Commands:** `commands/pluto.command.ts` registers (via `registerPlutoCommands()` from `model.contribution.ts`) both `pollis.action.sendToPluto` — writes a fresh one-cell Pluto `.jl` under `IEnvironmentService.cacheHome/pollis-pluto/` (unique `pollis-pluto-<ts>.jl` — **never overwrites**) and opens it in the **internal browser** (`workbench.action.browser.open` → `<base>/open?path=<encoded fsPath>`) — and `pollis.action.newPlutoNotebook` — a **New File: Pluto Notebook** entry (`MenuRegistry.appendMenuItem(MenuId.NewFile, …)`) that opens a brand-new empty notebook (`<base>/new`). Both share `ensurePlutoServer()` (reuse-or-start). Separately, `juliaNotebookKernel.contribution.ts` makes **Julia the default kernel** for any opened Jupyter notebook with no kernel selected (reuses `autoSelectJuliaKernel`).
 - **Server start = file handshake, not network.** Fixed ports clash (`EADDRINUSE`) and the renderer **can't `fetch` localhost (CSP)**. So we write a `launch.jl` that: ensures Pluto (`Pkg.add` fallback), grabs a **free OS port** (`listen(localhost, 0)`), builds a `Pluto.ServerSession()` (so we can read its `.secret`), writes `port.txt` + `secret.txt`, starts the server with `Pluto.run(_session)` (**secret kept on** — no "dangerous setting" warning), and (on an `@async` task) writes `ready.txt` once the port accepts a connection. The cell body is wrapped in `begin … end` (Pluto allows one expression per cell). The command `include(raw"…launch.jl")`s it in the Julia REPL, then **polls those files via `IFileService`** (not the network) for port + secret + readiness, and opens `…/open?path=<enc fsPath>&secret=<enc secret>` in the internal browser. Base URL + secret are cached in module variables so **repeat clicks reuse the same server**.
-- **Per webview:** add `'pluto'` to the `runCode` target union (types), one `else if (msg.target === 'pluto') { await commandService.executeCommand('pollis.action.sendToPluto', code); }` branch in the handler, and the **Send to Pluto** button (after Send to Notebook) in the scaffold's main bar + `renderRightCode` panel bar. (The scaffold already does all of this for the Visualise webviews.)
+- **Per webview (mandatory — not optional):** add `'pluto'` to the `runCode` target union (types) **and** one `else if (msg.target === 'pluto') { await commandService.executeCommand('pollis.action.sendToPluto', code); }` branch in the handler. The **Send to Pluto** button itself is rendered by the shared scaffold for **every** webview unconditionally (main bar + `renderRightCode` panel bar), so the type + handler branch are required in each webview or the button is dead — see the pitfall in §18.10.
 - **Layer note:** use `IEnvironmentService` (common, browser-safe), **not** `INativeEnvironmentService` — the latter trips the browser-layer checker. `cacheHome` is a real on-disk folder Pluto can read.
 - **Status, not a toast.** The "Starting Pluto…" wait is shown via `IProgressService` `ProgressLocation.Window` (status bar), **not** `notificationService.info` — a notification **toast overlapping the internal browser** makes `browserView` show a "Paused due to Notification" overlay (see `overlayManager.ts` watching `notification-toast-container`). Any toast over the browser pauses it, so feature code near the browser should prefer window/status progress.
 - **Caveats:** Pluto opens the file in *safe preview* (code not run until the user clicks **Run notebook code** — matches "run later"); the Julia REPL shows "Evaluating…" forever because `Pluto.run` blocks it (that REPL *is* the server — expected); session reuse breaks if the user kills the REPL (reload the window to reset the cached base/secret); first run installs/precompiles Pluto (slow → 10-minute file-poll timeout).
@@ -2483,7 +2484,7 @@ Some data providers need a **free API key** (Alpha Vantage, FRED, and the HF/Kag
 
 ### 24.2 Generated code reads the env var — never embeds the key
 
-All code branches/actions read the key from the environment (e.g. AlphaVantage.jl's global client reads `ENV["ALPHA_VANTAGE_API_KEY"]`). The literal key is injected **only** into the Julia REPL session via `replPrefix`. **Send to Editor / Notebook do NOT inject it** (those persist to disk) — the user sets the env var in that session themselves; document this in the **Authentication** wiki.
+All code branches/actions read the key from the environment (e.g. AlphaVantage.jl's global client reads `ENV["ALPHA_VANTAGE_API_KEY"]`). The literal key is **never written into a file**. It reaches the running Julia process through the **process environment**, which is supplied two ways: the `replPrefix` injection on the `juliaRepl` send (legacy, REPL-only), and — superseding it — the **global credential environment injection** (§24.6), which mirrors every stored credential into the environment of *every* terminal, editor-run, and notebook kernel. So Send to REPL / Editor / Notebook, **and hand-written code in any Pollis terminal**, all see the key with no per-snippet injection and nothing on disk. (Historically Send to Editor/Notebook did *not* get the key; §24.6 closed that gap.)
 
 ### 24.3 Scaffold rendering (shared, additive, inert by default)
 
@@ -2505,7 +2506,17 @@ All code branches/actions read the key from the environment (e.g. AlphaVantage.j
 - [ ] Provider constant `{ secretKey: 'pollis.apiKey.<name>', envVar, label }`.
 - [ ] Handler/command/contribution thread `ISecretStorageService`; `apiKey.postStatus()` on open; `setApiKey`/`clearApiKey` cases; `replPrefix` injected in the `juliaRepl` branch.
 - [ ] Generated code reads `ENV[envVar]` — the literal key appears in **no** file.
+- [ ] **Field registered in `common/credentials.ts`** (so the global injector exposes it — §24.6).
 - [ ] Authentication wiki present.
+
+### 24.6 Global credential environment injection (terminals, editor-runs, notebook kernels)
+
+`replPrefix` (§24.1) only injects on the `juliaRepl` send, so Send to Editor/Notebook and hand-typed code in a fresh session never saw the key. That gap is closed by a **single global mechanism** that mirrors every stored credential into the process environment — off-disk, all providers, uniform. The same applies to EDGAR's non-secret SEC contact (`SEC_USER_AGENT`).
+
+- **Single registry — `common/credentials.ts`.** `CREDENTIALS` (named map) + `POLLIS_CREDENTIAL_FIELDS` (`{ secretKey, envVar }[]`) are the **one source of truth** for every credential. The per-webview handlers build their `createApiKeyWiring` fields by spreading these (e.g. `{ ...CREDENTIALS.fred, prompt: 'FRED API key' }`), so a `secretKey`/`envVar` pair is declared in exactly one place. **A new webview with a credential MUST add its field here**, or the injector won't know about it.
+- **Terminals / REPL / editor-runs — `credentialEnvironment.contribution.ts`.** A workbench contribution (runs at `AfterRestored`) reads each secret from Secret Storage and registers a collection with `IEnvironmentVariableService` (`set('pollis.credentials', { map })`, mutators `Replace` + `applyAtProcessCreation`). Registered **without** the `persistent` flag, so the values stay in memory and are **never serialized to storage**; they are re-read each session and refreshed on `ISecretStorageService.onDidChangeSecret`. Because it's the standard terminal env-var collection, it reaches every terminal Pollis spawns — so the Julia REPL, "Execute in REPL" from an editor file, and hand-typed terminal commands all have the key at process creation.
+- **Notebook kernels — `pollis.credentialEnv` command + the Julia extension.** A Jupyter kernel is a separate process that does **not** inherit the terminal collection. So the same contribution also registers the command `pollis.credentialEnv` (returns `{ envVar: value }`), and the bundled `extensions/language-julia` kernel launcher merges it into the kernel's spawn `env` (see POLLIS_GUIDE §5.6). That covers notebook cells too — including **hand-created** notebooks, not just webview-generated ones.
+- **Trade-off to know.** This makes the keys **ambient in every Pollis terminal** (any process you run can read its own env), broader than the old REPL-only injection — but still never on disk. There is no per-shell scoping in the env-collection API (only per-workspace-folder).
 
 ## 25. Interactive Explore pane (`[explore]`) — live, axis-filtered hub browser
 

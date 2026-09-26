@@ -31,8 +31,10 @@ for %%A in (%*) do (
 	)
 )
 
+set DISABLE_COPILOT_CHAT_EXTENSION="--disable-extension=GitHub.copilot-chat"
+
 :: Launch Code
-%CODE% --inspect=5874 out\cli.js %~dp0.. %DISABLE_TEST_EXTENSION% %*
+%CODE% --inspect=5874 out\cli.js %~dp0.. %DISABLE_TEST_EXTENSION% %DISABLE_COPILOT_CHAT_EXTENSION% %*
 goto end
 
 :builtin

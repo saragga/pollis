@@ -178,6 +178,8 @@ export interface IProductConfiguration {
 	readonly reportIssueUrl?: string;
 	readonly reportMarketplaceIssueUrl?: string;
 	readonly licenseUrl?: string;
+	readonly licenseName?: string;
+	readonly sourceUrl?: string;
 	readonly serverLicenseUrl?: string;
 	readonly privacyStatementUrl?: string;
 	readonly showTelemetryOptOut?: boolean;
@@ -247,10 +249,7 @@ export interface IProductConfiguration {
 	readonly embedded?: IEmbeddedProductConfiguration;
 
 	readonly poweredBy?: {
-		readonly gemma?: string;
 		readonly julia?: string;
-		readonly duckdb?: string;
-		readonly lancedb?: string;
 		readonly codeoss?: string;
 	};
 

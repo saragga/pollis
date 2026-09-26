@@ -35,7 +35,7 @@ if "%VSCODE_REMOTE_SERVER_PATH%"=="" (
 :: Figure out which Electron to use for running tests
 if "%INTEGRATION_TEST_ELECTRON_PATH%"=="" (
 	chcp 65001
-	set INTEGRATION_TEST_ELECTRON_PATH=.\scripts\code.bat
+	set INTEGRATION_TEST_ELECTRON_PATH=.\scripts\texttt.bat
 	set API_TESTS_EXTRA_ARGS_BUILT=
 
 	echo Running integration tests out of sources.

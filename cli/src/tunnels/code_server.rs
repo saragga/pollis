@@ -602,7 +602,7 @@ impl<'a> ServerBuilder<'a> {
 
 		debug!(self.logger, "Starting server with command... {:?}", cmd);
 
-		// On Windows spawning a code-server binary will run cmd.exe /c C:\path\to\code-server.cmd...
+		// On Windows spawning a code-server binary will run cmd.exe /c C:\path\to\texttt-server.cmd...
 		// This spawns a cmd.exe window for the user, which if they close will kill the code-server process
 		// and disconnect the tunnel. To prevent this, pass the CREATE_NO_WINDOW flag to the Command
 		// only on Windows.

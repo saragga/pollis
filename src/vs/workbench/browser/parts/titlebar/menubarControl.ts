@@ -94,15 +94,15 @@ MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
 	order: 4.1
 });
 
-MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
-	submenu: MenuId.MenubarComposeMenu,
-	title: {
-		value: 'Compose',
-		original: 'Compose',
-		mnemonicTitle: localize({ key: 'mHelp', comment: ['&& denotes a mnemonic'] }, "&&Compose")
-	},
-	order: 9
-});
+//MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
+//	submenu: MenuId.MenubarComposeMenu,
+//	title: {
+//		value: 'Compose',
+//		original: 'Compose',
+//		mnemonicTitle: localize({ key: 'mHelp', comment: ['&& denotes a mnemonic'] }, "&&Compose")
+//	},
+//	order: 9
+//});
 
 MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
 	submenu: MenuId.MenubarPreferencesMenu,

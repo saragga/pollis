@@ -1,0 +1,74 @@
+name: Pollis Build
+
+# Fast checks only. These cover what a full `gulp vscode-min` build does not:
+#
+#   compile-check-ts-native  the build type-checks too (transpileOnly: false), so this adds no
+#                            coverage -- it just fails in seconds instead of minutes.
+#   valid-layers-check       type-checks against six restricted lib sets (browser / worker / node /
+#                            electron-*). The build uses one permissive config, so a browser-layer
+#                            file importing a node built-in compiles and bundles, then fails at
+#                            runtime. Genuinely uncovered by the build.
+#   eslint                   unexternalized strings, disposable leaks, DI patterns -- all
+#                            type-correct and invisible to the compiler.
+#   test-node                behaviour rather than compilation. Mainly a rebase safety net.
+#
+# Hygiene is a git pre-commit hook instead (`git config core.hooksPath .githooks`), since
+# indentation, formatting and copyright headers have no runtime effect.
+#
+# The full packaged build lives in pollis-package.yml, on a manual trigger.
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: pollis-build-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  VSCODE_QUALITY: 'oss'
+  # Inherited from the Electron process tree when the runner is started from an editor terminal.
+  # Left empty rather than set, so that `if (process.env.ELECTRON_RUN_AS_NODE)` checks stay falsy.
+  ELECTRON_RUN_AS_NODE: ''
+
+jobs:
+  checks:
+    name: Checks
+    runs-on: [self-hosted, macOS]
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          lfs: true
+          # Keep node_modules and .build between runs. A clean checkout would `git clean -ffdx`
+          # them away and force a full reinstall every time, which is the slowest step by far.
+          clean: false
+
+      - name: Setup
+        uses: ./.github/actions/pollis-setup
+
+      - name: Type check build scripts
+        run: npm run typecheck
+        working-directory: build
+
+      - name: Type check sources
+        run: npm run compile-check-ts-native
+
+      - name: Check layering
+        run: npm run valid-layers-check
+
+      - name: Lint
+        run: npm run eslint
+
+      - name: Unit tests
+        run: npm run test-node

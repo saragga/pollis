@@ -1,0 +1,65 @@
+name: Pollis Package
+
+# The full minified build: `gulp vscode-min` runs compile-build-with-mangling (which type-checks
+# with emitError, so it subsumes compile-check-ts-native), builds the bundled extensions, minifies,
+# and assembles the app into ../VSCode-darwin-arm64.
+#
+# This is the only thing that proves Pollis actually ships, and it is far too slow for every push,
+# hence the manual trigger. Unlike pollis-build.yml it needs the real Electron binary.
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_checks:
+        description: Run the fast checks first (fails in seconds rather than after the build)
+        type: boolean
+        default: true
+
+concurrency:
+  group: pollis-package-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  VSCODE_QUALITY: 'oss'
+  ELECTRON_RUN_AS_NODE: ''
+
+jobs:
+  package:
+    name: vscode-min
+    runs-on: [self-hosted, macOS]
+    timeout-minutes: 180
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          lfs: true
+          clean: false
+
+      - name: Setup
+        uses: ./.github/actions/pollis-setup
+        with:
+          install-binaries: 'true'
+
+      - name: Type check sources
+        if: ${{ inputs.run_checks }}
+        run: npm run compile-check-ts-native
+
+      - name: Check layering
+        if: ${{ inputs.run_checks }}
+        run: npm run valid-layers-check
+
+      - name: Build minified app
+        run: npm run gulp vscode-min
+
+      - name: Report build output
+        run: |
+          set -e
+          echo "out-vscode-min:"
+          du -sh out-vscode-min
+          echo "packaged app:"
+          du -sh ../VSCode-darwin-arm64
+          ls -1 ../VSCode-darwin-arm64
