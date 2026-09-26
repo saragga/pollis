@@ -9,6 +9,7 @@
         "strict": false,
         "noUnusedLocals": true,
         "esModuleInterop": true,
+        "skipLibCheck": true,
         "types": ["node", "mocha"]
     },
     "include": ["src"],
