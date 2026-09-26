@@ -49,8 +49,10 @@ let g_terminal_is_persistent: boolean = false
 
 let g_ExecutableFeature: ExecutableFeature
 
-async function startREPLCommand() {
-    await startREPL(false, true)
+// POLLIS: returns whether a REPL is running, so that callers (the Pollis panels' "Send to Julia
+// REPL") only send code when it is.
+async function startREPLCommand(): Promise<boolean> {
+    return await startREPL(false, true)
 }
 
 async function startREPLWithVersionCommand(versionName?: string) {
@@ -186,7 +188,7 @@ export async function startREPL(
     preserveFocus: boolean,
     showTerminal: boolean = true,
     juliaExecutable?: JuliaExecutable
-) {
+): Promise<boolean> {
     const config = vscode.workspace.getConfiguration('julia')
     const isPersistentSession = Boolean(config.get('persistentSession.enabled'))
 
@@ -194,11 +196,11 @@ export async function startREPL(
         if (showTerminal) {
             g_terminal.show(preserveFocus)
         }
-        return
+        return true
     }
 
     if (isConnected()) {
-        return
+        return true
     }
 
     const terminalConfig = vscode.workspace.getConfiguration('terminal')
@@ -250,7 +252,7 @@ export async function startREPL(
         } catch (err) {
             if (err instanceof JuliaNotFoundError) {
                 vscode.window.showErrorMessage('Cannot start the Julia REPL: Julia is not installed.')
-                return
+                return false
             }
             throw err
         }
@@ -367,6 +369,7 @@ export async function startREPL(
 
     g_terminal.show(preserveFocus)
     await juliaIsConnectedPromise.wait()
+    return true
 }
 
 function makeTerminalName(juliaExecutable: JuliaExecutable) {
@@ -1560,10 +1563,23 @@ export function activate(
 
     // Optionally launch the REPL on startup and focus the terminal panel immediately.
     // Controlled by the julia.startREPLOnStartup setting.
+    // POLLIS: only when Julia is installed. Looking for Julia without offering to install it keeps the
+    // "Automatically install Julia?" dialog from opening at every launch; the welcome page's Alerts
+    // and Announcements section offers the installation instead.
     if (vscode.workspace.getConfiguration('julia').get<boolean>('startREPLOnStartup')) {
-        startREPL(false, true).catch(err => {
-            vscode.window.showErrorMessage(`Julia REPL failed to start: ${err?.message ?? err}`)
-        })
+        g_ExecutableFeature
+            .getExecutable(false)
+            .then(
+                (juliaExecutable) => startREPL(false, true, juliaExecutable),
+                (err) => {
+                    if (!(err instanceof JuliaNotFoundError)) {
+                        throw err
+                    }
+                }
+            )
+            .catch((err) => {
+                vscode.window.showErrorMessage(`Julia REPL failed to start: ${err?.message ?? err}`)
+            })
     }
 }
 

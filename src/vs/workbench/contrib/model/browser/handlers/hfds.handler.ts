@@ -29,7 +29,7 @@ import { generateTokensCSSForColorMap } from '../../../../../editor/common/langu
 import { Event } from '../../../../../base/common/event.js';
 import { IUntitledTextResourceEditorInput } from '../../../../common/editor.js';
 import { CellEditType, CellKind } from '../../../notebook/common/notebookCommon.js';
-import { openWikiByFile, openNotebookByFile, openPackageItem, openVideoList, openInBrowser, autoSelectJuliaKernel, createPackageStatusWiring, createApiKeyWiring } from './model.handler.js';
+import { openWikiByFile, openNotebookByFile, openPackageItem, openVideoList, openInBrowser, autoSelectJuliaKernel, createPackageStatusWiring, createApiKeyWiring, sendToJuliaRepl } from './model.handler.js';
 import { CREDENTIALS } from '../common/credentials.js';
 import { hasKey } from '../../../../../base/common/types.js';
 
@@ -146,8 +146,7 @@ export function registerHfdsWebviewHandlers(
 				} else if (msg.target === 'juliaRepl') {
 					// Inject the HF token as a session env var so it never lands in a saved file.
 					const prefix = await apiKey.replPrefix(msg.target);
-					await commandService.executeCommand('language-julia.startREPL');
-					await commandService.executeCommand('workbench.action.terminal.sendSequence', { text: prefix + code + '\n' });
+					if (!await sendToJuliaRepl(prefix + code, commandService)) { break; }
 				} else if (msg.target === 'notebook') {
 					const ref = await notebookEditorModelResolverService.resolve({ untitledResource: undefined }, 'jupyter-notebook');
 					const notebook = ref.object.notebook;

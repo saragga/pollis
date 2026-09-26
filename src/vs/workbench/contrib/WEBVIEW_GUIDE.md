@@ -1959,7 +1959,7 @@ A row of action buttons placed **below** the code-preview box lets the user take
 | **Send to Terminal** | Host runs `workbench.action.terminal.sendSequence` with `{ text: code + '\n' }` | an open terminal |
 | **Send to Notebook** | Host resolves an **untitled Jupyter notebook**, inserts the code as one `julia` **code cell**, opens it, then **auto-selects the Julia kernel** | Julia VS Code extension only — it supplies the kernel directly; **no IJulia / Jupyter install needed** |
 | **Send to Pluto** | Host writes the code as a fresh one-cell **Pluto `.jl` notebook**, ensures a Pluto server is running (auto-`Pkg.add("Pluto")` on first use), then opens it in the **internal browser** | Julia + Pluto.jl (installed automatically) |
-| **Julia REPL** | Host runs `language-julia.startREPL`, then `terminal.sendSequence` | Julia VS Code extension |
+| **Julia REPL** | Host calls `sendToJuliaRepl(code, commandService)` (`model.handler.ts`): runs `language-julia.startREPL`, then `terminal.sendSequence` only if a REPL is running. When Julia is missing the extension offers to install it and nothing is sent | Julia VS Code extension |
 
 All four host-side actions are carried by a single `runCode` message discriminated by a `target` field. Copy never reaches the host.
 
@@ -2070,8 +2070,8 @@ case 'runCode': {
     } else if (msg.target === 'terminal') {
         await commandService.executeCommand('workbench.action.terminal.sendSequence', { text: code + '\n' });
     } else if (msg.target === 'juliaRepl') {
-        await commandService.executeCommand('language-julia.startREPL');
-        await commandService.executeCommand('workbench.action.terminal.sendSequence', { text: code + '\n' });
+        // Nothing is sent (and no package nudge) when no REPL could be started, e.g. Julia is not installed.
+        if (!await sendToJuliaRepl(code, commandService)) { break; }
     } else if (msg.target === 'notebook') {
         const ref = await notebookEditorModelResolverService.resolve({ untitledResource: undefined }, 'jupyter-notebook');
         const notebook = ref.object.notebook;
@@ -2433,7 +2433,7 @@ A small status indicator on the **"Powered by:"** line shows whether the webview
 
 ### 23.1 How detection works — silent, reads `Project.toml`, never runs Julia
 
-There is **no way to spawn a hidden Julia process** from the webview (browser) layer — the only ways to run Julia are the user's visible REPL (`language-julia.startREPL` + `terminal.sendSequence`) or the pluto-style file handshake. So the indicator does **not** run `using …`. Instead it reads the active environment's `Project.toml` `[deps]` from disk:
+There is **no way to spawn a hidden Julia process** from the webview (browser) layer — the only ways to run Julia are the user's visible REPL (`sendToJuliaRepl`: `language-julia.startREPL` + `terminal.sendSequence`) or the pluto-style file handshake. So the indicator does **not** run `using …`. Instead it reads the active environment's `Project.toml` `[deps]` from disk:
 
 - Helper `checkJuliaPackagesInstalled(packageNames, fileService, pathService, workspaceContextService)` in `model.handler.ts` parses a `Project.toml` `[deps]` table and reports each declared package (`"YFinance.jl"` → checks dependency `YFinance`, i.e. the display name minus `.jl`). Returns `IJuliaEnvStatus` (`{ statuses: { name, installed }[]; env }`), where `env` is a human label of the environment that was inspected.
 - **Which environment:** it prefers an **activated project** — a `Project.toml` at a workspace folder root (`readWorkspaceProject` via `IWorkspaceContextService`, the env the Julia extension defaults to when one is present) — and otherwise falls back to the **shared default environment** `~/.julia/environments/<newest vX.Y>/Project.toml` (resolved via `IPathService.userHome({ preferLocal: true })`). The shared env is the one shown in the status bar that throws **"Package X not found in current path"** when a dependency is missing.

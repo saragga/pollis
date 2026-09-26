@@ -107,6 +107,13 @@ type GettingStartedActionEvent = {
 };
 
 const REDUCED_MOTION_KEY = 'workbench.welcomePage.preferReducedMotion';
+
+/**
+ * Pollis: set by the bundled Julia extension (`language-julia`) once it has looked for Julia at startup.
+ * Only an explicit `false` shows the alert, so nothing is shown before the check has run.
+ */
+const JULIA_INSTALLED_KEY = 'julia.juliaInstalled';
+const juliaNotInstalled = ContextKeyExpr.equals(JULIA_INSTALLED_KEY, false);
 export class GettingStartedPage extends EditorPane {
 
 	public static readonly ID = 'gettingStartedPage';
@@ -414,6 +421,15 @@ export class GettingStartedPage extends EditorPane {
 			}
 			case 'seeAllWalkthroughs': {
 				await this.openWalkthroughSelector();
+				break;
+			}
+			case 'installJulia': {
+				// Pollis: the Julia extension asks how to install Julia (juliaup download, a custom command or a path).
+				this.commandService.executeCommand('language-julia.retriggerInstallation');
+				break;
+			}
+			case 'setJuliaPath': {
+				this.commandService.executeCommand('workbench.action.openSettings', 'julia.executablePath');
 				break;
 			}
 			case 'openFolder': {
@@ -965,8 +981,40 @@ export class GettingStartedPage extends EditorPane {
 	}
 
 	private buildAnnouncementsSection(): HTMLElement {
+		// Pollis: alerts are shown under the heading and updated when the context they depend on changes.
+		const alerts = $('.pollis-alerts', {});
+		const renderAlerts = () => {
+			reset(alerts, ...(this.contextService.contextMatchesRules(juliaNotInstalled) ? [this.buildJuliaNotInstalledAlert()] : []));
+			this.registerDispatchListeners();
+		};
+		renderAlerts();
+		this.categoriesSlideDisposables.add(this.contextService.onDidChangeContext(e => {
+			if (e.affectsSome(new Set([JULIA_INSTALLED_KEY]))) {
+				renderAlerts();
+			}
+		}));
+
 		return $('.announcements-section', {},
 			$('h2.section-header', {}, localize('alertsAndAnnouncements', "Alerts and Announcements")),
+			alerts,
+		);
+	}
+
+	/**
+	 * Pollis: alert shown while Julia is not installed. Most panels generate Julia code, and the Julia REPL,
+	 * notebooks and Pluto need Julia to run it.
+	 */
+	private buildJuliaNotInstalledAlert(): HTMLElement {
+		return $('.pollis-alert', { role: 'alert' },
+			$('span.pollis-alert-icon.codicon.codicon-warning'),
+			$('.pollis-alert-body', {},
+				$('p.pollis-alert-title', {}, localize('pollis.juliaNotInstalled', "Julia is not installed")),
+				$('p.pollis-alert-description', {}, localize('pollis.juliaNotInstalledDescription', "Most Pollis panels generate Julia code. The Julia REPL, notebooks and Pluto need Julia to run it.")),
+				$('.pollis-alert-actions', {},
+					$('button.button-link', { 'x-dispatch': 'installJulia' }, localize('pollis.installJulia', "Install Julia")),
+					$('button.button-link', { 'x-dispatch': 'setJuliaPath' }, localize('pollis.setJuliaPath', "Set Julia Path")),
+				),
+			),
 		);
 	}
 

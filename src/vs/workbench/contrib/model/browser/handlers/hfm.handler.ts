@@ -30,7 +30,7 @@ import { IPathService } from '../../../../services/path/common/pathService.js';
 import { IWorkspaceContextService } from '../../../../../platform/workspace/common/workspace.js';
 import { ISecretStorageService } from '../../../../../platform/secrets/common/secrets.js';
 import { IWebviewService } from '../../../webview/browser/webview.js';
-import { openWikiByFile, openNotebookByFile, openPackageItem, openVideoList, openInBrowser, autoSelectJuliaKernel, createPackageStatusWiring, createApiKeyWiring } from './model.handler.js';
+import { openWikiByFile, openNotebookByFile, openPackageItem, openVideoList, openInBrowser, autoSelectJuliaKernel, createPackageStatusWiring, createApiKeyWiring, sendToJuliaRepl } from './model.handler.js';
 import { CREDENTIALS } from '../common/credentials.js';
 import { hasKey } from '../../../../../base/common/types.js';
 
@@ -149,8 +149,7 @@ export function registerHfmWebviewHandlers(
 					await editorService.openEditor(input);
 				} else if (msg.target === 'juliaRepl') {
 					const prefix = await apiKey.replPrefix(msg.target);
-					await commandService.executeCommand('language-julia.startREPL');
-					await commandService.executeCommand('workbench.action.terminal.sendSequence', { text: prefix + code + '\n' });
+					if (!await sendToJuliaRepl(prefix + code, commandService)) { break; }
 				} else if (msg.target === 'notebook') {
 					const ref = await notebookEditorModelResolverService.resolve({ untitledResource: undefined }, 'jupyter-notebook');
 					const notebook = ref.object.notebook;

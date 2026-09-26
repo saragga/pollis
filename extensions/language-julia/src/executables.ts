@@ -391,9 +391,10 @@ export class ExecutableFeature {
                     const juliaup = await this.getJuliaupExecutable(true)
                     if (juliaup) {
                         juliaup.shouldAutoRequestInstall = true
-                        this.getExecutable(true)
-                        this.getLsExecutable(true)
-                        vscode.commands.executeCommand('language-julia.restartLanguageServer')
+                        // POLLIS: the language server is not started (see extension.ts), so its channel is not
+                        // installed and it is not restarted here. Upstream also calls getLsExecutable(true)
+                        // and language-julia.restartLanguageServer.
+                        await this.getExecutable(true)
                     }
                 } catch (err) {
                     if (err instanceof JuliaNotFoundError) {
@@ -474,9 +475,19 @@ export class ExecutableFeature {
         // At this point, we're sure we need to use juliaup. We may already have extraced the intended
         // channel from the configuration though
         outputPrefix = '[juliaup] '
-        const juliaup = await this.getJuliaupExecutable(tryInstall)
+        // POLLIS: without juliaup, fall through to report that Julia is not installed (the
+        // `julia.juliaInstalled` context key drives the welcome page's alert). Upstream lets the
+        // juliaup error escape, so the context key and the status bar item were never set.
+        let juliaup: JuliaupExecutable | undefined
+        try {
+            juliaup = await this.getJuliaupExecutable(tryInstall)
+        } catch (err) {
+            if (!(err instanceof JuliaNotFoundError)) {
+                throw err
+            }
+        }
 
-        if (configuredJuliaupChannel) {
+        if (juliaup && configuredJuliaupChannel) {
             try {
                 const channel = await juliaup.getChannel(configuredJuliaupChannel)
                 this.outputChannel.appendLine(outputPrefix + `using juliaup channel ${channel.name}`)
@@ -490,14 +501,16 @@ export class ExecutableFeature {
             }
         }
 
-        try {
-            const channel = await juliaup.getDefaultChannel()
-            this.outputChannel.appendLine(outputPrefix + `using default juliaup channel ${channel.name}`)
-            this.setJuliaInstalled(true)
+        if (juliaup) {
+            try {
+                const channel = await juliaup.getDefaultChannel()
+                this.outputChannel.appendLine(outputPrefix + `using default juliaup channel ${channel.name}`)
+                this.setJuliaInstalled(true)
 
-            return new JuliaExecutable(channel)
-        } catch {
-            this.outputChannel.appendLine(outputPrefix + `default juliaup channel is not installed`)
+                return new JuliaExecutable(channel)
+            } catch {
+                this.outputChannel.appendLine(outputPrefix + `default juliaup channel is not installed`)
+            }
         }
 
         setStatusJuliaRequired(this.statusBarItem)

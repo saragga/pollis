@@ -69,9 +69,10 @@ Replaced with the Pollis icon. **After a rebase:** restore the Pollis `.icns` fi
 - **Excluded walkthroughs.** `POLLIS_EXCLUDED_WALKTHROUGHS` (compared lower-cased by `isPollisExcludedWalkthrough`) lists walkthroughs that are never registered: the built-in `Setup` ("Get started with VS Code"), the built-in `Beginner` ("Learn the Fundamentals", page title "Essential Features"; it has no `when` clause, so it would always be listed) and the Copilot Chat extension's `GitHub.copilot-chat#copilotWelcome`. Both registration paths skip them: `registerWalkthroughs()` for built-ins and the extension-contribution loop for extensions. `SetupAccessibility` names `Setup` as its `next`; with `Setup` gone it just shows no "Next Section" button.
 - **No sign-in onboarding.** `workbench.welcomePage.experimentalOnboarding` defaults to `false` (was `true`). Upstream's new-user onboarding is a VS Code-branded modal asking to sign in to GitHub/Copilot, and it does not respect `chat.disableAIFeatures`.
 - **First launch shows the welcome page.** Upstream opens a new user's first launch straight into the first registered walkthrough. That branch at the end of `buildCategoriesSlide()` is removed. `product.json` `openToWelcomeMainPage` would also skip it, but it additionally shows a "collects usage data" telemetry footer, which is wrong for Pollis.
+- **"Julia is not installed" alert.** The Alerts and Announcements section (`buildAnnouncementsSection()`) shows an alert while the context key `julia.juliaInstalled` is `false`, with **Install Julia** (`language-julia.retriggerInstallation`, which asks how to install: juliaup download, a custom command or a path) and **Set Julia Path** (opens the `julia.executablePath` setting). `language-julia` sets the key when it activates, so only an explicit `false` shows the alert, and it disappears once Julia is found. Styles are the `.pollis-alert` rules in `gettingStarted.css`.
 - **No "Overview" heading.** Upstream's `buildOverviewSection()` produced only an empty "Overview" heading under the walkthroughs; it was removed, so the right column shows the walkthrough list alone.
 
-Previously these only looked absent in the dev build because they had been hidden with × in the `code-oss-dev` profile; the packaged app showed them. **After a rebase:** re-add the exclusion set and both early returns in `gettingStartedService.ts`, drop the Overview section and the first-launch walkthrough branch again in `gettingStarted.ts`, and set the `workbench.welcomePage.experimentalOnboarding` default to `false` again.
+Previously these only looked absent in the dev build because they had been hidden with × in the `code-oss-dev` profile; the packaged app showed them. **After a rebase:** re-add the exclusion set and both early returns in `gettingStartedService.ts`, drop the Overview section and the first-launch walkthrough branch again in `gettingStarted.ts`, set the `workbench.welcomePage.experimentalOnboarding` default to `false` again, and re-add the Julia alert (`buildAnnouncementsSection()`, `buildJuliaNotInstalledAlert()`, the `installJulia`/`setJuliaPath` dispatch cases and the `.pollis-alert` CSS).
 
 ### 1.5 Copilot Chat not shipped; AI features off by default
 
@@ -83,6 +84,14 @@ Previously these only looked absent in the dev build because they had been hidde
 - **No source maps in the app.** `gulpfile.vscode.ts` always strips `*.js.map` / `*.css.map` from the package (upstream does so only on CI, so local builds shipped ~195 MB of maps) and never points `sourceMappingURL` at Microsoft's CDN.
 
 **After a rebase:** remove `compileCopilotExtensionBuildTask` and the shim preparation from `gulpfile.vscode.ts` again (new upstream Copilot build steps may appear; the packaged `Contents/Resources/app/extensions/` must not contain `copilot`), and set the `chat.disableAIFeatures` default to `true` again. Re-apply the Agents window guards and build omissions (new upstream `vs/sessions` entry points may appear; the packaged `Contents/Resources/app/out/vs/sessions/` must not exist) and the source-map settings.
+
+### 1.6 New windows open maximized
+
+**Files:** `src/vs/platform/windows/electron-main/windowsStateHandler.ts`, `src/vs/workbench/electron-browser/desktop.contribution.ts`
+
+A window with no saved size (the first launch, or a new window) opens maximized, filling the screen (on macOS this is zoom, not full-screen mode). Upstream opens a fixed-size window in the centre, which users tend to resize before anything else. The `window.newWindowDimensions` default is `maximized` (was `default`). The main process only sees user settings, not registered defaults, so `windowsStateHandler.ts` treats an unset value as `maximized` too. Saved window sizes are still restored.
+
+**After a rebase:** set the `window.newWindowDimensions` default to `maximized` again, and re-add the `?? 'maximized'` fallback in `doGetNewWindowState()`.
 
 ---
 
@@ -390,9 +399,13 @@ Several upstream features are not activated in Pollis:
 - **`documentation.activate()` signature** — no longer receives `languageClientFeature` argument (see below)
 - **Symbol-cache-download prompt** — removed (the `julia.symbolCacheDownload` config prompt is gone)
 - **Telemetry-consent prompt** — removed (the `enableTelemetry` opt-in dialog is gone)
-- **`startREPLOnStartup`** — added: if `julia.startREPLOnStartup` is `true`, the REPL is started automatically on extension activation
+- **`startREPLOnStartup`** — added: if `julia.startREPLOnStartup` is `true`, the REPL is started automatically on extension activation (the block is in `repl.ts` `activate()`). It first looks for Julia with `getExecutable(false)`, which never offers to install, and skips the REPL silently when Julia is missing, so the modal "Automatically install Julia?" dialog does not open at every launch. The welcome page alert (§1.4) offers the installation instead. The setting itself is left alone, so the REPL starts on the next launch after Julia is installed
+- **`startREPL` returns whether a REPL is running** — `startREPL()` and the `language-julia.startREPL` command resolve `true` when a REPL is running and `false` when Julia is not installed. The Pollis panels' `sendToJuliaRepl()` (`model.handler.ts`, also used by `installJuliaPackages` and Pluto) sends code only on `true`, so it never runs in another terminal
+- **`getExecutable()` reports a missing juliaup** (`executables.ts`) — when neither Julia nor juliaup is found, it still sets `julia.juliaInstalled` to `false` and shows the "Julia: Not Installed" status bar item. Upstream lets the juliaup error escape before those lines, so the welcome page alert (§1.4) never appeared
+- **`skipLibCheck`** (`tsconfig.json`) — the npm `@vscode/debugprotocol` typings use `declare module` for a namespace, which the newer TypeScript in the build rejects (TS1540)
+- **`language-julia.retriggerInstallation`** (`executables.ts`) — installs Julia and then looks for it again, and nothing more. Upstream also installs the language server's channel (`getLsExecutable(true)`) and restarts the language server, which Pollis does not start
 
-**After a rebase:** re-apply all removals, the commented-out `startServer()`, and the `startREPLOnStartup` block.
+**After a rebase:** re-apply all removals, the commented-out `startServer()`, the `startREPLOnStartup` block (with its Julia check), the boolean `startREPL` result, the `retriggerInstallation` and `getExecutable()` changes, and `skipLibCheck`.
 
 #### `src/interactive/repl.ts` — REPL status bar + doc lookup + startup setting
 
@@ -612,7 +625,8 @@ this._overlayLayout.reapplyLayoutStyles();   // re-applies anchor styles, cleari
 When pulling a new upstream VS Code version, work through this list in order:
 
 - [ ] **Branding** — restore `product.json` fields (§1.1, §1.2), restore Pollis icon (§1.3)
-- [ ] **Welcome page** — re-add the excluded walkthroughs (`Setup`, `Beginner`, Copilot welcome), remove the empty Overview heading and the first-launch walkthrough branch, and default `experimentalOnboarding` to `false` (§1.4)
+- [ ] **Welcome page** — re-add the excluded walkthroughs (`Setup`, `Beginner`, Copilot welcome), remove the empty Overview heading and the first-launch walkthrough branch, default `experimentalOnboarding` to `false`, and re-add the "Julia is not installed" alert (§1.4)
+- [ ] **New windows maximized** — `window.newWindowDimensions` default `maximized` and the fallback in `windowsStateHandler.ts` (§1.6)
 - [ ] **Copilot and AI** — keep Copilot Chat out of the packaged app in `build/gulpfile.vscode.ts` and default `chat.disableAIFeatures` to `true` in `chat.contribution.ts`; re-apply the Agents window guards, the `vs/sessions` build omissions and the source-map settings (§1.5)
 - [ ] **Product interface** — re-add `pollisVersion`, `poweredBy`, `licenseName` and `sourceUrl` to `IProductConfiguration` (§1.2)
 - [ ] **About dialog** — re-add `createNativeAboutDialogDetails` to `dialog.ts`, and the licence + source lines to `createBrowserAboutDialogDetails` (§2)

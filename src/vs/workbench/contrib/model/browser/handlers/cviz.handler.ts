@@ -25,7 +25,7 @@ import { generateTokensCSSForColorMap } from '../../../../../editor/common/langu
 import { IFileService } from '../../../../../platform/files/common/files.js';
 import { IPathService } from '../../../../services/path/common/pathService.js';
 import { IWorkspaceContextService } from '../../../../../platform/workspace/common/workspace.js';
-import { openWikiByFile, openNotebookByFile, openPackageItem, openVideoList, openInBrowser, autoSelectJuliaKernel, createPackageStatusWiring } from './model.handler.js';
+import { openWikiByFile, openNotebookByFile, openPackageItem, openVideoList, openInBrowser, autoSelectJuliaKernel, createPackageStatusWiring, sendToJuliaRepl } from './model.handler.js';
 import { hasKey } from '../../../../../base/common/types.js';
 
 export function registerCvizWebviewHandlers(
@@ -132,8 +132,7 @@ export function registerCvizWebviewHandlers(
 					};
 					await editorService.openEditor(input);
 				} else if (msg.target === 'juliaRepl') {
-					await commandService.executeCommand('language-julia.startREPL');
-					await commandService.executeCommand('workbench.action.terminal.sendSequence', { text: code + '\n' });
+					if (!await sendToJuliaRepl(code, commandService)) { break; }
 				} else if (msg.target === 'notebook') {
 					const ref = await notebookEditorModelResolverService.resolve({ untitledResource: undefined }, 'jupyter-notebook');
 					const notebook = ref.object.notebook;

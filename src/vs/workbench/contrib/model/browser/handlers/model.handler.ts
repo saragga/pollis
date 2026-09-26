@@ -190,12 +190,23 @@ async function readWorkspaceProject(
 	return undefined;
 }
 
+/**
+ * Start the Julia REPL and send `code` to it. When Julia is not installed, the Julia extension offers to
+ * install it instead, and nothing is sent, so the code never runs in another terminal. Resolves whether
+ * the code was sent.
+ */
+export async function sendToJuliaRepl(code: string, commandService: ICommandService): Promise<boolean> {
+	const started = await commandService.executeCommand<boolean>('language-julia.startREPL');
+	if (!started) { return false; }
+	await commandService.executeCommand('workbench.action.terminal.sendSequence', { text: code + '\n' });
+	return true;
+}
+
 /** Install the given packages (display names accepted) via `Pkg.add` in the Julia REPL. */
 export async function installJuliaPackages(packageNames: string[], commandService: ICommandService): Promise<void> {
 	if (!packageNames.length) { return; }
 	const list = packageNames.map(n => `"${juliaPackageName(n)}"`).join(', ');
-	await commandService.executeCommand('language-julia.startREPL');
-	await commandService.executeCommand('workbench.action.terminal.sendSequence', { text: `import Pkg; Pkg.add([${list}])\n` });
+	await sendToJuliaRepl(`import Pkg; Pkg.add([${list}])`, commandService);
 }
 
 /** Reusable wiring for the Powered-by package install-status indicator (see WEBVIEW_GUIDE.md §23). */

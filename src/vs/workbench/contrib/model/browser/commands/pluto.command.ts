@@ -14,6 +14,7 @@ import { URI } from '../../../../../base/common/uri.js';
 import { VSBuffer } from '../../../../../base/common/buffer.js';
 import { generateUuid } from '../../../../../base/common/uuid.js';
 import { localize } from '../../../../../nls.js';
+import { sendToJuliaRepl } from '../handlers/model.handler.js';
 
 /** Base URL + secret of the Pluto server we started this session (lets repeat clicks reuse it). */
 let plutoBase: string | undefined;
@@ -131,8 +132,7 @@ async function ensurePlutoServer(
 	const launcherUri = URI.joinPath(dir, 'launch.jl');
 	await fileService.writeFile(launcherUri, VSBuffer.fromString(buildLauncher(portFile.fsPath, secretFile.fsPath, readyFile.fsPath)));
 
-	await commandService.executeCommand('language-julia.startREPL');
-	await commandService.executeCommand('workbench.action.terminal.sendSequence', { text: `include(raw"${launcherUri.fsPath}")\n` });
+	if (!await sendToJuliaRepl(`include(raw"${launcherUri.fsPath}")`, commandService)) { return undefined; }
 
 	const { port, secret, ready } = await progressService.withProgress(
 		{ location: ProgressLocation.Window, title: localize('pluto.starting', "Starting Pluto (first run installs/precompiles Pluto)…") },

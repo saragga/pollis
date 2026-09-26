@@ -1111,6 +1111,39 @@
 	line-height: 24px;
 }
 
+/* Pollis: alerts in the Alerts and Announcements section */
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-alert {
+	display: flex;
+	gap: 8px;
+	padding: 8px 12px;
+	margin-top: 8px;
+	border-left: 3px solid var(--vscode-editorWarning-foreground);
+	background: var(--vscode-welcomePage-tileBackground);
+	border-radius: 4px;
+}
+
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-alert .pollis-alert-icon {
+	color: var(--vscode-editorWarning-foreground);
+	margin-top: 2px;
+}
+
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-alert p {
+	margin: 0 0 4px;
+}
+
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-alert .pollis-alert-title {
+	font-weight: 600;
+}
+
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-alert .pollis-alert-description {
+	color: var(--vscode-descriptionForeground);
+}
+
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-alert .pollis-alert-actions {
+	display: flex;
+	gap: 16px;
+}
+
 .monaco-workbench .part.editor > .content .gettingStartedContainer a:not(.hide-category-button):hover {
 	color: var(--vscode-textLink-activeForeground);
 }
