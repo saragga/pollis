@@ -56,6 +56,7 @@ import { GettingStartedEditorOptions, GettingStartedInput } from './gettingStart
 import { IResolvedWalkthrough, IResolvedWalkthroughStep, IWalkthroughsService, hiddenEntriesConfigurationKey, parseDescription } from './gettingStartedService.js';
 import { RestoreWalkthroughsConfigurationValue, restoreWalkthroughsConfigurationKey } from './startupPage.js';
 import { startEntries } from '../common/gettingStartedContent.js';
+import { discoverPollisEntries } from '../common/discoverPollisContent.js';
 import { GroupsOrder, IEditorGroup, IEditorGroupsService, preferredSideBySideGroupDirection } from '../../../services/editor/common/editorGroupsService.js';
 import { IExtensionService } from '../../../services/extensions/common/extensions.js';
 import { IHostService } from '../../../services/host/browser/host.js';
@@ -918,27 +919,21 @@ export class GettingStartedPage extends EditorPane {
 		}
 		const footer = $('.footer', {}, ...footerChildren);
 
+		// Pollis: Start and Alerts and Announcements share the left column, and Discover Pollis heads the right one.
+		const discoverSection = this.buildDiscoverSection();
+		reset(leftColumn, startList.getDomElement(), announcementsSection);
+
 		const layoutLists = () => {
 			if (gettingStartedList.itemCount) {
 				this.container.classList.remove('noWalkthroughs');
 				// Pollis: upstream's "Overview" section is only a heading with no content, so it is not shown.
-				reset(rightColumn, gettingStartedList.getDomElement());
+				reset(rightColumn, discoverSection, gettingStartedList.getDomElement());
 			}
 			else {
 				this.container.classList.add('noWalkthroughs');
-				reset(rightColumn);
+				reset(rightColumn, discoverSection);
 			}
 			setTimeout(() => this.categoriesPageScrollbar?.scanDomNode(), 50);
-			layoutAnnouncementsSection();
-		};
-
-		const layoutAnnouncementsSection = () => {
-			if (this.container.classList.contains('noWalkthroughs')) {
-				reset(leftColumn, startList.getDomElement());
-				reset(rightColumn, announcementsSection);
-			} else {
-				reset(leftColumn, startList.getDomElement(), announcementsSection);
-			}
 		};
 
 		gettingStartedList.onDidChange(layoutLists);
@@ -1013,6 +1008,62 @@ export class GettingStartedPage extends EditorPane {
 				$('.pollis-alert-actions', {},
 					$('button.button-link', { 'x-dispatch': 'installJulia' }, localize('pollis.installJulia', "Install Julia")),
 					$('button.button-link', { 'x-dispatch': 'setJuliaPath' }, localize('pollis.setJuliaPath', "Set Julia Path")),
+				),
+			),
+		);
+	}
+
+	/**
+	 * Pollis: the Discover Pollis section shows one feature at a time: a picture, where it is in the menus, and a
+	 * link that opens it. The arrows and dots change the slide; nothing changes it automatically. A slide with an
+	 * animated picture shows its still version while reduced motion is on.
+	 */
+	private buildDiscoverSection(): HTMLElement {
+		const entries = discoverPollisEntries;
+		const media = $<HTMLImageElement>('img.pollis-discover-media');
+		const menuPath = $('span.pollis-discover-path');
+		const title = $('span.pollis-discover-title');
+		const description = $('span.pollis-discover-description');
+		const action = $('button.button-link.pollis-discover-action');
+		const previous = $('button.pollis-discover-arrow', { 'aria-label': localize('pollis.discoverPrevious', "Previous") }, $('span.codicon.codicon-chevron-left'));
+		const next = $('button.pollis-discover-arrow', { 'aria-label': localize('pollis.discoverNext', "Next") }, $('span.codicon.codicon-chevron-right'));
+		const dots = entries.map(entry => $('button.pollis-discover-dot', { 'aria-label': localize('pollis.discoverShow', "Show {0}", entry.title) }, $('span')));
+
+		let index = 0;
+		const show = (i: number) => {
+			index = (i + entries.length) % entries.length;
+			const entry = entries[index];
+			const file = entry.animatedMedia && !this.accessibilityService.isMotionReduced() ? entry.animatedMedia : entry.media;
+			media.src = FileAccess.asBrowserUri(`vs/workbench/contrib/welcomeGettingStarted/common/media/discover/${file}`).toString(true);
+			media.alt = entry.title;
+			menuPath.textContent = entry.menuPath;
+			title.textContent = entry.title;
+			description.textContent = entry.description;
+			action.textContent = entry.action;
+			dots.forEach((dot, j) => {
+				dot.classList.toggle('active', j === index);
+				dot.setAttribute('aria-current', String(j === index));
+			});
+		};
+		show(0);
+
+		this.categoriesSlideDisposables.add(this.accessibilityService.onDidChangeReducedMotion(() => show(index)));
+		this.categoriesSlideDisposables.add(addDisposableListener(previous, 'click', () => show(index - 1)));
+		this.categoriesSlideDisposables.add(addDisposableListener(next, 'click', () => show(index + 1)));
+		dots.forEach((dot, j) => this.categoriesSlideDisposables.add(addDisposableListener(dot, 'click', () => show(j))));
+		this.categoriesSlideDisposables.add(addDisposableListener(action, 'click', () => {
+			this.commandService.executeCommand('workbench.action.keepEditor');
+			this.commandService.executeCommand(entries[index].command);
+		}));
+
+		return $('.pollis-discover-section', {},
+			$('h2.section-header', {}, localize('pollis.discoverPollis', "Discover Pollis")),
+			$('.pollis-discover-card', {},
+				$('.pollis-discover-frame', {}, media),
+				$('.pollis-discover-body', { 'aria-live': 'polite' }, menuPath, title, description),
+				$('.pollis-discover-footer', {},
+					action,
+					$('.pollis-discover-nav', {}, previous, ...dots, next),
 				),
 			),
 		);

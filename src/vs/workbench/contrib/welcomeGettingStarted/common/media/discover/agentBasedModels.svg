@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="240" viewBox="0 0 480 240" fill="none">
+<style>
+.agent{animation:move 9s ease-in-out infinite}
+@keyframes move{0%,10%{transform:translate(var(--dx),var(--dy));opacity:1}55%,86%{transform:translate(0,0);opacity:1}100%{transform:translate(0,0);opacity:0}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+<circle class="agent" style="--dx:140px;--dy:0px;animation-delay:0.36s" cx="142" cy="45" r="9" fill="#4daafc"/>
+<circle class="agent" style="--dx:112px;--dy:90px;animation-delay:0.45s" cx="86" cy="75" r="9" fill="#4daafc"/>
+<circle class="agent" style="--dx:308px;--dy:120px;animation-delay:0.74s" cx="58" cy="75" r="9" fill="#4daafc"/>
+<circle class="agent" style="--dx:112px;--dy:120px;animation-delay:0.37s" cx="282" cy="75" r="9" fill="#e8a33d"/>
+<circle class="agent" style="--dx:112px;--dy:-30px;animation-delay:0.41s" cx="254" cy="75" r="9" fill="#4daafc"/>
+<circle class="agent" style="--dx:-196px;--dy:0px;animation-delay:0.47s" cx="310" cy="135" r="9" fill="#e8a33d"/>
+<circle class="agent" style="--dx:252px;--dy:60px;animation-delay:0.15s" cx="170" cy="135" r="9" fill="#4daafc"/>
+<circle class="agent" style="--dx:0px;--dy:0px;animation-delay:0.41s" cx="338" cy="135" r="9" fill="#e8a33d"/>
+<circle class="agent" style="--dx:-56px;--dy:-30px;animation-delay:0.50s" cx="254" cy="105" r="9" fill="#e8a33d"/>
+<circle class="agent" style="--dx:-84px;--dy:0px;animation-delay:0.63s" cx="198" cy="45" r="9" fill="#4daafc"/>
+<circle class="agent" style="--dx:-112px;--dy:0px;animation-delay:0.08s" cx="422" cy="105" r="9" fill="#e8a33d"/>
+<circle class="agent" style="--dx:336px;--dy:-30px;animation-delay:0.24s" cx="58" cy="165" r="9" fill="#e8a33d"/>
+<circle class="agent" style="--dx:-28px;--dy:30px;animation-delay:0.07s" cx="394" cy="105" r="9" fill="#e8a33d"/>
+<circle class="agent" style="--dx:-308px;--dy:-60px;animation-delay:0.65s" cx="394" cy="135" r="9" fill="#e8a33d"/>
+<circle class="agent" style="--dx:-28px;--dy:-120px;animation-delay:0.55s" cx="226" cy="165" r="9" fill="#e8a33d"/>
+<circle class="agent" style="--dx:336px;--dy:0px;animation-delay:0.03s" cx="86" cy="165" r="9" fill="#e8a33d"/>
+<circle class="agent" style="--dx:-140px;--dy:0px;animation-delay:0.79s" cx="366" cy="135" r="9" fill="#e8a33d"/>
+<circle class="agent" style="--dx:-196px;--dy:90px;animation-delay:0.77s" cx="254" cy="45" r="9" fill="#4daafc"/>
+<circle class="agent" style="--dx:-28px;--dy:-60px;animation-delay:0.52s" cx="282" cy="165" r="9" fill="#e8a33d"/>
+<circle class="agent" style="--dx:-112px;--dy:90px;animation-delay:0.49s" cx="394" cy="75" r="9" fill="#e8a33d"/>
+<circle class="agent" style="--dx:-28px;--dy:-30px;animation-delay:0.13s" cx="142" cy="135" r="9" fill="#4daafc"/>
+<circle class="agent" style="--dx:56px;--dy:30px;animation-delay:0.01s" cx="114" cy="165" r="9" fill="#4daafc"/>
+<circle class="agent" style="--dx:-168px;--dy:150px;animation-delay:0.42s" cx="366" cy="45" r="9" fill="#e8a33d"/>
+<circle class="agent" style="--dx:-112px;--dy:-30px;animation-delay:0.05s" cx="170" cy="75" r="9" fill="#4daafc"/>
+<circle class="agent" style="--dx:-224px;--dy:0px;animation-delay:0.15s" cx="394" cy="45" r="9" fill="#e8a33d"/>
+<circle class="agent" style="--dx:56px;--dy:-60px;animation-delay:0.19s" cx="170" cy="105" r="9" fill="#4daafc"/>
+<circle class="agent" style="--dx:-28px;--dy:-60px;animation-delay:0.02s" cx="366" cy="165" r="9" fill="#e8a33d"/>
+<circle class="agent" style="--dx:-84px;--dy:60px;animation-delay:0.37s" cx="310" cy="45" r="9" fill="#e8a33d"/>
+<circle class="agent" style="--dx:0px;--dy:60px;animation-delay:0.35s" cx="226" cy="105" r="9" fill="#4daafc"/>
+<circle class="agent" style="--dx:168px;--dy:-30px;animation-delay:0.67s" cx="226" cy="75" r="9" fill="#4daafc"/>
+<circle class="agent" style="--dx:280px;--dy:-60px;animation-delay:0.42s" cx="114" cy="135" r="9" fill="#4daafc"/>
+<circle class="agent" style="--dx:84px;--dy:-60px;animation-delay:0.51s" cx="86" cy="135" r="9" fill="#e8a33d"/>
+<circle class="agent" style="--dx:28px;--dy:-90px;animation-delay:0.40s" cx="338" cy="195" r="9" fill="#e8a33d"/>
+<circle class="agent" style="--dx:-308px;--dy:30px;animation-delay:0.53s" cx="422" cy="45" r="9" fill="#e8a33d"/>
+<circle class="agent" style="--dx:168px;--dy:-60px;animation-delay:0.37s" cx="142" cy="105" r="9" fill="#4daafc"/>
+<circle class="agent" style="--dx:-84px;--dy:90px;animation-delay:0.22s" cx="366" cy="105" r="9" fill="#e8a33d"/>
+<circle class="agent" style="--dx:84px;--dy:-30px;animation-delay:0.80s" cx="338" cy="165" r="9" fill="#e8a33d"/>
+<circle class="agent" style="--dx:28px;--dy:30px;animation-delay:0.80s" cx="226" cy="45" r="9" fill="#4daafc"/>
+<circle class="agent" style="--dx:-84px;--dy:0px;animation-delay:0.67s" cx="310" cy="75" r="9" fill="#e8a33d"/>
+<circle class="agent" style="--dx:-84px;--dy:-120px;animation-delay:0.57s" cx="394" cy="195" r="9" fill="#e8a33d"/>
+<circle class="agent" style="--dx:196px;--dy:90px;animation-delay:0.25s" cx="58" cy="105" r="9" fill="#e8a33d"/>
+<circle class="agent" style="--dx:56px;--dy:-30px;animation-delay:0.18s" cx="282" cy="105" r="9" fill="#e8a33d"/>
+<circle class="agent" style="--dx:-28px;--dy:90px;animation-delay:0.23s" cx="366" cy="75" r="9" fill="#e8a33d"/>
+<circle class="agent" style="--dx:-336px;--dy:30px;animation-delay:0.06s" cx="422" cy="75" r="9" fill="#e8a33d"/>
+<circle class="agent" style="--dx:0px;--dy:-60px;animation-delay:0.61s" cx="198" cy="165" r="9" fill="#e8a33d"/>
+<circle class="agent" style="--dx:84px;--dy:0px;animation-delay:0.32s" cx="338" cy="105" r="9" fill="#e8a33d"/>
+<circle class="agent" style="--dx:-112px;--dy:-30px;animation-delay:0.68s" cx="422" cy="195" r="9" fill="#e8a33d"/>
+<circle class="agent" style="--dx:-28px;--dy:90px;animation-delay:0.31s" cx="142" cy="75" r="9" fill="#4daafc"/>
+<circle class="agent" style="--dx:-56px;--dy:-90px;animation-delay:0.77s" cx="226" cy="195" r="9" fill="#e8a33d"/>
+<circle class="agent" style="--dx:-112px;--dy:-90px;animation-delay:0.68s" cx="254" cy="165" r="9" fill="#e8a33d"/>
+<circle class="agent" style="--dx:308px;--dy:30px;animation-delay:0.00s" cx="114" cy="45" r="9" fill="#4daafc"/>
+<circle class="agent" style="--dx:-252px;--dy:90px;animation-delay:0.17s" cx="310" cy="105" r="9" fill="#e8a33d"/>
+<circle class="agent" style="--dx:112px;--dy:60px;animation-delay:0.73s" cx="226" cy="135" r="9" fill="#e8a33d"/>
+<circle class="agent" style="--dx:84px;--dy:0px;animation-delay:0.38s" cx="338" cy="45" r="9" fill="#e8a33d"/>
+<circle class="agent" style="--dx:-84px;--dy:90px;animation-delay:0.78s" cx="170" cy="45" r="9" fill="#4daafc"/>
+<circle class="agent" style="--dx:28px;--dy:0px;animation-delay:0.32s" cx="254" cy="135" r="9" fill="#e8a33d"/>
+<circle class="agent" style="--dx:196px;--dy:0px;animation-delay:0.06s" cx="58" cy="135" r="9" fill="#e8a33d"/>
+<circle class="agent" style="--dx:0px;--dy:120px;animation-delay:0.50s" cx="58" cy="45" r="9" fill="#4daafc"/>
+<circle class="agent" style="--dx:28px;--dy:-150px;animation-delay:0.62s" cx="310" cy="195" r="9" fill="#e8a33d"/>
+<circle class="agent" style="--dx:-196px;--dy:-30px;animation-delay:0.22s" cx="366" cy="195" r="9" fill="#e8a33d"/>
+<circle class="agent" style="--dx:140px;--dy:-30px;animation-delay:0.07s" cx="114" cy="195" r="9" fill="#4daafc"/>
+<circle class="agent" style="--dx:84px;--dy:30px;animation-delay:0.27s" cx="142" cy="165" r="9" fill="#4daafc"/>
+<circle class="agent" style="--dx:-56px;--dy:-60px;animation-delay:0.77s" cx="422" cy="135" r="9" fill="#e8a33d"/>
+<circle class="agent" style="--dx:-224px;--dy:0px;animation-delay:0.61s" cx="310" cy="165" r="9" fill="#e8a33d"/>
+<circle class="agent" style="--dx:28px;--dy:0px;animation-delay:0.09s" cx="86" cy="195" r="9" fill="#e8a33d"/>
+<circle class="agent" style="--dx:84px;--dy:0px;animation-delay:0.20s" cx="198" cy="75" r="9" fill="#4daafc"/>
+</svg>

@@ -1144,6 +1144,117 @@
 	gap: 16px;
 }
 
+/* Pollis: Discover Pollis section */
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-discover-card {
+	margin-top: 8px;
+	background: var(--vscode-welcomePage-tileBackground);
+	border-radius: 6px;
+	overflow: hidden;
+}
+
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-discover-frame {
+	aspect-ratio: 16 / 9;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: var(--vscode-sideBar-background);
+}
+
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-discover-media {
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+}
+
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-discover-body {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	padding: 14px 16px 0;
+}
+
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-discover-path {
+	font-size: 12px;
+	color: var(--vscode-descriptionForeground);
+}
+
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-discover-title {
+	font-size: 15px;
+	font-weight: 600;
+}
+
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-discover-description {
+	min-height: 2.9em;
+	line-height: 1.45;
+	color: var(--vscode-descriptionForeground);
+}
+
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-discover-footer {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+	padding: 6px 12px 10px 16px;
+}
+
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-discover-footer .pollis-discover-action {
+	padding: 0;
+	text-align: start;
+}
+
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-discover-nav {
+	display: flex;
+	align-items: center;
+	flex-shrink: 0;
+}
+
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-discover-arrow,
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-discover-dot {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 28px;
+	padding: 0;
+	border: none;
+	border-radius: 4px;
+	background: transparent;
+	color: var(--vscode-foreground);
+	cursor: pointer;
+}
+
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-discover-arrow {
+	width: 28px;
+}
+
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-discover-dot {
+	width: 20px;
+}
+
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-discover-arrow:hover {
+	background: var(--vscode-toolbar-hoverBackground);
+}
+
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-discover-arrow:focus-visible,
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-discover-dot:focus-visible {
+	outline: 1px solid var(--vscode-focusBorder);
+	outline-offset: -1px;
+}
+
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-discover-dot > span {
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background: var(--vscode-descriptionForeground);
+	opacity: 0.5;
+}
+
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-discover-dot.active > span {
+	width: 10px;
+	height: 10px;
+	background: #e8a33d;
+	opacity: 1;
+}
+
 .monaco-workbench .part.editor > .content .gettingStartedContainer a:not(.hide-category-button):hover {
 	color: var(--vscode-textLink-activeForeground);
 }
