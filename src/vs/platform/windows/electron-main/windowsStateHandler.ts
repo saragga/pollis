@@ -378,15 +378,19 @@ export class WindowsStateHandler extends Disposable {
 
 		// Check for newWindowDimensions setting and adjust accordingly
 		const windowConfig = this.configurationService.getValue<IWindowSettings | undefined>('window');
+		// Pollis: new windows open maximized unless the user chose otherwise, so the first launch fills
+		// the screen. The main process only sees user settings, so the registered default (see
+		// desktop.contribution.ts) is repeated here.
+		const newWindowDimensions = windowConfig?.newWindowDimensions ?? 'maximized';
 		let ensureNoOverlap = true;
-		if (windowConfig?.newWindowDimensions) {
-			if (windowConfig.newWindowDimensions === 'maximized') {
+		if (newWindowDimensions) {
+			if (newWindowDimensions === 'maximized') {
 				state.mode = WindowMode.Maximized;
 				ensureNoOverlap = false;
-			} else if (windowConfig.newWindowDimensions === 'fullscreen') {
+			} else if (newWindowDimensions === 'fullscreen') {
 				state.mode = WindowMode.Fullscreen;
 				ensureNoOverlap = false;
-			} else if ((windowConfig.newWindowDimensions === 'inherit' || windowConfig.newWindowDimensions === 'offset') && lastActive) {
+			} else if ((newWindowDimensions === 'inherit' || newWindowDimensions === 'offset') && lastActive) {
 				const lastActiveState = lastActive.serializeWindowState();
 				if (lastActiveState.mode === WindowMode.Fullscreen) {
 					state.mode = WindowMode.Fullscreen; // only take mode (fixes https://github.com/microsoft/vscode/issues/19331)
@@ -397,7 +401,7 @@ export class WindowsStateHandler extends Disposable {
 					};
 				}
 
-				ensureNoOverlap = state.mode !== WindowMode.Fullscreen && windowConfig.newWindowDimensions === 'offset';
+				ensureNoOverlap = state.mode !== WindowMode.Fullscreen && newWindowDimensions === 'offset';
 			}
 		}
 
