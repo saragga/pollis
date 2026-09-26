@@ -64,12 +64,14 @@ Replaced with the Pollis icon. **After a rebase:** restore the Pollis `.icns` fi
 
 ### 1.4 Welcome page
 
-**Files:** `src/vs/workbench/contrib/welcomeGettingStarted/browser/gettingStartedService.ts`, `…/browser/gettingStarted.ts`
+**Files:** `src/vs/workbench/contrib/welcomeGettingStarted/browser/gettingStartedService.ts`, `…/browser/gettingStarted.ts`, `…/browser/gettingStarted.contribution.ts`
 
-- **Excluded walkthroughs.** `POLLIS_EXCLUDED_WALKTHROUGHS` (compared lower-cased by `isPollisExcludedWalkthrough`) lists walkthroughs that are never registered: the built-in `Setup` ("Get started with VS Code") and the Copilot Chat extension's `GitHub.copilot-chat#copilotWelcome`. Both registration paths skip them: `registerWalkthroughs()` for built-ins and the extension-contribution loop for extensions. `SetupAccessibility` names `Setup` as its `next`; with `Setup` gone it just shows no "Next Section" button.
+- **Excluded walkthroughs.** `POLLIS_EXCLUDED_WALKTHROUGHS` (compared lower-cased by `isPollisExcludedWalkthrough`) lists walkthroughs that are never registered: the built-in `Setup` ("Get started with VS Code"), the built-in `Beginner` ("Learn the Fundamentals", page title "Essential Features"; it has no `when` clause, so it would always be listed) and the Copilot Chat extension's `GitHub.copilot-chat#copilotWelcome`. Both registration paths skip them: `registerWalkthroughs()` for built-ins and the extension-contribution loop for extensions. `SetupAccessibility` names `Setup` as its `next`; with `Setup` gone it just shows no "Next Section" button.
+- **No sign-in onboarding.** `workbench.welcomePage.experimentalOnboarding` defaults to `false` (was `true`). Upstream's new-user onboarding is a VS Code-branded modal asking to sign in to GitHub/Copilot, and it does not respect `chat.disableAIFeatures`.
+- **First launch shows the welcome page.** Upstream opens a new user's first launch straight into the first registered walkthrough. That branch at the end of `buildCategoriesSlide()` is removed. `product.json` `openToWelcomeMainPage` would also skip it, but it additionally shows a "collects usage data" telemetry footer, which is wrong for Pollis.
 - **No "Overview" heading.** Upstream's `buildOverviewSection()` produced only an empty "Overview" heading under the walkthroughs; it was removed, so the right column shows the walkthrough list alone.
 
-Previously these only looked absent in the dev build because they had been hidden with × in the `code-oss-dev` profile; the packaged app showed them. **After a rebase:** re-add the exclusion set and both early returns in `gettingStartedService.ts`, and drop the Overview section again in `gettingStarted.ts`.
+Previously these only looked absent in the dev build because they had been hidden with × in the `code-oss-dev` profile; the packaged app showed them. **After a rebase:** re-add the exclusion set and both early returns in `gettingStartedService.ts`, drop the Overview section and the first-launch walkthrough branch again in `gettingStarted.ts`, and set the `workbench.welcomePage.experimentalOnboarding` default to `false` again.
 
 ### 1.5 Copilot Chat not shipped; AI features off by default
 
@@ -587,7 +589,7 @@ this._overlayLayout.reapplyLayoutStyles();   // re-applies anchor styles, cleari
 When pulling a new upstream VS Code version, work through this list in order:
 
 - [ ] **Branding** — restore `product.json` fields (§1.1, §1.2), restore Pollis icon (§1.3)
-- [ ] **Welcome page** — re-add the excluded walkthroughs (`Setup`, Copilot welcome) and remove the empty Overview heading (§1.4)
+- [ ] **Welcome page** — re-add the excluded walkthroughs (`Setup`, `Beginner`, Copilot welcome), remove the empty Overview heading and the first-launch walkthrough branch, and default `experimentalOnboarding` to `false` (§1.4)
 - [ ] **Copilot and AI** — keep Copilot Chat out of the packaged app in `build/gulpfile.vscode.ts` and default `chat.disableAIFeatures` to `true` in `chat.contribution.ts`; re-apply the Agents window guards, the `vs/sessions` build omissions and the source-map settings (§1.5)
 - [ ] **Product interface** — re-add `pollisVersion`, `poweredBy`, `licenseName` and `sourceUrl` to `IProductConfiguration` (§1.2)
 - [ ] **About dialog** — re-add `createNativeAboutDialogDetails` to `dialog.ts`, and the licence + source lines to `createBrowserAboutDialogDetails` (§2)

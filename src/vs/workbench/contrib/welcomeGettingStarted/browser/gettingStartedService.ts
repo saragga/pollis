@@ -116,10 +116,10 @@ export interface IWalkthroughsService {
 
 // Show walkthrough as "new" for 7 days after first install
 /**
- * Pollis: walkthroughs that are never registered, by category id. The built-in VS Code setup
- * walkthrough and the Copilot Chat welcome do not apply to Pollis. Ids are compared lower-cased.
+ * Pollis: walkthroughs that are never registered, by category id. The built-in VS Code setup and
+ * fundamentals walkthroughs and the Copilot Chat welcome do not apply to Pollis. Ids are compared lower-cased.
  */
-const POLLIS_EXCLUDED_WALKTHROUGHS = new Set(['setup', 'github.copilot-chat#copilotwelcome']);
+const POLLIS_EXCLUDED_WALKTHROUGHS = new Set(['setup', 'beginner', 'github.copilot-chat#copilotwelcome']);
 
 function isPollisExcludedWalkthrough(categoryId: string): boolean {
 	return POLLIS_EXCLUDED_WALKTHROUGHS.has(categoryId.toLowerCase());
