@@ -24,6 +24,8 @@ The following fields are set to Pollis-specific values:
 | `poweredBy` | object | Runtime version strings shown in About dialog (see §1.2) |
 | `licenseName` | `"AGPL-3.0-or-later"` | SPDX id; shown in About dialog, written into Linux packages |
 | `sourceUrl` | `"https://github.com/Trumpingtons/pollis"` | Source link shown in About dialog (AGPL section 13) |
+| `reportIssueUrl` | `"https://github.com/Trumpingtons/pollis/issues/new"` | Help > Report Issue, for Pollis itself (§3.6) |
+| `requestFeatureUrl` | Pollis issues labelled `enhancement` | Help > Search Feature Requests (§3.6) |
 
 **After a rebase:** re-apply these values; upstream will reset them to VS Code defaults.
 
@@ -210,7 +212,7 @@ The extension exception in `LICENSE.txt` names these contribution points as part
 
 ### 3.6 Help menu
 
-**Files:** `src/vs/workbench/browser/parts/titlebar/menubarControl.ts`, `src/vs/platform/menubar/electron-main/menubar.ts`, `src/vs/workbench/browser/actions/helpActions.ts`, `src/vs/workbench/browser/actions/windowActions.ts`
+**Files:** `src/vs/workbench/browser/parts/titlebar/menubarControl.ts`, `src/vs/platform/menubar/electron-main/menubar.ts`, `src/vs/workbench/browser/actions/helpActions.ts`, `src/vs/workbench/browser/actions/windowActions.ts`, `src/vs/workbench/contrib/issue/browser/baseIssueReporterService.ts`, `…/issue/browser/issueReporterPage.ts`, `product.json`, `.github/ISSUE_TEMPLATE/`
 
 Pollis has a Help menu on every platform, last in the menu bar. It holds:
 
@@ -218,7 +220,8 @@ Pollis has a Help menu on every platform, last in the menu bar. It holds:
 |---|---|---|
 | `1_about` | About Pollis | Windows and Linux (`when: IsMacNativeContext.toNegated()`) |
 | `2_welcome` | Welcome (`workbench.action.openWalkthrough`) | all |
-| `3_legal` | View License, View Third-Party Notices | all |
+| `4_feedback` | Search Feature Requests (`workbench.action.openRequestFeatureUrl`), Report Issue (`workbench.action.openIssueReporter`) | all |
+| `5_legal` | View License, View Third-Party Notices | all |
 
 On macOS, About Pollis stays in the Pollis application menu (`setMacApplicationMenu`), which otherwise holds only Preferences, Services, Hide/Show and Quit. Welcome, View License and View Third-Party Notices were moved out of it into Help.
 
@@ -227,9 +230,18 @@ On macOS, About Pollis stays in the Pollis application menu (`setMacApplicationM
 - `helpActions.ts` registers About and Welcome with `MenuRegistry.appendMenuItem`, and adds `menu` entries to `ShowLicenseAction` and `ShowThirdPartyNoticesAction`.
 - `windowActions.ts`: the upstream `ShowAboutDialogAction` Help entry (group `z_about`, last) is removed so that About comes first.
 
-Upstream's other Help items (Documentation, Release Notes, Report Issue, and so on) do not register, because Pollis's `product.json` has no URLs for them.
+**Search Feature Requests** opens `requestFeatureUrl`: the Pollis issues labelled `enhancement` (GitHub's standard label for feature requests). `helpActions.ts` gives `OpenRequestFeatureUrlAction` a menu entry (the Help menu commit had removed upstream's). **Report Issue** is upstream's, registered by `issue/common/issue.contribution.ts` in `4_feedback` (order 3) when `reportIssueUrl` is set. The issue reporter sends nothing itself: **Create on GitHub** opens a pre-filled "New issue" page (or copies the details to the clipboard when they are too long), which the user submits with their GitHub account. Where it goes depends on the "For" field:
 
-**After a rebase:** upstream has its own Help menu. Keep its registration and drawing block. Remove the About entry from `ShowAboutDialogAction`, remove Welcome, View License and View Third-Party Notices from `setMacApplicationMenu`, and re-add the `helpActions.ts` entries.
+- **Pollis** → `reportIssueUrl`, with `template=bug_report.md` added, so `.github/ISSUE_TEMPLATE/bug_report.md` must keep that name. The Pollis panels are core code, so they are reported here.
+- **An extension** → the extension's `bugs.url`, else its `repository`. The bundled `language-julia` points `bugs.url` at the Pollis issues (§5.6), because its bugs are usually Pollis's changes; genuine upstream bugs are passed on to julia-vscode by hand.
+
+The reporter's "For" options read **Pollis** (`product.nameLong`, was "Visual Studio Code"), **An extension** (was "A VS Code extension") and **Don't know** (unchanged; files on Pollis and suggests reloading with extensions disabled). Two more strings use the product name instead of "VS Code": the out-of-date acknowledgement (`issueReporterPage.ts`) and "This extension handles issues outside of Pollis" (`baseIssueReporterService.ts`). **After a rebase:** re-apply these four labels.
+
+The `feature_request.md` template applies the `enhancement` label and `bug_report.md` the `bug` label; both are GitHub's default labels. The links only work for other people once the repository is public.
+
+Upstream's other Help items (Documentation, Release Notes and so on) do not register, because Pollis's `product.json` has no URLs for them.
+
+**After a rebase:** upstream has its own Help menu. Keep its registration and drawing block. Remove the About entry from `ShowAboutDialogAction`, remove Welcome, View License and View Third-Party Notices from `setMacApplicationMenu`, and re-add the `helpActions.ts` entries (including the Search Feature Requests menu entry and the `5_legal` group).
 
 ---
 
@@ -356,8 +368,9 @@ The following changes have been made relative to upstream:
 | `displayName` | `"Julia"` | `"Julia (Pollis)"` |
 | `description` | upstream description | `"Julia Language Support (Pollis built-in fork of julia-vscode)"` |
 | `publisher` | `"julialang"` | `"pollis"` |
+| `bugs.url` | julia-vscode issues | `"https://github.com/Trumpingtons/pollis/issues"` (Help > Report Issue, §3.6) |
 
-**After a rebase:** re-apply these three field values.
+**After a rebase:** re-apply these four field values.
 
 #### Telemetry removed (`src/telemetry.ts`)
 
@@ -519,7 +532,7 @@ Imported from `model/browser/model.contribution.ts` (alongside `juliaNotebookKer
 
 Upstream's 15 workflows were **removed** — they encode Microsoft's engineering process (API proposal checks, telemetry metadata, Monaco packaging, component screenshots, the multi-platform `pr.yml` matrix calling `pr-{darwin,linux,win32}-test.yml`, Copilot cache checks) and either fail or burn CI minutes on infrastructure Pollis does not have. `check-clean-git-state.sh` was **kept**: it is not a workflow and is still referenced by `build/azure-pipelines/dependencies-check.yml`.
 
-The rest of Microsoft's `.github/` infrastructure was removed too: `CODEOWNERS`, `CODENOTIFY`, `ISSUE_TEMPLATE/`, `pull_request_template.md`, `dependabot.yml`, the triage-bot files (`classifier.json`, `commands.json`, `commands/`, `similarity.yml`, `insiders.yml`, `endgame/`), `hooks/`, `agents/`, and the AI guidance tied to Microsoft's process (Kusto/telemetry, Azure Pipelines, issue triage, CI screenshots, policies, Copilot chat, the Agents window). The generic engineering guidance is **kept**: 7 files in `instructions/` (plus `resources/`), 7 in `prompts/`, 7 in `skills/`. `copilot-instructions.md` **must stay** — `build/npm/postinstall.ts` links `.claude/CLAUDE.md` to it and `AGENTS.md` points to it.
+The rest of Microsoft's `.github/` infrastructure was removed too: `CODEOWNERS`, `CODENOTIFY`, `ISSUE_TEMPLATE/` (Pollis has its own now, §3.6), `pull_request_template.md`, `dependabot.yml`, the triage-bot files (`classifier.json`, `commands.json`, `commands/`, `similarity.yml`, `insiders.yml`, `endgame/`), `hooks/`, `agents/`, and the AI guidance tied to Microsoft's process (Kusto/telemetry, Azure Pipelines, issue triage, CI screenshots, policies, Copilot chat, the Agents window). The generic engineering guidance is **kept**: 7 files in `instructions/` (plus `resources/`), 7 in `prompts/`, 7 in `skills/`. `copilot-instructions.md` **must stay** — `build/npm/postinstall.ts` links `.claude/CLAUDE.md` to it and `AGENTS.md` points to it.
 
 **Pollis-owned files:**
 
@@ -635,7 +648,7 @@ When pulling a new upstream VS Code version, work through this list in order:
 - [ ] **Menu bar construction** — re-comment Selection/Go/Terminal; re-add four Pollis menu blocks in `menubar.ts` (§3.2)
 - [ ] **Terminal menu items** — remove New Terminal / New Terminal Window / Split Terminal from `terminalMenus.ts` and the `&&Terminal` mnemonic title (§3.3)
 - [ ] **`menubarControl.ts`** — re-add Pollis menu registrations to `MenubarMainMenu` (§3.4)
-- [ ] **Help menu** — About first (non-mac), Welcome, View License, View Third-Party Notices on all platforms; macOS app menu keeps only About (§3.6)
+- [ ] **Help menu** — About first (non-mac), Welcome, Search Feature Requests, Report Issue, View License, View Third-Party Notices on all platforms; macOS app menu keeps only About; `reportIssueUrl` and `requestFeatureUrl` in `product.json`; the issue reporter's Pollis labels (§3.6)
 - [ ] **Column Selection Mode** — re-add `MenubarViewMenu` entry to `toggleColumnSelection.ts` (§4.1)
 - [ ] **Word Wrap** — remove `precondition: CAN_TOGGLE_WORD_WRAP` from View menu registration in `toggleWordWrap.ts` (§4.2)
 - [ ] **`workbench.common.main.ts`** — verify all Pollis contribution imports are intact (§5.2)

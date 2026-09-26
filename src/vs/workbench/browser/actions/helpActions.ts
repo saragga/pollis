@@ -203,7 +203,13 @@ class OpenRequestFeatureUrlAction extends Action2 {
 				mnemonicTitle: localize({ key: 'miUserVoice', comment: ['&& denotes a mnemonic'] }, "&&Search Feature Requests"),
 			},
 			category: Categories.Help,
-			f1: true
+			f1: true,
+			// Pollis: next to Report Issue (issue.contribution.ts), which is in '4_feedback' order 3
+			menu: {
+				id: MenuId.MenubarHelpMenu,
+				group: '4_feedback',
+				order: 2
+			}
 		});
 	}
 
@@ -332,7 +338,7 @@ class ShowLicenseAction extends Action2 {
 			f1: true,
 			menu: {
 				id: MenuId.MenubarHelpMenu,
-				group: '3_legal',
+				group: '5_legal',
 				order: 1
 			}
 		});
@@ -360,7 +366,7 @@ class ShowThirdPartyNoticesAction extends Action2 {
 			f1: true,
 			menu: {
 				id: MenuId.MenubarHelpMenu,
-				group: '3_legal',
+				group: '5_legal',
 				order: 2
 			}
 		});
@@ -443,7 +449,8 @@ registerAction2(ShowLicenseAction);
 registerAction2(ShowThirdPartyNoticesAction);
 
 // Pollis: the Help menu holds About (Windows and Linux only; on macOS it is in the Pollis application
-// menu), Welcome, then View License and View Third-Party Notices (registered above).
+// menu), Welcome, Search Feature Requests and Report Issue, then View License and View Third-Party
+// Notices (registered above).
 MenuRegistry.appendMenuItem(MenuId.MenubarHelpMenu, {
 	group: '1_about',
 	command: {
