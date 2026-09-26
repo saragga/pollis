@@ -127,10 +127,16 @@ jobs:
           du -sh ../VSCode-win32-x64
           ls -1 ../VSCode-win32-x64
 
+      - name: Move packaged app into the workspace
+        # upload-artifact rejects paths outside the workspace ('..').
+        if: ${{ !cancelled() && inputs.package && inputs.upload }}
+        shell: bash
+        run: mv ../VSCode-win32-x64 .build/VSCode-win32-x64
+
       - name: Upload packaged app
         if: ${{ !cancelled() && inputs.package && inputs.upload }}
         uses: actions/upload-artifact@v7
         with:
           name: Pollis-win32-x64
-          path: ${{ github.workspace }}/../VSCode-win32-x64
+          path: .build/VSCode-win32-x64
           retention-days: 3
