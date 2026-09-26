@@ -25,7 +25,7 @@ import { generateTokensCSSForColorMap } from '../../../../../editor/common/langu
 import { IFileService } from '../../../../../platform/files/common/files.js';
 import { IPathService } from '../../../../services/path/common/pathService.js';
 import { IWorkspaceContextService } from '../../../../../platform/workspace/common/workspace.js';
-import { openWikiByFile, openNotebookByFile, openPackageItem, openVideoList, openInBrowser, autoSelectJuliaKernel, createPackageStatusWiring, sendToJuliaRepl } from './model.handler.js';
+import { openWikiByFile, openNotebookByFile, openPackageItem, openVideoList, openInBrowser, autoSelectJuliaKernel, createPackageStatusWiring, createExampleCodeWiring, sendToJuliaRepl } from './model.handler.js';
 import { hasKey } from '../../../../../base/common/types.js';
 
 export function registerCvizWebviewHandlers(
@@ -49,6 +49,7 @@ export function registerCvizWebviewHandlers(
 	const disposables = new DisposableStore();
 	const cvizData = metadata.cviz;
 	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, cvizData.packages.map(p => p.name), fileService, pathService, commandService, notificationService, workspaceContextService);
+	createExampleCodeWiring(webviewInput.webview, disposables, 'cviz', fileService, pathService, notificationService);
 
 	// PROTOTYPE: colorize a plain Julia string with the editor's own tokenizer + the
 	// active colour theme, so the code box matches the editor/notebook for THIS user.

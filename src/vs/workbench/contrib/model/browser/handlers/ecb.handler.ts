@@ -25,7 +25,7 @@ import { generateTokensCSSForColorMap } from '../../../../../editor/common/langu
 import { Event } from '../../../../../base/common/event.js';
 import { IUntitledTextResourceEditorInput } from '../../../../common/editor.js';
 import { CellEditType, CellKind } from '../../../notebook/common/notebookCommon.js';
-import { openWikiByFile, openNotebookByFile, openPackageItem, openVideoList, openInBrowser, autoSelectJuliaKernel, createPackageStatusWiring, sendToJuliaRepl } from './model.handler.js';
+import { openWikiByFile, openNotebookByFile, openPackageItem, openVideoList, openInBrowser, autoSelectJuliaKernel, createPackageStatusWiring, createExampleCodeWiring, sendToJuliaRepl } from './model.handler.js';
 import { hasKey } from '../../../../../base/common/types.js';
 
 export function registerEcbWebviewHandlers(
@@ -59,6 +59,7 @@ export function registerEcbWebviewHandlers(
 	}));
 	const ecbData = metadata.ecb;
 	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, ecbData.packages.map(p => p.name), fileService, pathService, commandService, notificationService, workspaceContextService);
+	createExampleCodeWiring(webviewInput.webview, disposables, 'ecb', fileService, pathService, notificationService);
 
 	setTimeout(() => {
 		const packages = ecbData.packages.map(pkg => ({ name: pkg.name, url: pkg.github }));

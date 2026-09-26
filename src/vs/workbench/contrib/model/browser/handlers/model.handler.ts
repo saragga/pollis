@@ -15,6 +15,8 @@ import { IModelPackage, IModelPaper, IModelNotebook, IModelWiki, IModelVideo, IM
 import { URI } from '../../../../../base/common/uri.js';
 import { DisposableStore } from '../../../../../base/common/lifecycle.js';
 import { disposableTimeout } from '../../../../../base/common/async.js';
+import { Event } from '../../../../../base/common/event.js';
+import { VSBuffer } from '../../../../../base/common/buffer.js';
 import { INotebookKernelService, INotebookTextModelLike } from '../../../notebook/common/notebookKernelService.js';
 import { INotebookEditorModelResolverService } from '../../../notebook/common/notebookEditorModelResolverService.js';
 import { IFileService } from '../../../../../platform/files/common/files.js';
@@ -371,6 +373,63 @@ export function createApiKeyWiring(
 		return lines.length ? lines.join('\n') + '\n' : '';
 	};
 	return { postStatus, handleSet, handleClear, replPrefix };
+}
+
+/** A message from the scaffold's Example Code box (`saveExample` carries `code`, `restoreExample` does not). */
+interface IExampleCodeMessage {
+	readonly command: string;
+	readonly model?: string;
+	readonly code?: string;
+}
+
+/**
+ * Wire the Edit / Save / Restore Default buttons of a scaffold webview's Example Code box.
+ * Customised examples are plain Julia files in `~/.pollis/examples/<panelId>/<model>.jl`, outside
+ * the application, so they survive updates, work in compiled builds and can be copied between
+ * machines (e.g. a teacher handing out a set of examples). A tab without a file shows the
+ * generated default.
+ */
+export function createExampleCodeWiring(
+	webview: { postMessage(message: unknown): void; readonly onMessage: Event<{ readonly message: IExampleCodeMessage }> },
+	disposables: DisposableStore,
+	panelId: string,
+	fileService: IFileService,
+	pathService: IPathService,
+	notificationService: INotificationService,
+): void {
+	const folder = URI.joinPath(pathService.userHome({ preferLocal: true }), '.pollis', 'examples', panelId);
+	const isModelId = (model: string) => /^[\w-]+$/.test(model);
+	const postExamples = async (): Promise<void> => {
+		const examples: { [model: string]: string } = {};
+		if (await fileService.exists(folder)) {
+			const stat = await fileService.resolve(folder);
+			for (const child of stat.children ?? []) {
+				const model = child.name.replace(/\.jl$/, '');
+				if (!child.isDirectory && child.name.endsWith('.jl') && isModelId(model)) {
+					examples[model] = (await fileService.readFile(child.resource)).value.toString().replace(/\s+$/, '');
+				}
+			}
+		}
+		webview.postMessage({ command: 'customExamples', examples });
+	};
+	disposables.add(webview.onMessage(async e => {
+		const msg = e.message;
+		if ((msg.command !== 'saveExample' && msg.command !== 'restoreExample') || typeof msg.model !== 'string' || !isModelId(msg.model)) {
+			return;
+		}
+		const file = URI.joinPath(folder, `${msg.model}.jl`);
+		try {
+			if (msg.command === 'saveExample' && typeof msg.code === 'string') {
+				await fileService.writeFile(file, VSBuffer.fromString(msg.code + '\n'));
+			} else if (msg.command === 'restoreExample' && await fileService.exists(file)) {
+				await fileService.del(file);
+			}
+		} catch (error) {
+			notificationService.error(localize('pollis.exampleCode.saveFailed', "Could not update the example in {0}: {1}", file.fsPath, String(error)));
+		}
+		await postExamples();
+	}));
+	void postExamples();
 }
 
 export function buildPaperLinks(packages: IModelPackage[]): IModelPaper[] {

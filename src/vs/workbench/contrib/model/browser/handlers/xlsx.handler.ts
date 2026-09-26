@@ -25,7 +25,7 @@ import { CellEditType, CellKind } from '../../../notebook/common/notebookCommon.
 import { IFileService } from '../../../../../platform/files/common/files.js';
 import { IPathService } from '../../../../services/path/common/pathService.js';
 import { IWorkspaceContextService } from '../../../../../platform/workspace/common/workspace.js';
-import { openWikiByFile, openNotebookByFile, openPackageItem, openVideoList, openInBrowser, autoSelectJuliaKernel, createPackageStatusWiring, sendToJuliaRepl } from './model.handler.js';
+import { openWikiByFile, openNotebookByFile, openPackageItem, openVideoList, openInBrowser, autoSelectJuliaKernel, createPackageStatusWiring, createExampleCodeWiring, sendToJuliaRepl } from './model.handler.js';
 import { hasKey } from '../../../../../base/common/types.js';
 
 export function registerXlsxWebviewHandlers(
@@ -59,6 +59,7 @@ export function registerXlsxWebviewHandlers(
 	}));
 	const xlsxData = metadata.xlsx;
 	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, xlsxData.packages.map(p => p.name), fileService, pathService, commandService, notificationService, workspaceContextService);
+	createExampleCodeWiring(webviewInput.webview, disposables, 'xlsx', fileService, pathService, notificationService);
 
 	setTimeout(() => {
 		const packages = xlsxData.packages.map(pkg => ({ name: pkg.name, url: pkg.github }));

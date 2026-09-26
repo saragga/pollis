@@ -27,7 +27,7 @@ import { IPathService } from '../../../../services/path/common/pathService.js';
 import { IWorkspaceContextService } from '../../../../../platform/workspace/common/workspace.js';
 import { ISecretStorageService } from '../../../../../platform/secrets/common/secrets.js';
 import { IWebviewService } from '../../../webview/browser/webview.js';
-import { openWikiByFile, openNotebookByFile, openPackageItem, openVideoList, openInBrowser, autoSelectJuliaKernel, createPackageStatusWiring, createApiKeyWiring, sendToJuliaRepl } from './model.handler.js';
+import { openWikiByFile, openNotebookByFile, openPackageItem, openVideoList, openInBrowser, autoSelectJuliaKernel, createPackageStatusWiring, createExampleCodeWiring, createApiKeyWiring, sendToJuliaRepl } from './model.handler.js';
 import { CREDENTIALS } from '../common/credentials.js';
 
 const KGM_API_KEY = {
@@ -67,6 +67,7 @@ export function registerKgmWebviewHandlers(
 	const disposables = new DisposableStore();
 	const kgmData = metadata.kgm;
 	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, kgmData.packages.map(p => p.name), fileService, pathService, commandService, notificationService, workspaceContextService);
+	createExampleCodeWiring(webviewInput.webview, disposables, 'kgm', fileService, pathService, notificationService);
 	const apiKey = createApiKeyWiring(webviewInput.webview, KGM_API_KEY, secretStorageService, quickInputService, webviewService);
 
 	const lastCode: { [target: string]: string } = {};

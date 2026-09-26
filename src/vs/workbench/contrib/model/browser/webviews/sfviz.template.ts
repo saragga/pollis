@@ -14,9 +14,7 @@ export function getSfvizHtml(mermaidJs?: string): string {
 		modelsLiteral: `['contour', 'contour3d', 'surface', 'volume', 'phase', 'mesh', 'voxels']`,
 		chartW: 54,
 		hiddenRowCss: '.bar-row, .histogram-row, .box-row, .violin-row { display: none; }',
-		extraCss: `		.code-btn-bar-split { justify-content: space-between; }
-		.code-btn-group { display: flex; gap: 4px; }
-		.interact-toggle { display: flex; align-items: center; gap: 6px; font-size: 13px; font-family: var(--vscode-font-family); color: var(--vscode-textLink-foreground); cursor: pointer; user-select: none; }
+		extraCss: `		.interact-toggle { display: flex; align-items: center; gap: 6px; font-size: 13px; font-family: var(--vscode-font-family); color: var(--vscode-textLink-foreground); cursor: pointer; user-select: none; }
 		.interact-toggle:hover { color: var(--vscode-textLink-activeForeground); text-decoration: underline; }
 		.interact-toggle:hover input { border-color: var(--vscode-textLink-activeForeground); }
 		.interact-toggle input:checked::after { content: ''; position: absolute; left: 4px; top: 1px; width: 3px; height: 7px; border: solid var(--vscode-textLink-foreground); border-width: 0 2px 2px 0; transform: rotate(45deg); }
@@ -40,7 +38,6 @@ export function getSfvizHtml(mermaidJs?: string): string {
 `,
 		setModelExtraJs: `			var is3d = model !== 'contour';   // 2D contour is always static (CairoMakie) — hide the toggle
 			document.getElementById('interact-label').style.display = is3d ? 'flex' : 'none';
-			document.getElementById('main-btn-bar').classList.toggle('code-btn-bar-split', is3d);
 `,
 		tailScriptJs: `		document.getElementById('interact-cb').addEventListener('change', function() {
 			interactive = this.checked;

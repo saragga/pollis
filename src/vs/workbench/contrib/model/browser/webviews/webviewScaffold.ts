@@ -186,6 +186,21 @@ export function buildWebviewHtml(parts: WebviewParts): string {
 		.code-btn-bar-bottom { margin-bottom: 0; margin-top: 6px; }
 		.code-action-btn { background: var(--vscode-button-secondaryBackground); color: var(--vscode-button-secondaryForeground); border: none; border-radius: 4px; padding: 4px 10px; font-size: 11px; cursor: pointer; opacity: 0.7; white-space: nowrap; }
 		.code-action-btn:hover { opacity: 1; }
+		.code-btn-bar-split { justify-content: space-between; }
+		.code-btn-group { display: flex; align-items: center; gap: 4px; }
+		.code-action-btn:disabled { opacity: 0.35; cursor: default; }
+		.code-action-btn.primary { background: var(--vscode-button-background); color: var(--vscode-button-foreground); opacity: 1; }
+		.code-action-btn.primary:hover { background: var(--vscode-button-hoverBackground); }
+		/* Editable Example Code: the box swaps for a textarea while editing; a saved example is marked Customised. */
+		.code-edit-wrap { position: relative; display: none; }
+		#sec-code.editing .code-edit-wrap { display: block; }
+		#sec-code.editing #code-preview { display: none; }
+		#sec-code.editing .model-toggle { pointer-events: none; opacity: 0.5; }
+		.code-edit { display: block; width: 100%; min-height: 120px; background: var(--vscode-input-background); color: var(--vscode-input-foreground); border: 1px solid var(--vscode-focusBorder); outline: 1px solid var(--vscode-focusBorder); border-radius: 0 0 6px 6px; padding: 20px; padding-right: 80px; font-family: 'Consolas', 'Monaco', 'Courier New', monospace; font-size: 12px; line-height: 1.6; white-space: pre; overflow: auto; resize: vertical; tab-size: 4; }
+		.code-edit-label { position: absolute; top: 8px; right: 12px; font-size: 11px; color: var(--vscode-textLink-foreground); pointer-events: none; }
+		.code-custom-tag { display: none; margin-left: 4px; font-size: 11px; font-weight: 500; line-height: 16px; color: var(--vscode-editorWarning-foreground); border: 1px solid var(--vscode-editorWarning-foreground); border-radius: 10px; padding: 0 8px; }
+		#sec-code.customised .code-custom-tag { display: inline-block; }
+		.toggle-btn.has-custom::after { content: ''; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--vscode-editorWarning-foreground); margin-left: 7px; vertical-align: 1px; }
 		.bottom-layout { display: grid; grid-template-columns: 190px 1fr; gap: 24px; margin-top: 0; align-items: start; }
 		.left-strip { display: flex; flex-direction: column; }
 		.strip-title { font-size: 1.5em; font-weight: 400; color: var(--vscode-foreground); margin: 0 0 5px 0; line-height: initial; }
@@ -297,7 +312,7 @@ ${parts.decisionRows}</tbody>
 		</div>
 
 		<div class="section" id="sec-code">
-			<button class="section-toggle"><span class="illus-chevron"><svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M7.976 10.072l-4.054-4.014-.92.92 4.49 4.45.978.01 4.525-4.46-.918-.92-4.101 4.014z"/></svg></span>Example Code</button>
+			<button class="section-toggle"><span class="illus-chevron"><svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M7.976 10.072l-4.054-4.014-.92.92 4.49 4.45.978.01 4.525-4.46-.918-.92-4.101 4.014z"/></svg></span>Example Code<span class="code-custom-tag" title="Your saved version of this example. Restore Default brings back the original.">Customised</span></button>
 			<div class="section-body">
 		<div class="model-toggle" id="model-group">
 ${parts.togglesJs}
@@ -305,12 +320,24 @@ ${parts.togglesJs}
 
 		<div class="code-preview-wrapper">
 			<div class="code-preview" id="code-preview"></div>
-			<div class="code-btn-bar code-btn-bar-bottom${parts.interactiveLabelHtml ? ' code-btn-bar-split" id="main-btn-bar' : ''}">${parts.interactiveLabelHtml ? '\n\t\t\t\t' + parts.interactiveLabelHtml + '\n\t\t\t\t<span class="code-btn-group">' : ''}
-				<button class="code-action-btn" id="btn-copy">Copy</button>
-				<button class="code-action-btn" id="btn-julia-repl">Julia REPL</button>
-				<button class="code-action-btn" id="btn-new-file">Send to Editor</button>
-				<button class="code-action-btn" id="btn-notebook">Send to Notebook</button>
-					<button class="code-action-btn" id="btn-pluto">Send to Pluto</button>${parts.interactiveLabelHtml ? '\n\t\t\t\t</span>' : ''}
+			<div class="code-edit-wrap">
+				<textarea class="code-edit" id="code-edit" spellcheck="false" aria-label="Example code"></textarea>
+				<span class="code-edit-label">Editing</span>
+			</div>
+			<div class="code-btn-bar code-btn-bar-bottom code-btn-bar-split" id="main-btn-bar">
+				<span class="code-btn-group">
+					<button class="code-action-btn" id="btn-edit-code" title="Edit this example and keep your version">Edit</button>
+					<button class="code-action-btn" id="btn-restore-code" title="Discard your version and bring back the original example" hidden>Restore Default</button>
+					<button class="code-action-btn primary" id="btn-save-code" hidden>Save</button>
+					<button class="code-action-btn" id="btn-cancel-code" hidden>Cancel</button>${parts.interactiveLabelHtml ? '\n\t\t\t\t\t' + parts.interactiveLabelHtml : ''}
+				</span>
+				<span class="code-btn-group">
+					<button class="code-action-btn" id="btn-copy">Copy</button>
+					<button class="code-action-btn" id="btn-julia-repl">Julia REPL</button>
+					<button class="code-action-btn" id="btn-new-file">Send to Editor</button>
+					<button class="code-action-btn" id="btn-notebook">Send to Notebook</button>
+					<button class="code-action-btn" id="btn-pluto">Send to Pluto</button>
+				</span>
 			</div>
 		</div>
 			</div>
@@ -460,12 +487,100 @@ ${parts.illustrationOverrideJs ?? ''}			var activeIdx = MODELS.indexOf(currentMo
 			var box = document.getElementById('code-preview');
 			currentPlainCode = null;            // so extractCode reads the freshly-built DOM
 			box.innerHTML = c;
-			currentPlainCode = extractCode();   // plain source = single source of truth
+			currentDefaultCode = extractCode();
+			// A saved (customised) example replaces the generated one for this tab.
+			var custom = customExamples[currentModel];
+			if (typeof custom === 'string') {
+				box.innerHTML = custom.split('\\n').map(function(l) { return l ? line(esc(l)) : blank(); }).join('');
+				currentPlainCode = custom;
+			} else {
+				currentPlainCode = currentDefaultCode;   // plain source = single source of truth
+			}
+			updateCustomState();
 			vscode.postMessage({ command: 'colorize', code: currentPlainCode });
 		}
 
+		// ── Editable Example Code ────────────────────────────────────────────
+		// Saved examples live in ~/.pollis/examples/<panel>/<model>.jl (see createExampleCodeWiring).
+		var customExamples = {};       // model -> saved source, sent by the host
+		var currentDefaultCode = '';   // generated source for the current tab
+		var editingCode = false;
+		var restoreTimer = null;
+		var SEND_BUTTONS = ['btn-copy', 'btn-julia-repl', 'btn-new-file', 'btn-notebook', 'btn-pluto'];
+
+		function updateCustomState() {
+			var isCustom = typeof customExamples[currentModel] === 'string';
+			document.getElementById('sec-code').classList.toggle('customised', isCustom);
+			document.getElementById('btn-restore-code').hidden = editingCode || !isCustom;
+			document.querySelectorAll('#model-group .toggle-btn').forEach(function(b) {
+				b.classList.toggle('has-custom', typeof customExamples[b.dataset.model] === 'string');
+			});
+		}
+
+		function resetRestoreButton() {
+			if (restoreTimer) { clearTimeout(restoreTimer); restoreTimer = null; }
+			document.getElementById('btn-restore-code').textContent = 'Restore Default';
+		}
+
+		function setEditingCode(on) {
+			editingCode = on;
+			resetRestoreButton();
+			document.getElementById('sec-code').classList.toggle('editing', on);
+			document.getElementById('btn-edit-code').hidden = on;
+			document.getElementById('btn-save-code').hidden = !on;
+			document.getElementById('btn-cancel-code').hidden = !on;
+			SEND_BUTTONS.forEach(function(id) { document.getElementById(id).disabled = on; });
+			updateCustomState();
+			if (on) {
+				var ta = document.getElementById('code-edit');
+				ta.value = currentPlainCode || '';
+				ta.style.height = 'auto';
+				ta.style.height = (ta.scrollHeight + 2) + 'px';
+				ta.focus();
+				ta.setSelectionRange(0, 0);
+			}
+		}
+
+		document.getElementById('btn-edit-code').addEventListener('click', function() { setEditingCode(true); });
+		document.getElementById('btn-cancel-code').addEventListener('click', function() { setEditingCode(false); });
+		document.getElementById('btn-save-code').addEventListener('click', function() {
+			var code = document.getElementById('code-edit').value.replace(/\\s+$/, '');
+			// Saving the original (or nothing) is the same as restoring the default.
+			if (!code || code === currentDefaultCode.replace(/\\s+$/, '')) {
+				delete customExamples[currentModel];
+				vscode.postMessage({ command: 'restoreExample', model: currentModel });
+			} else {
+				customExamples[currentModel] = code;
+				vscode.postMessage({ command: 'saveExample', model: currentModel, code: code });
+			}
+			setEditingCode(false);
+			updateCodePreview();
+		});
+		document.getElementById('btn-restore-code').addEventListener('click', function() {
+			// Two-step confirmation: the first click asks, a second click within 4 seconds restores.
+			if (!restoreTimer) {
+				this.textContent = 'Confirm Restore';
+				restoreTimer = setTimeout(resetRestoreButton, 4000);
+				return;
+			}
+			resetRestoreButton();
+			delete customExamples[currentModel];
+			vscode.postMessage({ command: 'restoreExample', model: currentModel });
+			updateCodePreview();
+		});
+		document.getElementById('code-edit').addEventListener('keydown', function(e) {
+			if (e.key === 'Tab' && !e.shiftKey && !e.metaKey && !e.ctrlKey && !e.altKey) {
+				e.preventDefault();
+				this.setRangeText('    ', this.selectionStart, this.selectionEnd, 'end');
+			}
+		});
+		document.getElementById('code-edit').addEventListener('input', function() {
+			if (this.scrollHeight > this.clientHeight) { this.style.height = (this.scrollHeight + 2) + 'px'; }
+		});
+
 		function setModel(model) {
-			if (!MODELS.includes(model)) { return; }
+			if (!MODELS.includes(model) || editingCode) { return; }
+			resetRestoreButton();
 			currentModel = model;
 ${parts.setModelExtraJs ?? ''}			document.querySelectorAll('#model-group .toggle-btn').forEach(function(b) {
 				b.classList.toggle('active', b.dataset.model === model);
@@ -1094,6 +1209,10 @@ ${parts.nextStepsWiringJs ?? `		document.getElementById('btn-viz').addEventListe
 				document.getElementById('mtk-theme').textContent = msg.css || '';
 				var box = document.getElementById(msg.target === 'panel' ? 'panel-code' : 'code-preview');
 				if (box) { box.innerHTML = msg.html || ''; colorizeBrackets(box); }
+			}
+			if (msg.command === 'customExamples') {
+				customExamples = msg.examples || {};
+				if (editingCode) { updateCustomState(); } else { updateCodePreview(); }
 			}
 			if (msg.command === 'setModel') { setModel(msg.model); }
 			if (msg.command === 'actionDone') { releaseBtn(); }

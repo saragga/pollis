@@ -29,7 +29,7 @@ import { generateTokensCSSForColorMap } from '../../../../../editor/common/langu
 import { Event } from '../../../../../base/common/event.js';
 import { IUntitledTextResourceEditorInput } from '../../../../common/editor.js';
 import { CellEditType, CellKind } from '../../../notebook/common/notebookCommon.js';
-import { openWikiByFile, openNotebookByFile, openPackageItem, openVideoList, openInBrowser, autoSelectJuliaKernel, createPackageStatusWiring, createApiKeyWiring, sendToJuliaRepl } from './model.handler.js';
+import { openWikiByFile, openNotebookByFile, openPackageItem, openVideoList, openInBrowser, autoSelectJuliaKernel, createPackageStatusWiring, createExampleCodeWiring, createApiKeyWiring, sendToJuliaRepl } from './model.handler.js';
 import { CREDENTIALS } from '../common/credentials.js';
 import { hasKey } from '../../../../../base/common/types.js';
 
@@ -72,6 +72,7 @@ export function registerHfdsWebviewHandlers(
 	}));
 	const hfdsData = metadata.hfds;
 	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, hfdsData.packages.map(p => p.name), fileService, pathService, commandService, notificationService, workspaceContextService);
+	createExampleCodeWiring(webviewInput.webview, disposables, 'hfds', fileService, pathService, notificationService);
 	const apiKey = createApiKeyWiring(webviewInput.webview, HFDS_API_KEY, secretStorageService, quickInputService, webviewService);
 
 	setTimeout(() => {

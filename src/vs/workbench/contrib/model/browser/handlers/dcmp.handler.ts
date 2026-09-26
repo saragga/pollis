@@ -25,7 +25,7 @@ import { CellEditType, CellKind } from '../../../notebook/common/notebookCommon.
 import { IFileService } from '../../../../../platform/files/common/files.js';
 import { IPathService } from '../../../../services/path/common/pathService.js';
 import { IWorkspaceContextService } from '../../../../../platform/workspace/common/workspace.js';
-import { openWikiByFile, openNotebookByFile, openPackageItem, openVideoList, openInBrowser, autoSelectJuliaKernel, createPackageStatusWiring, sendToJuliaRepl } from './model.handler.js';
+import { openWikiByFile, openNotebookByFile, openPackageItem, openVideoList, openInBrowser, autoSelectJuliaKernel, createPackageStatusWiring, createExampleCodeWiring, sendToJuliaRepl } from './model.handler.js';
 import { hasKey } from '../../../../../base/common/types.js';
 
 export function registerDcmpWebviewHandlers(
@@ -60,6 +60,7 @@ export function registerDcmpWebviewHandlers(
 	}));
 	const dcmpData = metadata.dcmp;
 	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, dcmpData.packages.map(p => p.name), fileService, pathService, commandService, notificationService, workspaceContextService);
+	createExampleCodeWiring(webviewInput.webview, disposables, 'dcmp', fileService, pathService, notificationService);
 
 	setTimeout(() => {
 		const packages = dcmpData.packages.map(pkg => ({ name: pkg.name, url: pkg.github }));
