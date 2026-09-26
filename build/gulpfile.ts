@@ -38,8 +38,8 @@ const compileClientTask = task.define('compile-client', task.series(compileTomlT
 gulp.task(compileClientTask);
 
 const watchClientTask = useEsbuildTranspile
-	? task.define('watch-client', task.parallel(compilation.watchTask('out', false, 'src', { noEmit: true }), compilation.watchApiProposalNamesTask, compilation.watchExtensionPointNamesTask, compilation.watchCodiconsTask))
-	: task.define('watch-client', task.series(util.rimraf('out'), task.parallel(compilation.watchTask('out', false), compilation.watchApiProposalNamesTask, compilation.watchExtensionPointNamesTask, compilation.watchCodiconsTask)));
+	? task.define('watch-client', task.series(compileTomlTask, task.parallel(compilation.watchTask('out', false, 'src', { noEmit: true }), compilation.watchApiProposalNamesTask, compilation.watchExtensionPointNamesTask, compilation.watchCodiconsTask)))
+	: task.define('watch-client', task.series(compileTomlTask, util.rimraf('out'), task.parallel(compilation.watchTask('out', false), compilation.watchApiProposalNamesTask, compilation.watchExtensionPointNamesTask, compilation.watchCodiconsTask)));
 gulp.task(watchClientTask);
 
 // All
