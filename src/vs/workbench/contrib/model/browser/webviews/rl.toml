@@ -12,6 +12,11 @@ defaultModel = "flux"
 name = "RecurrentLayers.jl"
 github = "https://github.com/MartinuzziFrancesco/RecurrentLayers.jl"
 
+[[packages.videos]]
+title = "High Performance Computing in Julia"
+description = "An 18-video course by Jamie Mair on writing fast Julia code"
+url = "https://www.youtube.com/playlist?list=PLUAq6xQKFgGr39PiyrPk_C9dhBKvWcjUA"
+
 [[packages]]
 name = "LuxRecurrentLayers.jl"
 github = "https://github.com/MartinuzziFrancesco/LuxRecurrentLayers.jl"
