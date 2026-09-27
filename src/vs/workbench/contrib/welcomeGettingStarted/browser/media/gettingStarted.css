@@ -1145,20 +1145,16 @@
 }
 
 /* Pollis: Discover Pollis section */
-.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-discover-heading {
-	display: flex;
-	align-items: center;
-	margin-bottom: 5px;
-}
-
-.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-discover-heading > h2 {
-	margin-bottom: 0;
-	line-height: 1;
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-discover-frame > .pollis-discover-run {
+	position: absolute;
+	top: 8px;
+	left: 8px;
+	background: color-mix(in srgb, var(--vscode-welcomePage-tileBackground) 80%, transparent);
 }
 
 .monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-discover-run > .codicon {
 	position: relative;
-	top: 1px;
+	top: -1px;
 	font-size: 18px;
 }
 
@@ -1178,6 +1174,7 @@
 }
 
 .monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-discover-frame {
+	position: relative;
 	aspect-ratio: 16 / 9;
 	display: flex;
 	align-items: center;

@@ -1020,7 +1020,7 @@ export class GettingStartedPage extends EditorPane {
 	/**
 	 * Pollis: the Discover Pollis section shows one feature at a time: a picture, where it is in the menus, and a
 	 * link that opens it. The arrows and dots change the slide; nothing changes it automatically. Pictures start
-	 * still: the Run button next to the heading plays the animated version (from the start) on this and later
+	 * still: the Run button in the top-left corner of the picture plays the animated version (from the start) on this and later
 	 * slides until Stop is pressed.
 	 */
 	private buildDiscoverSection(): HTMLElement {
@@ -1078,12 +1078,9 @@ export class GettingStartedPage extends EditorPane {
 		}));
 
 		return $('.pollis-discover-section', {},
-			$('.pollis-discover-heading', {},
-				$('h2.section-header', {}, localize('pollis.discoverPollis', "Discover Pollis")),
-				run,
-			),
+			$('h2.section-header', {}, localize('pollis.discoverPollis', "Discover Pollis")),
 			$('.pollis-discover-card', {},
-				$('.pollis-discover-frame', {}, media),
+				$('.pollis-discover-frame', {}, media, run),
 				$('.pollis-discover-body', { 'aria-live': 'polite' }, menuPath, title, description),
 				$('.pollis-discover-footer', {},
 					action,
