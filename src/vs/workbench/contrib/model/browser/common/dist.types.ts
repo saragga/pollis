@@ -3,9 +3,14 @@
  *  Licensed under the GNU Affero General Public License v3.0 or later. See LICENSE.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IModelPackage, IModelNotebook, IModelWiki } from './model.types.js';
+import { IModelPackage, IModelNotebook, IModelWiki, IScaffoldPanelData } from './model.types.js';
 
 export interface IDistMetadata {
+	readonly dist: IScaffoldPanelData;
+}
+
+/** The Distribution Sampling panel's metadata (not yet on the shared scaffold). */
+export interface IDistSamplingMetadata {
 	readonly dist: {
 		readonly packages: IModelPackage[];
 		readonly notebooks: IModelNotebook[];

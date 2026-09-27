@@ -11,12 +11,12 @@ import { IClipboardService } from '../../../../../platform/clipboard/common/clip
 import { INotificationService } from '../../../../../platform/notification/common/notification.js';
 import { ICommandService } from '../../../../../platform/commands/common/commands.js';
 import { IWebviewWorkbenchService } from '../../../webviewPanel/browser/webviewWorkbenchService.js';
-import { IDistMetadata, DistWebviewMessage } from '../common/dist.types.js';
+import { IDistSamplingMetadata, DistWebviewMessage } from '../common/dist.types.js';
 import { openWikiList, openNotebookList, openNotebookByFile, openPackageItem, buildPaperLinks, openInBrowser } from './model.handler.js';
 
 export function registerDistWebviewHandlers(
 	webviewInput: ReturnType<IWebviewWorkbenchService['openWebview']>,
-	metadata: IDistMetadata,
+	metadata: IDistSamplingMetadata,
 	openerService: IOpenerService,
 	editorService: IEditorService,
 	quickInputService: IQuickInputService,

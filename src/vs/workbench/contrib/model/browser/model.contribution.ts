@@ -16,8 +16,8 @@ import { IQuickInputService } from '../../../../platform/quickinput/common/quick
 import { ITerminalService } from '../../terminal/browser/terminal.js';
 
 import { openNllsWebview } from './commands/nlls.command.js';
-import { openLmWebview } from './commands/lm.command.js';
-import { openMmWebview } from './commands/mm.command.js';
+import { LM_PANEL } from './commands/lm.command.js';
+import { MM_PANEL } from './commands/mm.command.js';
 import { GLM_PANEL } from './commands/glm.command.js';
 import { openScaffoldWebview } from './commands/scaffold.command.js';
 import { openLmmWebview } from './commands/lmm.command.js';
@@ -25,7 +25,7 @@ import { openGlmmWebview } from './commands/glmm.command.js';
 import { openLassoWebview } from './commands/lasso.command.js';
 import { openRngWebview } from './commands/rng.command.js';
 import { openQrngWebview } from './commands/qrng.command.js';
-import { openDistWebview } from './commands/dist.command.js';
+import { DIST_PANEL } from './commands/dist.command.js';
 import { openDistSamplingWebview } from './commands/dist-sampling.command.js';
 import { openHtWebview } from './commands/ht.command.js';
 import { openDeWebview } from './commands/de.command.js';
@@ -44,7 +44,7 @@ import { openNntsfWebview } from './commands/nntsf.command.js';
 import { openDtWebview } from './commands/dt.command.js';
 import { openKnnWebview } from './commands/knn.command.js';
 import { openRnnWebview } from './commands/rnn.command.js';
-import { openRlWebview } from './commands/rl.command.js';
+import { RL_PANEL } from './commands/rl.command.js';
 import { registerPlutoCommands } from './commands/pluto.command.js';
 import { registerNewJuliaFileCommand } from './commands/juliaFile.command.js';
 import './juliaNotebookKernel.contribution.js';
@@ -180,17 +180,7 @@ CommandsRegistry.registerCommand('chiara.statistics.ht', (accessor: ServicesAcce
 	);
 });
 
-CommandsRegistry.registerCommand('chiara.statistics.d', (accessor: ServicesAccessor) => {
-	openDistWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	);
-});
+CommandsRegistry.registerCommand('chiara.statistics.d', accessor => openScaffoldWebview(accessor, DIST_PANEL));
 
 CommandsRegistry.registerCommand('chiara.statistics.d.sampling', (accessor: ServicesAccessor) => {
 	openDistSamplingWebview(
@@ -402,17 +392,7 @@ CommandsRegistry.registerCommand('chiara.statistics.nlls', (accessor: ServicesAc
 	);
 });
 
-CommandsRegistry.registerCommand('chiara.statistics.pdme', (accessor: ServicesAccessor) => {
-	openMmWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	);
-});
+CommandsRegistry.registerCommand('chiara.statistics.pdme', accessor => openScaffoldWebview(accessor, MM_PANEL));
 
 CommandsRegistry.registerCommand('chiara.statistics.lmm', (accessor: ServicesAccessor) => {
 	openLmmWebview(
@@ -438,20 +418,10 @@ CommandsRegistry.registerCommand('chiara.statistics.glmm', (accessor: ServicesAc
 	);
 });
 
-const LM_OPEN = (accessor: ServicesAccessor) => openLmWebview(
-	accessor.get(IWebviewWorkbenchService),
-	accessor.get(IOpenerService),
-	accessor.get(IEditorService),
-	accessor.get(IQuickInputService),
-	accessor.get(ICommandService),
-	accessor.get(IClipboardService),
-	accessor.get(INotificationService),
-);
-
-CommandsRegistry.registerCommand('chiara.statistics.lm', LM_OPEN);
-CommandsRegistry.registerCommand('chiara.statistics.lm.ols', LM_OPEN);
-CommandsRegistry.registerCommand('chiara.statistics.lm.hac', LM_OPEN);
-CommandsRegistry.registerCommand('chiara.statistics.lm.wls', LM_OPEN);
+CommandsRegistry.registerCommand('chiara.statistics.lm', accessor => openScaffoldWebview(accessor, LM_PANEL));
+CommandsRegistry.registerCommand('chiara.statistics.lm.ols', accessor => openScaffoldWebview(accessor, LM_PANEL, 'ols'));
+CommandsRegistry.registerCommand('chiara.statistics.lm.hac', accessor => openScaffoldWebview(accessor, LM_PANEL, 'ols'));
+CommandsRegistry.registerCommand('chiara.statistics.lm.wls', accessor => openScaffoldWebview(accessor, LM_PANEL, 'wls'));
 CommandsRegistry.registerCommand('chiara.statistics.rbv', (accessor: ServicesAccessor) => openRvolWebview(
 	accessor.get(IWebviewWorkbenchService),
 	accessor.get(IOpenerService),
@@ -1342,15 +1312,7 @@ CommandsRegistry.registerCommand('chiara.statistics.nn.rnn', accessor => RNN_OPE
 registerPlutoCommands();
 registerNewJuliaFileCommand();
 
-CommandsRegistry.registerCommand('chiara.statistics.nn.rl', (accessor: ServicesAccessor) => openRlWebview(
-	accessor.get(IWebviewWorkbenchService),
-	accessor.get(IOpenerService),
-	accessor.get(IEditorService),
-	accessor.get(IQuickInputService),
-	accessor.get(ICommandService),
-	accessor.get(IClipboardService),
-	accessor.get(INotificationService),
-));
+CommandsRegistry.registerCommand('chiara.statistics.nn.rl', accessor => openScaffoldWebview(accessor, RL_PANEL));
 
 CommandsRegistry.registerCommand('chiara.statistics.nn.cnn', (accessor: ServicesAccessor) => openCnnWebview(
 	accessor.get(IWebviewWorkbenchService),

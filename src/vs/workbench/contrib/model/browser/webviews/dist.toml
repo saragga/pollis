@@ -1,0 +1,1352 @@
+# Distribution Functions Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/dist.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Distribution Functions"
+viewType = "pollis.dist"
+defaultModel = "discrete"
+
+[[packages]]
+name = "Distributions.jl"
+github = "https://github.com/JuliaStats/Distributions.jl"
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Univariate Distributions (Jupyter)"
+file = "dist/tutorial-01-univariate.ipynb"
+bundled = true
+description = "Working with discrete and continuous univariate distributions"
+
+[[notebookSections.notebooks]]
+name = "Univariate Distributions (Pluto)"
+file = "dist/tutorial-01-univariate.jl"
+bundled = true
+description = "Reactive Pluto notebook — discrete and continuous univariate distributions"
+
+[[notebookSections.notebooks]]
+name = "Truncated and Censored"
+file = "dist/tutorial-02-truncated-censored.ipynb"
+bundled = true
+description = "Constraining distributions with bounds"
+
+[[notebookSections.notebooks]]
+name = "Multivariate Distributions"
+file = "dist/tutorial-03-multivariate.ipynb"
+bundled = true
+description = "Vector-valued distributions including MvNormal and Dirichlet"
+
+[[notebookSections.notebooks]]
+name = "Mixture and Composite"
+file = "dist/tutorial-04-mixture-composite.ipynb"
+bundled = true
+description = "Mixture models, product distributions, and convolutions"
+
+[[wikis]]
+name = "Overview"
+file = "dist/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Factsheet"
+file = "dist/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "dist/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "dist/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "dist/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "dist/decision-guide.md"
+bundled = true
+
+[[wikis]]
+name = "Pollis vs Crystal Ball"
+file = "dist/pollis-vs-crystalball.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "Distributions.jl: Definition and Modeling of Probability Distributions in the JuliaStats Ecosystem"
+authors = "Besançon, Mathieu; Papamarkou, Theodore; Anthoff, David; Arslan, Alex; Byrne, Simon; Lin, Dahua; Pearson, John"
+year = 2021
+journal = "Journal of Statistical Software"
+doi = "10.18637/jss.v098.i16"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Statistical Distributions"
+authors = "Forbes, Catherine; Evans, Merran; Hastings, Nicholas; Peacock, Brian"
+year = 2011
+journal = "Wiley (4th edition)"
+doi = "10.1002/9780470627242"
+openAccess = false
+
+[[models]]
+id = "discrete"
+label = "Discrete"
+
+[[models]]
+id = "continuous"
+label = "Continuous"
+
+[[models]]
+id = "truncated"
+label = "Truncated"
+
+[[models]]
+id = "multivariate"
+label = "Multivariate"
+
+[[models]]
+id = "matrixvariate"
+label = "Matrix-Variate"
+
+[[models]]
+id = "mixture"
+label = "Mixture"
+
+[[models]]
+id = "product"
+label = "Product"
+
+[[models]]
+id = "convolutions"
+label = "Convolutions"
+
+[[bullets]]
+text = "Discrete"
+detail = "integer-valued distributions (Binomial, Poisson, Geometric, &#8230;)"
+
+[[bullets]]
+text = "Continuous"
+detail = "real-valued distributions (Normal, Gamma, Beta, Weibull, &#8230;)"
+
+[[bullets]]
+text = "Truncated"
+detail = "a base distribution constrained to a bounded interval"
+
+[[bullets]]
+text = "Multivariate"
+detail = "vector-valued distributions (MvNormal, Dirichlet, Multinomial)"
+
+[[bullets]]
+text = "Matrix-Variate"
+detail = "matrix-valued distributions (Wishart, InverseWishart, MatrixNormal)"
+
+[[bullets]]
+text = "Mixture, Product and Convolutions"
+detail = "weighted mixtures, independent products and sums of random variables"
+
+[[decisionRows]]
+task = "Discrete"
+context = "Counts, successes or categories"
+purpose = "Probabilities of integer outcomes"
+
+[[decisionRows]]
+task = "Continuous"
+context = "Measurements on the real line"
+purpose = "Densities, probabilities and quantiles"
+
+[[decisionRows]]
+task = "Truncated"
+context = "Values known to lie within bounds"
+purpose = "Renormalised distribution on an interval"
+
+[[decisionRows]]
+task = "Multivariate"
+context = "Several correlated quantities"
+purpose = "Joint distribution of a vector"
+
+[[decisionRows]]
+task = "Matrix-Variate"
+context = "Covariance matrices, Bayesian priors"
+purpose = "Distribution over matrices"
+
+[[decisionRows]]
+task = "Mixture"
+context = "Data from several subpopulations"
+purpose = "Multimodal distribution"
+
+[[decisionRows]]
+task = "Product"
+context = "Independent components"
+purpose = "Joint distribution of independent variables"
+
+[[decisionRows]]
+task = "Convolutions"
+context = "Sums of independent variables"
+purpose = "Distribution of X + Y"
+
+[[inputs]]
+id = "dist"
+label = "Distribution"
+kind = "select"
+models = ["discrete", "continuous", "truncated", "multivariate", "matrixvariate"]
+[[inputs.options]]
+value = "Bernoulli"
+label = "Bernoulli"
+models = ["discrete"]
+[[inputs.options]]
+value = "Binomial"
+label = "Binomial"
+models = ["discrete"]
+[[inputs.options]]
+value = "Poisson"
+label = "Poisson"
+models = ["discrete"]
+[[inputs.options]]
+value = "Geometric"
+label = "Geometric"
+models = ["discrete"]
+[[inputs.options]]
+value = "NegativeBinomial"
+label = "NegativeBinomial"
+models = ["discrete"]
+[[inputs.options]]
+value = "DiscreteUniform"
+label = "DiscreteUniform"
+models = ["discrete"]
+[[inputs.options]]
+value = "Hypergeometric"
+label = "Hypergeometric"
+models = ["discrete"]
+[[inputs.options]]
+value = "Categorical"
+label = "Categorical"
+models = ["discrete"]
+[[inputs.options]]
+value = "Normal"
+label = "Normal"
+models = ["continuous", "truncated"]
+[[inputs.options]]
+value = "Uniform"
+label = "Uniform"
+models = ["continuous"]
+[[inputs.options]]
+value = "Exponential"
+label = "Exponential"
+models = ["continuous", "truncated"]
+[[inputs.options]]
+value = "Gamma"
+label = "Gamma"
+models = ["continuous", "truncated"]
+[[inputs.options]]
+value = "Beta"
+label = "Beta"
+models = ["continuous"]
+[[inputs.options]]
+value = "LogNormal"
+label = "LogNormal"
+models = ["continuous", "truncated"]
+[[inputs.options]]
+value = "Cauchy"
+label = "Cauchy"
+models = ["continuous"]
+[[inputs.options]]
+value = "Laplace"
+label = "Laplace"
+models = ["continuous"]
+[[inputs.options]]
+value = "Logistic"
+label = "Logistic"
+models = ["continuous"]
+[[inputs.options]]
+value = "TDist"
+label = "TDist"
+models = ["continuous"]
+[[inputs.options]]
+value = "Chisq"
+label = "Chisq"
+models = ["continuous"]
+[[inputs.options]]
+value = "Weibull"
+label = "Weibull"
+models = ["continuous", "truncated"]
+[[inputs.options]]
+value = "Gumbel"
+label = "Gumbel"
+models = ["continuous"]
+[[inputs.options]]
+value = "Pareto"
+label = "Pareto"
+models = ["continuous", "truncated"]
+[[inputs.options]]
+value = "Triangular"
+label = "Triangular"
+models = ["continuous"]
+[[inputs.options]]
+value = "InverseGaussian"
+label = "InverseGaussian"
+models = ["continuous"]
+[[inputs.options]]
+value = "Epanechnikov"
+label = "Epanechnikov"
+models = ["continuous"]
+[[inputs.options]]
+value = "GeneralizedExtremeValue"
+label = "GeneralizedExtremeValue"
+models = ["continuous"]
+[[inputs.options]]
+value = "GeneralizedPareto"
+label = "GeneralizedPareto"
+models = ["continuous"]
+[[inputs.options]]
+value = "Levy"
+label = "Levy"
+models = ["continuous"]
+[[inputs.options]]
+value = "SkewNormal"
+label = "SkewNormal"
+models = ["continuous"]
+[[inputs.options]]
+value = "MvNormal"
+label = "MvNormal"
+models = ["multivariate"]
+[[inputs.options]]
+value = "Dirichlet"
+label = "Dirichlet"
+models = ["multivariate"]
+[[inputs.options]]
+value = "Multinomial"
+label = "Multinomial"
+models = ["multivariate"]
+[[inputs.options]]
+value = "Wishart"
+label = "Wishart"
+models = ["matrixvariate"]
+[[inputs.options]]
+value = "InverseWishart"
+label = "InverseWishart"
+models = ["matrixvariate"]
+[[inputs.options]]
+value = "MatrixNormal"
+label = "MatrixNormal"
+models = ["matrixvariate"]
+
+[[inputs]]
+id = "method"
+label = "Method"
+tooltip = "The function to evaluate at the evaluation point"
+kind = "select"
+[[inputs.options]]
+value = "pdf"
+label = "Probability Mass Function"
+models = ["discrete"]
+[[inputs.options]]
+value = "pdf"
+label = "Probability Density Function"
+models = ["continuous", "truncated", "multivariate", "matrixvariate", "mixture", "product", "convolutions"]
+[[inputs.options]]
+value = "cdf"
+label = "Cumulative Distribution Function"
+models = ["discrete", "continuous", "truncated", "mixture", "convolutions"]
+[[inputs.options]]
+value = "quantile"
+label = "Quantile"
+models = ["discrete", "continuous", "truncated", "mixture", "convolutions"]
+
+[[inputs]]
+id = "bernoulli_p"
+label = "p"
+default = "0.5"
+models = ["discrete"]
+when = "dist=Bernoulli"
+newRow = true
+
+[[inputs]]
+id = "binomial_n"
+label = "n"
+default = "10"
+models = ["discrete"]
+when = "dist=Binomial"
+
+[[inputs]]
+id = "binomial_p"
+label = "p"
+default = "0.5"
+models = ["discrete"]
+when = "dist=Binomial"
+
+[[inputs]]
+id = "poisson_lam"
+label = "lambda"
+default = "1.0"
+models = ["discrete"]
+when = "dist=Poisson"
+
+[[inputs]]
+id = "geometric_p"
+label = "p"
+default = "0.5"
+models = ["discrete"]
+when = "dist=Geometric"
+
+[[inputs]]
+id = "negativebinomial_r"
+label = "r"
+default = "5"
+models = ["discrete"]
+when = "dist=NegativeBinomial"
+
+[[inputs]]
+id = "negativebinomial_p"
+label = "p"
+default = "0.5"
+models = ["discrete"]
+when = "dist=NegativeBinomial"
+
+[[inputs]]
+id = "discreteuniform_a"
+label = "a"
+default = "1"
+models = ["discrete"]
+when = "dist=DiscreteUniform"
+
+[[inputs]]
+id = "discreteuniform_b"
+label = "b"
+default = "10"
+models = ["discrete"]
+when = "dist=DiscreteUniform"
+
+[[inputs]]
+id = "hypergeometric_s"
+label = "s"
+default = "10"
+models = ["discrete"]
+when = "dist=Hypergeometric"
+
+[[inputs]]
+id = "hypergeometric_f"
+label = "f"
+default = "10"
+models = ["discrete"]
+when = "dist=Hypergeometric"
+
+[[inputs]]
+id = "hypergeometric_n"
+label = "n"
+default = "5"
+models = ["discrete"]
+when = "dist=Hypergeometric"
+
+[[inputs]]
+id = "categorical_probs"
+label = "p"
+default = "[0.2, 0.3, 0.5]"
+models = ["discrete"]
+when = "dist=Categorical"
+
+[[inputs]]
+id = "normal_mu"
+label = "mu"
+default = "0.0"
+models = ["continuous", "truncated"]
+when = "dist=Normal"
+
+[[inputs]]
+id = "normal_sigma"
+label = "sigma"
+default = "1.0"
+models = ["continuous", "truncated"]
+when = "dist=Normal"
+
+[[inputs]]
+id = "uniform_a"
+label = "a"
+default = "0.0"
+models = ["continuous"]
+when = "dist=Uniform"
+
+[[inputs]]
+id = "uniform_b"
+label = "b"
+default = "1.0"
+models = ["continuous"]
+when = "dist=Uniform"
+
+[[inputs]]
+id = "exponential_theta"
+label = "theta"
+default = "1.0"
+models = ["continuous", "truncated"]
+when = "dist=Exponential"
+
+[[inputs]]
+id = "gamma_alpha"
+label = "alpha"
+default = "2.0"
+models = ["continuous", "truncated"]
+when = "dist=Gamma"
+
+[[inputs]]
+id = "gamma_theta"
+label = "theta"
+default = "1.0"
+models = ["continuous", "truncated"]
+when = "dist=Gamma"
+
+[[inputs]]
+id = "beta_alpha"
+label = "alpha"
+default = "2.0"
+models = ["continuous"]
+when = "dist=Beta"
+
+[[inputs]]
+id = "beta_beta"
+label = "beta"
+default = "5.0"
+models = ["continuous"]
+when = "dist=Beta"
+
+[[inputs]]
+id = "lognormal_mu"
+label = "mu"
+default = "0.0"
+models = ["continuous", "truncated"]
+when = "dist=LogNormal"
+
+[[inputs]]
+id = "lognormal_sigma"
+label = "sigma"
+default = "1.0"
+models = ["continuous", "truncated"]
+when = "dist=LogNormal"
+
+[[inputs]]
+id = "cauchy_mu"
+label = "mu"
+default = "0.0"
+models = ["continuous"]
+when = "dist=Cauchy"
+
+[[inputs]]
+id = "cauchy_sigma"
+label = "sigma"
+default = "1.0"
+models = ["continuous"]
+when = "dist=Cauchy"
+
+[[inputs]]
+id = "laplace_mu"
+label = "mu"
+default = "0.0"
+models = ["continuous"]
+when = "dist=Laplace"
+
+[[inputs]]
+id = "laplace_b"
+label = "b"
+default = "1.0"
+models = ["continuous"]
+when = "dist=Laplace"
+
+[[inputs]]
+id = "logistic_mu"
+label = "mu"
+default = "0.0"
+models = ["continuous"]
+when = "dist=Logistic"
+
+[[inputs]]
+id = "logistic_theta"
+label = "theta"
+default = "1.0"
+models = ["continuous"]
+when = "dist=Logistic"
+
+[[inputs]]
+id = "tdist_nu"
+label = "nu"
+default = "5.0"
+models = ["continuous"]
+when = "dist=TDist"
+
+[[inputs]]
+id = "chisq_k"
+label = "k"
+default = "3"
+models = ["continuous"]
+when = "dist=Chisq"
+
+[[inputs]]
+id = "weibull_alpha"
+label = "alpha"
+default = "1.0"
+models = ["continuous", "truncated"]
+when = "dist=Weibull"
+
+[[inputs]]
+id = "weibull_theta"
+label = "theta"
+default = "1.0"
+models = ["continuous", "truncated"]
+when = "dist=Weibull"
+
+[[inputs]]
+id = "gumbel_mu"
+label = "mu"
+default = "0.0"
+models = ["continuous"]
+when = "dist=Gumbel"
+
+[[inputs]]
+id = "gumbel_beta"
+label = "beta"
+default = "1.0"
+models = ["continuous"]
+when = "dist=Gumbel"
+
+[[inputs]]
+id = "pareto_alpha"
+label = "alpha"
+default = "1.0"
+models = ["continuous", "truncated"]
+when = "dist=Pareto"
+
+[[inputs]]
+id = "pareto_theta"
+label = "theta"
+default = "1.0"
+models = ["continuous", "truncated"]
+when = "dist=Pareto"
+
+[[inputs]]
+id = "triangular_a"
+label = "a"
+default = "0.0"
+models = ["continuous"]
+when = "dist=Triangular"
+
+[[inputs]]
+id = "triangular_b"
+label = "b"
+default = "1.0"
+models = ["continuous"]
+when = "dist=Triangular"
+
+[[inputs]]
+id = "triangular_c"
+label = "c (mode)"
+default = "0.5"
+models = ["continuous"]
+when = "dist=Triangular"
+
+[[inputs]]
+id = "inversegaussian_mu"
+label = "mu"
+default = "1.0"
+models = ["continuous"]
+when = "dist=InverseGaussian"
+
+[[inputs]]
+id = "inversegaussian_lam"
+label = "lambda"
+default = "1.0"
+models = ["continuous"]
+when = "dist=InverseGaussian"
+
+[[inputs]]
+id = "generalizedextremevalue_mu"
+label = "mu"
+default = "0.0"
+models = ["continuous"]
+when = "dist=GeneralizedExtremeValue"
+
+[[inputs]]
+id = "generalizedextremevalue_sigma"
+label = "sigma"
+default = "1.0"
+models = ["continuous"]
+when = "dist=GeneralizedExtremeValue"
+
+[[inputs]]
+id = "generalizedextremevalue_xi"
+label = "xi"
+default = "0.1"
+models = ["continuous"]
+when = "dist=GeneralizedExtremeValue"
+
+[[inputs]]
+id = "generalizedpareto_mu"
+label = "mu"
+default = "0.0"
+models = ["continuous"]
+when = "dist=GeneralizedPareto"
+
+[[inputs]]
+id = "generalizedpareto_sigma"
+label = "sigma"
+default = "1.0"
+models = ["continuous"]
+when = "dist=GeneralizedPareto"
+
+[[inputs]]
+id = "generalizedpareto_xi"
+label = "xi"
+default = "0.1"
+models = ["continuous"]
+when = "dist=GeneralizedPareto"
+
+[[inputs]]
+id = "levy_mu"
+label = "mu"
+default = "0.0"
+models = ["continuous"]
+when = "dist=Levy"
+
+[[inputs]]
+id = "levy_c"
+label = "c"
+default = "1.0"
+models = ["continuous"]
+when = "dist=Levy"
+
+[[inputs]]
+id = "skewnormal_xi"
+label = "xi"
+default = "0.0"
+models = ["continuous"]
+when = "dist=SkewNormal"
+
+[[inputs]]
+id = "skewnormal_omega"
+label = "omega"
+default = "1.0"
+models = ["continuous"]
+when = "dist=SkewNormal"
+
+[[inputs]]
+id = "skewnormal_alpha"
+label = "alpha"
+default = "3.0"
+models = ["continuous"]
+when = "dist=SkewNormal"
+
+[[inputs]]
+id = "mvnormal_mu"
+label = "mu"
+default = "[0.0, 0.0]"
+models = ["multivariate"]
+when = "dist=MvNormal"
+
+[[inputs]]
+id = "mvnormal_sigma"
+label = "Sigma"
+default = "[1.0 0.0; 0.0 1.0]"
+models = ["multivariate"]
+when = "dist=MvNormal"
+
+[[inputs]]
+id = "dirichlet_alpha"
+label = "alpha"
+default = "[1.0, 1.0, 1.0]"
+models = ["multivariate"]
+when = "dist=Dirichlet"
+
+[[inputs]]
+id = "multinomial_n"
+label = "n"
+default = "10"
+models = ["multivariate"]
+when = "dist=Multinomial"
+
+[[inputs]]
+id = "multinomial_probs"
+label = "p"
+default = "[0.2, 0.3, 0.5]"
+models = ["multivariate"]
+when = "dist=Multinomial"
+
+[[inputs]]
+id = "wishart_nu"
+label = "nu"
+default = "5.0"
+models = ["matrixvariate"]
+when = "dist=Wishart"
+
+[[inputs]]
+id = "wishart_s"
+label = "S"
+default = "[1.0 0.0; 0.0 1.0]"
+models = ["matrixvariate"]
+when = "dist=Wishart"
+
+[[inputs]]
+id = "inversewishart_nu"
+label = "nu"
+default = "5.0"
+models = ["matrixvariate"]
+when = "dist=InverseWishart"
+
+[[inputs]]
+id = "inversewishart_s"
+label = "S"
+default = "[1.0 0.0; 0.0 1.0]"
+models = ["matrixvariate"]
+when = "dist=InverseWishart"
+
+[[inputs]]
+id = "matrixnormal_m"
+label = "M"
+default = "[0.0 0.0; 0.0 0.0]"
+models = ["matrixvariate"]
+when = "dist=MatrixNormal"
+
+[[inputs]]
+id = "matrixnormal_u"
+label = "U"
+default = "[1.0 0.0; 0.0 1.0]"
+models = ["matrixvariate"]
+when = "dist=MatrixNormal"
+
+[[inputs]]
+id = "matrixnormal_vv"
+label = "V"
+default = "[1.0 0.0; 0.0 1.0]"
+models = ["matrixvariate"]
+when = "dist=MatrixNormal"
+
+[[inputs]]
+id = "lower"
+label = "Lower Bound"
+default = "-Inf"
+models = ["truncated"]
+newRow = true
+
+[[inputs]]
+id = "upper"
+label = "Upper Bound"
+default = "Inf"
+models = ["truncated"]
+
+[[inputs]]
+id = "mixcomponents"
+label = "Components"
+default = "Normal(0.0, 1.0), Normal(5.0, 1.0)"
+models = ["mixture"]
+newRow = true
+
+[[inputs]]
+id = "mixweights"
+label = "Weights"
+default = "[0.5, 0.5]"
+models = ["mixture"]
+
+[[inputs]]
+id = "prodcomponents"
+label = "Components"
+default = "Normal(0.0, 1.0), Exponential(1.0)"
+models = ["product"]
+newRow = true
+
+[[inputs]]
+id = "d1"
+label = "d1"
+default = "Poisson(2.0)"
+models = ["convolutions"]
+newRow = true
+
+[[inputs]]
+id = "d2"
+label = "d2"
+default = "Poisson(3.0)"
+models = ["convolutions"]
+
+[[inputs]]
+id = "xint"
+label = "Evaluation Point (x)"
+default = "1"
+models = ["discrete"]
+when = "method!=quantile"
+newRow = true
+
+[[inputs]]
+id = "x"
+label = "Evaluation Point (x)"
+default = "1.0"
+models = ["continuous", "truncated", "mixture"]
+when = "method!=quantile"
+
+[[inputs]]
+id = "xvec"
+label = "Evaluation Point (x)"
+default = "[0.0, 0.0]"
+models = ["multivariate", "product"]
+
+[[inputs]]
+id = "xmat"
+label = "Evaluation Point (X)"
+default = "[1.0 0.0; 0.0 1.0]"
+models = ["matrixvariate"]
+
+[[inputs]]
+id = "xconv"
+label = "Evaluation Point (x)"
+default = "2"
+models = ["convolutions"]
+when = "method!=quantile"
+
+[[inputs]]
+id = "prob"
+label = "Evaluation Point (prob)"
+default = "0.25"
+models = ["discrete", "continuous", "truncated", "mixture", "convolutions"]
+when = "method=quantile"
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.discrete]
+# Probability mass bars
+svg = '''
+var h = [6, 16, 26, 30, 24, 14, 7, 3];
+var s = '<line x1="4" y1="66" x2="50" y2="66" stroke="currentColor" stroke-width="1" opacity="0.5"/>';
+for (var i = 0; i < h.length; i++) {
+	s += '<rect x="' + (6 + i * 5.5) + '" y="' + (66 - h[i]) + '" width="3.5" height="' + h[i] + '" fill="currentColor" opacity="0.6"/>';
+}
+return s;
+'''
+
+[miniCharts.continuous]
+# Bell-shaped density
+svg = '''
+var p = '';
+for (var i = 0; i <= 44; i++) {
+	var x = 5 + i, z = (i - 22) / 7;
+	p += (i ? ' L' : 'M') + x + ' ' + (66 - 32 * Math.exp(-z * z / 2)).toFixed(1);
+}
+return '<line x1="4" y1="66" x2="50" y2="66" stroke="currentColor" stroke-width="1" opacity="0.5"/>'
+	+ '<path d="' + p + '" fill="none" stroke="currentColor" stroke-width="1.5"/>';
+'''
+
+[miniCharts.truncated]
+# Density cut off at two bounds
+svg = '''
+var p = 'M14 66';
+for (var i = 9; i <= 35; i++) {
+	var x = 5 + i, z = (i - 22) / 7;
+	p += ' L' + x + ' ' + (66 - 40 * Math.exp(-z * z / 2)).toFixed(1);
+}
+p += ' L40 66 Z';
+return '<line x1="4" y1="66" x2="50" y2="66" stroke="currentColor" stroke-width="1" opacity="0.5"/>'
+	+ '<path d="' + p + '" fill="currentColor" opacity="0.25" stroke="currentColor" stroke-width="1.5"/>'
+	+ '<line x1="14" y1="22" x2="14" y2="68" stroke="currentColor" stroke-width="1" stroke-dasharray="2 2"/>'
+	+ '<line x1="40" y1="22" x2="40" y2="68" stroke="currentColor" stroke-width="1" stroke-dasharray="2 2"/>';
+'''
+
+[miniCharts.multivariate]
+# Contours of a correlated bivariate density
+svg = '''
+var s = '';
+var r = [[20, 9], [14, 6], [7, 3]];
+for (var i = 0; i < r.length; i++) {
+	s += '<ellipse cx="27" cy="46" rx="' + r[i][0] + '" ry="' + r[i][1] + '" transform="rotate(-35 27 46)" fill="none" stroke="currentColor" stroke-width="1.2" opacity="' + (0.4 + i * 0.3) + '"/>';
+}
+return s;
+'''
+
+[miniCharts.matrixvariate]
+# A random matrix of cells
+svg = '''
+var v = [0.9, 0.3, 0.1, 0.3, 0.8, 0.4, 0.1, 0.4, 0.7];
+var s = '';
+for (var i = 0; i < 9; i++) {
+	s += '<rect x="' + (10 + (i % 3) * 12) + '" y="' + (30 + Math.floor(i / 3) * 12) + '" width="10" height="10" fill="currentColor" opacity="' + v[i] + '"/>';
+}
+return s;
+'''
+
+[miniCharts.mixture]
+# Two-component bimodal density
+svg = '''
+var p = '';
+for (var i = 0; i <= 44; i++) {
+	var x = 5 + i, a = (i - 13) / 5, b = (i - 32) / 6;
+	p += (i ? ' L' : 'M') + x + ' ' + (66 - 30 * Math.exp(-a * a / 2) - 20 * Math.exp(-b * b / 2)).toFixed(1);
+}
+return '<line x1="4" y1="66" x2="50" y2="66" stroke="currentColor" stroke-width="1" opacity="0.5"/>'
+	+ '<path d="' + p + '" fill="none" stroke="currentColor" stroke-width="1.5"/>';
+'''
+
+[miniCharts.product]
+# Independent marginals along both axes
+svg = '''
+var px = '', py = '';
+for (var i = 0; i <= 30; i++) {
+	var z = (i - 15) / 5, f = 12 * Math.exp(-z * z / 2);
+	px += (i ? ' L' : 'M') + (18 + i) + ' ' + (70 - f).toFixed(1);
+	py += (i ? ' L' : 'M') + (14 - f).toFixed(1) + ' ' + (58 - i);
+}
+var s = '<line x1="16" y1="70" x2="50" y2="70" stroke="currentColor" stroke-width="1" opacity="0.5"/>'
+	+ '<line x1="14" y1="24" x2="14" y2="60" stroke="currentColor" stroke-width="1" opacity="0.5"/>';
+for (var j = 0; j < 9; j++) {
+	s += '<circle cx="' + (24 + (j % 3) * 9) + '" cy="' + (34 + Math.floor(j / 3) * 9) + '" r="1.8" fill="currentColor" opacity="0.5"/>';
+}
+return s + '<path d="' + px + '" fill="none" stroke="currentColor" stroke-width="1.3"/>'
+	+ '<path d="' + py + '" fill="none" stroke="currentColor" stroke-width="1.3"/>';
+'''
+
+[miniCharts.convolutions]
+# Two narrow densities and their wider sum
+svg = '''
+function curve(c, w, h) {
+	var p = '';
+	for (var i = 0; i <= 44; i++) {
+		var z = (i - c) / w;
+		p += (i ? ' L' : 'M') + (5 + i) + ' ' + (66 - h * Math.exp(-z * z / 2)).toFixed(1);
+	}
+	return p;
+}
+return '<line x1="4" y1="66" x2="50" y2="66" stroke="currentColor" stroke-width="1" opacity="0.5"/>'
+	+ '<path d="' + curve(10, 3.5, 26) + '" fill="none" stroke="currentColor" stroke-width="1" opacity="0.5"/>'
+	+ '<path d="' + curve(20, 3.5, 26) + '" fill="none" stroke="currentColor" stroke-width="1" opacity="0.5"/>'
+	+ '<path d="' + curve(30, 5, 18) + '" fill="none" stroke="currentColor" stroke-width="1.5"/>';
+'''
+
+[[codeBranches]]
+model = "discrete"
+code = '''
+using Distributions
+
+{{?dist=Bernoulli}}d = Bernoulli({{bernoulli_p}})  # support: x in {0, 1}
+{{?dist=Binomial}}d = Binomial({{binomial_n}}, {{binomial_p}})  # support: x in {0, ..., n}
+{{?dist=Poisson}}d = Poisson({{poisson_lam}})  # support: x in {0, 1, 2, ...}
+{{?dist=Geometric}}d = Geometric({{geometric_p}})  # support: x in {0, 1, 2, ...}
+{{?dist=NegativeBinomial}}d = NegativeBinomial({{negativebinomial_r}}, {{negativebinomial_p}})  # support: x in {0, 1, 2, ...}
+{{?dist=DiscreteUniform}}d = DiscreteUniform({{discreteuniform_a}}, {{discreteuniform_b}})  # support: x in {a, ..., b}
+{{?dist=Hypergeometric}}d = Hypergeometric({{hypergeometric_s}}, {{hypergeometric_f}}, {{hypergeometric_n}})  # support: x in {0, ..., min(n, s)}
+{{?dist=Categorical}}d = Categorical({{categorical_probs}})  # support: x in {1, ..., k}
+
+{{?method!=quantile}}x = {{xint}}  # evaluation point
+{{?method=pdf}}println("pdf: ", pdf(d, x))
+{{?method=cdf}}println("cdf: ", cdf(d, x))
+{{?method=quantile}}prob = {{prob}}  # evaluation point
+{{?method=quantile}}println("quantile: ", quantile(d, prob))
+'''
+
+[[codeBranches]]
+model = "continuous"
+code = '''
+using Distributions
+
+{{?dist=Normal}}d = Normal({{normal_mu}}, {{normal_sigma}})  # support: x in (-Inf, Inf)
+{{?dist=Uniform}}d = Uniform({{uniform_a}}, {{uniform_b}})  # support: x in [a, b]
+{{?dist=Exponential}}d = Exponential({{exponential_theta}})  # support: x in [0, Inf)
+{{?dist=Gamma}}d = Gamma({{gamma_alpha}}, {{gamma_theta}})  # support: x in (0, Inf)
+{{?dist=Beta}}d = Beta({{beta_alpha}}, {{beta_beta}})  # support: x in (0, 1)
+{{?dist=LogNormal}}d = LogNormal({{lognormal_mu}}, {{lognormal_sigma}})  # support: x in (0, Inf)
+{{?dist=Cauchy}}d = Cauchy({{cauchy_mu}}, {{cauchy_sigma}})  # support: x in (-Inf, Inf)
+{{?dist=Laplace}}d = Laplace({{laplace_mu}}, {{laplace_b}})  # support: x in (-Inf, Inf)
+{{?dist=Logistic}}d = Logistic({{logistic_mu}}, {{logistic_theta}})  # support: x in (-Inf, Inf)
+{{?dist=TDist}}d = TDist({{tdist_nu}})  # support: x in (-Inf, Inf)
+{{?dist=Chisq}}d = Chisq({{chisq_k}})  # support: x in [0, Inf)
+{{?dist=Weibull}}d = Weibull({{weibull_alpha}}, {{weibull_theta}})  # support: x in [0, Inf)
+{{?dist=Gumbel}}d = Gumbel({{gumbel_mu}}, {{gumbel_beta}})  # support: x in (-Inf, Inf)
+{{?dist=Pareto}}d = Pareto({{pareto_alpha}}, {{pareto_theta}})  # support: x in [theta, Inf)
+{{?dist=Triangular}}d = Triangular({{triangular_a}}, {{triangular_b}}, {{triangular_c}})  # support: x in [a, b]
+{{?dist=InverseGaussian}}d = InverseGaussian({{inversegaussian_mu}}, {{inversegaussian_lam}})  # support: x in (0, Inf)
+{{?dist=Epanechnikov}}d = Epanechnikov()  # support: x in [-1, 1]
+{{?dist=GeneralizedExtremeValue}}d = GeneralizedExtremeValue({{generalizedextremevalue_mu}}, {{generalizedextremevalue_sigma}}, {{generalizedextremevalue_xi}})  # support: x in (-Inf, Inf)
+{{?dist=GeneralizedPareto}}d = GeneralizedPareto({{generalizedpareto_mu}}, {{generalizedpareto_sigma}}, {{generalizedpareto_xi}})  # support: x in [mu, Inf)
+{{?dist=Levy}}d = Levy({{levy_mu}}, {{levy_c}})  # support: x in [mu, Inf)
+{{?dist=SkewNormal}}d = SkewNormal({{skewnormal_xi}}, {{skewnormal_omega}}, {{skewnormal_alpha}})  # support: x in (-Inf, Inf)
+
+{{?method!=quantile}}x = {{x}}  # evaluation point
+{{?method=pdf}}println("pdf: ", pdf(d, x))
+{{?method=cdf}}println("cdf: ", cdf(d, x))
+{{?method=quantile}}prob = {{prob}}  # evaluation point
+{{?method=quantile}}println("quantile: ", quantile(d, prob))
+'''
+
+[[codeBranches]]
+model = "truncated"
+code = '''
+using Distributions
+
+{{?dist=Normal}}base = Normal({{normal_mu}}, {{normal_sigma}})
+{{?dist=Gamma}}base = Gamma({{gamma_alpha}}, {{gamma_theta}})
+{{?dist=Exponential}}base = Exponential({{exponential_theta}})
+{{?dist=LogNormal}}base = LogNormal({{lognormal_mu}}, {{lognormal_sigma}})
+{{?dist=Weibull}}base = Weibull({{weibull_alpha}}, {{weibull_theta}})
+{{?dist=Pareto}}base = Pareto({{pareto_alpha}}, {{pareto_theta}})
+d = truncated(base, lower={{lower}}, upper={{upper}})  # support: x in [{{lower}}, {{upper}}]
+
+{{?method!=quantile}}x = {{x}}  # evaluation point
+{{?method=pdf}}println("pdf: ", pdf(d, x))
+{{?method=cdf}}println("cdf: ", cdf(d, x))
+{{?method=quantile}}prob = {{prob}}  # evaluation point
+{{?method=quantile}}println("quantile: ", quantile(d, prob))
+'''
+
+[[codeBranches]]
+model = "multivariate"
+code = '''
+using Distributions
+
+{{?dist=MvNormal}}mu = {{mvnormal_mu}}
+{{?dist=MvNormal}}Sigma = {{mvnormal_sigma}}
+{{?dist=MvNormal}}d = MvNormal(mu, Sigma)  # support: x in R^n
+{{?dist=Dirichlet}}alpha = {{dirichlet_alpha}}
+{{?dist=Dirichlet}}d = Dirichlet(alpha)  # support: x in the simplex
+{{?dist=Multinomial}}p = {{multinomial_probs}}
+{{?dist=Multinomial}}d = Multinomial({{multinomial_n}}, p)  # support: x in N^n
+
+x = {{xvec}}  # evaluation point
+println("pdf: ", pdf(d, x))
+'''
+
+[[codeBranches]]
+model = "matrixvariate"
+code = '''
+using Distributions
+
+{{?dist=Wishart}}nu = {{wishart_nu}}
+{{?dist=Wishart}}S = {{wishart_s}}
+{{?dist=Wishart}}d = Wishart(nu, S)  # support: X positive definite
+{{?dist=InverseWishart}}nu = {{inversewishart_nu}}
+{{?dist=InverseWishart}}S = {{inversewishart_s}}
+{{?dist=InverseWishart}}d = InverseWishart(nu, S)  # support: X positive definite
+{{?dist=MatrixNormal}}M = {{matrixnormal_m}}
+{{?dist=MatrixNormal}}U = {{matrixnormal_u}}
+{{?dist=MatrixNormal}}V = {{matrixnormal_vv}}
+{{?dist=MatrixNormal}}d = MatrixNormal(M, U, V)  # support: X in R^(m x n)
+
+X = {{xmat}}  # evaluation point
+println("pdf: ", pdf(d, X))
+'''
+
+[[codeBranches]]
+model = "mixture"
+code = '''
+using Distributions
+
+d = MixtureModel([{{mixcomponents}}], {{mixweights}})
+
+{{?method!=quantile}}x = {{x}}  # evaluation point
+{{?method=pdf}}println("pdf: ", pdf(d, x))
+{{?method=cdf}}println("cdf: ", cdf(d, x))
+{{?method=quantile}}prob = {{prob}}  # evaluation point
+{{?method=quantile}}println("quantile: ", quantile(d, prob))
+'''
+
+[[codeBranches]]
+model = "product"
+code = '''
+using Distributions
+
+d = product_distribution([{{prodcomponents}}])
+
+x = {{xvec}}  # evaluation point
+println("pdf: ", pdf(d, x))
+'''
+
+[[codeBranches]]
+model = "convolutions"
+code = '''
+using Distributions
+
+d = convolve({{d1}}, {{d2}})
+
+{{?method!=quantile}}x = {{xconv}}  # evaluation point
+{{?method=pdf}}println("pdf: ", pdf(d, x))
+{{?method=cdf}}println("cdf: ", cdf(d, x))
+{{?method=quantile}}prob = {{prob}}  # evaluation point
+{{?method=quantile}}println("quantile: ", quantile(d, prob))
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "plot-density"
+label = "Density Plot"
+desc = "Plot the density (or mass function) of d"
+code = '''
+using StatsPlots
+plot(d, lw=2, label="pdf", title="Density")
+'''
+
+[[actionGroups.actions]]
+id = "plot-cdf"
+label = "Cumulative Distribution Plot"
+desc = "Plot the cdf of d between its 0.1% and 99.9% quantiles"
+code = '''
+using StatsPlots
+plot(x -> cdf(d, x), quantile(d, 0.001), quantile(d, 0.999), lw=2, label="cdf", title="Cumulative distribution")
+'''
+
+[[actionGroups.actions]]
+id = "plot-samples"
+label = "Samples vs Density"
+desc = "Histogram of random draws with the density on top"
+code = '''
+using StatsPlots
+xs = rand(d, 10_000)
+histogram(xs, normalize=:pdf, alpha=0.4, label="samples")
+plot!(d, lw=2, label="pdf")
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "moments"
+label = "Moments"
+desc = "Mean, variance, skewness and kurtosis of d"
+code = '''
+println("Mean:     ", mean(d))
+println("Variance: ", var(d))
+println("Skewness: ", skewness(d))
+println("Kurtosis: ", kurtosis(d))
+'''
+
+[[actionGroups.actions]]
+id = "parameters"
+label = "Parameters and Support"
+desc = "The parameters of d and whether the evaluation point is in its support"
+code = '''
+println("Parameters: ", params(d))
+println("Support:    ", minimum(d), " to ", maximum(d))
+println("x in support: ", insupport(d, x))
+'''
+
+[[actionGroups.actions]]
+id = "entropy"
+label = "Entropy"
+desc = "Differential (or Shannon) entropy of d"
+code = '''
+println("Entropy: ", entropy(d))
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "draws"
+label = "Random Draws"
+desc = "Draw a sample of 1000 values from d"
+code = '''
+using Random
+Random.seed!(1)
+xs = rand(d, 1000)
+'''
+
+[[actionGroups.actions]]
+id = "monte-carlo"
+label = "Monte Carlo Check"
+desc = "Compare the sample mean of many draws with the theoretical mean"
+code = '''
+xs = rand(d, 100_000)
+println("Sample mean:      ", mean(xs))
+println("Theoretical mean: ", mean(d))
+'''
+
+[[actionGroups.actions]]
+id = "tail"
+label = "Tail Probabilities"
+desc = "Probability of exceeding the evaluation point, and its log density"
+code = '''
+println("P(X > x): ", ccdf(d, x))
+println("log pdf:  ", logpdf(d, x))
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "fit-mle"
+label = "Refit by Maximum Likelihood"
+desc = "Simulate data from d and recover its parameters with fit_mle"
+code = '''
+data = rand(d, 500)
+D = Base.typename(typeof(d)).wrapper
+d_hat = fit_mle(D, data)
+'''
+
+[[actionGroups.actions]]
+id = "normal-approx"
+label = "Normal Approximation"
+desc = "Monte Carlo KL divergence from d to a Normal with the same mean and std"
+code = '''
+d_alt = Normal(mean(d), std(d))
+xs = rand(d, 100_000)
+println("KL(d || Normal): ", mean(logpdf.(d, xs) .- logpdf.(d_alt, xs)))
+'''
+
+[[actionGroups.actions]]
+id = "qq-plot"
+label = "Q-Q Plot vs Normal"
+desc = "Quantile-quantile plot of draws from d against a matching Normal"
+code = '''
+using StatsPlots
+qqplot(Normal(mean(d), std(d)), rand(d, 1000), title="Q-Q vs Normal")
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "quantile-table"
+label = "Quantile Table"
+desc = "Selected quantiles of d"
+code = '''
+for p in (0.01, 0.05, 0.25, 0.5, 0.75, 0.95, 0.99)
+	println(rpad(p, 6), quantile(d, p))
+end
+'''
+
+[[actionGroups.actions]]
+id = "central-interval"
+label = "95% Central Interval"
+desc = "The interval holding the middle 95% of the probability"
+code = '''
+lo, hi = quantile(d, 0.025), quantile(d, 0.975)
+println("95% of the probability lies in [", lo, ", ", hi, "]")
+'''
+
+[[actionGroups.actions]]
+id = "loglik"
+label = "Log-Likelihood of Data"
+desc = "How well d explains a data vector"
+code = '''
+data = rand(d, 100)
+println("Log-likelihood: ", loglikelihood(d, data))
+'''

@@ -10,14 +10,14 @@ import { INotificationService } from '../../../../../platform/notification/commo
 import { ICommandService } from '../../../../../platform/commands/common/commands.js';
 import { IQuickInputService } from '../../../../../platform/quickinput/common/quickInput.js';
 import { IWebviewWorkbenchService } from '../../../webviewPanel/browser/webviewWorkbenchService.js';
-import { IDistMetadata } from '../common/dist.types.js';
+import { IDistSamplingMetadata } from '../common/dist.types.js';
 import { registerDistWebviewHandlers } from '../handlers/dist.handler.js';
 import { getDistSamplingHtml } from '../webviews/dist-sampling.template.js';
 
 const DIST_SAMPLING_VIEW_TYPE = 'pollis.dist.sampling';
 const DIST_SAMPLING_TITLE = 'Distribution Sampling';
 
-const DIST_SAMPLING_METADATA: IDistMetadata = {
+const DIST_SAMPLING_METADATA: IDistSamplingMetadata = {
 	dist: {
 		packages: [
 			{ name: 'Distributions.jl', github: 'https://github.com/JuliaStats/Distributions.jl', papers: [] },

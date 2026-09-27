@@ -468,12 +468,10 @@ ${parts.headScriptJs ?? ''}
 		}
 		// Show the inputs (and select choices) of the current model and input values; a hidden choice falls back to the first available one.
 		function applyInputsForModel() {
-			document.querySelectorAll('.scaffold-input').forEach(function(g) { g.hidden = !availableFor(g) || !whenHolds(g); });
-			document.querySelectorAll('.scaffold-inputs .form-row').forEach(function(r) { r.hidden = !r.querySelector('.scaffold-input:not([hidden])'); });
 			document.querySelectorAll('.scaffold-input select').forEach(function(select) {
 				var first = null;
 				Array.prototype.forEach.call(select.options, function(o) {
-					var ok = availableFor(o);
+					var ok = availableFor(o) && whenHolds(o);
 					o.hidden = !ok;
 					o.disabled = !ok;
 					if (ok && !first) { first = o; }
@@ -481,6 +479,9 @@ ${parts.headScriptJs ?? ''}
 				var current = select.options[select.selectedIndex];
 				if (first && (!current || current.disabled)) { first.selected = true; }
 			});
+			// Visibility last, so conditions see each select's fallback choice
+			document.querySelectorAll('.scaffold-input').forEach(function(g) { g.hidden = !availableFor(g) || !whenHolds(g); });
+			document.querySelectorAll('.scaffold-inputs .form-row').forEach(function(r) { r.hidden = !r.querySelector('.scaffold-input:not([hidden])'); });
 		}
 
 		// ── Mini chart SVG builders (all coordinates within a 54 × 86 box) ──

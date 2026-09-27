@@ -156,7 +156,10 @@ export interface IModelActionGroup {
 export interface IModelInputOption {
 	readonly value: string;
 	readonly label: string;
+	/** Offer the choice only for these model toggles. Default: all. */
 	readonly models?: string[];
+	/** Offer the choice only while another input matches, as `id=a|b` or `id!=a|b`. */
+	readonly when?: string;
 }
 
 /**
@@ -172,9 +175,9 @@ export interface IModelInput {
 	readonly tooltip?: string;
 	/** Default: `text`. */
 	readonly kind?: 'text' | 'select';
-	/** Placeholder and fallback value of a text input. */
+	/** Placeholder and fallback value of a text input, or the initially selected choice of a select. */
 	readonly default?: string;
-	/** The choices of a select input; the first one available for the model is the default. */
+	/** The choices of a select input; `default`, else the first one available for the model, is chosen initially. */
 	readonly options?: IModelInputOption[];
 	/** Show the input only for these model toggles. Default: all. */
 	readonly models?: string[];

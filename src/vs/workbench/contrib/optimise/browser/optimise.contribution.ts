@@ -35,7 +35,8 @@ import { openProxWebview } from '../../model/browser/commands/prox.command.js';
 import { openMbmWebview } from '../../model/browser/commands/mbm.command.js';
 import { openDcoWebview } from '../../model/browser/commands/dco.command.js';
 import { openSwarmWebview } from '../../model/browser/commands/swarm.command.js';
-import { openBoptWebview } from '../../model/browser/commands/bopt.command.js';
+import { BOPT_PANEL } from '../../model/browser/commands/bopt.command.js';
+import { openScaffoldWebview } from '../../model/browser/commands/scaffold.command.js';
 import { openSboWebview } from '../../model/browser/commands/sbo.command.js';
 import { openMoptWebview } from '../../model/browser/commands/mopt.command.js';
 import { openNgoWebview } from '../../model/browser/commands/ngo.command.js';
@@ -401,17 +402,7 @@ CommandsRegistry.registerCommand(SWARM_ID, (accessor: ServicesAccessor) => {
 	);
 });
 
-CommandsRegistry.registerCommand(BOPT_ID, (accessor: ServicesAccessor) => {
-	openBoptWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	);
-});
+CommandsRegistry.registerCommand(BOPT_ID, accessor => openScaffoldWebview(accessor, BOPT_PANEL));
 
 CommandsRegistry.registerCommand(SBO_ID, (accessor: ServicesAccessor) => {
 	openSboWebview(

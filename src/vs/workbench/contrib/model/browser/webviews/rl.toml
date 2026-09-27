@@ -1,0 +1,615 @@
+# Recurrent Layers Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/rl.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Recurrent Layers"
+viewType = "pollis.rl"
+defaultModel = "flux"
+
+[[packages]]
+name = "RecurrentLayers.jl"
+github = "https://github.com/MartinuzziFrancesco/RecurrentLayers.jl"
+
+[[packages]]
+name = "LuxRecurrentLayers.jl"
+github = "https://github.com/MartinuzziFrancesco/LuxRecurrentLayers.jl"
+
+[[packages]]
+name = "Flux.jl"
+github = "https://github.com/FluxML/Flux.jl"
+
+[[packages]]
+name = "Lux.jl"
+github = "https://github.com/LuxDL/Lux.jl"
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Recurrent Cell Zoo"
+file = "rl/tutorial-01-zoo.ipynb"
+bundled = true
+description = "Tour of the RecurrentLayers.jl cells with a shared training loop"
+
+[[notebookSections.notebooks]]
+name = "Minimal Gated Cells"
+file = "rl/tutorial-02-minimal.ipynb"
+bundled = true
+description = "MGU, LiGRU and friends: lightweight gating for fast training"
+
+[[notebookSections.notebooks]]
+name = "Stable & Oscillatory"
+file = "rl/tutorial-03-stable.ipynb"
+bundled = true
+description = "coRNN, UnICORNN and LEM for very long-range dependencies"
+
+[[notebookSections.notebooks]]
+name = "Same Cells in Lux"
+file = "rl/tutorial-04-lux.ipynb"
+bundled = true
+description = "Porting a RecurrentLayers.jl model to the Lux explicit-parameter API"
+
+[[wikis]]
+name = "Factsheet"
+file = "rl/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "rl/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "rl/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "rl/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "rl/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "rl/decision-guide.md"
+bundled = true
+
+[[wikis]]
+name = "Cell Catalogue"
+file = "rl/cell-catalogue.md"
+bundled = true
+
+[[wikis]]
+name = "Flux vs Lux"
+file = "rl/flux-vs-lux.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "Unified Implementations of Recurrent Neural Networks in Multiple Deep Learning Frameworks"
+authors = "Martinuzzi, Francesco"
+year = 2025
+journal = "arXiv"
+url = "https://arxiv.org/abs/2508.12942"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Foundations"
+
+[[references]]
+title = "Long Short-Term Memory"
+authors = "Hochreiter, Sepp; Schmidhuber, Jürgen"
+year = 1997
+journal = "Neural Computation"
+doi = "10.1162/neco.1997.9.8.1735"
+openAccess = false
+
+[[references]]
+title = "Learning Phrase Representations using RNN Encoder-Decoder for Statistical Machine Translation"
+authors = "Cho, Kyunghyun; van Merrienboer, Bart; Gulcehre, Caglar; Bahdanau, Dzmitry; Bougares, Fethi; Schwenk, Holger; Bengio, Yoshua"
+year = 2014
+journal = "EMNLP"
+doi = "10.3115/v1/D14-1179"
+openAccess = true
+
+[[models]]
+id = "flux"
+label = "Flux"
+
+[[models]]
+id = "lux"
+label = "Lux"
+
+[[bullets]]
+text = "RecurrentLayers.jl"
+detail = "35+ recurrent cells as drop-in Flux layers"
+
+[[bullets]]
+text = "LuxRecurrentLayers.jl"
+detail = "the same architectures for the Lux explicit-parameter API"
+
+[[bullets]]
+text = "Unified API"
+detail = "every cell is built with the same <code>Name(in =&gt; hidden)</code> signature"
+
+[[bullets]]
+text = "Ready-to-run code"
+detail = "pick a backend and a cell to generate idiomatic Julia"
+
+[[decisionRows]]
+task = "Flux"
+context = "Implicit-style models, quick prototyping"
+purpose = "The full catalogue of 37 cells"
+
+[[decisionRows]]
+task = "Lux"
+context = "Explicit parameters and state, functional workflows"
+purpose = "31 of the cells, wrapped in Recurrence"
+
+[[inputs]]
+id = "cell"
+label = "Recurrent Cell"
+tooltip = "The recurrent architecture. Every cell shares the same constructor, Name(input_size => hidden_size), so you can swap one for another without changing the surrounding code. Lux offers only the cells implemented in LuxRecurrentLayers.jl."
+kind = "select"
+default = "MGU"
+[[inputs.options]]
+value = "OriginalLSTM"
+label = "OriginalLSTM"
+models = ["flux"]
+[[inputs.options]]
+value = "PeepholeLSTM"
+label = "PeepholeLSTM"
+[[inputs.options]]
+value = "MultiplicativeLSTM"
+label = "MultiplicativeLSTM"
+[[inputs.options]]
+value = "WMCLSTM"
+label = "WMCLSTM"
+[[inputs.options]]
+value = "TLSTM"
+label = "TLSTM"
+[[inputs.options]]
+value = "MGU"
+label = "MGU"
+[[inputs.options]]
+value = "LiGRU"
+label = "LiGRU"
+[[inputs.options]]
+value = "LightRU"
+label = "LightRU"
+[[inputs.options]]
+value = "UGRNN"
+label = "UGRNN"
+models = ["flux"]
+[[inputs.options]]
+value = "MinimalRNN"
+label = "MinimalRNN"
+[[inputs.options]]
+value = "JANET"
+label = "JANET"
+[[inputs.options]]
+value = "TGRU"
+label = "TGRU"
+[[inputs.options]]
+value = "RAN"
+label = "RAN"
+[[inputs.options]]
+value = "ATR"
+label = "ATR"
+[[inputs.options]]
+value = "SGRN"
+label = "SGRN"
+[[inputs.options]]
+value = "STAR"
+label = "STAR"
+[[inputs.options]]
+value = "IntersectionRNN"
+label = "IntersectionRNN"
+models = ["flux"]
+[[inputs.options]]
+value = "NAS"
+label = "NAS"
+[[inputs.options]]
+value = "MUT1"
+label = "MUT1"
+[[inputs.options]]
+value = "MUT2"
+label = "MUT2"
+[[inputs.options]]
+value = "MUT3"
+label = "MUT3"
+[[inputs.options]]
+value = "IndRNN"
+label = "IndRNN"
+[[inputs.options]]
+value = "RHN"
+label = "RHN"
+models = ["flux"]
+[[inputs.options]]
+value = "SCRN"
+label = "SCRN"
+[[inputs.options]]
+value = "TRNN"
+label = "TRNN"
+[[inputs.options]]
+value = "coRNN"
+label = "coRNN"
+[[inputs.options]]
+value = "UnICORNN"
+label = "UnICORNN"
+[[inputs.options]]
+value = "LEM"
+label = "LEM"
+[[inputs.options]]
+value = "AntisymmetricRNN"
+label = "AntisymmetricRNN"
+[[inputs.options]]
+value = "GatedAntisymmetricRNN"
+label = "GatedAntisymmetricRNN"
+[[inputs.options]]
+value = "CFN"
+label = "CFN"
+[[inputs.options]]
+value = "FastRNN"
+label = "FastRNN"
+[[inputs.options]]
+value = "FastGRNN"
+label = "FastGRNN"
+[[inputs.options]]
+value = "BR"
+label = "BR"
+[[inputs.options]]
+value = "NBR"
+label = "NBR"
+[[inputs.options]]
+value = "MiRU1"
+label = "MiRU1"
+models = ["flux"]
+[[inputs.options]]
+value = "MiRU2"
+label = "MiRU2"
+models = ["flux"]
+
+[[inputs]]
+id = "inputsize"
+label = "input_size"
+tooltip = "Number of input features per time step. Typical range: 1 for a univariate series up to several hundred for embeddings."
+default = "10"
+newRow = true
+
+[[inputs]]
+id = "hiddensize"
+label = "hidden_size"
+tooltip = "Width of the recurrent hidden state. Larger values add capacity at the cost of memory and compute. Typical range: 32-512."
+default = "64"
+
+[[inputs]]
+id = "outputsize"
+label = "output_size"
+tooltip = "Dimension of the prediction produced by the readout layer. Use 1 for scalar regression or the number of classes for classification."
+default = "1"
+
+[[inputs]]
+id = "xvar"
+label = "Sequence Data"
+default = "X"
+newRow = true
+
+[[inputs]]
+id = "yvar"
+label = "Target Variable"
+default = "y"
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.flux]
+# A recurrent cell with its state fed back
+svg = '''
+var s = '<rect x="15" y="36" width="24" height="18" rx="3" fill="none" stroke="currentColor" stroke-width="1.5"/>';
+s += '<line x1="27" y1="68" x2="27" y2="56" stroke="currentColor" stroke-width="1.2"/>';
+s += '<line x1="27" y1="34" x2="27" y2="22" stroke="currentColor" stroke-width="1.2"/>';
+s += '<path d="M39 45 H46 V28 H8 V45 H13" fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.6"/>';
+s += '<path d="M11 42 L14 45 L11 48" fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.6"/>';
+return s;
+'''
+
+[miniCharts.lux]
+# The cell unrolled over time, with explicit parameters passed in
+svg = '''
+var s = '';
+for (var i = 0; i < 3; i++) {
+	var x = 5 + i * 16;
+	s += '<rect x="' + x + '" y="38" width="12" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.3"/>';
+	s += '<line x1="' + (x + 6) + '" y1="66" x2="' + (x + 6) + '" y2="54" stroke="currentColor" stroke-width="1"/>';
+	s += '<line x1="' + (x + 6) + '" y1="30" x2="' + (x + 6) + '" y2="36" stroke="currentColor" stroke-width="1" opacity="0.5" stroke-dasharray="2 1.5"/>';
+	if (i < 2) { s += '<line x1="' + (x + 12) + '" y1="45" x2="' + (x + 16) + '" y2="45" stroke="currentColor" stroke-width="1.2"/>'; }
+}
+s += '<rect x="5" y="22" width="44" height="7" rx="2" fill="currentColor" opacity="0.3"/>';
+return s;
+'''
+
+[[codeBranches]]
+model = "flux"
+code = '''
+{{?cell=OriginalLSTM}}# OriginalLSTM: Reference LSTM implementation with the classic forget/input/output gates.
+{{?cell=PeepholeLSTM}}# PeepholeLSTM: LSTM whose gates also read the cell state directly (peephole connections).
+{{?cell=MultiplicativeLSTM}}# MultiplicativeLSTM: LSTM with an input-dependent multiplicative transition for richer dynamics.
+{{?cell=WMCLSTM}}# WMCLSTM: Working-memory-connected LSTM that augments the cell with an external memory read.
+{{?cell=TLSTM}}# TLSTM: Typed LSTM variant from the unified RecurrentLayers formulation.
+{{?cell=MGU}}# MGU: Minimal Gated Unit: a single forget gate, the lightest gated recurrent cell.
+{{?cell=LiGRU}}# LiGRU: Light Gated Recurrent Unit: drops the reset gate and uses ReLU + batch norm.
+{{?cell=LightRU}}# LightRU: Light Recurrent Unit with a single gate and a simplified candidate update.
+{{?cell=UGRNN}}# UGRNN: Update-Gate RNN: a GRU-like cell with only an update gate.
+{{?cell=MinimalRNN}}# MinimalRNN: Minimal RNN: an encoded input combined with a single update gate.
+{{?cell=JANET}}# JANET: Just Another NETwork: an LSTM stripped down to only the forget gate.
+{{?cell=TGRU}}# TGRU: Typed GRU variant from the unified RecurrentLayers formulation.
+{{?cell=RAN}}# RAN: Recurrent Additive Network: gated, purely additive memory with no tanh squashing.
+{{?cell=ATR}}# ATR: Addition-subtraction Twin-gated Recurrent cell sharing a single weight matrix.
+{{?cell=SGRN}}# SGRN: Simple Gated Recurrent Network with a single input-driven gate.
+{{?cell=STAR}}# STAR: Stackable Recurrent cell designed to train very deep recurrent stacks.
+{{?cell=IntersectionRNN}}# IntersectionRNN: Intersection RNN with separate gates for the recurrent and feed-forward paths.
+{{?cell=NAS}}# NAS: Cell discovered by neural architecture search over recurrent topologies.
+{{?cell=MUT1}}# MUT1: Mutated cell #1 from an evolutionary search over gated architectures.
+{{?cell=MUT2}}# MUT2: Mutated cell #2 from an evolutionary search over gated architectures.
+{{?cell=MUT3}}# MUT3: Mutated cell #3 from an evolutionary search over gated architectures.
+{{?cell=IndRNN}}# IndRNN: Independently RNN: element-wise recurrence so neurons can be stacked deeply.
+{{?cell=RHN}}# RHN: Recurrent Highway Network: multiple highway transforms per time step.
+{{?cell=SCRN}}# SCRN: Structurally Constrained RN with a slow-changing context layer for long memory.
+{{?cell=TRNN}}# TRNN: Typed vanilla RNN from the unified RecurrentLayers formulation.
+{{?cell=coRNN}}# coRNN: Coupled Oscillatory RNN: a network of damped oscillators for long dependencies.
+{{?cell=UnICORNN}}# UnICORNN: Undamped Independent Controlled Oscillatory RNN with provable gradient stability.
+{{?cell=LEM}}# LEM: Long Expressive Memory: a multiscale ODE-based cell for long-range dependencies.
+{{?cell=AntisymmetricRNN}}# AntisymmetricRNN: Antisymmetric RNN whose stable ODE discretisation preserves gradients.
+{{?cell=GatedAntisymmetricRNN}}# GatedAntisymmetricRNN: Antisymmetric RNN with an added gate controlling the stable dynamics.
+{{?cell=CFN}}# CFN: Chaos-Free Network: simple gated dynamics with provably non-chaotic behaviour.
+{{?cell=FastRNN}}# FastRNN: FastRNN: a residual connection with two scalars for cheap, stable training.
+{{?cell=FastGRNN}}# FastGRNN: FastGRNN: gated extension of FastRNN with low-rank, quantised weights.
+{{?cell=BR}}# BR: Bistable Recurrent cell whose neurons settle into two stable states.
+{{?cell=NBR}}# NBR: Recurrently-connected Bistable Recurrent cell for long-term memory.
+{{?cell=MiRU1}}# MiRU1: Minimal Recurrent Unit variant #1 with a single lightweight gate.
+{{?cell=MiRU2}}# MiRU2: Minimal Recurrent Unit variant #2 with a single lightweight gate.
+using Flux, RecurrentLayers
+
+input_size  = {{inputsize}}  # input features per time step
+hidden_size = {{hiddensize}}  # recurrent state width
+output_size = {{outputsize}}  # prediction dimension
+
+rnn     = {{cell}}(input_size => hidden_size)  # {{cell}} recurrent layer
+readout = Dense(hidden_size => output_size)
+
+function predict({{xvar}})
+    H = rnn({{xvar}})  # {{xvar}}: (input_size, T); H: (hidden_size, T)
+    readout(H[:, end])  # map the final hidden state to the output
+end
+
+{{?cell=OriginalLSTM|PeepholeLSTM|MGU|LiGRU|MinimalRNN|IndRNN|RAN|coRNN|FastGRNN}}params    = Flux.params(rnn, readout)
+opt_state = Flux.setup(Adam(1f-3), (rnn, readout))
+loss({{xvar}}, {{yvar}}) = Flux.mse(predict({{xvar}}), {{yvar}})
+{{?cell=OriginalLSTM|PeepholeLSTM|MGU|LiGRU|MinimalRNN|IndRNN|RAN|coRNN|FastGRNN}}
+{{?cell=OriginalLSTM|PeepholeLSTM|MGU|LiGRU|MinimalRNN|IndRNN|RAN|coRNN|FastGRNN}}Flux.train!(loss, (rnn, readout), data, opt_state)  # one epoch over (X, y) pairs
+'''
+
+[[codeBranches]]
+model = "lux"
+code = '''
+{{?cell=OriginalLSTM}}# OriginalLSTM: Reference LSTM implementation with the classic forget/input/output gates.
+{{?cell=PeepholeLSTM}}# PeepholeLSTM: LSTM whose gates also read the cell state directly (peephole connections).
+{{?cell=MultiplicativeLSTM}}# MultiplicativeLSTM: LSTM with an input-dependent multiplicative transition for richer dynamics.
+{{?cell=WMCLSTM}}# WMCLSTM: Working-memory-connected LSTM that augments the cell with an external memory read.
+{{?cell=TLSTM}}# TLSTM: Typed LSTM variant from the unified RecurrentLayers formulation.
+{{?cell=MGU}}# MGU: Minimal Gated Unit: a single forget gate, the lightest gated recurrent cell.
+{{?cell=LiGRU}}# LiGRU: Light Gated Recurrent Unit: drops the reset gate and uses ReLU + batch norm.
+{{?cell=LightRU}}# LightRU: Light Recurrent Unit with a single gate and a simplified candidate update.
+{{?cell=UGRNN}}# UGRNN: Update-Gate RNN: a GRU-like cell with only an update gate.
+{{?cell=MinimalRNN}}# MinimalRNN: Minimal RNN: an encoded input combined with a single update gate.
+{{?cell=JANET}}# JANET: Just Another NETwork: an LSTM stripped down to only the forget gate.
+{{?cell=TGRU}}# TGRU: Typed GRU variant from the unified RecurrentLayers formulation.
+{{?cell=RAN}}# RAN: Recurrent Additive Network: gated, purely additive memory with no tanh squashing.
+{{?cell=ATR}}# ATR: Addition-subtraction Twin-gated Recurrent cell sharing a single weight matrix.
+{{?cell=SGRN}}# SGRN: Simple Gated Recurrent Network with a single input-driven gate.
+{{?cell=STAR}}# STAR: Stackable Recurrent cell designed to train very deep recurrent stacks.
+{{?cell=IntersectionRNN}}# IntersectionRNN: Intersection RNN with separate gates for the recurrent and feed-forward paths.
+{{?cell=NAS}}# NAS: Cell discovered by neural architecture search over recurrent topologies.
+{{?cell=MUT1}}# MUT1: Mutated cell #1 from an evolutionary search over gated architectures.
+{{?cell=MUT2}}# MUT2: Mutated cell #2 from an evolutionary search over gated architectures.
+{{?cell=MUT3}}# MUT3: Mutated cell #3 from an evolutionary search over gated architectures.
+{{?cell=IndRNN}}# IndRNN: Independently RNN: element-wise recurrence so neurons can be stacked deeply.
+{{?cell=RHN}}# RHN: Recurrent Highway Network: multiple highway transforms per time step.
+{{?cell=SCRN}}# SCRN: Structurally Constrained RN with a slow-changing context layer for long memory.
+{{?cell=TRNN}}# TRNN: Typed vanilla RNN from the unified RecurrentLayers formulation.
+{{?cell=coRNN}}# coRNN: Coupled Oscillatory RNN: a network of damped oscillators for long dependencies.
+{{?cell=UnICORNN}}# UnICORNN: Undamped Independent Controlled Oscillatory RNN with provable gradient stability.
+{{?cell=LEM}}# LEM: Long Expressive Memory: a multiscale ODE-based cell for long-range dependencies.
+{{?cell=AntisymmetricRNN}}# AntisymmetricRNN: Antisymmetric RNN whose stable ODE discretisation preserves gradients.
+{{?cell=GatedAntisymmetricRNN}}# GatedAntisymmetricRNN: Antisymmetric RNN with an added gate controlling the stable dynamics.
+{{?cell=CFN}}# CFN: Chaos-Free Network: simple gated dynamics with provably non-chaotic behaviour.
+{{?cell=FastRNN}}# FastRNN: FastRNN: a residual connection with two scalars for cheap, stable training.
+{{?cell=FastGRNN}}# FastGRNN: FastGRNN: gated extension of FastRNN with low-rank, quantised weights.
+{{?cell=BR}}# BR: Bistable Recurrent cell whose neurons settle into two stable states.
+{{?cell=NBR}}# NBR: Recurrently-connected Bistable Recurrent cell for long-term memory.
+{{?cell=MiRU1}}# MiRU1: Minimal Recurrent Unit variant #1 with a single lightweight gate.
+{{?cell=MiRU2}}# MiRU2: Minimal Recurrent Unit variant #2 with a single lightweight gate.
+using Lux, LuxRecurrentLayers, Random
+
+rng = Random.default_rng()  # reproducible initialisation
+input_size  = {{inputsize}}  # input features per time step
+hidden_size = {{hiddensize}}  # recurrent state width
+output_size = {{outputsize}}  # prediction dimension
+
+model = Chain(
+    Recurrence({{cell}}Cell(input_size => hidden_size)),  # wrap the cell; returns the last state
+    Dense(hidden_size => output_size),
+)
+
+ps, st = Lux.setup(rng, model)  # explicit parameters and state
+
+y_hat, st = model({{xvar}}, ps, st)  # {{xvar}}: (input_size, T, batch)
+{{?cell=OriginalLSTM|PeepholeLSTM|MGU|LiGRU|MinimalRNN|IndRNN|RAN|coRNN|FastGRNN}}
+{{?cell=OriginalLSTM|PeepholeLSTM|MGU|LiGRU|MinimalRNN|IndRNN|RAN|coRNN|FastGRNN}}using Optimisers, Zygote
+{{?cell=OriginalLSTM|PeepholeLSTM|MGU|LiGRU|MinimalRNN|IndRNN|RAN|coRNN|FastGRNN}}opt_state = Optimisers.setup(Adam(1f-3), ps)
+{{?cell=OriginalLSTM|PeepholeLSTM|MGU|LiGRU|MinimalRNN|IndRNN|RAN|coRNN|FastGRNN}}loss(model, ps, st, {{xvar}}, {{yvar}}) = Lux.MSELoss()(model, ps, st, ({{xvar}}, {{yvar}}))
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "hidden-heatmap"
+label = "Hidden State Heatmap"
+desc = "How each hidden unit evolves over the time steps of the first sequence"
+code = '''
+using Plots
+{{?model=flux}}H = rnn({{xvar}})  # (hidden_size, T)
+{{?model=lux}}rnn_seq = Recurrence({{cell}}Cell(input_size => hidden_size); return_sequence=true)
+{{?model=lux}}ps_seq, st_seq = Lux.setup(rng, rnn_seq)
+{{?model=lux}}H_steps, _ = rnn_seq({{xvar}}, ps_seq, st_seq)
+{{?model=lux}}H = reduce(hcat, [h[:, 1] for h in H_steps])  # (hidden_size, T)
+heatmap(H, xlabel="time step", ylabel="hidden unit", title="Hidden state")
+'''
+
+[[actionGroups.actions]]
+id = "pred-vs-target"
+label = "Predictions vs Targets"
+desc = "Scatter of the model predictions against the targets"
+code = '''
+using Plots
+{{?model=flux}}y_pred = predict({{xvar}})
+{{?model=lux}}y_pred, _ = model({{xvar}}, ps, Lux.testmode(st))
+scatter(vec({{yvar}}), vec(y_pred), xlabel="target", ylabel="prediction", legend=false)
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "param-count"
+label = "Parameter Count"
+desc = "Number of trainable parameters in the model"
+code = '''
+{{?model=flux}}println("Parameters: ", sum(length, Flux.trainables((rnn, readout))))
+{{?model=lux}}println("Parameters: ", Lux.parameterlength(model))
+'''
+
+[[actionGroups.actions]]
+id = "gradient-norm"
+label = "Gradient Norm"
+desc = "Size of the loss gradient, to spot vanishing or exploding gradients"
+code = '''
+using Functors
+{{?model=flux}}grads = Flux.gradient(m -> Flux.mse(m[2](m[1]({{xvar}})[:, end]), {{yvar}}), (rnn, readout))[1]
+{{?model=lux}}using Zygote
+{{?model=lux}}grads = Zygote.gradient(p -> first(Lux.MSELoss()(model, p, st, ({{xvar}}, {{yvar}}))), ps)[1]
+norm2 = sum(g -> g isa AbstractArray ? sum(abs2, g) : 0.0, Functors.fleaves(grads))
+println("Gradient norm: ", sqrt(norm2))
+'''
+
+[[actionGroups.actions]]
+id = "output-shape"
+label = "Output Shapes"
+desc = "Check the shape of the recurrent output and of the prediction"
+code = '''
+{{?model=flux}}println("Hidden states: ", size(rnn({{xvar}})))
+{{?model=flux}}println("Prediction:    ", size(predict({{xvar}})))
+{{?model=lux}}println("Prediction: ", size(first(model({{xvar}}, ps, st))))
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "predict-new"
+label = "Predict New Sequences"
+desc = "Apply the model to new input sequences"
+code = '''
+{{?model=flux}}y_new = predict(X_new)
+{{?model=lux}}y_new, _ = model(X_new, ps, Lux.testmode(st))
+'''
+
+[[actionGroups.actions]]
+id = "validation-loss"
+label = "Validation Loss"
+desc = "Mean squared error on held-out sequences"
+code = '''
+{{?model=flux}}println("Validation MSE: ", Flux.mse(predict(X_val), y_val))
+{{?model=lux}}y_val_hat, _ = model(X_val, ps, Lux.testmode(st))
+{{?model=lux}}println("Validation MSE: ", Lux.MSELoss()(y_val_hat, y_val))
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "vs-lstm"
+label = "Size vs LSTM"
+desc = "Compare the parameter count with a standard LSTM of the same width"
+code = '''
+{{?model=flux}}lstm = LSTM(input_size => hidden_size)
+{{?model=flux}}println("{{cell}}: ", sum(length, Flux.trainables(rnn)), " parameters")
+{{?model=flux}}println("LSTM: ", sum(length, Flux.trainables(lstm)), " parameters")
+{{?model=lux}}lstm = Chain(Recurrence(LSTMCell(input_size => hidden_size)), Dense(hidden_size => output_size))
+{{?model=lux}}println("{{cell}}: ", Lux.parameterlength(model), " parameters")
+{{?model=lux}}println("LSTM: ", Lux.parameterlength(lstm), " parameters")
+'''
+
+[[actionGroups.actions]]
+id = "vs-gru"
+label = "Size vs GRU"
+desc = "Compare the parameter count with a standard GRU of the same width"
+code = '''
+{{?model=flux}}gru = GRU(input_size => hidden_size)
+{{?model=flux}}println("{{cell}}: ", sum(length, Flux.trainables(rnn)), " parameters")
+{{?model=flux}}println("GRU: ", sum(length, Flux.trainables(gru)), " parameters")
+{{?model=lux}}gru = Chain(Recurrence(GRUCell(input_size => hidden_size)), Dense(hidden_size => output_size))
+{{?model=lux}}println("{{cell}}: ", Lux.parameterlength(model), " parameters")
+{{?model=lux}}println("GRU: ", Lux.parameterlength(gru), " parameters")
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "input-sensitivity"
+label = "Input Sensitivity"
+desc = "Gradient of the prediction with respect to each input feature and time step"
+code = '''
+using Plots
+{{?model=flux}}gx = Flux.gradient(x -> sum(predict(x)), {{xvar}})[1]
+{{?model=lux}}using Zygote
+{{?model=lux}}gx = Zygote.gradient(x -> sum(first(model(x, ps, st))), {{xvar}})[1][:, :, 1]
+heatmap(abs.(gx), xlabel="time step", ylabel="input feature", title="Input sensitivity")
+'''
+
+[[actionGroups.actions]]
+id = "final-state"
+label = "Final Hidden State"
+desc = "The hidden state the readout layer sees after the last time step"
+code = '''
+{{?model=flux}}h_final = rnn({{xvar}})[:, end]
+{{?model=lux}}h_final, _ = Recurrence({{cell}}Cell(input_size => hidden_size))({{xvar}}, ps.layer_1, st.layer_1)
+println("Final hidden state: ", h_final)
+'''
