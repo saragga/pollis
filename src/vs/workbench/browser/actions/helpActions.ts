@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { localize, localize2 } from '../../../nls.js';
+import { ILocalizedString, localize, localize2 } from '../../../nls.js';
 import product from '../../../platform/product/common/product.js';
 import { isMacintosh, isLinux, language, isWeb } from '../../../base/common/platform.js';
 import { FileAccess, AppResourcePath } from '../../../base/common/network.js';
@@ -468,4 +468,139 @@ MenuRegistry.appendMenuItem(MenuId.MenubarHelpMenu, {
 		title: localize({ key: 'miWelcome', comment: ['&& denotes a mnemonic'] }, "&&Welcome")
 	},
 	order: 1
+});
+
+/** The Help > Documentation, Video Tutorials and Notebook Lectures submenus. */
+const MenubarHelpDocumentationMenu = new MenuId('MenubarHelpDocumentationMenu');
+const MenubarHelpVideoTutorialsMenu = new MenuId('MenubarHelpVideoTutorialsMenu');
+const MenubarHelpNotebookLecturesMenu = new MenuId('MenubarHelpNotebookLecturesMenu');
+
+MenuRegistry.appendMenuItem(MenuId.MenubarHelpMenu, {
+	group: '2_welcome',
+	title: localize({ key: 'miDocumentationMenu', comment: ['&& denotes a mnemonic'] }, "&&Documentation"),
+	submenu: MenubarHelpDocumentationMenu,
+	order: 2
+});
+
+MenuRegistry.appendMenuItem(MenuId.MenubarHelpMenu, {
+	group: '2_welcome',
+	title: localize({ key: 'miVideoTutorialsMenu', comment: ['&& denotes a mnemonic'] }, "&&Video Tutorials"),
+	submenu: MenubarHelpVideoTutorialsMenu,
+	order: 3
+});
+
+MenuRegistry.appendMenuItem(MenuId.MenubarHelpMenu, {
+	group: '2_welcome',
+	title: localize({ key: 'miNotebookLecturesMenu', comment: ['&& denotes a mnemonic'] }, "&&Notebook Lectures"),
+	submenu: MenubarHelpNotebookLecturesMenu,
+	order: 4
+});
+
+/** A Help submenu entry that opens a web page; `title` is its Command Palette name. */
+interface IHelpLink {
+	readonly id: string;
+	readonly title: ILocalizedString;
+	readonly mnemonicTitle: string;
+	readonly menu: MenuId;
+	readonly order: number;
+	readonly url: string;
+}
+
+function registerHelpLink(link: IHelpLink): void {
+	registerAction2(class extends Action2 {
+		constructor() {
+			super({
+				id: link.id,
+				title: { ...link.title, mnemonicTitle: link.mnemonicTitle },
+				category: Categories.Help,
+				f1: true,
+				menu: { id: link.menu, group: '1_links', order: link.order }
+			});
+		}
+
+		run(accessor: ServicesAccessor): void {
+			accessor.get(IOpenerService).open(URI.parse(link.url));
+		}
+	});
+}
+
+registerHelpLink({
+	id: 'pollis.action.openCodeOssDocumentation',
+	title: localize2('openCodeOssDocumentation', "Code - OSS Documentation"),
+	mnemonicTitle: localize({ key: 'miCodeOssDocumentation', comment: ['&& denotes a mnemonic'] }, "&&Code - OSS"),
+	menu: MenubarHelpDocumentationMenu,
+	order: 1,
+	url: 'https://code.visualstudio.com/docs#vscode'
+});
+
+registerHelpLink({
+	id: 'pollis.action.openJuliaDocumentation',
+	title: localize2('openJuliaDocumentation', "Julia Programming Language Documentation"),
+	mnemonicTitle: localize({ key: 'miJuliaDocumentation', comment: ['&& denotes a mnemonic'] }, "&&Julia Programming Language"),
+	menu: MenubarHelpDocumentationMenu,
+	order: 2,
+	url: 'https://docs.julialang.org/en/v1/'
+});
+
+registerHelpLink({
+	id: 'pollis.action.openJuliaVSCodeDocumentation',
+	title: localize2('openJuliaVSCodeDocumentation', "Julia in VS Code Documentation"),
+	mnemonicTitle: localize({ key: 'miJuliaVSCodeDocumentation', comment: ['&& denotes a mnemonic'] }, "Julia in &&VS Code"),
+	menu: MenubarHelpDocumentationMenu,
+	order: 3,
+	url: 'https://www.julia-vscode.org/docs/stable/'
+});
+
+registerHelpLink({
+	id: 'pollis.action.openCodeOssVideoTutorials',
+	title: localize2('openCodeOssVideoTutorials', "Code - OSS Video Tutorials"),
+	mnemonicTitle: localize({ key: 'miCodeOssVideoTutorials', comment: ['&& denotes a mnemonic'] }, "&&Code - OSS"),
+	menu: MenubarHelpVideoTutorialsMenu,
+	order: 1,
+	url: 'https://code.visualstudio.com/docs/getstarted/introvideos'
+});
+
+registerHelpLink({
+	id: 'pollis.action.openJuliaVideoTutorials',
+	title: localize2('openJuliaVideoTutorials', "Julia Programming Language Video Tutorials"),
+	mnemonicTitle: localize({ key: 'miJuliaVideoTutorials', comment: ['&& denotes a mnemonic'] }, "&&Julia Programming Language"),
+	menu: MenubarHelpVideoTutorialsMenu,
+	order: 2,
+	url: 'https://www.youtube.com/user/JuliaLanguage'
+});
+
+registerHelpLink({
+	id: 'pollis.action.openJuliaAcademy',
+	title: localize2('openJuliaAcademy', "JuliaAcademy Courses"),
+	mnemonicTitle: localize({ key: 'miJuliaAcademy', comment: ['&& denotes a mnemonic'] }, "Julia&&Academy"),
+	menu: MenubarHelpVideoTutorialsMenu,
+	order: 3,
+	url: 'https://juliaacademy.com'
+});
+
+registerHelpLink({
+	id: 'pollis.action.openComputationalThinking',
+	title: localize2('openComputationalThinking', "MIT Computational Thinking (Pluto Notebooks)"),
+	mnemonicTitle: localize({ key: 'miComputationalThinking', comment: ['&& denotes a mnemonic'] }, "&&MIT Computational Thinking (Pluto)"),
+	menu: MenubarHelpNotebookLecturesMenu,
+	order: 1,
+	url: 'https://computationalthinking.mit.edu'
+});
+
+registerHelpLink({
+	id: 'pollis.action.openPlutoFeatured',
+	title: localize2('openPlutoFeatured', "Pluto Featured Notebooks"),
+	mnemonicTitle: localize({ key: 'miPlutoFeatured', comment: ['&& denotes a mnemonic'] }, "&&Pluto Featured Notebooks"),
+	menu: MenubarHelpNotebookLecturesMenu,
+	order: 2,
+	url: 'https://featured.plutojl.org'
+});
+
+registerHelpLink({
+	id: 'pollis.action.openQuantEconJulia',
+	title: localize2('openQuantEconJulia', "QuantEcon Julia Lectures (Jupyter Notebooks)"),
+	mnemonicTitle: localize({ key: 'miQuantEconJulia', comment: ['&& denotes a mnemonic'] }, "&&QuantEcon Julia Lectures (Jupyter)"),
+	menu: MenubarHelpNotebookLecturesMenu,
+	order: 3,
+	url: 'https://julia.quantecon.org'
 });
