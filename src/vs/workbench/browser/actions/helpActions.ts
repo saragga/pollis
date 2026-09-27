@@ -561,6 +561,15 @@ registerHelpLink({
 });
 
 registerHelpLink({
+	id: 'pollis.action.openJuliaHpcVideoTutorials',
+	title: localize2('openJuliaHpcVideoTutorials', "High Performance Computing in Julia Video Tutorials"),
+	mnemonicTitle: localize({ key: 'miJuliaHpcVideoTutorials', comment: ['&& denotes a mnemonic'] }, "&&High Performance Computing in Julia"),
+	menu: MenubarHelpVideoTutorialsMenu,
+	order: 3,
+	url: 'https://www.youtube.com/playlist?list=PLUAq6xQKFgGr39PiyrPk_C9dhBKvWcjUA'
+});
+
+registerHelpLink({
 	id: 'pollis.action.openComputationalThinking',
 	title: localize2('openComputationalThinking', "MIT Computational Thinking (Pluto Notebooks)"),
 	mnemonicTitle: localize({ key: 'miComputationalThinking', comment: ['&& denotes a mnemonic'] }, "&&MIT Computational Thinking (Pluto)"),
