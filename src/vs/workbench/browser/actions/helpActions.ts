@@ -470,10 +470,10 @@ MenuRegistry.appendMenuItem(MenuId.MenubarHelpMenu, {
 	order: 1
 });
 
-/** The Help > Documentation, Video Tutorials and Notebook Lectures submenus. */
+/** The Help > Documentation, Video Tutorials and Notebook Courses submenus. */
 const MenubarHelpDocumentationMenu = new MenuId('MenubarHelpDocumentationMenu');
 const MenubarHelpVideoTutorialsMenu = new MenuId('MenubarHelpVideoTutorialsMenu');
-const MenubarHelpNotebookLecturesMenu = new MenuId('MenubarHelpNotebookLecturesMenu');
+const MenubarHelpNotebookCoursesMenu = new MenuId('MenubarHelpNotebookCoursesMenu');
 
 MenuRegistry.appendMenuItem(MenuId.MenubarHelpMenu, {
 	group: '2_welcome',
@@ -491,8 +491,8 @@ MenuRegistry.appendMenuItem(MenuId.MenubarHelpMenu, {
 
 MenuRegistry.appendMenuItem(MenuId.MenubarHelpMenu, {
 	group: '2_welcome',
-	title: localize({ key: 'miNotebookLecturesMenu', comment: ['&& denotes a mnemonic'] }, "&&Notebook Lectures"),
-	submenu: MenubarHelpNotebookLecturesMenu,
+	title: localize({ key: 'miNotebookCoursesMenu', comment: ['&& denotes a mnemonic'] }, "&&Notebook Courses"),
+	submenu: MenubarHelpNotebookCoursesMenu,
 	order: 4
 });
 
@@ -543,15 +543,6 @@ registerHelpLink({
 });
 
 registerHelpLink({
-	id: 'pollis.action.openJuliaVSCodeDocumentation',
-	title: localize2('openJuliaVSCodeDocumentation', "Julia in VS Code Documentation"),
-	mnemonicTitle: localize({ key: 'miJuliaVSCodeDocumentation', comment: ['&& denotes a mnemonic'] }, "Julia in &&VS Code"),
-	menu: MenubarHelpDocumentationMenu,
-	order: 3,
-	url: 'https://www.julia-vscode.org/docs/stable/'
-});
-
-registerHelpLink({
 	id: 'pollis.action.openCodeOssVideoTutorials',
 	title: localize2('openCodeOssVideoTutorials', "Code - OSS Video Tutorials"),
 	mnemonicTitle: localize({ key: 'miCodeOssVideoTutorials', comment: ['&& denotes a mnemonic'] }, "&&Code - OSS"),
@@ -570,37 +561,19 @@ registerHelpLink({
 });
 
 registerHelpLink({
-	id: 'pollis.action.openJuliaAcademy',
-	title: localize2('openJuliaAcademy', "JuliaAcademy Courses"),
-	mnemonicTitle: localize({ key: 'miJuliaAcademy', comment: ['&& denotes a mnemonic'] }, "Julia&&Academy"),
-	menu: MenubarHelpVideoTutorialsMenu,
-	order: 3,
-	url: 'https://juliaacademy.com'
-});
-
-registerHelpLink({
 	id: 'pollis.action.openComputationalThinking',
 	title: localize2('openComputationalThinking', "MIT Computational Thinking (Pluto Notebooks)"),
 	mnemonicTitle: localize({ key: 'miComputationalThinking', comment: ['&& denotes a mnemonic'] }, "&&MIT Computational Thinking (Pluto)"),
-	menu: MenubarHelpNotebookLecturesMenu,
+	menu: MenubarHelpNotebookCoursesMenu,
 	order: 1,
 	url: 'https://computationalthinking.mit.edu'
-});
-
-registerHelpLink({
-	id: 'pollis.action.openPlutoFeatured',
-	title: localize2('openPlutoFeatured', "Pluto Featured Notebooks"),
-	mnemonicTitle: localize({ key: 'miPlutoFeatured', comment: ['&& denotes a mnemonic'] }, "&&Pluto Featured Notebooks"),
-	menu: MenubarHelpNotebookLecturesMenu,
-	order: 2,
-	url: 'https://featured.plutojl.org'
 });
 
 registerHelpLink({
 	id: 'pollis.action.openQuantEconJulia',
 	title: localize2('openQuantEconJulia', "QuantEcon Julia Lectures (Jupyter Notebooks)"),
 	mnemonicTitle: localize({ key: 'miQuantEconJulia', comment: ['&& denotes a mnemonic'] }, "&&QuantEcon Julia Lectures (Jupyter)"),
-	menu: MenubarHelpNotebookLecturesMenu,
-	order: 3,
+	menu: MenubarHelpNotebookCoursesMenu,
+	order: 2,
 	url: 'https://julia.quantecon.org'
 });
