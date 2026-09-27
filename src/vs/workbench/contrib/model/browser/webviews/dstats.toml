@@ -1,0 +1,449 @@
+# Descriptive Statistics Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/dstats.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Descriptive Statistics"
+viewType = "pollis.dstats"
+defaultModel = "summ"
+
+[[packages]]
+name = "StatsBase.jl"
+github = "https://github.com/JuliaStats/StatsBase.jl"
+
+[[packages]]
+name = "FreqTables.jl"
+github = "https://github.com/nalimilan/FreqTables.jl"
+
+[[packages]]
+name = "Statistics.jl"
+github = "https://github.com/JuliaStats/Statistics.jl"
+
+[[notebookSections]]
+label = "Basic"
+
+[[notebookSections.notebooks]]
+name = "Summary Statistics"
+file = "dstats/tutorial-01-summary-statistics.ipynb"
+bundled = true
+description = "Compute mean, median, std, quantiles, skewness and kurtosis with StatsBase.jl"
+
+[[notebookSections.notebooks]]
+name = "Frequency Tables"
+file = "dstats/tutorial-02-frequency-tables.ipynb"
+bundled = true
+description = "Build frequency and cross-tabulation tables for categorical data with FreqTables.jl"
+
+[[notebookSections]]
+label = "Advanced"
+
+[[notebookSections.notebooks]]
+name = "Correlation Analysis"
+file = "dstats/tutorial-03-correlation.ipynb"
+bundled = true
+description = "Compute and visualise Pearson and Spearman correlation matrices with Statistics.jl"
+
+[[wikis]]
+name = "Factsheet"
+file = "dstats/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "dstats/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "dstats/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "dstats/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "dstats/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "dstats/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Methods"
+
+[[wikis]]
+name = "Summary Stats"
+file = "dstats/summary-stats.md"
+bundled = true
+
+[[wikis]]
+name = "Frequency"
+file = "dstats/frequency.md"
+bundled = true
+
+[[wikis]]
+name = "Correlation"
+file = "dstats/correlation.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "StatsBase.jl: Basic Statistics for Julia"
+authors = "JuliaStats Contributors"
+year = 2023
+journal = "GitHub"
+url = "https://github.com/JuliaStats/StatsBase.jl"
+openAccess = true
+
+[[references]]
+title = "FreqTables.jl: Frequency Tables in Julia"
+authors = "Milan Bouchet-Valat"
+year = 2023
+journal = "GitHub"
+url = "https://github.com/nalimilan/FreqTables.jl"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Statistics"
+authors = "Freedman, David; Pisani, Robert; Purves, Roger"
+year = 2007
+journal = "W. W. Norton (4th ed.)"
+openAccess = false
+
+[[references]]
+title = "The Art of Statistics: Learning from Data"
+authors = "Spiegelhalter, David"
+year = 2019
+journal = "Pelican Books"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Note on Regression and Inheritance in the Case of Two Parents"
+authors = "Galton, Francis"
+year = 1889
+journal = "Proceedings of the Royal Society of London"
+doi = "10.1098/rspl.1888.0082"
+openAccess = true
+
+[[references]]
+title = "The Proof and Measurement of Association between Two Things"
+authors = "Spearman, Charles"
+year = 1904
+journal = "American Journal of Psychology"
+doi = "10.2307/1412159"
+openAccess = false
+
+[[models]]
+id = "summ"
+label = "Summary"
+
+[[models]]
+id = "freq"
+label = "Frequency"
+
+[[models]]
+id = "corr"
+label = "Correlation"
+
+[[bullets]]
+text = "Summary"
+detail = "central tendency, spread, and shape of a numeric variable: mean, median, standard deviation, quantiles, skewness, and kurtosis via StatsBase.jl"
+
+[[bullets]]
+text = "Frequency"
+detail = "count and proportion tables for categorical or discrete data; cross-tabulation for two variables via FreqTables.jl"
+
+[[bullets]]
+text = "Correlation"
+detail = "pairwise Pearson or Spearman correlation and covariance matrix for a numeric data matrix via Statistics.jl"
+
+[[decisionRows]]
+task = "Summary"
+context = "Numeric vector"
+purpose = "Describe the centre, spread and shape of one variable before modelling it"
+
+[[decisionRows]]
+task = "Frequency"
+context = "Categorical or discrete vector"
+purpose = "Count how often each level occurs and compare level proportions"
+
+[[decisionRows]]
+task = "Correlation (Pearson)"
+context = "Numeric matrix, roughly linear relations"
+purpose = "Measure linear association between every pair of variables"
+
+[[decisionRows]]
+task = "Correlation (Spearman)"
+context = "Numeric or ordinal matrix, outliers or monotonic curves"
+purpose = "Measure rank (monotonic) association that is robust to outliers"
+
+[[inputs]]
+id = "data"
+label = "Data"
+tooltip = "Variable name of a numeric vector (Summary/Frequency) or matrix with observations in rows and variables in columns (Correlation)"
+default = "x"
+
+[[inputs]]
+id = "method"
+label = "Method"
+tooltip = "Pearson measures linear association; Spearman measures monotonic association and is robust to outliers"
+kind = "select"
+models = ["corr"]
+
+[[inputs.options]]
+value = "pearson"
+label = "Pearson"
+
+[[inputs.options]]
+value = "spearman"
+label = "Spearman"
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.summ]
+# Box plot
+svg = '''
+var s = '<line x1="27" y1="14" x2="27" y2="26" stroke="currentColor" stroke-width="1"/>';
+s += '<line x1="20" y1="14" x2="34" y2="14" stroke="currentColor" stroke-width="1"/>';
+s += '<rect x="15" y="26" width="24" height="30" fill="currentColor" fill-opacity="0.2" stroke="currentColor" stroke-width="1.2"/>';
+s += '<line x1="15" y1="38" x2="39" y2="38" stroke="currentColor" stroke-width="2"/>';
+s += '<line x1="27" y1="56" x2="27" y2="70" stroke="currentColor" stroke-width="1"/>';
+s += '<line x1="20" y1="70" x2="34" y2="70" stroke="currentColor" stroke-width="1"/>';
+return s;
+'''
+
+[miniCharts.freq]
+# Frequency bars
+svg = '''
+var s = '<line x1="6" y1="74" x2="48" y2="74" stroke="currentColor" stroke-width="1"/>';
+var h = [30, 18, 44, 26, 14];
+for (var i = 0; i < h.length; i++) {
+	s += '<rect x="' + (8 + i * 8) + '" y="' + (74 - h[i]) + '" width="6" height="' + h[i] + '" fill="currentColor" opacity="0.45"/>';
+}
+return s;
+'''
+
+[miniCharts.corr]
+# 3 x 3 correlation matrix
+svg = '''
+var v = [[1, 0.8, -0.3], [0.8, 1, 0.5], [-0.3, 0.5, 1]];
+var s = '';
+for (var r = 0; r < 3; r++) {
+	for (var c = 0; c < 3; c++) {
+		s += '<rect x="' + (6 + c * 14) + '" y="' + (22 + r * 14) + '" width="13" height="13" fill="currentColor" opacity="' + (Math.abs(v[r][c]) * 0.6).toFixed(2) + '"/>';
+	}
+}
+return s;
+'''
+
+[[codeBranches]]
+model = "summ"
+code = '''
+using StatsBase, Statistics
+
+s = summarystats({{data}})  # min, Q1, median, mean, Q3, max
+println(s)  # print summary table
+
+println("Mean:     ", mean({{data}}))  # arithmetic mean
+println("Std:      ", std({{data}}))  # sample standard deviation
+println("Median:   ", median({{data}}))  # 50th percentile
+println("Q1 / Q3:  ", quantile({{data}}, [0.25, 0.75]))  # interquartile range endpoints
+println("Skewness: ", skewness({{data}}))  # third standardised moment
+println("Kurtosis: ", kurtosis({{data}}))  # excess kurtosis (0 for normal)
+println("Missing:  ", count(ismissing, {{data}}))  # number of missing values
+'''
+
+[[codeBranches]]
+model = "freq"
+code = '''
+using FreqTables, StatsBase
+
+ft = freqtable({{data}})  # frequency table (counts per level)
+println(ft)  # display counts
+
+pt = prop(ft)  # proportions (sums to 1)
+println(pt)  # display proportions
+
+cm = countmap({{data}})  # Dict mapping each level to its count
+println(cm)  # display count dictionary
+'''
+
+[[codeBranches]]
+model = "corr"
+code = '''
+using Statistics, StatsBase
+
+{{?method=pearson}}C = cor({{data}})  # Pearson correlation matrix (p × p)
+{{?method=spearman}}C = corspearman({{data}})  # Spearman rank correlation matrix (p × p)
+V = cov({{data}})  # sample covariance matrix
+
+println("Correlation matrix:\n", C)  # print correlation matrix
+println("Covariance matrix:\n", V)  # print covariance matrix
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "boxplot"
+label = "Box Plot"
+desc = "Five-number summary as a box-and-whisker plot"
+code = '''
+using StatsPlots
+
+boxplot({{data}}, label=false, ylabel="Value")  # box spans Q1-Q3; line is median; whiskers at 1.5 IQR
+'''
+
+[[actionGroups.actions]]
+id = "violin"
+label = "Violin Plot"
+desc = "Kernel density mirrored around the axis"
+code = '''
+using StatsPlots
+
+violin({{data}}, label=false, ylabel="Value")  # violin shows full density shape
+boxplot!({{data}}, label=false, fillalpha=0.3)  # overlay box plot for quantile reference
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "outliers-iqr"
+label = "Outlier Check"
+desc = "Flag values outside 1.5 IQR from Q1/Q3"
+code = '''
+using StatsBase
+
+q1, q3 = quantile({{data}}, [0.25, 0.75])  # first and third quartiles
+iqr    = q3 - q1  # interquartile range
+lo, hi = q1 - 1.5 * iqr, q3 + 1.5 * iqr  # Tukey fence bounds
+outliers = {{data}}[{{data}} .< lo .|| {{data}} .> hi]  # values outside fences
+println("Outliers: ", outliers)  # print flagged values
+'''
+
+[[actionGroups.actions]]
+id = "missing-values"
+label = "Missing Values"
+desc = "Count and proportion of missing entries"
+code = '''
+n_miss = count(ismissing, {{data}})  # total missing count
+p_miss = n_miss / length({{data}})  # fraction missing
+println("Missing: ", n_miss, " (", round(100p_miss; digits=1), "%)")  # print summary
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "zscore"
+label = "Z-Score Standardise"
+desc = "Subtract mean and divide by standard deviation"
+code = '''
+using StatsBase
+
+z = zscore({{data}})  # zero mean, unit variance
+println("Mean: ", mean(z), "  Std: ", std(z))  # verify standardisation
+'''
+
+[[actionGroups.actions]]
+id = "minmax"
+label = "Min-Max Scale"
+desc = "Rescale to [0, 1] interval"
+code = '''
+xmin, xmax = minimum({{data}}), maximum({{data}})  # data range
+x_scaled   = ({{data}} .- xmin) ./ (xmax - xmin)  # rescale to [0, 1]
+println("Range: [", minimum(x_scaled), ", ", maximum(x_scaled), "]")  # verify bounds
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "two-groups"
+label = "Two Groups"
+desc = "Side-by-side summary for two subsets"
+code = '''
+using StatsBase
+
+g1, g2 = {{data}}[mask], {{data}}[.!mask]  # split by Boolean mask
+println("Group 1: ", summarystats(g1))  # summary for group 1
+println("Group 2: ", summarystats(g2))  # summary for group 2
+'''
+
+[[actionGroups.actions]]
+id = "rolling-stats"
+label = "Rolling Statistics"
+desc = "Sliding-window mean and std over a time series"
+code = '''
+using StatsBase
+
+w       = 20  # window size
+n       = length({{data}})  # series length
+rmean   = [mean({{data}}[i:i+w-1]) for i in 1:n-w+1]  # rolling mean
+rstd    = [std({{data}}[i:i+w-1])  for i in 1:n-w+1]  # rolling standard deviation
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "skew-kurt"
+label = "Shape Interpretation"
+desc = "Rule-of-thumb interpretation of skewness and kurtosis"
+code = '''
+using StatsBase
+
+sk = skewness({{data}})  # positive = right-tailed; negative = left-tailed
+ku = kurtosis({{data}})  # excess kurtosis: >0 heavy-tailed; <0 light-tailed
+
+println("Skewness: ", round(sk; digits=3))  # print with interpretation hint
+println("Kurtosis: ", round(ku; digits=3))  # print with interpretation hint
+println(abs(sk) < 0.5 ? "Approx. symmetric" : sk > 0 ? "Right-skewed" : "Left-skewed")  # skewness rule of thumb
+'''
+
+[[actionGroups.actions]]
+id = "percentile-report"
+label = "Percentile Report"
+desc = "Full percentile profile at common quantile levels"
+code = '''
+using StatsBase
+
+pcts = [0.01, 0.05, 0.10, 0.25, 0.50, 0.75, 0.90, 0.95, 0.99]  # percentile levels
+vals = quantile({{data}}, pcts)  # values at each percentile
+for (p, v) in zip(pcts, vals)
+    println(lpad(string(round(Int, 100p)), 3), "th pct: ", round(v; digits=4))
+end
+'''

@@ -24,6 +24,11 @@ export interface WebviewParts {
 	readonly actionsJs: string;
 	/** The model-toggle (tab) buttons, e.g. `<button class="toggle-btn active" data-model="...">…</button>`. */
 	readonly togglesJs: string;
+	/**
+	 * Parameter inputs shown between the model toggles and the Example Code box (see `buildInputsHtml`
+	 * in scaffoldParts.ts). Code lines built with `codeLine()` read them through `{{id}}` placeholders.
+	 */
+	readonly inputsHtml?: string;
 	/** Optional CSS rule for this webview's (legacy) hidden param rows. Default: none. */
 	readonly hiddenRowCss?: string;
 	/** Start the illustration pane collapsed (e.g. webviews with no gallery yet). Default: open. */
@@ -193,7 +198,8 @@ export function buildWebviewHtml(parts: WebviewParts): string {
 		.code-edit-wrap { position: relative; display: none; }
 		#sec-code.editing .code-edit-wrap, #right-panel.editing .code-edit-wrap { display: block; }
 		#sec-code.editing #code-preview, #right-panel.editing #panel-code { display: none; }
-		#sec-code.editing .model-toggle { pointer-events: none; opacity: 0.5; }
+		#sec-code.editing .model-toggle, #sec-code.editing .scaffold-inputs { pointer-events: none; opacity: 0.5; }
+		.scaffold-inputs .form-row[hidden], .scaffold-input[hidden] { display: none; }
 		.code-edit { display: block; width: 100%; min-height: 120px; background: var(--vscode-input-background); color: var(--vscode-input-foreground); border: 1px solid var(--vscode-focusBorder); outline: 1px solid var(--vscode-focusBorder); border-radius: 0 0 6px 6px; padding: 20px; padding-right: 80px; font-family: 'Consolas', 'Monaco', 'Courier New', monospace; font-size: 12px; line-height: 1.6; white-space: pre; overflow: auto; resize: vertical; tab-size: 4; }
 		.code-edit-label { position: absolute; top: 8px; right: 12px; font-size: 11px; color: var(--vscode-textLink-foreground); pointer-events: none; }
 		.code-custom-tag { display: none; margin-left: 4px; font-size: 11px; font-weight: 500; line-height: 16px; color: var(--vscode-editorWarning-foreground); border: 1px solid var(--vscode-editorWarning-foreground); border-radius: 10px; padding: 0 8px; }
@@ -334,7 +340,7 @@ ${parts.decisionRows}</tbody>
 		<div class="model-toggle" id="model-group">
 ${parts.togglesJs}
 		</div>
-
+${parts.inputsHtml ? `\t\t<div class="scaffold-inputs" id="scaffold-inputs">\n${parts.inputsHtml}\n\t\t</div>\n` : ''}
 		<div class="code-preview-wrapper">
 			<div class="code-preview" id="code-preview"></div>
 			<div class="code-edit-wrap">
@@ -435,6 +441,47 @@ ${parts.headScriptJs ?? ''}
 		function blank()     { return '<div class="code-blank"></div>'; }
 		function val(id, fb) { var el = document.getElementById(id); return esc((el && el.value.trim()) || fb); }
 		function sel(id, fb) { var el = document.getElementById(id); return esc((el && el.value) || fb); }
+
+		// ── Parameter inputs ─────────────────────────────────────────────────
+		// The raw value of input <id>: a select's choice, or a text input's value (its default when empty).
+		function inputRaw(id) {
+			if (id === 'model') { return currentModel; }
+			var el = document.getElementById('in-' + id);
+			if (!el) { return ''; }
+			return el.tagName === 'SELECT' ? el.value : (el.value.trim() || el.dataset.default || '');
+		}
+		// One line of declarative code: an optional {{?id=a|b}} / {{?id!=a|b}} guard, then {{id}} placeholders.
+		function holds(id, op, values) { return (values.split('|').indexOf(inputRaw(id)) >= 0) !== (op === '!='); }
+		function codeLine(s) {
+			var m = /^[{][{][?]([\\w-]+)(!?=)([^}]*)[}][}] ?/.exec(s);
+			if (m) {
+				if (!holds(m[1], m[2], m[3])) { return ''; }
+				s = s.slice(m[0].length);
+			}
+			if (!s) { return blank(); }
+			return line(esc(s).replace(/[{][{]([\\w-]+)[}][}]/g, function(_, id) { return esc(inputRaw(id)); }));
+		}
+		function availableFor(el) { return !el.dataset.models || el.dataset.models.split(' ').indexOf(currentModel) >= 0; }
+		function whenHolds(el) {
+			var m = el.dataset.when && /^([\\w-]+)(!?=)(.*)$/.exec(el.dataset.when);
+			return !m || holds(m[1], m[2], m[3]);
+		}
+		// Show the inputs (and select choices) of the current model and input values; a hidden choice falls back to the first available one.
+		function applyInputsForModel() {
+			document.querySelectorAll('.scaffold-input').forEach(function(g) { g.hidden = !availableFor(g) || !whenHolds(g); });
+			document.querySelectorAll('.scaffold-inputs .form-row').forEach(function(r) { r.hidden = !r.querySelector('.scaffold-input:not([hidden])'); });
+			document.querySelectorAll('.scaffold-input select').forEach(function(select) {
+				var first = null;
+				Array.prototype.forEach.call(select.options, function(o) {
+					var ok = availableFor(o);
+					o.hidden = !ok;
+					o.disabled = !ok;
+					if (ok && !first) { first = o; }
+				});
+				var current = select.options[select.selectedIndex];
+				if (first && (!current || current.disabled)) { first.selected = true; }
+			});
+		}
 
 		// ── Mini chart SVG builders (all coordinates within a 54 × 86 box) ──
 
@@ -600,6 +647,7 @@ ${parts.illustrationOverrideJs ?? ''}			var activeIdx = MODELS.indexOf(currentMo
 			if (!MODELS.includes(model) || editingCode) { return; }
 			resetRestoreButton();
 			currentModel = model;
+			applyInputsForModel();
 ${parts.setModelExtraJs ?? ''}			document.querySelectorAll('#model-group .toggle-btn').forEach(function(b) {
 				b.classList.toggle('active', b.dataset.model === model);
 			});
@@ -611,6 +659,15 @@ ${parts.setModelExtraJs ?? ''}			document.querySelectorAll('#model-group .toggle
 			var btn = e.target.closest('[data-model]');
 			if (btn) { setModel(btn.dataset.model); }
 		});
+
+		// Typing in an input refreshes the example and the open Next Steps example.
+		function onInputsChanged() {
+			applyInputsForModel();
+			if (!editingCode) { updateCodePreview(); }
+			if (panelAction && !panelEditing && document.getElementById('panel-code')) { renderRightCode(panelAction, panelNav.actions, panelNav.title); }
+		}
+		var inputsBox = document.getElementById('scaffold-inputs');
+		if (inputsBox) { inputsBox.addEventListener('input', onInputsChanged); }   // fires for text inputs and selects
 
 		document.querySelector('.subtitle').addEventListener('click', function(e) {
 			var link = e.target.closest('.plot-link');

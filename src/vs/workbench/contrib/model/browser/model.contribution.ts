@@ -18,7 +18,8 @@ import { ITerminalService } from '../../terminal/browser/terminal.js';
 import { openNllsWebview } from './commands/nlls.command.js';
 import { openLmWebview } from './commands/lm.command.js';
 import { openMmWebview } from './commands/mm.command.js';
-import { openGlmWebview } from './commands/glm.command.js';
+import { GLM_PANEL } from './commands/glm.command.js';
+import { openScaffoldWebview } from './commands/scaffold.command.js';
 import { openLmmWebview } from './commands/lmm.command.js';
 import { openGlmmWebview } from './commands/glmm.command.js';
 import { openLassoWebview } from './commands/lasso.command.js';
@@ -1401,16 +1402,7 @@ CommandsRegistry.registerCommand('chiara.statistics.nn.fnn', (accessor: Services
 	accessor.get(INotificationService),
 ));
 
-const GLM_SERVICES = (accessor: ServicesAccessor, initialFamily?: string) => openGlmWebview(
-	accessor.get(IWebviewWorkbenchService),
-	accessor.get(IOpenerService),
-	accessor.get(IEditorService),
-	accessor.get(IQuickInputService),
-	accessor.get(ICommandService),
-	accessor.get(IClipboardService),
-	accessor.get(INotificationService),
-	initialFamily
-);
+const GLM_SERVICES = (accessor: ServicesAccessor, initialFamily?: string) => openScaffoldWebview(accessor, GLM_PANEL, initialFamily);
 
 CommandsRegistry.registerCommand('chiara.statistics.glm', accessor => GLM_SERVICES(accessor));
 CommandsRegistry.registerCommand('chiara.statistics.glm.binary', accessor => GLM_SERVICES(accessor, 'Bernoulli'));

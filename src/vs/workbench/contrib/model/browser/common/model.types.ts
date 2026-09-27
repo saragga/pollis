@@ -122,10 +122,19 @@ export interface IModelMiniChart {
 	readonly svg: string;
 }
 
-/** A plain-text code example for a model toggle (Julia source). */
+/**
+ * A plain-text code example for a model toggle (Julia source). `model = "*"` is the fallback
+ * branch for every model without its own. The code may use input placeholders (see {@link IModelInput}).
+ */
 export interface IModelCodeBranch {
 	readonly model: string;
 	readonly code: string;
+}
+
+/** A model toggle (tab) of a scaffold panel, in display order (declared as `[[models]]` in TOML). */
+export interface IModelToggle {
+	readonly id: string;
+	readonly label: string;
 }
 
 /** A single action inside a Next Steps action group. */
@@ -141,4 +150,53 @@ export interface IModelActionGroup {
 	readonly id: string;
 	readonly label: string;
 	readonly actions: IModelAction[];
+}
+
+/** One choice of a `select` input. `models` limits it to those model toggles (default: all). */
+export interface IModelInputOption {
+	readonly value: string;
+	readonly label: string;
+	readonly models?: string[];
+}
+
+/**
+ * A parameter input shown above the Example Code box (declared as `[[inputs]]` in TOML).
+ * Code branches and Next Steps examples reference it as `{{id}}`, which becomes the typed
+ * value (or `default` when empty) for a text input and the selected value for a select.
+ * A code line starting with `{{?id=a|b}}` (or `{{?id!=a|b}}`) is kept only when the
+ * input's value is (or is not) one of the listed values; `{{model}}` is the current model.
+ */
+export interface IModelInput {
+	readonly id: string;
+	readonly label: string;
+	readonly tooltip?: string;
+	/** Default: `text`. */
+	readonly kind?: 'text' | 'select';
+	/** Placeholder and fallback value of a text input. */
+	readonly default?: string;
+	/** The choices of a select input; the first one available for the model is the default. */
+	readonly options?: IModelInputOption[];
+	/** Show the input only for these model toggles. Default: all. */
+	readonly models?: string[];
+	/** Show the input only while another input matches, as `id=a|b` or `id!=a|b`. */
+	readonly when?: string;
+	/** Start a new form row with this input. */
+	readonly newRow?: boolean;
+}
+
+/** The declarative content of a panel built on the shared scaffold (generated from its TOML). */
+export interface IScaffoldPanelData {
+	readonly packages: IModelPackage[];
+	readonly notebooks: IModelNotebook[];
+	readonly notebookSections: IModelNotebookSection[];
+	readonly wikis: IModelWiki[];
+	readonly references: IModelReference[];
+	/** The model toggles. Default: one per code branch, labelled with its capitalised model id. */
+	readonly models?: IModelToggle[];
+	readonly bullets?: IModelBullet[];
+	readonly decisionRows?: IModelDecisionRow[];
+	readonly miniCharts?: IModelMiniChart[];
+	readonly codeBranches?: IModelCodeBranch[];
+	readonly actionGroups?: IModelActionGroup[];
+	readonly inputs?: IModelInput[];
 }

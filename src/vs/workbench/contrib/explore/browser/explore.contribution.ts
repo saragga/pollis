@@ -25,7 +25,8 @@ import { openRdynWebview } from '../../model/browser/commands/rdyn.command.js';
 import { openRctlWebview } from '../../model/browser/commands/rctl.command.js';
 import { openMcatWebview } from '../../model/browser/commands/mcat.command.js';
 import { openRzooWebview } from '../../model/browser/commands/rzoo.command.js';
-import { openDstatsWebview } from '../../model/browser/commands/dstats.command.js';
+import { DSTATS_PANEL } from '../../model/browser/commands/dstats.command.js';
+import { openScaffoldWebview } from '../../model/browser/commands/scaffold.command.js';
 import { openNodWebview } from '../../model/browser/commands/nod.command.js';
 import { openAndeWebview } from '../../model/browser/commands/ande.command.js';
 import { openNovdWebview } from '../../model/browser/commands/novd.command.js';
@@ -116,17 +117,7 @@ CommandsRegistry.registerCommand(EXPL_COMMAND_ID, () => {
 	alert?.('Explore command executed!');
 });
 
-CommandsRegistry.registerCommand(DSTATS_ID, (accessor: ServicesAccessor) => {
-	openDstatsWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	);
-});
+CommandsRegistry.registerCommand(DSTATS_ID, (accessor: ServicesAccessor) => openScaffoldWebview(accessor, DSTATS_PANEL));
 
 CommandsRegistry.registerCommand(NOD_ID, (accessor: ServicesAccessor) => {
 	openNodWebview(

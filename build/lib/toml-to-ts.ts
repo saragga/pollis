@@ -289,6 +289,8 @@ export function generateTypeScriptFromToml(tomlPath: string, acronym: string): s
 	const explore = (data.explore as TomlValue | undefined) ?? null;
 	const codeBranches = (data.codeBranches as unknown[] | undefined) ?? [];
 	const actionGroups = (data.actionGroups as unknown[] | undefined) ?? [];
+	const inputs = (data.inputs as unknown[] | undefined) ?? [];
+	const models = (data.models as unknown[] | undefined) ?? [];
 
 	// miniCharts: stored as [miniCharts.modelName] sections — convert to array
 	const miniChartsRaw = (data.miniCharts as TomlValue | undefined) ?? {};
@@ -298,6 +300,7 @@ export function generateTypeScriptFromToml(tomlPath: string, acronym: string): s
 	}));
 
 	const optionalFields = [
+		models.length ? `\n\t\tmodels: ${toTypeScriptLiteral(models, '\t\t')},` : '',
 		bullets.length ? `\n\t\tbullets: ${toTypeScriptLiteral(bullets, '\t\t')},` : '',
 		decisionRows.length ? `\n\t\tdecisionRows: ${toTypeScriptLiteral(decisionRows, '\t\t')},` : '',
 		notes ? `\n\t\tnotes: ${toTypeScriptLiteral(notes, '\t\t')},` : '',
@@ -305,6 +308,7 @@ export function generateTypeScriptFromToml(tomlPath: string, acronym: string): s
 		miniCharts.length ? `\n\t\tminiCharts: ${toTypeScriptLiteral(miniCharts, '\t\t')},` : '',
 		codeBranches.length ? `\n\t\tcodeBranches: ${toTypeScriptLiteral(codeBranches, '\t\t')},` : '',
 		actionGroups.length ? `\n\t\tactionGroups: ${toTypeScriptLiteral(actionGroups, '\t\t')},` : '',
+		inputs.length ? `\n\t\tinputs: ${toTypeScriptLiteral(inputs, '\t\t')},` : '',
 	].join('');
 
 	const ts = `/*---------------------------------------------------------------------------------------------
