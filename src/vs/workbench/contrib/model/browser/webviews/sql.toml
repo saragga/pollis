@@ -1,0 +1,578 @@
+# SQL Databases Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/sql.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "SQL Databases"
+viewType = "pollis.sql"
+defaultModel = "query"
+
+[[packages]]
+name = "DuckDB.jl"
+github = "https://github.com/duckdb/duckdb"
+
+[[packages.videos]]
+title = "High Performance Computing in Julia"
+description = "An 18-video course by Jamie Mair on writing fast Julia code"
+url = "https://www.youtube.com/playlist?list=PLUAq6xQKFgGr39PiyrPk_C9dhBKvWcjUA"
+
+[[packages]]
+name = "DBInterface.jl"
+github = "https://github.com/JuliaDatabases/DBInterface.jl"
+
+[[packages]]
+name = "Tables.jl"
+github = "https://github.com/JuliaData/Tables.jl"
+
+[[notebookSections]]
+label = "SQL Databases"
+
+[[notebookSections.notebooks]]
+name = "First Queries"
+file = "sql/tutorial-01-first-queries.ipynb"
+bundled = true
+description = "Create a table in an in-memory DuckDB database, filter and sort it with SELECT, and bring the result into Julia as columns"
+
+[[notebookSections.notebooks]]
+name = "Files and Tables"
+file = "sql/tutorial-02-files-and-tables.ipynb"
+bundled = true
+description = "Import CSV and Parquet files, save Julia tables into the database, and export query results back to files"
+
+[[notebookSections.notebooks]]
+name = "Joins and Aggregation"
+file = "sql/tutorial-03-joins-and-aggregation.ipynb"
+bundled = true
+description = "Combine tables with joins, summarise them with GROUP BY and window functions, and check the results in Julia"
+
+[[wikis]]
+name = "Factsheet"
+file = "sql/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "sql/overview.md"
+bundled = true
+
+[[wikis]]
+name = "SQL Basics"
+file = "sql/sql-basics.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "sql/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "sql/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "sql/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Methods"
+
+[[wikis]]
+name = "Query"
+file = "sql/query.md"
+bundled = true
+
+[[wikis]]
+name = "Import File"
+file = "sql/import.md"
+bundled = true
+
+[[wikis]]
+name = "Save Table"
+file = "sql/save.md"
+bundled = true
+
+[[wikis]]
+name = "Export"
+file = "sql/export.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "DuckDB: an Embeddable Analytical Database"
+authors = "Raasveldt, Mark; Mühleisen, Hannes"
+year = 2019
+journal = "Proceedings of the 2019 International Conference on Management of Data (SIGMOD)"
+doi = "10.1145/3299869.3320212"
+openAccess = false
+
+[[references]]
+title = "DBInterface.jl: Database interface definitions for Julia"
+authors = "Quinn, Jacob"
+year = 2023
+journal = "GitHub"
+url = "https://github.com/JuliaDatabases/DBInterface.jl"
+openAccess = true
+
+[[references]]
+title = "Tables.jl: An interface for tables in Julia"
+authors = "Quinn, Jacob"
+year = 2023
+journal = "GitHub"
+url = "https://github.com/JuliaData/Tables.jl"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Foundations"
+
+[[references]]
+title = "A Relational Model of Data for Large Shared Data Banks"
+authors = "Codd, Edgar F."
+year = 1970
+journal = "Communications of the ACM"
+doi = "10.1145/362384.362685"
+openAccess = false
+
+[[references]]
+title = "Column-Stores vs. Row-Stores: How Different Are They Really?"
+authors = "Abadi, Daniel J.; Madden, Samuel R.; Hachem, Nabil"
+year = 2008
+journal = "Proceedings of the 2008 ACM SIGMOD International Conference on Management of Data"
+doi = "10.1145/1376616.1376712"
+openAccess = false
+
+[[models]]
+id = "query"
+label = "Query"
+
+[[models]]
+id = "import"
+label = "Import File"
+
+[[models]]
+id = "save"
+label = "Save Table"
+
+[[models]]
+id = "export"
+label = "Export"
+
+[[bullets]]
+text = "Query"
+detail = "<code>DBInterface.execute</code> runs a SQL statement in the database, and <code>Tables.columntable</code> brings the result into Julia as a named tuple of column vectors"
+
+[[bullets]]
+text = "Import File"
+detail = "DuckDB reads CSV, Parquet and JSON files itself with <code>read_csv</code>, <code>read_parquet</code> and <code>read_json</code>, inferring the column types, and stores them as a table"
+
+[[bullets]]
+text = "Save Table"
+detail = "<code>DuckDB.register_table</code> shows any Tables.jl source to SQL as a view without copying it, so <code>CREATE TABLE ... AS SELECT</code> stores it in the database"
+
+[[bullets]]
+text = "Export"
+detail = "<code>COPY (query) TO 'file'</code> writes a query result straight to a CSV, Parquet or JSON file, without passing it through Julia"
+
+[[decisionRows]]
+task = "Query"
+context = "Data already in the database"
+purpose = "Filter, join and aggregate in SQL, then analyse the result in Julia"
+
+[[decisionRows]]
+task = "Import File"
+context = "Data in CSV, Parquet or JSON files"
+purpose = "Store the file as a table, to query it again without re-reading it"
+
+[[decisionRows]]
+task = "Save Table"
+context = "Data computed in Julia"
+purpose = "Keep a result in the database, to query it with SQL or share it"
+
+[[decisionRows]]
+task = "Export"
+context = "Result needed outside the database"
+purpose = "Hand a query result to other tools as a file"
+
+[[inputs]]
+id = "con"
+label = "Connection"
+tooltip = "Variable holding the DuckDB connection. The Databases view connects the built-in Pollis database as pollis. If the variable does not exist yet, the code connects it to the built-in database."
+default = "pollis"
+
+[[inputs]]
+id = "file"
+label = "File"
+tooltip = "Path of the file to import, relative to the Julia working directory or absolute. Compressed files ending in .gz are read directly."
+default = "data.csv"
+models = ["import"]
+
+[[inputs]]
+id = "reader"
+label = "Reader"
+tooltip = "DuckDB function that reads the file. read_csv detects the delimiter, header and column types from the first rows."
+kind = "select"
+default = "read_csv"
+models = ["import"]
+
+[[inputs.options]]
+value = "read_csv"
+label = "CSV (read_csv)"
+
+[[inputs.options]]
+value = "read_parquet"
+label = "Parquet (read_parquet)"
+
+[[inputs.options]]
+value = "read_json"
+label = "JSON (read_json)"
+
+[[inputs]]
+id = "data"
+label = "Data"
+tooltip = "Variable name of the Julia table to save: any Tables.jl source, e.g. a named tuple of vectors, a CSV.File or a query result."
+default = "tbl"
+models = ["save"]
+
+[[inputs]]
+id = "table"
+label = "Table"
+tooltip = "Name of the database table to create or append to. Names with spaces or capitals need double quotes, e.g. \"Sales 2026\"."
+default = "data"
+models = ["import", "save"]
+
+[[inputs]]
+id = "mode"
+label = "If It Exists"
+tooltip = "Replace drops the existing table and creates it again. Append inserts the new rows, which need the same columns in the same order."
+kind = "select"
+default = "replace"
+models = ["import", "save"]
+
+[[inputs.options]]
+value = "replace"
+label = "replace"
+
+[[inputs.options]]
+value = "append"
+label = "append"
+
+[[inputs]]
+id = "out"
+label = "Output File"
+tooltip = "Path of the file to write, relative to the Julia working directory or absolute. An existing file is overwritten."
+default = "result.parquet"
+models = ["export"]
+
+[[inputs]]
+id = "format"
+label = "Format"
+tooltip = "File format to write. Parquet keeps the column types and compresses well; CSV opens anywhere; JSON writes one object per line."
+kind = "select"
+default = "parquet"
+models = ["export"]
+
+[[inputs.options]]
+value = "parquet"
+label = "Parquet"
+
+[[inputs.options]]
+value = "csv"
+label = "CSV"
+
+[[inputs.options]]
+value = "json"
+label = "JSON"
+
+[[inputs]]
+id = "sql"
+label = "SQL"
+tooltip = "SELECT statement to run. Tables of the built-in database are listed in the Databases view."
+kind = "textarea"
+default = '''
+SELECT *
+FROM data
+LIMIT 1000
+'''
+models = ["query", "export"]
+newRow = true
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.query]
+# Database cylinder flowing into a grid of columns
+svg = '''
+var s = '<ellipse cx="27" cy="9" rx="18" ry="5" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.6"/>';
+s += '<path d="M9 9 L9 29 A18 5 0 0 0 45 29 L45 9" fill="currentColor" fill-opacity="0.12" stroke="currentColor" stroke-width="0.8" stroke-opacity="0.6"/>';
+s += '<line x1="27" y1="37" x2="27" y2="47" stroke="currentColor" stroke-width="1" opacity="0.6"/>';
+s += '<path d="M23 44 L27 49 L31 44" fill="none" stroke="currentColor" stroke-width="1" opacity="0.6"/>';
+s += '<rect x="6" y="54" width="42" height="26" rx="2" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.5"/>';
+s += '<rect x="9" y="57" width="10" height="20" fill="currentColor" opacity="0.25"/>';
+s += '<rect x="22" y="57" width="10" height="20" fill="currentColor" opacity="0.15"/>';
+s += '<rect x="35" y="57" width="10" height="20" fill="currentColor" opacity="0.25"/>';
+return s;
+'''
+
+[miniCharts.import]
+# File flowing into a database cylinder
+svg = '''
+var s = '<path d="M10 6 L38 6 L44 12 L44 30 L10 30 Z" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.5"/>';
+s += '<text x="27" y="22" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">a,b,c</text>';
+s += '<line x1="27" y1="33" x2="27" y2="43" stroke="currentColor" stroke-width="1" opacity="0.6"/>';
+s += '<path d="M23 40 L27 45 L31 40" fill="none" stroke="currentColor" stroke-width="1" opacity="0.6"/>';
+s += '<ellipse cx="27" cy="55" rx="18" ry="5" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.6"/>';
+s += '<path d="M9 55 L9 75 A18 5 0 0 0 45 75 L45 55" fill="currentColor" fill-opacity="0.12" stroke="currentColor" stroke-width="0.8" stroke-opacity="0.6"/>';
+return s;
+'''
+
+[miniCharts.save]
+# Grid of Julia columns flowing into a database cylinder
+svg = '''
+var s = '<rect x="6" y="6" width="42" height="26" rx="2" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.5"/>';
+s += '<rect x="9" y="9" width="10" height="20" fill="currentColor" opacity="0.25"/>';
+s += '<rect x="22" y="9" width="10" height="20" fill="currentColor" opacity="0.15"/>';
+s += '<rect x="35" y="9" width="10" height="20" fill="currentColor" opacity="0.25"/>';
+s += '<line x1="27" y1="34" x2="27" y2="44" stroke="currentColor" stroke-width="1" opacity="0.6"/>';
+s += '<path d="M23 41 L27 46 L31 41" fill="none" stroke="currentColor" stroke-width="1" opacity="0.6"/>';
+s += '<ellipse cx="27" cy="55" rx="18" ry="5" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.6"/>';
+s += '<path d="M9 55 L9 75 A18 5 0 0 0 45 75 L45 55" fill="currentColor" fill-opacity="0.12" stroke="currentColor" stroke-width="0.8" stroke-opacity="0.6"/>';
+return s;
+'''
+
+[miniCharts.export]
+# Database cylinder flowing into a file
+svg = '''
+var s = '<ellipse cx="27" cy="9" rx="18" ry="5" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.6"/>';
+s += '<path d="M9 9 L9 29 A18 5 0 0 0 45 29 L45 9" fill="currentColor" fill-opacity="0.12" stroke="currentColor" stroke-width="0.8" stroke-opacity="0.6"/>';
+s += '<line x1="27" y1="37" x2="27" y2="47" stroke="currentColor" stroke-width="1" opacity="0.6"/>';
+s += '<path d="M23 44 L27 49 L31 44" fill="none" stroke="currentColor" stroke-width="1" opacity="0.6"/>';
+s += '<path d="M10 54 L38 54 L44 60 L44 80 L10 80 Z" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.5"/>';
+s += '<text x="27" y="71" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">.parquet</text>';
+return s;
+'''
+
+[[codeBranches]]
+model = "query"
+code = '''
+isdefined(Main, :PollisDB) && PollisDB.install()  # DuckDB is built into Pollis
+using DuckDB, DBInterface, Tables
+
+if !isdefined(Main, :{{con}})  # connect once, to the built-in database, as the Databases view does
+	{{con}} = DBInterface.connect(DuckDB.DB, joinpath(homedir(), ".pollis", "pollis.duckdb"))
+	isdefined(Main, :PollisDB) && PollisDB.register("pollis", {{con}}; name = "Pollis")
+end
+
+sql = raw"""
+{{sql}}
+"""
+relation = "(" * rstrip(strip(sql), ';') * ")"  # the query as a subquery, for the Next Steps
+tbl = Tables.columntable(DBInterface.execute({{con}}, sql))  # named tuple of column vectors
+println(length(first(tbl)), " rows x ", length(tbl), " columns")
+println(Tables.schema(tbl))
+'''
+
+[[codeBranches]]
+model = "import"
+code = '''
+isdefined(Main, :PollisDB) && PollisDB.install()  # DuckDB is built into Pollis
+using DuckDB, DBInterface, Tables
+
+if !isdefined(Main, :{{con}})  # connect once, to the built-in database, as the Databases view does
+	{{con}} = DBInterface.connect(DuckDB.DB, joinpath(homedir(), ".pollis", "pollis.duckdb"))
+	isdefined(Main, :PollisDB) && PollisDB.register("pollis", {{con}}; name = "Pollis")
+end
+
+{{?mode=replace}}DBInterface.execute({{con}}, "CREATE OR REPLACE TABLE {{table}} AS SELECT * FROM {{reader}}('{{file}}')")
+{{?mode=append}}DBInterface.execute({{con}}, "INSERT INTO {{table}} SELECT * FROM {{reader}}('{{file}}')")
+isdefined(Main, :PollisDB) && PollisDB.refresh()  # show the table in the Databases view
+relation = "{{table}}"
+n = first(Tables.columntable(DBInterface.execute({{con}}, "SELECT count(*) AS n FROM $relation")).n)
+tbl = Tables.columntable(DBInterface.execute({{con}}, "SELECT * FROM $relation LIMIT 1000"))  # a sample, for the Next Steps
+println("Table {{table}}: ", n, " rows x ", length(tbl), " columns")
+println(Tables.schema(tbl))
+'''
+
+[[codeBranches]]
+model = "save"
+code = '''
+isdefined(Main, :PollisDB) && PollisDB.install()  # DuckDB is built into Pollis
+using DuckDB, DBInterface, Tables
+
+if !isdefined(Main, :{{con}})  # connect once, to the built-in database, as the Databases view does
+	{{con}} = DBInterface.connect(DuckDB.DB, joinpath(homedir(), ".pollis", "pollis.duckdb"))
+	isdefined(Main, :PollisDB) && PollisDB.register("pollis", {{con}}; name = "Pollis")
+end
+
+DuckDB.register_table({{con}}, Tables.columntable({{data}}), "julia_data")  # a view of the Julia columns, not a copy
+{{?mode=replace}}DBInterface.execute({{con}}, "CREATE OR REPLACE TABLE {{table}} AS SELECT * FROM julia_data")
+{{?mode=append}}DBInterface.execute({{con}}, "INSERT INTO {{table}} SELECT * FROM julia_data")
+DuckDB.unregister_table({{con}}, "julia_data")
+isdefined(Main, :PollisDB) && PollisDB.refresh()  # show the table in the Databases view
+relation = "{{table}}"
+n = first(Tables.columntable(DBInterface.execute({{con}}, "SELECT count(*) AS n FROM $relation")).n)
+tbl = Tables.columntable(DBInterface.execute({{con}}, "SELECT * FROM $relation LIMIT 1000"))  # a sample, for the Next Steps
+println("Table {{table}}: ", n, " rows x ", length(tbl), " columns")
+'''
+
+[[codeBranches]]
+model = "export"
+code = '''
+isdefined(Main, :PollisDB) && PollisDB.install()  # DuckDB is built into Pollis
+using DuckDB, DBInterface, Tables
+
+if !isdefined(Main, :{{con}})  # connect once, to the built-in database, as the Databases view does
+	{{con}} = DBInterface.connect(DuckDB.DB, joinpath(homedir(), ".pollis", "pollis.duckdb"))
+	isdefined(Main, :PollisDB) && PollisDB.register("pollis", {{con}}; name = "Pollis")
+end
+
+sql = raw"""
+{{sql}}
+"""
+DBInterface.execute({{con}}, "COPY (" * rstrip(strip(sql), ';') * ") TO '{{out}}' (FORMAT {{format}})")
+relation = "'{{out}}'"  # DuckDB reads the file back, for the Next Steps
+tbl = Tables.columntable(DBInterface.execute({{con}}, "SELECT * FROM $relation LIMIT 1000"))
+println("Wrote {{out}} (", filesize("{{out}}"), " bytes, ", length(tbl), " columns)")
+'''
+
+# Next Steps action groups
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "preview-rows"
+label = "Preview Rows"
+desc = "The first 10 rows as an aligned text table"
+code = '''
+n = min(10, length(first(tbl)))
+println(join(rpad.(string.(keys(tbl)), 14)))
+for i in 1:n
+	println(join(rpad.(string.(getindex.(values(tbl), i)), 14)))
+end
+'''
+
+[[actionGroups.actions]]
+id = "column-histograms"
+label = "Column Histograms"
+desc = "Histogram of every numeric column"
+code = '''
+using Plots
+
+numeric = [n for n in keys(tbl) if nonmissingtype(eltype(tbl[n])) <: Real]
+isempty(numeric) ? println("No numeric columns") :
+	plot([histogram(collect(skipmissing(tbl[n])), title=string(n), legend=false) for n in numeric]...)
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "query-plan"
+label = "Query Plan"
+desc = "EXPLAIN ANALYZE: the steps DuckDB runs, with the rows and time of each"
+code = '''
+plan = Tables.columntable(DBInterface.execute({{con}}, "EXPLAIN ANALYZE SELECT * FROM $relation"))
+println(last(plan)[1])  # read bottom-up: scans first, then filters, joins and aggregates
+'''
+
+[[actionGroups.actions]]
+id = "missing-values"
+label = "Missing Values"
+desc = "NULL count and share per column, counted in the database over every row"
+code = '''
+cols = Tables.columntable(DBInterface.execute({{con}}, "SELECT * FROM $relation LIMIT 0"))
+counts = Tables.columntable(DBInterface.execute({{con}}, "SELECT count(*) AS n, " *
+	join(("count(*) - count(\"$c\") AS \"$c\"" for c in keys(cols)), ", ") * " FROM $relation"))
+n = first(counts.n)
+for c in keys(cols)
+	k = first(counts[c])
+	println(rpad(c, 16), lpad(k, 8), " missing  (", round(100 * k / max(n, 1), digits=1), "%)")
+end
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "sql-vs-julia"
+label = "SQL vs Julia Timing"
+desc = "Time the mean of the first numeric column in DuckDB against fetching the rows and computing it in Julia"
+code = '''
+using Statistics
+
+full = Tables.columntable(DBInterface.execute({{con}}, "SELECT * FROM $relation"))
+numeric = [c for c in keys(full) if nonmissingtype(eltype(full[c])) <: Real]
+if isempty(numeric)
+	println("No numeric columns to average")
+else
+	col = first(numeric)
+	in_sql() = first(Tables.columntable(DBInterface.execute({{con}}, "SELECT avg(\"$col\") AS m FROM $relation")).m)
+	in_julia() = mean(skipmissing(Tables.columntable(DBInterface.execute({{con}}, "SELECT * FROM $relation"))[col]))
+	in_sql(); in_julia()  # first calls compile
+	println("Mean of ", col, " (", length(full[col]), " rows)")
+	println("  DuckDB:            ", round(1000 * @elapsed(in_sql()), digits=2), " ms")
+	println("  Fetch + Julia:     ", round(1000 * @elapsed(in_julia()), digits=2), " ms")
+	println("  Julia on fetched:  ", round(1000 * @elapsed(mean(skipmissing(full[col]))), digits=2), " ms")
+end
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "column-summary"
+label = "Column Summary"
+desc = "DuckDB SUMMARIZE: type, range, distinct values, mean and missing share of every column"
+code = '''
+s = Tables.columntable(DBInterface.execute({{con}}, "SUMMARIZE SELECT * FROM $relation"))
+for i in eachindex(s.column_name)
+	println(rpad(s.column_name[i], 16), rpad(s.column_type[i], 12),
+		"min = ", coalesce(s.min[i], "-"), "  max = ", coalesce(s.max[i], "-"),
+		"  distinct ~ ", s.approx_unique[i], "  mean = ", coalesce(s.avg[i], "-"),
+		"  missing = ", s.null_percentage[i], "%")
+end
+'''
+
+[[actionGroups]]
+id = "export"
+label = "Export"
+
+[[actionGroups.actions]]
+id = "save-xlsx"
+label = "Save as Excel Workbook"
+desc = "Fetch every row and write it to result.xlsx"
+code = '''
+using XLSX
+
+out = "result.xlsx"
+XLSX.writetable(out, Tables.columntable(DBInterface.execute({{con}}, "SELECT * FROM $relation")); overwrite=true)
+println("Wrote ", out)
+'''
+
+[[actionGroups.actions]]
+id = "save-csv"
+label = "Save as CSV"
+desc = "Let DuckDB write every row to result.csv, without passing it through Julia"
+code = '''
+out = "result.csv"
+DBInterface.execute({{con}}, "COPY (SELECT * FROM $relation) TO '$out' (FORMAT csv, HEADER)")
+println("Wrote ", out, " (", filesize(out), " bytes)")
+'''

@@ -173,9 +173,9 @@ export interface IModelInput {
 	readonly id: string;
 	readonly label: string;
 	readonly tooltip?: string;
-	/** Default: `text`. */
-	readonly kind?: 'text' | 'select';
-	/** Placeholder and fallback value of a text input, or the initially selected choice of a select. */
+	/** Default: `text`. A `textarea` holds several lines, e.g. a SQL query; a code line that uses it becomes one line per line of the value. */
+	readonly kind?: 'text' | 'select' | 'textarea';
+	/** Placeholder and fallback value of a text input, the initial content of a textarea, or the initially selected choice of a select. */
 	readonly default?: string;
 	/** The choices of a select input; `default`, else the first one available for the model, is chosen initially. */
 	readonly options?: IModelInputOption[];

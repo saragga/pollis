@@ -172,6 +172,7 @@ export function buildWebviewHtml(parts: WebviewParts): string {
 		.form-input:focus { border-color: var(--vscode-focusBorder); outline: 1px solid var(--vscode-focusBorder); }
 		textarea.form-input { resize: none; overflow-x: auto; overflow-y: hidden; white-space: nowrap; height: 37px; line-height: 1.4; }
 		textarea.form-input::-webkit-scrollbar { display: none; }
+		textarea.form-input.multiline { height: auto; white-space: pre; overflow-y: auto; resize: vertical; }
 		select.form-input { height: 37px; cursor: pointer; }
 		.param-input { text-align: center; }
 		.code-preview-wrapper { position: relative; margin: 0 0 20px 0; }
@@ -459,7 +460,8 @@ ${parts.headScriptJs ?? ''}
 				s = s.slice(m[0].length);
 			}
 			if (!s) { return blank(); }
-			return line(esc(s).replace(/[{][{]([\\w-]+)[}][}]/g, function(_, id) { return esc(inputRaw(id)); }));
+			// A multi-line value (a textarea) becomes one code line per line.
+			return s.replace(/[{][{]([\\w-]+)[}][}]/g, function(_, id) { return inputRaw(id); }).split('\\n').map(function(l) { return l ? line(esc(l)) : blank(); }).join('');
 		}
 		function availableFor(el) { return !el.dataset.models || el.dataset.models.split(' ').indexOf(currentModel) >= 0; }
 		function whenHolds(el) {

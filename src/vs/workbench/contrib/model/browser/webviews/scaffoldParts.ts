@@ -104,7 +104,9 @@ function modelsAttr(models: string[] | undefined, when?: string): string {
 
 function buildInputHtml(input: IModelInput): string {
 	const tooltip = input.tooltip ? `\n\t\t\t\t\t<span class="tooltip-icon">?</span>\n\t\t\t\t\t<span class="tooltip-text">${htmlEsc(input.tooltip)}</span>` : '';
-	const field = input.kind === 'select'
+	const field = input.kind === 'textarea'
+		? `<textarea id="in-${input.id}" class="form-input multiline" rows="${(input.default ?? '').split('\n').length + 1}" spellcheck="false" data-default="${htmlEsc(input.default ?? '')}">${htmlEsc(input.default ?? '')}</textarea>`
+		: input.kind === 'select'
 		? `<select id="in-${input.id}" class="form-input">\n${(input.options ?? []).map(o => `\t\t\t\t\t<option value="${htmlEsc(o.value)}"${modelsAttr(o.models, o.when)}${o.value === input.default ? ' selected' : ''}>${htmlEsc(o.label)}</option>`).join('\n')}\n\t\t\t\t</select>`
 		: `<input type="text" id="in-${input.id}" class="form-input" spellcheck="false" placeholder="${htmlEsc(input.default ?? '')}" data-default="${htmlEsc(input.default ?? '')}">`;
 	return `\t\t\t<div class="form-group scaffold-input"${modelsAttr(input.models, input.when)}>

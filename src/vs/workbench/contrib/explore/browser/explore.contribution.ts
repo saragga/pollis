@@ -39,6 +39,7 @@ import { openSfvizWebview } from '../../model/browser/commands/sfviz.command.js'
 import { HMD_PANEL } from '../../model/browser/commands/hmd.command.js';
 import { IDAT_PANEL } from '../../model/browser/commands/idat.command.js';
 import { CSV_PANEL } from '../../model/browser/commands/csv.command.js';
+import { SQL_PANEL } from '../../model/browser/commands/sql.command.js';
 import { openHfmWebview } from '../../model/browser/commands/hfm.command.js';
 import { openKgmWebview } from '../../model/browser/commands/kgm.command.js';
 import { openXlsxWebview } from '../../model/browser/commands/xlsx.command.js';
@@ -171,6 +172,7 @@ CommandsRegistry.registerCommand(KGM_ID, (accessor: ServicesAccessor) => {
 	);
 });
 
+CommandsRegistry.registerCommand(SQL_ID, (accessor: ServicesAccessor) => openScaffoldWebview(accessor, SQL_PANEL));
 CommandsRegistry.registerCommand(CSV_ID, (accessor: ServicesAccessor) => openScaffoldWebview(accessor, CSV_PANEL));
 
 CommandsRegistry.registerCommand(XLSX_ID, (accessor: ServicesAccessor) => {
