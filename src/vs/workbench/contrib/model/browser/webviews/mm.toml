@@ -177,8 +177,8 @@ default = "y ~ x1 + x2 + (1|group)"
 [[inputs]]
 id = "data"
 label = "Data"
-tooltip = "DataFrame containing all variables referenced in the formula. Column names must match the formula symbols exactly."
-default = "df"
+tooltip = "Table containing all variables referenced in the formula: any Tables.jl source, e.g. a named tuple of vectors or a CSV.File. Column names must match the formula symbols exactly."
+default = "data"
 
 [[inputs]]
 id = "family"
@@ -394,9 +394,9 @@ id = "predict-new"
 label = "Predict New Data"
 desc = "Predictions for new observations, including unseen groups"
 code = '''
-using MixedModels
+using MixedModels, Tables
 
-newdata = {{data}}[1:5, :]  # replace with new observations
+newdata = map(c -> c[1:5], Tables.columntable({{data}}))  # first 5 rows; replace with new observations
 yhat = predict(model, newdata; new_re_levels=:population)  # unseen groups use the population mean
 println(yhat)
 '''

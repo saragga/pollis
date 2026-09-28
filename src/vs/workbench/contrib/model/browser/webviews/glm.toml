@@ -247,8 +247,8 @@ default = "y ~ x1 + x2"
 [[inputs]]
 id = "data"
 label = "Data"
-tooltip = "DataFrame containing all variables referenced in the formula. Column names must match the formula symbols exactly."
-default = "df"
+tooltip = "Table containing all variables referenced in the formula: any Tables.jl source, e.g. a named tuple of vectors or a CSV.File. Column names must match the formula symbols exactly."
+default = "data"
 
 [[inputs]]
 id = "link"
@@ -363,21 +363,21 @@ label = "Driscoll-Kraay"
 [[inputs]]
 id = "cluster"
 label = "Cluster Variable"
-tooltip = "Column of the DataFrame that identifies the clusters (e.g. firm or school)"
+tooltip = "Column of the data table that identifies the clusters (e.g. firm or school)"
 default = "cluster_id"
 when = "inference=clustered"
 
 [[inputs]]
 id = "dktime"
 label = "Time Variable"
-tooltip = "Column of the DataFrame with the time period of each observation"
+tooltip = "Column of the data table with the time period of each observation"
 default = "year"
 when = "inference=driscoll-kraay"
 
 [[inputs]]
 id = "dkentity"
 label = "Entity Variable"
-tooltip = "Column of the DataFrame that identifies the panel entity of each observation"
+tooltip = "Column of the data table that identifies the panel entity of each observation"
 default = "firm"
 when = "inference=driscoll-kraay"
 
@@ -483,15 +483,15 @@ return s;
 model = "*"
 code = '''
 {{?inference=standard}}using GLM  # generalized linear models
-{{?inference!=standard}}using GLM, CovarianceMatrices  # GLM + robust standard errors
+{{?inference!=standard}}using GLM, CovarianceMatrices, Tables  # GLM + robust standard errors
 
 {{?link=}}model = glm(@formula({{formula}}), {{data}}, {{model}}())  # {{model}} family with its default link
 {{?link!=}}model = glm(@formula({{formula}}), {{data}}, {{model}}(), {{link}}())  # {{model}} family with {{link}}
 
 {{?inference=HC0|HC1|HC2|HC3}}V = vcov(model, {{inference}}())  # robust variance-covariance matrix
 {{?inference=HAC}}V = vcov(model, HAC(BartlettKernel(), NeweyWest()))  # robust variance-covariance matrix
-{{?inference=clustered}}V = vcov(model, CRHC0({{data}}[:, :{{cluster}}]))  # cluster-robust variance-covariance matrix
-{{?inference=driscoll-kraay}}V = vcov(DriscollKraay(Bartlett(5), tis={{data}}.{{dktime}}, iis={{data}}.{{dkentity}}), model)  # Driscoll-Kraay variance-covariance matrix
+{{?inference=clustered}}V = vcov(model, CRHC0(Tables.getcolumn({{data}}, :{{cluster}})))  # cluster-robust variance-covariance matrix
+{{?inference=driscoll-kraay}}V = vcov(DriscollKraay(Bartlett(5), tis=Tables.getcolumn({{data}}, :{{dktime}}), iis=Tables.getcolumn({{data}}, :{{dkentity}})), model)  # Driscoll-Kraay variance-covariance matrix
 {{?inference!=standard}}println(coeftable(model, V))  # coefficients with robust SEs
 {{?inference=standard}}println(coeftable(model))  # coefficient table
 
@@ -585,9 +585,9 @@ id = "predict-mean"
 label = "Predicted Mean"
 desc = "Fitted mean for new observations"
 code = '''
-using GLM
+using GLM, Tables
 
-newdata = {{data}}[1:5, :]  # replace with new observations
+newdata = map(c -> c[1:5], Tables.columntable({{data}}))  # first 5 rows; replace with new observations
 mu = predict(model, newdata)  # predicted mean on the response scale
 println(mu)
 '''
@@ -597,9 +597,9 @@ id = "predict-ci"
 label = "Confidence Band"
 desc = "Predicted mean with a 95% confidence interval"
 code = '''
-using GLM
+using GLM, Tables
 
-newdata = {{data}}[1:5, :]  # replace with new observations
+newdata = map(c -> c[1:5], Tables.columntable({{data}}))  # first 5 rows; replace with new observations
 pred = predict(model, newdata; interval=:confidence, level=0.95)  # prediction, lower, upper
 println(pred)
 '''
@@ -655,11 +655,11 @@ id = "marginal"
 label = "Marginal Effects"
 desc = "Average marginal effect of one predictor on the mean"
 code = '''
-using GLM, Statistics
+using GLM, Statistics, Tables
 
 h  = 1e-4  # small step for the numerical derivative
-d1 = copy({{data}})
-d1.x1 .+= h  # x1: the predictor of interest
+d1 = Tables.columntable({{data}})
+d1 = merge(d1, (x1 = d1.x1 .+ h,))  # x1: the predictor of interest
 ame = mean((predict(model, d1) .- predict(model, {{data}})) ./ h)  # average marginal effect
 println("AME of x1: ", round(ame; digits=4))
 '''

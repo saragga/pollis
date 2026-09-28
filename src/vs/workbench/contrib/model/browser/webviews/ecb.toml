@@ -5,7 +5,7 @@
 # Approach: the ECB Data Portal exposes a standard SDMX 2.1 REST API at
 # https://data-api.ecb.europa.eu/service/ and needs NO API key. We request
 # format=csvdata (a flat table) and read it with HTTP.jl + CSV.jl into a
-# Tables.jl-compatible table; the user pipes that into DataFrames, TimeSeries,
+# Tables.jl-compatible table; the user pipes that into TimeSeries
 # or any other Tables.jl sink downstream.
 
 [meta]
@@ -230,7 +230,7 @@ println(last(rates, 5))
 
 # ...or pipe it into the container of your choice:
 # using TimeSeries, Dates; ta = TimeArray(Date.(dates), rates, [:USD])
-# using DataFrames;        df = DataFrame(tbl)
+# using Tables;            cols = Tables.columntable(tbl)
 """
 
 [[codeBranches]]

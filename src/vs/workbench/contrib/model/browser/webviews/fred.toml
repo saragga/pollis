@@ -26,7 +26,7 @@ label = "FRED"
 name = "First Series"
 file = "fred/tutorial-01-first-series.ipynb"
 bundled = true
-description = "Connect with an API key and pull your first series (real GDP) into a DataFrame"
+description = "Connect with an API key and pull your first series (real GDP) as a table of dates and values"
 
 [[notebookSections.notebooks]]
 name = "Transformations"

@@ -6,7 +6,7 @@
 # API key — but every request MUST send a User-Agent header declaring your app and
 # a contact email, or the SEC returns 403. We use EDGAR.jl (which wraps HTTP.jl +
 # JSON3.jl) and stop at JSON3 objects / NamedTuples; the user pipes those into
-# DataFrames or TimeSeries downstream. EDGAR.jl reads the contact from the
+# TimeSeries or any Tables.jl sink downstream. EDGAR.jl reads the contact from the
 # SEC_USER_AGENT env var that Pollis injects. Fair-access limit: 10 requests/sec.
 
 [meta]
