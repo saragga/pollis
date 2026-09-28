@@ -15,7 +15,10 @@ connections this session holds; those of a Julia that died without exiting are r
 next REPL starts.
 
 The module loads no database package itself: it looks up DBInterface.jl and Tables.jl among the
-packages the connection code has already loaded.
+packages the connection code has already loaded. DuckDB is built into Pollis: `install()` adds it,
+once, to a Julia environment of Pollis' own (`ENVIRONMENT`), which PollisDB puts on the load path
+so that `using DuckDB` works in any project without touching its Project.toml. The built-in Pollis
+database is the DuckDB file `DATABASE`.
 """
 module PollisDB
 
@@ -24,6 +27,15 @@ using Dates: now
 
 const DBINTERFACE = Base.PkgId(UUID("a10d1c49-ce27-4219-8d33-6db1a4562965"), "DBInterface")
 const TABLES = Base.PkgId(UUID("bd369af6-aec1-5ad0-b16a-f7cc5008161c"), "Tables")
+
+"""The Julia environment of the packages built into Pollis, one per Julia minor version."""
+const ENVIRONMENT = joinpath(homedir(), ".pollis", "julia", "environments", "v$(VERSION.major).$(VERSION.minor)")
+
+"""The packages built into Pollis: DuckDB and what the connection code loads with it."""
+const PACKAGES = ["DuckDB", "DBInterface", "Tables"]
+
+"""The built-in Pollis database, a DuckDB file."""
+const DATABASE = joinpath(homedir(), ".pollis", "pollis.duckdb")
 
 """The folder of the snapshots, one `<id>.json` per connection, watched by the Databases view."""
 const SESSIONS = joinpath(homedir(), ".pollis", "databases", "sessions")
@@ -230,6 +242,28 @@ function preview(con, table::AbstractString; limit::Integer = 100)
     return nothing
 end
 
+"""
+    install()
+
+Install the packages built into Pollis that no environment on the load path provides yet into
+`ENVIRONMENT`. Runs once: afterwards it finds them and returns at once. The active project is
+left as it was.
+"""
+function install()
+    missing_packages = filter(p -> Base.identify_package(p) === nothing, PACKAGES)
+    isempty(missing_packages) && return nothing
+    println("Pollis: installing ", join(missing_packages, ", "), " for the built-in database. This happens only once.")
+    Pkg = Base.require(Main, :Pkg)
+    active = Base.ACTIVE_PROJECT[]
+    try
+        Base.invokelatest(Pkg.activate, ENVIRONMENT; io = devnull)
+        Base.invokelatest(Pkg.add, missing_packages)
+    finally
+        Base.ACTIVE_PROJECT[] = active
+    end
+    return nothing
+end
+
 """Whether process `pid` is running. Assumed on Windows, which has no `kill(pid, 0)`."""
 alive(pid::Integer) = Sys.iswindows() || ccall(:kill, Cint, (Cint, Cint), pid, 0) == 0
 
@@ -248,6 +282,9 @@ try
     prune()
 catch
 end
+
+# After the user's environments, so that their own versions of these packages come first.
+ENVIRONMENT in LOAD_PATH || push!(LOAD_PATH, ENVIRONMENT)
 
 # Remove the snapshots when Julia exits, so the view does not show dead connections.
 atexit(() -> foreach(id -> rm(snapshot_path(id); force = true), keys(CONNECTIONS)))

@@ -24,7 +24,12 @@ export interface IDatabaseConnectionProfile {
 	readonly variable: string;
 	/** Driver field values, keyed by {@link IDatabaseDriverField.id}. */
 	readonly options: Readonly<Record<string, string | boolean>>;
+	/** Whether this is the built-in Pollis database, which cannot be edited or deleted. */
+	readonly builtin?: boolean;
 }
+
+/** The id of the built-in Pollis database, a DuckDB file in ~/.pollis. */
+export const BUILTIN_DATABASE_ID = 'pollis';
 
 /** One input of a driver's connection form. */
 export interface IDatabaseDriverField {
@@ -207,12 +212,14 @@ export function generateConnectionCode(profile: IDatabaseConnectionProfile): str
 /**
  * The code that connects `profile` in the Julia REPL and shows it in the Databases view, through
  * the PollisDB module the REPL loads at startup. A connection the REPL already holds is closed
- * first, so a database file is not opened twice.
+ * first, so a database file is not opened twice. DuckDB is built into Pollis, so its code first
+ * installs it, the first time only.
  */
 export function generateSessionConnectCode(profile: IDatabaseConnectionProfile, connected: boolean): string {
 	const id = juliaString(profile.id);
 	return [
 		...(connected ? [`PollisDB.disconnect(${id})`] : []),
+		...(profile.driver === 'duckdb' ? ['PollisDB.install()'] : []),
 		generateConnectionCode(profile),
 		`PollisDB.register(${id}, ${profile.variable}; name = ${juliaString(profile.name)})`,
 	].join('\n');

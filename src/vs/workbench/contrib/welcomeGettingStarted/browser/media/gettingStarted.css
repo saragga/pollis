@@ -1127,6 +1127,27 @@
 	margin-top: 2px;
 }
 
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-alert.info {
+	border-left-color: var(--vscode-editorInfo-foreground);
+}
+
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-alert.info .pollis-alert-icon {
+	color: var(--vscode-editorInfo-foreground);
+}
+
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-alert .pollis-alert-body {
+	flex: 1;
+}
+
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-alert .pollis-alert-dismiss {
+	align-self: flex-start;
+	padding: 0;
+	border: none;
+	background: none;
+	color: var(--vscode-errorForeground);
+	cursor: pointer;
+}
+
 .monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-alert p {
 	margin: 0 0 4px;
 }

@@ -64,8 +64,8 @@ suite('Database drivers', () => {
 			generatePreviewCode('id', 'main', 'my "sales"'),
 			quoteSqlName('hr', 'staff'),
 		], [
-			'using DuckDB, DBInterface\ncon = DBInterface.connect(DuckDB.DB, ":memory:")\nPollisDB.register("id", con; name = "Test")',
-			'PollisDB.disconnect("id")\nusing DuckDB, DBInterface\ncon = DBInterface.connect(DuckDB.DB, ":memory:")\nPollisDB.register("id", con; name = "Test")',
+			'PollisDB.install()\nusing DuckDB, DBInterface\ncon = DBInterface.connect(DuckDB.DB, ":memory:")\nPollisDB.register("id", con; name = "Test")',
+			'PollisDB.disconnect("id")\nPollisDB.install()\nusing DuckDB, DBInterface\ncon = DBInterface.connect(DuckDB.DB, ":memory:")\nPollisDB.register("id", con; name = "Test")',
 			'PollisDB.disconnect("id")',
 			'PollisDB.refresh()',
 			'PollisDB.refresh("id")',

@@ -19,6 +19,15 @@
 	color: var(--vscode-charts-green);
 }
 
+.database-item.disconnected .icon {
+	color: var(--vscode-charts-red);
+}
+
+/* Disconnect is red here too, as the debugger colours it in title bars. */
+.database-item .actions .codicon-debug-disconnect {
+	color: var(--vscode-debugIcon-disconnectForeground);
+}
+
 .database-item .name {
 	white-space: nowrap;
 }
@@ -43,69 +52,10 @@
 	display: block;
 }
 
-/* The screen of one connection: toolbar and header above the tree. */
-
 .databases-view {
 	display: flex;
 	flex-direction: column;
 	height: 100%;
-}
-
-.databases-toolbar,
-.databases-header {
-	display: none;
-	align-items: center;
-	flex-shrink: 0;
-	gap: 4px;
-	padding: 0 8px;
-	border-bottom: 1px solid var(--vscode-sideBarSectionHeader-border, var(--vscode-panel-border));
-}
-
-.databases-view.connection-open .databases-toolbar,
-.databases-view.connection-open .databases-header {
-	display: flex;
-}
-
-.databases-toolbar {
-	height: 28px;
-	box-sizing: border-box;
-}
-
-.databases-toolbar .databases-action {
-	display: flex;
-	align-items: center;
-	gap: 4px;
-	padding: 2px 6px;
-	border-radius: 4px;
-	color: var(--vscode-foreground);
-	cursor: pointer;
-}
-
-.databases-toolbar .databases-action:hover {
-	background-color: var(--vscode-toolbar-hoverBackground);
-}
-
-.databases-toolbar .separator {
-	width: 1px;
-	height: 16px;
-	background-color: var(--vscode-panel-border);
-}
-
-.databases-header {
-	height: 28px;
-	box-sizing: border-box;
-	font-weight: 600;
-}
-
-.databases-header .name {
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-}
-
-.databases-header .description {
-	font-weight: normal;
-	opacity: 0.7;
 }
 
 .databases-tree {

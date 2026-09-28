@@ -15,6 +15,7 @@ import { InstantiationType, registerSingleton } from '../../../../platform/insta
 import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
 import { Registry } from '../../../../platform/registry/common/platform.js';
 import { registerIcon } from '../../../../platform/theme/common/iconRegistry.js';
+import { ViewAction } from '../../../browser/parts/views/viewPane.js';
 import { ViewPaneContainer } from '../../../browser/parts/views/viewPaneContainer.js';
 import { IViewContainersRegistry, IViewsRegistry, ViewContainerLocation, Extensions as ViewExtensions } from '../../../common/views.js';
 import { sendToJuliaRepl } from '../../model/browser/handlers/model.handler.js';
@@ -22,7 +23,7 @@ import { IDatabaseConnectionsService } from '../common/databaseConnections.js';
 import { generateConnectionCode, generatePreviewCode, generateSessionConnectCode, generateSessionDisconnectCode, generateSessionRefreshCode, IDatabaseConnectionProfile, quoteSqlName } from '../common/databaseDrivers.js';
 import { openConnectionEditor } from './connectionEditor.js';
 import { DatabaseConnectionsService } from './databaseConnectionsService.js';
-import { CONNECT_DATABASE_COMMAND_ID, DatabaseConnectionContextMenu, DatabaseConnectionsView, DatabaseItemConnected, DatabaseItemInlineMenu, DatabaseItemKind, DatabaseItemSaved, DISCONNECT_DATABASE_COMMAND_ID, IDatabaseItemArg, PREVIEW_TABLE_COMMAND_ID, REFRESH_DATABASE_COMMAND_ID } from './connectionsView.js';
+import { CONNECT_DATABASE_COMMAND_ID, DatabaseConnectionContextMenu, DatabaseConnectionOpen, DatabaseConnectionsView, DatabaseItemConnected, DatabaseItemInlineMenu, DatabaseItemBuiltin, DatabaseItemKind, DatabaseItemSaved, DISCONNECT_DATABASE_COMMAND_ID, IDatabaseItemArg, PREVIEW_TABLE_COMMAND_ID, REFRESH_DATABASE_COMMAND_ID } from './connectionsView.js';
 
 registerSingleton(IDatabaseConnectionsService, DatabaseConnectionsService, InstantiationType.Delayed);
 
@@ -61,6 +62,7 @@ viewsRegistry.registerViewWelcomeContent(DatabaseConnectionsView.ID, {
 const connectionsViewTitle = ContextKeyExpr.equals('view', DatabaseConnectionsView.ID);
 const onConnection = DatabaseItemKind.isEqualTo('connection');
 const onSavedConnection = ContextKeyExpr.and(onConnection, DatabaseItemSaved);
+const onEditableConnection = ContextKeyExpr.and(onSavedConnection, DatabaseItemBuiltin.negate());
 
 /** The saved profile an item command was invoked on. */
 function profileOf(accessor: ServicesAccessor, arg: IDatabaseItemArg | undefined): IDatabaseConnectionProfile | undefined {
@@ -80,11 +82,43 @@ registerAction2(class extends Action2 {
 			category: localize2('databases.category', "Databases"),
 			icon: Codicon.add,
 			f1: true,
-			menu: { id: MenuId.ViewTitle, when: connectionsViewTitle, group: 'navigation', order: 1 },
+			menu: { id: MenuId.ViewTitle, when: connectionsViewTitle, group: 'navigation', order: 3 },
 		});
 	}
 	run(accessor: ServicesAccessor): void {
 		openConnectionEditor(accessor);
+	}
+});
+
+registerAction2(class extends ViewAction<DatabaseConnectionsView> {
+	constructor() {
+		super({
+			id: 'pollis.databases.showConnections',
+			title: localize2('databases.showConnections', "Show Connections"),
+			icon: Codicon.listFlat,
+			viewId: DatabaseConnectionsView.ID,
+			menu: { id: MenuId.ViewTitle, when: ContextKeyExpr.and(connectionsViewTitle, DatabaseConnectionOpen), group: 'navigation', order: 1 },
+		});
+	}
+	runInView(_accessor: ServicesAccessor, view: DatabaseConnectionsView): void {
+		view.showList();
+	}
+});
+
+registerAction2(class extends ViewAction<DatabaseConnectionsView> {
+	constructor() {
+		super({
+			id: 'pollis.databases.disconnectOpen',
+			title: localize2('databases.disconnectOpen', "Disconnect"),
+			icon: Codicon.debugDisconnect,
+			viewId: DatabaseConnectionsView.ID,
+			menu: { id: MenuId.ViewTitle, when: ContextKeyExpr.and(connectionsViewTitle, DatabaseConnectionOpen), group: 'navigation', order: 2 },
+		});
+	}
+	async runInView(accessor: ServicesAccessor, view: DatabaseConnectionsView): Promise<void> {
+		if (view.openConnectionId) {
+			await sendToJuliaRepl(generateSessionDisconnectCode(view.openConnectionId), accessor.get(ICommandService));
+		}
 	}
 });
 
@@ -97,7 +131,7 @@ registerAction2(class extends Action2 {
 			icon: Codicon.refresh,
 			f1: true,
 			menu: [
-				{ id: MenuId.ViewTitle, when: connectionsViewTitle, group: 'navigation', order: 2 },
+				{ id: MenuId.ViewTitle, when: connectionsViewTitle, group: 'navigation', order: 4 },
 				{ id: DatabaseConnectionContextMenu, when: ContextKeyExpr.and(onConnection, DatabaseItemConnected), group: '1_connect', order: 3 },
 				{ id: DatabaseItemInlineMenu, when: ContextKeyExpr.and(onConnection, DatabaseItemConnected), group: 'inline', order: 1 },
 			],
@@ -210,7 +244,7 @@ registerAction2(class extends Action2 {
 		super({
 			id: 'pollis.databases.editConnection',
 			title: localize2('databases.edit', "Edit Connection"),
-			menu: { id: DatabaseConnectionContextMenu, when: onSavedConnection, group: '3_edit', order: 1 },
+			menu: { id: DatabaseConnectionContextMenu, when: onEditableConnection, group: '3_edit', order: 1 },
 		});
 	}
 	run(accessor: ServicesAccessor, arg: IDatabaseItemArg): void {
@@ -226,7 +260,11 @@ registerAction2(class extends Action2 {
 		super({
 			id: 'pollis.databases.deleteConnection',
 			title: localize2('databases.delete', "Delete Connection"),
-			menu: { id: DatabaseConnectionContextMenu, when: onSavedConnection, group: '3_edit', order: 2 },
+			icon: Codicon.close,
+			menu: [
+				{ id: DatabaseConnectionContextMenu, when: onEditableConnection, group: '3_edit', order: 2 },
+				{ id: DatabaseItemInlineMenu, when: onEditableConnection, group: 'inline', order: 9 },
+			],
 		});
 	}
 	async run(accessor: ServicesAccessor, arg: IDatabaseItemArg): Promise<void> {

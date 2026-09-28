@@ -1420,6 +1420,8 @@ export function activate(
                 )
                 connection.onNotification(notifyTypeProgress, updateProgress)
                 setContext('julia.isEvaluating', false)
+                // POLLIS: the welcome page names the version in its "Julia is ready" announcement.
+                setContext('julia.replVersion', juliaExecutable?.version ?? '')
                 setContext('julia.hasREPL', true)
             })
         ),

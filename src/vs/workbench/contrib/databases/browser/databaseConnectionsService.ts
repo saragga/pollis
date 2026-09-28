@@ -13,7 +13,7 @@ import { ILogService } from '../../../../platform/log/common/log.js';
 import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
 import { IPathService } from '../../../services/path/common/pathService.js';
 import { IDatabaseConnectionsService, IDatabaseSession } from '../common/databaseConnections.js';
-import { DatabaseConnectionTarget, IDatabaseConnectionProfile } from '../common/databaseDrivers.js';
+import { BUILTIN_DATABASE_ID, DatabaseConnectionTarget, IDatabaseConnectionProfile } from '../common/databaseDrivers.js';
 
 const STORAGE_KEY = 'pollis.databases.connections';
 
@@ -23,7 +23,7 @@ function storageScope(target: DatabaseConnectionTarget): StorageScope.PROFILE | 
 
 /**
  * Keeps the connection profiles as JSON arrays in profile storage (global) and workspace storage,
- * and follows the REPL connections through the snapshots PollisDB writes to
+ * lists the built-in Pollis database before them, and follows the REPL connections through the snapshots PollisDB writes to
  * ~/.pollis/databases/sessions/<profile id>.json.
  */
 export class DatabaseConnectionsService extends Disposable implements IDatabaseConnectionsService {
@@ -34,6 +34,7 @@ export class DatabaseConnectionsService extends Disposable implements IDatabaseC
 	readonly onDidChangeConnections = this._onDidChangeConnections.event;
 
 	private readonly sessionsFolder: URI;
+	private readonly builtin: IDatabaseConnectionProfile;
 	private sessions = new Map<string, IDatabaseSession>();
 	private readonly sessionsScheduler = this._register(new RunOnceScheduler(() => this.readSessions(), 100));
 
@@ -49,13 +50,24 @@ export class DatabaseConnectionsService extends Disposable implements IDatabaseC
 		this._register(this.storageService.onDidChangeValue(StorageScope.PROFILE, STORAGE_KEY, listeners)(() => this._onDidChangeConnections.fire()));
 
 		// Julia runs on this machine, so the snapshots live in the local home folder.
-		this.sessionsFolder = joinPath(pathService.userHome({ preferLocal: true }), '.pollis', 'databases', 'sessions');
+		const pollisFolder = joinPath(pathService.userHome({ preferLocal: true }), '.pollis');
+		this.sessionsFolder = joinPath(pollisFolder, 'databases', 'sessions');
+		// The same file as PollisDB.DATABASE.
+		this.builtin = {
+			id: BUILTIN_DATABASE_ID,
+			name: 'Pollis',
+			driver: 'duckdb',
+			target: 'global',
+			variable: 'pollis',
+			options: { path: joinPath(pollisFolder, 'pollis.duckdb').fsPath, readonly: false },
+			builtin: true,
+		};
 		void this.watchSessions();
 	}
 
 	getConnections(): readonly IDatabaseConnectionProfile[] {
 		const byName = (a: IDatabaseConnectionProfile, b: IDatabaseConnectionProfile) => a.name.localeCompare(b.name);
-		return [...this.read('global').sort(byName), ...this.read('workspace').sort(byName)];
+		return [this.builtin, ...this.read('global').sort(byName), ...this.read('workspace').sort(byName)];
 	}
 
 	getConnection(id: string): IDatabaseConnectionProfile | undefined {
@@ -63,6 +75,9 @@ export class DatabaseConnectionsService extends Disposable implements IDatabaseC
 	}
 
 	saveConnection(profile: IDatabaseConnectionProfile): void {
+		if (profile.id === BUILTIN_DATABASE_ID) {
+			return;
+		}
 		for (const target of ['global', 'workspace'] as const) {
 			const others = this.read(target).filter(c => c.id !== profile.id);
 			this.write(target, target === profile.target ? [...others, profile] : others);
@@ -71,6 +86,9 @@ export class DatabaseConnectionsService extends Disposable implements IDatabaseC
 	}
 
 	deleteConnection(id: string): void {
+		if (id === BUILTIN_DATABASE_ID) {
+			return;
+		}
 		for (const target of ['global', 'workspace'] as const) {
 			this.write(target, this.read(target).filter(c => c.id !== id));
 		}
@@ -124,7 +142,7 @@ export class DatabaseConnectionsService extends Disposable implements IDatabaseC
 		}
 		try {
 			const parsed: IDatabaseConnectionProfile[] = JSON.parse(raw);
-			return Array.isArray(parsed) ? parsed.map(c => ({ ...c, target })) : [];
+			return Array.isArray(parsed) ? parsed.filter(c => c.id !== BUILTIN_DATABASE_ID).map(c => ({ ...c, target })) : [];
 		} catch {
 			return [];
 		}

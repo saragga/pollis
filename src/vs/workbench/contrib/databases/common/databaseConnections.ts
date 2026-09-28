@@ -53,12 +53,12 @@ export interface IDatabaseConnectionsService {
 	/** Fires when a profile is saved or deleted, or a REPL session connects, disconnects or refreshes. */
 	readonly onDidChangeConnections: Event<void>;
 
-	/** Every saved profile, global ones first, each group sorted by name. */
+	/** The built-in Pollis database, then every saved profile, global ones first, each group sorted by name. */
 	getConnections(): readonly IDatabaseConnectionProfile[];
 
 	getConnection(id: string): IDatabaseConnectionProfile | undefined;
 
-	/** Add `profile`, or replace the profile with the same id (moving it if its target changed). */
+	/** Add `profile`, or replace the profile with the same id (moving it if its target changed). The built-in database is never saved. */
 	saveConnection(profile: IDatabaseConnectionProfile): void;
 
 	deleteConnection(id: string): void;
