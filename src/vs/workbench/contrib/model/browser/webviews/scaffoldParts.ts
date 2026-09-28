@@ -3,7 +3,7 @@
  *  Licensed under the GNU Affero General Public License v3.0 or later. See LICENSE.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { buildWebviewHtml, WebviewParts } from './webviewScaffold.js';
+import { buildWebviewHtml, NEXT_STEP_ICONS, WebviewParts } from './webviewScaffold.js';
 import { IModelInput, IModelToggle, IScaffoldPanelData } from '../common/model.types.js';
 
 /**
@@ -93,7 +93,7 @@ function buildNextSteps(panelId: string, data: IScaffoldPanelData): Pick<Webview
 	}
 	const btnId = (id: string) => `btn-${panelId}-${id}`;
 	return {
-		nextStepsHtml: groups.map(g => `\t\t\t\t\t<li><button class="list-btn panel-toggle" id="${btnId(g.id)}">${htmlEsc(g.label)}</button></li>`).join('\n'),
+		nextStepsHtml: groups.map(g => `\t\t\t\t\t<li><button class="list-btn panel-toggle" id="${btnId(g.id)}">${NEXT_STEP_ICONS[g.id] ?? ''}${htmlEsc(g.label)}</button></li>`).join('\n'),
 		nextStepsWiringJs: groups.map(g => `\t\tdocument.getElementById('${btnId(g.id)}').addEventListener('click', function() { showRightPanel(${actionsVar(g.id)}, '${jsEscape(g.label)}', '${btnId(g.id)}'); });`).join('\n'),
 	};
 }
