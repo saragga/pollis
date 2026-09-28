@@ -1,3 +1,0 @@
-# Change Point
-
-Coming soon!

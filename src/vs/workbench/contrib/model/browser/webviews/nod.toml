@@ -1,0 +1,528 @@
+# Proximity-Based Outlier Detection Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/nod.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Proximity-Based Outlier Detection"
+viewType = "pollis.nod"
+defaultModel = "knn"
+
+[[packages]]
+name = "OutlierDetection.jl"
+github = "https://github.com/OutlierDetectionJL/OutlierDetection.jl"
+
+[[packages]]
+name = "OutlierDetectionNeighbors.jl"
+github = "https://github.com/OutlierDetectionJL/OutlierDetectionNeighbors.jl"
+
+[[notebookSections]]
+label = "Basic"
+
+[[notebookSections.notebooks]]
+name = "KNN Outliers"
+file = "nod/tutorial-01-knn-outliers.ipynb"
+bundled = true
+description = "Detect outliers using k-nearest neighbour distance scores with OutlierDetection.jl"
+
+[[notebookSections.notebooks]]
+name = "LOF"
+file = "nod/tutorial-02-lof.ipynb"
+bundled = true
+description = "Local Outlier Factor: density-based detection using local reachability density ratios"
+
+[[notebookSections]]
+label = "Advanced"
+
+[[notebookSections.notebooks]]
+name = "COF and ABOD"
+file = "nod/tutorial-03-cof-abod.ipynb"
+bundled = true
+description = "Connectivity-Based Outlier Factor and Angle-Based Outlier Detection for high-dimensional data"
+
+[[wikis]]
+name = "Factsheet"
+file = "nod/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "nod/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "nod/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "nod/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "nod/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "nod/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Detectors"
+
+[[wikis]]
+name = "KNN"
+file = "nod/knn.md"
+bundled = true
+
+[[wikis]]
+name = "LOF"
+file = "nod/lof.md"
+bundled = true
+
+[[wikis]]
+name = "COF"
+file = "nod/cof.md"
+bundled = true
+
+[[wikis]]
+name = "ABOD"
+file = "nod/abod.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "OutlierDetection.jl: A Modular Outlier Detection Ecosystem for the Julia Programming Language"
+authors = "Muhr, David; Affenzeller, Michael"
+year = 2022
+journal = "GitHub"
+url = "https://github.com/OutlierDetectionJL/OutlierDetection.jl"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Outlier Analysis"
+authors = "Aggarwal, Charu C."
+year = 2017
+journal = "Springer (2nd ed.)"
+doi = "10.1007/978-3-319-47578-3"
+openAccess = false
+
+[[references]]
+title = "Anomaly Detection: A Survey"
+authors = "Chandola, Varun; Banerjee, Arindam; Kumar, Vipin"
+year = 2009
+journal = "ACM Computing Surveys"
+doi = "10.1145/1541880.1541882"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "LOF: Identifying Density-Based Local Outliers"
+authors = "Breunig, Markus M.; Kriegel, Hans-Peter; Ng, Raymond T.; Sander, Jörg"
+year = 2000
+journal = "ACM SIGMOD"
+doi = "10.1145/342009.335388"
+openAccess = false
+
+[[references]]
+title = "Enhancing Effectiveness of Outlier Detections for Low Density Patterns"
+authors = "Tang, Jian; Chen, Zhixiang; Fu, Ada Wai-chee; Cheung, David W."
+year = 2002
+journal = "PAKDD"
+doi = "10.1007/3-540-47887-6_53"
+openAccess = false
+
+[[references]]
+title = "Angle-Based Outlier Detection in High-Dimensional Data"
+authors = "Kriegel, Hans-Peter; Schubert, Matthias; Zimek, Arthur"
+year = 2008
+journal = "ACM SIGKDD"
+doi = "10.1145/1401890.1401946"
+openAccess = false
+
+[[models]]
+id = "knn"
+label = "KNN"
+
+[[models]]
+id = "lof"
+label = "LOF"
+
+[[models]]
+id = "cof"
+label = "COF"
+
+[[models]]
+id = "abod"
+label = "ABOD"
+
+[[bullets]]
+text = "k-Nearest Neighbours (KNN)"
+detail = "scores each point by its distance to the k-th nearest neighbour; isolated points receive high scores"
+
+[[bullets]]
+text = "Local Outlier Factor (LOF)"
+detail = "compares a point's local reachability density to that of its neighbours; low relative density indicates an outlier"
+
+[[bullets]]
+text = "Connectivity-Based Outlier Factor (COF)"
+detail = "extends LOF using chaining distances; more robust in sparse, elongated clusters"
+
+[[bullets]]
+text = "Angle-Based Outlier Detection (ABOD)"
+detail = "measures the variance of angles subtended at a point by pairs of other points; outliers subtend a narrow angle range"
+
+[[decisionRows]]
+task = "KNN"
+context = "One dense cloud, global outliers"
+purpose = "Fast, simple baseline: far from everything means outlying"
+
+[[decisionRows]]
+task = "LOF"
+context = "Clusters of different densities"
+purpose = "Local outliers that sit just outside a tight cluster"
+
+[[decisionRows]]
+task = "COF"
+context = "Elongated or chain-shaped clusters"
+purpose = "Avoids flagging the ends of thin, linear structures"
+
+[[decisionRows]]
+task = "ABOD"
+context = "Moderate to high dimensions"
+purpose = "Angle variance degrades less than distances as dimension grows"
+
+[[inputs]]
+id = "data"
+label = "Data (X)"
+tooltip = "Numeric matrix with observations in rows and features in columns (n x p). The detectors expect observations in columns, so the code passes permutedims(X)."
+default = "X"
+
+[[inputs]]
+id = "k"
+label = "Neighbours (k)"
+tooltip = "Number of nearest neighbours; typical values 5 to 20. A larger k smooths the scores; a k smaller than the size of a small outlier group lets the group hide itself."
+default = "10"
+
+[[inputs]]
+id = "contam"
+label = "Contamination"
+tooltip = "Expected fraction of outliers in the data, e.g. 0.05 for 5%. Points scoring above the 1 - contamination quantile are flagged."
+default = "0.05"
+
+[[inputs]]
+id = "reduction"
+label = "Reduction"
+tooltip = "How the distances to the k neighbours become one score: maximum is the distance to the k-th neighbour, mean and median average over all k neighbours."
+kind = "select"
+default = "maximum"
+models = ["knn"]
+
+[[inputs.options]]
+value = "maximum"
+label = "maximum"
+
+[[inputs.options]]
+value = "mean"
+label = "mean"
+
+[[inputs.options]]
+value = "median"
+label = "median"
+
+[[inputs]]
+id = "enhanced"
+label = "Variant"
+tooltip = "FastABOD measures the variance of angles to the k nearest neighbours only (Kriegel et al. 2008). Enhanced ABOD (Li, Lv and Cheng 2015) uses more stable neighbour relationships."
+kind = "select"
+default = "false"
+models = ["abod"]
+
+[[inputs.options]]
+value = "false"
+label = "FastABOD"
+
+[[inputs.options]]
+value = "true"
+label = "Enhanced ABOD"
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.knn]
+# A cluster, an isolated point and its long distance to the nearest point
+svg = '''
+var s = '';
+var p = [[14,54],[19,48],[12,44],[22,56],[17,40],[24,46]];
+for (var i = 0; i < p.length; i++) {
+	s += '<circle cx="' + p[i][0] + '" cy="' + p[i][1] + '" r="2" fill="currentColor" opacity="0.6"/>';
+}
+s += '<line x1="24" y1="46" x2="42" y2="24" stroke="currentColor" stroke-width="1" stroke-dasharray="2,2"/>';
+s += '<circle cx="42" cy="24" r="3" fill="none" stroke="currentColor" stroke-width="1.5"/>';
+return s;
+'''
+
+[miniCharts.lof]
+# A dense and a sparse cluster; the local outlier sits just outside the dense one
+svg = '''
+var s = '';
+var dense = [[13,30],[15,33],[12,34],[16,29],[14,36]];
+var sparse = [[30,52],[42,48],[34,64],[46,62],[38,56]];
+for (var i = 0; i < dense.length; i++) {
+	s += '<circle cx="' + dense[i][0] + '" cy="' + dense[i][1] + '" r="1.8" fill="currentColor" opacity="0.6"/>';
+	s += '<circle cx="' + sparse[i][0] + '" cy="' + sparse[i][1] + '" r="1.8" fill="currentColor" opacity="0.6"/>';
+}
+s += '<circle cx="14" cy="32" r="8" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.4"/>';
+s += '<circle cx="26" cy="24" r="3" fill="none" stroke="currentColor" stroke-width="1.5"/>';
+return s;
+'''
+
+[miniCharts.cof]
+# A chain-shaped cluster with an off-chain outlier
+svg = '''
+var s = '';
+var d = '';
+for (var i = 0; i < 7; i++) {
+	var x = 8 + i * 6, y = 66 - i * 6;
+	s += '<circle cx="' + x + '" cy="' + y + '" r="1.8" fill="currentColor" opacity="0.6"/>';
+	d += (i ? 'L' : 'M') + x + ',' + y;
+}
+s += '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.4"/>';
+s += '<circle cx="40" cy="60" r="3" fill="none" stroke="currentColor" stroke-width="1.5"/>';
+return s;
+'''
+
+[miniCharts.abod]
+# Rays from the outlier to cluster points span a narrow angle
+svg = '''
+var s = '';
+var p = [[12,58],[16,52],[20,62],[10,50],[22,55]];
+for (var i = 0; i < p.length; i++) {
+	s += '<circle cx="' + p[i][0] + '" cy="' + p[i][1] + '" r="1.8" fill="currentColor" opacity="0.6"/>';
+	s += '<line x1="42" y1="22" x2="' + p[i][0] + '" y2="' + p[i][1] + '" stroke="currentColor" stroke-width="0.6" opacity="0.4"/>';
+}
+s += '<circle cx="42" cy="22" r="3" fill="none" stroke="currentColor" stroke-width="1.5"/>';
+return s;
+'''
+
+[[codeBranches]]
+model = "knn"
+code = '''
+using OutlierDetection, OutlierDetectionNeighbors, Statistics
+
+detector = KNNDetector(k={{k}}, reduction=:{{reduction}})  # distance to the k nearest neighbours
+model, scores = OutlierDetection.fit(detector, permutedims({{data}}); verbosity=0)  # observations in columns
+
+threshold = quantile(scores, 1 - {{contam}})  # flag the top {{contam}} of scores
+outliers  = findall(scores .> threshold)  # row indices of the flagged points
+println("Outliers detected: ", length(outliers))
+'''
+
+[[codeBranches]]
+model = "lof"
+code = '''
+using OutlierDetection, OutlierDetectionNeighbors, Statistics
+
+detector = LOFDetector(k={{k}})  # local reachability density relative to the neighbours
+model, scores = OutlierDetection.fit(detector, permutedims({{data}}); verbosity=0)  # observations in columns
+
+threshold = quantile(scores, 1 - {{contam}})  # LOF near 1 is normal, well above 1 is outlying
+outliers  = findall(scores .> threshold)  # row indices of the flagged points
+println("Outliers detected: ", length(outliers))
+'''
+
+[[codeBranches]]
+model = "cof"
+code = '''
+using OutlierDetection, OutlierDetectionNeighbors, Statistics
+
+detector = COFDetector(k={{k}})  # average chaining distance relative to the neighbours
+model, scores = OutlierDetection.fit(detector, permutedims({{data}}); verbosity=0)  # observations in columns
+
+threshold = quantile(scores, 1 - {{contam}})  # flag the top {{contam}} of scores
+outliers  = findall(scores .> threshold)  # row indices of the flagged points
+println("Outliers detected: ", length(outliers))
+'''
+
+[[codeBranches]]
+model = "abod"
+code = '''
+using OutlierDetection, OutlierDetectionNeighbors, Statistics
+
+detector = ABODDetector(k={{k}}, enhanced={{enhanced}})  # inverted variance of angles to pairs of neighbours
+model, scores = OutlierDetection.fit(detector, permutedims({{data}}); verbosity=0)  # observations in columns
+
+threshold = quantile(scores, 1 - {{contam}})  # high score = small angle variance = outlying
+outliers  = findall(scores .> threshold)  # row indices of the flagged points
+println("Outliers detected: ", length(outliers))
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "score-scatter"
+label = "Score Scatter"
+desc = "First two features, coloured by outlier score, with flagged points marked"
+code = '''
+using Plots, Statistics
+
+threshold = quantile(scores, 1 - {{contam}})
+flagged   = scores .> threshold
+scatter({{data}}[:, 1], {{data}}[:, 2], zcolor=scores, markerstrokewidth=0, label="Score", xlabel="Feature 1", ylabel="Feature 2")
+scatter!({{data}}[flagged, 1], {{data}}[flagged, 2], marker=:x, markersize=6, color=:red, label="Flagged")
+'''
+
+[[actionGroups.actions]]
+id = "score-histogram"
+label = "Score Distribution"
+desc = "Histogram of outlier scores with the contamination threshold"
+code = '''
+using Plots, Statistics
+
+threshold = quantile(scores, 1 - {{contam}})
+histogram(scores, bins=40, label="Scores", xlabel="Outlier score", ylabel="Count")
+vline!([threshold], color=:red, linestyle=:dash, label="Threshold")  # a clear gap before the tail is reassuring
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "k-sensitivity"
+label = "k Sensitivity"
+desc = "How stable the flagged set is as k changes"
+code = '''
+using OutlierDetection, OutlierDetectionNeighbors, Statistics, Plots
+
+{{?model=knn}}Detector = KNNDetector
+{{?model=lof}}Detector = LOFDetector
+{{?model=cof}}Detector = COFDetector
+{{?model=abod}}Detector = ABODDetector
+function flagged_set(k)
+	_, s = OutlierDetection.fit(Detector(k=k), permutedims({{data}}); verbosity=0)
+	Set(findall(s .> quantile(s, 1 - {{contam}})))
+end
+
+ks   = [5, 10, 15, 20, 30]
+base = flagged_set({{k}})
+jacc = [length(intersect(base, flagged_set(k))) / length(union(base, flagged_set(k))) for k in ks]
+plot(ks, jacc, marker=:circle, xlabel="k", ylabel="Jaccard overlap with k = {{k}}", ylims=(0, 1.05), label=false)
+'''
+
+[[actionGroups.actions]]
+id = "top-outliers"
+label = "Top Outliers"
+desc = "Row indices and scores of the highest-ranked points"
+code = '''
+ranked = sortperm(scores, rev=true)  # most outlying first
+for i in ranked[1:10]
+	println("row ", i, "  score = ", round(scores[i], sigdigits=4))
+end
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "score-new"
+label = "Score New Points"
+desc = "Apply the fitted detector to new observations X_new"
+code = '''
+using OutlierDetection, OutlierDetectionNeighbors, Statistics
+
+threshold  = quantile(scores, 1 - {{contam}})  # calibrated on the training scores
+new_scores = OutlierDetection.transform(detector, model, permutedims(X_new))  # X_new: rows = observations
+new_flags  = new_scores .> threshold
+println("Flagged ", sum(new_flags), " of ", length(new_flags), " new points")
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "compare-detectors"
+label = "Compare All Four"
+desc = "Which points KNN, LOF, COF and ABOD agree on"
+code = '''
+using OutlierDetection, OutlierDetectionNeighbors, Statistics
+
+detectors = [KNNDetector(k={{k}}), LOFDetector(k={{k}}), COFDetector(k={{k}}), ABODDetector(k={{k}})]
+labels    = ["KNN", "LOF", "COF", "ABOD"]
+flags = reduce(hcat, map(detectors) do d
+	_, s = OutlierDetection.fit(d, permutedims({{data}}); verbosity=0)
+	s .> quantile(s, 1 - {{contam}})
+end)
+votes = vec(sum(flags, dims=2))
+println("Flagged per detector: ", Dict(zip(labels, vec(sum(flags, dims=1)))))
+println("Flagged by 2 or more: ", findall(votes .>= 2))
+'''
+
+[[actionGroups.actions]]
+id = "rank-correlation"
+label = "Rank Correlation"
+desc = "Spearman correlation between the four detectors' scores"
+code = '''
+using OutlierDetection, OutlierDetectionNeighbors, StatsBase
+
+detectors = [KNNDetector(k={{k}}), LOFDetector(k={{k}}), COFDetector(k={{k}}), ABODDetector(k={{k}})]
+S = reduce(hcat, [OutlierDetection.fit(d, permutedims({{data}}); verbosity=0)[2] for d in detectors])
+display(corspearman(S))  # rows and columns: KNN, LOF, COF, ABOD
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "normalise-scores"
+label = "Normalise Scores"
+desc = "Rescale scores to [0, 1] and to percentile ranks"
+code = '''
+using StatsBase
+
+scaled = (scores .- minimum(scores)) ./ (maximum(scores) - minimum(scores))  # [0, 1], sensitive to extremes
+pct    = ordinalrank(scores) ./ length(scores)  # percentile rank, comparable across detectors
+top    = argmax(scores)
+println("Top point: row ", top, ", min-max ", round(scaled[top], digits=3), ", percentile ", round(pct[top], digits=3))
+'''
+
+[[actionGroups.actions]]
+id = "feature-deviations"
+label = "Feature Deviations"
+desc = "Standardised feature values of the most outlying point"
+code = '''
+using Statistics
+
+top = argmax(scores)
+z   = ({{data}}[top, :] .- vec(mean({{data}}, dims=1))) ./ vec(std({{data}}, dims=1))  # z-score per feature
+for j in sortperm(abs.(z), rev=true)
+	println("feature ", j, "  z = ", round(z[j], digits=2))  # large |z| drives the distance
+end
+'''

@@ -27,9 +27,9 @@ import { openMcatWebview } from '../../model/browser/commands/mcat.command.js';
 import { openRzooWebview } from '../../model/browser/commands/rzoo.command.js';
 import { DSTATS_PANEL } from '../../model/browser/commands/dstats.command.js';
 import { openScaffoldWebview } from '../../model/browser/commands/scaffold.command.js';
-import { openNodWebview } from '../../model/browser/commands/nod.command.js';
-import { openAndeWebview } from '../../model/browser/commands/ande.command.js';
-import { openNovdWebview } from '../../model/browser/commands/novd.command.js';
+import { NOD_PANEL } from '../../model/browser/commands/nod.command.js';
+import { ANDE_PANEL } from '../../model/browser/commands/ande.command.js';
+import { NOVD_PANEL } from '../../model/browser/commands/novd.command.js';
 import { openCvizWebview } from '../../model/browser/commands/cviz.command.js';
 import { openDcmpWebview } from '../../model/browser/commands/dcmp.command.js';
 import { openMvizWebview } from '../../model/browser/commands/mviz.command.js';
@@ -119,29 +119,9 @@ CommandsRegistry.registerCommand(EXPL_COMMAND_ID, () => {
 
 CommandsRegistry.registerCommand(DSTATS_ID, (accessor: ServicesAccessor) => openScaffoldWebview(accessor, DSTATS_PANEL));
 
-CommandsRegistry.registerCommand(NOD_ID, (accessor: ServicesAccessor) => {
-	openNodWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	);
-});
+CommandsRegistry.registerCommand(NOD_ID, (accessor: ServicesAccessor) => openScaffoldWebview(accessor, NOD_PANEL));
 
-CommandsRegistry.registerCommand(ANDE_ID, (accessor: ServicesAccessor) => {
-	openAndeWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	);
-});
+CommandsRegistry.registerCommand(ANDE_ID, (accessor: ServicesAccessor) => openScaffoldWebview(accessor, ANDE_PANEL));
 
 CommandsRegistry.registerCommand(IDAT_ID, (accessor: ServicesAccessor) => {
 	openIdatWebview(
@@ -375,17 +355,7 @@ CommandsRegistry.registerCommand(HMD_ID, (accessor: ServicesAccessor) => {
 	);
 });
 
-CommandsRegistry.registerCommand(NOVD_ID, (accessor: ServicesAccessor) => {
-	openNovdWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	);
-});
+CommandsRegistry.registerCommand(NOVD_ID, (accessor: ServicesAccessor) => openScaffoldWebview(accessor, NOVD_PANEL));
 
 CommandsRegistry.registerCommand(RDYN_ID, (accessor: ServicesAccessor) => {
 	openRdynWebview(

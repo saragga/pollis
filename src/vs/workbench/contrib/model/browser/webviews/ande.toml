@@ -1,0 +1,487 @@
+# Learning-Based Anomaly Detection Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/ande.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Learning-Based Anomaly Detection"
+viewType = "pollis.ande"
+defaultModel = "ae"
+
+[[packages]]
+name = "OutlierDetectionNetworks.jl"
+github = "https://github.com/OutlierDetectionJL/OutlierDetectionNetworks.jl"
+
+[[packages.videos]]
+title = "High Performance Computing in Julia"
+description = "An 18-video course by Jamie Mair on writing fast Julia code"
+url = "https://www.youtube.com/playlist?list=PLUAq6xQKFgGr39PiyrPk_C9dhBKvWcjUA"
+
+[[packages]]
+name = "OutlierDetection.jl"
+github = "https://github.com/OutlierDetectionJL/OutlierDetection.jl"
+
+[[packages]]
+name = "Flux.jl"
+github = "https://github.com/FluxML/Flux.jl"
+
+[[notebookSections]]
+label = "Basic"
+
+[[notebookSections.notebooks]]
+name = "AutoEncoder Anomaly"
+file = "ande/tutorial-01-autoencoder.ipynb"
+bundled = true
+description = "Use reconstruction error from a trained autoencoder as an anomaly score"
+
+[[notebookSections]]
+label = "Advanced"
+
+[[notebookSections.notebooks]]
+name = "DeepSAD and ESAD"
+file = "ande/tutorial-02-deepsad-esad.ipynb"
+bundled = true
+description = "Semi-supervised anomaly detection with a small set of known anomaly labels"
+
+[[wikis]]
+name = "Factsheet"
+file = "ande/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "ande/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "ande/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "ande/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "ande/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "ande/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Methods"
+
+[[wikis]]
+name = "AutoEncoder"
+file = "ande/autoencoder.md"
+bundled = true
+
+[[wikis]]
+name = "DeepSAD"
+file = "ande/deepsad.md"
+bundled = true
+
+[[wikis]]
+name = "ESAD"
+file = "ande/esad.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "OutlierDetectionNetworks.jl: Neural Outlier Detection in Julia"
+authors = "Muhr, David"
+year = 2023
+journal = "GitHub"
+url = "https://github.com/OutlierDetectionJL/OutlierDetectionNetworks.jl"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Outlier Analysis"
+authors = "Aggarwal, Charu C."
+year = 2017
+journal = "Springer (2nd ed.)"
+doi = "10.1007/978-3-319-47578-3"
+openAccess = false
+
+[[references]]
+title = "Deep Learning"
+authors = "Goodfellow, Ian; Bengio, Yoshua; Courville, Aaron"
+year = 2016
+journal = "MIT Press"
+url = "https://www.deeplearningbook.org/"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Deep One-Class Classification"
+authors = "Ruff, Lukas; Vandermeulen, Robert A.; Goernitz, Nico; Deecke, Lucas; Siddiqui, Shoaib Ahmed; Binder, Alexander; Mueller, Emmanuel; Kloft, Marius"
+year = 2018
+journal = "ICML"
+url = "https://arxiv.org/abs/1801.05365"
+openAccess = true
+
+[[references]]
+title = "Deep SAD: A Method for Deep Semi-Supervised Anomaly Detection"
+authors = "Ruff, Lukas; Vandermeulen, Robert A.; Franks, Billy Joe; Mueller, Emmanuel; Kloft, Marius"
+year = 2020
+journal = "ICLR"
+url = "https://arxiv.org/abs/1906.02694"
+openAccess = true
+
+[[references]]
+title = "ESAD: End-to-End Deep Semi-Supervised Anomaly Detection"
+authors = "Huang, Chaoqin; Ye, Fei; Zhang, Ya; Wang, Yan-Feng; Tian, Qi"
+year = 2021
+journal = "arXiv"
+url = "https://arxiv.org/abs/2012.04905"
+openAccess = true
+
+[[models]]
+id = "ae"
+label = "AutoEncoder"
+
+[[models]]
+id = "deepsad"
+label = "DeepSAD"
+
+[[models]]
+id = "esad"
+label = "ESAD"
+
+[[bullets]]
+text = "AutoEncoder (AE)"
+detail = "trains an encoder-decoder network to reconstruct the data; anomalies have a high reconstruction error because the network cannot compress them well"
+
+[[bullets]]
+text = "Deep Semi-Supervised Anomaly Detection (DeepSAD)"
+detail = "learns a latent space in which normal samples gather around a centre; a small set of labelled anomalies is pushed away from it"
+
+[[bullets]]
+text = "End-to-End Semi-Supervised Anomaly Detection (ESAD)"
+detail = "trains the representation and the detector jointly in one stage, using the labelled anomalies throughout"
+
+[[decisionRows]]
+task = "AutoEncoder"
+context = "Unlabelled data with nonlinear structure"
+purpose = "Anomalies are the points the network cannot reconstruct"
+
+[[decisionRows]]
+task = "DeepSAD"
+context = "A few labelled anomalies are available"
+purpose = "Tighten the normal region around a centre and push known anomalies out"
+
+[[decisionRows]]
+task = "ESAD"
+context = "Labelled anomalies, single training stage"
+purpose = "End-to-end training without a separate pretraining phase"
+
+[[decisionRows]]
+task = "Proximity-based instead"
+context = "Small, low-dimensional tabular data"
+purpose = "KNN or LOF need no training and are easier to explain"
+
+[[inputs]]
+id = "data"
+label = "Data (X)"
+tooltip = "Numeric matrix with observations in rows and features in columns (n x p). The code scales each feature to [0, 1] and passes the transpose, because the networks expect observations in columns."
+default = "X"
+
+[[inputs]]
+id = "contam"
+label = "Contamination"
+tooltip = "Expected fraction of anomalies in X, e.g. 0.05. Points scoring above the 1 - contamination quantile are flagged."
+default = "0.05"
+
+[[inputs]]
+id = "known"
+label = "Known Anomalies"
+tooltip = "Row indices of X known to be anomalies, e.g. anom_idx = [3, 17, 42]. All other rows are treated as normal during training."
+default = "anom_idx"
+models = ["deepsad", "esad"]
+
+[[inputs]]
+id = "latent"
+label = "Latent Size"
+tooltip = "Width of the bottleneck layer. It must be well below the number of features, or the network can learn to copy anomalies too."
+default = "2"
+newRow = true
+
+[[inputs]]
+id = "hidden"
+label = "Hidden Layers"
+tooltip = "Widths of the hidden layers of the encoder, as a Julia vector; the decoder mirrors them. Example: [64, 32]"
+default = "[32, 16]"
+
+[[inputs]]
+id = "epochs"
+label = "Epochs"
+tooltip = "Passes over the training data. Start with 50 to 100; too few epochs underfit, too many let the network reconstruct anomalies as well."
+default = "50"
+
+[[inputs]]
+id = "eta"
+label = "Label Weight (eta)"
+tooltip = "Weight of the labelled points in the DeepSAD loss. Values above 1 trust the labels more than the unlabelled data."
+default = "1"
+models = ["deepsad"]
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.ae]
+# Hourglass encoder-decoder with a narrow bottleneck
+svg = '''
+var s = '';
+var cols = [[8, 5], [18, 3], [27, 1], [36, 3], [46, 5]];
+for (var c = 0; c < cols.length; c++) {
+	var x = cols[c][0], n = cols[c][1];
+	for (var i = 0; i < n; i++) {
+		var y = 44 + (i - (n - 1) / 2) * 8;
+		s += '<circle cx="' + x + '" cy="' + y + '" r="2.2" fill="currentColor" opacity="' + (c === 2 ? '1' : '0.55') + '"/>';
+	}
+}
+s += '<path d="M8,26 L27,40 L46,26 M8,62 L27,48 L46,62" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.4"/>';
+return s;
+'''
+
+[miniCharts.deepsad]
+# Normal points inside a hypersphere, a labelled anomaly pushed outside
+svg = '''
+var s = '<circle cx="24" cy="48" r="14" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="2,2"/>';
+var p = [[20,44],[26,50],[22,53],[29,44],[24,40],[18,50]];
+for (var i = 0; i < p.length; i++) {
+	s += '<circle cx="' + p[i][0] + '" cy="' + p[i][1] + '" r="1.8" fill="currentColor" opacity="0.6"/>';
+}
+s += '<line x1="36" y1="37" x2="42" y2="30" stroke="currentColor" stroke-width="1"/>';
+s += '<path d="M45,26 l-5,1 l3,3 z" fill="currentColor"/>';
+s += '<text x="44" y="24" font-size="9" text-anchor="middle" fill="currentColor">x</text>';
+return s;
+'''
+
+[miniCharts.esad]
+# Two encoders trained jointly into one latent centre
+svg = '''
+var s = '';
+s += '<path d="M6,28 L20,34 L20,42 L6,48 Z" fill="none" stroke="currentColor" stroke-width="1" opacity="0.7"/>';
+s += '<path d="M6,52 L20,58 L20,66 L6,72 Z" fill="none" stroke="currentColor" stroke-width="1" opacity="0.7"/>';
+s += '<line x1="20" y1="38" x2="34" y2="48" stroke="currentColor" stroke-width="0.8"/>';
+s += '<line x1="20" y1="62" x2="34" y2="52" stroke="currentColor" stroke-width="0.8"/>';
+s += '<circle cx="40" cy="50" r="7" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="2,2"/>';
+s += '<circle cx="40" cy="50" r="1.8" fill="currentColor"/>';
+return s;
+'''
+
+[[codeBranches]]
+model = "ae"
+code = '''
+using OutlierDetection, OutlierDetectionNetworks, Flux, Statistics
+using OutlierDetectionNetworks.Templates: MLPAutoEncoder
+
+lo, hi = minimum({{data}}, dims=1), maximum({{data}}, dims=1)
+Xs = Float32.(permutedims(({{data}} .- lo) ./ (hi .- lo)))  # scale to [0, 1], observations in columns
+
+encoder, decoder = MLPAutoEncoder(size(Xs, 1), {{latent}}, {{hidden}}; bias=true)  # input, latent and hidden sizes
+detector = AEDetector(encoder=encoder, decoder=decoder, epochs={{epochs}}, opt=Adam(1e-3))
+model, scores = OutlierDetection.fit(detector, Xs; verbosity=0)  # score = reconstruction error
+
+threshold = quantile(scores, 1 - {{contam}})  # flag the top {{contam}} of scores
+anomalies = findall(scores .> threshold)  # row indices of the flagged points
+println("Anomalies detected: ", length(anomalies))
+'''
+
+[[codeBranches]]
+model = "deepsad"
+code = '''
+using OutlierDetection, OutlierDetectionNetworks, Flux, Statistics
+using OutlierDetectionNetworks.Templates: MLPAutoEncoder
+
+lo, hi = minimum({{data}}, dims=1), maximum({{data}}, dims=1)
+Xs = Float32.(permutedims(({{data}} .- lo) ./ (hi .- lo)))  # scale to [0, 1], observations in columns
+y  = fill("normal", size({{data}}, 1))  # unlabelled rows are treated as normal
+y[{{known}}] .= "outlier"  # rows known to be anomalies
+
+encoder, decoder = MLPAutoEncoder(size(Xs, 1), {{latent}}, {{hidden}}; bias=true)  # the decoder is used for pretraining only
+detector = DSADDetector(encoder=encoder, decoder=decoder, epochs=(10, {{epochs}}), eta={{eta}})  # (pretraining, training) epochs
+model, scores = OutlierDetection.fit(detector, Xs, to_categorical(y); verbosity=0)  # score = distance to the centre
+
+threshold = quantile(scores, 1 - {{contam}})  # flag the top {{contam}} of scores
+anomalies = findall(scores .> threshold)  # row indices of the flagged points
+println("Anomalies detected: ", length(anomalies))
+'''
+
+[[codeBranches]]
+model = "esad"
+code = '''
+using OutlierDetection, OutlierDetectionNetworks, Flux, Statistics
+using OutlierDetectionNetworks.Templates: MLPAutoEncoder
+
+lo, hi = minimum({{data}}, dims=1), maximum({{data}}, dims=1)
+Xs = Float32.(permutedims(({{data}} .- lo) ./ (hi .- lo)))  # scale to [0, 1], observations in columns
+y  = fill("normal", size({{data}}, 1))  # unlabelled rows are treated as normal
+y[{{known}}] .= "outlier"  # rows known to be anomalies
+
+encoder, decoder = MLPAutoEncoder(size(Xs, 1), {{latent}}, {{hidden}}; bias=true)
+detector = ESADDetector(encoder=encoder, decoder=decoder, epochs={{epochs}})  # one end-to-end training stage
+model, scores = OutlierDetection.fit(detector, Xs, to_categorical(y); verbosity=0)  # score = distance in latent space
+
+threshold = quantile(scores, 1 - {{contam}})  # flag the top {{contam}} of scores
+anomalies = findall(scores .> threshold)  # row indices of the flagged points
+println("Anomalies detected: ", length(anomalies))
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "score-scatter"
+label = "Score Scatter"
+desc = "First two features, coloured by anomaly score, with flagged points marked"
+code = '''
+using Plots, Statistics
+
+threshold = quantile(scores, 1 - {{contam}})
+flagged   = scores .> threshold
+scatter({{data}}[:, 1], {{data}}[:, 2], zcolor=scores, markerstrokewidth=0, label="Score", xlabel="Feature 1", ylabel="Feature 2")
+scatter!({{data}}[flagged, 1], {{data}}[flagged, 2], marker=:x, markersize=6, color=:red, label="Flagged")
+'''
+
+[[actionGroups.actions]]
+id = "score-histogram"
+label = "Score Distribution"
+desc = "Histogram of anomaly scores with the contamination threshold"
+code = '''
+using Plots, Statistics
+
+threshold = quantile(scores, 1 - {{contam}})
+histogram(scores, bins=40, label="Scores", xlabel="Anomaly score", ylabel="Count")
+vline!([threshold], color=:red, linestyle=:dash, label="Threshold")  # a clear gap before the tail is reassuring
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "seed-stability"
+label = "Seed Stability"
+desc = "Refit with three random seeds and compare the score rankings"
+code = '''
+using OutlierDetection, OutlierDetectionNetworks, Flux, Random, StatsBase
+using OutlierDetectionNetworks.Templates: MLPAutoEncoder
+
+runs = map(1:3) do seed
+	Random.seed!(seed)  # different initial weights and batches
+	encoder, decoder = MLPAutoEncoder(size(Xs, 1), {{latent}}, {{hidden}}; bias=true)
+{{?model=ae}}	d = AEDetector(encoder=encoder, decoder=decoder, epochs={{epochs}}, opt=Adam(1e-3))
+{{?model=ae}}	OutlierDetection.fit(d, Xs; verbosity=0)[2]
+{{?model=deepsad}}	d = DSADDetector(encoder=encoder, decoder=decoder, epochs=(10, {{epochs}}), eta={{eta}})
+{{?model=esad}}	d = ESADDetector(encoder=encoder, decoder=decoder, epochs={{epochs}})
+{{?model!=ae}}	OutlierDetection.fit(d, Xs, to_categorical(y); verbosity=0)[2]
+end
+display(corspearman(reduce(hcat, runs)))  # values near 1: the ranking does not depend on the seed
+'''
+
+[[actionGroups.actions]]
+id = "top-anomalies"
+label = "Top Anomalies"
+desc = "Row indices and scores of the highest-ranked points"
+code = '''
+ranked = sortperm(scores, rev=true)  # most anomalous first
+for i in ranked[1:10]
+	println("row ", i, "  score = ", round(scores[i], sigdigits=4))
+end
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "score-new"
+label = "Score New Data"
+desc = "Apply the fitted network to new observations X_new"
+code = '''
+using OutlierDetection, OutlierDetectionNetworks, Statistics
+
+threshold  = quantile(scores, 1 - {{contam}})  # calibrated on the training scores
+Xn         = Float32.(permutedims((X_new .- lo) ./ (hi .- lo)))  # same scaling as the training data
+new_scores = OutlierDetection.transform(detector, model, Xn)
+new_flags  = new_scores .> threshold
+println("Flagged ", sum(new_flags), " of ", length(new_flags), " new points")
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "vs-lof"
+label = "vs Proximity (LOF)"
+desc = "Agreement with a Local Outlier Factor baseline"
+code = '''
+using OutlierDetection, OutlierDetectionNeighbors, Statistics, StatsBase
+
+_, lof = OutlierDetection.fit(LOFDetector(k=20), Xs; verbosity=0)  # needs no training; k above the size of small anomaly clusters
+top_nn  = Set(findall(scores .> quantile(scores, 1 - {{contam}})))
+top_lof = Set(findall(lof .> quantile(lof, 1 - {{contam}})))
+println("Spearman correlation: ", round(corspearman(scores, lof), digits=3))
+println("Flagged by both: ", length(intersect(top_nn, top_lof)), " of ", length(top_nn))
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "feature-errors"
+label = "Feature Attribution"
+desc = "Which features make the most anomalous point stand out"
+code = '''
+using Flux, Statistics
+
+top = argmax(scores)
+{{?model=ae}}Flux.testmode!(model.chain)  # inference mode for the BatchNorm layers
+{{?model=ae}}err = (model.chain(Xs)[:, top] .- Xs[:, top]) .^ 2  # reconstruction error per feature
+{{?model!=ae}}err = abs.(Xs[:, top] .- vec(median(Xs, dims=2)))  # scaled distance from the median, per feature
+for j in sortperm(vec(err), rev=true)
+	println("feature ", j, "  ", round(err[j], sigdigits=3))
+end
+'''
+
+[[actionGroups.actions]]
+id = "normalise-scores"
+label = "Normalise Scores"
+desc = "Rescale scores to [0, 1] and to percentile ranks"
+code = '''
+using StatsBase
+
+scaled = (scores .- minimum(scores)) ./ (maximum(scores) - minimum(scores))  # [0, 1], sensitive to extremes
+pct    = ordinalrank(scores) ./ length(scores)  # percentile rank, comparable across detectors
+top    = argmax(scores)
+println("Top point: row ", top, ", min-max ", round(scaled[top], digits=3), ", percentile ", round(pct[top], digits=3))
+'''

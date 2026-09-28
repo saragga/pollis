@@ -1,0 +1,470 @@
+# Novelty Detection Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/novd.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Novelty Detection"
+viewType = "pollis.novd"
+defaultModel = "ocsvm"
+
+[[packages]]
+name = "LIBSVM.jl"
+github = "https://github.com/JuliaML/LIBSVM.jl"
+
+[[packages]]
+name = "OnlineStats.jl"
+github = "https://github.com/joshday/OnlineStats.jl"
+
+[[notebookSections]]
+label = "Non-Temporal"
+
+[[notebookSections.notebooks]]
+name = "One-Class SVM"
+file = "novd/tutorial-01-one-class-svm.ipynb"
+bundled = true
+description = "Learn a boundary around normal training data and flag novel test points with LIBSVM.jl"
+
+[[notebookSections.notebooks]]
+name = "Gaussian Novelty"
+file = "novd/tutorial-02-gaussian-novelty.ipynb"
+bundled = true
+description = "Fit a multivariate Gaussian to normal data and detect novelties via Mahalanobis distance"
+
+[[notebookSections]]
+label = "Temporal"
+
+[[notebookSections.notebooks]]
+name = "CUSUM"
+file = "novd/tutorial-03-cusum.ipynb"
+bundled = true
+description = "Detect sustained shifts from a baseline with the cumulative sum control chart"
+
+[[wikis]]
+name = "Factsheet"
+file = "novd/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "novd/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "novd/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "novd/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "novd/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "novd/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Non-Temporal"
+
+[[wikis]]
+name = "One-Class SVM"
+file = "novd/one-class-svm.md"
+bundled = true
+
+[[wikis]]
+name = "Gaussian Novelty"
+file = "novd/gaussian-novelty.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Temporal"
+
+[[wikis]]
+name = "CUSUM"
+file = "novd/cusum.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "LIBSVM.jl: Julia bindings for LIBSVM"
+authors = "JuliaML Contributors"
+year = 2023
+journal = "GitHub"
+url = "https://github.com/JuliaML/LIBSVM.jl"
+openAccess = true
+
+[[references]]
+title = "OnlineStats.jl: Single-Pass Algorithms for Statistics"
+authors = "Day, Josh"
+year = 2023
+journal = "GitHub"
+url = "https://github.com/joshday/OnlineStats.jl"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Anomaly Detection: A Survey"
+authors = "Chandola, Varun; Banerjee, Arindam; Kumar, Vipin"
+year = 2009
+journal = "ACM Computing Surveys"
+doi = "10.1145/1541880.1541882"
+openAccess = false
+
+[[references]]
+title = "Statistical Methods for Quality Improvement"
+authors = "Ryan, Thomas P."
+year = 2011
+journal = "Wiley (3rd ed.)"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Estimating the Support of a High-Dimensional Distribution"
+authors = "Scholkopf, Bernhard; Platt, John C.; Shawe-Taylor, John; Smola, Alex J.; Williamson, Robert C."
+year = 2001
+journal = "Neural Computation"
+doi = "10.1162/089976601750264965"
+openAccess = false
+
+[[references]]
+title = "Continuous Inspection Schemes"
+authors = "Page, Ewan S."
+year = 1954
+journal = "Biometrika"
+doi = "10.2307/2333009"
+openAccess = false
+
+[[models]]
+id = "ocsvm"
+label = "OC-SVM"
+
+[[models]]
+id = "gauss"
+label = "Gaussian"
+
+[[models]]
+id = "cusum"
+label = "CUSUM"
+
+[[bullets]]
+text = "One-Class Support Vector Machine (OC-SVM)"
+detail = "fits a boundary around the normal training data in kernel space; test points outside the boundary are novel"
+
+[[bullets]]
+text = "Gaussian Novelty"
+detail = "fits a multivariate Gaussian to normal data; a test point is novel when its Mahalanobis distance exceeds a chi-square quantile"
+
+[[bullets]]
+text = "Cumulative Sum (CUSUM)"
+detail = "monitors a series for sustained deviations from a baseline mean; small deviations accumulate until they cross an alarm threshold"
+
+[[decisionRows]]
+task = "OC-SVM"
+context = "Clean training data, curved or multimodal normal region"
+purpose = "Flexible boundary with no distributional assumption"
+
+[[decisionRows]]
+task = "Gaussian"
+context = "Clean training data, roughly elliptical normal region"
+purpose = "Fast, interpretable score with a principled threshold"
+
+[[decisionRows]]
+task = "CUSUM"
+context = "A series with a known in-control baseline"
+purpose = "Detect small, sustained shifts in the mean as they happen"
+
+[[inputs]]
+id = "train"
+label = "Training Data"
+tooltip = "Clean training data containing only normal observations, as an n x p matrix, e.g. X_train"
+default = "X_train"
+models = ["ocsvm", "gauss"]
+
+[[inputs]]
+id = "test"
+label = "Test Data"
+tooltip = "New observations to check for novelty, with the same columns as the training data, e.g. X_test"
+default = "X_test"
+models = ["ocsvm", "gauss"]
+
+[[inputs]]
+id = "nu"
+label = "Nu"
+tooltip = "Upper bound on the fraction of training points left outside the boundary, between 0 and 1, e.g. 0.05. Smaller values give a looser boundary."
+default = "0.05"
+models = ["ocsvm"]
+
+[[inputs]]
+id = "alpha"
+label = "False Alarm Rate"
+tooltip = "Probability that a normal point is flagged, e.g. 0.01. The threshold is the 1 - alpha quantile of the chi-square distribution."
+default = "0.01"
+models = ["gauss"]
+
+[[inputs]]
+id = "baseline"
+label = "Baseline"
+tooltip = "Clean in-control series used to estimate the normal mean and standard deviation, e.g. x_baseline"
+default = "x_baseline"
+models = ["cusum"]
+
+[[inputs]]
+id = "series"
+label = "Series"
+tooltip = "The series to monitor, e.g. x_new"
+default = "x_new"
+models = ["cusum"]
+
+[[inputs]]
+id = "k"
+label = "Allowance (k)"
+tooltip = "Half the shift to detect, in standard deviations, e.g. 0.5 to detect a shift of one standard deviation"
+default = "0.5"
+models = ["cusum"]
+
+[[inputs]]
+id = "h"
+label = "Threshold (h)"
+tooltip = "Alarm threshold in standard deviations; typical values are 4 to 5. Higher values give fewer false alarms and slower detection."
+default = "5"
+models = ["cusum"]
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.ocsvm]
+# Curved boundary around training points, a novel point outside
+svg = '''
+var s = '<path d="M10,52 C8,36 22,28 32,32 C44,36 46,52 38,58 C30,64 12,64 10,52 Z" fill="none" stroke="currentColor" stroke-width="1"/>';
+var p = [[18,48],[24,42],[30,46],[22,54],[34,50],[28,56],[16,54]];
+for (var i = 0; i < p.length; i++) {
+	s += '<circle cx="' + p[i][0] + '" cy="' + p[i][1] + '" r="1.8" fill="currentColor" opacity="0.6"/>';
+}
+s += '<text x="46" y="24" font-size="9" text-anchor="middle" fill="currentColor">x</text>';
+return s;
+'''
+
+[miniCharts.gauss]
+# Concentric ellipses (Mahalanobis contours) with a novel point
+svg = '''
+var s = '';
+s += '<ellipse cx="25" cy="48" rx="8" ry="5" transform="rotate(-30 25 48)" fill="none" stroke="currentColor" stroke-width="1"/>';
+s += '<ellipse cx="25" cy="48" rx="15" ry="9" transform="rotate(-30 25 48)" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.6"/>';
+s += '<ellipse cx="25" cy="48" rx="22" ry="13" transform="rotate(-30 25 48)" fill="none" stroke="currentColor" stroke-width="0.8" stroke-dasharray="2,2" opacity="0.5"/>';
+s += '<text x="44" y="68" font-size="9" text-anchor="middle" fill="currentColor">x</text>';
+return s;
+'''
+
+[miniCharts.cusum]
+# Flat statistic that rises after a shift and crosses the threshold
+svg = '''
+var s = '<line x1="4" y1="30" x2="50" y2="30" stroke="currentColor" stroke-width="0.8" stroke-dasharray="3,2" opacity="0.6"/>';
+s += '<polyline points="4,62 10,61 14,62 18,60 22,62 26,61 30,56 34,49 38,42 42,34 46,27 50,20" fill="none" stroke="currentColor" stroke-width="1.2"/>';
+s += '<circle cx="44" cy="30" r="2" fill="currentColor"/>';
+return s;
+'''
+
+[[codeBranches]]
+model = "ocsvm"
+code = '''
+using LIBSVM, Statistics
+
+mu, sd = mean({{train}}, dims=1), std({{train}}, dims=1)
+Ztrain = permutedims(({{train}} .- mu) ./ sd)  # standardise; LIBSVM expects observations in columns
+Ztest  = permutedims(({{test}} .- mu) ./ sd)  # same scaling as the training data
+
+model = svmtrain(Ztrain; svmtype=OneClassSVM, nu={{nu}})  # RBF boundary around the normal data
+inside, dec = svmpredict(model, Ztest)  # true = inside the boundary
+scores   = -dec[1, :]  # higher = further outside
+is_novel = .!inside
+println("Novel points: ", sum(is_novel), " of ", length(is_novel))
+'''
+
+[[codeBranches]]
+model = "gauss"
+code = '''
+using Statistics, LinearAlgebra, Distributions
+
+mu     = vec(mean({{train}}, dims=1))  # training mean vector
+SigInv = inv(cov({{train}}))  # inverse training covariance
+scores = [dot(x .- mu, SigInv * (x .- mu)) for x in eachrow({{test}})]  # squared Mahalanobis distance
+
+threshold = quantile(Chisq(size({{train}}, 2)), 1 - {{alpha}})  # chi-square with p degrees of freedom
+is_novel  = scores .> threshold
+println("Novel points: ", sum(is_novel), " of ", length(is_novel))
+'''
+
+[[codeBranches]]
+model = "cusum"
+code = '''
+using Statistics
+
+mu0, sigma0 = mean({{baseline}}), std({{baseline}})  # in-control mean and standard deviation
+z = ({{series}} .- mu0) ./ sigma0  # standardised series
+k, h = {{k}}, {{h}}
+
+S_up, S_down = zeros(length(z)), zeros(length(z))  # upper and lower CUSUM statistics
+for t in eachindex(z)
+	S_up[t]   = max(0.0, (t == 1 ? 0.0 : S_up[t-1]) + z[t] - k)  # accumulates upward shifts
+	S_down[t] = max(0.0, (t == 1 ? 0.0 : S_down[t-1]) - z[t] - k)  # accumulates downward shifts
+end
+
+alarms = findall((S_up .> h) .| (S_down .> h))  # time steps above the threshold
+println("First alarm at: ", isempty(alarms) ? "none" : alarms[1])
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "novelty-plot"
+label = "Novelty Plot"
+desc = "Test points coloured by novelty, or the monitoring statistic over time"
+code = '''
+using Plots
+
+{{?model=ocsvm|gauss}}scatter({{train}}[:, 1], {{train}}[:, 2], color=:lightgray, markerstrokewidth=0, label="Training", xlabel="Feature 1", ylabel="Feature 2")
+{{?model=ocsvm|gauss}}scatter!({{test}}[.!is_novel, 1], {{test}}[.!is_novel, 2], color=:blue, markerstrokewidth=0, label="Normal")
+{{?model=ocsvm|gauss}}scatter!({{test}}[is_novel, 1], {{test}}[is_novel, 2], color=:red, marker=:star5, label="Novel")
+{{?model=cusum}}plot([S_up S_down], label=["Upper CUSUM" "Lower CUSUM"], xlabel="Time", ylabel="S(t)")
+{{?model=cusum}}hline!([h], color=:red, linestyle=:dash, label="Threshold h")
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "false-alarms"
+label = "False Alarm Check"
+desc = "How often the detector fires on data known to be normal"
+code = '''
+using Statistics
+
+{{?model=ocsvm}}inside_train, _ = svmpredict(model, Ztrain)
+{{?model=ocsvm}}println("Training points outside the boundary: ", round(100 * mean(.!inside_train), digits=1), "% (nu = {{nu}})")
+{{?model=gauss}}train_scores = [dot(x .- mu, SigInv * (x .- mu)) for x in eachrow({{train}})]
+{{?model=gauss}}println("Training points above the threshold: ", round(100 * mean(train_scores .> threshold), digits=1), "% (alpha = {{alpha}})")
+{{?model=cusum}}run_lengths = map(1:2000) do _  # simulated in-control run lengths
+{{?model=cusum}}	s_up, s_down, t = 0.0, 0.0, 0
+{{?model=cusum}}	while max(s_up, s_down) <= h && t < 10_000
+{{?model=cusum}}		zt = randn(); t += 1
+{{?model=cusum}}		s_up, s_down = max(0.0, s_up + zt - k), max(0.0, s_down - zt - k)
+{{?model=cusum}}	end
+{{?model=cusum}}	t
+{{?model=cusum}}end
+{{?model=cusum}}println("In-control average run length (ARL0): ", round(mean(run_lengths)), " steps between false alarms")
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "online-monitor"
+label = "Online Monitor"
+desc = "Score a stream one observation at a time"
+code = '''
+using OnlineStats, Statistics
+
+{{?model=ocsvm|gauss}}stream = eachrow({{test}})  # replace with your incoming observations
+{{?model=ocsvm|gauss}}rate = OnlineStats.fit!(Mean(), Float64[])  # running fraction of novel points
+{{?model=ocsvm|gauss}}for x in stream
+{{?model=ocsvm}}	novel = !svmpredict(model, reshape((collect(x) .- vec(mu)) ./ vec(sd), :, 1))[1][1]
+{{?model=gauss}}	novel = dot(x .- mu, SigInv * (x .- mu)) > threshold
+{{?model=ocsvm|gauss}}	OnlineStats.fit!(rate, novel)
+{{?model=ocsvm|gauss}}end
+{{?model=ocsvm|gauss}}println("Novel fraction so far: ", round(OnlineStats.value(rate), digits=3), " over ", OnlineStats.nobs(rate), " points")
+{{?model=cusum}}stats = OnlineStats.fit!(Series(Mean(), Variance()), {{baseline}})  # single pass over the baseline
+{{?model=cusum}}m0, s0 = OnlineStats.value(stats.stats[1]), sqrt(OnlineStats.value(stats.stats[2]))  # in-control mean and standard deviation
+{{?model=cusum}}let s_up = 0.0, s_down = 0.0
+{{?model=cusum}}	for (t, x) in enumerate({{series}})  # replace with your incoming observations
+{{?model=cusum}}		s_up, s_down = max(0.0, s_up + (x - m0) / s0 - {{k}}), max(0.0, s_down - (x - m0) / s0 - {{k}})
+{{?model=cusum}}		if max(s_up, s_down) > {{h}}
+{{?model=cusum}}			println("Alarm at step ", t); break
+{{?model=cusum}}		end
+{{?model=cusum}}	end
+{{?model=cusum}}end
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "compare-methods"
+label = "Compare Methods"
+desc = "OC-SVM against the Gaussian detector, or CUSUM tuned for small against large shifts"
+code = '''
+using LIBSVM, Statistics, LinearAlgebra, Distributions
+
+{{?model=ocsvm|gauss}}mu_g, SigInv_g = vec(mean({{train}}, dims=1)), inv(cov({{train}}))
+{{?model=ocsvm|gauss}}gauss_novel = [dot(x .- mu_g, SigInv_g * (x .- mu_g)) for x in eachrow({{test}})] .> quantile(Chisq(size({{train}}, 2)), 0.99)
+{{?model=ocsvm|gauss}}mu_s, sd_s = mean({{train}}, dims=1), std({{train}}, dims=1)
+{{?model=ocsvm|gauss}}svm = svmtrain(permutedims(({{train}} .- mu_s) ./ sd_s); svmtype=OneClassSVM, nu=0.05)
+{{?model=ocsvm|gauss}}svm_novel = .!svmpredict(svm, permutedims(({{test}} .- mu_s) ./ sd_s))[1]
+{{?model=ocsvm|gauss}}println("Agreement: ", round(100 * mean(svm_novel .== gauss_novel), digits=1), "%")
+{{?model=ocsvm|gauss}}println("Novel by OC-SVM only: ", findall(svm_novel .& .!gauss_novel), ", by Gaussian only: ", findall(gauss_novel .& .!svm_novel))
+{{?model=cusum}}for (kk, hh) in ((0.25, 8.0), ({{k}}, {{h}}), (1.0, 2.5))  # small k: sensitive to small shifts; large k: fewer false alarms
+{{?model=cusum}}	s_up, s_down, t_alarm = 0.0, 0.0, 0
+{{?model=cusum}}	for (t, zt) in enumerate(z)
+{{?model=cusum}}		s_up, s_down = max(0.0, s_up + zt - kk), max(0.0, s_down - zt - kk)
+{{?model=cusum}}		if max(s_up, s_down) > hh
+{{?model=cusum}}			t_alarm = t; break
+{{?model=cusum}}		end
+{{?model=cusum}}	end
+{{?model=cusum}}	println("k = ", kk, ", h = ", hh, ": first alarm at ", t_alarm == 0 ? "none" : t_alarm)
+{{?model=cusum}}end
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "explain-novelty"
+label = "Explain Novelty"
+desc = "Which features make a test point novel, or how large the detected shift is"
+code = '''
+using Statistics
+
+{{?model=ocsvm|gauss}}top = argmax(scores)  # the most novel test point
+{{?model=ocsvm|gauss}}z = ({{test}}[top, :] .- vec(mean({{train}}, dims=1))) ./ vec(std({{train}}, dims=1))  # per-feature z-scores
+{{?model=ocsvm|gauss}}println("Most novel test point: row ", top)
+{{?model=ocsvm|gauss}}for j in sortperm(abs.(z), rev=true)
+{{?model=ocsvm|gauss}}	println("feature ", j, "  z = ", round(z[j], digits=2))
+{{?model=ocsvm|gauss}}end
+{{?model=cusum}}t0 = isempty(alarms) ? length({{series}}) + 1 : alarms[1]
+{{?model=cusum}}before, after = {{baseline}}, {{series}}[t0:end]
+{{?model=cusum}}if !isempty(after)
+{{?model=cusum}}	println("Mean: ", round(mean(before), digits=3), " -> ", round(mean(after), digits=3))
+{{?model=cusum}}	println("Std:  ", round(std(before), digits=3), " -> ", round(std(after), digits=3))
+{{?model=cusum}}end
+'''

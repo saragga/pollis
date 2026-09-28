@@ -1,3 +1,0 @@
-# Isolation Forest
-
-Coming soon!
