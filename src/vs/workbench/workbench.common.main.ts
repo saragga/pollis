@@ -268,6 +268,7 @@ import './contrib/debug/browser/debugViewlet.js';
 // Explore, Model, Simulate, Optimise and Toolboxes
 import './contrib/explore/browser/explore.contribution.js';
 import './contrib/model/browser/model.contribution.js';
+import './contrib/databases/browser/databases.contribution.js';
 import './contrib/simulate/browser/simulate.contribution.js';
 import './contrib/optimise/browser/optimise.contribution.js';
 import './contrib/toolboxes/browser/toolboxes.contribution.js';

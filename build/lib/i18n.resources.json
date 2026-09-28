@@ -263,6 +263,10 @@
 			"project": "vscode-workbench"
 		},
 		{
+			"name": "vs/workbench/contrib/databases",
+			"project": "vscode-workbench"
+		},
+		{
 			"name": "vs/workbench/contrib/optimise",
 			"project": "vscode-workbench"
 		},

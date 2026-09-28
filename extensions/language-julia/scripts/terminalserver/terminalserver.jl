@@ -7,6 +7,13 @@ let
 
     include("load_vscodeserver.jl")
 
+    # Pollis: the bridge to the Databases view. Loads no packages; never let it block the REPL.
+    try
+        include("PollisDB.jl")
+    catch err
+        @debug "PollisDB not loaded" exception=err
+    end
+
     @debug "vscodeserver loaded" time=round(Int, time()*10)
     # load Revise ?
     if "USE_REVISE=true" in args

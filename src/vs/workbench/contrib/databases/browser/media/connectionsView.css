@@ -1,0 +1,114 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) 2026 Antonio Saragga Seabra
+ *  Licensed under the GNU Affero General Public License v3.0 or later. See LICENSE.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+.database-item {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	height: 100%;
+	overflow: hidden;
+}
+
+.database-item .icon {
+	flex-shrink: 0;
+}
+
+.database-item.connected .icon {
+	color: var(--vscode-charts-green);
+}
+
+.database-item .name {
+	white-space: nowrap;
+}
+
+.database-item .description {
+	opacity: 0.7;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.database-item .actions {
+	display: none;
+	flex-shrink: 0;
+	margin-left: auto;
+	padding-right: 4px;
+}
+
+.monaco-list-row:hover .database-item .actions,
+.monaco-list-row.selected .database-item .actions,
+.monaco-list-row.focused .database-item .actions {
+	display: block;
+}
+
+/* The screen of one connection: toolbar and header above the tree. */
+
+.databases-view {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+}
+
+.databases-toolbar,
+.databases-header {
+	display: none;
+	align-items: center;
+	flex-shrink: 0;
+	gap: 4px;
+	padding: 0 8px;
+	border-bottom: 1px solid var(--vscode-sideBarSectionHeader-border, var(--vscode-panel-border));
+}
+
+.databases-view.connection-open .databases-toolbar,
+.databases-view.connection-open .databases-header {
+	display: flex;
+}
+
+.databases-toolbar {
+	height: 28px;
+	box-sizing: border-box;
+}
+
+.databases-toolbar .databases-action {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	padding: 2px 6px;
+	border-radius: 4px;
+	color: var(--vscode-foreground);
+	cursor: pointer;
+}
+
+.databases-toolbar .databases-action:hover {
+	background-color: var(--vscode-toolbar-hoverBackground);
+}
+
+.databases-toolbar .separator {
+	width: 1px;
+	height: 16px;
+	background-color: var(--vscode-panel-border);
+}
+
+.databases-header {
+	height: 28px;
+	box-sizing: border-box;
+	font-weight: 600;
+}
+
+.databases-header .name {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.databases-header .description {
+	font-weight: normal;
+	opacity: 0.7;
+}
+
+.databases-tree {
+	flex: 1;
+	min-height: 0;
+}
