@@ -127,6 +127,15 @@ MenuRegistry.appendMenuItem(E_MTDataSourcesSubmenuId, {
 	order: 5,
 }); // WorldBankData.jl
 
+MenuRegistry.appendMenuItem(E_MTDataSourcesSubmenuId, {
+	group: '2_mtds',
+	command: {
+		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
+		title: localize('mt.french', 'Kenneth French Data Library'),
+	},
+	order: 6,
+}); // FamaFrenchData.jl
+
 // Models
 MenuRegistry.appendMenuItem(E_MTSubmenuId, {
 	group: '4_mt',

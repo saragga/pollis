@@ -3,23 +3,8 @@
  *  Licensed under the GNU Affero General Public License v3.0 or later. See LICENSE.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IModelPackage, IModelNotebook, IModelNotebookSection, IModelWiki, IModelReference } from './model.types.js';
+import { IScaffoldPanelData } from './model.types.js';
 
 export interface IHmdMetadata {
-	readonly hmd: {
-		readonly packages: IModelPackage[];
-		readonly notebooks: IModelNotebook[];
-		readonly notebookSections: IModelNotebookSection[];
-		readonly wikis: IModelWiki[];
-		readonly references: IModelReference[];
-	};
+	readonly hmd: IScaffoldPanelData;
 }
-
-export type HmdWebviewMessage =
-	| { command: 'openDocs'; target: 'paper' | 'repository' }
-	| { command: 'openNotebook'; target: string }
-	| { command: 'openWiki'; target: string }
-	| { command: 'openUrl'; url: string }
-	| { command: 'openReference'; id: string }
-	| { command: 'openVideoList' }
-	| { command: 'cancelAction' };

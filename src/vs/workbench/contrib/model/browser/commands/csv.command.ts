@@ -4,13 +4,13 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { IScaffoldPanel } from './scaffold.command.js';
-import { HMD_METADATA } from '../webviews/hmd.data.js';
-import { getHmdHtml } from '../webviews/hmd.template.js';
+import { CSV_METADATA } from '../webviews/csv.data.js';
+import { getCsvHtml } from '../webviews/csv.template.js';
 
-export const HMD_PANEL: IScaffoldPanel = {
-	id: 'hmd',
-	viewType: 'pollis.hmd',
-	title: 'Handle Missing Data',
-	data: HMD_METADATA.hmd,
-	html: getHmdHtml,
+export const CSV_PANEL: IScaffoldPanel = {
+	id: 'csv',
+	viewType: 'pollis.csv',
+	title: 'CSV Files',
+	data: CSV_METADATA.csv,
+	html: getCsvHtml,
 };

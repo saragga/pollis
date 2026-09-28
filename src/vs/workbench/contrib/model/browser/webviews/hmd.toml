@@ -1,0 +1,613 @@
+# Handle Missing Data Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/hmd.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Handle Missing Data"
+viewType = "pollis.hmd"
+defaultModel = "drop"
+
+[[packages]]
+name = "Impute.jl"
+github = "https://github.com/invenia/Impute.jl"
+
+[[packages]]
+name = "Missings.jl"
+github = "https://github.com/JuliaData/Missings.jl"
+
+[[packages]]
+name = "Tables.jl"
+github = "https://github.com/JuliaData/Tables.jl"
+
+[[notebookSections]]
+label = "Handle Missing Data"
+
+[[notebookSections.notebooks]]
+name = "Missing Data Basics"
+file = "hmd/tutorial-01-basics.ipynb"
+bundled = true
+description = "Detect, count, and summarise missing values with Missings.jl"
+
+[[notebookSections.notebooks]]
+name = "Imputation Methods"
+file = "hmd/tutorial-02-imputation.ipynb"
+bundled = true
+description = "Apply Drop, Substitute, Interpolate, LOCF, and SVD methods via Impute.jl"
+
+[[notebookSections.notebooks]]
+name = "Time-Series Imputation"
+file = "hmd/tutorial-03-time-series.ipynb"
+bundled = true
+description = "Impute ordered sequences with LOCF, NOCB, and linear interpolation"
+
+[[wikis]]
+name = "Factsheet"
+file = "hmd/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "hmd/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "hmd/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "hmd/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "hmd/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "hmd/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Methods"
+
+[[wikis]]
+name = "Drop"
+file = "hmd/drop.md"
+bundled = true
+
+[[wikis]]
+name = "Substitute"
+file = "hmd/substitute.md"
+bundled = true
+
+[[wikis]]
+name = "Interpolate"
+file = "hmd/interpolate.md"
+bundled = true
+
+[[wikis]]
+name = "LOCF / NOCB"
+file = "hmd/locf.md"
+bundled = true
+
+[[wikis]]
+name = "SVD"
+file = "hmd/svd.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "Impute.jl: Flexible Missing Data Imputation in Julia"
+authors = "Greenham, Rory"
+year = 2022
+journal = "GitHub"
+url = "https://github.com/invenia/Impute.jl"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Statistical Analysis with Missing Data"
+authors = "Little, Roderick J. A.; Rubin, Donald B."
+year = 2019
+journal = "Wiley (3rd ed.)"
+doi = "10.1002/9781119482260"
+openAccess = false
+
+[[references]]
+title = "Flexible Imputation of Missing Data"
+authors = "van Buuren, Stef"
+year = 2018
+journal = "CRC Press (2nd ed.)"
+url = "https://stefvanbuuren.name/fimd/"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "A Test of Missing Completely at Random for Multivariate Data with Missing Values"
+authors = "Little, Roderick J. A."
+year = 1988
+journal = "Journal of the American Statistical Association"
+doi = "10.1080/01621459.1988.10478722"
+openAccess = false
+
+[[references]]
+title = "Inference and Missing Data"
+authors = "Rubin, Donald B."
+year = 1976
+journal = "Biometrika"
+doi = "10.1093/biomet/63.3.581"
+openAccess = false
+
+[[references]]
+title = "Spectral Regularization Algorithms for Learning Large Incomplete Matrices"
+authors = "Mazumder, Rahul; Hastie, Trevor; Tibshirani, Robert"
+year = 2010
+journal = "Journal of Machine Learning Research"
+url = "https://www.jmlr.org/papers/v11/mazumder10a.html"
+openAccess = true
+
+[[models]]
+id = "drop"
+label = "Drop"
+
+[[models]]
+id = "sub"
+label = "Substitute"
+
+[[models]]
+id = "interp"
+label = "Interpolate"
+
+[[models]]
+id = "locf"
+label = "LOCF / NOCB"
+
+[[models]]
+id = "svd"
+label = "SVD"
+
+[[bullets]]
+text = "Drop"
+detail = "removes rows (or columns) that contain any missing value; the simplest strategy, keeping only complete cases with no imputation bias"
+
+[[bullets]]
+text = "Substitute"
+detail = "replaces each missing value with a column statistic (mean, median, or mode); fast and loses no data, but shrinks the variance and weakens correlations"
+
+[[bullets]]
+text = "Interpolate"
+detail = "fills gaps by linear interpolation along each column; suited to ordered or time-indexed data with a smooth trend between observed values"
+
+[[bullets]]
+text = "LOCF / NOCB"
+detail = "Last Observation Carried Forward or Next Observation Carried Backward; copies the nearest observed value into the gap; suited to step-like or slowly varying series"
+
+[[bullets]]
+text = "Singular Value Decomposition (SVD)"
+detail = "low-rank matrix completion; recovers missing entries from the shared structure of the columns; most effective when the columns are correlated"
+
+[[decisionRows]]
+task = "Drop"
+context = "Any"
+purpose = "Few missing values in a large dataset"
+
+[[decisionRows]]
+task = "Substitute"
+context = "Tabular"
+purpose = "Fast baseline for cross-sectional data"
+
+[[decisionRows]]
+task = "Interpolate"
+context = "Time series"
+purpose = "Values change smoothly between observations"
+
+[[decisionRows]]
+task = "LOCF / NOCB"
+context = "Time series"
+purpose = "Short gaps in step-like or slowly varying data"
+
+[[decisionRows]]
+task = "SVD"
+context = "Numeric matrix"
+purpose = "Many correlated variables"
+
+[[inputs]]
+id = "data"
+label = "Data"
+tooltip = "Variable name of your dataset: any Tables.jl source (e.g. a named tuple of vectors or a CSV.File). Rows are observations in their natural order; Interpolate and LOCF / NOCB fill along that order."
+default = "data"
+
+[[inputs]]
+id = "target"
+label = "Target"
+tooltip = "Drop rows (observations) or columns (variables). Dropping rows keeps every variable; dropping columns keeps every observation."
+kind = "select"
+default = "obs"
+models = ["drop"]
+
+[[inputs.options]]
+value = "obs"
+label = "rows (obs)"
+
+[[inputs.options]]
+value = "vars"
+label = "cols (vars)"
+
+[[inputs]]
+id = "statistic"
+label = "Statistic"
+tooltip = "mean and median require numeric columns; mode works for any column type and needs StatsBase."
+kind = "select"
+default = "mean"
+models = ["sub"]
+
+[[inputs.options]]
+value = "mean"
+label = "mean"
+
+[[inputs.options]]
+value = "median"
+label = "median"
+
+[[inputs.options]]
+value = "mode"
+label = "mode"
+
+[[inputs]]
+id = "direction"
+label = "Direction"
+tooltip = "LOCF copies the last observed value forward; NOCB copies the next observed value backward. LOCF cannot fill leading gaps and NOCB cannot fill trailing gaps."
+kind = "select"
+default = "locf"
+models = ["locf"]
+
+[[inputs.options]]
+value = "locf"
+label = "forward (LOCF)"
+
+[[inputs.options]]
+value = "nocb"
+label = "backward (NOCB)"
+
+[[inputs]]
+id = "rank"
+label = "Rank"
+tooltip = "Number of singular vectors used in the low-rank approximation. Lower rank = stronger smoothing; higher rank = closer fit to the observed entries. Must be smaller than the number of columns."
+default = "2"
+models = ["svd"]
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.drop]
+# A grid of cells; the row with a missing cell is struck out
+svg = '''
+var s = '';
+for (var r = 0; r < 5; r++) {
+	for (var c = 0; c < 3; c++) {
+		var miss = r === 2 && c === 1;
+		s += '<rect x="' + (10 + c * 12) + '" y="' + (22 + r * 9) + '" width="10" height="7" fill="' + (miss ? 'none' : 'currentColor') + '" stroke="currentColor" stroke-width="0.8" opacity="' + (r === 2 ? 0.35 : 0.6) + '"/>';
+	}
+}
+s += '<line x1="6" y1="44.5" x2="48" y2="44.5" stroke="currentColor" stroke-width="1.5"/>';
+return s;
+'''
+
+[miniCharts.sub]
+# Observed points around a horizontal mean line; the gap is filled on the line
+svg = '''
+var s = '';
+var ys = [36, 54, 42, null, 58, 40];
+s += '<line x1="6" y1="46" x2="48" y2="46" stroke="currentColor" stroke-width="0.8" stroke-dasharray="2,2" opacity="0.6"/>';
+for (var i = 0; i < ys.length; i++) {
+	var x = 9 + i * 7;
+	if (ys[i] === null) {
+		s += '<circle cx="' + x + '" cy="46" r="2.8" fill="none" stroke="currentColor" stroke-width="1.5"/>';
+	} else {
+		s += '<circle cx="' + x + '" cy="' + ys[i] + '" r="2" fill="currentColor" opacity="0.6"/>';
+	}
+}
+return s;
+'''
+
+[miniCharts.interp]
+# A rising series; the gap is filled on the straight line between its neighbours
+svg = '''
+var s = '';
+var ys = [62, 55, null, 41, 36, 28];
+s += '<line x1="16" y1="55" x2="30" y2="41" stroke="currentColor" stroke-width="0.8" stroke-dasharray="2,2" opacity="0.6"/>';
+for (var i = 0; i < ys.length; i++) {
+	var x = 9 + i * 7;
+	if (ys[i] === null) {
+		s += '<circle cx="' + x + '" cy="48" r="2.8" fill="none" stroke="currentColor" stroke-width="1.5"/>';
+	} else {
+		s += '<circle cx="' + x + '" cy="' + ys[i] + '" r="2" fill="currentColor" opacity="0.6"/>';
+	}
+}
+return s;
+'''
+
+[miniCharts.locf]
+# A step series; the last observed value is carried forward into the gap
+svg = '''
+var s = '';
+var ys = [56, 56, 40, null, 34, 34];
+s += '<path d="M23,40 H30" fill="none" stroke="currentColor" stroke-width="0.8" stroke-dasharray="2,2" opacity="0.6"/>';
+for (var i = 0; i < ys.length; i++) {
+	var x = 9 + i * 7;
+	if (ys[i] === null) {
+		s += '<circle cx="' + x + '" cy="40" r="2.8" fill="none" stroke="currentColor" stroke-width="1.5"/>';
+	} else {
+		s += '<circle cx="' + x + '" cy="' + ys[i] + '" r="2" fill="currentColor" opacity="0.6"/>';
+	}
+}
+return s;
+'''
+
+[miniCharts.svd]
+# A matrix equals a tall and a wide factor; the missing cell is recovered
+svg = '''
+var s = '';
+for (var r = 0; r < 4; r++) {
+	for (var c = 0; c < 4; c++) {
+		var miss = r === 1 && c === 2;
+		s += '<rect x="' + (5 + c * 6) + '" y="' + (30 + r * 6) + '" width="5" height="5" fill="' + (miss ? 'none' : 'currentColor') + '" stroke="currentColor" stroke-width="' + (miss ? 1.2 : 0) + '" opacity="' + (miss ? 1 : 0.5) + '"/>';
+	}
+}
+s += '<rect x="33" y="30" width="5" height="23" fill="currentColor" opacity="0.6"/>';
+s += '<rect x="40" y="30" width="11" height="5" fill="currentColor" opacity="0.6"/>';
+return s;
+'''
+
+[[codeBranches]]
+model = "drop"
+code = '''
+using Impute, Tables
+
+tbl = Tables.columntable({{data}})  # named tuple of column vectors, from any Tables.jl source
+{{?target=obs}}method = x -> Impute.dropobs(x)  # keep only the complete rows
+{{?target=vars}}method = x -> Impute.dropvars(x)  # keep only the complete columns
+result = method(tbl)
+println("Rows before: ", length(first(tbl)), ", after: ", isempty(result) ? 0 : length(first(result)))
+println("Columns before: ", length(tbl), ", after: ", length(result))
+'''
+
+[[codeBranches]]
+model = "sub"
+code = '''
+using Impute, Tables, Statistics
+{{?statistic=mode}}using StatsBase
+
+tbl = Tables.columntable({{data}})  # named tuple of column vectors, from any Tables.jl source
+method = x -> Impute.substitute(x; statistic={{statistic}})  # per-column {{statistic}} of the observed values
+result = method(tbl)
+println("Missing cells before: ", count(ismissing, Tables.matrix(tbl)), ", after: ", count(ismissing, Tables.matrix(result)))
+'''
+
+[[codeBranches]]
+model = "interp"
+code = '''
+using Impute, Tables
+
+tbl = Tables.columntable({{data}})  # rows in their natural (time) order
+method = x -> Impute.interp(x)  # linear interpolation between the neighbouring observed values
+result = method(tbl)
+println("Missing cells before: ", count(ismissing, Tables.matrix(tbl)), ", after: ", count(ismissing, Tables.matrix(result)))  # leading and trailing gaps remain
+'''
+
+[[codeBranches]]
+model = "locf"
+code = '''
+using Impute, Tables
+
+tbl = Tables.columntable({{data}})  # rows in their natural (time) order
+{{?direction=locf}}method = x -> Impute.locf(x)  # carry the last observation forward
+{{?direction=nocb}}method = x -> Impute.nocb(x)  # carry the next observation backward
+result = method(tbl)
+println("Missing cells before: ", count(ismissing, Tables.matrix(tbl)), ", after: ", count(ismissing, Tables.matrix(result)))
+'''
+
+[[codeBranches]]
+model = "svd"
+code = '''
+using Impute, Tables
+
+tbl = Tables.columntable({{data}})  # all columns must be numeric
+method = x -> Tables.columntable(Tables.table(Impute.svd(Matrix{Union{Float64, Missing}}(Tables.matrix(x)); rank={{rank}}); header=collect(keys(x))))  # rank-{{rank}} matrix completion
+result = method(tbl)
+println("Missing cells before: ", count(ismissing, Tables.matrix(tbl)), ", after: ", count(ismissing, Tables.matrix(result)))
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "missing-heatmap"
+label = "Missing Heatmap"
+desc = "Heatmap showing which cells are missing across all columns"
+code = '''
+using Plots, Tables
+
+heatmap(Int.(ismissing.(Tables.matrix(tbl))), color=:grays, colorbar=false, yflip=true,
+	xticks=(1:length(tbl), string.(keys(tbl))), xlabel="Variable", ylabel="Observation", title="Missing cells (white)")
+'''
+
+[[actionGroups.actions]]
+id = "missing-count"
+label = "Missing Count Plot"
+desc = "Bar chart of missing value counts per column"
+code = '''
+using Plots
+
+counts = [count(ismissing, c) for c in tbl]
+bar(collect(string.(keys(tbl))), counts, ylabel="Missing count", xrotation=45, legend=false)
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "missing-summary"
+label = "Missing Summary"
+desc = "Count and fraction of missing values per column"
+code = '''
+n = length(first(tbl))
+for (name, c) in pairs(tbl)
+	k = count(ismissing, c)
+	println(rpad(name, 16), k, " missing (", round(100 * k / n, digits=1), "%)")
+end
+println("Complete rows: ", count(i -> all(c -> !ismissing(c[i]), tbl), 1:n), " of ", n)
+'''
+
+[[actionGroups.actions]]
+id = "mcar-check"
+label = "MCAR Check"
+desc = "Do other columns differ between rows where a value is missing and rows where it is observed?"
+code = '''
+using Statistics
+
+numeric = [n for n in keys(tbl) if nonmissingtype(eltype(tbl[n])) <: Real]
+for a in numeric, b in numeric
+	a == b && continue
+	gone = ismissing.(tbl[a])
+	(any(gone) && !all(gone)) || continue
+	x_gone = collect(skipmissing(tbl[b][gone]))
+	x_kept = collect(skipmissing(tbl[b][.!gone]))
+	(isempty(x_gone) || isempty(x_kept)) && continue
+	d = (mean(x_gone) - mean(x_kept)) / std(collect(skipmissing(tbl[b])))  # standardised mean difference
+	println(rpad(b, 12), " when ", rpad(a, 12), " is missing: d = ", round(d, digits=2), abs(d) > 0.5 ? "  <- missingness depends on observed data" : "")
+end
+# small d everywhere is consistent with MCAR (missing completely at random); this is a heuristic, not Little's formal test
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "holdout"
+label = "Holdout Evaluation"
+desc = "Hide 20% of the observed values, impute them, then measure the reconstruction error"
+code = '''
+using Random, Statistics
+
+{{?model=drop}}println("Holdout evaluation does not apply to Drop: dropping removes the hidden values instead of reconstructing them")
+{{?model!=drop}}Random.seed!(1)
+{{?model!=drop}}col    = findfirst(c -> nonmissingtype(eltype(c)) <: Real, collect(tbl))  # first numeric column
+{{?model!=drop}}seen   = findall(!ismissing, tbl[col])
+{{?model!=drop}}hidden = seen[randperm(length(seen))[1:max(1, div(length(seen), 5))]]  # 20% of the observed values
+{{?model!=drop}}masked = map(c -> Vector{Union{eltype(c), Missing}}(c), tbl)  # copy that can hold missing
+{{?model!=drop}}masked[col][hidden] .= missing
+{{?model!=drop}}filled = method(masked)[col][hidden]
+{{?model!=drop}}ok     = .!ismissing.(filled)  # interpolation and LOCF cannot fill every position
+{{?model!=drop}}rmse   = sqrt(mean((filled[ok] .- tbl[col][hidden[ok]]) .^ 2))
+{{?model!=drop}}println("Column ", keys(tbl)[col], ": RMSE = ", round(rmse, sigdigits=4), " over ", count(ok), " hidden values (std of column = ", round(std(skipmissing(tbl[col])), sigdigits=4), ")")
+'''
+
+[[actionGroups.actions]]
+id = "chain-fill"
+label = "Chain Fill"
+desc = "Follow the method with LOCF and NOCB to cover any leading and trailing gaps"
+code = '''
+using Impute, Tables
+
+complete = result |> Impute.locf |> Impute.nocb  # LOCF fills trailing gaps, NOCB fills leading gaps
+println("Missing cells remaining: ", isempty(complete) ? 0 : count(ismissing, Tables.matrix(complete)))
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "method-comparison"
+label = "Method Comparison"
+desc = "Holdout RMSE of Substitute, Interpolate, LOCF, and SVD on the numeric columns"
+code = '''
+using Impute, Tables, Random, Statistics
+
+num = Tables.matrix(tbl[Tuple(n for n in keys(tbl) if nonmissingtype(eltype(tbl[n])) <: Real)])
+Random.seed!(1)
+seen   = findall(!ismissing, num)
+hidden = seen[randperm(length(seen))[1:max(1, div(length(seen), 5))]]  # hide 20% of the observed cells
+masked = Matrix{Union{Float64, Missing}}(num)
+masked[hidden] .= missing
+truth  = num[hidden]
+
+as_table(M) = Tables.columntable(Tables.table(M))
+candidates = [
+	"Substitute (mean)" => M -> Tables.matrix(Impute.substitute(as_table(M); statistic=mean)),
+	"Interpolate"       => M -> Tables.matrix(Impute.interp(as_table(M))),
+	"LOCF"              => M -> Tables.matrix(Impute.locf(as_table(M))),
+	"SVD (rank 2)"      => M -> Impute.svd(M; rank=min(2, size(M, 2) - 1)),
+]
+for (name, impute) in candidates
+	guess = impute(masked)[hidden]
+	done  = .!ismissing.(guess)
+	println(rpad(name, 20), "RMSE = ", round(sqrt(mean((guess[done] .- truth[done]) .^ 2)), sigdigits=4), "  (", count(done), " of ", length(done), " filled)")
+end
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "distribution-shift"
+label = "Distribution Shift"
+desc = "Compare the observed and the post-imputation distribution of a column"
+code = '''
+using Plots
+
+col = findfirst(n -> nonmissingtype(eltype(tbl[n])) <: Real, collect(keys(tbl)))  # first numeric column
+name = keys(tbl)[col]
+histogram(collect(skipmissing(tbl[name])), alpha=0.5, normalize=:pdf, label="Observed")
+haskey(result, name) && histogram!(collect(skipmissing(result[name])), alpha=0.5, normalize=:pdf, label="After {{model}}", title=string(name))  # a spike at the mean signals Substitute
+'''
+
+[[actionGroups.actions]]
+id = "sensitivity"
+label = "Sensitivity Analysis"
+desc = "How the mean and standard deviation of each column change under different methods"
+code = '''
+using Impute, Statistics
+
+numeric = [n for n in keys(tbl) if nonmissingtype(eltype(tbl[n])) <: Real]
+variants = [
+	"Drop rows"   => Impute.dropobs(tbl),
+	"Mean"        => Impute.substitute(tbl; statistic=mean),
+	"Interpolate" => Impute.interp(tbl),
+	"LOCF"        => Impute.locf(tbl),
+]
+for n in numeric
+	println(n)
+	for (name, t) in variants
+		v = collect(skipmissing(t[n]))
+		println("  ", rpad(name, 12), "mean = ", round(mean(v), sigdigits=4), "  std = ", round(std(v), sigdigits=4))
+	end
+end
+'''

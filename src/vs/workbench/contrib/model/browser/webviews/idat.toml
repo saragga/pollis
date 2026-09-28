@@ -1,0 +1,589 @@
+# Interpolate Data Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/idat.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Interpolate Data"
+viewType = "pollis.idat"
+defaultModel = "linear"
+
+[[packages]]
+name = "Interpolations.jl"
+github = "https://github.com/JuliaMath/Interpolations.jl"
+
+[[packages]]
+name = "Dierckx.jl"
+github = "https://github.com/kbarbary/Dierckx.jl"
+
+[[notebookSections]]
+label = "Interpolate Data"
+
+[[notebookSections.notebooks]]
+name = "1D Interpolation"
+file = "idat/tutorial-01-1d.ipynb"
+bundled = true
+description = "Linear and cubic spline interpolation on irregular knots with Interpolations.jl"
+
+[[notebookSections.notebooks]]
+name = "B-Spline Grids"
+file = "idat/tutorial-02-bspline.ipynb"
+bundled = true
+description = "Interpolate regular grid data in 1D and 2D with BSpline and scale()"
+
+[[notebookSections.notebooks]]
+name = "Dierckx Fitting"
+file = "idat/tutorial-03-dierckx.ipynb"
+bundled = true
+description = "Fit smooth splines to scattered data and evaluate derivatives with Dierckx.jl"
+
+[[notebookSections.notebooks]]
+name = "Extrapolation"
+file = "idat/tutorial-04-extrapolation.ipynb"
+bundled = true
+description = "Control out-of-range behaviour: Throw, Flat, Linear, and Periodic boundary conditions"
+
+[[wikis]]
+name = "Factsheet"
+file = "idat/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "idat/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "idat/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "idat/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "idat/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "idat/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Methods"
+
+[[wikis]]
+name = "Linear"
+file = "idat/linear.md"
+bundled = true
+
+[[wikis]]
+name = "Cubic Spline"
+file = "idat/cubic-spline.md"
+bundled = true
+
+[[wikis]]
+name = "B-Spline"
+file = "idat/bspline.md"
+bundled = true
+
+[[wikis]]
+name = "Dierckx Spline"
+file = "idat/dierckx.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "Interpolations.jl: Fast, Flexible Interpolations"
+authors = "Holy, Tim; others"
+year = 2024
+journal = "GitHub"
+url = "https://github.com/JuliaMath/Interpolations.jl"
+openAccess = true
+
+[[references]]
+title = "Dierckx.jl: Spline Fitting for Julia"
+authors = "Barbary, Kyle"
+year = 2018
+journal = "GitHub"
+url = "https://github.com/kbarbary/Dierckx.jl"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "A Practical Guide to Splines"
+authors = "de Boor, Carl"
+year = 2001
+journal = "Springer (revised ed.)"
+doi = "10.1007/978-1-4612-6333-3"
+openAccess = false
+
+[[references]]
+title = "Numerical Methods for Scientists and Engineers"
+authors = "Hamming, Richard W."
+year = 1987
+journal = "Dover (2nd ed.)"
+url = "https://store.doverpublications.com/0486652416.html"
+openAccess = false
+
+[[references]]
+title = "Numerical Analysis"
+authors = "Burden, Richard L.; Faires, J. Douglas; Burden, Annette M."
+year = 2015
+journal = "Cengage (10th ed.)"
+url = "https://www.cengage.com/c/numerical-analysis-10e-burden"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "On Calculating with B-Splines"
+authors = "de Boor, Carl"
+year = 1972
+journal = "Journal of Approximation Theory"
+doi = "10.1016/0021-9045(72)90080-9"
+openAccess = false
+
+[[references]]
+title = "An Algorithm for Smoothing, Differentiation and Integration of Experimental Data Using Spline Functions"
+authors = "Dierckx, Paul"
+year = 1975
+journal = "Journal of Computational and Applied Mathematics"
+doi = "10.1016/0771-050X(75)90034-0"
+openAccess = false
+
+[[models]]
+id = "linear"
+label = "Linear"
+
+[[models]]
+id = "cspline"
+label = "Cubic Spline"
+
+[[models]]
+id = "bspline"
+label = "B-Spline"
+
+[[models]]
+id = "dierckx"
+label = "Dierckx Spline"
+
+[[bullets]]
+text = "Linear"
+detail = "piecewise-linear interpolation on irregular 1D knots; fast and exact at every knot, with a kink at each data point"
+
+[[bullets]]
+text = "Cubic Spline"
+detail = "smooth, twice continuously differentiable interpolant on uniformly spaced knots; natural, periodic or linear boundary conditions; little oscillation between data points"
+
+[[bullets]]
+text = "B-Spline"
+detail = "tensor-product spline on a regular grid; supports 1D to N-D arrays; choose the degree from constant (nearest neighbour) to cubic to trade speed for smoothness"
+
+[[bullets]]
+text = "Dierckx Spline"
+detail = "FITPACK spline for scattered or noisy knots; a smoothing factor moves it from exact interpolation to a least-squares fit; exact derivatives and definite integrals"
+
+[[decisionRows]]
+task = "Linear"
+context = "Irregular 1D"
+purpose = "Fast interpolant for any knot spacing; handles sharp changes well"
+
+[[decisionRows]]
+task = "Cubic Spline"
+context = "Uniform 1D"
+purpose = "Smooth curve through evenly spaced data"
+
+[[decisionRows]]
+task = "B-Spline"
+context = "Regular grid"
+purpose = "Multi-dimensional arrays; degree from constant to cubic"
+
+[[decisionRows]]
+task = "Dierckx Spline"
+context = "Irregular or noisy 1D"
+purpose = "Smooth spline fit with controllable smoothing, derivatives and integrals"
+
+[[inputs]]
+id = "xs"
+label = "Knots (xs)"
+tooltip = "Sorted vector of knot positions. Linear and Dierckx accept irregular spacing. Cubic Spline and B-Spline assume uniform spacing, so the code places length(ys) evenly spaced knots between the first and last xs."
+default = "xs"
+
+[[inputs]]
+id = "ys"
+label = "Values (ys)"
+tooltip = "Vector of data values at the knot positions, the same length as xs."
+default = "ys"
+
+[[inputs]]
+id = "xq"
+label = "Query"
+tooltip = "Point or vector of points at which to evaluate the interpolant, e.g. 2.5 or range(0, 5; length=200)."
+default = "xq"
+
+[[inputs]]
+id = "extrap"
+label = "Extrapolation"
+tooltip = "Behaviour outside the knot range. Throw raises an error; Flat returns the boundary value; Line extrapolates linearly from the endpoint slope."
+kind = "select"
+default = "Throw()"
+models = ["linear"]
+
+[[inputs.options]]
+value = "Throw()"
+label = "Throw"
+
+[[inputs.options]]
+value = "Flat()"
+label = "Flat"
+
+[[inputs.options]]
+value = "Line()"
+label = "Line"
+
+[[inputs]]
+id = "bc"
+label = "Boundary"
+tooltip = "Boundary condition for the cubic spline. Natural sets zero curvature at the endpoints (most common). Periodic matches the value and first derivative at both ends (use for cyclic data). Line is equivalent to Natural."
+kind = "select"
+default = "Natural(OnGrid())"
+models = ["cspline"]
+
+[[inputs.options]]
+value = "Natural(OnGrid())"
+label = "Natural"
+
+[[inputs.options]]
+value = "Periodic(OnGrid())"
+label = "Periodic"
+
+[[inputs.options]]
+value = "Line(OnGrid())"
+label = "Line"
+
+[[inputs]]
+id = "degree"
+label = "Degree"
+tooltip = "B-Spline degree. Constant = nearest neighbour (degree 0); Linear = piecewise linear (degree 1); Quadratic = continuous first derivative (degree 2); Cubic = continuous second derivative (degree 3)."
+kind = "select"
+default = "Cubic(Line(OnGrid()))"
+models = ["bspline"]
+
+[[inputs.options]]
+value = "Cubic(Line(OnGrid()))"
+label = "Cubic"
+
+[[inputs.options]]
+value = "Quadratic(Line(OnGrid()))"
+label = "Quadratic"
+
+[[inputs.options]]
+value = "Linear()"
+label = "Linear"
+
+[[inputs.options]]
+value = "Constant()"
+label = "Constant"
+
+[[inputs]]
+id = "k"
+label = "Degree (k)"
+tooltip = "Spline degree, from 1 to 5: 1 = linear, 3 = cubic (default), 5 = quintic. Odd degrees are the usual choice; the number of knots must exceed k."
+kind = "select"
+default = "3"
+models = ["dierckx"]
+
+[[inputs.options]]
+value = "3"
+label = "Cubic"
+
+[[inputs.options]]
+value = "1"
+label = "Linear"
+
+[[inputs.options]]
+value = "5"
+label = "Quintic"
+
+[[inputs]]
+id = "s"
+label = "Smoothing (s)"
+tooltip = "Smoothing factor. 0 interpolates every knot exactly; larger values give a smoother least-squares fit whose sum of squared residuals stays at most s. A common start for noisy data is the number of knots times the noise variance."
+default = "0.0"
+models = ["dierckx"]
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.linear]
+# Straight segments joining irregular knots
+svg = '''
+var s = '';
+var p = [[7,58],[16,38],[22,48],[36,26],[47,40]];
+var d = '';
+for (var i = 0; i < p.length; i++) {
+	d += (i ? 'L' : 'M') + p[i][0] + ',' + p[i][1];
+	s += '<circle cx="' + p[i][0] + '" cy="' + p[i][1] + '" r="2" fill="currentColor" opacity="0.6"/>';
+}
+s = '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.5"/>' + s;
+return s;
+'''
+
+[miniCharts.cspline]
+# A smooth curve through evenly spaced knots
+svg = '''
+var s = '';
+var d = '';
+for (var i = 0; i <= 40; i++) {
+	var x = 7 + i, y = 44 - 16 * Math.sin(i / 40 * 2 * Math.PI);
+	d += (i ? 'L' : 'M') + x + ',' + y.toFixed(1);
+}
+s += '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.5"/>';
+for (var j = 0; j <= 4; j++) {
+	var xk = 7 + j * 10, yk = 44 - 16 * Math.sin(j / 4 * 2 * Math.PI);
+	s += '<circle cx="' + xk + '" cy="' + yk.toFixed(1) + '" r="2" fill="currentColor" opacity="0.6"/>';
+}
+return s;
+'''
+
+[miniCharts.bspline]
+# Overlapping bell-shaped basis functions on a regular grid
+svg = '''
+var s = '';
+for (var c = 0; c < 4; c++) {
+	var d = '';
+	for (var i = 0; i <= 20; i++) {
+		var u = i / 20 * 4 - 2, b = Math.abs(u) < 1 ? 2 / 3 - u * u + Math.abs(u * u * u) / 2 : Math.pow(2 - Math.abs(u), 3) / 6;
+		d += (i ? 'L' : 'M') + (7 + c * 8 + i * 1.6).toFixed(1) + ',' + (60 - 36 * b).toFixed(1);
+	}
+	s += '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1" opacity="0.6"/>';
+}
+s += '<line x1="5" y1="61" x2="49" y2="61" stroke="currentColor" stroke-width="0.8" opacity="0.4"/>';
+return s;
+'''
+
+[miniCharts.dierckx]
+# A smoothing spline passing between noisy points
+svg = '''
+var s = '';
+var d = '';
+for (var i = 0; i <= 40; i++) {
+	var x = 7 + i, y = 58 - 26 * i / 40 + 6 * Math.sin(i / 40 * Math.PI);
+	d += (i ? 'L' : 'M') + x + ',' + y.toFixed(1);
+}
+s += '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.5"/>';
+var p = [[9,52],[15,58],[21,47],[27,54],[33,40],[39,45],[45,32]];
+for (var j = 0; j < p.length; j++) {
+	s += '<circle cx="' + p[j][0] + '" cy="' + p[j][1] + '" r="2" fill="currentColor" opacity="0.6"/>';
+}
+return s;
+'''
+
+[[codeBranches]]
+model = "linear"
+code = '''
+using Interpolations
+
+itp = linear_interpolation({{xs}}, {{ys}}; extrapolation_bc={{extrap}})  # piecewise linear, irregular knots allowed
+yq  = itp.({{xq}})
+println("Interpolated values: ", round.(yq, sigdigits=4))
+'''
+
+[[codeBranches]]
+model = "cspline"
+code = '''
+using Interpolations
+
+knots = range(first({{xs}}), last({{xs}}); length=length({{ys}}))  # cubic_spline_interpolation needs uniformly spaced knots
+itp   = cubic_spline_interpolation(knots, {{ys}}; bc={{bc}}, extrapolation_bc=Flat())
+yq    = itp.({{xq}})
+println("Interpolated values: ", round.(yq, sigdigits=4))
+'''
+
+[[codeBranches]]
+model = "bspline"
+code = '''
+using Interpolations
+
+knots = range(first({{xs}}), last({{xs}}); length=length({{ys}}))  # B-splines live on a regular grid
+itp   = extrapolate(scale(interpolate({{ys}}, BSpline({{degree}})), knots), Flat())  # scale maps grid indices to xs
+yq    = itp.({{xq}})
+println("Interpolated values: ", round.(yq, sigdigits=4))
+'''
+
+[[codeBranches]]
+model = "dierckx"
+code = '''
+using Dierckx
+
+itp = Spline1D({{xs}}, {{ys}}; k={{k}}, s={{s}})  # s = 0 passes through every knot
+yq  = itp.({{xq}})
+println("Interpolated values: ", round.(yq, sigdigits=4))
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "interpolant-plot"
+label = "Interpolant Plot"
+desc = "Plot the knot data and the dense interpolated curve together"
+code = '''
+using Plots
+
+xg = range(extrema({{xs}})...; length=400)
+plot(xg, itp.(xg), label="{{model}}", xlabel="x", ylabel="y")
+scatter!({{xs}}, {{ys}}, label="Knots")
+'''
+
+[[actionGroups.actions]]
+id = "extrapolation-plot"
+label = "Extrapolation Plot"
+desc = "Show how the interpolant behaves outside the knot range"
+code = '''
+using Plots
+
+lo, hi = extrema({{xs}})
+pad = 0.25 * (hi - lo)
+xe = range(lo - pad, hi + pad; length=500)
+ye = [try itp(x) catch; NaN end for x in xe]  # NaN (a gap) where the interpolant throws
+plot(xe, ye, label="{{model}}", xlabel="x", ylabel="y")
+scatter!({{xs}}, {{ys}}, label="Knots")
+vspan!([lo, hi], alpha=0.1, color=:gray, label="Knot range")
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "residual-check"
+label = "Residual Check"
+desc = "Verify that the interpolant passes through all knot points"
+code = '''
+res = itp.({{xs}}) .- {{ys}}
+println("Max |residual| at the knots: ", maximum(abs.(res)))  # near zero for exact interpolation
+# large residuals mean smoothing (Dierckx s > 0) or irregular xs forced onto a uniform grid (Cubic Spline, B-Spline)
+'''
+
+[[actionGroups.actions]]
+id = "condition-check"
+label = "Condition Check"
+desc = "Detect unsorted or badly spaced knots that may degrade accuracy"
+code = '''
+gaps = diff({{xs}})
+all(gaps .> 0) || println("Knots are not strictly increasing: sort them and remove duplicates first")
+ratio = maximum(gaps) / minimum(gaps)
+println("Largest / smallest knot gap: ", round(ratio, sigdigits=3))
+ratio > 10 && println("Very uneven spacing: splines may overshoot in the wide gaps; consider Linear or Dierckx smoothing")
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "dense-grid"
+label = "Dense Grid Evaluation"
+desc = "Evaluate the interpolant on a fine uniform grid for downstream use"
+code = '''
+xg = range(extrema({{xs}})...; length=1000)
+yg = itp.(xg)
+println("Evaluated ", length(yg), " points on [", first(xg), ", ", last(xg), "]")
+'''
+
+[[actionGroups.actions]]
+id = "derivatives"
+label = "Derivatives"
+desc = "First and second derivatives of the interpolant"
+code = '''
+using Plots
+
+xg = range(extrema({{xs}})...; length=400)[2:end-1]  # interior points only
+h  = 1e-4 * (last(xg) - first(xg))
+d1 = (itp.(xg .+ h) .- itp.(xg .- h)) ./ (2h)  # central differences
+d2 = (itp.(xg .+ h) .- 2 .* itp.(xg) .+ itp.(xg .- h)) ./ h^2
+{{?model=dierckx}}d1 = derivative(itp, collect(xg); nu=1)  # Dierckx gives exact spline derivatives
+{{?model=dierckx}}d2 = derivative(itp, collect(xg); nu=2)
+plot(xg, d1, label="First derivative", xlabel="x")
+plot!(xg, d2, label="Second derivative")  # jumps reveal the kinks of lower-degree interpolants
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "method-comparison"
+label = "Method Comparison"
+desc = "Plot Linear, Cubic Spline, B-Spline and Dierckx on the same axes"
+code = '''
+using Interpolations, Dierckx, Plots
+
+knots = range(first({{xs}}), last({{xs}}); length=length({{ys}}))
+candidates = [
+	"Linear"         => linear_interpolation({{xs}}, {{ys}}),
+	"Cubic Spline"   => cubic_spline_interpolation(knots, {{ys}}),
+	"B-Spline"       => extrapolate(scale(interpolate({{ys}}, BSpline(Cubic(Line(OnGrid())))), knots), Flat()),
+	"Dierckx Spline" => Spline1D({{xs}}, {{ys}}; k=3),
+]
+xg = range(extrema({{xs}})...; length=400)
+plt = scatter({{xs}}, {{ys}}, label="Knots", xlabel="x", ylabel="y")
+for (name, f) in candidates
+	plot!(plt, xg, f.(xg), label=name)
+end
+plt
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "smoothness"
+label = "Smoothness Measure"
+desc = "Estimate the roughness of the interpolant from the energy of its second derivative"
+code = '''
+xg = range(extrema({{xs}})...; length=2001)
+dx = step(xg)
+ygrid = itp.(xg)
+d2 = (ygrid[3:end] .- 2 .* ygrid[2:end-1] .+ ygrid[1:end-2]) ./ dx^2
+roughness = sum(d2 .^ 2) * dx  # approximate integral of the squared second derivative
+println("Roughness: ", round(roughness, sigdigits=4))  # lower = smoother; linear kinks inflate it
+'''
+
+[[actionGroups.actions]]
+id = "definite-integral"
+label = "Definite Integral"
+desc = "Compute the area under the interpolated curve over the knot range"
+code = '''
+lo, hi = extrema({{xs}})
+xg = range(lo, hi; length=2001)
+ygrid = itp.(xg)
+area = step(xg) * (sum(ygrid) - (first(ygrid) + last(ygrid)) / 2)  # trapezoidal rule
+println("Integral over [", lo, ", ", hi, "]: ", round(area, sigdigits=6))
+{{?model=dierckx}}println("Exact spline integral: ", round(integrate(itp, lo, hi), sigdigits=6))
+'''

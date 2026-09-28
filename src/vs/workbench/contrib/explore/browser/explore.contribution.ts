@@ -7,7 +7,6 @@
 import { localize } from '../../../../../vs/nls.js';
 import { MenuRegistry, MenuId } from '../../../../platform/actions/common/actions.js';
 import { CommandsRegistry, ICommandService } from '../../../../platform/commands/common/commands.js';
-import { ContextKeyExpr } from '../../../../platform/contextkey/common/contextkey.js';
 import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
 import { IWebviewService } from '../../webview/browser/webview.js';
@@ -37,8 +36,9 @@ import { openTsvizWebview } from '../../model/browser/commands/tsviz.command.js'
 import { openCpvizWebview } from '../../model/browser/commands/cpviz.command.js';
 import { openGsvizWebview } from '../../model/browser/commands/gsviz.command.js';
 import { openSfvizWebview } from '../../model/browser/commands/sfviz.command.js';
-import { openHmdWebview } from '../../model/browser/commands/hmd.command.js';
-import { openIdatWebview } from '../../model/browser/commands/idat.command.js';
+import { HMD_PANEL } from '../../model/browser/commands/hmd.command.js';
+import { IDAT_PANEL } from '../../model/browser/commands/idat.command.js';
+import { CSV_PANEL } from '../../model/browser/commands/csv.command.js';
 import { openHfmWebview } from '../../model/browser/commands/hfm.command.js';
 import { openKgmWebview } from '../../model/browser/commands/kgm.command.js';
 import { openXlsxWebview } from '../../model/browser/commands/xlsx.command.js';
@@ -67,7 +67,9 @@ const HMD_ID = 'chiara.explore.hmd';
 const IDAT_ID = 'chiara.explore.idat';
 const HFM_ID  = 'chiara.explore.hfm';
 const KGM_ID  = 'chiara.explore.kgm';
+const SQL_ID = 'chiara.explore.conn.sql';
 const XLSX_ID = 'chiara.explore.conn.xlsx';
+const CSV_ID = 'chiara.explore.conn.csv';
 const YFIN_ID = 'chiara.explore.adr.yfin';
 const ALPV_ID = 'chiara.explore.adr.alpv';
 export const FRED_ID = 'chiara.explore.adr.fred';
@@ -123,17 +125,7 @@ CommandsRegistry.registerCommand(NOD_ID, (accessor: ServicesAccessor) => openSca
 
 CommandsRegistry.registerCommand(ANDE_ID, (accessor: ServicesAccessor) => openScaffoldWebview(accessor, ANDE_PANEL));
 
-CommandsRegistry.registerCommand(IDAT_ID, (accessor: ServicesAccessor) => {
-	openIdatWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	);
-});
+CommandsRegistry.registerCommand(IDAT_ID, (accessor: ServicesAccessor) => openScaffoldWebview(accessor, IDAT_PANEL));
 
 CommandsRegistry.registerCommand(HFM_ID, (accessor: ServicesAccessor) => {
 	openHfmWebview(
@@ -178,6 +170,8 @@ CommandsRegistry.registerCommand(KGM_ID, (accessor: ServicesAccessor) => {
 		accessor.get(IWebviewService),
 	);
 });
+
+CommandsRegistry.registerCommand(CSV_ID, (accessor: ServicesAccessor) => openScaffoldWebview(accessor, CSV_PANEL));
 
 CommandsRegistry.registerCommand(XLSX_ID, (accessor: ServicesAccessor) => {
 	openXlsxWebview(
@@ -343,17 +337,7 @@ CommandsRegistry.registerCommand(EDGAR_ID, (accessor: ServicesAccessor) => {
 	);
 });
 
-CommandsRegistry.registerCommand(HMD_ID, (accessor: ServicesAccessor) => {
-	openHmdWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	);
-});
+CommandsRegistry.registerCommand(HMD_ID, (accessor: ServicesAccessor) => openScaffoldWebview(accessor, HMD_PANEL));
 
 CommandsRegistry.registerCommand(NOVD_ID, (accessor: ServicesAccessor) => openScaffoldWebview(accessor, NOVD_PANEL));
 
@@ -1122,12 +1106,6 @@ const DVSubmenuId = new MenuId('menubarDVSubmenu');
 // Define a new submenu ID for "Anomalies and Novelties"
 const ANSubmenuId = new MenuId('menubarANSubmenu');
 
-// Define a new submenu ID for "Cloud Computing"
-const RCSubmenuId = new MenuId('menubarRCSubmenu');
-
-// Define a new submenu ID for "Cloud Storage"
-const CSSubmenuId = new MenuId('menubarCSSubmenu');
-
 // ===================================================
 // TOP-LEVEL EXPLORE MENU STRUCTURE
 // ===================================================
@@ -1149,7 +1127,7 @@ MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
 MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
 	group: '1_explore',
 	submenu: CONNSubmenuId,
-	title: localize('showExplore.formats', 'Formats and Protocols'),
+	title: localize('showExplore.formats', 'Access Files and Databases'),
 	order: 3,
 });
 
@@ -1263,7 +1241,7 @@ MenuRegistry.appendMenuItem(ADRSubmenuId, {
 }); // Kaggle API + CSV.jl
 
 MenuRegistry.appendMenuItem(ADRSubmenuId, {
-	group: '4_ds',
+	group: '2_ds',
 	command: {
 		id: YFIN_ID,
 		title: localize('fit.yahoo', 'Yahoo Finance'),
@@ -1272,7 +1250,7 @@ MenuRegistry.appendMenuItem(ADRSubmenuId, {
 }); // YFinance.jl
 
 MenuRegistry.appendMenuItem(ADRSubmenuId, {
-	group: '4_ds',
+	group: '2_ds',
 	command: {
 		id: ALPV_ID,
 		title: localize('fit.alpha', 'Alpha Vantage'),
@@ -1280,22 +1258,15 @@ MenuRegistry.appendMenuItem(ADRSubmenuId, {
 	order: 2,
 }); // AlphaVantage.jl
 
-MenuRegistry.appendMenuItem(ADRSubmenuId, {
-	group: '4_ds',
-	command: {
-		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
-		title: localize('mt.french', 'Kenneth French Data Library'),
-	},
-	order: 3,
-}); // FamaFrenchData.jl
+
 
 MenuRegistry.appendMenuItem(ADRSubmenuId, {
-	group: '3_ds',
+	group: '2_ds',
 	command: {
 		id: EDGAR_ID,
 		title: localize('ft.edgar', 'US SEC EDGAR'),
 	},
-	order: 1,
+	order: 3,
 }); // ScrapeSEC.jl
 
 //MenuRegistry.appendMenuItem(ADRSubmenuId, {
@@ -1314,149 +1285,34 @@ MenuRegistry.appendMenuItem(ADRSubmenuId, {
 // SUBMENU: FORMATS AND PROTOCOLS
 // ===================================================
 
+
+MenuRegistry.appendMenuItem(CONNSubmenuId, {
+	group: '2_conn',
+	command: {
+		id: SQL_ID,
+		title: localize('conn.sql', 'SQL Databases'),
+	},
+	order: 1,
+});  // DuckDB.jl
+
 MenuRegistry.appendMenuItem(CONNSubmenuId, {
 	group: '2_conn',
 	command: {
 		id: XLSX_ID,
 		title: localize('conn.excel', 'Excel Workbooks'),
 	},
-	order: 1,
+	order: 2,
 });  // XLSX.jl
-
-//MenuRegistry.appendMenuItem(CONNSubmenuId, {
-//	group: '2_conn',
-//	command: {
-//		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
-//		title: localize('conn.json', 'JSON Files'),
-//	},
-//	order: 3,
-//});  // JSON.jl
-
-//MenuRegistry.appendMenuItem(CONNSubmenuId, {
-//	group: '2_conn',
-//	command: {
-//		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
-//		title: localize('conn.xml', 'XML and XPath'),
-//	},
-//	order: 4,
-//});  // EzXML.jl
 
 MenuRegistry.appendMenuItem(CONNSubmenuId, {
 	group: '2_conn',
 	command: {
-		id: XLSX_ID, precondition: ContextKeyExpr.false(),
+		id: CSV_ID,
 		title: localize('conn.csv', 'CSV Files'),
 	},
-	order: 5,
+	order: 3,
 });  // CSV.jl
 
-//MenuRegistry.appendMenuItem(CONNSubmenuId, {
-//	group: '2_conn',
-//	command: {
-//		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
-//		title: localize('conn.parquet', 'Parquet Files'),
-//	},
-//	order: 6,
-//});  // Parquet.jl
-
-//MenuRegistry.appendMenuItem(CONNSubmenuId, {
-//	group: '3_conn',
-//	command: {
-//		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
-//		title: localize('conn.http', 'HTTP / REST APIs'),
-//	},
-//	order: 1,
-//});  // HTTP.jl
-
-// ===================================================
-// SUBMENU: CLOUD COMPUTING PLATFORMS
-// ===================================================
-
-MenuRegistry.appendMenuItem(RCSubmenuId, {
-	group: '1_ccp',
-	command: {
-		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
-		title: localize('ccp.colab', 'Google Colab'),
-	},
-	order: 1,
-});  // Becomes active only if the Extension Colab is installed
-
-MenuRegistry.appendMenuItem(RCSubmenuId, {
-	group: '1_ccp',
-	command: {
-		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
-		title: localize('conn.gs', 'Google Sheets'),
-	},
-	order: 2,
-});  //
-
-MenuRegistry.appendMenuItem(RCSubmenuId, {
-	group: '2_ccp',
-	command: {
-		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
-		title: localize('ccp.azure', 'Microsoft Azure'),
-	},
-	order: 1,
-});  // Becomes active only if the Extension Azure is installed
-
-MenuRegistry.appendMenuItem(RCSubmenuId, {
-	group: '2_ccp',
-	command: {
-		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
-		title: localize('ccp.aws', 'AWS'),
-	},
-	order: 2,
-});  // Becomes active only if the Extension AWS is installed
-
-
-// ===================================================
-// SUBMENU: CLOUD STORAGE
-// ===================================================
-
-MenuRegistry.appendMenuItem(CSSubmenuId, {
-	group: '1_cs',
-	command: {
-		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
-		title: localize('conn.gd', 'Google Drive'),
-	},
-	order: 1,
-});  // GoogleDrive.jl
-
-MenuRegistry.appendMenuItem(CSSubmenuId, {
-	group: '1_cs',
-	command: {
-		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
-		title: localize('conn.mo', 'Microsoft OneDrive'),
-	},
-	order: 2,
-});  //
-
-MenuRegistry.appendMenuItem(CSSubmenuId, {
-	group: '1_cs',
-	command: {
-		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
-		title: localize('conn.aic', 'Apple iCloud'),
-	},
-	order: 3,
-});  //
-
-MenuRegistry.appendMenuItem(CSSubmenuId, {
-	group: '1_cs',
-	command: {
-		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
-		title: localize('conn.box', 'Box'),
-	},
-	order: 4,
-});  //
-
-MenuRegistry.appendMenuItem(CSSubmenuId, {
-	group: '1_cs',
-	command: {
-		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
-		title: localize('conn.nc', 'NextCloud'),
-	},
-	order: 5,
-});  //
 
 
 // ===================================================

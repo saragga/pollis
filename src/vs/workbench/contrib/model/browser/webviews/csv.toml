@@ -1,0 +1,581 @@
+# CSV Files Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/csv.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "CSV Files"
+viewType = "pollis.csv"
+defaultModel = "read"
+
+[[packages]]
+name = "CSV.jl"
+github = "https://github.com/JuliaData/CSV.jl"
+
+[[packages.videos]]
+title = "High Performance Computing in Julia"
+description = "An 18-video course by Jamie Mair on writing fast Julia code"
+url = "https://www.youtube.com/playlist?list=PLUAq6xQKFgGr39PiyrPk_C9dhBKvWcjUA"
+
+[[packages]]
+name = "Tables.jl"
+github = "https://github.com/JuliaData/Tables.jl"
+
+[[notebookSections]]
+label = "CSV Files"
+
+[[notebookSections.notebooks]]
+name = "Read and Inspect"
+file = "csv/tutorial-01-read.ipynb"
+bundled = true
+description = "Read sample files with the right delimiter, missing markers, decimal mark and date format, then check the schema"
+
+[[notebookSections.notebooks]]
+name = "Write and Round-Trip"
+file = "csv/tutorial-02-write.ipynb"
+bundled = true
+description = "Write tables with options, append, compress, and check which values survive a write and a read"
+
+[[notebookSections.notebooks]]
+name = "Large Files"
+file = "csv/tutorial-03-large-files.ipynb"
+bundled = true
+description = "Process a file piece by piece with CSV.Rows and CSV.Chunks, and verify against a full read"
+
+[[wikis]]
+name = "Factsheet"
+file = "csv/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "csv/overview.md"
+bundled = true
+
+[[wikis]]
+name = "File Format"
+file = "csv/file-format.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "csv/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "csv/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "csv/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Methods"
+
+[[wikis]]
+name = "Read"
+file = "csv/read.md"
+bundled = true
+
+[[wikis]]
+name = "Write"
+file = "csv/write.md"
+bundled = true
+
+[[wikis]]
+name = "Stream Rows"
+file = "csv/rows.md"
+bundled = true
+
+[[wikis]]
+name = "Chunks"
+file = "csv/chunks.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "CSV.jl: Utility library for working with CSV and other delimited files"
+authors = "Quinn, Jacob"
+year = 2023
+journal = "GitHub"
+url = "https://github.com/JuliaData/CSV.jl"
+openAccess = true
+
+[[references]]
+title = "Tables.jl: An interface for tables in Julia"
+authors = "Quinn, Jacob"
+year = 2023
+journal = "GitHub"
+url = "https://github.com/JuliaData/Tables.jl"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Standards"
+
+[[references]]
+title = "Common Format and MIME Type for Comma-Separated Values (CSV) Files"
+authors = "Shafranovich, Yakov"
+year = 2005
+journal = "IETF RFC 4180"
+url = "https://www.rfc-editor.org/rfc/rfc4180"
+openAccess = true
+
+[[models]]
+id = "read"
+label = "Read"
+
+[[models]]
+id = "write"
+label = "Write"
+
+[[models]]
+id = "rows"
+label = "Stream Rows"
+
+[[models]]
+id = "chunks"
+label = "Chunks"
+
+[[bullets]]
+text = "Read"
+detail = "<code>CSV.File</code> parses the whole file into typed columns in memory, inferring each column type and using several threads on large files"
+
+[[bullets]]
+text = "Write"
+detail = "<code>CSV.write</code> saves any Tables.jl source, e.g. a named tuple of vectors, as a delimited text file"
+
+[[bullets]]
+text = "Stream Rows"
+detail = "<code>CSV.Rows</code> iterates one row at a time with a reused buffer, so memory stays constant however large the file is"
+
+[[bullets]]
+text = "Chunks"
+detail = "<code>CSV.Chunks</code> splits the file into byte ranges and parses them one at a time, for files too large to hold in memory at once"
+
+[[decisionRows]]
+task = "Read"
+context = "Fits in memory"
+purpose = "Load the whole file as typed columns for analysis"
+
+[[decisionRows]]
+task = "Write"
+context = "Any table"
+purpose = "Export results for spreadsheets, other languages or archives"
+
+[[decisionRows]]
+task = "Stream Rows"
+context = "Larger than memory"
+purpose = "One pass over every row: counting, filtering, running totals"
+
+[[decisionRows]]
+task = "Chunks"
+context = "Larger than memory"
+purpose = "Process typed column blocks one at a time, then combine the results"
+
+[[inputs]]
+id = "path"
+label = "File"
+tooltip = "Path to the delimited file, relative to the Julia working directory or absolute. Files ending in .gz are decompressed automatically when reading."
+default = "data.csv"
+
+[[inputs]]
+id = "data"
+label = "Data"
+tooltip = "Variable name of the table to write: any Tables.jl source (e.g. a named tuple of vectors or a CSV.File)."
+default = "data"
+models = ["write"]
+
+[[inputs]]
+id = "delim"
+label = "Delimiter"
+tooltip = "Field separator. Auto detects comma, tab, semicolon or pipe from the first lines when reading, and writes commas."
+kind = "select"
+default = "auto"
+
+[[inputs.options]]
+value = "auto"
+label = "auto"
+
+[[inputs.options]]
+value = ","
+label = "comma"
+
+[[inputs.options]]
+value = ";"
+label = "semicolon"
+
+[[inputs.options]]
+value = '\t'
+label = "tab"
+
+[[inputs.options]]
+value = "|"
+label = "pipe"
+
+[[inputs]]
+id = "header"
+label = "Header"
+tooltip = "Row holding the column names. With none, columns are named Column1, Column2, ... and the first row is data."
+kind = "select"
+default = "1"
+models = ["read", "rows", "chunks"]
+
+[[inputs.options]]
+value = "1"
+label = "row 1"
+
+[[inputs.options]]
+value = "false"
+label = "none"
+
+[[inputs]]
+id = "missingstring"
+label = "Missing Strings"
+tooltip = "Comma-separated list of quoted strings that are read as missing, e.g. \"\", \"NA\", \"NULL\"."
+default = '"", "NA"'
+models = ["read", "rows", "chunks"]
+
+[[inputs]]
+id = "decimal"
+label = "Decimal Mark"
+tooltip = "Character separating the integer and fractional parts of numbers. A comma decimal mark needs a delimiter other than comma, usually semicolon."
+kind = "select"
+default = "."
+models = ["read", "chunks"]
+newRow = true
+
+[[inputs.options]]
+value = "."
+label = "point (1.5)"
+
+[[inputs.options]]
+value = ","
+label = "comma (1,5)"
+
+[[inputs]]
+id = "dateformat"
+label = "Date Format"
+tooltip = "Dates.DateFormat pattern for date columns, e.g. yyyy-mm-dd or dd/mm/yyyy. Columns that do not match are read as strings."
+default = "yyyy-mm-dd"
+models = ["read", "chunks"]
+
+[[inputs]]
+id = "ntasks"
+label = "Chunks"
+tooltip = "Number of byte ranges the file is split into. More chunks = less memory per chunk. Files too small to split are read as a single chunk."
+default = "4"
+models = ["chunks"]
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.read]
+# Text file flowing into a grid of typed columns
+svg = '''
+var s = '<rect x="6" y="6" width="42" height="24" rx="2" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.5"/>';
+s += '<text x="27" y="21" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">a,b,c</text>';
+s += '<line x1="27" y1="32" x2="27" y2="42" stroke="currentColor" stroke-width="1" opacity="0.6"/>';
+s += '<path d="M23 39 L27 44 L31 39" fill="none" stroke="currentColor" stroke-width="1" opacity="0.6"/>';
+s += '<rect x="6" y="48" width="42" height="32" rx="2" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.5"/>';
+s += '<rect x="9" y="51" width="10" height="26" fill="currentColor" opacity="0.25"/>';
+s += '<rect x="22" y="51" width="10" height="26" fill="currentColor" opacity="0.15"/>';
+s += '<rect x="35" y="51" width="10" height="26" fill="currentColor" opacity="0.25"/>';
+return s;
+'''
+
+[miniCharts.write]
+# Grid of columns flowing into a text file
+svg = '''
+var s = '<rect x="6" y="6" width="42" height="32" rx="2" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.5"/>';
+s += '<rect x="9" y="9" width="10" height="26" fill="currentColor" opacity="0.25"/>';
+s += '<rect x="22" y="9" width="10" height="26" fill="currentColor" opacity="0.15"/>';
+s += '<rect x="35" y="9" width="10" height="26" fill="currentColor" opacity="0.25"/>';
+s += '<line x1="27" y1="40" x2="27" y2="50" stroke="currentColor" stroke-width="1" opacity="0.6"/>';
+s += '<path d="M23 47 L27 52 L31 47" fill="none" stroke="currentColor" stroke-width="1" opacity="0.6"/>';
+s += '<rect x="6" y="56" width="42" height="24" rx="2" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.5"/>';
+s += '<text x="27" y="71" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">a,b,c</text>';
+return s;
+'''
+
+[miniCharts.rows]
+# One highlighted row passing through at a time
+svg = '''
+var s = '<rect x="6" y="6" width="42" height="74" rx="2" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.5"/>';
+for (var i = 0; i < 8; i++) {
+	var y = 12 + i * 8.5;
+	s += '<rect x="10" y="' + y + '" width="34" height="5" rx="1" fill="currentColor" opacity="' + (i === 3 ? 0.6 : 0.12) + '"/>';
+}
+s += '<path d="M2 29.5 L6 32.5 L2 35.5" fill="currentColor" opacity="0.6"/>';
+return s;
+'''
+
+[miniCharts.chunks]
+# File split into separate blocks
+svg = '''
+var s = '';
+for (var i = 0; i < 4; i++) {
+	var y = 6 + i * 19;
+	s += '<rect x="6" y="' + y + '" width="42" height="15" rx="2" fill="currentColor" opacity="' + (0.1 + i * 0.07) + '" stroke="currentColor" stroke-width="0.8" stroke-opacity="0.5"/>';
+	s += '<text x="27" y="' + (y + 10.5) + '" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">' + (i + 1) + '</text>';
+}
+return s;
+'''
+
+[[codeBranches]]
+model = "read"
+code = '''
+using CSV, Tables
+
+opts = (
+{{?delim!=auto}}	delim = '{{delim}}',
+	header = {{header}},
+	missingstring = [{{missingstring}}],
+	decimal = '{{decimal}}',
+	dateformat = "{{dateformat}}",
+)
+file = CSV.File("{{path}}"; opts...)
+tbl = Tables.columntable(file)  # named tuple of column vectors
+println(length(file), " rows x ", length(tbl), " columns")
+println(Tables.schema(file))
+'''
+
+[[codeBranches]]
+model = "write"
+code = '''
+using CSV, Tables
+
+{{?delim=auto}}opts = (;)  # CSV.write uses commas by default
+{{?delim!=auto}}opts = (delim = '{{delim}}',)
+tbl = Tables.columntable({{data}})  # named tuple of column vectors, from any Tables.jl source
+CSV.write("{{path}}", tbl; opts...)  # missing values are written as empty fields
+println("Wrote ", length(first(tbl)), " rows x ", length(tbl), " columns to {{path}} (", filesize("{{path}}"), " bytes)")
+'''
+
+[[codeBranches]]
+model = "rows"
+code = '''
+using CSV, Tables
+
+opts = (
+{{?delim!=auto}}	delim = '{{delim}}',
+	header = {{header}},
+	missingstring = [{{missingstring}}],
+)
+rows = CSV.Rows("{{path}}"; opts..., reusebuffer=true)  # untyped: every value is a string or missing
+for (i, row) in enumerate(rows)
+	i > 5 && break
+	println(join((string(coalesce(Tables.getcolumn(row, j), "missing")) for j in 1:length(Tables.columnnames(row))), " | "))
+end
+println("Rows: ", count(_ -> true, rows))  # one pass in constant memory
+tbl = Tables.columntable(CSV.File("{{path}}"; opts..., limit=1000))  # typed sample of the first 1000 rows, for the Next Steps
+'''
+
+[[codeBranches]]
+model = "chunks"
+code = '''
+using CSV, Tables
+
+opts = (
+{{?delim!=auto}}	delim = '{{delim}}',
+	header = {{header}},
+	missingstring = [{{missingstring}}],
+	decimal = '{{decimal}}',
+	dateformat = "{{dateformat}}",
+)
+chunks = try
+	CSV.Chunks("{{path}}"; opts..., ntasks={{ntasks}})  # each chunk is a typed CSV.File
+catch  # too few rows to split
+	[CSV.File("{{path}}"; opts...)]
+end
+sizes = [length(chunk) for chunk in chunks]  # replace length with your per-chunk computation, then combine
+println("Chunks: ", length(sizes), ", rows per chunk: ", sizes, ", total: ", sum(sizes))
+tbl = Tables.columntable(first(chunks))  # the first chunk, for the Next Steps
+'''
+
+# Next Steps action groups
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "preview-rows"
+label = "Preview Rows"
+desc = "The first 10 rows as an aligned text table"
+code = '''
+n = min(10, length(first(tbl)))
+println(join(rpad.(string.(keys(tbl)), 14)))
+for i in 1:n
+	println(join(rpad.(string.(getindex.(values(tbl), i)), 14)))
+end
+'''
+
+[[actionGroups.actions]]
+id = "column-histograms"
+label = "Column Histograms"
+desc = "Histogram of every numeric column"
+code = '''
+using Plots
+
+numeric = [n for n in keys(tbl) if nonmissingtype(eltype(tbl[n])) <: Real]
+isempty(numeric) ? println("No numeric columns") :
+	plot([histogram(collect(skipmissing(tbl[n])), title=string(n), legend=false) for n in numeric]...)
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "schema-check"
+label = "Schema Check"
+desc = "Type and missing count per column, flagging text columns that look like numbers or dates"
+code = '''
+for (name, c) in pairs(tbl)
+	T = nonmissingtype(eltype(c))
+	v = collect(skipmissing(c))
+	hint = ""
+	if T <: AbstractString && !isempty(v)
+		count(s -> tryparse(Float64, replace(s, "," => ".")) !== nothing, v) > 0.9 * length(v) && (hint = "  <- looks numeric: check the delimiter and decimal mark")
+		count(s -> occursin(r"^\d{1,4}[-/.]\d{1,2}[-/.]\d{1,4}$", s), v) > 0.9 * length(v) && (hint = "  <- looks like dates: check the date format")
+	end
+	println(rpad(name, 16), rpad(T, 14), count(ismissing, c), " missing", hint)
+end
+'''
+
+[[actionGroups.actions]]
+id = "row-count-check"
+label = "Row Count Check"
+desc = "Lines in the file against rows parsed: a gap points to blank lines, quoted line breaks or footers"
+code = '''
+using CSV
+
+lines  = countlines("{{path}}")
+parsed = length(CSV.File("{{path}}"; opts...))
+header = get(opts, :header, 1) === false ? 0 : 1  # header lines expected on top of the data rows
+println("Lines in file: ", lines, ", rows parsed: ", parsed, ", header lines: ", header)
+println(lines - parsed == header ? "One line per row, as expected" : "Difference of " * string(lines - parsed - header) * ": look for blank lines, quoted line breaks, comments or footers")
+'''
+
+[[actionGroups.actions]]
+id = "strict-parse"
+label = "Strict Parse"
+desc = "Parse again with strict=true, stopping at the first value that does not fit its column type"
+code = '''
+using CSV
+
+try
+	CSV.File("{{path}}"; opts..., strict=true)
+	println("Every value parsed cleanly with the inferred column types")
+catch err
+	println("First problem: ", sprint(showerror, err))
+end
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "round-trip"
+label = "Round-Trip Check"
+desc = "Write the table to memory and read it back: do the values and column types survive?"
+code = '''
+using CSV, Tables
+
+back = Tables.columntable(CSV.File(IOBuffer(sprint(io -> CSV.write(io, tbl)))))
+for name in keys(tbl)
+	same = haskey(back, name) && isequal(tbl[name], back[name])
+	println(rpad(name, 16), same ? "identical" : "changed", "  ", eltype(tbl[name]), " -> ", haskey(back, name) ? eltype(back[name]) : "absent")
+end
+'''
+
+[[actionGroups.actions]]
+id = "reader-comparison"
+label = "Reader Comparison"
+desc = "Time CSV.File, CSV.Rows and CSV.Chunks on the same file"
+code = '''
+using CSV
+
+readers = [
+	"CSV.File"   => () -> CSV.File("{{path}}"; opts...),
+	"CSV.Rows"   => () -> count(_ -> true, CSV.Rows("{{path}}"; opts..., reusebuffer=true)),
+	"CSV.Chunks" => () -> sum(length, CSV.Chunks("{{path}}"; opts..., ntasks=4)),
+]
+for (name, f) in readers
+	try
+		f()  # first call compiles
+		println(rpad(name, 12), round(1000 * @elapsed(f()), digits=1), " ms")
+	catch
+		println(rpad(name, 12), "not applicable (file too small to split)")
+	end
+end
+println("Threads: ", Threads.nthreads(), " (start Julia with --threads=auto for parallel parsing)")
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "column-summary"
+label = "Column Summary"
+desc = "Range and median of numeric columns; distinct values and the most frequent one for the rest"
+code = '''
+using Statistics, StatsBase
+
+for (name, c) in pairs(tbl)
+	v = collect(skipmissing(c))
+	if isempty(v)
+		println(rpad(name, 16), "all missing")
+	elseif eltype(v) <: Real && !(eltype(v) <: Bool)
+		println(rpad(name, 16), "min = ", minimum(v), "  median = ", median(v), "  max = ", maximum(v))
+	else
+		top = first(sort(collect(countmap(v)), by=last, rev=true))
+		println(rpad(name, 16), length(unique(v)), " distinct, most frequent: ", first(top), " (", last(top), " times)")
+	end
+end
+'''
+
+[[actionGroups]]
+id = "export"
+label = "Export"
+
+[[actionGroups.actions]]
+id = "save-xlsx"
+label = "Save as Excel Workbook"
+desc = "Write the table to an .xlsx file next to the CSV"
+code = '''
+using XLSX
+
+out = first(splitext("{{path}}")) * ".xlsx"
+XLSX.writetable(out, tbl; overwrite=true)
+println("Wrote ", out)
+'''
+
+[[actionGroups.actions]]
+id = "save-gz"
+label = "Save Compressed"
+desc = "Stream the file row by row into a gzip-compressed copy"
+code = '''
+using CSV
+
+out = "{{path}}.gz"
+CSV.write(out, CSV.Rows("{{path}}"; opts..., reusebuffer=true); compress=true)
+println("Wrote ", out, " (", round(100 * filesize(out) / filesize("{{path}}"), digits=1), "% of the original size)")
+'''
