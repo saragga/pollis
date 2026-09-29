@@ -94,7 +94,6 @@ import { ACRONYM_METADATA } from '../webviews/acronym.data.js';
 - `viewType` — Unique identifier (e.g., "pollis.hfm")
 - `defaultModel` — Active model toggle on first load
 - `models` — Array of model toggle keys
-- `wideLayout` (optional) — Use wide layout (default: false)
 - `illusCollapsed` (optional) — Collapse illustration pane (default: false)
 
 ### `[[packages]]` — Dependency packages

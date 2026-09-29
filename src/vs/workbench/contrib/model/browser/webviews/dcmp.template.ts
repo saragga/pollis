@@ -8,7 +8,6 @@ import { buildWebviewHtml } from './webviewScaffold.js';
 export function getDcmpHtml(): string {
 	return buildWebviewHtml({
 		title: 'Distribution Comparison Plots',
-		wideLayout: true,
 		defaultModel: 'ecdf',
 		modelsLiteral: `['ecdf', 'qq', 'marginal', 'correlogram']`,
 		chartW: 66,

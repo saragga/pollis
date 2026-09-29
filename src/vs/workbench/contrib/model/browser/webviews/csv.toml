@@ -21,6 +21,10 @@ url = "https://www.youtube.com/playlist?list=PLUAq6xQKFgGr39PiyrPk_C9dhBKvWcjUA"
 name = "Tables.jl"
 github = "https://github.com/JuliaData/Tables.jl"
 
+# Further packages the examples use: checked by the install indicator, not listed on the Powered-by line
+[requires]
+packages = ["Plots.jl", "StatsBase.jl", "XLSX.jl"]
+
 [[notebookSections]]
 label = "CSV Files"
 

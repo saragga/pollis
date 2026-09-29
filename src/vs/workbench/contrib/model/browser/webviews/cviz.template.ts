@@ -8,7 +8,6 @@ import { buildWebviewHtml } from './webviewScaffold.js';
 export function getCvizHtml(): string {
 	return buildWebviewHtml({
 		title: 'Core Statistical Plots',
-		wideLayout: true,
 		defaultModel: 'scatter',
 		modelsLiteral: `['scatter', 'regression', 'bar', 'histogram', 'box', 'violin', 'pie', 'line']`,
 		chartW: 54,

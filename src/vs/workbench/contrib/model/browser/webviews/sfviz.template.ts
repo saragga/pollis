@@ -8,7 +8,6 @@ import { buildWebviewHtml } from './webviewScaffold.js';
 export function getSfvizHtml(): string {
 	return buildWebviewHtml({
 		title: 'Surfaces and Fields',
-		wideLayout: true,
 		defaultModel: 'contour',
 		modelsLiteral: `['contour', 'contour3d', 'surface', 'volume', 'phase', 'mesh', 'voxels']`,
 		chartW: 54,

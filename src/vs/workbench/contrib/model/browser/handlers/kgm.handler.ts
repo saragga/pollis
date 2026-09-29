@@ -66,7 +66,7 @@ export function registerKgmWebviewHandlers(
 ): DisposableStore {
 	const disposables = new DisposableStore();
 	const kgmData = metadata.kgm;
-	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, kgmData.packages.map(p => p.name), fileService, pathService, commandService, notificationService, workspaceContextService);
+	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, [...kgmData.packages.map(p => p.name), ...(kgmData.requires ?? [])], fileService, pathService, commandService, notificationService, workspaceContextService);
 	createExampleCodeWiring(webviewInput.webview, disposables, 'kgm', fileService, pathService, notificationService);
 	createCustomCopyWiring(webviewInput.webview, disposables, kgmData.wikis, kgmData.notebooks, fileService, pathService, editorService, commandService, notificationService);
 	createReferenceWiring(webviewInput.webview, disposables, 'kgm', kgmData.references, fileService, pathService, commandService, notificationService);

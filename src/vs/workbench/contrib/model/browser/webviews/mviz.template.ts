@@ -8,7 +8,6 @@ import { buildWebviewHtml } from './webviewScaffold.js';
 export function getMvizHtml(): string {
 	return buildWebviewHtml({
 		title: 'Multivariate Plots',
-		wideLayout: true,
 		defaultModel: 'corner',
 		modelsLiteral: `['corner', 'parallel', 'bubble', 'heatmap']`,
 		chartW: 54,

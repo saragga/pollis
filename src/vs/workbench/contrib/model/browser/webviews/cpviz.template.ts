@@ -8,7 +8,6 @@ import { buildWebviewHtml } from './webviewScaffold.js';
 export function getCpvizHtml(): string {
 	return buildWebviewHtml({
 		title: 'Categorical and Proportional Plots',
-		wideLayout: true,
 		defaultModel: 'mosaic',
 		modelsLiteral: `['mosaic', 'nightingale', 'waterfall', 'treemap', 'sankey']`,
 		chartW: 54,

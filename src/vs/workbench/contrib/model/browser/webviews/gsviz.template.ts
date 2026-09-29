@@ -8,7 +8,6 @@ import { buildWebviewHtml } from './webviewScaffold.js';
 export function getGsvizHtml(): string {
 	return buildWebviewHtml({
 		title: 'Graph and Spatial Plots',
-		wideLayout: true,
 		defaultModel: 'network',
 		modelsLiteral: `['network', 'tree', 'choropleth', 'voronoi']`,
 		chartW: 54,

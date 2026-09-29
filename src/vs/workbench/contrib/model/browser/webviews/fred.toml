@@ -7,7 +7,6 @@ title = "Federal Reserve Economic Data"
 viewType = "pollis.fred"
 defaultModel = "growth"
 models = ["growth", "inflation", "labor", "rates", "money"]
-wideLayout = true
 illusCollapsed = true
 illustrationText = "Pull U.S. and international macroeconomic time series from FRED into Julia: output and growth, inflation, the labour market, interest rates, and money and exchange rates."
 

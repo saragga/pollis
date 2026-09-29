@@ -1,0 +1,670 @@
+# Kaggle Models Webview Configuration
+# Declarative source. The build script generates kgm.data.ts.
+# Run: npm run gulp compile-toml
+#
+# Approach: model weights are downloaded from Kaggle Models and run in Julia with
+# ONNX.jl (exported models) or Flux.jl. The Explore pane queries the Kaggle Models API
+# live. The Kaggle API key is stored in Secret Storage and only injected into the REPL
+# session, never written to a file.
+
+[meta]
+title = "Kaggle Models"
+viewType = "pollis.kgm"
+defaultModel = "nlp"
+
+[notes.explore]
+intro = "Pick a Task to search the catalogue, then narrow with Framework and Author. Selecting several Frameworks or Authors matches any of them (<strong>OR</strong>), and the categories combine with <strong>AND</strong>. For example, <em>PyTorch</em> plus <em>TensorFlow</em> under Framework plus an Author builds: <code>(PyTorch OR TensorFlow) AND (Author)</code>"
+
+# Interactive Explore pane (replaces the static Illustration pane). Groups sharing an
+# `axis` are OR-ed, different axes AND-ed. The axes map onto the Kaggle Models API:
+# task -> search (the first selected task's search term), framework -> framework, author -> owner.
+[explore]
+label = "Explore by Task / Framework / Author"
+
+[[explore.groups]]
+axis = "task"
+label = "Multimodal"
+filterPrefix = ""
+[[explore.groups.chips]]
+label = "Video-Text-to-Text"
+value = "video text"
+[[explore.groups.chips]]
+label = "Image-Text-to-Text"
+value = "image text"
+[[explore.groups.chips]]
+label = "Visual Question Answering"
+value = "visual question answering"
+[[explore.groups.chips]]
+label = "Document Question Answering"
+value = "document question answering"
+[[explore.groups.chips]]
+label = "Any-to-Any"
+value = "any to any"
+
+[[explore.groups]]
+axis = "task"
+label = "Natural Language Processing"
+filterPrefix = ""
+[[explore.groups.chips]]
+label = "Text Generation"
+value = "text generation"
+[[explore.groups.chips]]
+label = "Text Classification"
+value = "text classification"
+[[explore.groups.chips]]
+label = "Token Classification"
+value = "token classification"
+[[explore.groups.chips]]
+label = "Question Answering"
+value = "question answering"
+[[explore.groups.chips]]
+label = "Summarization"
+value = "summarization"
+[[explore.groups.chips]]
+label = "Translation"
+value = "translation"
+[[explore.groups.chips]]
+label = "Sentence Similarity"
+value = "sentence similarity"
+[[explore.groups.chips]]
+label = "Feature Extraction"
+value = "feature extraction"
+[[explore.groups.chips]]
+label = "Fill-Mask"
+value = "fill mask"
+
+[[explore.groups]]
+axis = "task"
+label = "Vision"
+filterPrefix = ""
+[[explore.groups.chips]]
+label = "Image Classification"
+value = "image classification"
+[[explore.groups.chips]]
+label = "Object Detection"
+value = "object detection"
+[[explore.groups.chips]]
+label = "Image Segmentation"
+value = "image segmentation"
+[[explore.groups.chips]]
+label = "Depth Estimation"
+value = "depth estimation"
+[[explore.groups.chips]]
+label = "Image-to-Image"
+value = "image to image"
+[[explore.groups.chips]]
+label = "Image-to-Text"
+value = "image to text"
+[[explore.groups.chips]]
+label = "Text-to-Image"
+value = "text to image"
+[[explore.groups.chips]]
+label = "Keypoint Detection"
+value = "keypoint detection"
+
+[[explore.groups]]
+axis = "task"
+label = "Audio"
+filterPrefix = ""
+[[explore.groups.chips]]
+label = "Automatic Speech Recognition"
+value = "speech recognition"
+[[explore.groups.chips]]
+label = "Text-to-Speech"
+value = "text to speech"
+[[explore.groups.chips]]
+label = "Audio Classification"
+value = "audio classification"
+[[explore.groups.chips]]
+label = "Audio-to-Audio"
+value = "audio to audio"
+
+[[explore.groups]]
+axis = "task"
+label = "Tabular"
+filterPrefix = ""
+[[explore.groups.chips]]
+label = "Tabular Classification"
+value = "tabular classification"
+[[explore.groups.chips]]
+label = "Tabular Regression"
+value = "tabular regression"
+[[explore.groups.chips]]
+label = "Time Series Forecasting"
+value = "time series"
+
+[[explore.groups]]
+axis = "task"
+label = "Learning & Robotics"
+filterPrefix = ""
+[[explore.groups.chips]]
+label = "Reinforcement Learning"
+value = "reinforcement learning"
+[[explore.groups.chips]]
+label = "Graph Machine Learning"
+value = "graph machine learning"
+[[explore.groups.chips]]
+label = "Robotics"
+value = "robotics"
+
+# A chip value may list several Kaggle framework ids, comma-separated (matched with OR).
+[[explore.groups]]
+axis = "framework"
+label = "Framework"
+filterPrefix = ""
+separatorBefore = true
+[[explore.groups.chips]]
+label = "Transformers"
+value = "transformers"
+[[explore.groups.chips]]
+label = "TensorFlow / Keras"
+value = "tensorFlow2,keras"
+[[explore.groups.chips]]
+label = "PyTorch"
+value = "pyTorch"
+[[explore.groups.chips]]
+label = "JAX / Flax"
+value = "jax,flax"
+[[explore.groups.chips]]
+label = "GGUF"
+value = "gguf"
+[[explore.groups.chips]]
+label = "ONNX"
+value = "onnx"
+[[explore.groups.chips]]
+label = "scikit-learn"
+value = "scikitLearn"
+
+[[explore.groups]]
+axis = "author"
+label = "Author"
+filterPrefix = ""
+[[explore.groups.chips]]
+label = "DeepSeek"
+value = "deepseek-ai"
+[[explore.groups.chips]]
+label = "Google"
+value = "google"
+[[explore.groups.chips]]
+label = "Kaggle"
+value = "kaggle"
+[[explore.groups.chips]]
+label = "Keras"
+value = "keras"
+[[explore.groups.chips]]
+label = "Meta"
+value = "metaresearch"
+[[explore.groups.chips]]
+label = "Mistral AI"
+value = "mistral-ai"
+[[explore.groups.chips]]
+label = "Qwen"
+value = "qwen-lm"
+[[explore.groups.chips]]
+label = "Stability AI"
+value = "stabilityai"
+[[explore.groups.chips]]
+label = "TensorFlow"
+value = "tensorflow"
+[[explore.groups.chips]]
+label = "TIMM"
+value = "timm"
+[[explore.groups.chips]]
+label = "Ultralytics"
+value = "ultralytics"
+[[packages]]
+name = "Flux.jl"
+github = "https://github.com/FluxML/Flux.jl"
+
+[[packages]]
+name = "ONNX.jl"
+github = "https://github.com/FluxML/ONNX.jl"
+
+# Further packages the examples use: checked by the install indicator, not listed on the Powered-by line
+[requires]
+packages = ["BenchmarkTools.jl", "CSV.jl", "Images.jl", "Plots.jl", "Tables.jl", "WAV.jl"]
+
+[[notebookSections]]
+label = "Getting Started"
+
+[[notebookSections.notebooks]]
+name = "Load a Kaggle Model"
+file = "kgm/tutorial-01-load-model.ipynb"
+bundled = true
+description = "Download and load a Kaggle model in Julia via ONNX.jl or Flux.jl"
+
+[[notebookSections.notebooks]]
+name = "Run Inference"
+file = "kgm/tutorial-02-inference.ipynb"
+bundled = true
+description = "Run inference on Kaggle models across vision, NLP, tabular, and RL tasks"
+
+[[wikis]]
+name = "Factsheet"
+file = "kgm/factsheet.md"
+bundled = true
+description = "Architecture overview and quick-start for Kaggle models in Julia"
+
+[[wikis]]
+name = "Overview"
+file = "kgm/overview.md"
+bundled = true
+description = "Task families, frameworks, and the Kaggle model ecosystem"
+
+[[wikis]]
+name = "Authentication"
+file = "kgm/api-key.md"
+bundled = true
+description = "Create, install, and use your Kaggle API key securely"
+
+[[wikis]]
+name = "API Reference"
+file = "kgm/api-reference.md"
+bundled = true
+description = "Full Kaggle REST API: model search, metadata, instances, and downloads"
+
+[[wikis]]
+name = "Download & Load"
+file = "kgm/download-load.md"
+bundled = true
+description = "Download model weights from Kaggle and load them in Julia"
+
+[[wikis]]
+name = "Run Inference"
+file = "kgm/run-inference.md"
+bundled = true
+description = "Run inference on loaded Kaggle models in Julia"
+
+[[wikis]]
+name = "Choosing a Model"
+file = "kgm/choosing-a-model.md"
+bundled = true
+description = "Pick the right model by task, framework, benchmark, and licence"
+
+[[wikis]]
+name = "Package Guide"
+file = "kgm/package-guide.md"
+bundled = true
+description = "Full API reference for Flux.jl and ONNX.jl"
+
+[[wikis]]
+separator = true
+label = "Packages"
+
+[[wikis]]
+name = "Flux.jl"
+file = "kgm/flux-jl.md"
+bundled = true
+description = "Neural network library: layers, training, GPU support"
+
+[[wikis]]
+name = "ONNX.jl"
+file = "kgm/onnx-jl.md"
+bundled = true
+description = "Load ONNX model files exported from PyTorch or TensorFlow"
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "Flux.jl: Relax! High-Level Machine Learning on Julia"
+authors = "Innes, Mike"
+year = 2018
+journal = "Journal of Open Source Software"
+doi = "10.21105/joss.00602"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Foundational Papers"
+
+[[references]]
+title = "Deep Residual Learning for Image Recognition"
+authors = "He, Kaiming; Zhang, Xiangyu; Ren, Shaoqing; Sun, Jian"
+year = 2016
+journal = "CVPR"
+url = "https://arxiv.org/abs/1512.03385"
+openAccess = true
+
+[[references]]
+title = "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding"
+authors = "Devlin, Jacob; Chang, Ming-Wei; Lee, Kenton; Toutanova, Kristina"
+year = 2019
+journal = "NAACL-HLT"
+url = "https://arxiv.org/abs/1810.04805"
+openAccess = true
+
+[[models]]
+id = "multimodal"
+label = "Multimodal"
+
+[[models]]
+id = "nlp"
+label = "NLP"
+
+[[models]]
+id = "vision"
+label = "Vision"
+
+[[models]]
+id = "audio"
+label = "Audio"
+
+[[models]]
+id = "tabular"
+label = "Tabular"
+
+[[models]]
+id = "rl"
+label = "RL"
+
+[[bullets]]
+text = "Multimodal"
+detail = "models that combine vision and language (CLIP, LLaVA, PaLI)"
+
+[[bullets]]
+text = "Natural Language Processing (NLP)"
+detail = "text generation, classification, Q&amp;A, translation, and summarization"
+
+[[bullets]]
+text = "Vision"
+detail = "image classification, object detection, segmentation, and depth estimation"
+
+[[bullets]]
+text = "Audio"
+detail = "automatic speech recognition, audio classification, and text-to-speech"
+
+[[bullets]]
+text = "Tabular"
+detail = "classification, regression, and time series forecasting on structured data"
+
+[[bullets]]
+text = "Reinforcement Learning (RL)"
+detail = "policy and value models trained in interactive environments, including robotics control"
+
+[[decisionRows]]
+task = "Multimodal"
+context = "Image + text"
+purpose = "Tasks requiring both visual and language understanding"
+
+[[decisionRows]]
+task = "NLP"
+context = "Text only"
+purpose = "Text generation, summarisation, Q&A, classification"
+
+[[decisionRows]]
+task = "Vision"
+context = "Image"
+purpose = "Classification, detection, and segmentation of visual data"
+
+[[decisionRows]]
+task = "Audio"
+context = "Waveform"
+purpose = "Transcription, speaker ID, speech synthesis"
+
+[[decisionRows]]
+task = "Tabular"
+context = "Structured table"
+purpose = "Regression, classification, forecasting on tabular data"
+
+[[decisionRows]]
+task = "Reinforcement Learning (RL)"
+context = "Environment"
+purpose = "Sequential decision-making, policy learning, and robotic control"
+
+[miniCharts.multimodal]
+svg = '''
+var s = '<rect x="4" y="8" width="46" height="68" rx="2" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.4"/>';
+s += '<text x="27" y="52" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Multimodal</text>';
+return s;
+'''
+
+[miniCharts.nlp]
+svg = '''
+var s = '<rect x="4" y="8" width="46" height="68" rx="2" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.4"/>';
+s += '<text x="27" y="52" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">NLP</text>';
+return s;
+'''
+
+[miniCharts.vision]
+svg = '''
+var s = '<rect x="4" y="8" width="46" height="68" rx="2" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.4"/>';
+s += '<text x="27" y="52" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Vision</text>';
+return s;
+'''
+
+[miniCharts.audio]
+svg = '''
+var s = '<rect x="4" y="8" width="46" height="68" rx="2" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.4"/>';
+s += '<text x="27" y="52" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Audio</text>';
+return s;
+'''
+
+[miniCharts.tabular]
+svg = '''
+var s = '<rect x="4" y="8" width="46" height="68" rx="2" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.4"/>';
+s += '<text x="27" y="52" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Tabular</text>';
+return s;
+'''
+
+[miniCharts.rl]
+svg = '''
+var s = '<rect x="4" y="8" width="46" height="68" rx="2" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.4"/>';
+s += '<text x="27" y="52" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">RL</text>';
+return s;
+'''
+
+[[codeBranches]]
+model = "multimodal"
+code = """
+using ONNX, Images
+
+model = ONNX.load("clip-vit-base.onnx")  # load CLIP model from Kaggle weights
+
+img   = load("photo.jpg")  # load image
+img_t = preprocess(img)  # resize to 224x224, normalise
+txt_t = tokenize("a cat on a mat")  # tokenise text query
+out   = model(img_t, txt_t)  # joint vision–language forward pass
+sim   = out["logits_per_image"]  # image–text similarity logits
+"""
+
+[[codeBranches]]
+model = "nlp"
+code = """
+using ONNX
+
+model = ONNX.load("gemma-2b-it.onnx")  # load NLP model from Kaggle weights
+
+ids   = tokenize("Summarise this article:")  # tokenise prompt
+out   = model(ids)  # autoregressive forward pass
+text  = decode(out["logits"])  # decode output token ids
+"""
+
+[[codeBranches]]
+model = "vision"
+code = """
+using ONNX, Images
+
+model = ONNX.load("resnet50.onnx")  # load ResNet from Kaggle weights
+
+img    = load("image.jpg")  # load image
+img_t  = preprocess(img)  # resize and normalise to (3, 224, 224)
+logits = model(img_t)["output"]  # forward pass; shape: (1000,)
+pred   = argmax(logits)  # predicted ImageNet class index
+"""
+
+[[codeBranches]]
+model = "audio"
+code = """
+using ONNX, WAV
+
+model = ONNX.load("whisper-small.onnx")  # load Whisper from Kaggle weights
+
+wave, sr = wavread("audio.wav")  # load 16 kHz mono waveform
+feats    = log_mel_spectrogram(wave)  # extract log-mel features
+out      = model(feats)  # run encoder–decoder forward pass
+text     = decode(out["token_ids"])  # decoded transcript
+"""
+
+[[codeBranches]]
+model = "tabular"
+code = """
+using ONNX, CSV, Tables
+
+model = ONNX.load("tabular-classifier.onnx")  # load tabular model from Kaggle weights
+
+tbl   = CSV.File("data.csv")  # load tabular data
+X     = Tables.matrix(tbl)[:, 1:end-1]  # feature matrix, shape (n_samples, n_features)
+probs = model(transpose(X))  # class probabilities, shape (n_classes, n_samples)
+pred  = argmax.(eachcol(probs))  # predicted class for each sample
+"""
+
+[[codeBranches]]
+model = "rl"
+code = """
+using ONNX
+
+policy = ONNX.load("ppo-cartpole.onnx")  # load RL policy from Kaggle weights
+
+obs    = Float32.([0.02, -0.01, 0.03, -0.02])  # CartPole observation vector
+out    = policy(obs)  # forward pass through policy network
+action = argmax(out["action_probs"])  # greedy action selection
+"""
+
+[[codeBranches]]
+model = "*"
+code = """
+using ONNX
+
+model = ONNX.load("model.onnx")  # load any Kaggle ONNX model
+out   = model(input)  # run forward pass
+"""
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "prediction-probs"
+label = "Prediction Probabilities"
+desc = "Plot the top-5 class probabilities from the model output"
+code = """
+using ONNX, Plots, Images
+
+model  = ONNX.load("resnet50.onnx")  # load vision model
+img_t  = preprocess(load("image.jpg"))  # preprocess image
+logits = model(img_t)["output"]  # forward pass
+top5   = sortperm(logits, rev=true)[1:5]  # top-5 class indices
+bar(IMAGENET_LABELS[top5], logits[top5], title="Top-5 predictions")  # plot probabilities
+"""
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "model-info"
+label = "Model Info"
+desc = "Inspect ONNX model inputs, outputs, and operator graph"
+code = """
+using ONNX
+
+model = ONNX.load("model.onnx")  # load model
+println("Inputs:  ", ONNX.input_names(model))  # list input names
+println("Outputs: ", ONNX.output_names(model))  # list output names
+println("Nodes:   ", length(model.graph.node))  # operator count
+"""
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "batch-inference"
+label = "Batch Inference"
+desc = "Run inference over a list of inputs in mini-batches"
+code = """
+using ONNX
+
+model = ONNX.load("model.onnx")  # load model once
+batch = 16  # mini-batch size
+for i in 1:batch:length(inputs)
+    chunk = inputs[i:min(i+batch-1, end)]  # current mini-batch
+    outs  = model.(stack(chunk))  # batched forward pass
+end
+"""
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "compare-models"
+label = "Compare Models"
+desc = "Benchmark two Kaggle ONNX models on the same input"
+code = """
+using ONNX, BenchmarkTools
+
+files = ["model-a.onnx", "model-b.onnx"]  # models to compare
+
+for f in files
+    m   = ONNX.load(f)  # load model
+    t   = @benchmark m(input)  # benchmark forward pass
+    println(f, " median: ", median(t).time, " ns")  # report median time
+end
+"""
+
+[[actionGroups.actions]]
+id = "julia-onnx-vs-python"
+label = "Julia (ONNX) vs Python"
+desc = "Run the same Kaggle ONNX model in Julia and Python; compare outputs and latency"
+code = """
+# ── Julia side (ONNX.jl) ──────────────────────────────────────
+using ONNX, BenchmarkTools
+
+model  = ONNX.load("resnet50.onnx")  # load Kaggle ONNX model (e.g. keras/resnet)
+input  = rand(Float32, 224, 224, 3, 1)  # random image input (H, W, C, batch)
+out_jl = model(input)  # forward pass
+pred_jl = argmax(out_jl["logits"][:, 1])  # top-1 class index
+
+t_jl   = @benchmark model(input)  # benchmark
+println("Julia  median: ", median(t_jl).time ÷ 1_000_000, " ms")  # report latency
+
+# ── Python side (run in terminal) ─────────────────────────────
+# pip install onnxruntime numpy
+# python3 - <<EOF
+# import onnxruntime as ort, numpy as np, time
+# sess  = ort.InferenceSession("resnet50.onnx")
+# inp   = {sess.get_inputs()[0].name:
+#          np.random.rand(1, 3, 224, 224).astype(np.float32)}
+# t0    = time.perf_counter()
+# out   = sess.run(None, inp)
+# print(f"Python median: {(time.perf_counter()-t0)*1000:.1f} ms")
+# print(f"Top-1 class:   {out[0].argmax()}")
+# EOF
+"""
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "intermediate-activations"
+label = "Intermediate Activations"
+desc = "Extract and plot activations from an intermediate ONNX node"
+code = """
+using ONNX, Plots
+
+model = ONNX.load("resnet50.onnx")  # load model
+acts  = ONNX.run(model, input; intermediate="layer4")  # run with intermediate output
+heatmap(acts[:, :, 1, 1], title="Layer 4 activation map")  # plot first channel
+"""

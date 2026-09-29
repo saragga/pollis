@@ -3,21 +3,11 @@
  *  Licensed under the GNU Affero General Public License v3.0 or later. See LICENSE.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IModelPackage, IModelNotebook, IModelNotebookSection, IModelWiki, IModelReference, IModelBullet, IModelDecisionRow, IModelMiniChart, IModelCodeBranch, IModelActionGroup, IModelPaneNotes } from './model.types.js';
+import { IModelPaneNotes, IScaffoldPanelData } from './model.types.js';
 
 export interface IEdgarMetadata {
-	readonly edgar: {
-		readonly packages: IModelPackage[];
-		readonly notebooks: IModelNotebook[];
-		readonly notebookSections: IModelNotebookSection[];
-		readonly wikis: IModelWiki[];
-		readonly references: IModelReference[];
-		readonly bullets?: IModelBullet[];
-		readonly decisionRows?: IModelDecisionRow[];
+	readonly edgar: IScaffoldPanelData & {
 		readonly notes?: IModelPaneNotes;
-		readonly miniCharts?: IModelMiniChart[];
-		readonly codeBranches?: IModelCodeBranch[];
-		readonly actionGroups?: IModelActionGroup[];
 	};
 }
 

@@ -16,6 +16,10 @@ github = "https://github.com/OutlierDetectionJL/OutlierDetection.jl"
 name = "OutlierDetectionNeighbors.jl"
 github = "https://github.com/OutlierDetectionJL/OutlierDetectionNeighbors.jl"
 
+# Further packages the examples use: checked by the install indicator, not listed on the Powered-by line
+[requires]
+packages = ["Plots.jl", "StatsBase.jl"]
+
 [[notebookSections]]
 label = "Basic"
 

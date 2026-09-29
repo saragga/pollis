@@ -8,7 +8,6 @@ import { buildWebviewHtml } from './webviewScaffold.js';
 export function getTsvizHtml(): string {
 	return buildWebviewHtml({
 		title: 'Time Series Plots',
-		wideLayout: true,
 		defaultModel: 'tsplot',
 		modelsLiteral: `['tsplot', 'ribbon', 'stacked', 'ohlc']`,
 		chartW: 54,

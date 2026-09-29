@@ -20,6 +20,10 @@ github = "https://github.com/nalimilan/FreqTables.jl"
 name = "Statistics.jl"
 github = "https://github.com/JuliaStats/Statistics.jl"
 
+# Further packages the examples use: checked by the install indicator, not listed on the Powered-by line
+[requires]
+packages = ["StatsPlots.jl"]
+
 [[notebookSections]]
 label = "Basic"
 

@@ -25,6 +25,10 @@ github = "https://github.com/JuliaDatabases/DBInterface.jl"
 name = "Tables.jl"
 github = "https://github.com/JuliaData/Tables.jl"
 
+# Further packages the examples use: checked by the install indicator, not listed on the Powered-by line
+[requires]
+packages = ["Plots.jl", "XLSX.jl"]
+
 [[notebookSections]]
 label = "SQL Databases"
 

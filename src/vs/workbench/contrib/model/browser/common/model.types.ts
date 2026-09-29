@@ -194,6 +194,8 @@ export interface IScaffoldPanelData {
 	readonly notebookSections: IModelNotebookSection[];
 	readonly wikis: IModelWiki[];
 	readonly references: IModelReference[];
+	/** Further packages the examples use (e.g. "Plots.jl"): checked by the install indicator, not listed on the Powered-by line. */
+	readonly requires?: string[];
 	/** The model toggles. Default: one per code branch, labelled with its capitalised model id. */
 	readonly models?: IModelToggle[];
 	readonly bullets?: IModelBullet[];

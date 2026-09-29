@@ -13,7 +13,6 @@ title = "ECB Data Portal"
 viewType = "pollis.ecb"
 defaultModel = "exchange"
 models = ["exchange", "rates", "inflation", "money", "yields"]
-wideLayout = true
 illusCollapsed = true
 illustrationText = "Pull euro-area statistics from the ECB Data Portal into Julia: exchange rates, the key ECB interest rates, HICP inflation, monetary aggregates, and the yield curve."
 

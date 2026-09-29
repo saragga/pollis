@@ -16,6 +16,10 @@ github = "https://github.com/JuliaMath/Interpolations.jl"
 name = "Dierckx.jl"
 github = "https://github.com/kbarbary/Dierckx.jl"
 
+# Further packages the examples use: checked by the install indicator, not listed on the Powered-by line
+[requires]
+packages = ["Plots.jl"]
+
 [[notebookSections]]
 label = "Interpolate Data"
 

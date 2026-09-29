@@ -3,111 +3,8 @@
  *  Licensed under the GNU Affero General Public License v3.0 or later. See LICENSE.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { buildWebviewHtml } from './webviewScaffold.js';
+import { buildScaffoldHtml } from './scaffoldParts.js';
 import { IKgdsMetadata } from '../common/kgds.types.js';
-
-/** Escape a string for safe embedding in a JS single-quoted string literal. */
-function jsEscape(s: string): string {
-	return s.replace(/\\/g, '\\\\').replace(/'/g, '\\\'').replace(/\r?\n/g, '\\n');
-}
-
-/** Escape HTML special characters. */
-function htmlEsc(s: string): string {
-	return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-}
-
-function buildBulletsHtml(metadata: IKgdsMetadata): string {
-	const bullets = metadata.kgds.bullets;
-	if (!bullets?.length) { return ''; }
-	return '\n' + bullets.map(b => `\t\t\t\t\t<li><strong>${htmlEsc(b.text)}</strong> &#8212; ${b.detail}</li>`).join('\n') + '\n\t\t\t\t';
-}
-
-function buildDecisionRowsHtml(metadata: IKgdsMetadata): string {
-	const rows = metadata.kgds.decisionRows;
-	if (!rows?.length) { return ''; }
-	return '\n' + rows.map(r => `\t\t\t\t\t<tr><td>${htmlEsc(r.task)}</td><td>${htmlEsc(r.context)}</td><td>${htmlEsc(r.purpose)}</td></tr>`).join('\n') + '\n\t\t\t\t';
-}
-
-function buildMiniChartsJs(metadata: IKgdsMetadata): string {
-	const charts = metadata.kgds.miniCharts;
-	const models = metadata.kgds.codeBranches?.map(b => b.model) ?? [];
-	if (!charts?.length) { return `var MINI_CHARTS = []; var MINI_LABELS = [];`; }
-
-	const fns = charts.map(c => {
-		const body = c.svg.trim().split('\n').map(l => '\t\t\t\t\t' + l.trim()).join('\n');
-		return `\t\t\t\tfunction mini_${c.model}() {\n${body}\n\t\t\t\t\treturn s;\n\t\t\t\t}`;
-	}).join('\n');
-
-	const chartOrder = models.length ? models : charts.map(c => c.model);
-	const miniArr = chartOrder.map(m => `mini_${m}`).join(', ');
-	const labelArr = chartOrder.map(m => {
-		const found = charts.find(c => c.model === m);
-		const label = found ? (m.charAt(0).toUpperCase() + m.slice(1)) : m;
-		return `'${label}'`;
-	}).join(', ');
-
-	return `${fns}\n\t\t\t\tvar MINI_CHARTS = [${miniArr}];\n\t\t\t\tvar MINI_LABELS = [${labelArr}];`;
-}
-
-function buildCodeBranchesJs(metadata: IKgdsMetadata): string {
-	const branches = metadata.kgds.codeBranches;
-	if (!branches?.length) { return ''; }
-
-	const cases = branches.map((b, i) => {
-		const lines = b.code.trim().split('\n');
-		const linesCalls = lines.map(l => `\t\t\t\t\tc += line('${jsEscape(l)}');`).join('\n');
-		const cond = i === 0 ? `if (currentModel === '${b.model}')` : `else if (currentModel === '${b.model}')`;
-		return `\t\t\t\t${cond} {\n${linesCalls}\n\t\t\t\t}`;
-	}).join(' ');
-
-	return cases;
-}
-
-function buildActionsJs(metadata: IKgdsMetadata): string {
-	const groups = metadata.kgds.actionGroups;
-	if (!groups?.length) { return ''; }
-
-	return groups.map(g => {
-		const varName = g.id.toUpperCase().replace(/-/g, '_') + '_ACTIONS';
-		const actions = g.actions.map(a => {
-			const linesCalls = a.code.trim().split('\n').map(l => `line('${jsEscape(l)}')`).join(' + ');
-			return `\t\t\t\t\t{\n\t\t\t\t\t\tid: '${a.id}',\n\t\t\t\t\t\tlabel: '${jsEscape(a.label)}',\n\t\t\t\t\t\tdesc: '${jsEscape(a.desc)}',\n\t\t\t\t\t\tcode: function() { return ${linesCalls}; },\n\t\t\t\t\t}`;
-		}).join(',\n');
-		return `\t\t\t\tvar ${varName} = [\n${actions}\n\t\t\t\t];`;
-	}).join('\n');
-}
-
-function buildNextStepsHtml(metadata: IKgdsMetadata): string {
-	const groups = metadata.kgds.actionGroups;
-	if (!groups?.length) { return ''; }
-
-	return groups.map(g => {
-		const btnId = `btn-kgds-${g.id}`;
-		return `\t\t\t\t\t<li><button class="list-btn panel-toggle" id="${btnId}">${htmlEsc(g.label)}</button></li>`;
-	}).join('\n');
-}
-
-function buildNextStepsWiringJs(metadata: IKgdsMetadata): string {
-	const groups = metadata.kgds.actionGroups;
-	if (!groups?.length) { return ''; }
-
-	return groups.map(g => {
-		const btnId = `btn-kgds-${g.id}`;
-		const varName = g.id.toUpperCase().replace(/-/g, '_') + '_ACTIONS';
-		const label = jsEscape(g.label);
-		return `\t\t\tdocument.getElementById('${btnId}').addEventListener('click', function() {\n\t\t\t\tshowRightPanel(${varName}, '${label}', '${btnId}');\n\t\t\t});`;
-	}).join('\n');
-}
-
-function buildTogglesJs(metadata: IKgdsMetadata): string {
-	const branches = metadata.kgds.codeBranches;
-	if (!branches?.length) { return ''; }
-	return branches.map((b, i) => {
-		const label = b.model.charAt(0).toUpperCase() + b.model.slice(1);
-		const active = i === 0 ? ' active' : '';
-		return `\t\t\t\t<button class="toggle-btn${active}" data-model="${b.model}">${label}</button>`;
-	}).join('\n');
-}
 
 /** CSS for the interactive Explore pane (replaces the Illustration pane). */
 function buildExploreCss(): string {
@@ -350,30 +247,19 @@ function buildExploreOverrideJs(metadata: IKgdsMetadata): string {
 }
 
 export function getKgdsHtml(metadata: IKgdsMetadata): string {
-	return buildWebviewHtml({
+	return buildScaffoldHtml('kgds', metadata.kgds, {
 		title: 'Kaggle Datasets',
-		wideLayout: true,
 		defaultModel: 'browse',
-		modelsLiteral: `['browse', 'info', 'files', 'download', 'load']`,
-		chartW: 54,
+		decisionFirstColumn: 'Task',
 		illusCollapsed: false,
 		illustrationLabel: metadata.kgds.explore?.label ?? 'Illustration',
 		illustrationIntro: metadata.kgds.notes?.explore?.intro,
 		illustrationFootnote: metadata.kgds.notes?.explore?.footnote,
 		illustrationOverrideJs: buildExploreOverrideJs(metadata),
 		extraCss: buildExploreCss(),
-		togglesJs: buildTogglesJs(metadata),
-		bullets: buildBulletsHtml(metadata),
-		decisionRows: buildDecisionRowsHtml(metadata),
 		keyPointsIntro: metadata.kgds.notes?.keyPoints?.intro,
 		keyPointsFootnote: metadata.kgds.notes?.keyPoints?.footnote,
 		decisionIntro: metadata.kgds.notes?.decision?.intro,
 		decisionFootnote: metadata.kgds.notes?.decision?.footnote,
-		decisionFirstColumn: 'Task',
-		miniChartsJs: buildMiniChartsJs(metadata),
-		codeBranchesJs: buildCodeBranchesJs(metadata),
-		actionsJs: buildActionsJs(metadata),
-		nextStepsHtml: buildNextStepsHtml(metadata),
-		nextStepsWiringJs: buildNextStepsWiringJs(metadata),
 	});
 }

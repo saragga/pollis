@@ -8,7 +8,6 @@ title = "Yahoo Finance"
 viewType = "pollis.yfin"
 defaultModel = "price"
 models = ["price", "quote", "fundamental", "options", "search"]
-wideLayout = true
 illusCollapsed = true
 illustrationText = "Download market data from Yahoo Finance into Julia: prices, fundamentals, options, and news."
 
@@ -23,6 +22,10 @@ github = "https://github.com/JuliaData/Tables.jl"
 [[packages]]
 name = "TimeSeries.jl"
 github = "https://github.com/JuliaStats/TimeSeries.jl"
+
+# Further packages the examples use: checked by the install indicator, not listed on the Powered-by line
+[requires]
+packages = ["Plots.jl"]
 
 [[notebookSections]]
 label = "Yahoo Finance"

@@ -1,0 +1,818 @@
+# Hugging Face Models Webview Configuration
+# Declarative source. The build script generates hfm.data.ts.
+# Run: npm run gulp compile-toml
+#
+# Approach: models are loaded in Julia with Transformers.jl (HuggingFace submodule),
+# exported ONNX models run with ONNX.jl. The Explore pane queries the public Hub REST
+# API (huggingface.co/api/models) live. A personal access token (shared with the
+# Hugging Face Datasets webview) is only required for gated or private models; it is
+# injected into the REPL session as ENV["HUGGING_FACE_HUB_TOKEN"] and never written
+# to a file.
+
+[meta]
+title = "Hugging Face Models"
+viewType = "pollis.hfm"
+defaultModel = "nlp"
+
+[notes.explore]
+intro = "The Task sub-categories (Computer Vision, Natural Language Processing, …) are visual groupings that all belong to one Task category. A query joins your selections with <strong>OR</strong> inside a category and <strong>AND</strong> across categories. For example, picking <em>Text Generation</em> plus <em>Summarization</em> under Task, plus <em>PyTorch</em> under Framework, builds: <code>(Text Generation OR Summarization) AND (PyTorch)</code>"
+
+# Interactive Explore pane (replaces the static Illustration pane). Groups sharing an
+# `axis` are OR-ed in the query, different axes AND-ed. The axes map onto the Hub API:
+# task -> pipeline_tag, framework -> filter, author -> author. Queried live against the Hub.
+[explore]
+label = "Explore by Task / Framework / Author"
+
+[[explore.groups]]
+axis = "task"
+label = "Multimodal"
+filterPrefix = ""
+[[explore.groups.chips]]
+label = "Video-Text-to-Text"
+value = "video-text-to-text"
+[[explore.groups.chips]]
+label = "Image-Text-to-Text"
+value = "image-text-to-text"
+[[explore.groups.chips]]
+label = "Image-Text-to-Image"
+value = "image-text-to-image"
+[[explore.groups.chips]]
+label = "Image-Text-to-Video"
+value = "image-text-to-video"
+[[explore.groups.chips]]
+label = "Audio-Text-to-Text"
+value = "audio-text-to-text"
+[[explore.groups.chips]]
+label = "Visual Question Answering"
+value = "visual-question-answering"
+[[explore.groups.chips]]
+label = "Visual Document Retrieval"
+value = "visual-document-retrieval"
+[[explore.groups.chips]]
+label = "Document Question Answering"
+value = "document-question-answering"
+[[explore.groups.chips]]
+label = "Any-to-Any"
+value = "any-to-any"
+
+[[explore.groups]]
+axis = "task"
+label = "Natural Language Processing"
+filterPrefix = ""
+[[explore.groups.chips]]
+label = "Token Classification"
+value = "token-classification"
+[[explore.groups.chips]]
+label = "Text Classification"
+value = "text-classification"
+[[explore.groups.chips]]
+label = "Zero-Shot Classification"
+value = "zero-shot-classification"
+[[explore.groups.chips]]
+label = "Sentence Similarity"
+value = "sentence-similarity"
+[[explore.groups.chips]]
+label = "Text Ranking"
+value = "text-ranking"
+[[explore.groups.chips]]
+label = "Text Generation"
+value = "text-generation"
+[[explore.groups.chips]]
+label = "Question Answering"
+value = "question-answering"
+[[explore.groups.chips]]
+label = "Table Question Answering"
+value = "table-question-answering"
+[[explore.groups.chips]]
+label = "Translation"
+value = "translation"
+[[explore.groups.chips]]
+label = "Summarization"
+value = "summarization"
+[[explore.groups.chips]]
+label = "Feature Extraction"
+value = "feature-extraction"
+[[explore.groups.chips]]
+label = "Fill-Mask"
+value = "fill-mask"
+
+[[explore.groups]]
+axis = "task"
+label = "Computer Vision"
+filterPrefix = ""
+[[explore.groups.chips]]
+label = "Depth Estimation"
+value = "depth-estimation"
+[[explore.groups.chips]]
+label = "Image Feature Extraction"
+value = "image-feature-extraction"
+[[explore.groups.chips]]
+label = "Image Classification"
+value = "image-classification"
+[[explore.groups.chips]]
+label = "Zero-Shot Image Classification"
+value = "zero-shot-image-classification"
+[[explore.groups.chips]]
+label = "Video Classification"
+value = "video-classification"
+[[explore.groups.chips]]
+label = "Object Detection"
+value = "object-detection"
+[[explore.groups.chips]]
+label = "Image Segmentation"
+value = "image-segmentation"
+[[explore.groups.chips]]
+label = "Text-to-Image"
+value = "text-to-image"
+[[explore.groups.chips]]
+label = "Text-to-Video"
+value = "text-to-video"
+[[explore.groups.chips]]
+label = "Text-to-3D"
+value = "text-to-3d"
+[[explore.groups.chips]]
+label = "Image-to-Text"
+value = "image-to-text"
+[[explore.groups.chips]]
+label = "Image-to-Image"
+value = "image-to-image"
+[[explore.groups.chips]]
+label = "Image-to-Video"
+value = "image-to-video"
+[[explore.groups.chips]]
+label = "Image-to-3D"
+value = "image-to-3d"
+[[explore.groups.chips]]
+label = "Video-to-Video"
+value = "video-to-video"
+[[explore.groups.chips]]
+label = "Unconditional Image Generation"
+value = "unconditional-image-generation"
+[[explore.groups.chips]]
+label = "Mask Generation"
+value = "mask-generation"
+[[explore.groups.chips]]
+label = "Zero-Shot Object Detection"
+value = "zero-shot-object-detection"
+[[explore.groups.chips]]
+label = "Keypoint Detection"
+value = "keypoint-detection"
+
+[[explore.groups]]
+axis = "task"
+label = "Audio"
+filterPrefix = ""
+[[explore.groups.chips]]
+label = "Text-to-Speech"
+value = "text-to-speech"
+[[explore.groups.chips]]
+label = "Text-to-Audio"
+value = "text-to-audio"
+[[explore.groups.chips]]
+label = "Audio-to-Audio"
+value = "audio-to-audio"
+[[explore.groups.chips]]
+label = "Voice Activity Detection"
+value = "voice-activity-detection"
+[[explore.groups.chips]]
+label = "Automatic Speech Recognition"
+value = "automatic-speech-recognition"
+[[explore.groups.chips]]
+label = "Audio Classification"
+value = "audio-classification"
+
+[[explore.groups]]
+axis = "task"
+label = "Tabular"
+filterPrefix = ""
+[[explore.groups.chips]]
+label = "Tabular Classification"
+value = "tabular-classification"
+[[explore.groups.chips]]
+label = "Tabular Regression"
+value = "tabular-regression"
+[[explore.groups.chips]]
+label = "Time Series Forecasting"
+value = "time-series-forecasting"
+
+[[explore.groups]]
+axis = "task"
+label = "Learning & Robotics"
+filterPrefix = ""
+[[explore.groups.chips]]
+label = "Reinforcement Learning"
+value = "reinforcement-learning"
+[[explore.groups.chips]]
+label = "Graph Machine Learning"
+value = "graph-ml"
+[[explore.groups.chips]]
+label = "Robotics"
+value = "robotics"
+
+[[explore.groups]]
+axis = "framework"
+label = "Framework"
+filterPrefix = ""
+separatorBefore = true
+[[explore.groups.chips]]
+label = "Transformers"
+value = "transformers"
+[[explore.groups.chips]]
+label = "PyTorch"
+value = "pytorch"
+[[explore.groups.chips]]
+label = "TensorFlow / Keras"
+value = "tf"
+[[explore.groups.chips]]
+label = "JAX / Flax"
+value = "jax"
+[[explore.groups.chips]]
+label = "scikit-learn"
+value = "scikit-learn"
+[[explore.groups.chips]]
+label = "ONNX"
+value = "onnx"
+[[explore.groups.chips]]
+label = "GGUF"
+value = "gguf"
+[[explore.groups.chips]]
+label = "MLX"
+value = "mlx"
+[[explore.groups.chips]]
+label = "OpenVINO"
+value = "openvino"
+
+[[explore.groups]]
+axis = "author"
+label = "Author"
+filterPrefix = ""
+[[explore.groups.chips]]
+label = "Allen AI"
+value = "allenai"
+[[explore.groups.chips]]
+label = "Apple"
+value = "apple"
+[[explore.groups.chips]]
+label = "Black Forest Labs"
+value = "black-forest-labs"
+[[explore.groups.chips]]
+label = "ByteDance"
+value = "ByteDance"
+[[explore.groups.chips]]
+label = "Cohere"
+value = "CohereForAI"
+[[explore.groups.chips]]
+label = "DeepSeek"
+value = "deepseek-ai"
+[[explore.groups.chips]]
+label = "Google"
+value = "google"
+[[explore.groups.chips]]
+label = "Hugging Face"
+value = "huggingface"
+[[explore.groups.chips]]
+label = "Meta"
+value = "meta-llama"
+[[explore.groups.chips]]
+label = "Microsoft"
+value = "microsoft"
+[[explore.groups.chips]]
+label = "Mistral"
+value = "mistralai"
+[[explore.groups.chips]]
+label = "Moonshot"
+value = "moonshotai"
+[[explore.groups.chips]]
+label = "Nvidia"
+value = "nvidia"
+[[explore.groups.chips]]
+label = "OpenAI"
+value = "openai"
+[[explore.groups.chips]]
+label = "Qwen"
+value = "Qwen"
+[[explore.groups.chips]]
+label = "Stability AI"
+value = "stabilityai"
+[[explore.groups.chips]]
+label = "X.AI"
+value = "xai-org"
+[[explore.groups.chips]]
+label = "Z.ai"
+value = "THUDM"
+
+[[packages]]
+name = "Transformers.jl"
+github = "https://github.com/chengchingwen/Transformers.jl"
+
+[[packages]]
+name = "HuggingFaceHub.jl"
+github = "https://github.com/cjdoris/HuggingFaceHub.jl"
+
+[[packages]]
+name = "ONNX.jl"
+github = "https://github.com/FluxML/ONNX.jl"
+
+# Further packages the examples use: checked by the install indicator, not listed on the Powered-by line
+[requires]
+packages = ["BenchmarkTools.jl", "Images.jl", "Plots.jl", "UMAP.jl", "WAV.jl"]
+
+[[notebookSections]]
+label = "Getting Started"
+
+[[notebookSections.notebooks]]
+name = "Load a Model"
+file = "hfm/tutorial-01-load-model.ipynb"
+bundled = true
+description = "Download and load any Hugging Face model in Julia via Transformers.jl"
+
+[[notebookSections.notebooks]]
+name = "Run Inference"
+file = "hfm/tutorial-02-inference.ipynb"
+bundled = true
+description = "Run text, image and audio inference with pre-trained HF models"
+
+[[wikis]]
+name = "Factsheet"
+file = "hfm/factsheet.md"
+bundled = true
+description = "Architecture overview and quick-start for Hugging Face models in Julia"
+
+[[wikis]]
+name = "Overview"
+file = "hfm/overview.md"
+bundled = true
+description = "Task families, pipeline tags, and the HF model ecosystem"
+
+[[wikis]]
+name = "Authentication"
+file = "hfm/access-tokens.md"
+bundled = true
+description = "Create and use HF tokens; gated models, the Hub API, and rate limits"
+
+[[wikis]]
+name = "API Reference"
+file = "hfm/api-reference.md"
+bundled = true
+description = "Full Hub REST API: model search, metadata, file downloads, Inference API"
+
+[[wikis]]
+name = "Download & Load"
+file = "hfm/download-load.md"
+bundled = true
+description = "Download weights from the Hub and load them with Transformers.jl"
+
+[[wikis]]
+name = "Run Inference"
+file = "hfm/run-inference.md"
+bundled = true
+description = "Run text, image, audio, and multimodal inference on loaded models"
+
+[[wikis]]
+name = "Choosing a Model"
+file = "hfm/choosing-a-model.md"
+bundled = true
+description = "Pick the right model by task, benchmark, size, and licence"
+
+[[wikis]]
+name = "Package Guide"
+file = "hfm/package-guide.md"
+bundled = true
+description = "Full API reference for Transformers.jl and HuggingFaceHub.jl"
+
+[[wikis]]
+separator = true
+label = "Packages"
+
+[[wikis]]
+name = "Transformers.jl"
+file = "hfm/transformers-jl.md"
+bundled = true
+description = "Architecture reference, inference patterns, GPU, and fine-tuning"
+
+[[wikis]]
+name = "ONNX.jl"
+file = "hfm/onnx-jl.md"
+bundled = true
+description = "Export HF models to ONNX and run inference in Julia without Python"
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "Transformers.jl: Transformers in Julia"
+authors = "Cheng, Ching-Wen"
+year = 2023
+journal = "GitHub"
+url = "https://github.com/chengchingwen/Transformers.jl"
+openAccess = true
+
+[[references]]
+title = "HuggingFaceHub.jl: Julia Interface to the Hugging Face Hub"
+authors = "JuliaML contributors"
+year = 2024
+journal = "GitHub"
+url = "https://github.com/cjdoris/HuggingFaceHub.jl"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Foundational Papers"
+
+[[references]]
+title = "Attention Is All You Need"
+authors = "Vaswani, Ashish; Shazeer, Noam; Parmar, Niki; Uszkoreit, Jakob; Jones, Llion; Gomez, Aidan N.; Kaiser, Lukasz; Polosukhin, Illia"
+year = 2017
+journal = "NeurIPS"
+url = "https://arxiv.org/abs/1706.03762"
+openAccess = true
+
+[[references]]
+title = "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding"
+authors = "Devlin, Jacob; Chang, Ming-Wei; Lee, Kenton; Toutanova, Kristina"
+year = 2019
+journal = "NAACL-HLT"
+url = "https://arxiv.org/abs/1810.04805"
+openAccess = true
+
+[[models]]
+id = "multimodal"
+label = "Multimodal"
+
+[[models]]
+id = "nlp"
+label = "NLP"
+
+[[models]]
+id = "vision"
+label = "Vision"
+
+[[models]]
+id = "audio"
+label = "Audio"
+
+[[models]]
+id = "tabular"
+label = "Tabular"
+
+[[models]]
+id = "rl"
+label = "RL"
+
+[[models]]
+id = "graphml"
+label = "Graph ML"
+
+[[models]]
+id = "embedding"
+label = "Embedding"
+
+[[bullets]]
+text = "Multimodal"
+detail = "models that combine vision and language (CLIP, LLaVA, BLIP-2)"
+
+[[bullets]]
+text = "Natural Language Processing (NLP)"
+detail = "text generation, instruction-following and chat models"
+
+[[bullets]]
+text = "Vision"
+detail = "image classification, object detection and visual representation models"
+
+[[bullets]]
+text = "Audio"
+detail = "automatic speech recognition and audio understanding models"
+
+[[bullets]]
+text = "Tabular"
+detail = "models trained on structured table data for classification or regression"
+
+[[bullets]]
+text = "Reinforcement Learning (RL)"
+detail = "policy and value models trained in interactive environments"
+
+[[bullets]]
+text = "Graph Machine Learning (Graph ML)"
+detail = "graph neural networks for node/link/graph tasks"
+
+[[bullets]]
+text = "Embedding"
+detail = "dense vector representations of text for retrieval and similarity search"
+
+[[decisionRows]]
+task = "Multimodal"
+context = "Image + text"
+purpose = "Tasks requiring both visual and language understanding"
+
+[[decisionRows]]
+task = "NLP"
+context = "Text only"
+purpose = "Text generation, summarisation, Q&A, instruction following"
+
+[[decisionRows]]
+task = "Vision"
+context = "Image only"
+purpose = "Classification, detection, segmentation of visual data"
+
+[[decisionRows]]
+task = "Audio"
+context = "Audio waveform"
+purpose = "Transcription, speaker ID, audio classification"
+
+[[decisionRows]]
+task = "Tabular"
+context = "Structured table"
+purpose = "Regression and classification on tabular features"
+
+[[decisionRows]]
+task = "RL"
+context = "Environment"
+purpose = "Sequential decision-making and policy learning"
+
+[[decisionRows]]
+task = "Graph ML"
+context = "Graph (nodes + edges)"
+purpose = "Node classification, link prediction, graph regression"
+
+[[decisionRows]]
+task = "Embedding"
+context = "Text"
+purpose = "Semantic search, clustering, retrieval-augmented generation"
+
+[miniCharts.multimodal]
+svg = '''
+var s = '<rect x="4" y="8" width="46" height="68" rx="2" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.4"/>';
+s += '<text x="27" y="52" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Multimodal</text>';
+return s;
+'''
+
+[miniCharts.nlp]
+svg = '''
+var s = '<rect x="4" y="8" width="46" height="68" rx="2" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.4"/>';
+s += '<text x="27" y="52" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">NLP</text>';
+return s;
+'''
+
+[miniCharts.vision]
+svg = '''
+var s = '<rect x="4" y="8" width="46" height="68" rx="2" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.4"/>';
+s += '<text x="27" y="52" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Vision</text>';
+return s;
+'''
+
+[miniCharts.audio]
+svg = '''
+var s = '<rect x="4" y="8" width="46" height="68" rx="2" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.4"/>';
+s += '<text x="27" y="52" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Audio</text>';
+return s;
+'''
+
+[miniCharts.tabular]
+svg = '''
+var s = '<rect x="4" y="8" width="46" height="68" rx="2" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.4"/>';
+s += '<text x="27" y="52" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Tabular</text>';
+return s;
+'''
+
+[miniCharts.rl]
+svg = '''
+var s = '<rect x="4" y="8" width="46" height="68" rx="2" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.4"/>';
+s += '<text x="27" y="52" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Reinforcement Learning</text>';
+return s;
+'''
+
+[miniCharts.graphml]
+svg = '''
+var s = '<rect x="4" y="8" width="46" height="68" rx="2" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.4"/>';
+s += '<text x="27" y="52" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Graph ML</text>';
+return s;
+'''
+
+[miniCharts.embedding]
+svg = '''
+var s = '<rect x="4" y="8" width="46" height="68" rx="2" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.4"/>';
+s += '<text x="27" y="52" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Embedding</text>';
+return s;
+'''
+
+[[codeBranches]]
+model = "multimodal"
+code = """
+using Transformers, Transformers.HuggingFace
+using Images
+
+proc  = HuggingFace.load_processor("openai/clip-vit-base-patch32")  # load CLIP processor
+model = HuggingFace.load_model(HuggingFace.CLIPModel, "openai/clip-vit-base-patch32")  # load CLIP model
+
+img   = load("photo.jpg") |> proc  # preprocess image
+txt   = proc("a cat sitting on a mat")  # tokenise text query
+out   = model(img.pixel_values, txt.input_ids, txt.attention_mask)  # joint vision–language forward pass
+sim   = out.logits_per_image  # image–text similarity logits
+"""
+
+[[codeBranches]]
+model = "nlp"
+code = """
+using Transformers, Transformers.HuggingFace
+
+tkr   = HuggingFace.load_tokenizer("meta-llama/Llama-3.2-3B-Instruct")  # load tokenizer
+model = HuggingFace.load_model(HuggingFace.GPTModel, "meta-llama/Llama-3.2-3B-Instruct")  # load language model
+
+prompt = tkr("The capital of France is")  # tokenise prompt
+out    = generate(model, prompt.token; max_new_tokens=32)  # autoregressive generation
+text   = tkr.decode(out[1])  # decode generated token ids
+"""
+
+[[codeBranches]]
+model = "vision"
+code = """
+using Transformers, Transformers.HuggingFace
+using Images
+
+proc   = HuggingFace.load_processor("google/vit-base-patch16-224")  # load image processor
+model  = HuggingFace.load_model(HuggingFace.ViTModel, "google/vit-base-patch16-224")  # load ViT model
+
+img    = load("image.jpg") |> proc  # load and preprocess image
+logits = model(img.pixel_values).logits  # forward pass; shape: (num_classes,)
+pred   = argmax(logits)  # predicted class index
+"""
+
+[[codeBranches]]
+model = "audio"
+code = """
+using Transformers, Transformers.HuggingFace
+using WAV
+
+proc   = HuggingFace.load_processor("openai/whisper-large-v3")  # load audio processor
+model  = HuggingFace.load_model(HuggingFace.WhisperModel, "openai/whisper-large-v3")  # load Whisper model
+
+wave, sr = wavread("audio.wav")  # load 16 kHz mono waveform
+inputs   = proc(wave)  # extract log-mel spectrogram
+out      = generate(model, inputs.input_features)  # decode with greedy search
+text     = proc.decode(out[1])  # decoded transcript
+"""
+
+[[codeBranches]]
+model = "embedding"
+code = """
+using Transformers, Transformers.HuggingFace
+
+tkr   = HuggingFace.load_tokenizer("sentence-transformers/all-MiniLM-L6-v2")  # load tokenizer
+model = HuggingFace.load_model(HuggingFace.TextEncoderModel, "sentence-transformers/all-MiniLM-L6-v2")  # load embedding model
+
+enc   = tkr("Hello, world!")  # tokenise input text
+emb   = model(enc.token, enc.segment, enc.attention_mask).hidden_state[:, 1, :]  # CLS token embedding
+"""
+
+# Tabular, RL and Graph ML share the generic loading example.
+[[codeBranches]]
+model = "*"
+code = """
+using Transformers, Transformers.HuggingFace
+
+tkr   = HuggingFace.load_tokenizer("sentence-transformers/all-MiniLM-L6-v2")  # load tokenizer
+model = HuggingFace.load_model(HuggingFace.TextEncoderModel, "sentence-transformers/all-MiniLM-L6-v2")  # load model from HF Hub
+"""
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "embedding-scatter"
+label = "Embedding Scatter"
+desc = "Project model embeddings to 2D with UMAP for visual inspection"
+code = """
+using Transformers, UMAP, Plots
+using Transformers.HuggingFace
+
+tkr  = HuggingFace.load_tokenizer("sentence-transformers/all-MiniLM-L6-v2")  # load tokenizer
+model = HuggingFace.load_model(HuggingFace.TextEncoderModel, "sentence-transformers/all-MiniLM-L6-v2")  # load embedding model
+
+embs = hcat([vec(model(tkr(d).token, tkr(d).segment, tkr(d).attention_mask).hidden_state[:, 1, :]) for d in docs]...)  # embed all documents
+proj = umap(embs, 2)  # reduce to 2D with UMAP
+scatter(proj[1, :], proj[2, :], xlabel="UMAP 1", ylabel="UMAP 2")  # scatter plot of embeddings
+"""
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "model-summary"
+label = "Model Summary"
+desc = "Print parameter counts and layer structure of a loaded model"
+code = """
+using Transformers.HuggingFace
+
+model = HuggingFace.load_model(HuggingFace.BertModel, "bert-base-uncased")  # load any HF model
+println(model)  # inspect layer hierarchy
+sum(length, Flux.params(model))  # total parameter count
+"""
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "batch-inference"
+label = "Batch Inference"
+desc = "Run inference over a list of inputs in mini-batches"
+code = """
+using Transformers, Transformers.HuggingFace
+
+tkr    = HuggingFace.load_tokenizer("sentence-transformers/all-MiniLM-L6-v2")  # load tokenizer
+model  = HuggingFace.load_model(HuggingFace.TextEncoderModel, "sentence-transformers/all-MiniLM-L6-v2")  # load model
+
+batch  = 16  # mini-batch size
+for i in 1:batch:length(texts)
+    chunk = texts[i:min(i+batch-1, end)]  # current mini-batch
+    enc   = tkr.(chunk)  # tokenise batch
+    out   = model.(enc)  # forward pass over batch
+end
+"""
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "compare-models"
+label = "Compare Models"
+desc = "Benchmark two HF models on the same input"
+code = """
+using Transformers, Transformers.HuggingFace
+
+ids   = ["bert-base-uncased", "sentence-transformers/all-MiniLM-L6-v2"]  # models to compare
+
+for id in ids
+    tkr   = HuggingFace.load_tokenizer(id)  # tokenizer for model
+    model = HuggingFace.load_model(HuggingFace.BertModel, id)  # load model
+    enc   = tkr("benchmark text")  # tokenise input
+    out   = model(enc.token, enc.segment, enc.attention_mask)  # forward pass
+    println(id, " hidden_size: ", size(out.hidden_state, 1))  # print hidden dimension
+end
+"""
+
+[[actionGroups.actions]]
+id = "julia-onnx-vs-python"
+label = "Julia (ONNX) vs Python"
+desc = "Run the same HF ONNX model in Julia and Python; compare outputs and latency"
+code = """
+# ── Julia side (ONNX.jl) ──────────────────────────────────────
+using ONNX, BenchmarkTools
+
+model  = ONNX.load("minilm.onnx")  # load exported ONNX model
+input  = rand(Float32, 1, 128)  # dummy token-id input (batch=1, seq=128)
+out_jl = model(input)  # forward pass
+emb_jl = out_jl["last_hidden_state"][:, 1, :]  # CLS token embedding
+
+t_jl   = @benchmark model(input)  # benchmark
+println("Julia  median: ", median(t_jl).time ÷ 1_000_000, " ms")  # report latency
+
+# ── Python side (run in terminal) ─────────────────────────────
+# pip install optimum[onnxruntime] transformers sentence-transformers
+# python3 - <<EOF
+# from optimum.onnxruntime import ORTModelForFeatureExtraction
+# from transformers import AutoTokenizer
+# import time, numpy as np
+# model = ORTModelForFeatureExtraction.from_pretrained(
+#     "sentence-transformers/all-MiniLM-L6-v2", export=True)
+# tkr   = AutoTokenizer.from_pretrained(
+#     "sentence-transformers/all-MiniLM-L6-v2")
+# enc   = tkr("benchmark text", return_tensors="pt")
+# t0    = time.perf_counter()
+# out   = model(**enc)
+# print(f"Python median: {(time.perf_counter()-t0)*1000:.1f} ms")
+# print(f"Embedding shape: {out.last_hidden_state.shape}")
+# EOF
+"""
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "attention-weights"
+label = "Attention Weights"
+desc = "Visualise last-layer attention for a single input"
+code = """
+using Transformers, Transformers.HuggingFace, Plots
+
+tkr   = HuggingFace.load_tokenizer("bert-base-uncased")  # load tokenizer
+model = HuggingFace.load_model(HuggingFace.BertModel, "bert-base-uncased")  # load BERT
+
+enc   = tkr("Transformers changed NLP")  # tokenise text
+out   = model(enc.token, enc.segment, enc.attention_mask; output_attentions=true)  # forward with attention
+attn  = out.attentions[end][:, :, 1, 1]  # last-layer attention, head 1
+heatmap(attn, title="Attention")  # plot attention heatmap
+"""

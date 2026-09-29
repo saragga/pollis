@@ -411,7 +411,6 @@ extraJs: `
             + '</div>'
             + '</div>';
         rightPanel.innerHTML = html;
-        placePanel('sec-learn'); // CRITICAL: moves the panel below Learn More (wide-layout webviews); omit and it renders above it
         rightPanel.style.display = 'block';
         document.getElementById('btn-refs-close').addEventListener('click', function() {
             rightPanel.innerHTML = '';

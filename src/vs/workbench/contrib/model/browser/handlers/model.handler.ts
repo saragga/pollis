@@ -86,6 +86,9 @@ export interface IJuliaEnvStatus {
 	readonly env: string;
 }
 
+/** Julia standard libraries: always loadable (through `@stdlib` on the load path), so never missing. */
+const JULIA_STDLIBS = new Set(['Base64', 'Dates', 'DelimitedFiles', 'Distributed', 'Downloads', 'InteractiveUtils', 'LinearAlgebra', 'Logging', 'Markdown', 'Mmap', 'Pkg', 'Printf', 'Random', 'Serialization', 'SHA', 'Sockets', 'SparseArrays', 'Statistics', 'TOML', 'Test', 'Unicode', 'UUIDs']);
+
 /** Strip a trailing ".jl" to recover the importable Julia package name. */
 function juliaPackageName(displayName: string): string {
 	return displayName.replace(/\.jl$/i, '');
@@ -163,7 +166,7 @@ export async function checkJuliaPackagesInstalled(
 		}
 	} catch { /* no depot / unreadable — treat every package as not installed */ }
 
-	const statuses = packageNames.map(displayName => ({ name: displayName, installed: deps.has(juliaPackageName(displayName)) }));
+	const statuses = packageNames.map(displayName => ({ name: displayName, installed: JULIA_STDLIBS.has(juliaPackageName(displayName)) || deps.has(juliaPackageName(displayName)) }));
 	return { statuses, env };
 }
 

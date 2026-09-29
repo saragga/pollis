@@ -16,6 +16,10 @@ github = "https://github.com/JuliaML/LIBSVM.jl"
 name = "OnlineStats.jl"
 github = "https://github.com/joshday/OnlineStats.jl"
 
+# Further packages the examples use: checked by the install indicator, not listed on the Powered-by line
+[requires]
+packages = ["Distributions.jl", "Plots.jl"]
+
 [[notebookSections]]
 label = "Non-Temporal"
 

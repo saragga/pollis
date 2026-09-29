@@ -14,7 +14,6 @@ title = "Kaggle Datasets"
 viewType = "pollis.kgds"
 defaultModel = "browse"
 models = ["browse", "info", "files", "download", "load"]
-wideLayout = true
 illusCollapsed = false
 illustrationText = "Search the Kaggle catalogue, then pull datasets into Julia: browse and filter over the public REST API, read a dataset's metadata and file list, download the archive, and load the CSVs with CSV.jl + Tables.jl."
 

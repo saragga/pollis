@@ -69,7 +69,7 @@ export function registerScaffoldWebviewHandlers(
 	disposables.add(themeService.onDidColorThemeChange(() => {
 		for (const t of Object.keys(lastCode)) { void postColorized(lastCode[t], t); }
 	}));
-	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, data.packages.map(p => p.name), fileService, pathService, commandService, notificationService, workspaceContextService);
+	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, [...data.packages.map(p => p.name), ...(data.requires ?? [])], fileService, pathService, commandService, notificationService, workspaceContextService);
 	createExampleCodeWiring(webviewInput.webview, disposables, panelId, fileService, pathService, notificationService);
 	createCustomCopyWiring(webviewInput.webview, disposables, data.wikis, data.notebooks, fileService, pathService, editorService, commandService, notificationService);
 	createReferenceWiring(webviewInput.webview, disposables, panelId, data.references, fileService, pathService, commandService, notificationService);

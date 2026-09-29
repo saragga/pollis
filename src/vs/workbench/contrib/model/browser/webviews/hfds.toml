@@ -15,7 +15,6 @@ title = "Hugging Face Datasets"
 viewType = "pollis.hfds"
 defaultModel = "browse"
 models = ["browse", "load", "inspect", "files", "info"]
-wideLayout = true
 illusCollapsed = true
 illustrationText = "Search the Hugging Face Hub, then load datasets into Julia: browse the catalogue over the REST API, load splits with HuggingFaceDatasets.jl, inspect rows, download the underlying Parquet files, and read dataset metadata."
 

@@ -7,7 +7,6 @@ title = "Alpha Vantage"
 viewType = "pollis.alpv"
 defaultModel = "equity"
 models = ["equity", "forex", "crypto", "indicators", "economic"]
-wideLayout = true
 illusCollapsed = true
 illustrationText = "Download market and economic data from Alpha Vantage into Julia: equities, forex, crypto, indicators, and macro series."
 

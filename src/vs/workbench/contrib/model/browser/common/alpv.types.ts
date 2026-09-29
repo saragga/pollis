@@ -3,21 +3,10 @@
  *  Licensed under the GNU Affero General Public License v3.0 or later. See LICENSE.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IModelPackage, IModelNotebook, IModelNotebookSection, IModelWiki, IModelReference, IModelBullet, IModelDecisionRow, IModelMiniChart, IModelCodeBranch, IModelActionGroup } from './model.types.js';
+import { IScaffoldPanelData } from './model.types.js';
 
 export interface IAlpvMetadata {
-	readonly alpv: {
-		readonly packages: IModelPackage[];
-		readonly notebooks: IModelNotebook[];
-		readonly notebookSections: IModelNotebookSection[];
-		readonly wikis: IModelWiki[];
-		readonly references: IModelReference[];
-		readonly bullets?: IModelBullet[];
-		readonly decisionRows?: IModelDecisionRow[];
-		readonly miniCharts?: IModelMiniChart[];
-		readonly codeBranches?: IModelCodeBranch[];
-		readonly actionGroups?: IModelActionGroup[];
-	};
+	readonly alpv: IScaffoldPanelData;
 }
 
 export type AlpvWebviewMessage =

@@ -3,15 +3,13 @@
  *  Licensed under the GNU Affero General Public License v3.0 or later. See LICENSE.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IModelPackage, IModelNotebook, IModelNotebookSection, IModelWiki, IModelReference } from './model.types.js';
+import { IModelExplorePane, IModelPaneNotes, IScaffoldPanelData } from './model.types.js';
 
 export interface IHfmMetadata {
-	readonly hfm: {
-		readonly packages: IModelPackage[];
-		readonly notebooks: IModelNotebook[];
-		readonly notebookSections: IModelNotebookSection[];
-		readonly wikis: IModelWiki[];
-		readonly references: IModelReference[];
+	readonly hfm: IScaffoldPanelData & {
+		readonly notes?: IModelPaneNotes;
+		/** The Explore pane; its axes are `task` (pipeline tag), `framework` (tag filter) and `author`. */
+		readonly explore?: IModelExplorePane;
 	};
 }
 

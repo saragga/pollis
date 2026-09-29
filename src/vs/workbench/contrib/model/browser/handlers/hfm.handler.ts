@@ -59,7 +59,7 @@ export function registerHfmWebviewHandlers(
 ): DisposableStore {
 	const disposables = new DisposableStore();
 	const hfmData = metadata.hfm;
-	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, hfmData.packages.map(p => p.name), fileService, pathService, commandService, notificationService, workspaceContextService);
+	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, [...hfmData.packages.map(p => p.name), ...(hfmData.requires ?? [])], fileService, pathService, commandService, notificationService, workspaceContextService);
 	createExampleCodeWiring(webviewInput.webview, disposables, 'hfm', fileService, pathService, notificationService);
 	createCustomCopyWiring(webviewInput.webview, disposables, hfmData.wikis, hfmData.notebooks, fileService, pathService, editorService, commandService, notificationService);
 	createReferenceWiring(webviewInput.webview, disposables, 'hfm', hfmData.references, fileService, pathService, commandService, notificationService);

@@ -7,7 +7,6 @@ title = "Excel Workbook"
 viewType = "pollis.xlsx"
 defaultModel = "write"
 models = ["write", "read", "formula"]
-wideLayout = true
 illusCollapsed = true
 illustrationText = "Excel file reader and writer for the Julia language."
 

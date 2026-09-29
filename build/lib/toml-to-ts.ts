@@ -283,6 +283,8 @@ export function generateTypeScriptFromToml(tomlPath: string, acronym: string): s
 	});
 	const wikis = (data.wikis as unknown[] | undefined) ?? [];
 	const references = (data.references as unknown[] | undefined) ?? [];
+	// [requires] packages = [...]: further packages the examples use, for the install indicator only
+	const requires = ((data.requires as TomlValue | undefined)?.packages as unknown[] | undefined) ?? [];
 	const bullets = (data.bullets as unknown[] | undefined) ?? [];
 	const decisionRows = (data.decisionRows as unknown[] | undefined) ?? [];
 	const notes = (data.notes as TomlValue | undefined) ?? null;
@@ -300,6 +302,7 @@ export function generateTypeScriptFromToml(tomlPath: string, acronym: string): s
 	}));
 
 	const optionalFields = [
+		requires.length ? `\n\t\trequires: ${toTypeScriptLiteral(requires, '\t\t')},` : '',
 		models.length ? `\n\t\tmodels: ${toTypeScriptLiteral(models, '\t\t')},` : '',
 		bullets.length ? `\n\t\tbullets: ${toTypeScriptLiteral(bullets, '\t\t')},` : '',
 		decisionRows.length ? `\n\t\tdecisionRows: ${toTypeScriptLiteral(decisionRows, '\t\t')},` : '',

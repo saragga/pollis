@@ -14,7 +14,6 @@ title = "US SEC EDGAR"
 viewType = "pollis.edgar"
 defaultModel = "submissions"
 models = ["submissions", "facts", "concept", "frames", "search"]
-wideLayout = true
 illusCollapsed = true
 illustrationText = "Pull company filings and financial data from the SEC EDGAR REST APIs into Julia: submission histories, XBRL company facts and concepts, cross-filer frames, and full-text search."
 
