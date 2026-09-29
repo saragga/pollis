@@ -1,0 +1,690 @@
+# Volatility Measurement Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/vm.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Volatility Measurement"
+viewType = "pollis.vm"
+defaultModel = "park"
+
+[[packages]]
+name = "HighFrequencyCovariance.jl"
+github = "https://github.com/s-baumann/HighFrequencyCovariance.jl"
+
+[requires]
+packages = ["Plots.jl", "SpecialFunctions.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Parkinson Estimator"
+file = "volatility-measurement/tutorial-01-parkinson.ipynb"
+bundled = true
+description = "Range-based volatility with daily high-low prices — Parkinson (1980)"
+
+[[notebookSections.notebooks]]
+name = "Garman-Klass Estimator"
+file = "volatility-measurement/tutorial-02-garman-klass.ipynb"
+bundled = true
+description = "OHLC estimator with higher efficiency than Parkinson — Garman & Klass (1980)"
+
+[[notebookSections.notebooks]]
+name = "Rogers-Satchell Estimator"
+file = "volatility-measurement/tutorial-03-rogers-satchell.ipynb"
+bundled = true
+description = "Drift-corrected OHLC estimator unbiased under non-zero mean returns"
+
+[[notebookSections.notebooks]]
+name = "Yang-Zhang Estimator"
+file = "volatility-measurement/tutorial-04-yang-zhang.ipynb"
+bundled = true
+description = "Minimum-variance combination of overnight, close-to-close, and RS components"
+
+[[notebookSections.notebooks]]
+name = "Realized Volatility"
+file = "volatility-measurement/tutorial-05-realized-volatility.ipynb"
+bundled = true
+description = "High-frequency realized variance from intraday log-returns — HighFrequencyCovariance.jl"
+
+[[notebookSections.notebooks]]
+name = "Two Scales Volatility"
+file = "volatility-measurement/tutorial-06-two-scales.ipynb"
+bundled = true
+description = "Noise-robust TSRV estimator using slow/fast time-scale correction — Zhang et al. (2005)"
+
+[[notebookSections.notebooks]]
+name = "Bipower Variation"
+file = "volatility-measurement/tutorial-07-bipower-variation.ipynb"
+bundled = true
+description = "Jump-robust integrated variance estimator using products of adjacent absolute returns — Barndorff-Nielsen & Shephard (2004)"
+
+[[wikis]]
+name = "Introduction to HF Volatility"
+file = "volatility-measurement/intro-hf-finance.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "volatility-measurement/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Parkinson"
+file = "volatility-measurement/parkinson.md"
+bundled = true
+
+[[wikis]]
+name = "Garman-Klass"
+file = "volatility-measurement/garman-klass.md"
+bundled = true
+
+[[wikis]]
+name = "Rogers-Satchell"
+file = "volatility-measurement/rogers-satchell.md"
+bundled = true
+
+[[wikis]]
+name = "Yang-Zhang"
+file = "volatility-measurement/yang-zhang.md"
+bundled = true
+
+[[wikis]]
+name = "Realized Volatility"
+file = "volatility-measurement/realized-volatility.md"
+bundled = true
+
+[[wikis]]
+name = "Two Scales Volatility"
+file = "volatility-measurement/two-scales-volatility.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Original Papers (from packages)"
+
+[[references]]
+title = "The Extreme Value Method for Estimating the Variance of the Rate of Return"
+authors = "Parkinson, M."
+year = 1980
+journal = ""
+url = "https://doi.org/10.1086/260803"
+openAccess = false
+
+[[references]]
+title = "On the Estimation of Security Price Volatilities from Historical Data"
+authors = "Garman, M.B. & Klass, M.J."
+year = 1980
+journal = ""
+url = "https://doi.org/10.1086/260791"
+openAccess = false
+
+[[references]]
+title = "Estimating Variance from High, Low, and Closing Prices"
+authors = "Rogers, L.C.G. & Satchell, S.E."
+year = 1991
+journal = ""
+url = "https://doi.org/10.1086/296071"
+openAccess = false
+
+[[references]]
+title = "Drift-Independent Volatility Estimation Based on High, Low, Open, and Close Prices"
+authors = "Yang, D. & Zhang, Q."
+year = 2000
+journal = ""
+url = "https://doi.org/10.1086/209650"
+openAccess = false
+
+[[references]]
+title = "Answering the Skeptics: Yes, Standard Volatility Models Do Provide Accurate Forecasts"
+authors = "Andersen, T.G. & Bollerslev, T."
+year = 1998
+journal = ""
+url = "https://doi.org/10.2307/2527343"
+openAccess = false
+
+[[references]]
+title = "A Tale of Two Time Scales: Determining Integrated Volatility With Noisy High-Frequency Data"
+authors = "Zhang, L., Mykland, P.A. & Aït-Sahalia, Y."
+year = 2005
+journal = ""
+url = "https://doi.org/10.1198/016214505000000169"
+openAccess = false
+
+[[references]]
+title = "Power and Bipower Variation with Stochastic Volatility and Jumps"
+authors = "Barndorff-Nielsen, O.E. & Shephard, N."
+year = 2004
+journal = ""
+url = "https://doi.org/10.1093/jjfinec/nbh001"
+openAccess = false
+
+[[models]]
+id = "park"
+label = "Parkinson"
+
+[[models]]
+id = "gk"
+label = "Garman-Klass"
+
+[[models]]
+id = "rs"
+label = "Rogers-Satchell"
+
+[[models]]
+id = "yz"
+label = "Yang-Zhang"
+
+[[models]]
+id = "rv"
+label = "Realized Volatility"
+
+[[models]]
+id = "tsv"
+label = "Two Scales Volatility"
+
+[[models]]
+id = "bpv"
+label = "Bipower"
+
+[[bullets]]
+text = "Parkinson"
+detail = "range-based estimator using daily high and low prices"
+
+[[bullets]]
+text = "Garman-Klass"
+detail = "extends Parkinson with open-to-close returns for higher efficiency"
+
+[[bullets]]
+text = "Rogers-Satchell"
+detail = "drift-corrected OHLC estimator; unbiased under non-zero mean returns"
+
+[[bullets]]
+text = "Yang-Zhang"
+detail = "combines overnight, open-to-close, and Rogers-Satchell components"
+
+[[bullets]]
+text = "Realized Volatility"
+detail = "sum of squared intraday log-returns on a high-frequency grid (HighFrequencyCovariance.jl)"
+
+[[bullets]]
+text = "Two Scales Volatility"
+detail = "noise-robust realized volatility via slow/fast time-scale correction (HighFrequencyCovariance.jl)"
+
+[[bullets]]
+text = "Bipower Variation"
+detail = "jump-robust integrated variance estimator using products of adjacent absolute returns"
+
+[[decisionRows]]
+task = "Parkinson"
+context = "Only daily high and low prices"
+purpose = "Range-based volatility, about 5x more efficient than close-to-close"
+
+[[decisionRows]]
+task = "Garman-Klass"
+context = "Full OHLC bars, negligible drift"
+purpose = "More efficient range estimator using open and close too"
+
+[[decisionRows]]
+task = "Rogers-Satchell"
+context = "OHLC bars with a trending price"
+purpose = "Drift-independent range volatility"
+
+[[decisionRows]]
+task = "Yang-Zhang"
+context = "OHLC bars with overnight gaps"
+purpose = "Minimum-variance estimator robust to drift and opening jumps"
+
+[[decisionRows]]
+task = "Realized Volatility"
+context = "Intraday prices, little microstructure noise"
+purpose = "Daily integrated volatility from squared intraday returns"
+
+[[decisionRows]]
+task = "Two Scales"
+context = "Tick data contaminated by microstructure noise"
+purpose = "Noise-corrected realized volatility"
+
+[[decisionRows]]
+task = "Bipower"
+context = "Intraday prices with possible jumps"
+purpose = "Jump-robust integrated variance and jump testing"
+
+[[inputs]]
+id = "open"
+label = "Open"
+tooltip = "Julia vector of daily opening prices."
+default = "open"
+models = ["gk", "rs", "yz"]
+
+[[inputs]]
+id = "high"
+label = "High"
+tooltip = "Julia vector of daily high prices."
+default = "high"
+models = ["park", "gk", "rs", "yz"]
+
+[[inputs]]
+id = "low"
+label = "Low"
+tooltip = "Julia vector of daily low prices."
+default = "low"
+models = ["park", "gk", "rs", "yz"]
+
+[[inputs]]
+id = "close"
+label = "Close"
+tooltip = "Julia vector of daily closing prices."
+default = "close"
+models = ["gk", "rs", "yz"]
+
+[[inputs]]
+id = "k"
+label = "k weight"
+tooltip = "Weighting parameter between close-to-close and Rogers-Satchell variance components. The value k = 0.34 / (1 + (n+1)/(n-1)) minimises MSE; default 0.34 is a widely used approximation."
+default = "0.34"
+models = ["yz"]
+
+[[inputs]]
+id = "price"
+label = "Price"
+tooltip = "Julia vector of intraday prices on a regular high-frequency grid (e.g. 1- or 5-minute bars for one trading day)."
+default = "price"
+models = ["rv", "tsv", "bpv"]
+
+[[inputs]]
+id = "nsub"
+label = "Subsamples K"
+tooltip = "Number of subsamples for the slow time scale. Larger K reduces microstructure noise bias at the cost of fewer slow-scale observations. Typical values: 5-30."
+default = "5"
+models = ["tsv"]
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.park]
+# High-low range bars
+svg = '''
+var hi = [30, 26, 34, 22, 28, 20];
+var lo = [52, 46, 58, 44, 50, 42];
+var s = '';
+for (var i = 0; i < hi.length; i++) { var x = 9 + i * 7.5; s += '<line x1="' + x + '" y1="' + hi[i] + '" x2="' + x + '" y2="' + lo[i] + '" stroke="currentColor" stroke-width="2"/>'; }
+return s;
+'''
+
+[miniCharts.gk]
+# OHLC bars with open and close ticks
+svg = '''
+var b = [[30, 52, 46, 36], [26, 46, 38, 30], [34, 58, 36, 54], [22, 44, 40, 26], [28, 50, 30, 46], [20, 42, 40, 24]];
+var s = '';
+for (var i = 0; i < b.length; i++) {
+	var x = 9 + i * 7.5;
+	s += '<line x1="' + x + '" y1="' + b[i][0] + '" x2="' + x + '" y2="' + b[i][1] + '" stroke="currentColor" stroke-width="1.5"/>';
+	s += '<line x1="' + (x - 3) + '" y1="' + b[i][2] + '" x2="' + x + '" y2="' + b[i][2] + '" stroke="currentColor" stroke-width="1.5"/>';
+	s += '<line x1="' + x + '" y1="' + b[i][3] + '" x2="' + (x + 3) + '" y2="' + b[i][3] + '" stroke="currentColor" stroke-width="1.5"/>';
+}
+return s;
+'''
+
+[miniCharts.rs]
+# OHLC bars riding an upward drift line
+svg = '''
+var s = '<line x1="5" y1="60" x2="50" y2="22" stroke="currentColor" stroke-width="0.8" stroke-dasharray="2,2" opacity="0.6"/>';
+for (var i = 0; i < 6; i++) {
+	var x = 9 + i * 7.5, mid = 56 - i * 6.5;
+	s += '<line x1="' + x + '" y1="' + (mid - 9) + '" x2="' + x + '" y2="' + (mid + 9) + '" stroke="currentColor" stroke-width="1.5"/>';
+	s += '<line x1="' + (x - 3) + '" y1="' + (mid + 4) + '" x2="' + x + '" y2="' + (mid + 4) + '" stroke="currentColor" stroke-width="1.5"/>';
+	s += '<line x1="' + x + '" y1="' + (mid - 4) + '" x2="' + (x + 3) + '" y2="' + (mid - 4) + '" stroke="currentColor" stroke-width="1.5"/>';
+}
+return s;
+'''
+
+[miniCharts.yz]
+# OHLC bars with overnight gaps between sessions
+svg = '''
+var mids = [48, 34, 42, 26, 38];
+var s = '';
+for (var i = 0; i < mids.length; i++) {
+	var x = 8 + i * 9.5, m = mids[i];
+	s += '<rect x="' + (x - 2.5) + '" y="' + (m - 6) + '" width="5" height="12" fill="currentColor" opacity="0.7"/>';
+	s += '<line x1="' + x + '" y1="' + (m - 11) + '" x2="' + x + '" y2="' + (m + 11) + '" stroke="currentColor" stroke-width="1"/>';
+	if (i > 0) { s += '<line x1="' + (x - 7) + '" y1="' + mids[i - 1] + '" x2="' + (x - 2.5) + '" y2="' + m + '" stroke="currentColor" stroke-width="0.8" stroke-dasharray="1.5,1.5" opacity="0.6"/>'; }
+}
+return s;
+'''
+
+[miniCharts.rv]
+# Many small intraday returns summed into one bar
+svg = '''
+var s = '<line x1="4" y1="44" x2="38" y2="44" stroke="currentColor" stroke-width="0.6" opacity="0.5"/>';
+for (var i = 0; i < 16; i++) { var h = 3 + 9 * Math.abs(Math.sin(i * 1.7)); s += '<line x1="' + (6 + i * 2) + '" y1="' + (44 - h) + '" x2="' + (6 + i * 2) + '" y2="' + (44 + h * 0.6) + '" stroke="currentColor" stroke-width="1" opacity="0.6"/>'; }
+s += '<rect x="42" y="24" width="7" height="42" fill="currentColor" opacity="0.9"/>';
+return s;
+'''
+
+[miniCharts.tsv]
+# Noisy fast path and a smooth slow-scale path
+svg = '''
+var d = '', e = '';
+for (var i = 0; i <= 44; i++) {
+	var base = 44 - 12 * Math.sin(i / 9);
+	d += (i ? 'L' : 'M') + (5 + i) + ',' + (base + (i % 2 ? 4 : -4)).toFixed(1);
+	e += (i ? 'L' : 'M') + (5 + i) + ',' + base.toFixed(1);
+}
+return '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.4"/><path d="' + e + '" fill="none" stroke="currentColor" stroke-width="1.6"/>';
+'''
+
+[miniCharts.bpv]
+# Returns with one jump that bipower variation discounts
+svg = '''
+var s = '<line x1="4" y1="46" x2="50" y2="46" stroke="currentColor" stroke-width="0.6" opacity="0.5"/>';
+for (var i = 0; i < 20; i++) {
+	var h = i === 11 ? 26 : 3 + 6 * Math.abs(Math.sin(i * 1.3));
+	s += '<line x1="' + (6 + i * 2.2) + '" y1="' + (46 - h) + '" x2="' + (6 + i * 2.2) + '" y2="46" stroke="currentColor" stroke-width="1.2" opacity="' + (i === 11 ? 0.95 : 0.55) + '"/>';
+}
+return s;
+'''
+
+[[codeBranches]]
+model = "park"
+code = '''
+function parkinson_volatility(high, low)
+    n = length(high)
+    log_hl = log.(high ./ low)
+    return sqrt(sum(log_hl.^2) / (4 * n * log(2)))
+end
+
+sigma = parkinson_volatility({{high}}, {{low}})  # daily volatility
+'''
+
+[[codeBranches]]
+model = "gk"
+code = '''
+function garman_klass_volatility(open, high, low, close)
+    n = length(open)
+    log_hl = log.(high ./ low)
+    log_co = log.(close ./ open)
+    v = (0.5 .* log_hl.^2) .- ((2*log(2) - 1) .* log_co.^2)
+    return sqrt(sum(v) / n)
+end
+
+sigma = garman_klass_volatility({{open}}, {{high}}, {{low}}, {{close}})  # daily volatility
+'''
+
+[[codeBranches]]
+model = "rs"
+code = '''
+function rogers_satchell_volatility(open, high, low, close)
+    n = length(open)
+    log_hc = log.(high ./ close)
+    log_ho = log.(high ./ open)
+    log_lc = log.(low ./ close)
+    log_lo = log.(low ./ open)
+    v = (log_hc .* log_ho) .+ (log_lc .* log_lo)
+    return sqrt(sum(v) / n)
+end
+
+sigma = rogers_satchell_volatility({{open}}, {{high}}, {{low}}, {{close}})  # daily volatility
+'''
+
+[[codeBranches]]
+model = "yz"
+code = '''
+using Statistics
+
+function yang_zhang_volatility(open, high, low, close; k = nothing)
+    # Align all series after the overnight lag shift
+    open_t  = open[2:end]
+    high_t  = high[2:end]
+    low_t   = low[2:end]
+    close_t = close[2:end]
+    close_prev = close[1:end-1]
+    n = length(open_t)
+
+    # 1. Overnight Volatility
+    log_co = log.(open_t ./ close_prev)
+    sigma_o2 = var(log_co)
+
+    # 2. Open-to-Close Volatility
+    log_oc = log.(close_t ./ open_t)
+    sigma_c2 = var(log_oc)
+
+    # 3. Rogers-Satchell component
+    sigma_rs2 = mean((log.(high_t./close_t).*log.(high_t./open_t)) .+
+                     (log.(low_t./close_t).*log.(low_t./open_t)))
+
+    # Optimal k weight (Yang-Zhang 2000, eq. 14) unless k is given
+    k = something(k, 0.34 / (1 + (n+1)/(n-1)))
+
+    return sqrt(sigma_o2 + k*sigma_c2 + (1-k)*sigma_rs2)
+end
+
+sigma = yang_zhang_volatility({{open}}, {{high}}, {{low}}, {{close}}; k = {{k}})  # daily volatility
+'''
+
+[[codeBranches]]
+model = "rv"
+code = '''
+function realized_volatility(price)
+    log_r = diff(log.(price))
+    return sqrt(sum(log_r.^2))
+end
+
+sigma = realized_volatility({{price}})  # daily realized volatility
+'''
+
+[[codeBranches]]
+model = "tsv"
+code = '''
+function two_scales_volatility(price; K=5)
+    n = length(price)
+    log_r = diff(log.(price))
+
+    # Fast scale: all-observations RV
+    rv_all = sum(log_r.^2)
+
+    # Slow scale: average over K subsampled grids
+    rv_slow = 0.0
+    for k in 1:K
+        sub_r = diff(log.(price[k:K:end]))
+        rv_slow += sum(sub_r.^2)
+    end
+    rv_slow /= K
+
+    # Bias correction (Zhang, Mykland and Ait-Sahalia 2005)
+    n_bar = (n - K) / K
+
+    return sqrt(rv_slow - (n_bar / n) * rv_all)
+end
+
+sigma = two_scales_volatility({{price}}; K = {{nsub}})  # noise-corrected daily volatility
+'''
+
+[[codeBranches]]
+model = "bpv"
+code = '''
+r   = diff(log.({{price}}))
+
+BPV = sum(abs.(r[2:end]) .* abs.(r[1:end-1]))
+println("Bipower Variation: ", BPV)
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "price_plot"
+label = "Price Plot"
+desc = "Plot the price series the estimator is computed from"
+code = '''
+using Plots
+
+{{?model=park}} plot([{{high}} {{low}}]; label = ["High" "Low"], xlabel = "Day")  # daily range envelope
+{{?model=gk|rs|yz}} plot([{{high}} {{low}} {{close}}]; label = ["High" "Low" "Close"], xlabel = "Day")  # daily bars
+{{?model=rv|tsv|bpv}} plot({{price}}; label = "Price", xlabel = "Intraday observation")  # intraday path
+'''
+
+[[actionGroups.actions]]
+id = "returns_plot"
+label = "Log Returns"
+desc = "Plot log returns to see volatility clusters and jumps"
+code = '''
+using Plots
+
+{{?model=park}} r = log.({{high}} ./ {{low}})  # daily log range
+{{?model=gk|rs|yz}} r = diff(log.({{close}}))  # close-to-close log returns
+{{?model=rv|tsv|bpv}} r = diff(log.({{price}}))  # intraday log returns
+plot(r; seriestype = :sticks, label = "Log return", xlabel = "Observation")
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "rolling"
+label = "Rolling Volatility"
+desc = "Plot the estimator over a rolling window to visualise volatility clusters and regimes"
+code = '''
+using Plots
+
+w = 21  # window length (about one trading month of days, or of intraday bars)
+{{?model=park}} n = length({{high}})
+{{?model=park}} roll = [parkinson_volatility({{high}}[i-w+1:i], {{low}}[i-w+1:i]) for i in w:n]
+{{?model=gk}} n = length({{open}})
+{{?model=gk}} roll = [garman_klass_volatility({{open}}[i-w+1:i], {{high}}[i-w+1:i], {{low}}[i-w+1:i], {{close}}[i-w+1:i]) for i in w:n]
+{{?model=rs}} n = length({{open}})
+{{?model=rs}} roll = [rogers_satchell_volatility({{open}}[i-w+1:i], {{high}}[i-w+1:i], {{low}}[i-w+1:i], {{close}}[i-w+1:i]) for i in w:n]
+{{?model=yz}} n = length({{open}})
+{{?model=yz}} roll = [yang_zhang_volatility({{open}}[i-w+1:i], {{high}}[i-w+1:i], {{low}}[i-w+1:i], {{close}}[i-w+1:i]; k = {{k}}) for i in w:n]
+{{?model=rv}} n = length({{price}})
+{{?model=rv}} roll = [realized_volatility({{price}}[i-w+1:i]) for i in w:n]
+{{?model=tsv}} n = length({{price}})
+{{?model=tsv}} roll = [two_scales_volatility({{price}}[i-w+1:i]; K = {{nsub}}) for i in w:n]
+{{?model=bpv}} r = diff(log.({{price}}))
+{{?model=bpv}} roll = [sqrt(pi / 2 * sum(abs.(r[i-w+2:i]) .* abs.(r[i-w+1:i-1]))) for i in w:length(r)]
+
+plot(roll; label = "Rolling volatility (w = $w)", xlabel = "Window end")
+'''
+
+[[actionGroups.actions]]
+id = "bns"
+label = "Barndorff-Nielsen and Shephard Test"
+desc = "BNS jump test: standardised Z-statistic for the null hypothesis of no jumps. Significant if |Z| > 1.96."
+code = '''
+using SpecialFunctions  # gamma
+
+function bns_test(r)
+    n = length(r)
+
+    # Realized Variance
+    RV = sum(r.^2)
+
+    # Bipower Variation
+    BPV = (pi / 2) * sum(abs.(r[2:end]) .* abs.(r[1:end-1]))
+
+    # Tripower Quarticity (asymptotic variance estimator)
+    mu43 = (2^(2/3)) * gamma(7/6) / gamma(1/2)
+    TPQ = n * mu43^(-3) * sum(
+        abs.(r[3:end]).^(4/3) .*
+        abs.(r[2:end-1]).^(4/3) .*
+        abs.(r[1:end-2]).^(4/3))
+
+    # Asymptotic variance
+    avar = ((pi/2)^2 + pi - 5) * TPQ / n
+
+    # Z statistic
+    Z = (RV - BPV) / sqrt(avar)
+    return Z
+end
+
+{{?model=park}} r = log.({{high}} ./ {{low}})  # daily log range (the test is designed for intraday returns)
+{{?model=gk|rs|yz}} r = diff(log.({{close}}))  # close-to-close log returns (the test is designed for intraday returns)
+{{?model=rv|tsv|bpv}} r = diff(log.({{price}}))  # intraday log returns
+Z = bns_test(r)
+println("BNS Z-statistic: ", Z)
+
+if abs(Z) > 1.96
+    println("Reject null -> evidence of jumps")
+else
+    println("No significant jumps detected")
+end
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "ewma"
+label = "EWMA Volatility Forecast"
+desc = "One-step-ahead volatility forecast with the RiskMetrics exponentially weighted moving average"
+code = '''
+lam = 0.94  # RiskMetrics decay factor for daily data
+{{?model=park}} r = log.({{high}} ./ {{low}}) ./ sqrt(4 * log(2))  # Parkinson-scaled daily range as a return proxy
+{{?model=gk|rs|yz}} r = diff(log.({{close}}))  # close-to-close log returns
+{{?model=rv|tsv|bpv}} r = diff(log.({{price}}))  # intraday log returns
+
+s2 = r[1]^2
+for x in r[2:end]
+    global s2 = lam * s2 + (1 - lam) * x^2  # recursive variance update
+end
+println("Next-period volatility forecast: ", sqrt(s2))
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "compare"
+label = "Compare Estimators"
+desc = "Compare the estimator with a simple benchmark computed on the same data"
+code = '''
+using Statistics
+
+{{?model=park}} bench = std(diff(log.(sqrt.({{high}} .* {{low}}))))  # close-to-close proxy from the range midpoint
+{{?model=gk|rs|yz}} bench = std(diff(log.({{close}})))  # close-to-close daily volatility
+{{?model=rv|tsv|bpv}} r = diff(log.({{price}}))
+{{?model=rv|tsv|bpv}} rv  = sqrt(sum(r.^2))  # realized volatility
+{{?model=rv|tsv|bpv}} bpv = sqrt(pi / 2 * sum(abs.(r[2:end]) .* abs.(r[1:end-1])))  # jump-robust bipower volatility
+
+{{?model=park|gk|rs|yz}} println("Range-based estimator: ", sigma)
+{{?model=park|gk|rs|yz}} println("Close-to-close:        ", bench)
+{{?model=rv|tsv|bpv}} println("Realized volatility:  ", rv)
+{{?model=rv|tsv|bpv}} println("Bipower volatility:   ", bpv)  # a large gap to RV signals jumps
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "annualise"
+label = "Annualise"
+desc = "Scale daily volatility to annual: sigma_annual = sigma_daily x sqrt(252)"
+code = '''
+{{?model=bpv}} sigma = sqrt(pi / 2 * BPV)  # daily volatility from bipower variation
+sigma_annual = sigma * sqrt(252)  # 252 trading days per year
+println("Annualised volatility: ", round(100 * sigma_annual, digits = 2), "%")
+'''
+
+[[actionGroups.actions]]
+id = "regime"
+label = "Volatility Regimes"
+desc = "Classify observations as low / normal / high volatility using quantile thresholds"
+code = '''
+using Statistics
+
+w = 21  # rolling window
+{{?model=park}} r = log.({{high}} ./ {{low}}) ./ sqrt(4 * log(2))  # Parkinson-scaled daily range
+{{?model=gk|rs|yz}} r = diff(log.({{close}}))  # close-to-close log returns
+{{?model=rv|tsv|bpv}} r = diff(log.({{price}}))  # intraday log returns
+vol = [sqrt(mean(r[i-w+1:i].^2)) for i in w:length(r)]  # rolling volatility
+
+lo, hi = quantile(vol, [1/3, 2/3])  # tercile thresholds
+regime = [v < lo ? :low : v > hi ? :high : :normal for v in vol]
+println("Low: ", count(==(:low), regime), "  Normal: ", count(==(:normal), regime), "  High: ", count(==(:high), regime))
+'''

@@ -1,0 +1,502 @@
+# Portfolio Optimisation Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/po.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Portfolio Optimisation"
+viewType = "pollis.po"
+defaultModel = "mv"
+
+[[packages]]
+name = "PortfolioOptimisers.jl"
+github = "https://github.com/dcelisgarza/PortfolioOptimisers.jl"
+
+[[packages.videos]]
+title = "Julia in Academia"
+description = "Overview of Julia for academic and scientific computing"
+url = "https://www.youtube.com/watch?v=wPFPT-Ech2c"
+
+[requires]
+packages = ["Plots.jl", "StatsBase.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Mean-Variance (Markowitz)"
+file = "portfolio-opt/tutorial-01-mean-variance.ipynb"
+bundled = true
+description = "Markowitz mean-variance optimisation: minimum-risk and maximum Sharpe ratio portfolios on the efficient frontier"
+
+[[notebookSections.notebooks]]
+name = "Mean-CVaR"
+file = "portfolio-opt/tutorial-02-mean-cvar.ipynb"
+bundled = true
+description = "Mean-CVaR optimisation: minimise Conditional Value-at-Risk at a given confidence level instead of variance"
+
+[[notebookSections.notebooks]]
+name = "Hierarchical Risk Parity (HRP)"
+file = "portfolio-opt/tutorial-03-hrp.ipynb"
+bundled = true
+description = "HRP: cluster assets by correlation, then allocate inversely proportional to within-cluster risk"
+
+[[notebookSections.notebooks]]
+name = "Hierarchical Equal Risk (HERC)"
+file = "portfolio-opt/tutorial-04-herc.ipynb"
+bundled = true
+description = "HERC: hierarchical clustering with equal risk contribution within each cluster for better diversification"
+
+[[wikis]]
+name = "Factsheet"
+file = "portfolio-opt/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "portfolio-opt/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "portfolio-opt/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "portfolio-opt/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "portfolio-opt/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "portfolio-opt/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Optimisation Methods"
+
+[[wikis]]
+name = "Mean-Variance"
+file = "portfolio-opt/mean-variance.md"
+bundled = true
+
+[[wikis]]
+name = "Mean-CVaR"
+file = "portfolio-opt/mean-cvar.md"
+bundled = true
+
+[[wikis]]
+name = "HRP"
+file = "portfolio-opt/hrp.md"
+bundled = true
+
+[[wikis]]
+name = "HERC"
+file = "portfolio-opt/herc.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Portfolio Selection: Efficient Diversification of Investments"
+authors = "Markowitz, Harry M."
+year = 1991
+journal = "Wiley (2nd ed.)"
+url = "https://www.wiley.com/en-us/Portfolio+Selection%3A+Efficient+Diversification+of+Investments%2C+2nd+Edition-p-9781557861085"
+openAccess = false
+
+[[references]]
+title = "Introduction to Risk Parity and Budgeting"
+authors = "Roncalli, Thierry"
+year = 2013
+journal = "CRC Press"
+url = "https://www.crcpress.com/Introduction-to-Risk-Parity-and-Budgeting/Roncalli/p/book/9781482207156"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Portfolio Selection"
+authors = "Markowitz, Harry M."
+year = 1952
+journal = "Journal of Finance"
+doi = "10.2307/2975974"
+openAccess = false
+
+[[references]]
+title = "Optimization of Conditional Value-at-Risk"
+authors = "Rockafellar, R. Tyrrell; Uryasev, Stanislav"
+year = 2000
+journal = "Journal of Risk"
+doi = "10.21314/JOR.2000.038"
+openAccess = false
+
+[[references]]
+title = "Building Diversified Portfolios that Outperform Out of Sample"
+authors = "Lopez de Prado, Marcos"
+year = 2016
+journal = "Journal of Portfolio Management"
+doi = "10.3905/jpm.2016.42.4.059"
+openAccess = false
+
+[[references]]
+title = "Global Portfolio Optimization"
+authors = "Black, Fischer; Litterman, Robert"
+year = 1992
+journal = "Financial Analysts Journal"
+doi = "10.2469/faj.v48.n5.28"
+openAccess = false
+
+[[models]]
+id = "mv"
+label = "Mean-Variance"
+
+[[models]]
+id = "cvar"
+label = "Mean-CVaR"
+
+[[models]]
+id = "hrp"
+label = "HRP"
+
+[[models]]
+id = "herc"
+label = "HERC"
+
+[[bullets]]
+text = "Mean-Variance"
+detail = "Markowitz efficient frontier; minimise variance for a target return or maximise the Sharpe ratio"
+
+[[bullets]]
+text = "Mean-CVaR"
+detail = "replace variance with Conditional Value-at-Risk; better captures tail risk for non-normal returns"
+
+[[bullets]]
+text = "Hierarchical Risk Parity (HRP)"
+detail = "cluster assets by correlation then allocate inversely proportional to within-cluster risk; no matrix inversion"
+
+[[bullets]]
+text = "Hierarchical Equal Risk Contribution (HERC)"
+detail = "equal risk contribution within each hierarchical cluster for improved out-of-sample diversification"
+
+[[decisionRows]]
+task = "Mean-Variance"
+context = "Reliable return and covariance estimates"
+purpose = "Classic Markowitz trade-off between expected return and variance"
+
+[[decisionRows]]
+task = "Mean-CVaR"
+context = "Fat tails or asymmetric return distributions"
+purpose = "Control expected loss in the worst scenarios instead of variance"
+
+[[decisionRows]]
+task = "HRP"
+context = "Many correlated assets, noisy covariance"
+purpose = "Stable allocation without inverting the covariance matrix"
+
+[[decisionRows]]
+task = "HERC"
+context = "Clustered assets, want balanced cluster risk"
+purpose = "Equalise risk contributions across and within clusters"
+
+[[inputs]]
+id = "R"
+label = "Returns matrix (R)"
+tooltip = "Matrix of asset returns (T x N): T observations, N assets. Each column is one asset's return series."
+default = "R"
+
+[[inputs]]
+id = "obj"
+label = "Objective"
+tooltip = "Optimisation objective. MinRisk minimises the risk measure; Sharpe maximises the risk-adjusted return."
+default = "MinRisk()"
+models = ["mv", "cvar"]
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.mv]
+# Efficient frontier with a scatter of feasible portfolios
+svg = '''
+var d = '';
+for (var i = 0; i <= 30; i++) { var y = 66 - i * 1.4; var x = 12 + 0.035 * Math.pow(y - 50, 2); d += (i ? 'L' : 'M') + x.toFixed(1) + ',' + y.toFixed(1); }
+var s = '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.6"/>';
+var pts = [[28, 50], [34, 58], [30, 40], [40, 46], [38, 32], [44, 54]];
+for (var j = 0; j < pts.length; j++) { s += '<circle cx="' + pts[j][0] + '" cy="' + pts[j][1] + '" r="1.4" fill="currentColor" opacity="0.5"/>'; }
+return s;
+'''
+
+[miniCharts.cvar]
+# Loss distribution with the shaded left tail
+svg = '''
+var d = '', t = 'M5,66';
+for (var i = 0; i <= 44; i++) {
+	var x = 5 + i, y = 66 - 34 * Math.exp(-0.5 * Math.pow((x - 30) / 8, 2));
+	d += (i ? 'L' : 'M') + x + ',' + y.toFixed(1);
+	if (x <= 16) { t += 'L' + x + ',' + y.toFixed(1); }
+}
+t += 'L16,66Z';
+return '<path d="' + t + '" fill="currentColor" opacity="0.5"/><path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.5"/>';
+'''
+
+[miniCharts.hrp]
+# Dendrogram over four assets
+svg = '''
+var s = '';
+var ln = function(a, b, c, d) { s += '<line x1="' + a + '" y1="' + b + '" x2="' + c + '" y2="' + d + '" stroke="currentColor" stroke-width="1.4"/>'; };
+ln(10, 66, 10, 52); ln(20, 66, 20, 52); ln(10, 52, 20, 52);
+ln(34, 66, 34, 46); ln(44, 66, 44, 46); ln(34, 46, 44, 46);
+ln(15, 52, 15, 28); ln(39, 46, 39, 28); ln(15, 28, 39, 28);
+return s;
+'''
+
+[miniCharts.herc]
+# Two clusters with equal total risk bars
+svg = '''
+var h = [20, 20, 13, 13, 14];
+var s = '<line x1="4" y1="66" x2="50" y2="66" stroke="currentColor" stroke-width="0.8" opacity="0.6"/>';
+for (var i = 0; i < h.length; i++) { var x = i < 2 ? 8 + i * 8 : 16 + i * 8; s += '<rect x="' + x + '" y="' + (66 - h[i]) + '" width="6" height="' + h[i] + '" fill="currentColor" opacity="' + (i < 2 ? 0.85 : 0.5) + '"/>'; }
+s += '<line x1="8" y1="40" x2="22" y2="40" stroke="currentColor" stroke-width="0.8" stroke-dasharray="2,2"/><line x1="32" y1="40" x2="54" y2="40" stroke="currentColor" stroke-width="0.8" stroke-dasharray="2,2"/>';
+return s;
+'''
+
+[[codeBranches]]
+model = "mv"
+code = '''
+using PortfolioOptimisers
+
+port = Portfolio(; returns = {{R}})  # construct portfolio from return matrix
+optimise!(port, Trad(; obj = {{obj}}, rm = Variance()))  # Mean-Variance: minimise portfolio variance (Markowitz)
+
+w = port.weights  # optimal portfolio weights (N-vector, sum to 1)
+println(w)  # print weights
+'''
+
+[[codeBranches]]
+model = "cvar"
+code = '''
+using PortfolioOptimisers
+
+port = Portfolio(; returns = {{R}})  # construct portfolio from return matrix
+optimise!(port, Trad(; obj = {{obj}}, rm = CVaR()))  # Mean-CVaR: minimise Conditional Value-at-Risk
+
+w = port.weights  # optimal portfolio weights (N-vector, sum to 1)
+println(w)  # print weights
+'''
+
+[[codeBranches]]
+model = "hrp"
+code = '''
+using PortfolioOptimisers
+
+port = Portfolio(; returns = {{R}})  # construct portfolio from return matrix
+optimise!(port, HRP())  # Hierarchical Risk Parity: cluster then allocate by risk
+
+w = port.weights  # optimal portfolio weights (N-vector, sum to 1)
+println(w)  # print weights
+'''
+
+[[codeBranches]]
+model = "herc"
+code = '''
+using PortfolioOptimisers
+
+port = Portfolio(; returns = {{R}})  # construct portfolio from return matrix
+optimise!(port, HERC())  # Hierarchical Equal Risk Contribution
+
+w = port.weights  # optimal portfolio weights (N-vector, sum to 1)
+println(w)  # print weights
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "efficient-frontier"
+label = "Efficient Frontier"
+desc = "Plot the mean-variance efficient frontier and locate the minimum-risk and Sharpe-optimal portfolios"
+code = '''
+using PortfolioOptimisers, Plots
+
+port = Portfolio(; returns = {{R}})  # build portfolio
+frontier = efficient_frontier!(port, Trad(; rm = Variance()), 50)  # compute 50 frontier points
+plot(frontier.risk, frontier.ret, xlabel="Volatility", ylabel="Return", label="Frontier")  # risk-return frontier
+'''
+
+[[actionGroups.actions]]
+id = "weights-bar"
+label = "Weights Bar Chart"
+desc = "Bar chart of optimal portfolio weights across assets"
+code = '''
+using PortfolioOptimisers, Plots
+
+port = Portfolio(; returns = {{R}})  # build portfolio
+optimise!(port, Trad(; rm = Variance()))  # optimise
+bar(port.weights, xlabel="Asset", ylabel="Weight", title="Portfolio Weights")  # plot weights
+'''
+
+[[actionGroups.actions]]
+id = "risk-contribution"
+label = "Risk Contribution"
+desc = "Pie or bar chart of per-asset contribution to total portfolio risk"
+code = '''
+using PortfolioOptimisers, Plots
+
+port = Portfolio(; returns = {{R}})  # build portfolio
+optimise!(port, Trad(; rm = Variance()))  # optimise
+rc = risk_contribution(port)  # marginal risk contributions
+bar(rc, xlabel="Asset", ylabel="Risk contribution", title="Risk Decomposition")  # plot
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "correlation-heatmap"
+label = "Correlation Heatmap"
+desc = "Heatmap of the asset correlation matrix to inspect clustering structure"
+code = '''
+using PortfolioOptimisers, StatsBase, Plots
+
+C = cor({{R}})  # correlation matrix (N x N)
+heatmap(C, title="Asset Correlation Matrix", color=:RdBu)  # diverging colourmap: red = negative, blue = positive
+'''
+
+[[actionGroups.actions]]
+id = "rolling-sharpe"
+label = "Rolling Sharpe Ratio"
+desc = "Rolling annualised Sharpe ratio of the optimal portfolio over time"
+code = '''
+using PortfolioOptimisers, Plots
+
+port = Portfolio(; returns = {{R}})  # build portfolio
+optimise!(port, Trad(; rm = Variance()))  # optimise
+port_ret = {{R}} * port.weights  # portfolio return series
+sharpe   = rolling_sharpe(port_ret; window = 60)  # rolling 60-period Sharpe
+plot(sharpe, xlabel="Time", ylabel="Sharpe ratio")  # plot
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "oos-performance"
+label = "Out-of-Sample Performance"
+desc = "Apply weights estimated on training data to a held-out test period"
+code = '''
+using PortfolioOptimisers
+
+T = size({{R}}, 1)  # total observations
+R_train = {{R}}[1:div(T,2), :]  # in-sample half
+R_test  = {{R}}[div(T,2)+1:end, :]  # out-of-sample half
+
+port = Portfolio(; returns = R_train)  # fit on training data
+optimise!(port, Trad(; rm = Variance()))  # optimise in-sample
+
+oos_ret = R_test * port.weights  # out-of-sample portfolio returns
+println("OOS Sharpe: ", mean(oos_ret) / std(oos_ret) * sqrt(252))  # annualised OOS Sharpe
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "compare-equal-weight"
+label = "vs Equal Weight"
+desc = "Compare optimised portfolio Sharpe and volatility against a naive equal-weight benchmark"
+code = '''
+using PortfolioOptimisers
+
+port = Portfolio(; returns = {{R}})  # build portfolio
+optimise!(port, Trad(; rm = Variance()))  # optimise
+
+N       = size({{R}}, 2)  # number of assets
+w_ew    = fill(1/N, N)  # equal-weight benchmark
+ret_opt = {{R}} * port.weights  # optimal portfolio returns
+ret_ew  = {{R}} * w_ew  # equal-weight returns
+
+println("Opt  Sharpe: ", mean(ret_opt) / std(ret_opt))  # optimised Sharpe
+println("EW   Sharpe: ", mean(ret_ew)  / std(ret_ew))  # equal-weight Sharpe
+'''
+
+[[actionGroups.actions]]
+id = "compare-methods"
+label = "Compare Methods"
+desc = "Side-by-side Sharpe ratio and maximum drawdown for all four methods"
+code = '''
+using PortfolioOptimisers
+
+port = Portfolio(; returns = {{R}})
+
+for (label, strategy) in [
+    ("MV",   () -> optimise!(port, Trad(; rm = Variance()))),
+    ("CVaR", () -> optimise!(port, Trad(; rm = CVaR()))),
+    ("HRP",  () -> optimise!(port, HRP())),
+    ("HERC", () -> optimise!(port, HERC())),
+]
+    strategy()
+    ret = {{R}} * port.weights  # portfolio return series
+    println(label, " Sharpe: ", mean(ret) / std(ret))  # print Sharpe
+end
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "portfolio-weights"
+label = "Portfolio Weights"
+desc = "Extract and display the optimal weights with asset labels"
+code = '''
+using PortfolioOptimisers
+
+port = Portfolio(; returns = {{R}})  # build portfolio
+optimise!(port, Trad(; rm = Variance()))  # optimise
+
+println("Weights: ", port.weights)  # optimal weight vector (sums to 1)
+println("Max weight: ", maximum(port.weights))  # most concentrated position
+println("Min weight: ", minimum(port.weights))  # smallest position
+'''
+
+[[actionGroups.actions]]
+id = "expected-risk-return"
+label = "Expected Risk & Return"
+desc = "Annualised expected return, volatility and Sharpe ratio of the optimal portfolio"
+code = '''
+using PortfolioOptimisers
+
+port = Portfolio(; returns = {{R}})  # build portfolio
+optimise!(port, Trad(; rm = Variance()))  # optimise
+
+port_ret = {{R}} * port.weights  # portfolio return series
+println("E[r]  = ", mean(port_ret) * 252)  # annualised expected return
+println("Vol   = ", std(port_ret)  * sqrt(252))  # annualised volatility
+println("Sharpe = ", mean(port_ret) / std(port_ret) * sqrt(252))  # annualised Sharpe ratio
+'''

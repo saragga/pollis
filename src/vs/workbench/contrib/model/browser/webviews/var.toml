@@ -1,0 +1,419 @@
+# VAR Models Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/var.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "VAR Models"
+viewType = "pollis.var"
+defaultModel = "var"
+
+[[packages]]
+name = "MacroEconometricModels.jl"
+github = "https://github.com/FriedmanJP/MacroEconometricModels.jl"
+
+[[packages]]
+name = "TransmissionChannelAnalysis.jl"
+github = "https://github.com/enweg/TransmissionChannelAnalysis.jl"
+
+[requires]
+packages = ["Plots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "VAR Modelling"
+file = "var/tutorial-01-var.ipynb"
+bundled = true
+description = "Fitting and interpreting Vector Autoregression models"
+
+[[notebookSections.notebooks]]
+name = "Structural VAR"
+file = "var/tutorial-02-svar.ipynb"
+bundled = true
+description = "Identifying structural shocks with short-run and long-run restrictions"
+
+[[notebookSections.notebooks]]
+name = "Impulse Response Functions"
+file = "var/tutorial-03-irf.ipynb"
+bundled = true
+description = "Computing and visualising IRFs and forecast error variance decompositions"
+
+[[notebookSections.notebooks]]
+name = "Cointegration and VECM"
+file = "var/tutorial-04-vecm.ipynb"
+bundled = true
+description = "Johansen cointegration tests and vector error correction modelling"
+
+[[notebookSections.notebooks]]
+name = "Transmission Channel Analysis"
+file = "var/tutorial-05-tca.ipynb"
+bundled = true
+description = "Decomposing transmission channels of structural shocks"
+
+[[wikis]]
+name = "Overview"
+file = "var/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Factsheet"
+file = "var/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "var/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "var/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "var/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "var/decision-guide.md"
+bundled = true
+
+[[models]]
+id = "var"
+label = "VAR"
+
+[[models]]
+id = "svar"
+label = "SVAR"
+
+[[models]]
+id = "favar"
+label = "FAVAR"
+
+[[models]]
+id = "vecm"
+label = "VECM"
+
+[[bullets]]
+text = "VAR"
+detail = "vector autoregression for joint modelling of multiple time series"
+
+[[bullets]]
+text = "Structural VAR"
+detail = "VAR with short-run or long-run identification restrictions"
+
+[[bullets]]
+text = "FAVAR"
+detail = "factor-augmented VAR for large information sets"
+
+[[bullets]]
+text = "VECM"
+detail = "vector error correction model for cointegrated systems"
+
+[[decisionRows]]
+task = "VAR"
+context = "Stationary series that interact"
+purpose = "Joint dynamics, forecasts and Granger causality"
+
+[[decisionRows]]
+task = "Structural VAR"
+context = "Economic shocks to identify"
+purpose = "Causal impulse responses under short- or long-run restrictions"
+
+[[decisionRows]]
+task = "FAVAR"
+context = "Large panel of informative indicators"
+purpose = "Summarise many series in a few factors inside the VAR"
+
+[[decisionRows]]
+task = "VECM"
+context = "Non-stationary, cointegrated series"
+purpose = "Long-run equilibrium relations plus short-run adjustment"
+
+[[inputs]]
+id = "xvar"
+label = "Panel data (X)"
+tooltip = "T x N large panel of observables summarised by the latent factors."
+default = "X"
+models = ["favar"]
+
+[[inputs]]
+id = "yvar"
+label = "Data variable"
+tooltip = "T x n matrix of endogenous variables. For FAVAR, the fast-moving / policy variables; for VECM, the I(1) series."
+default = "y"
+
+[[inputs]]
+id = "p"
+label = "p (lags)"
+tooltip = "Lag order: number of lagged vectors of endogenous variables in each equation. Select by AIC or BIC. Default 1."
+default = "1"
+newRow = true
+
+[[inputs]]
+id = "trend"
+label = "Trend"
+tooltip = "Deterministic component: const (intercept only), trend (linear trend only), both (intercept and trend) or none. Default const."
+kind = "select"
+default = "const"
+models = ["var", "svar", "vecm"]
+
+[[inputs.options]]
+value = "const"
+label = "Constant (const)"
+
+[[inputs.options]]
+value = "trend"
+label = "Linear trend (trend)"
+
+[[inputs.options]]
+value = "both"
+label = "Constant + trend (both)"
+
+[[inputs.options]]
+value = "none"
+label = "None"
+
+[[inputs]]
+id = "nfactors"
+label = "Factors"
+tooltip = "Number of latent factors for FAVAR. Factors summarise large panels of observable variables not included directly in the VAR. Default 1."
+default = "1"
+models = ["favar"]
+
+[[inputs]]
+id = "r"
+label = "r (rank)"
+tooltip = "Cointegration rank: number of cointegrating vectors for VECM. Determine via Johansen trace or max-eigenvalue tests. Default 1."
+default = "1"
+models = ["vecm"]
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.var]
+# Two interacting series moving together
+svg = '''
+var a = [40, 34, 38, 30, 34, 26, 30, 24, 28];
+var b = [56, 52, 58, 50, 54, 46, 52, 44, 48];
+var da = '', db = '';
+for (var i = 0; i < a.length; i++) {
+	da += (i ? 'L' : 'M') + (6 + i * 5.3) + ',' + a[i];
+	db += (i ? 'L' : 'M') + (6 + i * 5.3) + ',' + b[i];
+}
+return '<path d="' + da + '" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="' + db + '" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.5"/>';
+'''
+
+[miniCharts.svar]
+# Impulse response decaying back to zero
+svg = '''
+var s = '<line x1="4" y1="50" x2="50" y2="50" stroke="currentColor" stroke-width="0.8" stroke-dasharray="2,2" opacity="0.6"/>';
+var d = '';
+for (var i = 0; i <= 40; i++) { d += (i ? 'L' : 'M') + (7 + i) + ',' + (50 - 30 * Math.exp(-i / 9) * Math.cos(i / 5)).toFixed(1); }
+s += '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.5"/>';
+return s;
+'''
+
+[miniCharts.favar]
+# Many faint indicator lines summarised by one bold factor
+svg = '''
+var s = '';
+for (var k = 0; k < 5; k++) {
+	var d = '';
+	for (var i = 0; i < 9; i++) { d += (i ? 'L' : 'M') + (6 + i * 5.3) + ',' + (44 + 10 * Math.sin(i / 1.6 + k) - k * 2 + (i % 2 ? 3 : -3)).toFixed(1); }
+	s += '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.3"/>';
+}
+var f = '';
+for (var j = 0; j < 9; j++) { f += (j ? 'L' : 'M') + (6 + j * 5.3) + ',' + (40 + 10 * Math.sin(j / 1.6 + 2)).toFixed(1); }
+return s + '<path d="' + f + '" fill="none" stroke="currentColor" stroke-width="1.8"/>';
+'''
+
+[miniCharts.vecm]
+# Two trending series held together by a long-run relation
+svg = '''
+var a = [66, 60, 56, 52, 44, 40, 34, 30, 22];
+var b = [58, 54, 46, 44, 38, 32, 28, 22, 18];
+var da = '', db = '';
+for (var i = 0; i < a.length; i++) {
+	da += (i ? 'L' : 'M') + (6 + i * 5.3) + ',' + a[i];
+	db += (i ? 'L' : 'M') + (6 + i * 5.3) + ',' + b[i];
+}
+return '<path d="' + da + '" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="' + db + '" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.5"/>';
+'''
+
+[[codeBranches]]
+model = "var"
+code = '''
+using MacroEconometricModels
+
+model = VAR({{yvar}}, {{p}}, trend="{{trend}}")  # VAR({{p}})
+fit!(model)  # OLS equation by equation
+
+print_results(model)  # display estimates and diagnostics
+'''
+
+[[codeBranches]]
+model = "svar"
+code = '''
+using MacroEconometricModels
+
+var  = VAR({{yvar}}, {{p}}, trend="{{trend}}")  # reduced-form VAR
+fit!(var)  # estimate reduced form
+svar = SVAR(var, ...)  # add identification restrictions
+fit!(svar)  # identify structural shocks
+'''
+
+[[codeBranches]]
+model = "favar"
+code = '''
+using MacroEconometricModels
+
+model = FAVAR({{xvar}}, {{yvar}}, {{p}}, {{nfactors}})  # FAVAR({{p}}) with {{nfactors}} factor(s)
+fit!(model)  # two-step principal components + VAR
+'''
+
+[[codeBranches]]
+model = "vecm"
+code = '''
+using MacroEconometricModels
+
+model = VECM({{yvar}}, {{p}}, {{r}}, trend="{{trend}}")  # VECM with rank {{r}}
+fit!(model)  # Johansen ML estimation
+
+print_results(model)  # cointegrating vectors and loading matrix
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "series-plot"
+label = "Series Plot"
+desc = "Plot every endogenous series on a shared time axis"
+code = '''
+using Plots
+
+plot({{yvar}}; layout = (size({{yvar}}, 2), 1), legend = false, xlabel = "Period")  # one panel per variable
+'''
+
+[[actionGroups.actions]]
+id = "irf-plot"
+label = "Impulse Responses"
+desc = "Plot the responses of every variable to each shock over 20 periods"
+code = '''
+using MacroEconometricModels, Plots
+
+{{?model=var|svar}} model = VAR({{yvar}}, {{p}}, trend="{{trend}}")  # reduced-form VAR({{p}})
+{{?model=favar}} model = FAVAR({{xvar}}, {{yvar}}, {{p}}, {{nfactors}})  # FAVAR({{p}}) with {{nfactors}} factor(s)
+{{?model=vecm}} model = VECM({{yvar}}, {{p}}, {{r}}, trend="{{trend}}")  # VECM with rank {{r}}
+fit!(model)
+
+responses = irf(model, 20)  # impulse responses, horizon 20
+plot(responses)
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "johansen"
+label = "Johansen Cointegration Test"
+desc = "Trace and max-eigenvalue tests for the number of cointegrating vectors among I(1) series"
+code = '''
+using MacroEconometricModels
+
+result = JohansenTest({{yvar}}, :trace, {{p}})  # trace test for cointegrating rank
+
+println(result)
+println("Rank: ", rank(result))  # number of cointegrating vectors
+'''
+
+[[actionGroups.actions]]
+id = "lag-selection"
+label = "Lag Selection"
+desc = "Compare information criteria across lag orders to choose p"
+code = '''
+using MacroEconometricModels
+
+for lags in 1:8
+    m = VAR({{yvar}}, lags)
+    fit!(m)
+    println("p = ", lags, "  AIC = ", round(aic(m), digits = 2), "  BIC = ", round(bic(m), digits = 2))  # pick the minimum
+end
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "forecast"
+label = "Forecast"
+desc = "Forecast every variable 12 periods ahead"
+code = '''
+using MacroEconometricModels
+
+{{?model=var|svar}} model = VAR({{yvar}}, {{p}}, trend="{{trend}}")  # reduced-form VAR({{p}})
+{{?model=favar}} model = FAVAR({{xvar}}, {{yvar}}, {{p}}, {{nfactors}})  # FAVAR({{p}}) with {{nfactors}} factor(s)
+{{?model=vecm}} model = VECM({{yvar}}, {{p}}, {{r}}, trend="{{trend}}")  # VECM with rank {{r}}
+fit!(model)
+
+fc = forecast(model, 12)  # 12-step-ahead forecasts
+println(fc)
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "var-vs-vecm"
+label = "VAR vs VECM"
+desc = "Fit a VAR in levels and a VECM and compare their information criteria"
+code = '''
+using MacroEconometricModels
+
+var  = VAR({{yvar}}, {{p}});       fit!(var)  # VAR in levels
+vecm = VECM({{yvar}}, {{p}}, {{r}}); fit!(vecm)  # imposes {{r}} cointegrating relation(s)
+
+println("VAR  AIC: ", round(aic(var),  digits = 2))
+println("VECM AIC: ", round(aic(vecm), digits = 2))
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "fevd"
+label = "Variance Decomposition"
+desc = "Share of each variable's forecast error variance explained by each shock"
+code = '''
+using MacroEconometricModels
+
+{{?model=var|svar}} model = VAR({{yvar}}, {{p}}, trend="{{trend}}")  # reduced-form VAR({{p}})
+{{?model=favar}} model = FAVAR({{xvar}}, {{yvar}}, {{p}}, {{nfactors}})  # FAVAR({{p}}) with {{nfactors}} factor(s)
+{{?model=vecm}} model = VECM({{yvar}}, {{p}}, {{r}}, trend="{{trend}}")  # VECM with rank {{r}}
+fit!(model)
+
+decomp = fevd(model, 20)  # forecast error variance decomposition, horizon 20
+println(decomp)
+'''
+
+[[actionGroups.actions]]
+id = "granger"
+label = "Granger Causality"
+desc = "Test whether the lags of one variable help predict another"
+code = '''
+using MacroEconometricModels
+
+model = VAR({{yvar}}, {{p}})
+fit!(model)
+println(granger_test(model, 1, 2))  # does variable 1 Granger-cause variable 2?
+'''

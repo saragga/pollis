@@ -1,0 +1,523 @@
+# Loss Risk Measures Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/lrm.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Loss Risk Measures"
+viewType = "pollis.lrm"
+defaultModel = "dd"
+
+[[packages]]
+name = "PerformanceAnalytics.jl"
+github = "https://github.com/eohne/PerformanceAnalytics.jl"
+
+[requires]
+packages = ["Plots.jl", "Distributions.jl", "StatsBase.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Quick Start"
+file = "lrm/tutorial-01-quickstart.ipynb"
+bundled = true
+description = "Compute drawdown, VaR and CVaR for a returns series"
+
+[[notebookSections.notebooks]]
+name = "Drawdown Analysis"
+file = "lrm/tutorial-02-drawdown.ipynb"
+bundled = true
+description = "Max drawdown, average drawdown and recovery periods"
+
+[[notebookSections.notebooks]]
+name = "Downside Risk"
+file = "lrm/tutorial-03-downside.ipynb"
+bundled = true
+description = "Semi-deviation, Sortino ratio and Omega ratio"
+
+[[notebookSections.notebooks]]
+name = "VaR and CVaR"
+file = "lrm/tutorial-04-var-cvar.ipynb"
+bundled = true
+description = "Historical and parametric Value at Risk and Expected Shortfall"
+
+[[wikis]]
+name = "Overview"
+file = "lrm/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Factsheet"
+file = "lrm/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "lrm/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "lrm/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "lrm/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "lrm/decision-guide.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "PerformanceAnalytics.jl: Performance and Risk Analysis of Returns"
+authors = "Oehne, Elias"
+year = 2024
+journal = "GitHub"
+url = "https://github.com/eohne/PerformanceAnalytics.jl"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Portfolio Selection"
+authors = "Markowitz, Harry"
+year = 1952
+journal = "Journal of Finance"
+doi = "10.2307/2975974"
+openAccess = false
+
+[[references]]
+title = "Performance Measurement in a Downside Risk Framework"
+authors = "Sortino, Frank A.; Price, Lee N."
+year = 1994
+journal = "Journal of Investing"
+doi = "10.3905/joi.3.3.59"
+openAccess = false
+
+[[references]]
+title = "Coherent Measures of Risk"
+authors = "Artzner, Philippe; Delbaen, Freddy; Eber, Jean-Marc; Heath, David"
+year = 1999
+journal = "Mathematical Finance"
+doi = "10.1111/1467-9965.00068"
+openAccess = false
+
+[[references]]
+title = "Expected Shortfall: A Natural Coherent Alternative to Value at Risk"
+authors = "Acerbi, Carlo; Tasche, Dirk"
+year = 2002
+journal = "Economic Notes"
+doi = "10.1111/1468-0300.00091"
+openAccess = false
+
+# Model toggles: one per family of loss risk measures
+
+[[models]]
+id = "dd"
+label = "Drawdown"
+
+[[models]]
+id = "dr"
+label = "Downside Risk"
+
+[[models]]
+id = "vr"
+label = "Value at Risk"
+
+[[models]]
+id = "es"
+label = "Expected Shortfall"
+
+[[bullets]]
+text = "Drawdown"
+detail = "maximum drawdown, average drawdown, Calmar and Sterling ratios"
+
+[[bullets]]
+text = "Downside Risk"
+detail = "semi-deviation, downside deviation, Sortino and Omega ratios"
+
+[[bullets]]
+text = "Value at Risk (VaR)"
+detail = "historical simulation, parametric normal and Cornish-Fisher estimates"
+
+[[bullets]]
+text = "Expected Shortfall (CVaR)"
+detail = "average loss beyond the VaR threshold; a coherent risk measure"
+
+[[decisionRows]]
+task = "Drawdown"
+context = "Path of cumulative returns"
+purpose = "Worst peak-to-trough loss and how long recovery takes"
+
+[[decisionRows]]
+task = "Downside Risk"
+context = "Returns below a target"
+purpose = "Penalise only losses relative to a minimum acceptable return"
+
+[[decisionRows]]
+task = "Value at Risk"
+context = "Return distribution"
+purpose = "Loss threshold not exceeded with a given confidence"
+
+[[decisionRows]]
+task = "Expected Shortfall"
+context = "Tail of the distribution"
+purpose = "Average loss in the worst cases; coherent and tail-sensitive"
+
+[[inputs]]
+id = "returns"
+label = "Returns"
+tooltip = "Variable name holding your returns vector (e.g. daily or monthly log-returns as a Float64 vector)."
+default = "returns"
+
+[[inputs]]
+id = "window"
+label = "Window"
+tooltip = "Rolling window length in periods for time-varying drawdown statistics."
+default = "252"
+models = ["dd"]
+
+[[inputs]]
+id = "mar"
+label = "MAR"
+tooltip = "Minimum Acceptable Return (MAR). Returns below this threshold are counted as losses for downside-risk measures. Defaults to 0."
+default = "0.0"
+models = ["dr"]
+
+[[inputs]]
+id = "alpha"
+label = "Alpha"
+tooltip = "Significance level alpha. For VaR, 0.05 gives the 95% VaR (loss not exceeded 95% of the time); for Expected Shortfall, 0.05 gives the average loss in the worst 5% of outcomes. Use 0.01 for the 99% level."
+default = "0.05"
+models = ["vr", "es"]
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.dd]
+# Cumulative wealth path with the peak-to-trough drop shaded
+svg = '''
+var p = [30, 26, 22, 24, 34, 46, 50, 44, 36, 32, 28];
+var d = '';
+for (var i = 0; i < p.length; i++) {
+	d += (i ? 'L' : 'M') + (6 + i * 4.2) + ',' + p[i];
+}
+var s = '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.5"/>';
+s += '<line x1="6" y1="22" x2="48" y2="22" stroke="currentColor" stroke-width="0.8" stroke-dasharray="2,2" opacity="0.6"/>';
+s += '<rect x="14.4" y="22" width="12.6" height="28" fill="currentColor" opacity="0.2"/>';
+return s;
+'''
+
+[miniCharts.dr]
+# Return bars around a target line; only those below it are highlighted
+svg = '''
+var h = [8, -6, 12, -14, 5, -4, 10, -9, 7];
+var s = '<line x1="4" y1="44" x2="50" y2="44" stroke="currentColor" stroke-width="1"/>';
+for (var i = 0; i < h.length; i++) {
+	var y = h[i] > 0 ? 44 - h[i] * 1.5 : 44;
+	s += '<rect x="' + (6 + i * 5) + '" y="' + y + '" width="3.5" height="' + Math.abs(h[i]) * 1.5 + '" fill="currentColor" opacity="' + (h[i] < 0 ? 0.8 : 0.25) + '"/>';
+}
+return s;
+'''
+
+[miniCharts.vr]
+# Return density with the VaR cut-off in the left tail
+svg = '''
+var s = '<line x1="4" y1="74" x2="50" y2="74" stroke="currentColor" stroke-width="1"/>';
+var d = '';
+for (var i = 0; i <= 40; i++) {
+	var z = -3 + i * 0.15;
+	d += (i ? 'L' : 'M') + (7 + i) + ',' + (74 - Math.exp(-z * z / 2) * 45).toFixed(1);
+}
+s += '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.5"/>';
+s += '<line x1="16" y1="30" x2="16" y2="74" stroke="currentColor" stroke-width="1.2" stroke-dasharray="3,2"/>';
+return s;
+'''
+
+[miniCharts.es]
+# Return density with the tail beyond VaR shaded
+svg = '''
+var s = '<line x1="4" y1="74" x2="50" y2="74" stroke="currentColor" stroke-width="1"/>';
+var d = '';
+var tail = 'M7,74';
+for (var i = 0; i <= 40; i++) {
+	var z = -3 + i * 0.15;
+	var y = (74 - Math.exp(-z * z / 2) * 45).toFixed(1);
+	d += (i ? 'L' : 'M') + (7 + i) + ',' + y;
+	if (i <= 9) { tail += 'L' + (7 + i) + ',' + y; }
+}
+tail += 'L16,74Z';
+s += '<path d="' + tail + '" fill="currentColor" opacity="0.45"/>';
+s += '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.5"/>';
+s += '<line x1="16" y1="30" x2="16" y2="74" stroke="currentColor" stroke-width="1.2" stroke-dasharray="3,2"/>';
+return s;
+'''
+
+[[codeBranches]]
+model = "dd"
+code = '''
+using PerformanceAnalytics
+
+dd_series  = drawdowns({{returns}})  # full drawdown series
+max_dd     = maxDrawdown({{returns}})  # maximum drawdown
+avg_dd     = averageDrawdown({{returns}})  # average drawdown
+calmar     = calmarRatio({{returns}})  # annualised return / max drawdown
+sterling   = sterlingRatio({{returns}})  # excess return / average drawdown
+roll_dd    = rollDrawdown({{returns}}; window = {{window}})  # rolling max drawdown over window
+
+println("Max Drawdown:   ", round(max_dd,   digits = 4))
+println("Avg Drawdown:   ", round(avg_dd,   digits = 4))
+println("Calmar Ratio:   ", round(calmar,   digits = 4))
+println("Sterling Ratio: ", round(sterling, digits = 4))
+'''
+
+[[codeBranches]]
+model = "dr"
+code = '''
+using PerformanceAnalytics
+
+semi_dev   = semiDeviation({{returns}})  # std dev of negative returns
+down_dev   = downsideDeviation({{returns}}; mar = {{mar}})  # downside deviation relative to MAR
+sortino    = sortinoRatio({{returns}}; mar = {{mar}})  # excess return / downside deviation
+omega      = omegaRatio({{returns}}; mar = {{mar}})  # probability-weighted gain/loss ratio
+gain_loss  = gainLossRatio({{returns}}; mar = {{mar}})  # average gain / average loss
+
+println("Semi-Deviation:  ", round(semi_dev,  digits = 4))
+println("Downside Dev:    ", round(down_dev,  digits = 4))
+println("Sortino Ratio:   ", round(sortino,   digits = 4))
+println("Omega Ratio:     ", round(omega,     digits = 4))
+println("Gain/Loss Ratio: ", round(gain_loss, digits = 4))
+'''
+
+[[codeBranches]]
+model = "vr"
+code = '''
+using PerformanceAnalytics
+
+var_hist = valueAtRisk({{returns}}; method = :historical,     alpha = {{alpha}})  # historical simulation VaR
+var_norm = valueAtRisk({{returns}}; method = :normal,         alpha = {{alpha}})  # parametric normal VaR
+var_cf   = valueAtRisk({{returns}}; method = :cornish_fisher, alpha = {{alpha}})  # Cornish-Fisher expansion VaR
+
+println("VaR (Historical):     ", round(var_hist, digits = 4))
+println("VaR (Normal):         ", round(var_norm, digits = 4))
+println("VaR (Cornish-Fisher): ", round(var_cf,   digits = 4))
+'''
+
+[[codeBranches]]
+model = "es"
+code = '''
+using PerformanceAnalytics
+
+es_hist = expectedShortfall({{returns}}; method = :historical,     alpha = {{alpha}})  # historical Expected Shortfall
+es_norm = expectedShortfall({{returns}}; method = :normal,         alpha = {{alpha}})  # parametric normal Expected Shortfall
+es_cf   = expectedShortfall({{returns}}; method = :cornish_fisher, alpha = {{alpha}})  # Cornish-Fisher expansion Expected Shortfall
+
+println("ES (Historical):     ", round(es_hist, digits = 4))
+println("ES (Normal):         ", round(es_norm, digits = 4))
+println("ES (Cornish-Fisher): ", round(es_cf,   digits = 4))
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "wealth-index"
+label = "Wealth Index"
+desc = "Growth of one unit invested, with its running peak"
+code = '''
+using Plots
+
+wealth = cumprod(1 .+ {{returns}})  # value of 1 unit invested
+peak   = accumulate(max, wealth)  # running maximum
+plot(wealth, label = "Wealth", xlabel = "Period", ylabel = "Value")
+plot!(peak, linestyle = :dash, label = "Running peak")  # gaps below the peak are drawdowns
+'''
+
+[[actionGroups.actions]]
+id = "tail-histogram"
+label = "Tail Histogram"
+desc = "Return histogram with the historical VaR cut-off"
+code = '''
+using Plots, Statistics
+
+q = quantile({{returns}}, 0.05)  # 5% quantile of returns = -VaR
+histogram({{returns}}; bins = 50, normalize = :pdf, label = "Returns", xlabel = "Return", ylabel = "Density")
+vline!([q], linestyle = :dash, linewidth = 2, label = "5% quantile")  # losses left of the line are the tail
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "return-dist"
+label = "Return Distribution"
+desc = "Plot a histogram of returns to inspect skewness, fat tails, and normality"
+code = '''
+using PerformanceAnalytics, Plots, Statistics, StatsBase
+
+histogram({{returns}};  # return distribution
+    bins   = 50, normalize = :pdf,
+    xlabel = "Return", ylabel = "Density",
+    title  = "Return Distribution", legend = false)
+
+println("Mean:     ", round(mean({{returns}}), digits = 6))  # sample mean
+println("Std Dev:  ", round(std({{returns}}),  digits = 6))  # sample standard deviation
+println("Skewness: ", round(skewness({{returns}}), digits = 4))  # negative = left tail
+println("Kurtosis: ", round(kurtosis({{returns}}), digits = 4))  # excess kurtosis > 0 = fat tails
+'''
+
+[[actionGroups.actions]]
+id = "drawdown-chart"
+label = "Drawdown Chart"
+desc = "Plot the full drawdown series to identify recovery periods and prolonged losses"
+code = '''
+using PerformanceAnalytics, Plots
+
+dd_series = drawdowns({{returns}})  # drawdown at each point in time
+
+plot(dd_series;  # drawdown chart
+    xlabel = "Period", ylabel = "Drawdown",
+    title  = "Drawdown Series", legend = false,
+    color  = :red, fill = 0, fillalpha = 0.3)
+
+println("Max Drawdown: ", round(minimum(dd_series), digits = 4))
+'''
+
+[[actionGroups.actions]]
+id = "var-backtest"
+label = "VaR Backtest"
+desc = "Count VaR breaches (exceedances) and test whether the violation rate matches the confidence level"
+code = '''
+using PerformanceAnalytics
+
+var_h = valueAtRisk({{returns}}; method = :historical, alpha = {{alpha}})  # historical VaR estimate
+violations = sum({{returns}} .< -var_h)  # count returns below -VaR
+viol_rate  = violations / length({{returns}})  # empirical violation rate
+
+println("Expected violations: ",  round({{alpha}} * length({{returns}}), digits = 1))
+println("Observed violations: ",  violations)
+println("Violation rate:      ",  round(viol_rate, digits = 4))
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "rolling-var"
+label = "Rolling VaR Forecast"
+desc = "One-step-ahead historical VaR from a moving window"
+code = '''
+using Statistics
+
+w = 250  # estimation window
+fc = [-quantile({{returns}}[t-w:t-1], {{alpha}}) for t in (w + 1):length({{returns}})]  # VaR forecast for period t
+println("Latest VaR forecast: ", round(last(fc), digits = 4))
+'''
+
+[[actionGroups.actions]]
+id = "horizon-var"
+label = "Multi-Period VaR"
+desc = "Scale the one-period normal VaR to a longer horizon"
+code = '''
+using Distributions, Statistics
+
+h  = 10  # horizon in periods
+mu = mean({{returns}})
+sd = std({{returns}})
+var_h = -(h * mu + sqrt(h) * sd * quantile(Normal(), {{alpha}}))  # square-root-of-time rule
+println(h, "-period VaR: ", round(var_h, digits = 4))
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "var-methods"
+label = "VaR Methods"
+desc = "Historical against normal VaR at several confidence levels"
+code = '''
+using Distributions, Statistics
+
+mu, sd = mean({{returns}}), std({{returns}})
+for a in (0.10, 0.05, 0.01)
+    hist = -quantile({{returns}}, a)  # historical VaR
+    norm = -(mu + sd * quantile(Normal(), a))  # parametric normal VaR
+    println("alpha = ", a, ":  historical ", round(hist, digits = 4), "  normal ", round(norm, digits = 4))
+end
+'''
+
+[[actionGroups.actions]]
+id = "var-vs-es"
+label = "VaR vs Expected Shortfall"
+desc = "How far the average tail loss lies beyond VaR"
+code = '''
+using Statistics
+
+q    = quantile({{returns}}, {{alpha}})  # -VaR
+tail = {{returns}}[{{returns}} .<= q]  # returns in the tail
+println("VaR: ", round(-q, digits = 4))
+println("ES:  ", round(-mean(tail), digits = 4))  # ES is always at least VaR
+println("ES / VaR: ", round(mean(tail) / q, digits = 3))  # about 1.25 for normal returns at 5%
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "risk-adjusted"
+label = "Risk-Adjusted Performance"
+desc = "Compute Sharpe, Sortino and Calmar ratios together for a full risk-adjusted view"
+code = '''
+using PerformanceAnalytics
+
+sharpe  = sharpeRatio({{returns}})  # Sharpe ratio (excess return / total vol)
+sortino = sortinoRatio({{returns}}; mar = {{mar}})  # Sortino ratio (excess return / downside vol)
+calmar  = calmarRatio({{returns}})  # Calmar ratio (annualised return / max drawdown)
+omega   = omegaRatio({{returns}}; mar = {{mar}})  # Omega ratio (weighted gains / weighted losses)
+
+println("Sharpe:  ", round(sharpe,  digits = 4))
+println("Sortino: ", round(sortino, digits = 4))
+println("Calmar:  ", round(calmar,  digits = 4))
+println("Omega:   ", round(omega,   digits = 4))
+'''
+
+[[actionGroups.actions]]
+id = "es-decomposition"
+label = "CVaR Decomposition"
+desc = "Decompose Expected Shortfall into its tail loss contributions"
+code = '''
+using PerformanceAnalytics, Statistics
+
+es_hist   = expectedShortfall({{returns}}; method = :historical, alpha = {{alpha}})  # historical Expected Shortfall
+threshold = quantile({{returns}}, {{alpha}})  # return threshold at alpha
+tail_obs  = {{returns}}[{{returns}} .< threshold]  # returns in the tail
+n_tail    = length(tail_obs)  # number of tail observations
+
+println("Expected Shortfall: ", round(es_hist,  digits = 4))
+println("Tail threshold:     ", round(threshold, digits = 4))
+println("Tail observations:  ", n_tail)
+println("Avg tail loss:      ", round(mean(tail_obs), digits = 4))
+'''

@@ -1,0 +1,679 @@
+# Dynamic Stochastic General Equilibrium (DSGE) Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/dsge.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Dynamic Stochastic General Equilibrium (DSGE)"
+viewType = "pollis.dsge"
+defaultModel = "mom"
+
+[[packages]]
+name = "MacroModelling.jl"
+github = "https://github.com/thorek1/MacroModelling.jl"
+
+[[packages]]
+name = "Dynare.jl"
+github = "https://github.com/DynareJulia/Dynare.jl"
+
+[[packages]]
+name = "DSGE.jl"
+github = "https://github.com/FRBNY-DSGE/DSGE.jl"
+
+[[packages]]
+name = "SolveDSGE.jl"
+github = "https://github.com/RJDennis/SolveDSGE.jl"
+
+[[packages]]
+name = "StateSpaceEcon.jl"
+github = "https://github.com/bankofcanada/StateSpaceEcon.jl"
+
+[requires]
+packages = ["StatsPlots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Quick Start"
+file = "dsge/tutorial-01-quickstart.ipynb"
+bundled = true
+description = "Define an RBC model and compute impulse responses"
+
+[[notebookSections.notebooks]]
+name = "Impulse Responses"
+file = "dsge/tutorial-02-irfs.ipynb"
+bundled = true
+description = "Compute and plot IRFs using perturbation solutions to various orders"
+
+[[notebookSections.notebooks]]
+name = "Bayesian Estimation"
+file = "dsge/tutorial-03-estimation.ipynb"
+bundled = true
+description = "Estimate a DSGE model on data using NUTS or HMC"
+
+[[notebookSections.notebooks]]
+name = "Moments & Calibration"
+file = "dsge/tutorial-04-moments.ipynb"
+bundled = true
+description = "Match model moments and calibrate against steady state"
+
+[[notebookSections.notebooks]]
+name = "Higher-Order Solutions"
+file = "dsge/tutorial-05-higher-order.ipynb"
+bundled = true
+description = "Pruned 2nd and 3rd order solutions and nonlinear estimation"
+
+[[notebookSections.notebooks]]
+name = "Variance Decomposition"
+file = "dsge/tutorial-06-variance.ipynb"
+bundled = true
+description = "Forecast error variance decomposition and historical decomposition"
+
+[[wikis]]
+name = "Overview"
+file = "dsge/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Factsheet"
+file = "dsge/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "dsge/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "dsge/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "dsge/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "dsge/decision-guide.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Original Papers (from packages)"
+
+[[references]]
+title = "Bayesian Estimation of DSGE Models"
+authors = "Herbst, E. P., & Schorfheide, F."
+year = 2015
+journal = ""
+url = "https://doi.org/10.23943/princeton/9780691161082.001.0001"
+openAccess = false
+
+[[references]]
+title = "Solving dynamic general equilibrium models using a second-order approximation to the policy function"
+authors = "Schmitt-Grohé, S., & Uribe, M."
+year = 2004
+journal = ""
+url = "https://doi.org/10.1016/S0165-1889(03)00043-5"
+openAccess = false
+
+[[references]]
+title = "Shocks and frictions in US business cycles: A Bayesian DSGE approach"
+authors = "Smets, F., & Wouters, R."
+year = 2007
+journal = ""
+url = "https://doi.org/10.1257/aer.97.3.586"
+openAccess = false
+
+[[references]]
+title = "The pruned state-space system for non-linear DSGE models: Theory and empirical applications"
+authors = "Andreasen, M. M., Fernández-Villaverde, J., & Rubio-Ramírez, J. F."
+year = 2018
+journal = ""
+url = "https://doi.org/10.1093/restud/rdx037"
+openAccess = false
+
+[[references]]
+title = "Dynare: Reference Manual"
+authors = "Adjemian, S., Bastani, H., Juillard, M., Mihoubi, F., Perendia, G., Ratto, M., & Villemot, S."
+year = 2011
+journal = ""
+url = "https://www.dynare.org/wp-repo/dynarewp001.pdf"
+openAccess = true
+
+[[references]]
+title = "Perturbation methods for Markov-switching DSGE models"
+authors = "Foerster, A., Rubio-Ramírez, J. F., Waggoner, D. F., & Zha, T."
+year = 2016
+journal = ""
+url = "https://doi.org/10.3982/QE596"
+openAccess = false
+
+[[references]]
+title = "Inflation in the Great Recession and New Keynesian Models"
+authors = "Del Negro, M., Giannoni, M. P., & Schorfheide, F."
+year = 2015
+journal = ""
+url = "https://doi.org/10.1257/mac.20140097"
+openAccess = false
+
+[[references]]
+title = "DSGE Model-Based Forecasting"
+authors = "Del Negro, M., & Schorfheide, F."
+year = 2013
+journal = ""
+url = "https://doi.org/10.1016/B978-0-444-53683-9.00002-5"
+openAccess = false
+
+[[references]]
+title = "Using the generalised Schur form to solve a multivariate linear rational expectations model"
+authors = "Klein, P."
+year = 2000
+journal = ""
+url = "https://doi.org/10.1016/S0165-1889(99)00045-7"
+openAccess = false
+
+[[references]]
+title = "Solving rational expectations models at first order: what Dynare does"
+authors = "Villemot, S."
+year = 2011
+journal = ""
+url = "https://www.dynare.org/wp-repo/dynarewp002.pdf"
+openAccess = true
+
+[[references]]
+title = "ToTEM II: An Updated Version of the Bank of Canada's Quarterly Projection Model"
+authors = "Dorich, J., Johnston, M. K., Mendes, R. R., Murchison, S., & Zhang, Y."
+year = 2013
+journal = ""
+url = "https://www.bankofcanada.ca/2013/10/technical-report-100/"
+openAccess = true
+
+[[models]]
+id = "mom"
+label = "Moments"
+
+[[models]]
+id = "est"
+label = "Estimation"
+
+[[models]]
+id = "irf"
+label = "Impulse Responses"
+
+[[bullets]]
+text = "Define DSGE models symbolically using @model and @parameters macros; solved via perturbation to 1st, 2nd, or 3rd order"
+detail = ""
+
+[[bullets]]
+text = "Calibrate parameters against non-stochastic steady state relationships; match model moments using pruned higher-order solutions"
+detail = ""
+
+[[bullets]]
+text = "Estimate on data with the Kalman filter (1st order) using gradient-based Bayesian samplers"
+detail = "NUTS and HMC"
+
+[[bullets]]
+text = "Estimate nonlinear models using the inversion filter (higher-order perturbation solutions)"
+detail = ""
+
+[[bullets]]
+text = "Compute impulse responses, variance decomposition, historical decomposition, and conditional forecasts"
+detail = ""
+
+[[decisionRows]]
+task = "Moments"
+context = "Calibrated model, no data needed"
+purpose = "Model-implied means, volatilities, autocorrelations and variance shares"
+
+[[decisionRows]]
+task = "Estimation"
+context = "Observable time series available"
+purpose = "Bayesian posterior for parameters via the Kalman filter and NUTS or HMC"
+
+[[decisionRows]]
+task = "Impulse Responses"
+context = "Question about how a shock propagates"
+purpose = "Dynamic response of every variable to a structural shock"
+
+[[inputs]]
+id = "dsgemodel"
+label = "Model"
+tooltip = "Name of the MacroModelling.jl model object defined via the @model macro (e.g. RBC, SW07). Choose Custom to write your own."
+kind = "select"
+default = "custom"
+
+[[inputs.options]]
+value = "custom"
+label = "Custom"
+
+[[inputs.options]]
+value = "Gali_2015_chapter_3_nonlinear"
+label = "Gali (2015)"
+
+[[inputs.options]]
+value = "Ascari_Sbordone_2014"
+label = "Ascari and Sbordone (2014)"
+
+[[inputs.options]]
+value = "Caldara_et_al_2012"
+label = "Caldara et al. (2012)"
+
+[[inputs.options]]
+value = "JQ_2012_RBC"
+label = "Jermann and Quadrini (2012)"
+
+[[inputs.options]]
+value = "GNSS_2010"
+label = "Gerali, Neri, Sessa, and Signoretti (2010)"
+
+[[inputs.options]]
+value = "QUEST3_2009"
+label = "QUEST3 (2009)"
+
+[[inputs.options]]
+value = "NAWM_EAUS_2008"
+label = "New Area-Wide Model (2008)"
+
+[[inputs.options]]
+value = "Aguiar_Gopinath_2007"
+label = "Aguiar and Gopinath (2007)"
+
+[[inputs.options]]
+value = "SW07"
+label = "Smets and Wouters (2007)"
+
+[[inputs.options]]
+value = "Gali_Monacelli_2005_CITR"
+label = "Gali and Monacelli (2005)"
+
+[[inputs.options]]
+value = "Ghironi_Melitz_2005"
+label = "Ghironi and Melitz (2005)"
+
+[[inputs.options]]
+value = "Ireland_2004"
+label = "Ireland (2004)"
+
+[[inputs.options]]
+value = "SGU_2003_debt_premium"
+label = "Schmitt-Grohe and Uribe (2003)"
+
+[[inputs.options]]
+value = "SW03"
+label = "Smets and Wouters (2003)"
+
+[[inputs.options]]
+value = "FS2000"
+label = "Schorfheide (2000)"
+
+[[inputs.options]]
+value = "Baxter_King_1993"
+label = "Baxter and King (1993)"
+
+[[inputs.options]]
+value = "Backus_Kehoe_Kydland_1992"
+label = "Backus, Kehoe, and Kydland (1992)"
+
+[[inputs]]
+id = "custom"
+label = "Custom DSGE"
+tooltip = "Name for your own @model object. The code defines a small RBC model under this name as a starting point."
+default = "MyModel"
+when = "dsgemodel=custom"
+
+[[inputs]]
+id = "shock"
+label = "Shock"
+tooltip = "Shock variable name for impulse response computation. Omit the leading colon; it is added automatically."
+default = "eps_z"
+models = ["irf"]
+
+[[inputs]]
+id = "periods"
+label = "Periods"
+tooltip = "Number of periods for the impulse response function. Typically 20-60 periods depending on data frequency."
+default = "40"
+models = ["irf"]
+
+[[inputs]]
+id = "data"
+label = "Data"
+tooltip = "Julia variable name of the data matrix used for estimation (T x n_observables). Columns correspond to observable variables."
+default = "data"
+models = ["est"]
+
+[[inputs]]
+id = "sampler"
+label = "Sampler"
+tooltip = "Gradient-based MCMC sampler: NUTS (No-U-Turn Sampler, recommended) or HMC (Hamiltonian Monte Carlo)."
+kind = "select"
+default = "NUTS"
+models = ["est"]
+
+[[inputs.options]]
+value = "NUTS"
+label = "NUTS"
+
+[[inputs.options]]
+value = "HMC"
+label = "HMC"
+
+[[inputs]]
+id = "draws"
+label = "Draws"
+tooltip = "Number of posterior draws retained after burn-in. Minimum 500; 1000-2000 is standard for stable estimates."
+default = "1000"
+models = ["est"]
+
+[[inputs]]
+id = "burnin"
+label = "Burn-in"
+tooltip = "Number of initial MCMC draws discarded to allow the chain to reach the posterior before collecting samples."
+default = "200"
+models = ["est"]
+
+[[inputs]]
+id = "order"
+label = "Order"
+tooltip = "Perturbation order for moment computation: 1 (linear), 2 (quadratic), or 3 (cubic). Higher orders capture nonlinear dynamics."
+default = "2"
+models = ["mom"]
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.mom]
+# Bars of model-implied standard deviations
+svg = '''
+var h = [30, 18, 38, 24, 12];
+var s = '<line x1="4" y1="66" x2="50" y2="66" stroke="currentColor" stroke-width="0.8" opacity="0.6"/>';
+for (var i = 0; i < h.length; i++) { s += '<rect x="' + (7 + i * 9) + '" y="' + (66 - h[i]) + '" width="6" height="' + h[i] + '" fill="currentColor" opacity="' + (i === 2 ? 0.9 : 0.5) + '"/>'; }
+return s;
+'''
+
+[miniCharts.est]
+# Prior (faint) updated to a sharper posterior density
+svg = '''
+function curve(mu, sd, amp) {
+	var d = '';
+	for (var i = 0; i <= 44; i++) { var x = 5 + i; d += (i ? 'L' : 'M') + x + ',' + (66 - amp * Math.exp(-0.5 * Math.pow((x - mu) / sd, 2))).toFixed(1); }
+	return d;
+}
+return '<path d="' + curve(27, 11, 16) + '" fill="none" stroke="currentColor" stroke-width="1" opacity="0.4" stroke-dasharray="2,2"/><path d="' + curve(31, 4.5, 40) + '" fill="none" stroke="currentColor" stroke-width="1.5"/>';
+'''
+
+[miniCharts.irf]
+# Response to a shock decaying back to steady state
+svg = '''
+var s = '<line x1="4" y1="56" x2="50" y2="56" stroke="currentColor" stroke-width="0.8" stroke-dasharray="2,2" opacity="0.6"/>';
+var d = '', e = '';
+for (var i = 0; i <= 40; i++) {
+	d += (i ? 'L' : 'M') + (7 + i) + ',' + (56 - 32 * Math.exp(-i / 8)).toFixed(1);
+	e += (i ? 'L' : 'M') + (7 + i) + ',' + (56 - 18 * (Math.exp(-i / 14) - Math.exp(-i / 3))).toFixed(1);
+}
+return s + '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="' + e + '" fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.5"/>';
+'''
+
+[[codeBranches]]
+model = "mom"
+code = '''
+using MacroModelling, StatsPlots
+
+{{?dsgemodel=custom}} @model {{custom}} begin
+{{?dsgemodel=custom}}     1 / c[0] = (beta / c[1]) * (alpha * exp(z[1]) * k[0]^(alpha - 1) + (1 - delta))
+{{?dsgemodel=custom}}     c[0] + k[0] = (1 - delta) * k[-1] + q[0]
+{{?dsgemodel=custom}}     q[0] = exp(z[0]) * k[-1]^alpha
+{{?dsgemodel=custom}}     z[0] = rho * z[-1] + std_z * eps_z[x]
+{{?dsgemodel=custom}} end
+{{?dsgemodel=custom}}
+{{?dsgemodel=custom}} @parameters {{custom}} begin
+{{?dsgemodel=custom}}     std_z = 0.01
+{{?dsgemodel=custom}}     rho = 0.2
+{{?dsgemodel=custom}}     delta = 0.02
+{{?dsgemodel=custom}}     alpha = 0.5
+{{?dsgemodel=custom}}     beta = 0.95
+{{?dsgemodel=custom}} end
+{{?dsgemodel=custom}}
+{{?dsgemodel=custom}} dsge = {{custom}}  # your model object
+{{?dsgemodel!=custom}} dsge = {{dsgemodel}}  # model from the MacroModelling.jl model library
+
+moments = get_moments(dsge, order = {{order}})  # model-implied moments at perturbation order {{order}}
+
+var_dec = get_variance_decomposition(dsge, order = {{order}})  # fraction of variance explained by each shock
+
+autocov = get_autocorrelation(dsge, order = {{order}})  # model-implied autocorrelation function
+'''
+
+[[codeBranches]]
+model = "est"
+code = '''
+using MacroModelling, StatsPlots
+
+{{?dsgemodel=custom}} @model {{custom}} begin
+{{?dsgemodel=custom}}     1 / c[0] = (beta / c[1]) * (alpha * exp(z[1]) * k[0]^(alpha - 1) + (1 - delta))
+{{?dsgemodel=custom}}     c[0] + k[0] = (1 - delta) * k[-1] + q[0]
+{{?dsgemodel=custom}}     q[0] = exp(z[0]) * k[-1]^alpha
+{{?dsgemodel=custom}}     z[0] = rho * z[-1] + std_z * eps_z[x]
+{{?dsgemodel=custom}} end
+{{?dsgemodel=custom}}
+{{?dsgemodel=custom}} @parameters {{custom}} begin
+{{?dsgemodel=custom}}     std_z = 0.01
+{{?dsgemodel=custom}}     rho = 0.2
+{{?dsgemodel=custom}}     delta = 0.02
+{{?dsgemodel=custom}}     alpha = 0.5
+{{?dsgemodel=custom}}     beta = 0.95
+{{?dsgemodel=custom}} end
+{{?dsgemodel=custom}}
+{{?dsgemodel=custom}} dsge = {{custom}}  # your model object
+{{?dsgemodel!=custom}} dsge = {{dsgemodel}}  # model from the MacroModelling.jl model library
+
+result = estimate(dsge, {{data}}, n_draws = {{draws}}, burnin = {{burnin}}, sampler = :{{sampler}})  # Bayesian estimation via Kalman filter
+
+println("Post. mean std_z: ", mean(result[:std_z]))  # posterior mean for shock std dev
+println("Post. mean rho:   ", mean(result[:rho]))  # posterior mean for AR persistence
+'''
+
+[[codeBranches]]
+model = "irf"
+code = '''
+using MacroModelling, StatsPlots
+
+{{?dsgemodel=custom}} @model {{custom}} begin
+{{?dsgemodel=custom}}     1 / c[0] = (beta / c[1]) * (alpha * exp(z[1]) * k[0]^(alpha - 1) + (1 - delta))
+{{?dsgemodel=custom}}     c[0] + k[0] = (1 - delta) * k[-1] + q[0]
+{{?dsgemodel=custom}}     q[0] = exp(z[0]) * k[-1]^alpha
+{{?dsgemodel=custom}}     z[0] = rho * z[-1] + std_z * eps_z[x]
+{{?dsgemodel=custom}} end
+{{?dsgemodel=custom}}
+{{?dsgemodel=custom}} @parameters {{custom}} begin
+{{?dsgemodel=custom}}     std_z = 0.01
+{{?dsgemodel=custom}}     rho = 0.2
+{{?dsgemodel=custom}}     delta = 0.02
+{{?dsgemodel=custom}}     alpha = 0.5
+{{?dsgemodel=custom}}     beta = 0.95
+{{?dsgemodel=custom}} end
+{{?dsgemodel=custom}}
+{{?dsgemodel=custom}} dsge = {{custom}}  # your model object
+{{?dsgemodel!=custom}} dsge = {{dsgemodel}}  # model from the MacroModelling.jl model library
+
+plot_irf(dsge, shock = :{{shock}}, periods = {{periods}})  # plot impulse response functions
+
+irfs = get_irfs(dsge, shock = :{{shock}}, periods = {{periods}})  # return IRF array (periods x variables x shocks)
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "irf_plot"
+label = "Impulse Response Plot"
+desc = "Plot the responses of all variables to every shock"
+code = '''
+using MacroModelling, StatsPlots
+
+{{?dsgemodel=custom}} plot_irf({{custom}})  # every variable, every shock
+{{?dsgemodel!=custom}} plot_irf({{dsgemodel}})  # every variable, every shock
+'''
+
+[[actionGroups.actions]]
+id = "fevd_plot"
+label = "Variance Decomposition Plot"
+desc = "Plot the conditional forecast error variance decomposition over the horizon"
+code = '''
+using MacroModelling, StatsPlots
+
+{{?dsgemodel=custom}} plot_conditional_variance_decomposition({{custom}})  # share of each shock by horizon
+{{?dsgemodel!=custom}} plot_conditional_variance_decomposition({{dsgemodel}})  # share of each shock by horizon
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "steady_state"
+label = "Steady State"
+desc = "Compute and display all non-stochastic steady state values for the model variables"
+code = '''
+using MacroModelling
+
+{{?dsgemodel=custom}} dsge = {{custom}}  # your model object
+{{?dsgemodel!=custom}} dsge = {{dsgemodel}}  # model from the MacroModelling.jl model library
+ss = get_steady_state(dsge)  # dictionary of steady state values
+
+for (var, val_ss) in ss  # iterate over all variables
+    println(var, ": ", val_ss)
+end
+'''
+
+[[actionGroups.actions]]
+id = "blanchard_kahn"
+label = "Blanchard-Kahn Conditions"
+desc = "Verify that the number of explosive eigenvalues matches the number of forward-looking variables"
+code = '''
+using MacroModelling
+
+{{?dsgemodel=custom}} dsge = {{custom}}  # your model object
+{{?dsgemodel!=custom}} dsge = {{dsgemodel}}  # model from the MacroModelling.jl model library
+sol = get_solution(dsge)  # compute perturbation solution (order 1)
+
+n_fwd = length(get_variables(dsge, filter = :forward_looking))  # number of forward-looking variables
+n_exp = sum(abs.(get_eigenvalues(dsge)) .> 1)  # eigenvalues outside unit circle
+
+println("Forward-looking: ", n_fwd)  # must equal explosive eigenvalues for BK
+println("Explosive eigen: ", n_exp)  # if equal: unique stable solution exists
+'''
+
+[[actionGroups.actions]]
+id = "model_acf"
+label = "Model-Implied ACF"
+desc = "Theoretical autocorrelation function from the solved model at 1st order"
+code = '''
+using MacroModelling
+
+{{?dsgemodel=custom}} dsge = {{custom}}  # your model object
+{{?dsgemodel!=custom}} dsge = {{dsgemodel}}  # model from the MacroModelling.jl model library
+autocov = get_autocorrelation(dsge, order = 1)  # model-implied ACF at first order
+
+vars = get_variables(dsge)  # list of model variables
+for v in vars[1:min(3, end)]  # print ACF for first 3 variables
+    println(v, ": ", autocov[v])
+end
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "simulate"
+label = "Simulate"
+desc = "Simulate the model forward for 100 periods with random shocks"
+code = '''
+using MacroModelling, StatsPlots
+
+{{?dsgemodel=custom}} dsge = {{custom}}  # your model object
+{{?dsgemodel!=custom}} dsge = {{dsgemodel}}  # model from the MacroModelling.jl model library
+sim = simulate(dsge, periods = 100)  # variables x periods x 1 draw
+
+plot_simulations(dsge, periods = 100)  # plot a simulated path of every variable
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "order_compare"
+label = "First vs Second Order"
+desc = "Compare model-implied standard deviations under first- and second-order perturbation"
+code = '''
+using MacroModelling
+
+{{?dsgemodel=custom}} dsge = {{custom}}  # your model object
+{{?dsgemodel!=custom}} dsge = {{dsgemodel}}  # model from the MacroModelling.jl model library
+sd1 = get_standard_deviation(dsge, algorithm = :first_order)  # linear approximation
+sd2 = get_standard_deviation(dsge, algorithm = :pruned_second_order)  # captures nonlinear effects
+
+println("First order:  ", sd1)
+println("Second order: ", sd2)
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "variance_decomp"
+label = "Variance Decomposition"
+desc = "Fraction of each variable variance explained by each structural shock"
+code = '''
+using MacroModelling
+
+{{?dsgemodel=custom}} dsge = {{custom}}  # your model object
+{{?dsgemodel!=custom}} dsge = {{dsgemodel}}  # model from the MacroModelling.jl model library
+var_dec = get_variance_decomposition(dsge, order = {{order}})  # rows: variables; columns: shocks
+
+vars   = get_variables(dsge)  # variable names
+shocks = get_shocks(dsge)  # shock names
+
+for (i, v) in enumerate(vars)  # print share per shock for each variable
+    println(v, ": ", round.(var_dec[i, :], digits=3))
+end
+'''
+
+[[actionGroups.actions]]
+id = "historical_decomp"
+label = "Historical Decomposition"
+desc = "Contribution of each structural shock to historical fluctuations around steady state"
+code = '''
+using MacroModelling
+
+{{?dsgemodel=custom}} dsge = {{custom}}  # your model object
+{{?dsgemodel!=custom}} dsge = {{dsgemodel}}  # model from the MacroModelling.jl model library
+hist_dec = get_historical_decomposition(dsge, {{data}}, order = 1)  # T x variables x shocks array
+
+shocks = get_shocks(dsge)  # shock names
+hist_dec[end, 1, :]  # shock contributions to first variable in last period
+'''
+
+[[actionGroups.actions]]
+id = "cond_forecast"
+label = "Conditional Forecast"
+desc = "Model-consistent forecast conditional on a user-specified path for observable variables"
+code = '''
+using MacroModelling
+
+{{?dsgemodel=custom}} dsge = {{custom}}  # your model object
+{{?dsgemodel!=custom}} dsge = {{dsgemodel}}  # model from the MacroModelling.jl model library
+horizon = 8  # forecast horizon in periods
+
+fc = get_forecast(dsge, {{data}}, horizon = horizon)  # unconditional model forecast
+
+get_variables(dsge)  # list of variables available in the forecast
+'''
