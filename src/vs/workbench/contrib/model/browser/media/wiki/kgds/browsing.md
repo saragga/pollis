@@ -43,6 +43,5 @@ The **Explore** pane builds these queries for you: pick chips under **Task** and
 `ref`, `title`, `subtitle`, `ownerName`, `licenseName`, `totalBytes`, `voteCount`, `downloadCount`, `usabilityRating`, `lastUpdated`, `tags`.
 
 ## See Also
-
-- Choosing a Dataset — turning a search into a decision
-- Downloading & Loading — fetching the files you found
+- [Choosing a Dataset](choosing-a-dataset.md) — turning a search into a decision
+- [Downloading & Loading](downloading-loading.md) — fetching the files you found

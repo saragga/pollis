@@ -30,3 +30,6 @@ For a forecast ribbon (see [Ribbon Plot](ribbon.md)):
 ## Caveats
 
 A plot describes the *sample*, not the *population*. Apparent patterns can arise by chance, especially in short series. Treat the plot as a generator of hypotheses to be confirmed with formal tools, not as proof.
+
+## See Also
+- [Diagnostics](diagnostics.md) · [Decision Guide](decision-guide.md) · [Overview](overview.md)

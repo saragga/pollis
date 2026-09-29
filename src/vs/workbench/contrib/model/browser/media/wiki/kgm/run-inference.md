@@ -102,13 +102,13 @@ println("Image–text similarity: ", round(sim, digits=4))
 ## Tabular — Classification
 
 ```julia
-using ONNX, DataFrames, CSV
+using ONNX, CSV, Tables
 
 model = ONNX.load("xgboost-classifier.onnx")
 
-df   = CSV.read("data.csv", DataFrame)
-X    = Float32.(Matrix(df[:, 1:end-1]))   # (n_samples, n_features)
-out  = model(X')                           # ONNX expects (n_features, n_samples)
+tbl  = CSV.File("data.csv")
+X    = Float32.(Tables.matrix(tbl)[:, 1:end-1])   # (n_samples, n_features)
+out  = model(transpose(X))                         # ONNX expects (n_features, n_samples)
 
 probs = out["probabilities"]               # (n_classes, n_samples)
 preds = vec(argmax(probs, dims=1))        # predicted class per sample
@@ -163,3 +163,6 @@ input_gpu = CuArray(preprocess_image("photo.jpg"))
 out_gpu   = model_gpu(input_gpu)
 logits    = Array(out_gpu["output"])     # bring results back to CPU
 ```
+
+## See Also
+- [Download & Load](download-load.md) · [Flux.jl](flux-jl.md) · [ONNX.jl](onnx-jl.md)

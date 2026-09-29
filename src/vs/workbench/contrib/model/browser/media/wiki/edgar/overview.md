@@ -1,4 +1,4 @@
-# US SEC EDGAR — Overview
+# Overview
 
 Every public company in the United States files its disclosures with the SEC through **EDGAR**. Since 2009 the financial statements in those filings are tagged in **XBRL** (eXtensible Business Reporting Language), which is what makes them machine-readable. The SEC publishes this data through open JSON REST APIs at `data.sec.gov`.
 
@@ -32,3 +32,6 @@ Companies are keyed by **CIK** (Central Index Key), an integer. In the `data.sec
 - **FRED** (`FredData.jl`) — aggregate macroeconomic series, by series ID.
 
 The **Compare** link in the Concept Map cross-references the two.
+
+## See Also
+- [Factsheet](factsheet.md) · [Finding a Company](finding-a-company.md) · [Search Modes](search-modes.md)

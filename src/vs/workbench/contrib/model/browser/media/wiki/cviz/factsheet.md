@@ -19,3 +19,6 @@
 ## What It Is Not
 
 These are descriptive plots. They do not test hypotheses or estimate models. For formal distribution comparison use the Distribution Comparison webview; for multivariate structure use Multivariate Visualisation.
+
+## See Also
+- [Overview](overview.md) · [Decision Guide](decision-guide.md) · [Diagnostics](diagnostics.md)

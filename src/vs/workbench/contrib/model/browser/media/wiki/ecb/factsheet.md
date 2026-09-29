@@ -44,4 +44,7 @@ The CSV is flat; the columns you usually want are:
 | `OBS_VALUE` | The observed value |
 | `TITLE` / `UNIT` | Human-readable series title and unit |
 
-> `CSV.File` is Tables.jl-compatible, so you can pipe it straight into the container you prefer: `DataFrame(tbl)`, a `TimeArray`, or anything else that accepts a Tables.jl source.
+> `CSV.File` is Tables.jl-compatible, so you can pipe it straight into the container you prefer: `Tables.columntable(tbl)`, a `TimeArray`, or anything else that accepts a Tables.jl source.
+
+## See Also
+- [Overview](overview.md) · [Query Options](query-options.md) · [Accessing Data](accessing-data.md)

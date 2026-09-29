@@ -24,3 +24,6 @@
 | Network | High betweenness | Bridge / bottleneck |
 | Tree | Lopsided subtree | Imbalanced hierarchy |
 | Choropleth | Colour clustering | Spatial autocorrelation |
+
+## See Also
+- [Assumptions](assumptions.md) · [Interpretation](interpretation.md) · [Decision Guide](decision-guide.md)

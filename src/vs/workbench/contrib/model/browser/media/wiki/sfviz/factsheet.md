@@ -19,3 +19,6 @@
 
 ## What It Is Not
 These are for *continuous fields*, not discrete points, categories, or networks — for those use the other Visualise webviews.
+
+## See Also
+- [Overview](overview.md) · [Decision Guide](decision-guide.md) · [Diagnostics](diagnostics.md)

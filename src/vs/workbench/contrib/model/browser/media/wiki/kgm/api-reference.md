@@ -1,4 +1,4 @@
-# Kaggle Models — API Reference
+# API Reference
 
 The Kaggle REST API is available at `https://www.kaggle.com/api/v1/`. Public model metadata can be browsed without authentication; downloading files and accessing private models requires an API key. See the **Authentication** wiki for key setup.
 
@@ -212,3 +212,6 @@ end
 | 403 | Access denied (private model or key mismatch) |
 | 404 | Model, instance, or version does not exist |
 | 429 | Rate limit exceeded — back off and retry |
+
+## See Also
+- [Download & Load](download-load.md) · [Run Inference](run-inference.md) · [Kaggle API Key](api-key.md)

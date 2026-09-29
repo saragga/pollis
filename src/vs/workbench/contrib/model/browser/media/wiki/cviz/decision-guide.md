@@ -27,3 +27,6 @@
 - **Try several histogram bin widths** before trusting a feature.
 - **Use violins when shape matters**, boxes when it does not.
 - For very small groups, prefer a box plot (or show the raw points) over a violin.
+
+## See Also
+- [Overview](overview.md) · [Assumptions](assumptions.md) · [Interpretation](interpretation.md)

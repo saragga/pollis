@@ -30,3 +30,6 @@ What to look for, and what it implies.
 | Nightingale | One huge sector | Area over-states magnitude |
 | Waterfall | End ≠ running total | Sign/data error |
 | Sankey | Inflow ≠ outflow | Conservation broken |
+
+## See Also
+- [Assumptions](assumptions.md) · [Interpretation](interpretation.md) · [Decision Guide](decision-guide.md)

@@ -126,3 +126,6 @@ FROM ./gemma-converted.gguf
 PARAMETER temperature 0.7
 SYSTEM "You are a helpful Julia data-science assistant."
 ```
+
+## See Also
+- [Access Tokens](access-tokens.md) · [Run Inference](run-inference.md) · [Choosing a Model](choosing-a-model.md)

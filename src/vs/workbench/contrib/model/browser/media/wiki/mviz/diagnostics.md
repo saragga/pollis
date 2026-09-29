@@ -27,3 +27,6 @@
 | Parallel | X between axes | Negative correlation |
 | Bubble | Size gradient | Third variable structure |
 | Heatmap | Colour block | Correlated variable group |
+
+## See Also
+- [Assumptions](assumptions.md) · [Interpretation](interpretation.md) · [Decision Guide](decision-guide.md)

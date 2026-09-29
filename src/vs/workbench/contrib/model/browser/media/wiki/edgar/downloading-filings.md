@@ -1,4 +1,4 @@
-# US SEC EDGAR — Downloading Filings
+# Downloading Filings
 
 The `data.sec.gov` JSON APIs give you **metadata and XBRL facts**. They do **not** give you the filing **documents** themselves — the full 10-K/10-Q/8-K text and HTML. For that, the right tool is [**ScrapeSEC.jl**](https://github.com/tylerjthomas9/ScrapeSEC.jl), a registered, maintained package that downloads filings in bulk from EDGAR's archive.
 
@@ -66,3 +66,6 @@ println("https://www.sec.gov/Archives/edgar/data/$cik/$acc/$doc")
 | Raw filing documents in bulk | `ScrapeSEC.jl` |
 
 > ScrapeSEC.jl downloads from `www.sec.gov`, which is also subject to the SEC's fair-access policy — keep request volume reasonable.
+
+## See Also
+- [Search Modes](search-modes.md) · [Finding a Company](finding-a-company.md) · [Accessing Data](accessing-data.md)

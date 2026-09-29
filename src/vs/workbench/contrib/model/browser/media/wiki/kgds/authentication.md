@@ -26,6 +26,5 @@ auth = ["Authorization" => "Basic " * base64encode(ENV["KAGGLE_USERNAME"] * ":" 
 > **Send to Editor / Notebook do not inject the credentials.** Those persist to disk, so you must set the environment variables in that session yourself.
 
 ## See Also
-
-- Factsheet — endpoints and the Julia stack
-- Downloading & Loading — where the token is needed
+- [Factsheet](factsheet.md) — endpoints and the Julia stack
+- [Downloading & Loading](downloading-loading.md) — where the token is needed

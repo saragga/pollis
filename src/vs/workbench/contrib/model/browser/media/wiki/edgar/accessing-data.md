@@ -1,4 +1,4 @@
-# US SEC EDGAR — Accessing Data
+# Accessing Data
 
 The core recipe: fetch JSON from `data.sec.gov` with the **mandatory `User-Agent` header**, no API key, respecting the rate limit.
 
@@ -64,8 +64,11 @@ Stop at plain Julia and pick your container. Build a `Vector` of `NamedTuple`s (
 
 ```julia
 rows = [(; end_date = o.end, form = o.form, val = o.val) for o in concept.units.USD]
-# using DataFrames; DataFrame(rows)
+# using Tables;     Tables.columntable(rows)
 # using TimeSeries;  TimeArray(...)
 ```
 
 > Hard-coding the `User-Agent` in a saved file is fine — it is not a secret. It simply tells the SEC who is calling.
+
+## See Also
+- [XBRL Financial Data](xbrl-financial-data.md) · [Finding a Company](finding-a-company.md) · [Downloading Filings](downloading-filings.md)

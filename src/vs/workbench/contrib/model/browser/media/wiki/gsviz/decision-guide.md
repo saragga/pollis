@@ -16,3 +16,6 @@
 - **Normalise choropleth values** (rates / per-capita) so the map shows the variable, not population or area.
 - **State the colour classification** on a choropleth (quantile vs equal-interval changes the pattern).
 - Beyond a few hundred nodes, **filter or aggregate** rather than drawing every node.
+
+## See Also
+- [Overview](overview.md) · [Assumptions](assumptions.md) · [Interpretation](interpretation.md)

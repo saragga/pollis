@@ -1,4 +1,4 @@
-# Excel Workbook — Diagnostics
+# Diagnostics
 
 ## Common Errors
 
@@ -40,3 +40,6 @@ Formatting requires `openxlsx` with `mode="w"` or `mode="rw"`. Using `writetable
 
 ### Formula shows `#NAME?` in Excel
 The formula string passed to `setFormula` contains a Julia string escape or a non-ASCII character. Check for accidental backslashes or Unicode in the formula string.
+
+## See Also
+- [Constraints](constraints.md) · [Interpretation](interpretation.md) · [Factsheet](factsheet.md)

@@ -11,3 +11,6 @@ A tree reads top-down: the **root** is the origin, **depth** is distance from it
 
 ## Caveat
 All three encode *structure*, which the eye reads approximately. They are superb for revealing pattern and exception, weaker for exact values — annotate or pair with a table when precise numbers matter.
+
+## See Also
+- [Diagnostics](diagnostics.md) · [Decision Guide](decision-guide.md) · [Overview](overview.md)

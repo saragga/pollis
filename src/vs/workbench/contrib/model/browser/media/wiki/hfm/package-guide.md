@@ -197,3 +197,6 @@ path = HuggingFaceHub.hf_hub_download(
 - Weights already cached, working offline → set `HF_HUB_OFFLINE=1` and load normally
 
 Both packages share `~/.cache/huggingface/hub/` — downloading with one makes files available to the other automatically.
+
+## See Also
+- [Transformers.jl Reference](transformers-jl.md) · [ONNX.jl](onnx-jl.md) · [Choosing a Model](choosing-a-model.md)

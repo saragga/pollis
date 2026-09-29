@@ -158,3 +158,6 @@ top5   = sortperm(logits, rev=true)[1:5]
 println("Top-5 class indices: ", top5)
 println("Top-5 scores:        ", round.(logits[top5], digits=3))
 ```
+
+## See Also
+- [Flux.jl](flux-jl.md) · [Package Guide](package-guide.md) · [Run Inference](run-inference.md)

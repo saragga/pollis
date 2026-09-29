@@ -1,4 +1,4 @@
-# ECB Data Portal — Finding Series
+# Finding Series
 
 To download a series you need its **dataflow** and its **key**. This page covers how to find them.
 
@@ -50,3 +50,6 @@ A key fixes every dimension of the dataflow, dot-separated. For `EXR/D.USD.EUR.S
 - Swap one dimension to get a sibling series: change `USD` to `GBP` in an `EXR` key, or `M30` to `M10` (M1) in a `BSI` key.
 - For HICP by country, replace the reference area `U2` (euro area) with a country code such as `DE`, `FR`, or `IT`.
 - The **Next Steps** buttons in this webview pre-fill working keys for the most-used series in each topic.
+
+## See Also
+- [Accessing Data](accessing-data.md) · [Query Options](query-options.md) · [Factsheet](factsheet.md)

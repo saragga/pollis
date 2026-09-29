@@ -1,4 +1,4 @@
-# FRED — Transformations
+# Transformations
 
 FRED can transform a series **server-side** before it reaches Julia, so you rarely need to compute growth rates or resample by hand. Pass the `units` and `frequency` keywords to `get_data`.
 
@@ -53,3 +53,6 @@ indpro = get_data(f, "INDPRO"; observation_start="2000-01-01")
 ```
 
 > Transforms are applied by FRED, not by FredData.jl, so the returned `units` field reflects the transform you requested.
+
+## See Also
+- [Interpretation](interpretation.md) · [Finding Series](finding-series.md) · [Factsheet](factsheet.md)

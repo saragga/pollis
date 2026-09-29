@@ -106,3 +106,6 @@ Before downloading a Kaggle model:
 - [ ] Have I read the overview for intended use and limitations?
 - [ ] Is the licence compatible with my use (academic / commercial)?
 - [ ] Is the opset version ≤ 17? (ONNX.jl supports opset 17 and below)
+
+## See Also
+- [Package Guide](package-guide.md) · [Download & Load](download-load.md) · [Run Inference](run-inference.md)

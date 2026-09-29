@@ -21,7 +21,6 @@ This webview exposes two complementary ways to work with a dataset:
 Hugging Face automatically converts every dataset to **Parquet** and serves the shards over the API. This means you can stream or download the raw data without the Python stack at all — list the shards, fetch one, and read it through the `Tables.jl` interface with `Parquet2.jl`.
 
 ## See Also
-
-- Browsing the Hub — search, sort, and filter the catalogue
-- Loading Datasets — `load_dataset` and `with_format("julia")`
-- Dataset Files — the Parquet shards and how to read them
+- [Browsing the Hub](browsing-the-hub.md) — search, sort, and filter the catalogue
+- [Loading Datasets](loading-datasets.md) — `load_dataset` and `with_format("julia")`
+- [Dataset Files](dataset-files.md) — the Parquet shards and how to read them

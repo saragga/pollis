@@ -30,3 +30,6 @@ What to look for in each plot, and what it implies.
 | Histogram | Two peaks | Mixed populations |
 | Box | Off-centre median | Skew |
 | Violin | Extra bulge | Hidden mode |
+
+## See Also
+- [Assumptions](assumptions.md) · [Interpretation](interpretation.md) · [Decision Guide](decision-guide.md)

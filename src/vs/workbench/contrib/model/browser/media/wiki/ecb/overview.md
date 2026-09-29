@@ -1,4 +1,4 @@
-# ECB Data Portal — Overview
+# Overview
 
 The [ECB Data Portal](https://data.ecb.europa.eu) is the European Central Bank's public statistics service. It exposes its data through an **SDMX 2.1 REST API** at `https://data-api.ecb.europa.eu/service/`. SDMX (Statistical Data and Metadata eXchange) is the ISO standard used by central banks and statistical agencies worldwide, so the same request style works for the BIS, Eurostat, the IMF, and others.
 
@@ -26,3 +26,6 @@ The API can return SDMX-ML (XML), SDMX-JSON, or SDMX-CSV. **SDMX-CSV (`format=cs
 - **FRED** (`FredData.jl`) — the equivalent for U.S. series; a dedicated package and an API key.
 
 The **Compare** link in the Concept Map cross-references the two.
+
+## See Also
+- [Factsheet](factsheet.md) · [Finding Series](finding-series.md) · [Accessing Data](accessing-data.md)

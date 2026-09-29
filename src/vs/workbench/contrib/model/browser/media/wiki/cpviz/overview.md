@@ -19,3 +19,6 @@ Nodes connected by **bands whose width is proportional to flow**, conserving qua
 
 ## Why It Matters
 Composition and flow are everywhere — budgets, cohorts, energy, web funnels. Encoding them as area or band width communicates proportion far more directly than a table of numbers.
+
+## See Also
+- [Factsheet](factsheet.md) · [Decision Guide](decision-guide.md) · [Interpretation](interpretation.md)

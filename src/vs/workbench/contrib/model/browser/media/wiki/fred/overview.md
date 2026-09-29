@@ -1,4 +1,4 @@
-# FRED — Overview
+# Overview
 
 **FredData.jl** brings the [FRED](https://fred.stlouisfed.org) API into Julia. FRED, maintained by the Federal Reserve Bank of St. Louis, aggregates 800,000+ economic time series from national and international sources. Each series has a short **series ID** (e.g. `GDPC1`, `UNRATE`, `CPIAUCSL`); you download it by that ID.
 
@@ -34,3 +34,6 @@ println(gdp.data)
 - **Alpha Vantage** (`AlphaVantage.jl`) — market data (equities, FX, crypto) plus a smaller set of economic indicators.
 
 Use whichever fits your data needs; the **Compare** link in the Concept Map cross-references the two.
+
+## See Also
+- [Factsheet](factsheet.md) · [Authentication](authentication.md) · [Finding Series](finding-series.md)

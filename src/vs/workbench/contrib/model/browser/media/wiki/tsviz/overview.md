@@ -19,3 +19,6 @@ A **ribbon** draws a shaded band around a central line, typically used to displa
 ## Why It Matters
 
 Most time series pathologies — non-stationarity, seasonality, heteroskedasticity, outliers, missing stretches — are *visible*. A few minutes spent plotting the data prevents hours spent debugging a model that was never appropriate for it.
+
+## See Also
+- [Factsheet](factsheet.md) · [Decision Guide](decision-guide.md) · [Interpretation](interpretation.md)

@@ -16,3 +16,6 @@ Visualises a full **3D scalar field** `f(x, y, z)` as nested isosurfaces or a **
 
 ## Why It Matters
 Fields are everywhere in science and engineering — potentials, temperatures, densities, terrain, simulation output. These plots turn a grid of numbers into structure the eye can read.
+
+## See Also
+- [Factsheet](factsheet.md) · [Decision Guide](decision-guide.md) · [Interpretation](interpretation.md)

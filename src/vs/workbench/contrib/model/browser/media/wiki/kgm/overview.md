@@ -1,4 +1,4 @@
-# Kaggle Models — Overview
+# Overview
 
 The Kaggle Models Hub is a **model-sharing platform** built around competition-proven, production-ready checkpoints. Unlike Hugging Face, which focuses on research-grade weights in framework-native formats, Kaggle emphasises deployable snapshots — often in ONNX format — that have been validated on real benchmark tasks.
 
@@ -66,3 +66,6 @@ const MODEL_REF = "google/gemma/transformers/2b-it/3"
 | Competition context | Winning pipelines available | General research |
 
 For most NLP and vision tasks, start with Hugging Face for breadth, and switch to Kaggle when you need a competition-proven ONNX checkpoint or a specific Google/Keras first-party model.
+
+## See Also
+- [Factsheet](factsheet.md) · [Choosing a Model](choosing-a-model.md) · [Download & Load](download-load.md)

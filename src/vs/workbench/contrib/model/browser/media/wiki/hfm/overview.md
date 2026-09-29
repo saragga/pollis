@@ -1,4 +1,4 @@
-# Hugging Face Models — Overview
+# Overview
 
 The Hugging Face Hub is a **model-sharing platform** built around a simple idea: a Git repository per model, with a standardised card, weights, tokenizer config, and task tag. Any framework — PyTorch, JAX, TensorFlow, or Julia — can pull weights from it.
 
@@ -57,3 +57,6 @@ ENV["HF_TOKEN"] = "hf_..."   # or set it in your shell profile
 ```
 
 Private models in your own organisation are accessed the same way, provided your token has the right permissions.
+
+## See Also
+- [Factsheet](factsheet.md) · [Choosing a Model](choosing-a-model.md) · [Download & Load](download-load.md)

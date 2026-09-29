@@ -22,3 +22,6 @@
 | Closed loop | Local extremum |
 | Saddle pattern | Pass between basins |
 | Jagged isolines | Grid too coarse |
+
+## See Also
+- [Assumptions](assumptions.md) · [Interpretation](interpretation.md) · [Decision Guide](decision-guide.md)

@@ -16,3 +16,6 @@ A matrix of values shown as a colour grid — ideal for **correlation matrices**
 
 ## Why It Matters
 Real problems are rarely two-dimensional. These plots let the eye find clusters, gradients, and correlations that no pair of axes could show alone.
+
+## See Also
+- [Factsheet](factsheet.md) · [Decision Guide](decision-guide.md) · [Interpretation](interpretation.md)

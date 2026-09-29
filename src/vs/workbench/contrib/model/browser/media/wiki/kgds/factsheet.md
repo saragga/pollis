@@ -24,7 +24,6 @@
 - **Authenticated download:** with a Kaggle token in `KAGGLE_USERNAME` / `KAGGLE_KEY`, download the `.zip`, unpack it with `ZipFile.jl`, and read the CSVs with `CSV.jl` + `Tables.jl` (no DataFrames.jl).
 
 ## See Also
-
-- Overview — what Kaggle Datasets are and how they are organised
-- Authentication — creating and using a Kaggle API token
-- Downloading & Loading — the download → unzip → read recipe
+- [Overview](overview.md) — what Kaggle Datasets are and how they are organised
+- [Authentication](authentication.md) — creating and using a Kaggle API token
+- [Downloading & Loading](downloading-loading.md) — the download → unzip → read recipe

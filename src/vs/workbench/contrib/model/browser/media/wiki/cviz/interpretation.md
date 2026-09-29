@@ -14,3 +14,6 @@ A box plot gives robust **summary** statistics; a violin shows the **full shape*
 
 ## Caveat
 All four describe the *sample*. Apparent features in small samples can be noise. Treat them as hypotheses to confirm with formal tools.
+
+## See Also
+- [Diagnostics](diagnostics.md) · [Decision Guide](decision-guide.md) · [Overview](overview.md)

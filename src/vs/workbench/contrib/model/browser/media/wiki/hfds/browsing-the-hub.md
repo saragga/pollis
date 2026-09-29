@@ -49,6 +49,5 @@ get_json(url)
 Combine multiple `filter=` parameters to AND them together.
 
 ## See Also
-
-- Dataset Info — full metadata for a single dataset
-- Choosing a Dataset — turning a search into a decision
+- [Loading Datasets](loading-datasets.md) — `load_dataset` and `with_format("julia")`
+- [Choosing a Dataset](choosing-a-dataset.md) — turning a search into a decision

@@ -18,3 +18,6 @@ Observations are treated as an i.i.d. sample. Autocorrelated (time-series) data 
 
 ## Continuity
 QQ and ECDF assume an underlying continuous variable. Heavily discretised or tied data produces visible steps and staircase artefacts.
+
+## See Also
+- [Diagnostics](diagnostics.md) · [Decision Guide](decision-guide.md) · [Interpretation](interpretation.md)

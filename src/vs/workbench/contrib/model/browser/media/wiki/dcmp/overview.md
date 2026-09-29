@@ -16,3 +16,6 @@ A **scatter-plot matrix** of every variable pair, with densities on the diagonal
 
 ## Why It Matters
 Means and variances hide a lot. Two samples can share a mean yet differ in skew, tails, or modality. These plots expose those differences directly.
+
+## See Also
+- [Factsheet](factsheet.md) · [Decision Guide](decision-guide.md) · [Interpretation](interpretation.md)

@@ -17,3 +17,6 @@ The **line of bars** tells a story: start, each gain or loss, end. Bars above th
 
 ## Caveat
 All of these rely on **area or angle** perception, which the eye reads approximately. They are excellent for communicating structure and proportion, weaker for exact values — annotate with numbers when precision matters.
+
+## See Also
+- [Diagnostics](diagnostics.md) · [Decision Guide](decision-guide.md) · [Overview](overview.md)

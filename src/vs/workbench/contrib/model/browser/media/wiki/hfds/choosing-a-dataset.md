@@ -32,6 +32,5 @@ Confirm the dataset provides the splits you expect. If it ships only a `train` s
 4. Load a small slice first to sanity-check the fields.
 
 ## See Also
-
-- Browsing the Hub — search and filter syntax
-- Dataset Info — reading metadata for one dataset
+- [Browsing the Hub](browsing-the-hub.md) — search and filter syntax
+- [Loading Datasets](loading-datasets.md) — `load_dataset` and `with_format("julia")`

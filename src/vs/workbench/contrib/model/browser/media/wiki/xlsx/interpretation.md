@@ -1,4 +1,4 @@
-# Excel Workbook — Interpretation
+# Interpretation
 
 ## Workbook Structure
 An `.xlsx` file is a ZIP archive of XML files. The key components are:
@@ -25,3 +25,6 @@ Rules are evaluated by Excel, not by XLSX.jl. The rule string uses Excel syntax 
 
 ## Named Ranges
 `addDefinedName` creates a workbook-scoped name that points to a cell or range. Downstream users can refer to it by name in formulas (`=TotalRevenue`) rather than by address (`=Sheet1!$A$3`), making the workbook robust to row/column insertions.
+
+## See Also
+- [Diagnostics](diagnostics.md) · [Overview](overview.md) · [Constraints](constraints.md)

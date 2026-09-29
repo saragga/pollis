@@ -58,6 +58,5 @@ ENV["JULIA_CONDAPKG_OPENSSL_VERSION"] = true
 ```
 
 ## See Also
-
-- Dataset Files — read the Parquet shards without Python
-- HuggingFaceDatasets.jl — full package reference
+- [Dataset Files](dataset-files.md) — read the Parquet shards without Python
+- [HuggingFaceDatasets.jl](huggingfacedatasets-jl.md) — full package reference

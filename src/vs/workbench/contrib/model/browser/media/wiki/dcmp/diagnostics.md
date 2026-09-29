@@ -27,3 +27,6 @@
 | QQ | Curvature | Skew |
 | ECDF | Horizontal shift | Location difference |
 | Correlogram | Tilted panel | Correlated pair |
+
+## See Also
+- [Assumptions](assumptions.md) · [Interpretation](interpretation.md) · [Decision Guide](decision-guide.md)

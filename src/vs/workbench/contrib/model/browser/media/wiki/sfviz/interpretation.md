@@ -14,3 +14,6 @@ Direct volume rendering accumulates the field along each viewing ray, so **dense
 
 ## Caveat
 All four encode value through **position, colour, or opacity**, which the eye reads approximately. They are excellent for revealing structure (peaks, shells, gradients), weaker for reading exact numbers — annotate or add a colour bar when precision matters.
+
+## See Also
+- [Diagnostics](diagnostics.md) · [Decision Guide](decision-guide.md) · [Overview](overview.md)

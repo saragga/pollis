@@ -26,7 +26,6 @@ The **Hugging Face Hub** hosts hundreds of thousands of machine-learning dataset
 - **HuggingFaceDatasets.jl:** `load_dataset("imdb", split = "train")` wraps the Python `datasets` library through PythonCall; `.with_format("julia")` returns native Julia objects.
 
 ## See Also
-
-- Overview — what the Hub is and how datasets are organised
-- Authentication — tokens, gated datasets, and Secret Storage
-- Loading Datasets — `load_dataset`, splits, and indexing
+- [Overview](overview.md) — what the Hub is and how datasets are organised
+- [Authentication](authentication.md) — tokens, gated datasets, and Secret Storage
+- [Loading Datasets](loading-datasets.md) — `load_dataset`, splits, and indexing

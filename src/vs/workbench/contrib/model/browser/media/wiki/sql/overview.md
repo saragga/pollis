@@ -1,4 +1,4 @@
-# SQL Databases — Overview
+# Overview
 
 The panel writes Julia code that talks to a DuckDB database through **DBInterface.jl**, the common interface of Julia's SQL packages. Every tab starts the same way:
 

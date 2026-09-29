@@ -29,6 +29,5 @@ auth = haskey(ENV, "HUGGING_FACE_HUB_TOKEN") ? ["Authorization" => "Bearer $(ENV
 > **Send to Editor / Notebook do not inject the token.** Those persist to disk, so you must set the environment variable in that session yourself.
 
 ## See Also
-
-- Factsheet — endpoints and the Julia stack
-- Choosing a Dataset — licences and gated access
+- [Factsheet](factsheet.md) — endpoints and the Julia stack
+- [Choosing a Dataset](choosing-a-dataset.md) — licences and gated access

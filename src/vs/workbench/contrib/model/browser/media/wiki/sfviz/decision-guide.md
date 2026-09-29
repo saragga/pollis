@@ -19,3 +19,6 @@
 - **Use `:viridis`** (perceptually uniform); avoid rainbow colormaps that invent banding.
 - **Add transparency** to 3D contours and volumes so the interior is visible.
 - **Interpolate scattered data onto a grid** before contouring or surfacing.
+
+## See Also
+- [Overview](overview.md) · [Assumptions](assumptions.md) · [Interpretation](interpretation.md)

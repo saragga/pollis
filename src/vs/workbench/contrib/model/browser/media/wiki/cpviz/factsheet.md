@@ -18,3 +18,6 @@ These plots show **composition, flow, and magnitude across categories** rather t
 
 ## What It Is Not
 These are not for raw numeric distributions or two-variable relationships — use the Core Statistical Plots (scatter, histogram, box, violin) for that.
+
+## See Also
+- [Overview](overview.md) · [Decision Guide](decision-guide.md) · [Diagnostics](diagnostics.md)

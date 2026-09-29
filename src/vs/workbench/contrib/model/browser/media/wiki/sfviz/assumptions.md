@@ -16,3 +16,6 @@ Grid resolution controls smoothness and cost. Too coarse and contours look jagge
 ## Colour and Levels
 - Choose **contour levels** deliberately (linear, log, or custom); the chosen levels shape the story.
 - For signed fields use a **diverging** colormap centred at zero; for magnitudes a **sequential** one.
+
+## See Also
+- [Diagnostics](diagnostics.md) · [Decision Guide](decision-guide.md) · [Interpretation](interpretation.md)

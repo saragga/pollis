@@ -15,3 +15,6 @@ Readers judge **area** less accurately than length. These plots trade precision 
 
 ## Cardinality
 All of these degrade with too many categories: mosaics and treemaps become unreadable past ~10–15 tiles, sankeys past a handful of nodes per stage, nightingale roses past ~12 sectors. Aggregate small categories into an "Other" bucket first.
+
+## See Also
+- [Diagnostics](diagnostics.md) · [Decision Guide](decision-guide.md) · [Interpretation](interpretation.md)

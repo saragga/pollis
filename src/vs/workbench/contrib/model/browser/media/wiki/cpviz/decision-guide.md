@@ -19,3 +19,6 @@
 - **Keep quantities non-negative**; these encodings break for negatives.
 - For exact comparison, a plain **bar chart** often beats an area encoding — use these for structure, not precision.
 - **Annotate with values** where the reader needs the number, not just the proportion.
+
+## See Also
+- [Overview](overview.md) · [Assumptions](assumptions.md) · [Interpretation](interpretation.md)

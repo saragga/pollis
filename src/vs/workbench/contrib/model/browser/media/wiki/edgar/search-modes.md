@@ -1,4 +1,4 @@
-# US SEC EDGAR — Search Modes
+# Search Modes
 
 EDGAR offers several ways to *find* filings before you pull their data. This page covers the three you can drive from Julia.
 
@@ -48,3 +48,6 @@ https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0000320193&type=1
 - **Don't know the company, have a phrase or topic** → Full-Text Search.
 - **Have a ticker, need the CIK** → `company_tickers.json`.
 - **Want the raw filing documents in bulk** → ScrapeSEC.jl (see Downloading Filings).
+
+## See Also
+- [Finding a Company](finding-a-company.md) · [Downloading Filings](downloading-filings.md) · [Overview](overview.md)

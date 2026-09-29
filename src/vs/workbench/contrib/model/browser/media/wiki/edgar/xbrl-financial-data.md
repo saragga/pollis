@@ -1,4 +1,4 @@
-# US SEC EDGAR — XBRL Financial Data
+# XBRL Financial Data
 
 Three endpoints expose the structured financial numbers tagged in filings. All return JSON and share the same `us-gaap` vocabulary.
 
@@ -57,3 +57,6 @@ Concept tags follow the us-gaap taxonomy. Common ones:
 | `CommonStockSharesOutstanding` | Shares outstanding |
 
 > Different companies tag the same economic figure with different concepts (e.g. the two revenue tags above). When comparing filers, check which tag each one actually uses — `companyfacts` lists them all.
+
+## See Also
+- [Accessing Data](accessing-data.md) · [Finding a Company](finding-a-company.md) · [Factsheet](factsheet.md)

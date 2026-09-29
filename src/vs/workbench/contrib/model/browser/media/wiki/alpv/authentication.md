@@ -1,4 +1,4 @@
-# Alpha Vantage — Authentication
+# Authentication
 
 Alpha Vantage requires a **free API key**. This page explains how to get one and how Pollis stores it.
 
@@ -38,3 +38,6 @@ Outside Pollis you can export the variable in your shell, or set the client key 
 client = AlphaVantage.GLOBAL[]
 client.key = "YOURKEY"
 ```
+
+## See Also
+- [Constraints](constraints.md) · [Diagnostics](diagnostics.md) · [Overview](overview.md)

@@ -58,6 +58,5 @@ run(`kaggle datasets download -d uciml/iris -p . --unzip`)
 ```
 
 ## See Also
-
-- Authentication — getting the token in place
-- Browsing the Catalogue — finding a dataset ref first
+- [Authentication](authentication.md) — getting the token in place
+- [Browsing the Catalogue](browsing.md) — finding a dataset ref first

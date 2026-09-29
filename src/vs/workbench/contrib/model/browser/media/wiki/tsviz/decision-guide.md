@@ -28,3 +28,6 @@ Which plot should you reach for? The choice depends on what you are trying to se
 - **Use a ribbon only when the band has a defined meaning** (e.g. a 95% interval). A decorative band misleads.
 - **Limit overlays** to a handful of series; beyond that, consider small multiples (faceting) instead of one crowded axis.
 - **Label the time axis** with real dates where available — integer indices hide seasonality.
+
+## See Also
+- [Overview](overview.md) · [Assumptions](assumptions.md) · [Interpretation](interpretation.md)

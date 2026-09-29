@@ -1,4 +1,4 @@
-# Yahoo Finance — Diagnostics
+# Diagnostics
 
 Common problems when downloading from Yahoo Finance and how to recognise them.
 
@@ -36,3 +36,6 @@ Prices default to exchange-local time. Pass `exchange_local_time=false` to conve
 **Symptom:** a `KeyError` when indexing a statement item.
 
 Available line items differ by company and statement. Inspect `keys(result)` first, then index the items that are present.
+
+## See Also
+- [Constraints](constraints.md) · [Interpretation](interpretation.md) · [Factsheet](factsheet.md)

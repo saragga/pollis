@@ -1,4 +1,4 @@
-# Alpha Vantage — Diagnostics
+# Diagnostics
 
 Common problems when calling Alpha Vantage and how to recognise them.
 
@@ -34,3 +34,6 @@ The endpoint requires premium access. Use a free-tier equivalent or upgrade your
 **Symptom:** an HTTP error or a parse failure.
 
 Transient network issues or a changed response shape. Retry; if it persists, check the Alpha Vantage status and the AlphaVantage.jl issue tracker.
+
+## See Also
+- [Authentication](authentication.md) · [Constraints](constraints.md) · [Interpretation](interpretation.md)

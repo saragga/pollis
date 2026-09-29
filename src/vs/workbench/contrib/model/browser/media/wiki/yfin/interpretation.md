@@ -1,4 +1,4 @@
-# Yahoo Finance — Interpretation
+# Interpretation
 
 How to read the data YFinance.jl returns.
 
@@ -31,3 +31,6 @@ Use **`adjclose`** for return and performance calculations — it removes the ar
 ## Search and News
 
 `get_symbols` returns candidate tickers for a name; `get_all_symbols(exchange)` lists every symbol on an exchange. `search_news` returns a news collection — read it with `titles`, `links`, and `timestamps`.
+
+## See Also
+- [Diagnostics](diagnostics.md) · [Decision Guide](decision-guide.md) · [Overview](overview.md)

@@ -137,3 +137,6 @@ Once downloaded, Kaggle models require no network connection. Simply keep the `.
 model = ONNX.load("/data/models/efficientnet-b0.onnx")
 out   = model(input)
 ```
+
+## See Also
+- [Kaggle API Key](api-key.md) · [Run Inference](run-inference.md) · [Choosing a Model](choosing-a-model.md)

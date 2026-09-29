@@ -50,3 +50,6 @@ Pkg.status(["Transformers", "HuggingFaceHub"])
 ## Architecture
 
 Julia code calls either **Transformers.jl** (`load_tokenizer` / `load_model`) or **HuggingFaceHub.jl** (`hf_hub_download` / `model_info`). Both packages communicate with the HF Hub over HTTPS and store downloaded files in `~/.cache/huggingface/hub/`. On subsequent calls the local cache is used directly, with no network request.
+
+## See Also
+- [Overview](overview.md) · [Package Guide](package-guide.md) · [API Reference](api-reference.md)

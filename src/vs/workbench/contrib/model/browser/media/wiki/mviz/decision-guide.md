@@ -18,3 +18,6 @@
 - **Map bubble value to area**, not radius.
 - **Diverging palette, centred at zero** for correlation heatmaps.
 - Beyond ~8 variables, reduce dimensions (PCA/UMAP) before plotting.
+
+## See Also
+- [Overview](overview.md) · [Assumptions](assumptions.md) · [Interpretation](interpretation.md)

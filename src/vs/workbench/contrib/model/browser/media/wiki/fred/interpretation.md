@@ -1,4 +1,4 @@
-# FRED — Interpretation
+# Interpretation
 
 `get_data` returns a `FredSeries`. This page explains its fields and a few economic conventions worth knowing before you read the numbers.
 
@@ -18,7 +18,7 @@ s.notes               # source notes and definitions
 s.data                # DataFrame: date, value (+ realtime columns)
 ```
 
-Most analysis works off `s.data`, a `DataFrame` with a `date` and a `value` column. The `realtime_start` / `realtime_end` columns describe the vintage (see below).
+Most analysis works off `s.data`, a `DataFrame` with a `date` and a `value` column. The `realtime_start` / `realtime_end` columns describe the vintage (see below). FredData.jl builds that table itself, so you never load DataFrames.jl: `Tables.columntable(s.data)` turns it into a NamedTuple of column vectors, and `s.data.date` / `s.data.value` give the columns directly.
 
 ## Seasonal Adjustment
 
@@ -38,3 +38,6 @@ A level (e.g. the CPI index) is rarely interesting on its own — the **change**
 ## Vintages and Revisions
 
 Many macro series are **revised** after first publication. FRED keeps every past **vintage**; ALFRED ("Archival FRED") lets you fetch the data *as it looked* on a given date via `vintage_dates`. This matters for backtesting: a model should only see the numbers that were actually available at decision time, not today's revised values.
+
+## See Also
+- [Transformations](transformations.md) · [Finding Series](finding-series.md) · [Factsheet](factsheet.md)

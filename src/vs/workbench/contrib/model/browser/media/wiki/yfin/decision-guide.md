@@ -1,4 +1,4 @@
-# Yahoo Finance — Decision Guide
+# Decision Guide
 
 ## Simple vs Log Returns
 
@@ -51,3 +51,6 @@ The **Aggregate Returns** card under *Analyse Returns* demonstrates both on live
 - **`adjclose` vs `close`** — use `adjclose` for any return calculation; it removes dividend and split jumps. Use raw `close` only when you need the unadjusted print.
 - **`range` vs `startdt`/`enddt`** — use `range` for a rolling lookback, explicit dates for a fixed window.
 - **Sink type** — `OrderedDict` for raw access; `TimeArray` for time-indexed analysis and Tables.jl interop.
+
+## See Also
+- [Overview](overview.md) · [Constraints](constraints.md) · [Interpretation](interpretation.md)

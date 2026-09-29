@@ -1,4 +1,4 @@
-# ECB Data Portal — SDMX and Alternatives
+# SDMX and Alternatives
 
 The ECB API is an **SDMX 2.1** service. This page explains the formats and when a dedicated SDMX package is worth it over raw CSV.
 
@@ -33,3 +33,6 @@ Caveats worth knowing:
 ## Recommendation
 
 Start with **HTTP + CSV + Tables** (the *Accessing Data* page). Reach for an SDMX library only when you specifically need structure/metadata parsing that the flat CSV does not give you.
+
+## See Also
+- [Accessing Data](accessing-data.md) · [Query Options](query-options.md) · [Overview](overview.md)

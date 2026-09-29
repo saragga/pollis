@@ -20,3 +20,6 @@ Points are treated as an **unordered sample**. If the data is a time series, use
 
 ## No Distributional Assumptions
 None of these plots assume normality. They are used precisely to *check* distributional shape before any model relies on it.
+
+## See Also
+- [Diagnostics](diagnostics.md) · [Decision Guide](decision-guide.md) · [Interpretation](interpretation.md)

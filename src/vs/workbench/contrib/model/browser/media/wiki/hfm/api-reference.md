@@ -1,4 +1,4 @@
-# Hugging Face Hub — API Reference
+# API Reference
 
 The Hub exposes a public REST API at `https://huggingface.co/api/`. Most endpoints work without authentication; a token raises rate limits and unlocks gated/private content. See the **Authentication** wiki for token setup.
 
@@ -237,3 +237,6 @@ Pass a token in the `Authorization` header to authenticate — see the **Authent
 | 404 | Model, dataset, or file does not exist |
 | 429 | Rate limit exceeded — back off and retry |
 | 503 | Inference API model is loading — retry in 20 s |
+
+## See Also
+- [Download & Load](download-load.md) · [Run Inference](run-inference.md) · [Access Tokens](access-tokens.md)

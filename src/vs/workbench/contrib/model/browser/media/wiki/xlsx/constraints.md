@@ -1,4 +1,4 @@
-# Excel Workbook — Constraints
+# Constraints
 
 ## File Format
 - XLSX.jl reads and writes **Office Open XML** (`.xlsx`) only. Legacy `.xls` (BIFF8) files are not supported — convert them to `.xlsx` first (e.g. with LibreOffice or Python's `xlrd`).
@@ -6,7 +6,7 @@
 
 ## Data Types
 - Cells are read as their native Excel type: `Float64`, `Int`, `String`, `Bool`, `Date`, `DateTime`, or `Missing`.
-- Empty cells become `Missing` in DataFrames.
+- Empty cells are read as `missing`.
 - Dates are stored as Excel serial numbers internally; XLSX.jl converts them to `Julia.Dates.Date` or `DateTime` automatically when the cell has a date format.
 
 ## Sheet and Range References
@@ -21,3 +21,6 @@
 ## Formulas (v0.11+)
 - `setFormula` stores the formula string; the computed value is only available after the file is opened in Excel or a compatible application.
 - XLSX.jl does not evaluate formulas — it writes them for Excel to compute.
+
+## See Also
+- [Diagnostics](diagnostics.md) · [Factsheet](factsheet.md) · [Overview](overview.md)

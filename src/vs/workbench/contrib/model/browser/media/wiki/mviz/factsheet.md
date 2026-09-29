@@ -17,3 +17,6 @@
 
 ## What It Is Not
 A substitute for dimensionality reduction (PCA, t-SNE, UMAP). These plots display raw variables; for very high dimensions, reduce first, then visualise.
+
+## See Also
+- [Overview](overview.md) · [Decision Guide](decision-guide.md) · [Diagnostics](diagnostics.md)

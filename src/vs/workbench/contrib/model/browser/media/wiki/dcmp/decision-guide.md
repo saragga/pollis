@@ -18,3 +18,6 @@
 - **Standardise** before comparing to a standard normal.
 - Pair a QQ plot with a **formal test** (KS, Anderson–Darling) — the plot shows *how* it deviates, the test shows *whether* it does.
 - For tied/discrete data, prefer the ECDF (it handles ties honestly) over a QQ plot.
+
+## See Also
+- [Overview](overview.md) · [Assumptions](assumptions.md) · [Interpretation](interpretation.md)

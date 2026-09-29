@@ -36,3 +36,6 @@
 `get_data` returns a `FredSeries`. Its `.data` field is a `DataFrame` with `date` and `value` columns; metadata fields such as `title`, `units`, `frequency`, and `seasonal_adjustment` describe the series.
 
 > **API key.** Use the **Set API key** link above the page to store your free key securely in VS Code Secret Storage. It is injected into the Julia REPL session as `ENV["FRED_API_KEY"]` and never written to a saved file.
+
+## See Also
+- [Overview](overview.md) · [Finding Series](finding-series.md) · [Transformations](transformations.md)

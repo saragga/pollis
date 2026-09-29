@@ -51,6 +51,5 @@ ENV["JULIA_CONDAPKG_OPENSSL_VERSION"] = true
 ```
 
 ## See Also
-
-- Loading Datasets — splits, formats, and indexing in context
-- Dataset Files — the pure-Julia Parquet alternative
+- [Loading Datasets](loading-datasets.md) — splits, formats, and indexing in context
+- [Dataset Files](dataset-files.md) — the pure-Julia Parquet alternative

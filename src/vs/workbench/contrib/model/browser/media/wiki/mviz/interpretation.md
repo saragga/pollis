@@ -14,3 +14,6 @@ Colour *is* the value: consult the colour bar. On a correlation heatmap, look pa
 
 ## Caveat
 Multivariate plots are exploratory. Striking patterns warrant a model or test, not a conclusion on their own — and watch for artefacts from scaling and colour choices.
+
+## See Also
+- [Diagnostics](diagnostics.md) · [Decision Guide](decision-guide.md) · [Overview](overview.md)

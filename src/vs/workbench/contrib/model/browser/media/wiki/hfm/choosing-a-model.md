@@ -127,3 +127,6 @@ Before pulling a model:
 - [ ] Does the model size fit my hardware budget?
 - [ ] Is the licence compatible with my use (academic / commercial)?
 - [ ] Is there a quantised version if I plan to run locally via Ollama?
+
+## See Also
+- [Package Guide](package-guide.md) · [Download & Load](download-load.md) · [Run Inference](run-inference.md)

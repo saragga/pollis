@@ -19,3 +19,6 @@ A mismatched scale misleads about sign and midpoint.
 
 ## Dimensionality
 These plots stay legible to a handful of variables (corner, parallel) or a moderate matrix (heatmap). Beyond that, reduce dimensions first.
+
+## See Also
+- [Diagnostics](diagnostics.md) · [Decision Guide](decision-guide.md) · [Interpretation](interpretation.md)

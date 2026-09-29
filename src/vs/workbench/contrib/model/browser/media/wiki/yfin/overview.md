@@ -1,4 +1,4 @@
-# Yahoo Finance — Overview
+# Overview
 
 **YFinance.jl** brings Yahoo Finance market data into Julia. It mirrors the design of Python's `yahooquery` by reading Yahoo's JSON API endpoints, which avoids the decryption issues present in some other clients.
 
@@ -27,3 +27,6 @@ A `TimeArray` implements the **Tables.jl** interface, so it interoperates with t
 2. Download prices or another data type.
 3. Sink into a `TimeArray` and compute returns, moving averages, or statistics.
 4. Plot or compare across tickers.
+
+## See Also
+- [Factsheet](factsheet.md) · [Decision Guide](decision-guide.md) · [Constraints](constraints.md)

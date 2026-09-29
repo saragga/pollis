@@ -28,6 +28,5 @@ Check `licenseName` before using data in a product. The `license` filter groups 
 4. List the files to confirm the format and size before downloading.
 
 ## See Also
-
-- Browsing the Catalogue — search and filter syntax
-- Downloading & Loading — getting the files into Julia
+- [Browsing the Catalogue](browsing.md) — search and filter syntax
+- [Downloading & Loading](downloading-loading.md) — getting the files into Julia

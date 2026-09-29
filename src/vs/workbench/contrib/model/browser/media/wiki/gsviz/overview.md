@@ -13,3 +13,6 @@ A **map** in which geographic regions are shaded by a value using a colour scale
 
 ## Why It Matters
 Relationships and geography are everywhere — social networks, supply chains, organisational structure, regional statistics. Encoding them as position-and-link or colour-on-a-map communicates structure that no table or bar chart can.
+
+## See Also
+- [Factsheet](factsheet.md) · [Decision Guide](decision-guide.md) · [Interpretation](interpretation.md)

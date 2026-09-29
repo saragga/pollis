@@ -18,3 +18,6 @@ Scan **off-diagonal** panels for tilted (correlated) clouds and the **diagonal**
 
 ## Caveat
 Visual fit is necessary, not sufficient. Confirm with a goodness-of-fit test, and remember small samples make even a good fit look ragged.
+
+## See Also
+- [Diagnostics](diagnostics.md) · [Decision Guide](decision-guide.md) · [Overview](overview.md)

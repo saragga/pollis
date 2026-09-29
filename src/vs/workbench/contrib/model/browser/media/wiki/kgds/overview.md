@@ -19,7 +19,6 @@
 Both host community datasets, but the centre of gravity differs: Kaggle leans **tabular and competition-oriented**, with rich human-written documentation; Hugging Face leans **ML-training-oriented** (text, audio, image), auto-converted to Parquet. Pollis ships a webview for each.
 
 ## See Also
-
-- Browsing the Catalogue — search, sort, and filter
-- Downloading & Loading — get the files into Julia
-- Choosing a Dataset — usability, size, licence
+- [Browsing the Catalogue](browsing.md) — search, sort, and filter
+- [Downloading & Loading](downloading-loading.md) — get the files into Julia
+- [Choosing a Dataset](choosing-a-dataset.md) — usability, size, licence

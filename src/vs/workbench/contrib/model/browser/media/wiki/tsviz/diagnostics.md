@@ -35,3 +35,6 @@ Visible breaks in the line indicate missing data. Confirm whether the gap is rea
 | Break | Sudden sustained jump | Parameter instability |
 | Heteroskedasticity | Volatility clusters | Variance modelling / transform |
 | Outliers | Isolated spikes | Clean or robustify |
+
+## See Also
+- [Assumptions](assumptions.md) · [Interpretation](interpretation.md) · [Decision Guide](decision-guide.md)

@@ -20,3 +20,6 @@ A box plot's summary plus a mirrored kernel density — shows the **full distrib
 ## Why It Matters
 
 Each plot trades detail for clarity differently. Picking the right one — and reading it correctly — is the foundation of honest data analysis.
+
+## See Also
+- [Factsheet](factsheet.md) · [Decision Guide](decision-guide.md) · [Interpretation](interpretation.md)

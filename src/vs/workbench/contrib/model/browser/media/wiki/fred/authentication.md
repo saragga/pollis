@@ -1,4 +1,4 @@
-# FRED — Authentication
+# Authentication
 
 FRED requires a **free API key**. This page explains how to get one and how Pollis stores it.
 
@@ -43,3 +43,6 @@ Outside Pollis you can:
 [FRED]
 api_key = yourkey
 ```
+
+## See Also
+- [Finding Series](finding-series.md) · [Overview](overview.md) · [Factsheet](factsheet.md)

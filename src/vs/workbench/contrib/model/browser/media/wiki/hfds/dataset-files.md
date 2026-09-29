@@ -38,6 +38,5 @@ rows = [NamedTuple(r) for r in Tables.rows(ds)]   # materialise rows when you ne
 - **`load_dataset`** — interactive exploration and quick access to observations as Julia objects.
 
 ## See Also
-
-- Loading Datasets — the HuggingFaceDatasets.jl path
-- Browsing the Hub — finding a dataset id first
+- [Loading Datasets](loading-datasets.md) — the HuggingFaceDatasets.jl path
+- [Browsing the Hub](browsing-the-hub.md) — finding a dataset id first

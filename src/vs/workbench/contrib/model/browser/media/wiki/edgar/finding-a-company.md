@@ -1,4 +1,4 @@
-# US SEC EDGAR — Finding a Company
+# Finding a Company
 
 Every filer is identified by a **CIK** (Central Index Key). Once you have it, every data API is one request away. This page covers how to get from a name or ticker to a CIK.
 
@@ -43,3 +43,6 @@ For anything fuzzier, use the **Full-Text Search** model or the EDGAR company-se
 | Berkshire Hathaway | BRK-B | 1067983 |
 
 > The submission JSON for a CIK also echoes the company's `tickers`, `sicDescription`, and addresses — handy for confirming you have the right filer.
+
+## See Also
+- [Search Modes](search-modes.md) · [Accessing Data](accessing-data.md) · [Downloading Filings](downloading-filings.md)

@@ -1,4 +1,4 @@
-# ECB Data Portal — Accessing Data
+# Accessing Data
 
 This page is the core recipe: fetch a series with **no API key**, in **CSV**, into a **Tables.jl** table.
 
@@ -39,11 +39,10 @@ values = Tables.getcolumn(tbl, :OBS_VALUE)
 Because `CSV.File` is a Tables.jl source, the choice of frame is **yours**, not the API's:
 
 ```julia
-using DataFrames
-df = DataFrame(tbl)
+cols = Tables.columntable(tbl)   # NamedTuple of column vectors
 
 using TimeSeries
-ta = TimeArray(DataFrame(tbl); timestamp = :TIME_PERIOD)
+ta = TimeArray(tbl; timestamp = :TIME_PERIOD)
 ```
 
 ## A Small Helper
@@ -60,3 +59,6 @@ usd = ecb("EXR", "D.USD.EUR.SP00.A"; params = "startPeriod=2020-01-01&format=csv
 ```
 
 > No authentication headers are needed. If a request returns no rows, check the key on its ECB series page (see *Finding Series*) and confirm the frequency dimension matches the data.
+
+## See Also
+- [Query Options](query-options.md) · [Finding Series](finding-series.md) · [SDMX and Alternatives](sdmx-alternatives.md)
