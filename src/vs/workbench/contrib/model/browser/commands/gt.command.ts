@@ -50,7 +50,7 @@ const GT_REFERENCES: IModelReference[] = [
 		authors: 'Osborne, Martin J.; Rubinstein, Ariel',
 		year: 1994,
 		journal: 'MIT Press (freely available online)',
-		url: 'https://arielrubinstein.tau.ac.il/books/GT.pdf',
+		url: 'https://arielrubinstein.org/gt/arielDocs/',
 		openAccess: true,
 	},
 	{
@@ -66,7 +66,7 @@ const GT_REFERENCES: IModelReference[] = [
 		authors: 'Maynard Smith, John',
 		year: 1982,
 		journal: 'Cambridge University Press',
-		url: 'https://www.cambridge.org/core/books/evolution-and-the-theory-of-games/70D7D9D45E5E2B3E22A6F2A2F3F474A5',
+		doi: '10.1017/CBO9780511806292',
 		openAccess: false,
 	},
 	{ separator: true, label: 'Original Papers' },

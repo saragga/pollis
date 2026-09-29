@@ -73,7 +73,7 @@ const GSVIZ_REFERENCES: IModelReference[] = [
 		authors: 'Monmonier, Mark',
 		year: 2018,
 		journal: 'University of Chicago Press (3rd ed.)',
-		url: 'https://press.uchicago.edu/ucp/books/book/chicago/H/bo27400543.html',
+		url: 'https://press.uchicago.edu/ucp/books/book/chicago/H/bo27400568.html',
 		openAccess: false,
 	},
 	{ separator: true, label: 'Original Papers' },

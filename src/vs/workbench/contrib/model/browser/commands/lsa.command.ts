@@ -83,7 +83,7 @@ const LSA_METADATA: ILsaMetadata = {
 			},
 			{
 				name: 'LinearAlgebra.jl',
-				github: 'https://github.com/JuliaLang/julia/blob/master/stdlib/LinearAlgebra/src/LinearAlgebra.jl',
+				github: 'https://github.com/JuliaLang/LinearAlgebra.jl',
 				papers: [],
 			},
 		],
