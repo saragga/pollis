@@ -117,6 +117,27 @@
 	right: 0;
 }
 
+/* Secondary side bar shortcuts: a separator above them */
+.monaco-workbench .activitybar > .content .auxiliarybar-shortcuts:not(.empty)::before {
+	content: "";
+	display: block;
+	height: 0;
+	margin: 4px 12px;
+	border-top: 1px solid var(--vscode-activityBar-inactiveForeground);
+	opacity: 0.4;
+}
+
+/* Secondary side bar shortcuts: the indicator sits on the side facing the secondary side bar */
+.monaco-workbench .activitybar.left > .content .auxiliarybar-shortcuts > .monaco-action-bar .action-item .active-item-indicator:before {
+	left: auto;
+	right: 0;
+}
+
+.monaco-workbench .activitybar.right > .content .auxiliarybar-shortcuts > .monaco-action-bar .action-item .active-item-indicator:before {
+	left: 0;
+	right: auto;
+}
+
 /* Hides outline on HC as focus is handled by border */
 .monaco-workbench.hc-black .activitybar.left > .content :not(.monaco-menu) > .monaco-action-bar .action-item:focus:before,
 .monaco-workbench.hc-black .activitybar.right > .content :not(.monaco-menu) > .monaco-action-bar .action-item:focus:before,

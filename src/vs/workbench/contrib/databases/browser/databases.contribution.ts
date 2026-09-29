@@ -40,7 +40,8 @@ const databasesViewContainer = Registry.as<IViewContainersRegistry>(ViewExtensio
 	icon: databasesViewIcon,
 	ctorDescriptor: new SyncDescriptor(ViewPaneContainer, [DATABASES_VIEW_CONTAINER_ID, { mergeViewWithContainerWhenSingleView: true }]),
 	storageId: DATABASES_VIEW_CONTAINER_ID,
-	order: 2,
+	// After the Julia views, which extensions register from order 101 on: session state first, then its databases.
+	order: 1000,
 }, ViewContainerLocation.AuxiliaryBar);
 
 const viewsRegistry = Registry.as<IViewsRegistry>(ViewExtensions.ViewsRegistry);
@@ -48,6 +49,8 @@ viewsRegistry.registerViews([{
 	id: DatabaseConnectionsView.ID,
 	name: localize2('databases.connections', "Connections"),
 	containerIcon: databasesViewIcon,
+	// Title the container "Databases" rather than "Databases: Connections" while this is its only view
+	singleViewPaneContainerTitle: databasesViewContainer.title.value,
 	ctorDescriptor: new SyncDescriptor(DatabaseConnectionsView),
 	canToggleVisibility: false,
 	canMoveView: true,

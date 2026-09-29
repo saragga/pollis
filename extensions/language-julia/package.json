@@ -1139,7 +1139,7 @@
             }
         },
         "viewsContainers": {
-            "activitybar": [
+            "secondarySidebar": [
                 {
                     "id": "julia-explorer",
                     "title": "Julia",

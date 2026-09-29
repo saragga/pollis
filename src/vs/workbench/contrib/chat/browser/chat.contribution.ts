@@ -1423,8 +1423,10 @@ configurationRegistry.registerConfiguration({
 		[ChatConfiguration.AIDisabled]: {
 			type: 'boolean',
 			description: nls.localize('chat.disableAIFeatures', "Disable and hide built-in AI features provided by GitHub Copilot, including chat and inline suggestions."),
-			// Pollis: AI features are off by default (Copilot Chat is not shipped); users can turn them on in Settings.
+			// Pollis: AI features are off (Copilot Chat is not shipped). The deprecation message hides the setting
+			// from the Settings editor unless it has been set, so it is not offered as a way to turn them on.
 			default: true,
+			deprecationMessage: nls.localize('chat.disableAIFeatures.pollis', "AI features are not available in Pollis."),
 			scope: ConfigurationScope.WINDOW
 		},
 		'chat.allowAnonymousAccess': { // TODO@bpasero remove me eventually

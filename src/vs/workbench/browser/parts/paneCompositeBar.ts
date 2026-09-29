@@ -385,7 +385,7 @@ export class PaneCompositeBar extends Disposable {
 		return this.toCompositeBarActionItem(viewContainerModel.viewContainer.id, viewContainerModel.title, viewContainerModel.icon, viewContainerModel.keybindingId);
 	}
 
-	private toCompositeBarActionItem(id: string, name: string, icon: URI | ThemeIcon | undefined, keybindingId: string | undefined): ICompositeBarActionItem {
+	protected toCompositeBarActionItem(id: string, name: string, icon: URI | ThemeIcon | undefined, keybindingId: string | undefined): ICompositeBarActionItem {
 		let classNames: string[] | undefined = undefined;
 		let iconUrl: URI | undefined = undefined;
 		if (this.options.icon) {

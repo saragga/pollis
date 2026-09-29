@@ -261,7 +261,9 @@ export class AuxiliaryBarPart extends AbstractPaneCompositePart {
 	}
 
 	protected shouldShowCompositeBar(): boolean {
-		if (this.configuration.position === ActivityBarPosition.HIDDEN) {
+		// With the activity bar on the side, its shortcuts switch the secondary side bar containers,
+		// so the secondary side bar shows a plain title like the primary side bar does
+		if (this.configuration.position === ActivityBarPosition.HIDDEN || this.configuration.position === ActivityBarPosition.DEFAULT) {
 			return false;
 		}
 

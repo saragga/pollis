@@ -212,8 +212,8 @@ export function generateConnectionCode(profile: IDatabaseConnectionProfile): str
 /**
  * The code that connects `profile` in the Julia REPL and shows it in the Databases view, through
  * the PollisDB module the REPL loads at startup. A connection the REPL already holds is closed
- * first, so a database file is not opened twice. DuckDB is built into Pollis, so its code first
- * installs it, the first time only.
+ * first, so a database file is not opened twice. DuckDB is the default engine, so its code first
+ * installs the DuckDB.jl package on the user's machine, the first time only (Pollis does not ship it).
  */
 export function generateSessionConnectCode(profile: IDatabaseConnectionProfile, connected: boolean): string {
 	const id = juliaString(profile.id);

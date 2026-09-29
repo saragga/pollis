@@ -28,6 +28,7 @@ import { GestureEvent } from '../../../../base/browser/touch.js';
 import { IPaneCompositePart } from '../paneCompositePart.js';
 import { IPaneCompositeBarOptions, PaneCompositeBar } from '../paneCompositeBar.js';
 import { GlobalCompositeBar } from '../globalCompositeBar.js';
+import { AuxiliaryBarShortcuts } from './auxiliaryBarShortcuts.js';
 import { IStorageService } from '../../../../platform/storage/common/storage.js';
 import { Action2, IMenuService, MenuId, MenuRegistry, registerAction2 } from '../../../../platform/actions/common/actions.js';
 import { ContextKeyExpr, IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
@@ -249,6 +250,8 @@ export class ActivityBarCompositeBar extends PaneCompositeBar {
 	private menuBarContainer: HTMLElement | undefined;
 	private compositeBarContainer: HTMLElement | undefined;
 	private readonly globalCompositeBar: GlobalCompositeBar | undefined;
+	private readonly auxiliaryBarShortcuts: AuxiliaryBarShortcuts | undefined;
+	private lastLayout: { width: number; height: number } | undefined;
 
 	private readonly keyboardNavigationDisposables = this._register(new DisposableStore());
 
@@ -282,6 +285,16 @@ export class ActivityBarCompositeBar extends PaneCompositeBar {
 			this.globalCompositeBar = this._register(instantiationService.createInstance(GlobalCompositeBar, () => this.getContextMenuActions(), (theme: IColorTheme) => this.options.colors(theme), this.options.activityHoverOptions));
 		}
 
+		// Secondary side bar containers, opened from the activity bar
+		if (location === ViewContainerLocation.Sidebar && options.orientation === ActionsOrientation.VERTICAL) {
+			this.auxiliaryBarShortcuts = this._register(instantiationService.createInstance(AuxiliaryBarShortcuts, (id, name, icon, keybindingId) => this.toCompositeBarActionItem(id, name, icon, keybindingId), (theme: IColorTheme) => this.options.colors(theme), this.options.activityHoverOptions, () => this.getContextMenuActions()));
+			this._register(this.auxiliaryBarShortcuts.onDidChangeSize(() => {
+				if (this.lastLayout) {
+					this.layout(this.lastLayout.width, this.lastLayout.height);
+				}
+			}));
+		}
+
 		// Register for configuration changes
 		this._register(this.configurationService.onDidChangeConfiguration(e => {
 			if (e.affectsConfiguration(MenuSettings.MenuBarVisibility)) {
@@ -305,6 +318,13 @@ export class ActivityBarCompositeBar extends PaneCompositeBar {
 			if (isAncestor(e.target as Node, this.menuBarContainer)) {
 				actions.unshift(...[toAction({ id: 'hideCompactMenu', label: localize('hideMenu', "Hide Menu"), run: () => this.configurationService.updateValue(MenuSettings.MenuBarVisibility, 'toggle') }), new Separator()]);
 			}
+		}
+
+		// Secondary side bar shortcuts
+		const auxiliaryBarShortcutActions = this.auxiliaryBarShortcuts?.getContextMenuActions() ?? [];
+		if (auxiliaryBarShortcutActions.length) {
+			actions.push(new Separator());
+			actions.push(...auxiliaryBarShortcutActions);
 		}
 
 		// Global Composite Bar
@@ -390,6 +410,9 @@ export class ActivityBarCompositeBar extends PaneCompositeBar {
 		// View Containers action bar
 		this.compositeBarContainer = super.create(this.element);
 
+		// Secondary side bar shortcuts, right below the view containers
+		this.auxiliaryBarShortcuts?.create(this.compositeBarContainer);
+
 		// Global action bar
 		if (this.globalCompositeBar) {
 			this.globalCompositeBar.create(this.element);
@@ -402,6 +425,7 @@ export class ActivityBarCompositeBar extends PaneCompositeBar {
 	}
 
 	override layout(width: number, height: number): void {
+		this.lastLayout = { width, height };
 		if (this.menuBarContainer) {
 			if (this.options.orientation === ActionsOrientation.VERTICAL) {
 				height -= this.menuBarContainer.clientHeight;
@@ -415,6 +439,9 @@ export class ActivityBarCompositeBar extends PaneCompositeBar {
 			} else {
 				width -= this.globalCompositeBar.element.clientWidth;
 			}
+		}
+		if (this.auxiliaryBarShortcuts) {
+			height -= this.auxiliaryBarShortcuts.height(this.options.overflowActionSize);
 		}
 		super.layout(width, height);
 	}

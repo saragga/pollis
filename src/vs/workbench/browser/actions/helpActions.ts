@@ -529,7 +529,7 @@ registerHelpLink({
 	title: localize2('openCodeOssDocumentation', "Code - OSS Documentation"),
 	mnemonicTitle: localize({ key: 'miCodeOssDocumentation', comment: ['&& denotes a mnemonic'] }, "&&Code - OSS"),
 	menu: MenubarHelpDocumentationMenu,
-	order: 1,
+	order: 2,
 	url: 'https://code.visualstudio.com/docs#vscode'
 });
 
@@ -538,7 +538,7 @@ registerHelpLink({
 	title: localize2('openJuliaDocumentation', "Julia Programming Language Documentation"),
 	mnemonicTitle: localize({ key: 'miJuliaDocumentation', comment: ['&& denotes a mnemonic'] }, "&&Julia Programming Language"),
 	menu: MenubarHelpDocumentationMenu,
-	order: 2,
+	order: 1,
 	url: 'https://docs.julialang.org/en/v1/'
 });
 
@@ -547,7 +547,7 @@ registerHelpLink({
 	title: localize2('openCodeOssVideoTutorials', "Code - OSS Video Tutorials"),
 	mnemonicTitle: localize({ key: 'miCodeOssVideoTutorials', comment: ['&& denotes a mnemonic'] }, "&&Code - OSS"),
 	menu: MenubarHelpVideoTutorialsMenu,
-	order: 1,
+	order: 3,
 	url: 'https://code.visualstudio.com/docs/getstarted/introvideos'
 });
 
@@ -556,7 +556,7 @@ registerHelpLink({
 	title: localize2('openJuliaVideoTutorials', "Julia Programming Language Video Tutorials"),
 	mnemonicTitle: localize({ key: 'miJuliaVideoTutorials', comment: ['&& denotes a mnemonic'] }, "&&Julia Programming Language"),
 	menu: MenubarHelpVideoTutorialsMenu,
-	order: 2,
+	order: 1,
 	url: 'https://www.youtube.com/user/JuliaLanguage'
 });
 
@@ -565,7 +565,7 @@ registerHelpLink({
 	title: localize2('openJuliaHpcVideoTutorials', "High Performance Computing in Julia Video Tutorials"),
 	mnemonicTitle: localize({ key: 'miJuliaHpcVideoTutorials', comment: ['&& denotes a mnemonic'] }, "&&High Performance Computing in Julia"),
 	menu: MenubarHelpVideoTutorialsMenu,
-	order: 3,
+	order: 2,
 	url: 'https://www.youtube.com/playlist?list=PLUAq6xQKFgGr39PiyrPk_C9dhBKvWcjUA'
 });
 
