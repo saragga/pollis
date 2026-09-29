@@ -1,0 +1,3 @@
+# Joint Method
+
+Coming soon!
