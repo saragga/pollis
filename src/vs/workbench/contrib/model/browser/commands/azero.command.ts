@@ -98,8 +98,8 @@ const AZERO_METADATA: IAzeroMetadata = {
 				videos: [],
 			},
 			{
-				name: 'AlphaZeroChess.jl',
-				github: 'https://github.com/antonio-saragga-seabra/AlphaZeroChess.jl',
+				name: 'Setfield.jl',
+				github: 'https://github.com/jw3126/Setfield.jl',
 				papers: [],
 				videos: [],
 			},

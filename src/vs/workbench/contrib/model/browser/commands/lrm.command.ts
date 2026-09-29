@@ -22,7 +22,7 @@ const LRM_METADATA: ILrmMetadata = {
 		packages: [
 			{
 				name: 'PerformanceAnalytics.jl',
-				github: 'https://github.com/JuliaQuant/PerformanceAnalytics.jl',
+				github: 'https://github.com/eohne/PerformanceAnalytics.jl',
 				papers: [
 					{
 						title: 'Coherent Measures of Risk',
@@ -39,10 +39,10 @@ const LRM_METADATA: ILrmMetadata = {
 						openAccess: false,
 					},
 					{
-						title: 'The Sortino Ratio and Downside Risk',
+						title: 'Performance Measurement in a Downside Risk Framework',
 						authors: 'Sortino, F. A., & Price, L. N.',
 						year: 1994,
-						url: 'https://doi.org/10.3905/jpm.1994.409504',
+						url: 'https://doi.org/10.3905/joi.3.3.59',
 						openAccess: false,
 					},
 					{

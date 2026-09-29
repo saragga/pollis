@@ -22,7 +22,7 @@ const HFCME_METADATA: IHfcmeMetadata = {
 		packages: [
 			{
 				name: 'HighFrequencyCovariance.jl',
-				github: 'https://github.com/s-fuerst/HighFrequencyCovariance.jl',
+				github: 'https://github.com/s-baumann/HighFrequencyCovariance.jl',
 				papers: [
 					{ title: 'Multivariate Realised Kernels: Consistent Positive Semi-Definite Estimators of the Covariation of Equity Prices with Noise and Non-Synchronous Trading', authors: 'Barndorff-Nielsen, Hansen, Lunde & Shephard', year: 2011, journal: 'Journal of Econometrics', doi: '10.1016/j.jeconom.2011.02.007', openAccess: false },
 					{ title: 'Estimating Covariation: Epps Effect, Microstructure Noise', authors: 'Zhang', year: 2011, journal: 'Journal of Econometrics', doi: '10.1016/j.jeconom.2010.07.006', openAccess: false },

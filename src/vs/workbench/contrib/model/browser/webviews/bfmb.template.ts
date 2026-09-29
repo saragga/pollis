@@ -102,7 +102,7 @@ export function getBfmbHtml(): string {
 			<div class="subtitle">
 				<ul class="methods-list">
 					<li>Bayesian &#8212; BayesianFM() from BayesianFactorZoo.jl: normal shrinkage prior on risk prices &#955;, optional pricing-error prior weighted by d, full MCMC posterior</li>
-					<li>Classical &#8212; fama_macbeth() from FamaFrench.jl: standard two-pass OLS with time-series betas and cross-sectional risk prices, Newey-West HAC standard errors</li>
+					<li>Classical &#8212; TwoPassRegression() from BayesianFactorZoo.jl: standard two-pass regression with time-series betas and cross-sectional risk prices (OLS and GLS), Shanken-corrected standard errors</li>
 				</ul>
 			</div>
 		</div>
@@ -184,20 +184,13 @@ export function getBfmbHtml(): string {
 		<!-- Row 4 (classical): Inference parameters -->
 		<div class="form-row classical-row">
 			<div class="form-group" style="flex:1; min-width:100px;">
-				<label class="form-label centered form-label-with-tooltip">Intercept
-					<span class="tooltip-icon" id="tip-cls-intercept">?</span>
-					<span class="tooltip-text" id="tip-cls-intercept-text"></span>
+				<label class="form-label centered form-label-with-tooltip">Estimator
+					<span class="tooltip-icon" id="tip-cls-est">?</span>
+					<span class="tooltip-text" id="tip-cls-est-text"></span>
 				</label>
-				<textarea id="bfmb-cls-intercept" class="form-input param-input" placeholder="true" rows="1"></textarea>
+				<textarea id="bfmb-cls-est" class="form-input param-input" placeholder="ols" rows="1"></textarea>
 			</div>
-			<div class="form-group" style="flex:1; min-width:100px;">
-				<label class="form-label centered form-label-with-tooltip">NW lags
-					<span class="tooltip-icon" id="tip-cls-lags">?</span>
-					<span class="tooltip-text" id="tip-cls-lags-text"></span>
-				</label>
-				<textarea id="bfmb-cls-lags" class="form-input param-input" placeholder="5" rows="1"></textarea>
-			</div>
-			<div class="form-group" style="flex:2; min-width:120px; visibility:hidden;"></div>
+			<div class="form-group" style="flex:3; min-width:120px; visibility:hidden;"></div>
 		</div>
 
 		<div class="code-preview-wrapper">
@@ -275,7 +268,7 @@ export function getBfmbHtml(): string {
 				html += eqRow('R<sub>i,t</sub>', '=', '&alpha;<sub>i</sub> + &beta;<sub>i</sub>&#8242; f<sub>t</sub> + &epsilon;<sub>i,t</sub>', 'first-pass time-series OLS per test asset i');
 				html += eqRow('&lambda;&#770;<sub>t</sub>', '=', '(&beta;&#770;&#8242; &beta;&#770;)<sup>&minus;1</sup> &beta;&#770;&#8242; R<sub>t</sub>', 'second-pass cross-sectional OLS at each t');
 				html += eqRow('<span style="text-decoration:overline">&lambda;</span>', '=', '(1/T) &sum;<sub>t</sub> &lambda;&#770;<sub>t</sub>', 'time-series average of cross-sectional estimates');
-				html += eqRow('SE(<span style="text-decoration:overline">&lambda;</span>)', '=', 'NW<sub>q</sub>(Var(&lambda;&#770;<sub>t</sub>))<sup>1/2</sup>', 'Newey-West HAC standard errors with q lags');
+				html += eqRow('SE(<span style="text-decoration:overline">&lambda;</span>)', '=', '(Var(&lambda;&#770;<sub>t</sub>) &middot; (1 + c) / T)<sup>1/2</sup>', 'Shanken errors-in-variables correction, c = &lambda;&#8242; &Sigma;<sub>f</sub><sup>&minus;1</sup> &lambda;');
 			}
 			el.innerHTML = html;
 		}
@@ -311,23 +304,21 @@ export function getBfmbHtml(): string {
 				code += cline(fn('println') + '("&lambda; (std):  ", &lambda;_std)',  'print posterior std of risk prices');
 				code += cline(fn('println') + '("R&#178; (mean):  ", R2_mean)',       'print posterior mean R&#178;');
 			} else {
-				var intercept_cls = val('bfmb-cls-intercept', 'true');
-				var lags          = val('bfmb-cls-lags',      '5');
+				var est = val('bfmb-cls-est', 'ols').toLowerCase() === 'gls' ? 'gls' : 'ols';
+				var sfx = est === 'gls' ? '_gls' : '';
+				var r2  = est === 'gls' ? 'R2_adj_GLS' : 'R2_adj';
 
-				code += cline(kw('using') + ' ' + ty('FamaFrench') + ', ' + ty('Statistics'), 'Fama-French factor pricing + Statistics stdlib');
+				code += cline(kw('using') + ' ' + ty('BayesianFactorZoo'), 'Bayesian factor pricing, incl. classical two-pass');
 				code += blank();
-				code += cline('result = ' + fn('fama_macbeth') + '(' + f + ', ' + R + ';', 'classical two-pass Fama-MacBeth regression');
-				code += cline('    intercept = ' + intercept_cls + ',', 'include intercept in cross-sectional regression');
-				code += line( '    lags      = ' + lags);
-				code += line( ')');
+				code += cline('result = ' + fn('TwoPassRegression') + '(' + f + ', ' + R + ')', 'classical two-pass Fama-MacBeth regression');
 				code += blank();
-				code += cline('&lambda;_est = result.lambda', 'risk price estimates (K-vector, time-series mean)');
-				code += cline('t_stat  = result.tstat',  'Newey-West t-statistics for each risk price');
-				code += cline('R2      = result.R2',      'cross-sectional R&#178;');
+				code += cline('&lambda;_est = result.lambda' + sfx + '[2:end]', 'risk price estimates (' + est.toUpperCase() + ', intercept dropped)');
+				code += cline('t_stat  = result.t_stat' + sfx + '[2:end]', 'Shanken-corrected t-statistics');
+				code += cline('R2      = result.' + r2, 'adjusted cross-sectional R&#178;');
 				code += blank();
 				code += cline(fn('println') + '("&lambda; (estimate): ", &lambda;_est)', 'print risk price estimates');
-				code += cline(fn('println') + '("t-statistics:  ", t_stat)',             'print Newey-West t-statistics');
-				code += cline(fn('println') + '("R&#178;:             ", R2)',            'print cross-sectional R&#178;');
+				code += cline(fn('println') + '("t-statistics:  ", t_stat)',             'print Shanken t-statistics');
+				code += cline(fn('println') + '("R&#178;:             ", R2)',            'print adjusted cross-sectional R&#178;');
 			}
 
 			document.getElementById('code-preview').innerHTML = code;
@@ -368,8 +359,7 @@ export function getBfmbHtml(): string {
 			['tip-intercept',    'tip-intercept-text'],
 			['tip-sim',          'tip-sim-text'],
 			['tip-burnin',       'tip-burnin-text'],
-			['tip-cls-intercept','tip-cls-intercept-text'],
-			['tip-cls-lags',     'tip-cls-lags-text'],
+			['tip-cls-est',      'tip-cls-est-text'],
 		];
 
 		TOOLTIP_IDS.forEach(function(pair) {
@@ -391,7 +381,7 @@ export function getBfmbHtml(): string {
 
 		// ── Input wiring ──────────────────────────────────────────────────────────
 		['bfmb-f','bfmb-R','bfmb-psi0','bfmb-d','bfmb-intercept','bfmb-sim-length','bfmb-burnin',
-		 'bfmb-cls-intercept','bfmb-cls-lags'].forEach(function(id) {
+		 'bfmb-cls-est'].forEach(function(id) {
 			var el = document.getElementById(id);
 			if (el) {
 				el.addEventListener('input', updateCodePreview);
@@ -483,8 +473,7 @@ export function getBfmbHtml(): string {
 					'tip-intercept-text':    tips.intercept,
 					'tip-sim-text':          tips.sim_length,
 					'tip-burnin-text':       tips.burnin,
-					'tip-cls-intercept-text':tips.intercept,
-					'tip-cls-lags-text':     tips.lags,
+					'tip-cls-est-text':      tips.estimator,
 				};
 				Object.keys(map).forEach(function(id) {
 					var el = document.getElementById(id);

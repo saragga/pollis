@@ -89,6 +89,22 @@ export interface IJuliaEnvStatus {
 /** Julia standard libraries: always loadable (through `@stdlib` on the load path), so never missing. */
 const JULIA_STDLIBS = new Set(['Base64', 'Dates', 'DelimitedFiles', 'Distributed', 'Downloads', 'InteractiveUtils', 'LinearAlgebra', 'Logging', 'Markdown', 'Mmap', 'Pkg', 'Printf', 'Random', 'Serialization', 'SHA', 'Sockets', 'SparseArrays', 'Statistics', 'TOML', 'Test', 'Unicode', 'UUIDs']);
 
+/** Packages used by the panels that are not in the General registry, so `Pkg.add` needs their repository URL. */
+const UNREGISTERED_PACKAGE_URLS = new Map<string, string>([
+	['Brokerage', 'https://github.com/aaron-wheeler/Brokerage.jl'],
+	['EDGAR', 'https://github.com/Trumpingtons/EDGAR.jl'],
+	['HARE', 'https://github.com/Trumpingtons/HARE.jl'],
+	['LSurvival', 'https://github.com/alexpkeil1/LSurvival.jl'],
+	['MultilevelEstimators', 'https://github.com/PieterjanRobbe/MultilevelEstimators.jl'],
+	['PerformanceAnalytics', 'https://github.com/eohne/PerformanceAnalytics.jl'],
+	['QuadDIRECT', 'https://github.com/timholy/QuadDIRECT.jl'],
+	['RangeVol', 'https://github.com/Trumpingtons/RangeVol.jl'],
+	['TopicModels', 'https://github.com/slycoder/TopicModels.jl'],
+	['TotalViewITCH', 'https://github.com/cswaney/TotalViewITCH.jl'],
+	['TradingAgents', 'https://github.com/aaron-wheeler/TradingAgents.jl'],
+	['VLLimitOrderBook', 'https://github.com/Renruize12306/VLLimitOrderBook.jl'],
+]);
+
 /** Strip a trailing ".jl" to recover the importable Julia package name. */
 function juliaPackageName(displayName: string): string {
 	return displayName.replace(/\.jl$/i, '');
@@ -207,7 +223,11 @@ export async function sendToJuliaRepl(code: string, commandService: ICommandServ
 /** Install the given packages (display names accepted) via `Pkg.add` in the Julia REPL. */
 export async function installJuliaPackages(packageNames: string[], commandService: ICommandService): Promise<void> {
 	if (!packageNames.length) { return; }
-	const list = packageNames.map(n => `"${juliaPackageName(n)}"`).join(', ');
+	const list = packageNames.map(n => {
+		const name = juliaPackageName(n);
+		const url = UNREGISTERED_PACKAGE_URLS.get(name);
+		return url ? `Pkg.PackageSpec(url="${url}")` : `Pkg.PackageSpec(name="${name}")`;
+	}).join(', ');
 	await sendToJuliaRepl(`import Pkg; Pkg.add([${list}])`, commandService);
 }
 

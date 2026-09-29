@@ -13,7 +13,7 @@ export interface IBfmbTooltips {
 	readonly intercept?: string;
 	readonly sim_length?: string;
 	readonly burnin?: string;
-	readonly lags?: string;
+	readonly estimator?: string;
 }
 
 export interface IBfmbMetadata {

@@ -102,7 +102,7 @@ export function getAzeroHtml(): string {
 				<ul class="methods-list">
 					<li>Self-Play &#8212; the current network plays against itself to generate a game history; Monte Carlo Tree Search guides action selection and produces improved policy targets stronger than the raw network output (AlphaZero.jl)</li>
 					<li>Monte Carlo Tree Search (MCTS) &#8212; at each position expands a search tree for a fixed number of simulations; visit counts are converted to a policy distribution used as the training target for the policy head (AlphaZero.jl)</li>
-					<li>Network Training &#8212; the shared policy-value network is trained on sampled positions from the replay buffer to match the MCTS policy and the game outcome; iterated until convergence (Lux.jl, AlphaZeroChess.jl)</li>
+					<li>Network Training &#8212; the shared policy-value network is trained on sampled positions from the replay buffer to match the MCTS policy and the game outcome; iterated until convergence (AlphaZero.jl, Flux.jl)</li>
 				</ul>
 			</div>
 		</div>
@@ -116,9 +116,9 @@ export function getAzeroHtml(): string {
 			<div class="form-group">
 				<label class="form-label centered form-label-with-tooltip">Game
 					<span class="tooltip-icon">?</span>
-					<span class="tooltip-text">A game implementing AlphaZero.jl&#8217;s GameInterface. Use ChessSpec() from AlphaZeroChess.jl, or a built-in game such as connect-four.</span>
+					<span class="tooltip-text">A game implementing AlphaZero.jl&#8217;s GameInterface. Built-in games live in Examples: ConnectFour, Tictactoe, Mancala and GridWorld, e.g. Examples.ConnectFour.GameSpec().</span>
 				</label>
-				<textarea id="azero-game" class="form-input" placeholder="ChessSpec()" rows="1"></textarea>
+				<textarea id="azero-game" class="form-input" placeholder="Examples.ConnectFour.GameSpec()" rows="1"></textarea>
 			</div>
 			<div class="form-group narrow">
 				<label class="form-label centered form-label-with-tooltip">Iterations
@@ -191,26 +191,22 @@ export function getAzeroHtml(): string {
 		function val(id, fb) { var el = document.getElementById(id); return esc((el && el.value.trim()) || fb); }
 
 		function updateCodePreview() {
-			var game   = val('azero-game',   'ChessSpec()');
+			var game   = val('azero-game',   'Examples.ConnectFour.GameSpec()');
 			var niters = val('azero-niters', '15');
 			var nsims  = val('azero-nsims',  '800');
 			var ngames = val('azero-ngames', '5000');
 			var code = '';
-			code += line(kw('using') + ' ' + ty('AlphaZero') + ', ' + ty('AlphaZeroChess'));
+			code += line(kw('using') + ' ' + ty('AlphaZero') + ', ' + ty('Setfield'));
 			code += blank();
-			code += cline('params = ' + fn('Params') + '(', 'training configuration');
-			code += line('    selfplay = ' + fn('SelfPlayParams') + '(');
-			code += line('        mcts      = ' + fn('MctsParams') + '(num_simulations = ' + nsims + '),');
-			code += line('        num_games = ' + ngames + ',');
-			code += line('    ),');
-			code += line('    learning = ' + fn('LearningParams') + '(');
-			code += line('        num_iters  = ' + niters + ',');
-			code += line('        batch_size = 512,');
-			code += line('    ),');
-			code += line(')');
+			code += cline('base   = Examples.experiments["connect-four"]', 'built-in example experiment (network, benchmark)');
+			code += cline('params = base.params', 'training configuration');
+			code += line('params = @set params.num_iters = ' + niters);
+			code += line('params = @set params.self_play.sim.num_games = ' + ngames);
+			code += line('params = @set params.self_play.mcts.num_iters_per_turn = ' + nsims);
 			code += blank();
-			code += cline('session = ' + fn('Session') + '(' + game + ', params, ' + fn('ChessNet') + '())', 'initialise training session');
-			code += cline(fn('train!') + '(session)', 'run iterative self-play training loop');
+			code += cline('experiment = ' + fn('Experiment') + '("connect-four", ' + game + ', params, base.mknet, base.netparams, base.benchmark)', 'game + hyperparameters');
+			code += cline('session = ' + fn('Session') + '(experiment)', 'initialise training session');
+			code += cline(fn('resume!') + '(session)', 'run iterative self-play training loop');
 			document.getElementById('code-preview').innerHTML = code;
 		}
 
@@ -414,10 +410,10 @@ export function getAzeroHtml(): string {
 				label: 'MCTS Visit Counts',
 				desc: 'Visualise MCTS visit distribution across legal moves for a given position',
 				code: function() {
-					var game = val('azero-game', 'ChessSpec()');
+					var game = val('azero-game', 'Examples.ConnectFour.GameSpec()');
 					var nsims = val('azero-nsims', '800');
 					var c = '';
-					c += line(kw('using') + ' ' + ty('AlphaZero') + ', ' + ty('AlphaZeroChess') + ', ' + ty('Plots'));
+					c += line(kw('using') + ' ' + ty('AlphaZero') + ', ' + ty('Plots'));
 					c += blank();
 					c += cline('env  = ' + fn('GI.init') + '(' + game + ')', 'initial position');
 					c += cline('mcts = ' + fn('MCTS.init') + '(session.network, ' + fn('MctsParams') + '(num_simulations = ' + nsims + '))', 'MCTS instance');
@@ -438,9 +434,9 @@ export function getAzeroHtml(): string {
 				label: 'Win Rate vs Random',
 				desc: 'Evaluate the trained network against a random player over many games',
 				code: function() {
-					var game   = val('azero-game',   'ChessSpec()');
+					var game   = val('azero-game',   'Examples.ConnectFour.GameSpec()');
 					var c = '';
-					c += line(kw('using') + ' ' + ty('AlphaZero') + ', ' + ty('AlphaZeroChess'));
+					c += line(kw('using') + ' ' + ty('AlphaZero'));
 					c += blank();
 					c += cline('results = ' + fn('evaluate') + '(session,', 'evaluate against random opponent');
 					c += line('    ' + fn('RandomPlayer') + '(),');
@@ -477,10 +473,10 @@ export function getAzeroHtml(): string {
 				label: 'Play a Game',
 				desc: 'Run a complete game between two copies of the trained network',
 				code: function() {
-					var game  = val('azero-game',  'ChessSpec()');
+					var game  = val('azero-game',  'Examples.ConnectFour.GameSpec()');
 					var nsims = val('azero-nsims', '800');
 					var c = '';
-					c += line(kw('using') + ' ' + ty('AlphaZero') + ', ' + ty('AlphaZeroChess'));
+					c += line(kw('using') + ' ' + ty('AlphaZero'));
 					c += blank();
 					c += cline('player = ' + fn('MctsPlayer') + '(session.network, ' + fn('MctsParams') + '(num_simulations = ' + nsims + '))', 'MCTS player using trained network');
 					c += cline('trace  = ' + fn('play_game') + '(' + game + ', player, player)', 'self-play one game and record trace');
@@ -495,10 +491,10 @@ export function getAzeroHtml(): string {
 				label: 'Best Move',
 				desc: 'Policy distribution over legal moves from a given position',
 				code: function() {
-					var game  = val('azero-game',  'ChessSpec()');
+					var game  = val('azero-game',  'Examples.ConnectFour.GameSpec()');
 					var nsims = val('azero-nsims', '800');
 					var c = '';
-					c += line(kw('using') + ' ' + ty('AlphaZero') + ', ' + ty('AlphaZeroChess'));
+					c += line(kw('using') + ' ' + ty('AlphaZero'));
 					c += blank();
 					c += cline('env  = ' + fn('GI.init') + '(' + game + ')', 'start from initial position');
 					c += cline('mcts = ' + fn('MCTS.init') + '(session.network, ' + fn('MctsParams') + '(num_simulations = ' + nsims + '))', 'MCTS');
@@ -518,9 +514,9 @@ export function getAzeroHtml(): string {
 				label: 'vs Previous Checkpoint',
 				desc: 'Compare win rate of current network against an earlier training checkpoint',
 				code: function() {
-					var game = val('azero-game', 'ChessSpec()');
+					var game = val('azero-game', 'Examples.ConnectFour.GameSpec()');
 					var c = '';
-					c += line(kw('using') + ' ' + ty('AlphaZero') + ', ' + ty('AlphaZeroChess'));
+					c += line(kw('using') + ' ' + ty('AlphaZero'));
 					c += blank();
 					c += cline('old_net = ' + fn('load_network') + '(session, iter=5)', 'load checkpoint from iteration 5');
 					c += cline('new_net = session.network', 'current network');
@@ -542,10 +538,10 @@ export function getAzeroHtml(): string {
 				label: 'Policy Distribution',
 				desc: 'Raw network policy probabilities before and after MCTS for a given position',
 				code: function() {
-					var game = val('azero-game', 'ChessSpec()');
+					var game = val('azero-game', 'Examples.ConnectFour.GameSpec()');
 					var nsims = val('azero-nsims', '800');
 					var c = '';
-					c += line(kw('using') + ' ' + ty('AlphaZero') + ', ' + ty('AlphaZeroChess'));
+					c += line(kw('using') + ' ' + ty('AlphaZero'));
 					c += blank();
 					c += cline('env   = ' + fn('GI.init') + '(' + game + ')', 'current position');
 					c += cline('state = ' + fn('GI.vectorize_state') + '(' + game + ', env)', 'encode state as tensor');
@@ -566,10 +562,10 @@ export function getAzeroHtml(): string {
 				label: 'Value Over Game',
 				desc: 'Network value estimate at each position along a played game',
 				code: function() {
-					var game  = val('azero-game',  'ChessSpec()');
+					var game  = val('azero-game',  'Examples.ConnectFour.GameSpec()');
 					var nsims = val('azero-nsims', '800');
 					var c = '';
-					c += line(kw('using') + ' ' + ty('AlphaZero') + ', ' + ty('AlphaZeroChess') + ', ' + ty('Plots'));
+					c += line(kw('using') + ' ' + ty('AlphaZero') + ', ' + ty('Plots'));
 					c += blank();
 					c += cline('player = ' + fn('MctsPlayer') + '(session.network, ' + fn('MctsParams') + '(num_simulations = ' + nsims + '))', 'MCTS player');
 					c += cline('trace  = ' + fn('play_game') + '(' + game + ', player, player)', 'play one game');

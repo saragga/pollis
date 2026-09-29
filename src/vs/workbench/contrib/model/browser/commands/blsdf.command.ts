@@ -22,7 +22,7 @@ const BLSDF_METADATA: IBlsdfMetadata = {
 		packages: [
 			{
 				name: 'BayesianFactorZoo.jl',
-				github: 'https://github.com/BayesianFactorZoo/BayesianFactorZoo.jl',
+				github: 'https://github.com/eohne/BayesianFactorZoo.jl',
 				papers: [
 					{ title: 'Bayesian Solutions for the Factor Zoo: We Just Ran Two Quadrillion Models', authors: 'Bryzgalova, Huang & Julliard', year: 2023, journal: 'Journal of Finance', doi: '10.1111/jofi.13197', openAccess: false },
 				],

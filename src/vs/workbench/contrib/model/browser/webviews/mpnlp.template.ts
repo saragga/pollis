@@ -268,12 +268,12 @@ export function getMpnlpHtml(): string {
 		function jNlp(s)         { return 'Ipopt'; }
 		function solverImport(s) {
 			if (isJuniper(s)) { return ty('JuMP') + ', ' + ty('Juniper') + ', ' + ty(jNlp(s)); }
-			if (isCouenne(s)) { return ty('JuMP') + ', ' + ty('CouenneNL'); }
+			if (isCouenne(s)) { return ty('JuMP') + ', ' + ty('AmplNLWriter') + ', ' + ty('Couenne_jll'); }
 			return ty('JuMP') + ', ' + ty(s);
 		}
 		function solverModel(s) {
 			if (isJuniper(s)) { return fn('Model') + '(' + fn('optimizer_with_attributes') + '(' + ty('Juniper') + '.Optimizer, "nl_solver" => ' + ty(jNlp(s)) + '.Optimizer))'; }
-			if (isCouenne(s)) { return fn('Model') + '(' + ty('CouenneNL') + '.Optimizer)'; }
+			if (isCouenne(s)) { return fn('Model') + '(() -&gt; ' + ty('AmplNLWriter') + '.Optimizer(' + ty('Couenne_jll') + '.amplexe))'; }
 			return fn('Model') + '(' + ty(s) + '.Optimizer)';
 		}
 
@@ -307,7 +307,7 @@ export function getMpnlpHtml(): string {
 				var minlpComment = isJuniper(solver) ? jNlp(solver) + ' + Juniper outer Branch and Bound; ' + jNlp(solver) + ' solves each NLP node' : 'SCIP handles MINLP internally';
 				c += cline(kw('using') + ' ' + solverImport(solver), minlpComment);
 			} else if (currentModel === 'gnlp') {
-				var gnlpComment = isCouenne(solver) ? 'global NLP via CouenneNL (spatial Branch and Bound)' : 'global NLP; Branch and Bound with convex relaxations';
+				var gnlpComment = isCouenne(solver) ? 'global NLP via Couenne through AmplNLWriter (spatial Branch and Bound)' : 'global NLP; Branch and Bound with convex relaxations';
 				c += cline(kw('using') + ' ' + solverImport(solver), gnlpComment);
 			} else {
 				c += cline(kw('using') + ' ' + solverImport(solver), 'nonlinear programming (NLP)');
@@ -653,7 +653,7 @@ export function getMpnlpHtml(): string {
 						c += cline('t2 = @elapsed ' + fn('optimize!') + '(jun)', 'solve with Juniper');
 						c += cline(fn('println') + '("Ipopt+Juniper:  obj=", ' + fn('objective_value') + '(jun), " t=", round(t2; digits=4), "s")', 'result');
 					} else if (currentModel === 'gnlp') {
-						c += cline(kw('using') + ' ' + ty('JuMP') + ', ' + ty('EAGO') + ', ' + ty('CouenneNL'), 'EAGO vs CouenneNL — both JuMP-native global solvers');
+						c += cline(kw('using') + ' ' + ty('JuMP') + ', ' + ty('EAGO') + ', ' + ty('AmplNLWriter') + ', ' + ty('Couenne_jll'), 'EAGO vs Couenne — two global solvers behind JuMP');
 						c += blank();
 						c += cline('eago = ' + fn('Model') + '(EAGO.Optimizer)', 'EAGO: Branch and Bound + McCormick relaxations');
 						c += cline(fn('@variable') + '(eago, ' + xvar + '[1:' + n + '])');
@@ -662,7 +662,7 @@ export function getMpnlpHtml(): string {
 						c += cline('t1 = @elapsed ' + fn('optimize!') + '(eago)', 'solve with EAGO');
 						c += cline(fn('println') + '("EAGO:    obj=", ' + fn('objective_value') + '(eago), " t=", round(t1; digits=4), "s")', 'result');
 						c += blank();
-						c += cline('couenne = ' + fn('Model') + '(' + ty('CouenneNL') + '.Optimizer)', 'CouenneNL: spatial Branch and Bound');
+						c += cline('couenne = ' + fn('Model') + '(() -&gt; ' + ty('AmplNLWriter') + '.Optimizer(' + ty('Couenne_jll') + '.amplexe))', 'Couenne via AmplNLWriter: spatial Branch and Bound');
 						c += cline(fn('@variable') + '(couenne, ' + xvar + '[1:' + n + '])');
 						c += cline(fn('@objective') + '(couenne, ' + ty(sense) + ', ' + fn('sum') + '(' + xvar + ' .^ 2))');
 						c += cline(fn('@constraint') + '(couenne, ' + fn('sum') + '(' + xvar + ') == 1)');

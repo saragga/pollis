@@ -503,7 +503,7 @@ export function getLrmHtml(): string {
 			pressBtn(this); vscode.postMessage({ command: 'openNotebookList' });
 		});
 		document.getElementById('btn-documentation').addEventListener('click', function() {
-			vscode.postMessage({ command: 'openUrl', url: 'https://github.com/JuliaQuant/PerformanceAnalytics.jl' });
+			vscode.postMessage({ command: 'openUrl', url: 'https://github.com/eohne/PerformanceAnalytics.jl' });
 		});
 		document.getElementById('btn-paper').addEventListener('click', function() {
 			if (activeBtn === this) { releaseBtn(); document.body.click(); return; }

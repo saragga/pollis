@@ -22,14 +22,14 @@ const BFMB_METADATA: IBfmbMetadata = {
 		packages: [
 			{
 				name: 'BayesianFactorZoo.jl',
-				github: 'https://github.com/BayesianFactorZoo/BayesianFactorZoo.jl',
+				github: 'https://github.com/eohne/BayesianFactorZoo.jl',
 				papers: [
 					{ title: 'Bayesian Solutions for the Factor Zoo: We Just Ran Two Quadrillion Models', authors: 'Bryzgalova, Huang & Julliard', year: 2023, journal: 'Journal of Finance', doi: '10.1111/jofi.13197', openAccess: false },
 				],
 			},
 			{
-				name: 'FamaFrench.jl',
-				github: 'https://github.com/JuliaFinance/FamaFrench.jl',
+				name: 'FamaFrenchData.jl',
+				github: 'https://github.com/tbeason/FamaFrenchData.jl',
 				papers: [
 					{ title: 'Risk, Return, and Equilibrium: Empirical Tests', authors: 'Fama & MacBeth', year: 1973, journal: 'Journal of Political Economy', doi: '10.1086/260061', openAccess: false },
 				],
@@ -40,7 +40,7 @@ const BFMB_METADATA: IBfmbMetadata = {
 			{ name: 'Prior Sensitivity',           file: 'bfmb/tutorial-02-priors.ipynb',       bundled: true, description: 'Effect of psi0 and d on posterior risk price estimates' },
 			{ name: 'Model Comparison',            file: 'bfmb/tutorial-03-model-comparison.ipynb', bundled: true, description: 'Bayesian factor selection and model comparison across candidate factors' },
 			{ name: 'Factor Zoo Application',      file: 'bfmb/tutorial-04-factor-zoo.ipynb',   bundled: true, description: 'Running two-quadrillion-model Bayesian factor selection on real data' },
-			{ name: 'Classical FM Basics',         file: 'bfmb/tutorial-05-classical.ipynb',   bundled: true, description: 'Classical two-pass Fama-MacBeth regression with FamaFrench.jl' },
+			{ name: 'Classical FM Basics',         file: 'bfmb/tutorial-05-classical.ipynb',   bundled: true, description: 'Classical two-pass Fama-MacBeth regression with TwoPassRegression()' },
 			{ name: 'Newey-West Standard Errors',  file: 'bfmb/tutorial-06-newey-west.ipynb',  bundled: true, description: 'HAC-robust inference for cross-sectional risk price estimates' },
 		],
 		wikis: [
@@ -59,7 +59,7 @@ const BFMB_METADATA: IBfmbMetadata = {
 			intercept:  'true to allow non-zero pricing errors in the cross-sectional regression; false to impose that factors explain all expected returns exactly.',
 			sim_length: 'Number of MCMC posterior draws retained after burnin. Increase to 50 000 or more for publication-quality inference.',
 			burnin:     'Number of initial MCMC draws to discard as warmup. Should be at least 10–20 % of sim_length.',
-			lags:       'Newey-West lags for HAC-consistent standard errors. Controls autocorrelation correction in cross-sectional risk price inference. Typical rule: floor(T^(1/3)); use 5 for monthly data.',
+			estimator:  'ols for the two-pass OLS risk premia, gls for the GLS estimates. TwoPassRegression() always includes an intercept and reports Shanken (1992) errors-in-variables corrected t-statistics for both.',
 		},
 	},
 };

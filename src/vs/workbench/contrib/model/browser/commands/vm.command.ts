@@ -26,7 +26,7 @@ const VM_METADATA: IVmMetadata = {
 				papers: [
 					{ title: 'The Extreme Value Method for Estimating the Variance of the Rate of Return', authors: 'Parkinson, M.', year: 1980, url: 'https://doi.org/10.1086/260803', openAccess: false },
 					{ title: 'On the Estimation of Security Price Volatilities from Historical Data', authors: 'Garman, M.B. & Klass, M.J.', year: 1980, url: 'https://doi.org/10.1086/260791', openAccess: false },
-					{ title: 'Estimating Variance from High, Low, and Closing Prices', authors: 'Rogers, L.C.G. & Satchell, S.E.', year: 1991, url: 'https://doi.org/10.1214/aoap/1177005798', openAccess: false },
+					{ title: 'Estimating Variance from High, Low, and Closing Prices', authors: 'Rogers, L.C.G. & Satchell, S.E.', year: 1991, url: 'https://doi.org/10.1086/296071', openAccess: false },
 					{ title: 'Drift-Independent Volatility Estimation Based on High, Low, Open, and Close Prices', authors: 'Yang, D. & Zhang, Q.', year: 2000, url: 'https://doi.org/10.1086/209650', openAccess: false },
 					{ title: 'Answering the Skeptics: Yes, Standard Volatility Models Do Provide Accurate Forecasts', authors: 'Andersen, T.G. & Bollerslev, T.', year: 1998, url: 'https://doi.org/10.2307/2527343', openAccess: false },
 					{ title: 'A Tale of Two Time Scales: Determining Integrated Volatility With Noisy High-Frequency Data', authors: 'Zhang, L., Mykland, P.A. & Aït-Sahalia, Y.', year: 2005, url: 'https://doi.org/10.1198/016214505000000169', openAccess: false },

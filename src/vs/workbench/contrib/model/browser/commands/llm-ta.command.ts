@@ -69,7 +69,7 @@ const LLM_TA_METADATA: ILlmTaMetadata = {
 		packages: [
 			{
 				name: 'LLMTextAnalysis.jl',
-				github: 'https://github.com/JuliaAI/LLMTextAnalysis.jl',
+				github: 'https://github.com/svilupp/LLMTextAnalysis.jl',
 				papers: [],
 			},
 		],

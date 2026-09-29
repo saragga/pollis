@@ -28,7 +28,7 @@ const DSGE_METADATA: IDsgeMetadata = {
 						title: 'Bayesian Estimation of DSGE Models',
 						authors: 'Herbst, E. P., & Schorfheide, F.',
 						year: 2015,
-						url: 'https://doi.org/10.1515/9781400873082',
+						url: 'https://doi.org/10.23943/princeton/9780691161082.001.0001',
 						openAccess: false,
 					},
 					{
@@ -69,7 +69,7 @@ const DSGE_METADATA: IDsgeMetadata = {
 						title: 'Perturbation methods for Markov-switching DSGE models',
 						authors: 'Foerster, A., Rubio-Ram\u00edrez, J. F., Waggoner, D. F., & Zha, T.',
 						year: 2016,
-						url: 'https://doi.org/10.3982/QE432',
+						url: 'https://doi.org/10.3982/QE596',
 						openAccess: false,
 					},
 				],

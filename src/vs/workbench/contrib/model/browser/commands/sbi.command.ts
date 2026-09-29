@@ -24,7 +24,7 @@ const SBI_METADATA: ISbiMetadata = {
 				name: 'NeuralEstimators.jl',
 				github: 'https://github.com/msainsburydale/NeuralEstimators.jl',
 				papers: [
-					{ title: 'Neural Bayes Estimators for Irregular Spatial Data Using Graph Neural Networks', authors: 'Sainsbury-Dale, M., Zammit-Mangion, A. & Huser, R.', year: 2024, url: 'https://doi.org/10.1080/10618600.2024.2338323', openAccess: true },
+					{ title: 'Neural Bayes Estimators for Irregular Spatial Data Using Graph Neural Networks', authors: 'Sainsbury-Dale, M., Zammit-Mangion, A. & Huser, R.', year: 2025, url: 'https://doi.org/10.1080/10618600.2024.2433671', openAccess: true },
 					{ title: 'Likelihood-Free Parameter Estimation with Neural Bayes Estimators', authors: 'Sainsbury-Dale, M., Zammit-Mangion, A. & Huser, R.', year: 2024, url: 'https://doi.org/10.1080/00031305.2023.2249522', openAccess: true },
 				],
 			},

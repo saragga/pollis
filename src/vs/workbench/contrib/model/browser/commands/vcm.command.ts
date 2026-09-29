@@ -20,7 +20,7 @@ const VCM_TITLE = 'GARCH-Type Models';
 const VCM_METADATA: IVcmMetadata = {
 	vcm: {
 		packages: [
-			{ name: 'ARCHModels.jl', github: 'https://github.com/s-baumann/ARCHModels.jl', papers: [] },
+			{ name: 'ARCHModels.jl', github: 'https://github.com/s-broda/ARCHModels.jl', papers: [] },
 		],
 		notebooks: [
 			{ name: 'GARCH Modelling',           file: 'vcm/tutorial-01-garch.ipynb',    bundled: true, description: 'Univariate GARCH, EGARCH and GJR-GARCH volatility models' },

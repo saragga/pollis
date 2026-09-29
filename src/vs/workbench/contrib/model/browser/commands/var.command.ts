@@ -21,7 +21,7 @@ const VAR_METADATA: IVarMetadata = {
 	var: {
 		packages: [
 			{ name: 'MacroEconometricModels.jl', github: 'https://github.com/FriedmanJP/MacroEconometricModels.jl', papers: [], license: 'GPL-3.0' },
-			{ name: 'TransmissionChannelAnalysis.jl', github: 'https://github.com/enricoschumann/TransmissionChannelAnalysis.jl', papers: [] },
+			{ name: 'TransmissionChannelAnalysis.jl', github: 'https://github.com/enweg/TransmissionChannelAnalysis.jl', papers: [] },
 		],
 		notebooks: [
 			{ name: 'VAR Modelling',                    file: 'var/tutorial-01-var.ipynb',         bundled: true, description: 'Fitting and interpreting Vector Autoregression models' },

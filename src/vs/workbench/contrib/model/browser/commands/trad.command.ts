@@ -86,19 +86,19 @@ const TRAD_METADATA: ITradMetadata = {
 			},
 			{
 				name: 'VLLimitOrderBook.jl',
-				github: 'https://github.com/dm13450/VLLimitOrderBook.jl',
+				github: 'https://github.com/Renruize12306/VLLimitOrderBook.jl',
 				papers: [],
 				videos: [],
 			},
 			{
 				name: 'Brokerage.jl',
-				github: 'https://github.com/dm13450/Brokerage.jl',
+				github: 'https://github.com/aaron-wheeler/Brokerage.jl',
 				papers: [],
 				videos: [],
 			},
 			{
 				name: 'TotalViewITCH.jl',
-				github: 'https://github.com/dm13450/TotalViewITCH.jl',
+				github: 'https://github.com/cswaney/TotalViewITCH.jl',
 				papers: [],
 				videos: [],
 			},

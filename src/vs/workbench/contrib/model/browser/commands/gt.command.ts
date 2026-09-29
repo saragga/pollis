@@ -129,7 +129,7 @@ const GT_METADATA: IGtMetadata = {
 			},
 			{
 				name: 'BaryPlots.jl',
-				github: 'https://github.com/QuantEcon/BaryPlots.jl',
+				github: 'https://github.com/datadreamscorp/BaryPlots.jl',
 				papers: [],
 				videos: [],
 			},
