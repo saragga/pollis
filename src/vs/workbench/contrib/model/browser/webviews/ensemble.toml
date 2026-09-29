@@ -1,0 +1,636 @@
+# Ensemble Learning Methods Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/ensemble.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Ensemble Learning Methods"
+viewType = "pollis.ensemble"
+defaultModel = "rf"
+
+[[packages]]
+name = "DecisionTree.jl"
+github = "https://github.com/JuliaAI/DecisionTree.jl"
+
+[[packages]]
+name = "EvoTrees.jl"
+github = "https://github.com/Evovest/EvoTrees.jl"
+
+[[packages]]
+name = "XGBoost.jl"
+github = "https://github.com/dmlc/XGBoost.jl"
+
+[[packages]]
+name = "NeuroTreeModels.jl"
+github = "https://github.com/Evovest/NeuroTreeModels.jl"
+
+[[packages]]
+name = "SIRUS.jl"
+github = "https://github.com/rikhuijzer/SIRUS.jl"
+
+[requires]
+packages = ["Plots.jl", "Tables.jl", "MLJ.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Random Forests"
+file = "ensemble/tutorial-01-random-forests.ipynb"
+bundled = true
+description = "Training, tuning, and evaluating random forests with DecisionTree.jl"
+
+[[notebookSections.notebooks]]
+name = "Gradient Boosting"
+file = "ensemble/tutorial-02-gradient-boosting.ipynb"
+bundled = true
+description = "Gradient boosted trees with EvoTrees.jl — nrounds, depth, learning rate"
+
+[[notebookSections.notebooks]]
+name = "XGBoost"
+file = "ensemble/tutorial-03-xgboost.ipynb"
+bundled = true
+description = "High-performance boosting with XGBoost.jl and regularisation parameters"
+
+[[notebookSections.notebooks]]
+name = "Model Interpretation"
+file = "ensemble/tutorial-04-interpretation.ipynb"
+bundled = true
+description = "Feature importance, SIRUS rule extraction, and SHAP value decomposition"
+
+[[notebookSections.notebooks]]
+name = "Differentiable DT"
+file = "ensemble/tutorial-05-neurotree.ipynb"
+bundled = true
+description = "Gradient-boosted soft decision trees with NeuroTreeModels.jl"
+
+[[wikis]]
+name = "Overview"
+file = "ensemble/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Factsheet"
+file = "ensemble/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "ensemble/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "ensemble/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "ensemble/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "ensemble/decision-guide.md"
+bundled = true
+
+[[wikis]]
+name = "Random Forests"
+file = "ensemble/random-forests.md"
+bundled = true
+
+[[wikis]]
+name = "Gradient Boosting"
+file = "ensemble/gradient-boosting.md"
+bundled = true
+
+[[wikis]]
+name = "XGBoost"
+file = "ensemble/xgboost.md"
+bundled = true
+
+[[wikis]]
+name = "Feature Importance"
+file = "ensemble/feature-importance.md"
+bundled = true
+
+[[wikis]]
+name = "SIRUS"
+file = "ensemble/sirus.md"
+bundled = true
+
+[[wikis]]
+name = "SHAP Values"
+file = "ensemble/shap.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Original Papers (from packages)"
+
+[[references]]
+title = "Random Forests"
+authors = "Breiman, L."
+year = 2001
+journal = ""
+url = "https://link.springer.com/article/10.1023/A:1010933404324"
+openAccess = false
+
+[[references]]
+title = "Greedy Function Approximation: A Gradient Boosting Machine"
+authors = "Friedman, J.H."
+year = 2001
+journal = ""
+url = "https://projecteuclid.org/journals/annals-of-statistics/volume-29/issue-5/Greedy-function-approximation-A-gradient-boosting-machine/10.1214/aos/1013203451.full"
+openAccess = false
+
+[[references]]
+title = "XGBoost: A Scalable Tree Boosting System"
+authors = "Chen, T. & Guestrin, C."
+year = 2016
+journal = ""
+url = "https://arxiv.org/abs/1603.02754"
+openAccess = true
+
+[[references]]
+title = "SIRUS: Stable and Interpretable RUle Sets for Classification"
+authors = "Bénard, C., Biau, G., Da Veiga, S. & Scornet, E."
+year = 2021
+journal = ""
+url = "https://projecteuclid.org/journals/electronic-journal-of-statistics/volume-15/issue-1/SIRUS--Stable-and-Interpretable-RUle-Sets-for-classification/10.1214/20-EJS1792.full"
+openAccess = true
+
+[[references]]
+title = "A Unified Approach to Interpreting Model Predictions"
+authors = "Lundberg, S.M. & Lee, S.I."
+year = 2017
+journal = ""
+url = "https://arxiv.org/abs/1705.07874"
+openAccess = true
+
+[[references]]
+title = "Explaining Black-Box Models through Counterfactuals"
+authors = "Altmeyer, P., van der Blom, I., Daxberger, E. & Martens, D."
+year = 2023
+journal = ""
+url = "https://arxiv.org/abs/2212.07466"
+openAccess = true
+
+[[models]]
+id = "rf"
+label = "Random Forests"
+
+[[models]]
+id = "gbt"
+label = "Gradient Boosting"
+
+[[models]]
+id = "xgb"
+label = "XGBoost"
+
+[[models]]
+id = "ddt"
+label = "Differentiable DT"
+
+[[bullets]]
+text = "Random Forests"
+detail = "bagging of decision trees; low variance via bootstrap aggregation (DecisionTree.jl)"
+
+[[bullets]]
+text = "Gradient Boosting"
+detail = "sequential additive training on pseudo-residuals; pure Julia implementation (EvoTrees.jl)"
+
+[[bullets]]
+text = "XGBoost"
+detail = "regularised gradient boosting with second-order approximation; high-performance C++ via Julia wrapper"
+
+[[bullets]]
+text = "Differentiable DT"
+detail = "gradient-boosted ensemble of soft, differentiable trees via sigmoid routing (NeuroTreeModels.jl)"
+
+[[decisionRows]]
+task = "Random Forests"
+context = "Strong default with little tuning"
+purpose = "Average of deep trees on bootstrap samples; low variance"
+
+[[decisionRows]]
+task = "Gradient Boosting"
+context = "Tabular data, best accuracy with tuning, pure Julia"
+purpose = "Shallow trees added one at a time to correct the current errors (EvoTrees.jl)"
+
+[[decisionRows]]
+task = "XGBoost"
+context = "Large data, a proven industrial implementation"
+purpose = "Regularised boosting with second-order gradients (C++ library)"
+
+[[decisionRows]]
+task = "Differentiable DT"
+context = "Trees inside a gradient-based or neural pipeline"
+purpose = "Soft trees with sigmoid routing, trained by gradient descent (NeuroTreeModels.jl)"
+
+[[inputs]]
+id = "task"
+label = "Task"
+tooltip = "Learning objective and prediction head. Classification minimises cross-entropy or Gini impurity; regression minimises squared error."
+kind = "select"
+default = "classification"
+
+[[inputs.options]]
+value = "classification"
+label = "Classification"
+
+[[inputs.options]]
+value = "regression"
+label = "Regression"
+
+[[inputs]]
+id = "X"
+label = "Train Feature Matrix"
+tooltip = "n_samples × n_features matrix of input features used to train the ensemble."
+default = "X_train"
+
+[[inputs]]
+id = "y"
+label = "Train Target Variable"
+tooltip = "Target vector of length n_samples. Discrete class labels for classification; continuous values for regression."
+default = "y_train"
+
+[[inputs]]
+id = "X_test"
+label = "Test Feature Matrix"
+tooltip = "n_samples × n_features feature matrix of held-out test data used to evaluate generalisation."
+default = "X_test"
+
+[[inputs]]
+id = "y_test"
+label = "Test Target Variable"
+tooltip = "Target vector of the held-out test data."
+default = "y_test"
+
+[[inputs]]
+id = "ntrees"
+label = "n_trees"
+tooltip = "Number of trees (Random Forests, Differentiable DT) or boosting rounds (Gradient Boosting, XGBoost). More rounds reduce bias but risk overfitting. Typical range: 100–1000."
+default = "100"
+newRow = true
+
+[[inputs]]
+id = "maxdepth"
+label = "max_depth"
+tooltip = "Maximum depth of each tree. Shallower trees reduce overfitting but may underfit. Typical values: 3–8 for boosting, 5–20 for random forests (or unlimited with −1)."
+default = "5"
+
+[[inputs]]
+id = "eta"
+label = "eta (learning rate)"
+tooltip = "Step size eta in (0, 1] applied to each tree's contribution. Smaller values require more rounds but generalise better. Typical range: 0.01–0.3."
+default = "0.1"
+models = ["gbt", "xgb"]
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.rf]
+# Three small trees side by side, averaged
+svg = '''
+var s = '';
+for (var k = 0; k < 3; k++) {
+	var x = 9 + k * 18;
+	s += '<line x1="' + x + '" y1="30" x2="' + (x - 5) + '" y2="44" stroke="currentColor" stroke-width="1"/>';
+	s += '<line x1="' + x + '" y1="30" x2="' + (x + 5) + '" y2="44" stroke="currentColor" stroke-width="1"/>';
+	s += '<circle cx="' + x + '" cy="30" r="3" fill="currentColor"/>';
+	s += '<circle cx="' + (x - 5) + '" cy="45" r="2.5" fill="currentColor" opacity="0.6"/><circle cx="' + (x + 5) + '" cy="45" r="2.5" fill="currentColor" opacity="0.6"/>';
+	s += '<line x1="' + x + '" y1="50" x2="27" y2="62" stroke="currentColor" stroke-width="0.8" opacity="0.5"/>';
+}
+return s + '<circle cx="27" cy="65" r="4" fill="currentColor"/>';
+'''
+
+[miniCharts.gbt]
+# Trees added in sequence, each shrinking the error
+svg = '''
+var s = '', h = [26, 17, 11, 7];
+for (var k = 0; k < 4; k++) {
+	var x = 7 + k * 13;
+	s += '<rect x="' + (x - 3) + '" y="' + (66 - h[k]) + '" width="6" height="' + h[k] + '" fill="currentColor" opacity="0.6"/>';
+	s += '<circle cx="' + x + '" cy="30" r="2.5" fill="currentColor"/>';
+	if (k < 3) { s += '<path d="M' + (x + 3) + ',30 L' + (x + 10) + ',30" stroke="currentColor" stroke-width="1"/>'; }
+}
+return s;
+'''
+
+[miniCharts.xgb]
+# Boosted trees with a regularisation bracket over their leaves
+svg = '''
+var s = '', h = [24, 16, 10, 6];
+for (var k = 0; k < 4; k++) {
+	var x = 7 + k * 13;
+	s += '<rect x="' + (x - 3) + '" y="' + (66 - h[k]) + '" width="6" height="' + h[k] + '" fill="currentColor" opacity="0.6"/>';
+}
+s += '<path d="M4,34 L4,28 L50,28 L50,34" fill="none" stroke="currentColor" stroke-width="1.2"/>';
+return s;
+'''
+
+[miniCharts.ddt]
+# A soft split: a sigmoid routing curve
+svg = '''
+var d = '';
+for (var i = 0; i <= 40; i++) {
+	var x = 5 + i * 1.1, z = (x - 27) / 4;
+	d += (i === 0 ? 'M' : 'L') + x.toFixed(1) + ',' + (64 - 36 / (1 + Math.exp(-z))).toFixed(1);
+}
+return '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.5"/>'
+	+ '<line x1="27" y1="22" x2="27" y2="68" stroke="currentColor" stroke-width="0.8" stroke-dasharray="2,2" opacity="0.6"/>';
+'''
+
+[[codeBranches]]
+model = "rf"
+code = '''
+using DecisionTree, Statistics
+
+X, y           = {{X}}, {{y}}  # training features (n x p) and target
+X_test, y_test = {{X_test}}, {{y_test}}  # held-out features and target
+ntrees    = {{ntrees}}  # number of trees
+max_depth = {{maxdepth}}  # maximum depth of each tree
+{{?task=classification}} classes = sort(unique(y))  # class labels; probability columns follow this order
+
+{{?task=classification}} model = RandomForestClassifier(n_trees=ntrees, max_depth=max_depth)
+{{?task=regression}} model = RandomForestRegressor(n_trees=ntrees, max_depth=max_depth)
+fit!(model, X, y)  # each tree grows on a bootstrap sample with random feature subsets
+
+yhat(X) = predict(model, X)  # majority vote or mean over the trees
+{{?task=classification}} proba(X) = predict_proba(model, X)  # n x classes
+
+{{?task=classification}} score(X) = proba(X)[:, end]  # probability of the last class, explained by the Interpret actions
+{{?task=regression}} score(X) = yhat(X)
+{{?task=classification}} metric(y, y_hat) = mean(y .== y_hat)  # accuracy
+{{?task=regression}} metric(y, y_hat) = sqrt(mean(abs2, y .- y_hat))  # RMSE
+(train = metric(y, yhat(X)), test = metric(y_test, yhat(X_test)))
+'''
+
+[[codeBranches]]
+model = "gbt"
+code = '''
+using EvoTrees, Statistics
+
+X, y           = {{X}}, {{y}}  # training features (n x p) and target
+X_test, y_test = {{X_test}}, {{y_test}}  # held-out features and target
+ntrees    = {{ntrees}}  # boosting rounds
+max_depth = {{maxdepth}}  # maximum depth of each tree
+eta       = {{eta}}  # learning rate (shrinkage)
+{{?task=classification}} classes = sort(unique(y))  # class labels; probability columns follow this order
+
+{{?task=classification}} config = EvoTreeClassifier(nrounds=ntrees, max_depth=max_depth, eta=eta)
+{{?task=regression}} config = EvoTreeRegressor(nrounds=ntrees, max_depth=max_depth, eta=eta)
+model = fit_evotree(config; x_train=X, y_train=y)  # each round fits a tree to the current gradients
+
+{{?task=classification}} proba(X) = model(X)  # n x classes
+{{?task=classification}} yhat(X) = classes[argmax.(eachrow(proba(X)))]
+{{?task=regression}} yhat(X) = model(X)
+
+{{?task=classification}} score(X) = proba(X)[:, end]  # probability of the last class, explained by the Interpret actions
+{{?task=regression}} score(X) = yhat(X)
+{{?task=classification}} metric(y, y_hat) = mean(y .== y_hat)  # accuracy
+{{?task=regression}} metric(y, y_hat) = sqrt(mean(abs2, y .- y_hat))  # RMSE
+(train = metric(y, yhat(X)), test = metric(y_test, yhat(X_test)))
+'''
+
+[[codeBranches]]
+model = "xgb"
+code = '''
+using XGBoost, Statistics
+
+X, y           = {{X}}, {{y}}  # training features (n x p) and target
+X_test, y_test = {{X_test}}, {{y_test}}  # held-out features and target
+ntrees    = {{ntrees}}  # boosting rounds
+max_depth = {{maxdepth}}  # maximum depth of each tree
+eta       = {{eta}}  # learning rate (shrinkage)
+{{?task=classification}} classes = sort(unique(y))  # class labels; probability columns follow this order
+
+{{?task=classification}} bst = xgboost((X, indexin(y, classes) .- 1); num_round=ntrees, max_depth, eta,  # labels recoded to 0, 1, ...
+{{?task=classification}}               objective="multi:softprob", num_class=length(classes))
+{{?task=regression}} bst = xgboost((X, y); num_round=ntrees, max_depth, eta, objective="reg:squarederror")
+
+{{?task=classification}} proba(X) = predict(bst, X)  # n x classes
+{{?task=classification}} yhat(X) = classes[argmax.(eachrow(proba(X)))]
+{{?task=regression}} yhat(X) = predict(bst, X)
+
+{{?task=classification}} score(X) = proba(X)[:, end]  # probability of the last class, explained by the Interpret actions
+{{?task=regression}} score(X) = yhat(X)
+{{?task=classification}} metric(y, y_hat) = mean(y .== y_hat)  # accuracy
+{{?task=regression}} metric(y, y_hat) = sqrt(mean(abs2, y .- y_hat))  # RMSE
+(train = metric(y, yhat(X)), test = metric(y_test, yhat(X_test)))
+'''
+
+[[codeBranches]]
+model = "ddt"
+code = '''
+using NeuroTreeModels, Tables, Statistics
+
+X, y           = {{X}}, {{y}}  # training features (n x p) and target
+X_test, y_test = {{X_test}}, {{y_test}}  # held-out features and target
+ntrees    = {{ntrees}}  # trees per ensemble
+max_depth = {{maxdepth}}  # maximum depth of each tree
+{{?task=classification}} classes = sort(unique(y))  # class labels; probability columns follow this order
+
+features = Symbol.(:Column, 1:size(X, 2))
+table(X) = Tables.columntable(Tables.table(X))  # Tables.jl column table (Column1, Column2, ...)
+{{?task=classification}} config = NeuroTreeClassifier(depth=max_depth, ntrees=ntrees, lr=0.05)
+{{?task=regression}} config = NeuroTreeRegressor(depth=max_depth, ntrees=ntrees, lr=0.05)
+model = NeuroTreeModels.fit(config, merge(table(X), (target = y,)); target_name=:target, feature_names=features)  # gradient descent on soft trees
+
+{{?task=classification}} proba(X) = model(table(X))  # n x classes
+{{?task=classification}} yhat(X) = classes[argmax.(eachrow(proba(X)))]
+{{?task=regression}} yhat(X) = model(table(X))
+
+{{?task=classification}} score(X) = proba(X)[:, end]  # probability of the last class, explained by the Interpret actions
+{{?task=regression}} score(X) = yhat(X)
+{{?task=classification}} metric(y, y_hat) = mean(y .== y_hat)  # accuracy
+{{?task=regression}} metric(y, y_hat) = sqrt(mean(abs2, y .- y_hat))  # RMSE
+(train = metric(y, yhat(X)), test = metric(y_test, yhat(X_test)))
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "fit-plot"
+label = "Predicted vs Actual"
+desc = "Confusion matrix on the test set (classification) or predicted against actual values (regression)"
+code = '''
+using Plots
+
+y_hat = yhat(X_test)
+{{?task=classification}} C = [count((y_test .== a) .& (y_hat .== b)) for a in classes, b in classes]
+{{?task=classification}} heatmap(string.(classes), string.(classes), C, xlabel="predicted", ylabel="actual", yflip=true)
+{{?task=regression}} scatter(y_test, y_hat, xlabel="actual", ylabel="predicted", alpha=0.5, legend=false)
+{{?task=regression}} plot!(identity, extrema(y_test)..., linestyle=:dash)
+'''
+
+[[actionGroups.actions]]
+id = "partial-dependence"
+label = "Partial Dependence"
+desc = "Average model output as one feature sweeps its range while all other features keep their observed values"
+code = '''
+using Plots
+
+j = 1  # feature to vary
+grid = range(extrema(X[:, j])..., length=30)
+pd = map(grid) do v
+    Xv = copy(X)
+    Xv[:, j] .= v
+    mean(score(Xv))
+end
+plot(grid, pd, xlabel=string("feature ", j), ylabel="average prediction", legend=false)
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "residuals"
+label = "Residuals or Calibration"
+desc = "Residuals against predictions (regression) or predicted probability against observed frequency (classification)"
+code = '''
+using Plots
+
+{{?task=regression}} y_hat = yhat(X_test)
+{{?task=regression}} scatter(y_hat, y_test .- y_hat, xlabel="prediction", ylabel="residual", alpha=0.5, legend=false)
+{{?task=regression}} hline!([0], linestyle=:dash)
+{{?task=classification}} p_hat = score(X_test)  # predicted probability of the last class
+{{?task=classification}} bins = clamp.(ceil.(Int, 10 .* p_hat), 1, 10)
+{{?task=classification}} observed = [mean(y_test[bins .== b] .== classes[end]) for b in 1:10 if any(bins .== b)]
+{{?task=classification}} predicted = [mean(p_hat[bins .== b]) for b in 1:10 if any(bins .== b)]
+{{?task=classification}} plot(predicted, observed, marker=:circle, xlabel="predicted probability", ylabel="observed frequency", label="model")
+{{?task=classification}} plot!(identity, 0, 1, linestyle=:dash, label="perfect calibration")
+'''
+
+[[actionGroups.actions]]
+id = "bootstrap-metric"
+label = "Test Metric Uncertainty"
+desc = "Bootstrap the test set 1000 times to put a 95% interval around the test accuracy or RMSE"
+code = '''
+y_hat = yhat(X_test)
+boot = map(1:1000) do _
+    i = rand(1:length(y_test), length(y_test))
+    metric(y_test[i], y_hat[i])
+end
+(test = metric(y_test, y_hat), interval = quantile(boot, [0.025, 0.975]))
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "predict-new"
+label = "Predict New Data"
+desc = "Predictions (and class probabilities) for new observations"
+code = '''
+y_new = yhat(X_new)  # X_new: same columns as the training features
+{{?task=classification}} p_new = proba(X_new)  # one column per class, in the order of classes
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "vs-tree"
+label = "vs Single Decision Tree"
+desc = "Fit one decision tree of the same depth: the gap is what the ensemble adds"
+code = '''
+import DecisionTree
+
+{{?task=classification}} tree = DecisionTree.DecisionTreeClassifier(max_depth=max_depth)
+{{?task=regression}} tree = DecisionTree.DecisionTreeRegressor(max_depth=max_depth)
+DecisionTree.fit!(tree, X, y)
+(ensemble = metric(y_test, yhat(X_test)), tree = metric(y_test, DecisionTree.predict(tree, X_test)))
+'''
+
+[[actionGroups.actions]]
+id = "vs-baseline"
+label = "vs Simple Baseline"
+desc = "Majority class (classification) or least squares on all features (regression)"
+code = '''
+{{?task=classification}} majority = classes[argmax([count(==(c), y) for c in classes])]
+{{?task=classification}} baseline = metric(y_test, fill(majority, length(y_test)))
+{{?task=regression}} beta = hcat(ones(size(X, 1)), X) \ y  # least squares with intercept
+{{?task=regression}} baseline = metric(y_test, hcat(ones(size(X_test, 1)), X_test) * beta)
+(ensemble = metric(y_test, yhat(X_test)), baseline = baseline)
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "importance"
+label = "Built-in Feature Importance"
+desc = "The library's own importance: impurity decrease (forests) or split gain (boosting)"
+code = '''
+{{?model=rf}} imp = impurity_importance(model)  # mean decrease in impurity per feature
+{{?model=gbt}} imp = last.(EvoTrees.importance(model))  # total split gain per feature
+{{?model=xgb}} imp = importance(bst, "gain")  # gain per feature
+{{?model=ddt}} imp = NeuroTreeModels.importance(model)  # importance per feature
+'''
+
+[[actionGroups.actions]]
+id = "permutation"
+label = "Permutation Importance"
+desc = "Drop in test performance when each feature is shuffled: model-agnostic and computed on held-out data"
+code = '''
+using Plots, Random
+
+base = metric(y_test, yhat(X_test))
+drop = map(1:size(X_test, 2)) do j
+    Xp = copy(X_test)
+    Xp[:, j] = shuffle(Xp[:, j])
+    s = metric(y_test, yhat(Xp))
+{{?task=classification}}     base - s  # lost accuracy
+{{?task=regression}}     s - base  # added RMSE
+end
+bar(drop, xlabel="feature", ylabel="performance lost when shuffled", legend=false)
+'''
+
+[[actionGroups.actions]]
+id = "shapley"
+label = "Shapley Values"
+desc = "Monte Carlo Shapley values for one test observation: each feature's contribution to its prediction"
+code = '''
+using Plots, Random
+
+function shapley(x; samples=200)  # permutation sampling against random training rows
+    phi = zeros(length(x))
+    for _ in 1:samples
+        z = X[rand(1:size(X, 1)), :]
+        prev = score(permutedims(z))[1]
+        for j in randperm(length(x))
+            z[j] = x[j]
+            next = score(permutedims(z))[1]
+            phi[j] += next - prev
+            prev = next
+        end
+    end
+    phi ./ samples
+end
+phi = shapley(X_test[1, :])  # explain the first test observation
+bar(phi, xlabel="feature", ylabel="contribution to the prediction", legend=false)
+'''
+
+[[actionGroups.actions]]
+id = "sirus"
+label = "Stable Rules (SIRUS)"
+desc = "A short, stable rule list distilled from a random forest on the same data — interpretable by design"
+code = '''
+using SIRUS
+import MLJ
+
+{{?task=classification}} rules = StableRulesClassifier(max_rules=10, q=10)  # at most 10 rules; q quantile splits per feature
+{{?task=regression}} rules = StableRulesRegressor(max_rules=10, q=10)
+{{?task=classification}} mach = MLJ.machine(rules, MLJ.table(X), MLJ.categorical(y))
+{{?task=regression}} mach = MLJ.machine(rules, MLJ.table(X), y)
+MLJ.fit!(mach)
+MLJ.fitted_params(mach).fitresult  # the extracted rule list
+'''

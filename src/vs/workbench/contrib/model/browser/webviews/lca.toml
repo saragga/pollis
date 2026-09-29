@@ -1,0 +1,407 @@
+# Latent Component Analysis Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/lca.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Latent Component Analysis"
+viewType = "pollis.lca"
+defaultModel = "pca"
+
+[[packages]]
+name = "MultivariateStats.jl"
+github = "https://github.com/JuliaStats/MultivariateStats.jl"
+
+[requires]
+packages = ["Plots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "PCA"
+file = "dim-reduction-lca/tutorial-01-pca.ipynb"
+bundled = true
+description = "Principal Component Analysis — eigendecomposition, scree plot, and score visualisation"
+
+[[notebookSections.notebooks]]
+name = "Kernel PCA"
+file = "dim-reduction-lca/tutorial-02-kpca.ipynb"
+bundled = true
+description = "Kernel PCA with RBF kernel — centred Gram matrix, nonlinear embedding, and bandwidth selection"
+
+[[notebookSections.notebooks]]
+name = "Factor Analysis"
+file = "dim-reduction-lca/tutorial-03-fa.ipynb"
+bundled = true
+description = "Factor Analysis — EM estimation of loadings and uniquenesses, scree and loading heatmap"
+
+[[wikis]]
+name = "Overview"
+file = "dim-reduction-lca/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Factsheet"
+file = "dim-reduction-lca/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "PCA"
+file = "dim-reduction-lca/pca.md"
+bundled = true
+
+[[wikis]]
+name = "Kernel PCA"
+file = "dim-reduction-lca/kpca.md"
+bundled = true
+
+[[wikis]]
+name = "Factor Analysis"
+file = "dim-reduction-lca/fa.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Original Papers (from packages)"
+
+[[references]]
+title = "Analysis of a Complex of Statistical Variables into Principal Components"
+authors = "Hotelling, H."
+year = 1933
+journal = ""
+url = "https://doi.org/10.1037/h0071325"
+openAccess = false
+
+[[references]]
+title = "Kernel Principal Component Analysis"
+authors = "Schölkopf, B., Smola, A. & Müller, K.-R."
+year = 1998
+journal = ""
+url = "https://doi.org/10.1162/089976698300017467"
+openAccess = false
+
+[[references]]
+title = "EM Algorithms for ML Factor Analysis"
+authors = "Rubin, D.B. & Thayer, D.T."
+year = 1982
+journal = ""
+url = "https://doi.org/10.1007/BF02294360"
+openAccess = false
+
+[[models]]
+id = "pca"
+label = "PCA"
+
+[[models]]
+id = "kpca"
+label = "Kernel PCA"
+
+[[models]]
+id = "fa"
+label = "Factor Analysis"
+
+[[bullets]]
+text = "PCA"
+detail = "projects data onto orthogonal axes of maximum variance via eigendecomposition of the covariance matrix (MultivariateStats.jl)"
+
+[[bullets]]
+text = "Kernel PCA"
+detail = "extends PCA to nonlinear structure using a kernel function; applies classical PCA in the implicit feature space (MultivariateStats.jl)"
+
+[[bullets]]
+text = "Factor Analysis"
+detail = "decomposes observed variables into latent factors plus independent noise; models Cov(x) = WWT + Psi (MultivariateStats.jl)"
+
+[[decisionRows]]
+task = "PCA"
+context = "Linear structure; compression, visualisation, decorrelation"
+purpose = "Orthogonal directions of maximum variance"
+
+[[decisionRows]]
+task = "Kernel PCA"
+context = "Nonlinear structure such as curves, rings or manifolds"
+purpose = "PCA in the feature space implied by an RBF kernel"
+
+[[decisionRows]]
+task = "Factor Analysis"
+context = "Observed variables driven by a few latent causes plus noise"
+purpose = "Shared variance through loadings; each variable keeps its own noise variance"
+
+[[inputs]]
+id = "X"
+label = "Feature Matrix"
+tooltip = "n_samples × n_features matrix, one row per observation. MultivariateStats.jl works with features × samples, so the code transposes it."
+default = "X_train"
+
+[[inputs]]
+id = "k"
+label = "Output Dimensions"
+tooltip = "Number of components or factors to extract. Use 2 or 3 for visualisation; the Choosing k action compares more."
+default = "2"
+newRow = true
+
+[[inputs]]
+id = "scaling"
+label = "Scaling"
+tooltip = "Standardise when features are on different scales, otherwise large-variance features dominate the components. The training mean and standard deviation are reused for new data."
+kind = "select"
+default = "standardise"
+
+[[inputs.options]]
+value = "standardise"
+label = "Standardise"
+
+[[inputs.options]]
+value = "centre"
+label = "Centre Only"
+
+[[inputs]]
+id = "gamma"
+label = "gamma (RBF bandwidth)"
+tooltip = "Bandwidth of the RBF kernel k(x, y) = exp(-gamma ||x - y||^2). Larger gamma = narrower kernel = more local structure. A common start is 1 / n_features."
+default = "1.0"
+models = ["kpca"]
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.pca]
+# Elongated point cloud with its two orthogonal principal axes
+svg = '''
+var s = '', pts = [[-14, -7], [-9, -6], [-6, -1], [-2, -3], [1, 1], [4, 0], [7, 4], [10, 3], [13, 7], [-11, -2], [8, 7], [-4, 2]];
+pts.forEach(function (p) { s += '<circle cx="' + (27 + p[0]) + '" cy="' + (46 - p[1]) + '" r="1.6" fill="currentColor" opacity="0.5"/>'; });
+return s + '<line x1="9" y1="55" x2="45" y2="37" stroke="currentColor" stroke-width="1.5"/>'
+	+ '<line x1="23" y1="38" x2="31" y2="54" stroke="currentColor" stroke-width="1.2"/>';
+'''
+
+[miniCharts.kpca]
+# A curved band unrolled into a straight line
+svg = '''
+var s = '';
+for (var i = 0; i <= 10; i++) {
+	var a = Math.PI * (0.15 + 0.7 * i / 10);
+	s += '<circle cx="' + (27 - 16 * Math.cos(a)).toFixed(1) + '" cy="' + (48 - 16 * Math.sin(a)).toFixed(1) + '" r="1.6" fill="currentColor" opacity="0.7"/>';
+	s += '<circle cx="' + (9 + 3.6 * i).toFixed(1) + '" cy="64" r="1.6" fill="currentColor" opacity="0.7"/>';
+}
+return s + '<path d="M27,51 L27,58 M24,55 L27,58 L30,55" fill="none" stroke="currentColor" stroke-width="1"/>';
+'''
+
+[miniCharts.fa]
+# Two latent factors pointing to four observed variables
+svg = '''
+var s = '', obs = [9, 21, 33, 45];
+s += '<circle cx="17" cy="30" r="5" fill="none" stroke="currentColor" stroke-width="1.3"/><circle cx="37" cy="30" r="5" fill="none" stroke="currentColor" stroke-width="1.3"/>';
+obs.forEach(function (x, i) {
+	s += '<rect x="' + (x - 4) + '" y="56" width="8" height="8" fill="currentColor" opacity="0.6"/>';
+	s += '<line x1="' + (i < 2 ? 17 : 37) + '" y1="35" x2="' + x + '" y2="56" stroke="currentColor" stroke-width="1"/>';
+});
+return s + '<line x1="17" y1="35" x2="33" y2="56" stroke="currentColor" stroke-width="0.8" opacity="0.4"/>';
+'''
+
+[[codeBranches]]
+model = "pca"
+code = '''
+using MultivariateStats, Statistics
+
+X  = {{X}}  # n x p feature matrix, one row per observation
+k  = {{k}}  # number of components or factors
+mu = mean(X, dims=1)
+{{?scaling=standardise}} sd = std(X, dims=1)
+{{?scaling=standardise}} prep(A) = permutedims((A .- mu) ./ sd)  # standardise with training statistics, transpose to p x n
+{{?scaling=centre}} prep(A) = permutedims(A .- mu)  # centre with the training mean, transpose to p x n
+Xt = prep(X)
+
+fit_model(k) = fit(PCA, Xt; maxoutdim=k)
+M = fit_model(k)
+Y = permutedims(predict(M, Xt))  # n x k component scores
+W = projection(M)  # p x k orthonormal directions (loadings(M) scales them by the component sd)
+
+X_hat = permutedims(reconstruct(M, predict(M, Xt)))  # n x p reconstruction in the prepared scale
+explained = principalvars(M) ./ var(M)  # share of total variance per component
+explained
+'''
+
+[[codeBranches]]
+model = "kpca"
+code = '''
+using MultivariateStats, Statistics, LinearAlgebra
+
+X  = {{X}}  # n x p feature matrix, one row per observation
+k  = {{k}}  # number of components or factors
+mu = mean(X, dims=1)
+{{?scaling=standardise}} sd = std(X, dims=1)
+{{?scaling=standardise}} prep(A) = permutedims((A .- mu) ./ sd)  # standardise with training statistics, transpose to p x n
+{{?scaling=centre}} prep(A) = permutedims(A .- mu)  # centre with the training mean, transpose to p x n
+Xt = prep(X)
+
+gamma  = {{gamma}}  # RBF bandwidth
+kernel = (x, y) -> exp(-gamma * norm(x - y)^2)
+
+fit_model(k) = fit(KernelPCA, Xt; kernel=kernel, maxoutdim=k, inverse=true)  # inverse=true learns a pre-image map
+M = fit_model(k)
+Y = permutedims(predict(M, Xt))  # n x k component scores
+
+X_hat = permutedims(reconstruct(M, predict(M, Xt)))  # approximate pre-images
+explained = eigvals(M) ./ sum(eigvals(fit(KernelPCA, Xt; kernel=kernel, maxoutdim=size(Xt, 2))))  # share of kernel variance
+explained
+'''
+
+[[codeBranches]]
+model = "fa"
+code = '''
+using MultivariateStats, Statistics
+
+X  = {{X}}  # n x p feature matrix, one row per observation
+k  = {{k}}  # number of components or factors
+mu = mean(X, dims=1)
+{{?scaling=standardise}} sd = std(X, dims=1)
+{{?scaling=standardise}} prep(A) = permutedims((A .- mu) ./ sd)  # standardise with training statistics, transpose to p x n
+{{?scaling=centre}} prep(A) = permutedims(A .- mu)  # centre with the training mean, transpose to p x n
+Xt = prep(X)
+
+fit_model(k) = fit(FactorAnalysis, Xt; maxoutdim=k, method=:cm)  # expectation-maximisation style updates
+M = fit_model(k)
+Y = permutedims(predict(M, Xt))  # n x k factor scores
+W = loadings(M)  # p x k loading matrix
+psi = var(M)  # unique (noise) variance of each variable
+
+X_hat = permutedims(W * predict(M, Xt) .+ mean(M))  # common-factor part of each observation
+explained = vec(sum(abs2, W, dims=1)) ./ sum(var(Xt, dims=2))  # share of total variance per factor
+communality = vec(sum(abs2, W, dims=2))  # variance of each variable explained by the factors
+explained
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "scores"
+label = "Score Scatter"
+desc = "Observations on the first two components or factors (colour them by a group vector if you have one)"
+code = '''
+using Plots
+
+scatter(Y[:, 1], Y[:, 2], xlabel="component 1", ylabel="component 2", markersize=3, alpha=0.7, legend=false)
+'''
+
+[[actionGroups.actions]]
+id = "scree"
+label = "Scree Plot"
+desc = "Share of variance per component with the cumulative share"
+code = '''
+using Plots
+
+bar(explained, xlabel="component", ylabel="share of variance", label="per component")
+plot!(cumsum(explained), marker=:circle, label="cumulative")
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "reconstruction-error"
+label = "Reconstruction Error"
+desc = "Per-observation squared error of rebuilding the data from k dimensions; the largest are hard-to-represent observations"
+code = '''
+using Plots
+
+errs = vec(mean(abs2, permutedims(Xt) .- X_hat, dims=2))  # per-observation MSE in the prepared scale
+histogram(errs, bins=30, xlabel="reconstruction MSE", ylabel="observations", legend=false)
+partialsortperm(errs, 1:min(5, length(errs)), rev=true)  # the five hardest observations
+'''
+
+[[actionGroups.actions]]
+id = "choose-k"
+label = "Choosing k"
+desc = "Refit for k = 1 to 10 and plot the mean reconstruction error: pick k where it stops falling quickly"
+code = '''
+using Plots
+
+ks = 1:min(10, size(Xt, 1))
+mse = map(ks) do kk
+    Mk = fit_model(kk)
+{{?model!=fa}}     R  = reconstruct(Mk, predict(Mk, Xt))
+{{?model=fa}}     R  = loadings(Mk) * predict(Mk, Xt) .+ mean(Mk)
+    mean(abs2, Xt .- R)
+end
+plot(ks, mse, marker=:circle, xlabel="k", ylabel="mean reconstruction MSE", legend=false)
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "project-new"
+label = "Project New Data"
+desc = "Scores of new observations, using the training scaling and the fitted model"
+code = '''
+Y_new = permutedims(predict(M, prep(X_new)))  # X_new: same columns as X; returns n_new x k
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "vs-other"
+label = "vs PCA or Factor Analysis"
+desc = "Absolute correlations between these scores and those of PCA (Factor Analysis for PCA itself): values near 1 mean the same directions"
+code = '''
+{{?model!=pca}} other = permutedims(predict(fit(PCA, Xt; maxoutdim=k), Xt))
+{{?model=pca}} other = permutedims(predict(fit(FactorAnalysis, Xt; maxoutdim=k), Xt))
+abs.(cor(Y, other))  # rows = these components, columns = the other method's
+'''
+
+[[actionGroups.actions]]
+id = "neighbours"
+label = "Neighbour Preservation"
+desc = "Share of each observation's 10 nearest neighbours that stay neighbours in the embedding, against a random projection"
+code = '''
+using LinearAlgebra, Random
+
+function knn_sets(A, m=10)  # rows are observations
+    G = A * permutedims(A)
+    D = diag(G) .+ permutedims(diag(G)) .- 2 .* G  # squared distances
+    [Set(sortperm(D[i, :])[2:m+1]) for i in axes(A, 1)]
+end
+kept(A) = mean(length(intersect(a, b)) / 10 for (a, b) in zip(knn_sets(permutedims(Xt)), knn_sets(A)))
+(model = kept(Y), random = kept(permutedims(Xt) * randn(size(Xt, 1), k)))
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "loading-matrix"
+label = "Loading Matrix"
+desc = "Heatmap of how each feature relates to each component (loadings for PCA and Factor Analysis, correlations for Kernel PCA)"
+code = '''
+using Plots
+
+{{?model!=kpca}} L = W  # p x k loadings
+{{?model=kpca}} L = cor(permutedims(Xt), Y)  # p x k feature-score correlations (no explicit loadings in kernel space)
+heatmap(1:size(L, 2), 1:size(L, 1), L, xlabel="component", ylabel="feature", color=:balance, clims=(-maximum(abs, L), maximum(abs, L)))
+'''
+
+[[actionGroups.actions]]
+id = "biplot"
+label = "Biplot"
+desc = "Score scatter overlaid with scaled feature arrows in the first two dimensions"
+code = '''
+using Plots
+
+{{?model!=kpca}} A = W[:, 1:2]
+{{?model=kpca}} A = cor(permutedims(Xt), Y[:, 1:2])
+A = A .* (maximum(abs, Y[:, 1:2]) / maximum(abs, A))  # scale arrows to the score range
+scatter(Y[:, 1], Y[:, 2], alpha=0.5, markersize=3, xlabel="component 1", ylabel="component 2", legend=false)
+for i in axes(A, 1)
+    plot!([0, A[i, 1]], [0, A[i, 2]], arrow=true, color=:red)
+    annotate!(A[i, 1], A[i, 2], text(string(i), 8))
+end
+plot!()
+'''

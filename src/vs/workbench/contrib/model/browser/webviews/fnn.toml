@@ -1,0 +1,601 @@
+# Feedforward Neural Networks Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/fnn.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Feedforward Neural Networks"
+viewType = "pollis.fnn"
+defaultModel = "mlp"
+
+[[packages]]
+name = "Flux.jl"
+github = "https://github.com/FluxML/Flux.jl"
+
+[[packages.videos]]
+title = "High Performance Computing in Julia"
+description = "An 18-video course by Jamie Mair on writing fast Julia code"
+url = "https://www.youtube.com/playlist?list=PLUAq6xQKFgGr39PiyrPk_C9dhBKvWcjUA"
+
+[requires]
+packages = ["Plots.jl", "MultivariateStats.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "MLP Basics"
+file = "fnn/tutorial-01-mlp.ipynb"
+bundled = true
+description = "Feedforward MLP for regression and classification with Flux.jl"
+
+[[notebookSections.notebooks]]
+name = "Autoencoder"
+file = "fnn/tutorial-02-autoencoder.ipynb"
+bundled = true
+description = "Unsupervised representation learning via encoder–decoder compression"
+
+[[notebookSections.notebooks]]
+name = "Variational AE"
+file = "fnn/tutorial-03-vae.ipynb"
+bundled = true
+description = "Latent variable generative model with ELBO training"
+
+[[notebookSections.notebooks]]
+name = "Mixture Density Network"
+file = "fnn/tutorial-04-mdn.ipynb"
+bundled = true
+description = "Probabilistic output as a Gaussian mixture; captures multimodal targets"
+
+[[wikis]]
+name = "Overview"
+file = "fnn/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Factsheet"
+file = "fnn/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "fnn/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "fnn/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "fnn/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "fnn/decision-guide.md"
+bundled = true
+
+[[wikis]]
+name = "Autoencoder"
+file = "fnn/autoencoder.md"
+bundled = true
+
+[[wikis]]
+name = "Variational Autoencoder"
+file = "fnn/vae.md"
+bundled = true
+
+[[wikis]]
+name = "Residual & BatchNorm"
+file = "fnn/residual-batchnorm.md"
+bundled = true
+
+[[wikis]]
+name = "Mixture Density Network"
+file = "fnn/mdn.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Original Papers (from packages)"
+
+[[references]]
+title = "Auto-Encoding Variational Bayes"
+authors = "Kingma, D.P. & Welling, M."
+year = 2013
+journal = ""
+url = "https://arxiv.org/abs/1312.6114"
+openAccess = true
+
+[[references]]
+title = "Deep Residual Learning for Image Recognition"
+authors = "He, K. et al."
+year = 2016
+journal = ""
+url = "https://arxiv.org/abs/1512.03385"
+openAccess = true
+
+[[references]]
+title = "Mixture Density Networks"
+authors = "Bishop, C.M."
+year = 1994
+journal = ""
+url = "https://publications.aston.ac.uk/id/eprint/373/1/NCRG_94_004.pdf"
+openAccess = true
+
+[[models]]
+id = "mlp"
+label = "MLP"
+
+[[models]]
+id = "ae"
+label = "Autoencoder"
+
+[[models]]
+id = "vae"
+label = "VAE"
+
+[[bullets]]
+text = "MLP"
+detail = "vanilla feedforward network; universal approximator for regression and classification"
+
+[[bullets]]
+text = "Autoencoder"
+detail = "unsupervised encoder–decoder for compression and anomaly detection"
+
+[[bullets]]
+text = "VAE"
+detail = "Variational Autoencoder; latent generative model trained with the ELBO"
+
+[[decisionRows]]
+task = "MLP"
+context = "Tabular inputs with a known target"
+purpose = "Flexible non-linear regression or classification"
+
+[[decisionRows]]
+task = "Autoencoder"
+context = "Unlabelled data; compression or anomaly detection"
+purpose = "Deterministic low-dimensional code learned by reconstruction"
+
+[[decisionRows]]
+task = "VAE"
+context = "Need to sample or interpolate new data"
+purpose = "Probabilistic latent space trained with the ELBO"
+
+[[inputs]]
+id = "xvar"
+label = "Input data"
+tooltip = "Feature matrix with one sample per column (features x samples), as Flux expects."
+default = "X"
+
+[[inputs]]
+id = "yvar"
+label = "Target variable"
+tooltip = "Targets with one sample per column (outputs x samples)."
+default = "y"
+models = ["mlp"]
+
+[[inputs]]
+id = "input-size"
+label = "input_size"
+tooltip = "Dimensionality of the input vector. For tabular data this is the number of features; for time-series, it is the flattened look-back window or number of channels."
+default = "10"
+newRow = true
+
+[[inputs]]
+id = "hidden-size"
+label = "hidden_size"
+tooltip = "Width of each hidden layer (number of neurons). Larger values increase model capacity at the cost of compute and overfitting risk. Typical range: 64-512."
+default = "128"
+
+[[inputs]]
+id = "num-layers"
+label = "num_layers"
+tooltip = "Number of hidden layers (depth). Shallow networks (1-2 layers) suffice for smooth targets; deeper networks (3-8) are needed for highly non-linear mappings."
+default = "3"
+
+[[inputs]]
+id = "output-size"
+label = "output_size"
+tooltip = "Dimensionality of the network output. Use 1 for scalar regression, N for multi-output regression or N-class softmax classification."
+default = "1"
+models = ["mlp"]
+when = "head=standard"
+
+[[inputs]]
+id = "latent-dim"
+label = "latent_dim"
+tooltip = "Dimension of the bottleneck (latent) space in autoencoders. Smaller values force stronger compression; larger values preserve more information. Typical range: 2-64."
+default = "16"
+models = ["ae", "vae"]
+
+[[inputs]]
+id = "activation"
+label = "activation"
+tooltip = "Non-linearity applied after each hidden Dense layer."
+kind = "select"
+default = "relu"
+newRow = true
+
+[[inputs.options]]
+value = "relu"
+label = "relu"
+
+[[inputs.options]]
+value = "gelu"
+label = "gelu"
+
+[[inputs.options]]
+value = "tanh"
+label = "tanh"
+
+[[inputs.options]]
+value = "selu"
+label = "selu"
+
+[[inputs.options]]
+value = "leakyrelu"
+label = "leakyrelu"
+
+[[inputs]]
+id = "dropout"
+label = "dropout"
+tooltip = "Dropout probability applied after each hidden activation. Regularises the network by randomly zeroing neurons during training. Set to 0 to disable. Typical range: 0.1-0.5."
+default = "0.0"
+
+[[inputs]]
+id = "residual"
+label = "Residual connections"
+tooltip = "Adds a skip connection around each hidden block: H(l+1) = f(W H(l)) + H(l). Eases gradient flow in deep networks and lets each block learn a residual rather than a full transformation."
+kind = "select"
+default = "no"
+
+[[inputs.options]]
+value = "no"
+label = "No"
+
+[[inputs.options]]
+value = "yes"
+label = "Yes"
+
+[[inputs]]
+id = "batchnorm"
+label = "Batch normalisation"
+tooltip = "Normalises each layer's input by the batch mean and variance, then rescales with a learned scale and shift. Stabilises training and reduces sensitivity to weight initialisation."
+kind = "select"
+default = "no"
+
+[[inputs.options]]
+value = "no"
+label = "No"
+
+[[inputs.options]]
+value = "yes"
+label = "Yes"
+
+[[inputs]]
+id = "head"
+label = "Output head"
+tooltip = "Standard: a Dense layer trained with mean squared error. MDN (Mixture Density Network): K Gaussian components (weights, means, std devs) for probabilistic, multi-modal predictions."
+kind = "select"
+default = "standard"
+models = ["mlp"]
+newRow = true
+
+[[inputs.options]]
+value = "standard"
+label = "Standard"
+
+[[inputs.options]]
+value = "mdn"
+label = "MDN"
+
+[[inputs]]
+id = "num-components"
+label = "num_components"
+tooltip = "Number of Gaussian components K in the Mixture Density Network output head. Higher K allows the model to capture more complex, multi-modal conditional distributions. Typical range: 3-20."
+default = "5"
+models = ["mlp"]
+when = "head=mdn"
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.mlp]
+# Fully connected layers: 3 inputs, two hidden layers of 4, one output
+svg = '''
+var layers = [[3, 10], [4, 22], [4, 34], [1, 46]];
+var ys = function(n) { var out = []; for (var i = 0; i < n; i++) { out.push(44 + (i - (n - 1) / 2) * 12); } return out; };
+var s = '';
+for (var l = 0; l < layers.length - 1; l++) {
+	var a = ys(layers[l][0]), b = ys(layers[l + 1][0]);
+	for (var i = 0; i < a.length; i++) {
+		for (var j = 0; j < b.length; j++) {
+			s += '<line x1="' + layers[l][1] + '" y1="' + a[i] + '" x2="' + layers[l + 1][1] + '" y2="' + b[j] + '" stroke="currentColor" stroke-width="0.5" opacity="0.5"/>';
+		}
+	}
+}
+for (var k = 0; k < layers.length; k++) {
+	var y = ys(layers[k][0]);
+	for (var m = 0; m < y.length; m++) {
+		s += '<circle cx="' + layers[k][1] + '" cy="' + y[m] + '" r="2.8" fill="currentColor"/>';
+	}
+}
+return s;
+'''
+
+[miniCharts.ae]
+# Hourglass: wide input, narrow bottleneck, wide reconstruction
+svg = '''
+var widths = [40, 26, 10, 26, 40];
+var s = '';
+for (var i = 0; i < widths.length; i++) {
+	var y = 18 + i * 13;
+	s += '<rect x="' + (27 - widths[i] / 2) + '" y="' + y + '" width="' + widths[i] + '" height="7" rx="1.5" fill="currentColor" opacity="' + (i === 2 ? 0.95 : 0.45) + '"/>';
+}
+return s;
+'''
+
+[miniCharts.vae]
+# Hourglass whose bottleneck is a Gaussian (mean and spread) rather than a point
+svg = '''
+var widths = [40, 26, 0, 26, 40];
+var s = '';
+for (var i = 0; i < widths.length; i++) {
+	if (!widths[i]) { continue; }
+	var y = 14 + i * 14;
+	s += '<rect x="' + (27 - widths[i] / 2) + '" y="' + y + '" width="' + widths[i] + '" height="7" rx="1.5" fill="currentColor" opacity="0.45"/>';
+}
+var d = '';
+for (var k = 0; k <= 24; k++) {
+	var z = (k - 12) / 4;
+	d += (k ? 'L' : 'M') + (15 + k) + ',' + (49 - Math.exp(-z * z / 2) * 9).toFixed(1);
+}
+s += '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.5"/>';
+return s;
+'''
+
+[[codeBranches]]
+model = "mlp"
+code = '''
+using Flux, Statistics
+
+input_size  = {{input-size}}  # input dimensionality
+hidden_size = {{hidden-size}}  # neurons per hidden layer
+num_layers  = {{num-layers}}  # number of hidden layers
+{{?head=standard}} output_size = {{output-size}}  # output dimensionality
+{{?head=mdn}} num_components = {{num-components}}  # Gaussian mixture components
+dropout     = {{dropout}}  # dropout probability (0 disables)
+
+{{?batchnorm=no}} hidden(n_in) = Chain(Dense(n_in => hidden_size, {{activation}}), Dropout(dropout))
+{{?batchnorm=yes}} hidden(n_in) = Chain(BatchNorm(n_in), Dense(n_in => hidden_size, {{activation}}), Dropout(dropout))
+{{?residual=yes}} struct ResBlock  # skip-connection block
+{{?residual=yes}}     net::Chain
+{{?residual=yes}} end
+{{?residual=yes}} Flux.@layer ResBlock
+{{?residual=yes}} (b::ResBlock)(x) = b.net(x) .+ x  # element-wise residual
+{{?residual=no}} backbone = Chain(hidden(input_size), [hidden(hidden_size) for _ in 2:num_layers]...)
+{{?residual=yes}} backbone = Chain(hidden(input_size), [ResBlock(hidden(hidden_size)) for _ in 2:num_layers]...)
+
+{{?head=standard}} model = Chain(backbone, Dense(hidden_size => output_size))  # output head
+{{?head=standard}} loss(m, x, y) = Flux.mse(m(x), y)
+{{?head=mdn}} # MDN head: mixture weights, means and std devs per component
+{{?head=mdn}} model = (backbone = backbone, w = Dense(hidden_size => num_components), mu = Dense(hidden_size => num_components), s = Dense(hidden_size => num_components))
+{{?head=mdn}} function mdn_forward(m, x)
+{{?head=mdn}}     h = m.backbone(x)
+{{?head=mdn}}     softmax(m.w(h)), m.mu(h), softplus.(m.s(h))  # weights, means, std devs
+{{?head=mdn}} end
+{{?head=mdn}} function loss(m, x, y)  # mixture negative log-likelihood
+{{?head=mdn}}     w, mu, s = mdn_forward(m, x)
+{{?head=mdn}}     log_p = -0.5f0 .* ((y .- mu) ./ s) .^ 2 .- log.(s) .- 0.5f0 * log(2f0 * pi)
+{{?head=mdn}}     -mean(log.(sum(w .* exp.(log_p); dims=1)))
+{{?head=mdn}} end
+
+opt_state = Flux.setup(Adam(1f-3), model)
+loader = Flux.DataLoader(({{xvar}}, {{yvar}}), batchsize=64, shuffle=true)  # one sample per column
+for epoch in 1:100
+    Flux.train!(loss, model, loader, opt_state)
+end
+'''
+
+[[codeBranches]]
+model = "ae"
+code = '''
+using Flux
+
+input_size  = {{input-size}}  # input dimensionality
+hidden_size = {{hidden-size}}  # neurons per encoder/decoder layer
+num_layers  = {{num-layers}}  # depth of each half
+latent_dim  = {{latent-dim}}  # bottleneck size
+dropout     = {{dropout}}  # dropout probability (0 disables)
+
+{{?batchnorm=no}} hidden(n_in) = Chain(Dense(n_in => hidden_size, {{activation}}), Dropout(dropout))
+{{?batchnorm=yes}} hidden(n_in) = Chain(BatchNorm(n_in), Dense(n_in => hidden_size, {{activation}}), Dropout(dropout))
+{{?residual=yes}} struct ResBlock  # skip-connection block
+{{?residual=yes}}     net::Chain
+{{?residual=yes}} end
+{{?residual=yes}} Flux.@layer ResBlock
+{{?residual=yes}} (b::ResBlock)(x) = b.net(x) .+ x  # element-wise residual
+{{?residual=no}} trunk(n_in) = Chain(hidden(n_in), [hidden(hidden_size) for _ in 2:num_layers]...)
+{{?residual=yes}} trunk(n_in) = Chain(hidden(n_in), [ResBlock(hidden(hidden_size)) for _ in 2:num_layers]...)
+
+encoder = Chain(trunk(input_size), Dense(hidden_size => latent_dim))  # compresses input to latent space
+decoder = Chain(trunk(latent_dim), Dense(hidden_size => input_size))  # reconstructs input from latent code
+model = Chain(encoder, decoder)
+loss(m, x) = Flux.mse(m(x), x)  # reconstruction error
+
+opt_state = Flux.setup(Adam(1f-3), model)
+loader = Flux.DataLoader({{xvar}}, batchsize=64, shuffle=true)  # one sample per column
+for epoch in 1:100
+    Flux.train!(loss, model, loader, opt_state)
+end
+'''
+
+[[codeBranches]]
+model = "vae"
+code = '''
+using Flux, Statistics
+
+input_size  = {{input-size}}  # input dimensionality
+hidden_size = {{hidden-size}}  # neurons per encoder/decoder layer
+num_layers  = {{num-layers}}  # depth of each half
+latent_dim  = {{latent-dim}}  # latent space dimension
+dropout     = {{dropout}}  # dropout probability (0 disables)
+
+{{?batchnorm=no}} hidden(n_in) = Chain(Dense(n_in => hidden_size, {{activation}}), Dropout(dropout))
+{{?batchnorm=yes}} hidden(n_in) = Chain(BatchNorm(n_in), Dense(n_in => hidden_size, {{activation}}), Dropout(dropout))
+{{?residual=yes}} struct ResBlock  # skip-connection block
+{{?residual=yes}}     net::Chain
+{{?residual=yes}} end
+{{?residual=yes}} Flux.@layer ResBlock
+{{?residual=yes}} (b::ResBlock)(x) = b.net(x) .+ x  # element-wise residual
+{{?residual=no}} trunk(n_in) = Chain(hidden(n_in), [hidden(hidden_size) for _ in 2:num_layers]...)
+{{?residual=yes}} trunk(n_in) = Chain(hidden(n_in), [ResBlock(hidden(hidden_size)) for _ in 2:num_layers]...)
+
+model = (
+    encoder = trunk(input_size),  # shared encoder trunk
+    mu      = Dense(hidden_size => latent_dim),  # mean of q(z|x)
+    logvar  = Dense(hidden_size => latent_dim),  # log-variance of q(z|x)
+    decoder = Chain(trunk(latent_dim), Dense(hidden_size => input_size)),  # maps z back to data space
+)
+function loss(m, x)
+    h = m.encoder(x)
+    mu, logvar = m.mu(h), m.logvar(h)
+    z = mu .+ exp.(0.5f0 .* logvar) .* randn(Float32, size(mu))  # reparameterisation trick
+    recon = Flux.mse(m.decoder(z), x)  # reconstruction loss
+    kl = -0.5f0 * mean(sum(1 .+ logvar .- mu .^ 2 .- exp.(logvar), dims=1))  # KL divergence
+    recon + kl  # negative ELBO
+end
+
+opt_state = Flux.setup(Adam(1f-3), model)
+loader = Flux.DataLoader({{xvar}}, batchsize=64, shuffle=true)  # one sample per column
+for epoch in 1:100
+    Flux.train!(loss, model, loader, opt_state)
+end
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "loss-curve"
+label = "Training Loss Curve"
+desc = "Keep training while recording the loss after every epoch, then plot it"
+code = '''
+using Plots, Statistics
+
+{{?model=mlp}} epoch_loss() = mean(loss(model, x, y) for (x, y) in loader)
+{{?model!=mlp}} epoch_loss() = mean(loss(model, x) for x in loader)
+history = Float32[]
+for epoch in 1:100
+    Flux.train!(loss, model, loader, opt_state)
+    push!(history, epoch_loss())
+end
+plot(history, xlabel="epoch", ylabel="loss", yscale=:log10, legend=false)
+'''
+
+[[actionGroups.actions]]
+id = "latent-scatter"
+label = "Learned Representation"
+desc = "Scatter the first two coordinates of the latent code (or last hidden layer) of every sample"
+code = '''
+using Plots
+
+{{?model=mlp}} Z = model[1]({{xvar}})  # last hidden layer of the backbone
+{{?model=ae}} Z = encoder({{xvar}})
+{{?model=vae}} Z = model.mu(model.encoder({{xvar}}))  # posterior means
+scatter(Z[1, :], Z[2, :], xlabel="z1", ylabel="z2", markersize=2, legend=false)
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "holdout"
+label = "Train vs Validation Loss"
+desc = "Retrain on 80% of the samples and compare the loss on the held-out 20% to detect overfitting"
+code = '''
+using Random
+
+n = size({{xvar}}, 2)
+idx = randperm(n)
+val, tr = idx[1:div(n, 5)], idx[div(n, 5) + 1:end]
+{{?model=mlp}} train_loader = Flux.DataLoader(({{xvar}}[:, tr], {{yvar}}[:, tr]), batchsize=64, shuffle=true)
+{{?model!=mlp}} train_loader = Flux.DataLoader({{xvar}}[:, tr], batchsize=64, shuffle=true)
+for epoch in 1:100
+    Flux.train!(loss, model, train_loader, opt_state)
+end
+Flux.testmode!(model)
+{{?model=mlp}} (train = loss(model, {{xvar}}[:, tr], {{yvar}}[:, tr]), validation = loss(model, {{xvar}}[:, val], {{yvar}}[:, val]))
+{{?model!=mlp}} (train = loss(model, {{xvar}}[:, tr]), validation = loss(model, {{xvar}}[:, val]))
+'''
+
+[[actionGroups.actions]]
+id = "per-sample-error"
+label = "Per-Sample Error"
+desc = "Squared error of every sample; unusually large values flag outliers or anomalies"
+code = '''
+using Plots
+
+Flux.testmode!(model)
+{{?model=mlp}} pred(x) = model isa Chain ? model(x) : (r = mdn_forward(model, x); sum(r[1] .* r[2], dims=1))  # MDN: mixture mean
+{{?model=mlp}} err = vec(sum(abs2, pred({{xvar}}) .- {{yvar}}, dims=1))
+{{?model=ae}} err = vec(sum(abs2, model({{xvar}}) .- {{xvar}}, dims=1))  # reconstruction error
+{{?model=vae}} err = vec(sum(abs2, model.decoder(model.mu(model.encoder({{xvar}}))) .- {{xvar}}, dims=1))  # reconstruction error
+histogram(err, xlabel="squared error", legend=false)
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "predict-new"
+label = "Predict New Data"
+desc = "Apply the trained network to new samples in inference mode"
+code = '''
+Flux.testmode!(model)  # disable dropout, use running batch-norm statistics
+{{?model=mlp}} y_hat = model isa Chain ? model(X_new) : mdn_forward(model, X_new)  # X_new: features x samples; MDN: weights, means, std devs
+{{?model=ae}} X_rec = model(X_new)  # reconstructions
+{{?model=vae}} X_rec = model.decoder(model.mu(model.encoder(X_new)))  # reconstructions
+{{?model=vae}} X_gen = model.decoder(randn(Float32, latent_dim, 100))  # 100 new samples from the prior N(0, I)
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "classical-baseline"
+label = "Classical Baseline"
+desc = "Least squares (MLP) or PCA with the same latent size (autoencoders): how much does the network add?"
+code = '''
+{{?model=mlp}} Xb = vcat({{xvar}}, ones(1, size({{xvar}}, 2)))  # add intercept row
+{{?model=mlp}} B = {{yvar}} / Xb  # least-squares coefficients
+{{?model=mlp}} Flux.mse(B * Xb, {{yvar}})  # compare with loss(model, {{xvar}}, {{yvar}})
+{{?model!=mlp}} using MultivariateStats
+{{?model!=mlp}} pca = fit(PCA, {{xvar}}; maxoutdim=latent_dim)
+{{?model!=mlp}} Flux.mse(reconstruct(pca, predict(pca, {{xvar}})), {{xvar}})  # compare with the network's reconstruction error
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "input-gradients"
+label = "Input Sensitivity"
+desc = "Average absolute gradient of the output (or latent code) with respect to each input feature"
+code = '''
+using Statistics
+
+{{?model=mlp}} f(x) = model isa Chain ? sum(model(x)) : sum(mdn_forward(model, x)[2])
+{{?model=ae}} f(x) = sum(encoder(x))
+{{?model=vae}} f(x) = sum(model.mu(model.encoder(x)))
+g = Flux.gradient(f, {{xvar}})[1]
+vec(mean(abs.(g), dims=2))  # one sensitivity per input feature
+'''

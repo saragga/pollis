@@ -1,0 +1,874 @@
+# Transformers Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/transformer.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Transformers"
+viewType = "pollis.transformer"
+defaultModel = "encoder"
+
+[[packages]]
+name = "Flux.jl"
+github = "https://github.com/FluxML/Flux.jl"
+
+[[packages.videos]]
+title = "High Performance Computing in Julia"
+description = "An 18-video course by Jamie Mair on writing fast Julia code"
+url = "https://www.youtube.com/playlist?list=PLUAq6xQKFgGr39PiyrPk_C9dhBKvWcjUA"
+
+[[packages]]
+name = "Transformers.jl"
+github = "https://github.com/chengchingwen/Transformers.jl"
+
+[requires]
+packages = ["Plots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Encoder (BERT-style)"
+file = "transformer/tutorial-01-encoder.ipynb"
+bundled = true
+description = "Encoder-only Transformer for classification and sequence labelling"
+
+[[notebookSections.notebooks]]
+name = "Decoder (GPT-style)"
+file = "transformer/tutorial-02-decoder.ipynb"
+bundled = true
+description = "Causal decoder for autoregressive language modelling"
+
+[[notebookSections.notebooks]]
+name = "Encoder-Decoder"
+file = "transformer/tutorial-03-encdec.ipynb"
+bundled = true
+description = "Full seq2seq Transformer with cross-attention for translation and summarisation"
+
+[[notebookSections.notebooks]]
+name = "Time Series (PatchTST)"
+file = "transformer/tutorial-04-timeseries.ipynb"
+bundled = true
+description = "PatchTST: patch-based Transformer for multivariate time-series forecasting"
+
+[[notebookSections.notebooks]]
+name = "Cross-Modal Fusion"
+file = "transformer/tutorial-05-crossmodal.ipynb"
+bundled = true
+description = "Fusing text and numerical features for financial prediction tasks"
+
+[[wikis]]
+name = "Overview"
+file = "transformer/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Factsheet"
+file = "transformer/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "transformer/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "transformer/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "transformer/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "transformer/decision-guide.md"
+bundled = true
+
+[[wikis]]
+name = "Time Series Transformers"
+file = "transformer/time-series.md"
+bundled = true
+
+[[wikis]]
+name = "Cross-Modal Transformers"
+file = "transformer/cross-modal.md"
+bundled = true
+
+[[wikis]]
+name = "Efficient Attention"
+file = "transformer/efficient-attention.md"
+bundled = true
+
+[[wikis]]
+name = "Positional Encoding"
+file = "transformer/positional-encoding.md"
+bundled = true
+
+[[models]]
+id = "encoder"
+label = "Encoder"
+
+[[models]]
+id = "decoder"
+label = "Decoder"
+
+[[models]]
+id = "encdec"
+label = "Encoder-Decoder"
+
+[[models]]
+id = "timeseries"
+label = "Time Series"
+
+[[models]]
+id = "crossmodal"
+label = "Cross-Modal"
+
+[[bullets]]
+text = "Encoder"
+detail = "BERT-style bidirectional encoder; classification and sequence labelling"
+
+[[bullets]]
+text = "Decoder"
+detail = "GPT-style causal decoder; autoregressive language modelling"
+
+[[bullets]]
+text = "Encoder-Decoder"
+detail = "full seq2seq architecture with cross-attention; translation and summarisation"
+
+[[bullets]]
+text = "Time Series"
+detail = "PatchTST; patch tokenisation of time series for multivariate forecasting"
+
+[[bullets]]
+text = "Cross-Modal"
+detail = "text and numerical feature fusion; financial earnings and sentiment models"
+
+[[decisionRows]]
+task = "Encoder"
+context = "Classify or label whole sequences of tokens"
+purpose = "Bidirectional self-attention; every token sees the full context (BERT)"
+
+[[decisionRows]]
+task = "Decoder"
+context = "Generate text or continue a sequence"
+purpose = "Causal self-attention; each token sees only the past (GPT)"
+
+[[decisionRows]]
+task = "Encoder-Decoder"
+context = "Map one sequence to another (translation, summarisation)"
+purpose = "Encoder reads the source; decoder cross-attends to it while generating"
+
+[[decisionRows]]
+task = "Time Series"
+context = "Long-horizon forecasting from a lookback window"
+purpose = "PatchTST: patches of consecutive time steps become the tokens"
+
+[[decisionRows]]
+task = "Cross-Modal"
+context = "Text and numerical features describe the same example"
+purpose = "Text encoder output fused with projected numerical features"
+
+[[inputs]]
+id = "xvar"
+label = "Input variable"
+tooltip = "Encoder, Decoder, Encoder-Decoder and Cross-Modal: token ids, seq_len x n. Time Series: lookback windows, seq_len x n."
+default = "x"
+
+[[inputs]]
+id = "yvar"
+label = "Target variable"
+tooltip = "Encoder: class labels (n). Encoder-Decoder: target token ids beginning with a start token, tgt_len x n. Time Series: forecast horizons, pred_len x n. Cross-Modal: targets, 1 x n."
+default = "y"
+models = ["encoder", "encdec", "timeseries", "crossmodal"]
+
+[[inputs]]
+id = "xnum"
+label = "Numerical features"
+tooltip = "Numerical features per example, d_num x n (price ratios, volumes, macro indicators)."
+default = "x_num"
+models = ["crossmodal"]
+
+[[inputs]]
+id = "d-model"
+label = "d_model"
+tooltip = "Embedding dimension — the width of all token and position representations. All sub-layers (attention, FFN, residual connections) operate in this space. Must be divisible by num_heads. Typical range: 128–1024."
+default = "256"
+newRow = true
+
+[[inputs]]
+id = "d-ff"
+label = "d_ff"
+tooltip = "Dimension of the position-wise feed-forward network inside each Transformer block. Usually 2× or 4× d_model. Larger values increase capacity at the cost of memory."
+default = "512"
+
+[[inputs]]
+id = "num-heads"
+label = "num_heads"
+tooltip = "Number of parallel attention heads. Each head attends to different aspects of the input independently; their outputs are concatenated. d_model must be divisible by num_heads. Typical: 4, 8, or 16."
+default = "8"
+
+[[inputs]]
+id = "num-layers"
+label = "num_layers"
+tooltip = "Number of stacked Transformer blocks (for the Encoder-Decoder: in the encoder and in the decoder each). More layers capture deeper structure but increase training cost and risk overfitting on small datasets. Typical: 4–12."
+default = "4"
+
+[[inputs]]
+id = "dropout"
+label = "dropout"
+tooltip = "Dropout probability applied to attention weights and to the residual branches. Set to 0 to disable. Typical range: 0.1–0.3."
+default = "0.1"
+
+[[inputs]]
+id = "positions"
+label = "Positional encoding"
+tooltip = "Sinusoidal: fixed sine and cosine vectors (Vaswani et al. 2017), not trained. Learned: a trained position table; best when seq_len is fixed and data is plentiful, but it does not generalise beyond the training length."
+kind = "select"
+default = "sinusoidal"
+
+[[inputs.options]]
+value = "sinusoidal"
+label = "Sinusoidal"
+
+[[inputs.options]]
+value = "learned"
+label = "Learned"
+
+[[inputs]]
+id = "seq-len"
+label = "seq_len"
+tooltip = "Input sequence length in tokens: the maximum number of tokens per example (for the Encoder-Decoder, the source length)."
+default = "128"
+models = ["encoder", "decoder", "encdec", "crossmodal"]
+newRow = true
+
+[[inputs]]
+id = "vocab-size"
+label = "vocab_size"
+tooltip = "Size of the token vocabulary — determines the Embedding table rows. For financial text with BPE tokenisation: 10 000–50 000. For byte-level models: 256."
+default = "10000"
+models = ["encoder", "decoder", "encdec", "crossmodal"]
+
+[[inputs]]
+id = "num-classes"
+label = "num_classes"
+tooltip = "Number of output classes; labels are the integers 1 to num_classes."
+default = "2"
+models = ["encoder"]
+
+[[inputs]]
+id = "tgt-len"
+label = "tgt_len"
+tooltip = "Target sequence length — the number of tokens the decoder generates. For translation this is the target sentence length; for summarisation it is the summary length."
+default = "64"
+models = ["encdec"]
+
+[[inputs]]
+id = "d-num"
+label = "d_num"
+tooltip = "Dimensionality of the numerical feature vector per example. These features are projected to d_model by a Dense layer and fused with the text representation."
+default = "32"
+models = ["crossmodal"]
+
+[[inputs]]
+id = "ts-seq-len"
+label = "seq_len"
+tooltip = "Historical lookback window in time steps. Must be divisible by patch_size."
+default = "336"
+models = ["timeseries"]
+newRow = true
+
+[[inputs]]
+id = "pred-len"
+label = "pred_len"
+tooltip = "Forecast horizon — number of future time steps to predict. PatchTST maps the full patch sequence directly to a flat pred_len output vector. Typical values: 24, 96, 192, 720."
+default = "96"
+models = ["timeseries"]
+
+[[inputs]]
+id = "patch-size"
+label = "patch_size"
+tooltip = "Number of consecutive time steps grouped into one patch token. Smaller patches preserve finer detail; larger patches give a broader view per token. seq_len must be divisible by patch_size. Typical: 8–64."
+default = "16"
+models = ["timeseries"]
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.encoder]
+# A row of tokens, each attending to every other token
+svg = '''
+var xs = [9, 21, 33, 45], s = '';
+for (var i = 0; i < 4; i++) {
+	for (var j = 0; j < 4; j++) {
+		s += '<line x1="' + xs[i] + '" y1="62" x2="' + xs[j] + '" y2="26" stroke="currentColor" stroke-width="0.8" opacity="0.45"/>';
+	}
+}
+for (var k = 0; k < 4; k++) {
+	s += '<rect x="' + (xs[k] - 4) + '" y="62" width="8" height="8" fill="currentColor" opacity="0.5"/>';
+	s += '<rect x="' + (xs[k] - 4) + '" y="18" width="8" height="8" fill="currentColor"/>';
+}
+return s;
+'''
+
+[miniCharts.decoder]
+# Causal attention: each token sees only itself and earlier tokens
+svg = '''
+var xs = [9, 21, 33, 45], s = '';
+for (var i = 0; i < 4; i++) {
+	for (var j = 0; j <= i; j++) {
+		s += '<line x1="' + xs[j] + '" y1="62" x2="' + xs[i] + '" y2="26" stroke="currentColor" stroke-width="0.8" opacity="0.5"/>';
+	}
+}
+for (var k = 0; k < 4; k++) {
+	s += '<rect x="' + (xs[k] - 4) + '" y="62" width="8" height="8" fill="currentColor" opacity="0.5"/>';
+	s += '<rect x="' + (xs[k] - 4) + '" y="18" width="8" height="8" fill="currentColor"/>';
+}
+return s;
+'''
+
+[miniCharts.encdec]
+# Encoder stack on the left feeding the decoder stack on the right
+svg = '''
+var s = '';
+s += '<rect x="6" y="30" width="16" height="36" rx="2" fill="currentColor" opacity="0.45"/>';
+s += '<rect x="32" y="20" width="16" height="46" rx="2" fill="currentColor"/>';
+s += '<path d="M22,40 L32,40 M28,37 L32,40 L28,43" fill="none" stroke="currentColor" stroke-width="1.2"/>';
+s += '<path d="M40,20 L40,12 M37,15 L40,12 L43,15" fill="none" stroke="currentColor" stroke-width="1.2"/>';
+return s;
+'''
+
+[miniCharts.timeseries]
+# A series cut into patches, followed by a forecast
+svg = '''
+var ys = [52, 44, 48, 38, 42, 34, 40, 30, 36, 28], s = '', d = '';
+for (var i = 0; i < ys.length; i++) {
+	d += (i === 0 ? 'M' : 'L') + (4 + i * 3.4) + ',' + ys[i];
+}
+s += '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.3"/>';
+for (var p = 1; p < 3; p++) {
+	s += '<line x1="' + (4 + p * 10.2) + '" y1="22" x2="' + (4 + p * 10.2) + '" y2="60" stroke="currentColor" stroke-width="0.8" stroke-dasharray="2,2" opacity="0.6"/>';
+}
+s += '<path d="M34.6,28 L40,26 L45,24 L50,22" fill="none" stroke="currentColor" stroke-width="1.3" stroke-dasharray="3,2"/>';
+return s;
+'''
+
+[miniCharts.crossmodal]
+# Text tokens and a numeric bar chart merging into one output
+svg = '''
+var s = '';
+for (var i = 0; i < 3; i++) {
+	s += '<rect x="' + (5 + i * 7) + '" y="18" width="5" height="5" fill="currentColor" opacity="0.6"/>';
+}
+var h = [8, 14, 10];
+for (var j = 0; j < 3; j++) {
+	s += '<rect x="' + (31 + j * 7) + '" y="' + (26 - h[j]) + '" width="5" height="' + h[j] + '" fill="currentColor" opacity="0.6"/>';
+}
+s += '<path d="M14,26 L27,50 M42,28 L27,50" fill="none" stroke="currentColor" stroke-width="1.2"/>';
+s += '<circle cx="27" cy="55" r="5" fill="currentColor"/>';
+return s;
+'''
+
+[[codeBranches]]
+model = "encoder"
+code = '''
+using Flux
+
+d_model     = {{d-model}}  # embedding dimension
+num_heads   = {{num-heads}}  # attention heads (must divide d_model)
+d_ff        = {{d-ff}}  # feed-forward dimension
+num_layers  = {{num-layers}}  # encoder blocks
+dropout     = {{dropout}}  # dropout rate
+seq_len     = {{seq-len}}  # maximum token sequence length
+vocab_size  = {{vocab-size}}  # vocabulary size
+num_classes = {{num-classes}}  # output classes
+
+struct Block  # pre-LN transformer block: self-attention and feed-forward, each with a residual
+    ln1; attn; ln2; ff; drop
+end
+Flux.@layer Block
+Block(d, h, ff, p) = Block(LayerNorm(d), MultiHeadAttention(d; nheads=h, dropout_prob=p), LayerNorm(d), Chain(Dense(d => ff, gelu), Dense(ff => d)), Dropout(p))
+function (b::Block)(x; mask=nothing)
+    x = x .+ b.drop(first(b.attn(b.ln1(x); mask)))
+    x .+ b.drop(b.ff(b.ln2(x)))
+end
+
+{{?positions=sinusoidal}} function sinusoidal(d, T)  # fixed d x T position encodings (Vaswani et al. 2017)
+{{?positions=sinusoidal}}     freq = 10000f0 .^ (-(0:2:d-1) ./ d)
+{{?positions=sinusoidal}}     P = zeros(Float32, d, T)
+{{?positions=sinusoidal}}     P[1:2:end, :] = sin.(freq .* transpose(0:T-1))
+{{?positions=sinusoidal}}     P[2:2:end, :] = cos.(freq .* transpose(0:T-1))
+{{?positions=sinusoidal}}     P
+{{?positions=sinusoidal}} end
+{{?positions=sinusoidal}} positions(d, T) = sinusoidal(d, T)  # fixed, not trained
+{{?positions=learned}} positions(d, T) = Flux.glorot_uniform(d, T)  # trained position table (fixed maximum length)
+
+struct Encoder  # BERT-style: every token attends to every other token
+    embed; pos; blocks; ln; head
+end
+{{?positions=sinusoidal}} Flux.@layer Encoder trainable=(embed, blocks, ln, head)  # fixed positions are not trained
+{{?positions=learned}} Flux.@layer Encoder
+inputs(m, x) = m.embed(x) .+ m.pos[:, 1:size(x, 1)]  # x: seq_len x batch token ids
+function (m::Encoder)(x)
+    h = inputs(m, x)
+    for b in m.blocks
+        h = b(h)
+    end
+    m.head(m.ln(h)[:, 1, :])  # first ([CLS]) token -> class logits
+end
+
+model = Encoder(Embedding(vocab_size => d_model), positions(d_model, seq_len),
+                [Block(d_model, num_heads, d_ff, dropout) for _ in 1:num_layers], LayerNorm(d_model), Dense(d_model => num_classes))
+
+loss(model, x, y) = Flux.logitcrossentropy(model(x), Flux.onehotbatch(y, 1:num_classes))
+data = ({{xvar}}, {{yvar}})  # token ids (seq_len x n), class labels (n)
+opt_state = Flux.setup(AdamW(1f-4), model)
+loader = Flux.DataLoader(data, batchsize=32, shuffle=true)
+for epoch in 1:20
+    Flux.train!(loss, model, loader, opt_state)
+end
+'''
+
+[[codeBranches]]
+model = "decoder"
+code = '''
+using Flux
+
+d_model     = {{d-model}}  # embedding dimension
+num_heads   = {{num-heads}}  # attention heads (must divide d_model)
+d_ff        = {{d-ff}}  # feed-forward dimension
+num_layers  = {{num-layers}}  # decoder blocks
+dropout     = {{dropout}}  # dropout rate
+seq_len     = {{seq-len}}  # context window length
+vocab_size  = {{vocab-size}}  # vocabulary size
+
+struct Block  # pre-LN transformer block: self-attention and feed-forward, each with a residual
+    ln1; attn; ln2; ff; drop
+end
+Flux.@layer Block
+Block(d, h, ff, p) = Block(LayerNorm(d), MultiHeadAttention(d; nheads=h, dropout_prob=p), LayerNorm(d), Chain(Dense(d => ff, gelu), Dense(ff => d)), Dropout(p))
+function (b::Block)(x; mask=nothing)
+    x = x .+ b.drop(first(b.attn(b.ln1(x); mask)))
+    x .+ b.drop(b.ff(b.ln2(x)))
+end
+
+{{?positions=sinusoidal}} function sinusoidal(d, T)  # fixed d x T position encodings (Vaswani et al. 2017)
+{{?positions=sinusoidal}}     freq = 10000f0 .^ (-(0:2:d-1) ./ d)
+{{?positions=sinusoidal}}     P = zeros(Float32, d, T)
+{{?positions=sinusoidal}}     P[1:2:end, :] = sin.(freq .* transpose(0:T-1))
+{{?positions=sinusoidal}}     P[2:2:end, :] = cos.(freq .* transpose(0:T-1))
+{{?positions=sinusoidal}}     P
+{{?positions=sinusoidal}} end
+{{?positions=sinusoidal}} positions(d, T) = sinusoidal(d, T)  # fixed, not trained
+{{?positions=learned}} positions(d, T) = Flux.glorot_uniform(d, T)  # trained position table (fixed maximum length)
+
+struct Decoder  # GPT-style: each token attends only to earlier tokens
+    embed; pos; blocks; ln; head
+end
+{{?positions=sinusoidal}} Flux.@layer Decoder trainable=(embed, blocks, ln, head)  # fixed positions are not trained
+{{?positions=learned}} Flux.@layer Decoder
+inputs(m, x) = m.embed(x) .+ m.pos[:, 1:size(x, 1)]  # x: seq_len x batch token ids
+function (m::Decoder)(x)
+    h = inputs(m, x)
+    mask = Flux.NNlib.make_causal_mask(h)  # position t sees only positions <= t
+    for b in m.blocks
+        h = b(h; mask)
+    end
+    m.head(m.ln(h))  # vocab_size x T x batch logits
+end
+
+model = Decoder(Embedding(vocab_size => d_model), positions(d_model, seq_len),
+                [Block(d_model, num_heads, d_ff, dropout) for _ in 1:num_layers], LayerNorm(d_model), Dense(d_model => vocab_size))
+
+loss(model, x) = Flux.logitcrossentropy(model(x)[:, 1:end-1, :], Flux.onehotbatch(x[2:end, :], 1:vocab_size))  # predict every next token
+data = ({{xvar}},)  # token ids, seq_len x n
+opt_state = Flux.setup(AdamW(1f-4), model)
+loader = Flux.DataLoader(data, batchsize=32, shuffle=true)
+for epoch in 1:20
+    Flux.train!(loss, model, loader, opt_state)
+end
+'''
+
+[[codeBranches]]
+model = "encdec"
+code = '''
+using Flux
+
+d_model     = {{d-model}}  # embedding dimension
+num_heads   = {{num-heads}}  # attention heads (must divide d_model)
+d_ff        = {{d-ff}}  # feed-forward dimension
+num_layers  = {{num-layers}}  # encoder and decoder blocks each
+dropout     = {{dropout}}  # dropout rate
+seq_len     = {{seq-len}}  # source sequence length
+tgt_len     = {{tgt-len}}  # target sequence length
+vocab_size  = {{vocab-size}}  # shared vocabulary size
+
+struct Block  # pre-LN transformer block: self-attention and feed-forward, each with a residual
+    ln1; attn; ln2; ff; drop
+end
+Flux.@layer Block
+Block(d, h, ff, p) = Block(LayerNorm(d), MultiHeadAttention(d; nheads=h, dropout_prob=p), LayerNorm(d), Chain(Dense(d => ff, gelu), Dense(ff => d)), Dropout(p))
+function (b::Block)(x; mask=nothing)
+    x = x .+ b.drop(first(b.attn(b.ln1(x); mask)))
+    x .+ b.drop(b.ff(b.ln2(x)))
+end
+
+{{?positions=sinusoidal}} function sinusoidal(d, T)  # fixed d x T position encodings (Vaswani et al. 2017)
+{{?positions=sinusoidal}}     freq = 10000f0 .^ (-(0:2:d-1) ./ d)
+{{?positions=sinusoidal}}     P = zeros(Float32, d, T)
+{{?positions=sinusoidal}}     P[1:2:end, :] = sin.(freq .* transpose(0:T-1))
+{{?positions=sinusoidal}}     P[2:2:end, :] = cos.(freq .* transpose(0:T-1))
+{{?positions=sinusoidal}}     P
+{{?positions=sinusoidal}} end
+{{?positions=sinusoidal}} positions(d, T) = sinusoidal(d, T)  # fixed, not trained
+{{?positions=learned}} positions(d, T) = Flux.glorot_uniform(d, T)  # trained position table (fixed maximum length)
+
+struct CrossBlock  # causal self-attention, cross-attention over the encoder memory, feed-forward
+    ln1; self_attn; ln2; cross_attn; ln3; ff; drop
+end
+Flux.@layer CrossBlock
+CrossBlock(d, h, ff, p) = CrossBlock(LayerNorm(d), MultiHeadAttention(d; nheads=h, dropout_prob=p), LayerNorm(d),
+                                     MultiHeadAttention(d; nheads=h, dropout_prob=p), LayerNorm(d), Chain(Dense(d => ff, gelu), Dense(ff => d)), Dropout(p))
+function (b::CrossBlock)(y, memory; mask=nothing)
+    y = y .+ b.drop(first(b.self_attn(b.ln1(y); mask)))
+    y = y .+ b.drop(first(b.cross_attn(b.ln2(y), memory, memory)))  # every target position reads the encoded source
+    y .+ b.drop(b.ff(b.ln3(y)))
+end
+
+struct Seq2Seq  # encoder-decoder (translation, summarisation)
+    embed; pos; blocks; cross_blocks; ln_enc; ln_dec; head
+end
+{{?positions=sinusoidal}} Flux.@layer Seq2Seq trainable=(embed, blocks, cross_blocks, ln_enc, ln_dec, head)  # fixed positions are not trained
+{{?positions=learned}} Flux.@layer Seq2Seq
+inputs(m, x) = m.embed(x) .+ m.pos[:, 1:size(x, 1)]  # x: length x batch token ids
+function (m::Seq2Seq)(src, tgt)
+    memory = inputs(m, src)
+    for b in m.blocks
+        memory = b(memory)
+    end
+    memory = m.ln_enc(memory)
+    h = inputs(m, tgt)
+    mask = Flux.NNlib.make_causal_mask(h)
+    for b in m.cross_blocks
+        h = b(h, memory; mask)
+    end
+    m.head(m.ln_dec(h))  # vocab_size x T x batch logits
+end
+
+model = Seq2Seq(Embedding(vocab_size => d_model), positions(d_model, max(seq_len, tgt_len)),
+                [Block(d_model, num_heads, d_ff, dropout) for _ in 1:num_layers],
+                [CrossBlock(d_model, num_heads, d_ff, dropout) for _ in 1:num_layers],
+                LayerNorm(d_model), LayerNorm(d_model), Dense(d_model => vocab_size))
+
+loss(model, src, tgt) = Flux.logitcrossentropy(model(src, tgt[1:end-1, :]), Flux.onehotbatch(tgt[2:end, :], 1:vocab_size))  # teacher forcing
+data = ({{xvar}}, {{yvar}})  # source ids (seq_len x n), target ids starting with a start token (tgt_len x n)
+opt_state = Flux.setup(AdamW(1f-4), model)
+loader = Flux.DataLoader(data, batchsize=32, shuffle=true)
+for epoch in 1:20
+    Flux.train!(loss, model, loader, opt_state)
+end
+'''
+
+[[codeBranches]]
+model = "timeseries"
+code = '''
+using Flux
+
+d_model     = {{d-model}}  # embedding dimension
+num_heads   = {{num-heads}}  # attention heads (must divide d_model)
+d_ff        = {{d-ff}}  # feed-forward dimension
+num_layers  = {{num-layers}}  # encoder blocks
+dropout     = {{dropout}}  # dropout rate
+seq_len     = {{ts-seq-len}}  # lookback window (time steps)
+pred_len    = {{pred-len}}  # forecast horizon (time steps)
+patch_size  = {{patch-size}}  # time steps per patch token
+num_patches = div(seq_len, patch_size)  # seq_len must be a multiple of patch_size
+
+struct Block  # pre-LN transformer block: self-attention and feed-forward, each with a residual
+    ln1; attn; ln2; ff; drop
+end
+Flux.@layer Block
+Block(d, h, ff, p) = Block(LayerNorm(d), MultiHeadAttention(d; nheads=h, dropout_prob=p), LayerNorm(d), Chain(Dense(d => ff, gelu), Dense(ff => d)), Dropout(p))
+function (b::Block)(x; mask=nothing)
+    x = x .+ b.drop(first(b.attn(b.ln1(x); mask)))
+    x .+ b.drop(b.ff(b.ln2(x)))
+end
+
+{{?positions=sinusoidal}} function sinusoidal(d, T)  # fixed d x T position encodings (Vaswani et al. 2017)
+{{?positions=sinusoidal}}     freq = 10000f0 .^ (-(0:2:d-1) ./ d)
+{{?positions=sinusoidal}}     P = zeros(Float32, d, T)
+{{?positions=sinusoidal}}     P[1:2:end, :] = sin.(freq .* transpose(0:T-1))
+{{?positions=sinusoidal}}     P[2:2:end, :] = cos.(freq .* transpose(0:T-1))
+{{?positions=sinusoidal}}     P
+{{?positions=sinusoidal}} end
+{{?positions=sinusoidal}} positions(d, T) = sinusoidal(d, T)  # fixed, not trained
+{{?positions=learned}} positions(d, T) = Flux.glorot_uniform(d, T)  # trained position table (fixed maximum length)
+
+struct PatchTST  # Nie et al. 2023: non-overlapping patches become the tokens
+    patch_embed; pos; blocks; ln; head
+end
+{{?positions=sinusoidal}} Flux.@layer PatchTST trainable=(patch_embed, blocks, ln, head)  # fixed positions are not trained
+{{?positions=learned}} Flux.@layer PatchTST
+inputs(m, x) = m.patch_embed(reshape(x, patch_size, :, size(x, 2))) .+ m.pos  # seq_len x batch -> d_model x num_patches x batch
+function (m::PatchTST)(x)
+    h = inputs(m, x)
+    for b in m.blocks
+        h = b(h)
+    end
+    m.head(reshape(m.ln(h), :, size(h, 3)))  # flatten all patches -> pred_len forecast
+end
+
+model = PatchTST(Dense(patch_size => d_model), positions(d_model, num_patches),
+                 [Block(d_model, num_heads, d_ff, dropout) for _ in 1:num_layers], LayerNorm(d_model), Dense(d_model * num_patches => pred_len))
+
+loss(model, x, y) = Flux.mse(model(x), y)
+data = (Float32.({{xvar}}), Float32.({{yvar}}))  # lookback windows (seq_len x n), horizons (pred_len x n)
+opt_state = Flux.setup(AdamW(1f-4), model)
+loader = Flux.DataLoader(data, batchsize=32, shuffle=true)
+for epoch in 1:20
+    Flux.train!(loss, model, loader, opt_state)
+end
+'''
+
+[[codeBranches]]
+model = "crossmodal"
+code = '''
+using Flux
+
+d_model     = {{d-model}}  # embedding dimension
+num_heads   = {{num-heads}}  # attention heads (must divide d_model)
+d_ff        = {{d-ff}}  # feed-forward dimension
+num_layers  = {{num-layers}}  # text encoder blocks
+dropout     = {{dropout}}  # dropout rate
+seq_len     = {{seq-len}}  # text sequence length
+vocab_size  = {{vocab-size}}  # vocabulary size
+d_num       = {{d-num}}  # number of numerical features
+
+struct Block  # pre-LN transformer block: self-attention and feed-forward, each with a residual
+    ln1; attn; ln2; ff; drop
+end
+Flux.@layer Block
+Block(d, h, ff, p) = Block(LayerNorm(d), MultiHeadAttention(d; nheads=h, dropout_prob=p), LayerNorm(d), Chain(Dense(d => ff, gelu), Dense(ff => d)), Dropout(p))
+function (b::Block)(x; mask=nothing)
+    x = x .+ b.drop(first(b.attn(b.ln1(x); mask)))
+    x .+ b.drop(b.ff(b.ln2(x)))
+end
+
+{{?positions=sinusoidal}} function sinusoidal(d, T)  # fixed d x T position encodings (Vaswani et al. 2017)
+{{?positions=sinusoidal}}     freq = 10000f0 .^ (-(0:2:d-1) ./ d)
+{{?positions=sinusoidal}}     P = zeros(Float32, d, T)
+{{?positions=sinusoidal}}     P[1:2:end, :] = sin.(freq .* transpose(0:T-1))
+{{?positions=sinusoidal}}     P[2:2:end, :] = cos.(freq .* transpose(0:T-1))
+{{?positions=sinusoidal}}     P
+{{?positions=sinusoidal}} end
+{{?positions=sinusoidal}} positions(d, T) = sinusoidal(d, T)  # fixed, not trained
+{{?positions=learned}} positions(d, T) = Flux.glorot_uniform(d, T)  # trained position table (fixed maximum length)
+
+struct Fusion  # text encoder plus projected numerical features (e.g. earnings calls and fundamentals)
+    embed; pos; blocks; ln; num_proj; head
+end
+{{?positions=sinusoidal}} Flux.@layer Fusion trainable=(embed, blocks, ln, num_proj, head)  # fixed positions are not trained
+{{?positions=learned}} Flux.@layer Fusion
+inputs(m, x) = m.embed(x) .+ m.pos[:, 1:size(x, 1)]  # x: seq_len x batch token ids
+function (m::Fusion)(x_text, x_num)
+    h = inputs(m, x_text)
+    for b in m.blocks
+        h = b(h)
+    end
+    text_feat = m.ln(h)[:, 1, :]  # [CLS] summary of the text, d_model x batch
+    m.head(text_feat .+ m.num_proj(x_num))  # residual fusion with the numerical features
+end
+
+model = Fusion(Embedding(vocab_size => d_model), positions(d_model, seq_len),
+               [Block(d_model, num_heads, d_ff, dropout) for _ in 1:num_layers], LayerNorm(d_model),
+               Dense(d_num => d_model), Dense(d_model => 1))
+
+loss(model, x_text, x_num, y) = Flux.mse(model(x_text, x_num), y)
+data = ({{xvar}}, Float32.({{xnum}}), Float32.({{yvar}}))  # token ids (seq_len x n), features (d_num x n), targets (1 x n)
+opt_state = Flux.setup(AdamW(1f-4), model)
+loader = Flux.DataLoader(data, batchsize=32, shuffle=true)
+for epoch in 1:20
+    Flux.train!(loss, model, loader, opt_state)
+end
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "fit-plot"
+label = "Predictions"
+desc = "Model output on the first examples: confusion matrix, loss by position, forecast or predicted vs actual"
+code = '''
+using Plots
+
+sample = map(a -> collect(selectdim(a, ndims(a), 1:min(size(a, ndims(a)), 256))), data)  # first 256 examples
+{{?model=encoder}} y_hat = Flux.onecold(model(sample[1]), 1:num_classes)
+{{?model=encoder}} C = [count((sample[2] .== i) .& (y_hat .== j)) for i in 1:num_classes, j in 1:num_classes]
+{{?model=encoder}} heatmap(C, xlabel="predicted class", ylabel="true class", title="confusion matrix")
+{{?model=decoder}} logits = model(sample[1])
+{{?model=decoder}} per_pos = [Flux.logitcrossentropy(logits[:, t, :], Flux.onehotbatch(sample[1][t+1, :], 1:vocab_size)) for t in 1:size(logits, 2)-1]
+{{?model=decoder}} plot(per_pos, xlabel="position", ylabel="next-token cross-entropy", legend=false)
+{{?model=encdec}} logits = model(sample[1], sample[2][1:end-1, :])
+{{?model=encdec}} per_pos = [Flux.logitcrossentropy(logits[:, t, :], Flux.onehotbatch(sample[2][t+1, :], 1:vocab_size)) for t in 1:size(logits, 2)]
+{{?model=encdec}} plot(per_pos, xlabel="target position", ylabel="cross-entropy", legend=false)
+{{?model=timeseries}} plot(1:seq_len, sample[1][:, 1], label="lookback")
+{{?model=timeseries}} plot!(seq_len+1:seq_len+pred_len, sample[2][:, 1], label="actual")
+{{?model=timeseries}} plot!(seq_len+1:seq_len+pred_len, model(sample[1][:, 1:1])[:, 1], label="forecast", linestyle=:dash)
+{{?model=crossmodal}} y_hat = model(sample[1], sample[2])
+{{?model=crossmodal}} scatter(vec(sample[3]), vec(y_hat), xlabel="target", ylabel="prediction", alpha=0.5, legend=false)
+{{?model=crossmodal}} plot!(identity, extrema(vec(sample[3]))..., linestyle=:dash)
+'''
+
+[[actionGroups.actions]]
+id = "attention-map"
+label = "Attention Map"
+desc = "Attention weights of one head in the first block for the first example: which positions each position reads"
+code = '''
+using Plots
+
+head = 1  # attention head to show
+x1 = inputs(model, collect(selectdim(data[1], ndims(data[1]), 1:1)))  # first example, d_model x T x 1
+{{?model=decoder}} mask = Flux.NNlib.make_causal_mask(x1)
+{{?model!=decoder}} mask = nothing
+b = model.blocks[1]
+_, A = b.attn(b.ln1(x1); mask)  # A: attended position x query position x head x batch
+heatmap(permutedims(A[:, :, head, 1]), xlabel="attended position", ylabel="query position", yflip=true)
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "training-curve"
+label = "Training Curve"
+desc = "Keep training while recording the loss on the first examples after every epoch, then plot it"
+code = '''
+using Plots
+
+sample = map(a -> collect(selectdim(a, ndims(a), 1:min(size(a, ndims(a)), 256))), data)
+history = Float32[]
+for epoch in 1:20
+    Flux.train!(loss, model, loader, opt_state)
+    push!(history, loss(model, sample...))
+end
+plot(history, xlabel="epoch", ylabel="loss", legend=false)
+'''
+
+[[actionGroups.actions]]
+id = "attention-entropy"
+label = "Attention Entropy per Head"
+desc = "Normalised entropy of each head's attention in every block; values near 0 mean a head attends to a single position"
+code = '''
+using Plots, Statistics
+
+h = inputs(model, collect(selectdim(data[1], ndims(data[1]), 1:min(size(data[1], ndims(data[1])), 32))))
+{{?model=decoder}} mask = Flux.NNlib.make_causal_mask(h)
+{{?model!=decoder}} mask = nothing
+E = zeros(num_heads, length(model.blocks))
+for (l, b) in enumerate(model.blocks)
+    _, A = b.attn(b.ln1(h); mask)
+    E[:, l] = vec(mean(-sum(A .* log.(A .+ 1f-9); dims=1); dims=(2, 4))) ./ log(size(A, 1))
+    h = b(h; mask)
+end
+heatmap(E, xlabel="block", ylabel="head", clims=(0, 1), title="normalised attention entropy")
+'''
+
+[[actionGroups.actions]]
+id = "param-count"
+label = "Parameter Count"
+desc = "Number of trainable parameters, in total and per component"
+code = '''
+(total = sum(length, Flux.trainables(model)),
+ per_block = sum(length, Flux.trainables(model.blocks[1])),
+ embedding = sum(length, Flux.trainables(getfield(model, 1))))
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "predict-new"
+label = "Predict New Data"
+desc = "Apply the trained Transformer to new examples (greedy generation for the Decoder and Encoder-Decoder)"
+code = '''
+{{?model=encoder}} y_new = Flux.onecold(model(x_new), 1:num_classes)  # x_new: token ids, seq_len x m
+{{?model=decoder}} tokens = copy(prompt)  # prompt: vector of token ids
+{{?model=decoder}} for _ in 1:20  # generate 20 tokens greedily
+{{?model=decoder}}     context = tokens[max(1, end-seq_len+1):end]
+{{?model=decoder}}     push!(tokens, Flux.onecold(model(reshape(context, :, 1))[:, end, 1]))
+{{?model=decoder}} end
+{{?model=decoder}} tokens
+{{?model=encdec}} tgt = [bos]  # bos: start-of-sequence token id
+{{?model=encdec}} for _ in 1:tgt_len-1  # greedy decoding of src_new (source token ids)
+{{?model=encdec}}     push!(tgt, Flux.onecold(model(reshape(src_new, :, 1), reshape(tgt, :, 1))[:, end, 1]))
+{{?model=encdec}} end
+{{?model=encdec}} tgt
+{{?model=timeseries}} y_new = model(Float32.(x_new))  # x_new: lookback windows, seq_len x m -> pred_len x m
+{{?model=crossmodal}} y_new = model(x_text_new, Float32.(x_num_new))  # token ids (seq_len x m), features (d_num x m)
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "baseline"
+label = "vs Simple Baseline"
+desc = "Loss of the Transformer against a baseline without attention: class prior, unigram frequencies, last value or linear model"
+code = '''
+using Statistics
+
+sample = map(a -> collect(selectdim(a, ndims(a), 1:min(size(a, ndims(a)), 256))), data)
+{{?model=encoder}} prior = [count(==(c), data[2]) + 1 for c in 1:num_classes] ./ (length(data[2]) + num_classes)
+{{?model=encoder}} baseline = -mean(log.(prior[sample[2]]))  # cross-entropy of always predicting the class frequencies
+{{?model=decoder}} freq = [count(==(v), data[1]) + 1 for v in 1:vocab_size] ./ (length(data[1]) + vocab_size)
+{{?model=decoder}} baseline = -mean(log.(freq[sample[1][2:end, :]]))  # unigram cross-entropy
+{{?model=encdec}} freq = [count(==(v), data[2]) + 1 for v in 1:vocab_size] ./ (length(data[2]) + vocab_size)
+{{?model=encdec}} baseline = -mean(log.(freq[sample[2][2:end, :]]))  # unigram cross-entropy of the targets
+{{?model=timeseries}} baseline = Flux.mse(repeat(sample[1][end:end, :], pred_len), sample[2])  # repeat the last observed value
+{{?model=crossmodal}} X = vcat(sample[2], ones(Float32, 1, size(sample[2], 2)))
+{{?model=crossmodal}} baseline = Flux.mse((sample[3] / X) * X, sample[3])  # least squares on the numerical features alone
+(transformer = loss(model, sample...), baseline = baseline)
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "attention-layers"
+label = "Attention by Layer"
+desc = "Head-averaged attention of every block for the first example: how the attention pattern changes with depth"
+code = '''
+using Plots, Statistics
+
+h = inputs(model, collect(selectdim(data[1], ndims(data[1]), 1:1)))
+{{?model=decoder}} mask = Flux.NNlib.make_causal_mask(h)
+{{?model!=decoder}} mask = nothing
+maps = Matrix{Float32}[]
+for b in model.blocks
+    _, A = b.attn(b.ln1(h); mask)
+    push!(maps, permutedims(dropdims(mean(A[:, :, :, 1]; dims=3); dims=3)))
+    h = b(h; mask)
+end
+plot([heatmap(M, title=string("block ", l), yflip=true, colorbar=false) for (l, M) in enumerate(maps)]...)
+'''
+
+[[actionGroups.actions]]
+id = "position-similarity"
+label = "Position Similarity"
+desc = "Cosine similarity between the positional encodings: nearby positions should look alike"
+code = '''
+using LinearAlgebra, Plots
+
+Pn = mapslices(normalize, model.pos; dims=1)  # unit-length encoding per position
+heatmap(transpose(Pn) * Pn, xlabel="position", ylabel="position", yflip=true, clims=(-1, 1))
+'''

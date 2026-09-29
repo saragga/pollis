@@ -1,0 +1,490 @@
+# Convolutional Neural Networks Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/cnn.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Convolutional Neural Networks"
+viewType = "pollis.cnn"
+defaultModel = "conv1d"
+
+[[packages]]
+name = "Flux.jl"
+github = "https://github.com/FluxML/Flux.jl"
+
+[[packages.videos]]
+title = "High Performance Computing in Julia"
+description = "An 18-video course by Jamie Mair on writing fast Julia code"
+url = "https://www.youtube.com/playlist?list=PLUAq6xQKFgGr39PiyrPk_C9dhBKvWcjUA"
+
+[requires]
+packages = ["Plots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "1D CNN Basics"
+file = "cnn/tutorial-01-conv1d.ipynb"
+bundled = true
+description = "Temporal convolution for time-series with Flux.jl"
+
+[[notebookSections.notebooks]]
+name = "Dilated Convolutions"
+file = "cnn/tutorial-02-dilated.ipynb"
+bundled = true
+description = "Exponential dilation schedules for long-range receptive fields"
+
+[[notebookSections.notebooks]]
+name = "TCN Architecture"
+file = "cnn/tutorial-03-tcn.ipynb"
+bundled = true
+description = "Temporal Convolutional Networks: causal, dilated, residual blocks"
+
+[[wikis]]
+name = "Overview"
+file = "cnn/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Factsheet"
+file = "cnn/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "cnn/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "cnn/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "cnn/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "cnn/decision-guide.md"
+bundled = true
+
+[[wikis]]
+name = "Causal & Multi-Channel Guide"
+file = "cnn/causal-multichannel.md"
+bundled = true
+
+[[models]]
+id = "conv1d"
+label = "1D Conv"
+
+[[models]]
+id = "dilated"
+label = "Dilated Conv"
+
+[[models]]
+id = "tcn"
+label = "TCN"
+
+[[bullets]]
+text = "1D Conv"
+detail = "vanilla temporal convolution; local pattern detection along the time axis"
+
+[[bullets]]
+text = "Dilated Conv"
+detail = "exponentially expanding dilation schedule; large receptive field without depth blowup"
+
+[[bullets]]
+text = "TCN"
+detail = "Temporal Convolutional Network; always causal, dilated, and residual (Bai et al. 2018)"
+
+[[decisionRows]]
+task = "1D Conv"
+context = "Short local patterns anywhere in the sequence"
+purpose = "Stacked temporal filters with a small receptive field"
+
+[[decisionRows]]
+task = "Dilated Conv"
+context = "Long histories without very deep networks"
+purpose = "Exponentially growing dilation: receptive field doubles per layer"
+
+[[decisionRows]]
+task = "TCN"
+context = "Forecasting; a parallel alternative to RNNs"
+purpose = "Causal, dilated and residual blocks (Bai et al. 2018)"
+
+[[inputs]]
+id = "xvar"
+label = "Sequence data"
+tooltip = "T x in_channels x n array: n sequences of T time steps (the layout Flux's Conv expects)."
+default = "X"
+
+[[inputs]]
+id = "yvar"
+label = "Target variable"
+tooltip = "output_size x n matrix: one target vector per sequence (e.g. the next value after the window)."
+default = "y"
+
+[[inputs]]
+id = "in-channels"
+label = "in_channels"
+tooltip = "Number of input channels. Use 1 for a single time series, or the number of parallel input features (e.g. price, volume, sentiment)."
+default = "1"
+newRow = true
+
+[[inputs]]
+id = "output-size"
+label = "output_size"
+tooltip = "Dimension of the prediction made from each sequence."
+default = "1"
+
+[[inputs]]
+id = "padding"
+label = "Padding"
+tooltip = "Same pads both sides, so each output sees past and future steps (fine for classifying whole sequences). Causal pads only on the left, so no output looks ahead: required for forecasting."
+kind = "select"
+default = "same"
+models = ["conv1d", "dilated"]
+
+[[inputs.options]]
+value = "same"
+label = "Same (acausal)"
+
+[[inputs.options]]
+value = "causal"
+label = "Causal"
+
+[[inputs]]
+id = "out-channels"
+label = "out_channels"
+tooltip = "Number of feature maps (filters) in each convolutional layer or block. More channels capture richer patterns at the cost of more parameters. Typical range: 32-256."
+default = "64"
+newRow = true
+
+[[inputs]]
+id = "kernel-size"
+label = "kernel_size"
+tooltip = "Length of the convolution window in the time dimension. Larger kernels capture longer local patterns. Typical range: 3-9."
+default = "3"
+
+[[inputs]]
+id = "num-layers"
+label = "num_layers"
+tooltip = "Number of stacked convolutional layers. More layers increase depth and receptive field without growing the kernel. Typical range: 2-8."
+default = "4"
+models = ["conv1d", "dilated"]
+
+[[inputs]]
+id = "dilation-base"
+label = "dilation_base"
+tooltip = "Base of the exponential dilation schedule. At layer l the dilation is base^(l-1), giving dilations 1, 2, 4, 8, ... for base=2. The receptive field grows exponentially with depth."
+default = "2"
+models = ["dilated"]
+
+[[inputs]]
+id = "num-blocks"
+label = "num_blocks"
+tooltip = "Number of residual TCN blocks. Each block contains two causal dilated convolutions with a skip connection. The dilation doubles with each block: 1, 2, 4, ..."
+default = "4"
+models = ["tcn"]
+
+[[inputs]]
+id = "dropout"
+label = "dropout"
+tooltip = "Dropout probability applied after each convolution inside a TCN block. Set to 0 to disable. Typical range: 0.1-0.3."
+default = "0.2"
+models = ["tcn"]
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.conv1d]
+# A signal with a sliding kernel window and the filtered output below
+svg = '''
+var d = '', o = '';
+for (var i = 0; i <= 44; i++) {
+	d += (i ? 'L' : 'M') + (5 + i) + ',' + (30 - 8 * Math.sin(i / 3) - 3 * Math.sin(i * 1.3)).toFixed(1);
+	o += (i ? 'L' : 'M') + (5 + i) + ',' + (62 - 7 * Math.sin(i / 3)).toFixed(1);
+}
+var s = '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.6"/>';
+s += '<rect x="18" y="16" width="10" height="28" fill="currentColor" opacity="0.2" stroke="currentColor" stroke-width="0.8"/>';
+s += '<line x1="23" y1="44" x2="23" y2="' + (62 - 7 * Math.sin(18 / 3)).toFixed(1) + '" stroke="currentColor" stroke-width="0.8" stroke-dasharray="2,2"/>';
+s += '<path d="' + o + '" fill="none" stroke="currentColor" stroke-width="1.5"/>';
+return s;
+'''
+
+[miniCharts.dilated]
+# Three layers whose connections spread with dilation 1, 2, 4
+svg = '''
+var s = '', ys = [70, 52, 34, 16];
+for (var i = 0; i < 8; i++) {
+	s += '<circle cx="' + (6 + i * 6) + '" cy="70" r="1.6" fill="currentColor" opacity="0.5"/>';
+}
+var tree = function(x, level) {
+	if (level === 0) { return; }
+	var gap = 3 * Math.pow(2, level - 1);
+	var y1 = ys[level], y0 = ys[level - 1];
+	s += '<line x1="' + x + '" y1="' + y1 + '" x2="' + (x - gap) + '" y2="' + y0 + '" stroke="currentColor" stroke-width="1"/>';
+	s += '<line x1="' + x + '" y1="' + y1 + '" x2="' + (x + gap) + '" y2="' + y0 + '" stroke="currentColor" stroke-width="1"/>';
+	s += '<circle cx="' + x + '" cy="' + y1 + '" r="2.2" fill="currentColor"/>';
+	tree(x - gap, level - 1);
+	tree(x + gap, level - 1);
+};
+tree(27, 3);
+return s;
+'''
+
+[miniCharts.tcn]
+# Causal dilated stack with a residual skip connection
+svg = '''
+var s = '', xs = [6, 12, 18, 24, 30, 36, 42, 48];
+for (var i = 0; i < xs.length; i++) {
+	s += '<circle cx="' + xs[i] + '" cy="68" r="1.6" fill="currentColor" opacity="0.5"/>';
+}
+var pairs = [[48, 42, 68, 50], [48, 48, 68, 50], [48, 36, 50, 32], [48, 48, 50, 32], [48, 24, 32, 14], [48, 48, 32, 14]];
+for (var j = 0; j < pairs.length; j++) {
+	var p = pairs[j];
+	s += '<line x1="' + p[1] + '" y1="' + p[2] + '" x2="' + p[0] + '" y2="' + p[3] + '" stroke="currentColor" stroke-width="1"/>';
+}
+s += '<circle cx="48" cy="50" r="2.2" fill="currentColor"/><circle cx="48" cy="32" r="2.2" fill="currentColor"/><circle cx="48" cy="14" r="2.5" fill="currentColor"/>';
+s += '<path d="M8,50 C2,40 2,24 8,14" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="2,2"/>';
+return s;
+'''
+
+[[codeBranches]]
+model = "conv1d"
+code = '''
+using Flux
+
+in_channels  = {{in-channels}}  # input channels
+out_channels = {{out-channels}}  # feature maps per layer
+kernel_size  = {{kernel-size}}  # convolution window
+num_layers   = {{num-layers}}  # stacked conv layers
+output_size  = {{output-size}}  # output dimension
+
+{{?padding=same}} pad = SamePad()  # symmetric padding: full context
+{{?padding=causal}} pad = (kernel_size - 1, 0)  # left-only padding: no look-ahead
+
+model = Chain(
+    Conv((kernel_size,), in_channels => out_channels, relu; pad=pad),
+    [Conv((kernel_size,), out_channels => out_channels, relu; pad=pad) for _ in 2:num_layers]...,
+{{?padding=same}}     GlobalMaxPool(),  # strongest response over the time axis
+{{?padding=same}}     Flux.flatten,  # (out_channels, batch)
+{{?padding=causal}}     x -> x[end, :, :],  # last time step, which has only seen the past
+    Dense(out_channels => output_size),
+)
+
+loss(model, x, y) = Flux.mse(model(x), y)
+opt_state = Flux.setup(Adam(1f-3), model)
+loader = Flux.DataLoader(({{xvar}}, {{yvar}}), batchsize=32, shuffle=true)  # {{xvar}}: T x in_channels x sequences
+for epoch in 1:100
+    Flux.train!(loss, model, loader, opt_state)
+end
+'''
+
+[[codeBranches]]
+model = "dilated"
+code = '''
+using Flux
+
+in_channels   = {{in-channels}}  # input channels
+out_channels  = {{out-channels}}  # feature maps per layer
+kernel_size   = {{kernel-size}}  # convolution window
+num_layers    = {{num-layers}}  # stacked dilated layers
+dilation_base = {{dilation-base}}  # dilation at layer l is dilation_base^(l-1)
+output_size   = {{output-size}}  # output dimension
+
+receptive_field = 1 + (kernel_size - 1) * sum(dilation_base^(l - 1) for l in 1:num_layers)  # time steps seen by each output
+
+{{?padding=same}} pad(d) = SamePad()  # symmetric padding: full context
+{{?padding=causal}} pad(d) = ((kernel_size - 1) * d, 0)  # left-only padding: no look-ahead
+conv(n_in, d) = Conv((kernel_size,), n_in => out_channels, relu; pad=pad(d), dilation=d)
+
+model = Chain(
+    [conv(l == 1 ? in_channels : out_channels, dilation_base^(l - 1)) for l in 1:num_layers]...,
+{{?padding=same}}     GlobalMaxPool(),  # strongest response over the time axis
+{{?padding=same}}     Flux.flatten,  # (out_channels, batch)
+{{?padding=causal}}     x -> x[end, :, :],  # last time step, which has only seen the past
+    Dense(out_channels => output_size),
+)
+
+loss(model, x, y) = Flux.mse(model(x), y)
+opt_state = Flux.setup(Adam(1f-3), model)
+loader = Flux.DataLoader(({{xvar}}, {{yvar}}), batchsize=32, shuffle=true)  # {{xvar}}: T x in_channels x sequences
+for epoch in 1:100
+    Flux.train!(loss, model, loader, opt_state)
+end
+'''
+
+[[codeBranches]]
+model = "tcn"
+code = '''
+using Flux
+
+in_channels  = {{in-channels}}  # input channels
+out_channels = {{out-channels}}  # feature maps per residual block
+kernel_size  = {{kernel-size}}  # convolution window
+num_blocks   = {{num-blocks}}  # residual blocks; dilation doubles: 1, 2, 4, ...
+dropout      = {{dropout}}  # dropout inside each block
+output_size  = {{output-size}}  # output dimension
+
+struct TCNBlock  # two causal dilated convolutions with a residual connection
+    conv1; conv2; downsample; drop
+end
+Flux.@layer TCNBlock
+
+function TCNBlock(in_ch, out_ch, k, d, p)
+    pad = ((k - 1) * d, 0)  # left-only causal padding
+    TCNBlock(
+        Conv((k,), in_ch => out_ch, relu; pad=pad, dilation=d),
+        Conv((k,), out_ch => out_ch, relu; pad=pad, dilation=d),
+        in_ch == out_ch ? identity : Conv((1,), in_ch => out_ch),  # 1x1 projection if channel counts differ
+        Dropout(p),
+    )
+end
+
+function (b::TCNBlock)(x)
+    y = b.drop(b.conv1(x))
+    y = b.drop(b.conv2(y))
+    relu.(y .+ b.downsample(x))  # residual connection
+end
+
+model = Chain(
+    [TCNBlock(i == 1 ? in_channels : out_channels, out_channels, kernel_size, 2^(i - 1), dropout) for i in 1:num_blocks]...,
+    x -> x[end, :, :],  # last time step: (out_channels, batch)
+    Dense(out_channels => output_size),
+)
+
+loss(model, x, y) = Flux.mse(model(x), y)
+opt_state = Flux.setup(Adam(1f-3), model)
+loader = Flux.DataLoader(({{xvar}}, {{yvar}}), batchsize=32, shuffle=true)  # {{xvar}}: T x in_channels x sequences
+for epoch in 1:100
+    Flux.train!(loss, model, loader, opt_state)
+end
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "fit-plot"
+label = "Predictions vs Targets"
+desc = "Scatter every prediction against its target; points should hug the diagonal"
+code = '''
+using Plots
+
+y_hat = model({{xvar}})
+scatter(vec({{yvar}}), vec(y_hat), xlabel="target", ylabel="prediction", alpha=0.5, legend=false)
+plot!(identity, extrema(vec({{yvar}}))..., linestyle=:dash)
+'''
+
+[[actionGroups.actions]]
+id = "feature-maps"
+label = "Feature Maps"
+desc = "Heatmap of the first layer's filter responses over time for the first sequence"
+code = '''
+using Plots
+
+fmap = dropdims(model[1]({{xvar}}[:, :, 1:1]); dims=3)  # T x out_channels
+heatmap(fmap', xlabel="time step", ylabel="filter", title="first-layer feature maps, first sequence")
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "training-curve"
+label = "Training Curve"
+desc = "Keep training while recording the MSE after every epoch, then plot it"
+code = '''
+using Plots, Statistics
+
+history = Float32[]
+for epoch in 1:100
+    Flux.train!(loss, model, loader, opt_state)
+    push!(history, mean(loss(model, x, y) for (x, y) in loader))
+end
+plot(history, xlabel="epoch", ylabel="MSE", yscale=:log10, legend=false)
+'''
+
+[[actionGroups.actions]]
+id = "holdout"
+label = "Held-Out Error"
+desc = "MSE on the training sequences against held-out sequences; a large gap signals overfitting"
+code = '''
+(train = loss(model, {{xvar}}, {{yvar}}), test = loss(model, X_test, y_test))  # X_test: T x in_channels x m, y_test: output_size x m
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "predict-new"
+label = "Predict New Sequences"
+desc = "One prediction per new sequence of the same shape as the training data"
+code = '''
+y_new = model(X_new)  # X_new: T x in_channels x m
+'''
+
+[[actionGroups.actions]]
+id = "multi-step"
+label = "Recursive Multi-Step Forecast"
+desc = "Feed each one-step prediction back as the newest input to forecast 12 steps ahead"
+code = '''
+window = {{xvar}}[:, :, end:end]  # most recent window, T x in_channels x 1 (needs in_channels == output_size)
+forecast = Vector{Float32}[]
+for h in 1:12
+    y_next = vec(model(window))
+    push!(forecast, y_next)
+    global window = cat(window[2:end, :, :], reshape(y_next, 1, :, 1); dims=1)  # slide the window forward
+end
+reduce(hcat, forecast)  # output_size x 12
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "linear-baseline"
+label = "vs Linear Baseline"
+desc = "Training MSE of the network against least squares on the flattened input windows"
+code = '''
+Z = reshape({{xvar}}, :, size({{xvar}}, 3))  # flatten each window into one feature vector
+Z1 = vcat(Z, ones(Float32, 1, size(Z, 2)))  # add an intercept row
+W = {{yvar}} / Z1  # least-squares coefficients
+(network = loss(model, {{xvar}}, {{yvar}}), linear = Flux.mse(W * Z1, {{yvar}}))
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "saliency"
+label = "Input Saliency"
+desc = "Gradient of the prediction with respect to every time step and channel of one sequence: the effective receptive field"
+code = '''
+using Plots
+
+x = {{xvar}}[:, :, 1:1]
+g = Flux.gradient(x -> sum(model(x)), x)[1]
+heatmap(abs.(dropdims(g; dims=3))', xlabel="time step", ylabel="input channel", title="|d prediction / d input|")
+'''
+
+[[actionGroups.actions]]
+id = "filters"
+label = "Learned Filters"
+desc = "Kernel weights of the first layer for the first input channel: what local shapes each filter detects"
+code = '''
+using Plots
+
+{{?model=tcn}} W1 = model[1].conv1.weight  # kernel_size x in_channels x out_channels
+{{?model!=tcn}} W1 = model[1].weight  # kernel_size x in_channels x out_channels
+heatmap(W1[:, 1, :]', xlabel="kernel tap", ylabel="filter", title="first-layer filters")
+'''

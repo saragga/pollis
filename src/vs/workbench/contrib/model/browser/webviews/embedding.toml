@@ -1,0 +1,368 @@
+# Neighbour Embedding Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/embedding.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Neighbour Embedding"
+viewType = "pollis.embedding"
+defaultModel = "tsne"
+
+[[packages]]
+name = "TSne.jl"
+github = "https://github.com/lejon/TSne.jl"
+
+[[packages]]
+name = "UMAP.jl"
+github = "https://github.com/dillondaudert/UMAP.jl"
+
+[requires]
+packages = ["Plots.jl", "Distances.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "t-SNE"
+file = "dim-reduction-embedding/tutorial-01-tsne.ipynb"
+bundled = true
+description = "t-SNE with TSne.jl — perplexity, learning rate, and 2-D/3-D neighbourhood embedding"
+
+[[notebookSections.notebooks]]
+name = "UMAP"
+file = "dim-reduction-embedding/tutorial-02-umap.ipynb"
+bundled = true
+description = "UMAP with UMAP.jl — n_neighbors, min_dist, and topology-preserving embedding"
+
+[[wikis]]
+name = "Overview"
+file = "dim-reduction-embedding/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Factsheet"
+file = "dim-reduction-embedding/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "t-SNE"
+file = "dim-reduction-embedding/tsne.md"
+bundled = true
+
+[[wikis]]
+name = "UMAP"
+file = "dim-reduction-embedding/umap.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Original Papers (from packages)"
+
+[[references]]
+title = "Visualizing Data using t-SNE"
+authors = "van der Maaten, L. & Hinton, G."
+year = 2008
+journal = ""
+url = "https://jmlr.org/papers/v9/vandermaaten08a.html"
+openAccess = true
+
+[[references]]
+title = "UMAP: Uniform Manifold Approximation and Projection for Dimension Reduction"
+authors = "McInnes, L., Healy, J. & Melville, J."
+year = 2018
+journal = ""
+url = "https://arxiv.org/abs/1802.03426"
+openAccess = true
+
+[[models]]
+id = "tsne"
+label = "t-SNE"
+
+[[models]]
+id = "umap"
+label = "UMAP"
+
+[[bullets]]
+text = "t-SNE"
+detail = "models high-dimensional similarities with Gaussian kernels and low-dimensional similarities with a Student-t; minimises KL divergence via gradient descent (TSne.jl)"
+
+[[bullets]]
+text = "UMAP"
+detail = "constructs a fuzzy topological representation of the high-dimensional graph then minimises cross-entropy to a low-dimensional analogue; faster and better at preserving global structure than t-SNE (UMAP.jl)"
+
+[[decisionRows]]
+task = "t-SNE"
+context = "Visualising local cluster structure of a fixed data set"
+purpose = "Match neighbour probabilities with a heavy-tailed Student-t in the embedding"
+
+[[decisionRows]]
+task = "UMAP"
+context = "Larger data, more global structure, embedding new points later"
+purpose = "Match a fuzzy k-NN graph with a low-dimensional one by cross-entropy"
+
+[[inputs]]
+id = "X"
+label = "Feature Matrix"
+tooltip = "n_samples × n_features matrix, one row per observation. Standardise the columns first when they are on different scales."
+default = "X_train"
+
+[[inputs]]
+id = "d"
+label = "Embedding Dimensions"
+tooltip = "Number of output dimensions. 2 is standard for visualisation; 3 for interactive 3D plots."
+default = "2"
+newRow = true
+
+[[inputs]]
+id = "perplexity"
+label = "Perplexity"
+tooltip = "Effective number of neighbours per point. Typical range 5–50. Larger values give more globally coherent embeddings; smaller values emphasise local clusters."
+default = "30"
+models = ["tsne"]
+
+[[inputs]]
+id = "maxiter"
+label = "max_iter"
+tooltip = "Number of gradient descent iterations. 1000 is usually enough; increase for large data sets."
+default = "1000"
+models = ["tsne"]
+
+[[inputs]]
+id = "eta"
+label = "Learning Rate"
+tooltip = "Gradient descent step size (eta). 100–1000 is typical. Too small converges slowly; too large compresses the points into a ball."
+default = "200.0"
+models = ["tsne"]
+
+[[inputs]]
+id = "nn"
+label = "n_neighbors"
+tooltip = "Neighbours in the high-dimensional fuzzy graph. Smaller values capture local structure; larger values preserve more global topology."
+default = "15"
+models = ["umap"]
+
+[[inputs]]
+id = "mindist"
+label = "min_dist"
+tooltip = "Minimum distance between points in the embedding. Smaller values give tighter clusters; larger values spread points more evenly."
+default = "0.1"
+models = ["umap"]
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.tsne]
+# Tight, well-separated clusters with a heavy-tailed kernel curve
+svg = '''
+var s = '', c = [[14, 34], [40, 34], [27, 60]];
+var o = [[-3, -2], [2, -3], [3, 2], [-2, 3], [0, 0]];
+c.forEach(function (p) { o.forEach(function (d) { s += '<circle cx="' + (p[0] + d[0]) + '" cy="' + (p[1] + d[1]) + '" r="1.6" fill="currentColor" opacity="0.7"/>'; }); });
+return s;
+'''
+
+[miniCharts.umap]
+# Clusters linked by the edges of a fuzzy graph
+svg = '''
+var s = '', c = [[14, 34], [40, 34], [27, 60]];
+var o = [[-3, -2], [2, -3], [3, 2], [-2, 3], [0, 0]];
+s += '<path d="M14,34 L40,34 L27,60 Z" fill="none" stroke="currentColor" stroke-width="0.8" stroke-dasharray="2,2" opacity="0.6"/>';
+c.forEach(function (p) { o.forEach(function (d) { s += '<circle cx="' + (p[0] + d[0]) + '" cy="' + (p[1] + d[1]) + '" r="1.6" fill="currentColor" opacity="0.7"/>'; }); });
+return s;
+'''
+
+[[codeBranches]]
+model = "tsne"
+code = '''
+using TSne, Distances, Statistics, Random
+
+X = {{X}}  # n x p feature matrix, one row per observation
+d = {{d}}  # embedding dimensions
+
+embed(perplexity) = tsne(X, d, 0, {{maxiter}}, perplexity; eta={{eta}})  # n x d; reduce_dims=0 skips the initial PCA
+grid = [5, 15, 30, 50]  # perplexities compared by the sweep action
+par  = {{perplexity}}
+
+Random.seed!(1)  # t-SNE starts from random positions
+Y = embed(par)
+
+function trustworthiness(Y, m=10)  # share of embedding neighbours that were also near in X (1 = perfect)
+    n  = size(X, 1)
+    Dx = pairwise(Euclidean(), X, dims=1)
+    Dy = pairwise(Euclidean(), Y, dims=1)
+    penalty = 0.0
+    for i in 1:n
+        rank_x = invperm(sortperm(Dx[i, :])) .- 1  # rank 0 = the point itself
+        for j in sortperm(Dy[i, :])[2:m+1]
+            penalty += max(rank_x[j] - m, 0)
+        end
+    end
+    1 - 2 * penalty / (n * m * (2n - 3m - 1))
+end
+trustworthiness(Y)
+'''
+
+[[codeBranches]]
+model = "umap"
+code = '''
+using UMAP, Distances, Statistics, Random
+
+X  = {{X}}  # n x p feature matrix, one row per observation
+d  = {{d}}  # embedding dimensions
+Xt = permutedims(X)  # UMAP.jl expects features x samples
+
+fit_umap(nn) = UMAP_(Xt, d; n_neighbors=nn, min_dist={{mindist}})  # fuzzy k-NN graph, then cross-entropy layout
+embed(nn) = permutedims(fit_umap(nn).embedding)  # n x d
+grid = [5, 10, 15, 30, 50]  # n_neighbors values compared by the sweep action
+par  = {{nn}}
+
+Random.seed!(1)  # the layout starts from a random (spectral + noise) initialisation
+model = fit_umap(par)
+Y = permutedims(model.embedding)  # n x d embedding
+
+function trustworthiness(Y, m=10)  # share of embedding neighbours that were also near in X (1 = perfect)
+    n  = size(X, 1)
+    Dx = pairwise(Euclidean(), X, dims=1)
+    Dy = pairwise(Euclidean(), Y, dims=1)
+    penalty = 0.0
+    for i in 1:n
+        rank_x = invperm(sortperm(Dx[i, :])) .- 1  # rank 0 = the point itself
+        for j in sortperm(Dy[i, :])[2:m+1]
+            penalty += max(rank_x[j] - m, 0)
+        end
+    end
+    1 - 2 * penalty / (n * m * (2n - 3m - 1))
+end
+trustworthiness(Y)
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "scatter"
+label = "Embedding Scatter"
+desc = "The first two embedding coordinates (pass your own labels or values as colour)"
+code = '''
+using Plots
+
+colour = 1:size(X, 1)  # replace with class labels or a variable of interest
+scatter(Y[:, 1], Y[:, 2], zcolor=colour, color=:viridis, markersize=3, markerstrokewidth=0, xlabel="axis 1", ylabel="axis 2", legend=false)
+'''
+
+[[actionGroups.actions]]
+id = "label-scatter"
+label = "Label Overlay"
+desc = "Colour the embedding by a categorical label vector to judge class separation"
+code = '''
+using Plots
+
+# labels: class vector of length n
+scatter(Y[:, 1], Y[:, 2], group=labels, markersize=3, markerstrokewidth=0, xlabel="axis 1", ylabel="axis 2")
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "trustworthiness"
+label = "Trustworthiness"
+desc = "Trustworthiness for 5 to 50 neighbours: how far the embedding's neighbourhoods can be trusted (1 = perfect)"
+code = '''
+using Plots
+
+ms = [5, 10, 20, 30, 50]
+plot(ms, [trustworthiness(Y, m) for m in ms], marker=:circle, xlabel="neighbours checked", ylabel="trustworthiness", legend=false)
+'''
+
+[[actionGroups.actions]]
+id = "sweep"
+label = "Perplexity / n_neighbors Sweep"
+desc = "Trustworthiness at several perplexities (t-SNE) or n_neighbors (UMAP) to choose the setting"
+code = '''
+using Plots
+
+scores = [(Random.seed!(1); trustworthiness(embed(g))) for g in grid]
+{{?model=tsne}} plot(grid, scores, marker=:circle, xlabel="perplexity", ylabel="trustworthiness", legend=false)
+{{?model=umap}} plot(grid, scores, marker=:circle, xlabel="n_neighbors", ylabel="trustworthiness", legend=false)
+'''
+
+[[actionGroups.actions]]
+id = "seed-stability"
+label = "Seed Stability"
+desc = "Rerun with different random seeds and measure how many of each point's 10 embedding neighbours stay the same"
+code = '''
+knn(Z) = [Set(sortperm(r)[2:11]) for r in eachrow(pairwise(Euclidean(), Z, dims=1))]
+base = knn(Y)
+map(2:4) do seed
+    Random.seed!(seed)
+    mean(length(intersect(a, b)) / 10 for (a, b) in zip(base, knn(embed(par))))  # 1 = identical neighbourhoods
+end
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "embed-new"
+label = "Embed New Data"
+desc = "UMAP places new points with its fitted graph; t-SNE has no mapping, so new points are rebuilt from their 10 nearest training points"
+code = '''
+{{?model=umap}} Y_new = permutedims(UMAP.transform(model, permutedims(X_new)))  # X_new: same columns as X; n_new x d
+{{?model=tsne}} using LinearAlgebra
+{{?model=tsne}} function place(x, m=10)
+{{?model=tsne}}     nb = sortperm(vec(pairwise(Euclidean(), permutedims(x), X, dims=1)))[1:m]
+{{?model=tsne}}     Z  = X[nb, :] .- permutedims(x)
+{{?model=tsne}}     G  = Z * permutedims(Z)
+{{?model=tsne}}     w  = (G + 1e-3 * tr(G) * I) \ ones(m)  # regularised reconstruction weights
+{{?model=tsne}}     permutedims(w ./ sum(w)) * Y[nb, :]
+{{?model=tsne}} end
+{{?model=tsne}} Y_new = reduce(vcat, [place(x) for x in eachrow(X_new)])  # X_new: same columns as X; n_new x d
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "vs-pca"
+label = "vs PCA"
+desc = "Trustworthiness and residual variance of this embedding against a linear PCA embedding of the same dimension"
+code = '''
+using LinearAlgebra
+
+Xc  = X .- mean(X, dims=1)
+Ypca = Xc * svd(Xc).V[:, 1:d]
+Dx  = vec(pairwise(Euclidean(), X, dims=1))
+resvar(Z) = 1 - cor(Dx, vec(pairwise(Euclidean(), Z, dims=1)))^2
+(embedding = (trust = trustworthiness(Y), resvar = resvar(Y)), pca = (trust = trustworthiness(Ypca), resvar = resvar(Ypca)))
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "feature-correlation"
+label = "Feature Correlation"
+desc = "Correlation between each original feature and each embedding axis, to see which features drive the layout"
+code = '''
+using Plots
+
+C = cor(X, Y)  # features x axes
+heatmap(1:size(C, 2), 1:size(C, 1), C, xlabel="axis", ylabel="feature", color=:balance, clims=(-1, 1))
+'''
+
+[[actionGroups.actions]]
+id = "colour-scatter"
+label = "Colour Scatter by Feature"
+desc = "Overlay a feature value as a colour gradient on the 2D embedding"
+code = '''
+using Plots
+
+j = 1  # feature to show
+scatter(Y[:, 1], Y[:, 2], zcolor=X[:, j], color=:viridis, colorbar=true, markersize=4, markerstrokewidth=0,
+    xlabel="axis 1", ylabel="axis 2", title=string("feature ", j), legend=false)
+'''

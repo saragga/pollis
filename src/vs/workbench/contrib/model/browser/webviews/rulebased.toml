@@ -1,0 +1,391 @@
+# Rule-Based Methods Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/rulebased.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Rule-Based Methods"
+viewType = "pollis.rulebased"
+defaultModel = "itemset"
+
+[[packages]]
+name = "RuleMiner.jl"
+github = "https://github.com/JaredSchwartz/RuleMiner.jl"
+
+[requires]
+packages = ["Tables.jl", "Plots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Frequent Itemset Mining"
+file = "rulebased/tutorial-01-itemsets.ipynb"
+bundled = true
+description = "Apriori, ECLAT, FP-Growth — mining frequent itemsets with support thresholds"
+
+[[notebookSections.notebooks]]
+name = "Closed and Maximal Itemsets"
+file = "rulebased/tutorial-02-closed-maximal.ipynb"
+bundled = true
+description = "FP-Close and FP-Maximal — compact representations of the frequent itemset lattice"
+
+[[notebookSections.notebooks]]
+name = "Association Rule Mining"
+file = "rulebased/tutorial-03-rules.ipynb"
+bundled = true
+description = "Rule generation and filtering by confidence, lift, conviction, and leverage"
+
+[[wikis]]
+name = "Overview"
+file = "rulebased/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Factsheet"
+file = "rulebased/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "rulebased/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "rulebased/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "rulebased/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "rulebased/decision-guide.md"
+bundled = true
+
+[[wikis]]
+name = "Apriori"
+file = "rulebased/apriori.md"
+bundled = true
+
+[[wikis]]
+name = "ECLAT"
+file = "rulebased/eclat.md"
+bundled = true
+
+[[wikis]]
+name = "FP-Growth"
+file = "rulebased/fpgrowth.md"
+bundled = true
+
+[[wikis]]
+name = "Closed Itemsets"
+file = "rulebased/closed-itemsets.md"
+bundled = true
+
+[[wikis]]
+name = "Maximal Itemsets"
+file = "rulebased/maximal-itemsets.md"
+bundled = true
+
+[[wikis]]
+name = "Association Rules"
+file = "rulebased/association-rules.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Original Papers (from packages)"
+
+[[references]]
+title = "Fast Algorithms for Mining Association Rules"
+authors = "Agrawal, R. & Srikant, R."
+year = 1994
+journal = ""
+url = "https://www.vldb.org/conf/1994/P487.PDF"
+openAccess = true
+
+[[references]]
+title = "New Algorithms for Fast Discovery of Association Rules"
+authors = "Zaki, M.J., Parthasarathy, S., Ogihara, M. & Li, W."
+year = 1997
+journal = ""
+url = "https://www.cs.rpi.edu/~zaki/PaperDir/KDD97.pdf"
+openAccess = true
+
+[[references]]
+title = "Mining Frequent Patterns without Candidate Generation"
+authors = "Han, J., Pei, J. & Yin, Y."
+year = 2000
+journal = ""
+url = "https://dl.acm.org/doi/10.1145/342009.335372"
+openAccess = false
+
+[[models]]
+id = "itemset"
+label = "Itemset Mining"
+
+[[models]]
+id = "rules"
+label = "Association Rules"
+
+[[bullets]]
+text = "Frequent itemset mining"
+detail = "Apriori, ECLAT, FP-Growth"
+
+[[bullets]]
+text = "Closed and maximal itemsets"
+detail = "FP-Close, FP-Maximal"
+
+[[bullets]]
+text = "Association rule generation"
+detail = "confidence, lift, conviction, leverage"
+
+[[decisionRows]]
+task = "Apriori"
+context = "Small to medium transaction sets"
+purpose = "Level-wise candidate generation; simple and memory-light"
+
+[[decisionRows]]
+task = "ECLAT"
+context = "Dense data, many frequent items"
+purpose = "Depth-first search over transaction-id sets; fast intersections"
+
+[[decisionRows]]
+task = "FP-Growth"
+context = "Large or sparse transaction sets"
+purpose = "Mines a compressed FP-tree without generating candidates"
+
+[[decisionRows]]
+task = "Closed / Maximal"
+context = "Too many frequent itemsets to read"
+purpose = "Lossless (closed) or most compact (maximal) summary of the itemsets"
+
+[[decisionRows]]
+task = "Association Rules"
+context = "Cross-selling, co-occurrence patterns"
+purpose = "If-then rules scored by confidence, lift, conviction and leverage"
+
+[[inputs]]
+id = "df"
+label = "DataFrame"
+tooltip = "Table in long format with one row per (transaction, item) pair, with columns :Transaction and :Item."
+default = "df"
+
+[[inputs]]
+id = "algorithm"
+label = "Algorithm"
+tooltip = "Apriori, ECLAT and FP-Growth return all frequent itemsets. FP-Close returns only closed itemsets (no superset with the same support); FP-Maximal returns only maximal itemsets (no frequent superset)."
+kind = "select"
+default = "apriori"
+models = ["itemset"]
+newRow = true
+
+[[inputs.options]]
+value = "apriori"
+label = "Apriori"
+
+[[inputs.options]]
+value = "eclat"
+label = "ECLAT"
+
+[[inputs.options]]
+value = "fpgrowth"
+label = "FP-Growth"
+
+[[inputs.options]]
+value = "fpclose"
+label = "FP-Close (closed)"
+
+[[inputs.options]]
+value = "fpmaximal"
+label = "FP-Maximal (maximal)"
+
+[[inputs]]
+id = "support"
+label = "min_support"
+tooltip = "Minimum fraction of transactions (0-1) that must contain an itemset. Lower values find rarer patterns but grow the output quickly."
+default = "0.1"
+
+[[inputs]]
+id = "confidence"
+label = "min_confidence"
+tooltip = "Minimum conditional probability P(consequent | antecedent) for a rule to be kept (0-1)."
+default = "0.5"
+models = ["rules"]
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.itemset]
+# Itemset lattice: single items at the bottom, pairs and a triple above, frequent ones filled
+svg = '''
+var rows = [[[27, 20]], [[13, 42], [27, 42], [41, 42]], [[9, 64], [21, 64], [33, 64], [45, 64]]];
+var s = '';
+var links = [[0, 0, 1, 0], [0, 0, 1, 1], [0, 0, 1, 2], [1, 0, 2, 0], [1, 0, 2, 1], [1, 1, 2, 1], [1, 1, 2, 2], [1, 2, 2, 2], [1, 2, 2, 3]];
+for (var i = 0; i < links.length; i++) {
+	var a = rows[links[i][0]][links[i][1]], b = rows[links[i][2]][links[i][3]];
+	s += '<line x1="' + a[0] + '" y1="' + a[1] + '" x2="' + b[0] + '" y2="' + b[1] + '" stroke="currentColor" stroke-width="0.8" opacity="0.6"/>';
+}
+for (var r = 0; r < rows.length; r++) {
+	for (var j = 0; j < rows[r].length; j++) {
+		var frequent = r > 0 || j === 0;
+		s += '<circle cx="' + rows[r][j][0] + '" cy="' + rows[r][j][1] + '" r="3.5" fill="' + (frequent && !(r === 1 && j === 2) ? 'currentColor' : 'none') + '" stroke="currentColor" stroke-width="1"/>';
+	}
+}
+return s;
+'''
+
+[miniCharts.rules]
+# Rule {A, B} => C: two antecedent items pointing to one consequent
+svg = '''
+var s = '<circle cx="14" cy="30" r="6" fill="currentColor" opacity="0.8"/>';
+s += '<circle cx="14" cy="56" r="6" fill="currentColor" opacity="0.8"/>';
+s += '<circle cx="42" cy="43" r="7" fill="none" stroke="currentColor" stroke-width="1.5"/>';
+s += '<path d="M20,31 L33,40 M20,55 L33,46" stroke="currentColor" stroke-width="1.3"/>';
+s += '<path d="M33,40 L30,36 M33,40 L28,41 M33,46 L28,45 M33,46 L30,50" stroke="currentColor" stroke-width="1.3"/>';
+return s;
+'''
+
+[[codeBranches]]
+model = "itemset"
+code = '''
+using RuleMiner
+
+txns = Txns({{df}}, index_col=:Transaction, item_col=:Item)  # convert DataFrame to Transactions
+
+itemsets = {{algorithm}}(txns, {{support}})  # returns DataFrame: items, support, ntransactions
+'''
+
+[[codeBranches]]
+model = "rules"
+code = '''
+using RuleMiner
+
+txns = Txns({{df}}, index_col=:Transaction, item_col=:Item)  # convert DataFrame to Transactions
+
+rules = arules(txns, {{support}}, {{confidence}})  # min_support, min_confidence
+# returns DataFrame: antecedent, consequent, support, confidence, lift, leverage, conviction
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "top-support"
+label = "Most Frequent Patterns"
+desc = "Bar chart of the ten itemsets (or rules) with the highest support"
+code = '''
+using Tables, Plots
+
+{{?model=itemset}} t = Tables.columntable(itemsets)
+{{?model=itemset}} names = [join(s, ", ") for s in t.Itemset]
+{{?model=rules}} t = Tables.columntable(rules)
+{{?model=rules}} names = [join(a, ", ") * " => " * string(c) for (a, c) in zip(t.LHS, t.RHS)]
+top = sortperm(t.Support, rev=true)[1:min(10, end)]
+bar(names[top], t.Support[top], xrotation=45, ylabel="support", legend=false)
+'''
+
+[[actionGroups.actions]]
+id = "rule-scatter"
+label = "Support vs Confidence"
+desc = "Every rule as a point, coloured by lift, to spot strong and surprising rules"
+code = '''
+using Tables, Plots
+
+r = Tables.columntable(arules(txns, {{support}}, {{confidence}}))
+scatter(r.Support, r.Confidence, zcolor=r.Lift, xlabel="support", ylabel="confidence", colorbar_title="lift", legend=false)
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "support-sweep"
+label = "Support Threshold Sweep"
+desc = "Number of frequent itemsets as min_support falls, to pick a readable threshold"
+code = '''
+using Tables, Plots
+
+thresholds = [0.3, 0.2, 0.1, 0.05, 0.02]
+counts = [length(Tables.columntable(fpgrowth(txns, s)).Support) for s in thresholds]
+plot(thresholds, counts, xflip=true, yscale=:log10, marker=:circle, xlabel="min_support", ylabel="itemsets", legend=false)
+'''
+
+[[actionGroups.actions]]
+id = "lift-check"
+label = "Uninformative Rules"
+desc = "Share of rules with lift <= 1, which are no better than independence"
+code = '''
+using Tables
+
+r = Tables.columntable(arules(txns, {{support}}, {{confidence}}))
+count(<=(1), r.Lift) / length(r.Lift)
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "recommend"
+label = "Recommend Items"
+desc = "Items suggested for a basket by the matching rules, ranked by confidence"
+code = '''
+using Tables
+
+r = Tables.columntable(arules(txns, {{support}}, {{confidence}}))
+basket = ["bread", "milk"]  # items already in the basket
+hits = [i for i in eachindex(r.LHS) if issubset(r.LHS[i], basket) && !(r.RHS[i] in basket)]
+unique(r.RHS[hits[sortperm(r.Confidence[hits], rev=true)]])
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "algorithm-timing"
+label = "Algorithm Timing"
+desc = "Run time and itemset count of Apriori, ECLAT and FP-Growth on your data"
+code = '''
+using Tables
+
+for f in (apriori, eclat, fpgrowth)
+	t = @elapsed out = f(txns, {{support}})
+	println(rpad(string(f), 10), round(t, digits=3), " s  ", length(Tables.columntable(out).Support), " itemsets")
+end
+'''
+
+[[actionGroups.actions]]
+id = "summaries"
+label = "All vs Closed vs Maximal"
+desc = "How much the closed and maximal summaries shrink the frequent itemsets"
+code = '''
+using Tables
+
+n(x) = length(Tables.columntable(x).Support)
+(all = n(fpgrowth(txns, {{support}})), closed = n(fpclose(txns, {{support}})), maximal = n(fpmaximal(txns, {{support}})))
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "top-lift"
+label = "Strongest Rules"
+desc = "The ten rules with the highest lift, read as if-then statements"
+code = '''
+using Tables
+
+r = Tables.columntable(arules(txns, {{support}}, {{confidence}}))
+for i in sortperm(r.Lift, rev=true)[1:min(10, end)]
+	println(join(r.LHS[i], " + "), " => ", r.RHS[i], "   conf ", round(r.Confidence[i], digits=2), "  lift ", round(r.Lift[i], digits=2))
+end
+'''

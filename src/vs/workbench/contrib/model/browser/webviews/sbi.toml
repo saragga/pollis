@@ -1,0 +1,491 @@
+# Simulation-Based Inference Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/sbi.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Simulation-Based Inference"
+viewType = "pollis.sbi"
+defaultModel = "point"
+
+[[packages]]
+name = "NeuralEstimators.jl"
+github = "https://github.com/msainsburydale/NeuralEstimators.jl"
+
+[[packages.videos]]
+title = "High Performance Computing in Julia"
+description = "An 18-video course by Jamie Mair on writing fast Julia code"
+url = "https://www.youtube.com/playlist?list=PLUAq6xQKFgGr39PiyrPk_C9dhBKvWcjUA"
+
+[[packages]]
+name = "Flux.jl"
+github = "https://github.com/FluxML/Flux.jl"
+
+[requires]
+packages = ["Plots.jl", "Distributions.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Quick Start"
+file = "sbi/tutorial-01-quickstart.ipynb"
+bundled = true
+description = "Train a neural Bayes estimator from scratch — prior, simulator, network, training loop"
+
+[[notebookSections.notebooks]]
+name = "Uncertainty Quantification"
+file = "sbi/tutorial-02-uncertainty.ipynb"
+bundled = true
+description = "Bootstrap and conformal prediction intervals for neural estimators"
+
+[[notebookSections.notebooks]]
+name = "Spatial Data"
+file = "sbi/tutorial-03-spatial.ipynb"
+bundled = true
+description = "Graph neural network estimators for irregular spatial observations"
+
+[[notebookSections.notebooks]]
+name = "Model Assessment"
+file = "sbi/tutorial-04-assessment.ipynb"
+bundled = true
+description = "Bias, RMSE, and coverage diagnostics via simulation study"
+
+[[wikis]]
+name = "Overview"
+file = "sbi/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Factsheet"
+file = "sbi/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "sbi/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "sbi/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "sbi/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "sbi/decision-guide.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Original Papers (from packages)"
+
+[[references]]
+title = "Neural Bayes Estimators for Irregular Spatial Data Using Graph Neural Networks"
+authors = "Sainsbury-Dale, M., Zammit-Mangion, A. & Huser, R."
+year = 2025
+journal = ""
+url = "https://doi.org/10.1080/10618600.2024.2433671"
+openAccess = true
+
+[[references]]
+title = "Likelihood-Free Parameter Estimation with Neural Bayes Estimators"
+authors = "Sainsbury-Dale, M., Zammit-Mangion, A. & Huser, R."
+year = 2024
+journal = ""
+url = "https://doi.org/10.1080/00031305.2023.2249522"
+openAccess = true
+
+[[models]]
+id = "point"
+label = "Point"
+
+[[models]]
+id = "interval"
+label = "Interval"
+
+[[models]]
+id = "quantile"
+label = "Quantile"
+
+[[bullets]]
+text = "Neural networks trained as statistical estimators by minimising a loss over simulated parameter–data pairs"
+detail = ""
+
+[[bullets]]
+text = "Likelihood-free"
+detail = "works with any simulator regardless of whether the likelihood is tractable"
+
+[[bullets]]
+text = "Amortised inference"
+detail = "training is done once; estimation at test time is a single forward pass"
+
+[[bullets]]
+text = "Supports point estimation (posterior mean, MAP) and uncertainty quantification via bootstrap or conformal intervals"
+detail = ""
+
+[[bullets]]
+text = "Scales to large and irregular spatial data via graph neural network architectures"
+detail = ""
+
+[[decisionRows]]
+task = "Point"
+context = "A single best guess of the parameters is enough"
+purpose = "Posterior median via the absolute-error loss; uncertainty from a parametric bootstrap"
+
+[[decisionRows]]
+task = "Interval"
+context = "Credible bounds are needed at every estimate"
+purpose = "Two networks trained with the quantile loss give the lower and upper bound directly"
+
+[[decisionRows]]
+task = "Quantile"
+context = "The shape of the posterior matters, not only its centre"
+purpose = "Several posterior quantiles per parameter from one amortised estimator"
+
+[[inputs]]
+id = "data"
+label = "Data"
+tooltip = "Observed data passed to the trained estimator. DeepSet and LSTM: a vector of m values. GNN: an n_locations x m matrix observed at the locations S."
+default = "Z"
+
+[[inputs]]
+id = "arch"
+label = "Architecture"
+tooltip = "DeepSet: permutation-invariant over independent replicates. GNN: graph neural network summary of irregular spatial data. LSTM: recurrent summary of an ordered sequence."
+kind = "select"
+default = "DeepSet"
+
+[[inputs.options]]
+value = "DeepSet"
+label = "DeepSet"
+
+[[inputs.options]]
+value = "GNN"
+label = "GNN (Graph Neural Network)"
+
+[[inputs.options]]
+value = "LSTM"
+label = "LSTM"
+
+[[inputs]]
+id = "p"
+label = "Parameters (p)"
+tooltip = "Number of unknown parameters, the length of the estimator output. The example prior and simulator below have p = 2 (mean and standard deviation)."
+default = "2"
+newRow = true
+
+[[inputs]]
+id = "m"
+label = "Replicates (m)"
+tooltip = "Number of independent replicates (or sequence length for the LSTM) in each simulated data set; it should match the observed data."
+default = "150"
+
+[[inputs]]
+id = "k"
+label = "Simulations per epoch (K)"
+tooltip = "Number of parameter vectors drawn from the prior, and data sets simulated, in every epoch. More simulations reduce overfitting."
+default = "10000"
+
+[[inputs]]
+id = "epochs"
+label = "Epochs"
+tooltip = "Number of full passes through the simulated training set. Typical range: 100–500."
+default = "200"
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.point]
+# A posterior density with a single point estimate at its centre
+svg = '''
+var d = '';
+for (var i = 0; i <= 40; i++) {
+	var x = 5 + i * 1.1, z = (x - 27) / 8;
+	d += (i === 0 ? 'M' : 'L') + x.toFixed(1) + ',' + (62 - 30 * Math.exp(-z * z / 2)).toFixed(1);
+}
+return '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.3" opacity="0.6"/>'
+	+ '<line x1="27" y1="66" x2="27" y2="28" stroke="currentColor" stroke-width="1.6"/>'
+	+ '<circle cx="27" cy="66" r="3" fill="currentColor"/>';
+'''
+
+[miniCharts.interval]
+# A posterior density with its lower and upper bounds marked
+svg = '''
+var d = '';
+for (var i = 0; i <= 40; i++) {
+	var x = 5 + i * 1.1, z = (x - 27) / 8;
+	d += (i === 0 ? 'M' : 'L') + x.toFixed(1) + ',' + (62 - 30 * Math.exp(-z * z / 2)).toFixed(1);
+}
+return '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.3" opacity="0.6"/>'
+	+ '<line x1="13" y1="68" x2="41" y2="68" stroke="currentColor" stroke-width="1.6"/>'
+	+ '<line x1="13" y1="64" x2="13" y2="72" stroke="currentColor" stroke-width="1.6"/>'
+	+ '<line x1="41" y1="64" x2="41" y2="72" stroke="currentColor" stroke-width="1.6"/>';
+'''
+
+[miniCharts.quantile]
+# A posterior density cut at several quantiles
+svg = '''
+var d = '';
+for (var i = 0; i <= 40; i++) {
+	var x = 5 + i * 1.1, z = (x - 27) / 8;
+	d += (i === 0 ? 'M' : 'L') + x.toFixed(1) + ',' + (62 - 30 * Math.exp(-z * z / 2)).toFixed(1);
+}
+var s = '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.3" opacity="0.6"/>';
+var q = [14, 21, 27, 33, 40];
+for (var k = 0; k < q.length; k++) {
+	s += '<line x1="' + q[k] + '" y1="66" x2="' + q[k] + '" y2="' + (k === 2 ? 30 : 46) + '" stroke="currentColor" stroke-width="1.1"/>';
+}
+return s;
+'''
+
+[[codeBranches]]
+model = "point"
+code = '''
+using NeuralEstimators, Flux, Distributions
+{{?arch=GNN}} using GraphNeuralNetworks
+
+p      = {{p}}  # number of parameters
+m      = {{m}}  # replicates per data set
+K      = {{k}}  # simulated data sets per epoch
+epochs = {{epochs}}  # training epochs
+
+# Example model, m iid draws from Normal(mu, sigma) (p = 2): replace sampler and simulator with your own
+function sampler(K)  # K draws from the prior, p x K
+    mu    = rand(Normal(0, 1), K)
+    sigma = rand(Uniform(0.1, 1), K)
+    Float32.(permutedims(hcat(mu, sigma)))
+end
+{{?arch=DeepSet}} simulator(theta, m) = [theta[1, k] .+ theta[2, k] .* randn(Float32, 1, m) for k in 1:size(theta, 2)]  # one 1 x m data set per column of theta
+{{?arch=LSTM}} simulator(theta, m) = reshape(theta[1, :], 1, 1, :) .+ reshape(theta[2, :], 1, 1, :) .* randn(Float32, 1, m, size(theta, 2))  # 1 x m x K sequences
+{{?arch=GNN}} S = rand(Float32, 100, 2)  # spatial locations of the observations (here 100 random points)
+{{?arch=GNN}} simulator(theta, m) = [spatialgraph(S, theta[1, k] .+ theta[2, k] .* randn(Float32, size(S, 1), m); r=0.15) for k in 1:size(theta, 2)]  # neighbourhood graph with m replicates per location
+nsets(Z) = Z isa AbstractVector ? length(Z) : size(Z, ndims(Z))  # number of data sets in Z
+
+{{?arch=DeepSet}} network(out) = DeepSet(Chain(Dense(1 => 64, relu), Dense(64 => 64, relu)),  # psi: summarises each replicate
+{{?arch=DeepSet}}                        Chain(Dense(64 => 64, relu), Dense(64 => out)))  # phi: pooled summary -> estimates
+{{?arch=GNN}} network(out) = DeepSet(GNNSummary(GNNChain(SpatialGraphConv(1 => 16), SpatialGraphConv(16 => 32)), GlobalPool(mean)),  # graph summary
+{{?arch=GNN}}                        Chain(Dense(32 => 64, relu), Dense(64 => out)))
+{{?arch=LSTM}} network(out) = Chain(LSTM(1 => 64), h -> h[:, end, :], Dense(64 => out))  # final hidden state summarises the sequence
+
+estimator = PointEstimator(network(p))
+estimator = train(estimator, sampler, simulator; m, K, epochs)  # absolute-error loss: posterior median
+point_estimate(Z) = estimate(estimator, Z)  # p x number of data sets
+function bounds(Z; B=100)  # 95% parametric-bootstrap intervals for every data set in Z
+    ci = [interval(bootstrap(estimator, point_estimate(subsetdata(Z, k)), simulator, m; B)) for k in 1:nsets(Z)]
+    (reduce(hcat, [c[:, 1] for c in ci]), reduce(hcat, [c[:, 2] for c in ci]))
+end
+
+{{?arch=DeepSet}} Z_obs = [reshape(Float32.({{data}}), 1, :)]  # the observed data as one data set
+{{?arch=LSTM}} Z_obs = reshape(Float32.({{data}}), 1, :, 1)
+{{?arch=GNN}} Z_obs = [spatialgraph(S, Float32.({{data}}); r=0.15)]
+theta_hat = point_estimate(Z_obs)
+interval(bootstrap(estimator, theta_hat, simulator, m; B=400))  # 95% intervals, p x 2
+'''
+
+[[codeBranches]]
+model = "interval"
+code = '''
+using NeuralEstimators, Flux, Distributions
+{{?arch=GNN}} using GraphNeuralNetworks
+
+p      = {{p}}  # number of parameters
+m      = {{m}}  # replicates per data set
+K      = {{k}}  # simulated data sets per epoch
+epochs = {{epochs}}  # training epochs
+
+# Example model, m iid draws from Normal(mu, sigma) (p = 2): replace sampler and simulator with your own
+function sampler(K)  # K draws from the prior, p x K
+    mu    = rand(Normal(0, 1), K)
+    sigma = rand(Uniform(0.1, 1), K)
+    Float32.(permutedims(hcat(mu, sigma)))
+end
+{{?arch=DeepSet}} simulator(theta, m) = [theta[1, k] .+ theta[2, k] .* randn(Float32, 1, m) for k in 1:size(theta, 2)]  # one 1 x m data set per column of theta
+{{?arch=LSTM}} simulator(theta, m) = reshape(theta[1, :], 1, 1, :) .+ reshape(theta[2, :], 1, 1, :) .* randn(Float32, 1, m, size(theta, 2))  # 1 x m x K sequences
+{{?arch=GNN}} S = rand(Float32, 100, 2)  # spatial locations of the observations (here 100 random points)
+{{?arch=GNN}} simulator(theta, m) = [spatialgraph(S, theta[1, k] .+ theta[2, k] .* randn(Float32, size(S, 1), m); r=0.15) for k in 1:size(theta, 2)]  # neighbourhood graph with m replicates per location
+nsets(Z) = Z isa AbstractVector ? length(Z) : size(Z, ndims(Z))  # number of data sets in Z
+
+{{?arch=DeepSet}} network(out) = DeepSet(Chain(Dense(1 => 64, relu), Dense(64 => 64, relu)),  # psi: summarises each replicate
+{{?arch=DeepSet}}                        Chain(Dense(64 => 64, relu), Dense(64 => out)))  # phi: pooled summary -> estimates
+{{?arch=GNN}} network(out) = DeepSet(GNNSummary(GNNChain(SpatialGraphConv(1 => 16), SpatialGraphConv(16 => 32)), GlobalPool(mean)),  # graph summary
+{{?arch=GNN}}                        Chain(Dense(32 => 64, relu), Dense(64 => out)))
+{{?arch=LSTM}} network(out) = Chain(LSTM(1 => 64), h -> h[:, end, :], Dense(64 => out))  # final hidden state summarises the sequence
+
+estimator = IntervalEstimator(network(p), network(p))  # lower-bound and upper-bound networks
+estimator = train(estimator, sampler, simulator; m, K, epochs)  # quantile loss at 0.025 and 0.975
+function bounds(Z)  # 95% credible bounds for every data set in Z
+    b = estimate(estimator, Z)
+    (b[1:p, :], b[p+1:end, :])
+end
+point_estimate(Z) = sum(bounds(Z)) ./ 2  # interval midpoint
+
+{{?arch=DeepSet}} Z_obs = [reshape(Float32.({{data}}), 1, :)]  # the observed data as one data set
+{{?arch=LSTM}} Z_obs = reshape(Float32.({{data}}), 1, :, 1)
+{{?arch=GNN}} Z_obs = [spatialgraph(S, Float32.({{data}}); r=0.15)]
+bounds(Z_obs)  # (lower, upper), p x 1 each
+'''
+
+[[codeBranches]]
+model = "quantile"
+code = '''
+using NeuralEstimators, Flux, Distributions
+{{?arch=GNN}} using GraphNeuralNetworks
+
+p      = {{p}}  # number of parameters
+m      = {{m}}  # replicates per data set
+K      = {{k}}  # simulated data sets per epoch
+epochs = {{epochs}}  # training epochs
+
+# Example model, m iid draws from Normal(mu, sigma) (p = 2): replace sampler and simulator with your own
+function sampler(K)  # K draws from the prior, p x K
+    mu    = rand(Normal(0, 1), K)
+    sigma = rand(Uniform(0.1, 1), K)
+    Float32.(permutedims(hcat(mu, sigma)))
+end
+{{?arch=DeepSet}} simulator(theta, m) = [theta[1, k] .+ theta[2, k] .* randn(Float32, 1, m) for k in 1:size(theta, 2)]  # one 1 x m data set per column of theta
+{{?arch=LSTM}} simulator(theta, m) = reshape(theta[1, :], 1, 1, :) .+ reshape(theta[2, :], 1, 1, :) .* randn(Float32, 1, m, size(theta, 2))  # 1 x m x K sequences
+{{?arch=GNN}} S = rand(Float32, 100, 2)  # spatial locations of the observations (here 100 random points)
+{{?arch=GNN}} simulator(theta, m) = [spatialgraph(S, theta[1, k] .+ theta[2, k] .* randn(Float32, size(S, 1), m); r=0.15) for k in 1:size(theta, 2)]  # neighbourhood graph with m replicates per location
+nsets(Z) = Z isa AbstractVector ? length(Z) : size(Z, ndims(Z))  # number of data sets in Z
+
+{{?arch=DeepSet}} network(out) = DeepSet(Chain(Dense(1 => 64, relu), Dense(64 => 64, relu)),  # psi: summarises each replicate
+{{?arch=DeepSet}}                        Chain(Dense(64 => 64, relu), Dense(64 => out)))  # phi: pooled summary -> estimates
+{{?arch=GNN}} network(out) = DeepSet(GNNSummary(GNNChain(SpatialGraphConv(1 => 16), SpatialGraphConv(16 => 32)), GlobalPool(mean)),  # graph summary
+{{?arch=GNN}}                        Chain(Dense(32 => 64, relu), Dense(64 => out)))
+{{?arch=LSTM}} network(out) = Chain(LSTM(1 => 64), h -> h[:, end, :], Dense(64 => out))  # final hidden state summarises the sequence
+
+probs = [0.05, 0.25, 0.5, 0.75, 0.95]  # posterior probabilities to estimate
+estimator = QuantileEstimator(network(p); probs)
+estimator = train(estimator, sampler, simulator; m, K, epochs)  # quantile loss at every probability
+quantiles(Z) = reshape(estimate(estimator, Z), p, length(probs), :)  # parameter x probability x data set
+point_estimate(Z) = quantiles(Z)[:, 3, :]  # posterior median
+bounds(Z) = (quantiles(Z)[:, 1, :], quantiles(Z)[:, end, :])  # 90% credible bounds
+
+{{?arch=DeepSet}} Z_obs = [reshape(Float32.({{data}}), 1, :)]  # the observed data as one data set
+{{?arch=LSTM}} Z_obs = reshape(Float32.({{data}}), 1, :, 1)
+{{?arch=GNN}} Z_obs = [spatialgraph(S, Float32.({{data}}); r=0.15)]
+quantiles(Z_obs)
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "estimates-vs-truth"
+label = "Estimates vs Truth"
+desc = "Simulate 500 test data sets and plot each parameter's estimate against the value that generated it"
+code = '''
+using Plots
+
+theta_test = sampler(500)
+theta_est = point_estimate(simulator(theta_test, m))
+plot([begin
+    scatter(theta_test[i, :], theta_est[i, :], xlabel="true", ylabel="estimate", title=string("parameter ", i), alpha=0.4, legend=false)
+    plot!(identity, extrema(theta_test[i, :])..., linestyle=:dash)
+end for i in 1:p]...)
+'''
+
+[[actionGroups.actions]]
+id = "sampling-distribution"
+label = "Sampling Distribution"
+desc = "Estimates from 500 data sets simulated at the observed estimate: the spread is the estimator's uncertainty"
+code = '''
+using Plots
+
+theta0 = point_estimate(Z_obs)
+draws = point_estimate(simulator(repeat(theta0, 1, 500), m))
+plot([begin
+    histogram(draws[i, :], title=string("parameter ", i), legend=false)
+    vline!([theta0[i]], linewidth=2)
+end for i in 1:p]...)
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "bias-rmse"
+label = "Bias and RMSE"
+desc = "Bias and root mean squared error of the point estimates over 1000 simulated test data sets"
+code = '''
+using Statistics
+
+theta_test = sampler(1000)
+err = point_estimate(simulator(theta_test, m)) .- theta_test
+(bias = vec(mean(err; dims=2)), rmse = vec(sqrt.(mean(abs2, err; dims=2))))
+'''
+
+[[actionGroups.actions]]
+id = "coverage"
+label = "Interval Coverage"
+desc = "Share of test data sets whose interval contains the true parameter; it should match the nominal level"
+code = '''
+using Statistics
+
+theta_test = sampler(200)
+lower, upper = bounds(simulator(theta_test, m))
+{{?model!=quantile}} nominal = 0.95
+{{?model=quantile}} nominal = 0.90
+(nominal = nominal, coverage = vec(mean((lower .<= theta_test) .& (theta_test .<= upper); dims=2)))
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "estimate-new"
+label = "Estimate New Data"
+desc = "Amortised inference: estimates and intervals for new data sets with a single forward pass each"
+code = '''
+{{?arch=DeepSet}} Z_new = [reshape(Float32.(z), 1, :) for z in new_datasets]  # new_datasets: vector of data sets
+{{?arch=LSTM}} Z_new = reshape(reduce(hcat, Float32.(z) for z in new_datasets), 1, m, :)  # new_datasets: vector of length-m sequences
+{{?arch=GNN}} Z_new = [spatialgraph(S, Float32.(z); r=0.15) for z in new_datasets]  # each n_locations x m
+(estimate = point_estimate(Z_new), bounds = bounds(Z_new))
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "mle"
+label = "vs Maximum Likelihood"
+desc = "RMSE of the neural estimator against the closed-form MLE of the example Normal model (sample mean and sd)"
+code = '''
+using Statistics
+
+{{?arch=DeepSet}} values(Z, k) = vec(Z[k])
+{{?arch=LSTM}} values(Z, k) = vec(Z[:, :, k])
+{{?arch=GNN}} values(Z, k) = vec(Z[k].ndata.Z)
+theta_test = sampler(1000)
+Z_test = simulator(theta_test, m)
+mle = reduce(hcat, [[mean(values(Z_test, k)), std(values(Z_test, k); corrected=false)] for k in 1:nsets(Z_test)])
+rmse(est) = vec(sqrt.(mean(abs2, est .- theta_test; dims=2)))
+(neural = rmse(point_estimate(Z_test)), mle = rmse(mle))
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "rmse-vs-m"
+label = "RMSE vs Replicates"
+desc = "How the error shrinks as each data set holds more replicates, using the same trained estimator"
+code = '''
+using Plots, Statistics
+
+theta_test = sampler(500)
+ms = unique(max.(2, round.(Int, m .* [0.25, 0.5, 1, 2])))
+R = reduce(hcat, [vec(sqrt.(mean(abs2, point_estimate(simulator(theta_test, mi)) .- theta_test; dims=2))) for mi in ms])
+plot(ms, permutedims(R), xlabel="replicates m", ylabel="RMSE", label=permutedims(string.("parameter ", 1:p)), marker=:circle)
+'''

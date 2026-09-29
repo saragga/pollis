@@ -1,0 +1,546 @@
+# Neural ODEs for System Identification Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/node.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Neural ODEs for System Identification"
+viewType = "pollis.node"
+defaultModel = "node"
+
+[[packages]]
+name = "DiffEqFlux.jl"
+github = "https://github.com/SciML/DiffEqFlux.jl"
+
+[[packages.videos]]
+title = "High Performance Computing in Julia"
+description = "An 18-video course by Jamie Mair on writing fast Julia code"
+url = "https://www.youtube.com/playlist?list=PLUAq6xQKFgGr39PiyrPk_C9dhBKvWcjUA"
+
+[requires]
+packages = ["Plots.jl", "OrdinaryDiffEq.jl", "SciMLSensitivity.jl", "Lux.jl", "ComponentArrays.jl", "Optimization.jl", "OptimizationOptimisers.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Basic Neural ODE"
+file = "node/tutorial-01-basic.ipynb"
+bundled = true
+description = "Fit a NeuralODE to a two-dimensional spiral trajectory and recover the latent dynamics"
+
+[[notebookSections.notebooks]]
+name = "Multivariate System"
+file = "node/tutorial-02-multivariate.ipynb"
+bundled = true
+description = "Identify a higher-dimensional system from noisy observations using a deeper network architecture"
+
+[[notebookSections.notebooks]]
+name = "Universal Differential Equations"
+file = "node/tutorial-03-ude.ipynb"
+bundled = true
+description = "Combine known structure with a neural network term to learn unknown parts of the governing equations"
+
+[[wikis]]
+name = "Factsheet"
+file = "node/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "node/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "node/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "node/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "node/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "node/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Neural ODEs"
+
+[[wikis]]
+name = "Architecture"
+file = "node/architecture.md"
+bundled = true
+
+[[wikis]]
+name = "Training"
+file = "node/training.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "DiffEqFlux.jl: A Julia Library for Neural Differential Equations"
+authors = "Rackauckas, Christopher; Ma, Yingbo; Martensen, Julius; Warner, Collin; Zubov, Kirill; Supekar, Rohit; Skinner, Dominic; Ramadhan, Ali; Edelman, Alan"
+year = 2019
+journal = "arXiv"
+doi = "10.48550/arXiv.1902.02376"
+openAccess = true
+
+[[references]]
+title = "Universal Differential Equations for Scientific Machine Learning"
+authors = "Rackauckas, Christopher; Ma, Yingbo; Dixit, Vaibhav; Guo, Xingjian; Innes, Mike; Revels, Jarrett; Nyberg, Joakim; Ivaturi, Vijay"
+year = 2020
+journal = "arXiv"
+doi = "10.48550/arXiv.2001.04385"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Deep Learning"
+authors = "Goodfellow, Ian; Bengio, Yoshua; Courville, Aaron"
+year = 2016
+journal = "MIT Press"
+openAccess = false
+
+[[references]]
+title = "Nonlinear Dynamics and Chaos"
+authors = "Strogatz, Steven H."
+year = 2015
+journal = "Westview Press (2nd ed.)"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Neural Ordinary Differential Equations"
+authors = "Chen, Ricky T. Q.; Rubanova, Yulia; Bettencourt, Jesse; Duvenaud, David"
+year = 2018
+journal = "NeurIPS"
+doi = "10.48550/arXiv.1806.07366"
+openAccess = true
+
+[[references]]
+title = "Latent ODEs for Irregularly-Sampled Time Series"
+authors = "Rubanova, Yulia; Chen, Ricky T. Q.; Duvenaud, David"
+year = 2019
+journal = "NeurIPS"
+doi = "10.48550/arXiv.1907.03907"
+openAccess = true
+
+[[models]]
+id = "node"
+label = "Neural ODE"
+
+[[models]]
+id = "augmented"
+label = "Augmented"
+
+[[models]]
+id = "ude"
+label = "UDE"
+
+[[bullets]]
+text = "Neural ODE"
+detail = "a neural network is the right-hand side of an ODE, learning unknown continuous-time dynamics from data"
+
+[[bullets]]
+text = "Augmented Neural ODE"
+detail = "extra zero-initialised states let trajectories cross in the observed space, which a plain Neural ODE cannot do"
+
+[[bullets]]
+text = "Universal Differential Equation"
+detail = "known physics plus a neural network that learns only the missing terms"
+
+[[bullets]]
+text = "Training"
+detail = "trajectory squared error minimised with Adam through Optimization.jl, gradients by adjoint sensitivity"
+
+[[decisionRows]]
+task = "Neural ODE"
+context = "Dynamics unknown, trajectories do not cross"
+purpose = "Black-box vector field du/dt = nn(u)"
+
+[[decisionRows]]
+task = "Augmented"
+context = "Observed trajectories cross, or the plain Neural ODE underfits"
+purpose = "Dynamics in a larger state space; extra states start at zero and are dropped from the output"
+
+[[decisionRows]]
+task = "UDE"
+context = "Part of the physics is known"
+purpose = "Known terms with estimated rates plus a network for the missing terms"
+
+[[inputs]]
+id = "yvar"
+label = "Observed trajectory"
+tooltip = "Observed states, n x number of time points; the first column is the initial condition."
+default = "obs_data"
+
+[[inputs]]
+id = "tvar"
+label = "Time points"
+tooltip = "Observation times, one per column of the observed trajectory, within [0, T]."
+default = "tsteps"
+
+[[inputs]]
+id = "n"
+label = "State dimension (n)"
+tooltip = "Number of state variables in the system. For a 2D spiral use 2; for a Lorenz-type system use 3."
+default = "2"
+newRow = true
+
+[[inputs]]
+id = "hidden"
+label = "Hidden units"
+tooltip = "Number of units in each hidden layer of the neural network. Larger values increase capacity but slow training."
+default = "32"
+
+[[inputs]]
+id = "augment"
+label = "Augmented dimensions"
+tooltip = "Extra states appended to the observed ones, starting at zero. They give trajectories room to cross; 1 to n is usually enough."
+default = "2"
+models = ["augmented"]
+
+[[inputs]]
+id = "tspan"
+label = "Time span end (T)"
+tooltip = "End of the training interval: the last observation time. Extrapolation actions integrate beyond it."
+default = "10.0"
+newRow = true
+
+[[inputs]]
+id = "lr"
+label = "Learning rate"
+tooltip = "Step size for the Adam optimiser. Typical range 1e-3 to 1e-2. Reduce if loss diverges."
+default = "0.01"
+
+[[inputs]]
+id = "maxiter"
+label = "Iterations"
+tooltip = "Number of gradient steps. Start with 300 and increase if the loss has not converged."
+default = "300"
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.node]
+# An inward spiral traced by a learned vector field
+svg = '''
+var d = '';
+for (var i = 0; i <= 80; i++) {
+	var t = i * 0.16, r = 20 * Math.exp(-0.12 * t);
+	d += (i === 0 ? 'M' : 'L') + (27 + r * Math.cos(t)).toFixed(1) + ',' + (43 + r * Math.sin(t)).toFixed(1);
+}
+return '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.3"/><circle cx="47" cy="43" r="2.5" fill="currentColor"/>';
+'''
+
+[miniCharts.augmented]
+# Two crossing projections of trajectories that separate in an extra dimension
+svg = '''
+var s = '';
+s += '<path d="M6,28 C20,28 34,58 48,58" fill="none" stroke="currentColor" stroke-width="1.3"/>';
+s += '<path d="M6,58 C20,58 34,28 48,28" fill="none" stroke="currentColor" stroke-width="1.3" opacity="0.5"/>';
+s += '<path d="M6,72 L48,72 M6,72 L6,14" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.6"/>';
+s += '<path d="M6,72 L18,64" fill="none" stroke="currentColor" stroke-width="0.8" stroke-dasharray="2,2"/>';
+return s;
+'''
+
+[miniCharts.ude]
+# A known curve plus a learned correction
+svg = '''
+var d1 = '', d2 = '';
+for (var i = 0; i <= 40; i++) {
+	var x = 6 + i * 1.05, base = 58 - 0.5 * i;
+	d1 += (i === 0 ? 'M' : 'L') + x.toFixed(1) + ',' + base.toFixed(1);
+	d2 += (i === 0 ? 'M' : 'L') + x.toFixed(1) + ',' + (base - 8 * Math.sin(i / 6)).toFixed(1);
+}
+return '<path d="' + d1 + '" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="3,2" opacity="0.6"/>'
+	+ '<path d="' + d2 + '" fill="none" stroke="currentColor" stroke-width="1.4"/>';
+'''
+
+[[codeBranches]]
+model = "node"
+code = '''
+using DiffEqFlux, OrdinaryDiffEq, SciMLSensitivity, Lux, ComponentArrays, Optimization, OptimizationOptimisers, Random
+
+n       = {{n}}  # state dimension
+hidden  = {{hidden}}  # hidden units per layer
+T       = {{tspan}}f0  # end of the training time span
+lr      = {{lr}}  # Adam learning rate
+maxiter = {{maxiter}}  # training iterations
+
+obs_data = Float32.({{yvar}})  # observed trajectory, n x number of time points
+tsteps   = Float32.(collect({{tvar}}))  # observation times in [0, T]
+u0       = obs_data[:, 1]  # initial condition: the first observation
+solver   = (reltol=1f-3, abstol=1f-3)  # ODE solver tolerances
+
+nn = Chain(Dense(n => hidden, tanh), Dense(hidden => hidden, tanh), Dense(hidden => n))  # learned vector field du/dt = nn(u)
+ps, st = Lux.setup(Random.default_rng(), nn)
+ps = ComponentArray(ps)
+predict(p, u0, t) = Array(first(NeuralODE(nn, (0f0, t[end]), Tsit5(); saveat=t, solver...)(u0, p, st)))  # n x length(t)
+vector_field(u, p) = first(nn(u, p, st))  # du/dt at state u
+
+loss(p) = sum(abs2, predict(p, u0, tsteps) .- obs_data)  # squared error against the observed trajectory
+losses = Float32[]
+callback(state, l) = (push!(losses, l); false)  # record the loss at every iteration
+optf = OptimizationFunction((p, _) -> loss(p), Optimization.AutoZygote())
+res = solve(OptimizationProblem(optf, ps), OptimizationOptimisers.Adam(lr); maxiters=maxiter, callback)
+p_opt = res.u  # fitted parameters
+'''
+
+[[codeBranches]]
+model = "augmented"
+code = '''
+using DiffEqFlux, OrdinaryDiffEq, SciMLSensitivity, Lux, ComponentArrays, Optimization, OptimizationOptimisers, Random
+
+n       = {{n}}  # state dimension
+hidden  = {{hidden}}  # hidden units per layer
+T       = {{tspan}}f0  # end of the training time span
+lr      = {{lr}}  # Adam learning rate
+maxiter = {{maxiter}}  # training iterations
+
+obs_data = Float32.({{yvar}})  # observed trajectory, n x number of time points
+tsteps   = Float32.(collect({{tvar}}))  # observation times in [0, T]
+u0       = obs_data[:, 1]  # initial condition: the first observation
+solver   = (reltol=1f-3, abstol=1f-3)  # ODE solver tolerances
+
+aug = {{augment}}  # extra states, starting at zero
+nn = Chain(Dense(n + aug => hidden, tanh), Dense(hidden => hidden, tanh), Dense(hidden => n + aug))  # dynamics in the augmented space
+ps, st = Lux.setup(Random.default_rng(), nn)
+ps = ComponentArray(ps)
+lift(u) = vcat(u, zeros(Float32, aug))  # append the augmented states
+predict(p, u0, t) = Array(first(NeuralODE(nn, (0f0, t[end]), Tsit5(); saveat=t, solver...)(lift(u0), p, st)))[1:n, :]  # keep the observed states
+vector_field(u, p) = first(nn(lift(u), p, st))[1:n]  # du/dt of the observed states at u
+
+loss(p) = sum(abs2, predict(p, u0, tsteps) .- obs_data)  # squared error against the observed trajectory
+losses = Float32[]
+callback(state, l) = (push!(losses, l); false)  # record the loss at every iteration
+optf = OptimizationFunction((p, _) -> loss(p), Optimization.AutoZygote())
+res = solve(OptimizationProblem(optf, ps), OptimizationOptimisers.Adam(lr); maxiters=maxiter, callback)
+p_opt = res.u  # fitted parameters
+'''
+
+[[codeBranches]]
+model = "ude"
+code = '''
+using DiffEqFlux, OrdinaryDiffEq, SciMLSensitivity, Lux, ComponentArrays, Optimization, OptimizationOptimisers, Random
+
+n       = {{n}}  # state dimension
+hidden  = {{hidden}}  # hidden units per layer
+T       = {{tspan}}f0  # end of the training time span
+lr      = {{lr}}  # Adam learning rate
+maxiter = {{maxiter}}  # training iterations
+
+obs_data = Float32.({{yvar}})  # observed trajectory, n x number of time points
+tsteps   = Float32.(collect({{tvar}}))  # observation times in [0, T]
+u0       = obs_data[:, 1]  # initial condition: the first observation
+solver   = (reltol=1f-3, abstol=1f-3)  # ODE solver tolerances
+
+known(u, theta) = theta .* u  # known physics with unknown rates (here growth or decay of each state): replace with your model
+nn = Chain(Dense(n => hidden, tanh), Dense(hidden => n))  # learns the missing terms
+ps_nn, st = Lux.setup(Random.default_rng(), nn)
+ps = ComponentArray(theta=zeros(Float32, n), nn=ps_nn)
+vector_field(u, p) = known(u, p.theta) .+ first(nn(u, p.nn, st))  # du/dt = known + learned
+prob = ODEProblem((u, p, t) -> vector_field(u, p), u0, (0f0, T), ps)
+predict(p, u0, t) = Array(solve(remake(prob; u0, p, tspan=(0f0, t[end])), Tsit5(); saveat=t, solver...,
+                                sensealg=InterpolatingAdjoint(autojacvec=ZygoteVJP())))  # n x length(t)
+
+loss(p) = sum(abs2, predict(p, u0, tsteps) .- obs_data)  # squared error against the observed trajectory
+losses = Float32[]
+callback(state, l) = (push!(losses, l); false)  # record the loss at every iteration
+optf = OptimizationFunction((p, _) -> loss(p), Optimization.AutoZygote())
+res = solve(OptimizationProblem(optf, ps), OptimizationOptimisers.Adam(lr); maxiters=maxiter, callback)
+p_opt = res.u  # fitted parameters
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "predicted-vs-observed"
+label = "Predicted vs Observed"
+desc = "Plot the fitted trajectory of every state against the observed data"
+code = '''
+using Plots
+
+pred = predict(p_opt, u0, tsteps)
+plot(tsteps, permutedims(pred), label=permutedims(string.("fitted x", 1:n)), lw=2)
+scatter!(tsteps, permutedims(obs_data), label=permutedims(string.("observed x", 1:n)), ms=3)
+'''
+
+[[actionGroups.actions]]
+id = "phase-portrait"
+label = "Phase Portrait"
+desc = "Fitted and observed trajectories of the first two states in phase space"
+code = '''
+using Plots
+
+pred = predict(p_opt, u0, range(0f0, T; length=500))
+plot(pred[1, :], pred[2, :], label="fitted", lw=2, xlabel="x1", ylabel="x2")
+scatter!(obs_data[1, :], obs_data[2, :], label="observed", ms=3)
+scatter!([u0[1]], [u0[2]], label="start", marker=:star5, ms=8)
+'''
+
+[[actionGroups.actions]]
+id = "loss-curve"
+label = "Loss Curve"
+desc = "Training loss recorded at every iteration, to check convergence"
+code = '''
+using Plots
+
+plot(losses, xlabel="iteration", ylabel="squared error", yscale=:log10, legend=false)
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "residuals"
+label = "Residual Analysis"
+desc = "Residuals of every state over time; structure left in them means dynamics the model has missed"
+code = '''
+using Plots, Statistics
+
+residuals = predict(p_opt, u0, tsteps) .- obs_data
+println("RMSE per state: ", vec(sqrt.(mean(abs2, residuals; dims=2))))
+plot(tsteps, permutedims(residuals), label=permutedims(string.("x", 1:n)), xlabel="time", ylabel="residual")
+hline!([0], color=:black, ls=:dash, label=false)
+'''
+
+[[actionGroups.actions]]
+id = "held-out-horizon"
+label = "Held-Out Horizon"
+desc = "Refit on the first 80% of the time points and check how well the last 20% are forecast"
+code = '''
+using Plots
+
+cut = round(Int, 0.8 * length(tsteps))
+loss_fit(p) = sum(abs2, predict(p, u0, tsteps[1:cut]) .- obs_data[:, 1:cut])
+res_fit = solve(OptimizationProblem(OptimizationFunction((p, _) -> loss_fit(p), Optimization.AutoZygote()), ps),
+                OptimizationOptimisers.Adam(lr); maxiters=maxiter)
+pred = predict(res_fit.u, u0, tsteps)
+println("held-out squared error: ", sum(abs2, pred[:, cut+1:end] .- obs_data[:, cut+1:end]))
+plot(tsteps, permutedims(pred), label=permutedims(string.("fitted x", 1:n)), lw=2)
+scatter!(tsteps, permutedims(obs_data), label=false, ms=3)
+vline!([tsteps[cut]], ls=:dash, label="end of fit")
+'''
+
+[[actionGroups.actions]]
+id = "sensitivity"
+label = "Initial-Condition Sensitivity"
+desc = "Distance over time between trajectories started at u0 and at a slightly perturbed u0"
+code = '''
+using LinearAlgebra, Plots
+
+t = range(0f0, T; length=200)
+delta = norm.(eachcol(predict(p_opt, u0, t) .- predict(p_opt, u0 .* 1.01f0, t)))  # 1% perturbation
+plot(t, delta, xlabel="time", ylabel="distance between trajectories", legend=false)
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "forward-sim"
+label = "Forward Simulation"
+desc = "Run the fitted model forward from a new initial condition"
+code = '''
+using Plots
+
+u_new = obs_data[:, 1] .+ 0.5f0 .* randn(Float32, n)  # new initial condition
+t_new = range(0f0, T; length=200)
+pred_new = predict(p_opt, u_new, t_new)
+plot(t_new, permutedims(pred_new), label=permutedims(string.("x", 1:n)), xlabel="time")
+'''
+
+[[actionGroups.actions]]
+id = "extrapolation"
+label = "Extrapolation"
+desc = "Extend the prediction to twice the training horizon to test generalisation"
+code = '''
+using Plots
+
+t_extrap = range(0f0, 2T; length=400)
+pred_extrap = predict(p_opt, u0, t_extrap)
+plot(t_extrap, permutedims(pred_extrap), label=permutedims(string.("x", 1:n)), xlabel="time")
+scatter!(tsteps, permutedims(obs_data), label=false, ms=2)
+vline!([T], ls=:dash, label="training end")
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "vs-linear"
+label = "vs Linear ODE"
+desc = "Fit the linear ODE du/dt = A u to the same data: the gap shows how much nonlinearity the network adds"
+code = '''
+prob_lin = ODEProblem((u, A, t) -> A * u, u0, (0f0, tsteps[end]), zeros(Float32, n, n))
+predict_lin(A) = Array(solve(remake(prob_lin; p=A), Tsit5(); saveat=tsteps, solver...,
+                             sensealg=InterpolatingAdjoint(autojacvec=ZygoteVJP())))
+optf_lin = OptimizationFunction((A, _) -> sum(abs2, predict_lin(A) .- obs_data), Optimization.AutoZygote())
+res_lin = solve(OptimizationProblem(optf_lin, zeros(Float32, n, n)), OptimizationOptimisers.Adam(lr); maxiters=maxiter)
+(neural = loss(p_opt), linear = sum(abs2, predict_lin(res_lin.u) .- obs_data), A = res_lin.u)
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "vector-field"
+label = "Learned Vector Field"
+desc = "Arrows of the learned du/dt over the observed range of the first two states (other states at their mean)"
+code = '''
+using LinearAlgebra, Plots, Statistics
+
+r1, r2 = extrema(obs_data[1, :]), extrema(obs_data[2, :])
+base = vec(mean(obs_data; dims=2))  # states beyond the first two held at their mean
+grid = vec([(x, y) for x in range(r1..., length=15), y in range(r2..., length=15)])
+field = [vector_field(Float32.(vcat(x, y, base[3:end])), p_opt) for (x, y) in grid]
+scale = 0.06 * (r1[2] - r1[1]) / maximum(norm, field)
+quiver(first.(grid), last.(grid), quiver=(scale .* getindex.(field, 1), scale .* getindex.(field, 2)), xlabel="x1", ylabel="x2")
+plot!(obs_data[1, :], obs_data[2, :], lw=2, label="observed")
+'''
+
+[[actionGroups.actions]]
+id = "lyapunov-estimate"
+label = "Lyapunov Estimate"
+desc = "Slope of the log-distance between two nearby trajectories: a rough maximal Lyapunov exponent"
+code = '''
+using LinearAlgebra
+
+t = range(0f0, 2T; length=400)
+dist = norm.(eachcol(predict(p_opt, u0, t) .- predict(p_opt, u0 .+ 1f-4, t)))
+lyap = (log(dist[end]) - log(dist[1])) / (t[end] - t[1])  # growth rate of the separation
+(lyapunov = lyap, dynamics = lyap > 0 ? "chaotic or unstable" : "stable")
+'''

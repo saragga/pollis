@@ -1,0 +1,421 @@
+# Autoencoders Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/autoencoder.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Autoencoders"
+viewType = "pollis.autoencoder"
+defaultModel = "ae"
+
+[[packages]]
+name = "Flux.jl"
+github = "https://github.com/FluxML/Flux.jl"
+
+[[packages.videos]]
+title = "High Performance Computing in Julia"
+description = "An 18-video course by Jamie Mair on writing fast Julia code"
+url = "https://www.youtube.com/playlist?list=PLUAq6xQKFgGr39PiyrPk_C9dhBKvWcjUA"
+
+[[packages]]
+name = "AutoEncoderToolkit.jl"
+github = "https://github.com/mrazomej/AutoEncoderToolkit.jl"
+
+[requires]
+packages = ["Flux.jl", "Plots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Autoencoder"
+file = "dim-reduction-autoencoder/tutorial-01-ae.ipynb"
+bundled = true
+description = "Deterministic autoencoder with Flux.jl — architecture, MSE loss, latent space extraction"
+
+[[notebookSections.notebooks]]
+name = "Variational Autoencoder"
+file = "dim-reduction-autoencoder/tutorial-02-vae.ipynb"
+bundled = true
+description = "VAE with reparametrisation trick — ELBO loss, beta-VAE, and latent traversal"
+
+[[wikis]]
+name = "Overview"
+file = "dim-reduction-autoencoder/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Factsheet"
+file = "dim-reduction-autoencoder/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Autoencoder"
+file = "dim-reduction-autoencoder/ae.md"
+bundled = true
+
+[[wikis]]
+name = "Variational Autoencoder"
+file = "dim-reduction-autoencoder/vae.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Original Papers (from packages)"
+
+[[references]]
+title = "Auto-Encoding Variational Bayes"
+authors = "Kingma, D.P. & Welling, M."
+year = 2013
+journal = ""
+url = "https://arxiv.org/abs/1312.6114"
+openAccess = true
+
+[[models]]
+id = "ae"
+label = "Autoencoder"
+
+[[models]]
+id = "vae"
+label = "VAE"
+
+[[bullets]]
+text = "Autoencoder"
+detail = "encoder compresses input to a bottleneck latent code; decoder reconstructs the input; trained end-to-end by minimising MSE reconstruction loss (Flux.jl)"
+
+[[bullets]]
+text = "VAE"
+detail = "encoder outputs a distribution over latent codes; the reparametrisation trick enables gradient flow; trained by maximising the ELBO: reconstruction minus beta-weighted KL divergence from a standard Gaussian prior (Flux.jl)"
+
+[[decisionRows]]
+task = "Autoencoder"
+context = "Nonlinear compression, denoising, anomaly detection by reconstruction error"
+purpose = "Encoder and decoder trained end-to-end to rebuild the input through a bottleneck"
+
+[[decisionRows]]
+task = "VAE"
+context = "A smooth, sampleable latent space; generating new observations"
+purpose = "Encoder outputs a Gaussian posterior; the loss adds a beta-weighted KL term towards N(0, I)"
+
+[[inputs]]
+id = "X"
+label = "Feature Matrix"
+tooltip = "n_samples × n_features matrix, one row per observation. The code standardises it with the training mean and standard deviation and transposes it, since Flux Dense layers expect features × samples."
+default = "X_train"
+
+[[inputs]]
+id = "latent"
+label = "Latent Dimensions"
+tooltip = "Size of the bottleneck layer. Use 2–3 to visualise the latent space; larger values (8–64) capture more structure for downstream modelling."
+default = "2"
+newRow = true
+
+[[inputs]]
+id = "hidden"
+label = "Hidden Units"
+tooltip = "Width of the hidden layer in both the encoder and the decoder."
+default = "64"
+
+[[inputs]]
+id = "epochs"
+label = "Epochs"
+tooltip = "Number of full passes over the training data. Watch the Training Loss action and stop when it plateaus. VAEs usually need more epochs than plain autoencoders."
+default = "100"
+newRow = true
+
+[[inputs]]
+id = "lr"
+label = "Learning Rate"
+tooltip = "Adam optimiser step size. 1e-3 is a reliable default; reduce to 1e-4 if training is unstable."
+default = "1e-3"
+
+[[inputs]]
+id = "batchsize"
+label = "Batch Size"
+tooltip = "Observations per gradient step. Smaller batches give noisier but more frequent updates."
+default = "32"
+
+[[inputs]]
+id = "beta"
+label = "beta (KL weight)"
+tooltip = "Weight on the KL divergence term. beta = 1 is the standard VAE; beta > 1 (beta-VAE) encourages disentanglement at the cost of reconstruction quality."
+default = "1.0"
+models = ["vae"]
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.ae]
+# Hourglass: wide input, narrow bottleneck, wide output
+svg = '''
+var s = '', cols = [[8, 5], [19, 3], [27, 2], [35, 3], [46, 5]];
+cols.forEach(function (c, j) {
+	for (var i = 0; i < c[1]; i++) {
+		var y = 46 + (i - (c[1] - 1) / 2) * 9;
+		s += '<circle cx="' + c[0] + '" cy="' + y + '" r="' + (j === 2 ? 2.8 : 2.2) + '" fill="currentColor" opacity="' + (j === 2 ? 0.9 : 0.55) + '"/>';
+	}
+});
+return s + '<path d="M11,26 L24,39 M11,66 L24,53 M30,39 L43,26 M30,53 L43,66" stroke="currentColor" stroke-width="0.8" opacity="0.5"/>';
+'''
+
+[miniCharts.vae]
+# Hourglass whose bottleneck is a Gaussian bump (a distribution, not a point)
+svg = '''
+var s = '', cols = [[8, 5], [19, 3], [35, 3], [46, 5]];
+cols.forEach(function (c) {
+	for (var i = 0; i < c[1]; i++) {
+		s += '<circle cx="' + c[0] + '" cy="' + (46 + (i - (c[1] - 1) / 2) * 9) + '" r="2.2" fill="currentColor" opacity="0.55"/>';
+	}
+});
+var d = 'M21,56';
+for (var x = 21; x <= 33; x++) { d += ' L' + x + ',' + (56 - 18 * Math.exp(-Math.pow((x - 27) / 3, 2) / 2)).toFixed(1); }
+return s + '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.4"/>';
+'''
+
+[[codeBranches]]
+model = "ae"
+code = '''
+using Flux, Statistics, Random
+
+X    = {{X}}  # n x p feature matrix, one row per observation
+mu_x = mean(X, dims=1)
+sd_x = std(X, dims=1)
+prep(A) = Float32.(permutedims((A .- mu_x) ./ sd_x))  # standardise with training statistics, transpose to p x n
+Xt = prep(X)
+p  = size(Xt, 1)  # number of features
+k  = {{latent}}  # latent dimensions
+h  = {{hidden}}  # hidden units
+
+build(k) = (enc = Chain(Dense(p => h, relu), Dense(h => k)),  # p -> h -> k bottleneck
+            dec = Chain(Dense(k => h, relu), Dense(h => p)))  # k -> h -> p reconstruction
+encode(m, x) = m.enc(x)
+loss(m, x) = Flux.mse(m.dec(m.enc(x)), x)  # reconstruction MSE
+
+function train(k, epochs)
+    Random.seed!(1)
+    m      = build(k)
+    opt    = Flux.setup(Adam({{lr}}), m)
+    loader = Flux.DataLoader(Xt, batchsize={{batchsize}}, shuffle=true)
+    hist   = Float32[]
+    for epoch in 1:epochs
+        for x in loader
+            g = Flux.gradient(mm -> loss(mm, x), m)[1]
+            Flux.update!(opt, m, g)
+        end
+        push!(hist, loss(m, Xt))  # full-data loss after each epoch
+    end
+    m, hist
+end
+
+model, losses = train(k, {{epochs}})
+Z     = permutedims(encode(model, Xt))  # n x k latent codes
+X_hat = permutedims(model.dec(encode(model, Xt)))  # n x p reconstruction in the standardised scale
+last(losses)
+'''
+
+[[codeBranches]]
+model = "vae"
+code = '''
+using Flux, Statistics, Random
+
+X    = {{X}}  # n x p feature matrix, one row per observation
+mu_x = mean(X, dims=1)
+sd_x = std(X, dims=1)
+prep(A) = Float32.(permutedims((A .- mu_x) ./ sd_x))  # standardise with training statistics, transpose to p x n
+Xt = prep(X)
+p  = size(Xt, 1)  # number of features
+k  = {{latent}}  # latent dimensions
+h  = {{hidden}}  # hidden units
+
+build(k) = (enc = Chain(Dense(p => h, relu), Dense(h => 2k)),  # outputs posterior mean and log-variance
+            dec = Chain(Dense(k => h, relu), Dense(h => p)))
+function posterior(m, x)
+    o = m.enc(x)
+    q = div(size(o, 1), 2)
+    o[1:q, :], o[q+1:end, :]  # mean, log-variance
+end
+encode(m, x) = posterior(m, x)[1]  # deterministic encoding = posterior mean
+kl_terms(mu, logvar) = -0.5f0 .* (1f0 .+ logvar .- mu .^ 2 .- exp.(logvar))  # KL to N(0, I) per latent dimension
+
+function loss(m, x)
+    mu, logvar = posterior(m, x)
+    z = mu .+ exp.(0.5f0 .* logvar) .* randn(Float32, size(mu))  # reparametrisation trick
+    recon = mean(sum(abs2, m.dec(z) .- x, dims=1))  # squared error per observation
+    kl    = mean(sum(kl_terms(mu, logvar), dims=1))  # KL divergence per observation
+    recon + {{beta}}f0 * kl  # negative ELBO
+end
+
+function train(k, epochs)
+    Random.seed!(1)
+    m      = build(k)
+    opt    = Flux.setup(Adam({{lr}}), m)
+    loader = Flux.DataLoader(Xt, batchsize={{batchsize}}, shuffle=true)
+    hist   = Float32[]
+    for epoch in 1:epochs
+        for x in loader
+            g = Flux.gradient(mm -> loss(mm, x), m)[1]
+            Flux.update!(opt, m, g)
+        end
+        push!(hist, loss(m, Xt))  # full-data loss after each epoch
+    end
+    m, hist
+end
+
+model, losses = train(k, {{epochs}})
+Z     = permutedims(encode(model, Xt))  # n x k latent codes
+X_hat = permutedims(model.dec(encode(model, Xt)))  # n x p reconstruction in the standardised scale
+last(losses)
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "latent-scatter"
+label = "Latent Scatter"
+desc = "Observations in the first two latent dimensions (a histogram when there is only one)"
+code = '''
+using Plots
+
+size(Z, 2) == 1 ? histogram(Z[:, 1], xlabel="latent 1", legend=false) :
+    scatter(Z[:, 1], Z[:, 2], xlabel="latent 1", ylabel="latent 2", markersize=3, alpha=0.7, legend=false)
+'''
+
+[[actionGroups.actions]]
+id = "loss-curve"
+label = "Training Loss"
+desc = "Full-data loss after each epoch: stop training where it flattens"
+code = '''
+using Plots
+
+plot(losses, xlabel="epoch", ylabel="loss", yscale=:log10, legend=false)
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "reconstruction-error"
+label = "Reconstruction Error"
+desc = "Per-observation MSE between the (standardised) input and its reconstruction; the largest are outliers or poorly represented by the bottleneck"
+code = '''
+using Plots
+
+errs = vec(mean(abs2, permutedims(Xt) .- X_hat, dims=2))  # per-observation MSE
+histogram(errs, bins=30, xlabel="reconstruction MSE", ylabel="observations", legend=false)
+findall(errs .> quantile(errs, 0.95))  # the hardest 5% to reconstruct
+'''
+
+[[actionGroups.actions]]
+id = "latent-stats"
+label = "Latent Space Statistics"
+desc = "Mean, spread and range of each latent dimension to spot collapsed (near-constant) dimensions"
+code = '''
+stats = (dim = 1:size(Z, 2), mean = vec(mean(Z, dims=1)), std = vec(std(Z, dims=1)),
+         min = vec(minimum(Z, dims=1)), max = vec(maximum(Z, dims=1)))
+{{?model=vae}} kl_per_dim = vec(mean(kl_terms(posterior(model, Xt)...), dims=2))  # near 0 = posterior collapse in that dimension
+{{?model=vae}} (stats..., kl = kl_per_dim)
+{{?model=ae}} stats
+'''
+
+[[actionGroups.actions]]
+id = "choose-latent"
+label = "Choosing Latent Size"
+desc = "Retrain with 1 to 8 latent dimensions and compare reconstruction MSE: pick the size where it stops falling quickly"
+code = '''
+using Plots
+
+ks  = 1:min(8, p)
+mse = map(ks) do kk
+    m, _ = train(kk, {{epochs}})
+    Flux.mse(m.dec(encode(m, Xt)), Xt)
+end
+plot(ks, mse, marker=:circle, xlabel="latent dimensions", ylabel="reconstruction MSE", legend=false)
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "encode-new"
+label = "Encode New Data"
+desc = "Latent codes and reconstruction-based anomaly flags for new observations, using the training scaling"
+code = '''
+Xn        = prep(X_new)  # X_new: same columns as X
+Z_new     = permutedims(encode(model, Xn))  # n_new x k latent codes
+err_new   = vec(mean(abs2, model.dec(encode(model, Xn)) .- Xn, dims=1))
+threshold = quantile(vec(mean(abs2, permutedims(X_hat) .- Xt, dims=1)), 0.95)  # 95th percentile of training error
+anomalous = err_new .> threshold
+'''
+
+[[actionGroups.actions]]
+id = "generate"
+label = "Generate Samples"
+desc = "Decode random latent codes into new observations in the original units (VAE: from the N(0, I) prior; autoencoder: from a Gaussian fitted to the codes)"
+code = '''
+m_new = 10  # number of samples
+{{?model=vae}} z = randn(Float32, k, m_new)  # draws from the prior
+{{?model=ae}} using LinearAlgebra
+{{?model=ae}} C = cholesky(Symmetric(cov(Z) + 1e-6I)).L
+{{?model=ae}} z = Float32.(permutedims(mean(Z, dims=1)) .+ C * randn(k, m_new))  # draws from a Gaussian fitted to the codes
+X_gen = permutedims(model.dec(z)) .* sd_x .+ mu_x  # m_new x p, back in the original units
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "vs-pca"
+label = "vs PCA"
+desc = "Reconstruction MSE of this model against linear PCA with the same number of dimensions and a column-mean baseline"
+code = '''
+using LinearAlgebra
+
+V    = svd(permutedims(Xt)).V[:, 1:k]  # data are already centred by the standardisation
+Xpca = permutedims(Xt) * V * permutedims(V)
+(model = mean(abs2, permutedims(Xt) .- X_hat), pca = mean(abs2, permutedims(Xt) .- Xpca), mean_only = mean(abs2, Xt))
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "latent-traversal"
+label = "Latent Traversal"
+desc = "Move along one latent dimension (others held at their mean) and show how each decoded feature responds"
+code = '''
+using Plots
+
+j    = 1  # latent dimension to traverse
+vals = range(quantile(Z[:, j], 0.05), quantile(Z[:, j], 0.95), length=15)
+base = Float32.(vec(mean(Z, dims=1)))
+path = reduce(hcat, [model.dec(setindex!(copy(base), Float32(v), j)) for v in vals])  # p x 15 decoded features
+heatmap(collect(vals), 1:p, path, xlabel="latent $j", ylabel="feature", color=:balance)
+'''
+
+[[actionGroups.actions]]
+id = "reconstruction-compare"
+label = "Reconstruction Quality Check"
+desc = "One observation next to its reconstruction (standardised units) to see what the bottleneck keeps and discards"
+code = '''
+using Plots
+
+idx = 1  # observation to inspect
+bar([Xt[:, idx] X_hat[idx, :]], label=["original" "reconstructed"], xlabel="feature", ylabel="standardised value", alpha=0.7)
+'''
+
+[[actionGroups.actions]]
+id = "feature-latent"
+label = "Feature-Latent Correlation"
+desc = "Heatmap of correlations between each original feature and each latent dimension"
+code = '''
+using Plots
+
+R = cor(X, Z)  # p x k
+heatmap(1:size(R, 2), 1:size(R, 1), R, xlabel="latent dimension", ylabel="feature", color=:balance, clims=(-1, 1))
+'''

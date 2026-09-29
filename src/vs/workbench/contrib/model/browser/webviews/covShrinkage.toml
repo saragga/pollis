@@ -1,0 +1,584 @@
+# Regularised Covariance Estimation Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/covShrinkage.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Regularised Covariance Estimation"
+viewType = "pollis.cov-shrinkage"
+defaultModel = "linear"
+
+[[packages]]
+name = "CovarianceEstimation.jl"
+github = "https://mateuszbaran.github.io/CovarianceEstimation.jl/stable/"
+
+[requires]
+packages = ["CovarianceEstimation.jl", "Plots.jl", "Distributions.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Linear Shrinkage"
+file = "cov-shrinkage/tutorial-01-linear-shrinkage.ipynb"
+bundled = true
+description = "Ledoit-Wolf and Oracle-Approximating linear shrinkage towards structured targets — ConstantCorrelation, DiagonalCommonVariance, RBLW, OAS"
+
+[[notebookSections.notebooks]]
+name = "Analytical Nonlinear Shrinkage"
+file = "cov-shrinkage/tutorial-02-nonlinear-shrinkage.ipynb"
+bundled = true
+description = "Nonlinear eigenvalue shrinkage via the Ledoit-Wolf (2020) oracle formula — optimal for large p/n ratios"
+
+[[notebookSections.notebooks]]
+name = "Woodbury Estimator"
+file = "cov-shrinkage/tutorial-03-woodbury.ipynb"
+bundled = true
+description = "Low-rank plus diagonal structured estimator suited to very high-dimensional problems"
+
+[[notebookSections.notebooks]]
+name = "Biweight Midcovariance"
+file = "cov-shrinkage/tutorial-04-biweight.ipynb"
+bundled = true
+description = "Robust covariance estimator based on Tukey biweight — highly resistant to outliers and heavy-tailed distributions"
+
+[[wikis]]
+name = "Factsheet"
+file = "cov-shrinkage/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "cov-shrinkage/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "cov-shrinkage/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "cov-shrinkage/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "cov-shrinkage/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "cov-shrinkage/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Estimators"
+
+[[wikis]]
+name = "Linear Shrinkage"
+file = "cov-shrinkage/linear-shrinkage.md"
+bundled = true
+
+[[wikis]]
+name = "Nonlinear Shrinkage"
+file = "cov-shrinkage/nonlinear-shrinkage.md"
+bundled = true
+
+[[wikis]]
+name = "Woodbury Estimator"
+file = "cov-shrinkage/woodbury.md"
+bundled = true
+
+[[wikis]]
+name = "Biweight"
+file = "cov-shrinkage/biweight.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Random Matrix Theory and Wireless Communications"
+authors = "Tulino, Antonia M.; Verdu, Sergio"
+year = 2004
+journal = "Foundations and Trends in Communications and Information Theory"
+doi = "10.1561/0100000001"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Honey, I Shrunk the Sample Covariance Matrix"
+authors = "Ledoit, Olivier; Wolf, Michael"
+year = 2004
+journal = "Journal of Portfolio Management"
+doi = "10.3905/jpm.2004.110"
+openAccess = false
+
+[[references]]
+title = "Shrinkage Algorithms for MMSE Covariance Estimation"
+authors = "Chen, Yilun; Wiesel, Ami; Eldar, Yonina C.; Hero, Alfred O."
+year = 2010
+journal = "IEEE Transactions on Signal Processing"
+doi = "10.1109/TSP.2010.2053029"
+openAccess = false
+
+[[references]]
+title = "Analytical Nonlinear Shrinkage of Large-Dimensional Covariance Matrices"
+authors = "Ledoit, Olivier; Wolf, Michael"
+year = 2020
+journal = "Annals of Statistics"
+doi = "10.1214/19-AOS1921"
+openAccess = true
+
+[[models]]
+id = "linear"
+label = "Linear"
+
+[[models]]
+id = "nonlinear"
+label = "Nonlinear"
+
+[[models]]
+id = "woodbury"
+label = "Woodbury"
+
+[[models]]
+id = "biweight"
+label = "Biweight"
+
+[[bullets]]
+text = "Linear Shrinkage"
+detail = "convex combination (1 - alpha) S + alpha T of the sample covariance S and a structured target T; alpha chosen by Ledoit-Wolf, Schafer-Strimmer, OAS or RBLW"
+
+[[bullets]]
+text = "Analytical Nonlinear Shrinkage"
+detail = "oracle-optimal per-eigenvalue shrinkage via the Ledoit-Wolf (2020) closed-form formula; superior to linear shrinkage for large p/n"
+
+[[bullets]]
+text = "Woodbury Estimator"
+detail = "low-rank plus diagonal estimate (spiked covariance model) suited to very high-dimensional problems where p is large relative to n"
+
+[[bullets]]
+text = "Biweight Midcovariance"
+detail = "robust estimator based on Tukey biweight; highly resistant to outliers and heavy-tailed distributions"
+
+[[decisionRows]]
+task = "Linear"
+context = "The default for p comparable to n; portfolio and risk models"
+purpose = "Blend the sample covariance with a structured target by an estimated weight alpha"
+
+[[decisionRows]]
+task = "Nonlinear"
+context = "Large p/n ratios where eigenvalues need different amounts of shrinkage"
+purpose = "Shrink each sample eigenvalue separately with the Ledoit-Wolf (2020) closed-form oracle"
+
+[[decisionRows]]
+task = "Woodbury"
+context = "A few strong factors plus idiosyncratic noise"
+purpose = "Low-rank plus diagonal structure with optimally shrunk spike eigenvalues"
+
+[[decisionRows]]
+task = "Biweight"
+context = "Outliers or heavy-tailed data"
+purpose = "Robust midcovariance that down-weights observations far from the median"
+
+[[inputs]]
+id = "X"
+label = "X (n × p)"
+tooltip = "Data matrix: n observations × p features. CovarianceEstimation.jl uses the standard Julia convention (rows = observations), so no transposing is needed."
+default = "X_train"
+
+[[inputs]]
+id = "target"
+label = "Target"
+tooltip = "Structured matrix T towards which the sample covariance is shrunk. DiagonalUnitVariance: identity. DiagonalCommonVariance: diagonal with equal variances. DiagonalUnequalVariance: diagonal with individual variances. CommonCovariance: equal variances and equal covariances. PerfectPositiveCorrelation: all correlations = 1. ConstantCorrelation: equal off-diagonal correlations."
+kind = "select"
+default = "ConstantCorrelation()"
+models = ["linear"]
+newRow = true
+
+[[inputs.options]]
+value = "ConstantCorrelation()"
+label = "ConstantCorrelation"
+
+[[inputs.options]]
+value = "DiagonalCommonVariance()"
+label = "DiagonalCommonVariance"
+
+[[inputs.options]]
+value = "DiagonalUnequalVariance()"
+label = "DiagonalUnequalVariance"
+
+[[inputs.options]]
+value = "DiagonalUnitVariance()"
+label = "DiagonalUnitVariance"
+
+[[inputs.options]]
+value = "CommonCovariance()"
+label = "CommonCovariance"
+
+[[inputs.options]]
+value = "PerfectPositiveCorrelation()"
+label = "PerfectPositiveCorrelation"
+
+[[inputs]]
+id = "shrinkage"
+label = "Shrinkage Method"
+tooltip = ":lw: Ledoit-Wolf (2004) analytical formula. :ss: Schafer-Strimmer. :oas: Oracle Approximating Shrinkage (Chen et al. 2010), lower MSE for Gaussian data. :rblw: Rao-Blackwell Ledoit-Wolf. OAS and RBLW are defined for the DiagonalCommonVariance target only."
+kind = "select"
+default = ":lw"
+models = ["linear"]
+
+[[inputs.options]]
+value = ":lw"
+label = "Ledoit-Wolf (:lw)"
+
+[[inputs.options]]
+value = ":ss"
+label = "Schafer-Strimmer (:ss)"
+
+[[inputs.options]]
+value = ":oas"
+label = "OAS (:oas)"
+
+[[inputs.options]]
+value = ":rblw"
+label = "RBLW (:rblw)"
+
+[[inputs]]
+id = "rank"
+label = "Rank"
+tooltip = "Rank of the low-rank component. Choose it well below p to reflect a belief that most variation lies in a few factors. A higher rank captures more structure but shrinks less."
+default = "2"
+models = ["woodbury"]
+newRow = true
+
+[[inputs]]
+id = "c"
+label = "Tuning Constant c"
+tooltip = "Biweight tuning constant, in units of the median absolute deviation. Smaller values reject outliers more aggressively; 9 is the standard choice."
+default = "9.0"
+models = ["biweight"]
+newRow = true
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.linear]
+# Sample matrix + target matrix blended into the estimate
+svg = '''
+var s = '';
+function grid(x0, y0, op) {
+	for (var i = 0; i < 3; i++) { for (var j = 0; j < 3; j++) {
+		var o = i === j ? 0.85 : op;
+		s += '<rect x="' + (x0 + j * 5) + '" y="' + (y0 + i * 5) + '" width="4.5" height="4.5" fill="currentColor" opacity="' + o + '"/>';
+	} }
+}
+grid(4, 26, 0.55); grid(35, 26, 0.12); grid(19, 52, 0.3);
+return s + '<path d="M12,43 L24,50 M42,43 L30,50" stroke="currentColor" stroke-width="1" fill="none"/>';
+'''
+
+[miniCharts.nonlinear]
+# Sample eigenvalues (spread) pulled inwards by a curved map
+svg = '''
+var s = '', xs = [8, 14, 21, 30, 46];
+xs.forEach(function (x) { s += '<line x1="' + x + '" y1="30" x2="' + x + '" y2="36" stroke="currentColor" stroke-width="1.4" opacity="0.6"/>'; });
+[16, 20, 24, 29, 37].forEach(function (x, i) {
+	s += '<line x1="' + x + '" y1="60" x2="' + x + '" y2="66" stroke="currentColor" stroke-width="1.6"/>';
+	s += '<path d="M' + xs[i] + ',37 Q' + ((xs[i] + x) / 2) + ',44 ' + x + ',59" stroke="currentColor" stroke-width="0.7" fill="none" opacity="0.5"/>';
+});
+return s;
+'''
+
+[miniCharts.woodbury]
+# Low-rank block plus a diagonal
+svg = '''
+var s = '<rect x="6" y="34" width="18" height="18" fill="currentColor" opacity="0.45"/>';
+s += '<text x="27" y="47" font-size="9" text-anchor="middle" fill="currentColor">+</text>';
+for (var i = 0; i < 4; i++) { s += '<rect x="' + (31 + i * 4.5) + '" y="' + (34 + i * 4.5) + '" width="4" height="4" fill="currentColor" opacity="0.85"/>'; }
+return s;
+'''
+
+[miniCharts.biweight]
+# A point cloud with a down-weighted outlier (hollow)
+svg = '''
+var s = '', pts = [[-8, -5], [-5, -2], [-2, -4], [0, 0], [3, 1], [5, 4], [-3, 2], [7, 3], [2, -2]];
+pts.forEach(function (p) { s += '<circle cx="' + (22 + p[0]) + '" cy="' + (50 - p[1]) + '" r="1.8" fill="currentColor" opacity="0.7"/>'; });
+return s + '<circle cx="44" cy="28" r="2.4" fill="none" stroke="currentColor" stroke-width="1"/>'
+	+ '<ellipse cx="22" cy="50" rx="13" ry="7" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.5" transform="rotate(-20 22 50)"/>';
+'''
+
+[[codeBranches]]
+model = "linear"
+code = '''
+using CovarianceEstimation, LinearAlgebra, Statistics, Random
+
+X = {{X}}  # n x p data matrix, rows = observations
+n, p = size(X)
+
+estimator = LinearShrinkage({{target}}, {{shrinkage}})  # (1 - alpha) S + alpha T with an estimated alpha
+
+estimate(A) = Matrix(Symmetric(Matrix(cov(estimator, A))))  # dense symmetric p x p estimate
+S        = estimate(X)
+S_sample = cov(X)  # plain sample covariance, for reference
+
+# mean Gaussian log-likelihood of a random half of the rows under a covariance fitted on the other half
+function holdout(fitcov; seed=1)
+    idx = randperm(MersenneTwister(seed), n)
+    tr, te = idx[1:div(n, 2)], idx[div(n, 2)+1:end]
+    Sig = Symmetric(fitcov(X[tr, :]))
+    isposdef(Sig) || return -Inf  # singular (e.g. the sample covariance when p > n/2)
+    Z = X[te, :] .- mean(X[tr, :], dims=1)
+    -0.5 * (logdet(Sig) + mean(sum((Z * inv(Sig)) .* Z, dims=2)) + p * log(2pi))
+end
+
+(n = n, p = p, cond_sample = cond(S_sample), cond_estimate = cond(S))
+'''
+
+[[codeBranches]]
+model = "nonlinear"
+code = '''
+using CovarianceEstimation, LinearAlgebra, Statistics, Random
+
+X = {{X}}  # n x p data matrix, rows = observations
+n, p = size(X)
+
+estimator = AnalyticalNonlinearShrinkage()  # per-eigenvalue oracle shrinkage (Ledoit-Wolf 2020)
+
+estimate(A) = Matrix(Symmetric(Matrix(cov(estimator, A))))  # dense symmetric p x p estimate
+S        = estimate(X)
+S_sample = cov(X)  # plain sample covariance, for reference
+
+# mean Gaussian log-likelihood of a random half of the rows under a covariance fitted on the other half
+function holdout(fitcov; seed=1)
+    idx = randperm(MersenneTwister(seed), n)
+    tr, te = idx[1:div(n, 2)], idx[div(n, 2)+1:end]
+    Sig = Symmetric(fitcov(X[tr, :]))
+    isposdef(Sig) || return -Inf  # singular (e.g. the sample covariance when p > n/2)
+    Z = X[te, :] .- mean(X[tr, :], dims=1)
+    -0.5 * (logdet(Sig) + mean(sum((Z * inv(Sig)) .* Z, dims=2)) + p * log(2pi))
+end
+
+(n = n, p = p, cond_sample = cond(S_sample), cond_estimate = cond(S))
+'''
+
+[[codeBranches]]
+model = "woodbury"
+code = '''
+using CovarianceEstimation, LinearAlgebra, Statistics, Random
+
+X = {{X}}  # n x p data matrix, rows = observations
+n, p = size(X)
+
+estimator = WoodburyEstimator({{rank}})  # low-rank plus diagonal structured estimator
+
+estimate(A) = Matrix(Symmetric(Matrix(cov(estimator, A))))  # dense symmetric p x p estimate
+S        = estimate(X)
+S_sample = cov(X)  # plain sample covariance, for reference
+
+# mean Gaussian log-likelihood of a random half of the rows under a covariance fitted on the other half
+function holdout(fitcov; seed=1)
+    idx = randperm(MersenneTwister(seed), n)
+    tr, te = idx[1:div(n, 2)], idx[div(n, 2)+1:end]
+    Sig = Symmetric(fitcov(X[tr, :]))
+    isposdef(Sig) || return -Inf  # singular (e.g. the sample covariance when p > n/2)
+    Z = X[te, :] .- mean(X[tr, :], dims=1)
+    -0.5 * (logdet(Sig) + mean(sum((Z * inv(Sig)) .* Z, dims=2)) + p * log(2pi))
+end
+
+(n = n, p = p, cond_sample = cond(S_sample), cond_estimate = cond(S))
+'''
+
+[[codeBranches]]
+model = "biweight"
+code = '''
+using CovarianceEstimation, LinearAlgebra, Statistics, Random
+
+X = {{X}}  # n x p data matrix, rows = observations
+n, p = size(X)
+
+estimator = BiweightMidcovariance(c={{c}})  # robust covariance via Tukey biweight
+
+estimate(A) = Matrix(Symmetric(Matrix(cov(estimator, A))))  # dense symmetric p x p estimate
+S        = estimate(X)
+S_sample = cov(X)  # plain sample covariance, for reference
+
+# mean Gaussian log-likelihood of a random half of the rows under a covariance fitted on the other half
+function holdout(fitcov; seed=1)
+    idx = randperm(MersenneTwister(seed), n)
+    tr, te = idx[1:div(n, 2)], idx[div(n, 2)+1:end]
+    Sig = Symmetric(fitcov(X[tr, :]))
+    isposdef(Sig) || return -Inf  # singular (e.g. the sample covariance when p > n/2)
+    Z = X[te, :] .- mean(X[tr, :], dims=1)
+    -0.5 * (logdet(Sig) + mean(sum((Z * inv(Sig)) .* Z, dims=2)) + p * log(2pi))
+end
+
+(n = n, p = p, cond_sample = cond(S_sample), cond_estimate = cond(S))
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "cov-heatmap"
+label = "Correlation Heatmap"
+desc = "Correlations implied by the sample covariance and by this estimate, side by side"
+code = '''
+using Plots
+
+corr(C) = C ./ sqrt.(diag(C) * permutedims(diag(C)))
+plot(heatmap(corr(S_sample), clims=(-1, 1), color=:balance, yflip=true, title="sample"),
+     heatmap(corr(S), clims=(-1, 1), color=:balance, yflip=true, title="estimate"), layout=(1, 2), size=(900, 400))
+'''
+
+[[actionGroups.actions]]
+id = "eigenvalue-spectrum"
+label = "Eigenvalue Spectrum"
+desc = "Sorted eigenvalues of the sample covariance and of this estimate (log scale): shrinkage lifts the smallest and lowers the largest"
+code = '''
+using Plots
+
+plot(sort(eigvals(Symmetric(S_sample)), rev=true), label="sample", yscale=:log10, marker=:circle, markersize=2)
+plot!(sort(eigvals(Symmetric(S)), rev=true), label="estimate", marker=:circle, markersize=2, xlabel="rank", ylabel="eigenvalue")
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "conditioning"
+label = "Conditioning"
+desc = "Condition number, smallest eigenvalue and positive definiteness of the sample covariance and of this estimate"
+code = '''
+summ(C) = (cond = cond(C), min_eig = minimum(eigvals(Symmetric(C))), posdef = isposdef(Symmetric(C)))
+(sample = summ(S_sample), estimate = summ(S))
+'''
+
+[[actionGroups.actions]]
+id = "distance"
+label = "Distance from Sample Covariance"
+desc = "How far the estimate moved from the sample covariance: relative Frobenius distance and the largest change in any correlation"
+code = '''
+corr(C) = C ./ sqrt.(diag(C) * permutedims(diag(C)))
+(relative_frobenius = norm(S - S_sample) / norm(S_sample), max_corr_change = maximum(abs, corr(S) - corr(S_sample)))
+'''
+
+[[actionGroups.actions]]
+id = "holdout"
+label = "Held-Out Log-Likelihood"
+desc = "Gaussian log-likelihood of held-out rows over 10 random splits, for this estimator and the sample covariance (higher is better)"
+code = '''
+(estimate = mean(holdout(estimate; seed=s) for s in 1:10), sample = mean(holdout(cov; seed=s) for s in 1:10))
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "precision-matrix"
+label = "Precision and Partial Correlations"
+desc = "Invert the estimate: the precision matrix and the partial correlation between each pair of variables given all others"
+code = '''
+using Plots
+
+P = inv(Symmetric(S))  # precision matrix
+partial = -P ./ sqrt.(diag(P) * permutedims(diag(P)))
+partial[diagind(partial)] .= 1
+heatmap(partial, clims=(-1, 1), color=:balance, yflip=true, title="partial correlations")
+'''
+
+[[actionGroups.actions]]
+id = "mahalanobis"
+label = "Mahalanobis Outlier Scores"
+desc = "Squared Mahalanobis distance of new observations under this estimate, with chi-square p-values"
+code = '''
+using Distributions
+
+P  = inv(Symmetric(S))
+Z  = X_new .- mean(X, dims=1)  # X_new: same columns as X
+d2 = vec(sum((Z * P) .* Z, dims=2))  # squared Mahalanobis distances
+pvalues  = ccdf.(Chisq(p), d2)
+outliers = findall(pvalues .< 0.01)
+'''
+
+[[actionGroups.actions]]
+id = "min-variance"
+label = "Minimum-Variance Weights"
+desc = "Global minimum-variance portfolio weights implied by this estimate (columns of X are asset returns)"
+code = '''
+P = inv(Symmetric(S))
+w = P * ones(p) ./ sum(P * ones(p))  # weights sum to 1
+(weights = w, variance = dot(w, S * w))
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "compare-estimators"
+label = "Compare Estimators"
+desc = "Held-out log-likelihood and condition number for the sample covariance and several shrinkage estimators on the same data"
+code = '''
+candidates = [
+    "sample" => cov,
+    "Ledoit-Wolf, constant correlation" => A -> cov(LinearShrinkage(ConstantCorrelation(), :lw), A),
+    "OAS, common variance" => A -> cov(LinearShrinkage(DiagonalCommonVariance(), :oas), A),
+    "analytical nonlinear" => A -> cov(AnalyticalNonlinearShrinkage(), A),
+    "biweight" => A -> cov(BiweightMidcovariance(), A),
+    "this estimate" => estimate,
+]
+map(candidates) do (name, f)
+    (estimator = name, holdout_loglik = mean(holdout(f; seed=s) for s in 1:10), cond = cond(Matrix(f(X))))
+end
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "eigen-map"
+label = "Eigenvalue Shrinkage Map"
+desc = "Each sample eigenvalue against the eigenvalue of the estimate in the same rank position; the diagonal is no shrinkage"
+code = '''
+using Plots
+
+ls = sort(eigvals(Symmetric(S_sample)))
+le = sort(eigvals(Symmetric(S)))
+scatter(ls, le, xlabel="sample eigenvalue", ylabel="estimated eigenvalue", legend=false, markersize=3)
+plot!([0, maximum(ls)], [0, maximum(ls)], linestyle=:dash)
+'''
+
+[[actionGroups.actions]]
+id = "corr-change"
+label = "Correlation Changes"
+desc = "Heatmap of estimated minus sample correlations: where the estimator pulled pairs together or apart"
+code = '''
+using Plots
+
+corr(C) = C ./ sqrt.(diag(C) * permutedims(diag(C)))
+dC = corr(S) - corr(S_sample)
+heatmap(dC, color=:balance, clims=(-maximum(abs, dC), maximum(abs, dC)), yflip=true, title="estimate - sample")
+'''

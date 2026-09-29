@@ -1,0 +1,660 @@
+# Partitional & Density Clustering Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/clp.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Partitional & Density Clustering"
+viewType = "pollis.clp"
+defaultModel = "km"
+
+[[packages]]
+name = "Clustering.jl"
+github = "https://github.com/JuliaStats/Clustering.jl"
+
+[[packages]]
+name = "BetaML.jl"
+github = "https://github.com/sylvaticus/BetaML.jl"
+
+[requires]
+packages = ["Plots.jl", "Distances.jl", "DecisionTree.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "K-Means"
+file = "cluster-partitional/tutorial-01-kmeans.ipynb"
+bundled = true
+description = "K-Means clustering with Clustering.jl — choosing k, convergence, and visualisation"
+
+[[notebookSections.notebooks]]
+name = "K-Medoids"
+file = "cluster-partitional/tutorial-02-kmedoids.ipynb"
+bundled = true
+description = "K-Medoids for robust clustering on distance matrices with Clustering.jl"
+
+[[notebookSections.notebooks]]
+name = "Fuzzy C-Means"
+file = "cluster-partitional/tutorial-03-fcm.ipynb"
+bundled = true
+description = "Soft cluster memberships with Fuzzy C-Means — fuzziness parameter and stability"
+
+[[notebookSections.notebooks]]
+name = "DBSCAN"
+file = "cluster-partitional/tutorial-04-dbscan.ipynb"
+bundled = true
+description = "Density-based clustering with DBSCAN — epsilon, min_pts, and noise detection"
+
+[[notebookSections.notebooks]]
+name = "Gaussian Mixture Models"
+file = "cluster-partitional/tutorial-05-gmm.ipynb"
+bundled = true
+description = "Probabilistic clustering with GMM — EM algorithm and soft assignments via BetaML.jl"
+
+[[notebookSections.notebooks]]
+name = "Spectral Clustering"
+file = "cluster-partitional/tutorial-06-spectral.ipynb"
+bundled = true
+description = "Graph Laplacian spectral embedding followed by k-means for non-convex cluster shapes"
+
+[[wikis]]
+name = "Overview"
+file = "cluster-partitional/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Factsheet"
+file = "cluster-partitional/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "cluster-partitional/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "cluster-partitional/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "cluster-partitional/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "cluster-partitional/decision-guide.md"
+bundled = true
+
+[[wikis]]
+name = "K-Means"
+file = "cluster-partitional/kmeans.md"
+bundled = true
+
+[[wikis]]
+name = "K-Medoids"
+file = "cluster-partitional/kmedoids.md"
+bundled = true
+
+[[wikis]]
+name = "Fuzzy C-Means"
+file = "cluster-partitional/fuzzy-cmeans.md"
+bundled = true
+
+[[wikis]]
+name = "DBSCAN"
+file = "cluster-partitional/dbscan.md"
+bundled = true
+
+[[wikis]]
+name = "Gaussian Mixture Models"
+file = "cluster-partitional/gmm.md"
+bundled = true
+
+[[wikis]]
+name = "Spectral Clustering"
+file = "cluster-partitional/spectral.md"
+bundled = true
+
+[[wikis]]
+name = "Cluster Evaluation"
+file = "cluster-partitional/cluster-evaluation.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Original Papers (from packages)"
+
+[[references]]
+title = "A Density-Based Algorithm for Discovering Clusters in Large Spatial Databases with Noise"
+authors = "Ester, M., Kriegel, H.P., Sander, J. & Xu, X."
+year = 1996
+journal = ""
+url = "https://www.dbs.ifi.lmu.de/Publikationen/Papers/KDD-96.final.frame.pdf"
+openAccess = true
+
+[[references]]
+title = "BetaML: The Beta Machine Learning Toolkit, a Self-Contained Repository of Machine Learning Algorithms in Julia"
+authors = "Lobianco, A."
+year = 2021
+journal = ""
+url = "https://doi.org/10.21105/joss.02849"
+openAccess = true
+
+[[references]]
+title = "A Unified Approach to Interpreting Model Predictions"
+authors = "Lundberg, S.M. & Lee, S.I."
+year = 2017
+journal = ""
+url = "https://arxiv.org/abs/1705.07874"
+openAccess = true
+
+[[references]]
+title = "Explaining Black-Box Models through Counterfactuals"
+authors = "Altmeyer, P., van der Blom, I., Daxberger, E. & Martens, D."
+year = 2023
+journal = ""
+url = "https://arxiv.org/abs/2212.07466"
+openAccess = true
+
+[[models]]
+id = "km"
+label = "K-Means"
+
+[[models]]
+id = "kmed"
+label = "K-Medoids"
+
+[[models]]
+id = "fcm"
+label = "Fuzzy C-Means"
+
+[[models]]
+id = "dbscan"
+label = "DBSCAN"
+
+[[models]]
+id = "gmm"
+label = "GMM"
+
+[[models]]
+id = "spectral"
+label = "Spectral"
+
+[[bullets]]
+text = "K-Means"
+detail = "minimise total within-cluster squared distance to centroids via Lloyd’s algorithm (Clustering.jl)"
+
+[[bullets]]
+text = "K-Medoids"
+detail = "minimise total distance to actual data points as cluster representatives (Clustering.jl)"
+
+[[bullets]]
+text = "Fuzzy C-Means"
+detail = "soft assignments via weighted objective; each point belongs to all clusters with degrees (Clustering.jl)"
+
+[[bullets]]
+text = "DBSCAN"
+detail = "density-based; discovers arbitrary-shaped clusters and labels noise points explicitly (Clustering.jl)"
+
+[[bullets]]
+text = "GMM"
+detail = "probabilistic model; EM algorithm fits a mixture of Gaussians with full soft membership (BetaML.jl)"
+
+[[bullets]]
+text = "Spectral"
+detail = "normalised graph Laplacian eigenvectors embed the data; k-means clusters the embedding (Clustering.jl)"
+
+[[decisionRows]]
+task = "K-Means"
+context = "Compact, roughly spherical clusters of similar size; large n"
+purpose = "Minimise within-cluster squared distance to k centroids"
+
+[[decisionRows]]
+task = "K-Medoids"
+context = "Outliers present, or only a dissimilarity matrix is available"
+purpose = "Clusters represented by actual observations (medoids); robust to outliers"
+
+[[decisionRows]]
+task = "Fuzzy C-Means"
+context = "Overlapping groups where points plausibly belong to several clusters"
+purpose = "Soft membership degree of every point in every cluster"
+
+[[decisionRows]]
+task = "DBSCAN"
+context = "Arbitrary shapes, unknown number of clusters, noise to discard"
+purpose = "Dense regions become clusters; isolated points are labelled noise"
+
+[[decisionRows]]
+task = "GMM"
+context = "Elliptical clusters of different sizes; probabilities wanted"
+purpose = "Mixture of Gaussians fitted by EM with posterior membership probabilities"
+
+[[decisionRows]]
+task = "Spectral"
+context = "Non-convex shapes (rings, moons) connected by local similarity"
+purpose = "Cluster the leading eigenvectors of the graph Laplacian"
+
+[[inputs]]
+id = "X"
+label = "Feature Matrix"
+tooltip = "n_samples × n_features matrix of input features (one row per observation). Standardise the columns first when they are on different scales."
+default = "X_train"
+
+[[inputs]]
+id = "k"
+label = "k"
+tooltip = "Number of clusters (Gaussian components for GMM; Laplacian eigenvectors for spectral clustering). Use the Choosing k action to compare values."
+default = "3"
+newRow = true
+models = ["km", "kmed", "fcm", "gmm", "spectral"]
+
+[[inputs]]
+id = "maxiter"
+label = "max_iter"
+tooltip = "Maximum iterations: Lloyd updates (K-Means), swap passes (K-Medoids), membership updates (Fuzzy C-Means) or EM steps (GMM). Convergence is usually reached well before the limit."
+default = "300"
+models = ["km", "kmed", "fcm", "gmm"]
+
+[[inputs]]
+id = "tol"
+label = "tol"
+tooltip = "Convergence tolerance on the change in the objective between iterations."
+default = "1e-6"
+models = ["km"]
+
+[[inputs]]
+id = "fuzziness"
+label = "fuzziness (m)"
+tooltip = "Fuzziness exponent m > 1. Values near 1 approach hard clustering; m = 2 is the standard choice; larger m gives softer memberships."
+default = "2.0"
+models = ["fcm"]
+
+[[inputs]]
+id = "eps"
+label = "epsilon"
+tooltip = "Neighbourhood radius. Points within epsilon of each other are neighbours. Read it off the knee of the k-distance plot (Choosing k or Epsilon action)."
+default = "0.5"
+newRow = true
+models = ["dbscan"]
+
+[[inputs]]
+id = "minpts"
+label = "min_pts"
+tooltip = "Minimum neighbours within epsilon for a point to be a core point. Points with fewer neighbours are border points or noise. A common start is 2 × n_features."
+default = "5"
+models = ["dbscan"]
+
+[[inputs]]
+id = "sigma"
+label = "sigma"
+tooltip = "Bandwidth of the RBF affinity W_ij = exp(-d_ij^2 / 2 sigma^2). Smaller sigma keeps only close neighbours connected."
+default = "1.0"
+models = ["spectral"]
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.km]
+# Three blobs, each with a centroid cross
+svg = '''
+var s = '', c = [[14, 34], [40, 30], [26, 58]];
+var o = [[-4, -3], [3, -4], [5, 2], [-3, 4], [0, 0], [4, 5]];
+c.forEach(function (p) {
+	o.forEach(function (d) { s += '<circle cx="' + (p[0] + d[0]) + '" cy="' + (p[1] + d[1]) + '" r="1.6" fill="currentColor" opacity="0.5"/>'; });
+	s += '<path d="M' + (p[0] - 3) + ',' + p[1] + ' L' + (p[0] + 3) + ',' + p[1] + ' M' + p[0] + ',' + (p[1] - 3) + ' L' + p[0] + ',' + (p[1] + 3) + '" stroke="currentColor" stroke-width="1.5"/>';
+});
+return s;
+'''
+
+[miniCharts.kmed]
+# Three blobs, each with a ringed actual point as medoid
+svg = '''
+var s = '', c = [[14, 34], [40, 30], [26, 58]];
+var o = [[-4, -3], [3, -4], [5, 2], [-3, 4], [1, 0], [4, 5]];
+c.forEach(function (p) {
+	o.forEach(function (d) { s += '<circle cx="' + (p[0] + d[0]) + '" cy="' + (p[1] + d[1]) + '" r="1.6" fill="currentColor" opacity="0.5"/>'; });
+	s += '<circle cx="' + (p[0] + 1) + '" cy="' + p[1] + '" r="3.5" fill="none" stroke="currentColor" stroke-width="1.2"/>';
+});
+return s;
+'''
+
+[miniCharts.fcm]
+# Two overlapping soft clusters
+svg = '''
+return '<circle cx="21" cy="42" r="14" fill="currentColor" opacity="0.25"/>'
+	+ '<circle cx="34" cy="46" r="14" fill="currentColor" opacity="0.25"/>'
+	+ '<circle cx="21" cy="42" r="2" fill="currentColor"/><circle cx="34" cy="46" r="2" fill="currentColor"/>';
+'''
+
+[miniCharts.dbscan]
+# A curved dense band and isolated noise points
+svg = '''
+var s = '';
+for (var i = 0; i <= 14; i++) {
+	var a = Math.PI * (0.1 + 0.8 * i / 14);
+	s += '<circle cx="' + (27 - 18 * Math.cos(a)).toFixed(1) + '" cy="' + (56 - 22 * Math.sin(a)).toFixed(1) + '" r="1.8" fill="currentColor" opacity="0.7"/>';
+}
+return s + '<path d="M8,24 l3,3 m0,-3 l-3,3 M46,64 l3,3 m0,-3 l-3,3 M44,22 l3,3 m0,-3 l-3,3" stroke="currentColor" stroke-width="1"/>';
+'''
+
+[miniCharts.gmm]
+# Two Gaussian ellipses of different shape
+svg = '''
+return '<ellipse cx="19" cy="38" rx="11" ry="6" transform="rotate(-30 19 38)" fill="none" stroke="currentColor" stroke-width="1.2"/>'
+	+ '<ellipse cx="19" cy="38" rx="5.5" ry="3" transform="rotate(-30 19 38)" fill="currentColor" opacity="0.35"/>'
+	+ '<ellipse cx="36" cy="56" rx="8" ry="10" fill="none" stroke="currentColor" stroke-width="1.2"/>'
+	+ '<ellipse cx="36" cy="56" rx="4" ry="5" fill="currentColor" opacity="0.35"/>';
+'''
+
+[miniCharts.spectral]
+# Two concentric rings: connected by similarity, not by distance to a centre
+svg = '''
+var s = '';
+for (var i = 0; i < 16; i++) {
+	var a = 2 * Math.PI * i / 16;
+	s += '<circle cx="' + (27 + 20 * Math.cos(a)).toFixed(1) + '" cy="' + (46 + 20 * Math.sin(a)).toFixed(1) + '" r="1.6" fill="currentColor" opacity="0.8"/>';
+	if (i % 2 === 0) { s += '<circle cx="' + (27 + 7 * Math.cos(a)).toFixed(1) + '" cy="' + (46 + 7 * Math.sin(a)).toFixed(1) + '" r="1.6" fill="currentColor" opacity="0.4"/>'; }
+}
+return s;
+'''
+
+[[codeBranches]]
+model = "km"
+code = '''
+using Clustering, Statistics
+
+X  = {{X}}  # n x p feature matrix, one row per observation
+Xt = permutedims(X)  # Clustering.jl expects p x n (one column per observation)
+k  = {{k}}  # number of clusters
+
+fit_labels(k) = assignments(kmeans(Xt, k; maxiter={{maxiter}}, tol={{tol}}))  # Lloyd's algorithm from random k-means++ seeds
+
+result  = kmeans(Xt, k; maxiter={{maxiter}}, tol={{tol}})
+labels  = assignments(result)  # cluster of each observation
+centers = result.centers  # p x k centroids
+
+[count(==(c), labels) for c in 1:maximum(labels)]  # cluster sizes
+'''
+
+[[codeBranches]]
+model = "kmed"
+code = '''
+using Clustering, Distances, Statistics
+
+X  = {{X}}  # n x p feature matrix, one row per observation
+Xt = permutedims(X)  # Clustering.jl expects p x n (one column per observation)
+k  = {{k}}  # number of clusters
+D  = pairwise(Euclidean(), X, dims=1)  # n x n distance matrix (any dissimilarity works)
+
+fit_labels(k) = assignments(kmedoids(D, k; maxiter={{maxiter}}))
+
+result  = kmedoids(D, k; maxiter={{maxiter}})
+labels  = assignments(result)  # cluster of each observation
+medoids = result.medoids  # row indices of the representative observations
+
+[count(==(c), labels) for c in 1:maximum(labels)]  # cluster sizes
+'''
+
+[[codeBranches]]
+model = "fcm"
+code = '''
+using Clustering, Statistics
+
+X  = {{X}}  # n x p feature matrix, one row per observation
+Xt = permutedims(X)  # Clustering.jl expects p x n (one column per observation)
+k  = {{k}}  # number of clusters
+m  = {{fuzziness}}  # fuzziness exponent
+
+fit_labels(k) = map(argmax, eachrow(fuzzy_cmeans(Xt, k, m; maxiter={{maxiter}}).weights))
+
+result      = fuzzy_cmeans(Xt, k, m; maxiter={{maxiter}})
+memberships = result.weights  # n x k membership degrees; each row sums to 1
+labels      = map(argmax, eachrow(memberships))  # hard labels from the largest membership
+centers     = result.centers  # p x k cluster centres
+
+[count(==(c), labels) for c in 1:maximum(labels)]  # cluster sizes
+'''
+
+[[codeBranches]]
+model = "dbscan"
+code = '''
+using Clustering, Statistics
+
+X  = {{X}}  # n x p feature matrix, one row per observation
+Xt = permutedims(X)  # Clustering.jl expects p x n (one column per observation)
+radius = {{eps}}  # neighbourhood radius epsilon
+minpts = {{minpts}}  # neighbours needed for a core point
+
+result = dbscan(Xt, radius; min_neighbors=minpts)
+labels = result.assignments  # 0 = noise, 1...k = cluster
+k      = maximum(labels)  # number of clusters found
+count(==(0), labels)  # number of noise points
+
+[count(==(c), labels) for c in 1:maximum(labels)]  # cluster sizes
+'''
+
+[[codeBranches]]
+model = "gmm"
+code = '''
+using BetaML, Statistics
+
+X  = {{X}}  # n x p feature matrix, one row per observation
+Xt = permutedims(X)  # Clustering.jl expects p x n (one column per observation)
+k  = {{k}}  # number of Gaussian components
+
+function fit_labels(k)
+    gm = GaussianMixtureClusterer(n_classes=k, maximum_iterations={{maxiter}})
+    fit!(gm, X)
+    map(argmax, eachrow(predict(gm, X)))
+end
+
+model  = GaussianMixtureClusterer(n_classes=k, maximum_iterations={{maxiter}})  # EM from k-means initial means
+fit!(model, X)
+probs  = predict(model, X)  # n x k posterior membership probabilities
+labels = map(argmax, eachrow(probs))  # most probable component
+
+[count(==(c), labels) for c in 1:maximum(labels)]  # cluster sizes
+'''
+
+[[codeBranches]]
+model = "spectral"
+code = '''
+using Clustering, Distances, LinearAlgebra, Statistics
+
+X  = {{X}}  # n x p feature matrix, one row per observation
+Xt = permutedims(X)  # Clustering.jl expects p x n (one column per observation)
+k     = {{k}}  # number of clusters
+sigma = {{sigma}}  # RBF bandwidth
+
+W = exp.(-pairwise(SqEuclidean(), X, dims=1) ./ (2 * sigma^2))  # affinity matrix
+d = vec(sum(W, dims=2))  # node degrees
+L = I - Diagonal(d .^ -0.5) * W * Diagonal(d .^ -0.5)  # normalised graph Laplacian
+vecs = eigen(Symmetric(L)).vectors  # eigenvalues in ascending order
+
+function fit_labels(k)
+    Z = vecs[:, 1:k]  # embedding: the k smallest eigenvectors
+    Z = Z ./ sqrt.(sum(abs2, Z, dims=2))  # row-normalise (Ng, Jordan and Weiss)
+    assignments(kmeans(permutedims(Z), k))
+end
+
+labels = fit_labels(k)  # cluster of each observation
+
+[count(==(c), labels) for c in 1:maximum(labels)]  # cluster sizes
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "scatter"
+label = "Cluster Scatter"
+desc = "Observations on their first two principal components, coloured by cluster"
+code = '''
+using Plots, LinearAlgebra
+
+Xc  = X .- mean(X, dims=1)  # centre the columns
+pcs = Xc * svd(Xc).V[:, 1:2]  # scores on the first two principal components
+scatter(pcs[:, 1], pcs[:, 2], group=labels, xlabel="PC1", ylabel="PC2", markersize=3, alpha=0.7)
+'''
+
+[[actionGroups.actions]]
+id = "sizes"
+label = "Cluster Sizes"
+desc = "Number of observations in each cluster (noise shown as cluster 0 for DBSCAN)"
+code = '''
+using Plots
+
+ids = sort(unique(labels))
+bar(string.(ids), [count(==(c), labels) for c in ids], xlabel="cluster", ylabel="observations", legend=false)
+'''
+
+[[actionGroups.actions]]
+id = "membership"
+label = "Membership Uncertainty"
+desc = "Histogram of each point's largest membership: values near 1 are confident, low values sit between clusters"
+code = '''
+using Plots
+
+{{?model=fcm}} top = vec(maximum(memberships, dims=2))  # largest membership degree per observation
+{{?model=gmm}} top = vec(maximum(probs, dims=2))  # largest posterior probability per observation
+{{?model!=fcm|gmm}} top = Float64.(labels .> 0)  # hard clustering: always 1 (0 for DBSCAN noise)
+histogram(top, bins=20, xlabel="largest membership", ylabel="observations", legend=false)
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "silhouette"
+label = "Silhouette Analysis"
+desc = "Per-observation cohesion vs separation (-1 to 1); the mean summarises how well separated the clusters are"
+code = '''
+using Distances, Plots
+
+keep   = labels .> 0  # excludes DBSCAN noise
+D      = pairwise(Euclidean(), X[keep, :], dims=1)
+scores = silhouettes(labels[keep], D)  # per-observation silhouette
+order  = sortperm(collect(zip(labels[keep], -scores)))  # group by cluster, best first
+bar(scores[order], group=labels[keep][order], linewidth=0, xlabel="observation", ylabel="silhouette")
+hline!([mean(scores)], linestyle=:dash, label="mean")
+'''
+
+[[actionGroups.actions]]
+id = "choose"
+label = "Choosing k or Epsilon"
+desc = "Mean silhouette over k = 2 to 10, or the k-distance plot whose knee suggests epsilon (DBSCAN)"
+code = '''
+using Distances, Plots
+
+D = pairwise(Euclidean(), X, dims=1)
+{{?model!=dbscan}} ks  = 2:10
+{{?model!=dbscan}} sil = [mean(silhouettes(fit_labels(k), D)) for k in ks]
+{{?model!=dbscan}} plot(ks, sil, marker=:circle, xlabel="k", ylabel="mean silhouette", legend=false)
+{{?model=dbscan}} kdist = sort([sort(r)[minpts + 1] for r in eachrow(D)])  # distance to the min_pts-th neighbour
+{{?model=dbscan}} plot(kdist, xlabel="observations sorted", ylabel="distance to neighbour min_pts", legend=false)
+{{?model=dbscan}} hline!([radius], linestyle=:dash)
+'''
+
+[[actionGroups.actions]]
+id = "stability"
+label = "Stability"
+desc = "Adjusted Rand index between repeated fits (or perturbed epsilon for DBSCAN): values near 1 mean the partition is reproducible"
+code = '''
+{{?model!=dbscan}} ari = [randindex(fit_labels(k), labels)[1] for _ in 1:20]  # restarts from new random seeds
+{{?model=dbscan}} ari = [randindex(dbscan(Xt, s * radius; min_neighbors=minpts).assignments, labels)[1] for s in 0.8:0.1:1.2]
+(mean = mean(ari), min = minimum(ari))
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "assign-new"
+label = "Assign New Data"
+desc = "Cluster labels for new observations: nearest centre, posterior probability, or the label of the nearest training point"
+code = '''
+using Distances
+
+{{?model=km|fcm}} new_labels = map(argmin, eachrow(pairwise(Euclidean(), X_new, permutedims(centers), dims=1)))  # nearest centre
+{{?model=kmed}} new_labels = map(argmin, eachrow(pairwise(Euclidean(), X_new, X[medoids, :], dims=1)))  # nearest medoid
+{{?model=gmm}} new_probs  = predict(model, X_new)  # posterior probabilities
+{{?model=gmm}} new_labels = map(argmax, eachrow(new_probs))
+{{?model=dbscan|spectral}} new_labels = labels[map(argmin, eachrow(pairwise(Euclidean(), X_new, X, dims=1)))]  # label of the nearest training point
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "vs-kmeans"
+label = "Agreement with K-Means"
+desc = "Adjusted Rand index against K-Means with the same number of clusters (against K-Medoids for K-Means itself)"
+code = '''
+using Distances
+
+kk = maximum(labels)
+{{?model!=km}} other = assignments(kmeans(Xt, kk))
+{{?model=km}} other = assignments(kmedoids(pairwise(Euclidean(), X, dims=1), kk))
+randindex(labels, other)  # (adjusted Rand, Rand, Mirkin, Hubert); adjusted Rand near 1 = same partition
+'''
+
+[[actionGroups.actions]]
+id = "vs-random"
+label = "vs Random Labels"
+desc = "Mean silhouette against a random partition with the same cluster sizes: the gap is the structure found"
+code = '''
+using Distances, Random
+
+keep = labels .> 0  # excludes DBSCAN noise
+D    = pairwise(Euclidean(), X[keep, :], dims=1)
+found  = mean(silhouettes(labels[keep], D))
+random = mean(mean(silhouettes(shuffle(labels[keep]), D)) for _ in 1:20)
+(found = found, random = random)
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "profiles"
+label = "Cluster Profiles"
+desc = "Per-cluster feature means and standard deviations to characterise what each cluster represents"
+code = '''
+ids   = sort(unique(labels))  # 0 = DBSCAN noise
+means = [mean(X[labels .== c, j]) for c in ids, j in 1:size(X, 2)]  # clusters x features
+sds   = [std(X[labels .== c, j]) for c in ids, j in 1:size(X, 2)]
+(clusters = ids, means = means, sds = sds)
+'''
+
+[[actionGroups.actions]]
+id = "distinguishing"
+label = "Distinguishing Features"
+desc = "Standardised difference between each cluster's mean and the overall mean: large values name what sets a cluster apart"
+code = '''
+using Plots
+
+ids = sort(unique(labels))
+z   = [(mean(X[labels .== c, j]) - mean(X[:, j])) / std(X[:, j]) for c in ids, j in 1:size(X, 2)]
+heatmap(1:size(X, 2), string.(ids), z, xlabel="feature", ylabel="cluster", color=:balance, clims=(-maximum(abs, z), maximum(abs, z)))
+'''
+
+[[actionGroups.actions]]
+id = "surrogate"
+label = "Surrogate Tree Rules"
+desc = "A shallow decision tree trained to reproduce the clusters: its splits give readable rules and its accuracy says how faithful they are"
+code = '''
+using DecisionTree
+
+tree = DecisionTreeClassifier(max_depth=3)
+fit!(tree, X, labels)
+print_tree(tree)  # feature thresholds that separate the clusters
+mean(predict(tree, X) .== labels)  # fidelity: share of observations the rules place correctly
+'''

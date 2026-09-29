@@ -1,0 +1,615 @@
+# Normalising Flows Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/nf.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Normalising Flows"
+viewType = "pollis.nf"
+defaultModel = "realnvp"
+
+[[packages]]
+name = "Flux.jl"
+github = "https://github.com/FluxML/Flux.jl"
+
+[[packages.videos]]
+title = "High Performance Computing in Julia"
+description = "An 18-video course by Jamie Mair on writing fast Julia code"
+url = "https://www.youtube.com/playlist?list=PLUAq6xQKFgGr39PiyrPk_C9dhBKvWcjUA"
+
+[[packages]]
+name = "Bijectors.jl"
+github = "https://github.com/TuringLang/Bijectors.jl"
+
+[requires]
+packages = ["Plots.jl", "Distributions.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "RealNVP"
+file = "nf/tutorial-01-realnvp.ipynb"
+bundled = true
+description = "Affine coupling layers for multivariate density estimation with Flux.jl"
+
+[[notebookSections.notebooks]]
+name = "MAF"
+file = "nf/tutorial-02-maf.ipynb"
+bundled = true
+description = "Masked Autoregressive Flow: sequential density estimation via MADE networks"
+
+[[notebookSections.notebooks]]
+name = "Neural Spline Flow"
+file = "nf/tutorial-03-nsf.ipynb"
+bundled = true
+description = "Rational-quadratic spline coupling layers for expressive bijections"
+
+[[notebookSections.notebooks]]
+name = "Copula Estimation"
+file = "nf/tutorial-04-copula.ipynb"
+bundled = true
+description = "PIT preprocessing + normalising flow to estimate a copula density"
+
+[[wikis]]
+name = "Overview"
+file = "nf/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Factsheet"
+file = "nf/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "nf/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "nf/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "nf/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "nf/decision-guide.md"
+bundled = true
+
+[[wikis]]
+name = "RealNVP"
+file = "nf/realnvp.md"
+bundled = true
+
+[[wikis]]
+name = "MAF"
+file = "nf/maf.md"
+bundled = true
+
+[[wikis]]
+name = "Neural Spline Flows"
+file = "nf/nsf.md"
+bundled = true
+
+[[wikis]]
+name = "Copula Estimation"
+file = "nf/copula.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Original Papers (from packages)"
+
+[[references]]
+title = "Density Estimation Using Real-valued Non-Volume Preserving (Real NVP) Transformations"
+authors = "Dinh, L. et al."
+year = 2017
+journal = ""
+url = "https://arxiv.org/abs/1605.08803"
+openAccess = true
+
+[[references]]
+title = "Masked Autoregressive Flow for Density Estimation"
+authors = "Papamakarios, G. et al."
+year = 2017
+journal = ""
+url = "https://arxiv.org/abs/1705.07057"
+openAccess = true
+
+[[references]]
+title = "Neural Spline Flows"
+authors = "Durkan, C. et al."
+year = 2019
+journal = ""
+url = "https://arxiv.org/abs/1906.04032"
+openAccess = true
+
+[[models]]
+id = "realnvp"
+label = "RealNVP"
+
+[[models]]
+id = "maf"
+label = "MAF"
+
+[[models]]
+id = "nsf"
+label = "Neural Spline"
+
+[[bullets]]
+text = "RealNVP"
+detail = "alternating affine coupling layers; fast forward and inverse pass"
+
+[[bullets]]
+text = "MAF"
+detail = "Masked Autoregressive Flow; highly expressive, slow sampling"
+
+[[bullets]]
+text = "Neural Spline"
+detail = "rational-quadratic spline couplings; flexible, bounded bijection"
+
+[[bullets]]
+text = "Applications"
+detail = "multivariate density estimation and copula estimation via probability integral transform"
+
+[[decisionRows]]
+task = "RealNVP"
+context = "Fast density evaluation and fast sampling"
+purpose = "Affine coupling layers, parallel in both directions"
+
+[[decisionRows]]
+task = "MAF"
+context = "Density evaluation is the priority"
+purpose = "Masked autoregressive steps: flexible, fast density, sequential sampling"
+
+[[decisionRows]]
+task = "Neural Spline"
+context = "Multimodal, skewed or sharply bounded densities"
+purpose = "Monotone rational-quadratic splines, more expressive per layer"
+
+[[decisionRows]]
+task = "Copula target"
+context = "Dependence matters more than the marginals"
+purpose = "Rank-transform each margin, then let the flow fit the copula density"
+
+[[inputs]]
+id = "xvar"
+label = "Input data"
+tooltip = "D x n data matrix: D variables, n samples (one sample per column)."
+default = "X"
+
+[[inputs]]
+id = "target"
+label = "Target"
+tooltip = "Joint density fits p(x) directly. Copula applies the probability integral transform u_i = F_i(x_i) to every margin (empirical ranks), maps it to the normal scale, and lets the flow fit only the dependence structure (Sklar's theorem)."
+kind = "select"
+default = "density"
+
+[[inputs.options]]
+value = "density"
+label = "Joint density p(x)"
+
+[[inputs.options]]
+value = "copula"
+label = "Copula c(u)"
+
+[[inputs]]
+id = "input-dim"
+label = "input_dim"
+tooltip = "Dimensionality D of the random vector x. The flow learns the full joint density p(x_1, ..., x_D)."
+default = "8"
+newRow = true
+
+[[inputs]]
+id = "num-flows"
+label = "num_flows"
+tooltip = "Number of stacked bijective transformations (coupling or autoregressive steps). More steps increase expressiveness but add compute. Typical range: 4-16."
+default = "8"
+
+[[inputs]]
+id = "num-bins"
+label = "num_bins"
+tooltip = "Number of spline segments K in each Neural Spline Flow coupling layer. More bins give a finer piecewise approximation at the cost of more parameters. Typical range: 4-16."
+default = "8"
+models = ["nsf"]
+
+[[inputs]]
+id = "hidden-size"
+label = "hidden_size"
+tooltip = "Width of the conditioner networks inside each flow step. Controls how rich the learned scale-and-shift (or spline) parameters are. Typical range: 64-512."
+default = "128"
+newRow = true
+
+[[inputs]]
+id = "num-layers"
+label = "num_layers"
+tooltip = "Number of hidden layers in each conditioner network. Deeper conditioners can learn more complex dependencies between dimensions. Typical range: 2-4."
+default = "2"
+
+[[inputs]]
+id = "dropout"
+label = "dropout"
+tooltip = "Dropout probability applied inside the conditioner networks. Regularises deep conditioners. Set to 0 to disable. Typical range: 0.0-0.2."
+default = "0.0"
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.realnvp]
+# Affine coupling: the top half passes through and conditions the scale-and-shift of the bottom half
+svg = '''
+var s = '<rect x="6" y="18" width="10" height="22" fill="currentColor" opacity="0.8"/>';
+s += '<rect x="6" y="46" width="10" height="22" fill="currentColor" opacity="0.35"/>';
+s += '<rect x="38" y="18" width="10" height="22" fill="currentColor" opacity="0.8"/>';
+s += '<rect x="38" y="46" width="10" height="22" fill="none" stroke="currentColor" stroke-width="1.3"/>';
+s += '<line x1="16" y1="29" x2="38" y2="29" stroke="currentColor" stroke-width="1.2"/>';
+s += '<line x1="16" y1="57" x2="38" y2="57" stroke="currentColor" stroke-width="1.2"/>';
+s += '<line x1="27" y1="29" x2="27" y2="53" stroke="currentColor" stroke-width="1" stroke-dasharray="2,2"/>';
+s += '<circle cx="27" cy="57" r="4" fill="none" stroke="currentColor" stroke-width="1.2"/>';
+return s;
+'''
+
+[miniCharts.maf]
+# Autoregressive chain: each variable is conditioned on every earlier one
+svg = '''
+var xs = [10, 22, 34, 46];
+var s = '';
+for (var i = 0; i < xs.length; i++) {
+	for (var j = i + 1; j < xs.length; j++) {
+		var mid = (xs[i] + xs[j]) / 2, h = 50 - (j - i) * 9;
+		s += '<path d="M' + xs[i] + ',56 Q' + mid + ',' + h + ' ' + xs[j] + ',56" fill="none" stroke="currentColor" stroke-width="0.9" opacity="0.6"/>';
+	}
+}
+for (var k = 0; k < xs.length; k++) {
+	s += '<circle cx="' + xs[k] + '" cy="60" r="3.5" fill="currentColor" opacity="' + (0.4 + 0.2 * k) + '"/>';
+}
+return s;
+'''
+
+[miniCharts.nsf]
+# Monotone piecewise spline between knots
+svg = '''
+var knots = [[8, 72], [18, 60], [26, 38], [36, 30], [46, 16]];
+var d = 'M' + knots[0][0] + ',' + knots[0][1];
+for (var i = 1; i < knots.length; i++) {
+	var a = knots[i - 1], b = knots[i];
+	d += ' C' + (a[0] + 4) + ',' + a[1] + ' ' + (b[0] - 4) + ',' + b[1] + ' ' + b[0] + ',' + b[1];
+}
+var s = '<path d="M6,74 L48,74 M6,74 L6,12" stroke="currentColor" stroke-width="0.8" opacity="0.5"/>';
+s += '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.5"/>';
+for (var k = 0; k < knots.length; k++) {
+	s += '<circle cx="' + knots[k][0] + '" cy="' + knots[k][1] + '" r="2.2" fill="currentColor"/>';
+}
+return s;
+'''
+
+[[codeBranches]]
+model = "realnvp"
+code = '''
+using Flux, Statistics
+{{?target=copula}} using Distributions
+
+input_dim   = {{input-dim}}  # dimensionality of x
+num_flows   = {{num-flows}}  # affine coupling layers
+hidden_size = {{hidden-size}}  # conditioner network width
+num_layers  = {{num-layers}}  # conditioner network depth
+
+{{?target=density}} data = Float32.({{xvar}})  # D x n, one sample per column
+{{?target=copula}} pit(x) = (sortperm(sortperm(x)) .- 0.5) ./ length(x)  # empirical ranks mapped into (0, 1)
+{{?target=copula}} U = mapslices(pit, {{xvar}}; dims=2)  # u_i = F_i(x_i), one row per variable
+{{?target=copula}} data = Float32.(quantile.(Normal(), U))  # probit scale: the flow now fits the copula
+
+d1 = input_dim ÷ 2
+d2 = input_dim - d1  # split dimensions for coupling
+
+make_net(n_in, n_out) = Chain(
+    Dense(n_in => hidden_size, tanh),
+    [Dense(hidden_size => hidden_size, tanh) for _ in 2:num_layers]...,
+    Dropout({{dropout}}),
+    Dense(hidden_size => n_out),
+)
+
+struct AffineCoupling  # scale-and-shift coupling layer
+    s_net; t_net; d1::Int; flip::Bool
+end
+Flux.@layer AffineCoupling
+
+function (ac::AffineCoupling)(x)
+    xa = ac.flip ? x[ac.d1+1:end, :] : x[1:ac.d1, :]  # conditioning half
+    xb = ac.flip ? x[1:ac.d1, :] : x[ac.d1+1:end, :]  # transformed half
+    s, t = ac.s_net(xa), ac.t_net(xa)
+    yb = xb .* exp.(s) .+ t  # y_b = x_b * exp(s(x_a)) + t(x_a)
+    y = ac.flip ? vcat(yb, xa) : vcat(xa, yb)
+    y, vec(sum(s; dims=1))  # log|det J| = sum of the log-scales
+end
+
+model = Tuple(AffineCoupling(
+    make_net(isodd(i) ? d1 : d2, isodd(i) ? d2 : d1),  # s network
+    make_net(isodd(i) ? d1 : d2, isodd(i) ? d2 : d1),  # t network
+    d1, iseven(i),  # alternate which half is conditioned
+) for i in 1:num_flows)
+
+function logdensity(model, x)  # log p(x) by the change of variables formula
+    z, ldj = x, zeros(Float32, size(x, 2))
+    for f in model
+        z, ld = f(z)
+        ldj = ldj .+ ld
+    end
+    vec(-0.5f0 .* sum(abs2, z; dims=1)) .- 0.5f0 * size(z, 1) * log(2f0 * pi) .+ ldj  # standard normal base
+end
+loss(model, x) = -mean(logdensity(model, x))  # negative mean log-likelihood
+
+opt_state = Flux.setup(Adam(1f-3), model)
+loader = Flux.DataLoader(data, batchsize=64, shuffle=true)  # one sample per column
+for epoch in 1:100
+    Flux.train!(loss, model, loader, opt_state)
+end
+'''
+
+[[codeBranches]]
+model = "maf"
+code = '''
+using Flux, Statistics
+{{?target=copula}} using Distributions
+
+input_dim   = {{input-dim}}  # dimensionality of x
+num_flows   = {{num-flows}}  # autoregressive steps
+hidden_size = {{hidden-size}}  # conditioner network width
+num_layers  = {{num-layers}}  # conditioner network depth
+
+{{?target=density}} data = Float32.({{xvar}})  # D x n, one sample per column
+{{?target=copula}} pit(x) = (sortperm(sortperm(x)) .- 0.5) ./ length(x)  # empirical ranks mapped into (0, 1)
+{{?target=copula}} U = mapslices(pit, {{xvar}}; dims=2)  # u_i = F_i(x_i), one row per variable
+{{?target=copula}} data = Float32.(quantile.(Normal(), U))  # probit scale: the flow now fits the copula
+
+struct MaskedDense  # dense layer whose weights are multiplied by a fixed 0/1 mask
+    W; b; M; act
+end
+Flux.@layer MaskedDense trainable=(W, b)
+MaskedDense(M, act=identity) = MaskedDense(Flux.glorot_uniform(size(M)...), zeros(Float32, size(M, 1)), Float32.(M), act)
+(m::MaskedDense)(x) = m.act.((m.W .* m.M) * x .+ m.b)
+
+function made(D)  # MADE: output i depends only on inputs 1..i-1
+    deg_h = [mod1(k, D - 1) for k in 1:hidden_size]  # hidden unit k sees inputs 1..deg_h[k]
+    Chain(
+        MaskedDense(deg_h .>= (1:D)', tanh),
+        [MaskedDense(deg_h .>= deg_h', tanh) for _ in 2:num_layers]...,
+        MaskedDense(vcat(1:D, 1:D) .> deg_h'),  # mu_i and alpha_i for every dimension
+    )
+end
+
+struct MAFStep  # one masked autoregressive step
+    made; perm::Vector{Int}
+end
+Flux.@layer MAFStep trainable=(made,)
+
+function (m::MAFStep)(x)
+    x = x[m.perm, :]  # reverse the variable order on alternate steps
+    D = size(x, 1)
+    h = m.made(x)
+    mu, alpha = h[1:D, :], h[D+1:end, :]  # conditional shift and log-scale
+    z = (x .- mu) .* exp.(-alpha)  # normalise each dimension
+    z, -vec(sum(alpha; dims=1))  # log|det J| = -sum of alpha_i
+end
+
+model = Tuple(MAFStep(made(input_dim), isodd(i) ? collect(1:input_dim) : collect(input_dim:-1:1))
+              for i in 1:num_flows)
+
+function logdensity(model, x)  # log p(x) by the change of variables formula
+    z, ldj = x, zeros(Float32, size(x, 2))
+    for f in model
+        z, ld = f(z)
+        ldj = ldj .+ ld
+    end
+    vec(-0.5f0 .* sum(abs2, z; dims=1)) .- 0.5f0 * size(z, 1) * log(2f0 * pi) .+ ldj  # standard normal base
+end
+loss(model, x) = -mean(logdensity(model, x))  # negative mean log-likelihood
+
+opt_state = Flux.setup(Adam(1f-3), model)
+loader = Flux.DataLoader(data, batchsize=64, shuffle=true)  # one sample per column
+for epoch in 1:100
+    Flux.train!(loss, model, loader, opt_state)
+end
+'''
+
+[[codeBranches]]
+model = "nsf"
+code = '''
+using Flux, Bijectors, Statistics
+{{?target=copula}} using Distributions
+
+input_dim   = {{input-dim}}  # dimensionality of x
+num_flows   = {{num-flows}}  # spline coupling layers
+hidden_size = {{hidden-size}}  # conditioner network width
+num_layers  = {{num-layers}}  # conditioner network depth
+K           = {{num-bins}}  # rational-quadratic spline segments
+B           = 5f0  # splines act on [-B, B], identity outside
+
+{{?target=density}} data = Float32.({{xvar}})  # D x n, one sample per column
+{{?target=copula}} pit(x) = (sortperm(sortperm(x)) .- 0.5) ./ length(x)  # empirical ranks mapped into (0, 1)
+{{?target=copula}} U = mapslices(pit, {{xvar}}; dims=2)  # u_i = F_i(x_i), one row per variable
+{{?target=copula}} data = Float32.(quantile.(Normal(), U))  # probit scale: the flow now fits the copula
+
+d1 = input_dim ÷ 2
+d2 = input_dim - d1  # split dimensions for coupling
+
+make_net(n_in, n_out) = Chain(
+    Dense(n_in => hidden_size, relu),
+    [Dense(hidden_size => hidden_size, relu) for _ in 2:num_layers]...,
+    Dropout({{dropout}}),
+    Dense(hidden_size => (3K - 1) * n_out),  # widths, heights and interior derivatives
+)
+
+struct SplineCoupling  # rational-quadratic spline coupling layer (Durkan et al. 2019)
+    net; d1::Int; flip::Bool
+end
+Flux.@layer SplineCoupling
+
+function (sc::SplineCoupling)(x)
+    xa = sc.flip ? x[sc.d1+1:end, :] : x[1:sc.d1, :]  # conditioning half
+    xb = sc.flip ? x[1:sc.d1, :] : x[sc.d1+1:end, :]  # transformed half
+    P = sc.net(xa)
+    d = size(xb, 1)
+    out = map(1:size(x, 2)) do j
+        p = reshape(P[:, j], d, 3K - 1)
+        rqs = RationalQuadraticSpline(p[:, 1:K], p[:, K+1:2K], p[:, 2K+1:end], B)  # one spline per dimension
+        with_logabsdet_jacobian(rqs, xb[:, j])
+    end
+    yb = reduce(hcat, first.(out))
+    y = sc.flip ? vcat(yb, xa) : vcat(xa, yb)
+    y, last.(out)  # output and log|det J|
+end
+
+model = Tuple(SplineCoupling(make_net(isodd(i) ? d1 : d2, isodd(i) ? d2 : d1), d1, iseven(i))
+              for i in 1:num_flows)
+
+function logdensity(model, x)  # log p(x) by the change of variables formula
+    z, ldj = x, zeros(Float32, size(x, 2))
+    for f in model
+        z, ld = f(z)
+        ldj = ldj .+ ld
+    end
+    vec(-0.5f0 .* sum(abs2, z; dims=1)) .- 0.5f0 * size(z, 1) * log(2f0 * pi) .+ ldj  # standard normal base
+end
+loss(model, x) = -mean(logdensity(model, x))  # negative mean log-likelihood
+
+opt_state = Flux.setup(Adam(1f-3), model)
+loader = Flux.DataLoader(data, batchsize=64, shuffle=true)  # one sample per column
+for epoch in 1:100
+    Flux.train!(loss, model, loader, opt_state)
+end
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "loss-curve"
+label = "Training Curve"
+desc = "Keep training while recording the negative log-likelihood after every epoch, then plot it"
+code = '''
+using Plots
+
+epoch_loss() = mean(loss(model, x) for x in loader)
+history = [epoch_loss()]
+for epoch in 1:100
+    Flux.train!(loss, model, loader, opt_state)
+    push!(history, epoch_loss())
+end
+plot(history, xlabel="epoch", ylabel="negative log-likelihood", legend=false)
+'''
+
+[[actionGroups.actions]]
+id = "latent-space"
+label = "Data vs Latent Space"
+desc = "Scatter the first two variables before and after the flow; the latent cloud should look like N(0, I)"
+code = '''
+using Plots
+
+z = foldl((z, f) -> first(f(z)), model; init=data)  # push the data through every flow step
+plot(scatter(data[1, :], data[2, :], title="data", alpha=0.4),
+     scatter(z[1, :], z[2, :], title="latent", alpha=0.4), layout=(1, 2), legend=false)
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "latent-normality"
+label = "Latent Normality"
+desc = "A well-trained flow maps the data to mean 0 and identity covariance, with standard normal margins"
+code = '''
+using Plots, Distributions, LinearAlgebra
+
+z = foldl((z, f) -> first(f(z)), model; init=data)
+println((mean_error = maximum(abs, mean(z; dims=2)), cov_error = maximum(abs, cov(z; dims=2) - I)))
+histogram(vec(z), normalize=true, label="latent values")
+plot!(x -> pdf(Normal(), x), -4, 4, label="N(0, 1)", linewidth=2)
+'''
+
+[[actionGroups.actions]]
+id = "holdout"
+label = "Held-Out Log-Likelihood"
+desc = "Mean log-likelihood on training and held-out samples; a large gap signals overfitting"
+code = '''
+X_test = Float32.(X_test)  # held-out samples, D x m, prepared the same way as data
+(train = -loss(model, data), test = -loss(model, X_test))
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "density-new"
+label = "Density of New Points"
+desc = "Exact log-density log p(x) of new observations under the fitted flow"
+code = '''
+logp = logdensity(model, Float32.(X_new))  # X_new: D x m, one point per column
+'''
+
+[[actionGroups.actions]]
+id = "anomalies"
+label = "Lowest-Density Samples"
+desc = "Flag the ten samples the flow finds least likely, as anomaly candidates"
+code = '''
+logp = logdensity(model, data)
+outliers = sortperm(logp)[1:10]  # column indices of the least likely samples
+logp[outliers]
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "gaussian-baseline"
+label = "vs Multivariate Gaussian"
+desc = "Mean log-likelihood of the flow against a maximum-likelihood Gaussian fitted to the same data"
+code = '''
+using Distributions
+
+g = fit(MvNormal, Float64.(data))  # Gaussian baseline
+(flow = -loss(model, data), gaussian = mean(logpdf(g, Float64.(data))))  # higher is better
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "per-step-logdet"
+label = "Per-Step Log-Determinant"
+desc = "How much each flow step stretches or squeezes the space, averaged over the data"
+code = '''
+using Plots
+
+contrib = Float32[]
+foldl(model; init=data) do z, f
+    z, ld = f(z)
+    push!(contrib, mean(ld))
+    z
+end
+bar(contrib, xlabel="flow step", ylabel="mean log|det J|", legend=false)
+'''
+
+[[actionGroups.actions]]
+id = "density-slice"
+label = "Density Slice"
+desc = "Density along the first variable with every other variable held at its median"
+code = '''
+using Plots
+
+x0 = median(data; dims=2)  # hold every other variable at its median
+grid = range(extrema(data[1, :])..., length=200)
+pts = repeat(x0, 1, length(grid))
+pts[1, :] .= grid
+plot(grid, exp.(logdensity(model, pts)), xlabel="x_1", ylabel="density (others at median)", legend=false)
+'''

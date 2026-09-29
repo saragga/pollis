@@ -1,0 +1,583 @@
+# Graph Neural Networks Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/gnn.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Graph Neural Networks"
+viewType = "pollis.gnn"
+defaultModel = "gcn"
+
+[[packages]]
+name = "Flux.jl"
+github = "https://github.com/FluxML/Flux.jl"
+
+[[packages.videos]]
+title = "High Performance Computing in Julia"
+description = "An 18-video course by Jamie Mair on writing fast Julia code"
+url = "https://www.youtube.com/playlist?list=PLUAq6xQKFgGr39PiyrPk_C9dhBKvWcjUA"
+
+[[packages]]
+name = "GraphNeuralNetworks.jl"
+github = "https://github.com/CarloLucibello/GraphNeuralNetworks.jl"
+
+[requires]
+packages = ["Plots.jl", "MultivariateStats.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "GCN Basics"
+file = "gnn/tutorial-01-gcn.ipynb"
+bundled = true
+description = "Node classification with Graph Convolutional Networks using GraphNeuralNetworks.jl"
+
+[[notebookSections.notebooks]]
+name = "Graph Attention Networks"
+file = "gnn/tutorial-02-gat.ipynb"
+bundled = true
+description = "Attention-weighted neighbourhood aggregation with GATConv"
+
+[[notebookSections.notebooks]]
+name = "GraphSAGE"
+file = "gnn/tutorial-03-graphsage.ipynb"
+bundled = true
+description = "Inductive learning on large graphs with neighbour sampling"
+
+[[notebookSections.notebooks]]
+name = "Temporal GNNs"
+file = "gnn/tutorial-04-temporal.ipynb"
+bundled = true
+description = "EvolveGCN for dynamic graphs with time-varying topology"
+
+[[wikis]]
+name = "Overview"
+file = "gnn/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Factsheet"
+file = "gnn/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "gnn/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "gnn/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "gnn/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "gnn/decision-guide.md"
+bundled = true
+
+[[wikis]]
+name = "Heterogeneous Graphs"
+file = "gnn/heterogeneous.md"
+bundled = true
+
+[[wikis]]
+name = "GNN Architectures in Finance"
+file = "gnn/gnn-architectures-finance.md"
+bundled = true
+
+[[models]]
+id = "gcn"
+label = "GCN"
+
+[[models]]
+id = "gat"
+label = "GAT"
+
+[[models]]
+id = "sage"
+label = "GraphSAGE"
+
+[[models]]
+id = "temporal"
+label = "Temporal GNN"
+
+[[bullets]]
+text = "GCN"
+detail = "spectral convolution with symmetric normalisation; efficient baseline for homogeneous graphs"
+
+[[bullets]]
+text = "GAT"
+detail = "attention-weighted aggregation; learns which neighbours matter most"
+
+[[bullets]]
+text = "GraphSAGE"
+detail = "inductive sampling-based aggregation; scales to graphs with unseen nodes at inference"
+
+[[bullets]]
+text = "Temporal GNN"
+detail = "EvolveGCN-O; GRU evolves GCN weight matrices across discrete graph snapshots"
+
+[[decisionRows]]
+task = "GCN"
+context = "Homogeneous graph, neighbours roughly equally informative"
+purpose = "Normalised neighbourhood averaging; fast, strong baseline"
+
+[[decisionRows]]
+task = "GAT"
+context = "Some neighbours matter much more than others"
+purpose = "Learned attention weights over each node's neighbours"
+
+[[decisionRows]]
+task = "GraphSAGE"
+context = "Large graphs, or new nodes appear at prediction time"
+purpose = "Inductive: combines a node with an aggregate (mean, max, sum) of its neighbours"
+
+[[decisionRows]]
+task = "Temporal GNN"
+context = "A sequence of graph snapshots over time"
+purpose = "EvolveGCN-O: a GRU evolves the GCN weights from snapshot to snapshot"
+
+[[decisionRows]]
+task = "Heterogeneous"
+context = "Several edge types with different meaning"
+purpose = "Separate convolution weights per relation, summed per node"
+
+[[inputs]]
+id = "gvar"
+label = "Graph"
+tooltip = "A GNNGraph (a GNNHeteroGraph with relations (:node, :rel_1, :node), ... when Graph type is Heterogeneous). For the Temporal GNN: a vector of GNNGraph snapshots over the same nodes."
+default = "g"
+
+[[inputs]]
+id = "xvar"
+label = "Node features"
+tooltip = "in_channels x num_nodes matrix of node features. For the Temporal GNN: a vector with one such matrix per snapshot."
+default = "X"
+
+[[inputs]]
+id = "yvar"
+label = "Target variable"
+tooltip = "out_channels x num_nodes matrix of node targets (for the Temporal GNN: the targets after the final snapshot)."
+default = "y"
+
+[[inputs]]
+id = "in-channels"
+label = "in_channels"
+tooltip = "Number of input node features. In financial graphs, features might include balance-sheet ratios, trading volumes, or sector embeddings."
+default = "16"
+newRow = true
+
+[[inputs]]
+id = "hidden-channels"
+label = "hidden_channels"
+tooltip = "Size of the hidden node embedding produced by each GNN layer. Larger values increase model capacity. For GAT it must be divisible by num_heads. Typical range: 32-256."
+default = "64"
+
+[[inputs]]
+id = "out-channels"
+label = "out_channels"
+tooltip = "Output dimension per node: 1 for node regression, or the embedding size fed to a downstream head."
+default = "1"
+
+[[inputs]]
+id = "num-layers"
+label = "num_layers"
+tooltip = "Number of stacked graph convolution layers. Each layer aggregates one additional hop of neighbours. More layers risk over-smoothing on dense graphs. Typical range: 2-4."
+default = "2"
+models = ["gcn", "gat", "sage"]
+newRow = true
+
+[[inputs]]
+id = "dropout"
+label = "dropout"
+tooltip = "Dropout probability applied to the node embeddings before the readout. Set to 0 to disable. Typical range: 0.1-0.5."
+default = "0.0"
+models = ["gcn", "gat", "sage"]
+
+[[inputs]]
+id = "num-heads"
+label = "num_heads"
+tooltip = "Number of parallel attention heads in GAT. Each head attends to neighbours independently and their outputs are concatenated. Must divide hidden_channels evenly. Typical: 4 or 8."
+default = "4"
+models = ["gat"]
+
+[[inputs]]
+id = "aggr"
+label = "aggr"
+tooltip = "How GraphSAGE combines neighbour embeddings: mean (smooth, degree-independent), max (picks the strongest signal) or sum (keeps degree information)."
+kind = "select"
+default = "mean"
+models = ["sage"]
+
+[[inputs.options]]
+value = "mean"
+label = "mean"
+
+[[inputs.options]]
+value = "max"
+label = "max"
+
+[[inputs.options]]
+value = "+"
+label = "sum"
+
+[[inputs]]
+id = "graph-type"
+label = "Graph type"
+tooltip = "Heterogeneous assigns separate weight matrices to each relation type via HeteroGraphConv. Use it when edge types carry different meaning, e.g. ownership, co-trading and sentiment links between firms."
+kind = "select"
+default = "homo"
+models = ["gcn", "gat", "sage"]
+newRow = true
+
+[[inputs.options]]
+value = "homo"
+label = "Homogeneous"
+
+[[inputs.options]]
+value = "hetero"
+label = "Heterogeneous"
+
+[[inputs]]
+id = "num-relations"
+label = "num_relations"
+tooltip = "Number of distinct edge (relation) types in the heterogeneous graph. Each relation type has its own convolution weights."
+default = "3"
+models = ["gcn", "gat", "sage"]
+when = "graph-type=hetero"
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.gcn]
+# A node with equally weighted edges to its neighbours
+svg = '''
+var c = [27, 43], nb = [[10, 24], [44, 22], [8, 58], [46, 62], [27, 72]];
+var s = '';
+for (var i = 0; i < nb.length; i++) {
+	s += '<line x1="' + c[0] + '" y1="' + c[1] + '" x2="' + nb[i][0] + '" y2="' + nb[i][1] + '" stroke="currentColor" stroke-width="1.2"/>';
+	s += '<circle cx="' + nb[i][0] + '" cy="' + nb[i][1] + '" r="3.5" fill="currentColor" opacity="0.5"/>';
+}
+s += '<circle cx="' + c[0] + '" cy="' + c[1] + '" r="5" fill="currentColor"/>';
+return s;
+'''
+
+[miniCharts.gat]
+# The same neighbourhood, with edge thickness showing attention weights
+svg = '''
+var c = [27, 43], nb = [[10, 24], [44, 22], [8, 58], [46, 62], [27, 72]], w = [3, 0.6, 1.6, 0.6, 1];
+var s = '';
+for (var i = 0; i < nb.length; i++) {
+	s += '<line x1="' + c[0] + '" y1="' + c[1] + '" x2="' + nb[i][0] + '" y2="' + nb[i][1] + '" stroke="currentColor" stroke-width="' + w[i] + '" opacity="' + (0.4 + w[i] / 5) + '"/>';
+	s += '<circle cx="' + nb[i][0] + '" cy="' + nb[i][1] + '" r="3.5" fill="currentColor" opacity="0.5"/>';
+}
+s += '<circle cx="' + c[0] + '" cy="' + c[1] + '" r="5" fill="currentColor"/>';
+return s;
+'''
+
+[miniCharts.sage]
+# Sampled neighbours pooled into one aggregate, then combined with the node itself
+svg = '''
+var nb = [[8, 18], [20, 14], [32, 18]];
+var s = '';
+for (var i = 0; i < nb.length; i++) {
+	s += '<line x1="' + nb[i][0] + '" y1="' + nb[i][1] + '" x2="20" y2="38" stroke="currentColor" stroke-width="1"/>';
+	s += '<circle cx="' + nb[i][0] + '" cy="' + nb[i][1] + '" r="3" fill="currentColor" opacity="0.5"/>';
+}
+s += '<rect x="14" y="35" width="12" height="7" fill="currentColor" opacity="0.7"/>';
+s += '<circle cx="42" cy="38" r="4" fill="currentColor"/>';
+s += '<line x1="20" y1="42" x2="28" y2="62" stroke="currentColor" stroke-width="1.2"/>';
+s += '<line x1="42" y1="42" x2="32" y2="62" stroke="currentColor" stroke-width="1.2"/>';
+s += '<circle cx="30" cy="66" r="4.5" fill="currentColor"/>';
+return s;
+'''
+
+[miniCharts.temporal]
+# Three graph snapshots side by side, linked through time
+svg = '''
+var s = '';
+var shapes = [[[0, 0, 8, -10], [0, 0, 10, 6]], [[0, 0, 8, -10], [8, -10, 10, 6]], [[0, 0, 10, 6], [8, -10, 10, 6]]];
+for (var k = 0; k < 3; k++) {
+	var ox = 5 + k * 16, oy = 48;
+	for (var e = 0; e < shapes[k].length; e++) {
+		var p = shapes[k][e];
+		s += '<line x1="' + (ox + p[0]) + '" y1="' + (oy + p[1]) + '" x2="' + (ox + p[2]) + '" y2="' + (oy + p[3]) + '" stroke="currentColor" stroke-width="1"/>';
+	}
+	s += '<circle cx="' + ox + '" cy="' + oy + '" r="2.2" fill="currentColor"/><circle cx="' + (ox + 8) + '" cy="' + (oy - 10) + '" r="2.2" fill="currentColor"/><circle cx="' + (ox + 10) + '" cy="' + (oy + 6) + '" r="2.2" fill="currentColor"/>';
+}
+s += '<path d="M6,70 L48,70 M44,67 L48,70 L44,73" fill="none" stroke="currentColor" stroke-width="1" opacity="0.6"/>';
+return s;
+'''
+
+[[codeBranches]]
+model = "gcn"
+code = '''
+using Flux, GraphNeuralNetworks
+
+in_channels     = {{in-channels}}  # input node features
+hidden_channels = {{hidden-channels}}  # hidden dimension
+out_channels    = {{out-channels}}  # output dimension
+num_layers      = {{num-layers}}  # message-passing hops
+{{?graph-type=hetero}} num_relations   = {{num-relations}}  # edge types
+
+conv(n_in, n_out) = GCNConv(n_in => n_out, relu)  # symmetric-normalised neighbourhood average
+
+{{?graph-type=homo}} model = GNNChain(
+{{?graph-type=homo}}     GNNChain(conv(in_channels, hidden_channels), [conv(hidden_channels, hidden_channels) for _ in 2:num_layers]..., Dropout({{dropout}})),  # encoder
+{{?graph-type=homo}}     Dense(hidden_channels => out_channels),  # node readout
+{{?graph-type=homo}} )
+{{?graph-type=homo}} embed(model, g, x) = model[1](g, x)
+{{?graph-type=homo}} forward(model, g, x) = model(g, x)
+{{?graph-type=hetero}} relations = [(:node, Symbol("rel_", r), :node) for r in 1:num_relations]
+{{?graph-type=hetero}} hconv(n_in, n_out) = HeteroGraphConv([rel => conv(n_in, n_out) for rel in relations]...; aggr=+)  # one conv per relation, summed
+{{?graph-type=hetero}} struct HeteroGNN
+{{?graph-type=hetero}}     layers; drop; readout
+{{?graph-type=hetero}} end
+{{?graph-type=hetero}} Flux.@layer HeteroGNN
+{{?graph-type=hetero}} function embed(m::HeteroGNN, g, x)
+{{?graph-type=hetero}}     h = (node = x,)  # features keyed by node type
+{{?graph-type=hetero}}     for layer in m.layers
+{{?graph-type=hetero}}         h = layer(g, h)
+{{?graph-type=hetero}}     end
+{{?graph-type=hetero}}     m.drop(h.node)
+{{?graph-type=hetero}} end
+{{?graph-type=hetero}} forward(m, g, x) = m.readout(embed(m, g, x))
+{{?graph-type=hetero}} model = HeteroGNN(
+{{?graph-type=hetero}}     [hconv(in_channels, hidden_channels); [hconv(hidden_channels, hidden_channels) for _ in 2:num_layers]],
+{{?graph-type=hetero}}     Dropout({{dropout}}),
+{{?graph-type=hetero}}     Dense(hidden_channels => out_channels),
+{{?graph-type=hetero}} )
+
+loss(model, g, x, y) = Flux.mse(forward(model, g, x), y)  # node-level MSE
+opt_state = Flux.setup(Adam(1f-3), model)
+for epoch in 1:200
+    Flux.train!(loss, model, [({{gvar}}, {{xvar}}, {{yvar}})], opt_state)  # full-batch training on the whole graph
+end
+'''
+
+[[codeBranches]]
+model = "gat"
+code = '''
+using Flux, GraphNeuralNetworks
+
+in_channels     = {{in-channels}}  # input node features
+hidden_channels = {{hidden-channels}}  # hidden dimension (per head x heads)
+out_channels    = {{out-channels}}  # output dimension
+num_layers      = {{num-layers}}  # message-passing hops
+num_heads       = {{num-heads}}  # attention heads (must divide hidden_channels)
+{{?graph-type=hetero}} num_relations   = {{num-relations}}  # edge types
+
+conv(n_in, n_out) = GATConv(n_in => div(n_out, num_heads), elu; heads=num_heads, concat=true)  # heads concatenated back to n_out
+
+{{?graph-type=homo}} model = GNNChain(
+{{?graph-type=homo}}     GNNChain(conv(in_channels, hidden_channels), [conv(hidden_channels, hidden_channels) for _ in 2:num_layers]..., Dropout({{dropout}})),  # encoder
+{{?graph-type=homo}}     Dense(hidden_channels => out_channels),  # node readout
+{{?graph-type=homo}} )
+{{?graph-type=homo}} embed(model, g, x) = model[1](g, x)
+{{?graph-type=homo}} forward(model, g, x) = model(g, x)
+{{?graph-type=hetero}} relations = [(:node, Symbol("rel_", r), :node) for r in 1:num_relations]
+{{?graph-type=hetero}} hconv(n_in, n_out) = HeteroGraphConv([rel => conv(n_in, n_out) for rel in relations]...; aggr=+)  # own attention weights per relation
+{{?graph-type=hetero}} struct HeteroGNN
+{{?graph-type=hetero}}     layers; drop; readout
+{{?graph-type=hetero}} end
+{{?graph-type=hetero}} Flux.@layer HeteroGNN
+{{?graph-type=hetero}} function embed(m::HeteroGNN, g, x)
+{{?graph-type=hetero}}     h = (node = x,)  # features keyed by node type
+{{?graph-type=hetero}}     for layer in m.layers
+{{?graph-type=hetero}}         h = layer(g, h)
+{{?graph-type=hetero}}     end
+{{?graph-type=hetero}}     m.drop(h.node)
+{{?graph-type=hetero}} end
+{{?graph-type=hetero}} forward(m, g, x) = m.readout(embed(m, g, x))
+{{?graph-type=hetero}} model = HeteroGNN(
+{{?graph-type=hetero}}     [hconv(in_channels, hidden_channels); [hconv(hidden_channels, hidden_channels) for _ in 2:num_layers]],
+{{?graph-type=hetero}}     Dropout({{dropout}}),
+{{?graph-type=hetero}}     Dense(hidden_channels => out_channels),
+{{?graph-type=hetero}} )
+
+loss(model, g, x, y) = Flux.mse(forward(model, g, x), y)  # node-level MSE
+opt_state = Flux.setup(Adam(1f-3), model)
+for epoch in 1:200
+    Flux.train!(loss, model, [({{gvar}}, {{xvar}}, {{yvar}})], opt_state)  # full-batch training on the whole graph
+end
+'''
+
+[[codeBranches]]
+model = "sage"
+code = '''
+using Flux, GraphNeuralNetworks, Statistics
+
+in_channels     = {{in-channels}}  # input node features
+hidden_channels = {{hidden-channels}}  # hidden dimension
+out_channels    = {{out-channels}}  # output dimension
+num_layers      = {{num-layers}}  # message-passing hops
+{{?graph-type=hetero}} num_relations   = {{num-relations}}  # edge types
+
+conv(n_in, n_out) = SAGEConv(n_in => n_out, relu; aggr={{aggr}})  # W [h_self; AGG(neighbours)]
+
+{{?graph-type=homo}} model = GNNChain(
+{{?graph-type=homo}}     GNNChain(conv(in_channels, hidden_channels), [conv(hidden_channels, hidden_channels) for _ in 2:num_layers]..., Dropout({{dropout}})),  # encoder
+{{?graph-type=homo}}     Dense(hidden_channels => out_channels),  # node readout
+{{?graph-type=homo}} )
+{{?graph-type=homo}} embed(model, g, x) = model[1](g, x)
+{{?graph-type=homo}} forward(model, g, x) = model(g, x)
+{{?graph-type=hetero}} relations = [(:node, Symbol("rel_", r), :node) for r in 1:num_relations]
+{{?graph-type=hetero}} hconv(n_in, n_out) = HeteroGraphConv([rel => conv(n_in, n_out) for rel in relations]...; aggr=+)  # one SAGE conv per relation, summed
+{{?graph-type=hetero}} struct HeteroGNN
+{{?graph-type=hetero}}     layers; drop; readout
+{{?graph-type=hetero}} end
+{{?graph-type=hetero}} Flux.@layer HeteroGNN
+{{?graph-type=hetero}} function embed(m::HeteroGNN, g, x)
+{{?graph-type=hetero}}     h = (node = x,)  # features keyed by node type
+{{?graph-type=hetero}}     for layer in m.layers
+{{?graph-type=hetero}}         h = layer(g, h)
+{{?graph-type=hetero}}     end
+{{?graph-type=hetero}}     m.drop(h.node)
+{{?graph-type=hetero}} end
+{{?graph-type=hetero}} forward(m, g, x) = m.readout(embed(m, g, x))
+{{?graph-type=hetero}} model = HeteroGNN(
+{{?graph-type=hetero}}     [hconv(in_channels, hidden_channels); [hconv(hidden_channels, hidden_channels) for _ in 2:num_layers]],
+{{?graph-type=hetero}}     Dropout({{dropout}}),
+{{?graph-type=hetero}}     Dense(hidden_channels => out_channels),
+{{?graph-type=hetero}} )
+
+loss(model, g, x, y) = Flux.mse(forward(model, g, x), y)  # node-level MSE
+opt_state = Flux.setup(Adam(1f-3), model)
+for epoch in 1:200
+    Flux.train!(loss, model, [({{gvar}}, {{xvar}}, {{yvar}})], opt_state)  # full-batch training on the whole graph
+end
+'''
+
+[[codeBranches]]
+model = "temporal"
+code = '''
+using Flux, GraphNeuralNetworks
+
+in_channels     = {{in-channels}}  # input node features
+hidden_channels = {{hidden-channels}}  # hidden dimension
+out_channels    = {{out-channels}}  # output dimension
+
+# EvolveGCN-O: a GRU evolves the GCN weight matrix from one snapshot to the next
+model = (evolve = EvolveGCNO(in_channels => hidden_channels), readout = Dense(hidden_channels => out_channels))
+
+embed(model, snapshots, xs) = model.evolve(TemporalSnapshotsGNNGraph(snapshots), xs)[end]  # embeddings after the final snapshot
+forward(model, snapshots, xs) = model.readout(embed(model, snapshots, xs))
+
+loss(model, g, x, y) = Flux.mse(forward(model, g, x), y)  # node-level MSE
+opt_state = Flux.setup(Adam(1f-3), model)
+for epoch in 1:200
+    Flux.train!(loss, model, [({{gvar}}, {{xvar}}, {{yvar}})], opt_state)  # {{gvar}}: vector of snapshots, {{xvar}}: one feature matrix per snapshot
+end
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "fit-plot"
+label = "Predictions vs Targets"
+desc = "Scatter every node's prediction against its target; points should hug the diagonal"
+code = '''
+using Plots
+
+y_hat = forward(model, {{gvar}}, {{xvar}})
+scatter(vec({{yvar}}), vec(y_hat), xlabel="target", ylabel="prediction", alpha=0.5, legend=false)
+plot!(identity, extrema(vec({{yvar}}))..., linestyle=:dash)
+'''
+
+[[actionGroups.actions]]
+id = "embeddings"
+label = "Node Embeddings"
+desc = "Learned node embeddings projected to two principal components, coloured by the target"
+code = '''
+using MultivariateStats, Plots
+
+H = embed(model, {{gvar}}, {{xvar}})  # hidden_channels x num_nodes
+P = MultivariateStats.predict(fit(PCA, H; maxoutdim=2), H)
+scatter(P[1, :], P[2, :], zcolor=vec({{yvar}}[1, :]), xlabel="PC 1", ylabel="PC 2", legend=false)
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "training-curve"
+label = "Training Curve"
+desc = "Keep training while recording the MSE after every epoch, then plot it"
+code = '''
+using Plots
+
+history = Float32[]
+for epoch in 1:200
+    Flux.train!(loss, model, [({{gvar}}, {{xvar}}, {{yvar}})], opt_state)
+    push!(history, loss(model, {{gvar}}, {{xvar}}, {{yvar}}))
+end
+plot(history, xlabel="epoch", ylabel="MSE", yscale=:log10, legend=false)
+'''
+
+[[actionGroups.actions]]
+id = "oversmoothing"
+label = "Over-Smoothing Check"
+desc = "Mean cosine similarity between node embeddings; values near 1 mean too many layers have made all nodes alike"
+code = '''
+using LinearAlgebra, Statistics
+
+H = embed(model, {{gvar}}, {{xvar}})
+Hn = mapslices(normalize, H; dims=1)  # unit-length embedding per node
+mean(Hn' * Hn)  # average pairwise cosine similarity
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "new-graph"
+label = "Predict on a New Graph"
+desc = "Apply the trained network to another graph with the same node features (inductive prediction)"
+code = '''
+y_new = forward(model, g_new, X_new)  # g_new, X_new: same structure and feature layout as {{gvar}}, {{xvar}}
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "mlp-baseline"
+label = "vs Graph-Free MLP"
+desc = "Train an MLP on the node features alone: the gap shows how much the graph structure adds"
+code = '''
+{{?model!=temporal}} Xn = {{xvar}}
+{{?model=temporal}} Xn = {{xvar}}[end]  # features of the final snapshot
+mlp = Chain(Dense(size(Xn, 1) => hidden_channels, relu), Dense(hidden_channels => out_channels))
+mlp_state = Flux.setup(Adam(1f-3), mlp)
+for epoch in 1:200
+    Flux.train!((m, x, y) -> Flux.mse(m(x), y), mlp, [(Xn, {{yvar}})], mlp_state)
+end
+(gnn = loss(model, {{gvar}}, {{xvar}}, {{yvar}}), mlp = Flux.mse(mlp(Xn), {{yvar}}))
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "saliency"
+label = "Feature Saliency"
+desc = "Mean absolute gradient of the predictions with respect to each input node feature"
+code = '''
+using Plots, Statistics
+
+g_x = Flux.gradient(x -> sum(forward(model, {{gvar}}, x)), {{xvar}})[1]
+{{?model=temporal}} g_x = g_x[end]  # final snapshot
+bar(vec(mean(abs, g_x; dims=2)), xlabel="input feature", ylabel="mean |gradient|", legend=false)
+'''

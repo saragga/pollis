@@ -1,0 +1,429 @@
+# Canonical Correlation Analysis Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/cca.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Canonical Correlation Analysis"
+viewType = "pollis.cca"
+defaultModel = "cca"
+
+[[packages]]
+name = "MultivariateStats.jl"
+github = "https://juliastats.org/MultivariateStats.jl/stable/"
+
+[requires]
+packages = ["Plots.jl", "Distributions.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Canonical Correlation Analysis"
+file = "cca/tutorial-01-cca.ipynb"
+bundled = true
+description = "CCA with MultivariateStats.jl — canonical variates, correlations, and joint embedding of two feature sets"
+
+[[wikis]]
+name = "Factsheet"
+file = "cca/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "cca/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "cca/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "cca/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "cca/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "cca/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "CCA"
+
+[[wikis]]
+name = "CCA"
+file = "cca/cca.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "An Introduction to Multivariate Statistical Analysis"
+authors = "Anderson, T. W."
+year = 2003
+journal = "Wiley (3rd ed.)"
+url = "https://www.wiley.com/en-us/An+Introduction+to+Multivariate+Statistical+Analysis%2C+3rd+Edition-p-9780471360919"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Relations Between Two Sets of Variates"
+authors = "Hotelling, Harold"
+year = 1936
+journal = "Biometrika"
+doi = "10.1093/biomet/28.3-4.321"
+openAccess = false
+
+[[bullets]]
+text = "Finds linear combinations of X and Y that are maximally correlated"
+detail = "the canonical variates Zx = XAx and Zy = YAy"
+
+[[bullets]]
+text = "Returns k canonical correlations rho1 ≥ rho2 ≥ … ≥ rhok and their associated coefficient matrices Ax, Ay"
+detail = ""
+
+[[bullets]]
+text = "Useful for studying relationships between two multivariate datasets, dimensionality reduction, and joint embedding"
+detail = ""
+
+[[models]]
+id = "cca"
+label = "CCA"
+
+[[models]]
+id = "rcca"
+label = "Regularised CCA"
+
+[[models]]
+id = "pls"
+label = "PLS"
+
+[[decisionRows]]
+task = "CCA"
+context = "Many more observations than variables in X and Y"
+purpose = "Pairs of linear combinations with maximal correlation (Hotelling)"
+
+[[decisionRows]]
+task = "Regularised CCA"
+context = "Many or collinear variables, where CCA overfits"
+purpose = "Ridge penalty on the within-set covariances stabilises the directions"
+
+[[decisionRows]]
+task = "PLS"
+context = "Wide data (p, q near or above n); prediction-oriented"
+purpose = "Pairs of directions with maximal covariance (PLS-SVD)"
+
+[[inputs]]
+id = "X"
+label = "X (n × p)"
+tooltip = "First data matrix: n observations × p variables, one row per observation."
+default = "X_train"
+
+[[inputs]]
+id = "Y"
+label = "Y (n × q)"
+tooltip = "Second data matrix: n observations × q variables. Must have the same rows (observations) as X."
+default = "Y_train"
+
+[[inputs]]
+id = "k"
+label = "k"
+tooltip = "Number of canonical dimensions to extract. Must satisfy k ≤ min(p, q)."
+default = "2"
+newRow = true
+
+[[inputs]]
+id = "lambda"
+label = "lambda (ridge)"
+tooltip = "Ridge penalty added to the diagonal of the within-set covariance matrices. 0 recovers classical CCA; larger values move towards PLS. Choose it with the Held-Out Correlations action."
+default = "0.1"
+models = ["rcca"]
+
+[[inputs]]
+id = "scaling"
+label = "Scaling"
+tooltip = "Standardise when variables are on different scales. Classical CCA is scale invariant; regularised CCA and PLS are not."
+kind = "select"
+default = "standardise"
+models = ["rcca", "pls"]
+
+[[inputs.options]]
+value = "standardise"
+label = "Standardise"
+
+[[inputs.options]]
+value = "centre"
+label = "Centre Only"
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.cca]
+# Two variable sets feeding two variates joined by a correlation link
+svg = '''
+var s = '';
+[10, 18, 26].forEach(function (y) { s += '<rect x="4" y="' + (y + 16) + '" width="8" height="5" fill="currentColor" opacity="0.6"/><line x1="12" y1="' + (y + 18) + '" x2="20" y2="46" stroke="currentColor" stroke-width="0.8"/>'; });
+[10, 18, 26].forEach(function (y) { s += '<rect x="42" y="' + (y + 16) + '" width="8" height="5" fill="currentColor" opacity="0.6"/><line x1="42" y1="' + (y + 18) + '" x2="34" y2="46" stroke="currentColor" stroke-width="0.8"/>'; });
+return s + '<circle cx="20" cy="46" r="3.5" fill="currentColor"/><circle cx="34" cy="46" r="3.5" fill="currentColor"/>'
+	+ '<path d="M23,46 L31,46" stroke="currentColor" stroke-width="2"/>';
+'''
+
+[miniCharts.rcca]
+# The CCA link with dashed shrinkage rings around each variate
+svg = '''
+var s = '';
+[10, 18, 26].forEach(function (y) { s += '<rect x="4" y="' + (y + 16) + '" width="8" height="5" fill="currentColor" opacity="0.6"/><line x1="12" y1="' + (y + 18) + '" x2="20" y2="46" stroke="currentColor" stroke-width="0.8"/>'; });
+[10, 18, 26].forEach(function (y) { s += '<rect x="42" y="' + (y + 16) + '" width="8" height="5" fill="currentColor" opacity="0.6"/><line x1="42" y1="' + (y + 18) + '" x2="34" y2="46" stroke="currentColor" stroke-width="0.8"/>'; });
+return s + '<circle cx="20" cy="46" r="3.5" fill="currentColor"/><circle cx="34" cy="46" r="3.5" fill="currentColor"/>'
+	+ '<circle cx="20" cy="46" r="7" fill="none" stroke="currentColor" stroke-width="0.8" stroke-dasharray="2,2"/>'
+	+ '<circle cx="34" cy="46" r="7" fill="none" stroke="currentColor" stroke-width="0.8" stroke-dasharray="2,2"/>';
+'''
+
+[miniCharts.pls]
+# A cross-covariance matrix and its leading singular pair
+svg = '''
+var s = '';
+for (var i = 0; i < 4; i++) {
+	for (var j = 0; j < 4; j++) {
+		s += '<rect x="' + (12 + 8 * j) + '" y="' + (30 + 8 * i) + '" width="7" height="7" fill="currentColor" opacity="' + (0.15 + 0.2 * ((i + j) % 4)).toFixed(2) + '"/>';
+	}
+}
+return s + '<line x1="6" y1="30" x2="6" y2="61" stroke="currentColor" stroke-width="2"/><line x1="12" y1="68" x2="43" y2="68" stroke="currentColor" stroke-width="2"/>';
+'''
+
+[[codeBranches]]
+model = "cca"
+code = '''
+using MultivariateStats, Statistics
+
+X = {{X}}  # n x p, one row per observation
+Y = {{Y}}  # n x q, same rows as X
+k = {{k}}  # canonical dimensions, k <= min(p, q)
+
+function fit_cc(X, Y, k)
+    M = fit(CCA, permutedims(X), permutedims(Y); outdim=k)  # centres internally; expects variables x observations
+    (px = A -> permutedims(predict(M, permutedims(A), :x)), py = B -> permutedims(predict(M, permutedims(B), :y)),
+     Ax = projection(M, :x), Ay = projection(M, :y))  # p x k and q x k canonical coefficients
+end
+
+m      = fit_cc(X, Y, k)
+Zx, Zy = m.px(X), m.py(Y)  # n x k canonical variates
+rho    = [cor(Zx[:, j], Zy[:, j]) for j in 1:k]  # correlation of each variate pair
+'''
+
+[[codeBranches]]
+model = "rcca"
+code = '''
+using LinearAlgebra, Statistics
+
+X = {{X}}  # n x p, one row per observation
+Y = {{Y}}  # n x q, same rows as X
+k = {{k}}  # canonical dimensions, k <= min(p, q)
+lambda = {{lambda}}  # ridge penalty on the within-set covariances
+
+function fit_cc(X, Y, k)
+    mx, my = mean(X, dims=1), mean(Y, dims=1)
+{{?scaling=standardise}}     sx, sy = std(X, dims=1), std(Y, dims=1)
+{{?scaling=centre}}     sx, sy = one.(mx), one.(my)
+    Xs, Ys = (X .- mx) ./ sx, (Y .- my) ./ sy
+    Sxy = permutedims(Xs) * Ys / (size(X, 1) - 1)  # p x q cross-covariance
+    Rx = cholesky(Symmetric(permutedims(Xs) * Xs / (size(X, 1) - 1) + lambda * I)).U
+    Ry = cholesky(Symmetric(permutedims(Ys) * Ys / (size(Y, 1) - 1) + lambda * I)).U
+    F  = svd((permutedims(Rx) \ Sxy) / Ry)  # SVD of the whitened cross-covariance
+    Ax, Ay = Rx \ F.U[:, 1:k], Ry \ F.V[:, 1:k]  # back to the original variables
+    (px = A -> ((A .- mx) ./ sx) * Ax, py = B -> ((B .- my) ./ sy) * Ay, Ax = Ax, Ay = Ay)  # projections to n x k variates
+end
+
+m      = fit_cc(X, Y, k)
+Zx, Zy = m.px(X), m.py(Y)  # n x k canonical variates
+rho    = [cor(Zx[:, j], Zy[:, j]) for j in 1:k]  # correlation of each variate pair
+'''
+
+[[codeBranches]]
+model = "pls"
+code = '''
+using LinearAlgebra, Statistics
+
+X = {{X}}  # n x p, one row per observation
+Y = {{Y}}  # n x q, same rows as X
+k = {{k}}  # canonical dimensions, k <= min(p, q)
+
+function fit_cc(X, Y, k)
+    mx, my = mean(X, dims=1), mean(Y, dims=1)
+{{?scaling=standardise}}     sx, sy = std(X, dims=1), std(Y, dims=1)
+{{?scaling=centre}}     sx, sy = one.(mx), one.(my)
+    Xs, Ys = (X .- mx) ./ sx, (Y .- my) ./ sy
+    Sxy = permutedims(Xs) * Ys / (size(X, 1) - 1)  # p x q cross-covariance
+    F = svd(Sxy)  # singular vectors maximise covariance, not correlation
+    Ax, Ay = F.U[:, 1:k], F.V[:, 1:k]  # orthonormal weights
+    (px = A -> ((A .- mx) ./ sx) * Ax, py = B -> ((B .- my) ./ sy) * Ay, Ax = Ax, Ay = Ay)  # projections to n x k variates
+end
+
+m      = fit_cc(X, Y, k)
+Zx, Zy = m.px(X), m.py(Y)  # n x k canonical variates
+rho    = [cor(Zx[:, j], Zy[:, j]) for j in 1:k]  # correlation of each variate pair
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "canonical-correlations"
+label = "Canonical Correlations"
+desc = "Bar chart of the correlation of each variate pair"
+code = '''
+using Plots
+
+bar(rho, xlabel="canonical dimension", ylabel="correlation", ylims=(0, 1), legend=false)
+'''
+
+[[actionGroups.actions]]
+id = "joint-embedding"
+label = "Joint Embedding"
+desc = "Scatter of the X variate against the Y variate for one dimension"
+code = '''
+using Plots
+
+j = 1  # canonical dimension
+scatter(Zx[:, j], Zy[:, j], xlabel=string("X variate ", j), ylabel=string("Y variate ", j), alpha=0.6, legend=false,
+    title=string("r = ", round(rho[j], digits=3)))
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "bartlett-test"
+label = "Bartlett Test"
+desc = "Sequential chi-squared tests that the classical canonical correlations from dimension j onwards are all zero"
+code = '''
+using MultivariateStats, Distributions
+
+n, p = size(X)
+q = size(Y, 2)
+r = cor(fit(CCA, permutedims(X), permutedims(Y); outdim=min(p, q)))  # all classical canonical correlations
+map(1:min(p, q)) do j
+    chi2 = -(n - 1 - (p + q + 1) / 2) * log(prod(1 .- r[j:end] .^ 2))  # Bartlett's approximation to Wilks' lambda
+    df   = (p - j + 1) * (q - j + 1)
+    (dimension = j, correlation = r[j], chi2 = chi2, df = df, p_value = ccdf(Chisq(df), chi2))
+end
+'''
+
+[[actionGroups.actions]]
+id = "held-out"
+label = "Held-Out Correlations"
+desc = "Fit on a random half and correlate the variates on the other half: a large drop signals overfitting"
+code = '''
+using Random
+
+idx   = shuffle(1:size(X, 1))
+half  = div(length(idx), 2)
+train = idx[1:half]
+test  = idx[half+1:end]
+mh    = fit_cc(X[train, :], Y[train, :], k)
+Ztx, Zty = mh.px(X[test, :]), mh.py(Y[test, :])
+(train = rho, test = [cor(Ztx[:, j], Zty[:, j]) for j in 1:k])
+'''
+
+[[actionGroups.actions]]
+id = "redundancy-index"
+label = "Redundancy Index"
+desc = "Share of the variance of Y explained by each X variate (Stewart and Love), and the reverse"
+code = '''
+redundancy(V, Z) = [mean(cor(V[:, i], Z[:, j])^2 for i in axes(V, 2)) for j in axes(Z, 2)]
+(Y_given_X = redundancy(Y, Zx), X_given_Y = redundancy(X, Zy))  # per dimension; sum for the total
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "transform-new"
+label = "Transform New Data"
+desc = "Project new observations into canonical space, and predict Y from X through the X variates"
+code = '''
+Zx_new = m.px(X_new)  # X_new: same columns as X; n_new x k
+Zy_new = m.py(Y_new)  # Y_new: same columns as Y
+
+B     = hcat(ones(size(Zx, 1)), Zx) \ Y  # regress Y on the X variates
+Y_hat = hcat(ones(size(Zx_new, 1)), Zx_new) * B  # predicted Y for the new observations
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "compare-dimensions"
+label = "Compare Dimensions"
+desc = "Correlation, shared variance and cumulative shared variance by dimension"
+code = '''
+[(dimension = j, correlation = rho[j], shared = rho[j]^2, cumulative = sum(abs2, rho[1:j]) / sum(abs2, rho)) for j in 1:k]
+'''
+
+[[actionGroups.actions]]
+id = "vs-permuted"
+label = "vs Permuted Y"
+desc = "Leading correlation after shuffling the rows of Y: what chance alone produces with this many variables"
+code = '''
+using Random
+
+null = map(1:100) do _
+    Yp = Y[shuffle(1:end), :]  # breaks the pairing between rows of X and Y
+    mp = fit_cc(X, Yp, 1)
+    cor(mp.px(X)[:, 1], mp.py(Yp)[:, 1])
+end
+(found = rho[1], chance_95 = quantile(null, 0.95))
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "canonical-coefficients"
+label = "Canonical Coefficients"
+desc = "Weights of each variable in each canonical variate"
+code = '''
+using Plots
+
+cl(A) = (-maximum(abs, A), maximum(abs, A))
+plot(heatmap(m.Ax, ylabel="X variable", xlabel="dimension", color=:balance, clims=cl(m.Ax)),
+     heatmap(m.Ay, ylabel="Y variable", xlabel="dimension", color=:balance, clims=cl(m.Ay)))
+'''
+
+[[actionGroups.actions]]
+id = "structure-correlations"
+label = "Structure Correlations"
+desc = "Correlation of each original variable with the canonical variates: more stable to read than the weights when variables are collinear"
+code = '''
+(X = cor(X, Zx), Y = cor(Y, Zy))  # p x k and q x k
+'''

@@ -1,0 +1,460 @@
+# Hierarchical Clustering Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/clh.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Hierarchical Clustering"
+viewType = "pollis.clh"
+defaultModel = "ward"
+
+[[packages]]
+name = "Clustering.jl"
+github = "https://github.com/JuliaStats/Clustering.jl"
+
+[[packages]]
+name = "Distances.jl"
+github = "https://github.com/JuliaStats/Distances.jl"
+
+[requires]
+packages = ["Plots.jl", "StatsPlots.jl", "DecisionTree.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Hierarchical Clustering"
+file = "cluster-hierarchical/tutorial-01-hclust.ipynb"
+bundled = true
+description = "Agglomerative clustering with hclust — linkage methods, dendrogram, and cutree"
+
+[[notebookSections.notebooks]]
+name = "Linkage Comparison"
+file = "cluster-hierarchical/tutorial-02-linkage-comparison.ipynb"
+bundled = true
+description = "Comparing Ward, Complete, Average and Single linkage on real datasets"
+
+[[wikis]]
+name = "Overview"
+file = "cluster-hierarchical/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Factsheet"
+file = "cluster-hierarchical/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "cluster-hierarchical/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "cluster-hierarchical/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Ward Linkage"
+file = "cluster-hierarchical/ward.md"
+bundled = true
+
+[[wikis]]
+name = "Complete Linkage"
+file = "cluster-hierarchical/complete.md"
+bundled = true
+
+[[wikis]]
+name = "Average Linkage"
+file = "cluster-hierarchical/average.md"
+bundled = true
+
+[[wikis]]
+name = "Single Linkage"
+file = "cluster-hierarchical/single.md"
+bundled = true
+
+[[wikis]]
+name = "Cophenetic Correlation"
+file = "cluster-hierarchical/cophenetic.md"
+bundled = true
+
+[[models]]
+id = "ward"
+label = "Ward"
+
+[[models]]
+id = "complete"
+label = "Complete"
+
+[[models]]
+id = "average"
+label = "Average"
+
+[[models]]
+id = "single"
+label = "Single"
+
+[[bullets]]
+text = "Ward"
+detail = "minimise total within-cluster variance at each merge step; produces compact, equal-sized clusters (Clustering.jl)"
+
+[[bullets]]
+text = "Complete"
+detail = "merge clusters by maximum pairwise distance between members; produces tight, well-separated clusters (Clustering.jl)"
+
+[[bullets]]
+text = "Average"
+detail = "merge by average pairwise distance (UPGMA); a balanced trade-off between Ward and Single (Clustering.jl)"
+
+[[bullets]]
+text = "Single"
+detail = "merge by minimum pairwise distance; sensitive to outliers but finds elongated chains (Clustering.jl)"
+
+[[decisionRows]]
+task = "Ward"
+context = "Compact, similarly sized clusters; Euclidean features"
+purpose = "Merge the pair that least increases total within-cluster variance"
+
+[[decisionRows]]
+task = "Complete"
+context = "Tight, well-separated clusters; any dissimilarity"
+purpose = "Cluster distance = the largest pairwise distance between members"
+
+[[decisionRows]]
+task = "Average"
+context = "A balanced default; best cophenetic fit in many data sets"
+purpose = "Cluster distance = the mean pairwise distance between members (UPGMA)"
+
+[[decisionRows]]
+task = "Single"
+context = "Elongated or chained shapes; outlier detection"
+purpose = "Cluster distance = the smallest pairwise distance (nearest neighbours)"
+
+[[inputs]]
+id = "X"
+label = "Feature Matrix"
+tooltip = "n_samples × n_features matrix of input features (one row per observation). Standardise the columns first when they are on different scales."
+default = "X_train"
+
+[[inputs]]
+id = "k"
+label = "k"
+tooltip = "Number of flat clusters cut from the dendrogram with cutree. Look for a large jump in the merge heights, or compare mean silhouettes."
+default = "3"
+newRow = true
+
+[[inputs]]
+id = "metric"
+label = "Distance"
+tooltip = "Dissimilarity between observations. Ward linkage is defined for Euclidean distance only."
+kind = "select"
+default = "Euclidean()"
+models = ["complete", "average", "single"]
+
+[[inputs.options]]
+value = "Euclidean()"
+label = "Euclidean"
+
+[[inputs.options]]
+value = "Cityblock()"
+label = "Manhattan"
+
+[[inputs.options]]
+value = "CosineDist()"
+label = "Cosine"
+
+[[inputs.options]]
+value = "Chebyshev()"
+label = "Chebyshev"
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.ward]
+# Low merges and a tall final merge (compact groups)
+svg = '''
+var y0 = 70, s = '';
+function u(x1, x2, h1, h2, top) {
+	s += '<path d="M' + x1 + ',' + h1 + ' L' + x1 + ',' + top + ' L' + x2 + ',' + top + ' L' + x2 + ',' + h2 + '" fill="none" stroke="currentColor" stroke-width="1.3"/>';
+}
+u(8, 18, y0, y0, 54);
+u(36, 46, y0, y0, 50);
+u(13, 41, 54, 50, 22);
+return s;
+'''
+
+[miniCharts.complete]
+# Tight clusters joined high
+svg = '''
+var y0 = 70, s = '';
+function u(x1, x2, h1, h2, top) {
+	s += '<path d="M' + x1 + ',' + h1 + ' L' + x1 + ',' + top + ' L' + x2 + ',' + top + ' L' + x2 + ',' + h2 + '" fill="none" stroke="currentColor" stroke-width="1.3"/>';
+}
+u(8, 18, y0, y0, 56);
+u(36, 46, y0, y0, 52);
+u(13, 41, 56, 52, 30);
+return s;
+'''
+
+[miniCharts.average]
+# Balanced merge heights
+svg = '''
+var y0 = 70, s = '';
+function u(x1, x2, h1, h2, top) {
+	s += '<path d="M' + x1 + ',' + h1 + ' L' + x1 + ',' + top + ' L' + x2 + ',' + top + ' L' + x2 + ',' + h2 + '" fill="none" stroke="currentColor" stroke-width="1.3"/>';
+}
+u(8, 18, y0, y0, 52);
+u(36, 46, y0, y0, 48);
+u(13, 41, 52, 48, 36);
+return s;
+'''
+
+[miniCharts.single]
+# Chained: merges at similar low heights
+svg = '''
+var y0 = 70, s = '';
+function u(x1, x2, h1, h2, top) {
+	s += '<path d="M' + x1 + ',' + h1 + ' L' + x1 + ',' + top + ' L' + x2 + ',' + top + ' L' + x2 + ',' + h2 + '" fill="none" stroke="currentColor" stroke-width="1.3"/>';
+}
+u(8, 18, y0, y0, 60);
+u(36, 46, y0, y0, 58);
+u(13, 41, 60, 58, 52);
+return s;
+'''
+
+[[codeBranches]]
+model = "ward"
+code = '''
+using Clustering, Distances, Statistics
+
+X = {{X}}  # n x p feature matrix, one row per observation
+k = {{k}}  # number of flat clusters
+D = pairwise(Euclidean(), X, dims=1)  # n x n dissimilarity matrix
+
+hc     = hclust(D, linkage=:ward)  # agglomerative merges and their heights
+labels = cutree(hc, k=k)  # cut the dendrogram into k flat clusters
+
+[count(==(c), labels) for c in 1:k]  # cluster sizes
+'''
+
+[[codeBranches]]
+model = "complete"
+code = '''
+using Clustering, Distances, Statistics
+
+X = {{X}}  # n x p feature matrix, one row per observation
+k = {{k}}  # number of flat clusters
+D = pairwise({{metric}}, X, dims=1)  # n x n dissimilarity matrix
+
+hc     = hclust(D, linkage=:complete)  # agglomerative merges and their heights
+labels = cutree(hc, k=k)  # cut the dendrogram into k flat clusters
+
+[count(==(c), labels) for c in 1:k]  # cluster sizes
+'''
+
+[[codeBranches]]
+model = "average"
+code = '''
+using Clustering, Distances, Statistics
+
+X = {{X}}  # n x p feature matrix, one row per observation
+k = {{k}}  # number of flat clusters
+D = pairwise({{metric}}, X, dims=1)  # n x n dissimilarity matrix
+
+hc     = hclust(D, linkage=:average)  # agglomerative merges and their heights
+labels = cutree(hc, k=k)  # cut the dendrogram into k flat clusters
+
+[count(==(c), labels) for c in 1:k]  # cluster sizes
+'''
+
+[[codeBranches]]
+model = "single"
+code = '''
+using Clustering, Distances, Statistics
+
+X = {{X}}  # n x p feature matrix, one row per observation
+k = {{k}}  # number of flat clusters
+D = pairwise({{metric}}, X, dims=1)  # n x n dissimilarity matrix
+
+hc     = hclust(D, linkage=:single)  # agglomerative merges and their heights
+labels = cutree(hc, k=k)  # cut the dendrogram into k flat clusters
+
+[count(==(c), labels) for c in 1:k]  # cluster sizes
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "dendrogram"
+label = "Dendrogram"
+desc = "The full merge tree with a dashed line where it is cut into k clusters"
+code = '''
+using StatsPlots
+
+plot(hc, xticks=false, ylabel="merge height", legend=false)
+hline!([mean(hc.heights[end-k+1:end-k+2])], linestyle=:dash)  # between the k-th and (k-1)-th largest merges
+'''
+
+[[actionGroups.actions]]
+id = "scatter"
+label = "Cluster Scatter"
+desc = "Observations on their first two principal components, coloured by cluster"
+code = '''
+using Plots, LinearAlgebra
+
+Xc  = X .- mean(X, dims=1)  # centre the columns
+pcs = Xc * svd(Xc).V[:, 1:2]  # scores on the first two principal components
+scatter(pcs[:, 1], pcs[:, 2], group=labels, xlabel="PC1", ylabel="PC2", markersize=3, alpha=0.7)
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "silhouette"
+label = "Silhouette Analysis"
+desc = "Per-observation cohesion vs separation (-1 to 1); the mean summarises how well separated the clusters are"
+code = '''
+using Plots
+
+scores = silhouettes(labels, D)  # per-observation silhouette
+order  = sortperm(collect(zip(labels, -scores)))  # group by cluster, best first
+bar(scores[order], group=labels[order], linewidth=0, xlabel="observation", ylabel="silhouette")
+hline!([mean(scores)], linestyle=:dash, label="mean")
+'''
+
+[[actionGroups.actions]]
+id = "cophenetic"
+label = "Cophenetic Correlation"
+desc = "Correlation between the original dissimilarities and the heights at which pairs first merge: how faithfully the tree keeps the data's structure"
+code = '''
+function cophenetic(hc, n)  # C[i, j] = height of the merge that first joins i and j
+    C = zeros(n, n)
+    members = Vector{Vector{Int}}(undef, size(hc.merges, 1))
+    for s in axes(hc.merges, 1)
+        a, b = hc.merges[s, 1], hc.merges[s, 2]  # negative = observation, positive = earlier merge
+        left  = a < 0 ? [-a] : members[a]
+        right = b < 0 ? [-b] : members[b]
+        for i in left, j in right
+            C[i, j] = C[j, i] = hc.heights[s]
+        end
+        members[s] = vcat(left, right)
+    end
+    C
+end
+
+C = cophenetic(hc, size(X, 1))
+upper = [(i, j) for j in axes(D, 2) for i in 1:j-1]
+cor([D[i, j] for (i, j) in upper], [C[i, j] for (i, j) in upper])  # closer to 1 = more faithful tree
+'''
+
+[[actionGroups.actions]]
+id = "heights"
+label = "Merge Heights"
+desc = "The last 20 merge heights: a large jump before the final merges suggests where to cut"
+code = '''
+using Plots
+
+h = reverse(hc.heights)[1:min(20, length(hc.heights))]  # largest first
+plot(2:length(h)+1, h, marker=:circle, xlabel="k (clusters when cut just below this merge)", ylabel="merge height", legend=false)
+vline!([k], linestyle=:dash)
+'''
+
+[[actionGroups.actions]]
+id = "choose-k"
+label = "Choosing k"
+desc = "Mean silhouette for k = 2 to 10 cut from the same tree"
+code = '''
+using Plots
+
+ks  = 2:10
+sil = [mean(silhouettes(cutree(hc, k=kk), D)) for kk in ks]
+plot(ks, sil, marker=:circle, xlabel="k", ylabel="mean silhouette", legend=false)
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "assign-new"
+label = "Assign New Data"
+desc = "Place new observations in the cluster that the linkage rule makes closest"
+code = '''
+{{?model=ward}} Dnew = pairwise(Euclidean(), X_new, X, dims=1)  # new x training dissimilarities
+{{?model!=ward}} Dnew = pairwise({{metric}}, X_new, X, dims=1)  # new x training dissimilarities
+{{?model=ward}} link(d) = mean(d)  # centroid-like: mean distance
+{{?model=complete}} link(d) = maximum(d)  # farthest member
+{{?model=average}} link(d) = mean(d)  # average member
+{{?model=single}} link(d) = minimum(d)  # nearest member
+new_labels = [argmin([link(Dnew[r, labels .== c]) for c in 1:k]) for r in axes(Dnew, 1)]
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "linkages"
+label = "Linkage Comparison"
+desc = "All four linkages on the same data: mean silhouette and smallest cluster size when cut at k"
+code = '''
+Deuc = pairwise(Euclidean(), X, dims=1)  # Ward needs Euclidean distances
+map([:ward, :complete, :average, :single]) do l
+    lab = cutree(hclust(l == :ward ? Deuc : D, linkage=l), k=k)
+    (linkage = l, silhouette = mean(silhouettes(lab, D)), smallest = minimum(count(==(c), lab) for c in 1:k))
+end
+'''
+
+[[actionGroups.actions]]
+id = "vs-kmeans"
+label = "Agreement with K-Means"
+desc = "Adjusted Rand index against K-Means with the same k: near 1 means both find the same partition"
+code = '''
+other = assignments(kmeans(permutedims(X), k))
+randindex(labels, other)  # (adjusted Rand, Rand, Mirkin, Hubert)
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "profiles"
+label = "Cluster Profiles"
+desc = "Per-cluster feature means and standard deviations to characterise what each cluster represents"
+code = '''
+ids   = sort(unique(labels))  # 0 = DBSCAN noise
+means = [mean(X[labels .== c, j]) for c in ids, j in 1:size(X, 2)]  # clusters x features
+sds   = [std(X[labels .== c, j]) for c in ids, j in 1:size(X, 2)]
+(clusters = ids, means = means, sds = sds)
+'''
+
+[[actionGroups.actions]]
+id = "distinguishing"
+label = "Distinguishing Features"
+desc = "Standardised difference between each cluster's mean and the overall mean: large values name what sets a cluster apart"
+code = '''
+using Plots
+
+ids = sort(unique(labels))
+z   = [(mean(X[labels .== c, j]) - mean(X[:, j])) / std(X[:, j]) for c in ids, j in 1:size(X, 2)]
+heatmap(1:size(X, 2), string.(ids), z, xlabel="feature", ylabel="cluster", color=:balance, clims=(-maximum(abs, z), maximum(abs, z)))
+'''
+
+[[actionGroups.actions]]
+id = "surrogate"
+label = "Surrogate Tree Rules"
+desc = "A shallow decision tree trained to reproduce the clusters: its splits give readable rules and its accuracy says how faithful they are"
+code = '''
+using DecisionTree
+
+tree = DecisionTreeClassifier(max_depth=3)
+fit!(tree, X, labels)
+print_tree(tree)  # feature thresholds that separate the clusters
+mean(predict(tree, X) .== labels)  # fidelity: share of observations the rules place correctly
+'''

@@ -1,0 +1,441 @@
+# Manifold Learning Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/manifold.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Manifold Learning"
+viewType = "pollis.manifold"
+defaultModel = "isomap"
+
+[[packages]]
+name = "ManifoldLearning.jl"
+github = "https://github.com/wildart/ManifoldLearning.jl"
+
+[requires]
+packages = ["Plots.jl", "Distances.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "ISOmap"
+file = "dim-reduction-manifold/tutorial-01-isomap.ipynb"
+bundled = true
+description = "Geodesic distance embedding with ISOmap — k-NN graph, MDS projection, and visualisation"
+
+[[notebookSections.notebooks]]
+name = "LLE"
+file = "dim-reduction-manifold/tutorial-02-lle.ipynb"
+bundled = true
+description = "Locally Linear Embedding — reconstruction weights and low-dimensional preservation"
+
+[[notebookSections.notebooks]]
+name = "Diffusion Maps"
+file = "dim-reduction-manifold/tutorial-03-diffusion-maps.ipynb"
+bundled = true
+description = "Diffusion operator eigenvectors — bandwidth, diffusion time, and spectral embedding"
+
+[[wikis]]
+name = "Overview"
+file = "dim-reduction-manifold/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Factsheet"
+file = "dim-reduction-manifold/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "ISOmap"
+file = "dim-reduction-manifold/isomap.md"
+bundled = true
+
+[[wikis]]
+name = "LLE"
+file = "dim-reduction-manifold/lle.md"
+bundled = true
+
+[[wikis]]
+name = "Diffusion Maps"
+file = "dim-reduction-manifold/diffusion-maps.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Original Papers (from packages)"
+
+[[references]]
+title = "A Global Geometric Framework for Nonlinear Dimensionality Reduction"
+authors = "Tenenbaum, J.B., de Silva, V. & Langford, J.C."
+year = 2000
+journal = ""
+url = "https://science.sciencemag.org/content/290/5500/2319"
+openAccess = false
+
+[[references]]
+title = "Nonlinear Dimensionality Reduction by Locally Linear Embedding"
+authors = "Roweis, S.T. & Saul, L.K."
+year = 2000
+journal = ""
+url = "https://science.sciencemag.org/content/290/5500/2323"
+openAccess = false
+
+[[references]]
+title = "Diffusion Maps"
+authors = "Coifman, R.R. & Lafon, S."
+year = 2006
+journal = ""
+url = "https://doi.org/10.1016/j.acha.2006.04.006"
+openAccess = false
+
+[[models]]
+id = "isomap"
+label = "ISOmap"
+
+[[models]]
+id = "lle"
+label = "LLE"
+
+[[models]]
+id = "dm"
+label = "Diffusion Maps"
+
+[[bullets]]
+text = "ISOmap"
+detail = "approximates geodesic distances via a k-NN graph then applies classical MDS; preserves global curved structure (ManifoldLearning.jl)"
+
+[[bullets]]
+text = "LLE"
+detail = "reconstructs each point as a weighted sum of its neighbours, then finds a low-dimensional embedding that preserves those weights (ManifoldLearning.jl)"
+
+[[bullets]]
+text = "Diffusion Maps"
+detail = "builds a Markov diffusion process on the data graph; embeds using eigenvectors of the diffusion operator scaled by lambdat (ManifoldLearning.jl)"
+
+[[decisionRows]]
+task = "ISOmap"
+context = "One smooth, well-sampled curved sheet (e.g. a Swiss roll)"
+purpose = "Preserve geodesic distances measured along the k-NN graph"
+
+[[decisionRows]]
+task = "LLE"
+context = "Locally linear patches; fast, sparse computation"
+purpose = "Preserve each point's reconstruction from its neighbours"
+
+[[decisionRows]]
+task = "Diffusion Maps"
+context = "Noisy data, uneven sampling, multiscale structure"
+purpose = "Diffusion distance of a random walk on the data; t sets the scale"
+
+[[inputs]]
+id = "X"
+label = "Feature Matrix"
+tooltip = "n_samples × n_features matrix, one row per observation. ManifoldLearning.jl expects features × samples, so the code transposes it."
+default = "X_train"
+
+[[inputs]]
+id = "d"
+label = "Output Dimensions"
+tooltip = "Number of dimensions in the embedding. Use 2 or 3 for visualisation."
+default = "2"
+newRow = true
+
+[[inputs]]
+id = "k"
+label = "k (neighbours)"
+tooltip = "Number of nearest neighbours in the graph. Too small tears the manifold into pieces; too large short-circuits across folds. Compare values with the Choosing k action."
+default = "10"
+models = ["isomap", "lle"]
+
+[[inputs]]
+id = "sigma"
+label = "sigma (bandwidth)"
+tooltip = "Bandwidth of the Gaussian kernel K_ij = exp(-||x_i - x_j||^2 / sigma^2). A common start is the median pairwise distance."
+default = "1.0"
+models = ["dm"]
+
+[[inputs]]
+id = "t"
+label = "t (diffusion time)"
+tooltip = "Number of diffusion steps. Larger t damps the small-eigenvalue directions and emphasises global geometry; t = 1 keeps the finest scale."
+default = "1"
+models = ["dm"]
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.isomap]
+# A spiral sheet with a geodesic path along it
+svg = '''
+var d = '', s = '';
+for (var i = 0; i <= 40; i++) {
+	var a = 1.2 + i * 0.12, r = 3 + a * 3.2;
+	var x = 27 + r * Math.cos(a), y = 46 + r * Math.sin(a) * 0.8;
+	d += (i === 0 ? 'M' : 'L') + x.toFixed(1) + ',' + y.toFixed(1);
+	if (i % 4 === 0) { s += '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="1.8" fill="currentColor"/>'; }
+}
+return '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.3" opacity="0.6"/>' + s;
+'''
+
+[miniCharts.lle]
+# A point rebuilt from its neighbours
+svg = '''
+var s = '', nb = [[14, 34], [40, 36], [18, 60], [38, 58]];
+nb.forEach(function (p) {
+	s += '<line x1="27" y1="47" x2="' + p[0] + '" y2="' + p[1] + '" stroke="currentColor" stroke-width="1" opacity="0.6"/>';
+	s += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="2.5" fill="currentColor" opacity="0.6"/>';
+});
+return s + '<circle cx="27" cy="47" r="3.5" fill="none" stroke="currentColor" stroke-width="1.5"/>';
+'''
+
+[miniCharts.dm]
+# A random walk spreading over a point cloud
+svg = '''
+var s = '', pts = [[10, 40], [16, 32], [24, 36], [30, 28], [38, 34], [44, 42], [36, 50], [28, 56], [18, 54], [12, 60]];
+pts.forEach(function (p) { s += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="1.8" fill="currentColor" opacity="0.5"/>'; });
+var w = [0, 2, 4, 6, 8];
+for (var i = 0; i < w.length - 1; i++) {
+	var a = pts[w[i]], b = pts[w[i + 1]];
+	s += '<line x1="' + a[0] + '" y1="' + a[1] + '" x2="' + b[0] + '" y2="' + b[1] + '" stroke="currentColor" stroke-width="1.2" stroke-dasharray="2,1.5"/>';
+}
+return s;
+'''
+
+[[codeBranches]]
+model = "isomap"
+code = '''
+using ManifoldLearning, Distances, Statistics
+
+X  = {{X}}  # n x p feature matrix, one row per observation
+d  = {{d}}  # embedding dimensions
+k  = {{k}}  # neighbours in the k-NN graph
+Xt = permutedims(X)  # ManifoldLearning.jl expects features x samples
+
+embed(k) = permutedims(predict(fit(Isomap, Xt; k=k, maxoutdim=d)))  # geodesic distances on the k-NN graph, then classical MDS
+grid = [5, 8, 10, 15, 20, 30]  # neighbourhood sizes compared by the Choosing action
+Y = embed(k)  # n x d embedding
+
+function trustworthiness(Y, m=10)  # share of embedding neighbours that were also near in X (1 = perfect)
+    n  = size(X, 1)
+    Dx = pairwise(Euclidean(), X, dims=1)
+    Dy = pairwise(Euclidean(), Y, dims=1)
+    penalty = 0.0
+    for i in 1:n
+        rank_x = invperm(sortperm(Dx[i, :])) .- 1  # rank 0 = the point itself
+        for j in sortperm(Dy[i, :])[2:m+1]
+            penalty += max(rank_x[j] - m, 0)
+        end
+    end
+    1 - 2 * penalty / (n * m * (2n - 3m - 1))
+end
+trustworthiness(Y)
+'''
+
+[[codeBranches]]
+model = "lle"
+code = '''
+using ManifoldLearning, Distances, Statistics
+
+X  = {{X}}  # n x p feature matrix, one row per observation
+d  = {{d}}  # embedding dimensions
+k  = {{k}}  # neighbours used for each reconstruction
+Xt = permutedims(X)  # ManifoldLearning.jl expects features x samples
+
+embed(k) = permutedims(predict(fit(LLE, Xt; k=k, maxoutdim=d)))  # local reconstruction weights, then the embedding that keeps them
+grid = [5, 8, 10, 15, 20, 30]  # neighbourhood sizes compared by the Choosing action
+Y = embed(k)  # n x d embedding
+
+function trustworthiness(Y, m=10)  # share of embedding neighbours that were also near in X (1 = perfect)
+    n  = size(X, 1)
+    Dx = pairwise(Euclidean(), X, dims=1)
+    Dy = pairwise(Euclidean(), Y, dims=1)
+    penalty = 0.0
+    for i in 1:n
+        rank_x = invperm(sortperm(Dx[i, :])) .- 1  # rank 0 = the point itself
+        for j in sortperm(Dy[i, :])[2:m+1]
+            penalty += max(rank_x[j] - m, 0)
+        end
+    end
+    1 - 2 * penalty / (n * m * (2n - 3m - 1))
+end
+trustworthiness(Y)
+'''
+
+[[codeBranches]]
+model = "dm"
+code = '''
+using LinearAlgebra, Distances, Statistics
+
+X  = {{X}}  # n x p feature matrix, one row per observation
+d  = {{d}}  # embedding dimensions
+sigma = {{sigma}}  # kernel bandwidth
+t     = {{t}}  # diffusion time
+
+function embed(sigma)
+    K = exp.(-pairwise(SqEuclidean(), X, dims=1) ./ sigma^2)  # Gaussian affinities
+    q = vec(sum(K, dims=2))
+    K = K ./ (q * permutedims(q))  # alpha = 1 normalisation: removes the effect of sampling density
+    s = sqrt.(vec(sum(K, dims=2)))
+    F = eigen(Symmetric(K ./ (s * permutedims(s))))  # symmetric conjugate of the Markov matrix P
+    order = sortperm(F.values, rev=true)
+    psi = F.vectors[:, order] ./ s  # right eigenvectors of P
+    lam = F.values[order]
+    psi[:, 2:d+1] .* permutedims(lam[2:d+1] .^ t)  # skip the constant eigenvector; scale by lambda^t
+end
+grid = sigma .* [0.25, 0.5, 1, 2, 4]  # bandwidths compared by the Choosing action
+Y = embed(sigma)  # n x d diffusion coordinates
+
+function trustworthiness(Y, m=10)  # share of embedding neighbours that were also near in X (1 = perfect)
+    n  = size(X, 1)
+    Dx = pairwise(Euclidean(), X, dims=1)
+    Dy = pairwise(Euclidean(), Y, dims=1)
+    penalty = 0.0
+    for i in 1:n
+        rank_x = invperm(sortperm(Dx[i, :])) .- 1  # rank 0 = the point itself
+        for j in sortperm(Dy[i, :])[2:m+1]
+            penalty += max(rank_x[j] - m, 0)
+        end
+    end
+    1 - 2 * penalty / (n * m * (2n - 3m - 1))
+end
+trustworthiness(Y)
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "scatter"
+label = "Embedding Scatter"
+desc = "The first two embedding coordinates (pass your own labels or values as colour)"
+code = '''
+using Plots
+
+colour = 1:size(X, 1)  # replace with class labels or a variable of interest
+scatter(Y[:, 1], Y[:, 2], zcolor=colour, color=:viridis, markersize=3, markerstrokewidth=0, xlabel="axis 1", ylabel="axis 2", legend=false)
+'''
+
+[[actionGroups.actions]]
+id = "graph"
+label = "Neighbourhood Graph"
+desc = "Edges of the original-space 10-NN graph drawn on the embedding: long edges reveal tears or short circuits"
+code = '''
+using Plots
+
+Dx = pairwise(Euclidean(), X, dims=1)
+p = plot(legend=false, xlabel="axis 1", ylabel="axis 2")
+for i in axes(X, 1), j in sortperm(Dx[i, :])[2:11]
+    plot!(p, [Y[i, 1], Y[j, 1]], [Y[i, 2], Y[j, 2]], color=:gray, alpha=0.3)
+end
+scatter!(p, Y[:, 1], Y[:, 2], markersize=2)
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "trustworthiness"
+label = "Trustworthiness"
+desc = "Trustworthiness for 5 to 50 neighbours: how far the embedding's neighbourhoods can be trusted (1 = perfect)"
+code = '''
+using Plots
+
+ms = [5, 10, 20, 30, 50]
+plot(ms, [trustworthiness(Y, m) for m in ms], marker=:circle, xlabel="neighbours checked", ylabel="trustworthiness", legend=false)
+'''
+
+[[actionGroups.actions]]
+id = "residual-variance"
+label = "Residual Variance"
+desc = "1 - r^2 between original and embedding distances: how much global distance structure is lost (0 = none)"
+code = '''
+using Plots
+
+Dx = pairwise(Euclidean(), X, dims=1)
+Dy = pairwise(Euclidean(), Y, dims=1)
+upper = [(i, j) for j in axes(Dx, 2) for i in 1:j-1]
+a, b = [Dx[i, j] for (i, j) in upper], [Dy[i, j] for (i, j) in upper]
+scatter(a, b, markersize=1, alpha=0.2, xlabel="original distance", ylabel="embedding distance", legend=false)  # Shepard diagram
+1 - cor(a, b)^2
+'''
+
+[[actionGroups.actions]]
+id = "choose"
+label = "Choosing k or sigma"
+desc = "Trustworthiness of the embedding for each neighbourhood size (ISOmap, LLE) or bandwidth (Diffusion Maps)"
+code = '''
+using Plots
+
+scores = [trustworthiness(embed(g)) for g in grid]
+{{?model=dm}} plot(grid, scores, marker=:circle, xscale=:log10, xlabel="sigma", ylabel="trustworthiness", legend=false)
+{{?model!=dm}} plot(grid, scores, marker=:circle, xlabel="k", ylabel="trustworthiness", legend=false)
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "embed-new"
+label = "Embed New Data"
+desc = "Place new observations by reconstructing each from its 10 nearest training points and applying the same weights in the embedding"
+code = '''
+using LinearAlgebra
+
+function place(x, m=10)
+    nb = sortperm(vec(pairwise(Euclidean(), permutedims(x), X, dims=1)))[1:m]
+    Z  = X[nb, :] .- permutedims(x)  # neighbours relative to x
+    G  = Z * permutedims(Z)
+    w  = (G + 1e-3 * tr(G) * I) \ ones(m)  # regularised reconstruction weights
+    permutedims(w ./ sum(w)) * Y[nb, :]
+end
+Y_new = reduce(vcat, [place(x) for x in eachrow(X_new)])  # X_new: same columns as X; n_new x d
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "vs-pca"
+label = "vs PCA"
+desc = "Trustworthiness and residual variance of this embedding against a linear PCA embedding of the same dimension"
+code = '''
+using LinearAlgebra
+
+Xc  = X .- mean(X, dims=1)
+Ypca = Xc * svd(Xc).V[:, 1:d]
+Dx  = vec(pairwise(Euclidean(), X, dims=1))
+resvar(Z) = 1 - cor(Dx, vec(pairwise(Euclidean(), Z, dims=1)))^2
+(manifold = (trust = trustworthiness(Y), resvar = resvar(Y)), pca = (trust = trustworthiness(Ypca), resvar = resvar(Ypca)))
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "feature-correlation"
+label = "Feature Correlation"
+desc = "Correlation between each original feature and each embedding axis, to see which features drive the layout"
+code = '''
+using Plots
+
+C = cor(X, Y)  # features x axes
+heatmap(1:size(C, 2), 1:size(C, 1), C, xlabel="axis", ylabel="feature", color=:balance, clims=(-1, 1))
+'''
+
+[[actionGroups.actions]]
+id = "colour-scatter"
+label = "Colour Scatter by Feature"
+desc = "Overlay a feature value as a colour gradient on the 2D embedding"
+code = '''
+using Plots
+
+j = 1  # feature to show
+scatter(Y[:, 1], Y[:, 2], zcolor=X[:, j], color=:viridis, colorbar=true, markersize=4, markerstrokewidth=0,
+    xlabel="axis 1", ylabel="axis 2", title=string("feature ", j), legend=false)
+'''

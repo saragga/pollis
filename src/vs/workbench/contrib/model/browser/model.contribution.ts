@@ -41,38 +41,38 @@ import { VAR_PANEL } from './commands/var.command.js';
 import { openNscrWebview } from './commands/nscr.command.js';
 import { openTsfWebview } from './commands/tsf.command.js';
 import { openNntsfWebview } from './commands/nntsf.command.js';
-import { openDtWebview } from './commands/dt.command.js';
-import { openKnnWebview } from './commands/knn.command.js';
-import { openRnnWebview } from './commands/rnn.command.js';
+import { DT_PANEL } from './commands/dt.command.js';
+import { KNN_PANEL } from './commands/knn.command.js';
+import { RNN_PANEL } from './commands/rnn.command.js';
 import { RL_PANEL } from './commands/rl.command.js';
 import { registerPlutoCommands } from './commands/pluto.command.js';
 import { registerNewJuliaFileCommand } from './commands/juliaFile.command.js';
 import './juliaNotebookKernel.contribution.js';
 import './credentialEnvironment.contribution.js';
 import './customCopyFileSystem.contribution.js';
-import { openCnnWebview } from './commands/cnn.command.js';
-import { openGnnWebview } from './commands/gnn.command.js';
-import { openTransformerWebview } from './commands/transformer.command.js';
-import { openFnnWebview } from './commands/fnn.command.js';
-import { openNfWebview } from './commands/nf.command.js';
+import { CNN_PANEL } from './commands/cnn.command.js';
+import { GNN_PANEL } from './commands/gnn.command.js';
+import { TRANSFORMER_PANEL } from './commands/transformer.command.js';
+import { FNN_PANEL } from './commands/fnn.command.js';
+import { NF_PANEL } from './commands/nf.command.js';
 import { openCopulaWebview } from './commands/copula.command.js';
 import { openCevalWebview } from './commands/ceval.command.js';
 import { openCopulaSamplingWebview } from './commands/cps.command.js';
 import { openPplWebview } from './commands/ppl.command.js';
 import { openRxinferWebview } from './commands/rxinfer.command.js';
 import { openBnetWebview } from './commands/bnet.command.js';
-import { openRuleBasedWebview } from './commands/rulebased.command.js';
+import { RULEBASED_PANEL } from './commands/rulebased.command.js';
 import { BFMB_PANEL } from './commands/bfmb.command.js';
 import { openHfcmeWebview } from './commands/hfcme.command.js';
 import { openRcmeWebview } from './commands/rcme.command.js';
 import { openBlsdfWebview } from './commands/blsdf.command.js';
-import { openEnsembleWebview } from './commands/ensemble.command.js';
-import { openClpWebview } from './commands/clp.command.js';
-import { openClhWebview } from './commands/clh.command.js';
-import { openManifoldWebview } from './commands/manifold.command.js';
-import { openEmbeddingWebview } from './commands/embedding.command.js';
-import { openAutoencoderWebview } from './commands/autoencoder.command.js';
-import { openLcaWebview } from './commands/lca.command.js';
+import { ENSEMBLE_PANEL } from './commands/ensemble.command.js';
+import { CLP_PANEL } from './commands/clp.command.js';
+import { CLH_PANEL } from './commands/clh.command.js';
+import { MANIFOLD_PANEL } from './commands/manifold.command.js';
+import { EMBEDDING_PANEL } from './commands/embedding.command.js';
+import { AUTOENCODER_PANEL } from './commands/autoencoder.command.js';
+import { LCA_PANEL } from './commands/lca.command.js';
 import { VM_PANEL } from './commands/vm.command.js';
 import { openRpWebview } from './commands/rp.command.js';
 import { openHptWebview } from './commands/hpt.command.js';
@@ -80,7 +80,7 @@ import { openMcWebview } from './commands/mc.command.js';
 import { openCvWebview } from './commands/cv.command.js';
 import { openClfWebview } from './commands/clf.command.js';
 import { openAdlpWebview } from './commands/adlp.command.js';
-import { openSbiWebview } from './commands/sbi.command.js';
+import { SBI_PANEL } from './commands/sbi.command.js';
 import { openExpWebview } from './commands/exp.command.js';
 import { openMmnWebview } from './commands/mmn.command.js';
 import { openBcfWebview } from './commands/bcf.command.js';
@@ -105,7 +105,7 @@ import { PO_PANEL } from './commands/po.command.js';
 import { openOaWebview } from './commands/oa.command.js';
 import { openCdsWebview } from './commands/cds.command.js';
 import { openDmapWebview } from './commands/dmap.command.js';
-import { openNodeWebview } from './commands/node.command.js';
+import { NODE_PANEL } from './commands/node.command.js';
 import { openAttrWebview } from './commands/attr.command.js';
 import { openChaosWebview } from './commands/chaos.command.js';
 import { openCmplxWebview } from './commands/cmplx.command.js';
@@ -120,8 +120,8 @@ import { openEpiCompWebview } from './commands/epi-comp.command.js';
 import { openEpiUdeWebview } from './commands/epi-ude.command.js';
 import { openCrnWebview } from './commands/crn.command.js';
 import { openCestWebview } from './commands/cest.command.js';
-import { openCcaWebview } from './commands/cca.command.js';
-import { openCovShrinkageWebview } from './commands/cov-shrinkage.command.js';
+import { CCA_PANEL } from './commands/cca.command.js';
+import { COVSHRINKAGE_PANEL } from './commands/covShrinkage.command.js';
 import { openLlmTaWebview } from './commands/llm-ta.command.js';
 import { openRougeWebview } from './commands/rouge.command.js';
 import { openDtmWebview } from './commands/dtm.command.js';
@@ -243,27 +243,11 @@ CommandsRegistry.registerCommand('chiara.statistics.cs', (accessor: ServicesAcce
 });
 
 CommandsRegistry.registerCommand('chiara.statistics.ar.associationRules', (accessor: ServicesAccessor) => {
-	openRuleBasedWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	);
+	openScaffoldWebview(accessor, RULEBASED_PANEL);
 });
 
 CommandsRegistry.registerCommand('chiara.statistics.ensemble.ensembleLearning', (accessor: ServicesAccessor) => {
-	openEnsembleWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	);
+	openScaffoldWebview(accessor, ENSEMBLE_PANEL);
 });
 
 CommandsRegistry.registerCommand('chiara.statistics.up', (accessor: ServicesAccessor) => {
@@ -311,26 +295,10 @@ CommandsRegistry.registerCommand('chiara.statistics.ba.rxinfer', (accessor: Serv
 	accessor.get(INotificationService),
 ));
 
-const SBI_OPEN = (accessor: ServicesAccessor) => openSbiWebview(
-	accessor.get(IWebviewWorkbenchService),
-	accessor.get(IOpenerService),
-	accessor.get(IEditorService),
-	accessor.get(IQuickInputService),
-	accessor.get(ICommandService),
-	accessor.get(IClipboardService),
-	accessor.get(INotificationService),
-);
+const SBI_OPEN = (accessor: ServicesAccessor) => openScaffoldWebview(accessor, SBI_PANEL);
 
 CommandsRegistry.registerCommand('chiara.statistics.sbi', SBI_OPEN);
-CommandsRegistry.registerCommand('chiara.statistics.nn.node', (accessor: ServicesAccessor) => openNodeWebview(
-	accessor.get(IWebviewWorkbenchService),
-	accessor.get(IOpenerService),
-	accessor.get(IEditorService),
-	accessor.get(IQuickInputService),
-	accessor.get(ICommandService),
-	accessor.get(IClipboardService),
-	accessor.get(INotificationService),
-));
+CommandsRegistry.registerCommand('chiara.statistics.nn.node', accessor => openScaffoldWebview(accessor, NODE_PANEL));
 
 const EXP_OPEN = (accessor: ServicesAccessor) => openExpWebview(
 	accessor.get(IWebviewWorkbenchService),
@@ -1064,103 +1032,29 @@ CommandsRegistry.registerCommand('chiara.mp.sos', (accessor: ServicesAccessor) =
 	accessor.get(INotificationService),
 ));
 
-const DT_OPEN = (accessor: ServicesAccessor, initialModel?: string) => openDtWebview(
-	accessor.get(IWebviewWorkbenchService),
-	accessor.get(IOpenerService),
-	accessor.get(IEditorService),
-	accessor.get(IQuickInputService),
-	accessor.get(ICommandService),
-	accessor.get(IClipboardService),
-	accessor.get(INotificationService),
-	initialModel,
-);
+const DT_OPEN = (accessor: ServicesAccessor, initialModel?: string) => openScaffoldWebview(accessor, DT_PANEL, initialModel);
 
 CommandsRegistry.registerCommand('chiara.statistics.dtrf.dt', accessor => DT_OPEN(accessor));
 CommandsRegistry.registerCommand('chiara.statistics.dtrf.modalDt', accessor => DT_OPEN(accessor));
 CommandsRegistry.registerCommand('chiara.statistics.dtrf.randomDt', accessor => DT_OPEN(accessor));
 
-const CLP_OPEN = (accessor: ServicesAccessor, initialModel?: string) => openClpWebview(
-	accessor.get(IWebviewWorkbenchService),
-	accessor.get(IOpenerService),
-	accessor.get(IEditorService),
-	accessor.get(IQuickInputService),
-	accessor.get(ICommandService),
-	accessor.get(IClipboardService),
-	accessor.get(INotificationService),
-	initialModel,
-);
+const CLP_OPEN = (accessor: ServicesAccessor, initialModel?: string) => openScaffoldWebview(accessor, CLP_PANEL, initialModel);
 
 CommandsRegistry.registerCommand('chiara.statistics.cl.partitional', accessor => CLP_OPEN(accessor));
 
-CommandsRegistry.registerCommand('chiara.statistics.cl.hierarchical', (accessor: ServicesAccessor) => openClhWebview(
-	accessor.get(IWebviewWorkbenchService),
-	accessor.get(IOpenerService),
-	accessor.get(IEditorService),
-	accessor.get(IQuickInputService),
-	accessor.get(ICommandService),
-	accessor.get(IClipboardService),
-	accessor.get(INotificationService),
-));
+CommandsRegistry.registerCommand('chiara.statistics.cl.hierarchical', accessor => openScaffoldWebview(accessor, CLH_PANEL));
 
-CommandsRegistry.registerCommand('chiara.statistics.pm.manifold', (accessor: ServicesAccessor) => openManifoldWebview(
-	accessor.get(IWebviewWorkbenchService),
-	accessor.get(IOpenerService),
-	accessor.get(IEditorService),
-	accessor.get(IQuickInputService),
-	accessor.get(ICommandService),
-	accessor.get(IClipboardService),
-	accessor.get(INotificationService),
-));
+CommandsRegistry.registerCommand('chiara.statistics.pm.manifold', accessor => openScaffoldWebview(accessor, MANIFOLD_PANEL));
 
-CommandsRegistry.registerCommand('chiara.statistics.pm.embedding', (accessor: ServicesAccessor) => openEmbeddingWebview(
-	accessor.get(IWebviewWorkbenchService),
-	accessor.get(IOpenerService),
-	accessor.get(IEditorService),
-	accessor.get(IQuickInputService),
-	accessor.get(ICommandService),
-	accessor.get(IClipboardService),
-	accessor.get(INotificationService),
-));
+CommandsRegistry.registerCommand('chiara.statistics.pm.embedding', accessor => openScaffoldWebview(accessor, EMBEDDING_PANEL));
 
-CommandsRegistry.registerCommand('chiara.statistics.pm.autoencoder', (accessor: ServicesAccessor) => openAutoencoderWebview(
-	accessor.get(IWebviewWorkbenchService),
-	accessor.get(IOpenerService),
-	accessor.get(IEditorService),
-	accessor.get(IQuickInputService),
-	accessor.get(ICommandService),
-	accessor.get(IClipboardService),
-	accessor.get(INotificationService),
-));
+CommandsRegistry.registerCommand('chiara.statistics.pm.autoencoder', accessor => openScaffoldWebview(accessor, AUTOENCODER_PANEL));
 
-CommandsRegistry.registerCommand('chiara.statistics.pm.lca', (accessor: ServicesAccessor) => openLcaWebview(
-	accessor.get(IWebviewWorkbenchService),
-	accessor.get(IOpenerService),
-	accessor.get(IEditorService),
-	accessor.get(IQuickInputService),
-	accessor.get(ICommandService),
-	accessor.get(IClipboardService),
-	accessor.get(INotificationService),
-));
+CommandsRegistry.registerCommand('chiara.statistics.pm.lca', accessor => openScaffoldWebview(accessor, LCA_PANEL));
 
-CommandsRegistry.registerCommand('chiara.statistics.pm.cca', (accessor: ServicesAccessor) => openCcaWebview(
-	accessor.get(IWebviewWorkbenchService),
-	accessor.get(IOpenerService),
-	accessor.get(IEditorService),
-	accessor.get(IQuickInputService),
-	accessor.get(ICommandService),
-	accessor.get(IClipboardService),
-	accessor.get(INotificationService),
-));
+CommandsRegistry.registerCommand('chiara.statistics.pm.cca', accessor => openScaffoldWebview(accessor, CCA_PANEL));
 
-CommandsRegistry.registerCommand('chiara.statistics.pm.covShrinkage', (accessor: ServicesAccessor) => openCovShrinkageWebview(
-	accessor.get(IWebviewWorkbenchService),
-	accessor.get(IOpenerService),
-	accessor.get(IEditorService),
-	accessor.get(IQuickInputService),
-	accessor.get(ICommandService),
-	accessor.get(IClipboardService),
-	accessor.get(INotificationService),
-));
+CommandsRegistry.registerCommand('chiara.statistics.pm.covShrinkage', accessor => openScaffoldWebview(accessor, COVSHRINKAGE_PANEL));
 
 CommandsRegistry.registerCommand('chiara.statistics.vm', accessor => openScaffoldWebview(accessor, VM_PANEL));
 
@@ -1230,26 +1124,9 @@ const CLF_OPEN = (accessor: ServicesAccessor, initialModel?: string) => openClfW
 CommandsRegistry.registerCommand('chiara.statistics.mwm.classificationPerf', accessor => CLF_OPEN(accessor, 'metrics'));
 CommandsRegistry.registerCommand('chiara.statistics.mwm.roc', accessor => CLF_OPEN(accessor, 'roc'));
 
-CommandsRegistry.registerCommand('chiara.statistics.knn', (accessor: ServicesAccessor) => openKnnWebview(
-	accessor.get(IWebviewWorkbenchService),
-	accessor.get(IOpenerService),
-	accessor.get(IEditorService),
-	accessor.get(IQuickInputService),
-	accessor.get(ICommandService),
-	accessor.get(IClipboardService),
-	accessor.get(INotificationService),
-));
+CommandsRegistry.registerCommand('chiara.statistics.knn', accessor => openScaffoldWebview(accessor, KNN_PANEL));
 
-const RNN_OPEN = (accessor: ServicesAccessor, initialModel?: string) => openRnnWebview(
-	accessor.get(IWebviewWorkbenchService),
-	accessor.get(IOpenerService),
-	accessor.get(IEditorService),
-	accessor.get(IQuickInputService),
-	accessor.get(ICommandService),
-	accessor.get(IClipboardService),
-	accessor.get(INotificationService),
-	initialModel,
-);
+const RNN_OPEN = (accessor: ServicesAccessor, initialModel?: string) => openScaffoldWebview(accessor, RNN_PANEL, initialModel);
 
 CommandsRegistry.registerCommand('chiara.statistics.nn.rnn', accessor => RNN_OPEN(accessor));
 
@@ -1258,55 +1135,15 @@ registerNewJuliaFileCommand();
 
 CommandsRegistry.registerCommand('chiara.statistics.nn.rl', accessor => openScaffoldWebview(accessor, RL_PANEL));
 
-CommandsRegistry.registerCommand('chiara.statistics.nn.cnn', (accessor: ServicesAccessor) => openCnnWebview(
-	accessor.get(IWebviewWorkbenchService),
-	accessor.get(IOpenerService),
-	accessor.get(IEditorService),
-	accessor.get(IQuickInputService),
-	accessor.get(ICommandService),
-	accessor.get(IClipboardService),
-	accessor.get(INotificationService),
-));
+CommandsRegistry.registerCommand('chiara.statistics.nn.cnn', accessor => openScaffoldWebview(accessor, CNN_PANEL));
 
-CommandsRegistry.registerCommand('chiara.statistics.nn.gnn', (accessor: ServicesAccessor) => openGnnWebview(
-	accessor.get(IWebviewWorkbenchService),
-	accessor.get(IOpenerService),
-	accessor.get(IEditorService),
-	accessor.get(IQuickInputService),
-	accessor.get(ICommandService),
-	accessor.get(IClipboardService),
-	accessor.get(INotificationService),
-));
+CommandsRegistry.registerCommand('chiara.statistics.nn.gnn', accessor => openScaffoldWebview(accessor, GNN_PANEL));
 
-CommandsRegistry.registerCommand('chiara.statistics.nn.transformer', (accessor: ServicesAccessor) => openTransformerWebview(
-	accessor.get(IWebviewWorkbenchService),
-	accessor.get(IOpenerService),
-	accessor.get(IEditorService),
-	accessor.get(IQuickInputService),
-	accessor.get(ICommandService),
-	accessor.get(IClipboardService),
-	accessor.get(INotificationService),
-));
+CommandsRegistry.registerCommand('chiara.statistics.nn.transformer', accessor => openScaffoldWebview(accessor, TRANSFORMER_PANEL));
 
-CommandsRegistry.registerCommand('chiara.statistics.nn.nf', (accessor: ServicesAccessor) => openNfWebview(
-	accessor.get(IWebviewWorkbenchService),
-	accessor.get(IOpenerService),
-	accessor.get(IEditorService),
-	accessor.get(IQuickInputService),
-	accessor.get(ICommandService),
-	accessor.get(IClipboardService),
-	accessor.get(INotificationService),
-));
+CommandsRegistry.registerCommand('chiara.statistics.nn.nf', accessor => openScaffoldWebview(accessor, NF_PANEL));
 
-CommandsRegistry.registerCommand('chiara.statistics.nn.fnn', (accessor: ServicesAccessor) => openFnnWebview(
-	accessor.get(IWebviewWorkbenchService),
-	accessor.get(IOpenerService),
-	accessor.get(IEditorService),
-	accessor.get(IQuickInputService),
-	accessor.get(ICommandService),
-	accessor.get(IClipboardService),
-	accessor.get(INotificationService),
-));
+CommandsRegistry.registerCommand('chiara.statistics.nn.fnn', accessor => openScaffoldWebview(accessor, FNN_PANEL));
 
 const GLM_SERVICES = (accessor: ServicesAccessor, initialFamily?: string) => openScaffoldWebview(accessor, GLM_PANEL, initialFamily);
 

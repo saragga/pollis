@@ -1,0 +1,558 @@
+# Recurrent Neural Networks Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/rnn.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Recurrent Neural Networks"
+viewType = "pollis.rnn"
+defaultModel = "lstm"
+
+[[packages]]
+name = "Flux.jl"
+github = "https://github.com/FluxML/Flux.jl"
+
+[[packages.videos]]
+title = "High Performance Computing in Julia"
+description = "An 18-video course by Jamie Mair on writing fast Julia code"
+url = "https://www.youtube.com/playlist?list=PLUAq6xQKFgGr39PiyrPk_C9dhBKvWcjUA"
+
+[requires]
+packages = ["Plots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "LSTM Basics"
+file = "rnn/tutorial-01-lstm.ipynb"
+bundled = true
+description = "Sequence modelling with LSTM cells using Flux.jl"
+
+[[notebookSections.notebooks]]
+name = "GRU and Variants"
+file = "rnn/tutorial-02-gru.ipynb"
+bundled = true
+description = "Gated recurrent units and lightweight alternatives"
+
+[[notebookSections.notebooks]]
+name = "Echo State Networks"
+file = "rnn/tutorial-03-esn.ipynb"
+bundled = true
+description = "Reservoir computing with fixed random recurrent weights"
+
+[[notebookSections.notebooks]]
+name = "Attention-Augmented RNNs"
+file = "rnn/tutorial-04-attention.ipynb"
+bundled = true
+description = "Adding multi-head attention on top of a recurrent encoder"
+
+[[wikis]]
+name = "Overview"
+file = "rnn/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Factsheet"
+file = "rnn/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "rnn/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "rnn/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "rnn/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "rnn/decision-guide.md"
+bundled = true
+
+[[wikis]]
+name = "Bidirectional RNNs"
+file = "rnn/bidirectional.md"
+bundled = true
+
+[[wikis]]
+name = "Extensions"
+file = "rnn/extensions.md"
+bundled = true
+
+[[models]]
+id = "lstm"
+label = "LSTM"
+
+[[models]]
+id = "gru"
+label = "GRU"
+
+[[models]]
+id = "esn"
+label = "Echo State"
+
+[[models]]
+id = "attn"
+label = "Attention"
+
+[[bullets]]
+text = "LSTM"
+detail = "gated cell with separate memory stream; excels at long-range dependencies"
+
+[[bullets]]
+text = "GRU"
+detail = "simplified gating with fewer parameters; often matches LSTM on shorter sequences"
+
+[[bullets]]
+text = "Echo State Network"
+detail = "fixed random reservoir; only the readout layer is trained"
+
+[[bullets]]
+text = "Attention-Augmented"
+detail = "recurrent encoder followed by multi-head attention over hidden states"
+
+[[decisionRows]]
+task = "LSTM"
+context = "Long sequences with long-range dependencies"
+purpose = "Separate memory cell protected by input, forget and output gates"
+
+[[decisionRows]]
+task = "GRU"
+context = "Shorter sequences or limited data"
+purpose = "Two gates and fewer parameters; often matches LSTM"
+
+[[decisionRows]]
+task = "Echo State"
+context = "Chaotic or fast dynamics, very little tuning budget"
+purpose = "Fixed random reservoir; only a linear readout is fitted, in closed form"
+
+[[decisionRows]]
+task = "Attention"
+context = "The relevant time steps vary between sequences"
+purpose = "Recurrent encoder plus attention over every hidden state"
+
+[[inputs]]
+id = "xvar"
+label = "Sequence data"
+tooltip = "input_size x T x n array: n sequences of T time steps, each step a vector of input_size features."
+default = "X"
+
+[[inputs]]
+id = "yvar"
+label = "Target variable"
+tooltip = "output_size x n matrix: one target vector per sequence (e.g. the next value after the window)."
+default = "y"
+
+[[inputs]]
+id = "input-size"
+label = "input_size"
+tooltip = "Number of features observed at each time step."
+default = "10"
+newRow = true
+
+[[inputs]]
+id = "output-size"
+label = "output_size"
+tooltip = "Dimension of the prediction made from each sequence."
+default = "1"
+
+[[inputs]]
+id = "hidden-size"
+label = "hidden_size"
+tooltip = "Number of hidden units in each recurrent layer. Larger values increase capacity but also memory use and training time. For attention it must be divisible by num_heads. Typical range: 32-512."
+default = "64"
+models = ["lstm", "gru", "attn"]
+
+[[inputs]]
+id = "num-layers"
+label = "num_layers"
+tooltip = "Number of stacked recurrent layers. Deeper stacks can capture more abstract temporal patterns. Typical range: 1-4."
+default = "1"
+models = ["lstm", "gru"]
+newRow = true
+
+[[inputs]]
+id = "dropout"
+label = "dropout"
+tooltip = "Dropout probability applied to the recurrent output before the readout. Set to 0 to disable. Typical range: 0.1-0.5."
+default = "0.0"
+models = ["lstm", "gru"]
+
+[[inputs]]
+id = "direction"
+label = "Direction"
+tooltip = "Unidirectional reads the sequence forwards and predicts from the last hidden state. Bidirectional adds a second layer that reads it backwards and averages both over time: useful when the whole sequence is known in advance (classification, tagging), not for forecasting."
+kind = "select"
+default = "uni"
+models = ["lstm", "gru"]
+
+[[inputs.options]]
+value = "uni"
+label = "Unidirectional"
+
+[[inputs.options]]
+value = "bi"
+label = "Bidirectional"
+
+[[inputs]]
+id = "reservoir-size"
+label = "reservoir_size"
+tooltip = "Number of neurons in the fixed random reservoir. More neurons give higher memory capacity. Typical range: 100-2000."
+default = "100"
+models = ["esn"]
+newRow = true
+
+[[inputs]]
+id = "spectral-radius"
+label = "rho (spectral)"
+tooltip = "Largest eigenvalue magnitude of the reservoir weight matrix. Values < 1 ensure the echo state property (fading memory). Typical range: 0.7-0.99."
+default = "0.9"
+models = ["esn"]
+
+[[inputs]]
+id = "sparsity"
+label = "sparsity"
+tooltip = "Fraction of reservoir connections set to zero. Sparse reservoirs (0.8-0.99) are computationally efficient and often generalise better."
+default = "0.9"
+models = ["esn"]
+
+[[inputs]]
+id = "leaking-rate"
+label = "alpha (leaking)"
+tooltip = "Leaking rate alpha in (0, 1]. Controls how fast reservoir states respond to new inputs. Lower values produce slower, smoother dynamics."
+default = "0.3"
+models = ["esn"]
+
+[[inputs]]
+id = "num-heads"
+label = "num_heads"
+tooltip = "Number of parallel attention heads. Each head attends to a different subspace of the hidden states. Must divide hidden_size evenly. Typical: 4 or 8."
+default = "4"
+models = ["attn"]
+newRow = true
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.lstm]
+# Unrolled cells with a separate memory line running across the top
+svg = '''
+var s = '<line x1="4" y1="26" x2="50" y2="26" stroke="currentColor" stroke-width="1.8"/>';
+s += '<line x1="4" y1="54" x2="50" y2="54" stroke="currentColor" stroke-width="1" opacity="0.6"/>';
+for (var i = 0; i < 3; i++) {
+	var x = 7 + i * 15;
+	s += '<rect x="' + x + '" y="34" width="10" height="12" rx="2" fill="currentColor" opacity="0.8"/>';
+	s += '<line x1="' + (x + 5) + '" y1="26" x2="' + (x + 5) + '" y2="34" stroke="currentColor" stroke-width="1"/>';
+	s += '<line x1="' + (x + 5) + '" y1="46" x2="' + (x + 5) + '" y2="54" stroke="currentColor" stroke-width="1"/>';
+	s += '<line x1="' + (x + 5) + '" y1="54" x2="' + (x + 5) + '" y2="68" stroke="currentColor" stroke-width="1" opacity="0.6"/>';
+}
+return s;
+'''
+
+[miniCharts.gru]
+# Unrolled cells sharing a single hidden-state line
+svg = '''
+var s = '<line x1="4" y1="40" x2="50" y2="40" stroke="currentColor" stroke-width="1.5"/>';
+for (var i = 0; i < 3; i++) {
+	var x = 12 + i * 15;
+	s += '<circle cx="' + x + '" cy="40" r="5.5" fill="currentColor" opacity="0.8"/>';
+	s += '<line x1="' + x + '" y1="46" x2="' + x + '" y2="64" stroke="currentColor" stroke-width="1" opacity="0.6"/>';
+	s += '<line x1="' + x + '" y1="34" x2="' + x + '" y2="20" stroke="currentColor" stroke-width="1" opacity="0.6"/>';
+}
+return s;
+'''
+
+[miniCharts.esn]
+# Random reservoir graph feeding a single trained readout
+svg = '''
+var n = [[10, 26], [22, 18], [18, 40], [30, 32], [12, 58], [26, 56], [34, 46]];
+var e = [[0, 1], [0, 2], [1, 3], [2, 3], [2, 4], [4, 5], [5, 6], [3, 6], [1, 2]];
+var s = '';
+for (var i = 0; i < e.length; i++) {
+	s += '<line x1="' + n[e[i][0]][0] + '" y1="' + n[e[i][0]][1] + '" x2="' + n[e[i][1]][0] + '" y2="' + n[e[i][1]][1] + '" stroke="currentColor" stroke-width="0.8" opacity="0.5"/>';
+}
+for (var j = 0; j < n.length; j++) {
+	s += '<circle cx="' + n[j][0] + '" cy="' + n[j][1] + '" r="2.5" fill="currentColor" opacity="0.6"/>';
+	s += '<line x1="' + n[j][0] + '" y1="' + n[j][1] + '" x2="47" y2="40" stroke="currentColor" stroke-width="0.6" opacity="0.3"/>';
+}
+s += '<rect x="44" y="36" width="7" height="8" fill="currentColor"/>';
+return s;
+'''
+
+[miniCharts.attn]
+# Recurrent chain with attention arcs from the last step back to every earlier step
+svg = '''
+var xs = [8, 18, 28, 38, 48];
+var s = '<line x1="8" y1="58" x2="48" y2="58" stroke="currentColor" stroke-width="1.2"/>';
+for (var i = 0; i < xs.length - 1; i++) {
+	var mid = (xs[i] + 48) / 2;
+	s += '<path d="M48,58 Q' + mid + ',' + (30 - i * 3) + ' ' + xs[i] + ',58" fill="none" stroke="currentColor" stroke-width="' + (0.6 + 0.3 * i) + '" opacity="0.6"/>';
+}
+for (var j = 0; j < xs.length; j++) {
+	s += '<circle cx="' + xs[j] + '" cy="58" r="3.5" fill="currentColor" opacity="' + (j === xs.length - 1 ? 1 : 0.55) + '"/>';
+}
+return s;
+'''
+
+[[codeBranches]]
+model = "lstm"
+code = '''
+using Flux, Statistics
+
+input_size  = {{input-size}}  # input features per time step
+hidden_size = {{hidden-size}}  # hidden units per layer
+output_size = {{output-size}}  # output dimension
+num_layers  = {{num-layers}}  # stacked LSTM layers
+
+{{?direction=uni}} layer(n_in) = LSTM(n_in => hidden_size)
+{{?direction=uni}} width = hidden_size
+{{?direction=bi}} struct BiRNN  # forward and backward pass over the same sequence
+{{?direction=bi}}     fwd; bwd
+{{?direction=bi}} end
+{{?direction=bi}} Flux.@layer BiRNN
+{{?direction=bi}} (b::BiRNN)(x) = vcat(b.fwd(x), reverse(b.bwd(reverse(x; dims=2)); dims=2))
+{{?direction=bi}} layer(n_in) = BiRNN(LSTM(n_in => hidden_size), LSTM(n_in => hidden_size))
+{{?direction=bi}} width = 2hidden_size  # forward and backward states side by side
+
+model = Chain(
+    layer(input_size),
+    [layer(width) for _ in 2:num_layers]...,
+    Dropout({{dropout}}),
+{{?direction=uni}}     x -> x[:, end, :],  # last hidden state of every sequence
+{{?direction=bi}}     x -> dropdims(mean(x; dims=2); dims=2),  # average over time: both directions see the whole sequence
+    Dense(width => output_size),
+)
+
+loss(model, x, y) = Flux.mse(model(x), y)
+opt_state = Flux.setup(Adam(1f-3), model)
+loader = Flux.DataLoader(({{xvar}}, {{yvar}}), batchsize=32, shuffle=true)  # {{xvar}}: input_size x T x sequences
+for epoch in 1:100
+    Flux.train!(loss, model, loader, opt_state)
+end
+'''
+
+[[codeBranches]]
+model = "gru"
+code = '''
+using Flux, Statistics
+
+input_size  = {{input-size}}  # input features per time step
+hidden_size = {{hidden-size}}  # hidden units per layer
+output_size = {{output-size}}  # output dimension
+num_layers  = {{num-layers}}  # stacked GRU layers
+
+{{?direction=uni}} layer(n_in) = GRU(n_in => hidden_size)
+{{?direction=uni}} width = hidden_size
+{{?direction=bi}} struct BiRNN  # forward and backward pass over the same sequence
+{{?direction=bi}}     fwd; bwd
+{{?direction=bi}} end
+{{?direction=bi}} Flux.@layer BiRNN
+{{?direction=bi}} (b::BiRNN)(x) = vcat(b.fwd(x), reverse(b.bwd(reverse(x; dims=2)); dims=2))
+{{?direction=bi}} layer(n_in) = BiRNN(GRU(n_in => hidden_size), GRU(n_in => hidden_size))
+{{?direction=bi}} width = 2hidden_size  # forward and backward states side by side
+
+model = Chain(
+    layer(input_size),
+    [layer(width) for _ in 2:num_layers]...,
+    Dropout({{dropout}}),
+{{?direction=uni}}     x -> x[:, end, :],  # last hidden state of every sequence
+{{?direction=bi}}     x -> dropdims(mean(x; dims=2); dims=2),  # average over time: both directions see the whole sequence
+    Dense(width => output_size),
+)
+
+loss(model, x, y) = Flux.mse(model(x), y)
+opt_state = Flux.setup(Adam(1f-3), model)
+loader = Flux.DataLoader(({{xvar}}, {{yvar}}), batchsize=32, shuffle=true)  # {{xvar}}: input_size x T x sequences
+for epoch in 1:100
+    Flux.train!(loss, model, loader, opt_state)
+end
+'''
+
+[[codeBranches]]
+model = "esn"
+code = '''
+using Flux, LinearAlgebra
+
+input_size     = {{input-size}}  # input features per time step
+reservoir_size = {{reservoir-size}}  # fixed reservoir neurons
+output_size    = {{output-size}}  # output dimension
+alpha          = {{leaking-rate}}  # leaking rate in (0, 1]
+rho            = {{spectral-radius}}  # target spectral radius
+sparsity       = {{sparsity}}  # fraction of zero reservoir weights
+
+W_in  = randn(Float32, reservoir_size, input_size) .* 0.1f0  # input weights (fixed)
+W_res = randn(Float32, reservoir_size, reservoir_size) .* (rand(Float32, reservoir_size, reservoir_size) .> sparsity)
+W_res .*= rho / maximum(abs, eigvals(W_res))  # rescale the fixed reservoir to spectral radius rho
+
+function reservoir_states(x)  # x: input_size x T; returns reservoir_size x T
+    h = zeros(Float32, reservoir_size)
+    states = map(eachcol(x)) do u
+        h = (1 - alpha) .* h .+ alpha .* tanh.(W_in * u .+ W_res * h)  # leaky-integrator update
+    end
+    reduce(hcat, states)
+end
+
+final_states(X) = reduce(hcat, [reservoir_states(X[:, :, i])[:, end] for i in axes(X, 3)])  # one column per sequence
+ridge_readout(H, Y, beta) = (Y * H') / (H * H' + beta * I)  # closed-form ridge regression
+
+H = final_states({{xvar}})  # {{xvar}}: input_size x T x sequences
+W_out = ridge_readout(H, {{yvar}}, 1e-6)  # the readout is the only fitted weight matrix
+model(x) = W_out * final_states(x)
+loss(model, x, y) = Flux.mse(model(x), y)
+'''
+
+[[codeBranches]]
+model = "attn"
+code = '''
+using Flux
+
+input_size  = {{input-size}}  # input features per time step
+hidden_size = {{hidden-size}}  # GRU hidden units
+output_size = {{output-size}}  # output dimension
+num_heads   = {{num-heads}}  # attention heads (must divide hidden_size)
+
+struct AttnRNN  # GRU encoder, then the last state attends over every step
+    rnn; attn; readout
+end
+Flux.@layer AttnRNN
+
+function (m::AttnRNN)(x)
+    H = m.rnn(x)  # hidden_size x T x batch
+    c, _ = m.attn(H[:, end:end, :], H, H)  # query: last hidden state; keys and values: all steps
+    m.readout(dropdims(c; dims=2))
+end
+
+model = AttnRNN(GRU(input_size => hidden_size), MultiHeadAttention(hidden_size; nheads=num_heads), Dense(hidden_size => output_size))
+
+loss(model, x, y) = Flux.mse(model(x), y)
+opt_state = Flux.setup(Adam(1f-3), model)
+loader = Flux.DataLoader(({{xvar}}, {{yvar}}), batchsize=32, shuffle=true)  # {{xvar}}: input_size x T x sequences
+for epoch in 1:100
+    Flux.train!(loss, model, loader, opt_state)
+end
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "fit-plot"
+label = "Predictions vs Targets"
+desc = "Scatter every prediction against its target; points should hug the diagonal"
+code = '''
+using Plots
+
+y_hat = model({{xvar}})
+scatter(vec({{yvar}}), vec(y_hat), xlabel="target", ylabel="prediction", alpha=0.5, legend=false)
+plot!(identity, extrema(vec({{yvar}}))..., linestyle=:dash)
+'''
+
+[[actionGroups.actions]]
+id = "hidden-states"
+label = "Hidden States"
+desc = "Heatmap of the hidden units over time for the first sequence"
+code = '''
+using Plots
+
+{{?model=esn}} H1 = reservoir_states({{xvar}}[:, :, 1])  # reservoir_size x T
+{{?model=lstm|gru}} H1 = dropdims(model[1]({{xvar}}[:, :, 1:1]); dims=3)  # first recurrent layer, units x T
+{{?model=attn}} H1 = dropdims(model.rnn({{xvar}}[:, :, 1:1]); dims=3)  # GRU encoder, units x T
+heatmap(H1, xlabel="time step", ylabel="unit", title="hidden states, first sequence")
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "training-curve"
+label = "Training Curve"
+desc = "Training MSE per epoch (for the echo state network: per ridge penalty, since its readout is solved in closed form)"
+code = '''
+using Plots, Statistics
+
+{{?model!=esn}} history = Float32[]
+{{?model!=esn}} for epoch in 1:100
+{{?model!=esn}}     Flux.train!(loss, model, loader, opt_state)
+{{?model!=esn}}     push!(history, mean(loss(model, x, y) for (x, y) in loader))
+{{?model!=esn}} end
+{{?model!=esn}} plot(history, xlabel="epoch", ylabel="MSE", yscale=:log10, legend=false)
+{{?model=esn}} betas = 10.0 .^ (-8:1)
+{{?model=esn}} errs = [Flux.mse(ridge_readout(H, {{yvar}}, b) * H, {{yvar}}) for b in betas]
+{{?model=esn}} plot(betas, errs, xscale=:log10, xlabel="ridge penalty", ylabel="training MSE", legend=false)
+'''
+
+[[actionGroups.actions]]
+id = "holdout"
+label = "Held-Out Error"
+desc = "MSE on the training sequences against held-out sequences; a large gap signals overfitting"
+code = '''
+(train = loss(model, {{xvar}}, {{yvar}}), test = loss(model, X_test, y_test))  # X_test: input_size x T x m, y_test: output_size x m
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "predict-new"
+label = "Predict New Sequences"
+desc = "One prediction per new sequence of the same shape as the training data"
+code = '''
+y_new = model(X_new)  # X_new: input_size x T x m
+'''
+
+[[actionGroups.actions]]
+id = "multi-step"
+label = "Recursive Multi-Step Forecast"
+desc = "Feed each one-step prediction back as the newest input to forecast 12 steps ahead"
+code = '''
+window = {{xvar}}[:, :, end:end]  # most recent input window, input_size x T x 1 (needs input_size == output_size)
+forecast = Vector{Float32}[]
+for h in 1:12
+    y_next = vec(model(window))
+    push!(forecast, y_next)
+    global window = cat(window[:, 2:end, :], reshape(y_next, :, 1, 1); dims=2)  # slide the window forward
+end
+reduce(hcat, forecast)  # output_size x 12
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "linear-baseline"
+label = "vs Linear Baseline"
+desc = "Training MSE of the network against least squares on the flattened input windows"
+code = '''
+Z = reshape({{xvar}}, :, size({{xvar}}, 3))  # flatten each window into one feature vector
+Z1 = vcat(Z, ones(Float32, 1, size(Z, 2)))  # add an intercept row
+W = {{yvar}} / Z1  # least-squares coefficients
+(network = loss(model, {{xvar}}, {{yvar}}), linear = Flux.mse(W * Z1, {{yvar}}))
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "saliency"
+label = "Input Saliency"
+desc = "Gradient of the prediction with respect to every input feature and time step of one sequence"
+code = '''
+using Plots
+
+x = {{xvar}}[:, :, 1:1]
+g = Flux.gradient(x -> sum(model(x)), x)[1]
+heatmap(abs.(dropdims(g; dims=3)), xlabel="time step", ylabel="input feature", title="|d prediction / d input|")
+'''
