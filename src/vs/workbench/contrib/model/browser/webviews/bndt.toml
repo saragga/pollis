@@ -1,0 +1,559 @@
+# Bandit Problems Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/bndt.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Bandit Problems"
+viewType = "pollis.bndt"
+defaultModel = "egreedy"
+
+[[packages]]
+name = "ReinforcementLearning.jl"
+github = "https://github.com/JuliaReinforcementLearning/ReinforcementLearning.jl"
+
+[requires]
+packages = ["Distributions.jl", "Plots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "epsilon-Greedy"
+file = "bandit/tutorial-01-epsilon-greedy.ipynb"
+bundled = true
+description = "Explore/exploit trade-off via epsilon-greedy action selection on multi-arm bandits"
+
+[[notebookSections.notebooks]]
+name = "UCB"
+file = "bandit/tutorial-02-ucb.ipynb"
+bundled = true
+description = "Upper Confidence Bound: optimistic arm selection with confidence bonus"
+
+[[notebookSections.notebooks]]
+name = "Thompson Sampling"
+file = "bandit/tutorial-03-thompson.ipynb"
+bundled = true
+description = "Bayesian exploration via Beta posterior sampling; conjugate update for Bernoulli rewards"
+
+[[wikis]]
+name = "Factsheet"
+file = "bandit/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "bandit/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "bandit/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "bandit/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "bandit/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "bandit/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Algorithms"
+
+[[wikis]]
+name = "epsilon-Greedy"
+file = "bandit/epsilon-greedy.md"
+bundled = true
+
+[[wikis]]
+name = "UCB"
+file = "bandit/ucb.md"
+bundled = true
+
+[[wikis]]
+name = "Thompson Sampling"
+file = "bandit/thompson-sampling.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "ReinforcementLearning.jl: A Reinforcement Learning Package for the Julia Programming Language"
+authors = "Tian, Jun; others"
+year = 2020
+journal = "GitHub"
+url = "https://github.com/JuliaReinforcementLearning/ReinforcementLearning.jl"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Reinforcement Learning: An Introduction"
+authors = "Sutton, Richard S.; Barto, Andrew G."
+year = 2018
+journal = "MIT Press"
+url = "http://incompleteideas.net/book/the-book-2nd.html"
+openAccess = true
+
+[[references]]
+title = "Algorithms for Reinforcement Learning"
+authors = "Szepesvari, Csaba"
+year = 2010
+journal = "Morgan and Claypool"
+url = "https://sites.ualberta.ca/~szepesva/papers/RLAlgsInMDPs.pdf"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "On the Likelihood that One Unknown Probability Exceeds Another"
+authors = "Thompson, William R."
+year = 1933
+journal = "Biometrika"
+doi = "10.1093/biomet/25.3-4.285"
+openAccess = false
+
+[[references]]
+title = "Finite-time Analysis of the Multiarmed Bandit Problem"
+authors = "Auer, Peter; Cesa-Bianchi, Nicolo; Fischer, Paul"
+year = 2002
+journal = "Machine Learning"
+doi = "10.1023/A:1013689704352"
+openAccess = false
+
+[[models]]
+id = "egreedy"
+label = "epsilon-Greedy"
+
+[[models]]
+id = "ucb"
+label = "UCB"
+
+[[models]]
+id = "thompson"
+label = "Thompson Sampling"
+
+[[bullets]]
+text = "epsilon-Greedy"
+detail = "with probability epsilon selects a random arm; otherwise exploits the arm with the highest estimated mean reward; simple and interpretable for stationary reward distributions (ReinforcementLearning.jl)"
+
+[[bullets]]
+text = "Upper Confidence Bound (UCB)"
+detail = "selects the arm with the highest optimistic estimate; confidence bonus shrinks as an arm is pulled more; achieves sublinear regret without any prior knowledge (ReinforcementLearning.jl)"
+
+[[bullets]]
+text = "Thompson Sampling"
+detail = "samples a reward estimate from the Beta posterior of each arm and pulls the arm with the highest sample; conjugate Bayesian update after each pull; best empirical performance in practice (ReinforcementLearning.jl)"
+
+[[decisionRows]]
+task = "epsilon-Greedy"
+context = "Simple baseline; easy to explain and tune"
+purpose = "Pulls the arm with the best estimated mean, except with probability epsilon a random arm; linear regret for a fixed epsilon"
+
+[[decisionRows]]
+task = "UCB"
+context = "When a deterministic, tuning-free policy with guarantees is wanted"
+purpose = "Upper Confidence Bound (UCB1): pulls the arm with the highest mean plus an exploration bonus c sqrt(log t / n); logarithmic regret"
+
+[[decisionRows]]
+task = "Thompson Sampling"
+context = "Usually the best empirical performance; natural with prior knowledge"
+purpose = "Samples each arm's success probability from its Beta posterior and pulls the arm with the highest draw; logarithmic regret"
+
+[[inputs]]
+id = "probs"
+label = "Arm Success Probabilities"
+tooltip = "True probability of reward 1 for each arm of the Bernoulli bandit (unknown to the agent)."
+default = "[0.10, 0.25, 0.40, 0.55, 0.50]"
+
+[[inputs]]
+id = "steps"
+label = "Steps"
+tooltip = "Total number of arm pulls in one run."
+default = "1000"
+
+[[inputs]]
+id = "runs"
+label = "Monte Carlo Runs"
+tooltip = "Number of independent runs averaged by the regret and comparison actions."
+default = "200"
+
+[[inputs]]
+id = "seed"
+label = "Random Seed"
+tooltip = "Seed of the single run shown by the main code."
+default = "1"
+
+[[inputs]]
+id = "eps"
+label = "Exploration (epsilon)"
+tooltip = "Probability in (0, 1) of pulling a random arm instead of the best estimated one."
+default = "0.1"
+models = ["egreedy"]
+newRow = true
+
+[[inputs]]
+id = "c"
+label = "UCB Constant (c)"
+tooltip = "Weight of the exploration bonus c sqrt(log t / n). c = sqrt(2) is the UCB1 value."
+default = "1.41"
+models = ["ucb"]
+newRow = true
+
+[[inputs]]
+id = "alpha"
+label = "Prior alpha"
+tooltip = "Beta(alpha, beta) prior on each arm's success probability; alpha = beta = 1 is uniform."
+default = "1"
+models = ["thompson"]
+newRow = true
+
+[[inputs]]
+id = "beta"
+label = "Prior beta"
+tooltip = "Beta(alpha, beta) prior on each arm's success probability; alpha = beta = 1 is uniform."
+default = "1"
+models = ["thompson"]
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.egreedy]
+# Mostly the best bar, sometimes a random one
+svg = '''
+const h = [14, 22, 30, 18];
+let s = '';
+for (let i = 0; i < 4; i++) { s += '<rect x="' + (8 + i * 10) + '" y="' + (70 - h[i]) + '" width="7" height="' + h[i] + '" fill="currentColor" opacity="' + (i === 2 ? 0.9 : 0.3) + '"/>'; }
+s += '<text x="27" y="34" font-size="8" text-anchor="middle" fill="currentColor">?</text>';
+return s;
+'''
+
+[miniCharts.ucb]
+# Means with upper confidence whiskers
+svg = '''
+const m = [48, 42, 38, 52], u = [30, 32, 30, 44];
+let s = '';
+for (let i = 0; i < 4; i++) {
+	const x = 11 + i * 10;
+	s += '<line x1="' + x + '" y1="' + u[i] + '" x2="' + x + '" y2="' + (m[i] + 10) + '" stroke="currentColor" stroke-width="0.8"/><circle cx="' + x + '" cy="' + m[i] + '" r="2" fill="currentColor"/>';
+	s += '<line x1="' + (x - 3) + '" y1="' + u[i] + '" x2="' + (x + 3) + '" y2="' + u[i] + '" stroke="currentColor" stroke-width="1.2"/>';
+}
+return s;
+'''
+
+[miniCharts.thompson]
+# Overlapping posterior densities
+svg = '''
+return '<path d="M6,70 Q16,30 26,70" fill="none" stroke="currentColor" stroke-width="1" opacity="0.5"/>'
+	+ '<path d="M16,70 Q28,24 40,70" fill="none" stroke="currentColor" stroke-width="1.4"/>'
+	+ '<path d="M24,70 Q36,44 48,70" fill="none" stroke="currentColor" stroke-width="1" opacity="0.5"/>'
+	+ '<line x1="4" y1="70" x2="50" y2="70" stroke="currentColor" stroke-width="0.6"/>';
+'''
+
+[[codeBranches]]
+model = "egreedy"
+code = '''
+using Distributions, Random, Statistics
+
+probs = {{probs}}  # true success probability of each arm (unknown to the agent)
+K = length(probs)  # number of arms
+steps = {{steps}}  # pulls per run
+runs = {{runs}}  # Monte Carlo runs for averaged results
+seed = {{seed}}  # random seed
+epsilon = {{eps}}  # exploration probability
+choose(N, W, t, rng) = rand(rng) < epsilon || t <= K ? rand(rng, 1:K) : argmax(W ./ max.(N, 1))  # N = pulls, W = successes per arm
+
+function run_bandit(policy=choose; steps=steps, seed=seed, probs=probs)  # one run of the bandit
+    rng = MersenneTwister(seed)
+    N = zeros(Int, length(probs)); W = zeros(Int, length(probs))
+    arms = zeros(Int, steps); rewards = zeros(Int, steps)
+    for t in 1:steps
+        a = policy(N, W, t, rng)
+        r = Int(rand(rng) < probs[a])  # Bernoulli reward
+        N[a] += 1; W[a] += r
+        arms[t] = a; rewards[t] = r
+    end
+    (arms = arms, rewards = rewards, N = N, W = W, regret = cumsum(maximum(probs) .- probs[arms]))
+end
+mean_regret(policy=choose; steps=steps) = mean(run_bandit(policy; steps, seed=k).regret for k in 1:runs)  # expected regret curve
+
+res = run_bandit()
+(total_reward = sum(res.rewards), pulls_per_arm = res.N, best_arm = argmax(probs), share_on_best_arm = res.N[argmax(probs)] / steps,
+ final_regret = res.regret[end])
+'''
+
+[[codeBranches]]
+model = "ucb"
+code = '''
+using Distributions, Random, Statistics
+
+probs = {{probs}}  # true success probability of each arm (unknown to the agent)
+K = length(probs)  # number of arms
+steps = {{steps}}  # pulls per run
+runs = {{runs}}  # Monte Carlo runs for averaged results
+seed = {{seed}}  # random seed
+c = {{c}}  # exploration constant
+choose(N, W, t, rng) = t <= K ? t : argmax(W ./ N .+ c .* sqrt.(log(t) ./ N))  # pull each arm once, then the highest upper bound
+
+function run_bandit(policy=choose; steps=steps, seed=seed, probs=probs)  # one run of the bandit
+    rng = MersenneTwister(seed)
+    N = zeros(Int, length(probs)); W = zeros(Int, length(probs))
+    arms = zeros(Int, steps); rewards = zeros(Int, steps)
+    for t in 1:steps
+        a = policy(N, W, t, rng)
+        r = Int(rand(rng) < probs[a])  # Bernoulli reward
+        N[a] += 1; W[a] += r
+        arms[t] = a; rewards[t] = r
+    end
+    (arms = arms, rewards = rewards, N = N, W = W, regret = cumsum(maximum(probs) .- probs[arms]))
+end
+mean_regret(policy=choose; steps=steps) = mean(run_bandit(policy; steps, seed=k).regret for k in 1:runs)  # expected regret curve
+
+res = run_bandit()
+(total_reward = sum(res.rewards), pulls_per_arm = res.N, best_arm = argmax(probs), share_on_best_arm = res.N[argmax(probs)] / steps,
+ final_regret = res.regret[end])
+'''
+
+[[codeBranches]]
+model = "thompson"
+code = '''
+using Distributions, Random, Statistics
+
+probs = {{probs}}  # true success probability of each arm (unknown to the agent)
+K = length(probs)  # number of arms
+steps = {{steps}}  # pulls per run
+runs = {{runs}}  # Monte Carlo runs for averaged results
+seed = {{seed}}  # random seed
+alpha, beta = {{alpha}}, {{beta}}  # Beta prior parameters
+choose(N, W, t, rng) = argmax([rand(rng, Beta(alpha + W[a], beta + N[a] - W[a])) for a in 1:K])  # one posterior draw per arm
+
+function run_bandit(policy=choose; steps=steps, seed=seed, probs=probs)  # one run of the bandit
+    rng = MersenneTwister(seed)
+    N = zeros(Int, length(probs)); W = zeros(Int, length(probs))
+    arms = zeros(Int, steps); rewards = zeros(Int, steps)
+    for t in 1:steps
+        a = policy(N, W, t, rng)
+        r = Int(rand(rng) < probs[a])  # Bernoulli reward
+        N[a] += 1; W[a] += r
+        arms[t] = a; rewards[t] = r
+    end
+    (arms = arms, rewards = rewards, N = N, W = W, regret = cumsum(maximum(probs) .- probs[arms]))
+end
+mean_regret(policy=choose; steps=steps) = mean(run_bandit(policy; steps, seed=k).regret for k in 1:runs)  # expected regret curve
+
+res = run_bandit()
+(total_reward = sum(res.rewards), pulls_per_arm = res.N, best_arm = argmax(probs), share_on_best_arm = res.N[argmax(probs)] / steps,
+ final_regret = res.regret[end])
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "cumulative-reward"
+label = "Cumulative Reward"
+desc = "Cumulative reward of one run against an oracle that always pulls the best arm (expected)"
+code = '''
+using Plots
+
+plot(cumsum(res.rewards), xlabel="step", ylabel="cumulative reward", label="{{model}}")
+plot!(maximum(probs) .* (1:steps), linestyle=:dash, label="oracle (expected)")
+'''
+
+[[actionGroups.actions]]
+id = "regret-plot"
+label = "Regret Plot"
+desc = "Expected cumulative regret averaged over the Monte Carlo runs, with the spread across runs"
+code = '''
+using Plots
+
+R = reduce(hcat, [run_bandit(seed=k).regret for k in 1:runs])
+lo, hi = [quantile(r, 0.1) for r in eachrow(R)], [quantile(r, 0.9) for r in eachrow(R)]
+m = vec(mean(R, dims=2))
+plot(m, ribbon=(m .- lo, hi .- m), fillalpha=0.2, xlabel="step", ylabel="cumulative regret", label="mean (10-90% band)")
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "action-frequency"
+label = "Action Frequency"
+desc = "How often each arm was pulled in one run, next to its true success probability"
+code = '''
+using Plots
+
+p1 = bar(1:K, res.N, xlabel="arm", ylabel="pulls", legend=false)
+p2 = bar(1:K, probs, xlabel="arm", ylabel="true success probability", legend=false, color=:gray)
+plot(p1, p2, layout=(1, 2))
+'''
+
+[[actionGroups.actions]]
+id = "reward-distribution"
+label = "Estimate Accuracy"
+desc = "Estimated success probability of each arm with a 95% interval, against the truth: rarely pulled arms stay uncertain"
+code = '''
+phat = res.W ./ max.(res.N, 1)
+se = sqrt.(phat .* (1 .- phat) ./ max.(res.N, 1))
+[(arm = a, true_p = probs[a], estimate = round(phat[a], digits=3), lower_95 = round(max(phat[a] - 1.96se[a], 0), digits=3),
+  upper_95 = round(min(phat[a] + 1.96se[a], 1), digits=3), pulls = res.N[a]) for a in 1:K]
+'''
+
+[[actionGroups.actions]]
+id = "best-arm-share"
+label = "Exploration Over Time"
+desc = "Share of pulls on the best arm in windows of 50 steps, averaged over the runs: how fast exploration gives way to exploitation"
+code = '''
+using Plots
+
+best = argmax(probs)
+share = mean(Float64.(run_bandit(seed=k).arms .== best) for k in 1:runs)
+w = 50
+plot([mean(share[i:min(i + w - 1, steps)]) for i in 1:w:steps], xlabel="window of $w steps", ylabel="share on best arm", legend=false, ylims=(0, 1))
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "optimal-arm"
+label = "Optimal Arm"
+desc = "Which arm the agent believes is best after the run, and how often it identifies the true best arm across runs"
+code = '''
+{{?model=thompson}}Random.seed!(2)
+{{?model=thompson}}draws = [argmax([rand(Beta(alpha + res.W[a], beta + res.N[a] - res.W[a])) for a in 1:K]) for k in 1:10_000]
+{{?model=thompson}}prob_best = [count(==(a), draws) / length(draws) for a in 1:K]  # posterior probability that each arm is best
+chosen(r) = argmax(r.N)  # the most pulled arm
+(believed_best = chosen(res), true_best = argmax(probs), estimate = res.W[chosen(res)] / res.N[chosen(res)],
+{{?model=thompson}} posterior_probability_best = round.(prob_best, digits=3),
+ identified_correctly_share = count(k -> chosen(run_bandit(seed=k)) == argmax(probs), 1:runs) / runs)
+'''
+
+[[actionGroups.actions]]
+id = "expected-reward"
+label = "Regret Forecast"
+desc = "Expected regret at 1, 2 and 4 times the horizon, and the fitted growth rate (log-like for UCB and Thompson, linear for epsilon-greedy)"
+code = '''
+Rlong = mean_regret(steps=4steps)
+horizons = [steps, 2steps, 4steps]
+slope = (Rlong[4steps] - Rlong[2steps]) / (log(4steps) - log(2steps))  # regret per unit of log t
+(expected_regret = [t => round(Rlong[t], digits=2) for t in horizons], regret_per_log_step = round(slope, digits=2),
+ regret_per_step_late = round((Rlong[4steps] - Rlong[2steps]) / (2steps), digits=4), mean_reward_per_step_late = round(maximum(probs) - (Rlong[4steps] - Rlong[2steps]) / (2steps), digits=4))
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "algorithm-benchmark"
+label = "Algorithm Benchmark"
+desc = "Expected regret of epsilon-greedy (0.1), UCB1 and Thompson sampling (uniform prior) on the same arms"
+code = '''
+using Plots
+
+eg(N, W, t, rng) = rand(rng) < 0.1 || t <= K ? rand(rng, 1:K) : argmax(W ./ max.(N, 1))
+ucb1(N, W, t, rng) = t <= K ? t : argmax(W ./ N .+ sqrt.(2 .* log(t) ./ N))
+thompson(N, W, t, rng) = argmax([rand(rng, Beta(1 + W[a], 1 + N[a] - W[a])) for a in 1:K])
+plt = plot(xlabel="step", ylabel="expected cumulative regret")
+for (name, p) in ["epsilon-greedy (0.1)" => eg, "UCB1" => ucb1, "Thompson (uniform prior)" => thompson]
+    plot!(plt, mean_regret(p), label=name)
+end
+plt
+'''
+
+[[actionGroups.actions]]
+id = "param-sweep"
+label = "Parameter Sweep"
+desc = "Final expected regret for a range of values of the current algorithm's parameter"
+code = '''
+{{?model=egreedy}}[(eps = e, final_regret = round(mean_regret((N, W, t, rng) -> rand(rng) < e || t <= K ? rand(rng, 1:K) : argmax(W ./ max.(N, 1)))[end], digits=2))
+{{?model=egreedy}} for e in [0.01, 0.05, 0.1, 0.2, 0.3]]
+{{?model=ucb}}[(c = cc, final_regret = round(mean_regret((N, W, t, rng) -> t <= K ? t : argmax(W ./ N .+ cc .* sqrt.(log(t) ./ N)))[end], digits=2))
+{{?model=ucb}} for cc in [0.25, 0.5, 1.0, 1.41, 2.0, 3.0]]
+{{?model=thompson}}[(prior = (a0, b0), final_regret = round(mean_regret((N, W, t, rng) -> argmax([rand(rng, Beta(a0 + W[a], b0 + N[a] - W[a])) for a in 1:K]))[end], digits=2))
+{{?model=thompson}} for (a0, b0) in [(1, 1), (0.5, 0.5), (2, 2), (5, 5), (1, 5), (5, 1)]]
+'''
+
+[[actionGroups.actions]]
+id = "lower-bound"
+label = "Lai-Robbins Bound"
+desc = "Expected regret against the asymptotic lower bound sum over suboptimal arms of gap / KL(p_a, p_best) times log t"
+code = '''
+using Plots
+
+kl(p, q) = p * log(p / q) + (1 - p) * log((1 - p) / (1 - q))  # Bernoulli Kullback-Leibler divergence
+pb = maximum(probs)
+constant = sum((pb - p) / kl(p, pb) for p in probs if p < pb)
+plot(mean_regret(), xlabel="step", ylabel="expected cumulative regret", label="{{model}}")
+plot!(t -> constant * log(t), 1, steps, linestyle=:dash, label="lower bound")
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "q-values"
+label = "Arm Estimates"
+desc = "Per arm: true probability, pulls, successes and estimated mean reward"
+code = '''
+[(arm = a, true_p = probs[a], pulls = res.N[a], successes = res.W[a], estimate = round(res.W[a] / max(res.N[a], 1), digits=3)) for a in 1:K]
+'''
+
+[[actionGroups.actions]]
+id = "posterior-params"
+label = "Posterior / Confidence Bounds"
+desc = "Thompson: each arm's Beta posterior. UCB: the mean and exploration bonus making up each arm's index. epsilon-greedy: estimates with 2 standard errors"
+code = '''
+using Plots
+
+{{?model=thompson}}plt = plot(xlabel="success probability", ylabel="posterior density")
+{{?model=thompson}}for a in 1:K
+{{?model=thompson}}    plot!(plt, x -> pdf(Beta(alpha + res.W[a], beta + res.N[a] - res.W[a]), x), 0, 1, label="arm $a: Beta($(alpha + res.W[a]), $(beta + res.N[a] - res.W[a]))")
+{{?model=thompson}}end
+{{?model=thompson}}plt
+{{?model=ucb}}m = res.W ./ res.N; bonus = c .* sqrt.(log(steps) ./ res.N)
+{{?model=ucb}}bar(1:K, m, label="estimated mean", xlabel="arm")
+{{?model=ucb}}scatter!(1:K, m .+ bonus, label="upper confidence bound", markersize=6)
+{{?model=egreedy}}m = res.W ./ max.(res.N, 1)
+{{?model=egreedy}}scatter(1:K, m, yerror=2 .* sqrt.(m .* (1 .- m) ./ max.(res.N, 1)), xlabel="arm", ylabel="estimate", label="estimate +- 2 se")
+{{?model=egreedy}}scatter!(1:K, probs, marker=:x, label="true p")
+'''
+
+[[actionGroups.actions]]
+id = "regret-decomposition"
+label = "Regret Decomposition"
+desc = "Expected regret split by arm: gap to the best arm times the expected number of pulls"
+code = '''
+Nbar = mean(run_bandit(seed=k).N for k in 1:runs)
+gap = maximum(probs) .- probs
+[(arm = a, gap = round(gap[a], digits=3), expected_pulls = round(Nbar[a], digits=1), regret_contribution = round(gap[a] * Nbar[a], digits=2)) for a in 1:K]
+'''

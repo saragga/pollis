@@ -1,0 +1,485 @@
+# Hierarchical Optimisation Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/blv.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Hierarchical Optimisation"
+viewType = "pollis.blv"
+defaultModel = ""
+
+[[packages]]
+name = "BilevelJuMP.jl"
+github = "https://github.com/joaquimg/BilevelJuMP.jl"
+
+[[packages]]
+name = "HiGHS.jl"
+github = "https://github.com/jump-dev/HiGHS.jl"
+
+[requires]
+packages = ["BilevelJuMP.jl", "JuMP.jl", "HiGHS.jl", "Plots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Bilevel Optimisation"
+file = "blv/tutorial-01-bilevel.ipynb"
+bundled = true
+description = "Leader-follower optimisation via BilevelJuMP.jl; lower-level KKT conditions reformulated as MPEC and solved with HiGHS"
+
+[[wikis]]
+name = "Factsheet"
+file = "blv/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "blv/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "blv/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "blv/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "blv/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "blv/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Formulation"
+
+[[wikis]]
+name = "Bilevel Optimisation"
+file = "blv/bilevel.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "BilevelJuMP.jl: Modeling Bilevel Optimization Problems in Julia"
+authors = "Dias Garcia, Joaquim; Bodin, Guillaume; Street, Alexandre"
+year = 2022
+journal = "INFORMS Journal on Computing"
+doi = "10.1287/ijoc.2022.1181"
+openAccess = true
+
+[[references]]
+title = "HiGHS: Serial and Parallel Solution of Linear Programming"
+authors = "Huangfu, Qi; Hall, J.A.J."
+year = 2018
+journal = "Mathematical Programming Computation"
+doi = "10.1007/s12532-017-0130-5"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Bilevel Programming Problems: Theory, Algorithms and Applications to Energy Networks"
+authors = "Dempe, Stephan; Kalashnikov, Vyacheslav; Perez-Valdes, Gerardo A.; Kalashnykova, Nataliya"
+year = 2015
+journal = "Springer"
+doi = "10.1007/978-3-662-45827-3"
+openAccess = false
+
+[[references]]
+title = "Introduction to Bilevel Programming"
+authors = "Dempe, Stephan"
+year = 2002
+journal = "Kluwer Academic Publishers"
+doi = "10.1007/b101970"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "A New Algorithm for the Bilevel Programming Problem"
+authors = "Bard, Jonathan F.; Falk, James E."
+year = 1982
+journal = "Management Science"
+doi = "10.1287/mnsc.28.6.683"
+openAccess = false
+
+[[references]]
+title = "On the Computation of Stackelberg-Nash Equilibria"
+authors = "Sherali, Hanif D."
+year = 1984
+journal = "Operations Research"
+doi = "10.1287/opre.32.2.322"
+openAccess = false
+
+[[bullets]]
+text = "Bilevel Optimisation has a strategic hierarchy: a leader chooses their strategy knowing that rational followers will respond by solving their own optimisation problem. The leader anticipates this response and optimises accordingly."
+detail = ""
+
+[[bullets]]
+text = "Examples: a government setting road tolls knowing drivers will re-route to minimise travel time; a firm choosing prices knowing competitors respond; adversarial machine learning where an attacker anticipates model retraining."
+detail = ""
+
+[[bullets]]
+text = "The standard solution approach replaces the lower-level problem with its Karush-Kuhn-Tucker (KKT) optimality conditions, converting the bilevel problem into an MPEC solved via complementarity. BilevelJuMP.jl automates this reformulation."
+detail = ""
+
+[[models]]
+id = "kkt"
+label = "KKT Reformulation"
+
+[[models]]
+id = "grid"
+label = "Leader Grid Search"
+
+[[decisionRows]]
+task = "KKT Reformulation"
+context = "Follower problem is convex (here linear); the standard exact approach for any number of leader variables"
+purpose = "Default: Bard (1998) Example 5.1.1. BilevelJuMP replaces the follower by its KKT conditions and linearises complementarity with big-M constraints (Fortuny-Amat and McCarl); HiGHS solves the resulting MILP"
+
+[[decisionRows]]
+task = "Leader Grid Search"
+context = "One leader variable and a cheap follower; a transparent check that needs no reformulation or big-M"
+purpose = "Evaluate the optimistic follower response y*(x) by LP on a grid of leader decisions and keep the best feasible leader objective"
+
+[[inputs]]
+id = "obj"
+label = "Leader Objective F(x, y)"
+tooltip = "Julia expression in the leader decision x and the follower decision y (both scalars) that the leader minimises."
+default = "x - 4y"
+
+[[inputs]]
+id = "cons"
+label = "Leader Constraints G(x, y) <= 0"
+tooltip = "Vector of Julia expressions in x and y, each required to be <= 0 by the leader."
+default = "[-x]"
+
+[[inputs]]
+id = "f"
+label = "Follower Objective f(x, y)"
+tooltip = "Julia expression the follower minimises over y once x is announced; must be linear in y."
+default = "y"
+
+[[inputs]]
+id = "g"
+label = "Follower Constraints g(x, y) <= 0"
+tooltip = "Vector of Julia expressions in x and y, each required to be <= 0 in the follower problem; must be linear in y."
+default = "[3 - x - y, y - 2x, 2x + y - 12, 3x - 2y - 4, -y]"
+
+[[inputs]]
+id = "bigM"
+label = "Big-M"
+tooltip = "Bound used to linearise complementarity for both primal slacks and follower duals. Too small cuts off the true solution; too large weakens the MILP."
+default = "100"
+models = ["kkt"]
+
+[[inputs]]
+id = "npts"
+label = "Grid Points"
+tooltip = "Number of leader decisions evaluated between the smallest and largest feasible x; each needs two follower LPs."
+default = "401"
+models = ["grid"]
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.kkt]
+# Complementarity: the L-shaped set lambda * s = 0
+svg = '''
+return '<line x1="10" y1="68" x2="48" y2="68" stroke="currentColor" stroke-width="0.6"/><line x1="10" y1="24" x2="10" y2="68" stroke="currentColor" stroke-width="0.6"/>'
+	+ '<path d="M12,26 L12,66 L48,66" fill="none" stroke="currentColor" stroke-width="2"/>';
+'''
+
+[miniCharts.grid]
+# Leader objective sampled along a grid, best point highlighted
+svg = '''
+let s = '<line x1="6" y1="70" x2="50" y2="70" stroke="currentColor" stroke-width="0.6"/>';
+const ys = [34, 40, 47, 55, 62, 52, 44, 38, 31];
+ys.forEach((y, i) => { s += '<circle cx="' + (8 + i * 5) + '" cy="' + y + '" r="' + (i === 4 ? 3 : 1.6) + '" fill="currentColor"/>'; });
+return s;
+'''
+
+[[codeBranches]]
+model = "kkt"
+code = '''
+using BilevelJuMP, JuMP, HiGHS, Logging, Statistics
+
+F(x, y) = {{obj}}  # leader objective
+Gc(x, y) = {{cons}}  # leader constraints <= 0
+f(x, y) = {{f}}  # follower objective
+g(x, y) = {{g}}  # follower constraints <= 0
+bigM = {{bigM}}  # big-M for complementarity
+
+function follower(xv)  # optimistic best response: follower optimum, ties broken in the leader's favour
+    m = Model(HiGHS.Optimizer); set_silent(m)
+    @variable(m, yv)
+    c = @constraint(m, g(xv, yv) .<= 0)
+    @objective(m, Min, f(xv, yv))
+    optimize!(m)
+    is_solved_and_feasible(m) || return (y = NaN, v = NaN, lam = fill(NaN, length(c)), ok = false)
+    v, lam = objective_value(m), -dual.(c)  # follower value and multipliers (>= 0)
+    @constraint(m, f(xv, yv) <= v + 1e-9)
+    @objective(m, Min, F(xv, yv))
+    optimize!(m)
+    (y = value(yv), v = v, lam = lam, ok = true)
+end
+
+function high_point(sense=MOI.MIN_SENSE; target=(xv, yv) -> F(xv, yv))  # joint problem ignoring the hierarchy
+    m = Model(HiGHS.Optimizer); set_silent(m)
+    @variable(m, xv); @variable(m, yv)
+    @constraint(m, Gc(xv, yv) .<= 0); @constraint(m, g(xv, yv) .<= 0)
+    @objective(m, sense, target(xv, yv))
+    optimize!(m)
+    (x = value(xv), y = value(yv), F = F(value(xv), value(yv)), target = objective_value(m))
+end
+xlo, xhi = high_point(MOI.MIN_SENSE; target=(xv, yv) -> xv).target, high_point(MOI.MAX_SENSE; target=(xv, yv) -> xv).target  # range of leader decisions
+
+function solve_kkt(; xmax=Inf, bigM=100)
+    m = BilevelModel(HiGHS.Optimizer; mode=BilevelJuMP.FortunyAmatMcCarlMode(primal_big_M=bigM, dual_big_M=bigM)); set_silent(m)
+    @variable(Upper(m), xv); @variable(Lower(m), yv)
+    @objective(Upper(m), Min, F(xv, yv))
+    @constraint(Upper(m), Gc(xv, yv) .<= 0)
+    isfinite(xmax) && @constraint(Upper(m), xv <= xmax)
+    @objective(Lower(m), Min, f(xv, yv))
+    @constraint(Lower(m), g(xv, yv) .<= 0)
+    with_logger(() -> optimize!(m), ConsoleLogger(stderr, Logging.Error))  # silence reformulation deprecation warnings
+    termination_status(m) == MOI.OPTIMAL || return (x = NaN, y = NaN, F = NaN, ok = false)
+    (x = value(xv), y = value(yv), F = objective_value(m), ok = true)
+end
+
+function solve_grid(; xmax=Inf, npts=401)
+    best = (x = NaN, y = NaN, F = Inf, ok = false)
+    for xv in range(xlo, min(xhi, xmax), length=npts)
+        r = follower(xv)
+        r.ok && all(Gc(xv, r.y) .<= 1e-9) && F(xv, r.y) < best.F && (best = (x = xv, y = r.y, F = F(xv, r.y), ok = true))
+    end
+    best
+end
+solve_bilevel(; kw...) = solve_kkt(; bigM=bigM, kw...)
+sol = solve_bilevel()  # Stackelberg solution (optimistic)
+(leader_x = round(sol.x, digits=4), follower_y = round(sol.y, digits=4), leader_objective = round(sol.F, digits=4),
+ follower_objective = round(f(sol.x, sol.y), digits=4), solved = sol.ok)
+'''
+
+[[codeBranches]]
+model = "grid"
+code = '''
+using BilevelJuMP, JuMP, HiGHS, Logging, Statistics
+
+F(x, y) = {{obj}}  # leader objective
+Gc(x, y) = {{cons}}  # leader constraints <= 0
+f(x, y) = {{f}}  # follower objective
+g(x, y) = {{g}}  # follower constraints <= 0
+npts = {{npts}}  # leader grid points
+
+function follower(xv)  # optimistic best response: follower optimum, ties broken in the leader's favour
+    m = Model(HiGHS.Optimizer); set_silent(m)
+    @variable(m, yv)
+    c = @constraint(m, g(xv, yv) .<= 0)
+    @objective(m, Min, f(xv, yv))
+    optimize!(m)
+    is_solved_and_feasible(m) || return (y = NaN, v = NaN, lam = fill(NaN, length(c)), ok = false)
+    v, lam = objective_value(m), -dual.(c)  # follower value and multipliers (>= 0)
+    @constraint(m, f(xv, yv) <= v + 1e-9)
+    @objective(m, Min, F(xv, yv))
+    optimize!(m)
+    (y = value(yv), v = v, lam = lam, ok = true)
+end
+
+function high_point(sense=MOI.MIN_SENSE; target=(xv, yv) -> F(xv, yv))  # joint problem ignoring the hierarchy
+    m = Model(HiGHS.Optimizer); set_silent(m)
+    @variable(m, xv); @variable(m, yv)
+    @constraint(m, Gc(xv, yv) .<= 0); @constraint(m, g(xv, yv) .<= 0)
+    @objective(m, sense, target(xv, yv))
+    optimize!(m)
+    (x = value(xv), y = value(yv), F = F(value(xv), value(yv)), target = objective_value(m))
+end
+xlo, xhi = high_point(MOI.MIN_SENSE; target=(xv, yv) -> xv).target, high_point(MOI.MAX_SENSE; target=(xv, yv) -> xv).target  # range of leader decisions
+
+function solve_kkt(; xmax=Inf, bigM=100)
+    m = BilevelModel(HiGHS.Optimizer; mode=BilevelJuMP.FortunyAmatMcCarlMode(primal_big_M=bigM, dual_big_M=bigM)); set_silent(m)
+    @variable(Upper(m), xv); @variable(Lower(m), yv)
+    @objective(Upper(m), Min, F(xv, yv))
+    @constraint(Upper(m), Gc(xv, yv) .<= 0)
+    isfinite(xmax) && @constraint(Upper(m), xv <= xmax)
+    @objective(Lower(m), Min, f(xv, yv))
+    @constraint(Lower(m), g(xv, yv) .<= 0)
+    with_logger(() -> optimize!(m), ConsoleLogger(stderr, Logging.Error))  # silence reformulation deprecation warnings
+    termination_status(m) == MOI.OPTIMAL || return (x = NaN, y = NaN, F = NaN, ok = false)
+    (x = value(xv), y = value(yv), F = objective_value(m), ok = true)
+end
+
+function solve_grid(; xmax=Inf, npts=401)
+    best = (x = NaN, y = NaN, F = Inf, ok = false)
+    for xv in range(xlo, min(xhi, xmax), length=npts)
+        r = follower(xv)
+        r.ok && all(Gc(xv, r.y) .<= 1e-9) && F(xv, r.y) < best.F && (best = (x = xv, y = r.y, F = F(xv, r.y), ok = true))
+    end
+    best
+end
+solve_bilevel(; kw...) = solve_grid(; npts=npts, kw...)
+sol = solve_bilevel()  # Stackelberg solution (optimistic)
+(leader_x = round(sol.x, digits=4), follower_y = round(sol.y, digits=4), leader_objective = round(sol.F, digits=4),
+ follower_objective = round(f(sol.x, sol.y), digits=4), solved = sol.ok)
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "reaction-curve"
+label = "Reaction Curve"
+desc = "Follower best response y*(x) and the leader objective F(x, y*(x)) along the feasible leader range, with the Stackelberg solution"
+code = '''
+using Plots
+xs = range(xlo, xhi, length=300)
+rs = follower.(xs)
+ys = [r.y for r in rs]
+Fs = [r.ok && all(Gc(xv, r.y) .<= 1e-9) ? F(xv, r.y) : NaN for (xv, r) in zip(xs, rs)]  # NaN where the leader is infeasible
+plot(plot(xs, ys, lw=2, xlabel="Leader x", ylabel="Follower y*(x)", label="reaction"),
+    plot(xs, Fs, lw=2, xlabel="Leader x", ylabel="F(x, y*(x))", label="leader objective"), layout=(1, 2), size=(900, 350))
+scatter!([sol.x], [sol.F], subplot=2, ms=6, label="Stackelberg")
+scatter!([sol.x], [sol.y], subplot=1, ms=6, label="Stackelberg")
+'''
+
+[[actionGroups.actions]]
+id = "inducible-region"
+label = "Inducible Region"
+desc = "Joint feasible set of both levels (shaded), the reaction curve the leader can actually induce, leader objective contours and both solutions"
+code = '''
+using Plots
+coop = high_point()
+ylo, yhi = high_point(MOI.MIN_SENSE; target=(xv, yv) -> yv).target, high_point(MOI.MAX_SENSE; target=(xv, yv) -> yv).target
+gx, gy = range(xlo, xhi, length=200), range(ylo - 0.5, yhi + 0.5, length=200)
+joint = [all(Gc(xv, yv) .<= 1e-9) && all(g(xv, yv) .<= 1e-9) ? 1.0 : 0.0 for yv in gy, xv in gx]
+heatmap(gx, gy, joint, c=cgrad([:white, :lightblue]), colorbar=false, xlabel="Leader x", ylabel="Follower y", title="Inducible region")
+contour!(gx, gy, [F(xv, yv) for yv in gy, xv in gx], levels=12, c=:grays, alpha=0.5, colorbar=false)
+xs = range(xlo, xhi, length=300)
+plot!(xs, [follower(xv).y for xv in xs], lw=3, c=:steelblue, label="reaction y*(x)")
+scatter!([coop.x], [coop.y], ms=6, marker=:square, label="cooperative optimum")
+scatter!([sol.x], [sol.y], ms=6, label="Stackelberg")
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "kkt-check"
+label = "Karush-Kuhn-Tucker Verification"
+desc = "Follower primal feasibility, dual feasibility, stationarity and complementary slackness at the computed solution, with multipliers from the follower LP"
+code = '''
+r = follower(sol.x)
+gv = g(sol.x, sol.y)
+gy, fy = g(sol.x, sol.y + 1) .- gv, f(sol.x, sol.y + 1) - f(sol.x, sol.y)  # y-gradients (exact for linear in y)
+(primal_feasibility = maximum(gv), dual_feasibility = minimum(r.lam), stationarity = abs(fy + sum(r.lam .* gy)),
+ complementarity = maximum(abs.(r.lam .* gv)), multipliers = round.(r.lam, digits=4))
+'''
+
+[[actionGroups.actions]]
+id = "optimality"
+label = "Optimality Check"
+desc = "Leader feasibility, follower optimality gap at the solution, and a dense grid search as an independent check of the leader optimum"
+code = '''
+dense = solve_grid(; npts=2001)
+(leader_objective = round(sol.F, digits=4), leader_feasible = all(Gc(sol.x, sol.y) .<= 1e-6),
+ follower_gap = round(f(sol.x, sol.y) - follower(sol.x).v, digits=6), dense_grid_objective = round(dense.F, digits=4), dense_grid_x = round(dense.x, digits=4))
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "parametric"
+label = "Parametric Solve"
+desc = "Re-solve with an extra leader cap x <= t over the feasible range: how the Stackelberg value responds to restricting the leader"
+code = '''
+using Plots
+caps = range(xlo, xhi, length=25)
+res = [solve_bilevel(; xmax=t) for t in caps]
+plot(caps, [r.F for r in res], marker=:o, xlabel="Leader cap t (x <= t)", ylabel="Stackelberg leader objective", legend=false, title="Parametric solve")
+'''
+
+[[actionGroups.actions]]
+id = "response-table"
+label = "Response Table"
+desc = "Follower response, follower value and leader objective for a few leader decisions across the feasible range"
+code = '''
+[begin
+    r = follower(xv)
+    (x = round(xv, digits=3), y_star = round(r.y, digits=3), follower_value = round(r.v, digits=3), leader_objective = round(F(xv, r.y), digits=3), leader_feasible = r.ok && all(Gc(xv, r.y) .<= 1e-9))
+end for xv in range(xlo, xhi, length=9)]
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "cooperative"
+label = "Cooperative Bound"
+desc = "High-point relaxation: leader and follower constraints solved jointly with the leader's objective, a lower bound on the Stackelberg value"
+code = '''
+coop = high_point()
+(cooperative_x = round(coop.x, digits=4), cooperative_y = round(coop.y, digits=4), cooperative_bound = round(coop.F, digits=4),
+ stackelberg_value = round(sol.F, digits=4), follower_accepts = abs(f(coop.x, coop.y) - follower(coop.x).v) < 1e-6)
+'''
+
+[[actionGroups.actions]]
+id = "kkt-vs-grid"
+label = "KKT vs Grid Search"
+desc = "Both solution methods on the same problem: leader decision, objective and run time"
+code = '''
+[begin
+    t = @elapsed r = run()
+    (method = name, x = round(r.x, digits=4), y = round(r.y, digits=4), leader_objective = round(r.F, digits=4), seconds = round(t, digits=3))
+end for (name, run) in [("KKT big-M", () -> solve_kkt()), ("grid 401", () -> solve_grid()), ("grid 2001", () -> solve_grid(; npts=2001))]]
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "stackelberg-value"
+label = "Stackelberg Value"
+desc = "Leader and follower decisions and payoffs at the Stackelberg equilibrium, and which follower constraints bind"
+code = '''
+gv = g(sol.x, sol.y)
+(leader_x = round(sol.x, digits=4), follower_y = round(sol.y, digits=4), leader_objective = round(sol.F, digits=4),
+ follower_objective = round(f(sol.x, sol.y), digits=4), binding_follower_constraints = findall(abs.(gv) .< 1e-6))
+'''
+
+[[actionGroups.actions]]
+id = "price-of-hierarchy"
+label = "Price of Hierarchy"
+desc = "Leader objective lost because the follower optimises for itself: Stackelberg value against the cooperative optimum"
+code = '''
+coop = high_point()
+(stackelberg = round(sol.F, digits=4), cooperative = round(coop.F, digits=4), price_of_hierarchy = round(sol.F - coop.F, digits=4))
+'''

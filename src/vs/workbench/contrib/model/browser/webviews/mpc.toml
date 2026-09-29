@@ -1,0 +1,474 @@
+# Model Predictive Control Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/mpc.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Model Predictive Control"
+viewType = "pollis.mpc"
+defaultModel = "linmpc"
+
+[[packages]]
+name = "ModelPredictiveControl.jl"
+github = "https://github.com/JuliaControl/ModelPredictiveControl.jl"
+
+[requires]
+packages = ["ModelPredictiveControl.jl", "ControlSystemsBase.jl", "Plots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Linear MPC Design"
+file = "mpc/tutorial-01-linmpc.ipynb"
+bundled = true
+description = "Build and simulate a LinMPC controller with QP solver"
+
+[[notebookSections.notebooks]]
+name = "Nonlinear MPC Design"
+file = "mpc/tutorial-02-nonlinmpc.ipynb"
+bundled = true
+description = "Build and simulate a NonLinMPC controller with NLP solver"
+
+[[notebookSections.notebooks]]
+name = "Constraint Handling"
+file = "mpc/tutorial-03-constraints.ipynb"
+bundled = true
+description = "State and input constraints via setconstraint!()"
+
+[[notebookSections.notebooks]]
+name = "Disturbance Rejection"
+file = "mpc/tutorial-04-disturbance.ipynb"
+bundled = true
+description = "Offset-free tracking with integrated disturbance model"
+
+[[wikis]]
+name = "Factsheet"
+file = "mpc/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "mpc/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "mpc/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "mpc/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "mpc/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "mpc/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "MPC Variants"
+
+[[wikis]]
+name = "Linear MPC"
+file = "mpc/linmpc.md"
+bundled = true
+
+[[wikis]]
+name = "Nonlinear MPC"
+file = "mpc/nonlinmpc.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "ModelPredictiveControl.jl: A Unified Predictive Control Toolbox for Julia"
+authors = "Desbiens, Francis; Ozorio Cassol, Guilherme"
+year = 2024
+journal = "Journal of Open Source Software"
+doi = "10.21105/joss.06171"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Model Predictive Control: Theory, Computation, and Design"
+authors = "Rawlings, James B.; Mayne, David Q.; Diehl, Moritz M."
+year = 2017
+journal = "Nob Hill Publishing (2nd ed.)"
+url = "https://sites.engineering.ucsb.edu/~jbraw/mpc/"
+openAccess = true
+
+[[references]]
+title = "Predictive Control with Constraints"
+authors = "Maciejowski, Jan M."
+year = 2002
+journal = "Pearson Education"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Receding Horizon Control of Nonlinear Systems"
+authors = "Mayne, David Q.; Michalska, H."
+year = 1990
+journal = "IEEE Transactions on Automatic Control"
+doi = "10.1109/9.57020"
+openAccess = false
+
+[[references]]
+title = "Constrained Model Predictive Control: Stability and Optimality"
+authors = "Mayne, David Q.; Rawlings, James B.; Rao, Christopher V.; Scokaert, Pierre O. M."
+year = 2000
+journal = "Automatica"
+doi = "10.1016/S0005-1098(99)00214-9"
+openAccess = false
+
+[[models]]
+id = "linmpc"
+label = "Linear MPC"
+
+[[models]]
+id = "nonlinmpc"
+label = "Nonlinear MPC"
+
+[[decisionRows]]
+task = "Linear MPC"
+context = "Plants well described by a linear model around the operating point; fast sampling"
+purpose = "Each step solves a convex QP over the horizon with input and output constraints; apply the first move and repeat"
+
+[[decisionRows]]
+task = "Nonlinear MPC"
+context = "Strongly nonlinear plants or wide operating ranges (e.g. swinging a pendulum upright)"
+purpose = "Each step solves a nonlinear program with the full model (Ipopt); state estimated by an unscented Kalman filter"
+
+[[inputs]]
+id = "plant"
+label = "Plant Transfer Function"
+tooltip = "Continuous-time plant built with ControlSystemsBase, discretised at the sample time. Examples: tf(2, [1, 1]) (first order), tf(1, [1, 0.6, 1]) (lightly damped)."
+default = "tf(2, [1, 1])"
+models = ["linmpc"]
+
+[[inputs]]
+id = "ry"
+label = "Setpoint"
+tooltip = "Output reference as a Julia vector (length ny)."
+default = "[1.0]"
+models = ["linmpc"]
+
+[[inputs]]
+id = "f"
+label = "Dynamics f(x, u)"
+tooltip = "Continuous-time state derivative as a Julia vector in terms of x and u. Default: a pendulum with friction and torque input (angle x[1] in radians)."
+default = "[x[2], -24.5 * sin(x[1]) - 4.0 * x[2] + 20.8 * u[1]]"
+models = ["nonlinmpc"]
+
+[[inputs]]
+id = "h"
+label = "Output h(x)"
+tooltip = "Measured output as a Julia vector in terms of x. Default: the pendulum angle in degrees."
+default = "[180 / pi * x[1]]"
+models = ["nonlinmpc"]
+
+[[inputs]]
+id = "nx"
+label = "States"
+tooltip = "Number of states (length of x)."
+default = "2"
+models = ["nonlinmpc"]
+
+[[inputs]]
+id = "nu"
+label = "Inputs"
+tooltip = "Number of manipulated inputs (length of u)."
+default = "1"
+models = ["nonlinmpc"]
+
+[[inputs]]
+id = "ryn"
+label = "Setpoint"
+tooltip = "Output reference as a Julia vector (length ny). 180 degrees is the pendulum upright."
+default = "[180.0]"
+models = ["nonlinmpc"]
+
+[[inputs]]
+id = "Ts"
+label = "Sample Time"
+tooltip = "Controller sampling period in seconds. The MPC problem must be solved faster than this in real time."
+default = "0.1"
+newRow = true
+
+[[inputs]]
+id = "Hp"
+label = "Prediction Horizon"
+tooltip = "Number of future steps predicted. Hp * Ts should cover the main plant dynamics; larger Hp costs more per solve."
+default = "20"
+
+[[inputs]]
+id = "Hc"
+label = "Control Horizon"
+tooltip = "Number of free input moves (Hc <= Hp); the input is held after Hc. Small Hc means fewer decision variables."
+default = "2"
+
+[[inputs]]
+id = "Nsim"
+label = "Simulation Steps"
+tooltip = "Number of closed-loop steps simulated."
+default = "35"
+
+[[inputs]]
+id = "Mwt"
+label = "Output Weights"
+tooltip = "Setpoint-tracking weights, one per output (vector of length ny)."
+default = "[0.5]"
+newRow = true
+
+[[inputs]]
+id = "Nwt"
+label = "Move Weights"
+tooltip = "Penalty on input moves (changes of u between steps), one per input. Larger values give smoother, slower control."
+default = "[2.5]"
+
+[[inputs]]
+id = "umin"
+label = "Input Min"
+tooltip = "Lower bound on each input as a Julia vector; use [-Inf] for none."
+default = "[-1.5]"
+
+[[inputs]]
+id = "umax"
+label = "Input Max"
+tooltip = "Upper bound on each input as a Julia vector; use [Inf] for none."
+default = "[1.5]"
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.linmpc]
+# Output rising to a setpoint with the receding prediction window shaded
+svg = '''
+var d = 'M8,64';
+for (var x = 8; x <= 46; x++) { d += ' L' + x + ',' + (64 - 28 * (1 - Math.exp(-(x - 8) / 7))).toFixed(1); }
+return '<rect x="22" y="30" width="16" height="38" fill="currentColor" opacity="0.12"/><line x1="8" y1="36" x2="46" y2="36" stroke="currentColor" stroke-width="0.8" stroke-dasharray="3,2"/><path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.4"/>';
+'''
+
+[miniCharts.nonlinmpc]
+# A pendulum being swung upright
+svg = '''
+return '<circle cx="27" cy="52" r="1.8" fill="currentColor"/><line x1="27" y1="52" x2="27" y2="30" stroke="currentColor" stroke-width="1.4"/><circle cx="27" cy="30" r="3" fill="currentColor"/>'
+	+ '<path d="M16,64 A13,13 0 0 1 14,45" fill="none" stroke="currentColor" stroke-width="0.9" stroke-dasharray="2,2"/><line x1="27" y1="52" x2="27" y2="68" stroke="currentColor" stroke-width="0.8" opacity="0.4"/>';
+'''
+
+[[codeBranches]]
+model = "linmpc"
+code = '''
+using ModelPredictiveControl, ControlSystemsBase, LinearAlgebra, Statistics
+
+Ts = {{Ts}}  # sample time
+model = LinModel({{plant}}, Ts)  # discretised linear plant
+ry = {{ry}}  # setpoint
+Hp, Hc = {{Hp}}, {{Hc}}  # prediction and control horizons
+
+build(; Hp=Hp, Hc=Hc, Mwt={{Mwt}}, Nwt={{Nwt}}) = (c = LinMPC(model; Hp, Hc, Mwt, Nwt); setconstraint!(c; umin={{umin}}, umax={{umax}}); c)
+
+mpc = build()
+res = sim!(mpc, {{Nsim}}, ry)  # closed loop on the nominal plant
+Y, U = res.Y_data, res.U_data
+(final_output = Y[:, end], setpoint = ry, tracking_rmse = sqrt(mean(abs2, Y .- ry)), peak_input = maximum(abs, U))
+'''
+
+[[codeBranches]]
+model = "nonlinmpc"
+code = '''
+using ModelPredictiveControl, LinearAlgebra, Statistics
+
+Ts = {{Ts}}  # sample time
+f(x, u, _, _) = {{f}}  # continuous-time dynamics
+h(x, _, _) = {{h}}  # measured output
+ry = {{ryn}}  # setpoint
+nu, nx, ny = {{nu}}, {{nx}}, length(ry)
+model = NonLinModel(f, h, Ts, nu, nx, ny)  # integrated with RK4 between samples
+Hp, Hc = {{Hp}}, {{Hc}}  # prediction and control horizons
+
+build(; Hp=Hp, Hc=Hc, Mwt={{Mwt}}, Nwt={{Nwt}}) = (c = NonLinMPC(model; Hp, Hc, Mwt, Nwt); setconstraint!(c; umin={{umin}}, umax={{umax}}); c)
+
+mpc = build()
+res = sim!(mpc, {{Nsim}}, ry)  # closed loop on the nominal plant
+Y, U = res.Y_data, res.U_data
+(final_output = Y[:, end], setpoint = ry, tracking_rmse = sqrt(mean(abs2, Y .- ry)), peak_input = maximum(abs, U))
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "closed-loop"
+label = "Closed-Loop Response"
+desc = "Outputs against the setpoint and the inputs with their bounds (ModelPredictiveControl plot recipe)"
+code = '''
+using Plots
+
+plot(res, plotu=true, plotry=true)
+'''
+
+[[actionGroups.actions]]
+id = "open-loop-step"
+label = "Open-Loop Step Response"
+desc = "The plant alone under a unit input step: the dynamics the controller has to shape"
+code = '''
+using Plots
+
+plot(sim!(deepcopy(model), {{Nsim}}, ones(model.nu)))
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "constraint-check"
+label = "Constraint Check"
+desc = "Whether the applied inputs stayed within bounds, how often they saturated, and the overshoot and final error of the outputs"
+code = '''
+lo, hi = {{umin}}, {{umax}}
+sat = mean(any(U[:, k] .<= lo .+ 1e-6) || any(U[:, k] .>= hi .- 1e-6) for k in axes(U, 2))
+(inputs_within_bounds = all(lo .- 1e-6 .<= U .<= hi .+ 1e-6), share_of_steps_saturated = sat,
+ overshoot = maximum(Y, dims=2)[:] .- ry, final_error = Y[:, end] .- ry)
+'''
+
+[[actionGroups.actions]]
+id = "solve-time"
+label = "Solve Time"
+desc = "Run the loop step by step and time each optimisation: the controller is real-time feasible only if the worst solve is well below the sample time"
+code = '''
+plant = deepcopy(model); ctrl = build()
+initstate!(ctrl, zeros(model.nu), evaloutput(plant))
+times = map(1:{{Nsim}}) do _
+    y = evaloutput(plant)
+    preparestate!(ctrl, y)
+    t = @elapsed u = moveinput!(ctrl, ry)
+    updatestate!(ctrl, u, y); updatestate!(plant, u)
+    t
+end
+(mean_solve_seconds = mean(times[2:end]), worst_solve_seconds = maximum(times[2:end]), sample_time = Ts,
+ real_time_feasible = maximum(times[2:end]) < Ts)
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "disturbance-rejection"
+label = "Disturbance Rejection"
+desc = "Closed loop with a step load disturbance on the input: the integrating state estimator removes the offset"
+code = '''
+using Plots
+
+plot(sim!(build(), {{Nsim}}, ry; plant=deepcopy(model), u_step=0.1 .* ones(model.nu)), plotu=true)
+'''
+
+[[actionGroups.actions]]
+id = "plant-mismatch"
+label = "Plant Mismatch"
+desc = "The controller keeps its model while the real plant has 20% more input gain: robustness of the tracking"
+code = '''
+using Plots
+
+{{?model=linmpc}} plant = LinModel(1.2 * ({{plant}}), Ts)
+{{?model=nonlinmpc}} plant = NonLinModel((x, u, d, p) -> f(x, 1.2 .* u, d, p), h, Ts, nu, nx, ny)
+r = sim!(build(), {{Nsim}}, ry; plant=plant)
+display(plot(r, plotu=true))
+(tracking_rmse_mismatch = sqrt(mean(abs2, r.Y_data .- ry)), tracking_rmse_nominal = sqrt(mean(abs2, Y .- ry)))
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "horizon-sweep"
+label = "Horizon Sweep"
+desc = "Tracking error, input effort and solve time for several prediction horizons"
+code = '''
+map([5, 10, 20, 40]) do hp
+    c = build(Hp=hp, Hc=min(Hc, hp))
+    t = @elapsed r = sim!(c, {{Nsim}}, ry)
+    (Hp = hp, tracking_rmse = sqrt(mean(abs2, r.Y_data .- ry)), input_moves = sum(abs, diff(r.U_data, dims=2)), seconds_per_step = t / {{Nsim}})
+end
+'''
+
+[[actionGroups.actions]]
+id = "alternative-controller"
+label = "Alternative Controller"
+desc = "Linear MPC against the unconstrained analytic ExplicitMPC; nonlinear MPC against a linear MPC built on the model linearised at the operating point"
+code = '''
+using Plots
+
+{{?model=linmpc}} alt = ExplicitMPC(model; Hp, Hc, Mwt={{Mwt}}, Nwt={{Nwt}}); altname = "ExplicitMPC (no constraints)"
+{{?model=nonlinmpc}} alt = LinMPC(linearize(model); Hp, Hc, Mwt={{Mwt}}, Nwt={{Nwt}}); setconstraint!(alt; umin={{umin}}, umax={{umax}}); altname = "LinMPC on linearised model"
+ra = sim!(alt, {{Nsim}}, ry; plant=deepcopy(model))
+p = plot(res.T_data, res.Y_data', label="MPC", xlabel="time", ylabel="output")
+plot!(p, ra.T_data, ra.Y_data', label=altname)
+hline!(p, ry, linestyle=:dash, color=:gray, label="setpoint")
+display(p)
+(mpc_rmse = sqrt(mean(abs2, Y .- ry)), alternative_rmse = sqrt(mean(abs2, ra.Y_data .- ry)), alternative_peak_input = maximum(abs, ra.U_data))
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "weight-sensitivity"
+label = "Weight Sensitivity"
+desc = "Sweep the move weight: faster tracking costs larger, more aggressive input moves"
+code = '''
+using Plots
+
+res_w = map([0.1, 0.5, 2.5, 10.0]) do w
+    r = sim!(build(Nwt=fill(w, model.nu)), {{Nsim}}, ry)
+    (Nwt = w, tracking_rmse = sqrt(mean(abs2, r.Y_data .- ry)), input_moves = sum(abs, diff(r.U_data, dims=2)))
+end
+display(plot(getfield.(res_w, :input_moves), getfield.(res_w, :tracking_rmse), marker=:circle, xlabel="total input movement", ylabel="tracking RMSE", legend=false))
+res_w
+'''
+
+[[actionGroups.actions]]
+id = "receding-plan"
+label = "Receding-Horizon Plan"
+desc = "The full input sequence the controller plans at the first step and its objective: only the first move is applied before re-planning"
+code = '''
+using Plots
+
+ctrl = build()
+initstate!(ctrl, zeros(model.nu), evaloutput(model))
+preparestate!(ctrl, evaloutput(model))
+u0 = moveinput!(ctrl, ry)
+info = getinfo(ctrl)
+Uplan = reshape(info[:U], model.nu, Hp)'
+display(plot(Ts .* (0:Hp-1), Uplan, linetype=:steppost, xlabel="time ahead", ylabel="planned input", label=permutedims(["u$j" for j in 1:model.nu])))
+(first_move = u0, objective = info[:J])
+'''

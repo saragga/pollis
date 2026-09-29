@@ -1,0 +1,485 @@
+# Complementarity Problems Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/cmp.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Complementarity Problems"
+viewType = "pollis.cmp"
+defaultModel = "lcp"
+
+[[packages]]
+name = "Complementarity.jl"
+github = "https://github.com/chkwon/Complementarity.jl"
+
+[[packages]]
+name = "PATHSolver.jl"
+github = "https://github.com/chkwon/PATHSolver.jl"
+
+[requires]
+packages = ["JuMP.jl", "PATHSolver.jl", "Ipopt.jl", "Plots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Linear Complementarity"
+file = "cmp/tutorial-01-lcp.ipynb"
+bundled = true
+description = "Solve the LCP (Mx + q ≥ 0, x ≥ 0, complementarity) via Complementarity.jl and PATHSolver"
+
+[[notebookSections.notebooks]]
+name = "Nonlinear Complementarity"
+file = "cmp/tutorial-02-ncp.ipynb"
+bundled = true
+description = "Solve the NCP (F(x) ≥ 0, x ≥ 0, complementarity) for nonlinear operator F via PATH"
+
+[[notebookSections.notebooks]]
+name = "Mixed Complementarity"
+file = "cmp/tutorial-03-mcp.ipynb"
+bundled = true
+description = "Solve the MCP with box constraints lb ≤ x ≤ ub; models general equilibrium and traffic assignment"
+
+[[wikis]]
+name = "Factsheet"
+file = "cmp/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "cmp/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "cmp/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "cmp/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "cmp/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "cmp/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Problems"
+
+[[wikis]]
+name = "Linear Complementarity (LCP)"
+file = "cmp/lcp.md"
+bundled = true
+
+[[wikis]]
+name = "Nonlinear Complementarity (NCP)"
+file = "cmp/ncp.md"
+bundled = true
+
+[[wikis]]
+name = "Mixed Complementarity (MCP)"
+file = "cmp/mcp.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "Complementarity.jl: Modeling and Solving Complementarity Problems in Julia"
+authors = "Chung, Changhyun"
+year = 2023
+journal = "GitHub"
+url = "https://github.com/chkwon/Complementarity.jl"
+openAccess = true
+
+[[references]]
+title = "PATH Solver: A Non-Monotone Stabilisation Scheme for the Solution of Nonlinear Complementarity Problems"
+authors = "Dirkse, Steven P.; Ferris, Michael C."
+year = 1995
+journal = "Mathematical Programming"
+doi = "10.1007/BF02592958"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Finite-Dimensional Variational Inequalities and Complementarity Problems"
+authors = "Facchinei, Francisco; Pang, Jong-Shi"
+year = 2003
+journal = "Springer (Vol. I & II)"
+openAccess = false
+
+[[references]]
+title = "Complementarity Problems"
+authors = "Isac, George"
+year = 1992
+journal = "Springer Lecture Notes in Mathematics"
+doi = "10.1007/BFb0084653"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "The Linear Complementarity Problem"
+authors = "Cottle, Richard W.; Pang, Jong-Shi; Stone, Richard E."
+year = 1992
+journal = "SIAM Classics in Applied Mathematics"
+doi = "10.1137/1.9780898719000"
+openAccess = false
+
+[[references]]
+title = "Engineering and Economic Applications of Complementarity Problems"
+authors = "Ferris, Michael C.; Pang, Jong-Shi"
+year = 1997
+journal = "SIAM Review"
+doi = "10.1137/S0036144595285963"
+openAccess = false
+
+[[models]]
+id = "lcp"
+label = "Linear Complementarity"
+
+[[models]]
+id = "ncp"
+label = "Nonlinear Complementarity"
+
+[[models]]
+id = "mcp"
+label = "Mixed Complementarity"
+
+[[bullets]]
+text = "A complementarity problem finds a point x and an operator F(x) that are mutually non-negative and perpendicular: each component is either zero or its counterpart is zero. The condition x ≥ 0, F(x) ≥ 0, xᵀF(x) = 0 captures equilibrium in markets, mechanical contact, and game theory."
+detail = ""
+
+[[bullets]]
+text = "LCP and NCP are special cases of the Mixed Complementarity Problem (MCP), which adds box constraints and is the standard form solved by the PATH solver."
+detail = ""
+
+[[decisionRows]]
+task = "Linear Complementarity"
+context = "Affine map F(x) = Mx + q: KKT conditions of convex quadratic programmes, bimatrix games, contact mechanics, American options"
+purpose = "Find x >= 0 with Mx + q >= 0 and x'(Mx + q) = 0; a unique solution for every q when M is positive definite. Solved with PATH through JuMP"
+
+[[decisionRows]]
+task = "Nonlinear Complementarity"
+context = "Nonlinear map F with sign-constrained variables: market equilibria, traffic equilibria, KKT systems of nonlinear programmes"
+purpose = "Find x >= 0 with F(x) >= 0 and x'F(x) = 0. Default: the Kojima-Shindo problem, which has two solutions, (1, 0, 3, 0) and (sqrt(6)/2, 0, 0, 1/2)"
+
+[[decisionRows]]
+task = "Mixed Complementarity"
+context = "Box bounds lb <= x <= ub, including free variables (equations) and upper bounds (capacities): the general form behind GAMS/MCP and PATH"
+purpose = "x_i at lb needs F_i >= 0, at ub needs F_i <= 0, strictly between needs F_i = 0. Default: Kojima-Shindo with x1 <= 1, which removes the solution with x1 = sqrt(6)/2 and creates (1, 0, 0, 2/3) with x1 at its upper bound"
+
+[[inputs]]
+id = "M"
+label = "Matrix M (n x n)"
+tooltip = "Matrix of the affine map F(x) = Mx + q, as a Julia matrix literal."
+default = "[2.0 1.0 0.0; 1.0 2.0 1.0; 0.0 1.0 2.0]"
+models = ["lcp"]
+
+[[inputs]]
+id = "q"
+label = "Vector q"
+tooltip = "Constant of the affine map F(x) = Mx + q; its length sets n."
+default = "[-3.0, -2.0, 1.0]"
+models = ["lcp"]
+
+[[inputs]]
+id = "n"
+label = "Dimension n"
+tooltip = "Number of variables; must match the length of F."
+default = "4"
+models = ["ncp", "mcp"]
+
+[[inputs]]
+id = "F"
+label = "Operator F(x)"
+tooltip = "Vector of Julia expressions in x[1] .. x[n]. Default: the Kojima-Shindo test problem."
+default = "[3x[1]^2 + 2x[1]*x[2] + 2x[2]^2 + x[3] + 3x[4] - 6, 2x[1]^2 + x[1] + x[2]^2 + 10x[3] + 2x[4] - 2, 3x[1]^2 + x[1]*x[2] + 2x[2]^2 + 2x[3] + 9x[4] - 9, x[1]^2 + 3x[2]^2 + 2x[3] + 3x[4] - 3]"
+models = ["ncp", "mcp"]
+
+[[inputs]]
+id = "lb"
+label = "Lower Bounds lb"
+tooltip = "Lower bounds as a Julia vector; use -Inf for a free component (then F_i = 0 is an equation when ub_i is also Inf)."
+default = "zeros(4)"
+models = ["mcp"]
+
+[[inputs]]
+id = "ub"
+label = "Upper Bounds ub"
+tooltip = "Upper bounds as a Julia vector; use Inf where there is none."
+default = "[1.0, Inf, Inf, Inf]"
+models = ["mcp"]
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.lcp]
+# Complementarity corner with a straight map
+svg = '''
+return '<path d="M10,24 L10,68 L48,68" fill="none" stroke="currentColor" stroke-width="2"/>'
+	+ '<line x1="10" y1="40" x2="46" y2="60" stroke="currentColor" stroke-width="1" stroke-dasharray="3,2"/><circle cx="10" cy="40" r="2.5" fill="currentColor"/>';
+'''
+
+[miniCharts.ncp]
+# Complementarity corner with a curved map crossing twice
+svg = '''
+return '<path d="M10,24 L10,68 L48,68" fill="none" stroke="currentColor" stroke-width="2"/>'
+	+ '<path d="M10,32 Q30,90 46,40" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="3,2"/><circle cx="10" cy="32" r="2.5" fill="currentColor"/><circle cx="21" cy="68" r="2.5" fill="currentColor"/>';
+'''
+
+[miniCharts.mcp]
+# Box-constrained complementarity: lower and upper branches
+svg = '''
+return '<path d="M8,24 L8,46 L46,46 L46,68" fill="none" stroke="currentColor" stroke-width="2"/>'
+	+ '<line x1="8" y1="46" x2="8" y2="46" stroke="currentColor"/><line x1="4" y1="46" x2="50" y2="46" stroke="currentColor" stroke-width="0.5" stroke-dasharray="2,2"/>';
+'''
+
+[[codeBranches]]
+model = "lcp"
+code = '''
+using JuMP, PATHSolver, Ipopt, LinearAlgebra, Random, Statistics
+M = {{M}}
+q = {{q}}
+n = length(q)
+Fop(x) = M * x .+ q  # affine map
+lb, ub = zeros(n), fill(Inf, n)  # x >= 0
+
+function solve_cp(F=Fop; lb=lb, ub=ub, start=fill(1.0, n), iters=nothing)  # mixed complementarity: lb <= x <= ub perp F(x)
+    m = Model(PATHSolver.Optimizer); set_silent(m)
+    @variable(m, x[i=1:n], start = start[i])
+    for i in 1:n
+        isfinite(lb[i]) && set_lower_bound(x[i], lb[i])
+        isfinite(ub[i]) && set_upper_bound(x[i], ub[i])
+    end
+    @constraint(m, complements(F(x), x))
+    iters === nothing || set_attribute(m, "major_iteration_limit", iters)
+    optimize!(m)
+    xs = value.(x)
+    (x = xs, Fx = F(xs), ok = termination_status(m) == MOI.LOCALLY_SOLVED, status = raw_status(m))
+end
+
+mid(a, l, u) = min(max(a, l), u)
+residual(x, F=Fop) = norm(x .- mid.(x .- F(x), lb, ub))  # natural residual: zero exactly at a solution
+
+sol = solve_cp()
+(x = round.(sol.x, digits=6), F_at_x = round.(sol.Fx, digits=6), residual = residual(sol.x), solved = sol.ok)
+'''
+
+[[codeBranches]]
+model = "ncp"
+code = '''
+using JuMP, PATHSolver, Ipopt, LinearAlgebra, Random, Statistics
+n = {{n}}
+Fop(x) = {{F}}  # nonlinear map
+lb, ub = zeros(n), fill(Inf, n)  # x >= 0
+
+function solve_cp(F=Fop; lb=lb, ub=ub, start=fill(1.0, n), iters=nothing)  # mixed complementarity: lb <= x <= ub perp F(x)
+    m = Model(PATHSolver.Optimizer); set_silent(m)
+    @variable(m, x[i=1:n], start = start[i])
+    for i in 1:n
+        isfinite(lb[i]) && set_lower_bound(x[i], lb[i])
+        isfinite(ub[i]) && set_upper_bound(x[i], ub[i])
+    end
+    @constraint(m, complements(F(x), x))
+    iters === nothing || set_attribute(m, "major_iteration_limit", iters)
+    optimize!(m)
+    xs = value.(x)
+    (x = xs, Fx = F(xs), ok = termination_status(m) == MOI.LOCALLY_SOLVED, status = raw_status(m))
+end
+
+mid(a, l, u) = min(max(a, l), u)
+residual(x, F=Fop) = norm(x .- mid.(x .- F(x), lb, ub))  # natural residual: zero exactly at a solution
+
+sol = solve_cp()
+(x = round.(sol.x, digits=6), F_at_x = round.(sol.Fx, digits=6), residual = residual(sol.x), solved = sol.ok)
+'''
+
+[[codeBranches]]
+model = "mcp"
+code = '''
+using JuMP, PATHSolver, Ipopt, LinearAlgebra, Random, Statistics
+n = {{n}}
+Fop(x) = {{F}}  # nonlinear map
+lb, ub = Float64.({{lb}}), Float64.({{ub}})  # box bounds
+
+function solve_cp(F=Fop; lb=lb, ub=ub, start=fill(1.0, n), iters=nothing)  # mixed complementarity: lb <= x <= ub perp F(x)
+    m = Model(PATHSolver.Optimizer); set_silent(m)
+    @variable(m, x[i=1:n], start = start[i])
+    for i in 1:n
+        isfinite(lb[i]) && set_lower_bound(x[i], lb[i])
+        isfinite(ub[i]) && set_upper_bound(x[i], ub[i])
+    end
+    @constraint(m, complements(F(x), x))
+    iters === nothing || set_attribute(m, "major_iteration_limit", iters)
+    optimize!(m)
+    xs = value.(x)
+    (x = xs, Fx = F(xs), ok = termination_status(m) == MOI.LOCALLY_SOLVED, status = raw_status(m))
+end
+
+mid(a, l, u) = min(max(a, l), u)
+residual(x, F=Fop) = norm(x .- mid.(x .- F(x), lb, ub))  # natural residual: zero exactly at a solution
+
+sol = solve_cp()
+(x = round.(sol.x, digits=6), F_at_x = round.(sol.Fx, digits=6), residual = residual(sol.x), solved = sol.ok)
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "plot-residual"
+label = "Residual Plot"
+desc = "Natural residual ||x - mid(lb, ub, x - F(x))|| after each PATH major iteration: the fast local convergence of the Newton method"
+code = '''
+using Plots
+res = [residual(solve_cp(; iters=k).x) for k in 0:15]
+plot(0:15, max.(res, 1e-16), marker=:o, yscale=:log10, xlabel="PATH major iterations", ylabel="Natural residual", legend=false, title="Complementarity residual")
+'''
+
+[[actionGroups.actions]]
+id = "pairs"
+label = "Complementarity Pairs"
+desc = "Each component's x_i next to F_i(x): wherever x_i is off its bounds F_i is zero, and wherever F_i is non-zero x_i sits at a bound"
+code = '''
+using Plots
+bar((1:n) .- 0.2, sol.x, bar_width=0.4, label="x", xticks=(1:n, ["i = " * string(i) for i in 1:n]), ylabel="Value", title="Complementarity pairs")
+bar!((1:n) .+ 0.2, sol.Fx, bar_width=0.4, label="F(x)")
+hline!([0], c=:black, label=false)
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "check-compl"
+label = "Complementarity Check"
+desc = "Bounds, sign conditions of F at each bound and complementarity at the solution"
+code = '''
+tol = 1e-6
+atl, atu = sol.x .<= lb .+ tol, sol.x .>= ub .- tol
+(within_bounds = all(lb .- tol .<= sol.x .<= ub .+ tol),
+ F_nonneg_at_lower = all(sol.Fx[atl .& .!atu] .>= -tol), F_nonpos_at_upper = all(sol.Fx[atu .& .!atl] .<= tol),
+ F_zero_inside = all(abs.(sol.Fx[.!atl .& .!atu]) .<= tol), max_violation = residual(sol.x))
+'''
+
+[[actionGroups.actions]]
+id = "check-status"
+label = "Solver Status"
+desc = "PATH termination message and residual, and whether the Jacobian of F is positive definite at the solution (local uniqueness indicator)"
+code = '''
+h = 1e-6
+J = reduce(hcat, [(Fop(sol.x .+ h .* [j == k ? 1.0 : 0.0 for k in 1:n]) .- sol.Fx) ./ h for j in 1:n])  # finite-difference Jacobian
+(solved = sol.ok, status = sol.status, residual = residual(sol.x), min_eig_sym_jacobian = round(minimum(eigvals(Symmetric((J + transpose(J)) / 2))), digits=4))
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "parametric"
+label = "Parametric Solve"
+desc = "Solution path as the map is shifted to F(x) + t (every component), warm-starting each solve from the previous one"
+code = '''
+using Plots
+ts = range(-1, 1, length=41)
+function solution_path(ts)
+    xs, x0 = Vector{Float64}[], sol.x
+    for t in ts
+        r = solve_cp(x -> Fop(x) .+ t; start=x0)
+        push!(xs, r.ok ? r.x : fill(NaN, n)); r.ok && (x0 = r.x)  # warm start
+    end
+    reduce(hcat, xs)
+end
+plot(ts, transpose(solution_path(ts)), lw=2, marker=:circle, ms=2, xlabel="Shift t", ylabel="x*(t)", label=permutedims(["x" * string(i) for i in 1:n]), title="Parametric solve")
+'''
+
+[[actionGroups.actions]]
+id = "multistart"
+label = "Solution Multiplicity"
+desc = "Solve from 50 random starting points and list the distinct solutions PATH reaches, with how often each is found"
+code = '''
+rng = MersenneTwister(1)
+found = Dict{Vector{Float64}, Int}()
+for _ in 1:50
+    r = solve_cp(; start=mid.(3 .* rand(rng, n), lb, ub))
+    r.ok && residual(r.x) < 1e-6 && (k = round.(r.x, digits=4); found[k] = get(found, k, 0) + 1)
+end
+[(x = k, times_found = v) for (k, v) in sort(collect(found), by=last, rev=true)]
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "lp-relax"
+label = "Merit Function Reformulation"
+desc = "Solve the same problem by minimising the squared Fischer-Burmeister merit function with Ipopt, and compare with PATH"
+code = '''
+fb(a, b) = sqrt(a^2 + b^2 + 1e-12) - a - b  # zero iff a >= 0, b >= 0, ab = 0
+function phi(x, Fx, i)  # Billups merit for each bound type
+    lo, up = isfinite(lb[i]), isfinite(ub[i])
+    lo && up ? fb(x[i] - lb[i], -fb(ub[i] - x[i], -Fx[i])) : lo ? fb(x[i] - lb[i], Fx[i]) : up ? fb(ub[i] - x[i], -Fx[i]) : Fx[i]
+end
+t = @elapsed begin
+    m = Model(Ipopt.Optimizer); set_silent(m)
+    @variable(m, x[1:n], start = 1.0)
+    Fx = Fop(x)
+    @objective(m, Min, sum(phi(x, Fx, i)^2 for i in 1:n))
+    optimize!(m)
+end
+t_path = @elapsed solve_cp()
+[(method = "PATH", x = round.(sol.x, digits=4), residual = residual(sol.x), seconds = round(t_path, digits=3)),
+ (method = "Fischer-Burmeister + Ipopt", x = round.(value.(x), digits=4), residual = residual(value.(x)), seconds = round(t, digits=3))]
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "dual-interp"
+label = "Dual Interpretation"
+desc = "Classify each pair: at the lower bound (F_i >= 0 acts as a binding constraint), at the upper bound (F_i <= 0), or interior (F_i = 0 holds as an equation)"
+code = '''
+tol = 1e-6
+[(i = i, x = round(sol.x[i], digits=5), F = round(sol.Fx[i], digits=5),
+  status = sol.x[i] <= lb[i] + tol ? (abs(sol.Fx[i]) <= tol ? "at lower bound, degenerate" : "at lower bound") :
+           sol.x[i] >= ub[i] - tol ? "at upper bound" : "interior, F = 0") for i in 1:n]
+'''
+
+[[actionGroups.actions]]
+id = "sensitivity"
+label = "Sensitivity Analysis"
+desc = "Finite-difference response of the solution to a small shift in each component of F (for the LCP, a shift of q): dx_i / dshift_j"
+code = '''
+d = 1e-4
+S = reduce(hcat, [(solve_cp(x -> Fop(x) .+ d .* [k == j ? 1.0 : 0.0 for k in 1:n]; start=sol.x).x .- sol.x) ./ d for j in 1:n])
+round.(S, digits=4)  # column j: response of x to shifting F_j
+'''

@@ -1,0 +1,612 @@
+# Surrogate-Based Optimisation Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/sbo.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Surrogate-Based Optimisation"
+viewType = "pollis.sbo"
+defaultModel = "rsm"
+
+[[packages]]
+name = "Surrogates.jl"
+github = "https://github.com/SciML/Surrogates.jl"
+
+[requires]
+packages = ["Surrogates.jl", "SpecialFunctions.jl", "Optim.jl", "Plots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Response Surface Methods"
+file = "sbo/tutorial-01-rsm.ipynb"
+bundled = true
+description = "Polynomial response surface fitted to sample data; minimised directly; interpretable for low-dimensional smooth problems"
+
+[[notebookSections.notebooks]]
+name = "Kriging"
+file = "sbo/tutorial-02-kriging.ipynb"
+bundled = true
+description = "GP interpolant from geostatistics; provides uncertainty estimates; used with EI or LCBS acquisition; suited to expensive black-box problems"
+
+[[notebookSections.notebooks]]
+name = "Radial Basis Functions"
+file = "sbo/tutorial-03-rbf.ipynb"
+bundled = true
+description = "Exact interpolant using radial basis functions; no uncertainty estimate; flexible kernel choice; scales to higher dimensions"
+
+[[wikis]]
+name = "Factsheet"
+file = "sbo/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "sbo/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "sbo/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "sbo/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "sbo/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "sbo/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Surrogates"
+
+[[wikis]]
+name = "Response Surface Methods"
+file = "sbo/rsm.md"
+bundled = true
+
+[[wikis]]
+name = "Kriging"
+file = "sbo/kriging.md"
+bundled = true
+
+[[wikis]]
+name = "Radial Basis Functions"
+file = "sbo/rbf.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Engineering Design via Surrogate Modelling: A Practical Guide"
+authors = "Forrester, Alexander I.J.; Sobester, Andras; Keane, Andy J."
+year = 2008
+journal = "Wiley"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Design and Analysis of Computer Experiments"
+authors = "Sacks, Jerome; Welch, William J.; Mitchell, Toby J.; Wynn, Henry P."
+year = 1989
+journal = "Statistical Science"
+openAccess = false
+
+[[references]]
+title = "A Taxonomy of Global Optimization Methods Based on Response Surfaces"
+authors = "Jones, Donald R."
+year = 2001
+journal = "Journal of Global Optimization"
+openAccess = false
+
+[[models]]
+id = "rsm"
+label = "Response Surface Methods"
+
+[[models]]
+id = "kriging"
+label = "Kriging"
+
+[[models]]
+id = "rbf"
+label = "Radial Basis Functions"
+
+[[bullets]]
+text = "Response Surface Methods"
+detail = "polynomial surrogate fitted to sample data; minimised directly; interpretable and fast; suited to low-dimensional smooth problems"
+
+[[bullets]]
+text = "Kriging"
+detail = "GP interpolant from geostatistics; uncertainty estimates guide EI acquisition; suited to expensive black-box functions"
+
+[[bullets]]
+text = "Radial Basis Functions"
+detail = "exact radial basis interpolant with flexible kernel choice; no uncertainty estimate; scales to moderate dimensions"
+
+[[decisionRows]]
+task = "Response Surface Methods"
+context = "Smooth, low-dimensional objectives, when an interpretable model is wanted"
+purpose = "Fits a full quadratic by least squares and moves to its minimum within a region around the best point"
+
+[[decisionRows]]
+task = "Kriging"
+context = "Expensive black boxes with few evaluations, where uncertainty should guide sampling"
+purpose = "Gaussian-process interpolant with a length scale chosen by marginal likelihood; the next point maximises expected improvement"
+
+[[decisionRows]]
+task = "Radial Basis Functions"
+context = "Moderate dimensions and budgets; fast to refit"
+purpose = "Cubic RBF interpolant with a linear tail; the next point balances a low prediction against distance from evaluated points (stochastic RBF)"
+
+[[inputs]]
+id = "n"
+label = "Dimension (n)"
+tooltip = "Number of decision variables. The default objective and bounds adapt to it (n >= 2)."
+default = "2"
+
+[[inputs]]
+id = "obj"
+label = "Objective f(x)"
+tooltip = "Julia expression for the (expensive) objective, in terms of the vector x. Default: the Rosenbrock function (minimum 0 at x = ones(n))."
+default = "sum(100 .* (x[2:end] .- x[1:end-1] .^ 2) .^ 2 .+ (1 .- x[1:end-1]) .^ 2)"
+
+[[inputs]]
+id = "lb"
+label = "Lower Bounds"
+tooltip = "Julia vector of lower bounds, one per variable."
+default = "fill(-2.0, n)"
+newRow = true
+
+[[inputs]]
+id = "ub"
+label = "Upper Bounds"
+tooltip = "Julia vector of upper bounds, one per variable."
+default = "fill(2.0, n)"
+
+[[inputs]]
+id = "ninit"
+label = "Initial Samples"
+tooltip = "Number of points in the Latin-hypercube initial design. More points give a better first surrogate but use evaluations up front."
+default = "10"
+newRow = true
+
+[[inputs]]
+id = "budget"
+label = "Evaluations"
+tooltip = "Number of surrogate-guided evaluations after the initial design."
+default = "40"
+
+[[inputs]]
+id = "radius"
+label = "Region Size"
+tooltip = "Size of the region around the best point in which the quadratic is minimised, as a fraction of the box."
+default = "0.2"
+models = ["rsm"]
+newRow = true
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.rsm]
+# A fitted parabola through scattered points
+svg = '''
+var s = '<path d="M6,38 Q27,86 48,38" fill="none" stroke="currentColor" stroke-width="1.2"/>';
+[[10,46],[18,58],[26,60],[34,57],[44,44]].forEach(function (p) { s += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="1.8" fill="currentColor"/>'; });
+return s;
+'''
+
+[miniCharts.kriging]
+# A GP mean with an uncertainty band pinched at the data
+svg = '''
+return '<path d="M6,44 Q12,58 18,52 Q26,40 32,56 Q40,72 48,50 L48,40 Q40,54 32,52 Q26,36 18,48 Q12,50 6,40 Z" fill="currentColor" opacity="0.2"/>'
+	+ '<path d="M6,42 Q12,54 18,50 Q26,38 32,54 Q40,64 48,45" fill="none" stroke="currentColor" stroke-width="1.1"/>'
+	+ '<circle cx="18" cy="50" r="1.8" fill="currentColor"/><circle cx="32" cy="54" r="1.8" fill="currentColor"/>';
+'''
+
+[miniCharts.rbf]
+# Bumps centred at the data summing to a curve
+svg = '''
+var s = '';
+[14,27,40].forEach(function (c) { s += '<path d="M' + (c - 9) + ',66 Q' + c + ',42 ' + (c + 9) + ',66" fill="none" stroke="currentColor" stroke-width="0.7" opacity="0.5"/><circle cx="' + c + '" cy="66" r="1.6" fill="currentColor"/>'; });
+return s + '<path d="M6,60 Q14,40 20,50 Q27,40 34,50 Q40,40 48,58" fill="none" stroke="currentColor" stroke-width="1.1"/>';
+'''
+
+[[codeBranches]]
+model = "rsm"
+code = '''
+using LinearAlgebra, Statistics, Random
+
+n = {{n}}  # dimension
+f(x) = {{obj}}  # the expensive objective
+lb, ub = {{lb}}, {{ub}}  # search box
+n0 = {{ninit}}  # initial design size
+budget = {{budget}}  # surrogate-guided evaluations
+
+# Latin-hypercube design: one point per stratum in every variable
+function lhs(k, lb, ub)
+    U = reduce(hcat, [(randperm(k) .- rand(k)) ./ k for _ in eachindex(lb)])
+    [lb .+ U[i, :] .* (ub .- lb) for i in 1:k]
+end
+unit(x, lb, ub) = (x .- lb) ./ (ub .- lb)  # the box mapped to [0, 1]^n
+# candidate points: uniform in the box and Gaussian around the best point
+candidates(xb, lb, ub, r; k=500) = [[lb .+ rand(length(lb)) .* (ub .- lb) for _ in 1:k];
+                                    [clamp.(xb .+ r .* (ub .- lb) .* randn(length(lb)), lb, ub) for _ in 1:k]]
+RADIUS = {{radius}}  # region around the best point
+
+features(z) = [1.0; z; [z[i] * z[j] for i in eachindex(z) for j in i:length(z)]]  # full quadratic
+function fit(X, y, lb, ub)
+    F = permutedims(reduce(hcat, [features(unit(x, lb, ub)) for x in X]))
+    beta = (transpose(F) * F + 1e-8I) \ (transpose(F) * y)  # least squares (slightly regularised)
+    (mean = x -> dot(features(unit(x, lb, ub)), beta), sd = x -> 0.0, coefficients = beta)
+end
+# minimise the quadratic among candidates near the best point
+acquire(m, X, y, lb, ub, t) = (C = candidates(X[argmin(y)], lb, ub, RADIUS; k=1000)[1001:end]; C[argmin(m.mean.(C))])
+
+function search(; budget=budget, n0=n0, seed=1, lb=lb, ub=ub, f=f)
+    Random.seed!(seed)
+    X = lhs(n0, lb, ub); y = f.(X)
+    for t in 1:budget
+        m = fit(X, y, lb, ub)  # refit the surrogate
+        xn = acquire(m, X, y, lb, ub, t)  # choose the next point
+        push!(X, xn); push!(y, f(xn))  # one expensive evaluation
+    end
+    k = argmin(y)
+    (x = X[k], fx = y[k], X = X, y = y, trace = accumulate(min, y), model = fit(X, y, lb, ub))
+end
+
+res = search()
+x_best, f_best = res.x, res.fx
+(best_point = x_best, best_value = f_best, evaluations = length(res.y))
+'''
+
+[[codeBranches]]
+model = "kriging"
+code = '''
+using SpecialFunctions, LinearAlgebra, Statistics, Random
+
+n = {{n}}  # dimension
+f(x) = {{obj}}  # the expensive objective
+lb, ub = {{lb}}, {{ub}}  # search box
+n0 = {{ninit}}  # initial design size
+budget = {{budget}}  # surrogate-guided evaluations
+
+# Latin-hypercube design: one point per stratum in every variable
+function lhs(k, lb, ub)
+    U = reduce(hcat, [(randperm(k) .- rand(k)) ./ k for _ in eachindex(lb)])
+    [lb .+ U[i, :] .* (ub .- lb) for i in 1:k]
+end
+unit(x, lb, ub) = (x .- lb) ./ (ub .- lb)  # the box mapped to [0, 1]^n
+# candidate points: uniform in the box and Gaussian around the best point
+candidates(xb, lb, ub, r; k=500) = [[lb .+ rand(length(lb)) .* (ub .- lb) for _ in 1:k];
+                                    [clamp.(xb .+ r .* (ub .- lb) .* randn(length(lb)), lb, ub) for _ in 1:k]]
+
+normcdf(z) = 0.5 * erfc(-z / sqrt(2)); normpdf(z) = exp(-z^2 / 2) / sqrt(2pi)
+
+function fit(X, y, lb, ub)
+    Z = [unit(x, lb, ub) for x in X]; m0, s0 = mean(y), std(y) + eps()
+    yn = (y .- m0) ./ s0  # standardised responses
+    kern(a, b, l) = exp(-sum(abs2, a - b) / (2l^2))  # squared-exponential kernel
+    best = (ll = -Inf,)
+    for l in (0.05, 0.1, 0.2, 0.3, 0.5, 1.0)  # length scale by maximum marginal likelihood
+        C = cholesky(Symmetric([kern(a, b, l) for a in Z, b in Z] + 1e-6I))
+        alpha = C \ yn
+        ll = -0.5 * dot(yn, alpha) - sum(log, diag(C.L))
+        ll > best.ll && (best = (ll = ll, l = l, C = C, alpha = alpha))
+    end
+    kvec(x) = [kern(unit(x, lb, ub), b, best.l) for b in Z]
+    (mean = x -> m0 + s0 * dot(kvec(x), best.alpha),
+     sd = x -> (k = kvec(x); s0 * sqrt(max(1 - dot(k, best.C \ k), 1e-12))), length_scale = best.l)
+end
+# expected improvement over the best value so far
+ei(m, x, fbest) = (mu = m.mean(x); sd = m.sd(x); d = fbest - mu; d * normcdf(d / sd) + sd * normpdf(d / sd))
+acquire(m, X, y, lb, ub, t) = (C = candidates(X[argmin(y)], lb, ub, 0.1); C[argmax([ei(m, c, minimum(y)) for c in C])])
+
+function search(; budget=budget, n0=n0, seed=1, lb=lb, ub=ub, f=f)
+    Random.seed!(seed)
+    X = lhs(n0, lb, ub); y = f.(X)
+    for t in 1:budget
+        m = fit(X, y, lb, ub)  # refit the surrogate
+        xn = acquire(m, X, y, lb, ub, t)  # choose the next point
+        push!(X, xn); push!(y, f(xn))  # one expensive evaluation
+    end
+    k = argmin(y)
+    (x = X[k], fx = y[k], X = X, y = y, trace = accumulate(min, y), model = fit(X, y, lb, ub))
+end
+
+res = search()
+x_best, f_best = res.x, res.fx
+(best_point = x_best, best_value = f_best, evaluations = length(res.y))
+'''
+
+[[codeBranches]]
+model = "rbf"
+code = '''
+using LinearAlgebra, Statistics, Random
+
+n = {{n}}  # dimension
+f(x) = {{obj}}  # the expensive objective
+lb, ub = {{lb}}, {{ub}}  # search box
+n0 = {{ninit}}  # initial design size
+budget = {{budget}}  # surrogate-guided evaluations
+
+# Latin-hypercube design: one point per stratum in every variable
+function lhs(k, lb, ub)
+    U = reduce(hcat, [(randperm(k) .- rand(k)) ./ k for _ in eachindex(lb)])
+    [lb .+ U[i, :] .* (ub .- lb) for i in 1:k]
+end
+unit(x, lb, ub) = (x .- lb) ./ (ub .- lb)  # the box mapped to [0, 1]^n
+# candidate points: uniform in the box and Gaussian around the best point
+candidates(xb, lb, ub, r; k=500) = [[lb .+ rand(length(lb)) .* (ub .- lb) for _ in 1:k];
+                                    [clamp.(xb .+ r .* (ub .- lb) .* randn(length(lb)), lb, ub) for _ in 1:k]]
+
+function fit(X, y, lb, ub)
+    Z = [unit(x, lb, ub) for x in X]; k, d = length(Z), length(lb)
+    P = [ones(k) permutedims(reduce(hcat, Z))]  # linear tail
+    M = [[norm(a - b)^3 for a in Z, b in Z] P; transpose(P) zeros(d + 1, d + 1)]
+    c = pinv(M) * [y; zeros(d + 1)]
+    w, v = c[1:k], c[k+1:end]
+    (mean = x -> (z = unit(x, lb, ub); sum(w[i] * norm(z - Z[i])^3 for i in 1:k) + v[1] + dot(v[2:end], z)), sd = x -> 0.0)
+end
+# stochastic RBF: weighted score of prediction and distance to evaluated points, cycling the weight
+function acquire(m, X, y, lb, ub, t)
+    C = candidates(X[argmin(y)], lb, ub, 0.1)
+    s = m.mean.(C); dist = [minimum(norm(unit(c, lb, ub) - unit(x, lb, ub)) for x in X) for c in C]
+    scale(v) = (v .- minimum(v)) ./ max(maximum(v) - minimum(v), eps())
+    w = (0.3, 0.5, 0.8, 0.95)[mod1(t, 4)]  # weight on the prediction
+    C[argmin(w .* scale(s) .+ (1 - w) .* (1 .- scale(dist)))]
+end
+
+function search(; budget=budget, n0=n0, seed=1, lb=lb, ub=ub, f=f)
+    Random.seed!(seed)
+    X = lhs(n0, lb, ub); y = f.(X)
+    for t in 1:budget
+        m = fit(X, y, lb, ub)  # refit the surrogate
+        xn = acquire(m, X, y, lb, ub, t)  # choose the next point
+        push!(X, xn); push!(y, f(xn))  # one expensive evaluation
+    end
+    k = argmin(y)
+    (x = X[k], fx = y[k], X = X, y = y, trace = accumulate(min, y), model = fit(X, y, lb, ub))
+end
+
+res = search()
+x_best, f_best = res.x, res.fx
+(best_point = x_best, best_value = f_best, evaluations = length(res.y))
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "convergence"
+label = "Convergence Trace"
+desc = "Best observed value per evaluation; the dashed line marks the end of the initial design"
+code = '''
+using Plots
+
+plot(res.trace, xlabel="evaluation", ylabel="best f", label="best so far", linetype=:steppost)
+scatter!(res.y, markersize=2, alpha=0.5, label="evaluations")
+vline!([n0 + 0.5], linestyle=:dash, label="initial design")
+'''
+
+[[actionGroups.actions]]
+id = "surrogate-surface"
+label = "Surrogate Surface"
+desc = "Contours of the final surrogate over the first two variables (others at the best point) with the evaluated points"
+code = '''
+using Plots
+
+xs = range(lb[1], ub[1], length=80); ys = range(lb[2], ub[2], length=80)
+contour(xs, ys, (a, b) -> res.model.mean([a; b; x_best[3:end]]), fill=true, xlabel="x1", ylabel="x2")
+scatter!(first.(res.X), getindex.(res.X, 2), color=:white, markersize=3, label="evaluated")
+scatter!([x_best[1]], [x_best[2]], marker=:star, markersize=10, color=:red, label="best")
+'''
+
+[[actionGroups.actions]]
+id = "predicted-actual"
+label = "Predicted vs Actual"
+desc = "Surrogate predictions against true values on 200 fresh random points (extra evaluations of f)"
+code = '''
+using Plots
+
+Random.seed!(2)
+H = [lb .+ rand(length(lb)) .* (ub .- lb) for _ in 1:200]
+yt, yp = f.(H), res.model.mean.(H)
+scatter(yt, yp, xlabel="true f", ylabel="predicted f", label="holdout", markersize=3)
+plot!(collect(extrema([yt; yp])), collect(extrema([yt; yp])), linestyle=:dash, color=:red, label="perfect fit")
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "loo-error"
+label = "Leave-One-Out Error"
+desc = "Refit without each evaluated point and predict it: cross-validated error of the surrogate"
+code = '''
+err = map(eachindex(res.X)) do i
+    keep = setdiff(eachindex(res.X), i)
+    fit(res.X[keep], res.y[keep], lb, ub).mean(res.X[i]) - res.y[i]
+end
+(rmse = sqrt(mean(abs2, err)), max_abs_error = maximum(abs, err), response_std = std(res.y), relative_rmse = sqrt(mean(abs2, err)) / std(res.y))
+'''
+
+[[actionGroups.actions]]
+id = "exploration-check"
+label = "Exploration Check"
+desc = "How the guided evaluations split between exploring the box and refining around the best point"
+code = '''
+guided = res.X[n0+1:end]
+dist_best = [norm(unit(x, lb, ub) - unit(x_best, lb, ub)) for x in guided]
+dmin = [minimum(norm(unit(res.X[i], lb, ub) - unit(res.X[j], lb, ub)) for j in 1:i-1) for i in n0+1:length(res.X)]
+(share_near_best = mean(dist_best .< 0.1), median_distance_to_best = median(dist_best),
+ smallest_gap_to_earlier_point = minimum(dmin), improvements_after_design = count(diff(res.trace[n0:end]) .< 0))
+'''
+
+[[actionGroups.actions]]
+id = "sample-size"
+label = "Sample Size Sensitivity"
+desc = "Best value for different initial design sizes at the same total number of evaluations, 3 seeds each"
+code = '''
+total = n0 + budget
+map(filter(<(total), [max(2, n + 1), 5, 10, 20, 40])) do k
+    v = [search(n0=k, budget=total - k, seed=s).fx for s in 1:3]
+    (initial_samples = k, guided = total - k, mean_best = mean(v), worst_best = maximum(v))
+end
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "run-sbo"
+label = "Best Solution"
+desc = "The best evaluated point, its value and what the surrogate predicts there"
+code = '''
+(best_point = round.(x_best, sigdigits=6), best_value = f_best, surrogate_prediction = res.model.mean(x_best),
+ found_at_evaluation = argmin(res.y), evaluations = length(res.y))
+'''
+
+[[actionGroups.actions]]
+id = "multi-start"
+label = "Multi-Start"
+desc = "Three independent initial designs; keep the best result"
+code = '''
+runs = [search(seed=s) for s in 1:3]
+k = argmin(getfield.(runs, :fx))
+(best_values = getfield.(runs, :fx), best_point = round.(runs[k].x, sigdigits=6), total_evaluations = sum(length(r.y) for r in runs))
+'''
+
+[[actionGroups.actions]]
+id = "local-refine"
+label = "Local Refinement"
+desc = "Polish the best point with Nelder-Mead on the true objective, limited to 100 evaluations (Optim.jl)"
+code = '''
+using Optim
+
+r = Optim.optimize(f, x_best, NelderMead(), Optim.Options(f_calls_limit=100))
+(surrogate_best = f_best, refined = Optim.minimum(r), improvement = f_best - Optim.minimum(r),
+ refined_point = round.(clamp.(Optim.minimizer(r), lb, ub), sigdigits=6), extra_evaluations = Optim.f_calls(r))
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "surrogate-comparison"
+label = "Compare with Surrogates.jl"
+desc = "Holdout accuracy of this surrogate against Surrogates.jl's Kriging and RadialBasis fitted to the same evaluated points"
+code = '''
+using Surrogates
+
+xs = Tuple.(res.X)  # Surrogates.jl takes points as tuples
+sk = Surrogates.Kriging(xs, res.y, lb, ub)
+sr = Surrogates.RadialBasis(xs, res.y, lb, ub)
+Random.seed!(2)
+H = [lb .+ rand(length(lb)) .* (ub .- lb) for _ in 1:200]; yt = f.(H)
+rmse(p) = sqrt(mean(abs2, p .- yt))
+[(model = "this panel's surrogate", holdout_rmse = rmse(res.model.mean.(H))),
+ (model = "Surrogates.jl Kriging", holdout_rmse = rmse([sk(Tuple(h)) for h in H])),
+ (model = "Surrogates.jl RadialBasis", holdout_rmse = rmse([sr(Tuple(h)) for h in H]))]
+'''
+
+[[actionGroups.actions]]
+id = "budget-sensitivity"
+label = "Budget Sensitivity"
+desc = "Best value found for increasing numbers of guided evaluations"
+code = '''
+map(unique([5, 10, 20, budget, 2budget])) do b
+    sec = @elapsed r = search(budget=b)
+    (guided_evaluations = b, best_value = r.fx, seconds = sec)
+end
+'''
+
+[[actionGroups.actions]]
+id = "optimizer-comparison"
+label = "Compare with Direct Search"
+desc = "The same number of evaluations given to random search and to Nelder-Mead (Optim.jl), 3 seeds each"
+code = '''
+using Optim
+
+total = length(res.y)
+function random_search(seed)
+    Random.seed!(seed)
+    minimum(f(lb .+ rand(length(lb)) .* (ub .- lb)) for _ in 1:total)
+end
+function nelder_mead(seed)
+    Random.seed!(seed)
+    r = Optim.optimize(x -> f(clamp.(x, lb, ub)), lb .+ rand(length(lb)) .* (ub .- lb), NelderMead(), Optim.Options(f_calls_limit=total))
+    Optim.minimum(r)
+end
+map(["surrogate (selected)" => s -> search(seed=s).fx, "random search" => random_search, "Nelder-Mead" => nelder_mead]) do (name, run)
+    v = [run(s) for s in 1:3]
+    (method = name, evaluations = total, mean_best = mean(v), worst_best = maximum(v))
+end
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "solution-summary"
+label = "Solution Summary"
+desc = "Each variable of the best point with its bounds, and the model's own settings"
+code = '''
+(variables = [(variable = i, value = x_best[i], lower = lb[i], upper = ub[i]) for i in eachindex(x_best)],
+{{?model=rsm}} quadratic_coefficients = round.(res.model.coefficients, sigdigits=4), region = RADIUS,
+{{?model=kriging}} length_scale = res.model.length_scale,
+ best_value = f_best, initial_samples = n0, guided_evaluations = budget)
+'''
+
+[[actionGroups.actions]]
+id = "model-accuracy"
+label = "Model Accuracy"
+desc = "RMSE and R-squared on 200 fresh random points, and on points near the best one (extra evaluations of f)"
+code = '''
+Random.seed!(3)
+H = [lb .+ rand(length(lb)) .* (ub .- lb) for _ in 1:200]
+N = [clamp.(x_best .+ 0.05 .* (ub .- lb) .* randn(length(lb)), lb, ub) for _ in 1:200]
+score(P) = (yt = f.(P); yp = res.model.mean.(P); (rmse = sqrt(mean(abs2, yp .- yt)), r_squared = 1 - sum(abs2, yp .- yt) / sum(abs2, yt .- mean(yt))))
+(whole_box = score(H), near_best = score(N))
+'''
+
+[[actionGroups.actions]]
+id = "surrogate-guide"
+label = "Surrogate Guide"
+desc = "When to use a response surface, Kriging or radial basis functions"
+code = '''
+[(surrogate = "Response surface (quadratic)", best_for = "smooth, nearly quadratic objectives in low dimension", cost = "needs at least (n + 1)(n + 2) / 2 points", uncertainty = false),
+ (surrogate = "Kriging (Gaussian process)", best_for = "very expensive objectives and small budgets; principled exploration via expected improvement", cost = "cubic in the number of points", uncertainty = true),
+ (surrogate = "Radial basis functions", best_for = "moderate dimensions and budgets; robust default", cost = "cubic in the number of points, but no hyperparameters", uncertainty = false)]
+'''

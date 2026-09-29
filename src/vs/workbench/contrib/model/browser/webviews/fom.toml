@@ -1,0 +1,792 @@
+# First-Order Methods Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/fom.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "First-Order Methods"
+viewType = "pollis.fom"
+defaultModel = "sgd"
+
+[[packages]]
+name = "Optimisers.jl"
+github = "https://github.com/FluxML/Optimisers.jl"
+
+[[packages.videos]]
+title = "High Performance Computing in Julia"
+description = "An 18-video course by Jamie Mair on writing fast Julia code"
+url = "https://www.youtube.com/playlist?list=PLUAq6xQKFgGr39PiyrPk_C9dhBKvWcjUA"
+
+[[packages]]
+name = "Optimization.jl"
+github = "https://github.com/SciML/Optimization.jl"
+
+[requires]
+packages = ["Optimisers.jl", "Zygote.jl", "Optimization.jl", "Plots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "SGD"
+file = "fom/tutorial-01-sgd.ipynb"
+bundled = true
+description = "Stochastic gradient descent with Optimisers.jl: setup, training loop, and learning rate scheduling"
+
+[[notebookSections.notebooks]]
+name = "Adam and AdaMax"
+file = "fom/tutorial-02-adam-adamax.ipynb"
+bundled = true
+description = "Adam and AdaMax optimizers with adaptive moment estimates using Optimisers.jl"
+
+[[notebookSections.notebooks]]
+name = "AdaGrad"
+file = "fom/tutorial-03-adagrad.ipynb"
+bundled = true
+description = "AdaGrad for sparse features: accumulated squared gradient scaling with Optimisers.jl"
+
+[[notebookSections.notebooks]]
+name = "Momentum and Nesterov"
+file = "fom/tutorial-04-momentum-nesterov.ipynb"
+bundled = true
+description = "Momentum SGD and Nesterov look-ahead gradient via Optimization.jl + OptimizationOptimisers.jl"
+
+[[notebookSections.notebooks]]
+name = "RMSProp and AdamW"
+file = "fom/tutorial-05-rmsprop-adamw.ipynb"
+bundled = true
+description = "RMSProp and AdamW with decoupled weight decay via Optimization.jl + OptimizationOptimisers.jl"
+
+[[notebookSections.notebooks]]
+name = "Benchmarking All Methods"
+file = "fom/tutorial-06-benchmark.ipynb"
+bundled = true
+description = "Compare all 8 first-order methods on benchmark objectives"
+
+[[wikis]]
+name = "Factsheet"
+file = "fom/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "fom/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "fom/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "fom/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "fom/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "fom/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Algorithm Details"
+
+[[wikis]]
+name = "SGD"
+file = "fom/sgd.md"
+bundled = true
+
+[[wikis]]
+name = "Adam"
+file = "fom/adam.md"
+bundled = true
+
+[[wikis]]
+name = "AdaMax"
+file = "fom/adamax.md"
+bundled = true
+
+[[wikis]]
+name = "AdaGrad"
+file = "fom/adagrad.md"
+bundled = true
+
+[[wikis]]
+name = "Momentum"
+file = "fom/momentum.md"
+bundled = true
+
+[[wikis]]
+name = "Nesterov"
+file = "fom/nesterov.md"
+bundled = true
+
+[[wikis]]
+name = "RMSProp"
+file = "fom/rmsprop.md"
+bundled = true
+
+[[wikis]]
+name = "AdamW"
+file = "fom/adamw.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "Optim: A mathematical optimization package for Julia"
+authors = "Mogensen, Patrick Kofod; Riseth, Asbjorn Nilsen"
+year = 2018
+journal = "Journal of Open Source Software"
+doi = "10.21105/joss.00615"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Numerical Optimization"
+authors = "Nocedal, Jorge; Wright, Stephen J."
+year = 2006
+journal = "Springer (2nd ed.)"
+doi = "10.1007/978-0-387-40065-5"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Function minimisation by conjugate gradients"
+authors = "Fletcher, R.; Reeves, C. M."
+year = 1964
+journal = "The Computer Journal"
+doi = "10.1093/comjnl/7.2.149"
+openAccess = false
+
+[[references]]
+title = "Adam: A Method for Stochastic Optimization"
+authors = "Kingma, Diederik P.; Ba, Jimmy Lei"
+year = 2015
+journal = "International Conference on Learning Representations"
+doi = "10.48550/arXiv.1412.6980"
+openAccess = true
+
+[[references]]
+title = "Some methods of speeding up the convergence of iteration methods"
+authors = "Polyak, Boris T."
+year = 1964
+journal = "USSR Computational Mathematics and Mathematical Physics"
+doi = "10.1016/0041-5553(64)90137-5"
+openAccess = false
+
+[[references]]
+title = "A method of solving a convex programming problem with convergence rate O(1/k^2)"
+authors = "Nesterov, Yurii"
+year = 1983
+journal = "Soviet Mathematics Doklady"
+openAccess = false
+
+[[references]]
+title = "Lecture 6.5 - RMSProp: Divide the gradient by a running average of its recent magnitude"
+authors = "Hinton, Geoffrey"
+year = 2012
+journal = "COURSERA: Neural Networks for Machine Learning (unpublished)"
+url = "https://www.cs.toronto.edu/~tijmen/csc321/slides/lecture_slides_lec6.pdf"
+openAccess = true
+
+[[references]]
+title = "Decoupled Weight Decay Regularization"
+authors = "Loshchilov, Ilya; Hutter, Frank"
+year = 2019
+journal = "International Conference on Learning Representations"
+doi = "10.48550/arXiv.1711.05101"
+openAccess = true
+
+[[models]]
+id = "sgd"
+label = "SGD"
+
+[[models]]
+id = "adam"
+label = "Adam"
+
+[[models]]
+id = "adamax"
+label = "AdaMax"
+
+[[models]]
+id = "adagrad"
+label = "AdaGrad"
+
+[[models]]
+id = "momentum"
+label = "Momentum"
+
+[[models]]
+id = "nesterov"
+label = "Nesterov"
+
+[[models]]
+id = "rmsprop"
+label = "RMSProp"
+
+[[models]]
+id = "adamw"
+label = "AdamW"
+
+[[bullets]]
+text = "Stochastic gradient descent - simple, noisy updates scaled by a fixed learning rate"
+detail = ""
+
+[[bullets]]
+text = "Adam"
+detail = "adaptive moment estimation; per-parameter rates via first and second gradient moments"
+
+[[bullets]]
+text = "AdaMax"
+detail = "Adam variant with L∞ norm update; robust for embeddings and sparse gradients"
+
+[[bullets]]
+text = "AdaGrad - Adaptively adjusts learning rates per parameter, but its continuously shrinking learning rate can cause premature convergence. Modern deep learning therefore often prefers RMSProp or Adam."
+detail = ""
+
+[[bullets]]
+text = "Momentum"
+detail = "SGD with velocity accumulation; smooths oscillations and accelerates convergence"
+
+[[bullets]]
+text = "Nesterov"
+detail = "momentum SGD with look-ahead gradient; corrects overshoot before it happens"
+
+[[bullets]]
+text = "RMSProp"
+detail = "normalises by exponential moving avg of squared gradients; fixes AdaGrad decay"
+
+[[bullets]]
+text = "AdamW"
+detail = "Adam with decoupled weight decay; prevents L2 regularisation coupling to adaptive rates"
+
+[[decisionRows]]
+task = "SGD"
+context = "Baseline, or well-scaled problems with a tuned schedule"
+purpose = "x -= lr * g: the plain gradient step"
+
+[[decisionRows]]
+task = "Momentum / Nesterov"
+context = "Ill-conditioned valleys where plain steps zig-zag"
+purpose = "Accumulate a velocity (Nesterov evaluates the gradient at the look-ahead point) to damp oscillation and speed up along the valley"
+
+[[decisionRows]]
+task = "AdaGrad / RMSProp"
+context = "Parameters on very different scales, sparse features"
+purpose = "Scale each coordinate by its gradient history (all of it for AdaGrad, a moving average for RMSProp)"
+
+[[decisionRows]]
+task = "Adam / AdaMax / AdamW"
+context = "Default for deep learning; AdamW when regularising with weight decay"
+purpose = "Momentum plus per-coordinate scaling; AdaMax uses the infinity norm, AdamW decouples weight decay from the gradient"
+
+[[inputs]]
+id = "f"
+label = "Objective f(x)"
+tooltip = "Julia expression for the scalar loss to minimise. Use x[1], x[2], ... for the components."
+default = "(x[1] - 1)^2 + 10 * (x[2] + 0.5)^2"
+
+[[inputs]]
+id = "x0"
+label = "Initial Parameters x0"
+tooltip = "Starting parameter vector as a Julia array."
+default = "[-2.0, 1.5]"
+
+[[inputs]]
+id = "lr"
+label = "Learning Rate"
+tooltip = "Step size. SGD and the momentum methods work well near 0.01; Adam, AdamW and RMSProp typically use 0.001 to 0.01."
+default = "0.01"
+newRow = true
+
+[[inputs]]
+id = "rho"
+label = "Momentum rho"
+tooltip = "Fraction of the previous velocity kept at each step; 0.9 is standard."
+default = "0.9"
+models = ["momentum", "nesterov"]
+
+[[inputs]]
+id = "decay"
+label = "Weight Decay"
+tooltip = "Decoupled weight decay: each step also shrinks the parameters by lr * decay * x, independently of the adaptive scaling."
+default = "0.01"
+models = ["adamw"]
+
+[[inputs]]
+id = "iters"
+label = "Iterations"
+tooltip = "Number of update steps."
+default = "2000"
+
+[[inputs]]
+id = "noise"
+label = "Gradient Noise"
+tooltip = "Standard deviation of Gaussian noise added to each gradient to imitate minibatch sampling. 0 gives the deterministic method."
+default = "0.0"
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.sgd]
+# A jittery descent path toward the centre of the contours
+svg = '''
+var s = '';
+[20, 13, 6].forEach(function (r) { s += '<ellipse cx="30" cy="46" rx="' + r + '" ry="' + (r * 0.55) + '" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.6"/>'; });
+return s + '<path d="M9,60 L14,52 L13,56 L19,49 L21,53 L24,47 L27,50 L29,45 L31,47" fill="none" stroke="currentColor" stroke-width="1.1"/><circle cx="9" cy="60" r="2" fill="currentColor"/>';
+'''
+
+[miniCharts.adam]
+# Loss curve with a smoothed momentum curve over the noisy one
+svg = '''
+var n = 'M8,32', m = 'M8,32';
+for (var x = 8; x <= 46; x += 2) { var y = 32 + 30 * (1 - Math.exp(-(x - 8) / 9)); n += ' L' + x + ',' + (y + ((x / 2) % 2 ? 3 : -3)).toFixed(1); m += ' L' + x + ',' + y.toFixed(1); }
+return '<path d="' + n + '" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.5"/><path d="' + m + '" fill="none" stroke="currentColor" stroke-width="1.4"/>';
+'''
+
+[miniCharts.adamax]
+# Gradient bars capped by a max-norm line
+svg = '''
+var s = '', h = [10, 14, 30, 12, 9, 16, 11];
+h.forEach(function (v, i) { s += '<rect x="' + (9 + 5 * i) + '" y="' + (64 - Math.min(v, 18)) + '" width="3.5" height="' + Math.min(v, 18) + '" fill="currentColor" opacity="0.6"/>'; });
+return s + '<line x1="7" y1="46" x2="46" y2="46" stroke="currentColor" stroke-width="1" stroke-dasharray="3,2"/>';
+'''
+
+[miniCharts.adagrad]
+# Step sizes shrinking as squared gradients accumulate
+svg = '''
+var s = '';
+for (var i = 0; i < 7; i++) { var h = 30 / Math.sqrt(i + 1); s += '<rect x="' + (9 + 5 * i) + '" y="' + (64 - h).toFixed(1) + '" width="3.5" height="' + h.toFixed(1) + '" fill="currentColor" opacity="0.65"/>'; }
+return s;
+'''
+
+[miniCharts.momentum]
+# A heavy ball rolling smoothly down a valley
+svg = '''
+var s = '';
+[20, 13, 6].forEach(function (r) { s += '<ellipse cx="30" cy="46" rx="' + r + '" ry="' + (r * 0.45) + '" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.6"/>'; });
+return s + '<path d="M10,56 Q14,38 22,48 Q27,53 30,46" fill="none" stroke="currentColor" stroke-width="1.3"/><circle cx="10" cy="56" r="3" fill="currentColor"/>';
+'''
+
+[miniCharts.nesterov]
+# The look-ahead point where the gradient is evaluated
+svg = '''
+var s = '';
+[20, 13, 6].forEach(function (r) { s += '<ellipse cx="30" cy="46" rx="' + r + '" ry="' + (r * 0.45) + '" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.6"/>'; });
+return s + '<line x1="12" y1="56" x2="22" y2="44" stroke="currentColor" stroke-width="1" stroke-dasharray="2,2"/><line x1="22" y1="44" x2="27" y2="48" stroke="currentColor" stroke-width="1.3"/><circle cx="12" cy="56" r="2" fill="currentColor"/><circle cx="22" cy="44" r="1.8" fill="none" stroke="currentColor"/>';
+'''
+
+[miniCharts.rmsprop]
+# Step sizes that adapt up and down with a moving average
+svg = '''
+var s = '', h = [26, 18, 14, 20, 15, 12, 16];
+h.forEach(function (v, i) { s += '<rect x="' + (9 + 5 * i) + '" y="' + (64 - v) + '" width="3.5" height="' + v + '" fill="currentColor" opacity="0.65"/>'; });
+return s;
+'''
+
+[miniCharts.adamw]
+# Adam curve with parameters pulled toward zero by decay
+svg = '''
+var m = 'M8,32';
+for (var x = 8; x <= 46; x += 2) { m += ' L' + x + ',' + (32 + 30 * (1 - Math.exp(-(x - 8) / 9))).toFixed(1); }
+return '<path d="' + m + '" fill="none" stroke="currentColor" stroke-width="1.4"/><line x1="8" y1="66" x2="46" y2="66" stroke="currentColor" stroke-width="0.8" opacity="0.5"/><line x1="38" y1="40" x2="38" y2="52" stroke="currentColor" stroke-width="1"/><path d="M35,49 L38,53 L41,49" fill="none" stroke="currentColor" stroke-width="1"/>';
+'''
+
+[[codeBranches]]
+model = "sgd"
+code = '''
+using Optimisers, Zygote, Random, LinearAlgebra, Statistics
+
+f(x) = {{f}}
+x0    = {{x0}}  # initial parameters
+iters = {{iters}}  # update steps
+noise = {{noise}}  # std of the gradient noise (stands in for minibatch sampling)
+rule(lr) = Descent(lr)  # x -= lr * g
+
+function train(r; x0=x0, iters=iters, noise=noise, seed=1)
+    rng = Xoshiro(seed)
+    x = copy(x0)
+    state = Optimisers.setup(r, x)
+    path, losses = [copy(x)], [f(x)]
+    for _ in 1:iters
+        g = Zygote.gradient(f, x)[1] .+ noise .* randn(rng, length(x))  # noisy gradient
+        state, x = Optimisers.update(state, x, g)
+        push!(path, copy(x)); push!(losses, f(x))
+    end
+    (x = x, path = path, losses = losses, state = state)
+end
+
+trained = train(rule({{lr}}))
+x_opt = trained.x
+(final_parameters = x_opt, final_loss = f(x_opt), mean_loss_last_10pct = mean(trained.losses[end - div(iters, 10):end]))
+'''
+
+[[codeBranches]]
+model = "adam"
+code = '''
+using Optimisers, Zygote, Random, LinearAlgebra, Statistics
+
+f(x) = {{f}}
+x0    = {{x0}}  # initial parameters
+iters = {{iters}}  # update steps
+noise = {{noise}}  # std of the gradient noise (stands in for minibatch sampling)
+rule(lr) = Adam(lr)  # beta = (0.9, 0.999): momentum plus a running second-moment scale
+
+function train(r; x0=x0, iters=iters, noise=noise, seed=1)
+    rng = Xoshiro(seed)
+    x = copy(x0)
+    state = Optimisers.setup(r, x)
+    path, losses = [copy(x)], [f(x)]
+    for _ in 1:iters
+        g = Zygote.gradient(f, x)[1] .+ noise .* randn(rng, length(x))  # noisy gradient
+        state, x = Optimisers.update(state, x, g)
+        push!(path, copy(x)); push!(losses, f(x))
+    end
+    (x = x, path = path, losses = losses, state = state)
+end
+
+trained = train(rule({{lr}}))
+x_opt = trained.x
+(final_parameters = x_opt, final_loss = f(x_opt), mean_loss_last_10pct = mean(trained.losses[end - div(iters, 10):end]))
+'''
+
+[[codeBranches]]
+model = "adamax"
+code = '''
+using Optimisers, Zygote, Random, LinearAlgebra, Statistics
+
+f(x) = {{f}}
+x0    = {{x0}}  # initial parameters
+iters = {{iters}}  # update steps
+noise = {{noise}}  # std of the gradient noise (stands in for minibatch sampling)
+rule(lr) = AdaMax(lr)  # Adam with an infinity-norm scale
+
+function train(r; x0=x0, iters=iters, noise=noise, seed=1)
+    rng = Xoshiro(seed)
+    x = copy(x0)
+    state = Optimisers.setup(r, x)
+    path, losses = [copy(x)], [f(x)]
+    for _ in 1:iters
+        g = Zygote.gradient(f, x)[1] .+ noise .* randn(rng, length(x))  # noisy gradient
+        state, x = Optimisers.update(state, x, g)
+        push!(path, copy(x)); push!(losses, f(x))
+    end
+    (x = x, path = path, losses = losses, state = state)
+end
+
+trained = train(rule({{lr}}))
+x_opt = trained.x
+(final_parameters = x_opt, final_loss = f(x_opt), mean_loss_last_10pct = mean(trained.losses[end - div(iters, 10):end]))
+'''
+
+[[codeBranches]]
+model = "adagrad"
+code = '''
+using Optimisers, Zygote, Random, LinearAlgebra, Statistics
+
+f(x) = {{f}}
+x0    = {{x0}}  # initial parameters
+iters = {{iters}}  # update steps
+noise = {{noise}}  # std of the gradient noise (stands in for minibatch sampling)
+rule(lr) = AdaGrad(lr)  # divides by the root of the accumulated squared gradients
+
+function train(r; x0=x0, iters=iters, noise=noise, seed=1)
+    rng = Xoshiro(seed)
+    x = copy(x0)
+    state = Optimisers.setup(r, x)
+    path, losses = [copy(x)], [f(x)]
+    for _ in 1:iters
+        g = Zygote.gradient(f, x)[1] .+ noise .* randn(rng, length(x))  # noisy gradient
+        state, x = Optimisers.update(state, x, g)
+        push!(path, copy(x)); push!(losses, f(x))
+    end
+    (x = x, path = path, losses = losses, state = state)
+end
+
+trained = train(rule({{lr}}))
+x_opt = trained.x
+(final_parameters = x_opt, final_loss = f(x_opt), mean_loss_last_10pct = mean(trained.losses[end - div(iters, 10):end]))
+'''
+
+[[codeBranches]]
+model = "momentum"
+code = '''
+using Optimisers, Zygote, Random, LinearAlgebra, Statistics
+
+f(x) = {{f}}
+x0    = {{x0}}  # initial parameters
+iters = {{iters}}  # update steps
+noise = {{noise}}  # std of the gradient noise (stands in for minibatch sampling)
+rule(lr) = Momentum(lr, {{rho}})  # velocity v = rho * v + lr * g; x -= v
+
+function train(r; x0=x0, iters=iters, noise=noise, seed=1)
+    rng = Xoshiro(seed)
+    x = copy(x0)
+    state = Optimisers.setup(r, x)
+    path, losses = [copy(x)], [f(x)]
+    for _ in 1:iters
+        g = Zygote.gradient(f, x)[1] .+ noise .* randn(rng, length(x))  # noisy gradient
+        state, x = Optimisers.update(state, x, g)
+        push!(path, copy(x)); push!(losses, f(x))
+    end
+    (x = x, path = path, losses = losses, state = state)
+end
+
+trained = train(rule({{lr}}))
+x_opt = trained.x
+(final_parameters = x_opt, final_loss = f(x_opt), mean_loss_last_10pct = mean(trained.losses[end - div(iters, 10):end]))
+'''
+
+[[codeBranches]]
+model = "nesterov"
+code = '''
+using Optimisers, Zygote, Random, LinearAlgebra, Statistics
+
+f(x) = {{f}}
+x0    = {{x0}}  # initial parameters
+iters = {{iters}}  # update steps
+noise = {{noise}}  # std of the gradient noise (stands in for minibatch sampling)
+rule(lr) = Nesterov(lr, {{rho}})  # momentum with the gradient taken at the look-ahead point
+
+function train(r; x0=x0, iters=iters, noise=noise, seed=1)
+    rng = Xoshiro(seed)
+    x = copy(x0)
+    state = Optimisers.setup(r, x)
+    path, losses = [copy(x)], [f(x)]
+    for _ in 1:iters
+        g = Zygote.gradient(f, x)[1] .+ noise .* randn(rng, length(x))  # noisy gradient
+        state, x = Optimisers.update(state, x, g)
+        push!(path, copy(x)); push!(losses, f(x))
+    end
+    (x = x, path = path, losses = losses, state = state)
+end
+
+trained = train(rule({{lr}}))
+x_opt = trained.x
+(final_parameters = x_opt, final_loss = f(x_opt), mean_loss_last_10pct = mean(trained.losses[end - div(iters, 10):end]))
+'''
+
+[[codeBranches]]
+model = "rmsprop"
+code = '''
+using Optimisers, Zygote, Random, LinearAlgebra, Statistics
+
+f(x) = {{f}}
+x0    = {{x0}}  # initial parameters
+iters = {{iters}}  # update steps
+noise = {{noise}}  # std of the gradient noise (stands in for minibatch sampling)
+rule(lr) = RMSProp(lr)  # divides by the root of a moving average of squared gradients
+
+function train(r; x0=x0, iters=iters, noise=noise, seed=1)
+    rng = Xoshiro(seed)
+    x = copy(x0)
+    state = Optimisers.setup(r, x)
+    path, losses = [copy(x)], [f(x)]
+    for _ in 1:iters
+        g = Zygote.gradient(f, x)[1] .+ noise .* randn(rng, length(x))  # noisy gradient
+        state, x = Optimisers.update(state, x, g)
+        push!(path, copy(x)); push!(losses, f(x))
+    end
+    (x = x, path = path, losses = losses, state = state)
+end
+
+trained = train(rule({{lr}}))
+x_opt = trained.x
+(final_parameters = x_opt, final_loss = f(x_opt), mean_loss_last_10pct = mean(trained.losses[end - div(iters, 10):end]))
+'''
+
+[[codeBranches]]
+model = "adamw"
+code = '''
+using Optimisers, Zygote, Random, LinearAlgebra, Statistics
+
+f(x) = {{f}}
+x0    = {{x0}}  # initial parameters
+iters = {{iters}}  # update steps
+noise = {{noise}}  # std of the gradient noise (stands in for minibatch sampling)
+rule(lr) = AdamW(lr, (0.9, 0.999), {{decay}})  # Adam plus decoupled weight decay
+
+function train(r; x0=x0, iters=iters, noise=noise, seed=1)
+    rng = Xoshiro(seed)
+    x = copy(x0)
+    state = Optimisers.setup(r, x)
+    path, losses = [copy(x)], [f(x)]
+    for _ in 1:iters
+        g = Zygote.gradient(f, x)[1] .+ noise .* randn(rng, length(x))  # noisy gradient
+        state, x = Optimisers.update(state, x, g)
+        push!(path, copy(x)); push!(losses, f(x))
+    end
+    (x = x, path = path, losses = losses, state = state)
+end
+
+trained = train(rule({{lr}}))
+x_opt = trained.x
+(final_parameters = x_opt, final_loss = f(x_opt), mean_loss_last_10pct = mean(trained.losses[end - div(iters, 10):end]))
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "loss-curve"
+label = "Loss Curve"
+desc = "Loss per iteration with a 50-step moving average (log scale): the plateau is the noise floor set by the learning rate and the gradient noise"
+code = '''
+using Plots
+
+L = trained.losses
+ma = [mean(L[max(1, i - 49):i]) for i in eachindex(L)]
+plot(0:length(L)-1, L, yscale=:log10, alpha=0.35, label="loss", xlabel="iteration")
+plot!(0:length(L)-1, ma, linewidth=2, label="moving average")
+'''
+
+[[actionGroups.actions]]
+id = "param-trajectory"
+label = "Parameter Trajectory"
+desc = "The noisy iterates on the contours of f (2D problems; other parameters held at the final value)"
+code = '''
+using Plots
+
+P = reduce(hcat, trained.path)
+pad = max(0.5, 0.15 * maximum(abs, P[1:2, :]))
+xs = range(minimum(P[1, :]) - pad, maximum(P[1, :]) + pad, length=120)
+ys = range(minimum(P[2, :]) - pad, maximum(P[2, :]) + pad, length=120)
+contour(xs, ys, (a, b) -> log1p(f([a; b; x_opt[3:end]]) - minimum(trained.losses) + 1e-12), fill=true, colorbar=false, xlabel="x1", ylabel="x2")
+plot!(P[1, :], P[2, :], color=:white, linewidth=0.8, label="iterates")
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "lr-sensitivity"
+label = "Learning-Rate Sensitivity"
+desc = "Average loss over the last 10% of iterations for a grid of learning rates (log-log): too small stalls, too large diverges or bounces"
+code = '''
+using Plots
+
+lrs = 10.0 .^ (-4:0.5:0)
+tail(L) = mean(L[end - div(length(L), 10):end])
+scores = [tail(train(rule(a)).losses) for a in lrs]
+plot(lrs, scores, xscale=:log10, yscale=:log10, marker=:circle, xlabel="learning rate", ylabel="late average loss", legend=false)
+vline!([{{lr}}], linestyle=:dash)
+'''
+
+[[actionGroups.actions]]
+id = "convergence-check"
+label = "Convergence Check"
+desc = "Final true-gradient norm, and whether the loss has flattened: the slope of the late losses and their spread around the noise floor"
+code = '''
+k = div(iters, 10)
+late = trained.losses[end - k:end]
+slope = cov(collect(0:k), late) / var(collect(0:k))  # near 0 = stationary
+(gradient_norm = norm(Zygote.gradient(f, x_opt)[1]), late_mean = mean(late), late_std = std(late), late_slope = slope, stationary = abs(slope) * k < std(late))
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "evaluate-new"
+label = "Evaluate at New Point"
+desc = "Loss at a new parameter vector, compared with the trained one"
+code = '''
+x_new = x_opt .+ 0.1  # replace with the parameters to evaluate
+(loss_new = f(x_new), loss_trained = f(x_opt), difference = f(x_new) - f(x_opt))
+'''
+
+[[actionGroups.actions]]
+id = "iterate-averaging"
+label = "Iterate Averaging"
+desc = "Polyak-Ruppert averaging: the mean of the second half of the iterates cancels much of the noise and usually lands closer to the minimum than the last iterate"
+code = '''
+x_avg = mean(trained.path[div(end, 2):end])
+(last_iterate = x_opt, loss_last = f(x_opt), averaged = x_avg, loss_averaged = f(x_avg))
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "compare-rules"
+label = "Compare Rules"
+desc = "All eight Optimisers.jl rules at the same learning rate: late average loss over 5 seeds (mean and spread) and the loss curves overlaid"
+code = '''
+using Plots
+
+rules = ["SGD" => Descent, "Momentum" => Momentum, "Nesterov" => Nesterov, "AdaGrad" => AdaGrad,
+         "RMSProp" => RMSProp, "Adam" => Adam, "AdaMax" => AdaMax, "AdamW" => AdamW]
+tail(L) = mean(L[end - div(length(L), 10):end])
+p = plot(xlabel="iteration", ylabel="loss", yscale=:log10)
+table = map(rules) do (name, R)
+    runs = [train(R({{lr}}); seed=k) for k in 1:5]
+    plot!(p, runs[1].losses .+ eps(), label=name)
+    s = tail.(getfield.(runs, :losses))
+    (rule = name, late_loss_mean = mean(s), late_loss_std = std(s))
+end
+display(p)
+table
+'''
+
+[[actionGroups.actions]]
+id = "optimization-interface"
+label = "Optimization.jl Interface"
+desc = "The same rule run through Optimization.jl (OptimizationOptimisers), the interface shared with Optim, NLopt and the other solvers, checked against the hand-written loop"
+code = '''
+using Optimization, OptimizationOptimisers
+
+fn = OptimizationFunction((u, p) -> f(u), Optimization.AutoZygote())
+prob = OptimizationProblem(fn, x0)
+sol = solve(prob, rule({{lr}}); maxiters=iters)
+loop = train(rule({{lr}}); noise=0.0)
+(optimization_jl = sol.u, loss_optimization_jl = sol.objective, hand_loop = loop.x, loss_hand_loop = f(loop.x))
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "solution-summary"
+label = "Solution Summary"
+desc = "Final parameters, loss, improvement over the start and the gradient norm"
+code = '''
+(parameters = x_opt, loss = f(x_opt), loss_start = f(x0), improvement = f(x0) - f(x_opt),
+ gradient_norm = norm(Zygote.gradient(f, x_opt)[1]), iterations = iters)
+'''
+
+[[actionGroups.actions]]
+id = "optimiser-state"
+label = "Optimiser State"
+desc = "The internal state the rule carries after training (velocity, moment estimates, accumulated squares): what distinguishes one rule from another"
+code = '''
+trained.state  # Optimisers.Leaf holding the rule and its state
+'''

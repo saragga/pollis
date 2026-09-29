@@ -1,0 +1,804 @@
+# Differential Evolution Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/devol.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Differential Evolution"
+viewType = "pollis.devol"
+defaultModel = "de"
+
+[[packages]]
+name = "Evolutionary.jl"
+github = "https://github.com/wildart/Evolutionary.jl"
+
+[[packages.videos]]
+title = "High Performance Computing in Julia"
+description = "An 18-video course by Jamie Mair on writing fast Julia code"
+url = "https://www.youtube.com/playlist?list=PLUAq6xQKFgGr39PiyrPk_C9dhBKvWcjUA"
+
+[requires]
+packages = ["BlackBoxOptim.jl", "Evolutionary.jl", "Plots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Classic DE"
+file = "devol/tutorial-01-de.ipynb"
+bundled = true
+description = "Classic DE with Evolutionary.jl: strategy, F, Cr, and convergence"
+
+[[notebookSections.notebooks]]
+name = "Adaptive Variants"
+file = "devol/tutorial-02-adaptive.ipynb"
+bundled = true
+description = "SHADE and Adaptive DE: self-adaptive parameters and archive"
+
+[[wikis]]
+name = "Factsheet"
+file = "devol/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "devol/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "devol/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "devol/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "devol/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "devol/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Algorithm Details"
+
+[[wikis]]
+name = "Classic DE"
+file = "devol/de.md"
+bundled = true
+
+[[wikis]]
+name = "SHADE"
+file = "devol/shade.md"
+bundled = true
+
+[[wikis]]
+name = "Adaptive DE"
+file = "devol/adaptive-de.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "Evolutionary.jl: A Julia package for evolutionary algorithms"
+authors = "Poliak, Art"
+year = 2021
+journal = "GitHub"
+doi = "10.5281/zenodo.5781169"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Differential Evolution: A Practical Approach to Global Optimization"
+authors = "Price, Kenneth V.; Storn, Rainer M.; Lampinen, Jouni A."
+year = 2005
+journal = "Springer"
+doi = "10.1007/3-540-31306-0"
+openAccess = false
+
+[[references]]
+title = "Introduction to Evolutionary Computing"
+authors = "Eiben, A. E.; Smith, J. E."
+year = 2015
+journal = "Springer"
+doi = "10.1007/978-3-662-44874-8"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Differential Evolution — A Simple and Efficient Heuristic for Global Optimization over Continuous Spaces"
+authors = "Storn, Rainer; Price, Kenneth"
+year = 1997
+journal = "Journal of Global Optimization"
+doi = "10.1023/A:1008202821328"
+openAccess = false
+
+[[references]]
+title = "JADE: Adaptive Differential Evolution with Optional External Archive"
+authors = "Zhang, Jingqiao; Sanderson, Arthur C."
+year = 2009
+journal = "IEEE Transactions on Evolutionary Computation"
+doi = "10.1109/TEVC.2009.2014613"
+openAccess = false
+
+[[references]]
+title = "Success-History Based Parameter Adaptation for Differential Evolution"
+authors = "Tanabe, Ryoji; Fukunaga, Alex"
+year = 2013
+journal = "IEEE Congress on Evolutionary Computation"
+doi = "10.1109/CEC.2013.6557555"
+openAccess = false
+
+[[models]]
+id = "de"
+label = "DE"
+
+[[models]]
+id = "shade"
+label = "SHADE"
+
+[[models]]
+id = "adaptive"
+label = "Adaptive DE"
+
+[[models]]
+id = "ede"
+label = "epsilonDE"
+
+[[bullets]]
+text = "Classic DE"
+detail = "fixed scale factor F and crossover rate Cr"
+
+[[bullets]]
+text = "SHADE"
+detail = "success-history based adaptive F and Cr with external archive"
+
+[[bullets]]
+text = "Adaptive DE"
+detail = "self-adaptive parameters via JADE-style mechanism"
+
+[[bullets]]
+text = "epsilonDE"
+detail = "epsilon-constrained DE; uses a tightening epsilon tolerance on constraint violations to guide feasibility without hard rejection"
+
+[[decisionRows]]
+task = "DE"
+context = "Continuous box-constrained problems; a robust first try"
+purpose = "DE/rand/1/bin: each trial vector adds a scaled difference of two random members to a third, then crosses over with the target; greedy selection"
+
+[[decisionRows]]
+task = "SHADE"
+context = "When tuning F and CR by hand is impractical; competition-grade performance"
+purpose = "Success-history adaptation: F and CR are sampled around memories updated from the settings that produced improvements, with current-to-pbest mutation and an archive"
+
+[[decisionRows]]
+task = "Adaptive DE"
+context = "A light-weight self-adaptive alternative to SHADE"
+purpose = "jDE: every individual carries its own F and CR, occasionally re-sampled; settings survive only when their trial vector wins"
+
+[[decisionRows]]
+task = "epsilonDE"
+context = "Problems with inequality constraints g(x) <= 0"
+purpose = "Epsilon-constrained DE: compares by objective while violations are below a tolerance epsilon, by violation otherwise, and shrinks epsilon to 0"
+
+[[inputs]]
+id = "n"
+label = "Dimension (n)"
+tooltip = "Number of decision variables. The default objective and bounds adapt to it."
+default = "5"
+
+[[inputs]]
+id = "obj"
+label = "Objective f(x)"
+tooltip = "Julia expression for the objective to minimise, in terms of the vector x. Default: the Rastrigin function in any dimension (global minimum 0 at the origin)."
+default = "10 * length(x) + sum(x .^ 2 .- 10 .* cos.(2pi .* x))"
+
+[[inputs]]
+id = "lb"
+label = "Lower Bounds"
+tooltip = "Julia vector of lower bounds, one per variable."
+default = "fill(-5.12, n)"
+newRow = true
+
+[[inputs]]
+id = "ub"
+label = "Upper Bounds"
+tooltip = "Julia vector of upper bounds, one per variable."
+default = "fill(5.12, n)"
+
+[[inputs]]
+id = "pop"
+label = "Population Size"
+tooltip = "Number of candidate solutions (NP). Around 10n is typical; at least 4 (DE) or 5 (SHADE) are needed to pick distinct members."
+default = "50"
+newRow = true
+
+[[inputs]]
+id = "budget"
+label = "Generations"
+tooltip = "Number of generations. Each costs one objective evaluation per population member."
+default = "300"
+
+[[inputs]]
+id = "F"
+label = "Scale Factor (F)"
+tooltip = "Weight of the difference vector. Around 0.5 to 0.9; small values converge fast but may stall."
+default = "0.7"
+models = ["de", "ede"]
+newRow = true
+
+[[inputs]]
+id = "CR"
+label = "Crossover Rate (CR)"
+tooltip = "Probability each coordinate comes from the mutant. High values (0.9) suit non-separable problems, low values (0.1) separable ones."
+default = "0.9"
+models = ["de", "ede"]
+
+[[inputs]]
+id = "H"
+label = "Memory Size (H)"
+tooltip = "Number of (F, CR) memory slots SHADE keeps and cycles through."
+default = "10"
+models = ["shade"]
+newRow = true
+
+[[inputs]]
+id = "pbest"
+label = "p-best Fraction"
+tooltip = "Mutation moves towards a random member of the best p fraction of the population. Smaller is greedier."
+default = "0.1"
+models = ["shade"]
+
+[[inputs]]
+id = "tau"
+label = "Re-sampling Probability"
+tooltip = "Probability that an individual draws a fresh F (in [0.1, 1]) and CR (in [0, 1]) before building its trial vector."
+default = "0.1"
+models = ["adaptive"]
+newRow = true
+
+[[inputs]]
+id = "con"
+label = "Constraints g(x) <= 0"
+tooltip = "Julia vector of constraint functions that must be <= 0. Default: stay on or above the plane sum(x) = 1, which cuts off the unconstrained minimum at the origin."
+default = "[1 - sum(x)]"
+models = ["ede"]
+newRow = true
+
+[[inputs]]
+id = "tc"
+label = "Epsilon Horizon"
+tooltip = "Fraction of the generations over which epsilon shrinks to 0; afterwards only feasible points can win on objective."
+default = "0.5"
+models = ["ede"]
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.de]
+# Base vector plus a scaled difference vector
+svg = '''
+return '<circle cx="12" cy="60" r="1.8" fill="currentColor"/><circle cx="30" cy="62" r="1.8" fill="currentColor" opacity="0.6"/><circle cx="40" cy="44" r="1.8" fill="currentColor" opacity="0.6"/>'
+	+ '<line x1="30" y1="62" x2="40" y2="44" stroke="currentColor" stroke-width="0.8" stroke-dasharray="2,2"/><line x1="12" y1="60" x2="20" y2="46" stroke="currentColor" stroke-width="1.3"/><circle cx="20" cy="46" r="2.2" fill="none" stroke="currentColor" stroke-width="1.2"/>';
+'''
+
+[miniCharts.shade]
+# Memory slots feeding the parameter distribution
+svg = '''
+var s = '';
+for (var i = 0; i < 5; i++) { s += '<rect x="' + (8 + i * 8) + '" y="' + (40 + (i % 3) * 5) + '" width="6" height="' + (24 - (i % 3) * 5) + '" fill="currentColor" opacity="' + (i === 2 ? 0.9 : 0.4) + '"/>'; }
+return s + '<line x1="6" y1="64" x2="48" y2="64" stroke="currentColor" stroke-width="0.6"/><path d="M8,34 Q27,22 46,34" fill="none" stroke="currentColor" stroke-width="1"/>';
+'''
+
+[miniCharts.adaptive]
+# Individuals each carrying their own parameter
+svg = '''
+var s = '', p = [[12, 44, 3], [24, 58, 1.5], [34, 40, 2.5], [42, 60, 1]];
+p.forEach(function (q) { s += '<circle cx="' + q[0] + '" cy="' + q[1] + '" r="1.8" fill="currentColor"/><circle cx="' + q[0] + '" cy="' + q[1] + '" r="' + (q[2] * 2.2) + '" fill="none" stroke="currentColor" stroke-width="0.7" opacity="0.6"/>'; });
+return s;
+'''
+
+[miniCharts.ede]
+# Feasible side of a constraint with a shrinking epsilon band
+svg = '''
+return '<path d="M8,66 L46,30 L46,66 Z" fill="currentColor" opacity="0.15"/><line x1="8" y1="66" x2="46" y2="30" stroke="currentColor" stroke-width="1.2"/>'
+	+ '<line x1="8" y1="58" x2="38" y2="30" stroke="currentColor" stroke-width="0.7" stroke-dasharray="2,2"/><circle cx="30" cy="48" r="2.2" fill="currentColor"/>';
+'''
+
+[[codeBranches]]
+model = "de"
+code = '''
+using Random, LinearAlgebra, Statistics
+
+n = {{n}}  # dimension
+f(x) = {{obj}}  # objective
+lb, ub = {{lb}}, {{ub}}  # search box
+NP = {{pop}}  # population size
+budget = {{budget}}  # generations
+
+# distinct random population indices, excluding those given
+pick(NP, excl, k) = shuffle(setdiff(1:NP, excl))[1:k]
+
+# binomial crossover: each coordinate from the mutant with probability CR, at least one always
+function crossover(x, v, CR)
+    jrand = rand(1:length(x))
+    [(rand() < CR || j == jrand) ? v[j] : x[j] for j in eachindex(x)]
+end
+
+# per-generation history: best value, population spread and mean parameters
+newhist() = (best = Float64[], diversity = Float64[], F = Float64[], CR = Float64[])
+function record!(h, X, best, Fs, CRs)
+    push!(h.best, best)
+    push!(h.diversity, mean(std(reduce(hcat, X), dims=2)))
+    push!(h.F, mean(Fs)); push!(h.CR, mean(CRs))
+end
+
+F, CR = {{F}}, {{CR}}  # fixed control parameters
+
+function search(; gens=budget, NP=NP, seed=1, lb=lb, ub=ub)
+    Random.seed!(seed)
+    d = length(lb)
+    X = [lb .+ rand(d) .* (ub .- lb) for _ in 1:NP]; fX = f.(X)
+    h = newhist()
+    for g in 1:gens
+        for i in 1:NP
+            a, b, c = pick(NP, i, 3)
+            v = clamp.(X[a] .+ F .* (X[b] .- X[c]), lb, ub)  # rand/1 mutation
+            u = crossover(X[i], v, CR)
+            fu = f(u)
+            if fu <= fX[i]  # greedy one-to-one selection
+                X[i], fX[i] = u, fu
+            end
+        end
+        record!(h, X, minimum(fX), [F], [CR])
+    end
+    k = argmin(fX)
+    (x = X[k], fx = fX[k], h..., evals = NP * (gens + 1), population = X)
+end
+
+res = search()
+x_best, f_best = res.x, res.fx
+(best_point = x_best, best_value = f_best, evaluations = res.evals)
+'''
+
+[[codeBranches]]
+model = "shade"
+code = '''
+using Random, LinearAlgebra, Statistics
+
+n = {{n}}  # dimension
+f(x) = {{obj}}  # objective
+lb, ub = {{lb}}, {{ub}}  # search box
+NP = {{pop}}  # population size
+budget = {{budget}}  # generations
+
+# distinct random population indices, excluding those given
+pick(NP, excl, k) = shuffle(setdiff(1:NP, excl))[1:k]
+
+# binomial crossover: each coordinate from the mutant with probability CR, at least one always
+function crossover(x, v, CR)
+    jrand = rand(1:length(x))
+    [(rand() < CR || j == jrand) ? v[j] : x[j] for j in eachindex(x)]
+end
+
+# per-generation history: best value, population spread and mean parameters
+newhist() = (best = Float64[], diversity = Float64[], F = Float64[], CR = Float64[])
+function record!(h, X, best, Fs, CRs)
+    push!(h.best, best)
+    push!(h.diversity, mean(std(reduce(hcat, X), dims=2)))
+    push!(h.F, mean(Fs)); push!(h.CR, mean(CRs))
+end
+
+H = {{H}}  # memory slots
+PB = {{pbest}}  # p-best fraction
+
+function search(; gens=budget, NP=NP, seed=1, lb=lb, ub=ub)
+    Random.seed!(seed)
+    d = length(lb)
+    X = [lb .+ rand(d) .* (ub .- lb) for _ in 1:NP]; fX = f.(X)
+    MF, MCR, slot = fill(0.5, H), fill(0.5, H), 1  # success-history memories
+    archive = Vector{Float64}[]  # replaced parents, extra diversity for the difference vector
+    h = newhist()
+    for g in 1:gens
+        SF, SCR, gains = Float64[], Float64[], Float64[]
+        Fs, CRs = zeros(NP), zeros(NP)
+        order = sortperm(fX)
+        for i in 1:NP
+            r = rand(1:H)
+            CRs[i] = clamp(MCR[r] + 0.1 * randn(), 0, 1)  # normal around the memory
+            Fi = 0.0
+            while Fi <= 0
+                Fi = MF[r] + 0.1 * tan(pi * (rand() - 0.5))  # Cauchy around the memory
+            end
+            Fs[i] = min(Fi, 1.0)
+            pb = order[rand(1:max(2, round(Int, PB * NP)))]
+            r1 = pick(NP, i, 1)[1]
+            pool = [X; archive]
+            r2 = rand(setdiff(eachindex(pool), (i, r1)))
+            v = clamp.(X[i] .+ Fs[i] .* (X[pb] .- X[i]) .+ Fs[i] .* (X[r1] .- pool[r2]), lb, ub)  # current-to-pbest/1
+            u = crossover(X[i], v, CRs[i])
+            fu = f(u)
+            if fu < fX[i]
+                push!(archive, X[i]); push!(SF, Fs[i]); push!(SCR, CRs[i]); push!(gains, fX[i] - fu)
+            end
+            if fu <= fX[i]
+                X[i], fX[i] = u, fu
+            end
+        end
+        while length(archive) > NP
+            deleteat!(archive, rand(eachindex(archive)))
+        end
+        if !isempty(SF)  # weighted by improvement: Lehmer mean for F, arithmetic for CR
+            w = gains ./ sum(gains)
+            MF[slot] = sum(w .* SF .^ 2) / sum(w .* SF)
+            MCR[slot] = sum(w .* SCR)
+            slot = mod1(slot + 1, H)
+        end
+        record!(h, X, minimum(fX), Fs, CRs)
+    end
+    k = argmin(fX)
+    (x = X[k], fx = fX[k], h..., evals = NP * (gens + 1), population = X)
+end
+
+res = search()
+x_best, f_best = res.x, res.fx
+(best_point = x_best, best_value = f_best, evaluations = res.evals)
+'''
+
+[[codeBranches]]
+model = "adaptive"
+code = '''
+using Random, LinearAlgebra, Statistics
+
+n = {{n}}  # dimension
+f(x) = {{obj}}  # objective
+lb, ub = {{lb}}, {{ub}}  # search box
+NP = {{pop}}  # population size
+budget = {{budget}}  # generations
+
+# distinct random population indices, excluding those given
+pick(NP, excl, k) = shuffle(setdiff(1:NP, excl))[1:k]
+
+# binomial crossover: each coordinate from the mutant with probability CR, at least one always
+function crossover(x, v, CR)
+    jrand = rand(1:length(x))
+    [(rand() < CR || j == jrand) ? v[j] : x[j] for j in eachindex(x)]
+end
+
+# per-generation history: best value, population spread and mean parameters
+newhist() = (best = Float64[], diversity = Float64[], F = Float64[], CR = Float64[])
+function record!(h, X, best, Fs, CRs)
+    push!(h.best, best)
+    push!(h.diversity, mean(std(reduce(hcat, X), dims=2)))
+    push!(h.F, mean(Fs)); push!(h.CR, mean(CRs))
+end
+
+TAU = {{tau}}  # probability of re-sampling an individual's parameters
+
+function search(; gens=budget, NP=NP, seed=1, lb=lb, ub=ub)
+    Random.seed!(seed)
+    d = length(lb)
+    X = [lb .+ rand(d) .* (ub .- lb) for _ in 1:NP]; fX = f.(X)
+    Fs, CRs = fill(0.5, NP), fill(0.9, NP)  # each individual carries its own F and CR
+    h = newhist()
+    for g in 1:gens
+        for i in 1:NP
+            Fi = rand() < TAU ? 0.1 + 0.9 * rand() : Fs[i]
+            CRi = rand() < TAU ? rand() : CRs[i]
+            a, b, c = pick(NP, i, 3)
+            v = clamp.(X[a] .+ Fi .* (X[b] .- X[c]), lb, ub)
+            u = crossover(X[i], v, CRi)
+            fu = f(u)
+            if fu <= fX[i]  # the winning settings are inherited
+                X[i], fX[i], Fs[i], CRs[i] = u, fu, Fi, CRi
+            end
+        end
+        record!(h, X, minimum(fX), Fs, CRs)
+    end
+    k = argmin(fX)
+    (x = X[k], fx = fX[k], h..., evals = NP * (gens + 1), population = X)
+end
+
+res = search()
+x_best, f_best = res.x, res.fx
+(best_point = x_best, best_value = f_best, evaluations = res.evals)
+'''
+
+[[codeBranches]]
+model = "ede"
+code = '''
+using Random, LinearAlgebra, Statistics
+
+n = {{n}}  # dimension
+f(x) = {{obj}}  # objective
+lb, ub = {{lb}}, {{ub}}  # search box
+NP = {{pop}}  # population size
+budget = {{budget}}  # generations
+
+# distinct random population indices, excluding those given
+pick(NP, excl, k) = shuffle(setdiff(1:NP, excl))[1:k]
+
+# binomial crossover: each coordinate from the mutant with probability CR, at least one always
+function crossover(x, v, CR)
+    jrand = rand(1:length(x))
+    [(rand() < CR || j == jrand) ? v[j] : x[j] for j in eachindex(x)]
+end
+
+# per-generation history: best value, population spread and mean parameters
+newhist() = (best = Float64[], diversity = Float64[], F = Float64[], CR = Float64[])
+function record!(h, X, best, Fs, CRs)
+    push!(h.best, best)
+    push!(h.diversity, mean(std(reduce(hcat, X), dims=2)))
+    push!(h.F, mean(Fs)); push!(h.CR, mean(CRs))
+end
+
+F, CR = {{F}}, {{CR}}  # fixed control parameters
+g(x) = {{con}}  # constraints, feasible when every entry is <= 0
+violation(x) = sum(max.(0, g(x)))
+TC = {{tc}}  # fraction of generations over which epsilon shrinks to 0
+
+# epsilon comparison: by objective when both violations are within epsilon (or equal), else by violation
+better(fa, va, fb, vb, eps) = ((va <= eps && vb <= eps) || va == vb) ? fa <= fb : va < vb
+
+function search(; gens=budget, NP=NP, seed=1, lb=lb, ub=ub)
+    Random.seed!(seed)
+    d = length(lb)
+    X = [lb .+ rand(d) .* (ub .- lb) for _ in 1:NP]; fX, vX = f.(X), violation.(X)
+    eps0 = sort(vX)[max(1, round(Int, 0.2NP))]  # start at the violation of the top 20 percent
+    Tc = max(1, round(Int, TC * gens))
+    h, epsilon = newhist(), Float64[]
+    for t in 1:gens
+        eps = t < Tc ? eps0 * (1 - t / Tc)^5 : 0.0
+        for i in 1:NP
+            a, b, c = pick(NP, i, 3)
+            v = clamp.(X[a] .+ F .* (X[b] .- X[c]), lb, ub)
+            u = crossover(X[i], v, CR)
+            fu, vu = f(u), violation(u)
+            if better(fu, vu, fX[i], vX[i], eps)
+                X[i], fX[i], vX[i] = u, fu, vu
+            end
+        end
+        k = argmin(collect(zip(vX, fX)))  # least violation first, then objective
+        record!(h, X, fX[k], [F], [CR]); push!(epsilon, eps)
+    end
+    k = argmin(collect(zip(vX, fX)))
+    (x = X[k], fx = fX[k], violation = vX[k], h..., epsilon = epsilon, evals = NP * (gens + 1), population = X)
+end
+
+res = search()
+x_best, f_best = res.x, res.fx
+(best_point = x_best, best_value = f_best, evaluations = res.evals)
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "convergence-curve"
+label = "Convergence Curve"
+desc = "Best value in the population at each generation (log scale)"
+code = '''
+using Plots
+
+shift = min(0, minimum(res.best)) - 1e-12  # keeps the log scale defined
+plot(res.best .- shift, yscale=:log10, xlabel="generation", ylabel="best f - shift", legend=false)
+'''
+
+[[actionGroups.actions]]
+id = "population-diversity"
+label = "Population Diversity"
+desc = "Mean standard deviation of the population across coordinates: a collapse to 0 before the best value stops improving means premature convergence"
+code = '''
+using Plots
+
+plot(res.diversity, yscale=:log10, xlabel="generation", ylabel="mean std of population", legend=false)
+'''
+
+[[actionGroups.actions]]
+id = "parameter-history"
+label = "Parameter History"
+desc = "Mean F and CR used in each generation (flat for classic DE and epsilonDE, which also shows its epsilon schedule)"
+code = '''
+using Plots
+
+p = plot(res.F, label="mean F", xlabel="generation", ylims=(0, 1.05))
+plot!(p, res.CR, label="mean CR")
+{{?model=ede}} display(plot(p, plot(res.epsilon, label="epsilon", xlabel="generation"), layout=(2, 1)))
+{{?model!=ede}} display(p)
+(final_mean_F = res.F[end], final_mean_CR = res.CR[end])
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "convergence-check"
+label = "Convergence Check"
+desc = "When the best value last improved, the final population spread and whether the search stagnated"
+code = '''
+last_gain = something(findlast(diff(res.best) .< 0), 0) + 1
+(generations = length(res.best), evaluations = res.evals, last_improvement_generation = last_gain,
+ final_diversity = res.diversity[end], stagnated = res.diversity[end] < 1e-8 * maximum(ub .- lb),
+ {{?model=ede}} final_violation = res.violation,
+ best_value = f_best)
+'''
+
+[[actionGroups.actions]]
+id = "multi-start"
+label = "Multi-Start"
+desc = "Repeat the search with 10 seeds: the spread of best values and how far apart the solutions are"
+code = '''
+runs = [search(seed=s) for s in 1:10]
+v = getfield.(runs, :fx)
+(best_values = round.(v, sigdigits=6), mean = mean(v), spread = std(v), share_at_best = mean(v .<= minimum(v) + 1e-6),
+ max_distance_between_solutions = maximum(norm(a.x - b.x) for a in runs, b in runs))
+'''
+
+[[actionGroups.actions]]
+id = "population-size"
+label = "Population Size Study"
+desc = "Best value for several population sizes at the same number of evaluations (fewer generations for larger populations), 3 seeds each"
+code = '''
+evals = NP * budget
+map([10, 20, 50, 100, 200]) do np
+    v = [search(NP=np, gens=div(evals, np), seed=s).fx for s in 1:3]
+    (population = np, generations = div(evals, np), mean_best = mean(v), worst_best = maximum(v))
+end
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "eval-at-minimum"
+label = "Evaluate at Minimum"
+desc = "Re-evaluate f at the solution and estimate its gradient by central differences (near 0 at an interior, unconstrained minimum)"
+code = '''
+h = 1e-6
+grad = [(f(x_best + h * e) - f(x_best - h * e)) / 2h for e in eachcol(Matrix(1.0I, length(x_best), length(x_best)))]
+(best_point = x_best, reported_value = f_best, re_evaluated = f(x_best), gradient_norm = norm(grad))
+'''
+
+[[actionGroups.actions]]
+id = "sensitivity"
+label = "Bounds Sensitivity"
+desc = "Re-run with the box shrunk, enlarged and shifted by 10 percent and see how the optimum moves"
+code = '''
+w = ub .- lb
+boxes = ["as given" => (lb, ub), "shrunk 10%" => (lb .+ 0.05w, ub .- 0.05w), "enlarged 10%" => (lb .- 0.05w, ub .+ 0.05w), "shifted +10%" => (lb .+ 0.1w, ub .+ 0.1w)]
+map(boxes) do (name, (l, u))
+    r = search(lb=l, ub=u)
+    (box = name, best_value = r.fx, change = r.fx - f_best, moved = norm(r.x - x_best))
+end
+'''
+
+[[actionGroups.actions]]
+id = "dimension-scaling"
+label = "Dimension Scaling"
+desc = "Best value and runtime as the dimension grows, with the population scaled to 10n (the objective must accept any length of x)"
+code = '''
+using Plots
+
+dims = [2, 5, 10, 20]
+rows = map(dims) do d
+    sec = @elapsed r = search(lb=fill(lb[1], d), ub=fill(ub[1], d), NP=10d)
+    (dimension = d, best_value = r.fx, evaluations = r.evals, seconds = sec)
+end
+display(plot(dims, getfield.(rows, :best_value) .+ 1e-12, yscale=:log10, marker=:circle, xlabel="dimension", ylabel="best f", legend=false))
+rows
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "de-vs-shade"
+label = "Compare with Library DE"
+desc = "The selected variant against BlackBoxOptim's classic and adaptive DE at the same number of evaluations, over 5 seeds"
+code = '''
+using BlackBoxOptim
+
+lib(m) = seed -> best_fitness(bboptimize(f; SearchRange=collect(zip(lb, ub)), NumDimensions=length(lb), Method=m,
+                                         MaxFuncEvals=res.evals, TraceMode=:silent, RandomizeRngSeed=false, RngSeed=seed))
+runs = ["selected variant" => s -> search(seed=s).fx, "BlackBoxOptim DE" => lib(:de_rand_1_bin), "BlackBoxOptim adaptive DE" => lib(:adaptive_de_rand_1_bin_radiuslimited)]
+map(runs) do (name, run)
+    sec = @elapsed v = [run(s) for s in 1:5]
+    (method = name, mean_best = mean(v), worst_best = maximum(v), seconds_per_run = sec / 5)
+end
+'''
+
+[[actionGroups.actions]]
+id = "de-vs-es"
+label = "DE vs CMA-ES"
+desc = "The selected variant against CMA-ES (Evolutionary.jl) at the same number of evaluations, over 5 seeds"
+code = '''
+using Evolutionary
+
+d = length(lb)
+function cma(seed)
+    Random.seed!(seed)
+    lam = 4 + floor(Int, 3log(d))
+    r = Evolutionary.optimize(f, Evolutionary.BoxConstraints(lb, ub), lb .+ rand(d) .* (ub .- lb),
+                              CMAES(mu=div(lam, 2), lambda=lam, sigma0=0.3 * maximum(ub .- lb)), Evolutionary.Options(iterations=div(res.evals, lam)))
+    Evolutionary.minimum(r)
+end
+map(["selected variant" => s -> search(seed=s).fx, "CMA-ES" => cma]) do (name, run)
+    sec = @elapsed v = [run(s) for s in 1:5]
+    (method = name, mean_best = mean(v), worst_best = maximum(v), seconds_per_run = sec / 5)
+end
+'''
+
+[[actionGroups.actions]]
+id = "budget-study"
+label = "Budget Study"
+desc = "Best value against the number of generations, 3 seeds each"
+code = '''
+using Plots
+
+gens = round.(Int, budget .* [0.1, 0.25, 0.5, 1, 2])
+best = [mean(search(gens=g, seed=s).fx for s in 1:3) for g in gens]
+display(plot(gens, best .+ 1e-12, xscale=:log10, yscale=:log10, marker=:circle, xlabel="generations", ylabel="mean best f", legend=false))
+[(generations = g, mean_best = v) for (g, v) in zip(gens, best)]
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "solution-summary"
+label = "Solution Summary"
+desc = "Best point, value, evaluations and final population spread"
+code = '''
+(best_point = round.(x_best, sigdigits=6), best_value = f_best, generations = length(res.best), evaluations = res.evals,
+ {{?model=ede}} violation = res.violation, feasible = res.violation == 0,
+ final_diversity = res.diversity[end])
+'''
+
+[[actionGroups.actions]]
+id = "bounds-check"
+label = "Bounds Check"
+desc = "Verify the solution lies within the bounds and see which coordinates press against them"
+code = '''
+slack_low, slack_high = x_best .- lb, ub .- x_best
+(inside_box = all(slack_low .>= 0) && all(slack_high .>= 0), min_slack = minimum([slack_low; slack_high]),
+ at_lower = findall(slack_low .< 1e-6 .* (ub .- lb)), at_upper = findall(slack_high .< 1e-6 .* (ub .- lb)))
+'''
+
+[[actionGroups.actions]]
+id = "algorithm-info"
+label = "Algorithm Info"
+desc = "Key properties of the selected DE variant"
+code = '''
+{{?model=de}} (algorithm = "DE/rand/1/bin", F = F, CR = CR, adapts = "nothing", selection = "greedy one-to-one")
+{{?model=shade}} (algorithm = "SHADE", memory_slots = H, pbest_fraction = PB, adapts = "F and CR from a weighted success history", final_mean_F = res.F[end], final_mean_CR = res.CR[end])
+{{?model=adaptive}} (algorithm = "jDE", resampling_probability = TAU, adapts = "per-individual F and CR, inherited on success", final_mean_F = res.F[end], final_mean_CR = res.CR[end])
+{{?model=ede}} (algorithm = "epsilon-constrained DE", F = F, CR = CR, constraints = length(g(x_best)), epsilon_horizon = TC, final_violation = res.violation)
+'''

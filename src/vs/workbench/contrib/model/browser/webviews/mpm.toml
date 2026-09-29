@@ -1,0 +1,588 @@
+# Multi-Objective Optimisation Performance Metrics Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/mpm.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Multi-Objective Optimisation Performance Metrics"
+viewType = "pollis.mpm"
+defaultModel = "hv"
+
+[[packages]]
+name = "Metaheuristics.jl"
+github = "https://github.com/jmejia8/Metaheuristics.jl"
+
+[requires]
+packages = ["Metaheuristics", " Plots"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Hypervolume"
+file = "mpm/tutorial-01-hv.ipynb"
+bundled = true
+description = "Hypervolume indicator: volume of objective space dominated by the Pareto front"
+
+[[notebookSections.notebooks]]
+name = "Generational Distance"
+file = "mpm/tutorial-02-gd.ipynb"
+bundled = true
+description = "Generational Distance: average distance from obtained front to true Pareto front"
+
+[[notebookSections.notebooks]]
+name = "Inverted Generational Distance"
+file = "mpm/tutorial-03-igd.ipynb"
+bundled = true
+description = "Inverted Generational Distance: average distance from true front to obtained front"
+
+[[notebookSections.notebooks]]
+name = "Epsilon-Indicator"
+file = "mpm/tutorial-04-eps.ipynb"
+bundled = true
+description = "Additive epsilon-indicator: smallest epsilon such that the obtained front epsilon-dominates the true front"
+
+[[notebookSections.notebooks]]
+name = "Spacing"
+file = "mpm/tutorial-05-spacing.ipynb"
+bundled = true
+description = "Spacing metric: uniformity of distribution of solutions along the Pareto front"
+
+[[wikis]]
+name = "Factsheet"
+file = "mpm/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "mpm/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "mpm/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "mpm/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "mpm/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "mpm/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Metrics"
+
+[[wikis]]
+name = "Hypervolume"
+file = "mpm/hv.md"
+bundled = true
+
+[[wikis]]
+name = "Generational Distance"
+file = "mpm/gd.md"
+bundled = true
+
+[[wikis]]
+name = "Inverted Generational Distance"
+file = "mpm/igd.md"
+bundled = true
+
+[[wikis]]
+name = "Epsilon-Indicator"
+file = "mpm/eps.md"
+bundled = true
+
+[[wikis]]
+name = "Spacing"
+file = "mpm/spacing.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "Metaheuristics: A Julia Package for Single- and Multi-Objective Optimization"
+authors = "Mejia-de-Dios, Jesus-Adolfo; Mezura-Montes, Efren"
+year = 2022
+journal = "Journal of Open Source Software"
+doi = "10.21105/joss.04723"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Multi-Objective Optimization Using Evolutionary Algorithms"
+authors = "Deb, Kalyanmoy"
+year = 2001
+journal = "Wiley"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Performance Assessment of Multiobjective Optimizers: An Analysis and Review"
+authors = "Zitzler, Eckart; Thiele, Lothar; Laumanns, Marco; Fonseca, Carlos M.; da Fonseca, Viviane Grunert"
+year = 2003
+journal = "IEEE Transactions on Evolutionary Computation"
+doi = "10.1109/TEVC.2003.810758"
+openAccess = false
+
+[[references]]
+title = "Multiobjective Evolutionary Algorithms: A Comparative Case Study and the Strength Pareto Approach"
+authors = "Zitzler, Eckart; Thiele, Lothar"
+year = 1999
+journal = "IEEE Transactions on Evolutionary Computation"
+doi = "10.1109/4235.797969"
+openAccess = false
+
+[[references]]
+title = "Measuring the Hypervolume Exactly for Multi-Objective Minimization Problems"
+authors = "Beume, Nicola; Fonseca, Carlos M.; Lopez-Ibanez, Manuel; Paquete, Luis; Vahrenhold, Jan"
+year = 2009
+journal = "Evolutionary Computation"
+doi = "10.1162/evco.2009.17.1.17104"
+openAccess = false
+
+[[references]]
+title = "Generational Distance Revisited"
+authors = "Ishibuchi, Hisao; Masuda, Hiroyuki; Tanigaki, Yuki; Nojima, Yusuke"
+year = 2015
+journal = "GECCO Companion Proceedings"
+doi = "10.1145/2739482.2764899"
+openAccess = false
+
+[[models]]
+id = "hv"
+label = "Hypervolume"
+
+[[models]]
+id = "gd"
+label = "Generational Distance"
+
+[[models]]
+id = "igd"
+label = "Inverted Generational Distance"
+
+[[models]]
+id = "eps"
+label = "Epsilon-Indicator"
+
+[[models]]
+id = "spacing"
+label = "Spacing"
+
+[[bullets]]
+text = "Hypervolume"
+detail = "volume of objective space dominated by the front relative to a reference point"
+
+[[bullets]]
+text = "Generational Distance (GD)"
+detail = "average distance from obtained front to true Pareto front"
+
+[[bullets]]
+text = "Inverted Generational Distance (IGD)"
+detail = "average distance from true front to obtained front"
+
+[[bullets]]
+text = "Epsilon-Indicator"
+detail = "smallest additive shift such that obtained front epsilon-dominates true front"
+
+[[bullets]]
+text = "Spacing"
+detail = "uniformity of the solution distribution along the Pareto front"
+
+[[decisionRows]]
+task = "Hypervolume"
+context = "No true front is known, or a single number rewarding both convergence and spread is wanted; the only metric strictly monotone with Pareto dominance"
+purpose = "Volume of objective space dominated by the front and bounded by a reference point (here 10% beyond the joint nadir). Larger is better; each point's exclusive contribution shows which trade-offs matter"
+
+[[decisionRows]]
+task = "Generational Distance"
+context = "A reference front is known and only convergence (closeness) matters"
+purpose = "Mean distance from each obtained point to its nearest reference point. Smaller is better; blind to spread: a single point on the true front scores zero"
+
+[[decisionRows]]
+task = "Inverted Generational Distance"
+context = "A reference front is known and both convergence and coverage matter: the usual benchmark metric"
+purpose = "Mean distance from each reference point to its nearest obtained point. Smaller is better; gaps in the front are penalised because the reference points there are far from everything"
+
+[[decisionRows]]
+task = "Epsilon-Indicator"
+context = "A worst-case guarantee is wanted: how far the front is from dominating the reference everywhere"
+purpose = "Additive epsilon: smallest shift eps such that every reference point is weakly dominated by some obtained point moved by -eps. Smaller is better; driven by the single worst-covered region"
+
+[[decisionRows]]
+task = "Spacing"
+context = "Uniformity of the front matters, e.g. before handing a set of trade-offs to a decision maker; needs no reference front"
+purpose = "Standard deviation of each point's distance (L1) to its nearest neighbour (Schott). Zero means evenly spaced; says nothing about convergence or extent"
+
+[[inputs]]
+id = "result"
+label = "Result"
+tooltip = "Variable holding the optimisation result (a Metaheuristics State) or a front matrix (one row per point). Default: the built-in demo, NSGA-II on ZDT1."
+default = "demo_result"
+
+[[inputs]]
+id = "ref"
+label = "Reference Front"
+tooltip = "Variable holding the true (reference) front: a matrix with one row per point, or solutions accepted by pareto_front. Used by GD, IGD, Epsilon and the Hypervolume reference point. Default: the known ZDT1 front."
+default = "demo_ref"
+
+[[inputs]]
+id = "result2"
+label = "Second Result"
+tooltip = "Second result or front matrix for the Compare actions. Default: the demo run with SPEA2."
+default = "demo_result2"
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.hv]
+# Dominated staircase region up to a reference point
+svg = '''
+return '<path d="M10,24 L18,24 L18,40 L30,40 L30,52 L44,52 L44,62 L48,62 L48,24 Z" fill="currentColor" fill-opacity="0.35" stroke="currentColor" stroke-width="1.5"/>'
+	+ '<circle cx="48" cy="24" r="2.5" fill="currentColor"/>';
+'''
+
+[miniCharts.gd]
+# Obtained points joined to the reference curve
+svg = '''
+return '<path d="M8,26 Q12,62 48,66" fill="none" stroke="currentColor" stroke-width="1.5"/>'
+	+ [[18,34,12,38],[26,46,17,52],[38,52,34,61]].map(p => '<line x1="' + p[0] + '" y1="' + p[1] + '" x2="' + p[2] + '" y2="' + p[3] + '" stroke="currentColor" stroke-dasharray="2,2"/><circle cx="' + p[0] + '" cy="' + p[1] + '" r="2.5" fill="currentColor"/>').join('');
+'''
+
+[miniCharts.igd]
+# Reference points joined to the nearest obtained point, one gap
+svg = '''
+return [[10,30],[12,42],[16,52],[24,60],[36,64],[48,66]].map(p => '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="2" fill="none" stroke="currentColor"/>').join('')
+	+ [[16,36],[20,50],[40,58]].map(p => '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="2.5" fill="currentColor"/>').join('')
+	+ '<line x1="24" y1="60" x2="20" y2="50" stroke="currentColor" stroke-dasharray="2,2"/><line x1="36" y1="64" x2="40" y2="58" stroke="currentColor" stroke-dasharray="2,2"/>';
+'''
+
+[miniCharts.eps]
+# Front shifted by eps onto the reference
+svg = '''
+return '<path d="M8,26 Q12,62 48,66" fill="none" stroke="currentColor" stroke-width="1.5"/>'
+	+ '<path d="M16,20 Q20,54 54,58" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3,2"/>'
+	+ '<line x1="34" y1="54" x2="28" y2="62" stroke="currentColor" stroke-width="1"/><polygon points="28,62 29,57 32,60" fill="currentColor"/>';
+'''
+
+[miniCharts.spacing]
+# Points along a front with equal gaps
+svg = '''
+return '<path d="M8,26 Q12,62 48,66" fill="none" stroke="currentColor" stroke-width="0.8" stroke-dasharray="2,2"/>'
+	+ [[9,32],[11,44],[16,53],[24,60],[35,64],[46,66]].map(p => '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="2.5" fill="currentColor"/>').join('');
+'''
+
+[[codeBranches]]
+model = "hv"
+code = '''
+using Metaheuristics, LinearAlgebra, Random
+Ind = Metaheuristics.PerformanceIndicators
+
+# Demo: NSGA-II and SPEA2 on ZDT1, whose true front is known (replace the inputs with your own variables)
+zdt, zdt_bounds, zdt_front = Metaheuristics.TestProblems.get_problem(:ZDT1)
+demo_opts() = Options(iterations=100, seed=1, store_convergence=true)
+demo_result = optimize(zdt, zdt_bounds, NSGA2(options=demo_opts()))
+demo_result2 = optimize(zdt, zdt_bounds, SPEA2(options=demo_opts()))
+demo_ref = pareto_front(zdt_front)
+
+as_front(r) = r isa AbstractMatrix ? Matrix{Float64}(r) : pareto_front(r)  # State or solutions -> one row per point
+front, front2, ref = as_front({{result}}), as_front({{result2}}), as_front({{ref}})
+all_pts = [front; front2; ref]
+refpoint = vec(maximum(all_pts, dims=1)) .+ 0.1 .* vec(maximum(all_pts, dims=1) .- minimum(all_pts, dims=1))  # hypervolume reference point
+nearest(a, B) = minimum(norm(a .- B[j, :]) for j in axes(B, 1))
+
+hypervolume(F) = (keep = vec(all(F .< transpose(refpoint), dims=2)); any(keep) ? Ind.hypervolume(F[keep, :], refpoint; verbose=false) : 0.0)  # larger is better
+gd(F) = Ind.gd(F, ref)  # mean distance obtained -> reference; smaller is better
+igd(F) = Ind.igd(F, ref)  # mean distance reference -> obtained; smaller is better
+epsilon(F) = maximum(minimum(maximum(F[i, :] .- ref[j, :]) for i in axes(F, 1)) for j in axes(ref, 1))  # additive epsilon; smaller is better
+nn_l1(F) = [minimum(sum(abs.(F[i, :] .- F[j, :])) for j in axes(F, 1) if j != i) for i in axes(F, 1)]  # L1 distance to nearest neighbour
+spacing(F) = Ind.spacing(F)  # 0 = perfectly even
+all_metrics(F) = (hypervolume = hypervolume(F), gd = gd(F), igd = igd(F), epsilon = epsilon(F), spacing = spacing(F))
+name, better = "Hypervolume", "higher"
+metric(F) = hypervolume(F)
+pointwise(F) = (F, [hypervolume(F) - hypervolume(F[setdiff(axes(F, 1), i), :]) for i in axes(F, 1)], "exclusive hypervolume contribution")
+
+(metric = name, value = metric(front), better = better, front_size = size(front, 1), reference_size = size(ref, 1), objectives = size(front, 2))
+'''
+
+[[codeBranches]]
+model = "gd"
+code = '''
+using Metaheuristics, LinearAlgebra, Random
+Ind = Metaheuristics.PerformanceIndicators
+
+# Demo: NSGA-II and SPEA2 on ZDT1, whose true front is known (replace the inputs with your own variables)
+zdt, zdt_bounds, zdt_front = Metaheuristics.TestProblems.get_problem(:ZDT1)
+demo_opts() = Options(iterations=100, seed=1, store_convergence=true)
+demo_result = optimize(zdt, zdt_bounds, NSGA2(options=demo_opts()))
+demo_result2 = optimize(zdt, zdt_bounds, SPEA2(options=demo_opts()))
+demo_ref = pareto_front(zdt_front)
+
+as_front(r) = r isa AbstractMatrix ? Matrix{Float64}(r) : pareto_front(r)  # State or solutions -> one row per point
+front, front2, ref = as_front({{result}}), as_front({{result2}}), as_front({{ref}})
+all_pts = [front; front2; ref]
+refpoint = vec(maximum(all_pts, dims=1)) .+ 0.1 .* vec(maximum(all_pts, dims=1) .- minimum(all_pts, dims=1))  # hypervolume reference point
+nearest(a, B) = minimum(norm(a .- B[j, :]) for j in axes(B, 1))
+
+hypervolume(F) = (keep = vec(all(F .< transpose(refpoint), dims=2)); any(keep) ? Ind.hypervolume(F[keep, :], refpoint; verbose=false) : 0.0)  # larger is better
+gd(F) = Ind.gd(F, ref)  # mean distance obtained -> reference; smaller is better
+igd(F) = Ind.igd(F, ref)  # mean distance reference -> obtained; smaller is better
+epsilon(F) = maximum(minimum(maximum(F[i, :] .- ref[j, :]) for i in axes(F, 1)) for j in axes(ref, 1))  # additive epsilon; smaller is better
+nn_l1(F) = [minimum(sum(abs.(F[i, :] .- F[j, :])) for j in axes(F, 1) if j != i) for i in axes(F, 1)]  # L1 distance to nearest neighbour
+spacing(F) = Ind.spacing(F)  # 0 = perfectly even
+all_metrics(F) = (hypervolume = hypervolume(F), gd = gd(F), igd = igd(F), epsilon = epsilon(F), spacing = spacing(F))
+name, better = "Generational Distance", "lower"
+metric(F) = gd(F)
+pointwise(F) = (F, [nearest(F[i, :], ref) for i in axes(F, 1)], "distance to the reference front")
+
+(metric = name, value = metric(front), better = better, front_size = size(front, 1), reference_size = size(ref, 1), objectives = size(front, 2))
+'''
+
+[[codeBranches]]
+model = "igd"
+code = '''
+using Metaheuristics, LinearAlgebra, Random
+Ind = Metaheuristics.PerformanceIndicators
+
+# Demo: NSGA-II and SPEA2 on ZDT1, whose true front is known (replace the inputs with your own variables)
+zdt, zdt_bounds, zdt_front = Metaheuristics.TestProblems.get_problem(:ZDT1)
+demo_opts() = Options(iterations=100, seed=1, store_convergence=true)
+demo_result = optimize(zdt, zdt_bounds, NSGA2(options=demo_opts()))
+demo_result2 = optimize(zdt, zdt_bounds, SPEA2(options=demo_opts()))
+demo_ref = pareto_front(zdt_front)
+
+as_front(r) = r isa AbstractMatrix ? Matrix{Float64}(r) : pareto_front(r)  # State or solutions -> one row per point
+front, front2, ref = as_front({{result}}), as_front({{result2}}), as_front({{ref}})
+all_pts = [front; front2; ref]
+refpoint = vec(maximum(all_pts, dims=1)) .+ 0.1 .* vec(maximum(all_pts, dims=1) .- minimum(all_pts, dims=1))  # hypervolume reference point
+nearest(a, B) = minimum(norm(a .- B[j, :]) for j in axes(B, 1))
+
+hypervolume(F) = (keep = vec(all(F .< transpose(refpoint), dims=2)); any(keep) ? Ind.hypervolume(F[keep, :], refpoint; verbose=false) : 0.0)  # larger is better
+gd(F) = Ind.gd(F, ref)  # mean distance obtained -> reference; smaller is better
+igd(F) = Ind.igd(F, ref)  # mean distance reference -> obtained; smaller is better
+epsilon(F) = maximum(minimum(maximum(F[i, :] .- ref[j, :]) for i in axes(F, 1)) for j in axes(ref, 1))  # additive epsilon; smaller is better
+nn_l1(F) = [minimum(sum(abs.(F[i, :] .- F[j, :])) for j in axes(F, 1) if j != i) for i in axes(F, 1)]  # L1 distance to nearest neighbour
+spacing(F) = Ind.spacing(F)  # 0 = perfectly even
+all_metrics(F) = (hypervolume = hypervolume(F), gd = gd(F), igd = igd(F), epsilon = epsilon(F), spacing = spacing(F))
+name, better = "Inverted Generational Distance", "lower"
+metric(F) = igd(F)
+pointwise(F) = (ref, [nearest(ref[j, :], F) for j in axes(ref, 1)], "distance from the reference point to the front")
+
+(metric = name, value = metric(front), better = better, front_size = size(front, 1), reference_size = size(ref, 1), objectives = size(front, 2))
+'''
+
+[[codeBranches]]
+model = "eps"
+code = '''
+using Metaheuristics, LinearAlgebra, Random
+Ind = Metaheuristics.PerformanceIndicators
+
+# Demo: NSGA-II and SPEA2 on ZDT1, whose true front is known (replace the inputs with your own variables)
+zdt, zdt_bounds, zdt_front = Metaheuristics.TestProblems.get_problem(:ZDT1)
+demo_opts() = Options(iterations=100, seed=1, store_convergence=true)
+demo_result = optimize(zdt, zdt_bounds, NSGA2(options=demo_opts()))
+demo_result2 = optimize(zdt, zdt_bounds, SPEA2(options=demo_opts()))
+demo_ref = pareto_front(zdt_front)
+
+as_front(r) = r isa AbstractMatrix ? Matrix{Float64}(r) : pareto_front(r)  # State or solutions -> one row per point
+front, front2, ref = as_front({{result}}), as_front({{result2}}), as_front({{ref}})
+all_pts = [front; front2; ref]
+refpoint = vec(maximum(all_pts, dims=1)) .+ 0.1 .* vec(maximum(all_pts, dims=1) .- minimum(all_pts, dims=1))  # hypervolume reference point
+nearest(a, B) = minimum(norm(a .- B[j, :]) for j in axes(B, 1))
+
+hypervolume(F) = (keep = vec(all(F .< transpose(refpoint), dims=2)); any(keep) ? Ind.hypervolume(F[keep, :], refpoint; verbose=false) : 0.0)  # larger is better
+gd(F) = Ind.gd(F, ref)  # mean distance obtained -> reference; smaller is better
+igd(F) = Ind.igd(F, ref)  # mean distance reference -> obtained; smaller is better
+epsilon(F) = maximum(minimum(maximum(F[i, :] .- ref[j, :]) for i in axes(F, 1)) for j in axes(ref, 1))  # additive epsilon; smaller is better
+nn_l1(F) = [minimum(sum(abs.(F[i, :] .- F[j, :])) for j in axes(F, 1) if j != i) for i in axes(F, 1)]  # L1 distance to nearest neighbour
+spacing(F) = Ind.spacing(F)  # 0 = perfectly even
+all_metrics(F) = (hypervolume = hypervolume(F), gd = gd(F), igd = igd(F), epsilon = epsilon(F), spacing = spacing(F))
+name, better = "Epsilon-Indicator (additive)", "lower"
+metric(F) = epsilon(F)
+pointwise(F) = (ref, [minimum(maximum(F[i, :] .- ref[j, :]) for i in axes(F, 1)) for j in axes(ref, 1)], "shift needed to dominate the reference point")
+
+(metric = name, value = metric(front), better = better, front_size = size(front, 1), reference_size = size(ref, 1), objectives = size(front, 2))
+'''
+
+[[codeBranches]]
+model = "spacing"
+code = '''
+using Metaheuristics, LinearAlgebra, Random
+Ind = Metaheuristics.PerformanceIndicators
+
+# Demo: NSGA-II and SPEA2 on ZDT1, whose true front is known (replace the inputs with your own variables)
+zdt, zdt_bounds, zdt_front = Metaheuristics.TestProblems.get_problem(:ZDT1)
+demo_opts() = Options(iterations=100, seed=1, store_convergence=true)
+demo_result = optimize(zdt, zdt_bounds, NSGA2(options=demo_opts()))
+demo_result2 = optimize(zdt, zdt_bounds, SPEA2(options=demo_opts()))
+demo_ref = pareto_front(zdt_front)
+
+as_front(r) = r isa AbstractMatrix ? Matrix{Float64}(r) : pareto_front(r)  # State or solutions -> one row per point
+front, front2, ref = as_front({{result}}), as_front({{result2}}), as_front({{ref}})
+all_pts = [front; front2; ref]
+refpoint = vec(maximum(all_pts, dims=1)) .+ 0.1 .* vec(maximum(all_pts, dims=1) .- minimum(all_pts, dims=1))  # hypervolume reference point
+nearest(a, B) = minimum(norm(a .- B[j, :]) for j in axes(B, 1))
+
+hypervolume(F) = (keep = vec(all(F .< transpose(refpoint), dims=2)); any(keep) ? Ind.hypervolume(F[keep, :], refpoint; verbose=false) : 0.0)  # larger is better
+gd(F) = Ind.gd(F, ref)  # mean distance obtained -> reference; smaller is better
+igd(F) = Ind.igd(F, ref)  # mean distance reference -> obtained; smaller is better
+epsilon(F) = maximum(minimum(maximum(F[i, :] .- ref[j, :]) for i in axes(F, 1)) for j in axes(ref, 1))  # additive epsilon; smaller is better
+nn_l1(F) = [minimum(sum(abs.(F[i, :] .- F[j, :])) for j in axes(F, 1) if j != i) for i in axes(F, 1)]  # L1 distance to nearest neighbour
+spacing(F) = Ind.spacing(F)  # 0 = perfectly even
+all_metrics(F) = (hypervolume = hypervolume(F), gd = gd(F), igd = igd(F), epsilon = epsilon(F), spacing = spacing(F))
+name, better = "Spacing", "lower"
+metric(F) = spacing(F)
+pointwise(F) = (d = nn_l1(F); (F, abs.(d .- sum(d) / length(d)), "deviation from the mean neighbour distance"))
+
+(metric = name, value = metric(front), better = better, front_size = size(front, 1), reference_size = size(ref, 1), objectives = size(front, 2))
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "front-plot"
+label = "Front vs Reference"
+desc = "The obtained front against the reference front, with what this metric measures drawn on top (first two objectives)"
+code = '''
+using Plots
+p = plot(ref[sortperm(ref[:, 1]), 1], ref[sortperm(ref[:, 1]), 2], c=:gray, lw=2, label="reference", xlabel="f1", ylabel="f2", title=name)
+scatter!(front[:, 1], front[:, 2], ms=3, c=:black, label="obtained")
+{{?model=hv}}o = sortperm(front[:, 1]); xs = [front[o, 1]; refpoint[1]]; ys = [front[o, 2]; front[o[end], 2]]
+{{?model=hv}}plot!([xs[1]; repeat(xs[2:end], inner=2)], [repeat(ys[1:end-1], inner=2); ys[end]], fillrange=refpoint[2], fillalpha=0.25, c=:steelblue, label="dominated region"); scatter!([refpoint[1]], [refpoint[2]], c=:red, label="reference point")
+{{?model=gd}}for i in axes(front, 1); j = argmin([norm(front[i, :] .- ref[k, :]) for k in axes(ref, 1)]); plot!([front[i, 1], ref[j, 1]], [front[i, 2], ref[j, 2]], c=:red, label=false); end
+{{?model=igd}}for j in 1:4:size(ref, 1); i = argmin([norm(ref[j, :] .- front[k, :]) for k in axes(front, 1)]); plot!([ref[j, 1], front[i, 1]], [ref[j, 2], front[i, 2]], c=:red, label=false); end
+{{?model=eps}}scatter!(front[:, 1] .- metric(front), front[:, 2] .- metric(front), ms=2, c=:red, label="front shifted by -eps")
+{{?model=spacing}}for i in axes(front, 1); j = argmin([k == i ? Inf : sum(abs.(front[i, :] .- front[k, :])) for k in axes(front, 1)]); plot!([front[i, 1], front[j, 1]], [front[i, 2], front[j, 2]], c=:red, label=false); end
+p
+'''
+
+[[actionGroups.actions]]
+id = "metric-convergence"
+label = "Metric over Generations"
+desc = "The metric on the non-dominated front of every stored generation (needs store_convergence=true): when the search stopped improving"
+code = '''
+using Plots
+r = {{result}}
+r isa AbstractMatrix && error("A front matrix has no history; pass the result State of a run with store_convergence=true")
+isempty(r.convergence) && error("No history stored; rerun with Options(store_convergence=true)")
+vals = [metric(pareto_front(st)) for st in r.convergence]
+plot(vals, lw=2, xlabel="Generation", ylabel=name, legend=false, yscale=better == "lower" ? :log10 : :identity, title=name * " over generations")
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "all-metrics"
+label = "All Metrics"
+desc = "All five metrics for the front at once, with the direction in which each improves: disagreement between them points at a convergence or spread problem"
+code = '''
+m = all_metrics(front)
+[(metric = "Hypervolume", value = m.hypervolume, better = "higher"), (metric = "GD", value = m.gd, better = "lower"),
+ (metric = "IGD", value = m.igd, better = "lower"), (metric = "Epsilon (additive)", value = m.epsilon, better = "lower"),
+ (metric = "Spacing", value = m.spacing, better = "lower")]
+'''
+
+[[actionGroups.actions]]
+id = "front-stats"
+label = "Front Statistics"
+desc = "Size, objective ranges against the reference, dominated points and duplicates in the front: a front that is not mutually non-dominated distorts every metric"
+code = '''
+dominated = count(i -> any(all(front[j, :] .<= front[i, :]) && any(front[j, :] .< front[i, :]) for j in axes(front, 1)), axes(front, 1))
+(front_size = size(front, 1), objectives = size(front, 2), dominated_points = dominated, duplicates = size(front, 1) - length(unique(eachrow(front))),
+ front_range = [(minimum(front[:, k]), maximum(front[:, k])) for k in axes(front, 2)], reference_range = [(minimum(ref[:, k]), maximum(ref[:, k])) for k in axes(ref, 2)])
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "compute-metric"
+label = "Subsample Sensitivity"
+desc = "The metric on random subsets of the front (20 draws per size): how the value would change with a smaller archive, and how much it depends on front size at all"
+code = '''
+using Plots, Statistics
+rng = MersenneTwister(1)
+sizes = unique(max.(2, round.(Int, size(front, 1) .* [0.1, 0.2, 0.4, 0.6, 0.8, 1.0])))
+vals = [[metric(front[randperm(rng, size(front, 1))[1:k], :]) for _ in 1:20] for k in sizes]
+plot(sizes, mean.(vals), ribbon=std.(vals), marker=:o, lw=2, xlabel="Points kept", ylabel=name, legend=false, title="Subsample sensitivity")
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "compare-fronts"
+label = "Compare Two Fronts"
+desc = "Both fronts on all five metrics with a shared hypervolume reference point, and which one wins each"
+code = '''
+a, b = all_metrics(front), all_metrics(front2)
+[(metric = string(k), front_a = a[k], front_b = b[k], winner = a[k] == b[k] ? "tie" : (k == :hypervolume) == (a[k] > b[k]) ? "A" : "B") for k in keys(a)]
+'''
+
+[[actionGroups.actions]]
+id = "coverage"
+label = "Coverage"
+desc = "Set coverage C(A, B): the share of B's points weakly dominated by some point of A, in both directions; unlike the unary metrics, it compares the fronts directly"
+code = '''
+(C_A_covers_B = Ind.covering(front, front2), C_B_covers_A = Ind.covering(front2, front))
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "metric-guide"
+label = "Metric Guide"
+desc = "What each metric rewards, its value here and whether it needs a reference front"
+code = '''
+m = all_metrics(front)
+[(metric = "Hypervolume", value = m.hypervolume, better = "higher", needs_reference = "point only", rewards = "convergence and spread; dominance-compatible"),
+ (metric = "GD", value = m.gd, better = "lower", needs_reference = "front", rewards = "convergence only"),
+ (metric = "IGD", value = m.igd, better = "lower", needs_reference = "front", rewards = "convergence and coverage of the reference"),
+ (metric = "Epsilon (additive)", value = m.epsilon, better = "lower", needs_reference = "front", rewards = "worst-case approximation"),
+ (metric = "Spacing", value = m.spacing, better = "lower", needs_reference = "none", rewards = "evenness of spread only")]
+'''
+
+[[actionGroups.actions]]
+id = "contributions"
+label = "Point Contributions"
+desc = "This metric broken down point by point (first two objectives, coloured by contribution), with the five largest: where the front earns or loses its score"
+code = '''
+using Plots
+P, v, what = pointwise(front)
+top = sortperm(v, rev=true)[1:min(5, length(v))]
+display([(point = round.(P[i, :], digits=4), value = v[i]) for i in top])
+scatter(P[:, 1], P[:, 2], zcolor=v, ms=4, xlabel="f1", ylabel="f2", label=false, title=what)
+'''

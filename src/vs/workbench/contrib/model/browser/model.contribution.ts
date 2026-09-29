@@ -15,7 +15,7 @@ import { IEditorService } from '../../../services/editor/common/editorService.js
 import { IQuickInputService } from '../../../../platform/quickinput/common/quickInput.js';
 import { ITerminalService } from '../../terminal/browser/terminal.js';
 
-import { openNllsWebview } from './commands/nlls.command.js';
+import { NLLS_PANEL } from './commands/nlls.command.js';
 import { LM_PANEL } from './commands/lm.command.js';
 import { MM_PANEL } from './commands/mm.command.js';
 import { GLM_PANEL } from './commands/glm.command.js';
@@ -97,7 +97,7 @@ import { openGpWebview } from './commands/gp.command.js';
 import { openEvtRiskWebview } from './commands/evt-risk.command.js';
 import { openEvtDiagWebview } from './commands/evt-diag.command.js';
 import { openHareWebview } from './commands/hare.command.js';
-import { openGtWebview } from './commands/gt.command.js';
+import { GT_PANEL } from './commands/gt.command.js';
 import { openRvolWebview } from './commands/rvol.command.js';
 import { openLmarWebview } from './commands/lmar.command.js';
 import { openLmharWebview } from './commands/lmhar.command.js';
@@ -138,12 +138,12 @@ import { openSregWebview } from './commands/sreg.command.js';
 import { openSiWebview } from './commands/si.command.js';
 import { openOdeWebview } from './commands/ode.command.js';
 import { openAtsfWebview } from './commands/atsf.command.js';
-import { openLpWebview } from './commands/lp.command.js';
-import { openQpWebview } from './commands/qp.command.js';
-import { openMpnlpWebview } from './commands/mpnlp.command.js';
-import { openMpconeWebview } from './commands/mpcone.command.js';
-import { openMpsdpWebview } from './commands/mpsdp.command.js';
-import { openMpsosWebview } from './commands/mpsos.command.js';
+import { LP_PANEL } from './commands/lp.command.js';
+import { QP_PANEL } from './commands/qp.command.js';
+import { MPNLP_PANEL } from './commands/mpnlp.command.js';
+import { MPCONE_PANEL } from './commands/mpcone.command.js';
+import { MPSDP_PANEL } from './commands/mpsdp.command.js';
+import { MPSOS_PANEL } from './commands/mpsos.command.js';
 
 // ============================================
 // COMMAND REGISTRATION
@@ -348,17 +348,7 @@ CommandsRegistry.registerCommand('chiara.statistics.qrng', (accessor: ServicesAc
 	);
 });
 
-CommandsRegistry.registerCommand('chiara.statistics.nlls', (accessor: ServicesAccessor) => {
-	openNllsWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	);
-});
+CommandsRegistry.registerCommand('chiara.statistics.nlls', accessor => openScaffoldWebview(accessor, NLLS_PANEL));
 
 CommandsRegistry.registerCommand('chiara.statistics.pdme', accessor => openScaffoldWebview(accessor, MM_PANEL));
 
@@ -791,15 +781,7 @@ CommandsRegistry.registerCommand('chiara.statistics.macro.ctmf', (accessor: Serv
 	accessor.get(IClipboardService),
 	accessor.get(INotificationService),
 ));
-CommandsRegistry.registerCommand('chiara.statistics.macro.gt', (accessor: ServicesAccessor) => openGtWebview(
-	accessor.get(IWebviewWorkbenchService),
-	accessor.get(IOpenerService),
-	accessor.get(IEditorService),
-	accessor.get(IQuickInputService),
-	accessor.get(ICommandService),
-	accessor.get(IClipboardService),
-	accessor.get(INotificationService),
-));
+CommandsRegistry.registerCommand('chiara.statistics.macro.gt', accessor => openScaffoldWebview(accessor, GT_PANEL));
 
 CommandsRegistry.registerCommand('chiara.statistics.ml.logpdf', accessor => openAdlpWebview(
 	accessor.get(IWebviewWorkbenchService),
@@ -928,109 +910,25 @@ CommandsRegistry.registerCommand('chiara.statistics.ode', (accessor: ServicesAcc
 	accessor.get(INotificationService),
 ));
 
-CommandsRegistry.registerCommand('chiara.mp.lp', (accessor: ServicesAccessor) => openLpWebview(
-	accessor.get(IWebviewWorkbenchService),
-	accessor.get(IOpenerService),
-	accessor.get(IEditorService),
-	accessor.get(IQuickInputService),
-	accessor.get(ICommandService),
-	accessor.get(IClipboardService),
-	accessor.get(INotificationService),
-));
+CommandsRegistry.registerCommand('chiara.mp.lp', accessor => openScaffoldWebview(accessor, LP_PANEL));
 
-CommandsRegistry.registerCommand('chiara.mp.milp', (accessor: ServicesAccessor) => openLpWebview(
-	accessor.get(IWebviewWorkbenchService),
-	accessor.get(IOpenerService),
-	accessor.get(IEditorService),
-	accessor.get(IQuickInputService),
-	accessor.get(ICommandService),
-	accessor.get(IClipboardService),
-	accessor.get(INotificationService),
-	'milp',
-));
+CommandsRegistry.registerCommand('chiara.mp.milp', accessor => openScaffoldWebview(accessor, LP_PANEL, 'milp'));
 
-CommandsRegistry.registerCommand('chiara.mp.qp', (accessor: ServicesAccessor) => openQpWebview(
-	accessor.get(IWebviewWorkbenchService),
-	accessor.get(IOpenerService),
-	accessor.get(IEditorService),
-	accessor.get(IQuickInputService),
-	accessor.get(ICommandService),
-	accessor.get(IClipboardService),
-	accessor.get(INotificationService),
-));
+CommandsRegistry.registerCommand('chiara.mp.qp', accessor => openScaffoldWebview(accessor, QP_PANEL));
 
-CommandsRegistry.registerCommand('chiara.mp.qcqp', (accessor: ServicesAccessor) => openQpWebview(
-	accessor.get(IWebviewWorkbenchService),
-	accessor.get(IOpenerService),
-	accessor.get(IEditorService),
-	accessor.get(IQuickInputService),
-	accessor.get(ICommandService),
-	accessor.get(IClipboardService),
-	accessor.get(INotificationService),
-	'qcqp',
-));
+CommandsRegistry.registerCommand('chiara.mp.qcqp', accessor => openScaffoldWebview(accessor, QP_PANEL, 'qcqp'));
 
-CommandsRegistry.registerCommand('chiara.mp.miqp', (accessor: ServicesAccessor) => openQpWebview(
-	accessor.get(IWebviewWorkbenchService),
-	accessor.get(IOpenerService),
-	accessor.get(IEditorService),
-	accessor.get(IQuickInputService),
-	accessor.get(ICommandService),
-	accessor.get(IClipboardService),
-	accessor.get(INotificationService),
-	'miqp',
-));
+CommandsRegistry.registerCommand('chiara.mp.miqp', accessor => openScaffoldWebview(accessor, QP_PANEL, 'miqp'));
 
-CommandsRegistry.registerCommand('chiara.mp.nlp', (accessor: ServicesAccessor) => openMpnlpWebview(
-	accessor.get(IWebviewWorkbenchService),
-	accessor.get(IOpenerService),
-	accessor.get(IEditorService),
-	accessor.get(IQuickInputService),
-	accessor.get(ICommandService),
-	accessor.get(IClipboardService),
-	accessor.get(INotificationService),
-));
+CommandsRegistry.registerCommand('chiara.mp.nlp', accessor => openScaffoldWebview(accessor, MPNLP_PANEL));
 
-CommandsRegistry.registerCommand('chiara.mp.minlp', (accessor: ServicesAccessor) => openMpnlpWebview(
-	accessor.get(IWebviewWorkbenchService),
-	accessor.get(IOpenerService),
-	accessor.get(IEditorService),
-	accessor.get(IQuickInputService),
-	accessor.get(ICommandService),
-	accessor.get(IClipboardService),
-	accessor.get(INotificationService),
-	'minlp',
-));
+CommandsRegistry.registerCommand('chiara.mp.minlp', accessor => openScaffoldWebview(accessor, MPNLP_PANEL, 'minlp'));
 
-CommandsRegistry.registerCommand('chiara.mp.cone', (accessor: ServicesAccessor) => openMpconeWebview(
-	accessor.get(IWebviewWorkbenchService),
-	accessor.get(IOpenerService),
-	accessor.get(IEditorService),
-	accessor.get(IQuickInputService),
-	accessor.get(ICommandService),
-	accessor.get(IClipboardService),
-	accessor.get(INotificationService),
-));
+CommandsRegistry.registerCommand('chiara.mp.cone', accessor => openScaffoldWebview(accessor, MPCONE_PANEL));
 
-CommandsRegistry.registerCommand('chiara.mp.sdp', (accessor: ServicesAccessor) => openMpsdpWebview(
-	accessor.get(IWebviewWorkbenchService),
-	accessor.get(IOpenerService),
-	accessor.get(IEditorService),
-	accessor.get(IQuickInputService),
-	accessor.get(ICommandService),
-	accessor.get(IClipboardService),
-	accessor.get(INotificationService),
-));
+CommandsRegistry.registerCommand('chiara.mp.sdp', accessor => openScaffoldWebview(accessor, MPSDP_PANEL));
 
-CommandsRegistry.registerCommand('chiara.mp.sos', (accessor: ServicesAccessor) => openMpsosWebview(
-	accessor.get(IWebviewWorkbenchService),
-	accessor.get(IOpenerService),
-	accessor.get(IEditorService),
-	accessor.get(IQuickInputService),
-	accessor.get(ICommandService),
-	accessor.get(IClipboardService),
-	accessor.get(INotificationService),
-));
+CommandsRegistry.registerCommand('chiara.mp.sos', accessor => openScaffoldWebview(accessor, MPSOS_PANEL));
 
 const DT_OPEN = (accessor: ServicesAccessor, initialModel?: string) => openScaffoldWebview(accessor, DT_PANEL, initialModel);
 

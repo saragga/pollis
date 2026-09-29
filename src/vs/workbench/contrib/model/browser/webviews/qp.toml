@@ -1,0 +1,550 @@
+# Quadratic Programming Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/qp.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Quadratic Programming"
+viewType = "pollis.qp"
+defaultModel = "qp"
+
+[[packages]]
+name = "JuMP.jl"
+github = "https://github.com/jump-dev/JuMP.jl"
+
+[[packages]]
+name = "OSQP.jl"
+github = "https://github.com/oxfordcontrol/OSQP.jl"
+
+[[packages]]
+name = "Clarabel.jl"
+github = "https://github.com/oxfordcontrol/Clarabel.jl"
+
+[[packages]]
+name = "Ipopt.jl"
+github = "https://github.com/jump-dev/Ipopt.jl"
+
+[[packages]]
+name = "SCIP.jl"
+github = "https://github.com/scipopt/SCIP.jl"
+
+[requires]
+packages = ["JuMP.jl", "Clarabel.jl", "SCIP.jl", "Plots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Basic QP"
+file = "qp/tutorial-01-basic-qp.ipynb"
+bundled = true
+description = "Formulate and solve a quadratic programme with JuMP and Clarabel"
+
+[[notebookSections.notebooks]]
+name = "Portfolio Optimisation"
+file = "qp/tutorial-02-portfolio-optimisation.ipynb"
+bundled = true
+description = "Markowitz mean-variance portfolio: efficient frontier and minimum-variance allocation"
+
+[[notebookSections.notebooks]]
+name = "Basic QCQP"
+file = "qp/tutorial-03-basic-qcqp.ipynb"
+bundled = true
+description = "Formulate and solve a quadratically constrained quadratic programme"
+
+[[notebookSections.notebooks]]
+name = "Cardinality Portfolio"
+file = "qp/tutorial-04-cardinality-portfolio.ipynb"
+bundled = true
+description = "Cardinality-constrained portfolio: select at most k assets using binary variables"
+
+[[wikis]]
+name = "Factsheet"
+file = "qp/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "qp/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "qp/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "qp/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "qp/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "qp/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Methods"
+
+[[wikis]]
+name = "QP"
+file = "qp/qp.md"
+bundled = true
+
+[[wikis]]
+name = "QCQP"
+file = "qp/qcqp.md"
+bundled = true
+
+[[wikis]]
+name = "MIQP"
+file = "qp/miqp.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Applications"
+
+[[wikis]]
+name = "Portfolio Optimisation"
+file = "qp/portfolio-optimisation.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "JuMP: A Modeling Language for Mathematical Optimization"
+authors = "Dunning, Iain; Huchette, Joey; Lubin, Miles"
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/15M1020575"
+openAccess = true
+
+[[references]]
+title = "OSQP: An Operator Splitting Solver for Quadratic Programs"
+authors = "Stellato, Bartolomeo; Banjac, Goran; Goulart, Paul; Bemporad, Alberto; Boyd, Stephen"
+year = 2020
+journal = "Mathematical Programming Computation"
+doi = "10.1007/s12532-020-00179-2"
+openAccess = true
+
+[[references]]
+title = "Clarabel: An Interior-Point Solver for Conic Programs with Quadratic Objectives"
+authors = "Goulart, Paul J.; Chen, Yuwen"
+year = 2024
+journal = "Mathematical Programming Computation"
+url = "https://arxiv.org/abs/2212.08260"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Numerical Optimization"
+authors = "Nocedal, Jorge; Wright, Stephen J."
+year = 2006
+journal = "Springer (2nd ed.)"
+doi = "10.1007/978-0-387-40065-5"
+openAccess = false
+
+[[references]]
+title = "Convex Optimization"
+authors = "Boyd, Stephen; Vandenberghe, Lieven"
+year = 2004
+journal = "Cambridge University Press"
+url = "https://web.stanford.edu/~boyd/cvxbook/"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Portfolio Selection"
+authors = "Markowitz, Harry"
+year = 1952
+journal = "Journal of Finance"
+doi = "10.2307/2975974"
+openAccess = false
+
+[[models]]
+id = "qp"
+label = "Quadratic Programming (QP)"
+
+[[models]]
+id = "qcqp"
+label = "Quadratic Constraints QP (QCQP)"
+
+[[models]]
+id = "miqp"
+label = "Mixed-Integer QP (MIQP)"
+
+[[decisionRows]]
+task = "Quadratic Programming (QP)"
+context = "Quadratic objective, linear constraints: minimum-variance portfolios, least squares with constraints, MPC"
+purpose = "Minimise the variance w' Sigma w for a required expected return"
+
+[[decisionRows]]
+task = "Quadratic Constraints QP (QCQP)"
+context = "A quadratic budget such as a risk, energy or distance limit"
+purpose = "Maximise the expected return subject to a volatility cap w' Sigma w <= risk^2"
+
+[[decisionRows]]
+task = "Mixed-Integer QP (MIQP)"
+context = "Quadratic objective with discrete choices: limited number of assets, minimum lot sizes, on/off decisions"
+purpose = "Minimum variance with at most k assets held (binary selection variables), solved by branch and bound"
+
+[[inputs]]
+id = "mu"
+label = "Expected Returns"
+tooltip = "Vector of expected asset returns; its length sets the number of assets n."
+default = "[0.08, 0.10, 0.12, 0.07, 0.15]"
+
+[[inputs]]
+id = "Sigma"
+label = "Covariance Matrix"
+tooltip = "n × n positive semidefinite covariance matrix of the returns, for example cov(R) from a returns matrix. The default is a random one."
+default = "(F = 0.1 .* randn(5, 5); F * F' + 0.01I)"
+
+[[inputs]]
+id = "target"
+label = "Target Return"
+tooltip = "Minimum expected portfolio return mu' w. Must lie between the smallest and the largest expected return."
+default = "0.10"
+models = ["qp", "miqp"]
+newRow = true
+
+[[inputs]]
+id = "risk"
+label = "Volatility Cap"
+tooltip = "Maximum portfolio standard deviation: the constraint w' Sigma w <= cap^2."
+default = "0.15"
+models = ["qcqp"]
+newRow = true
+
+[[inputs]]
+id = "k"
+label = "Max Assets k"
+tooltip = "Maximum number of assets with a non-zero weight."
+default = "2"
+models = ["miqp"]
+
+[[inputs]]
+id = "qpsolver"
+label = "Solver"
+tooltip = "Clarabel: interior point, the default. OSQP: ADMM, excels on large sparse QPs (lower accuracy). Ipopt: general nonlinear interior point."
+kind = "select"
+default = "Clarabel"
+models = ["qp"]
+
+[[inputs.options]]
+value = "Clarabel"
+label = "Clarabel"
+
+[[inputs.options]]
+value = "OSQP"
+label = "OSQP"
+
+[[inputs.options]]
+value = "Ipopt"
+label = "Ipopt"
+
+[[inputs]]
+id = "qcsolver"
+label = "Solver"
+tooltip = "Clarabel: interior point (the quadratic constraint becomes a second-order cone), the default. Ipopt: general nonlinear interior point. (OSQP supports linear constraints only.)"
+kind = "select"
+default = "Clarabel"
+models = ["qcqp"]
+
+[[inputs.options]]
+value = "Clarabel"
+label = "Clarabel"
+
+[[inputs.options]]
+value = "Ipopt"
+label = "Ipopt"
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.qp]
+# Elliptical level sets with a linear constraint and the optimum
+svg = '''
+var s = '';
+[18, 12, 6].forEach(function (r) { s += '<ellipse cx="27" cy="47" rx="' + r + '" ry="' + (r * 0.65) + '" fill="none" stroke="currentColor" stroke-width="0.9" opacity="0.7"/>'; });
+return s + '<line x1="8" y1="30" x2="46" y2="58" stroke="currentColor" stroke-width="1.2"/><circle cx="29.5" cy="48.5" r="2.4" fill="currentColor"/>';
+'''
+
+[miniCharts.qcqp]
+# A linear objective direction touching an elliptical constraint
+svg = '''
+return '<ellipse cx="27" cy="48" rx="16" ry="11" fill="currentColor" fill-opacity="0.15" stroke="currentColor" stroke-width="1.2"/>'
+	+ '<line x1="30" y1="24" x2="52" y2="46" stroke="currentColor" stroke-width="1" stroke-dasharray="3,2"/><circle cx="39" cy="40" r="2.4" fill="currentColor"/>';
+'''
+
+[miniCharts.miqp]
+# Level sets with a few selected (filled) and unselected (hollow) points
+svg = '''
+var s = '<ellipse cx="27" cy="47" rx="17" ry="11" fill="none" stroke="currentColor" stroke-width="0.9" opacity="0.7"/>';
+[[16, 40, 1], [27, 47, 1], [38, 54, 0], [20, 56, 0], [36, 38, 0]].forEach(function (p) { s += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="2.4" fill="' + (p[2] ? 'currentColor' : 'none') + '" stroke="currentColor"/>'; });
+return s;
+'''
+
+[[codeBranches]]
+model = "qp"
+code = '''
+using JuMP, {{qpsolver}}, LinearAlgebra, Random
+
+Random.seed!(1)
+mu    = {{mu}}  # expected returns
+Sigma = {{Sigma}}  # covariance matrix
+n     = length(mu)
+level = {{target}}
+
+function build(optimizer, level)
+    m = Model(optimizer)
+    set_silent(m)
+    @variable(m, 0 <= w[1:n] <= 1)  # long-only weights
+    @constraint(m, budget, sum(w) == 1)  # fully invested
+    @constraint(m, level_con, dot(mu, w) >= level)  # required expected return
+    @objective(m, Min, dot(w, Sigma, w))  # portfolio variance
+    m, w
+end
+
+solver = {{qpsolver}}.Optimizer
+model, w = build(solver, level)
+optimize!(model)
+grid = range(minimum(mu), maximum(mu), length=20)  # target returns traced by the frontier and the sweep
+(status = termination_status(model), objective = objective_value(model), weights = value.(w),
+ expected_return = dot(mu, value.(w)), volatility = sqrt(dot(value.(w), Sigma, value.(w))))
+'''
+
+[[codeBranches]]
+model = "qcqp"
+code = '''
+using JuMP, {{qcsolver}}, LinearAlgebra, Random
+
+Random.seed!(1)
+mu    = {{mu}}  # expected returns
+Sigma = {{Sigma}}  # covariance matrix
+n     = length(mu)
+level = {{risk}}
+
+function build(optimizer, level)
+    m = Model(optimizer)
+    set_silent(m)
+    @variable(m, 0 <= w[1:n] <= 1)  # long-only weights
+    @constraint(m, budget, sum(w) == 1)  # fully invested
+    @constraint(m, level_con, dot(w, Sigma, w) <= level^2)  # volatility cap
+    @objective(m, Max, dot(mu, w))  # expected return
+    m, w
+end
+
+solver = {{qcsolver}}.Optimizer
+model, w = build(solver, level)
+optimize!(model)
+grid = range(sqrt(minimum(eigvals(Symmetric(Sigma)))), sqrt(maximum(diag(Sigma))), length=20)  # volatility caps
+(status = termination_status(model), objective = objective_value(model), weights = value.(w),
+ expected_return = dot(mu, value.(w)), volatility = sqrt(dot(value.(w), Sigma, value.(w))))
+'''
+
+[[codeBranches]]
+model = "miqp"
+code = '''
+using JuMP, SCIP, LinearAlgebra, Random
+
+Random.seed!(1)
+mu    = {{mu}}  # expected returns
+Sigma = {{Sigma}}  # covariance matrix
+n     = length(mu)
+level = {{target}}
+
+function build(optimizer, level)
+    m = Model(optimizer)
+    set_silent(m)
+    @variable(m, 0 <= w[1:n] <= 1)  # long-only weights
+    @constraint(m, budget, sum(w) == 1)  # fully invested
+    @constraint(m, level_con, dot(mu, w) >= level)  # required expected return
+    @variable(m, z[1:n], Bin)  # 1 = asset held
+    @constraint(m, w .<= z)
+    @constraint(m, sum(z) <= {{k}})  # at most k assets
+    @objective(m, Min, dot(w, Sigma, w))  # portfolio variance
+    m, w
+end
+
+solver = SCIP.Optimizer
+model, w = build(solver, level)
+optimize!(model)
+grid = range(minimum(mu), maximum(mu), length=20)  # target returns traced by the frontier and the sweep
+(status = termination_status(model), objective = objective_value(model), weights = value.(w),
+ expected_return = dot(mu, value.(w)), volatility = sqrt(dot(value.(w), Sigma, value.(w))))
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "efficient-frontier"
+label = "Efficient Frontier"
+desc = "Volatility against expected return of the optimal portfolios across the target (or cap) grid, with the single assets and the current solution"
+code = '''
+using Plots
+
+pts = map(grid) do v
+    m, ww = build(solver, v)
+    optimize!(m)
+    is_solved_and_feasible(m) ? (sqrt(dot(value.(ww), Sigma, value.(ww))), dot(mu, value.(ww))) : (NaN, NaN)
+end
+plot(first.(pts), last.(pts), marker=:circle, markersize=2, xlabel="volatility", ylabel="expected return", label="frontier")
+scatter!(sqrt.(diag(Sigma)), mu, label="assets")
+scatter!([sqrt(dot(value.(w), Sigma, value.(w)))], [dot(mu, value.(w))], marker=:star, markersize=10, label="solution")
+'''
+
+[[actionGroups.actions]]
+id = "portfolio-weights"
+label = "Portfolio Weights"
+desc = "Bar chart of the optimal asset weights"
+code = '''
+using Plots
+
+bar(value.(w), xlabel="asset", ylabel="weight", legend=false)
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "feasibility"
+label = "Feasibility Check"
+desc = "Termination and primal status (INFEASIBLE when the target return or volatility cap cannot be met), and any violated constraint"
+code = '''
+(termination = termination_status(model), primal = primal_status(model),
+ violated = primal_feasibility_report(model; atol=1e-6))  # empty Dict = feasible
+'''
+
+[[actionGroups.actions]]
+id = "convexity"
+label = "Convexity Check"
+desc = "Eigenvalues of Sigma: all >= 0 means the problem is convex and the solution is the global optimum; all > 0 makes it unique"
+code = '''
+ev = eigvals(Symmetric(Sigma))
+(min_eigenvalue = minimum(ev), convex = minimum(ev) >= -1e-10, strictly_convex = minimum(ev) > 1e-10,
+ condition_number = maximum(ev) / max(minimum(ev), eps()))
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "sensitivity"
+label = "Sensitivity Analysis"
+desc = "Dual values of the budget and the return (or risk) constraint, and the reduced cost of each weight (MIQP: with the selection fixed)"
+code = '''
+{{?model=miqp}} using Clarabel; undo = fix_discrete_variables(model); set_optimizer(model, Clarabel.Optimizer); set_silent(model); optimize!(model)
+out = (budget_dual = dual(model[:budget]), level_dual = dual(model[:level_con]), reduced_costs = reduced_cost.(w))
+{{?model=miqp}} undo(); set_optimizer(model, solver); set_silent(model); optimize!(model)
+out
+'''
+
+[[actionGroups.actions]]
+id = "parametric"
+label = "Parametric Sweep"
+desc = "The optimal objective (variance, or expected return for the QCQP) across the target return (or volatility cap) grid"
+code = '''
+using Plots
+
+vals = map(grid) do v
+    m, _ = build(solver, v)
+    optimize!(m)
+    is_solved_and_feasible(m) ? objective_value(m) : NaN
+end
+{{?model!=qcqp}} plot(grid, vals, marker=:circle, xlabel="target return", ylabel="minimum variance", legend=false)
+{{?model=qcqp}} plot(grid, vals, marker=:circle, xlabel="volatility cap", ylabel="maximum expected return", legend=false)
+vline!([level], linestyle=:dash)
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "solver-compare"
+label = "Solver Comparison"
+desc = "The same problem with each capable solver: status, objective and time"
+code = '''
+{{?model=qp}} using Clarabel, OSQP, Ipopt
+{{?model=qp}} solvers = ["Clarabel" => Clarabel.Optimizer, "OSQP" => OSQP.Optimizer, "Ipopt" => Ipopt.Optimizer]
+{{?model=qcqp}} using Clarabel, Ipopt
+{{?model=qcqp}} solvers = ["Clarabel" => Clarabel.Optimizer, "Ipopt" => Ipopt.Optimizer]
+{{?model=miqp}} using Juniper, Ipopt
+{{?model=miqp}} solvers = ["SCIP" => SCIP.Optimizer, "Juniper" => optimizer_with_attributes(Juniper.Optimizer, "nl_solver" => optimizer_with_attributes(Ipopt.Optimizer, "print_level" => 0))]
+map(solvers) do (name, opt)
+    m, _ = build(opt, level)
+    t = @elapsed optimize!(m)
+    (solver = name, status = termination_status(m), objective = objective_value(m), seconds = t)
+end
+'''
+
+[[actionGroups.actions]]
+id = "benchmarks"
+label = "Benchmark Portfolios"
+desc = "The optimum against the equal-weight portfolio and the global minimum-variance portfolio (MIQP: also the continuous relaxation bound)"
+code = '''
+stats(ww) = (expected_return = dot(mu, ww), volatility = sqrt(dot(ww, Sigma, ww)))
+w_eq = fill(1 / n, n)
+w_gmv = let s = Symmetric(Sigma) \ ones(n); s ./ sum(s) end  # may short-sell
+{{?model=miqp}} using Clarabel
+{{?model=miqp}} undo = relax_integrality(model); set_optimizer(model, Clarabel.Optimizer); set_silent(model); optimize!(model)
+{{?model=miqp}} relaxed = (variance_bound = objective_value(model), stats(value.(w))...)
+{{?model=miqp}} undo(); set_optimizer(model, solver); set_silent(model); optimize!(model)
+{{?model!=miqp}} relaxed = nothing
+(optimum = stats(value.(w)), equal_weight = stats(w_eq), global_min_variance = stats(w_gmv), relaxation = relaxed)
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "dual-prices"
+label = "Dual Prices"
+desc = "Shadow prices: the change in the optimum per unit of extra budget and per unit of the return target (or volatility cap)"
+code = '''
+{{?model=miqp}} using Clarabel; undo = fix_discrete_variables(model); set_optimizer(model, Clarabel.Optimizer); set_silent(model); optimize!(model)
+out = (budget = shadow_price(model[:budget]), level = shadow_price(model[:level_con]))
+{{?model=miqp}} undo(); set_optimizer(model, solver); set_silent(model); optimize!(model)
+{{?model!=qcqp}} (out..., note = "level = the change in minimum variance per unit of extra required return")
+{{?model=qcqp}} (out..., note = "level = the change in expected return per unit of extra squared volatility")
+'''
+
+[[actionGroups.actions]]
+id = "variance-attribution"
+label = "Variance Attribution"
+desc = "Each asset's share of the portfolio variance: w_i (Sigma w)_i / w' Sigma w"
+code = '''
+ww = value.(w)
+var_p = dot(ww, Sigma, ww)
+contrib = ww .* (Sigma * ww) ./ var_p  # sums to 1
+[(asset = i, weight = ww[i], variance_share = contrib[i]) for i in 1:n]
+'''

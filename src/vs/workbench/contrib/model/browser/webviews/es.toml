@@ -1,0 +1,777 @@
+# Evolution Strategies Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/es.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Evolution Strategies"
+viewType = "pollis.es"
+defaultModel = "cmaes"
+
+[[packages]]
+name = "Evolutionary.jl"
+github = "https://github.com/wildart/Evolutionary.jl"
+
+[[packages.videos]]
+title = "High Performance Computing in Julia"
+description = "An 18-video course by Jamie Mair on writing fast Julia code"
+url = "https://www.youtube.com/playlist?list=PLUAq6xQKFgGr39PiyrPk_C9dhBKvWcjUA"
+
+[[packages]]
+name = "NLopt.jl"
+github = "https://github.com/JuliaOpt/NLopt.jl"
+
+[requires]
+packages = ["Evolutionary.jl", "BlackBoxOptim.jl", "GCMAES.jl", "NLopt.jl", "ForwardDiff.jl", "Plots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "CMA-ES"
+file = "es/tutorial-01-cmaes.ipynb"
+bundled = true
+description = "CMA-ES with Evolutionary.jl: covariance adaptation, bounds, and convergence"
+
+[[notebookSections.notebooks]]
+name = "NES Variants"
+file = "es/tutorial-02-nes.ipynb"
+bundled = true
+description = "Natural evolution strategies: xNES and dxNES with Evolutionary.jl"
+
+[[notebookSections.notebooks]]
+name = "ISRES & ESCH"
+file = "es/tutorial-03-isres-esch.ipynb"
+bundled = true
+description = "Constrained global search with ISRES and ESCH via NLopt.jl"
+
+[[wikis]]
+name = "Factsheet"
+file = "es/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "es/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "es/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "es/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "es/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "es/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Algorithm Details"
+
+[[wikis]]
+name = "CMA-ES"
+file = "es/cmaes.md"
+bundled = true
+
+[[wikis]]
+name = "xNES"
+file = "es/xnes.md"
+bundled = true
+
+[[wikis]]
+name = "dxNES"
+file = "es/dxnes.md"
+bundled = true
+
+[[wikis]]
+name = "GCMAES"
+file = "es/gcmaes.md"
+bundled = true
+
+[[wikis]]
+name = "ISRES"
+file = "es/isres.md"
+bundled = true
+
+[[wikis]]
+name = "ESCH"
+file = "es/esch.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "Evolutionary.jl: A Julia package for evolutionary algorithms"
+authors = "Poliak, Art"
+year = 2021
+journal = "GitHub"
+doi = "10.5281/zenodo.5781169"
+openAccess = true
+
+[[references]]
+title = "Optim: A Mathematical Optimization Package for Julia"
+authors = "Mogensen, Patrick K.; Riseth, Asbjorn N."
+year = 2018
+journal = "Journal of Open Source Software"
+doi = "10.21105/joss.00615"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Introduction to Evolutionary Computing"
+authors = "Eiben, A. E.; Smith, J. E."
+year = 2015
+journal = "Springer"
+doi = "10.1007/978-3-662-44874-8"
+openAccess = false
+
+[[references]]
+title = "Evolution Strategies: A Comprehensive Introduction"
+authors = "Beyer, Hans-Georg; Schwefel, Hans-Paul"
+year = 2002
+journal = "Natural Computing"
+doi = "10.1023/A:1015059928466"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Completely Derandomized Self-Adaptation in Evolution Strategies"
+authors = "Hansen, Nikolaus; Ostermeier, Andreas"
+year = 2001
+journal = "Evolutionary Computation"
+doi = "10.1162/106365601750190398"
+openAccess = false
+
+[[references]]
+title = "Exponential Natural Evolution Strategies"
+authors = "Glasmachers, Tobias; Schaul, Tom; Yi, Sun; Wierstra, Daan; Schmidhuber, Juergen"
+year = 2010
+journal = "GECCO"
+doi = "10.1145/1830483.1830557"
+openAccess = false
+
+[[references]]
+title = "Search Biases in Constrained Evolutionary Optimization"
+authors = "Runarsson, Thomas P.; Yao, Xin"
+year = 2005
+journal = "IEEE Transactions on Systems, Man, and Cybernetics"
+doi = "10.1109/TSMCC.2005.843606"
+openAccess = false
+
+[[references]]
+title = "Improving the CMA Evolution Strategy and Adapting its Parameters on the Fly"
+authors = "da Silva Santos, Carlos M.; Machado, Marcos A. S.; Nascimento, Ivo C."
+year = 2010
+journal = "GECCO"
+doi = "10.1145/1830483.1830556"
+openAccess = false
+
+[[models]]
+id = "cmaes"
+label = "CMA-ES"
+
+[[models]]
+id = "xnes"
+label = "xNES"
+
+[[models]]
+id = "dxnes"
+label = "dxNES"
+
+[[models]]
+id = "gcmaes"
+label = "GCMAES"
+
+[[models]]
+id = "isres"
+label = "ISRES"
+
+[[models]]
+id = "esch"
+label = "ESCH"
+
+[[bullets]]
+text = "CMA-ES and GCMAES"
+detail = "covariance matrix adaptation via Evolutionary.jl"
+
+[[bullets]]
+text = "xNES and dxNES"
+detail = "natural evolution strategies via Evolutionary.jl"
+
+[[bullets]]
+text = "ISRES and ESCH"
+detail = "constrained and unconstrained global search via NLopt.jl"
+
+[[decisionRows]]
+task = "CMA-ES"
+context = "Continuous black-box problems up to a few hundred variables, ill-conditioned or non-separable"
+purpose = "Samples a Gaussian population and adapts its full covariance matrix and step size from successful steps; the default choice"
+
+[[decisionRows]]
+task = "xNES"
+context = "Same setting as CMA-ES; smooth landscapes"
+purpose = "Exponential natural evolution strategy: follows the natural gradient of expected fitness with respect to the search distribution"
+
+[[decisionRows]]
+task = "dxNES"
+context = "Multimodal or plateau-rich landscapes where xNES shrinks too early"
+purpose = "Distance-weighted xNES: adapts the learning rates to how far the distribution moves, keeping the search wide while it is still travelling"
+
+[[decisionRows]]
+task = "GCMAES"
+context = "High-dimensional problems with a cheap gradient"
+purpose = "Gradient-assisted CMA-ES: the population is complemented by a gradient step, which greatly speeds up progress on smooth parts"
+
+[[decisionRows]]
+task = "ISRES"
+context = "Problems that also have nonlinear constraints (supported by NLopt)"
+purpose = "Improved stochastic ranking ES: mutation plus a differential-variation step, with a stochastic ranking of feasibility and fitness"
+
+[[decisionRows]]
+task = "ESCH"
+context = "Box-constrained problems, quick first attempt"
+purpose = "A plain evolutionary algorithm with Cauchy mutations (heavy tails give occasional long jumps)"
+
+[[inputs]]
+id = "n"
+label = "Dimension (n)"
+tooltip = "Number of decision variables. The default objective and bounds adapt to it."
+default = "5"
+
+[[inputs]]
+id = "obj"
+label = "Objective f(x)"
+tooltip = "Julia expression for the objective to minimise, in terms of the vector x. Default: the Rastrigin function in any dimension (global minimum 0 at the origin)."
+default = "10 * length(x) + sum(x .^ 2 .- 10 .* cos.(2pi .* x))"
+
+[[inputs]]
+id = "lb"
+label = "Lower Bounds"
+tooltip = "Julia vector of lower bounds, one per variable."
+default = "fill(-5.12, n)"
+newRow = true
+
+[[inputs]]
+id = "ub"
+label = "Upper Bounds"
+tooltip = "Julia vector of upper bounds, one per variable."
+default = "fill(5.12, n)"
+
+[[inputs]]
+id = "budget"
+label = "Budget"
+tooltip = "Number of objective evaluations. Generation-based methods run budget / population-size generations."
+default = "20000"
+
+[[inputs]]
+id = "sigma"
+label = "Initial Step Size"
+tooltip = "Initial standard deviation of the search distribution, as a fraction of the widest box side. About 0.3 covers the box; small values search locally around the random start."
+default = "0.3"
+models = ["cmaes", "gcmaes"]
+newRow = true
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.cmaes]
+# A tilted covariance ellipse shrinking towards the optimum
+svg = '''
+return '<ellipse cx="22" cy="54" rx="16" ry="7" transform="rotate(-30 22 54)" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.4"/>'
+	+ '<ellipse cx="30" cy="46" rx="10" ry="4" transform="rotate(-30 30 46)" fill="none" stroke="currentColor" stroke-width="1" opacity="0.7"/>'
+	+ '<ellipse cx="36" cy="40" rx="4" ry="2" transform="rotate(-30 36 40)" fill="none" stroke="currentColor" stroke-width="1.2"/><circle cx="38" cy="38" r="1.8" fill="currentColor"/>';
+'''
+
+[miniCharts.xnes]
+# Circles following a natural-gradient path
+svg = '''
+return '<circle cx="14" cy="60" r="8" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.4"/><circle cx="26" cy="48" r="6" fill="none" stroke="currentColor" stroke-width="1" opacity="0.7"/><circle cx="36" cy="38" r="3.5" fill="none" stroke="currentColor" stroke-width="1.2"/>'
+	+ '<path d="M14,60 L26,48 L36,38" fill="none" stroke="currentColor" stroke-width="0.8" stroke-dasharray="2,2"/>';
+'''
+
+[miniCharts.dxnes]
+# A distribution that stays wide while travelling, then shrinks
+svg = '''
+return '<circle cx="12" cy="62" r="7" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.4"/><circle cx="24" cy="50" r="7" fill="none" stroke="currentColor" stroke-width="1" opacity="0.6"/><circle cx="36" cy="38" r="3" fill="none" stroke="currentColor" stroke-width="1.2"/>'
+	+ '<path d="M12,62 L24,50 L36,38" fill="none" stroke="currentColor" stroke-width="0.8" stroke-dasharray="2,2"/>';
+'''
+
+[miniCharts.gcmaes]
+# Population ellipse plus a gradient arrow
+svg = '''
+return '<ellipse cx="22" cy="54" rx="13" ry="6" transform="rotate(-30 22 54)" fill="none" stroke="currentColor" stroke-width="1" opacity="0.6"/>'
+	+ '<line x1="22" y1="54" x2="38" y2="38" stroke="currentColor" stroke-width="1.4"/><path d="M38,38 L32,39 L37,44 Z" fill="currentColor"/>';
+'''
+
+[miniCharts.isres]
+# Feasible region with ranked individuals
+svg = '''
+var s = '<path d="M8,66 L8,34 Q30,28 46,66 Z" fill="currentColor" opacity="0.12" stroke="currentColor" stroke-width="0.8"/>', p = [[16, 52], [24, 44], [30, 58], [40, 40], [44, 52]];
+p.forEach(function (q, i) { s += '<circle cx="' + q[0] + '" cy="' + q[1] + '" r="1.8" fill="currentColor" opacity="' + (i === 3 || i === 4 ? 0.35 : 0.9) + '"/>'; });
+return s;
+'''
+
+[miniCharts.esch]
+# A heavy-tailed Cauchy mutation density
+svg = '''
+var s = 'M6,64';
+for (var i = 0; i <= 40; i++) { var t = (i - 20) / 4; s += ' L' + (6 + i) + ',' + (64 - 28 / (1 + t * t)).toFixed(1); }
+return '<path d="' + s + '" fill="none" stroke="currentColor" stroke-width="1.3"/><line x1="6" y1="64" x2="46" y2="64" stroke="currentColor" stroke-width="0.6"/>';
+'''
+
+[[codeBranches]]
+model = "cmaes"
+code = '''
+using Random, LinearAlgebra, Statistics
+
+n = {{n}}  # dimension
+f(x) = {{obj}}  # objective
+lb, ub = {{lb}}, {{ub}}  # search box
+budget = {{budget}}  # objective evaluations
+
+# wraps f so that every evaluation is recorded
+function recorder()
+    pts, vals = Vector{Float64}[], Float64[]
+    fc(x) = (v = f(x); push!(pts, copy(x)); push!(vals, v); v)
+    fc, pts, vals
+end
+result(x, fx, pts, vals; extra...) = (x = x, fx = fx, points = pts, values = vals, trace = accumulate(min, vals), evals = length(vals), extra...)
+popsize(d) = 4 + floor(Int, 3log(d))  # the standard CMA-ES population size
+using Evolutionary
+
+SIGMA = {{sigma}}  # initial step size as a fraction of the widest box side
+
+function search(; budget=budget, seed=1, lb=lb, ub=ub)
+    Random.seed!(seed)
+    fc, pts, vals = recorder()
+    d, lam = length(lb), popsize(length(lb))
+    x0 = lb .+ rand(d) .* (ub .- lb)  # random start
+    method = CMAES(mu=div(lam, 2), lambda=lam, sigma0=SIGMA * maximum(ub .- lb))
+    r = Evolutionary.optimize(fc, Evolutionary.BoxConstraints(lb, ub), x0, method, Evolutionary.Options(iterations=div(budget, lam)))
+    result(Evolutionary.minimizer(r), Evolutionary.minimum(r), pts, vals; status = Evolutionary.converged(r) ? "converged" : "iteration limit")
+end
+
+res = search()
+x_best, f_best = res.x, res.fx
+(best_point = x_best, best_value = f_best, evaluations = res.evals, status = res.status)
+'''
+
+[[codeBranches]]
+model = "xnes"
+code = '''
+using Random, LinearAlgebra, Statistics
+
+n = {{n}}  # dimension
+f(x) = {{obj}}  # objective
+lb, ub = {{lb}}, {{ub}}  # search box
+budget = {{budget}}  # objective evaluations
+
+# wraps f so that every evaluation is recorded
+function recorder()
+    pts, vals = Vector{Float64}[], Float64[]
+    fc(x) = (v = f(x); push!(pts, copy(x)); push!(vals, v); v)
+    fc, pts, vals
+end
+result(x, fx, pts, vals; extra...) = (x = x, fx = fx, points = pts, values = vals, trace = accumulate(min, vals), evals = length(vals), extra...)
+popsize(d) = 4 + floor(Int, 3log(d))  # the standard CMA-ES population size
+using BlackBoxOptim
+
+function search(; budget=budget, seed=1, lb=lb, ub=ub)
+    fc, pts, vals = recorder()
+    r = bboptimize(fc; SearchRange=collect(zip(lb, ub)), NumDimensions=length(lb), Method=:xnes,
+                   MaxFuncEvals=budget, TraceMode=:silent, RandomizeRngSeed=false, RngSeed=seed)
+    result(best_candidate(r), best_fitness(r), pts, vals; status = stop_reason(r))
+end
+
+res = search()
+x_best, f_best = res.x, res.fx
+(best_point = x_best, best_value = f_best, evaluations = res.evals, status = res.status)
+'''
+
+[[codeBranches]]
+model = "dxnes"
+code = '''
+using Random, LinearAlgebra, Statistics
+
+n = {{n}}  # dimension
+f(x) = {{obj}}  # objective
+lb, ub = {{lb}}, {{ub}}  # search box
+budget = {{budget}}  # objective evaluations
+
+# wraps f so that every evaluation is recorded
+function recorder()
+    pts, vals = Vector{Float64}[], Float64[]
+    fc(x) = (v = f(x); push!(pts, copy(x)); push!(vals, v); v)
+    fc, pts, vals
+end
+result(x, fx, pts, vals; extra...) = (x = x, fx = fx, points = pts, values = vals, trace = accumulate(min, vals), evals = length(vals), extra...)
+popsize(d) = 4 + floor(Int, 3log(d))  # the standard CMA-ES population size
+using BlackBoxOptim
+
+function search(; budget=budget, seed=1, lb=lb, ub=ub)
+    fc, pts, vals = recorder()
+    r = bboptimize(fc; SearchRange=collect(zip(lb, ub)), NumDimensions=length(lb), Method=:dxnes,
+                   MaxFuncEvals=budget, TraceMode=:silent, RandomizeRngSeed=false, RngSeed=seed)
+    result(best_candidate(r), best_fitness(r), pts, vals; status = stop_reason(r))
+end
+
+res = search()
+x_best, f_best = res.x, res.fx
+(best_point = x_best, best_value = f_best, evaluations = res.evals, status = res.status)
+'''
+
+[[codeBranches]]
+model = "gcmaes"
+code = '''
+using Random, LinearAlgebra, Statistics
+
+n = {{n}}  # dimension
+f(x) = {{obj}}  # objective
+lb, ub = {{lb}}, {{ub}}  # search box
+budget = {{budget}}  # objective evaluations
+
+# wraps f so that every evaluation is recorded
+function recorder()
+    pts, vals = Vector{Float64}[], Float64[]
+    fc(x) = (v = f(x); push!(pts, copy(x)); push!(vals, v); v)
+    fc, pts, vals
+end
+result(x, fx, pts, vals; extra...) = (x = x, fx = fx, points = pts, values = vals, trace = accumulate(min, vals), evals = length(vals), extra...)
+popsize(d) = 4 + floor(Int, 3log(d))  # the standard CMA-ES population size
+using GCMAES, ForwardDiff
+
+SIGMA = {{sigma}}  # initial step size as a fraction of the widest box side
+
+function search(; budget=budget, seed=1, lb=lb, ub=ub)
+    Random.seed!(seed)
+    fc, pts, vals = recorder()
+    d = length(lb)
+    x0 = lb .+ rand(d) .* (ub .- lb)  # random start
+    grad(x) = ForwardDiff.gradient(f, x)  # the gradient step complements the sampled population
+    x, fx, status = GCMAES.minimize((fc, grad), x0, SIGMA * maximum(ub .- lb), lb, ub; maxiter=div(budget, popsize(d)))
+    result(x, fx, pts, vals; status = status)
+end
+
+res = search()
+x_best, f_best = res.x, res.fx
+(best_point = x_best, best_value = f_best, evaluations = res.evals, status = res.status)
+'''
+
+[[codeBranches]]
+model = "isres"
+code = '''
+using Random, LinearAlgebra, Statistics
+
+n = {{n}}  # dimension
+f(x) = {{obj}}  # objective
+lb, ub = {{lb}}, {{ub}}  # search box
+budget = {{budget}}  # objective evaluations
+
+# wraps f so that every evaluation is recorded
+function recorder()
+    pts, vals = Vector{Float64}[], Float64[]
+    fc(x) = (v = f(x); push!(pts, copy(x)); push!(vals, v); v)
+    fc, pts, vals
+end
+result(x, fx, pts, vals; extra...) = (x = x, fx = fx, points = pts, values = vals, trace = accumulate(min, vals), evals = length(vals), extra...)
+popsize(d) = 4 + floor(Int, 3log(d))  # the standard CMA-ES population size
+using NLopt
+
+function search(; budget=budget, seed=1, lb=lb, ub=ub)
+    NLopt.srand(seed)
+    fc, pts, vals = recorder()
+    opt = Opt(:GN_ISRES, length(lb))
+    opt.lower_bounds, opt.upper_bounds, opt.maxeval = lb, ub, budget
+    opt.min_objective = (x, g) -> fc(x)  # derivative-free: g is never requested
+    fx, x, ret = NLopt.optimize(opt, (lb .+ ub) ./ 2)
+    result(x, fx, pts, vals; status = ret)
+end
+
+res = search()
+x_best, f_best = res.x, res.fx
+(best_point = x_best, best_value = f_best, evaluations = res.evals, status = res.status)
+'''
+
+[[codeBranches]]
+model = "esch"
+code = '''
+using Random, LinearAlgebra, Statistics
+
+n = {{n}}  # dimension
+f(x) = {{obj}}  # objective
+lb, ub = {{lb}}, {{ub}}  # search box
+budget = {{budget}}  # objective evaluations
+
+# wraps f so that every evaluation is recorded
+function recorder()
+    pts, vals = Vector{Float64}[], Float64[]
+    fc(x) = (v = f(x); push!(pts, copy(x)); push!(vals, v); v)
+    fc, pts, vals
+end
+result(x, fx, pts, vals; extra...) = (x = x, fx = fx, points = pts, values = vals, trace = accumulate(min, vals), evals = length(vals), extra...)
+popsize(d) = 4 + floor(Int, 3log(d))  # the standard CMA-ES population size
+using NLopt
+
+function search(; budget=budget, seed=1, lb=lb, ub=ub)
+    NLopt.srand(seed)
+    fc, pts, vals = recorder()
+    opt = Opt(:GN_ESCH, length(lb))
+    opt.lower_bounds, opt.upper_bounds, opt.maxeval = lb, ub, budget
+    opt.min_objective = (x, g) -> fc(x)  # derivative-free: g is never requested
+    fx, x, ret = NLopt.optimize(opt, (lb .+ ub) ./ 2)
+    result(x, fx, pts, vals; status = ret)
+end
+
+res = search()
+x_best, f_best = res.x, res.fx
+(best_point = x_best, best_value = f_best, evaluations = res.evals, status = res.status)
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "convergence-curve"
+label = "Convergence Curve"
+desc = "Best value found against evaluations (log scale), with every evaluation behind it"
+code = '''
+using Plots
+
+shift = min(0, minimum(res.values)) - 1e-12  # keeps the log scale defined
+scatter(res.values .- shift, markersize=1, alpha=0.2, label="evaluation", yscale=:log10, xlabel="evaluations", ylabel="f - shift")
+plot!(res.trace .- shift, linewidth=2, label="best so far")
+'''
+
+[[actionGroups.actions]]
+id = "population-spread"
+label = "Population Spread"
+desc = "Every evaluated point in the (x1, x2) plane, coloured by when it was sampled, over the objective contours"
+code = '''
+using Plots
+
+xs = range(lb[1], ub[1], length=120); ys = range(lb[2], ub[2], length=120)
+contour(xs, ys, (a, b) -> f([a; b; x_best[3:end]]), levels=20, xlabel="x1", ylabel="x2", colorbar=false)
+scatter!(getindex.(res.points, 1), getindex.(res.points, 2), zcolor=1:res.evals, markersize=1.5, markerstrokewidth=0, label="evaluations")
+scatter!([x_best[1]], [x_best[2]], marker=:star, markersize=10, color=:red, label="best")
+'''
+
+[[actionGroups.actions]]
+id = "step-size-history"
+label = "Search Radius History"
+desc = "Spread of the sampled points in consecutive windows of evaluations: the effective step size, which step-size adaptation should shrink steadily"
+code = '''
+using Plots
+
+w = max(20, div(res.evals, 100))  # window of evaluations
+starts = 1:w:(res.evals - w + 1)
+radius = [mean(std(reduce(hcat, res.points[s:s+w-1]), dims=2)) for s in starts]
+plot(starts, radius, yscale=:log10, xlabel="evaluations", ylabel="mean std of samples", legend=false)
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "convergence-check"
+label = "Convergence Check"
+desc = "Stopping reason, evaluations used, when the final best was first reached and whether it sits on a bound"
+code = '''
+first_hit = findfirst(<=(f_best + 1e-9 * max(1, abs(f_best))), res.trace)
+(status = res.status, budget = budget, used = res.evals, best_first_reached_at = first_hit,
+ last_improvement_share = round(first_hit / res.evals, digits=3), on_a_bound = any(isapprox.(x_best, lb; atol=1e-8) .| isapprox.(x_best, ub; atol=1e-8)))
+'''
+
+[[actionGroups.actions]]
+id = "multi-start"
+label = "Multi-Start Analysis"
+desc = "Repeat the search with 10 seeds: the spread of best values and how far apart the solutions are"
+code = '''
+runs = [search(seed=s) for s in 1:10]
+v = getfield.(runs, :fx)
+(best_values = round.(v, sigdigits=6), mean = mean(v), spread = std(v), share_at_best = mean(v .<= minimum(v) + 1e-6),
+ max_distance_between_solutions = maximum(norm(a.x - b.x) for a in runs, b in runs))
+'''
+
+[[actionGroups.actions]]
+id = "budget-sensitivity"
+label = "Budget Sensitivity"
+desc = "Best value against budget, 3 seeds each"
+code = '''
+using Plots
+
+budgets = round.(Int, budget .* [0.05, 0.1, 0.25, 0.5, 1, 2])
+best = [mean(search(budget=b, seed=s).fx for s in 1:3) for b in budgets]
+display(plot(budgets, best, xscale=:log10, marker=:circle, xlabel="budget", ylabel="mean best f", legend=false))
+[(budget = b, mean_best = v) for (b, v) in zip(budgets, best)]
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "eval-at-minimum"
+label = "Evaluate at Minimum"
+desc = "Re-evaluate f at the solution and estimate its gradient by central differences (near 0 at an interior minimum)"
+code = '''
+h = 1e-6
+grad = [(f(x_best + h * e) - f(x_best - h * e)) / 2h for e in eachcol(Matrix(1.0I, length(x_best), length(x_best)))]
+(best_point = x_best, reported_value = f_best, re_evaluated = f(x_best), gradient_norm = norm(grad))
+'''
+
+[[actionGroups.actions]]
+id = "neighbourhood-check"
+label = "Neighbourhood Check"
+desc = "Sample 2000 points around the solution at several radii and count how many are better: none means a local minimum at that scale"
+code = '''
+map([1e-4, 1e-3, 1e-2, 1e-1]) do r
+    samples = [clamp.(x_best .+ r .* (ub .- lb) .* randn(length(x_best)), lb, ub) for _ in 1:2000]
+    fv = f.(samples)
+    (radius = r, share_better = mean(fv .< f_best), best_nearby = minimum(fv))
+end
+'''
+
+[[actionGroups.actions]]
+id = "sensitivity"
+label = "Bounds Sensitivity"
+desc = "Re-run with the box shrunk, enlarged and shifted by 10 percent and see how the optimum moves"
+code = '''
+w = ub .- lb
+boxes = ["as given" => (lb, ub), "shrunk 10%" => (lb .+ 0.05w, ub .- 0.05w), "enlarged 10%" => (lb .- 0.05w, ub .+ 0.05w), "shifted +10%" => (lb .+ 0.1w, ub .+ 0.1w)]
+map(boxes) do (name, (l, u))
+    r = search(lb=l, ub=u)
+    (box = name, best_value = r.fx, change = r.fx - f_best, moved = norm(r.x - x_best))
+end
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "es-vs-de"
+label = "ES vs DE"
+desc = "The selected strategy against adaptive differential evolution (BlackBoxOptim) at the same budget, over 5 seeds"
+code = '''
+using BlackBoxOptim
+
+de(seed) = best_fitness(bboptimize(f; SearchRange=collect(zip(lb, ub)), NumDimensions=length(lb), Method=:adaptive_de_rand_1_bin_radiuslimited,
+                                   MaxFuncEvals=budget, TraceMode=:silent, RandomizeRngSeed=false, RngSeed=seed))
+map(["selected strategy" => s -> search(seed=s).fx, "adaptive DE" => de]) do (name, run)
+    sec = @elapsed v = [run(s) for s in 1:5]
+    (method = name, mean_best = mean(v), worst_best = maximum(v), seconds_per_run = sec / 5)
+end
+'''
+
+[[actionGroups.actions]]
+id = "compare-strategies"
+label = "Compare Strategies"
+desc = "CMA-ES (Evolutionary), xNES and dxNES (BlackBoxOptim), ISRES and ESCH (NLopt) at the same budget, over 3 seeds"
+code = '''
+using Evolutionary, BlackBoxOptim, NLopt
+
+d = length(lb)
+function cma(seed)
+    Random.seed!(seed)
+    lam = popsize(d)
+    r = Evolutionary.optimize(f, Evolutionary.BoxConstraints(lb, ub), lb .+ rand(d) .* (ub .- lb),
+                              CMAES(mu=div(lam, 2), lambda=lam, sigma0=0.3 * maximum(ub .- lb)), Evolutionary.Options(iterations=div(budget, lam)))
+    Evolutionary.minimum(r)
+end
+nes(m) = seed -> best_fitness(bboptimize(f; SearchRange=collect(zip(lb, ub)), NumDimensions=d, Method=m, MaxFuncEvals=budget, TraceMode=:silent, RandomizeRngSeed=false, RngSeed=seed))
+function nlo(alg)
+    seed -> begin
+        NLopt.srand(seed)
+        opt = Opt(alg, d)
+        opt.lower_bounds, opt.upper_bounds, opt.maxeval = lb, ub, budget
+        opt.min_objective = (x, g) -> f(x)
+        NLopt.optimize(opt, (lb .+ ub) ./ 2)[1]
+    end
+end
+runs = ["CMA-ES" => cma, "xNES" => nes(:xnes), "dxNES" => nes(:dxnes), "ISRES" => nlo(:GN_ISRES), "ESCH" => nlo(:GN_ESCH)]
+map(runs) do (name, run)
+    sec = @elapsed v = [run(s) for s in 1:3]
+    (method = name, mean_best = mean(v), worst_best = maximum(v), seconds_per_run = sec / 3)
+end
+'''
+
+[[actionGroups.actions]]
+id = "dimension-scaling"
+label = "Dimension Scaling"
+desc = "Runtime and best value as the dimension grows (the objective must accept any length of x), with the budget scaled by the dimension"
+code = '''
+using Plots
+
+dims = [2, 5, 10, 20, 40]
+rows = map(dims) do d
+    l, u = fill(lb[1], d), fill(ub[1], d)
+    sec = @elapsed r = search(lb=l, ub=u, budget=div(budget * d, length(lb)))
+    (dimension = d, best_value = r.fx, evaluations = r.evals, seconds = sec)
+end
+display(plot(dims, getfield.(rows, :seconds), marker=:circle, xlabel="dimension", ylabel="seconds", legend=false))
+rows
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "solution-summary"
+label = "Solution Summary"
+desc = "Best point, value, stopping reason and evaluations"
+code = '''
+(best_point = round.(x_best, sigdigits=6), best_value = f_best, status = res.status, evaluations = res.evals, budget = budget, dimension = length(x_best))
+'''
+
+[[actionGroups.actions]]
+id = "bounds-check"
+label = "Bounds Check"
+desc = "Verify the solution lies within the bounds and see which coordinates press against them"
+code = '''
+slack_low, slack_high = x_best .- lb, ub .- x_best
+(inside_box = all(slack_low .>= 0) && all(slack_high .>= 0), min_slack = minimum([slack_low; slack_high]),
+ at_lower = findall(slack_low .< 1e-6 .* (ub .- lb)), at_upper = findall(slack_high .< 1e-6 .* (ub .- lb)))
+'''
+
+[[actionGroups.actions]]
+id = "algorithm-info"
+label = "Algorithm Info"
+desc = "Key properties of the selected evolution strategy"
+code = '''
+{{?model=cmaes}} (algorithm = "CMA-ES", package = "Evolutionary.jl", population = popsize(length(lb)), adapts = "full covariance and step size", needs_gradient = false, invariance = "rotation and monotone transforms of f")
+{{?model=xnes}} (algorithm = "xNES", package = "BlackBoxOptim.jl", adapts = "full covariance via the natural gradient", needs_gradient = false, invariance = "rotation and monotone transforms of f")
+{{?model=dxnes}} (algorithm = "dxNES", package = "BlackBoxOptim.jl", adapts = "covariance with distance-weighted learning rates", needs_gradient = false, strength = "keeps exploring on plateaus and in multimodal landscapes")
+{{?model=gcmaes}} (algorithm = "GCMAES", package = "GCMAES.jl", adapts = "covariance and step size, plus a gradient step", needs_gradient = true, strength = "high dimensions with a cheap gradient")
+{{?model=isres}} (algorithm = "ISRES", package = "NLopt.jl", adapts = "mutation step sizes", needs_gradient = false, strength = "handles nonlinear constraints via stochastic ranking")
+{{?model=esch}} (algorithm = "ESCH", package = "NLopt.jl", adapts = "nothing: fixed Cauchy mutations", needs_gradient = false, strength = "simple, heavy-tailed jumps")
+'''

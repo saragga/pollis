@@ -1,0 +1,652 @@
+# Game Theory Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/gt.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Game Theory"
+viewType = "pollis.gt"
+defaultModel = "normal"
+
+[[packages]]
+name = "GameTheory.jl"
+github = "https://github.com/QuantEcon/GameTheory.jl"
+
+[[packages.videos]]
+title = "QuantEcon: Game Theory in Julia"
+description = "Introduction to game theory concepts and GameTheory.jl via QuantEcon lectures"
+url = "https://quantecon.org/lectures/"
+
+[[packages]]
+name = "BaryPlots.jl"
+github = "https://github.com/datadreamscorp/BaryPlots.jl"
+
+[requires]
+packages = ["GameTheory.jl BaryPlots.jl Plots.jl JuMP.jl HiGHS.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Normal-Form Games"
+file = "game-theory/tutorial-01-normal-form.ipynb"
+bundled = true
+description = "Represent and solve normal-form games: find pure and mixed Nash equilibria via support enumeration and LRS"
+
+[[notebookSections.notebooks]]
+name = "Zero-Sum Games"
+file = "game-theory/tutorial-02-zero-sum.ipynb"
+bundled = true
+description = "Solve two-player zero-sum games via linear programming; compute minimax strategies and game value"
+
+[[notebookSections.notebooks]]
+name = "Evolutionary Game Theory"
+file = "game-theory/tutorial-03-evolutionary.ipynb"
+bundled = true
+description = "Simulate replicator dynamics and visualise population trajectories in the simplex via BaryPlots.jl"
+
+[[wikis]]
+name = "Factsheet"
+file = "game-theory/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "game-theory/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "game-theory/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "game-theory/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "game-theory/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "game-theory/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Game Types"
+
+[[wikis]]
+name = "Normal-Form Games"
+file = "game-theory/normal-form.md"
+bundled = true
+
+[[wikis]]
+name = "Zero-Sum Games"
+file = "game-theory/zero-sum.md"
+bundled = true
+
+[[wikis]]
+name = "Evolutionary Dynamics"
+file = "game-theory/evolutionary.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "GameTheory.jl: A Julia package for game theory"
+authors = "QuantEcon"
+year = 2020
+journal = "GitHub"
+url = "https://github.com/QuantEcon/GameTheory.jl"
+openAccess = true
+
+[[references]]
+title = "DifferentialEquations.jl: A Performant and Feature-Rich Ecosystem for Solving Differential Equations in Julia"
+authors = "Rackauckas, Christopher; Nie, Qing"
+year = 2017
+journal = "Journal of Open Research Software"
+doi = "10.5334/jors.151"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "A Course in Game Theory"
+authors = "Osborne, Martin J.; Rubinstein, Ariel"
+year = 1994
+journal = "MIT Press (freely available online)"
+url = "https://arielrubinstein.org/gt/arielDocs/"
+openAccess = true
+
+[[references]]
+title = "Game Theory"
+authors = "Fudenberg, Drew; Tirole, Jean"
+year = 1991
+journal = "MIT Press"
+url = "https://mitpress.mit.edu/9780262061414/game-theory/"
+openAccess = false
+
+[[references]]
+title = "Evolution and the Theory of Games"
+authors = "Maynard Smith, John"
+year = 1982
+journal = "Cambridge University Press"
+doi = "10.1017/CBO9780511806292"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Equilibrium Points in N-Person Games"
+authors = "Nash, John F."
+year = 1950
+journal = "Proceedings of the National Academy of Sciences"
+doi = "10.1073/pnas.36.1.48"
+openAccess = false
+
+[[references]]
+title = "Non-Cooperative Games"
+authors = "Nash, John F."
+year = 1951
+journal = "Annals of Mathematics"
+doi = "10.2307/1969529"
+openAccess = false
+
+[[references]]
+title = "Zur Theorie der Gesellschaftsspiele"
+authors = "von Neumann, John"
+year = 1928
+journal = "Mathematische Annalen"
+doi = "10.1007/BF01448847"
+openAccess = false
+
+[[references]]
+title = "The Logic of Animal Conflict"
+authors = "Maynard Smith, John; Price, George R."
+year = 1973
+journal = "Nature"
+doi = "10.1038/246015a0"
+openAccess = false
+
+[[references]]
+title = "Computing Nash Equilibria by Iterated Polymatrix Approximation"
+authors = "Govindan, Srihari; Wilson, Robert"
+year = 2003
+journal = "Journal of Economic Dynamics and Control"
+doi = "10.1016/S0165-1889(02)00100-4"
+openAccess = false
+
+[[models]]
+id = "normal"
+label = "Normal Form"
+
+[[models]]
+id = "zerosum"
+label = "Zero Sum"
+
+[[models]]
+id = "evo"
+label = "Evolutionary"
+
+[[models]]
+id = "potential"
+label = "Potential"
+
+[[bullets]]
+text = "Normal Form"
+detail = "2-player strategic game; find all pure and mixed Nash equilibria via support enumeration, LRS vertex enumeration, or homotopy continuation (GameTheory.jl)"
+
+[[bullets]]
+text = "Zero Sum"
+detail = "minimax/maximin solution via linear programming; von Neumann minimax theorem gives game value and optimal strategies (GameTheory.jl)"
+
+[[bullets]]
+text = "Evolutionary"
+detail = "replicator dynamics for symmetric population games; trajectories through the strategy simplex visualised via BaryPlots.jl"
+
+[[bullets]]
+text = "Potential"
+detail = "Nash equilibria via best-response iteration; equilibrium coincides with the maximiser of the shared potential function (GameTheory.jl)"
+
+[[decisionRows]]
+task = "Normal Form"
+context = "Two players with finitely many actions and arbitrary payoffs: coordination, entry, pricing, bargaining and conflict games"
+purpose = "All Nash equilibria, pure and mixed, by support enumeration (GameTheory.jl). Default: Battle of the Sexes, with two pure equilibria and one mixed"
+
+[[decisionRows]]
+task = "Zero Sum"
+context = "Strictly competitive games where one player's gain is the other's loss: inspection, matching pennies, adversarial and security games"
+purpose = "The value of the game and the optimal (maximin/minimax) mixed strategies; every Nash equilibrium gives the same value and security strategies coincide with equilibrium strategies"
+
+[[decisionRows]]
+task = "Evolutionary"
+context = "A large population repeatedly matched in a symmetric game, with strategies spreading in proportion to their payoff: biology, cultural evolution, learning"
+purpose = "Replicator dynamics on the strategy simplex (BaryPlots.jl), its rest points and which of them are evolutionarily stable. Default: rock-paper-scissors with win 2, loss 1, whose interior equilibrium is an ESS"
+
+[[decisionRows]]
+task = "Potential"
+context = "Games where every unilateral change in payoff is mirrored by one potential function P: congestion, network formation and identical-interest games"
+purpose = "Pure equilibria always exist and are the local maxima of P; best-response and replicator dynamics settle at them. Default: identical interests with payoffs P, three pure equilibria"
+
+[[inputs]]
+id = "A"
+label = "Row Payoffs A"
+tooltip = "Row player's payoff A[i, j] when the row player plays i and the column player plays j."
+default = "[3.0 0.0; 0.0 2.0]"
+models = ["normal"]
+
+[[inputs]]
+id = "B"
+label = "Column Payoffs B"
+tooltip = "Column player's payoff B[i, j] at the same action pair (row i, column j), same shape as A."
+default = "[2.0 0.0; 0.0 3.0]"
+models = ["normal"]
+
+[[inputs]]
+id = "Z"
+label = "Payoff Matrix A"
+tooltip = "Row player's payoff A[i, j]; the column player receives -A[i, j]."
+default = "[3.0 -1.0 -2.0; -2.0 4.0 -1.0; -1.0 -2.0 5.0]"
+models = ["zerosum"]
+
+[[inputs]]
+id = "E"
+label = "Payoff Matrix A"
+tooltip = "Symmetric game: payoff A[i, j] to strategy i when it meets strategy j (square)."
+default = "[0.0 -1.0 2.0; 2.0 0.0 -1.0; -1.0 2.0 0.0]"
+models = ["evo"]
+
+[[inputs]]
+id = "x0"
+label = "Initial State x0"
+tooltip = "Initial population shares of each strategy (non-negative, summing to 1)."
+default = "[0.6, 0.3, 0.1]"
+models = ["evo"]
+
+[[inputs]]
+id = "P"
+label = "Potential P"
+tooltip = "Potential P[i, j]; both players receive P[i, j] (identical interests), so P is an exact potential."
+default = "[4.0 0.0 1.0; 0.0 3.0 0.0; 1.0 0.0 2.0]"
+models = ["potential"]
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.normal]
+# 2 x 2 payoff grid with equilibrium cells marked
+svg = '''
+return '<rect x="9" y="25" width="36" height="36" fill="none" stroke="currentColor" stroke-width="2"/><line x1="27" y1="25" x2="27" y2="61" stroke="currentColor"/><line x1="9" y1="43" x2="45" y2="43" stroke="currentColor"/>'
+	+ '<circle cx="18" cy="34" r="3" fill="currentColor"/><circle cx="36" cy="52" r="3" fill="currentColor"/>';
+'''
+
+[miniCharts.zerosum]
+# Saddle: maximin meets minimax
+svg = '''
+return '<path d="M6,34 Q27,62 48,34" fill="none" stroke="currentColor" stroke-width="2"/><path d="M6,56 Q27,28 48,56" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="3,2"/>'
+	+ '<circle cx="27" cy="45" r="3" fill="currentColor"/>';
+'''
+
+[miniCharts.evo]
+# Simplex with a spiral trajectory
+svg = '''
+return '<path d="M27,22 L50,64 L4,64 Z" fill="none" stroke="currentColor" stroke-width="2"/>'
+	+ '<path d="M12,58 Q40,60 34,46 Q28,36 22,48 Q24,54 28,50" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="3,2"/><circle cx="27" cy="50" r="2.5" fill="currentColor"/>';
+'''
+
+[miniCharts.potential]
+# Potential landscape with two peaks
+svg = '''
+return '<path d="M4,66 Q14,24 22,48 Q30,64 38,38 Q44,26 50,66" fill="none" stroke="currentColor" stroke-width="2"/>'
+	+ '<circle cx="15" cy="37" r="2.5" fill="currentColor"/><circle cx="41" cy="33" r="2.5" fill="currentColor"/>';
+'''
+
+[[codeBranches]]
+model = "normal"
+code = '''
+using GameTheory, LinearAlgebra, Random
+A1 = Float64.({{A}})  # row player's payoffs
+A2 = Float64.({{B}})  # column player's payoffs, same (row, column) indexing
+m, k = size(A1)
+g = NormalFormGame((Player(A1), Player(Matrix(transpose(A2)))))  # GameTheory stores each player's payoffs with own actions in rows
+
+eqs = support_enumeration(g)  # all Nash equilibria (x, y) of a nondegenerate game
+payoffs(x, y) = (dot(x, A1 * y), dot(x, A2 * y))
+
+function replicator(x, y; T=100.0, dt=0.01)  # two-population replicator dynamics; with y = x in a symmetric game, the single-population one
+    xs, ys = [x], [y]
+    for _ in 1:round(Int, T / dt)
+        fx, fy = A1 * y, transpose(A2) * x
+        x = max.(x .+ dt .* x .* (fx .- dot(x, fx)), 0.0); x = x ./ sum(x)
+        y = max.(y .+ dt .* y .* (fy .- dot(y, fy)), 0.0); y = y ./ sum(y)
+        push!(xs, x); push!(ys, y)
+    end
+    (x = reduce(hcat, xs), y = reduce(hcat, ys))
+end
+
+[(row = round.(x, digits=4), column = round.(y, digits=4), payoffs = round.(payoffs(x, y), digits=4)) for (x, y) in eqs]
+'''
+
+[[codeBranches]]
+model = "zerosum"
+code = '''
+using GameTheory, LinearAlgebra, Random
+A1 = Float64.({{Z}})  # row player's payoffs
+A2 = -A1  # zero sum
+m, k = size(A1)
+g = NormalFormGame((Player(A1), Player(Matrix(transpose(A2)))))  # GameTheory stores each player's payoffs with own actions in rows
+
+eqs = support_enumeration(g)  # all Nash equilibria (x, y) of a nondegenerate game
+payoffs(x, y) = (dot(x, A1 * y), dot(x, A2 * y))
+
+function replicator(x, y; T=100.0, dt=0.01)  # two-population replicator dynamics; with y = x in a symmetric game, the single-population one
+    xs, ys = [x], [y]
+    for _ in 1:round(Int, T / dt)
+        fx, fy = A1 * y, transpose(A2) * x
+        x = max.(x .+ dt .* x .* (fx .- dot(x, fx)), 0.0); x = x ./ sum(x)
+        y = max.(y .+ dt .* y .* (fy .- dot(y, fy)), 0.0); y = y ./ sum(y)
+        push!(xs, x); push!(ys, y)
+    end
+    (x = reduce(hcat, xs), y = reduce(hcat, ys))
+end
+
+[(row = round.(x, digits=4), column = round.(y, digits=4), payoffs = round.(payoffs(x, y), digits=4)) for (x, y) in eqs]
+'''
+
+[[codeBranches]]
+model = "evo"
+code = '''
+using GameTheory, LinearAlgebra, Random
+A1 = Float64.({{E}})  # payoff to strategy i against strategy j
+A2 = Matrix(transpose(A1))  # symmetric game
+x0 = Float64.({{x0}})  # initial population state
+m, k = size(A1)
+g = NormalFormGame((Player(A1), Player(Matrix(transpose(A2)))))  # GameTheory stores each player's payoffs with own actions in rows
+
+eqs = support_enumeration(g)  # all Nash equilibria (x, y) of a nondegenerate game
+payoffs(x, y) = (dot(x, A1 * y), dot(x, A2 * y))
+
+function replicator(x, y; T=100.0, dt=0.01)  # two-population replicator dynamics; with y = x in a symmetric game, the single-population one
+    xs, ys = [x], [y]
+    for _ in 1:round(Int, T / dt)
+        fx, fy = A1 * y, transpose(A2) * x
+        x = max.(x .+ dt .* x .* (fx .- dot(x, fx)), 0.0); x = x ./ sum(x)
+        y = max.(y .+ dt .* y .* (fy .- dot(y, fy)), 0.0); y = y ./ sum(y)
+        push!(xs, x); push!(ys, y)
+    end
+    (x = reduce(hcat, xs), y = reduce(hcat, ys))
+end
+
+[(row = round.(x, digits=4), column = round.(y, digits=4), payoffs = round.(payoffs(x, y), digits=4)) for (x, y) in eqs]
+'''
+
+[[codeBranches]]
+model = "potential"
+code = '''
+using GameTheory, LinearAlgebra, Random
+P = Float64.({{P}})  # exact potential
+A1, A2 = P, P  # identical interests
+m, k = size(A1)
+g = NormalFormGame((Player(A1), Player(Matrix(transpose(A2)))))  # GameTheory stores each player's payoffs with own actions in rows
+
+eqs = support_enumeration(g)  # all Nash equilibria (x, y) of a nondegenerate game
+payoffs(x, y) = (dot(x, A1 * y), dot(x, A2 * y))
+
+function replicator(x, y; T=100.0, dt=0.01)  # two-population replicator dynamics; with y = x in a symmetric game, the single-population one
+    xs, ys = [x], [y]
+    for _ in 1:round(Int, T / dt)
+        fx, fy = A1 * y, transpose(A2) * x
+        x = max.(x .+ dt .* x .* (fx .- dot(x, fx)), 0.0); x = x ./ sum(x)
+        y = max.(y .+ dt .* y .* (fy .- dot(y, fy)), 0.0); y = y ./ sum(y)
+        push!(xs, x); push!(ys, y)
+    end
+    (x = reduce(hcat, xs), y = reduce(hcat, ys))
+end
+
+[(row = round.(x, digits=4), column = round.(y, digits=4), payoffs = round.(payoffs(x, y), digits=4)) for (x, y) in eqs]
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "simplex-traj"
+label = "Strategy Dynamics"
+desc = "Replicator dynamics from the initial state: on the strategy simplex (BaryPlots.jl) for a three-strategy population game, otherwise the share of each action over time for both players"
+code = '''
+using Plots
+{{?model=evo}}if m == 3
+{{?model=evo}}    using BaryPlots
+{{?model=evo}}    fit(i) = (x, t, p) -> dot(A1[i, :], x)  # payoff of strategy i in population state x
+{{?model=evo}}    plot_evolution((fit(1), fit(2), fit(3)), [x0, [0.1, 0.2, 0.7], [0.2, 0.7, 0.1]], (0.0, 100.0); labels=["S1", "S2", "S3"])
+{{?model=evo}}else
+{{?model=evo}}    r = replicator(x0, x0)
+{{?model=evo}}    plot(transpose(r.x), xlabel="Step", ylabel="Share", label=permutedims(["S" * string(i) for i in 1:m]), title="Replicator dynamics")
+{{?model=evo}}end
+{{?model!=evo}}r = replicator(fill(1 / m, m) .+ 0.1 .* (1:m .== 1), fill(1 / k, k) .+ 0.1 .* (1:k .== k))  # start near the uniform mix
+{{?model!=evo}}r = (x = r.x ./ sum(r.x, dims=1), y = r.y ./ sum(r.y, dims=1))
+{{?model!=evo}}plot(plot(transpose(r.x), label=permutedims(["row " * string(i) for i in 1:m]), ylabel="Share", title="Row player"),
+{{?model!=evo}}     plot(transpose(r.y), label=permutedims(["col " * string(j) for j in 1:k]), xlabel="Step", ylabel="Share", title="Column player"), layout=(2, 1))
+'''
+
+[[actionGroups.actions]]
+id = "best-response"
+label = "Best Response Plot"
+desc = "For a 2 x 2 game, both best-response correspondences in the (q, p) square, crossing at the equilibria; otherwise the row player's expected payoff from each action as the column player moves between its first two actions"
+code = '''
+using Plots
+qs = range(0, 1, length=1001)
+if m == 2 && k == 2
+    br(d) = d > 1e-12 ? 1.0 : d < -1e-12 ? 0.0 : 0.5
+    pbr = [br(dot(A1[1, :] .- A1[2, :], [q, 1 - q])) for q in qs]  # row: probability of action 1
+    qbr = [br(dot([p, 1 - p], A2[:, 1] .- A2[:, 2])) for p in qs]  # column: probability of action 1
+    plot(qs, pbr, lw=2, label="Row best response", xlabel="q = P(column plays 1)", ylabel="p = P(row plays 1)", aspect_ratio=:equal, title="Best responses")
+    plot!(qbr, qs, lw=2, label="Column best response")
+    scatter!([y[1] for (x, y) in eqs], [x[1] for (x, y) in eqs], ms=7, c=:black, label="Nash equilibria")
+else
+    U = reduce(hcat, [A1 * [q; 1 - q; zeros(k - 2)] for q in qs])
+    plot(qs, transpose(U), lw=2, label=permutedims(["row action " * string(i) for i in 1:m]), xlabel="q = weight on column action 1 (rest on 2)", ylabel="Expected payoff", title="Row player's payoffs; upper envelope = best response")
+end
+'''
+
+[[actionGroups.actions]]
+id = "payoff-heatmap"
+label = "Payoff Heatmap"
+desc = "Both players' payoff matrices, with pure Nash equilibria marked"
+code = '''
+using Plots
+pn = pure_nash(g)
+hm(M, t) = (heatmap(1:k, 1:m, M, yflip=true, c=:RdBu, xlabel="Column action", ylabel="Row action", title=t, xticks=1:k, yticks=1:m);
+            scatter!([a[2] for a in pn], [a[1] for a in pn], ms=8, c=:black, marker=:star5, label=isempty(pn) ? false : "pure NE"))
+plot(hm(A1, "Row payoffs"), hm(A2, "Column payoffs"), layout=(1, 2), size=(800, 350))
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "pure-nash"
+label = "Pure Nash Equilibria"
+desc = "All pure-strategy Nash equilibria by exhaustive search, with payoffs and whether each is strict (every deviation strictly loses)"
+code = '''
+strict(i, j) = all(A1[r, j] < A1[i, j] for r in 1:m if r != i) && all(A2[i, c] < A2[i, j] for c in 1:k if c != j)
+[(row = i, column = j, payoffs = (A1[i, j], A2[i, j]), strict = strict(i, j)) for (i, j) in pure_nash(g)]
+'''
+
+[[actionGroups.actions]]
+id = "nash-check"
+label = "Nash Verification"
+desc = "For each equilibrium found: the largest gain either player could get by deviating (zero at a Nash equilibrium) and GameTheory's is_nash check"
+code = '''
+[(equilibrium = e, row_gain = maximum(A1 * y) - dot(x, A1 * y), column_gain = maximum(transpose(A2) * x) - dot(x, A2 * y), is_nash = is_nash(g, (x, y)))
+ for (e, (x, y)) in enumerate(eqs)]
+'''
+
+[[actionGroups.actions]]
+id = "stationarity"
+label = "Dominance Check"
+desc = "Iterated elimination of actions strictly dominated by a pure or mixed action: no equilibrium ever uses an eliminated action"
+code = '''
+function iterated_dominance()
+    rows, cols = collect(1:m), collect(1:k)
+    while true
+        dr = dominated_actions(Player(A1[rows, cols]))
+        dc = dominated_actions(Player(Matrix(transpose(A2[rows, cols]))))
+        isempty(dr) && isempty(dc) && return (surviving_rows = rows, surviving_columns = cols)
+        rows, cols = rows[setdiff(1:length(rows), dr)], cols[setdiff(1:length(cols), dc)]
+    end
+end
+iterated_dominance()
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "mixed-nash"
+label = "Mixed Nash Equilibria"
+desc = "Every Nash equilibrium from support enumeration, with each player's mixed strategy and expected payoff"
+code = '''
+[(equilibrium = e, row = round.(x, digits=4), column = round.(y, digits=4), row_payoff = round(payoffs(x, y)[1], digits=4), column_payoff = round(payoffs(x, y)[2], digits=4))
+ for (e, (x, y)) in enumerate(eqs)]
+'''
+
+[[actionGroups.actions]]
+id = "minimax"
+label = "Minimax Solution"
+desc = "Each player's security (maximin) strategy and level by linear programming: in a zero-sum game both equal the value of the game"
+code = '''
+using JuMP, HiGHS
+function security(M)  # max v s.t. transpose(M) * x >= v on the simplex: guaranteed payoff whatever the opponent does
+    md = Model(HiGHS.Optimizer); set_silent(md)
+    @variable(md, x[1:size(M, 1)] >= 0); @variable(md, v)
+    @constraint(md, sum(x) == 1); @constraint(md, transpose(M) * x .>= v)
+    @objective(md, Max, v); optimize!(md)
+    (strategy = round.(value.(x), digits=4), level = round(value(v), digits=4))
+end
+(row = security(A1), column = security(Matrix(transpose(A2))), equilibrium_payoffs = [round.(payoffs(x, y), digits=4) for (x, y) in eqs])
+'''
+
+[[actionGroups.actions]]
+id = "stationary-states"
+label = "Long-Run Outcomes"
+desc = "Replicator dynamics from 200 random starting states: where play ends up and how often (the basins of attraction). In a zero-sum game the dynamics cycle, so the time-averaged state is reported: it approaches the equilibrium"
+code = '''
+rng = MersenneTwister(1)
+rsimplex(d) = (w = -log.(rand(rng, d)); w ./ sum(w))
+function long_run(runs)
+    ends = Dict{Any, Int}()
+    for _ in 1:runs
+{{?model=evo}}        s = rsimplex(m); r = replicator(s, s; T=200.0)
+{{?model!=evo}}        r = replicator(rsimplex(m), rsimplex(k); T=200.0)
+{{?model=zerosum}}        e = (vec(sum(r.x, dims=2)) ./ size(r.x, 2), vec(sum(r.y, dims=2)) ./ size(r.y, 2))  # time average
+{{?model!=zerosum}}        e = (round.(r.x[:, end], digits=2), round.(r.y[:, end], digits=2))
+        ends[e] = get(ends, e, 0) + 1
+    end
+    ends
+end
+ends = long_run(200)
+{{?model!=zerosum}}[(row = e[1], column = e[2], share = c / 200) for (e, c) in sort(collect(ends), by=last, rev=true)]
+{{?model=zerosum}}avg = collect(keys(ends)); (x_eq, y_eq) = eqs[1]
+{{?model=zerosum}}(equilibrium = (round.(x_eq, digits=4), round.(y_eq, digits=4)), mean_time_average = (round.(sum(first.(avg)) ./ length(avg), digits=4), round.(sum(last.(avg)) ./ length(avg), digits=4)),
+{{?model=zerosum}} largest_distance = round(maximum(norm(a[1] - x_eq) + norm(a[2] - y_eq) for a in avg), digits=4))
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "se-vs-lrs"
+label = "Support vs Vertex Enumeration"
+desc = "The equilibria found by support enumeration, vertex enumeration and the Lemke-Howson path (which finds one), with run times"
+code = '''
+t_se = @elapsed se = support_enumeration(g)
+t_ve = @elapsed ve = vertex_enumeration(g)
+t_lh = @elapsed lh = lemke_howson(g)
+[(method = "Support enumeration", equilibria = length(se), seconds = t_se),
+ (method = "Vertex enumeration", equilibria = length(ve), seconds = t_ve),
+ (method = "Lemke-Howson", equilibria = 1, seconds = t_lh, found = round.(lh[1], digits=4))]
+'''
+
+[[actionGroups.actions]]
+id = "random-game"
+label = "Random Game Baseline"
+desc = "Number of equilibria of this game against the distribution over 500 random games of the same size (generically an odd number)"
+code = '''
+using Plots
+rng = MersenneTwister(1)
+counts = [length(support_enumeration(random_game(rng, (m, k)))) for _ in 1:500]
+histogram(counts, bins=0.5:1:maximum(counts) + 0.5, normalize=:probability, label="random games", xlabel="Number of Nash equilibria", ylabel="Share", title="Equilibrium count")
+vline!([length(eqs)], lw=3, c=:red, label="this game")
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "support-analysis"
+label = "Support Analysis"
+desc = "Support of each equilibrium strategy and the indifference that makes mixing optimal: every action in the support earns the same expected payoff"
+code = '''
+supp(v) = findall(v .> 1e-8)
+[(equilibrium = e, row_support = supp(x), column_support = supp(y),
+  row_payoffs_in_support = round.((A1 * y)[supp(x)], digits=4), column_payoffs_in_support = round.((transpose(A2) * x)[supp(y)], digits=4))
+ for (e, (x, y)) in enumerate(eqs)]
+'''
+
+[[actionGroups.actions]]
+id = "expected-payoffs"
+label = "Equilibrium Welfare"
+desc = "Payoffs and total welfare at each equilibrium against the best total payoff of any action pair, and whether the equilibrium is Pareto-dominated by another"
+code = '''
+best = maximum(A1 .+ A2)
+pay = [payoffs(x, y) for (x, y) in eqs]
+dominated(p) = any(q[1] >= p[1] && q[2] >= p[2] && q != p for q in pay)
+{{?model=potential}}println("Potential maximiser: ", Tuple(argmax(P)), " with P = ", maximum(P))
+[(equilibrium = e, payoffs = round.(p, digits=4), welfare = round(sum(p), digits=4), best_welfare = best, pareto_dominated = dominated(p)) for (e, p) in enumerate(pay)]
+'''
+
+[[actionGroups.actions]]
+id = "ess-check"
+label = "ESS Check"
+desc = "Evolutionary stability: a symmetric equilibrium x is an ESS if every mutant y earns less against x, or equally against x but less against itself. Checked with the equivalent local condition u(x, y) > u(y, y) for mutant mixes y = (1 - eps) x + eps z, z a pure strategy or one of 5000 random states; in asymmetric games only strict equilibria are evolutionarily stable"
+code = '''
+rng = MersenneTwister(1)
+u(a, b) = dot(a, A1 * b)
+function is_ess(x; eps=1e-3)  # x is an ESS iff u(x, y) > u(y, y) for every nearby y != x
+    zs = [[[i == j ? 1.0 : 0.0 for j in 1:m] for i in 1:m]; [(w = -log.(rand(rng, m)); w ./ sum(w)) for _ in 1:5000]]
+    for z in zs
+        y = (1 - eps) .* x .+ eps .* z
+        norm(y - x) > 1e-12 && u(x, y) - u(y, y) <= 1e-12 && return false
+    end
+    true
+end
+symmetric_game = A2 == transpose(A1)
+[(equilibrium = round.(x, digits=4), symmetric = isapprox(x, y, atol=1e-8),
+  ess = symmetric_game && isapprox(x, y, atol=1e-8) ? is_ess(x) : false,
+  strict = count(>(1e-8), x) == 1 && count(>(1e-8), y) == 1 && count(==(maximum(A1 * y)), A1 * y) == 1 && count(==(maximum(transpose(A2) * x)), transpose(A2) * x) == 1)
+ for (x, y) in eqs]
+'''

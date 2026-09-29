@@ -1,0 +1,708 @@
+# Swarm Intelligence Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/swarm.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Swarm Intelligence"
+viewType = "pollis.swarm"
+defaultModel = "pso"
+
+[[packages]]
+name = "Metaheuristics.jl"
+github = "https://github.com/jmejia8/Metaheuristics.jl"
+
+[[packages.videos]]
+title = "High Performance Computing in Julia"
+description = "An 18-video course by Jamie Mair on writing fast Julia code"
+url = "https://www.youtube.com/playlist?list=PLUAq6xQKFgGr39PiyrPk_C9dhBKvWcjUA"
+
+[requires]
+packages = ["Metaheuristics.jl", "Optim.jl", "Plots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "PSO"
+file = "swarm/tutorial-01-pso.ipynb"
+bundled = true
+description = "Particle swarm optimisation: social and cognitive velocity updates drive particles toward the global best"
+
+[[notebookSections.notebooks]]
+name = "CSO"
+file = "swarm/tutorial-02-cso.ipynb"
+bundled = true
+description = "Competitive swarm optimiser: pairwise competition updates loser velocity toward winner and global mean"
+
+[[notebookSections.notebooks]]
+name = "ABC"
+file = "swarm/tutorial-03-abc.ipynb"
+bundled = true
+description = "Artificial bee colony: employed, onlooker and scout bee phases balance exploitation and exploration"
+
+[[notebookSections.notebooks]]
+name = "WOA"
+file = "swarm/tutorial-04-woa.ipynb"
+bundled = true
+description = "Whale optimisation algorithm: bubble-net attacking and spiral updating mimic humpback whale foraging"
+
+[[notebookSections.notebooks]]
+name = "GSA"
+file = "swarm/tutorial-05-gsa.ipynb"
+bundled = true
+description = "Gravitational search algorithm: agents attract each other via simulated gravity proportional to fitness mass"
+
+[[wikis]]
+name = "Factsheet"
+file = "swarm/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "swarm/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "swarm/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "swarm/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "swarm/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "swarm/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Algorithm Details"
+
+[[wikis]]
+name = "PSO"
+file = "swarm/pso.md"
+bundled = true
+
+[[wikis]]
+name = "CSO"
+file = "swarm/cso.md"
+bundled = true
+
+[[wikis]]
+name = "ABC"
+file = "swarm/abc.md"
+bundled = true
+
+[[wikis]]
+name = "WOA"
+file = "swarm/woa.md"
+bundled = true
+
+[[wikis]]
+name = "GSA"
+file = "swarm/gsa.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "Metaheuristics: A Julia Package for Single- and Multi-Objective Optimization"
+authors = "Mejía-de-Dios, Jesús-Adolfo; Mezura-Montes, Efrén"
+year = 2022
+journal = "SoftwareX"
+doi = "10.1016/j.softx.2022.101049"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Swarm Intelligence"
+authors = "Kennedy, James; Eberhart, Russell C.; Shi, Yuhui"
+year = 2001
+journal = "Morgan Kaufmann"
+openAccess = false
+
+[[references]]
+title = "Fundamentals of Computational Swarm Intelligence"
+authors = "Engelbrecht, Andries P."
+year = 2005
+journal = "Wiley"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Particle Swarm Optimization"
+authors = "Kennedy, James; Eberhart, Russell C."
+year = 1995
+journal = "ICNN'95 — International Conference on Neural Networks"
+doi = "10.1109/ICNN.1995.488968"
+openAccess = false
+
+[[references]]
+title = "A Competitive Swarm Optimizer for Large Scale Optimization"
+authors = "Cheng, Ran; Jin, Yaochu"
+year = 2015
+journal = "IEEE Transactions on Cybernetics"
+doi = "10.1109/TCYB.2014.2322602"
+openAccess = false
+
+[[references]]
+title = "A Powerful and Efficient Algorithm for Numerical Function Optimization: Artificial Bee Colony (ABC) Algorithm"
+authors = "Karaboga, Dervis; Basturk, Bahriye"
+year = 2007
+journal = "Journal of Global Optimization"
+doi = "10.1007/s10898-007-9149-x"
+openAccess = false
+
+[[references]]
+title = "The Whale Optimization Algorithm"
+authors = "Mirjalili, Seyedali; Lewis, Andrew"
+year = 2016
+journal = "Advances in Engineering Software"
+doi = "10.1016/j.advengsoft.2016.01.008"
+openAccess = false
+
+[[references]]
+title = "GSA: A Gravitational Search Algorithm"
+authors = "Rashedi, Esmat; Nezamabadi-pour, Hossein; Saryazdi, Saeid"
+year = 2009
+journal = "Information Sciences"
+doi = "10.1016/j.ins.2009.03.004"
+openAccess = false
+
+[[models]]
+id = "pso"
+label = "PSO"
+
+[[models]]
+id = "cso"
+label = "CSO"
+
+[[models]]
+id = "abc"
+label = "ABC"
+
+[[models]]
+id = "woa"
+label = "WOA"
+
+[[models]]
+id = "gsa"
+label = "GSA"
+
+[[bullets]]
+text = "PSO"
+detail = "particle swarm optimisation; social and cognitive velocity updates drive particles toward the global best"
+
+[[bullets]]
+text = "CSO"
+detail = "competitive swarm optimiser; pairwise competition updates the loser toward the winner and the global mean"
+
+[[bullets]]
+text = "ABC"
+detail = "artificial bee colony; employed, onlooker and scout bee phases balance exploitation and exploration"
+
+[[bullets]]
+text = "WOA"
+detail = "whale optimisation algorithm; bubble-net attacking and spiral updating mimic humpback whale foraging"
+
+[[bullets]]
+text = "GSA"
+detail = "gravitational search algorithm; agents attract each other via simulated gravity proportional to fitness mass"
+
+[[decisionRows]]
+task = "PSO"
+context = "Continuous box-constrained problems; the standard swarm baseline"
+purpose = "Particles move with inertia towards their own best and the swarm's best positions"
+
+[[decisionRows]]
+task = "CSO"
+context = "Higher-dimensional problems where PSO converges prematurely"
+purpose = "Competitive Swarm Optimiser: random pairs compete, and the loser learns from the winner and the swarm mean, with no personal or global bests kept"
+
+[[decisionRows]]
+task = "ABC"
+context = "Multimodal problems where exploration matters more than speed"
+purpose = "Artificial Bee Colony: employed and onlooker bees perturb food sources; sources that stop improving are abandoned to scouts"
+
+[[decisionRows]]
+task = "WOA"
+context = "Quick exploratory runs with almost no parameters to tune"
+purpose = "Whale Optimisation: encircling the best solution and spiral bubble-net moves, with a shrinking exploration coefficient"
+
+[[decisionRows]]
+task = "GSA"
+context = "Problems where a smooth exploration-to-exploitation schedule helps"
+purpose = "Gravitational Search: agents attract each other with forces proportional to their fitness-derived masses; here the chaotic variant CGSA of Metaheuristics.jl"
+
+[[inputs]]
+id = "n"
+label = "Dimension (n)"
+tooltip = "Number of decision variables. The default objective and bounds adapt to it."
+default = "10"
+
+[[inputs]]
+id = "obj"
+label = "Objective f(x)"
+tooltip = "Julia expression for the objective to minimise, in terms of the vector x. Default: the Rastrigin function in any dimension (global minimum 0 at the origin)."
+default = "10 * length(x) + sum(x .^ 2 .- 10 .* cos.(2pi .* x))"
+
+[[inputs]]
+id = "lb"
+label = "Lower Bounds"
+tooltip = "Julia vector of lower bounds, one per variable."
+default = "fill(-5.12, n)"
+newRow = true
+
+[[inputs]]
+id = "ub"
+label = "Upper Bounds"
+tooltip = "Julia vector of upper bounds, one per variable."
+default = "fill(5.12, n)"
+
+[[inputs]]
+id = "pop"
+label = "Swarm Size"
+tooltip = "Number of particles (bees, whales, agents)."
+default = "40"
+newRow = true
+
+[[inputs]]
+id = "budget"
+label = "Iterations"
+tooltip = "Number of iterations. Evaluations per iteration differ: about one per particle (PSO, WOA, GSA), one per pair (CSO) or two per bee (ABC); the comparisons therefore use evaluations."
+default = "500"
+
+[[inputs]]
+id = "phi"
+label = "Mean Attraction (phi)"
+tooltip = "Weight of the pull of each loser towards the swarm mean; 0 disables it. Around 0.1 in moderate dimensions."
+default = "0.1"
+models = ["cso"]
+newRow = true
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.pso]
+# Particles with velocity arrows towards the best
+svg = '''
+var s = '', pts = [[12,40],[42,38],[14,66],[44,64],[28,34]];
+pts.forEach(function (p) { var dx = (28 - p[0]) * 0.35, dy = (52 - p[1]) * 0.35; s += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="1.8" fill="currentColor"/><line x1="' + p[0] + '" y1="' + p[1] + '" x2="' + (p[0] + dx) + '" y2="' + (p[1] + dy) + '" stroke="currentColor" stroke-width="0.8"/>'; });
+return s + '<circle cx="28" cy="52" r="3" fill="none" stroke="currentColor" stroke-width="1"/>';
+'''
+
+[miniCharts.cso]
+# A pair: the loser moves towards the winner
+svg = '''
+return '<circle cx="36" cy="42" r="2.4" fill="currentColor"/><circle cx="16" cy="62" r="2.4" fill="none" stroke="currentColor" stroke-width="1"/>'
+	+ '<line x1="16" y1="62" x2="30" y2="48" stroke="currentColor" stroke-width="1"/><path d="M30,48 L25,49 L29,53 Z" fill="currentColor"/>'
+	+ '<circle cx="27" cy="54" r="1.2" fill="currentColor" opacity="0.5"/>';
+'''
+
+[miniCharts.abc]
+# Food sources with bees around them
+svg = '''
+var s = '';
+[[18,44],[38,48],[26,64]].forEach(function (p, i) { s += '<rect x="' + (p[0] - 3) + '" y="' + (p[1] - 3) + '" width="6" height="6" fill="currentColor" opacity="' + (0.9 - 0.25 * i) + '"/>'; });
+[[12,38],[24,40],[44,42],[32,56],[20,70]].forEach(function (p) { s += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="1.3" fill="currentColor"/>'; });
+return s;
+'''
+
+[miniCharts.woa]
+# A spiral closing in on the prey
+svg = '''
+var pts = [];
+for (var t = 0; t <= 12; t += 0.3) { var r = 16 * Math.exp(-0.18 * t); pts.push((28 + r * Math.cos(t)).toFixed(1) + ',' + (52 + r * Math.sin(t)).toFixed(1)); }
+return '<polyline points="' + pts.join(' ') + '" fill="none" stroke="currentColor" stroke-width="0.9"/><circle cx="28" cy="52" r="2" fill="currentColor"/>';
+'''
+
+[miniCharts.gsa]
+# Masses of different size attracting each other
+svg = '''
+return '<circle cx="30" cy="50" r="6" fill="currentColor" opacity="0.8"/><circle cx="14" cy="40" r="2.5" fill="currentColor" opacity="0.6"/><circle cx="44" cy="64" r="3.5" fill="currentColor" opacity="0.6"/><circle cx="16" cy="66" r="2" fill="currentColor" opacity="0.6"/>'
+	+ '<line x1="14" y1="40" x2="24" y2="46" stroke="currentColor" stroke-width="0.7"/><line x1="44" y1="64" x2="35" y2="55" stroke="currentColor" stroke-width="0.7"/><line x1="16" y1="66" x2="25" y2="55" stroke="currentColor" stroke-width="0.7"/>';
+'''
+
+[[codeBranches]]
+model = "pso"
+code = '''
+using Metaheuristics, Random, LinearAlgebra, Statistics
+
+n = {{n}}  # dimension
+f(x) = {{obj}}  # objective
+lb, ub = {{lb}}, {{ub}}  # search box
+NP = {{pop}}  # swarm size
+budget = {{budget}}  # iterations
+
+# wrap f so every evaluation is recorded
+function recorder(f)
+    vals = Float64[]
+    fr(x) = (v = f(x); push!(vals, v); v)
+    fr, vals
+end
+
+function search(; iters=budget, N=NP, seed=1, lb=lb, ub=ub, f=f)
+    fr, vals = recorder(f)
+    alg = PSO(N=N, options=Options(iterations=iters, seed=seed))  # particle swarm optimisation
+    r = Metaheuristics.optimize(fr, [transpose(lb); transpose(ub)], alg)
+    (x = minimizer(r), fx = minimum(r), trace = accumulate(min, vals), evals = length(vals), pop = positions(r))
+end
+
+res = search()
+x_best, f_best = res.x, res.fx
+(best_point = x_best, best_value = f_best, evaluations = res.evals)
+'''
+
+[[codeBranches]]
+model = "cso"
+code = '''
+using Random, LinearAlgebra, Statistics
+
+n = {{n}}  # dimension
+f(x) = {{obj}}  # objective
+lb, ub = {{lb}}, {{ub}}  # search box
+NP = {{pop}}  # swarm size
+budget = {{budget}}  # iterations
+
+# wrap f so every evaluation is recorded
+function recorder(f)
+    vals = Float64[]
+    fr(x) = (v = f(x); push!(vals, v); v)
+    fr, vals
+end
+
+PHI = {{phi}}  # pull towards the swarm mean
+
+# Competitive Swarm Optimiser (Cheng and Jin, 2015)
+function search(; iters=budget, N=NP, seed=1, lb=lb, ub=ub, f=f, phi=PHI)
+    Random.seed!(seed)
+    fr, vals = recorder(f); d = length(lb)
+    X = [lb .+ rand(d) .* (ub .- lb) for _ in 1:N]; V = [zeros(d) for _ in 1:N]; fX = fr.(X)
+    for t in 1:iters
+        xbar = mean(X)
+        p = randperm(N)
+        for k in 1:2:N-1
+            i, j = p[k], p[k+1]
+            w, l = fX[i] <= fX[j] ? (i, j) : (j, i)  # winner, loser
+            V[l] = rand(d) .* V[l] .+ rand(d) .* (X[w] .- X[l]) .+ phi .* rand(d) .* (xbar .- X[l])  # the loser learns
+            X[l] = clamp.(X[l] .+ V[l], lb, ub); fX[l] = fr(X[l])
+        end
+    end
+    k = argmin(fX)
+    (x = X[k], fx = fX[k], trace = accumulate(min, vals), evals = length(vals), pop = permutedims(reduce(hcat, X)))
+end
+
+res = search()
+x_best, f_best = res.x, res.fx
+(best_point = x_best, best_value = f_best, evaluations = res.evals)
+'''
+
+[[codeBranches]]
+model = "abc"
+code = '''
+using Metaheuristics, Random, LinearAlgebra, Statistics
+
+n = {{n}}  # dimension
+f(x) = {{obj}}  # objective
+lb, ub = {{lb}}, {{ub}}  # search box
+NP = {{pop}}  # swarm size
+budget = {{budget}}  # iterations
+
+# wrap f so every evaluation is recorded
+function recorder(f)
+    vals = Float64[]
+    fr(x) = (v = f(x); push!(vals, v); v)
+    fr, vals
+end
+
+function search(; iters=budget, N=NP, seed=1, lb=lb, ub=ub, f=f)
+    fr, vals = recorder(f)
+    alg = ABC(N=N, options=Options(iterations=iters, seed=seed))  # artificial bee colony
+    r = Metaheuristics.optimize(fr, [transpose(lb); transpose(ub)], alg)
+    (x = minimizer(r), fx = minimum(r), trace = accumulate(min, vals), evals = length(vals), pop = positions(r))
+end
+
+res = search()
+x_best, f_best = res.x, res.fx
+(best_point = x_best, best_value = f_best, evaluations = res.evals)
+'''
+
+[[codeBranches]]
+model = "woa"
+code = '''
+using Metaheuristics, Random, LinearAlgebra, Statistics
+
+n = {{n}}  # dimension
+f(x) = {{obj}}  # objective
+lb, ub = {{lb}}, {{ub}}  # search box
+NP = {{pop}}  # swarm size
+budget = {{budget}}  # iterations
+
+# wrap f so every evaluation is recorded
+function recorder(f)
+    vals = Float64[]
+    fr(x) = (v = f(x); push!(vals, v); v)
+    fr, vals
+end
+
+function search(; iters=budget, N=NP, seed=1, lb=lb, ub=ub, f=f)
+    fr, vals = recorder(f)
+    alg = WOA(N=N, options=Options(iterations=iters, seed=seed))  # whale optimisation algorithm
+    r = Metaheuristics.optimize(fr, [transpose(lb); transpose(ub)], alg)
+    (x = minimizer(r), fx = minimum(r), trace = accumulate(min, vals), evals = length(vals), pop = positions(r))
+end
+
+res = search()
+x_best, f_best = res.x, res.fx
+(best_point = x_best, best_value = f_best, evaluations = res.evals)
+'''
+
+[[codeBranches]]
+model = "gsa"
+code = '''
+using Metaheuristics, Random, LinearAlgebra, Statistics
+
+n = {{n}}  # dimension
+f(x) = {{obj}}  # objective
+lb, ub = {{lb}}, {{ub}}  # search box
+NP = {{pop}}  # swarm size
+budget = {{budget}}  # iterations
+
+# wrap f so every evaluation is recorded
+function recorder(f)
+    vals = Float64[]
+    fr(x) = (v = f(x); push!(vals, v); v)
+    fr, vals
+end
+
+function search(; iters=budget, N=NP, seed=1, lb=lb, ub=ub, f=f)
+    fr, vals = recorder(f)
+    alg = CGSA(N=N, options=Options(iterations=iters, seed=seed))  # chaotic gravitational search algorithm
+    r = Metaheuristics.optimize(fr, [transpose(lb); transpose(ub)], alg)
+    (x = minimizer(r), fx = minimum(r), trace = accumulate(min, vals), evals = length(vals), pop = positions(r))
+end
+
+res = search()
+x_best, f_best = res.x, res.fx
+(best_point = x_best, best_value = f_best, evaluations = res.evals)
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "convergence"
+label = "Convergence Curve"
+desc = "Best objective value against evaluations (log scale)"
+code = '''
+using Plots
+
+shift = min(0, minimum(res.trace)) - 1e-12  # keeps the log scale defined
+plot(res.trace .- shift, yscale=:log10, xlabel="evaluation", ylabel="best f - shift", legend=false)
+'''
+
+[[actionGroups.actions]]
+id = "population"
+label = "Population Snapshot"
+desc = "Final swarm in the first two variables over the objective's contours"
+code = '''
+using Plots
+
+xs = range(lb[1], ub[1], length=120); ys = range(lb[2], ub[2], length=120)
+contour(xs, ys, (a, b) -> f([a; b; x_best[3:end]]), fill=true, alpha=0.6, xlabel="x1", ylabel="x2")
+scatter!(res.pop[:, 1], res.pop[:, 2], markersize=3, color=:white, label="final swarm")
+scatter!([x_best[1]], [x_best[2]], marker=:star, markersize=10, color=:red, label="best")
+'''
+
+[[actionGroups.actions]]
+id = "landscape"
+label = "Fitness Landscape"
+desc = "Heatmap of f over the first two variables, with the others held at the best point"
+code = '''
+using Plots
+
+xs = range(lb[1], ub[1], length=150); ys = range(lb[2], ub[2], length=150)
+heatmap(xs, ys, (a, b) -> f([a; b; x_best[3:end]]), xlabel="x1", ylabel="x2")
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "diversity"
+label = "Swarm Diversity"
+desc = "Spread of the final swarm: per-variable standard deviation relative to the box, and distance to the best"
+code = '''
+P = res.pop
+(relative_spread = round.(vec(std(P, dims=1)) ./ (ub .- lb), sigdigits=3),
+ mean_distance_to_best = mean(norm(P[i, :] - x_best) for i in axes(P, 1)), collapsed = maximum(std(P, dims=1)) < 1e-6)
+'''
+
+[[actionGroups.actions]]
+id = "pop-sensitivity"
+label = "Population Sensitivity"
+desc = "Best value for several swarm sizes at roughly the same number of evaluations, 3 seeds each"
+code = '''
+map([10, 20, 40, 80, 160]) do N
+    it = max(1, div(NP * budget, N))
+    v = [search(N=N, iters=it, seed=s).fx for s in 1:3]
+    (swarm_size = N, iterations = it, mean_best = mean(v), worst_best = maximum(v))
+end
+'''
+
+[[actionGroups.actions]]
+id = "consistency"
+label = "Run Consistency"
+desc = "Best values over 10 seeds and how far apart the solutions are"
+code = '''
+runs = [search(seed=s) for s in 1:10]
+v = getfield.(runs, :fx)
+(best_values = round.(v, sigdigits=6), mean = mean(v), spread = std(v), share_at_best = mean(v .<= minimum(v) + 1e-6),
+ max_distance_between_solutions = maximum(norm(a.x - b.x) for a in runs, b in runs))
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "solution"
+label = "Best Solution"
+desc = "The best point and its objective value, re-evaluated"
+code = '''
+(best_point = round.(x_best, sigdigits=6), reported_value = f_best, re_evaluated = f(x_best), evaluations = res.evals)
+'''
+
+[[actionGroups.actions]]
+id = "multistart"
+label = "Multi-Start"
+desc = "Best of 5 independent runs"
+code = '''
+runs = [search(seed=s) for s in 1:5]
+k = argmin(getfield.(runs, :fx))
+(best_value = runs[k].fx, best_point = round.(runs[k].x, sigdigits=6), best_seed = k, single_run_value = f_best)
+'''
+
+[[actionGroups.actions]]
+id = "local-refine"
+label = "Local Refinement"
+desc = "Polish the swarm's best point with box-constrained L-BFGS (Optim.jl, ForwardDiff gradients)"
+code = '''
+using Optim
+
+x_start = clamp.(x_best, lb .+ 1e-9 .* (ub .- lb), ub .- 1e-9 .* (ub .- lb))  # strictly inside the box
+r = Optim.optimize(f, lb, ub, x_start, Fminbox(LBFGS()); autodiff=:forward)
+(swarm_value = f_best, refined_value = Optim.minimum(r), improvement = f_best - Optim.minimum(r),
+ moved = norm(Optim.minimizer(r) - x_best), refined_point = round.(Optim.minimizer(r), sigdigits=6))
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "vs-gradient"
+label = "vs Gradient-Based"
+desc = "The swarm against L-BFGS from the box midpoint and from 10 random starts (Optim.jl)"
+code = '''
+using Optim
+
+lbfgs(x0) = Optim.minimum(Optim.optimize(f, lb, ub, x0, Fminbox(LBFGS()); autodiff=:forward))
+Random.seed!(1)
+starts = [lb .+ (0.05 .+ 0.9 .* rand(length(lb))) .* (ub .- lb) for _ in 1:10]
+(swarm = f_best, lbfgs_from_midpoint = lbfgs((lb .+ ub) ./ 2 .+ 1e-3 .* (ub .- lb)), lbfgs_best_of_10 = minimum(lbfgs.(starts)))
+'''
+
+[[actionGroups.actions]]
+id = "vs-swarm"
+label = "Algorithm Shootout"
+desc = "PSO, ABC, WOA and CGSA (Metaheuristics.jl) with the same number of evaluations as this run, 3 seeds each"
+code = '''
+using Metaheuristics
+
+algs = ["PSO" => PSO, "ABC" => ABC, "WOA" => WOA, "CGSA" => CGSA]
+map(algs) do (name, A)
+    v = map(1:3) do s
+        minimum(Metaheuristics.optimize(f, [transpose(lb); transpose(ub)], A(N=NP, options=Options(iterations=10^6, f_calls_limit=res.evals, seed=s))))
+    end
+    (algorithm = name, evaluations = res.evals, mean_best = mean(v), worst_best = maximum(v))
+end
+'''
+
+[[actionGroups.actions]]
+id = "benchmark"
+label = "Benchmark Functions"
+desc = "The selected algorithm on the sphere, Rosenbrock, Rastrigin and Ackley functions over the same box"
+code = '''
+bench = ["sphere" => x -> sum(x .^ 2),
+         "Rosenbrock" => x -> sum(100 .* (x[2:end] .- x[1:end-1] .^ 2) .^ 2 .+ (1 .- x[1:end-1]) .^ 2),
+         "Rastrigin" => x -> 10 * length(x) + sum(x .^ 2 .- 10 .* cos.(2pi .* x)),
+         "Ackley" => x -> -20exp(-0.2sqrt(mean(x .^ 2))) - exp(mean(cos.(2pi .* x))) + 20 + exp(1)]
+map(bench) do (name, g)
+    r = search(f=g)
+    (function_name = name, best_value = r.fx, distance_to_origin = norm(r.x))
+end
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "summary"
+label = "Solution Summary"
+desc = "Each variable of the best point with its bounds and relative position in the box"
+code = '''
+(variables = [(variable = i, value = x_best[i], lower = lb[i], upper = ub[i], relative_position = round((x_best[i] - lb[i]) / (ub[i] - lb[i]), digits=4)) for i in eachindex(x_best)],
+ best_value = f_best, evaluations = res.evals)
+'''
+
+[[actionGroups.actions]]
+id = "hyperparams"
+label = "Hyperparameter Guide"
+desc = "The main settings of the selected algorithm and their effect"
+code = '''
+{{?model=pso}}[(parameter = "N", value = NP, effect = "more particles explore more but cost more evaluations per iteration"), (parameter = "C1, C2", value = "2.0, 2.0 (Metaheuristics.jl defaults)", effect = "pull towards the personal and global best"), (parameter = "inertia", value = "0.8 (default)", effect = "higher keeps momentum and exploration, lower converges faster")]
+{{?model=cso}}[(parameter = "N", value = NP, effect = "half the swarm is updated each iteration"), (parameter = "phi", value = PHI, effect = "pull of losers towards the swarm mean: more diversity when larger")]
+{{?model=abc}}[(parameter = "N", value = NP, effect = "number of food sources and bees"), (parameter = "limit", value = "10 (default)", effect = "trials without improvement before a source is abandoned to a scout")]
+{{?model=woa}}[(parameter = "N", value = NP, effect = "number of whales"), (parameter = "a", value = "decreases from 2 to 0", effect = "controls the switch from exploration to encircling the best")]
+{{?model=gsa}}[(parameter = "N", value = NP, effect = "number of agents"), (parameter = "chaos map", value = "Metaheuristics.jl default", effect = "chaotic schedule of the gravitational constant, from exploration to exploitation")]
+'''
+
+[[actionGroups.actions]]
+id = "scaling"
+label = "Dimension Scaling"
+desc = "Best value and run time as the dimension grows (the objective must accept any length of x, like the default)"
+code = '''
+map([2, 5, 10, 20, 40]) do d
+    sec = @elapsed r = search(lb=fill(lb[1], d), ub=fill(ub[1], d))
+    (dimension = d, best_value = r.fx, evaluations = r.evals, seconds = sec)
+end
+'''

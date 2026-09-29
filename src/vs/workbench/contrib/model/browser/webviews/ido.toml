@@ -1,0 +1,409 @@
+# Infinite-Dimensional Optimisation Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/ido.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Infinite-Dimensional Optimisation"
+viewType = "pollis.ido"
+defaultModel = "ocp"
+
+[[packages]]
+name = "InfiniteOpt.jl"
+github = "https://github.com/infiniteopt/InfiniteOpt.jl"
+
+[requires]
+packages = ["InfiniteOpt.jl", "Ipopt.jl", "HiGHS.jl", "Plots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Quick Start"
+file = "ido/tutorial-01-quickstart.ipynb"
+bundled = true
+description = "Formulate and solve an infinite-dimensional optimisation problem using InfiniteOpt.jl"
+
+[[notebookSections.notebooks]]
+name = "Optimal Control"
+file = "ido/tutorial-02-optcontrol.ipynb"
+bundled = true
+description = "ODE-constrained optimal control with state and control variables over a time horizon"
+
+[[notebookSections.notebooks]]
+name = "Integral Objectives"
+file = "ido/tutorial-03-integral.ipynb"
+bundled = true
+description = "Minimise integral objectives using Gaussian quadrature and orthogonal collocation"
+
+[[notebookSections.notebooks]]
+name = "Infinite Parameters"
+file = "ido/tutorial-04-parameters.ipynb"
+bundled = true
+description = "Define infinite and finite parameters, add supports, and query solution values"
+
+[[wikis]]
+name = "Overview"
+file = "ido/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Factsheet"
+file = "ido/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "ido/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "ido/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "ido/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "ido/decision-guide.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Original Papers (from packages)"
+
+[[references]]
+title = "A unifying modeling abstraction for infinite-dimensional optimization"
+authors = "Pulsipher, J. A., Zhang, W., Hongisto, T. J., & Zavala, V. M."
+year = 2022
+journal = ""
+url = "https://par.nsf.gov/servlets/purl/10388096"
+openAccess = false
+
+[[models]]
+id = "ocp"
+label = "Optimal Control"
+
+[[bullets]]
+text = "Formulate optimisation problems over continuous domains: time, space, or any infinite parameter"
+detail = ""
+
+[[bullets]]
+text = "Supports ODE-constrained optimal control, integral objectives, and PDE-constrained problems"
+detail = ""
+
+[[bullets]]
+text = "Transcribes infinite problems to finite NLP/MIP via orthogonal collocation or trapezoid discretisation"
+detail = ""
+
+[[bullets]]
+text = "Compatible with any JuMP-supported solver: Ipopt, HiGHS, Juniper, GLPK, Mosek"
+detail = ""
+
+[[decisionRows]]
+task = "Optimal Control"
+context = "Choose a control trajectory u(t) that steers an ODE system while minimising an integral cost"
+purpose = "InfiniteOpt keeps the continuous-time formulation and transcribes it to a finite NLP by collocation or finite differences"
+
+[[inputs]]
+id = "dyn"
+label = "Dynamics dx/dt"
+tooltip = "Julia vector expression for dx/dt in terms of the state vector x, the control vector u and time t, one entry per state. Example (double integrator): [x[2], u[1]]."
+default = "[x[2], u[1]]"
+
+[[inputs]]
+id = "obj"
+label = "Running Cost f(x, u, t)"
+tooltip = "Integrand of the objective, minimised as the integral of f over [t0, T]. Example: u[1]^2 (control energy)."
+default = "u[1]^2"
+
+[[inputs]]
+id = "nx"
+label = "States"
+tooltip = "Number of state variables (length of x and of the dynamics vector)."
+default = "2"
+newRow = true
+
+[[inputs]]
+id = "nu"
+label = "Controls"
+tooltip = "Number of control variables (length of u)."
+default = "1"
+
+[[inputs]]
+id = "xinit"
+label = "Initial State"
+tooltip = "x(t0) as a Julia vector of length nx."
+default = "[1.0, 0.0]"
+
+[[inputs]]
+id = "xfinal"
+label = "Terminal State"
+tooltip = "x(T) as a Julia vector of length nx, imposed as an equality constraint."
+default = "[0.0, 0.0]"
+
+[[inputs]]
+id = "umax"
+label = "Control Bound"
+tooltip = "Bound on every control: -umax <= u(t) <= umax. Use Inf for unbounded controls."
+default = "5.0"
+
+[[inputs]]
+id = "t0"
+label = "t0"
+tooltip = "Start of the time horizon, the lower end of the infinite parameter domain. Usually 0."
+default = "0.0"
+newRow = true
+
+[[inputs]]
+id = "T"
+label = "T"
+tooltip = "End of the time horizon [t0, T]."
+default = "2.0"
+
+[[inputs]]
+id = "N"
+label = "Supports"
+tooltip = "Number of support points of t used by the transcription. More supports are more accurate and slower; 20 to 200 is typical."
+default = "50"
+
+[[inputs]]
+id = "deriv"
+label = "Derivative Method"
+tooltip = "How derivatives are approximated between supports. OrthogonalCollocation(k) uses k Lobatto nodes per interval (high order); FiniteDifference(Backward()) is implicit Euler (the InfiniteOpt default) and FiniteDifference(Central()) second order."
+kind = "select"
+default = "OrthogonalCollocation(3)"
+
+[[inputs.options]]
+value = "OrthogonalCollocation(3)"
+label = "Orthogonal Collocation (3)"
+
+[[inputs.options]]
+value = "OrthogonalCollocation(4)"
+label = "Orthogonal Collocation (4)"
+
+[[inputs.options]]
+value = "FiniteDifference(Backward())"
+label = "Finite Difference (Backward)"
+
+[[inputs.options]]
+value = "FiniteDifference(Central())"
+label = "Finite Difference (Central)"
+
+[[inputs]]
+id = "optimizer"
+label = "Solver"
+tooltip = "Ipopt handles general nonlinear dynamics and costs; HiGHS solves linear dynamics with a convex quadratic cost."
+kind = "select"
+default = "Ipopt"
+
+[[inputs.options]]
+value = "Ipopt"
+label = "Ipopt"
+
+[[inputs.options]]
+value = "HiGHS"
+label = "HiGHS"
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.ocp]
+# A smooth state trajectory above a piecewise control profile
+svg = '''
+var d = 'M8,32';
+for (var x = 8; x <= 46; x++) { var s = (x - 8) / 38; d += ' L' + x + ',' + (32 + 20 * (3 * s * s - 2 * s * s * s)).toFixed(1); }
+return '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.4"/>'
+	+ '<path d="M8,60 L18,60 L18,64 L28,64 L28,68 L38,68 L38,72 L46,72" fill="none" stroke="currentColor" stroke-width="1" opacity="0.7"/>';
+'''
+
+[[codeBranches]]
+model = "ocp"
+code = '''
+using InfiniteOpt, {{optimizer}}, LinearAlgebra
+
+dynamics(x, u, t) = {{dyn}}  # dx/dt
+running(x, u, t) = {{obj}}  # integrand of the cost
+nx, nu = {{nx}}, {{nu}}
+x_init, x_final, umax = {{xinit}}, {{xfinal}}, {{umax}}
+t0 = {{t0}}
+
+function build(; T={{T}}, N={{N}}, method={{deriv}}, x_init=x_init)
+    model = InfiniteModel({{optimizer}}.Optimizer)
+    set_silent(model)
+    @infinite_parameter(model, t in [t0, T], num_supports=N, derivative_method=method)
+    @variable(model, x[1:nx], Infinite(t))
+    @variable(model, -umax <= u[1:nu] <= umax, Infinite(t))
+    @objective(model, Min, integral(running(x, u, t), t))
+    rhs = dynamics(x, u, t)
+    @constraint(model, ode[i = 1:nx], deriv(x[i], t) == rhs[i])
+    @constraint(model, initial[i = 1:nx], x[i](t0) == x_init[i])
+    @constraint(model, terminal[i = 1:nx], x[i](T) == x_final[i])
+    model
+end
+
+model = build()
+optimize!(model)
+ts = supports(model[:t])  # time grid
+X = reduce(hcat, value.(model[:x]))  # length(ts) x nx states
+U = reduce(hcat, value.(model[:u]))  # length(ts) x nu controls
+(status = termination_status(model), objective = objective_value(model), supports = length(ts), solve_seconds = solve_time(model))
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "trajectory"
+label = "Optimal Trajectory"
+desc = "State trajectories x(t) and control trajectories u(t) at the optimum"
+code = '''
+using Plots
+
+p1 = plot(ts, X, label=permutedims(["x$i" for i in 1:nx]), ylabel="state", marker=:circle, markersize=2)
+p2 = plot(ts, U, label=permutedims(["u$j" for j in 1:nu]), ylabel="control", xlabel="t", linetype=:steppost)
+plot(p1, p2, layout=(2, 1), link=:x)
+'''
+
+[[actionGroups.actions]]
+id = "phase-plot"
+label = "Phase Portrait"
+desc = "The optimal path in the (x1, x2) state plane from the initial to the terminal state (needs two or more states)"
+code = '''
+using Plots
+
+plot(X[:, 1], X[:, 2], marker=:circle, markersize=2, xlabel="x1", ylabel="x2", label="optimal path")
+scatter!([x_init[1]], [x_init[2]], label="start"); scatter!([x_final[1]], [x_final[2]], marker=:star, markersize=8, label="target")
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "constraint-violations"
+label = "Dynamics Residuals"
+desc = "Status, and how well the discrete solution satisfies the ODE between supports: finite-difference slope of x against the dynamics at interval midpoints"
+code = '''
+dt = diff(ts)
+slope = diff(X, dims=1) ./ dt
+mid = [dynamics((X[k, :] .+ X[k+1, :]) ./ 2, (U[k, :] .+ U[k+1, :]) ./ 2, (ts[k] + ts[k+1]) / 2) for k in 1:length(dt)]
+res = maximum(abs, slope .- permutedims(reduce(hcat, mid)))
+(termination = termination_status(model), primal = primal_status(model), max_ode_residual = res,
+ initial_error = norm(X[1, :] - x_init), terminal_error = norm(X[end, :] - x_final))
+'''
+
+[[actionGroups.actions]]
+id = "mesh-refinement"
+label = "Mesh Refinement"
+desc = "Objective and solve time as the number of supports grows: the objective should settle once the discretisation is fine enough"
+code = '''
+map([10, 20, 50, 100, 200]) do n
+    m = build(N=n)
+    optimize!(m)
+    (supports = n, objective = objective_value(m), status = termination_status(m), seconds = solve_time(m))
+end
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "open-loop"
+label = "Open-Loop Simulation"
+desc = "Apply the optimal control (linearly interpolated) to the true dynamics with a fine RK4 integrator: where the simulated state ends against the target"
+code = '''
+using Plots
+
+uat(s) = (k = clamp(searchsortedlast(ts, s), 1, length(ts) - 1); w = (s - ts[k]) / (ts[k+1] - ts[k]); (1 - w) .* U[k, :] .+ w .* U[k+1, :])
+h = (ts[end] - t0) / 2000
+xs, tt = [float.(x_init)], [t0]
+for _ in 1:2000
+    s, x = tt[end], xs[end]
+    k1 = dynamics(x, uat(s), s); k2 = dynamics(x .+ h / 2 .* k1, uat(s + h / 2), s + h / 2)
+    k3 = dynamics(x .+ h / 2 .* k2, uat(s + h / 2), s + h / 2); k4 = dynamics(x .+ h .* k3, uat(s + h), s + h)
+    push!(xs, x .+ h / 6 .* (k1 .+ 2 .* k2 .+ 2 .* k3 .+ k4)); push!(tt, s + h)
+end
+display(plot(tt, permutedims(reduce(hcat, xs)), label="simulated", xlabel="t"))
+(simulated_final_state = xs[end], target = x_final, miss = norm(xs[end] - x_final))
+'''
+
+[[actionGroups.actions]]
+id = "state-at-time"
+label = "State at Time"
+desc = "Interpolate the optimal state and control at any time in the horizon"
+code = '''
+tq = (t0 + ts[end]) / 2  # replace with the time of interest
+k = clamp(searchsortedlast(ts, tq), 1, length(ts) - 1); w = (tq - ts[k]) / (ts[k+1] - ts[k])
+(time = tq, state = (1 - w) .* X[k, :] .+ w .* X[k+1, :], control = (1 - w) .* U[k, :] .+ w .* U[k+1, :])
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "compare-methods"
+label = "Compare Derivative Methods"
+desc = "Collocation of two orders against backward and central finite differences at the same number of supports: objective and solve time"
+code = '''
+methods = ["Collocation (3)" => OrthogonalCollocation(3), "Collocation (4)" => OrthogonalCollocation(4),
+           "Backward FD" => FiniteDifference(Backward()), "Central FD" => FiniteDifference(Central())]
+map(methods) do (name, meth)
+    m = build(method=meth)
+    optimize!(m)
+    (method = name, objective = objective_value(m), status = termination_status(m), seconds = solve_time(m))
+end
+'''
+
+[[actionGroups.actions]]
+id = "horizon-sweep"
+label = "Horizon Sweep"
+desc = "Optimal cost against the horizon length T: shorter horizons need more aggressive control"
+code = '''
+using Plots
+
+Ts = range(0.5, 2 * {{T}}, length=8)
+costs = map(Ts) do s
+    m = build(T=s)
+    optimize!(m)
+    has_values(m) ? objective_value(m) : NaN
+end
+plot(Ts, costs, marker=:circle, xlabel="horizon T", ylabel="optimal cost", legend=false)
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "dual-variables"
+label = "Costates"
+desc = "Duals of the dynamics constraints: the discrete costates p(t) of Pontryagin's principle, the marginal cost of a unit change in each state at each time"
+code = '''
+using Plots
+
+P = reduce(hcat, dual.(model[:ode]))  # one column per state; scaled by the quadrature weights of the transcription
+plot(ts[1:size(P, 1)], P, label=permutedims(["p$i" for i in 1:nx]), xlabel="t", ylabel="costate")
+'''
+
+[[actionGroups.actions]]
+id = "sensitivity"
+label = "Initial-State Sensitivity"
+desc = "Change in the optimal cost when each initial state is perturbed, and the duals of the initial conditions that predict it"
+code = '''
+d = 0.01
+base = objective_value(model)
+map(1:nx) do i
+    e = zeros(nx); e[i] = d
+    m = build(x_init=x_init .+ e)
+    optimize!(m)
+    (state = i, finite_difference = (objective_value(m) - base) / d, initial_condition_dual = dual(model[:initial][i]))
+end
+'''

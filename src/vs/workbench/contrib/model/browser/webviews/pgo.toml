@@ -1,0 +1,495 @@
+# Principled Global Search with Local Refinement Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/pgo.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Principled Global Search with Local Refinement"
+viewType = "pollis.pgo"
+defaultModel = "ags"
+
+[[packages]]
+name = "NLopt.jl"
+github = "https://github.com/JuliaOpt/NLopt.jl"
+
+[requires]
+packages = ["NLopt.jl", "ForwardDiff.jl", "Plots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "MLSL"
+file = "pgo/tutorial-01-mlsl.ipynb"
+bundled = true
+description = "Multi-Level Single-Linkage with NLopt.jl: multi-start local search with clustering to avoid repeated basins"
+
+[[notebookSections.notebooks]]
+name = "StoGO-R"
+file = "pgo/tutorial-02-stogo-r.ipynb"
+bundled = true
+description = "Randomised stochastic branch-and-bound with NLopt.jl: gradient-based bounding with random branching"
+
+[[notebookSections.notebooks]]
+name = "AGS"
+file = "pgo/tutorial-03-ags.ipynb"
+bundled = true
+description = "Adaptive Global Search with NLopt.jl: Lipschitz model-based global optimisation"
+
+[[wikis]]
+name = "Factsheet"
+file = "pgo/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "pgo/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "pgo/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "pgo/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "pgo/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "pgo/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Algorithm Details"
+
+[[wikis]]
+name = "MLSL"
+file = "pgo/mlsl.md"
+bundled = true
+
+[[wikis]]
+name = "StoGO-R"
+file = "pgo/stogo-r.md"
+bundled = true
+
+[[wikis]]
+name = "AGS"
+file = "pgo/ags.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Introduction to Global Optimization"
+authors = "Neumaier, Arnold"
+year = 2004
+journal = "Cambridge University Press"
+doi = "10.1017/CBO9780511569029"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Stochastic Global Optimization Methods Part I: Clustering Methods"
+authors = "Rinnooy Kan, A. H. G.; Timmer, G. T."
+year = 1987
+journal = "Mathematical Programming"
+doi = "10.1007/BF02592071"
+openAccess = false
+
+[[references]]
+title = "An Adaptive Approach to Stochastic Global Optimization"
+authors = "Madsen, Kaj; Zertchaninov, Serguei"
+year = 1998
+journal = "Technical Report"
+openAccess = false
+
+[[references]]
+title = "Lipschitz Global Optimization"
+authors = "Strongin, Roman G.; Sergeyev, Yaroslav D."
+year = 2000
+journal = "Springer"
+doi = "10.1007/978-1-4615-4677-1"
+openAccess = false
+
+[[models]]
+id = "ags"
+label = "AGS"
+
+[[models]]
+id = "mlsl"
+label = "MLSL"
+
+[[models]]
+id = "stogo-r"
+label = "StoGO-R"
+
+[[bullets]]
+text = "AGS"
+detail = "adaptive global search; Lipschitz-model-based global optimisation with adaptive constant estimation"
+
+[[bullets]]
+text = "MLSL"
+detail = "multi-level single-linkage; multi-start local search with clustering to avoid repeated basin attraction"
+
+[[bullets]]
+text = "StoGO-R"
+detail = "randomised stochastic branch-and-bound; gradient-based bounding with random branching order"
+
+[[decisionRows]]
+task = "AGS"
+context = "Low-dimensional (up to about 5 variables) Lipschitz-continuous black-box problems"
+purpose = "Reduce the box to one dimension with a space-filling Peano curve and search it with adaptive Lipschitz estimates; deterministic"
+
+[[decisionRows]]
+task = "MLSL"
+context = "Smooth multimodal problems where a good local solver is available"
+purpose = "Multi-level single-linkage: sample low-discrepancy points and start a local search only from points not already near a found basin"
+
+[[decisionRows]]
+task = "StoGO-R"
+context = "Smooth problems with cheap gradients"
+purpose = "Branch-and-bound over boxes with gradient-based local searches inside each, with randomised box sampling"
+
+[[inputs]]
+id = "obj"
+label = "Objective f(x)"
+tooltip = "Julia expression for the objective to minimise, using x[1], x[2], ... StoGO-R needs gradients, which are computed automatically with ForwardDiff. Default: the Rastrigin function (global minimum 0 at the origin, a grid of local minima around it)."
+default = "20 + x[1]^2 + x[2]^2 - 10 * (cos(2pi * x[1]) + cos(2pi * x[2]))"
+
+[[inputs]]
+id = "lb"
+label = "Lower Bounds"
+tooltip = "Julia vector of lower bounds, one per variable; its length sets the dimension."
+default = "[-5.12, -5.12]"
+newRow = true
+
+[[inputs]]
+id = "ub"
+label = "Upper Bounds"
+tooltip = "Julia vector of upper bounds, one per variable."
+default = "[5.12, 5.12]"
+
+[[inputs]]
+id = "budget"
+label = "Budget"
+tooltip = "Maximum number of objective evaluations (maxeval). Reaching it (MAXEVAL_REACHED) is the normal way these methods stop."
+default = "2000"
+
+[[inputs]]
+id = "localopt"
+label = "Local Optimiser"
+tooltip = "Local algorithm MLSL starts from promising sample points. BOBYQA and Nelder-Mead are derivative-free; L-BFGS uses gradients from ForwardDiff."
+kind = "select"
+default = "LN_BOBYQA"
+models = ["mlsl"]
+
+[[inputs.options]]
+value = "LN_BOBYQA"
+label = "BOBYQA"
+
+[[inputs.options]]
+value = "LN_NELDERMEAD"
+label = "Nelder-Mead"
+
+[[inputs.options]]
+value = "LD_LBFGS"
+label = "L-BFGS"
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.ags]
+# A space-filling curve folding the box into one line
+svg = '''
+return '<path d="M10,64 L10,52 L22,52 L22,64 L34,64 L34,52 L46,52 L46,40 L34,40 L34,28 L22,28 L22,40 L10,40 L10,28" fill="none" stroke="currentColor" stroke-width="1.2"/>';
+'''
+
+[miniCharts.mlsl]
+# Scattered samples with local descents from a few of them
+svg = '''
+var s = '', p = [[12, 34], [40, 30], [20, 60], [44, 58], [30, 44], [14, 48], [36, 64]];
+p.forEach(function (q) { s += '<circle cx="' + q[0] + '" cy="' + q[1] + '" r="1.4" fill="currentColor" opacity="0.6"/>'; });
+return s + '<path d="M12,34 Q18,40 24,40" fill="none" stroke="currentColor" stroke-width="1.1"/><path d="M44,58 Q40,52 38,50" fill="none" stroke="currentColor" stroke-width="1.1"/><circle cx="24" cy="40" r="2.2" fill="currentColor"/><circle cx="38" cy="50" r="2.2" fill="currentColor"/>';
+'''
+
+[miniCharts.stogo-r]
+# Boxes of a branch-and-bound tree, one searched by gradient steps
+svg = '''
+return '<rect x="8" y="28" width="38" height="38" fill="none" stroke="currentColor" stroke-width="1"/><line x1="27" y1="28" x2="27" y2="66" stroke="currentColor" stroke-width="0.8"/><line x1="27" y1="47" x2="46" y2="47" stroke="currentColor" stroke-width="0.8"/><line x1="36.5" y1="47" x2="36.5" y2="66" stroke="currentColor" stroke-width="0.6"/>'
+	+ '<path d="M29,64 L32,58 L33,54" fill="none" stroke="currentColor" stroke-width="1.2"/><circle cx="33" cy="54" r="1.8" fill="currentColor"/>';
+'''
+
+[[codeBranches]]
+model = "ags"
+code = '''
+using NLopt, ForwardDiff, LinearAlgebra
+
+f(x) = {{obj}}  # objective
+lb, ub = {{lb}}, {{ub}}  # search box
+n = length(lb)
+budget = {{budget}}  # evaluation budget
+ALG = :GN_AGS  # adaptive global search along a Peano curve
+LOCAL = :LN_BOBYQA  # unused by AGS
+
+# every evaluation is recorded so the search can be inspected afterwards
+function search(; alg=ALG, budget=budget, lb=lb, ub=ub, seed=1)
+    NLopt.srand(seed)  # fixes the random sampling of the stochastic methods
+    pts, vals = Vector{Float64}[], Float64[]
+    opt = Opt(alg, n)
+    opt.lower_bounds, opt.upper_bounds, opt.maxeval = lb, ub, budget
+    if alg == :G_MLSL_LDS
+        loc = Opt(LOCAL, n); loc.xtol_rel = 1e-6
+        opt.local_optimizer = loc
+    end
+    opt.min_objective = function (x, g)
+        v = f(x)
+        if length(g) > 0  # gradient-based algorithms request it
+            g .= ForwardDiff.gradient(f, x)
+        end
+        push!(pts, copy(x)); push!(vals, v)
+        v
+    end
+    fx, x, ret = optimize(opt, (lb .+ ub) ./ 2)
+    (x = x, fx = fx, ret = ret, points = pts, values = vals)
+end
+
+res = search()
+x_best, f_best = res.x, res.fx
+(best_point = x_best, best_value = f_best, evaluations = length(res.values), return_code = res.ret)
+'''
+
+[[codeBranches]]
+model = "mlsl"
+code = '''
+using NLopt, ForwardDiff, LinearAlgebra
+
+f(x) = {{obj}}  # objective
+lb, ub = {{lb}}, {{ub}}  # search box
+n = length(lb)
+budget = {{budget}}  # evaluation budget
+ALG = :G_MLSL_LDS  # multi-level single-linkage on a low-discrepancy sequence
+LOCAL = :{{localopt}}  # local optimiser started from promising samples
+
+# every evaluation is recorded so the search can be inspected afterwards
+function search(; alg=ALG, budget=budget, lb=lb, ub=ub, seed=1)
+    NLopt.srand(seed)  # fixes the random sampling of the stochastic methods
+    pts, vals = Vector{Float64}[], Float64[]
+    opt = Opt(alg, n)
+    opt.lower_bounds, opt.upper_bounds, opt.maxeval = lb, ub, budget
+    if alg == :G_MLSL_LDS
+        loc = Opt(LOCAL, n); loc.xtol_rel = 1e-6
+        opt.local_optimizer = loc
+    end
+    opt.min_objective = function (x, g)
+        v = f(x)
+        if length(g) > 0  # gradient-based algorithms request it
+            g .= ForwardDiff.gradient(f, x)
+        end
+        push!(pts, copy(x)); push!(vals, v)
+        v
+    end
+    fx, x, ret = optimize(opt, (lb .+ ub) ./ 2)
+    (x = x, fx = fx, ret = ret, points = pts, values = vals)
+end
+
+res = search()
+x_best, f_best = res.x, res.fx
+(best_point = x_best, best_value = f_best, evaluations = length(res.values), return_code = res.ret)
+'''
+
+[[codeBranches]]
+model = "stogo-r"
+code = '''
+using NLopt, ForwardDiff, LinearAlgebra
+
+f(x) = {{obj}}  # objective
+lb, ub = {{lb}}, {{ub}}  # search box
+n = length(lb)
+budget = {{budget}}  # evaluation budget
+ALG = :GD_STOGO_RAND  # randomised StoGO: branch-and-bound with gradient local search
+LOCAL = :LN_BOBYQA  # unused by StoGO
+
+# every evaluation is recorded so the search can be inspected afterwards
+function search(; alg=ALG, budget=budget, lb=lb, ub=ub, seed=1)
+    NLopt.srand(seed)  # fixes the random sampling of the stochastic methods
+    pts, vals = Vector{Float64}[], Float64[]
+    opt = Opt(alg, n)
+    opt.lower_bounds, opt.upper_bounds, opt.maxeval = lb, ub, budget
+    if alg == :G_MLSL_LDS
+        loc = Opt(LOCAL, n); loc.xtol_rel = 1e-6
+        opt.local_optimizer = loc
+    end
+    opt.min_objective = function (x, g)
+        v = f(x)
+        if length(g) > 0  # gradient-based algorithms request it
+            g .= ForwardDiff.gradient(f, x)
+        end
+        push!(pts, copy(x)); push!(vals, v)
+        v
+    end
+    fx, x, ret = optimize(opt, (lb .+ ub) ./ 2)
+    (x = x, fx = fx, ret = ret, points = pts, values = vals)
+end
+
+res = search()
+x_best, f_best = res.x, res.fx
+(best_point = x_best, best_value = f_best, evaluations = length(res.values), return_code = res.ret)
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "landscape"
+label = "Objective Landscape"
+desc = "Heatmap of f over the box (first two variables; others held at the best point) with every evaluated point and the optimum"
+code = '''
+using Plots
+
+xs = range(lb[1], ub[1], length=150); ys = range(lb[2], ub[2], length=150)
+heatmap(xs, ys, (a, b) -> f([a; b; x_best[3:end]]), xlabel="x1", ylabel="x2")
+scatter!(getindex.(res.points, 1), getindex.(res.points, 2), markersize=1.5, color=:white, alpha=0.5, label="evaluations")
+scatter!([x_best[1]], [x_best[2]], marker=:star, markersize=10, color=:red, label="best")
+'''
+
+[[actionGroups.actions]]
+id = "convergence"
+label = "Convergence Curve"
+desc = "Best value found against evaluations; the jumps are new basins found"
+code = '''
+using Plots
+
+plot(accumulate(min, res.values), xlabel="evaluations", ylabel="best f", legend=false)
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "return-status"
+label = "Return Status"
+desc = "What the return code means, the evaluations used and when the final best value was first reached"
+code = '''
+meaning = Dict(:SUCCESS => "generic success", :STOPVAL_REACHED => "reached the target value", :FTOL_REACHED => "function tolerance met",
+               :XTOL_REACHED => "step tolerance met", :MAXEVAL_REACHED => "budget used up (normal for global methods)", :MAXTIME_REACHED => "time limit reached")
+first_hit = findfirst(<=(f_best + 1e-9 * max(1, abs(f_best))), accumulate(min, res.values))
+(return_code = res.ret, meaning = get(meaning, res.ret, "failure: check the bounds and the objective"),
+ budget = budget, used = length(res.values), best_first_reached_at = first_hit)
+'''
+
+[[actionGroups.actions]]
+id = "seed-robustness"
+label = "Seed Robustness"
+desc = "Repeat the search with 5 random seeds: AGS is deterministic, while MLSL and StoGO-R vary; a spread of best values means the budget is too small"
+code = '''
+using Statistics
+
+runs = [search(seed=s) for s in 1:5]
+v = getfield.(runs, :fx)
+(best_values = v, mean = mean(v), spread = std(v), max_distance_between_solutions = maximum(norm(r.x - runs[1].x) for r in runs))
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "solution"
+label = "Solution"
+desc = "Best point and value, with the gradient norm there (near 0 at an interior minimum)"
+code = '''
+(best_point = x_best, best_value = f_best, gradient_norm = norm(ForwardDiff.gradient(f, x_best)), return_code = res.ret)
+'''
+
+[[actionGroups.actions]]
+id = "local-polish"
+label = "Local Polish"
+desc = "Refine the global answer with a gradient-based local solver (L-BFGS with ForwardDiff gradients) inside the bounds"
+code = '''
+loc = Opt(:LD_LBFGS, n)
+loc.lower_bounds, loc.upper_bounds, loc.xtol_rel, loc.maxeval = lb, ub, 1e-12, 1000
+loc.min_objective = (x, g) -> (length(g) > 0 && (g .= ForwardDiff.gradient(f, x)); f(x))
+f_loc, x_loc, ret_loc = optimize(loc, copy(x_best))
+(global_point = x_best, global_value = f_best, polished_point = x_loc, polished_value = f_loc, improvement = f_best - f_loc, return_code = ret_loc)
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "compare-methods"
+label = "Compare Methods"
+desc = "AGS, MLSL, StoGO-R, DIRECT-L and CRS2 at the same budget, averaged over 3 seeds"
+code = '''
+using Statistics
+
+algs = ["AGS" => :GN_AGS, "MLSL" => :G_MLSL_LDS, "StoGO-R" => :GD_STOGO_RAND, "DIRECT-L" => :GN_DIRECT_L, "CRS2" => :GN_CRS2_LM]
+map(algs) do (name, a)
+    sec = @elapsed runs = [search(alg=a, seed=s) for s in 1:3]
+    (method = name, mean_best = mean(getfield.(runs, :fx)), worst_best = maximum(getfield.(runs, :fx)), seconds_per_run = sec / 3)
+end
+'''
+
+[[actionGroups.actions]]
+id = "budget-study"
+label = "Budget Study"
+desc = "Best value found as the evaluation budget grows"
+code = '''
+using Plots
+
+budgets = [100, 250, 500, 1000, 2000, 5000]
+best = [search(budget=b).fx for b in budgets]
+display(plot(budgets, best, xscale=:log10, marker=:circle, xlabel="budget", ylabel="best f", legend=false))
+[(budget = b, best_value = v) for (b, v) in zip(budgets, best)]
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "algorithm-properties"
+label = "Algorithm Properties"
+desc = "What the selected algorithm assumes and guarantees"
+code = '''
+{{?model=ags}} (algorithm = "AGS", deterministic = true, needs_gradient = false, local_refinement = false, guarantee = "converges for Lipschitz-continuous f", practical_dimension = "up to about 5")
+{{?model=mlsl}} (algorithm = "MLSL", deterministic = false, needs_gradient = LOCAL == :LD_LBFGS, local_refinement = true, local_optimizer = LOCAL, guarantee = "finds every local minimum with probability 1 as samples grow", practical_dimension = "up to about 20")
+{{?model=stogo-r}} (algorithm = "StoGO-R", deterministic = false, needs_gradient = true, local_refinement = true, guarantee = "branch-and-bound with bounds from gradients", practical_dimension = "up to about 10")
+'''
+
+[[actionGroups.actions]]
+id = "solution-summary"
+label = "Solution Summary"
+desc = "Best point, value, return code, evaluations and the box"
+code = '''
+(best_point = x_best, best_value = f_best, return_code = res.ret, evaluations = length(res.values), budget = budget,
+ lower_bounds = lb, upper_bounds = ub, relative_position = (x_best .- lb) ./ (ub .- lb))
+'''

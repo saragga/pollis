@@ -1,0 +1,602 @@
+# Optimization on Riemannian Manifolds Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/mopt.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Optimization on Riemannian Manifolds"
+viewType = "pollis.mopt"
+defaultModel = "gd"
+
+[[packages]]
+name = "Manopt.jl"
+github = "https://github.com/JuliaManifolds/Manopt.jl"
+
+[[packages]]
+name = "Manifolds.jl"
+github = "https://github.com/JuliaManifolds/Manifolds.jl"
+
+[requires]
+packages = ["Manopt.jl", "Manifolds.jl", "ManifoldDiff.jl", "ForwardDiff.jl", "Plots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Gradient Descent"
+file = "mopt/tutorial-01-gd.ipynb"
+bundled = true
+description = "Retraction-based steepest descent along the Riemannian gradient; simple and robust; suited to smooth objectives with moderate curvature"
+
+[[notebookSections.notebooks]]
+name = "Conjugate Gradient"
+file = "mopt/tutorial-02-cg.ipynb"
+bundled = true
+description = "Polak-Ribiere or Fletcher-Reeves CG with Riemannian vector transport; faster than gradient descent; low per-iteration memory cost"
+
+[[notebookSections.notebooks]]
+name = "Quasi-Newton"
+file = "mopt/tutorial-03-qn.ipynb"
+bundled = true
+description = "Limited-memory BFGS Hessian approximation with vector transport; superlinear convergence; recommended for medium-scale problems"
+
+[[notebookSections.notebooks]]
+name = "Trust Regions"
+file = "mopt/tutorial-04-tr.ipynb"
+bundled = true
+description = "Subproblem solved in the tangent space using tCG; second-order convergence; most robust for ill-conditioned and high-curvature problems"
+
+[[wikis]]
+name = "Factsheet"
+file = "mopt/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "mopt/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "mopt/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "mopt/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "mopt/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "mopt/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Algorithms"
+
+[[wikis]]
+name = "Gradient Descent"
+file = "mopt/gd.md"
+bundled = true
+
+[[wikis]]
+name = "Conjugate Gradient"
+file = "mopt/cg.md"
+bundled = true
+
+[[wikis]]
+name = "Quasi-Newton"
+file = "mopt/qn.md"
+bundled = true
+
+[[wikis]]
+name = "Trust Regions"
+file = "mopt/tr.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "Manopt.jl: Optimization on Manifolds in Julia"
+authors = "Bergmann, Ronny"
+year = 2022
+journal = "Journal of Open Source Software"
+doi = "10.21105/joss.03866"
+openAccess = true
+
+[[references]]
+title = "Manifolds.jl: An Extensible Julia Framework for Data Analysis on Manifolds"
+authors = "Axen, Seth D.; Baran, Mateusz; Bergmann, Ronny; Rzecki, Krzysztof"
+year = 2023
+journal = "ACM Transactions on Mathematical Software"
+doi = "10.1145/3618296"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Optimization Algorithms on Matrix Manifolds"
+authors = "Absil, Pierre-Antoine; Mahony, Robert; Sepulchre, Rodolphe"
+year = 2008
+journal = "Princeton University Press"
+openAccess = false
+
+[[references]]
+title = "An Introduction to Optimization on Smooth Manifolds"
+authors = "Boumal, Nicolas"
+year = 2023
+journal = "Cambridge University Press"
+url = "https://www.nicolasboumal.net/book"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Trust-Region Methods on Riemannian Manifolds"
+authors = "Absil, Pierre-Antoine; Baker, Christopher G.; Gallivan, Kyle A."
+year = 2007
+journal = "Foundations of Computational Mathematics"
+doi = "10.1007/s10208-005-0179-9"
+openAccess = false
+
+[[references]]
+title = "Riemannian Conjugate Gradient Methods: General Framework and Specific Algorithms with Convergence Analyses"
+authors = "Sato, Hiroyuki"
+year = 2022
+journal = "SIAM Journal on Optimization"
+doi = "10.1137/20M1324713"
+openAccess = false
+
+[[references]]
+title = "A Riemannian BFGS Method without Differentiated Retraction for Nonconvex Optimization Problems"
+authors = "Huang, Wen; Absil, Pierre-Antoine; Gallivan, Kyle A."
+year = 2018
+journal = "SIAM Journal on Optimization"
+doi = "10.1137/17M1127582"
+openAccess = false
+
+[[models]]
+id = "gd"
+label = "Gradient Descent"
+
+[[models]]
+id = "cg"
+label = "Conjugate Gradient"
+
+[[models]]
+id = "qn"
+label = "Quasi-Newton"
+
+[[models]]
+id = "tr"
+label = "Trust Regions"
+
+[[bullets]]
+text = "Gradient Descent"
+detail = "retraction-based steepest descent along the Riemannian gradient"
+
+[[bullets]]
+text = "Conjugate Gradient"
+detail = "manifold-adapted CG with vector transport of search directions"
+
+[[bullets]]
+text = "Quasi-Newton"
+detail = "L-BFGS Hessian approximation with vector transport; superlinear convergence"
+
+[[bullets]]
+text = "Trust Regions"
+detail = "subproblem solved in tangent space via tCG; second-order convergence rate"
+
+[[decisionRows]]
+task = "Gradient Descent"
+context = "First attempt on any smooth problem on a manifold; cheap iterations"
+purpose = "Steps along the negative Riemannian gradient and retracts back to the manifold, with an Armijo line search"
+
+[[decisionRows]]
+task = "Conjugate Gradient"
+context = "Large problems where storing curvature information is too costly"
+purpose = "Combines the new gradient with the previous direction, moved by vector transport, for faster convergence than gradient descent at almost the same cost"
+
+[[decisionRows]]
+task = "Quasi-Newton"
+context = "Moderate dimension, smooth objectives; usually the fastest first-order choice"
+purpose = "Riemannian L-BFGS: builds curvature information from past gradients transported to the current tangent space"
+
+[[decisionRows]]
+task = "Trust Regions"
+context = "When high accuracy or robustness near saddle points matters"
+purpose = "Solves a quadratic model within a trust region by truncated conjugate gradient, with a finite-difference Hessian approximation by default; superlinear local convergence"
+
+[[inputs]]
+id = "n"
+label = "Ambient Dimension (n)"
+tooltip = "Size of the data matrix A used by the default objective, and of the default manifold's embedding."
+default = "5"
+
+[[inputs]]
+id = "manifold"
+label = "Manifold"
+tooltip = "A Manifolds.jl manifold, for example Sphere(n - 1), Stiefel(n, 2), Grassmann(n, 2) or SymmetricPositiveDefinite(n)."
+default = "Sphere(n - 1)"
+
+[[inputs]]
+id = "f"
+label = "Objective f(M, p)"
+tooltip = "Julia expression for the cost at a point p of M; A is a random symmetric n x n matrix. Default: the Rayleigh quotient, whose minimum on the sphere is the smallest eigenvalue of A."
+default = "dot(p, A * p)"
+newRow = true
+
+[[inputs]]
+id = "p0"
+label = "Initial Point"
+tooltip = "Starting point, which must lie on the manifold (for example a unit vector for the sphere)."
+default = "normalize(ones(n))"
+
+[[inputs]]
+id = "maxiters"
+label = "Max Iterations"
+tooltip = "Maximum number of iterations before the solver stops."
+default = "200"
+newRow = true
+
+[[inputs]]
+id = "tol"
+label = "Gradient Tolerance"
+tooltip = "Stop when the norm of the Riemannian gradient falls below this value."
+default = "1e-8"
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.gd]
+# Steps on a sphere following the gradient
+svg = '''
+return '<circle cx="27" cy="52" r="18" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.6"/><ellipse cx="27" cy="52" rx="18" ry="6" fill="none" stroke="currentColor" stroke-width="0.5" opacity="0.4"/>'
+	+ '<polyline points="14,40 20,36 26,35 31,36 34,38" fill="none" stroke="currentColor" stroke-width="1"/><circle cx="34" cy="38" r="1.8" fill="currentColor"/>';
+'''
+
+[miniCharts.cg]
+# Two conjugate steps reaching the minimum
+svg = '''
+return '<circle cx="27" cy="52" r="18" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.6"/>'
+	+ '<polyline points="12,46 26,36 36,44" fill="none" stroke="currentColor" stroke-width="1"/><circle cx="36" cy="44" r="1.8" fill="currentColor"/>';
+'''
+
+[miniCharts.qn]
+# A curvature ellipse guiding one step
+svg = '''
+return '<circle cx="27" cy="52" r="18" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.6"/>'
+	+ '<ellipse cx="30" cy="46" rx="9" ry="4" transform="rotate(-20 30 46)" fill="none" stroke="currentColor" stroke-width="0.7" stroke-dasharray="2,2"/>'
+	+ '<line x1="16" y1="54" x2="30" y2="46" stroke="currentColor" stroke-width="1"/><circle cx="30" cy="46" r="1.8" fill="currentColor"/>';
+'''
+
+[miniCharts.tr]
+# A trust region on the tangent plane
+svg = '''
+return '<circle cx="27" cy="56" r="16" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.6"/>'
+	+ '<line x1="8" y1="40" x2="46" y2="40" stroke="currentColor" stroke-width="0.8"/><ellipse cx="27" cy="40" rx="8" ry="2.5" fill="none" stroke="currentColor" stroke-width="0.8" stroke-dasharray="2,2"/>'
+	+ '<circle cx="27" cy="40" r="1.8" fill="currentColor"/>';
+'''
+
+[[codeBranches]]
+model = "gd"
+code = '''
+using Manopt, Manifolds, ManifoldDiff, ForwardDiff, LinearAlgebra, Random
+
+n = {{n}}  # ambient dimension
+Random.seed!(1)
+B = randn(n, n); A = (B + transpose(B)) / 2  # random symmetric matrix used by the default objective
+M = {{manifold}}  # the manifold
+f(M, p) = {{f}}  # the cost
+egrad(p) = ForwardDiff.gradient(q -> f(M, q), p)  # Euclidean gradient by automatic differentiation
+grad_f(M, p) = ManifoldDiff.riemannian_gradient(M, p, egrad(p))  # converted to the Riemannian gradient
+p0 = {{p0}}  # starting point on M
+maxiters = {{maxiters}}  # iteration limit
+tol = {{tol}}  # gradient-norm tolerance
+
+function solve(p0=p0; maxiters=maxiters, tol=tol, kw...)
+    st = gradient_descent(M, f, grad_f, p0;  # Riemannian gradient descent with Armijo line search
+        stopping_criterion=StopAfterIteration(maxiters) | StopWhenGradientNormLess(tol),
+        record=[:Cost, :GradientNorm, :Iterate], return_state=true, kw...)
+    rec = get_record(st)
+    (p = get_solver_result(st), costs = [r[1] for r in rec], gnorms = [r[2] for r in rec],
+     iterates = [r[3] for r in rec], reason = get_reason(st))
+end
+
+res = solve()
+p_opt = res.p
+(solution = p_opt, cost = f(M, p_opt), gradient_norm = norm(M, p_opt, grad_f(M, p_opt)), iterations = length(res.costs), on_manifold = is_point(M, p_opt))
+'''
+
+[[codeBranches]]
+model = "cg"
+code = '''
+using Manopt, Manifolds, ManifoldDiff, ForwardDiff, LinearAlgebra, Random
+
+n = {{n}}  # ambient dimension
+Random.seed!(1)
+B = randn(n, n); A = (B + transpose(B)) / 2  # random symmetric matrix used by the default objective
+M = {{manifold}}  # the manifold
+f(M, p) = {{f}}  # the cost
+egrad(p) = ForwardDiff.gradient(q -> f(M, q), p)  # Euclidean gradient by automatic differentiation
+grad_f(M, p) = ManifoldDiff.riemannian_gradient(M, p, egrad(p))  # converted to the Riemannian gradient
+p0 = {{p0}}  # starting point on M
+maxiters = {{maxiters}}  # iteration limit
+tol = {{tol}}  # gradient-norm tolerance
+
+function solve(p0=p0; maxiters=maxiters, tol=tol, kw...)
+    st = conjugate_gradient_descent(M, f, grad_f, p0;  # Riemannian conjugate gradient
+        stopping_criterion=StopAfterIteration(maxiters) | StopWhenGradientNormLess(tol),
+        record=[:Cost, :GradientNorm, :Iterate], return_state=true, kw...)
+    rec = get_record(st)
+    (p = get_solver_result(st), costs = [r[1] for r in rec], gnorms = [r[2] for r in rec],
+     iterates = [r[3] for r in rec], reason = get_reason(st))
+end
+
+res = solve()
+p_opt = res.p
+(solution = p_opt, cost = f(M, p_opt), gradient_norm = norm(M, p_opt, grad_f(M, p_opt)), iterations = length(res.costs), on_manifold = is_point(M, p_opt))
+'''
+
+[[codeBranches]]
+model = "qn"
+code = '''
+using Manopt, Manifolds, ManifoldDiff, ForwardDiff, LinearAlgebra, Random
+
+n = {{n}}  # ambient dimension
+Random.seed!(1)
+B = randn(n, n); A = (B + transpose(B)) / 2  # random symmetric matrix used by the default objective
+M = {{manifold}}  # the manifold
+f(M, p) = {{f}}  # the cost
+egrad(p) = ForwardDiff.gradient(q -> f(M, q), p)  # Euclidean gradient by automatic differentiation
+grad_f(M, p) = ManifoldDiff.riemannian_gradient(M, p, egrad(p))  # converted to the Riemannian gradient
+p0 = {{p0}}  # starting point on M
+maxiters = {{maxiters}}  # iteration limit
+tol = {{tol}}  # gradient-norm tolerance
+
+function solve(p0=p0; maxiters=maxiters, tol=tol, kw...)
+    st = quasi_Newton(M, f, grad_f, p0;  # Riemannian L-BFGS
+        stopping_criterion=StopAfterIteration(maxiters) | StopWhenGradientNormLess(tol),
+        record=[:Cost, :GradientNorm, :Iterate], return_state=true, kw...)
+    rec = get_record(st)
+    (p = get_solver_result(st), costs = [r[1] for r in rec], gnorms = [r[2] for r in rec],
+     iterates = [r[3] for r in rec], reason = get_reason(st))
+end
+
+res = solve()
+p_opt = res.p
+(solution = p_opt, cost = f(M, p_opt), gradient_norm = norm(M, p_opt, grad_f(M, p_opt)), iterations = length(res.costs), on_manifold = is_point(M, p_opt))
+'''
+
+[[codeBranches]]
+model = "tr"
+code = '''
+using Manopt, Manifolds, ManifoldDiff, ForwardDiff, LinearAlgebra, Random
+
+n = {{n}}  # ambient dimension
+Random.seed!(1)
+B = randn(n, n); A = (B + transpose(B)) / 2  # random symmetric matrix used by the default objective
+M = {{manifold}}  # the manifold
+f(M, p) = {{f}}  # the cost
+egrad(p) = ForwardDiff.gradient(q -> f(M, q), p)  # Euclidean gradient by automatic differentiation
+grad_f(M, p) = ManifoldDiff.riemannian_gradient(M, p, egrad(p))  # converted to the Riemannian gradient
+p0 = {{p0}}  # starting point on M
+maxiters = {{maxiters}}  # iteration limit
+tol = {{tol}}  # gradient-norm tolerance
+
+function solve(p0=p0; maxiters=maxiters, tol=tol, kw...)
+    st = trust_regions(M, f, grad_f, p0;  # Riemannian trust regions, finite-difference Hessian approximation
+        stopping_criterion=StopAfterIteration(maxiters) | StopWhenGradientNormLess(tol),
+        record=[:Cost, :GradientNorm, :Iterate], return_state=true, kw...)
+    rec = get_record(st)
+    (p = get_solver_result(st), costs = [r[1] for r in rec], gnorms = [r[2] for r in rec],
+     iterates = [r[3] for r in rec], reason = get_reason(st))
+end
+
+res = solve()
+p_opt = res.p
+(solution = p_opt, cost = f(M, p_opt), gradient_norm = norm(M, p_opt, grad_f(M, p_opt)), iterations = length(res.costs), on_manifold = is_point(M, p_opt))
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "convergence-trace"
+label = "Convergence Trace"
+desc = "Cost at each iteration"
+code = '''
+using Plots
+
+plot(res.costs, xlabel="iteration", ylabel="f(p)", legend=false, marker=:circle, markersize=2)
+'''
+
+[[actionGroups.actions]]
+id = "gradient-norm"
+label = "Gradient Norm"
+desc = "Norm of the Riemannian gradient per iteration (log scale)"
+code = '''
+using Plots
+
+plot(max.(res.gnorms, 1e-16), yscale=:log10, xlabel="iteration", ylabel="norm of grad f", legend=false)
+hline!([tol], linestyle=:dash)
+'''
+
+[[actionGroups.actions]]
+id = "iterate-path"
+label = "Iterate Path"
+desc = "Geodesic distance from each iterate to the solution (log scale): linear, superlinear or sublinear convergence"
+code = '''
+using Plots
+
+d = [distance(M, q, p_opt) for q in res.iterates]
+plot(max.(d, 1e-16), yscale=:log10, xlabel="iteration", ylabel="distance to solution", legend=false)
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "gradient-check"
+label = "Gradient Check"
+desc = "Compare the Riemannian gradient with finite differences along random geodesics at the starting point"
+code = '''
+Random.seed!(2)
+map(1:5) do _
+    X = rand(M; vector_at=p0); X = X / norm(M, p0, X)  # random unit tangent vector
+    t = 1e-6
+    fd = (f(M, exp(M, p0, t * X)) - f(M, exp(M, p0, -t * X))) / (2t)
+    an = inner(M, p0, grad_f(M, p0), X)
+    (finite_difference = fd, gradient = an, relative_error = abs(fd - an) / max(abs(an), 1e-12))
+end
+'''
+
+[[actionGroups.actions]]
+id = "debug-output"
+label = "Debug Output"
+desc = "Print iteration, cost and gradient norm every 10 iterations while solving"
+code = '''
+solve(debug=[:Iteration, " ", :Cost, " ", :GradientNorm, "\n", 10]);
+'''
+
+[[actionGroups.actions]]
+id = "stopping-criterion"
+label = "Stopping Criterion"
+desc = "Which criterion stopped the solver and how close it came to the other"
+code = '''
+(reason = res.reason, iterations = length(res.costs), max_iterations = maxiters,
+ final_gradient_norm = res.gnorms[end], tolerance = tol, converged = res.gnorms[end] < tol)
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "run-optimisation"
+label = "Solution"
+desc = "The optimal point, its cost and checks that it lies on the manifold"
+code = '''
+(solution = round.(p_opt, sigdigits=6), cost = f(M, p_opt), on_manifold = is_point(M, p_opt),
+ gradient_norm = norm(M, p_opt, grad_f(M, p_opt)), start_cost = f(M, p0))
+'''
+
+[[actionGroups.actions]]
+id = "multiple-restarts"
+label = "Multiple Restarts"
+desc = "Solve from 10 random points on the manifold to look for other local minima"
+code = '''
+Random.seed!(3)
+runs = [solve(rand(M)) for _ in 1:10]
+c = [f(M, r.p) for r in runs]
+(costs = round.(c, sigdigits=8), best = minimum(c), worst = maximum(c), share_at_best = count(c .<= minimum(c) + 1e-8) / length(c),
+ selected_run_cost = f(M, p_opt))
+'''
+
+[[actionGroups.actions]]
+id = "warm-start"
+label = "Warm Start"
+desc = "Restart from the solution with a hundred times tighter tolerance"
+code = '''
+r2 = solve(p_opt; tol=tol / 100)
+(cost_before = f(M, p_opt), cost_after = f(M, r2.p), gradient_before = res.gnorms[end], gradient_after = r2.gnorms[end],
+ moved = distance(M, p_opt, r2.p), extra_iterations = length(r2.costs))
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "algorithm-comparison"
+label = "Algorithm Comparison"
+desc = "All four Manopt.jl solvers from the same start with the same stopping rule"
+code = '''
+solvers = ["gradient descent" => gradient_descent, "conjugate gradient" => conjugate_gradient_descent,
+           "quasi-Newton" => quasi_Newton, "trust regions" => trust_regions]
+map(solvers) do (name, s)
+    sec = @elapsed st = s(M, f, grad_f, p0; stopping_criterion=StopAfterIteration(maxiters) | StopWhenGradientNormLess(tol),
+                          record=[:Cost], return_state=true)
+    p = get_solver_result(st)
+    (solver = name, cost = f(M, p), gradient_norm = norm(M, p, grad_f(M, p)), iterations = length(get_record(st)), seconds = sec)
+end
+'''
+
+[[actionGroups.actions]]
+id = "budget-study"
+label = "Iteration Budget"
+desc = "Cost and gradient norm reached with increasing iteration limits"
+code = '''
+map(unique([1, 5, 10, 20, 50, maxiters])) do k
+    r = solve(maxiters=k, tol=0.0)
+    (max_iterations = k, cost = f(M, r.p), gradient_norm = r.gnorms[end])
+end
+'''
+
+[[actionGroups.actions]]
+id = "tolerance-sensitivity"
+label = "Tolerance Sensitivity"
+desc = "Iterations and time needed for gradient tolerances from 1e-2 to 1e-10"
+code = '''
+map([1e-2, 1e-4, 1e-6, 1e-8, 1e-10]) do t
+    sec = @elapsed r = solve(tol=t, maxiters=10maxiters)
+    (tolerance = t, iterations = length(r.costs), cost = f(M, r.p), seconds = sec)
+end
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "solution-summary"
+label = "Solution Summary"
+desc = "Optimal point, cost, gradient norm and manifold membership; for the default Rayleigh quotient on the sphere, the minimum should equal the smallest eigenvalue of A"
+code = '''
+(manifold = string(M), solution = round.(p_opt, sigdigits=6), cost = f(M, p_opt), gradient_norm = norm(M, p_opt, grad_f(M, p_opt)),
+ on_manifold = is_point(M, p_opt), iterations = length(res.costs), stopped_because = res.reason,
+ smallest_eigenvalue_of_A = eigmin(A))
+'''
+
+[[actionGroups.actions]]
+id = "geodesic-distance"
+label = "Geodesic Distance"
+desc = "Distance travelled along the manifold from the start, compared with the length of the iterate path"
+code = '''
+path = [p0; res.iterates]
+(start_to_solution = distance(M, p0, p_opt), path_length = sum(distance(M, path[i], path[i+1]) for i in 1:length(path)-1),
+ euclidean_chord = norm(p_opt - p0))
+'''
+
+[[actionGroups.actions]]
+id = "algorithm-guide"
+label = "Algorithm Guide"
+desc = "Rules of thumb for choosing between gradient descent, conjugate gradient, quasi-Newton and trust regions"
+code = '''
+[(solver = "gradient descent", per_iteration = "one gradient, a few costs (line search)", convergence = "linear", use_when = "baseline; cheap or very large problems"),
+ (solver = "conjugate gradient", per_iteration = "as gradient descent plus a vector transport", convergence = "faster linear", use_when = "large problems without memory for curvature"),
+ (solver = "quasi-Newton", per_iteration = "gradient plus limited-memory updates", convergence = "superlinear in practice", use_when = "moderate dimension; usually the best default"),
+ (solver = "trust regions", per_iteration = "an inner truncated-CG solve with Hessian-vector products", convergence = "superlinear to quadratic", use_when = "high accuracy, saddle points, or an exact Hessian is available")]
+'''

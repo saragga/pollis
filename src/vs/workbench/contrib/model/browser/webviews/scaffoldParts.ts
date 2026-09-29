@@ -56,13 +56,15 @@ function buildTogglesHtml(models: IModelToggle[], defaultModel: string): string 
 }
 
 function buildMiniChartsJs(data: IScaffoldPanelData, models: IModelToggle[]): string {
+	// model ids may contain '-', which is not valid in a JS function name
+	const fnName = (id: string) => `mini_${id.replace(/[^A-Za-z0-9_]/g, '_')}`;
 	const charts = data.miniCharts ?? [];
 	if (!charts.length) { return 'var MINI_CHARTS = []; var MINI_LABELS = [];'; }
 	const fns = charts.map(c => {
 		const body = c.svg.trim().split('\n').map(l => '\t\t\t\t\t' + l.trim()).join('\n');
-		return `\t\t\t\tfunction mini_${c.model}() {\n${body}\n\t\t\t\t}`;
+		return `\t\t\t\tfunction ${fnName(c.model)}() {\n${body}\n\t\t\t\t}`;
 	}).join('\n');
-	const miniArr = models.map(m => `mini_${m.id}`).join(', ');
+	const miniArr = models.map(m => fnName(m.id)).join(', ');
 	const labelArr = models.map(m => `'${jsEscape(m.label)}'`).join(', ');
 	return `${fns}\n\t\t\t\tvar MINI_CHARTS = [${miniArr}];\n\t\t\t\tvar MINI_LABELS = [${labelArr}];`;
 }

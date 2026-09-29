@@ -1,0 +1,425 @@
+# First-Order Methods Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/fo.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "First-Order Methods"
+viewType = "pollis.fo"
+defaultModel = "gd"
+
+[[packages]]
+name = "Optim.jl"
+github = "https://github.com/JuliaNLSolvers/Optim.jl"
+
+[requires]
+packages = ["Optim.jl", "LineSearches.jl", "Plots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Gradient Descent"
+file = "fo/tutorial-01-gradient-descent.ipynb"
+bundled = true
+description = "Steepest descent with Wolfe line search using GradientDescent() in Optim.jl"
+
+[[notebookSections.notebooks]]
+name = "Conjugate Gradient"
+file = "fo/tutorial-02-conjugate-gradient.ipynb"
+bundled = true
+description = "Hager-Zhang conjugate gradient with guaranteed descent via ConjugateGradient()"
+
+[[notebookSections.notebooks]]
+name = "Line Search Options"
+file = "fo/tutorial-03-linesearch.ipynb"
+bundled = true
+description = "Customising line search: step bounds, Wolfe conditions, and backtracking strategies"
+
+[[notebookSections.notebooks]]
+name = "Benchmarking First-Order Methods"
+file = "fo/tutorial-04-benchmark.ipynb"
+bundled = true
+description = "Compare GradientDescent and ConjugateGradient on standard test functions"
+
+[[wikis]]
+name = "Factsheet"
+file = "fo/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "fo/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "fo/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "fo/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "fo/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "fo/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Algorithm Details"
+
+[[wikis]]
+name = "Gradient Descent"
+file = "fo/gradient-descent.md"
+bundled = true
+
+[[wikis]]
+name = "Conjugate Gradient"
+file = "fo/conjugate-gradient.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "Optim: A mathematical optimization package for Julia"
+authors = "Mogensen, Patrick Kofod; Riseth, Asbjorn Nilsen"
+year = 2018
+journal = "Journal of Open Source Software"
+doi = "10.21105/joss.00615"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Numerical Optimization"
+authors = "Nocedal, Jorge; Wright, Stephen J."
+year = 2006
+journal = "Springer (2nd ed.)"
+doi = "10.1007/978-0-387-40065-5"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Function Minimization by Conjugate Gradients"
+authors = "Fletcher, Roger; Reeves, Colin M."
+year = 1964
+journal = "Computer Journal"
+doi = "10.1093/comjnl/7.2.149"
+openAccess = false
+
+[[references]]
+title = "Note sur la convergence de methodes de directions conjuguees"
+authors = "Polak, Elijah; Ribiere, Gerard"
+year = 1969
+journal = "Revue Francaise Informatique Recherche Operationnelle"
+openAccess = false
+
+[[references]]
+title = "A New Conjugate Gradient Method with Guaranteed Descent and an Efficient Line Search"
+authors = "Hager, William W.; Zhang, Hongchao"
+year = 2005
+journal = "SIAM Journal on Optimization"
+doi = "10.1137/030601880"
+openAccess = false
+
+[[models]]
+id = "gd"
+label = "Gradient Descent"
+
+[[models]]
+id = "cg"
+label = "Conjugate Gradient"
+
+[[bullets]]
+text = "Gradient Descent"
+detail = "steepest descent with Wolfe line search; simple but slow near flat regions"
+
+[[bullets]]
+text = "Conjugate Gradient"
+detail = "Hager-Zhang CG with guaranteed descent; faster convergence than GD on ill-conditioned problems"
+
+[[decisionRows]]
+task = "Gradient Descent"
+context = "Well-conditioned smooth problems, or a simple baseline"
+purpose = "Step along the negative gradient with a line search; linear convergence that slows as the conditioning worsens"
+
+[[decisionRows]]
+task = "Conjugate Gradient"
+context = "Large smooth problems where storing a Hessian approximation is too costly"
+purpose = "Combine the gradient with the previous direction (Hager-Zhang) so successive steps do not undo each other"
+
+[[inputs]]
+id = "f"
+label = "Objective f(x)"
+tooltip = "Julia expression for the scalar objective to minimise; it must be differentiable. Use x[1], x[2], ... for the components."
+default = "(1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2"
+
+[[inputs]]
+id = "x0"
+label = "Initial Guess x0"
+tooltip = "Starting point as a Julia vector. On non-convex problems the method finds the local minimum nearest in the descent sense."
+default = "[-1.2, 1.0]"
+
+[[inputs]]
+id = "autodiff"
+label = "Derivatives"
+tooltip = ":forward: exact gradients by forward-mode automatic differentiation (ForwardDiff.jl), recommended. :finite: finite-difference gradients (FiniteDiff.jl), slower and less accurate."
+kind = "select"
+default = ":forward"
+newRow = true
+
+[[inputs.options]]
+value = ":forward"
+label = ":forward (ForwardDiff)"
+
+[[inputs.options]]
+value = ":finite"
+label = ":finite (FiniteDiff)"
+
+[[inputs]]
+id = "linesearch"
+label = "Line Search"
+tooltip = "How the step length along each direction is chosen (LineSearches.jl). HagerZhang is the Optim default; BackTracking is cheap; MoreThuente and StrongWolfe enforce the strong Wolfe conditions."
+kind = "select"
+default = "HagerZhang"
+
+[[inputs.options]]
+value = "HagerZhang"
+label = "HagerZhang"
+
+[[inputs.options]]
+value = "BackTracking"
+label = "BackTracking"
+
+[[inputs.options]]
+value = "MoreThuente"
+label = "MoreThuente"
+
+[[inputs.options]]
+value = "StrongWolfe"
+label = "StrongWolfe"
+
+[[inputs]]
+id = "maxiter"
+label = "Max Iterations"
+tooltip = "Iteration limit. Gradient descent can need thousands of iterations on ill-conditioned problems such as Rosenbrock."
+default = "10000"
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.gd]
+# Zig-zag steepest-descent path across elongated contours
+svg = '''
+var s = '';
+[20, 13, 6].forEach(function (r) { s += '<ellipse cx="30" cy="46" rx="' + r + '" ry="' + (r * 0.45) + '" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.6"/>'; });
+return s + '<path d="M10,56 L16,38 L21,52 L25,41 L28,49 L30,46" fill="none" stroke="currentColor" stroke-width="1.2"/><circle cx="10" cy="56" r="2" fill="currentColor"/>';
+'''
+
+[miniCharts.cg]
+# Two conjugate steps reaching the centre of the contours
+svg = '''
+var s = '';
+[20, 13, 6].forEach(function (r) { s += '<ellipse cx="30" cy="46" rx="' + r + '" ry="' + (r * 0.45) + '" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.6"/>'; });
+return s + '<path d="M10,56 L16,38 L30,46" fill="none" stroke="currentColor" stroke-width="1.2"/><circle cx="10" cy="56" r="2" fill="currentColor"/><circle cx="30" cy="46" r="2.4" fill="currentColor"/>';
+'''
+
+[[codeBranches]]
+model = "gd"
+code = '''
+using Optim, LineSearches, ForwardDiff, LinearAlgebra
+
+f(x) = {{f}}
+x0 = {{x0}}  # initial guess
+n  = length(x0)
+ls = LineSearches.{{linesearch}}()  # step-length rule
+opts = Optim.Options(iterations={{maxiter}}, store_trace=true, extended_trace=true)  # keep the iterates for the plots
+method = GradientDescent(linesearch=ls)
+
+result = optimize(f, x0, method, opts; autodiff={{autodiff}})
+x_opt = Optim.minimizer(result)
+path  = Optim.x_trace(result)
+(minimizer = x_opt, minimum = Optim.minimum(result), iterations = Optim.iterations(result), converged = Optim.converged(result))
+'''
+
+[[codeBranches]]
+model = "cg"
+code = '''
+using Optim, LineSearches, ForwardDiff, LinearAlgebra
+
+f(x) = {{f}}
+x0 = {{x0}}  # initial guess
+n  = length(x0)
+ls = LineSearches.{{linesearch}}()  # step-length rule
+opts = Optim.Options(iterations={{maxiter}}, store_trace=true, extended_trace=true)  # keep the iterates for the plots
+method = ConjugateGradient(linesearch=ls)  # Hager-Zhang direction update
+
+result = optimize(f, x0, method, opts; autodiff={{autodiff}})
+x_opt = Optim.minimizer(result)
+path  = Optim.x_trace(result)
+(minimizer = x_opt, minimum = Optim.minimum(result), iterations = Optim.iterations(result), converged = Optim.converged(result))
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "convergence-trace"
+label = "Convergence Trace"
+desc = "f(x_k) - f* and the gradient norm along the iterates (log scale): a straight line is linear convergence"
+code = '''
+using Plots
+
+fs = Optim.f_trace(result)
+gs = Optim.g_norm_trace(result)
+plot(0:length(fs)-1, fs .- Optim.minimum(result) .+ eps(), yscale=:log10, label="f(x) - f*", xlabel="iteration")
+plot!(0:length(gs)-1, gs .+ eps(), label="gradient norm")
+'''
+
+[[actionGroups.actions]]
+id = "contour-path"
+label = "Contour + Path"
+desc = "The iterates on the contours of f (2D problems; other variables held at the optimum)"
+code = '''
+using Plots
+
+P = reduce(hcat, path)
+pad = max(0.5, 0.25 * maximum(abs, P[1:2, :]))
+xs = range(minimum(P[1, :]) - pad, maximum(P[1, :]) + pad, length=120)
+ys = range(minimum(P[2, :]) - pad, maximum(P[2, :]) + pad, length=120)
+contour(xs, ys, (a, b) -> log1p(f([a; b; x_opt[3:end]]) - Optim.minimum(result) + 1e-12), fill=true, colorbar=false, xlabel="x1", ylabel="x2")
+plot!(P[1, :], P[2, :], color=:white, label="iterates")
+scatter!([x_opt[1]], [x_opt[2]], marker=:star, markersize=10, color=:red, label="minimiser")
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "convergence-check"
+label = "Convergence Check"
+desc = "Convergence flag, iterations, function and gradient calls, final gradient norm, and the observed linear rate of f(x_k) - f*"
+code = '''
+fs = Optim.f_trace(result) .- Optim.minimum(result)
+fs = fs[fs .> 1e-14]
+rate = length(fs) >= 20 ? exp((log(fs[end]) - log(fs[end-19])) / 19) : missing  # per-iteration contraction; near 1 = slow
+(converged = Optim.converged(result), iterations = Optim.iterations(result), f_calls = Optim.f_calls(result), g_calls = Optim.g_calls(result),
+ gradient_norm = norm(ForwardDiff.gradient(f, x_opt)), linear_rate = rate)
+'''
+
+[[actionGroups.actions]]
+id = "gradient-check"
+label = "Gradient Check"
+desc = "Finite-difference against automatic-differentiation gradients at x0 and at the solution"
+code = '''
+using FiniteDiff
+
+map(["x0" => x0, "x_opt" => x_opt]) do (name, p)
+    g_ad = ForwardDiff.gradient(f, p)
+    g_fd = FiniteDiff.finite_difference_gradient(f, p)
+    (point = name, autodiff = g_ad, finite_diff = g_fd, max_difference = maximum(abs, g_ad - g_fd))
+end
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "evaluate-new"
+label = "Evaluate at New Point"
+desc = "f and the gradient at a new point, compared with the minimum"
+code = '''
+x_new = x_opt .+ 0.1  # replace with the point to evaluate
+(f_new = f(x_new), f_min = Optim.minimum(result), increase = f(x_new) - Optim.minimum(result), gradient = ForwardDiff.gradient(f, x_new))
+'''
+
+[[actionGroups.actions]]
+id = "iteration-bound"
+label = "Iteration Estimate"
+desc = "Iterations predicted by the textbook rates from the Hessian condition number at the solution: GD ((k-1)/(k+1))^2 per step, CG about (sqrt(k)-1)/(sqrt(k)+1)"
+code = '''
+ev = eigvals(Symmetric(ForwardDiff.hessian(f, x_opt)))
+k = maximum(ev) / minimum(ev)  # condition number
+tol = 1e-8  # target reduction of f(x) - f*
+rate_gd = ((k - 1) / (k + 1))^2
+rate_cg = ((sqrt(k) - 1) / (sqrt(k) + 1))^2
+(condition_number = k, gd_iterations = ceil(Int, log(tol) / log(rate_gd)), cg_iterations = ceil(Int, log(tol) / log(rate_cg)), observed = Optim.iterations(result))
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "compare-fo-methods"
+label = "Compare Methods"
+desc = "Gradient descent, momentum, accelerated (Nesterov), conjugate gradient and BFGS (quasi-Newton reference) from the same start"
+code = '''
+methods = ["GradientDescent" => GradientDescent(), "Momentum" => MomentumGradientDescent(),
+           "Accelerated" => AcceleratedGradientDescent(), "ConjugateGradient" => ConjugateGradient(), "BFGS" => BFGS()]
+map(methods) do (name, m)
+    t = @elapsed r = optimize(f, x0, m, Optim.Options(iterations={{maxiter}}); autodiff=:forward)
+    (method = name, minimum = Optim.minimum(r), iterations = Optim.iterations(r), g_calls = Optim.g_calls(r), converged = Optim.converged(r), seconds = t)
+end
+'''
+
+[[actionGroups.actions]]
+id = "compare-linesearch"
+label = "Compare Line Searches"
+desc = "The same method with each line search: iterations against function and gradient calls"
+code = '''
+{{?model=gd}} make(l) = GradientDescent(linesearch=l)
+{{?model=cg}} make(l) = ConjugateGradient(linesearch=l)
+map([HagerZhang(), BackTracking(), MoreThuente(), StrongWolfe()]) do l
+    r = optimize(f, x0, make(l), Optim.Options(iterations={{maxiter}}); autodiff=:forward)
+    (linesearch = nameof(typeof(l)), minimum = Optim.minimum(r), iterations = Optim.iterations(r), f_calls = Optim.f_calls(r), g_calls = Optim.g_calls(r), converged = Optim.converged(r))
+end
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "solution-summary"
+label = "Solution Summary"
+desc = "Minimiser, minimum, iterations and the improvement over the start"
+code = '''
+(minimizer = x_opt, minimum = Optim.minimum(result), f_start = f(x0), improvement = f(x0) - Optim.minimum(result),
+ iterations = Optim.iterations(result), converged = Optim.converged(result))
+'''
+
+[[actionGroups.actions]]
+id = "conditioning"
+label = "Conditioning"
+desc = "Hessian eigenvalues at the solution: a large ratio of largest to smallest curvature is what makes first-order methods zig-zag"
+code = '''
+F = eigen(Symmetric(ForwardDiff.hessian(f, x_opt)))
+(curvatures = F.values, directions = F.vectors, condition_number = maximum(F.values) / minimum(F.values))
+'''

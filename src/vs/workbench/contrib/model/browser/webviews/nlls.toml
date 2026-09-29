@@ -1,0 +1,496 @@
+# Nonlinear Least Squares Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/nlls.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Nonlinear Least Squares"
+viewType = "pollis.nlls"
+defaultModel = "lm"
+
+[[packages]]
+name = "LeastSquaresOptim.jl"
+github = "https://github.com/matthieugomez/LeastSquaresOptim.jl"
+
+[[packages]]
+name = "NonlinearSolve.jl"
+github = "https://github.com/SciML/NonlinearSolve.jl"
+
+[requires]
+packages = ["LeastSquaresOptim.jl", "NonlinearSolve.jl", "ForwardDiff.jl", "Distributions.jl", "Plots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "NLLS Basics"
+file = "nlls/tutorial-01-basics.ipynb"
+bundled = true
+description = "Nonlinear least squares with LeastSquaresOptim.jl: LevenbergMarquardt and Dogleg algorithms"
+
+[[notebookSections.notebooks]]
+name = "NLLS Advanced"
+file = "nlls/tutorial-02-advanced.ipynb"
+bundled = true
+description = "Jacobians, sparse problems, and large-scale NLLS with GaussNewton from NonlinearSolve.jl"
+
+[[notebookSections.notebooks]]
+name = "Nelson-Siegel"
+file = "nlls/example-nelson-siegel.ipynb"
+bundled = true
+description = "Fitting the Nelson-Siegel yield curve model to bond market data"
+
+[[wikis]]
+name = "Factsheet"
+file = "nlls/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "nlls/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "nlls/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "nlls/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "nlls/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "nlls/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Algorithm Details"
+
+[[wikis]]
+name = "LM Algorithm"
+file = "nlls/lm-algorithm.md"
+bundled = true
+
+[[wikis]]
+name = "Dogleg Algorithm"
+file = "nlls/dogleg-algorithm.md"
+bundled = true
+
+[[wikis]]
+name = "Gauss-Newton"
+file = "nlls/gauss-newton.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Numerical Optimization"
+authors = "Nocedal, Jorge; Wright, Stephen J."
+year = 2006
+journal = "Springer (2nd ed.)"
+doi = "10.1007/978-0-387-40065-5"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "A Method for the Solution of Certain Non-Linear Problems in Least Squares"
+authors = "Levenberg, Kenneth"
+year = 1944
+journal = "Quarterly of Applied Mathematics"
+doi = "10.1090/qam/10666"
+openAccess = false
+
+[[references]]
+title = "An Algorithm for Least-Squares Estimation of Nonlinear Parameters"
+authors = "Marquardt, Donald W."
+year = 1963
+journal = "SIAM Journal on Applied Mathematics"
+doi = "10.1137/0111030"
+openAccess = false
+
+[[references]]
+title = "A New Algorithm for Unconstrained Optimization"
+authors = "Powell, Michael J. D."
+year = 1970
+journal = "Nonlinear Programming (Academic Press)"
+doi = "10.1016/B978-0-12-597050-1.50009-6"
+openAccess = false
+
+[[models]]
+id = "lm"
+label = "Levenberg-Marquardt"
+
+[[models]]
+id = "dogleg"
+label = "Dogleg"
+
+[[models]]
+id = "gn"
+label = "Gauss-Newton"
+
+[[bullets]]
+text = "Levenberg-Marquardt"
+detail = "trust-region with adaptive damping; blends gradient descent and Gauss-Newton; robust from poor starting points"
+
+[[bullets]]
+text = "Dogleg"
+detail = "piecewise path within the trust region from steepest descent to Gauss-Newton; efficient for small-residual problems"
+
+[[bullets]]
+text = "Gauss-Newton"
+detail = "linearises residuals at each step; quadratic convergence when residuals are small at the solution"
+
+[[decisionRows]]
+task = "Levenberg-Marquardt"
+context = "The default for curve fitting; robust from poor starting points"
+purpose = "Blend Gauss-Newton with gradient descent through an adaptive damping term added to J'J"
+
+[[decisionRows]]
+task = "Dogleg"
+context = "Well-scaled problems where fewer, cheaper iterations matter"
+purpose = "Trust-region step on the path between the steepest-descent and Gauss-Newton points"
+
+[[decisionRows]]
+task = "Gauss-Newton"
+context = "Small-residual problems with a good starting point"
+purpose = "Linearise the residuals and solve the normal equations J'J d = -J'r at each step; fast near the solution, may diverge far from it"
+
+[[inputs]]
+id = "model"
+label = "Model f(t, p)"
+tooltip = "Julia expression for the model prediction at a single input t with parameter vector p. The residuals are y - f(t, p). Example: p[1] * exp(-p[2] * t)."
+default = "p[1] * exp(-p[2] * t)"
+
+[[inputs]]
+id = "p0"
+label = "Initial Parameters p0"
+tooltip = "Starting parameter vector as a Julia array; its length sets the number of parameters."
+default = "[1.0, 0.1]"
+
+[[inputs]]
+id = "tdata"
+label = "Inputs t"
+tooltip = "Observed inputs as a Julia vector (or a variable already in the session)."
+default = "collect(0:0.5:5)"
+newRow = true
+
+[[inputs]]
+id = "ydata"
+label = "Observations y"
+tooltip = "Observed outputs as a Julia vector of the same length as t."
+default = "[5.1, 3.9, 3.0, 2.4, 1.8, 1.5, 1.1, 0.9, 0.7, 0.55, 0.45]"
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.lm]
+# Damped steps blending two directions toward the minimum
+svg = '''
+var s = '';
+[20, 13, 6].forEach(function (r) { s += '<ellipse cx="32" cy="46" rx="' + r + '" ry="' + (r * 0.55) + '" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.6"/>'; });
+return s + '<path d="M10,60 L18,50 L25,48 L30,46.5 L32,46" fill="none" stroke="currentColor" stroke-width="1.3"/><circle cx="10" cy="60" r="2" fill="currentColor"/>';
+'''
+
+[miniCharts.dogleg]
+# The bent dogleg path clipped by a trust-region circle
+svg = '''
+return '<circle cx="18" cy="56" r="16" fill="none" stroke="currentColor" stroke-width="0.8" stroke-dasharray="3,2"/>'
+	+ '<path d="M18,56 L26,44 L44,34" fill="none" stroke="currentColor" stroke-width="1.3"/><circle cx="18" cy="56" r="2" fill="currentColor"/><circle cx="31" cy="41" r="2" fill="currentColor"/>';
+'''
+
+[miniCharts.gn]
+# Data points with a fitted curve
+svg = '''
+var d = 'M8,32', s = '', e = [2, -3, 1, 3, -2, 1, -1];
+for (var x = 8; x <= 46; x++) { d += ' L' + x + ',' + (66 - 34 * Math.exp(-(x - 8) / 12)).toFixed(1); }
+e.forEach(function (v, i) { var x = 9 + 6 * i; s += '<circle cx="' + x + '" cy="' + (66 - 34 * Math.exp(-(x - 8) / 12) + v).toFixed(1) + '" r="1.6" fill="currentColor"/>'; });
+return s + '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.3"/>';
+'''
+
+[[codeBranches]]
+model = "lm"
+code = '''
+using ForwardDiff, LinearAlgebra, Statistics
+
+f(t, p) = {{model}}  # model prediction at one input
+t = {{tdata}}  # inputs
+y = {{ydata}}  # observations
+p0 = {{p0}}  # initial parameters
+resid(p) = y .- f.(t, Ref(p))  # residual vector r(p)
+m, n = length(y), length(p0)
+using LeastSquaresOptim
+
+function fit(p0; tol=1e-8)
+    r = LeastSquaresOptim.optimize(resid, p0, LeastSquaresOptim.LevenbergMarquardt(); autodiff=:forward, x_tol=tol, f_tol=tol)
+    (p = r.minimizer, converged = r.converged, iterations = r.iterations)
+end
+
+result = fit(p0)
+p_hat = result.p  # fitted parameters
+r_hat = resid(p_hat)  # residuals at the solution
+J = ForwardDiff.jacobian(resid, p_hat)  # m x n Jacobian of the residuals
+(parameters = p_hat, ssr = sum(abs2, r_hat), converged = result.converged, iterations = result.iterations)
+'''
+
+[[codeBranches]]
+model = "dogleg"
+code = '''
+using ForwardDiff, LinearAlgebra, Statistics
+
+f(t, p) = {{model}}  # model prediction at one input
+t = {{tdata}}  # inputs
+y = {{ydata}}  # observations
+p0 = {{p0}}  # initial parameters
+resid(p) = y .- f.(t, Ref(p))  # residual vector r(p)
+m, n = length(y), length(p0)
+using LeastSquaresOptim
+
+function fit(p0; tol=1e-8)
+    r = LeastSquaresOptim.optimize(resid, p0, LeastSquaresOptim.Dogleg(); autodiff=:forward, x_tol=tol, f_tol=tol)
+    (p = r.minimizer, converged = r.converged, iterations = r.iterations)
+end
+
+result = fit(p0)
+p_hat = result.p  # fitted parameters
+r_hat = resid(p_hat)  # residuals at the solution
+J = ForwardDiff.jacobian(resid, p_hat)  # m x n Jacobian of the residuals
+(parameters = p_hat, ssr = sum(abs2, r_hat), converged = result.converged, iterations = result.iterations)
+'''
+
+[[codeBranches]]
+model = "gn"
+code = '''
+using ForwardDiff, LinearAlgebra, Statistics
+
+f(t, p) = {{model}}  # model prediction at one input
+t = {{tdata}}  # inputs
+y = {{ydata}}  # observations
+p0 = {{p0}}  # initial parameters
+resid(p) = y .- f.(t, Ref(p))  # residual vector r(p)
+m, n = length(y), length(p0)
+using NonlinearSolve
+
+function fit(p0; tol=1e-8)
+    prob = NonlinearLeastSquaresProblem(NonlinearFunction((p, _) -> resid(p); resid_prototype=zeros(m)), p0)
+    s = solve(prob, NonlinearSolve.GaussNewton(); abstol=tol)
+    (p = s.u, converged = s.retcode == ReturnCode.Success, iterations = s.stats.nsteps)
+end
+
+result = fit(p0)
+p_hat = result.p  # fitted parameters
+r_hat = resid(p_hat)  # residuals at the solution
+J = ForwardDiff.jacobian(resid, p_hat)  # m x n Jacobian of the residuals
+(parameters = p_hat, ssr = sum(abs2, r_hat), converged = result.converged, iterations = result.iterations)
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "fit-overlay"
+label = "Fitted vs Observed"
+desc = "The data with the fitted model curve"
+code = '''
+using Plots
+
+tt = range(minimum(t), maximum(t), length=300)
+scatter(t, y, label="observed", xlabel="t", ylabel="y")
+plot!(tt, f.(tt, Ref(p_hat)), label="fitted", linewidth=2)
+'''
+
+[[actionGroups.actions]]
+id = "residual-plot"
+label = "Residual Plot"
+desc = "Residuals against the input: a random scatter around zero means the model shape fits; a pattern means it does not"
+code = '''
+using Plots
+
+scatter(t, r_hat, xlabel="t", ylabel="residual", legend=false)
+hline!([0], linestyle=:dash, color=:gray)
+'''
+
+[[actionGroups.actions]]
+id = "jacobian-structure"
+label = "Jacobian Structure"
+desc = "Heatmap of the Jacobian at the solution: which observations inform which parameters"
+code = '''
+using Plots
+
+heatmap(abs.(J), xlabel="parameter", ylabel="observation", yflip=true, colorbar_title="|dr/dp|")
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "residual-analysis"
+label = "Residual Analysis"
+desc = "Mean, spread, largest residual and lag-1 autocorrelation (near 0 for independent errors)"
+code = '''
+(mean = mean(r_hat), std = std(r_hat), max_abs = maximum(abs, r_hat), ssr = sum(abs2, r_hat),
+ lag1_autocorrelation = cor(r_hat[1:end-1], r_hat[2:end]))
+'''
+
+[[actionGroups.actions]]
+id = "gradient-norm"
+label = "Gradient Norm"
+desc = "First-order optimality: the gradient of the sum of squares, 2 J'r, should vanish at a minimum"
+code = '''
+g = 2 .* (J' * r_hat)
+(gradient = g, gradient_norm = norm(g), converged = result.converged)
+'''
+
+[[actionGroups.actions]]
+id = "condition-number"
+label = "Condition Number"
+desc = "Singular values, rank and condition number of J: a large condition number means strongly correlated, poorly identified parameters"
+code = '''
+sv = svdvals(J)
+(singular_values = sv, rank = rank(J), n_parameters = n, condition_number = sv[1] / sv[end])
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "fitted-values"
+label = "Fitted Values"
+desc = "Observed, fitted and residual value at every input"
+code = '''
+[(t = t[i], observed = y[i], fitted = f(t[i], p_hat), residual = r_hat[i]) for i in eachindex(t)]
+'''
+
+[[actionGroups.actions]]
+id = "new-point-eval"
+label = "New-Point Eval"
+desc = "Prediction at a new input with a delta-method standard error and an approximate 95% interval"
+code = '''
+using Distributions
+
+t_new = maximum(t) * 1.2  # replace with the input of interest
+s2 = sum(abs2, r_hat) / (m - n)
+Cov = s2 .* inv(J' * J)
+g = ForwardDiff.gradient(p -> f(t_new, p), p_hat)
+se = sqrt(dot(g, Cov * g)); q = quantile(TDist(m - n), 0.975)
+(t = t_new, prediction = f(t_new, p_hat), standard_error = se, lower_95 = f(t_new, p_hat) - q * se, upper_95 = f(t_new, p_hat) + q * se)
+'''
+
+[[actionGroups.actions]]
+id = "param-ci"
+label = "Parameter CI"
+desc = "Approximate 95% confidence intervals from the linearised covariance s^2 (J'J)^-1"
+code = '''
+using Distributions
+
+s2 = sum(abs2, r_hat) / (m - n)
+se = sqrt.(diag(s2 .* inv(J' * J)))
+q = quantile(TDist(m - n), 0.975)
+[(parameter = i, estimate = p_hat[i], lower_95 = p_hat[i] - q * se[i], upper_95 = p_hat[i] + q * se[i]) for i in 1:n]
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "compare-solvers"
+label = "Compare Solvers"
+desc = "Levenberg-Marquardt and Dogleg (LeastSquaresOptim) against Gauss-Newton and trust-region (NonlinearSolve) from the same start"
+code = '''
+using LeastSquaresOptim, NonlinearSolve
+
+lso(meth) = (r = LeastSquaresOptim.optimize(resid, p0, meth; autodiff=:forward); (r.minimizer, r.converged, r.iterations))
+nls(alg) = (s = solve(NonlinearLeastSquaresProblem(NonlinearFunction((p, _) -> resid(p); resid_prototype=zeros(m)), p0), alg); (s.u, s.retcode == ReturnCode.Success, s.stats.nsteps))
+runs = ["Levenberg-Marquardt" => () -> lso(LeastSquaresOptim.LevenbergMarquardt()), "Dogleg" => () -> lso(LeastSquaresOptim.Dogleg()),
+        "Gauss-Newton" => () -> nls(NonlinearSolve.GaussNewton()), "Trust region" => () -> nls(NonlinearSolve.TrustRegion())]
+map(runs) do (name, run)
+    sec = @elapsed (p, ok, it) = run()
+    (method = name, ssr = sum(abs2, resid(p)), converged = ok, iterations = it, seconds = sec)
+end
+'''
+
+[[actionGroups.actions]]
+id = "starting-points"
+label = "Starting-Point Study"
+desc = "Fit from 20 random starts around p0: the share reaching the best sum of squares shows the size of the convergence basin"
+code = '''
+using Random
+
+rng = Xoshiro(1)
+runs = [fit(p0 .* exp.(randn(rng, n))) for _ in 1:20]  # log-normal perturbations of p0
+ssr = [sum(abs2, resid(r.p)) for r in runs]
+best = minimum(ssr)
+(best_ssr = best, share_at_best = mean(ssr .< best * (1 + 1e-6) + 1e-12), share_converged = mean(getfield.(runs, :converged)), worst_ssr = maximum(ssr))
+'''
+
+[[actionGroups.actions]]
+id = "tol-sweep"
+label = "Tolerance Sweep"
+desc = "Iterations and final sum of squares as the stopping tolerance tightens"
+code = '''
+map([1e-2, 1e-4, 1e-6, 1e-8, 1e-10]) do tol
+    r = fit(p0; tol=tol)
+    (tolerance = tol, iterations = r.iterations, ssr = sum(abs2, resid(r.p)), converged = r.converged)
+end
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "summary"
+label = "Summary"
+desc = "Parameters, sum of squares, residual standard error, convergence and iterations"
+code = '''
+(parameters = p_hat, ssr = sum(abs2, r_hat), residual_std_error = sqrt(sum(abs2, r_hat) / (m - n)), degrees_of_freedom = m - n,
+ converged = result.converged, iterations = result.iterations)
+'''
+
+[[actionGroups.actions]]
+id = "param-estimates"
+label = "Parameter Estimates"
+desc = "Estimates with standard errors, t-statistics and the parameter correlation matrix (off-diagonals near +-1 mean the data cannot separate the parameters)"
+code = '''
+Cov = sum(abs2, r_hat) / (m - n) .* inv(J' * J)
+se = sqrt.(diag(Cov))
+table = [(parameter = i, estimate = p_hat[i], std_error = se[i], t_stat = p_hat[i] / se[i]) for i in 1:n]
+(estimates = table, correlation = Cov ./ (se * se'))
+'''
+
+[[actionGroups.actions]]
+id = "gof"
+label = "Goodness of Fit"
+desc = "R-squared analogue, RMSE and the residual norm relative to the data norm"
+code = '''
+ssr = sum(abs2, r_hat); sst = sum(abs2, y .- mean(y))
+(r_squared = 1 - ssr / sst, rmse = sqrt(ssr / m), normalised_residual_norm = norm(r_hat) / norm(y))
+'''

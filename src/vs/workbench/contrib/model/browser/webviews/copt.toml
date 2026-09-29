@@ -1,0 +1,837 @@
+# Constrained Optimisation Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/copt.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Constrained Optimisation"
+viewType = "pollis.copt"
+defaultModel = "slsqp"
+
+[[packages]]
+name = "NLopt.jl"
+github = "https://github.com/JuliaOpt/NLopt.jl"
+
+[[packages]]
+name = "JuMP.jl"
+github = "https://github.com/jump-dev/JuMP.jl"
+
+[[packages]]
+name = "Ipopt.jl"
+github = "https://github.com/jump-dev/Ipopt.jl"
+
+[[packages]]
+name = "FrankWolfe.jl"
+github = "https://github.com/ZIB-IOL/FrankWolfe.jl"
+
+[[packages]]
+name = "Optim.jl"
+github = "https://github.com/JuliaNLSolvers/Optim.jl"
+
+[requires]
+packages = ["NLopt.jl", "ForwardDiff.jl", "JuMP.jl", "Ipopt.jl", "FrankWolfe.jl", "Plots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "SLSQP"
+file = "copt/tutorial-01-slsqp.ipynb"
+bundled = true
+description = "Sequential Least Squares Programming with NLopt.jl: inequality and equality constraints"
+
+[[notebookSections.notebooks]]
+name = "MMA"
+file = "copt/tutorial-02-mma.ipynb"
+bundled = true
+description = "Method of Moving Asymptotes: convex separable approximations for structural design"
+
+[[notebookSections.notebooks]]
+name = "Interior Point"
+file = "copt/tutorial-03-interior-point.ipynb"
+bundled = true
+description = "Barrier methods via Ipopt.jl and JuMP: large-scale nonlinear programming"
+
+[[notebookSections.notebooks]]
+name = "Frank-Wolfe"
+file = "copt/tutorial-04-frank-wolfe.ipynb"
+bundled = true
+description = "Conditional gradient method for constrained optimisation with FrankWolfe.jl"
+
+[[notebookSections.notebooks]]
+name = "Gradient Projection"
+file = "copt/tutorial-05-gradient-projection.ipynb"
+bundled = true
+description = "Projected gradient descent for box-constrained problems"
+
+[[wikis]]
+name = "Factsheet"
+file = "copt/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "copt/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "copt/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "copt/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "copt/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "copt/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Algorithm Details"
+
+[[wikis]]
+name = "SLSQP"
+file = "copt/slsqp.md"
+bundled = true
+
+[[wikis]]
+name = "MMA"
+file = "copt/mma.md"
+bundled = true
+
+[[wikis]]
+name = "Interior Point"
+file = "copt/interior-point.md"
+bundled = true
+
+[[wikis]]
+name = "Frank-Wolfe"
+file = "copt/frank-wolfe.md"
+bundled = true
+
+[[wikis]]
+name = "Gradient Projection"
+file = "copt/gradient-projection.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "NLopt: A free/open-source library for nonlinear optimization"
+authors = "Johnson, Steven G."
+year = 2007
+journal = "GitHub"
+openAccess = true
+
+[[references]]
+title = "JuMP: A Modeling Language for Mathematical Optimization"
+authors = "Dunning, Iain; Huchette, Joey; Lubin, Miles"
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/15M1020575"
+openAccess = true
+
+[[references]]
+title = "FrankWolfe.jl: A High-Performance and Flexible Toolbox for Frank-Wolfe Algorithms and Conditional Gradients"
+authors = "Besançon, Mathieu; Carderera, Alejandro; Pokutta, Sebastian"
+year = 2022
+journal = "INFORMS Journal on Computing"
+doi = "10.1287/ijoc.2022.1191"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Numerical Optimization"
+authors = "Nocedal, Jorge; Wright, Stephen J."
+year = 2006
+journal = "Springer (2nd ed.)"
+doi = "10.1007/978-0-387-40065-5"
+openAccess = false
+
+[[references]]
+title = "Convex Optimization"
+authors = "Boyd, Stephen; Vandenberghe, Lieven"
+year = 2004
+journal = "Cambridge University Press"
+openAccess = true
+
+[[references]]
+title = "Practical Methods of Optimization"
+authors = "Fletcher, Roger"
+year = 2000
+journal = "Wiley (2nd ed.)"
+doi = "10.1002/9781118723203"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "A Software Package for Sequential Quadratic Programming"
+authors = "Kraft, Dieter"
+year = 1988
+journal = "DFVLR Technical Report FB 88-28"
+openAccess = false
+
+[[references]]
+title = "The Method of Moving Asymptotes — A New Method for Structural Optimization"
+authors = "Svanberg, Krister"
+year = 1987
+journal = "International Journal for Numerical Methods in Engineering"
+doi = "10.1002/nme.1620240207"
+openAccess = false
+
+[[references]]
+title = "On the Implementation of an Interior-Point Filter Line-Search Algorithm for Large-Scale Nonlinear Programming"
+authors = "Wächter, Andreas; Biegler, Lorenz T."
+year = 2006
+journal = "Mathematical Programming"
+doi = "10.1007/s10107-004-0559-y"
+openAccess = false
+
+[[references]]
+title = "An Algorithm for Quadratic Programming"
+authors = "Frank, Marguerite; Wolfe, Philip"
+year = 1956
+journal = "Naval Research Logistics Quarterly"
+doi = "10.1002/nav.3800030109"
+openAccess = false
+
+[[references]]
+title = "The Gradient Projection Method for Nonlinear Programming. Part I. Linear Constraints"
+authors = "Rosen, J. B."
+year = 1960
+journal = "Journal of the Society for Industrial and Applied Mathematics"
+doi = "10.1137/0108011"
+openAccess = false
+
+[[models]]
+id = "slsqp"
+label = "SLSQP"
+
+[[models]]
+id = "mma"
+label = "MMA"
+
+[[models]]
+id = "ip"
+label = "Interior Point"
+
+[[models]]
+id = "fw"
+label = "Frank–Wolfe"
+
+[[models]]
+id = "gp"
+label = "Gradient Projection"
+
+[[bullets]]
+text = "SLSQP"
+detail = "sequential quadratic programming for nonlinear inequality and equality constraints"
+
+[[bullets]]
+text = "MMA"
+detail = "Method of Moving Asymptotes: convex separable approximations"
+
+[[bullets]]
+text = "Interior Point"
+detail = "barrier methods via Ipopt.jl and JuMP"
+
+[[bullets]]
+text = "Frank–Wolfe"
+detail = "conditional gradient method with linear subproblem oracles"
+
+[[bullets]]
+text = "Gradient Projection"
+detail = "projected gradient descent for box-constrained problems"
+
+[[decisionRows]]
+task = "SLSQP"
+context = "Smooth problems of small to medium size with nonlinear constraints"
+purpose = "Sequential least-squares quadratic programming: a quasi-Newton QP model of the Lagrangian at each step; fast local convergence"
+
+[[decisionRows]]
+task = "MMA"
+context = "Many variables with few constraints, e.g. structural and topology design"
+purpose = "Method of moving asymptotes: a separable convex approximation that stays conservative, so iterates remain feasible once feasible"
+
+[[decisionRows]]
+task = "Interior Point"
+context = "Large sparse problems with many constraints"
+purpose = "Ipopt: follows a barrier path from the interior of the feasible set, solving Newton systems for primal and dual variables together"
+
+[[decisionRows]]
+task = "Frank-Wolfe"
+context = "Convex feasible sets where minimising a linear function is cheap"
+purpose = "Conditional gradient: moves towards the point of the set that minimises the linearised objective; projection-free, sparse iterates"
+
+[[decisionRows]]
+task = "Gradient Projection"
+context = "Convex feasible sets with a cheap projection (boxes, balls, simplices)"
+purpose = "Takes a gradient step, projects back onto the set, and backtracks along the projection arc"
+
+[[inputs]]
+id = "n"
+label = "Dimension (n)"
+tooltip = "Number of decision variables."
+default = "2"
+
+[[inputs]]
+id = "obj"
+label = "Objective f(x)"
+tooltip = "Julia expression for the objective to minimise, in terms of the vector x. Default: the squared distance to (1.5, 1), whose unconstrained minimum lies outside the unit disk."
+default = "(x[1] - 1.5)^2 + (x[2] - 1.0)^2"
+
+[[inputs]]
+id = "constr"
+label = "Constraints g(x) <= 0"
+tooltip = "Julia vector of inequality constraints, feasible when every entry is <= 0. Default: the unit disk (active at the solution) and x2 <= x1 (inactive). Frank-Wolfe and Gradient Projection assume the feasible set is convex."
+default = "[x[1]^2 + x[2]^2 - 1.0, x[2] - x[1]]"
+
+[[inputs]]
+id = "lb"
+label = "Lower Bounds"
+tooltip = "Julia vector of lower bounds on x."
+default = "fill(-2.0, n)"
+newRow = true
+
+[[inputs]]
+id = "ub"
+label = "Upper Bounds"
+tooltip = "Julia vector of upper bounds on x."
+default = "fill(2.0, n)"
+
+[[inputs]]
+id = "maxiter"
+label = "Max Iterations"
+tooltip = "Iteration limit (objective evaluations for SLSQP and MMA)."
+default = "500"
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.slsqp]
+# Quadratic model contours touching the constraint
+svg = '''
+return '<path d="M6,34 Q30,44 48,70" fill="none" stroke="currentColor" stroke-width="1.3"/><ellipse cx="18" cy="60" rx="12" ry="7" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.5"/>'
+	+ '<ellipse cx="18" cy="60" rx="20" ry="12" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.35"/><circle cx="30" cy="48" r="2.2" fill="currentColor"/>';
+'''
+
+[miniCharts.mma]
+# Moving asymptotes bracketing a convex approximation
+svg = '''
+return '<line x1="10" y1="28" x2="10" y2="70" stroke="currentColor" stroke-width="0.8" stroke-dasharray="2,2"/><line x1="44" y1="28" x2="44" y2="70" stroke="currentColor" stroke-width="0.8" stroke-dasharray="2,2"/>'
+	+ '<path d="M13,30 Q27,90 41,30" fill="none" stroke="currentColor" stroke-width="1.3"/><circle cx="27" cy="60" r="2" fill="currentColor"/>';
+'''
+
+[miniCharts.ip]
+# A central path through the interior to the boundary optimum
+svg = '''
+return '<path d="M8,66 L8,30 L46,30 Q46,56 30,66 Z" fill="currentColor" opacity="0.12" stroke="currentColor" stroke-width="0.8"/>'
+	+ '<path d="M16,40 Q26,44 30,54 T36,62" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="2,1.5"/><circle cx="36" cy="62" r="2.2" fill="currentColor"/>';
+'''
+
+[miniCharts.fw]
+# Zig-zag towards vertices of a polytope
+svg = '''
+return '<path d="M8,64 L26,28 L46,52 Z" fill="currentColor" opacity="0.12" stroke="currentColor" stroke-width="0.8"/>'
+	+ '<path d="M24,54 L30,40 L34,48 L32,44 L34,47" fill="none" stroke="currentColor" stroke-width="1.1"/><circle cx="34" cy="47" r="2" fill="currentColor"/>';
+'''
+
+[miniCharts.gp]
+# A gradient step outside the set projected back onto it
+svg = '''
+return '<circle cx="24" cy="52" r="15" fill="currentColor" opacity="0.12" stroke="currentColor" stroke-width="0.8"/>'
+	+ '<line x1="24" y1="52" x2="44" y2="34" stroke="currentColor" stroke-width="1" stroke-dasharray="2,2"/><line x1="44" y1="34" x2="35" y2="42" stroke="currentColor" stroke-width="1.2"/><circle cx="35" cy="42" r="2.2" fill="currentColor"/>';
+'''
+
+[[codeBranches]]
+model = "slsqp"
+code = '''
+using ForwardDiff, LinearAlgebra, NLopt
+
+n = {{n}}  # dimension
+f(x) = {{obj}}  # objective
+g(x) = {{constr}}  # inequality constraints, feasible when every entry is <= 0
+lb, ub = {{lb}}, {{ub}}  # bounds
+maxiter = {{maxiter}}  # iteration limit
+
+# largest violation of the constraints and bounds (0 when feasible)
+violation(x; g=g, lb=lb, ub=ub) = max(0, maximum(g(x)), maximum(lb .- x), maximum(x .- ub))
+
+# NLopt problem with ForwardDiff gradients and Jacobians; rec(x) is called at every objective evaluation
+function nlopt_model(alg, x0; obj=f, g=g, lb=lb, ub=ub, maxeval=maxiter, tol=1e-8, rec=nothing)
+    opt = Opt(alg, length(x0))
+    opt.lower_bounds, opt.upper_bounds, opt.maxeval, opt.xtol_rel = lb, ub, maxeval, 1e-10
+    opt.min_objective = function (x, grad)
+        length(grad) > 0 && (grad .= ForwardDiff.gradient(obj, x))
+        rec === nothing || rec(x)
+        obj(x)
+    end
+    inequality_constraint!(opt, function (res, x, jac)
+        res .= g(x)
+        length(jac) > 0 && (jac .= transpose(ForwardDiff.jacobian(g, x)))  # NLopt expects n x m
+    end, fill(tol, length(g(x0))))
+    opt
+end
+
+ALG = :LD_SLSQP  # sequential least-squares quadratic programming
+
+function solve(; x0=(lb .+ ub) ./ 2, g=g, lb=lb, ub=ub, maxiter=maxiter)
+    path, hf, hv = Vector{Float64}[], Float64[], Float64[]
+    rec(x) = (push!(path, copy(x)); push!(hf, f(x)); push!(hv, violation(x; g=g, lb=lb, ub=ub)))
+    fx, x, ret = NLopt.optimize(nlopt_model(ALG, x0; g=g, lb=lb, ub=ub, maxeval=maxiter, rec=rec), x0)
+    (x = x, fx = fx, path = path, hf = hf, hv = hv, status = ret)
+end
+
+res = solve()
+x_star, f_star = res.x, res.fx
+(solution = x_star, objective = f_star, max_violation = violation(x_star), status = res.status)
+'''
+
+[[codeBranches]]
+model = "mma"
+code = '''
+using ForwardDiff, LinearAlgebra, NLopt
+
+n = {{n}}  # dimension
+f(x) = {{obj}}  # objective
+g(x) = {{constr}}  # inequality constraints, feasible when every entry is <= 0
+lb, ub = {{lb}}, {{ub}}  # bounds
+maxiter = {{maxiter}}  # iteration limit
+
+# largest violation of the constraints and bounds (0 when feasible)
+violation(x; g=g, lb=lb, ub=ub) = max(0, maximum(g(x)), maximum(lb .- x), maximum(x .- ub))
+
+# NLopt problem with ForwardDiff gradients and Jacobians; rec(x) is called at every objective evaluation
+function nlopt_model(alg, x0; obj=f, g=g, lb=lb, ub=ub, maxeval=maxiter, tol=1e-8, rec=nothing)
+    opt = Opt(alg, length(x0))
+    opt.lower_bounds, opt.upper_bounds, opt.maxeval, opt.xtol_rel = lb, ub, maxeval, 1e-10
+    opt.min_objective = function (x, grad)
+        length(grad) > 0 && (grad .= ForwardDiff.gradient(obj, x))
+        rec === nothing || rec(x)
+        obj(x)
+    end
+    inequality_constraint!(opt, function (res, x, jac)
+        res .= g(x)
+        length(jac) > 0 && (jac .= transpose(ForwardDiff.jacobian(g, x)))  # NLopt expects n x m
+    end, fill(tol, length(g(x0))))
+    opt
+end
+
+ALG = :LD_MMA  # method of moving asymptotes
+
+function solve(; x0=(lb .+ ub) ./ 2, g=g, lb=lb, ub=ub, maxiter=maxiter)
+    path, hf, hv = Vector{Float64}[], Float64[], Float64[]
+    rec(x) = (push!(path, copy(x)); push!(hf, f(x)); push!(hv, violation(x; g=g, lb=lb, ub=ub)))
+    fx, x, ret = NLopt.optimize(nlopt_model(ALG, x0; g=g, lb=lb, ub=ub, maxeval=maxiter, rec=rec), x0)
+    (x = x, fx = fx, path = path, hf = hf, hv = hv, status = ret)
+end
+
+res = solve()
+x_star, f_star = res.x, res.fx
+(solution = x_star, objective = f_star, max_violation = violation(x_star), status = res.status)
+'''
+
+[[codeBranches]]
+model = "ip"
+code = '''
+using ForwardDiff, LinearAlgebra, NLopt
+
+n = {{n}}  # dimension
+f(x) = {{obj}}  # objective
+g(x) = {{constr}}  # inequality constraints, feasible when every entry is <= 0
+lb, ub = {{lb}}, {{ub}}  # bounds
+maxiter = {{maxiter}}  # iteration limit
+
+# largest violation of the constraints and bounds (0 when feasible)
+violation(x; g=g, lb=lb, ub=ub) = max(0, maximum(g(x)), maximum(lb .- x), maximum(x .- ub))
+
+# NLopt problem with ForwardDiff gradients and Jacobians; rec(x) is called at every objective evaluation
+function nlopt_model(alg, x0; obj=f, g=g, lb=lb, ub=ub, maxeval=maxiter, tol=1e-8, rec=nothing)
+    opt = Opt(alg, length(x0))
+    opt.lower_bounds, opt.upper_bounds, opt.maxeval, opt.xtol_rel = lb, ub, maxeval, 1e-10
+    opt.min_objective = function (x, grad)
+        length(grad) > 0 && (grad .= ForwardDiff.gradient(obj, x))
+        rec === nothing || rec(x)
+        obj(x)
+    end
+    inequality_constraint!(opt, function (res, x, jac)
+        res .= g(x)
+        length(jac) > 0 && (jac .= transpose(ForwardDiff.jacobian(g, x)))  # NLopt expects n x m
+    end, fill(tol, length(g(x0))))
+    opt
+end
+using JuMP, Ipopt
+
+function solve(; x0=(lb .+ ub) ./ 2, g=g, lb=lb, ub=ub, maxiter=maxiter)
+    model = Model(Ipopt.Optimizer)
+    set_silent(model)
+    set_attribute(model, "max_iter", maxiter)
+    @variable(model, lb[i] <= x[i=1:length(lb)] <= ub[i], start = x0[i])
+    @objective(model, Min, f(x))
+    c = @constraint(model, g(x) .<= 0)
+    hf, hv = Float64[], Float64[]  # objective and primal infeasibility at each Ipopt iteration
+    MOI.set(model, Ipopt.CallbackFunction(), (alg_mod, iter, obj, inf_pr, rest...) -> (push!(hf, obj); push!(hv, inf_pr); true))
+    optimize!(model)
+    (x = value.(x), fx = objective_value(model), path = Vector{Float64}[], hf = hf, hv = hv,
+     status = termination_status(model), multipliers = -dual.(c))  # Lagrange multipliers of g(x) <= 0
+end
+
+res = solve()
+x_star, f_star = res.x, res.fx
+(solution = x_star, objective = f_star, max_violation = violation(x_star), status = res.status)
+'''
+
+[[codeBranches]]
+model = "fw"
+code = '''
+using ForwardDiff, LinearAlgebra, NLopt
+
+n = {{n}}  # dimension
+f(x) = {{obj}}  # objective
+g(x) = {{constr}}  # inequality constraints, feasible when every entry is <= 0
+lb, ub = {{lb}}, {{ub}}  # bounds
+maxiter = {{maxiter}}  # iteration limit
+
+# largest violation of the constraints and bounds (0 when feasible)
+violation(x; g=g, lb=lb, ub=ub) = max(0, maximum(g(x)), maximum(lb .- x), maximum(x .- ub))
+
+# NLopt problem with ForwardDiff gradients and Jacobians; rec(x) is called at every objective evaluation
+function nlopt_model(alg, x0; obj=f, g=g, lb=lb, ub=ub, maxeval=maxiter, tol=1e-8, rec=nothing)
+    opt = Opt(alg, length(x0))
+    opt.lower_bounds, opt.upper_bounds, opt.maxeval, opt.xtol_rel = lb, ub, maxeval, 1e-10
+    opt.min_objective = function (x, grad)
+        length(grad) > 0 && (grad .= ForwardDiff.gradient(obj, x))
+        rec === nothing || rec(x)
+        obj(x)
+    end
+    inequality_constraint!(opt, function (res, x, jac)
+        res .= g(x)
+        length(jac) > 0 && (jac .= transpose(ForwardDiff.jacobian(g, x)))  # NLopt expects n x m
+    end, fill(tol, length(g(x0))))
+    opt
+end
+using FrankWolfe
+
+# linear minimisation oracle over {lb <= v <= ub, g(v) <= 0}, solved as a small SLSQP problem (exact when the set is convex)
+struct SetLMO <: FrankWolfe.LinearMinimizationOracle
+    g::Function
+    lb::Vector{Float64}
+    ub::Vector{Float64}
+end
+function FrankWolfe.compute_extreme_point(lmo::SetLMO, d; kwargs...)
+    x0, dir = (lmo.lb .+ lmo.ub) ./ 2, collect(d)
+    NLopt.optimize(nlopt_model(:LD_SLSQP, x0; obj=v -> dot(dir, v), g=lmo.g, lb=lmo.lb, ub=lmo.ub, maxeval=500), x0)[2]
+end
+
+function solve(; x0=(lb .+ ub) ./ 2, g=g, lb=lb, ub=ub, maxiter=maxiter)
+    lmo = SetLMO(g, float.(lb), float.(ub))
+    dir = x0 .- (lb .+ ub) ./ 2
+    start = FrankWolfe.compute_extreme_point(lmo, iszero(dir) ? -ones(length(lb)) : -dir)  # a feasible start: the vertex towards x0
+    path, hf, hv = Vector{Float64}[], Float64[], Float64[]
+    cb = (state, args...) -> (push!(path, copy(state.x)); push!(hf, f(state.x)); push!(hv, violation(state.x; g=g, lb=lb, ub=ub)); true)
+    grad!(s, x) = ForwardDiff.gradient!(s, f, x)
+    x, v, primal, gap = FrankWolfe.frank_wolfe(f, grad!, lmo, start; max_iteration=maxiter, line_search=FrankWolfe.Adaptive(), callback=cb, verbose=false)
+    (x = x, fx = primal, path = path, hf = hf, hv = hv, status = "dual gap $(round(gap, sigdigits=3))")
+end
+
+res = solve()
+x_star, f_star = res.x, res.fx
+(solution = x_star, objective = f_star, max_violation = violation(x_star), status = res.status)
+'''
+
+[[codeBranches]]
+model = "gp"
+code = '''
+using ForwardDiff, LinearAlgebra, NLopt
+
+n = {{n}}  # dimension
+f(x) = {{obj}}  # objective
+g(x) = {{constr}}  # inequality constraints, feasible when every entry is <= 0
+lb, ub = {{lb}}, {{ub}}  # bounds
+maxiter = {{maxiter}}  # iteration limit
+
+# largest violation of the constraints and bounds (0 when feasible)
+violation(x; g=g, lb=lb, ub=ub) = max(0, maximum(g(x)), maximum(lb .- x), maximum(x .- ub))
+
+# NLopt problem with ForwardDiff gradients and Jacobians; rec(x) is called at every objective evaluation
+function nlopt_model(alg, x0; obj=f, g=g, lb=lb, ub=ub, maxeval=maxiter, tol=1e-8, rec=nothing)
+    opt = Opt(alg, length(x0))
+    opt.lower_bounds, opt.upper_bounds, opt.maxeval, opt.xtol_rel = lb, ub, maxeval, 1e-10
+    opt.min_objective = function (x, grad)
+        length(grad) > 0 && (grad .= ForwardDiff.gradient(obj, x))
+        rec === nothing || rec(x)
+        obj(x)
+    end
+    inequality_constraint!(opt, function (res, x, jac)
+        res .= g(x)
+        length(jac) > 0 && (jac .= transpose(ForwardDiff.jacobian(g, x)))  # NLopt expects n x m
+    end, fill(tol, length(g(x0))))
+    opt
+end
+
+# Euclidean projection onto {lb <= y <= ub, g(y) <= 0}, as a small SLSQP problem (unique when the set is convex)
+function proj(z; g=g, lb=lb, ub=ub)
+    y0 = clamp.(z, lb, ub)
+    NLopt.optimize(nlopt_model(:LD_SLSQP, y0; obj=y -> sum(abs2, y .- z), g=g, lb=lb, ub=ub, maxeval=500), y0)[2]
+end
+
+function solve(; x0=(lb .+ ub) ./ 2, g=g, lb=lb, ub=ub, maxiter=maxiter)
+    x, t = proj(x0; g=g, lb=lb, ub=ub), 1.0
+    path, hf, hv = Vector{Float64}[], Float64[], Float64[]
+    rec(x) = (push!(path, copy(x)); push!(hf, f(x)); push!(hv, violation(x; g=g, lb=lb, ub=ub)))
+    status = "iteration limit"
+    for k in 1:maxiter
+        rec(x)
+        d = ForwardDiff.gradient(f, x)
+        y = proj(x .- t .* d; g=g, lb=lb, ub=ub)
+        while f(y) > f(x) + 1e-4 * dot(d, y .- x) && t > 1e-12  # Armijo backtracking along the projection arc
+            t /= 2
+            y = proj(x .- t .* d; g=g, lb=lb, ub=ub)
+        end
+        if norm(y .- x) < 1e-9
+            x, status = y, "converged (projected step below 1e-9)"
+            break
+        end
+        x, t = y, min(1.0, 2t)  # try a longer step next time
+    end
+    rec(x)
+    (x = x, fx = f(x), path = path, hf = hf, hv = hv, status = status)
+end
+
+res = solve()
+x_star, f_star = res.x, res.fx
+(solution = x_star, objective = f_star, max_violation = violation(x_star), status = res.status)
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "convergence-curve"
+label = "Convergence Curve"
+desc = "Objective value at each recorded iterate (evaluations for SLSQP and MMA, iterations otherwise)"
+code = '''
+using Plots
+
+plot(res.hf, xlabel="iteration", ylabel="f(x)", legend=false, marker=:circle, markersize=2)
+hline!([f_star], linestyle=:dash)
+'''
+
+[[actionGroups.actions]]
+id = "constraint-violation"
+label = "Constraint Violation"
+desc = "Largest violation of the constraints and bounds at each recorded iterate (Ipopt: its primal infeasibility)"
+code = '''
+using Plots
+
+plot(max.(res.hv, 1e-16), yscale=:log10, xlabel="iteration", ylabel="max violation", legend=false)
+'''
+
+[[actionGroups.actions]]
+id = "solution-path"
+label = "Solution Path"
+desc = "Objective contours, the constraint boundaries g(x) = 0 and the path of the iterates in the (x1, x2) plane (Ipopt shows only the start and the solution)"
+code = '''
+using Plots
+
+xs = range(lb[1], ub[1], length=150); ys = range(lb[2], ub[2], length=150)
+p = contour(xs, ys, (a, b) -> f([a; b; x_star[3:end]]), levels=25, xlabel="x1", ylabel="x2", colorbar=false)
+for i in eachindex(g(x_star))
+    contour!(p, xs, ys, (a, b) -> g([a; b; x_star[3:end]])[i], levels=[0.0], color=:black, linewidth=2)
+end
+pts = isempty(res.path) ? [(lb .+ ub) ./ 2, x_star] : res.path
+plot!(p, getindex.(pts, 1), getindex.(pts, 2), marker=:circle, markersize=2, color=:red, label="iterates")
+scatter!(p, [x_star[1]], [x_star[2]], marker=:star, markersize=10, color=:red, label="solution")
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "feasibility-check"
+label = "Feasibility Check"
+desc = "Constraint values and bound slacks at the solution"
+code = '''
+gx = g(x_star)
+(constraint_values = round.(gx, sigdigits=6), constraints_satisfied = all(gx .<= 1e-6),
+ bounds_satisfied = all(lb .- 1e-9 .<= x_star .<= ub .+ 1e-9), max_violation = violation(x_star))
+'''
+
+[[actionGroups.actions]]
+id = "kkt-check"
+label = "KKT Conditions"
+desc = "Estimate the multipliers of the active constraints by least squares and check stationarity, dual feasibility and complementary slackness"
+code = '''
+gx, J, gradf = g(x_star), ForwardDiff.jacobian(g, x_star), ForwardDiff.gradient(f, x_star)
+active = findall(gx .>= -1e-6)
+free = findall((x_star .> lb .+ 1e-8) .& (x_star .< ub .- 1e-8))  # bound-active coordinates are excluded
+JA = J[active, free]
+lambda = zeros(length(gx))
+isempty(active) || (lambda[active] = -(transpose(JA) \ gradf[free]))  # solve grad f + JA^T lambda = 0
+stationarity = gradf[free] + transpose(J[:, free]) * lambda
+(active_constraints = active, multipliers = round.(lambda, sigdigits=6),
+ {{?model=ip}} ipopt_multipliers = round.(res.multipliers, sigdigits=6),
+ stationarity_residual = norm(stationarity), dual_feasible = all(lambda .>= -1e-6),
+ complementary_slackness = maximum(abs.(lambda .* gx)))
+'''
+
+[[actionGroups.actions]]
+id = "multi-start"
+label = "Multi-Start"
+desc = "Solve from 10 random starting points: several distinct solutions mean a non-convex problem with local optima"
+code = '''
+using Random, Statistics
+
+Random.seed!(1)
+runs = [solve(x0=lb .+ rand(length(lb)) .* (ub .- lb)) for _ in 1:10]
+fv = getfield.(runs, :fx)
+(objectives = round.(fv, sigdigits=6), feasible = [violation(r.x) < 1e-6 for r in runs],
+ distinct_solutions = length(unique(round.(getfield.(runs, :x), digits=4))), best = minimum(fv), spread = std(fv))
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "eval-at-solution"
+label = "Evaluate at Solution"
+desc = "f, g and the gradient of f at the solution"
+code = '''
+(solution = x_star, objective = f(x_star), constraints = g(x_star), gradient = ForwardDiff.gradient(f, x_star))
+'''
+
+[[actionGroups.actions]]
+id = "sensitivity-bounds"
+label = "Bounds Sensitivity"
+desc = "Re-solve with the box shrunk by 10, 25 and 50 percent around its centre"
+code = '''
+c, w = (lb .+ ub) ./ 2, (ub .- lb) ./ 2
+map([0.0, 0.1, 0.25, 0.5]) do s
+    l, u = c .- (1 - s) .* w, c .+ (1 - s) .* w
+    r = solve(lb=l, ub=u, x0=c)
+    (shrink = s, objective = r.fx, change = r.fx - f_star, solution = round.(r.x, digits=4), max_violation = violation(r.x; lb=l, ub=u))
+end
+'''
+
+[[actionGroups.actions]]
+id = "constraint-relaxation"
+label = "Constraint Relaxation"
+desc = "Re-solve with g(x) <= delta: the slope of the optimal value against delta is minus the multiplier (the shadow price)"
+code = '''
+using Plots
+
+deltas = [-0.2, -0.1, 0.0, 0.1, 0.2]
+vals = [solve(g=x -> g(x) .- d).fx for d in deltas]
+display(plot(deltas, vals, marker=:circle, xlabel="relaxation delta (all constraints)", ylabel="optimal f", legend=false))
+(deltas = deltas, optimal_values = round.(vals, sigdigits=6), slope_at_0 = (vals[4] - vals[2]) / 0.2)
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "slsqp-vs-mma"
+label = "Compare Methods"
+desc = "The selected method against NLopt SLSQP, MMA and derivative-free COBYLA from the same start"
+code = '''
+x0 = (lb .+ ub) ./ 2
+function nl(alg)
+    k = Ref(0)
+    sec = @elapsed fx, x, ret = NLopt.optimize(nlopt_model(alg, x0; rec=_ -> k[] += 1), x0)
+    (method = string(alg), objective = fx, max_violation = violation(x), evaluations = k[], seconds = sec, status = ret)
+end
+sec = @elapsed r = solve()
+[(method = "selected", objective = r.fx, max_violation = violation(r.x), evaluations = length(r.hf), seconds = sec, status = r.status);
+ nl(:LD_SLSQP); nl(:LD_MMA); nl(:LN_COBYLA)]
+'''
+
+[[actionGroups.actions]]
+id = "constrained-vs-unconstrained"
+label = "vs Unconstrained"
+desc = "The box-only optimum (L-BFGS) against the constrained one: what the constraints cost"
+code = '''
+x0 = (lb .+ ub) ./ 2
+opt = Opt(:LD_LBFGS, length(x0))
+opt.lower_bounds, opt.upper_bounds, opt.maxeval = lb, ub, 2000
+opt.min_objective = (x, grad) -> (length(grad) > 0 && (grad .= ForwardDiff.gradient(f, x)); f(x))
+fu, xu, _ = NLopt.optimize(opt, x0)
+(box_only_solution = round.(xu, digits=6), box_only_objective = fu, box_only_violates = findall(g(xu) .> 1e-8),
+ constrained_solution = round.(x_star, digits=6), constrained_objective = f_star, cost_of_constraints = f_star - fu)
+'''
+
+[[actionGroups.actions]]
+id = "budget-study"
+label = "Budget Study"
+desc = "Objective and violation for increasing iteration limits"
+code = '''
+map([5, 10, 25, 50, 100, maxiter]) do k
+    r = solve(maxiter=k)
+    (max_iterations = k, objective = r.fx, gap_to_final = r.fx - f_star, max_violation = violation(r.x))
+end
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "solution-summary"
+label = "Solution Summary"
+desc = "Solution, objective, status, active constraints and iterations"
+code = '''
+(solution = round.(x_star, sigdigits=6), objective = f_star, status = res.status, iterations = length(res.hf),
+ active_constraints = findall(g(x_star) .>= -1e-6), active_bounds = findall((x_star .<= lb .+ 1e-8) .| (x_star .>= ub .- 1e-8)),
+ max_violation = violation(x_star))
+'''
+
+[[actionGroups.actions]]
+id = "active-constraints"
+label = "Active Constraints"
+desc = "Each constraint and bound with its value and whether it binds"
+code = '''
+gx = g(x_star)
+cons = [(name = "g$i", value = gx[i], binding = gx[i] >= -1e-6) for i in eachindex(gx)]
+bnds = [(name = "x$i bound", value = min(x_star[i] - lb[i], ub[i] - x_star[i]), binding = min(x_star[i] - lb[i], ub[i] - x_star[i]) <= 1e-8) for i in eachindex(x_star)]
+[cons; bnds]
+'''
+
+[[actionGroups.actions]]
+id = "algorithm-info"
+label = "Algorithm Info"
+desc = "Key properties and trade-offs of the selected method"
+code = '''
+{{?model=slsqp}} (method = "SLSQP (NLopt)", needs = "gradients of f and g", handles = "nonlinear equality and inequality constraints", convergence = "superlinear near the solution", caveat = "dense quasi-Newton matrix: small to medium n")
+{{?model=mma}} (method = "MMA (NLopt)", needs = "gradients of f and g", handles = "nonlinear inequality constraints", convergence = "globally convergent, conservative", caveat = "no equality constraints; slower final convergence")
+{{?model=ip}} (method = "Interior point (Ipopt via JuMP)", needs = "gradients and Hessians (JuMP computes them)", handles = "large sparse equality and inequality constraints", convergence = "superlinear, returns multipliers", caveat = "local solutions of non-convex problems")
+{{?model=fw}} (method = "Frank-Wolfe (FrankWolfe.jl)", needs = "gradient of f and a linear minimisation oracle", handles = "convex feasible sets", convergence = "O(1/k) in the objective, reports a dual gap", caveat = "the oracle here solves a small SLSQP problem, exact only for convex sets")
+{{?model=gp}} (method = "Gradient projection", needs = "gradient of f and a projection", handles = "convex feasible sets", convergence = "like gradient descent, O(1/k) for convex f", caveat = "the projection here solves a small SLSQP problem, unique only for convex sets")
+'''

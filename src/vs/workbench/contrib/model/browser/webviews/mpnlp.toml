@@ -1,0 +1,593 @@
+# Nonlinear Programming Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/mpnlp.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Nonlinear Programming"
+viewType = "pollis.mpnlp"
+defaultModel = "nlp"
+
+[[packages]]
+name = "JuMP.jl"
+github = "https://github.com/jump-dev/JuMP.jl"
+
+[[packages]]
+name = "Ipopt.jl"
+github = "https://github.com/jump-dev/Ipopt.jl"
+
+[[packages]]
+name = "SCIP.jl"
+github = "https://github.com/scipopt/SCIP.jl"
+
+[[packages]]
+name = "Juniper.jl"
+github = "https://github.com/lanl-ansi/Juniper.jl"
+
+[[packages]]
+name = "EAGO.jl"
+github = "https://github.com/PSORLab/EAGO.jl"
+
+[[packages]]
+name = "AmplNLWriter.jl"
+github = "https://github.com/jump-dev/AmplNLWriter.jl"
+
+[[packages]]
+name = "Couenne_jll.jl"
+github = "https://github.com/JuliaBinaryWrappers/Couenne_jll.jl"
+
+[requires]
+packages = ["JuMP.jl", "Ipopt.jl", "Plots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Basic NLP"
+file = "mpnlp/tutorial-01-basic-nlp.ipynb"
+bundled = true
+description = "Formulate and solve a smooth nonlinear programme with JuMP and Ipopt"
+
+[[notebookSections.notebooks]]
+name = "MLE Estimation"
+file = "mpnlp/tutorial-02-mle-estimation.ipynb"
+bundled = true
+description = "Maximum likelihood estimation as a nonlinear optimisation problem"
+
+[[notebookSections.notebooks]]
+name = "Basic MINLP"
+file = "mpnlp/tutorial-03-basic-minlp.ipynb"
+bundled = true
+description = "Formulate and solve a mixed-integer nonlinear programme with SCIP"
+
+[[notebookSections.notebooks]]
+name = "Global NLP"
+file = "mpnlp/tutorial-04-global-nlp.ipynb"
+bundled = true
+description = "Find certified global optima of nonconvex NLPs with EAGO and Couenne"
+
+[[wikis]]
+name = "Factsheet"
+file = "mpnlp/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "mpnlp/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "mpnlp/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "mpnlp/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "mpnlp/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "mpnlp/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Methods"
+
+[[wikis]]
+name = "NLP"
+file = "mpnlp/nlp.md"
+bundled = true
+
+[[wikis]]
+name = "MINLP"
+file = "mpnlp/minlp.md"
+bundled = true
+
+[[wikis]]
+name = "Global NLP"
+file = "mpnlp/gnlp.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Topics"
+
+[[wikis]]
+name = "KKT Conditions"
+file = "mpnlp/kkt.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "JuMP: A Modeling Language for Mathematical Optimization"
+authors = "Dunning, Iain; Huchette, Joey; Lubin, Miles"
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/15M1020575"
+openAccess = true
+
+[[references]]
+title = "On the Implementation of an Interior-Point Filter Line-Search Algorithm for Large-Scale Nonlinear Programming"
+authors = "Wachter, Andreas; Biegler, Lorenz T."
+year = 2006
+journal = "Mathematical Programming"
+doi = "10.1007/s10107-004-0559-y"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Numerical Optimization"
+authors = "Nocedal, Jorge; Wright, Stephen J."
+year = 2006
+journal = "Springer (2nd ed.)"
+doi = "10.1007/978-0-387-40065-5"
+openAccess = false
+
+[[references]]
+title = "Nonlinear Programming"
+authors = "Bazaraa, Mokhtar S.; Sherali, Hanif D.; Shetty, C. M."
+year = 2006
+journal = "Wiley (3rd ed.)"
+doi = "10.1002/0471787779"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Nonlinear Programming"
+authors = "Kuhn, Harold W.; Tucker, Albert W."
+year = 1951
+journal = "Proceedings of the Second Berkeley Symposium"
+url = "https://projecteuclid.org/euclid.bsmsp/1200500249"
+openAccess = true
+
+[[models]]
+id = "nlp"
+label = "Nonlinear Programming (NLP)"
+
+[[models]]
+id = "minlp"
+label = "Mixed-Integer NLP (MINLP)"
+
+[[models]]
+id = "gnlp"
+label = "Global NLP"
+
+[[decisionRows]]
+task = "NLP"
+context = "Smooth nonlinear objective and constraints, continuous variables"
+purpose = "Interior-point search for a locally optimal point satisfying the KKT conditions"
+
+[[decisionRows]]
+task = "MINLP"
+context = "Nonlinear model with on/off or cardinality decisions"
+purpose = "Branch and bound over binary variables with NLP relaxations at each node"
+
+[[decisionRows]]
+task = "Global NLP"
+context = "Nonconvex problems where a local optimum is not good enough"
+purpose = "Spatial branch and bound with convex relaxations to certify the global optimum"
+
+[[inputs]]
+id = "n"
+label = "n"
+tooltip = "Number of decision variables x[1], ..., x[n]."
+default = "5"
+
+[[inputs]]
+id = "sense"
+label = "Sense"
+tooltip = "Direction of optimisation."
+kind = "select"
+default = "Min"
+
+[[inputs.options]]
+value = "Min"
+label = "Minimise"
+
+[[inputs.options]]
+value = "Max"
+label = "Maximise"
+
+[[inputs]]
+id = "obj"
+label = "Objective"
+tooltip = "Nonlinear expression in the vector x, for example sum((x .- 1) .^ 2) + x[1] * x[2] or sum(sin.(x)). JuMP builds the nonlinear expression directly; user functions need @operator."
+default = "sum((x .- 1) .^ 2) + prod(x[1:2])"
+newRow = true
+
+[[inputs]]
+id = "cons"
+label = "Constraint"
+tooltip = "One constraint in x, for example sum(x) == 1 or sum(x .^ 2) <= 4. Add further @constraint lines in the generated code."
+default = "sum(x .^ 2) <= 4"
+
+[[inputs]]
+id = "lb"
+label = "Lower Bound"
+tooltip = "Lower bound on every x[i]. Global solvers need finite bounds; for MINLP it must be at most 0 so that x[i] can switch off."
+default = "-5"
+newRow = true
+
+[[inputs]]
+id = "ub"
+label = "Upper Bound"
+tooltip = "Upper bound on every x[i]. Global solvers need finite bounds."
+default = "5"
+
+[[inputs]]
+id = "card"
+label = "Max Nonzeros"
+tooltip = "At most this many x[i] may be nonzero; each x[i] is tied to a binary switch z[i]."
+default = "2"
+models = ["minlp"]
+
+[[inputs]]
+id = "nlpsolver"
+label = "Solver"
+tooltip = "Ipopt: the standard interior-point solver for smooth NLPs. MadNLP: a pure-Julia interior-point solver with the same interface, GPU-capable."
+kind = "select"
+default = "Ipopt"
+models = ["nlp"]
+
+[[inputs.options]]
+value = "Ipopt"
+label = "Ipopt"
+
+[[inputs.options]]
+value = "MadNLP"
+label = "MadNLP"
+
+[[inputs]]
+id = "minlpsolver"
+label = "Solver"
+tooltip = "SCIP: branch and cut with spatial branching, handles nonconvex MINLPs. Juniper: branch and bound over Ipopt relaxations, exact for convex MINLPs only."
+kind = "select"
+default = "SCIP"
+models = ["minlp"]
+
+[[inputs.options]]
+value = "SCIP"
+label = "SCIP"
+
+[[inputs.options]]
+value = "Juniper"
+label = "Juniper + Ipopt"
+
+[[inputs]]
+id = "gsolver"
+label = "Solver"
+tooltip = "EAGO: pure-Julia deterministic global optimiser using McCormick relaxations. SCIP: spatial branch and bound, also certifies global optimality."
+kind = "select"
+default = "EAGO"
+models = ["gnlp"]
+
+[[inputs.options]]
+value = "EAGO"
+label = "EAGO"
+
+[[inputs.options]]
+value = "SCIP"
+label = "SCIP"
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.nlp]
+# Nested elliptical contours with the optimum at the centre
+svg = '''
+var s = '';
+[18, 12, 6].forEach(function (r, i) {
+	s += '<ellipse cx="27" cy="46" rx="' + r + '" ry="' + (r * 0.65).toFixed(1) + '" fill="none" stroke="currentColor" stroke-width="1" opacity="' + (0.4 + 0.2 * i) + '" transform="rotate(-25 27 46)"/>';
+});
+return s + '<circle cx="27" cy="46" r="2.2" fill="currentColor"/>';
+'''
+
+[miniCharts.minlp]
+# Contours with integer lattice points, one of them chosen
+svg = '''
+var s = '<ellipse cx="27" cy="46" rx="18" ry="11" fill="none" stroke="currentColor" stroke-width="1" opacity="0.5" transform="rotate(-25 27 46)"/>';
+for (var i = 0; i < 4; i++) { for (var j = 0; j < 3; j++) {
+	s += '<circle cx="' + (12 + i * 10) + '" cy="' + (36 + j * 10) + '" r="1.4" fill="currentColor" opacity="0.5"/>';
+} }
+return s + '<circle cx="32" cy="46" r="2.8" fill="none" stroke="currentColor" stroke-width="1.4"/>';
+'''
+
+[miniCharts.gnlp]
+# Multimodal curve with the global minimum marked
+svg = '''
+var d = 'M6,40';
+for (var x = 6; x <= 48; x++) { d += ' L' + x + ',' + (46 - 8 * Math.sin((x - 6) / 4) - (x - 27) * (x - 27) / -60).toFixed(1); }
+return '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.3"/><line x1="0" y1="66" x2="54" y2="66" stroke="currentColor" stroke-width="0.6" opacity="0.4"/>';
+'''
+
+[[codeBranches]]
+model = "nlp"
+code = '''
+using JuMP, {{nlpsolver}}
+
+n = {{n}}  # number of decision variables
+lb, ub = {{lb}}, {{ub}}  # bounds on every x[i]
+
+function build(optimizer)
+    m = Model(optimizer)
+    set_silent(m)
+    @variable(m, lb <= x[1:n] <= ub, start = (lb + ub) / 2)
+    @objective(m, {{sense}}, {{obj}})
+    @constraint(m, {{cons}})
+    m, x
+end
+
+solver = {{nlpsolver}}.Optimizer  # local interior-point solver
+model, x = build(solver)
+optimize!(model)
+
+(status = termination_status(model), objective = objective_value(model), x = value.(x))
+'''
+
+[[codeBranches]]
+model = "minlp"
+code = '''
+using JuMP
+{{?minlpsolver=SCIP}} using SCIP
+{{?minlpsolver=Juniper}} using Juniper, Ipopt
+
+n = {{n}}  # number of decision variables
+lb, ub = {{lb}}, {{ub}}  # bounds on every x[i]
+
+function build(optimizer)
+    m = Model(optimizer)
+    set_silent(m)
+    @variable(m, lb <= x[1:n] <= ub, start = (lb + ub) / 2)
+    @objective(m, {{sense}}, {{obj}})
+    @constraint(m, {{cons}})
+    @variable(m, z[1:n], Bin)  # z[i] = 1 lets x[i] be nonzero
+    @constraint(m, [i = 1:n], lb * z[i] <= x[i] <= ub * z[i])
+    @constraint(m, sum(z) <= {{card}})  # cardinality limit
+    m, x
+end
+
+{{?minlpsolver=SCIP}} solver = SCIP.Optimizer  # branch and cut with spatial branching
+{{?minlpsolver=Juniper}} solver = optimizer_with_attributes(Juniper.Optimizer, "nl_solver" => optimizer_with_attributes(Ipopt.Optimizer, "print_level" => 0))
+model, x = build(solver)
+optimize!(model)
+
+(status = termination_status(model), objective = objective_value(model), x = value.(x))
+'''
+
+[[codeBranches]]
+model = "gnlp"
+code = '''
+using JuMP, {{gsolver}}
+
+n = {{n}}  # number of decision variables
+lb, ub = {{lb}}, {{ub}}  # bounds on every x[i]
+
+function build(optimizer)
+    m = Model(optimizer)
+    set_silent(m)
+    @variable(m, lb <= x[1:n] <= ub, start = (lb + ub) / 2)
+    @objective(m, {{sense}}, {{obj}})
+    @constraint(m, {{cons}})
+    m, x
+end
+
+solver = {{gsolver}}.Optimizer  # certifies the global optimum within its tolerance
+model, x = build(solver)
+optimize!(model)
+
+(status = termination_status(model), objective = objective_value(model), x = value.(x))
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "objective-surface"
+label = "Objective Contours"
+desc = "Contours of the objective over x[1] and x[2] around the optimum, with the other variables held at their optimal values"
+code = '''
+using Plots
+
+xs = value.(x)
+f(v) = value(vi -> v[findfirst(==(vi), x)], objective_function(model))  # evaluate the JuMP objective at a point
+g1 = range(lb, ub, length=60)
+g2 = range(lb, ub, length=60)
+Z  = [f([a; b; xs[3:end]]) for b in g2, a in g1]
+contour(g1, g2, Z, levels=30, xlabel="x[1]", ylabel="x[2]", fill=true)
+scatter!([xs[1]], [xs[2]], marker=:star, markersize=8, label="optimum")
+'''
+
+[[actionGroups.actions]]
+id = "solution-profile"
+label = "Solution Profile"
+desc = "Optimal value of each variable against its bounds"
+code = '''
+using Plots
+
+bar(value.(x), xlabel="i", ylabel="x[i]", legend=false)
+hline!([lb, ub], linestyle=:dash, color=:gray)
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "feasibility"
+label = "Status and Feasibility"
+desc = "Termination, primal and dual status, and any constraints violated by more than 1e-6 at the reported solution"
+code = '''
+(termination = termination_status(model), primal = primal_status(model), dual = dual_status(model),
+ violated = primal_feasibility_report(model; atol=1e-6))  # empty Dict = feasible
+'''
+
+[[actionGroups.actions]]
+id = "multistart"
+label = "Multi-Start"
+desc = "Re-solve from 20 random starting points: differing optima reveal a nonconvex problem with several local solutions"
+code = '''
+using Random, Plots
+
+Random.seed!(1)
+objs = map(1:20) do _
+    set_start_value.(x, lb .+ (ub - lb) .* rand(n))
+    optimize!(model)
+    is_solved_and_feasible(model) ? objective_value(model) : NaN
+end
+histogram(filter(!isnan, objs), bins=20, xlabel="objective at the solution found", ylabel="starts", legend=false)
+'''
+
+[[actionGroups.actions]]
+id = "solver-stats"
+label = "Solver Statistics"
+desc = "Solve time, iterations, branch-and-bound nodes and relative gap, where the solver reports them"
+code = '''
+stat(f) = try f(model) catch; missing end  # not every solver reports every attribute
+(time = stat(solve_time), barrier_iterations = stat(barrier_iterations), nodes = stat(node_count),
+ relative_gap = stat(relative_gap), bound = stat(objective_bound))
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "sensitivity"
+label = "Constraint Sensitivity"
+desc = "Shadow prices: change in the optimal objective per unit relaxation of each constraint (available when the solver returns duals)"
+code = '''
+has_duals(model) || error("this solver returned no duals (typical for MINLP and global solvers)")
+cons = all_constraints(model; include_variable_in_set_constraints=true)
+[(constraint = c, shadow_price = shadow_price(c)) for c in cons]
+'''
+
+[[actionGroups.actions]]
+id = "parametric"
+label = "Parametric Sweep"
+desc = "Tighten the upper bound on every variable step by step and track the optimal objective"
+code = '''
+using Plots
+
+caps = range(ub, lb + (ub - lb) / 10, length=15)
+vals = map(caps) do b
+    set_upper_bound.(x, b)
+    optimize!(model)
+    is_solved_and_feasible(model) ? objective_value(model) : NaN
+end
+set_upper_bound.(x, ub)  # restore
+plot(caps, vals, marker=:circle, xlabel="upper bound on x[i]", ylabel="optimal objective", legend=false)
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "solver-compare"
+label = "Solver Comparison"
+desc = "The same model with two solvers: objective, status and time"
+code = '''
+{{?model=nlp}} using Ipopt, MadNLP
+{{?model=nlp}} solvers = ["Ipopt" => Ipopt.Optimizer, "MadNLP" => MadNLP.Optimizer]
+{{?model=minlp}} using SCIP, Juniper, Ipopt
+{{?model=minlp}} solvers = ["SCIP" => SCIP.Optimizer,
+{{?model=minlp}}            "Juniper" => optimizer_with_attributes(Juniper.Optimizer, "nl_solver" => optimizer_with_attributes(Ipopt.Optimizer, "print_level" => 0))]
+{{?model=gnlp}} using EAGO, SCIP
+{{?model=gnlp}} solvers = ["EAGO" => EAGO.Optimizer, "SCIP" => SCIP.Optimizer]
+map(solvers) do (name, opt)
+    m, _ = build(opt)
+    t = @elapsed optimize!(m)
+    (solver = name, status = termination_status(m), objective = objective_value(m), seconds = t)
+end
+'''
+
+[[actionGroups.actions]]
+id = "gap-check"
+label = "Optimality Gap Check"
+desc = "NLP and Global NLP: local Ipopt optimum against the EAGO global optimum. MINLP: the integer optimum against its continuous relaxation bound"
+code = '''
+{{?model!=minlp}} using Ipopt, EAGO
+{{?model!=minlp}} loc, _ = build(Ipopt.Optimizer); optimize!(loc)
+{{?model!=minlp}} glo, _ = build(EAGO.Optimizer); optimize!(glo)
+{{?model!=minlp}} (local_ipopt = objective_value(loc), global_eago = objective_value(glo))  # equal = the local optimum is global
+{{?model=minlp}} undo = relax_integrality(model)  # drop the binary restriction on z
+{{?model=minlp}} optimize!(model)
+{{?model=minlp}} bound = objective_value(model)
+{{?model=minlp}} undo()
+{{?model=minlp}} optimize!(model)
+{{?model=minlp}} (integer = objective_value(model), relaxation_bound = bound, gap = abs(objective_value(model) - bound))
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "kkt"
+label = "KKT Conditions"
+desc = "At the solution: constraint values, multipliers and complementary slackness (multiplier times slack should be about 0)"
+code = '''
+has_duals(model) || error("this solver returned no duals (typical for MINLP and global solvers)")
+cons = [c for c in all_constraints(model; include_variable_in_set_constraints=true)
+        if constraint_object(c).set isa Union{MOI.LessThan, MOI.GreaterThan, MOI.EqualTo}]
+map(cons) do c
+    slack = value(c) - MOI.constant(constraint_object(c).set)
+    (constraint = c, value = value(c), multiplier = dual(c), complementarity = dual(c) * slack)
+end
+'''
+
+[[actionGroups.actions]]
+id = "constraint-activity"
+label = "Constraint Activity"
+desc = "Which constraints and bounds are binding (slack below 1e-6) at the optimum"
+code = '''
+cons = [c for c in all_constraints(model; include_variable_in_set_constraints=true)
+        if constraint_object(c).set isa Union{MOI.LessThan, MOI.GreaterThan, MOI.EqualTo}]
+[(constraint = c, slack = abs(value(c) - MOI.constant(constraint_object(c).set)),
+  binding = abs(value(c) - MOI.constant(constraint_object(c).set)) < 1e-6) for c in cons]
+'''

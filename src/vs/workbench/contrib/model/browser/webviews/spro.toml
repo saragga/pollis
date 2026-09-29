@@ -1,0 +1,641 @@
+# Stochastic Programming Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/spro.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Stochastic Programming"
+viewType = "pollis.spro"
+defaultModel = "ts"
+
+[[packages]]
+name = "StochasticPrograms.jl"
+github = "https://github.com/martinbiel/StochasticPrograms.jl"
+
+[[packages.videos]]
+title = "High Performance Computing in Julia"
+description = "An 18-video course by Jamie Mair on writing fast Julia code"
+url = "https://www.youtube.com/playlist?list=PLUAq6xQKFgGr39PiyrPk_C9dhBKvWcjUA"
+
+[[packages]]
+name = "SDDP.jl"
+github = "https://github.com/odow/SDDP.jl"
+
+[[packages]]
+name = "HiGHS.jl"
+github = "https://github.com/jump-dev/HiGHS.jl"
+
+[requires]
+packages = ["JuMP.jl", "HiGHS.jl", "SDDP.jl", "Plots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Two-Stage: Newsvendor"
+file = "spro/tutorial-01-two-stage.ipynb"
+bundled = true
+description = "Two-stage stochastic newsvendor problem: optimal order quantity under demand uncertainty using StochasticPrograms.jl and HiGHS"
+
+[[notebookSections.notebooks]]
+name = "Multistage Inventory"
+file = "spro/tutorial-02-multistage.ipynb"
+bundled = true
+description = "Multistage stochastic inventory control over T periods with scenario tree generation and progressive hedging via StochasticPrograms.jl"
+
+[[notebookSections.notebooks]]
+name = "SDDP: Hydro Scheduling"
+file = "spro/tutorial-03-sddp.ipynb"
+bundled = true
+description = "Hydrothermal scheduling with SDDP.jl: forward-backward pass, cutting plane convergence, and policy simulation over many stages"
+
+[[wikis]]
+name = "Factsheet"
+file = "spro/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "spro/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "spro/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "spro/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "spro/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "spro/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Methods"
+
+[[wikis]]
+name = "Two-Stage SP"
+file = "spro/two-stage.md"
+bundled = true
+
+[[wikis]]
+name = "Multistage SP"
+file = "spro/multistage.md"
+bundled = true
+
+[[wikis]]
+name = "SDDP"
+file = "spro/sddp.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "JuMP: A Modeling Language for Mathematical Optimization"
+authors = "Dunning, Iain; Huchette, Joey; Lubin, Miles"
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/15M1020575"
+openAccess = true
+
+[[references]]
+title = "StochasticPrograms.jl: A Progressive Hedging Library for Two-Stage Stochastic Programming in Julia"
+authors = "Biel, Martin; Johansson, Mikael"
+year = 2022
+journal = "Journal of Statistical Software"
+doi = "10.18637/jss.v095.i05"
+openAccess = true
+
+[[references]]
+title = "SDDP.jl: A Julia Package for Stochastic Dual Dynamic Programming"
+authors = "Dowson, Oscar; Kapelevich, Lea"
+year = 2021
+journal = "INFORMS Journal on Computing"
+doi = "10.1287/ijoc.2022.1253"
+openAccess = true
+
+[[references]]
+title = "HiGHS: Serial and Parallel Solution of Linear Programming"
+authors = "Huangfu, Qi; Hall, J.A.J."
+year = 2018
+journal = "Mathematical Programming Computation"
+doi = "10.1007/s12532-017-0130-5"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Introduction to Stochastic Programming"
+authors = "Birge, John R.; Louveaux, Francois"
+year = 2011
+journal = "Springer (2nd ed.)"
+doi = "10.1007/978-1-4614-0237-4"
+openAccess = false
+
+[[references]]
+title = "Lectures on Stochastic Programming: Modeling and Theory"
+authors = "Shapiro, Alexander; Dentcheva, Darinka; Ruszczynski, Andrzej"
+year = 2021
+journal = "SIAM (3rd ed.)"
+doi = "10.1137/1.9780898718751"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Linear Programming under Uncertainty"
+authors = "Dantzig, George B."
+year = 1955
+journal = "Management Science"
+doi = "10.1287/mnsc.1.3-4.197"
+openAccess = false
+
+[[references]]
+title = "Multi-stage Stochastic Optimization Applied to Energy Planning"
+authors = "Pereira, Mario V.F.; Pinto, Leontina M.V.G."
+year = 1991
+journal = "Mathematical Programming"
+doi = "10.1007/BF01582895"
+openAccess = false
+
+[[references]]
+title = "The Optimal Decision Policy for Multi-stage Stochastic Programming"
+authors = "Rockafellar, R. Tyrrell; Wets, Roger J-B."
+year = 1991
+journal = "Mathematics of Operations Research"
+doi = "10.1287/moor.16.1.119"
+openAccess = false
+
+[[models]]
+id = "ts"
+label = "Two-Stage"
+
+[[models]]
+id = "ms"
+label = "Multistage"
+
+[[models]]
+id = "sddp"
+label = "SDDP"
+
+[[bullets]]
+text = "Stochastic Programming discretises uncertainty into a finite set of scenarios or cuts and optimises decisions jointly over that representation. Unlike Stochastic Dynamic Programming"
+detail = "which solves the Bellman equation over a continuous state space and relies on Markovian structure — SP does not require the problem to be Markovian and can handle arbitrary scenario-dependent recourse."
+
+[[bullets]]
+text = "Stochastic Dual Dynamic Programming (SDDP) bridges the two: it handles many-stage SPs via Benders cuts, but assumes stagewise independence"
+detail = "a Markovian condition — to make the backward pass tractable. For problems with continuous state spaces and Markovian transitions, Stochastic Dynamic Programming in the Dynamic Optimisation menu is the natural alternative."
+
+[[decisionRows]]
+task = "Two-Stage"
+context = "Decide now, observe uncertainty once, then take a recourse action (newsvendor ordering, capacity sizing, unit commitment)"
+purpose = "Order before demand is known, sell after it is revealed; solved as one extensive-form LP over S sampled demand scenarios, with EVPI and VSS"
+
+[[decisionRows]]
+task = "Multistage"
+context = "Decisions and observations alternate over several periods and each decision may use only what has been observed (non-anticipativity)"
+purpose = "The same inventory problem over T periods on a scenario tree with S branches per period (S^T paths), solved exactly as one extensive-form LP"
+
+[[decisionRows]]
+task = "SDDP"
+context = "Many stages or large trees where the extensive form explodes, with stagewise-independent uncertainty and convex costs"
+purpose = "Stochastic dual dynamic programming (SDDP.jl): forward simulations and backward passes build Benders cuts of each stage's cost-to-go, giving a policy and a lower bound"
+
+[[inputs]]
+id = "S"
+label = "Scenarios per Stage (S)"
+tooltip = "Number of equally likely demand values sampled from Uniform(50, 150) for each period. The multistage tree has S^T paths, so keep S^T below about 10000."
+default = "20"
+
+[[inputs]]
+id = "T"
+label = "Periods (T)"
+tooltip = "Number of demand periods. The two-stage model always has one. The multistage extensive form grows as S^T; SDDP grows only linearly in T."
+default = "3"
+models = ["ms", "sddp"]
+
+[[inputs]]
+id = "iter"
+label = "SDDP Iterations"
+tooltip = "Iteration limit of SDDP training. Each iteration runs one forward simulation and one backward pass that adds a Benders cut per stage."
+default = "100"
+models = ["sddp"]
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.ts]
+# Root decision fanning out to recourse scenarios
+svg = '''
+let s = '<circle cx="10" cy="48" r="3.5" fill="currentColor"/>';
+for (let i = 0; i < 5; i++) { const y = 28 + i * 10; s += '<line x1="10" y1="48" x2="44" y2="' + y + '" stroke="currentColor" stroke-width="0.8"/><circle cx="44" cy="' + y + '" r="2.2" fill="currentColor"/>'; }
+return s;
+'''
+
+[miniCharts.ms]
+# Scenario tree branching over three stages
+svg = '''
+let s = '<circle cx="6" cy="48" r="3" fill="currentColor"/>';
+for (const y1 of [36, 60]) {
+	s += '<line x1="6" y1="48" x2="26" y2="' + y1 + '" stroke="currentColor" stroke-width="0.8"/><circle cx="26" cy="' + y1 + '" r="2.2" fill="currentColor"/>';
+	for (const dy of [-7, 7]) { s += '<line x1="26" y1="' + y1 + '" x2="46" y2="' + (y1 + dy) + '" stroke="currentColor" stroke-width="0.6"/><circle cx="46" cy="' + (y1 + dy) + '" r="1.6" fill="currentColor"/>'; }
+}
+return s;
+'''
+
+[miniCharts.sddp]
+# Piecewise-linear cuts under a convex cost-to-go
+svg = '''
+return '<line x1="6" y1="70" x2="50" y2="70" stroke="currentColor" stroke-width="0.6"/>'
+	+ '<path d="M8,30 Q28,78 48,34" fill="none" stroke="currentColor" stroke-width="1.4"/>'
+	+ '<line x1="6" y1="36" x2="26" y2="62" stroke="currentColor" stroke-width="0.8"/><line x1="16" y1="58" x2="40" y2="56" stroke="currentColor" stroke-width="0.8"/><line x1="30" y1="62" x2="50" y2="30" stroke="currentColor" stroke-width="0.8"/>';
+'''
+
+[[codeBranches]]
+model = "ts"
+code = '''
+using JuMP, HiGHS, SDDP, Random, Statistics
+
+S = {{S}}  # equally likely demand values per period
+price, cost, hold = 5.0, 2.0, 0.5  # sale price, unit order cost, holding cost per unit carried
+sample_demand(n; seed=1) = 50 .+ 100 .* rand(MersenneTwister(seed), n)  # Uniform(50, 150) demand
+demand = sample_demand(S)
+T = 1  # two stages: order now, sell once demand is revealed
+
+# Extensive form on the scenario tree: node k of period t has parent div(k - 1, S) + 1 and demand dem[mod1(k, S)]
+function solve_ef(dem=demand; T=T, s0=0.0, root=nothing)
+    S = length(dem)
+    m = Model(HiGHS.Optimizer); set_silent(m)
+    @variable(m, x0 >= 0)  # order placed before any demand is seen
+    root === nothing || fix(x0, root; force=true)
+    x = [@variable(m, [1:S^t], lower_bound = 0) for t in 1:T]  # order after period-t demand
+    y = [@variable(m, [1:S^t], lower_bound = 0) for t in 1:T]  # sales
+    s = [@variable(m, [1:S^t], lower_bound = 0) for t in 1:T]  # stock carried after sales
+    set_upper_bound.(x[T], 0.0)  # nothing to order after the last period
+    for t in 1:T, k in 1:S^t
+        p = div(k - 1, S) + 1
+        inflow = t == 1 ? s0 + x0 : s[t-1][p] + x[t-1][p]
+        @constraint(m, y[t][k] <= dem[mod1(k, S)])
+        @constraint(m, s[t][k] == inflow - y[t][k])
+    end
+    @objective(m, Min, cost * x0 + sum(sum(cost .* x[t] .- price .* y[t] .+ hold .* s[t]) / S^t for t in 1:T))
+    optimize!(m)
+    (obj = objective_value(m), x0 = value(x0), x = [value.(v) for v in x], y = [value.(v) for v in y], s = [value.(v) for v in s], dem = dem)
+end
+
+function path_costs(sol)  # total cost along every root-to-leaf path
+    S, T = length(sol.dem), length(sol.x)
+    [cost * sol.x0 + sum(begin
+        a = div(k - 1, S^(T - t)) + 1  # ancestor of leaf k in period t
+        cost * sol.x[t][a] - price * sol.y[t][a] + hold * sol.s[t][a]
+    end for t in 1:T) for k in 1:S^T]
+end
+
+# SDDP on the same problem: stage 1 only orders, stages 2 .. T+1 observe demand, sell and reorder
+function build_sddp(dem=demand; T=T, s0=0.0)
+    SDDP.LinearPolicyGraph(stages = T + 1, sense = :Min, lower_bound = -price * T * maximum(dem), optimizer = HiGHS.Optimizer) do sp, t
+        @variable(sp, stock >= 0, SDDP.State, initial_value = s0)
+        @variable(sp, ordered >= 0, SDDP.State, initial_value = 0.0)
+        @variable(sp, sales >= 0)
+        @variable(sp, d)
+        t == T + 1 && set_upper_bound(ordered.out, 0.0)
+        @constraint(sp, sales <= d)
+        @constraint(sp, stock.out == stock.in + ordered.in - sales)
+        @stageobjective(sp, cost * ordered.out - price * sales + (t > 1 ? hold : 0.0) * stock.out)
+        if t == 1
+            fix(d, 0.0)
+        else
+            SDDP.parameterize(w -> fix(d, w), sp, dem)
+        end
+    end
+end
+sim_cost(r) = sum(st[:stage_objective] for st in r)  # total cost of one SDDP simulation
+sol = solve_ef()  # extensive form
+(order = round(sol.x0, digits=2), expected_cost = round(sol.obj, digits=2), expected_profit = round(-sol.obj, digits=2))
+'''
+
+[[codeBranches]]
+model = "ms"
+code = '''
+using JuMP, HiGHS, SDDP, Random, Statistics
+
+S = {{S}}  # equally likely demand values per period
+price, cost, hold = 5.0, 2.0, 0.5  # sale price, unit order cost, holding cost per unit carried
+sample_demand(n; seed=1) = 50 .+ 100 .* rand(MersenneTwister(seed), n)  # Uniform(50, 150) demand
+demand = sample_demand(S)
+T = {{T}}  # demand periods
+
+# Extensive form on the scenario tree: node k of period t has parent div(k - 1, S) + 1 and demand dem[mod1(k, S)]
+function solve_ef(dem=demand; T=T, s0=0.0, root=nothing)
+    S = length(dem)
+    m = Model(HiGHS.Optimizer); set_silent(m)
+    @variable(m, x0 >= 0)  # order placed before any demand is seen
+    root === nothing || fix(x0, root; force=true)
+    x = [@variable(m, [1:S^t], lower_bound = 0) for t in 1:T]  # order after period-t demand
+    y = [@variable(m, [1:S^t], lower_bound = 0) for t in 1:T]  # sales
+    s = [@variable(m, [1:S^t], lower_bound = 0) for t in 1:T]  # stock carried after sales
+    set_upper_bound.(x[T], 0.0)  # nothing to order after the last period
+    for t in 1:T, k in 1:S^t
+        p = div(k - 1, S) + 1
+        inflow = t == 1 ? s0 + x0 : s[t-1][p] + x[t-1][p]
+        @constraint(m, y[t][k] <= dem[mod1(k, S)])
+        @constraint(m, s[t][k] == inflow - y[t][k])
+    end
+    @objective(m, Min, cost * x0 + sum(sum(cost .* x[t] .- price .* y[t] .+ hold .* s[t]) / S^t for t in 1:T))
+    optimize!(m)
+    (obj = objective_value(m), x0 = value(x0), x = [value.(v) for v in x], y = [value.(v) for v in y], s = [value.(v) for v in s], dem = dem)
+end
+
+function path_costs(sol)  # total cost along every root-to-leaf path
+    S, T = length(sol.dem), length(sol.x)
+    [cost * sol.x0 + sum(begin
+        a = div(k - 1, S^(T - t)) + 1  # ancestor of leaf k in period t
+        cost * sol.x[t][a] - price * sol.y[t][a] + hold * sol.s[t][a]
+    end for t in 1:T) for k in 1:S^T]
+end
+
+# SDDP on the same problem: stage 1 only orders, stages 2 .. T+1 observe demand, sell and reorder
+function build_sddp(dem=demand; T=T, s0=0.0)
+    SDDP.LinearPolicyGraph(stages = T + 1, sense = :Min, lower_bound = -price * T * maximum(dem), optimizer = HiGHS.Optimizer) do sp, t
+        @variable(sp, stock >= 0, SDDP.State, initial_value = s0)
+        @variable(sp, ordered >= 0, SDDP.State, initial_value = 0.0)
+        @variable(sp, sales >= 0)
+        @variable(sp, d)
+        t == T + 1 && set_upper_bound(ordered.out, 0.0)
+        @constraint(sp, sales <= d)
+        @constraint(sp, stock.out == stock.in + ordered.in - sales)
+        @stageobjective(sp, cost * ordered.out - price * sales + (t > 1 ? hold : 0.0) * stock.out)
+        if t == 1
+            fix(d, 0.0)
+        else
+            SDDP.parameterize(w -> fix(d, w), sp, dem)
+        end
+    end
+end
+sim_cost(r) = sum(st[:stage_objective] for st in r)  # total cost of one SDDP simulation
+sol = solve_ef()  # extensive form over S^T paths
+(first_order = round(sol.x0, digits=2), expected_cost = round(sol.obj, digits=2), paths = S^T)
+'''
+
+[[codeBranches]]
+model = "sddp"
+code = '''
+using JuMP, HiGHS, SDDP, Random, Statistics
+
+S = {{S}}  # equally likely demand values per period
+price, cost, hold = 5.0, 2.0, 0.5  # sale price, unit order cost, holding cost per unit carried
+sample_demand(n; seed=1) = 50 .+ 100 .* rand(MersenneTwister(seed), n)  # Uniform(50, 150) demand
+demand = sample_demand(S)
+T = {{T}}  # demand periods
+iters = {{iter}}  # SDDP iterations
+
+# Extensive form on the scenario tree: node k of period t has parent div(k - 1, S) + 1 and demand dem[mod1(k, S)]
+function solve_ef(dem=demand; T=T, s0=0.0, root=nothing)
+    S = length(dem)
+    m = Model(HiGHS.Optimizer); set_silent(m)
+    @variable(m, x0 >= 0)  # order placed before any demand is seen
+    root === nothing || fix(x0, root; force=true)
+    x = [@variable(m, [1:S^t], lower_bound = 0) for t in 1:T]  # order after period-t demand
+    y = [@variable(m, [1:S^t], lower_bound = 0) for t in 1:T]  # sales
+    s = [@variable(m, [1:S^t], lower_bound = 0) for t in 1:T]  # stock carried after sales
+    set_upper_bound.(x[T], 0.0)  # nothing to order after the last period
+    for t in 1:T, k in 1:S^t
+        p = div(k - 1, S) + 1
+        inflow = t == 1 ? s0 + x0 : s[t-1][p] + x[t-1][p]
+        @constraint(m, y[t][k] <= dem[mod1(k, S)])
+        @constraint(m, s[t][k] == inflow - y[t][k])
+    end
+    @objective(m, Min, cost * x0 + sum(sum(cost .* x[t] .- price .* y[t] .+ hold .* s[t]) / S^t for t in 1:T))
+    optimize!(m)
+    (obj = objective_value(m), x0 = value(x0), x = [value.(v) for v in x], y = [value.(v) for v in y], s = [value.(v) for v in s], dem = dem)
+end
+
+function path_costs(sol)  # total cost along every root-to-leaf path
+    S, T = length(sol.dem), length(sol.x)
+    [cost * sol.x0 + sum(begin
+        a = div(k - 1, S^(T - t)) + 1  # ancestor of leaf k in period t
+        cost * sol.x[t][a] - price * sol.y[t][a] + hold * sol.s[t][a]
+    end for t in 1:T) for k in 1:S^T]
+end
+
+# SDDP on the same problem: stage 1 only orders, stages 2 .. T+1 observe demand, sell and reorder
+function build_sddp(dem=demand; T=T, s0=0.0)
+    SDDP.LinearPolicyGraph(stages = T + 1, sense = :Min, lower_bound = -price * T * maximum(dem), optimizer = HiGHS.Optimizer) do sp, t
+        @variable(sp, stock >= 0, SDDP.State, initial_value = s0)
+        @variable(sp, ordered >= 0, SDDP.State, initial_value = 0.0)
+        @variable(sp, sales >= 0)
+        @variable(sp, d)
+        t == T + 1 && set_upper_bound(ordered.out, 0.0)
+        @constraint(sp, sales <= d)
+        @constraint(sp, stock.out == stock.in + ordered.in - sales)
+        @stageobjective(sp, cost * ordered.out - price * sales + (t > 1 ? hold : 0.0) * stock.out)
+        if t == 1
+            fix(d, 0.0)
+        else
+            SDDP.parameterize(w -> fix(d, w), sp, dem)
+        end
+    end
+end
+sim_cost(r) = sum(st[:stage_objective] for st in r)  # total cost of one SDDP simulation
+sd = build_sddp()
+SDDP.train(sd; iteration_limit = iters, print_level = 0)
+sims = SDDP.simulate(sd, 500, [:stock, :ordered, :sales])  # in-sample policy simulations
+tc = sim_cost.(sims)
+(first_order = round(sims[1][1][:ordered].out, digits=2), lower_bound = round(SDDP.calculate_bound(sd), digits=2),
+ simulated_cost = round(mean(tc), digits=2), ci_halfwidth = round(1.96 * std(tc) / sqrt(length(tc)), digits=2))
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "cost-distribution"
+label = "Cost Distribution"
+desc = "Distribution of total cost across scenario paths (extensive form) or simulated paths (SDDP), with its mean"
+code = '''
+using Plots
+{{?model=ts|ms}}pc = path_costs(sol)
+{{?model=sddp}}pc = sim_cost.(sims)
+histogram(pc, bins=30, label=false, xlabel="Total cost", ylabel="Paths", title="Cost distribution (" * string(length(pc)) * " paths)")
+vline!([mean(pc)], lw=2, label="mean")
+'''
+
+[[actionGroups.actions]]
+id = "decision-paths"
+label = "Decision Paths"
+desc = "Two-stage: sales and leftover stock against demand in each scenario. Multistage and SDDP: orders and stock along 30 scenario paths"
+code = '''
+using Plots
+{{?model=ts}}scatter(sol.dem, sol.y[1], label="sales", xlabel="Demand", ylabel="Units", title="Recourse per scenario")
+{{?model=ts}}scatter!(sol.dem, sol.s[1], label="leftover")
+{{?model=ts}}hline!([sol.x0], lw=2, label="order")
+{{?model=ms}}leaves = rand(MersenneTwister(3), 1:S^T, min(30, S^T))
+{{?model=ms}}anc(k, t) = div(k - 1, S^(T - t)) + 1
+{{?model=ms}}orders = [t == 0 ? sol.x0 : sol.x[t][anc(k, t)] for t in 0:T-1, k in leaves]
+{{?model=ms}}stock = [sol.s[t][anc(k, t)] for t in 1:T, k in leaves]
+{{?model=sddp}}orders = [r[t][:ordered].out for t in 1:T, r in sims[1:30]]
+{{?model=sddp}}stock = [r[t][:stock].out for t in 2:T+1, r in sims[1:30]]
+{{?model=ms|sddp}}plot(plot(0:T-1, orders, label=false, alpha=0.5, marker=:o, xlabel="Period", ylabel="Order", title="Orders"),
+{{?model=ms|sddp}}    plot(1:T, stock, label=false, alpha=0.5, marker=:o, xlabel="Period", ylabel="Stock after sales", title="Stock"),
+{{?model=ms|sddp}}    layout=(1, 2), size=(900, 350))
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "bound-gap"
+label = "Bound Gap"
+desc = "Extensive form: sample-average lower bound over independent scenario sets against the cost of the chosen first order on fresh scenarios. SDDP: cut-based lower bound against the simulated cost with its 95% interval"
+code = '''
+{{?model=ts|ms}}reps = [solve_ef(sample_demand(S; seed=100 + r)).obj for r in 1:10]  # SAA optima are biased low
+{{?model=ts|ms}}lb, se = mean(reps), std(reps) / sqrt(length(reps))
+{{?model=ts|ms}}ups = [solve_ef(sample_demand(T == 1 ? 2000 : S; seed=200 + r); root=sol.x0).obj for r in 1:10]  # chosen first order, fresh scenarios
+{{?model=ts|ms}}ub, ue = mean(ups), std(ups) / sqrt(length(ups))
+{{?model=ts|ms}}(lower_bound = round(lb, digits=2), lower_se = round(se, digits=2), upper_estimate = round(ub, digits=2), upper_se = round(ue, digits=2), gap = round(ub - lb, digits=2))
+{{?model=sddp}}lb, ub = SDDP.calculate_bound(sd), mean(tc)
+{{?model=sddp}}hw = 1.96 * std(tc) / sqrt(length(tc))
+{{?model=sddp}}(lower_bound = round(lb, digits=2), simulated_cost = round(ub, digits=2), ci = round.((ub - hw, ub + hw), digits=2), gap_percent = round(100 * (ub - lb) / abs(lb), digits=2))
+'''
+
+[[actionGroups.actions]]
+id = "scenario-count"
+label = "Scenario Count Study"
+desc = "Optimal cost and first order as the number of sampled demand values per period grows: the sample-average approximation stabilises"
+code = '''
+using Plots
+{{?model=ts|ms}}counts = T == 1 ? [5, 10, 20, 50, 100, 200, 500] : filter(n -> n^T <= 20_000, [2, 3, 5, 8, 12, 20])
+{{?model=ts|ms}}res = [solve_ef(sample_demand(n)) for n in counts]
+{{?model=ts|ms}}obj, first = [r.obj for r in res], [r.x0 for r in res]
+{{?model=sddp}}counts = [3, 5, 10, 20, 50]
+{{?model=sddp}}res = map(counts) do n
+{{?model=sddp}}    m = build_sddp(sample_demand(n))
+{{?model=sddp}}    SDDP.train(m; iteration_limit = min(iters, 50), print_level = 0)
+{{?model=sddp}}    (SDDP.calculate_bound(m), SDDP.simulate(m, 1, [:ordered])[1][1][:ordered].out)
+{{?model=sddp}}end
+{{?model=sddp}}obj, first = first.(res), last.(res)
+plot(plot(counts, obj, marker=:o, xscale=:log10, xlabel="Scenarios per period", ylabel="Expected cost", legend=false),
+    plot(counts, first, marker=:o, xscale=:log10, xlabel="Scenarios per period", ylabel="First order", legend=false),
+    layout=(1, 2), size=(900, 350))
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "out-of-sample"
+label = "Out-of-Sample"
+desc = "Cost distribution of the decisions on fresh demand scenarios never used in the optimisation"
+code = '''
+using Plots
+{{?model=ts|ms}}fresh = solve_ef(sample_demand(T == 1 ? 5000 : S; seed=99); root=sol.x0)  # first order fixed, recourse re-optimised
+{{?model=ts|ms}}pc = path_costs(fresh)
+{{?model=sddp}}fresh = sample_demand(S; seed=99)
+{{?model=sddp}}scheme = SDDP.OutOfSampleMonteCarlo(sd; use_insample_transition = true) do node
+{{?model=sddp}}    node == 1 ? [SDDP.Noise(nothing, 1.0)] : [SDDP.Noise(w, 1 / S) for w in fresh]
+{{?model=sddp}}end
+{{?model=sddp}}pc = sim_cost.(SDDP.simulate(sd, 500; sampling_scheme = scheme))
+println("Mean ", round(mean(pc), digits=2), "   std ", round(std(pc), digits=2), "   95% quantile ", round(quantile(pc, 0.95), digits=2))
+histogram(pc, bins=30, label=false, xlabel="Total cost on fresh scenarios", ylabel="Paths", title="Out-of-sample cost")
+'''
+
+[[actionGroups.actions]]
+id = "stage-plan"
+label = "Stage Plan"
+desc = "Expected order, sales and stock in every period under the optimal decisions"
+code = '''
+{{?model=ts|ms}}[(period = t, mean_order = round(t == 0 ? sol.x0 : mean(sol.x[t]), digits=2),
+{{?model=ts|ms}}  mean_sales = t == 0 ? 0.0 : round(mean(sol.y[t]), digits=2), mean_stock = t == 0 ? 0.0 : round(mean(sol.s[t]), digits=2)) for t in 0:T]
+{{?model=sddp}}[(period = t - 1, mean_order = round(mean(r[t][:ordered].out for r in sims), digits=2),
+{{?model=sddp}}  mean_sales = round(mean(r[t][:sales] for r in sims), digits=2), mean_stock = round(mean(r[t][:stock].out for r in sims), digits=2)) for t in 1:T+1]
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "wait-and-see"
+label = "Wait-and-See"
+desc = "Recourse problem (RP) against the wait-and-see bound (WS, perfect information) and the expected cost of the mean-demand solution (EEV): EVPI = RP - WS, VSS = EEV - RP"
+code = '''
+ws = (cost - price) * T * mean(demand)  # with perfect information every period's demand is ordered exactly
+{{?model=ts|ms}}rp = sol.obj
+{{?model=ts|ms}}ev = solve_ef([mean(demand)])  # deterministic mean-demand problem
+{{?model=ts|ms}}eev = solve_ef(; root=ev.x0).obj  # its first order under real uncertainty
+{{?model=ts|ms}}(WS = round(ws, digits=2), RP = round(rp, digits=2), EEV = round(eev, digits=2), EVPI = round(rp - ws, digits=2), VSS = round(eev - rp, digits=2))
+{{?model=sddp}}rp = mean(tc)  # simulated cost of the SDDP policy
+{{?model=sddp}}(WS = round(ws, digits=2), RP_simulated = round(rp, digits=2), RP_lower_bound = round(SDDP.calculate_bound(sd), digits=2), EVPI = round(rp - ws, digits=2))
+'''
+
+[[actionGroups.actions]]
+id = "ef-vs-sddp"
+label = "Extensive Form vs SDDP"
+desc = "The same problem solved exactly as one extensive-form LP and approximately by SDDP: optimal cost, first order and run time"
+code = '''
+t_ef = @elapsed ef = S^T <= 20_000 ? solve_ef() : nothing
+t_sddp = @elapsed begin
+    m = build_sddp()
+    SDDP.train(m; iteration_limit = 100, print_level = 0)
+end
+[(method = "extensive form", cost = ef === nothing ? NaN : round(ef.obj, digits=2), first_order = ef === nothing ? NaN : round(ef.x0, digits=2), seconds = round(t_ef, digits=2)),
+ (method = "SDDP (100 iterations)", cost = round(SDDP.calculate_bound(m), digits=2), first_order = round(SDDP.simulate(m, 1, [:ordered])[1][1][:ordered].out, digits=2), seconds = round(t_sddp, digits=2))]
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "stock-value"
+label = "Value of Initial Stock"
+desc = "Optimal expected cost as a function of the stock on hand at the start, and the marginal value of one more unit"
+code = '''
+using Plots
+s0s = collect(0:10:150)
+{{?model=ts|ms}}v = [solve_ef(; s0=s).obj for s in s0s]
+{{?model=sddp}}V = SDDP.ValueFunction(sd; node = 1)
+{{?model=sddp}}v = [SDDP.evaluate(V, Dict(:stock => s, :ordered => 0.0))[1] for s in s0s]
+plot(plot(s0s, v, marker=:o, xlabel="Initial stock", ylabel="Expected cost", legend=false),
+    plot(s0s[2:end], -diff(v) ./ diff(s0s), marker=:o, xlabel="Initial stock", ylabel="Value of one more unit", legend=false),
+    layout=(1, 2), size=(900, 350))
+'''
+
+[[actionGroups.actions]]
+id = "critical-fractile"
+label = "Critical Fractile"
+desc = "Order-up-to levels of the optimal policy against the newsvendor fractiles: (p - c) / (p + h) when leftovers are wasted, (p - c) / (p - c + h) when they carry over"
+code = '''
+last_q = quantile(demand, (price - cost) / (price + hold))  # final period: leftover only costs holding and is lost
+carry_q = quantile(demand, (price - cost) / (price - cost + hold))  # earlier periods: leftover is used next period
+{{?model=ts|ms}}levels = [t == 0 ? sol.x0 : mean(sol.s[t] .+ sol.x[t]) for t in 0:T-1]  # stock after ordering
+{{?model=sddp}}levels = [mean(r[t][:stock].out + r[t][:ordered].out for r in sims) for t in 1:T]
+(fractile_last_period = round(last_q, digits=2), fractile_with_carry_over = round(carry_q, digits=2), order_up_to_by_period = round.(levels, digits=2))
+'''

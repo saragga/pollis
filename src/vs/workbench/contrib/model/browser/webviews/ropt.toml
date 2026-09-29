@@ -1,0 +1,696 @@
+# Uncertainty-Set Robust Optimisation Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/ropt.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Uncertainty-Set Robust Optimisation"
+viewType = "pollis.ropt"
+defaultModel = "box"
+
+[[packages]]
+name = "JuMP.jl"
+github = "https://github.com/jump-dev/JuMP.jl"
+
+[[packages]]
+name = "HiGHS.jl"
+github = "https://github.com/jump-dev/HiGHS.jl"
+
+[[packages]]
+name = "Clarabel.jl"
+github = "https://github.com/oxfordcontrol/Clarabel.jl"
+
+[requires]
+packages = ["JuMP.jl", "HiGHS.jl", "Clarabel.jl", "Plots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Box Uncertainty"
+file = "ropt/tutorial-01-box.ipynb"
+bundled = true
+description = "LP robust counterpart for box uncertainty: component-wise bounds reformulated as LP with auxiliary variables via JuMP and HiGHS"
+
+[[notebookSections.notebooks]]
+name = "Ellipsoidal Uncertainty"
+file = "ropt/tutorial-02-ellipsoidal.ipynb"
+bundled = true
+description = "SOCP robust counterpart for ellipsoidal uncertainty: norm-bounded perturbations reformulated as second-order cone constraints via Clarabel"
+
+[[notebookSections.notebooks]]
+name = "Budgeted Uncertainty"
+file = "ropt/tutorial-03-budgeted.ipynb"
+bundled = true
+description = "LP robust counterpart for Bertsimas-Sim budgeted uncertainty: at most k parameters deviate; conservatism controlled by the budget parameter"
+
+[[notebookSections.notebooks]]
+name = "Polyhedral Uncertainty"
+file = "ropt/tutorial-04-polyhedral.ipynb"
+bundled = true
+description = "LP robust counterpart for polyhedral uncertainty via LP duality; most general linear uncertainty set description"
+
+[[wikis]]
+name = "Factsheet"
+file = "ropt/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "ropt/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "ropt/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "ropt/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "ropt/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "ropt/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Uncertainty Sets"
+
+[[wikis]]
+name = "Box Uncertainty"
+file = "ropt/box.md"
+bundled = true
+
+[[wikis]]
+name = "Ellipsoidal Uncertainty"
+file = "ropt/ellipsoidal.md"
+bundled = true
+
+[[wikis]]
+name = "Budgeted Uncertainty"
+file = "ropt/budgeted.md"
+bundled = true
+
+[[wikis]]
+name = "Polyhedral Uncertainty"
+file = "ropt/polyhedral.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "JuMP: A Modeling Language for Mathematical Optimization"
+authors = "Dunning, Iain; Huchette, Joey; Lubin, Miles"
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/15M1020575"
+openAccess = true
+
+[[references]]
+title = "HiGHS: Serial and Parallel Solution of Linear Programming"
+authors = "Huangfu, Qi; Hall, J.A.J."
+year = 2018
+journal = "Mathematical Programming Computation"
+doi = "10.1007/s12532-017-0130-5"
+openAccess = true
+
+[[references]]
+title = "Clarabel: An Interior-Point Solver for Conic Programs with Quadratic Objectives"
+authors = "Goulart, Paul J.; Chen, Yuwen"
+year = 2024
+journal = "arXiv"
+doi = "10.48550/arXiv.2405.14674"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Robust Optimization"
+authors = "Ben-Tal, Aharon; El Ghaoui, Laurent; Nemirovski, Arkadi"
+year = 2009
+journal = "Princeton University Press"
+doi = "10.1515/9781400831050"
+openAccess = false
+
+[[references]]
+title = "Introduction to Linear Optimization"
+authors = "Bertsimas, Dimitris; Tsitsiklis, John N."
+year = 1997
+journal = "Athena Scientific"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Convex Programming with Set-Inclusive Constraints and Applications to Inexact Linear Programming"
+authors = "Soyster, Allen L."
+year = 1973
+journal = "Operations Research"
+doi = "10.1287/opre.21.5.1154"
+openAccess = false
+
+[[references]]
+title = "Robust Convex Optimization"
+authors = "Ben-Tal, Aharon; Nemirovski, Arkadi"
+year = 1998
+journal = "Mathematics of Operations Research"
+doi = "10.1287/moor.23.4.769"
+openAccess = false
+
+[[references]]
+title = "The Price of Robustness"
+authors = "Bertsimas, Dimitris; Sim, Melvyn"
+year = 2004
+journal = "Operations Research"
+doi = "10.1287/opre.1030.0065"
+openAccess = false
+
+[[references]]
+title = "Robust Discrete Optimization and Network Flows"
+authors = "Bertsimas, Dimitris; Sim, Melvyn"
+year = 2003
+journal = "Mathematical Programming"
+doi = "10.1007/s10107-003-0396-4"
+openAccess = false
+
+[[models]]
+id = "box"
+label = "Box"
+
+[[models]]
+id = "ellip"
+label = "Ellipsoidal"
+
+[[models]]
+id = "budget"
+label = "Budgeted"
+
+[[models]]
+id = "poly"
+label = "Polyhedral"
+
+[[bullets]]
+text = "Robust optimisation finds a solution that remains feasible and near-optimal for all realisations of uncertain parameters within a prescribed uncertainty set"
+detail = "no probability distribution is assumed. The approach is distribution-free and guarantees worst-case feasibility."
+
+[[bullets]]
+text = "The key insight is that for standard uncertainty sets (box, ellipsoidal, budgeted, polyhedral) the robust counterpart reformulates exactly into a deterministic LP or SOCP, solved directly in JuMP without a specialised robust optimisation package."
+detail = ""
+
+[[decisionRows]]
+task = "Box"
+context = "Every coefficient may independently take its worst value (Soyster); simplest and most conservative"
+purpose = "Each resource coefficient lies in [a_ij - rho |a_ij|, a_ij + rho |a_ij|]; the robust counterpart stays an LP with every deviation added in full"
+
+[[decisionRows]]
+task = "Ellipsoidal"
+context = "Deviations are unlikely to be all extreme at once; protect against a Euclidean ball of joint deviations (Ben-Tal and Nemirovski)"
+purpose = "a_i = a0_i + diag(ahat_i) u with ||u||_2 <= omega; the robust counterpart is a second-order cone programme (Clarabel)"
+
+[[decisionRows]]
+task = "Budgeted"
+context = "At most Gamma coefficients per constraint deviate simultaneously (Bertsimas and Sim); tunable price of robustness"
+purpose = "u in the box with ||u||_1 <= Gamma; the Bertsimas-Sim reformulation keeps an LP and interpolates between nominal (Gamma = 0) and box (Gamma = n)"
+
+[[decisionRows]]
+task = "Polyhedral"
+context = "Any uncertainty set described by linear inequalities W u <= h; the general LP-duality route"
+purpose = "Here the cross-polytope ||u||_1 <= Gamma written as W u <= h over all sign vectors; the inner maximisation is replaced by its LP dual. It equals the budgeted set for Gamma <= 1 and is not clipped to the box beyond"
+
+[[inputs]]
+id = "c"
+label = "Profit c"
+tooltip = "Profit per unit of each product; the model maximises c^T x with x >= 0. The feasible-region plot needs two products."
+default = "[5.0, 4.0]"
+
+[[inputs]]
+id = "A"
+label = "Resource Use A"
+tooltip = "Nominal resource-use matrix (one row per constraint a_i^T x <= b_i, one column per product), as a Julia matrix literal."
+default = "[6.0 4.0; 1.0 2.0; -1.0 1.0; 0.0 1.0]"
+
+[[inputs]]
+id = "b"
+label = "Capacity b"
+tooltip = "Right-hand side of each constraint (available resource)."
+default = "[24.0, 6.0, 1.0, 2.0]"
+
+[[inputs]]
+id = "rho"
+label = "Relative Deviation (rho)"
+tooltip = "Each coefficient may deviate from its nominal value by up to rho |a_ij|; zero coefficients are certain."
+default = "0.1"
+
+[[inputs]]
+id = "omega"
+label = "Ellipsoid Radius (omega)"
+tooltip = "Radius of the ball ||u||_2 <= omega of scaled deviations. omega = 1 lies inside the box; omega = sqrt(n) contains it."
+default = "1.0"
+models = ["ellip"]
+
+[[inputs]]
+id = "gamma"
+label = "Budget (Gamma)"
+tooltip = "Total scaled deviation allowed per constraint, between 0 (nominal) and the number of products. For the budgeted set it is the number of coefficients that may deviate fully."
+default = "1.0"
+models = ["budget", "poly"]
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.box]
+# Square uncertainty set around the nominal point
+svg = '''
+return '<rect x="12" y="28" width="30" height="30" fill="currentColor" fill-opacity="0.15" stroke="currentColor" stroke-width="1.4"/><circle cx="27" cy="43" r="2" fill="currentColor"/>';
+'''
+
+[miniCharts.ellip]
+# Ellipsoidal uncertainty set
+svg = '''
+return '<ellipse cx="27" cy="43" rx="19" ry="12" transform="rotate(-25 27 43)" fill="currentColor" fill-opacity="0.15" stroke="currentColor" stroke-width="1.4"/><circle cx="27" cy="43" r="2" fill="currentColor"/>';
+'''
+
+[miniCharts.budget]
+# Box cut by a diamond: the budgeted set
+svg = '''
+return '<rect x="12" y="28" width="30" height="30" fill="none" stroke="currentColor" stroke-width="0.6" stroke-dasharray="2,2"/>'
+	+ '<polygon points="20,28 34,28 42,36 42,50 34,58 20,58 12,50 12,36" fill="currentColor" fill-opacity="0.15" stroke="currentColor" stroke-width="1.4"/><circle cx="27" cy="43" r="2" fill="currentColor"/>';
+'''
+
+[miniCharts.poly]
+# General polytope W u <= h
+svg = '''
+return '<polygon points="27,24 46,38 40,60 16,62 9,40" fill="currentColor" fill-opacity="0.15" stroke="currentColor" stroke-width="1.4"/><circle cx="27" cy="43" r="2" fill="currentColor"/>';
+'''
+
+[[codeBranches]]
+model = "box"
+code = '''
+using JuMP, HiGHS, Clarabel, LinearAlgebra, Random, Statistics
+
+c = {{c}}  # profit per unit (maximise c'x, x >= 0)
+A = {{A}}  # nominal resource use: row i is the constraint a_i'x <= b_i
+b = {{b}}  # capacities
+rho = {{rho}}  # coefficient a_ij may deviate by up to rho |a_ij|
+Ahat = rho .* abs.(A)  # maximal deviations
+nc, n = size(A)
+set, par = :box, (;)  # box set ||u||_inf <= 1
+
+# Worst-case increase of a_i'x over the set, for deviations d = ahat_i .* x (x >= 0)
+function protect(set, d; gamma=1.0, omega=1.0)
+    set == :nominal && return 0.0
+    set == :box && return sum(d)
+    set == :ellip && return omega * norm(d)
+    set == :poly && return gamma * maximum(d)
+    s = sort(d, rev=true); k = min(floor(Int, gamma), length(d))  # budget: the Gamma largest deviations
+    sum(s[1:k]) + (k < length(d) ? (gamma - k) * s[k+1] : 0.0)
+end
+
+function solve_robust(set; A=A, b=b, Ahat=Ahat, gamma=1.0, omega=1.0)  # robust counterpart
+    m = Model(set == :ellip ? Clarabel.Optimizer : HiGHS.Optimizer); set_silent(m)
+    @variable(m, x[1:n] >= 0)
+    @objective(m, Max, dot(c, x))
+    W = [iseven(div(r - 1, 2^(j - 1))) ? 1.0 : -1.0 for r in 1:2^n, j in 1:n]  # all sign vectors: ||u||_1 <= Gamma as W u <= h
+    for i in 1:nc
+        a, d = A[i, :], Ahat[i, :] .* x
+        if set == :nominal
+            @constraint(m, dot(a, x) <= b[i])
+        elseif set == :box
+            @constraint(m, dot(a, x) + sum(d) <= b[i])
+        elseif set == :ellip
+            @constraint(m, [b[i] - dot(a, x); omega .* d] in SecondOrderCone())
+        elseif set == :budget  # Bertsimas-Sim: dual of the inner knapsack
+            z = @variable(m, lower_bound = 0); p = @variable(m, [1:n], lower_bound = 0)
+            @constraint(m, p .+ z .>= d)
+            @constraint(m, dot(a, x) + gamma * z + sum(p) <= b[i])
+        else  # max d'u over W u <= h equals min h'lam over W'lam = d, lam >= 0
+            lam = @variable(m, [1:2^n], lower_bound = 0)
+            @constraint(m, transpose(W) * lam .== d)
+            @constraint(m, dot(a, x) + gamma * sum(lam) <= b[i])
+        end
+    end
+    optimize!(m)
+    (x = value.(x), obj = objective_value(m), solved = is_solved_and_feasible(m))
+end
+
+worst_use(set, x; kw...) = [dot(A[i, :], x) + protect(set, Ahat[i, :] .* x; kw...) for i in 1:nc]  # worst-case resource use
+sample_A(K; seed=7) = (rng = MersenneTwister(seed); [A .+ Ahat .* (2 .* rand(rng, nc, n) .- 1) for _ in 1:K])  # independent uniform deviations
+draws = sample_A(10_000)
+violation(x) = mean(any(Ak * x .> b .+ 1e-9) for Ak in draws)  # probability that some constraint is violated
+
+nom = solve_robust(:nominal)
+sol = solve_robust(set; par...)
+(robust_x = round.(sol.x, digits=3), robust_profit = round(sol.obj, digits=3), nominal_profit = round(nom.obj, digits=3),
+ price_of_robustness_percent = round(100 * (1 - sol.obj / nom.obj), digits=2), solved = sol.solved)
+'''
+
+[[codeBranches]]
+model = "ellip"
+code = '''
+using JuMP, HiGHS, Clarabel, LinearAlgebra, Random, Statistics
+
+c = {{c}}  # profit per unit (maximise c'x, x >= 0)
+A = {{A}}  # nominal resource use: row i is the constraint a_i'x <= b_i
+b = {{b}}  # capacities
+rho = {{rho}}  # coefficient a_ij may deviate by up to rho |a_ij|
+Ahat = rho .* abs.(A)  # maximal deviations
+nc, n = size(A)
+set, par = :ellip, (omega = {{omega}},)  # ellipsoid ||u||_2 <= omega
+
+# Worst-case increase of a_i'x over the set, for deviations d = ahat_i .* x (x >= 0)
+function protect(set, d; gamma=1.0, omega=1.0)
+    set == :nominal && return 0.0
+    set == :box && return sum(d)
+    set == :ellip && return omega * norm(d)
+    set == :poly && return gamma * maximum(d)
+    s = sort(d, rev=true); k = min(floor(Int, gamma), length(d))  # budget: the Gamma largest deviations
+    sum(s[1:k]) + (k < length(d) ? (gamma - k) * s[k+1] : 0.0)
+end
+
+function solve_robust(set; A=A, b=b, Ahat=Ahat, gamma=1.0, omega=1.0)  # robust counterpart
+    m = Model(set == :ellip ? Clarabel.Optimizer : HiGHS.Optimizer); set_silent(m)
+    @variable(m, x[1:n] >= 0)
+    @objective(m, Max, dot(c, x))
+    W = [iseven(div(r - 1, 2^(j - 1))) ? 1.0 : -1.0 for r in 1:2^n, j in 1:n]  # all sign vectors: ||u||_1 <= Gamma as W u <= h
+    for i in 1:nc
+        a, d = A[i, :], Ahat[i, :] .* x
+        if set == :nominal
+            @constraint(m, dot(a, x) <= b[i])
+        elseif set == :box
+            @constraint(m, dot(a, x) + sum(d) <= b[i])
+        elseif set == :ellip
+            @constraint(m, [b[i] - dot(a, x); omega .* d] in SecondOrderCone())
+        elseif set == :budget  # Bertsimas-Sim: dual of the inner knapsack
+            z = @variable(m, lower_bound = 0); p = @variable(m, [1:n], lower_bound = 0)
+            @constraint(m, p .+ z .>= d)
+            @constraint(m, dot(a, x) + gamma * z + sum(p) <= b[i])
+        else  # max d'u over W u <= h equals min h'lam over W'lam = d, lam >= 0
+            lam = @variable(m, [1:2^n], lower_bound = 0)
+            @constraint(m, transpose(W) * lam .== d)
+            @constraint(m, dot(a, x) + gamma * sum(lam) <= b[i])
+        end
+    end
+    optimize!(m)
+    (x = value.(x), obj = objective_value(m), solved = is_solved_and_feasible(m))
+end
+
+worst_use(set, x; kw...) = [dot(A[i, :], x) + protect(set, Ahat[i, :] .* x; kw...) for i in 1:nc]  # worst-case resource use
+sample_A(K; seed=7) = (rng = MersenneTwister(seed); [A .+ Ahat .* (2 .* rand(rng, nc, n) .- 1) for _ in 1:K])  # independent uniform deviations
+draws = sample_A(10_000)
+violation(x) = mean(any(Ak * x .> b .+ 1e-9) for Ak in draws)  # probability that some constraint is violated
+
+nom = solve_robust(:nominal)
+sol = solve_robust(set; par...)
+(robust_x = round.(sol.x, digits=3), robust_profit = round(sol.obj, digits=3), nominal_profit = round(nom.obj, digits=3),
+ price_of_robustness_percent = round(100 * (1 - sol.obj / nom.obj), digits=2), solved = sol.solved)
+'''
+
+[[codeBranches]]
+model = "budget"
+code = '''
+using JuMP, HiGHS, Clarabel, LinearAlgebra, Random, Statistics
+
+c = {{c}}  # profit per unit (maximise c'x, x >= 0)
+A = {{A}}  # nominal resource use: row i is the constraint a_i'x <= b_i
+b = {{b}}  # capacities
+rho = {{rho}}  # coefficient a_ij may deviate by up to rho |a_ij|
+Ahat = rho .* abs.(A)  # maximal deviations
+nc, n = size(A)
+set, par = :budget, (gamma = {{gamma}},)  # budget ||u||_inf <= 1, ||u||_1 <= Gamma
+
+# Worst-case increase of a_i'x over the set, for deviations d = ahat_i .* x (x >= 0)
+function protect(set, d; gamma=1.0, omega=1.0)
+    set == :nominal && return 0.0
+    set == :box && return sum(d)
+    set == :ellip && return omega * norm(d)
+    set == :poly && return gamma * maximum(d)
+    s = sort(d, rev=true); k = min(floor(Int, gamma), length(d))  # budget: the Gamma largest deviations
+    sum(s[1:k]) + (k < length(d) ? (gamma - k) * s[k+1] : 0.0)
+end
+
+function solve_robust(set; A=A, b=b, Ahat=Ahat, gamma=1.0, omega=1.0)  # robust counterpart
+    m = Model(set == :ellip ? Clarabel.Optimizer : HiGHS.Optimizer); set_silent(m)
+    @variable(m, x[1:n] >= 0)
+    @objective(m, Max, dot(c, x))
+    W = [iseven(div(r - 1, 2^(j - 1))) ? 1.0 : -1.0 for r in 1:2^n, j in 1:n]  # all sign vectors: ||u||_1 <= Gamma as W u <= h
+    for i in 1:nc
+        a, d = A[i, :], Ahat[i, :] .* x
+        if set == :nominal
+            @constraint(m, dot(a, x) <= b[i])
+        elseif set == :box
+            @constraint(m, dot(a, x) + sum(d) <= b[i])
+        elseif set == :ellip
+            @constraint(m, [b[i] - dot(a, x); omega .* d] in SecondOrderCone())
+        elseif set == :budget  # Bertsimas-Sim: dual of the inner knapsack
+            z = @variable(m, lower_bound = 0); p = @variable(m, [1:n], lower_bound = 0)
+            @constraint(m, p .+ z .>= d)
+            @constraint(m, dot(a, x) + gamma * z + sum(p) <= b[i])
+        else  # max d'u over W u <= h equals min h'lam over W'lam = d, lam >= 0
+            lam = @variable(m, [1:2^n], lower_bound = 0)
+            @constraint(m, transpose(W) * lam .== d)
+            @constraint(m, dot(a, x) + gamma * sum(lam) <= b[i])
+        end
+    end
+    optimize!(m)
+    (x = value.(x), obj = objective_value(m), solved = is_solved_and_feasible(m))
+end
+
+worst_use(set, x; kw...) = [dot(A[i, :], x) + protect(set, Ahat[i, :] .* x; kw...) for i in 1:nc]  # worst-case resource use
+sample_A(K; seed=7) = (rng = MersenneTwister(seed); [A .+ Ahat .* (2 .* rand(rng, nc, n) .- 1) for _ in 1:K])  # independent uniform deviations
+draws = sample_A(10_000)
+violation(x) = mean(any(Ak * x .> b .+ 1e-9) for Ak in draws)  # probability that some constraint is violated
+
+nom = solve_robust(:nominal)
+sol = solve_robust(set; par...)
+(robust_x = round.(sol.x, digits=3), robust_profit = round(sol.obj, digits=3), nominal_profit = round(nom.obj, digits=3),
+ price_of_robustness_percent = round(100 * (1 - sol.obj / nom.obj), digits=2), solved = sol.solved)
+'''
+
+[[codeBranches]]
+model = "poly"
+code = '''
+using JuMP, HiGHS, Clarabel, LinearAlgebra, Random, Statistics
+
+c = {{c}}  # profit per unit (maximise c'x, x >= 0)
+A = {{A}}  # nominal resource use: row i is the constraint a_i'x <= b_i
+b = {{b}}  # capacities
+rho = {{rho}}  # coefficient a_ij may deviate by up to rho |a_ij|
+Ahat = rho .* abs.(A)  # maximal deviations
+nc, n = size(A)
+set, par = :poly, (gamma = {{gamma}},)  # polytope W u <= h (here ||u||_1 <= Gamma)
+
+# Worst-case increase of a_i'x over the set, for deviations d = ahat_i .* x (x >= 0)
+function protect(set, d; gamma=1.0, omega=1.0)
+    set == :nominal && return 0.0
+    set == :box && return sum(d)
+    set == :ellip && return omega * norm(d)
+    set == :poly && return gamma * maximum(d)
+    s = sort(d, rev=true); k = min(floor(Int, gamma), length(d))  # budget: the Gamma largest deviations
+    sum(s[1:k]) + (k < length(d) ? (gamma - k) * s[k+1] : 0.0)
+end
+
+function solve_robust(set; A=A, b=b, Ahat=Ahat, gamma=1.0, omega=1.0)  # robust counterpart
+    m = Model(set == :ellip ? Clarabel.Optimizer : HiGHS.Optimizer); set_silent(m)
+    @variable(m, x[1:n] >= 0)
+    @objective(m, Max, dot(c, x))
+    W = [iseven(div(r - 1, 2^(j - 1))) ? 1.0 : -1.0 for r in 1:2^n, j in 1:n]  # all sign vectors: ||u||_1 <= Gamma as W u <= h
+    for i in 1:nc
+        a, d = A[i, :], Ahat[i, :] .* x
+        if set == :nominal
+            @constraint(m, dot(a, x) <= b[i])
+        elseif set == :box
+            @constraint(m, dot(a, x) + sum(d) <= b[i])
+        elseif set == :ellip
+            @constraint(m, [b[i] - dot(a, x); omega .* d] in SecondOrderCone())
+        elseif set == :budget  # Bertsimas-Sim: dual of the inner knapsack
+            z = @variable(m, lower_bound = 0); p = @variable(m, [1:n], lower_bound = 0)
+            @constraint(m, p .+ z .>= d)
+            @constraint(m, dot(a, x) + gamma * z + sum(p) <= b[i])
+        else  # max d'u over W u <= h equals min h'lam over W'lam = d, lam >= 0
+            lam = @variable(m, [1:2^n], lower_bound = 0)
+            @constraint(m, transpose(W) * lam .== d)
+            @constraint(m, dot(a, x) + gamma * sum(lam) <= b[i])
+        end
+    end
+    optimize!(m)
+    (x = value.(x), obj = objective_value(m), solved = is_solved_and_feasible(m))
+end
+
+worst_use(set, x; kw...) = [dot(A[i, :], x) + protect(set, Ahat[i, :] .* x; kw...) for i in 1:nc]  # worst-case resource use
+sample_A(K; seed=7) = (rng = MersenneTwister(seed); [A .+ Ahat .* (2 .* rand(rng, nc, n) .- 1) for _ in 1:K])  # independent uniform deviations
+draws = sample_A(10_000)
+violation(x) = mean(any(Ak * x .> b .+ 1e-9) for Ak in draws)  # probability that some constraint is violated
+
+nom = solve_robust(:nominal)
+sol = solve_robust(set; par...)
+(robust_x = round.(sol.x, digits=3), robust_profit = round(sol.obj, digits=3), nominal_profit = round(nom.obj, digits=3),
+ price_of_robustness_percent = round(100 * (1 - sol.obj / nom.obj), digits=2), solved = sol.solved)
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "robust-frontier"
+label = "Robust Frontier"
+desc = "Robust optimal profit as the relative deviation rho grows, against the nominal optimum"
+code = '''
+using Plots
+rhos = 0:0.02:0.5
+objs = [solve_robust(set; Ahat=r .* abs.(A), par...).obj for r in rhos]
+plot(rhos, objs, marker=:o, xlabel="Relative deviation rho", ylabel="Optimal profit", label=string(set) * " robust")
+hline!([nom.obj], ls=:dash, label="nominal", title="Robust frontier")
+'''
+
+[[actionGroups.actions]]
+id = "feasible-region"
+label = "Feasible Region"
+desc = "Nominal and robust feasible sets for two products, with both optimal solutions"
+code = '''
+using Plots
+if n != 2
+    "The feasible-region plot needs exactly two products"
+else
+    g = range(0, 1.3 * maximum(nom.x) + 0.5, length=250)
+    feasible(s, x) = all(worst_use(s, x; par...) .<= b .+ 1e-9)
+    region = [feasible(:nominal, [x1, x2]) + feasible(set, [x1, x2]) for x2 in g, x1 in g]  # 1 nominal only, 2 robust
+    heatmap(g, g, region, c=cgrad([:white, :lightblue, :steelblue]), colorbar=false, xlabel="x1", ylabel="x2", title="Nominal and robust feasible sets")
+    scatter!([nom.x[1]], [nom.x[2]], ms=6, label="nominal optimum")
+    scatter!([sol.x[1]], [sol.x[2]], ms=6, marker=:diamond, label="robust optimum")
+end
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "worst-case"
+label = "Worst-Case Scenario"
+desc = "Resource use of the nominal and robust solutions at the worst coefficients in the set, against capacity"
+code = '''
+wn, wr = worst_use(set, nom.x; par...), worst_use(set, sol.x; par...)
+[(constraint = i, capacity = b[i], nominal_use = round(dot(A[i, :], nom.x), digits=3), nominal_worst_case = round(wn[i], digits=3),
+  robust_worst_case = round(wr[i], digits=3), nominal_violated = wn[i] > b[i] + 1e-6) for i in 1:nc]
+'''
+
+[[actionGroups.actions]]
+id = "nominal-check"
+label = "Nominal Suboptimality"
+desc = "Profit given up by the robust solution, and how far the nominal solution overshoots capacity in the worst case"
+code = '''
+(nominal_profit = round(nom.obj, digits=3), robust_profit = round(sol.obj, digits=3), profit_given_up = round(nom.obj - sol.obj, digits=3),
+ nominal_worst_overshoot = round(maximum(worst_use(set, nom.x; par...) .- b), digits=3))
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "price-robustness"
+label = "Price of Robustness"
+desc = "Profit and simulated violation probability as the protection level grows: the trade-off the set controls"
+code = '''
+using Plots
+{{?model=box}}pvals, pname = 0:0.1:1, "Protected fraction of rho"
+{{?model=box}}sols = [solve_robust(:box; Ahat=k .* Ahat) for k in pvals]
+{{?model=ellip}}pvals, pname = 0:0.25:3, "omega"
+{{?model=ellip}}sols = [solve_robust(:ellip; omega=v) for v in pvals]
+{{?model=budget|poly}}pvals, pname = 0:0.25:n, "Gamma"
+{{?model=budget|poly}}sols = [solve_robust(set; gamma=v) for v in pvals]
+plot(plot(pvals, [s.obj for s in sols], marker=:o, xlabel=pname, ylabel="Profit", legend=false),
+    plot(pvals, [violation(s.x) for s in sols], marker=:o, xlabel=pname, ylabel="P(violation)", legend=false),
+    layout=(1, 2), size=(900, 350))
+'''
+
+[[actionGroups.actions]]
+id = "violation-probability"
+label = "Violation Probability"
+desc = "Monte Carlo probability that each constraint is violated when every coefficient deviates independently and uniformly within rho"
+code = '''
+pv(x) = [round(mean(dot(Ak[i, :], x) > b[i] + 1e-9 for Ak in draws), digits=4) for i in 1:nc]
+{{?model=budget}}println("Bertsimas-Sim bound per constraint: ", round(exp(-par.gamma^2 / (2n)), digits=4))
+(nominal_per_constraint = pv(nom.x), robust_per_constraint = pv(sol.x), nominal_any = violation(nom.x), robust_any = violation(sol.x))
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "vs-stochastic"
+label = "Scenario Approach"
+desc = "Robust solution against the scenario approach, which enforces the constraints on K sampled coefficient matrices"
+code = '''
+function scenario_solution(K)
+    m = Model(HiGHS.Optimizer); set_silent(m)
+    @variable(m, xs[1:n] >= 0)
+    @objective(m, Max, dot(c, xs))
+    for Ak in sample_A(K; seed=11)
+        @constraint(m, Ak * xs .<= b)
+    end
+    optimize!(m)
+    value.(xs)
+end
+rows = [("nominal", nom.x), (string(set) * " robust", sol.x), [("scenario K = " * string(K), scenario_solution(K)) for K in (20, 100, 500)]...]
+[(method = name, x = round.(x, digits=3), profit = round(dot(c, x), digits=3), p_violation = violation(x)) for (name, x) in rows]
+'''
+
+[[actionGroups.actions]]
+id = "vs-nominal"
+label = "All Sets vs Nominal"
+desc = "Nominal solution and every uncertainty set at the current parameters: decisions, profit and simulated violation probability"
+code = '''
+kw = (gamma = get(par, :gamma, 1.0), omega = get(par, :omega, 1.0))
+[begin
+    r = solve_robust(s; kw...)
+    (set = s, x = round.(r.x, digits=3), profit = round(r.obj, digits=3), p_violation = violation(r.x))
+end for s in (:nominal, :box, :ellip, :budget, :poly)]
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "conservatism"
+label = "Conservatism Analysis"
+desc = "Slack of the robust solution at nominal and at worst-case coefficients, and the protection used relative to the box set"
+code = '''
+[(constraint = i, nominal_slack = round(b[i] - dot(A[i, :], sol.x), digits=3), worst_case_slack = round(b[i] - worst_use(set, sol.x; par...)[i], digits=3),
+  protection = round(protect(set, Ahat[i, :] .* sol.x; par...), digits=3), box_protection = round(protect(:box, Ahat[i, :] .* sol.x), digits=3)) for i in 1:nc]
+'''
+
+[[actionGroups.actions]]
+id = "shadow-prices"
+label = "Shadow Prices"
+desc = "Extra profit from one more unit of each capacity, in the nominal and in the robust problem (finite differences)"
+code = '''
+e(i) = [j == i ? 1.0 : 0.0 for j in 1:nc]
+[(constraint = i, nominal = round((solve_robust(:nominal; b=b .+ 1e-3 .* e(i)).obj - nom.obj) / 1e-3, digits=3),
+  robust = round((solve_robust(set; b=b .+ 1e-3 .* e(i), par...).obj - sol.obj) / 1e-3, digits=3)) for i in 1:nc]
+'''

@@ -1,0 +1,626 @@
+# Multi-Agent Reinforcement Learning Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/marl.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Multi-Agent Reinforcement Learning"
+viewType = "pollis.marl"
+defaultModel = "cooperative"
+
+[[packages]]
+name = "ReinforcementLearning.jl"
+github = "https://github.com/JuliaReinforcementLearning/ReinforcementLearning.jl"
+
+[[packages.videos]]
+title = "High Performance Computing in Julia"
+description = "An 18-video course by Jamie Mair on writing fast Julia code"
+url = "https://www.youtube.com/playlist?list=PLUAq6xQKFgGr39PiyrPk_C9dhBKvWcjUA"
+
+[requires]
+packages = ["Plots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Cooperative MARL"
+file = "marl/tutorial-01-cooperative.ipynb"
+bundled = true
+description = "Cooperative multi-agent setup with shared reward; independent Q-learning and CTDE (QMIX-style)"
+
+[[notebookSections.notebooks]]
+name = "Competitive MARL"
+file = "marl/tutorial-02-competitive.ipynb"
+bundled = true
+description = "Competitive (zero-sum) multi-agent games; self-play; Nash equilibrium via policy gradient"
+
+[[wikis]]
+name = "Factsheet"
+file = "marl/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "marl/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "marl/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "marl/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "marl/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "marl/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Modes"
+
+[[wikis]]
+name = "Cooperative"
+file = "marl/cooperative.md"
+bundled = true
+
+[[wikis]]
+name = "Competitive"
+file = "marl/competitive.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "ReinforcementLearning.jl: A Reinforcement Learning Package for the Julia Programming Language"
+authors = "Tian, Jun; others"
+year = 2020
+journal = "GitHub"
+url = "https://github.com/JuliaReinforcementLearning/ReinforcementLearning.jl"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Multiagent Systems: Algorithmic, Game-Theoretic, and Logical Foundations"
+authors = "Shoham, Yoav; Leyton-Brown, Kevin"
+year = 2009
+journal = "Cambridge University Press"
+url = "https://www.masfoundations.org/"
+openAccess = true
+
+[[references]]
+title = "An Introduction to MultiAgent Systems"
+authors = "Wooldridge, Michael"
+year = 2009
+journal = "Wiley (2nd ed.)"
+url = "https://www.wiley.com/en-us/An+Introduction+to+MultiAgent+Systems%2C+2nd+Edition-p-9780470519462"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Multi-Agent Actor-Critic for Mixed Cooperative-Competitive Environments"
+authors = "Lowe, Ryan; Wu, Yi; Tamar, Aviv; Harb, Jean; Abbeel, Pieter; Mordatch, Igor"
+year = 2017
+journal = "NeurIPS"
+url = "https://proceedings.neurips.cc/paper/2017/hash/68a9750337a418a86fe06c1991a1d64c-Abstract.html"
+openAccess = true
+
+[[references]]
+title = "Counterfactual Multi-Agent Policy Gradients"
+authors = "Foerster, Jakob; Farquhar, Gregory; Afouras, Triantafyllos; Nardelli, Nantas; Whiteson, Shimon"
+year = 2018
+journal = "AAAI"
+url = "https://ojs.aaai.org/index.php/AAAI/article/view/11794"
+openAccess = true
+
+[[models]]
+id = "cooperative"
+label = "Cooperative"
+
+[[models]]
+id = "competitive"
+label = "Competitive"
+
+[[bullets]]
+text = "Cooperative"
+detail = "agents share a team reward and learn to coordinate; centralised training with decentralised execution via algorithms such as QMIX or Multi-Agent Deep Deterministic Policy Gradient (MADDPG); each agent acts on its own local observations at execution time (ReinforcementLearning.jl)"
+
+[[bullets]]
+text = "Competitive"
+detail = "agents pursue opposing objectives in zero-sum or general-sum games; self-play against a pool of past policy versions drives emergent strategy and prevents exploitation of weak fixed opponents (ReinforcementLearning.jl)"
+
+[[decisionRows]]
+task = "Cooperative"
+context = "Agents share one reward and must coordinate (robot teams, traffic signals, distributed control)"
+purpose = "Rendezvous grid world: agents start in different corners and are rewarded for meeting quickly; compares independent learners (IQL) with centralised training (VDN value decomposition, joint-action learner)"
+
+[[decisionRows]]
+task = "Competitive"
+context = "Zero-sum games between agents (board games, adversarial security, auctions)"
+purpose = "Tic-tac-toe learned by self-play: one shared afterstate value table plays both sides and is scored against random and perfect (minimax) opponents"
+
+[[inputs]]
+id = "episodes"
+label = "Episodes"
+tooltip = "Training episodes (cooperative) or self-play games (competitive)."
+default = "5000"
+
+[[inputs]]
+id = "alpha"
+label = "Learning Rate (alpha)"
+tooltip = "Step size of the tabular value updates."
+default = "0.2"
+
+[[inputs]]
+id = "eps"
+label = "Exploration (epsilon)"
+tooltip = "Probability of a random action during training."
+default = "0.1"
+
+[[inputs]]
+id = "seed"
+label = "Random Seed"
+tooltip = "Seed of exploration and random opponents."
+default = "1"
+
+[[inputs]]
+id = "nagents"
+label = "Agents"
+tooltip = "Number of agents (2 to 4), starting in different corners of the grid."
+default = "2"
+models = ["cooperative"]
+newRow = true
+
+[[inputs]]
+id = "size"
+label = "Grid Size"
+tooltip = "Side length of the square grid. The joint state space grows as size^(2 x agents)."
+default = "5"
+models = ["cooperative"]
+
+[[inputs]]
+id = "gamma"
+label = "Discount (gamma)"
+tooltip = "Discount factor of the shared return."
+default = "0.95"
+models = ["cooperative"]
+
+[[inputs]]
+id = "learner"
+label = "Learner"
+tooltip = "IQL: each agent learns its own Q ignoring the others. VDN: centralised training of Q_tot = sum of per-agent Q_i, decentralised execution. Central: one Q-table over joint actions."
+kind = "select"
+default = "iql"
+models = ["cooperative"]
+
+[[inputs.options]]
+value = "iql"
+label = "Independent Q-Learning (IQL)"
+
+[[inputs.options]]
+value = "vdn"
+label = "Value Decomposition (VDN)"
+
+[[inputs.options]]
+value = "central"
+label = "Central Joint-Action Learner"
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.cooperative]
+# Two agents converging on a meeting cell
+svg = '''
+let s = '';
+for (let i = 0; i < 5; i++) { s += '<line x1="' + (7 + i * 10) + '" y1="28" x2="' + (7 + i * 10) + '" y2="68" stroke="currentColor" stroke-width="0.3"/><line x1="7" y1="' + (28 + i * 10) + '" x2="47" y2="' + (28 + i * 10) + '" stroke="currentColor" stroke-width="0.3"/>'; }
+return s + '<circle cx="12" cy="33" r="3" fill="currentColor"/><circle cx="42" cy="63" r="3" fill="currentColor"/>'
+	+ '<path d="M12,33 L27,33 L27,46" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="2,1"/><path d="M42,63 L27,63 L27,50" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="2,1"/>';
+'''
+
+[miniCharts.competitive]
+# Tic-tac-toe board
+svg = '''
+return '<line x1="21" y1="30" x2="21" y2="66" stroke="currentColor" stroke-width="1"/><line x1="33" y1="30" x2="33" y2="66" stroke="currentColor" stroke-width="1"/>'
+	+ '<line x1="9" y1="42" x2="45" y2="42" stroke="currentColor" stroke-width="1"/><line x1="9" y1="54" x2="45" y2="54" stroke="currentColor" stroke-width="1"/>'
+	+ '<path d="M11,32 L19,40 M19,32 L11,40 M35,56 L43,64 M43,56 L35,64" stroke="currentColor" stroke-width="1.4"/>'
+	+ '<circle cx="27" cy="48" r="4" fill="none" stroke="currentColor" stroke-width="1.4"/>';
+'''
+
+[[codeBranches]]
+model = "cooperative"
+code = '''
+using Random, Statistics
+
+episodes = {{episodes}}  # training episodes
+alpha, epsilon = {{alpha}}, {{eps}}  # learning rate, exploration
+seed = {{seed}}  # random seed
+N, n = {{nagents}}, {{size}}  # agents (2 to 4), grid side
+gamma = {{gamma}}  # discount factor
+learner = "{{learner}}"  # iql, vdn or central
+maxsteps = 4n  # step cap per episode
+
+# Rendezvous: reward -1 per step until all agents stand on the same cell
+moves = [(0, 0), (-1, 0), (0, 1), (1, 0), (0, -1)]  # stay, up, right, down, left
+starts = [(1, 1), (n, n), (1, n), (n, 1)][1:N]
+move(p, a) = (clamp(p[1] + moves[a][1], 1, n), clamp(p[2] + moves[a][2], 1, n))
+step_env(s, a) = (s2 = Tuple(move(s[i], a[i]) for i in 1:N); (s2, -1.0, all(==(s2[1]), s2)))
+joint = vec(collect(Iterators.product(fill(1:5, N)...)))  # all joint actions
+
+function train(; learner=learner, episodes=episodes, seed=seed, epsilon=epsilon)
+    rng = MersenneTwister(seed)
+    Qs = [Dict{Any, Vector{Float64}}() for i in 1:N]  # per-agent tables (IQL, VDN)
+    Qj = Dict{Any, Vector{Float64}}()  # joint-action table (central)
+    qi(i, s) = get!(() -> zeros(5), Qs[i], s)
+    qj(s) = get!(() -> zeros(length(joint)), Qj, s)
+    greedy(s) = learner == "central" ? joint[argmax(qj(s))] : Tuple(argmax(qi(i, s)) for i in 1:N)
+    function act(s)
+        learner == "central" && return (rand(rng) < epsilon ? rand(rng, joint) : greedy(s))
+        Tuple(rand(rng) < epsilon ? rand(rng, 1:5) : argmax(qi(i, s)) for i in 1:N)
+    end
+    lens = zeros(Int, episodes); qtrace = zeros(episodes)
+    for ep in 1:episodes
+        s = Tuple(starts)
+        for t in 1:maxsteps
+            a = act(s); s2, r, done = step_env(s, a)
+            if learner == "iql"  # each agent treats the others as part of the environment
+                for i in 1:N
+                    q = qi(i, s); q[a[i]] += alpha * (r + (done ? 0.0 : gamma * maximum(qi(i, s2))) - q[a[i]])
+                end
+            elseif learner == "vdn"  # shared TD error of Q_tot = sum_i Q_i
+                d = r + (done ? 0.0 : gamma * sum(maximum(qi(i, s2)) for i in 1:N)) - sum(qi(i, s)[a[i]] for i in 1:N)
+                for i in 1:N
+                    qi(i, s)[a[i]] += alpha * d / N
+                end
+            else  # one Q over joint actions
+                q = qj(s); k = findfirst(==(a), joint)
+                q[k] += alpha * (r + (done ? 0.0 : gamma * maximum(qj(s2))) - q[k])
+            end
+            s = s2; lens[ep] = t
+            done && break
+        end
+        s0 = Tuple(starts)
+        qtrace[ep] = learner == "central" ? maximum(qj(s0)) : learner == "vdn" ? sum(maximum(qi(i, s0)) for i in 1:N) : mean(maximum(qi(i, s0)) for i in 1:N)
+    end
+    (greedy = greedy, lens = lens, qtrace = qtrace, Qs = Qs, Qj = Qj, qi = qi, qj = qj)
+end
+
+function rollout(policy)  # greedy joint trajectory from the start
+    s = Tuple(starts); path = [s]
+    for t in 1:maxsteps
+        s, r, done = step_env(s, policy(s)); push!(path, s)
+        done && break
+    end
+    path
+end
+movavg(x, w) = [mean(x[max(1, i - w + 1):i]) for i in eachindex(x)]
+
+res = train()
+path = rollout(res.greedy)
+(learner = learner, greedy_steps_to_meet = all(==(path[end][1]), path[end]) ? length(path) - 1 : missing, lower_bound = n - 1,
+ mean_steps_last_100 = mean(res.lens[max(1, end - 99):end]), states_visited = learner == "central" ? length(res.Qj) : length(res.Qs[1]))
+'''
+
+[[codeBranches]]
+model = "competitive"
+code = '''
+using Random, Statistics
+
+episodes = {{episodes}}  # self-play games
+alpha, epsilon = {{alpha}}, {{eps}}  # learning rate, exploration
+seed = {{seed}}  # random seed
+
+# Tic-tac-toe: board of 9 cells, +1 = X (moves first), -1 = O, 0 = empty
+wins = [(1, 2, 3), (4, 5, 6), (7, 8, 9), (1, 4, 7), (2, 5, 8), (3, 6, 9), (1, 5, 9), (3, 5, 7)]
+function winner(b)
+    for (i, j, k) in wins
+        b[i] != 0 && b[i] == b[j] == b[k] && return b[i]
+    end
+    0
+end
+place(b, m, p) = (c = copy(b); c[m] = p; c)
+isover(b) = winner(b) != 0 || all(!=(0), b)
+
+# One afterstate value table shared by both sides, stored from the mover's perspective (board times player)
+function value(V, b, p)
+    winner(b) == p && return 1.0
+    all(!=(0), b) && return 0.0
+    get(V, b .* p, 0.0)
+end
+greedy_move(V, b, p, rng) = (ms = findall(==(0), b); vs = [value(V, place(b, m, p), p) for m in ms]; rand(rng, ms[vs .== maximum(vs)]))
+random_move(b, p, rng) = rand(rng, findall(==(0), b))
+
+memo = Dict{Vector{Int}, Int}()
+function negamax(b, p)  # value for player p to move under perfect play (1 win, 0 draw, -1 loss)
+    get!(memo, b .* p) do
+        maximum(winner(place(b, m, p)) == p ? 1 : all(!=(0), place(b, m, p)) ? 0 : -negamax(place(b, m, p), -p) for m in findall(==(0), b))
+    end
+end
+function perfect_move(b, p, rng)
+    ms = findall(==(0), b)
+    vs = [winner(place(b, m, p)) == p ? 1 : all(!=(0), place(b, m, p)) ? 0 : -negamax(place(b, m, p), -p) for m in ms]
+    rand(rng, ms[vs .== maximum(vs)])
+end
+
+function play(px, po, rng)  # px, po: (board, player, rng) -> move; returns the winner (0 = draw)
+    b = zeros(Int, 9); p = 1
+    while !isover(b)
+        b = place(b, (p == 1 ? px : po)(b, p, rng), p); p = -p
+    end
+    winner(b)
+end
+
+function selfplay_game!(V, rng; alpha=alpha, epsilon=epsilon)  # TD(0) on afterstates, both sides share V
+    b = zeros(Int, 9); p = 1; last = Dict{Int, Vector{Int}}()
+    while true
+        nb = place(b, rand(rng) < epsilon ? random_move(b, p, rng) : greedy_move(V, b, p, rng), p)
+        if haskey(last, p)  # move this player's previous afterstate towards its new one
+            k = last[p] .* p; V[k] = get(V, k, 0.0) + alpha * (value(V, nb, p) - get(V, k, 0.0))
+        end
+        last[p] = nb
+        if isover(nb)
+            if haskey(last, -p)  # the opponent's last afterstate led to this loss or draw
+                k = last[-p] .* (-p); target = winner(nb) == p ? -1.0 : 0.0
+                V[k] = get(V, k, 0.0) + alpha * (target - get(V, k, 0.0))
+            end
+            return winner(nb)
+        end
+        b = nb; p = -p
+    end
+end
+
+function evaluate(V, opponent; games=200, rng=MersenneTwister(123))  # (win, draw, loss) shares, half as X and half as O
+    me = (b, p, r) -> greedy_move(V, b, p, r)
+    out = [play(me, opponent, rng) for k in 1:div(games, 2)]
+    out2 = [-play(opponent, me, rng) for k in 1:div(games, 2)]
+    o = [out; out2]
+    (win = mean(o .== 1), draw = mean(o .== 0), loss = mean(o .== -1))
+end
+randomp = (b, p, r) -> random_move(b, p, r)
+movavg(x, w) = [mean(x[max(1, i - w + 1):i]) for i in eachindex(x)]
+perfectp = (b, p, r) -> perfect_move(b, p, r)
+
+function train(; episodes=episodes, seed=seed, alpha=alpha, epsilon=epsilon, checkpoints=20)
+    rng = MersenneTwister(seed); V = Dict{Vector{Int}, Float64}()
+    hist = (game = Int[], vs_random = NamedTuple[], vs_perfect = NamedTuple[], outcomes = Int[])
+    for g in 1:episodes
+        push!(hist.outcomes, selfplay_game!(V, rng; alpha, epsilon))
+        if g % max(1, div(episodes, checkpoints)) == 0
+            push!(hist.game, g); push!(hist.vs_random, evaluate(V, randomp)); push!(hist.vs_perfect, evaluate(V, perfectp))
+        end
+    end
+    (V = V, hist = hist)
+end
+
+res = train()
+(states_learned = length(res.V), vs_random = res.hist.vs_random[end], vs_perfect = res.hist.vs_perfect[end])
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "agent-returns"
+label = "Learning Curve"
+desc = "Cooperative: steps needed to meet per episode (moving average) against the lower bound. Competitive: self-play outcome shares over training"
+code = '''
+using Plots
+
+{{?model=cooperative}}plot(movavg(res.lens, 50), xlabel="episode", ylabel="steps to meet (moving average of 50)", label=learner)
+{{?model=cooperative}}hline!([n - 1], linestyle=:dash, label="lower bound")
+{{?model=competitive}}w = max(1, div(episodes, 50))
+{{?model=competitive}}plot([movavg(Float64.(res.hist.outcomes .== k), w) for k in (1, 0, -1)], label=["X wins" "draw" "O wins"],
+{{?model=competitive}}    xlabel="self-play game", ylabel="share (moving average of $w)")
+'''
+
+[[actionGroups.actions]]
+id = "win-rate"
+label = "Win Rate / Success Rate"
+desc = "Cooperative: share of episodes in which the agents met within the step cap. Competitive: win, draw and loss shares of the greedy policy against random and perfect opponents over training"
+code = '''
+using Plots
+
+{{?model=cooperative}}plot(movavg(Float64.(res.lens .< maxsteps), 50), xlabel="episode", ylabel="share of episodes that met (moving average of 50)", legend=false, ylims=(0, 1.05))
+{{?model=competitive}}p1 = plot(res.hist.game, [[r.win for r in res.hist.vs_random], [r.draw for r in res.hist.vs_random], [r.loss for r in res.hist.vs_random]],
+{{?model=competitive}}    label=["win" "draw" "loss"], title="vs random", xlabel="self-play game", ylims=(0, 1))
+{{?model=competitive}}p2 = plot(res.hist.game, [[r.win for r in res.hist.vs_perfect], [r.draw for r in res.hist.vs_perfect], [r.loss for r in res.hist.vs_perfect]],
+{{?model=competitive}}    label=["win" "draw" "loss"], title="vs perfect", xlabel="self-play game", ylims=(0, 1))
+{{?model=competitive}}plot(p1, p2, layout=(1, 2))
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "non-stationarity"
+label = "Non-Stationarity"
+desc = "Cooperative: the learned value of the start state over training; under IQL each agent's target keeps moving as the others learn. Competitive: how often each opening move is preferred by the table over training"
+code = '''
+using Plots
+
+{{?model=cooperative}}plot(res.qtrace, xlabel="episode", ylabel="value of the start state", label=learner)
+{{?model=cooperative}}hline!([-sum(gamma^k for k in 0:(n - 2))], linestyle=:dash, label="optimal")
+{{?model=competitive}}function opening_values(g)
+{{?model=competitive}}    r = train(episodes=g, checkpoints=1)
+{{?model=competitive}}    [value(r.V, place(zeros(Int, 9), m, 1), 1) for m in 1:9]
+{{?model=competitive}}end
+{{?model=competitive}}gs = unique(round.(Int, range(max(1, div(episodes, 10)), episodes, length=8)))
+{{?model=competitive}}vals = reduce(hcat, [opening_values(g) for g in gs])
+{{?model=competitive}}plot(gs, transpose(vals[[1, 2, 5], :]), label=["corner" "edge" "centre"], xlabel="self-play games", ylabel="value of X's opening move")
+'''
+
+[[actionGroups.actions]]
+id = "coordination-test"
+label = "Coordination Test"
+desc = "Cooperative: greedy steps to meet for five training seeds (miscoordination shows up as failures or long detours). Competitive: result of the learned policy against itself and against perfect play from every opening"
+code = '''
+{{?model=cooperative}}function coordination(k)
+{{?model=cooperative}}    p = rollout(train(seed=k).greedy)
+{{?model=cooperative}}    (seed = k, met = all(==(p[end][1]), p[end]), steps = length(p) - 1)
+{{?model=cooperative}}end
+{{?model=cooperative}}[coordination(k) for k in 1:5]
+{{?model=competitive}}rng = MersenneTwister(5)
+{{?model=competitive}}me = (b, p, r) -> greedy_move(res.V, b, p, r)
+{{?model=competitive}}function selfplay_from(m)  # learned policy plays both sides after X opens at m
+{{?model=competitive}}    b = place(zeros(Int, 9), m, 1); p = -1
+{{?model=competitive}}    while !isover(b)
+{{?model=competitive}}        b = place(b, me(b, p, rng), p); p = -p
+{{?model=competitive}}    end
+{{?model=competitive}}    winner(b)
+{{?model=competitive}}end
+{{?model=competitive}}[(opening = m, perfect_value_for_X = -negamax(place(zeros(Int, 9), m, 1), -1), learned_vs_learned = selfplay_from(m)) for m in 1:9]
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "greedy-match"
+label = "Greedy Match"
+desc = "Cooperative: the agents' greedy paths drawn on the grid. Competitive: one game of the learned policy (X) against a perfect player (O), board by board"
+code = '''
+{{?model=cooperative}}using Plots
+
+{{?model=cooperative}}plt = plot(xlims=(0.5, n + 0.5), ylims=(0.5, n + 0.5), yflip=true, aspect_ratio=:equal, xlabel="column", ylabel="row", title="greedy paths")
+{{?model=cooperative}}for i in 1:N
+{{?model=cooperative}}    plot!(plt, [s[i][2] for s in path], [s[i][1] for s in path], marker=:circle, linewidth=2, label="agent $i")
+{{?model=cooperative}}end
+{{?model=cooperative}}plt
+{{?model=competitive}}rng = MersenneTwister(9)
+{{?model=competitive}}show_board(b) = join([join([c == 1 ? "X" : c == -1 ? "O" : "." for c in b[3r-2:3r]]) for r in 1:3], " / ")
+{{?model=competitive}}function match_vs_perfect()
+{{?model=competitive}}    b = zeros(Int, 9); p = 1; boards = String[]
+{{?model=competitive}}    while !isover(b)
+{{?model=competitive}}        b = place(b, p == 1 ? greedy_move(res.V, b, p, rng) : perfect_move(b, p, rng), p); p = -p
+{{?model=competitive}}        push!(boards, show_board(b))
+{{?model=competitive}}    end
+{{?model=competitive}}    (moves = boards, result = ("O wins", "draw", "X wins")[winner(b) + 2])
+{{?model=competitive}}end
+{{?model=competitive}}match_vs_perfect()
+'''
+
+[[actionGroups.actions]]
+id = "vs-random"
+label = "Evaluation"
+desc = "Cooperative: success rate and mean steps of the greedy joint policy when one agent instead acts randomly. Competitive: win, draw and loss shares over 400 games against random and perfect opponents"
+code = '''
+{{?model=cooperative}}function with_random_agent(j; reps=200, rng=MersenneTwister(4))
+{{?model=cooperative}}    steps = map(1:reps) do k
+{{?model=cooperative}}        s = Tuple(starts)
+{{?model=cooperative}}        for t in 1:maxsteps
+{{?model=cooperative}}            a = collect(res.greedy(s)); j > 0 && (a[j] = rand(rng, 1:5))
+{{?model=cooperative}}            s, r, done = step_env(s, Tuple(a))
+{{?model=cooperative}}            done && return t
+{{?model=cooperative}}        end
+{{?model=cooperative}}        maxsteps
+{{?model=cooperative}}    end
+{{?model=cooperative}}    (random_agent = j == 0 ? "none" : "agent $j", met_share = mean(steps .< maxsteps), mean_steps = mean(steps))
+{{?model=cooperative}}end
+{{?model=cooperative}}[with_random_agent(j) for j in 0:N]
+{{?model=competitive}}[merge((opponent = "random",), evaluate(res.V, randomp; games=400)), merge((opponent = "perfect",), evaluate(res.V, perfectp; games=400))]
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "ctde-vs-iql"
+label = "Learner Comparison"
+desc = "Cooperative: IQL against VDN (centralised training) and the central joint-action learner. Competitive: the self-play table after 10%, 30% and 100% of the games against a random and a perfect opponent"
+code = '''
+{{?model=cooperative}}using Plots
+
+{{?model=cooperative}}plt = plot(xlabel="episode", ylabel="steps to meet (moving average of 50)")
+{{?model=cooperative}}for l in ["iql", "vdn", "central"]
+{{?model=cooperative}}    plot!(plt, movavg(train(learner=l).lens, 50), label=l)
+{{?model=cooperative}}end
+{{?model=cooperative}}hline!(plt, [n - 1], linestyle=:dash, label="lower bound")
+{{?model=competitive}}function stage(frac)
+{{?model=competitive}}    r = train(episodes=max(1, round(Int, frac * episodes)), checkpoints=1)
+{{?model=competitive}}    (games = round(Int, frac * episodes), random_win = r.hist.vs_random[end].win, random_loss = r.hist.vs_random[end].loss,
+{{?model=competitive}}     perfect_draw = r.hist.vs_perfect[end].draw, perfect_loss = r.hist.vs_perfect[end].loss)
+{{?model=competitive}}end
+{{?model=competitive}}[stage(f) for f in [0.1, 0.3, 1.0]]
+'''
+
+[[actionGroups.actions]]
+id = "exploration-sweep"
+label = "Exploration Sweep"
+desc = "Final performance for a range of exploration rates epsilon"
+code = '''
+{{?model=cooperative}}function sweep(e)
+{{?model=cooperative}}    r = train(epsilon=e); p = rollout(r.greedy)
+{{?model=cooperative}}    (epsilon = e, mean_steps_last_100 = mean(r.lens[max(1, end - 99):end]), greedy_met = all(==(p[end][1]), p[end]), greedy_steps = length(p) - 1)
+{{?model=cooperative}}end
+{{?model=competitive}}function sweep(e)
+{{?model=competitive}}    r = train(epsilon=e, checkpoints=1)
+{{?model=competitive}}    (epsilon = e, random_win = r.hist.vs_random[end].win, perfect_draw = r.hist.vs_perfect[end].draw, perfect_loss = r.hist.vs_perfect[end].loss)
+{{?model=competitive}}end
+[sweep(e) for e in [0.01, 0.05, 0.1, 0.2, 0.4]]
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "individual-q-values"
+label = "Individual Q-Values"
+desc = "Cooperative: each agent's action values at the start state (IQL, VDN) or the best joint actions (central). Competitive: learned value of every move for X on the empty board and after X centre, O corner"
+code = '''
+{{?model=cooperative}}names = ["stay", "up", "right", "down", "left"]
+{{?model=cooperative}}s0 = Tuple(starts)
+{{?model=cooperative}}learner == "central" ? [(joint_action = Tuple(names[k] for k in joint[j]), q = round(res.qj(s0)[j], digits=2)) for j in sortperm(res.qj(s0), rev=true)[1:5]] :
+{{?model=cooperative}}    [merge((agent = i,), NamedTuple{Tuple(Symbol.(names))}(round.(res.qi(i, s0), digits=2))) for i in 1:N]
+{{?model=competitive}}grid(b, p) = [b[3(r - 1) + c] != 0 ? NaN : round(value(res.V, place(b, 3(r - 1) + c, p), p), digits=2) for r in 1:3, c in 1:3]
+{{?model=competitive}}b2 = place(place(zeros(Int, 9), 5, 1), 1, -1)
+{{?model=competitive}}(empty_board_X = grid(zeros(Int, 9), 1), after_X_centre_O_corner = grid(b2, 1))
+'''
+
+[[actionGroups.actions]]
+id = "strategy-profile"
+label = "Strategy Profile"
+desc = "Cooperative: each agent's greedy action in every cell with the other agents at their starts (^ > v < and o for stay). Competitive: greedy reply of the learned policy (as O) to each opening move of X"
+code = '''
+{{?model=cooperative}}arrow = ["o", "^", ">", "v", "<"]
+{{?model=cooperative}}function action_map(i)
+{{?model=cooperative}}    [begin
+{{?model=cooperative}}        s = Tuple(j == i ? (r, c) : starts[j] for j in 1:N)
+{{?model=cooperative}}        arrow[res.greedy(s)[i]]
+{{?model=cooperative}}    end for r in 1:n, c in 1:n]
+{{?model=cooperative}}end
+{{?model=cooperative}}[action_map(i) for i in 1:N]
+{{?model=competitive}}rng = MersenneTwister(2)
+{{?model=competitive}}cell = ["top-left", "top", "top-right", "left", "centre", "right", "bottom-left", "bottom", "bottom-right"]
+{{?model=competitive}}[(X_opens = cell[m], O_replies = cell[greedy_move(res.V, place(zeros(Int, 9), m, 1), -1, rng)],
+{{?model=competitive}}  perfect_replies = cell[filter(r -> r != m && negamax(place(place(zeros(Int, 9), m, 1), r, -1), 1) == 0, 1:9)]) for m in 1:9]
+'''

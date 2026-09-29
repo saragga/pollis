@@ -1,0 +1,539 @@
+# Local Optimisation Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/optim.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Local Optimisation"
+viewType = "pollis.optim"
+defaultModel = "gf"
+
+[[packages]]
+name = "Optim.jl"
+github = "https://github.com/JuliaNLSolvers/Optim.jl"
+
+[requires]
+packages = ["Optim.jl", "Plots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Local Optimisation"
+file = "optim/tutorial-01-optim.ipynb"
+bundled = true
+description = "Gradient-free, gradient-based, and Hessian-based local optimisation using Optim.jl"
+
+[[notebookSections.notebooks]]
+name = "Constrained Optimisation (IPNewton)"
+file = "optim/tutorial-02-ipnewton.ipynb"
+bundled = true
+description = "Interior-point Newton method for box-constrained problems with TwiceDifferentiableConstraints"
+
+[[wikis]]
+name = "Factsheet"
+file = "optim/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "optim/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "optim/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "optim/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "optim/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "optim/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Algorithm Classes"
+
+[[wikis]]
+name = "Gradient Free"
+file = "optim/gradient-free.md"
+bundled = true
+
+[[wikis]]
+name = "Gradient Required"
+file = "optim/gradient-required.md"
+bundled = true
+
+[[wikis]]
+name = "Hessian Required"
+file = "optim/hessian-required.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "Optim: A mathematical optimization package for Julia"
+authors = "Mogensen, Patrick Kofod; Riseth, Asbjorn Nilsen"
+year = 2018
+journal = "Journal of Open Source Software"
+doi = "10.21105/joss.00615"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Numerical Optimization"
+authors = "Nocedal, Jorge; Wright, Stephen J."
+year = 2006
+journal = "Springer (2nd ed.)"
+doi = "10.1007/978-0-387-40065-5"
+openAccess = false
+
+[[references]]
+title = "Convex Optimization"
+authors = "Boyd, Stephen; Vandenberghe, Lieven"
+year = 2004
+journal = "Cambridge University Press"
+url = "https://web.stanford.edu/~boyd/cvxbook/"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "A Simplex Method for Function Minimization"
+authors = "Nelder, John A.; Mead, Roger"
+year = 1965
+journal = "The Computer Journal"
+doi = "10.1093/comjnl/7.4.308"
+openAccess = false
+
+[[references]]
+title = "The Convergence of a Class of Double-Rank Minimization Algorithms"
+authors = "Fletcher, Roger"
+year = 1970
+journal = "IMA Journal of Applied Mathematics"
+doi = "10.1093/imamat/6.1.76"
+openAccess = false
+
+[[references]]
+title = "On the Implementation of an Interior-Point Filter Line-Search Algorithm for Large-Scale Nonlinear Programming"
+authors = "Waechter, Andreas; Biegler, Lorenz T."
+year = 2006
+journal = "Mathematical Programming"
+doi = "10.1007/s10107-004-0559-y"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers (from packages)"
+
+[[references]]
+title = "Optim: A mathematical optimization package for Julia"
+authors = "Mogensen, Patrick Kofod; Riseth, Asbjorn Nilsen"
+year = 2018
+journal = "Journal of Open Source Software"
+doi = "10.21105/joss.00615"
+openAccess = true
+
+[[models]]
+id = "gf"
+label = "Gradient Free"
+
+[[models]]
+id = "gr"
+label = "Gradient Required"
+
+[[models]]
+id = "hr"
+label = "Hessian Required"
+
+[[bullets]]
+text = "Gradient Free"
+detail = "derivative-free local search: Nelder-Mead simplex method"
+
+[[bullets]]
+text = "Gradient Required"
+detail = "first-order methods: BFGS, L-BFGS, Conjugate Gradient, Gradient Descent"
+
+[[bullets]]
+text = "Hessian Required"
+detail = "second-order methods: Newton, Newton Trust Region, IPNewton (constrained)"
+
+[[decisionRows]]
+task = "Gradient Free"
+context = "Non-smooth, noisy or black-box objectives where derivatives are unavailable or meaningless"
+purpose = "Compare function values only (simplex, annealing, swarm); robust but slow in many dimensions"
+
+[[decisionRows]]
+task = "Gradient Required"
+context = "Smooth objectives, from a few to millions of variables"
+purpose = "Descend along (quasi-Newton-scaled) gradients from automatic differentiation; box bounds via Fminbox"
+
+[[decisionRows]]
+task = "Hessian Required"
+context = "Smooth, moderately sized problems where fast, accurate convergence matters"
+purpose = "Newton steps with the exact Hessian: quadratic convergence near the optimum; IPNewton adds box bounds"
+
+[[inputs]]
+id = "f"
+label = "Objective f(x)"
+tooltip = "Julia expression for the scalar objective to minimise. Use x[1], x[2], ... for the components. Example: (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2 (Rosenbrock)."
+default = "(1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2"
+
+[[inputs]]
+id = "x0"
+label = "Initial Guess x0"
+tooltip = "Starting point as a Julia vector, for example [-1.2, 1.0]. Local methods may converge to different minima from different starts."
+default = "[-1.2, 1.0]"
+
+[[inputs]]
+id = "gfalgo"
+label = "Algorithm"
+tooltip = "NelderMead: simplex search, the standard derivative-free method. SimulatedAnnealing: random moves accepted by a cooling schedule, can escape local minima. ParticleSwarm: population search, global but slow."
+kind = "select"
+default = "NelderMead"
+models = ["gf"]
+newRow = true
+
+[[inputs.options]]
+value = "NelderMead"
+label = "Nelder-Mead"
+
+[[inputs.options]]
+value = "SimulatedAnnealing"
+label = "Simulated Annealing"
+
+[[inputs.options]]
+value = "ParticleSwarm"
+label = "Particle Swarm"
+
+[[inputs]]
+id = "gralgo"
+label = "Algorithm"
+tooltip = "BFGS: quasi-Newton, robust and widely used. LBFGS: memory-efficient BFGS for large problems. ConjugateGradient: efficient for large smooth problems. GradientDescent: simple steepest descent, slow near optima."
+kind = "select"
+default = "BFGS"
+models = ["gr"]
+newRow = true
+
+[[inputs.options]]
+value = "BFGS"
+label = "BFGS"
+
+[[inputs.options]]
+value = "LBFGS"
+label = "L-BFGS"
+
+[[inputs.options]]
+value = "ConjugateGradient"
+label = "Conjugate Gradient"
+
+[[inputs.options]]
+value = "GradientDescent"
+label = "Gradient Descent"
+
+[[inputs]]
+id = "hralgo"
+label = "Algorithm"
+tooltip = "Newton: fast quadratic convergence near the optimum. NewtonTrustRegion: Newton with trust-region globalisation, more robust far from the optimum. IPNewton: interior-point Newton that respects the box bounds."
+kind = "select"
+default = "Newton"
+models = ["hr"]
+newRow = true
+
+[[inputs.options]]
+value = "Newton"
+label = "Newton"
+
+[[inputs.options]]
+value = "NewtonTrustRegion"
+label = "Newton Trust Region"
+
+[[inputs.options]]
+value = "IPNewton"
+label = "IPNewton (Constrained)"
+
+[[inputs]]
+id = "autodiff"
+label = "Derivatives"
+tooltip = ":forward: exact derivatives by forward-mode automatic differentiation (ForwardDiff.jl), recommended. :finite: finite-difference approximations (FiniteDiff.jl), slower and less accurate but works for any Julia function."
+kind = "select"
+default = ":forward"
+models = ["gr", "hr"]
+
+[[inputs.options]]
+value = ":forward"
+label = ":forward (ForwardDiff)"
+
+[[inputs.options]]
+value = ":finite"
+label = ":finite (FiniteDiff)"
+
+[[inputs]]
+id = "lb"
+label = "Lower Bounds"
+tooltip = "Lower bound for each variable; -Inf for none. Used by Fminbox (gradient methods, when any bound is finite) and IPNewton."
+default = "[-Inf, -Inf]"
+models = ["gr", "hr"]
+newRow = true
+
+[[inputs]]
+id = "ub"
+label = "Upper Bounds"
+tooltip = "Upper bound for each variable; Inf for none."
+default = "[Inf, Inf]"
+models = ["gr", "hr"]
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.gf]
+# Shrinking Nelder-Mead simplices
+svg = '''
+return '<path d="M8,64 L44,58 L20,26 Z" fill="none" stroke="currentColor" stroke-width="1" opacity="0.5"/>'
+	+ '<path d="M20,56 L38,52 L28,36 Z" fill="none" stroke="currentColor" stroke-width="1.1" opacity="0.75"/>'
+	+ '<path d="M27,49 L33,47 L29,42 Z" fill="currentColor" fill-opacity="0.4" stroke="currentColor" stroke-width="1.2"/>';
+'''
+
+[miniCharts.gr]
+# Contours with a zig-zag descent path
+svg = '''
+var s = '';
+[18, 12, 6].forEach(function (r) { s += '<ellipse cx="30" cy="48" rx="' + r + '" ry="' + (r * 0.6) + '" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.6"/>'; });
+return s + '<path d="M8,30 L20,42 L24,36 L28,46 L30,48" fill="none" stroke="currentColor" stroke-width="1.3"/><circle cx="30" cy="48" r="2" fill="currentColor"/>';
+'''
+
+[miniCharts.hr]
+# A smooth curve with its minimum
+svg = '''
+var d = 'M8,30';
+for (var x = 8; x <= 46; x++) { var u = (x - 30) / 12; d += ' L' + x + ',' + (62 - 30 * (Math.pow(u, 4) * 0.5 + 0.5 * u * u) / 1.3).toFixed(1); }
+return '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.4"/><circle cx="30" cy="62" r="2.2" fill="currentColor"/>';
+'''
+
+[[codeBranches]]
+model = "gf"
+code = '''
+using Optim, LinearAlgebra
+
+f(x) = {{f}}
+x0 = {{x0}}  # initial guess
+opts = Optim.Options(store_trace=true, extended_trace=true)  # keep the path for the plots
+
+algo = {{gfalgo}}()
+solve(x0, algo=algo) = optimize(f, x0, algo, opts)
+
+result = solve(x0)
+x_opt = Optim.minimizer(result)
+(minimizer = x_opt, minimum = Optim.minimum(result), converged = Optim.converged(result), iterations = Optim.iterations(result))
+'''
+
+[[codeBranches]]
+model = "gr"
+code = '''
+using Optim, LinearAlgebra
+
+f(x) = {{f}}
+x0 = {{x0}}  # initial guess
+opts = Optim.Options(store_trace=true, extended_trace=true)  # keep the path for the plots
+lb, ub = {{lb}}, {{ub}}
+bounded = any(isfinite, lb) || any(isfinite, ub)
+
+algo = {{gralgo}}()
+solve(x0, algo=algo) = bounded ?
+    optimize(f, lb, ub, x0, Fminbox(algo), opts; autodiff={{autodiff}}) :  # box-constrained
+    optimize(f, x0, algo, opts; autodiff={{autodiff}})
+
+result = solve(x0)
+x_opt = Optim.minimizer(result)
+(minimizer = x_opt, minimum = Optim.minimum(result), converged = Optim.converged(result), iterations = Optim.iterations(result))
+'''
+
+[[codeBranches]]
+model = "hr"
+code = '''
+using Optim, LinearAlgebra
+
+f(x) = {{f}}
+x0 = {{x0}}  # initial guess
+opts = Optim.Options(store_trace=true, extended_trace=true)  # keep the path for the plots
+lb, ub = {{lb}}, {{ub}}
+
+algo = {{hralgo}}()
+solve(x0, algo=algo) = algo isa IPNewton ?
+    optimize(TwiceDifferentiable(f, x0; autodiff={{autodiff}}), TwiceDifferentiableConstraints(lb, ub), x0, algo, opts) :  # box-constrained
+    optimize(f, x0, algo, opts; autodiff={{autodiff}})
+
+result = solve(x0)
+x_opt = Optim.minimizer(result)
+(minimizer = x_opt, minimum = Optim.minimum(result), converged = Optim.converged(result), iterations = Optim.iterations(result))
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "convergence-trace"
+label = "Convergence Trace"
+desc = "Objective value against iteration (log scale)"
+code = '''
+using Plots
+
+fs = Optim.f_trace(result)
+plot(0:length(fs)-1, fs .- minimum(fs) .+ eps(), yscale=:log10, xlabel="iteration", ylabel="f(x) - f*", marker=:circle, markersize=2, legend=false)
+'''
+
+[[actionGroups.actions]]
+id = "contour-path"
+label = "Contour + Path"
+desc = "The optimisation path on the contours of f (2D problems; other variables held at the optimum)"
+code = '''
+using Plots
+
+path = Optim.x_trace(result)
+P = reduce(hcat, path)
+pad = max(1, 0.25 * maximum(abs, P))
+xs = range(minimum(P[1, :]) - pad, maximum(P[1, :]) + pad, length=120)
+ys = range(minimum(P[2, :]) - pad, maximum(P[2, :]) + pad, length=120)
+g(a, b) = f([a; b; x_opt[3:end]])
+contour(xs, ys, (a, b) -> log1p(g(a, b) - Optim.minimum(result) + 1e-12), fill=true, colorbar=false, xlabel="x1", ylabel="x2")
+plot!(P[1, :], P[2, :], marker=:circle, markersize=2, color=:white, label="path")
+scatter!([x_opt[1]], [x_opt[2]], marker=:star, markersize=10, color=:red, label="minimiser")
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "convergence-check"
+label = "Convergence Check"
+desc = "Convergence flags, iterations, function and gradient calls, and the gradient norm at the solution"
+code = '''
+using ForwardDiff
+
+(converged = Optim.converged(result), x_converged = Optim.x_converged(result), f_converged = Optim.f_converged(result),
+ g_converged = Optim.g_converged(result), iterations = Optim.iterations(result),
+ f_calls = Optim.f_calls(result), g_calls = Optim.g_calls(result),
+ gradient_norm = norm(ForwardDiff.gradient(f, x_opt)))  # about 0 at an unconstrained minimum
+'''
+
+[[actionGroups.actions]]
+id = "gradient-check"
+label = "Gradient Check"
+desc = "Finite-difference against automatic-differentiation gradients at x0 and at the solution (a large difference points to a non-smooth f)"
+code = '''
+using ForwardDiff, FiniteDiff
+
+map(["x0" => x0, "x_opt" => x_opt]) do (name, p)
+    g_ad = ForwardDiff.gradient(f, p)
+    g_fd = FiniteDiff.finite_difference_gradient(f, p)
+    (point = name, autodiff = g_ad, finite_diff = g_fd, max_difference = maximum(abs, g_ad - g_fd))
+end
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "evaluate-new"
+label = "Evaluate at New Point"
+desc = "f at a new point, compared with the minimum"
+code = '''
+x_new = x_opt .+ 0.1  # replace with the point to evaluate
+(f_new = f(x_new), f_min = Optim.minimum(result), increase = f(x_new) - Optim.minimum(result), distance = norm(x_new - x_opt))
+'''
+
+[[actionGroups.actions]]
+id = "multi-start"
+label = "Multi-Start"
+desc = "Solve from 20 random starts around x0 to reveal other local minima"
+code = '''
+using Random
+
+Random.seed!(1)
+runs = map(1:20) do _
+    s = x0 .+ 2 .* randn(length(x0))
+    r = solve(s)
+    (start = s, minimizer = Optim.minimizer(r), minimum = Optim.minimum(r), converged = Optim.converged(r))
+end
+sort(runs, by = r -> r.minimum)
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "compare-algorithms"
+label = "Compare Algorithms"
+desc = "Nelder-Mead, gradient descent, conjugate gradient, BFGS, L-BFGS and Newton from the same start: minimum, iterations, calls and time"
+code = '''
+algos = ["NelderMead" => NelderMead(), "GradientDescent" => GradientDescent(), "ConjugateGradient" => ConjugateGradient(),
+         "BFGS" => BFGS(), "LBFGS" => LBFGS(), "Newton" => Newton()]
+map(algos) do (name, a)
+    t = @elapsed r = a isa NelderMead ? optimize(f, x0, a) : optimize(f, x0, a; autodiff=:forward)
+    (algorithm = name, minimum = Optim.minimum(r), iterations = Optim.iterations(r), f_calls = Optim.f_calls(r), converged = Optim.converged(r), seconds = t)
+end
+'''
+
+[[actionGroups.actions]]
+id = "autodiff-compare"
+label = "Autodiff vs Finite Differences"
+desc = "BFGS with forward-mode automatic differentiation against finite differences: accuracy, calls and time"
+code = '''
+map([:forward, :finite]) do ad
+    t = @elapsed r = optimize(f, x0, BFGS(); autodiff=ad)
+    (derivatives = ad, minimum = Optim.minimum(r), iterations = Optim.iterations(r), f_calls = Optim.f_calls(r), g_calls = Optim.g_calls(r), seconds = t)
+end
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "solution-summary"
+label = "Solution Summary"
+desc = "Optim's full report: algorithm, minimiser, minimum, convergence measures and work counters"
+code = '''
+result
+'''
+
+[[actionGroups.actions]]
+id = "hessian-check"
+label = "Local Optimality (Hessian)"
+desc = "Eigenvalues of the Hessian at the solution: all positive = strict local minimum; the condition number measures how elongated the valley is"
+code = '''
+using ForwardDiff
+
+H = ForwardDiff.hessian(f, x_opt)
+ev = eigvals(Symmetric(H))
+(eigenvalues = ev, strict_local_minimum = all(>(0), ev), condition_number = maximum(abs, ev) / minimum(abs, ev))
+'''

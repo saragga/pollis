@@ -1,0 +1,560 @@
+# Q-Learning Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/ql.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Q-Learning"
+viewType = "pollis.ql"
+defaultModel = "tabular"
+
+[[packages]]
+name = "ReinforcementLearning.jl"
+github = "https://github.com/JuliaReinforcementLearning/ReinforcementLearning.jl"
+
+[[packages.videos]]
+title = "High Performance Computing in Julia"
+description = "An 18-video course by Jamie Mair on writing fast Julia code"
+url = "https://www.youtube.com/playlist?list=PLUAq6xQKFgGr39PiyrPk_C9dhBKvWcjUA"
+
+[requires]
+packages = ["Flux.jl", "Plots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Tabular Q-Learning"
+file = "ql/tutorial-01-tabular.ipynb"
+bundled = true
+description = "Q-table update rule, epsilon-greedy exploration, GridWorld and FrozenLake environments"
+
+[[notebookSections.notebooks]]
+name = "Deep Q-Network"
+file = "ql/tutorial-02-dqn.ipynb"
+bundled = true
+description = "Neural network Q-function approximation with experience replay and target networks via Flux.jl"
+
+[[wikis]]
+name = "Factsheet"
+file = "ql/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "ql/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "ql/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "ql/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "ql/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "ql/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Algorithms"
+
+[[wikis]]
+name = "Tabular"
+file = "ql/tabular.md"
+bundled = true
+
+[[wikis]]
+name = "DQN"
+file = "ql/dqn.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "ReinforcementLearning.jl: A Reinforcement Learning Package for the Julia Programming Language"
+authors = "Tian, Jun; others"
+year = 2020
+journal = "GitHub"
+url = "https://github.com/JuliaReinforcementLearning/ReinforcementLearning.jl"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Reinforcement Learning: An Introduction"
+authors = "Sutton, Richard S.; Barto, Andrew G."
+year = 2018
+journal = "MIT Press"
+url = "http://incompleteideas.net/book/the-book-2nd.html"
+openAccess = true
+
+[[references]]
+title = "Deep Reinforcement Learning Hands-On"
+authors = "Lapan, Maxim"
+year = 2020
+journal = "Packt Publishing (2nd ed.)"
+url = "https://www.packtpub.com/product/deep-reinforcement-learning-hands-on-second-edition/9781838826994"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Q-learning"
+authors = "Watkins, Christopher J.C.H.; Dayan, Peter"
+year = 1992
+journal = "Machine Learning"
+doi = "10.1007/BF00992698"
+openAccess = false
+
+[[references]]
+title = "Human-level Control through Deep Reinforcement Learning"
+authors = "Mnih, Volodymyr; Kavukcuoglu, Koray; Silver, David; et al."
+year = 2015
+journal = "Nature"
+doi = "10.1038/nature14236"
+openAccess = false
+
+[[models]]
+id = "tabular"
+label = "Tabular"
+
+[[models]]
+id = "dqn"
+label = "DQN"
+
+[[bullets]]
+text = "Tabular"
+detail = "maintains an exact lookup table of Q-values updated via the Bellman equation after each transition; exact and interpretable for small discrete state-action spaces (ReinforcementLearning.jl)"
+
+[[bullets]]
+text = "Deep Q-Network (DQN)"
+detail = "approximates Q-values with a neural network; stabilised by experience replay and a periodically frozen target network; handles high-dimensional or pixel-based observations (ReinforcementLearning.jl)"
+
+[[decisionRows]]
+task = "Tabular"
+context = "Small, discrete state and action spaces (grid worlds, board positions, inventory levels)"
+purpose = "Keeps one Q(s, a) entry per state-action pair and updates it towards r + gamma max Q(s', a'); converges to the optimal Q under enough exploration"
+
+[[decisionRows]]
+task = "DQN"
+context = "Large or continuous state spaces where a table is infeasible"
+purpose = "Deep Q-Network: a neural network approximates Q(s, .), trained on minibatches from a replay buffer against a periodically synchronised target network"
+
+[[inputs]]
+id = "rows"
+label = "Grid Rows"
+tooltip = "Rows of the Cliff Walking grid. The agent starts bottom-left, the goal is bottom-right and the bottom row in between is the cliff (reward -100, back to start)."
+default = "4"
+
+[[inputs]]
+id = "cols"
+label = "Grid Columns"
+tooltip = "Columns of the Cliff Walking grid. Every step costs -1."
+default = "12"
+
+[[inputs]]
+id = "episodes"
+label = "Episodes"
+tooltip = "Total number of training episodes."
+default = "300"
+
+[[inputs]]
+id = "gamma"
+label = "Discount (gamma)"
+tooltip = "Discount factor in (0, 1]. Values close to 1 weigh long-term rewards."
+default = "0.99"
+
+[[inputs]]
+id = "eps"
+label = "Exploration (epsilon)"
+tooltip = "Probability of a random action in the epsilon-greedy behaviour policy."
+default = "0.1"
+
+[[inputs]]
+id = "seed"
+label = "Random Seed"
+tooltip = "Seed for exploration, replay sampling and network initialisation."
+default = "1"
+
+[[inputs]]
+id = "alpha"
+label = "Learning Rate (alpha)"
+tooltip = "Step size of the Q-table update. Too large causes oscillation; too small slows learning."
+default = "0.5"
+models = ["tabular"]
+newRow = true
+
+[[inputs]]
+id = "lr"
+label = "Adam Learning Rate"
+tooltip = "Learning rate of the Adam optimiser training the Q-network."
+default = "1e-3"
+models = ["dqn"]
+newRow = true
+
+[[inputs]]
+id = "batch"
+label = "Batch Size"
+tooltip = "Number of transitions sampled from the replay buffer for each gradient step."
+default = "32"
+models = ["dqn"]
+
+[[inputs]]
+id = "hidden"
+label = "Hidden Units"
+tooltip = "Units in the hidden layer of the Q-network."
+default = "64"
+models = ["dqn"]
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.tabular]
+# Q-table grid with one highlighted cell
+svg = '''
+let s = '';
+for (let i = 0; i < 4; i++) {
+	for (let j = 0; j < 4; j++) {
+		s += '<rect x="' + (8 + j * 10) + '" y="' + (26 + i * 10) + '" width="9" height="9" fill="currentColor" opacity="' + ((i + j) % 3 === 0 ? 0.8 : 0.25) + '"/>';
+	}
+}
+return s;
+'''
+
+[miniCharts.dqn]
+# Small network: 3 inputs, 4 hidden, 2 outputs
+svg = '''
+const L = [[10, [34, 46, 58]], [27, [28, 40, 52, 64]], [44, [40, 52]]];
+let s = '';
+for (let k = 0; k < 2; k++) {
+	for (const y1 of L[k][1]) { for (const y2 of L[k + 1][1]) { s += '<line x1="' + L[k][0] + '" y1="' + y1 + '" x2="' + L[k + 1][0] + '" y2="' + y2 + '" stroke="currentColor" stroke-width="0.4" opacity="0.5"/>'; } }
+}
+for (const [x, ys] of L) { for (const y of ys) { s += '<circle cx="' + x + '" cy="' + y + '" r="3" fill="currentColor"/>'; } }
+return s;
+'''
+
+[[codeBranches]]
+model = "tabular"
+code = '''
+using Random, Statistics
+
+nrows, ncols = {{rows}}, {{cols}}  # Cliff Walking grid
+episodes = {{episodes}}  # training episodes
+gamma = {{gamma}}  # discount factor
+epsilon = {{eps}}  # exploration probability
+seed = {{seed}}  # random seed
+maxsteps = 4 * nrows * ncols  # step cap per episode
+start, goal = (nrows, 1), (nrows, ncols)
+moves = [(-1, 0), (0, 1), (1, 0), (0, -1)]  # actions: up, right, down, left
+cliff(p) = p[1] == nrows && 1 < p[2] < ncols
+sid(p) = (p[1] - 1) * ncols + p[2]  # state index
+function step_env(p, a)  # returns (next position, reward, done)
+    q = (clamp(p[1] + moves[a][1], 1, nrows), clamp(p[2] + moves[a][2], 1, ncols))
+    cliff(q) && return (start, -100.0, false)
+    return (q, -1.0, q == goal)
+end
+
+function train_tabular(; episodes=episodes, alpha=0.5, epsilon=epsilon, seed=seed, onpolicy=false)  # Q-learning (or SARSA if onpolicy)
+    rng = MersenneTwister(seed)
+    Qt = zeros(nrows * ncols, 4)
+    pick(p) = rand(rng) < epsilon ? rand(rng, 1:4) : argmax(Qt[sid(p), :])
+    returns = zeros(episodes); tderr = Float64[]
+    for ep in 1:episodes
+        p = start; a = pick(p); G = 0.0
+        for t in 1:maxsteps
+            q, r, done = step_env(p, a)
+            a2 = pick(q)
+            nextQ = done ? 0.0 : (onpolicy ? Qt[sid(q), a2] : maximum(Qt[sid(q), :]))
+            d = r + gamma * nextQ - Qt[sid(p), a]  # TD error
+            Qt[sid(p), a] += alpha * d
+            push!(tderr, d); G += r; p = q; a = a2
+            done && break
+        end
+        returns[ep] = G
+    end
+    (Q = p -> Qt[sid(p), :], returns = returns, tderr = tderr, table = Qt)
+end
+
+alpha = {{alpha}}  # learning rate
+train(; kw...) = train_tabular(; alpha=alpha, kw...)
+
+function rollout(Q)  # one greedy episode from the start
+    p = start; path = [p]; G = 0.0
+    for t in 1:maxsteps
+        p, r, done = step_env(p, argmax(Q(p))); push!(path, p); G += r
+        done && break
+    end
+    (path = path, G = G)
+end
+movavg(x, w) = [mean(x[max(1, i - w + 1):i]) for i in eachindex(x)]  # trailing moving average
+
+res = train()
+(greedy_return = rollout(res.Q).G, optimal_return = -(ncols + 1), mean_return_last_50 = mean(res.returns[max(1, end - 49):end]),
+ episodes_trained = episodes)
+'''
+
+[[codeBranches]]
+model = "dqn"
+code = '''
+using Random, Statistics
+
+nrows, ncols = {{rows}}, {{cols}}  # Cliff Walking grid
+episodes = {{episodes}}  # training episodes
+gamma = {{gamma}}  # discount factor
+epsilon = {{eps}}  # exploration probability
+seed = {{seed}}  # random seed
+maxsteps = 4 * nrows * ncols  # step cap per episode
+start, goal = (nrows, 1), (nrows, ncols)
+moves = [(-1, 0), (0, 1), (1, 0), (0, -1)]  # actions: up, right, down, left
+cliff(p) = p[1] == nrows && 1 < p[2] < ncols
+sid(p) = (p[1] - 1) * ncols + p[2]  # state index
+function step_env(p, a)  # returns (next position, reward, done)
+    q = (clamp(p[1] + moves[a][1], 1, nrows), clamp(p[2] + moves[a][2], 1, ncols))
+    cliff(q) && return (start, -100.0, false)
+    return (q, -1.0, q == goal)
+end
+
+function train_tabular(; episodes=episodes, alpha=0.5, epsilon=epsilon, seed=seed, onpolicy=false)  # Q-learning (or SARSA if onpolicy)
+    rng = MersenneTwister(seed)
+    Qt = zeros(nrows * ncols, 4)
+    pick(p) = rand(rng) < epsilon ? rand(rng, 1:4) : argmax(Qt[sid(p), :])
+    returns = zeros(episodes); tderr = Float64[]
+    for ep in 1:episodes
+        p = start; a = pick(p); G = 0.0
+        for t in 1:maxsteps
+            q, r, done = step_env(p, a)
+            a2 = pick(q)
+            nextQ = done ? 0.0 : (onpolicy ? Qt[sid(q), a2] : maximum(Qt[sid(q), :]))
+            d = r + gamma * nextQ - Qt[sid(p), a]  # TD error
+            Qt[sid(p), a] += alpha * d
+            push!(tderr, d); G += r; p = q; a = a2
+            done && break
+        end
+        returns[ep] = G
+    end
+    (Q = p -> Qt[sid(p), :], returns = returns, tderr = tderr, table = Qt)
+end
+using Flux
+
+lr, batch, hidden = {{lr}}, {{batch}}, {{hidden}}  # optimiser and network settings
+capacity, sync = 10_000, 200  # replay buffer size, target-network sync period (steps)
+feat(p) = Float32.(1:nrows * ncols .== sid(p))  # one-hot state encoding
+
+function train_dqn(; episodes=episodes, epsilon=epsilon, seed=seed)
+    rng = MersenneTwister(seed); Random.seed!(seed)
+    net = Chain(Dense(nrows * ncols => hidden, relu), Dense(hidden => 4))  # Q-network
+    target_net = deepcopy(net)
+    opt = Flux.setup(Adam(lr), net)
+    buffer = Tuple{Vector{Float32}, Int, Float32, Vector{Float32}, Bool}[]  # replay buffer (s, a, r, s', done)
+    returns = zeros(episodes); tderr = Float64[]; nsteps = 0
+    for ep in 1:episodes
+        p = start; G = 0.0
+        for t in 1:maxsteps
+            s = feat(p)
+            a = rand(rng) < epsilon ? rand(rng, 1:4) : argmax(net(s))
+            q, r, done = step_env(p, a)
+            push!(buffer, (s, a, Float32(r), feat(q), done)); length(buffer) > capacity && popfirst!(buffer)
+            G += r; p = q; nsteps += 1
+            if length(buffer) >= batch
+                B = buffer[rand(rng, 1:length(buffer), batch)]
+                S, S2 = reduce(hcat, [b[1] for b in B]), reduce(hcat, [b[4] for b in B])
+                idx = CartesianIndex.([b[2] for b in B], 1:batch)
+                y = [b[3] for b in B] .+ Float32(gamma) .* .![b[5] for b in B] .* vec(maximum(target_net(S2), dims=1))  # TD targets
+                loss, grads = Flux.withgradient(m -> Flux.mse(m(S)[idx], y), net)
+                Flux.update!(opt, net, grads[1])
+                push!(tderr, sqrt(loss))  # RMS TD error of the minibatch
+            end
+            nsteps % sync == 0 && (target_net = deepcopy(net))
+            done && break
+        end
+        returns[ep] = G
+    end
+    (Q = p -> Float64.(net(feat(p))), returns = returns, tderr = tderr, net = net)
+end
+train(; kw...) = train_dqn(; kw...)
+
+function rollout(Q)  # one greedy episode from the start
+    p = start; path = [p]; G = 0.0
+    for t in 1:maxsteps
+        p, r, done = step_env(p, argmax(Q(p))); push!(path, p); G += r
+        done && break
+    end
+    (path = path, G = G)
+end
+movavg(x, w) = [mean(x[max(1, i - w + 1):i]) for i in eachindex(x)]  # trailing moving average
+
+res = train()
+(greedy_return = rollout(res.Q).G, optimal_return = -(ncols + 1), mean_return_last_50 = mean(res.returns[max(1, end - 49):end]),
+ episodes_trained = episodes)
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "learning-curve"
+label = "Learning Curve"
+desc = "Return per training episode with its moving average; the dashed line is the optimal return"
+code = '''
+using Plots
+
+plot(res.returns, alpha=0.3, label="episode return", xlabel="episode", ylabel="return", ylims=(-10 * (nrows + ncols), 0))
+plot!(movavg(res.returns, 20), linewidth=2, label="moving average (20)")
+hline!([-(ncols + 1)], linestyle=:dash, label="optimal")
+'''
+
+[[actionGroups.actions]]
+id = "q-value-heatmap"
+label = "Value Heatmap"
+desc = "Learned state value max_a Q(s, a) over the grid"
+code = '''
+using Plots
+
+heatmap([maximum(res.Q((i, j))) for i in 1:nrows, j in 1:ncols], yflip=true, xlabel="column", ylabel="row",
+    title="max_a Q(s, a)", aspect_ratio=:equal)
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "td-error"
+label = "TD Error"
+desc = "Magnitude of the temporal-difference error over updates (moving average); it should shrink as Q settles"
+code = '''
+using Plots
+
+plot(movavg(abs.(res.tderr), 200), xlabel="update", ylabel="|TD error| (moving average of 200)", legend=false)
+'''
+
+[[actionGroups.actions]]
+id = "epsilon-decay"
+label = "Seed Stability"
+desc = "Learning curves for five random seeds: how reliable training is"
+code = '''
+using Plots
+
+plt = plot(xlabel="episode", ylabel="return (moving average of 20)", ylims=(-10 * (nrows + ncols), 0))
+for k in 1:5
+    plot!(plt, movavg(train(seed=k).returns, 20), label="seed $k")
+end
+plt
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "greedy-policy"
+label = "Greedy Policy"
+desc = "Path taken by the trained greedy policy from the start, drawn over the grid (dark = cliff)"
+code = '''
+using Plots
+
+g = rollout(res.Q)
+heatmap([cliff((i, j)) ? 1.0 : 0.0 for i in 1:nrows, j in 1:ncols], yflip=true, color=:grays, colorbar=false, aspect_ratio=:equal,
+    xlabel="column", ylabel="row", title="greedy return $(g.G)")
+plot!(last.(g.path), first.(g.path), marker=:circle, linewidth=2, label="greedy path")
+'''
+
+[[actionGroups.actions]]
+id = "expected-return"
+label = "Expected Return"
+desc = "Mean and spread of the return over 100 evaluation episodes, greedily and with the training exploration"
+code = '''
+function episode_return(Q, e, rng)
+    p = start; G = 0.0
+    for t in 1:maxsteps
+        a = rand(rng) < e ? rand(rng, 1:4) : argmax(Q(p))
+        p, r, done = step_env(p, a); G += r
+        done && break
+    end
+    G
+end
+summarise(name, Gs) = (policy = name, mean_return = round(mean(Gs), digits=2), std_return = round(std(Gs), digits=2), worst_return = minimum(Gs))
+rng = MersenneTwister(99)
+[summarise("greedy", [episode_return(res.Q, 0.0, rng) for k in 1:100]),
+ summarise("epsilon-greedy ($epsilon)", [episode_return(res.Q, epsilon, rng) for k in 1:100])]
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "tabular-vs-dqn"
+label = "Algorithm Comparison"
+desc = "Tabular: Q-learning (off-policy) against SARSA (on-policy), which learns the safer path away from the cliff. DQN: DQN against tabular Q-learning"
+code = '''
+using Plots
+
+{{?model=tabular}}other, names = train_tabular(alpha=alpha, onpolicy=true), ("Q-learning (off-policy)", "SARSA (on-policy)")
+{{?model=dqn}}other, names = train_tabular(), ("DQN", "tabular Q-learning")
+plot(movavg(res.returns, 20), label=names[1], xlabel="episode", ylabel="return (moving average of 20)", ylims=(-10 * (nrows + ncols), 0))
+plot!(movavg(other.returns, 20), label=names[2])
+title!("greedy returns: $(rollout(res.Q).G) vs $(rollout(other.Q).G)")
+'''
+
+[[actionGroups.actions]]
+id = "exploration-sweep"
+label = "Exploration Sweep"
+desc = "Training return and final greedy return for a range of exploration rates epsilon"
+code = '''
+function sweep(e)
+    r = train(epsilon=e)
+    (epsilon = e, mean_return_last_50 = round(mean(r.returns[max(1, end - 49):end]), digits=1), greedy_return = rollout(r.Q).G)
+end
+[sweep(e) for e in [0.01, 0.05, 0.1, 0.2, 0.3]]
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "policy-table"
+label = "Policy Table"
+desc = "Greedy action in every cell of the grid (^ > v <), with C for the cliff and G for the goal"
+code = '''
+arrow = ["^", ">", "v", "<"]
+[cliff((i, j)) ? "C" : (i, j) == goal ? "G" : arrow[argmax(res.Q((i, j)))] for i in 1:nrows, j in 1:ncols]
+'''
+
+[[actionGroups.actions]]
+id = "network-weights"
+label = "Model Summary"
+desc = "Tabular: size and coverage of the Q-table. DQN: the network, its parameter count and the number of gradient updates"
+code = '''
+{{?model=tabular}}(states = nrows * ncols, actions = 4, table_entries = length(res.table), entries_updated = count(!iszero, res.table),
+{{?model=tabular}} unvisited_states = count(s -> all(iszero, res.table[s, :]), 1:nrows * ncols))
+{{?model=dqn}}(network = res.net, parameters = sum(length, Flux.trainables(res.net)), table_entries_equivalent = nrows * ncols * 4,
+{{?model=dqn}} gradient_updates = length(res.tderr))
+'''

@@ -1,0 +1,766 @@
+# Trajectory Optimisation Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/traj.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Trajectory Optimisation"
+viewType = "pollis.traj"
+defaultModel = "direct"
+
+[[packages]]
+name = "TrajectoryOptimization.jl"
+github = "https://github.com/RoboticExplorationLab/TrajectoryOptimization.jl"
+
+[[packages.videos]]
+title = "Trajectory Optimization in Julia"
+description = "Introduction to trajectory optimization methods and tools"
+url = "https://www.youtube.com/watch?v=wPFPT-Ech2c"
+
+[[packages]]
+name = "Altro.jl"
+github = "https://github.com/RoboticExplorationLab/Altro.jl"
+
+[requires]
+packages = ["ForwardDiff.jl", "JuMP.jl", "Ipopt.jl", "NLsolve.jl", "Plots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Direct Methods (DIRCOL)"
+file = "trajectory-optimization/tutorial-01-direct.ipynb"
+bundled = true
+description = "Direct collocation: transcribe continuous trajectory to finite-dimensional NLP"
+
+[[notebookSections.notebooks]]
+name = "Indirect Methods (iLQR)"
+file = "trajectory-optimization/tutorial-02-ilqr.ipynb"
+bundled = true
+description = "Iterative LQR: local trajectory refinement via successive quadratic approximation"
+
+[[notebookSections.notebooks]]
+name = "Differential Dynamic Programming (DDP)"
+file = "trajectory-optimization/tutorial-03-ddp.ipynb"
+bundled = true
+description = "Second-order trajectory optimization with backward-forward sweep"
+
+[[notebookSections.notebooks]]
+name = "ALTRO Algorithm"
+file = "trajectory-optimization/tutorial-04-altro.ipynb"
+bundled = true
+description = "Augmented Lagrangian trajectory optimizer combining DDP with constraint handling"
+
+[[wikis]]
+name = "Factsheet"
+file = "trajectory-optimization/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "trajectory-optimization/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "trajectory-optimization/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "trajectory-optimization/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "trajectory-optimization/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "trajectory-optimization/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Trajectory Methods"
+
+[[wikis]]
+name = "Direct Methods"
+file = "trajectory-optimization/direct.md"
+bundled = true
+
+[[wikis]]
+name = "Indirect Methods"
+file = "trajectory-optimization/indirect.md"
+bundled = true
+
+[[wikis]]
+name = "DDP"
+file = "trajectory-optimization/ddp.md"
+bundled = true
+
+[[wikis]]
+name = "ALTRO"
+file = "trajectory-optimization/altro.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "TrajectoryOptimization.jl: A Julia Package for Motion Planning"
+authors = "Jackson, Brian E.; Fong, Ethan; Howell, Taylor A.; Maric, Filip"
+year = 2021
+journal = "Journal of Open Source Software"
+doi = "10.21105/joss.03153"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Optimal Control: An Introduction"
+authors = "Kirk, Donald E."
+year = 2012
+journal = "Dover Publications"
+url = "https://doverpublications.com/"
+openAccess = false
+
+[[references]]
+title = "Nonlinear Dynamics and Chaos"
+authors = "Strogatz, Steven H."
+year = 2015
+journal = "Westview Press (2nd ed.)"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Differential Dynamic Programming and Newton's Method for Discrete Optimal Control Problems"
+authors = "Jacobson, David H.; Mayne, David Q."
+year = 1970
+journal = "Journal of Mathematical Analysis and Applications"
+doi = "10.1016/0022-247X(70)90272-X"
+openAccess = false
+
+[[references]]
+title = "A Differential Dynamic Programming Framework for Optimal Control of Smooth Rigid Body Systems"
+authors = "Tassa, Yuval; Erez, Tom; Todorov, Emanuel"
+year = 2012
+journal = "IEEE Transactions on Automatic Control"
+doi = "10.1109/TAC.2012.2195830"
+openAccess = false
+
+[[models]]
+id = "direct"
+label = "Direct Methods"
+
+[[models]]
+id = "indirect"
+label = "Indirect Methods"
+
+[[models]]
+id = "ddp"
+label = "Differential Dynamic Programming"
+
+[[models]]
+id = "altro"
+label = "ALTRO"
+
+[[bullets]]
+text = "Direct Methods (Direct Collocation)"
+detail = "Transcribe continuous trajectory problem into a finite-dimensional nonlinear program. Discretize state and control along a time grid, enforce dynamics constraints at collocation points. Fast for long horizons; requires NLP solver."
+
+[[bullets]]
+text = "Indirect Methods (Iterative LQR)"
+detail = "Refine trajectory iteratively via successive quadratic approximation (iLQR). Linearise dynamics and quadraticise cost around current trajectory. Backward sweep computes optimal control gains, forward sweep integrates improved trajectory."
+
+[[bullets]]
+text = "Differential Dynamic Programming (DDP)"
+detail = "Second-order indirect method using backward-forward sweep with second-order Taylor expansion. More accurate than iLQR for highly nonlinear problems; locally quadratic convergence."
+
+[[bullets]]
+text = "Augmented Lagrangian Trajectory Optimizer (ALTRO)"
+detail = "Combines DDP with constraint handling via augmented Lagrangian framework. Solves constrained trajectory problems (equality and inequality constraints). State-of-the-art solver for nonlinear robotics."
+
+[[decisionRows]]
+task = "Direct Methods"
+context = "General problems with path constraints and bounds; a good NLP solver is available"
+purpose = "Transcribe states and controls at every node into one large NLP (here trapezoidal collocation solved by Ipopt)"
+
+[[decisionRows]]
+task = "Indirect Methods"
+context = "Smooth unconstrained problems where high accuracy is wanted and a good costate guess exists"
+purpose = "Pontryagin's principle: shoot on the initial costate until the terminal transversality condition holds"
+
+[[decisionRows]]
+task = "Differential Dynamic Programming"
+context = "Unconstrained or softly constrained problems; also yields feedback gains"
+purpose = "Backward pass of local quadratic value models, forward rollout with the updated controls (iLQR form)"
+
+[[decisionRows]]
+task = "ALTRO"
+context = "Control or state limits with the speed of DDP"
+purpose = "Augmented Lagrangian outer loop that prices the constraints around an iLQR inner solver"
+
+[[inputs]]
+id = "f"
+label = "Dynamics f(x, u)"
+tooltip = "Continuous-time dynamics returning dx/dt as a Julia vector, in terms of the state vector x and control vector u. Default: a damped pendulum with torque input (swing-up)."
+default = "[x[2], -9.81 * sin(x[1]) - 0.1 * x[2] + u[1]]"
+
+[[inputs]]
+id = "x0"
+label = "Initial State"
+tooltip = "Starting state as a Julia vector of length n."
+default = "[0.0, 0.0]"
+
+[[inputs]]
+id = "xf"
+label = "Target State"
+tooltip = "Goal state as a Julia vector of length n; the running and terminal costs penalise the distance to it."
+default = "[pi, 0.0]"
+
+[[inputs]]
+id = "Q"
+label = "State Cost Q"
+tooltip = "Symmetric positive-semidefinite (n x n) running penalty on x - xf."
+default = "Diagonal([0.1, 0.1])"
+newRow = true
+
+[[inputs]]
+id = "R"
+label = "Control Cost R"
+tooltip = "Symmetric positive-definite (m x m) running penalty on u; its size also sets the number of controls m."
+default = "fill(0.1, 1, 1)"
+
+[[inputs]]
+id = "Qf"
+label = "Terminal Cost Qf"
+tooltip = "Symmetric positive-semidefinite (n x n) penalty on x(tf) - xf. Large values make the target an almost hard constraint."
+default = "Diagonal([100.0, 100.0])"
+
+[[inputs]]
+id = "N"
+label = "Knot Points"
+tooltip = "Number of time nodes; the step is dt = tf / (N - 1). More nodes are more accurate and slower."
+default = "101"
+newRow = true
+
+[[inputs]]
+id = "tf"
+label = "Time Horizon"
+tooltip = "Total duration of the trajectory in seconds."
+default = "5.0"
+
+[[inputs]]
+id = "umax"
+label = "Control Bound"
+tooltip = "Limit on every control, |u| <= umax. Use Inf for no bound."
+default = "5.0"
+models = ["direct", "altro"]
+
+[[inputs]]
+id = "maxiter"
+label = "Max Iterations"
+tooltip = "Maximum iterations of the solver (Newton iterations on the costate for the indirect method, iLQR sweeps for DDP and ALTRO)."
+default = "200"
+models = ["indirect", "ddp", "altro"]
+
+[[inputs]]
+id = "tol"
+label = "Tolerance"
+tooltip = "Convergence tolerance: relative cost decrease for DDP, maximum constraint violation for the ALTRO outer loop."
+default = "1e-6"
+models = ["ddp", "altro"]
+
+[[inputs]]
+id = "rho"
+label = "Initial Penalty"
+tooltip = "Initial augmented Lagrangian penalty weight; multiplied by 10 after each outer iteration while the constraints are violated."
+default = "1.0"
+models = ["altro"]
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.direct]
+# A trajectory with every knot point as a decision variable
+svg = '''
+var s = '', d = 'M8,62';
+for (var i = 0; i <= 8; i++) { var x = 8 + 4.75 * i, t = i / 8, y = 62 - 30 * (3 * t * t - 2 * t * t * t); d += ' L' + x.toFixed(1) + ',' + y.toFixed(1); s += '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="1.8" fill="currentColor"/>'; }
+return '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1"/>' + s;
+'''
+
+[miniCharts.indirect]
+# Shooting arcs from one start converging on the target
+svg = '''
+var s = '';
+[-14, -4, 0].forEach(function (e, i) { s += '<path d="M8,62 Q28,' + (26 + e) + ' 46,' + (32 + e * 0.8) + '" fill="none" stroke="currentColor" stroke-width="' + (i === 2 ? 1.4 : 0.8) + '" opacity="' + (i === 2 ? 1 : 0.5) + '"/>'; });
+return s + '<circle cx="8" cy="62" r="2" fill="currentColor"/><circle cx="46" cy="32" r="2.4" fill="none" stroke="currentColor" stroke-width="1.2"/>';
+'''
+
+[miniCharts.ddp]
+# Backward sweep arrow above a forward rollout
+svg = '''
+return '<path d="M46,34 L10,34" stroke="currentColor" stroke-width="1" fill="none"/><path d="M14,31 L10,34 L14,37" stroke="currentColor" stroke-width="1" fill="none"/>'
+	+ '<path d="M8,64 Q24,40 46,48" stroke="currentColor" stroke-width="1.4" fill="none"/><path d="M42,45 L46,48 L42,51" stroke="currentColor" stroke-width="1.1" fill="none"/>';
+'''
+
+[miniCharts.altro]
+# A control profile pressed against its bounds
+svg = '''
+var d = 'M8,50';
+for (var x = 8; x <= 46; x++) { var t = (x - 8) / 38, y = 50 - 26 * Math.sin(2 * Math.PI * t); d += ' L' + x + ',' + Math.max(36, Math.min(64, y)).toFixed(1); }
+return '<line x1="8" y1="36" x2="46" y2="36" stroke="currentColor" stroke-width="0.8" stroke-dasharray="3,2"/><line x1="8" y1="64" x2="46" y2="64" stroke="currentColor" stroke-width="0.8" stroke-dasharray="3,2"/><path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.4"/>';
+'''
+
+[[codeBranches]]
+model = "direct"
+code = '''
+using ForwardDiff, LinearAlgebra
+
+f(x, u) = {{f}}  # continuous-time dynamics dx/dt
+x0, xf = {{x0}}, {{xf}}  # start and target
+Q, R, Qf = {{Q}}, {{R}}, {{Qf}}  # running state, running control and terminal weights
+N, tf = {{N}}, {{tf}}  # knot points and horizon
+dt = tf / (N - 1)
+n, m = length(x0), size(R, 1)
+
+rk4step(F, z) = (k1 = F(z); k2 = F(z .+ dt / 2 .* k1); k3 = F(z .+ dt / 2 .* k2); k4 = F(z .+ dt .* k3); z .+ dt / 6 .* (k1 .+ 2 .* k2 .+ 2 .* k3 .+ k4))
+rk4(x, u) = rk4step(y -> f(y, u), x)  # discrete dynamics x[k+1] = rk4(x[k], u[k])
+stage(x, u) = (dot(x - xf, Q * (x - xf)) + dot(u, R * u)) / 2
+terminal(x) = dot(x - xf, Qf * (x - xf)) / 2
+total(X, U) = sum(stage(X[k], U[k]) for k in 1:N-1) + terminal(X[N])
+rollout(U; x0=x0) = (X = [x0]; for u in U; push!(X, rk4(X[end], u)); end; X)
+
+# time-varying LQR around a nominal trajectory: feedback gains u = U[k] - K[k] (x - X[k])
+function tvlqr(X, U)
+    P = Matrix(Qf); K = Vector{Matrix{Float64}}(undef, N - 1)
+    for k in N-1:-1:1
+        Ak = ForwardDiff.jacobian(x -> rk4(x, U[k]), X[k]); Bk = ForwardDiff.jacobian(u -> rk4(X[k], u), U[k])
+        K[k] = (R + Bk' * P * Bk) \ (Bk' * P * Ak)
+        P = Q + Ak' * P * (Ak - Bk * K[k])
+    end
+    K
+end
+
+using JuMP, Ipopt
+umax = {{umax}}
+
+function plan(x0)
+    model = Model(Ipopt.Optimizer); set_silent(model)
+    @variable(model, xv[i = 1:n, k = 1:N], start = x0[i] + (xf[i] - x0[i]) * (k - 1) / (N - 1))  # straight-line initial guess
+    @variable(model, -umax <= uv[1:m, 1:N] <= umax)
+    @constraint(model, xv[:, 1] .== x0)
+    for k in 1:N-1  # trapezoidal collocation of the dynamics
+        @constraint(model, xv[:, k+1] .== xv[:, k] .+ dt / 2 .* (f(xv[:, k], uv[:, k]) .+ f(xv[:, k+1], uv[:, k+1])))
+    end
+    @objective(model, Min, sum(stage(xv[:, k], uv[:, k]) for k in 1:N-1) + terminal(xv[:, N]))
+    optimize!(model)
+    (X = [value.(xv[:, k]) for k in 1:N], U = [value.(uv[:, k]) for k in 1:N-1], model = model)
+end
+
+result = plan(x0)
+X, U = result.X, result.U
+(final_state = X[end], target = xf, terminal_error = norm(X[end] - xf), cost = total(X, U), peak_control = maximum(norm, U))
+'''
+
+[[codeBranches]]
+model = "indirect"
+code = '''
+using ForwardDiff, LinearAlgebra
+
+f(x, u) = {{f}}  # continuous-time dynamics dx/dt
+x0, xf = {{x0}}, {{xf}}  # start and target
+Q, R, Qf = {{Q}}, {{R}}, {{Qf}}  # running state, running control and terminal weights
+N, tf = {{N}}, {{tf}}  # knot points and horizon
+dt = tf / (N - 1)
+n, m = length(x0), size(R, 1)
+
+rk4step(F, z) = (k1 = F(z); k2 = F(z .+ dt / 2 .* k1); k3 = F(z .+ dt / 2 .* k2); k4 = F(z .+ dt .* k3); z .+ dt / 6 .* (k1 .+ 2 .* k2 .+ 2 .* k3 .+ k4))
+rk4(x, u) = rk4step(y -> f(y, u), x)  # discrete dynamics x[k+1] = rk4(x[k], u[k])
+stage(x, u) = (dot(x - xf, Q * (x - xf)) + dot(u, R * u)) / 2
+terminal(x) = dot(x - xf, Qf * (x - xf)) / 2
+total(X, U) = sum(stage(X[k], U[k]) for k in 1:N-1) + terminal(X[N])
+rollout(U; x0=x0) = (X = [x0]; for u in U; push!(X, rk4(X[end], u)); end; X)
+
+# time-varying LQR around a nominal trajectory: feedback gains u = U[k] - K[k] (x - X[k])
+function tvlqr(X, U)
+    P = Matrix(Qf); K = Vector{Matrix{Float64}}(undef, N - 1)
+    for k in N-1:-1:1
+        Ak = ForwardDiff.jacobian(x -> rk4(x, U[k]), X[k]); Bk = ForwardDiff.jacobian(u -> rk4(X[k], u), U[k])
+        K[k] = (R + Bk' * P * Bk) \ (Bk' * P * Ak)
+        P = Q + Ak' * P * (Ak - Bk * K[k])
+    end
+    K
+end
+
+using NLsolve
+
+# Pontryagin: H = stage + lambda' f; with control-affine dynamics, dH/du = 0 gives u = -R^-1 f_u' lambda
+ham(x, u, lam) = stage(x, u) + dot(lam, f(x, u))
+ustar(x, lam) = -(R \ (ForwardDiff.jacobian(v -> f(x, v), zeros(eltype(x), m))' * lam))
+function canonical(z)  # state and costate equations
+    x, lam = z[1:n], z[n+1:end]
+    u = ustar(x, lam)
+    vcat(f(x, u), -ForwardDiff.gradient(y -> ham(y, u, lam), x))
+end
+shoot(lam0; x0=x0) = (Z = [vcat(x0, lam0)]; for _ in 1:N-1; push!(Z, rk4step(canonical, Z[end])); end; Z)
+
+function plan(x0; lam0=zeros(n))
+    # transversality: lambda(tf) = gradient of the terminal cost
+    residual(l) = (z = shoot(l; x0=x0)[end]; z[n+1:end] - Qf * (z[1:n] - xf))
+    sol = nlsolve(residual, lam0; autodiff=:forward, iterations={{maxiter}})
+    Z = shoot(sol.zero; x0=x0)
+    (X = [z[1:n] for z in Z], U = [ustar(z[1:n], z[n+1:end]) for z in Z[1:N-1]], sol = sol)
+end
+
+result = plan(x0)
+X, U = result.X, result.U
+(final_state = X[end], target = xf, terminal_error = norm(X[end] - xf), cost = total(X, U), peak_control = maximum(norm, U))
+'''
+
+[[codeBranches]]
+model = "ddp"
+code = '''
+using ForwardDiff, LinearAlgebra
+
+f(x, u) = {{f}}  # continuous-time dynamics dx/dt
+x0, xf = {{x0}}, {{xf}}  # start and target
+Q, R, Qf = {{Q}}, {{R}}, {{Qf}}  # running state, running control and terminal weights
+N, tf = {{N}}, {{tf}}  # knot points and horizon
+dt = tf / (N - 1)
+n, m = length(x0), size(R, 1)
+
+rk4step(F, z) = (k1 = F(z); k2 = F(z .+ dt / 2 .* k1); k3 = F(z .+ dt / 2 .* k2); k4 = F(z .+ dt .* k3); z .+ dt / 6 .* (k1 .+ 2 .* k2 .+ 2 .* k3 .+ k4))
+rk4(x, u) = rk4step(y -> f(y, u), x)  # discrete dynamics x[k+1] = rk4(x[k], u[k])
+stage(x, u) = (dot(x - xf, Q * (x - xf)) + dot(u, R * u)) / 2
+terminal(x) = dot(x - xf, Qf * (x - xf)) / 2
+total(X, U) = sum(stage(X[k], U[k]) for k in 1:N-1) + terminal(X[N])
+rollout(U; x0=x0) = (X = [x0]; for u in U; push!(X, rk4(X[end], u)); end; X)
+
+# time-varying LQR around a nominal trajectory: feedback gains u = U[k] - K[k] (x - X[k])
+function tvlqr(X, U)
+    P = Matrix(Qf); K = Vector{Matrix{Float64}}(undef, N - 1)
+    for k in N-1:-1:1
+        Ak = ForwardDiff.jacobian(x -> rk4(x, U[k]), X[k]); Bk = ForwardDiff.jacobian(u -> rk4(X[k], u), U[k])
+        K[k] = (R + Bk' * P * Bk) \ (Bk' * P * Ak)
+        P = Q + Ak' * P * (Ak - Bk * K[k])
+    end
+    K
+end
+
+# iLQR: quadratic models of the cost and linear models of the dynamics along the current trajectory
+function ilqr(stagek; U=[zeros(m) for _ in 1:N-1], maxiter={{maxiter}}, tol={{tol}})
+    X = rollout(U)
+    Jof(X, U) = sum(stagek(X[k], U[k], k) for k in 1:N-1) + terminal(X[N])
+    J = Jof(X, U); history = [J]; mu = 1e-6
+    Ks = Vector{Matrix{Float64}}(undef, N - 1); ds = Vector{Vector{Float64}}(undef, N - 1)
+    for _ in 1:maxiter
+        Vx = ForwardDiff.gradient(terminal, X[N]); Vxx = ForwardDiff.hessian(terminal, X[N])
+        for k in N-1:-1:1  # backward pass
+            Ak = ForwardDiff.jacobian(x -> rk4(x, U[k]), X[k]); Bk = ForwardDiff.jacobian(u -> rk4(X[k], u), U[k])
+            lz(z) = stagek(z[1:n], z[n+1:end], k)
+            g = ForwardDiff.gradient(lz, vcat(X[k], U[k])); H = ForwardDiff.hessian(lz, vcat(X[k], U[k]))
+            Qx = g[1:n] + Ak' * Vx; Qu = g[n+1:end] + Bk' * Vx
+            Qxx = H[1:n, 1:n] + Ak' * Vxx * Ak; Quu = H[n+1:end, n+1:end] + Bk' * Vxx * Bk + mu * I
+            Qux = H[n+1:end, 1:n] + Bk' * Vxx * Ak
+            Ks[k] = -(Quu \ Qux); ds[k] = -(Quu \ Qu)
+            Vx = Qx + Ks[k]' * Quu * ds[k] + Ks[k]' * Qu + Qux' * ds[k]
+            Vxx = Matrix(Symmetric(Qxx + Ks[k]' * Quu * Ks[k] + Ks[k]' * Qux + Qux' * Ks[k]))
+        end
+        improved = false
+        for a in (1.0, 0.5, 0.25, 0.1, 0.03, 0.01)  # forward pass with a backtracking line search
+            Xn = [x0]; Un = similar(U)
+            for k in 1:N-1
+                Un[k] = U[k] + a * ds[k] + Ks[k] * (Xn[k] - X[k])
+                push!(Xn, rk4(Xn[k], Un[k]))
+            end
+            Jn = Jof(Xn, Un)
+            if Jn < J
+                X, U, improved = Xn, Un, true
+                break
+            end
+        end
+        if !improved
+            mu *= 10  # regularise the backward pass and retry
+            mu > 1e8 && break
+            continue
+        end
+        mu = max(mu / 10, 1e-8)
+        push!(history, Jof(X, U))
+        if abs(history[end-1] - history[end]) < tol * max(1.0, abs(history[end]))
+            break
+        end
+        J = history[end]
+    end
+    (X = X, U = U, K = Ks, history = history)
+end
+
+plan(x0) = ilqr((x, u, k) -> stage(x, u))
+
+result = plan(x0)
+X, U = result.X, result.U
+(final_state = X[end], target = xf, terminal_error = norm(X[end] - xf), cost = total(X, U), peak_control = maximum(norm, U))
+'''
+
+[[codeBranches]]
+model = "altro"
+code = '''
+using ForwardDiff, LinearAlgebra
+
+f(x, u) = {{f}}  # continuous-time dynamics dx/dt
+x0, xf = {{x0}}, {{xf}}  # start and target
+Q, R, Qf = {{Q}}, {{R}}, {{Qf}}  # running state, running control and terminal weights
+N, tf = {{N}}, {{tf}}  # knot points and horizon
+dt = tf / (N - 1)
+n, m = length(x0), size(R, 1)
+
+rk4step(F, z) = (k1 = F(z); k2 = F(z .+ dt / 2 .* k1); k3 = F(z .+ dt / 2 .* k2); k4 = F(z .+ dt .* k3); z .+ dt / 6 .* (k1 .+ 2 .* k2 .+ 2 .* k3 .+ k4))
+rk4(x, u) = rk4step(y -> f(y, u), x)  # discrete dynamics x[k+1] = rk4(x[k], u[k])
+stage(x, u) = (dot(x - xf, Q * (x - xf)) + dot(u, R * u)) / 2
+terminal(x) = dot(x - xf, Qf * (x - xf)) / 2
+total(X, U) = sum(stage(X[k], U[k]) for k in 1:N-1) + terminal(X[N])
+rollout(U; x0=x0) = (X = [x0]; for u in U; push!(X, rk4(X[end], u)); end; X)
+
+# time-varying LQR around a nominal trajectory: feedback gains u = U[k] - K[k] (x - X[k])
+function tvlqr(X, U)
+    P = Matrix(Qf); K = Vector{Matrix{Float64}}(undef, N - 1)
+    for k in N-1:-1:1
+        Ak = ForwardDiff.jacobian(x -> rk4(x, U[k]), X[k]); Bk = ForwardDiff.jacobian(u -> rk4(X[k], u), U[k])
+        K[k] = (R + Bk' * P * Bk) \ (Bk' * P * Ak)
+        P = Q + Ak' * P * (Ak - Bk * K[k])
+    end
+    K
+end
+
+# iLQR: quadratic models of the cost and linear models of the dynamics along the current trajectory
+function ilqr(stagek; U=[zeros(m) for _ in 1:N-1], maxiter={{maxiter}}, tol={{tol}})
+    X = rollout(U)
+    Jof(X, U) = sum(stagek(X[k], U[k], k) for k in 1:N-1) + terminal(X[N])
+    J = Jof(X, U); history = [J]; mu = 1e-6
+    Ks = Vector{Matrix{Float64}}(undef, N - 1); ds = Vector{Vector{Float64}}(undef, N - 1)
+    for _ in 1:maxiter
+        Vx = ForwardDiff.gradient(terminal, X[N]); Vxx = ForwardDiff.hessian(terminal, X[N])
+        for k in N-1:-1:1  # backward pass
+            Ak = ForwardDiff.jacobian(x -> rk4(x, U[k]), X[k]); Bk = ForwardDiff.jacobian(u -> rk4(X[k], u), U[k])
+            lz(z) = stagek(z[1:n], z[n+1:end], k)
+            g = ForwardDiff.gradient(lz, vcat(X[k], U[k])); H = ForwardDiff.hessian(lz, vcat(X[k], U[k]))
+            Qx = g[1:n] + Ak' * Vx; Qu = g[n+1:end] + Bk' * Vx
+            Qxx = H[1:n, 1:n] + Ak' * Vxx * Ak; Quu = H[n+1:end, n+1:end] + Bk' * Vxx * Bk + mu * I
+            Qux = H[n+1:end, 1:n] + Bk' * Vxx * Ak
+            Ks[k] = -(Quu \ Qux); ds[k] = -(Quu \ Qu)
+            Vx = Qx + Ks[k]' * Quu * ds[k] + Ks[k]' * Qu + Qux' * ds[k]
+            Vxx = Matrix(Symmetric(Qxx + Ks[k]' * Quu * Ks[k] + Ks[k]' * Qux + Qux' * Ks[k]))
+        end
+        improved = false
+        for a in (1.0, 0.5, 0.25, 0.1, 0.03, 0.01)  # forward pass with a backtracking line search
+            Xn = [x0]; Un = similar(U)
+            for k in 1:N-1
+                Un[k] = U[k] + a * ds[k] + Ks[k] * (Xn[k] - X[k])
+                push!(Xn, rk4(Xn[k], Un[k]))
+            end
+            Jn = Jof(Xn, Un)
+            if Jn < J
+                X, U, improved = Xn, Un, true
+                break
+            end
+        end
+        if !improved
+            mu *= 10  # regularise the backward pass and retry
+            mu > 1e8 && break
+            continue
+        end
+        mu = max(mu / 10, 1e-8)
+        push!(history, Jof(X, U))
+        if abs(history[end-1] - history[end]) < tol * max(1.0, abs(history[end]))
+            break
+        end
+        J = history[end]
+    end
+    (X = X, U = U, K = Ks, history = history)
+end
+
+umax = {{umax}}
+con(u) = vcat(u .- umax, -umax .- u)  # control bounds as c(u) <= 0
+
+function plan(x0; rho={{rho}}, outer=10)
+    lam = [zeros(2m) for _ in 1:N-1]; U = [zeros(m) for _ in 1:N-1]
+    inner = nothing; violation = Float64[]
+    for _ in 1:outer
+        al(x, u, k) = stage(x, u) + sum(abs2, max.(0, lam[k] .+ rho .* con(u))) / (2rho)  # augmented Lagrangian
+        inner = ilqr(al; U=U)
+        U = inner.U
+        push!(violation, maximum(maximum(max.(0, con(u))) for u in U))
+        violation[end] < {{tol}} && break
+        lam = [max.(0, lam[k] .+ rho .* con(U[k])) for k in 1:N-1]  # multiplier update
+        rho *= 10
+    end
+    (X = inner.X, U = U, K = inner.K, history = inner.history, violation = violation)
+end
+
+result = plan(x0)
+X, U = result.X, result.U
+(final_state = X[end], target = xf, terminal_error = norm(X[end] - xf), cost = total(X, U), peak_control = maximum(norm, U))
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "state-trajectory"
+label = "State Trajectory"
+desc = "The optimal states over time with the target values dashed"
+code = '''
+using Plots
+
+t = range(0, tf, length=N)
+p = plot(t, reduce(hcat, X)', label=permutedims(["x$i" for i in 1:n]), xlabel="time", ylabel="state")
+hline!(p, xf, linestyle=:dash, color=:gray, label="target")
+'''
+
+[[actionGroups.actions]]
+id = "control-trajectory"
+label = "Control Trajectory"
+desc = "The optimal control held over each interval"
+code = '''
+using Plots
+
+plot(range(0, tf - dt, length=N - 1), reduce(hcat, U)', linetype=:steppost, label=permutedims(["u$j" for j in 1:m]), xlabel="time", ylabel="control")
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "dynamics-feasibility"
+label = "Dynamics Feasibility"
+desc = "Roll the optimal controls through the RK4 model and compare with the planned states: collocation defects for the direct method, integration error otherwise"
+code = '''
+Xr = rollout(U)
+gap = [norm(Xr[k] - X[k]) for k in 1:N]
+(max_state_gap = maximum(gap), final_state_rollout = Xr[end], terminal_error_rollout = norm(Xr[end] - xf))
+'''
+
+[[actionGroups.actions]]
+id = "solver-convergence"
+label = "Solver Convergence"
+desc = "How the solver converged: NLP status, costate shooting residual, or the cost per iLQR sweep"
+code = '''
+{{?model=direct}} (status = termination_status(result.model), objective = objective_value(result.model), seconds = solve_time(result.model))
+{{?model=indirect}} (converged = converged(result.sol), shooting_residual = result.sol.residual_norm, newton_iterations = result.sol.iterations)
+{{?model=ddp}} using Plots; plot(result.history .- minimum(result.history) .+ eps(), yscale=:log10, marker=:circle, xlabel="iteration", ylabel="cost - best", legend=false)
+{{?model=altro}} (inner_iterations_last = length(result.history) - 1, outer_iterations = length(result.violation), constraint_violation = result.violation)
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "replan"
+label = "Replan from New State"
+desc = "Solve again from a different initial state and compare the cost and terminal accuracy"
+code = '''
+x_new = x0 .+ 0.2  # replace with the new initial state
+r = plan(x_new)
+(new_cost = total(r.X, r.U), original_cost = total(X, U), terminal_error = norm(r.X[end] - xf))
+'''
+
+[[actionGroups.actions]]
+id = "disturbance-rejection"
+label = "Disturbance Rejection"
+desc = "Execute the plan under random state disturbances: open-loop controls against time-varying LQR feedback around the trajectory"
+code = '''
+using Random, Plots
+
+K = tvlqr(X, U)
+function execute(feedback; sigma=0.02, seed=1)
+    rng = Xoshiro(seed); x = copy(x0); xs = [x]
+    for k in 1:N-1
+        u = feedback ? U[k] - K[k] * (x - X[k]) : U[k]
+        x = rk4(x, u) .+ sigma .* randn(rng, n); push!(xs, x)
+    end
+    xs
+end
+ol, cl = execute(false), execute(true)
+display(plot(range(0, tf, length=N), [first.(X) first.(ol) first.(cl)], label=["plan" "open loop" "TVLQR feedback"], xlabel="time", ylabel="x1"))
+(open_loop_final_error = norm(ol[end] - xf), feedback_final_error = norm(cl[end] - xf))
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "discretisation"
+label = "Discretisation Accuracy"
+desc = "Integrate the same piecewise-constant controls with 1, 4 and 16 RK4 sub-steps per interval: how much the final state moves tells whether N is fine enough"
+code = '''
+map([1, 4, 16]) do s
+    x = copy(x0); h = dt / s
+    for u in U, _ in 1:s
+        k1 = f(x, u); k2 = f(x .+ h / 2 .* k1, u); k3 = f(x .+ h / 2 .* k2, u); k4 = f(x .+ h .* k3, u)
+        x = x .+ h / 6 .* (k1 .+ 2 .* k2 .+ 2 .* k3 .+ k4)
+    end
+    (substeps = s, final_state = x, terminal_error = norm(x - xf))
+end
+'''
+
+[[actionGroups.actions]]
+id = "model-mismatch"
+label = "Model Mismatch"
+desc = "Run the plan on dynamics that differ from the model (every derivative scaled): open loop against TVLQR feedback"
+code = '''
+K = tvlqr(X, U)
+map([0.9, 1.0, 1.1]) do s
+    g(x, u) = s .* f(x, u)
+    step(x, u) = (k1 = g(x, u); k2 = g(x .+ dt / 2 .* k1, u); k3 = g(x .+ dt / 2 .* k2, u); k4 = g(x .+ dt .* k3, u); x .+ dt / 6 .* (k1 .+ 2 .* k2 .+ 2 .* k3 .+ k4))
+    xo = copy(x0); xc = copy(x0)
+    for k in 1:N-1
+        xo = step(xo, U[k]); xc = step(xc, U[k] - K[k] * (xc - X[k]))
+    end
+    (dynamics_scale = s, open_loop_error = norm(xo - xf), feedback_error = norm(xc - xf))
+end
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "cost-breakdown"
+label = "Cost Breakdown"
+desc = "Total cost split into running state cost, control effort and terminal penalty"
+code = '''
+state_cost = sum(dot(X[k] - xf, Q * (X[k] - xf)) for k in 1:N-1) / 2
+control_cost = sum(dot(U[k], R * U[k]) for k in 1:N-1) / 2
+(state = state_cost, control = control_cost, terminal = terminal(X[N]), total = total(X, U))
+'''
+
+[[actionGroups.actions]]
+id = "feedback-gains"
+label = "Feedback Gains"
+desc = "Size of the time-varying LQR gain along the trajectory: large gains mark the moments where deviations matter most"
+code = '''
+using Plots
+
+K = tvlqr(X, U)
+plot(range(0, tf - dt, length=N - 1), opnorm.(K), xlabel="time", ylabel="gain norm", legend=false)
+'''

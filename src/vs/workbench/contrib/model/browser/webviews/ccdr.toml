@@ -1,0 +1,536 @@
+# Chance-Constrained and Distributionally Robust Optimisation Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/ccdr.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Chance-Constrained and Distributionally Robust Optimisation"
+viewType = "pollis.ccdr"
+defaultModel = "cc"
+
+[[packages]]
+name = "JuMP.jl"
+github = "https://github.com/jump-dev/JuMP.jl"
+
+[[packages]]
+name = "Clarabel.jl"
+github = "https://github.com/oxfordcontrol/Clarabel.jl"
+
+[[packages]]
+name = "HiGHS.jl"
+github = "https://github.com/jump-dev/HiGHS.jl"
+
+[requires]
+packages = ["JuMP.jl", "Clarabel.jl", "Distributions.jl", "Plots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Chance-Constrained: Gaussian"
+file = "ccdr/tutorial-01-cc-gaussian.ipynb"
+bundled = true
+description = "Individual chance constraints with Gaussian uncertainty: exact SOCP reformulation via JuMP and Clarabel"
+
+[[notebookSections.notebooks]]
+name = "Chance-Constrained: Sample Average Approximation"
+file = "ccdr/tutorial-02-cc-saa.ipynb"
+bundled = true
+description = "Joint chance constraints via sample average approximation: big-M MIP reformulation with HiGHS"
+
+[[notebookSections.notebooks]]
+name = "DRO: Moment Ambiguity"
+file = "ccdr/tutorial-03-dro-moment.ipynb"
+bundled = true
+description = "Distributionally robust optimisation with mean-covariance ambiguity set: SDP reformulation via Clarabel"
+
+[[notebookSections.notebooks]]
+name = "DRO: Wasserstein"
+file = "ccdr/tutorial-04-dro-wasserstein.ipynb"
+bundled = true
+description = "Wasserstein DRO: finite-sample ambiguity ball around empirical distribution, reformulated as LP/SOCP via JuMP"
+
+[[wikis]]
+name = "Factsheet"
+file = "ccdr/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "ccdr/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "ccdr/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "ccdr/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "ccdr/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "ccdr/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Methods"
+
+[[wikis]]
+name = "Chance-Constrained"
+file = "ccdr/chance-constrained.md"
+bundled = true
+
+[[wikis]]
+name = "Distributionally Robust"
+file = "ccdr/dro.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "JuMP: A Modeling Language for Mathematical Optimization"
+authors = "Dunning, Iain; Huchette, Joey; Lubin, Miles"
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/15M1020575"
+openAccess = true
+
+[[references]]
+title = "Clarabel: An Interior-Point Solver for Conic Programs with Quadratic Objectives"
+authors = "Goulart, Paul J.; Chen, Yuwen"
+year = 2024
+journal = "arXiv"
+doi = "10.48550/arXiv.2405.14674"
+openAccess = true
+
+[[references]]
+title = "HiGHS: Serial and Parallel Solution of Linear Programming"
+authors = "Huangfu, Qi; Hall, J.A.J."
+year = 2018
+journal = "Mathematical Programming Computation"
+doi = "10.1007/s12532-017-0130-5"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Robust Optimization"
+authors = "Ben-Tal, Aharon; El Ghaoui, Laurent; Nemirovski, Arkadi"
+year = 2009
+journal = "Princeton University Press"
+doi = "10.1515/9781400831050"
+openAccess = false
+
+[[references]]
+title = "Lectures on Stochastic Programming: Modeling and Theory"
+authors = "Shapiro, Alexander; Dentcheva, Darinka; Ruszczynski, Andrzej"
+year = 2021
+journal = "SIAM (3rd ed.)"
+doi = "10.1137/1.9780898718751"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Distributionally Robust Optimization under Moment Uncertainty with Application to Data-Driven Problems"
+authors = "Delage, Erick; Ye, Yinyu"
+year = 2010
+journal = "Operations Research"
+doi = "10.1287/opre.1090.0741"
+openAccess = false
+
+[[references]]
+title = "Data-Driven Distributionally Robust Optimization Using the Wasserstein Metric"
+authors = "Mohajerin Esfahani, Peyman; Kuhn, Daniel"
+year = 2018
+journal = "Mathematical Programming"
+doi = "10.1007/s10107-017-1172-1"
+openAccess = true
+
+[[references]]
+title = "Chance Constrained Programming"
+authors = "Charnes, Abraham; Cooper, William W."
+year = 1959
+journal = "Management Science"
+doi = "10.1287/mnsc.6.1.73"
+openAccess = false
+
+[[references]]
+title = "A Sample Approximation Approach for Optimization with Probabilistic Constraints"
+authors = "Luedtke, James; Ahmed, Shabbir"
+year = 2008
+journal = "SIAM Journal on Optimization"
+doi = "10.1137/070702928"
+openAccess = false
+
+[[models]]
+id = "cc"
+label = "Chance-Constrained"
+
+[[models]]
+id = "dro"
+label = "Distributionally Robust"
+
+[[bullets]]
+text = "Unlike Uncertainty-Set Robust Optimisation"
+detail = "which is distribution-free and guarantees feasibility for every realisation in a prescribed set — both methods here assume uncertainty has a probability distribution. Chance-Constrained Programming relaxes feasibility to a probabilistic guarantee (constraints may be violated with probability at most epsilon), enabling less conservative solutions."
+
+[[bullets]]
+text = "Distributionally Robust Optimisation sits between the two: it does not assume a known distribution, but rather optimises against the worst-case distribution within an ambiguity set defined by moments or Wasserstein distance to empirical data."
+detail = ""
+
+[[decisionRows]]
+task = "Chance-Constrained"
+context = "Constraints on random quantities that may be violated with a small, controlled probability (capacity, reliability, service levels)"
+purpose = "Gaussian chance constraint P(xi'x <= b) >= 1 - epsilon with mean and covariance estimated from n samples, reformulated exactly as a second-order cone constraint"
+
+[[decisionRows]]
+task = "Distributionally Robust"
+context = "Few data and an unknown distribution: protect against every distribution close to the empirical one, not just a fitted model"
+purpose = "Wasserstein DRO: the worst-case CVaR of the constraint over all distributions within transport distance theta of the n samples must be nonpositive, a conic program that guarantees the chance constraint for all of them"
+
+[[inputs]]
+id = "n"
+label = "Samples (n)"
+tooltip = "Number of observed samples of the random resource use xi. The chance-constrained model estimates its mean and covariance from them; the DRO model centres its Wasserstein ball on their empirical distribution."
+default = "100"
+
+[[inputs]]
+id = "eps"
+label = "Violation Probability (epsilon)"
+tooltip = "Allowed probability that resource use exceeds capacity; the constraint must hold with probability at least 1 - epsilon. Typical values 0.01 to 0.10 (must be below 0.5)."
+default = "0.05"
+
+[[inputs]]
+id = "theta"
+label = "Wasserstein Radius (theta)"
+tooltip = "Radius of the Wasserstein ball around the empirical distribution: the average distance probability mass may be moved. Larger values protect against more distributions and give more conservative decisions; theta = 0 is the sample (SAA) CVaR constraint. Used by the DRO formulation and by the comparisons."
+default = "0.02"
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.cc]
+# Bell curve with a small shaded violation tail beyond the capacity line
+svg = '''
+let d = 'M4,70';
+for (let i = 0; i <= 46; i++) { const x = 4 + i; const z = (x - 24) / 8; d += ' L' + x + ',' + (70 - 38 * Math.exp(-z * z / 2)).toFixed(1); }
+return '<line x1="4" y1="70" x2="50" y2="70" stroke="currentColor" stroke-width="0.6"/>'
+	+ '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.4"/>'
+	+ '<path d="M40,70 L40,63.3 L44,66.9 L50,69.1 L50,70 Z" fill="currentColor" opacity="0.6"/>'
+	+ '<line x1="40" y1="26" x2="40" y2="72" stroke="currentColor" stroke-width="1" stroke-dasharray="2,1"/>';
+'''
+
+[miniCharts.dro]
+# Empirical samples surrounded by a ball of nearby distributions
+svg = '''
+const pts = [[20, 44], [28, 38], [32, 50], [24, 54], [36, 42], [27, 47]];
+let s = '<circle cx="28" cy="46" r="18" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="3,2"/>';
+for (const [x, y] of pts) { s += '<circle cx="' + x + '" cy="' + y + '" r="1.8" fill="currentColor"/>'; }
+return s + '<line x1="8" y1="76" x2="50" y2="22" stroke="currentColor" stroke-width="1.2"/>';
+'''
+
+[[codeBranches]]
+model = "cc"
+code = '''
+using JuMP, Clarabel, LinearAlgebra, Distributions, Random, Statistics
+
+n = {{n}}  # observed samples
+epsilon = {{eps}}  # allowed violation probability
+theta = {{theta}}  # Wasserstein radius (DRO)
+
+# Two products compete for one capacity b; resource use per unit xi is random
+c = [1.0, 1.5]  # profit per unit
+b = 10.0  # capacity
+dist = MvNormal([1.0, 2.0], [0.30 0.10; 0.10 0.60])  # true (unknown) distribution of xi
+xi = rand(MersenneTwister(1), dist, n)  # observed samples, 2 x n
+
+function solve_cc(; epsilon=epsilon, xi=xi, b=b, theta=nothing)  # Gaussian chance constraint as an SOC
+    mu, L = vec(mean(xi, dims=2)), cholesky(Symmetric(cov(xi, dims=2))).U  # Sigma = transpose(L) * L
+    z = quantile(Normal(), 1 - epsilon)
+    m = Model(Clarabel.Optimizer); set_silent(m)
+    @variable(m, x[1:2] >= 0)
+    @constraint(m, [(b - dot(mu, x)) / z; L * x] in SecondOrderCone())  # mu'x + z ||L x|| <= b
+    @objective(m, Max, dot(c, x))
+    optimize!(m)
+    (x = value.(x), obj = objective_value(m), solved = is_solved_and_feasible(m))
+end
+
+function solve_dro(; epsilon=epsilon, xi=xi, b=b, theta=theta)  # worst-case CVaR over a Wasserstein ball
+    N = size(xi, 2)
+    m = Model(Clarabel.Optimizer); set_silent(m)
+    @variable(m, x[1:2] >= 0); @variable(m, tau); @variable(m, s[1:N] >= 0); @variable(m, u)
+    @constraint(m, [i = 1:N], s[i] >= dot(xi[:, i], x) - b - tau)  # CVaR hinge terms
+    @constraint(m, [u; x] in SecondOrderCone())  # u >= ||x||, the Lipschitz constant of the loss
+    @constraint(m, tau + sum(s) / (epsilon * N) + theta * u / epsilon <= 0)
+    @objective(m, Max, dot(c, x))
+    optimize!(m)
+    (x = value.(x), obj = objective_value(m), solved = is_solved_and_feasible(m))
+end
+
+function solve_box(; xi=xi, b=b, k=3)  # classical robust baseline: worst case of a box mean +- k sd
+    worst = vec(mean(xi, dims=2) .+ k .* std(xi, dims=2))
+    m = Model(Clarabel.Optimizer); set_silent(m)
+    @variable(m, x[1:2] >= 0)
+    @constraint(m, dot(worst, x) <= b)
+    @objective(m, Max, dot(c, x))
+    optimize!(m)
+    (x = value.(x), obj = objective_value(m), solved = is_solved_and_feasible(m))
+end
+
+XTEST = rand(MersenneTwister(99), dist, 100_000)  # fresh draws from the true distribution
+violation(x) = mean(transpose(XTEST) * x .> b)  # true probability that use exceeds capacity
+solve_model(; kw...) = solve_cc(; kw...)  # the active formulation
+
+sol = solve_model()
+(x = round.(sol.x, digits=3), profit = round(sol.obj, digits=3), true_violation = violation(sol.x), target = epsilon, solved = sol.solved)
+'''
+
+[[codeBranches]]
+model = "dro"
+code = '''
+using JuMP, Clarabel, LinearAlgebra, Distributions, Random, Statistics
+
+n = {{n}}  # observed samples
+epsilon = {{eps}}  # allowed violation probability
+theta = {{theta}}  # Wasserstein radius (DRO)
+
+# Two products compete for one capacity b; resource use per unit xi is random
+c = [1.0, 1.5]  # profit per unit
+b = 10.0  # capacity
+dist = MvNormal([1.0, 2.0], [0.30 0.10; 0.10 0.60])  # true (unknown) distribution of xi
+xi = rand(MersenneTwister(1), dist, n)  # observed samples, 2 x n
+
+function solve_cc(; epsilon=epsilon, xi=xi, b=b, theta=nothing)  # Gaussian chance constraint as an SOC
+    mu, L = vec(mean(xi, dims=2)), cholesky(Symmetric(cov(xi, dims=2))).U  # Sigma = transpose(L) * L
+    z = quantile(Normal(), 1 - epsilon)
+    m = Model(Clarabel.Optimizer); set_silent(m)
+    @variable(m, x[1:2] >= 0)
+    @constraint(m, [(b - dot(mu, x)) / z; L * x] in SecondOrderCone())  # mu'x + z ||L x|| <= b
+    @objective(m, Max, dot(c, x))
+    optimize!(m)
+    (x = value.(x), obj = objective_value(m), solved = is_solved_and_feasible(m))
+end
+
+function solve_dro(; epsilon=epsilon, xi=xi, b=b, theta=theta)  # worst-case CVaR over a Wasserstein ball
+    N = size(xi, 2)
+    m = Model(Clarabel.Optimizer); set_silent(m)
+    @variable(m, x[1:2] >= 0); @variable(m, tau); @variable(m, s[1:N] >= 0); @variable(m, u)
+    @constraint(m, [i = 1:N], s[i] >= dot(xi[:, i], x) - b - tau)  # CVaR hinge terms
+    @constraint(m, [u; x] in SecondOrderCone())  # u >= ||x||, the Lipschitz constant of the loss
+    @constraint(m, tau + sum(s) / (epsilon * N) + theta * u / epsilon <= 0)
+    @objective(m, Max, dot(c, x))
+    optimize!(m)
+    (x = value.(x), obj = objective_value(m), solved = is_solved_and_feasible(m))
+end
+
+function solve_box(; xi=xi, b=b, k=3)  # classical robust baseline: worst case of a box mean +- k sd
+    worst = vec(mean(xi, dims=2) .+ k .* std(xi, dims=2))
+    m = Model(Clarabel.Optimizer); set_silent(m)
+    @variable(m, x[1:2] >= 0)
+    @constraint(m, dot(worst, x) <= b)
+    @objective(m, Max, dot(c, x))
+    optimize!(m)
+    (x = value.(x), obj = objective_value(m), solved = is_solved_and_feasible(m))
+end
+
+XTEST = rand(MersenneTwister(99), dist, 100_000)  # fresh draws from the true distribution
+violation(x) = mean(transpose(XTEST) * x .> b)  # true probability that use exceeds capacity
+solve_model(; kw...) = solve_dro(; kw...)  # the active formulation
+
+sol = solve_model()
+(x = round.(sol.x, digits=3), profit = round(sol.obj, digits=3), true_violation = violation(sol.x), target = epsilon, solved = sol.solved)
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "feasible-region"
+label = "Feasible Region"
+desc = "Feasible decisions under the nominal (mean) constraint, the chance constraint, the DRO constraint and the box-robust constraint, with the optimal decision"
+code = '''
+using Plots
+function cvar(l, epsilon)  # mean of the worst epsilon fraction of the losses l
+    s = sort(l, rev=true); k = epsilon * length(l); j = floor(Int, k)
+    (sum(s[1:j]) + (k - j) * (j < length(s) ? s[j+1] : 0.0)) / k
+end
+mu, L = vec(mean(xi, dims=2)), cholesky(Symmetric(cov(xi, dims=2))).U
+worst = vec(mean(xi, dims=2) .+ 3 .* std(xi, dims=2))
+z = quantile(Normal(), 1 - epsilon)
+function dro_radius(d)  # largest step along d that keeps the DRO constraint (bisection)
+    lo, hi = 0.0, 2b / dot(mu, d)
+    for _ in 1:60
+        r = (lo + hi) / 2
+        cvar(r .* (transpose(xi) * d) .- b, epsilon) + theta * r / epsilon <= 0 ? (lo = r) : (hi = r)
+    end
+    lo
+end
+dirs = [[cos(p), sin(p)] for p in range(0, pi / 2, length=90)]
+boundary(rf) = (r = rf.(dirs); ([0; r .* first.(dirs); 0], [0; r .* last.(dirs); 0]))
+plot(boundary(d -> b / dot(mu, d))..., label="nominal (mean)", lw=2, ls=:dot)
+plot!(boundary(d -> b / (dot(mu, d) + z * norm(L * d)))..., label="chance constraint", lw=2)
+plot!(boundary(dro_radius)..., label="DRO (theta = " * string(theta) * ")", lw=2)
+plot!(boundary(d -> b / dot(worst, d))..., label="box robust", lw=2, ls=:dash)
+scatter!([sol.x[1]], [sol.x[2]], ms=6, label="optimum", xlabel="x1", ylabel="x2", aspect_ratio=1, title="Feasible decisions")
+'''
+
+[[actionGroups.actions]]
+id = "ambiguity-set"
+label = "Uncertainty Set"
+desc = "Samples of resource use xi with the boundary xi'x* = b of the optimal decision. Chance-constrained: the (1 - epsilon) ellipsoid the constraint protects. DRO: the epsilon tail of samples whose CVaR, plus the Wasserstein margin, must stay within capacity"
+code = '''
+using Plots
+x = sol.x
+scatter(xi[1, :], xi[2, :], ms=3, alpha=0.5, label="samples", xlabel="xi1", ylabel="xi2")
+a1 = range(minimum(xi[1, :]), maximum(xi[1, :]), length=50)
+plot!(a1, (b .- a1 .* x[1]) ./ x[2], lw=2, label="xi'x* = b (violation above)")
+{{?model=cc}}mu, L = vec(mean(xi, dims=2)), cholesky(Symmetric(cov(xi, dims=2))).U
+{{?model=cc}}z = quantile(Normal(), 1 - epsilon)
+{{?model=cc}}E = [mu .+ z .* (transpose(L) * [cos(t), sin(t)]) for t in range(0, 2pi, length=200)]  # support function mu'x + z ||L x||
+{{?model=cc}}plot!(first.(E), last.(E), lw=2, label="protected ellipsoid", title="Chance constraint", aspect_ratio=1)
+{{?model=dro}}k = ceil(Int, epsilon * n)
+{{?model=dro}}tail = sortperm(transpose(xi) * x, rev=true)[1:k]  # samples in the CVaR tail
+{{?model=dro}}scatter!(xi[1, tail], xi[2, tail], ms=5, label="epsilon tail", title="DRO (theta = " * string(theta) * ")", aspect_ratio=1)
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "violation-rate"
+label = "Violation Rate"
+desc = "True probability that resource use exceeds capacity at the optimal decision, from 100000 fresh draws of the true distribution, against the target epsilon"
+code = '''
+v = violation(sol.x)
+(target = epsilon, true_violation = v, reliable = v <= epsilon, expected_overflow = round(mean(max.(transpose(XTEST) * sol.x .- b, 0)), digits=4))
+'''
+
+[[actionGroups.actions]]
+id = "reliability"
+label = "Reliability"
+desc = "Repeat the whole procedure on 100 independent data sets of size n: distribution of the true violation probability and how often it exceeds epsilon"
+code = '''
+using Plots
+v = [violation(solve_model(; xi=rand(MersenneTwister(1000 + r), dist, n)).x) for r in 1:100]
+println("Share of data sets with violation above epsilon: ", mean(v .> epsilon))
+histogram(v, bins=20, label="true violation", xlabel="Violation probability", ylabel="Data sets", title="Reliability over 100 data sets (n = " * string(n) * ")")
+vline!([epsilon], lw=2, ls=:dash, label="epsilon")
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "out-of-sample"
+label = "Out-of-Sample"
+desc = "Distribution of realised resource use xi'x* under the true distribution, against the capacity b"
+code = '''
+using Plots
+use = transpose(XTEST) * sol.x
+println("Mean use: ", round(mean(use), digits=3), "   95% quantile: ", round(quantile(use, 0.95), digits=3), "   capacity: ", b)
+histogram(use, bins=80, normalize=:pdf, label="resource use", xlabel="xi'x*", title="Out-of-sample resource use")
+vline!([b], lw=2, label="capacity")
+'''
+
+[[actionGroups.actions]]
+id = "epsilon-sweep"
+label = "Epsilon Sweep"
+desc = "Profit and true violation probability as the allowed violation probability epsilon varies"
+code = '''
+using Plots
+eps_grid = [0.01, 0.02, 0.05, 0.1, 0.15, 0.2, 0.3]
+sols = [solve_model(; epsilon=e) for e in eps_grid]
+plot(plot(eps_grid, [s.obj for s in sols], marker=:o, xlabel="epsilon", ylabel="Profit", legend=false),
+    plot(eps_grid, [violation(s.x) for s in sols], marker=:o, xlabel="epsilon", ylabel="True violation", label="realised"),
+    layout=(1, 2), size=(900, 350))
+plot!(eps_grid, eps_grid, ls=:dash, label="target", subplot=2)
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "cc-vs-dro"
+label = "CC vs DRO"
+desc = "Average true violation probability of the chance-constrained and DRO decisions across sample sizes (20 data sets each): DRO keeps its guarantee with few data"
+code = '''
+using Plots
+sizes = [10, 25, 50, 100, 250, 1000]
+avg(f, N) = mean(violation(f(; xi=rand(MersenneTwister(2000 + r), dist, N)).x) for r in 1:20)
+cc_v = [avg(solve_cc, N) for N in sizes]
+dro_v = [avg(solve_dro, N) for N in sizes]
+plot(sizes, [cc_v dro_v], marker=:o, xscale=:log10, label=["chance constraint" "DRO (theta = " * string(theta) * ")"], xlabel="Samples n", ylabel="Mean true violation")
+hline!([epsilon], ls=:dash, label="epsilon")
+'''
+
+[[actionGroups.actions]]
+id = "cc-vs-robust"
+label = "Robust and Nominal Baselines"
+desc = "Decision, profit and true violation for the nominal mean constraint, box-robust (mean + 3 sd), chance-constrained and DRO formulations on the same data"
+code = '''
+rows = [("nominal (mean)", solve_box(; k=0).x), ("box robust", solve_box().x), ("chance constraint", solve_cc().x), ("DRO", solve_dro().x)]
+[(method = m, x = round.(x, digits=3), profit = round(dot(c, x), digits=3), true_violation = violation(x)) for (m, x) in rows]
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "shadow-price"
+label = "Shadow Prices"
+desc = "Marginal profit of one more unit of capacity and of relaxing epsilon by 0.01 (the price of reliability)"
+code = '''
+dcap = solve_model(; b=b + 1).obj - sol.obj
+deps = (solve_model(; epsilon=epsilon + 0.01).obj - sol.obj) / 0.01
+(profit = round(sol.obj, digits=3), per_unit_of_capacity = round(dcap, digits=4), per_unit_of_epsilon = round(deps, digits=3))
+'''
+
+[[actionGroups.actions]]
+id = "worst-case-dist"
+label = "Worst-Case Distribution"
+desc = "Chance-constrained: the worst realisation in the protected ellipsoid, which lies exactly on capacity. DRO: the worst-case distribution, which moves the epsilon tail by theta / epsilon towards violation"
+code = '''
+using Plots
+x = sol.x
+scatter(xi[1, :], xi[2, :], ms=3, alpha=0.4, label="empirical", xlabel="xi1", ylabel="xi2", aspect_ratio=1)
+a1 = range(minimum(xi[1, :]), maximum(xi[1, :]), length=50)
+plot!(a1, (b .- a1 .* x[1]) ./ x[2], lw=2, label="xi'x* = b")
+{{?model=cc}}mu, Sig = vec(mean(xi, dims=2)), cov(xi, dims=2)
+{{?model=cc}}z = quantile(Normal(), 1 - epsilon)
+{{?model=cc}}astar = mu .+ z .* (Sig * x) ./ sqrt(dot(x, Sig * x))  # maximiser of xi'x over the ellipsoid
+{{?model=cc}}println("Worst-case use: ", round(dot(astar, x), digits=4), " (capacity ", b, ")")
+{{?model=cc}}scatter!([astar[1]], [astar[2]], ms=7, label="worst case", title="Chance constraint")
+{{?model=dro}}k = ceil(Int, epsilon * n)
+{{?model=dro}}tail = sortperm(transpose(xi) * x, rev=true)[1:k]
+{{?model=dro}}moved = xi[:, tail] .+ (theta / epsilon) .* x ./ norm(x)  # transport budget theta spent on the tail
+{{?model=dro}}scatter!(moved[1, :], moved[2, :], ms=5, label="worst-case tail", title="DRO worst case")
+'''

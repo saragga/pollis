@@ -1,0 +1,342 @@
+# Curvature-Aware Methods Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/cam.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Curvature-Aware Methods"
+viewType = "pollis.cam"
+defaultModel = "sophia"
+
+[[packages]]
+name = "Optimization.jl"
+github = "https://github.com/SciML/Optimization.jl"
+
+[requires]
+packages = ["ForwardDiff.jl", "Optimisers.jl", "Plots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "SOPHIA Optimizer"
+file = "cam/tutorial-01-sophia.ipynb"
+bundled = true
+description = "SOPHIA: second-order optimizer with clipped Hessian diagonal estimate via Optimization.jl"
+
+[[notebookSections.notebooks]]
+name = "SOPHIA vs Adam"
+file = "cam/tutorial-02-sophia-vs-adam.ipynb"
+bundled = true
+description = "Benchmark comparison of SOPHIA and Adam on convex and non-convex objectives"
+
+[[wikis]]
+name = "Factsheet"
+file = "cam/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "cam/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "cam/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "cam/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "cam/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "cam/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Algorithm Details"
+
+[[wikis]]
+name = "SOPHIA"
+file = "cam/sophia.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Numerical Optimization"
+authors = "Nocedal, Jorge; Wright, Stephen J."
+year = 2006
+journal = "Springer (2nd ed.)"
+doi = "10.1007/978-0-387-40065-5"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Sophia: A Scalable Stochastic Second-order Optimizer for Language Model Pre-training"
+authors = "Liu, Hong; Zhu, Zhiyuan; Guo, Jiarui; Jordan, Michael; Liang, Percy; Ma, Tengyu"
+year = 2023
+journal = "International Conference on Learning Representations"
+doi = "10.48550/arXiv.2305.14342"
+openAccess = true
+
+[[models]]
+id = "sophia"
+label = "SOPHIA"
+
+[[bullets]]
+text = "SOPHIA"
+detail = "scalable second-order method; Hessian diagonal estimate with clip-by-value update rule"
+
+[[decisionRows]]
+task = "SOPHIA"
+context = "Loss surfaces whose curvature differs strongly across parameters (heterogeneous, badly scaled), including large-model training"
+purpose = "Divide the momentum by a cheap diagonal-Hessian estimate and clip each coordinate so no step exceeds lr * rho; clipping also guards negative curvature"
+
+[[inputs]]
+id = "f"
+label = "Objective f(x)"
+tooltip = "Julia expression for the scalar loss to minimise; it must be twice differentiable. Use x[1], x[2], ... for the components."
+default = "(x[1] - 1)^2 + 25 * (x[2] + 0.5)^2"
+
+[[inputs]]
+id = "x0"
+label = "Initial Parameters x0"
+tooltip = "Starting parameter vector as a Julia array."
+default = "[-2.0, 1.5]"
+
+[[inputs]]
+id = "lr"
+label = "Learning Rate"
+tooltip = "Step scale. The largest move of any coordinate in one step is lr * rho, so lr can be much larger than for Adam."
+default = "0.5"
+newRow = true
+
+[[inputs]]
+id = "rho"
+label = "Clip rho"
+tooltip = "Clipping threshold on the curvature-scaled momentum m / h. Small values make SOPHIA behave like sign descent; large values like a diagonal Newton step. Typical range 0.01 to 0.1."
+default = "0.04"
+
+[[inputs]]
+id = "k"
+label = "Hessian Interval k"
+tooltip = "The diagonal-Hessian estimate is refreshed every k steps (one Hessian-vector product each time), which keeps the cost close to a first-order method."
+default = "10"
+
+[[inputs]]
+id = "iters"
+label = "Iterations"
+tooltip = "Number of update steps."
+default = "1000"
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.sophia]
+# Curvature-scaled steps clipped at a threshold band
+svg = '''
+var s = '<line x1="7" y1="40" x2="47" y2="40" stroke="currentColor" stroke-width="0.8" stroke-dasharray="3,2"/><line x1="7" y1="60" x2="47" y2="60" stroke="currentColor" stroke-width="0.8" stroke-dasharray="3,2"/>';
+var h = [-18, 16, -6, 12, 4, -3, 2];
+h.forEach(function (v, i) { var c = Math.max(-10, Math.min(10, v)); s += '<rect x="' + (9 + 5 * i) + '" y="' + (50 - Math.max(c, 0)) + '" width="3.5" height="' + Math.abs(c) + '" fill="currentColor" opacity="' + (Math.abs(v) > 10 ? 0.9 : 0.5) + '"/>'; });
+return s;
+'''
+
+[[codeBranches]]
+model = "sophia"
+code = '''
+using ForwardDiff, LinearAlgebra, Random, Statistics
+
+f(x) = {{f}}
+x0    = {{x0}}  # initial parameters
+iters = {{iters}}  # update steps
+
+hvp(x, v) = ForwardDiff.derivative(t -> ForwardDiff.gradient(f, x .+ t .* v), 0.0)  # Hessian-vector product H(x) * v
+
+# SOPHIA (Liu et al. 2023): momentum divided by an EMA of a Hutchinson diagonal-Hessian estimate, clipped coordinate-wise
+function sophia(; lr={{lr}}, rho={{rho}}, k={{k}}, iters=iters, b1=0.9, b2=0.99, tiny=1e-12, seed=1)
+    rng = Xoshiro(seed)
+    x, m, h = copy(x0), zero(x0), zero(x0)
+    path, losses, clipped = [copy(x)], [f(x)], Float64[]
+    for t in 1:iters
+        g = ForwardDiff.gradient(f, x)
+        m = b1 .* m .+ (1 - b1) .* g
+        if (t - 1) % k == 0
+            u = rand(rng, (-1.0, 1.0), length(x))  # Rademacher probe
+            est = u .* hvp(x, u)  # unbiased estimate of diag(H)
+            h = t == 1 ? est : b2 .* h .+ (1 - b2) .* est
+        end
+        r = m ./ max.(h, tiny)  # negative or tiny curvature -> huge ratio -> clipped
+        push!(clipped, mean(abs.(r) .> rho))
+        x = x .- lr .* clamp.(r, -rho, rho)
+        push!(path, copy(x)); push!(losses, f(x))
+    end
+    (x = x, path = path, losses = losses, clipped = clipped, h = h)
+end
+
+trained = sophia()
+x_opt = trained.x
+(final_parameters = x_opt, final_loss = f(x_opt), gradient_norm = norm(ForwardDiff.gradient(f, x_opt)), share_clipped_last_step = trained.clipped[end])
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "loss-curve"
+label = "Loss Curve"
+desc = "Loss per iteration (log scale)"
+code = '''
+using Plots
+
+plot(0:length(trained.losses)-1, trained.losses .- minimum(trained.losses) .+ eps(), yscale=:log10, xlabel="iteration", ylabel="loss - best loss", legend=false)
+'''
+
+[[actionGroups.actions]]
+id = "param-trajectory"
+label = "Parameter Trajectory"
+desc = "The iterates on the contours of f (2D problems; other parameters held at the final value)"
+code = '''
+using Plots
+
+P = reduce(hcat, trained.path)
+pad = max(0.5, 0.15 * maximum(abs, P[1:2, :]))
+xs = range(minimum(P[1, :]) - pad, maximum(P[1, :]) + pad, length=120)
+ys = range(minimum(P[2, :]) - pad, maximum(P[2, :]) + pad, length=120)
+contour(xs, ys, (a, b) -> log1p(f([a; b; x_opt[3:end]]) - minimum(trained.losses) + 1e-12), fill=true, colorbar=false, xlabel="x1", ylabel="x2")
+plot!(P[1, :], P[2, :], color=:white, label="iterates")
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "convergence-check"
+label = "Convergence Check"
+desc = "Final gradient norm, the loss change over the last 10% of iterations, and the Hessian eigenvalues at the end point (all positive = a minimum)"
+code = '''
+q = div(iters, 10)
+(gradient_norm = norm(ForwardDiff.gradient(f, x_opt)), loss_change_last_10pct = trained.losses[end] - trained.losses[end - q],
+ hessian_eigenvalues = eigvals(Symmetric(ForwardDiff.hessian(f, x_opt))))
+'''
+
+[[actionGroups.actions]]
+id = "hessian-estimate"
+label = "Hessian Estimate"
+desc = "The Hutchinson diagonal estimate SOPHIA ended with against the exact Hessian diagonal: the curvature scaling it applied to each coordinate"
+code = '''
+d = diag(ForwardDiff.hessian(f, x_opt))
+[(parameter = i, estimated = trained.h[i], exact = d[i], relative_error = abs(trained.h[i] - d[i]) / max(abs(d[i]), eps())) for i in eachindex(d)]
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "evaluate-new"
+label = "Evaluate at New Point"
+desc = "Loss at a new parameter vector, compared with the trained one"
+code = '''
+x_new = x_opt .+ 0.1  # replace with the parameters to evaluate
+(loss_new = f(x_new), loss_trained = f(x_opt), difference = f(x_new) - f(x_opt))
+'''
+
+[[actionGroups.actions]]
+id = "iteration-budget"
+label = "Iteration Budget"
+desc = "Iterations needed to bring the loss within a tolerance of its final value, for a few learning rates: how the step scale trades speed against overshoot"
+code = '''
+tol = 1e-6  # loss gap to reach
+map([0.1, 0.25, 0.5, 1.0, 2.0]) do a
+    L = sophia(lr=a).losses
+    hit = findfirst(<=(minimum(L) + tol), L)
+    (lr = a, iterations_needed = hit === nothing ? missing : hit - 1, final_loss = L[end])
+end
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "sophia-vs-adam"
+label = "SOPHIA vs Adam"
+desc = "Loss curves of SOPHIA, Adam (first-order, same number of steps) and SOPHIA without clipping (a raw diagonal Newton step)"
+code = '''
+using Optimisers, Plots
+
+function adam(lr; iters=iters)
+    x = copy(x0); state = Optimisers.setup(Optimisers.Adam(lr), x); L = [f(x)]
+    for _ in 1:iters
+        state, x = Optimisers.update(state, x, ForwardDiff.gradient(f, x)); push!(L, f(x))
+    end
+    L
+end
+best = minimum(trained.losses)
+plot(trained.losses .- best .+ eps(), yscale=:log10, label="SOPHIA", xlabel="iteration", ylabel="loss - best")
+plot!(adam(0.01) .- best .+ eps(), label="Adam (lr 0.01)")
+plot!(max.(sophia(rho=1e6, lr=1.0).losses .- best, 0) .+ eps(), label="no clipping")
+'''
+
+[[actionGroups.actions]]
+id = "rho-sweep"
+label = "Clip Threshold Sweep"
+desc = "Final loss and share of clipped coordinates for several rho: small rho is sign descent, large rho an unguarded Newton step"
+code = '''
+map([0.005, 0.01, 0.04, 0.1, 1.0]) do r
+    s = sophia(rho=r)
+    (rho = r, final_loss = s.losses[end], mean_share_clipped = mean(s.clipped))
+end
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "solution-summary"
+label = "Solution Summary"
+desc = "Final parameters, loss, improvement over the start and the gradient norm"
+code = '''
+(parameters = x_opt, loss = f(x_opt), loss_start = f(x0), improvement = f(x0) - f(x_opt),
+ gradient_norm = norm(ForwardDiff.gradient(f, x_opt)), iterations = iters)
+'''
+
+[[actionGroups.actions]]
+id = "clipping"
+label = "Clipping Over Time"
+desc = "Share of coordinates clipped at each step: near 1 early (sign-descent phase far from the minimum), falling as the curvature-scaled step becomes trustworthy"
+code = '''
+using Plots
+
+ma = [mean(trained.clipped[max(1, i - 19):i]) for i in eachindex(trained.clipped)]
+plot(ma, xlabel="iteration", ylabel="share of coordinates clipped", ylims=(0, 1), legend=false)
+'''

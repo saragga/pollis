@@ -1,0 +1,849 @@
+# Policy Gradient Methods Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/pgm.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Policy Gradient Methods"
+viewType = "pollis.pgm"
+defaultModel = "reinforce"
+
+[[packages]]
+name = "ReinforcementLearning.jl"
+github = "https://github.com/JuliaReinforcementLearning/ReinforcementLearning.jl"
+
+[[packages.videos]]
+title = "High Performance Computing in Julia"
+description = "An 18-video course by Jamie Mair on writing fast Julia code"
+url = "https://www.youtube.com/playlist?list=PLUAq6xQKFgGr39PiyrPk_C9dhBKvWcjUA"
+
+[requires]
+packages = ["Plots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "REINFORCE"
+file = "pgm/tutorial-01-reinforce.ipynb"
+bundled = true
+description = "Monte Carlo policy gradient with baseline; full-episode returns; Flux.jl policy network"
+
+[[notebookSections.notebooks]]
+name = "PPO"
+file = "pgm/tutorial-02-ppo.ipynb"
+bundled = true
+description = "Proximal Policy Optimization with clipped surrogate objective; parallel environment rollouts"
+
+[[notebookSections.notebooks]]
+name = "TRPO"
+file = "pgm/tutorial-03-trpo.ipynb"
+bundled = true
+description = "Trust Region Policy Optimization with KL divergence constraint; conjugate gradient solver"
+
+[[wikis]]
+name = "Factsheet"
+file = "pgm/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "pgm/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "pgm/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "pgm/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "pgm/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "pgm/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Algorithms"
+
+[[wikis]]
+name = "REINFORCE"
+file = "pgm/reinforce.md"
+bundled = true
+
+[[wikis]]
+name = "PPO"
+file = "pgm/ppo.md"
+bundled = true
+
+[[wikis]]
+name = "TRPO"
+file = "pgm/trpo.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "ReinforcementLearning.jl: A Reinforcement Learning Package for the Julia Programming Language"
+authors = "Tian, Jun; others"
+year = 2020
+journal = "GitHub"
+url = "https://github.com/JuliaReinforcementLearning/ReinforcementLearning.jl"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Reinforcement Learning: An Introduction"
+authors = "Sutton, Richard S.; Barto, Andrew G."
+year = 2018
+journal = "MIT Press"
+url = "http://incompleteideas.net/book/the-book-2nd.html"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Policy Gradient Methods for Reinforcement Learning with Function Approximation"
+authors = "Sutton, Richard S.; McAllester, David; Singh, Satinder; Mansour, Yishay"
+year = 2000
+journal = "NeurIPS"
+url = "https://proceedings.neurips.cc/paper/1999/hash/464d828b85b0bed98e80ade0a5c43b0f-Abstract.html"
+openAccess = true
+
+[[references]]
+title = "Proximal Policy Optimization Algorithms"
+authors = "Schulman, John; Wolski, Filip; Dhariwal, Prafulla; Radford, Alec; Klimov, Oleg"
+year = 2017
+journal = "arXiv"
+url = "https://arxiv.org/abs/1707.06347"
+openAccess = true
+
+[[references]]
+title = "Trust Region Policy Optimization"
+authors = "Schulman, John; Levine, Sergey; Abbeel, Pieter; Jordan, Michael; Moritz, Philipp"
+year = 2015
+journal = "ICML"
+url = "https://proceedings.mlr.press/v37/schulman15.html"
+openAccess = true
+
+[[models]]
+id = "reinforce"
+label = "REINFORCE"
+
+[[models]]
+id = "ppo"
+label = "PPO"
+
+[[models]]
+id = "trpo"
+label = "TRPO"
+
+[[bullets]]
+text = "REINFORCE"
+detail = "Monte Carlo policy gradient; updates the policy using the full-episode discounted return as a gradient weight; simple and unbiased but high variance; suited to episodic tasks and small networks (ReinforcementLearning.jl)"
+
+[[bullets]]
+text = "Proximal Policy Optimisation (PPO)"
+detail = "clips the probability ratio of new to old policy to prevent large updates; reuses each rollout batch for multiple gradient epochs; widely used default choice for continuous control (ReinforcementLearning.jl)"
+
+[[bullets]]
+text = "Trust Region Policy Optimisation (TRPO)"
+detail = "constrains the Kullback–Leibler divergence between successive policies; guarantees monotonic improvement; natural gradient step computed via conjugate gradient (ReinforcementLearning.jl)"
+
+[[decisionRows]]
+task = "REINFORCE"
+context = "Simplest policy gradient; teaching, small problems, a baseline"
+purpose = "Monte Carlo policy gradient: raises the log-probability of each action in proportion to its advantage (return minus a learned baseline)"
+
+[[decisionRows]]
+task = "PPO"
+context = "Default choice in practice; robust, reuses each batch for several epochs"
+purpose = "Proximal Policy Optimisation: maximises a clipped importance-weighted surrogate so the new policy cannot move far from the one that collected the data"
+
+[[decisionRows]]
+task = "TRPO"
+context = "When monotone, controlled policy improvement matters"
+purpose = "Trust Region Policy Optimisation: natural-gradient step (Fisher matrix via conjugate gradient) with a line search enforcing a KL-divergence limit"
+
+[[inputs]]
+id = "iters"
+label = "Policy Updates"
+tooltip = "Number of collect-then-update iterations."
+default = "60"
+
+[[inputs]]
+id = "batch"
+label = "Episodes per Update"
+tooltip = "Episodes collected with the current policy before each update."
+default = "10"
+
+[[inputs]]
+id = "horizon"
+label = "Max Episode Length"
+tooltip = "CartPole episodes end when the pole falls, the cart leaves the track or this many steps pass (reward 1 per step)."
+default = "500"
+
+[[inputs]]
+id = "gamma"
+label = "Discount (gamma)"
+tooltip = "Discount factor in (0, 1] for the returns G_t."
+default = "0.99"
+
+[[inputs]]
+id = "seed"
+label = "Random Seed"
+tooltip = "Seed of the episodes and of the policy updates."
+default = "1"
+
+[[inputs]]
+id = "lr"
+label = "Learning Rate"
+tooltip = "Step size of the policy-gradient ascent (Adam)."
+default = "0.05"
+models = ["reinforce", "ppo"]
+newRow = true
+
+[[inputs]]
+id = "clip"
+label = "Clip (epsilon)"
+tooltip = "PPO clipping parameter: the probability ratio is clipped to [1 - epsilon, 1 + epsilon]. Typical value 0.2."
+default = "0.2"
+models = ["ppo"]
+
+[[inputs]]
+id = "epochs"
+label = "Epochs"
+tooltip = "Gradient epochs on each collected batch. PPO reuses each batch several times."
+default = "10"
+models = ["ppo"]
+
+[[inputs]]
+id = "kl"
+label = "Max KL"
+tooltip = "Largest mean KL divergence between the old and new policy that a TRPO step may take."
+default = "0.01"
+models = ["trpo"]
+newRow = true
+
+[[inputs]]
+id = "damp"
+label = "Damping"
+tooltip = "Added to the Fisher matrix in the conjugate-gradient solve for numerical stability."
+default = "0.1"
+models = ["trpo"]
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.reinforce]
+# Noisy rising learning curve
+svg = '''
+return '<polyline points="4,70 10,64 14,68 20,56 24,60 30,46 34,52 40,36 44,42 50,28" fill="none" stroke="currentColor" stroke-width="1.4"/>';
+'''
+
+[miniCharts.ppo]
+# Clipped surrogate: ratio line flattening outside the clip band
+svg = '''
+return '<line x1="18" y1="20" x2="18" y2="76" stroke="currentColor" stroke-width="0.5" stroke-dasharray="2,2"/>'
+	+ '<line x1="36" y1="20" x2="36" y2="76" stroke="currentColor" stroke-width="0.5" stroke-dasharray="2,2"/>'
+	+ '<polyline points="4,66 18,56 36,40 50,40" fill="none" stroke="currentColor" stroke-width="1.6"/>';
+'''
+
+[miniCharts.trpo]
+# Trust region: step inside a KL ball
+svg = '''
+return '<circle cx="27" cy="48" r="16" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="3,2"/>'
+	+ '<circle cx="27" cy="48" r="2" fill="currentColor"/>'
+	+ '<line x1="27" y1="48" x2="38" y2="37" stroke="currentColor" stroke-width="1.6"/><circle cx="38" cy="37" r="2" fill="currentColor"/>';
+'''
+
+[[codeBranches]]
+model = "reinforce"
+code = '''
+using LinearAlgebra, Random, Statistics
+
+iters = {{iters}}  # policy updates
+batch = {{batch}}  # episodes per update
+horizon = {{horizon}}  # max episode length
+gamma = {{gamma}}  # discount factor
+seed = {{seed}}  # random seed
+
+# CartPole (Barto, Sutton and Anderson 1983), as in OpenAI Gym; actions 1 = push left, 2 = push right
+grav, mcart, mpole, halflen, force, dt = 9.8, 1.0, 0.1, 0.5, 10.0, 0.02
+function cp_step(s, a)  # returns (next state, reward, done)
+    x, xd, th, thd = s
+    f = a == 2 ? force : -force
+    temp = (f + mpole * halflen * thd^2 * sin(th)) / (mcart + mpole)
+    thacc = (grav * sin(th) - cos(th) * temp) / (halflen * (4 / 3 - mpole * cos(th)^2 / (mcart + mpole)))
+    xacc = temp - mpole * halflen * thacc * cos(th) / (mcart + mpole)
+    s2 = [x + dt * xd, xd + dt * xacc, th + dt * thd, thd + dt * thacc]
+    s2, 1.0, abs(s2[1]) > 2.4 || abs(s2[3]) > 12pi / 180
+end
+
+# Linear-softmax policy pi(a|s) = softmax(W [s; 1]), W is 2 x 5
+feats(s) = [s; 1.0]
+softmax(z) = (e = exp.(z .- maximum(z)); e ./ sum(e))
+probs(W, s) = softmax(W * feats(s))
+glogp(W, s, a) = ((1:2 .== a) .- probs(W, s)) * transpose(feats(s))  # gradient of log pi(a|s) in W
+entropy(p) = -sum(p .* log.(p .+ 1e-12))
+kl(p, q) = sum(p .* log.((p .+ 1e-12) ./ (q .+ 1e-12)))
+
+function run_episode(W, rng; greedy=false)
+    s = 0.1 .* rand(rng, 4) .- 0.05
+    S, A, R = Vector{Float64}[], Int[], Float64[]
+    for t in 1:horizon
+        p = probs(W, s)
+        a = greedy ? argmax(p) : (rand(rng) < p[1] ? 1 : 2)
+        push!(S, s); push!(A, a)
+        s, r, done = cp_step(s, a)
+        push!(R, r)
+        done && break
+    end
+    (S = S, A = A, R = R)
+end
+function discount(R)  # discounted returns G_t
+    G = similar(R); acc = 0.0
+    for t in length(R):-1:1
+        acc = R[t] + gamma * acc; G[t] = acc
+    end
+    G
+end
+phi(s) = [1.0; s; s .^ 2]  # critic features
+
+function collect_batch(W, rng; n=batch)  # episodes, flattened states and actions, normalised advantages
+    trajs = [run_episode(W, rng) for k in 1:n]
+    S, A = reduce(vcat, [t.S for t in trajs]), reduce(vcat, [t.A for t in trajs])
+    G = reduce(vcat, [discount(t.R) for t in trajs])
+    Phi = reduce(vcat, [transpose(phi(s)) for s in S])
+    w = (transpose(Phi) * Phi + 1e-3I) \ (transpose(Phi) * G)  # least-squares critic V(s) = phi(s) w
+    adv = G .- Phi * w
+    (trajs = trajs, S = S, A = A, adv = (adv .- mean(adv)) ./ (std(adv) + 1e-8), critic = w)
+end
+
+function adam_step!(W, g, st; lr)  # gradient ascent with Adam moments st = (m, v, t)
+    st.t[] += 1
+    st.m .= 0.9 .* st.m .+ 0.1 .* g; st.v .= 0.999 .* st.v .+ 0.001 .* g .^ 2
+    W .+= lr .* (st.m ./ (1 - 0.9^st.t[])) ./ (sqrt.(st.v ./ (1 - 0.999^st.t[])) .+ 1e-8)
+end
+adam_state() = (m = zeros(2, 5), v = zeros(2, 5), t = Ref(0))
+
+function update_reinforce!(W, B, st; lr=0.05)
+    g = mean(B.adv[i] * glogp(W, B.S[i], B.A[i]) for i in eachindex(B.A))  # policy gradient
+    adam_step!(W, g, st; lr)
+    norm(g)
+end
+
+function update_ppo!(W, B, st; lr=0.05, clip=0.2, epochs=10)
+    old = [probs(W, s)[a] for (s, a) in zip(B.S, B.A)]
+    gn = 0.0
+    for k in 1:epochs
+        g = zeros(2, 5)
+        for i in eachindex(B.A)
+            ratio = probs(W, B.S[i])[B.A[i]] / old[i]
+            clipped = (B.adv[i] > 0 && ratio > 1 + clip) || (B.adv[i] < 0 && ratio < 1 - clip)
+            clipped || (g .+= B.adv[i] * ratio .* glogp(W, B.S[i], B.A[i]))  # gradient of the clipped surrogate
+        end
+        g ./= length(B.A)
+        k == 1 && (gn = norm(g))
+        adam_step!(W, g, st; lr)
+    end
+    gn
+end
+
+function update_trpo!(W, B, st; maxkl=0.01, damp=0.1)
+    P = [probs(W, s) for s in B.S]
+    g = mean(B.adv[i] * glogp(W, B.S[i], B.A[i]) for i in eachindex(B.A))
+    Fv(V) = mean((Diagonal(p) - p * transpose(p)) * (V * feats(s)) * transpose(feats(s)) for (p, s) in zip(P, B.S)) .+ damp .* V  # Fisher-vector product
+    x = zeros(2, 5); r = copy(g); d = copy(g)  # conjugate gradient for F x = g
+    for k in 1:10
+        Fd = Fv(d); alpha_cg = dot(r, r) / dot(d, Fd)
+        x .+= alpha_cg .* d; rnew = r .- alpha_cg .* Fd
+        d = rnew .+ (dot(rnew, rnew) / dot(r, r)) .* d; r = rnew
+    end
+    step = sqrt(2maxkl / dot(x, Fv(x))) .* x
+    surr(Wn) = mean(B.adv[i] * probs(Wn, B.S[i])[B.A[i]] / P[i][B.A[i]] for i in eachindex(B.A))
+    base = surr(W)
+    for frac in 0.5 .^ (0:9)  # backtracking line search
+        Wn = W .+ frac .* step
+        if mean(kl(p, probs(Wn, s)) for (p, s) in zip(P, B.S)) <= maxkl && surr(Wn) > base
+            W .= Wn
+            break
+        end
+    end
+    norm(g)
+end
+
+lr = {{lr}}  # learning rate
+update!(W, B, st) = update_reinforce!(W, B, st; lr=lr)
+
+function train(upd=update!; iters=iters, seed=seed, batch=batch)
+    rng = MersenneTwister(seed)
+    W = zeros(2, 5); st = adam_state()  # uniform initial policy
+    hist = (ret = Float64[], entropy = Float64[], gradnorm = Float64[], kl = Float64[])
+    for it in 1:iters
+        B = collect_batch(W, rng; n=batch)
+        P = [probs(W, s) for s in B.S]
+        push!(hist.ret, mean(sum(t.R) for t in B.trajs)); push!(hist.entropy, mean(entropy, P))
+        push!(hist.gradnorm, upd(W, B, st))
+        push!(hist.kl, mean(kl(p, probs(W, s)) for (p, s) in zip(P, B.S)))  # policy change of this update
+    end
+    (W = W, hist = hist, critic = collect_batch(W, rng).critic)
+end
+
+res = train()
+(final_mean_return = res.hist.ret[end], best_mean_return = maximum(res.hist.ret), max_return = horizon,
+ greedy_return = sum(run_episode(res.W, MersenneTwister(0); greedy=true).R), policy_weights = round.(res.W, digits=2))
+'''
+
+[[codeBranches]]
+model = "ppo"
+code = '''
+using LinearAlgebra, Random, Statistics
+
+iters = {{iters}}  # policy updates
+batch = {{batch}}  # episodes per update
+horizon = {{horizon}}  # max episode length
+gamma = {{gamma}}  # discount factor
+seed = {{seed}}  # random seed
+
+# CartPole (Barto, Sutton and Anderson 1983), as in OpenAI Gym; actions 1 = push left, 2 = push right
+grav, mcart, mpole, halflen, force, dt = 9.8, 1.0, 0.1, 0.5, 10.0, 0.02
+function cp_step(s, a)  # returns (next state, reward, done)
+    x, xd, th, thd = s
+    f = a == 2 ? force : -force
+    temp = (f + mpole * halflen * thd^2 * sin(th)) / (mcart + mpole)
+    thacc = (grav * sin(th) - cos(th) * temp) / (halflen * (4 / 3 - mpole * cos(th)^2 / (mcart + mpole)))
+    xacc = temp - mpole * halflen * thacc * cos(th) / (mcart + mpole)
+    s2 = [x + dt * xd, xd + dt * xacc, th + dt * thd, thd + dt * thacc]
+    s2, 1.0, abs(s2[1]) > 2.4 || abs(s2[3]) > 12pi / 180
+end
+
+# Linear-softmax policy pi(a|s) = softmax(W [s; 1]), W is 2 x 5
+feats(s) = [s; 1.0]
+softmax(z) = (e = exp.(z .- maximum(z)); e ./ sum(e))
+probs(W, s) = softmax(W * feats(s))
+glogp(W, s, a) = ((1:2 .== a) .- probs(W, s)) * transpose(feats(s))  # gradient of log pi(a|s) in W
+entropy(p) = -sum(p .* log.(p .+ 1e-12))
+kl(p, q) = sum(p .* log.((p .+ 1e-12) ./ (q .+ 1e-12)))
+
+function run_episode(W, rng; greedy=false)
+    s = 0.1 .* rand(rng, 4) .- 0.05
+    S, A, R = Vector{Float64}[], Int[], Float64[]
+    for t in 1:horizon
+        p = probs(W, s)
+        a = greedy ? argmax(p) : (rand(rng) < p[1] ? 1 : 2)
+        push!(S, s); push!(A, a)
+        s, r, done = cp_step(s, a)
+        push!(R, r)
+        done && break
+    end
+    (S = S, A = A, R = R)
+end
+function discount(R)  # discounted returns G_t
+    G = similar(R); acc = 0.0
+    for t in length(R):-1:1
+        acc = R[t] + gamma * acc; G[t] = acc
+    end
+    G
+end
+phi(s) = [1.0; s; s .^ 2]  # critic features
+
+function collect_batch(W, rng; n=batch)  # episodes, flattened states and actions, normalised advantages
+    trajs = [run_episode(W, rng) for k in 1:n]
+    S, A = reduce(vcat, [t.S for t in trajs]), reduce(vcat, [t.A for t in trajs])
+    G = reduce(vcat, [discount(t.R) for t in trajs])
+    Phi = reduce(vcat, [transpose(phi(s)) for s in S])
+    w = (transpose(Phi) * Phi + 1e-3I) \ (transpose(Phi) * G)  # least-squares critic V(s) = phi(s) w
+    adv = G .- Phi * w
+    (trajs = trajs, S = S, A = A, adv = (adv .- mean(adv)) ./ (std(adv) + 1e-8), critic = w)
+end
+
+function adam_step!(W, g, st; lr)  # gradient ascent with Adam moments st = (m, v, t)
+    st.t[] += 1
+    st.m .= 0.9 .* st.m .+ 0.1 .* g; st.v .= 0.999 .* st.v .+ 0.001 .* g .^ 2
+    W .+= lr .* (st.m ./ (1 - 0.9^st.t[])) ./ (sqrt.(st.v ./ (1 - 0.999^st.t[])) .+ 1e-8)
+end
+adam_state() = (m = zeros(2, 5), v = zeros(2, 5), t = Ref(0))
+
+function update_reinforce!(W, B, st; lr=0.05)
+    g = mean(B.adv[i] * glogp(W, B.S[i], B.A[i]) for i in eachindex(B.A))  # policy gradient
+    adam_step!(W, g, st; lr)
+    norm(g)
+end
+
+function update_ppo!(W, B, st; lr=0.05, clip=0.2, epochs=10)
+    old = [probs(W, s)[a] for (s, a) in zip(B.S, B.A)]
+    gn = 0.0
+    for k in 1:epochs
+        g = zeros(2, 5)
+        for i in eachindex(B.A)
+            ratio = probs(W, B.S[i])[B.A[i]] / old[i]
+            clipped = (B.adv[i] > 0 && ratio > 1 + clip) || (B.adv[i] < 0 && ratio < 1 - clip)
+            clipped || (g .+= B.adv[i] * ratio .* glogp(W, B.S[i], B.A[i]))  # gradient of the clipped surrogate
+        end
+        g ./= length(B.A)
+        k == 1 && (gn = norm(g))
+        adam_step!(W, g, st; lr)
+    end
+    gn
+end
+
+function update_trpo!(W, B, st; maxkl=0.01, damp=0.1)
+    P = [probs(W, s) for s in B.S]
+    g = mean(B.adv[i] * glogp(W, B.S[i], B.A[i]) for i in eachindex(B.A))
+    Fv(V) = mean((Diagonal(p) - p * transpose(p)) * (V * feats(s)) * transpose(feats(s)) for (p, s) in zip(P, B.S)) .+ damp .* V  # Fisher-vector product
+    x = zeros(2, 5); r = copy(g); d = copy(g)  # conjugate gradient for F x = g
+    for k in 1:10
+        Fd = Fv(d); alpha_cg = dot(r, r) / dot(d, Fd)
+        x .+= alpha_cg .* d; rnew = r .- alpha_cg .* Fd
+        d = rnew .+ (dot(rnew, rnew) / dot(r, r)) .* d; r = rnew
+    end
+    step = sqrt(2maxkl / dot(x, Fv(x))) .* x
+    surr(Wn) = mean(B.adv[i] * probs(Wn, B.S[i])[B.A[i]] / P[i][B.A[i]] for i in eachindex(B.A))
+    base = surr(W)
+    for frac in 0.5 .^ (0:9)  # backtracking line search
+        Wn = W .+ frac .* step
+        if mean(kl(p, probs(Wn, s)) for (p, s) in zip(P, B.S)) <= maxkl && surr(Wn) > base
+            W .= Wn
+            break
+        end
+    end
+    norm(g)
+end
+
+lr, clip, epochs = {{lr}}, {{clip}}, {{epochs}}  # learning rate, clip range, epochs per batch
+update!(W, B, st) = update_ppo!(W, B, st; lr=lr, clip=clip, epochs=epochs)
+
+function train(upd=update!; iters=iters, seed=seed, batch=batch)
+    rng = MersenneTwister(seed)
+    W = zeros(2, 5); st = adam_state()  # uniform initial policy
+    hist = (ret = Float64[], entropy = Float64[], gradnorm = Float64[], kl = Float64[])
+    for it in 1:iters
+        B = collect_batch(W, rng; n=batch)
+        P = [probs(W, s) for s in B.S]
+        push!(hist.ret, mean(sum(t.R) for t in B.trajs)); push!(hist.entropy, mean(entropy, P))
+        push!(hist.gradnorm, upd(W, B, st))
+        push!(hist.kl, mean(kl(p, probs(W, s)) for (p, s) in zip(P, B.S)))  # policy change of this update
+    end
+    (W = W, hist = hist, critic = collect_batch(W, rng).critic)
+end
+
+res = train()
+(final_mean_return = res.hist.ret[end], best_mean_return = maximum(res.hist.ret), max_return = horizon,
+ greedy_return = sum(run_episode(res.W, MersenneTwister(0); greedy=true).R), policy_weights = round.(res.W, digits=2))
+'''
+
+[[codeBranches]]
+model = "trpo"
+code = '''
+using LinearAlgebra, Random, Statistics
+
+iters = {{iters}}  # policy updates
+batch = {{batch}}  # episodes per update
+horizon = {{horizon}}  # max episode length
+gamma = {{gamma}}  # discount factor
+seed = {{seed}}  # random seed
+
+# CartPole (Barto, Sutton and Anderson 1983), as in OpenAI Gym; actions 1 = push left, 2 = push right
+grav, mcart, mpole, halflen, force, dt = 9.8, 1.0, 0.1, 0.5, 10.0, 0.02
+function cp_step(s, a)  # returns (next state, reward, done)
+    x, xd, th, thd = s
+    f = a == 2 ? force : -force
+    temp = (f + mpole * halflen * thd^2 * sin(th)) / (mcart + mpole)
+    thacc = (grav * sin(th) - cos(th) * temp) / (halflen * (4 / 3 - mpole * cos(th)^2 / (mcart + mpole)))
+    xacc = temp - mpole * halflen * thacc * cos(th) / (mcart + mpole)
+    s2 = [x + dt * xd, xd + dt * xacc, th + dt * thd, thd + dt * thacc]
+    s2, 1.0, abs(s2[1]) > 2.4 || abs(s2[3]) > 12pi / 180
+end
+
+# Linear-softmax policy pi(a|s) = softmax(W [s; 1]), W is 2 x 5
+feats(s) = [s; 1.0]
+softmax(z) = (e = exp.(z .- maximum(z)); e ./ sum(e))
+probs(W, s) = softmax(W * feats(s))
+glogp(W, s, a) = ((1:2 .== a) .- probs(W, s)) * transpose(feats(s))  # gradient of log pi(a|s) in W
+entropy(p) = -sum(p .* log.(p .+ 1e-12))
+kl(p, q) = sum(p .* log.((p .+ 1e-12) ./ (q .+ 1e-12)))
+
+function run_episode(W, rng; greedy=false)
+    s = 0.1 .* rand(rng, 4) .- 0.05
+    S, A, R = Vector{Float64}[], Int[], Float64[]
+    for t in 1:horizon
+        p = probs(W, s)
+        a = greedy ? argmax(p) : (rand(rng) < p[1] ? 1 : 2)
+        push!(S, s); push!(A, a)
+        s, r, done = cp_step(s, a)
+        push!(R, r)
+        done && break
+    end
+    (S = S, A = A, R = R)
+end
+function discount(R)  # discounted returns G_t
+    G = similar(R); acc = 0.0
+    for t in length(R):-1:1
+        acc = R[t] + gamma * acc; G[t] = acc
+    end
+    G
+end
+phi(s) = [1.0; s; s .^ 2]  # critic features
+
+function collect_batch(W, rng; n=batch)  # episodes, flattened states and actions, normalised advantages
+    trajs = [run_episode(W, rng) for k in 1:n]
+    S, A = reduce(vcat, [t.S for t in trajs]), reduce(vcat, [t.A for t in trajs])
+    G = reduce(vcat, [discount(t.R) for t in trajs])
+    Phi = reduce(vcat, [transpose(phi(s)) for s in S])
+    w = (transpose(Phi) * Phi + 1e-3I) \ (transpose(Phi) * G)  # least-squares critic V(s) = phi(s) w
+    adv = G .- Phi * w
+    (trajs = trajs, S = S, A = A, adv = (adv .- mean(adv)) ./ (std(adv) + 1e-8), critic = w)
+end
+
+function adam_step!(W, g, st; lr)  # gradient ascent with Adam moments st = (m, v, t)
+    st.t[] += 1
+    st.m .= 0.9 .* st.m .+ 0.1 .* g; st.v .= 0.999 .* st.v .+ 0.001 .* g .^ 2
+    W .+= lr .* (st.m ./ (1 - 0.9^st.t[])) ./ (sqrt.(st.v ./ (1 - 0.999^st.t[])) .+ 1e-8)
+end
+adam_state() = (m = zeros(2, 5), v = zeros(2, 5), t = Ref(0))
+
+function update_reinforce!(W, B, st; lr=0.05)
+    g = mean(B.adv[i] * glogp(W, B.S[i], B.A[i]) for i in eachindex(B.A))  # policy gradient
+    adam_step!(W, g, st; lr)
+    norm(g)
+end
+
+function update_ppo!(W, B, st; lr=0.05, clip=0.2, epochs=10)
+    old = [probs(W, s)[a] for (s, a) in zip(B.S, B.A)]
+    gn = 0.0
+    for k in 1:epochs
+        g = zeros(2, 5)
+        for i in eachindex(B.A)
+            ratio = probs(W, B.S[i])[B.A[i]] / old[i]
+            clipped = (B.adv[i] > 0 && ratio > 1 + clip) || (B.adv[i] < 0 && ratio < 1 - clip)
+            clipped || (g .+= B.adv[i] * ratio .* glogp(W, B.S[i], B.A[i]))  # gradient of the clipped surrogate
+        end
+        g ./= length(B.A)
+        k == 1 && (gn = norm(g))
+        adam_step!(W, g, st; lr)
+    end
+    gn
+end
+
+function update_trpo!(W, B, st; maxkl=0.01, damp=0.1)
+    P = [probs(W, s) for s in B.S]
+    g = mean(B.adv[i] * glogp(W, B.S[i], B.A[i]) for i in eachindex(B.A))
+    Fv(V) = mean((Diagonal(p) - p * transpose(p)) * (V * feats(s)) * transpose(feats(s)) for (p, s) in zip(P, B.S)) .+ damp .* V  # Fisher-vector product
+    x = zeros(2, 5); r = copy(g); d = copy(g)  # conjugate gradient for F x = g
+    for k in 1:10
+        Fd = Fv(d); alpha_cg = dot(r, r) / dot(d, Fd)
+        x .+= alpha_cg .* d; rnew = r .- alpha_cg .* Fd
+        d = rnew .+ (dot(rnew, rnew) / dot(r, r)) .* d; r = rnew
+    end
+    step = sqrt(2maxkl / dot(x, Fv(x))) .* x
+    surr(Wn) = mean(B.adv[i] * probs(Wn, B.S[i])[B.A[i]] / P[i][B.A[i]] for i in eachindex(B.A))
+    base = surr(W)
+    for frac in 0.5 .^ (0:9)  # backtracking line search
+        Wn = W .+ frac .* step
+        if mean(kl(p, probs(Wn, s)) for (p, s) in zip(P, B.S)) <= maxkl && surr(Wn) > base
+            W .= Wn
+            break
+        end
+    end
+    norm(g)
+end
+
+maxkl, damp = {{kl}}, {{damp}}  # trust-region size, Fisher damping
+update!(W, B, st) = update_trpo!(W, B, st; maxkl=maxkl, damp=damp)
+
+function train(upd=update!; iters=iters, seed=seed, batch=batch)
+    rng = MersenneTwister(seed)
+    W = zeros(2, 5); st = adam_state()  # uniform initial policy
+    hist = (ret = Float64[], entropy = Float64[], gradnorm = Float64[], kl = Float64[])
+    for it in 1:iters
+        B = collect_batch(W, rng; n=batch)
+        P = [probs(W, s) for s in B.S]
+        push!(hist.ret, mean(sum(t.R) for t in B.trajs)); push!(hist.entropy, mean(entropy, P))
+        push!(hist.gradnorm, upd(W, B, st))
+        push!(hist.kl, mean(kl(p, probs(W, s)) for (p, s) in zip(P, B.S)))  # policy change of this update
+    end
+    (W = W, hist = hist, critic = collect_batch(W, rng).critic)
+end
+
+res = train()
+(final_mean_return = res.hist.ret[end], best_mean_return = maximum(res.hist.ret), max_return = horizon,
+ greedy_return = sum(run_episode(res.W, MersenneTwister(0); greedy=true).R), policy_weights = round.(res.W, digits=2))
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "learning-curve"
+label = "Learning Curve"
+desc = "Mean episode return of each batch over the policy updates; the dashed line is the maximum episode length"
+code = '''
+using Plots
+
+plot(res.hist.ret, xlabel="policy update", ylabel="mean episode return", label="{{model}}", marker=:circle, markersize=2)
+hline!([horizon], linestyle=:dash, label="maximum")
+'''
+
+[[actionGroups.actions]]
+id = "entropy-plot"
+label = "Policy Entropy"
+desc = "Mean entropy of the action distribution over training: high = exploring, low = committed (log 2 is uniform)"
+code = '''
+using Plots
+
+plot(res.hist.entropy, xlabel="policy update", ylabel="mean policy entropy", legend=false, ylims=(0, log(2) * 1.05))
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "gradient-norm"
+label = "Gradient Norm"
+desc = "Norm of the policy gradient at each update (on a log scale); it should stay bounded and non-zero"
+code = '''
+using Plots
+
+plot(res.hist.gradnorm, xlabel="policy update", ylabel="policy gradient norm", yscale=:log10, legend=false)
+'''
+
+[[actionGroups.actions]]
+id = "kl-divergence"
+label = "KL Divergence"
+desc = "Mean KL divergence between the policy before and after each update: PPO and TRPO keep it small, REINFORCE does not control it"
+code = '''
+using Plots
+
+plot(res.hist.kl, xlabel="policy update", ylabel="mean KL(old || new)", label="{{model}}")
+{{?model=trpo}}hline!([maxkl], linestyle=:dash, label="max KL")
+'''
+
+[[actionGroups.actions]]
+id = "seed-stability"
+label = "Seed Stability"
+desc = "Learning curves for five random seeds: policy-gradient training is notoriously variable"
+code = '''
+using Plots
+
+plt = plot(xlabel="policy update", ylabel="mean episode return")
+for k in 1:5
+    plot!(plt, train(seed=k).hist.ret, label="seed $k")
+end
+plt
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "stochastic-rollout"
+label = "Stochastic Rollout"
+desc = "One episode sampled from the trained stochastic policy: cart position and pole angle over time"
+code = '''
+using Plots
+
+ep = run_episode(res.W, MersenneTwister(7))
+p1 = plot([s[1] for s in ep.S], ylabel="cart position", legend=false)
+p2 = plot([s[3] * 180 / pi for s in ep.S], ylabel="pole angle (degrees)", xlabel="step", legend=false)
+plot(p1, p2, layout=(2, 1), plot_title="return $(sum(ep.R))")
+'''
+
+[[actionGroups.actions]]
+id = "deterministic-policy"
+label = "Deterministic Policy"
+desc = "Return of the greedy (argmax) policy against the stochastic policy over 50 episodes"
+code = '''
+rng = MersenneTwister(11)
+greedy_returns = [sum(run_episode(res.W, rng; greedy=true).R) for k in 1:50]
+stochastic_returns = [sum(run_episode(res.W, rng).R) for k in 1:50]
+[(policy = "greedy", mean_return = mean(greedy_returns), min_return = minimum(greedy_returns), share_at_max = mean(greedy_returns .== horizon)),
+ (policy = "stochastic", mean_return = mean(stochastic_returns), min_return = minimum(stochastic_returns), share_at_max = mean(stochastic_returns .== horizon))]
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "reinforce-vs-ppo"
+label = "REINFORCE vs PPO vs TRPO"
+desc = "Learning curves of the three methods with typical settings on the same seed"
+code = '''
+using Plots
+
+plt = plot(xlabel="policy update", ylabel="mean episode return")
+for (name, upd) in ["REINFORCE" => (W, B, st) -> update_reinforce!(W, B, st),
+                    "PPO" => (W, B, st) -> update_ppo!(W, B, st),
+                    "TRPO" => (W, B, st) -> update_trpo!(W, B, st)]
+    plot!(plt, train(upd).hist.ret, label=name)
+end
+plt
+'''
+
+[[actionGroups.actions]]
+id = "batch-size-study"
+label = "Batch Size Study"
+desc = "Final performance for different numbers of episodes per update at the same total number of episodes"
+code = '''
+function batch_study(b)
+    r = train(iters=max(1, div(iters * batch, b)), batch=b)
+    (episodes_per_update = b, updates = length(r.hist.ret), final_mean_return = r.hist.ret[end], best_mean_return = maximum(r.hist.ret))
+end
+[batch_study(b) for b in [2, 5, 10, 20]]
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "action-probs"
+label = "Action Probabilities"
+desc = "Probability of pushing right as a function of the pole angle and angular velocity (cart centred and still)"
+code = '''
+using Plots
+
+angles = range(-12, 12, length=61); rates = range(-2, 2, length=61)
+heatmap(angles, rates, [probs(res.W, [0.0, 0.0, a * pi / 180, w])[2] for w in rates, a in angles],
+    xlabel="pole angle (degrees)", ylabel="angular velocity (rad/s)", title="P(push right)", clims=(0, 1))
+'''
+
+[[actionGroups.actions]]
+id = "value-estimate"
+label = "Value Estimate"
+desc = "Critic (baseline) value V(s) along a sampled episode against the realised discounted return"
+code = '''
+using Plots
+
+ep = run_episode(res.W, MersenneTwister(7))
+plot([dot(phi(s), res.critic) for s in ep.S], label="critic V(s)", xlabel="step", ylabel="value")
+plot!(discount(ep.R), label="realised discounted return")
+'''

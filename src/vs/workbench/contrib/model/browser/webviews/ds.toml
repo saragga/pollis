@@ -1,0 +1,586 @@
+# Direct Search Methods Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/ds.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Direct Search Methods"
+viewType = "pollis.ds"
+defaultModel = "nm"
+
+[[packages]]
+name = "Optim.jl"
+github = "https://github.com/JuliaNLSolvers/Optim.jl"
+
+[[packages]]
+name = "DirectSearch.jl"
+github = "https://github.com/ImperialCollegeLondon/DirectSearch.jl"
+
+[requires]
+packages = ["Optim.jl", "DirectSearch.jl", "Plots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Nelder-Mead Simplex"
+file = "ds/tutorial-01-nelder-mead.ipynb"
+bundled = true
+description = "Derivative-free minimisation using the Nelder-Mead simplex algorithm in Optim.jl"
+
+[[notebookSections.notebooks]]
+name = "Pattern Search (GPS)"
+file = "ds/tutorial-02-pattern-search.ipynb"
+bundled = true
+description = "Generalized pattern search with structured coordinate polls in DirectSearch.jl"
+
+[[notebookSections.notebooks]]
+name = "Mesh Adaptive Direct Search (MADS)"
+file = "ds/tutorial-03-mads.ipynb"
+bundled = true
+description = "OrthoMADS algorithm with provable convergence guarantees via DirectSearch.jl"
+
+[[notebookSections.notebooks]]
+name = "Generating Set Search (GSS)"
+file = "ds/tutorial-04-gss.ipynb"
+bundled = true
+description = "Generating set search for non-smooth objectives via DirectSearch.jl"
+
+[[notebookSections.notebooks]]
+name = "Benchmarking Direct Search Methods"
+file = "ds/tutorial-05-benchmark.ipynb"
+bundled = true
+description = "Compare NelderMead, GPS, OrthoMADS and GSS on standard test functions"
+
+[[wikis]]
+name = "Factsheet"
+file = "ds/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "ds/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "ds/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "ds/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "ds/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "ds/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Algorithm Details"
+
+[[wikis]]
+name = "Nelder-Mead"
+file = "ds/nelder-mead.md"
+bundled = true
+
+[[wikis]]
+name = "Pattern Search"
+file = "ds/pattern-search.md"
+bundled = true
+
+[[wikis]]
+name = "MADS"
+file = "ds/mads.md"
+bundled = true
+
+[[wikis]]
+name = "Generating Set Search"
+file = "ds/generating-set-search.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "Optim: A mathematical optimization package for Julia"
+authors = "Mogensen, Patrick Kofod; Riseth, Asbjorn Nilsen"
+year = 2018
+journal = "Journal of Open Source Software"
+doi = "10.21105/joss.00615"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Numerical Optimization"
+authors = "Nocedal, Jorge; Wright, Stephen J."
+year = 2006
+journal = "Springer (2nd ed.)"
+doi = "10.1007/978-0-387-40065-5"
+openAccess = false
+
+[[references]]
+title = "Introduction to Derivative-Free Optimization"
+authors = "Conn, Andrew R.; Scheinberg, Katya; Vicente, Luis N."
+year = 2009
+journal = "SIAM"
+doi = "10.1137/1.9780898718768"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "A Simplex Method for Function Minimization"
+authors = "Nelder, John A.; Mead, Roger"
+year = 1965
+journal = "The Computer Journal"
+doi = "10.1093/comjnl/7.4.308"
+openAccess = false
+
+[[references]]
+title = "Optimization by Direct Search: New Perspectives on Some Classical and Modern Methods"
+authors = "Kolda, Tamara G.; Lewis, Robert M.; Torczon, Virginia"
+year = 2003
+journal = "SIAM Review"
+doi = "10.1137/S003614450242889"
+openAccess = false
+
+[[references]]
+title = "Mesh Adaptive Direct Search Algorithms for Constrained Optimization"
+authors = "Audet, Charles; Dennis, John E."
+year = 2006
+journal = "SIAM Journal on Optimization"
+doi = "10.1137/040603371"
+openAccess = false
+
+[[references]]
+title = "Generating Set Search Methods"
+authors = "Kolda, Tamara G.; Lewis, Robert M.; Torczon, Virginia"
+year = 2006
+journal = "SIAM Review"
+doi = "10.1137/S003614450242889"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers (from packages)"
+
+[[references]]
+title = "Optim: A mathematical optimization package for Julia"
+authors = "Mogensen, Patrick Kofod; Riseth, Asbjorn Nilsen"
+year = 2018
+journal = "Journal of Open Source Software"
+doi = "10.21105/joss.00615"
+openAccess = true
+
+[[models]]
+id = "nm"
+label = "Nelder-Mead"
+
+[[models]]
+id = "ps"
+label = "Pattern Search"
+
+[[models]]
+id = "mads"
+label = "MADS"
+
+[[models]]
+id = "gss"
+label = "GSS"
+
+[[bullets]]
+text = "Nelder-Mead"
+detail = "simplex contracts toward the minimum; no derivatives required"
+
+[[bullets]]
+text = "Pattern Search"
+detail = "GPS; structured poll along coordinate directions"
+
+[[bullets]]
+text = "MADS"
+detail = "OrthoMADS; mesh-adaptive poll with provable convergence guarantees"
+
+[[bullets]]
+text = "GSS"
+detail = "Generating Set Search; generalized poll directions for non-smooth objectives"
+
+[[decisionRows]]
+task = "Nelder-Mead"
+context = "Low-dimensional smooth or mildly noisy problems; the quickest to try"
+purpose = "Reflect, expand and shrink a simplex of n + 1 points; no convergence guarantee"
+
+[[decisionRows]]
+task = "Pattern Search"
+context = "Simple, predictable search when each evaluation is cheap"
+purpose = "Compass search: poll +/- each coordinate, halve the step when no poll point improves"
+
+[[decisionRows]]
+task = "MADS"
+context = "Black-box, non-smooth or simulation-based objectives with a convergence theory"
+purpose = "Mesh adaptive direct search: polls in directions that become dense, with guaranteed convergence to a Clarke-stationary point"
+
+[[decisionRows]]
+task = "GSS"
+context = "Smooth problems where you want fewer polls per iteration and step expansion"
+purpose = "Generating set search: a minimal positive spanning set (n + 1 directions), sufficient decrease, expand on success"
+
+[[inputs]]
+id = "f"
+label = "Objective f(x)"
+tooltip = "Julia expression for the scalar objective to minimise. Use x[1], x[2], ... for the components. Example: abs(x[1] - 1) + (x[2] - 2)^2 (non-smooth)."
+default = "abs(x[1] - 1) + 2 * abs(x[2] + 0.5) + 0.1 * (x[1]^2 + x[2]^2)"
+
+[[inputs]]
+id = "x0"
+label = "Initial Guess x0"
+tooltip = "Starting point as a Julia vector, for example [1.0, 1.0]."
+default = "[2.0, 2.0]"
+
+[[inputs]]
+id = "maxiter"
+label = "Max Iterations"
+tooltip = "Iteration budget. Direct search needs many more iterations (and evaluations) than gradient methods for high accuracy."
+default = "500"
+newRow = true
+
+[[inputs]]
+id = "step"
+label = "Initial Step"
+tooltip = "Initial poll step size. Around a tenth of the expected distance to the solution works well."
+default = "0.5"
+models = ["ps", "gss"]
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.nm]
+# A simplex and its reflected point
+svg = '''
+return '<path d="M12,62 L40,58 L22,34 Z" fill="currentColor" fill-opacity="0.15" stroke="currentColor" stroke-width="1.2"/>'
+	+ '<path d="M12,62 L40,58 L30,76 Z" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="3,2"/>'
+	+ '<circle cx="22" cy="34" r="2.2" fill="currentColor"/>';
+'''
+
+[miniCharts.ps]
+# The four compass poll points around the incumbent
+svg = '''
+var s = '<circle cx="27" cy="48" r="2.6" fill="currentColor"/>';
+[[27, 32], [27, 64], [11, 48], [43, 48]].forEach(function (p) { s += '<line x1="27" y1="48" x2="' + p[0] + '" y2="' + p[1] + '" stroke="currentColor" stroke-width="1" opacity="0.6"/><circle cx="' + p[0] + '" cy="' + p[1] + '" r="2" fill="none" stroke="currentColor"/>'; });
+return s;
+'''
+
+[miniCharts.mads]
+# A fine mesh with poll directions in irregular orientations
+svg = '''
+var s = '';
+for (var i = 0; i <= 4; i++) { s += '<line x1="' + (11 + i * 8) + '" y1="32" x2="' + (11 + i * 8) + '" y2="64" stroke="currentColor" stroke-width="0.5" opacity="0.35"/><line x1="11" y1="' + (32 + i * 8) + '" x2="43" y2="' + (32 + i * 8) + '" stroke="currentColor" stroke-width="0.5" opacity="0.35"/>'; }
+[[35, 32], [19, 64], [43, 56], [11, 40]].forEach(function (p) { s += '<line x1="27" y1="48" x2="' + p[0] + '" y2="' + p[1] + '" stroke="currentColor" stroke-width="1.1"/>'; });
+return s + '<circle cx="27" cy="48" r="2.6" fill="currentColor"/>';
+'''
+
+[miniCharts.gss]
+# A minimal positive spanning set of three directions
+svg = '''
+var s = '<circle cx="27" cy="50" r="2.6" fill="currentColor"/>';
+[[45, 50], [27, 32], [14, 63]].forEach(function (p) { s += '<line x1="27" y1="50" x2="' + p[0] + '" y2="' + p[1] + '" stroke="currentColor" stroke-width="1.2"/><circle cx="' + p[0] + '" cy="' + p[1] + '" r="2" fill="none" stroke="currentColor"/>'; });
+return s;
+'''
+
+[[codeBranches]]
+model = "nm"
+code = '''
+using LinearAlgebra
+
+f(x) = {{f}}
+x0 = {{x0}}  # initial guess
+n  = length(x0)
+
+evals = Tuple{Vector{Float64}, Float64}[]  # every evaluation (point, value), in order
+obj = Ref{Function}(f)  # the function the solver sees (swappable, e.g. for a noisy version)
+fr(x) = (v = obj[](x); push!(evals, (copy(x), v)); v)  # recording wrapper passed to the solver
+using Optim
+
+function solve(x0)
+    empty!(evals)
+    r = optimize(fr, x0, NelderMead(), Optim.Options(iterations={{maxiter}}))
+    Optim.minimizer(r), Optim.minimum(r)
+end
+
+x_opt, f_opt = solve(x0)
+best = accumulate(min, last.(evals))  # best value after each evaluation
+(minimizer = x_opt, minimum = f_opt, evaluations = length(evals))
+'''
+
+[[codeBranches]]
+model = "ps"
+code = '''
+using LinearAlgebra
+
+f(x) = {{f}}
+x0 = {{x0}}  # initial guess
+n  = length(x0)
+
+evals = Tuple{Vector{Float64}, Float64}[]  # every evaluation (point, value), in order
+obj = Ref{Function}(f)  # the function the solver sees (swappable, e.g. for a noisy version)
+fr(x) = (v = obj[](x); push!(evals, (copy(x), v)); v)  # recording wrapper passed to the solver
+
+dirs = [s * e for e in eachcol(Matrix(1.0I, n, n)) for s in (1, -1)]  # h
+
+function solve(x0; step={{step}}, tol=1e-8)
+    empty!(evals)
+    x, fx, h = copy(x0), fr(x0), step
+    for _ in 1:{{maxiter}}
+        h < tol && break
+        improved = false
+        for d in dirs  # opportunistic poll: stop at the first improving point
+            y = x + h * d
+            fy = fr(y)
+            if the 2n compass directions +/- e_i
+                x, fx, improved = y, fy, true
+                break
+            end
+        end
+        h = improved ? fy < fx : h / 2
+    end
+    x, fx
+end
+
+x_opt, f_opt = solve(x0)
+best = accumulate(min, last.(evals))  # best value after each evaluation
+(minimizer = x_opt, minimum = f_opt, evaluations = length(evals))
+'''
+
+[[codeBranches]]
+model = "mads"
+code = '''
+using LinearAlgebra
+
+f(x) = {{f}}
+x0 = {{x0}}  # initial guess
+n  = length(x0)
+
+evals = Tuple{Vector{Float64}, Float64}[]  # every evaluation (point, value), in order
+obj = Ref{Function}(f)  # the function the solver sees (swappable, e.g. for a noisy version)
+fr(x) = (v = obj[](x); push!(evals, (copy(x), v)); v)  # recording wrapper passed to the solver
+using DirectSearch
+
+function solve(x0)
+    empty!(evals)
+    p = DSProblem(n; poll=OrthoMADS(n))
+    SetObjective(p, fr)
+    SetInitialPoint(p, x0)
+    SetIterationLimit(p, {{maxiter}})
+    Optimize!(p)
+    p.x, p.x_cost
+end
+
+x_opt, f_opt = solve(x0)
+best = accumulate(min, last.(evals))  # best value after each evaluation
+(minimizer = x_opt, minimum = f_opt, evaluations = length(evals))
+'''
+
+[[codeBranches]]
+model = "gss"
+code = '''
+using LinearAlgebra
+
+f(x) = {{f}}
+x0 = {{x0}}  # initial guess
+n  = length(x0)
+
+evals = Tuple{Vector{Float64}, Float64}[]  # every evaluation (point, value), in order
+obj = Ref{Function}(f)  # the function the solver sees (swappable, e.g. for a noisy version)
+fr(x) = (v = obj[](x); push!(evals, (copy(x), v)); v)  # recording wrapper passed to the solver
+
+dirs = [collect(eachcol(Matrix(1.0I, n, n))); [-ones(n) ./ sqrt(n)]]  # 2h  # expand after a success
+
+function solve(x0; step={{step}}, tol=1e-8)
+    empty!(evals)
+    x, fx, h = copy(x0), fr(x0), step
+    for _ in 1:{{maxiter}}
+        h < tol && break
+        improved = false
+        for d in dirs  # opportunistic poll: stop at the first improving point
+            y = x + h * d
+            fy = fr(y)
+            if minimal positive spanning set: e_1, ..., e_n and -(1, ..., 1)
+                x, fx, improved = y, fy, true
+                break
+            end
+        end
+        h = improved ? fy < fx - 1e-4 * h^2  # sufficient decrease : h / 2
+    end
+    x, fx
+end
+
+x_opt, f_opt = solve(x0)
+best = accumulate(min, last.(evals))  # best value after each evaluation
+(minimizer = x_opt, minimum = f_opt, evaluations = length(evals))
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "convergence-trace"
+label = "Convergence Trace"
+desc = "Best objective value against the number of function evaluations (log scale)"
+code = '''
+using Plots
+
+plot(best .- f_opt .+ eps(), yscale=:log10, xlabel="evaluations", ylabel="best f - f*", legend=false)
+'''
+
+[[actionGroups.actions]]
+id = "contour-path"
+label = "Contour + Path"
+desc = "Every evaluated point and the path of improving incumbents on the contours of f (2D problems; other variables held at the optimum)"
+code = '''
+using Plots
+
+P = reduce(hcat, first.(evals))
+inc = [i for i in eachindex(evals) if i == 1 || evals[i][2] < best[i - 1]]  # improving evaluations
+pad = max(0.5, 0.2 * maximum(abs, P[1:2, :]))
+xs = range(minimum(P[1, :]) - pad, maximum(P[1, :]) + pad, length=120)
+ys = range(minimum(P[2, :]) - pad, maximum(P[2, :]) + pad, length=120)
+contour(xs, ys, (a, b) -> f([a; b; x_opt[3:end]]), fill=true, colorbar=false, xlabel="x1", ylabel="x2")
+scatter!(P[1, :], P[2, :], markersize=1.5, color=:white, alpha=0.5, label="evaluations")
+plot!(P[1, inc], P[2, inc], marker=:circle, markersize=2, color=:black, label="incumbents")
+scatter!([x_opt[1]], [x_opt[2]], marker=:star, markersize=10, color=:red, label="solution")
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "convergence-check"
+label = "Convergence Check"
+desc = "Evaluations used, and a final poll: whether any point at distance h along +/- e_i improves on the solution (none = locally optimal at that scale)"
+code = '''
+h = 1e-4
+neighbours = [x_opt + s * h * e for e in eachcol(Matrix(1.0I, n, n)) for s in (1, -1)]
+(evaluations = length(evals), minimum = f_opt,
+ best_neighbour_improvement = f_opt - minimum(f.(neighbours)),  # <= 0 means no improving neighbour
+ poll_stationary = all(f.(neighbours) .>= f_opt))
+'''
+
+[[actionGroups.actions]]
+id = "restart-sensitivity"
+label = "Restart Sensitivity"
+desc = "Solve from 10 random starts around x0 and check whether the solutions agree"
+code = '''
+using Random
+
+Random.seed!(1)
+runs = map(1:10) do _
+    s = x0 .+ 2 .* randn(n)
+    xs, fs = solve(s)
+    (start = s, minimizer = xs, minimum = fs, evaluations = length(evals))
+end
+solve(x0)  # restore the evaluation record of the main run
+sort(runs, by = r -> r.minimum)
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "evaluate-new"
+label = "Evaluate at New Point"
+desc = "f at a new point, compared with the minimum"
+code = '''
+x_new = x_opt .+ 0.1  # replace with the point to evaluate
+(f_new = f(x_new), f_min = f_opt, increase = f(x_new) - f_opt, distance = norm(x_new - x_opt))
+'''
+
+[[actionGroups.actions]]
+id = "noisy-objective"
+label = "Noisy Objective"
+desc = "Solve again with evaluation noise (standard deviation 0.01) to see how far the solution moves: direct search tolerates noise better than finite-difference gradients"
+code = '''
+using Random
+
+Random.seed!(1)
+obj[] = x -> f(x) + 0.01 * randn()
+xn, _ = solve(x0)
+obj[] = f  # restore the noiseless objective
+solve(x0)
+(noisy_minimizer = xn, distance_to_clean = norm(xn - x_opt), clean_value_at_noisy = f(xn), clean_minimum = f_opt)
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "compare-ds-methods"
+label = "Compare Methods"
+desc = "This method against Nelder-Mead (Optim) and OrthoMADS (DirectSearch): minimum and evaluations"
+code = '''
+using Optim, DirectSearch
+
+count_evals(g) = (k = Ref(0); (x -> (k[] += 1; g(x)), k))
+fn, kn = count_evals(f); rn = optimize(fn, x0, NelderMead(), Optim.Options(iterations={{maxiter}}))
+fm, km = count_evals(f); pm = DSProblem(n; poll=OrthoMADS(n)); SetObjective(pm, fm); SetInitialPoint(pm, x0); SetIterationLimit(pm, {{maxiter}}); Optimize!(pm)
+[(method = "this method", minimum = f_opt, evaluations = length(evals)),
+ (method = "Nelder-Mead", minimum = Optim.minimum(rn), evaluations = kn[]),
+ (method = "OrthoMADS", minimum = pm.x_cost, evaluations = km[])]
+'''
+
+[[actionGroups.actions]]
+id = "vs-gradient"
+label = "vs Gradient-Based"
+desc = "BFGS with automatic differentiation from the same start: much cheaper on smooth problems, unreliable on non-smooth ones"
+code = '''
+using Optim
+
+rb = optimize(f, x0, BFGS(); autodiff=:forward)
+[(method = "this method", minimum = f_opt, evaluations = length(evals), gradient_calls = 0),
+ (method = "BFGS", minimum = Optim.minimum(rb), evaluations = Optim.f_calls(rb), gradient_calls = Optim.g_calls(rb))]
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "solution-summary"
+label = "Solution Summary"
+desc = "Minimiser, minimum, evaluations and the improvement over the start"
+code = '''
+(minimizer = x_opt, minimum = f_opt, f_start = f(x0), improvement = f(x0) - f_opt, evaluations = length(evals))
+'''
+
+[[actionGroups.actions]]
+id = "evaluation-budget"
+label = "Evaluation Budget"
+desc = "Evaluations needed to get within 10%, 1%, 0.1% and 0.01% of the final improvement: where the budget was spent"
+code = '''
+total = f(x0) - f_opt
+[(within = tol, evaluations = something(findfirst(b -> b - f_opt <= tol * total, best), length(best))) for tol in (0.1, 0.01, 1e-3, 1e-4)]
+'''

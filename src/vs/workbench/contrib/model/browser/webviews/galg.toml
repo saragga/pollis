@@ -1,0 +1,716 @@
+# Genetic Algorithms Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/galg.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Genetic Algorithms"
+viewType = "pollis.galg"
+defaultModel = "ga"
+
+[[packages]]
+name = "Evolutionary.jl"
+github = "https://github.com/wildart/Evolutionary.jl"
+
+[[packages.videos]]
+title = "High Performance Computing in Julia"
+description = "An 18-video course by Jamie Mair on writing fast Julia code"
+url = "https://www.youtube.com/playlist?list=PLUAq6xQKFgGr39PiyrPk_C9dhBKvWcjUA"
+
+[requires]
+packages = ["Evolutionary.jl", "BlackBoxOptim.jl", "Plots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Classic GA"
+file = "galg/tutorial-01-ga.ipynb"
+bundled = true
+description = "GA with Evolutionary.jl: selection, crossover, mutation, and convergence"
+
+[[notebookSections.notebooks]]
+name = "Compact GA"
+file = "galg/tutorial-02-cga.ipynb"
+bundled = true
+description = "Compact GA: probability vector representation and incremental updates"
+
+[[notebookSections.notebooks]]
+name = "BRKGA"
+file = "galg/tutorial-03-brkga.ipynb"
+bundled = true
+description = "BRKGA: biased random-key encoding and elite/non-elite crossover"
+
+[[wikis]]
+name = "Factsheet"
+file = "galg/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "galg/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "galg/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "galg/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "galg/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "galg/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Algorithm Details"
+
+[[wikis]]
+name = "Classic GA"
+file = "galg/ga.md"
+bundled = true
+
+[[wikis]]
+name = "Compact GA"
+file = "galg/cga.md"
+bundled = true
+
+[[wikis]]
+name = "BRKGA"
+file = "galg/brkga.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "Evolutionary.jl: A Julia package for evolutionary algorithms"
+authors = "Poliak, Art"
+year = 2021
+journal = "GitHub"
+doi = "10.5281/zenodo.5781169"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Introduction to Evolutionary Computing"
+authors = "Eiben, A. E.; Smith, J. E."
+year = 2015
+journal = "Springer"
+doi = "10.1007/978-3-662-44874-8"
+openAccess = false
+
+[[references]]
+title = "Genetic Algorithms in Search, Optimization, and Machine Learning"
+authors = "Goldberg, David E."
+year = 1989
+journal = "Addison-Wesley"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "The Compact Genetic Algorithm"
+authors = "Harik, Georges R.; Lobo, Fernando G.; Goldberg, David E."
+year = 1999
+journal = "IEEE Transactions on Evolutionary Computation"
+doi = "10.1109/4235.797971"
+openAccess = false
+
+[[references]]
+title = "Biased Random-Key Genetic Algorithms for Combinatorial Optimization"
+authors = "Gonçalves, José Fernando; Resende, Mauricio G. C."
+year = 2011
+journal = "Journal of Heuristics"
+doi = "10.1007/s10732-010-9143-1"
+openAccess = false
+
+[[references]]
+title = "A Genetic Algorithm Tutorial"
+authors = "Whitley, Darrell"
+year = 1994
+journal = "Statistics and Computing"
+doi = "10.1007/BF00175354"
+openAccess = false
+
+[[models]]
+id = "ga"
+label = "GA"
+
+[[models]]
+id = "cga"
+label = "Compact GA"
+
+[[models]]
+id = "brkga"
+label = "BRKGA"
+
+[[models]]
+id = "mccga"
+label = "MCCGA"
+
+[[bullets]]
+text = "Classic GA"
+detail = "selection, crossover, and mutation on fixed-length chromosomes"
+
+[[bullets]]
+text = "Compact GA"
+detail = "probability vector representation with incremental updates"
+
+[[bullets]]
+text = "BRKGA"
+detail = "biased random-key encoding with elite/non-elite crossover"
+
+[[bullets]]
+text = "MCCGA"
+detail = "machine-coded compact GA; encodes real variables as integers using b bits; maintains a marginal-product histogram updated by pairwise competition"
+
+[[decisionRows]]
+task = "GA"
+context = "General continuous or mixed problems; the baseline evolutionary method"
+purpose = "Real-coded GA: tournament selection, intermediate crossover, Gaussian mutation and elitism over a population of candidate solutions"
+
+[[decisionRows]]
+task = "Compact GA"
+context = "Memory-constrained settings or when only a probabilistic model is wanted"
+purpose = "Replaces the population by a probability vector over bits; pairwise competitions nudge each bit's probability towards the winner"
+
+[[decisionRows]]
+task = "BRKGA"
+context = "Combinatorial or mixed problems that can be expressed through a decoder"
+purpose = "Biased random-key GA: individuals are key vectors in [0, 1]^n decoded into solutions; elite parents pass on more genes, and fresh mutants keep diversity"
+
+[[decisionRows]]
+task = "MCCGA"
+context = "Continuous problems with no problem-specific encoding"
+purpose = "Machine-coded compact GA: a compact GA over the IEEE bit pattern of the floating-point variables, with initial bit probabilities learned from the box"
+
+[[inputs]]
+id = "n"
+label = "Dimension (n)"
+tooltip = "Number of decision variables. The default objective and bounds adapt to it."
+default = "5"
+
+[[inputs]]
+id = "obj"
+label = "Objective f(x)"
+tooltip = "Julia expression for the objective to minimise, in terms of the vector x. Default: the Rastrigin function in any dimension (global minimum 0 at the origin)."
+default = "10 * length(x) + sum(x .^ 2 .- 10 .* cos.(2pi .* x))"
+
+[[inputs]]
+id = "lb"
+label = "Lower Bounds"
+tooltip = "Julia vector of lower bounds, one per variable."
+default = "fill(-5.12, n)"
+newRow = true
+
+[[inputs]]
+id = "ub"
+label = "Upper Bounds"
+tooltip = "Julia vector of upper bounds, one per variable."
+default = "fill(5.12, n)"
+
+[[inputs]]
+id = "pop"
+label = "Population Size"
+tooltip = "Population size (GA, BRKGA), or virtual population size of the compact GAs: each competition moves a bit probability by 1 / size, so larger sizes converge more slowly but more reliably."
+default = "50"
+newRow = true
+
+[[inputs]]
+id = "budget"
+label = "Generations"
+tooltip = "Number of generations. One generation costs about one evaluation per population member for every variant (the compact GAs run size / 2 competitions per generation) and they stop early once their probability vector has converged."
+default = "300"
+
+[[inputs]]
+id = "pc"
+label = "Crossover Rate"
+tooltip = "Probability that a child is produced by crossover rather than copied from its first parent."
+default = "0.9"
+models = ["ga"]
+newRow = true
+
+[[inputs]]
+id = "pm"
+label = "Mutation Rate"
+tooltip = "Probability that each gene receives Gaussian noise (standard deviation 10 percent of its range)."
+default = "0.1"
+models = ["ga"]
+
+[[inputs]]
+id = "bits"
+label = "Bits per Variable"
+tooltip = "Fixed-point resolution of each variable: the box side is divided into 2^bits - 1 steps."
+default = "16"
+models = ["cga"]
+newRow = true
+
+[[inputs]]
+id = "elite"
+label = "Elite Fraction"
+tooltip = "Share of the population kept unchanged each generation."
+default = "0.2"
+models = ["brkga"]
+newRow = true
+
+[[inputs]]
+id = "mutants"
+label = "Mutant Fraction"
+tooltip = "Share of the population replaced by fresh random keys each generation."
+default = "0.15"
+models = ["brkga"]
+
+[[inputs]]
+id = "rho"
+label = "Elite Inheritance"
+tooltip = "Probability that a child takes each key from its elite parent rather than the non-elite one (above 0.5 biases towards the elite)."
+default = "0.7"
+models = ["brkga"]
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.ga]
+# Two parent chromosomes crossing into a child
+svg = '''
+var s = '';
+for (var i = 0; i < 6; i++) {
+	s += '<rect x="' + (8 + i * 6.5) + '" y="32" width="5.5" height="7" fill="currentColor" opacity="0.9"/>';
+	s += '<rect x="' + (8 + i * 6.5) + '" y="44" width="5.5" height="7" fill="currentColor" opacity="0.35"/>';
+	s += '<rect x="' + (8 + i * 6.5) + '" y="58" width="5.5" height="7" fill="currentColor" opacity="' + (i < 3 ? 0.9 : 0.35) + '"/>';
+}
+return s;
+'''
+
+[miniCharts.cga]
+# A probability vector with bars drifting to 0 or 1
+svg = '''
+var p = [0.9, 0.2, 0.55, 0.95, 0.1, 0.7];
+return p.map(function (v, i) { return '<rect x="' + (8 + i * 6.5) + '" y="' + (64 - 32 * v).toFixed(1) + '" width="5" height="' + (32 * v).toFixed(1) + '" fill="currentColor" opacity="0.75"/>'; }).join('')
+	+ '<line x1="6" y1="64" x2="48" y2="64" stroke="currentColor" stroke-width="0.6"/><line x1="6" y1="32" x2="48" y2="32" stroke="currentColor" stroke-width="0.5" stroke-dasharray="2,2"/>';
+'''
+
+[miniCharts.brkga]
+# Elite and non-elite key vectors with a biased child
+svg = '''
+var s = '', keys = [0.8, 0.3, 0.6, 0.2, 0.9];
+for (var i = 0; i < 5; i++) {
+	s += '<circle cx="' + (10 + i * 8.5) + '" cy="' + (36 + 8 * keys[i]).toFixed(1) + '" r="1.8" fill="currentColor"/>';
+	s += '<circle cx="' + (10 + i * 8.5) + '" cy="' + (54 + 8 * keys[4 - i]).toFixed(1) + '" r="1.8" fill="currentColor" opacity="' + (i % 3 === 0 ? 0.35 : 0.9) + '"/>';
+}
+return s + '<line x1="6" y1="50" x2="48" y2="50" stroke="currentColor" stroke-width="0.5" stroke-dasharray="2,2"/>';
+'''
+
+[miniCharts.mccga]
+# A 32-bit float pattern: sign, exponent, mantissa
+svg = '''
+var s = '';
+for (var i = 0; i < 16; i++) { s += '<rect x="' + (6 + i * 2.7) + '" y="44" width="2.2" height="10" fill="currentColor" opacity="' + (i === 0 ? 1 : i < 5 ? 0.7 : 0.35) + '"/>'; }
+return s + '<path d="M6,40 L8,40 M9,40 L19,40 M20,40 L49,40" stroke="currentColor" stroke-width="0.8"/>';
+'''
+
+[[codeBranches]]
+model = "ga"
+code = '''
+using Random, LinearAlgebra, Statistics
+
+n = {{n}}  # dimension
+f(x) = {{obj}}  # objective
+lb, ub = {{lb}}, {{ub}}  # search box
+NP = {{pop}}  # population size (virtual size for the compact GAs)
+budget = {{budget}}  # generations
+
+# per-generation history: best value so far and a diversity measure
+newhist() = (best = Float64[], diversity = Float64[])
+
+PC, PM = {{pc}}, {{pm}}  # crossover and per-gene mutation rates
+
+function search(; gens=budget, NP=NP, seed=1, lb=lb, ub=ub)
+    Random.seed!(seed)
+    d, w = length(lb), ub .- lb
+    X = [lb .+ rand(d) .* w for _ in 1:NP]; fX = f.(X)
+    h, evals = newhist(), NP
+    for g in 1:gens
+        tournament() = (c = rand(1:NP, 3); X[c[argmin(fX[c])]])  # best of 3 random members
+        elite = argmin(fX)
+        Y = [copy(X[elite])]  # elitism: the best survives unchanged
+        while length(Y) < NP
+            a, b = tournament(), tournament()
+            child = rand() < PC ? a .+ (1.5 .* rand(d) .- 0.25) .* (b .- a) : copy(a)  # intermediate crossover (BLX-0.25)
+            mask = rand(d) .< PM
+            child[mask] .+= 0.1 .* w[mask] .* randn(count(mask))  # Gaussian mutation
+            push!(Y, clamp.(child, lb, ub))
+        end
+        fX = [fX[elite]; f.(Y[2:end])]; X = Y
+        evals += NP - 1
+        push!(h.best, minimum(fX)); push!(h.diversity, mean(std(reduce(hcat, X), dims=2)))
+    end
+    k = argmin(fX)
+    (x = X[k], fx = fX[k], h..., evals = evals)
+end
+
+res = search()
+x_best, f_best = res.x, res.fx
+(best_point = x_best, best_value = f_best, generations = length(res.best), evaluations = res.evals)
+'''
+
+[[codeBranches]]
+model = "cga"
+code = '''
+using Random, LinearAlgebra, Statistics
+
+n = {{n}}  # dimension
+f(x) = {{obj}}  # objective
+lb, ub = {{lb}}, {{ub}}  # search box
+NP = {{pop}}  # population size (virtual size for the compact GAs)
+budget = {{budget}}  # generations
+
+# per-generation history: best value so far and a diversity measure
+newhist() = (best = Float64[], diversity = Float64[])
+
+BITS = {{bits}}  # fixed-point bits per variable
+
+# bits (most significant first) to a point in the box
+decode(bits, lb, ub) = [lb[i] + (ub[i] - lb[i]) * evalpoly(2, reverse(bits[(i - 1) * BITS + 1:i * BITS])) / (2^BITS - 1) for i in eachindex(lb)]
+
+function search(; gens=budget, NP=NP, seed=1, lb=lb, ub=ub)
+    Random.seed!(seed)
+    p = fill(0.5, BITS * length(lb))  # probability that each bit is 1
+    bx = decode(rand(length(p)) .< p, lb, ub); bf = f(bx)
+    h, evals = newhist(), 1
+    for g in 1:gens, c in 1:max(1, div(NP, 2))  # NP / 2 competitions per generation
+        a, b = rand(length(p)) .< p, rand(length(p)) .< p  # two samples from the model
+        xa, xb = decode(a, lb, ub), decode(b, lb, ub)
+        fa, fb = f(xa), f(xb); evals += 2
+        win, lose = fa <= fb ? (a, b) : (b, a)
+        differ = win .!= lose
+        p[differ] .= clamp.(p[differ] .+ ifelse.(win[differ], 1, -1) ./ NP, 0, 1)  # move towards the winner
+        fa < bf && ((bx, bf) = (xa, fa))
+        fb < bf && ((bx, bf) = (xb, fb))
+        if c == max(1, div(NP, 2))
+            push!(h.best, bf); push!(h.diversity, 4 * mean(p .* (1 .- p)))  # 1 = undecided, 0 = converged
+            all(q -> q < 1e-9 || q > 1 - 1e-9, p) && break  # probability vector converged
+        end
+    end
+    (x = bx, fx = bf, h..., evals = evals, probabilities = p)
+end
+
+res = search()
+x_best, f_best = res.x, res.fx
+(best_point = x_best, best_value = f_best, generations = length(res.best), evaluations = res.evals)
+'''
+
+[[codeBranches]]
+model = "brkga"
+code = '''
+using Random, LinearAlgebra, Statistics
+
+n = {{n}}  # dimension
+f(x) = {{obj}}  # objective
+lb, ub = {{lb}}, {{ub}}  # search box
+NP = {{pop}}  # population size (virtual size for the compact GAs)
+budget = {{budget}}  # generations
+
+# per-generation history: best value so far and a diversity measure
+newhist() = (best = Float64[], diversity = Float64[])
+
+PE, PMUT, RHO = {{elite}}, {{mutants}}, {{rho}}  # elite share, mutant share, elite inheritance probability
+
+function search(; gens=budget, NP=NP, seed=1, lb=lb, ub=ub)
+    Random.seed!(seed)
+    d = length(lb)
+    decode(k) = lb .+ k .* (ub .- lb)  # random keys in [0, 1]^d to a point in the box
+    K = [rand(d) for _ in 1:NP]; fK = f.(decode.(K))
+    ne, nm = max(1, round(Int, PE * NP)), round(Int, PMUT * NP)
+    h, evals = newhist(), NP
+    for g in 1:gens
+        o = sortperm(fK)
+        E, R = K[o[1:ne]], K[o[ne+1:end]]
+        mutants = [rand(d) for _ in 1:nm]  # fresh random individuals
+        children = map(1:NP - ne - nm) do _
+            e, r = rand(E), rand(R)
+            ifelse.(rand(d) .< RHO, e, r)  # biased uniform crossover
+        end
+        K = [E; mutants; children]
+        fK = [fK[o[1:ne]]; f.(decode.(mutants)); f.(decode.(children))]
+        evals += NP - ne
+        push!(h.best, minimum(fK)); push!(h.diversity, mean(std(reduce(hcat, decode.(K)), dims=2)))
+    end
+    k = argmin(fK)
+    (x = decode(K[k]), fx = fK[k], h..., evals = evals)
+end
+
+res = search()
+x_best, f_best = res.x, res.fx
+(best_point = x_best, best_value = f_best, generations = length(res.best), evaluations = res.evals)
+'''
+
+[[codeBranches]]
+model = "mccga"
+code = '''
+using Random, LinearAlgebra, Statistics
+
+n = {{n}}  # dimension
+f(x) = {{obj}}  # objective
+lb, ub = {{lb}}, {{ub}}  # search box
+NP = {{pop}}  # population size (virtual size for the compact GAs)
+budget = {{budget}}  # generations
+
+# per-generation history: best value so far and a diversity measure
+newhist() = (best = Float64[], diversity = Float64[])
+
+# a Float32 as 32 bits (sign, 8 exponent bits, 23 mantissa bits; most significant first) and back
+tobits(v::Float32) = [((reinterpret(UInt32, v) >> (32 - k)) & 0x1) == 0x1 for k in 1:32]
+frombits(b) = reinterpret(Float32, foldl((acc, bit) -> (acc << 1) | UInt32(bit), b; init=UInt32(0)))
+function decode(bits, lb, ub)
+    map(eachindex(lb)) do i
+        v = Float64(frombits(bits[32(i - 1) + 1:32i]))
+        isfinite(v) ? clamp(v, lb[i], ub[i]) : (lb[i] + ub[i]) / 2  # patterns outside the box are pulled back in
+    end
+end
+# initial bit probabilities: the bit frequencies of uniform samples from the box
+initial_p(lb, ub) = reduce(vcat, [mean(tobits.(Float32.(lb[i] .+ rand(10_000) .* (ub[i] - lb[i])))) for i in eachindex(lb)])
+
+function search(; gens=budget, NP=NP, seed=1, lb=lb, ub=ub)
+    Random.seed!(seed)
+    p = initial_p(lb, ub)  # probability that each bit is 1
+    bx = decode(rand(length(p)) .< p, lb, ub); bf = f(bx)
+    h, evals = newhist(), 1
+    for g in 1:gens, c in 1:max(1, div(NP, 2))  # NP / 2 competitions per generation
+        a, b = rand(length(p)) .< p, rand(length(p)) .< p  # two samples from the model
+        xa, xb = decode(a, lb, ub), decode(b, lb, ub)
+        fa, fb = f(xa), f(xb); evals += 2
+        win, lose = fa <= fb ? (a, b) : (b, a)
+        differ = win .!= lose
+        p[differ] .= clamp.(p[differ] .+ ifelse.(win[differ], 1, -1) ./ NP, 0, 1)  # move towards the winner
+        fa < bf && ((bx, bf) = (xa, fa))
+        fb < bf && ((bx, bf) = (xb, fb))
+        if c == max(1, div(NP, 2))
+            push!(h.best, bf); push!(h.diversity, 4 * mean(p .* (1 .- p)))  # 1 = undecided, 0 = converged
+            all(q -> q < 1e-9 || q > 1 - 1e-9, p) && break  # probability vector converged
+        end
+    end
+    (x = bx, fx = bf, h..., evals = evals, probabilities = p)
+end
+
+res = search()
+x_best, f_best = res.x, res.fx
+(best_point = x_best, best_value = f_best, generations = length(res.best), evaluations = res.evals)
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "convergence-plot"
+label = "Convergence Plot"
+desc = "Best value found at each generation (log scale)"
+code = '''
+using Plots
+
+shift = min(0, minimum(res.best)) - 1e-12  # keeps the log scale defined
+plot(res.best .- shift, yscale=:log10, xlabel="generation", ylabel="best f - shift", legend=false)
+'''
+
+[[actionGroups.actions]]
+id = "population-diversity"
+label = "Population Diversity"
+desc = "Spread of the population per generation (GA, BRKGA), or the undecidedness of the probability vector, 4 p (1 - p) averaged over bits (compact GAs)"
+code = '''
+using Plots
+
+plot(max.(res.diversity, 1e-16), yscale=:log10, xlabel="generation", ylabel="diversity", legend=false)
+'''
+
+[[actionGroups.actions]]
+id = "fitness-landscape"
+label = "Fitness Landscape"
+desc = "Heatmap of f over the first two variables, with the others held at the best point"
+code = '''
+using Plots
+
+xs = range(lb[1], ub[1], length=150); ys = range(lb[2], ub[2], length=150)
+heatmap(xs, ys, (a, b) -> f([a; b; x_best[3:end]]), xlabel="x1", ylabel="x2")
+scatter!([x_best[1]], [x_best[2]], marker=:star, markersize=10, color=:red, label="best")
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "stagnation-check"
+label = "Stagnation Check"
+desc = "When the best value last improved and whether diversity collapsed first (premature convergence)"
+code = '''
+last_gain = something(findlast(diff(res.best) .< 0), 0) + 1
+(generations = length(res.best), last_improvement_generation = last_gain,
+ idle_generations = length(res.best) - last_gain, final_diversity = res.diversity[end],
+ premature = res.diversity[end] < 1e-6 && last_gain < 0.5 * length(res.best))
+'''
+
+[[actionGroups.actions]]
+id = "convergence-rate"
+label = "Convergence Rate"
+desc = "Generations needed to come within 1, 0.1, 0.01 and 0.0001 of the final best value"
+code = '''
+map([1.0, 0.1, 0.01, 1e-4]) do tol
+    (tolerance = tol, generation = findfirst(<=(f_best + tol), res.best))
+end
+'''
+
+[[actionGroups.actions]]
+id = "multi-run"
+label = "Multi-Run Reliability"
+desc = "Repeat the search with 10 seeds: the spread of best values and how far apart the solutions are"
+code = '''
+runs = [search(seed=s) for s in 1:10]
+v = getfield.(runs, :fx)
+(best_values = round.(v, sigdigits=6), mean = mean(v), spread = std(v), share_at_best = mean(v .<= minimum(v) + 1e-6),
+ max_distance_between_solutions = maximum(norm(a.x - b.x) for a in runs, b in runs))
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "best-solution"
+label = "Best Solution"
+desc = "The best point and its objective value, re-evaluated"
+code = '''
+(best_point = round.(x_best, sigdigits=6), reported_value = f_best, re_evaluated = f(x_best))
+'''
+
+[[actionGroups.actions]]
+id = "evaluate-new"
+label = "Evaluate New Point"
+desc = "Objective at a point of your choice (edit x_new) compared with the best one"
+code = '''
+x_new = (lb .+ ub) ./ 2  # edit: any point in the box
+(x_new = x_new, f_new = f(x_new), f_best = f_best, difference = f(x_new) - f_best, distance_to_best = norm(x_new - x_best))
+'''
+
+[[actionGroups.actions]]
+id = "sensitivity"
+label = "Sensitivity Analysis"
+desc = "Sample 2000 points around the best one at several radii: the share that is better shows whether it is a local minimum at that scale"
+code = '''
+map([1e-4, 1e-3, 1e-2, 1e-1]) do r
+    samples = [clamp.(x_best .+ r .* (ub .- lb) .* randn(length(x_best)), lb, ub) for _ in 1:2000]
+    fv = f.(samples)
+    (radius = r, share_better = mean(fv .< f_best), mean_increase = mean(fv) - f_best)
+end
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "compare-de"
+label = "Compare with DE"
+desc = "The selected GA against adaptive differential evolution (BlackBoxOptim) at the same number of evaluations, over 5 seeds"
+code = '''
+using BlackBoxOptim
+
+de(seed) = best_fitness(bboptimize(f; SearchRange=collect(zip(lb, ub)), NumDimensions=length(lb), Method=:adaptive_de_rand_1_bin_radiuslimited,
+                                   MaxFuncEvals=res.evals, TraceMode=:silent, RandomizeRngSeed=false, RngSeed=seed))
+map(["selected GA" => s -> search(seed=s).fx, "adaptive DE" => de]) do (name, run)
+    sec = @elapsed v = [run(s) for s in 1:5]
+    (method = name, mean_best = mean(v), worst_best = maximum(v), seconds_per_run = sec / 5)
+end
+'''
+
+[[actionGroups.actions]]
+id = "compare-pop-size"
+label = "Population Size Study"
+desc = "Best value for several population sizes at the same number of evaluations, 3 seeds each"
+code = '''
+map([10, 20, 50, 100, 200]) do np
+    gens = max(1, div(NP * budget, np))
+    v = [search(NP=np, gens=gens, seed=s).fx for s in 1:3]
+    (population = np, generations = gens, mean_best = mean(v), worst_best = maximum(v))
+end
+'''
+
+[[actionGroups.actions]]
+id = "compare-cmaes"
+label = "Compare with CMA-ES"
+desc = "The selected GA against CMA-ES (Evolutionary.jl) at the same number of evaluations, over 5 seeds"
+code = '''
+using Evolutionary
+
+d = length(lb)
+function cma(seed)
+    Random.seed!(seed)
+    lam = 4 + floor(Int, 3log(d))
+    r = Evolutionary.optimize(f, Evolutionary.BoxConstraints(lb, ub), lb .+ rand(d) .* (ub .- lb),
+                              CMAES(mu=div(lam, 2), lambda=lam, sigma0=0.3 * maximum(ub .- lb)), Evolutionary.Options(iterations=div(res.evals, lam)))
+    Evolutionary.minimum(r)
+end
+map(["selected GA" => s -> search(seed=s).fx, "CMA-ES" => cma]) do (name, run)
+    sec = @elapsed v = [run(s) for s in 1:5]
+    (method = name, mean_best = mean(v), worst_best = maximum(v), seconds_per_run = sec / 5)
+end
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "solution-summary"
+label = "Solution Summary"
+desc = "Each variable of the best point with its bounds and relative position in the box"
+code = '''
+[(variable = i, value = x_best[i], lower = lb[i], upper = ub[i], relative_position = round((x_best[i] - lb[i]) / (ub[i] - lb[i]), digits=4)) for i in eachindex(x_best)]
+'''
+
+[[actionGroups.actions]]
+id = "operator-stats"
+label = "Operator Statistics"
+desc = "The settings of the selected variant and what the run cost"
+code = '''
+{{?model=ga}} (variant = "real-coded GA", population = NP, crossover_rate = PC, mutation_rate = PM, selection = "tournament of 3", crossover = "intermediate (BLX-0.25)", elitism = 1,
+{{?model=cga}} (variant = "compact GA", virtual_population = NP, bits_per_variable = BITS, undecided_bits = count(q -> 0.01 < q < 0.99, res.probabilities),
+{{?model=brkga}} (variant = "BRKGA", population = NP, elite = max(1, round(Int, PE * NP)), mutants = round(Int, PMUT * NP), elite_inheritance = RHO,
+{{?model=mccga}} (variant = "machine-coded compact GA", virtual_population = NP, bits_per_variable = 32, undecided_bits = count(q -> 0.01 < q < 0.99, res.probabilities),
+ generations = length(res.best), evaluations = res.evals)
+'''
+
+[[actionGroups.actions]]
+id = "bounds-check"
+label = "Bounds Feasibility"
+desc = "Verify the best point lies within the bounds and see which coordinates press against them"
+code = '''
+slack_low, slack_high = x_best .- lb, ub .- x_best
+(inside_box = all(slack_low .>= 0) && all(slack_high .>= 0), min_slack = minimum([slack_low; slack_high]),
+ at_lower = findall(slack_low .< 1e-6 .* (ub .- lb)), at_upper = findall(slack_high .< 1e-6 .* (ub .- lb)))
+'''

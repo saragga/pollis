@@ -1,0 +1,467 @@
+# Dynamic Programming Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/dp.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Dynamic Programming"
+viewType = "pollis.dp"
+defaultModel = "det"
+
+[[packages]]
+name = "QuantEcon.jl"
+github = "https://github.com/QuantEcon/QuantEcon.jl"
+
+[[packages]]
+name = "StochDynamicProgramming.jl"
+github = "https://github.com/JuliaStochOpt/StochDynamicProgramming.jl"
+
+[requires]
+packages = ["QuantEcon.jl", "Plots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Deterministic: Inventory Control"
+file = "dp/tutorial-01-deterministic-inventory.ipynb"
+bundled = true
+description = "Finite-horizon deterministic inventory control via backward induction: value function, optimal policy extraction, and simulation"
+
+[[notebookSections.notebooks]]
+name = "Deterministic: Shortest Path"
+file = "dp/tutorial-02-deterministic-shortest-path.ipynb"
+bundled = true
+description = "Shortest-path DP on a directed graph: Bellman-Ford as a DP recursion, comparison with Dijkstra"
+
+[[notebookSections.notebooks]]
+name = "Stochastic: Inventory Control"
+file = "dp/tutorial-03-stochastic-inventory.ipynb"
+bundled = true
+description = "Stochastic inventory control with random demand via StochDynamicProgramming.jl: grid discretisation, backward induction, and policy simulation"
+
+[[wikis]]
+name = "Factsheet"
+file = "dp/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "dp/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "dp/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "dp/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "dp/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "dp/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Methods"
+
+[[wikis]]
+name = "Deterministic DP"
+file = "dp/deterministic.md"
+bundled = true
+
+[[wikis]]
+name = "Stochastic DP"
+file = "dp/stochastic.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "Quantitative Economics with Julia"
+authors = "Sargent, Thomas J.; Stachurski, John"
+year = 2024
+journal = "QuantEcon"
+url = "https://julia.quantecon.org"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Dynamic Programming and Optimal Control, Vol. 1"
+authors = "Bertsekas, Dimitri P."
+year = 2017
+journal = "Athena Scientific (4th ed.)"
+openAccess = false
+
+[[references]]
+title = "Dynamic Programming and Optimal Control, Vol. 2"
+authors = "Bertsekas, Dimitri P."
+year = 2012
+journal = "Athena Scientific (4th ed.)"
+openAccess = false
+
+[[references]]
+title = "Markov Decision Processes: Discrete Stochastic Dynamic Programming"
+authors = "Puterman, Martin L."
+year = 2005
+journal = "Wiley (2nd ed.)"
+doi = "10.1002/9780470316887"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "The Theory of Dynamic Programming"
+authors = "Bellman, Richard"
+year = 1954
+journal = "Proceedings of the National Academy of Sciences"
+doi = "10.1073/pnas.40.8.716"
+openAccess = true
+
+[[references]]
+title = "Stochastic Games"
+authors = "Shapley, Lloyd S."
+year = 1953
+journal = "Proceedings of the National Academy of Sciences"
+doi = "10.1073/pnas.39.10.1095"
+openAccess = true
+
+[[references]]
+title = "On the Solution of a Linear Programming Problem"
+authors = "Howard, Ronald A."
+year = 1960
+journal = "MIT Press"
+openAccess = false
+
+[[models]]
+id = "det"
+label = "Deterministic"
+
+[[models]]
+id = "stoch"
+label = "Stochastic"
+
+[[bullets]]
+text = "Dynamic Programming solves the Bellman equation by backward induction over a finite or discretised state space, guaranteeing the global optimum without assumptions on convexity or differentiability. Unlike Stochastic Dual Dynamic Programming (Stochastic Programming menu)"
+detail = "which exploits stagewise independence and solves cuts over continuous decisions — exact DP works on a discretised grid and applies to problems with arbitrary transition structure, including non-linear dynamics and non-convex costs."
+
+[[bullets]]
+text = "Both toggles assume full state observability. For problems where the state is only partially observed, see Sequential Decision Making Under Uncertainty (POMDPs.jl). For large or continuous state spaces where exact DP is intractable, see Reinforcement Learning."
+detail = ""
+
+[[decisionRows]]
+task = "Deterministic"
+context = "Sequential decisions whose outcomes are known in advance (inventory with known demand, shortest paths, resource allocation)"
+purpose = "Inventory control with a fixed demand of 5 units per period, solved exactly on the discrete stock grid by policy iteration (QuantEcon DiscreteDP)"
+
+[[decisionRows]]
+task = "Stochastic"
+context = "Sequential decisions under uncertainty where the Bellman equation takes an expectation over random shocks"
+purpose = "The same inventory problem with random demand: N equally likely scenarios between 0 and 10 units (mean 5); the value accounts for lost sales and leftover stock"
+
+[[inputs]]
+id = "S"
+label = "States (S)"
+tooltip = "Number of stock levels 0 .. S-1 (warehouse capacity). Orders that would exceed capacity are infeasible."
+default = "50"
+
+[[inputs]]
+id = "T"
+label = "Horizon (T)"
+tooltip = "Periods simulated under the optimal policy; also the longest horizon of the finite-horizon backward induction comparison."
+default = "10"
+
+[[inputs]]
+id = "gamma"
+label = "Discount (gamma)"
+tooltip = "Discount factor in (0, 1). Values close to 1 weight future profit heavily and slow the convergence of value iteration."
+default = "0.95"
+
+[[inputs]]
+id = "N"
+label = "Demand Scenarios (N)"
+tooltip = "Number of equally likely demand values, spread evenly between 0 and 10 units, used to take the expectation in the Bellman equation."
+default = "10"
+models = ["stoch"]
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.det]
+# Order-up-to policy: staircase falling to zero
+svg = '''
+return '<line x1="6" y1="70" x2="50" y2="70" stroke="currentColor" stroke-width="0.6"/><line x1="6" y1="24" x2="6" y2="70" stroke="currentColor" stroke-width="0.6"/>'
+	+ '<path d="M6,30 L14,30 L14,38 L22,38 L22,46 L30,46 L30,54 L38,54 L38,62 L44,62 L44,70 L50,70" fill="none" stroke="currentColor" stroke-width="1.6"/>';
+'''
+
+[miniCharts.stoch]
+# Fan of random stock paths around the mean
+svg = '''
+const p = (d, w) => '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="' + w + '"/>';
+return '<line x1="6" y1="70" x2="50" y2="70" stroke="currentColor" stroke-width="0.6"/><line x1="6" y1="24" x2="6" y2="70" stroke="currentColor" stroke-width="0.6"/>'
+	+ p('M6,48 L16,40 L26,52 L36,36 L50,44', 0.7) + p('M6,48 L16,56 L26,44 L36,58 L50,50', 0.7) + p('M6,48 L16,46 L26,34 L36,48 L50,30', 0.7)
+	+ p('M6,48 L50,46', 1.6);
+'''
+
+[[codeBranches]]
+model = "det"
+code = '''
+using QuantEcon, Random, Statistics
+
+nS = {{S}}  # stock levels 0 .. S-1
+T = {{T}}  # simulation horizon
+beta = {{gamma}}  # discount factor
+amax = 10  # largest order per period
+price, cost, hold = 8.0, 2.0, 0.5  # sale price, unit order cost, holding cost per leftover unit
+demand, prob = [5], [1.0]  # known demand every period
+
+function build(demand, prob)  # reward matrix R[s, a] and transition array Q[s, a, s'] (lost sales)
+    R = fill(-Inf, nS, amax + 1)  # -Inf marks orders that would exceed capacity
+    Q = zeros(nS, amax + 1, nS)
+    for s in 0:nS-1, a in 0:amax
+        if s + a > nS - 1
+            Q[s+1, a+1, s+1] = 1.0  # never chosen; any valid distribution
+            continue
+        end
+        R[s+1, a+1] = sum(p * (price * min(s + a, d) - cost * a - hold * max(s + a - d, 0)) for (d, p) in zip(demand, prob))
+        for (d, p) in zip(demand, prob)
+            Q[s+1, a+1, max(s + a - d, 0)+1] += p
+        end
+    end
+    R, Q
+end
+
+function simulate(pol, s0, steps, rng)  # follow an order policy (order per stock level) with sampled demand
+    s = s0; stock = [s]; orders = Int[]; rewards = Float64[]
+    cp = cumsum(prob)
+    for t in 1:steps
+        a = pol[s+1]; d = demand[findfirst(cp .>= rand(rng))]
+        push!(orders, a); push!(rewards, price * min(s + a, d) - cost * a - hold * max(s + a - d, 0))
+        s = max(s + a - d, 0); push!(stock, s)
+    end
+    (stock = stock, orders = orders, rewards = rewards)
+end
+
+R, Q = build(demand, prob)
+ddp = DiscreteDP(R, Q, beta)  # discrete dynamic program
+res = solve(ddp, PFI)  # policy iteration
+V, policy = res.v, res.sigma .- 1  # value and optimal order per stock level
+(value_at_empty_stock = round(V[1], digits=3), order_at_empty_stock = policy[1],
+ order_up_to = unique(s + policy[s+1] for s in 0:nS-1 if policy[s+1] > 0), iterations = res.num_iter)
+'''
+
+[[codeBranches]]
+model = "stoch"
+code = '''
+using QuantEcon, Random, Statistics
+
+nS = {{S}}  # stock levels 0 .. S-1
+T = {{T}}  # simulation horizon
+beta = {{gamma}}  # discount factor
+amax = 10  # largest order per period
+price, cost, hold = 8.0, 2.0, 0.5  # sale price, unit order cost, holding cost per leftover unit
+N = {{N}}  # demand scenarios
+demand = N == 1 ? [5] : round.(Int, range(0, 10, length=N))  # equally likely demands, mean 5
+prob = fill(1 / N, N)
+
+function build(demand, prob)  # reward matrix R[s, a] and transition array Q[s, a, s'] (lost sales)
+    R = fill(-Inf, nS, amax + 1)  # -Inf marks orders that would exceed capacity
+    Q = zeros(nS, amax + 1, nS)
+    for s in 0:nS-1, a in 0:amax
+        if s + a > nS - 1
+            Q[s+1, a+1, s+1] = 1.0  # never chosen; any valid distribution
+            continue
+        end
+        R[s+1, a+1] = sum(p * (price * min(s + a, d) - cost * a - hold * max(s + a - d, 0)) for (d, p) in zip(demand, prob))
+        for (d, p) in zip(demand, prob)
+            Q[s+1, a+1, max(s + a - d, 0)+1] += p
+        end
+    end
+    R, Q
+end
+
+function simulate(pol, s0, steps, rng)  # follow an order policy (order per stock level) with sampled demand
+    s = s0; stock = [s]; orders = Int[]; rewards = Float64[]
+    cp = cumsum(prob)
+    for t in 1:steps
+        a = pol[s+1]; d = demand[findfirst(cp .>= rand(rng))]
+        push!(orders, a); push!(rewards, price * min(s + a, d) - cost * a - hold * max(s + a - d, 0))
+        s = max(s + a - d, 0); push!(stock, s)
+    end
+    (stock = stock, orders = orders, rewards = rewards)
+end
+
+R, Q = build(demand, prob)
+ddp = DiscreteDP(R, Q, beta)  # discrete dynamic program
+res = solve(ddp, PFI)  # policy iteration
+V, policy = res.v, res.sigma .- 1  # value and optimal order per stock level
+(value_at_empty_stock = round(V[1], digits=3), order_at_empty_stock = policy[1],
+ order_up_to = unique(s + policy[s+1] for s in 0:nS-1 if policy[s+1] > 0), iterations = res.num_iter)
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "value-function"
+label = "Value Function"
+desc = "Optimal value V*(s) across stock levels: the discounted profit of starting with s units"
+code = '''
+using Plots
+plot(0:nS-1, V, xlabel="Stock level s", ylabel="V*(s)", title="Optimal value function", legend=false, lw=2)
+'''
+
+[[actionGroups.actions]]
+id = "policy-map"
+label = "Optimal Policy"
+desc = "Optimal order at each stock level, with the stock after ordering, revealing the order-up-to structure"
+code = '''
+using Plots
+bar(0:nS-1, policy, xlabel="Stock level s", ylabel="Units", label="optimal order", alpha=0.6)
+plot!(0:nS-1, (0:nS-1) .+ policy, lw=2, label="stock after ordering", title="Optimal policy")
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "convergence"
+label = "Convergence"
+desc = "Bellman residual ||TV - V|| over value iteration sweeps against the geometric contraction bound gamma^k"
+code = '''
+using Plots
+function vi_residuals(ddp; tol=1e-8, maxit=5000)
+    v = zeros(nS); r = Float64[]
+    for k in 1:maxit
+        v2 = bellman_operator(ddp, v)
+        push!(r, maximum(abs.(v2 .- v))); v = v2
+        r[end] < tol && break
+    end
+    r
+end
+resid = vi_residuals(ddp)
+plot(resid, yscale=:log10, xlabel="Sweep", ylabel="||TV - V||", label="residual", title="Value iteration convergence")
+plot!(1:length(resid), resid[1] .* beta .^ (0:length(resid)-1), ls=:dash, label="gamma^k bound")
+'''
+
+[[actionGroups.actions]]
+id = "policy-eval"
+label = "Policy Evaluation"
+desc = "Check V*(0) by Monte Carlo: discounted profit of 1000 simulated runs of the optimal policy from empty stock"
+code = '''
+using Statistics, Random
+H = ceil(Int, log(1e-6) / log(beta))  # horizon after which discounting makes the rest negligible
+rng = MersenneTwister(1)
+G = [sum(beta^(t - 1) * r for (t, r) in enumerate(simulate(policy, 0, H, rng).rewards)) for _ in 1:1000]
+(monte_carlo = round(mean(G), digits=3), std_error = round(std(G) / sqrt(length(G)), digits=3), dp_value = round(V[1], digits=3))
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "policy-simulation"
+label = "Policy Simulation"
+desc = "Stock level and orders over T periods under the optimal policy, starting from empty stock"
+code = '''
+using Plots, Random
+sim = simulate(policy, 0, T, MersenneTwister(1))
+plot(0:T, sim.stock, marker=:o, label="stock level", xlabel="Period", ylabel="Units")
+plot!(1:T, sim.orders, marker=:x, ls=:dash, label="order", title="Profit " * string(round(sum(sim.rewards), digits=1)))
+'''
+
+[[actionGroups.actions]]
+id = "horizon-sensitivity"
+label = "Horizon Sensitivity"
+desc = "Finite-horizon value at empty stock by backward induction as the horizon grows, converging to the infinite-horizon V*(0)"
+code = '''
+using Plots
+horizons = sort(unique([1, 2, 5, 10, 20, 50, 100, 200, T]))
+v0 = [backward_induction(ddp, h)[1][1, 1] for h in horizons]  # value with h periods to go
+plot(horizons, v0, marker=:o, xscale=:log10, xlabel="Horizon", ylabel="V(0)", label="finite horizon")
+hline!([V[1]], ls=:dash, label="infinite horizon", title="Horizon sensitivity")
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "vi-vs-pi"
+label = "Value vs Policy Iteration"
+desc = "Iterations and run time of value iteration, policy iteration and modified policy iteration, and whether they agree on the policy"
+code = '''
+algorithms = [("value iteration", VFI), ("policy iteration", PFI), ("modified policy iteration", MPFI)]
+[begin
+    t = @elapsed r = solve(ddp, M)
+    (method = name, iterations = r.num_iter, ms = round(1000t, digits=2), same_policy = r.sigma == res.sigma)
+end for (name, M) in algorithms]
+'''
+
+[[actionGroups.actions]]
+id = "grid-resolution"
+label = "Scenario Resolution"
+desc = "Value at empty stock as the demand distribution is resolved into more scenarios; N = 1 is the deterministic (mean demand) problem"
+code = '''
+using Plots
+Ns = [1, 2, 3, 5, 10, 20, 50]
+v0 = [begin
+    d = n == 1 ? [5] : round.(Int, range(0, 10, length=n))
+    R2, Q2 = build(d, fill(1 / n, n))
+    solve(DiscreteDP(R2, Q2, beta), PFI).v[1]
+end for n in Ns]
+plot(Ns, v0, marker=:o, xscale=:log10, xlabel="Demand scenarios N", ylabel="V*(0)", legend=false, title="Cost of demand uncertainty")
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "state-value"
+label = "State Value"
+desc = "Value, optimal order and marginal value of one more unit of stock at a stock level of interest"
+code = '''
+s = min(20, nS - 2)  # stock level to inspect
+(stock = s, value = round(V[s+1], digits=3), optimal_order = policy[s+1], marginal_value_of_a_unit = round(V[s+2] - V[s+1], digits=3))
+'''
+
+[[actionGroups.actions]]
+id = "discount-sensitivity"
+label = "Discount Sensitivity"
+desc = "Value at empty stock and the order-up-to level for a range of discount factors"
+code = '''
+using Plots
+gammas = [0.5, 0.7, 0.8, 0.9, 0.95, 0.99]
+sols = [solve(DiscreteDP(R, Q, g), PFI) for g in gammas]
+upto = [maximum((s + r.sigma[s+1] - 1 for s in 0:nS-1 if r.sigma[s+1] > 1); init=0) for r in sols]  # stock after ordering
+plot(plot(gammas, [r.v[1] for r in sols], marker=:o, xlabel="gamma", ylabel="V*(0)", legend=false),
+    plot(gammas, upto, marker=:o, xlabel="gamma", ylabel="order-up-to level", legend=false), layout=(1, 2), size=(900, 350))
+'''

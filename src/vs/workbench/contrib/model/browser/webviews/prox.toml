@@ -1,0 +1,885 @@
+# Nonsmooth and Proximal Optimisation Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/prox.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Nonsmooth and Proximal Optimisation"
+viewType = "pollis.prox"
+defaultModel = "sg"
+
+[[packages]]
+name = "ProximalAlgorithms.jl"
+github = "https://github.com/JuliaFirstOrder/ProximalAlgorithms.jl"
+
+[[packages]]
+name = "ProximalOperators.jl"
+github = "https://github.com/JuliaFirstOrder/ProximalOperators.jl"
+
+[requires]
+packages = ["ProximalOperators.jl", "ProximalAlgorithms.jl", "Plots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Subgradient"
+file = "prox/tutorial-01-subgradient.ipynb"
+bundled = true
+description = "Subgradient method with diminishing step sizes for nonsmooth objectives"
+
+[[notebookSections.notebooks]]
+name = "Bundle Methods"
+file = "prox/tutorial-02-bundle.ipynb"
+bundled = true
+description = "Proximal bundle method: cutting-plane model with stability centre"
+
+[[notebookSections.notebooks]]
+name = "Chambolle-Pock"
+file = "prox/tutorial-03-chambolle-pock.ipynb"
+bundled = true
+description = "Primal-dual splitting for min f(x) + g(Kx) with ProximalAlgorithms.jl"
+
+[[notebookSections.notebooks]]
+name = "Douglas-Rachford"
+file = "prox/tutorial-04-douglas-rachford.ipynb"
+bundled = true
+description = "Operator splitting for min f(x) + g(x) with ProximalAlgorithms.jl"
+
+[[notebookSections.notebooks]]
+name = "Proximal Point"
+file = "prox/tutorial-05-proximal-point.ipynb"
+bundled = true
+description = "Classic proximal point algorithm for nonsmooth convex minimisation"
+
+[[wikis]]
+name = "Factsheet"
+file = "prox/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "prox/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "prox/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "prox/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "prox/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "prox/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Algorithm Details"
+
+[[wikis]]
+name = "Subgradient"
+file = "prox/subgradient.md"
+bundled = true
+
+[[wikis]]
+name = "Bundle Methods"
+file = "prox/bundle.md"
+bundled = true
+
+[[wikis]]
+name = "Chambolle-Pock"
+file = "prox/chambolle-pock.md"
+bundled = true
+
+[[wikis]]
+name = "Douglas-Rachford"
+file = "prox/douglas-rachford.md"
+bundled = true
+
+[[wikis]]
+name = "Proximal Point"
+file = "prox/proximal-point.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "ProximalAlgorithms.jl: Proximal algorithms for nonsmooth optimisation in Julia"
+authors = "Themelis, Andreas; Stella, Lorenzo; Patrinos, Panagiotis"
+year = 2020
+journal = "GitHub"
+openAccess = true
+
+[[references]]
+title = "ProximalOperators.jl: Proximal operators for nonsmooth optimisation"
+authors = "Stella, Lorenzo; Themelis, Andreas; Patrinos, Panagiotis"
+year = 2017
+journal = "GitHub"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Proximal Algorithms"
+authors = "Parikh, Neal; Boyd, Stephen"
+year = 2014
+journal = "Foundations and Trends in Optimization"
+doi = "10.1561/2400000003"
+openAccess = true
+
+[[references]]
+title = "Convex Analysis and Minimization Algorithms I"
+authors = "Hiriart-Urruty, Jean-Baptiste; Lemaréchal, Claude"
+year = 1993
+journal = "Springer"
+doi = "10.1007/978-3-662-02796-7"
+openAccess = false
+
+[[references]]
+title = "First-Order Methods in Optimization"
+authors = "Beck, Amir"
+year = 2017
+journal = "SIAM"
+doi = "10.1137/1.9781611974997"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Minimization of Nonsmooth Functionals"
+authors = "Polyak, Boris T."
+year = 1969
+journal = "USSR Computational Mathematics and Mathematical Physics"
+doi = "10.1016/0041-5553(69)90061-5"
+openAccess = false
+
+[[references]]
+title = "An Extension of the Method of Subgradients"
+authors = "Lemaréchal, Claude"
+year = 1975
+journal = "Symposia Mathematica"
+openAccess = false
+
+[[references]]
+title = "A First-Order Primal-Dual Algorithm for Convex Problems with Applications to Imaging"
+authors = "Chambolle, Antonin; Pock, Thomas"
+year = 2011
+journal = "Journal of Mathematical Imaging and Vision"
+doi = "10.1007/s10851-010-0251-1"
+openAccess = false
+
+[[references]]
+title = "Splitting Algorithms for the Sum of Two Nonlinear Operators"
+authors = "Lions, Pierre-Louis; Mercier, Bertrand"
+year = 1979
+journal = "SIAM Journal on Numerical Analysis"
+doi = "10.1137/0716071"
+openAccess = false
+
+[[references]]
+title = "Monotone Operators and the Proximal Point Algorithm"
+authors = "Rockafellar, R. Tyrrell"
+year = 1976
+journal = "SIAM Journal on Control and Optimization"
+doi = "10.1137/0314056"
+openAccess = false
+
+[[models]]
+id = "sg"
+label = "Subgradient"
+
+[[models]]
+id = "bundle"
+label = "Bundle"
+
+[[models]]
+id = "cp"
+label = "Chambolle–Pock"
+
+[[models]]
+id = "dr"
+label = "Douglas–Rachford"
+
+[[models]]
+id = "pp"
+label = "Proximal Point"
+
+[[bullets]]
+text = "Subgradient"
+detail = "iterative descent using subgradients with diminishing step sizes"
+
+[[bullets]]
+text = "Bundle Methods"
+detail = "cutting-plane models with a proximal stability centre"
+
+[[bullets]]
+text = "Chambolle–Pock"
+detail = "primal-dual splitting for min f(x) + g(Kx)"
+
+[[bullets]]
+text = "Douglas–Rachford"
+detail = "operator splitting for min f(x) + g(x)"
+
+[[bullets]]
+text = "Proximal Point"
+detail = "sequential proximal operator applications"
+
+[[decisionRows]]
+task = "Subgradient"
+context = "Any convex nonsmooth objective with a subgradient oracle; simplest baseline"
+purpose = "Steps along a negative subgradient with diminishing step sizes; not a descent method, so the best iterate is tracked. Rate O(1 / sqrt(k))"
+
+[[decisionRows]]
+task = "Bundle"
+context = "Nonsmooth objectives where only function values and subgradients are available, and accuracy matters"
+purpose = "Keeps a bundle of linearisations as a cutting-plane model, takes proximal steps on the model and moves the stability centre only on sufficient decrease"
+
+[[decisionRows]]
+task = "Chambolle-Pock"
+context = "Problems of the form g(x) + h(Ax) with easy proximal maps of g and of the conjugate of h"
+purpose = "Primal-dual hybrid gradient: alternates a dual prox step and a primal prox step with extrapolation; needs tau * sigma * norm(A)^2 < 1"
+
+[[decisionRows]]
+task = "Douglas-Rachford"
+context = "Sums of two functions whose proximal maps are both available"
+purpose = "Operator splitting: reflects through the two proximal maps; converges for any positive step size"
+
+[[decisionRows]]
+task = "Proximal Point"
+context = "When each proximal subproblem is cheaper or better conditioned than the original problem"
+purpose = "Repeatedly minimises F(u) + norm(u - x)^2 / (2 * step); each subproblem is strongly convex and solved here by an inner accelerated proximal gradient loop"
+
+[[inputs]]
+id = "n"
+label = "Variables (n)"
+tooltip = "Number of unknowns in the sparse regression problem min 0.5 * norm(A * x - b)^2 + penalty(x)."
+default = "20"
+
+[[inputs]]
+id = "m"
+label = "Observations (m)"
+tooltip = "Number of rows of the random design matrix A."
+default = "40"
+
+[[inputs]]
+id = "pen"
+label = "Penalty"
+tooltip = "Nonsmooth penalty added to the least-squares loss (ProximalOperators.jl supplies its proximal map)."
+kind = "select"
+default = "l1"
+
+[[inputs.options]]
+value = "l1"
+label = "L1 Norm (Lasso)"
+
+[[inputs.options]]
+value = "l2"
+label = "L2 Norm (Group Lasso)"
+
+[[inputs.options]]
+value = "linf"
+label = "Max Norm"
+
+[[inputs]]
+id = "reg"
+label = "Penalty Weight"
+tooltip = "Weight lambda of the penalty; larger values give sparser (or smaller) solutions."
+default = "2.0"
+
+[[inputs]]
+id = "step"
+label = "Step Size"
+tooltip = "Subgradient: step at iteration k is step / sqrt(k). Bundle: proximal weight 1 / step. Chambolle-Pock: primal step tau (the dual step follows). Douglas-Rachford and Proximal Point: proximal parameter."
+default = "0.01"
+newRow = true
+
+[[inputs]]
+id = "maxiter"
+label = "Iterations"
+tooltip = "Number of (outer) iterations."
+default = "500"
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.sg]
+# A zig-zag path across a kink
+svg = '''
+return '<path d="M8,36 L28,64 L48,36" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.5"/>'
+	+ '<polyline points="12,42 40,48 18,54 34,58 24,61 30,62" fill="none" stroke="currentColor" stroke-width="1"/><circle cx="28" cy="64" r="1.8" fill="currentColor"/>';
+'''
+
+[miniCharts.bundle]
+# A cutting-plane model under a convex function
+svg = '''
+return '<path d="M8,34 Q28,82 48,34" fill="none" stroke="currentColor" stroke-width="1"/>'
+	+ '<path d="M8,44 L22,64 L36,62 L48,42" fill="none" stroke="currentColor" stroke-width="0.8" stroke-dasharray="2,2"/>'
+	+ '<circle cx="22" cy="64" r="1.6" fill="currentColor"/><circle cx="36" cy="62" r="1.6" fill="currentColor"/>';
+'''
+
+[miniCharts.cp]
+# Primal and dual iterates moving in step
+svg = '''
+return '<polyline points="10,62 20,54 26,50 30,48" fill="none" stroke="currentColor" stroke-width="1"/>'
+	+ '<polyline points="44,38 36,44 32,46 30,47" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="2,2"/>'
+	+ '<circle cx="10" cy="62" r="1.8" fill="currentColor"/><circle cx="44" cy="38" r="1.8" fill="none" stroke="currentColor"/>';
+'''
+
+[miniCharts.dr]
+# Reflections through two sets
+svg = '''
+return '<line x1="6" y1="66" x2="48" y2="36" stroke="currentColor" stroke-width="1" opacity="0.6"/><line x1="6" y1="40" x2="48" y2="60" stroke="currentColor" stroke-width="1" opacity="0.6"/>'
+	+ '<polyline points="12,34 20,58 30,40 26,52 29,48" fill="none" stroke="currentColor" stroke-width="0.9"/><circle cx="29" cy="48" r="1.8" fill="currentColor"/>';
+'''
+
+[miniCharts.pp]
+# A sequence of shrinking proximal balls
+svg = '''
+return '<circle cx="16" cy="60" r="9" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.5"/><circle cx="26" cy="52" r="6" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.7"/>'
+	+ '<circle cx="33" cy="46" r="3.5" fill="none" stroke="currentColor" stroke-width="0.8"/><polyline points="16,60 26,52 33,46 37,42" fill="none" stroke="currentColor" stroke-width="1"/><circle cx="37" cy="42" r="1.8" fill="currentColor"/>';
+'''
+
+[[codeBranches]]
+model = "sg"
+code = '''
+using ProximalOperators, LinearAlgebra, Random, Statistics
+
+# sparse regression: min F(x) = 0.5 * norm(A * x - b)^2 + penalty(x)
+n, m = {{n}}, {{m}}  # unknowns, observations
+Random.seed!(1)
+A = randn(m, n)
+k = max(1, div(n, 5))
+x_true = [3 .* randn(k); zeros(n - k)]  # sparse ground truth
+b = A * x_true + 0.1 .* randn(m)
+lambda = {{reg}}  # penalty weight
+step = {{step}}  # step size / proximal parameter
+maxiter = {{maxiter}}  # iterations
+
+{{?pen=l1}}g = NormL1(lambda)  # lambda * norm(x, 1)
+{{?pen=l1}}subg(x) = lambda .* sign.(x)
+{{?pen=l2}}g = NormL2(lambda)  # lambda * norm(x)
+{{?pen=l2}}subg(x) = norm(x) > 0 ? lambda .* x ./ norm(x) : zeros(length(x))
+{{?pen=linf}}g = NormLinf(lambda)  # lambda * maximum(abs, x)
+{{?pen=linf}}subg(x) = (i = argmax(abs.(x)); s = zeros(length(x)); s[i] = lambda * sign(x[i]); s)
+loss(x) = 0.5 * norm(A * x - b)^2
+gradloss(x) = transpose(A) * (A * x - b)
+F(x) = loss(x) + g(x)  # ProximalOperators functions are callable
+subgrad(x) = gradloss(x) + subg(x)  # one element of the subdifferential of F
+L = opnorm(A)^2  # Lipschitz constant of gradloss
+
+# prox-gradient residual: zero exactly when 0 is in the subdifferential of F
+pgres(x) = L * norm(x - prox(g, x - gradloss(x) / L, 1 / L)[1])
+
+# reference optimum by 5000 accelerated proximal gradient (FISTA) steps
+function reference(iters=5000)
+    x = zeros(n); y = copy(x); t = 1.0
+    for _ in 1:iters
+        xn, _ = prox(g, y - gradloss(y) / L, 1 / L)
+        tn = (1 + sqrt(1 + 4t^2)) / 2
+        y = xn + ((t - 1) / tn) * (xn - x); x, t = xn, tn
+    end
+    x
+end
+F_star = F(reference())
+
+function solve(; step=step, iters=maxiter, x0=zeros(n))
+    x = copy(x0); xb, Fb = copy(x), F(x)
+    path, hist = [copy(x)], [F(x)]
+    for k in 1:iters
+        x = x - (step / sqrt(k)) * subgrad(x)  # diminishing step: step / sqrt(k)
+        Fx = F(x)
+        Fx < Fb && ((xb, Fb) = (copy(x), Fx))  # not a descent method: keep the best iterate
+        push!(path, copy(x)); push!(hist, Fx)
+    end
+    (x = xb, fx = Fb, history = hist, path = path)
+end
+
+res = solve()
+x_best, f_best = res.x, res.fx
+(solution = round.(x_best, sigdigits=5), objective = f_best, reference_objective = F_star, gap = f_best - F_star, iterations = length(res.history) - 1)
+'''
+
+[[codeBranches]]
+model = "bundle"
+code = '''
+using ProximalOperators, LinearAlgebra, Random, Statistics
+
+# sparse regression: min F(x) = 0.5 * norm(A * x - b)^2 + penalty(x)
+n, m = {{n}}, {{m}}  # unknowns, observations
+Random.seed!(1)
+A = randn(m, n)
+k = max(1, div(n, 5))
+x_true = [3 .* randn(k); zeros(n - k)]  # sparse ground truth
+b = A * x_true + 0.1 .* randn(m)
+lambda = {{reg}}  # penalty weight
+step = {{step}}  # step size / proximal parameter
+maxiter = {{maxiter}}  # iterations
+
+{{?pen=l1}}g = NormL1(lambda)  # lambda * norm(x, 1)
+{{?pen=l1}}subg(x) = lambda .* sign.(x)
+{{?pen=l2}}g = NormL2(lambda)  # lambda * norm(x)
+{{?pen=l2}}subg(x) = norm(x) > 0 ? lambda .* x ./ norm(x) : zeros(length(x))
+{{?pen=linf}}g = NormLinf(lambda)  # lambda * maximum(abs, x)
+{{?pen=linf}}subg(x) = (i = argmax(abs.(x)); s = zeros(length(x)); s[i] = lambda * sign(x[i]); s)
+loss(x) = 0.5 * norm(A * x - b)^2
+gradloss(x) = transpose(A) * (A * x - b)
+F(x) = loss(x) + g(x)  # ProximalOperators functions are callable
+subgrad(x) = gradloss(x) + subg(x)  # one element of the subdifferential of F
+L = opnorm(A)^2  # Lipschitz constant of gradloss
+
+# prox-gradient residual: zero exactly when 0 is in the subdifferential of F
+pgres(x) = L * norm(x - prox(g, x - gradloss(x) / L, 1 / L)[1])
+
+# reference optimum by 5000 accelerated proximal gradient (FISTA) steps
+function reference(iters=5000)
+    x = zeros(n); y = copy(x); t = 1.0
+    for _ in 1:iters
+        xn, _ = prox(g, y - gradloss(y) / L, 1 / L)
+        tn = (1 + sqrt(1 + 4t^2)) / 2
+        y = xn + ((t - 1) / tn) * (xn - x); x, t = xn, tn
+    end
+    x
+end
+F_star = F(reference())
+
+# Euclidean projection onto the probability simplex
+function simplex_proj(v)
+    u = sort(v, rev=true); c = cumsum(u)
+    r = findlast(j -> u[j] + (1 - c[j]) / j > 0, eachindex(u))
+    max.(v .+ (1 - c[r]) / r, 0.0)
+end
+
+function solve(; step=step, iters=maxiter, x0=zeros(n), maxbundle=40)
+    mu = 1 / step  # proximal weight around the stability centre
+    y = copy(x0); Fy = F(y)
+    pts, vals, sgs = [copy(y)], [Fy], [subgrad(y)]  # the bundle: points, values, subgradients
+    path, hist, serious = [copy(y)], [Fy], 0
+    for k in 1:iters
+        G = reduce(hcat, sgs)
+        e = max.([Fy - (vals[i] + dot(sgs[i], y - pts[i])) for i in eachindex(vals)], 0.0)  # linearisation errors
+        a = fill(1 / length(e), length(e)); t = mu / max(opnorm(G)^2, 1e-12)
+        for _ in 1:200  # dual of the proximal cutting-plane step: a QP over the simplex
+            a = simplex_proj(a - t * (transpose(G) * (G * a) / mu + e))
+        end
+        d = -(G * a) / mu
+        delta = dot(e, a) + norm(G * a)^2 / mu  # decrease predicted by the model
+        delta < 1e-12 && break
+        xt = y + d; Ft = F(xt)
+        if Fy - Ft >= 0.1 * delta  # serious step: move the centre
+            y, Fy = xt, Ft; serious += 1
+        end  # otherwise a null step: only the model improves
+        push!(pts, xt); push!(vals, Ft); push!(sgs, subgrad(xt))
+        if length(pts) > maxbundle
+            popfirst!(pts); popfirst!(vals); popfirst!(sgs)
+        end
+        push!(path, copy(y)); push!(hist, Fy)
+    end
+    (x = y, fx = Fy, history = hist, path = path, serious_steps = serious)
+end
+
+res = solve()
+x_best, f_best = res.x, res.fx
+(solution = round.(x_best, sigdigits=5), objective = f_best, reference_objective = F_star, gap = f_best - F_star, iterations = length(res.history) - 1)
+'''
+
+[[codeBranches]]
+model = "cp"
+code = '''
+using ProximalOperators, LinearAlgebra, Random, Statistics
+
+# sparse regression: min F(x) = 0.5 * norm(A * x - b)^2 + penalty(x)
+n, m = {{n}}, {{m}}  # unknowns, observations
+Random.seed!(1)
+A = randn(m, n)
+k = max(1, div(n, 5))
+x_true = [3 .* randn(k); zeros(n - k)]  # sparse ground truth
+b = A * x_true + 0.1 .* randn(m)
+lambda = {{reg}}  # penalty weight
+step = {{step}}  # step size / proximal parameter
+maxiter = {{maxiter}}  # iterations
+
+{{?pen=l1}}g = NormL1(lambda)  # lambda * norm(x, 1)
+{{?pen=l1}}subg(x) = lambda .* sign.(x)
+{{?pen=l2}}g = NormL2(lambda)  # lambda * norm(x)
+{{?pen=l2}}subg(x) = norm(x) > 0 ? lambda .* x ./ norm(x) : zeros(length(x))
+{{?pen=linf}}g = NormLinf(lambda)  # lambda * maximum(abs, x)
+{{?pen=linf}}subg(x) = (i = argmax(abs.(x)); s = zeros(length(x)); s[i] = lambda * sign(x[i]); s)
+loss(x) = 0.5 * norm(A * x - b)^2
+gradloss(x) = transpose(A) * (A * x - b)
+F(x) = loss(x) + g(x)  # ProximalOperators functions are callable
+subgrad(x) = gradloss(x) + subg(x)  # one element of the subdifferential of F
+L = opnorm(A)^2  # Lipschitz constant of gradloss
+
+# prox-gradient residual: zero exactly when 0 is in the subdifferential of F
+pgres(x) = L * norm(x - prox(g, x - gradloss(x) / L, 1 / L)[1])
+
+# reference optimum by 5000 accelerated proximal gradient (FISTA) steps
+function reference(iters=5000)
+    x = zeros(n); y = copy(x); t = 1.0
+    for _ in 1:iters
+        xn, _ = prox(g, y - gradloss(y) / L, 1 / L)
+        tn = (1 + sqrt(1 + 4t^2)) / 2
+        y = xn + ((t - 1) / tn) * (xn - x); x, t = xn, tn
+    end
+    x
+end
+F_star = F(reference())
+
+# F(x) = g(x) + h(A * x) with h(z) = 0.5 * norm(z - b)^2
+function solve(; step=step, iters=maxiter, x0=zeros(n))
+    tau = step; sigma = 0.99 / (step * L)  # tau * sigma * norm(A)^2 < 1
+    x = copy(x0); xbar = copy(x); y = zeros(m)
+    path, hist = [copy(x)], [F(x)]
+    for k in 1:iters
+        y = (y + sigma * (A * xbar) - sigma * b) / (1 + sigma)  # dual step: prox of the conjugate of h
+        xn, _ = prox(g, x - tau * (transpose(A) * y), tau)  # primal step: prox of g
+        xbar = 2xn - x; x = xn  # extrapolation
+        push!(path, copy(x)); push!(hist, F(x))
+    end
+    (x = x, fx = F(x), history = hist, path = path, dual = y)
+end
+
+res = solve()
+x_best, f_best = res.x, res.fx
+(solution = round.(x_best, sigdigits=5), objective = f_best, reference_objective = F_star, gap = f_best - F_star, iterations = length(res.history) - 1)
+'''
+
+[[codeBranches]]
+model = "dr"
+code = '''
+using ProximalOperators, LinearAlgebra, Random, Statistics
+
+# sparse regression: min F(x) = 0.5 * norm(A * x - b)^2 + penalty(x)
+n, m = {{n}}, {{m}}  # unknowns, observations
+Random.seed!(1)
+A = randn(m, n)
+k = max(1, div(n, 5))
+x_true = [3 .* randn(k); zeros(n - k)]  # sparse ground truth
+b = A * x_true + 0.1 .* randn(m)
+lambda = {{reg}}  # penalty weight
+step = {{step}}  # step size / proximal parameter
+maxiter = {{maxiter}}  # iterations
+
+{{?pen=l1}}g = NormL1(lambda)  # lambda * norm(x, 1)
+{{?pen=l1}}subg(x) = lambda .* sign.(x)
+{{?pen=l2}}g = NormL2(lambda)  # lambda * norm(x)
+{{?pen=l2}}subg(x) = norm(x) > 0 ? lambda .* x ./ norm(x) : zeros(length(x))
+{{?pen=linf}}g = NormLinf(lambda)  # lambda * maximum(abs, x)
+{{?pen=linf}}subg(x) = (i = argmax(abs.(x)); s = zeros(length(x)); s[i] = lambda * sign(x[i]); s)
+loss(x) = 0.5 * norm(A * x - b)^2
+gradloss(x) = transpose(A) * (A * x - b)
+F(x) = loss(x) + g(x)  # ProximalOperators functions are callable
+subgrad(x) = gradloss(x) + subg(x)  # one element of the subdifferential of F
+L = opnorm(A)^2  # Lipschitz constant of gradloss
+
+# prox-gradient residual: zero exactly when 0 is in the subdifferential of F
+pgres(x) = L * norm(x - prox(g, x - gradloss(x) / L, 1 / L)[1])
+
+# reference optimum by 5000 accelerated proximal gradient (FISTA) steps
+function reference(iters=5000)
+    x = zeros(n); y = copy(x); t = 1.0
+    for _ in 1:iters
+        xn, _ = prox(g, y - gradloss(y) / L, 1 / L)
+        tn = (1 + sqrt(1 + 4t^2)) / 2
+        y = xn + ((t - 1) / tn) * (xn - x); x, t = xn, tn
+    end
+    x
+end
+F_star = F(reference())
+
+function solve(; step=step, iters=maxiter, x0=zeros(n))
+    C = cholesky(Symmetric(Matrix(1.0I, n, n) + step * transpose(A) * A)); Atb = transpose(A) * b
+    z = copy(x0); x = copy(z)
+    path, hist = [copy(x)], [F(x)]
+    for k in 1:iters
+        u = C \ (z + step * Atb)  # prox of the loss (a linear solve)
+        x, _ = prox(g, 2u - z, step)  # prox of the penalty at the reflected point
+        z = z + x - u
+        push!(path, copy(x)); push!(hist, F(x))
+    end
+    (x = x, fx = F(x), history = hist, path = path)
+end
+
+res = solve()
+x_best, f_best = res.x, res.fx
+(solution = round.(x_best, sigdigits=5), objective = f_best, reference_objective = F_star, gap = f_best - F_star, iterations = length(res.history) - 1)
+'''
+
+[[codeBranches]]
+model = "pp"
+code = '''
+using ProximalOperators, LinearAlgebra, Random, Statistics
+
+# sparse regression: min F(x) = 0.5 * norm(A * x - b)^2 + penalty(x)
+n, m = {{n}}, {{m}}  # unknowns, observations
+Random.seed!(1)
+A = randn(m, n)
+k = max(1, div(n, 5))
+x_true = [3 .* randn(k); zeros(n - k)]  # sparse ground truth
+b = A * x_true + 0.1 .* randn(m)
+lambda = {{reg}}  # penalty weight
+step = {{step}}  # step size / proximal parameter
+maxiter = {{maxiter}}  # iterations
+
+{{?pen=l1}}g = NormL1(lambda)  # lambda * norm(x, 1)
+{{?pen=l1}}subg(x) = lambda .* sign.(x)
+{{?pen=l2}}g = NormL2(lambda)  # lambda * norm(x)
+{{?pen=l2}}subg(x) = norm(x) > 0 ? lambda .* x ./ norm(x) : zeros(length(x))
+{{?pen=linf}}g = NormLinf(lambda)  # lambda * maximum(abs, x)
+{{?pen=linf}}subg(x) = (i = argmax(abs.(x)); s = zeros(length(x)); s[i] = lambda * sign(x[i]); s)
+loss(x) = 0.5 * norm(A * x - b)^2
+gradloss(x) = transpose(A) * (A * x - b)
+F(x) = loss(x) + g(x)  # ProximalOperators functions are callable
+subgrad(x) = gradloss(x) + subg(x)  # one element of the subdifferential of F
+L = opnorm(A)^2  # Lipschitz constant of gradloss
+
+# prox-gradient residual: zero exactly when 0 is in the subdifferential of F
+pgres(x) = L * norm(x - prox(g, x - gradloss(x) / L, 1 / L)[1])
+
+# reference optimum by 5000 accelerated proximal gradient (FISTA) steps
+function reference(iters=5000)
+    x = zeros(n); y = copy(x); t = 1.0
+    for _ in 1:iters
+        xn, _ = prox(g, y - gradloss(y) / L, 1 / L)
+        tn = (1 + sqrt(1 + 4t^2)) / 2
+        y = xn + ((t - 1) / tn) * (xn - x); x, t = xn, tn
+    end
+    x
+end
+F_star = F(reference())
+
+function solve(; step=step, iters=maxiter, x0=zeros(n), inner=50)
+    x = copy(x0); Li = L + 1 / step
+    path, hist = [copy(x)], [F(x)]
+    for k in 1:iters
+        # proximal subproblem: min F(u) + norm(u - x)^2 / (2 * step), by inner FISTA
+        u = copy(x); v = copy(x); t = 1.0
+        for _ in 1:inner
+            un, _ = prox(g, v - (gradloss(v) + (v - x) / step) / Li, 1 / Li)
+            tn = (1 + sqrt(1 + 4t^2)) / 2
+            v = un + ((t - 1) / tn) * (un - u); u, t = un, tn
+        end
+        x = u
+        push!(path, copy(x)); push!(hist, F(x))
+    end
+    (x = x, fx = F(x), history = hist, path = path)
+end
+
+res = solve()
+x_best, f_best = res.x, res.fx
+(solution = round.(x_best, sigdigits=5), objective = f_best, reference_objective = F_star, gap = f_best - F_star, iterations = length(res.history) - 1)
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "convergence-curve"
+label = "Convergence Curve"
+desc = "Objective gap F(x_k) - F* per iteration (log scale), with the running best"
+code = '''
+using Plots
+
+gap = max.(res.history .- F_star, 1e-16)
+plot(gap, yscale=:log10, xlabel="iteration", ylabel="F(x) - F*", label="iterate", alpha=0.6)
+plot!(accumulate(min, gap), label="best so far")
+'''
+
+[[actionGroups.actions]]
+id = "optimality-residual"
+label = "Optimality Residual"
+desc = "Prox-gradient residual per iteration: how far 0 is from being a subgradient of F"
+code = '''
+using Plots
+
+plot(max.(pgres.(res.path), 1e-16), yscale=:log10, xlabel="iteration", ylabel="prox-gradient residual", legend=false)
+'''
+
+[[actionGroups.actions]]
+id = "prox-residual"
+label = "Iterate Change"
+desc = "Plot norm(x_k+1 - x_k) per iteration, a common stopping criterion"
+code = '''
+using Plots
+
+plot(max.(norm.(diff(res.path)), 1e-16), yscale=:log10, xlabel="iteration", ylabel="norm(x_k+1 - x_k)", legend=false)
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "optimality-check"
+label = "Optimality Check"
+desc = "Gap to the reference optimum and whether 0 lies (numerically) in the subdifferential at the solution"
+code = '''
+r = pgres(x_best)
+(objective = f_best, reference_objective = F_star, gap = f_best - F_star,
+ prox_gradient_residual = r, zero_in_subdifferential = r < 1e-4 * max(1, norm(gradloss(x_best))))
+'''
+
+[[actionGroups.actions]]
+id = "step-size-sensitivity"
+label = "Step Size Sensitivity"
+desc = "Final objective gap for step sizes from a tenth to ten times the chosen one"
+code = '''
+map([0.1, 0.3, 1.0, 3.0, 10.0]) do s
+    r = solve(step=s * step)
+    (step = s * step, gap = r.fx - F_star, residual = pgres(r.x))
+end
+'''
+
+[[actionGroups.actions]]
+id = "descent-check"
+label = "Descent Check"
+desc = "How often the objective went up between iterations (subgradient and primal-dual methods are not descent methods)"
+code = '''
+dh = diff(res.history)
+(iterations = length(dh), increases = count(dh .> 1e-12), largest_increase = maximum([dh; 0.0]),
+ monotone = all(dh .<= 1e-12), last_improvement = something(findlast(dh .< -1e-12), 0))
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "eval-at-solution"
+label = "Evaluate at Solution"
+desc = "Objective, loss and penalty at the solution, and how well it recovers the true coefficients"
+code = '''
+(objective = F(x_best), loss = loss(x_best), penalty = g(x_best), gap = F(x_best) - F_star,
+ relative_recovery_error = norm(x_best - x_true) / norm(x_true), residual_norm = norm(A * x_best - b))
+'''
+
+[[actionGroups.actions]]
+id = "warm-start"
+label = "Warm Start"
+desc = "Continue from the solution for another run of iterations"
+code = '''
+res2 = solve(x0=x_best)
+(gap_before = f_best - F_star, gap_after = res2.fx - F_star, moved = norm(res2.x - x_best), residual_after = pgres(res2.x))
+'''
+
+[[actionGroups.actions]]
+id = "sparsity-pattern"
+label = "Sparsity Pattern"
+desc = "Which coefficients are zero, compared with the true support"
+code = '''
+support(v) = findall(abs.(v) .> 1e-6)
+(estimated_support = support(x_best), true_support = support(x_true), zeros = n - length(support(x_best)),
+ false_positives = setdiff(support(x_best), support(x_true)), missed = setdiff(support(x_true), support(x_best)))
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "compare-library"
+label = "Compare with ProximalAlgorithms"
+desc = "The selected method against ProximalAlgorithms.jl's accelerated forward-backward and Douglas-Rachford solvers at the same iteration count"
+code = '''
+using ProximalAlgorithms
+
+f_ls = LeastSquares(A, b)  # 0.5 * norm(A * x - b)^2
+runs = ["selected method" => () -> solve().x,
+        "FastForwardBackward" => () -> first(ProximalAlgorithms.FastForwardBackward(maxit=maxiter, tol=1e-12)(x0=zeros(n), f=f_ls, g=g)),
+        "DouglasRachford" => () -> first(ProximalAlgorithms.DouglasRachford(maxit=maxiter, tol=1e-12, gamma=step)(x0=zeros(n), f=f_ls, g=g))]
+map(runs) do (name, run)
+    sec = @elapsed x = run()
+    (method = name, gap = F(x) - F_star, residual = pgres(x), seconds = sec)
+end
+'''
+
+[[actionGroups.actions]]
+id = "compare-subgradient"
+label = "Compare with Subgradient"
+desc = "Objective gap of the selected method against the plain subgradient method (running best) over the same iterations"
+code = '''
+using Plots
+
+function subgradient_best(iters)
+    x = zeros(n); best = F(x); out = [best]
+    for k in 1:iters
+        x -= (step / sqrt(k)) * subgrad(x); best = min(best, F(x)); push!(out, best)
+    end
+    out
+end
+plot(max.(accumulate(min, res.history) .- F_star, 1e-16), yscale=:log10, xlabel="iteration", ylabel="best F - F*", label="selected method")
+plot!(max.(subgradient_best(maxiter) .- F_star, 1e-16), label="subgradient")
+'''
+
+[[actionGroups.actions]]
+id = "budget-study"
+label = "Budget Study"
+desc = "Objective gap and run time for increasing iteration budgets"
+code = '''
+map(unique([10, 50, 100, 250, 500, maxiter])) do it
+    sec = @elapsed r = solve(iters=it)
+    (iterations = it, gap = r.fx - F_star, residual = pgres(r.x), seconds = sec)
+end
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "solution-summary"
+label = "Solution Summary"
+desc = "Each coefficient next to its true value, with the objective breakdown"
+code = '''
+(coefficients = [(variable = i, estimate = round(x_best[i], sigdigits=5), truth = round(x_true[i], sigdigits=5)) for i in 1:n],
+ objective = f_best, loss = loss(x_best), penalty = g(x_best), gap = f_best - F_star)
+'''
+
+[[actionGroups.actions]]
+id = "subdiff-interpretation"
+label = "Subdifferential"
+desc = "Read the optimality condition -gradloss(x) in lambda * (subdifferential of the penalty) coordinate by coordinate"
+code = '''
+gl = gradloss(x_best)
+{{?pen=l1}}[(coordinate = i, value = x_best[i], loss_gradient = gl[i], case = abs(x_best[i]) > 1e-6 ? "nonzero: gradient = -lambda * sign(x)" : "zero: abs(gradient) <= lambda", holds = abs(x_best[i]) > 1e-6 ? abs(gl[i] + lambda * sign(x_best[i])) <= 1e-3 * max(1, lambda) : abs(gl[i]) <= lambda * (1 + 1e-3)) for i in 1:n]
+{{?pen=l2}}(norm_x = norm(x_best), loss_gradient_norm = norm(gl), lambda = lambda, case = norm(x_best) > 1e-6 ? "x nonzero: gradient = -lambda * x / norm(x)" : "x zero: norm(gradient) <= lambda", alignment = norm(x_best) > 1e-6 ? -dot(gl, x_best) / (norm(gl) * norm(x_best)) : missing)
+{{?pen=linf}}(max_abs = maximum(abs, x_best), at_maximum = findall(abs.(abs.(x_best) .- maximum(abs, x_best)) .< 1e-6), gradient_l1_norm = norm(gl, 1), lambda = lambda, note = "at an optimum the loss gradient has l1 norm lambda and is supported on the coordinates at the maximum (l1 norm at most lambda when x is zero)")
+'''
+
+[[actionGroups.actions]]
+id = "algorithm-info"
+label = "Algorithm Info"
+desc = "Cost per iteration and convergence guarantee of the selected method"
+code = '''
+{{?model=sg}}(method = "subgradient", per_iteration = "one subgradient", step_rule = "step / sqrt(k)", guarantee = "best value within O(1 / sqrt(k))", descent = false,
+{{?model=bundle}}(method = "proximal bundle", per_iteration = "one subgradient plus a small QP over the bundle", serious_steps = res.serious_steps, guarantee = "converges; in practice far fewer iterations than subgradient", descent = true,
+{{?model=cp}}(method = "Chambolle-Pock", per_iteration = "one product with A and with transpose(A), two prox maps", step_rule = "tau * sigma * norm(A)^2 < 1", guarantee = "O(1 / k) on the primal-dual gap", descent = false,
+{{?model=dr}}(method = "Douglas-Rachford", per_iteration = "a linear solve (prox of the loss) and a prox of the penalty", step_rule = "any positive step", guarantee = "converges for any step; rate depends on conditioning", descent = false,
+{{?model=pp}}(method = "proximal point", per_iteration = "an inner accelerated solve of a strongly convex subproblem", step_rule = "larger steps take fewer outer iterations but harder subproblems", guarantee = "O(1 / k) on the objective", descent = true,
+ iterations = length(res.history) - 1, final_gap = f_best - F_star)
+'''

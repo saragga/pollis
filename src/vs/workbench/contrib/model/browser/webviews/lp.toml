@@ -1,0 +1,492 @@
+# Linear Programming Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/lp.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Linear Programming"
+viewType = "pollis.lp"
+defaultModel = "lp"
+
+[[packages]]
+name = "JuMP.jl"
+github = "https://github.com/jump-dev/JuMP.jl"
+
+[[packages]]
+name = "HiGHS.jl"
+github = "https://github.com/jump-dev/HiGHS.jl"
+
+[[packages]]
+name = "Clp.jl"
+github = "https://github.com/jump-dev/Clp.jl"
+
+[[packages]]
+name = "GLPK.jl"
+github = "https://github.com/jump-dev/GLPK.jl"
+
+[requires]
+packages = ["JuMP.jl", "HiGHS.jl", "Plots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Basic LP"
+file = "lp/tutorial-01-basic-lp.ipynb"
+bundled = true
+description = "Formulate and solve a linear programme with JuMP and HiGHS"
+
+[[notebookSections.notebooks]]
+name = "Sensitivity Analysis"
+file = "lp/tutorial-02-sensitivity-analysis.ipynb"
+bundled = true
+description = "Compute shadow prices and right-hand side ranges at the optimum"
+
+[[notebookSections.notebooks]]
+name = "Basic MILP"
+file = "lp/tutorial-03-basic-milp.ipynb"
+bundled = true
+description = "Formulate and solve a mixed-integer linear programme with branch-and-bound"
+
+[[wikis]]
+name = "Factsheet"
+file = "lp/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "lp/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "lp/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "lp/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "lp/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "lp/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Methods"
+
+[[wikis]]
+name = "LP"
+file = "lp/lp.md"
+bundled = true
+
+[[wikis]]
+name = "MILP"
+file = "lp/milp.md"
+bundled = true
+
+[[wikis]]
+name = "Duality"
+file = "lp/duality.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "JuMP: A Modeling Language for Mathematical Optimization"
+authors = "Dunning, Iain; Huchette, Joey; Lubin, Miles"
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/15M1020575"
+openAccess = true
+
+[[references]]
+title = "HiGHS: High Performance Software for Linear Optimization"
+authors = "Huangfu, Qi; Hall, J. A. Julian"
+year = 2018
+journal = "Mathematical Programming Computation"
+doi = "10.1007/s12532-017-0130-5"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Linear and Nonlinear Programming"
+authors = "Luenberger, David G.; Ye, Yinyu"
+year = 2016
+journal = "Springer (4th ed.)"
+doi = "10.1007/978-3-319-18842-3"
+openAccess = false
+
+[[references]]
+title = "Introduction to Linear Optimization"
+authors = "Bertsimas, Dimitris; Tsitsiklis, John N."
+year = 1997
+journal = "Athena Scientific"
+url = "http://www.athenasc.com/linoptbook.html"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Maximization of a Linear Function of Variables Subject to Linear Inequalities"
+authors = "Dantzig, George B."
+year = 1951
+journal = "Activity Analysis of Production and Allocation (Koopmans ed.)"
+url = "https://cowles.yale.edu/research/cfm-13-activity-analysis-production-and-allocation"
+openAccess = true
+
+[[references]]
+title = "An Automatic Method for Solving Discrete Programming Problems"
+authors = "Land, Ailsa H.; Doig, Alison G."
+year = 1960
+journal = "Econometrica"
+doi = "10.2307/1910129"
+openAccess = false
+
+[[models]]
+id = "lp"
+label = "Linear Programming (LP)"
+
+[[models]]
+id = "milp"
+label = "Mixed-Integer LP (MILP)"
+
+[[bullets]]
+text = "JuMP.jl"
+detail = "unified modelling layer; define problems with @variable, @objective, and @constraint; solver-independent"
+
+[[bullets]]
+text = "HiGHS.jl"
+detail = "Linear Programming (LP) and Mixed-Integer LP (MILP); recommended default; state-of-the-art open-source performance"
+
+[[bullets]]
+text = "GLPK.jl"
+detail = "Linear Programming (LP) and Mixed-Integer LP (MILP); lightweight; good for teaching and small-to-medium problems"
+
+[[bullets]]
+text = "Clp.jl"
+detail = "Linear Programming (LP) only; continuous variables; fast for large-scale problems"
+
+[[decisionRows]]
+task = "Linear Programming (LP)"
+context = "Continuous quantities: production planning, blending, transport, diet problems"
+purpose = "Optimise a linear objective over a polyhedron; the optimum is a vertex and comes with shadow prices"
+
+[[decisionRows]]
+task = "Mixed-Integer LP (MILP)"
+context = "Indivisible units or yes/no decisions: scheduling, facility location, knapsack"
+purpose = "Branch and bound over LP relaxations; the optimum is exact but duals only hold with the integers fixed"
+
+[[inputs]]
+id = "c"
+label = "Objective Coefficients c"
+tooltip = "Vector of objective coefficients; its length sets the number of variables n. The objective is c' x."
+default = "[5.0, 4.0, 3.0]"
+
+[[inputs]]
+id = "A"
+label = "Constraint Matrix A"
+tooltip = "m × n matrix of the constraints A x <= b (one row per constraint). Write >= constraints as <= by negating the row."
+default = "[2 3 1; 4 1 2; 3 4 2]"
+
+[[inputs]]
+id = "b"
+label = "Right-Hand Side b"
+tooltip = "Length-m vector of constraint limits (for example resource capacities)."
+default = "[5.0, 11.0, 8.0]"
+
+[[inputs]]
+id = "sense"
+label = "Sense"
+tooltip = "Direction of optimisation: Minimise or Maximise. The variables are non-negative."
+kind = "select"
+default = "Max"
+newRow = true
+
+[[inputs.options]]
+value = "Max"
+label = "Maximise"
+
+[[inputs.options]]
+value = "Min"
+label = "Minimise"
+
+[[inputs]]
+id = "solver"
+label = "Solver"
+tooltip = "HiGHS: the default and fastest (simplex and interior point). Clp: mature simplex. GLPK: lightweight open-source simplex."
+kind = "select"
+default = "HiGHS"
+models = ["lp"]
+
+[[inputs.options]]
+value = "HiGHS"
+label = "HiGHS"
+
+[[inputs.options]]
+value = "Clp"
+label = "Clp"
+
+[[inputs.options]]
+value = "GLPK"
+label = "GLPK"
+
+[[inputs]]
+id = "misolver"
+label = "Solver"
+tooltip = "HiGHS: the default, fast branch and cut. GLPK: lightweight open-source branch and bound. (Clp solves LPs only.)"
+kind = "select"
+default = "HiGHS"
+models = ["milp"]
+
+[[inputs.options]]
+value = "HiGHS"
+label = "HiGHS"
+
+[[inputs.options]]
+value = "GLPK"
+label = "GLPK"
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.lp]
+# A feasible polygon with the optimal vertex
+svg = '''
+return '<path d="M10,66 L10,34 L28,28 L44,44 L44,66 Z" fill="currentColor" fill-opacity="0.15" stroke="currentColor" stroke-width="1.2"/>'
+	+ '<line x1="18" y1="20" x2="50" y2="40" stroke="currentColor" stroke-width="1" stroke-dasharray="3,2"/>'
+	+ '<circle cx="28" cy="28" r="2.6" fill="currentColor"/>';
+'''
+
+[miniCharts.milp]
+# Integer lattice points inside the feasible polygon
+svg = '''
+var s = '<path d="M10,66 L10,34 L28,28 L44,44 L44,66 Z" fill="none" stroke="currentColor" stroke-width="1.2"/>';
+for (var x = 14; x <= 42; x += 7) { for (var y = 38; y <= 64; y += 7) { s += '<circle cx="' + x + '" cy="' + y + '" r="1.4" fill="currentColor" opacity="0.7"/>'; } }
+return s;
+'''
+
+[[codeBranches]]
+model = "lp"
+code = '''
+using JuMP, {{solver}}, LinearAlgebra
+
+c = {{c}}  # objective coefficients
+A = {{A}}  # constraint matrix
+b = {{b}}  # right-hand side
+n = length(c)
+
+function build(optimizer; integer=false)
+    m = Model(optimizer)
+    set_silent(m)
+    @variable(m, x[1:n] >= 0, integer = integer)
+    @objective(m, {{sense}}, dot(c, x))
+    @constraint(m, cons, A * x .<= b)
+    m, x
+end
+
+model, x = build({{solver}}.Optimizer)
+optimize!(model)
+(status = termination_status(model), objective = objective_value(model), x = value.(x))
+'''
+
+[[codeBranches]]
+model = "milp"
+code = '''
+using JuMP, {{misolver}}, LinearAlgebra
+
+c = {{c}}  # objective coefficients
+A = {{A}}  # constraint matrix
+b = {{b}}  # right-hand side
+n = length(c)
+
+function build(optimizer; integer=true)
+    m = Model(optimizer)
+    set_silent(m)
+    @variable(m, x[1:n] >= 0, integer = integer)
+    @objective(m, {{sense}}, dot(c, x))
+    @constraint(m, cons, A * x .<= b)
+    m, x
+end
+
+model, x = build({{misolver}}.Optimizer)
+optimize!(model)
+(status = termination_status(model), objective = objective_value(model), x = value.(x))
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "feasible-region"
+label = "Feasible Region"
+desc = "The feasible region in the (x1, x2) plane with objective contours and the optimum (other variables held at their optimal values)"
+code = '''
+using Plots
+
+xs_opt = value.(x)
+rest = xs_opt[3:end]
+feasible(a, u) = all(A * [a; u; rest] .<= b .+ 1e-9)
+hi = 1.5 * max(maximum(xs_opt[1:2]), 1)
+g = range(0, hi, length=200)
+contour(g, g, (a, u) -> c[1] * a + c[2] * u, levels=15, color=:grey, colorbar=false, xlabel="x1", ylabel="x2")
+contourf!(g, g, (a, u) -> feasible(a, u) ? 1.0 : NaN, color=:blues, alpha=0.3, colorbar=false)
+{{?model=milp}} pts = [(a, u) for a in 0:floor(Int, hi), u in 0:floor(Int, hi) if feasible(a, u)]
+{{?model=milp}} scatter!(first.(pts), last.(pts), color=:black, markersize=2, label="integer points")
+scatter!([xs_opt[1]], [xs_opt[2]], marker=:star, markersize=10, color=:red, label="optimum")
+'''
+
+[[actionGroups.actions]]
+id = "solution-plot"
+label = "Solution Plot"
+desc = "The optimal x, and each constraint's usage A x against its limit b"
+code = '''
+using Plots
+
+p1 = bar(value.(x), xlabel="variable", ylabel="x[i]", legend=false, title="solution")
+p2 = bar([A * value.(x) b], xlabel="constraint", label=["A x" "b"], title="usage vs limit")
+plot(p1, p2, layout=(1, 2))
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "feasibility"
+label = "Feasibility Check"
+desc = "Termination and primal status (INFEASIBLE, or DUAL_INFEASIBLE = unbounded), and any violated constraint"
+code = '''
+(termination = termination_status(model), primal = primal_status(model),
+{{?model=milp}}  relative_gap = relative_gap(model),
+ violated = primal_feasibility_report(model; atol=1e-6))  # empty Dict = feasible
+'''
+
+[[actionGroups.actions]]
+id = "constraint-activity"
+label = "Constraint Activity"
+desc = "Slack b - A x of every constraint; binding constraints (slack about 0) determine the optimum"
+code = '''
+slack = b - A * value.(x)
+[(constraint = i, usage = (A * value.(x))[i], limit = b[i], slack = slack[i], binding = abs(slack[i]) < 1e-6) for i in eachindex(b)]
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "sensitivity"
+label = "Sensitivity Analysis"
+desc = "Ranges over which each objective coefficient and right-hand side can move without changing the optimal basis (MILP: with the integers fixed)"
+code = '''
+{{?model=milp}} undo = fix_discrete_variables(model); optimize!(model)  # duals hold for the LP with the integers fixed
+report = lp_sensitivity_report(model)
+objective_ranges = [(variable = i, c = c[i], range = c[i] .+ report[x[i]]) for i in 1:n]
+rhs_ranges = [(constraint = i, b = b[i], range = b[i] .+ report[model[:cons][i]]) for i in eachindex(b)]
+{{?model=milp}} undo(); optimize!(model)
+(objective_ranges = objective_ranges, rhs_ranges = rhs_ranges)
+'''
+
+[[actionGroups.actions]]
+id = "parametric"
+label = "Parametric Analysis"
+desc = "Sweep the cost coefficient c[1] and plot the optimal value and x[1] (piecewise linear for an LP, step-wise for a MILP)"
+code = '''
+using Plots
+
+grid = range(0, 2 * max(abs(c[1]), 1), length=25)
+res = map(grid) do v
+    set_objective_coefficient(model, x[1], v)
+    optimize!(model)
+    (objective_value(model), value(x[1]))
+end
+set_objective_coefficient(model, x[1], c[1]); optimize!(model)
+p1 = plot(grid, first.(res), marker=:circle, ylabel="optimal value", legend=false)
+p2 = plot(grid, last.(res), marker=:circle, xlabel="c[1]", ylabel="x[1]", legend=false, linetype=:steppost)
+plot(p1, p2, layout=(2, 1))
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "milp-gap"
+label = "LP Relaxation Gap"
+desc = "The integer optimum against the LP relaxation bound: the integrality gap"
+code = '''
+{{?model=lp}} mi, xi = build({{solver}}.Optimizer; integer=true)
+{{?model=lp}} optimize!(mi)
+{{?model=lp}} (lp = objective_value(model), milp = objective_value(mi), gap = abs(objective_value(model) - objective_value(mi)), x_milp = value.(xi))
+{{?model=milp}} undo = relax_integrality(model); optimize!(model)
+{{?model=milp}} lp_bound = objective_value(model); x_lp = value.(x)
+{{?model=milp}} undo(); optimize!(model)
+{{?model=milp}} (milp = objective_value(model), lp = lp_bound, gap = abs(lp_bound - objective_value(model)), x_lp = x_lp)
+'''
+
+[[actionGroups.actions]]
+id = "solver-compare"
+label = "Solver Comparison"
+desc = "The same problem with each solver: status, objective and time"
+code = '''
+{{?model=lp}} using HiGHS, Clp, GLPK
+{{?model=lp}} solvers = ["HiGHS" => HiGHS.Optimizer, "Clp" => Clp.Optimizer, "GLPK" => GLPK.Optimizer]
+{{?model=milp}} using HiGHS, GLPK
+{{?model=milp}} solvers = ["HiGHS" => HiGHS.Optimizer, "GLPK" => GLPK.Optimizer]
+map(solvers) do (name, opt)
+{{?model=lp}}     m, _ = build(opt)
+{{?model=milp}}     m, _ = build(opt; integer=true)
+    t = @elapsed optimize!(m)
+    (solver = name, status = termination_status(m), objective = objective_value(m), seconds = t)
+end
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "shadow-prices"
+label = "Shadow Prices"
+desc = "The change in the optimal value per extra unit of each right-hand side (MILP: with the integers fixed, so valid only locally)"
+code = '''
+{{?model=milp}} undo = fix_discrete_variables(model); optimize!(model)  # duals hold for the LP with the integers fixed
+sp = shadow_price.(model[:cons])
+{{?model=milp}} undo(); optimize!(model)
+[(constraint = i, limit = b[i], shadow_price = sp[i]) for i in eachindex(b)]
+'''
+
+[[actionGroups.actions]]
+id = "reduced-costs"
+label = "Reduced Costs"
+desc = "How much each variable's cost must improve before it enters the solution (non-zero only for variables at 0)"
+code = '''
+{{?model=milp}} undo = fix_discrete_variables(model); optimize!(model)  # duals hold for the LP with the integers fixed
+rc = reduced_cost.(x)
+{{?model=milp}} undo(); optimize!(model)
+[(variable = i, value = value(x[i]), cost = c[i], reduced_cost = rc[i]) for i in 1:n]
+'''

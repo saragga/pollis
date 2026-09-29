@@ -1,0 +1,906 @@
+# Network and Graph Optimisation Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/ngo.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Network and Graph Optimisation"
+viewType = "pollis.ngo"
+defaultModel = "sp"
+
+[[packages]]
+name = "RobustShortestPath.jl"
+github = "https://github.com/chkwon/RobustShortestPath.jl"
+
+[[packages]]
+name = "Graphs.jl"
+github = "https://github.com/JuliaGraphs/Graphs.jl"
+
+[[packages]]
+name = "SimpleWeightedGraphs.jl"
+github = "https://github.com/JuliaGraphs/SimpleWeightedGraphs.jl"
+
+[[packages]]
+name = "GraphsFlows.jl"
+github = "https://github.com/JuliaGraphs/GraphsFlows.jl"
+
+[[packages]]
+name = "GraphsOptim.jl"
+github = "https://github.com/JuliaGraphs/GraphsOptim.jl"
+
+[[packages]]
+name = "Hungarian.jl"
+github = "https://github.com/Gnimuc/Hungarian.jl"
+
+[requires]
+packages = ["Graphs.jl", "GraphsFlows.jl", "Hungarian.jl", "JuMP.jl", "HiGHS.jl", "Plots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Shortest Path"
+file = "ngo/tutorial-01-sp.ipynb"
+bundled = true
+description = "Dijkstra, Bellman-Ford, and A* for single-source shortest paths on weighted directed graphs"
+
+[[notebookSections.notebooks]]
+name = "Robust Shortest Path"
+file = "ngo/tutorial-02-rsp.ipynb"
+bundled = true
+description = "Min-max regret robust shortest path with interval edge weights via RobustShortestPath.jl"
+
+[[notebookSections.notebooks]]
+name = "Network Flow"
+file = "ngo/tutorial-03-nf.ipynb"
+bundled = true
+description = "Maximum flow and minimum cut on directed capacity networks via Dinic and push-relabel"
+
+[[notebookSections.notebooks]]
+name = "Spanning Tree"
+file = "ngo/tutorial-04-st.ipynb"
+bundled = true
+description = "Minimum spanning tree via Kruskal and Prim on undirected weighted graphs"
+
+[[notebookSections.notebooks]]
+name = "Bipartite Matching"
+file = "ngo/tutorial-05-bm.ipynb"
+bundled = true
+description = "Maximum weight bipartite matching via GraphsOptim; maximises matched pairs"
+
+[[notebookSections.notebooks]]
+name = "Assignment"
+file = "ngo/tutorial-06-am.ipynb"
+bundled = true
+description = "Minimum cost assignment problem via the Hungarian method"
+
+[[wikis]]
+name = "Factsheet"
+file = "ngo/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "ngo/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "ngo/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "ngo/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "ngo/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "ngo/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Algorithms"
+
+[[wikis]]
+name = "Shortest Path"
+file = "ngo/sp.md"
+bundled = true
+
+[[wikis]]
+name = "Robust Shortest Path"
+file = "ngo/rsp.md"
+bundled = true
+
+[[wikis]]
+name = "Network Flow"
+file = "ngo/nf.md"
+bundled = true
+
+[[wikis]]
+name = "Spanning Tree"
+file = "ngo/st.md"
+bundled = true
+
+[[wikis]]
+name = "Bipartite Matching"
+file = "ngo/bm.md"
+bundled = true
+
+[[wikis]]
+name = "Assignment"
+file = "ngo/am.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Introduction to Algorithms"
+authors = "Cormen, Thomas H.; Leiserson, Charles E.; Rivest, Ronald L.; Stein, Clifford"
+year = 2022
+journal = "MIT Press (4th ed.)"
+openAccess = false
+
+[[references]]
+title = "Network Flows: Theory, Algorithms, and Applications"
+authors = "Ahuja, Ravindra K.; Magnanti, Thomas L.; Orlin, James B."
+year = 1993
+journal = "Prentice Hall"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "A Note on Two Problems in Connexion with Graphs"
+authors = "Dijkstra, Edsger W."
+year = 1959
+journal = "Numerische Mathematik"
+doi = "10.1007/BF01386390"
+openAccess = false
+
+[[references]]
+title = "An Exact Algorithm for the Robust Shortest Path Problem with Interval Data"
+authors = "Montemanni, Roberto; Gambardella, Luca M."
+year = 2004
+journal = "Computers & Operations Research"
+doi = "10.1016/S0305-0548(03)00085-3"
+openAccess = false
+
+[[references]]
+title = "Maximal Flow Through a Network"
+authors = "Ford, Lester R.; Fulkerson, Delbert R."
+year = 1956
+journal = "Canadian Journal of Mathematics"
+doi = "10.4153/CJM-1956-045-5"
+openAccess = false
+
+[[references]]
+title = "On the Shortest Spanning Subtree of a Graph and the Traveling Salesman Problem"
+authors = "Kruskal, Joseph B."
+year = 1956
+journal = "Proceedings of the American Mathematical Society"
+doi = "10.1090/S0002-9939-1956-0078686-7"
+openAccess = false
+
+[[references]]
+title = "The Hungarian Method for the Assignment Problem"
+authors = "Kuhn, Harold W."
+year = 1955
+journal = "Naval Research Logistics Quarterly"
+doi = "10.1002/nav.3800020109"
+openAccess = false
+
+[[models]]
+id = "sp"
+label = "Shortest Path"
+
+[[models]]
+id = "rsp"
+label = "Robust Shortest Path"
+
+[[models]]
+id = "nf"
+label = "Network Flow"
+
+[[models]]
+id = "st"
+label = "Spanning Tree"
+
+[[models]]
+id = "bm"
+label = "Bipartite Matching"
+
+[[models]]
+id = "am"
+label = "Assignment"
+
+[[bullets]]
+text = "Shortest Path"
+detail = "Dijkstra, Bellman-Ford, A*; minimum-cost path from source to destination"
+
+[[bullets]]
+text = "Network Flow"
+detail = "maximum flow and minimum cut on directed capacity networks"
+
+[[bullets]]
+text = "Spanning Tree"
+detail = "Kruskal and Prim MST; minimum-weight connected spanning subgraph"
+
+[[bullets]]
+text = "Bipartite Matching"
+detail = "maximum weight matching on a bipartite graph; maximises matched pairs"
+
+[[bullets]]
+text = "Assignment"
+detail = "minimum cost assignment via the Hungarian method"
+
+[[decisionRows]]
+task = "Shortest Path"
+context = "Cheapest route between two vertices of a directed graph with non-negative weights"
+purpose = "Dijkstra's algorithm; returns the path, its cost and the distances from the source to every vertex"
+
+[[decisionRows]]
+task = "Robust Shortest Path"
+context = "Edge weights are only known to lie in intervals [lower, upper]"
+purpose = "Min-max regret path: the path whose worst-case gap to the best path in hindsight is smallest (exact enumeration, small graphs)"
+
+[[decisionRows]]
+task = "Network Flow"
+context = "Capacities on arcs; how much can be sent from a source to a sink"
+purpose = "Maximum flow by push-relabel (GraphsFlows.jl); equal to the capacity of the minimum cut"
+
+[[decisionRows]]
+task = "Spanning Tree"
+context = "Connect all vertices at minimum total cost (networks, clustering)"
+purpose = "Kruskal's minimum spanning tree on the undirected version of the graph"
+
+[[decisionRows]]
+task = "Bipartite Matching"
+context = "Pair rows with columns along existing edges, maximising total weight"
+purpose = "Maximum-weight bipartite matching of the rows and columns of the matrix, solved by the Hungarian algorithm on shifted costs"
+
+[[decisionRows]]
+task = "Assignment"
+context = "Assign every worker to one job at minimum total cost"
+purpose = "Linear assignment problem solved exactly by the Hungarian algorithm; rectangular matrices allowed"
+
+[[inputs]]
+id = "n"
+label = "Vertices (n)"
+tooltip = "Number of vertices of the generated graph (rows and columns of the generated matrix)."
+default = "8"
+
+[[inputs]]
+id = "density"
+label = "Edge Density"
+tooltip = "Probability that each directed edge i -> j exists in the generated graph. A chain 1 -> 2 -> ... -> n is always added so every vertex is reachable from 1."
+default = "0.4"
+models = ["sp", "rsp", "nf", "st", "bm"]
+
+[[inputs]]
+id = "seed"
+label = "Random Seed"
+tooltip = "Seed for the generated weights."
+default = "1"
+
+[[inputs]]
+id = "mat"
+label = "Weight Matrix (n x n)"
+tooltip = "W[i, j] > 0 is an edge i -> j with that weight (0 = no edge). Shortest paths: lengths; Robust: lower bounds; Network Flow: capacities; Spanning Tree: weights (symmetrised); Bipartite Matching: row-column weights. Replace with your own matrix literal if you like."
+default = "random_weights(n, density, seed)"
+models = ["sp", "rsp", "nf", "st", "bm"]
+newRow = true
+
+[[inputs]]
+id = "matub"
+label = "Upper Bounds (n x n)"
+tooltip = "Upper bounds of the interval weights for the Robust Shortest Path; must satisfy upper >= lower on every edge."
+default = "W .+ (W .> 0) .* rand(MersenneTwister(seed + 1), 0:6, n, n)"
+models = ["rsp"]
+
+[[inputs]]
+id = "cost"
+label = "Cost Matrix (n x p)"
+tooltip = "Cost of assigning worker i (row) to job j (column). Need not be square."
+default = "Float64.(rand(MersenneTwister(seed), 1:20, n, n))"
+models = ["am"]
+newRow = true
+
+[[inputs]]
+id = "src"
+label = "Source"
+tooltip = "Start vertex for the shortest paths; source for the network flow."
+default = "1"
+models = ["sp", "rsp", "nf"]
+newRow = true
+
+[[inputs]]
+id = "dst"
+label = "Target"
+tooltip = "End vertex for the shortest paths; sink for the network flow."
+default = "n"
+models = ["sp", "rsp", "nf"]
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.sp]
+# A graph with the shortest path highlighted
+svg = '''
+const pts = [[8,60],[22,40],[24,70],[38,50],[48,34]];
+let s = '<line x1="8" y1="60" x2="24" y2="70" stroke="currentColor" stroke-width="0.6" opacity="0.4"/><line x1="24" y1="70" x2="38" y2="50" stroke="currentColor" stroke-width="0.6" opacity="0.4"/>';
+s += '<polyline points="8,60 22,40 38,50 48,34" fill="none" stroke="currentColor" stroke-width="1.6"/>';
+for (const p of pts) { s += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="2.2" fill="currentColor"/>'; }
+return s;
+'''
+
+[miniCharts.rsp]
+# Two paths with interval weights
+svg = '''
+let s = '<polyline points="8,56 26,36 46,56" fill="none" stroke="currentColor" stroke-width="0.8" stroke-dasharray="2,2"/>';
+s += '<polyline points="8,56 26,70 46,56" fill="none" stroke="currentColor" stroke-width="1.6"/>';
+s += '<rect x="22" y="66" width="8" height="8" fill="none" stroke="currentColor" stroke-width="0.6"/>';
+for (const p of [[8,56],[26,36],[26,70],[46,56]]) { s += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="2.2" fill="currentColor"/>'; }
+return s;
+'''
+
+[miniCharts.nf]
+# Pipes of different widths from source to sink
+svg = '''
+let s = '<line x1="8" y1="52" x2="27" y2="38" stroke="currentColor" stroke-width="3"/><line x1="8" y1="52" x2="27" y2="66" stroke="currentColor" stroke-width="1.5"/>';
+s += '<line x1="27" y1="38" x2="46" y2="52" stroke="currentColor" stroke-width="2.2"/><line x1="27" y1="66" x2="46" y2="52" stroke="currentColor" stroke-width="1.5"/>';
+for (const p of [[8,52],[27,38],[27,66],[46,52]]) { s += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="2.4" fill="currentColor"/>'; }
+return s;
+'''
+
+[miniCharts.st]
+# A tree spanning scattered vertices
+svg = '''
+const pts = [[10,40],[24,52],[14,70],[38,40],[44,66],[30,72]];
+const e = [[0,1],[1,2],[1,3],[1,5],[5,4]];
+let s = '';
+for (const [a, b] of e) { s += '<line x1="' + pts[a][0] + '" y1="' + pts[a][1] + '" x2="' + pts[b][0] + '" y2="' + pts[b][1] + '" stroke="currentColor" stroke-width="1.2"/>'; }
+for (const p of pts) { s += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="2.2" fill="currentColor"/>'; }
+return s;
+'''
+
+[miniCharts.bm]
+# Two columns of vertices with matched pairs
+svg = '''
+let s = '';
+const L = [36,50,64,78], R = [36,50,64,78];
+s += '<line x1="14" y1="36" x2="40" y2="50" stroke="currentColor" stroke-width="1.4"/><line x1="14" y1="50" x2="40" y2="36" stroke="currentColor" stroke-width="1.4"/>';
+s += '<line x1="14" y1="64" x2="40" y2="78" stroke="currentColor" stroke-width="1.4"/><line x1="14" y1="78" x2="40" y2="64" stroke="currentColor" stroke-width="0.6" opacity="0.4"/>';
+for (const y of L) { s += '<circle cx="14" cy="' + y + '" r="2.2" fill="currentColor"/>'; }
+for (const y of R) { s += '<circle cx="40" cy="' + y + '" r="2.2" fill="none" stroke="currentColor" stroke-width="1"/>'; }
+return s;
+'''
+
+[miniCharts.am]
+# A cost grid with one cell chosen per row
+svg = '''
+let s = '';
+const pick = [2, 0, 3, 1];
+for (let r = 0; r < 4; r++) { for (let c = 0; c < 4; c++) {
+	s += '<rect x="' + (9 + c * 9) + '" y="' + (36 + r * 9) + '" width="8" height="8" fill="currentColor" opacity="' + (pick[r] === c ? 0.9 : 0.15) + '"/>';
+} }
+return s;
+'''
+
+[[codeBranches]]
+model = "sp"
+code = '''
+using Graphs, Random
+
+n = {{n}}  # number of vertices
+density = {{density}}  # probability of each directed edge
+seed = {{seed}}  # random seed for the generated weights
+function random_weights(n, density, seed)  # random integer weights 1-9; 0 = no edge
+    rng = MersenneTwister(seed)
+    W = [i != j && rand(rng) < density ? Float64(rand(rng, 1:9)) : 0.0 for i in 1:n, j in 1:n]
+    for i in 1:n-1  # the chain 1 -> 2 -> ... -> n keeps every vertex reachable from 1
+        W[i, i+1] == 0 && (W[i, i+1] = Float64(rand(rng, 5:9)))
+    end
+    W
+end
+W = {{mat}}  # W[i, j] > 0 is an edge i -> j with that weight
+source = {{src}}  # start vertex
+target = {{dst}}  # end vertex
+remove_edge(W, i, j) = (W2 = copy(W); W2[i, j] = 0; W2)  # the graph without edge i -> j
+
+function solve(W=W; source=source, target=target)
+    g = SimpleDiGraph(W)
+    ds = dijkstra_shortest_paths(g, source, W)  # Dijkstra with the weights as edge lengths
+    (path = enumerate_paths(ds, target), cost = ds.dists[target], dists = ds.dists)
+end
+objective(s) = s.cost
+sol_edges(s) = [(s.path[k], s.path[k+1]) for k in 1:length(s.path)-1]
+
+sol = solve()
+(path = sol.path, cost = sol.cost, reachable = isfinite(sol.cost), distances_from_source = sol.dists)
+'''
+
+[[codeBranches]]
+model = "rsp"
+code = '''
+using Graphs, Random
+
+n = {{n}}  # number of vertices
+density = {{density}}  # probability of each directed edge
+seed = {{seed}}  # random seed for the generated weights
+function random_weights(n, density, seed)  # random integer weights 1-9; 0 = no edge
+    rng = MersenneTwister(seed)
+    W = [i != j && rand(rng) < density ? Float64(rand(rng, 1:9)) : 0.0 for i in 1:n, j in 1:n]
+    for i in 1:n-1  # the chain 1 -> 2 -> ... -> n keeps every vertex reachable from 1
+        W[i, i+1] == 0 && (W[i, i+1] = Float64(rand(rng, 5:9)))
+    end
+    W
+end
+W = {{mat}}  # W[i, j] > 0 is an edge i -> j with that weight
+Wu = {{matub}}  # upper bounds: the true weight of edge i -> j lies in [W[i, j], Wu[i, j]]
+source = {{src}}  # start vertex
+target = {{dst}}  # end vertex
+remove_edge(W, i, j) = (W2 = copy(W); W2[i, j] = 0; W2)  # the graph without edge i -> j
+
+pathcost(p, C) = sum(C[p[k], p[k+1]] for k in 1:length(p)-1)
+function regret(p, W, Wu, g; source=source, target=target)  # worst case: p's edges at their upper bounds, all others at their lower bounds
+    C = copy(W)
+    for k in 1:length(p)-1
+        C[p[k], p[k+1]] = Wu[p[k], p[k+1]]
+    end
+    pathcost(p, C) - dijkstra_shortest_paths(g, source, C).dists[target]
+end
+function solve(W=W; source=source, target=target, Wu=Wu)
+    g = SimpleDiGraph(W)
+    paths = collect(all_simple_paths(g, source, target))  # every simple path (exact, small graphs only)
+    isempty(paths) && return (path = Int[], regret = Inf, cost_low = Inf, cost_high = Inf, paths = paths, regrets = Float64[])
+    r = [regret(p, W, Wu, g; source, target) for p in paths]
+    k = argmin(r)  # min-max regret
+    (path = paths[k], regret = r[k], cost_low = pathcost(paths[k], W), cost_high = pathcost(paths[k], Wu), paths = paths, regrets = r)
+end
+objective(s) = s.regret
+sol_edges(s) = [(s.path[k], s.path[k+1]) for k in 1:length(s.path)-1]
+
+sol = solve()
+(robust_path = sol.path, max_regret = sol.regret, cost_if_all_low = sol.cost_low, cost_if_all_high = sol.cost_high, paths_enumerated = length(sol.paths))
+'''
+
+[[codeBranches]]
+model = "nf"
+code = '''
+using Graphs, Random
+
+n = {{n}}  # number of vertices
+density = {{density}}  # probability of each directed edge
+seed = {{seed}}  # random seed for the generated weights
+function random_weights(n, density, seed)  # random integer weights 1-9; 0 = no edge
+    rng = MersenneTwister(seed)
+    W = [i != j && rand(rng) < density ? Float64(rand(rng, 1:9)) : 0.0 for i in 1:n, j in 1:n]
+    for i in 1:n-1  # the chain 1 -> 2 -> ... -> n keeps every vertex reachable from 1
+        W[i, i+1] == 0 && (W[i, i+1] = Float64(rand(rng, 5:9)))
+    end
+    W
+end
+W = {{mat}}  # W[i, j] > 0 is an edge i -> j with that weight
+source = {{src}}  # start vertex
+target = {{dst}}  # end vertex
+remove_edge(W, i, j) = (W2 = copy(W); W2[i, j] = 0; W2)  # the graph without edge i -> j
+using GraphsFlows
+
+function solve(W=W; source=source, target=target, algorithm=PushRelabelAlgorithm())
+    g = SimpleDiGraph(W)
+    value, F = maximum_flow(g, source, target, W, algorithm)  # W holds the arc capacities
+    (value = value, flow = F)
+end
+objective(s) = s.value
+sol_edges(s) = [(i, j) for i in axes(s.flow, 1), j in axes(s.flow, 2) if s.flow[i, j] > 1e-9]  # arcs carrying flow
+
+sol = solve()
+(max_flow = sol.value, arcs_used = sol_edges(sol))
+'''
+
+[[codeBranches]]
+model = "st"
+code = '''
+using Graphs, Random
+
+n = {{n}}  # number of vertices
+density = {{density}}  # probability of each directed edge
+seed = {{seed}}  # random seed for the generated weights
+function random_weights(n, density, seed)  # random integer weights 1-9; 0 = no edge
+    rng = MersenneTwister(seed)
+    W = [i != j && rand(rng) < density ? Float64(rand(rng, 1:9)) : 0.0 for i in 1:n, j in 1:n]
+    for i in 1:n-1  # the chain 1 -> 2 -> ... -> n keeps every vertex reachable from 1
+        W[i, i+1] == 0 && (W[i, i+1] = Float64(rand(rng, 5:9)))
+    end
+    W
+end
+W = {{mat}}  # W[i, j] > 0 is an edge i -> j with that weight
+remove_edge(W, i, j) = (W2 = copy(W); W2[i, j] = 0; W2[j, i] = 0; W2)  # the graph without edge i -- j
+
+function solve(W=W)
+    Wu = max.(W, transpose(W))  # undirected: i -- j is an edge if either direction has a weight
+    g = SimpleGraph(Wu)
+    tree = [(src(e), dst(e)) for e in kruskal_mst(g, Wu)]  # Kruskal's algorithm
+    (tree = tree, weight = sum(Wu[i, j] for (i, j) in tree; init=0.0), spanning = length(tree) == size(W, 1) - 1)
+end
+objective(s) = s.weight
+sol_edges(s) = s.tree
+
+sol = solve()
+(tree_edges = sol.tree, total_weight = sol.weight, spans_all_vertices = sol.spanning)
+'''
+
+[[codeBranches]]
+model = "bm"
+code = '''
+using Graphs, Random
+
+n = {{n}}  # number of vertices
+density = {{density}}  # probability of each directed edge
+seed = {{seed}}  # random seed for the generated weights
+function random_weights(n, density, seed)  # random integer weights 1-9; 0 = no edge
+    rng = MersenneTwister(seed)
+    W = [i != j && rand(rng) < density ? Float64(rand(rng, 1:9)) : 0.0 for i in 1:n, j in 1:n]
+    for i in 1:n-1  # the chain 1 -> 2 -> ... -> n keeps every vertex reachable from 1
+        W[i, i+1] == 0 && (W[i, i+1] = Float64(rand(rng, 5:9)))
+    end
+    W
+end
+W = {{mat}}  # W[i, j] > 0 is an edge i -> j with that weight
+remove_edge(W, i, j) = (W2 = copy(W); W2[i, j] = 0; W2)  # the graph without edge i -> j
+using Hungarian
+
+function solve(W=W)  # rows are the left vertices, columns the right vertices
+    assignment = hungarian(maximum(W) .- W)[1]  # maximum weight = minimum shifted cost; non-edges get the largest cost
+    pairs = [(i, j) for (i, j) in enumerate(assignment) if j > 0 && W[i, j] > 0]  # keep real edges only
+    (pairs = pairs, weight = sum(W[i, j] for (i, j) in pairs; init=0.0))
+end
+objective(s) = s.weight
+sol_edges(s) = s.pairs
+
+sol = solve()
+(matched_pairs = sol.pairs, total_weight = sol.weight, matching_size = length(sol.pairs))
+'''
+
+[[codeBranches]]
+model = "am"
+code = '''
+using Hungarian, Random
+
+n = {{n}}  # number of workers and jobs
+seed = {{seed}}  # random seed for the generated costs
+W = {{cost}}  # W[i, j] = cost of assigning worker i to job j
+remove_edge(W, i, j) = (W2 = copy(W); W2[i, j] = 10 * sum(W); W2)  # forbid the pair with a prohibitive cost
+
+function solve(W=W)
+    assignment, cost = hungarian(W)  # Hungarian algorithm, minimises the total cost
+    (pairs = [(i, j) for (i, j) in enumerate(assignment) if j > 0], cost = cost)
+end
+objective(s) = s.cost
+sol_edges(s) = s.pairs
+
+sol = solve()
+(assignment = sol.pairs, total_cost = sol.cost)
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "edge-list"
+label = "Graph Plot"
+desc = "The graph with the solution's edges highlighted (bipartite layout for matching and assignment)"
+code = '''
+using Plots
+
+m = size(W, 1)
+{{?model!=bm|am}}xy = [(cos(2pi * k / m), sin(2pi * k / m)) for k in 0:m-1]  # vertices on a circle
+{{?model=bm|am}}xy = [[(0.0, -1.0 * k) for k in 1:m]; [(1.0, -1.0 * k) for k in 1:size(W, 2)]]  # rows left, columns right
+{{?model!=bm|am}}seg(i, j) = ([xy[i][1], xy[j][1]], [xy[i][2], xy[j][2]])
+{{?model=bm|am}}seg(i, j) = ([xy[i][1], xy[m + j][1]], [xy[i][2], xy[m + j][2]])
+plt = plot(legend=false, axis=false, grid=false)
+{{?model!=am}}for i in 1:m, j in 1:size(W, 2)
+{{?model!=am}}    W[i, j] > 0 && plot!(plt, seg(i, j)..., color=:lightgray)
+{{?model!=am}}end
+for (i, j) in sol_edges(sol)
+    plot!(plt, seg(i, j)..., color=:red, linewidth=3)
+end
+{{?model!=bm|am}}scatter!(plt, first.(xy), last.(xy), markersize=12, color=:white, series_annotations=string.(1:m))
+{{?model=bm|am}}scatter!(plt, first.(xy), last.(xy), markersize=12, color=:white, series_annotations=string.([1:m; 1:size(W, 2)]))
+plt
+'''
+
+[[actionGroups.actions]]
+id = "distance-matrix"
+label = "Weight Heatmap"
+desc = "The weight (or cost) matrix with the solution's entries marked"
+code = '''
+using Plots
+
+e = sol_edges(sol)
+heatmap(W, yflip=true, xlabel="to / column", ylabel="from / row", color=:viridis)
+scatter!(last.(e), first.(e), color=:red, marker=:x, markersize=8, legend=false)
+'''
+
+[[actionGroups.actions]]
+id = "graph-properties"
+label = "Solution Profile"
+desc = "Distances from the source, regret of every path, flow against capacity, tree against all weights, or the weight of each matched pair"
+code = '''
+using Plots
+
+{{?model=sp}}bar(replace(sol.dists, Inf => NaN), xlabel="vertex", ylabel="shortest distance from source", legend=false)
+{{?model=rsp}}histogram(sol.regrets, xlabel="max regret of a path", ylabel="paths", legend=false)
+{{?model=rsp}}vline!([sol.regret], color=:red, linewidth=2)
+{{?model=nf}}arcs = [(i, j) for i in 1:size(W, 1), j in 1:size(W, 2) if W[i, j] > 0]
+{{?model=nf}}bar(string.(arcs), [W[i, j] for (i, j) in arcs], alpha=0.3, label="capacity", xrotation=60)
+{{?model=nf}}bar!(string.(arcs), [max(sol.flow[i, j], 0) for (i, j) in arcs], label="flow")
+{{?model=st}}Wu = max.(W, transpose(W))
+{{?model=st}}histogram([Wu[i, j] for i in 1:size(W, 1) for j in i+1:size(W, 1) if Wu[i, j] > 0], alpha=0.4, label="all edges", xlabel="weight")
+{{?model=st}}histogram!([Wu[i, j] for (i, j) in sol.tree], label="spanning tree")
+{{?model=bm|am}}bar(string.(sol_edges(sol)), [W[i, j] for (i, j) in sol_edges(sol)], ylabel="weight / cost", legend=false, xrotation=60)
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "path-validation"
+label = "Solution Validation"
+desc = "Check that the solution satisfies every constraint of the problem"
+code = '''
+{{?model=sp|rsp}}p = sol.path
+{{?model=sp|rsp}}(starts_at_source = first(p) == source, ends_at_target = last(p) == target, edges_exist = all(W[i, j] > 0 for (i, j) in sol_edges(sol)),
+{{?model=sp}} simple_path = allunique(p), weight_sum = sum(W[i, j] for (i, j) in sol_edges(sol); init=0.0), reported_cost = sol.cost)
+{{?model=rsp}} simple_path = allunique(p), regret_nonnegative = sol.regret >= 0, bounds_ordered = all(Wu .>= W))
+{{?model=nf}}F = sol.flow; m = size(W, 1)
+{{?model=nf}}net = [sum(max.(F[i, :], 0)) - sum(max.(F[:, i], 0)) for i in 1:m]  # outflow minus inflow
+{{?model=nf}}(within_capacity = all(F .<= W .+ 1e-9), conserved_at_inner_vertices = all(abs(net[i]) < 1e-9 for i in 1:m if i != source && i != target),
+{{?model=nf}} source_outflow = net[source], reported_value = sol.value)
+{{?model=st}}tg = SimpleGraph(size(W, 1))
+{{?model=st}}for (i, j) in sol.tree
+{{?model=st}}    add_edge!(tg, i, j)
+{{?model=st}}end
+{{?model=st}}(edges = ne(tg), vertices = nv(tg), connected = is_connected(tg), acyclic = ne(tg) == nv(tg) - 1 && is_connected(tg))
+{{?model=bm}}(rows_used_once = allunique(first.(sol.pairs)), columns_used_once = allunique(last.(sol.pairs)),
+{{?model=bm}} edges_exist = all(W[i, j] > 0 for (i, j) in sol.pairs), weight_sum = sum(W[i, j] for (i, j) in sol.pairs; init=0.0), reported_weight = sol.weight)
+{{?model=am}}(rows_used_once = allunique(first.(sol.pairs)), columns_used_once = allunique(last.(sol.pairs)), pairs = length(sol.pairs),
+{{?model=am}} expected_pairs = minimum(size(W)), cost_sum = sum(W[i, j] for (i, j) in sol.pairs), reported_cost = sol.cost)
+'''
+
+[[actionGroups.actions]]
+id = "algorithm-variants"
+label = "Cross-Check"
+desc = "Confirm the optimum independently: Bellman-Ford, sampled scenarios, min-cut, Prim, or the linear-programming relaxation"
+code = '''
+{{?model=sp}}bf = bellman_ford_shortest_paths(SimpleDiGraph(W), source, W)
+{{?model=sp}}(dijkstra = sol.cost, bellman_ford = bf.dists[target], same_path = enumerate_paths(bf, target) == sol.path)
+{{?model=rsp}}Random.seed!(2); g = SimpleDiGraph(W)
+{{?model=rsp}}sampled = map(1:500) do k  # random scenarios inside the intervals
+{{?model=rsp}}    C = W .+ rand(size(W)...) .* (Wu .- W)
+{{?model=rsp}}    pathcost(sol.path, C) - dijkstra_shortest_paths(g, source, C).dists[target]
+{{?model=rsp}}end
+{{?model=rsp}}(largest_sampled_regret = maximum(sampled), worst_case_regret = sol.regret, bound_holds = maximum(sampled) <= sol.regret + 1e-9)
+{{?model=nf}}part1, part2, cut = mincut(SimpleDiGraph(W), source, target, W, PushRelabelAlgorithm())
+{{?model=nf}}(max_flow = sol.value, min_cut = cut, equal = isapprox(sol.value, cut), source_side = part1, sink_side = part2)
+{{?model=st}}Wu = max.(W, transpose(W))
+{{?model=st}}prim = sum(Wu[src(e), dst(e)] for e in prim_mst(SimpleGraph(Wu), Wu); init=0.0)
+{{?model=st}}(kruskal = sol.weight, prim = prim, equal = isapprox(sol.weight, prim))
+{{?model=bm|am}}using JuMP, HiGHS
+{{?model=bm|am}}m, k = size(W)
+{{?model=bm|am}}lp = Model(HiGHS.Optimizer); set_silent(lp)
+{{?model=bm|am}}@variable(lp, 0 <= x[1:m, 1:k] <= 1)
+{{?model=bm|am}}@constraint(lp, [i in 1:m], sum(x[i, :]) <= 1)
+{{?model=bm|am}}@constraint(lp, [j in 1:k], sum(x[:, j]) <= 1)
+{{?model=bm}}@constraint(lp, [i in 1:m, j in 1:k; W[i, j] == 0], x[i, j] == 0)
+{{?model=bm}}@objective(lp, Max, sum(W .* x))
+{{?model=am}}@constraint(lp, sum(x) == min(m, k))
+{{?model=am}}@objective(lp, Min, sum(W .* x))
+{{?model=bm|am}}optimize!(lp)
+{{?model=bm|am}}(hungarian = objective(sol), linear_relaxation = objective_value(lp), equal = isapprox(objective(sol), objective_value(lp)),
+{{?model=bm|am}} relaxation_integral = all(v -> min(v, 1 - v) < 1e-6, value.(x)))
+'''
+
+[[actionGroups.actions]]
+id = "connectivity"
+label = "Connectivity Check"
+desc = "Vertex and edge counts, weak and strong components, and the vertices reachable from vertex 1"
+code = '''
+{{?model!=am}}g = SimpleDiGraph(W)
+{{?model!=am}}(vertices = nv(g), edges = ne(g), observed_density = ne(g) / (nv(g) * (nv(g) - 1)), weakly_connected = is_weakly_connected(g),
+{{?model!=am}} strong_components = strongly_connected_components(g), reachable_from_1 = findall(isfinite, dijkstra_shortest_paths(g, 1).dists))
+{{?model=am}}(complete_bipartite = true, workers = size(W, 1), jobs = size(W, 2), cost_range = extrema(W))
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "run-algorithm"
+label = "Weight Uncertainty"
+desc = "Solve again with +-20% random noise on every weight (100 draws): how often the solution stays the same"
+code = '''
+Random.seed!(4)
+runs = map(1:100) do k
+    Fm = 1 .+ 0.2 .* (2 .* rand(size(W)...) .- 1)  # +-20% noise on every weight
+{{?model!=rsp}}    s2 = solve(W .* Fm)
+{{?model=rsp}}    s2 = solve(W .* Fm; Wu=Wu .* Fm)
+    (objective = objective(s2), same_solution = sort(sol_edges(s2)) == sort(sol_edges(sol)))
+end
+(same_solution_share = count(r -> r.same_solution, runs) / length(runs), objective_mean = sum(r.objective for r in runs) / length(runs),
+ objective_range = extrema(r.objective for r in runs), nominal_objective = objective(sol))
+'''
+
+[[actionGroups.actions]]
+id = "all-pairs"
+label = "All Pairs / Vertex Values"
+desc = "All-pairs distances (shortest paths), max flow to every sink, distances inside the tree, or the value of each row (matching and assignment)"
+code = '''
+{{?model=sp|rsp}}round.(floyd_warshall_shortest_paths(SimpleDiGraph(W), W).dists, digits=2)  # Inf = unreachable
+{{?model=nf}}[(sink = t, max_flow = solve(W; target=t).value) for t in 1:size(W, 1) if t != source]
+{{?model=st}}Wu = max.(W, transpose(W)); tg = SimpleGraph(size(W, 1))
+{{?model=st}}for (i, j) in sol.tree
+{{?model=st}}    add_edge!(tg, i, j)
+{{?model=st}}end
+{{?model=st}}round.(floyd_warshall_shortest_paths(tg, Wu).dists, digits=2)
+{{?model=bm|am}}[(row = i, objective_without_row = objective(solve(W[setdiff(1:size(W, 1), i), :])),
+{{?model=bm|am}}  change = objective(solve(W[setdiff(1:size(W, 1), i), :])) - objective(sol)) for i in 1:size(W, 1)]
+'''
+
+[[actionGroups.actions]]
+id = "sensitivity"
+label = "Edge Sensitivity"
+desc = "Remove each edge of the solution in turn and solve again"
+code = '''
+base = objective(sol)
+map(sol_edges(sol)) do (i, j)
+    s2 = solve(remove_edge(W, i, j))
+    (removed = (i, j), objective = objective(s2), change = objective(s2) - base)
+end
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "algorithm-comparison"
+label = "Algorithm Comparison"
+desc = "Time alternative algorithms on the same instance (for the robust path: robust against nominal and pessimistic paths)"
+code = '''
+bench(f) = (f(); @elapsed f())  # second run, after compilation
+{{?model=sp}}g = SimpleDiGraph(W)
+{{?model=sp}}[(algorithm = "Dijkstra", seconds = bench(() -> dijkstra_shortest_paths(g, source, W))),
+{{?model=sp}} (algorithm = "Bellman-Ford", seconds = bench(() -> bellman_ford_shortest_paths(g, source, W))),
+{{?model=sp}} (algorithm = "A* (zero heuristic)", seconds = bench(() -> a_star(g, source, target, W))),
+{{?model=sp}} (algorithm = "Floyd-Warshall (all pairs)", seconds = bench(() -> floyd_warshall_shortest_paths(g, W)))]
+{{?model=rsp}}g = SimpleDiGraph(W)
+{{?model=rsp}}cand = ["robust (min-max regret)" => sol.path, "nominal (lower bounds)" => enumerate_paths(dijkstra_shortest_paths(g, source, W), target),
+{{?model=rsp}}        "pessimistic (upper bounds)" => enumerate_paths(dijkstra_shortest_paths(g, source, Wu), target),
+{{?model=rsp}}        "midpoint" => enumerate_paths(dijkstra_shortest_paths(g, source, (W .+ Wu) ./ 2), target)]
+{{?model=rsp}}[(path_type = name, path = p, max_regret = regret(p, W, Wu, g), cost_low = pathcost(p, W), cost_high = pathcost(p, Wu)) for (name, p) in cand]
+{{?model=nf}}[(algorithm = name, max_flow = solve(; algorithm=a).value, seconds = bench(() -> solve(; algorithm=a)))
+{{?model=nf}} for (name, a) in ["Push-relabel" => PushRelabelAlgorithm(), "Edmonds-Karp" => EdmondsKarpAlgorithm(),
+{{?model=nf}}                   "Dinic" => DinicAlgorithm(), "Boykov-Kolmogorov" => BoykovKolmogorovAlgorithm()]]
+{{?model=st}}Wu = max.(W, transpose(W)); g = SimpleGraph(Wu)
+{{?model=st}}[(algorithm = "Kruskal", seconds = bench(() -> kruskal_mst(g, Wu))), (algorithm = "Prim", seconds = bench(() -> prim_mst(g, Wu)))]
+{{?model=bm|am}}using JuMP, HiGHS
+{{?model=bm|am}}function lp_solve(W)
+{{?model=bm|am}}    m, k = size(W)
+{{?model=bm|am}}    lp = Model(HiGHS.Optimizer); set_silent(lp)
+{{?model=bm|am}}    @variable(lp, 0 <= x[1:m, 1:k] <= 1)
+{{?model=bm|am}}    @constraint(lp, [i in 1:m], sum(x[i, :]) <= 1)
+{{?model=bm|am}}    @constraint(lp, [j in 1:k], sum(x[:, j]) <= 1)
+{{?model=bm}}    @objective(lp, Max, sum(W .* x))
+{{?model=am}}    @constraint(lp, sum(x) == min(m, k))
+{{?model=am}}    @objective(lp, Min, sum(W .* x))
+{{?model=bm|am}}    optimize!(lp); objective_value(lp)
+{{?model=bm|am}}end
+{{?model=bm|am}}[(algorithm = "Hungarian", objective = objective(sol), seconds = bench(() -> solve(W))),
+{{?model=bm|am}} (algorithm = "Linear programming (HiGHS)", objective = lp_solve(W), seconds = bench(() -> lp_solve(W)))]
+'''
+
+[[actionGroups.actions]]
+id = "graph-size"
+label = "Graph Size Scaling"
+desc = "Runtime as the number of vertices grows (the exact robust path is limited to small graphs)"
+code = '''
+{{?model!=rsp}}sizes = [10, 20, 40, 80, 160]
+{{?model=rsp}}sizes = [5, 6, 7, 8, 9]
+map(sizes) do m
+{{?model!=am}}    Wm = random_weights(m, density, seed)
+{{?model=am}}    Wm = Float64.(rand(MersenneTwister(seed), 1:20, m, m))
+{{?model=sp|nf}}    run = () -> solve(Wm; target=m)
+{{?model=rsp}}    run = () -> solve(Wm; target=m, Wu=1.5 .* Wm)
+{{?model=st|bm|am}}    run = () -> solve(Wm)
+    run()
+    (vertices = m, seconds = @elapsed run())
+end
+'''
+
+[[actionGroups.actions]]
+id = "directed-vs-undirected"
+label = "Baseline Comparison"
+desc = "Directed against undirected graph (paths and flows), shortest-path tree against spanning tree, or greedy against optimal pairing"
+code = '''
+{{?model=sp|nf}}Ws = max.(W, transpose(W))  # every edge usable in both directions
+{{?model=sp|nf}}(directed = objective(sol), undirected = objective(solve(Ws)))
+{{?model=rsp}}(directed = objective(sol), undirected = objective(solve(max.(W, transpose(W)); Wu=max.(Wu, transpose(Wu)))))
+{{?model=st}}Ws = max.(W, transpose(W)); m = size(W, 1)
+{{?model=st}}ds = dijkstra_shortest_paths(SimpleGraph(Ws), 1, Ws)
+{{?model=st}}(minimum_spanning_tree = sol.weight, shortest_path_tree_from_1 = sum(Ws[ds.parents[v], v] for v in 2:m if ds.parents[v] > 0))
+{{?model=bm|am}}used_rows = Set{Int}(); used_cols = Set{Int}(); greedy = 0.0
+{{?model=bm}}for (i, j) in sort([(i, j) for i in axes(W, 1), j in axes(W, 2) if W[i, j] > 0], by=e -> -W[e...])  # heaviest edge first
+{{?model=am}}for (i, j) in sort([(i, j) for i in axes(W, 1), j in axes(W, 2)], by=e -> W[e...])  # cheapest pair first
+{{?model=bm|am}}    if !(i in used_rows) && !(j in used_cols)
+{{?model=bm|am}}        push!(used_rows, i); push!(used_cols, j); global greedy += W[i, j]
+{{?model=bm|am}}    end
+{{?model=bm|am}}end
+{{?model=bm|am}}(optimal = objective(sol), greedy = greedy, gap = abs(objective(sol) - greedy))
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "solution-summary"
+label = "Solution Summary"
+desc = "Problem, objective value and solution in a readable form"
+code = '''
+{{?model=sp}}problem = "shortest path from $source to $target: total length"
+{{?model=rsp}}problem = "min-max regret path from $source to $target: worst-case regret"
+{{?model=nf}}problem = "maximum flow from $source to $target: flow value"
+{{?model=st}}problem = "minimum spanning tree: total weight"
+{{?model=bm}}problem = "maximum-weight bipartite matching: total weight"
+{{?model=am}}problem = "minimum-cost assignment: total cost"
+(problem = problem, objective = objective(sol), solution_edges = sol_edges(sol), rows = size(W, 1), columns = size(W, 2), nonzero_entries = count(>(0), W))
+'''
+
+[[actionGroups.actions]]
+id = "path-reconstruction"
+label = "Solution Edges"
+desc = "Every edge of the path, flow, tree, matching or assignment with its weight"
+code = '''
+{{?model!=nf}}[(from = i, to = j, weight = W[i, j]) for (i, j) in sol_edges(sol)]
+{{?model=nf}}[(from = i, to = j, flow = sol.flow[i, j], capacity = W[i, j], saturated = sol.flow[i, j] >= W[i, j] - 1e-9) for (i, j) in sol_edges(sol)]
+'''
+
+[[actionGroups.actions]]
+id = "algorithm-guide"
+label = "Algorithm Guide"
+desc = "Rules of thumb for choosing an algorithm in each problem class"
+code = '''
+[(problem = "shortest path", use = "Dijkstra", when = "non-negative weights; Bellman-Ford for negative weights, A* with a good heuristic for geometric graphs"),
+ (problem = "robust shortest path", use = "min-max regret by enumeration", when = "small graphs; use MILP formulations or budgeted uncertainty for large ones"),
+ (problem = "maximum flow", use = "push-relabel or Dinic", when = "Edmonds-Karp for teaching, Boykov-Kolmogorov for image-segmentation grids"),
+ (problem = "spanning tree", use = "Kruskal on sparse graphs, Prim on dense graphs", when = "weights on undirected edges"),
+ (problem = "bipartite matching", use = "Hungarian (weighted) or Hopcroft-Karp (unweighted)", when = "pairs of rows and columns along existing edges"),
+ (problem = "assignment", use = "Hungarian", when = "every row to one column at minimum cost; linear programming gives the same answer")]
+'''

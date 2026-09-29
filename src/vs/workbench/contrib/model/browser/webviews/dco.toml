@@ -1,0 +1,731 @@
+# Discrete and Combinatorial Optimisation Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/dco.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Discrete and Combinatorial Optimisation"
+viewType = "pollis.dco"
+defaultModel = "grasp"
+
+[[packages]]
+name = "MHLib.jl"
+github = "https://github.com/ac-tuwien/MHLib.jl"
+
+[requires]
+packages = ["TravelingSalesmanHeuristics.jl", "Plots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "GRASP"
+file = "dco/tutorial-01-grasp.ipynb"
+bundled = true
+description = "Greedy randomised adaptive search: construction phase with restricted candidate list and local search"
+
+[[notebookSections.notebooks]]
+name = "VND"
+file = "dco/tutorial-02-vnd.ipynb"
+bundled = true
+description = "Variable neighbourhood descent: systematic cycling through neighbourhood structures until no improvement"
+
+[[notebookSections.notebooks]]
+name = "VNS"
+file = "dco/tutorial-03-vns.ipynb"
+bundled = true
+description = "Variable neighbourhood search: shaking perturbation + VND descent to escape local optima"
+
+[[wikis]]
+name = "Factsheet"
+file = "dco/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "dco/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "dco/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "dco/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "dco/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "dco/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Algorithm Details"
+
+[[wikis]]
+name = "GRASP"
+file = "dco/grasp.md"
+bundled = true
+
+[[wikis]]
+name = "VND"
+file = "dco/vnd.md"
+bundled = true
+
+[[wikis]]
+name = "VNS"
+file = "dco/vns.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Metaheuristics: From Design to Implementation"
+authors = "Talbi, El-Ghazali"
+year = 2009
+journal = "Wiley"
+doi = "10.1002/9780470496916"
+openAccess = false
+
+[[references]]
+title = "Handbook of Metaheuristics"
+authors = "Gendreau, Michel; Potvin, Jean-Yves (eds.)"
+year = 2019
+journal = "Springer (3rd ed.)"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Greedy Randomized Adaptive Search Procedures"
+authors = "Feo, Thomas A.; Resende, Mauricio G. C."
+year = 1995
+journal = "Journal of Global Optimization"
+doi = "10.1007/BF01096763"
+openAccess = false
+
+[[references]]
+title = "Variable Neighborhood Search"
+authors = "Mladeńović, Nenad; Hansen, Pierre"
+year = 1997
+journal = "Computers and Operations Research"
+doi = "10.1016/S0305-0548(97)00031-2"
+openAccess = false
+
+[[references]]
+title = "Variable Neighbourhood Search: Principles and Applications"
+authors = "Hansen, Pierre; Mladeńović, Nenad"
+year = 2001
+journal = "European Journal of Operational Research"
+doi = "10.1016/S0377-2217(00)00100-4"
+openAccess = false
+
+[[models]]
+id = "grasp"
+label = "GRASP"
+
+[[models]]
+id = "vnd"
+label = "VND"
+
+[[models]]
+id = "vns"
+label = "VNS"
+
+[[bullets]]
+text = "GRASP"
+detail = "greedy randomised adaptive search; restricted candidate list construction followed by local search; uses restarts"
+
+[[bullets]]
+text = "VND"
+detail = "variable neighbourhood descent; cycles through neighbourhood structures; halts when no neighbourhood improves the solution"
+
+[[bullets]]
+text = "VNS"
+detail = "variable neighbourhood search; shaking perturbation to escape local optima followed by VND descent; systematic neighbourhood change"
+
+[[decisionRows]]
+task = "GRASP"
+context = "Problems with a good greedy construction that benefits from randomisation"
+purpose = "Greedy Randomised Adaptive Search: each iteration builds a tour greedily from a restricted candidate list (controlled by alpha), improves it by local search and keeps the best"
+
+[[decisionRows]]
+task = "VND"
+context = "Several cheap neighbourhoods whose local optima differ"
+purpose = "Variable Neighbourhood Descent: search the neighbourhoods in order, return to the first after any improvement, stop when none improves; restarted here from random tours"
+
+[[decisionRows]]
+task = "VNS"
+context = "Rugged landscapes where descent alone gets stuck"
+purpose = "Variable Neighbourhood Search: perturb (shake) the best solution with increasing strength, descend with VND, and accept only improvements, resetting the strength on success"
+
+[[inputs]]
+id = "n"
+label = "Cities (n)"
+tooltip = "Number of cities of the random travelling-salesman instance (points in the unit square)."
+default = "40"
+
+[[inputs]]
+id = "k"
+label = "Neighbourhoods"
+tooltip = "How many local-search neighbourhoods to use, in order: 1 = 2-opt, 2 = 2-opt and or-opt, 3 = 2-opt, or-opt and swap."
+default = "3"
+
+[[inputs]]
+id = "maxiter"
+label = "Iterations"
+tooltip = "GRASP: construction and improvement rounds. VND: descents (the first from a nearest-neighbour tour, then from random tours). VNS: shaking and descent rounds."
+default = "100"
+
+[[inputs]]
+id = "alpha"
+label = "Greediness (alpha)"
+tooltip = "Restricted candidate list: the next city is chosen among those within alpha * (range of distances) of the nearest one; 0 = pure nearest neighbour, 1 = uniformly random."
+default = "0.3"
+models = ["grasp"]
+newRow = true
+
+[[inputs]]
+id = "kmax"
+label = "Shaking Levels"
+tooltip = "Largest shaking strength: level s applies s random double-bridge moves before descending."
+default = "3"
+models = ["vns"]
+newRow = true
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.grasp]
+# Several greedy constructions, one highlighted
+svg = '''
+return '<polyline points="10,64 18,40 34,36 46,58 26,68 10,64" fill="none" stroke="currentColor" stroke-width="0.7" opacity="0.35"/>'
+	+ '<polyline points="10,64 26,68 46,58 34,36 18,40 10,64" fill="none" stroke="currentColor" stroke-width="1.2"/>'
+	+ [[10,64],[18,40],[34,36],[46,58],[26,68]].map(function (p) { return '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="1.8" fill="currentColor"/>'; }).join('');
+'''
+
+[miniCharts.vnd]
+# A descent through a stack of neighbourhoods
+svg = '''
+return '<rect x="8" y="34" width="38" height="8" fill="none" stroke="currentColor" stroke-width="0.8"/><rect x="8" y="46" width="38" height="8" fill="none" stroke="currentColor" stroke-width="0.8"/><rect x="8" y="58" width="38" height="8" fill="none" stroke="currentColor" stroke-width="0.8"/>'
+	+ '<polyline points="14,38 22,50 30,62 34,50 40,38" fill="none" stroke="currentColor" stroke-width="1"/>';
+'''
+
+[miniCharts.vns]
+# Shakes of growing radius around the incumbent
+svg = '''
+return '<circle cx="27" cy="52" r="5" fill="none" stroke="currentColor" stroke-width="0.8"/><circle cx="27" cy="52" r="10" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.6"/><circle cx="27" cy="52" r="15" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.35"/>'
+	+ '<circle cx="27" cy="52" r="1.8" fill="currentColor"/><line x1="27" y1="52" x2="38" y2="42" stroke="currentColor" stroke-width="1"/>';
+'''
+
+[[codeBranches]]
+model = "grasp"
+code = '''
+using Random, LinearAlgebra, Statistics
+
+# a random travelling-salesman instance: minimise the length of a closed tour
+n = {{n}}  # cities
+Random.seed!(1)
+pts = rand(2, n)  # cities in the unit square
+D = [norm(pts[:, i] - pts[:, j]) for i in 1:n, j in 1:n]
+tourlen(t) = sum(D[t[i], t[mod1(i + 1, length(t))]] for i in eachindex(t))
+maxiter = {{maxiter}}  # iterations
+
+# neighbourhoods: each applies the first improving move it finds and reports whether it found one
+function two_opt!(t)  # reverse a segment
+    m = length(t)
+    for i in 1:m-2, j in i+2:m
+        (i == 1 && j == m) && continue
+        a, b, c, d = t[i], t[i+1], t[j], t[mod1(j + 1, m)]
+        if D[a, c] + D[b, d] < D[a, b] + D[c, d] - 1e-12
+            reverse!(t, i + 1, j); return true
+        end
+    end
+    false
+end
+function or_opt!(t)  # move a segment of 1 to 3 cities elsewhere, possibly reversed
+    m = length(t)
+    for len in 1:3, i in 1:m-len+1
+        seg = t[i:i+len-1]
+        prev, next = t[mod1(i - 1, m)], t[mod1(i + len, m)]
+        gain = D[prev, seg[1]] + D[seg[end], next] - D[prev, next]
+        rest = [t[1:i-1]; t[i+len:end]]
+        for j in eachindex(rest), s in (seg, reverse(seg))
+            p, q = rest[j], rest[mod1(j + 1, length(rest))]
+            if D[p, s[1]] + D[s[end], q] - D[p, q] < gain - 1e-12
+                t .= [rest[1:j]; s; rest[j+1:end]]; return true
+            end
+        end
+    end
+    false
+end
+function swap!(t)  # exchange two cities
+    before = tourlen(t)
+    for i in 1:length(t)-1, j in i+1:length(t)
+        t[i], t[j] = t[j], t[i]
+        tourlen(t) < before - 1e-12 && return true
+        t[i], t[j] = t[j], t[i]
+    end
+    false
+end
+NAMES = ["2-opt", "or-opt", "swap"]
+NB = [two_opt!, or_opt!, swap!][1:clamp({{k}}, 1, 3)]  # neighbourhoods in use
+
+# Variable Neighbourhood Descent: back to the first neighbourhood after every improvement
+function vnd!(t, NB, moves)
+    k = 1
+    while k <= length(NB)
+        if NB[k](t)
+            moves[k] += 1; k = 1
+        else
+            k += 1
+        end
+    end
+    t
+end
+
+# greedy construction with a restricted candidate list (alpha = 0: nearest neighbour)
+function construct(alpha)
+    t = [rand(1:n)]; left = setdiff(1:n, t)
+    while !isempty(left)
+        d = [D[t[end], c] for c in left]
+        lo, hi = extrema(d)
+        c = left[rand(findall(d .<= lo + alpha * (hi - lo)))]
+        push!(t, c); deleteat!(left, findfirst(==(c), left))
+    end
+    t
+end
+
+ALPHA = {{alpha}}  # greediness
+
+function search(; iters=maxiter, seed=1, NB=NB, seconds=Inf)
+    Random.seed!(seed); t0 = time()
+    best, bestlen, trace, moves = Int[], Inf, Float64[], zeros(Int, length(NB))
+    for it in 1:iters
+        t = vnd!(construct(ALPHA), NB, moves)  # randomised greedy construction, then local search
+        tourlen(t) < bestlen && ((best, bestlen) = (t, tourlen(t)))
+        push!(trace, bestlen)
+        time() - t0 > seconds && break
+    end
+    (tour = best, len = bestlen, trace = trace, moves = moves)
+end
+
+res = search()
+best_tour, best_len = res.tour, res.len
+(tour_length = best_len, tour = best_tour, iterations = length(res.trace), improving_moves = NAMES[1:length(NB)] .=> res.moves)
+'''
+
+[[codeBranches]]
+model = "vnd"
+code = '''
+using Random, LinearAlgebra, Statistics
+
+# a random travelling-salesman instance: minimise the length of a closed tour
+n = {{n}}  # cities
+Random.seed!(1)
+pts = rand(2, n)  # cities in the unit square
+D = [norm(pts[:, i] - pts[:, j]) for i in 1:n, j in 1:n]
+tourlen(t) = sum(D[t[i], t[mod1(i + 1, length(t))]] for i in eachindex(t))
+maxiter = {{maxiter}}  # iterations
+
+# neighbourhoods: each applies the first improving move it finds and reports whether it found one
+function two_opt!(t)  # reverse a segment
+    m = length(t)
+    for i in 1:m-2, j in i+2:m
+        (i == 1 && j == m) && continue
+        a, b, c, d = t[i], t[i+1], t[j], t[mod1(j + 1, m)]
+        if D[a, c] + D[b, d] < D[a, b] + D[c, d] - 1e-12
+            reverse!(t, i + 1, j); return true
+        end
+    end
+    false
+end
+function or_opt!(t)  # move a segment of 1 to 3 cities elsewhere, possibly reversed
+    m = length(t)
+    for len in 1:3, i in 1:m-len+1
+        seg = t[i:i+len-1]
+        prev, next = t[mod1(i - 1, m)], t[mod1(i + len, m)]
+        gain = D[prev, seg[1]] + D[seg[end], next] - D[prev, next]
+        rest = [t[1:i-1]; t[i+len:end]]
+        for j in eachindex(rest), s in (seg, reverse(seg))
+            p, q = rest[j], rest[mod1(j + 1, length(rest))]
+            if D[p, s[1]] + D[s[end], q] - D[p, q] < gain - 1e-12
+                t .= [rest[1:j]; s; rest[j+1:end]]; return true
+            end
+        end
+    end
+    false
+end
+function swap!(t)  # exchange two cities
+    before = tourlen(t)
+    for i in 1:length(t)-1, j in i+1:length(t)
+        t[i], t[j] = t[j], t[i]
+        tourlen(t) < before - 1e-12 && return true
+        t[i], t[j] = t[j], t[i]
+    end
+    false
+end
+NAMES = ["2-opt", "or-opt", "swap"]
+NB = [two_opt!, or_opt!, swap!][1:clamp({{k}}, 1, 3)]  # neighbourhoods in use
+
+# Variable Neighbourhood Descent: back to the first neighbourhood after every improvement
+function vnd!(t, NB, moves)
+    k = 1
+    while k <= length(NB)
+        if NB[k](t)
+            moves[k] += 1; k = 1
+        else
+            k += 1
+        end
+    end
+    t
+end
+
+# greedy construction with a restricted candidate list (alpha = 0: nearest neighbour)
+function construct(alpha)
+    t = [rand(1:n)]; left = setdiff(1:n, t)
+    while !isempty(left)
+        d = [D[t[end], c] for c in left]
+        lo, hi = extrema(d)
+        c = left[rand(findall(d .<= lo + alpha * (hi - lo)))]
+        push!(t, c); deleteat!(left, findfirst(==(c), left))
+    end
+    t
+end
+
+function search(; iters=maxiter, seed=1, NB=NB, seconds=Inf)
+    Random.seed!(seed); t0 = time()
+    best, bestlen, trace, moves = Int[], Inf, Float64[], zeros(Int, length(NB))
+    for it in 1:iters
+        start = it == 1 ? construct(0.0) : randperm(n)  # nearest neighbour first, then random tours
+        t = vnd!(start, NB, moves)
+        tourlen(t) < bestlen && ((best, bestlen) = (t, tourlen(t)))
+        push!(trace, bestlen)
+        time() - t0 > seconds && break
+    end
+    (tour = best, len = bestlen, trace = trace, moves = moves)
+end
+
+res = search()
+best_tour, best_len = res.tour, res.len
+(tour_length = best_len, tour = best_tour, iterations = length(res.trace), improving_moves = NAMES[1:length(NB)] .=> res.moves)
+'''
+
+[[codeBranches]]
+model = "vns"
+code = '''
+using Random, LinearAlgebra, Statistics
+
+# a random travelling-salesman instance: minimise the length of a closed tour
+n = {{n}}  # cities
+Random.seed!(1)
+pts = rand(2, n)  # cities in the unit square
+D = [norm(pts[:, i] - pts[:, j]) for i in 1:n, j in 1:n]
+tourlen(t) = sum(D[t[i], t[mod1(i + 1, length(t))]] for i in eachindex(t))
+maxiter = {{maxiter}}  # iterations
+
+# neighbourhoods: each applies the first improving move it finds and reports whether it found one
+function two_opt!(t)  # reverse a segment
+    m = length(t)
+    for i in 1:m-2, j in i+2:m
+        (i == 1 && j == m) && continue
+        a, b, c, d = t[i], t[i+1], t[j], t[mod1(j + 1, m)]
+        if D[a, c] + D[b, d] < D[a, b] + D[c, d] - 1e-12
+            reverse!(t, i + 1, j); return true
+        end
+    end
+    false
+end
+function or_opt!(t)  # move a segment of 1 to 3 cities elsewhere, possibly reversed
+    m = length(t)
+    for len in 1:3, i in 1:m-len+1
+        seg = t[i:i+len-1]
+        prev, next = t[mod1(i - 1, m)], t[mod1(i + len, m)]
+        gain = D[prev, seg[1]] + D[seg[end], next] - D[prev, next]
+        rest = [t[1:i-1]; t[i+len:end]]
+        for j in eachindex(rest), s in (seg, reverse(seg))
+            p, q = rest[j], rest[mod1(j + 1, length(rest))]
+            if D[p, s[1]] + D[s[end], q] - D[p, q] < gain - 1e-12
+                t .= [rest[1:j]; s; rest[j+1:end]]; return true
+            end
+        end
+    end
+    false
+end
+function swap!(t)  # exchange two cities
+    before = tourlen(t)
+    for i in 1:length(t)-1, j in i+1:length(t)
+        t[i], t[j] = t[j], t[i]
+        tourlen(t) < before - 1e-12 && return true
+        t[i], t[j] = t[j], t[i]
+    end
+    false
+end
+NAMES = ["2-opt", "or-opt", "swap"]
+NB = [two_opt!, or_opt!, swap!][1:clamp({{k}}, 1, 3)]  # neighbourhoods in use
+
+# Variable Neighbourhood Descent: back to the first neighbourhood after every improvement
+function vnd!(t, NB, moves)
+    k = 1
+    while k <= length(NB)
+        if NB[k](t)
+            moves[k] += 1; k = 1
+        else
+            k += 1
+        end
+    end
+    t
+end
+
+# greedy construction with a restricted candidate list (alpha = 0: nearest neighbour)
+function construct(alpha)
+    t = [rand(1:n)]; left = setdiff(1:n, t)
+    while !isempty(left)
+        d = [D[t[end], c] for c in left]
+        lo, hi = extrema(d)
+        c = left[rand(findall(d .<= lo + alpha * (hi - lo)))]
+        push!(t, c); deleteat!(left, findfirst(==(c), left))
+    end
+    t
+end
+
+KMAX = {{kmax}}  # shaking levels
+
+# shaking at level s: s random double-bridge moves (segments A B C D become A C B D)
+function shake(t, s)
+    u = copy(t)
+    for _ in 1:s
+        a, b, c = sort(randperm(length(u) - 1)[1:3])
+        u = [u[1:a]; u[b+1:c]; u[a+1:b]; u[c+1:end]]
+    end
+    u
+end
+
+function search(; iters=maxiter, seed=1, NB=NB, seconds=Inf)
+    Random.seed!(seed); t0 = time()
+    moves = zeros(Int, length(NB))
+    best = vnd!(construct(0.0), NB, moves); bestlen = tourlen(best)
+    trace, s = Float64[], 1
+    for it in 1:iters
+        t = vnd!(shake(best, s), NB, moves)
+        if tourlen(t) < bestlen - 1e-12
+            best, bestlen, s = t, tourlen(t), 1  # improvement: accept and reset the strength
+        else
+            s = s == KMAX ? 1 : s + 1  # otherwise shake harder
+        end
+        push!(trace, bestlen)
+        time() - t0 > seconds && break
+    end
+    (tour = best, len = bestlen, trace = trace, moves = moves)
+end
+
+res = search()
+best_tour, best_len = res.tour, res.len
+(tour_length = best_len, tour = best_tour, iterations = length(res.trace), improving_moves = NAMES[1:length(NB)] .=> res.moves)
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "convergence"
+label = "Convergence Curve"
+desc = "Best tour length after each iteration"
+code = '''
+using Plots
+
+plot(res.trace, xlabel="iteration", ylabel="best tour length", legend=false, linetype=:steppost)
+'''
+
+[[actionGroups.actions]]
+id = "tour-plot"
+label = "Tour Plot"
+desc = "The best tour drawn through the cities"
+code = '''
+using Plots
+
+c = [best_tour; best_tour[1]]
+plot(pts[1, c], pts[2, c], marker=:circle, markersize=3, aspect_ratio=:equal, legend=false, title=string("length ", round(best_len, digits=4)))
+'''
+
+[[actionGroups.actions]]
+id = "nhood-usage"
+label = "Neighbourhood Usage"
+desc = "Improving moves applied by each neighbourhood during the run"
+code = '''
+using Plots
+
+bar(NAMES[1:length(NB)], res.moves, xlabel="neighbourhood", ylabel="improving moves", legend=false)
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "restart-study"
+label = "Restart Study"
+desc = "Run with 10 seeds and compare the tour lengths"
+code = '''
+v = [search(seed=s).len for s in 1:10]
+(lengths = round.(v, digits=4), best = minimum(v), mean = mean(v), spread = std(v), share_at_best = mean(v .<= minimum(v) + 1e-9))
+'''
+
+[[actionGroups.actions]]
+id = "construction-quality"
+label = "Construction Quality"
+desc = "Nearest-neighbour tour, the same after one descent, and the full algorithm"
+code = '''
+Random.seed!(1)
+c = construct(0.0)
+(nearest_neighbour = tourlen(c), after_one_descent = tourlen(vnd!(copy(c), NB, zeros(Int, length(NB)))), full_algorithm = best_len,
+ improvement_by_search = 1 - best_len / tourlen(c))
+'''
+
+[[actionGroups.actions]]
+id = "budget-impact"
+label = "Budget Impact"
+desc = "Tour length and run time for increasing iteration budgets"
+code = '''
+map(unique([1, 10, 50, maxiter, 2maxiter, 5maxiter])) do it
+    sec = @elapsed r = search(iters=it)
+    (iterations = it, length = r.len, seconds = sec)
+end
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "solution"
+label = "Solution"
+desc = "The best tour as a city sequence and its length"
+code = '''
+(tour = [best_tour; best_tour[1]], length = best_len, recomputed = tourlen(best_tour), visits_every_city_once = sort(best_tour) == 1:n)
+'''
+
+[[actionGroups.actions]]
+id = "multistart"
+label = "Multistart"
+desc = "Best tour over 10 independent runs"
+code = '''
+sec = @elapsed runs = [search(seed=s) for s in 1:10]
+k = argmin(getfield.(runs, :len))
+(best_length = runs[k].len, best_seed = k, single_run_length = best_len, total_seconds = sec)
+'''
+
+[[actionGroups.actions]]
+id = "time-budget"
+label = "Time Budget"
+desc = "Stop on a wall-clock limit (edit seconds) instead of the iteration count"
+code = '''
+seconds = 2.0  # edit: time limit
+r = search(iters=typemax(Int), seconds=seconds)
+(seconds = seconds, iterations_done = length(r.trace), length = r.len)
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "compare-baseline"
+label = "Compare with 2-opt Baseline"
+desc = "The selected method against a nearest-neighbour tour improved by 2-opt only"
+code = '''
+Random.seed!(1)
+base = construct(0.0)
+while two_opt!(base) end
+(selected_method = best_len, nearest_neighbour_2opt = tourlen(base), improvement = 1 - best_len / tourlen(base))
+'''
+
+[[actionGroups.actions]]
+id = "compare-library"
+label = "Compare with Library"
+desc = "The selected method against TravelingSalesmanHeuristics.jl (repeated insertion heuristics with 2-opt, and simulated annealing)"
+code = '''
+using TravelingSalesmanHeuristics
+
+runs = ["selected method" => () -> search().len,
+        "solve_tsp" => () -> last(solve_tsp(D; quality_factor=80)),
+        "simulated annealing" => () -> last(simulated_annealing(D))]
+map(runs) do (name, run)
+    sec = @elapsed len = run()
+    (method = name, length = len, seconds = sec)
+end
+'''
+
+[[actionGroups.actions]]
+id = "nhood-count"
+label = "Neighbourhood Count"
+desc = "Tour length and time with 1, 2 and 3 neighbourhoods"
+code = '''
+map(1:3) do k
+    sec = @elapsed r = search(NB=[two_opt!, or_opt!, swap!][1:k])
+    (neighbourhoods = join(NAMES[1:k], ", "), length = r.len, seconds = sec)
+end
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "summary"
+label = "Summary"
+desc = "Configuration and result of the run"
+code = '''
+{{?model=grasp}}(method = "GRASP", alpha = ALPHA,
+{{?model=vnd}}(method = "VND with restarts",
+{{?model=vns}}(method = "VNS", shaking_levels = KMAX,
+ cities = n, neighbourhoods = NAMES[1:length(NB)], iterations = length(res.trace), improving_moves = res.moves, length = best_len)
+'''
+
+[[actionGroups.actions]]
+id = "nhood-effectiveness"
+label = "Neighbourhood Analysis"
+desc = "Whether each of the three neighbourhoods can still improve the best tour (a tour that none improves is a local optimum for all of them)"
+code = '''
+map(zip(NAMES, [two_opt!, or_opt!, swap!])) do (name, nb!)
+    t = copy(best_tour)
+    (neighbourhood = name, in_use = nb! in NB, finds_improvement = nb!(t), length_after_one_move = tourlen(t))
+end
+'''
+
+[[actionGroups.actions]]
+id = "obj-gap"
+label = "Objective Gap"
+desc = "Tour length against a lower bound on the optimum (TravelingSalesmanHeuristics.jl) and the nearest-neighbour tour"
+code = '''
+using TravelingSalesmanHeuristics
+
+lb = lowerbound(D)
+Random.seed!(1)
+(length = best_len, lower_bound = lb, gap_to_bound = best_len / lb - 1, nearest_neighbour = tourlen(construct(0.0)))
+'''

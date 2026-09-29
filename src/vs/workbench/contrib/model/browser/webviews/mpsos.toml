@@ -1,0 +1,485 @@
+# Polynomial Programming Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/mpsos.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Polynomial Programming"
+viewType = "pollis.mpsos"
+defaultModel = "sos"
+
+[[packages]]
+name = "SumOfSquares.jl"
+github = "https://github.com/jump-dev/SumOfSquares.jl"
+
+[[packages]]
+name = "Clarabel.jl"
+github = "https://github.com/oxfordcontrol/Clarabel.jl"
+
+[[packages]]
+name = "COSMO.jl"
+github = "https://github.com/oxfordcontrol/COSMO.jl"
+
+[[packages]]
+name = "SCS.jl"
+github = "https://github.com/jump-dev/SCS.jl"
+
+[requires]
+packages = ["SumOfSquares.jl", "DynamicPolynomials.jl", "Clarabel.jl", "Plots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Sum of Squares Certification"
+file = "mpsos/tutorial-01-sos-certificate.ipynb"
+bundled = true
+description = "Certify polynomial non-negativity via a sum-of-squares decomposition"
+
+[[notebookSections.notebooks]]
+name = "Polynomial Optimisation"
+file = "mpsos/tutorial-02-polynomial-optimisation.ipynb"
+bundled = true
+description = "Global lower bound via the Lasserre moment-SOS hierarchy"
+
+[[wikis]]
+name = "Factsheet"
+file = "mpsos/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "mpsos/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "mpsos/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "mpsos/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "mpsos/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "mpsos/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Methods"
+
+[[wikis]]
+name = "Sum of Squares Certification"
+file = "mpsos/sos.md"
+bundled = true
+
+[[wikis]]
+name = "Polynomial Optimisation"
+file = "mpsos/polyopt.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Topics"
+
+[[wikis]]
+name = "Lasserre Hierarchy"
+file = "mpsos/lasserre.md"
+bundled = true
+
+[[wikis]]
+name = "Duality"
+file = "mpsos/duality.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "JuMP: A Modeling Language for Mathematical Optimization"
+authors = "Dunning, Iain; Huchette, Joey; Lubin, Miles"
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/15M1020575"
+openAccess = true
+
+[[references]]
+title = "SumOfSquares.jl: Polynomial Sum-of-Squares Optimization in Julia"
+authors = "Legat, Benoit; Weisser, Tillmann; Lofberg, Johan; Parrilo, Pablo A."
+year = 2023
+journal = "GitHub"
+url = "https://github.com/jump-dev/SumOfSquares.jl"
+openAccess = true
+
+[[references]]
+title = "Clarabel: An Interior-Point Solver for Conic Programs with Quadratic Objectives"
+authors = "Goulart, Paul J.; Chen, Yuwen"
+year = 2024
+journal = "arXiv"
+doi = "10.48550/arXiv.2405.14674"
+openAccess = true
+
+[[references]]
+title = "COSMO: A Conic Operator Splitting Method for Convex Conic Problems"
+authors = "Garstka, Michael; Cannon, Mark; Goulart, Paul"
+year = 2021
+journal = "Journal of Optimization Theory and Applications"
+doi = "10.1007/s10957-021-01896-7"
+openAccess = true
+
+[[references]]
+title = "Conic Optimization via Operator Splitting and Homogeneous Self-Dual Embedding"
+authors = "O'Donoghue, Brendan; Chu, Eric; Parikh, Neal; Boyd, Stephen"
+year = 2016
+journal = "Journal of Optimization Theory and Applications"
+doi = "10.1007/s10957-016-0892-3"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Semidefinite Optimization and Convex Algebraic Geometry"
+authors = "Blekherman, Grigoriy; Parrilo, Pablo A.; Thomas, Rekha R. (Eds.)"
+year = 2012
+journal = "SIAM"
+doi = "10.1137/1.9781611972290"
+openAccess = false
+
+[[references]]
+title = "An Introduction to Polynomial and Semi-Algebraic Optimization"
+authors = "Lasserre, Jean B."
+year = 2015
+journal = "Cambridge University Press"
+doi = "10.1017/CBO9781107447226"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Semidefinite Programming Relaxations for Semialgebraic Problems"
+authors = "Parrilo, Pablo A."
+year = 2003
+journal = "Mathematical Programming"
+doi = "10.1007/s10107-003-0387-5"
+openAccess = false
+
+[[references]]
+title = "Global Optimization with Polynomials and the Problem of Moments"
+authors = "Lasserre, Jean B."
+year = 2001
+journal = "SIAM Journal on Optimization"
+doi = "10.1137/S1052623400366802"
+openAccess = false
+
+[[models]]
+id = "sos"
+label = "Sum of Squares Certification"
+
+[[models]]
+id = "polyopt"
+label = "Polynomial Optimisation"
+
+[[bullets]]
+text = "Sum of Squares (SOS) Certification"
+detail = "decomposes a polynomial as a sum of squares via a Gram matrix semidefinite programme, certifying non-negativity."
+
+[[bullets]]
+text = "Polynomial Optimisation"
+detail = "applies the Lasserre moment-SOS hierarchy to compute converging semidefinite programme lower bounds on a polynomial's global minimum."
+
+[[bullets]]
+text = "SumOfSquares.jl"
+detail = "handles the SOS reformulation automatically; the solvers (Clarabel, COSMO, SCS) solve the resulting semidefinite programme."
+
+[[decisionRows]]
+task = "Sum of Squares Certification"
+context = "Proving a polynomial is non-negative everywhere: Lyapunov functions, safety and stability certificates"
+purpose = "Find a PSD Gram matrix Q with p = m' Q m for a vector of monomials m"
+
+[[decisionRows]]
+task = "Polynomial Optimisation"
+context = "Global minimum of a non-convex polynomial, optionally on a semialgebraic set"
+purpose = "Maximise t such that p - t is SOS on the set (Putinar); converging lower bounds as the degree grows"
+
+[[inputs]]
+id = "n"
+label = "n"
+tooltip = "Number of polynomial variables x[1], ..., x[n]."
+default = "2"
+
+[[inputs]]
+id = "poly"
+label = "Polynomial p(x)"
+tooltip = "Polynomial expression in the vector x, for example sum(x .^ 4) - sum(x .^ 2) + 1 or x[1]^4 + x[1] * x[2] - x[2]^2. Its degree must be even for a certificate to exist."
+default = "sum(x .^ 4) - sum(x .^ 2) + 1"
+
+[[inputs]]
+id = "domain"
+label = "Domain"
+tooltip = "Semialgebraic set to minimise over, in the @set syntax: for example sum(x .^ 2) <= 4 or x[1] >= 0 && x[2] >= 0. Use sum(x .^ 2) <= 1e6 for (essentially) all of R^n."
+default = "sum(x .^ 2) <= 4"
+models = ["polyopt"]
+
+[[inputs]]
+id = "degree"
+label = "Relaxation Degree"
+tooltip = "Maximum degree of the SOS multipliers (the level of the Lasserre hierarchy). At least the degree of p; higher values give tighter bounds at greater cost."
+default = "4"
+models = ["polyopt"]
+
+[[inputs]]
+id = "solver"
+label = "Solver"
+tooltip = "SOS problems reduce to semidefinite programmes. Clarabel: interior point, the default and most accurate. COSMO: ADMM, lower memory for large or sparse problems. SCS: first-order, very large problems when a rough bound suffices."
+kind = "select"
+default = "Clarabel"
+newRow = true
+
+[[inputs.options]]
+value = "Clarabel"
+label = "Clarabel"
+
+[[inputs.options]]
+value = "COSMO"
+label = "COSMO"
+
+[[inputs.options]]
+value = "SCS"
+label = "SCS"
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.sos]
+# A quartic curve that stays above zero
+svg = '''
+var d = 'M8,28';
+for (var x = 8; x <= 46; x++) { var u = (x - 27) / 10; d += ' L' + x + ',' + (58 - 8 * (Math.pow(u, 4) - Math.pow(u, 2) + 1) + 8).toFixed(1); }
+return '<line x1="6" y1="66" x2="48" y2="66" stroke="currentColor" stroke-width="0.8" stroke-dasharray="2,2"/><path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.4"/>';
+'''
+
+[miniCharts.polyopt]
+# A double-well polynomial with its global minimum and a lower bound
+svg = '''
+var d = '', first = true;
+for (var x = 8; x <= 46; x++) { var u = (x - 27) / 9; var y = 30 + 10 * (Math.pow(u, 4) - 2 * Math.pow(u, 2) + 0.3 * u + 2); if (y < 26) { y = 26; } d += (first ? 'M' : ' L') + x + ',' + (96 - y).toFixed(1); first = false; }
+return '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.4"/><line x1="6" y1="61" x2="48" y2="61" stroke="currentColor" stroke-width="1" stroke-dasharray="3,2"/>';
+'''
+
+[[codeBranches]]
+model = "sos"
+code = '''
+using SumOfSquares, DynamicPolynomials, {{solver}}, LinearAlgebra
+
+n = {{n}}
+@polyvar x[1:n]
+p = {{poly}}
+
+model = SOSModel({{solver}}.Optimizer)
+set_silent(model)
+c = @constraint(model, p >= 0)  # p is a sum of squares
+optimize!(model)
+certified = termination_status(model) == MOI.OPTIMAL  # true = p >= 0 for every x
+
+# lower bound on min p over a set (used by the degree and sampling actions)
+function lower_bound(d; S = FullSpace())
+    m = SOSModel({{solver}}.Optimizer)
+    set_silent(m)
+    @variable(m, t)
+    @objective(m, Max, t)
+    @constraint(m, p >= t, domain = S, maxdegree = d)
+    optimize!(m)
+    objective_value(m)
+end
+box = 2.0  # half-width of the region sampled by the sampling action
+(status = termination_status(model), certified = certified)
+'''
+
+[[codeBranches]]
+model = "polyopt"
+code = '''
+using SumOfSquares, DynamicPolynomials, {{solver}}, LinearAlgebra
+
+n = {{n}}
+@polyvar x[1:n]
+p = {{poly}}
+S = @set {{domain}}
+
+function lower_bound(d; S = S)
+    m = SOSModel({{solver}}.Optimizer)
+    set_silent(m)
+    @variable(m, t)
+    @objective(m, Max, t)
+    cref = @constraint(m, p >= t, domain = S, maxdegree = d)  # p - t = sigma_0 + sum sigma_i g_i
+    optimize!(m)
+    m, cref
+end
+
+model, c = lower_bound({{degree}})
+box = 2.0  # half-width of the region sampled by the sampling action
+(status = termination_status(model), lower_bound = objective_value(model))
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "gram-heatmap"
+label = "Gram Matrix Heatmap"
+desc = "The PSD Gram matrix Q of the certificate p = m' Q m (rows and columns are the monomials of m)"
+code = '''
+using Plots
+
+g = gram_matrix(c)
+Q = Matrix(g.Q)
+labels = string.(g.basis.monomials)
+heatmap(labels, labels, Q, aspect_ratio=:equal, yflip=true, color=:RdBu, clims=(-1, 1) .* maximum(abs, Q), xrotation=45)
+'''
+
+[[actionGroups.actions]]
+id = "polynomial-surface"
+label = "Polynomial Contours"
+desc = "p over the (x1, x2) plane, the other variables held at 0"
+code = '''
+using Plots
+
+xs = range(-box, box, length=80)
+f(a, b) = p(x => [a; b; zeros(n - 2)])
+contour(xs, xs, f, fill=true, xlabel="x1", ylabel="x2", color=:viridis)
+{{?model=polyopt}} contour!(xs, xs, (a, b) -> f(a, b) - objective_value(model), levels=[0], color=:white, linewidth=2, label="p = lower bound")
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "feasibility"
+label = "Feasibility Check"
+desc = "Termination, primal and dual status of the SOS semidefinite programme. For certification, INFEASIBLE means no SOS certificate exists at this degree (p may still be non-negative)"
+code = '''
+(termination = termination_status(model), primal = primal_status(model), dual = dual_status(model))
+'''
+
+[[actionGroups.actions]]
+id = "gram-psd"
+label = "Gram PSD Check"
+desc = "Eigenvalues of the Gram matrix (all >= 0 for a valid certificate) and the residual of p - m' Q m"
+code = '''
+g = gram_matrix(c)
+ev = eigvals(Symmetric(Matrix(g.Q)))
+m = g.basis.monomials
+{{?model=sos}} residual = p - dot(m, Matrix(g.Q) * m)
+{{?model=sos}} (min_eigenvalue = minimum(ev), psd = minimum(ev) >= -1e-6, max_residual_coefficient = maximum(abs, coefficients(residual); init=0.0))
+{{?model=polyopt}} (min_eigenvalue = minimum(ev), psd = minimum(ev) >= -1e-6)
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "tighten"
+label = "Tighten Relaxation"
+desc = "Lower bound on min p at increasing relaxation degrees (the Lasserre hierarchy)"
+code = '''
+using Plots
+
+degs = maxdegree(p):2:maxdegree(p) + 6
+{{?model=sos}} lbs = [lower_bound(d; S = @set(sum(x .^ 2) <= box^2)) for d in degs]
+{{?model=polyopt}} lbs = [objective_value(first(lower_bound(d))) for d in degs]
+plot(degs, lbs, marker=:circle, xlabel="relaxation degree", ylabel="lower bound on min p", legend=false)
+'''
+
+[[actionGroups.actions]]
+id = "minimiser"
+label = "Extract Minimiser"
+desc = "Global minimiser(s) read from the moment matrix (the dual of the SOS constraint); nothing when the relaxation is not tight"
+code = '''
+{{?model=sos}} m_, c_ = let m = SOSModel({{solver}}.Optimizer); set_silent(m); @variable(m, t); @objective(m, Max, t); cr = @constraint(m, p >= t); optimize!(m); (m, cr) end
+{{?model=polyopt}} m_, c_ = model, c
+atoms = atomic_measure(moment_matrix(c_), 1e-4)  # nothing if no atoms found
+(lower_bound = objective_value(m_), minimisers = atoms === nothing ? nothing : [a.center for a in atoms.atoms],
+ p_at_minimisers = atoms === nothing ? nothing : [p(x => a.center) for a in atoms.atoms])
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "solver-compare"
+label = "Solver Comparison"
+desc = "Clarabel, COSMO and SCS on the same SOS problem: status, objective and time"
+code = '''
+using Clarabel, COSMO, SCS
+
+map(["Clarabel" => Clarabel.Optimizer, "COSMO" => COSMO.Optimizer, "SCS" => SCS.Optimizer]) do (name, opt)
+    set_optimizer(model, opt)
+    set_silent(model)
+    t = @elapsed optimize!(model)
+    (solver = name, status = termination_status(model), objective = objective_value(model), seconds = t)
+end
+'''
+
+[[actionGroups.actions]]
+id = "sos-vs-sample"
+label = "SOS vs Sampling"
+desc = "The certified SOS lower bound against the smallest value of p at 100,000 random points (an upper bound on the minimum, never a certificate)"
+code = '''
+{{?model=sos}} sos_lb = lower_bound(maxdegree(p))
+{{?model=polyopt}} sos_lb = objective_value(model)
+pts = [box .* (2 .* rand(n) .- 1) for _ in 1:100_000]
+{{?model=polyopt}} filter!(q -> all(g(x => q) >= 0 for g in inequalities(S)), pts)  # keep points in the domain
+sampled = minimum(q -> p(x => q), pts)
+(sos_lower_bound = sos_lb, sampled_minimum = sampled, gap = sampled - sos_lb)
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "gram-decomp"
+label = "Gram Decomposition"
+desc = "The explicit squares: p = sum_i s_i(x)^2, from the eigendecomposition of the Gram matrix"
+code = '''
+g = gram_matrix(c)
+F = eigen(Symmetric(Matrix(g.Q)))
+m = g.basis.monomials
+keep = findall(>(1e-8), F.values)
+squares = [sqrt(F.values[i]) * dot(F.vectors[:, i], m) for i in keep]  # p = sum(s .^ 2) (plus t for the bound)
+(number_of_squares = length(squares), squares = squares)
+'''
+
+[[actionGroups.actions]]
+id = "dual-certificate"
+label = "Dual Certificate"
+desc = "The moment matrix (the dual of the SOS constraint) and, on a domain, the SOS multipliers of each constraint"
+code = '''
+mm = moment_matrix(c)
+{{?model=sos}} (moment_matrix = mm,)
+{{?model=polyopt}} (moment_matrix = mm, multipliers = lagrangian_multipliers(c))  # sigma_i with p - t = sigma_0 + sum sigma_i g_i
+'''

@@ -1,0 +1,569 @@
+# Second Order Methods Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/so.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Second Order Methods"
+viewType = "pollis.so"
+defaultModel = "newton"
+
+[[packages]]
+name = "Optim.jl"
+github = "https://github.com/JuliaNLSolvers/Optim.jl"
+
+[[packages]]
+name = "NLopt.jl"
+github = "https://github.com/JuliaOpt/NLopt.jl"
+
+[requires]
+packages = ["Optim.jl", "NLopt.jl", "Plots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Newton Method"
+file = "so/tutorial-01-newton.ipynb"
+bundled = true
+description = "Second-order optimisation using exact Hessian via automatic differentiation with Newton()"
+
+[[notebookSections.notebooks]]
+name = "Newton Trust Region"
+file = "so/tutorial-02-newton-trust-region.ipynb"
+bundled = true
+description = "Globalised Newton method with trust-region step constraint for robust convergence"
+
+[[notebookSections.notebooks]]
+name = "Interior-Point Newton (IPNewton)"
+file = "so/tutorial-03-ipnewton.ipynb"
+bundled = true
+description = "Box-constrained optimisation via interior-point Newton using TwiceDifferentiableConstraints"
+
+[[notebookSections.notebooks]]
+name = "Truncated Newton"
+file = "so/tutorial-04-truncated-newton.ipynb"
+bundled = true
+description = "CG-based approximate Newton step using Hessian-vector products via NLopt.jl LD_TNEWTON"
+
+[[notebookSections.notebooks]]
+name = "Benchmarking Second-Order Methods"
+file = "so/tutorial-05-benchmark.ipynb"
+bundled = true
+description = "Compare Newton, Newton Trust Region, IPNewton, and Truncated Newton on standard test functions"
+
+[[wikis]]
+name = "Factsheet"
+file = "so/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "so/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "so/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "so/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "so/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "so/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Algorithm Details"
+
+[[wikis]]
+name = "Newton"
+file = "so/newton.md"
+bundled = true
+
+[[wikis]]
+name = "Newton Trust Region"
+file = "so/newton-trust-region.md"
+bundled = true
+
+[[wikis]]
+name = "IPNewton"
+file = "so/ipnewton.md"
+bundled = true
+
+[[wikis]]
+name = "Truncated Newton"
+file = "so/truncated-newton.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "Optim: A mathematical optimization package for Julia"
+authors = "Mogensen, Patrick Kofod; Riseth, Asbjorn Nilsen"
+year = 2018
+journal = "Journal of Open Source Software"
+doi = "10.21105/joss.00615"
+openAccess = true
+
+[[references]]
+title = "The NLopt nonlinear-optimization package"
+authors = "Johnson, Steven G."
+year = 2007
+journal = "NLopt Documentation"
+url = "https://nlopt.readthedocs.io/en/latest/"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Numerical Optimization"
+authors = "Nocedal, Jorge; Wright, Stephen J."
+year = 2006
+journal = "Springer (2nd ed.)"
+doi = "10.1007/978-0-387-40065-5"
+openAccess = false
+
+[[references]]
+title = "Trust Region Methods"
+authors = "Conn, Andrew R.; Gould, Nicholas I. M.; Toint, Philippe L."
+year = 2000
+journal = "SIAM"
+doi = "10.1137/1.9780898719857"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "On the Implementation of an Interior-Point Filter Line-Search Algorithm for Large-Scale Nonlinear Programming"
+authors = "Waechter, Andreas; Biegler, Lorenz T."
+year = 2006
+journal = "Mathematical Programming"
+doi = "10.1007/s10107-004-0559-y"
+openAccess = false
+
+[[references]]
+title = "Computing a Trust Region Step"
+authors = "More, Jorge J.; Sorensen, Danny C."
+year = 1983
+journal = "SIAM Journal on Scientific and Statistical Computing"
+doi = "10.1137/0904038"
+openAccess = false
+
+[[references]]
+title = "A Survey of Truncated-Newton Methods"
+authors = "Nash, Stephen G."
+year = 2000
+journal = "Journal of Computational and Applied Mathematics"
+doi = "10.1016/S0377-0427(00)00426-X"
+openAccess = false
+
+[[models]]
+id = "newton"
+label = "Newton"
+
+[[models]]
+id = "ntr"
+label = "Newton Trust Region"
+
+[[models]]
+id = "ipnewton"
+label = "IPNewton"
+
+[[models]]
+id = "tn"
+label = "Truncated Newton"
+
+[[bullets]]
+text = "Newton"
+detail = "exact Hessian via AD; quadratic convergence near the optimum"
+
+[[bullets]]
+text = "Newton Trust Region"
+detail = "Newton step clipped to a trust-region sphere; globally convergent"
+
+[[bullets]]
+text = "IPNewton"
+detail = "interior-point Newton for box-constrained problems"
+
+[[bullets]]
+text = "Truncated Newton"
+detail = "CG inner loop approximates Newton step; avoids forming the full Hessian"
+
+[[decisionRows]]
+task = "Newton"
+context = "Smooth, moderately sized problems started near a minimum with a positive definite Hessian"
+purpose = "Step to the minimum of the local quadratic model (with a line search); quadratic convergence"
+
+[[decisionRows]]
+task = "Newton Trust Region"
+context = "Starts far from the optimum, or a Hessian that is indefinite along the way"
+purpose = "Minimise the quadratic model inside a trust region that grows or shrinks with its accuracy; robust"
+
+[[decisionRows]]
+task = "IPNewton"
+context = "Box-constrained smooth problems"
+purpose = "Interior-point Newton on a barrier problem that keeps the iterates inside the bounds"
+
+[[decisionRows]]
+task = "Truncated Newton"
+context = "Large problems where forming or factorising the Hessian is too expensive"
+purpose = "Solve the Newton system approximately by conjugate gradients with Hessian-vector products (NLopt)"
+
+[[inputs]]
+id = "f"
+label = "Objective f(x)"
+tooltip = "Julia expression for the scalar objective to minimise; it must be twice differentiable. Use x[1], x[2], ... for the components."
+default = "(1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2"
+
+[[inputs]]
+id = "x0"
+label = "Initial Guess x0"
+tooltip = "Starting point as a Julia vector. Plain Newton can diverge from a poor start; the trust region is more robust. For IPNewton it must lie inside the bounds."
+default = "[-1.2, 1.0]"
+
+[[inputs]]
+id = "autodiff"
+label = "Derivatives"
+tooltip = ":forward: exact gradients and Hessians by forward-mode automatic differentiation (ForwardDiff.jl), recommended. :finite: finite-difference approximations (FiniteDiff.jl), slower and less accurate."
+kind = "select"
+default = ":forward"
+models = ["newton", "ntr", "ipnewton"]
+newRow = true
+
+[[inputs.options]]
+value = ":forward"
+label = ":forward (ForwardDiff)"
+
+[[inputs.options]]
+value = ":finite"
+label = ":finite (FiniteDiff)"
+
+[[inputs]]
+id = "lb"
+label = "Lower Bounds"
+tooltip = "Lower bound for each variable; -Inf for none."
+default = "[-Inf, -Inf]"
+models = ["ipnewton"]
+
+[[inputs]]
+id = "ub"
+label = "Upper Bounds"
+tooltip = "Upper bound for each variable; Inf for none."
+default = "[Inf, Inf]"
+models = ["ipnewton"]
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.newton]
+# A curve, its quadratic model at a point, and the step to the model's minimum
+svg = '''
+var d = 'M8,30', q = 'M10,40';
+for (var x = 8; x <= 46; x++) { var u = (x - 32) / 13; d += ' L' + x + ',' + (64 - 32 * (1 - Math.min(1, u * u))).toFixed(1); }
+for (var x2 = 10; x2 <= 40; x2++) { var v = (x2 - 26) / 14; q += ' L' + x2 + ',' + (58 - 26 * (1 - v * v)).toFixed(1); }
+return '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="' + q + '" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="3,2"/><line x1="14" y1="45" x2="26" y2="32" stroke="currentColor" stroke-width="1" marker-end="none"/><circle cx="14" cy="45" r="2" fill="currentColor"/>';
+'''
+
+[miniCharts.ntr]
+# A trust-region circle around the iterate with the constrained step
+svg = '''
+var s = '';
+[18, 11].forEach(function (r) { s += '<ellipse cx="32" cy="42" rx="' + r + '" ry="' + (r * 0.6) + '" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.6"/>'; });
+return s + '<circle cx="16" cy="58" r="10" fill="currentColor" fill-opacity="0.12" stroke="currentColor" stroke-width="1" stroke-dasharray="3,2"/><line x1="16" y1="58" x2="23" y2="51" stroke="currentColor" stroke-width="1.3"/><circle cx="16" cy="58" r="2" fill="currentColor"/>';
+'''
+
+[miniCharts.ipnewton]
+# Iterates approaching a bound from the interior
+svg = '''
+return '<rect x="10" y="28" width="34" height="38" fill="none" stroke="currentColor" stroke-width="1.2"/>'
+	+ '<path d="M22,56 Q30,46 38,40 Q41,37 43,35" fill="none" stroke="currentColor" stroke-width="1.2"/>'
+	+ '<circle cx="22" cy="56" r="1.8" fill="currentColor"/><circle cx="38" cy="40" r="1.8" fill="currentColor"/><circle cx="43" cy="35" r="2.4" fill="currentColor"/>';
+'''
+
+[miniCharts.tn]
+# Inner conjugate-gradient steps approximating the Newton step
+svg = '''
+return '<path d="M10,62 L20,48 L26,52 L32,40 L36,43 L42,32" fill="none" stroke="currentColor" stroke-width="1" opacity="0.7"/>'
+	+ '<line x1="10" y1="62" x2="42" y2="32" stroke="currentColor" stroke-width="1.3" stroke-dasharray="3,2"/><circle cx="10" cy="62" r="2" fill="currentColor"/><circle cx="42" cy="32" r="2.4" fill="currentColor"/>';
+'''
+
+[[codeBranches]]
+model = "newton"
+code = '''
+using Optim, ForwardDiff, LinearAlgebra
+
+f(x) = {{f}}
+x0 = {{x0}}  # initial guess
+n  = length(x0)
+opts = Optim.Options(store_trace=true, extended_trace=true)  # keep the iterates for the plots
+
+pack(r) = (x = Optim.minimizer(r), f = Optim.minimum(r), path = Optim.x_trace(r), iterations = Optim.iterations(r), converged = Optim.converged(r))
+solve(x0) = pack(optimize(f, x0, Newton(), opts; autodiff={{autodiff}}))
+
+sol = solve(x0)
+x_opt = sol.x
+(minimizer = x_opt, minimum = sol.f, iterations = sol.iterations, converged = sol.converged)
+'''
+
+[[codeBranches]]
+model = "ntr"
+code = '''
+using Optim, ForwardDiff, LinearAlgebra
+
+f(x) = {{f}}
+x0 = {{x0}}  # initial guess
+n  = length(x0)
+opts = Optim.Options(store_trace=true, extended_trace=true)  # keep the iterates for the plots
+
+pack(r) = (x = Optim.minimizer(r), f = Optim.minimum(r), path = Optim.x_trace(r), iterations = Optim.iterations(r), converged = Optim.converged(r))
+solve(x0) = pack(optimize(f, x0, NewtonTrustRegion(), opts; autodiff={{autodiff}}))
+
+sol = solve(x0)
+x_opt = sol.x
+(minimizer = x_opt, minimum = sol.f, iterations = sol.iterations, converged = sol.converged)
+'''
+
+[[codeBranches]]
+model = "ipnewton"
+code = '''
+using Optim, ForwardDiff, LinearAlgebra
+
+f(x) = {{f}}
+x0 = {{x0}}  # initial guess
+n  = length(x0)
+opts = Optim.Options(store_trace=true, extended_trace=true)  # keep the iterates for the plots
+
+pack(r) = (x = Optim.minimizer(r), f = Optim.minimum(r), path = Optim.x_trace(r), iterations = Optim.iterations(r), converged = Optim.converged(r))
+lb, ub = {{lb}}, {{ub}}  # box bounds; x0 must lie strictly inside
+solve(x0) = pack(optimize(TwiceDifferentiable(f, x0; autodiff={{autodiff}}), TwiceDifferentiableConstraints(lb, ub), x0, IPNewton(), opts))
+
+sol = solve(x0)
+x_opt = sol.x
+(minimizer = x_opt, minimum = sol.f, iterations = sol.iterations, converged = sol.converged)
+'''
+
+[[codeBranches]]
+model = "tn"
+code = '''
+using Optim, ForwardDiff, LinearAlgebra
+
+f(x) = {{f}}
+x0 = {{x0}}  # initial guess
+n  = length(x0)
+opts = Optim.Options(store_trace=true, extended_trace=true)  # keep the iterates for the plots
+
+pack(r) = (x = Optim.minimizer(r), f = Optim.minimum(r), path = Optim.x_trace(r), iterations = Optim.iterations(r), converged = Optim.converged(r))
+using NLopt
+
+function solve(x0)
+    path, best, calls = [copy(x0)], Ref(f(x0)), Ref(0)
+    function obj(x, g)
+        length(g) > 0 && (g .= ForwardDiff.gradient(f, x))
+        v = f(x); calls[] += 1
+        v < best[] && (best[] = v; push!(path, copy(x)))  # record improving points
+        v
+    end
+    opt = Opt(:LD_TNEWTON_PRECOND_RESTART, n)  # preconditioned truncated Newton with restarts
+    opt.min_objective = obj
+    opt.maxeval = 2000
+    opt.ftol_rel = 1e-12
+    minf, minx, ret = NLopt.optimize(opt, copy(x0))
+    (x = minx, f = minf, path = path, iterations = calls[], converged = ret in (:SUCCESS, :FTOL_REACHED, :XTOL_REACHED))
+end
+
+sol = solve(x0)
+x_opt = sol.x
+(minimizer = x_opt, minimum = sol.f, iterations = sol.iterations, converged = sol.converged)
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "convergence-trace"
+label = "Convergence Trace"
+desc = "f(x_k) - f* along the iterates (log scale): Newton-type methods show the characteristic quadratic plunge near the end"
+code = '''
+using Plots
+
+fs = f.(sol.path)
+plot(0:length(fs)-1, fs .- sol.f .+ eps(), yscale=:log10, marker=:circle, markersize=2, xlabel="iterate", ylabel="f(x) - f*", legend=false)
+'''
+
+[[actionGroups.actions]]
+id = "contour-path"
+label = "Contour + Path"
+desc = "The iterates on the contours of f (2D problems; other variables held at the optimum)"
+code = '''
+using Plots
+
+P = reduce(hcat, sol.path)
+pad = max(0.5, 0.25 * maximum(abs, P[1:2, :]))
+xs = range(minimum(P[1, :]) - pad, maximum(P[1, :]) + pad, length=120)
+ys = range(minimum(P[2, :]) - pad, maximum(P[2, :]) + pad, length=120)
+contour(xs, ys, (a, b) -> log1p(f([a; b; x_opt[3:end]]) - sol.f + 1e-12), fill=true, colorbar=false, xlabel="x1", ylabel="x2")
+plot!(P[1, :], P[2, :], marker=:circle, markersize=3, color=:white, label="iterates")
+scatter!([x_opt[1]], [x_opt[2]], marker=:star, markersize=10, color=:red, label="minimiser")
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "convergence-check"
+label = "Convergence Check"
+desc = "Convergence flag, iterations, gradient norm at the solution, and the observed convergence order from the last iterates (about 2 = quadratic)"
+code = '''
+e = [norm(p - x_opt) for p in sol.path]
+e = e[e .> 1e-12]
+order = length(e) >= 3 ? log(e[end] / e[end-1]) / log(e[end-1] / e[end-2]) : missing
+(converged = sol.converged, iterations = sol.iterations, gradient_norm = norm(ForwardDiff.gradient(f, x_opt)), observed_order = order)
+'''
+
+[[actionGroups.actions]]
+id = "gradient-check"
+label = "Gradient Check"
+desc = "Finite-difference against automatic-differentiation gradients at x0 and at the solution"
+code = '''
+using FiniteDiff
+
+map(["x0" => x0, "x_opt" => x_opt]) do (name, p)
+    g_ad = ForwardDiff.gradient(f, p)
+    g_fd = FiniteDiff.finite_difference_gradient(f, p)
+    (point = name, autodiff = g_ad, finite_diff = g_fd, max_difference = maximum(abs, g_ad - g_fd))
+end
+'''
+
+[[actionGroups.actions]]
+id = "hessian-check"
+label = "Hessian Conditioning"
+desc = "Hessian eigenvalues at x0 and at the solution: an indefinite Hessian at the start is where plain Newton struggles and the trust region helps"
+code = '''
+map(["x0" => x0, "x_opt" => x_opt]) do (name, p)
+    ev = eigvals(Symmetric(ForwardDiff.hessian(f, p)))
+    (point = name, eigenvalues = ev, positive_definite = all(>(0), ev), condition_number = maximum(abs, ev) / minimum(abs, ev))
+end
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "evaluate-new"
+label = "Evaluate at New Point"
+desc = "f at a new point, compared with the minimum"
+code = '''
+x_new = x_opt .+ 0.1  # replace with the point to evaluate
+(f_new = f(x_new), f_min = sol.f, increase = f(x_new) - sol.f, distance = norm(x_new - x_opt))
+'''
+
+[[actionGroups.actions]]
+id = "quadratic-model"
+label = "Quadratic Model"
+desc = "The second-order Taylor prediction f* + d' H d / 2 against the true f along the flattest Hessian direction: where the model Newton relies on stays accurate"
+code = '''
+using Plots
+
+H = Symmetric(ForwardDiff.hessian(f, x_opt))
+F = eigen(H)
+v = F.vectors[:, 1]  # flattest direction
+ts = range(-1, 1, length=81)
+plot(ts, [f(x_opt + t * v) for t in ts], label="f", xlabel="step along the flattest direction", ylabel="value")
+plot!(ts, [sol.f + t^2 * F.values[1] / 2 for t in ts], linestyle=:dash, label="quadratic model")
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "compare-so-methods"
+label = "Compare Methods"
+desc = "Newton, Newton trust region, IPNewton (unbounded), truncated Newton and BFGS (first-order reference) from the same start"
+code = '''
+using NLopt
+
+function tn_run(x0)
+    k = Ref(0)
+    opt = Opt(:LD_TNEWTON_PRECOND_RESTART, n)
+    opt.min_objective = (x, g) -> (length(g) > 0 && (g .= ForwardDiff.gradient(f, x)); k[] += 1; f(x))
+    opt.maxeval = 2000
+    minf, _, ret = NLopt.optimize(opt, copy(x0))
+    (minimum = minf, iterations = missing, f_calls = k[], converged = ret in (:SUCCESS, :FTOL_REACHED, :XTOL_REACHED))
+end
+optim_row(r) = (minimum = Optim.minimum(r), iterations = Optim.iterations(r), f_calls = Optim.f_calls(r), converged = Optim.converged(r))
+runs = ["Newton" => () -> optim_row(optimize(f, x0, Newton(); autodiff=:forward)),
+        "NewtonTrustRegion" => () -> optim_row(optimize(f, x0, NewtonTrustRegion(); autodiff=:forward)),
+        "IPNewton" => () -> optim_row(optimize(TwiceDifferentiable(f, x0; autodiff=:forward), TwiceDifferentiableConstraints(fill(-Inf, n), fill(Inf, n)), x0, IPNewton())),
+        "TruncatedNewton" => () -> tn_run(x0),
+        "BFGS" => () -> optim_row(optimize(f, x0, BFGS(); autodiff=:forward))]
+map(runs) do (name, run)
+    t = @elapsed r = run()
+    (method = name, r..., seconds = t)
+end
+'''
+
+[[actionGroups.actions]]
+id = "start-robustness"
+label = "Start Robustness"
+desc = "Success rate of Newton against Newton trust region from 20 random starts around x0"
+code = '''
+using Random
+
+Random.seed!(1)
+starts = [x0 .+ 2 .* randn(n) for _ in 1:20]
+ok(r) = Optim.converged(r) && norm(ForwardDiff.gradient(f, Optim.minimizer(r))) < 1e-6
+map(["Newton" => Newton(), "NewtonTrustRegion" => NewtonTrustRegion()]) do (name, a)
+    rs = [optimize(f, s, a; autodiff=:forward) for s in starts]
+    (method = name, success_rate = count(ok, rs) / length(rs), median_iterations = sort(Optim.iterations.(rs))[div(end, 2) + 1])
+end
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "solution-summary"
+label = "Solution Summary"
+desc = "Minimiser, minimum, iterations and the improvement over the start"
+code = '''
+(minimizer = x_opt, minimum = sol.f, f_start = f(x0), improvement = f(x0) - sol.f, iterations = sol.iterations, converged = sol.converged)
+'''
+
+[[actionGroups.actions]]
+id = "curvature"
+label = "Local Curvature"
+desc = "Principal axes of the minimum: Hessian eigenvectors with their curvatures; flat directions (small eigenvalues) are poorly determined"
+code = '''
+F = eigen(Symmetric(ForwardDiff.hessian(f, x_opt)))
+[(curvature = F.values[i], direction = F.vectors[:, i], relative_width = sqrt(F.values[end] / max(F.values[i], eps()))) for i in eachindex(F.values)]
+'''

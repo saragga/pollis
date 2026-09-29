@@ -1,0 +1,567 @@
+# AlphaZero Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/azero.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "AlphaZero"
+viewType = "pollis.azero"
+defaultModel = ""
+
+[[packages]]
+name = "AlphaZero.jl"
+github = "https://github.com/jonathan-laurent/AlphaZero.jl"
+
+[[packages.videos]]
+title = "High Performance Computing in Julia"
+description = "An 18-video course by Jamie Mair on writing fast Julia code"
+url = "https://www.youtube.com/playlist?list=PLUAq6xQKFgGr39PiyrPk_C9dhBKvWcjUA"
+
+[[packages]]
+name = "Setfield.jl"
+github = "https://github.com/jw3126/Setfield.jl"
+
+[requires]
+packages = ["Flux.jl", "Distributions.jl", "Plots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Connect Four"
+file = "azero/tutorial-01-connect-four.ipynb"
+bundled = true
+description = "Train AlphaZero from scratch on Connect Four; visualise MCTS visit counts and training curves"
+
+[[notebookSections.notebooks]]
+name = "Custom Game"
+file = "azero/tutorial-02-custom-game.ipynb"
+bundled = true
+description = "Implement the GameInterface for a new two-player game and plug it into the AlphaZero training loop"
+
+[[notebookSections.notebooks]]
+name = "TicTacToe"
+file = "azero/tutorial-03-tictactoe.ipynb"
+bundled = true
+description = "Fast convergence showcase on TicTacToe; inspect the learned policy and value function on all 9 board positions"
+
+[[wikis]]
+name = "Factsheet"
+file = "azero/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "azero/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "azero/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "azero/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "azero/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "azero/decision-guide.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "AlphaZero.jl: A Julia Implementation of the AlphaZero Algorithm"
+authors = "Laurent, Jonathan"
+year = 2021
+journal = "GitHub"
+url = "https://github.com/jonathan-laurent/AlphaZero.jl"
+openAccess = true
+
+[[references]]
+title = "Chess.jl: A Julia Chess Programming Library"
+authors = "Hager, Gunnar"
+year = 2021
+journal = "GitHub"
+url = "https://github.com/romstad/Chess.jl"
+openAccess = true
+
+[[references]]
+title = "Lux: Explicit Parameterisation for Deep Learning in Julia"
+authors = "Pal, Avik"
+year = 2023
+journal = "GitHub"
+url = "https://github.com/LuxDL/Lux.jl"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Reinforcement Learning: An Introduction"
+authors = "Sutton, Richard S.; Barto, Andrew G."
+year = 2018
+journal = "MIT Press"
+url = "http://incompleteideas.net/book/the-book-2nd.html"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Mastering the Game of Go with Deep Neural Networks and Tree Search"
+authors = "Silver, David; Huang, Aja; Maddison, Chris J.; et al."
+year = 2016
+journal = "Nature"
+doi = "10.1038/nature16961"
+openAccess = false
+
+[[references]]
+title = "Mastering the Game of Go without Human Knowledge"
+authors = "Silver, David; Schrittwieser, Julian; Simonyan, Karen; et al."
+year = 2017
+journal = "Nature"
+doi = "10.1038/nature24270"
+openAccess = false
+
+[[references]]
+title = "A General Reinforcement Learning Algorithm that Masters Chess, Shogi, and Go through Self-Play"
+authors = "Silver, David; Hubert, Thomas; Schrittwieser, Julian; et al."
+year = 2018
+journal = "Science"
+doi = "10.1126/science.aar6404"
+openAccess = false
+
+[[bullets]]
+text = "Self-Play"
+detail = "the current network plays against itself to generate a game history; Monte Carlo Tree Search guides action selection and produces improved policy targets stronger than the raw network output (AlphaZero.jl)"
+
+[[bullets]]
+text = "Monte Carlo Tree Search (MCTS)"
+detail = "at each position expands a search tree for a fixed number of simulations; visit counts are converted to a policy distribution used as the training target for the policy head (AlphaZero.jl)"
+
+[[bullets]]
+text = "Network Training"
+detail = "the shared policy-value network is trained on sampled positions from the replay buffer to match the MCTS policy and the game outcome; iterated until convergence (AlphaZero.jl, Flux.jl)"
+
+[[models]]
+id = "alphazero"
+label = "AlphaZero"
+
+[[decisionRows]]
+task = "AlphaZero"
+context = "Two-player, perfect-information games with a known simulator (board games, combinatorial puzzles, planning with an exact model)"
+purpose = "Self-play reinforcement learning: Monte Carlo Tree Search guided by a policy-value network plays games against itself, and the network learns to predict the search's move distribution and the final outcome"
+
+[[inputs]]
+id = "game"
+label = "Game"
+tooltip = "Tic-tac-toe (9 cells, learned in seconds) or Connect Four (6 x 7 board, 7 column actions, needs more iterations and simulations; a default run takes several minutes)."
+kind = "select"
+default = "tictactoe"
+
+[[inputs.options]]
+value = "tictactoe"
+label = "Tic-Tac-Toe"
+
+[[inputs.options]]
+value = "connect4"
+label = "Connect Four"
+
+[[inputs]]
+id = "niters"
+label = "Iterations"
+tooltip = "Outer training iterations. Each iteration collects self-play games, then updates the network on a replay window of the latest games."
+default = "15"
+
+[[inputs]]
+id = "nsims"
+label = "MCTS Simulations"
+tooltip = "Tree-search simulations per move. More simulations give stronger play and better training targets but slower self-play."
+default = "50"
+
+[[inputs]]
+id = "ngames"
+label = "Games per Iteration"
+tooltip = "Self-play games collected per iteration before the network update."
+default = "50"
+
+[[inputs]]
+id = "cpuct"
+label = "Exploration (c_puct)"
+tooltip = "Weight of the prior-guided exploration bonus in the PUCT selection rule Q + c_puct * P * sqrt(N) / (1 + n)."
+default = "1.5"
+newRow = true
+
+[[inputs]]
+id = "hidden"
+label = "Hidden Units"
+tooltip = "Width of the two hidden layers of the policy-value network."
+default = "64"
+
+[[inputs]]
+id = "lr"
+label = "Learning Rate"
+tooltip = "Adam step size of the network update."
+default = "1e-3"
+
+[[inputs]]
+id = "seed"
+label = "Random Seed"
+tooltip = "Seed of network initialisation, self-play sampling and Dirichlet noise."
+default = "1"
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.alphazero]
+# Search tree growing from the root, the most visited branch drawn heavier
+svg = '''
+const e = (x1, y1, x2, y2, w) => '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" stroke="currentColor" stroke-width="' + w + '"/>';
+const n = (x, y, r) => '<circle cx="' + x + '" cy="' + y + '" r="' + r + '" fill="currentColor"/>';
+return e(27, 26, 12, 46, 0.6) + e(27, 26, 27, 46, 2) + e(27, 26, 42, 46, 0.6)
+	+ e(27, 46, 19, 66, 1.4) + e(27, 46, 35, 66, 0.6) + e(12, 46, 8, 66, 0.4) + e(42, 46, 46, 66, 0.4)
+	+ n(27, 26, 3.5) + n(12, 46, 2) + n(27, 46, 3) + n(42, 46, 2) + n(19, 66, 2.5) + n(35, 66, 1.8) + n(8, 66, 1.5) + n(46, 66, 1.5);
+'''
+
+[[codeBranches]]
+model = "alphazero"
+code = '''
+using Flux, Distributions, Random, Statistics
+
+game = "{{game}}"  # tictactoe or connect4
+niters = {{niters}}  # training iterations
+nsims = {{nsims}}  # MCTS simulations per move
+ngames = {{ngames}}  # self-play games per iteration
+cpuct = {{cpuct}}  # exploration constant of the PUCT rule
+hidden = {{hidden}}  # hidden units of the policy-value network
+lr = {{lr}}  # Adam learning rate
+seed = {{seed}}  # random seed
+
+# Boards are stored from the view of the player to move: +1 own stones, -1 opponent's
+const ROWS, COLS, K = game == "tictactoe" ? (3, 3, 3) : (6, 7, 4)  # board size and line length to win
+const NA = game == "tictactoe" ? ROWS * COLS : COLS  # actions: cells (tic-tac-toe) or columns (Connect Four)
+cell(r, c) = (r - 1) * COLS + c
+legal(b) = NA == length(b) ? b .== 0 : BitVector([b[cell(1, c)] == 0 for c in 1:COLS])
+landing(b, a) = NA == length(b) ? a : cell(findlast(r -> b[cell(r, a)] == 0, 1:ROWS), a)  # stones drop in Connect Four
+
+function wins(b, i)  # does the stone at cell i complete K in a row?
+    r, c = divrem(i - 1, COLS) .+ 1
+    for (dr, dc) in ((0, 1), (1, 0), (1, 1), (1, -1))
+        n = 1
+        for s in (1, -1)
+            rr, cc = r + s * dr, c + s * dc
+            while 1 <= rr <= ROWS && 1 <= cc <= COLS && b[cell(rr, cc)] == b[i]
+                n += 1; rr += s * dr; cc += s * dc
+            end
+        end
+        n >= K && return true
+    end
+    false
+end
+
+function play(b, a)  # next board (seen by the opponent) and the outcome for the mover (nothing if the game goes on)
+    b2 = copy(b); i = landing(b, a); b2[i] = 1
+    wins(b2, i) && return (-b2, 1f0)
+    all(!=(0), b2) && return (-b2, 0f0)
+    (-b2, nothing)
+end
+
+# Policy-value network: board planes in, action logits and a value out
+encode(b) = Float32.(vcat(b .== 1, b .== -1))
+make_net() = Chain(Dense(2 * ROWS * COLS => hidden, relu), Dense(hidden => hidden, relu), Dense(hidden => NA + 1))
+
+function rollout(b, rng)  # random playout value for the player to move (pure MCTS)
+    sgn = 1f0
+    while true
+        b, z = play(b, rand(rng, findall(legal(b))))
+        z === nothing || return sgn * z
+        sgn = -sgn
+    end
+end
+
+function evaluate(net, b, rng)  # prior over legal actions and value for the player to move
+    m = legal(b)
+    net === nothing && return (Float32.(m) ./ sum(m), rollout(b, rng))
+    out = net(encode(b))
+    logits = ifelse.(m, out[1:NA], -Inf32)
+    p = exp.(logits .- maximum(logits))
+    (p ./ sum(p), tanh(out[end]))
+end
+
+# Monte Carlo Tree Search with the PUCT rule
+mutable struct Node
+    P::Vector{Float32}  # prior from the network
+    N::Vector{Int}  # visit counts
+    W::Vector{Float32}  # total backed-up value
+    mask::BitVector  # legal actions
+end
+
+function simulate!(tree, net, b, rng)  # one simulation; returns the value for the player to move at b
+    node = get(tree, b, nothing)
+    if node === nothing  # leaf: expand with the network (or a rollout)
+        p, v = evaluate(net, b, rng)
+        tree[b] = Node(p, zeros(Int, NA), zeros(Float32, NA), legal(b))
+        return v
+    end
+    sq = sqrt(sum(node.N) + 1)
+    best, a = -Inf32, 0
+    for j in findall(node.mask)
+        q = node.N[j] == 0 ? 0f0 : node.W[j] / node.N[j]
+        u = q + cpuct * node.P[j] * sq / (1 + node.N[j])
+        u > best && ((best, a) = (u, j))
+    end
+    b2, z = play(b, a)
+    v = z === nothing ? -simulate!(tree, net, b2, rng) : z
+    node.N[a] += 1; node.W[a] += v
+    v
+end
+
+function search(net, b, rng; sims=nsims, noise=false)
+    tree = Dict{Vector{Int}, Node}()
+    simulate!(tree, net, b, rng)  # expand the root
+    idx = findall(tree[b].mask)
+    if noise && length(idx) > 1  # Dirichlet noise on the root priors keeps self-play exploring
+        P = tree[b].P
+        P[idx] .= 0.75f0 .* P[idx] .+ 0.25f0 .* Float32.(rand(rng, Dirichlet(length(idx), 0.3)))
+    end
+    for _ in 1:sims
+        simulate!(tree, net, b, rng)
+    end
+    tree
+end
+visits(tree, b) = tree[b].N ./ sum(tree[b].N)  # improved policy = visit distribution at the root
+
+function self_play(net, rng; tempmoves=game == "tictactoe" ? 2 : 8)
+    b = zeros(Int, ROWS * COLS); states = Vector{Int}[]; pis = Vector{Float32}[]
+    while true
+        pv = Float32.(visits(search(net, b, rng; noise=true), b))
+        push!(states, b); push!(pis, pv)
+        a = length(states) <= tempmoves ? findfirst(cumsum(pv) .>= rand(rng) * sum(pv)) : argmax(pv)  # sample early moves
+        b, z = play(b, a)
+        if z !== nothing  # outcome for the last mover, sign alternating back through the game
+            L = length(states)
+            return states, pis, Float32[iseven(L - t) ? z : -z for t in 1:L]
+        end
+    end
+end
+
+# Players map (board, rng) to an action
+random_player() = (b, rng) -> rand(rng, findall(legal(b)))
+mcts_player(net; sims=nsims) = (b, rng) -> argmax(visits(search(net, b, rng; sims=sims), b))
+policy_player(net) = (b, rng) -> argmax(evaluate(net, b, rng)[1])  # raw network, no search
+
+function match(p1, p2; games=20, randomstart=1, rng=MersenneTwister(seed + 1))  # p1 moves first in odd games
+    w = d = l = 0
+    for g in 1:games
+        players = isodd(g) ? (p1, p2) : (p2, p1); me = isodd(g) ? 1 : 2
+        b = zeros(Int, ROWS * COLS); turn = 1; ply = 0
+        while true
+            ply += 1
+            a = ply <= randomstart ? rand(rng, findall(legal(b))) : players[turn](b, rng)  # random opening varies the games
+            b, z = play(b, a)
+            if z !== nothing
+                z == 0 ? (d += 1) : (turn == me ? (w += 1) : (l += 1))
+                break
+            end
+            turn = 3 - turn
+        end
+    end
+    (win = w / games, draw = d / games, loss = l / games)
+end
+
+function train(; niters=niters, ngames=ngames, seed=seed, window=4, epochs=4, batch=64)
+    rng = MersenneTwister(seed); Random.seed!(seed)
+    net = make_net(); opt = Flux.setup(Adam(lr), net)
+    buffer = []  # self-play data of the latest iterations
+    hist = (iter = Int[], policy_loss = Float64[], value_loss = Float64[], win_random = Float64[], samples = Int[])
+    checkpoints = [deepcopy(net)]  # checkpoints[k + 1] = network after iteration k
+    for it in 1:niters
+        S, P, Z = Vector{Int}[], Vector{Float32}[], Float32[]
+        for g in 1:ngames
+            s, p, z = self_play(net, rng); append!(S, s); append!(P, p); append!(Z, z)
+        end
+        push!(buffer, (S, P, Z)); length(buffer) > window && popfirst!(buffer)
+        X = reduce(hcat, [encode(s) for d in buffer for s in d[1]])
+        Pm = reduce(hcat, [p for d in buffer for p in d[2]])
+        Zv = reduce(vcat, [d[3] for d in buffer])
+        for e in 1:epochs, idx in Iterators.partition(randperm(rng, length(Zv)), batch)
+            gs = Flux.gradient(net) do m
+                out = m(X[:, idx])
+                Flux.logitcrossentropy(out[1:NA, :], Pm[:, idx]) + Flux.mse(tanh.(out[end, :]), Zv[idx])
+            end
+            Flux.update!(opt, net, gs[1])
+        end
+        out = net(X)
+        push!(hist.iter, it); push!(hist.samples, length(Zv))
+        push!(hist.policy_loss, Flux.logitcrossentropy(out[1:NA, :], Pm)); push!(hist.value_loss, Flux.mse(tanh.(out[end, :]), Zv))
+        push!(hist.win_random, match(mcts_player(net), random_player(); games=20).win)
+        push!(checkpoints, deepcopy(net))
+    end
+    (net = net, hist = hist, checkpoints = checkpoints)
+end
+
+show_board(b, mover) = [b[cell(r, c)] * mover == 1 ? 'X' : b[cell(r, c)] * mover == -1 ? 'O' : '.' for r in 1:ROWS, c in 1:COLS]  # mover = 1 when X is to move
+
+function greedy_game(net, rng)  # one game of the trained player against itself
+    b = zeros(Int, ROWS * COLS); mover = 1; states = [b]; moves = Int[]
+    while true
+        a = argmax(visits(search(net, b, rng), b)); push!(moves, a)
+        b, z = play(b, a); mover = -mover; push!(states, b)
+        z === nothing || return (moves = moves, states = states, final = show_board(b, mover), outcome = z == 0 ? "draw" : (mover == -1 ? "X wins" : "O wins"))
+    end
+end
+
+res = train()  # self-play training
+(win_rate_vs_random = res.hist.win_random[end], policy_loss = round(res.hist.policy_loss[end], digits=3), value_loss = round(res.hist.value_loss[end], digits=3), samples = res.hist.samples[end])
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "training-curves"
+label = "Training Curves"
+desc = "Win rate of the search player against a random opponent and the total network loss over iterations"
+code = '''
+using Plots
+h = res.hist
+plot(plot(h.iter, h.win_random, marker=:o, ylim=(0, 1), xlabel="Iteration", ylabel="Win rate vs random", label=false),
+    plot(h.iter, h.policy_loss .+ h.value_loss, marker=:o, xlabel="Iteration", ylabel="Loss", label="policy + value"),
+    layout=(1, 2), size=(900, 350))
+'''
+
+[[actionGroups.actions]]
+id = "mcts-visits"
+label = "MCTS Visit Counts"
+desc = "Visit counts of the tree search over the moves of the empty board (cells for tic-tac-toe, columns for Connect Four)"
+code = '''
+using Plots
+b0 = zeros(Int, ROWS * COLS)
+N = search(res.net, b0, MersenneTwister(seed))[b0].N  # visits per action at the root
+game == "tictactoe" ? heatmap(transpose(reshape(N, COLS, ROWS)), yflip=true, aspect_ratio=1, title="MCTS visits, empty board") :
+    bar(N, xlabel="Column", ylabel="Visits", label=false, title="MCTS visits, empty board")
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "vs-random"
+label = "Win Rate vs Random"
+desc = "Win, draw and loss rates against a random player over 100 games (alternating first move), with and without tree search"
+code = '''
+(with_search = match(mcts_player(res.net), random_player(); games=100),
+ raw_network = match(policy_player(res.net), random_player(); games=100))
+'''
+
+[[actionGroups.actions]]
+id = "loss-components"
+label = "Loss Components"
+desc = "Policy loss (cross-entropy to the MCTS visit distribution) and value loss (squared error to the game outcome) over iterations"
+code = '''
+using Plots
+h = res.hist
+plot(h.iter, [h.policy_loss h.value_loss], label=["policy loss" "value loss"], marker=:o, xlabel="Iteration", ylabel="Loss")
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "play-game"
+label = "Play a Game"
+desc = "One complete game of the trained search player against itself: move list, final board and outcome"
+code = '''
+g = greedy_game(res.net, MersenneTwister(seed + 2))
+println(g.outcome, " after ", length(g.moves), " moves: ", g.moves)
+g.final
+'''
+
+[[actionGroups.actions]]
+id = "best-move"
+label = "Best Move"
+desc = "Best move chosen by the search after a short opening (tic-tac-toe: X centre, O corner; Connect Four: both in the centre column)"
+code = '''
+opening = game == "tictactoe" ? [5, 1] : [4, 4]
+b = zeros(Int, ROWS * COLS)
+for a in opening
+    global b = play(b, a)[1]
+end
+pv = visits(search(res.net, b, MersenneTwister(seed)), b)
+display(show_board(b, 1))
+(best_action = argmax(pv), visit_share = round(maximum(pv), digits=3), value_for_X = round(evaluate(res.net, b, nothing)[2], digits=3))
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "vs-checkpoint"
+label = "vs Previous Checkpoint"
+desc = "Current network against the checkpoint from halfway through training and against the untrained network, both with tree search"
+code = '''
+k = max(1, div(niters, 2))  # halfway checkpoint
+(vs_iteration = k, result = match(mcts_player(res.net), mcts_player(res.checkpoints[k + 1]); games=40),
+ vs_untrained = match(mcts_player(res.net), mcts_player(res.checkpoints[1]); games=40))
+'''
+
+[[actionGroups.actions]]
+id = "vs-pure-mcts"
+label = "vs Pure MCTS"
+desc = "AlphaZero search against pure MCTS (uniform priors, random-rollout values) with the same simulation budget, and the raw network without search"
+code = '''
+pure = mcts_player(nothing)  # classic MCTS: no network
+(alphazero_vs_pure_mcts = match(mcts_player(res.net), pure; games=40),
+ raw_network_vs_pure_mcts = match(policy_player(res.net), pure; games=40))
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "policy-distribution"
+label = "Policy Distribution"
+desc = "Raw network prior against the improved MCTS policy for every move of the empty board, plus the network's value estimate"
+code = '''
+b0 = zeros(Int, ROWS * COLS)
+p, v = evaluate(res.net, b0, nothing)
+pv = visits(search(res.net, b0, MersenneTwister(seed)), b0)
+println("Value of the empty board for X: ", round(v, digits=3))
+[(action = a, prior = round(p[a], digits=3), mcts = round(pv[a], digits=3)) for a in sortperm(pv, rev=true)]
+'''
+
+[[actionGroups.actions]]
+id = "value-over-game"
+label = "Value Over Game"
+desc = "Network value estimate (for X) at every position of a self-play game"
+code = '''
+using Plots
+g = greedy_game(res.net, MersenneTwister(seed + 2))
+v = [evaluate(res.net, s, nothing)[2] * (isodd(t) ? 1 : -1) for (t, s) in enumerate(g.states[1:end-1])]  # flip to X's view
+plot(v, marker=:o, ylim=(-1, 1), xlabel="Move", ylabel="Value for X", label=false, title=g.outcome)
+'''

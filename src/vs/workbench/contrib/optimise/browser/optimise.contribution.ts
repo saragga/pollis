@@ -6,63 +6,56 @@
 import { localize } from '../../../../../vs/nls.js';
 import { MenuRegistry, MenuId } from '../../../../platform/actions/common/actions.js';
 import { ContextKeyExpr } from '../../../../platform/contextkey/common/contextkey.js';
-import { CommandsRegistry, ICommandService } from '../../../../platform/commands/common/commands.js';
-import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
-import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
-import { IOpenerService } from '../../../../platform/opener/common/opener.js';
-import { IEditorService } from '../../../services/editor/common/editorService.js';
-import { IQuickInputService } from '../../../../platform/quickinput/common/quickInput.js';
-import { IClipboardService } from '../../../../platform/clipboard/common/clipboardService.js';
-import { INotificationService } from '../../../../platform/notification/common/notification.js';
-import { openIdoWebview } from '../../model/browser/commands/ido.command.js';
-import { openOptimWebview } from '../../model/browser/commands/optim.command.js';
-import { openDsWebview } from '../../model/browser/commands/ds.command.js';
-import { openSoWebview } from '../../model/browser/commands/so.command.js';
-import { openFoWebview } from '../../model/browser/commands/fo.command.js';
-import { openQnWebview } from '../../model/browser/commands/qn.command.js';
-import { openSgmWebview } from '../../model/browser/commands/sgm.command.js';
-import { openFomWebview } from '../../model/browser/commands/fom.command.js';
-import { openCamWebview } from '../../model/browser/commands/cam.command.js';
-import { openNllsWebview } from '../../model/browser/commands/nlls.command.js';
-import { openDgoWebview } from '../../model/browser/commands/dgo.command.js';
-import { openPgoWebview } from '../../model/browser/commands/pgo.command.js';
-import { openHnsWebview } from '../../model/browser/commands/hns.command.js';
-import { openEsWebview } from '../../model/browser/commands/es.command.js';
-import { openDevolWebview } from '../../model/browser/commands/devol.command.js';
-import { openGalgWebview } from '../../model/browser/commands/galg.command.js';
-import { openCoptWebview } from '../../model/browser/commands/copt.command.js';
-import { openProxWebview } from '../../model/browser/commands/prox.command.js';
-import { openMbmWebview } from '../../model/browser/commands/mbm.command.js';
-import { openDcoWebview } from '../../model/browser/commands/dco.command.js';
-import { openSwarmWebview } from '../../model/browser/commands/swarm.command.js';
+import { CommandsRegistry } from '../../../../platform/commands/common/commands.js';
+import { IDO_PANEL } from '../../model/browser/commands/ido.command.js';
+import { OPTIM_PANEL } from '../../model/browser/commands/optim.command.js';
+import { DS_PANEL } from '../../model/browser/commands/ds.command.js';
+import { SO_PANEL } from '../../model/browser/commands/so.command.js';
+import { FO_PANEL } from '../../model/browser/commands/fo.command.js';
+import { QN_PANEL } from '../../model/browser/commands/qn.command.js';
+import { SGM_PANEL } from '../../model/browser/commands/sgm.command.js';
+import { FOM_PANEL } from '../../model/browser/commands/fom.command.js';
+import { CAM_PANEL } from '../../model/browser/commands/cam.command.js';
+import { NLLS_PANEL } from '../../model/browser/commands/nlls.command.js';
+import { DGO_PANEL } from '../../model/browser/commands/dgo.command.js';
+import { PGO_PANEL } from '../../model/browser/commands/pgo.command.js';
+import { HNS_PANEL } from '../../model/browser/commands/hns.command.js';
+import { ES_PANEL } from '../../model/browser/commands/es.command.js';
+import { DEVOL_PANEL } from '../../model/browser/commands/devol.command.js';
+import { GALG_PANEL } from '../../model/browser/commands/galg.command.js';
+import { COPT_PANEL } from '../../model/browser/commands/copt.command.js';
+import { PROX_PANEL } from '../../model/browser/commands/prox.command.js';
+import { MBM_PANEL } from '../../model/browser/commands/mbm.command.js';
+import { DCO_PANEL } from '../../model/browser/commands/dco.command.js';
+import { SWARM_PANEL } from '../../model/browser/commands/swarm.command.js';
 import { BOPT_PANEL } from '../../model/browser/commands/bopt.command.js';
 import { openScaffoldWebview } from '../../model/browser/commands/scaffold.command.js';
-import { openSboWebview } from '../../model/browser/commands/sbo.command.js';
-import { openMoptWebview } from '../../model/browser/commands/mopt.command.js';
-import { openNgoWebview } from '../../model/browser/commands/ngo.command.js';
-import { openCmpWebview } from '../../model/browser/commands/cmp.command.js';
-import { openVariWebview } from '../../model/browser/commands/vari.command.js';
-import { openGtWebview } from '../../model/browser/commands/gt.command.js';
-import { openMpecWebview } from '../../model/browser/commands/mpec.command.js';
-import { openBlvWebview } from '../../model/browser/commands/blv.command.js';
-import { openDpWebview } from '../../model/browser/commands/dp.command.js';
-import { openMdpWebview } from '../../model/browser/commands/mdp.command.js';
-import { openMadpWebview } from '../../model/browser/commands/madp.command.js';
-import { openRoptWebview } from '../../model/browser/commands/ropt.command.js';
-import { openSproWebview } from '../../model/browser/commands/spro.command.js';
-import { openCcdrWebview } from '../../model/browser/commands/ccdr.command.js';
-import { openPbmWebview } from '../../model/browser/commands/pbm.command.js';
-import { openDcmWebview } from '../../model/browser/commands/dcm.command.js';
-import { openMpmWebview } from '../../model/browser/commands/mpm.command.js';
-import { openBndtWebview } from '../../model/browser/commands/bndt.command.js';
-import { openQlWebview } from '../../model/browser/commands/ql.command.js';
-import { openPgmWebview } from '../../model/browser/commands/pgm.command.js';
-import { openAcmWebview } from '../../model/browser/commands/acm.command.js';
-import { openMarlWebview } from '../../model/browser/commands/marl.command.js';
-import { openAzeroWebview } from '../../model/browser/commands/azero.command.js';
-import { openLqrWebview } from '../../model/browser/commands/lqr.command.js';
-import { openTrajWebview } from '../../model/browser/commands/traj.command.js';
-import { openMpcWebview } from '../../model/browser/commands/mpc.command.js';
+import { SBO_PANEL } from '../../model/browser/commands/sbo.command.js';
+import { MOPT_PANEL } from '../../model/browser/commands/mopt.command.js';
+import { NGO_PANEL } from '../../model/browser/commands/ngo.command.js';
+import { CMP_PANEL } from '../../model/browser/commands/cmp.command.js';
+import { VARI_PANEL } from '../../model/browser/commands/vari.command.js';
+import { GT_PANEL } from '../../model/browser/commands/gt.command.js';
+import { MPEC_PANEL } from '../../model/browser/commands/mpec.command.js';
+import { BLV_PANEL } from '../../model/browser/commands/blv.command.js';
+import { DP_PANEL } from '../../model/browser/commands/dp.command.js';
+import { MDP_PANEL } from '../../model/browser/commands/mdp.command.js';
+import { MADP_PANEL } from '../../model/browser/commands/madp.command.js';
+import { ROPT_PANEL } from '../../model/browser/commands/ropt.command.js';
+import { SPRO_PANEL } from '../../model/browser/commands/spro.command.js';
+import { CCDR_PANEL } from '../../model/browser/commands/ccdr.command.js';
+import { PBM_PANEL } from '../../model/browser/commands/pbm.command.js';
+import { DCM_PANEL } from '../../model/browser/commands/dcm.command.js';
+import { MPM_PANEL } from '../../model/browser/commands/mpm.command.js';
+import { BNDT_PANEL } from '../../model/browser/commands/bndt.command.js';
+import { QL_PANEL } from '../../model/browser/commands/ql.command.js';
+import { PGM_PANEL } from '../../model/browser/commands/pgm.command.js';
+import { ACM_PANEL } from '../../model/browser/commands/acm.command.js';
+import { MARL_PANEL } from '../../model/browser/commands/marl.command.js';
+import { AZERO_PANEL } from '../../model/browser/commands/azero.command.js';
+import { LQR_PANEL } from '../../model/browser/commands/lqr.command.js';
+import { TRAJ_PANEL } from '../../model/browser/commands/traj.command.js';
+import { MPC_PANEL } from '../../model/browser/commands/mpc.command.js';
 // import { METHODS } from 'http';
 
 const OPTIMISE_COMMAND_ID = 'workbench.action.showOptimise';
@@ -113,573 +106,102 @@ CommandsRegistry.registerCommand(OPTIMISE_COMMAND_ID, () => {
 	console.log('Optimise command executed!');
 });
 
-CommandsRegistry.registerCommand(OPTIM_ID, (accessor: ServicesAccessor) => {
-	openOptimWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	);
-});
+CommandsRegistry.registerCommand(OPTIM_ID, accessor => openScaffoldWebview(accessor, OPTIM_PANEL));
 
-CommandsRegistry.registerCommand(DS_ID, (accessor: ServicesAccessor) => {
-	openDsWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	);
-});
+CommandsRegistry.registerCommand(DS_ID, accessor => openScaffoldWebview(accessor, DS_PANEL));
 
-CommandsRegistry.registerCommand(SO_ID, (accessor: ServicesAccessor) => {
-	openSoWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	);
-});
+CommandsRegistry.registerCommand(SO_ID, accessor => openScaffoldWebview(accessor, SO_PANEL));
 
-CommandsRegistry.registerCommand(FO_ID, (accessor: ServicesAccessor) => {
-	openFoWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	);
-});
+CommandsRegistry.registerCommand(FO_ID, accessor => openScaffoldWebview(accessor, FO_PANEL));
 
-CommandsRegistry.registerCommand(QN_ID, (accessor: ServicesAccessor) => {
-	openQnWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	);
-});
+CommandsRegistry.registerCommand(QN_ID, accessor => openScaffoldWebview(accessor, QN_PANEL));
 
-CommandsRegistry.registerCommand(SGM_ID, (accessor: ServicesAccessor) => {
-	openSgmWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	);
-});
+CommandsRegistry.registerCommand(SGM_ID, accessor => openScaffoldWebview(accessor, SGM_PANEL));
 
-CommandsRegistry.registerCommand(FOM_ID, (accessor: ServicesAccessor) => {
-	openFomWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	);
-});
+CommandsRegistry.registerCommand(FOM_ID, accessor => openScaffoldWebview(accessor, FOM_PANEL));
 
-CommandsRegistry.registerCommand(CAM_ID, (accessor: ServicesAccessor) => {
-	openCamWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	);
-});
+CommandsRegistry.registerCommand(CAM_ID, accessor => openScaffoldWebview(accessor, CAM_PANEL));
 
-CommandsRegistry.registerCommand(IDO_ID, (accessor: ServicesAccessor) => {
-	openIdoWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	);
-});
+CommandsRegistry.registerCommand(IDO_ID, accessor => openScaffoldWebview(accessor, IDO_PANEL));
 
-CommandsRegistry.registerCommand(LQR_ID, (accessor: ServicesAccessor) => {
-	openLqrWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	);
-});
+CommandsRegistry.registerCommand(LQR_ID, accessor => openScaffoldWebview(accessor, LQR_PANEL));
 
-CommandsRegistry.registerCommand(TRAJ_ID, (accessor: ServicesAccessor) => {
-	openTrajWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	);
-});
+CommandsRegistry.registerCommand(TRAJ_ID, accessor => openScaffoldWebview(accessor, TRAJ_PANEL));
 
-CommandsRegistry.registerCommand(MPC_ID, (accessor: ServicesAccessor) => {
-	openMpcWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	);
-});
+CommandsRegistry.registerCommand(MPC_ID, accessor => openScaffoldWebview(accessor, MPC_PANEL));
 
 
-CommandsRegistry.registerCommand(NLLS_ID, (accessor: ServicesAccessor) => {
-	openNllsWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	);
-});
+CommandsRegistry.registerCommand(NLLS_ID, accessor => openScaffoldWebview(accessor, NLLS_PANEL));
 
-CommandsRegistry.registerCommand(DGO_ID, (accessor: ServicesAccessor) => {
-	openDgoWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	);
-});
+CommandsRegistry.registerCommand(DGO_ID, accessor => openScaffoldWebview(accessor, DGO_PANEL));
 
-CommandsRegistry.registerCommand(PGO_ID, (accessor: ServicesAccessor) => {
-	openPgoWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	);
-});
+CommandsRegistry.registerCommand(PGO_ID, accessor => openScaffoldWebview(accessor, PGO_PANEL));
 
-CommandsRegistry.registerCommand(HNS_ID, (accessor: ServicesAccessor) => {
-	openHnsWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	);
-});
+CommandsRegistry.registerCommand(HNS_ID, accessor => openScaffoldWebview(accessor, HNS_PANEL));
 
-CommandsRegistry.registerCommand(ES_ID, (accessor: ServicesAccessor) => {
-	openEsWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	);
-});
+CommandsRegistry.registerCommand(ES_ID, accessor => openScaffoldWebview(accessor, ES_PANEL));
 
-CommandsRegistry.registerCommand(DEVOL_ID, (accessor: ServicesAccessor) => {
-	openDevolWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	);
-});
+CommandsRegistry.registerCommand(DEVOL_ID, accessor => openScaffoldWebview(accessor, DEVOL_PANEL));
 
-CommandsRegistry.registerCommand(COPT_ID, (accessor: ServicesAccessor) => {
-	openCoptWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	);
-});
+CommandsRegistry.registerCommand(COPT_ID, accessor => openScaffoldWebview(accessor, COPT_PANEL));
 
-CommandsRegistry.registerCommand(GALG_ID, (accessor: ServicesAccessor) => {
-	openGalgWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	);
-});
+CommandsRegistry.registerCommand(GALG_ID, accessor => openScaffoldWebview(accessor, GALG_PANEL));
 
-CommandsRegistry.registerCommand(MBM_ID, (accessor: ServicesAccessor) => {
-	openMbmWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	);
-});
+CommandsRegistry.registerCommand(MBM_ID, accessor => openScaffoldWebview(accessor, MBM_PANEL));
 
-CommandsRegistry.registerCommand(PROX_ID, (accessor: ServicesAccessor) => {
-	openProxWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	);
-});
+CommandsRegistry.registerCommand(PROX_ID, accessor => openScaffoldWebview(accessor, PROX_PANEL));
 
-CommandsRegistry.registerCommand(DCO_ID, (accessor: ServicesAccessor) => {
-	openDcoWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	);
-});
+CommandsRegistry.registerCommand(DCO_ID, accessor => openScaffoldWebview(accessor, DCO_PANEL));
 
-CommandsRegistry.registerCommand(SWARM_ID, (accessor: ServicesAccessor) => {
-	openSwarmWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	);
-});
+CommandsRegistry.registerCommand(SWARM_ID, accessor => openScaffoldWebview(accessor, SWARM_PANEL));
 
 CommandsRegistry.registerCommand(BOPT_ID, accessor => openScaffoldWebview(accessor, BOPT_PANEL));
 
-CommandsRegistry.registerCommand(SBO_ID, (accessor: ServicesAccessor) => {
-	openSboWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	);
-});
+CommandsRegistry.registerCommand(SBO_ID, accessor => openScaffoldWebview(accessor, SBO_PANEL));
 
-CommandsRegistry.registerCommand(MOPT_ID, (accessor: ServicesAccessor) => {
-	openMoptWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	);
-});
+CommandsRegistry.registerCommand(MOPT_ID, accessor => openScaffoldWebview(accessor, MOPT_PANEL));
 
-CommandsRegistry.registerCommand(NGO_ID, (accessor: ServicesAccessor) => {
-	openNgoWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	);
-});
+CommandsRegistry.registerCommand(NGO_ID, accessor => openScaffoldWebview(accessor, NGO_PANEL));
 
-CommandsRegistry.registerCommand(MDP_ID, (accessor: ServicesAccessor) => {
-	openMdpWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	);
-});
+CommandsRegistry.registerCommand(MDP_ID, accessor => openScaffoldWebview(accessor, MDP_PANEL));
 
-CommandsRegistry.registerCommand(MADP_ID, (accessor: ServicesAccessor) => {
-	openMadpWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	);
-});
+CommandsRegistry.registerCommand(MADP_ID, accessor => openScaffoldWebview(accessor, MADP_PANEL));
 
-CommandsRegistry.registerCommand('chiara.statistics.rl.bndt', (accessor: ServicesAccessor) => {
-	openBndtWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	);
-});
+CommandsRegistry.registerCommand('chiara.statistics.rl.bndt', accessor => openScaffoldWebview(accessor, BNDT_PANEL));
 
-CommandsRegistry.registerCommand('chiara.statistics.rl.ql', (accessor: ServicesAccessor) => {
-	openQlWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	);
-});
+CommandsRegistry.registerCommand('chiara.statistics.rl.ql', accessor => openScaffoldWebview(accessor, QL_PANEL));
 
-CommandsRegistry.registerCommand('chiara.statistics.rl.pgm', (accessor: ServicesAccessor) => {
-	openPgmWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	);
-});
+CommandsRegistry.registerCommand('chiara.statistics.rl.pgm', accessor => openScaffoldWebview(accessor, PGM_PANEL));
 
-CommandsRegistry.registerCommand('chiara.statistics.rl.acm', (accessor: ServicesAccessor) => {
-	openAcmWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	);
-});
+CommandsRegistry.registerCommand('chiara.statistics.rl.acm', accessor => openScaffoldWebview(accessor, ACM_PANEL));
 
-CommandsRegistry.registerCommand('chiara.statistics.rl.marl', (accessor: ServicesAccessor) => {
-	openMarlWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	);
-});
+CommandsRegistry.registerCommand('chiara.statistics.rl.marl', accessor => openScaffoldWebview(accessor, MARL_PANEL));
 
-CommandsRegistry.registerCommand('chiara.statistics.rl.azero', (accessor: ServicesAccessor) => {
-	openAzeroWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	);
-});
+CommandsRegistry.registerCommand('chiara.statistics.rl.azero', accessor => openScaffoldWebview(accessor, AZERO_PANEL));
 
-CommandsRegistry.registerCommand(DP_ID, (accessor: ServicesAccessor) => {
-	openDpWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	);
-});
+CommandsRegistry.registerCommand(DP_ID, accessor => openScaffoldWebview(accessor, DP_PANEL));
 
-CommandsRegistry.registerCommand(CCDR_ID, (accessor: ServicesAccessor) => {
-	openCcdrWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	);
-});
+CommandsRegistry.registerCommand(CCDR_ID, accessor => openScaffoldWebview(accessor, CCDR_PANEL));
 
-CommandsRegistry.registerCommand(SPRO_ID, (accessor: ServicesAccessor) => {
-	openSproWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	);
-});
+CommandsRegistry.registerCommand(SPRO_ID, accessor => openScaffoldWebview(accessor, SPRO_PANEL));
 
-CommandsRegistry.registerCommand(ROPT_ID, (accessor: ServicesAccessor) => {
-	openRoptWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	);
-});
+CommandsRegistry.registerCommand(ROPT_ID, accessor => openScaffoldWebview(accessor, ROPT_PANEL));
 
-CommandsRegistry.registerCommand(BLV_ID, (accessor: ServicesAccessor) => {
-	openBlvWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	);
-});
+CommandsRegistry.registerCommand(BLV_ID, accessor => openScaffoldWebview(accessor, BLV_PANEL));
 
-CommandsRegistry.registerCommand(MPEC_ID, (accessor: ServicesAccessor) => {
-	openMpecWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	);
-});
+CommandsRegistry.registerCommand(MPEC_ID, accessor => openScaffoldWebview(accessor, MPEC_PANEL));
 
-CommandsRegistry.registerCommand(CMP_ID, (accessor: ServicesAccessor) => {
-	openCmpWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	);
-});
+CommandsRegistry.registerCommand(CMP_ID, accessor => openScaffoldWebview(accessor, CMP_PANEL));
 
-CommandsRegistry.registerCommand(VARI_ID, (accessor: ServicesAccessor) => {
-	openVariWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	);
-});
+CommandsRegistry.registerCommand(VARI_ID, accessor => openScaffoldWebview(accessor, VARI_PANEL));
 
-CommandsRegistry.registerCommand(NASH_ID, (accessor: ServicesAccessor) => {
-	openGtWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-		'potential',
-	);
-});
+CommandsRegistry.registerCommand(NASH_ID, accessor => openScaffoldWebview(accessor, GT_PANEL, 'potential'));
 
-CommandsRegistry.registerCommand(PBM_ID, (accessor: ServicesAccessor) => {
-	openPbmWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	);
-});
+CommandsRegistry.registerCommand(PBM_ID, accessor => openScaffoldWebview(accessor, PBM_PANEL));
 
-CommandsRegistry.registerCommand(DCM_ID, (accessor: ServicesAccessor) => {
-	openDcmWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	);
-});
+CommandsRegistry.registerCommand(DCM_ID, accessor => openScaffoldWebview(accessor, DCM_PANEL));
 
-CommandsRegistry.registerCommand(MPM_ID, (accessor: ServicesAccessor) => {
-	openMpmWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	);
-});
+CommandsRegistry.registerCommand(MPM_ID, accessor => openScaffoldWebview(accessor, MPM_PANEL));
 
 // Register the Optimise menu to the main menu
 MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {

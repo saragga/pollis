@@ -1457,9 +1457,9 @@ export type XxxWebviewMessage =
 ## 13. Checklist for a new webview
 
 - [ ] `common/<acronym>.types.ts` — metadata interface + message type (include `references: IModelReference[]`)
-- [ ] `handlers/<acronym>.handler.ts` — copy structure from `lp.handler.ts`
+- [ ] `handlers/<acronym>.handler.ts` — only for a legacy (non-scaffold) panel; scaffold panels use the shared `handlers/scaffold.handler.ts` (see §22)
 - [ ] `commands/<acronym>.command.ts` — fill in METADATA, VIEW_TYPE, TITLE; define `XXX_REFERENCES` with three groups
-- [ ] `webviews/<acronym>.template.ts` — copy CSS verbatim from `lp.template.ts`
+- [ ] `webviews/<acronym>.template.ts` — for a scaffold panel, a thin wrapper around the TOML (see `lp.template.ts` + `lp.toml`, §22)
 - [ ] HTML: collapsible section layout, subtitle (`methods-list` bullets), toggle buttons, all inputs in one `form-row`
 - [ ] HTML: Next Steps inside `<div class="section" id="sec-next">` with `section-toggle` + `section-body`; all five buttons have `class="list-btn panel-toggle"`
 - [ ] HTML: Learn More inside `<div class="section" id="sec-learn">` with `section-toggle` + `section-body`; Local Wikis, Notebook Tutorials, Explore References = `panel-toggle`; Multimedia Tutorials = `has-actions`

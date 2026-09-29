@@ -1,0 +1,633 @@
+# Multi-Agent Decision Processes Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/madp.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Multi-Agent Decision Processes"
+viewType = "pollis.madp"
+defaultModel = "dec"
+
+[[packages]]
+name = "POMDPs.jl"
+github = "https://github.com/JuliaPOMDP/POMDPs.jl"
+
+[[packages]]
+name = "GameTheory.jl"
+github = "https://github.com/QuantEcon/GameTheory.jl"
+
+[requires]
+packages = ["JuMP.jl", "HiGHS.jl", "Plots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Dec-POMDP: Broadcast Problem"
+file = "madp/tutorial-01-decpomdp-broadcast.ipynb"
+bundled = true
+description = "Two-agent cooperative broadcast Dec-POMDP: joint policy representation, finite-horizon backward induction, and value comparison with centralised POMDP upper bound"
+
+[[notebookSections.notebooks]]
+name = "Dec-POMDP: JESP Algorithm"
+file = "madp/tutorial-02-decpomdp-jesp.ipynb"
+bundled = true
+description = "Joint Equilibrium-based Search for Policies (JESP): alternating agent optimisation, convergence behaviour, and local optima analysis"
+
+[[notebookSections.notebooks]]
+name = "Stochastic Game: Zero-Sum"
+file = "madp/tutorial-03-sg-zerosum.ipynb"
+bundled = true
+description = "Zero-sum two-player stochastic game via minimax value iteration using GameTheory.jl: stage-game LP, Nash equilibrium, and convergence to stationary strategies"
+
+[[notebookSections.notebooks]]
+name = "Stochastic Game: General-Sum"
+file = "madp/tutorial-04-sg-generalsum.ipynb"
+bundled = true
+description = "General-sum two-player stochastic game: Nash Q-value iteration, correlated equilibria, and comparison of equilibrium concepts"
+
+[[wikis]]
+name = "Factsheet"
+file = "madp/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "madp/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "madp/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "madp/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "madp/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "madp/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Models"
+
+[[wikis]]
+name = "Dec-POMDPs"
+file = "madp/decpomdp.md"
+bundled = true
+
+[[wikis]]
+name = "Stochastic Games"
+file = "madp/stochastic-games.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "POMDPs.jl: A Framework for Sequential Decision Making under Uncertainty"
+authors = "Egorov, Maxim; Sunberg, Zachary N.; Balaban, Edward; Wheeler, Tim A.; Gupta, Jayesh K.; Kochenderfer, Mykel J."
+year = 2017
+journal = "Journal of Machine Learning Research"
+url = "https://jmlr.org/papers/v18/16-300.html"
+openAccess = true
+
+[[references]]
+title = "GameTheory.jl: Normal-Form Game Solvers in Julia"
+authors = "QuantEcon Development Team"
+year = 2023
+journal = "GitHub"
+url = "https://github.com/QuantEcon/GameTheory.jl"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "A Concise Introduction to Decentralized POMDPs"
+authors = "Oliehoek, Frans A.; Amato, Christopher"
+year = 2016
+journal = "Springer"
+doi = "10.1007/978-3-319-28929-8"
+openAccess = false
+
+[[references]]
+title = "Multiagent Systems: Algorithmic, Game-Theoretic, and Logical Foundations"
+authors = "Shoham, Yoav; Leyton-Brown, Kevin"
+year = 2009
+journal = "Cambridge University Press"
+url = "https://www.masfoundations.org"
+openAccess = true
+
+[[references]]
+title = "Decision Making Under Uncertainty: Theory and Application"
+authors = "Kochenderfer, Mykel J."
+year = 2015
+journal = "MIT Press"
+url = "https://mitpress.mit.edu/9780262029254/"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Stochastic Games"
+authors = "Shapley, Lloyd S."
+year = 1953
+journal = "Proceedings of the National Academy of Sciences"
+doi = "10.1073/pnas.39.10.1095"
+openAccess = true
+
+[[references]]
+title = "The Complexity of Decentralized Control of Markov Decision Processes"
+authors = "Bernstein, Daniel S.; Givan, Robert; Immerman, Neil; Zilberstein, Shlomo"
+year = 2002
+journal = "Mathematics of Operations Research"
+doi = "10.1287/moor.27.4.819.297"
+openAccess = false
+
+[[references]]
+title = "Optimal and Approximate Q-value Functions for Decentralized POMDPs"
+authors = "Oliehoek, Frans A.; Spaan, Matthijs T.J.; Vlassis, Nikos"
+year = 2008
+journal = "Journal of Artificial Intelligence Research"
+doi = "10.1613/jair.2432"
+openAccess = true
+
+[[models]]
+id = "dec"
+label = "Dec-POMDP"
+
+[[models]]
+id = "sg"
+label = "Stochastic Games"
+
+[[bullets]]
+text = "A Decentralized Partially Observable Markov Decision Process (Dec-POMDP) models a cooperative team of agents that share a single joint reward but each observe the world independently through local, noisy sensors and cannot communicate during execution. Each agent must act based solely on its own observation history, making Dec-POMDPs the standard framework for multi-robot coordination, sensor networks, and cooperative planning under partial information."
+detail = ""
+
+[[bullets]]
+text = "Dec-POMDPs are provably NEXP-hard in the general case"
+detail = "meaning the worst-case solution time grows doubly exponentially, placing them strictly harder than NP-complete problems — which limits exact backward induction to small horizons (T ≤ 5) and few agents. Practical algorithms sacrifice optimality for tractability: Joint Equilibrium-based Search for Policies (JESP) alternately optimises one agent’s policy while fixing the others; Point-Based Value Iteration (PBVI) approximates the value function over a sampled set of belief points rather than the full belief space."
+
+[[bullets]]
+text = "Stochastic Games model self-interested agents, each with its own reward function, where the outcome for every agent depends on the joint actions of all players. The solution concept is Nash equilibrium"
+detail = "a strategy profile from which no agent can unilaterally deviate to gain — rather than a cooperative optimum. Zero-sum instances (one player’s gain is the other’s loss) admit efficient minimax value iteration; general-sum games are solved stage by stage via linear programming or support enumeration."
+
+[[decisionRows]]
+task = "Dec-POMDP"
+context = "A team shares one reward but each agent acts on its own noisy observations, without communication"
+purpose = "Decentralised POMDP solved by JESP (alternating exact best responses over policy trees) with random restarts; default: the Dec-Tiger problem"
+
+[[decisionRows]]
+task = "Stochastic Games"
+context = "Two opponents with opposite interests act in a shared, changing environment"
+purpose = "Zero-sum stochastic game solved by Shapley value iteration, with one linear programme per state for the equilibrium mixed strategies"
+
+[[inputs]]
+id = "acc"
+label = "Listening Accuracy"
+tooltip = "Probability that a listening agent hears the tiger on the correct side (both agents must listen for the observation to be informative)."
+default = "0.85"
+models = ["dec"]
+
+[[inputs]]
+id = "T"
+label = "Horizon (T)"
+tooltip = "Number of decision stages. Policy trees have 2^T - 1 nodes, so the cost grows exponentially; T up to 5 is quick."
+default = "3"
+models = ["dec"]
+
+[[inputs]]
+id = "restarts"
+label = "JESP Restarts"
+tooltip = "JESP converges to a local optimum (a Nash equilibrium of the team); several random starts find the best one more reliably."
+default = "10"
+models = ["dec"]
+
+[[inputs]]
+id = "S"
+label = "States (S)"
+tooltip = "Number of states of the randomly generated stochastic game."
+default = "5"
+models = ["sg"]
+
+[[inputs]]
+id = "A"
+label = "Actions per Player (A)"
+tooltip = "Number of actions of each player in every state."
+default = "3"
+models = ["sg"]
+
+[[inputs]]
+id = "gamma"
+label = "Discount (gamma)"
+tooltip = "Discount factor in [0, 1) of the infinite-horizon game."
+default = "0.9"
+models = ["sg"]
+newRow = true
+
+[[inputs]]
+id = "tol"
+label = "Tolerance"
+tooltip = "Shapley iteration stops when the largest change in the state values falls below this."
+default = "1e-6"
+models = ["sg"]
+
+[[inputs]]
+id = "seed"
+label = "Random Seed"
+tooltip = "Seed for the generated payoffs and transition probabilities."
+default = "1"
+models = ["sg"]
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.dec]
+# Two agents with separate observation channels and a shared reward
+svg = '''
+let s = '<circle cx="14" cy="40" r="5" fill="none" stroke="currentColor" stroke-width="1"/><circle cx="40" cy="40" r="5" fill="none" stroke="currentColor" stroke-width="1"/>';
+s += '<rect x="19" y="62" width="16" height="10" fill="none" stroke="currentColor" stroke-width="1"/>';
+s += '<path d="M14,45 L24,62" stroke="currentColor" stroke-width="0.8"/><path d="M40,45 L30,62" stroke="currentColor" stroke-width="0.8"/>';
+s += '<path d="M14,35 L14,28" stroke="currentColor" stroke-width="0.8" stroke-dasharray="2,2"/><path d="M40,35 L40,28" stroke="currentColor" stroke-width="0.8" stroke-dasharray="2,2"/>';
+return s;
+'''
+
+[miniCharts.sg]
+# A payoff matrix between two opposing players
+svg = '''
+let s = '';
+for (let r = 0; r < 3; r++) { for (let c = 0; c < 3; c++) {
+	s += '<rect x="' + (13 + c * 10) + '" y="' + (36 + r * 10) + '" width="9" height="9" fill="currentColor" opacity="' + [0.2, 0.7, 0.4, 0.8, 0.3, 0.5, 0.35, 0.6, 0.15][r * 3 + c] + '"/>';
+} }
+s += '<text x="7" y="52" font-size="7" text-anchor="middle" fill="currentColor">1</text><text x="27" y="32" font-size="7" text-anchor="middle" fill="currentColor">2</text>';
+return s;
+'''
+
+[[codeBranches]]
+model = "dec"
+code = '''
+using Random, Statistics
+
+acc = {{acc}}  # probability that a listening agent hears the correct side
+T = {{T}}  # horizon: number of decision stages
+restarts = {{restarts}}  # random restarts of JESP
+NS, NA, NO = 2, 3, 2  # states (tiger left, right), actions per agent, observations per agent (hear left, right)
+LISTEN, OPEN_LEFT, OPEN_RIGHT = 1, 2, 3
+ACTIONS = ["listen", "open-left", "open-right"]
+b0 = [0.5, 0.5]  # initial belief over the tiger's side
+
+function reward(s, a1, a2)  # Dec-Tiger joint reward (Nair et al., 2003)
+    a1 == LISTEN && a2 == LISTEN && return -2.0
+    tiger = s == 1 ? OPEN_LEFT : OPEN_RIGHT
+    a1 == a2 && return (a1 == tiger ? -50.0 : 20.0)  # both open the same door
+    LISTEN in (a1, a2) && return (tiger in (a1, a2) ? -101.0 : 9.0)  # one listens, the other opens
+    -100.0  # they open different doors
+end
+trans(s2, s, a1, a2) = a1 == LISTEN && a2 == LISTEN ? Float64(s2 == s) : 0.5  # opening a door resets the tiger
+hear(o, s2) = o == s2 ? acc : 1 - acc
+obs(o1, o2, s2, a1, a2) = a1 == LISTEN && a2 == LISTEN ? hear(o1, s2) * hear(o2, s2) : 0.25  # independent local observations
+
+# a policy is a tree: node 1 is the first stage and child(node, o) the node after hearing o
+nodes(H) = 2^H - 1
+child(nd, o) = 2nd + o - 1
+
+function evaluate(p1, p2; H=T)  # exact expected total reward of a joint policy
+    function v(s, n1, n2, t)
+        a1, a2 = p1[n1], p2[n2]
+        r = reward(s, a1, a2)
+        t == H && return r
+        r + sum(trans(s2, s, a1, a2) * obs(o1, o2, s2, a1, a2) * v(s2, child(n1, o1), child(n2, o2), t + 1)
+                for s2 in 1:NS, o1 in 1:NO, o2 in 1:NO)
+    end
+    sum(b0[s] * v(s, 1, 1, 1) for s in 1:NS)
+end
+
+function best_response(i, pj; H=T)  # exact best policy tree of agent i against agent j's fixed tree pj
+    function br(ni, B, t)  # B[(s, nj)] = probability of state s and agent j at node nj, jointly with agent i's history
+        best = (-Inf, Dict{Int,Int}())
+        for ai in 1:NA
+            val = sum(p * (i == 1 ? reward(s, ai, pj[nj]) : reward(s, pj[nj], ai)) for ((s, nj), p) in B; init=0.0)
+            sub = Dict(ni => ai)
+            if t < H
+                for oi in 1:NO
+                    Bc = Dict{Tuple{Int,Int},Float64}()
+                    for ((s, nj), p) in B, s2 in 1:NS, oj in 1:NO
+                        a1, a2, o1, o2 = i == 1 ? (ai, pj[nj], oi, oj) : (pj[nj], ai, oj, oi)
+                        q = p * trans(s2, s, a1, a2) * obs(o1, o2, s2, a1, a2)
+                        q > 0 && (k = (s2, child(nj, oj)); Bc[k] = get(Bc, k, 0.0) + q)
+                    end
+                    v, d = br(child(ni, oi), Bc, t + 1)
+                    val += v; merge!(sub, d)
+                end
+            end
+            val > best[1] && (best = (val, sub))
+        end
+        best
+    end
+    v, d = br(1, Dict((s, 1) => b0[s] for s in 1:NS), 1)
+    (policy = [get(d, k, LISTEN) for k in 1:nodes(H)], value = v)
+end
+
+function jesp(seed; H=T, maxiter=50)  # Joint Equilibrium-based Search for Policies
+    rng = MersenneTwister(seed)
+    p1, p2 = rand(rng, 1:NA, nodes(H)), rand(rng, 1:NA, nodes(H))
+    trace = [evaluate(p1, p2; H)]
+    for it in 1:maxiter
+        p1 = best_response(1, p2; H).policy
+        p2 = best_response(2, p1; H).policy
+        push!(trace, evaluate(p1, p2; H))
+        trace[end] <= trace[end-1] + 1e-9 && break  # no agent can improve alone: a local optimum
+    end
+    (p1 = p1, p2 = p2, value = trace[end], trace = trace)
+end
+
+function episode(p1, p2; H=T, rng=Random.default_rng())  # one simulated run of the joint policy
+    s = rand(rng, 1:NS); n1 = n2 = 1; steps = NamedTuple[]
+    for t in 1:H
+        a1, a2 = p1[n1], p2[n2]
+        s2 = rand(rng) < trans(1, s, a1, a2) ? 1 : 2
+        informative = a1 == LISTEN && a2 == LISTEN
+        o1 = rand(rng) < (informative ? hear(1, s2) : 0.5) ? 1 : 2
+        o2 = rand(rng) < (informative ? hear(1, s2) : 0.5) ? 1 : 2
+        push!(steps, (stage = t, tiger = s == 1 ? "left" : "right", agent1 = ACTIONS[a1], agent2 = ACTIONS[a2], reward = reward(s, a1, a2),
+                      heard1 = o1 == 1 ? "left" : "right", heard2 = o2 == 1 ? "left" : "right"))
+        s = s2; n1 = child(n1, o1); n2 = child(n2, o2)
+    end
+    steps
+end
+history(nd) = nd == 1 ? "start" : join(b == 0 ? "L" : "R" for b in reverse(digits(nd - 2^floor(Int, log2(nd)), base=2, pad=floor(Int, log2(nd)))))
+
+runs = [jesp(k) for k in 1:restarts]
+best = runs[argmax([r.value for r in runs])]
+(joint_value = best.value, local_optima_values = sort(unique(round.([r.value for r in runs], digits=3))),
+ agent1_first_action = ACTIONS[best.p1[1]], agent2_first_action = ACTIONS[best.p2[1]])
+'''
+
+[[codeBranches]]
+model = "sg"
+code = '''
+using JuMP, HiGHS, Random, LinearAlgebra, Statistics
+
+S = {{S}}  # states
+A = {{A}}  # actions per player
+gamma = {{gamma}}  # discount factor
+tol = {{tol}}  # stopping tolerance
+seed = {{seed}}  # random seed
+Random.seed!(seed)
+Rw = [round.(randn(A, A), digits=2) for s in 1:S]  # player 1's payoff in each state; player 2 receives minus this
+P = [rand(A, A, S) for s in 1:S]
+P = [p ./ sum(p, dims=3) for p in P]  # P[s][a1, a2, s'] transition probabilities
+
+function matrix_game(G)  # value and optimal mixed strategies of the zero-sum matrix game G (row player maximises)
+    m, k = size(G)
+    lp = Model(HiGHS.Optimizer); set_silent(lp)
+    @variable(lp, x[1:m] >= 0)
+    @variable(lp, v)
+    @constraint(lp, sum(x) == 1)
+    @constraint(lp, c[j in 1:k], sum(G[i, j] * x[i] for i in 1:m) >= v)
+    @objective(lp, Max, v)
+    optimize!(lp)
+    y = abs.(dual.(c))  # the column player's strategy from the dual
+    (value = value(v), x = max.(value.(x), 0), y = y ./ sum(y))
+end
+stage(s, V; gamma=gamma) = Rw[s] .+ gamma .* [sum(P[s][a1, a2, s2] * V[s2] for s2 in 1:S) for a1 in 1:A, a2 in 1:A]  # payoff now plus discounted continuation
+
+function shapley(; gamma=gamma, tol=tol, maxiter=5000)  # Shapley value iteration
+    V = zeros(S); trace = Float64[]
+    for it in 1:maxiter
+        Vn = [matrix_game(stage(s, V; gamma)).value for s in 1:S]
+        push!(trace, maximum(abs.(Vn - V)))
+        V = Vn
+        trace[end] < tol && break
+    end
+    (V = V, trace = trace)
+end
+
+sh = shapley()
+eqs = [matrix_game(stage(s, sh.V)) for s in 1:S]  # stationary equilibrium strategies
+(values_player1 = round.(sh.V, digits=4), iterations = length(sh.trace),
+ strategy_player1_state1 = round.(eqs[1].x, digits=3), strategy_player2_state1 = round.(eqs[1].y, digits=3))
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "joint-value"
+label = "Joint Value"
+desc = "Dec-POMDP: best joint value found by JESP for horizons 1 to T. Stochastic game: the equilibrium value of each state"
+code = '''
+using Plots
+
+{{?model=dec}}vals = [maximum(jesp(k; H=h).value for k in 1:restarts) for h in 1:T]
+{{?model=dec}}plot(1:T, vals, marker=:circle, xlabel="horizon", ylabel="joint value (JESP)", legend=false)
+{{?model=sg}}bar(1:S, sh.V, xlabel="state", ylabel="value to player 1 (player 2 gets minus this)", legend=false)
+'''
+
+[[actionGroups.actions]]
+id = "policy-profile"
+label = "Policy Profile"
+desc = "Dec-POMDP: both agents' policy trees (left branch = heard left). Stochastic game: player 1's equilibrium probabilities in each state"
+code = '''
+using Plots
+
+{{?model=dec}}function tree_plot(p, title)
+{{?model=dec}}    plt = plot(legend=false, axis=false, grid=false, title=title)
+{{?model=dec}}    for nd in 1:length(p)
+{{?model=dec}}        d = floor(Int, log2(nd)); x = (nd - 2^d + 0.5) / 2^d
+{{?model=dec}}        if nd > 1
+{{?model=dec}}            pd = div(nd, 2); px = (pd - 2^(d - 1) + 0.5) / 2^(d - 1)
+{{?model=dec}}            plot!(plt, [px, x], [1 - d, -d], color=:gray)
+{{?model=dec}}        end
+{{?model=dec}}        annotate!(plt, x, -d, text(ACTIONS[p[nd]], 7))
+{{?model=dec}}    end
+{{?model=dec}}    plt
+{{?model=dec}}end
+{{?model=dec}}plot(tree_plot(best.p1, "agent 1"), tree_plot(best.p2, "agent 2"), layout=(2, 1))
+{{?model=sg}}heatmap(1:S, 1:A, hcat([e.x for e in eqs]...), xlabel="state", ylabel="player 1 action", title="equilibrium probabilities")
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "jesp-convergence"
+label = "JESP / Shapley Convergence"
+desc = "Dec-POMDP: joint value per JESP iteration for every restart. Stochastic game: largest change in the state values per Shapley iteration"
+code = '''
+using Plots
+
+{{?model=dec}}plt = plot(xlabel="JESP iteration", ylabel="joint value", legend=false)
+{{?model=dec}}for r in runs
+{{?model=dec}}    plot!(plt, 0:length(r.trace)-1, r.trace, marker=:circle)
+{{?model=dec}}end
+{{?model=dec}}plt
+{{?model=sg}}plot(max.(sh.trace, 1e-16), yscale=:log10, xlabel="iteration", ylabel="max change in V", legend=false)
+{{?model=sg}}hline!([tol], linestyle=:dash)
+'''
+
+[[actionGroups.actions]]
+id = "nash-gap"
+label = "Equilibrium Check"
+desc = "How much any single agent or player could gain by deviating alone (near 0 = equilibrium)"
+code = '''
+{{?model=dec}}br1, br2 = best_response(1, best.p2).value, best_response(2, best.p1).value
+{{?model=dec}}(joint_value = best.value, best_response_agent1 = br1, best_response_agent2 = br2,
+{{?model=dec}} is_equilibrium = max(br1, br2) <= best.value + 1e-9)
+{{?model=sg}}map(1:S) do s
+{{?model=sg}}    G = stage(s, sh.V); x, y = eqs[s].x, eqs[s].y
+{{?model=sg}}    v = dot(x, G * y)
+{{?model=sg}}    (state = s, gain_player1 = maximum(G * y) - v, gain_player2 = v - minimum(transpose(G) * x))
+{{?model=sg}}end
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "joint-simulation"
+label = "Joint Simulation"
+desc = "One simulated episode, and the average over many episodes against the exact value"
+code = '''
+{{?model=dec}}Random.seed!(2)
+{{?model=dec}}tot = [sum(st.reward for st in episode(best.p1, best.p2)) for k in 1:20_000]
+{{?model=dec}}(example_episode = episode(best.p1, best.p2), mean_total_reward = mean(tot), standard_error = std(tot) / sqrt(length(tot)), exact_value = best.value)
+{{?model=sg}}Random.seed!(2)
+{{?model=sg}}draw(p) = something(findfirst(cumsum(p) .>= rand()), length(p))
+{{?model=sg}}function play(s, stages)  # discounted payoff to player 1 when both follow the equilibrium
+{{?model=sg}}    total = 0.0
+{{?model=sg}}    for t in 0:stages-1
+{{?model=sg}}        a1, a2 = draw(eqs[s].x), draw(eqs[s].y)
+{{?model=sg}}        total += gamma^t * Rw[s][a1, a2]
+{{?model=sg}}        s = draw(P[s][a1, a2, :])
+{{?model=sg}}    end
+{{?model=sg}}    total
+{{?model=sg}}end
+{{?model=sg}}rets = [play(1, 200) for k in 1:2000]
+{{?model=sg}}(mean_discounted_payoff = mean(rets), standard_error = std(rets) / sqrt(length(rets)), equilibrium_value_state1 = sh.V[1])
+'''
+
+[[actionGroups.actions]]
+id = "value-of-comm"
+label = "Value of Communication / Discount Sensitivity"
+desc = "Dec-POMDP: value if the agents shared their observations (centralised POMDP) or saw the tiger (MDP). Stochastic game: equilibrium value as the discount changes"
+code = '''
+{{?model=dec}}function central_value(b, t)  # both agents' observations shared: a POMDP over joint actions
+{{?model=dec}}    best_v = -Inf
+{{?model=dec}}    for a1 in 1:NA, a2 in 1:NA
+{{?model=dec}}        v = sum(b[s] * reward(s, a1, a2) for s in 1:NS)
+{{?model=dec}}        if t < T
+{{?model=dec}}            for o1 in 1:NO, o2 in 1:NO
+{{?model=dec}}                bn = [sum(b[s] * trans(s2, s, a1, a2) for s in 1:NS) * obs(o1, o2, s2, a1, a2) for s2 in 1:NS]
+{{?model=dec}}                po = sum(bn)
+{{?model=dec}}                po > 0 && (v += po * central_value(bn ./ po, t + 1))
+{{?model=dec}}            end
+{{?model=dec}}        end
+{{?model=dec}}        best_v = max(best_v, v)
+{{?model=dec}}    end
+{{?model=dec}}    best_v
+{{?model=dec}}end
+{{?model=dec}}central = T <= 5 ? central_value(b0, 1) : missing
+{{?model=dec}}(decentralised = best.value, centralised_pomdp = central, fully_observed = 20.0 * T,
+{{?model=dec}} cost_of_decentralisation = central === missing ? missing : central - best.value)
+{{?model=sg}}[(gamma = g, value_state1 = shapley(gamma=g).V[1]) for g in unique([0.0, 0.5, 0.8, 0.9, gamma])]
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "zerosum-vs-general"
+label = "Local vs Global / Pure vs Mixed"
+desc = "Dec-POMDP: JESP against exhaustive search over all joint policies (horizon 2 at most). Stochastic game: pure-strategy security levels against the mixed value"
+code = '''
+{{?model=dec}}H = min(T, 2)
+{{?model=dec}}pols = [collect(p) for p in Iterators.product(fill(1:NA, nodes(H))...)]
+{{?model=dec}}(horizon = H, exhaustive_optimum = maximum(evaluate(p1, p2; H) for p1 in pols, p2 in pols),
+{{?model=dec}} jesp_best = maximum(jesp(k; H).value for k in 1:restarts), joint_policies_enumerated = length(pols)^2)
+{{?model=sg}}map(1:S) do s
+{{?model=sg}}    G = stage(s, sh.V)
+{{?model=sg}}    (state = s, pure_maximin = maximum(minimum(G, dims=2)), mixed_value = eqs[s].value, pure_minimax = minimum(maximum(G, dims=1)))
+{{?model=sg}}end
+'''
+
+[[actionGroups.actions]]
+id = "cooperative-vs-competitive"
+label = "Against Baselines"
+desc = "Dec-POMDP: JESP against always listening, listening then opening by majority, and random trees. Stochastic game: a myopic player 1 (ignores the future) against the equilibrium player 2"
+code = '''
+{{?model=dec}}function listen_then_open(H)  # listen until the last stage, then open the door opposite the majority heard
+{{?model=dec}}    p = fill(LISTEN, nodes(H))
+{{?model=dec}}    H == 1 && return p
+{{?model=dec}}    for nd in 2^(H-1):nodes(H)
+{{?model=dec}}        h = digits(nd - 2^(H-1), base=2, pad=H-1)  # 0 = heard left
+{{?model=dec}}        nl = count(==(0), h); nr = length(h) - nl
+{{?model=dec}}        p[nd] = nl > nr ? OPEN_RIGHT : nr > nl ? OPEN_LEFT : LISTEN
+{{?model=dec}}    end
+{{?model=dec}}    p
+{{?model=dec}}end
+{{?model=dec}}lto = listen_then_open(T)
+{{?model=dec}}Random.seed!(3)
+{{?model=dec}}(jesp = best.value, always_listen = evaluate(fill(LISTEN, nodes(T)), fill(LISTEN, nodes(T))), listen_then_open = evaluate(lto, lto),
+{{?model=dec}} random_trees = mean(evaluate(rand(1:NA, nodes(T)), rand(1:NA, nodes(T))) for k in 1:200))
+{{?model=sg}}myopic = [matrix_game(Rw[s]).x for s in 1:S]  # best for the current stage only
+{{?model=sg}}cont(X) = (I - gamma .* [sum(X[s][a1] * eqs[s].y[a2] * P[s][a1, a2, s2] for a1 in 1:A, a2 in 1:A) for s in 1:S, s2 in 1:S]) \
+{{?model=sg}}          [dot(X[s], Rw[s] * eqs[s].y) for s in 1:S]  # exact discounted value of a stationary strategy against player 2's equilibrium
+{{?model=sg}}(equilibrium_player1 = round.(cont([e.x for e in eqs]), digits=4), myopic_player1 = round.(cont(myopic), digits=4))
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "mixed-strategy"
+label = "Policy / Mixed Strategy"
+desc = "Dec-POMDP: each agent's action after every observation history. Stochastic game: both players' equilibrium strategies and the value in every state"
+code = '''
+{{?model=dec}}[(history = history(nd), agent1 = ACTIONS[best.p1[nd]], agent2 = ACTIONS[best.p2[nd]]) for nd in 1:nodes(T)]
+{{?model=sg}}[(state = s, value = round(eqs[s].value, digits=4), player1 = round.(eqs[s].x, digits=3), player2 = round.(eqs[s].y, digits=3)) for s in 1:S]
+'''
+
+[[actionGroups.actions]]
+id = "price-of-anarchy"
+label = "Outcome Decomposition"
+desc = "Dec-POMDP: how often the team listens, opens the safe door or meets the tiger (simulated). Stochastic game: each state's value split into the immediate payoff and the discounted continuation"
+code = '''
+{{?model=dec}}Random.seed!(4)
+{{?model=dec}}steps = reduce(vcat, [episode(best.p1, best.p2) for k in 1:5000])
+{{?model=dec}}per(f) = count(f, steps) / 5000  # per episode
+{{?model=dec}}(listens_per_episode = per(st -> st.agent1 == "listen") + per(st -> st.agent2 == "listen"),
+{{?model=dec}} tiger_met_per_episode = per(st -> st.reward <= -50), safe_door_per_episode = per(st -> st.reward in (9.0, 20.0)),
+{{?model=dec}} mean_total_reward = sum(st.reward for st in steps) / 5000)
+{{?model=sg}}map(1:S) do s
+{{?model=sg}}    immediate = dot(eqs[s].x, Rw[s] * eqs[s].y)
+{{?model=sg}}    (state = s, value = eqs[s].value, immediate_payoff = immediate, continuation = eqs[s].value - immediate)
+{{?model=sg}}end
+'''

@@ -1,0 +1,510 @@
+# Pareto-Based Multi-Objective Optimisation Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/pbm.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Pareto-Based Multi-Objective Optimisation"
+viewType = "pollis.pbm"
+defaultModel = "nsga2"
+
+[[packages]]
+name = "Metaheuristics.jl"
+github = "https://github.com/jmejia8/Metaheuristics.jl"
+
+[[packages.videos]]
+title = "High Performance Computing in Julia"
+description = "An 18-video course by Jamie Mair on writing fast Julia code"
+url = "https://www.youtube.com/playlist?list=PLUAq6xQKFgGr39PiyrPk_C9dhBKvWcjUA"
+
+[requires]
+packages = ["Metaheuristics.jl Plots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "NSGA-II"
+file = "pbm/tutorial-01-nsga2.ipynb"
+bundled = true
+description = "Non-dominated Sorting Genetic Algorithm II for two- and three-objective problems"
+
+[[notebookSections.notebooks]]
+name = "NSGA-III"
+file = "pbm/tutorial-02-nsga3.ipynb"
+bundled = true
+description = "Reference-point-based NSGA for many-objective problems with 4 or more objectives"
+
+[[notebookSections.notebooks]]
+name = "SPEA2"
+file = "pbm/tutorial-03-spea2.ipynb"
+bundled = true
+description = "Strength Pareto Evolutionary Algorithm 2 with archive-based selection"
+
+[[notebookSections.notebooks]]
+name = "SMS-EMOA"
+file = "pbm/tutorial-04-sms.ipynb"
+bundled = true
+description = "Hypervolume-based steady-state multiobjective evolutionary algorithm"
+
+[[wikis]]
+name = "Factsheet"
+file = "pbm/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "pbm/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "pbm/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "pbm/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "pbm/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "pbm/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Algorithms"
+
+[[wikis]]
+name = "NSGA-II"
+file = "pbm/nsga2.md"
+bundled = true
+
+[[wikis]]
+name = "NSGA-III"
+file = "pbm/nsga3.md"
+bundled = true
+
+[[wikis]]
+name = "SPEA2"
+file = "pbm/spea2.md"
+bundled = true
+
+[[wikis]]
+name = "SMS-EMOA"
+file = "pbm/sms.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "Metaheuristics: A Julia Package for Single- and Multi-Objective Optimization"
+authors = "Mejia-de-Dios, Jesus-Adolfo; Mezura-Montes, Efren"
+year = 2022
+journal = "Journal of Open Source Software"
+doi = "10.21105/joss.04723"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Multi-Objective Optimization Using Evolutionary Algorithms"
+authors = "Deb, Kalyanmoy"
+year = 2001
+journal = "Wiley"
+openAccess = false
+
+[[references]]
+title = "Evolutionary Algorithms for Solving Multi-Objective Problems"
+authors = "Coello Coello, Carlos A.; Lamont, Gary B.; Van Veldhuizen, David A."
+year = 2007
+journal = "Springer (2nd ed.)"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "A Fast and Elitist Multiobjective Genetic Algorithm: NSGA-II"
+authors = "Deb, Kalyanmoy; Pratap, Amrit; Agarwal, Sameer; Meyarivan, T."
+year = 2002
+journal = "IEEE Transactions on Evolutionary Computation"
+doi = "10.1109/4235.996017"
+openAccess = false
+
+[[references]]
+title = "An Evolutionary Many-Objective Optimization Algorithm Using Reference-Point-Based Nondominated Sorting Approach, Part I: Solving Problems with Box Constraints"
+authors = "Deb, Kalyanmoy; Jain, Himanshu"
+year = 2014
+journal = "IEEE Transactions on Evolutionary Computation"
+doi = "10.1109/TEVC.2013.2281535"
+openAccess = false
+
+[[references]]
+title = "SPEA2: Improving the Strength Pareto Evolutionary Algorithm"
+authors = "Zitzler, Eckart; Laumanns, Marco; Thiele, Lothar"
+year = 2001
+journal = "TIK-Report 103, ETH Zurich"
+openAccess = false
+
+[[references]]
+title = "SMS-EMOA: Multiobjective Selection Based on Dominated Hypervolume"
+authors = "Beume, Nicola; Naujoks, Boris; Emmerich, Michael"
+year = 2007
+journal = "European Journal of Operational Research"
+doi = "10.1016/j.ejor.2006.08.008"
+openAccess = false
+
+[[models]]
+id = "nsga2"
+label = "NSGA-II"
+
+[[models]]
+id = "nsga3"
+label = "NSGA-III"
+
+[[models]]
+id = "spea2"
+label = "SPEA2"
+
+[[models]]
+id = "sms"
+label = "SMS-EMOA"
+
+[[bullets]]
+text = "NSGA-II"
+detail = "fast non-dominated sorting with crowding distance; two- and three-objective problems"
+
+[[bullets]]
+text = "NSGA-III"
+detail = "reference-point-based selection; many-objective problems with four or more objectives"
+
+[[bullets]]
+text = "SPEA2"
+detail = "strength Pareto evolutionary algorithm with archive-based external population"
+
+[[bullets]]
+text = "SMS-EMOA"
+detail = "hypervolume-based steady-state selection; maximises dominated hypervolume"
+
+[[decisionRows]]
+task = "NSGA-II"
+context = "The default multi-objective evolutionary algorithm for two or three objectives, with or without constraints"
+purpose = "Fast non-dominated sorting plus crowding distance: a well-spread approximation of the Pareto front at low cost. Default problem: Binh-Korn, two objectives and two nonlinear constraints"
+
+[[decisionRows]]
+task = "NSGA-III"
+context = "Many objectives (four or more), where crowding distance no longer separates solutions"
+purpose = "Replaces crowding with a set of reference directions, keeping an even spread across a high-dimensional front"
+
+[[decisionRows]]
+task = "SPEA2"
+context = "Fronts with uneven density or when an external archive of elite solutions is wanted"
+purpose = "Strength-based fitness with k-nearest-neighbour density and archive truncation, which preserves boundary solutions"
+
+[[decisionRows]]
+task = "SMS-EMOA"
+context = "When the quality of the front is judged by hypervolume and evaluations are affordable"
+purpose = "Steady-state selection that discards the solution contributing least hypervolume: usually the highest hypervolume, at a higher cost per generation"
+
+[[inputs]]
+id = "obj"
+label = "Objectives"
+tooltip = "Vector of objective expressions in x (all minimised), e.g. [x[1]^2 + x[2]^2, (x[1] - 1)^2 + x[2]^2]."
+default = "[4x[1]^2 + 4x[2]^2, (x[1] - 5)^2 + (x[2] - 5)^2]"
+
+[[inputs]]
+id = "ineq"
+label = "Inequality Constraints"
+tooltip = "Vector of inequality constraints g(x) <= 0; use [0.0] for none."
+default = "[(x[1] - 5)^2 + x[2]^2 - 25, 7.7 - (x[1] - 8)^2 - (x[2] + 3)^2]"
+
+[[inputs]]
+id = "eq"
+label = "Equality Constraints"
+tooltip = "Vector of equality constraints h(x) = 0; use [0.0] for none."
+default = "[0.0]"
+
+[[inputs]]
+id = "bounds"
+label = "Bounds"
+tooltip = "2 x n matrix: first row lower bounds, second row upper bounds of the decision variables."
+default = "[0.0 0.0; 5.0 3.0]"
+
+[[inputs]]
+id = "N"
+label = "Population"
+tooltip = "Number of individuals in the population. Typical: 100 to 300."
+default = "100"
+
+[[inputs]]
+id = "iter"
+label = "Iterations"
+tooltip = "Number of generations. Typical: 200 to 500."
+default = "250"
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.nsga2]
+# Front with crowding brackets
+svg = '''
+return '<path d="M10,24 Q14,62 48,66" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="3,2"/>'
+	+ [[11,32],[14,46],[20,55],[29,61],[40,64]].map(p => '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="2.5" fill="currentColor"/>').join('');
+'''
+
+[miniCharts.nsga3]
+# Reference directions fanning from the ideal point
+svg = '''
+return '<path d="M10,24 Q14,62 48,66" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="3,2"/>'
+	+ [[12,40],[17,53],[27,61],[42,65]].map(p => '<line x1="6" y1="70" x2="' + p[0] + '" y2="' + p[1] + '" stroke="currentColor" stroke-width="0.8"/><circle cx="' + p[0] + '" cy="' + p[1] + '" r="2.5" fill="currentColor"/>').join('');
+'''
+
+[miniCharts.spea2]
+# Front plus an archive box of elite points
+svg = '''
+return '<rect x="6" y="22" width="44" height="46" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="2,2"/>'
+	+ [[11,30],[14,46],[22,57],[36,63]].map(p => '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="2.5" fill="currentColor"/>').join('')
+	+ '<circle cx="34" cy="40" r="2" fill="none" stroke="currentColor"/>';
+'''
+
+[miniCharts.sms]
+# Hypervolume staircase under the front
+svg = '''
+return '<path d="M11,30 L11,46 L15,46 L15,56 L22,56 L22,62 L34,62 L34,66 L48,66 L48,30 Z" fill="currentColor" fill-opacity="0.25" stroke="currentColor" stroke-width="1.5"/>';
+'''
+
+[[codeBranches]]
+model = "nsga2"
+code = '''
+using Metaheuristics, LinearAlgebra, Random
+Ind = Metaheuristics.PerformanceIndicators
+
+f(x) = ({{obj}}, {{ineq}}, {{eq}})  # objectives (minimised), g(x) <= 0, h(x) = 0
+bounds = {{bounds}}  # row 1: lower, row 2: upper
+opts(seed=1; iterations={{iter}}) = Options(iterations=iterations, seed=seed, store_convergence=true)
+alg(seed=1; N={{N}}, kw...) = NSGA2(N=N, options=opts(seed; kw...))  # crowding distance
+
+result = optimize(f, bounds, alg())
+front = pareto_front(result)  # one row per non-dominated objective vector
+sols = Metaheuristics.get_non_dominated_solutions(result.population)
+refpoint = nadir(front) .+ 0.1 .* (nadir(front) .- ideal(front))  # hypervolume reference: 10% beyond the nadir
+hv(F, r=refpoint) = (keep = vec(all(F .< transpose(r), dims=2)); any(keep) ? Ind.hypervolume(F[keep, :], r; verbose=false) : 0.0)
+
+(front_size = size(front, 1), ideal = ideal(front), nadir = nadir(front), hypervolume = hv(front), all_feasible = all(s.is_feasible for s in sols))
+'''
+
+[[codeBranches]]
+model = "nsga3"
+code = '''
+using Metaheuristics, LinearAlgebra, Random
+Ind = Metaheuristics.PerformanceIndicators
+
+f(x) = ({{obj}}, {{ineq}}, {{eq}})  # objectives (minimised), g(x) <= 0, h(x) = 0
+bounds = {{bounds}}  # row 1: lower, row 2: upper
+opts(seed=1; iterations={{iter}}) = Options(iterations=iterations, seed=seed, store_convergence=true)
+alg(seed=1; N={{N}}, kw...) = NSGA3(N=N, options=opts(seed; kw...))  # reference directions
+
+result = optimize(f, bounds, alg())
+front = pareto_front(result)  # one row per non-dominated objective vector
+sols = Metaheuristics.get_non_dominated_solutions(result.population)
+refpoint = nadir(front) .+ 0.1 .* (nadir(front) .- ideal(front))  # hypervolume reference: 10% beyond the nadir
+hv(F, r=refpoint) = (keep = vec(all(F .< transpose(r), dims=2)); any(keep) ? Ind.hypervolume(F[keep, :], r; verbose=false) : 0.0)
+
+(front_size = size(front, 1), ideal = ideal(front), nadir = nadir(front), hypervolume = hv(front), all_feasible = all(s.is_feasible for s in sols))
+'''
+
+[[codeBranches]]
+model = "spea2"
+code = '''
+using Metaheuristics, LinearAlgebra, Random
+Ind = Metaheuristics.PerformanceIndicators
+
+f(x) = ({{obj}}, {{ineq}}, {{eq}})  # objectives (minimised), g(x) <= 0, h(x) = 0
+bounds = {{bounds}}  # row 1: lower, row 2: upper
+opts(seed=1; iterations={{iter}}) = Options(iterations=iterations, seed=seed, store_convergence=true)
+alg(seed=1; N={{N}}, kw...) = SPEA2(N=N, options=opts(seed; kw...))  # strength fitness + archive
+
+result = optimize(f, bounds, alg())
+front = pareto_front(result)  # one row per non-dominated objective vector
+sols = Metaheuristics.get_non_dominated_solutions(result.population)
+refpoint = nadir(front) .+ 0.1 .* (nadir(front) .- ideal(front))  # hypervolume reference: 10% beyond the nadir
+hv(F, r=refpoint) = (keep = vec(all(F .< transpose(r), dims=2)); any(keep) ? Ind.hypervolume(F[keep, :], r; verbose=false) : 0.0)
+
+(front_size = size(front, 1), ideal = ideal(front), nadir = nadir(front), hypervolume = hv(front), all_feasible = all(s.is_feasible for s in sols))
+'''
+
+[[codeBranches]]
+model = "sms"
+code = '''
+using Metaheuristics, LinearAlgebra, Random
+Ind = Metaheuristics.PerformanceIndicators
+
+f(x) = ({{obj}}, {{ineq}}, {{eq}})  # objectives (minimised), g(x) <= 0, h(x) = 0
+bounds = {{bounds}}  # row 1: lower, row 2: upper
+opts(seed=1; iterations={{iter}}) = Options(iterations=iterations, seed=seed, store_convergence=true)
+alg(seed=1; N={{N}}, kw...) = SMS_EMOA(N=N, options=opts(seed; kw...))  # hypervolume selection
+
+result = optimize(f, bounds, alg())
+front = pareto_front(result)  # one row per non-dominated objective vector
+sols = Metaheuristics.get_non_dominated_solutions(result.population)
+refpoint = nadir(front) .+ 0.1 .* (nadir(front) .- ideal(front))  # hypervolume reference: 10% beyond the nadir
+hv(F, r=refpoint) = (keep = vec(all(F .< transpose(r), dims=2)); any(keep) ? Ind.hypervolume(F[keep, :], r; verbose=false) : 0.0)
+
+(front_size = size(front, 1), ideal = ideal(front), nadir = nadir(front), hypervolume = hv(front), all_feasible = all(s.is_feasible for s in sols))
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "pareto-front"
+label = "Pareto Front Plot"
+desc = "The non-dominated front in objective space (first two objectives, or three in 3D)"
+code = '''
+using Plots
+if size(front, 2) >= 3
+    scatter3d(front[:, 1], front[:, 2], front[:, 3], xlabel="f1", ylabel="f2", zlabel="f3", ms=3, legend=false, title="Pareto front")
+else
+    scatter(front[:, 1], front[:, 2], xlabel="f1", ylabel="f2", ms=3, legend=false, title="Pareto front")
+end
+'''
+
+[[actionGroups.actions]]
+id = "convergence"
+label = "Convergence Plot"
+desc = "Hypervolume of the non-dominated set after each generation, with the final reference point: it rises quickly, then flattens as the front settles"
+code = '''
+using Plots
+hvs = [hv(pareto_front(s)) for s in result.convergence]
+plot(hvs, lw=2, xlabel="Generation", ylabel="Hypervolume", legend=false, title="Convergence")
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "front-size"
+label = "Front Statistics"
+desc = "Size of the front, range of each objective, spacing (spread uniformity; 0 = evenly spaced) and constraint violations of the non-dominated solutions"
+code = '''
+(front_size = size(front, 1), objective_ranges = [(minimum(c), maximum(c)) for c in eachcol(front)],
+ spacing = Ind.spacing([collect(r) for r in eachrow(front)]), all_feasible = all(s.is_feasible for s in sols),
+ max_violation = maximum(s.sum_violations for s in sols), evaluations = result.f_calls)
+'''
+
+[[actionGroups.actions]]
+id = "hypervolume"
+label = "Hypervolume"
+desc = "Hypervolume of the front and its variability over 5 independent runs (different seeds): a large spread means the result depends on luck"
+code = '''
+using Statistics
+hvs = [hv(pareto_front(optimize(f, bounds, alg(s)))) for s in 1:5]
+(hypervolume = hv(front), reference_point = refpoint, runs_mean = mean(hvs), runs_std = std(hvs))
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "run-algorithm"
+label = "Budget Sensitivity"
+desc = "Hypervolume reached with different numbers of generations: how much a larger budget would still improve the front"
+code = '''
+using Plots
+budgets = unique(round.(Int, {{iter}} .* [0.1, 0.25, 0.5, 1.0, 2.0]))
+hvs = [hv(pareto_front(optimize(f, bounds, alg(1; iterations=b)))) for b in budgets]
+plot(budgets, hvs, marker=:o, lw=2, xlabel="Generations", ylabel="Hypervolume", legend=false, title="Budget sensitivity")
+'''
+
+[[actionGroups.actions]]
+id = "tradeoff"
+label = "Trade-Off Rates"
+desc = "Along a two-objective front: how much f2 worsens per unit improvement in f1 between neighbouring solutions (the marginal rate of substitution)"
+code = '''
+using Plots
+size(front, 2) == 2 || error("Trade-off rates need exactly two objectives")
+F = front[sortperm(front[:, 1]), :]
+rate = -diff(F[:, 2]) ./ max.(diff(F[:, 1]), 1e-12)
+plot((F[1:end-1, 1] .+ F[2:end, 1]) ./ 2, max.(rate, 1e-6), lw=2, yscale=:log10, xlabel="f1", ylabel="-df2 / df1", legend=false, title="Trade-off rate along the front")
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "compare-algorithms"
+label = "Compare Algorithms"
+desc = "NSGA-II, NSGA-III, SPEA2 and SMS-EMOA on the same problem, budget and seed: front size, hypervolume (common reference point), spacing and run time"
+code = '''
+runs = [(name, @timed optimize(f, bounds, A(N={{N}}, options=opts(1)))) for (name, A) in
+        [("NSGA-II", NSGA2), ("NSGA-III", NSGA3), ("SPEA2", SPEA2), ("SMS-EMOA", SMS_EMOA)]]
+fronts = [pareto_front(r.value) for (_, r) in runs]
+common = (Fall = reduce(vcat, fronts); nadir(Fall) .+ 0.1 .* (nadir(Fall) .- ideal(Fall)))
+[(algorithm = name, front_size = size(F, 1), hypervolume = hv(F, common), spacing = Ind.spacing([collect(r) for r in eachrow(F)]), seconds = round(r.time, digits=2))
+ for ((name, r), F) in zip(runs, fronts)]
+'''
+
+[[actionGroups.actions]]
+id = "igd-comparison"
+label = "IGD Comparison"
+desc = "Inverted generational distance of each algorithm's front to a reference front, the non-dominated union of all four (lower is closer and better spread)"
+code = '''
+fronts = [(name, pareto_front(optimize(f, bounds, A(N={{N}}, options=opts(1))))) for (name, A) in
+          [("NSGA-II", NSGA2), ("NSGA-III", NSGA3), ("SPEA2", SPEA2), ("SMS-EMOA", SMS_EMOA)]]
+U = reduce(vcat, last.(fronts))
+nd = [i for i in axes(U, 1) if !any(all(U[j, :] .<= U[i, :]) && any(U[j, :] .< U[i, :]) for j in axes(U, 1))]
+reference = U[nd, :]
+[(algorithm = name, igd = Ind.igd(F, reference)) for (name, F) in fronts]
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "decision-space"
+label = "Decision Space"
+desc = "The Pareto set: decision variables of the non-dominated solutions (first two), coloured by f1, and a table of five solutions spread along the front"
+code = '''
+using Plots
+X = reduce(vcat, [transpose(get_position(s)) for s in sols]); Fv = reduce(vcat, [transpose(s.f) for s in sols])
+o = sortperm(Fv[:, 1]); pick = o[unique(round.(Int, range(1, length(o), length=5)))]
+display([(x = round.(X[i, :], digits=4), f = round.(Fv[i, :], digits=4)) for i in pick])
+scatter(X[:, 1], size(X, 2) > 1 ? X[:, 2] : zeros(size(X, 1)), zcolor=Fv[:, 1], xlabel="x1", ylabel="x2", label=false, title="Pareto set (colour = f1)")
+'''
+
+[[actionGroups.actions]]
+id = "knee"
+label = "Knee Point"
+desc = "The compromise solution closest to the ideal point after scaling each objective to [0, 1]: a natural default when no preference is given"
+code = '''
+Fv = reduce(vcat, [transpose(s.f) for s in sols])
+lo, hi = ideal(Fv), nadir(Fv)
+d = [norm((Fv[i, :] .- lo) ./ max.(hi .- lo, 1e-12)) for i in axes(Fv, 1)]
+k = argmin(d)
+(x = get_position(sols[k]), f = sols[k].f, ideal = lo, nadir = hi, scaled_distance = d[k])
+'''

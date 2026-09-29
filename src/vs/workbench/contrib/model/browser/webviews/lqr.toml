@@ -1,0 +1,493 @@
+# Linear Optimal Control Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/lqr.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Linear Optimal Control"
+viewType = "pollis.lqr"
+defaultModel = "sf"
+
+[[packages]]
+name = "ControlSystems.jl"
+github = "https://github.com/juliacontrol/ControlSystems.jl"
+
+[[packages.videos]]
+title = "Julia for Control Systems"
+description = "Introduction to control systems design using Julia"
+url = "https://www.youtube.com/watch?v=g9V8wVrVW8Q"
+
+[requires]
+packages = ["ControlSystemsBase.jl", "MatrixEquations.jl", "Plots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "State-Feedback Design"
+file = "optimal-control/tutorial-01-statefeedback.ipynb"
+bundled = true
+description = "LQR state-feedback gain computation via dare() and pole placement"
+
+[[notebookSections.notebooks]]
+name = "Output-Feedback Design"
+file = "optimal-control/tutorial-02-outputfeedback.ipynb"
+bundled = true
+description = "LQG observer design and output-feedback control via observer canonical form"
+
+[[notebookSections.notebooks]]
+name = "Finite Horizon"
+file = "optimal-control/tutorial-03-finite.ipynb"
+bundled = true
+description = "Finite horizon LQR with time-varying gains via dynamic programming"
+
+[[notebookSections.notebooks]]
+name = "Infinite Horizon"
+file = "optimal-control/tutorial-04-infinite.ipynb"
+bundled = true
+description = "Infinite horizon LQR steady-state gains and stability guarantees"
+
+[[wikis]]
+name = "Factsheet"
+file = "optimal-control/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "optimal-control/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "optimal-control/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "optimal-control/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "optimal-control/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "optimal-control/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "LQR / LQG Methods"
+
+[[wikis]]
+name = "State-Feedback"
+file = "optimal-control/statefeedback.md"
+bundled = true
+
+[[wikis]]
+name = "Output-Feedback"
+file = "optimal-control/outputfeedback.md"
+bundled = true
+
+[[wikis]]
+name = "Finite Horizon"
+file = "optimal-control/finitehorizon.md"
+bundled = true
+
+[[wikis]]
+name = "Infinite Horizon"
+file = "optimal-control/infinitehorizon.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "ControlSystems.jl — A Julia Package for Control Systems Design"
+authors = "Johansson, Kalle; Öberg, Fredrik"
+year = 2019
+journal = "Journal of Open Source Software"
+doi = "10.21105/joss.01391"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Optimal Control: An Introduction"
+authors = "Kirk, Donald E."
+year = 2012
+journal = "Dover Publications"
+url = "https://doverpublications.com/"
+openAccess = false
+
+[[references]]
+title = "Linear Control Systems Analysis and Design"
+authors = "D'Azzo, John J.; Houpis, Constantine H.; Sheldon, Stuart N."
+year = 2003
+journal = "CRC Press (5th ed.)"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "The Linear Quadratic Regulator Problem for Finite Horizon"
+authors = "Kalman, Rudolf E."
+year = 1960
+journal = "SIAM Journal on Control"
+doi = "10.1137/0108033"
+openAccess = false
+
+[[references]]
+title = "A New Approach to Linear Filtering and Prediction Problems"
+authors = "Kalman, Rudolf E."
+year = 1960
+journal = "Journal of Basic Engineering"
+doi = "10.1115/1.3662552"
+openAccess = false
+
+[[references]]
+title = "The Separation Principle for Linear Quadratic Gaussian Problem"
+authors = "Wonham, W. Murray"
+year = 1968
+journal = "Journal of Electronics and Control"
+doi = "10.1080/00207216808937376"
+openAccess = false
+
+[[models]]
+id = "sf"
+label = "State-Feedback LQR"
+
+[[models]]
+id = "of"
+label = "Output-Feedback LQG"
+
+[[bullets]]
+text = "State-Feedback Linear Quadratic Regulator (LQR)"
+detail = "Computes optimal state-feedback gain K to minimize a quadratic cost function. All state variables must be measurable; cost penalizes both state deviation and control effort. Yields closed-loop poles with optimal stability-performance tradeoff via the Discrete Algebraic Riccati Equation (DARE)."
+
+[[bullets]]
+text = "Output-Feedback Linear Quadratic Gaussian (LQG)"
+detail = "Combines LQR with a Kalman filter when only partial/noisy measurements are available. Computes both the optimal state-feedback gain K (DARE for control) and the optimal observer gain L (dual DARE for filtering). The separation principle guarantees optimality of the combined controller."
+
+[[decisionRows]]
+task = "State-Feedback LQR"
+context = "Every state is measured (or cheaply estimated) and the model is linear"
+purpose = "Solve the discrete Riccati equation once for the gain K; u = -K x minimises the sum of x'Qx + u'Ru"
+
+[[decisionRows]]
+task = "Output-Feedback LQG"
+context = "Only outputs y = Cx are measured, with process and measurement noise"
+purpose = "Separation principle: combine the LQR gain with a Kalman filter estimate, u = -K x_hat"
+
+[[inputs]]
+id = "A"
+label = "System Matrix A"
+tooltip = "Discrete-time state transition matrix (n x n): x[k+1] = A x[k] + B u[k]. Default: a double integrator sampled at 0.1 s."
+default = "[1.0 0.1; 0.0 1.0]"
+
+[[inputs]]
+id = "B"
+label = "Input Matrix B"
+tooltip = "Input-to-state matrix (n x m); a single input still needs a matrix, e.g. reshape([0.005, 0.1], 2, 1)."
+default = "reshape([0.005, 0.1], 2, 1)"
+
+[[inputs]]
+id = "Ts"
+label = "Sample Time"
+tooltip = "Sampling period of the discrete-time model in seconds, used for the time axis and the frequency analysis."
+default = "0.1"
+
+[[inputs]]
+id = "Q"
+label = "State Cost Q"
+tooltip = "Symmetric positive-semidefinite (n x n) penalty on state deviation. Larger entries drive those states to zero faster."
+default = "[1.0 0.0; 0.0 0.1]"
+newRow = true
+
+[[inputs]]
+id = "R"
+label = "Control Cost R"
+tooltip = "Symmetric positive-definite (m x m) penalty on control effort. Larger values give gentler control and slower regulation."
+default = "fill(0.01, 1, 1)"
+
+[[inputs]]
+id = "x0"
+label = "Initial State x0"
+tooltip = "Initial state for the simulations, as a Julia vector of length n."
+default = "[1.0, 0.0]"
+
+[[inputs]]
+id = "N"
+label = "Steps"
+tooltip = "Number of simulation steps."
+default = "100"
+
+[[inputs]]
+id = "C"
+label = "Output Matrix C"
+tooltip = "Measurement matrix (p x n): y = C x + v. Default: position only."
+default = "[1.0 0.0]"
+models = ["of"]
+newRow = true
+
+[[inputs]]
+id = "W"
+label = "Process Noise W"
+tooltip = "Covariance (n x n, positive semidefinite) of the process noise w in x[k+1] = A x + B u + w."
+default = "[1e-4 0.0; 0.0 1e-4]"
+models = ["of"]
+
+[[inputs]]
+id = "V"
+label = "Measurement Noise V"
+tooltip = "Covariance (p x p, positive definite) of the measurement noise v. Larger V makes the Kalman filter trust the model more than the data."
+default = "fill(1e-2, 1, 1)"
+models = ["of"]
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.sf]
+# A state decaying to zero under feedback
+svg = '''
+var d = 'M8,30';
+for (var x = 8; x <= 46; x++) { var s = (x - 8) / 38; d += ' L' + x + ',' + (60 - 30 * Math.exp(-4 * s) * Math.cos(6 * s)).toFixed(1); }
+return '<line x1="8" y1="60" x2="46" y2="60" stroke="currentColor" stroke-width="0.8" opacity="0.5"/><path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.4"/>';
+'''
+
+[miniCharts.of]
+# Noisy measurements with the smooth estimate through them
+svg = '''
+var d = 'M8,30', s = '', r = [3, -4, 2, -2, 4, -3, 1, -2, 2, -1];
+for (var x = 8; x <= 46; x++) { var t = (x - 8) / 38; d += ' L' + x + ',' + (60 - 30 * Math.exp(-4 * t) * Math.cos(6 * t)).toFixed(1); }
+r.forEach(function (e, i) { var x = 10 + 4 * i, t = (x - 8) / 38; s += '<circle cx="' + x + '" cy="' + (60 - 30 * Math.exp(-4 * t) * Math.cos(6 * t) + e).toFixed(1) + '" r="1.2" fill="currentColor" opacity="0.6"/>'; });
+return s + '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.4"/>';
+'''
+
+[[codeBranches]]
+model = "sf"
+code = '''
+using ControlSystemsBase, LinearAlgebra, Random
+
+A, B = {{A}}, {{B}}  # x[k+1] = A x[k] + B u[k]
+Q, R = {{Q}}, {{R}}  # stage cost x'Qx + u'Ru
+Ts = {{Ts}}  # sample time
+x0 = {{x0}}  # initial state
+N  = {{N}}  # simulation steps
+n, m = size(B)
+
+sys = ss(A, B, I(n), 0, Ts)  # full-state measurement
+K = lqr(sys, Q, R)  # optimal gain from the discrete Riccati equation: u = -K x
+
+function simulate(K; x0=x0, N=N)
+    X = zeros(N + 1, n); U = zeros(N, m); X[1, :] = x0
+    for k in 1:N
+        u = -K * X[k, :]
+        U[k, :] = u
+        X[k+1, :] = A * X[k, :] + B * u
+    end
+    (X = X, U = U, cost = sum(dot(X[k, :], Q * X[k, :]) + dot(U[k, :], R * U[k, :]) for k in 1:N))
+end
+
+sim = simulate(K)
+A_cl = A - B * K  # closed-loop state matrix
+(gain = K, closed_loop_poles = eigvals(A_cl), stable = maximum(abs, eigvals(A_cl)) < 1, simulated_cost = sim.cost)
+'''
+
+[[codeBranches]]
+model = "of"
+code = '''
+using ControlSystemsBase, LinearAlgebra, Random
+
+A, B = {{A}}, {{B}}  # x[k+1] = A x[k] + B u[k]
+Q, R = {{Q}}, {{R}}  # stage cost x'Qx + u'Ru
+Ts = {{Ts}}  # sample time
+x0 = {{x0}}  # initial state
+N  = {{N}}  # simulation steps
+n, m = size(B)
+C, W, V = {{C}}, {{W}}, {{V}}  # y = C x + v, process noise cov W, measurement noise cov V
+p = size(C, 1)
+
+sys = ss(A, B, C, 0, Ts)
+K = lqr(sys, Q, R)  # state-feedback gain
+L = kalman(sys, W, V)  # Kalman gain: x_hat[k+1] = A x_hat + B u + L (y - C x_hat)
+
+function simulate(K; x0=x0, N=N, seed=1)
+    rng = Xoshiro(seed)
+    Wc = cholesky(Symmetric(float.(W) + 1e-12I)).L; Vc = cholesky(Symmetric(float.(V))).L
+    X = zeros(N + 1, n); Xhat = zeros(N + 1, n); U = zeros(N, m); X[1, :] = x0
+    for k in 1:N
+        x, xh = X[k, :], Xhat[k, :]
+        y = C * x + Vc * randn(rng, p)
+        u = -K * xh  # certainty equivalence: act on the estimate
+        U[k, :] = u
+        X[k+1, :] = A * x + B * u + Wc * randn(rng, n)
+        Xhat[k+1, :] = A * xh + B * u + L * (y - C * xh)
+    end
+    (X = X, Xhat = Xhat, U = U, cost = sum(dot(X[k, :], Q * X[k, :]) + dot(U[k, :], R * U[k, :]) for k in 1:N))
+end
+
+sim = simulate(K)
+A_cl = A - B * K  # closed-loop state matrix
+(gain = K, closed_loop_poles = eigvals(A_cl), stable = maximum(abs, eigvals(A_cl)) < 1, simulated_cost = sim.cost)
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "state-trajectory"
+label = "State Trajectory"
+desc = "The closed-loop states from x0 (with the Kalman estimates dashed for LQG)"
+code = '''
+using Plots
+
+t = Ts .* (0:N)
+p = plot(t, sim.X, label=permutedims(["x$i" for i in 1:n]), xlabel="time", ylabel="state")
+{{?model=of}} plot!(p, t, sim.Xhat, linestyle=:dash, label=permutedims(["x$(i) estimate" for i in 1:n]))
+p
+'''
+
+[[actionGroups.actions]]
+id = "control-signal"
+label = "Control Signal"
+desc = "The optimal input u[k] = -K x[k] held over each sample"
+code = '''
+using Plots
+
+plot(Ts .* (0:N-1), sim.U, linetype=:steppost, label=permutedims(["u$j" for j in 1:m]), xlabel="time", ylabel="control")
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "structural-check"
+label = "Controllability & Observability"
+desc = "Ranks of the controllability matrix (must be n for arbitrary pole placement) and of the observability matrix of the measured or penalised outputs (needed for a stabilising, unique Riccati solution)"
+code = '''
+Cq = sqrt(Symmetric(float.(Q)))  # the cost sees the states through Q^(1/2)
+(n = n, controllability_rank = rank(ctrb(A, B)), cost_observability_rank = rank(obsv(A, Cq)),
+{{?model=of}}  measurement_observability_rank = rank(obsv(A, C)),
+ open_loop_poles = eigvals(A))
+'''
+
+[[actionGroups.actions]]
+id = "closed-loop-poles"
+label = "Closed-Loop Poles"
+desc = "Open- and closed-loop eigenvalues against the unit circle (inside = stable), with the estimator poles A - LC for LQG"
+code = '''
+using Plots
+
+pl = plot(cos.(0:0.01:2pi), sin.(0:0.01:2pi), color=:gray, label="unit circle", aspect_ratio=:equal, xlabel="Re", ylabel="Im")
+scatter!(pl, real(eigvals(A)), imag(eigvals(A)), marker=:x, markersize=6, label="open loop")
+scatter!(pl, real(eigvals(A - B * K)), imag(eigvals(A - B * K)), label="LQR closed loop")
+{{?model=of}} scatter!(pl, real(eigvals(A - L * C)), imag(eigvals(A - L * C)), marker=:diamond, label="estimator")
+pl
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "new-initial-state"
+label = "Response from New State"
+desc = "Simulate the controlled system from a different initial state"
+code = '''
+using Plots
+
+x_new = 2 .* x0  # replace with the initial state of interest
+s = simulate(K; x0=x_new)
+display(plot(Ts .* (0:N), s.X, label=permutedims(["x$i" for i in 1:n]), xlabel="time"))
+(final_state = s.X[end, :], cost = s.cost, peak_control = maximum(abs, s.U))
+'''
+
+[[actionGroups.actions]]
+id = "cost-to-go"
+label = "Predicted Cost"
+desc = "The Riccati solution P predicts the infinite-horizon cost x0' P x0 before simulating; compare it with the simulated cost"
+code = '''
+using MatrixEquations
+
+P = ared(A, B, R, Q)[1]  # stabilising solution of the discrete algebraic Riccati equation
+(predicted_cost = dot(x0, P * x0), simulated_cost = sim.cost, riccati_solution = P)
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "vs-uncontrolled"
+label = "vs. Uncontrolled"
+desc = "The closed-loop state norm against the open-loop system (u = 0) from the same initial state"
+code = '''
+using Plots
+
+Xol = zeros(N + 1, n); Xol[1, :] = x0
+for k in 1:N
+    Xol[k+1, :] = A * Xol[k, :]
+end
+t = Ts .* (0:N)
+plot(t, norm.(eachrow(Xol)), label="open loop", xlabel="time", ylabel="state norm")
+plot!(t, norm.(eachrow(sim.X)), label="closed loop")
+'''
+
+[[actionGroups.actions]]
+id = "weight-sweep"
+label = "Control-Weight Sweep"
+desc = "Scale R over four orders of magnitude: state cost against control cost (the LQR trade-off curve) and how fast the state settles"
+code = '''
+using Plots
+
+res = map(10.0 .^ (-2:1:2)) do s
+    Ks = lqr(sys, Q, s .* R)
+    r = simulate(Ks)
+    xc = sum(dot(r.X[k, :], Q * r.X[k, :]) for k in 1:N)
+    uc = sum(dot(r.U[k, :], R * r.U[k, :]) for k in 1:N)
+    (R_scale = s, state_cost = xc, control_cost = uc, spectral_radius = maximum(abs, eigvals(A - B * Ks)))
+end
+display(plot(getfield.(res, :control_cost), getfield.(res, :state_cost), marker=:circle, xlabel="control cost", ylabel="state cost", legend=false))
+res
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "gain-analysis"
+label = "Gain Analysis"
+desc = "The optimal gain (rows = inputs, columns = states) and each row normalised by its largest entry: which states the controller reacts to most"
+code = '''
+(gain = K, relative_gain = K ./ maximum(abs.(K), dims=2))
+'''
+
+[[actionGroups.actions]]
+id = "robustness"
+label = "Stability Margins"
+desc = "Gain and phase margins of the loop broken at the plant input (SISO): LQR guarantees generous margins with full state; LQG can lose them"
+code = '''
+{{?model=sf}} loop = ss(A, B, K, 0, Ts)  # loop transfer K (zI - A)^-1 B
+{{?model=of}} ctrl = ss(A - B * K - L * C, L, K, 0, Ts); loop = ctrl * ss(A, B, C, 0, Ts)  # LQG controller in series with the plant
+wgm, gm, wpm, pm = margin(loop)
+(gain_margin = gm, gain_crossover = wgm, phase_margin_degrees = pm, phase_crossover = wpm)
+'''

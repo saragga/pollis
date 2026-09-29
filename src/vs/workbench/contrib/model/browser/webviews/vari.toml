@@ -1,0 +1,436 @@
+# Variational Inequalities Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/vari.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Variational Inequalities"
+viewType = "pollis.vari"
+defaultModel = "vi"
+
+[[packages]]
+name = "Complementarity.jl"
+github = "https://github.com/chkwon/Complementarity.jl"
+
+[[packages]]
+name = "PATHSolver.jl"
+github = "https://github.com/chkwon/PATHSolver.jl"
+
+[requires]
+packages = ["JuMP.jl PATHSolver.jl Plots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Variational Inequality"
+file = "vari/tutorial-01-vi.ipynb"
+bundled = true
+description = "Find x* in K with F(x*)^T(y - x*) >= 0 for all y in K via MCP reformulation and PATHSolver"
+
+[[notebookSections.notebooks]]
+name = "Quasi-Variational Inequality"
+file = "vari/tutorial-02-qvi.ipynb"
+bundled = true
+description = "Find x* in K(x*) satisfying the QVI condition; state-dependent constraint set via fixed-point iteration"
+
+[[wikis]]
+name = "Factsheet"
+file = "vari/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "vari/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "vari/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "vari/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "vari/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "vari/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Problems"
+
+[[wikis]]
+name = "Variational Inequality (VI)"
+file = "vari/vi.md"
+bundled = true
+
+[[wikis]]
+name = "Quasi-Variational Inequality (QVI)"
+file = "vari/qvi.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "Complementarity.jl: Modeling and Solving Complementarity Problems in Julia"
+authors = "Chung, Changhyun"
+year = 2023
+journal = "GitHub"
+url = "https://github.com/chkwon/Complementarity.jl"
+openAccess = true
+
+[[references]]
+title = "PATH Solver: A Non-Monotone Stabilisation Scheme for the Solution of Nonlinear Complementarity Problems"
+authors = "Dirkse, Steven P.; Ferris, Michael C."
+year = 1995
+journal = "Mathematical Programming"
+doi = "10.1007/BF02592958"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Finite-Dimensional Variational Inequalities and Complementarity Problems"
+authors = "Facchinei, Francisco; Pang, Jong-Shi"
+year = 2003
+journal = "Springer (Vol. I & II)"
+openAccess = false
+
+[[references]]
+title = "An Introduction to Variational Inequalities and Their Applications"
+authors = "Kinderlehrer, David; Stampacchia, Guido"
+year = 1980
+journal = "SIAM"
+doi = "10.1137/1.9780898719451"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "On some non-linear elliptic differential-functional equations"
+authors = "Hartman, Philip; Stampacchia, Guido"
+year = 1966
+journal = "Acta Mathematica"
+doi = "10.1007/BF02392214"
+openAccess = false
+
+[[references]]
+title = "The Traffic Assignment Problem for a General Network"
+authors = "Dafermos, Stella C.; Sparrow, Frederick T."
+year = 1969
+journal = "Journal of Research of the National Bureau of Standards"
+doi = "10.6028/jres.073B.023"
+openAccess = false
+
+[[models]]
+id = "vi"
+label = "Variational Inequality"
+
+[[models]]
+id = "qvi"
+label = "Quasi-Variational Inequality"
+
+[[bullets]]
+text = "A variational inequality (VI) finds a point x* in a convex set K such that the operator F points inward"
+detail = "no feasible direction improves the objective. It unifies fixed-point problems, optimality conditions, complementarity, and equilibrium in a single framework."
+
+[[bullets]]
+text = "Used in traffic assignment, spatial price equilibrium, contact mechanics, game theory, and economics wherever the equilibrium condition cannot be written as a simple minimisation."
+detail = ""
+
+[[decisionRows]]
+task = "Variational Inequality"
+context = "Fixed box K = [lb, ub]: Nash-Cournot equilibria with capacities, traffic equilibria, contact problems, KKT systems of convex programmes"
+purpose = "Find x* in K with F(x*)'(y - x*) >= 0 for every y in K. On a box this is exactly the mixed complementarity problem, solved with PATH through JuMP. Default: Cournot duopoly with costs (1, 2), price 10 - x1 - x2 and capacity 3 each"
+
+[[decisionRows]]
+task = "Quasi-Variational Inequality"
+context = "Constraint set that moves with the solution, K(x): generalised Nash equilibria with shared resources, where each player's feasible set depends on the others' decisions"
+purpose = "Find x* in K(x*) solving the VI on K(x*). Solved by damped fixed-point iteration: solve the VI on K(x_k), move halfway towards it, update the set (undamped, the default problem cycles). Generalised Nash equilibria are typically not unique: the point reached depends on the start and the damping. Default: the same duopoly with a shared capacity x1 + x2 <= 5, which binds"
+
+[[inputs]]
+id = "n"
+label = "Dimension n"
+tooltip = "Number of variables; must match the length of F."
+default = "2"
+
+[[inputs]]
+id = "f"
+label = "Operator F(x)"
+tooltip = "Vector of Julia expressions in x[1] .. x[n]. Default: minus the marginal profit of each Cournot firm, c_i - (10 - x1 - x2) + x_i."
+default = "[1.0 - (10 - sum(x)) + x[1], 2.0 - (10 - sum(x)) + x[2]]"
+
+[[inputs]]
+id = "lb"
+label = "Lower Bounds lb"
+tooltip = "Lower bounds of the box K = [lb, ub] as a Julia vector; use -Inf for none."
+default = "zeros(2)"
+models = ["vi"]
+
+[[inputs]]
+id = "ub"
+label = "Upper Bounds ub"
+tooltip = "Upper bounds of the box K = [lb, ub] as a Julia vector; use Inf for none."
+default = "[3.0, 3.0]"
+models = ["vi"]
+
+[[inputs]]
+id = "K"
+label = "Moving Set K(x)"
+tooltip = "Julia expression in x returning the tuple (lb, ub) of the box K(x). Default: shared capacity 5, each firm limited to 5 minus the other's output."
+default = "(zeros(2), 5.0 .- (sum(x) .- x))"
+models = ["qvi"]
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.vi]
+# Fixed box with the operator pointing outward at the solution
+svg = '''
+return '<rect x="10" y="26" width="34" height="34" fill="none" stroke="currentColor" stroke-width="2"/>'
+	+ '<circle cx="44" cy="40" r="2.5" fill="currentColor"/><line x1="44" y1="40" x2="52" y2="40" stroke="currentColor" stroke-width="1" stroke-dasharray="3,2"/>';
+'''
+
+[miniCharts.qvi]
+# Two nested boxes: the set moves with the point
+svg = '''
+return '<rect x="8" y="24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="3,2"/>'
+	+ '<rect x="16" y="34" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="46" cy="50" r="2.5" fill="currentColor"/>';
+'''
+
+[[codeBranches]]
+model = "vi"
+code = '''
+using JuMP, PATHSolver, LinearAlgebra, Random
+n = {{n}}
+Fop(x) = {{f}}  # operator F
+Kset(x) = (Float64.({{lb}}), Float64.({{ub}}))  # fixed box K
+
+function solve_vi(F=Fop; K=Kset(zeros(n)), start=fill(0.5, n))  # VI on a box = mixed complementarity lb <= x <= ub perp F(x)
+    lb, ub = K
+    m = Model(PATHSolver.Optimizer); set_silent(m)
+    @variable(m, x[i=1:n], start = start[i])
+    for i in 1:n
+        isfinite(lb[i]) && set_lower_bound(x[i], lb[i])
+        isfinite(ub[i]) && set_upper_bound(x[i], ub[i])
+    end
+    @constraint(m, complements(F(x), x))
+    optimize!(m)
+    xs = value.(x)
+    (x = xs, ok = termination_status(m) == MOI.LOCALLY_SOLVED, status = raw_status(m))
+end
+
+function solve_qvi(F=Fop; x0=zeros(n), iters=200, tol=1e-9, damp=0.5)  # damped fixed point: x_{k+1} = x_k + damp * (VI(F, K(x_k)) - x_k)
+    x, steps = x0, Float64[]
+    for _ in 1:iters
+        r = solve_vi(F; K=Kset(x), start=x)
+        push!(steps, norm(r.x - x)); x = x .+ damp .* (r.x .- x)
+        steps[end] < tol && break
+    end
+    (x = x, ok = steps[end] < 1e-6, steps = steps)
+end
+
+solve(F=Fop) = solve_qvi(F; damp=1.0)  # a fixed K converges in one undamped step
+residual(x, F=Fop) = norm(x .- clamp.(x .- F(x), Kset(x)...))  # natural residual: zero exactly at a solution
+
+{{?model=vi}}sol = solve()
+{{?model=qvi}}sol = solve_qvi()
+lb, ub = Kset(sol.x)
+(x = round.(sol.x, digits=6), F_at_x = round.(Fop(sol.x), digits=6), K_at_x = (lb, ub), residual = residual(sol.x), solved = sol.ok)
+'''
+
+[[codeBranches]]
+model = "qvi"
+code = '''
+using JuMP, PATHSolver, LinearAlgebra, Random
+n = {{n}}
+Fop(x) = {{f}}  # operator F
+Kset(x) = map(v -> Float64.(v), {{K}})  # moving box K(x) = (lb, ub)
+
+function solve_vi(F=Fop; K=Kset(zeros(n)), start=fill(0.5, n))  # VI on a box = mixed complementarity lb <= x <= ub perp F(x)
+    lb, ub = K
+    m = Model(PATHSolver.Optimizer); set_silent(m)
+    @variable(m, x[i=1:n], start = start[i])
+    for i in 1:n
+        isfinite(lb[i]) && set_lower_bound(x[i], lb[i])
+        isfinite(ub[i]) && set_upper_bound(x[i], ub[i])
+    end
+    @constraint(m, complements(F(x), x))
+    optimize!(m)
+    xs = value.(x)
+    (x = xs, ok = termination_status(m) == MOI.LOCALLY_SOLVED, status = raw_status(m))
+end
+
+function solve_qvi(F=Fop; x0=zeros(n), iters=200, tol=1e-9, damp=0.5)  # damped fixed point: x_{k+1} = x_k + damp * (VI(F, K(x_k)) - x_k)
+    x, steps = x0, Float64[]
+    for _ in 1:iters
+        r = solve_vi(F; K=Kset(x), start=x)
+        push!(steps, norm(r.x - x)); x = x .+ damp .* (r.x .- x)
+        steps[end] < tol && break
+    end
+    (x = x, ok = steps[end] < 1e-6, steps = steps)
+end
+
+solve(F=Fop) = solve_qvi(F; damp=1.0)  # a fixed K converges in one undamped step
+residual(x, F=Fop) = norm(x .- clamp.(x .- F(x), Kset(x)...))  # natural residual: zero exactly at a solution
+
+{{?model=vi}}sol = solve()
+{{?model=qvi}}sol = solve_qvi()
+lb, ub = Kset(sol.x)
+(x = round.(sol.x, digits=6), F_at_x = round.(Fop(sol.x), digits=6), K_at_x = (lb, ub), residual = residual(sol.x), solved = sol.ok)
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "plot-F"
+label = "Operator Field"
+desc = "Arrows of -F over the set K(x*) in the first two coordinates (others fixed at the solution): at x* every arrow pointing into K has been stopped by a bound"
+code = '''
+using Plots
+g = [(a, b) for a in range(lb[1], ub[1], length=11) for b in range(lb[2], ub[2], length=11)]
+at(a, b) = (y = copy(sol.x); y[1] = a; y[2] = b; y)
+d = [-Fop(at(a, b))[1:2] for (a, b) in g]
+s = 0.08 * (ub[1] - lb[1]) / maximum(norm.(d))
+quiver(first.(g), last.(g), quiver=(s .* first.(d), s .* last.(d)), c=:gray, xlabel="x1", ylabel="x2", title="-F(x) on K(x*)", aspect_ratio=:equal)
+scatter!([sol.x[1]], [sol.x[2]], ms=7, c=:red, label="x*")
+'''
+
+[[actionGroups.actions]]
+id = "residual-map"
+label = "Residual Map"
+desc = "Natural residual over a grid of the first two coordinates: solutions are exactly the zeros of this surface"
+code = '''
+using Plots
+a1 = range(lb[1] - 1, ub[1] + 1, length=121); a2 = range(lb[2] - 1, ub[2] + 1, length=121)
+R = [residual((y = copy(sol.x); y[1] = u; y[2] = v; y)) for v in a2, u in a1]
+heatmap(a1, a2, log10.(R .+ 1e-6), xlabel="x1", ylabel="x2", title="log10 natural residual", colorbar_title="log10 r")
+scatter!([sol.x[1]], [sol.x[2]], ms=6, c=:white, label="x*")
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "check-vi"
+label = "VI Residual"
+desc = "Natural residual ||x* - P_K(x* - F(x*))|| and a direct check of the VI inequality F(x*)'(y - x*) >= 0 on 10000 random points y of K(x*)"
+code = '''
+rng = MersenneTwister(1)
+Fx = Fop(sol.x)
+box(i) = (max(lb[i], sol.x[i] - 10), min(ub[i], sol.x[i] + 10))  # sample a bounded part of K
+ys = [[box(i)[1] + rand(rng) * (box(i)[2] - box(i)[1]) for i in 1:n] for _ in 1:10000]
+(natural_residual = residual(sol.x), min_inner_product = minimum(dot(Fx, y - sol.x) for y in ys), holds = minimum(dot(Fx, y - sol.x) for y in ys) >= -1e-8)
+'''
+
+[[actionGroups.actions]]
+id = "check-conv"
+label = "Convergence Check"
+desc = "Step length ||x_{k+1} - x_k|| of the iteration: the fixed-point loop over K(x_k) for the QVI, or the projection method x <- P_K(x - gamma F(x)) for the VI"
+code = '''
+using Plots
+function projection_steps(gamma=0.2)
+    x, steps = zeros(n), Float64[]
+    for _ in 1:200
+        y = clamp.(x .- gamma .* Fop(x), Kset(x)...)
+        push!(steps, norm(y - x)); x = y
+        steps[end] < 1e-12 && break
+    end
+    steps
+end
+{{?model=qvi}}steps = sol.steps
+{{?model=vi}}steps = projection_steps()
+plot(max.(steps, 1e-16), marker=:o, ms=2, yscale=:log10, xlabel="Iteration", ylabel="||x_{k+1} - x_k||", legend=false, title="Fixed-point convergence")
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "param-solve"
+label = "Parametric VI"
+desc = "Equilibrium path as every component of F is shifted down by t (for Cournot, a rise of t in the demand intercept), warm-starting each solve"
+code = '''
+using Plots
+ts = range(-3, 3, length=41)
+function solution_path(ts)
+    xs = Vector{Float64}[]
+    for t in ts
+{{?model=vi}}        r = solve(x -> Fop(x) .- t)
+{{?model=qvi}}        r = solve_qvi(x -> Fop(x) .- t)
+        push!(xs, r.ok ? r.x : fill(NaN, n))
+    end
+    reduce(hcat, xs)
+end
+plot(ts, transpose(solution_path(ts)), lw=2, marker=:circle, ms=2, xlabel="Shift t", ylabel="x*(t)", label=permutedims(["x" * string(i) for i in 1:n]), title="Parametric VI")
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "vi-vs-ncp"
+label = "Bounds vs NCP"
+desc = "The solution on K next to the NCP solution with only the lower bounds kept: how much the upper bounds (capacities) change the equilibrium"
+code = '''
+r = solve_vi(; K=(Kset(zeros(n))[1], fill(Inf, n)))
+[(problem = "VI on K", x = round.(sol.x, digits=4), F = round.(Fop(sol.x), digits=4)),
+ (problem = "NCP (no upper bounds)", x = round.(r.x, digits=4), F = round.(Fop(r.x), digits=4))]
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "equilibrium"
+label = "Equilibrium Interpretation"
+desc = "Each component at the solution: interior (F_i = 0, the first-order condition holds), or at a bound, where |F_i| is the shadow value of relaxing that bound"
+code = '''
+tol = 1e-6
+Fx = Fop(sol.x)
+[(i = i, x = round(sol.x[i], digits=5), F = round(Fx[i], digits=5),
+  status = sol.x[i] <= lb[i] + tol ? "at lower bound" : sol.x[i] >= ub[i] - tol ? "at upper bound" : "interior, F = 0",
+  shadow_value = abs(Fx[i]) > tol ? round(abs(Fx[i]), digits=5) : 0.0) for i in 1:n]
+'''
+
+[[actionGroups.actions]]
+id = "gap"
+label = "Gap Function"
+desc = "Gap function g(x) = max over y in K(x) of F(x)'(x - y): non-negative on K(x) and zero exactly at a solution, compared at the start point and at x*"
+code = '''
+function gapfun(x)
+    Fx, (l, u) = Fop(x), Kset(x)
+    sum(Fx[i] * (x[i] - (Fx[i] > 0 ? l[i] : u[i])) for i in 1:n)  # y at the bound F pushes toward
+end
+x0 = clamp.(zeros(n), Kset(zeros(n))...)
+(gap_at_start = gapfun(x0), gap_at_solution = gapfun(sol.x))
+'''

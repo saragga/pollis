@@ -1,0 +1,446 @@
+# Quasi-Newton Methods Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/qn.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Quasi-Newton Methods"
+viewType = "pollis.qn"
+defaultModel = "bfgs"
+
+[[packages]]
+name = "Optim.jl"
+github = "https://github.com/JuliaNLSolvers/Optim.jl"
+
+[requires]
+packages = ["Optim.jl", "LineSearches.jl", "Plots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "BFGS"
+file = "qn/tutorial-01-bfgs.ipynb"
+bundled = true
+description = "BFGS with Wolfe line search using BFGS() in Optim.jl"
+
+[[notebookSections.notebooks]]
+name = "L-BFGS"
+file = "qn/tutorial-02-lbfgs.ipynb"
+bundled = true
+description = "Limited-memory BFGS for large-scale optimization using LBFGS() in Optim.jl"
+
+[[notebookSections.notebooks]]
+name = "Line Search Options"
+file = "qn/tutorial-03-linesearch.ipynb"
+bundled = true
+description = "Customising line search for quasi-Newton methods: step bounds, Wolfe conditions, and initial step strategies"
+
+[[notebookSections.notebooks]]
+name = "Benchmarking Quasi-Newton Methods"
+file = "qn/tutorial-04-benchmark.ipynb"
+bundled = true
+description = "Compare BFGS and L-BFGS on standard test functions: Rosenbrock, Himmelblau, and others"
+
+[[wikis]]
+name = "Factsheet"
+file = "qn/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "qn/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "qn/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "qn/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "qn/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "qn/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Algorithm Details"
+
+[[wikis]]
+name = "BFGS"
+file = "qn/bfgs.md"
+bundled = true
+
+[[wikis]]
+name = "L-BFGS"
+file = "qn/lbfgs.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "Optim: A mathematical optimization package for Julia"
+authors = "Mogensen, Patrick Kofod; Riseth, Asbjorn Nilsen"
+year = 2018
+journal = "Journal of Open Source Software"
+doi = "10.21105/joss.00615"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Numerical Optimization"
+authors = "Nocedal, Jorge; Wright, Stephen J."
+year = 2006
+journal = "Springer (2nd ed.)"
+doi = "10.1007/978-0-387-40065-5"
+openAccess = false
+
+[[references]]
+separator = true
+label = "BFGS (Original Papers)"
+
+[[references]]
+title = "The Convergence of a Class of Double-rank Minimization Algorithms"
+authors = "Broyden, Charles G."
+year = 1970
+journal = "Journal of the Institute of Mathematics and Its Applications"
+doi = "10.1093/imamat/6.1.76"
+openAccess = false
+
+[[references]]
+title = "A New Approach to Variable Metric Algorithms"
+authors = "Fletcher, Roger"
+year = 1970
+journal = "Computer Journal"
+doi = "10.1093/comjnl/13.3.317"
+openAccess = false
+
+[[references]]
+title = "A Family of Variable Metric Methods Derived by Variational Means"
+authors = "Goldfarb, Donald"
+year = 1970
+journal = "Mathematics of Computation"
+doi = "10.2307/2004514"
+openAccess = false
+
+[[references]]
+title = "Conditioning of Quasi-Newton Methods for Function Minimization"
+authors = "Shanno, David F."
+year = 1970
+journal = "Mathematics of Computation"
+doi = "10.2307/2004873"
+openAccess = false
+
+[[references]]
+separator = true
+label = "L-BFGS (Original Paper)"
+
+[[references]]
+title = "On the Limited Memory BFGS Method for Large Scale Optimization"
+authors = "Liu, Dong C.; Nocedal, Jorge"
+year = 1989
+journal = "Mathematical Programming"
+doi = "10.1007/BF01589116"
+openAccess = false
+
+[[models]]
+id = "bfgs"
+label = "BFGS"
+
+[[models]]
+id = "lbfgs"
+label = "L-BFGS"
+
+[[bullets]]
+text = "BFGS"
+detail = "Broyden-Fletcher-Goldfarb-Shanno; builds a dense Hessian approximation via secant updates"
+
+[[bullets]]
+text = "L-BFGS"
+detail = "Limited-memory BFGS; stores only m recent secant pairs for large-scale problems"
+
+[[decisionRows]]
+task = "BFGS"
+context = "Smooth problems of small to moderate dimension (up to a few thousand variables)"
+purpose = "Build a dense inverse-Hessian approximation from gradient differences; superlinear convergence without second derivatives"
+
+[[decisionRows]]
+task = "L-BFGS"
+context = "Large smooth problems where an n x n matrix does not fit or is too slow"
+purpose = "Keep only the last m secant pairs and apply the approximation implicitly; O(mn) memory"
+
+[[inputs]]
+id = "f"
+label = "Objective f(x)"
+tooltip = "Julia expression for the scalar objective to minimise; it must be differentiable. Use x[1], x[2], ... for the components."
+default = "(1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2"
+
+[[inputs]]
+id = "x0"
+label = "Initial Guess x0"
+tooltip = "Starting point as a Julia vector. Quasi-Newton methods are robust to the start but find the local minimum nearest in the descent sense."
+default = "[-1.2, 1.0]"
+
+[[inputs]]
+id = "m"
+label = "Memory m"
+tooltip = "Number of secant pairs stored by L-BFGS. Larger m gives a better Hessian approximation at O(mn) memory; 5 to 20 is typical."
+default = "10"
+models = ["lbfgs"]
+
+[[inputs]]
+id = "autodiff"
+label = "Derivatives"
+tooltip = ":forward: exact gradients by forward-mode automatic differentiation (ForwardDiff.jl), recommended. :finite: finite-difference gradients (FiniteDiff.jl), slower and less accurate."
+kind = "select"
+default = ":forward"
+newRow = true
+
+[[inputs.options]]
+value = ":forward"
+label = ":forward (ForwardDiff)"
+
+[[inputs.options]]
+value = ":finite"
+label = ":finite (FiniteDiff)"
+
+[[inputs]]
+id = "linesearch"
+label = "Line Search"
+tooltip = "How the step length along each direction is chosen (LineSearches.jl). HagerZhang is the Optim default; BackTracking is cheap; MoreThuente and StrongWolfe enforce the strong Wolfe conditions, which keep the BFGS update positive definite."
+kind = "select"
+default = "HagerZhang"
+
+[[inputs.options]]
+value = "HagerZhang"
+label = "HagerZhang"
+
+[[inputs.options]]
+value = "BackTracking"
+label = "BackTracking"
+
+[[inputs.options]]
+value = "MoreThuente"
+label = "MoreThuente"
+
+[[inputs.options]]
+value = "StrongWolfe"
+label = "StrongWolfe"
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.bfgs]
+# A dense matrix being updated beside a path bending toward the minimum
+svg = '''
+var s = '';
+for (var i = 0; i < 4; i++) { for (var j = 0; j < 4; j++) { s += '<rect x="' + (8 + 5 * j) + '" y="' + (30 + 5 * i) + '" width="4" height="4" fill="currentColor" opacity="' + (i === j ? 0.9 : 0.35) + '"/>'; } }
+return s + '<path d="M30,64 Q34,48 46,40" fill="none" stroke="currentColor" stroke-width="1.3"/><circle cx="30" cy="64" r="2" fill="currentColor"/><circle cx="46" cy="40" r="2.4" fill="currentColor"/>';
+'''
+
+[miniCharts.lbfgs]
+# A short stack of stored vector pairs beside the same path
+svg = '''
+var s = '';
+for (var k = 0; k < 3; k++) { s += '<rect x="8" y="' + (30 + 8 * k) + '" width="3" height="6" fill="currentColor" opacity="0.8"/><rect x="13" y="' + (30 + 8 * k) + '" width="3" height="6" fill="currentColor" opacity="0.45"/>'; }
+return s + '<path d="M26,64 Q32,48 46,40" fill="none" stroke="currentColor" stroke-width="1.3"/><circle cx="26" cy="64" r="2" fill="currentColor"/><circle cx="46" cy="40" r="2.4" fill="currentColor"/>';
+'''
+
+[[codeBranches]]
+model = "bfgs"
+code = '''
+using Optim, LineSearches, ForwardDiff, LinearAlgebra
+
+f(x) = {{f}}
+x0 = {{x0}}  # initial guess
+n  = length(x0)
+ls = LineSearches.{{linesearch}}()  # step-length rule
+opts = Optim.Options(store_trace=true, extended_trace=true)  # keep the iterates for the plots
+method = BFGS(linesearch=ls)  # dense inverse-Hessian update
+
+result = optimize(f, x0, method, opts; autodiff={{autodiff}})
+x_opt = Optim.minimizer(result)
+path  = Optim.x_trace(result)
+(minimizer = x_opt, minimum = Optim.minimum(result), iterations = Optim.iterations(result), converged = Optim.converged(result))
+'''
+
+[[codeBranches]]
+model = "lbfgs"
+code = '''
+using Optim, LineSearches, ForwardDiff, LinearAlgebra
+
+f(x) = {{f}}
+x0 = {{x0}}  # initial guess
+n  = length(x0)
+ls = LineSearches.{{linesearch}}()  # step-length rule
+opts = Optim.Options(store_trace=true, extended_trace=true)  # keep the iterates for the plots
+method = LBFGS(m={{m}}, linesearch=ls)  # last m secant pairs only
+
+result = optimize(f, x0, method, opts; autodiff={{autodiff}})
+x_opt = Optim.minimizer(result)
+path  = Optim.x_trace(result)
+(minimizer = x_opt, minimum = Optim.minimum(result), iterations = Optim.iterations(result), converged = Optim.converged(result))
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "convergence-trace"
+label = "Convergence Trace"
+desc = "f(x_k) - f* and the gradient norm along the iterates (log scale): the curve bending downward is superlinear convergence"
+code = '''
+using Plots
+
+fs = Optim.f_trace(result)
+gs = Optim.g_norm_trace(result)
+plot(0:length(fs)-1, fs .- Optim.minimum(result) .+ eps(), yscale=:log10, marker=:circle, markersize=2, label="f(x) - f*", xlabel="iteration")
+plot!(0:length(gs)-1, gs .+ eps(), label="gradient norm")
+'''
+
+[[actionGroups.actions]]
+id = "contour-path"
+label = "Contour + Path"
+desc = "The iterates on the contours of f (2D problems; other variables held at the optimum)"
+code = '''
+using Plots
+
+P = reduce(hcat, path)
+pad = max(0.5, 0.25 * maximum(abs, P[1:2, :]))
+xs = range(minimum(P[1, :]) - pad, maximum(P[1, :]) + pad, length=120)
+ys = range(minimum(P[2, :]) - pad, maximum(P[2, :]) + pad, length=120)
+contour(xs, ys, (a, b) -> log1p(f([a; b; x_opt[3:end]]) - Optim.minimum(result) + 1e-12), fill=true, colorbar=false, xlabel="x1", ylabel="x2")
+plot!(P[1, :], P[2, :], marker=:circle, markersize=3, color=:white, label="iterates")
+scatter!([x_opt[1]], [x_opt[2]], marker=:star, markersize=10, color=:red, label="minimiser")
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "convergence-check"
+label = "Convergence Check"
+desc = "Convergence flag, iterations, function and gradient calls, final gradient norm, and the ratios of successive errors (tending to 0 = superlinear)"
+code = '''
+e = [norm(p - x_opt) for p in path]
+e = e[e .> 1e-12]
+ratios = length(e) >= 4 ? e[end-2:end] ./ e[end-3:end-1] : missing  # shrinking ratios = superlinear
+(converged = Optim.converged(result), iterations = Optim.iterations(result), f_calls = Optim.f_calls(result), g_calls = Optim.g_calls(result),
+ gradient_norm = norm(ForwardDiff.gradient(f, x_opt)), error_ratios = ratios)
+'''
+
+[[actionGroups.actions]]
+id = "gradient-check"
+label = "Gradient Check"
+desc = "Finite-difference against automatic-differentiation gradients at x0 and at the solution"
+code = '''
+using FiniteDiff
+
+map(["x0" => x0, "x_opt" => x_opt]) do (name, p)
+    g_ad = ForwardDiff.gradient(f, p)
+    g_fd = FiniteDiff.finite_difference_gradient(f, p)
+    (point = name, autodiff = g_ad, finite_diff = g_fd, max_difference = maximum(abs, g_ad - g_fd))
+end
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "evaluate-new"
+label = "Evaluate at New Point"
+desc = "f and the gradient at a new point, compared with the minimum"
+code = '''
+x_new = x_opt .+ 0.1  # replace with the point to evaluate
+(f_new = f(x_new), f_min = Optim.minimum(result), increase = f(x_new) - Optim.minimum(result), gradient = ForwardDiff.gradient(f, x_new))
+'''
+
+[[actionGroups.actions]]
+id = "local-model"
+label = "Local Quadratic Model"
+desc = "The second-order Taylor prediction f* + d' H d / 2 at growing distances from the minimum against the true f: how far the quadratic picture the method builds stays valid"
+code = '''
+H = Symmetric(ForwardDiff.hessian(f, x_opt))
+map([0.01, 0.05, 0.1, 0.5]) do r
+    d = r .* normalize(ones(n))  # replace with any direction
+    (radius = r, true_value = f(x_opt + d), model_value = Optim.minimum(result) + dot(d, H * d) / 2)
+end
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "compare-qn-methods"
+label = "Compare Methods"
+desc = "BFGS, L-BFGS with small and large memory, conjugate gradient (first-order) and Newton (exact Hessian) from the same start"
+code = '''
+methods = ["BFGS" => BFGS(), "L-BFGS (m=3)" => LBFGS(m=3), "L-BFGS (m=20)" => LBFGS(m=20),
+           "ConjugateGradient" => ConjugateGradient(), "Newton" => Newton()]
+map(methods) do (name, m)
+    t = @elapsed r = optimize(f, x0, m; autodiff=:forward)
+    (method = name, minimum = Optim.minimum(r), iterations = Optim.iterations(r), g_calls = Optim.g_calls(r), converged = Optim.converged(r), seconds = t)
+end
+'''
+
+[[actionGroups.actions]]
+id = "compare-linesearch"
+label = "Compare Line Searches"
+desc = "The same method with each line search: iterations against function and gradient calls"
+code = '''
+{{?model=bfgs}} make(l) = BFGS(linesearch=l)
+{{?model=lbfgs}} make(l) = LBFGS(m={{m}}, linesearch=l)
+map([HagerZhang(), BackTracking(), MoreThuente(), StrongWolfe()]) do l
+    r = optimize(f, x0, make(l); autodiff=:forward)
+    (linesearch = nameof(typeof(l)), minimum = Optim.minimum(r), iterations = Optim.iterations(r), f_calls = Optim.f_calls(r), g_calls = Optim.g_calls(r), converged = Optim.converged(r))
+end
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "solution-summary"
+label = "Solution Summary"
+desc = "Minimiser, minimum, iterations and the improvement over the start"
+code = '''
+(minimizer = x_opt, minimum = Optim.minimum(result), f_start = f(x0), improvement = f(x0) - Optim.minimum(result),
+ iterations = Optim.iterations(result), converged = Optim.converged(result))
+'''
+
+[[actionGroups.actions]]
+id = "curvature"
+label = "Local Curvature"
+desc = "Hessian eigenvalues and directions at the solution: the curvature the quasi-Newton approximation has to learn; flat directions (small eigenvalues) are poorly determined"
+code = '''
+F = eigen(Symmetric(ForwardDiff.hessian(f, x_opt)))
+(curvatures = F.values, directions = F.vectors, condition_number = maximum(F.values) / minimum(F.values))
+'''

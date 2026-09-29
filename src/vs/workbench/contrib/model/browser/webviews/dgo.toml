@@ -1,0 +1,505 @@
+# Deterministic Global Methods Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/dgo.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Deterministic Global Methods"
+viewType = "pollis.dgo"
+defaultModel = "direct"
+
+[[packages]]
+name = "NLopt.jl"
+github = "https://github.com/JuliaOpt/NLopt.jl"
+
+[[packages]]
+name = "QuadDIRECT.jl"
+github = "https://github.com/timholy/QuadDIRECT.jl"
+
+[requires]
+packages = ["NLopt.jl", "QuadDIRECT.jl", "Plots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "DIRECT Methods"
+file = "dgo/tutorial-01-direct.ipynb"
+bundled = true
+description = "DIRECT and DIRECT-L with NLopt.jl: setup, bounds, and convergence analysis"
+
+[[notebookSections.notebooks]]
+name = "QuadDirect"
+file = "dgo/tutorial-03-quaddirect.ipynb"
+bundled = true
+description = "QuadDIRECT.jl: quadratic interpolation-based global search with fewer evaluations"
+
+[[wikis]]
+name = "Factsheet"
+file = "dgo/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "dgo/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "dgo/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "dgo/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "dgo/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "dgo/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Algorithm Details"
+
+[[wikis]]
+name = "DIRECT & DIRECT-L"
+file = "dgo/direct.md"
+bundled = true
+
+[[wikis]]
+name = "QuadDirect"
+file = "dgo/quaddirect.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Introduction to Global Optimization"
+authors = "Neumaier, Arnold"
+year = 2004
+journal = "Cambridge University Press"
+doi = "10.1017/CBO9780511569029"
+openAccess = false
+
+[[references]]
+title = "Deterministic Global Optimization"
+authors = "Floudas, Christodoulos A."
+year = 2000
+journal = "Springer"
+doi = "10.1007/978-1-4757-4949-6"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Lipschitzian Optimization Without the Lipschitz Constant"
+authors = "Jones, Donald R.; Perttunen, Cary D.; Stuckman, Bruce E."
+year = 1993
+journal = "Journal of Optimization Theory and Applications"
+doi = "10.1007/BF00941892"
+openAccess = false
+
+[[references]]
+title = "A Locally-Biased Form of the DIRECT Algorithm"
+authors = "Gablonsky, Joerg M.; Kelley, Carl T."
+year = 2001
+journal = "Journal of Global Optimization"
+doi = "10.1023/A:1017930332101"
+openAccess = false
+
+[[models]]
+id = "direct"
+label = "DIRECT"
+
+[[models]]
+id = "direct-l"
+label = "DIRECT-L"
+
+[[models]]
+id = "quaddirect"
+label = "QuadDirect"
+
+[[bullets]]
+text = "DIRECT"
+detail = "recursive hyperrectangle subdivision; provably converges for Lipschitz objectives; no gradient needed"
+
+[[bullets]]
+text = "DIRECT-L"
+detail = "locally biased variant; gives more weight to local search within promising regions"
+
+[[bullets]]
+text = "QuadDirect"
+detail = "quadratic interpolation within subdivisions (QuadDIRECT.jl); fewer function evaluations than standard DIRECT"
+
+[[decisionRows]]
+task = "DIRECT"
+context = "Low-dimensional black-box problems (up to about 10 variables) with box bounds"
+purpose = "Divide the box into hyperrectangles and split every one that could hold the minimum for some Lipschitz constant; no gradients or tuning"
+
+[[decisionRows]]
+task = "DIRECT-L"
+context = "The same problems when a few local minima dominate and evaluations are expensive"
+purpose = "Locally biased DIRECT: splits fewer boxes per round, converging faster at some risk to global coverage"
+
+[[decisionRows]]
+task = "QuadDirect"
+context = "Smooth objectives where local curvature can be exploited"
+purpose = "Coordinate-wise splitting with quadratic models of the objective and local refinement of promising boxes"
+
+[[inputs]]
+id = "obj"
+label = "Objective f(x)"
+tooltip = "Julia expression for the objective to minimise, using x[1], x[2], ... Default: the six-hump camel function (two global minima near (0.09, -0.71) and (-0.09, 0.71), f = -1.0316)."
+default = "(4 - 2.1 * x[1]^2 + x[1]^4 / 3) * x[1]^2 + x[1] * x[2] + (-4 + 4 * x[2]^2) * x[2]^2"
+
+[[inputs]]
+id = "lb"
+label = "Lower Bounds"
+tooltip = "Julia vector of lower bounds, one per variable; its length sets the dimension."
+default = "[-3.0, -2.0]"
+newRow = true
+
+[[inputs]]
+id = "ub"
+label = "Upper Bounds"
+tooltip = "Julia vector of upper bounds, one per variable."
+default = "[3.0, 2.0]"
+
+[[inputs]]
+id = "maxeval"
+label = "Max Evaluations"
+tooltip = "Budget of objective evaluations. Deterministic global methods stop when it is used up, so a MAXEVAL_REACHED return code is normal."
+default = "1000"
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.direct]
+# A box subdivided into thirds, finer where the minimum lies
+svg = '''
+return '<rect x="8" y="28" width="38" height="38" fill="none" stroke="currentColor" stroke-width="1"/>'
+	+ '<line x1="20.7" y1="28" x2="20.7" y2="66" stroke="currentColor" stroke-width="0.8"/><line x1="33.3" y1="28" x2="33.3" y2="66" stroke="currentColor" stroke-width="0.8"/>'
+	+ '<line x1="20.7" y1="40.7" x2="33.3" y2="40.7" stroke="currentColor" stroke-width="0.8"/><line x1="20.7" y1="53.3" x2="33.3" y2="53.3" stroke="currentColor" stroke-width="0.8"/>'
+	+ '<line x1="24.9" y1="40.7" x2="24.9" y2="53.3" stroke="currentColor" stroke-width="0.6"/><line x1="29.1" y1="40.7" x2="29.1" y2="53.3" stroke="currentColor" stroke-width="0.6"/><circle cx="27" cy="47" r="1.6" fill="currentColor"/>';
+'''
+
+[miniCharts.direct-l]
+# Subdivision concentrated in one corner
+svg = '''
+var s = '<rect x="8" y="28" width="38" height="38" fill="none" stroke="currentColor" stroke-width="1"/>', w = 38;
+for (var i = 0; i < 4; i++) { w = w / 3; s += '<rect x="8" y="' + (66 - w * 1.5).toFixed(1) + '" width="' + (w * 1.5).toFixed(1) + '" height="' + (w * 1.5).toFixed(1) + '" fill="none" stroke="currentColor" stroke-width="0.7"/>'; }
+return s + '<circle cx="9.5" cy="64.5" r="1.4" fill="currentColor"/>';
+'''
+
+[miniCharts.quaddirect]
+# A split coordinate with a fitted parabola through three samples
+svg = '''
+var d = 'M8,36';
+for (var x = 8; x <= 46; x++) { var u = (x - 27) / 19; d += ' L' + x + ',' + (62 - 26 * u * u).toFixed(1); }
+return '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.3"/>'
+	+ '<circle cx="12" cy="45.8" r="1.8" fill="currentColor"/><circle cx="27" cy="62" r="1.8" fill="currentColor"/><circle cx="42" cy="45.8" r="1.8" fill="currentColor"/>';
+'''
+
+[[codeBranches]]
+model = "direct"
+code = '''
+using LinearAlgebra
+
+f(x) = {{obj}}  # objective
+lb, ub = {{lb}}, {{ub}}  # search box
+n = length(lb)
+maxeval = {{maxeval}}  # evaluation budget
+using NLopt
+
+# every evaluation is recorded so the search can be inspected afterwards
+function search(; maxeval=maxeval, alg=:GN_DIRECT, lb=lb, ub=ub)
+    pts, vals = Vector{Float64}[], Float64[]
+    opt = Opt(alg, n)
+    opt.lower_bounds, opt.upper_bounds, opt.maxeval = lb, ub, maxeval
+    opt.min_objective = (x, g) -> (v = f(x); push!(pts, copy(x)); push!(vals, v); v)
+    fx, x, ret = optimize(opt, (lb .+ ub) ./ 2)
+    (x = x, fx = fx, ret = ret, points = pts, values = vals)
+end
+
+res = search()
+x_best, f_best = res.x, res.fx
+(best_point = x_best, best_value = f_best, evaluations = length(res.values), return_code = res.ret)
+'''
+
+[[codeBranches]]
+model = "direct-l"
+code = '''
+using LinearAlgebra
+
+f(x) = {{obj}}  # objective
+lb, ub = {{lb}}, {{ub}}  # search box
+n = length(lb)
+maxeval = {{maxeval}}  # evaluation budget
+using NLopt
+
+# every evaluation is recorded so the search can be inspected afterwards
+function search(; maxeval=maxeval, alg=:GN_DIRECT_L, lb=lb, ub=ub)
+    pts, vals = Vector{Float64}[], Float64[]
+    opt = Opt(alg, n)
+    opt.lower_bounds, opt.upper_bounds, opt.maxeval = lb, ub, maxeval
+    opt.min_objective = (x, g) -> (v = f(x); push!(pts, copy(x)); push!(vals, v); v)
+    fx, x, ret = optimize(opt, (lb .+ ub) ./ 2)
+    (x = x, fx = fx, ret = ret, points = pts, values = vals)
+end
+
+res = search()
+x_best, f_best = res.x, res.fx
+(best_point = x_best, best_value = f_best, evaluations = length(res.values), return_code = res.ret)
+'''
+
+[[codeBranches]]
+model = "quaddirect"
+code = '''
+using LinearAlgebra
+
+f(x) = {{obj}}  # objective
+lb, ub = {{lb}}, {{ub}}  # search box
+n = length(lb)
+maxeval = {{maxeval}}  # evaluation budget
+using QuadDIRECT
+
+# every evaluation is recorded so the search can be inspected afterwards
+function search(; maxeval=maxeval, lb=lb, ub=ub)
+    pts, vals = Vector{Float64}[], Float64[]
+    g(x) = (v = f(x); push!(pts, copy(x)); push!(vals, v); v)
+    splits = [[lb[i], (lb[i] + ub[i]) / 2, ub[i]] for i in 1:n]  # initial three split points per coordinate
+    root, xs = analyze(g, splits, lb, ub; maxevals=maxeval)
+    box = minimum(root)  # leaf box with the lowest value
+    (x = position(box, xs), fx = value(box), ret = :MAXEVAL_REACHED, points = pts, values = vals)
+end
+
+res = search()
+x_best, f_best = res.x, res.fx
+(best_point = x_best, best_value = f_best, evaluations = length(res.values), return_code = res.ret)
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "landscape"
+label = "Objective Landscape"
+desc = "Heatmap of f over the box (first two variables; others held at the best point) with the optimum marked"
+code = '''
+using Plots
+
+xs = range(lb[1], ub[1], length=150); ys = range(lb[2], ub[2], length=150)
+heatmap(xs, ys, (a, b) -> f([a; b; x_best[3:end]]), xlabel="x1", ylabel="x2")
+scatter!([x_best[1]], [x_best[2]], marker=:star, markersize=10, color=:white, label="best")
+'''
+
+[[actionGroups.actions]]
+id = "convergence"
+label = "Convergence Curve"
+desc = "Best value found against the number of evaluations"
+code = '''
+using Plots
+
+plot(accumulate(min, res.values), xlabel="evaluations", ylabel="best f", legend=false)
+'''
+
+[[actionGroups.actions]]
+id = "search-scatter"
+label = "Search Points"
+desc = "Every evaluated point on the contours of f: the sampling concentrates where the minima are"
+code = '''
+using Plots
+
+xs = range(lb[1], ub[1], length=120); ys = range(lb[2], ub[2], length=120)
+contour(xs, ys, (a, b) -> f([a; b; x_best[3:end]]), levels=25, xlabel="x1", ylabel="x2")
+scatter!(getindex.(res.points, 1), getindex.(res.points, 2), markersize=1.5, alpha=0.6, label="evaluations")
+scatter!([x_best[1]], [x_best[2]], marker=:star, markersize=9, color=:red, label="best")
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "eval-budget"
+label = "Evaluation Budget"
+desc = "Evaluations used against the budget, and when the final best value was first reached (a late hit suggests more budget may still help)"
+code = '''
+best_curve = accumulate(min, res.values)
+first_hit = findfirst(<=(f_best + 1e-9 * max(1, abs(f_best))), best_curve)
+(budget = maxeval, used = length(res.values), return_code = res.ret, best_first_reached_at = first_hit,
+ share_of_budget_to_best = first_hit === nothing ? missing : first_hit / length(res.values))
+'''
+
+[[actionGroups.actions]]
+id = "boundary-check"
+label = "Boundary Check"
+desc = "Whether the best point sits on a bound: a minimum on the edge of the box may lie outside it"
+code = '''
+tol = 1e-6 .* (ub .- lb)
+[(variable = i, value = x_best[i], status = abs(x_best[i] - lb[i]) < tol[i] ? "at lower bound" : abs(x_best[i] - ub[i]) < tol[i] ? "at upper bound" : "interior") for i in 1:n]
+'''
+
+[[actionGroups.actions]]
+id = "restart-study"
+label = "Box Perturbation Study"
+desc = "DIRECT is deterministic and ignores the start point, so restarts repeat the same run; instead shift and widen the box and check the same minimum is found"
+code = '''
+map([(0.0, 1.0), (0.05, 1.0), (-0.05, 1.0), (0.0, 1.2), (0.03, 0.9)]) do (shift, scale)
+    c = (lb .+ ub) ./ 2 .+ shift .* (ub .- lb); h = scale .* (ub .- lb) ./ 2
+    r = search(lb=c .- h, ub=c .+ h)
+    (shift = shift, scale = scale, best_value = r.fx, best_point = r.x, distance_to_original = norm(r.x - x_best))
+end
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "solution"
+label = "Solution"
+desc = "Best point, value and return code"
+code = '''
+(best_point = x_best, best_value = f_best, return_code = res.ret, evaluations = length(res.values))
+'''
+
+[[actionGroups.actions]]
+id = "local-refine"
+label = "Local Refinement"
+desc = "Polish the global answer with a derivative-free local method (BOBYQA) inside the bounds: global methods locate the basin, local ones reach full precision"
+code = '''
+using NLopt
+
+loc = Opt(:LN_BOBYQA, n)
+loc.lower_bounds, loc.upper_bounds, loc.xtol_rel, loc.maxeval = lb, ub, 1e-10, 2000
+loc.min_objective = (x, g) -> f(x)
+f_loc, x_loc, ret_loc = optimize(loc, copy(x_best))
+(global_point = x_best, global_value = f_best, refined_point = x_loc, refined_value = f_loc, improvement = f_best - f_loc, return_code = ret_loc)
+'''
+
+[[actionGroups.actions]]
+id = "candidate-minima"
+label = "Candidate Minima"
+desc = "Distinct low points among all evaluations (at least 10% of the box apart): other basins that may hold near-optimal solutions"
+code = '''
+order = sortperm(res.values)
+chosen = Int[]
+for i in order
+    all(maximum(abs.((res.points[i] .- res.points[j]) ./ (ub .- lb))) > 0.1 for j in chosen) && push!(chosen, i)
+    length(chosen) == 5 && break
+end
+[(rank = k, point = res.points[i], value = res.values[i]) for (k, i) in enumerate(chosen)]
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "direct-variants"
+label = "DIRECT Variants"
+desc = "The NLopt DIRECT family at the same budget: original, locally biased, randomised and the Gablonsky original implementation"
+code = '''
+using NLopt
+
+map([:GN_DIRECT, :GN_DIRECT_L, :GN_DIRECT_L_RAND, :GN_ORIG_DIRECT, :GN_ORIG_DIRECT_L]) do alg
+    opt = Opt(alg, n)
+    opt.lower_bounds, opt.upper_bounds, opt.maxeval = lb, ub, maxeval
+    opt.min_objective = (x, g) -> f(x)
+    sec = @elapsed fx, x, ret = optimize(opt, (lb .+ ub) ./ 2)
+    (algorithm = alg, best_value = fx, best_point = x, return_code = ret, seconds = sec)
+end
+'''
+
+[[actionGroups.actions]]
+id = "nlopt-vs-quad"
+label = "Deterministic vs Stochastic"
+desc = "DIRECT and QuadDIRECT against two stochastic global methods (CRS2, ISRES) at the same budget; the stochastic ones over 5 seeds"
+code = '''
+using NLopt, QuadDIRECT, Statistics
+
+function nl(alg; seed=1)
+    NLopt.srand(seed)
+    opt = Opt(alg, n); opt.lower_bounds, opt.upper_bounds, opt.maxeval = lb, ub, maxeval
+    opt.min_objective = (x, g) -> f(x)
+    optimize(opt, (lb .+ ub) ./ 2)[1]
+end
+quad() = (root, xs = analyze(f, [[lb[i], (lb[i] + ub[i]) / 2, ub[i]] for i in 1:n], lb, ub; maxevals=maxeval); value(minimum(root)))
+[(method = "DIRECT", best_value = nl(:GN_DIRECT), spread = 0.0),
+ (method = "QuadDIRECT", best_value = quad(), spread = 0.0),
+ (method = "CRS2 (stochastic)", best_value = mean(nl(:GN_CRS2_LM; seed=s) for s in 1:5), spread = std([nl(:GN_CRS2_LM; seed=s) for s in 1:5])),
+ (method = "ISRES (stochastic)", best_value = mean(nl(:GN_ISRES; seed=s) for s in 1:5), spread = std([nl(:GN_ISRES; seed=s) for s in 1:5]))]
+'''
+
+[[actionGroups.actions]]
+id = "budget-study"
+label = "Budget Study"
+desc = "Best value and distance to the final answer as the evaluation budget grows"
+code = '''
+map([50, 100, 250, 500, 1000, 2000]) do b
+    r = search(maxeval=b)
+    (budget = b, best_value = r.fx, gap_to_reference = r.fx - f_best, distance_to_reference = norm(r.x - x_best))
+end
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "summary"
+label = "Summary"
+desc = "Best point and value, evaluations, box and its volume"
+code = '''
+(best_point = x_best, best_value = f_best, evaluations = length(res.values), budget = maxeval, return_code = res.ret,
+ lower_bounds = lb, upper_bounds = ub, box_volume = prod(ub .- lb), dimension = n)
+'''
+
+[[actionGroups.actions]]
+id = "sensitivity"
+label = "Solution Sensitivity"
+desc = "Change in f when each coordinate of the best point moves by 1% of its range either way: all increases confirm a local minimum at this resolution"
+code = '''
+map(1:n) do i
+    e = zeros(n); e[i] = 0.01 * (ub[i] - lb[i])
+    up, down = f(clamp.(x_best .+ e, lb, ub)), f(clamp.(x_best .- e, lb, ub))
+    (variable = i, change_up = up - f_best, change_down = down - f_best, local_minimum = up >= f_best && down >= f_best)
+end
+'''
+
+[[actionGroups.actions]]
+id = "bounds-analysis"
+label = "Bounds Analysis"
+desc = "Relative position of the best point in the box and how much of each coordinate range the search covered (share of 10 bins sampled)"
+code = '''
+P = reduce(hcat, res.points)
+map(1:n) do i
+    bins = unique(clamp.(floor.(Int, 10 .* (P[i, :] .- lb[i]) ./ (ub[i] - lb[i])), 0, 9))
+    (variable = i, relative_position = (x_best[i] - lb[i]) / (ub[i] - lb[i]), range_coverage = length(bins) / 10)
+end
+'''

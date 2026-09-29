@@ -1,0 +1,679 @@
+# Actor-Critic Methods Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/acm.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Actor-Critic Methods"
+viewType = "pollis.acm"
+defaultModel = "a2c"
+
+[[packages]]
+name = "ReinforcementLearning.jl"
+github = "https://github.com/JuliaReinforcementLearning/ReinforcementLearning.jl"
+
+[[packages.videos]]
+title = "High Performance Computing in Julia"
+description = "An 18-video course by Jamie Mair on writing fast Julia code"
+url = "https://www.youtube.com/playlist?list=PLUAq6xQKFgGr39PiyrPk_C9dhBKvWcjUA"
+
+[requires]
+packages = ["Flux.jl", "Plots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "A2C"
+file = "acm/tutorial-01-a2c.ipynb"
+bundled = true
+description = "Advantage Actor-Critic with parallel workers; synchronous gradient accumulation via Flux.jl"
+
+[[notebookSections.notebooks]]
+name = "SAC"
+file = "acm/tutorial-02-sac.ipynb"
+bundled = true
+description = "Soft Actor-Critic: maximum-entropy off-policy; automatic temperature tuning; continuous control"
+
+[[notebookSections.notebooks]]
+name = "TD3"
+file = "acm/tutorial-03-td3.ipynb"
+bundled = true
+description = "Twin Delayed DDPG: double critics, delayed actor updates, target policy smoothing"
+
+[[wikis]]
+name = "Factsheet"
+file = "acm/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "acm/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "acm/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "acm/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "acm/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "acm/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Algorithms"
+
+[[wikis]]
+name = "A2C"
+file = "acm/a2c.md"
+bundled = true
+
+[[wikis]]
+name = "SAC"
+file = "acm/sac.md"
+bundled = true
+
+[[wikis]]
+name = "TD3"
+file = "acm/td3.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "ReinforcementLearning.jl: A Reinforcement Learning Package for the Julia Programming Language"
+authors = "Tian, Jun; others"
+year = 2020
+journal = "GitHub"
+url = "https://github.com/JuliaReinforcementLearning/ReinforcementLearning.jl"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Reinforcement Learning: An Introduction"
+authors = "Sutton, Richard S.; Barto, Andrew G."
+year = 2018
+journal = "MIT Press"
+url = "http://incompleteideas.net/book/the-book-2nd.html"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Asynchronous Methods for Deep Reinforcement Learning"
+authors = "Mnih, Volodymyr; et al."
+year = 2016
+journal = "ICML"
+url = "https://proceedings.mlr.press/v48/mniha16.html"
+openAccess = true
+
+[[references]]
+title = "Soft Actor-Critic: Off-Policy Maximum Entropy Deep Reinforcement Learning with a Stochastic Actor"
+authors = "Haarnoja, Tuomas; Zhou, Aurick; Abbeel, Pieter; Levine, Sergey"
+year = 2018
+journal = "ICML"
+url = "https://proceedings.mlr.press/v80/haarnoja18b.html"
+openAccess = true
+
+[[references]]
+title = "Addressing Function Approximation Error in Actor-Critic Methods"
+authors = "Fujimoto, Scott; van Hoof, Herke; Meger, David"
+year = 2018
+journal = "ICML"
+url = "https://proceedings.mlr.press/v80/fujimoto18a.html"
+openAccess = true
+
+[[models]]
+id = "a2c"
+label = "A2C"
+
+[[models]]
+id = "sac"
+label = "SAC"
+
+[[models]]
+id = "td3"
+label = "TD3"
+
+[[bullets]]
+text = "Advantage Actor-Critic (A2C)"
+detail = "on-policy; actor updated by the policy gradient weighted by the advantage function; variance reduced via parallel environment rollouts; supports discrete and continuous actions (ReinforcementLearning.jl)"
+
+[[bullets]]
+text = "Soft Actor-Critic (SAC)"
+detail = "off-policy maximum-entropy actor-critic; twin soft Q-networks prevent value overestimation; automatic entropy temperature tuning; state-of-the-art sample efficiency on continuous control (ReinforcementLearning.jl)"
+
+[[bullets]]
+text = "Twin Delayed Deep Deterministic Policy Gradient (TD3)"
+detail = "off-policy deterministic actor; twin critics reduce overestimation bias; delayed actor updates and target policy smoothing improve training stability (ReinforcementLearning.jl)"
+
+[[decisionRows]]
+task = "A2C"
+context = "On-policy; cheap updates from parallel environments; discrete or continuous actions"
+purpose = "Advantage Actor-Critic: a Gaussian policy follows the advantage-weighted policy gradient while a value network (critic) supplies n-step bootstrapped targets"
+
+[[decisionRows]]
+task = "SAC"
+context = "Off-policy continuous control; sample-efficient and robust to hyperparameters"
+purpose = "Soft Actor-Critic: maximises reward plus alpha times policy entropy with a tanh-squashed Gaussian actor, twin Q-networks and soft-updated targets"
+
+[[decisionRows]]
+task = "TD3"
+context = "Off-policy continuous control with a deterministic policy"
+purpose = "Twin Delayed DDPG: deterministic actor, clipped double-Q targets, target policy smoothing noise and delayed actor updates to curb overestimation"
+
+[[inputs]]
+id = "steps"
+label = "Environment Steps"
+tooltip = "Environment transitions collected during training (per parallel environment for A2C)."
+default = "20000"
+
+[[inputs]]
+id = "horizon"
+label = "Episode Length"
+tooltip = "Steps per episode of the point-mass task: push a unit mass from a random position in [-2, 2] to the origin with a force in [-1, 1]."
+default = "100"
+
+[[inputs]]
+id = "gamma"
+label = "Discount (gamma)"
+tooltip = "Discount factor for returns and value targets."
+default = "0.99"
+
+[[inputs]]
+id = "hidden"
+label = "Hidden Units"
+tooltip = "Units per hidden layer of the actor and critic networks."
+default = "64"
+
+[[inputs]]
+id = "seed"
+label = "Random Seed"
+tooltip = "Seed of the environments, exploration noise and network initialisation."
+default = "1"
+
+[[inputs]]
+id = "nenvs"
+label = "Parallel Environments"
+tooltip = "Number of environments stepped in parallel for each A2C rollout. More environments reduce the variance of each update."
+default = "16"
+models = ["a2c"]
+newRow = true
+
+[[inputs]]
+id = "alpha"
+label = "Temperature (alpha)"
+tooltip = "SAC entropy coefficient: the trade-off between reward and policy entropy. 0 disables entropy maximisation."
+default = "0.05"
+models = ["sac"]
+newRow = true
+
+[[inputs]]
+id = "tau"
+label = "Target Update (tau)"
+tooltip = "Soft target-network update: theta_target = tau theta + (1 - tau) theta_target. Typical value 0.005."
+default = "0.005"
+models = ["sac", "td3"]
+
+[[inputs]]
+id = "pnoise"
+label = "Policy Noise"
+tooltip = "Standard deviation of the smoothing noise added to target-policy actions (clipped to 0.5)."
+default = "0.2"
+models = ["td3"]
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.a2c]
+# Parallel rollouts feeding one update
+svg = '''
+let s = '';
+for (let i = 0; i < 4; i++) { s += '<line x1="6" y1="' + (30 + i * 10) + '" x2="30" y2="' + (30 + i * 10) + '" stroke="currentColor" stroke-width="1.2"/><line x1="30" y1="' + (30 + i * 10) + '" x2="44" y2="45" stroke="currentColor" stroke-width="0.6" opacity="0.6"/>'; }
+return s + '<circle cx="46" cy="45" r="4" fill="currentColor"/>';
+'''
+
+[miniCharts.sac]
+# Wide (high-entropy) Gaussian over actions
+svg = '''
+return '<path d="M4,70 C14,70 18,34 27,34 C36,34 40,70 50,70" fill="currentColor" opacity="0.35" stroke="currentColor" stroke-width="1.2"/>';
+'''
+
+[miniCharts.td3]
+# Twin critics, taking the minimum
+svg = '''
+return '<path d="M4,60 Q27,24 50,56" fill="none" stroke="currentColor" stroke-width="1" opacity="0.5"/>'
+	+ '<path d="M4,64 Q27,34 50,60" fill="none" stroke="currentColor" stroke-width="1.6"/>'
+	+ '<line x1="27" y1="20" x2="27" y2="76" stroke="currentColor" stroke-width="0.6" stroke-dasharray="2,2"/>';
+'''
+
+[[codeBranches]]
+model = "a2c"
+code = '''
+using Flux, Random, Statistics
+
+steps = {{steps}}  # environment steps
+horizon = {{horizon}}  # steps per episode
+gamma = Float32({{gamma}})  # discount factor
+hidden = {{hidden}}  # hidden units per layer
+seed = {{seed}}  # random seed
+
+# Point-mass regulator: push a unit mass from a random position to the origin with a bounded force
+dt = 0.1f0
+reset_state(rng) = Float32[4rand(rng) - 2, 0]  # position, velocity
+function env_step(s, a)  # a is clamped to [-1, 1]; returns (next state, reward)
+    a = clamp(a, -1, 1)
+    v = s[2] + a * dt
+    Float32[s[1] + v * dt, v], -(s[1]^2 + 0.1f0 * s[2]^2 + 0.01f0 * a^2)
+end
+function soft_update!(target, model, tau)  # Polyak averaging of target-network weights
+    for (pt, p) in zip(Flux.trainables(target), Flux.trainables(model))
+        pt .= (1 - tau) .* pt .+ tau .* p
+    end
+end
+mlp(nin, nout, act=identity) = Chain(Dense(nin => hidden, relu), Dense(hidden => hidden, relu), Dense(hidden => nout, act))
+function episode(policy; x0=2.0f0)  # deterministic episode from position x0
+    s = Float32[x0, 0]; S = [s]; A = Float32[]; G = 0.0
+    for t in 1:horizon
+        a = clamp(policy(s), -1, 1); s, r = env_step(s, a)
+        push!(S, s); push!(A, a); G += r
+    end
+    (S = S, A = A, G = G)
+end
+
+nenvs = {{nenvs}}  # parallel environments
+
+function train(; steps=steps, seed=seed, nstep=5, lr=1f-3, ent=1f-3)
+    rng = MersenneTwister(seed); Random.seed!(seed)
+    model = (actor = Chain(Dense(2 => hidden, tanh), Dense(hidden => 1, tanh)), logstd = zeros(Float32, 1),
+             critic = Chain(Dense(2 => hidden, tanh), Dense(hidden => 1)))
+    opt = Flux.setup(Adam(lr), model)
+    hist = (step = Int[], ret = Float64[], critic_loss = Float64[], actor_loss = Float64[], value = Float64[])
+    S = [reset_state(rng) for e in 1:nenvs]; G = zeros(nenvs); t = 0; total = 0
+    while total < steps
+        n = min(nstep, horizon - t)  # rollouts never cross an episode boundary
+        X = Matrix{Float32}[]; Acts = Vector{Float32}[]; R = Vector{Float32}[]
+        for k in 1:n  # step all environments together
+            Xk = reduce(hcat, S)
+            ak = vec(model.actor(Xk)) .+ exp(model.logstd[1]) .* randn(rng, Float32, nenvs)
+            out = [env_step(S[e], ak[e]) for e in 1:nenvs]
+            push!(X, Xk); push!(Acts, ak); push!(R, [o[2] for o in out])
+            S = [o[1] for o in out]; G .+= R[end]
+        end
+        ret = vec(model.critic(reduce(hcat, S)))  # bootstrap from the value of the last state
+        Ret = Vector{Float32}[]
+        for k in n:-1:1
+            ret = R[k] .+ gamma .* ret; pushfirst!(Ret, ret)
+        end
+        Xall, Aall, Rall = reduce(hcat, X), reduce(vcat, Acts), reduce(vcat, Ret)
+        V0 = vec(model.critic(Xall)); adv = Rall .- V0
+        adv = (adv .- mean(adv)) ./ (std(adv) + 1f-6)
+        grads = Flux.gradient(model) do m
+            mu = vec(m.actor(Xall)); ls = m.logstd[1]
+            logp = -0.5f0 .* ((Aall .- mu) ./ exp(ls)) .^ 2 .- ls
+            -mean(logp .* adv) - ent * ls + 0.5f0 * mean((Rall .- vec(m.critic(Xall))) .^ 2)
+        end
+        Flux.update!(opt, model, grads[1])
+        push!(hist.critic_loss, mean((Rall .- V0) .^ 2)); push!(hist.actor_loss, -mean(adv .* (-0.5f0 .* ((Aall .- vec(model.actor(Xall))) ./ exp(model.logstd[1])) .^ 2)))
+        push!(hist.value, mean(V0))
+        t += n; total += n
+        if t == horizon  # all environments finish their episode together
+            push!(hist.step, total * nenvs); push!(hist.ret, mean(G))
+            S = [reset_state(rng) for e in 1:nenvs]; G .= 0; t = 0
+        end
+    end
+    (policy = s -> model.actor(s)[1], sample = (s, rng) -> model.actor(s)[1] + exp(model.logstd[1]) * randn(rng),
+     value = s -> model.critic(s)[1], hist = hist, model = model)
+end
+
+res = train()
+starts = Float32[-2, -1, 1, 2]
+(final_training_return = res.hist.ret[end], episodes = length(res.hist.ret),
+ greedy_return_from = [x0 => round(episode(res.policy; x0).G, digits=2) for x0 in starts])
+'''
+
+[[codeBranches]]
+model = "sac"
+code = '''
+using Flux, Random, Statistics
+
+steps = {{steps}}  # environment steps
+horizon = {{horizon}}  # steps per episode
+gamma = Float32({{gamma}})  # discount factor
+hidden = {{hidden}}  # hidden units per layer
+seed = {{seed}}  # random seed
+
+# Point-mass regulator: push a unit mass from a random position to the origin with a bounded force
+dt = 0.1f0
+reset_state(rng) = Float32[4rand(rng) - 2, 0]  # position, velocity
+function env_step(s, a)  # a is clamped to [-1, 1]; returns (next state, reward)
+    a = clamp(a, -1, 1)
+    v = s[2] + a * dt
+    Float32[s[1] + v * dt, v], -(s[1]^2 + 0.1f0 * s[2]^2 + 0.01f0 * a^2)
+end
+function soft_update!(target, model, tau)  # Polyak averaging of target-network weights
+    for (pt, p) in zip(Flux.trainables(target), Flux.trainables(model))
+        pt .= (1 - tau) .* pt .+ tau .* p
+    end
+end
+mlp(nin, nout, act=identity) = Chain(Dense(nin => hidden, relu), Dense(hidden => hidden, relu), Dense(hidden => nout, act))
+function episode(policy; x0=2.0f0)  # deterministic episode from position x0
+    s = Float32[x0, 0]; S = [s]; A = Float32[]; G = 0.0
+    for t in 1:horizon
+        a = clamp(policy(s), -1, 1); s, r = env_step(s, a)
+        push!(S, s); push!(A, a); G += r
+    end
+    (S = S, A = A, G = G)
+end
+
+alpha, tau = Float32({{alpha}}), Float32({{tau}})  # entropy temperature, target update rate
+
+function squashed(actor, X, noise)  # tanh-Gaussian sample and its log-density
+    out = actor(X); mu = out[1:1, :]; ls = clamp.(out[2:2, :], -5f0, 2f0)
+    a = tanh.(mu .+ exp.(ls) .* noise)
+    (a = a, logp = -0.5f0 .* noise .^ 2 .- ls .- 0.9189385f0 .- log.(1 .- a .^ 2 .+ 1f-6))
+end
+
+function train(; steps=steps, seed=seed, alpha=alpha, lr=1f-3, batchsize=64, warmup=1000)
+    rng = MersenneTwister(seed); Random.seed!(seed)
+    actor = mlp(2, 2)  # outputs mean and log-std
+    critics = (mlp(3, 1), mlp(3, 1)); targets = deepcopy(critics)
+    opt_a, opt_q = Flux.setup(Adam(lr), actor), Flux.setup(Adam(lr), critics)
+    Sb, Ab, Rb, S2b = zeros(Float32, 2, steps), zeros(Float32, 1, steps), zeros(Float32, 1, steps), zeros(Float32, 2, steps)  # replay buffer
+    hist = (step = Int[], ret = Float64[], critic_loss = Float64[], actor_loss = Float64[], value = Float64[])
+    s = reset_state(rng); G = 0.0; t = 0
+    for i in 1:steps
+        a = i <= warmup ? 2rand(rng, Float32) - 1 : squashed(actor, s, randn(rng, Float32, 1, 1)).a[1]
+        s2, r = env_step(s, a)
+        Sb[:, i] = s; Ab[1, i] = a; Rb[1, i] = r; S2b[:, i] = s2
+        s = s2; G += r; t += 1
+        if t == horizon
+            push!(hist.step, i); push!(hist.ret, G); s = reset_state(rng); G = 0.0; t = 0
+        end
+        i < batchsize && continue
+        idx = rand(rng, 1:i, batchsize); X, A, R, X2 = Sb[:, idx], Ab[:, idx], Rb[:, idx], S2b[:, idx]
+        nxt = squashed(actor, X2, randn(rng, Float32, 1, batchsize)); XA2 = vcat(X2, nxt.a)
+        y = R .+ gamma .* (min.(targets[1](XA2), targets[2](XA2)) .- alpha .* nxt.logp)  # soft Bellman target
+        XA = vcat(X, A)
+        lq, gq = Flux.withgradient(c -> mean((c[1](XA) .- y) .^ 2) + mean((c[2](XA) .- y) .^ 2), critics)
+        Flux.update!(opt_q, critics, gq[1])
+        noise = randn(rng, Float32, 1, batchsize)
+        la, ga = Flux.withgradient(actor) do m
+            sm = squashed(m, X, noise); XAn = vcat(X, sm.a)
+            mean(alpha .* sm.logp .- min.(critics[1](XAn), critics[2](XAn)))
+        end
+        Flux.update!(opt_a, actor, ga[1])
+        soft_update!(targets, critics, tau)
+        push!(hist.critic_loss, lq / 2); push!(hist.actor_loss, la); push!(hist.value, mean(critics[1](XA)))
+    end
+    Q(s, a) = min(critics[1](vcat(s, a))[1], critics[2](vcat(s, a))[1])
+    (policy = s -> tanh(actor(s)[1]), sample = (s, rng) -> squashed(actor, s, randn(rng, Float32, 1, 1)).a[1],
+     value = s -> Q(s, [tanh(actor(s)[1])]), hist = hist, model = (actor = actor, critics = critics))
+end
+
+res = train()
+starts = Float32[-2, -1, 1, 2]
+(final_training_return = res.hist.ret[end], episodes = length(res.hist.ret),
+ greedy_return_from = [x0 => round(episode(res.policy; x0).G, digits=2) for x0 in starts])
+'''
+
+[[codeBranches]]
+model = "td3"
+code = '''
+using Flux, Random, Statistics
+
+steps = {{steps}}  # environment steps
+horizon = {{horizon}}  # steps per episode
+gamma = Float32({{gamma}})  # discount factor
+hidden = {{hidden}}  # hidden units per layer
+seed = {{seed}}  # random seed
+
+# Point-mass regulator: push a unit mass from a random position to the origin with a bounded force
+dt = 0.1f0
+reset_state(rng) = Float32[4rand(rng) - 2, 0]  # position, velocity
+function env_step(s, a)  # a is clamped to [-1, 1]; returns (next state, reward)
+    a = clamp(a, -1, 1)
+    v = s[2] + a * dt
+    Float32[s[1] + v * dt, v], -(s[1]^2 + 0.1f0 * s[2]^2 + 0.01f0 * a^2)
+end
+function soft_update!(target, model, tau)  # Polyak averaging of target-network weights
+    for (pt, p) in zip(Flux.trainables(target), Flux.trainables(model))
+        pt .= (1 - tau) .* pt .+ tau .* p
+    end
+end
+mlp(nin, nout, act=identity) = Chain(Dense(nin => hidden, relu), Dense(hidden => hidden, relu), Dense(hidden => nout, act))
+function episode(policy; x0=2.0f0)  # deterministic episode from position x0
+    s = Float32[x0, 0]; S = [s]; A = Float32[]; G = 0.0
+    for t in 1:horizon
+        a = clamp(policy(s), -1, 1); s, r = env_step(s, a)
+        push!(S, s); push!(A, a); G += r
+    end
+    (S = S, A = A, G = G)
+end
+
+tau, pnoise = Float32({{tau}}), Float32({{pnoise}})  # target update rate, target-policy smoothing noise
+
+function train(; steps=steps, seed=seed, lr=1f-3, batchsize=64, warmup=1000, explore=0.1f0, delay=2)
+    rng = MersenneTwister(seed); Random.seed!(seed)
+    actor = mlp(2, 1, tanh); actor_target = deepcopy(actor)  # deterministic policy
+    critics = (mlp(3, 1), mlp(3, 1)); targets = deepcopy(critics)
+    opt_a, opt_q = Flux.setup(Adam(lr), actor), Flux.setup(Adam(lr), critics)
+    Sb, Ab, Rb, S2b = zeros(Float32, 2, steps), zeros(Float32, 1, steps), zeros(Float32, 1, steps), zeros(Float32, 2, steps)  # replay buffer
+    hist = (step = Int[], ret = Float64[], critic_loss = Float64[], actor_loss = Float64[], value = Float64[])
+    s = reset_state(rng); G = 0.0; t = 0
+    for i in 1:steps
+        a = i <= warmup ? 2rand(rng, Float32) - 1 : clamp(actor(s)[1] + explore * randn(rng, Float32), -1f0, 1f0)
+        s2, r = env_step(s, a)
+        Sb[:, i] = s; Ab[1, i] = a; Rb[1, i] = r; S2b[:, i] = s2
+        s = s2; G += r; t += 1
+        if t == horizon
+            push!(hist.step, i); push!(hist.ret, G); s = reset_state(rng); G = 0.0; t = 0
+        end
+        i < batchsize && continue
+        idx = rand(rng, 1:i, batchsize); X, A, R, X2 = Sb[:, idx], Ab[:, idx], Rb[:, idx], S2b[:, idx]
+        a2 = clamp.(actor_target(X2) .+ clamp.(pnoise .* randn(rng, Float32, 1, batchsize), -0.5f0, 0.5f0), -1f0, 1f0)  # smoothed target action
+        XA2 = vcat(X2, a2)
+        y = R .+ gamma .* min.(targets[1](XA2), targets[2](XA2))  # clipped double-Q target
+        XA = vcat(X, A)
+        lq, gq = Flux.withgradient(c -> mean((c[1](XA) .- y) .^ 2) + mean((c[2](XA) .- y) .^ 2), critics)
+        Flux.update!(opt_q, critics, gq[1])
+        push!(hist.critic_loss, lq / 2); push!(hist.value, mean(critics[1](XA)))
+        if i % delay == 0  # delayed actor and target updates
+            la, ga = Flux.withgradient(m -> -mean(critics[1](vcat(X, m(X)))), actor)
+            Flux.update!(opt_a, actor, ga[1])
+            soft_update!(actor_target, actor, tau); soft_update!(targets, critics, tau)
+            push!(hist.actor_loss, la)
+        end
+    end
+    (policy = s -> actor(s)[1], sample = (s, rng) -> clamp(actor(s)[1] + explore * randn(rng, Float32), -1f0, 1f0),
+     value = s -> min(critics[1](vcat(s, actor(s)))[1], critics[2](vcat(s, actor(s)))[1]), hist = hist, model = (actor = actor, critics = critics))
+end
+
+res = train()
+starts = Float32[-2, -1, 1, 2]
+(final_training_return = res.hist.ret[end], episodes = length(res.hist.ret),
+ greedy_return_from = [x0 => round(episode(res.policy; x0).G, digits=2) for x0 in starts])
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "learning-curve"
+label = "Learning Curve"
+desc = "Training episode return against environment steps (A2C: mean over the parallel environments)"
+code = '''
+using Plots
+
+plot(res.hist.step, res.hist.ret, xlabel="environment step", ylabel="episode return", label="{{model}}", marker=:circle, markersize=2)
+'''
+
+[[actionGroups.actions]]
+id = "q-value-over-time"
+label = "Value Estimate Trend"
+desc = "Mean critic estimate on the training batches over the updates: a steady climb above the realised returns signals overestimation"
+code = '''
+using Plots
+
+plot(res.hist.value, xlabel="update", ylabel="mean critic estimate", label="critic", alpha=0.6)
+plot!(range(1, length(res.hist.value), length=length(res.hist.ret)), res.hist.ret ./ horizon ./ (1 - gamma), label="episode return / horizon / (1 - gamma)")
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "critic-loss"
+label = "Critic Loss"
+desc = "Mean squared temporal-difference error of the critic over the updates (log scale, moving average)"
+code = '''
+using Plots
+
+w = 100
+plot([mean(res.hist.critic_loss[max(1, i - w + 1):i]) for i in eachindex(res.hist.critic_loss)], yscale=:log10,
+    xlabel="update", ylabel="critic loss (moving average)", legend=false)
+'''
+
+[[actionGroups.actions]]
+id = "actor-loss"
+label = "Actor Loss"
+desc = "Actor objective over the updates (moving average); for SAC and TD3 it is minus the critic's value of the actor's actions"
+code = '''
+using Plots
+
+w = 100
+plot([mean(res.hist.actor_loss[max(1, i - w + 1):i]) for i in eachindex(res.hist.actor_loss)], xlabel="actor update", ylabel="actor loss (moving average)", legend=false)
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "deterministic-rollout"
+label = "Greedy Rollout"
+desc = "Position, velocity and force of the trained deterministic policy from x = 2"
+code = '''
+using Plots
+
+ep = episode(res.policy; x0=2.0f0)
+p1 = plot(0:horizon, [s[1] for s in ep.S], label="position"); plot!(p1, 0:horizon, [s[2] for s in ep.S], label="velocity")
+p2 = plot(1:horizon, ep.A, label="force", xlabel="step", ylims=(-1.1, 1.1))
+plot(p1, p2, layout=(2, 1), plot_title="return $(round(ep.G, digits=2))")
+'''
+
+[[actionGroups.actions]]
+id = "stochastic-rollout"
+label = "Stochastic Rollout"
+desc = "Ten position paths from x = 2 with the exploration noise of the training policy"
+code = '''
+using Plots
+
+rng = MersenneTwister(3)
+plt = plot(xlabel="step", ylabel="position", legend=false)
+for k in 1:10
+    s = Float32[2, 0]; xs = [s[1]]
+    for t in 1:horizon
+        s, r = env_step(s, res.sample(s, rng)); push!(xs, s[1])
+    end
+    plot!(plt, 0:horizon, xs, alpha=0.6)
+end
+plt
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "sac-vs-td3"
+label = "LQR Benchmark"
+desc = "Learned policy against the optimal linear-quadratic regulator (discounted Riccati solution, force clipped to [-1, 1]) from four starting positions"
+code = '''
+using LinearAlgebra
+
+Am, Bm = [1 dt; 0 1], [dt^2; dt]  # x' = Am x + Bm a
+Qm, Rm = Diagonal([1, 0.1]), 0.01
+function lqr_gain()  # discounted Riccati iteration
+    P = Matrix{Float64}(Qm)
+    for k in 1:2000
+        K = gamma * (transpose(Bm) * P * Am) / (Rm + gamma * dot(Bm, P * Bm))
+        P = Qm + gamma * transpose(Am) * P * Am - gamma * transpose(Am) * P * Bm * K
+    end
+    vec(gamma * (transpose(Bm) * P * Am) / (Rm + gamma * dot(Bm, P * Bm)))
+end
+K = lqr_gain()
+lqr(s) = -dot(K, s)
+[(start = x0, learned = round(episode(res.policy; x0).G, digits=2), lqr = round(episode(lqr; x0).G, digits=2)) for x0 in starts]
+'''
+
+[[actionGroups.actions]]
+id = "seed-stability"
+label = "Seed Stability"
+desc = "Learning curves for three random seeds: how reliable training is"
+code = '''
+using Plots
+
+plt = plot(xlabel="environment step", ylabel="episode return")
+for k in 1:3
+    r = train(seed=k)
+    plot!(plt, r.hist.step, r.hist.ret, label="seed $k")
+end
+plt
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "action-distribution"
+label = "Policy Map"
+desc = "Force chosen by the deterministic policy over positions and velocities (red = push right)"
+code = '''
+using Plots
+
+xs = range(-2, 2, length=61); vs = range(-2, 2, length=61)
+heatmap(xs, vs, [clamp(res.policy(Float32[x, v]), -1, 1) for v in vs, x in xs], xlabel="position", ylabel="velocity",
+    title="policy force", color=:balance, clims=(-1, 1))
+'''
+
+[[actionGroups.actions]]
+id = "value-function"
+label = "Value Function"
+desc = "Critic value over positions and velocities (A2C: V(s); SAC and TD3: min of the twin Q at the policy's action)"
+code = '''
+using Plots
+
+xs = range(-2, 2, length=61); vs = range(-2, 2, length=61)
+heatmap(xs, vs, [res.value(Float32[x, v]) for v in vs, x in xs], xlabel="position", ylabel="velocity", title="critic value")
+'''

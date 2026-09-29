@@ -1,0 +1,582 @@
+# Single-Agent Decision Processes Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/mdp.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Single-Agent Decision Processes"
+viewType = "pollis.mdp"
+defaultModel = "mdp"
+
+[[packages]]
+name = "POMDPs.jl"
+github = "https://github.com/JuliaPOMDP/POMDPs.jl"
+
+[[packages]]
+name = "DiscreteValueIteration.jl"
+github = "https://github.com/JuliaPOMDP/DiscreteValueIteration.jl"
+
+[[packages]]
+name = "QMDP.jl"
+github = "https://github.com/JuliaPOMDP/QMDP.jl"
+
+[[packages]]
+name = "MCTS.jl"
+github = "https://github.com/JuliaPOMDP/MCTS.jl"
+
+[requires]
+packages = ["POMDPs.jl", "POMDPTools.jl", "DiscreteValueIteration.jl", "QMDP.jl", "SARSOP.jl", "MCTS.jl", "BasicPOMCP.jl", "Plots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "MDP: Inventory Control"
+file = "mdp/tutorial-01-mdp-inventory.ipynb"
+bundled = true
+description = "Inventory control MDP via POMDPs.jl and DiscreteValueIteration.jl: state/action/transition/reward specification, value iteration, and policy extraction"
+
+[[notebookSections.notebooks]]
+name = "POMDP: Tiger Problem"
+file = "mdp/tutorial-02-pomdp-tiger.ipynb"
+bundled = true
+description = "Classic Tiger POMDP via POMDPs.jl and QMDP.jl: belief state planning, observation model, and policy evaluation under partial observability"
+
+[[notebookSections.notebooks]]
+name = "POMDP: SARSOP Solver"
+file = "mdp/tutorial-03-pomdp-sarsop.ipynb"
+bundled = true
+description = "Point-based POMDP solution via SARSOP.jl: alpha-vector representation, anytime convergence, and comparison with QMDP approximation"
+
+[[notebookSections.notebooks]]
+name = "Semi-MDP: Machine Maintenance"
+file = "mdp/tutorial-04-smdp-maintenance.ipynb"
+bundled = true
+description = "Semi-MDP machine maintenance via POMDPs.jl: variable holding times, effective discounting, and comparison with fixed-epoch MDP formulation"
+
+[[wikis]]
+name = "Factsheet"
+file = "mdp/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "mdp/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "mdp/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "mdp/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "mdp/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "mdp/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Models"
+
+[[wikis]]
+name = "MDP"
+file = "mdp/mdp.md"
+bundled = true
+
+[[wikis]]
+name = "POMDP"
+file = "mdp/pomdp.md"
+bundled = true
+
+[[wikis]]
+name = "Semi-MDP"
+file = "mdp/smdp.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "POMDPs.jl: A Framework for Sequential Decision Making under Uncertainty"
+authors = "Egorov, Maxim; Sunberg, Zachary N.; Balaban, Edward; Wheeler, Tim A.; Gupta, Jayesh K.; Kochenderfer, Mykel J."
+year = 2017
+journal = "Journal of Machine Learning Research"
+url = "https://jmlr.org/papers/v18/16-300.html"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Markov Decision Processes: Discrete Stochastic Dynamic Programming"
+authors = "Puterman, Martin L."
+year = 2005
+journal = "Wiley (2nd ed.)"
+doi = "10.1002/9780470316887"
+openAccess = false
+
+[[references]]
+title = "Decision Making Under Uncertainty: Theory and Application"
+authors = "Kochenderfer, Mykel J."
+year = 2015
+journal = "MIT Press"
+url = "https://mitpress.mit.edu/9780262029254/"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Planning and Acting in Partially Observable Stochastic Domains"
+authors = "Kaelbling, Leslie Pack; Littman, Michael L.; Cassandra, Anthony R."
+year = 1998
+journal = "Artificial Intelligence"
+doi = "10.1016/S0004-3702(98)00023-X"
+openAccess = false
+
+[[references]]
+title = "Point-Based Value Iteration: An Anytime Algorithm for POMDPs"
+authors = "Pineau, Joelle; Gordon, Geoff; Thrun, Sebastian"
+year = 2003
+journal = "IJCAI"
+url = "https://www.ijcai.org/Proceedings/03/Papers/147.pdf"
+openAccess = true
+
+[[references]]
+title = "Markov Decision Processes in Continuous Time"
+authors = "Puterman, Martin L."
+year = 1994
+journal = "Wiley"
+openAccess = false
+
+[[models]]
+id = "mdp"
+label = "MDP"
+
+[[models]]
+id = "pomdp"
+label = "POMDP"
+
+[[models]]
+id = "smdp"
+label = "Semi-MDP"
+
+[[bullets]]
+text = "A Markov Decision Process (MDP) is the canonical framework for sequential decision-making under uncertainty: an agent observes its full state, selects an action, receives a reward, and transitions to a new state with known probabilities. MDPs underlie robot navigation, inventory management, game playing, energy dispatch, and autonomous control"
+detail = "any domain where decisions are sequential, states are fully observable, and the goal is to maximise cumulative discounted reward. Unlike the Dynamic Programming webview — which solves the Bellman equation directly on a fixed state grid — these models use POMDPs.jl’s problem-specification interface, decoupling problem definition from solver choice so any compatible algorithm (value iteration, MCTS, QMDP, SARSOP) can be swapped without changing the model."
+
+[[bullets]]
+text = "A Partially Observable MDP (POMDP) extends the MDP to settings where the true state is hidden: the agent receives only a noisy observation and must maintain a belief distribution over all possible states, planning over the continuous belief space rather than the discrete state space. POMDPs model medical diagnosis under uncertain test results, autonomous driving under sensor noise, dialogue systems, and search-and-rescue"
+detail = "domains where the agent must balance information-gathering actions (sensing, listening) against task-achieving ones to act optimally despite incomplete information."
+
+[[decisionRows]]
+task = "MDP"
+context = "The state is fully observed and every decision takes one period (inventory, queues, games)"
+purpose = "Markov decision process solved by value iteration (DiscreteValueIteration.jl); default: an inventory problem with Poisson demand"
+
+[[decisionRows]]
+task = "POMDP"
+context = "The state is hidden and only noisy observations arrive (diagnosis, search, robotics)"
+purpose = "Partially observable MDP on beliefs; QMDP approximation by default, SARSOP and POMCP for comparison; default: the Tiger problem"
+
+[[decisionRows]]
+task = "Semi-MDP"
+context = "Actions take different amounts of time (maintenance, scheduling, options in RL)"
+purpose = "Semi-Markov decision process: the discount over a transition is gamma to the power of the action's duration; hand-written value iteration on a machine-maintenance problem"
+
+[[inputs]]
+id = "S"
+label = "States (S)"
+tooltip = "MDP: warehouse capacity, states 0:S are units in stock. Semi-MDP: condition levels, 0 = failed, S = new."
+default = "10"
+models = ["mdp", "smdp"]
+
+[[inputs]]
+id = "A"
+label = "Largest Order (A)"
+tooltip = "Actions 0:A are the order quantities available each period."
+default = "5"
+models = ["mdp"]
+
+[[inputs]]
+id = "dmean"
+label = "Mean Demand"
+tooltip = "Mean of the Poisson demand per period."
+default = "3"
+models = ["mdp"]
+
+[[inputs]]
+id = "acc"
+label = "Listening Accuracy"
+tooltip = "Probability that listening reports the tiger's side correctly (the observation model P(o | s, a))."
+default = "0.85"
+models = ["pomdp"]
+
+[[inputs]]
+id = "pdeg"
+label = "Degradation Probability"
+tooltip = "Probability that an operating machine loses one condition level during a period."
+default = "0.6"
+models = ["smdp"]
+
+[[inputs]]
+id = "gamma"
+label = "Discount (gamma)"
+tooltip = "Discount factor in [0, 1). For the Semi-MDP it is the discount per period, so an action lasting tau periods is discounted by gamma^tau."
+default = "0.95"
+newRow = true
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.mdp]
+# States connected by action arrows
+svg = '''
+let s = '<circle cx="12" cy="56" r="6" fill="none" stroke="currentColor" stroke-width="1"/><circle cx="42" cy="56" r="6" fill="none" stroke="currentColor" stroke-width="1"/><circle cx="27" cy="34" r="6" fill="none" stroke="currentColor" stroke-width="1"/>';
+s += '<path d="M18,56 L36,56" stroke="currentColor" stroke-width="1"/><path d="M15,51 L23,39" stroke="currentColor" stroke-width="1"/><path d="M31,39 L39,51" stroke="currentColor" stroke-width="1"/>';
+s += '<circle cx="27" cy="56" r="1.8" fill="currentColor"/>';
+return s;
+'''
+
+[miniCharts.pomdp]
+# A hidden state seen through a noisy observation
+svg = '''
+let s = '<circle cx="27" cy="40" r="7" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="2,2"/>';
+s += '<path d="M27,47 L27,60" stroke="currentColor" stroke-width="0.8" stroke-dasharray="2,2"/>';
+s += '<rect x="19" y="60" width="16" height="10" fill="none" stroke="currentColor" stroke-width="1"/><text x="27" y="68" font-size="7" text-anchor="middle" fill="currentColor">o</text>';
+return s;
+'''
+
+[miniCharts.smdp]
+# Decisions at irregular times on a time line
+svg = '''
+let s = '<line x1="6" y1="60" x2="48" y2="60" stroke="currentColor" stroke-width="0.8"/>';
+for (const x of [8, 14, 30, 38]) { s += '<circle cx="' + x + '" cy="60" r="2" fill="currentColor"/>'; }
+s += '<path d="M8,56 Q11,48 14,56" fill="none" stroke="currentColor" stroke-width="0.8"/><path d="M14,56 Q22,40 30,56" fill="none" stroke="currentColor" stroke-width="0.8"/><path d="M30,56 Q34,48 38,56" fill="none" stroke="currentColor" stroke-width="0.8"/>';
+return s;
+'''
+
+[[codeBranches]]
+model = "mdp"
+code = '''
+using POMDPs, POMDPTools, DiscreteValueIteration
+
+S = {{S}}  # warehouse capacity: states 0:S are units in stock
+A = {{A}}  # largest order: actions 0:A
+dmean = {{dmean}}  # mean demand per period (Poisson)
+gamma = {{gamma}}  # discount factor
+price, order_cost, holding_cost = 8.0, 2.0, 0.5  # per unit
+dprob = [exp(-dmean + d * log(dmean) - sum(log, 1:d; init=0.0)) for d in 0:S]  # Poisson probabilities
+dprob[end] += 1 - sum(dprob)  # demand of S or more lumped together
+
+struct InventoryMDP <: MDP{Int, Int} end
+m = InventoryMDP()
+POMDPs.states(::InventoryMDP) = 0:S
+POMDPs.actions(::InventoryMDP) = 0:A
+POMDPs.discount(::InventoryMDP) = gamma
+POMDPs.stateindex(::InventoryMDP, s) = s + 1
+POMDPs.actionindex(::InventoryMDP, a) = a + 1
+POMDPs.initialstate(::InventoryMDP) = Deterministic(0)
+function POMDPs.transition(::InventoryMDP, s, a)  # stock after ordering, minus random demand
+    y = min(s + a, S)
+    probs = zeros(S + 1)
+    for d in 0:S
+        probs[max(y - d, 0) + 1] += dprob[d + 1]
+    end
+    SparseCat(0:S, probs)
+end
+function POMDPs.reward(::InventoryMDP, s, a)  # expected revenue minus ordering and holding costs
+    y = min(s + a, S)
+    price * sum(dprob[d + 1] * min(y, d) for d in 0:S) - order_cost * a - holding_cost * y
+end
+
+policy = solve(ValueIterationSolver(max_iterations=1000, belres=1e-6), m)  # value iteration
+V(s) = value(policy, s)
+act(s) = action(policy, s)
+(order_by_stock = [s => act(s) for s in 0:S], value_when_empty = V(0), value_when_full = V(S))
+'''
+
+[[codeBranches]]
+model = "pomdp"
+code = '''
+using POMDPs, POMDPTools, QMDP
+
+gamma = {{gamma}}  # discount factor
+acc = {{acc}}  # probability that listening reports the correct side
+
+struct TigerPOMDP <: POMDP{Symbol, Symbol, Symbol} end  # the tiger hides behind the left or right door
+m = TigerPOMDP()
+POMDPs.states(::TigerPOMDP) = [:tiger_left, :tiger_right]
+POMDPs.actions(::TigerPOMDP) = [:open_left, :open_right, :listen]
+POMDPs.observations(::TigerPOMDP) = [:hear_left, :hear_right]
+POMDPs.stateindex(::TigerPOMDP, s) = s == :tiger_left ? 1 : 2
+POMDPs.actionindex(::TigerPOMDP, a) = findfirst(==(a), [:open_left, :open_right, :listen])
+POMDPs.obsindex(::TigerPOMDP, o) = o == :hear_left ? 1 : 2
+POMDPs.discount(::TigerPOMDP) = gamma
+POMDPs.initialstate(::TigerPOMDP) = Uniform([:tiger_left, :tiger_right])
+function POMDPs.transition(::TigerPOMDP, s, a)  # the tiger stays while listening and is reshuffled after a door opens
+    a == :listen && return Deterministic(s)
+    Uniform([:tiger_left, :tiger_right])
+end
+function POMDPs.observation(::TigerPOMDP, a, sp)  # noisy report of the tiger's side
+    a != :listen && return Uniform([:hear_left, :hear_right])
+    sp == :tiger_left ? SparseCat([:hear_left, :hear_right], [acc, 1 - acc]) : SparseCat([:hear_left, :hear_right], [1 - acc, acc])
+end
+function POMDPs.reward(::TigerPOMDP, s, a)  # listening costs 1, the tiger's door costs 100, the other door pays 10
+    a == :listen && return -1.0
+    (a == :open_left && s == :tiger_left) || (a == :open_right && s == :tiger_right) ? -100.0 : 10.0
+end
+
+policy = solve(QMDPSolver(max_iterations=1000), m)  # QMDP: alpha vectors from the fully observed MDP
+belief(p) = DiscreteBelief(m, [p, 1 - p])  # p = probability that the tiger is behind the left door
+V(p) = value(policy, belief(p))
+act(p) = action(policy, belief(p))
+(action_at_uniform_belief = act(0.5), action_when_90pct_left = act(0.9), value_at_uniform_belief = V(0.5))
+'''
+
+[[codeBranches]]
+model = "smdp"
+code = '''
+using Random
+
+S = {{S}}  # condition levels: 0 = failed, S = new
+gamma = {{gamma}}  # discount per period
+pdeg = {{pdeg}}  # probability of losing one level during a period of operation
+ACTIONS = ["operate", "maintain", "replace"]
+tau(a) = (1, 2, 4)[a]  # duration of each action in periods: the semi-Markov part
+function outcomes(s, a)  # (next condition, probability) pairs
+    a == 1 && s == 0 && return [(0, 1.0)]  # a failed machine stays failed
+    a == 1 && return [(s - 1, pdeg), (s, 1 - pdeg)]
+    a == 2 && return [(min(s + 2, S), 1.0)]
+    [(S, 1.0)]
+end
+R(s, a) = a == 1 ? 1.0 * s : a == 2 ? -5.0 : -20.0  # production while operating; cost of maintenance or replacement
+Q(V, s, a) = R(s, a) + gamma^tau(a) * sum(p * V[s2 + 1] for (s2, p) in outcomes(s, a))  # discount depends on the duration
+
+function value_iteration(; tol=1e-8, maxiter=10_000)
+    V = zeros(S + 1)
+    for it in 1:maxiter
+        Vn = [maximum(Q(V, s, a) for a in 1:3) for s in 0:S]
+        change = maximum(abs.(Vn - V))
+        V = Vn
+        change < tol && return (V = V, iterations = it)
+    end
+    (V = V, iterations = maxiter)
+end
+function rollout(policy_fn, s, periods; rng=Random.default_rng())  # simulate until `periods` periods have elapsed
+    t = 0; ret = 0.0; steps = NamedTuple[]
+    while t < periods
+        a = policy_fn(s); o = outcomes(s, a)
+        s2 = o[something(findfirst(cumsum(last.(o)) .>= rand(rng)), length(o))][1]
+        ret += gamma^t * R(s, a)
+        push!(steps, (time = t, condition = s, action = ACTIONS[a], reward = R(s, a)))
+        t += tau(a); s = s2
+    end
+    (steps = steps, discounted_return = ret)
+end
+
+vi = value_iteration()
+V(s) = vi.V[s + 1]
+act(s) = argmax(a -> Q(vi.V, s, a), 1:3)
+(action_by_condition = [s => ACTIONS[act(s)] for s in 0:S], value_when_new = V(S), value_when_failed = V(0), iterations = vi.iterations)
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "value-function"
+label = "Value Function"
+desc = "V*(s) across the states, or V*(b) across the belief that the tiger is on the left"
+code = '''
+using Plots
+
+{{?model=mdp|smdp}}plot(0:S, V.(0:S), xlabel="state", ylabel="V*(s)", legend=false, marker=:circle)
+{{?model=pomdp}}plot(0:0.01:1, V.(0:0.01:1), xlabel="belief that the tiger is behind the left door", ylabel="V*(b)", legend=false)
+'''
+
+[[actionGroups.actions]]
+id = "policy-map"
+label = "Policy Map"
+desc = "The optimal action at each state or belief"
+code = '''
+using Plots
+
+{{?model=mdp}}bar(0:S, act.(0:S), xlabel="stock level", ylabel="optimal order quantity", legend=false)
+{{?model=smdp}}scatter(0:S, act.(0:S), yticks=(1:3, ACTIONS), ylims=(0.5, 3.5), xlabel="condition", ylabel="optimal action", legend=false, markersize=6)
+{{?model=pomdp}}acts = [:open_left, :open_right, :listen]
+{{?model=pomdp}}scatter(0:0.01:1, [findfirst(==(act(p)), acts) for p in 0:0.01:1], yticks=(1:3, string.(acts)), ylims=(0.5, 3.5),
+{{?model=pomdp}}    xlabel="belief that the tiger is behind the left door", legend=false, markersize=2)
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "policy-simulation"
+label = "Policy Simulation"
+desc = "One episode under the optimal policy: states, actions, rewards (and beliefs for the POMDP)"
+code = '''
+using Random
+Random.seed!(1)
+{{?model=mdp}}hist = simulate(HistoryRecorder(max_steps=20), m, policy)
+{{?model=mdp}}(steps = [(stock = h.s, order = h.a, reward = round(h.r, digits=2)) for h in eachstep(hist)], discounted_return = discounted_reward(hist))
+{{?model=pomdp}}hist = simulate(HistoryRecorder(max_steps=20), m, policy, DiscreteUpdater(m))
+{{?model=pomdp}}(steps = [(tiger = h.s, action = h.a, heard = h.o, reward = h.r, belief_left = round(pdf(h.bp, :tiger_left), digits=3)) for h in eachstep(hist)],
+{{?model=pomdp}} discounted_return = discounted_reward(hist))
+{{?model=smdp}}rollout(act, S, 30)
+'''
+
+[[actionGroups.actions]]
+id = "belief-update"
+label = "Belief Update / Bellman Residual"
+desc = "POMDP: how the belief moves after each observation. MDP and Semi-MDP: the Bellman residual of the solved value function (near 0 means converged)"
+code = '''
+{{?model=pomdp}}up = DiscreteUpdater(m)
+{{?model=pomdp}}b = initialize_belief(up, initialstate(m))
+{{?model=pomdp}}map([:hear_left, :hear_left, :hear_right, :hear_left, :hear_left]) do o
+{{?model=pomdp}}    global b = update(up, b, :listen, o)  # Bayes rule after listening
+{{?model=pomdp}}    (heard = o, belief_left = round(pdf(b, :tiger_left), digits=4), next_action = action(policy, b))
+{{?model=pomdp}}end
+{{?model=mdp}}T(s) = maximum(reward(m, s, a) + gamma * sum(p * V(sp) for (sp, p) in weighted_iterator(transition(m, s, a))) for a in actions(m))
+{{?model=mdp}}(max_bellman_residual = maximum(abs(T(s) - V(s)) for s in 0:S),)
+{{?model=smdp}}(max_bellman_residual = maximum(abs(maximum(Q(vi.V, s, a) for a in 1:3) - V(s)) for s in 0:S), iterations = vi.iterations)
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "mc-return"
+label = "Monte Carlo Return"
+desc = "Average discounted return over 500 simulated episodes, against the value function's prediction"
+code = '''
+using Statistics, Random
+Random.seed!(2)
+{{?model=mdp}}rets = [simulate(RolloutSimulator(max_steps=200), m, policy) for k in 1:500]
+{{?model=mdp}}predicted = V(0)
+{{?model=pomdp}}rets = [simulate(RolloutSimulator(max_steps=200), m, policy, DiscreteUpdater(m)) for k in 1:500]
+{{?model=pomdp}}predicted = V(0.5)
+{{?model=smdp}}rets = [rollout(act, S, 400).discounted_return for k in 1:500]
+{{?model=smdp}}predicted = V(S)
+(mean_return = mean(rets), standard_error = std(rets) / sqrt(length(rets)), value_function_prediction = predicted)
+'''
+
+[[actionGroups.actions]]
+id = "mcts-lookahead"
+label = "Online Planning / Reward Rate"
+desc = "MDP: Monte Carlo tree search from each state. POMDP: POMCP from several beliefs. Semi-MDP: long-run reward per period and how often each action is chosen"
+code = '''
+{{?model=mdp}}using MCTS
+{{?model=mdp}}planner = solve(MCTSSolver(n_iterations=1000, depth=30, exploration_constant=10.0), m)
+{{?model=mdp}}[(stock = s, mcts = action(planner, s), value_iteration = act(s)) for s in 0:S]
+{{?model=pomdp}}using BasicPOMCP
+{{?model=pomdp}}planner = solve(POMCPSolver(tree_queries=2000, c=10.0), m)
+{{?model=pomdp}}[(belief_left = p, pomcp = action(planner, belief(p)), qmdp = act(p)) for p in (0.5, 0.85, 0.97)]
+{{?model=smdp}}st = rollout(act, S, 20_000).steps
+{{?model=smdp}}(reward_per_period = sum(x.reward for x in st) / 20_000, share_of_decisions = [a => count(x -> x.action == a, st) / length(st) for a in ACTIONS])
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "vi-vs-mcts"
+label = "Global vs Online Planning"
+desc = "MDP: value iteration against MCTS. POMDP: QMDP against POMCP. Semi-MDP: the duration-aware policy against one that ignores durations"
+code = '''
+using Statistics, Random
+Random.seed!(3)
+{{?model=mdp}}using MCTS
+{{?model=mdp}}planner = solve(MCTSSolver(n_iterations=500, depth=30, exploration_constant=10.0), m)
+{{?model=mdp}}(value_iteration = mean(simulate(RolloutSimulator(max_steps=50), m, policy) for k in 1:50),
+{{?model=mdp}} mcts = mean(simulate(RolloutSimulator(max_steps=50), m, planner) for k in 1:50))
+{{?model=pomdp}}using BasicPOMCP
+{{?model=pomdp}}planner = solve(POMCPSolver(tree_queries=1000, c=10.0), m)
+{{?model=pomdp}}(qmdp = mean(simulate(RolloutSimulator(max_steps=30), m, policy, DiscreteUpdater(m)) for k in 1:50),
+{{?model=pomdp}} pomcp = mean(simulate(RolloutSimulator(max_steps=30), m, planner) for k in 1:50))
+{{?model=smdp}}Vp = zeros(S + 1)  # plain MDP: every decision discounted by gamma whatever its duration
+{{?model=smdp}}for it in 1:5000
+{{?model=smdp}}    Vp .= [maximum(R(s, a) + gamma * sum(p * Vp[s2 + 1] for (s2, p) in outcomes(s, a)) for a in 1:3) for s in 0:S]
+{{?model=smdp}}end
+{{?model=smdp}}naive(s) = argmax(a -> R(s, a) + gamma * sum(p * Vp[s2 + 1] for (s2, p) in outcomes(s, a)), 1:3)
+{{?model=smdp}}(semi_markov_policy = mean(rollout(act, S, 400).discounted_return for k in 1:500),
+{{?model=smdp}} constant_discount_policy = mean(rollout(naive, S, 400).discounted_return for k in 1:500),
+{{?model=smdp}} policies_differ_at = [s for s in 0:S if act(s) != naive(s)])
+'''
+
+[[actionGroups.actions]]
+id = "qmdp-vs-sarsop"
+label = "Solver vs Baseline"
+desc = "POMDP: QMDP against the point-based SARSOP solver. MDP: optimal against myopic ordering. Semi-MDP: optimal against run-to-failure"
+code = '''
+using Statistics, Random
+Random.seed!(4)
+{{?model=pomdp}}using SARSOP
+{{?model=pomdp}}sarsop = solve(SARSOPSolver(precision=1e-3, verbose=false), m)
+{{?model=pomdp}}(actions = [(belief_left = p, qmdp = act(p), sarsop = action(sarsop, belief(p))) for p in (0.5, 0.7, 0.85, 0.97)],
+{{?model=pomdp}} value_at_uniform = (qmdp = V(0.5), sarsop = value(sarsop, belief(0.5))),
+{{?model=pomdp}} simulated_return = (qmdp = mean(simulate(RolloutSimulator(max_steps=100), m, policy, DiscreteUpdater(m)) for k in 1:500),
+{{?model=pomdp}}                     sarsop = mean(simulate(RolloutSimulator(max_steps=100), m, sarsop, DiscreteUpdater(m)) for k in 1:500)))
+{{?model=mdp}}myopic = FunctionPolicy(s -> argmax(a -> reward(m, s, a), actions(m)))  # best immediate reward only
+{{?model=mdp}}(optimal = mean(simulate(RolloutSimulator(max_steps=200), m, policy) for k in 1:500),
+{{?model=mdp}} myopic = mean(simulate(RolloutSimulator(max_steps=200), m, myopic) for k in 1:500))
+{{?model=smdp}}run_to_failure(s) = s == 0 ? 3 : 1  # operate until failure, then replace
+{{?model=smdp}}(optimal = mean(rollout(act, S, 400).discounted_return for k in 1:500),
+{{?model=smdp}} run_to_failure = mean(rollout(run_to_failure, S, 400).discounted_return for k in 1:500))
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "alpha-vectors"
+label = "Alpha Vectors / Q-Values"
+desc = "POMDP: the alpha vectors whose upper envelope is V*(b). MDP and Semi-MDP: the Q-value of every state-action pair"
+code = '''
+using Plots
+
+{{?model=pomdp}}plt = plot(xlabel="belief that the tiger is behind the left door", ylabel="value")
+{{?model=pomdp}}for (alpha, a) in alphapairs(policy)
+{{?model=pomdp}}    plot!(plt, 0:0.01:1, [p * alpha[1] + (1 - p) * alpha[2] for p in 0:0.01:1], label=string(a))
+{{?model=pomdp}}end
+{{?model=pomdp}}plt
+{{?model=mdp}}heatmap(0:A, 0:S, policy.qmat, xlabel="order quantity", ylabel="stock level", title="Q(s, a)")
+{{?model=smdp}}heatmap(ACTIONS, 0:S, [Q(vi.V, s, a) for s in 0:S, a in 1:3], ylabel="condition", title="Q(s, a)")
+'''
+
+[[actionGroups.actions]]
+id = "state-value"
+label = "State Value Lookup"
+desc = "V*(s) and the optimal action at every state (or at a grid of beliefs)"
+code = '''
+{{?model=mdp}}[(stock = s, value = round(V(s), digits=2), order = act(s)) for s in 0:S]
+{{?model=smdp}}[(condition = s, value = round(V(s), digits=2), action = ACTIONS[act(s)]) for s in 0:S]
+{{?model=pomdp}}[(belief_left = p, value = round(V(p), digits=2), action = act(p)) for p in 0:0.1:1]
+'''

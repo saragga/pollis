@@ -1,0 +1,823 @@
+# Neighbourhood Search Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/hns.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Neighbourhood Search"
+viewType = "pollis.hns"
+defaultModel = "crs"
+
+[[packages]]
+name = "NLopt.jl"
+github = "https://github.com/JuliaOpt/NLopt.jl"
+
+[[packages]]
+name = "Optim.jl"
+github = "https://github.com/JuliaNLSolvers/Optim.jl"
+
+[requires]
+packages = ["Optim.jl", "NLopt.jl", "Plots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "CRS"
+file = "hns/tutorial-01-crs.ipynb"
+bundled = true
+description = "Controlled Random Search: population-based gradient-free global optimisation via NLopt"
+
+[[notebookSections.notebooks]]
+name = "ILS"
+file = "hns/tutorial-02-ils.ipynb"
+bundled = true
+description = "Iterated Local Search: alternate local descent with random perturbations to escape local optima"
+
+[[notebookSections.notebooks]]
+name = "LNS & ALNS"
+file = "hns/tutorial-03-lns-alns.ipynb"
+bundled = true
+description = "Large Neighbourhood Search and its adaptive variant: destroy/repair cycles over the feasible region"
+
+[[notebookSections.notebooks]]
+name = "Basin-Hopping & SA"
+file = "hns/tutorial-04-bh-sa.ipynb"
+bundled = true
+description = "Basin-Hopping and Simulated Annealing: perturbation-based acceptance strategies for rugged landscapes"
+
+[[wikis]]
+name = "Factsheet"
+file = "hns/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "hns/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "hns/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "hns/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "hns/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "hns/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Algorithm Details"
+
+[[wikis]]
+name = "CRS"
+file = "hns/crs.md"
+bundled = true
+
+[[wikis]]
+name = "ILS"
+file = "hns/ils.md"
+bundled = true
+
+[[wikis]]
+name = "LNS"
+file = "hns/lns.md"
+bundled = true
+
+[[wikis]]
+name = "ALNS"
+file = "hns/alns.md"
+bundled = true
+
+[[wikis]]
+name = "Basin-Hopping"
+file = "hns/bh.md"
+bundled = true
+
+[[wikis]]
+name = "Simulated Annealing"
+file = "hns/sa.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "Optim: A mathematical optimization package for Julia"
+authors = "Mogensen, Patrick Kofod; Riseth, Asbjørn Nilsen"
+year = 2018
+journal = "Journal of Open Source Software"
+doi = "10.21105/joss.00615"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Global Optimization by Controlled Random Search"
+authors = "Price, W. L."
+year = 1983
+journal = "Journal of Optimization Theory and Applications"
+doi = "10.1007/BF00934495"
+openAccess = false
+
+[[references]]
+title = "Iterated Local Search: Framework and Applications"
+authors = "Lourenço, Helena R.; Martin, Olivier C.; Stützle, Thomas"
+year = 2003
+journal = "Handbook of Metaheuristics"
+doi = "10.1007/0-306-48056-5_11"
+openAccess = false
+
+[[references]]
+title = "Using Constraint Programming and Local Search Methods to Solve Vehicle Routing Problems"
+authors = "Shaw, Paul"
+year = 1998
+journal = "International Conference on Principles and Practice of Constraint Programming"
+doi = "10.1007/3-540-49481-2_30"
+openAccess = false
+
+[[references]]
+title = "An Adaptive Large Neighborhood Search Heuristic for the Pickup and Delivery Problem with Time Windows"
+authors = "Ropke, Stefan; Pisinger, David"
+year = 2006
+journal = "Transportation Science"
+doi = "10.1287/trsc.1050.0135"
+openAccess = false
+
+[[references]]
+title = "Global Optimization by Basin-Hopping and the Lowest Energy Structures of Lennard-Jones Clusters Containing up to 110 Atoms"
+authors = "Wales, David J.; Doye, Jonathan P. K."
+year = 1997
+journal = "Journal of Physical Chemistry A"
+doi = "10.1021/jp970984n"
+openAccess = false
+
+[[references]]
+title = "Optimization by Simulated Annealing"
+authors = "Kirkpatrick, S.; Gelatt, C. D.; Vecchi, M. P."
+year = 1983
+journal = "Science"
+doi = "10.1126/science.220.4598.671"
+openAccess = false
+
+[[models]]
+id = "crs"
+label = "CRS"
+
+[[models]]
+id = "ils"
+label = "ILS"
+
+[[models]]
+id = "lns"
+label = "LNS"
+
+[[models]]
+id = "alns"
+label = "ALNS"
+
+[[models]]
+id = "bh"
+label = "BH"
+
+[[models]]
+id = "sa"
+label = "SA"
+
+[[bullets]]
+text = "CRS"
+detail = "controlled random search; population-based, gradient-free; NLopt GN_CRS2_LM"
+
+[[bullets]]
+text = "ILS"
+detail = "iterated local search; local descent alternated with random perturbations to escape local optima"
+
+[[bullets]]
+text = "LNS"
+detail = "large neighbourhood search; destroy & repair operators applied iteratively over the feasible region"
+
+[[bullets]]
+text = "ALNS"
+detail = "adaptive LNS; weights each destroy fraction by its historical improvement rate"
+
+[[bullets]]
+text = "BH"
+detail = "basin-hopping; random perturbation followed by local descent with Metropolis acceptance criterion"
+
+[[bullets]]
+text = "SA"
+detail = "simulated annealing (Optim.jl SAMIN); temperature-schedule acceptance; very general box-constrained search"
+
+[[decisionRows]]
+task = "CRS"
+context = "Continuous box-constrained black-box problems, no gradients"
+purpose = "Controlled random search: a population of points is improved by reflecting simplices of random members (with local mutation)"
+
+[[decisionRows]]
+task = "ILS"
+context = "Problems where a local solver works well but gets trapped"
+purpose = "Iterated local search: kick the incumbent and descend again, keeping only improvements"
+
+[[decisionRows]]
+task = "LNS"
+context = "Problems where some variables can be re-optimised while others stay fixed"
+purpose = "Large neighbourhood search: destroy (re-sample) a fraction of the variables, then repair by local descent"
+
+[[decisionRows]]
+task = "ALNS"
+context = "When the right neighbourhood size is not known in advance"
+purpose = "Adaptive LNS: several destroy sizes compete, and the ones that produce improvements are chosen more often"
+
+[[decisionRows]]
+task = "BH"
+context = "Funnel-shaped landscapes with many nearby local minima"
+purpose = "Basin hopping: perturb, descend, and accept the new basin with a Metropolis rule so the search can walk uphill"
+
+[[decisionRows]]
+task = "SA"
+context = "Rugged landscapes, cheap objectives"
+purpose = "Simulated annealing: accept worse moves with a probability that falls as the temperature is lowered"
+
+[[inputs]]
+id = "obj"
+label = "Objective f(x)"
+tooltip = "Julia expression for the objective to minimise, using x[1], x[2], ... Default: the Rastrigin function (global minimum 0 at the origin, a regular grid of local minima around it)."
+default = "20 + x[1]^2 + x[2]^2 - 10 * (cos(2pi * x[1]) + cos(2pi * x[2]))"
+
+[[inputs]]
+id = "lb"
+label = "Lower Bounds"
+tooltip = "Julia vector of lower bounds, one per variable; its length sets the dimension."
+default = "[-5.12, -5.12]"
+newRow = true
+
+[[inputs]]
+id = "ub"
+label = "Upper Bounds"
+tooltip = "Julia vector of upper bounds, one per variable."
+default = "[5.12, 5.12]"
+
+[[inputs]]
+id = "budget"
+label = "Budget"
+tooltip = "Maximum number of objective evaluations. Every evaluation counts, including the finite-difference gradient evaluations of the local descents."
+default = "5000"
+
+[[inputs]]
+id = "pop"
+label = "Population"
+tooltip = "Number of points CRS keeps. 0 uses the NLopt default of 10(n + 1)."
+default = "0"
+models = ["crs"]
+newRow = true
+
+[[inputs]]
+id = "scale"
+label = "Perturbation Scale"
+tooltip = "Standard deviation of the kick, as a fraction of the box width. Too small and the descent falls back into the same basin; too large and the search becomes random restarts."
+default = "0.15"
+models = ["ils", "bh"]
+newRow = true
+
+[[inputs]]
+id = "frac"
+label = "Destroy Fraction"
+tooltip = "Fraction of the variables re-sampled uniformly in the box before each repair."
+default = "0.5"
+models = ["lns"]
+newRow = true
+
+[[inputs]]
+id = "react"
+label = "Reaction Factor"
+tooltip = "How quickly operator weights follow recent success: w = (1 - r) w + r * score. 0 never adapts; 1 forgets the past at once."
+default = "0.2"
+models = ["alns"]
+newRow = true
+
+[[inputs]]
+id = "temp"
+label = "Temperature"
+tooltip = "Metropolis temperature: a basin that is worse by T is accepted with probability exp(-1). Roughly the height of the barriers between neighbouring minima."
+default = "1.0"
+models = ["bh"]
+
+[[inputs]]
+id = "rt"
+label = "Cooling Rate (rt)"
+tooltip = "Factor the SAMIN temperature is multiplied by at each reduction. Close to 1 cools slowly and explores more."
+default = "0.9"
+models = ["sa"]
+newRow = true
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.crs]
+# A population of points and a reflected simplex
+svg = '''
+var s = '', p = [[12, 36], [42, 32], [18, 62], [40, 60], [28, 46], [10, 50], [34, 40]];
+p.forEach(function (q) { s += '<circle cx="' + q[0] + '" cy="' + q[1] + '" r="1.5" fill="currentColor" opacity="0.6"/>'; });
+return s + '<path d="M12,36 L34,40 L18,62 Z" fill="none" stroke="currentColor" stroke-width="1"/><circle cx="28" cy="46" r="2.2" fill="currentColor"/>';
+'''
+
+[miniCharts.ils]
+# Descents into successive basins linked by kicks
+svg = '''
+return '<path d="M6,40 Q12,64 18,48 Q24,34 30,56 Q36,72 42,50 Q46,38 50,44" fill="none" stroke="currentColor" stroke-width="1.1" opacity="0.6"/>'
+	+ '<path d="M12,58 C16,40 22,40 30,62" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="2,2"/><circle cx="12" cy="58" r="1.8" fill="currentColor"/><circle cx="34" cy="64" r="2.2" fill="currentColor"/>';
+'''
+
+[miniCharts.lns]
+# A vector with a block of variables re-sampled
+svg = '''
+var s = '';
+for (var i = 0; i < 6; i++) { s += '<rect x="' + (8 + i * 7) + '" y="40" width="6" height="14" fill="currentColor" opacity="' + (i >= 2 && i <= 3 ? 0.9 : 0.3) + '"/>'; }
+return s + '<path d="M22,36 Q27,28 32,36" fill="none" stroke="currentColor" stroke-width="1"/>';
+'''
+
+[miniCharts.alns]
+# Operators with weights that adapt
+svg = '''
+var h = [10, 22, 14];
+return h.map(function (v, i) { return '<rect x="' + (12 + i * 12) + '" y="' + (64 - v) + '" width="8" height="' + v + '" fill="currentColor" opacity="' + (i === 1 ? 0.9 : 0.45) + '"/>'; }).join('')
+	+ '<line x1="8" y1="64" x2="46" y2="64" stroke="currentColor" stroke-width="0.8"/>';
+'''
+
+[miniCharts.bh]
+# Hops between basins, one of them uphill
+svg = '''
+return '<path d="M6,40 Q11,62 16,48 Q21,36 26,52 Q31,70 36,50 Q41,34 46,58 L50,44" fill="none" stroke="currentColor" stroke-width="1.1" opacity="0.6"/>'
+	+ '<path d="M11,56 Q18,30 26,50" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="2,2"/><path d="M26,50 Q30,30 36,64" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="2,2"/><circle cx="36" cy="64" r="2.2" fill="currentColor"/>';
+'''
+
+[miniCharts.sa]
+# A falling temperature curve
+svg = '''
+return '<path d="M8,30 C18,32 22,56 46,62" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M8,34 L12,44 L16,36 L20,52 L24,46 L28,58 L34,56 L40,62 L46,63" fill="none" stroke="currentColor" stroke-width="0.9" opacity="0.5"/>';
+'''
+
+[[codeBranches]]
+model = "crs"
+code = '''
+using Optim, NLopt, Random, LinearAlgebra  # both export optimize, so calls are qualified
+
+f(x) = {{obj}}  # objective
+lb, ub = {{lb}}, {{ub}}  # search box
+n = length(lb)
+budget = {{budget}}  # evaluation budget
+
+# wraps f so that every evaluation is recorded
+function recorder()
+    pts, vals = Vector{Float64}[], Float64[]
+    fc(x) = (v = f(x); push!(pts, copy(x)); push!(vals, v); v)
+    fc, pts, vals
+end
+result(x, fx, pts, vals; extra...) = (x = x, fx = fx, points = pts, values = vals, trace = accumulate(min, vals), evals = length(vals), extra...)
+
+# bounded L-BFGS descent (finite-difference gradients) from a point moved strictly inside the box
+inside(x) = clamp.(x, lb .+ 1e-6 .* (ub .- lb), ub .- 1e-6 .* (ub .- lb))
+function descend(g, x)
+    r = Optim.optimize(g, lb, ub, inside(x), Fminbox(LBFGS()), Optim.Options(outer_iterations=5))
+    Optim.minimizer(r), Optim.minimum(r)
+end
+
+POP = {{pop}}  # population size, 0 = NLopt default
+KNOB, GRID = "population", [0, 20, 50, 100, 200]
+
+function search(; budget=budget, seed=1, knob=POP)
+    NLopt.srand(seed)
+    fc, pts, vals = recorder()
+    opt = Opt(:GN_CRS2_LM, n)  # controlled random search with local mutation
+    opt.lower_bounds, opt.upper_bounds, opt.maxeval = lb, ub, budget
+    knob > 0 && (opt.population = knob)
+    opt.min_objective = (x, g) -> fc(x)
+    fx, x, ret = NLopt.optimize(opt, (lb .+ ub) ./ 2)
+    result(x, fx, pts, vals; ret = ret)
+end
+
+res = search()
+x_best, f_best = res.x, res.fx
+(best_point = x_best, best_value = f_best, evaluations = res.evals)
+'''
+
+[[codeBranches]]
+model = "ils"
+code = '''
+using Optim, NLopt, Random, LinearAlgebra  # both export optimize, so calls are qualified
+
+f(x) = {{obj}}  # objective
+lb, ub = {{lb}}, {{ub}}  # search box
+n = length(lb)
+budget = {{budget}}  # evaluation budget
+
+# wraps f so that every evaluation is recorded
+function recorder()
+    pts, vals = Vector{Float64}[], Float64[]
+    fc(x) = (v = f(x); push!(pts, copy(x)); push!(vals, v); v)
+    fc, pts, vals
+end
+result(x, fx, pts, vals; extra...) = (x = x, fx = fx, points = pts, values = vals, trace = accumulate(min, vals), evals = length(vals), extra...)
+
+# bounded L-BFGS descent (finite-difference gradients) from a point moved strictly inside the box
+inside(x) = clamp.(x, lb .+ 1e-6 .* (ub .- lb), ub .- 1e-6 .* (ub .- lb))
+function descend(g, x)
+    r = Optim.optimize(g, lb, ub, inside(x), Fminbox(LBFGS()), Optim.Options(outer_iterations=5))
+    Optim.minimizer(r), Optim.minimum(r)
+end
+
+SCALE = {{scale}}  # kick size as a fraction of the box width
+KNOB, GRID = "perturbation scale", [0.02, 0.05, 0.1, 0.2, 0.4]
+
+function search(; budget=budget, seed=1, knob=SCALE)
+    Random.seed!(seed)
+    fc, pts, vals = recorder()
+    bx, bf = descend(fc, (lb .+ ub) ./ 2)
+    while length(vals) < budget
+        x, fx = descend(fc, bx .+ knob .* (ub .- lb) .* randn(n))  # kick the incumbent, then descend
+        if fx < bf
+            bx, bf = x, fx  # keep only improvements
+        end
+    end
+    result(bx, bf, pts, vals)
+end
+
+res = search()
+x_best, f_best = res.x, res.fx
+(best_point = x_best, best_value = f_best, evaluations = res.evals)
+'''
+
+[[codeBranches]]
+model = "lns"
+code = '''
+using Optim, NLopt, Random, LinearAlgebra  # both export optimize, so calls are qualified
+
+f(x) = {{obj}}  # objective
+lb, ub = {{lb}}, {{ub}}  # search box
+n = length(lb)
+budget = {{budget}}  # evaluation budget
+
+# wraps f so that every evaluation is recorded
+function recorder()
+    pts, vals = Vector{Float64}[], Float64[]
+    fc(x) = (v = f(x); push!(pts, copy(x)); push!(vals, v); v)
+    fc, pts, vals
+end
+result(x, fx, pts, vals; extra...) = (x = x, fx = fx, points = pts, values = vals, trace = accumulate(min, vals), evals = length(vals), extra...)
+
+# bounded L-BFGS descent (finite-difference gradients) from a point moved strictly inside the box
+inside(x) = clamp.(x, lb .+ 1e-6 .* (ub .- lb), ub .- 1e-6 .* (ub .- lb))
+function descend(g, x)
+    r = Optim.optimize(g, lb, ub, inside(x), Fminbox(LBFGS()), Optim.Options(outer_iterations=5))
+    Optim.minimizer(r), Optim.minimum(r)
+end
+
+FRAC = {{frac}}  # fraction of variables destroyed each step
+KNOB, GRID = "destroy fraction", [0.1, 0.25, 0.5, 0.75, 1.0]
+
+# re-sample a random subset of the variables uniformly in the box
+function destroy(x, frac)
+    y = copy(x)
+    idx = randperm(n)[1:max(1, round(Int, frac * n))]
+    y[idx] .= lb[idx] .+ rand(length(idx)) .* (ub[idx] .- lb[idx])
+    y
+end
+
+function search(; budget=budget, seed=1, knob=FRAC)
+    Random.seed!(seed)
+    fc, pts, vals = recorder()
+    bx, bf = descend(fc, (lb .+ ub) ./ 2)
+    while length(vals) < budget
+        x, fx = descend(fc, destroy(bx, knob))  # destroy, then repair
+        if fx < bf
+            bx, bf = x, fx
+        end
+    end
+    result(bx, bf, pts, vals)
+end
+
+res = search()
+x_best, f_best = res.x, res.fx
+(best_point = x_best, best_value = f_best, evaluations = res.evals)
+'''
+
+[[codeBranches]]
+model = "alns"
+code = '''
+using Optim, NLopt, Random, LinearAlgebra  # both export optimize, so calls are qualified
+
+f(x) = {{obj}}  # objective
+lb, ub = {{lb}}, {{ub}}  # search box
+n = length(lb)
+budget = {{budget}}  # evaluation budget
+
+# wraps f so that every evaluation is recorded
+function recorder()
+    pts, vals = Vector{Float64}[], Float64[]
+    fc(x) = (v = f(x); push!(pts, copy(x)); push!(vals, v); v)
+    fc, pts, vals
+end
+result(x, fx, pts, vals; extra...) = (x = x, fx = fx, points = pts, values = vals, trace = accumulate(min, vals), evals = length(vals), extra...)
+
+# bounded L-BFGS descent (finite-difference gradients) from a point moved strictly inside the box
+inside(x) = clamp.(x, lb .+ 1e-6 .* (ub .- lb), ub .- 1e-6 .* (ub .- lb))
+function descend(g, x)
+    r = Optim.optimize(g, lb, ub, inside(x), Fminbox(LBFGS()), Optim.Options(outer_iterations=5))
+    Optim.minimizer(r), Optim.minimum(r)
+end
+
+FRACS = [0.25, 0.5, 0.75]  # competing destroy fractions
+REACT = {{react}}  # reaction factor of the weight update
+KNOB, GRID = "reaction factor", [0.0, 0.1, 0.2, 0.5, 1.0]
+
+function destroy(x, frac)
+    y = copy(x)
+    idx = randperm(n)[1:max(1, round(Int, frac * n))]
+    y[idx] .= lb[idx] .+ rand(length(idx)) .* (ub[idx] .- lb[idx])
+    y
+end
+
+function search(; budget=budget, seed=1, knob=REACT)
+    Random.seed!(seed)
+    fc, pts, vals = recorder()
+    w = ones(length(FRACS))  # operator weights
+    uses = zeros(Int, length(FRACS))
+    bx, bf = descend(fc, (lb .+ ub) ./ 2)
+    while length(vals) < budget
+        k = findfirst(cumsum(w ./ sum(w)) .>= rand())  # roulette-wheel choice
+        uses[k] += 1
+        x, fx = descend(fc, destroy(bx, FRACS[k]))
+        score = fx < bf ? 3.0 : 0.5  # reward operators that improve the best
+        w[k] = (1 - knob) * w[k] + knob * score
+        if fx < bf
+            bx, bf = x, fx
+        end
+    end
+    result(bx, bf, pts, vals; weights = w ./ sum(w), uses = uses)
+end
+
+res = search()
+x_best, f_best = res.x, res.fx
+(best_point = x_best, best_value = f_best, evaluations = res.evals)
+'''
+
+[[codeBranches]]
+model = "bh"
+code = '''
+using Optim, NLopt, Random, LinearAlgebra  # both export optimize, so calls are qualified
+
+f(x) = {{obj}}  # objective
+lb, ub = {{lb}}, {{ub}}  # search box
+n = length(lb)
+budget = {{budget}}  # evaluation budget
+
+# wraps f so that every evaluation is recorded
+function recorder()
+    pts, vals = Vector{Float64}[], Float64[]
+    fc(x) = (v = f(x); push!(pts, copy(x)); push!(vals, v); v)
+    fc, pts, vals
+end
+result(x, fx, pts, vals; extra...) = (x = x, fx = fx, points = pts, values = vals, trace = accumulate(min, vals), evals = length(vals), extra...)
+
+# bounded L-BFGS descent (finite-difference gradients) from a point moved strictly inside the box
+inside(x) = clamp.(x, lb .+ 1e-6 .* (ub .- lb), ub .- 1e-6 .* (ub .- lb))
+function descend(g, x)
+    r = Optim.optimize(g, lb, ub, inside(x), Fminbox(LBFGS()), Optim.Options(outer_iterations=5))
+    Optim.minimizer(r), Optim.minimum(r)
+end
+
+SCALE = {{scale}}  # hop size as a fraction of the box width
+TEMP = {{temp}}  # Metropolis temperature
+KNOB, GRID = "temperature", [0.0, 0.3, 1.0, 3.0, 10.0]
+
+function search(; budget=budget, seed=1, knob=TEMP)
+    Random.seed!(seed)
+    fc, pts, vals = recorder()
+    cx, cf = descend(fc, (lb .+ ub) ./ 2)  # current basin
+    bx, bf = cx, cf
+    accepted = 0
+    while length(vals) < budget
+        x, fx = descend(fc, cx .+ SCALE .* (ub .- lb) .* randn(n))  # hop and descend
+        if fx < cf || (knob > 0 && rand() < exp(-(fx - cf) / knob))  # Metropolis acceptance
+            cx, cf = x, fx
+            accepted += 1
+        end
+        if cf < bf
+            bx, bf = cx, cf
+        end
+    end
+    result(bx, bf, pts, vals; accepted = accepted)
+end
+
+res = search()
+x_best, f_best = res.x, res.fx
+(best_point = x_best, best_value = f_best, evaluations = res.evals)
+'''
+
+[[codeBranches]]
+model = "sa"
+code = '''
+using Optim, NLopt, Random, LinearAlgebra  # both export optimize, so calls are qualified
+
+f(x) = {{obj}}  # objective
+lb, ub = {{lb}}, {{ub}}  # search box
+n = length(lb)
+budget = {{budget}}  # evaluation budget
+
+# wraps f so that every evaluation is recorded
+function recorder()
+    pts, vals = Vector{Float64}[], Float64[]
+    fc(x) = (v = f(x); push!(pts, copy(x)); push!(vals, v); v)
+    fc, pts, vals
+end
+result(x, fx, pts, vals; extra...) = (x = x, fx = fx, points = pts, values = vals, trace = accumulate(min, vals), evals = length(vals), extra...)
+
+# bounded L-BFGS descent (finite-difference gradients) from a point moved strictly inside the box
+inside(x) = clamp.(x, lb .+ 1e-6 .* (ub .- lb), ub .- 1e-6 .* (ub .- lb))
+function descend(g, x)
+    r = Optim.optimize(g, lb, ub, inside(x), Fminbox(LBFGS()), Optim.Options(outer_iterations=5))
+    Optim.minimizer(r), Optim.minimum(r)
+end
+
+RT = {{rt}}  # temperature reduction factor
+KNOB, GRID = "cooling rate", [0.5, 0.7, 0.85, 0.9, 0.95]
+
+function search(; budget=budget, seed=1, knob=RT)
+    Random.seed!(seed)
+    fc, pts, vals = recorder()
+    r = Optim.optimize(fc, lb, ub, (lb .+ ub) ./ 2, SAMIN(rt=knob, verbosity=0), Optim.Options(iterations=budget))
+    result(Optim.minimizer(r), Optim.minimum(r), pts, vals)
+end
+
+res = search()
+x_best, f_best = res.x, res.fx
+(best_point = x_best, best_value = f_best, evaluations = res.evals)
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "landscape"
+label = "Objective Landscape"
+desc = "Heatmap of f over the box (first two variables; others held at the best point) with every evaluated point and the best one"
+code = '''
+using Plots
+
+xs = range(lb[1], ub[1], length=150); ys = range(lb[2], ub[2], length=150)
+heatmap(xs, ys, (a, b) -> f([a; b; x_best[3:end]]), xlabel="x1", ylabel="x2")
+scatter!(getindex.(res.points, 1), getindex.(res.points, 2), markersize=1.5, color=:white, alpha=0.4, label="evaluations")
+scatter!([x_best[1]], [x_best[2]], marker=:star, markersize=10, color=:red, label="best")
+'''
+
+[[actionGroups.actions]]
+id = "convergence"
+label = "Convergence Curve"
+desc = "Best value found against evaluations, with the value of every evaluation behind it"
+code = '''
+using Plots
+
+scatter(res.values, markersize=1, alpha=0.3, label="evaluation", xlabel="evaluations", ylabel="f")
+plot!(res.trace, linewidth=2, label="best so far")
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "return-status"
+label = "Return Status"
+desc = "Evaluations used, when the final best was first reached and how many times the best improved"
+code = '''
+first_hit = findfirst(<=(f_best + 1e-9 * max(1, abs(f_best))), res.trace)
+(return_code = get(res, :ret, "none: the loop stops when the budget is used"), budget = budget, used = res.evals,
+ best_first_reached_at = first_hit, improvements = count(diff(res.trace) .< 0))
+'''
+
+[[actionGroups.actions]]
+id = "perturbation-scale"
+label = "Parameter Sensitivity"
+desc = "Best value over 5 seeds for each setting of the method's main parameter (kick size, destroy fraction, temperature, ...)"
+code = '''
+using Statistics
+
+map(GRID) do k
+    v = [search(seed=s, knob=k).fx for s in 1:5]
+    (parameter = KNOB, value = k, mean_best = mean(v), worst_best = maximum(v))
+end
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "run-algorithm"
+label = "Solution"
+desc = "Best point and value, with the finite-difference gradient norm there (near 0 at an interior minimum)"
+code = '''
+h = 1e-6
+grad = [(f(x_best + h * e) - f(x_best - h * e)) / 2h for e in eachcol(Matrix(1.0I, n, n))]
+(best_point = x_best, best_value = f_best, gradient_norm = norm(grad), evaluations = res.evals)
+'''
+
+[[actionGroups.actions]]
+id = "local-polish"
+label = "Local Polish"
+desc = "Refine the answer with a tight bounded L-BFGS run"
+code = '''
+r = Optim.optimize(f, lb, ub, inside(x_best), Fminbox(LBFGS()), Optim.Options(g_tol=1e-10))
+(found_point = x_best, found_value = f_best, polished_point = Optim.minimizer(r), polished_value = Optim.minimum(r),
+ improvement = f_best - Optim.minimum(r))
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "compare-crs-sa"
+label = "Compare vs CRS and SA"
+desc = "The selected method against NLopt CRS2 and Optim SAMIN at the same budget, over 5 seeds"
+code = '''
+using Statistics
+
+function crs(seed)
+    NLopt.srand(seed)
+    opt = Opt(:GN_CRS2_LM, n)
+    opt.lower_bounds, opt.upper_bounds, opt.maxeval = lb, ub, budget
+    opt.min_objective = (x, g) -> f(x)
+    NLopt.optimize(opt, (lb .+ ub) ./ 2)[1]
+end
+function samin(seed)
+    Random.seed!(seed)
+    Optim.minimum(Optim.optimize(f, lb, ub, (lb .+ ub) ./ 2, SAMIN(verbosity=0), Optim.Options(iterations=budget)))
+end
+runs = ["selected method" => s -> search(seed=s).fx, "CRS" => crs, "SA" => samin]
+map(runs) do (name, run)
+    sec = @elapsed v = [run(s) for s in 1:5]
+    (method = name, mean_best = mean(v), worst_best = maximum(v), seconds_per_run = sec / 5)
+end
+'''
+
+[[actionGroups.actions]]
+id = "seed-robustness"
+label = "Seed Robustness"
+desc = "Repeat the search with 10 random seeds: how often does it reach the best value seen?"
+code = '''
+using Statistics
+
+runs = [search(seed=s) for s in 1:10]
+v = getfield.(runs, :fx)
+(best_values = v, mean = mean(v), spread = std(v), share_within_1e_4_of_best = mean(v .<= minimum(v) + 1e-4))
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "algorithm-properties"
+label = "Algorithm Properties"
+desc = "What the selected method does, what it assumes and its tuning state"
+code = '''
+{{?model=crs}} (algorithm = "CRS2 with local mutation", population_based = true, uses_local_solver = false, main_parameter = "population", return_code = res.ret)
+{{?model=ils}} (algorithm = "Iterated local search", population_based = false, uses_local_solver = true, acceptance = "improvements only", main_parameter = "perturbation scale")
+{{?model=lns}} (algorithm = "Large neighbourhood search", population_based = false, uses_local_solver = true, acceptance = "improvements only", main_parameter = "destroy fraction")
+{{?model=alns}} (algorithm = "Adaptive LNS", operators = FRACS, final_weights = round.(res.weights, digits=3), times_used = res.uses)
+{{?model=bh}} (algorithm = "Basin hopping", population_based = false, uses_local_solver = true, acceptance = "Metropolis at temperature $TEMP", hops_accepted = res.accepted)
+{{?model=sa}} (algorithm = "Simulated annealing (SAMIN)", population_based = false, uses_local_solver = false, cooling_rate = RT, guarantee = "global convergence only with infinitely slow cooling")
+'''
+
+[[actionGroups.actions]]
+id = "solution-summary"
+label = "Solution Summary"
+desc = "Best point, value, evaluations and where the point sits in the box"
+code = '''
+(best_point = x_best, best_value = f_best, evaluations = res.evals, budget = budget,
+ lower_bounds = lb, upper_bounds = ub, relative_position = (x_best .- lb) ./ (ub .- lb))
+'''

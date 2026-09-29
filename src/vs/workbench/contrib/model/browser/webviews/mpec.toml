@@ -1,0 +1,617 @@
+# Mathematical Programming with Equilibrium Constraints Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/mpec.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Mathematical Programming with Equilibrium Constraints"
+viewType = "pollis.mpec"
+defaultModel = ""
+
+[[packages]]
+name = "Complementarity.jl"
+github = "https://github.com/chkwon/Complementarity.jl"
+
+[[packages]]
+name = "PATHSolver.jl"
+github = "https://github.com/chkwon/PATHSolver.jl"
+
+[requires]
+packages = ["JuMP.jl", "Ipopt.jl", "PATHSolver.jl", "Plots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "MPEC"
+file = "mpec/tutorial-01-mpec.ipynb"
+bundled = true
+description = "Optimise an outer objective subject to complementarity constraints via Complementarity.jl and PATHSolver; models network design and regulatory pricing"
+
+[[wikis]]
+name = "Factsheet"
+file = "mpec/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "mpec/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "mpec/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "mpec/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "mpec/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "mpec/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Formulation"
+
+[[wikis]]
+name = "MPEC"
+file = "mpec/mpec.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "Complementarity.jl: Modeling and Solving Complementarity Problems in Julia"
+authors = "Chung, Changhyun"
+year = 2023
+journal = "GitHub"
+url = "https://github.com/chkwon/Complementarity.jl"
+openAccess = true
+
+[[references]]
+title = "PATH Solver: A Non-Monotone Stabilisation Scheme for the Solution of Nonlinear Complementarity Problems"
+authors = "Dirkse, Steven P.; Ferris, Michael C."
+year = 1995
+journal = "Mathematical Programming"
+doi = "10.1007/BF02592958"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Mathematical Programs with Equilibrium Constraints"
+authors = "Luo, Zhi-Quan; Pang, Jong-Shi; Ralph, Daniel"
+year = 1996
+journal = "Cambridge University Press"
+doi = "10.1017/CBO9780511983658"
+openAccess = false
+
+[[references]]
+title = "Finite-Dimensional Variational Inequalities and Complementarity Problems"
+authors = "Facchinei, Francisco; Pang, Jong-Shi"
+year = 2003
+journal = "Springer (Vol. I & II)"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Engineering and Economic Applications of Complementarity Problems"
+authors = "Ferris, Michael C.; Pang, Jong-Shi"
+year = 1997
+journal = "SIAM Review"
+doi = "10.1137/S0036144595285963"
+openAccess = false
+
+[[references]]
+title = "Mathematical Programs with Complementarity Constraints: Stationarity, Optimality, and Sensitivity"
+authors = "Scheel, Holger; Scholtes, Stefan"
+year = 2000
+journal = "Mathematics of Operations Research"
+doi = "10.1287/moor.25.1.1.15213"
+openAccess = false
+
+[[bullets]]
+text = "A Mathematical Programming with Equilibrium Constraints (MPEC) is the problem of a single decision-maker who minimises an objective subject to both standard constraints and an equilibrium condition"
+detail = "such as complementarity or a variational inequality. The equilibrium is externally imposed; the decision-maker simply has to respect it."
+
+[[bullets]]
+text = "Examples: a regulator minimising social cost subject to traffic user-equilibrium; a grid operator minimising cost subject to market-clearing prices; a network designer optimising capacity subject to Wardrop flow conditions."
+detail = ""
+
+[[models]]
+id = "reg"
+label = "Regularisation"
+
+[[models]]
+id = "pen"
+label = "Penalty"
+
+[[models]]
+id = "imp"
+label = "Implicit (PATH)"
+
+[[decisionRows]]
+task = "Regularisation"
+context = "Smooth MPECs of any size; the complementarity y'f = 0 violates standard constraint qualifications, so relax it and tighten gradually"
+purpose = "Scholtes relaxation y_i f_i <= t solved by Ipopt for t = 1, 0.1, .., 1e-8, each warm-started from the last; converges to a C-stationary point"
+
+[[decisionRows]]
+task = "Penalty"
+context = "Keep y >= 0 and f >= 0 as ordinary constraints and push complementarity into the objective"
+purpose = "Minimise F + mu y'f with Ipopt for mu = 1, 10, .., 1e4; exact for large enough mu under mild conditions"
+
+[[decisionRows]]
+task = "Implicit (PATH)"
+context = "One outer variable and an inner equilibrium with a unique solution; transparent and globally reliable for small problems"
+purpose = "Solve the equilibrium y*(x) as a mixed complementarity problem with PATH on a grid of x, then minimise the implicit objective F(x, y*(x))"
+
+[[inputs]]
+id = "obj"
+label = "Objective F(x, y)"
+tooltip = "Julia expression in the scalar outer variable x and the equilibrium vector y to minimise. Default: minus the profit of a Stackelberg leader facing inverse demand 10 - Q with unit cost 1."
+default = "-x * (10 - x - sum(y)) + x"
+
+[[inputs]]
+id = "cons"
+label = "Constraints G(x, y) <= 0"
+tooltip = "Vector of Julia expressions in x and y, each required to be <= 0."
+default = "[x - 10, -x]"
+
+[[inputs]]
+id = "f"
+label = "Equilibrium Map f(x, y)"
+tooltip = "Vector of Julia expressions: find y >= 0 with f(x, y) >= 0 and y_i f_i(x, y) = 0. Default: Cournot followers with unit costs 1 and 2 (marginal cost minus marginal revenue)."
+default = "[ck + x + sum(y) + y[k] - 10 for (k, ck) in enumerate([1.0, 2.0])]"
+
+[[inputs]]
+id = "ny"
+label = "Equilibrium Dimension"
+tooltip = "Length of y, which must match the length of f."
+default = "2"
+
+[[inputs]]
+id = "npts"
+label = "Grid Points"
+tooltip = "Number of outer decisions x at which the equilibrium is solved with PATH."
+default = "201"
+models = ["imp"]
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.reg]
+# Smoothed complementarity corner y f <= t for shrinking t
+svg = '''
+let s = '<line x1="8" y1="70" x2="50" y2="70" stroke="currentColor" stroke-width="0.6"/><line x1="8" y1="24" x2="8" y2="70" stroke="currentColor" stroke-width="0.6"/>';
+for (const k of [14, 7, 3]) { s += '<path d="M' + (8 + k / 4) + ',26 Q' + (8 + k) + ',' + (70 - k) + ' 48,' + (70 - k / 4) + '" fill="none" stroke="currentColor" stroke-width="0.9"/>'; }
+return s + '<path d="M9,26 L9,69 L48,69" fill="none" stroke="currentColor" stroke-width="2"/>';
+'''
+
+[miniCharts.pen]
+# Penalty term growing away from the corner
+svg = '''
+return '<line x1="6" y1="70" x2="50" y2="70" stroke="currentColor" stroke-width="0.6"/>'
+	+ '<path d="M8,30 Q20,68 28,68 Q36,68 48,30" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M8,50 Q20,69 28,69 Q36,69 48,50" fill="none" stroke="currentColor" stroke-width="0.8" stroke-dasharray="2,2"/>';
+'''
+
+[miniCharts.imp]
+# Implicit objective sampled along x
+svg = '''
+let s = '<line x1="6" y1="70" x2="50" y2="70" stroke="currentColor" stroke-width="0.6"/>';
+[60, 50, 42, 37, 35, 37, 42, 50, 60].forEach((y, i) => { s += '<circle cx="' + (8 + i * 5) + '" cy="' + y + '" r="' + (i === 4 ? 3 : 1.6) + '" fill="currentColor"/>'; });
+return s;
+'''
+
+[[codeBranches]]
+model = "reg"
+code = '''
+using JuMP, Ipopt, PATHSolver, LinearAlgebra, Statistics
+
+F(x, y) = {{obj}}  # outer objective
+Gc(x, y) = {{cons}}  # outer constraints <= 0
+f(x, y) = {{f}}  # equilibrium map: 0 <= y perp f(x, y) >= 0
+ny = {{ny}}  # dimension of y
+
+function equilibrium(xv)  # inner mixed complementarity problem solved by PATH
+    m = Model(PATHSolver.Optimizer); set_silent(m)
+    @variable(m, yv[1:ny] >= 0, start = 1.0)
+    @constraint(m, complements(f(xv, yv), yv))
+    optimize!(m)
+    (y = value.(yv), ok = termination_status(m) == MOI.LOCALLY_SOLVED)
+end
+
+function x_range()  # smallest and largest x allowed by the outer constraints
+    map((MOI.MIN_SENSE, MOI.MAX_SENSE)) do sense
+        m = Model(Ipopt.Optimizer); set_silent(m)
+        @variable(m, xv); @variable(m, yv[1:ny] >= 0)
+        @constraint(m, Gc(xv, yv) .<= 0)
+        @objective(m, sense, xv)
+        optimize!(m)
+        value(xv)
+    end
+end
+xlo, xhi = x_range()
+
+compl(xv, yv) = maximum(abs.(yv .* f(xv, yv)))  # complementarity violation
+
+function nlp_model(xmax)  # outer problem with y >= 0 and f >= 0, complementarity added by the caller
+    m = Model(Ipopt.Optimizer); set_silent(m)
+    @variable(m, xv, start = (xlo + min(xhi, xmax)) / 2); @variable(m, yv[1:ny] >= 0, start = 1.0)
+    @constraint(m, Gc(xv, yv) .<= 0)
+    isfinite(xmax) && @constraint(m, xv <= xmax)
+    fv = f(xv, yv)
+    @constraint(m, fv .>= 0)
+    m, xv, yv, fv
+end
+
+function solve_reg(; xmax=Inf, ts=10.0 .^ (0:-1:-8))  # Scholtes regularisation y_i f_i <= t
+    m, xv, yv, fv = nlp_model(xmax)
+    @objective(m, Min, F(xv, yv))
+    tp = @variable(m, set = Parameter(ts[1]))
+    @constraint(m, yv .* fv .<= tp)
+    path = map(ts) do t
+        set_parameter_value(tp, t); optimize!(m)
+        xr, yr, ok = value(xv), value.(yv), is_solved_and_feasible(m)
+        set_start_value(xv, xr); set_start_value.(yv, yr)  # warm start the next t
+        (t = t, x = xr, y = yr, F = F(xr, yr), compl = compl(xr, yr), ok = ok)
+    end
+    (x = path[end].x, y = path[end].y, F = path[end].F, ok = path[end].ok, path = path)
+end
+
+function solve_pen(; xmax=Inf, mus=10.0 .^ (0:4))  # penalty F + mu y'f
+    m, xv, yv, fv = nlp_model(xmax)
+    path = map(mus) do mu
+        @objective(m, Min, F(xv, yv) + mu * sum(yv .* fv)); optimize!(m)
+        xr, yr, ok = value(xv), value.(yv), is_solved_and_feasible(m)
+        set_start_value(xv, xr); set_start_value.(yv, yr)  # warm start the next mu
+        (mu = mu, x = xr, y = yr, F = F(xr, yr), compl = compl(xr, yr), ok = ok)
+    end
+    (x = path[end].x, y = path[end].y, F = path[end].F, ok = path[end].ok, path = path)
+end
+
+function solve_imp(; xmax=Inf, npts=201)  # implicit programming on a grid of x
+    best = (x = NaN, y = fill(NaN, ny), F = Inf, ok = false, path = [])
+    for xv in range(xlo, min(xhi, xmax), length=npts)
+        r = equilibrium(xv)
+        r.ok && all(Gc(xv, r.y) .<= 1e-9) && F(xv, r.y) < best.F && (best = (x = xv, y = r.y, F = F(xv, r.y), ok = true, path = []))
+    end
+    best
+end
+solve_mpec(; kw...) = solve_reg(; kw...)
+sol = solve_mpec()
+(x = round(sol.x, digits=4), y = round.(sol.y, digits=4), objective = round(sol.F, digits=4),
+ complementarity_violation = compl(sol.x, sol.y), solved = sol.ok)
+'''
+
+[[codeBranches]]
+model = "pen"
+code = '''
+using JuMP, Ipopt, PATHSolver, LinearAlgebra, Statistics
+
+F(x, y) = {{obj}}  # outer objective
+Gc(x, y) = {{cons}}  # outer constraints <= 0
+f(x, y) = {{f}}  # equilibrium map: 0 <= y perp f(x, y) >= 0
+ny = {{ny}}  # dimension of y
+
+function equilibrium(xv)  # inner mixed complementarity problem solved by PATH
+    m = Model(PATHSolver.Optimizer); set_silent(m)
+    @variable(m, yv[1:ny] >= 0, start = 1.0)
+    @constraint(m, complements(f(xv, yv), yv))
+    optimize!(m)
+    (y = value.(yv), ok = termination_status(m) == MOI.LOCALLY_SOLVED)
+end
+
+function x_range()  # smallest and largest x allowed by the outer constraints
+    map((MOI.MIN_SENSE, MOI.MAX_SENSE)) do sense
+        m = Model(Ipopt.Optimizer); set_silent(m)
+        @variable(m, xv); @variable(m, yv[1:ny] >= 0)
+        @constraint(m, Gc(xv, yv) .<= 0)
+        @objective(m, sense, xv)
+        optimize!(m)
+        value(xv)
+    end
+end
+xlo, xhi = x_range()
+
+compl(xv, yv) = maximum(abs.(yv .* f(xv, yv)))  # complementarity violation
+
+function nlp_model(xmax)  # outer problem with y >= 0 and f >= 0, complementarity added by the caller
+    m = Model(Ipopt.Optimizer); set_silent(m)
+    @variable(m, xv, start = (xlo + min(xhi, xmax)) / 2); @variable(m, yv[1:ny] >= 0, start = 1.0)
+    @constraint(m, Gc(xv, yv) .<= 0)
+    isfinite(xmax) && @constraint(m, xv <= xmax)
+    fv = f(xv, yv)
+    @constraint(m, fv .>= 0)
+    m, xv, yv, fv
+end
+
+function solve_reg(; xmax=Inf, ts=10.0 .^ (0:-1:-8))  # Scholtes regularisation y_i f_i <= t
+    m, xv, yv, fv = nlp_model(xmax)
+    @objective(m, Min, F(xv, yv))
+    tp = @variable(m, set = Parameter(ts[1]))
+    @constraint(m, yv .* fv .<= tp)
+    path = map(ts) do t
+        set_parameter_value(tp, t); optimize!(m)
+        xr, yr, ok = value(xv), value.(yv), is_solved_and_feasible(m)
+        set_start_value(xv, xr); set_start_value.(yv, yr)  # warm start the next t
+        (t = t, x = xr, y = yr, F = F(xr, yr), compl = compl(xr, yr), ok = ok)
+    end
+    (x = path[end].x, y = path[end].y, F = path[end].F, ok = path[end].ok, path = path)
+end
+
+function solve_pen(; xmax=Inf, mus=10.0 .^ (0:4))  # penalty F + mu y'f
+    m, xv, yv, fv = nlp_model(xmax)
+    path = map(mus) do mu
+        @objective(m, Min, F(xv, yv) + mu * sum(yv .* fv)); optimize!(m)
+        xr, yr, ok = value(xv), value.(yv), is_solved_and_feasible(m)
+        set_start_value(xv, xr); set_start_value.(yv, yr)  # warm start the next mu
+        (mu = mu, x = xr, y = yr, F = F(xr, yr), compl = compl(xr, yr), ok = ok)
+    end
+    (x = path[end].x, y = path[end].y, F = path[end].F, ok = path[end].ok, path = path)
+end
+
+function solve_imp(; xmax=Inf, npts=201)  # implicit programming on a grid of x
+    best = (x = NaN, y = fill(NaN, ny), F = Inf, ok = false, path = [])
+    for xv in range(xlo, min(xhi, xmax), length=npts)
+        r = equilibrium(xv)
+        r.ok && all(Gc(xv, r.y) .<= 1e-9) && F(xv, r.y) < best.F && (best = (x = xv, y = r.y, F = F(xv, r.y), ok = true, path = []))
+    end
+    best
+end
+solve_mpec(; kw...) = solve_pen(; kw...)
+sol = solve_mpec()
+(x = round(sol.x, digits=4), y = round.(sol.y, digits=4), objective = round(sol.F, digits=4),
+ complementarity_violation = compl(sol.x, sol.y), solved = sol.ok)
+'''
+
+[[codeBranches]]
+model = "imp"
+code = '''
+using JuMP, Ipopt, PATHSolver, LinearAlgebra, Statistics
+
+F(x, y) = {{obj}}  # outer objective
+Gc(x, y) = {{cons}}  # outer constraints <= 0
+f(x, y) = {{f}}  # equilibrium map: 0 <= y perp f(x, y) >= 0
+ny = {{ny}}  # dimension of y
+npts = {{npts}}  # outer grid points
+
+function equilibrium(xv)  # inner mixed complementarity problem solved by PATH
+    m = Model(PATHSolver.Optimizer); set_silent(m)
+    @variable(m, yv[1:ny] >= 0, start = 1.0)
+    @constraint(m, complements(f(xv, yv), yv))
+    optimize!(m)
+    (y = value.(yv), ok = termination_status(m) == MOI.LOCALLY_SOLVED)
+end
+
+function x_range()  # smallest and largest x allowed by the outer constraints
+    map((MOI.MIN_SENSE, MOI.MAX_SENSE)) do sense
+        m = Model(Ipopt.Optimizer); set_silent(m)
+        @variable(m, xv); @variable(m, yv[1:ny] >= 0)
+        @constraint(m, Gc(xv, yv) .<= 0)
+        @objective(m, sense, xv)
+        optimize!(m)
+        value(xv)
+    end
+end
+xlo, xhi = x_range()
+
+compl(xv, yv) = maximum(abs.(yv .* f(xv, yv)))  # complementarity violation
+
+function nlp_model(xmax)  # outer problem with y >= 0 and f >= 0, complementarity added by the caller
+    m = Model(Ipopt.Optimizer); set_silent(m)
+    @variable(m, xv, start = (xlo + min(xhi, xmax)) / 2); @variable(m, yv[1:ny] >= 0, start = 1.0)
+    @constraint(m, Gc(xv, yv) .<= 0)
+    isfinite(xmax) && @constraint(m, xv <= xmax)
+    fv = f(xv, yv)
+    @constraint(m, fv .>= 0)
+    m, xv, yv, fv
+end
+
+function solve_reg(; xmax=Inf, ts=10.0 .^ (0:-1:-8))  # Scholtes regularisation y_i f_i <= t
+    m, xv, yv, fv = nlp_model(xmax)
+    @objective(m, Min, F(xv, yv))
+    tp = @variable(m, set = Parameter(ts[1]))
+    @constraint(m, yv .* fv .<= tp)
+    path = map(ts) do t
+        set_parameter_value(tp, t); optimize!(m)
+        xr, yr, ok = value(xv), value.(yv), is_solved_and_feasible(m)
+        set_start_value(xv, xr); set_start_value.(yv, yr)  # warm start the next t
+        (t = t, x = xr, y = yr, F = F(xr, yr), compl = compl(xr, yr), ok = ok)
+    end
+    (x = path[end].x, y = path[end].y, F = path[end].F, ok = path[end].ok, path = path)
+end
+
+function solve_pen(; xmax=Inf, mus=10.0 .^ (0:4))  # penalty F + mu y'f
+    m, xv, yv, fv = nlp_model(xmax)
+    path = map(mus) do mu
+        @objective(m, Min, F(xv, yv) + mu * sum(yv .* fv)); optimize!(m)
+        xr, yr, ok = value(xv), value.(yv), is_solved_and_feasible(m)
+        set_start_value(xv, xr); set_start_value.(yv, yr)  # warm start the next mu
+        (mu = mu, x = xr, y = yr, F = F(xr, yr), compl = compl(xr, yr), ok = ok)
+    end
+    (x = path[end].x, y = path[end].y, F = path[end].F, ok = path[end].ok, path = path)
+end
+
+function solve_imp(; xmax=Inf, npts=201)  # implicit programming on a grid of x
+    best = (x = NaN, y = fill(NaN, ny), F = Inf, ok = false, path = [])
+    for xv in range(xlo, min(xhi, xmax), length=npts)
+        r = equilibrium(xv)
+        r.ok && all(Gc(xv, r.y) .<= 1e-9) && F(xv, r.y) < best.F && (best = (x = xv, y = r.y, F = F(xv, r.y), ok = true, path = []))
+    end
+    best
+end
+solve_mpec(; kw...) = solve_imp(; npts=npts, kw...)
+sol = solve_mpec()
+(x = round(sol.x, digits=4), y = round.(sol.y, digits=4), objective = round(sol.F, digits=4),
+ complementarity_violation = compl(sol.x, sol.y), solved = sol.ok)
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "obj-contour"
+label = "Implicit Objective"
+desc = "Objective F(x, y*(x)) with the equilibrium solved by PATH along the whole feasible range of x, and the computed solution"
+code = '''
+using Plots
+xs = range(xlo, xhi, length=200)
+Fs = [begin r = equilibrium(xv); r.ok && all(Gc(xv, r.y) .<= 1e-9) ? F(xv, r.y) : NaN end for xv in xs]
+plot(xs, Fs, lw=2, xlabel="x", ylabel="F(x, y*(x))", label="implicit objective", title="Implicit objective")
+scatter!([sol.x], [sol.F], ms=6, label="solution")
+'''
+
+[[actionGroups.actions]]
+id = "solution-path"
+label = "Solution Path"
+desc = "Regularisation and penalty: objective and complementarity violation as t shrinks or mu grows. Implicit: objective on the grid"
+code = '''
+using Plots
+{{?model=reg}}plot(plot([p.t for p in sol.path], [p.F for p in sol.path], marker=:o, xscale=:log10, xflip=true, xlabel="t", ylabel="Objective", legend=false),
+{{?model=reg}}    plot([p.t for p in sol.path], max.([p.compl for p in sol.path], 1e-16), marker=:o, xscale=:log10, yscale=:log10, xflip=true, xlabel="t", ylabel="max |y_i f_i|", legend=false),
+{{?model=reg}}    layout=(1, 2), size=(900, 350))
+{{?model=pen}}plot(plot([p.mu for p in sol.path], [p.F for p in sol.path], marker=:o, xscale=:log10, xlabel="mu", ylabel="Objective", legend=false),
+{{?model=pen}}    plot([p.mu for p in sol.path], max.([p.compl for p in sol.path], 1e-16), marker=:o, xscale=:log10, yscale=:log10, xlabel="mu", ylabel="max |y_i f_i|", legend=false),
+{{?model=pen}}    layout=(1, 2), size=(900, 350))
+{{?model=imp}}xs = range(xlo, xhi, length=npts)
+{{?model=imp}}plot(xs, [begin r = equilibrium(xv); r.ok ? F(xv, r.y) : NaN end for xv in xs], marker=:circle, ms=2, xlabel="x", ylabel="F(x, y*(x))", legend=false, title="Grid evaluations")
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "compl-check"
+label = "Complementarity Check"
+desc = "Verify y >= 0, f(x, y) >= 0 and y_i f_i(x, y) = 0 at the solution"
+code = '''
+fv = f(sol.x, sol.y)
+(min_y = minimum(sol.y), min_f = minimum(fv), max_complementarity = maximum(abs.(sol.y .* fv)), y_dot_f = dot(sol.y, fv),
+ outer_feasible = all(Gc(sol.x, sol.y) .<= 1e-6))
+'''
+
+[[actionGroups.actions]]
+id = "kkt-check"
+label = "Stationarity Check"
+desc = "One-sided slopes of the implicit objective F(x, y*(x)) at the solution: a local minimum has a non-negative right slope and a non-positive left slope unless x is at a bound"
+code = '''
+h = 1e-4 * max(1.0, abs(sol.x))
+Fi(xv) = F(xv, equilibrium(xv).y)
+(right_slope = round((Fi(sol.x + h) - Fi(sol.x)) / h, digits=5), left_slope = round((Fi(sol.x) - Fi(sol.x - h)) / h, digits=5),
+ at_lower_bound = sol.x <= xlo + 1e-6, at_upper_bound = sol.x >= xhi - 1e-6, equilibrium_matches = norm(equilibrium(sol.x).y .- sol.y) < 1e-4)
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "parametric"
+label = "Parametric MPEC"
+desc = "Re-solve with an extra cap x <= t over the feasible range: optimal objective and equilibrium response as the cap tightens"
+code = '''
+using Plots
+caps = range(xlo + 0.05 * (xhi - xlo), xhi, length=20)
+res = [solve_mpec(; xmax=t) for t in caps]
+plot(plot(caps, [r.F for r in res], marker=:o, xlabel="Cap t (x <= t)", ylabel="Objective", legend=false),
+    plot(caps, reduce(hcat, [r.y for r in res])', marker=:o, xlabel="Cap t (x <= t)", ylabel="y", label=permutedims(["y" * string(i) for i in 1:ny])),
+    layout=(1, 2), size=(900, 350))
+'''
+
+[[actionGroups.actions]]
+id = "equilibrium-response"
+label = "Equilibrium Response"
+desc = "Equilibrium y*(x) of every component along the feasible range of x, solved by PATH"
+code = '''
+using Plots
+xs = range(xlo, xhi, length=200)
+Y = reduce(hcat, [equilibrium(xv).y for xv in xs])
+plot(xs, transpose(Y), lw=2, xlabel="x", ylabel="y*(x)", label=permutedims(["y" * string(i) for i in 1:ny]), title="Equilibrium response")
+vline!([sol.x], ls=:dash, label="solution")
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "relax"
+label = "Relaxed Bound"
+desc = "Drop complementarity (keep y >= 0 and f >= 0) and solve the relaxed problem: an optimistic bound on the MPEC objective"
+code = '''
+m, xv, yv, fv = nlp_model(Inf)
+@objective(m, Min, F(xv, yv)); optimize!(m)
+(relaxed_bound = round(objective_value(m), digits=4), relaxed_x = round(value(xv), digits=4), relaxed_y = round.(value.(yv), digits=4),
+ complementarity_violation = round(compl(value(xv), value.(yv)), digits=4), mpec_objective = round(sol.F, digits=4))
+'''
+
+[[actionGroups.actions]]
+id = "methods"
+label = "Method Comparison"
+desc = "Regularisation, penalty and implicit methods on the same problem: solution, objective, complementarity violation and run time"
+code = '''
+[begin
+    t = @elapsed r = run()
+    (method = name, x = round(r.x, digits=4), objective = round(r.F, digits=4), complementarity = compl(r.x, r.y), seconds = round(t, digits=2))
+end for (name, run) in [("regularisation", () -> solve_reg()), ("penalty", () -> solve_pen()), ("implicit (PATH)", () -> solve_imp())]]
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "value-of-commitment"
+label = "Value of Commitment"
+desc = "Objective when x is chosen anticipating the equilibrium (MPEC) against a simultaneous move, where x only best-responds to y (Nash, by best-response iteration)"
+code = '''
+xs = range(xlo, xhi, length=4001)
+function nash(; iters=200)
+    xv = (xlo + xhi) / 2
+    for _ in 1:iters
+        yv = equilibrium(xv).y
+        xn = xs[argmin([F(z, yv) for z in xs])]  # best response of x holding y fixed
+        abs(xn - xv) < 1e-9 && break
+        xv = xn
+    end
+    xv, equilibrium(xv).y
+end
+xn, yn = nash()
+(mpec_x = round(sol.x, digits=4), mpec_objective = round(sol.F, digits=4), nash_x = round(xn, digits=4), nash_objective = round(F(xn, yn), digits=4),
+ value_of_commitment = round(F(xn, yn) - sol.F, digits=4))
+'''
+
+[[actionGroups.actions]]
+id = "active-compl"
+label = "Active Constraints"
+desc = "Which complementarity pairs have y_i > 0 (f_i = 0, component active) and which have y_i = 0 (f_i >= 0, component shut out)"
+code = '''
+fv = f(sol.x, sol.y)
+[(i = i, y = round(sol.y[i], digits=5), f = round(fv[i], digits=5), status = sol.y[i] > 1e-6 ? "y > 0, f = 0" : fv[i] > 1e-6 ? "y = 0, f > 0" : "degenerate (both zero)") for i in 1:ny]
+'''

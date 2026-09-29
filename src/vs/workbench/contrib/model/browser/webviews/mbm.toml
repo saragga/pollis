@@ -1,0 +1,874 @@
+# Model-Based Methods Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/mbm.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Model-Based Methods"
+viewType = "pollis.mbm"
+defaultModel = "cobyla"
+
+[[packages]]
+name = "NLopt.jl"
+github = "https://github.com/JuliaOpt/NLopt.jl"
+
+[[packages]]
+name = "PRIMA.jl"
+github = "https://github.com/libprima/PRIMA.jl"
+
+[requires]
+packages = ["PRIMA.jl", "NLopt.jl", "Plots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "COBYLA"
+file = "mbm/tutorial-01-cobyla.ipynb"
+bundled = true
+description = "Constrained optimisation by linear approximation with nonlinear inequality constraints"
+
+[[notebookSections.notebooks]]
+name = "BOBYQA"
+file = "mbm/tutorial-02-bobyqa.ipynb"
+bundled = true
+description = "Bound-constrained optimisation by quadratic approximation without derivatives"
+
+[[notebookSections.notebooks]]
+name = "NEWUOA"
+file = "mbm/tutorial-03-newuoa.ipynb"
+bundled = true
+description = "Unconstrained optimisation via new quadratic interpolation model updates"
+
+[[notebookSections.notebooks]]
+name = "UOBYQA"
+file = "mbm/tutorial-04-uobyqa.ipynb"
+bundled = true
+description = "Unconstrained optimisation by quadratic approximation: full quadratic models"
+
+[[notebookSections.notebooks]]
+name = "LINCOA"
+file = "mbm/tutorial-05-lincoa.ipynb"
+bundled = true
+description = "Linearly constrained optimisation by quadratic approximation"
+
+[[notebookSections.notebooks]]
+name = "PRAXIS"
+file = "mbm/tutorial-06-praxis.ipynb"
+bundled = true
+description = "Principal axis method: Brent's derivative-free minimisation along conjugate directions"
+
+[[notebookSections.notebooks]]
+name = "Sbplx"
+file = "mbm/tutorial-07-sbplx.ipynb"
+bundled = true
+description = "Subplex method: Nelder-Mead on adaptive subspaces for high-dimensional problems"
+
+[[wikis]]
+name = "Factsheet"
+file = "mbm/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "mbm/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "mbm/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "mbm/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "mbm/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "mbm/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Algorithm Details"
+
+[[wikis]]
+name = "COBYLA"
+file = "mbm/cobyla.md"
+bundled = true
+
+[[wikis]]
+name = "BOBYQA"
+file = "mbm/bobyqa.md"
+bundled = true
+
+[[wikis]]
+name = "NEWUOA"
+file = "mbm/newuoa.md"
+bundled = true
+
+[[wikis]]
+name = "UOBYQA"
+file = "mbm/uobyqa.md"
+bundled = true
+
+[[wikis]]
+name = "LINCOA"
+file = "mbm/lincoa.md"
+bundled = true
+
+[[wikis]]
+name = "PRAXIS"
+file = "mbm/praxis.md"
+bundled = true
+
+[[wikis]]
+name = "Sbplx"
+file = "mbm/sbplx.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "The NLopt Nonlinear-Optimisation Package"
+authors = "Johnson, Steven G."
+year = 2007
+journal = "GitHub"
+openAccess = true
+
+[[references]]
+title = "PRIMA: Reference Implementations for Powell's Methods with Modernization and Amelioration"
+authors = "Zhang, Zaikun"
+year = 2023
+journal = "GitHub"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Introduction to Derivative-Free Optimization"
+authors = "Conn, Andrew R.; Scheinberg, Katya; Vicente, Luís N."
+year = 2009
+journal = "SIAM"
+doi = "10.1137/1.9780898718768"
+openAccess = false
+
+[[references]]
+title = "Numerical Optimization"
+authors = "Nocedal, Jorge; Wright, Stephen J."
+year = 2006
+journal = "Springer"
+doi = "10.1007/978-0-387-40065-5"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "A Direct Search Optimisation Method That Models the Objective and Constraint Functions by Linear Interpolation"
+authors = "Powell, Michael J.D."
+year = 1994
+journal = "Advances in Optimization and Numerical Analysis"
+doi = "10.1007/978-94-015-8330-5_4"
+openAccess = false
+
+[[references]]
+title = "The BOBYQA Algorithm for Bound Constrained Optimisation Without Derivatives"
+authors = "Powell, Michael J.D."
+year = 2009
+journal = "Report DAMTP 2009/NA06, University of Cambridge"
+openAccess = true
+
+[[references]]
+title = "The NEWUOA Software for Unconstrained Optimisation Without Derivatives"
+authors = "Powell, Michael J.D."
+year = 2006
+journal = "Large-Scale Nonlinear Optimization, Springer"
+doi = "10.1007/0-387-30065-1_16"
+openAccess = false
+
+[[references]]
+title = "UOBYQA: Unconstrained Optimisation by Quadratic Approximation"
+authors = "Powell, Michael J.D."
+year = 2002
+journal = "Mathematical Programming"
+doi = "10.1007/s101070100290"
+openAccess = false
+
+[[references]]
+title = "On Fast Trust Region Methods for Quadratic Models with Linear Constraints"
+authors = "Powell, Michael J.D."
+year = 2015
+journal = "Mathematical Programming Computation"
+doi = "10.1007/s12532-015-0084-4"
+openAccess = false
+
+[[references]]
+title = "Algorithms for Minimization without Derivatives"
+authors = "Brent, Richard P."
+year = 1973
+journal = "Prentice-Hall"
+openAccess = false
+
+[[references]]
+title = "Functional Stability Analysis of Numerical Algorithms"
+authors = "Rowan, Tom H."
+year = 1990
+journal = "PhD Thesis, University of Texas at Austin"
+openAccess = false
+
+[[models]]
+id = "cobyla"
+label = "COBYLA"
+
+[[models]]
+id = "bobyqa"
+label = "BOBYQA"
+
+[[models]]
+id = "newuoa"
+label = "NEWUOA"
+
+[[models]]
+id = "uobyqa"
+label = "UOBYQA"
+
+[[models]]
+id = "lincoa"
+label = "LINCOA"
+
+[[models]]
+id = "praxis"
+label = "PRAXIS"
+
+[[models]]
+id = "sbplx"
+label = "Sbplx"
+
+[[bullets]]
+text = "Powell quadratic-model methods via PRIMA.jl: COBYLA, BOBYQA, NEWUOA, UOBYQA, LINCOA"
+detail = ""
+
+[[bullets]]
+text = "Direct pattern methods via NLopt.jl: PRAXIS, Sbplx"
+detail = ""
+
+[[decisionRows]]
+task = "COBYLA"
+context = "Nonlinear inequality constraints, no derivatives available"
+purpose = "Builds linear models of the objective and constraints by interpolation on a simplex and solves a trust-region subproblem at each step"
+
+[[decisionRows]]
+task = "BOBYQA"
+context = "Bound-constrained, smooth, derivative-free"
+purpose = "Quadratic interpolation model (2n + 1 points by default) updated by least-Frobenius-norm changes, with a box-constrained trust region"
+
+[[decisionRows]]
+task = "NEWUOA"
+context = "Unconstrained, smooth, moderate dimension"
+purpose = "Same quadratic model machinery as BOBYQA without bounds; scales to a few hundred variables"
+
+[[decisionRows]]
+task = "UOBYQA"
+context = "Unconstrained, small dimension, where a full quadratic model pays off"
+purpose = "Fully determined quadratic interpolation over (n + 1)(n + 2) / 2 points; accurate models but cost grows quickly with n"
+
+[[decisionRows]]
+task = "LINCOA"
+context = "Linear inequality constraints plus bounds"
+purpose = "Quadratic models as in NEWUOA with a trust-region step that keeps linear constraints satisfied"
+
+[[decisionRows]]
+task = "PRAXIS"
+context = "Unconstrained, smooth, when an interpolation model is not wanted"
+purpose = "Brent's principal-axis method: line searches along conjugate directions that are periodically re-orthogonalised (NLopt)"
+
+[[decisionRows]]
+task = "Sbplx"
+context = "Bound-constrained, noisy or non-smooth objectives"
+purpose = "Rowan's Subplex: Nelder-Mead on a sequence of low-dimensional subspaces, more robust than plain Nelder-Mead in higher dimensions (NLopt)"
+
+[[inputs]]
+id = "n"
+label = "Dimension (n)"
+tooltip = "Number of decision variables. The default objective, start and bounds adapt to it."
+default = "4"
+
+[[inputs]]
+id = "f"
+label = "Objective f(x)"
+tooltip = "Julia expression for the objective to minimise, in terms of the vector x. Default: the n-dimensional Rosenbrock function (minimum 0 at x = ones(n))."
+default = "sum(100 .* (x[2:end] .- x[1:end-1] .^ 2) .^ 2 .+ (1 .- x[1:end-1]) .^ 2)"
+
+[[inputs]]
+id = "x0"
+label = "Starting Point"
+tooltip = "Julia vector used as the starting point."
+default = "zeros(n)"
+
+[[inputs]]
+id = "lb"
+label = "Lower Bounds"
+tooltip = "Julia vector of lower bounds. Enforced by BOBYQA, LINCOA, COBYLA and Sbplx; the other methods use the box only to sample starting points and draw plots."
+default = "fill(-2.0, n)"
+newRow = true
+
+[[inputs]]
+id = "ub"
+label = "Upper Bounds"
+tooltip = "Julia vector of upper bounds (see Lower Bounds)."
+default = "fill(2.0, n)"
+
+[[inputs]]
+id = "constr"
+label = "Constraints c(x) <= 0"
+tooltip = "Julia vector of nonlinear inequality constraints, each required to be at most 0. Default: stay inside the ball of radius sqrt(2)."
+default = "[sum(x .^ 2) - 2.0]"
+models = ["cobyla"]
+newRow = true
+
+[[inputs]]
+id = "aineq"
+label = "Constraint Matrix (A)"
+tooltip = "Julia matrix of the linear inequality constraints A * x <= b, one row per constraint. Default: a single row of ones."
+default = "ones(1, n)"
+models = ["lincoa"]
+newRow = true
+
+[[inputs]]
+id = "bineq"
+label = "Right-Hand Side (b)"
+tooltip = "Julia vector b of A * x <= b. Default: the variables may sum to at most 2."
+default = "[2.0]"
+models = ["lincoa"]
+
+[[inputs]]
+id = "maxfun"
+label = "Max Evaluations"
+tooltip = "Maximum number of objective evaluations."
+default = "2000"
+newRow = true
+
+[[inputs]]
+id = "rhobeg"
+label = "Initial Radius"
+tooltip = "Initial trust-region radius (PRIMA methods) or initial step size (PRAXIS, Sbplx): roughly a tenth of the expected distance to the minimiser. BOBYQA needs it no larger than half the smallest box side."
+default = "0.5"
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.cobyla]
+# A simplex of interpolation points and a constraint boundary
+svg = '''
+return '<path d="M8,68 Q30,30 50,40" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="3,2"/>'
+	+ '<polygon points="16,58 30,50 22,40" fill="currentColor" opacity="0.2" stroke="currentColor" stroke-width="0.8"/>'
+	+ '<circle cx="16" cy="58" r="1.8" fill="currentColor"/><circle cx="30" cy="50" r="1.8" fill="currentColor"/><circle cx="22" cy="40" r="1.8" fill="currentColor"/>';
+'''
+
+[miniCharts.bobyqa]
+# Quadratic model contours inside a box, with a trust region
+svg = '''
+return '<rect x="8" y="30" width="38" height="40" fill="none" stroke="currentColor" stroke-width="0.8"/>'
+	+ '<ellipse cx="30" cy="48" rx="12" ry="7" fill="none" stroke="currentColor" stroke-width="0.7" opacity="0.6"/>'
+	+ '<ellipse cx="30" cy="48" rx="6" ry="3.5" fill="none" stroke="currentColor" stroke-width="0.7" opacity="0.6"/>'
+	+ '<circle cx="22" cy="56" r="9" fill="none" stroke="currentColor" stroke-width="0.8" stroke-dasharray="2,2"/><circle cx="22" cy="56" r="1.8" fill="currentColor"/>';
+'''
+
+[miniCharts.newuoa]
+# Quadratic model contours with a trust region, no box
+svg = '''
+return '<ellipse cx="30" cy="48" rx="15" ry="9" fill="none" stroke="currentColor" stroke-width="0.7" opacity="0.6"/>'
+	+ '<ellipse cx="30" cy="48" rx="7" ry="4" fill="none" stroke="currentColor" stroke-width="0.7" opacity="0.6"/>'
+	+ '<circle cx="18" cy="58" r="10" fill="none" stroke="currentColor" stroke-width="0.8" stroke-dasharray="2,2"/><circle cx="18" cy="58" r="1.8" fill="currentColor"/>'
+	+ '<line x1="18" y1="58" x2="26" y2="52" stroke="currentColor" stroke-width="1"/>';
+'''
+
+[miniCharts.uobyqa]
+# A dense set of interpolation points around the model centre
+svg = '''
+var s = '', pts = [[20,40],[30,38],[40,42],[18,50],[28,50],[38,52],[22,60],[32,62],[42,58],[30,46]];
+pts.forEach(function (p) { s += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="1.6" fill="currentColor"/>'; });
+return s + '<ellipse cx="30" cy="50" rx="16" ry="14" fill="none" stroke="currentColor" stroke-width="0.7" opacity="0.5"/>';
+'''
+
+[miniCharts.lincoa]
+# A linear constraint cutting the trust region
+svg = '''
+return '<line x1="8" y1="36" x2="48" y2="66" stroke="currentColor" stroke-width="1.2"/>'
+	+ '<circle cx="24" cy="58" r="10" fill="none" stroke="currentColor" stroke-width="0.8" stroke-dasharray="2,2"/><circle cx="24" cy="58" r="1.8" fill="currentColor"/>'
+	+ '<line x1="24" y1="58" x2="30" y2="52" stroke="currentColor" stroke-width="1"/>';
+'''
+
+[miniCharts.praxis]
+# Line searches along conjugate directions
+svg = '''
+return '<ellipse cx="30" cy="48" rx="16" ry="8" transform="rotate(-25 30 48)" fill="none" stroke="currentColor" stroke-width="0.7" opacity="0.5"/>'
+	+ '<polyline points="10,66 36,66 26,52 32,49 29,47" fill="none" stroke="currentColor" stroke-width="1"/><circle cx="29" cy="47" r="1.8" fill="currentColor"/>';
+'''
+
+[miniCharts.sbplx]
+# Small simplices moving through subspaces
+svg = '''
+return '<polygon points="10,64 18,64 14,57" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.5"/>'
+	+ '<polygon points="20,56 28,58 24,50" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.7"/>'
+	+ '<polygon points="30,48 38,46 34,40" fill="currentColor" opacity="0.3" stroke="currentColor" stroke-width="0.8"/>';
+'''
+
+[[codeBranches]]
+model = "cobyla"
+code = '''
+using PRIMA, LinearAlgebra, Statistics, Random
+
+n = {{n}}  # number of variables
+f(x) = {{f}}  # objective
+x0 = {{x0}}  # starting point
+lb, ub = {{lb}}, {{ub}}  # box
+maxfun = {{maxfun}}  # evaluation budget
+rhobeg = {{rhobeg}}  # initial trust-region radius / step size
+
+# wrap f so every evaluation is recorded
+function recorder(f)
+    pts, vals = Vector{Vector{Float64}}(), Float64[]
+    fr(x) = (v = f(x); push!(pts, copy(x)); push!(vals, v); v)
+    fr, pts, vals
+end
+bound_violation(x) = max(0.0, maximum(lb .- x), maximum(x .- ub))
+c(x) = {{constr}}  # nonlinear constraints c(x) <= 0
+violation(x) = max(0.0, maximum(c(x)), bound_violation(x))
+
+function search(; x0=x0, maxfun=maxfun, rhobeg=rhobeg, f=f)
+    fr, pts, vals = recorder(f)
+    x, info = cobyla(fr, x0; nonlinear_ineq=c, xl=lb, xu=ub, maxfun=maxfun, rhobeg=rhobeg, rhoend=1e-8)
+    (x = x, fx = info.fx, points = pts, values = vals, evals = info.nf, status = string(info.status))
+end
+
+res = search()
+x_best, f_best = res.x, res.fx
+(minimiser = x_best, minimum = f_best, evaluations = res.evals, status = res.status, violation = violation(x_best))
+'''
+
+[[codeBranches]]
+model = "bobyqa"
+code = '''
+using PRIMA, LinearAlgebra, Statistics, Random
+
+n = {{n}}  # number of variables
+f(x) = {{f}}  # objective
+x0 = {{x0}}  # starting point
+lb, ub = {{lb}}, {{ub}}  # box
+maxfun = {{maxfun}}  # evaluation budget
+rhobeg = {{rhobeg}}  # initial trust-region radius / step size
+
+# wrap f so every evaluation is recorded
+function recorder(f)
+    pts, vals = Vector{Vector{Float64}}(), Float64[]
+    fr(x) = (v = f(x); push!(pts, copy(x)); push!(vals, v); v)
+    fr, pts, vals
+end
+bound_violation(x) = max(0.0, maximum(lb .- x), maximum(x .- ub))
+violation(x) = bound_violation(x)
+
+function search(; x0=x0, maxfun=maxfun, rhobeg=rhobeg, f=f)
+    fr, pts, vals = recorder(f)
+    x, info = bobyqa(fr, x0; xl=lb, xu=ub, maxfun=maxfun, rhobeg=rhobeg, rhoend=1e-8)
+    (x = x, fx = info.fx, points = pts, values = vals, evals = info.nf, status = string(info.status))
+end
+
+res = search()
+x_best, f_best = res.x, res.fx
+(minimiser = x_best, minimum = f_best, evaluations = res.evals, status = res.status, violation = violation(x_best))
+'''
+
+[[codeBranches]]
+model = "newuoa"
+code = '''
+using PRIMA, LinearAlgebra, Statistics, Random
+
+n = {{n}}  # number of variables
+f(x) = {{f}}  # objective
+x0 = {{x0}}  # starting point
+lb, ub = {{lb}}, {{ub}}  # box
+maxfun = {{maxfun}}  # evaluation budget
+rhobeg = {{rhobeg}}  # initial trust-region radius / step size
+
+# wrap f so every evaluation is recorded
+function recorder(f)
+    pts, vals = Vector{Vector{Float64}}(), Float64[]
+    fr(x) = (v = f(x); push!(pts, copy(x)); push!(vals, v); v)
+    fr, pts, vals
+end
+bound_violation(x) = max(0.0, maximum(lb .- x), maximum(x .- ub))
+violation(x) = 0.0  # unconstrained
+
+function search(; x0=x0, maxfun=maxfun, rhobeg=rhobeg, f=f)
+    fr, pts, vals = recorder(f)
+    x, info = newuoa(fr, x0; maxfun=maxfun, rhobeg=rhobeg, rhoend=1e-8)
+    (x = x, fx = info.fx, points = pts, values = vals, evals = info.nf, status = string(info.status))
+end
+
+res = search()
+x_best, f_best = res.x, res.fx
+(minimiser = x_best, minimum = f_best, evaluations = res.evals, status = res.status, violation = violation(x_best))
+'''
+
+[[codeBranches]]
+model = "uobyqa"
+code = '''
+using PRIMA, LinearAlgebra, Statistics, Random
+
+n = {{n}}  # number of variables
+f(x) = {{f}}  # objective
+x0 = {{x0}}  # starting point
+lb, ub = {{lb}}, {{ub}}  # box
+maxfun = {{maxfun}}  # evaluation budget
+rhobeg = {{rhobeg}}  # initial trust-region radius / step size
+
+# wrap f so every evaluation is recorded
+function recorder(f)
+    pts, vals = Vector{Vector{Float64}}(), Float64[]
+    fr(x) = (v = f(x); push!(pts, copy(x)); push!(vals, v); v)
+    fr, pts, vals
+end
+bound_violation(x) = max(0.0, maximum(lb .- x), maximum(x .- ub))
+violation(x) = 0.0  # unconstrained
+
+function search(; x0=x0, maxfun=maxfun, rhobeg=rhobeg, f=f)
+    fr, pts, vals = recorder(f)
+    x, info = uobyqa(fr, x0; maxfun=maxfun, rhobeg=rhobeg, rhoend=1e-8)
+    (x = x, fx = info.fx, points = pts, values = vals, evals = info.nf, status = string(info.status))
+end
+
+res = search()
+x_best, f_best = res.x, res.fx
+(minimiser = x_best, minimum = f_best, evaluations = res.evals, status = res.status, violation = violation(x_best))
+'''
+
+[[codeBranches]]
+model = "lincoa"
+code = '''
+using PRIMA, LinearAlgebra, Statistics, Random
+
+n = {{n}}  # number of variables
+f(x) = {{f}}  # objective
+x0 = {{x0}}  # starting point
+lb, ub = {{lb}}, {{ub}}  # box
+maxfun = {{maxfun}}  # evaluation budget
+rhobeg = {{rhobeg}}  # initial trust-region radius / step size
+
+# wrap f so every evaluation is recorded
+function recorder(f)
+    pts, vals = Vector{Vector{Float64}}(), Float64[]
+    fr(x) = (v = f(x); push!(pts, copy(x)); push!(vals, v); v)
+    fr, pts, vals
+end
+bound_violation(x) = max(0.0, maximum(lb .- x), maximum(x .- ub))
+A, b = {{aineq}}, {{bineq}}  # linear constraints A * x <= b
+violation(x) = max(0.0, maximum(A * x .- b), bound_violation(x))
+
+function search(; x0=x0, maxfun=maxfun, rhobeg=rhobeg, f=f)
+    fr, pts, vals = recorder(f)
+    x, info = lincoa(fr, x0; linear_ineq=(A, b), xl=lb, xu=ub, maxfun=maxfun, rhobeg=rhobeg, rhoend=1e-8)
+    (x = x, fx = info.fx, points = pts, values = vals, evals = info.nf, status = string(info.status))
+end
+
+res = search()
+x_best, f_best = res.x, res.fx
+(minimiser = x_best, minimum = f_best, evaluations = res.evals, status = res.status, violation = violation(x_best))
+'''
+
+[[codeBranches]]
+model = "praxis"
+code = '''
+using NLopt, LinearAlgebra, Statistics, Random
+
+n = {{n}}  # number of variables
+f(x) = {{f}}  # objective
+x0 = {{x0}}  # starting point
+lb, ub = {{lb}}, {{ub}}  # box
+maxfun = {{maxfun}}  # evaluation budget
+rhobeg = {{rhobeg}}  # initial trust-region radius / step size
+
+# wrap f so every evaluation is recorded
+function recorder(f)
+    pts, vals = Vector{Vector{Float64}}(), Float64[]
+    fr(x) = (v = f(x); push!(pts, copy(x)); push!(vals, v); v)
+    fr, pts, vals
+end
+bound_violation(x) = max(0.0, maximum(lb .- x), maximum(x .- ub))
+violation(x) = 0.0  # unconstrained
+
+function search(; x0=x0, maxfun=maxfun, rhobeg=rhobeg, f=f)
+    fr, pts, vals = recorder(f)
+    opt = NLopt.Opt(:LN_PRAXIS, length(x0))
+    opt.min_objective = (x, grad) -> fr(x)  # derivative-free: grad is unused
+    opt.maxeval = maxfun
+    opt.xtol_rel = 1e-10
+    opt.initial_step = fill(rhobeg, length(x0))
+    fx, x, ret = NLopt.optimize(opt, x0)
+    (x = x, fx = fx, points = pts, values = vals, evals = length(vals), status = string(ret))
+end
+
+res = search()
+x_best, f_best = res.x, res.fx
+(minimiser = x_best, minimum = f_best, evaluations = res.evals, status = res.status, violation = violation(x_best))
+'''
+
+[[codeBranches]]
+model = "sbplx"
+code = '''
+using NLopt, LinearAlgebra, Statistics, Random
+
+n = {{n}}  # number of variables
+f(x) = {{f}}  # objective
+x0 = {{x0}}  # starting point
+lb, ub = {{lb}}, {{ub}}  # box
+maxfun = {{maxfun}}  # evaluation budget
+rhobeg = {{rhobeg}}  # initial trust-region radius / step size
+
+# wrap f so every evaluation is recorded
+function recorder(f)
+    pts, vals = Vector{Vector{Float64}}(), Float64[]
+    fr(x) = (v = f(x); push!(pts, copy(x)); push!(vals, v); v)
+    fr, pts, vals
+end
+bound_violation(x) = max(0.0, maximum(lb .- x), maximum(x .- ub))
+violation(x) = bound_violation(x)
+
+function search(; x0=x0, maxfun=maxfun, rhobeg=rhobeg, f=f)
+    fr, pts, vals = recorder(f)
+    opt = NLopt.Opt(:LN_SBPLX, length(x0))
+    opt.min_objective = (x, grad) -> fr(x)  # derivative-free: grad is unused
+    opt.lower_bounds, opt.upper_bounds = lb, ub
+    opt.maxeval = maxfun
+    opt.xtol_rel = 1e-10
+    opt.initial_step = fill(rhobeg, length(x0))
+    fx, x, ret = NLopt.optimize(opt, x0)
+    (x = x, fx = fx, points = pts, values = vals, evals = length(vals), status = string(ret))
+end
+
+res = search()
+x_best, f_best = res.x, res.fx
+(minimiser = x_best, minimum = f_best, evaluations = res.evals, status = res.status, violation = violation(x_best))
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "convergence-curve"
+label = "Convergence Curve"
+desc = "Best objective value against the number of evaluations (log scale)"
+code = '''
+using Plots
+
+best = accumulate(min, res.values)
+shift = min(0, minimum(best)) - 1e-12  # keeps the log scale defined
+plot(best .- shift, yscale=:log10, xlabel="evaluation", ylabel="best f - shift", legend=false)
+'''
+
+[[actionGroups.actions]]
+id = "objective-surface"
+label = "Objective Surface"
+desc = "Contours of f over the first two variables (others held at the minimiser) with the path of best points"
+code = '''
+using Plots
+
+xs = range(lb[1], ub[1], length=150); ys = range(lb[2], ub[2], length=150)
+contour(xs, ys, (a, b) -> log1p(max(f([a; b; x_best[3:end]]) - f_best, 0)), fill=true, xlabel="x1", ylabel="x2", colorbar_title="log(1 + f - f*)")
+improving = [p for (k, p) in enumerate(res.points) if res.values[k] <= minimum(res.values[1:k])]
+plot!(first.(improving), getindex.(improving, 2), marker=:circle, markersize=2, color=:white, label="best so far")
+scatter!([x_best[1]], [x_best[2]], marker=:star, markersize=10, color=:red, label="minimiser")
+'''
+
+[[actionGroups.actions]]
+id = "query-scatter"
+label = "Query Scatter"
+desc = "Every evaluated point in the first two variables, coloured by evaluation order"
+code = '''
+using Plots
+
+scatter(first.(res.points), getindex.(res.points, 2), zcolor=1:length(res.points), markersize=2, markerstrokewidth=0,
+        xlabel="x1", ylabel="x2", colorbar_title="evaluation", label="queries")
+scatter!([x_best[1]], [x_best[2]], marker=:star, markersize=10, color=:red, label="minimiser")
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "convergence-check"
+label = "Convergence Check"
+desc = "Return status, evaluations used and a finite-difference gradient norm at the minimiser"
+code = '''
+h = 1e-6
+E = Matrix(1.0I, length(x_best), length(x_best))
+grad = [(f(x_best + h * e) - f(x_best - h * e)) / (2h) for e in eachcol(E)]
+(status = res.status, evaluations = res.evals, budget = maxfun, budget_exhausted = res.evals >= maxfun,
+ minimum = f_best, gradient_norm = norm(grad), violation = violation(x_best))
+'''
+
+[[actionGroups.actions]]
+id = "multi-start"
+label = "Multi-Start"
+desc = "Re-run from 10 random starting points in the box to test whether the same minimum is found"
+code = '''
+Random.seed!(1)
+runs = [search(x0=lb .+ rand(length(lb)) .* (ub .- lb)) for _ in 1:10]
+v = getfield.(runs, :fx)
+(minima = round.(v, sigdigits=6), best = minimum(v), worst = maximum(v), share_at_best = mean(v .<= minimum(v) + 1e-6),
+ max_distance_between_minimisers = maximum(norm(a.x - b.x) for a in runs, b in runs), mean_evaluations = mean(getfield.(runs, :evals)))
+'''
+
+[[actionGroups.actions]]
+id = "bounds-feasibility"
+label = "Bounds Feasibility"
+desc = "Whether the minimiser lies within the box and which variables press against it"
+code = '''
+slack_low, slack_high = x_best .- lb, ub .- x_best
+(inside_box = bound_violation(x_best) == 0, min_slack = minimum([slack_low; slack_high]),
+ at_lower = findall(slack_low .< 1e-6), at_upper = findall(slack_high .< 1e-6))
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "sensitivity"
+label = "Sensitivity"
+desc = "Change in f when each variable of the minimiser moves by plus or minus 1 percent of its range"
+code = '''
+[(variable = i, down = f(x_best - 0.01 * (ub[i] - lb[i]) * e) - f_best, up = f(x_best + 0.01 * (ub[i] - lb[i]) * e) - f_best)
+ for (i, e) in enumerate(eachcol(Matrix(1.0I, length(x_best), length(x_best))))]
+'''
+
+[[actionGroups.actions]]
+id = "warm-start"
+label = "Warm Start"
+desc = "Restart from the minimiser with a ten times smaller radius and see whether it improves further"
+code = '''
+res2 = search(x0=x_best, rhobeg=rhobeg / 10)
+(first_minimum = f_best, restarted_minimum = res2.fx, improvement = f_best - res2.fx,
+ moved = norm(res2.x - x_best), extra_evaluations = res2.evals, status = res2.status)
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "method-comparison"
+label = "Method Comparison"
+desc = "The PRIMA solvers and NLopt's PRAXIS, Sbplx and Nelder-Mead on the objective with the same start and budget (constraints other than bounds are left out)"
+code = '''
+using PRIMA, NLopt
+
+run_prima(solver; kw...) = (r = solver(f, x0; maxfun=maxfun, rhobeg=rhobeg, rhoend=1e-8, kw...); (fx = r[2].fx, evals = r[2].nf))
+function run_nlopt(alg)
+    opt = NLopt.Opt(alg, length(x0)); count = Ref(0)
+    opt.min_objective = (x, grad) -> (count[] += 1; f(x))
+    opt.maxeval = maxfun; opt.xtol_rel = 1e-10; opt.initial_step = fill(rhobeg, length(x0))
+    fx, _, _ = NLopt.optimize(opt, x0)
+    (fx = fx, evals = count[])
+end
+methods = ["NEWUOA" => () -> run_prima(newuoa), "UOBYQA" => () -> run_prima(uobyqa), "BOBYQA (box)" => () -> run_prima(bobyqa; xl=lb, xu=ub),
+           "PRAXIS" => () -> run_nlopt(:LN_PRAXIS), "Sbplx" => () -> run_nlopt(:LN_SBPLX), "Nelder-Mead" => () -> run_nlopt(:LN_NELDERMEAD)]
+map(methods) do (name, run)
+    sec = @elapsed r = run()
+    (method = name, minimum = r.fx, evaluations = r.evals, seconds = sec)
+end
+'''
+
+[[actionGroups.actions]]
+id = "nlopt-comparison"
+label = "NLopt vs PRIMA"
+desc = "NLopt's original COBYLA against PRIMA's modernised COBYLA on the same constrained problem"
+code = '''
+using PRIMA, NLopt
+
+{{?model=cobyla}}con(x) = c(x)
+{{?model=lincoa}}con(x) = A * x .- b
+{{?model!=cobyla|lincoa}}con(x) = [-1.0]  # this method has no constraints beyond the box
+m = length(con(x0))
+x1, info = cobyla(f, x0; nonlinear_ineq=con, xl=lb, xu=ub, maxfun=maxfun, rhobeg=rhobeg, rhoend=1e-8)
+opt = NLopt.Opt(:LN_COBYLA, length(x0)); count = Ref(0)
+opt.min_objective = (x, grad) -> (count[] += 1; f(x))
+NLopt.inequality_constraint!(opt, (out, x, grad) -> (out .= con(x)), fill(1e-10, m))
+opt.lower_bounds, opt.upper_bounds = lb, ub
+opt.maxeval = maxfun; opt.xtol_rel = 1e-10; opt.initial_step = fill(rhobeg, length(x0))
+fx2, x2, ret = NLopt.optimize(opt, x0)
+[(implementation = "PRIMA COBYLA", minimum = info.fx, evaluations = info.nf, max_constraint = maximum(con(x1)), status = string(info.status)),
+ (implementation = "NLopt COBYLA", minimum = fx2, evaluations = count[], max_constraint = maximum(con(x2)), status = string(ret))]
+'''
+
+[[actionGroups.actions]]
+id = "budget-sweep"
+label = "Budget Sweep"
+desc = "Minimum reached for increasing evaluation budgets"
+code = '''
+map(unique([50, 100, 200, 500, 1000, maxfun])) do m
+    r = search(maxfun=m)
+    (budget = m, minimum = r.fx, evaluations = r.evals, status = r.status)
+end
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "solution-summary"
+label = "Solution Summary"
+desc = "Each variable of the minimiser with its start and bounds, and the run totals"
+code = '''
+(variables = [(variable = i, start = x0[i], value = x_best[i], lower = lb[i], upper = ub[i]) for i in eachindex(x_best)],
+ minimum = f_best, start_value = f(x0), evaluations = res.evals, status = res.status)
+'''
+
+[[actionGroups.actions]]
+id = "constraint-check"
+label = "Constraint Check"
+desc = "Value and slack of every constraint at the minimiser (a constraint is active when its slack is near zero)"
+code = '''
+{{?model=cobyla}}vals = c(x_best)
+{{?model=lincoa}}vals = A * x_best .- b
+{{?model=cobyla|lincoa}}general = [(constraint = k, value = v, satisfied = v <= 1e-8, active = abs(v) < 1e-6) for (k, v) in enumerate(vals)]
+{{?model!=cobyla|lincoa}}general = "no constraints other than the box for this method"
+(general_constraints = general, box_violation = bound_violation(x_best), total_violation = violation(x_best))
+'''
+
+[[actionGroups.actions]]
+id = "scaling-check"
+label = "Scaling Check"
+desc = "Finite-difference Hessian at the minimiser: eigenvalues and condition number show how badly scaled the problem is"
+code = '''
+d, h = length(x_best), 1e-4
+E = Matrix(1.0I, d, d)
+H = [(f(x_best + h * (E[:, i] + E[:, j])) - f(x_best + h * (E[:, i] - E[:, j])) - f(x_best - h * (E[:, i] - E[:, j])) + f(x_best - h * (E[:, i] + E[:, j]))) / (4h^2) for i in 1:d, j in 1:d]
+ev = eigvals(Symmetric(H))
+(hessian_eigenvalues = round.(ev, sigdigits=4), condition_number = maximum(abs, ev) / max(minimum(abs, ev), eps()),
+ variable_magnitudes = round.(abs.(x_best), sigdigits=3), box_sides = ub .- lb,
+ advice = maximum(abs, ev) / max(minimum(abs, ev), eps()) > 1e4 ? "ill-conditioned: rescale the variables so curvatures are similar" : "reasonably scaled")
+'''

@@ -1,0 +1,500 @@
+# Semidefinite Programming Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/mpsdp.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Semidefinite Programming"
+viewType = "pollis.mpsdp"
+defaultModel = "sdp"
+
+[[packages]]
+name = "JuMP.jl"
+github = "https://github.com/jump-dev/JuMP.jl"
+
+[[packages]]
+name = "Clarabel.jl"
+github = "https://github.com/oxfordcontrol/Clarabel.jl"
+
+[[packages]]
+name = "COSMO.jl"
+github = "https://github.com/oxfordcontrol/COSMO.jl"
+
+[[packages]]
+name = "SCS.jl"
+github = "https://github.com/jump-dev/SCS.jl"
+
+[[packages]]
+name = "Hypatia.jl"
+github = "https://github.com/jump-dev/Hypatia.jl"
+
+[requires]
+packages = ["JuMP.jl", "Clarabel.jl", "Plots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Basic SDP"
+file = "mpsdp/tutorial-01-basic-sdp.ipynb"
+bundled = true
+description = "Formulate and solve a basic SDP with Clarabel; matrix constraints and duality"
+
+[[notebookSections.notebooks]]
+name = "Max-Cut SDP"
+file = "mpsdp/tutorial-02-maxcut-sdp.ipynb"
+bundled = true
+description = "Goemans-Williamson SDP relaxation of max-cut; rounding to a 0.878-approximation"
+
+[[wikis]]
+name = "Factsheet"
+file = "mpsdp/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "mpsdp/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "mpsdp/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "mpsdp/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "mpsdp/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "mpsdp/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Methods"
+
+[[wikis]]
+name = "SDP"
+file = "mpsdp/sdp.md"
+bundled = true
+
+[[wikis]]
+name = "SDP Relaxations"
+file = "mpsdp/sdprelax.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Topics"
+
+[[wikis]]
+name = "LMI Constraints"
+file = "mpsdp/lmi.md"
+bundled = true
+
+[[wikis]]
+name = "Duality"
+file = "mpsdp/duality.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "JuMP: A Modeling Language for Mathematical Optimization"
+authors = "Dunning, Iain; Huchette, Joey; Lubin, Miles"
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/15M1020575"
+openAccess = true
+
+[[references]]
+title = "Clarabel: An Interior-Point Solver for Conic Programs with Quadratic Objectives"
+authors = "Goulart, Paul J.; Chen, Yuwen"
+year = 2024
+journal = "arXiv"
+doi = "10.48550/arXiv.2405.14674"
+openAccess = true
+
+[[references]]
+title = "COSMO: A Conic Operator Splitting Method for Convex Conic Problems"
+authors = "Garstka, Michael; Cannon, Mark; Goulart, Paul"
+year = 2021
+journal = "Journal of Optimization Theory and Applications"
+doi = "10.1007/s10957-021-01896-7"
+openAccess = true
+
+[[references]]
+title = "Conic Optimization via Operator Splitting and Homogeneous Self-Dual Embedding"
+authors = "O'Donoghue, Brendan; Chu, Eric; Parikh, Neal; Boyd, Stephen"
+year = 2016
+journal = "Journal of Optimization Theory and Applications"
+doi = "10.1007/s10957-016-0892-3"
+openAccess = false
+
+[[references]]
+title = "Hypatia.jl: Conic Interior Point Solver"
+authors = "Coey, Chris; Kapelevich, Lea; Vielma, Juan Pablo"
+year = 2023
+journal = "INFORMS Journal on Computing"
+doi = "10.1287/ijoc.2022.1291"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Convex Optimization"
+authors = "Boyd, Stephen; Vandenberghe, Lieven"
+year = 2004
+journal = "Cambridge University Press"
+url = "https://web.stanford.edu/~boyd/cvxbook/"
+openAccess = true
+
+[[references]]
+title = "Semidefinite Programming"
+authors = "Vandenberghe, Lieven; Boyd, Stephen"
+year = 1996
+journal = "SIAM Review"
+doi = "10.1137/1038016"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Improved Approximation Algorithms for Maximum Cut and Satisfiability Problems Using Semidefinite Programming"
+authors = "Goemans, Michel X.; Williamson, David P."
+year = 1995
+journal = "Journal of the ACM"
+doi = "10.1145/227683.227684"
+openAccess = false
+
+[[references]]
+title = "Interior-Point Polynomial Algorithms in Convex Programming"
+authors = "Nesterov, Yurii; Nemirovskii, Arkadii"
+year = 1994
+journal = "SIAM"
+doi = "10.1137/1.9781611970791"
+openAccess = false
+
+[[models]]
+id = "sdp"
+label = "Semidefinite Programming"
+
+[[models]]
+id = "sdprelax"
+label = "SDP Relaxation"
+
+[[decisionRows]]
+task = "Semidefinite Programming"
+context = "Optimising over a positive semidefinite matrix: eigenvalue bounds, covariance and kernel fitting, control (LMIs)"
+purpose = "Linear objective in X subject to linear constraints and X being PSD"
+
+[[decisionRows]]
+task = "SDP Relaxation"
+context = "Hard combinatorial problems with +/-1 decisions, such as max-cut or graph partitioning"
+purpose = "Lift x x' to a PSD matrix for an upper bound, then round it back to a partition (Goemans-Williamson)"
+
+[[inputs]]
+id = "n"
+label = "n"
+tooltip = "Matrix dimension: X is an n x n positive semidefinite matrix (for the relaxation, n is the number of graph nodes)."
+default = "6"
+
+[[inputs]]
+id = "C"
+label = "Cost Matrix C"
+tooltip = "Symmetric n x n matrix of the objective tr(C X). With the default constraint tr(X) == 1, the minimum is the smallest eigenvalue of C."
+default = "Symmetric(randn(n, n))"
+models = ["sdp"]
+
+[[inputs]]
+id = "cons"
+label = "Constraint"
+tooltip = "One scalar linear constraint in X, for example tr(X) == 1 or X[1, 1] + X[2, 2] <= 2. The Parametric Sweep varies its right-hand side."
+default = "tr(X) == 1"
+models = ["sdp"]
+
+[[inputs]]
+id = "sense"
+label = "Sense"
+tooltip = "Direction of optimisation: Minimise or Maximise."
+kind = "select"
+default = "Min"
+models = ["sdp"]
+
+[[inputs.options]]
+value = "Min"
+label = "Minimise"
+
+[[inputs.options]]
+value = "Max"
+label = "Maximise"
+
+[[inputs]]
+id = "W"
+label = "Weight Matrix W"
+tooltip = "Symmetric n x n matrix of non-negative edge weights of the graph to cut (0 = no edge). The default is a random graph."
+default = "(E = triu(rand(n, n) .< 0.5, 1); float.(E + E'))"
+models = ["sdprelax"]
+
+[[inputs]]
+id = "solver"
+label = "Solver"
+tooltip = "Clarabel: interior point, the default and most accurate. COSMO: ADMM, lower memory for large sparse problems. SCS: first-order, very large problems when a rough bound suffices. Hypatia: interior point, robust on degenerate or ill-conditioned problems."
+kind = "select"
+default = "Clarabel"
+newRow = true
+
+[[inputs.options]]
+value = "Clarabel"
+label = "Clarabel"
+
+[[inputs.options]]
+value = "COSMO"
+label = "COSMO"
+
+[[inputs.options]]
+value = "SCS"
+label = "SCS"
+
+[[inputs.options]]
+value = "Hypatia"
+label = "Hypatia"
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.sdp]
+# A shaded symmetric matrix grid
+svg = '''
+var s = '', v = [[1, .5, .2], [.5, .9, .4], [.2, .4, .7]];
+for (var i = 0; i < 3; i++) { for (var j = 0; j < 3; j++) { s += '<rect x="' + (10 + j * 11.5) + '" y="' + (28 + i * 11.5) + '" width="10.5" height="10.5" fill="currentColor" fill-opacity="' + v[i][j] + '"/>'; } }
+return s;
+'''
+
+[miniCharts.sdprelax]
+# A small graph split by a cut
+svg = '''
+var p = [[12, 32], [20, 58], [36, 30], [42, 56]], e = [[0, 1], [0, 2], [1, 3], [2, 3], [0, 3]], s = '';
+e.forEach(function (d) { s += '<line x1="' + p[d[0]][0] + '" y1="' + p[d[0]][1] + '" x2="' + p[d[1]][0] + '" y2="' + p[d[1]][1] + '" stroke="currentColor" stroke-width="1" opacity="0.6"/>'; });
+p.forEach(function (q, i) { s += '<circle cx="' + q[0] + '" cy="' + q[1] + '" r="3.2" fill="currentColor" fill-opacity="' + (i % 3 === 0 ? 1 : 0.3) + '" stroke="currentColor"/>'; });
+return s + '<line x1="27" y1="24" x2="29" y2="66" stroke="currentColor" stroke-width="1.2" stroke-dasharray="3,2"/>';
+'''
+
+[[codeBranches]]
+model = "sdp"
+code = '''
+using JuMP, {{solver}}, LinearAlgebra, Random
+
+Random.seed!(1)
+n = {{n}}  # matrix dimension
+C = {{C}}  # symmetric cost matrix
+
+model = Model({{solver}}.Optimizer)
+set_silent(model)
+@variable(model, X[1:n, 1:n], PSD)  # n x n positive semidefinite matrix variable
+@objective(model, {{sense}}, tr(C * X))
+con = @constraint(model, {{cons}})
+optimize!(model)
+
+# re-solve with a new right-hand side (used by the Parametric Sweep)
+resolve(v) = (set_normalized_rhs(con, v); optimize!(model); objective_value(model))
+grid = normalized_rhs(con) .* range(0.25, 2, length=15)
+param_name = "constraint right-hand side"
+X_opt = value.(X)
+(status = termination_status(model), objective = objective_value(model), eigenvalues_C = eigvals(Symmetric(C)))
+'''
+
+[[codeBranches]]
+model = "sdprelax"
+code = '''
+using JuMP, {{solver}}, LinearAlgebra, Random
+
+Random.seed!(1)
+n = {{n}}  # number of nodes
+W = {{W}}  # symmetric edge weights
+L = Diagonal(vec(sum(W, dims=2))) - W  # graph Laplacian: cut(x) = x' L x / 4 for x in {-1, 1}^n
+cutvalue(x) = dot(x, L, x) / 4
+
+model = Model({{solver}}.Optimizer)
+set_silent(model)
+@variable(model, X[1:n, 1:n], PSD)  # relaxes x x' (the Gram matrix of unit node vectors)
+@objective(model, Max, tr(L * X) / 4)
+@constraint(model, diag(X) .== 1)  # unit vectors
+optimize!(model)
+X_opt = value.(X)
+
+# Goemans-Williamson rounding: node vectors V, cut by random hyperplanes, keep the best
+V = cholesky(Symmetric(X_opt + 1e-8I)).U
+function round_cut(trials=100)
+    cuts = [sign.(V' * randn(n)) for _ in 1:trials]
+    cuts[argmax(cutvalue.(cuts))]
+end
+x_cut = round_cut()
+
+resolve(v) = (Random.seed!(1); cutvalue(round_cut(round(Int, v))))  # best cut vs number of rounding trials
+grid = [1, 2, 5, 10, 20, 50, 100, 200]
+param_name = "rounding trials"
+(status = termination_status(model), sdp_bound = objective_value(model), cut = cutvalue(x_cut),
+ ratio = cutvalue(x_cut) / objective_value(model), partition = x_cut)  # ratio >= 0.878 in expectation
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "matrix-heatmap"
+label = "Matrix Heatmap"
+desc = "The optimal PSD matrix X"
+code = '''
+using Plots
+
+heatmap(X_opt, aspect_ratio=:equal, yflip=true, color=:RdBu, clims=(-1, 1) .* maximum(abs, X_opt), title="optimal X")
+'''
+
+[[actionGroups.actions]]
+id = "eigenvalues"
+label = "Eigenvalue Spectrum"
+desc = "Eigenvalues of X: all non-negative when PSD; a single non-zero one means rank 1"
+code = '''
+using Plots
+
+bar(sort(eigvals(Symmetric(X_opt)), rev=true), xlabel="index", ylabel="eigenvalue", legend=false)
+hline!([0], linestyle=:dash, color=:red)
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "feasibility"
+label = "Feasibility Check"
+desc = "Termination, primal and dual status, the smallest eigenvalue of X and any violated constraint"
+code = '''
+(termination = termination_status(model), primal = primal_status(model), dual = dual_status(model),
+ min_eigenvalue = eigmin(Symmetric(X_opt)),  # >= -tolerance
+ violated = primal_feasibility_report(model; atol=1e-6))  # empty Dict = feasible
+'''
+
+[[actionGroups.actions]]
+id = "rank-check"
+label = "Rank Check"
+desc = "Numerical rank of X: rank 1 means the relaxation is tight (the SDP solves the original problem)"
+code = '''
+ev = eigvals(Symmetric(X_opt))
+(rank = count(>(1e-6 * maximum(ev)), ev), eigenvalues = round.(ev; digits=6))
+'''
+
+[[actionGroups.actions]]
+id = "duality-gap"
+label = "Duality Gap"
+desc = "Primal and dual objectives and their relative gap: near 0 certifies optimality"
+code = '''
+primal = objective_value(model)
+dual   = dual_objective_value(model)
+(primal = primal, dual = dual, relative_gap = abs(primal - dual) / (1 + abs(primal)))
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "sensitivity"
+label = "Sensitivity Analysis"
+desc = "Shadow prices of the scalar constraints: the change in the optimal value per unit change in each right-hand side"
+code = '''
+cons = all_constraints(model, AffExpr, MOI.EqualTo{Float64})
+append!(cons, all_constraints(model, AffExpr, MOI.LessThan{Float64}), all_constraints(model, AffExpr, MOI.GreaterThan{Float64}))
+[(constraint = c, shadow_price = shadow_price(c)) for c in cons]
+'''
+
+[[actionGroups.actions]]
+id = "parametric"
+label = "Parametric Sweep"
+desc = "SDP: the optimal value across a range of the constraint's right-hand side. Relaxation: the best rounded cut against the number of rounding trials"
+code = '''
+using Plots
+
+vals = resolve.(grid)
+plot(grid, vals, marker=:circle, xlabel=param_name, ylabel="value", legend=false)
+{{?model=sdprelax}} hline!([objective_value(model)], linestyle=:dash, label="SDP bound")
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "solver-compare"
+label = "Solver Comparison"
+desc = "Clarabel, COSMO, SCS and Hypatia on the same problem: status, objective and time"
+code = '''
+using Clarabel, COSMO, SCS, Hypatia
+
+map(["Clarabel" => Clarabel.Optimizer, "COSMO" => COSMO.Optimizer, "SCS" => SCS.Optimizer, "Hypatia" => Hypatia.Optimizer]) do (name, opt)
+    set_optimizer(model, opt)
+    set_silent(model)
+    t = @elapsed optimize!(model)
+    (solver = name, status = termination_status(model), objective = objective_value(model), seconds = t)
+end
+'''
+
+[[actionGroups.actions]]
+id = "baseline"
+label = "vs Baseline"
+desc = "SDP: the optimum against the extreme eigenvalues of C (equal when the constraint is tr(X) == 1). Relaxation: the SDP bound and rounded cut against a random partition and brute force (n <= 20)"
+code = '''
+{{?model=sdp}} ev = eigvals(Symmetric(C))
+{{?model=sdp}} (sdp = objective_value(model), lambda_min = minimum(ev), lambda_max = maximum(ev))
+{{?model=sdprelax}} brute = n <= 20 ? maximum(cutvalue([(k >> i) & 1 == 1 ? 1.0 : -1.0 for i in 0:n-1]) for k in 0:2^(n-1)-1) : missing
+{{?model=sdprelax}} (sdp_bound = objective_value(model), rounded = cutvalue(x_cut), random = cutvalue(rand([-1.0, 1.0], n)), optimum = brute)
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "dual-matrix"
+label = "Dual Matrix"
+desc = "The dual PSD matrix S of the constraint X in PSD, and complementarity tr(X S) (about 0 at the optimum)"
+code = '''
+psd = only(all_constraints(model, Vector{VariableRef}, MOI.PositiveSemidefiniteConeTriangle))
+S = Symmetric(reshape_vector(dual(psd), SymmetricMatrixShape(n)))
+(complementarity = tr(X_opt * S), dual_eigenvalues = eigvals(S))
+'''
+
+[[actionGroups.actions]]
+id = "eigenvectors"
+label = "Eigenvector Extraction"
+desc = "Leading eigenvector of X: the SDP solution in the rank-1 case (SDP), or a deterministic partition by its signs (relaxation)"
+code = '''
+F = eigen(Symmetric(X_opt))
+v1 = F.vectors[:, end]  # eigenvector of the largest eigenvalue
+{{?model=sdp}} (leading_eigenvalue = F.values[end], share_of_trace = F.values[end] / tr(X_opt), vector = v1)
+{{?model=sdprelax}} x_eig = sign.(v1)
+{{?model=sdprelax}} (leading_eigenvalue = F.values[end], partition = x_eig, cut = cutvalue(x_eig), rounded_cut = cutvalue(x_cut))
+'''
