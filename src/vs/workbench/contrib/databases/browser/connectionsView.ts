@@ -109,6 +109,10 @@ class ItemDelegate implements IListVirtualDelegate<DatabaseItem> {
 	getHeight(): number {
 		return 22;
 	}
+	/** Messages (errors, "No tables yet") wrap onto as many lines as they need instead of being cut off. */
+	hasDynamicHeight(item: DatabaseItem): boolean {
+		return item.kind === 'message';
+	}
 	getTemplateId(): string {
 		return ItemRenderer.TEMPLATE_ID;
 	}
@@ -148,6 +152,7 @@ class ItemRenderer implements ITreeRenderer<DatabaseItem, void, IItemTemplate> {
 		let hover: string | undefined;
 		template.row.classList.toggle('connected', item.kind === 'connection' && !!item.session);
 		template.row.classList.toggle('disconnected', item.kind === 'connection' && !item.session);
+		template.row.classList.toggle('message', item.kind === 'message');
 		switch (item.kind) {
 			case 'connection': {
 				icon = Codicon.database;
@@ -285,6 +290,7 @@ export class DatabaseConnectionsView extends ViewPane {
 			[new ItemRenderer(item => this.itemContext(item), this.hoverService, this.menuService, this.contextKeyService, this.instantiationService, (item, anchor) => this.showItemMenu(item, anchor))],
 			{
 				identityProvider: { getId: itemId },
+				supportDynamicHeights: true,
 				accessibilityProvider: {
 					getAriaLabel: (item: DatabaseItem) => item.kind === 'connection' ? connectionName(item.profile, item.session) : itemId(item),
 					getWidgetAriaLabel: () => localize('connections.aria', "Database Connections"),

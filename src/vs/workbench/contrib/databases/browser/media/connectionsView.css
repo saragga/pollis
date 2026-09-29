@@ -32,6 +32,23 @@
 	white-space: nowrap;
 }
 
+/* Messages wrap in full; the row grows to fit (the delegate gives them a dynamic height). */
+.database-item.message {
+	align-items: flex-start;
+	height: auto;
+	padding: 3px 4px 3px 0;
+}
+
+.database-item.message .icon {
+	margin-top: 2px;
+}
+
+.database-item.message .name {
+	white-space: normal;
+	overflow-wrap: anywhere;
+	line-height: 16px;
+}
+
 .database-item .description {
 	opacity: 0.7;
 	overflow: hidden;
