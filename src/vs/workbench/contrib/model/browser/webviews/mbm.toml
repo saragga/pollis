@@ -720,13 +720,20 @@ label = "Diagnose"
 [[actionGroups.actions]]
 id = "convergence-check"
 label = "Convergence Check"
-desc = "Return status, evaluations used and a finite-difference gradient norm at the minimiser"
+desc = "Return status, evaluations used and a finite-difference gradient norm at the minimiser, with the part not balanced by active constraints"
 code = '''
 h = 1e-6
 E = Matrix(1.0I, length(x_best), length(x_best))
 grad = [(f(x_best + h * e) - f(x_best - h * e)) / (2h) for e in eachcol(E)]
+normals = Vector{Float64}[]  # outward normals of the constraints active at the minimiser
+{{?model=bobyqa|cobyla|lincoa|sbplx}}append!(normals, [E[:, i] .* (x_best[i] - lb[i] < 1e-6 ? -1 : 1) for i in eachindex(x_best) if min(x_best[i] - lb[i], ub[i] - x_best[i]) < 1e-6])  # bounds
+{{?model=cobyla}}cons(x) = c(x)
+{{?model=lincoa}}cons(x) = A * x .- b
+{{?model=cobyla|lincoa}}append!(normals, [[(cons(x_best + h * e)[k] - cons(x_best - h * e)[k]) / (2h) for e in eachcol(E)] for k in findall(abs.(cons(x_best)) .< 1e-6)])
+J = reduce(hcat, normals; init=zeros(length(x_best), 0))
+kkt = isempty(normals) ? grad : grad - J * (J \ grad)  # gradient left after removing the active normals: near 0 at a constrained (KKT) minimum, where grad itself need not be
 (status = res.status, evaluations = res.evals, budget = maxfun, budget_exhausted = res.evals >= maxfun,
- minimum = f_best, gradient_norm = norm(grad), violation = violation(x_best))
+ minimum = f_best, gradient_norm = norm(grad), active_constraints = size(J, 2), projected_gradient_norm = norm(kkt), violation = violation(x_best))
 '''
 
 [[actionGroups.actions]]
