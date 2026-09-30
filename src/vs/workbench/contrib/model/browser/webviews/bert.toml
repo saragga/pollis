@@ -201,8 +201,8 @@ code = '''
 using Transformers
 using Transformers.HuggingFace
 
-tkr  = HuggingFace.load_tokenizer({{bertmodel}})  # load tokenizer from HuggingFace Hub
-bert = HuggingFace.load_model(BertModel, {{bertmodel}})  # load pre-trained BERT weights
+tkr  = HuggingFace.load_tokenizer("{{bertmodel}}")  # load tokenizer from HuggingFace Hub
+bert = HuggingFace.load_model(BertModel, "{{bertmodel}}")  # load pre-trained BERT weights
 
 enc  = tkr({{text}})  # tokenise input text
 out  = bert(enc.token, enc.segment, enc.attention_mask)  # forward pass through BERT encoder
@@ -215,8 +215,8 @@ code = '''
 using Transformers, LinearAlgebra
 using Transformers.HuggingFace
 
-tkr  = HuggingFace.load_tokenizer({{bertmodel}})  # load tokenizer
-bert = HuggingFace.load_model(BertModel, {{bertmodel}})  # load BERT model
+tkr  = HuggingFace.load_tokenizer("{{bertmodel}}")  # load tokenizer
+bert = HuggingFace.load_model(BertModel, "{{bertmodel}}")  # load BERT model
 
 enc1 = tkr({{text1}})  # tokenise first sentence
 enc2 = tkr({{text2}})  # tokenise second sentence
@@ -238,8 +238,8 @@ code = '''
 using Transformers, UMAP, Plots
 using Transformers.HuggingFace
 
-tkr  = HuggingFace.load_tokenizer({{bertmodel}})  # load tokenizer
-bert = HuggingFace.load_model(BertModel, {{bertmodel}})  # load BERT
+tkr  = HuggingFace.load_tokenizer("{{bertmodel}}")  # load tokenizer
+bert = HuggingFace.load_model(BertModel, "{{bertmodel}}")  # load BERT
 
 embs = hcat([vec(bert(tkr(d).token, tkr(d).segment, tkr(d).attention_mask).hidden_state[:, 1, :]) for d in docs]...)  # embed all docs
 proj = umap(embs, 2)  # reduce to 2D with UMAP
@@ -254,8 +254,8 @@ code = '''
 using Transformers, LinearAlgebra, Plots
 using Transformers.HuggingFace
 
-tkr  = HuggingFace.load_tokenizer({{bertmodel}})  # load tokenizer
-bert = HuggingFace.load_model(BertModel, {{bertmodel}})  # load BERT
+tkr  = HuggingFace.load_tokenizer("{{bertmodel}}")  # load tokenizer
+bert = HuggingFace.load_model(BertModel, "{{bertmodel}}")  # load BERT
 
 E    = hcat([vec(bert(tkr(d).token, tkr(d).segment, tkr(d).attention_mask).hidden_state[:, 1, :]) for d in docs]...)  # embed all docs
 E    = E ./ norm.(eachcol(E))  # L2-normalise columns
@@ -275,8 +275,8 @@ code = '''
 using Transformers, LinearAlgebra, StatsBase, Plots
 using Transformers.HuggingFace
 
-tkr    = HuggingFace.load_tokenizer({{bertmodel}})  # load tokenizer
-bert   = HuggingFace.load_model(BertModel, {{bertmodel}})  # load BERT
+tkr    = HuggingFace.load_tokenizer("{{bertmodel}}")  # load tokenizer
+bert   = HuggingFace.load_model(BertModel, "{{bertmodel}}")  # load BERT
 
 norms  = [norm(vec(bert(tkr(d).token, tkr(d).segment, tkr(d).attention_mask).hidden_state[:, 1, :])) for d in docs]  # L2 norm per document
 histogram(norms, xlabel="L2 norm", title="CLS embedding norm distribution")  # norm histogram
@@ -290,8 +290,8 @@ code = '''
 using Transformers, Plots
 using Transformers.HuggingFace
 
-tkr    = HuggingFace.load_tokenizer({{bertmodel}})  # load tokenizer
-bert   = HuggingFace.load_model(BertModel, {{bertmodel}})  # load BERT
+tkr    = HuggingFace.load_tokenizer("{{bertmodel}}")  # load tokenizer
+bert   = HuggingFace.load_model(BertModel, "{{bertmodel}}")  # load BERT
 
 enc    = tkr({{text}})  # tokenise text
 out    = bert(enc.token, enc.segment, enc.attention_mask; output_attentions=true)  # run with attention output
@@ -312,8 +312,8 @@ code = '''
 using Transformers, LinearAlgebra
 using Transformers.HuggingFace
 
-tkr  = HuggingFace.load_tokenizer({{bertmodel}})  # load tokenizer
-bert = HuggingFace.load_model(BertModel, {{bertmodel}})  # load BERT
+tkr  = HuggingFace.load_tokenizer("{{bertmodel}}")  # load tokenizer
+bert = HuggingFace.load_model(BertModel, "{{bertmodel}}")  # load BERT
 
 E    = hcat([vec(bert(tkr(d).token, tkr(d).segment, tkr(d).attention_mask).hidden_state[:, 1, :]) for d in docs]...)  # embed corpus
 E    = E ./ norm.(eachcol(E))  # L2-normalise
@@ -332,8 +332,8 @@ code = '''
 using Transformers, LinearAlgebra
 using Transformers.HuggingFace
 
-tkr    = HuggingFace.load_tokenizer({{bertmodel}})  # load tokenizer
-bert   = HuggingFace.load_model(BertModel, {{bertmodel}})  # load BERT
+tkr    = HuggingFace.load_tokenizer("{{bertmodel}}")  # load tokenizer
+bert   = HuggingFace.load_model(BertModel, "{{bertmodel}}")  # load BERT
 
 batch  = 32  # mini-batch size
 embs   = vcat([hcat([vec(bert(tkr(d).token, tkr(d).segment, tkr(d).attention_mask).hidden_state[:, 1, :]) for d in docs[i:min(i+batch-1,end)]]...) for i in 1:batch:length(docs)]...)  # embed in batches
@@ -371,8 +371,8 @@ code = '''
 using Transformers, LinearAlgebra
 using Transformers.HuggingFace
 
-tkr    = HuggingFace.load_tokenizer({{bertmodel}})  # load tokenizer
-bert   = HuggingFace.load_model(BertModel, {{bertmodel}})  # load BERT
+tkr    = HuggingFace.load_tokenizer("{{bertmodel}}")  # load tokenizer
+bert   = HuggingFace.load_model(BertModel, "{{bertmodel}}")  # load BERT
 
 out    = bert(tkr({{text}}).token, tkr({{text}}).segment, tkr({{text}}).attention_mask)  # run encoder
 cls    = vec(out.hidden_state[:, 1, :])  # CLS token (first position)
@@ -392,8 +392,8 @@ code = '''
 using Transformers, LinearAlgebra
 using Transformers.HuggingFace
 
-tkr  = HuggingFace.load_tokenizer({{bertmodel}})  # load tokenizer
-bert = HuggingFace.load_model(BertModel, {{bertmodel}})  # load BERT
+tkr  = HuggingFace.load_tokenizer("{{bertmodel}}")  # load tokenizer
+bert = HuggingFace.load_model(BertModel, "{{bertmodel}}")  # load BERT
 
 E    = hcat([vec(bert(tkr(d).token, tkr(d).segment, tkr(d).attention_mask).hidden_state[:, 1, :]) for d in docs]...)  # embed corpus
 E    = E ./ norm.(eachcol(E))  # normalise
@@ -413,8 +413,8 @@ code = '''
 using Transformers, Zygote, LinearAlgebra
 using Transformers.HuggingFace
 
-tkr    = HuggingFace.load_tokenizer({{bertmodel}})  # load tokenizer
-bert   = HuggingFace.load_model(BertModel, {{bertmodel}})  # load BERT
+tkr    = HuggingFace.load_tokenizer("{{bertmodel}}")  # load tokenizer
+bert   = HuggingFace.load_model(BertModel, "{{bertmodel}}")  # load BERT
 
 enc    = tkr({{text}})  # tokenise input
 grads  = gradient(x -> sum(bert(x, enc.segment, enc.attention_mask).hidden_state[:, 1, :]), enc.token)[1]  # gradient of CLS norm wrt input token ids
