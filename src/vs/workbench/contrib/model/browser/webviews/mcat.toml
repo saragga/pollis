@@ -412,12 +412,12 @@ label = "Interpret"
 
 [[actionGroups.actions]]
 id = "introspect"
-label = "Scene Introspection"
-desc = "List all objects currently in the MeshCat scene tree"
+label = "Scene Cleanup"
+desc = "Find the visualizer in the browser, where the controls panel shows the scene tree, and remove objects from it"
 code = '''
-using MeshCat  # inspect the current scene graph structure
+using MeshCat  # manage the scene graph
 
-url({{vis}})  # browser URL for this visualizer instance
-delete!({{vis}})  # clear all objects from the scene
-delete!({{vis}}["path/to/object"])  # remove a specific subtree of objects
+println(url({{vis}}))  # browser URL: the controls panel there lists the scene tree
+delete!({{vis}}["path/to/object"])  # remove one subtree of objects (edit the path)
+# delete!({{vis}})  # uncomment to clear every object from the scene
 '''
