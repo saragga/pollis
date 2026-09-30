@@ -39,6 +39,8 @@ import { SYMB_PANEL } from './commands/symb.command.js';
 import { NLIN_PANEL } from './commands/nlin.command.js';
 import { DIFF_PANEL } from './commands/diff.command.js';
 import { INTEG_PANEL } from './commands/integ.command.js';
+import { ODES_PANEL } from './commands/odes.command.js';
+import { PDES_PANEL } from './commands/pdes.command.js';
 import { TTE_PANEL } from './commands/tte.command.js';
 import { CTSV_PANEL } from './commands/ctsv.command.js';
 import { ARIMA_PANEL } from './commands/arima.command.js';
@@ -284,6 +286,8 @@ CommandsRegistry.registerCommand('chiara.toolboxes.symb', accessor => openScaffo
 CommandsRegistry.registerCommand('chiara.toolboxes.nlin', accessor => openScaffoldWebview(accessor, NLIN_PANEL));
 CommandsRegistry.registerCommand('chiara.toolboxes.diff', accessor => openScaffoldWebview(accessor, DIFF_PANEL));
 CommandsRegistry.registerCommand('chiara.toolboxes.integ', accessor => openScaffoldWebview(accessor, INTEG_PANEL));
+CommandsRegistry.registerCommand('chiara.toolboxes.ode', accessor => openScaffoldWebview(accessor, ODES_PANEL));
+CommandsRegistry.registerCommand('chiara.toolboxes.pde', accessor => openScaffoldWebview(accessor, PDES_PANEL));
 CommandsRegistry.registerCommand('chiara.statistics.tvm.dtsv', () => { });
 
 const CTSV_OPEN = (accessor: ServicesAccessor) => openScaffoldWebview(accessor, CTSV_PANEL);

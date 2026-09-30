@@ -90,31 +90,37 @@ description = "Escape velocity, centre of mass, river discharge from measured de
 name = "Factsheet"
 file = "integ/factsheet.md"
 bundled = true
+description = "The three tasks at a glance (definite, multiple and sampled-data integrals) with a minimal example"
 
 [[wikis]]
 name = "Overview"
 file = "integ/overview.md"
 bundled = true
+description = "Area and accumulation, fixed rules, adaptive quadrature, several variables and sampled data"
 
 [[wikis]]
 name = "Assumptions"
 file = "integ/assumptions.md"
 bundled = true
+description = "When the integral exists, how smoothness drives accuracy, what tolerances mean, Monte Carlo and sampled data"
 
 [[wikis]]
 name = "Diagnostics"
 file = "integ/diagnostics.md"
 bundled = true
+description = "Convergence studies, error estimates, checking the integrand and cross-checking methods"
 
 [[wikis]]
 name = "Interpretation"
 file = "integ/interpretation.md"
 bundled = true
+description = "Signed and total area, average value, economic readings, moving the limits and present value"
 
 [[wikis]]
 name = "Decision Guide"
 file = "integ/decision-guide.md"
 bundled = true
+description = "Which method for your integral, from adaptive Gauss-Kronrod to cubature and Monte Carlo, and special cases"
 
 [[references]]
 separator = true

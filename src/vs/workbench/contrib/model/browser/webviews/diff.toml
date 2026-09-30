@@ -98,11 +98,13 @@ description = "Marginal products, elasticities, returns to scale and the implici
 name = "Factsheet"
 file = "diff/factsheet.md"
 bundled = true
+description = "The three tasks at a glance (derivatives, gradients and Hessians, Jacobians) with a minimal example"
 
 [[wikis]]
 name = "Overview"
 file = "diff/overview.md"
 bundled = true
+description = "The derivative, several variables, the three ways to compute one, forward and reverse mode, and DifferentiationInterface"
 
 [[wikis]]
 name = "Automatic Differentiation"
@@ -114,21 +116,25 @@ description = "What AD is, its history from Leibniz's chain rule to Enzyme and M
 name = "Assumptions"
 file = "diff/assumptions.md"
 bundled = true
+description = "The mathematical and computational conditions a derivative needs to exist and be computed reliably"
 
 [[wikis]]
 name = "Diagnostics"
 file = "diff/diagnostics.md"
 bundled = true
+description = "Step-size error, checking against an exact derivative, and the warning signs of a wrong result"
 
 [[wikis]]
 name = "Interpretation"
 file = "diff/interpretation.md"
 bundled = true
+description = "Reading slope and curvature, gradients and Hessians, elasticities, Jacobians and Taylor polynomials"
 
 [[wikis]]
 name = "Decision Guide"
 file = "diff/decision-guide.md"
 bundled = true
+description = "Which task and which backend for your problem, and why Zygote is not offered"
 
 [[references]]
 separator = true

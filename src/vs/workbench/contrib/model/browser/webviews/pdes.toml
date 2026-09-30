@@ -1,0 +1,755 @@
+# Partial Differential Equations Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/pdes.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Partial Differential Equations"
+viewType = "pollis.pdes"
+defaultModel = "heat"
+
+[[packages]]
+name = "OrdinaryDiffEq.jl"
+github = "https://github.com/SciML/OrdinaryDiffEq.jl"
+
+[[packages.videos]]
+title = "But What Is a Partial Differential Equation?"
+description = "3Blue1Brown, DE2: the heat equation as a statement about second derivatives and local averages"
+url = "https://www.youtube.com/watch?v=ly4S0oi3Yz8"
+
+[[packages.videos]]
+title = "Solving the Heat Equation"
+description = "3Blue1Brown, DE3: boundary conditions, sine waves that decay independently, and why that suggests Fourier series"
+url = "https://www.youtube.com/watch?v=ToIXSwZ1pJU"
+
+[[packages.videos]]
+title = "But What Is a Fourier Series?"
+description = "3Blue1Brown, DE4: building any initial condition out of the simple solutions of the heat equation"
+url = "https://www.youtube.com/watch?v=r6sGWTCMz2k"
+
+[[packages.videos]]
+title = "Solving Partial Differential Equations With Julia"
+description = "Chris Rackauckas at JuliaCon 2018: the method of lines, sparse Jacobians and choosing solvers for PDE discretisations"
+url = "https://www.youtube.com/watch?v=okGybBmihOE"
+
+[[packages]]
+name = "MethodOfLines.jl"
+github = "https://github.com/SciML/MethodOfLines.jl"
+
+[[packages.videos]]
+title = "Automated PDE Solving in Julia with MethodOfLines.jl"
+description = "Alex Jones at JuliaCon 2022: write the PDE symbolically and let the package build the finite-difference system"
+url = "https://www.youtube.com/watch?v=8gLhaWRYvfQ"
+
+[[packages]]
+name = "Krylov.jl"
+github = "https://github.com/JuliaSmoothOptimizers/Krylov.jl"
+
+[[packages]]
+name = "Gridap.jl"
+github = "https://github.com/gridap/Gridap.jl"
+
+[[packages.videos]]
+title = "New Tools to Solve PDEs in Julia with Gridap.jl"
+description = "Verdugo and colleagues at JuliaCon 2021: finite elements on general geometries, for when a rectangular grid is not enough"
+url = "https://www.youtube.com/watch?v=hsQiFP4S5RY"
+
+[requires]
+packages = ["OrdinaryDiffEq.jl", "Krylov.jl", "Plots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "The Heat Equation by Finite Differences"
+file = "pdes/tutorial-01-heat-equation.ipynb"
+bundled = true
+description = "The second difference, an explicit scheme and its instability, the method of lines, and a check against the exact Fourier solution"
+
+[[notebookSections.notebooks]]
+name = "The Wave Equation"
+file = "pdes/tutorial-02-wave-equation.ipynb"
+bundled = true
+description = "d'Alembert's travelling waves, reflections at fixed ends, the CFL condition and conservation of energy"
+
+[[notebookSections.notebooks]]
+name = "Laplace and Poisson Equations"
+file = "pdes/tutorial-03-poisson.ipynb"
+bundled = true
+description = "The five-point Laplacian built with kron, sparse direct solves against conjugate gradients, and the heat equation settling to Poisson"
+
+[[notebookSections.notebooks]]
+name = "Reaction, Diffusion and Advection"
+file = "pdes/tutorial-04-reaction-advection.ipynb"
+bundled = true
+description = "Fisher-KPP travelling fronts and their speed, and upwind schemes for transport with their numerical diffusion"
+
+[[notebookSections.notebooks]]
+name = "PDEs in Finance and Beyond"
+file = "pdes/tutorial-05-finance-and-beyond.ipynb"
+bundled = true
+description = "The Black-Scholes equation solved by finite differences and checked against the formula, then the heat equation written symbolically with MethodOfLines.jl"
+
+[[wikis]]
+name = "Factsheet"
+file = "pdes/factsheet.md"
+bundled = true
+description = "The three tasks at a glance (heat, wave and Poisson equations) with a minimal example"
+
+[[wikis]]
+name = "Overview"
+file = "pdes/overview.md"
+bundled = true
+description = "Three equations and their behaviours, finite differences, the method of lines and boundary conditions"
+
+[[wikis]]
+name = "Assumptions"
+file = "pdes/assumptions.md"
+bundled = true
+description = "A well-posed problem, smoothness, grid resolution, linear coefficients and stable time stepping"
+
+[[wikis]]
+name = "Diagnostics"
+file = "pdes/diagnostics.md"
+bundled = true
+description = "Grid convergence, exact-solution tests, stiffness and conditioning, conservation checks and solver warnings"
+
+[[wikis]]
+name = "Interpretation"
+file = "pdes/interpretation.md"
+bundled = true
+description = "Heat spreading and settling, reaction-diffusion, waves travelling and reflecting, Poisson balance, and uses in economics and finance"
+
+[[wikis]]
+name = "Decision Guide"
+file = "pdes/decision-guide.md"
+bundled = true
+description = "Which approach (finite differences, symbolic method of lines, finite elements, spectral) and which time steppers and linear solvers"
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "DifferentialEquations.jl: A Performant and Feature-Rich Ecosystem for Solving Differential Equations in Julia"
+authors = "Rackauckas, Christopher; Nie, Qing"
+year = 2017
+journal = "Journal of Open Research Software"
+doi = "10.5334/jors.151"
+openAccess = true
+
+[[references]]
+title = "Krylov.jl: A Julia Basket of Hand-Picked Krylov Methods"
+authors = "Montoison, Alexis; Orban, Dominique"
+year = 2023
+journal = "Journal of Open Source Software"
+doi = "10.21105/joss.05187"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Finite Difference Methods for Ordinary and Partial Differential Equations"
+authors = "LeVeque, Randall J."
+year = 2007
+journal = "SIAM"
+doi = "10.1137/1.9780898717839"
+openAccess = false
+
+[[references]]
+title = "Partial Differential Equations"
+authors = "Evans, Lawrence C."
+year = 2010
+journal = "American Mathematical Society"
+doi = "10.1090/gsm/019"
+openAccess = false
+
+[[references]]
+title = "Spectral Methods in MATLAB"
+authors = "Trefethen, Lloyd N."
+year = 2000
+journal = "SIAM"
+doi = "10.1137/1.9780898719598"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Ueber die partiellen Differenzengleichungen der mathematischen Physik"
+authors = "Courant, Richard; Friedrichs, Kurt; Lewy, Hans"
+year = 1928
+journal = "Mathematische Annalen"
+doi = "10.1007/BF01448839"
+openAccess = false
+
+[[references]]
+title = "A Practical Method for Numerical Evaluation of Solutions of Partial Differential Equations of the Heat-Conduction Type"
+authors = "Crank, John; Nicolson, Phyllis"
+year = 1947
+journal = "Mathematical Proceedings of the Cambridge Philosophical Society"
+doi = "10.1017/S0305004100023197"
+openAccess = false
+
+[[references]]
+title = "Methods of Conjugate Gradients for Solving Linear Systems"
+authors = "Hestenes, Magnus R.; Stiefel, Eduard"
+year = 1952
+journal = "Journal of Research of the National Bureau of Standards"
+doi = "10.6028/jres.049.044"
+openAccess = true
+
+[[references]]
+title = "The Wave of Advance of Advantageous Genes"
+authors = "Fisher, Ronald A."
+year = 1937
+journal = "Annals of Eugenics"
+doi = "10.1111/j.1469-1809.1937.tb02153.x"
+openAccess = true
+
+[[references]]
+title = "The Chemical Basis of Morphogenesis"
+authors = "Turing, Alan M."
+year = 1952
+journal = "Philosophical Transactions of the Royal Society B"
+doi = "10.1098/rstb.1952.0012"
+openAccess = false
+
+[[references]]
+title = "The Pricing of Options and Corporate Liabilities"
+authors = "Black, Fischer; Scholes, Myron"
+year = 1973
+journal = "Journal of Political Economy"
+doi = "10.1086/260062"
+openAccess = false
+
+[[models]]
+id = "heat"
+label = "Heat Equation"
+
+[[models]]
+id = "wave"
+label = "Wave Equation"
+
+[[models]]
+id = "poisson"
+label = "Poisson Equation"
+
+[[bullets]]
+text = "Heat Equation"
+detail = "u_t = D u_xx + r(u, x, t) on [0, L]: diffusion of heat, pollutants, prices or genes, optionally with a reaction term such as logistic growth"
+
+[[bullets]]
+text = "Wave Equation"
+detail = "u_tt = c^2 u_xx on [0, L]: vibrating strings, sound, water waves; disturbances travel at speed c and reflect at the ends"
+
+[[bullets]]
+text = "Poisson Equation"
+detail = "-(u_xx + u_yy) = f(x, y) on a square with u = 0 on the edge: steady temperature with a heat source, electric potential, a loaded membrane"
+
+[[decisionRows]]
+task = "Heat Equation"
+context = "A quantity that spreads out and smooths over time: temperature, concentration, a population diffusing and growing"
+purpose = "Method of lines: finite differences in x turn the PDE into a large stiff ODE system, solved by an implicit or stabilised solver"
+
+[[decisionRows]]
+task = "Wave Equation"
+context = "Disturbances that travel without spreading: a plucked string, an acoustic pulse, a signal on a line"
+purpose = "Method of lines with position and velocity as states, solved by an explicit solver whose step is limited by the CFL condition"
+
+[[decisionRows]]
+task = "Poisson Equation"
+context = "A steady state with no time: where heat flow balances the sources, an electrostatic potential, a membrane under load"
+purpose = "The five-point Laplacian gives a sparse symmetric linear system, solved directly or by conjugate gradients"
+
+[[inputs]]
+id = "L"
+label = "Domain Length L"
+tooltip = "The interval is [0, L]; for the Poisson equation, the square [0, L] x [0, L]."
+default = "1.0"
+models = ["heat", "wave", "poisson"]
+
+[[inputs]]
+id = "D"
+label = "Diffusion Coefficient D"
+tooltip = "How fast u spreads: a bump of width w flattens over a time of about w^2 / D."
+default = "0.01"
+models = ["heat"]
+
+[[inputs]]
+id = "ic"
+label = "Initial Profile u(x, 0)"
+tooltip = "A Julia expression in x, e.g. exp(-100 * (x - 0.5)^2) (a bump), sin(pi * x) or (x < 0.5) * 1.0 (a step)."
+default = "exp(-100 * (x - 0.5)^2)"
+models = ["heat"]
+
+[[inputs]]
+id = "react"
+label = "Reaction Term r(u, x, t)"
+tooltip = "Added to the right-hand side: 0.0 for pure diffusion, u * (1 - u) for Fisher-KPP growth, -0.5u for decay."
+default = "0.0"
+models = ["heat"]
+
+[[inputs]]
+id = "c"
+label = "Wave Speed c"
+tooltip = "The speed at which disturbances travel."
+default = "0.5"
+models = ["wave"]
+
+[[inputs]]
+id = "wic"
+label = "Initial Displacement u(x, 0)"
+tooltip = "A Julia expression in x, e.g. exp(-200 * (x - 0.3)^2) (a pulse that splits into two) or sin(pi * x) (a standing wave)."
+default = "exp(-200 * (x - 0.3)^2)"
+models = ["wave"]
+
+[[inputs]]
+id = "wvel"
+label = "Initial Velocity u_t(x, 0)"
+tooltip = "A Julia expression in x; 0.0 releases the string from rest."
+default = "0.0"
+models = ["wave"]
+
+[[inputs]]
+id = "bc"
+label = "Boundary Conditions"
+tooltip = "Fixed values: u is held at the left and right values. No flux: nothing enters or leaves (the end values are ignored). Periodic: the right end joins the left."
+kind = "select"
+default = "dirichlet"
+models = ["heat", "wave"]
+newRow = true
+
+[[inputs.options]]
+value = "dirichlet"
+label = "Fixed Values (Dirichlet)"
+
+[[inputs.options]]
+value = "neumann"
+label = "No Flux (Neumann)"
+
+[[inputs.options]]
+value = "periodic"
+label = "Periodic"
+
+[[inputs]]
+id = "uleft"
+label = "Left Value u(0, t)"
+tooltip = "Used only with fixed-value boundaries."
+default = "0.0"
+models = ["heat", "wave"]
+
+[[inputs]]
+id = "uright"
+label = "Right Value u(L, t)"
+tooltip = "Used only with fixed-value boundaries."
+default = "0.0"
+models = ["heat", "wave"]
+
+[[inputs]]
+id = "nx"
+label = "Grid Points"
+tooltip = "Interior grid points; the spacing h is about L / nx. Halving h cuts the spatial error by about four."
+default = "100"
+models = ["heat", "wave"]
+newRow = true
+
+[[inputs]]
+id = "T"
+label = "Final Time"
+tooltip = "Solve from t = 0 to this time."
+default = "5.0"
+models = ["heat", "wave"]
+
+[[inputs]]
+id = "halg"
+label = "Solver"
+tooltip = "FBDF and Rodas5P: implicit, for the stiff systems diffusion produces. ROCK2: stabilised explicit, cheap per step and good for moderately stiff diffusion. Tsit5: explicit, forced into tiny steps by stiffness (for comparison)."
+kind = "select"
+default = "fbdf"
+models = ["heat"]
+
+[[inputs.options]]
+value = "fbdf"
+label = "FBDF (Stiff)"
+
+[[inputs.options]]
+value = "rodas5p"
+label = "Rodas5P (Stiff)"
+
+[[inputs.options]]
+value = "rock2"
+label = "ROCK2 (Stabilised Explicit)"
+
+[[inputs.options]]
+value = "tsit5"
+label = "Tsit5 (Explicit)"
+
+[[inputs]]
+id = "walg"
+label = "Solver"
+tooltip = "Tsit5: explicit, the default for waves. Vern9: high-order explicit, least numerical dispersion. FBDF: implicit, which damps waves numerically (for comparison)."
+kind = "select"
+default = "tsit5"
+models = ["wave"]
+
+[[inputs.options]]
+value = "tsit5"
+label = "Tsit5 (Explicit)"
+
+[[inputs.options]]
+value = "vern9"
+label = "Vern9 (High Accuracy)"
+
+[[inputs.options]]
+value = "fbdf"
+label = "FBDF (Implicit)"
+
+[[inputs]]
+id = "tol"
+label = "Relative Tolerance"
+tooltip = "The time-stepping tolerance. The spatial error, set by the grid, does not shrink with it."
+default = "1e-6"
+models = ["heat", "wave"]
+
+[[inputs]]
+id = "src"
+label = "Source f(x, y)"
+tooltip = "A Julia expression in x and y, e.g. 1.0 (uniform heating) or 100 * exp(-50 * ((x - 0.3)^2 + (y - 0.6)^2)) (a hot spot)."
+default = "1.0"
+models = ["poisson"]
+
+[[inputs]]
+id = "np"
+label = "Grid Points per Side"
+tooltip = "Interior points in each direction; the system has this number squared unknowns. Odd numbers put a grid point at the centre."
+default = "49"
+models = ["poisson"]
+
+[[inputs]]
+id = "pmethod"
+label = "Linear Solver"
+tooltip = "Direct: sparse factorisation, exact up to rounding, fast for 2-D grids of this size. Conjugate Gradients: iterative, low memory, the standard for large 3-D problems; its iteration count grows with the grid."
+kind = "select"
+default = "direct"
+models = ["poisson"]
+newRow = true
+
+[[inputs.options]]
+value = "direct"
+label = "Direct (Sparse LU)"
+
+[[inputs.options]]
+value = "cg"
+label = "Conjugate Gradients"
+
+[[inputs]]
+id = "ptol"
+label = "CG Tolerance"
+tooltip = "Conjugate gradients stops when the residual has fallen by this factor."
+default = "1e-8"
+models = ["poisson"]
+
+[[codeBranches]]
+model = "heat"
+code = '''
+using OrdinaryDiffEq, SparseArrays, LinearAlgebra
+
+L = float({{L}})
+D = float({{D}})
+u_init(x) = {{ic}}
+reaction(u, x, t) = {{react}}
+bc = "{{bc}}"
+uL, uR = float({{uleft}}), float({{uright}})
+nx = {{nx}}
+function grid(n, bcond, ends)  # grid points, spacing, second-difference matrix and boundary vector
+    h = bcond == "dirichlet" ? L / (n + 1) : L / n
+    xs = bcond == "dirichlet" ? h .* (1:n) : bcond == "neumann" ? h .* ((1:n) .- 0.5) : h .* (0:n-1)
+    A = spdiagm(-1 => ones(n - 1), 0 => fill(-2.0, n), 1 => ones(n - 1))
+    bvec = zeros(n)
+    if bcond == "dirichlet"
+        bvec[1], bvec[n] = ends
+    elseif bcond == "neumann"
+        A[1, 1] = A[n, n] = -1.0
+    else
+        A[1, n] = A[n, 1] = 1.0
+    end
+    return collect(xs), h, A ./ h^2, bvec ./ h^2
+end
+function setup(n; init=u_init, bcond=bc, ends=(uL, uR), reac=reaction, tmax=float({{T}}))
+    xs, h, A, bvec = grid(n, bcond, ends)
+    rhs(u, p, t) = D .* (A * u .+ bvec) .+ reac.(u, xs, t)  # method of lines: one ODE per grid point
+    return (prob = ODEProblem(rhs, init.(xs), (0.0, tmax)), xs = xs, h = h, A = A, bvec = bvec, ufield = u -> u)
+end
+interp(xg, ug, x) = (i = clamp(searchsortedlast(xg, x), 1, length(xg) - 1); w = (x - xg[i]) / (xg[i + 1] - xg[i]); (1 - w) * ug[i] + w * ug[i + 1])
+algs = Dict("fbdf" => FBDF(), "rodas5p" => Rodas5P(), "rock2" => ROCK2(), "tsit5" => Tsit5(), "vern9" => Vern9())
+solve_with(name, problem; reltol={{tol}}) = solve(problem, algs[name]; reltol, abstol=reltol / 1000)
+alg = "{{halg}}"
+P = setup(nx)
+prob, xs, h, tspan = P.prob, P.xs, P.h, P.prob.tspan
+sol = solve_with(alg, prob)
+u_at(t) = P.ufield(sol(t))
+(grid_points = nx, spacing = h, final_minimum = minimum(u_at(tspan[2])), final_maximum = maximum(u_at(tspan[2])), steps = length(sol.t) - 1, f_evaluations = sol.stats.nf, retcode = sol.retcode, solver = alg)
+'''
+
+[[codeBranches]]
+model = "wave"
+code = '''
+using OrdinaryDiffEq, SparseArrays, LinearAlgebra
+
+L = float({{L}})
+c = float({{c}})
+u_init(x) = {{wic}}
+v_init(x) = {{wvel}}
+bc = "{{bc}}"
+uL, uR = float({{uleft}}), float({{uright}})
+nx = {{nx}}
+function grid(n, bcond, ends)  # grid points, spacing, second-difference matrix and boundary vector
+    h = bcond == "dirichlet" ? L / (n + 1) : L / n
+    xs = bcond == "dirichlet" ? h .* (1:n) : bcond == "neumann" ? h .* ((1:n) .- 0.5) : h .* (0:n-1)
+    A = spdiagm(-1 => ones(n - 1), 0 => fill(-2.0, n), 1 => ones(n - 1))
+    bvec = zeros(n)
+    if bcond == "dirichlet"
+        bvec[1], bvec[n] = ends
+    elseif bcond == "neumann"
+        A[1, 1] = A[n, n] = -1.0
+    else
+        A[1, n] = A[n, 1] = 1.0
+    end
+    return collect(xs), h, A ./ h^2, bvec ./ h^2
+end
+function setup(n; init=u_init, vel=v_init, bcond=bc, ends=(uL, uR), tmax=float({{T}}))
+    xs, h, A, bvec = grid(n, bcond, ends)
+    rhs(w, p, t) = [w[n+1:end]; c^2 .* (A * w[1:n] .+ bvec)]  # state w = [u; u_t]
+    return (prob = ODEProblem(rhs, [init.(xs); vel.(xs)], (0.0, tmax)), xs = xs, h = h, A = A, bvec = bvec, ufield = w -> w[1:n])
+end
+interp(xg, ug, x) = (i = clamp(searchsortedlast(xg, x), 1, length(xg) - 1); w = (x - xg[i]) / (xg[i + 1] - xg[i]); (1 - w) * ug[i] + w * ug[i + 1])
+algs = Dict("fbdf" => FBDF(), "rodas5p" => Rodas5P(), "rock2" => ROCK2(), "tsit5" => Tsit5(), "vern9" => Vern9())
+solve_with(name, problem; reltol={{tol}}) = solve(problem, algs[name]; reltol, abstol=reltol / 1000)
+alg = "{{walg}}"
+P = setup(nx)
+prob, xs, h, tspan = P.prob, P.xs, P.h, P.prob.tspan
+sol = solve_with(alg, prob)
+u_at(t) = P.ufield(sol(t))
+(grid_points = nx, spacing = h, cfl_time_step = h / c, final_minimum = minimum(u_at(tspan[2])), final_maximum = maximum(u_at(tspan[2])), steps = length(sol.t) - 1, f_evaluations = sol.stats.nf, retcode = sol.retcode, solver = alg)
+'''
+
+[[codeBranches]]
+model = "poisson"
+code = '''
+using SparseArrays, LinearAlgebra, Krylov
+
+L = float({{L}})
+src(x, y) = {{src}}
+np = {{np}}
+method = "{{pmethod}}"
+function setup(n; f=src)  # the five-point Laplacian with u = 0 on the boundary of [0, L]^2
+    h = L / (n + 1)
+    xs = collect(h .* (1:n))
+    T1 = spdiagm(-1 => fill(-1.0, n - 1), 0 => fill(2.0, n), 1 => fill(-1.0, n - 1)) ./ h^2
+    Id = sparse(1.0I, n, n)
+    A = kron(Id, T1) + kron(T1, Id)  # minus the 2-D Laplacian: symmetric positive definite
+    b = vec([f(x, y) for x in xs, y in xs])
+    return (A = A, b = b, xs = xs, h = h)
+end
+function psolve(m, Q; rtol={{ptol}})  # returns the solution vector and the iteration count
+    m == "direct" && return (Q.A \ Q.b, 0)
+    x, stats = cg(Q.A, Q.b; atol=0.0, rtol)
+    return (x, stats.niter)
+end
+P = setup(np)
+xs, h = P.xs, P.h
+uvec, iterations = psolve(method, P)
+U = reshape(uvec, np, np)  # U[i, j] = u(xs[i], xs[j])
+(grid = "$np x $np", unknowns = np^2, spacing = h, maximum = maximum(U), iterations = iterations, relative_residual = norm(P.A * uvec - P.b) / norm(P.b), method = method)
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "snapshots"
+label = "Solution Profiles"
+desc = "Heat and wave: u(x) at six times from start to finish, so spreading, travelling and reflection are visible at a glance. Poisson: the solution as a colour map over the square"
+code = '''
+using Plots
+{{?model=heat|wave}} p = Plots.plot(xlabel="x", ylabel="u", title="Profiles at six times ($alg)")
+{{?model=heat|wave}} for t in range(tspan[1], tspan[2], length=6); Plots.plot!(p, xs, u_at(t), lw=2, label="t = $(round(t, sigdigits=3))"); end
+{{?model=poisson}} p = Plots.heatmap(xs, xs, permutedims(U), aspect_ratio=1, c=:viridis, xlabel="x", ylabel="y", title="Solution u(x, y)")
+p
+'''
+
+[[actionGroups.actions]]
+id = "space-time"
+label = "Space-Time Picture"
+desc = "Heat and wave: u as colour over x (across) and t (up); travelling waves appear as diagonal lines whose slope is the speed. Poisson: the solution as a 3-D surface"
+code = '''
+using Plots
+{{?model=heat|wave}} ts = range(tspan[1], tspan[2], length=200)
+{{?model=heat|wave}} Plots.heatmap(xs, ts, permutedims(reduce(hcat, u_at.(ts))), c=:viridis, xlabel="x", ylabel="t", title="u(x, t)")
+{{?model=poisson}} Plots.surface(xs, xs, permutedims(U), c=:viridis, xlabel="x", ylabel="y", zlabel="u", title="Solution surface")
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "grid-convergence"
+label = "Grid Convergence"
+desc = "Re-solves on coarser and finer grids and measures the change against the finest one. An observed order near 2 confirms the second-order finite differences; a much lower order points to a kink, a discontinuity or too coarse a grid"
+code = '''
+using Plots
+{{?model=heat|wave}} probes = range(0.2L, 0.8L, length=7)
+{{?model=heat|wave}} endprofile(n) = (Q = setup(n); s = solve_with(alg, Q.prob; reltol=1e-10); (Q.h, [interp(Q.xs, Q.ufield(s.u[end]), x) for x in probes]))
+{{?model=heat|wave}} ns = [div(nx, 4), div(nx, 2), nx]; ref = endprofile(4nx)[2]
+{{?model=heat|wave}} res = endprofile.(ns); errs = [maximum(abs.(r[2] .- ref)) for r in res]
+{{?model=poisson}} centre(n) = (Q = setup(n); m = div(n + 1, 2); (Q.h, (Q.A \ Q.b)[m + (m - 1) * n]))  # value at (L/2, L/2)
+{{?model=poisson}} ns = [7, 15, 31, 63, 127]; ref = centre(255)[2]
+{{?model=poisson}} res = centre.(ns); errs = [abs(r[2] - ref) for r in res]
+hs = first.(res)
+display(Plots.plot(hs, errs, xscale=:log10, yscale=:log10, m=:circle, lw=2, label="change against the finest grid", xlabel="grid spacing h", ylabel="error", title="Grid convergence"))
+[(grid_points = ns[k], spacing = hs[k], error = errs[k], observed_order = k == 1 ? missing : log(errs[k - 1] / errs[k]) / log(hs[k - 1] / hs[k])) for k in eachindex(ns)]
+'''
+
+[[actionGroups.actions]]
+id = "stability-check"
+label = "Stiffness and Conditioning"
+desc = "Heat: the decay rates of the discrete diffusion operator, the forward-Euler step limit h^2 / 2D and the stiffness ratio. Wave: the CFL time step h / c. Poisson: the condition number of the linear system and the conjugate-gradient iterations it implies"
+code = '''
+using LinearAlgebra
+{{?model=heat|wave}} ev = abs.(eigvals(Symmetric(Matrix(P.A))))  # decay rates of the discrete second derivative
+{{?model=heat|wave}} rates = filter(>(1e-9 * maximum(ev)), ev)  # drop the zero mode of no-flux and periodic boundaries
+{{?model=heat|wave}} avg_step = (tspan[2] - tspan[1]) / (length(sol.t) - 1)
+{{?model=heat}} (fastest_decay_rate = D * maximum(rates), slowest_decay_rate = D * minimum(rates), stiffness_ratio = maximum(rates) / minimum(rates), forward_euler_step_limit = 2 / (D * maximum(rates)), steps_taken = length(sol.t) - 1, average_step = avg_step, note = "the stiffness ratio grows like 1/h^2: refining the grid makes explicit solvers hopeless and implicit ones essential")
+{{?model=wave}} (highest_frequency = c * sqrt(maximum(rates)), lowest_frequency = c * sqrt(minimum(rates)), cfl_time_step = h / c, steps_taken = length(sol.t) - 1, average_step = avg_step, note = "waves oscillate rather than decay, so they are not stiff: explicit solvers need steps of order h / c, and implicit ones add numerical damping")
+{{?model=poisson}} lmin = 8 / h^2 * sin(pi * h / (2L))^2; lmax = 8 / h^2 * cos(pi * h / (2L))^2
+{{?model=poisson}} (smallest_eigenvalue = lmin, largest_eigenvalue = lmax, condition_number = lmax / lmin, expected_cg_iterations = ceil(Int, sqrt(lmax / lmin) / 2 * log(2 / {{ptol}})), cg_iterations_taken = psolve("cg", P)[2], note = "the condition number grows like 1/h^2, so conjugate gradients needs about twice the iterations each time h is halved")
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "probe"
+label = "Probes and Cross-Sections"
+desc = "Heat and wave: u over time at x = L/4, L/2 and 3L/4, like sensors placed along the rod or string. Poisson: the solution along the two lines through the centre of the square"
+code = '''
+using Plots
+{{?model=heat|wave}} ts = range(tspan[1], tspan[2], length=300); pts = [L / 4, L / 2, 3L / 4]
+{{?model=heat|wave}} p = Plots.plot(xlabel="t", ylabel="u", title="u over time at three points")
+{{?model=heat|wave}} for x in pts; Plots.plot!(p, ts, [interp(xs, u_at(t), x) for t in ts], lw=2, label="x = $(round(x, sigdigits=3))"); end
+{{?model=heat|wave}} display(p)
+{{?model=heat|wave}} [(x = x, at_start = interp(xs, u_at(tspan[1]), x), at_middle = interp(xs, u_at(sum(tspan) / 2), x), at_end = interp(xs, u_at(tspan[2]), x)) for x in pts]
+{{?model=poisson}} m = div(np + 1, 2)
+{{?model=poisson}} display(Plots.plot(xs, [U[:, m] U[m, :]], lw=2, label=["along x at y = $(round(xs[m], sigdigits=3))" "along y at x = $(round(xs[m], sigdigits=3))"], xlabel="position", ylabel="u", title="Cross-sections through the centre"))
+{{?model=poisson}} (centre_value = U[m, m], average_on_line_along_x = sum(U[:, m]) / np, average_on_line_along_y = sum(U[m, :]) / np)
+'''
+
+[[actionGroups.actions]]
+id = "long-run"
+label = "Long-Run Behaviour"
+desc = "Heat: solves to ten times the horizon and tracks how fast u is still changing; a straight fall on the log scale is exponential approach to steady state. Wave: the amplitude over ten times the horizon, which should not decay. Poisson: runs the heat equation with this source and shows it settling to the Poisson solution"
+code = '''
+using Plots, LinearAlgebra
+{{?model=heat|wave}} long = solve_with(alg, remake(prob; tspan=(0.0, 10 * tspan[2]))); tl = range(0.0, 10 * tspan[2], length=400)
+{{?model=heat}} rate = [sqrt(h) * norm(prob.f(long(t), nothing, t)) for t in tl]
+{{?model=heat}} display(Plots.plot(tl, max.(rate, 1e-16), yscale=:log10, lw=2, label="", xlabel="t", ylabel="size of du/dt", title="Approach to steady state"))
+{{?model=heat}} (final_minimum = minimum(long.u[end]), final_maximum = maximum(long.u[end]), final_rate_of_change = rate[end], note = "a straight fall on the log scale means exponential decay at the rate of the slowest mode")
+{{?model=wave}} amp = [maximum(abs, P.ufield(long(t))) for t in tl]
+{{?model=wave}} display(Plots.plot(tl, amp, lw=2, label="", xlabel="t", ylabel="largest |u|", title="Amplitude over a long run ($alg)"))
+{{?model=wave}} (initial_amplitude = amp[1], final_amplitude = amp[end], steps = length(long.t) - 1, note = "the exact wave equation never loses energy; a steady fall here is numerical damping by the solver")
+{{?model=poisson}} F = lu(I + 0.01 * P.A)  # implicit Euler with step 0.01 for u_t = Laplacian(u) + f, starting from u = 0
+{{?model=poisson}} ws = accumulate((w, _) -> F \ (w .+ 0.01 .* P.b), 1:300; init=zeros(length(P.b))); gaps = [norm(w - uvec) / norm(uvec) for w in ws]
+{{?model=poisson}} display(Plots.plot(0.01 .* (1:300), gaps, yscale=:log10, lw=2, label="", xlabel="t", ylabel="relative gap to the Poisson solution", title="Heat flow settling to the steady state"))
+{{?model=poisson}} (gap_at_t_1 = gaps[100], gap_at_t_3 = gaps[300], time_to_1_percent = something(findfirst(<(0.01), gaps), missing) * 0.01)
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "compare-solvers"
+label = "Compare Solvers"
+desc = "Heat and wave: every time-stepper on the same grid, with its error against a tight-tolerance reference, steps, function and Jacobian evaluations and time. Poisson: the sparse direct solve against conjugate gradients"
+code = '''
+using LinearAlgebra
+{{?model=heat}} candidates = ["fbdf", "rodas5p", "rock2", "tsit5"]; ref = solve_with("rodas5p", prob; reltol=1e-10)
+{{?model=wave}} candidates = ["tsit5", "vern9", "fbdf"]; ref = solve_with("vern9", prob; reltol=1e-12)
+{{?model=heat|wave}} map(candidates) do m
+{{?model=heat|wave}}     try
+{{?model=heat|wave}}         solve_with(m, prob)  # compile
+{{?model=heat|wave}}         t = @elapsed s = solve_with(m, prob)
+{{?model=heat|wave}}         (solver = m, error_at_final_time = maximum(abs.(P.ufield(s.u[end]) .- P.ufield(ref.u[end]))), steps = length(s.t) - 1, f_evaluations = s.stats.nf, jacobians = s.stats.njacs, seconds = round(t, sigdigits=3), retcode = string(s.retcode))
+{{?model=heat|wave}}     catch e
+{{?model=heat|wave}}         (solver = m, error_at_final_time = missing, steps = missing, f_evaluations = missing, jacobians = missing, seconds = missing, retcode = sprint(showerror, e))
+{{?model=heat|wave}}     end
+{{?model=heat|wave}} end
+{{?model=poisson}} map(["direct", "cg"]) do m
+{{?model=poisson}}     psolve(m, P)  # compile
+{{?model=poisson}}     t = @elapsed (x, its) = psolve(m, P)
+{{?model=poisson}}     (method = m, iterations = its, seconds = round(t, sigdigits=3), relative_residual = norm(P.A * x - P.b) / norm(P.b), difference_from_direct = norm(x - P.A \ P.b) / norm(P.A \ P.b))
+{{?model=poisson}} end
+'''
+
+[[actionGroups.actions]]
+id = "exact-solution"
+label = "Exact-Solution Test"
+desc = "Runs the same code on a problem with a known answer, a decaying sine mode (heat), a standing wave (wave) or u = sin sin (Poisson), on this grid and on one twice as fine. The error should fall by about four: that verifies the discretisation, not just the solver"
+code = '''
+using Plots, LinearAlgebra
+mode(x) = sin(pi * x / L)
+{{?model=heat}} exact(x, t) = mode(x) * exp(-D * (pi / L)^2 * t)
+{{?model=heat}} test(n) = (Q = setup(n; init=mode, bcond="dirichlet", ends=(0.0, 0.0), reac=(u, x, t) -> 0.0); s = solve_with(alg, Q.prob; reltol=1e-10); (Q.xs, Q.ufield(s.u[end]), exact.(Q.xs, tspan[2])))
+{{?model=wave}} exact(x, t) = mode(x) * cos(c * pi * t / L)
+{{?model=wave}} test(n) = (Q = setup(n; init=mode, vel=x -> 0.0, bcond="dirichlet", ends=(0.0, 0.0)); s = solve_with(alg, Q.prob; reltol=1e-10); (Q.xs, Q.ufield(s.u[end]), exact.(Q.xs, tspan[2])))
+{{?model=heat|wave}} n1 = nx
+{{?model=poisson}} test(n) = (Q = setup(n; f=(x, y) -> 2 * (pi / L)^2 * mode(x) * mode(y)); (Q.xs, psolve(method, Q)[1], vec([mode(x) * mode(y) for x in Q.xs, y in Q.xs])))
+{{?model=poisson}} n1 = np
+coarse = test(n1); fine = test(2n1 + 1)
+e1 = maximum(abs.(coarse[2] .- coarse[3])); e2 = maximum(abs.(fine[2] .- fine[3]))
+{{?model=heat|wave}} p = Plots.plot(coarse[1], coarse[3], lw=3, c=:black, label="exact", xlabel="x", title="Numerical against exact at t = $(tspan[2])")
+{{?model=heat|wave}} Plots.scatter!(p, coarse[1], coarse[2], ms=2, label="numerical, $n1 points")
+{{?model=poisson}} p = Plots.heatmap(coarse[1], coarse[1], permutedims(reshape(coarse[2] .- coarse[3], n1, n1)), aspect_ratio=1, xlabel="x", ylabel="y", title="Numerical minus exact")
+display(p)
+(error_on_this_grid = e1, error_with_half_the_spacing = e2, ratio = e1 / e2, note = "a ratio near 4 confirms second-order accuracy in space")
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "conservation"
+label = "Conservation Check"
+desc = "Heat: total amount h * sum(u) over time, constant with no-flux or periodic boundaries and no reaction, otherwise changed only by the boundaries and the reaction. Wave: total energy, which should stay constant. Poisson: total source against the outflow through the boundary"
+code = '''
+using Plots, LinearAlgebra
+{{?model=heat|wave}} ts = range(tspan[1], tspan[2], length=300)
+{{?model=heat}} q = [h * sum(u_at(t)) for t in ts]; what = "total amount h * sum(u)"
+{{?model=wave}} energy(w) = (u = P.ufield(w); v = w[length(xs)+1:end]; h * (dot(v, v) / 2 - c^2 * (dot(u, P.A * u) / 2 + dot(P.bvec, u))))
+{{?model=wave}} q = [energy(sol(t)) for t in ts]; what = "energy (kinetic + stretching)"
+{{?model=heat|wave}} display(Plots.plot(ts, q, lw=2, label="", xlabel="t", ylabel=what, title="Conservation over time"))
+{{?model=heat|wave}} (quantity = what, at_start = q[1], at_end = q[end], relative_change = (q[end] - q[1]) / max(abs(q[1]), eps()))
+{{?model=poisson}} outflow = sum(U[1, :]) + sum(U[end, :]) + sum(U[:, 1]) + sum(U[:, end])  # flux u / h through each boundary edge of length h
+{{?model=poisson}} (total_source = h^2 * sum(P.b), boundary_outflow = outflow, relative_difference = (outflow - h^2 * sum(P.b)) / (h^2 * sum(P.b)), note = "in steady state everything the source produces must leave through the boundary")
+'''
+
+[[actionGroups.actions]]
+id = "field-summary"
+label = "Field Summary"
+desc = "Heat and wave: minimum, maximum, where the maximum sits and the spatial average at the start, the midpoint and the end. Poisson: the maximum, where it occurs, and the average over the square"
+code = '''
+{{?model=heat|wave}} map([tspan[1], sum(tspan) / 2, tspan[2]]) do t
+{{?model=heat|wave}}     u = u_at(t)
+{{?model=heat|wave}}     (t = t, minimum = minimum(u), maximum = maximum(u), location_of_maximum = xs[argmax(u)], spatial_average = sum(u) / length(u))
+{{?model=heat|wave}} end
+{{?model=poisson}} k = argmax(U)
+{{?model=poisson}} (maximum = U[k], at_x = xs[k[1]], at_y = xs[k[2]], average_over_square = sum(U) / length(U), minimum = minimum(U))
+'''

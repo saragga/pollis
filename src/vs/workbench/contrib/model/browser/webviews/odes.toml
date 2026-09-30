@@ -1,0 +1,630 @@
+# Ordinary Differential Equations Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/odes.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Ordinary Differential Equations"
+viewType = "pollis.odes"
+defaultModel = "scalar"
+
+[[packages]]
+name = "OrdinaryDiffEq.jl"
+github = "https://github.com/SciML/OrdinaryDiffEq.jl"
+
+[[packages.videos]]
+title = "Differential Equations, a Tourist's Guide"
+description = "3Blue1Brown, DE1: slope fields, phase space and why most differential equations are solved numerically"
+url = "https://www.youtube.com/watch?v=p_di4Zn4wz4"
+
+[[packages.videos]]
+title = "Intro to Solving Differential Equations in Julia"
+description = "Chris Rackauckas: defining an ODEProblem, choosing a solver and plotting the solution"
+url = "https://www.youtube.com/watch?v=KPEqYtEd-zY"
+
+[[packages.videos]]
+title = "A Deep Dive Into DifferentialEquations.jl"
+description = "Chris Rackauckas and Oscar Smith on solver choice, stiffness and performance (JuliaCon Global 2025)"
+url = "https://www.youtube.com/watch?v=lSGFAmXKIsE"
+
+[[packages.videos]]
+title = "Runge-Kutta Integration of ODEs and the Lorenz Equation"
+description = "Steve Brunton, ME564 lecture 18: how Runge-Kutta methods work and what chaos does to numerical solutions"
+url = "https://www.youtube.com/watch?v=5CXhHx56COo"
+
+[[packages]]
+name = "NonlinearSolve.jl"
+github = "https://github.com/SciML/NonlinearSolve.jl"
+
+[[packages]]
+name = "ForwardDiff.jl"
+github = "https://github.com/JuliaDiff/ForwardDiff.jl"
+
+[requires]
+packages = ["OrdinaryDiffEq.jl", "NonlinearSolve.jl", "ForwardDiff.jl", "Plots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "First-Order Equations"
+file = "odes/tutorial-01-first-order.ipynb"
+bundled = true
+description = "Slope fields, exponential and logistic growth, exact solutions and Euler's method by hand"
+
+[[notebookSections.notebooks]]
+name = "Numerical Methods and Their Accuracy"
+file = "odes/tutorial-02-numerical-methods.ipynb"
+bundled = true
+description = "Euler, Heun and RK4 written out, their orders of convergence, and adaptive step-size control"
+
+[[notebookSections.notebooks]]
+name = "Systems and Phase Planes"
+file = "odes/tutorial-03-systems-phase-planes.ipynb"
+bundled = true
+description = "Linear systems and eigenvalues, nodes, saddles, spirals and centres, and predator-prey dynamics"
+
+[[notebookSections.notebooks]]
+name = "Second-Order Equations and Oscillations"
+file = "odes/tutorial-04-second-order.ipynb"
+bundled = true
+description = "The characteristic equation, damping regimes, forcing and resonance, and the nonlinear pendulum"
+
+[[notebookSections.notebooks]]
+name = "Stiffness and Applications"
+file = "odes/tutorial-05-stiffness-applications.ipynb"
+bundled = true
+description = "Why stiff equations such as Robertson's reaction and the Van der Pol oscillator need implicit solvers, then the Solow growth model, an SIR epidemic and drug absorption"
+
+[[wikis]]
+name = "Factsheet"
+file = "odes/factsheet.md"
+bundled = true
+description = "The three tasks at a glance (first-order equations, systems, second-order equations) with a minimal example"
+
+[[wikis]]
+name = "Overview"
+file = "odes/overview.md"
+bundled = true
+description = "Initial value problems, reducing higher order to first order, time stepping, adaptive steps and stiffness"
+
+[[wikis]]
+name = "Assumptions"
+file = "odes/assumptions.md"
+bundled = true
+description = "Existence and uniqueness, smoothness, tolerances, chaos and the assumptions built into the model"
+
+[[wikis]]
+name = "Diagnostics"
+file = "odes/diagnostics.md"
+bundled = true
+description = "Return codes, step sizes and stiffness, residual checks, convergence and sensitivity"
+
+[[wikis]]
+name = "Interpretation"
+file = "odes/interpretation.md"
+bundled = true
+description = "Equilibria, stability from the Jacobian, phase portraits, long-run and transient behaviour, units and scale"
+
+[[wikis]]
+name = "Decision Guide"
+file = "odes/decision-guide.md"
+bundled = true
+description = "Which solver (Tsit5, Vern9, Rodas5P, FBDF, auto-switching), which tolerances, and what lies beyond plain ODEs"
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "DifferentialEquations.jl: A Performant and Feature-Rich Ecosystem for Solving Differential Equations in Julia"
+authors = "Rackauckas, Christopher; Nie, Qing"
+year = 2017
+journal = "Journal of Open Research Software"
+doi = "10.5334/jors.151"
+openAccess = true
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Solving Ordinary Differential Equations I: Nonstiff Problems"
+authors = "Hairer, Ernst; Norsett, Syvert P.; Wanner, Gerhard"
+year = 1993
+journal = "Springer"
+doi = "10.1007/978-3-540-78862-1"
+openAccess = false
+
+[[references]]
+title = "Solving Ordinary Differential Equations II: Stiff and Differential-Algebraic Problems"
+authors = "Hairer, Ernst; Wanner, Gerhard"
+year = 1996
+journal = "Springer"
+doi = "10.1007/978-3-642-05221-7"
+openAccess = false
+
+[[references]]
+title = "Numerical Methods for Ordinary Differential Equations"
+authors = "Butcher, John C."
+year = 2016
+journal = "Wiley"
+doi = "10.1002/9781119121534"
+openAccess = false
+
+[[references]]
+title = "Nonlinear Dynamics and Chaos"
+authors = "Strogatz, Steven H."
+year = 2018
+journal = "CRC Press"
+doi = "10.1201/9780429492563"
+openAccess = false
+
+[[references]]
+title = "Essential Mathematics for Economic Analysis"
+authors = "Sydsaeter, Knut; Hammond, Peter; Strom, Arne; Carvajal, Andres"
+year = 2021
+journal = "Pearson"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Ueber die numerische Aufloesung von Differentialgleichungen"
+authors = "Runge, Carl"
+year = 1895
+journal = "Mathematische Annalen"
+doi = "10.1007/BF01446807"
+openAccess = false
+
+[[references]]
+title = "A Family of Embedded Runge-Kutta Formulae"
+authors = "Dormand, J. R.; Prince, P. J."
+year = 1980
+journal = "Journal of Computational and Applied Mathematics"
+doi = "10.1016/0771-050X(80)90013-3"
+openAccess = false
+
+[[references]]
+title = "Runge-Kutta Pairs of Order 5(4) Satisfying Only the First Column Simplifying Assumption"
+authors = "Tsitouras, Ch."
+year = 2011
+journal = "Computers and Mathematics with Applications"
+doi = "10.1016/j.camwa.2011.06.002"
+openAccess = false
+
+[[references]]
+title = "The MATLAB ODE Suite"
+authors = "Shampine, Lawrence F.; Reichelt, Mark W."
+year = 1997
+journal = "SIAM Journal on Scientific Computing"
+doi = "10.1137/S1064827594276424"
+openAccess = false
+
+[[references]]
+title = "Fluctuations in the Abundance of a Species Considered Mathematically"
+authors = "Volterra, Vito"
+year = 1926
+journal = "Nature"
+doi = "10.1038/118558a0"
+openAccess = false
+
+[[references]]
+title = "A Contribution to the Mathematical Theory of Epidemics"
+authors = "Kermack, William O.; McKendrick, Anderson G."
+year = 1927
+journal = "Proceedings of the Royal Society A"
+doi = "10.1098/rspa.1927.0118"
+openAccess = true
+
+[[references]]
+title = "A Contribution to the Theory of Economic Growth"
+authors = "Solow, Robert M."
+year = 1956
+journal = "The Quarterly Journal of Economics"
+doi = "10.2307/1884513"
+openAccess = false
+
+[[models]]
+id = "scalar"
+label = "First-Order Equation"
+
+[[models]]
+id = "system"
+label = "System of Equations"
+
+[[models]]
+id = "second"
+label = "Second-Order Equation"
+
+[[bullets]]
+text = "First-Order Equation"
+detail = "dy/dt = f(t, y) with y(t0) given: growth, decay, cooling, logistic population, a price adjusting to excess demand"
+
+[[bullets]]
+text = "System of Equations"
+detail = "du/dt = F(t, u) for a vector u: predator and prey, susceptible and infected, capital and consumption"
+
+[[bullets]]
+text = "Second-Order Equation"
+detail = "y'' = g(t, y, y') with position and velocity given: oscillators, pendulums, circuits; solved as a first-order system in (y, y')"
+
+[[decisionRows]]
+task = "First-Order Equation"
+context = "One quantity whose rate of change depends on time and on its own value: exponential or logistic growth, Newton's law of cooling, a capital stock"
+purpose = "The solution curve, its slope field, its equilibria and whether they attract or repel"
+
+[[decisionRows]]
+task = "System of Equations"
+context = "Several interacting quantities: predator-prey, SIR epidemics, coupled markets, chemical reactions"
+purpose = "Trajectories in time and in the phase plane; equilibria classified by the eigenvalues of the Jacobian"
+
+[[decisionRows]]
+task = "Second-Order Equation"
+context = "Accelerations: a spring or pendulum, an RLC circuit, a business cycle model with a second-order lag"
+purpose = "Converts y'' = g into the system y' = v, v' = g, then shows oscillation, damping and energy in the (y, y') plane"
+
+[[inputs]]
+id = "fs"
+label = "Right-Hand Side f(t, y)"
+tooltip = "dy/dt as a Julia expression in t and y, e.g. 0.8y * (1 - y / 10) (logistic), -0.3(y - 20) (cooling) or 0.05y (exponential growth)."
+default = "0.8y * (1 - y / 10)"
+models = ["scalar"]
+
+[[inputs]]
+id = "y0"
+label = "Initial Value y(t0)"
+tooltip = "The value of y at the start of the time span."
+default = "0.5"
+models = ["scalar"]
+
+[[inputs]]
+id = "F"
+label = "Right-Hand Side F(t, u)"
+tooltip = "A vector with one Julia expression per equation, in u[1], u[2], ... and t. The default is predator-prey: prey u[1] grow and are eaten, predators u[2] die out without prey."
+kind = "textarea"
+default = '''
+[1.1u[1] - 0.4u[1] * u[2],
+ 0.1u[1] * u[2] - 0.4u[2]]
+'''
+models = ["system"]
+
+[[inputs]]
+id = "uv0"
+label = "Initial State u(t0)"
+tooltip = "One starting value per equation, e.g. [10.0, 5.0]."
+default = "[10.0, 5.0]"
+models = ["system"]
+
+[[inputs]]
+id = "g"
+label = "Acceleration g(t, y, dy)"
+tooltip = "y'' as a Julia expression in t, y and dy (the velocity y'). The default is a damped pendulum; -0.5dy - 4y + cos(1.5t) is a forced spring."
+default = "-0.5dy - 9.81 * sin(y)"
+models = ["second"]
+
+[[inputs]]
+id = "ya"
+label = "Initial Position y(t0)"
+tooltip = "The starting position, e.g. the pendulum angle in radians."
+default = "2.5"
+models = ["second"]
+
+[[inputs]]
+id = "dya"
+label = "Initial Velocity y'(t0)"
+tooltip = "The starting velocity."
+default = "0.0"
+models = ["second"]
+
+[[inputs]]
+id = "tspan"
+label = "Time Span"
+tooltip = "Start and end times as a tuple, e.g. (0.0, 20.0)."
+default = "(0.0, 20.0)"
+models = ["scalar", "system", "second"]
+
+[[inputs]]
+id = "alg"
+label = "Solver"
+tooltip = "Tsit5: the default for non-stiff equations. Vern9: very high accuracy at tight tolerances. Rodas5P: implicit, for stiff equations. Auto-Switching: starts with Tsit5 and switches to an implicit method when stiffness is detected. RK4 and Euler: classical fixed-step methods, for teaching and comparison (they use the step dt)."
+kind = "select"
+default = "tsit5"
+models = ["scalar", "system", "second"]
+newRow = true
+
+[[inputs.options]]
+value = "tsit5"
+label = "Tsit5 (Non-Stiff)"
+
+[[inputs.options]]
+value = "vern9"
+label = "Vern9 (High Accuracy)"
+
+[[inputs.options]]
+value = "rodas5p"
+label = "Rodas5P (Stiff)"
+
+[[inputs.options]]
+value = "auto"
+label = "Auto-Switching"
+
+[[inputs.options]]
+value = "rk4"
+label = "RK4 (Fixed Step)"
+
+[[inputs.options]]
+value = "euler"
+label = "Euler (Fixed Step)"
+
+[[inputs]]
+id = "tol"
+label = "Relative Tolerance"
+tooltip = "Adaptive solvers choose each step so the estimated local error stays below this fraction of the solution."
+default = "1e-8"
+models = ["scalar", "system", "second"]
+
+[[inputs]]
+id = "dt"
+label = "Fixed Step dt"
+tooltip = "The step size for RK4 and Euler. Adaptive solvers ignore it."
+default = "0.01"
+models = ["scalar", "system", "second"]
+
+[[codeBranches]]
+model = "scalar"
+code = '''
+using OrdinaryDiffEq
+
+f(t, y) = {{fs}}
+rhs(y, p, t) = f(t, y)  # the form OrdinaryDiffEq expects: du/dt = rhs(u, p, t)
+u0 = float({{y0}})
+tspan = float.({{tspan}})
+labels = ["y"]
+prob = ODEProblem(rhs, u0, tspan)
+algs = Dict("tsit5" => Tsit5(), "vern9" => Vern9(), "rodas5p" => Rodas5P(), "auto" => AutoTsit5(Rosenbrock23()), "rk4" => RK4(), "euler" => Euler())
+function solve_with(name; problem=prob, reltol={{tol}}, dt={{dt}})
+    name in ("rk4", "euler") && return solve(problem, algs[name]; dt, adaptive=false)
+    return solve(problem, algs[name]; reltol, abstol=reltol / 1000)
+end
+alg = "{{alg}}"
+sol = solve_with(alg)
+(final_value = sol.u[end], steps = length(sol.t) - 1, f_evaluations = sol.stats.nf, retcode = sol.retcode, solver = alg)
+'''
+
+[[codeBranches]]
+model = "system"
+code = '''
+using OrdinaryDiffEq
+
+rhs(u, p, t) = {{F}}
+u0 = float.({{uv0}})
+tspan = float.({{tspan}})
+labels = ["u[$i]" for i in eachindex(u0)]
+length(rhs(u0, nothing, tspan[1])) == length(u0) || error("F needs one equation per state variable")
+prob = ODEProblem(rhs, u0, tspan)
+algs = Dict("tsit5" => Tsit5(), "vern9" => Vern9(), "rodas5p" => Rodas5P(), "auto" => AutoTsit5(Rosenbrock23()), "rk4" => RK4(), "euler" => Euler())
+function solve_with(name; problem=prob, reltol={{tol}}, dt={{dt}})
+    name in ("rk4", "euler") && return solve(problem, algs[name]; dt, adaptive=false)
+    return solve(problem, algs[name]; reltol, abstol=reltol / 1000)
+end
+alg = "{{alg}}"
+sol = solve_with(alg)
+(final_state = sol.u[end], steps = length(sol.t) - 1, f_evaluations = sol.stats.nf, retcode = sol.retcode, solver = alg)
+'''
+
+[[codeBranches]]
+model = "second"
+code = '''
+using OrdinaryDiffEq
+
+g(t, y, dy) = {{g}}
+rhs(u, p, t) = [u[2], g(t, u[1], u[2])]  # the second-order equation becomes the system dy/dt = v, dv/dt = g(t, y, v)
+u0 = float.([{{ya}}, {{dya}}])
+tspan = float.({{tspan}})
+labels = ["y", "dy/dt"]
+prob = ODEProblem(rhs, u0, tspan)
+algs = Dict("tsit5" => Tsit5(), "vern9" => Vern9(), "rodas5p" => Rodas5P(), "auto" => AutoTsit5(Rosenbrock23()), "rk4" => RK4(), "euler" => Euler())
+function solve_with(name; problem=prob, reltol={{tol}}, dt={{dt}})
+    name in ("rk4", "euler") && return solve(problem, algs[name]; dt, adaptive=false)
+    return solve(problem, algs[name]; reltol, abstol=reltol / 1000)
+end
+alg = "{{alg}}"
+sol = solve_with(alg)
+(final_position = sol.u[end][1], final_velocity = sol.u[end][2], steps = length(sol.t) - 1, f_evaluations = sol.stats.nf, retcode = sol.retcode, solver = alg)
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "solution-plot"
+label = "Solution Plot"
+desc = "Every state variable against time, drawn from the solver's continuous interpolation rather than only at the steps; for a second-order equation, position and velocity"
+code = '''
+using Plots
+Plots.plot(sol, lw=2, label=permutedims(labels), xlabel="t", title="Solution by $alg")
+'''
+
+[[actionGroups.actions]]
+id = "phase-portrait"
+label = "Phase Portrait"
+desc = "First-order: the slope field in the (t, y) plane with the solution threading through it. Two variables: the vector field in the phase plane with the trajectory from the starting point. Equilibria are where the arrows vanish"
+code = '''
+using Plots
+function arrows(xs, ys, dir)  # equal-length segments on a grid; dir(x, y) returns the direction (dx, dy)
+    X = vec([x for x in xs, y in ys]); Y = vec([y for x in xs, y in ys])
+    D = [dir(x, y) for (x, y) in zip(X, Y)]
+    n = [hypot(d[1] / step(xs), d[2] / step(ys)) + eps() for d in D]
+    return X, Y, 0.4 .* first.(D) ./ n, 0.4 .* last.(D) ./ n
+end
+padded(v) = (lo = minimum(v); hi = maximum(v); m = 0.15 * (hi - lo) + 1e-3; range(lo - m, hi + m, length=17))
+{{?model=scalar}} xs = range(tspan[1], tspan[2], length=21); ys = padded(sol.u)
+{{?model=scalar}} X, Y, U, V = arrows(xs, ys, (t, y) -> (1.0, rhs(y, nothing, t)))
+{{?model=scalar}} p = Plots.quiver(X, Y, quiver=(U, V), c=:gray, xlabel="t", ylabel="y", title="Slope field and the solution")
+{{?model=scalar}} Plots.plot!(p, sol, lw=2, c=:steelblue, label="y(t)")
+{{?model=system|second}} length(u0) == 2 || error("the phase portrait needs exactly two state variables")
+{{?model=system|second}} xs = padded(sol[1, :]); ys = padded(sol[2, :])
+{{?model=system|second}} X, Y, U, V = arrows(xs, ys, (a, b) -> Tuple(rhs([a, b], nothing, tspan[1])))
+{{?model=system|second}} p = Plots.quiver(X, Y, quiver=(U, V), c=:gray, xlabel=labels[1], ylabel=labels[2], title="Phase portrait (vector field at t = $(tspan[1]))")
+{{?model=system|second}} Plots.plot!(p, sol, idxs=(1, 2), lw=2, c=:steelblue, label="trajectory")
+{{?model=system|second}} Plots.scatter!(p, [u0[1]], [u0[2]], c=:red, label="start")
+p
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "step-sizes"
+label = "Step Sizes and Stiffness"
+desc = "The step sizes the solver chose, accepted and rejected step counts, and the Jacobian eigenvalues at the start. Tiny steps where the solution is smooth, or a large stiffness ratio, signal a stiff equation that needs an implicit solver"
+code = '''
+using Plots, ForwardDiff, LinearAlgebra
+{{?model=scalar}} lam = [ForwardDiff.derivative(y -> rhs(y, nothing, tspan[1]), u0)]
+{{?model=system|second}} lam = eigvals(ForwardDiff.jacobian(u -> rhs(u, nothing, tspan[1]), u0))
+rates = abs.(real.(lam))
+dts = diff(sol.t)
+display(Plots.plot(sol.t[2:end], dts, yscale=:log10, m=:circle, ms=2, lw=1, label="", xlabel="t", ylabel="step size", title="$alg: $(sol.stats.naccept) accepted, $(sol.stats.nreject) rejected steps"))
+(steps = length(dts), smallest_step = minimum(dts), largest_step = maximum(dts), f_evaluations = sol.stats.nf, jacobian_eigenvalues_at_start = lam, stiffness_ratio = maximum(rates) / max(minimum(rates), eps()), explicit_step_limit_estimate = 2.8 / maximum(abs.(lam)), note = "steps far below the time scale of the solution, or a stiffness ratio in the thousands, suggest a stiff solver such as Rodas5P")
+'''
+
+[[actionGroups.actions]]
+id = "residual-check"
+label = "Residual Check"
+desc = "Does the computed curve satisfy the equation? Plots the defect, the gap between the curve's slope and the right-hand side, and the error against a Vern9 reference solved at tolerance 1e-12"
+code = '''
+using Plots, LinearAlgebra
+ts = range(tspan[1], tspan[2], length=401)
+defect = [norm(sol(t, Val{1}) - rhs(sol(t), nothing, t)) for t in ts]
+ref = solve(prob, Vern9(); reltol=1e-12, abstol=1e-14)
+gap = [norm(sol(t) - ref(t)) for t in ts]
+display(Plots.plot(ts, [max.(defect, 1e-16) max.(gap, 1e-16)], yscale=:log10, lw=2, label=["defect: slope minus right-hand side" "error against the reference"], xlabel="t", title="How well the solution satisfies the equation"))
+(largest_defect = maximum(defect), largest_error_vs_reference = maximum(gap), error_at_final_time = norm(sol.u[end] - ref.u[end]))
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "extend-horizon"
+label = "Extend the Horizon"
+desc = "Solves to twice the time span and reports the state at five times beyond the original end: does the solution settle, grow, oscillate or blow up?"
+code = '''
+using Plots
+T2 = tspan[1] + 2 * (tspan[2] - tspan[1])
+long = solve_with(alg; problem=remake(prob; tspan=(tspan[1], T2)))
+p = Plots.plot(long, lw=2, label=permutedims(labels), xlabel="t", title="Solution to twice the horizon")
+Plots.vline!(p, [tspan[2]], ls=:dash, c=:gray, label="original end")
+display(p)
+[(t = t, state = long(t)) for t in range(tspan[2], T2, length=5)]
+'''
+
+[[actionGroups.actions]]
+id = "initial-sensitivity"
+label = "Initial-Condition Sensitivity"
+desc = "Re-solves from the initial state scaled by 0.9, 0.99, 1.01 and 1.1. Gaps that shrink mean a stable solution; gaps that grow fast, as in chaotic systems, mean long-run forecasts are unreliable"
+code = '''
+using Plots, LinearAlgebra
+ts = range(tspan[1], tspan[2], length=400)
+p = Plots.plot(ts, [sol(t)[1] for t in ts], lw=3, c=:black, label="as given", xlabel="t", ylabel=labels[1], title="Sensitivity to the initial condition")
+rows = map((0.9, 0.99, 1.01, 1.1)) do s
+    alt = solve_with(alg; problem=remake(prob; u0=u0 * s))
+    Plots.plot!(p, ts, [alt(t)[1] for t in ts], lw=1.5, label="initial state x $s")
+    (scale = s, initial_gap = norm(u0 * s - u0), final_gap = norm(alt.u[end] - sol.u[end]), amplification = norm(alt.u[end] - sol.u[end]) / norm(u0 * s - u0))
+end
+display(p)
+rows
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "compare-solvers"
+label = "Compare Solvers"
+desc = "Every solver on the same problem: error at the final time against a Vern9 reference, steps, function and Jacobian evaluations and time (timed on a second run, after compilation)"
+code = '''
+using LinearAlgebra
+ref = solve(prob, Vern9(); reltol=1e-12, abstol=1e-14)
+map(["tsit5", "vern9", "rodas5p", "auto", "rk4", "euler"]) do m
+    try
+        solve_with(m)  # compile
+        t = @elapsed s = solve_with(m)
+        (solver = m, error_at_final_time = norm(s.u[end] - ref.u[end]), steps = length(s.t) - 1, f_evaluations = s.stats.nf, jacobians = s.stats.njacs, seconds = round(t, sigdigits=3), retcode = string(s.retcode))
+    catch e
+        (solver = m, error_at_final_time = missing, steps = missing, f_evaluations = missing, jacobians = missing, seconds = missing, retcode = sprint(showerror, e))
+    end
+end
+'''
+
+[[actionGroups.actions]]
+id = "work-precision"
+label = "Work-Precision Diagram"
+desc = "Error at the final time against function evaluations: the adaptive solver as the tolerance tightens from 1e-2 to 1e-10, and fixed-step Euler (slope -1) and RK4 (slope -4) as the step halves. Lower and further left is better"
+code = '''
+using Plots, LinearAlgebra
+ref = solve(prob, Vern9(); reltol=1e-13, abstol=1e-15)
+err(s) = norm(s.u[end] - ref.u[end]) + 1e-16
+adaptive = alg in ("rk4", "euler") ? "tsit5" : alg
+A = [solve_with(adaptive; reltol=r) for r in 10.0 .^ (-2:-1:-10)]
+H = (tspan[2] - tspan[1]) ./ 2 .^ (4:12)
+E1 = [solve_with("euler"; dt=h) for h in H]; R4 = [solve_with("rk4"; dt=h) for h in H]
+p = Plots.plot(xscale=:log10, yscale=:log10, xlabel="function evaluations", ylabel="error at the final time", title="Work against precision", legend=:bottomleft)
+Plots.plot!(p, [s.stats.nf for s in A], err.(A), m=:circle, lw=2, label="$adaptive, tolerance 1e-2 to 1e-10")
+Plots.plot!(p, [s.stats.nf for s in E1], err.(E1), m=:square, lw=2, label="Euler, fixed step")
+Plots.plot!(p, [s.stats.nf for s in R4], err.(R4), m=:diamond, lw=2, label="RK4, fixed step")
+p
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "steady-states"
+label = "Equilibria and Stability"
+desc = "Finds equilibria (where the right-hand side is zero) from several starting points, then classifies each by the eigenvalues of the Jacobian: stable or unstable node, spiral, saddle or centre. Exact for autonomous equations; otherwise the vector field is frozen at the final time"
+code = '''
+using NonlinearSolve, ForwardDiff, LinearAlgebra
+t_eq = tspan[2]
+G(u, _) = rhs(u, nothing, t_eq)
+{{?model=scalar}} J(u) = [ForwardDiff.derivative(y -> rhs(y, nothing, t_eq), u);;]
+{{?model=system|second}} J(u) = ForwardDiff.jacobian(x -> rhs(x, nothing, t_eq), u)
+kind(l) = all(x -> real(x) < 0, l) ? (all(isreal, l) ? "stable node" : "stable spiral") :
+    all(x -> real(x) > 0, l) ? (all(isreal, l) ? "unstable node" : "unstable spiral") :
+    any(x -> real(x) > 0, l) && any(x -> real(x) < 0, l) ? "saddle (unstable)" : "centre or non-hyperbolic: the linearisation cannot decide"
+roots = []
+for s in unique([sol.u[end], u0, zero(u0), u0 / 2, 2u0])
+    r = solve(NonlinearProblem(G, float.(s)))
+    SciMLBase.successful_retcode(r) && all(q -> norm(q - r.u) > 1e-6 * (1 + norm(r.u)), roots) && push!(roots, r.u)
+end
+isempty(roots) && error("no equilibrium found from the starting points tried")
+[(equilibrium = r, eigenvalues = eigvals(J(r)), type = kind(eigvals(J(r)))) for r in roots]
+'''
+
+[[actionGroups.actions]]
+id = "solution-summary"
+label = "Solution Summary"
+desc = "For each state variable: initial and final values, minimum, maximum, when the maximum occurs and the average over the time span"
+code = '''
+ts = range(tspan[1], tspan[2], length=1001); U = sol.(ts)
+map(eachindex(labels)) do i
+    x = [u[i] for u in U]
+    (variable = labels[i], initial = x[1], final = x[end], minimum = minimum(x), maximum = maximum(x), time_of_maximum = ts[argmax(x)], average_over_time = sum(x) / length(x))
+end
+'''

@@ -12,9 +12,10 @@ import { EXPL_COMMAND_ID, RDYN_ID, RCTL_ID, MCAT_ID, RZOO_ID, FRED_ID, ECB_ID } 
 const SYMB_ID = 'chiara.toolboxes.symb';
 const NLIN_ID = 'chiara.toolboxes.nlin';
 const DIFF_ID = 'chiara.toolboxes.diff';
+const INTEG_ID = 'chiara.toolboxes.integ';
 const ODE_ID = 'chiara.toolboxes.ode';
 const PDE_ID = 'chiara.toolboxes.pde';
-const INTEG_ID = 'chiara.toolboxes.integ';
+const SDE_ID = 'chiara.simulate.sde';
 
 // Define a new submenu ID for "Analytics Toolbox"
 const E_ATSubmenuId = new MenuId('menubarE_ATSubmenu');
@@ -110,41 +111,49 @@ MenuRegistry.appendMenuItem(E_ATSubmenuId, {
 });
 
 MenuRegistry.appendMenuItem(E_ATSubmenuId, {
-	group: '1_at',
+	group: '2_at',
 	command: {
 		id: DIFF_ID,
 		title: localize('at.diff', 'Numerical Differentiation'),
 	},
-	order: 3,
+	order: 1,
 });
 
 MenuRegistry.appendMenuItem(E_ATSubmenuId, {
-	group: '1_at',
+	group: '2_at',
 	command: {
 		id: INTEG_ID,
 		title: localize('at.integ', 'Numerical Integration'),
 	},
-	order: 4,
+	order: 2,
 });
 
 MenuRegistry.appendMenuItem(E_ATSubmenuId, {
-	group: '1_at',
+	group: '3_at',
 	command: {
-		id: ODE_ID, precondition: ContextKeyExpr.false(),
+		id: ODE_ID,
 		title: localize('at.ode', 'Ordinary Differential Equations'),
 	},
-	order: 5,
+	order: 1,
 });
 
 MenuRegistry.appendMenuItem(E_ATSubmenuId, {
-	group: '1_at',
+	group: '3_at',
 	command: {
-		id: PDE_ID, precondition: ContextKeyExpr.false(),
+		id: PDE_ID,
 		title: localize('at.pde', 'Partial Differential Equations'),
+	},
+	order: 2,
+});
+
+MenuRegistry.appendMenuItem(E_ATSubmenuId, {
+	group: '3_at',
+	command: {
+		id: SDE_ID,
+		title: localize('at.sde', 'Stochastic Differential Equations'),
 	},
 	order: 6,
 });
-
 
 
 
