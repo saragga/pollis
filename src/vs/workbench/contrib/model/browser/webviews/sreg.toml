@@ -151,14 +151,14 @@ detail = "specify binary and unary operators to guide the space of discoverable 
 [[inputs]]
 id = "X"
 label = "Feature Matrix X"
-tooltip = "Feature matrix as a Julia matrix literal (n_samples × n_features). Example: [1.0 2.0; 3.0 4.0; 5.0 6.0]"
-default = "[1.0 2.0; 3.0 4.0; 5.0 6.0]"
+tooltip = "Feature matrix (n_samples by n_features). The default draws 100 points uniformly from [-2, 2]^2; with only a handful of points many different formulas fit exactly and the search cannot tell them apart."
+default = "4 .* rand(100, 2) .- 2"
 
 [[inputs]]
 id = "y"
 label = "Target Vector y"
-tooltip = "Target vector as a Julia vector literal. Example: [3.0, 7.0, 11.0]"
-default = "[3.0, 7.0, 11.0]"
+tooltip = "Target vector, one value per row of X. The default follows a known law, y = 2 cos(x1) + x2^2 plus small noise, so you can check whether the search recovers it."
+default = "2 .* cos.(X[:, 1]) .+ X[:, 2] .^ 2 .+ 0.05 .* randn(size(X, 1))"
 
 [[inputs]]
 id = "niter"
