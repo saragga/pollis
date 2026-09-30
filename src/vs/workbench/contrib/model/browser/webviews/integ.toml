@@ -1,0 +1,633 @@
+# Integration Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/integ.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Integration"
+viewType = "pollis.integ"
+defaultModel = "def"
+
+[[packages]]
+name = "QuadGK.jl"
+github = "https://github.com/JuliaMath/QuadGK.jl"
+
+[[packages.videos]]
+title = "Integration and the Fundamental Theorem of Calculus"
+description = "3Blue1Brown, Essence of Calculus chapter 8: why the area under a curve undoes the derivative"
+url = "https://www.youtube.com/watch?v=rfG8ce4nNh0"
+
+[[packages.videos]]
+title = "What Does Area Have to Do with Slope?"
+description = "3Blue1Brown, Essence of Calculus chapter 9: the average value of a function and the antiderivative"
+url = "https://www.youtube.com/watch?v=FnJqaIESC2s"
+
+[[packages.videos]]
+title = "Essence of Calculus"
+description = "3Blue1Brown's full visual series on derivatives, integrals and Taylor series"
+url = "https://www.youtube.com/playlist?list=PLZHQObOWTQDMsr9K-rj53DwVRMYO3t5Yr"
+
+[[packages]]
+name = "HCubature.jl"
+github = "https://github.com/JuliaMath/HCubature.jl"
+
+[[packages.videos]]
+title = "Monte Carlo Integration"
+description = "TU Wien Rendering lecture 17: estimating an integral by random sampling and why its error falls like one over the square root of N"
+url = "https://www.youtube.com/watch?v=HZWwaLVATA8"
+
+[[packages]]
+name = "FastGaussQuadrature.jl"
+github = "https://github.com/JuliaApproximation/FastGaussQuadrature.jl"
+
+[[packages]]
+name = "SymbolicNumericIntegration.jl"
+github = "https://github.com/SciML/SymbolicNumericIntegration.jl"
+
+[requires]
+packages = ["QuadGK.jl", "HCubature.jl", "FastGaussQuadrature.jl", "Symbolics.jl", "SymbolicNumericIntegration.jl", "Plots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "From Riemann Sums to the Fundamental Theorem"
+file = "integ/tutorial-01-riemann-ftc.ipynb"
+bundled = true
+description = "Area as a limit of rectangles, the accumulation function and why its derivative is the integrand"
+
+[[notebookSections.notebooks]]
+name = "Quadrature Rules and Their Convergence"
+file = "integ/tutorial-02-quadrature-rules.ipynb"
+bundled = true
+description = "Midpoint, trapezoid, Simpson and Gauss-Legendre: how fast each error falls as the number of points grows"
+
+[[notebookSections.notebooks]]
+name = "Adaptive and Improper Integrals"
+file = "integ/tutorial-03-adaptive-improper.ipynb"
+bundled = true
+description = "QuadGK on peaks, kinks, endpoint singularities and infinite limits, with its error estimate"
+
+[[notebookSections.notebooks]]
+name = "Double Integrals and Monte Carlo"
+file = "integ/tutorial-04-multiple-monte-carlo.ipynb"
+bundled = true
+description = "Iterated integrals, adaptive cubature and random sampling, and how each scales with the dimension"
+
+[[notebookSections.notebooks]]
+name = "Expected Values and Probabilities"
+file = "integ/tutorial-05-expected-values.ipynb"
+bundled = true
+description = "Tail probabilities, moments, expected utility and certainty equivalents, Gauss-Hermite expectations and quadrature versus Monte Carlo"
+
+[[notebookSections.notebooks]]
+name = "Integrals Across Disciplines"
+file = "integ/tutorial-06-across-disciplines.ipynb"
+bundled = true
+description = "Escape velocity, centre of mass, river discharge from measured depths, Fourier coefficients, drug exposure (AUC), cumulative epidemic cases, seasonal population growth, life expectancy and option prices"
+
+[[wikis]]
+name = "Factsheet"
+file = "integ/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "integ/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "integ/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "integ/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "integ/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "integ/decision-guide.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "QUADPACK: A Subroutine Package for Automatic Integration"
+authors = "Piessens, Robert; de Doncker-Kapenga, Elise; Uberhuber, Christoph W.; Kahaner, David K."
+year = 1983
+journal = "Springer"
+doi = "10.1007/978-3-642-61786-7"
+openAccess = false
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Methods of Numerical Integration"
+authors = "Davis, Philip J.; Rabinowitz, Philip"
+year = 1984
+journal = "Academic Press"
+doi = "10.1016/C2013-0-10566-1"
+openAccess = false
+
+[[references]]
+title = "An Introduction to Numerical Analysis"
+authors = "Suli, Endre; Mayers, David F."
+year = 2003
+journal = "Cambridge University Press"
+doi = "10.1017/CBO9780511801181"
+openAccess = false
+
+[[references]]
+title = "Approximation Theory and Approximation Practice, Extended Edition"
+authors = "Trefethen, Lloyd N."
+year = 2019
+journal = "SIAM"
+doi = "10.1137/1.9781611975949"
+openAccess = false
+
+[[references]]
+title = "Essential Mathematics for Economic Analysis"
+authors = "Sydsaeter, Knut; Hammond, Peter; Strom, Arne; Carvajal, Andres"
+year = 2021
+journal = "Pearson"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Calculation of Gauss Quadrature Rules"
+authors = "Golub, Gene H.; Welsch, John H."
+year = 1969
+journal = "Mathematics of Computation"
+doi = "10.1090/S0025-5718-69-99647-1"
+openAccess = true
+
+[[references]]
+title = "Fast and Accurate Computation of Gauss-Legendre and Gauss-Jacobi Quadrature Nodes and Weights"
+authors = "Hale, Nicholas; Townsend, Alex"
+year = 2013
+journal = "SIAM Journal on Scientific Computing"
+doi = "10.1137/120889873"
+openAccess = false
+
+[[references]]
+title = "Remarks on Algorithm 006: An Adaptive Algorithm for Numerical Integration over an N-Dimensional Rectangular Region"
+authors = "Genz, A. C.; Malik, A. A."
+year = 1980
+journal = "Journal of Computational and Applied Mathematics"
+doi = "10.1016/0771-050X(80)90039-X"
+openAccess = false
+
+[[references]]
+title = "The Monte Carlo Method"
+authors = "Metropolis, Nicholas; Ulam, S."
+year = 1949
+journal = "Journal of the American Statistical Association"
+doi = "10.1080/01621459.1949.10483310"
+openAccess = false
+
+[[models]]
+id = "def"
+label = "Definite Integral"
+
+[[models]]
+id = "multi"
+label = "Multiple Integral"
+
+[[models]]
+id = "data"
+label = "Sampled Data"
+
+[[bullets]]
+text = "Definite Integral"
+detail = "the integral of f(x) from a to b, by an adaptive method (infinite limits allowed) or a fixed rule with n points"
+
+[[bullets]]
+text = "Multiple Integral"
+detail = "the integral of f over a box in several variables, by adaptive cubature or Monte Carlo sampling"
+
+[[bullets]]
+text = "Sampled Data"
+detail = "the area under a curve known only at sample points, e.g. a marginal cost observed at a few output levels"
+
+[[decisionRows]]
+task = "Definite Integral"
+context = "A formula in one variable: total cost from marginal cost, consumer surplus, present value, an expected value or a probability"
+purpose = "Adaptive Gauss-Kronrod refines where the integrand is hard and reports an error estimate; fixed rules show how accuracy grows with the number of points"
+
+[[decisionRows]]
+task = "Multiple Integral"
+context = "A function of several variables over a rectangle or box: expected utility over two shocks, a joint probability, a volume"
+purpose = "Adaptive cubature is precise in 2 to about 5 dimensions; Monte Carlo's error falls like one over the square root of the draws in any dimension"
+
+[[decisionRows]]
+task = "Sampled Data"
+context = "Values observed at points rather than a formula: survey measurements, a price path, a marginal cost schedule"
+purpose = "The trapezoid rule joins the points with straight lines; Simpson's rule fits parabolas and is more accurate for smooth data at equal spacing"
+
+[[inputs]]
+id = "f1"
+label = "Integrand f(x)"
+tooltip = "A Julia expression in x, e.g. x^2 * exp(-x), 1 / (1 + x^2) or exp(-x^2 / 2) / sqrt(2pi)."
+default = "x^2 * exp(-x)"
+models = ["def"]
+
+[[inputs]]
+id = "a"
+label = "Lower Limit a"
+tooltip = "A number, or -Inf with the adaptive method."
+default = "0.0"
+models = ["def"]
+
+[[inputs]]
+id = "b"
+label = "Upper Limit b"
+tooltip = "A number, or Inf with the adaptive method."
+default = "4.0"
+models = ["def"]
+
+[[inputs]]
+id = "fm"
+label = "Integrand f(x)"
+tooltip = "A Julia expression in x[1], x[2], ... returning one number."
+default = "exp(-(x[1]^2 + x[2]^2))"
+models = ["multi"]
+
+[[inputs]]
+id = "lower"
+label = "Lower Corner"
+tooltip = "Lower limit of each variable, e.g. [0.0, 0.0]."
+default = "[0.0, 0.0]"
+models = ["multi"]
+
+[[inputs]]
+id = "upper"
+label = "Upper Corner"
+tooltip = "Upper limit of each variable, e.g. [1.0, 1.0]."
+default = "[1.0, 1.0]"
+models = ["multi"]
+
+[[inputs]]
+id = "xs"
+label = "Sample Points x"
+tooltip = "Increasing x values, e.g. output levels or times."
+default = "[0, 1, 2, 3, 4, 5, 6]"
+models = ["data"]
+
+[[inputs]]
+id = "ys"
+label = "Values y"
+tooltip = "The value of the curve at each sample point, e.g. marginal cost at each output level."
+default = "[10.0, 8.2, 7.1, 6.9, 7.4, 8.8, 11.0]"
+models = ["data"]
+
+[[inputs]]
+id = "method"
+label = "Method"
+tooltip = "Adaptive Gauss-Kronrod (QuadGK): refines where needed, handles infinite limits and returns an error estimate. Gauss-Legendre: n nodes, exact for polynomials of degree 2n - 1. Simpson: parabolas, error of order 1/n^4. Trapezoid and Midpoint: straight lines and rectangles, error of order 1/n^2."
+kind = "select"
+default = "quadgk"
+models = ["def"]
+newRow = true
+
+[[inputs.options]]
+value = "quadgk"
+label = "Adaptive Gauss-Kronrod"
+
+[[inputs.options]]
+value = "gauss"
+label = "Gauss-Legendre"
+
+[[inputs.options]]
+value = "simpson"
+label = "Simpson"
+
+[[inputs.options]]
+value = "trapezoid"
+label = "Trapezoid"
+
+[[inputs.options]]
+value = "midpoint"
+label = "Midpoint"
+
+[[inputs]]
+id = "n"
+label = "Points n"
+tooltip = "Subintervals for Trapezoid, Midpoint and Simpson (made even for Simpson), nodes for Gauss-Legendre. The adaptive method chooses its own."
+default = "20"
+models = ["def"]
+
+[[inputs]]
+id = "mmethod"
+label = "Method"
+tooltip = "Adaptive Cubature (HCubature): subdivides the box where the integrand varies most, with an error estimate. Monte Carlo: averages f at random points; the standard error falls like one over the square root of the draws in any dimension."
+kind = "select"
+default = "hcubature"
+models = ["multi"]
+newRow = true
+
+[[inputs.options]]
+value = "hcubature"
+label = "Adaptive Cubature"
+
+[[inputs.options]]
+value = "montecarlo"
+label = "Monte Carlo"
+
+[[inputs]]
+id = "nmc"
+label = "Monte Carlo Draws"
+tooltip = "Number of random points for the Monte Carlo method."
+default = "100000"
+models = ["multi"]
+
+[[inputs]]
+id = "tol"
+label = "Relative Tolerance"
+tooltip = "The adaptive methods stop when the estimated error is below this fraction of the integral."
+default = "1e-8"
+models = ["def", "multi"]
+
+[[inputs]]
+id = "dmethod"
+label = "Method"
+tooltip = "Trapezoid: straight lines between points, any spacing. Simpson: parabolas through each three points, needs equal spacing and an even number of intervals."
+kind = "select"
+default = "trapezoid"
+models = ["data"]
+newRow = true
+
+[[inputs.options]]
+value = "trapezoid"
+label = "Trapezoid"
+
+[[inputs.options]]
+value = "simpson"
+label = "Simpson"
+
+[[codeBranches]]
+model = "def"
+code = '''
+using QuadGK, FastGaussQuadrature
+
+f(x) = {{f1}}
+a, b = {{a}}, {{b}}
+xa = isfinite(a) ? a : (isfinite(b) ? b - 20 : -10.0)  # plotting window when a limit is infinite
+xb = isfinite(b) ? b : xa + 20
+function rule(m, n)  # fixed rules: returns (integral, error estimate, evaluations)
+    (isfinite(a) && isfinite(b)) || error("fixed rules need finite limits: use the adaptive method for improper integrals")
+    if m == "trapezoid"
+        h = (b - a) / n
+        return h * (sum(f, range(a, b, length=n + 1)) - (f(a) + f(b)) / 2), missing, n + 1
+    elseif m == "midpoint"
+        h = (b - a) / n
+        return h * sum(i -> f(a + (i - 0.5) * h), 1:n), missing, n
+    elseif m == "simpson"
+        k = iseven(n) ? n : n + 1; h = (b - a) / k; xs = range(a, b, length=k + 1)
+        return h / 3 * (f(a) + f(b) + 4sum(f, xs[2:2:end-1]; init=0.0) + 2sum(f, xs[3:2:end-2]; init=0.0)), missing, k + 1
+    else  # Gauss-Legendre: nodes and weights on [-1, 1], mapped to [a, b]
+        t, w = gausslegendre(n)
+        return (b - a) / 2 * sum(w .* f.((b - a) / 2 .* t .+ (a + b) / 2)), missing, n
+    end
+end
+method = "{{method}}"
+integrate_with(m; n={{n}}, rtol={{tol}}) = m == "quadgk" ? quadgk_count(f, a, b; rtol) : rule(m, n)
+I, err, nevals = integrate_with(method)
+(integral = I, error_estimate = err, f_evaluations = nevals, method = method)
+'''
+
+[[codeBranches]]
+model = "multi"
+code = '''
+using HCubature, Statistics
+
+f(x) = {{fm}}
+lo, hi = {{lower}}, {{upper}}
+vol = prod(hi .- lo)  # volume of the box
+function montecarlo(N)  # returns (integral, standard error, evaluations)
+    ys = [f(lo .+ (hi .- lo) .* rand(length(lo))) for _ in 1:N]
+    return vol * mean(ys), vol * std(ys) / sqrt(N), N
+end
+method = "{{mmethod}}"
+integrate_with(m; n={{nmc}}, rtol={{tol}}) = m == "hcubature" ? hcubature_count(f, lo, hi; rtol) : montecarlo(n)
+I, err, nevals = integrate_with(method)
+(integral = I, error_estimate = err, f_evaluations = nevals, method = method)
+'''
+
+[[codeBranches]]
+model = "data"
+code = '''
+xs = {{xs}}
+ys = {{ys}}
+length(xs) == length(ys) || error("x and y need the same number of values")
+trap(x, y) = sum(i -> (x[i+1] - x[i]) * (y[i] + y[i+1]) / 2, 1:length(x)-1)
+cumtrap(x, y) = [0.0; cumsum([(x[i+1] - x[i]) * (y[i] + y[i+1]) / 2 for i in 1:length(x)-1])]  # running total
+function simp(x, y)
+    h = x[2] - x[1]
+    all(d -> isapprox(d, h), diff(x)) || error("Simpson's rule needs equally spaced x: use the trapezoid rule")
+    iseven(length(x) - 1) || error("Simpson's rule needs an even number of intervals: use the trapezoid rule")
+    return h / 3 * (y[1] + y[end] + 4sum(y[2:2:end-1]) + 2sum(y[3:2:end-2]; init=0.0))
+end
+method = "{{dmethod}}"
+integrate_with(m) = (m == "simpson" ? simp(xs, ys) : trap(xs, ys), missing, length(xs))
+I, err, nevals = integrate_with(method)
+(integral = I, average_value = I / (xs[end] - xs[begin]), method = method)
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "area-plot"
+label = "Area Plot"
+desc = "The integral as area: positive area in blue, negative in red; for two variables the surface whose volume is the integral; for data the trapezoids that the rule adds up"
+code = '''
+using Plots
+{{?model=def}} xs = range(xa, xb, length=400); ys = f.(xs)
+{{?model=def}} p = Plots.plot(xs, max.(ys, 0), fillrange=0, fillalpha=0.35, lw=0, c=:steelblue, label="positive area", xlabel="x", title="Integral = $(round(I, sigdigits=8))")
+{{?model=def}} Plots.plot!(xs, min.(ys, 0), fillrange=0, fillalpha=0.35, lw=0, c=:firebrick, label="negative area"); Plots.plot!(xs, ys, lw=2, c=:black, label="f(x)")
+{{?model=multi}} length(lo) == 2 || error("the surface plot needs exactly two variables")
+{{?model=multi}} g1 = range(lo[1], hi[1], length=60); g2 = range(lo[2], hi[2], length=60)
+{{?model=multi}} p = Plots.surface(g1, g2, (u, v) -> f([u, v]), xlabel="x[1]", ylabel="x[2]", title="Volume under the surface = $(round(I, sigdigits=6))")
+{{?model=data}} p = Plots.plot(xs, ys, fillrange=0, fillalpha=0.3, m=:circle, lw=2, c=:steelblue, label="trapezoids", xlabel="x", ylabel="y", title="Area = $(round(I, sigdigits=6)) ({{dmethod}})")
+{{?model=data}} Plots.plot!([xs xs]', [zero.(ys) ys]', c=:gray, label="")
+p
+'''
+
+[[actionGroups.actions]]
+id = "accumulation"
+label = "Accumulation Function"
+desc = "The running total F(x), the integral from the lower limit up to x, next to the integrand: F rises where f is positive and its slope is f (the fundamental theorem of calculus). For data: the total accumulated up to each point"
+code = '''
+using Plots
+{{?model=def}} using QuadGK
+{{?model=def}} xs = range(xa, xb, length=200); Fx = [quadgk(f, isfinite(a) ? a : xa, x)[1] for x in xs]
+{{?model=def}} Plots.plot(xs, [f.(xs) Fx], layout=(2, 1), lw=2, legend=false, xlabel="x", title=["f(x): the rate" "F(x): the integral of f up to x; F' = f"], size=(700, 600))
+{{?model=multi}} ts = range(lo[1], hi[1], length=41)[2:end]
+{{?model=multi}} acc = [hcubature(f, lo, [t; hi[2:end]]; rtol=1e-6)[1] for t in ts]
+{{?model=multi}} Plots.plot([lo[1]; ts], [0; acc], lw=2, m=:circle, ms=2, label="", xlabel="upper limit of x[1]", ylabel="integral so far", title="Integral over the box as x[1] extends")
+{{?model=data}} C = cumtrap(xs, ys)
+{{?model=data}} Plots.plot(xs, [ys C], layout=(2, 1), lw=2, m=:circle, legend=false, xlabel="x", title=["y: the rate, e.g. marginal cost" "running total, e.g. total variable cost"], size=(700, 600))
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "convergence-study"
+label = "Convergence Study"
+desc = "Error against the number of points on log-log axes: slope -2 for trapezoid and midpoint, -4 for Simpson, faster than any power for Gauss on smooth f. Multiple: Monte Carlo against adaptive cubature. Data: the estimate from every other point"
+code = '''
+using Plots
+{{?model=def}} (isfinite(a) && isfinite(b)) || error("the convergence study compares fixed rules, which need finite limits")
+{{?model=def}} ref = quadgk(f, a, b; rtol=1e-14)[1]; ns = 2 .^ (1:10)
+{{?model=def}} p = Plots.plot(xscale=:log2, yscale=:log10, xlabel="n (subintervals or nodes)", ylabel="absolute error", title="Error by number of points", legend=:bottomleft)
+{{?model=def}} foreach(m -> Plots.plot!(ns, [max(abs(rule(m, n)[1] - ref), 1e-17) for n in ns], m=:circle, lw=2, label=m), ("trapezoid", "midpoint", "simpson", "gauss"))
+{{?model=multi}} ref = hcubature(f, lo, hi; rtol=1e-12)[1]
+{{?model=multi}} mcN = 10 .^ (2:6); mcerr = [abs(montecarlo(N)[1] - ref) for N in mcN]
+{{?model=multi}} hc = [hcubature_count(f, lo, hi; rtol=r) for r in 10.0 .^ (-2:-1:-10)]
+{{?model=multi}} p = Plots.plot(mcN, max.(mcerr, 1e-17), xscale=:log10, yscale=:log10, m=:circle, lw=2, label="Monte Carlo, error ~ N^(-1/2)", xlabel="function evaluations", ylabel="absolute error", title="Accuracy per evaluation")
+{{?model=multi}} Plots.plot!([h[3] for h in hc], [max(abs(h[1] - ref), 1e-17) for h in hc], m=:square, lw=2, label="adaptive cubature")
+{{?model=data}} half = 1:2:length(xs); isodd(length(xs)) || @warn "an even number of points: every other point misses the last one"
+{{?model=data}} (all_points = trap(xs, ys), every_other_point = trap(xs[half], ys[half]), richardson_estimate = trap(xs, ys) + (trap(xs, ys) - trap(xs[half], ys[half])) / 3, note = "a large gap between the first two means the sampling is too coarse; with equal spacing the Richardson estimate equals Simpson's rule")
+{{?model=def|multi}} p
+'''
+
+[[actionGroups.actions]]
+id = "integrand-check"
+label = "Integrand Check"
+desc = "Looks for trouble before trusting the number: non-finite values, sign changes (positive and negative area cancel), huge values near the limits and the method's own error estimate. Data: ordering, spacing and whether Simpson applies"
+code = '''
+{{?model=def}} xs = range(xa, xb, length=1001); ys = f.(xs)
+{{?model=def}} Ia, Ea, na = quadgk_count(f, a, b; rtol={{tol}})
+{{?model=def}} (nonfinite_values = count(!isfinite, ys), sign_changes = count(i -> sign(ys[i]) != sign(ys[i+1]), 1:length(ys)-1), f_at_window_ends = (f(xa), f(xb)), largest_abs_value = maximum(abs, filter(isfinite, ys)), adaptive_integral = Ia, relative_error_estimate = Ea / abs(Ia), adaptive_evaluations = na)
+{{?model=multi}} ys = [f(lo .+ (hi .- lo) .* rand(length(lo))) for _ in 1:10_000]
+{{?model=multi}} Ic, Ec, nc = hcubature_count(f, lo, hi; rtol={{tol}})
+{{?model=multi}} (nonfinite_values = count(!isfinite, ys), share_negative = count(<(0), ys) / length(ys), range_of_f = extrema(filter(isfinite, ys)), cubature_integral = Ic, relative_error_estimate = Ec / abs(Ic), cubature_evaluations = nc)
+{{?model=data}} d = diff(xs)
+{{?model=data}} (points = length(xs), increasing = all(>(0), d), equally_spaced = all(s -> isapprox(s, d[1]), d), even_number_of_intervals = iseven(length(xs) - 1), simpson_applicable = all(>(0), d) && all(s -> isapprox(s, d[1]), d) && iseven(length(xs) - 1), nonfinite_values = count(!isfinite, ys))
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "limit-sensitivity"
+label = "Limit Sensitivity"
+desc = "How the integral changes when the upper limit moves: by the Leibniz rule the rate is f at that limit. Compares the prediction f(b) times the change with the exact integral. For data: the running total and its rate at each point"
+code = '''
+{{?model=def}} isfinite(b) || error("the upper limit is infinite: move a finite limit instead")
+{{?model=def}} [(db = db, exact_change = quadgk(f, a, b + db)[1] - I, predicted = f(b) * db) for db in (-0.5, -0.1, 0.1, 0.5)]
+{{?model=multi}} face(t) = length(lo) == 1 ? f([t]) : hcubature(y -> f([t; y]), lo[2:end], hi[2:end]; rtol=1e-8)[1]  # integral over the face x[1] = t
+{{?model=multi}} [(d_upper1 = d, exact_change = hcubature(f, lo, [hi[1] + d; hi[2:end]]; rtol=1e-10)[1] - I, predicted = face(hi[1]) * d) for d in (-0.1, -0.01, 0.01, 0.1)]
+{{?model=data}} C = cumtrap(xs, ys)
+{{?model=data}} [(upper_limit = xs[k], total_so_far = C[k], rate_at_limit = ys[k]) for k in eachindex(xs)]
+'''
+
+[[actionGroups.actions]]
+id = "present-value"
+label = "Present Value"
+desc = "Treats f as a flow over time and discounts it continuously at 0%, 2%, 5% and 10%: the present value is the integral of f(t) exp(-r t). For several variables x[1] is time"
+code = '''
+{{?model=def}} [(rate = r, present_value = quadgk(t -> f(t) * exp(-r * t), a, b; rtol={{tol}})[1]) for r in (0.0, 0.02, 0.05, 0.10)]
+{{?model=multi}} [(rate = r, present_value = hcubature(x -> f(x) * exp(-r * x[1]), lo, hi; rtol={{tol}})[1]) for r in (0.0, 0.02, 0.05, 0.10)]
+{{?model=data}} [(rate = r, present_value = trap(xs, ys .* exp.(-r .* xs))) for r in (0.0, 0.02, 0.05, 0.10)]
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "compare-methods"
+label = "Compare Methods"
+desc = "Every method on the same integral: value, error against a high-precision reference, the method's own error estimate, function evaluations and time (timed on a second run, after compilation)"
+code = '''
+{{?model=def}} ref = quadgk(f, a, b; rtol=1e-14)[1]; methods = ("quadgk", "gauss", "simpson", "trapezoid", "midpoint")
+{{?model=multi}} ref = hcubature(f, lo, hi; rtol=1e-12)[1]; methods = ("hcubature", "montecarlo")
+{{?model=data}} ref = missing; methods = ("trapezoid", "simpson")
+map(methods) do m
+    try
+        integrate_with(m)  # compile
+        t = @elapsed (Im, Em, ev) = integrate_with(m)
+        (method = m, integral = Im, error_vs_reference = ref === missing ? missing : abs(Im - ref), error_estimate = Em, f_evaluations = ev, seconds = round(t, sigdigits=3))
+    catch e
+        (method = m, integral = missing, error_vs_reference = missing, error_estimate = missing, f_evaluations = missing, seconds = missing, note = sprint(showerror, e))
+    end
+end
+'''
+
+[[actionGroups.actions]]
+id = "tolerance-sweep"
+label = "Tolerance Sweep"
+desc = "Tightens the relative tolerance from 1e-2 to 1e-12 and reports the value, error estimate and evaluations: smooth integrands buy extra digits cheaply. For data: the total from every point, every 2nd and every 3rd"
+code = '''
+{{?model=def}} adaptive = "quadgk"
+{{?model=multi}} adaptive = "hcubature"
+{{?model=def|multi}} map(10.0 .^ (-2:-2:-12)) do r
+{{?model=def|multi}}     Ir, Er, ev = integrate_with(adaptive; rtol=r)
+{{?model=def|multi}}     (rtol = r, integral = Ir, error_estimate = Er, f_evaluations = ev)
+{{?model=def|multi}} end
+{{?model=data}} [(every_kth_point = k, points_used = length(1:k:length(xs)), total = trap(xs[1:k:end], ys[1:k:end])) for k in 1:3 if (length(xs) - 1) % k == 0]
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "integral-summary"
+label = "Integral Summary"
+desc = "The signed integral, the total area between the curve and the axis, its positive and negative parts and the average value of f over the range"
+code = '''
+{{?model=def}} absI = quadgk(x -> abs(f(x)), a, b; rtol={{tol}})[1]
+{{?model=def}} (integral = I, area_between_curve_and_axis = absI, positive_part = (absI + I) / 2, negative_part = (I - absI) / 2, average_value = isfinite(b - a) ? I / (b - a) : missing, error_estimate = err)
+{{?model=multi}} absI = hcubature(x -> abs(f(x)), lo, hi; rtol={{tol}})[1]
+{{?model=multi}} (integral = I, integral_of_abs_f = absI, volume_of_region = vol, average_value = I / vol, error_estimate = err)
+{{?model=data}} (integral = I, area_between_curve_and_axis = trap(xs, abs.(ys)), average_value = I / (xs[end] - xs[begin]), range_of_y = extrema(ys), method = method)
+'''
+
+[[actionGroups.actions]]
+id = "cross-check"
+label = "Cross-Check"
+desc = "An independent check. One variable: an exact antiderivative from SymbolicNumericIntegration evaluated at the limits (the fundamental theorem). Several variables: iterated integrals in both orders (Fubini). Data: the exact integral of a cubic fitted to the points"
+code = '''
+{{?model=def}} using Symbolics, SymbolicNumericIntegration
+{{?model=def}} (isfinite(a) && isfinite(b)) || error("the antiderivative check needs finite limits")
+{{?model=def}} @variables t
+{{?model=def}} Fsym, unsolved, _ = integrate(f(t), t; symbolic=true)
+{{?model=def}} Fat(x) = Symbolics.value(substitute(Fsym, Dict(t => x)))
+{{?model=def}} (antiderivative = Fsym, unsolved_part = unsolved, by_fundamental_theorem = Fat(b) - Fat(a), numerical = I, difference = Fat(b) - Fat(a) - I)
+{{?model=multi}} using QuadGK
+{{?model=multi}} length(lo) == 2 || error("the iterated-integral check is written for two variables")
+{{?model=multi}} I12 = quadgk(u -> quadgk(v -> f([u, v]), lo[2], hi[2])[1], lo[1], hi[1])[1]
+{{?model=multi}} I21 = quadgk(v -> quadgk(u -> f([u, v]), lo[1], hi[1])[1], lo[2], hi[2])[1]
+{{?model=multi}} (cubature = I, x2_inside_then_x1 = I12, x1_inside_then_x2 = I21, note = "Fubini: for an integrable f the order of integration does not matter")
+{{?model=data}} X = [float(x)^k for x in xs, k in 0:3]; c = X \ ys  # least-squares cubic
+{{?model=data}} P(x) = sum(c[k+1] * x^(k + 1) / (k + 1) for k in 0:3)  # its antiderivative
+{{?model=data}} (rule_estimate = I, cubic_fit_integral = P(xs[end]) - P(xs[begin]), cubic_coefficients = c, note = "a large gap means the samples are too sparse for the curvature of the data")
+'''

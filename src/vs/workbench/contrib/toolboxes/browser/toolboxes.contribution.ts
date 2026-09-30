@@ -112,8 +112,8 @@ MenuRegistry.appendMenuItem(E_ATSubmenuId, {
 MenuRegistry.appendMenuItem(E_ATSubmenuId, {
 	group: '1_at',
 	command: {
-		id: DIFF_ID, precondition: ContextKeyExpr.false(),
-		title: localize('at.diff', 'Differentiation'),
+		id: DIFF_ID,
+		title: localize('at.diff', 'Numerical Differentiation'),
 	},
 	order: 3,
 });
@@ -121,8 +121,8 @@ MenuRegistry.appendMenuItem(E_ATSubmenuId, {
 MenuRegistry.appendMenuItem(E_ATSubmenuId, {
 	group: '1_at',
 	command: {
-		id: INTEG_ID, precondition: ContextKeyExpr.false(),
-		title: localize('at.integ', 'Integration'),
+		id: INTEG_ID,
+		title: localize('at.integ', 'Numerical Integration'),
 	},
 	order: 4,
 });
