@@ -223,7 +223,7 @@ field(x, c...) = getfield(x, Symbol(c...))  # the estimators use Unicode field n
 g    = tbl.{{group}}
 levs = unique(g)  # groups compared
 grp  = [findfirst(==(x), levs) for x in g]  # integer group codes
-test = GraffeoTest(T, D, age, date, covs, ones(Int, length(T)), grp, rt)  # Graff\u00e9o log-rank-type test (Pohar-Perme based)
+test = GraffeoTest(T, D, age, date, covs, ones(Int, length(T)), grp, rt)  # Graffeo log-rank-type test (Pohar-Perme based)
 est  = PoharPerme(T, D, age, date, covs, rt)  # pooled net survival
 ests = [PoharPerme(T[grp .== k], D[grp .== k], age[grp .== k], date[grp .== k], covs[grp .== k, :], rt) for k in eachindex(levs)]  # per group
 grid = est.grid  # time grid, days
@@ -342,7 +342,7 @@ code = '''
 s5 = Se[at(1826)]
 println("If the disease were the only cause of death, ", round(100s5, digits=1), "% of patients would be alive 5 years after diagnosis.")
 {{?model=cif}} println("In reality, ", round(100Mo[at(1826)], digits=1), "% died within 5 years: ", round(100Me[at(1826)], digits=1), "% from the disease and ", round(100Mp[at(1826)], digits=1), "% from other causes.")
-{{?model=lr}} println("The Graff\u00e9o test ", test.pval < 0.05 ? "finds" : "does not find", " a difference in net survival across {{group}} groups (p = ", round(test.pval, sigdigits=3), ").")
+{{?model=lr}} println("The Graffeo test ", test.pval < 0.05 ? "finds" : "does not find", " a difference in net survival across {{group}} groups (p = ", round(test.pval, sigdigits=3), ").")
 '''
 
 [[actionGroups.actions]]
