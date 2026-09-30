@@ -10,7 +10,6 @@ import { TokenizationRegistry } from '../../../../editor/common/languages.js';
 import { generateTokensCSSForColorMap } from '../../../../editor/common/languages/supports/tokenization.js';
 import { tokenizeToString } from '../../../../editor/common/languages/textToHtmlTokenizer.js';
 import { localize } from '../../../../nls.js';
-import { IClipboardService } from '../../../../platform/clipboard/common/clipboardService.js';
 import { ICommandService } from '../../../../platform/commands/common/commands.js';
 import { IFileDialogService } from '../../../../platform/dialogs/common/dialogs.js';
 import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
@@ -23,7 +22,7 @@ import { DATABASE_DRIVERS, DatabaseDriverId, generateConnectionCode, generateSes
 
 /** Messages the connection form sends. Each carries the profile as currently filled in. */
 type ConnectionEditorMessage =
-	| { command: 'update' | 'copy' | 'sendRepl' | 'save' | 'saveConnect'; profile: IDatabaseConnectionProfile }
+	| { command: 'update' | 'save' | 'saveConnect'; profile: IDatabaseConnectionProfile }
 	| { command: 'chooseFile'; field: string };
 
 /** A new, empty profile for `driver`. */
@@ -37,12 +36,12 @@ function newProfile(driver: DatabaseDriverId): IDatabaseConnectionProfile {
 
 /**
  * Open the connection form in an editor tab: a driver list on the left and, on the right, the
- * driver's fields with the Julia code they generate, which can be copied, sent to the Julia REPL
- * or saved as a profile for the Connections view. Passing `profile` edits an existing one.
+ * driver's fields with the Julia code they generate. The profile can be saved for the Connections
+ * view, or saved and connected in the Julia REPL. Passing `profile` edits an existing one; a new
+ * one starts with `driver` selected.
  */
-export function openConnectionEditor(accessor: ServicesAccessor, profile?: IDatabaseConnectionProfile): void {
+export function openConnectionEditor(accessor: ServicesAccessor, profile?: IDatabaseConnectionProfile, driver: DatabaseDriverId = 'duckdb'): void {
 	const databaseConnectionsService = accessor.get(IDatabaseConnectionsService);
-	const clipboardService = accessor.get(IClipboardService);
 	const commandService = accessor.get(ICommandService);
 	const fileDialogService = accessor.get(IFileDialogService);
 	const languageService = accessor.get(ILanguageService);
@@ -70,7 +69,7 @@ export function openConnectionEditor(accessor: ServicesAccessor, profile?: IData
 	const disposables = new DisposableStore();
 	disposables.add(webview.onDidDispose(() => disposables.dispose()));
 
-	let lastProfile = profile ?? newProfile('duckdb');
+	let lastProfile = profile ?? newProfile(driver);
 	let codeVersion = 0;
 	const postCode = async (): Promise<void> => {
 		// Tokenizing is async: drop a result that a newer edit has already overtaken.
@@ -97,15 +96,6 @@ export function openConnectionEditor(accessor: ServicesAccessor, profile?: IData
 			case 'update':
 				lastProfile = msg.profile;
 				await postCode();
-				break;
-			case 'copy':
-				await clipboardService.writeText(generateConnectionCode(msg.profile));
-				break;
-			case 'sendRepl':
-				// A saved profile connects through PollisDB, so the Connections view follows it.
-				await sendToJuliaRepl(databaseConnectionsService.getConnection(msg.profile.id)
-					? generateSessionConnectCode(msg.profile, !!databaseConnectionsService.getSession(msg.profile.id))
-					: generateConnectionCode(msg.profile), commandService);
 				break;
 			case 'save':
 			case 'saveConnect': {
@@ -151,10 +141,8 @@ function connectionEditorStrings() {
 		packages: localize('form.packages', "Packages"),
 		chooseFile: localize('form.chooseFile', "Choose File"),
 		code: localize('form.code', "Generated Code"),
-		copy: localize('form.copy', "Copy Code"),
-		sendRepl: localize('form.sendRepl', "Send to Julia REPL"),
 		save: localize('form.save', "Save Connection"),
-		saveConnect: localize('form.saveConnect', "Save and Connect"),
+		connect: localize('form.connect', "Connect"),
 	};
 }
 
@@ -216,10 +204,8 @@ function connectionEditorHtml(): string {
 				<ul class="problems" id="problems"></ul>
 			</div>
 			<div class="buttons">
-				<button class="action" id="btn-copy"></button>
-				<button class="action" id="btn-repl"></button>
 				<button class="action" id="btn-save"></button>
-				<button class="action primary" id="btn-save-connect"></button>
+				<button class="action primary" id="btn-connect"></button>
 			</div>
 		</main>
 	</div>
@@ -334,7 +320,7 @@ function connectionEditorHtml(): string {
 				problems.textContent = '';
 				msg.problems.forEach(p => problems.appendChild(el('li', { textContent: p })));
 				document.getElementById('btn-save').disabled = msg.problems.length > 0;
-				document.getElementById('btn-save-connect').disabled = msg.problems.length > 0;
+				document.getElementById('btn-connect').disabled = msg.problems.length > 0;
 			} else if (msg.command === 'setField') {
 				profile.options[msg.field] = msg.value;
 				document.getElementById('f-' + msg.field).value = msg.value;
@@ -344,14 +330,11 @@ function connectionEditorHtml(): string {
 
 		document.getElementById('drivers-title').textContent = S.connectionType;
 		document.getElementById('code-title').textContent = S.code;
-		document.getElementById('btn-copy').textContent = S.copy;
-		document.getElementById('btn-repl').textContent = S.sendRepl;
 		document.getElementById('btn-save').textContent = S.save;
-		document.getElementById('btn-save-connect').textContent = S.saveConnect;
-		document.getElementById('btn-copy').addEventListener('click', () => post('copy'));
-		document.getElementById('btn-repl').addEventListener('click', () => post('sendRepl'));
+		document.getElementById('btn-connect').textContent = S.connect;
 		document.getElementById('btn-save').addEventListener('click', () => post('save'));
-		document.getElementById('btn-save-connect').addEventListener('click', () => post('saveConnect'));
+		// Connect saves the profile too, so the Connections view lists and follows it.
+		document.getElementById('btn-connect').addEventListener('click', () => post('saveConnect'));
 		vscode.postMessage({ command: 'ready' });
 	</script>
 </body>

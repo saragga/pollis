@@ -79,3 +79,19 @@
 	flex: 1;
 	min-height: 0;
 }
+
+.database-item .actions .codicon-plug {
+	color: var(--vscode-charts-green);
+}
+
+/* The title's "+ New" split button: the icon and its label act as one button. */
+.databases-new-connection .action-container {
+	display: flex;
+	align-items: center;
+}
+
+.databases-new-connection .databases-new-label {
+	padding-right: 4px;
+	font-size: 11px;
+	cursor: pointer;
+}

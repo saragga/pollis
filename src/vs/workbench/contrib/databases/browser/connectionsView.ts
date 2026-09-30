@@ -4,19 +4,21 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as dom from '../../../../base/browser/dom.js';
-import { ActionBar } from '../../../../base/browser/ui/actionbar/actionbar.js';
+import { ActionBar, IActionViewItem } from '../../../../base/browser/ui/actionbar/actionbar.js';
+import { IDropdownMenuActionViewItemOptions } from '../../../../base/browser/ui/dropdown/dropdownActionViewItem.js';
 import { IListVirtualDelegate } from '../../../../base/browser/ui/list/list.js';
 import { IObjectTreeElement, ITreeContextMenuEvent, ITreeNode, ITreeRenderer } from '../../../../base/browser/ui/tree/tree.js';
-import { Action } from '../../../../base/common/actions.js';
+import { Action, IAction } from '../../../../base/common/actions.js';
 import { Codicon } from '../../../../base/common/codicons.js';
 import { DisposableStore } from '../../../../base/common/lifecycle.js';
 import { ThemeIcon } from '../../../../base/common/themables.js';
 import { localize } from '../../../../nls.js';
+import { DropdownWithPrimaryActionViewItem } from '../../../../platform/actions/browser/dropdownWithPrimaryActionViewItem.js';
 import { createActionViewItem, getActionBarActions, getFlatContextMenuActions } from '../../../../platform/actions/browser/menuEntryActionViewItem.js';
-import { IMenuService, MenuId } from '../../../../platform/actions/common/actions.js';
+import { IMenuService, MenuId, MenuItemAction } from '../../../../platform/actions/common/actions.js';
 import { ICommandService } from '../../../../platform/commands/common/commands.js';
 import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { IContextKey, IContextKeyService, RawContextKey } from '../../../../platform/contextkey/common/contextkey.js';
+import { IContextKeyService, RawContextKey } from '../../../../platform/contextkey/common/contextkey.js';
 import { IContextMenuService } from '../../../../platform/contextview/browser/contextView.js';
 import { IHoverService } from '../../../../platform/hover/browser/hover.js';
 import { IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
@@ -34,6 +36,8 @@ import { describeConnection, getDatabaseDriver, IDatabaseConnectionProfile } fro
 export const DatabaseConnectionContextMenu = new MenuId('DatabaseConnectionContext');
 /** The buttons shown on an item of the Connections view while it is hovered or selected. Same argument and context keys. */
 export const DatabaseItemInlineMenu = new MenuId('DatabaseItemInline');
+/** The engines in the dropdown of the view title's "+ New" button. */
+export const DatabasesNewConnectionMenu = new MenuId('DatabasesNewConnection');
 
 /** The kind of the item a menu is shown for: `connection`, `schema`, `table` or `column`. */
 export const DatabaseItemKind = new RawContextKey<string>('pollisDatabaseItem', undefined);
@@ -43,9 +47,10 @@ export const DatabaseItemConnected = new RawContextKey<boolean>('pollisDatabaseC
 export const DatabaseItemSaved = new RawContextKey<boolean>('pollisDatabaseSaved', false);
 /** Whether the connection of the item is the built-in Pollis database, which cannot be edited or deleted. */
 export const DatabaseItemBuiltin = new RawContextKey<boolean>('pollisDatabaseBuiltin', false);
-/** Whether the view shows the screen of one connection rather than the list; drives the view's title actions. */
-export const DatabaseConnectionOpen = new RawContextKey<boolean>('pollisDatabaseConnectionOpen', false);
+/** Whether the tables of the item's connection are shown below it. */
+export const DatabaseItemExpanded = new RawContextKey<boolean>('pollisDatabaseExpanded', false);
 
+export const NEW_CONNECTION_COMMAND_ID = 'pollis.databases.newConnection';
 export const CONNECT_DATABASE_COMMAND_ID = 'pollis.databases.connect';
 export const DISCONNECT_DATABASE_COMMAND_ID = 'pollis.databases.disconnect';
 export const REFRESH_DATABASE_COMMAND_ID = 'pollis.databases.refresh';
@@ -60,8 +65,7 @@ export interface IDatabaseItemArg {
 }
 
 type DatabaseItem =
-	// `open` marks the connection at the top of its own screen, above its schemas.
-	| { readonly kind: 'connection'; readonly id: string; readonly profile: IDatabaseConnectionProfile | undefined; readonly session: IDatabaseSession | undefined; readonly open?: boolean }
+	| { readonly kind: 'connection'; readonly id: string; readonly profile: IDatabaseConnectionProfile | undefined; readonly session: IDatabaseSession | undefined }
 	| { readonly kind: 'schema'; readonly id: string; readonly schema: IDatabaseSchema }
 	| { readonly kind: 'table'; readonly id: string; readonly schema: string; readonly table: IDatabaseTable }
 	| { readonly kind: 'column'; readonly id: string; readonly schema: string; readonly table: string; readonly column: IDatabaseColumn }
@@ -129,7 +133,6 @@ class ItemRenderer implements ITreeRenderer<DatabaseItem, void, IItemTemplate> {
 		private readonly menuService: IMenuService,
 		private readonly contextKeyService: IContextKeyService,
 		private readonly instantiationService: IInstantiationService,
-		private readonly showMenu: (item: DatabaseItem, anchor: HTMLElement) => void,
 	) { }
 
 	renderTemplate(container: HTMLElement): IItemTemplate {
@@ -159,9 +162,7 @@ class ItemRenderer implements ITreeRenderer<DatabaseItem, void, IItemTemplate> {
 				name = connectionName(item.profile, item.session);
 				const { profile, session } = item;
 				// The list shows only the names; the hover tells the engine, the location and the connection.
-				if (item.open && session) {
-					description = engineLabel(session.engine);
-				} else if (profile?.builtin) {
+				if (profile?.builtin) {
 					description = localize('connection.builtin', "built-in");
 				}
 				if (profile?.builtin) {
@@ -210,9 +211,6 @@ class ItemRenderer implements ITreeRenderer<DatabaseItem, void, IItemTemplate> {
 			const contextKeyService = this.contextKeyService.createOverlay(this.itemContext(item));
 			const groups = this.menuService.getMenuActions(DatabaseItemInlineMenu, contextKeyService, { arg: itemArg(item), shouldForwardArgs: true });
 			template.actionBar.push(getActionBarActions(groups, 'inline').primary, { icon: true, label: false });
-			// The context menu, for those who do not think of right-clicking.
-			const more = template.disposables.add(new Action('databases.moreActions', localize('moreActions', "More Actions..."), ThemeIcon.asClassName(Codicon.ellipsis), true, async () => this.showMenu(item, template.actions)));
-			template.actionBar.push(more, { icon: true, label: false });
 		}
 	}
 
@@ -227,11 +225,24 @@ class ItemRenderer implements ITreeRenderer<DatabaseItem, void, IItemTemplate> {
 }
 
 
+/** The title's New Connection button, labelled "+ New", with a dropdown that opens it on a given engine. */
+class NewConnectionActionViewItem extends DropdownWithPrimaryActionViewItem {
+
+	override render(container: HTMLElement): void {
+		super.render(container);
+		container.classList.add('databases-new-connection');
+		// The primary action renders into the first child, before the dropdown's.
+		const primary = container.firstElementChild;
+		if (dom.isHTMLElement(primary)) {
+			dom.append(primary, dom.$('span.databases-new-label', undefined, localize('newConnection.label', "New")));
+		}
+	}
+}
+
 /**
- * The Connections view has two screens. The list shows the saved connections and
- * those shown from the REPL with `PollisDB.show`; clicking one connects it if needed and opens its
- * screen, which has Back, Disconnect and Refresh buttons over the tree of its schemas, tables and
- * columns.
+ * The Connections view lists the saved connections and those shown from the REPL with
+ * `PollisDB.show`. Expanding a connection (clicking it, its twistie or Show Tables) connects it if
+ * needed and shows the tree of its schemas, tables and columns in place, below the connection.
  */
 export class DatabaseConnectionsView extends ViewPane {
 
@@ -239,14 +250,15 @@ export class DatabaseConnectionsView extends ViewPane {
 
 	private tree: WorkbenchObjectTree<DatabaseItem> | undefined;
 	private root: HTMLElement | undefined;
-	/** The connection whose screen is shown, or undefined for the list. */
-	private openId: string | undefined;
-	/** A connection being connected from the list, whose screen opens once the REPL reports it. */
-	private pendingId: string | undefined;
+	/** The connection items in the tree by id, the objects the tree knows them by. */
+	private readonly connections = new Map<string, DatabaseItem & { kind: 'connection' }>();
+	/** Connections expanded while not connected, being connected from the view; their tables show once the REPL reports them. */
+	private readonly pending = new Set<string>();
 	/** The ids of the expanded items, kept across refreshes. */
 	private readonly expanded = new Set<string>();
 	private lastSize: { height: number; width: number } | undefined;
-	private readonly connectionOpen: IContextKey<boolean>;
+	/** The dropdown action of the title's "+ New" button, replaced whenever the title renders it again. */
+	private readonly newConnectionDisposables = this._register(new DisposableStore());
 
 	constructor(
 		options: IViewPaneOptions,
@@ -264,13 +276,7 @@ export class DatabaseConnectionsView extends ViewPane {
 		@IHoverService hoverService: IHoverService,
 	) {
 		super(options, keybindingService, contextMenuService, configurationService, contextKeyService, viewDescriptorService, instantiationService, openerService, themeService, hoverService);
-		this.connectionOpen = DatabaseConnectionOpen.bindTo(this.scopedContextKeyService);
 		this._register(this.databaseConnectionsService.onDidChangeConnections(() => this.refresh()));
-	}
-
-	/** The connection whose screen is shown, or undefined for the list. */
-	get openConnectionId(): string | undefined {
-		return this.openId;
 	}
 
 	override shouldShowWelcome(): boolean {
@@ -281,13 +287,12 @@ export class DatabaseConnectionsView extends ViewPane {
 		super.renderBody(container);
 		this.root = dom.append(container, dom.$('.databases-view'));
 
-
 		this.tree = this._register(this.instantiationService.createInstance(
 			WorkbenchObjectTree<DatabaseItem>,
 			'DatabaseConnections',
 			dom.append(this.root, dom.$('.databases-tree')),
 			new ItemDelegate(),
-			[new ItemRenderer(item => this.itemContext(item), this.hoverService, this.menuService, this.contextKeyService, this.instantiationService, (item, anchor) => this.showItemMenu(item, anchor))],
+			[new ItemRenderer(item => this.itemContext(item), this.hoverService, this.menuService, this.contextKeyService, this.instantiationService)],
 			{
 				identityProvider: { getId: itemId },
 				supportDynamicHeights: true,
@@ -298,17 +303,17 @@ export class DatabaseConnectionsView extends ViewPane {
 			},
 		));
 		this._register(this.tree.onDidChangeCollapseState(e => {
-			if (e.node.element) {
-				if (e.node.collapsed) {
-					this.expanded.delete(itemId(e.node.element));
-				} else {
-					this.expanded.add(itemId(e.node.element));
-				}
+			const item = e.node.element;
+			if (!item) {
+				return;
 			}
-		}));
-		this._register(this.tree.onDidOpen(e => {
-			if (e.element?.kind === 'connection' && !e.element.open) {
-				this.openConnection(e.element);
+			if (e.node.collapsed) {
+				this.expanded.delete(itemId(item));
+			} else {
+				this.expanded.add(itemId(item));
+			}
+			if (item.kind === 'connection') {
+				this.onDidToggleConnection(item, !e.node.collapsed);
 			}
 		}));
 		this._register(this.tree.onMouseDblClick(e => {
@@ -320,75 +325,82 @@ export class DatabaseConnectionsView extends ViewPane {
 		this.refresh();
 	}
 
-	/** Open the screen of a connection, connecting it first if it is a saved profile the REPL does not hold. */
-	private openConnection(item: DatabaseItem & { kind: 'connection' }): void {
-		if (item.session) {
-			this.showConnection(item.id);
-		} else if (item.profile) {
-			this.pendingId = item.id;
-			this.commandService.executeCommand(CONNECT_DATABASE_COMMAND_ID, itemArg(item));
+	/** Show the tables of connection `id` below it, connecting it first if the REPL does not hold it. */
+	showTables(id: string): void {
+		const item = this.connections.get(id);
+		if (this.tree && item) {
+			this.tree.expand(item);
+			this.tree.setFocus([item]);
 		}
 	}
 
-	private showConnection(id: string): void {
-		this.openId = id;
-		this.pendingId = undefined;
-		// A single schema (DuckDB's `main`, SQLite) starts expanded.
+	/** Hide the tables of connection `id`. */
+	hideTables(id: string): void {
+		const item = this.connections.get(id);
+		if (this.tree && item) {
+			this.tree.collapse(item);
+		}
+	}
+
+	private onDidToggleConnection(item: DatabaseItem & { kind: 'connection' }, expanded: boolean): void {
+		if (!expanded) {
+			this.pending.delete(item.id);
+		} else if (item.session) {
+			this.expandSingleSchema(item.id);
+		} else if (item.profile && !this.pending.has(item.id)) {
+			this.pending.add(item.id);
+			this.commandService.executeCommand(CONNECT_DATABASE_COMMAND_ID, itemArg(item));
+			this.refresh();
+			return;
+		}
+		// The row's Show / Hide Tables button follows the new state.
+		if (this.tree?.hasElement(item)) {
+			this.tree.rerender(item);
+		}
+	}
+
+	/** A single schema (DuckDB's `main`, SQLite) starts expanded. */
+	private expandSingleSchema(id: string): void {
 		const schemas = this.databaseConnectionsService.getSession(id)?.schemas ?? [];
 		if (schemas.length === 1) {
 			this.expanded.add(`${id}/${schemas[0].name}`);
 		}
-		this.refresh();
-		this.tree?.domFocus();
-	}
-
-	/** Go back from the screen of a connection to the list of connections. */
-	showList(): void {
-		const id = this.openId;
-		this.openId = undefined;
-		this.pendingId = undefined;
-		this.refresh();
-		if (this.tree && id && this.tree.hasElement(this.connectionItem(id))) {
-			this.tree.setFocus([this.connectionItem(id)]);
-		}
-		this.tree?.domFocus();
-	}
-
-	private connectionItem(id: string): DatabaseItem & { kind: 'connection' } {
-		return { kind: 'connection', id, profile: this.databaseConnectionsService.getConnection(id), session: this.databaseConnectionsService.getSession(id) };
 	}
 
 	private refresh(): void {
-		if (this.pendingId && this.databaseConnectionsService.getSession(this.pendingId)) {
-			this.showConnection(this.pendingId);
-			return;
+		for (const id of this.pending) {
+			if (this.databaseConnectionsService.getSession(id)) {
+				this.pending.delete(id);
+				this.expandSingleSchema(id);
+			}
 		}
-		// Back to the list once the REPL lets the open connection go.
-		if (this.openId && !this.databaseConnectionsService.getSession(this.openId)) {
-			this.openId = undefined;
+		// A connection the REPL lets go folds back up.
+		for (const id of this.expanded) {
+			if (!id.includes('/') && !this.pending.has(id) && !this.databaseConnectionsService.getSession(id)) {
+				this.expanded.delete(id);
+			}
 		}
 		if (this.tree && this.root) {
-			const session = this.openId ? this.databaseConnectionsService.getSession(this.openId) : undefined;
-			this.connectionOpen.set(!!session);
-			if (this.openId && session) {
-				this.tree.setChildren(null, [{ element: { ...this.connectionItem(this.openId), open: true }, children: this.schemaElements(this.openId, session), collapsible: true, collapsed: false }]);
-			} else {
-				this.tree.setChildren(null, this.connectionElements());
-			}
+			this.tree.setChildren(null, this.connectionElements());
 			this.layoutTree();
 		}
 		this._onDidChangeViewWelcomeState.fire();
 	}
 
-	/** The saved profiles, then the connections shown from the REPL. */
+	/** The saved profiles, then the connections shown from the REPL, each with its schemas below it. */
 	private connectionElements(): IObjectTreeElement<DatabaseItem>[] {
 		const profiles = this.databaseConnectionsService.getConnections();
 		const saved = new Set(profiles.map(p => p.id));
 		const shown = this.databaseConnectionsService.getSessions().filter(s => !saved.has(s.id)).sort((a, b) => a.name.localeCompare(b.name));
-		return [
-			...profiles.map(profile => ({ element: this.connectionItem(profile.id) })),
-			...shown.map(session => ({ element: this.connectionItem(session.id) })),
-		];
+		this.connections.clear();
+		return [...profiles.map(p => p.id), ...shown.map(s => s.id)].map(id => {
+			const item: DatabaseItem & { kind: 'connection' } = { kind: 'connection', id, profile: this.databaseConnectionsService.getConnection(id), session: this.databaseConnectionsService.getSession(id) };
+			this.connections.set(id, item);
+			const children: IObjectTreeElement<DatabaseItem>[] = item.session
+				? this.schemaElements(id, item.session)
+				: this.pending.has(id) ? [{ element: { kind: 'message', id, message: localize('connection.connecting', "Connecting in the Julia REPL...") } }] : [];
+			return { element: item, children, collapsible: !!item.session || !!item.profile, collapsed: !this.expanded.has(id) };
+		});
 	}
 
 	private schemaElements(id: string, session: IDatabaseSession): IObjectTreeElement<DatabaseItem>[] {
@@ -412,6 +424,7 @@ export class DatabaseConnectionsView extends ViewPane {
 			[DatabaseItemConnected.key, !!this.databaseConnectionsService.getSession(item.id)],
 			[DatabaseItemSaved.key, !!this.databaseConnectionsService.getConnection(item.id)],
 			[DatabaseItemBuiltin.key, !!this.databaseConnectionsService.getConnection(item.id)?.builtin],
+			[DatabaseItemExpanded.key, this.expanded.has(item.id)],
 		];
 	}
 
@@ -428,6 +441,16 @@ export class DatabaseConnectionsView extends ViewPane {
 			getAnchor: () => anchor,
 			getActions: () => actions,
 		});
+	}
+
+	override createActionViewItem(action: IAction, options?: IDropdownMenuActionViewItemOptions): IActionViewItem | undefined {
+		if (action instanceof MenuItemAction && action.id === NEW_CONNECTION_COMMAND_ID) {
+			this.newConnectionDisposables.clear();
+			const engines = getFlatContextMenuActions(this.menuService.getMenuActions(DatabasesNewConnectionMenu, this.contextKeyService));
+			const dropdown = this.newConnectionDisposables.add(new Action('databases.newConnectionEngines', localize('newConnection.engines', "New Connection To..."), undefined, true));
+			return this.instantiationService.createInstance(NewConnectionActionViewItem, action, dropdown, engines, '', { hoverDelegate: options?.hoverDelegate });
+		}
+		return super.createActionViewItem(action, options);
 	}
 
 	override focus(): void {
