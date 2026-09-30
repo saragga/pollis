@@ -842,14 +842,14 @@ when = "dist=MatrixNormal"
 [[inputs]]
 id = "lower"
 label = "Lower Bound"
-default = "-Inf"
+default = "-1.0"
 models = ["truncated"]
 newRow = true
 
 [[inputs]]
 id = "upper"
 label = "Upper Bound"
-default = "Inf"
+default = "2.0"
 models = ["truncated"]
 
 [[inputs]]
@@ -1232,7 +1232,7 @@ code = '''
 println("Mean:     ", mean(d))
 println("Variance: ", var(d))
 println("Skewness: ", skewness(d))
-println("Kurtosis: ", kurtosis(d))
+println("Excess kurtosis: ", kurtosis(d))  # Distributions.jl reports excess kurtosis: 0 for a normal, not 3
 '''
 
 [[actionGroups.actions]]
