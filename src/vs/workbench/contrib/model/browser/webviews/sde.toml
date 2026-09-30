@@ -409,7 +409,7 @@ desc = "Estimate the long-run stationary distribution from a long trajectory"
 code = '''
 using StochasticDiffEq, StatsBase, Plots  # estimate stationary distribution
 
-f(X, p, t) = {{f}}; g(X, p, t) = 0.3  # Ornstein-Uhlenbeck: stationary ~ Normal(0, sigma^2 / 2*theta)
+f(X, p, t) = {{f}}; g(X, p, t) = 0.3  # Ornstein-Uhlenbeck (drift -theta X, diffusion sigma): stationary Normal(0, variance sigma^2 / (2 theta)), 0.09 for theta = 0.5 and sigma = 0.3
 sol = solve(SDEProblem(f, g, {{X0}}, (0.0, 1000.0)), EM(), dt=0.01)  # long trajectory
 h   = fit(Histogram, sol.u, nbins=50)  # histogram of visited states
 plot(h, normalize=:pdf, xlabel="X", ylabel="density")  # empirical stationary distribution
