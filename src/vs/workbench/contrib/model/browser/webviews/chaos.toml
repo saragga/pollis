@@ -224,7 +224,7 @@ using FractalDimensions  # correlation dimension module
 eps_vals = exp10.(range(-2, 1; length=20))  # log-spaced length scales
 D2 = correlationdim(tr, eps_vals)  # Grassberger-Procaccia dimension
 
-println("Correlation dimension D2: ", D2)  # Lorenz ~ 2.05, integer => non-chaotic
+println("Correlation dimension D2: ", D2)  # Lorenz ~ 2.05; a non-integer D2 suggests a strange attractor but does not by itself prove chaos (check the Lyapunov exponent)
 '''
 
 [[codeBranches]]
@@ -294,7 +294,7 @@ label = "Diagnose"
 [[actionGroups.actions]]
 id = "stationarity"
 label = "Stationarity Check"
-desc = "Split the series in halves and compare Lyapunov estimates to test for stationarity"
+desc = "Split the series in halves and compare their determinism (RQA DET): a large difference suggests the dynamics are not stationary"
 code = '''
 using RecurrenceAnalysis
 
@@ -311,16 +311,23 @@ id = "noise-sensitivity"
 label = "Noise Sensitivity"
 desc = "Add small noise and observe the change in Lyapunov exponent to assess robustness"
 code = '''
-using DynamicalSystems
+using DynamicalSystems, Statistics
 
 ds = CoupledODEs(lorenz!, [1.0, 0.0, 0.0], (10.0, 28.0, 8/3))
 lambda_clean = lyapunov(ds, {{T}})  # clean estimate
 
 tr, t = trajectory(ds, {{T}}; Dt=0.01)  # generate orbit
-tr_noisy = tr .+ 0.01 .* randn(size(tr))  # add 1% noise
+X = Matrix(tr)
+X_noisy = X .+ 0.01 .* std(X, dims=1) .* randn(size(X))  # measurement noise of 1% of each variable's sd
 
-println("Clean  lambda: ", lambda_clean)  # baseline
-println("Orbit rows: ", size(tr_noisy, 1))  # confirm size
+ks = 0:4:100  # steps ahead; the exponent is the slope of the log divergence E(k)
+slope(E) = cov(ks .* 0.01, E) / var(ks .* 0.01)  # per unit time (Dt = 0.01)
+lambda_data  = slope(lyapunov_from_data(StateSpaceSet(X), ks; w=10))  # estimated from the clean orbit
+lambda_noisy = slope(lyapunov_from_data(StateSpaceSet(X_noisy), ks; w=10))  # estimated from the noisy orbit
+
+println("From the equations: ", lambda_clean)  # baseline
+println("From clean data:    ", lambda_data)
+println("From noisy data:    ", lambda_noisy)  # a large change means the estimate is fragile to measurement noise
 '''
 
 [[actionGroups]]
@@ -369,17 +376,21 @@ id = "surrogate"
 label = "vs Linear Surrogate"
 desc = "Compare the Lyapunov exponent of the original data against phase-randomised surrogates"
 code = '''
-using DynamicalSystems, TimeseriesSurrogates
+using DynamicalSystems, TimeseriesSurrogates, Statistics
 
 tau = estimate_delay({{x}}, "mi_min")  # embedding delay
 d   = 3  # embedding dimension
 X   = embed({{x}}, d, tau)  # reconstruct phase space
 
-surr = surrogenerator({{x}}, RandomFourier())  # phase-randomised surrogate generator
-surr_lambdas = [lyapunov(CoupledODEs(embed(surr(), d, tau)), 100) for _ in 1:19]  # 19 surrogate exponents
+ks = 0:20  # steps ahead
+slope(E) = cov(ks, E) / var(ks)  # exponent per sampling step, from the growth of the log divergence
+lam(Y) = slope(lyapunov_from_data(Y, ks; w=10 * tau))  # Theiler window excludes temporal neighbours
 
-println("Data lambda:     ", lyapunov(X, 100))  # original
-println("Surrogate range: ", extrema(surr_lambdas))  # null distribution
+surr = surrogenerator({{x}}, RandomFourier())  # phase-randomised surrogate generator
+surr_lambdas = [lam(embed(surr(), d, tau)) for _ in 1:19]  # 19 surrogates: a one-sided test at the 5% level
+
+println("Data lambda:     ", lam(X))  # original
+println("Surrogate range: ", extrema(surr_lambdas))  # data above every surrogate: nonlinear structure beyond the linear spectrum
 '''
 
 [[actionGroups.actions]]
@@ -415,13 +426,16 @@ using DynamicalSystems
 ds = CoupledODEs(lorenz!, [1.0, 0.0, 0.0], (10.0, 28.0, 8/3))
 spectrum = lyapunovspectrum(ds, {{T}})  # full Lyapunov spectrum
 
-lambda1 = spectrum[1]  # maximal exponent
-if lambda1 > 0.01
+lambda1, lambda2 = spectrum[1], spectrum[2]  # the two largest exponents; a flow always has one near zero along the orbit
+tol = 0.01  # numerical tolerance for "zero"
+if lambda1 > tol
     println("Chaotic: sensitive dependence on ICs")
-elseif lambda1 > -0.01
-    println("Quasiperiodic or neutral orbit")
+elseif abs(lambda1) <= tol && abs(lambda2) <= tol
+    println("Quasiperiodic: two zero exponents (motion on a torus)")
+elseif abs(lambda1) <= tol
+    println("Periodic: one zero exponent (a limit cycle)")
 else
-    println("Periodic or fixed-point attractor")
+    println("Stable fixed point: all exponents negative")
 end
 '''
 
