@@ -193,8 +193,8 @@ using TextAnalysis, Languages
 crps = Corpus([StringDocument(d) for d in {{corpus}}])  # build corpus from documents
 prepare!(crps, strip_punctuation | strip_case)  # normalise text
 
-tokens   = vcat([tokens(d) for d in crps]...)  # flatten all tokens
-unigrams = ngrams(NGramDocument(join(tokens, " "), 1))  # unigram counts
+toks     = vcat([tokens(d) for d in crps]...)  # flatten all tokens
+unigrams = ngrams(NGramDocument(join(toks, " "), 1))  # unigram counts
 N        = sum(values(unigrams))  # total token count
 V        = length(unigrams)  # vocabulary size
 prob(w)  = (get(unigrams, w, 0) + {{k}}) / (N + {{k}} * V)  # Add-k smoothing
@@ -208,9 +208,9 @@ using TextAnalysis, Languages
 crps    = Corpus([StringDocument(d) for d in {{corpus}}])  # build corpus from documents
 prepare!(crps, strip_punctuation | strip_case)  # normalise text
 
-tokens   = vcat([tokens(d) for d in crps]...)  # flatten all tokens
-unigrams = ngrams(NGramDocument(join(tokens, " "), 1))  # unigram counts
-bigrams  = ngrams(NGramDocument(join(tokens, " "), 2))  # bigram counts
+toks     = vcat([tokens(d) for d in crps]...)  # flatten all tokens
+unigrams = ngrams(NGramDocument(join(toks, " "), 1))  # unigram counts
+bigrams  = ngrams(NGramDocument(join(toks, " "), 2))  # bigram counts
 V        = length(unigrams)  # vocabulary size
 '''
 
@@ -222,10 +222,10 @@ using TextAnalysis, Languages
 crps     = Corpus([StringDocument(d) for d in {{corpus}}])  # build corpus from documents
 prepare!(crps, strip_punctuation | strip_case)  # normalise text
 
-tokens   = vcat([tokens(d) for d in crps]...)  # flatten all tokens
-unigrams = ngrams(NGramDocument(join(tokens, " "), 1))  # unigram counts
-bigrams  = ngrams(NGramDocument(join(tokens, " "), 2))  # bigram counts
-trigrams = ngrams(NGramDocument(join(tokens, " "), 3))  # trigram counts
+toks     = vcat([tokens(d) for d in crps]...)  # flatten all tokens
+unigrams = ngrams(NGramDocument(join(toks, " "), 1))  # unigram counts
+bigrams  = ngrams(NGramDocument(join(toks, " "), 2))  # bigram counts
+trigrams = ngrams(NGramDocument(join(toks, " "), 3))  # trigram counts
 V        = length(unigrams)  # vocabulary size; use backoff or interpolation for unseen trigrams
 '''
 
@@ -242,8 +242,8 @@ using TextAnalysis, Languages
 
 crps     = Corpus([StringDocument(d) for d in {{corpus}}])  # build corpus
 prepare!(crps, strip_punctuation | strip_case)  # normalise
-tokens   = vcat([tokens(d) for d in crps]...)  # all tokens
-unigrams = ngrams(NGramDocument(join(tokens, " "), 1))  # counts
+toks     = vcat([tokens(d) for d in crps]...)  # all tokens
+unigrams = ngrams(NGramDocument(join(toks, " "), 1))  # counts
 top10    = sort(collect(unigrams), by=x->x[2], rev=true)[1:10]  # top-10 words by frequency
 '''
 
@@ -256,8 +256,8 @@ using TextAnalysis, Languages
 
 crps     = Corpus([StringDocument(d) for d in {{corpus}}])  # build corpus
 prepare!(crps, strip_punctuation | strip_case)  # normalise
-tokens   = vcat([tokens(d) for d in crps]...)  # all tokens
-unigrams = ngrams(NGramDocument(join(tokens, " "), 1))  # unigram counts
+toks     = vcat([tokens(d) for d in crps]...)  # all tokens
+unigrams = ngrams(NGramDocument(join(toks, " "), 1))  # unigram counts
 N = sum(values(unigrams)); V = length(unigrams)  # corpus size and vocabulary
 probs = Dict(w => (cnt + {{k}}) / (N + {{k}} * V) for (w, cnt) in unigrams)  # Add-k smoothed probabilities
 '''
@@ -271,14 +271,15 @@ id = "perplexity"
 label = "Perplexity"
 desc = "Perplexity on a held-out test corpus"
 code = '''
-using TextAnalysis, Languages
+using TextAnalysis, Languages, Statistics
 
 crps     = Corpus([StringDocument(d) for d in {{corpus}}])  # training corpus
 prepare!(crps, strip_punctuation | strip_case)  # normalise
-tokens   = vcat([tokens(d) for d in crps]...)  # training tokens
-unigrams = ngrams(NGramDocument(join(tokens, " "), 1))  # unigram counts
+toks     = vcat([tokens(d) for d in crps]...)  # training tokens
+unigrams = ngrams(NGramDocument(join(toks, " "), 1))  # unigram counts
 N = sum(values(unigrams)); V = length(unigrams)  # size and vocabulary
-log_pp   = -mean([log2((get(unigrams, w, 0) + {{k}}) / (N + {{k}} * V)) for w in test_tokens])  # per-token log-prob on test set
+log_pp   = -mean([log2((get(unigrams, w, 0) + {{k}}) / (N + {{k}} * V)) for w in test_tokens])  # cross-entropy in bits per test token
+pp       = 2^log_pp  # perplexity: the effective number of equally likely next words
 '''
 
 [[actionGroups.actions]]
@@ -286,12 +287,12 @@ id = "oov-rate"
 label = "OOV Rate"
 desc = "Fraction of test tokens unseen in training"
 code = '''
-using TextAnalysis, Languages
+using TextAnalysis, Languages, Statistics
 
 crps     = Corpus([StringDocument(d) for d in {{corpus}}])  # training corpus
 prepare!(crps, strip_punctuation | strip_case)  # normalise
-tokens   = vcat([tokens(d) for d in crps]...)  # training tokens
-vocab    = Set(tokens)  # training vocabulary
+toks     = vcat([tokens(d) for d in crps]...)  # training tokens
+vocab    = Set(toks)  # training vocabulary
 oov_rate = mean(w -> !(w in vocab), test_tokens)  # fraction of OOV test tokens
 '''
 
@@ -308,8 +309,8 @@ using TextAnalysis, Languages
 
 crps     = Corpus([StringDocument(d) for d in {{corpus}}])  # training corpus
 prepare!(crps, strip_punctuation | strip_case)  # normalise
-tokens   = vcat([tokens(d) for d in crps]...)  # training tokens
-unigrams = ngrams(NGramDocument(join(tokens, " "), 1))  # unigram counts
+toks     = vcat([tokens(d) for d in crps]...)  # training tokens
+unigrams = ngrams(NGramDocument(join(toks, " "), 1))  # unigram counts
 N = sum(values(unigrams)); V = length(unigrams)  # size and vocabulary
 log_p    = sum(log2((get(unigrams, w, 0) + {{k}}) / (N + {{k}} * V)) for w in new_sentence)  # log-probability of sentence
 '''
@@ -323,9 +324,9 @@ using TextAnalysis, Languages
 
 crps     = Corpus([StringDocument(d) for d in {{corpus}}])  # training corpus
 prepare!(crps, strip_punctuation | strip_case)  # normalise
-tokens   = vcat([tokens(d) for d in crps]...)  # training tokens
-bigrams  = ngrams(NGramDocument(join(tokens, " "), 2))  # bigram counts for context lookup
-unigrams = ngrams(NGramDocument(join(tokens, " "), 1))  # unigram counts
+toks     = vcat([tokens(d) for d in crps]...)  # training tokens
+bigrams  = ngrams(NGramDocument(join(toks, " "), 2))  # bigram counts for context lookup
+unigrams = ngrams(NGramDocument(join(toks, " "), 1))  # unigram counts
 next_w   = argmax(w -> get(bigrams, context * " " * w, 0) + {{k}}, collect(keys(unigrams)))  # most probable next word
 '''
 
@@ -342,10 +343,10 @@ using TextAnalysis, Languages
 
 crps     = Corpus([StringDocument(d) for d in {{corpus}}])  # training corpus
 prepare!(crps, strip_punctuation | strip_case)  # normalise
-tokens   = vcat([tokens(d) for d in crps]...)  # training tokens
-unigrams = ngrams(NGramDocument(join(tokens, " "), 1))  # unigram counts
-bigrams  = ngrams(NGramDocument(join(tokens, " "), 2))  # bigram counts
-trigrams = ngrams(NGramDocument(join(tokens, " "), 3))  # trigram counts; compare test-set perplexity across orders
+toks     = vcat([tokens(d) for d in crps]...)  # training tokens
+unigrams = ngrams(NGramDocument(join(toks, " "), 1))  # unigram counts
+bigrams  = ngrams(NGramDocument(join(toks, " "), 2))  # bigram counts
+trigrams = ngrams(NGramDocument(join(toks, " "), 3))  # trigram counts; compare test-set perplexity across orders
 '''
 
 [[actionGroups.actions]]
@@ -357,8 +358,8 @@ using TextAnalysis, Languages
 
 crps     = Corpus([StringDocument(d) for d in {{corpus}}])  # training corpus
 prepare!(crps, strip_punctuation | strip_case)  # normalise
-tokens   = vcat([tokens(d) for d in crps]...)  # training tokens
-unigrams = ngrams(NGramDocument(join(tokens, " "), 1))  # unigram counts
+toks     = vcat([tokens(d) for d in crps]...)  # training tokens
+unigrams = ngrams(NGramDocument(join(toks, " "), 1))  # unigram counts
 N = sum(values(unigrams)); V = length(unigrams)  # size and vocabulary
 pp_mle    = perplexity(unigrams, test_tokens, 0, N, V)  # MLE perplexity (k=0)
 pp_laplace = perplexity(unigrams, test_tokens, 1, N, V)  # Laplace perplexity (k=1)
@@ -378,8 +379,8 @@ using TextAnalysis, Languages
 
 crps     = Corpus([StringDocument(d) for d in {{corpus}}])  # build corpus
 prepare!(crps, strip_punctuation | strip_case)  # normalise
-tokens   = vcat([tokens(d) for d in crps]...)  # all tokens
-bigrams  = ngrams(NGramDocument(join(tokens, " "), 2))  # bigram counts
+toks     = vcat([tokens(d) for d in crps]...)  # all tokens
+bigrams  = ngrams(NGramDocument(join(toks, " "), 2))  # bigram counts
 top_bg   = sort(collect(bigrams), by=x->x[2], rev=true)[1:10]  # top-10 most frequent bigrams
 '''
 
@@ -392,9 +393,9 @@ using TextAnalysis, Languages
 
 crps     = Corpus([StringDocument(d) for d in {{corpus}}])  # build corpus
 prepare!(crps, strip_punctuation | strip_case)  # normalise
-tokens   = vcat([tokens(d) for d in crps]...)  # all tokens
-unigrams = ngrams(NGramDocument(join(tokens, " "), 1))  # unigram counts
-bigrams  = ngrams(NGramDocument(join(tokens, " "), 2))  # bigram counts
+toks     = vcat([tokens(d) for d in crps]...)  # all tokens
+unigrams = ngrams(NGramDocument(join(toks, " "), 1))  # unigram counts
+bigrams  = ngrams(NGramDocument(join(toks, " "), 2))  # bigram counts
 N = sum(values(unigrams))  # total tokens
 pmi(w1, w2) = log2((get(bigrams, w1 * " " * w2, 0) * N) / (get(unigrams, w1, 0) * get(unigrams, w2, 0) + 1))  # pointwise mutual information
 '''
