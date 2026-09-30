@@ -134,30 +134,30 @@ openAccess = false
 
 [[models]]
 id = "msm"
-label = "MS Regression"
+label = "Markov-Switching Regression"
 
 [[models]]
 id = "msar"
-label = "MS Autoregression"
+label = "Markov-Switching Autoregression"
 
 [[models]]
 id = "msarch"
-label = "MS-ARCH"
+label = "Markov-Switching ARCH"
 
 [[models]]
 id = "tvtp"
 label = "Time-Varying Transitions"
 
 [[bullets]]
-text = "MS Regression"
+text = "Markov-Switching Regression"
 detail = "intercept, slopes and variance switch with an unobserved Markov regime (Hamilton, 1989)"
 
 [[bullets]]
-text = "MS Autoregression"
+text = "Markov-Switching Autoregression"
 detail = "regime-specific autoregressive dynamics on the lags of the series"
 
 [[bullets]]
-text = "MS-ARCH"
+text = "Markov-Switching ARCH"
 detail = "volatility clusters within each regime through a regime-specific ARCH process"
 
 [[bullets]]
@@ -165,17 +165,17 @@ text = "Time-Varying Transitions"
 detail = "switching probabilities driven by exogenous variables (Filardo, 1994)"
 
 [[decisionRows]]
-task = "MS Regression"
+task = "Markov-Switching Regression"
 context = "A relationship that seems to change between calm and turbulent periods, expansions and recessions"
 purpose = "Estimates one set of coefficients and one variance per regime, the transition matrix and the probability of each regime at every date"
 
 [[decisionRows]]
-task = "MS Autoregression"
+task = "Markov-Switching Autoregression"
 context = "A single series whose persistence or mean reversion differs between regimes (GDP growth, interest rates)"
 purpose = "Regime-specific AR coefficients on the lagged series: business-cycle dating in the spirit of Hamilton (1989)"
 
 [[decisionRows]]
-task = "MS-ARCH"
+task = "Markov-Switching ARCH"
 context = "Returns with volatility clustering that also jumps between low- and high-volatility states"
 purpose = "Each regime carries its own ARCH(q) variance, so volatility clusters within a regime while the regime itself switches"
 
@@ -390,10 +390,10 @@ scatter!(1:length(yt), yt, group=["regime $i" for i in s], ms=2.5, msw=0)
 [[actionGroups.actions]]
 id = "variance"
 label = "Conditional Variance by Regime"
-desc = "The ARCH conditional variance of each regime over time (MS-ARCH only): how volatility clusters inside each regime"
+desc = "The ARCH conditional variance of each regime over time (Markov-Switching ARCH only): how volatility clusters inside each regime"
 code = '''
 using MarSwitching, Plots
-{{?model!=msarch}} error("Conditional variances are defined for the MS-ARCH model only")
+{{?model!=msarch}} error("Conditional variances are defined for the Markov-Switching ARCH model only")
 h = conditional_variance(model)  # T x k regime-conditional variances
 plot(sqrt.(h), lw=1.2, label=permutedims(["regime $i" for i in 1:model.k]), xlabel="t", ylabel="conditional std. dev.", title="Volatility by regime")
 '''
@@ -473,7 +473,7 @@ end
 [[actionGroups.actions]]
 id = "grid"
 label = "Specification Search"
-desc = "grid_search_msm searches regimes, intercept type, switching of each regressor and of the variance, and keeps the best model by AIC; it needs switching regressors (or the autoregression lags) and does not cover MS-ARCH or time-varying transitions"
+desc = "grid_search_msm searches regimes, intercept type, switching of each regressor and of the variance, and keeps the best model by AIC; it needs switching regressors (or the autoregression lags) and does not cover Markov-Switching ARCH or time-varying transitions"
 code = '''
 using MarSwitching
 {{?model=msar}} Xg = X[:, 2:end]

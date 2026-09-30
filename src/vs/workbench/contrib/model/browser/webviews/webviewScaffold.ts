@@ -212,7 +212,7 @@ export function buildWebviewHtml(parts: WebviewParts): string {
 		.decision-table td { padding: 5px 10px; border-bottom: 1px solid var(--vscode-widget-border); color: var(--vscode-foreground); vertical-align: top; line-height: 1.4; }
 		.decision-table tr:last-child td { border-bottom: none; }
 		.decision-table td:first-child { color: var(--vscode-textLink-foreground); font-weight: 500; white-space: nowrap; }
-		.decision-table td:nth-child(2) { white-space: nowrap; }
+		.decision-table td:nth-child(2) { min-width: 140px; }
 		.pane-intro { margin: 0 0 12px; font-size: 12px; line-height: 1.5; color: var(--vscode-descriptionForeground); border-left: 2px solid var(--vscode-textLink-foreground); padding-left: 10px; }
 		.pane-note { margin: 10px 0 0; font-size: 12px; line-height: 1.5; color: var(--vscode-descriptionForeground); border-left: 2px solid var(--vscode-textLink-foreground); padding-left: 10px; }
 		.pane-intro em, .pane-note em { font-style: italic; color: var(--vscode-foreground); }
