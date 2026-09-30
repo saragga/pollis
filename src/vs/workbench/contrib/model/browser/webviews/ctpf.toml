@@ -242,7 +242,7 @@ label = "Diagnose"
 [[actionGroups.actions]]
 id = "perplexity"
 label = "Perplexity"
-desc = "Held-out perplexity on unseen documents"
+desc = "Perplexity on the training documents (in-sample: nothing is held out, so it favours larger models)"
 code = '''
 using TopicModels, TextAnalysis
 
@@ -253,13 +253,13 @@ dtm   = DocumentTermMatrix(crps)
 model = CTPF(dtm.dtm, {{ratings}}, {{k}})
 train!(model)
 
-perplexity(model)  # held-out perplexity (lower is better)
+perplexity(model)  # in-sample perplexity (lower is better); refit without some documents to measure held-out perplexity
 '''
 
 [[actionGroups.actions]]
 id = "recommendation-recall"
 label = "Recommendation Recall"
-desc = "Recall at k for held-out user-item pairs"
+desc = "Top-10 recommendations for one user. Recall at k needs user-item pairs held out before training, which this action does not do"
 code = '''
 using TopicModels, TextAnalysis
 
