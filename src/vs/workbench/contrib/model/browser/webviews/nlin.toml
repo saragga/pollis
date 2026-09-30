@@ -242,7 +242,8 @@ tooltip = "A vector with one Julia expression per equation, in the unknowns u[1]
 kind = "textarea"
 default = '''
 [u[1]^2 + u[2]^2 - 4,
- exp(u[1]) + u[2] - 1]'''
+ exp(u[1]) + u[2] - 1]
+'''
 models = ["system"]
 
 [[inputs]]
