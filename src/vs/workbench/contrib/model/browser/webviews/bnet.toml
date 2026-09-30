@@ -314,7 +314,7 @@ using BayesNets  # exact inference via variable elimination
 
 posterior = infer(ExactInference(), {{net}}, [{{query}}], {{evidence}})  # compute P(wet_grass | evidence)
 
-println("P(" + string({{query}}) + " | evidence) = ", posterior)  # print posterior distribution
+println("P(", {{query}}, " | evidence) = ", posterior)  # print posterior distribution
 '''
 
 [[codeBranches]]
@@ -400,7 +400,7 @@ using BayesNets  # inference
 
 new_ev = Assignment(:rain => 1, :sprinkler => 1)  # new evidence to query against
 p = infer(ExactInference(), {{net}}, [{{query}}], new_ev)  # exact posterior
-println("P(" + string({{query}}) + " | new evidence) = ", p)  # posterior probability
+println("P(", {{query}}, " | new evidence) = ", p)  # posterior probability
 '''
 
 [[actionGroups.actions]]
