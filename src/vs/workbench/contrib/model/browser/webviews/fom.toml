@@ -347,7 +347,7 @@ default = "2000"
 id = "noise"
 label = "Gradient Noise"
 tooltip = "Standard deviation of Gaussian noise added to each gradient to imitate minibatch sampling. 0 gives the deterministic method."
-default = "0.0"
+default = "1.0"
 
 [miniCharts]
 # SVG drawing functions for each model's mini-chart icon (54 x 86 box)
