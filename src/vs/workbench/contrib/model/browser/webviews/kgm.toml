@@ -563,8 +563,9 @@ using ONNX, Plots, Images
 model  = ONNX.load("resnet50.onnx")  # load vision model
 img_t  = preprocess(load("image.jpg"))  # preprocess image
 logits = model(img_t)["output"]  # forward pass
-top5   = sortperm(logits, rev=true)[1:5]  # top-5 class indices
-bar(IMAGENET_LABELS[top5], logits[top5], title="Top-5 predictions")  # plot probabilities
+probs  = exp.(logits .- maximum(logits)); probs ./= sum(probs)  # softmax: the network outputs logits, not probabilities
+top5   = sortperm(probs, rev=true)[1:5]  # top-5 class indices
+bar(IMAGENET_LABELS[top5], probs[top5], title="Top-5 predictions", ylabel="probability")  # plot probabilities
 """
 
 [[actionGroups]]
@@ -599,7 +600,7 @@ model = ONNX.load("model.onnx")  # load model once
 batch = 16  # mini-batch size
 for i in 1:batch:length(inputs)
     chunk = inputs[i:min(i+batch-1, end)]  # current mini-batch
-    outs  = model.(stack(chunk))  # batched forward pass
+    outs  = model(stack(chunk))  # one forward pass on the stacked batch (model.(x) would apply it to every array element)
 end
 """
 
