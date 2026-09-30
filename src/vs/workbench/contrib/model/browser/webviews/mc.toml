@@ -134,25 +134,23 @@ cal_probs = predict(platt, tbl)  # calibrated probabilities
 [[codeBranches]]
 model = "isotonic"
 code = '''
-function pav(scores, labels)  # Pool Adjacent Violators algorithm
-    n    = length(scores)  # 
-    idx  = sortperm(scores)  # sort by score ascending
-    y    = float(labels[idx])  # 
-    pool = collect(1:n)  # each point starts in its own pool
-    avg  = copy(y)  # pool averages
-
-    for i in 2:n  # 
-        if avg[pool[i]] < avg[pool[i-1]]  # monotonicity violated
-            merged = [pool[i-1]; pool[i]]  # 
-            m = mean(y[merged])  # 
-            for j in merged; avg[j] = m; pool[j] = pool[i-1]; end  # 
-        end  # 
-    end  # 
-
-    return avg[pool]  # isotonic probabilities (sorted order)
+function pav(scores, labels)  # Pool Adjacent Violators: the least-squares non-decreasing fit of labels on scores
+    idx = sortperm(scores)  # sort by score ascending
+    means, sizes = Float64[], Int[]  # one entry per pooled block
+    for yi in float(labels[idx])
+        push!(means, yi); push!(sizes, 1)
+        while length(means) > 1 && means[end-1] > means[end]  # violation: merge the last two blocks, repeat backwards
+            w = sizes[end-1] + sizes[end]
+            means[end-1] = (sizes[end-1] * means[end-1] + sizes[end] * means[end]) / w
+            sizes[end-1] = w
+            pop!(means); pop!(sizes)
+        end
+    end
+    fitted = similar(means, length(scores))
+    fitted[idx] = reduce(vcat, [fill(m, k) for (m, k) in zip(means, sizes)])  # back to the original order, aligned with labels
+    fitted
 end
 
-idx       = sortperm({{scores}})  # 
 cal_probs = pav({{scores}}, {{y}})  # calibrated probabilities
 '''
 
@@ -183,7 +181,7 @@ id = "reliability"
 label = "Reliability Diagram"
 desc = "Binned calibration curve comparing mean predicted probability to observed fraction of positives"
 code = '''
-using CalibrationErrors, Plots
+using Plots, Statistics
 
 n_bins = 10  # number of equal-width bins
 bins   = range(0, 1, length=n_bins+1)  # bin edges
@@ -192,9 +190,9 @@ mean_pred = zeros(n_bins)  # mean predicted probability per bin
 frac_pos  = zeros(n_bins)  # observed positive fraction per bin
 
 for i in 1:n_bins
-    mask        = bins[i] .<= cal_probs .< bins[i+1]  # 
-    mean_pred[i] = isempty(cal_probs[mask]) ? (bins[i]+bins[i+1])/2 : mean(cal_probs[mask])  # 
-    frac_pos[i]  = isempty({{y}}[mask])  ? 0.0 : mean({{y}}[mask])  # 
+    mask         = (bins[i] .<= cal_probs .< bins[i+1]) .| ((i == n_bins) .& (cal_probs .== 1))  # the last bin includes 1
+    mean_pred[i] = any(mask) ? mean(cal_probs[mask]) : NaN  # empty bins are left out, not drawn at 0
+    frac_pos[i]  = any(mask) ? mean({{y}}[mask]) : NaN
 end
 
 plot([0,1], [0,1], lc=:grey, ls=:dash, label="Perfect calibration")  # diagonal reference
@@ -212,7 +210,9 @@ using CalibrationErrors
 ece_raw = ECE(UniformBinning(10))  # ECE estimator with 10 bins
 ece_cal = ECE(UniformBinning(10))  # 
 
-calibrationerror(ece_raw, {{scores}}, {{y}})  # ECE of raw scores
+{{?model=temperature}}raw = 1 ./ (1 .+ exp.(-{{scores}}))  # uncalibrated probabilities: sigmoid of the logits (T = 1)
+{{?model!=temperature}}raw = {{scores}}  # uncalibrated probability scores
+calibrationerror(ece_raw, raw, {{y}})  # ECE of raw scores
 calibrationerror(ece_cal, cal_probs, {{y}})  # ECE after calibration
 '''
 
@@ -227,7 +227,9 @@ desc = "Mean squared error of probability predictions; lower is better — compa
 code = '''
 using Statistics
 
-brier_raw = mean(({{scores}} .- {{y}}) .^ 2)  # Brier score of uncalibrated model
+{{?model=temperature}}raw = 1 ./ (1 .+ exp.(-{{scores}}))  # uncalibrated probabilities: sigmoid of the logits (T = 1)
+{{?model!=temperature}}raw = {{scores}}  # uncalibrated probability scores
+brier_raw = mean((raw .- {{y}}) .^ 2)  # Brier score of uncalibrated model
 brier_cal = mean((cal_probs .- {{y}}) .^ 2)  # Brier score after calibration
 
 println("Brier (raw):  ", round(brier_raw, digits=4))  # 
