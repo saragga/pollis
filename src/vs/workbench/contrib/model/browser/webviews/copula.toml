@@ -259,13 +259,20 @@ label = "Inversion of Spearman’s Rho"
 value = ":ibeta"
 label = "Inversion of Blomqvist’s Beta"
 
+[[inputs]]
+id = "sklar-select"
+label = "Margins"
+tooltip = "How the margins enter the copula fit.\nTwo-Stage (IFM) - fit the parametric margins first, then the copula on their CDF values\nPseudo-Observations - use ranks (empirical CDF), so the copula fit does not depend on the chosen margins"
+kind = "select"
+default = ":ifm"
+
 [[inputs.options]]
 value = ":ifm"
-label = "Two-Stage Maximum Likelihood"
+label = "Two-Stage (IFM)"
 
 [[inputs.options]]
 value = ":ecdf"
-label = "Pseudo-observations"
+label = "Pseudo-Observations"
 
 [[inputs]]
 id = "nu"
@@ -313,11 +320,161 @@ model = "main"
 code = '''
 using Copulas, Distributions, Plots
 
-{{?family=EmpiricalCopula|BetaCopula|BernsteinCopula|CheckerboardCopula|EmpiricalEVCopula}} D = fit({{family}}, {{data}})  # fit empirical copula
-{{?family!=EmpiricalCopula|BetaCopula|BernsteinCopula|CheckerboardCopula|EmpiricalEVCopula}} D = fit(CopulaModel, SklarDist{{{family}}, Tuple{{{marginals}}}}, {{data}}; copula_method={{method-select}})  # fit Sklar distribution
-plot(D)
+{{?family=EmpiricalCopula|BetaCopula|BernsteinCopula|CheckerboardCopula|EmpiricalEVCopula}} copula = fit({{family}}, {{data}})  # fit empirical copula (data: d x n)
+{{?family!=EmpiricalCopula|BetaCopula|BernsteinCopula|CheckerboardCopula|EmpiricalEVCopula}} D = fit(CopulaModel, SklarDist{{{family}}, Tuple{{{marginals}}}}, {{data}}; copula_method={{method-select}}, sklar_method={{sklar-select}})  # fit Sklar distribution (data: d x n)
+{{?family!=EmpiricalCopula|BetaCopula|BernsteinCopula|CheckerboardCopula|EmpiricalEVCopula}} sklar = D.result  # fitted Sklar distribution
+{{?family!=EmpiricalCopula|BetaCopula|BernsteinCopula|CheckerboardCopula|EmpiricalEVCopula}} copula = sklar.C  # fitted copula
+{{?family!=EmpiricalCopula|BetaCopula|BernsteinCopula|CheckerboardCopula|EmpiricalEVCopula}} marginals = sklar.m  # fitted marginals
+{{?family!=EmpiricalCopula|BetaCopula|BernsteinCopula|CheckerboardCopula|EmpiricalEVCopula}} plot(sklar)
+{{?family=EmpiricalCopula|BetaCopula|BernsteinCopula|CheckerboardCopula|EmpiricalEVCopula}} plot(copula)
+'''
 
-sklar = D.dist  # fitted Sklar distribution
-copula = sklar.C  # fitted copula
-marginals = sklar.m  # fitted marginals
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "pseudo-vs-sim"
+label = "Data vs Simulated Dependence"
+desc = "Pseudo-observations (ranks scaled to 0-1) of the data beside the same number of draws from the fitted copula, first two variables: the clouds should look alike"
+code = '''
+using Copulas, Plots
+U = pseudos({{data}}); V = rand(copula, size(U, 2))  # both on the uniform scale, d x n
+p1 = scatter(U[1, :], U[2, :], ms=2, msw=0, alpha=0.6, label=false, title="Data (pseudo-observations)")
+p2 = scatter(V[1, :], V[2, :], ms=2, msw=0, alpha=0.6, label=false, title="Fitted copula")
+plot(p1, p2, layout=(1, 2), size=(800, 380), xlabel="u1", ylabel="u2")
+'''
+
+[[actionGroups.actions]]
+id = "marginals"
+label = "Fitted Marginals"
+desc = "Histogram of each variable with the density of its fitted marginal distribution overlaid"
+code = '''
+using Distributions, Plots
+{{?family=EmpiricalCopula|BetaCopula|BernsteinCopula|CheckerboardCopula|EmpiricalEVCopula}} error("Empirical copulas have no fitted marginals: choose a parametric family")
+d = size({{data}}, 1)
+plot([begin
+    histogram({{data}}[i, :], normalize=:pdf, alpha=0.5, label="data", title="Variable $i")
+    plot!(x -> pdf(marginals[i], x), extrema({{data}}[i, :])..., lw=2, label=string(nameof(typeof(marginals[i]))))
+end for i in 1:d]..., layout=(1, d), size=(380d, 330))
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "rosenblatt"
+label = "Rosenblatt Goodness of Fit"
+desc = "The Rosenblatt transform of the data under the fitted model should be independent uniforms: KS test per coordinate and Kendall correlation between coordinates (near 0)"
+code = '''
+using Copulas, Distributions, HypothesisTests, StatsBase
+{{?family=EmpiricalCopula|BetaCopula|BernsteinCopula|CheckerboardCopula|EmpiricalEVCopula}} error("An empirical copula fits the data by construction: choose a parametric family")
+R = rosenblatt(sklar, {{data}})  # d x n, should be iid Uniform(0, 1)
+for i in axes(R, 1)
+    println("Coordinate $i: KS uniform p = ", round(pvalue(ExactOneSampleKSTest(R[i, :], Uniform())), digits=4))
+end
+println("Kendall correlation between coordinates (should be near 0):")
+display(round.(corkendall(transpose(R)), digits=3))
+'''
+
+[[actionGroups.actions]]
+id = "measures"
+label = "Dependence: Data vs Model"
+desc = "Kendall and Spearman rank correlations of the data against those of 10,000 draws from the fitted copula: large gaps mean the family cannot reproduce the dependence"
+code = '''
+using Copulas, StatsBase
+V = transpose(rand(copula, 10_000)); X = transpose({{data}})
+println("Kendall  - data:"); display(round.(corkendall(X), digits=3))
+println("Kendall  - model:"); display(round.(corkendall(V), digits=3))
+println("Spearman - data:"); display(round.(corspearman(X), digits=3))
+println("Spearman - model:"); display(round.(corspearman(V), digits=3))
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "simulate"
+label = "Simulate From the Fitted Model"
+desc = "New observations from the fitted joint distribution next to the data (first two variables); empirical families simulate on the uniform scale"
+code = '''
+using Copulas, Plots
+{{?family!=EmpiricalCopula|BetaCopula|BernsteinCopula|CheckerboardCopula|EmpiricalEVCopula}} X, S = {{data}}, rand(sklar, size({{data}}, 2))
+{{?family=EmpiricalCopula|BetaCopula|BernsteinCopula|CheckerboardCopula|EmpiricalEVCopula}} X, S = pseudos({{data}}), rand(copula, size({{data}}, 2))
+scatter(X[1, :], X[2, :], ms=2, msw=0, alpha=0.5, label="data", xlabel="x1", ylabel="x2", title="Data and simulated draws")
+scatter!(S[1, :], S[2, :], ms=2, msw=0, alpha=0.5, label="simulated")
+'''
+
+[[actionGroups.actions]]
+id = "joint-exceedance"
+label = "Joint Exceedance Probability"
+desc = "Probability that every variable exceeds its 95th percentile at once: data, fitted copula (simulated) and the independence baseline"
+code = '''
+using Copulas, Statistics
+q = 0.95; U = pseudos({{data}}); V = rand(copula, 100_000); d = size(U, 1)
+println("P(all variables above their ", q, " quantile):")
+println("  data:         ", round(mean(all(U .> q, dims=1)), digits=5))
+println("  fitted model: ", round(mean(all(V .> q, dims=1)), digits=5))
+println("  independence: ", round((1 - q)^d, digits=5))
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "families"
+label = "Compare Copula Families"
+desc = "Refits the same marginals with Gaussian, Student-t, Clayton, Gumbel, Frank and Joe copulas and ranks them by AIC (lower is better)"
+code = '''
+using Copulas, Distributions, StatsBase
+{{?family=EmpiricalCopula|BetaCopula|BernsteinCopula|CheckerboardCopula|EmpiricalEVCopula}} error("Choose a parametric family to compare families by AIC")
+fams = [GaussianCopula, TCopula, ClaytonCopula, GumbelCopula, FrankCopula, JoeCopula]
+res = map(fams) do F
+    M = try fit(CopulaModel, SklarDist{F, Tuple{{{marginals}}}}, {{data}}) catch; nothing end
+    (family = nameof(F), aic = M === nothing ? Inf : aic(M), bic = M === nothing ? Inf : bic(M))
+end
+foreach(r -> println(rpad(r.family, 16), " AIC = ", round(r.aic, digits=2), "   BIC = ", round(r.bic, digits=2)), sort(res, by = r -> r.aic))
+'''
+
+[[actionGroups.actions]]
+id = "independence"
+label = "Against Independence"
+desc = "Likelihood ratio test of the fitted copula against the independence copula with the same marginals"
+code = '''
+using Distributions, StatsBase
+{{?family=EmpiricalCopula|BetaCopula|BernsteinCopula|CheckerboardCopula|EmpiricalEVCopula}} error("Choose a parametric family for a likelihood ratio test")
+LR = 2 * (D.ll - D.method_details.null_ll)  # fitted vs independence log-likelihood
+println("LR = ", round(LR, digits=3), "  df = ", dof(D), "  p = ", round(ccdf(Chisq(dof(D)), LR), digits=5))
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "parameters"
+label = "Parameter Estimates"
+desc = "Copula parameters with standard errors, and the fitted marginal distributions"
+code = '''
+using StatsBase
+{{?family=EmpiricalCopula|BetaCopula|BernsteinCopula|CheckerboardCopula|EmpiricalEVCopula}} error("Empirical copulas have no parameters: choose a parametric family")
+se = try stderror(D) catch; fill(NaN, dof(D)) end
+foreach((n, b, s) -> println(rpad(n, 16), round(b, digits=4), "   (se ", round(s, digits=4), ")"), coefnames(D), coef(D), se)
+foreach((i, m) -> println("Marginal $i: ", m), 1:length(marginals), marginals)
+'''
+
+[[actionGroups.actions]]
+id = "tail"
+label = "Tail Dependence"
+desc = "Chance that variable 2 is extreme given variable 1 is (5% tails), in the data and the fitted copula: Gaussian copulas give near 0, Clayton loads the lower tail, Gumbel the upper"
+code = '''
+using Copulas, Statistics
+p = 0.05; U = pseudos({{data}}); V = rand(copula, 100_000)
+lower(W) = mean((W[1, :] .< p) .& (W[2, :] .< p)) / p
+upper(W) = mean((W[1, :] .> 1 - p) .& (W[2, :] .> 1 - p)) / p
+println("Lower tail - data: ", round(lower(U), digits=3), "   model: ", round(lower(V), digits=3))
+println("Upper tail - data: ", round(upper(U), digits=3), "   model: ", round(upper(V), digits=3))
 '''

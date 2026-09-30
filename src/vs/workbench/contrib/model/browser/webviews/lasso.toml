@@ -12,12 +12,8 @@ defaultModel = "lasso"
 name = "Lasso.jl"
 github = "https://github.com/JuliaStats/Lasso.jl"
 
-[[packages]]
-name = "MultivariateStats.jl"
-github = "https://github.com/JuliaStats/MultivariateStats.jl"
-
 [requires]
-packages = ["Lasso.jl", "MultivariateStats.jl"]
+packages = ["Lasso.jl"]
 
 [[notebookSections]]
 label = ""
@@ -50,7 +46,7 @@ description = "Using sparsity for automatic variable selection"
 name = "PLSR"
 file = "lasso/tutorial-05-plsr.ipynb"
 bundled = true
-description = "Partial Least Squares Regression with MultivariateStats.jl — components, scores, and prediction"
+description = "Partial Least Squares Regression — components, scores, and prediction"
 
 [[wikis]]
 name = "Overview"
@@ -116,7 +112,7 @@ detail = "L1 + L2 penalty; grouped sparsity with alpha controlling the penalty m
 
 [[bullets]]
 text = "PLSR"
-detail = "extracts latent components that maximise covariance between X and y; robust under multicollinearity and high dimensionality (MultivariateStats.jl)"
+detail = "extracts latent components that maximise covariance between X and y; robust under multicollinearity and high dimensionality (NIPALS, LinearAlgebra)"
 
 [[inputs]]
 id = "formula"
@@ -145,7 +141,7 @@ default = "0.5"
 [[inputs]]
 id = "plsr-X"
 label = "Feature Matrix"
-tooltip = "n_samples × n_features matrix. The template transposes automatically since MultivariateStats.jl expects features × samples."
+tooltip = "n_samples × n_features matrix."
 default = "X_train"
 models = ["plsr"]
 
@@ -175,8 +171,9 @@ model = "lasso"
 code = '''
 using Lasso
 
+lambda_kw = Symbol(Char(0x3bb))  # Lasso.jl names the penalty keyword with the Greek letter lambda
 {{?lambda=}} model = fit(LassoModel, @formula({{formula}}), {{data}})
-{{?lambda!=}} model = fit(LassoModel, @formula({{formula}}), {{data}}, lambda={{lambda}})
+{{?lambda!=}} model = fit(LassoModel, @formula({{formula}}), {{data}}; lambda_kw => [{{lambda}}])
 println(coef(model))
 '''
 
@@ -185,22 +182,198 @@ model = "enet"
 code = '''
 using Lasso
 
-{{?lambda=}} model = fit(LassoModel, @formula({{formula}}), {{data}}, alpha={{alpha}})
-{{?lambda!=}} model = fit(LassoModel, @formula({{formula}}), {{data}}, lambda={{lambda}}, alpha={{alpha}})
+alpha_kw, lambda_kw = Symbol(Char(0x3b1)), Symbol(Char(0x3bb))  # Lasso.jl names these keywords with Greek letters
+{{?lambda=}} model = fit(LassoModel, @formula({{formula}}), {{data}}; alpha_kw => {{alpha}})
+{{?lambda!=}} model = fit(LassoModel, @formula({{formula}}), {{data}}; alpha_kw => {{alpha}}, lambda_kw => [{{lambda}}])
 println(coef(model))
 '''
 
 [[codeBranches]]
 model = "plsr"
 code = '''
-using MultivariateStats
+using LinearAlgebra, Statistics
 
-Xt = Matrix(Float64.(transpose({{plsr-X}})))
-yt = Float64.(reshape({{plsr-y}}, 1, :))
-
-M = fit(PLSR, Xt, yt; ncomp={{plsr-ncomp}})
-B = coef(M)
+X = Matrix{Float64}({{plsr-X}})                       # n_samples x n_features
+Y = Float64.(reshape({{plsr-y}}, size(X, 1), :))      # n_samples x n_targets
+mx, my = mean(X, dims=1), mean(Y, dims=1)
+E, F = X .- mx, Y .- my
+W, P, Q = zeros(size(X, 2), 0), zeros(size(X, 2), 0), zeros(size(Y, 2), 0)
+for _ in 1:{{plsr-ncomp}}
+    w = svd(transpose(E) * F).U[:, 1]                 # direction of maximal covariance with Y
+    t = E * w; tt = dot(t, t)
+    p, q = transpose(E) * t / tt, transpose(F) * t / tt
+    E -= t * transpose(p); F -= t * transpose(q)      # deflate
+    W, P, Q = [W w], [P p], [Q q]
+end
+B = W * ((transpose(P) * W) \ transpose(Q))           # coefficients on the original scale
+b0 = my - mx * B
+println("Coefficients: ", vec(B))
 {{?plsr-Xtest!=}}
-{{?plsr-Xtest!=}} Xte   = Matrix(Float64.(transpose({{plsr-Xtest}})))
-{{?plsr-Xtest!=}} y_hat = vec(predict(M, Xte))
+{{?plsr-Xtest!=}} y_hat = b0 .+ Matrix{Float64}({{plsr-Xtest}}) * B
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "path"
+label = "Coefficient Path"
+desc = "Every coefficient along the regularisation path against the L1 norm of the coefficient vector: predictors enter one by one as the penalty weakens"
+code = '''
+using Lasso, Plots
+{{?model=plsr}} error("These steps cover Lasso and Elastic Net")
+X, y = modelmatrix(model), response(model)
+{{?model=lasso}} kw = ()
+{{?model=enet}} kw = (Symbol(Char(0x3b1)) => {{alpha}},)  # Lasso.jl names the mixing keyword with a Greek letter
+path = fit(LassoPath, X, y; kw...)
+B = Matrix(path.coefs); nm = permutedims(string.(vcat(coefnames(model))))
+plot(vec(sum(abs, B, dims=1)), transpose(B), lw=1.5, label=nm, xlabel="L1 norm of coefficients", ylabel="Coefficient", title="Regularisation path")
+'''
+
+[[actionGroups.actions]]
+id = "selected"
+label = "Selected Coefficients"
+desc = "Bar chart of the chosen model's coefficients (intercept excluded): bars at zero are predictors the penalty removed"
+code = '''
+using Lasso, Plots
+{{?model=plsr}} error("These steps cover Lasso and Elastic Net")
+b = coef(model); nm = string.(vcat(coefnames(model))); b = b[end-length(nm)+1:end]  # drop the intercept
+bar(nm, b, label=false, c=ifelse.(b .== 0, :lightgray, :steelblue), ylabel="Coefficient", title="Selected coefficients", xrotation=45)
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "residuals"
+label = "Residuals vs Fitted"
+desc = "Residuals against fitted values: structure left in the residuals points to a missing non-linear term or interaction"
+code = '''
+using Lasso, Plots
+{{?model=plsr}} error("These steps cover Lasso and Elastic Net")
+r = residuals(model); f = response(model) .- r
+scatter(f, r, ms=2, msw=0, alpha=0.6, label=false, xlabel="Fitted", ylabel="Residual", title="Residuals vs fitted")
+hline!([0], c=:red, ls=:dash, label=false)
+'''
+
+[[actionGroups.actions]]
+id = "stability"
+label = "Selection Stability"
+desc = "Refits on 100 bootstrap resamples and counts how often each predictor is selected: predictors picked in under half the resamples are not reliably chosen"
+code = '''
+using Lasso, Random
+{{?model=plsr}} error("These steps cover Lasso and Elastic Net")
+X, y = modelmatrix(model), response(model); nm = string.(vcat(coefnames(model)))
+{{?model=lasso}} kw = ()
+{{?model=enet}} kw = (Symbol(Char(0x3b1)) => {{alpha}},)
+rng = MersenneTwister(1); hits = zeros(size(X, 2))
+for _ in 1:100
+    i = rand(rng, 1:length(y), length(y))
+    hits .+= coef(fit(LassoModel, X[i, :], y[i]; kw...))[end-size(X, 2)+1:end] .!= 0
+end
+foreach(j -> println(rpad(nm[j], 20), " selected in ", Int(hits[j]), "% of resamples"), sortperm(hits, rev=true))
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "cv-rmse"
+label = "Cross-Validated RMSE"
+desc = "5-fold cross-validated prediction error of the penalised model against ordinary least squares on the same folds"
+code = '''
+using Lasso, Random, Statistics
+{{?model=plsr}} error("These steps cover Lasso and Elastic Net")
+X, y = modelmatrix(model), response(model); n = length(y)
+{{?model=lasso}} kw = ()
+{{?model=enet}} kw = (Symbol(Char(0x3b1)) => {{alpha}},)
+fold = shuffle(MersenneTwister(1), repeat(1:5, cld(n, 5))[1:n])
+e_pen, e_ols = Float64[], Float64[]
+for k in 1:5
+    tr, te = fold .!= k, fold .== k
+    m = fit(LassoModel, X[tr, :], y[tr]; kw...)
+    append!(e_pen, y[te] .- predict(m, X[te, :]))
+    Xi = [ones(count(tr)) X[tr, :]]; append!(e_ols, y[te] .- [ones(count(te)) X[te, :]] * (Xi \ y[tr]))
+end
+println("CV RMSE  penalised: ", round(sqrt(mean(abs2, e_pen)), digits=4), "   OLS: ", round(sqrt(mean(abs2, e_ols)), digits=4))
+'''
+
+[[actionGroups.actions]]
+id = "observed-fitted"
+label = "Observed vs Fitted"
+desc = "Observed response against fitted values with the 45-degree line; shrinkage pulls fitted values towards the mean"
+code = '''
+using Lasso, Plots
+{{?model=plsr}} error("These steps cover Lasso and Elastic Net")
+y = response(model); f = y .- residuals(model)
+scatter(f, y, ms=2, msw=0, alpha=0.6, label=false, xlabel="Fitted", ylabel="Observed", title="Observed vs fitted")
+plot!(identity, extrema(vcat(y, f))..., c=:red, ls=:dash, label=false)
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "criteria"
+label = "Selection Criteria"
+desc = "The same path with the penalty chosen by AICc, BIC, 10-fold CV (minimum error) and CV one-standard-error: the 1-SE rule gives the sparsest defensible model"
+code = '''
+using Lasso
+{{?model=plsr}} error("These steps cover Lasso and Elastic Net")
+X, y = modelmatrix(model), response(model); nm = string.(vcat(coefnames(model)))
+{{?model=lasso}} kw = ()
+{{?model=enet}} kw = (Symbol(Char(0x3b1)) => {{alpha}},)
+path = fit(LassoPath, X, y; kw...)
+sel = ["AICc" => MinAICc(), "BIC" => MinBIC(), "CV min" => MinCVmse(path, 10), "CV 1-SE" => MinCV1se(path, 10)]
+B = [s.first => coef(path, s.second)[end-length(nm)+1:end] for s in sel]
+println(rpad("", 20), join(rpad.(first.(B), 10)))
+foreach(j -> println(rpad(nm[j], 20), join(rpad.([round(b.second[j], digits=3) for b in B], 10))), eachindex(nm))
+println(rpad("non-zero", 20), join(rpad.([count(!=(0), b.second) for b in B], 10)))
+'''
+
+[[actionGroups.actions]]
+id = "vs-ols"
+label = "Against OLS"
+desc = "Penalised coefficients beside unpenalised least squares: shrinkage towards zero, and which predictors were dropped"
+code = '''
+using Lasso, GLM
+{{?model=plsr}} error("These steps cover Lasso and Elastic Net")
+ols = lm(@formula({{formula}}), {{data}})
+b = coef(model); nm = string.(vcat(coefnames(model))); b = b[end-length(nm)+1:end]
+bo = Dict(zip(coefnames(ols), coef(ols)))
+foreach((n, a) -> println(rpad(n, 20), " penalised = ", round(a, digits=4), "   OLS = ", round(bo[n], digits=4)), nm, b)
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "importance"
+label = "Predictor Importance"
+desc = "Selected predictors ranked by standardised coefficient (coefficient times predictor SD), so predictors on different scales are comparable"
+code = '''
+using Lasso, Statistics
+{{?model=plsr}} error("These steps cover Lasso and Elastic Net")
+X = modelmatrix(model); nm = string.(vcat(coefnames(model))); b = coef(model)[end-length(nm)+1:end]
+s = b .* vec(std(X, dims=1))
+for j in sortperm(abs.(s), rev=true)
+    b[j] == 0 || println(rpad(nm[j], 20), " coef = ", round(b[j], digits=4), "   standardised = ", round(s[j], digits=4))
+end
+println(count(==(0), b), " of ", length(b), " predictors removed by the penalty")
+'''
+
+[[actionGroups.actions]]
+id = "fit-summary"
+label = "Fit Summary"
+desc = "Pseudo R-squared (1 - deviance / null deviance) and the number of non-zero coefficients in the selected model"
+code = '''
+using Lasso
+{{?model=plsr}} error("These steps cover Lasso and Elastic Net")
+println("R-squared: ", round(1 - deviance(model) / nulldeviance(model), digits=4))
+println("Non-zero coefficients: ", count(!=(0), coef(model)), "   observations: ", nobs(model))
 '''

@@ -95,7 +95,7 @@ id = "family"
 label = "Family"
 tooltip = "Response distribution for the GLMM.\nBernoulli — binary 0/1 outcome\nBinomial — proportion or count with known N\nPoisson — count data\nNegativeBinomial — overdispersed counts\nGamma — positive skewed continuous\nInverseGaussian — positive heavy-tailed continuous"
 kind = "select"
-default = ""
+default = "Bernoulli"
 
 [[inputs.options]]
 value = "Bernoulli"
@@ -128,13 +128,17 @@ label = "Normal"
 [[inputs]]
 id = "link"
 label = "Link"
-tooltip = "Link function connecting the linear predictor to the mean. The default for each family is shown in parentheses — override only when theory requires a different link."
+tooltip = "Link function connecting the linear predictor to the mean. Canonical uses each family's default link (logit for Bernoulli/Binomial, log for Poisson/NegativeBinomial, inverse for Gamma) — override only when theory requires a different link."
 kind = "select"
-default = ""
+default = "canonical"
+
+[[inputs.options]]
+value = "canonical"
+label = "Canonical (Family Default)"
 
 [[inputs.options]]
 value = "LogitLink"
-label = "LogitLink (default)"
+label = "LogitLink"
 
 [[inputs.options]]
 value = "ProbitLink"
@@ -144,6 +148,21 @@ label = "ProbitLink"
 value = "CloglogLink"
 label = "CloglogLink"
 
+[[inputs.options]]
+value = "LogLink"
+label = "LogLink"
+
+[[inputs.options]]
+value = "IdentityLink"
+label = "IdentityLink"
+
+[[inputs.options]]
+value = "InverseLink"
+label = "InverseLink"
+
+[[inputs.options]]
+value = "SqrtLink"
+label = "SqrtLink"
 [[inputs]]
 id = "data"
 label = "Data"
@@ -161,9 +180,159 @@ model = "main"
 code = '''
 using MixedModels  # mixed-effects models
 
-model = fit(MixedModel, @formula({{formula}} + (1|{{group}})), {{data}}, {{family}}(), {{link}}())  # {{family}}, (1|{{group}}), {{link}}
+{{?family!=NegativeBinomial}} fam = {{family}}()
+{{?family=NegativeBinomial}} fam = MixedModels.GLM.Distributions.NegativeBinomial()  # not exported by MixedModels
+{{?link=canonical}} lk = MixedModels.GLM.canonicallink(fam)
+{{?link!=canonical}} lk = MixedModels.GLM.{{link}}()
+model = fit(MixedModel, @formula({{formula}} + (1|{{group}})), {{data}}, fam, lk)  # random intercept for each {{group}}
 
 println(model)  # model summary
 println(VarCorr(model))  # variance components
 println(ranef(model))  # random effects BLUPs
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "caterpillar"
+label = "Random Effects Caterpillar"
+desc = "Random intercepts per group on the linear-predictor scale, sorted, with approximate 95% intervals"
+code = '''
+using Plots
+b = vec(ranef(model)[1][1, :]); se = sqrt.(condVar(model.LMM)[1][1, 1, :])  # conditional modes and approximate std. errors
+o = sortperm(b)
+scatter(b[o], 1:length(b), xerror=1.96 .* se[o], ms=3, label=false, xlabel="Random intercept (link scale)", ylabel="{{group}} (sorted)", title="Caterpillar plot")
+vline!([0], c=:red, ls=:dash, label=false)
+'''
+
+[[actionGroups.actions]]
+id = "calibration"
+label = "Calibration Plot"
+desc = "Observations grouped into ten bins of fitted mean: observed against predicted average per bin; points on the diagonal mean a well-calibrated model"
+code = '''
+using Plots, Statistics
+y, mu = response(model), fitted(model)
+edges = quantile(mu, 0:0.1:1); bin = clamp.(searchsortedlast.(Ref(edges), mu), 1, 10)
+pm = [mean(mu[bin .== k]) for k in 1:10 if any(bin .== k)]
+om = [mean(y[bin .== k]) for k in 1:10 if any(bin .== k)]
+scatter(pm, om, ms=5, label="bins", xlabel="Mean predicted", ylabel="Mean observed", title="Calibration")
+plot!(identity, extrema(vcat(pm, om))..., c=:red, ls=:dash, label=false)
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "sim-residuals"
+label = "Simulated Residuals"
+desc = "Simulation-based (DHARMa-style) residuals: the rank of each observation among 250 simulated responses should be uniform; a KS test and uniform Q-Q plot check it"
+code = '''
+using Plots, Random, HypothesisTests, Distributions
+rng = MersenneTwister(1); y = response(model); nsim = 250
+S = reduce(hcat, [simulate(rng, model) for _ in 1:nsim])  # n x nsim simulated responses
+u = [(count(<(y[i]), S[i, :]) + rand(rng) * (count(==(y[i]), S[i, :]) + 1)) / (nsim + 1) for i in eachindex(y)]  # randomised for discrete data
+display((ks_uniform_p = pvalue(ExactOneSampleKSTest(u, Uniform())),))
+scatter(((1:length(u)) .- 0.5) ./ length(u), sort(u), ms=2, msw=0, label=false, xlabel="Expected", ylabel="Observed", title="Simulated residuals: uniform Q-Q")
+plot!(identity, 0, 1, c=:red, ls=:dash, label=false)
+'''
+
+[[actionGroups.actions]]
+id = "overdispersion"
+label = "Overdispersion Check"
+desc = "Pearson chi-square over residual degrees of freedom: well above 1 for a Poisson or Binomial model means overdispersion (try NegativeBinomial or an observation-level random effect)"
+code = '''
+using GLM, Distributions
+y, mu = response(model), fitted(model)
+pr = (y .- mu) ./ sqrt.(GLM.glmvar.(Distribution(model)(), mu))  # Pearson residuals
+ratio = sum(abs2, pr) / dof_residual(model)
+println("Pearson chi2 / df = ", round(ratio, digits=3), ratio > 1.5 ? "  -> overdispersed" : "  -> no strong sign of overdispersion")
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "conditional-population"
+label = "Conditional vs Population Predictions"
+desc = "Predictions including each group's random effect against population-level predictions (random effects at zero): the spread between them is the group effect"
+code = '''
+using Plots, GLM
+cond = fitted(model)  # includes the random effects
+pop = GLM.linkinv.(Ref(GLM.Link(model)), modelmatrix(model) * fixef(model))  # fixed effects only
+scatter(pop, cond, ms=2, msw=0, alpha=0.5, label=false, xlabel="Population-level prediction", ylabel="Conditional prediction", title="Effect of the random intercepts")
+plot!(identity, extrema(vcat(pop, cond))..., c=:red, ls=:dash, label=false)
+'''
+
+[[actionGroups.actions]]
+id = "accuracy"
+label = "Predictive Accuracy"
+desc = "Bernoulli: confusion matrix at 0.5 and the AUC. Other families: RMSE and MAE of the fitted means"
+code = '''
+using Statistics
+y, p = response(model), fitted(model)
+{{?family=Bernoulli}} yhat = p .>= 0.5
+{{?family=Bernoulli}} println("TP=", count(yhat .& (y .== 1)), "  FP=", count(yhat .& (y .== 0)), "  FN=", count(.!yhat .& (y .== 1)), "  TN=", count(.!yhat .& (y .== 0)))
+{{?family=Bernoulli}} r = invperm(sortperm(p)); n1 = count(==(1), y); n0 = length(y) - n1
+{{?family=Bernoulli}} println("AUC = ", round((sum(r[y .== 1]) - n1 * (n1 + 1) / 2) / (n1 * n0), digits=4))  # Mann-Whitney form
+{{?family!=Bernoulli}} println("RMSE = ", round(sqrt(mean((y .- p) .^ 2)), digits=4), "   MAE = ", round(mean(abs.(y .- p)), digits=4))
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "vs-glm"
+label = "Against a GLM Without Random Effects"
+desc = "Likelihood ratio test of the random intercept against the same GLM without grouping, with AIC and BIC for both"
+code = '''
+using GLM
+g = glm(@formula({{formula}}), {{data}}, fam, lk)  # no random effects
+display(MixedModels.likelihoodratiotest(g, model))
+println("AIC: GLM ", round(aic(g), digits=2), "  GLMM ", round(aic(model), digits=2))
+println("BIC: GLM ", round(bic(g), digits=2), "  GLMM ", round(bic(model), digits=2))
+'''
+
+[[actionGroups.actions]]
+id = "quadrature"
+label = "Laplace vs Adaptive Quadrature"
+desc = "Refits with 9-point adaptive Gauss-Hermite quadrature: if the estimates move, the default Laplace approximation is not accurate enough"
+code = '''
+mq = fit(MixedModel, @formula({{formula}} + (1|{{group}})), {{data}}, fam, lk; nAGQ=9)
+foreach((n, a, b) -> println(rpad(n, 20), " Laplace = ", round(a, digits=4), "   AGQ(9) = ", round(b, digits=4)), coefnames(model), fixef(model), fixef(mq))
+println("Deviance: Laplace ", round(deviance(model), digits=3), "   AGQ(9) ", round(deviance(mq), digits=3))
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "ratios"
+label = "Exponentiated Coefficients"
+desc = "exp(coefficient) with 95% intervals: odds ratios under a logit link, rate ratios under a log link"
+code = '''
+b, se = fixef(model), stderror(model)
+println(lk isa LogitLink ? "Odds ratios (multiplicative change in the odds per unit increase):" :
+    lk isa LogLink ? "Rate ratios (multiplicative change in the mean per unit increase):" :
+    "exp(coef) - a ratio interpretation holds for logit (odds) and log (rates) links only:")
+foreach((n, a, s) -> println(rpad(n, 20), round(exp(a), digits=4), "   [", round(exp(a - 1.96s), digits=4), ", ", round(exp(a + 1.96s), digits=4), "]"), coefnames(model), b, se)
+'''
+
+[[actionGroups.actions]]
+id = "icc"
+label = "Latent-Scale ICC"
+desc = "Intraclass correlation on the latent scale: the share of variance between groups, using pi^2/3 for the logit link and 1 for probit"
+code = '''
+sg = model.theta[1]  # random-intercept SD (dispersion fixed at 1)
+lv = lk isa LogitLink ? pi^2 / 3 :                   # latent logistic variance
+    lk isa ProbitLink ? 1.0 :                          # latent normal variance
+    lk isa MixedModels.GLM.CloglogLink ? pi^2 / 6 :   # latent extreme-value variance
+    error("The latent-scale ICC is defined for logit, probit and cloglog links")
+println("Random-intercept SD: ", round(sg, digits=4))
+println("Latent-scale ICC: ", round(sg^2 / (sg^2 + lv), digits=3))
 '''

@@ -326,7 +326,7 @@ label = "sigma"
 tooltip = ""
 default = "1.0"
 models = ["parametric"]
-when = "test=one-sample-z-test|two-sample-z-test"
+when = "test=one-sample-z-test"
 
 [[inputs]]
 id = "grp1"
@@ -524,16 +524,17 @@ when = "test=equality-of-covariance"
 model = "parametric"
 code = '''
 using HypothesisTests
+{{?test=one-sample-z-test}} using Statistics
 {{?test=one-sample-t-test}} result = OneSampleTTest({{x}}, {{mu01}})
 {{?test=two-sample-t-test}} result = EqualVarianceTTest({{x}}, {{y}})
 {{?test=welch-t-test}} result = UnequalVarianceTTest({{x}}, {{y}})
-{{?test=one-sample-z-test}} result = OneSampleZTest({{x}}, {{sig}}, {{mu01}})
-{{?test=two-sample-z-test}} result = EqualVarianceZTest({{x}}, {{y}}, {{sig}})
+{{?test=one-sample-z-test}} result = OneSampleZTest(mean({{x}}), {{sig}}, length({{x}}), {{mu01}})  # known sigma
+{{?test=two-sample-z-test}} result = EqualVarianceZTest({{x}}, {{y}})  # pooled variance estimated from the samples
 {{?test=f-test}} result = VarianceFTest({{x}}, {{y}})
 {{?test=one-way-anova}} result = OneWayANOVATest({{grp1}})
 {{?test=levene-s-test}} result = LeveneTest({{grp1}})
 {{?test=brown-forsythe-test}} result = BrownForsytheTest({{grp1}})
-{{?test=chi-squared-test}} result = ChisqTest({{obs}}, {{exp}})
+{{?test=chi-squared-test}} result = ChisqTest({{obs}}, {{exp}} ./ sum({{exp}}))  # observed counts vs expected proportions
 {{?test=power-divergence-test}} result = PowerDivergenceTest({{obs}}; lambda={{lam}})
 {{?test=multinomial-lr-test}} result = PowerDivergenceTest({{obs}}; lambda=0.0)
 println("Test statistic: ", teststatistic(result))
@@ -586,10 +587,221 @@ model = "multivariate"
 code = '''
 using HypothesisTests
 {{?test=hotelling-s-t}} result = HotellingT2Test({{X}}, {{mu02}})
-{{?test=equality-of-covariance}} result = EqualCovarianceTest({{grp2}})
+{{?test=equality-of-covariance}} result = BartlettTest({{grp2}})  # two data matrices, observations in rows
 {{?test=correlation-test}} result = CorrelationTest({{x}}, {{y}})
 println("Test statistic: ", teststatistic(result))
 println("p-value:        ", pvalue(result))
 {{?test=correlation-test}} println("95% CI:         ", confint(result, 0.95))
 '''
 
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "samples"
+label = "Plot the Samples"
+desc = "Overlaid histograms of the samples being tested (time series tests: the series itself), with each sample mean marked"
+code = '''
+using Plots, Statistics
+{{?test=one-sample-t-test|one-sample-z-test|ks-one-sample-test|sign-test|wilcoxon-signed-rank|anderson-darling-test|shapiro-wilk-test|jarque-bera|augmented-dickey-fuller|ljung-box|box-pierce}} samples = [{{x}}]
+{{?test=two-sample-t-test|welch-t-test|two-sample-z-test|f-test|ks-two-sample-test|mann-whitney-u-test|wald-wolfowitz-test|permutation-test}} samples = [{{x}}, {{y}}]
+{{?test=one-way-anova|levene-s-test|brown-forsythe-test|kruskal-wallis-test|fligner-killeen-test}} samples = [{{grp1}}]
+{{?test=chi-squared-test|power-divergence-test|multinomial-lr-test|binomial-test|fisher-exact-test|durbin-watson|breusch-godfrey|clark-west|diebold-mariano|white-test|hotelling-s-t|equality-of-covariance|correlation-test}} error("This action works on raw samples (location, scale and distribution tests): not available for the selected test")
+{{?model=timeseries}} plot(samples[1], lw=1.2, label=false, xlabel="t", title="Series")
+{{?model!=timeseries}} plot(title="Samples", xlabel="value", ylabel="density")
+{{?model!=timeseries}} foreach(i -> histogram!(samples[i], normalize=:pdf, alpha=0.45, label="sample $i"), eachindex(samples))
+{{?model!=timeseries}} vline!(mean.(samples), c=:black, ls=:dash, label="means")
+'''
+
+[[actionGroups.actions]]
+id = "boxplots"
+label = "Box Plots"
+desc = "Box plots with the individual points: location, spread, skew and outliers of each sample at a glance"
+code = '''
+using StatsPlots
+{{?test=one-sample-t-test|one-sample-z-test|ks-one-sample-test|sign-test|wilcoxon-signed-rank|anderson-darling-test|shapiro-wilk-test|jarque-bera|augmented-dickey-fuller|ljung-box|box-pierce}} samples = [{{x}}]
+{{?test=two-sample-t-test|welch-t-test|two-sample-z-test|f-test|ks-two-sample-test|mann-whitney-u-test|wald-wolfowitz-test|permutation-test}} samples = [{{x}}, {{y}}]
+{{?test=one-way-anova|levene-s-test|brown-forsythe-test|kruskal-wallis-test|fligner-killeen-test}} samples = [{{grp1}}]
+{{?test=chi-squared-test|power-divergence-test|multinomial-lr-test|binomial-test|fisher-exact-test|durbin-watson|breusch-godfrey|clark-west|diebold-mariano|white-test|hotelling-s-t|equality-of-covariance|correlation-test}} error("This action works on raw samples (location, scale and distribution tests): not available for the selected test")
+g = reduce(vcat, [fill("sample $i", length(s)) for (i, s) in enumerate(samples)])
+v = reduce(vcat, samples)
+boxplot(g, v, alpha=0.4, label=false, title="Samples")
+dotplot!(g, v, ms=2, msw=0, label=false)
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "assumptions"
+label = "Check Test Assumptions"
+desc = "Per-sample size, Jarque-Bera normality p-value and standard deviation, plus Levene's test for equal variances: t-tests and ANOVA assume normal samples, the pooled versions also equal variances"
+code = '''
+using HypothesisTests, Statistics
+{{?test=one-sample-t-test|one-sample-z-test|ks-one-sample-test|sign-test|wilcoxon-signed-rank|anderson-darling-test|shapiro-wilk-test|jarque-bera|augmented-dickey-fuller|ljung-box|box-pierce}} samples = [{{x}}]
+{{?test=two-sample-t-test|welch-t-test|two-sample-z-test|f-test|ks-two-sample-test|mann-whitney-u-test|wald-wolfowitz-test|permutation-test}} samples = [{{x}}, {{y}}]
+{{?test=one-way-anova|levene-s-test|brown-forsythe-test|kruskal-wallis-test|fligner-killeen-test}} samples = [{{grp1}}]
+{{?test=chi-squared-test|power-divergence-test|multinomial-lr-test|binomial-test|fisher-exact-test|durbin-watson|breusch-godfrey|clark-west|diebold-mariano|white-test|hotelling-s-t|equality-of-covariance|correlation-test}} error("This action works on raw samples (location, scale and distribution tests): not available for the selected test")
+for (i, s) in enumerate(samples)
+    println("sample $i: n = ", length(s), "   sd = ", round(std(s), digits=4), "   normality (Jarque-Bera) p = ", round(pvalue(JarqueBeraTest(s)), digits=4))
+end
+length(samples) > 1 && println("Equal variances (Levene) p = ", round(pvalue(LeveneTest(samples...)), digits=4))
+'''
+
+[[actionGroups.actions]]
+id = "qq"
+label = "Normal Q-Q Plots"
+desc = "One normal Q-Q plot per sample: points bending away from the line show skew or heavy tails"
+code = '''
+using Plots, Distributions, Statistics
+{{?test=one-sample-t-test|one-sample-z-test|ks-one-sample-test|sign-test|wilcoxon-signed-rank|anderson-darling-test|shapiro-wilk-test|jarque-bera|augmented-dickey-fuller|ljung-box|box-pierce}} samples = [{{x}}]
+{{?test=two-sample-t-test|welch-t-test|two-sample-z-test|f-test|ks-two-sample-test|mann-whitney-u-test|wald-wolfowitz-test|permutation-test}} samples = [{{x}}, {{y}}]
+{{?test=one-way-anova|levene-s-test|brown-forsythe-test|kruskal-wallis-test|fligner-killeen-test}} samples = [{{grp1}}]
+{{?test=chi-squared-test|power-divergence-test|multinomial-lr-test|binomial-test|fisher-exact-test|durbin-watson|breusch-godfrey|clark-west|diebold-mariano|white-test|hotelling-s-t|equality-of-covariance|correlation-test}} error("This action works on raw samples (location, scale and distribution tests): not available for the selected test")
+plot([begin
+    z = sort((s .- mean(s)) ./ std(s)); q = quantile.(Normal(), ((1:length(z)) .- 0.5) ./ length(z))
+    scatter(q, z, ms=2, msw=0, label=false, title="sample $i")
+    plot!(q, q, c=:red, ls=:dash, label=false)
+end for (i, s) in enumerate(samples)]..., layout=(1, length(samples)), size=(330 * length(samples), 320))
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "power"
+label = "Power by Resampling"
+desc = "Resamples the data at 0.5x to 3x the current sample size and reruns the test 500 times each: the share of rejections at 5% estimates the power to detect the observed effect"
+code = '''
+using HypothesisTests, Random, Plots
+{{?model=timeseries}} error("Resampling observations breaks the time ordering: not available for time series tests")
+{{?test=one-sample-t-test|one-sample-z-test|ks-one-sample-test|sign-test|wilcoxon-signed-rank|anderson-darling-test|shapiro-wilk-test|jarque-bera|augmented-dickey-fuller|ljung-box|box-pierce}} samples = [{{x}}]
+{{?test=two-sample-t-test|welch-t-test|two-sample-z-test|f-test|ks-two-sample-test|mann-whitney-u-test|wald-wolfowitz-test|permutation-test}} samples = [{{x}}, {{y}}]
+{{?test=one-way-anova|levene-s-test|brown-forsythe-test|kruskal-wallis-test|fligner-killeen-test}} samples = [{{grp1}}]
+{{?test=chi-squared-test|power-divergence-test|multinomial-lr-test|binomial-test|fisher-exact-test|durbin-watson|breusch-godfrey|clark-west|diebold-mariano|white-test|hotelling-s-t|equality-of-covariance|correlation-test}} error("This action works on raw samples (location, scale and distribution tests): not available for the selected test")
+{{?test=one-sample-t-test}} testfun = s -> OneSampleTTest(s[1], {{mu01}})
+{{?test=two-sample-t-test}} testfun = s -> EqualVarianceTTest(s[1], s[2])
+{{?test=welch-t-test}} testfun = s -> UnequalVarianceTTest(s[1], s[2])
+{{?test=one-sample-z-test}} testfun = s -> OneSampleZTest(s[1], {{mu01}})
+{{?test=two-sample-z-test}} testfun = s -> EqualVarianceZTest(s[1], s[2])
+{{?test=f-test}} testfun = s -> VarianceFTest(s[1], s[2])
+{{?test=one-way-anova}} testfun = s -> OneWayANOVATest(s...)
+{{?test=levene-s-test}} testfun = s -> LeveneTest(s...)
+{{?test=brown-forsythe-test}} testfun = s -> BrownForsytheTest(s...)
+{{?test=ks-one-sample-test}} testfun = s -> ExactOneSampleKSTest(s[1], {{dist}})
+{{?test=ks-two-sample-test}} testfun = s -> ApproximateTwoSampleKSTest(s[1], s[2])
+{{?test=sign-test}} testfun = s -> SignTest(s[1], {{mu01}})
+{{?test=wilcoxon-signed-rank}} testfun = s -> SignedRankTest(s[1], {{mu01}})
+{{?test=mann-whitney-u-test}} testfun = s -> MannWhitneyUTest(s[1], s[2])
+{{?test=kruskal-wallis-test}} testfun = s -> KruskalWallisTest(s...)
+{{?test=anderson-darling-test}} testfun = s -> OneSampleADTest(s[1], {{dist}})
+{{?test=fligner-killeen-test}} testfun = s -> FlignerKilleenTest(s...)
+{{?test=wald-wolfowitz-test}} testfun = s -> WaldWolfowitzTest(s[1], s[2])
+{{?test=shapiro-wilk-test|permutation-test}} error("Resampled power is too slow or unavailable for this test: try the t-test or Mann-Whitney equivalent")
+rng = MersenneTwister(1); mult = [0.5, 1, 1.5, 2, 3]
+pw = [count(_ -> pvalue(testfun([rand(rng, s, max(3, round(Int, m * length(s)))) for s in samples])) < 0.05, 1:500) / 500 for m in mult]
+foreach((m, p) -> println(rpad("$(m)x n", 8), " power = ", round(p, digits=3)), mult, pw)
+plot(mult, pw, marker=:circle, label=false, xlabel="Sample size (multiple of current)", ylabel="Power", ylims=(0, 1), title="Power by resampling")
+hline!([0.8], c=:red, ls=:dash, label="80%")
+'''
+
+[[actionGroups.actions]]
+id = "bootstrap-ci"
+label = "Bootstrap Confidence Interval"
+desc = "Percentile bootstrap interval (5,000 resamples) for the effect: the mean minus the null value for one sample, the difference in means for two, the largest gap between group means for more"
+code = '''
+using Random, Statistics
+{{?model=timeseries}} error("Resampling observations breaks the time ordering: not available for time series tests")
+{{?test=one-sample-t-test|one-sample-z-test|ks-one-sample-test|sign-test|wilcoxon-signed-rank|anderson-darling-test|shapiro-wilk-test|jarque-bera|augmented-dickey-fuller|ljung-box|box-pierce}} samples = [{{x}}]
+{{?test=two-sample-t-test|welch-t-test|two-sample-z-test|f-test|ks-two-sample-test|mann-whitney-u-test|wald-wolfowitz-test|permutation-test}} samples = [{{x}}, {{y}}]
+{{?test=one-way-anova|levene-s-test|brown-forsythe-test|kruskal-wallis-test|fligner-killeen-test}} samples = [{{grp1}}]
+{{?test=chi-squared-test|power-divergence-test|multinomial-lr-test|binomial-test|fisher-exact-test|durbin-watson|breusch-godfrey|clark-west|diebold-mariano|white-test|hotelling-s-t|equality-of-covariance|correlation-test}} error("This action works on raw samples (location, scale and distribution tests): not available for the selected test")
+effect = length(samples) == 1 ? (s -> mean(s[1]) - {{mu01}}) : length(samples) == 2 ? (s -> mean(s[1]) - mean(s[2])) : (s -> maximum(mean.(s)) - minimum(mean.(s)))
+rng = MersenneTwister(1)
+boot = [effect([rand(rng, s, length(s)) for s in samples]) for _ in 1:5000]
+println("Effect = ", round(effect(samples), digits=4), "   95% bootstrap CI: ", round.(quantile(boot, [0.025, 0.975]), digits=4))
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "param-nonparam"
+label = "Parametric vs Nonparametric"
+desc = "Runs the parametric tests and their rank-based counterparts on the same samples: agreement makes the conclusion robust, disagreement points to violated assumptions"
+code = '''
+using HypothesisTests
+{{?test=one-sample-t-test|one-sample-z-test|ks-one-sample-test|sign-test|wilcoxon-signed-rank|anderson-darling-test|shapiro-wilk-test|jarque-bera|augmented-dickey-fuller|ljung-box|box-pierce}} samples = [{{x}}]
+{{?test=two-sample-t-test|welch-t-test|two-sample-z-test|f-test|ks-two-sample-test|mann-whitney-u-test|wald-wolfowitz-test|permutation-test}} samples = [{{x}}, {{y}}]
+{{?test=one-way-anova|levene-s-test|brown-forsythe-test|kruskal-wallis-test|fligner-killeen-test}} samples = [{{grp1}}]
+{{?test=chi-squared-test|power-divergence-test|multinomial-lr-test|binomial-test|fisher-exact-test|durbin-watson|breusch-godfrey|clark-west|diebold-mariano|white-test|hotelling-s-t|equality-of-covariance|correlation-test}} error("This action works on raw samples (location, scale and distribution tests): not available for the selected test")
+k = length(samples); x = samples[1]
+tests = k == 1 ? ["one-sample t" => OneSampleTTest(x, {{mu01}}), "Wilcoxon signed-rank" => SignedRankTest(x, {{mu01}}), "sign" => SignTest(x, {{mu01}})] :
+        k == 2 ? ["pooled t" => EqualVarianceTTest(x, samples[2]), "Welch t" => UnequalVarianceTTest(x, samples[2]), "Mann-Whitney U" => MannWhitneyUTest(x, samples[2]), "two-sample KS" => ApproximateTwoSampleKSTest(x, samples[2])] :
+        ["one-way ANOVA" => OneWayANOVATest(samples...), "Kruskal-Wallis" => KruskalWallisTest(samples...)]
+foreach(t -> println(rpad(t.first, 22), " p = ", round(pvalue(t.second), digits=5)), tests)
+'''
+
+[[actionGroups.actions]]
+id = "permutation"
+label = "Permutation p-Value"
+desc = "Distribution-free p-value from 10,000 random relabellings (sign flips for one sample): needs no normality assumption"
+code = '''
+using HypothesisTests, Random, Statistics
+{{?test=one-sample-t-test|one-sample-z-test|ks-one-sample-test|sign-test|wilcoxon-signed-rank|anderson-darling-test|shapiro-wilk-test|jarque-bera|augmented-dickey-fuller|ljung-box|box-pierce}} samples = [{{x}}]
+{{?test=two-sample-t-test|welch-t-test|two-sample-z-test|f-test|ks-two-sample-test|mann-whitney-u-test|wald-wolfowitz-test|permutation-test}} samples = [{{x}}, {{y}}]
+{{?test=one-way-anova|levene-s-test|brown-forsythe-test|kruskal-wallis-test|fligner-killeen-test}} samples = [{{grp1}}]
+{{?test=chi-squared-test|power-divergence-test|multinomial-lr-test|binomial-test|fisher-exact-test|durbin-watson|breusch-godfrey|clark-west|diebold-mariano|white-test|hotelling-s-t|equality-of-covariance|correlation-test}} error("This action works on raw samples (location, scale and distribution tests): not available for the selected test")
+rng = MersenneTwister(1); B = 10_000
+if length(samples) == 1
+    x = samples[1] .- {{mu01}}; obs = abs(mean(x))
+    perm = [abs(mean(x .* rand(rng, (-1, 1), length(x)))) for _ in 1:B]  # random sign flips under H0
+else
+    pooled = reduce(vcat, samples); cuts = cumsum([0; length.(samples)])
+    stat = v -> teststatistic(OneWayANOVATest([v[cuts[i]+1:cuts[i+1]] for i in eachindex(samples)]...))  # F (= t^2 for two samples)
+    obs = stat(pooled); perm = [stat(shuffle(rng, pooled)) for _ in 1:B]
+end
+println("Permutation p = ", round((count(>=(obs), perm) + 1) / (B + 1), digits=5))
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "effect-size"
+label = "Effect Size"
+desc = "How large the difference is, not just whether it is significant: Cohen's d for one sample, Hedges' g for two, eta-squared for several (d: 0.2 small, 0.5 medium, 0.8 large)"
+code = '''
+using Statistics
+{{?test=one-sample-t-test|one-sample-z-test|ks-one-sample-test|sign-test|wilcoxon-signed-rank|anderson-darling-test|shapiro-wilk-test|jarque-bera|augmented-dickey-fuller|ljung-box|box-pierce}} samples = [{{x}}]
+{{?test=two-sample-t-test|welch-t-test|two-sample-z-test|f-test|ks-two-sample-test|mann-whitney-u-test|wald-wolfowitz-test|permutation-test}} samples = [{{x}}, {{y}}]
+{{?test=one-way-anova|levene-s-test|brown-forsythe-test|kruskal-wallis-test|fligner-killeen-test}} samples = [{{grp1}}]
+{{?test=chi-squared-test|power-divergence-test|multinomial-lr-test|binomial-test|fisher-exact-test|durbin-watson|breusch-godfrey|clark-west|diebold-mariano|white-test|hotelling-s-t|equality-of-covariance|correlation-test}} error("This action works on raw samples (location, scale and distribution tests): not available for the selected test")
+k = length(samples); n = length.(samples)
+if k == 1
+    println("Cohen's d = ", round((mean(samples[1]) - {{mu01}}) / std(samples[1]), digits=3))
+elseif k == 2
+    sp = sqrt(((n[1] - 1) * var(samples[1]) + (n[2] - 1) * var(samples[2])) / (sum(n) - 2))  # pooled SD
+    println("Hedges' g = ", round((mean(samples[1]) - mean(samples[2])) / sp * (1 - 3 / (4 * sum(n) - 9)), digits=3))
+else
+    pooled = reduce(vcat, samples); m = mean(pooled)
+    println("eta-squared = ", round(sum(n .* (mean.(samples) .- m) .^ 2) / sum(abs2, pooled .- m), digits=3), "  (share of variance between groups)")
+end
+'''
+
+[[actionGroups.actions]]
+id = "decision"
+label = "Decision at Common Levels"
+desc = "The full test report, then the reject or retain decision at the 10%, 5% and 1% levels"
+code = '''
+using HypothesisTests
+display(result)  # full report: hypotheses, statistic, p-value
+p = pvalue(result)
+foreach(a -> println("alpha = ", a, ": ", p < a ? "reject H0" : "do not reject H0"), (0.10, 0.05, 0.01))
+'''

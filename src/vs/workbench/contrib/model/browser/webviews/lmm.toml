@@ -213,5 +213,169 @@ using FixedEffectModels  # IV / 2SLS with fixed effects
 {{?inference=twoway-clustered}} model = reg({{data}}, @formula({{formula-iv}} + fe({{group}})), Vcov.cluster(:{{group}}, :{{time-var}}))  # IV/2SLS: (x_end ~ z_iv) notation
 
 println(coeftable(model))  # coefficient table
-println("First-stage F: ", first_stage_fstat(model))  # instrument strength
+println("First-stage F: ", model.F_kp)  # instrument strength (Kleibergen-Paap)
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "resid-fitted"
+label = "Residuals vs Fitted"
+desc = "Residuals against fitted values: curvature signals a missing term, a funnel signals heteroskedasticity"
+code = '''
+using Plots
+{{?model=lmm}} r, f = residuals(model), fitted(model)
+{{?model!=lmm}} m2 = reg({{data}}, model.formula, save=:all)  # refit keeping residuals and fixed effects
+{{?model!=lmm}} r, f = residuals(m2), predict(m2, {{data}})
+{{?model!=lmm}} ok = .!ismissing.(r) .& .!ismissing.(f); r, f = Float64.(r[ok]), Float64.(f[ok])
+scatter(f, r, ms=2, msw=0, alpha=0.6, label=false, xlabel="Fitted", ylabel="Residual", title="Residuals vs fitted")
+hline!([0], c=:red, ls=:dash, label=false)
+'''
+
+[[actionGroups.actions]]
+id = "group-effects"
+label = "Group Effects"
+desc = "Mixed-Effects: caterpillar plot of the random intercepts with 95% intervals. Fixed-effects models: distribution of the estimated group effects"
+code = '''
+using Plots, Tables
+{{?model=lmm}} b = vec(ranef(model)[1][1, :]); se = sqrt.(condVar(model)[1][1, 1, :])  # random intercepts and their conditional std. errors
+{{?model=lmm}} o = sortperm(b)
+{{?model=lmm}} scatter(b[o], 1:length(b), xerror=1.96 .* se[o], ms=3, label=false, xlabel="Random intercept", ylabel="{{group}} (sorted)", title="Caterpillar plot")
+{{?model=lmm}} vline!([0], c=:red, ls=:dash, label=false)
+{{?model!=lmm}} m2 = reg({{data}}, model.formula, save=:fe)  # refit keeping the fixed-effect estimates
+{{?model!=lmm}} g = unique(skipmissing(Tables.getcolumn(Tables.columns(fe(m2)), 1)))  # one estimate per {{group}}
+{{?model!=lmm}} histogram(g, bins=30, label=false, xlabel="Estimated {{group}} fixed effect", title="Distribution of group fixed effects")
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "normality"
+label = "Residual Normality"
+desc = "Normal Q-Q plot of the standardised residuals with a Jarque-Bera test: heavy tails or skew weaken the normal-theory standard errors"
+code = '''
+using Plots, Distributions, HypothesisTests, Statistics
+{{?model=lmm}} r = residuals(model)
+{{?model!=lmm}} m2 = reg({{data}}, model.formula, save=:residuals)  # refit keeping residuals
+{{?model!=lmm}} r = Float64.(collect(skipmissing(residuals(m2))))
+z = sort((r .- mean(r)) ./ std(r)); q = quantile.(Normal(), ((1:length(z)) .- 0.5) ./ length(z))
+display((jarque_bera_p = pvalue(JarqueBeraTest(r)),))
+scatter(q, z, ms=2, msw=0, label=false, xlabel="Normal quantiles", ylabel="Standardised residuals", title="Residual Q-Q plot")
+plot!(q, q, c=:red, ls=:dash, label=false)
+'''
+
+[[actionGroups.actions]]
+id = "health"
+label = "Model Health Checks"
+desc = "Mixed-Effects: singular fit (a variance component at zero). Fixed-effects: convergence of the demeaning. IV: first-stage Kleibergen-Paap F (below 10 means weak instruments)"
+code = '''
+{{?model=lmm}} println("Singular fit: ", issingular(model), "  (true = a variance component is estimated at zero: simplify the random effects)")
+{{?model=lmm}} println(VarCorr(model))
+{{?model!=lmm}} println("Converged: ", model.converged, " after ", model.iterations, " iterations")
+{{?model=iv}} println("First-stage F (Kleibergen-Paap): ", model.F_kp, "  p = ", model.p_kp, "  (F < 10 suggests weak instruments)")
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "observed-fitted"
+label = "Observed vs Fitted"
+desc = "Observed response against fitted values with the 45-degree line; Mixed-Effects also shows the population-level (fixed effects only) fit"
+code = '''
+using Plots
+{{?model=lmm}} y, f = response(model), fitted(model)
+{{?model=lmm}} fpop = modelmatrix(model) * fixef(model)  # population-level prediction: group effects set to zero
+{{?model!=lmm}} m2 = reg({{data}}, model.formula, save=:all)
+{{?model!=lmm}} r, f = residuals(m2), predict(m2, {{data}})
+{{?model!=lmm}} ok = .!ismissing.(r) .& .!ismissing.(f); f = Float64.(f[ok]); y = f .+ Float64.(r[ok])
+scatter(f, y, ms=2, msw=0, alpha=0.6, label="with group effects", xlabel="Fitted", ylabel="Observed", title="Observed vs fitted")
+{{?model=lmm}} scatter!(fpop, y, ms=2, msw=0, alpha=0.4, label="population level")
+plot!(identity, extrema(y)..., c=:red, ls=:dash, label=false)
+'''
+
+[[actionGroups.actions]]
+id = "holdout"
+label = "Hold-Out Prediction Error"
+desc = "Refit on a random 80% of the rows and report the RMSE on the other 20% (Mixed-Effects predicts unseen groups at population level)"
+code = '''
+using Random, Statistics, Tables
+Random.seed!(1)
+rows = Tables.rowtable({{data}}); idx = shuffle(1:length(rows)); cut = round(Int, 0.8 * length(rows))
+train, test = rows[idx[1:cut]], rows[idx[cut+1:end]]
+{{?model=lmm}} mt = fit(MixedModel, @formula({{formula}} + (1|{{group}})), train)
+{{?model=lmm}} p = predict(mt, test; new_re_levels=:population)  # new groups get the population prediction
+{{?model!=lmm}} mt = reg(train, model.formula, save=:fe)
+{{?model!=lmm}} p = predict(mt, test)  # missing for groups not seen in training
+y = [getproperty(r, Symbol(responsename(model))) for r in test]
+ok = .!ismissing.(p)
+println("Hold-out RMSE: ", sqrt(mean((y[ok] .- p[ok]) .^ 2)), "  on ", count(ok), " of ", length(test), " rows")
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "pooled"
+label = "Against Pooled OLS"
+desc = "Mixed-Effects: likelihood ratio test of the random intercept against plain OLS. Fixed-effects: pooled and fixed-effects estimates side by side"
+code = '''
+{{?model=lmm}} using GLM
+{{?model=lmm}} ols = lm(@formula({{formula}}), {{data}})  # same fixed effects, no grouping
+{{?model=lmm}} display(MixedModels.likelihoodratiotest(ols, model))
+{{?model=panel-fe|twoway-fe}} pooled = reg({{data}}, @formula({{formula}}))
+{{?model=iv}} pooled = reg({{data}}, @formula({{formula-iv}}))
+{{?model!=lmm}} using RegressionTables
+{{?model!=lmm}} regtable(pooled, model)
+'''
+
+[[actionGroups.actions]]
+id = "hausman"
+label = "Random vs Fixed Group Effects"
+desc = "Fits both a random-intercept and a fixed-effects model and runs a Hausman test: a small p-value means the random-effects estimates are inconsistent"
+code = '''
+using MixedModels, FixedEffectModels, Distributions, LinearAlgebra
+{{?model=iv}} error("The Hausman comparison uses the plain formula: switch to Mixed-Effects or Panel Fixed-Effects")
+re = fit(MixedModel, @formula({{formula}} + (1|{{group}})), {{data}})
+fx = reg({{data}}, @formula({{formula}} + fe({{group}})))
+common = intersect(coefnames(fx), coefnames(re))
+i, j = indexin(common, coefnames(re)), indexin(common, coefnames(fx))
+d = coef(fx)[j] .- coef(re)[i]
+H = d' * pinv(vcov(fx)[j, j] .- vcov(re)[i, i]) * d
+foreach((n, a, b) -> println(rpad(n, 20), " RE = ", round(a, digits=4), "   FE = ", round(b, digits=4)), common, coef(re)[i], coef(fx)[j])
+println("Hausman H = ", round(H, digits=3), "  df = ", length(common), "  p = ", round(ccdf(Chisq(length(common)), H), digits=4))
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "variance-share"
+label = "Variance Decomposition"
+desc = "Mixed-Effects: intraclass correlation, the share of variance between groups. Fixed-effects: overall versus within-group R-squared"
+code = '''
+{{?model=lmm}} s = std(model)  # standard deviations: random-effect terms first, residual last
+{{?model=lmm}} sg, se = s[1][1], s[end][1]
+{{?model=lmm}} println("Group SD: ", round(sg, digits=4), "   Residual SD: ", round(se, digits=4))
+{{?model=lmm}} println("Intraclass correlation: ", round(sg^2 / (sg^2 + se^2), digits=3), "  (share of variance between {{group}}s)")
+{{?model!=lmm}} println("R-squared: ", round(r2(model), digits=4), "   within R-squared: ", round(model.r2_within, digits=4))
+{{?model!=lmm}} println("The gap is the variation absorbed by the fixed effects")
+'''
+
+[[actionGroups.actions]]
+id = "coefplot"
+label = "Coefficient Plot"
+desc = "Point estimates with 95% confidence intervals: intervals crossing zero are not significant at the 5% level"
+code = '''
+using Plots
+n, b, se = coefnames(model), coef(model), stderror(model)
+scatter(b, 1:length(b), xerror=1.96 .* se, yticks=(1:length(b), n), ms=4, label=false, xlabel="Estimate", title="Coefficients with 95% CI")
+vline!([0], c=:red, ls=:dash, label=false)
 '''

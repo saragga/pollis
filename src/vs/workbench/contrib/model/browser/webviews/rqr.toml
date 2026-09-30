@@ -101,14 +101,14 @@ label = "Quantile Regression"
 
 [[bullets]]
 text = "Robust regression"
-detail = "M-estimators that down-weight outliers (Huber, Tukey, Hampel, Andrews, L1)"
+detail = "M-estimators that down-weight outliers (Huber, Tukey, Hampel, Welsch, L1)"
 
 [[bullets]]
 text = "Quantile regression"
 detail = "fits the conditional tau-quantile instead of the mean"
 
 [[bullets]]
-text = "Optional L1 / L2 regularisation for sparse or shrunken coefficients"
+text = "Optional ridge (L2) penalty for shrunken coefficients in robust regression"
 detail = ""
 
 [[inputs]]
@@ -126,13 +126,13 @@ default = "df"
 [[inputs]]
 id = "estimator"
 label = "M-estimator"
-tooltip = "M-estimator loss function controlling outlier resistance.\nHuber — moderate resistance, efficient near normality (recommended default)\nTukey bisquare — strong resistance, fully rejects large outliers\nHampel — three-part redescending loss\nAndrews wave — smooth redescending\nL1 (LAD) — median regression, maximum resistance"
+tooltip = "M-estimator loss function controlling outlier resistance.\nHuber — moderate resistance, efficient near normality (recommended default)\nTukey bisquare — strong resistance, fully rejects large outliers\nHampel — three-part redescending loss\nWelsch — smooth redescending\nL1 (LAD) — median regression, maximum resistance"
 kind = "select"
-default = "HuberEstimator()"
+default = "MEstimator{HuberLoss}()"
 models = ["robust"]
 
 [[inputs.options]]
-value = "HuberEstimator()"
+value = "MEstimator{HuberLoss}()"
 label = "Huber"
 
 [[inputs.options]]
@@ -144,11 +144,11 @@ value = "MEstimator{HampelLoss}()"
 label = "Hampel"
 
 [[inputs.options]]
-value = "MEstimator{AndrewsLoss}()"
-label = "Andrews wave"
+value = "MEstimator{WelschLoss}()"
+label = "Welsch"
 
 [[inputs.options]]
-value = "L1Estimator()"
+value = "MEstimator{L1Loss}()"
 label = "L1 (LAD)"
 
 [[inputs]]
@@ -161,37 +161,34 @@ models = ["quantile"]
 [[inputs]]
 id = "penalty"
 label = "Penalty"
-tooltip = "Optional coefficient penalty.\nNo Penalty - ordinary robust or quantile fit\nL1 - promotes sparsity (some coefficients set exactly to zero)\nL2 - shrinks all coefficients, none forced to zero"
+tooltip = "Optional coefficient penalty for robust regression.\nNo Penalty - ordinary robust fit\nRidge (L2) - shrinks all coefficients, none forced to zero"
 kind = "select"
 default = "none"
 newRow = true
+models = ["robust"]
 
 [[inputs.options]]
 value = "none"
 label = "No Penalty"
 
 [[inputs.options]]
-value = "l1"
-label = "L1"
-
-[[inputs.options]]
 value = "l2"
-label = "L2"
+label = "Ridge (L2)"
 
 [[inputs]]
 id = "lambda"
 label = "lambda (penalty strength)"
-tooltip = "Regularisation strength lambda ≥ 0. Larger values shrink coefficients more strongly.\nL1 penalty — promotes sparsity (some coefficients set exactly to zero)\nL2 penalty — shrinks all coefficients, none forced to zero"
+tooltip = "Regularisation strength lambda ≥ 0. Larger values shrink coefficients more strongly towards zero."
 default = "0.1"
 when = "penalty!=none"
+models = ["robust"]
 
 [[codeBranches]]
 model = "robust"
 code = '''
 using RobustModels
 {{?penalty=none}} model = rlm(@formula({{formula}}), {{data}}, {{estimator}})  # fit robust model
-{{?penalty=l1}} model = rlm(@formula({{formula}}), {{data}}, {{estimator}}, penalty=L1Penalty({{lambda}}))  # fit robust model with L1 penalty
-{{?penalty=l2}} model = rlm(@formula({{formula}}), {{data}}, {{estimator}}, penalty=L2Penalty({{lambda}}))  # fit robust model with L2 penalty
+{{?penalty=l2}} model = rlm(@formula({{formula}}), {{data}}, {{estimator}}; Symbol("ridge", Char(0x3bb)) => {{lambda}})  # robust ridge; the keyword name ends in the Greek letter lambda
 println(coef(model))
 println(stderror(model))
 '''
@@ -200,9 +197,147 @@ println(stderror(model))
 model = "quantile"
 code = '''
 using RobustModels
-{{?penalty=none}} model = rlm(@formula({{formula}}), {{data}}, QuantileRegression({{tau}}))  # fit tau-quantile model
-{{?penalty=l1}} model = rlm(@formula({{formula}}), {{data}}, QuantileRegression({{tau}}), penalty=L1Penalty({{lambda}}))  # fit tau-quantile model with L1 penalty
-{{?penalty=l2}} model = rlm(@formula({{formula}}), {{data}}, QuantileRegression({{tau}}), penalty=L2Penalty({{lambda}}))  # fit tau-quantile model with L2 penalty
+model = quantreg(@formula({{formula}}), {{data}}; quantile={{tau}})  # fit tau-quantile model
 println(coef(model))
 println(stderror(model))
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "resid-fitted"
+label = "Residuals vs Fitted"
+desc = "Residuals against fitted values; for quantile regression about a tau share of points should sit below zero at every fitted level"
+code = '''
+using RobustModels, Plots
+scatter(fitted(model), residuals(model), ms=2, msw=0, alpha=0.6, label=false, xlabel="Fitted", ylabel="Residual", title="Residuals vs fitted")
+hline!([0], c=:red, ls=:dash, label=false)
+'''
+
+[[actionGroups.actions]]
+id = "quantile-process"
+label = "Quantile Process"
+desc = "Each coefficient re-estimated at quantiles 0.1 to 0.9 against the least-squares estimate: slopes that change with tau mean the covariate affects the spread or shape, not just the centre"
+code = '''
+using RobustModels, Plots
+taus = 0.1:0.1:0.9
+fits = [quantreg(@formula({{formula}}), {{data}}; quantile=t) for t in taus]
+B = reduce(hcat, coef.(fits)); nm = coefnames(fits[1])
+ols = coef(rlm(@formula({{formula}}), {{data}}, MEstimator{L2Loss}()))  # least squares
+plot([begin
+    plot(taus, B[j, :], marker=:circle, label="quantile", title=nm[j], xlabel="tau")
+    hline!([ols[j]], c=:red, ls=:dash, label="OLS")
+end for j in eachindex(nm)]..., layout=(1, length(nm)), size=(330 * length(nm), 320))
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "weights"
+label = "Outlier and Weight Check"
+desc = "Robust: the final IRLS weight of each observation (low weight = treated as an outlier). Quantile: the share of residuals below zero, which should match tau"
+code = '''
+using RobustModels, Plots, Statistics
+{{?model=robust}} w = workingweights(model)
+{{?model=robust}} println(count(<(0.5), w), " of ", length(w), " observations have weight below 0.5 (downweighted as outliers)")
+{{?model=robust}} scatter(w, ms=2, msw=0, label=false, xlabel="Observation", ylabel="Weight", ylims=(0, 1.05), title="Robust weights")
+{{?model=quantile}} r = residuals(model)
+{{?model=quantile}} println("Share below the fitted quantile: ", round(mean(r .< 0), digits=3), "  (target tau = {{tau}})")
+{{?model=quantile}} histogram(r, bins=40, label=false, xlabel="Residual", title="Residual distribution")
+'''
+
+[[actionGroups.actions]]
+id = "leverage"
+label = "Leverage Points"
+desc = "Hat values of the design: robust M-estimators and quantile regression protect against outlying responses, not against high-leverage covariate values"
+code = '''
+using RobustModels, LinearAlgebra, Plots
+X = modelmatrix(model); h = diag(X * ((X' * X) \ X'))  # hat values
+cut = 2 * size(X, 2) / size(X, 1)
+println(count(>(cut), h), " observations with leverage above 2p/n = ", round(cut, digits=4))
+scatter(h, abs.(residuals(model)), ms=2, msw=0, label=false, xlabel="Leverage", ylabel="|Residual|", title="Leverage vs residual size")
+vline!([cut], c=:red, ls=:dash, label="2p/n")
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "observed-fitted"
+label = "Observed vs Fitted"
+desc = "Observed response against fitted values with the 45-degree line"
+code = '''
+using RobustModels, Plots
+y, f = response(model), fitted(model)
+scatter(f, y, ms=2, msw=0, alpha=0.6, label=false, xlabel="Fitted", ylabel="Observed", title="Observed vs fitted")
+plot!(identity, extrema(vcat(y, f))..., c=:red, ls=:dash, label=false)
+'''
+
+[[actionGroups.actions]]
+id = "interval"
+label = "90% Prediction Band"
+desc = "Fits the 5% and 95% conditional quantiles to form a distribution-free 90% prediction band, and reports its in-sample coverage"
+code = '''
+using RobustModels, Plots, Statistics
+lo = fitted(quantreg(@formula({{formula}}), {{data}}; quantile=0.05))
+hi = fitted(quantreg(@formula({{formula}}), {{data}}; quantile=0.95))
+y, f = response(model), fitted(model); o = sortperm(f)
+println("In-sample coverage: ", round(mean(lo .<= y .<= hi), digits=3), "  (target 0.90)")
+scatter(f, y, ms=2, msw=0, alpha=0.5, label="observed", xlabel="Fitted", ylabel="Response", title="90% quantile prediction band")
+plot!(f[o], [lo[o] hi[o]], c=:red, lw=1.5, label=["5%" "95%"])
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "vs-ols"
+label = "Against OLS"
+desc = "Coefficients of this fit beside ordinary least squares: large gaps mean outliers or skew are pulling the OLS estimates"
+code = '''
+using RobustModels
+ols = rlm(@formula({{formula}}), {{data}}, MEstimator{L2Loss}())  # least squares
+foreach((n, a, b) -> println(rpad(n, 20), " this fit = ", round(a, digits=4), "   OLS = ", round(b, digits=4)), coefnames(model), coef(model), coef(ols))
+'''
+
+[[actionGroups.actions]]
+id = "alternatives"
+label = "Alternative Estimators"
+desc = "Robust: refits with Huber, Tukey, Cauchy, Welsch and Hampel losses. Quantile: refits at the three quartiles. Stable coefficients mean the conclusion does not hinge on the choice"
+code = '''
+using RobustModels
+{{?model=robust}} alts = ["Huber" => MEstimator{HuberLoss}(), "Tukey" => MEstimator{TukeyLoss}(), "Cauchy" => MEstimator{CauchyLoss}(), "Welsch" => MEstimator{WelschLoss}(), "Hampel" => MEstimator{HampelLoss}()]
+{{?model=robust}} fits = [a.first => rlm(@formula({{formula}}), {{data}}, a.second) for a in alts]
+{{?model=quantile}} fits = ["tau = $t" => quantreg(@formula({{formula}}), {{data}}; quantile=t) for t in (0.25, 0.5, 0.75)]
+println(rpad("", 12), join(rpad.(coefnames(model), 14)))
+foreach(f -> println(rpad(f.first, 12), join(rpad.(round.(coef(f.second), digits=4), 14))), fits)
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "coefficients"
+label = "Coefficients With 95% CI"
+desc = "Estimates with Wald 95% intervals: robust slopes read like OLS slopes; a quantile slope is the change in the tau-th conditional quantile per unit increase"
+code = '''
+using RobustModels
+b, se = coef(model), stderror(model)
+foreach((n, a, s) -> println(rpad(n, 20), round(a, digits=4), "   95% CI [", round(a - 1.96s, digits=4), ", ", round(a + 1.96s, digits=4), "]"), coefnames(model), b, se)
+'''
+
+[[actionGroups.actions]]
+id = "pseudo-r2"
+label = "Pseudo R-Squared"
+desc = "1 - deviance / null deviance: the share of the (robust or check-function) loss explained by the covariates; the Koenker-Machado R1 for quantile regression"
+code = '''
+using RobustModels
+println("Pseudo R-squared: ", round(1 - deviance(model) / nulldeviance(model), digits=4))
 '''
