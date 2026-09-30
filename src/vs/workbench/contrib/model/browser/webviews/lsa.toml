@@ -188,11 +188,12 @@ using TextAnalysis, LinearAlgebra
 
 crps = Corpus([StringDocument(d) for d in {{corpus}}])  # build corpus
 prepare!(crps, strip_punctuation | strip_case); update_lexicon!(crps)
-U_k = Matrix(tf_idf(DocumentTermMatrix(crps))) |> M -> svd(M).U[:, 1:{{k}}]  # doc vectors
+F   = svd(Matrix(tf_idf(DocumentTermMatrix(crps))))  # SVD
+D_k = F.U[:, 1:{{k}}] .* transpose(F.S[1:{{k}}])  # doc vectors U_k S_k (unscaled U_k would weight every dimension equally)
 
-norms   = norm.(eachrow(U_k))  # L2 norm per document
-U_norm  = U_k ./ norms  # normalised document matrix
-sim_mat = U_norm * U_norm'  # cosine similarity matrix
+norms   = norm.(eachrow(D_k))  # L2 norm per document
+D_norm  = D_k ./ norms  # normalised document matrix
+sim_mat = D_norm * transpose(D_norm)  # cosine similarity matrix
 '''
 
 [[actionGroups.actions]]
@@ -260,8 +261,9 @@ crps = Corpus([StringDocument(d) for d in {{corpus}}])  # build corpus
 prepare!(crps, strip_punctuation | strip_case); update_lexicon!(crps)
 F    = svd(Matrix(tf_idf(DocumentTermMatrix(crps))))  # SVD
 
-q_vec = F.U[query_idx, 1:{{k}}]  # query document vector in latent space
-sims  = F.U[:, 1:{{k}}] * q_vec ./ (norm.(eachrow(F.U[:, 1:{{k}}])) .* norm(q_vec))  # cosine similarities
+D_k   = F.U[:, 1:{{k}}] .* transpose(F.S[1:{{k}}])  # doc vectors U_k S_k
+q_vec = D_k[query_idx, :]  # query document vector in latent space
+sims  = D_k * q_vec ./ (norm.(eachrow(D_k)) .* norm(q_vec))  # cosine similarities
 sortperm(sims, rev=true)  # ranked document indices
 '''
 
@@ -272,11 +274,24 @@ desc = "Project a new document into the existing latent space"
 code = '''
 using TextAnalysis, LinearAlgebra
 
-d_new = StringDocument(new_text)  # new document to fold in
-v_new = dtm_row(d_new, dtm.terms)  # term-frequency vector aligned to existing vocabulary
+crps = Corpus([StringDocument(d) for d in {{corpus}}])  # build corpus
+prepare!(crps, strip_punctuation | strip_case); update_lexicon!(crps)
+dtm  = DocumentTermMatrix(crps)
+F    = svd(Matrix(tf_idf(dtm)))  # the latent space to fold into
 
-S_inv = 1.0 ./ F.S[1:{{k}}]  # pseudo-inverse of singular values
-u_new = v_new * F.V[:, 1:{{k}}] .* S_inv'  # fold-in: project into latent space
+counts = Matrix(dtm.dtm)
+idf    = log.(size(counts, 1) ./ vec(sum(counts .> 0; dims=1)))  # the corpus idf weights, log(n / df)
+
+d_new = StringDocument(new_text)  # new document to fold in
+prepare!(d_new, strip_punctuation | strip_case)  # same cleaning as the corpus
+col   = Dict(t => j for (j, t) in enumerate(dtm.terms))
+v_new = zeros(length(dtm.terms))
+for t in tokens(d_new)
+    j = get(col, t, 0); j > 0 && (v_new[j] += 1)  # count terms in the existing vocabulary; unseen terms are dropped
+end
+v_new = v_new ./ max(sum(v_new), 1) .* idf  # tf-idf weighting as in the matrix that was decomposed
+
+u_new = (transpose(F.V[:, 1:{{k}}]) * v_new) ./ F.S[1:{{k}}]  # fold-in: u = S_k^-1 transpose(V_k) v, comparable with rows of U_k
 println("Latent vector: ", u_new)  # latent representation of new document
 '''
 
