@@ -257,7 +257,7 @@ label = "Diagnose"
 [[actionGroups.actions]]
 id = "perplexity"
 label = "Perplexity"
-desc = "Perplexity on held-out documents; lower is better"
+desc = "Perplexity on the training documents (in-sample: it keeps falling as topics are added, so hold out documents to compare models); lower is better"
 code = '''
 using TopicModels, TextAnalysis
 
