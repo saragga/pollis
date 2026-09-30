@@ -18,7 +18,7 @@ description = "An 18-video course by Jamie Mair on writing fast Julia code"
 url = "https://www.youtube.com/playlist?list=PLUAq6xQKFgGr39PiyrPk_C9dhBKvWcjUA"
 
 [requires]
-packages = ["Optimisers.jl", "Zygote.jl", "Plots.jl"]
+packages = ["Optimisers.jl", "Enzyme.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""
@@ -280,7 +280,7 @@ return s;
 [[codeBranches]]
 model = "sgd"
 code = '''
-using Optimisers, Zygote, Random, LinearAlgebra, Statistics
+using Optimisers, Enzyme, Random, LinearAlgebra, Statistics
 
 f(x) = {{f}}
 x0    = {{x0}}  # initial parameters
@@ -294,7 +294,7 @@ function train(r; x0=x0, iters=iters, noise=noise, seed=1)
     state = Optimisers.setup(r, x)
     path, losses = [copy(x)], [f(x)]
     for _ in 1:iters
-        g = Zygote.gradient(f, x)[1] .+ noise .* randn(rng, length(x))  # noisy gradient
+        g = Enzyme.gradient(Reverse, f, x)[1] .+ noise .* randn(rng, length(x))  # noisy gradient
         state, x = Optimisers.update(state, x, g)
         push!(path, copy(x)); push!(losses, f(x))
     end
@@ -309,7 +309,7 @@ x_opt = trained.x
 [[codeBranches]]
 model = "adam"
 code = '''
-using Optimisers, Zygote, Random, LinearAlgebra, Statistics
+using Optimisers, Enzyme, Random, LinearAlgebra, Statistics
 
 f(x) = {{f}}
 x0    = {{x0}}  # initial parameters
@@ -323,7 +323,7 @@ function train(r; x0=x0, iters=iters, noise=noise, seed=1)
     state = Optimisers.setup(r, x)
     path, losses = [copy(x)], [f(x)]
     for _ in 1:iters
-        g = Zygote.gradient(f, x)[1] .+ noise .* randn(rng, length(x))  # noisy gradient
+        g = Enzyme.gradient(Reverse, f, x)[1] .+ noise .* randn(rng, length(x))  # noisy gradient
         state, x = Optimisers.update(state, x, g)
         push!(path, copy(x)); push!(losses, f(x))
     end
@@ -338,7 +338,7 @@ x_opt = trained.x
 [[codeBranches]]
 model = "adamax"
 code = '''
-using Optimisers, Zygote, Random, LinearAlgebra, Statistics
+using Optimisers, Enzyme, Random, LinearAlgebra, Statistics
 
 f(x) = {{f}}
 x0    = {{x0}}  # initial parameters
@@ -352,7 +352,7 @@ function train(r; x0=x0, iters=iters, noise=noise, seed=1)
     state = Optimisers.setup(r, x)
     path, losses = [copy(x)], [f(x)]
     for _ in 1:iters
-        g = Zygote.gradient(f, x)[1] .+ noise .* randn(rng, length(x))  # noisy gradient
+        g = Enzyme.gradient(Reverse, f, x)[1] .+ noise .* randn(rng, length(x))  # noisy gradient
         state, x = Optimisers.update(state, x, g)
         push!(path, copy(x)); push!(losses, f(x))
     end
@@ -367,7 +367,7 @@ x_opt = trained.x
 [[codeBranches]]
 model = "adagrad"
 code = '''
-using Optimisers, Zygote, Random, LinearAlgebra, Statistics
+using Optimisers, Enzyme, Random, LinearAlgebra, Statistics
 
 f(x) = {{f}}
 x0    = {{x0}}  # initial parameters
@@ -381,7 +381,7 @@ function train(r; x0=x0, iters=iters, noise=noise, seed=1)
     state = Optimisers.setup(r, x)
     path, losses = [copy(x)], [f(x)]
     for _ in 1:iters
-        g = Zygote.gradient(f, x)[1] .+ noise .* randn(rng, length(x))  # noisy gradient
+        g = Enzyme.gradient(Reverse, f, x)[1] .+ noise .* randn(rng, length(x))  # noisy gradient
         state, x = Optimisers.update(state, x, g)
         push!(path, copy(x)); push!(losses, f(x))
     end
@@ -451,7 +451,7 @@ code = '''
 k = div(iters, 10)
 late = trained.losses[end - k:end]
 slope = cov(collect(0:k), late) / var(collect(0:k))  # near 0 = stationary
-(gradient_norm = norm(Zygote.gradient(f, x_opt)[1]), late_mean = mean(late), late_std = std(late), late_slope = slope, stationary = abs(slope) * k < std(late))
+(gradient_norm = norm(Enzyme.gradient(Reverse, f, x_opt)[1]), late_mean = mean(late), late_std = std(late), late_slope = slope, stationary = abs(slope) * k < std(late))
 '''
 
 [[actionGroups]]
@@ -519,7 +519,7 @@ label = "Solution Summary"
 desc = "Final parameters, loss, improvement over the start and the gradient norm"
 code = '''
 (parameters = x_opt, loss = f(x_opt), loss_start = f(x0), improvement = f(x0) - f(x_opt),
- gradient_norm = norm(Zygote.gradient(f, x_opt)[1]), iterations = iters)
+ gradient_norm = norm(Enzyme.gradient(Reverse, f, x_opt)[1]), iterations = iters)
 '''
 
 [[actionGroups.actions]]
@@ -529,6 +529,6 @@ desc = "Distance travelled, late jitter and remaining gradient for each paramete
 code = '''
 P = reduce(hcat, trained.path)
 late = P[:, end - div(iters, 10):end]
-g = Zygote.gradient(f, x_opt)[1]
+g = Enzyme.gradient(Reverse, f, x_opt)[1]
 [(parameter = i, start = x0[i], final = x_opt[i], travelled = abs(x_opt[i] - x0[i]), late_std = std(late[i, :]), gradient = g[i]) for i in eachindex(x0)]
 '''
