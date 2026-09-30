@@ -122,13 +122,13 @@ default = "y_val"
 [[codeBranches]]
 model = "platt"
 code = '''
-using GLM, DataFrames
+using GLM
 
-df = DataFrame(score={{scores}}, y={{y}})  # collect validation scores and labels
+tbl = (score = {{scores}}, y = {{y}})  # validation scores and labels as a Tables.jl column table
 
-platt = glm(@formula(y ~ score), df, Binomial(), LogitLink())  # logistic regression on raw scores
+platt = glm(@formula(y ~ score), tbl, Binomial(), LogitLink())  # logistic regression on raw scores
 
-cal_probs = predict(platt, df)  # calibrated probabilities
+cal_probs = predict(platt, tbl)  # calibrated probabilities
 '''
 
 [[codeBranches]]
