@@ -585,7 +585,7 @@ id = "geodesic-distance"
 label = "Geodesic Distance"
 desc = "Distance travelled along the manifold from the start, compared with the length of the iterate path"
 code = '''
-path = [p0; res.iterates]
+path = [[p0]; res.iterates]  # the start, then every iterate (a vector of points)
 (start_to_solution = distance(M, p0, p_opt), path_length = sum(distance(M, path[i], path[i+1]) for i in 1:length(path)-1),
  euclidean_chord = norm(p_opt - p0))
 '''
