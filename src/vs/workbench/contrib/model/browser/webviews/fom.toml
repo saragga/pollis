@@ -22,7 +22,7 @@ name = "Optimization.jl"
 github = "https://github.com/SciML/Optimization.jl"
 
 [requires]
-packages = ["Optimisers.jl", "Zygote.jl", "Optimization.jl", "Plots.jl"]
+packages = ["Optimisers.jl", "Enzyme.jl", "Optimization.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""
@@ -419,7 +419,7 @@ return '<path d="' + m + '" fill="none" stroke="currentColor" stroke-width="1.4"
 [[codeBranches]]
 model = "sgd"
 code = '''
-using Optimisers, Zygote, Random, LinearAlgebra, Statistics
+using Optimisers, Enzyme, Random, LinearAlgebra, Statistics
 
 f(x) = {{f}}
 x0    = {{x0}}  # initial parameters
@@ -433,7 +433,7 @@ function train(r; x0=x0, iters=iters, noise=noise, seed=1)
     state = Optimisers.setup(r, x)
     path, losses = [copy(x)], [f(x)]
     for _ in 1:iters
-        g = Zygote.gradient(f, x)[1] .+ noise .* randn(rng, length(x))  # noisy gradient
+        g = Enzyme.gradient(Reverse, f, x)[1] .+ noise .* randn(rng, length(x))  # noisy gradient
         state, x = Optimisers.update(state, x, g)
         push!(path, copy(x)); push!(losses, f(x))
     end
@@ -448,7 +448,7 @@ x_opt = trained.x
 [[codeBranches]]
 model = "adam"
 code = '''
-using Optimisers, Zygote, Random, LinearAlgebra, Statistics
+using Optimisers, Enzyme, Random, LinearAlgebra, Statistics
 
 f(x) = {{f}}
 x0    = {{x0}}  # initial parameters
@@ -462,7 +462,7 @@ function train(r; x0=x0, iters=iters, noise=noise, seed=1)
     state = Optimisers.setup(r, x)
     path, losses = [copy(x)], [f(x)]
     for _ in 1:iters
-        g = Zygote.gradient(f, x)[1] .+ noise .* randn(rng, length(x))  # noisy gradient
+        g = Enzyme.gradient(Reverse, f, x)[1] .+ noise .* randn(rng, length(x))  # noisy gradient
         state, x = Optimisers.update(state, x, g)
         push!(path, copy(x)); push!(losses, f(x))
     end
@@ -477,7 +477,7 @@ x_opt = trained.x
 [[codeBranches]]
 model = "adamax"
 code = '''
-using Optimisers, Zygote, Random, LinearAlgebra, Statistics
+using Optimisers, Enzyme, Random, LinearAlgebra, Statistics
 
 f(x) = {{f}}
 x0    = {{x0}}  # initial parameters
@@ -491,7 +491,7 @@ function train(r; x0=x0, iters=iters, noise=noise, seed=1)
     state = Optimisers.setup(r, x)
     path, losses = [copy(x)], [f(x)]
     for _ in 1:iters
-        g = Zygote.gradient(f, x)[1] .+ noise .* randn(rng, length(x))  # noisy gradient
+        g = Enzyme.gradient(Reverse, f, x)[1] .+ noise .* randn(rng, length(x))  # noisy gradient
         state, x = Optimisers.update(state, x, g)
         push!(path, copy(x)); push!(losses, f(x))
     end
@@ -506,7 +506,7 @@ x_opt = trained.x
 [[codeBranches]]
 model = "adagrad"
 code = '''
-using Optimisers, Zygote, Random, LinearAlgebra, Statistics
+using Optimisers, Enzyme, Random, LinearAlgebra, Statistics
 
 f(x) = {{f}}
 x0    = {{x0}}  # initial parameters
@@ -520,7 +520,7 @@ function train(r; x0=x0, iters=iters, noise=noise, seed=1)
     state = Optimisers.setup(r, x)
     path, losses = [copy(x)], [f(x)]
     for _ in 1:iters
-        g = Zygote.gradient(f, x)[1] .+ noise .* randn(rng, length(x))  # noisy gradient
+        g = Enzyme.gradient(Reverse, f, x)[1] .+ noise .* randn(rng, length(x))  # noisy gradient
         state, x = Optimisers.update(state, x, g)
         push!(path, copy(x)); push!(losses, f(x))
     end
@@ -535,7 +535,7 @@ x_opt = trained.x
 [[codeBranches]]
 model = "momentum"
 code = '''
-using Optimisers, Zygote, Random, LinearAlgebra, Statistics
+using Optimisers, Enzyme, Random, LinearAlgebra, Statistics
 
 f(x) = {{f}}
 x0    = {{x0}}  # initial parameters
@@ -549,7 +549,7 @@ function train(r; x0=x0, iters=iters, noise=noise, seed=1)
     state = Optimisers.setup(r, x)
     path, losses = [copy(x)], [f(x)]
     for _ in 1:iters
-        g = Zygote.gradient(f, x)[1] .+ noise .* randn(rng, length(x))  # noisy gradient
+        g = Enzyme.gradient(Reverse, f, x)[1] .+ noise .* randn(rng, length(x))  # noisy gradient
         state, x = Optimisers.update(state, x, g)
         push!(path, copy(x)); push!(losses, f(x))
     end
@@ -564,7 +564,7 @@ x_opt = trained.x
 [[codeBranches]]
 model = "nesterov"
 code = '''
-using Optimisers, Zygote, Random, LinearAlgebra, Statistics
+using Optimisers, Enzyme, Random, LinearAlgebra, Statistics
 
 f(x) = {{f}}
 x0    = {{x0}}  # initial parameters
@@ -578,7 +578,7 @@ function train(r; x0=x0, iters=iters, noise=noise, seed=1)
     state = Optimisers.setup(r, x)
     path, losses = [copy(x)], [f(x)]
     for _ in 1:iters
-        g = Zygote.gradient(f, x)[1] .+ noise .* randn(rng, length(x))  # noisy gradient
+        g = Enzyme.gradient(Reverse, f, x)[1] .+ noise .* randn(rng, length(x))  # noisy gradient
         state, x = Optimisers.update(state, x, g)
         push!(path, copy(x)); push!(losses, f(x))
     end
@@ -593,7 +593,7 @@ x_opt = trained.x
 [[codeBranches]]
 model = "rmsprop"
 code = '''
-using Optimisers, Zygote, Random, LinearAlgebra, Statistics
+using Optimisers, Enzyme, Random, LinearAlgebra, Statistics
 
 f(x) = {{f}}
 x0    = {{x0}}  # initial parameters
@@ -607,7 +607,7 @@ function train(r; x0=x0, iters=iters, noise=noise, seed=1)
     state = Optimisers.setup(r, x)
     path, losses = [copy(x)], [f(x)]
     for _ in 1:iters
-        g = Zygote.gradient(f, x)[1] .+ noise .* randn(rng, length(x))  # noisy gradient
+        g = Enzyme.gradient(Reverse, f, x)[1] .+ noise .* randn(rng, length(x))  # noisy gradient
         state, x = Optimisers.update(state, x, g)
         push!(path, copy(x)); push!(losses, f(x))
     end
@@ -622,7 +622,7 @@ x_opt = trained.x
 [[codeBranches]]
 model = "adamw"
 code = '''
-using Optimisers, Zygote, Random, LinearAlgebra, Statistics
+using Optimisers, Enzyme, Random, LinearAlgebra, Statistics
 
 f(x) = {{f}}
 x0    = {{x0}}  # initial parameters
@@ -636,7 +636,7 @@ function train(r; x0=x0, iters=iters, noise=noise, seed=1)
     state = Optimisers.setup(r, x)
     path, losses = [copy(x)], [f(x)]
     for _ in 1:iters
-        g = Zygote.gradient(f, x)[1] .+ noise .* randn(rng, length(x))  # noisy gradient
+        g = Enzyme.gradient(Reverse, f, x)[1] .+ noise .* randn(rng, length(x))  # noisy gradient
         state, x = Optimisers.update(state, x, g)
         push!(path, copy(x)); push!(losses, f(x))
     end
@@ -706,7 +706,7 @@ code = '''
 k = div(iters, 10)
 late = trained.losses[end - k:end]
 slope = cov(collect(0:k), late) / var(collect(0:k))  # near 0 = stationary
-(gradient_norm = norm(Zygote.gradient(f, x_opt)[1]), late_mean = mean(late), late_std = std(late), late_slope = slope, stationary = abs(slope) * k < std(late))
+(gradient_norm = norm(Enzyme.gradient(Reverse, f, x_opt)[1]), late_mean = mean(late), late_std = std(late), late_slope = slope, stationary = abs(slope) * k < std(late))
 '''
 
 [[actionGroups]]
@@ -763,7 +763,7 @@ desc = "The same rule run through Optimization.jl (OptimizationOptimisers), the 
 code = '''
 using Optimization, OptimizationOptimisers
 
-fn = OptimizationFunction((u, p) -> f(u), Optimization.AutoZygote())
+fn = OptimizationFunction((u, p) -> f(u), Optimization.AutoEnzyme())  # Enzyme is loaded by the default code
 prob = OptimizationProblem(fn, x0)
 sol = solve(prob, rule({{lr}}); maxiters=iters)
 loop = train(rule({{lr}}); noise=0.0)
@@ -780,7 +780,7 @@ label = "Solution Summary"
 desc = "Final parameters, loss, improvement over the start and the gradient norm"
 code = '''
 (parameters = x_opt, loss = f(x_opt), loss_start = f(x0), improvement = f(x0) - f(x_opt),
- gradient_norm = norm(Zygote.gradient(f, x_opt)[1]), iterations = iters)
+ gradient_norm = norm(Enzyme.gradient(Reverse, f, x_opt)[1]), iterations = iters)
 '''
 
 [[actionGroups.actions]]
