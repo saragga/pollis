@@ -255,9 +255,9 @@ model = "itemset"
 code = '''
 using RuleMiner
 
-txns = Txns({{df}}, index_col=:Transaction, item_col=:Item)  # convert DataFrame to Transactions
+txns = Txns({{df}}, index_col=:Transaction, item_col=:Item)  # transactions from a table with one row per (transaction, item) pair
 
-itemsets = {{algorithm}}(txns, {{support}})  # returns DataFrame: items, support, ntransactions
+itemsets = {{algorithm}}(txns, {{support}})  # one row per frequent itemset: columns Itemset, Support, N, Length
 '''
 
 [[codeBranches]]
@@ -265,10 +265,10 @@ model = "rules"
 code = '''
 using RuleMiner
 
-txns = Txns({{df}}, index_col=:Transaction, item_col=:Item)  # convert DataFrame to Transactions
+txns = Txns({{df}}, index_col=:Transaction, item_col=:Item)  # transactions from a table with one row per (transaction, item) pair
 
 rules = arules(txns, {{support}}, {{confidence}})  # min_support, min_confidence
-# returns DataFrame: antecedent, consequent, support, confidence, lift, leverage, conviction
+# one row per rule: columns LHS (antecedent), RHS (consequent), Support, Confidence, Coverage, Lift, N, Length
 '''
 
 [[actionGroups]]
