@@ -9,6 +9,16 @@ import { ContextKeyExpr } from '../../../../platform/contextkey/common/contextke
 import { ECO_BFMB_ID, ECO_BLSDF_ID, ARMA_ARIMA_WEBVIEW_ID, ARMA_VAR_WEBVIEW_ID } from '../../model/browser/model.contribution.js';
 import { EXPL_COMMAND_ID, RDYN_ID, RCTL_ID, MCAT_ID, RZOO_ID, FRED_ID, ECB_ID } from '../../explore/browser/explore.contribution.js';
 
+const SYMB_ID = 'chiara.toolboxes.symb';
+const NLIN_ID = 'chiara.toolboxes.nlin';
+const DIFF_ID = 'chiara.toolboxes.diff';
+const ODE_ID = 'chiara.toolboxes.ode';
+const PDE_ID = 'chiara.toolboxes.pde';
+const INTEG_ID = 'chiara.toolboxes.integ';
+
+// Define a new submenu ID for "Analytics Toolbox"
+const E_ATSubmenuId = new MenuId('menubarE_ATSubmenu');
+
 // Define a new submenu ID for "Economics Toolbox"
 const E_MTSubmenuId = new MenuId('menubarE_MTSubmenu');
 const E_MTDataSourcesSubmenuId = new MenuId('menubarE_MTDataSourcesSubmenu');
@@ -36,9 +46,17 @@ MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
 	order: 9.5
 });
 
-// Economics Toolbox
+// Analytics Toolbox
 MenuRegistry.appendMenuItem(MenuId.MenubarToolboxesMenu, {
 	group: '1_toolboxes',
+	submenu: E_ATSubmenuId,
+	title: localize('showStatistics.at', 'Analytics Toolbox'),
+	order: 1,
+});
+
+// Economics Toolbox
+MenuRegistry.appendMenuItem(MenuId.MenubarToolboxesMenu, {
+	group: '2_toolboxes',
 	submenu: E_MTSubmenuId,
 	title: localize('showStatistics.mt', 'Economics Toolbox'),
 	order: 1,
@@ -46,7 +64,7 @@ MenuRegistry.appendMenuItem(MenuId.MenubarToolboxesMenu, {
 
 // Econometrics Toolbox
 MenuRegistry.appendMenuItem(MenuId.MenubarToolboxesMenu, {
-	group: '1_toolboxes',
+	group: '2_toolboxes',
 	submenu: E_ETSubmenuId,
 	title: localize('showStatistics.et', 'Econometrics Toolbox'),
 	order: 2,
@@ -54,19 +72,80 @@ MenuRegistry.appendMenuItem(MenuId.MenubarToolboxesMenu, {
 
 // Epidemiology Toolbox
 MenuRegistry.appendMenuItem(MenuId.MenubarToolboxesMenu, {
-	group: '4_toolboxes',
+	group: '3_toolboxes',
 	submenu: E_CMTSubmenuId,
 	title: localize('showStatistics.ept', 'Epidemiology Toolbox'),
-	order: 3,
+	order: 1,
 });
+
 
 // Robotics Toolbox
 MenuRegistry.appendMenuItem(MenuId.MenubarToolboxesMenu, {
-	group: '5_toolboxes',
+	group: '4_toolboxes',
 	submenu: E_RTSubmenuId,
 	title: localize('showStatistics.robot', 'Robotics Toolbox'),
+	order: 1,
+});
+
+
+// ===================================================
+// SUBMENU: ANALYTICS TOOLBOX
+// ===================================================
+MenuRegistry.appendMenuItem(E_ATSubmenuId, {
+	group: '1_at',
+	command: {
+		id: SYMB_ID, precondition: ContextKeyExpr.false(),
+		title: localize('at.symb', 'Symbolic Math'),
+	},
+	order: 1,
+});
+
+MenuRegistry.appendMenuItem(E_ATSubmenuId, {
+	group: '1_at',
+	command: {
+		id: NLIN_ID, precondition: ContextKeyExpr.false(),
+		title: localize('at.roots', 'Nonlinear Systems'),
+	},
+	order: 2,
+});
+
+MenuRegistry.appendMenuItem(E_ATSubmenuId, {
+	group: '1_at',
+	command: {
+		id: DIFF_ID, precondition: ContextKeyExpr.false(),
+		title: localize('at.diff', 'Differentiation'),
+	},
+	order: 3,
+});
+
+MenuRegistry.appendMenuItem(E_ATSubmenuId, {
+	group: '1_at',
+	command: {
+		id: ODE_ID, precondition: ContextKeyExpr.false(),
+		title: localize('at.ode', 'Ordinary Differential Equations'),
+	},
 	order: 4,
 });
+
+MenuRegistry.appendMenuItem(E_ATSubmenuId, {
+	group: '1_at',
+	command: {
+		id: PDE_ID, precondition: ContextKeyExpr.false(),
+		title: localize('at.pde', 'Partial Differential Equations'),
+	},
+	order: 5,
+});
+
+MenuRegistry.appendMenuItem(E_ATSubmenuId, {
+	group: '1_at',
+	command: {
+		id: INTEG_ID, precondition: ContextKeyExpr.false(),
+		title: localize('at.integ', 'Integration'),
+	},
+	order: 6,
+});
+
+
 
 // ===================================================
 // SUBMENU: ECONOMICS TOOLBOX
