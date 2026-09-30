@@ -126,13 +126,13 @@ detail = "golden ratio additive recurrence, very well-spaced in 1D and 2D"
 
 [[bullets]]
 text = "Grid"
-detail = "uniform Cartesian lattice, deterministic; n = kd required"
+detail = "points drawn from a regular n-level grid on each axis; a starting point rather than an integration rule"
 
 [[inputs]]
 id = "n"
 label = "Number of Samples (n)"
-tooltip = "Number of quasi-random points to generate. For Grid sampling n should equal k^d for integer k."
-default = "100"
+tooltip = "Number of quasi-random points to generate. Sobol is balanced at powers of 2; Faure needs a multiple of a power of its prime base (the smallest prime at least the dimension)."
+default = "128"
 
 [[inputs]]
 id = "lb"
@@ -153,13 +153,6 @@ tooltip = "Direction vector alpha for Kronecker sequences. Length must match the
 default = "[sqrt(2), sqrt(3)]"
 models = ["kronecker"]
 
-[[inputs]]
-id = "dx"
-label = "Grid Spacing (dx)"
-tooltip = ""
-default = "[0.1, 0.1]"
-models = ["grid"]
-
 [[codeBranches]]
 model = "sobol"
 code = '''
@@ -169,7 +162,8 @@ n  = {{n}}  # number of sample points
 lb = {{lb}}  # lower bounds (one per dimension)
 ub = {{ub}}  # upper bounds (one per dimension)
 
-s = QuasiMonteCarlo.sample(n, lb, ub, SobolSample())  # d × n matrix of quasi-random points
+alg = SobolSample()
+s = QuasiMonteCarlo.sample(n, lb, ub, alg)  # d × n matrix of quasi-random points
 
 println(size(s))  # should print (d, n)
 '''
@@ -183,7 +177,8 @@ n  = {{n}}  # number of sample points
 lb = {{lb}}  # lower bounds (one per dimension)
 ub = {{ub}}  # upper bounds (one per dimension)
 
-s = QuasiMonteCarlo.sample(n, lb, ub, HaltonSample())  # d × n matrix of quasi-random points
+alg = HaltonSample()
+s = QuasiMonteCarlo.sample(n, lb, ub, alg)  # d × n matrix of quasi-random points
 
 println(size(s))  # should print (d, n)
 '''
@@ -197,7 +192,8 @@ n  = {{n}}  # number of sample points
 lb = {{lb}}  # lower bounds (one per dimension)
 ub = {{ub}}  # upper bounds (one per dimension)
 
-s = QuasiMonteCarlo.sample(n, lb, ub, FaureSample())  # d × n matrix of quasi-random points
+alg = FaureSample()
+s = QuasiMonteCarlo.sample(n, lb, ub, alg)  # d × n matrix of quasi-random points
 
 println(size(s))  # should print (d, n)
 '''
@@ -211,7 +207,8 @@ n  = {{n}}  # number of sample points
 lb = {{lb}}  # lower bounds (one per dimension)
 ub = {{ub}}  # upper bounds (one per dimension)
 
-s = QuasiMonteCarlo.sample(n, lb, ub, LatinHypercubeSample())  # d × n matrix of quasi-random points
+alg = LatinHypercubeSample()
+s = QuasiMonteCarlo.sample(n, lb, ub, alg)  # d × n matrix of quasi-random points
 
 println(size(s))  # should print (d, n)
 '''
@@ -227,7 +224,8 @@ ub = {{ub}}  # upper bounds (one per dimension)
 
 alpha  = {{alpha}}  # irrational direction vector (length = d)
 
-s = QuasiMonteCarlo.sample(n, lb, ub, KroneckerSample(alpha))  # d × n matrix of quasi-random points
+alg = KroneckerSample(alpha)
+s = QuasiMonteCarlo.sample(n, lb, ub, alg)  # d × n matrix of quasi-random points
 
 println(size(s))  # should print (d, n)
 '''
@@ -241,7 +239,8 @@ n  = {{n}}  # number of sample points
 lb = {{lb}}  # lower bounds (one per dimension)
 ub = {{ub}}  # upper bounds (one per dimension)
 
-s = QuasiMonteCarlo.sample(n, lb, ub, GoldenSample())  # d × n matrix of quasi-random points
+alg = GoldenSample()
+s = QuasiMonteCarlo.sample(n, lb, ub, alg)  # d × n matrix of quasi-random points
 
 println(size(s))  # should print (d, n)
 '''
@@ -255,9 +254,151 @@ n  = {{n}}  # number of sample points
 lb = {{lb}}  # lower bounds (one per dimension)
 ub = {{ub}}  # upper bounds (one per dimension)
 
-dx = {{dx}}  # grid spacing per axis; n should equal k^d
-
-s = QuasiMonteCarlo.sample(n, lb, ub, GridSample(dx))  # d × n matrix of uniformly-spaced points
+alg = GridSample()  # n grid levels per axis
+s = QuasiMonteCarlo.sample(n, lb, ub, alg)  # d × n matrix of grid points
 
 println(size(s))  # should print (d, n)
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "vs-random"
+label = "Points Against Pseudo-Random"
+desc = "The first two dimensions of the sequence beside the same number of pseudo-random points: quasi-random points avoid the clusters and gaps"
+code = '''
+using QuasiMonteCarlo, Plots
+r = QuasiMonteCarlo.sample(n, lb, ub, RandomSample())
+p1 = scatter(s[1, :], s[2, :], ms=2.5, msw=0, legend=false, aspect_ratio=1, title="This sequence")
+p2 = scatter(r[1, :], r[2, :], ms=2.5, msw=0, c=:gray, legend=false, aspect_ratio=1, title="Pseudo-random")
+plot(p1, p2, layout=(1, 2))
+'''
+
+[[actionGroups.actions]]
+id = "fill-order"
+label = "Order of Filling"
+desc = "Points coloured by their position in the sequence: a low-discrepancy sequence fills the gaps left by earlier points, so any prefix is well spread"
+code = '''
+using Plots
+scatter(s[1, :], s[2, :], zcolor=1:size(s, 2), ms=3, msw=0, c=:viridis, aspect_ratio=1, label=false, colorbar_title="index", title="Order of filling")
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "discrepancy"
+label = "L2-Star Discrepancy"
+desc = "Warnock's L2-star discrepancy of the points (rescaled to the unit cube) against pseudo-random points: lower means more even coverage"
+code = '''
+using QuasiMonteCarlo
+u = (s .- lb) ./ (ub .- lb)  # rescaled to the unit cube
+l2star(x) = (d = size(x, 1); m = size(x, 2); sqrt(3.0^-d - 2.0^(1 - d) / m * sum(prod(1 .- x[:, i] .^ 2) for i in 1:m) + sum(prod(1 .- max.(x[:, i], x[:, j])) for i in 1:m, j in 1:m) / m^2))
+(this_sequence = l2star(u), pseudo_random = l2star(QuasiMonteCarlo.sample(size(u, 2), size(u, 1), RandomSample())))
+'''
+
+[[actionGroups.actions]]
+id = "projections"
+label = "One-Dimensional Projections"
+desc = "A histogram of each coordinate: every axis on its own should look evenly filled"
+code = '''
+using Plots
+d = size(s, 1)
+histogram(permutedims(s), bins=16, layout=d, legend=false, title=permutedims(["dimension $k" for k in 1:d]))
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "integral"
+label = "Quasi-Monte Carlo Integral"
+desc = "Estimates the integral of a test function with a known value of 1 over the unit cube, with this sequence and with pseudo-random points"
+code = '''
+using QuasiMonteCarlo, Statistics
+u = (s .- lb) ./ (ub .- lb)  # rescaled to the unit cube
+f(x) = prod(2 .* x)  # integrates to exactly 1 over the unit cube
+r = QuasiMonteCarlo.sample(size(u, 2), size(u, 1), RandomSample())
+(quasi_monte_carlo_error = abs(mean(f(c) for c in eachcol(u)) - 1), monte_carlo_error = abs(mean(f(c) for c in eachcol(r)) - 1))
+'''
+
+[[actionGroups.actions]]
+id = "convergence"
+label = "Error Against Sample Size"
+desc = "Integration error as n doubles, for this sequence and for pseudo-random points: quasi-Monte Carlo approaches the 1/n rate, Monte Carlo stays near 1/sqrt(n)"
+code = '''
+using QuasiMonteCarlo, Statistics, Plots
+f(x) = prod(2 .* x)  # integrates to exactly 1 over the unit cube
+d = length(lb)
+{{?model=faure}} ns = nextprime(d) .^ (2:6)
+{{?model!=faure}} ns = 2 .^ (4:13)
+err(x) = abs(mean(f(c) for c in eachcol(x)) - 1) + eps()
+qe = [err(QuasiMonteCarlo.sample(m, d, alg)) for m in ns]
+re = [err(QuasiMonteCarlo.sample(m, d, RandomSample())) for m in ns]
+plot(ns, [qe re], xscale=:log10, yscale=:log10, marker=:circle, label=["this sequence" "pseudo-random"], xlabel="n", ylabel="absolute error", title="Error against sample size")
+plot!(ns, 1 ./ sqrt.(ns), c=:gray, ls=:dash, label="1/sqrt(n)")
+plot!(ns, 1 ./ ns, c=:black, ls=:dot, label="1/n")
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "algorithms"
+label = "Algorithms Side by Side"
+desc = "L2-star discrepancy of Sobol, Halton, Latin hypercube, golden, lattice-rule and pseudo-random points at this n and dimension"
+code = '''
+using QuasiMonteCarlo
+l2star(x) = (d = size(x, 1); m = size(x, 2); sqrt(3.0^-d - 2.0^(1 - d) / m * sum(prod(1 .- x[:, i] .^ 2) for i in 1:m) + sum(prod(1 .- max.(x[:, i], x[:, j])) for i in 1:m, j in 1:m) / m^2))
+algs = ["Sobol" => SobolSample(), "Halton" => HaltonSample(), "Latin hypercube" => LatinHypercubeSample(), "Golden" => GoldenSample(), "Lattice rule" => LatticeRuleSample(), "Pseudo-random" => RandomSample()]
+sort([(algorithm = name, l2_star_discrepancy = round(l2star(QuasiMonteCarlo.sample(n, length(lb), a)), digits=5)) for (name, a) in algs], by=r -> r.l2_star_discrepancy)
+'''
+
+[[actionGroups.actions]]
+id = "scrambled"
+label = "Scrambled Sobol Error Bars"
+desc = "Twenty Owen-scrambled Sobol point sets give independent integral estimates, so quasi-Monte Carlo gets an honest standard error like Monte Carlo"
+code = '''
+using QuasiMonteCarlo, Statistics
+f(x) = prod(2 .* x)  # integrates to exactly 1 over the unit cube
+m, d = nextpow(2, n), length(lb)
+est = [mean(f(c) for c in eachcol(randomize(QuasiMonteCarlo.sample(m, d, SobolSample()), OwenScramble(base=2, pad=32)))) for _ in 1:20]
+mc = [mean(f(c) for c in eachcol(QuasiMonteCarlo.sample(m, d, RandomSample()))) for _ in 1:20]
+(n = m, scrambled_sobol_mean = mean(est), scrambled_sobol_se = std(est) / sqrt(20), monte_carlo_se = std(mc) / sqrt(20))
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "sample-size"
+label = "Is n a Good Sample Size?"
+desc = "Sobol and other base-2 nets are balanced only at powers of 2, Faure at powers of its prime base: the nearest good sizes for this dimension"
+code = '''
+d = length(lb)
+b = nextprime(d)
+{{?model=sobol}} (n = n, balanced = ispow2(n), nearest_good = (prevpow(2, n), nextpow(2, n)))
+{{?model=faure}} (n = n, base = b, balanced = n % prevpow(b, n) == 0, nearest_good = (prevpow(b, n), nextpow(b, n)))
+{{?model!=sobol|faure}} (n = n, balanced = true, note = "any n works for this method; powers of 2 still help when comparing with Sobol")
+'''
+
+[[actionGroups.actions]]
+id = "rate"
+label = "Convergence Rate"
+desc = "The fitted slope of log error against log n: about -1 is the quasi-Monte Carlo rate, about -0.5 the Monte Carlo rate"
+code = '''
+using QuasiMonteCarlo, Statistics
+f(x) = prod(2 .* x)  # integrates to exactly 1 over the unit cube
+d = length(lb)
+{{?model=faure}} ns = nextprime(d) .^ (2:6)
+{{?model!=faure}} ns = 2 .^ (4:13)
+err(x) = abs(mean(f(c) for c in eachcol(x)) - 1) + eps()
+slope(e) = (X = [ones(length(ns)) log.(ns)]; (X \ log.(e))[2])
+(this_sequence = round(slope([err(QuasiMonteCarlo.sample(m, d, alg)) for m in ns]), digits=2), pseudo_random = round(slope([err(QuasiMonteCarlo.sample(m, d, RandomSample())) for m in ns]), digits=2))
 '''

@@ -12,8 +12,16 @@ defaultModel = "cif"
 name = "NetSurvival.jl"
 github = "https://github.com/JuliaSurv/NetSurvival.jl"
 
+[[packages]]
+name = "RateTables.jl"
+github = "https://github.com/JuliaSurv/RateTables.jl"
+
+[[packages]]
+name = "Tables.jl"
+github = "https://github.com/JuliaData/Tables.jl"
+
 [requires]
-packages = ["NetSurvival.jl"]
+packages = ["NetSurvival.jl", "RateTables.jl", "Tables.jl"]
 
 [[notebookSections]]
 label = ""
@@ -68,7 +76,7 @@ bundled = true
 
 [[models]]
 id = "cif"
-label = "Cumulative Incidence"
+label = "Crude Mortality"
 
 [[models]]
 id = "ns"
@@ -79,49 +87,48 @@ id = "lr"
 label = "Log-Rank Test"
 
 [[bullets]]
-text = "Cumulative Incidence"
-detail = "competing-risks CIF via cause-specific hazards"
+text = "Crude Mortality"
+detail = "Cronin-Feuer split of all deaths into deaths from the disease and from other causes, without cause-of-death data"
 
 [[bullets]]
 text = "Net Survival"
-detail = "population-based relative survival estimator"
+detail = "survival in a hypothetical world where the disease is the only cause of death, from a population rate table"
 
 [[bullets]]
 text = "Log-Rank Test"
-detail = "non-parametric comparison of net survival curves"
+detail = "Graff&eacute;o test comparing net survival across groups"
+
+[[inputs]]
+id = "data"
+label = "Data"
+tooltip = "Any Tables.jl source with one row per patient: follow-up time and status, age (days), year = date of diagnosis (days since year 0), and the covariates of the rate table (e.g. sex). colrec: 5971 Slovenian colorectal cancer patients shipped with NetSurvival, paired with slopop."
+default = "colrec"
 
 [[inputs]]
 id = "time"
-label = "time variable"
-tooltip = "Column name for observed event or censoring times."
+label = "Time Variable"
+tooltip = "Column with follow-up time since diagnosis, in days."
 default = "time"
 
 [[inputs]]
 id = "event"
-label = "event variable"
-tooltip = "Column name for event type. Use 0 for censored observations; integer codes ≥ 1 identify each competing event."
-default = "event"
+label = "Status Variable"
+tooltip = "Column with the vital status: 1 or true = death observed, 0 or false = censored."
+default = "status"
 
 [[inputs]]
-id = "data"
-label = "data"
-tooltip = "Julia DataFrame containing the survival data."
-default = "df"
-
-[[inputs]]
-id = "cause"
-label = "cause"
-tooltip = "Integer code identifying the cause of interest for the cumulative incidence function."
-default = "1"
-models = ["cif"]
+id = "expected"
+label = "Rate Table"
+tooltip = "Population mortality table from RateTables.jl matching the cohort, e.g. slopop (Slovenia), survexp_fr (France), survexp_us (USA). Its covariates must be columns of the data."
+default = "slopop"
 
 [[inputs]]
 id = "method"
-label = "estimator"
-tooltip = "Net survival estimator. Pohar-Perme is the recommended unbiased estimator for population-based studies."
+label = "Estimator"
+tooltip = "Excess hazard estimator. Pohar-Perme is the recommended consistent estimator; Ederer II gives the classical Cronin-Feuer crude mortality."
 kind = "select"
 default = "PoharPerme"
-models = ["ns"]
+models = ["cif", "ns"]
 
 [[inputs.options]]
 value = "PoharPerme"
@@ -140,40 +147,210 @@ value = "Hakulinen"
 label = "Hakulinen"
 
 [[inputs]]
-id = "expected"
-label = "expected hazard"
-tooltip = "Variable or expression providing the expected (population) hazard at each observation, typically derived from a population mortality ratetable."
-default = "ratetable"
-models = ["ns", "lr"]
-
-[[inputs]]
 id = "group"
-label = "group variable"
-tooltip = "Column name for the grouping variable used to compare net survival curves in the log-rank test."
-default = "group"
+label = "Group Variable"
+tooltip = "Column whose groups are compared, e.g. sex, site or stage in colrec."
+default = "site"
 models = ["lr"]
 
 [[codeBranches]]
 model = "cif"
 code = '''
-using NetSurvival
+using NetSurvival, RateTables, Tables
 
-cif = fit(CumulativeIncidence, {{data}}.{{time}}, {{data}}.{{event}}; cause={{cause}})  # cumulative incidence for cause {{cause}}
+tbl  = Tables.columntable({{data}})  # any Tables.jl source, read as named vectors
+rt   = {{expected}}  # population mortality rate table
+T    = Float64.(tbl.{{time}})  # follow-up time, days
+D    = Bool.(tbl.{{event}})  # true = death observed, false = censored
+age  = Float64.(tbl.age)  # age at diagnosis, days
+date = Float64.(tbl.year)  # date of diagnosis, days since year 0
+covs = stack([tbl[k] for k in RateTables.predictors(rt)])  # rate-table covariates (e.g. sex), one column each
+field(x, c...) = getfield(x, Symbol(c...))  # the estimators use Unicode field names
+
+est = {{method}}(T, D, age, date, covs, rt)  # {{method}} excess hazard
+grid = est.grid  # time grid, days
+Se   = field(est, 'S', Char(0x2091))  # net survival
+dLe  = field(est, Char(0x2202), Char(0x39b), Char(0x2091))  # excess hazard increments
+dLp  = field(est, Char(0x2202), Char(0x39b), Char(0x209a))  # population (expected) hazard increments
+dLo  = field(est, Char(0x2202), Char(0x39b), Char(0x2092))  # overall (observed) hazard increments
+at(t) = max(searchsortedlast(grid, t), 1)  # grid index at t days
+
+cm = CrudeMortality(est)  # Cronin-Feuer crude probabilities of death
+Mo, Me, Mp = field(cm, 'M', Char(0x2092)), field(cm, 'M', Char(0x2091)), field(cm, 'M', Char(0x209a))  # all causes, disease, other causes
+(at_5_years = (all_causes = Mo[at(1826)], disease = Me[at(1826)], other_causes = Mp[at(1826)]),)
 '''
 
 [[codeBranches]]
 model = "ns"
 code = '''
-using NetSurvival
+using NetSurvival, RateTables, Tables
 
-ns = fit({{method}}, @formula(EventTime({{time}}, {{event}}) ~ 1), {{data}}, {{expected}})  # {{method}} net survival estimator
+tbl  = Tables.columntable({{data}})  # any Tables.jl source, read as named vectors
+rt   = {{expected}}  # population mortality rate table
+T    = Float64.(tbl.{{time}})  # follow-up time, days
+D    = Bool.(tbl.{{event}})  # true = death observed, false = censored
+age  = Float64.(tbl.age)  # age at diagnosis, days
+date = Float64.(tbl.year)  # date of diagnosis, days since year 0
+covs = stack([tbl[k] for k in RateTables.predictors(rt)])  # rate-table covariates (e.g. sex), one column each
+field(x, c...) = getfield(x, Symbol(c...))  # the estimators use Unicode field names
+
+est = {{method}}(T, D, age, date, covs, rt)  # {{method}} net survival estimator
+grid = est.grid  # time grid, days
+Se   = field(est, 'S', Char(0x2091))  # net survival
+dLe  = field(est, Char(0x2202), Char(0x39b), Char(0x2091))  # excess hazard increments
+dLp  = field(est, Char(0x2202), Char(0x39b), Char(0x209a))  # population (expected) hazard increments
+dLo  = field(est, Char(0x2202), Char(0x39b), Char(0x2092))  # overall (observed) hazard increments
+at(t) = max(searchsortedlast(grid, t), 1)  # grid index at t days
+
+ci = confint(est; level=0.05)  # 95% pointwise intervals
+(net_survival_5y = Se[at(1826)], lower = ci[at(1826)][1], upper = ci[at(1826)][2])
 '''
 
 [[codeBranches]]
 model = "lr"
 code = '''
-using NetSurvival
+using NetSurvival, RateTables, Tables
 
-test = fit(GraffeoTest, @formula(EventTime({{time}}, {{event}}) ~ {{group}}), {{data}}, {{expected}})  # Grafféo log-rank test
-pvalue(test)  # p-value
+tbl  = Tables.columntable({{data}})  # any Tables.jl source, read as named vectors
+rt   = {{expected}}  # population mortality rate table
+T    = Float64.(tbl.{{time}})  # follow-up time, days
+D    = Bool.(tbl.{{event}})  # true = death observed, false = censored
+age  = Float64.(tbl.age)  # age at diagnosis, days
+date = Float64.(tbl.year)  # date of diagnosis, days since year 0
+covs = stack([tbl[k] for k in RateTables.predictors(rt)])  # rate-table covariates (e.g. sex), one column each
+field(x, c...) = getfield(x, Symbol(c...))  # the estimators use Unicode field names
+
+g    = tbl.{{group}}
+levs = unique(g)  # groups compared
+grp  = [findfirst(==(x), levs) for x in g]  # integer group codes
+test = GraffeoTest(T, D, age, date, covs, ones(Int, length(T)), grp, rt)  # Graff\u00e9o log-rank-type test (Pohar-Perme based)
+est  = PoharPerme(T, D, age, date, covs, rt)  # pooled net survival
+ests = [PoharPerme(T[grp .== k], D[grp .== k], age[grp .== k], date[grp .== k], covs[grp .== k, :], rt) for k in eachindex(levs)]  # per group
+grid = est.grid  # time grid, days
+Se   = field(est, 'S', Char(0x2091))  # net survival
+dLe  = field(est, Char(0x2202), Char(0x39b), Char(0x2091))  # excess hazard increments
+dLp  = field(est, Char(0x2202), Char(0x39b), Char(0x209a))  # population (expected) hazard increments
+dLo  = field(est, Char(0x2202), Char(0x39b), Char(0x2092))  # overall (observed) hazard increments
+at(t) = max(searchsortedlast(grid, t), 1)  # grid index at t days
+
+(statistic = test.stat, df = test.df, pvalue = test.pval)
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "curves"
+label = "Curves"
+desc = "Crude mortality: deaths from the disease and from other causes over time. Net survival: the curve with its 95% band. Log-rank: one net survival curve per group"
+code = '''
+using Plots
+{{?model=cif}} plot(grid ./ 365.241, [Me Mp Mo], label=["disease" "other causes" "all causes"], xlabel="years since diagnosis", ylabel="probability of death")
+{{?model=ns}} plot(grid ./ 365.241, Se, ribbon=(Se .- first.(ci), last.(ci) .- Se), fillalpha=0.2, label="net survival", xlabel="years since diagnosis", ylim=(0, 1))
+{{?model=lr}} fig = plot(xlabel="years since diagnosis", ylabel="net survival", ylim=(0, 1)); foreach(k -> plot!(fig, ests[k].grid ./ 365.241, field(ests[k], 'S', Char(0x2091)), label=string(levs[k])), eachindex(ests)); fig
+'''
+
+[[actionGroups.actions]]
+id = "hazards"
+label = "Excess and Expected Hazards"
+desc = "Cumulative excess hazard of the disease next to the cumulative hazard expected from the population table"
+code = '''
+using Plots
+plot(grid ./ 365.241, [cumsum(dLe) cumsum(dLp) cumsum(dLo)], label=["excess (disease)" "expected (population)" "observed (all causes)"], xlabel="years since diagnosis", ylabel="cumulative hazard")
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "cohort"
+label = "Cohort Summary"
+desc = "Size, deaths, censoring rate, follow-up and age range: net survival needs enough follow-up and a rate table that covers the ages and years"
+code = '''
+using Statistics
+(patients = length(T), deaths = sum(D), censored_share = round(1 - mean(D), digits=3), median_followup_years = round(median(T) / 365.241, digits=2), max_followup_years = round(maximum(T) / 365.241, digits=2), age_range_years = round.(extrema(age) ./ 365.241, digits=1), diagnosis_years = round.(extrema(date) ./ 365.241, digits=1))
+'''
+
+[[actionGroups.actions]]
+id = "excess-sign"
+label = "Negative Excess Hazard"
+desc = "Periods where patients die less than the general population give a negative excess hazard and a rising net survival: a sign of a mismatched rate table or a healthy-patient effect"
+code = '''
+neg = findall(<(0), dLe)
+(negative_steps = length(neg), share_of_grid = round(length(neg) / length(dLe), digits=3), first_negative_year = isempty(neg) ? nothing : round(grid[first(neg)] / 365.241, digits=2), net_survival_increases = any(diff(Se) .> 0))
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "milestones"
+label = "Milestone Estimates"
+desc = "Estimates at 1, 3, 5 and 10 years after diagnosis (within the follow-up)"
+code = '''
+yrs = filter(y -> 365.241 * y <= maximum(grid), [1, 3, 5, 10])
+{{?model=cif}} [(years = y, disease = round(Me[at(365.241y)], digits=3), other_causes = round(Mp[at(365.241y)], digits=3), all_causes = round(Mo[at(365.241y)], digits=3)) for y in yrs]
+{{?model=ns}} [(years = y, net_survival = round(Se[at(365.241y)], digits=3), lower = round(ci[at(365.241y)][1], digits=3), upper = round(ci[at(365.241y)][2], digits=3)) for y in yrs]
+{{?model=lr}} [(; group = levs[k], (Symbol("year_", y) => round(e(365.241y), digits=3) for y in yrs)...) for (k, e) in enumerate(ests)]
+'''
+
+[[actionGroups.actions]]
+id = "relative"
+label = "Observed, Expected and Relative Survival"
+desc = "Observed (all-cause) survival, the survival expected from the rate table, and their ratio, the relative survival"
+code = '''
+So = cumprod(1 .- dLo)  # observed survival
+Sp = exp.(-cumsum(dLp))  # expected survival of a comparable population group
+yrs = filter(y -> 365.241 * y <= maximum(grid), [1, 3, 5, 10])
+[(years = y, observed = round(So[at(365.241y)], digits=3), expected = round(Sp[at(365.241y)], digits=3), relative = round(So[at(365.241y)] / Sp[at(365.241y)], digits=3), net = round(Se[at(365.241y)], digits=3)) for y in yrs]
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "estimators"
+label = "Four Estimators"
+desc = "Net survival at 5 years from Pohar-Perme, Ederer I, Ederer II and Hakulinen: the older estimators are biased when the excess hazard depends on age"
+code = '''
+[(estimator = name, net_survival_5y = round(m(T, D, age, date, covs, rt)(1826), digits=4)) for (name, m) in ("Pohar-Perme" => PoharPerme, "Ederer I" => EdererI, "Ederer II" => EdererII, "Hakulinen" => Hakulinen)]
+'''
+
+[[actionGroups.actions]]
+id = "covariates"
+label = "Log-Rank Test for Each Covariate"
+desc = "The Graff&eacute;o test run on every column with 2 to 10 distinct values, ranked by p-value"
+code = '''
+cands = [k for k in keys(tbl) if !(k in (Symbol("{{time}}"), Symbol("{{event}}"), :age, :year)) && 2 <= length(unique(tbl[k])) <= 10]
+codes(v) = [findfirst(==(x), unique(v)) for x in v]
+sort([(covariate = k, groups = length(unique(tbl[k])), pvalue = GraffeoTest(T, D, age, date, covs, ones(Int, length(T)), codes(tbl[k]), rt).pval) for k in cands], by = r -> r.pvalue)
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "summary"
+label = "In Plain Terms"
+desc = "What the 5-year estimates mean for patients"
+code = '''
+s5 = Se[at(1826)]
+println("If the disease were the only cause of death, ", round(100s5, digits=1), "% of patients would be alive 5 years after diagnosis.")
+{{?model=cif}} println("In reality, ", round(100Mo[at(1826)], digits=1), "% died within 5 years: ", round(100Me[at(1826)], digits=1), "% from the disease and ", round(100Mp[at(1826)], digits=1), "% from other causes.")
+{{?model=lr}} println("The Graff\u00e9o test ", test.pval < 0.05 ? "finds" : "does not find", " a difference in net survival across {{group}} groups (p = ", round(test.pval, sigdigits=3), ").")
+'''
+
+[[actionGroups.actions]]
+id = "attributable"
+label = "Deaths Attributable to the Disease"
+desc = "Share of all deaths that the disease accounts for, at 1, 5 and 10 years"
+code = '''
+cm2 = CrudeMortality(est)
+Mo2, Me2 = field(cm2, 'M', Char(0x2092)), field(cm2, 'M', Char(0x2091))
+[(years = y, died = round(Mo2[at(365.241y)], digits=3), from_disease = round(Me2[at(365.241y)], digits=3), share_from_disease = round(Me2[at(365.241y)] / Mo2[at(365.241y)], digits=3)) for y in filter(y -> 365.241 * y <= maximum(grid), [1, 5, 10])]
 '''

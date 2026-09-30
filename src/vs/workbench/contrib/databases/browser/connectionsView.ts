@@ -30,7 +30,7 @@ import { IViewPaneOptions, ViewPane } from '../../../browser/parts/views/viewPan
 import { IViewDescriptorService } from '../../../common/views.js';
 import { IDatabaseColumn, IDatabaseConnectionsService, IDatabaseSchema, IDatabaseSession, IDatabaseTable } from '../common/databaseConnections.js';
 import './media/connectionsView.css';
-import { describeConnection, getDatabaseDriver, IDatabaseConnectionProfile } from '../common/databaseDrivers.js';
+import { describeConnection, getDatabaseDriver, IDatabaseConnectionProfile, isInMemoryConnection } from '../common/databaseDrivers.js';
 
 /** The context menu of an item in the Connections view. Its commands receive an {@link IDatabaseItemArg}. */
 export const DatabaseConnectionContextMenu = new MenuId('DatabaseConnectionContext');
@@ -158,12 +158,15 @@ class ItemRenderer implements ITreeRenderer<DatabaseItem, void, IItemTemplate> {
 		template.row.classList.toggle('message', item.kind === 'message');
 		switch (item.kind) {
 			case 'connection': {
-				icon = Codicon.database;
 				name = connectionName(item.profile, item.session);
 				const { profile, session } = item;
+				const inMemory = !!profile && isInMemoryConnection(profile);
+				icon = inMemory ? Codicon.zap : Codicon.database;
 				// The list shows only the names; the hover tells the engine, the location and the connection.
 				if (profile?.builtin) {
 					description = localize('connection.builtin', "built-in");
+				} else if (inMemory) {
+					description = localize('connection.inMemory', "in-memory");
 				}
 				if (profile?.builtin) {
 					hover = session
@@ -176,6 +179,9 @@ class ItemRenderer implements ITreeRenderer<DatabaseItem, void, IItemTemplate> {
 						: localize('connection.hover', "{0} ({1})\n{2}\nNot connected. Click to connect in the Julia REPL as {3}.", name, driver, describeConnection(profile), profile.variable);
 				} else if (session) {
 					hover = localize('connection.hover.shown', "{0} ({1})\nShown with PollisDB.show in the Julia REPL. Click to browse its tables.", name, engineLabel(session.engine));
+				}
+				if (inMemory && hover) {
+					hover = localize('connection.hover.inMemory', "{0}\nIn-memory: its data is lost when you disconnect or the Julia REPL restarts.", hover);
 				}
 				break;
 			}

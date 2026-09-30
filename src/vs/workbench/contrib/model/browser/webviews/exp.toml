@@ -153,14 +153,14 @@ when = "dist=LogNormal"
 
 [[inputs]]
 id = "params-Gamma"
-label = "Parameters (shape alpha, rate beta)"
+label = "Parameters (shape alpha, scale theta)"
 tooltip = "Comma-separated."
 default = "2, 1"
 when = "dist=Gamma"
 
 [[inputs]]
 id = "params-Exponential"
-label = "Parameters (rate lambda)"
+label = "Parameters (scale theta = 1/rate)"
 tooltip = "Comma-separated."
 default = "1"
 when = "dist=Exponential"
@@ -209,7 +209,7 @@ default = "20"
 [[codeBranches]]
 model = "main"
 code = '''
-using Expectations, Distributions  # numerical expectations via quadrature
+using Expectations, Distributions, LinearAlgebra  # numerical expectations via quadrature
 
 {{?dist=Normal}} dist = Normal({{params-Normal}})  # distribution
 {{?dist=Normal}} E    = expectation(dist; n={{n}})  # Gauss-Hermite quadrature, {{n}} nodes
@@ -225,10 +225,146 @@ using Expectations, Distributions  # numerical expectations via quadrature
 {{?dist=Uniform}} E    = expectation(dist; n={{n}})  # Gauss-Legendre quadrature, {{n}} nodes
 {{?dist=ChiSq}} dist = Chisq({{params-ChiSq}})  # distribution
 {{?dist=ChiSq}} E    = expectation(dist; n={{n}})  # Gauss-Laguerre quadrature, {{n}} nodes
-{{?dist=MixtureModel}} d = MixtureModel([{{mix-components}}], [{{mix-weights}}])  # composite distribution with mixing weights
-{{?dist=MixtureModel}} E = expectation(d; n={{n}})  # component-wise quadrature, {{n}} nodes per component
+{{?dist=MixtureModel}} dist = MixtureModel([{{mix-components}}], [{{mix-weights}}])  # composite distribution with mixing weights
+{{?dist=MixtureModel}} E    = expectation(dist; n={{n}})  # component-wise quadrature, {{n}} nodes per component
 
 E({{f}})  # E[f(X)]
 {{?dist!=MixtureModel}} dot(({{f}}).(nodes(E)), weights(E))  # equivalent linear algebra form
 {{?dist=MixtureModel}} expectations(E)  # component expectations
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "nodes"
+label = "Quadrature Nodes and Weights"
+desc = "Where the quadrature evaluates f and how much each node counts, over the density (one panel per mixture component)"
+code = '''
+using Plots
+Es = E isa MixtureExpectation ? expectations(E) : [E]
+comps = dist isa MixtureModel ? components(dist) : [dist]
+plot([begin
+    xs = range(quantile(c, 0.001), quantile(c, 0.999), length=300)
+    p = plot(xs, pdf.(c, xs), lw=2, label="density", title=string(nameof(typeof(c))))
+    sticks!(twinx(p), nodes(e), weights(e), color=:red, label="weights", legend=:topleft)
+    p
+end for (e, c) in zip(Es, comps)]..., layout=(1, length(Es)))
+'''
+
+[[actionGroups.actions]]
+id = "integrand"
+label = "f(x) Weighted by the Density"
+desc = "The integrand f(x) times the density: the shaded area is E[f(X)]"
+code = '''
+using Plots
+f = {{f}}
+xs = range(quantile(dist, 0.001), quantile(dist, 0.999), length=400)
+g = f.(xs) .* pdf.(dist, xs)
+plot(xs, g, fillrange=0, fillalpha=0.3, lw=2, label="f(x) p(x)", xlabel="x", title="E[f(X)] = $(round(E(f), sigdigits=6))")
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "convergence"
+label = "Convergence in the Number of Nodes"
+desc = "E[f(X)] with 2 to 64 nodes against a 200-node reference, on a log scale"
+code = '''
+using Plots
+f = {{f}}
+ref = expectation(dist; n=200)(f)
+ns = [2, 4, 8, 16, 32, 64]
+err = [max(abs(expectation(dist; n=m)(f) - ref), eps()) for m in ns]
+display([ns err])
+plot(ns, err, marker=:circle, xscale=:log2, yscale=:log10, xlabel="nodes", ylabel="absolute error", label="", title="Quadrature convergence")
+'''
+
+[[actionGroups.actions]]
+id = "moments-check"
+label = "Check Against Known Moments"
+desc = "The quadrature mean and variance next to the exact values from Distributions.jl"
+code = '''
+m = E(x -> x)
+v = E(x -> (x - m)^2)
+(quadrature_mean = m, exact_mean = mean(dist), quadrature_var = v, exact_var = var(dist))
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "monte-carlo"
+label = "Monte Carlo Cross-Check"
+desc = "E[f(X)] from one million random draws, with its standard error, next to the quadrature value"
+code = '''
+using Random, Statistics
+f = {{f}}
+y = f.(rand(Xoshiro(1), dist, 10^6))
+(quadrature = E(f), monte_carlo = mean(y), standard_error = std(y) / sqrt(length(y)))
+'''
+
+[[actionGroups.actions]]
+id = "excess"
+label = "Expected Excess Over Thresholds"
+desc = "E[max(X - K, 0)], the expected amount by which X exceeds K (a call payoff or stop-loss premium), for K at the 50th to 99th percentiles"
+code = '''
+ps = [0.5, 0.75, 0.9, 0.95, 0.99]
+[(percentile = p, K = quantile(dist, p), expected_excess = E(x -> max(x - quantile(dist, p), 0.0))) for p in ps]
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "methods"
+label = "Quadrature Methods"
+desc = "Gaussian quadrature, a quantile grid and the trapezoidal rule on 1,000 points for the same E[f(X)] (single distributions only)"
+code = '''
+f = {{f}}
+if dist isa MixtureModel
+    println("The alternative rules apply to single distributions; the mixture uses Gaussian quadrature per component: ", E(f))
+else
+    grid = range(quantile(dist, 0.0001), quantile(dist, 0.9999), length=1000)
+    (gaussian = E(f), quantile_range = expectation(dist, QuantileRange; n=50)(f), trapezoidal = expectation(dist, grid)(f))
+end
+'''
+
+[[actionGroups.actions]]
+id = "jensen"
+label = "Jensen's Inequality"
+desc = "E[g(X)] against g(E[X]) for convex and concave g: the gap shows how the curvature of g interacts with the spread of X"
+code = '''
+m = E(x -> x)
+gs = [("x^2", x -> x^2), ("exp(x)", exp), ("abs(x)", abs)]
+minimum(dist) > 0 && push!(gs, ("log(x)", log), ("sqrt(x)", sqrt))
+[(g = name, E_g_of_X = E(g), g_of_E_X = g(m), gap = E(g) - g(m)) for (name, g) in gs]
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "shape"
+label = "Moments and Shape"
+desc = "Mean, variance, skewness and excess kurtosis computed from the quadrature"
+code = '''
+m = E(x -> x)
+v = E(x -> (x - m)^2)
+(mean = m, var = v, std = sqrt(v), skewness = E(x -> (x - m)^3) / v^1.5, excess_kurtosis = E(x -> (x - m)^4) / v^2 - 3)
+'''
+
+[[actionGroups.actions]]
+id = "certainty-equivalent"
+label = "Certainty Equivalent"
+desc = "For exponential utility u(x) = -exp(-a x), the sure amount worth as much as X and the risk premium, for three levels of risk aversion a"
+code = '''
+m = E(x -> x)
+[(risk_aversion = a, certainty_equivalent = -log(E(x -> exp(-a * x))) / a, risk_premium = m + log(E(x -> exp(-a * x))) / a) for a in (0.1, 0.5, 1.0)]
 '''

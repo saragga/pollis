@@ -21,7 +21,7 @@ name = "Distributions.jl"
 github = "https://github.com/JuliaStats/Distributions.jl"
 
 [requires]
-packages = ["StatsBase.jl", "KernelDensity.jl", "Distributions.jl"]
+packages = ["StatsBase.jl", "KernelDensity.jl", "Distributions.jl", "Extremes.jl"]
 
 [[notebookSections]]
 label = ""
@@ -432,12 +432,13 @@ println("Counts:    ", h.weights)
 [[codeBranches]]
 model = "kde"
 code = '''
-using KernelDensity, Random
+using KernelDensity, Distributions, Random
 
 {{?kde-dim=uni}} data = {{data-kde}}
 {{?kde-dim=bi}} data = {{data-kde2}}
-k = kde(data; kernel={{kernel}}, bandwidth={{bandwidth}})
-println("Bandwidth: ", k.bw)
+bw = {{bandwidth}}
+k = kde(data; kernel={{kernel}}, bandwidth=bw)
+println("Bandwidth: ", bw)
 println("x range:   ", (minimum(k.x), maximum(k.x)))
 {{?kde-dim=bi}} println("y range:   ", (minimum(k.y), maximum(k.y)))
 '''
@@ -446,14 +447,216 @@ println("x range:   ", (minimum(k.x), maximum(k.x)))
 model = "parametric"
 code = '''
 using Distributions, Random
+{{?dist=GeneralizedExtremeValue|GeneralizedPareto}} using Extremes  # adds fit for the GEV and GP distributions
 
 {{?param-dim=uni}} data = {{data-param}}
+{{?dist=GeneralizedPareto}} data = data[data .> 0]  # GP models exceedances over a threshold (here 0)
 {{?param-dim=multi}} data = {{data-param2}}
 {{?dist!=Binomial}} d = fit({{dist}}, data)
-{{?dist=Binomial}} d = fit(Binomial, n, data)  # n = number of trials, must be provided
+{{?dist=Binomial}} n = maximum(data)  # number of trials; replace with the known value
+{{?dist=Binomial}} d = fit(Binomial, n, data)
 
 println("Parameters: ", params(d))
 println("Mean:       ", mean(d))
 {{?param-dim=uni}} println("Std:        ", std(d))
 {{?dist=MvNormal}} println("Covariance: ", cov(d))
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "estimate-plot"
+label = "Estimate Over the Data"
+desc = "The histogram, kernel density or fitted distribution drawn over the data (a heatmap for bivariate estimates)"
+code = '''
+using Plots
+{{?model=histogram}} plot(h, title="Histogram", legend=false)
+{{?model=kde}} k isa UnivariateKDE ? plot(k.x, k.density, lw=2, label="KDE", title="Kernel density") : heatmap(k.x, k.y, transpose(k.density), title="Bivariate kernel density")
+{{?model=kde}} k isa UnivariateKDE && scatter!(data, zeros(length(data)), marker=:vline, color=:black, label="data")
+{{?model=parametric}} if d isa UnivariateDistribution
+{{?model=parametric}}     histogram(data, normalize=:pdf, alpha=0.4, label="data")
+{{?model=parametric}}     xs = d isa DiscreteDistribution ? (minimum(data):maximum(data)) : range(extrema(data)..., length=300)
+{{?model=parametric}}     plot!(xs, pdf.(d, xs), lw=2, label=string(nameof(typeof(d))), title="Fitted distribution")
+{{?model=parametric}} else
+{{?model=parametric}}     scatter(data[1, :], data[2, :], alpha=0.5, label="data (first two components)", title="Multivariate data")
+{{?model=parametric}} end
+'''
+
+[[actionGroups.actions]]
+id = "cdf-plot"
+label = "Empirical Against Estimated CDF"
+desc = "The empirical CDF of the data (first margin) against the cumulative distribution implied by the estimate"
+code = '''
+using StatsBase, Plots
+x = data isa Tuple ? data[1] : data isa AbstractMatrix ? data[1, :] : data  # the first margin
+F = ecdf(x)
+xs = range(extrema(x)..., length=300)
+plot(xs, F.(xs), lw=2, label="empirical", xlabel="x", ylabel="F(x)", title="Empirical against estimated CDF")
+{{?model=histogram}} h1 = fit(Histogram, x, h.edges[1])
+{{?model=histogram}} plot!(h1.edges[1], [0; cumsum(h1.weights) ./ sum(h1.weights)], lw=2, ls=:dash, label="histogram")
+{{?model=kde}} k1 = k isa UnivariateKDE ? k : kde(x)
+{{?model=kde}} plot!(k1.x, cumsum(k1.density) .* step(k1.x), lw=2, ls=:dash, label="KDE")
+{{?model=parametric}} d isa UnivariateDistribution ? plot!(xs, cdf.(d, xs), lw=2, ls=:dash, label="fitted") : println("The fitted distribution is multivariate: only the empirical margin is shown.")
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "sensitivity"
+label = "Sensitivity to Tuning and Sampling"
+desc = "Histograms with 5, 20 and 50 bins, kernel densities at half, once and twice the bandwidth, or the spread of refitted parameters over 200 bootstrap samples"
+code = '''
+using StatsBase, Plots
+x = data isa Tuple ? data[1] : data isa AbstractMatrix ? data[1, :] : data  # the first margin
+{{?model=histogram}} plot([histogram(x, bins=b, normalize=:pdf, title="$b bins", legend=false) for b in (5, 20, 50)]..., layout=(1, 3))
+{{?model=kde}} b = first(bw)
+{{?model=kde}} plot(title="Bandwidth sensitivity", xlabel="x")
+{{?model=kde}} for (f, s) in ((0.5, :dot), (1.0, :solid), (2.0, :dash))
+{{?model=kde}}     kf = kde(x; kernel={{kernel}}, bandwidth=f * b)
+{{?model=kde}}     plot!(kf.x, kf.density, lw=2, ls=s, label="bandwidth $(round(f * b, digits=3))")
+{{?model=kde}} end
+{{?model=kde}} current()
+{{?model=parametric}} boot = [params(fit(typeof(d).name.wrapper, data isa AbstractMatrix ? data[:, rand(1:size(data, 2), size(data, 2))] : rand(data, length(data)))) for _ in 1:200]
+{{?model=parametric}} for i in eachindex(params(d))
+{{?model=parametric}}     p = getindex.(boot, i)
+{{?model=parametric}}     p isa AbstractVector{<:Real} && println("parameter $i: estimate = ", params(d)[i], ", bootstrap SE = ", std(p), ", 95% interval = ", quantile(p, [0.025, 0.975]))
+{{?model=parametric}} end
+'''
+
+[[actionGroups.actions]]
+id = "fit-check"
+label = "Goodness of Fit and Tuning Rules"
+desc = "Sturges, Scott and Freedman-Diaconis bin counts, the Silverman against the least-squares cross-validated bandwidth, or a Kolmogorov-Smirnov test of the fitted distribution"
+code = '''
+using StatsBase
+x = data isa Tuple ? data[1] : data isa AbstractMatrix ? data[1, :] : data  # the first margin
+{{?model=histogram}} n, r = length(x), maximum(x) - minimum(x)
+{{?model=histogram}} (sturges = ceil(Int, log2(n)) + 1,
+{{?model=histogram}}  scott = ceil(Int, r / (3.49 * std(x) * n^(-1 / 3))),
+{{?model=histogram}}  freedman_diaconis = ceil(Int, r / (2 * iqr(x) * n^(-1 / 3))),
+{{?model=histogram}}  current = length(h.edges[1]) - 1)
+{{?model=kde}} using Plots
+{{?model=kde}} ks, kl = kde(x), kde_lscv(x)
+{{?model=kde}} plot(ks.x, ks.density, lw=2, label="Silverman's rule", title="Bandwidth selection")
+{{?model=kde}} plot!(kl.x, kl.density, lw=2, ls=:dash, label="least-squares cross-validation")
+{{?model=parametric}} using HypothesisTests
+{{?model=parametric}} d isa ContinuousUnivariateDistribution ? ApproximateOneSampleKSTest(data, d) : println("The Kolmogorov-Smirnov test needs a continuous univariate distribution; compare observed and expected counts instead.")
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "density-at"
+label = "Density at New Points"
+desc = "The estimated density at chosen points (first margin for bivariate histograms and kernel densities)"
+code = '''
+using StatsBase
+x = data isa Tuple ? data[1] : data isa AbstractMatrix ? data[1, :] : data  # the first margin
+xs = quantile(x, [0.05, 0.25, 0.5, 0.75, 0.95])  # the points to evaluate
+{{?model=histogram}} h1 = fit(Histogram, x, h.edges[1])
+{{?model=histogram}} dens(v) = (i = StatsBase.binindex(h1, v); 1 <= i <= length(h1.weights) ? h1.weights[i] / (sum(h1.weights) * (h1.edges[1][i + 1] - h1.edges[1][i])) : 0.0)
+{{?model=histogram}} [xs dens.(xs)]
+{{?model=kde}} k isa UnivariateKDE ? [xs pdf(k, xs)] : pdf(k, xs, quantile(data[2], [0.05, 0.25, 0.5, 0.75, 0.95]))
+{{?model=parametric}} d isa UnivariateDistribution ? [xs pdf.(d, d isa DiscreteDistribution ? round.(Int, xs) : xs)] : pdf(d, data[:, 1:5])
+'''
+
+[[actionGroups.actions]]
+id = "sample"
+label = "Draw New Samples"
+desc = "1,000 new draws from the estimate: bins picked by their counts, a smoothed bootstrap for kernel densities, or random draws from the fitted distribution"
+code = '''
+using StatsBase, Random
+x = data isa Tuple ? data[1] : data isa AbstractMatrix ? data[1, :] : data  # the first margin
+{{?model=histogram}} h1 = fit(Histogram, x, h.edges[1])
+{{?model=histogram}} e = h1.edges[1]
+{{?model=histogram}} bins = sample(1:length(h1.weights), Weights(h1.weights), 1000)
+{{?model=histogram}} draws = e[bins] .+ rand(1000) .* (e[bins .+ 1] .- e[bins])
+{{?model=kde}} draws = rand(x, 1000) .+ rand(KernelDensity.kernel_dist({{kernel}}, first(bw)), 1000)
+{{?model=parametric}} draws = rand(d, 1000)
+{{?model!=parametric}} println("Mean of the draws: ", mean(draws), "   Mean of the data: ", mean(x))
+{{?model=parametric}} println("Mean of the draws: ", mean(draws; dims=ndims(draws)), "   Mean of the data: ", mean(data; dims=ndims(data)))
+draws
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "three-estimators"
+label = "Histogram, Kernel Density and Normal Fit"
+desc = "The three estimators side by side on the same data (first margin)"
+code = '''
+using StatsBase, KernelDensity, Distributions, Plots
+x = data isa Tuple ? data[1] : data isa AbstractMatrix ? data[1, :] : data  # the first margin
+x = float.(x)
+histogram(x, normalize=:pdf, alpha=0.35, label="histogram", title="Three estimators")
+kx = kde(x)
+plot!(kx.x, kx.density, lw=2, label="kernel density")
+xs = range(extrema(x)..., length=300)
+plot!(xs, pdf.(fit(Normal, x), xs), lw=2, ls=:dash, label="normal fit")
+'''
+
+[[actionGroups.actions]]
+id = "families"
+label = "Candidate Distributions by AIC"
+desc = "Log-likelihood, AIC and BIC of several parametric families fitted to the data (first margin); families that do not fit the support are skipped"
+code = '''
+using Distributions
+x = data isa Tuple ? data[1] : data isa AbstractMatrix ? data[1, :] : data  # the first margin
+x = float.(x)
+rows = []
+for D in (Normal, Laplace, LogNormal, Gamma, Exponential, Weibull, InverseGaussian, Rayleigh)
+    try
+        f = fit(D, x)
+        ll, k = loglikelihood(f, x), length(params(f))
+        push!(rows, (family = string(D), loglik = ll, aic = 2k - 2ll, bic = k * log(length(x)) - 2ll))
+    catch
+    end
+end
+sort!(rows, by = r -> r.aic)
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "summary"
+label = "Summary of the Estimate"
+desc = "Mode, mean, spread and quantiles implied by the estimate (first margin for bivariate histograms and kernel densities)"
+code = '''
+using StatsBase
+x = data isa Tuple ? data[1] : data isa AbstractMatrix ? data[1, :] : data  # the first margin
+{{?model=histogram}} h1 = fit(Histogram, x, h.edges[1])
+{{?model=histogram}} mids, w = StatsBase.midpoints(h1.edges[1]), h1.weights ./ sum(h1.weights)
+{{?model=histogram}} (modal_bin = mids[argmax(w)], mean = sum(mids .* w), std = sqrt(sum(w .* (mids .- sum(mids .* w)).^2)), median_data = median(x))
+{{?model=kde}} k1 = k isa UnivariateKDE ? k : kde(x)
+{{?model=kde}} p = k1.density .* step(k1.x)
+{{?model=kde}} m = sum(k1.x .* p)
+{{?model=kde}} (mode = k1.x[argmax(k1.density)], mean = m, std = sqrt(sum(p .* (k1.x .- m).^2)), median = k1.x[findfirst(>=(0.5), cumsum(p))])
+{{?model=parametric}} d isa UnivariateDistribution ? (mean = mean(d), median = median(d), mode = mode(d), std = std(d), skewness = skewness(d), kurtosis = kurtosis(d), q05_q95 = quantile.(d, [0.05, 0.95])) : (mean = mean(d), cov = cov(d))
+'''
+
+[[actionGroups.actions]]
+id = "interval-probability"
+label = "Probability of an Interval"
+desc = "The estimated probability that X falls between a and b, next to the share of the data that does (first margin)"
+code = '''
+using StatsBase
+x = data isa Tuple ? data[1] : data isa AbstractMatrix ? data[1, :] : data  # the first margin
+a, b = -1.0, 1.0  # the interval (a, b]
+{{?model=histogram}} h1 = fit(Histogram, x, h.edges[1])
+{{?model=histogram}} inside = [a <= lo && hi <= b for (lo, hi) in zip(h1.edges[1][1:end-1], h1.edges[1][2:end])]
+{{?model=histogram}} estimate = sum(h1.weights[inside]) / sum(h1.weights)  # whole bins inside (a, b]
+{{?model=kde}} k1 = k isa UnivariateKDE ? k : kde(x)
+{{?model=kde}} estimate = sum(k1.density[a .< k1.x .<= b]) * step(k1.x)
+{{?model=parametric}} estimate = d isa UnivariateDistribution ? cdf(d, b) - cdf(d, a) : missing
+(estimate = estimate, share_of_data = mean(a .< x .<= b))
 '''

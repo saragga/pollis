@@ -577,15 +577,15 @@ when = "dist-truncated=Pareto"
 
 [[inputs]]
 id = "lower"
-label = "Lower bound"
-tooltip = ""
+label = "Lower Bound"
+tooltip = "Left end of the support after truncation; -Inf for no lower bound."
 default = "-Inf"
 models = ["truncated"]
 
 [[inputs]]
 id = "upper"
-label = "Upper bound"
-tooltip = ""
+label = "Upper Bound"
+tooltip = "Right end of the support after truncation; Inf for no upper bound."
 default = "Inf"
 models = ["truncated"]
 
@@ -728,48 +728,48 @@ when = "dist-matrixvariate=MatrixNormal"
 [[inputs]]
 id = "mix-components"
 label = "Components"
-tooltip = ""
+tooltip = "Comma-separated component distributions of the same kind, e.g. Normal(0.0, 1.0), Normal(5.0, 1.0)."
 default = "Normal(0.0, 1.0), Normal(5.0, 1.0)"
 models = ["mixture"]
 
 [[inputs]]
 id = "mix-weights"
 label = "Weights"
-tooltip = ""
+tooltip = "Vector of mixing probabilities, one per component, summing to 1."
 default = "[0.5, 0.5]"
 models = ["mixture"]
 
 [[inputs]]
 id = "prod-components"
 label = "Components"
-tooltip = ""
+tooltip = "Comma-separated univariate distributions, one per coordinate of the independent product."
 default = "Normal(0.0, 1.0), Exponential(1.0)"
 models = ["product"]
 
 [[inputs]]
 id = "conv-d1"
-label = "d1"
-tooltip = ""
+label = "Distribution 1"
+tooltip = "First distribution of the sum X1 + X2. Convolution is available in closed form for pairs of the same family, e.g. Poisson, Normal, Gamma with a common scale."
 default = "Poisson(2.0)"
 models = ["convolutions"]
 
 [[inputs]]
 id = "conv-d2"
-label = "d2"
-tooltip = ""
+label = "Distribution 2"
+tooltip = "Second distribution of the sum X1 + X2, of the same family as the first."
 default = "Poisson(3.0)"
 models = ["convolutions"]
 
 [[inputs]]
 id = "method-param"
 label = "Samples (n)"
-tooltip = ""
+tooltip = "Number of draws printed by the default code. The Next Steps use a separate sample of 10,000 draws."
 default = "10"
 
 [[inputs]]
 id = "seed-param"
 label = "Seed"
-tooltip = ""
+tooltip = "Random seed, so that the draws are reproducible."
 default = "42"
 
 [[codeBranches]]
@@ -787,6 +787,7 @@ using Distributions, Random  # Distributions.jl + Random stdlib for seeding
 {{?dist-discrete=Categorical}} d = Categorical({{discrete-Categorical}})
 rng = MersenneTwister({{seed-param}})  # reproducible seed
 x = rand(rng, d, {{method-param}})  # draw {{method-param}} samples
+xs = rand(rng, d, 10_000)  # a large sample, used by the Next Steps
 println("Mean:    ", mean(d))  # mean of the distribution
 {{?dist-discrete=Bernoulli|Binomial|Poisson|Geometric|NegativeBinomial|DiscreteUniform|Hypergeometric}} println("Var:     ", var(d))  # variance
 println("Samples: ", x)  # inspect drawn samples
@@ -820,6 +821,7 @@ using Distributions, Random  # Distributions.jl + Random stdlib for seeding
 {{?dist-continuous=SkewNormal}} d = SkewNormal({{continuous-SkewNormal}})
 rng = MersenneTwister({{seed-param}})  # reproducible seed
 x = rand(rng, d, {{method-param}})  # draw {{method-param}} samples
+xs = rand(rng, d, 10_000)  # a large sample, used by the Next Steps
 {{?dist-continuous=Normal|Uniform|Exponential|Gamma|Beta|LogNormal|Laplace|Logistic|TDist|Chisq|Weibull|Gumbel|Pareto|Triangular|InverseGaussian|Epanechnikov|GeneralizedExtremeValue|GeneralizedPareto|Levy|SkewNormal}} println("Mean:    ", mean(d))  # mean of the distribution
 {{?dist-continuous=Chisq}} println("Var:     ", var(d))  # variance
 {{?dist-continuous=Normal|Uniform|Exponential|Gamma|Beta|LogNormal|Laplace|Logistic|TDist|Weibull|Gumbel|Pareto|Triangular|InverseGaussian|Epanechnikov|GeneralizedExtremeValue|GeneralizedPareto|Levy|SkewNormal}} println("Std:     ", std(d))  # standard deviation
@@ -841,6 +843,7 @@ using Distributions, Random  # Distributions.jl + Random stdlib for seeding
 d = truncated(base, lower={{lower}}, upper={{upper}})  # restrict support to [lower, upper]
 rng = MersenneTwister({{seed-param}})  # reproducible seed
 x = rand(rng, d, {{method-param}})  # draw {{method-param}} samples
+xs = rand(rng, d, 10_000)  # a large sample, used by the Next Steps
 println("Mean:    ", mean(d))  # mean of the distribution
 println("Std:     ", std(d))  # standard deviation
 println("Samples: ", x)  # inspect drawn samples
@@ -860,6 +863,7 @@ using Distributions, Random  # Distributions.jl + Random stdlib for seeding
 {{?dist-multivariate=Multinomial}} d = Multinomial({{multivariate-Multinomial-n}}, p)
 rng = MersenneTwister({{seed-param}})  # reproducible seed
 x = rand(rng, d, {{method-param}})  # draw {{method-param}} samples
+xs = rand(rng, d, 10_000)  # a large sample, used by the Next Steps
 println("Mean:    ", mean(d))  # mean of the distribution
 {{?dist-multivariate=MvNormal}} println("Cov:     ", cov(d))  # covariance matrix
 println("Samples: ", x)  # inspect drawn samples
@@ -882,6 +886,7 @@ using Distributions, Random  # Distributions.jl + Random stdlib for seeding
 {{?dist-matrixvariate=MatrixNormal}} d = MatrixNormal(M, U, V)
 rng = MersenneTwister({{seed-param}})  # reproducible seed
 x = rand(rng, d, {{method-param}})  # draw {{method-param}} samples
+xs = rand(rng, d, 10_000)  # a large sample, used by the Next Steps
 println("Mean:    ", mean(d))  # mean of the distribution
 println("Samples: ", x)  # inspect drawn samples
 '''
@@ -894,6 +899,7 @@ using Distributions, Random  # Distributions.jl + Random stdlib for seeding
 d = MixtureModel([{{mix-components}}], {{mix-weights}})  # weighted mixture of component distributions
 rng = MersenneTwister({{seed-param}})  # reproducible seed
 x = rand(rng, d, {{method-param}})  # draw {{method-param}} samples
+xs = rand(rng, d, 10_000)  # a large sample, used by the Next Steps
 println("Samples: ", x)  # inspect drawn samples
 '''
 
@@ -905,6 +911,7 @@ using Distributions, Random  # Distributions.jl + Random stdlib for seeding
 d = product_distribution([{{prod-components}}])  # independent product of marginal distributions
 rng = MersenneTwister({{seed-param}})  # reproducible seed
 x = rand(rng, d, {{method-param}})  # draw {{method-param}} samples
+xs = rand(rng, d, 10_000)  # a large sample, used by the Next Steps
 println("Samples: ", x)  # inspect drawn samples
 '''
 
@@ -916,5 +923,154 @@ using Distributions, Random  # Distributions.jl + Random stdlib for seeding
 d = convolve({{conv-d1}}, {{conv-d2}})  # convolution: distribution of X1 + X2
 rng = MersenneTwister({{seed-param}})  # reproducible seed
 x = rand(rng, d, {{method-param}})  # draw {{method-param}} samples
+xs = rand(rng, d, 10_000)  # a large sample, used by the Next Steps
 println("Samples: ", x)  # inspect drawn samples
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "draws"
+label = "Sample Against Distribution"
+desc = "Univariate: histogram of 10,000 draws with the density (or bars against the probability mass). Multivariate: the first two components. Matrix-variate: the mean next to one draw"
+code = '''
+using Plots
+{{?model=discrete|continuous|truncated|mixture|convolutions}} lo, hi = quantile(d, 0.001), quantile(d, 0.999)
+{{?model=discrete|continuous|truncated|mixture|convolutions}} if d isa DiscreteUnivariateDistribution
+{{?model=discrete|continuous|truncated|mixture|convolutions}}     k = round(Int, lo):round(Int, hi)
+{{?model=discrete|continuous|truncated|mixture|convolutions}}     bar(k, [mean(xs .== v) for v in k], alpha=0.5, label="sample"); scatter!(k, pdf.(d, k), label="pmf")
+{{?model=discrete|continuous|truncated|mixture|convolutions}} else
+{{?model=discrete|continuous|truncated|mixture|convolutions}}     histogram(filter(t -> lo <= t <= hi, xs), bins=80, normalize=:pdf, alpha=0.5, label="sample"); plot!(t -> pdf(d, t), lo, hi, lw=2, label="pdf")
+{{?model=discrete|continuous|truncated|mixture|convolutions}} end
+{{?model=multivariate|product}} scatter(xs[1, :], xs[2, :], ms=1, alpha=0.3, legend=false, xlabel="component 1", ylabel="component 2")
+{{?model=matrixvariate}} plot(heatmap(mean(d), title="mean", yflip=true), heatmap(first(xs), title="one draw", yflip=true), size=(700, 300))
+'''
+
+[[actionGroups.actions]]
+id = "cdf"
+label = "Cumulative and Marginals"
+desc = "Univariate: empirical against exact CDF. Multivariate: histogram of each component. Matrix-variate: distribution of the largest singular value"
+code = '''
+using Plots
+{{?model=discrete|continuous|truncated|mixture|convolutions}} lo, hi = quantile(d, 0.001), quantile(d, 0.999)
+{{?model=discrete|continuous|truncated|mixture|convolutions}} plot(sort(xs), (1:length(xs)) ./ length(xs), seriestype=:steppost, label="empirical", xlims=(lo, hi)); plot!(t -> cdf(d, t), lo, hi, lw=2, ls=:dash, label="exact")
+{{?model=multivariate|product}} plot([histogram(xs[i, :], bins=40, legend=false, title="component $(i)") for i in 1:min(size(xs, 1), 4)]..., size=(700, 300))
+{{?model=matrixvariate}} using LinearAlgebra
+{{?model=matrixvariate}} histogram([maximum(svdvals(x)) for x in xs], bins=60, legend=false, xlabel="largest singular value")
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "moments"
+label = "Sample Against Exact Moments"
+desc = "Theoretical moments next to those of the sample (NaN where a moment is undefined, e.g. the Cauchy mean)"
+code = '''
+using Statistics
+theory(f) = try f(d) catch; NaN end
+{{?model=discrete|continuous|truncated|mixture|convolutions}} [(moment = string(f), exact = theory(f), sample = f(xs)) for f in (mean, var, skewness, kurtosis)]
+{{?model=multivariate|product}} (max_mean_error = maximum(abs, vec(mean(xs, dims=2)) .- theory(mean)), max_cov_error = maximum(abs, cov(transpose(xs)) .- theory(cov)))
+{{?model=matrixvariate}} (max_mean_error = maximum(abs, mean(xs) .- theory(mean)),)
+'''
+
+[[actionGroups.actions]]
+id = "fit-check"
+label = "Goodness of Fit"
+desc = "Every draw in the support, the average negative log-density against the entropy (they should agree), and for continuous univariate laws a Kolmogorov-Smirnov test"
+code = '''
+using Statistics
+{{?model=discrete|continuous|truncated|mixture|convolutions}} lp = logpdf.(d, xs)
+{{?model=multivariate|product}} lp = [logpdf(d, c) for c in eachcol(xs)]
+{{?model=matrixvariate}} lp = logpdf.(Ref(d), xs)
+{{?model=discrete|continuous|truncated|mixture|convolutions}} using HypothesisTests
+{{?model=discrete|continuous|truncated|mixture|convolutions}} ks_pvalue = d isa ContinuousUnivariateDistribution ? pvalue(ApproximateOneSampleKSTest(xs, d)) : missing
+{{?model=multivariate|product|matrixvariate}} ks_pvalue = missing
+(all_in_support = all(isfinite, lp), average_neg_logpdf = -mean(lp), entropy = try entropy(d) catch; NaN end, ks_pvalue = ks_pvalue)
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "quantiles"
+label = "Quantiles"
+desc = "Univariate: exact and sample quantiles. Multivariate: sample quantiles of each component. Matrix-variate: 5%, 50% and 95% of each entry"
+code = '''
+qs = [0.01, 0.05, 0.25, 0.5, 0.75, 0.95, 0.99]
+{{?model=discrete|continuous|truncated|mixture|convolutions}} [(q = q, exact = quantile(d, q), sample = quantile(xs, q)) for q in qs]
+{{?model=multivariate|product}} [(; component = i, (Symbol("q", round(Int, 100q)) => quantile(xs[i, :], q) for q in qs)...) for i in axes(xs, 1)]
+{{?model=matrixvariate}} [(entry = (i, j), q05 = quantile([x[i, j] for x in xs], 0.05), median = quantile([x[i, j] for x in xs], 0.5), q95 = quantile([x[i, j] for x in xs], 0.95)) for i in axes(mean(d), 1), j in axes(mean(d), 2)]
+'''
+
+[[actionGroups.actions]]
+id = "probabilities"
+label = "Event Probabilities"
+desc = "Univariate: exact CDF against the Monte Carlo frequency at three points. Multivariate and matrix-variate: Monte Carlo probabilities of simple events"
+code = '''
+using Statistics
+{{?model=discrete|continuous|truncated|mixture|convolutions}} [(event = "X <= $(round(t, sigdigits=3))", exact = cdf(d, t), monte_carlo = mean(xs .<= t)) for t in quantile.(d, [0.1, 0.5, 0.9])]
+{{?model=multivariate|product}} (all_components_below_mean = mean(all(xs .<= mean(d), dims=1)), some_component_above_mean = 1 - mean(all(xs .<= mean(d), dims=1)))
+{{?model=matrixvariate}} (sum_of_entries_above_its_mean = mean(sum.(xs) .> sum(mean(d))),)
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "sample-size"
+label = "Error Against Sample Size"
+desc = "How far the sample median (univariate) or mean (multivariate) is from the exact value as n grows: roughly 1/sqrt(n)"
+code = '''
+using Statistics
+rng2 = MersenneTwister({{seed-param}})
+{{?model=discrete|continuous|truncated|mixture|convolutions}} [(n = m, median_error = abs(median(rand(rng2, d, m)) - median(d))) for m in (10, 100, 1000, 10_000)]
+{{?model=multivariate|product}} [(n = m, max_mean_error = maximum(abs, vec(mean(rand(rng2, d, m), dims=2)) .- mean(d))) for m in (10, 100, 1000, 10_000)]
+{{?model=matrixvariate}} [(n = m, max_mean_error = maximum(abs, mean(rand(rng2, d, m)) .- mean(d))) for m in (10, 100, 1000, 10_000)]
+'''
+
+[[actionGroups.actions]]
+id = "samplers"
+label = "Samplers Compared"
+desc = "Time for 100,000 draws with rand, with a precomputed sampler(d), and (univariate) by inverse transform quantile(d, U)"
+code = '''
+rng2 = MersenneTwister({{seed-param}})
+rand(rng2, d, 10); rand(rng2, sampler(d), 10)  # compile first
+t_rand = @elapsed rand(rng2, d, 100_000)
+t_sampler = @elapsed rand(rng2, sampler(d), 100_000)
+{{?model=discrete|continuous|truncated|mixture|convolutions}} t_inverse = @elapsed quantile.(d, rand(rng2, 100_000))
+{{?model=multivariate|product|matrixvariate}} t_inverse = missing
+(rand_ms = 1000 * t_rand, sampler_ms = 1000 * t_sampler, inverse_cdf_ms = 1000 * t_inverse)
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "summary"
+label = "Summary"
+desc = "Support, centre and spread of the distribution"
+code = '''
+theory(f) = try f(d) catch; NaN end
+{{?model=discrete|continuous|truncated|mixture|convolutions}} (distribution = d, support = (minimum(d), maximum(d)), mean = theory(mean), std = theory(std), median = theory(median), mode = theory(mode))
+{{?model=multivariate|product}} (distribution = typeof(d), dimension = length(d), mean = theory(mean), std = sqrt.(theory(var)))
+{{?model=matrixvariate}} (distribution = typeof(d), size = size(d), mean = theory(mean))
+'''
+
+[[actionGroups.actions]]
+id = "tails"
+label = "Tails and Dependence"
+desc = "Univariate: right-tail ratio (q99 - q50) / (q75 - q50), 3.45 for the normal. Multivariate and matrix-variate: correlations between components from the sample"
+code = '''
+using Statistics
+{{?model=discrete|continuous|truncated|mixture|convolutions}} tail_ratio = (quantile(d, 0.99) - quantile(d, 0.5)) / (quantile(d, 0.75) - quantile(d, 0.5))
+{{?model=discrete|continuous|truncated|mixture|convolutions}} (tail_ratio = tail_ratio, normal = 3.45, reading = tail_ratio > 4 ? "heavier right tail than the normal" : tail_ratio < 3 ? "lighter right tail than the normal" : "normal-like right tail")
+{{?model=multivariate|product}} cor(transpose(xs))
+{{?model=matrixvariate}} cor(reduce(hcat, vec.(xs)), dims=2)
 '''

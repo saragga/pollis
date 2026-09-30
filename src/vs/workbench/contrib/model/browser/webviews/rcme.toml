@@ -127,16 +127,16 @@ detail = "applies an eigenvalue-wise optimal shrinkage function derived analytic
 [[inputs]]
 id = "X"
 label = "Data matrix (X)"
-tooltip = "T×N data matrix: T observations in rows, N variables (assets) in columns. The estimator demeans each column internally before computing the covariance. Use returns, not price levels."
-default = "X"
+tooltip = "simulated: 60 observations of 40 assets from a known three-factor covariance, so there are almost as many variables as observations. Otherwise a T×N matrix: T observations in rows, N variables (assets) in columns. Each column is demeaned internally. Use returns, not price levels."
+default = "simulated"
 
 [[inputs]]
 id = "target"
 label = "Shrinkage target"
-tooltip = "Structured matrix to shrink towards. Common choices: DiagonalUnitVariance() (scaled identity), DiagonalCommonVariance() (diagonal with average variance), ConstantCorrelation() (equal pairwise correlations). A well-specified target reduces finite-sample error."
+tooltip = "Structured matrix to shrink towards. Common choices: DiagonalUnitVariance() (scaled identity), DiagonalCommonVariance() (diagonal with average variance), ConstantCorrelation() (equal pairwise correlations). A well-specified target reduces finite-sample error. OAS always shrinks towards DiagonalCommonVariance, the only target it is defined for."
 kind = "select"
 default = "DiagonalUnitVariance()"
-models = ["lw", "oas"]
+models = ["lw"]
 
 [[inputs.options]]
 value = "DiagonalUnitVariance()"
@@ -153,44 +153,185 @@ label = "ConstantCorrelation"
 [[codeBranches]]
 model = "lw"
 code = '''
-using CovarianceEstimation, LinearAlgebra  # shrinkage estimators + linear algebra
+using CovarianceEstimation, LinearAlgebra, Random
 
-Sigma = cov(LinearShrinkage({{target}}, :lw), {{X}})  # Ledoit-Wolf linear shrinkage covariance
+{{?X=simulated}} Random.seed!(1); B = randn(40, 3) ./ 3; SigmaTrue = B * transpose(B) + 0.02I  # true covariance: 3 factors plus noise, 40 assets
+{{?X=simulated}} X = randn(60, 40) * cholesky(Symmetric(SigmaTrue)).U  # 60 observations of 40 assets
+{{?X!=simulated}} X = {{X}}  # observations in rows, variables in columns
 
-rho = cov2cor(Sigma)  # derived N×N correlation matrix
-kappa = cond(Sigma)  # condition number (stability check)
+est = LinearShrinkage({{target}}, :lw)  # Ledoit-Wolf linear shrinkage
+Sigma = cov(est, X)  # shrunk covariance
+S = cov(SimpleCovariance(), X)  # sample covariance, for comparison
+sd = sqrt.(diag(Sigma))
+rho = Sigma ./ (sd * transpose(sd))  # correlation matrix
 Omega = inv(Sigma)  # precision matrix (inverse covariance)
 
-println("Covariance: ", round.(Sigma, digits=6))  # print estimated covariance matrix
-println("Condition number: ", round(kappa, digits=2))  # print condition number
+println("Condition number, sample: ", round(cond(S), sigdigits=3), ", shrunk: ", round(cond(Sigma), sigdigits=3))
 '''
 
 [[codeBranches]]
 model = "oas"
 code = '''
-using CovarianceEstimation, LinearAlgebra  # shrinkage estimators + linear algebra
+using CovarianceEstimation, LinearAlgebra, Random
 
-Sigma = cov(LinearShrinkage({{target}}, :oas), {{X}})  # OAS linear shrinkage covariance
+{{?X=simulated}} Random.seed!(1); B = randn(40, 3) ./ 3; SigmaTrue = B * transpose(B) + 0.02I  # true covariance: 3 factors plus noise, 40 assets
+{{?X=simulated}} X = randn(60, 40) * cholesky(Symmetric(SigmaTrue)).U  # 60 observations of 40 assets
+{{?X!=simulated}} X = {{X}}  # observations in rows, variables in columns
 
-rho = cov2cor(Sigma)  # derived N×N correlation matrix
-kappa = cond(Sigma)  # condition number (stability check)
+est = LinearShrinkage(DiagonalCommonVariance(), :oas)  # oracle approximating shrinkage
+Sigma = cov(est, X)  # shrunk covariance
+S = cov(SimpleCovariance(), X)  # sample covariance, for comparison
+sd = sqrt.(diag(Sigma))
+rho = Sigma ./ (sd * transpose(sd))  # correlation matrix
 Omega = inv(Sigma)  # precision matrix (inverse covariance)
 
-println("Covariance: ", round.(Sigma, digits=6))  # print estimated covariance matrix
-println("Condition number: ", round(kappa, digits=2))  # print condition number
+println("Condition number, sample: ", round(cond(S), sigdigits=3), ", shrunk: ", round(cond(Sigma), sigdigits=3))
 '''
 
 [[codeBranches]]
 model = "nls"
 code = '''
-using CovarianceEstimation, LinearAlgebra  # shrinkage estimators + linear algebra
+using CovarianceEstimation, LinearAlgebra, Random
 
-Sigma = cov(AnalyticalNonlinearShrinkage(), {{X}})  # analytical nonlinear shrinkage covariance
+{{?X=simulated}} Random.seed!(1); B = randn(40, 3) ./ 3; SigmaTrue = B * transpose(B) + 0.02I  # true covariance: 3 factors plus noise, 40 assets
+{{?X=simulated}} X = randn(60, 40) * cholesky(Symmetric(SigmaTrue)).U  # 60 observations of 40 assets
+{{?X!=simulated}} X = {{X}}  # observations in rows, variables in columns
 
-rho = cov2cor(Sigma)  # derived N×N correlation matrix
-kappa = cond(Sigma)  # condition number (stability check)
+est = AnalyticalNonlinearShrinkage()  # analytical nonlinear shrinkage (Ledoit and Wolf 2020)
+Sigma = cov(est, X)  # shrunk covariance
+S = cov(SimpleCovariance(), X)  # sample covariance, for comparison
+sd = sqrt.(diag(Sigma))
+rho = Sigma ./ (sd * transpose(sd))  # correlation matrix
 Omega = inv(Sigma)  # precision matrix (inverse covariance)
 
-println("Covariance: ", round.(Sigma, digits=6))  # print estimated covariance matrix
-println("Condition number: ", round(kappa, digits=2))  # print condition number
+println("Condition number, sample: ", round(cond(S), sigdigits=3), ", shrunk: ", round(cond(Sigma), sigdigits=3))
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "spectrum"
+label = "Eigenvalue Spectrum"
+desc = "Sorted eigenvalues of the sample and shrunk covariance on a log scale: shrinkage lifts the smallest and pulls down the largest"
+code = '''
+using Plots
+plot(sort(eigvals(Symmetric(S)), rev=true), yscale=:log10, marker=:circle, ms=2, label="sample", xlabel="rank", ylabel="eigenvalue")
+plot!(sort(eigvals(Symmetric(Sigma)), rev=true), marker=:circle, ms=2, label="shrunk")
+{{?X=simulated}} plot!(sort(eigvals(Symmetric(SigmaTrue)), rev=true), ls=:dash, label="true")
+'''
+
+[[actionGroups.actions]]
+id = "heatmap"
+label = "Correlation Heatmap"
+desc = "The shrunk correlation matrix next to the sample correlation matrix"
+code = '''
+using Plots
+ss = sqrt.(diag(S))
+p1 = heatmap(S ./ (ss * transpose(ss)), clims=(-1, 1), c=:RdBu, yflip=true, title="sample")
+p2 = heatmap(rho, clims=(-1, 1), c=:RdBu, yflip=true, title="shrunk")
+plot(p1, p2, layout=(1, 2), size=(900, 400))
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "conditioning"
+label = "Conditioning"
+desc = "Condition numbers and smallest eigenvalues of the sample and shrunk covariance, and whether each is positive definite"
+code = '''
+(observations_per_variable = size(X, 1) / size(X, 2), cond_sample = cond(S), cond_shrunk = cond(Sigma), min_eig_sample = minimum(eigvals(Symmetric(S))), min_eig_shrunk = minimum(eigvals(Symmetric(Sigma))), sample_posdef = isposdef(Symmetric(S)), shrunk_posdef = isposdef(Symmetric(Sigma)))
+'''
+
+[[actionGroups.actions]]
+id = "intensity"
+label = "Shrinkage Intensity"
+desc = "Linear shrinkage: the weight lambda on the target in (1 - lambda) S + lambda F. Nonlinear: each sample eigenvalue next to its shrunk value"
+code = '''
+{{?model=lw}} F = cov(LinearShrinkage({{target}}, 1.0), X)  # the target itself
+{{?model=oas}} F = cov(LinearShrinkage(DiagonalCommonVariance(), 1.0), X)  # the target itself
+{{?model=lw|oas}} (shrinkage_intensity = dot(vec(Sigma - S), vec(F - S)) / sum(abs2, F - S),)
+{{?model=nls}} [(sample = a, shrunk = b) for (a, b) in zip(eigvals(Symmetric(S)), eigvals(Symmetric(Sigma)))]
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "min-variance"
+label = "Minimum-Variance Portfolio"
+desc = "Fully invested minimum-variance weights from the shrunk covariance, its predicted volatility and largest positions"
+code = '''
+w = Omega * ones(size(Sigma, 1))
+w ./= sum(w)
+top = sortperm(abs.(w), rev=true)[1:min(5, end)]
+(predicted_vol = sqrt(dot(w, Sigma * w)), largest_positions = [(asset = i, weight = round(w[i], digits=3)) for i in top], gross_exposure = sum(abs, w))
+'''
+
+[[actionGroups.actions]]
+id = "out-of-sample"
+label = "Out-of-Sample Risk"
+desc = "Estimates on the first half of the data, then measures the realized volatility of each minimum-variance portfolio on the second half"
+code = '''
+using Statistics
+minvar(C) = (w = pinv(C) * ones(size(C, 1)); w ./ sum(w))
+h = div(size(X, 1), 2)
+Xa, Xb = X[1:h, :], X[h+1:end, :]
+(shrunk = std(Xb * minvar(cov(est, Xa))), sample = std(Xb * minvar(cov(SimpleCovariance(), Xa))), equal_weight = std(Xb * fill(1 / size(X, 2), size(X, 2))))
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "estimators"
+label = "All Estimators"
+desc = "Condition number of every estimator, with the Frobenius error from the true covariance when the data are simulated"
+code = '''
+ests = ["sample" => SimpleCovariance(), "LW unit variance" => LinearShrinkage(DiagonalUnitVariance(), :lw), "LW common variance" => LinearShrinkage(DiagonalCommonVariance(), :lw), "LW constant correlation" => LinearShrinkage(ConstantCorrelation(), :lw), "OAS" => LinearShrinkage(DiagonalCommonVariance(), :oas), "nonlinear" => AnalyticalNonlinearShrinkage()]
+{{?X=simulated}} [(estimator = k, condition = round(cond(cov(e, X)), sigdigits=3), error = round(norm(cov(e, X) - SigmaTrue), sigdigits=3)) for (k, e) in ests]
+{{?X!=simulated}} [(estimator = k, condition = round(cond(cov(e, X)), sigdigits=3)) for (k, e) in ests]
+'''
+
+[[actionGroups.actions]]
+id = "vs-sample"
+label = "Change From the Sample"
+desc = "How much shrinkage moved the correlations and variances away from their sample values"
+code = '''
+using Statistics
+ss = sqrt.(diag(S))
+dr = rho - S ./ (ss * transpose(ss))
+off = [dr[i, j] for i in axes(dr, 1) for j in axes(dr, 2) if i < j]
+(mean_abs_correlation_change = mean(abs, off), max_abs_correlation_change = maximum(abs, off), mean_variance_ratio = mean(diag(Sigma) ./ diag(S)))
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "summary"
+label = "What Shrinkage Did"
+desc = "The eigenvalue spread before and after, the fall in the condition number and the average correlation"
+code = '''
+using Statistics
+es, eh = eigvals(Symmetric(S)), eigvals(Symmetric(Sigma))
+off = [rho[i, j] for i in axes(rho, 1) for j in axes(rho, 2) if i < j]
+(eigen_range_sample = extrema(es), eigen_range_shrunk = extrema(eh), condition_falls_by = cond(S) / cond(Sigma), average_correlation = mean(off))
+'''
+
+[[actionGroups.actions]]
+id = "partial"
+label = "Strongest Partial Correlations"
+desc = "Partial correlations from the precision matrix: the link between two variables after removing all the others"
+code = '''
+d = sqrt.(diag(Omega))
+P = -Omega ./ (d * transpose(d))
+ranked = [(pair = (i, j), partial_correlation = round(P[i, j], digits=3)) for i in axes(P, 1) for j in axes(P, 2) if i < j]
+sort(ranked, by=x -> -abs(x.partial_correlation))[1:min(10, end)]
 '''

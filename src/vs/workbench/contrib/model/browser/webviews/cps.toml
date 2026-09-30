@@ -272,8 +272,8 @@ when = "family=studentt|tev"
 [[inputs]]
 id = "data"
 label = "Data"
-tooltip = ""
-default = "data"
+tooltip = "A d x n matrix, one column per observation; the default draws 500 pairs from a Gaussian copula."
+default = "rand(GaussianCopula(2, 0.5), 500)"
 when = "family=empirical|beta-emp|bernstein|checkerboard|empirical-ev"
 
 [[inputs]]
@@ -316,7 +316,6 @@ id = "n-samples"
 label = "Samples (n)"
 tooltip = ""
 default = "10_000"
-when = "family!=empirical|beta-emp|bernstein|checkerboard|empirical-ev"
 
 [[codeBranches]]
 model = "main"
@@ -336,19 +335,158 @@ code = '''
 {{?family=bb1}} C = BB1Copula({{dim}}, {{theta}}, {{delta}})  # BB1 copula (theta > 0, delta >= 1)
 {{?family=galambos}} C = GalambosCopula({{theta}})  # Galambos copula (theta > 0), bivariate
 {{?family=husler}} C = HuslerReissCopula({{theta}})  # Hüsler–Reiss copula, bivariate
-{{?family=tev}} C = TEVCopula({{nu}}, {{rho}})  # extreme-t copula, bivariate
-{{?family=mo}} C = MarshallOlkinCopula(2, [{{lambda1}}, {{lambda2}}, {{lambda12}}])  # Marshall–Olkin copula, bivariate
+{{?family=tev}} C = tEVCopula({{nu}}, {{rho}})  # extreme-t copula, bivariate
+{{?family=mo}} C = MOCopula({{lambda1}}, {{lambda2}}, {{lambda12}})  # Marshall–Olkin copula, bivariate
 {{?family=empirical}} C = EmpiricalCopula({{data}})  # unsmoothed empirical copula
 {{?family=beta-emp}} C = BetaCopula({{data}})  # beta-smoothed empirical copula
 {{?family=bernstein}} C = BernsteinCopula({{data}})  # Bernstein polynomial copula
 {{?family=checkerboard}} C = CheckerboardCopula({{data}})  # checkerboard copula
 {{?family=empirical-ev}} C = EmpiricalEVCopula({{data}})  # empirical extreme-value copula
 {{?family=upper-frechet}} C = MCopula({{dim}})  # upper Fréchet bound (comonotonicity)
-{{?family=independence}} C = IndependenceCopula({{dim}})  # independence copula Pi
+{{?family=independence}} C = IndependentCopula({{dim}})  # independence copula Pi
 {{?family=lower-frechet}} C = WCopula()  # lower Fréchet bound, d = 2 only
 
 {{?family!=empirical|beta-emp|bernstein|checkerboard|empirical-ev}} margs = ({{marginals}},)  # marginal distributions
 {{?family!=empirical|beta-emp|bernstein|checkerboard|empirical-ev}} D = SklarDist(C, margs)  # multivariate Sklar distribution
 
-{{?family!=empirical|beta-emp|bernstein|checkerboard|empirical-ev}} rand(D, {{n-samples}})  # sample n observations from the joint distribution
+{{?family!=empirical|beta-emp|bernstein|checkerboard|empirical-ev}} X = rand(D, {{n-samples}})  # n observations from the joint distribution, one per column
+{{?family=empirical|beta-emp|bernstein|checkerboard|empirical-ev}} X = rand(C, {{n-samples}})  # n draws on [0,1]^d from the empirical copula, one per column
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "scatter"
+label = "Sample Scatter With Margins"
+desc = "The first two coordinates of the sample, with a histogram of each margin"
+code = '''
+using Plots
+x, y = X[1, :], X[2, :]
+p1 = histogram(x, bins=50, legend=false, title="margin 1")
+p2 = scatter(x, y, ms=1.5, alpha=0.3, legend=false, xlabel="x1", ylabel="x2", title="joint sample")
+p3 = histogram(y, bins=50, legend=false, title="margin 2")
+plot(p1, p2, p3, layout=(1, 3), size=(1000, 330))
+'''
+
+[[actionGroups.actions]]
+id = "pseudos"
+label = "Pseudo-Observations"
+desc = "The ranks of the sample scaled to [0, 1]: this strips the margins and shows the copula alone"
+code = '''
+using Plots
+U = pseudos(X)
+scatter(U[1, :], U[2, :], ms=1.5, alpha=0.3, legend=false, xlabel="u1", ylabel="u2", aspect_ratio=1, title="Pseudo-observations (ranks / (n + 1))")
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "margins"
+label = "Sample Against Theoretical Margins"
+desc = "Sample quantiles of each margin next to the quantiles of its declared distribution (uniform for empirical copulas)"
+code = '''
+using Statistics
+ps = [0.01, 0.1, 0.5, 0.9, 0.99]
+{{?family!=empirical|beta-emp|bernstein|checkerboard|empirical-ev}} [(margin = i, p = p, sample = quantile(X[i, :], p), theoretical = quantile(margs[i], p)) for i in axes(X, 1) for p in ps]
+{{?family=empirical|beta-emp|bernstein|checkerboard|empirical-ev}} [(margin = i, p = p, sample = quantile(X[i, :], p), theoretical = p) for i in axes(X, 1) for p in ps]
+'''
+
+[[actionGroups.actions]]
+id = "mc-error"
+label = "Monte Carlo Error of the Dependence"
+desc = "Kendall's tau between the first two coordinates in 10 equal batches of the sample: its spread is the Monte Carlo error at that batch size"
+code = '''
+using StatsBase
+batches = Iterators.partition(axes(X, 2), div(size(X, 2), 10))
+taus = [corkendall(X[1, b], X[2, b]) for b in batches]
+(whole_sample = corkendall(X[1, :], X[2, :]), batch_mean = mean(taus), batch_sd = std(taus), standard_error = std(taus) / sqrt(length(taus)))
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "portfolio"
+label = "Portfolio Loss Quantiles"
+desc = "Value at risk and expected shortfall of the sum of the coordinates, against the same margins with the dependence removed by shuffling"
+code = '''
+using Random, Statistics
+S = vec(sum(X, dims=1))
+Xi = reduce(vcat, [transpose(shuffle(X[i, :])) for i in axes(X, 1)])  # same margins, dependence removed
+Si = vec(sum(Xi, dims=1))
+es(s, q) = mean(s[s .>= quantile(s, q)])
+[(level = q, VaR = quantile(S, q), VaR_independent = quantile(Si, q), ES = es(S, q), ES_independent = es(Si, q)) for q in (0.95, 0.99)]
+'''
+
+[[actionGroups.actions]]
+id = "joint-extremes"
+label = "Joint Extreme Probabilities"
+desc = "How often every coordinate exceeds its own 95% or 99% sample quantile at once, against the rate under independence"
+code = '''
+using Statistics
+[(q = q, joint = mean(all(X[i, :] .> quantile(X[i, :], q) for i in axes(X, 1))), independence = (1 - q)^size(X, 1)) for q in (0.9, 0.95, 0.99)]
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "vs-independent"
+label = "Against Independent Margins"
+desc = "The sample next to the same margins with each coordinate shuffled, which keeps the margins and removes the dependence"
+code = '''
+using Plots, Random
+Xi = reduce(vcat, [transpose(shuffle(X[i, :])) for i in axes(X, 1)])
+plot(scatter(X[1, :], X[2, :], ms=1.5, alpha=0.3, legend=false, title="this copula"),
+     scatter(Xi[1, :], Xi[2, :], ms=1.5, alpha=0.3, legend=false, title="independent"), layout=(1, 2), size=(900, 420))
+'''
+
+[[actionGroups.actions]]
+id = "refit"
+label = "Refit Candidate Families"
+desc = "Gaussian, Clayton, Gumbel and Frank copulas fitted to the pseudo-observations, ranked by log-likelihood (first two coordinates)"
+code = '''
+U = pseudos(X[1:2, :])
+rows = []
+for F in (GaussianCopula, ClaytonCopula, GumbelCopula, FrankCopula)
+    try
+        Ch = fit(F, U)
+        push!(rows, (family = string(F), fitted = Ch, loglik = sum(logpdf(Ch, U[:, j]) for j in axes(U, 2))))
+    catch err
+        push!(rows, (family = string(F), fitted = nothing, loglik = -Inf))
+    end
+end
+sort!(rows, by = r -> -r.loglik)
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "measures"
+label = "Sample Dependence Measures"
+desc = "Pearson, Kendall and Spearman correlation matrices and empirical tail dependence of the first two coordinates at the 1% level"
+code = '''
+using StatsBase
+M = Matrix(transpose(X))
+U = pseudos(X)
+a, b = U[1, :], U[2, :]
+(pearson = cor(M), kendall = corkendall(M), spearman = corspearman(M),
+ lower_tail = mean((a .< 0.01) .& (b .< 0.01)) / 0.01, upper_tail = mean((a .> 0.99) .& (b .> 0.99)) / 0.01)
+'''
+
+[[actionGroups.actions]]
+id = "summary"
+label = "Summary of the Sample"
+desc = "Mean, standard deviation, skewness, kurtosis and 1% and 99% quantiles of each margin"
+code = '''
+using StatsBase
+[(margin = i, mean = mean(r), std = std(r), skewness = skewness(r), kurtosis = kurtosis(r), q01 = quantile(r, 0.01), q99 = quantile(r, 0.99)) for (i, r) in enumerate(eachrow(X))]
 '''

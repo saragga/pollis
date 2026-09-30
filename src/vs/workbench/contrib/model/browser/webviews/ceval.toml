@@ -260,8 +260,8 @@ when = "family=studentt|tev"
 [[inputs]]
 id = "data"
 label = "Data"
-tooltip = ""
-default = "data"
+tooltip = "A d x n matrix, one column per observation; the default draws 500 pairs from a Gaussian copula."
+default = "rand(GaussianCopula(2, 0.5), 500)"
 when = "family=empirical|beta-emp|bernstein|checkerboard|empirical-ev"
 
 [[inputs]]
@@ -331,15 +331,15 @@ code = '''
 {{?family=bb1}} C = BB1Copula({{dim}}, {{theta}}, {{delta}})  # BB1 copula (theta > 0, delta >= 1)
 {{?family=galambos}} C = GalambosCopula({{theta}})  # Galambos copula (theta > 0), bivariate
 {{?family=husler}} C = HuslerReissCopula({{theta}})  # Hüsler–Reiss copula, bivariate
-{{?family=tev}} C = TEVCopula({{nu}}, {{rho}})  # extreme-t copula, bivariate
-{{?family=mo}} C = MarshallOlkinCopula(2, [{{lambda1}}, {{lambda2}}, {{lambda12}}])  # Marshall–Olkin copula, bivariate
+{{?family=tev}} C = tEVCopula({{nu}}, {{rho}})  # extreme-t copula, bivariate
+{{?family=mo}} C = MOCopula({{lambda1}}, {{lambda2}}, {{lambda12}})  # Marshall–Olkin copula, bivariate
 {{?family=empirical}} C = EmpiricalCopula({{data}})  # unsmoothed empirical copula
 {{?family=beta-emp}} C = BetaCopula({{data}})  # beta-smoothed empirical copula
 {{?family=bernstein}} C = BernsteinCopula({{data}})  # Bernstein polynomial copula
 {{?family=checkerboard}} C = CheckerboardCopula({{data}})  # checkerboard copula
 {{?family=empirical-ev}} C = EmpiricalEVCopula({{data}})  # empirical extreme-value copula
 {{?family=upper-frechet}} C = MCopula({{dim}})  # upper Fréchet bound (comonotonicity)
-{{?family=independence}} C = IndependenceCopula({{dim}})  # independence copula Pi
+{{?family=independence}} C = IndependentCopula({{dim}})  # independence copula Pi
 {{?family=lower-frechet}} C = WCopula()  # lower Fréchet bound, d = 2 only
 
 {{?family!=empirical|beta-emp|bernstein|checkerboard|empirical-ev}} margs = ({{marginals}},)  # marginal distributions
@@ -353,4 +353,144 @@ println("Copula PDF  c(u) = ", pdf(C, u))
 println("Copula CDF  C(u) = ", cdf(C, u))
 {{?family!=empirical|beta-emp|bernstein|checkerboard|empirical-ev}} println("Joint  PDF  f(x) = ", pdf(D, point))
 {{?family!=empirical|beta-emp|bernstein|checkerboard|empirical-ev}} println("Joint  CDF  F(x) = ", cdf(D, point))
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "scatter"
+label = "Sample on the Unit Square"
+desc = "2,000 draws from the copula (first two coordinates) with the evaluation point u marked"
+code = '''
+using Plots
+U = rand(C, 2000)
+scatter(U[1, :], U[2, :], ms=2, alpha=0.4, label="draws", xlabel="u1", ylabel="u2", aspect_ratio=1, xlims=(0, 1), ylims=(0, 1), title="Copula sample")
+scatter!([u[1]], [u[2]], ms=8, color=:red, label="u")
+'''
+
+[[actionGroups.actions]]
+id = "cdf-minus-independence"
+label = "C(u) Minus Independence"
+desc = "Contours of C(u1, u2) - u1 u2: positive where the copula puts more mass in the lower-left corner than independence would"
+code = '''
+using Plots
+C2 = length(C) > 2 ? subsetdims(C, (1, 2)) : C
+g = range(0.02, 0.98, length=49)
+Z = [cdf(C2, [a, b]) - a * b for b in g, a in g]
+contourf(g, g, Z, color=:balance, clims=(-0.25, 0.25), xlabel="u1", ylabel="u2", aspect_ratio=1, title="C(u) - u1 u2")
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "bounds"
+label = "Fréchet–Hoeffding Bounds Check"
+desc = "Checks max(u1 + u2 - 1, 0) <= C(u) <= min(u1, u2) on a 19 x 19 grid, which every copula must satisfy"
+code = '''
+C2 = length(C) > 2 ? subsetdims(C, (1, 2)) : C
+g = 0.05:0.05:0.95
+viol = [(a, b, cdf(C2, [a, b])) for a in g, b in g if !(max(a + b - 1, 0) - 1e-8 <= cdf(C2, [a, b]) <= min(a, b) + 1e-8)]
+isempty(viol) ? println("All $(length(g)^2) grid points lie within the bounds.") : viol
+'''
+
+[[actionGroups.actions]]
+id = "density-check"
+label = "Numerical Density Check"
+desc = "The copula density c(u) against a central finite difference of C(u), at the evaluation point (first two coordinates)"
+code = '''
+C2 = length(C) > 2 ? subsetdims(C, (1, 2)) : C
+a, b, h = u[1], u[2], 1e-3
+fd = (cdf(C2, [a + h, b + h]) - cdf(C2, [a + h, b - h]) - cdf(C2, [a - h, b + h]) + cdf(C2, [a - h, b - h])) / (4h^2)
+analytic = try pdf(C2, [a, b]) catch; missing end  # empirical copulas have no density
+(finite_difference = fd, pdf = analytic)
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "conditional"
+label = "Conditional Probability of U2 Given U1"
+desc = "P(U2 <= v | U1 = u1) as a curve in v for u1 = 0.1, 0.5 and 0.9, from the partial derivative of C"
+code = '''
+using Plots
+C2 = length(C) > 2 ? subsetdims(C, (1, 2)) : C
+h = 1e-4
+vs = range(0.01, 0.99, length=99)
+plot(title="P(U2 <= v | U1 = u1)", xlabel="v", ylabel="conditional probability", legend=:topleft)
+for a in (0.1, 0.5, 0.9)
+    plot!(vs, [(cdf(C2, [a + h, v]) - cdf(C2, [a - h, v])) / (2h) for v in vs], lw=2, label="u1 = $a")
+end
+plot!(vs, vs, ls=:dash, color=:gray, label="independence")
+'''
+
+[[actionGroups.actions]]
+id = "joint-exceedance"
+label = "Joint Exceedance Probabilities"
+desc = "P(U1 > q, U2 > q) = 1 - 2q + C(q, q) for high q, against (1 - q)^2 under independence"
+code = '''
+C2 = length(C) > 2 ? subsetdims(C, (1, 2)) : C
+[(q = q, joint_exceedance = 1 - 2q + cdf(C2, [q, q]), independence = (1 - q)^2, ratio = (1 - 2q + cdf(C2, [q, q])) / (1 - q)^2) for q in (0.9, 0.95, 0.99)]
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "vs-gaussian"
+label = "Against the Gaussian With the Same Kendall Tau"
+desc = "Joint tail probabilities of this copula and of a Gaussian copula matched on Kendall's tau (estimated from 20,000 draws)"
+code = '''
+using StatsBase
+C2 = length(C) > 2 ? subsetdims(C, (1, 2)) : C
+U = rand(C2, 20_000)
+tau = corkendall(U[1, :], U[2, :])
+G = GaussianCopula(2, sin(pi * tau / 2))
+[(q = q, lower_this = cdf(C2, [1 - q, 1 - q]), lower_gaussian = cdf(G, [1 - q, 1 - q]),
+  upper_this = 1 - 2q + cdf(C2, [q, q]), upper_gaussian = 1 - 2q + cdf(G, [q, q])) for q in (0.9, 0.95, 0.99)]
+'''
+
+[[actionGroups.actions]]
+id = "vs-bounds"
+label = "Against Independence and the Fréchet Bounds"
+desc = "C(u) next to the lower bound W, independence Pi and the upper bound M at points on the diagonal and off it"
+code = '''
+C2 = length(C) > 2 ? subsetdims(C, (1, 2)) : C
+pts = [(0.1, 0.1), (0.25, 0.75), (0.5, 0.5), (0.75, 0.25), (0.9, 0.9), (u[1], u[2])]
+[(u1 = a, u2 = b, W = max(a + b - 1, 0.0), Pi = a * b, C = cdf(C2, [a, b]), M = min(a, b)) for (a, b) in pts]
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "measures"
+label = "Dependence Measures"
+desc = "Kendall's tau, Spearman's rho and empirical lower and upper tail dependence at the 1% level, from 50,000 draws"
+code = '''
+using StatsBase
+C2 = length(C) > 2 ? subsetdims(C, (1, 2)) : C
+U = rand(C2, 50_000)
+a, b = U[1, :], U[2, :]
+(kendall_tau = corkendall(a, b), spearman_rho = corspearman(a, b),
+ lower_tail = mean((a .< 0.01) .& (b .< 0.01)) / 0.01, upper_tail = mean((a .> 0.99) .& (b .> 0.99)) / 0.01)
+'''
+
+[[actionGroups.actions]]
+id = "reading"
+label = "Reading the Values"
+desc = "What C(u) (and the joint F(x)) means at the chosen point, set against independence"
+code = '''
+using Printf
+Cu, Pu = cdf(C, u), prod(u)
+@printf("P(U <= u) = %.4f; independent margins would give %.4f (ratio %.2f).\n", Cu, Pu, Cu / Pu)
+println(Cu > Pu ? "The components tend to be small together (positive dependence at this point)." : "The components are less often small together than under independence.")
+{{?family!=empirical|beta-emp|bernstein|checkerboard|empirical-ev}} @printf("In the original units, P(X <= x) = %.4f for x = %s, where each margin alone gives %s.\n", cdf(D, point), string(point), string(round.(u, digits=4)))
 '''

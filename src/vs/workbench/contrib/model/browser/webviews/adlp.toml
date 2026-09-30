@@ -52,8 +52,8 @@ file = "adlp/chainrules.md"
 bundled = true
 
 [[wikis]]
-name = "Zygote Backend"
-file = "adlp/zygote.md"
+name = "Enzyme Backend"
+file = "adlp/enzyme.md"
 bundled = true
 
 [[wikis]]
@@ -84,11 +84,11 @@ url = "https://jmlr.org/papers/v18/17-468.html"
 openAccess = true
 
 [[references]]
-title = "Zygote: a Differentiable Programming System to Bridge Machine Learning and Scientific Computing"
-authors = "Innes, M. et al."
-year = 2019
+title = "Instead of Rewriting Foreign Code for Machine Learning, Automatically Synthesize Fast Gradients"
+authors = "Moses, W.S. & Churavy, V."
+year = 2020
 journal = ""
-url = "https://arxiv.org/abs/1907.07587"
+url = "https://arxiv.org/abs/2010.01709"
 openAccess = true
 
 [[references]]
@@ -116,7 +116,7 @@ text = "Automatic differentiation of log-likelihoods via DistributionsAD.jl"
 detail = "provides ChainRules.jl adjoint rules for Distributions"
 
 [[bullets]]
-text = "Compatible with Zygote.jl (reverse-mode) and ForwardDiff.jl (forward-mode) AD backends"
+text = "Gradients from Enzyme.jl (reverse mode) or ForwardDiff.jl (forward mode)"
 detail = ""
 
 [[bullets]]
@@ -130,13 +130,13 @@ detail = "positive parameters are mapped through exp(·) so the optimiser operat
 [[inputs]]
 id = "backend-select"
 label = "AD Backend"
-tooltip = ""
+tooltip = "Enzyme: reverse mode on compiled LLVM code, efficient for many parameters. ForwardDiff: forward mode, fastest for a handful of parameters."
 kind = "select"
-default = "zygote"
+default = "enzyme"
 
 [[inputs.options]]
-value = "zygote"
-label = "Zygote"
+value = "enzyme"
+label = "Enzyme"
 
 [[inputs.options]]
 value = "forwarddiff"
@@ -145,7 +145,7 @@ label = "ForwardDiff"
 [[inputs]]
 id = "dist-select"
 label = "Distribution"
-tooltip = ""
+tooltip = "Family whose parameters are fitted by maximum likelihood."
 kind = "select"
 default = "Normal"
 models = ["dist"]
@@ -173,21 +173,21 @@ label = "Exponential"
 [[inputs]]
 id = "dist-data"
 label = "Data (y)"
-tooltip = ""
-default = "y"
+tooltip = "simulated: 500 draws from the chosen family with known parameters. Otherwise a vector of observations in the support of the distribution."
+default = "simulated"
 models = ["dist"]
 
 [[inputs]]
 id = "p1"
 label = "Initial p[1]"
-tooltip = "Normal, LogNormal: initial mu. Gamma, Beta: initial log_alpha. Exponential: initial log_theta."
+tooltip = "Normal, LogNormal: initial mu. Gamma, Beta: initial log alpha. Exponential: initial log theta."
 default = "0.0"
 models = ["dist"]
 
 [[inputs]]
 id = "p2"
 label = "Initial p[2]"
-tooltip = "Normal, LogNormal: initial log_sigma. Gamma: initial log_theta. Beta: initial log_beta."
+tooltip = "Normal, LogNormal: initial log sigma. Gamma: initial log theta. Beta: initial log beta."
 default = "0.0"
 models = ["dist"]
 when = "dist-select!=Exponential"
@@ -195,79 +195,251 @@ when = "dist-select!=Exponential"
 [[inputs]]
 id = "reg-X"
 label = "Design Matrix (X)"
-tooltip = ""
-default = "X"
+tooltip = "simulated: 200 rows of an intercept and two standard normal covariates, with a response generated from known coefficients. Otherwise an n×p matrix; include a column of ones for an intercept."
+default = "simulated"
 models = ["lr", "logr"]
 
 [[inputs]]
 id = "reg-y"
 label = "Response (y)"
-tooltip = "Response vector. Binary (0/1) for logistic regression."
+tooltip = "Response vector, used when X is not simulated. Binary (0/1) for logistic regression."
 default = "y"
 models = ["lr", "logr"]
 
 [[codeBranches]]
 model = "dist"
 code = '''
-{{?backend-select=zygote}} using DistributionsAD, Zygote, Optim
-{{?backend-select=forwarddiff}} using DistributionsAD, ForwardDiff, Optim
+using DistributionsAD, Distributions, Optim, Random
+{{?backend-select=enzyme}} using Enzyme
+{{?backend-select=forwarddiff}} using ForwardDiff
 
-function negloglik(p)
-{{?dist-select!=Exponential}}     d = {{dist-select}}(exp(p[1]), exp(p[2]))  # {{dist-select}} with exp-transformed parameters
-{{?dist-select=Exponential}}     d = Exponential(exp(p[1]))  # Exponential with exp-transformed parameters
-    -sum(logpdf.(d, {{dist-data}}))  # negative log-likelihood
+Random.seed!(1)
+{{?dist-select=Normal}} d_true = Normal(2.0, 1.5)  # known parameters for simulated data
+{{?dist-select=LogNormal}} d_true = LogNormal(0.5, 0.4)  # known parameters for simulated data
+{{?dist-select=Gamma}} d_true = Gamma(2.0, 1.5)  # known parameters for simulated data
+{{?dist-select=Beta}} d_true = Beta(2.0, 5.0)  # known parameters for simulated data
+{{?dist-select=Exponential}} d_true = Exponential(2.0)  # known parameters for simulated data
+{{?dist-data=simulated}} y = rand(d_true, 500)  # simulated data
+{{?dist-data!=simulated}} y = {{dist-data}}  # observations
+
+function nll(p, y)
+{{?dist-select=Normal|LogNormal}}     d = {{dist-select}}(p[1], exp(p[2]))  # mean on the real line, sigma through exp
+{{?dist-select=Gamma|Beta}}     d = {{dist-select}}(exp(p[1]), exp(p[2]))  # both parameters through exp
+{{?dist-select=Exponential}}     d = Exponential(exp(p[1]))  # scale through exp
+    -sum(logpdf.(d, y))  # negative log-likelihood
 end
+data = (y,)  # arguments held constant during differentiation
+negloglik(p) = nll(p, data...)
+{{?backend-select=enzyme}} grad!(G, p) = (fill!(G, 0); Enzyme.autodiff(Reverse, nll, Active, Duplicated(p, G), Const.(data)...); G)  # reverse-mode gradient
+{{?backend-select=forwarddiff}} grad!(G, p) = ForwardDiff.gradient!(G, negloglik, p)  # forward-mode gradient
 
-{{?dist-select!=Exponential}} p0      = [{{p1}}, {{p2}}]  # initial parameters (unconstrained)
-{{?dist-select=Exponential}} p0      = [{{p1}}]  # initial parameters (unconstrained)
-{{?backend-select=zygote}} res     = optimize(negloglik, Zygote.gradient, p0, LBFGS())  # L-BFGS with Zygote gradient
-{{?backend-select=forwarddiff}} res     = optimize(negloglik, p0, LBFGS(); autodiff = :forward)  # L-BFGS with ForwardDiff
-p_hat   = Optim.minimizer(res)  # optimal unconstrained parameters
+{{?dist-select!=Exponential}} p0 = [{{p1}}, {{p2}}]  # initial parameters (unconstrained)
+{{?dist-select=Exponential}} p0 = [{{p1}}]  # initial parameters (unconstrained)
+res   = optimize(negloglik, grad!, p0, LBFGS())  # L-BFGS with the AD gradient
+p_hat = Optim.minimizer(res)  # optimal unconstrained parameters
 
-{{?dist-select=Normal|LogNormal}} mu_hat    = p_hat[1]  # MLE mean
-{{?dist-select=Normal|LogNormal}} sigma_hat = exp(p_hat[2])  # MLE std dev (back-transformed)
-{{?dist-select=Gamma|Beta}} alpha_hat = exp(p_hat[1])  # MLE shape (back-transformed)
-{{?dist-select=Gamma|Beta}} theta_hat = exp(p_hat[2])  # MLE scale (back-transformed)
-{{?dist-select=Exponential}} theta_hat = exp(p_hat[1])  # MLE mean (back-transformed)
+{{?dist-select=Normal|LogNormal}} pnames = ["mu", "log_sigma"]
+{{?dist-select=Gamma}} pnames = ["log_alpha", "log_theta"]
+{{?dist-select=Beta}} pnames = ["log_alpha", "log_beta"]
+{{?dist-select=Exponential}} pnames = ["log_theta"]
+{{?dist-select=Normal|LogNormal}} d_hat = {{dist-select}}(p_hat[1], exp(p_hat[2]))  # fitted distribution
+{{?dist-select=Gamma|Beta}} d_hat = {{dist-select}}(exp(p_hat[1]), exp(p_hat[2]))  # fitted distribution
+{{?dist-select=Exponential}} d_hat = Exponential(exp(p_hat[1]))  # fitted distribution
+println("Fitted: ", d_hat)
 '''
 
 [[codeBranches]]
 model = "lr"
 code = '''
-{{?backend-select=zygote}} using DistributionsAD, Zygote, Optim
-{{?backend-select=forwarddiff}} using DistributionsAD, ForwardDiff, Optim
+using DistributionsAD, Distributions, Optim, Random
+{{?backend-select=enzyme}} using Enzyme
+{{?backend-select=forwarddiff}} using ForwardDiff
 
-function negloglik(p)
+Random.seed!(1)
+{{?reg-X=simulated}} X = [ones(200) randn(200, 2)]  # intercept and two covariates
+{{?reg-X=simulated}} y = X * [1.0, 2.0, -1.0] .+ 0.5 .* randn(200)  # known coefficients, noise sd 0.5
+{{?reg-X!=simulated}} X, y = {{reg-X}}, {{reg-y}}
+
+function nll(p, X, y)
     beta  = p[1:end-1]  # regression coefficients
     sigma = exp(p[end])  # noise std (exp ensures positivity)
-    mu    = {{reg-X}} * beta  # predicted means
-    -sum(logpdf.(Normal.(mu, sigma), {{reg-y}}))  # normal log-likelihood
+    -sum(logpdf.(Normal.(X * beta, sigma), y))  # normal log-likelihood
 end
+data = (X, y)  # arguments held constant during differentiation
+negloglik(p) = nll(p, data...)
+{{?backend-select=enzyme}} grad!(G, p) = (fill!(G, 0); Enzyme.autodiff(Reverse, nll, Active, Duplicated(p, G), Const.(data)...); G)  # reverse-mode gradient
+{{?backend-select=forwarddiff}} grad!(G, p) = ForwardDiff.gradient!(G, negloglik, p)  # forward-mode gradient
 
-p0        = zeros(size({{reg-X}}, 2) + 1)  # initial params: [beta; log_sigma]
-{{?backend-select=zygote}} res       = optimize(negloglik, Zygote.gradient, p0, LBFGS())  # L-BFGS with Zygote gradient
-{{?backend-select=forwarddiff}} res       = optimize(negloglik, p0, LBFGS(); autodiff = :forward)  # L-BFGS with ForwardDiff
-p_hat     = Optim.minimizer(res)  # optimal parameters
+p0    = zeros(size(X, 2) + 1)  # initial params: [beta; log_sigma]
+res   = optimize(negloglik, grad!, p0, LBFGS())  # L-BFGS with the AD gradient
+p_hat = Optim.minimizer(res)  # optimal parameters
+pnames = [string.("beta", 1:size(X, 2)); "log_sigma"]
 
 beta_hat  = p_hat[1:end-1]  # MLE coefficients
 sigma_hat = exp(p_hat[end])  # MLE noise std (back-transformed)
+println("Coefficients: ", round.(beta_hat, digits=4), "  sigma: ", round(sigma_hat, digits=4))
 '''
 
 [[codeBranches]]
 model = "logr"
 code = '''
-{{?backend-select=zygote}} using DistributionsAD, Zygote, Optim
-{{?backend-select=forwarddiff}} using DistributionsAD, ForwardDiff, Optim
+using DistributionsAD, Distributions, Optim, Random
+{{?backend-select=enzyme}} using Enzyme
+{{?backend-select=forwarddiff}} using ForwardDiff
 
 sigmoid(z) = 1 / (1 + exp(-z))
 
-function negloglik(p)
-    prob = sigmoid.({{reg-X}} * p)  # predicted probabilities
-    -sum(logpdf.(Bernoulli.(prob), {{reg-y}}))  # Bernoulli log-likelihood
-end
+Random.seed!(1)
+{{?reg-X=simulated}} X = [ones(200) randn(200, 2)]  # intercept and two covariates
+{{?reg-X=simulated}} y = rand.(Bernoulli.(sigmoid.(X * [-0.5, 1.5, -1.0])))  # known log-odds coefficients
+{{?reg-X!=simulated}} X, y = {{reg-X}}, {{reg-y}}
 
-p0       = zeros(size({{reg-X}}, 2))  # initial coefficients
-{{?backend-select=zygote}} res      = optimize(negloglik, Zygote.gradient, p0, LBFGS())  # L-BFGS with Zygote gradient
-{{?backend-select=forwarddiff}} res      = optimize(negloglik, p0, LBFGS(); autodiff = :forward)  # L-BFGS with ForwardDiff
-beta_hat = Optim.minimizer(res)  # MLE log-odds coefficients
+function nll(p, X, y)
+    prob = sigmoid.(X * p)  # predicted probabilities
+    -sum(logpdf.(Bernoulli.(prob), y))  # Bernoulli log-likelihood
+end
+data = (X, y)  # arguments held constant during differentiation
+negloglik(p) = nll(p, data...)
+{{?backend-select=enzyme}} grad!(G, p) = (fill!(G, 0); Enzyme.autodiff(Reverse, nll, Active, Duplicated(p, G), Const.(data)...); G)  # reverse-mode gradient
+{{?backend-select=forwarddiff}} grad!(G, p) = ForwardDiff.gradient!(G, negloglik, p)  # forward-mode gradient
+
+p0       = zeros(size(X, 2))  # initial coefficients
+res      = optimize(negloglik, grad!, p0, LBFGS())  # L-BFGS with the AD gradient
+p_hat    = Optim.minimizer(res)
+pnames   = string.("beta", 1:size(X, 2))
+beta_hat = p_hat  # MLE log-odds coefficients
+println("Coefficients: ", round.(beta_hat, digits=4))
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "fit"
+label = "Fit Against Data"
+desc = "Distribution: fitted density over the histogram. Linear: fitted against observed. Logistic: predicted probability by observed outcome"
+code = '''
+using Plots
+{{?model=dist}} histogram(y, bins=40, normalize=:pdf, alpha=0.5, label="data"); plot!(x -> pdf(d_hat, x), extrema(y)..., lw=2, label="fitted")
+{{?model=lr}} scatter(X * beta_hat, y, alpha=0.5, legend=false, xlabel="fitted", ylabel="observed"); plot!(identity, extrema(y)..., ls=:dash)
+{{?model=logr}} scatter(sigmoid.(X * beta_hat), y .+ 0.05 .* randn(length(y)), alpha=0.5, legend=false, xlabel="predicted probability", ylabel="observed outcome (jittered)")
+'''
+
+[[actionGroups.actions]]
+id = "profile"
+label = "Likelihood Slices"
+desc = "The negative log-likelihood along each parameter with the others held at the optimum: a clear, curved minimum means the parameter is well identified"
+code = '''
+using Plots
+slice(i, v) = negloglik([j == i ? v : p_hat[j] for j in eachindex(p_hat)])
+plot([plot(p_hat[i] .+ range(-1, 1; length=61), v -> slice(i, v), legend=false, xlabel=pnames[i]) for i in eachindex(p_hat)]..., layout=(1, length(p_hat)), size=(300 * length(p_hat), 300))
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "convergence"
+label = "Convergence"
+desc = "Whether L-BFGS converged, how many iterations and gradient calls it needed, and the gradient norm at the optimum"
+code = '''
+G = similar(p_hat)
+grad!(G, p_hat)
+(converged = Optim.converged(res), iterations = Optim.iterations(res), gradient_calls = Optim.g_calls(res), gradient_norm = maximum(abs, G), minimum = Optim.minimum(res))
+'''
+
+[[actionGroups.actions]]
+id = "ad-check"
+label = "AD Against Finite Differences"
+desc = "The AD gradient at the starting point next to a central finite-difference approximation: they should agree to many digits"
+code = '''
+G = similar(p0)
+grad!(G, p0)
+h = 1e-6
+fd = [(negloglik(p0 .+ h .* (1:length(p0) .== i)) - negloglik(p0 .- h .* (1:length(p0) .== i))) / (2h) for i in eachindex(p0)]
+[(parameter = pnames[i], ad = G[i], finite_difference = fd[i], relative_error = abs(G[i] - fd[i]) / max(abs(fd[i]), 1e-12)) for i in eachindex(p0)]
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "predictions"
+label = "Predictions"
+desc = "Distribution: quantiles of the fitted law. Linear: predictions with 95% intervals. Logistic: predicted probabilities, for the first five rows"
+code = '''
+{{?model=dist}} [(p = p, quantile = quantile(d_hat, p)) for p in [0.05, 0.25, 0.5, 0.75, 0.95]]
+{{?model=lr}} [(row = i, prediction = dot(X[i, :], beta_hat), lower = dot(X[i, :], beta_hat) - 1.96 * sigma_hat, upper = dot(X[i, :], beta_hat) + 1.96 * sigma_hat, observed = y[i]) for i in 1:5]
+{{?model=logr}} [(row = i, probability = sigmoid(dot(X[i, :], beta_hat)), observed = y[i]) for i in 1:5]
+'''
+
+[[actionGroups.actions]]
+id = "replicate"
+label = "Replicated Data"
+desc = "New data simulated from the fitted model, summarised next to the observed data"
+code = '''
+using Statistics
+{{?model=dist}} yrep = rand(d_hat, length(y))
+{{?model=lr}} yrep = X * beta_hat .+ sigma_hat .* randn(length(y))
+{{?model=logr}} yrep = rand.(Bernoulli.(sigmoid.(X * beta_hat)))
+(observed = (mean = mean(y), sd = std(y), q05 = quantile(y, 0.05), q95 = quantile(y, 0.95)), replicated = (mean = mean(yrep), sd = std(yrep), q05 = quantile(yrep, 0.05), q95 = quantile(yrep, 0.95)))
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "reference"
+label = "Against a Reference Fit"
+desc = "Distribution: Distributions.fit. Linear: least squares. Logistic: GLM.jl. The AD optimum should match them"
+code = '''
+{{?model=dist}} (ad_fit = d_hat, reference = fit({{dist-select}}, y))
+{{?model=lr}} (ad_fit = beta_hat, least_squares = X \ y)
+{{?model=logr}} using GLM
+{{?model=logr}} (ad_fit = beta_hat, glm = coef(glm(X, y, Binomial(), LogitLink())))
+'''
+
+[[actionGroups.actions]]
+id = "backends"
+label = "Enzyme Against ForwardDiff"
+desc = "The gradient at the optimum from both AD backends, with the time each takes"
+code = '''
+using Enzyme, ForwardDiff
+enzyme_grad(p) = (G = zero(p); Enzyme.autodiff(Reverse, nll, Active, Duplicated(copy(p), G), Const.(data)...); G)
+ge = enzyme_grad(p_hat)
+gf = ForwardDiff.gradient(negloglik, p_hat)
+te = @elapsed for _ in 1:20; enzyme_grad(p_hat); end
+tf = @elapsed for _ in 1:20; ForwardDiff.gradient(negloglik, p_hat); end
+(max_difference = maximum(abs, ge .- gf), enzyme_ms = 1000 * te / 20, forwarddiff_ms = 1000 * tf / 20)
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "standard-errors"
+label = "Estimates With Standard Errors"
+desc = "Standard errors from the inverse Hessian of the negative log-likelihood (computed with ForwardDiff), with z-statistics"
+code = '''
+using ForwardDiff, LinearAlgebra
+H = ForwardDiff.hessian(negloglik, p_hat)
+se = sqrt.(diag(inv(H)))
+[(parameter = pnames[i], estimate = round(p_hat[i], sigdigits=4), std_error = round(se[i], sigdigits=3), z = round(p_hat[i] / se[i], digits=2)) for i in eachindex(p_hat)]
+'''
+
+[[actionGroups.actions]]
+id = "meaning"
+label = "In Plain Terms"
+desc = "Distribution: mean and spread of the fit. Linear: R2 and noise. Logistic: odds ratios. Plus the AIC of the fit"
+code = '''
+using Statistics
+aic = 2 * length(p_hat) + 2 * negloglik(p_hat)
+{{?model=dist}} (fitted = d_hat, mean = mean(d_hat), std = std(d_hat), AIC = aic)
+{{?model=lr}} (R2 = 1 - sum(abs2, y .- X * beta_hat) / sum(abs2, y .- mean(y)), noise_sd = sigma_hat, AIC = aic)
+{{?model=logr}} (odds_ratios = pnames .=> round.(exp.(beta_hat), digits=3), AIC = aic)
 '''

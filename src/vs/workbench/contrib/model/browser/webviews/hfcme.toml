@@ -125,99 +125,234 @@ text = "Realized Kernel"
 detail = "applies a Parzen kernel to the autocovariance matrices of tick returns up to lag L, yielding a positive semi-definite estimate robust to both noise and non-synchronicity"
 
 [[inputs]]
-id = "p"
-label = "Tick price data (p)"
-tooltip = "Price data for N assets. Accepts a matrix of synchronised prices (T×N) or a vector of N tick-data series with irregular timestamps. Prices should be raw levels, not returns — log-returns are computed internally."
-default = "p"
+id = "data"
+label = "Tick Data"
+tooltip = "simulated: four assets with 10,000 asynchronous ticks, microstructure noise and a known true covariance. Otherwise any Tables.jl source (e.g. a named tuple of vectors) with one row per tick: time (seconds), asset (Symbol) and logprice."
+default = "simulated"
 
 [[inputs]]
-id = "assets"
-label = "Assets"
-tooltip = "Names or integer count of assets to estimate. When passing raw tick series, supply a string vector of asset tickers matching the column order of p."
-default = "assets"
-
-[[inputs]]
-id = "H"
-label = "Bandwidth (H)"
-tooltip = "Pre-averaging bandwidth: number of consecutive ticks over which each return is smoothed before forming outer products. Larger H removes more noise but reduces the effective number of observations. Typical range: 3–15."
-default = "5"
+id = "theta"
+label = "Pre-averaging Window (theta)"
+tooltip = "Scales the pre-averaging window k = theta * sqrt(number of ticks) (Christensen, Podolskij and Vetter 2013). A larger theta smooths away more noise but leaves fewer returns. Default 0.15."
+default = "0.15"
 models = ["pav"]
 
 [[inputs]]
 id = "K"
 label = "Sub-grids (K)"
-tooltip = "Number of sub-sampling grids for the slow scale. The two-scales estimator uses K evenly spaced sub-grids of ticks to estimate slow-scale covariation and subtracts a fast-scale noise correction. Typical range: 5–30."
-default = "5"
+tooltip = "Number of sub-sampling grids for the slow scale of the two-scales estimator. Leave blank for the package default (fewest ticks of any asset / 100, at least 3)."
+default = ""
 models = ["tsrc"]
 
 [[inputs]]
-id = "L"
-label = "Bandwidth (L)"
-tooltip = "Number of autocovariance lags used in the kernel sum. Larger L captures more lead-lag structure but increases variance. Leave blank to use the package default."
+id = "H"
+label = "Kernel Bandwidth (H)"
+tooltip = "Bandwidth of the Parzen kernel over the autocovariances of refresh-time returns. Larger H captures more lead-lag structure but increases variance. Leave blank for the package default (c* times the mean ticks per asset to the power 0.6)."
 default = ""
 models = ["rk"]
 
 [[codeBranches]]
 model = "rc"
 code = '''
-using HighFrequencyCovariance, LinearAlgebra  # high-frequency covariance + linear algebra
+using HighFrequencyCovariance, LinearAlgebra, Random
 
-result = estimate_covariance({{p}}, {{assets}};  # realized covariance from synchronised tick data
-    method = Simple())
+{{?data=simulated}} ts, true_covar, true_noise, _ = generate_random_path(4, 10000; rng=MersenneTwister(2))  # simulated ticks with known true covariance and noise
+{{?data!=simulated}} using Tables, Dates
+{{?data!=simulated}} ts = SortedDataFrame(HighFrequencyCovariance.DataFrame(Tables.columntable({{data}})), :time, :asset, :logprice, Second(1))  # ticks from any Tables.jl source, sorted by time
+assets = get_assets(ts)
+est = estimate_covariance(ts, assets, :simple_covariance)  # realized covariance on an optimally spaced time grid
 
-Sigma = result.covariance  # estimated N×N covariance matrix
-rho = cov2cor(Sigma)  # derived N×N correlation matrix
-sigma = sqrt.(diag(Sigma))  # per-asset annualised volatilities
+Sigma = covariance(est)  # covariance matrix over one time unit
+rho   = Matrix(est.correlation)  # correlation matrix
+sigma = est.volatility  # volatility per time unit, in the order of est.labels
 
-println("Covariance matrix: ", round.(Sigma, digits=6))  # print covariance matrix
-println("Correlation matrix: ", round.(rho, digits=4))  # print correlation matrix
+println("Assets: ", est.labels)
+println("Correlation matrix: ", round.(rho, digits=3))
+println("Volatility: ", round.(sigma, sigdigits=4))
 '''
 
 [[codeBranches]]
 model = "pav"
 code = '''
-using HighFrequencyCovariance, LinearAlgebra  # high-frequency covariance + linear algebra
+using HighFrequencyCovariance, LinearAlgebra, Random
 
-result = estimate_covariance({{p}}, {{assets}};  # pre-averaged realized covariance
-    method = PreAveraged(H = {{H}}))
+{{?data=simulated}} ts, true_covar, true_noise, _ = generate_random_path(4, 10000; rng=MersenneTwister(2))  # simulated ticks with known true covariance and noise
+{{?data!=simulated}} using Tables, Dates
+{{?data!=simulated}} ts = SortedDataFrame(HighFrequencyCovariance.DataFrame(Tables.columntable({{data}})), :time, :asset, :logprice, Second(1))  # ticks from any Tables.jl source, sorted by time
+assets = get_assets(ts)
+est = estimate_covariance(ts, assets, :preaveraged_covariance; theta={{theta}})  # pre-averaged Hayashi-Yoshida covariance
 
-Sigma = result.covariance  # estimated N×N covariance matrix
-rho = cov2cor(Sigma)  # derived N×N correlation matrix
-sigma = sqrt.(diag(Sigma))  # per-asset annualised volatilities
+Sigma = covariance(est)  # covariance matrix over one time unit
+rho   = Matrix(est.correlation)  # correlation matrix
+sigma = est.volatility  # volatility per time unit, in the order of est.labels
 
-println("Covariance matrix: ", round.(Sigma, digits=6))  # print covariance matrix
-println("Correlation matrix: ", round.(rho, digits=4))  # print correlation matrix
+println("Assets: ", est.labels)
+println("Correlation matrix: ", round.(rho, digits=3))
+println("Volatility: ", round.(sigma, sigdigits=4))
 '''
 
 [[codeBranches]]
 model = "tsrc"
 code = '''
-using HighFrequencyCovariance, LinearAlgebra  # high-frequency covariance + linear algebra
+using HighFrequencyCovariance, LinearAlgebra, Random
 
-result = estimate_covariance({{p}}, {{assets}};  # two-scales realized covariance
-    method = TwoScales(K = {{K}}))
+{{?data=simulated}} ts, true_covar, true_noise, _ = generate_random_path(4, 10000; rng=MersenneTwister(2))  # simulated ticks with known true covariance and noise
+{{?data!=simulated}} using Tables, Dates
+{{?data!=simulated}} ts = SortedDataFrame(HighFrequencyCovariance.DataFrame(Tables.columntable({{data}})), :time, :asset, :logprice, Second(1))  # ticks from any Tables.jl source, sorted by time
+assets = get_assets(ts)
+{{?K=}} est = estimate_covariance(ts, assets, :two_scales_covariance)  # two-scales covariance
+{{?K!=}} est = estimate_covariance(ts, assets, :two_scales_covariance; num_grids={{K}})  # two-scales covariance
 
-Sigma = result.covariance  # estimated N×N covariance matrix
-rho = cov2cor(Sigma)  # derived N×N correlation matrix
-sigma = sqrt.(diag(Sigma))  # per-asset annualised volatilities
+Sigma = covariance(est)  # covariance matrix over one time unit
+rho   = Matrix(est.correlation)  # correlation matrix
+sigma = est.volatility  # volatility per time unit, in the order of est.labels
 
-println("Covariance matrix: ", round.(Sigma, digits=6))  # print covariance matrix
-println("Correlation matrix: ", round.(rho, digits=4))  # print correlation matrix
+println("Assets: ", est.labels)
+println("Correlation matrix: ", round.(rho, digits=3))
+println("Volatility: ", round.(sigma, sigdigits=4))
 '''
 
 [[codeBranches]]
 model = "rk"
 code = '''
-using HighFrequencyCovariance, LinearAlgebra  # high-frequency covariance + linear algebra
+using HighFrequencyCovariance, LinearAlgebra, Random
 
-result = estimate_covariance({{p}}, {{assets}};  # realized kernel covariance (Parzen kernel)
-{{?L=}}     method = RealizedKernel())
-{{?L!=}}     method = RealizedKernel(L = {{L}}))
+{{?data=simulated}} ts, true_covar, true_noise, _ = generate_random_path(4, 10000; rng=MersenneTwister(2))  # simulated ticks with known true covariance and noise
+{{?data!=simulated}} using Tables, Dates
+{{?data!=simulated}} ts = SortedDataFrame(HighFrequencyCovariance.DataFrame(Tables.columntable({{data}})), :time, :asset, :logprice, Second(1))  # ticks from any Tables.jl source, sorted by time
+assets = get_assets(ts)
+{{?H=}} est = estimate_covariance(ts, assets, :bnhls_covariance)  # multivariate realized kernel (Parzen)
+{{?H!=}} est = estimate_covariance(ts, assets, :bnhls_covariance; H={{H}})  # multivariate realized kernel (Parzen)
 
-Sigma = result.covariance  # estimated N×N covariance matrix
-rho = cov2cor(Sigma)  # derived N×N correlation matrix
-sigma = sqrt.(diag(Sigma))  # per-asset annualised volatilities
+Sigma = covariance(est)  # covariance matrix over one time unit
+rho   = Matrix(est.correlation)  # correlation matrix
+sigma = est.volatility  # volatility per time unit, in the order of est.labels
 
-println("Covariance matrix: ", round.(Sigma, digits=6))  # print covariance matrix
-println("Correlation matrix: ", round.(rho, digits=4))  # print correlation matrix
+println("Assets: ", est.labels)
+println("Correlation matrix: ", round.(rho, digits=3))
+println("Volatility: ", round.(sigma, sigdigits=4))
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "heatmap"
+label = "Correlation Heatmap"
+desc = "The estimated correlation matrix as a heatmap with the asset names on both axes"
+code = '''
+using Plots
+labs = string.(est.labels)
+heatmap(labs, labs, rho, clims=(-1, 1), c=:RdBu, yflip=true, aspect_ratio=1, title="Estimated correlations")
+'''
+
+[[actionGroups.actions]]
+id = "activity"
+label = "Trading Activity"
+desc = "Number of ticks per asset: asynchronous, unevenly traded assets are what these estimators are built for"
+code = '''
+using Plots
+tpa = ticks_per_asset(ts, assets)
+bar(string.(assets), [tpa[a] for a in assets], legend=false, ylabel="ticks", title="Ticks per asset")
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "validity"
+label = "Matrix Validity"
+desc = "Whether the estimate is positive semi-definite and a valid correlation matrix, with its smallest eigenvalues"
+code = '''
+using LinearAlgebra
+(psd = is_psd_matrix(Hermitian(Sigma)), valid_correlation = valid_correlation_matrix(est.correlation), smallest_eigenvalues = round.(sort(eigvals(Hermitian(rho)))[1:min(3, end)], sigdigits=3))
+'''
+
+[[actionGroups.actions]]
+id = "noise"
+label = "Microstructure Noise"
+desc = "Two-scales estimate of the noise variance per asset next to the squared volatility: a large ratio means naive realized covariance is biased"
+code = '''
+noise = estimate_microstructure_noise(ts, assets)
+vol = Dict(est.labels .=> est.volatility)
+[(asset = a, noise_variance = noise[a], vol_squared = vol[a]^2, noise_to_signal = noise[a] / vol[a]^2) for a in assets]
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "portfolio"
+label = "Portfolio Volatility"
+desc = "Daily volatility of an equal-weight portfolio from the estimated covariance, with each asset's share of the risk"
+code = '''
+using Dates, LinearAlgebra
+SigmaDay = covariance(est, Day(1))  # covariance over one day
+w = fill(1 / length(est.labels), length(est.labels))
+pvol = sqrt(dot(w, SigmaDay * w))
+(daily_volatility = pvol, risk_share = Dict(est.labels .=> round.(w .* (SigmaDay * w) ./ pvol^2, digits=3)))
+'''
+
+[[actionGroups.actions]]
+id = "scenarios"
+label = "Return Scenarios"
+desc = "10,000 daily return vectors drawn from a normal with the estimated covariance, and the equal-weight portfolio's 1% and 5% quantiles"
+code = '''
+using Dates, Distributions, LinearAlgebra, Statistics
+SigmaDay = Symmetric(covariance(est, Day(1)))
+R = rand(MvNormal(zeros(size(SigmaDay, 1)), SigmaDay), 10_000)  # assets x scenarios
+port = vec(mean(R, dims=1))  # equal-weight portfolio return
+(q01 = quantile(port, 0.01), q05 = quantile(port, 0.05), worst = minimum(port))
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "methods"
+label = "All Five Estimators"
+desc = "Distance of each estimator from the truth (simulated data) or from the current estimate (your data)"
+code = '''
+estimators = [:simple_covariance, :bnhls_covariance, :spectral_covariance, :preaveraged_covariance, :two_scales_covariance]
+{{?data=simulated}} ref = true_covar
+{{?data!=simulated}} ref = est
+[(method = m, distance = calculate_mean_abs_distance(estimate_covariance(ts, assets, m), ref)) for m in estimators]
+'''
+
+[[actionGroups.actions]]
+id = "regularised"
+label = "Raw Against Regularised"
+desc = "How far the nearest valid correlation matrix and eigenvalue cleaning move the estimate"
+code = '''
+nearest = regularise(est, ts, :nearest_correlation_matrix)
+cleaned = regularise(est, ts, :eigenvalue_clean)
+(nearest_correlation = squared_frobenius_distance(Matrix(nearest.correlation), rho), eigenvalue_clean = squared_frobenius_distance(Matrix(cleaned.correlation), rho))
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "pairs"
+label = "Strongest Pairs"
+desc = "Asset pairs ranked by the absolute value of their estimated correlation"
+code = '''
+n = length(est.labels)
+ranked = [(pair = (est.labels[i], est.labels[j]), correlation = round(rho[i, j], digits=3)) for i in 1:n for j in i+1:n]
+sort(ranked, by=x -> -abs(x.correlation))
+'''
+
+[[actionGroups.actions]]
+id = "annualised"
+label = "Annualised Volatilities"
+desc = "Each asset's volatility scaled to a 252-day year, the unit in which volatility is usually quoted"
+code = '''
+using Dates
+sd = sqrt.(diag(covariance(est, Day(1)))) .* sqrt(252)
+[(asset = a, annual_volatility_pct = round(100 * v, digits=2)) for (a, v) in zip(est.labels, sd)]
 '''

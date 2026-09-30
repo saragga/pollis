@@ -222,21 +222,21 @@ label = "Parameters"
 tooltip = "Fix two parameters as key=value pairs, comma-separated. Keys: mean, var, std, cv, scv, second_moment (E[X^2]), mode, median, q1, q3, iqr, quantiles (vector of (p, q), e.g. [(0.10, 1.0), (0.90, 10.0)]). Optionally append support=0..Inf (or 2..7, 0:20)."
 default = "mean=5.0, var=2.0"
 models = ["moments"]
-when = "dist=Normal|Laplace|Logistic|Gumbel|Gamma|Erlang|LogNormal|Weibull|Frechet|FDist|InverseGamma|Beta|NegativeBinomial"
+when = "dist=Normal|Laplace|Logistic|Gumbel|Gamma|Erlang|LogNormal|Weibull|Frechet|FDist|InverseGamma|Beta|NegativeBinomial|Uniform|SymTriangularDist|DiscreteUniform"
 
 [[inputs]]
 id = "params3"
 label = "Parameters"
-tooltip = "Fix three parameters as key=value pairs, comma-separated. Keys: mean, var, std, cv, scv, second_moment (E[X^2]), mode, median, q1, q3, iqr, quantiles (vector of (p, q), e.g. [(0.10, 1.0), (0.90, 10.0)]). Optionally append support=0..Inf (or 2..7, 0:20)."
-default = "mean=5.0, var=2.0, std=1.5"
+tooltip = "The standard TDist has mean 0; its variance (> 1) sets the degrees of freedom. Keys: mean, var, std. Optionally append support=0..Inf (or 2..7, 0:20)."
+default = "mean=0.0, var=2.0"
 models = ["moments"]
 when = "dist=TDist"
 
 [[inputs]]
 id = "paramsq"
 label = "Parameters"
-tooltip = "Fix two quantile parameters (median, q1, q3, iqr, quantiles) as key=value pairs, comma-separated. Keys: median, q1, q3, iqr, quantiles. Optionally append support=0..Inf (or 2..7, 0:20)."
-default = "median=5.0, q1=2.0"
+tooltip = "Fix two quantiles as key=value pairs, comma-separated: q1 and q3, median and iqr, or quantiles (vector of two (p, q), e.g. [(0.10, 1.0), (0.90, 10.0)]). Optionally append support=0..Inf (or 2..7, 0:20)."
+default = "q1=2.0, q3=8.0"
 models = ["moments"]
 when = "dist=Cauchy"
 
@@ -252,19 +252,17 @@ model = "moments"
 code = '''
 using DistributionsFactories, Distributions
 
-{{?dist=Uniform|SymTriangularDist|DiscreteUniform}} d = make_dist({{dist}})
-{{?dist=Uniform|SymTriangularDist|DiscreteUniform}} println("support: [", minimum(d), ", ", maximum(d), "]")
-{{?dist=Exponential|Chisq|FoldedNormal|Pareto|Chi|Rayleigh|Binomial|Geometric|Poisson}} if dist_exists({{dist}}, {{params1}})  # feasibility check
-{{?dist=Exponential|Chisq|FoldedNormal|Pareto|Chi|Rayleigh|Binomial|Geometric|Poisson}}     d = make_dist({{dist}}, {{params1}})
-{{?dist=Normal|Laplace|Logistic|Gumbel|Gamma|Erlang|LogNormal|Weibull|Frechet|FDist|InverseGamma|Beta|NegativeBinomial}} if dist_exists({{dist}}, {{params2}})  # feasibility check
-{{?dist=Normal|Laplace|Logistic|Gumbel|Gamma|Erlang|LogNormal|Weibull|Frechet|FDist|InverseGamma|Beta|NegativeBinomial}}     d = make_dist({{dist}}, {{params2}})
-{{?dist=TDist}} if dist_exists({{dist}}, {{params3}})  # feasibility check
-{{?dist=TDist}}     d = make_dist({{dist}}, {{params3}})
-{{?dist=Cauchy}} if dist_exists({{dist}}, {{paramsq}})  # feasibility check
-{{?dist=Cauchy}}     d = make_dist({{dist}}, {{paramsq}})
-{{?dist!=Uniform|SymTriangularDist|DiscreteUniform|Cauchy}}     println("mean: ", mean(d), "  var: ", var(d), "  median: ", median(d))
+{{?dist=Exponential|Chisq|FoldedNormal|Pareto|Chi|Rayleigh|Binomial|Geometric|Poisson}} targets = (; {{params1}})
+{{?dist=Normal|Laplace|Logistic|Gumbel|Gamma|Erlang|LogNormal|Weibull|Frechet|FDist|InverseGamma|Beta|NegativeBinomial|Uniform|SymTriangularDist|DiscreteUniform}} targets = (; {{params2}})
+{{?dist=TDist}} targets = (; {{params3}})
+{{?dist=Cauchy}} targets = (; {{paramsq}})
+if dist_exists({{dist}}; targets...)  # feasibility check
+    d = make_dist({{dist}}; targets...)
+{{?dist!=Cauchy}}     println("mean: ", mean(d), "  var: ", var(d), "  median: ", median(d))
 {{?dist=Cauchy}}     println("q25: ", quantile(d, 0.25), "  q75: ", quantile(d, 0.75))
-{{?dist!=Uniform|SymTriangularDist|DiscreteUniform}} end
+else
+    println("No {{dist}} distribution meets these targets; the Discover toggle lists the families that do.")
+end
 '''
 
 [[codeBranches]]
@@ -272,5 +270,180 @@ model = "discover"
 code = '''
 using DistributionsFactories, Distributions
 
-available_distributions({{constraints}})  # returns all feasible families
+targets = (; {{constraints}})
+kw = Base.structdiff(targets, NamedTuple{(:support,)})
+fams = haskey(targets, :support) ? available_distributions(targets.support; kw...) : available_distributions(; kw...)  # all feasible families
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "density"
+label = "Density of the Matched Distribution"
+desc = "The density (or probability mass) of the matched distribution, or of every feasible family overlaid"
+code = '''
+using Plots
+{{?model=moments}} ds = [string({{dist}}) => d]
+{{?model=discover}} ds = [string(F) => make_dist(F; targets...) for F in fams]
+lo = minimum(quantile(D, 0.005) for (_, D) in ds)
+hi = maximum(quantile(D, 0.995) for (_, D) in ds)
+plot(title="Matched densities", xlabel="x", ylabel="density")
+for (name, D) in ds
+    D isa DiscreteDistribution ? plot!(floor(Int, lo):ceil(Int, hi), x -> pdf(D, x), seriestype=:sticks, lw=2, label=name) : plot!(range(lo, hi, length=400), x -> pdf(D, x), lw=2, label=name)
+end
+current()
+'''
+
+[[actionGroups.actions]]
+id = "cdf"
+label = "CDF With Quartiles"
+desc = "The cumulative distribution with the lower quartile, median and upper quartile marked"
+code = '''
+using Plots
+{{?model=moments}} ds = [string({{dist}}) => d]
+{{?model=discover}} ds = [string(F) => make_dist(F; targets...) for F in fams]
+lo = minimum(quantile(D, 0.005) for (_, D) in ds)
+hi = maximum(quantile(D, 0.995) for (_, D) in ds)
+plot(title="Cumulative distribution", xlabel="x", ylabel="F(x)", legend=:bottomright)
+for (name, D) in ds
+    plot!(range(lo, hi, length=400), x -> cdf(D, x), lw=2, label=name)
+end
+{{?model=moments}} vline!(quantile.(d, [0.25, 0.5, 0.75]), ls=:dash, color=:gray, label="quartiles")
+current()
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "targets-met"
+label = "Check the Targets Are Met"
+desc = "Each target next to the value the matched distribution actually has"
+code = '''
+{{?model=moments}} ds = [string({{dist}}) => d]
+{{?model=discover}} ds = [string(F) => make_dist(F; targets...) for F in fams]
+achieved = Dict(:mean => mean, :var => var, :std => std, :median => median, :mode => mode,
+    :q1 => D -> quantile(D, 0.25), :q3 => D -> quantile(D, 0.75), :iqr => D -> quantile(D, 0.75) - quantile(D, 0.25),
+    :cv => D -> std(D) / mean(D), :scv => D -> var(D) / mean(D)^2, :second_moment => D -> var(D) + mean(D)^2,
+    :support => D -> (minimum(D), maximum(D)), :quantiles => D -> [(p, quantile(D, p)) for (p, _) in targets.quantiles])
+[(family = name, key = k, target = v, achieved = achieved[k](D)) for (name, D) in ds for (k, v) in pairs(targets)]
+'''
+
+[[actionGroups.actions]]
+id = "sensitivity"
+label = "Sensitivity to the Targets"
+desc = "How the parameters (or the list of feasible families) change when each numeric target moves by 10% down or up"
+code = '''
+for (k, v) in pairs(targets)
+    v isa Real || continue
+    for f in (0.9, 1.1)
+        t = merge(targets, NamedTuple{(k,)}((f * v,)))
+{{?model=moments}}         ok = dist_exists({{dist}}; t...)
+{{?model=moments}}         println(rpad("$k = $(f * v)", 28), ok ? params(make_dist({{dist}}; t...)) : "infeasible")
+{{?model=discover}}         kw = Base.structdiff(t, NamedTuple{(:support,)})
+{{?model=discover}}         println(rpad("$k = $(f * v)", 28), haskey(t, :support) ? available_distributions(t.support; kw...) : available_distributions(; kw...))
+    end
+end
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "tails"
+label = "Tail and Interval Probabilities"
+desc = "The chance of falling within 1, 2 and 3 spreads of the centre, and of exceeding the upper end (median and IQR stand in when the variance is not finite)"
+code = '''
+{{?model=moments}} ds = [string({{dist}}) => d]
+{{?model=discover}} ds = [string(F) => make_dist(F; targets...) for F in fams]
+map(ds) do (name, D)
+    c, s = isfinite(var(D)) ? (mean(D), std(D)) : (median(D), (quantile(D, 0.75) - quantile(D, 0.25)) / 1.349)
+    (family = name, centre = c, spread = s,
+     within_1 = cdf(D, c + s) - cdf(D, c - s), within_2 = cdf(D, c + 2s) - cdf(D, c - 2s),
+     within_3 = cdf(D, c + 3s) - cdf(D, c - 3s), above_3 = ccdf(D, c + 3s))
+end
+'''
+
+[[actionGroups.actions]]
+id = "simulate"
+label = "Simulate From the Distribution"
+desc = "10,000 draws and their sample moments and quartiles next to the distribution's own"
+code = '''
+using Statistics, Random
+{{?model=moments}} ds = [string({{dist}}) => d]
+{{?model=discover}} ds = [string(F) => make_dist(F; targets...) for F in fams]
+rng = Xoshiro(1)
+map(ds) do (name, D)
+    x = rand(rng, D, 10_000)
+    (family = name, sample_mean = mean(x), mean = mean(D), sample_var = var(x), var = var(D),
+     sample_quartiles = quantile(x, [0.25, 0.5, 0.75]), quartiles = quantile.(D, [0.25, 0.5, 0.75]))
+end
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "shape"
+label = "Shape Across Matching Families"
+desc = "Skewness, excess kurtosis, mode and support of every family that meets the same targets"
+code = '''
+kw = Base.structdiff(targets, NamedTuple{(:support,)})
+fams = haskey(targets, :support) ? available_distributions(targets.support; kw...) : available_distributions(; kw...)
+safe(f, D) = try f(D) catch; missing end
+[(family = string(F), skewness = safe(skewness, D), excess_kurtosis = safe(kurtosis, D), mode = safe(mode, D), support = (minimum(D), maximum(D)))
+ for F in fams for D in (make_dist(F; targets...),)]
+'''
+
+[[actionGroups.actions]]
+id = "tail-weight"
+label = "Tail Weight Across Families"
+desc = "The 95%, 99% and 99.9% quantiles of every family that meets the same targets, with their densities overlaid"
+code = '''
+using Plots
+kw = Base.structdiff(targets, NamedTuple{(:support,)})
+fams = haskey(targets, :support) ? available_distributions(targets.support; kw...) : available_distributions(; kw...)
+ds = [string(F) => make_dist(F; targets...) for F in fams]
+display([(family = name, q95 = quantile(D, 0.95), q99 = quantile(D, 0.99), q999 = quantile(D, 0.999)) for (name, D) in ds])
+hi = maximum(quantile(D, 0.999) for (_, D) in ds)
+lo = minimum(quantile(D, 0.9) for (_, D) in ds)
+plot(title="Upper tails", xlabel="x", ylabel="1 - F(x)", yscale=:log10)
+for (name, D) in ds
+    plot!(range(lo, hi, length=300), x -> max(ccdf(D, x), 1e-6), lw=2, label=name)
+end
+current()
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "parameters"
+label = "Parameters and Their Names"
+desc = "The fitted parameters of the matched distribution (or of each feasible family) with their field names"
+code = '''
+{{?model=moments}} ds = [string({{dist}}) => d]
+{{?model=discover}} ds = [string(F) => make_dist(F; targets...) for F in fams]
+[(family = name, parameters = NamedTuple{fieldnames(typeof(D))}(ntuple(i -> getfield(D, i), fieldcount(typeof(D))))) for (name, D) in ds]
+'''
+
+[[actionGroups.actions]]
+id = "statement"
+label = "Plain-Language Statement"
+desc = "A sentence per family: the central 90% range and the chance of exceeding the 95th percentile of the first family"
+code = '''
+using Printf
+{{?model=moments}} ds = [string({{dist}}) => d]
+{{?model=discover}} ds = [string(F) => make_dist(F; targets...) for F in fams]
+ref = quantile(last(first(ds)), 0.95)
+for (name, D) in ds
+    @printf("Under %s, 90%% of values lie between %.3g and %.3g, and the chance of exceeding %.3g is %.1f%%.\n",
+        name, quantile(D, 0.05), quantile(D, 0.95), ref, 100 * ccdf(D, ref))
+end
 '''

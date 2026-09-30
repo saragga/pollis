@@ -109,6 +109,12 @@ text = "Returns posterior mean and credible bands for the piecewise-constant vol
 detail = ""
 
 [[inputs]]
+id = "data"
+label = "Data"
+tooltip = "simulated: 4,001 log-prices on [0, 1] with a known sine-shaped volatility and noise of standard deviation 0.005. Otherwise a tuple (t, y) of observation times and log-prices of equal length."
+default = "simulated"
+
+[[inputs]]
 id = "N"
 label = "Bins (N)"
 tooltip = "Number of bins for the piecewise-constant volatility path. Higher values capture finer structure but increase computation time."
@@ -153,7 +159,7 @@ default = "5.0"
 [[inputs]]
 id = "pia-type"
 label = "Pialpha (smoothing prior)"
-tooltip = ""
+tooltip = "Family of the prior on the smoothing parameter alpha of the inverse Gamma Markov chain. Larger alpha ties neighbouring volatility bins more closely together."
 kind = "select"
 default = "LogNormal"
 
@@ -168,31 +174,31 @@ label = "Normal"
 [[inputs]]
 id = "pia-mu"
 label = "Pialpha mu"
-tooltip = ""
+tooltip = "Location of the smoothing prior (the mean of log alpha for LogNormal). Default 1."
 default = "1.0"
 
 [[inputs]]
 id = "pia-sigma"
 label = "Pialpha sigma"
-tooltip = ""
+tooltip = "Scale of the smoothing prior. Default 0.5."
 default = "0.5"
 
 [[inputs]]
 id = "alpha0"
-label = "alpha₀ (init vol)"
-tooltip = "Initial volatility vector alpha₀ passed to MCMC. Length must equal N. Often initialised to a constant."
+label = "alpha₀ (init smoothing)"
+tooltip = "Initial value of the smoothing parameter alpha for the MCMC chain. Default 0.3."
 default = "0.3"
 
 [[inputs]]
 id = "sigmaAlpha"
 label = "sigmaalpha (proposal)"
-tooltip = "Proposal standard deviation sigmaalpha for the random-walk Metropolis step on log-volatility bins."
+tooltip = "Step size of the random-walk Metropolis proposal for the smoothing parameter alpha. Aim for an acceptance rate of roughly 0.2 to 0.5."
 default = "0.15"
 
 [[inputs]]
 id = "iter"
 label = "Iterations"
-tooltip = ""
+tooltip = "Number of Gibbs sampler iterations. Default 5000."
 default = "5000"
 
 [[inputs]]
@@ -210,27 +216,160 @@ default = "0.9"
 [[codeBranches]]
 model = "main"
 code = '''
-using MicrostructureNoise, Distributions
+using MicrostructureNoise, Distributions, Random
 
-# Observed log-price data
-t = [0.0, ...]  # observation times, length n+1
-y = [...]       # log-prices, length n
+{{?data=simulated}} n = 4000; t = collect(range(0, 1; length=n + 1))  # observation times on [0, 1]
+{{?data=simulated}} s(u) = 0.2 * (1 + 0.5 * sin(2pi * u))  # true volatility function
+{{?data=simulated}} x = cumsum([0.0; s.(t[1:end-1]) .* sqrt.(diff(t)) .* randn(n)])  # latent log-price
+{{?data=simulated}} y = x .+ 0.005 .* randn(n + 1)  # observed log-price with microstructure noise
+{{?data!=simulated}} t, y = {{data}}  # observation times and log-prices, equal length
 
-# Define prior
-prior = MicrostructureNoise.Prior(
-    N     = {{N}},
-    alpha1 = {{alpha1}}, beta1 = {{beta1}},   # InvGamma prior on first vol bin
-    alphaeta = {{alphaEta}}, betaeta = {{betaEta}},   # InvGamma prior on noise variance
-    Pialpha = {{pia-type}}({{pia-mu}}, {{pia-sigma}}),   # smoothing prior on log-vol ratios
-    mu0 = {{mu0}}, C0 = {{C0}}  # initial state prior
-)
+# Prior (the package's keyword names are Greek, so they are built with Symbol)
+prior = MicrostructureNoise.Prior(;
+    :N => {{N}},  # number of volatility bins
+    Symbol(Char(0x3b1), 1) => {{alpha1}}, Symbol(Char(0x3b2), 1) => {{beta1}},  # InvGamma prior on the first bin
+    Symbol(Char(0x3b1), Char(0x3b7)) => {{alphaEta}}, Symbol(Char(0x3b2), Char(0x3b7)) => {{betaEta}},  # InvGamma prior on the noise variance
+    Symbol(Char(0x3a0), Char(0x3b1)) => {{pia-type}}({{pia-mu}}, {{pia-sigma}}),  # prior on the smoothing parameter alpha
+    Symbol(Char(0x3bc), 0) => {{mu0}}, :C0 => {{C0}})  # Normal prior on the initial state
 
-# Initial volatility vector
-alpha0 = fill({{alpha0}}, prior.N)
+# Gibbs sampler with forward filtering backward sampling
+td, thetas, etas, alphas, pacc = MicrostructureNoise.MCMC(prior, t, y, {{alpha0}}, {{sigmaAlpha}}, {{iter}}; printiter=1000)
 
-# Run Gibbs sampler (FFBS)
-td, thetas, etas, alphas, pacc = MicrostructureNoise.MCMC(prior, t, y, alpha0, {{sigmaAlpha}}, {{iter}})
-
-# Posterior volatility with credible bands
+# Posterior of the squared volatility s^2 per bin, with credible bands
 post = MicrostructureNoise.posterior_volatility(td, thetas; burnin={{burnin}}, qu={{qu}})
+println("Posterior mean volatility per bin: ", round.(post.post_mean_root, sigdigits=3))
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "band"
+label = "Volatility With Credible Band"
+desc = "Posterior mean of the volatility s(t) per bin inside its marginal credible band, with the true curve for simulated data"
+code = '''
+using Plots
+st(v) = [v; v[end]]  # repeat the last bin for a step plot
+plot(td, st(sqrt.(post.post_qup)), fillrange=st(sqrt.(post.post_qlow)), seriestype=:steppost, fillalpha=0.3, lw=0, label=string(round(Int, 100 * post.qu), "% band"))
+plot!(td, st(post.post_mean_root), seriestype=:steppost, lw=2, label="posterior mean of s", xlabel="t", ylabel="volatility")
+{{?data=simulated}} plot!(s, 0, 1, lw=2, ls=:dash, label="true s(t)")
+'''
+
+[[actionGroups.actions]]
+id = "observations"
+label = "Observed Prices and Returns"
+desc = "The noisy log-prices and their increments: noise shows up as bounce-back between consecutive returns"
+code = '''
+using Plots
+p1 = plot(t, y, legend=false, ylabel="log-price", title="Observations")
+p2 = plot(t[2:end], diff(y), legend=false, ylabel="increment", xlabel="t", lw=0.5)
+plot(p1, p2, layout=(2, 1), size=(800, 550))
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "traces"
+label = "Trace Plots"
+desc = "MCMC traces of the noise variance eta and the smoothing parameter alpha, with the burn-in marked"
+code = '''
+using Plots
+p1 = plot(etas, legend=false, ylabel="eta (noise variance)")
+vline!(p1, [{{burnin}}], ls=:dash)
+p2 = plot(alphas, legend=false, ylabel="alpha (smoothing)", xlabel="iteration")
+vline!(p2, [{{burnin}}], ls=:dash)
+plot(p1, p2, layout=(2, 1), size=(800, 550))
+'''
+
+[[actionGroups.actions]]
+id = "mixing"
+label = "Acceptance and Mixing"
+desc = "Acceptance rate of the alpha step, lag-1 autocorrelation of the kept draws, and the mean of eta in each half of the chain"
+code = '''
+using Statistics, StatsBase
+keep = {{burnin}}:length(etas)
+h = div(length(keep), 2)
+(alpha_acceptance = pacc, lag1_autocor_eta = autocor(etas[keep], [1])[1], lag1_autocor_alpha = autocor(alphas[keep], [1])[1], eta_mean_first_half = mean(etas[keep[1:h]]), eta_mean_second_half = mean(etas[keep[h+1:end]]))
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "noise"
+label = "Noise Level"
+desc = "Posterior mean and credible interval of the noise variance and standard deviation, and the noise-to-signal ratio per observation"
+code = '''
+using Statistics
+e = etas[{{burnin}}:end]
+dt = mean(diff(t))
+(noise_variance = mean(e), interval = (quantile(e, 0.05), quantile(e, 0.95)), noise_sd = sqrt(mean(e)), noise_to_signal = mean(e) / (mean(post.post_mean) * dt))
+'''
+
+[[actionGroups.actions]]
+id = "integrated"
+label = "Integrated Variance"
+desc = "Posterior of the integrated variance, the total s^2 over the whole period, with its 90% interval"
+code = '''
+using Statistics
+IV = [sum(thetas[:, j] .* diff(td)) for j in {{burnin}}:size(thetas, 2)]
+{{?data=simulated}} println("True integrated variance: ", sum(s.(t[1:end-1]) .^ 2 .* diff(t)))
+(posterior_mean = mean(IV), interval = (quantile(IV, 0.05), quantile(IV, 0.95)))
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "realised"
+label = "Against Realized Variance"
+desc = "Naive realized variance at every tick and at sparser sampling next to the posterior integrated variance: noise inflates the naive sums"
+code = '''
+using Statistics
+rv(k) = sum(abs2, diff(y[1:k:end]))  # realized variance sampling every k-th observation
+IV = mean(sum(thetas[:, j] .* diff(td)) for j in {{burnin}}:size(thetas, 2))
+(every_tick = rv(1), every_10th = rv(10), every_50th = rv(50), posterior = IV)
+'''
+
+[[actionGroups.actions]]
+id = "noise-free"
+label = "Ignoring the Noise"
+desc = "Refits with the noise variance fixed at almost zero: the volatility is then overstated wherever noise dominates"
+code = '''
+using Statistics
+res0 = MicrostructureNoise.MCMC(prior, t, y, {{alpha0}}, {{sigmaAlpha}}, 2000; printiter=10_000, fixeta=true, Symbol(Char(0x3b7), 0) => 1e-10)
+post0 = MicrostructureNoise.posterior_volatility(res0[1], res0[2]; burnin=500)
+(average_vol_with_noise_model = mean(post.post_mean_root), average_vol_noise_ignored = mean(post0.post_mean_root))
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "summary"
+label = "Volatility Summary"
+desc = "Average, lowest and highest posterior volatility, when the peak occurs, and the posterior smoothing"
+code = '''
+using Statistics
+v = post.post_mean_root
+k = argmax(v)
+(average_vol = mean(v), lowest = minimum(v), highest = maximum(v), peak_bin = (td[k], td[k + 1]), smoothing_alpha = mean(alphas[{{burnin}}:end]))
+'''
+
+[[actionGroups.actions]]
+id = "coverage"
+label = "Band Coverage"
+desc = "Simulated data: how many bins' credible bands contain the true s^2. Your data: the median width of the band relative to the estimate"
+code = '''
+using Statistics
+mid = (td[1:end-1] .+ td[2:end]) ./ 2
+{{?data=simulated}} inside = post.post_qlow .<= s.(mid) .^ 2 .<= post.post_qup
+{{?data=simulated}} (bins_covered = count(inside), bins = length(inside), nominal = post.qu)
+{{?data!=simulated}} (median_relative_band_width = median((post.post_qup .- post.post_qlow) ./ post.post_mean), nominal = post.qu)
 '''

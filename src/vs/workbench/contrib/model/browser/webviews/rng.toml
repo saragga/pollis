@@ -229,7 +229,7 @@ when = "operation=shuffle"
 [[codeBranches]]
 model = "stable"
 code = '''
-using StableRNGs
+using StableRNGs, Random
 rng = StableRNG({{seed}})
 
 {{?operation=uniform_float}} x = rand(rng, {{float-type}}, {{count}})
@@ -282,7 +282,7 @@ model = "tasklocal"
 code = '''
 using Random
 rng = TaskLocalRNG()
-seed!(rng, {{seed}})
+Random.seed!(rng, {{seed}})
 
 {{?operation=uniform_float}} x = rand(rng, {{float-type}}, {{count}})
 {{?operation=uniform_int}} x = rand(rng, {{int-type}}, {{count}})
@@ -310,4 +310,150 @@ rng = RandomDevice()
 {{?operation=shuffle}} x = shuffle(rng, {{collection}})
 {{?operation=permutation}} x = randperm(rng, {{count}})
 println(x)
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "histogram"
+label = "Draws Against the Target Density"
+desc = "A histogram of 100,000 draws (normal, exponential or uniform, following the chosen operation) with the density they should follow"
+code = '''
+using Random, Plots
+{{?operation=normal}} y = randn(rng, 10^5); f = z -> exp(-z^2 / 2) / sqrt(2pi)
+{{?operation=exponential}} y = randexp(rng, 10^5); f = z -> exp(-z)
+{{?operation!=normal|exponential}} y = rand(rng, 10^5); f = z -> 1.0
+histogram(y, bins=60, normalize=:pdf, alpha=0.6, label="100,000 draws", title="Draws against the target density")
+plot!(f, extrema(y)..., lw=2, c=:red, label="target density")
+'''
+
+[[actionGroups.actions]]
+id = "lag-plot"
+label = "Successive Pairs"
+desc = "Each uniform draw against the next one: a good generator fills the square evenly, while stripes or lattices reveal dependence between draws"
+code = '''
+using Random, Plots
+u = rand(rng, 5000)
+scatter(u[1:end-1], u[2:end], ms=1.5, msw=0, alpha=0.6, legend=false, aspect_ratio=1, xlabel="u(i)", ylabel="u(i+1)", title="Successive pairs")
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "uniformity-tests"
+label = "Uniformity and Independence Tests"
+desc = "Kolmogorov-Smirnov and chi-square tests of uniformity, a runs test and Ljung-Box for serial dependence on 100,000 draws: small p-values would flag a problem"
+code = '''
+using Random, HypothesisTests, Distributions
+u = rand(rng, 10^5)
+counts = [count(k -> (i - 1) / 20 <= k < i / 20, u) for i in 1:20]  # 20 equal bins
+(ks_p = pvalue(ApproximateOneSampleKSTest(u, Uniform())), chisq_p = pvalue(ChisqTest(counts)), runs_p = pvalue(WaldWolfowitzTest(u)), ljung_box_p = pvalue(LjungBoxTest(u, 10)))
+'''
+
+[[actionGroups.actions]]
+id = "reproducibility"
+label = "Reproducibility Check"
+desc = "Draws twice from the same seed: seeded generators repeat exactly, RandomDevice never does"
+code = '''
+using Random
+{{?model=stable}} using StableRNGs; a = rand(StableRNG({{seed}}), 5); b = rand(StableRNG({{seed}}), 5)
+{{?model=mt}} a = rand(MersenneTwister({{seed}}), 5); b = rand(MersenneTwister({{seed}}), 5)
+{{?model=xoshiro}} a = rand(Xoshiro({{seed}}), 5); b = rand(Xoshiro({{seed}}), 5)
+{{?model=tasklocal}} Random.seed!({{seed}}); a = rand(5); Random.seed!({{seed}}); b = rand(5)
+{{?model=device}} a = rand(RandomDevice(), 5); b = rand(RandomDevice(), 5)
+(first_run = a, second_run = b, identical = a == b)
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "mc-pi"
+label = "Monte Carlo Estimate of Pi"
+desc = "The share of a million random points that land inside the quarter circle, times four, with its Monte Carlo standard error"
+code = '''
+using Random
+n = 10^6
+inside = count(_ -> rand(rng)^2 + rand(rng)^2 <= 1, 1:n)
+p = inside / n
+(estimate = 4p, standard_error = 4 * sqrt(p * (1 - p) / n), error = 4p - pi)
+'''
+
+[[actionGroups.actions]]
+id = "mc-convergence"
+label = "Monte Carlo Convergence"
+desc = "The running Monte Carlo estimate of pi against the number of draws, inside the shrinking 1/sqrt(n) confidence band"
+code = '''
+using Random, Plots
+n = 10^5
+hits = [rand(rng)^2 + rand(rng)^2 <= 1 for _ in 1:n]
+est = 4 .* cumsum(hits) ./ (1:n)
+band = 1.96 .* 4 .* sqrt.((pi / 4) * (1 - pi / 4) ./ (1:n))
+plot(1:n, est, xscale=:log10, lw=1.2, label="running estimate", xlabel="draws", title="Monte Carlo convergence")
+plot!(1:n, [pi .+ band pi .- band], c=:red, ls=:dash, label=["95% band" ""])
+hline!([pi], c=:black, label="pi")
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "speed"
+label = "Generator Speed"
+desc = "Time to fill a million Float64 values with each generator: Xoshiro is usually fastest, RandomDevice (the operating system) slowest"
+code = '''
+using Random, StableRNGs
+buf = Vector{Float64}(undef, 10^6)
+gens = ["Xoshiro" => Xoshiro(1), "MersenneTwister" => MersenneTwister(1), "StableRNG" => StableRNG(1), "RandomDevice" => RandomDevice()]
+[(generator = name, milliseconds = (rand!(g, buf); round(1000 * @elapsed(rand!(g, buf)), digits=2))) for (name, g) in gens]
+'''
+
+[[actionGroups.actions]]
+id = "streams"
+label = "Independent Streams"
+desc = "Four streams from neighbouring seeds, as used for parallel tasks: correlations near zero mean the streams can be used side by side"
+code = '''
+using Random, Statistics
+{{?model=stable}} using StableRNGs; make = s -> StableRNG(s)
+{{?model=mt}} make = s -> MersenneTwister(s)
+{{?model=xoshiro|tasklocal}} make = s -> Xoshiro(s)  # TaskLocalRNG is a Xoshiro per task
+{{?model!=device}} X = reduce(hcat, [randn(make({{seed}} + i), 10^5) for i in 1:4])
+{{?model=device}} X = reduce(hcat, [randn(RandomDevice(), 10^5) for _ in 1:4])
+round.(cor(X), digits=4)
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "generator-facts"
+label = "Generator Properties"
+desc = "Algorithm, period and guarantees of the chosen generator: what it is safe to use it for"
+code = '''
+{{?model=stable}} (algorithm = "LehmerRNG, 128-bit multiplicative congruential", period = "2^126", same_stream_across_julia_versions = true, use = "reproducible tests and published results")
+{{?model=mt}} (algorithm = "Mersenne Twister MT19937", period = "2^19937 - 1", same_stream_across_julia_versions = false, use = "legacy code and comparison with other languages")
+{{?model=xoshiro}} (algorithm = "Xoshiro256++", period = "2^256 - 1", same_stream_across_julia_versions = false, use = "fast general-purpose simulation")
+{{?model=tasklocal}} (algorithm = "Xoshiro256++, one state per task", period = "2^256 - 1", same_stream_across_julia_versions = false, use = "default rand(); reproducible with multithreading once seeded")
+{{?model=device}} (algorithm = "operating system entropy", period = "none", same_stream_across_julia_versions = false, use = "seeds, keys and tokens; not reproducible")
+'''
+
+[[actionGroups.actions]]
+id = "seed-sensitivity"
+label = "Does the Seed Matter?"
+desc = "Sample means from 20 different seeds against the theoretical standard error: the seed changes the draws but not the answer beyond Monte Carlo error"
+code = '''
+using Random, Statistics
+{{?model=stable}} using StableRNGs; make = s -> StableRNG(s)
+{{?model=mt}} make = s -> MersenneTwister(s)
+{{?model=xoshiro|tasklocal}} make = s -> Xoshiro(s)
+{{?model=device}} make = _ -> RandomDevice()
+means = [mean(rand(make(s), 10^4)) for s in 1:20]
+(mean_of_means = round(mean(means), digits=5), spread_across_seeds = round(std(means), digits=5), theoretical_se = round(1 / sqrt(12 * 10^4), digits=5))
 '''

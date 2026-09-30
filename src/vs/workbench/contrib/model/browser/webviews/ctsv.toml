@@ -13,11 +13,11 @@ name = "DiffEqFinancial.jl"
 github = "https://github.com/SciML/DiffEqFinancial.jl"
 
 [[packages]]
-name = "QuantLib.jl"
-github = "https://github.com/pazzo83/QuantLib.jl"
+name = "Distributions.jl"
+github = "https://github.com/JuliaStats/Distributions.jl"
 
 [requires]
-packages = ["DiffEqFinancial.jl", "QuantLib.jl"]
+packages = ["DiffEqFinancial.jl", "Distributions.jl"]
 
 [[notebookSections]]
 label = ""
@@ -103,7 +103,7 @@ detail = "Heston extended with compound Poisson–log-normal jump diffusion"
 
 [[bullets]]
 text = "SABR"
-detail = "CEV-type forward with log-normal volatility (reference only — no Julia package)"
+detail = "CEV-type forward with log-normal volatility, priced with the Hagan et al. (2002) implied-volatility formula"
 
 [[inputs]]
 id = "kappa"
@@ -199,7 +199,7 @@ models = ["sabr"]
 [[inputs]]
 id = "rho-sabr"
 label = "rho (rho)"
-tooltip = ""
+tooltip = "Correlation between the forward and its volatility. Negative rho tilts the smile downwards (low strikes have higher implied volatility). Default −0.3."
 default = "-0.3"
 models = ["sabr"]
 
@@ -213,8 +213,15 @@ models = ["sabr"]
 [[inputs]]
 id = "T-sabr"
 label = "T (expiry)"
-tooltip = ""
+tooltip = "Option expiry in years. Default 1."
 default = "1"
+models = ["sabr"]
+
+[[inputs]]
+id = "nu"
+label = "nu (vol of vol)"
+tooltip = "Volatility of the volatility process. Higher nu increases the curvature of the smile. Default 0.4."
+default = "0.4"
 models = ["sabr"]
 
 [[codeBranches]]
@@ -222,23 +229,231 @@ model = "heston"
 code = '''
 using DiffEqFinancial, DifferentialEquations
 
-u0   = [{{S0}}, {{v0}}]  # initial [price, variance]
-prob = HestonProblem({{mu}}, {{kappa}}, {{theta}}, {{xi}}, {{rho}}, u0, (0.0, {{T}}))  # Heston SDE problem
-sol  = solve(prob, SRIW1())  # simulate path
+S0, v0, T = {{S0}}, {{v0}}, {{T}}  # initial price, initial variance, horizon
+heston() = HestonProblem({{mu}}, {{kappa}}, {{theta}}, {{xi}}, {{rho}}, [S0, v0], (0.0, T))  # Heston SDE, fresh random seed per call
+sol  = solve(heston(), SRIW1())  # one simulated path
+t, S, v = sol.t, first.(sol.u), last.(sol.u)  # times, prices, variances
+simulate(n) = [solve(heston(), EM(); dt=0.01).u[end][1] for _ in 1:n]  # n terminal prices
 '''
 
 [[codeBranches]]
 model = "bates"
 code = '''
-using QuantLib
+using Random, Distributions
 
-spot = QuoteHandle(SimpleQuote({{S0}}))  # spot price handle
-rf   = YieldTermStructureHandle(FlatForward(today, 0.0, Actual365Fixed()))  # flat risk-free rate
-proc = BatesProcess(rf, rf, spot, {{v0}}, {{kappa}}, {{theta}}, {{xi}}, {{rho}}, {{lambda}}, {{muJ}}, {{sigmaJ}})  # Bates SDE process
+S0, v0, T = {{S0}}, {{v0}}, {{T}}  # initial price, initial variance, horizon
+kappa, theta, xi, rho = {{kappa}}, {{theta}}, {{xi}}, {{rho}}
+lambda, muJ, deltaJ = {{lambda}}, {{muJ}}, {{sigmaJ}}
+r = 0.0  # risk-free rate (drift under the pricing measure)
+kbar = exp(muJ + deltaJ^2 / 2) - 1  # mean relative jump size, compensated in the drift
+
+# Euler path with full truncation: Heston diffusion plus compound Poisson log-normal jumps
+function bates_path(n=252)
+    dt = T / n
+    S = fill(float(S0), n + 1); v = fill(float(v0), n + 1)
+    for i in 1:n
+        z1 = randn(); z2 = rho * z1 + sqrt(1 - rho^2) * randn()
+        vp = max(v[i], 0.0)
+        nj = rand(Poisson(lambda * dt))  # number of jumps in this step
+        J = nj == 0 ? 0.0 : rand(Normal(nj * muJ, sqrt(nj) * deltaJ))  # total log-jump
+        S[i + 1] = S[i] * exp((r - lambda * kbar - vp / 2) * dt + sqrt(vp * dt) * z1 + J)
+        v[i + 1] = v[i] + kappa * (theta - vp) * dt + xi * sqrt(vp * dt) * z2
+    end
+    S, v
+end
+
+t = range(0, T; length=253)
+S, v = bates_path()  # one simulated path
+simulate(n) = [bates_path()[1][end] for _ in 1:n]  # n terminal prices
 '''
 
 [[codeBranches]]
 model = "sabr"
 code = '''
+using Random
 
+F0, T = {{F0}}, {{T-sabr}}  # initial forward, expiry
+alpha, beta, rho, nu = {{alpha}}, {{beta}}, {{rho-sabr}}, {{nu}}
+S0 = F0  # the forward plays the role of the price
+
+# Hagan et al. (2002) implied Black volatility for strike K
+function sabr_vol(K)
+    fk = (F0 * K)^((1 - beta) / 2)
+    corr = 1 + ((1 - beta)^2 / 24 * alpha^2 / fk^2 + rho * beta * nu * alpha / (4 * fk) + (2 - 3 * rho^2) / 24 * nu^2) * T
+    abs(F0 - K) < 1e-8 && return alpha / F0^(1 - beta) * corr  # at the money
+    lfk = log(F0 / K)
+    z = nu / alpha * fk * lfk
+    x = log((sqrt(1 - 2 * rho * z + z^2) + z - rho) / (1 - rho))
+    alpha / (fk * (1 + (1 - beta)^2 / 24 * lfk^2 + (1 - beta)^4 / 1920 * lfk^4)) * z / x * corr
+end
+
+# Euler path of the forward F and its volatility sig (F is absorbed at 0)
+function sabr_path(n=252)
+    dt = T / n
+    F = fill(float(F0), n + 1); sig = fill(float(alpha), n + 1)
+    for i in 1:n
+        z1 = randn(); z2 = rho * z1 + sqrt(1 - rho^2) * randn()
+        F[i + 1] = max(F[i] + sig[i] * F[i]^beta * sqrt(dt) * z1, 0.0)
+        sig[i + 1] = sig[i] * exp(nu * sqrt(dt) * z2 - nu^2 * dt / 2)
+    end
+    F, sig
+end
+
+t = range(0, T; length=253)
+S, sig = sabr_path()  # one simulated path of the forward
+v = (sig .* S .^ (beta - 1)) .^ 2  # instantaneous variance of log F
+simulate(n) = [sabr_path()[1][end] for _ in 1:n]  # n terminal forwards
+println("ATM implied volatility: ", sabr_vol(F0))
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "paths"
+label = "Price and Volatility Paths"
+desc = "The simulated price path above its instantaneous volatility: look for volatility spikes as prices fall"
+code = '''
+using Plots
+p1 = plot(t, S, xlabel="t (years)", ylabel="price", legend=false, title="Simulated price path")
+p2 = plot(t, sqrt.(max.(v, 0)), xlabel="t (years)", ylabel="volatility", legend=false, title="Instantaneous volatility")
+plot(p1, p2, layout=(2, 1), size=(800, 550))
+'''
+
+[[actionGroups.actions]]
+id = "smile"
+label = "Implied Volatility Smile"
+desc = "Black implied volatility across strikes: Monte Carlo prices inverted for Heston and Bates, the Hagan formula for SABR"
+code = '''
+using Statistics, Distributions, Plots
+{{?model=heston}} F = S0 * exp({{mu}} * T)  # forward price
+{{?model=bates}} F = S0 * exp(r * T)  # forward price
+{{?model=sabr}} F = S0
+black(sig, K) = (d1 = (log(F / K) + sig^2 * T / 2) / (sig * sqrt(T)); F * cdf(Normal(), d1) - K * cdf(Normal(), d1 - sig * sqrt(T)))
+function implied(c, K)  # bisection on the undiscounted Black price
+    lo, hi = 1e-4, 3.0
+    for _ in 1:60
+        mid = (lo + hi) / 2
+        black(mid, K) < c ? (lo = mid) : (hi = mid)
+    end
+    (lo + hi) / 2
+end
+strikes = F .* (0.7:0.05:1.3)
+{{?model=heston|bates}} ST = simulate(5000)
+{{?model=heston|bates}} ivs = [implied(mean(max.(ST .- K, 0)), K) for K in strikes]
+{{?model=sabr}} ivs = sabr_vol.(strikes)
+plot(strikes ./ F, ivs, marker=:circle, xlabel="moneyness K / F", ylabel="implied volatility", legend=false, title="Implied volatility smile")
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "positivity"
+label = "Positivity Check"
+desc = "Heston and Bates: the Feller condition 2 kappa theta > xi^2 keeps the variance away from zero; SABR: whether the forward was absorbed at zero"
+code = '''
+{{?model=heston|bates}} (two_kappa_theta = 2 * {{kappa}} * {{theta}}, xi_squared = {{xi}}^2, feller_holds = 2 * {{kappa}} * {{theta}} > {{xi}}^2, steps_at_zero_variance = count(<=(0), v))
+{{?model=sabr}} (min_forward = minimum(S), absorbed_at_zero = any(==(0), S))
+'''
+
+[[actionGroups.actions]]
+id = "martingale"
+label = "Monte Carlo Mean Check"
+desc = "The mean simulated terminal price against its theoretical value: a z-score beyond 2 points to discretisation bias"
+code = '''
+using Statistics
+ST = simulate(2000)
+{{?model=heston}} expected = S0 * exp({{mu}} * T)
+{{?model=bates}} expected = S0 * exp(r * T)
+{{?model=sabr}} expected = S0  # the forward is a martingale
+se = std(ST) / sqrt(length(ST))
+(simulated_mean = mean(ST), expected = expected, std_error = se, z = (mean(ST) - expected) / se)
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "risk"
+label = "Terminal Price Risk"
+desc = "Quantiles of the price at the horizon with the 95% value at risk and expected shortfall of the return"
+code = '''
+using Statistics
+ST = simulate(5000)
+ret = ST ./ S0 .- 1
+q05 = quantile(ret, 0.05)
+(p05 = quantile(ST, 0.05), median = median(ST), p95 = quantile(ST, 0.95), VaR95 = -q05, ES95 = -mean(ret[ret .<= q05]))
+'''
+
+[[actionGroups.actions]]
+id = "options"
+label = "Option Prices by Strike"
+desc = "Monte Carlo prices of European calls and puts at five strikes around the current price"
+code = '''
+using Statistics
+ST = simulate(5000)
+{{?model=heston}} disc = exp(-{{mu}} * T)
+{{?model=bates}} disc = exp(-r * T)
+{{?model=sabr}} disc = 1.0  # prices in forward terms
+[(strike = K, call = disc * mean(max.(ST .- K, 0)), put = disc * mean(max.(K .- ST, 0))) for K in S0 .* (0.8:0.1:1.2)]
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "vs-black-scholes"
+label = "Against Black-Scholes"
+desc = "Quantiles of the terminal price against a geometric Brownian motion with the same initial volatility: stochastic volatility fattens the tails"
+code = '''
+using Statistics
+ST = simulate(5000)
+{{?model=heston|bates}} sig0 = sqrt({{v0}})
+{{?model=sabr}} sig0 = {{alpha}} * S0^({{beta}} - 1)
+{{?model=heston}} m = {{mu}}
+{{?model=bates}} m = r
+{{?model=sabr}} m = 0.0
+GBM = S0 .* exp.((m - sig0^2 / 2) * T .+ sig0 * sqrt(T) .* randn(length(ST)))
+[(p = p, model = quantile(ST, p), black_scholes = quantile(GBM, p)) for p in [0.01, 0.05, 0.5, 0.95, 0.99]]
+'''
+
+[[actionGroups.actions]]
+id = "vs-normal"
+label = "Log Returns Against the Normal"
+desc = "Histogram of terminal log returns with the normal density of the same mean and variance, plus skewness and excess kurtosis"
+code = '''
+using Statistics, StatsBase, Distributions, Plots
+lr = log.(max.(simulate(5000), eps()) ./ S0)
+println((skewness = skewness(lr), excess_kurtosis = kurtosis(lr)))
+histogram(lr, bins=80, normalize=:pdf, label="simulated", xlabel="log return to T")
+plot!(x -> pdf(Normal(mean(lr), std(lr)), x), extrema(lr)..., lw=2, label="normal")
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "parameters"
+label = "Parameters in Plain Terms"
+desc = "Long-run volatility, variance half-life and leverage (Heston, Bates), jump size and frequency (Bates), ATM volatility and backbone (SABR)"
+code = '''
+{{?model=heston|bates}} display((long_run_vol = sqrt({{theta}}), initial_vol = sqrt({{v0}}), variance_half_life_years = log(2) / {{kappa}}, leverage = {{rho}} < 0 ? "negative: volatility rises when prices fall" : "none or positive"))
+{{?model=bates}} display((jumps_per_year = {{lambda}}, mean_jump_pct = 100 * kbar, jump_share_of_variance = {{lambda}} * (muJ^2 + deltaJ^2) / ({{theta}} + {{lambda}} * (muJ^2 + deltaJ^2))))
+{{?model=sabr}} (atm_vol = sabr_vol(S0), backbone = {{beta}} == 1 ? "log-normal" : {{beta}} == 0 ? "normal" : "CEV", smile_skew = {{rho-sabr}} < 0 ? "downward: low strikes are dearer" : "flat or upward", smile_curvature_from_nu = {{nu}})
+'''
+
+[[actionGroups.actions]]
+id = "realised"
+label = "Realised Against Integrated Volatility"
+desc = "The volatility measured from the simulated price path next to the average of the instantaneous volatility that drove it"
+code = '''
+rv = sqrt(sum(abs2, diff(log.(max.(S, eps())))) / T)  # realised volatility (includes jumps)
+iv = sqrt(sum(max.(v[1:end-1], 0) .* diff(t)) / T)  # integrated volatility
+(realised_vol = rv, integrated_vol = iv, gap = rv - iv)
 '''

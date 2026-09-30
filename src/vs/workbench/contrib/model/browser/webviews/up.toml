@@ -104,13 +104,13 @@ default = "x = Particles(n, Normal(0.0, 1.0))\ny = Particles(n, Uniform(0.0, 1.0
 [[inputs]]
 id = "expression"
 label = "Expression"
-tooltip = ""
+tooltip = "Julia expression of the uncertain variables, e.g. x^2 * sin(y) or a call to your own function. Every particle is pushed through it."
 default = "x + y"
 
 [[inputs]]
 id = "n-particles"
 label = "Particles (n)"
-tooltip = ""
+tooltip = "Monte Carlo samples carried by each uncertain variable. More particles give smoother estimates at a higher cost."
 kind = "select"
 default = "1000"
 
@@ -141,13 +141,13 @@ label = "10000"
 [[inputs]]
 id = "seed"
 label = "Seed"
-tooltip = ""
+tooltip = "Random seed, so that the particles are reproducible."
 default = "42"
 
 [[inputs]]
 id = "ci-level"
 label = "CI Level"
-tooltip = ""
+tooltip = "Central interval reported from the quantiles of the output particles."
 kind = "select"
 default = "95"
 
@@ -175,9 +175,131 @@ n = {{n-particles}}  # number of particles
 
 result = {{expression}}  # propagated output
 
-println("Mean:  ", mean(result))
-println("Std:   ", std(result))
-{{?ci-level=90}} println("90% CI: [", quantile(result, 0.05), ", ", quantile(result, 0.95), "]")  # 90% confidence interval
-{{?ci-level=95}} println("95% CI: [", quantile(result, 0.025), ", ", quantile(result, 0.975), "]")  # 95% confidence interval
-{{?ci-level=99}} println("99% CI: [", quantile(result, 0.005), ", ", quantile(result, 0.995), "]")  # 99% confidence interval
+here = @__MODULE__
+ins = [s => getfield(here, s) for s in names(here) if s !== :result && isdefined(here, s) && getfield(here, s) isa Particles]  # the uncertain inputs
+fexpr = eval(Expr(:->, Expr(:tuple, first.(ins)...), :({{expression}})))  # the expression as a function of the inputs
+tail = (100 - {{ci-level}}) / 200  # tail probability on each side
+
+println("Mean:  ", pmean(result))
+println("Std:   ", pstd(result))
+println("{{ci-level}}% CI: [", pquantile(result, tail), ", ", pquantile(result, 1 - tail), "]")
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "distribution"
+label = "Output Distribution"
+desc = "Histogram of the output particles with the mean and the {{ci-level}}% interval"
+code = '''
+using Plots
+histogram(result.particles, bins=60, normalize=:pdf, alpha=0.6, label="output particles")
+vline!([pmean(result)], lw=2, label="mean")
+vline!([pquantile(result, tail), pquantile(result, 1 - tail)], ls=:dash, label="{{ci-level}}% interval")
+'''
+
+[[actionGroups.actions]]
+id = "scatter"
+label = "Output Against Each Input"
+desc = "Scatter of the output particles against each input: a clear pattern shows which inputs drive the output, and whether the relation is linear"
+code = '''
+using Plots
+plot([scatter(v.particles, result.particles, ms=1, alpha=0.3, legend=false, xlabel=string(k), ylabel="output") for (k, v) in ins]..., layout=(1, length(ins)), size=(320 * length(ins), 300))
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "convergence"
+label = "Convergence in Particles"
+desc = "Running mean and standard deviation over the first k particles, and the Monte Carlo standard error of the mean: flat curves mean n is large enough"
+code = '''
+using Plots, Statistics
+ks = unique(round.(Int, range(20, n; length=100)))
+p = result.particles
+println("Monte Carlo standard error of the mean: ", pstd(result) / sqrt(n))
+plot(plot(ks, [mean(p[1:k]) for k in ks], legend=false, title="running mean"), plot(ks, [std(p[1:k]) for k in ks], legend=false, title="running std"), xlabel="particles", size=(700, 300))
+'''
+
+[[actionGroups.actions]]
+id = "normality"
+label = "Shape of the Output"
+desc = "Skewness and excess kurtosis of the output: far from 0, a mean plus or minus a standard deviation misdescribes the uncertainty, and the quantile interval should be used"
+code = '''
+using Distributions
+p = result.particles
+(skewness = skewness(p), excess_kurtosis = kurtosis(p), normal_interval = (pmean(result) + quantile(Normal(), tail) * pstd(result), pmean(result) + quantile(Normal(), 1 - tail) * pstd(result)), quantile_interval = (pquantile(result, tail), pquantile(result, 1 - tail)))
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "percentiles"
+label = "Percentiles"
+desc = "Output percentiles from 1% to 99%"
+code = '''
+[(percentile = 100q, value = pquantile(result, q)) for q in [0.01, 0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95, 0.99]]
+'''
+
+[[actionGroups.actions]]
+id = "tails"
+label = "Tail Probabilities"
+desc = "Probability that the output exceeds its mean by 1, 2 and 3 standard deviations, next to what a normal distribution would give"
+code = '''
+using Distributions
+m, s = pmean(result), pstd(result)
+[(threshold = "mean + $(k) sd", probability = @prob(result > m + k * s), if_normal = ccdf(Normal(), k)) for k in 1:3]
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "linear"
+label = "Against Linear Propagation"
+desc = "First-order (delta method) propagation with Measurements.jl, from the mean and standard deviation of each input: it misses nonlinearity and the correlation between inputs"
+code = '''
+using Measurements
+lin = Base.invokelatest(fexpr, [measurement(pmean(v), pstd(v)) for (_, v) in ins]...)
+(monte_carlo = (mean = pmean(result), std = pstd(result)), linear = (mean = Measurements.value(lin), std = Measurements.uncertainty(lin)))
+'''
+
+[[actionGroups.actions]]
+id = "fewer-particles"
+label = "Fewer Particles"
+desc = "The same expression evaluated on the first 10%, 25% and 50% of the particles: how much the estimates move with a smaller sample"
+code = '''
+sub(m) = Base.invokelatest(fexpr, [Particles(v.particles[1:m]) for (_, v) in ins]...)
+[(particles = m, mean = pmean(r), std = pstd(r), lower = pquantile(r, tail), upper = pquantile(r, 1 - tail)) for (m, r) in ((m, sub(m)) for m in unique([div(n, 10), div(n, 4), div(n, 2), n]))]
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "summary"
+label = "In Plain Terms"
+desc = "The result as a value with its uncertainty, the relative uncertainty and the {{ci-level}}% interval"
+code = '''
+m, s = pmean(result), pstd(result)
+println("The output is ", round(m, sigdigits=4), " +/- ", round(s, sigdigits=2), " (one standard deviation).")
+println("Relative uncertainty: ", round(100 * s / abs(m), digits=1), "% of the mean.")
+println("With {{ci-level}}% probability it lies between ", round(pquantile(result, tail), sigdigits=4), " and ", round(pquantile(result, 1 - tail), sigdigits=4), ".")
+'''
+
+[[actionGroups.actions]]
+id = "sensitivity"
+label = "Which Input Matters"
+desc = "Squared correlation between each input and the output: roughly the share of output variance each input explains (exact for linear, independent inputs)"
+code = '''
+using Statistics
+sort([(input = k, share_of_variance = round(cor(v.particles, result.particles)^2, digits=3)) for (k, v) in ins], by = r -> -r.share_of_variance)
 '''

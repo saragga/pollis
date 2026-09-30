@@ -111,14 +111,14 @@ detail = "dynamic conditional correlation for multivariate returns"
 
 [[inputs]]
 id = "p"
-label = "ARCH order p"
-tooltip = "ARCH order — number of lagged squared residuals in the variance equation. For DCC, applies to each inner GARCH volatility model. Default 1."
+label = "GARCH order p"
+tooltip = "GARCH order — number of lagged conditional variances in the variance equation (ARCHModels.jl convention: GARCH{p, q}). For DCC, applies to each inner GARCH volatility model. Default 1."
 default = "1"
 
 [[inputs]]
 id = "q"
-label = "GARCH order q"
-tooltip = "GARCH order — number of lagged conditional variances. Default 1."
+label = "ARCH order q"
+tooltip = "ARCH order — number of lagged squared residuals. Default 1."
 default = "1"
 
 [[inputs]]
@@ -130,8 +130,9 @@ default = "1"
 
 [[inputs]]
 id = "dist"
+models = ["garch", "egarch", "gjr"]
 label = "distribution"
-tooltip = "Innovation distribution. For DCC, the same distribution is applied to all individual GARCH models uniformly."
+tooltip = "Innovation distribution of the standardised shocks. DCC always uses the multivariate standard normal."
 kind = "select"
 default = ""
 
@@ -176,7 +177,8 @@ model = "garch"
 code = '''
 using ARCHModels
 
-am = fit(GARCH{{{p}}, {{q}}}, {{data}}; dist={{dist}})  # fit GARCH({{p}}, {{q}})
+spec = GARCH{{{p}}, {{q}}}  # {{p}} lagged variances, {{q}} lagged squared shocks
+am = fit(spec, {{data}}; dist={{dist}})
 coeftable(am)  # estimated parameters
 vol = volatilities(am)  # conditional volatilities sigma_t
 predict(am, :volatility)  # one-step volatility forecast
@@ -187,7 +189,8 @@ model = "egarch"
 code = '''
 using ARCHModels
 
-am = fit(EGARCH{{{p}}, {{o}}, {{q}}}, {{data}}; dist={{dist}})  # fit EGARCH({{p}}, {{o}}, {{q}})
+spec = EGARCH{{{o}}, {{p}}, {{q}}}  # {{o}} asymmetry terms, {{p}} lagged log variances, {{q}} magnitude terms
+am = fit(spec, {{data}}; dist={{dist}})
 coeftable(am)  # estimated parameters
 vol = volatilities(am)  # conditional volatilities sigma_t
 predict(am, :volatility)  # one-step volatility forecast
@@ -198,7 +201,8 @@ model = "gjr"
 code = '''
 using ARCHModels
 
-am = fit(GJR{{{p}}, {{o}}, {{q}}}, {{data}}; dist={{dist}})  # fit GJR-GARCH({{p}}, {{o}}, {{q}})
+spec = TGARCH{{{o}}, {{p}}, {{q}}}  # GJR-GARCH: {{o}} threshold terms, {{p}} lagged variances, {{q}} lagged squared shocks
+am = fit(spec, {{data}}; dist={{dist}})
 coeftable(am)  # estimated parameters
 vol = volatilities(am)  # conditional volatilities sigma_t
 predict(am, :volatility)  # one-step volatility forecast
@@ -209,6 +213,165 @@ model = "dcc"
 code = '''
 using ARCHModels
 
-am = fit(DCC{{{dcc-p}}, {{dcc-q}}}(GARCH{{{p}}, {{q}}}), {{data}}; dist={{dist}})  # fit DCC({{dcc-p}}, {{dcc-q}})-GARCH({{p}}, {{q}})
+am = fit(DCC{{{dcc-p}}, {{dcc-q}}, GARCH{{{p}}, {{q}}}}, {{data}})  # DCC({{dcc-p}}, {{dcc-q}}) on GARCH({{p}}, {{q}}) volatilities, one column per asset
 coeftable(am)  # estimated parameters
+R = correlations(am)  # conditional correlation matrix at each date
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "volatility"
+label = "Returns and Volatility Bands"
+desc = "The returns with plus and minus two conditional standard deviations (DCC: the conditional correlation between the first two assets over time)"
+code = '''
+using ARCHModels, Plots
+{{?model!=dcc}} vol = volatilities(am)
+{{?model!=dcc}} plot(am.data, c=:gray, alpha=0.5, label="returns", xlabel="t", title="Returns with conditional volatility bands")
+{{?model!=dcc}} plot!([2 .* vol -2 .* vol], c=:red, lw=1.2, label=["2 sigma" ""])
+{{?model=dcc}} R = correlations(am)  # one correlation matrix per date
+{{?model=dcc}} plot([r[1, 2] for r in R], lw=1.2, label="assets 1 and 2", xlabel="t", ylabel="conditional correlation", title="Dynamic conditional correlation")
+'''
+
+[[actionGroups.actions]]
+id = "news-impact"
+label = "News Impact Curve"
+desc = "Next-period variance as a function of today's shock, with past variances held at their sample average: a lopsided curve is the leverage effect"
+code = '''
+using ARCHModels, Statistics, Plots
+{{?model=dcc}} error("The news impact curve is defined for univariate models: fit GARCH, EGARCH or GJR-GARCH")
+o, p, q = typeof(am.spec).parameters[1:3]
+c = am.spec.coefs  # omega, then o asymmetry, p beta and q alpha coefficients
+omega, g, b, a = c[1], c[2:1+o], c[2+o:1+o+p], c[2+o+p:end]
+hbar = mean(volatilities(am) .^ 2)  # past variance held at its sample average
+shock = range(-4, 4, length=201) .* sqrt(hbar)
+{{?model!=egarch}} h = [omega + sum(b) * hbar + (isempty(a) ? 0.0 : a[1] * e^2) + sum(a[2:end]) * hbar + (isempty(g) ? 0.0 : g[1] * e^2 * (e < 0)) + sum(g[2:end]) * hbar / 2 for e in shock]
+{{?model=egarch}} h = [exp(omega + sum(b) * log(hbar) + (isempty(g) ? 0.0 : g[1] * e / sqrt(hbar)) + (isempty(a) ? 0.0 : a[1] * (abs(e) / sqrt(hbar) - sqrt(2 / pi)))) for e in shock]
+plot(shock, h, lw=2, legend=false, xlabel="shock a(t-1)", ylabel="next-period variance", title="News impact curve")
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "std-residuals"
+label = "Standardised Residual Checks"
+desc = "Ljung-Box on the standardised residuals and their squares, the ARCH-LM test and Jarque-Bera (per asset for DCC): leftover volatility clustering means the model is too small"
+code = '''
+using ARCHModels, HypothesisTests, StatsBase, Plots
+z = residuals(am)  # standardised residuals (one column per asset for DCC)
+Z = z isa AbstractMatrix ? z : reshape(z, :, 1)
+display([(asset = j, ljung_box_p = pvalue(LjungBoxTest(Z[:, j], 10)), ljung_box_squared_p = pvalue(LjungBoxTest(Z[:, j] .^ 2, 10)), arch_lm_p = pvalue(ARCHLMTest(Z[:, j], 5)), jarque_bera_p = pvalue(JarqueBeraTest(Z[:, j]))) for j in axes(Z, 2)])
+band = 1.96 / sqrt(size(Z, 1))
+bar(1:20, autocor(Z[:, 1] .^ 2, 1:20), legend=false, xlabel="Lag", title="ACF of squared standardised residuals")
+hline!([-band, band], c=:red, ls=:dash)
+'''
+
+[[actionGroups.actions]]
+id = "qq"
+label = "QQ Plot Against the Fitted Distribution"
+desc = "Standardised residuals against the quantiles of the fitted innovation distribution: points off the line in the tails mean the distribution misses the fat tails"
+code = '''
+using ARCHModels, Plots
+{{?model=dcc}} error("The QQ plot needs a univariate innovation distribution: fit GARCH, EGARCH or GJR-GARCH")
+z = sort(residuals(am))
+n = length(z)
+theo = [quantile(am.dist, (i - 0.5) / n) for i in 1:n]
+scatter(theo, z, ms=2, msw=0, label=false, xlabel="fitted distribution quantiles", ylabel="standardised residuals", title="QQ plot")
+plot!(theo, theo, c=:red, label="45-degree line")
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "vol-path"
+label = "Volatility Forecast Path"
+desc = "Volatility forecasts 1 to 20 steps ahead converging to the long-run level (GARCH and GJR-GARCH; DCC shows the one-step covariance matrix)"
+code = '''
+using ARCHModels, Plots
+{{?model=egarch}} error("ARCHModels.jl forecasts EGARCH one step ahead only: use predict(am, :volatility)")
+{{?model=dcc}} predict(am)  # one-step conditional covariance matrix
+{{?model!=dcc}} H = 1:20
+{{?model!=dcc}} path = [sqrt(predict(am, :variance, h)) for h in H]
+{{?model!=dcc}} o = typeof(am.spec).parameters[1]; c = am.spec.coefs
+{{?model!=dcc}} longrun = sqrt(c[1] / (1 - sum(c[2+o:end]) - sum(c[2:1+o]) / 2))  # omega / (1 - persistence)
+{{?model!=dcc}} plot(H, path, lw=2, marker=:circle, label="forecast", xlabel="horizon", ylabel="volatility", title="Volatility forecast path")
+{{?model!=dcc}} hline!([longrun], c=:red, ls=:dash, label="long-run volatility")
+'''
+
+[[actionGroups.actions]]
+id = "var-backtest"
+label = "Value-at-Risk Backtest"
+desc = "In-sample 5% Value-at-Risk against the returns: the number of exceedances against the 5% expected, the dynamic quantile test and next period's VaR"
+code = '''
+using ARCHModels, Plots
+{{?model=dcc}} error("Value-at-Risk here is univariate: fit GARCH, EGARCH or GJR-GARCH to a portfolio return")
+level = 0.05
+v = VaRs(am, level)  # in-sample VaR, a positive number is a loss
+hits = am.data .< -v
+display((exceedances = sum(hits), expected = round(level * length(v), digits=1), dq_test_p = pvalue(DQTest(am.data, v, level)), next_period_VaR = predict(am, :VaR; level=level)))
+plot(am.data, c=:gray, alpha=0.5, label="returns", xlabel="t", title="5% Value-at-Risk backtest")
+plot!(-v, c=:red, lw=1.2, label="minus VaR")
+scatter!(findall(hits), am.data[hits], c=:red, ms=3, msw=0, label="exceedances")
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "distributions"
+label = "Innovation Distributions"
+desc = "Refits the same volatility model with Gaussian, Student's t, GED and skewed t shocks: the lowest AIC and BIC point to the best tail shape"
+code = '''
+using ARCHModels
+{{?model=dcc}} error("DCC supports the multivariate standard normal only")
+fits = [d => fit(spec, {{data}}; dist=d) for d in (StdNormal, StdT, StdGED, StdSkewT)]
+[(distribution = string(d), loglik = round(loglikelihood(m), digits=2), aic = round(aic(m), digits=2), bic = round(bic(m), digits=2)) for (d, m) in fits]
+'''
+
+[[actionGroups.actions]]
+id = "orders"
+label = "Lag Order Selection"
+desc = "Searches all lag orders up to 2 by BIC and compares the best with this fit"
+code = '''
+using ARCHModels
+{{?model=dcc}} error("Select the lag orders of each asset's univariate model first, then refit the DCC")
+{{?model=garch}} best = selectmodel(GARCH, {{data}}; dist={{dist}}, maxlags=2)
+{{?model=egarch}} best = selectmodel(EGARCH, {{data}}; dist={{dist}}, maxlags=2)
+{{?model=gjr}} best = selectmodel(TGARCH, {{data}}; dist={{dist}}, maxlags=2)
+(this_fit = typeof(am.spec), this_bic = round(bic(am), digits=2), best = typeof(best.spec), best_bic = round(bic(best), digits=2))
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "persistence"
+label = "Persistence and Half-Life"
+desc = "How long a volatility shock lasts: persistence near 1 means shocks fade slowly; the half-life is the number of periods for half of a shock to die out (DCC: persistence of the correlations)"
+code = '''
+using ARCHModels
+{{?model!=dcc}} o, p = typeof(am.spec).parameters[1:2]; c = am.spec.coefs
+{{?model=garch}} pers = sum(c[2:end])  # sum of alphas and betas
+{{?model=gjr}} pers = sum(c[2+o:end]) + sum(c[2:1+o]) / 2  # alphas + betas + half the threshold terms
+{{?model=egarch}} pers = sum(c[2+o:1+o+p])  # the betas drive log-variance persistence
+{{?model=dcc}} pers = sum(am.spec.coefs)  # DCC a + b
+(persistence = round(pers, digits=4), half_life_periods = round(log(0.5) / log(pers), digits=1))
+'''
+
+[[actionGroups.actions]]
+id = "estimates"
+label = "Estimates with Confidence Intervals"
+desc = "Every parameter with its 95% confidence interval and whether it excludes zero: a significant asymmetry term confirms the leverage effect"
+code = '''
+using ARCHModels
+ci = confint(am)
+[(parameter = n, estimate = round(b, digits=4), lower95 = round(l, digits=4), upper95 = round(u, digits=4), significant = !(l <= 0 <= u)) for (n, b, l, u) in zip(coefnames(am), coef(am), ci[:, 1], ci[:, 2])]
 '''
