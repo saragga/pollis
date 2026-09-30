@@ -26,7 +26,7 @@ label = ""
 name = "Maximum Flow"
 file = "netflow/tutorial-01-max-flow.ipynb"
 bundled = true
-description = "Find the maximum flow from source to sink in a capacitated network using the Dinic algorithm"
+description = "Find the maximum flow from source to sink in a capacitated network (push-relabel by default; Dinic and others on request)"
 
 [[notebookSections.notebooks]]
 name = "Minimum Cost Flow"
@@ -203,7 +203,7 @@ for _ in 1:{{M}}
 end
 
 source, sink = 1, {{N}}  # source = node 1, sink = node N
-flow_val, flow_mat = maximum_flow(g, source, sink, cap_mat)  # Dinic algorithm
+flow_val, flow_mat = maximum_flow(g, source, sink, cap_mat)  # push-relabel (the default); flow_mat is antisymmetric: F[v, u] = -F[u, v]
 
 println("Max flow value:  ", flow_val)  # total throughput
 println("Edges with flow: ", count(flow_mat .> 0))  # active edges
@@ -213,7 +213,7 @@ println("Saturated edges: ", count(flow_mat .== cap_mat .&& cap_mat .> 0))  # bo
 [[codeBranches]]
 model = "mincost"
 code = '''
-using Graphs, GraphsFlows
+using Graphs, GraphsFlows, HiGHS
 
 g    = DiGraph({{N}})  # directed network
 cap  = zeros(Int, {{N}}, {{N}})  # edge capacities
@@ -231,7 +231,8 @@ demand    = zeros(Int, {{N}})  # node demand vector
 demand[1] = -10  # source supplies 10 units
 demand[{{N}}] =  10  # sink consumes 10 units
 
-flow_mat, total_cost = mincost_flow(g, cap, cost, demand)  # successive shortest paths
+flow_mat   = mincost_flow(g, demand, cap, cost, HiGHS.Optimizer)  # a linear programme; fails if 10 units cannot reach the sink
+total_cost = sum(flow_mat .* cost)  # cost per unit times flow on every arc
 
 println("Total cost:    ", total_cost)  # objective value
 println("Flow edges:    ", count(flow_mat .> 0))  # edges carrying flow
@@ -255,12 +256,21 @@ end
 source, sink = 1, {{N}}  # source and sink
 flow_val, flow_mat = maximum_flow(g, source, sink, cap_mat)  # max flow = min cut by duality
 
-cut_edges = [(u,v) for u in 1:{{N}} for v in 1:{{N}}  # bottleneck edges
-    if cap_mat[u,v] > 0 && flow_mat[u,v] == cap_mat[u,v]]
+# source side of the minimum cut: nodes still reachable from the source in the residual network
+S = Set([source]); stack = [source]
+while !isempty(stack)
+    u = pop!(stack)
+    for v in 1:{{N}}
+        if !(v in S) && cap_mat[u, v] - flow_mat[u, v] > 0  # residual capacity (reverse arcs of used flow included)
+            push!(S, v); push!(stack, v)
+        end
+    end
+end
+cut_edges = [(u, v) for u in S for v in 1:{{N}} if !(v in S) && cap_mat[u, v] > 0]  # arcs from S to the rest: all saturated
 
-println("Min cut value:    ", flow_val)  # equals max flow
-println("Bottleneck edges: ", length(cut_edges))  # number of saturated edges
-println("First cut edges:  ", first(cut_edges, 3))  # sample of cut edges
+println("Min cut value:    ", sum(cap_mat[u, v] for (u, v) in cut_edges; init=0), "  (max flow ", flow_val, ")")  # equal by duality
+println("Cut edges:        ", length(cut_edges), " of ", count(cap_mat .> 0 .&& flow_mat .== cap_mat), " saturated edges")  # a saturated edge need not be in the cut
+println("Source side:      ", sort(collect(S)))
 '''
 
 [[actionGroups]]
@@ -311,7 +321,7 @@ label = "Diagnose"
 [[actionGroups.actions]]
 id = "bottleneck-edges"
 label = "Bottleneck Edges"
-desc = "List all edges whose flow equals their capacity — these form the minimum cut"
+desc = "List all edges whose flow equals their capacity: the minimum cut is among them, but a saturated edge need not be in the cut"
 code = '''
 using Graphs, GraphsFlows
 
@@ -324,7 +334,7 @@ bottleneck = [(u,v) for u in 1:{{N}} for v in 1:{{N}}  # saturated edges
 
 println("Max flow:         ", flow_val)  # total throughput
 println("Bottleneck count: ", length(bottleneck))  # number of saturated edges
-println("Cut edges: ", bottleneck)  # list all saturated edges
+println("Saturated edges: ", bottleneck)  # a superset of the minimum cut
 '''
 
 [[actionGroups.actions]]
@@ -339,8 +349,8 @@ for _ in 1:{{M}}; u,v=rand(1:{{N}}),rand(1:{{N}}); u==v&&continue; add_edge!(g,u
 _, flow_mat = maximum_flow(g, 1, {{N}}, cap_mat)
 
 for v in 2:{{N}}-1  # check every internal node
-    inflow  = sum(flow_mat[u, v] for u in 1:{{N}})
-    outflow = sum(flow_mat[v, u] for u in 1:{{N}})
+    inflow  = sum(max(flow_mat[u, v], 0) for u in 1:{{N}})  # flow_mat is antisymmetric: keep the positive entries
+    outflow = sum(max(flow_mat[v, u], 0) for u in 1:{{N}})
     println("Node ", v, ":  in=", inflow, "  out=", outflow, "  ok=", inflow==outflow)
 end
 '''
@@ -446,7 +456,7 @@ for _ in 1:{{M}}; u,v=rand(1:{{N}}),rand(1:{{N}}); u==v&&continue; add_edge!(g,u
 flow_val, flow_mat = maximum_flow(g, 1, {{N}}, cap_mat)
 
 total_cap  = sum(cap_mat)  # total installed capacity
-total_flow = sum(flow_mat)  # total flow across all edges
+total_flow = sum(max.(flow_mat, 0))  # total flow across all edges (flow_mat is antisymmetric, so its plain sum is 0)
 utilisation = total_flow / total_cap  # fraction of capacity used
 
 println("Max flow:      ", flow_val)  # throughput
