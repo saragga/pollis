@@ -246,7 +246,7 @@ mro = fetch("B.U2.EUR.4F.KR.MRR_FR.LEV")   # main refinancing operations
 dfr = fetch("B.U2.EUR.4F.KR.DFR.LEV")      # deposit facility
 mlf = fetch("B.U2.EUR.4F.KR.MLFR.LEV")     # marginal lending facility
 
-println("Deposit facility rate, latest 5 changes:")
+println("Deposit facility rate, latest 5 business days:")
 println(last(Tables.getcolumn(dfr, :OBS_VALUE), 5))
 """
 
