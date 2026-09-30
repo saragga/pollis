@@ -697,7 +697,7 @@ lambda = zeros(length(gx))
 isempty(active) || (lambda[active] = -(transpose(JA) \ gradf[free]))  # solve grad f + JA^T lambda = 0
 stationarity = gradf[free] + transpose(J[:, free]) * lambda
 (active_constraints = active, multipliers = round.(lambda, sigdigits=6),
- {{?model=ip}} ipopt_multipliers = round.(res.multipliers, sigdigits=6),
+{{?model=ip}} ipopt_multipliers = round.(res.multipliers, sigdigits=6),
  stationarity_residual = norm(stationarity), dual_feasible = all(lambda .>= -1e-6),
  complementary_slackness = maximum(abs.(lambda .* gx)))
 '''

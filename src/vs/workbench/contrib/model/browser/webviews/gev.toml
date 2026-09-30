@@ -127,7 +127,7 @@ models = ["fit"]
 label = "Estimation method"
 tooltip = "Estimation method. Maximum Likelihood is the default and most widely used. Probability-Weighted Moments is faster and closed-form. Bayesian Estimation yields posterior distributions for the parameters."
 kind = "select"
-default = ""
+default = "mle"
 
 [[inputs.options]]
 value = "mle"

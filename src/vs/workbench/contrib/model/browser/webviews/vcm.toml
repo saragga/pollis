@@ -134,7 +134,7 @@ models = ["garch", "egarch", "gjr"]
 label = "distribution"
 tooltip = "Innovation distribution of the standardised shocks. DCC always uses the multivariate standard normal."
 kind = "select"
-default = ""
+default = "StdNormal"
 
 [[inputs.options]]
 value = "StdNormal"

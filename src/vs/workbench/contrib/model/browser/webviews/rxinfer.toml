@@ -669,9 +669,24 @@ axislegend(ax); display(fig)
 [[actionGroups.actions]]
 id = "streaming-forecast"
 label = "Streaming Forecast"
-desc = "Extend the reactive model forward to predict the next K observations with credible intervals"
+desc = "Extend the fitted model forward to predict the next K observations with 95% predictive intervals"
 code = '''
+using RxInfer, GLMakie, Statistics
 
+obs = rand(Normal(2.0, 0.5), 100)  # replace with real data
+result = infer(model = gaussian_model(n = 100), data = (y = obs,), iterations = 50, returnvars = (mu = KeepLast(), tau = KeepLast()))  # fit
+
+mu_post, tau_post = result.posteriors[:mu], result.posteriors[:tau]
+K = 20  # forecast horizon
+draws = [rand(Normal(rand(mu_post), sqrt(1 / rand(tau_post)))) for _ in 1:2000, _ in 1:K]  # predictive draws, one column per step
+lo, mid, hi = ([quantile(draws[:, k], q) for k in 1:K] for q in (0.025, 0.5, 0.975))  # 95% predictive interval and median
+
+n = length(obs); steps = n+1:n+K
+fig = Figure(); ax = Axis(fig[1,1], title = "Streaming Forecast", xlabel = "t", ylabel = "y")
+lines!(ax, 1:n, obs, color = :gray, label = "Observed")
+band!(ax, steps, lo, hi, color = (:red, 0.2), label = "95% predictive interval")
+lines!(ax, steps, mid, color = :red, label = "Forecast median")
+axislegend(ax, position = :lt); display(fig)
 '''
 
 [[actionGroups]]

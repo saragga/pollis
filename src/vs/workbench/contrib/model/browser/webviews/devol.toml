@@ -644,7 +644,7 @@ code = '''
 last_gain = something(findlast(diff(res.best) .< 0), 0) + 1
 (generations = length(res.best), evaluations = res.evals, last_improvement_generation = last_gain,
  final_diversity = res.diversity[end], stagnated = res.diversity[end] < 1e-8 * maximum(ub .- lb),
- {{?model=ede}} final_violation = res.violation,
+{{?model=ede}} final_violation = res.violation,
  best_value = f_best)
 '''
 
@@ -778,7 +778,7 @@ label = "Solution Summary"
 desc = "Best point, value, evaluations and final population spread"
 code = '''
 (best_point = round.(x_best, sigdigits=6), best_value = f_best, generations = length(res.best), evaluations = res.evals,
- {{?model=ede}} violation = res.violation, feasible = res.violation == 0,
+{{?model=ede}} violation = res.violation, feasible = res.violation == 0,
  final_diversity = res.diversity[end])
 '''
 
