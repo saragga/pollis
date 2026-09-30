@@ -1,0 +1,519 @@
+# Automatic Time-Series Forecasting Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/autotsf.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Automatic Time-Series Forecasting"
+viewType = "pollis.autotsf"
+defaultModel = "arima"
+
+[[packages]]
+name = "Durbyn.jl"
+github = "https://github.com/taf-society/Durbyn.jl"
+
+[requires]
+packages = ["Durbyn.jl", "Plots.jl", "HypothesisTests.jl", "StatsBase.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Automatic ARIMA"
+file = "autotsf/tutorial-01-auto-arima.ipynb"
+bundled = true
+description = "Unit-root tests pick the differencing, then a stepwise search picks the ARMA orders"
+
+[[notebookSections.notebooks]]
+name = "Automatic Exponential Smoothing"
+file = "autotsf/tutorial-02-auto-ets.ipynb"
+bundled = true
+description = "Search the ETS family of error, trend and seasonal forms by information criterion"
+
+[[notebookSections.notebooks]]
+name = "ARAR and ARARMA"
+file = "autotsf/tutorial-03-ararma.ipynb"
+bundled = true
+description = "Memory-shortening filters followed by a short AR or ARMA fit"
+
+[[notebookSections.notebooks]]
+name = "Model Race and Combinations"
+file = "autotsf/tutorial-04-model-race.ipynb"
+bundled = true
+description = "Let holdout accuracy choose between automatic methods, or average them"
+
+[[wikis]]
+name = "Factsheet"
+file = "autotsf/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "autotsf/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "autotsf/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "autotsf/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "autotsf/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "autotsf/decision-guide.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Forecasting: Principles and Practice"
+authors = "Hyndman, Rob J.; Athanasopoulos, George"
+year = 2021
+journal = "OTexts"
+url = "https://otexts.com/fpp3/"
+openAccess = true
+
+[[references]]
+title = "Introduction to Time Series and Forecasting"
+authors = "Brockwell, Peter J.; Davis, Richard A."
+year = 2016
+journal = "Springer"
+doi = "10.1007/978-3-319-29854-2"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Automatic Time Series Forecasting: The forecast Package for R"
+authors = "Hyndman, Rob J.; Khandakar, Yeasmin"
+year = 2008
+journal = "Journal of Statistical Software"
+doi = "10.18637/jss.v027.i03"
+openAccess = true
+
+[[references]]
+title = "A State Space Framework for Automatic Forecasting Using Exponential Smoothing Methods"
+authors = "Hyndman, Rob J.; Koehler, Anne B.; Snyder, Ralph D.; Grose, Simone"
+year = 2002
+journal = "International Journal of Forecasting"
+doi = "10.1016/S0169-2070(01)00110-8"
+openAccess = false
+
+[[references]]
+title = "ARARMA Models for Time Series Analysis and Forecasting"
+authors = "Parzen, Emanuel"
+year = 1982
+journal = "Journal of Forecasting"
+doi = "10.1002/for.3980010108"
+openAccess = false
+
+[[references]]
+title = "Models for Optimising the Theta Method and Their Relationship to State Space Models"
+authors = "Fiorucci, Jose A.; Pellegrini, Tiago R.; Louzada, Francisco; Petropoulos, Fotios; Koehler, Anne B."
+year = 2016
+journal = "International Journal of Forecasting"
+doi = "10.1016/j.ijforecast.2016.02.005"
+openAccess = false
+
+[[references]]
+title = "The Combination of Forecasts"
+authors = "Bates, J. M.; Granger, C. W. J."
+year = 1969
+journal = "Operational Research Quarterly"
+doi = "10.1057/jors.1969.103"
+openAccess = false
+
+[[models]]
+id = "arima"
+label = "Auto ARIMA"
+
+[[models]]
+id = "ets"
+label = "Auto ETS"
+
+[[models]]
+id = "ararma"
+label = "Auto ARARMA"
+
+[[models]]
+id = "race"
+label = "Model Race"
+
+[[bullets]]
+text = "Auto ARIMA"
+detail = "differencing by unit-root tests, ARMA orders by stepwise information-criterion search"
+
+[[bullets]]
+text = "Auto ETS"
+detail = "chooses the error, trend and seasonal form of exponential smoothing by information criterion"
+
+[[bullets]]
+text = "Auto ARARMA"
+detail = "Parzen's memory-shortening filter followed by a short ARMA, orders chosen by AIC or BIC"
+
+[[bullets]]
+text = "Model Race"
+detail = "fits every automatic method, keeps the one with the best holdout accuracy"
+
+[[decisionRows]]
+task = "Auto ARIMA"
+context = "Series whose dependence is well described by autocorrelation, possibly with a trend or a seasonal pattern that differencing removes"
+purpose = "KPSS and seasonal-strength tests set d and D; a stepwise search over p, q, P and Q minimises AICc; drift or a mean is added when allowed (Hyndman-Khandakar)"
+
+[[decisionRows]]
+task = "Auto ETS"
+context = "Series with a changing level, trend or seasonal pattern, especially when the seasonal swing grows with the level"
+purpose = "Fits additive and multiplicative error, trend (optionally damped) and seasonal forms as state-space models and keeps the one with the lowest information criterion"
+
+[[decisionRows]]
+task = "Auto ARARMA"
+context = "Long-memory or slowly decaying series where differencing is too blunt, with no clear seasonal period"
+purpose = "A memory-shortening filter turns the series into a short-memory one, then a subset AR model and a short ARMA are fitted; the orders come from AIC or BIC"
+
+[[decisionRows]]
+task = "Model Race"
+context = "You do not know which family suits the series and care about out-of-sample accuracy, not in-sample fit"
+purpose = "Scores auto ARIMA, auto ETS, auto theta and auto ARARMA on the last h observations by MASE and refits the winner on the full series"
+
+[[inputs]]
+id = "yvar"
+label = "Data variable"
+tooltip = "Your univariate time series (Vector of Float64), oldest observation first, equally spaced."
+default = "y"
+
+[[inputs]]
+id = "h"
+label = "Horizon"
+tooltip = "Forecast horizon in observations; also the length of the holdout used for accuracy checks (capped at a fifth of the series)."
+default = "12"
+
+[[inputs]]
+id = "m"
+label = "Seasonal Period"
+tooltip = "Observations per seasonal cycle: 12 for monthly, 4 for quarterly, 7 for daily data with a weekly cycle, 1 for non-seasonal data."
+default = "12"
+
+[[inputs]]
+id = "ic"
+label = "Criterion"
+tooltip = "Information criterion minimised by the search. AICc corrects AIC for small samples; BIC penalises extra parameters more and picks smaller models."
+kind = "select"
+default = ":aicc"
+models = ["arima", "ets"]
+newRow = true
+
+[[inputs.options]]
+value = ":aicc"
+label = "AICc"
+
+[[inputs.options]]
+value = ":aic"
+label = "AIC"
+
+[[inputs.options]]
+value = ":bic"
+label = "BIC"
+
+[[inputs]]
+id = "stepwise"
+label = "Search"
+tooltip = "Stepwise moves from a starting model to its neighbours and is fast; exhaustive fits every model within the order limits by exact likelihood and is slower but more thorough."
+kind = "select"
+default = "true"
+models = ["arima"]
+
+[[inputs.options]]
+value = "true"
+label = "Stepwise"
+
+[[inputs.options]]
+value = "false"
+label = "Exhaustive"
+
+[[inputs]]
+id = "damped"
+label = "Damped Trend"
+tooltip = "Automatic tries damped and undamped trends; Yes or No restricts the search to one of them."
+kind = "select"
+default = "nothing"
+models = ["ets"]
+
+[[inputs.options]]
+value = "nothing"
+label = "Automatic"
+
+[[inputs.options]]
+value = "true"
+label = "Yes"
+
+[[inputs.options]]
+value = "false"
+label = "No"
+
+[[inputs]]
+id = "lambda"
+label = "Box-Cox"
+tooltip = "Automatic estimates a Box-Cox transformation first, which stabilises a variance that grows with the level; only additive models are then considered."
+kind = "select"
+default = "nothing"
+models = ["ets"]
+
+[[inputs.options]]
+value = "nothing"
+label = "None"
+
+[[inputs.options]]
+value = ":auto"
+label = "Automatic"
+
+[[inputs]]
+id = "crit"
+label = "Criterion"
+tooltip = "Criterion for the ARMA orders of the filtered series. AIC often forecasts better at short horizons; BIC gives smaller models."
+kind = "select"
+default = ":aic"
+models = ["ararma"]
+newRow = true
+
+[[inputs.options]]
+value = ":aic"
+label = "AIC"
+
+[[inputs.options]]
+value = ":bic"
+label = "BIC"
+
+[[inputs]]
+id = "maxp"
+label = "Max AR Order"
+tooltip = "Largest AR order p tried for the ARMA stage."
+default = "4"
+models = ["ararma"]
+
+[[inputs]]
+id = "maxq"
+label = "Max MA Order"
+tooltip = "Largest MA order q tried for the ARMA stage."
+default = "2"
+models = ["ararma"]
+
+[[codeBranches]]
+model = "arima"
+code = '''
+using Durbyn
+
+y = Float64.({{yvar}})
+{{?stepwise=true}} build(y) = auto_arima(y, {{m}}; seasonal={{m}} > 1, ic={{ic}})  # tests pick d and D, stepwise search picks p, q, P, Q
+{{?stepwise=false}} build(y) = auto_arima(y, {{m}}; seasonal={{m}} > 1, ic={{ic}}, stepwise=false, approximation=false)  # every model within the order limits
+model = build(y)
+fc = forecast(model; h={{h}})  # {{h}}-step-ahead forecast with 80% and 95% intervals
+'''
+
+[[codeBranches]]
+model = "ets"
+code = '''
+using Durbyn
+
+y = Float64.({{yvar}})
+build(y) = ets(y, {{m}}, "ZZZ"; ic={{ic}}, damped={{damped}}, lambda={{lambda}})  # Z = choose error, trend and seasonal form automatically
+model = build(y)
+fc = forecast(model; h={{h}})  # {{h}}-step-ahead forecast with 80% and 95% intervals
+'''
+
+[[codeBranches]]
+model = "ararma"
+code = '''
+using Durbyn
+
+y = Float64.({{yvar}})
+build(y) = auto_ararma(y; max_p={{maxp}}, max_q={{maxq}}, crit={{crit}})  # memory-shortening filter, then the best ARMA(p, q)
+model = build(y)
+fc = forecast(model; h={{h}})  # {{h}}-step-ahead forecast with 80% and 95% intervals
+'''
+
+[[codeBranches]]
+model = "race"
+code = '''
+using Durbyn, Statistics
+
+y = Float64.({{yvar}})
+m = {{m}}
+H = min({{h}}, length(y) ÷ 5)  # holdout: the last H observations
+train, test = y[1:end-H], y[end-H+1:end]
+scale = m > 1 ? mean(abs.(train[m+1:end] .- train[1:end-m])) : mean(abs.(diff(train)))  # MASE denominator
+cands = ["Auto ARIMA" => (x -> auto_arima(x, m; seasonal = m > 1)), "Auto ETS" => (x -> ets(x, m, "ZZZ")),
+         "Auto Theta" => (x -> auto_theta(x, m)), "Auto ARARMA" => (x -> auto_ararma(x))]
+scores = map(cands) do (name, make)
+    mase = try mean(abs.(test .- forecast(make(train); h=H).mean)) / scale catch; Inf end
+    (method = name, holdout_mase = round(mase, digits=3))
+end
+best = argmin([s.holdout_mase for s in scores])
+build = last(cands[best])  # the winner, refitted on the full series
+model = build(y)
+fc = forecast(model; h={{h}})
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "forecast-plot"
+label = "Forecast Plot"
+desc = "The series, the in-sample fit and the forecast with its 95% prediction interval"
+code = '''
+using Plots
+p = Plots.plot(y, lw=1.5, c=:black, label="data", xlabel="t", title="{{h}}-step forecast: $(fc.method)")
+Plots.plot!(Durbyn.fitted(model), lw=1, ls=:dash, label="fitted")  # qualified: StatsBase also exports fitted
+tf = length(y) .+ (1:{{h}})
+Plots.plot!(tf, fc.mean, ribbon=(fc.mean .- fc.lower[:, 2], fc.upper[:, 2] .- fc.mean), fillalpha=0.2, lw=2, label="forecast, 95%")
+p
+'''
+
+[[actionGroups.actions]]
+id = "autocorrelation"
+label = "Autocorrelation"
+desc = "ACF and PACF of the series and of its first difference, with the seasonal lags marked: slow decay suggests differencing, spikes at multiples of the period suggest seasonality"
+code = '''
+using Plots, StatsBase
+m = max({{m}}, 1); L = min(max(24, 3 * m), length(y) ÷ 4); band = 1.96 / sqrt(length(y))
+panel(x, f, t) = (pl = Plots.bar(1:L, f(x, 1:L), legend=false, title=t); Plots.hline!(pl, [-band, band], c=:red, ls=:dash); m > 1 && Plots.vline!(pl, m:m:L, c=:gray, ls=:dot); pl)
+dy = diff(y)
+Plots.plot(panel(y, autocor, "ACF of y"), panel(y, StatsBase.pacf, "PACF of y"), panel(dy, autocor, "ACF of diff(y)"), panel(dy, StatsBase.pacf, "PACF of diff(y)"), layout=(2, 2))
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "residuals"
+label = "Residual Diagnostics"
+desc = "Residuals over time, their autocorrelation and the Ljung-Box test up to lag 2 x period (lag 10 for non-seasonal data): leftover structure means the search has missed something"
+code = '''
+using Plots, HypothesisTests, StatsBase
+r = filter(isfinite, Durbyn.residuals(model))  # qualified: StatsBase also exports residuals
+L = min({{m}} > 1 ? 2 * {{m}} : 10, length(r) ÷ 4)
+display((model = fc.method, ljung_box_lags = L, p_value = pvalue(LjungBoxTest(r, L)), residual_sd = std(r)))
+p1 = Plots.plot(r, legend=false, title="Residuals")
+p2 = Plots.bar(1:L, autocor(r, 1:L), legend=false, title="Residual ACF"); Plots.hline!(p2, [-1.96, 1.96] ./ sqrt(length(r)), c=:red, ls=:dash)
+Plots.plot(p1, p2, layout=(2, 1))
+'''
+
+[[actionGroups.actions]]
+id = "stability"
+label = "Selection Stability"
+desc = "Reruns the automatic selection on the first 70%, 80%, 90% and 100% of the series and lists the model chosen each time: a choice that keeps changing is fragile"
+code = '''
+n = length(y)
+[(observations = o, selected = forecast(build(y[1:o]); h=1).method) for o in round.(Int, n .* (0.7:0.1:1.0))]
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "forecast-table"
+label = "Forecast Table"
+desc = "Point forecasts with 80% and 95% prediction intervals for each step"
+code = '''
+[(step = i, mean = round(fc.mean[i], digits=3), lower80 = round(fc.lower[i, 1], digits=3), upper80 = round(fc.upper[i, 1], digits=3),
+  lower95 = round(fc.lower[i, 2], digits=3), upper95 = round(fc.upper[i, 2], digits=3)) for i in 1:{{h}}]
+'''
+
+[[actionGroups.actions]]
+id = "rolling-origin"
+label = "Rolling-Origin Accuracy"
+desc = "Reselects and refits the model at five successive forecast origins and reports the mean absolute error at each horizon step: how fast accuracy decays with the horizon"
+code = '''
+using Statistics
+H = min({{h}}, 12); K = 5; n = length(y)
+errs = fill(NaN, K, H)
+for (i, o) in enumerate(n-H-K+1:n-H)
+    errs[i, :] = abs.(y[o+1:o+H] .- forecast(build(y[1:o]); h=H).mean)
+end
+[(step = s, mae = round(mean(errs[:, s]), digits=3)) for s in 1:H]
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "compare-methods"
+label = "Compare Methods"
+desc = "Holdout accuracy of this model against every automatic method and the naive and seasonal-naive benchmarks on the same split, sorted by MASE (below 1 beats the in-sample naive forecast)"
+code = '''
+using Statistics
+m = {{m}}; H = min({{h}}, length(y) ÷ 5)
+train, test = y[1:end-H], y[end-H+1:end]
+scale = m > 1 ? mean(abs.(train[m+1:end] .- train[1:end-m])) : mean(abs.(diff(train)))
+cands = ["This model" => build, "Auto ARIMA" => (x -> auto_arima(x, m; seasonal = m > 1)), "Auto ETS" => (x -> ets(x, m, "ZZZ")),
+         "Auto Theta" => (x -> auto_theta(x, m)), "Auto ARARMA" => (x -> auto_ararma(x)), "Naive" => (x -> naive(x)), "Seasonal naive" => (x -> snaive(x, max(m, 1)))]
+rows = map(cands) do (name, make)
+    e = try test .- forecast(make(train); h=H).mean catch; fill(NaN, H) end
+    (method = name, mae = round(mean(abs.(e)), digits=3), rmse = round(sqrt(mean(e .^ 2)), digits=3), mase = round(mean(abs.(e)) / scale, digits=3))
+end
+sort(rows, by = r -> isnan(r.mase) ? Inf : r.mase)
+'''
+
+[[actionGroups.actions]]
+id = "combination"
+label = "Forecast Combination"
+desc = "Holdout MASE of auto ARIMA, auto ETS and auto theta against their simple average: combining often beats each method alone"
+code = '''
+using Statistics
+m = {{m}}; H = min({{h}}, length(y) ÷ 5)
+train, test = y[1:end-H], y[end-H+1:end]
+scale = m > 1 ? mean(abs.(train[m+1:end] .- train[1:end-m])) : mean(abs.(diff(train)))
+fa = forecast(auto_arima(train, m; seasonal = m > 1); h=H).mean
+fe = forecast(ets(train, m, "ZZZ"); h=H).mean
+ft = forecast(auto_theta(train, m); h=H).mean
+score(f) = round(mean(abs.(test .- f)) / scale, digits=3)
+(auto_arima = score(fa), auto_ets = score(fe), auto_theta = score(ft), average_of_three = score((fa .+ fe .+ ft) ./ 3), metric = "holdout MASE, lower is better")
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "selected-model"
+label = "Selected Model"
+desc = "The model the search settled on and its estimates: orders and coefficients for ARIMA; error, trend and seasonal form and smoothing parameters for ETS; filter and ARMA coefficients for ARARMA; the holdout scores for the race"
+code = '''
+{{?model=arima}} a = model.arma  # [p, q, P, Q, period, d, D]
+{{?model=arima}} (model = fc.method, p = a[1], d = a[6], q = a[2], P = a[3], D = a[7], Q = a[4], period = a[5], coefficients = model.coef, sigma2 = model.sigma2, aicc = model.aicc)
+{{?model=ets}} (model = model.method, parameters = model.par, sigma2 = model.sigma2, aic = model.aic, aicc = model.aicc, bic = model.bic)
+{{?model=ararma}} (model = fc.method, filter = round.(model.psi, digits=4), ar_lags = model.best_lag, lag_coefficients = round.(model.lag_phi, digits=4), arma_ar = round.(model.arma_phi, digits=4), arma_ma = round.(model.arma_theta, digits=4), aic = model.aic, bic = model.bic)
+{{?model=race}} (winner = first(cands[best]), selected = fc.method, holdout = scores)
+'''
+
+[[actionGroups.actions]]
+id = "candidates"
+label = "Candidates Considered"
+desc = "The alternatives the search weighed: the ARIMA search trace, the main ETS forms by criterion, the ARARMA orders by AIC and BIC, or the race scores"
+code = '''
+{{?model=arima}} auto_arima(y, {{m}}; seasonal={{m}} > 1, ic={{ic}}, trace=true);  # prints every model tried and its criterion
+{{?model=ets}} forms = [("ANN", false), ("AAN", false), ("AAN", true), ("MNN", false), ("MAN", false), ("MAN", true)]
+{{?model=ets}} {{m}} > 1 && append!(forms, [("ANA", false), ("AAA", false), ("AAA", true), ("MNM", false), ("MAM", false), ("MAM", true)])
+{{?model=ets}} sc(f, d) = try round(getproperty(ets(y, {{m}}, f; damped=d), {{ic}}), digits=2) catch; NaN end  # NaN: form not admissible, e.g. multiplicative with zeros
+{{?model=ets}} sort([(model = f * (d ? " damped" : ""), criterion = sc(f, d)) for (f, d) in forms], by = r -> isnan(r.criterion) ? Inf : r.criterion)
+{{?model=ararma}} sc(p, q) = try f = ararma(y; p=p, q=q); (p = p, q = q, aic = round(f.aic, digits=2), bic = round(f.bic, digits=2)) catch; (p = p, q = q, aic = NaN, bic = NaN) end
+{{?model=ararma}} sort([sc(p, q) for p in 0:{{maxp}} for q in 0:{{maxq}} if p + q > 0], by = r -> isnan(r.aic) ? Inf : r.aic)
+{{?model=race}} sort(scores, by = s -> s.holdout_mase)
+'''

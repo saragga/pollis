@@ -198,10 +198,7 @@ MenuRegistry.appendMenuItem(E_ETSubmenuId, {
 
 MenuRegistry.appendMenuItem(E_ETSubmenuId, {
 	group: '1_et',
-	command: {
-		id: 'chiara.statistics.rsm', precondition: ContextKeyExpr.false(),
-		title: localize('showStatistics.rsm', 'Regime Switching Models'),
-	},
+	command: { id: 'chiara.statistics.rsm', title: localize('showStatistics.rsm', 'Regime Switching Models') },
 	order: 4,
 }); // MarSwitching.jl, HiddenMarkovModels.jl
 
@@ -219,9 +216,9 @@ MenuRegistry.appendMenuItem(E_ETSubmenuId, {
 
 MenuRegistry.appendMenuItem(E_ETSubmenuId, {
 	group: '2_et',
-	command: { id: 'chiara.statistics.autotsf', precondition: ContextKeyExpr.false(), title: localize('et.autotsf', 'Automatic Time-Series Forecasting') },
+	command: { id: 'chiara.statistics.autotsf', title: localize('et.autotsf', 'Automatic Time-Series Forecasting') },
 	order: 3,
-}); // Heval.jl
+}); // Durbyn.jl
 
 MenuRegistry.appendMenuItem(E_ETSubmenuId, {
 	group: '3_et',

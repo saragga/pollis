@@ -33,6 +33,8 @@ import { DF_PANEL } from './commands/df.command.js';
 import { RQR_PANEL } from './commands/rqr.command.js';
 import { SSM_PANEL } from './commands/ssm.command.js';
 import { VCM_PANEL } from './commands/vcm.command.js';
+import { RSM_PANEL } from './commands/rsm.command.js';
+import { AUTOTSF_PANEL } from './commands/autotsf.command.js';
 import { TTE_PANEL } from './commands/tte.command.js';
 import { CTSV_PANEL } from './commands/ctsv.command.js';
 import { ARIMA_PANEL } from './commands/arima.command.js';
@@ -271,6 +273,9 @@ CommandsRegistry.registerCommand('chiara.statistics.ssm', accessor => SSM_OPEN(a
 const VCM_OPEN = (accessor: ServicesAccessor, initialModel?: string) => openScaffoldWebview(accessor, VCM_PANEL, initialModel);
 
 CommandsRegistry.registerCommand('chiara.statistics.vcm', accessor => VCM_OPEN(accessor));
+
+CommandsRegistry.registerCommand('chiara.statistics.rsm', accessor => openScaffoldWebview(accessor, RSM_PANEL));
+CommandsRegistry.registerCommand('chiara.statistics.autotsf', accessor => openScaffoldWebview(accessor, AUTOTSF_PANEL));
 CommandsRegistry.registerCommand('chiara.statistics.tvm.dtsv', () => { });
 
 const CTSV_OPEN = (accessor: ServicesAccessor) => openScaffoldWebview(accessor, CTSV_PANEL);
