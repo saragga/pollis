@@ -414,7 +414,8 @@ desc = "Test whether extra predictors improve the fit"
 code = '''
 using GLM
 
-model0 = lm(@formula(y ~ x1), {{data}})  # restricted model (edit to a nested formula)
+{{?model=ols}}model0 = lm(@formula(y ~ x1), {{data}})  # restricted model (edit to a nested formula)
+{{?model=wls}}model0 = lm(@formula(y ~ x1), {{data}}, wts={{weights}})  # restricted model, same weights (edit to a nested formula)
 println(ftest(model0.model, model.model))  # F-test of the nested models
 '''
 
