@@ -206,6 +206,8 @@ ds = CoupledODEs(lorenz!, {{u0}}, {{p}})  # define system
 grid = (range(-30, 30; length={{N}}), range(-30, 30; length={{N}}), range(0, 60; length={{N}}))  # state-space search grid
 mapper = AttractorsViaRecurrences(ds, grid)  # recurrence-based attractor mapper
 
+sampler, _ = statespace_sampler(grid, 1)  # random initial conditions in the grid box
+basins_fractions(mapper, sampler; N=200)  # map them first: the mapper only knows the attractors it has met
 attractors = extract_attractors(mapper)  # find all coexisting attractors
 println("Number of attractors found: ", length(attractors))  # count distinct attractors
 '''
@@ -270,6 +272,8 @@ using DynamicalSystems, Attractors, GLMakie
 ds = CoupledODEs(lorenz!, {{u0}}, {{p}})
 grid = (range(-30, 30; length={{N}}), range(-30, 30; length={{N}}), range(0, 60; length={{N}}))  # search grid
 mapper = AttractorsViaRecurrences(ds, grid)  # mapper
+sampler, _ = statespace_sampler(grid, 1)  # random initial conditions in the grid box
+basins_fractions(mapper, sampler; N=200)  # map them first: the mapper only knows the attractors it has met
 attractors = extract_attractors(mapper)  # find attractors
 
 for (k, A) in attractors
@@ -348,7 +352,9 @@ p_after  = (10.0, 24.0, 8/3)  # parameters past a bifurcation
 for p_i in [p_before, p_after]
     ds = CoupledODEs(lorenz!, {{u0}}, p_i)
     grid = (range(-30, 30; length={{N}}), range(-30, 30; length={{N}}), range(0, 60; length={{N}}))  # grid
-    att = extract_attractors(AttractorsViaRecurrences(ds, grid))  # find attractors
+    mapper = AttractorsViaRecurrences(ds, grid)
+    basins_fractions(mapper, statespace_sampler(grid, 1)[1]; N=200)  # map initial conditions first: the mapper only knows the attractors it has met
+    att = extract_attractors(mapper)  # attractors found
     println("p=", p_i, " -> ", length(att), " attractor(s)")  # count attractors
 end
 '''
@@ -365,7 +371,9 @@ prange = range(10.0, 30.0; length=40)  # sweep rho over [10, 30]
 for rho in prange
     ds = CoupledODEs(lorenz!, {{u0}}, (10.0, rho, 8/3))
     grid = (range(-30, 30; length={{N}}), range(-30, 30; length={{N}}), range(0, 60; length={{N}}))  # grid
-    att = extract_attractors(AttractorsViaRecurrences(ds, grid))  # find attractors
+    mapper = AttractorsViaRecurrences(ds, grid)
+    basins_fractions(mapper, statespace_sampler(grid, 1)[1]; N=200)  # map initial conditions first: the mapper only knows the attractors it has met
+    att = extract_attractors(mapper)  # attractors found
     println("rho=", rho, ": ", length(att), " attractor(s)")  # detect transition
 end
 '''
@@ -384,10 +392,15 @@ using DynamicalSystems, Attractors
 ds = CoupledODEs(lorenz!, {{u0}}, {{p}})
 grid = (range(-30, 30; length={{N}}), range(-30, 30; length={{N}}), range(0, 60; length={{N}}))  # grid
 
+sampler, _ = statespace_sampler(grid, 1)  # random initial conditions in the grid box
 m_rec  = AttractorsViaRecurrences(ds, grid)  # recurrence mapper
+fr_rec = basins_fractions(m_rec, sampler; N=500)  # finds the attractors as it maps
 att_r  = extract_attractors(m_rec)  # attractors via recurrence
+m_prox = AttractorsViaProximity(ds, att_r)  # proximity mapper: needs the attractors to be known already
+fr_prox = basins_fractions(m_prox, sampler; N=500)
 
-println("Recurrence: ", length(att_r), " attractor(s)")  # compare counts
+println("Recurrence: ", length(att_r), " attractor(s), basin fractions ", fr_rec)
+println("Proximity:  basin fractions ", fr_prox)  # should agree with recurrence up to sampling noise
 '''
 
 [[actionGroups.actions]]
@@ -399,7 +412,9 @@ using DynamicalSystems, Attractors
 
 ds = CoupledODEs(lorenz!, {{u0}}, {{p}})
 grid = (range(-30, 30; length={{N}}), range(-30, 30; length={{N}}), range(0, 60; length={{N}}))  # grid
-att = extract_attractors(AttractorsViaRecurrences(ds, grid))  # find attractors
+mapper = AttractorsViaRecurrences(ds, grid)
+basins_fractions(mapper, statespace_sampler(grid, 1)[1]; N=200)  # map initial conditions first: the mapper only knows the attractors it has met
+att = extract_attractors(mapper)  # attractors found
 
 println(length(att) == 1 ? "Monostable" : "Multistable ($(length(att)) attractors)")  # stability diagnosis
 '''
@@ -419,8 +434,9 @@ ds = CoupledODEs(lorenz!, {{u0}}, {{p}})
 grid = (range(-30, 30; length={{N}}), range(-30, 30; length={{N}}), range(0, 60; length={{N}}))  # grid
 basins, _ = basins_of_attraction(AttractorsViaRecurrences(ds, grid), grid)  # classify
 
-Sb = basin_entropy(basins)  # basin entropy (0 = simple, high = fractal)
-println("Basin entropy: ", Sb)  # interpret: > 0.5 indicates fractal boundaries
+Sb, Sbb = basin_entropy(basins)  # basin entropy and boundary basin entropy (Daza et al. 2016)
+println("Basin entropy Sb: ", Sb, "  boundary basin entropy Sbb: ", Sbb)  # Sb = 0: a single basin
+println(Sbb > log(2) ? "Sbb > log 2: the basin boundaries are fractal" : "Sbb <= log 2: inconclusive, the boundaries may or may not be fractal")
 '''
 
 [[actionGroups.actions]]
