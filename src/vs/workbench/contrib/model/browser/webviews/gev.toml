@@ -254,7 +254,7 @@ label = "Interpret"
 [[actionGroups.actions]]
 id = "tail_behaviour"
 label = "Tail Behaviour"
-desc = "Classify tail type from shape parameter and compute tail probability"
+desc = "Classify tail type from the shape parameter, and the chance that a block maximum exceeds the largest one observed"
 code = '''
 using Extremes, Distributions
 
@@ -262,9 +262,9 @@ fm                        = gevfit({{data}})  # fit GEV
 mu_hat, sigma_hat, xi_hat = params(fm)  # extract parameters
 tail    = xi_hat > 0.05 ? "Heavy (Frechet)" : xi_hat < -0.05 ? "Bounded (Weibull)" : "Light (Gumbel)"  # classify tail by shape
 d_gev   = GeneralizedExtremeValue(mu_hat, sigma_hat, xi_hat)  # build fitted distribution
-p_tail  = 1 - cdf(d_gev, quantile(d_gev, 0.99))  # prob of exceeding 99th pct
+p_tail  = ccdf(d_gev, maximum({{data}}))  # chance a new block maximum beats the record
 
 println("Tail type:          ", tail)
 println("xi_hat (shape):     ", round(xi_hat, digits = 4))
-println("P(X > Q0.99):       ", round(p_tail, digits = 6))
+println("P(X > record):      ", round(p_tail, digits = 6), "  (return period ", round(1 / p_tail, digits = 1), " blocks)")
 '''
