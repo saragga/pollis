@@ -175,22 +175,15 @@ using Graphs, NetworkDynamics, OrdinaryDiffEq, Statistics, LinearAlgebra
 g     = barabasi_albert({{N}}, 3)  # underlying network
 omega = randn({{N}}) .* {{gamma}}  # natural frequencies (spread = sigma)
 
-function kura_vertex!(dv, v, edges, p, t)
-    idx = round(Int, p[1])
-    K   = p[2]
-    dv[1] = omega[idx] + K * sum(e[1] for e in edges; init=0.0)
-end
-function kura_edge!(de, e, v_src, v_dst, p, t)
-    de[1] = sin(v_dst[1] - v_src[1])  # phase coupling
+function kuramoto(g, omega, K)  # d theta_i / dt = omega_i + K * sum over neighbours j of sin(theta_j - theta_i)
+    edge = EdgeModel(g=AntiSymmetric((ydst, vsrc, vdst, p, t) -> (ydst[1] = K * sin(vsrc[1] - vdst[1]))), outsym=[:coupling])  # pulls each end toward the other
+    verts = [VertexModel(f=(dv, v, esum, p, t) -> (dv[1] = omega[i] + esum[1]), g=1, dim=1, sym=[:theta]) for i in 1:nv(g)]
+    Network(g, verts, edge)
 end
 
-vf  = VertexModel(f=kura_vertex!, dim=1, sym=[:theta], pdim=2, psym=[:idx,:K])
-ef  = EdgeModel(f=kura_edge!, dim=1, coupling=AntiSymmetric())
-nd  = Network(g, vf, ef)
-
+nd  = kuramoto(g, omega, {{beta}})
 u0  = 2pi .* rand({{N}})  # random initial phases
-p   = [(float(i), {{beta}}) for i in 1:{{N}}]  # per-node params: (index, K)
-sol = solve(ODEProblem(nd, u0, (0.0, {{T}}), p), Tsit5())
+sol = solve(ODEProblem(nd, u0, (0.0, {{T}})), Tsit5())
 
 r = abs(mean(exp.(im .* sol[end])))  # order parameter r at final time
 println("Order parameter r: ", round(r; digits=3), "  (0=incoherent, 1=locked)")  # synchronisation result
@@ -205,7 +198,7 @@ g          = barabasi_albert({{N}}, 3)  # scale-free network
 loads      = rand({{N}}) .* 0.8  # initial loads in [0, 0.8]
 capacities = ones({{N}})  # unit capacity at each node
 failed     = Set{Int}()
-queue      = collect(findall(loads .> capacities))  # nodes that fail at t=0
+queue      = [rand(1:{{N}})]  # trigger: one random node fails at t=0 and sheds its load (loads <= 0.8 < capacity, so nothing fails on its own)
 union!(failed, queue)
 
 while !isempty(queue)
@@ -238,11 +231,13 @@ code = '''
 using Graphs, NetworkDynamics, OrdinaryDiffEq, Statistics, GLMakie
 
 g=barabasi_albert({{N}},3); omega=randn({{N}}).*{{gamma}}
-function kv!(dv,v,edges,p,t); dv[1]=omega[round(Int,p[1])]+p[2]*sum(e[1] for e in edges;init=0.0); end
-function ke!(de,e,s,d,p,t); de[1]=sin(d[1]-s[1]); end
-vf=VertexModel(f=kv!,dim=1,sym=[:theta],pdim=2,psym=[:idx,:K]); ef=EdgeModel(f=ke!,dim=1,coupling=AntiSymmetric())
-nd=Network(g,vf,ef); u0=2pi.*rand({{N}}); p=[(float(i),{{beta}}) for i in 1:{{N}}]
-sol=solve(ODEProblem(nd,u0,(0.0,{{T}}),p),Tsit5())
+function kuramoto(g, omega, K)  # d theta_i / dt = omega_i + K * sum over neighbours j of sin(theta_j - theta_i)
+    edge = EdgeModel(g=AntiSymmetric((ydst, vsrc, vdst, p, t) -> (ydst[1] = K * sin(vsrc[1] - vdst[1]))), outsym=[:coupling])  # pulls each end toward the other
+    verts = [VertexModel(f=(dv, v, esum, p, t) -> (dv[1] = omega[i] + esum[1]), g=1, dim=1, sym=[:theta]) for i in 1:nv(g)]
+    Network(g, verts, edge)
+end
+nd = kuramoto(g, omega, {{beta}}); u0 = 2pi .* rand({{N}})
+sol = solve(ODEProblem(nd, u0, (0.0, {{T}})), Tsit5())
 
 r_t = [abs(mean(exp.(im.*sol(t)))) for t in sol.t]  # order parameter over time
 fig,ax=Figure(),Axis(fig[1,1],xlabel="Time",ylabel="r",title="Kuramoto Order Parameter",limits=(nothing,(0,1)))
@@ -263,7 +258,7 @@ sizes = Float64[]  # failure fractions
 
 for _ in 1:200
     loads = rand({{N}}) .* 0.8; caps = ones({{N}}); failed = Set{Int}()
-    queue = collect(findall(loads .> caps)); union!(failed, queue)
+    queue = [rand(1:{{N}})]; union!(failed, queue)  # trigger: one random node fails
     while !isempty(queue)
         v=popfirst!(queue); nbrs=[u for u in neighbors(g,v) if !(u in failed)]
         isempty(nbrs) && continue; share=loads[v]/length(nbrs)
@@ -314,7 +309,7 @@ sizes = Float64[]  # store cascade sizes
 
 for _ in 1:200
     loads = rand({{N}}) .* 0.8; caps = ones({{N}}); failed = Set{Int}()
-    queue = collect(findall(loads .> caps)); union!(failed, queue)
+    queue = [rand(1:{{N}})]; union!(failed, queue)  # trigger: one random node fails
     while !isempty(queue)
         v=popfirst!(queue); nbrs=[u for u in neighbors(g,v) if !(u in failed)]
         isempty(nbrs) && continue; share=loads[v]/length(nbrs)
@@ -343,16 +338,17 @@ using Graphs, NetworkDynamics, OrdinaryDiffEq, Statistics, GLMakie
 g     = barabasi_albert({{N}}, 3)  # fixed network topology
 omega = randn({{N}}) .* {{gamma}}  # fixed natural frequencies
 
-function kv!(dv,v,edges,p,t); dv[1]=omega[round(Int,p[1])]+p[2]*sum(e[1] for e in edges;init=0.0); end
-function ke!(de,e,s,d,p,t); de[1]=sin(d[1]-s[1]); end
-vf=VertexModel(f=kv!,dim=1,sym=[:theta],pdim=2,psym=[:idx,:K]); ef=EdgeModel(f=ke!,dim=1,coupling=AntiSymmetric())
-nd=Network(g,vf,ef)
+function kuramoto(g, omega, K)  # d theta_i / dt = omega_i + K * sum over neighbours j of sin(theta_j - theta_i)
+    edge = EdgeModel(g=AntiSymmetric((ydst, vsrc, vdst, p, t) -> (ydst[1] = K * sin(vsrc[1] - vdst[1]))), outsym=[:coupling])  # pulls each end toward the other
+    verts = [VertexModel(f=(dv, v, esum, p, t) -> (dv[1] = omega[i] + esum[1]), g=1, dim=1, sym=[:theta]) for i in 1:nv(g)]
+    Network(g, verts, edge)
+end
 
 Ks     = 0.0:0.05:1.5  # coupling sweep range
 r_vals = Float64[]  # final order parameter per K
 for K_val in Ks
-    u0 = 2pi .* rand({{N}}); p = [(float(i), K_val) for i in 1:{{N}}]
-    sol = solve(ODEProblem(nd, u0, (0.0, {{T}}), p), Tsit5())
+    u0 = 2pi .* rand({{N}})
+    sol = solve(ODEProblem(kuramoto(g, omega, K_val), u0, (0.0, {{T}})), Tsit5())
     push!(r_vals, abs(mean(exp.(im .* sol[end]))))
 end
 
@@ -373,7 +369,7 @@ function cascade_frac(g, lmax, n=100)
     N = nv(g); total = 0.0
     for _ in 1:n
         loads = rand(N) .* lmax; caps = ones(N)
-        failed = Set{Int}(); queue = collect(findall(loads .> caps)); union!(failed, queue)
+        failed = Set{Int}(); queue = [rand(1:N)]; union!(failed, queue)  # trigger: one random node fails
         while !isempty(queue)
             v=popfirst!(queue); nbrs=[u for u in neighbors(g,v) if !(u in failed)]
             isempty(nbrs) && continue; share=loads[v]/length(nbrs)
@@ -427,7 +423,7 @@ function mean_cascade(g, n=200)
     N = nv(g); total = 0.0
     for _ in 1:n
         loads=rand(N).*0.8; caps=ones(N); failed=Set{Int}()
-        queue=collect(findall(loads.>caps)); union!(failed,queue)
+        queue=[rand(1:N)]; union!(failed,queue)  # trigger: one random node fails
         while !isempty(queue)
             v=popfirst!(queue); nbrs=[u for u in neighbors(g,v) if !(u in failed)]
             isempty(nbrs) && continue; share=loads[v]/length(nbrs)
@@ -457,11 +453,13 @@ code = '''
 using Graphs, NetworkDynamics, OrdinaryDiffEq, Statistics, LinearAlgebra
 
 g=barabasi_albert({{N}},3); omega=randn({{N}}).*{{gamma}}
-function kv!(dv,v,edges,p,t); dv[1]=omega[round(Int,p[1])]+p[2]*sum(e[1] for e in edges;init=0.0); end
-function ke!(de,e,s,d,p,t); de[1]=sin(d[1]-s[1]); end
-vf=VertexModel(f=kv!,dim=1,sym=[:theta],pdim=2,psym=[:idx,:K]); ef=EdgeModel(f=ke!,dim=1,coupling=AntiSymmetric())
-nd=Network(g,vf,ef); u0=2pi.*rand({{N}}); p=[(float(i),{{beta}}) for i in 1:{{N}}]
-sol=solve(ODEProblem(nd,u0,(0.0,{{T}}),p),Tsit5())
+function kuramoto(g, omega, K)  # d theta_i / dt = omega_i + K * sum over neighbours j of sin(theta_j - theta_i)
+    edge = EdgeModel(g=AntiSymmetric((ydst, vsrc, vdst, p, t) -> (ydst[1] = K * sin(vsrc[1] - vdst[1]))), outsym=[:coupling])  # pulls each end toward the other
+    verts = [VertexModel(f=(dv, v, esum, p, t) -> (dv[1] = omega[i] + esum[1]), g=1, dim=1, sym=[:theta]) for i in 1:nv(g)]
+    Network(g, verts, edge)
+end
+nd = kuramoto(g, omega, {{beta}}); u0 = 2pi .* rand({{N}})
+sol = solve(ODEProblem(nd, u0, (0.0, {{T}})), Tsit5())
 
 r = abs(mean(exp.(im .* sol[end])))  # order parameter
 L = Float64.(Matrix(laplacian_matrix(g)))  # dense Laplacian
