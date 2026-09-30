@@ -15,7 +15,11 @@ name: Pollis Build
 # Hygiene is a git pre-commit hook instead (`git config core.hooksPath .githooks`), since
 # indentation, formatting and copyright headers have no runtime effect.
 #
-# The full packaged build lives in pollis-package.yml, on a manual trigger.
+# Runs on a GitHub-hosted Ubuntu runner: it has the most memory of the hosted runners (16 GB,
+# against 7 GB on macOS), and the checks do not depend on the platform.
+#
+# The full packaged builds live in pollis-package.yml (macOS), pollis-windows.yml and
+# pollis-linux.yml, on a manual trigger.
 
 on:
   push:
@@ -42,17 +46,20 @@ env:
 jobs:
   checks:
     name: Checks
-    runs-on: [self-hosted, macOS]
-    timeout-minutes: 45
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
 
     steps:
       - name: Checkout
         uses: actions/checkout@v6
         with:
           lfs: true
-          # Keep node_modules and .build between runs. A clean checkout would `git clean -ffdx`
-          # them away and force a full reinstall every time, which is the slowest step by far.
-          clean: false
+
+      - name: Install system libraries
+        # Headers for the native modules that npm ci builds (native-keymap, kerberos).
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pkg-config libxkbfile-dev libkrb5-dev
 
       - name: Setup
         uses: ./.github/actions/pollis-setup
@@ -71,6 +78,9 @@ jobs:
 
       - name: Check layering
         run: npm run valid-layers-check
+        env:
+          # Node's default heap is too small for the six restricted type checks.
+          NODE_OPTIONS: --max-old-space-size=8192
 
       - name: Lint
         run: npm run eslint

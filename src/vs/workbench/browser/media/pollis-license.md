@@ -13,7 +13,7 @@ without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 full licence text below for more details.
 
 The complete source code of Pollis is available at
-[github.com/Trumpingtons/pollis](https://github.com/Trumpingtons/pollis).
+[github.com/saragga/pollis](https://github.com/saragga/pollis).
 
 ---
 

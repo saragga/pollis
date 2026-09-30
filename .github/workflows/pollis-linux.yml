@@ -1,14 +1,8 @@
-name: Pollis Package
+name: Pollis Linux
 
-# The full minified build: `gulp vscode-min` runs compile-build-with-mangling (which type-checks
-# with emitError, so it subsumes compile-check-ts-native), builds the bundled extensions, minifies,
-# and assembles the app into ../VSCode-darwin-arm64.
-#
-# This is the only thing that proves Pollis actually ships on macOS, and it is far too slow for
-# every push, hence the manual trigger. Unlike pollis-build.yml it needs the real Electron binary.
-#
-# Runs on a GitHub-hosted Apple silicon runner (free for public repositories). The app is not
-# signed, so macOS quarantines a downloaded copy: clear it with `xattr -cr Pollis.app`.
+# Pollis on Linux, on a GitHub-hosted runner. The full minified build
+# (`gulp vscode-linux-x64-min`) assembles the app into ../VSCode-linux-x64. Manual trigger only:
+# a full build takes hours and nothing is cached yet.
 
 on:
   workflow_dispatch:
@@ -23,7 +17,7 @@ on:
         default: false
 
 concurrency:
-  group: pollis-package-${{ github.ref }}
+  group: pollis-linux-${{ github.ref }}
   cancel-in-progress: false
 
 permissions:
@@ -31,19 +25,27 @@ permissions:
 
 env:
   VSCODE_QUALITY: 'oss'
+  VSCODE_ARCH: x64
   ELECTRON_RUN_AS_NODE: ''
 
 jobs:
-  package:
-    name: vscode-min
-    runs-on: macos-latest
-    timeout-minutes: 180
+  linux:
+    name: Linux (x64)
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
 
     steps:
       - name: Checkout
         uses: actions/checkout@v6
         with:
           lfs: true
+
+      - name: Install system libraries
+        # Headers for the native modules that npm ci builds (native-keymap, kerberos), and the
+        # libraries Electron loads.
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pkg-config libxkbfile-dev libkrb5-dev libgtk-3-0 libgbm1
 
       - name: Setup
         uses: ./.github/actions/pollis-setup
@@ -52,7 +54,6 @@ jobs:
 
       - name: Generate webview data
         # The *.data.ts modules are generated from the webview *.toml files and are gitignored.
-        # Only compile-client runs compile-toml, so type checks and vscode-min need it first.
         run: npm run gulp compile-toml
 
       - name: Type check sources
@@ -66,30 +67,30 @@ jobs:
           NODE_OPTIONS: --max-old-space-size=8192
 
       - name: Build minified app
-        run: npm run gulp vscode-min
+        run: npm run gulp vscode-linux-x64-min
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Report build output
         run: |
           set -e
-          echo "out-vscode-min:"
-          du -sh out-vscode-min
           echo "packaged app:"
-          du -sh ../VSCode-darwin-arm64
-          ls -1 ../VSCode-darwin-arm64
+          du -sh ../VSCode-linux-x64
+          ls -1 ../VSCode-linux-x64
 
       - name: Archive packaged app
-        # upload-artifact drops symlinks and permissions, which breaks an .app bundle, and rejects
-        # paths outside the workspace ('..'). ditto keeps both.
+        # upload-artifact drops permissions (the executable bit) and rejects paths outside the
+        # workspace ('..'). tar keeps both.
         if: ${{ inputs.upload }}
         run: |
           set -e
           mkdir -p .build
-          ditto -c -k --sequesterRsrc --keepParent ../VSCode-darwin-arm64 .build/Pollis-darwin-arm64.zip
+          tar -czf .build/Pollis-linux-x64.tar.gz -C .. VSCode-linux-x64
 
       - name: Upload packaged app
         if: ${{ inputs.upload }}
         uses: actions/upload-artifact@v7
         with:
-          name: Pollis-darwin-arm64
-          path: .build/Pollis-darwin-arm64.zip
+          name: Pollis-linux-x64
+          path: .build/Pollis-linux-x64.tar.gz
           retention-days: 3

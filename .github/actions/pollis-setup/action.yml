@@ -1,5 +1,5 @@
 name: Pollis Setup
-description: Sets up Node.js and installs dependencies, reusing node_modules between runs on a self-hosted runner.
+description: Sets up Node.js and installs dependencies, skipping the install when node_modules already matches package-lock.json.
 
 inputs:
   install-binaries:
@@ -21,8 +21,8 @@ runs:
 
     - name: Discard leftovers from a previous run
       shell: bash
-      # The checkout step uses `clean: false` so that node_modules survives; everything else that
-      # is not tracked is removed here instead.
+      # A no-op on a fresh hosted runner. On a persistent one, where checkout uses `clean: false`
+      # so that node_modules survives, it removes everything else that is not tracked.
       run: >
         git clean -fd
         --exclude=node_modules

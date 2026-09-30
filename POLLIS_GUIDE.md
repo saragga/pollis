@@ -23,8 +23,8 @@ The following fields are set to Pollis-specific values:
 | `date` | `"2026-05-31T00:00:00.000Z"` | Build date shown in About dialog |
 | `poweredBy` | object | Runtime version strings shown in About dialog (see §1.2) |
 | `licenseName` | `"AGPL-3.0-or-later"` | SPDX id; shown in About dialog, written into Linux packages |
-| `sourceUrl` | `"https://github.com/Trumpingtons/pollis"` | Source link shown in About dialog (AGPL section 13) |
-| `reportIssueUrl` | `"https://github.com/Trumpingtons/pollis/issues/new"` | Help > Report Issue, for Pollis itself (§3.6) |
+| `sourceUrl` | `"https://github.com/saragga/pollis"` | Source link shown in About dialog (AGPL section 13) |
+| `reportIssueUrl` | `"https://github.com/saragga/pollis/issues/new"` | Help > Report Issue, for Pollis itself (§3.6) |
 | `requestFeatureUrl` | Pollis issues labelled `enhancement` | Help > Search Feature Requests (§3.6) |
 
 **After a rebase:** re-apply these values; upstream will reset them to VS Code defaults.
@@ -372,7 +372,7 @@ The following changes have been made relative to upstream:
 | `displayName` | `"Julia"` | `"Julia (Pollis)"` |
 | `description` | upstream description | `"Julia Language Support (Pollis built-in fork of julia-vscode)"` |
 | `publisher` | `"julialang"` | `"pollis"` |
-| `bugs.url` | julia-vscode issues | `"https://github.com/Trumpingtons/pollis/issues"` (Help > Report Issue, §3.6) |
+| `bugs.url` | julia-vscode issues | `"https://github.com/saragga/pollis/issues"` (Help > Report Issue, §3.6) |
 
 **After a rebase:** re-apply these four field values.
 
@@ -542,9 +542,11 @@ The rest of Microsoft's `.github/` infrastructure was removed too: `CODEOWNERS`,
 
 | File | Role |
 |---|---|
-| `.github/workflows/pollis-build.yml` | Fast checks. `push`/`pull_request` on `main` plus `workflow_dispatch`, **self-hosted macOS runner**, 45 min timeout, cancels superseded runs. Steps: build-script typecheck → `compile-check-ts-native` → `valid-layers-check` → `eslint` → `test-node`. |
-| `.github/workflows/pollis-package.yml` | Full minified build, **manual trigger only** (`workflow_dispatch`, 180 min timeout). Optionally runs the fast type and layer checks first (`run_checks`, default on), then `npm run gulp vscode-min`, which assembles the app into `../VSCode-darwin-arm64`, and reports the output sizes. The only job that proves Pollis actually ships; too slow for every push. |
-| `.github/actions/pollis-setup/action.yml` | Composite action shared by both workflows: Node from `.nvmrc`, clean leftovers, cached `npm ci`. Input `install-binaries` (default `false`) — `true` for packaging, which needs the real Electron. |
+| `.github/workflows/pollis-build.yml` | Fast checks. `push`/`pull_request` on `main` plus `workflow_dispatch`, **GitHub-hosted `ubuntu-latest`** (16 GB, against 7 GB on hosted macOS; the checks do not depend on the platform), 60 min timeout, cancels superseded runs. Steps: apt headers for the native modules → build-script typecheck → `compile-check-ts-native` → `valid-layers-check` → `eslint` → `test-node`. |
+| `.github/workflows/pollis-package.yml` | macOS full minified build, **manual trigger only** (`workflow_dispatch`, 180 min timeout), **`macos-latest`** (Apple silicon). Optionally runs the fast type and layer checks first (`run_checks`, default on), then `npm run gulp vscode-min`, which assembles the app into `../VSCode-darwin-arm64`, and reports the output sizes. With `upload` it zips the app with `ditto` and uploads it as the `Pollis-darwin-arm64` artifact (3 days). The app is unsigned: clear the quarantine of a downloaded copy with `xattr -cr Pollis.app`. |
+| `.github/workflows/pollis-windows.yml` | Windows full build, manual trigger, `windows-2022`, 240 min timeout. Installs with its own `npm ci` (PowerShell, retries), runs all the fast checks, then `gulp vscode-win32-x64-min` (`package`, default on); `upload` publishes the `Pollis-win32-x64` artifact. |
+| `.github/workflows/pollis-linux.yml` | Linux full build, manual trigger, `ubuntu-latest`, 240 min timeout. Same shape as `pollis-package.yml`: apt headers and Electron libraries, optional type and layer checks, `gulp vscode-linux-x64-min`; `upload` tars the app (keeping the executable bit) as the `Pollis-linux-x64` artifact. |
+| `.github/actions/pollis-setup/action.yml` | Composite action shared by build, package and linux: Node from `.nvmrc`, clean leftovers, cached `npm ci`. Input `install-binaries` (default `false`) — `true` for packaging, which needs the real Electron. |
 | `.githooks/pre-commit` | Runs `npm run precommit` (`build/hygiene.ts` over the staged files): tabs, copyright header, unicode allowlist (which is what rejects accented and Greek characters in sources), TypeScript formatting, stylelint. |
 
 Why each fast check is there (the full build does not cover them all):
@@ -564,10 +566,11 @@ Bypass it for a single commit with `git commit --no-verify`. To check files outs
 
 Details that matter and are easy to lose:
 
-- **`clean: false` on `actions/checkout`.** A default checkout runs `git clean -ffdx`, which deletes `node_modules` and `.build` and forces a full `npm ci` every run — by far the slowest step. With `clean: false` they persist between runs; the setup action's `git clean -fd` removes everything else except `node_modules`, `.build`, `out`, `out-build` and `out-vscode-min`.
-- **Cached `npm ci`.** The setup action stores `<sha256 of package-lock.json> <variant>` in `.build/npm-ci-stamp` and skips the install when it matches. The variant (`full` or `skip-binaries`) is part of the stamp because the two produce different trees — so alternating between the two workflows re-runs `npm ci`. Installs are retried up to three times.
+- **Hosted runners, public repository.** The repository is public (`saragga/pollis`), so GitHub-hosted minutes are free. Every run starts from a fresh machine, so each one does a full `npm ci`. Pull requests from forks run `pollis-build.yml` with a read-only `GITHUB_TOKEN` and no secrets, and are never merged automatically; the CLA is checked by hand.
+- **Persistent runners (not used now).** The workflows used to run on a self-hosted Mac, with `clean: false` on `actions/checkout` so that `node_modules` and `.build` survived between runs. The setup action still supports that: its `git clean -fd` removes everything untracked except `node_modules`, `.build`, `out`, `out-build` and `out-vscode-min`, and is a no-op on a fresh runner. Never attach a self-hosted runner to a public repository that runs on `pull_request`: a fork's PR could run code on it.
+- **Cached `npm ci`.** The setup action stores `<sha256 of package-lock.json> <variant>` in `.build/npm-ci-stamp` and skips the install when it matches. The variant (`full` or `skip-binaries`) is part of the stamp because the two produce different trees. The stamp only helps on a persistent runner. Installs are retried up to three times.
 - **Binary downloads.** Without `install-binaries`, `ELECTRON_SKIP_BINARY_DOWNLOAD` and `PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD` are set to `1`; with it they are set to empty, not `'0'`, because they are tested for presence and `'0'` is truthy. `pollis-build.yml` therefore covers type checking, linting and node unit tests but **not** Electron or browser integration tests — those stay local via `scripts/test.sh`.
-- **`ELECTRON_RUN_AS_NODE: ''`** in both workflows. It is inherited from the Electron process tree when the runner is started from an editor terminal, and it breaks the build. Set to empty rather than unset so `if (process.env.ELECTRON_RUN_AS_NODE)` checks stay falsy.
+- **`ELECTRON_RUN_AS_NODE: ''`** in the build, package and linux workflows. It is inherited from the Electron process tree when the runner is started from an editor terminal, and it breaks the build. Set to empty rather than unset so `if (process.env.ELECTRON_RUN_AS_NODE)` checks stay falsy.
 
 **Upstream files modified for the Pollis header.** Pollis-authored files (847) carry:
 
@@ -584,7 +587,7 @@ Upstream checks Microsoft's header by exact match in two places, so both accept 
 - **`eslint.config.js`** — in the `header/header` rule, the Microsoft copyright and licence lines were replaced with `{ pattern: … }` entries that accept either the Microsoft or the Pollis wording. Microsoft files keep their MIT line; Pollis files must use the AGPL line.
 - **`build/lib/toml-to-ts.ts`** — emits the Pollis header into generated `*.data.ts` files.
 
-**After a rebase:** re-apply the `build/hygiene.ts` and `eslint.config.js` changes (upstream will restore the exact-match checks). Re-delete any upstream workflows or other Microsoft `.github/` files that reappear, but keep `copilot-instructions.md`. `pollis-build.yml`, `pollis-package.yml`, `pollis-setup` and `.githooks/` are Pollis-owned and will not conflict.
+**After a rebase:** re-apply the `build/hygiene.ts` and `eslint.config.js` changes (upstream will restore the exact-match checks). Re-delete any upstream workflows or other Microsoft `.github/` files that reappear, but keep `copilot-instructions.md`. The `pollis-*.yml` workflows, `pollis-setup` and `.githooks/` are Pollis-owned and will not conflict.
 
 ---
 

@@ -12,7 +12,7 @@ PARTICULAR PURPOSE. See the GNU Affero General Public License below for more
 details.
 
 The complete source code of Pollis is available at
-https://github.com/Trumpingtons/pollis
+https://github.com/saragga/pollis
 
 
 -------------------------------------------------------------------------------
