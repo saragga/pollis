@@ -220,7 +220,7 @@ using LLMTextAnalysis
 
 index = build_index({{texts}})  # build semantic index from documents
 
-results = aitag(index, {{tags}}; model={{llmmodel}})  # assign matching tags to each document
+results = aitag(index, {{tags}}; model="{{llmmodel}}")  # assign matching tags to each document
 
 find_tags(index, {{tags}}[1])  # retrieve documents matching the first tag
 '''
@@ -232,7 +232,7 @@ using LLMTextAnalysis
 
 index = build_index({{texts}})  # build semantic index from documents
 
-labels = aiclassify(index, {{categories}}; model={{llmmodel}})  # classify each document into one category
+labels = aiclassify(index, {{categories}}; model="{{llmmodel}}")  # classify each document into one category
 '''
 
 [[codeBranches]]
@@ -242,7 +242,7 @@ using LLMTextAnalysis
 
 index = build_index({{texts}})  # build semantic index from documents
 
-summary = aisummarize(index; model={{llmmodel}})  # generate a corpus-level summary
+summary = aisummarize(index; model="{{llmmodel}}")  # generate a corpus-level summary
 '''
 
 [[codeBranches]]
@@ -252,7 +252,7 @@ using LLMTextAnalysis
 
 index = build_index({{texts}})  # build semantic index from documents
 
-answer = aiask(index, {{question}}; model={{llmmodel}})  # answer the question using retrieved context
+answer = aiask(index, {{question}}; model="{{llmmodel}}")  # answer the question using retrieved context
 '''
 
 [[actionGroups]]
@@ -267,7 +267,7 @@ code = '''
 using LLMTextAnalysis, Plots
 
 index   = build_index({{texts}})  # build semantic index
-results = aitag(index, {{tags}}; model={{llmmodel}})  # tag each document
+results = aitag(index, {{tags}}; model="{{llmmodel}}")  # tag each document
 
 counts = map(t -> sum(find_tags(index, t) .!= 0), {{tags}})  # count documents per tag
 bar({{tags}}, counts, xlabel="Tag", ylabel="Count", title="Tag Frequency", legend=false)  # plot tag distribution
@@ -281,7 +281,7 @@ code = '''
 using LLMTextAnalysis, Plots
 
 index   = build_index({{texts}})  # build semantic index
-results = aitag(index, {{tags}}; model={{llmmodel}})  # tag each document
+results = aitag(index, {{tags}}; model="{{llmmodel}}")  # tag each document
 
 mat = hcat([map(r -> in(t, r), results) for t in {{tags}}]...)  # build tag-document matrix
 heatmap({{tags}}, 1:length({{texts}}), mat, title="Tag Presence", xlabel="Tag", ylabel="Document")  # visualise tag coverage
@@ -313,7 +313,7 @@ code = '''
 using LLMTextAnalysis
 
 index   = build_index({{texts}})  # build semantic index
-results = aitag(index, {{tags}}; model={{llmmodel}})  # tag documents
+results = aitag(index, {{tags}}; model="{{llmmodel}}")  # tag documents
 
 n = length({{texts}})  # total document count
 for t in {{tags}}
@@ -351,7 +351,7 @@ using LLMTextAnalysis
 index     = build_index({{texts}})  # build semantic index once
 questions = ["What is the main topic?", "What are key conclusions?"]  # list of questions
 
-answers = map(q -> aiask(index, q; model={{llmmodel}}), questions)
+answers = map(q -> aiask(index, q; model="{{llmmodel}}"), questions)
 for (q, a) in zip(questions, answers)
     println("Q: ", q, "
 A: ", a, "
@@ -368,7 +368,7 @@ id = "compare-models"
 label = "Compare Models"
 desc = "Run same analysis with two different LLMs and compare output"
 code = '''
-using LLMTextAnalysis
+using LLMTextAnalysis, Statistics
 
 index    = build_index({{texts}})  # build index once
 
@@ -391,7 +391,7 @@ code = '''
 using LLMTextAnalysis
 
 index   = build_index({{texts}})  # build semantic index
-results = aitag(index, {{tags}}; model={{llmmodel}})  # tag documents
+results = aitag(index, {{tags}}; model="{{llmmodel}}")  # tag documents
 
 for (i, tags_i) in enumerate(results)
     println("Doc ", i, ": ", tags_i)
