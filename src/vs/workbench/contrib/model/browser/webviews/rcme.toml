@@ -133,9 +133,9 @@ default = "simulated"
 [[inputs]]
 id = "target"
 label = "Shrinkage target"
-tooltip = "Structured matrix to shrink towards. Common choices: DiagonalUnitVariance() (scaled identity), DiagonalCommonVariance() (diagonal with average variance), ConstantCorrelation() (equal pairwise correlations). A well-specified target reduces finite-sample error. OAS always shrinks towards DiagonalCommonVariance, the only target it is defined for."
+tooltip = "Structured matrix to shrink towards. Common choices: DiagonalCommonVariance() (the identity scaled by the average variance: the Ledoit-Wolf 2004 target), DiagonalUnitVariance() (the identity itself: only sensible for standardised data, otherwise it pulls every variance towards 1), ConstantCorrelation() (sample variances, equal pairwise correlations). A well-specified target reduces finite-sample error. OAS always shrinks towards DiagonalCommonVariance, the only target it is defined for."
 kind = "select"
-default = "DiagonalUnitVariance()"
+default = "DiagonalCommonVariance()"
 models = ["lw"]
 
 [[inputs.options]]
