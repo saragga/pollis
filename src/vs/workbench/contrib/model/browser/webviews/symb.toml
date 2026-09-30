@@ -1,0 +1,508 @@
+# Symbolic Math Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/symb.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Symbolic Math"
+viewType = "pollis.symb"
+defaultModel = "alg"
+
+[[packages]]
+name = "Symbolics.jl"
+github = "https://github.com/JuliaSymbolics/Symbolics.jl"
+
+[[packages]]
+name = "SymbolicNumericIntegration.jl"
+github = "https://github.com/SciML/SymbolicNumericIntegration.jl"
+
+[requires]
+packages = ["Symbolics.jl", "SymbolicNumericIntegration.jl", "Nemo.jl", "Latexify.jl", "Plots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Algebra with Symbols"
+file = "symb/tutorial-01-algebra.ipynb"
+bundled = true
+description = "Declare variables, simplify, expand and substitute values into expressions"
+
+[[notebookSections.notebooks]]
+name = "Derivatives, Gradients and Hessians"
+file = "symb/tutorial-02-differentiation.ipynb"
+bundled = true
+description = "Differentiate by rule, then build gradients, Jacobians and Hessians of several variables"
+
+[[notebookSections.notebooks]]
+name = "Integration"
+file = "symb/tutorial-03-integration.ipynb"
+bundled = true
+description = "Antiderivatives and definite integrals, checked by differentiating back"
+
+[[notebookSections.notebooks]]
+name = "Limits and Taylor Series"
+file = "symb/tutorial-04-limits-series.ipynb"
+bundled = true
+description = "One- and two-sided limits, and Taylor polynomials that approximate a function near a point"
+
+[[notebookSections.notebooks]]
+name = "Solving Equations"
+file = "symb/tutorial-05-solving.ipynb"
+bundled = true
+description = "Exact roots of polynomial and transcendental equations, and linear systems"
+
+[[wikis]]
+name = "Factsheet"
+file = "symb/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "symb/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "symb/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "symb/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "symb/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "symb/decision-guide.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "High-Performance Symbolic-Numerics via Multiple Dispatch"
+authors = "Gowda, Shashi; Ma, Yingbo; Cheli, Alessandro; Gwozdz, Maja; Shah, Viral B.; Edelman, Alan; Rackauckas, Christopher"
+year = 2022
+journal = "ACM Communications in Computer Algebra"
+doi = "10.1145/3511528.3511535"
+openAccess = false
+
+[[references]]
+title = "Symbolic-Numeric Integration of Univariate Expressions Based on Sparse Regression"
+authors = "Iravanian, Shahriar; Martensen, Carl Julius; Cheli, Alessandro; Gowda, Shashi; Jain, Anand; Ma, Yingbo; Rackauckas, Christopher"
+year = 2022
+journal = "arXiv"
+url = "https://arxiv.org/abs/2201.12468"
+openAccess = true
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Calculus: Early Transcendentals"
+authors = "Stewart, James; Clegg, Daniel; Watson, Saleem"
+year = 2020
+journal = "Cengage Learning"
+openAccess = false
+
+[[references]]
+title = "Calculus, Volume 1"
+authors = "Apostol, Tom M."
+year = 1967
+journal = "Wiley"
+openAccess = false
+
+[[references]]
+title = "Mathematics for Economists"
+authors = "Simon, Carl P.; Blume, Lawrence"
+year = 1994
+journal = "W. W. Norton"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "The Problem of Integration in Finite Terms"
+authors = "Risch, Robert H."
+year = 1969
+journal = "Transactions of the American Mathematical Society"
+doi = "10.1090/S0002-9947-1969-0237477-8"
+openAccess = true
+
+[[references]]
+title = "On Computing Limits in a Symbolic Manipulation System"
+authors = "Gruntz, Dominik"
+year = 1996
+journal = "PhD thesis, ETH Zurich"
+doi = "10.3929/ethz-a-001631582"
+openAccess = true
+
+[[models]]
+id = "alg"
+label = "Algebra"
+
+[[models]]
+id = "diff"
+label = "Differentiation"
+
+[[models]]
+id = "int"
+label = "Integration"
+
+[[models]]
+id = "lim"
+label = "Limits and Series"
+
+[[models]]
+id = "solve"
+label = "Equation Solving"
+
+[[bullets]]
+text = "Algebra"
+detail = "simplifies, expands and evaluates an expression exactly, keeping fractions as fractions"
+
+[[bullets]]
+text = "Differentiation"
+detail = "first and second derivatives by rule, plus the gradient and Hessian over every variable"
+
+[[bullets]]
+text = "Integration"
+detail = "an antiderivative found by symbolic-numeric regression, and the definite integral between two bounds"
+
+[[bullets]]
+text = "Limits and Series"
+detail = "the limit at a point and the Taylor polynomial of a chosen order around it"
+
+[[bullets]]
+text = "Equation Solving"
+detail = "exact roots of an equation in one variable, with their numerical values"
+
+[[decisionRows]]
+task = "Algebra"
+context = "An expression you want in a cleaner form, or to evaluate exactly at a value"
+purpose = "simplify applies rewrite rules to a canonical form; expand multiplies out products and powers; substitute plugs in values and keeps rationals exact"
+
+[[decisionRows]]
+task = "Differentiation"
+context = "A differentiable expression in one or several variables: marginal effects, slopes, optimisation"
+purpose = "Differential and expand_derivatives apply the chain, product and quotient rules; the gradient and Hessian give first- and second-order conditions"
+
+[[decisionRows]]
+task = "Integration"
+context = "An elementary function of one variable whose antiderivative is itself elementary: areas, expected values, consumer surplus"
+purpose = "Proposes candidate terms from the integrand and keeps the combination that differentiates back to it (sparse regression); returns any part it could not integrate"
+
+[[decisionRows]]
+task = "Limits and Series"
+context = "Indeterminate forms such as 0/0, behaviour at infinity, or a local polynomial approximation"
+purpose = "limit uses Gruntz's algorithm for exp, log and rational operations; taylor expands around a point to the chosen order"
+
+[[decisionRows]]
+task = "Equation Solving"
+context = "A polynomial equation, or one reducible to a polynomial by isolating the variable (exponentials, logarithms)"
+purpose = "symbolic_solve factors polynomials exactly (Nemo) and inverts functions by isolation and attraction; roots are exact expressions you can convert to floats"
+
+[[inputs]]
+id = "vars"
+label = "Variables"
+tooltip = "Symbols to declare with @variables, separated by spaces, e.g. x y. Every symbol in the expression must be listed."
+default = "x"
+
+[[inputs]]
+id = "expr"
+label = "Expression"
+tooltip = "A Julia expression in the declared variables, e.g. x^3 - 6x^2 + 11x - 6, exp(-x^2), log(1 + x) / x. Plots and numeric checks treat it as a function of the main variable."
+default = "x^3 - 6x^2 + 11x - 6"
+
+[[inputs]]
+id = "var"
+label = "Main Variable"
+tooltip = "The variable to differentiate, integrate, take limits or solve in."
+default = "x"
+
+[[inputs]]
+id = "x0"
+label = "Point"
+tooltip = "Value at which the expression is evaluated (Algebra), the tangent is drawn (Differentiation), or the limit and Taylor expansion are taken (Limits and Series). Use Inf for the limit at infinity."
+default = "0"
+models = ["alg", "diff", "lim"]
+newRow = true
+
+[[inputs]]
+id = "order"
+label = "Taylor Order"
+tooltip = "Highest power kept in the Taylor polynomial."
+default = "4"
+models = ["lim"]
+
+[[inputs]]
+id = "rhs"
+label = "Right-Hand Side"
+tooltip = "Solves expression = right-hand side for the main variable."
+default = "0"
+models = ["solve"]
+newRow = true
+
+[[inputs]]
+id = "a"
+label = "From"
+tooltip = "Lower end of the plotting interval, and the lower bound of the definite integral."
+default = "0"
+newRow = true
+
+[[inputs]]
+id = "b"
+label = "To"
+tooltip = "Upper end of the plotting interval, and the upper bound of the definite integral."
+default = "4"
+
+[[codeBranches]]
+model = "alg"
+code = '''
+using Symbolics
+
+@variables {{vars}}
+v = {{var}}
+f = {{expr}}
+fs = simplify(f)  # rewrite rules to a canonical form
+fe = expand(f)  # products and powers multiplied out
+value = substitute(f, Dict(v => {{x0}}))  # exact: integers and rationals stay exact
+(expression = f, simplified = fs, expanded = fe, at = {{var}} => {{x0}}, value = value)
+'''
+
+[[codeBranches]]
+model = "diff"
+code = '''
+using Symbolics
+
+@variables {{vars}}
+v = {{var}}
+f = {{expr}}
+D = Differential(v)
+df = expand_derivatives(D(f))  # first derivative by the chain, product and quotient rules
+d2f = expand_derivatives(D(df))  # second derivative
+vs = sort(Num.(Symbolics.get_variables(f)), by=string)  # every variable in f
+grad = Symbolics.gradient(f, vs)
+H = Symbolics.hessian(f, vs)
+(derivative = df, second_derivative = d2f, variables = vs, gradient = grad, hessian = H)
+'''
+
+[[codeBranches]]
+model = "int"
+code = '''
+using Symbolics, SymbolicNumericIntegration
+
+@variables {{vars}}
+v = {{var}}
+f = {{expr}}
+F, unsolved, err = integrate(f, v; symbolic=true)  # antiderivative, the part left unintegrated, numerical error
+area = integrate(f, (v, {{a}}, {{b}}); symbolic=true, detailed=false)  # definite integral from {{a}} to {{b}} (nothing if it failed)
+(antiderivative = F, unsolved = unsolved, definite_integral = area)
+'''
+
+[[codeBranches]]
+model = "lim"
+code = '''
+using Symbolics
+
+@variables {{vars}}
+v = {{var}}
+f = {{expr}}
+L = limit(Symbolics.unwrap(f), Symbolics.unwrap(v), {{x0}})  # two-sided for a finite point; exp, log and rational operations only
+T = taylor(f, v, {{x0}}, 0:{{order}})  # Taylor polynomial of order {{order}} around {{x0}}
+(limit = L, taylor_polynomial = T)
+'''
+
+[[codeBranches]]
+model = "solve"
+code = '''
+using Symbolics, Nemo  # Nemo does the exact polynomial factoring
+
+@variables {{vars}}
+v = {{var}}
+f = {{expr}}
+eq = f ~ {{rhs}}
+roots = symbolic_solve(eq, v)  # exact roots
+(equation = eq, roots = roots, numeric = Symbolics.symbolic_to_float.(roots))
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "function-plot"
+label = "Function Plot"
+desc = "The expression over the interval, overlaid with the result: the derivatives, the shaded integral, the Taylor polynomial or the real roots"
+code = '''
+using Plots
+fn = build_function(f, v; expression=Val{false})  # compiled Julia function of the main variable
+ts = range({{a}}, {{b}}, length=400)
+p = Plots.plot(ts, fn.(ts), lw=2, c=:black, label="f", xlabel="{{var}}", title=string(f))
+{{?model=diff}} Plots.plot!(ts, build_function(df, v; expression=Val{false}).(ts), lw=1.5, label="f'")
+{{?model=diff}} Plots.plot!(ts, build_function(d2f, v; expression=Val{false}).(ts), lw=1.5, ls=:dash, label="f''")
+{{?model=int}} Plots.plot!(ts, fn.(ts), fillrange=0, fillalpha=0.2, lw=0, label="area = $(area)")
+{{?model=int}} Plots.plot!(ts, build_function(F, v; expression=Val{false}).(ts), lw=1.5, ls=:dash, label="F (antiderivative)")
+{{?model=lim}} Plots.plot!(ts, build_function(T, v; expression=Val{false}).(ts), lw=1.5, ls=:dash, label="Taylor order {{order}}")
+{{?model=solve}} r = filter(x -> abs(imag(x)) < 1e-12, complex.(float.(Symbolics.symbolic_to_float.(roots))))
+{{?model=solve}} Plots.hline!([{{rhs}}], c=:gray, ls=:dot, label="{{rhs}}"); Plots.scatter!(real.(r), fill({{rhs}}, length(r)), ms=6, label="real roots")
+p
+'''
+
+[[actionGroups.actions]]
+id = "tangent"
+label = "Tangent Line"
+desc = "The expression with its tangent line at a point: the derivative is the slope of the tangent"
+code = '''
+using Plots
+fn = build_function(f, v; expression=Val{false})
+dfn = build_function(expand_derivatives(Differential(v)(f)), v; expression=Val{false})
+{{?model=alg|diff|lim}} p0 = {{x0}}
+{{?model=int|solve}} p0 = ({{a}} + {{b}}) / 2
+ts = range({{a}}, {{b}}, length=400)
+Plots.plot(ts, fn.(ts), lw=2, c=:black, label="f", xlabel="{{var}}")
+Plots.plot!(ts, fn(p0) .+ dfn(p0) .* (ts .- p0), lw=1.5, ls=:dash, label="tangent, slope = $(round(dfn(p0), digits=4))")
+Plots.scatter!([p0], [fn(p0)], ms=5, label="")
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "back-substitution"
+label = "Symbolic Check"
+desc = "Verifies the result symbolically: the simplified and expanded forms equal the original, the antiderivative differentiates back to the integrand, the roots make the equation hold. Zero means verified"
+code = '''
+{{?model=alg}} (simplified_minus_original = simplify(fs - f; expand=true), expanded_minus_original = simplify(fe - f; expand=true))
+{{?model=diff}} (symmetric_hessian = isequal(H, transpose(H)), gradient_matches_derivative = isequal(simplify(grad[findfirst(isequal(v), vs)] - df), 0))
+{{?model=int}} (derivative_of_F_minus_f = simplify(expand_derivatives(Differential(v)(F)) - f; expand=true), unsolved = unsolved)
+{{?model=lim}} (limit = L, taylor_at_point = substitute(T, Dict(v => {{x0}})), note = "where f is continuous at the point, both equal f there")
+{{?model=solve}} [(root = r, residual = simplify(substitute(f - {{rhs}}, Dict(v => r)); expand=true)) for r in roots]
+'''
+
+[[actionGroups.actions]]
+id = "numeric-check"
+label = "Numeric Check"
+desc = "Compares the symbolic result with a plain numerical method at points in the interval: finite differences, the trapezoid rule, evaluation near the point or at the roots. Small errors confirm the result"
+code = '''
+fn = build_function(f, v; expression=Val{false})
+ts = range({{a}}, {{b}}, length=7)
+{{?model=alg}} [(t = t, f = fn(t), expanded = build_function(fe, v; expression=Val{false})(t)) for t in ts]
+{{?model=diff}} dfn = build_function(df, v; expression=Val{false}); h = 1e-6
+{{?model=diff}} [(t = t, exact = dfn(t), finite_difference = (fn(t + h) - fn(t - h)) / (2h)) for t in ts]
+{{?model=int}} xs = range({{a}}, {{b}}, length=10_001); ys = fn.(xs)
+{{?model=int}} (symbolic = area, trapezoid = step(xs) * (sum(ys) - (ys[1] + ys[end]) / 2))
+{{?model=lim}} [(distance = h, f_right = fn({{x0}} + h), f_left = fn({{x0}} - h), limit = L) for h in (1e-1, 1e-2, 1e-3, 1e-4)]
+{{?model=solve}} [(root = r, f_at_root = fn(Symbolics.symbolic_to_float(r))) for r in roots]
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "value-table"
+label = "Value Table"
+desc = "The expression and the result evaluated at evenly spaced points across the interval"
+code = '''
+fn = build_function(f, v; expression=Val{false})
+{{?model=alg}} g = fe
+{{?model=diff}} g = df
+{{?model=int}} g = F
+{{?model=lim}} g = T
+{{?model=solve}} g = f - {{rhs}}
+gn = build_function(g, v; expression=Val{false})
+[(t = t, f = round(fn(t), digits=6), result = round(gn(t), digits=6)) for t in range({{a}}, {{b}}, length=9)]
+'''
+
+[[actionGroups.actions]]
+id = "compiled-function"
+label = "Compiled Function"
+desc = "Turns the expression into ordinary Julia code you can call, save or reuse elsewhere: fast, and no longer needs Symbolics"
+code = '''
+code = build_function(f, v)  # a Julia expression of the function
+println(code)
+fn = eval(code)
+(f_at_{{a}} = fn({{a}}), f_at_{{b}} = fn({{b}}))
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "taylor-orders"
+label = "Taylor Approximations"
+desc = "Taylor polynomials of order 1 to 6 around the point and their largest error over the interval: how quickly the approximation improves"
+code = '''
+fn = build_function(f, v; expression=Val{false})
+{{?model=alg|diff|lim}} p0 = {{x0}}
+{{?model=int|solve}} p0 = ({{a}} + {{b}}) / 2
+ts = range({{a}}, {{b}}, length=200)
+map(1:6) do n
+    Tn = taylor(f, v, p0, 0:n)
+    (order = n, max_error = maximum(abs.(fn.(ts) .- build_function(Tn, v; expression=Val{false}).(ts))), polynomial = Tn)
+end
+'''
+
+[[actionGroups.actions]]
+id = "forms"
+label = "Compare Forms"
+desc = "The original, simplified and expanded forms side by side with their length: the shortest is often the easiest to read, the expanded one the easiest to integrate"
+code = '''
+forms = ["original" => f, "simplified" => simplify(f), "expanded" => expand(f), "simplified and expanded" => simplify(f; expand=true)]
+[(form = k, expression = e, characters = length(string(e))) for (k, e) in forms]
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "latex"
+label = "LaTeX Output"
+desc = "The expression and the result as LaTeX, ready to paste into a paper, slides or a notebook"
+code = '''
+using Latexify
+{{?model=alg}} latexify([f, fs, fe])
+{{?model=diff}} latexify([f, df, d2f])
+{{?model=int}} latexify([f, F])
+{{?model=lim}} latexify([f, T])
+{{?model=solve}} latexify(roots)
+'''
+
+[[actionGroups.actions]]
+id = "critical-points"
+label = "Critical Points"
+desc = "Solves f' = 0 and classifies each real solution by the sign of f'': a local minimum, a local maximum or an inflection candidate"
+code = '''
+using Nemo
+D = Differential(v)
+d1 = expand_derivatives(D(f)); d2 = expand_derivatives(D(d1))
+fn = build_function(f, v; expression=Val{false}); d2n = build_function(d2, v; expression=Val{false})
+cps = symbolic_solve(d1, v)  # exact solutions of f' = 0
+real_cps = [(exact = c, x = real(z)) for c in cps for z in (complex(float(Symbolics.symbolic_to_float(c))),) if abs(imag(z)) < 1e-10]
+map(real_cps) do (exact, x)
+    s = d2n(x)
+    (point = exact, x = x, f = fn(x), second_derivative = s, kind = s > 0 ? "local minimum" : s < 0 ? "local maximum" : "test inconclusive")
+end
+'''

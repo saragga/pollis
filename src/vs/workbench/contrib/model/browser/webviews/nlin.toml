@@ -1,0 +1,560 @@
+# Nonlinear Systems Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/nlin.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Nonlinear Systems"
+viewType = "pollis.nlin"
+defaultModel = "scalar"
+
+[[packages]]
+name = "NonlinearSolve.jl"
+github = "https://github.com/SciML/NonlinearSolve.jl"
+
+[requires]
+packages = ["NonlinearSolve.jl", "ForwardDiff.jl", "Symbolics.jl", "Plots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Newton's Method for One Equation"
+file = "nlin/tutorial-01-newton.ipynb"
+bundled = true
+description = "Solve f(x) = 0 from a starting guess, read the return code and watch the residual shrink"
+
+[[notebookSections.notebooks]]
+name = "Bracketing Methods"
+file = "nlin/tutorial-02-bracketing.ipynb"
+bundled = true
+description = "Bisection, false position, Brent and ITP: guaranteed convergence once a sign change is found"
+
+[[notebookSections.notebooks]]
+name = "Systems of Equations"
+file = "nlin/tutorial-03-systems.ipynb"
+bundled = true
+description = "Newton, trust region, Levenberg-Marquardt and Broyden on several equations in several unknowns"
+
+[[notebookSections.notebooks]]
+name = "Exact Jacobians with Symbolics"
+file = "nlin/tutorial-04-symbolic-jacobians.ipynb"
+bundled = true
+description = "Derive the Jacobian symbolically, compile it and pass it to the solver"
+
+[[notebookSections.notebooks]]
+name = "Equilibrium and Comparative Statics"
+file = "nlin/tutorial-05-comparative-statics.ipynb"
+bundled = true
+description = "Solve a market equilibrium and use the implicit function theorem to see how it moves"
+
+[[wikis]]
+name = "Factsheet"
+file = "nlin/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "nlin/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "nlin/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "nlin/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "nlin/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "nlin/decision-guide.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "NonlinearSolve.jl: High-Performance and Robust Solvers for Systems of Nonlinear Equations in Julia"
+authors = "Pal, Avik; Holtorf, Flemming; Larsson, Axel; Loman, Torkel; Utkarsh; Schaefer, Frank; Qu, Qingyu; Edelman, Alan; Rackauckas, Christopher"
+year = 2024
+journal = "arXiv"
+url = "https://arxiv.org/abs/2403.16341"
+openAccess = true
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Numerical Methods for Unconstrained Optimization and Nonlinear Equations"
+authors = "Dennis, J. E.; Schnabel, Robert B."
+year = 1996
+journal = "SIAM"
+doi = "10.1137/1.9781611971200"
+openAccess = false
+
+[[references]]
+title = "Solving Nonlinear Equations with Newton's Method"
+authors = "Kelley, C. T."
+year = 2003
+journal = "SIAM"
+doi = "10.1137/1.9780898718898"
+openAccess = false
+
+[[references]]
+title = "Numerical Optimization"
+authors = "Nocedal, Jorge; Wright, Stephen J."
+year = 2006
+journal = "Springer"
+doi = "10.1007/978-0-387-40065-5"
+openAccess = false
+
+[[references]]
+title = "Numerical Methods in Economics"
+authors = "Judd, Kenneth L."
+year = 1998
+journal = "MIT Press"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "A Class of Methods for Solving Nonlinear Simultaneous Equations"
+authors = "Broyden, C. G."
+year = 1965
+journal = "Mathematics of Computation"
+doi = "10.1090/S0025-5718-1965-0198670-6"
+openAccess = true
+
+[[references]]
+title = "The Levenberg-Marquardt Algorithm: Implementation and Theory"
+authors = "More, Jorge J."
+year = 1978
+journal = "Numerical Analysis, Lecture Notes in Mathematics 630"
+doi = "10.1007/BFb0067700"
+openAccess = false
+
+[[references]]
+title = "Algorithms for Minimization Without Derivatives"
+authors = "Brent, Richard P."
+year = 1973
+journal = "Prentice-Hall"
+openAccess = false
+
+[[references]]
+title = "An Enhancement of the Bisection Method Average Performance Preserving Minmax Optimality"
+authors = "Oliveira, I. F. D.; Takahashi, R. H. C."
+year = 2020
+journal = "ACM Transactions on Mathematical Software"
+doi = "10.1145/3423597"
+openAccess = false
+
+[[models]]
+id = "scalar"
+label = "Scalar Equation"
+
+[[models]]
+id = "bracket"
+label = "Bracketing"
+
+[[models]]
+id = "system"
+label = "System of Equations"
+
+[[bullets]]
+text = "Scalar Equation"
+detail = "one equation f(x) = 0 solved from a starting guess by Newton, trust region or a quasi-Newton method"
+
+[[bullets]]
+text = "Bracketing"
+detail = "one equation solved inside an interval where f changes sign: slower per step, but convergence is guaranteed"
+
+[[bullets]]
+text = "System of Equations"
+detail = "n equations in n unknowns, with the Jacobian from automatic differentiation or derived exactly by Symbolics"
+
+[[decisionRows]]
+task = "Scalar Equation"
+context = "One smooth equation and a reasonable first guess: break-even points, internal rates of return, implied volatilities"
+purpose = "Newton's method converges quadratically near a simple root; trust region and quasi-Newton variants are safer far from it or when derivatives are costly"
+
+[[decisionRows]]
+task = "Bracketing"
+context = "One continuous equation where you know an interval with a sign change, but not a good starting point"
+purpose = "Bisection halves the interval each step; false position, Ridder, Brent and ITP interpolate to go faster while keeping the root bracketed"
+
+[[decisionRows]]
+task = "System of Equations"
+context = "Several equations that must hold together: market equilibria, first-order conditions, steady states of dynamic models"
+purpose = "Newton solves a linear system with the Jacobian at each step; trust region and Levenberg-Marquardt control the step length; Broyden updates an approximate Jacobian instead of recomputing it"
+
+[[inputs]]
+id = "fexpr"
+label = "Equation f(x)"
+tooltip = "A Julia expression in x; the panel solves f(x) = 0. Move everything to the left-hand side, e.g. x^3 = 2x + 5 becomes x^3 - 2x - 5."
+default = "x^3 - 2x - 5"
+models = ["scalar", "bracket"]
+
+[[inputs]]
+id = "x0"
+label = "Starting Point"
+tooltip = "First guess for the root. Newton-type methods may reach a different root, or fail, from a different start."
+default = "2.0"
+models = ["scalar"]
+
+[[inputs]]
+id = "a"
+label = "Lower Bound"
+tooltip = "Left end of the bracket. f must have opposite signs at the two ends."
+default = "2.0"
+models = ["bracket"]
+
+[[inputs]]
+id = "b"
+label = "Upper Bound"
+tooltip = "Right end of the bracket. f must have opposite signs at the two ends."
+default = "3.0"
+models = ["bracket"]
+
+[[inputs]]
+id = "sys"
+label = "Equations f(u) = 0"
+tooltip = "A vector with one Julia expression per equation, in the unknowns u[1], u[2], ...; each must equal zero at the solution."
+kind = "textarea"
+default = '''
+[u[1]^2 + u[2]^2 - 4,
+ exp(u[1]) + u[2] - 1]'''
+models = ["system"]
+
+[[inputs]]
+id = "u0"
+label = "Starting Point"
+tooltip = "First guess, one value per unknown. Different starts can reach different solutions."
+default = "[1.0, -1.0]"
+models = ["system"]
+
+[[inputs]]
+id = "alg"
+label = "Algorithm"
+tooltip = "Newton-Raphson: fast near the root. Trust Region: limits the step, robust far from it. Levenberg-Marquardt: damped Newton, tolerates a nearly singular Jacobian. Broyden: updates an approximate Jacobian, fewer derivative evaluations."
+kind = "select"
+default = "NewtonRaphson()"
+models = ["scalar", "system"]
+newRow = true
+
+[[inputs.options]]
+value = "NewtonRaphson()"
+label = "Newton-Raphson"
+
+[[inputs.options]]
+value = "TrustRegion()"
+label = "Trust Region"
+
+[[inputs.options]]
+value = "LevenbergMarquardt()"
+label = "Levenberg-Marquardt"
+
+[[inputs.options]]
+value = "Broyden()"
+label = "Broyden"
+
+[[inputs]]
+id = "bmethod"
+label = "Method"
+tooltip = "ITP: interpolate, truncate and project, fast with bisection's worst-case guarantee. Brent: inverse quadratic interpolation with a bisection fallback. Ridder: exponential fit. Falsi: false position. Bisection: halves the bracket, slowest but simplest."
+kind = "select"
+default = "ITP()"
+models = ["bracket"]
+newRow = true
+
+[[inputs.options]]
+value = "ITP()"
+label = "ITP"
+
+[[inputs.options]]
+value = "Brent()"
+label = "Brent"
+
+[[inputs.options]]
+value = "Ridder()"
+label = "Ridder"
+
+[[inputs.options]]
+value = "Falsi()"
+label = "False Position"
+
+[[inputs.options]]
+value = "Bisection()"
+label = "Bisection"
+
+[[inputs]]
+id = "jac"
+label = "Jacobian"
+tooltip = "Automatic differentiation computes the Jacobian numerically to machine precision at each step. Symbolic derives it once as formulas with Symbolics and compiles them."
+kind = "select"
+default = "ad"
+models = ["system"]
+
+[[inputs.options]]
+value = "ad"
+label = "Automatic"
+
+[[inputs.options]]
+value = "symbolic"
+label = "Symbolic"
+
+[[inputs]]
+id = "tol"
+label = "Tolerance"
+tooltip = "Absolute tolerance: the solver stops when the residual (or the bracket) is below it."
+default = "1e-10"
+
+[[inputs]]
+id = "maxiters"
+label = "Max Iterations"
+tooltip = "The solver stops with the return code MaxIters after this many steps."
+default = "100"
+
+[[inputs]]
+id = "lo"
+label = "Plot From"
+tooltip = "Lower end of the window used by the plots and by the starting-point scan (both axes for a system)."
+default = "-3"
+models = ["scalar", "system"]
+newRow = true
+
+[[inputs]]
+id = "hi"
+label = "Plot To"
+tooltip = "Upper end of the window used by the plots and by the starting-point scan (both axes for a system)."
+default = "3"
+models = ["scalar", "system"]
+
+[[codeBranches]]
+model = "scalar"
+code = '''
+using NonlinearSolve
+
+f(x, p) = {{fexpr}}  # solve f(x) = 0
+alg = {{alg}}
+start0 = {{x0}}
+prob = NonlinearProblem(f, start0)
+solve_from(x0; alg=alg, abstol={{tol}}) = solve(remake(prob; u0=x0), alg; abstol, maxiters={{maxiters}})
+nevals(s) = s.stats.nf  # function evaluations of a solve
+sol = solve(prob, alg; abstol={{tol}}, maxiters={{maxiters}}, store_trace=Val(true))  # keeps the residual at each iteration
+(root = sol.u, residual = sol.resid, retcode = sol.retcode, iterations = sol.stats.nsteps, f_evaluations = sol.stats.nf)
+'''
+
+[[codeBranches]]
+model = "bracket"
+code = '''
+using NonlinearSolve
+
+f(x, p) = {{fexpr}}  # solve f(x) = 0
+evals = Float64[]  # every point where the method evaluates f
+fc(x, p) = (push!(evals, x); f(x, p))
+alg = {{bmethod}}
+start0 = ({{a}}, {{b}})
+sign(f({{a}}, nothing)) != sign(f({{b}}, nothing)) || @warn "f has the same sign at both ends: the interval may not bracket a root"
+solve_from(ab; alg=alg, abstol={{tol}}) = (empty!(evals); solve(IntervalNonlinearProblem(fc, ab), alg; abstol, maxiters={{maxiters}}))
+nevals(s) = length(evals)  # function evaluations of the latest solve
+sol = solve_from(start0)
+n_evals = length(evals)
+(root = sol.u, residual = sol.resid, retcode = sol.retcode, final_bracket = (sol.left, sol.right), f_evaluations = n_evals)
+'''
+
+[[codeBranches]]
+model = "system"
+code = '''
+using NonlinearSolve
+{{?jac=symbolic}} using Symbolics
+
+f(u, p) = {{sys}}
+u0 = {{u0}}
+alg = {{alg}}
+{{?jac=ad}} fun = NonlinearFunction(f)  # Jacobian by automatic differentiation
+{{?jac=symbolic}} z = Symbolics.variables(:z, 1:length(u0))
+{{?jac=symbolic}} J = Symbolics.jacobian(f(z, nothing), z)  # exact Jacobian as formulas
+{{?jac=symbolic}} jac_oop = first(build_function(J, z; expression=Val{false}))  # compiled
+{{?jac=symbolic}} fun = NonlinearFunction(f; jac=(u, p) -> jac_oop(u))
+start0 = u0
+prob = NonlinearProblem(fun, start0)
+solve_from(x0; alg=alg, abstol={{tol}}) = solve(remake(prob; u0=x0), alg; abstol, maxiters={{maxiters}})
+nevals(s) = s.stats.nf  # function evaluations of a solve
+sol = solve(prob, alg; abstol={{tol}}, maxiters={{maxiters}}, store_trace=Val(true))  # keeps the residual at each iteration
+{{?jac=symbolic}} display(J)
+(solution = sol.u, residual = sol.resid, retcode = sol.retcode, iterations = sol.stats.nsteps, f_evaluations = sol.stats.nf, jacobians = sol.stats.njacs)
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "solution-plot"
+label = "Solution Plot"
+desc = "One equation: f over the window with the root marked. Two equations: the zero curve of each; solutions are where the curves cross"
+code = '''
+using Plots
+{{?model=scalar}} xs = range({{lo}}, {{hi}}, length=400)
+{{?model=bracket}} w = {{b}} - {{a}}; xs = range({{a}} - w, {{b}} + w, length=400)
+{{?model=scalar|bracket}} p = Plots.plot(xs, [f(x, nothing) for x in xs], lw=2, c=:black, label="f(x)", xlabel="x"); Plots.hline!([0], c=:gray, ls=:dot, label="")
+{{?model=bracket}} Plots.vspan!([{{a}}, {{b}}], alpha=0.1, label="initial bracket")
+{{?model=scalar|bracket}} Plots.scatter!([sol.u], [0], ms=6, label="root = $(round(sol.u, sigdigits=10))")
+{{?model=system}} length(u0) == 2 || error("the curve plot needs exactly two unknowns")
+{{?model=system}} g = range({{lo}}, {{hi}}, length=300)
+{{?model=system}} p = Plots.contour(g, g, (x, y) -> f([x, y], nothing)[1], levels=[0], c=:blue, lw=2, colorbar=false, aspect_ratio=:equal, xlabel="u[1]", ylabel="u[2]", title="blue: equation 1, red: equation 2")
+{{?model=system}} Plots.contour!(g, g, (x, y) -> f([x, y], nothing)[2], levels=[0], c=:red, lw=2)
+{{?model=system}} Plots.scatter!([u0[1]], [u0[2]], m=:x, ms=6, c=:gray, label="start"); Plots.scatter!([sol.u[1]], [sol.u[2]], ms=6, c=:black, label="solution")
+p
+'''
+
+[[actionGroups.actions]]
+id = "convergence-plot"
+label = "Convergence Plot"
+desc = "The residual at each iteration on a log scale: a straight line means linear convergence, a curve that bends ever more steeply down means Newton's quadratic convergence"
+code = '''
+using Plots
+{{?model=scalar|system}} h = sol.trace.history  # one entry per iteration
+{{?model=scalar|system}} Plots.plot([e.iteration for e in h], [max(e.fnorm, eps()) for e in h], yscale=:log10, m=:circle, lw=2, xlabel="iteration", ylabel="max |f(u)|", label="{{alg}}", title="Residual by iteration")
+{{?model=bracket}} solve_from(start0)
+{{?model=bracket}} Plots.plot(eachindex(evals), [max(abs(f(x, nothing)), eps()) for x in evals], yscale=:log10, m=:circle, lw=2, xlabel="evaluation", ylabel="|f(x)|", label="{{bmethod}}", title="Residual at each evaluated point")
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "solution-check"
+label = "Solution Check"
+desc = "Did the solver converge, how small is the residual, and how well determined is the solution: a slope or Jacobian near singular means a small change in the equations moves the solution a lot"
+code = '''
+using ForwardDiff, LinearAlgebra
+{{?model=scalar|bracket}} d = ForwardDiff.derivative(x -> f(x, nothing), sol.u)
+{{?model=scalar|bracket}} (converged = SciMLBase.successful_retcode(sol), retcode = sol.retcode, root = sol.u, residual = f(sol.u, nothing), slope_at_root = d, note = abs(d) < 1e-6 ? "slope near zero: a repeated root or a flat function, so the root is poorly determined" : "simple root")
+{{?model=system}} Jr = ForwardDiff.jacobian(u -> f(u, nothing), sol.u)
+{{?model=system}} (converged = SciMLBase.successful_retcode(sol), retcode = sol.retcode, solution = sol.u, max_residual = norm(f(sol.u, nothing), Inf), jacobian = Jr, condition_number = cond(Jr), note = cond(Jr) > 1e8 ? "ill-conditioned: the solution is very sensitive to the equations" : "well-conditioned")
+'''
+
+[[actionGroups.actions]]
+id = "start-sensitivity"
+label = "Starting-Point Sensitivity"
+desc = "Solves again from many starting points (many sub-brackets for bracketing) and lists the distinct solutions found and how often each was reached: more than one means the answer depends on where you start"
+code = '''
+{{?model=scalar}} starts = collect(range({{lo}}, {{hi}}, length=25))
+{{?model=system}} starts = [{{lo}} .+ ({{hi}} - {{lo}}) .* rand(length(u0)) for _ in 1:40]  # random starts in the window
+{{?model=bracket}} w = {{b}} - {{a}}; edges = range({{a}} - 2w, {{b}} + 2w, length=26)
+{{?model=bracket}} starts = [(l, r) for (l, r) in zip(edges[1:end-1], edges[2:end]) if sign(f(l, nothing)) != sign(f(r, nothing))]  # sub-intervals with a sign change
+runs = [solve_from(s) for s in starts]
+ok = filter(SciMLBase.successful_retcode, runs)
+key(s) = round.(s.u, digits=6)
+found = unique(key, ok)
+(starts = length(runs), converged = length(ok), solutions = [(solution = key(s), reached_from = count(t -> key(t) == key(s), ok)) for s in found])
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "comparative-statics"
+label = "Comparative Statics"
+desc = "How the solution moves when the right-hand side of each equation rises from 0: the inverse Jacobian at the solution (the implicit function theorem)"
+code = '''
+using ForwardDiff
+{{?model=scalar|bracket}} dx = 1 / ForwardDiff.derivative(x -> f(x, nothing), sol.u)
+{{?model=scalar|bracket}} (root = sol.u, dx_dc = dx, meaning = "solving f(x) = c instead of 0 moves the root by about $(round(dx, sigdigits=4)) c")
+{{?model=system}} S = inv(ForwardDiff.jacobian(u -> f(u, nothing), sol.u))
+{{?model=system}} (solution = sol.u, du_dc = S, meaning = "column j: the change in the solution per unit rise in the right-hand side of equation j")
+'''
+
+[[actionGroups.actions]]
+id = "rhs-shift"
+label = "Right-Hand-Side Shift"
+desc = "Solves the equation again with its right-hand side (the first equation's, for a system) raised or lowered, and compares the exact new solution with the linear prediction"
+code = '''
+using ForwardDiff
+cs = (-0.5, -0.1, 0.1, 0.5)
+{{?model=scalar|bracket}} g(x, c) = f(x, nothing) - c
+{{?model=scalar|bracket}} lin = 1 / ForwardDiff.derivative(x -> f(x, nothing), sol.u)
+{{?model=scalar}} [(c = c, exact = solve(NonlinearProblem(g, sol.u, c), alg).u, linear_prediction = sol.u + lin * c) for c in cs]
+{{?model=bracket}} [(c = c, exact = solve(IntervalNonlinearProblem(g, start0, c), alg).u, linear_prediction = sol.u + lin * c) for c in cs]
+{{?model=system}} e1 = [1.0; zeros(length(u0) - 1)]
+{{?model=system}} g(u, c) = f(u, nothing) .- c .* e1
+{{?model=system}} lin = ForwardDiff.jacobian(u -> f(u, nothing), sol.u) \ e1
+{{?model=system}} [(c = c, exact = solve(NonlinearProblem(g, sol.u, c), alg).u, linear_prediction = sol.u .+ lin .* c) for c in cs]
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "compare-algorithms"
+label = "Compare Algorithms"
+desc = "Every method on the same problem from the same start: return code, solution, function evaluations and time (timed on a second run, after compilation)"
+code = '''
+{{?model=scalar|system}} algs = ["Newton-Raphson" => NewtonRaphson(), "Trust Region" => TrustRegion(), "Levenberg-Marquardt" => LevenbergMarquardt(), "Broyden" => Broyden(), "Klement" => Klement()]
+{{?model=bracket}} algs = ["ITP" => ITP(), "Brent" => Brent(), "Ridder" => Ridder(), "False Position" => Falsi(), "Bisection" => Bisection()]
+map(algs) do (name, a)
+    solve_from(start0; alg=a)  # compile
+    t = @elapsed s = solve_from(start0; alg=a)
+    (method = name, retcode = s.retcode, solution = s.u, f_evaluations = nevals(s), seconds = round(t, sigdigits=3))
+end
+'''
+
+[[actionGroups.actions]]
+id = "tolerance-sweep"
+label = "Tolerance Sweep"
+desc = "Tightens the tolerance from 1e-4 to 1e-14 and reports the evaluations needed and the residual reached: fast methods pay little for extra digits"
+code = '''
+map((1e-4, 1e-6, 1e-8, 1e-10, 1e-12, 1e-14)) do tol
+    s = solve_from(start0; abstol=tol)
+    (abstol = tol, retcode = s.retcode, f_evaluations = nevals(s), max_residual = maximum(abs, s.resid))
+end
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "solution-summary"
+label = "Solution Summary"
+desc = "Whether the solver converged, the solution, how close the equations are to zero there, and what it cost"
+code = '''
+status = SciMLBase.successful_retcode(sol) ? "converged" : "did not converge ($(sol.retcode)): try another start, algorithm or bracket"
+{{?model=scalar|system}} (status = status, solution = sol.u, max_residual = maximum(abs, sol.resid), iterations = sol.stats.nsteps, f_evaluations = sol.stats.nf, jacobian_evaluations = sol.stats.njacs)
+{{?model=bracket}} (status = status, root = sol.u, residual = sol.resid, final_bracket = (sol.left, sol.right), bracket_width = abs(sol.right - sol.left), f_evaluations = n_evals)
+'''
+
+[[actionGroups.actions]]
+id = "convergence-order"
+label = "Convergence Order"
+desc = "Estimates the order of convergence from successive residuals: about 1 is linear (bisection), about 1.6 superlinear (secant, Broyden), about 2 quadratic (Newton near a simple root)"
+code = '''
+{{?model=scalar|system}} r = [e.fnorm for e in sol.trace.history if e.fnorm > 0]
+{{?model=bracket}} solve_from(start0); r = [abs(f(x, nothing)) for x in evals if f(x, nothing) != 0]
+q = [log(r[k+1] / r[k]) / log(r[k] / r[k-1]) for k in 2:length(r)-1]
+(residuals = r, order_estimates = round.(q, digits=2))
+'''

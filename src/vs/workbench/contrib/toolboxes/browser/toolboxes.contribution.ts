@@ -94,7 +94,7 @@ MenuRegistry.appendMenuItem(MenuId.MenubarToolboxesMenu, {
 MenuRegistry.appendMenuItem(E_ATSubmenuId, {
 	group: '1_at',
 	command: {
-		id: SYMB_ID, precondition: ContextKeyExpr.false(),
+		id: SYMB_ID,
 		title: localize('at.symb', 'Symbolic Math'),
 	},
 	order: 1,
@@ -103,7 +103,7 @@ MenuRegistry.appendMenuItem(E_ATSubmenuId, {
 MenuRegistry.appendMenuItem(E_ATSubmenuId, {
 	group: '1_at',
 	command: {
-		id: NLIN_ID, precondition: ContextKeyExpr.false(),
+		id: NLIN_ID,
 		title: localize('at.roots', 'Nonlinear Systems'),
 	},
 	order: 2,
@@ -121,10 +121,19 @@ MenuRegistry.appendMenuItem(E_ATSubmenuId, {
 MenuRegistry.appendMenuItem(E_ATSubmenuId, {
 	group: '1_at',
 	command: {
+		id: INTEG_ID, precondition: ContextKeyExpr.false(),
+		title: localize('at.integ', 'Integration'),
+	},
+	order: 4,
+});
+
+MenuRegistry.appendMenuItem(E_ATSubmenuId, {
+	group: '1_at',
+	command: {
 		id: ODE_ID, precondition: ContextKeyExpr.false(),
 		title: localize('at.ode', 'Ordinary Differential Equations'),
 	},
-	order: 4,
+	order: 5,
 });
 
 MenuRegistry.appendMenuItem(E_ATSubmenuId, {
@@ -133,17 +142,10 @@ MenuRegistry.appendMenuItem(E_ATSubmenuId, {
 		id: PDE_ID, precondition: ContextKeyExpr.false(),
 		title: localize('at.pde', 'Partial Differential Equations'),
 	},
-	order: 5,
-});
-
-MenuRegistry.appendMenuItem(E_ATSubmenuId, {
-	group: '1_at',
-	command: {
-		id: INTEG_ID, precondition: ContextKeyExpr.false(),
-		title: localize('at.integ', 'Integration'),
-	},
 	order: 6,
 });
+
+
 
 
 
