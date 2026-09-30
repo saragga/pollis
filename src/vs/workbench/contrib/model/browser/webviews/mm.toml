@@ -419,12 +419,13 @@ label = "Compare"
 [[actionGroups.actions]]
 id = "lr-test"
 label = "Likelihood Ratio Test"
-desc = "Compare nested random-effects structures"
+desc = "Test the random effects against the same fixed effects without them (or edit model0 to another nested structure)"
 code = '''
-using MixedModels
+using MixedModels, GLM
 
-model0 = fit(MixedModel, @formula(y ~ x1 + x2 + (1|group)), {{data}})  # simpler model (edit to be nested)
-println(MixedModels.likelihoodratiotest(model0, model))  # test the extra variance components
+# model0 must be nested in model: here the same fixed effects with no random effects, and the same family and link
+model0 = model isa LinearMixedModel ? lm(@formula(y ~ x1 + x2), {{data}}) : glm(@formula(y ~ x1 + x2), {{data}}, model.resp.d, model.resp.link)
+println(MixedModels.likelihoodratiotest(model0, model))  # a variance tested at 0 is on the boundary: the chi-square p-value is conservative (roughly halve it)
 '''
 
 [[actionGroups.actions]]
@@ -451,7 +452,7 @@ code = '''
 using MixedModels
 
 s2_group = first(model.sigmas)[1]^2  # variance of the first random intercept
-s2_resid = model.sigma^2  # residual variance (LMM)
+s2_resid = model isa LinearMixedModel ? model.sigma^2 : pi^2 / 3  # LMM: residual variance; GLMM: latent-scale variance of the logistic error (logit link only)
 println("ICC: ", round(s2_group / (s2_group + s2_resid); digits=3))  # correlation of two observations in the same group
 '''
 
