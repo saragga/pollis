@@ -200,7 +200,7 @@ result, iterations = pdesolve(m, stategrid, y0)
 
 println("Solver iterations: ", iterations)  # Newton iterations to convergence
 println("P/D range: [", round(minimum(result[:p]), digits=2), ", ", round(maximum(result[:p]), digits=2), "]")  # price-dividend ratio range
-println("Mean P/D:  ", round(mean(result[:p]), digits=2))  # unconditional mean P/D ratio
+println("Grid-average P/D:  ", round(mean(result[:p]), digits=2))  # equal weight on every grid point, not the unconditional mean (weight by the stationary density of x for that)
 '''
 
 [[actionGroups.actions]]
@@ -259,13 +259,13 @@ y0        = OrderedDict(:p => zeros({{N}}))
 
 result, _ = pdesolve(m, stategrid, y0)
 
-sr_mean = mean(result[:sr])  # unconditional mean Sharpe ratio
+sr_mean = mean(result[:sr])  # grid average, not the unconditional mean: the grid gives the tails of x as much weight as the centre
 sr_max  = maximum(result[:sr])  # maximum (peak) Sharpe ratio
-ep_mean = mean(result[:mu]) * 100  # mean equity premium in %
+ep_mean = mean(result[:mu]) * 100  # grid-average equity premium in %
 
-println("Mean Sharpe ratio:  ", round(sr_mean, digits=3))
+println("Grid-average Sharpe ratio:  ", round(sr_mean, digits=3))
 println("Max Sharpe ratio:   ", round(sr_max,  digits=3))
-println("Mean equity premium: ", round(ep_mean, digits=2), "%")  # US historical ~6%
+println("Grid-average equity premium: ", round(ep_mean, digits=2), "%")  # US historical ~6%, an unconditional mean: compare with care
 '''
 
 [[actionGroups.actions]]
@@ -282,7 +282,8 @@ y0        = OrderedDict(:p => zeros({{N}}))
 result, _ = pdesolve(m, stategrid, y0)
 
 println("--- Model-Implied Asset Pricing Moments ---")  # 
-println("Mean P/D ratio:      ", round(mean(result[:p]),      digits=2))  # unconditional P/D
+println("Grid-average moments (equal weight on each grid point; weight by the stationary density of x for unconditional moments)")
+println("Mean P/D ratio:      ", round(mean(result[:p]),      digits=2))  # grid-average P/D
 println("Mean equity premium: ", round(mean(result[:mu])*100, digits=2), "%")  # annualised excess return
 println("Return volatility:   ", round(mean(result[:vol])*100, digits=2), "%")  # annualised equity vol
 println("Mean Sharpe ratio:   ", round(mean(result[:sr]),      digits=3))  # equity Sharpe ratio
@@ -292,7 +293,7 @@ println("Risk-free rate:      ", round(mean(result[:rf])*100,  digits=2), "%")  
 [[actionGroups.actions]]
 id = "state_dynamics"
 label = "State Variable Dynamics"
-desc = "Simulate the state variable and report its unconditional distribution and persistence"
+desc = "Half-life of shocks to expected consumption growth, and the stationary standard deviation of x as an OU process: vol(x) / sqrt(2 kappa)"
 code = '''
 using EconPDEs, OrderedCollections: OrderedDict, Statistics
 
@@ -302,7 +303,7 @@ y0        = OrderedDict(:p => zeros({{N}}))
 
 result, _ = pdesolve(m, stategrid, y0)
 
-sigma_x = {{sigma}} / sqrt(2 * {{kappa}})  # unconditional std of state variable (OU process)
+sigma_x = {{sigma}} / sqrt(2 * {{kappa}})  # OU stationary sd, if sigma were the volatility of x; in Bansal-Yaron x moves far less than consumption (about 4% of its volatility), so use the model's own x volatility
 half_life = log(2) / {{kappa}}  # half-life of shock in years
 
 println("State variable std:   ", round(sigma_x, digits=5))
