@@ -399,18 +399,18 @@ println("ST density:   ", res.ST[2])  # total-effect index
 [[actionGroups.actions]]
 id = "equilibrium-summary"
 label = "Equilibrium Summary"
-desc = "Print a table of equilibrium outcomes for each parameter combination from a paramscan"
+desc = "Equilibrium mean mood for each parameter combination, with its spread across seeds, from a paramscan"
 code = '''
 using Agents, Statistics, Tables
 
-params = Dict(:threshold => [0.2, 0.5, 0.8], :density => [0.5, 0.7])  # parameter grid
+params = Dict(:threshold => [0.2, 0.5, 0.8], :density => [0.5, 0.7], :seed => 1:{{R}})  # parameter grid, {{R}} seeds per combination
 data, _ = paramscan(params, {{init}}; n={{T}}, adata=[(:mood,mean)])  # scan
 cols = Tables.columntable(data)  # read the result as plain columns
 
 at_end = cols.step .== {{T}}  # equilibrium rows
 summary = map(sort(unique(zip(cols.threshold[at_end], cols.density[at_end])))) do (th, d)  # one row per parameter combination
     m = cols.mean_mood[at_end .& (cols.threshold .== th) .& (cols.density .== d)]
-    (threshold = th, density = d, eq_mean = mean(m), eq_std = std(m))
+    (threshold = th, density = d, eq_mean = mean(m), eq_std = std(m), runs = length(m))  # spread across seeds
 end
 
 foreach(println, summary)  # print summary table
