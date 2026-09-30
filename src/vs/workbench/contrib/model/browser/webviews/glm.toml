@@ -639,12 +639,14 @@ label = "Interpret"
 [[actionGroups.actions]]
 id = "coefficients"
 label = "Coefficient Interpretation"
-desc = "Odds ratios or rate ratios with confidence intervals"
+desc = "Odds ratios (logit link) or rate ratios (log link) with confidence intervals; for other links, the coefficients on the link scale"
 code = '''
 using GLM
 
-ratio = exp.(coef(model))  # odds ratio (logit link) or rate ratio (log link)
-ci    = exp.(confint(model))  # 95% confidence interval on the same scale
+{{?model=Bernoulli|Binomial|Poisson|Geometric}}ratio = exp.(coef(model))  # odds ratio (Bernoulli, Binomial: logit link) or rate ratio (Poisson, Geometric: log link), with the default link
+{{?model=Bernoulli|Binomial|Poisson|Geometric}}ci    = exp.(confint(model))  # 95% confidence interval on the same scale
+{{?model!=Bernoulli|Binomial|Poisson|Geometric}}ratio = coef(model)  # the default link here is not log or logit, so exp(coef) is not an odds or rate ratio: effects are on the link scale
+{{?model!=Bernoulli|Binomial|Poisson|Geometric}}ci    = confint(model)  # 95% confidence interval on the link scale
 for (name, r, lo, hi) in zip(coefnames(model), ratio, ci[:, 1], ci[:, 2])
     println(rpad(name, 16), round(r; digits=3), "  [", round(lo; digits=3), ", ", round(hi; digits=3), "]")
 end
