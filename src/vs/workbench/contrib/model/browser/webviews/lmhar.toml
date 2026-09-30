@@ -159,9 +159,9 @@ desc = "Test for AR(1) autocorrelation in OLS residuals before applying the comb
 code = '''
 using GLM, HypothesisTests
 
-ols   = lm({{X}}, {{y}})  # OLS baseline
+ols   = lm(hcat(ones(length({{y}})), {{X}}), {{y}})  # OLS baseline with the intercept HARE adds
 resid = residuals(ols)  # OLS residuals
-DurbinWatsonTest(resid)  # DW near 2 = no autocorrelation
+DurbinWatsonTest(modelmatrix(ols), resid)  # DW near 2 = no autocorrelation
 '''
 
 [[actionGroups.actions]]
@@ -171,7 +171,7 @@ desc = "Likelihood-ratio test for exponential heteroskedasticity in OLS residual
 code = '''
 using HARE
 
-harvey_test({{y}}, {{X}}, {{X}})  # LR test: H0 = homoskedasticity; Z defaults to X
+harvey_test({{X}}, {{y}})  # LR test: H0 = homoskedasticity; Z defaults to X
 '''
 
 [[actionGroups.actions]]
@@ -181,12 +181,13 @@ desc = "Plot OLS residuals over time (AR(1) pattern) and squared residuals vs fi
 code = '''
 using GLM, Plots
 
-ols   = lm({{X}}, {{y}})  # OLS baseline
+ols   = lm(hcat(ones(length({{y}})), {{X}}), {{y}})  # OLS baseline with the intercept HARE adds
 resid = residuals(ols)  # OLS residuals
 fitt  = fitted(ols)  # fitted values
 
-plot(resid, title="Residuals over time")  # look for autocorrelation pattern
-scatter(fitt, resid .^ 2, title="Squared residuals vs fitted")  # fan shape = heteroskedasticity
+p1 = plot(resid, title="Residuals over time")  # look for autocorrelation pattern
+p2 = scatter(fitt, resid .^ 2, title="Squared residuals vs fitted")  # fan shape = heteroskedasticity
+plot(p1, p2, layout=(2, 1))  # show both panels
 '''
 
 [[actionGroups]]
@@ -215,7 +216,7 @@ desc = "Side-by-side comparison of OLS and FGLS coefficients and standard errors
 code = '''
 using HARE, GLM
 
-ols_fit  = lm({{X}}, {{y}})  # OLS baseline
+ols_fit  = lm(hcat(ones(length({{y}})), {{X}}), {{y}})  # OLS baseline with the intercept HARE adds
 {{?model=sequential}} fgls_fit = {{method}}_sequential({{X}}, {{y}})  # FGLS corrected
 {{?model=joint}} fgls_fit = {{method}}_joint({{X}}, {{y}}, Z={{Z}})  # FGLS corrected
 
