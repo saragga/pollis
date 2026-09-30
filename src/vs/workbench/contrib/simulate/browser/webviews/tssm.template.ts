@@ -49,13 +49,6 @@ export function getTssmHtml(): string {
 		.hl-type    { color: var(--vscode-symbolIcon-classForeground); }
 		.copy-btn { position: absolute; top: 8px; right: 8px; background: var(--vscode-button-secondaryBackground); color: var(--vscode-button-secondaryForeground); border: none; border-radius: 4px; padding: 4px 10px; font-size: 11px; cursor: pointer; opacity: 0.7; }
 		.copy-btn:hover { opacity: 1; }
-		.illus-section { margin: 0 0 20px 0; }
-		.illus-toggle { display: flex; align-items: center; gap: 6px; background: transparent; border: none; color: var(--vscode-textLink-foreground); font-size: 13px; font-family: var(--vscode-font-family); cursor: pointer; padding: 0 0 6px 0; user-select: none; }
-		.illus-toggle:hover { text-decoration: underline; }
-		.illus-chevron { display: inline-flex; align-items: center; transition: transform 0.15s; flex-shrink: 0; }
-		.illus-section.collapsed .illus-chevron { transform: rotate(-90deg); }
-		.illus-section.collapsed .illus-body { display: none; }
-		.illus-body { background: var(--vscode-textCodeBlock-background); border: 1px solid var(--vscode-widget-border); border-radius: 6px; padding: 16px 20px; overflow-x: auto; }
 		.bottom-layout { display: grid; grid-template-columns: 160px 1fr; gap: 24px; margin-top: 20px; align-items: start; }
 		.left-strip { display: flex; flex-direction: column; }
 		.strip-title { font-size: 1.5em; font-weight: 400; color: var(--vscode-foreground); margin: 0 0 5px 0; line-height: initial; }
@@ -112,14 +105,6 @@ export function getTssmHtml(): string {
 			<button class="toggle-btn" data-model="lg">Linear Gaussian</button>
 			<button class="toggle-btn" data-model="nl">Nonlinear SSM</button>
 			<button class="toggle-btn" data-model="custom">Custom SSM</button>
-		</div>
-
-		<div class="illus-section" id="illus-section">
-			<button class="illus-toggle" id="illus-toggle">
-				<span class="illus-chevron"><svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M7.976 10.072l-4.054-4.014-.92.92 4.49 4.45.978.01 4.525-4.46-.918-.92-4.101 4.014z"/></svg></span>
-				Illustration
-			</button>
-			<div class="illus-body" id="illus-body"></div>
 		</div>
 
 		<!-- Linear Gaussian inputs -->
@@ -296,11 +281,6 @@ export function getTssmHtml(): string {
 
 		var MODELS = ['lg', 'nl', 'custom'];
 
-		function renderIllustration() {
-			var body = document.getElementById('illus-body');
-			body.innerHTML = '<p style="margin:0;color:var(--vscode-descriptionForeground);font-style:italic;">Coming soon!</p>';
-		}
-
 		function updateCodePreview() {
 			var c = '';
 			if (currentModel === 'lg') {
@@ -433,7 +413,6 @@ export function getTssmHtml(): string {
 					nGroup.style.display = nlFilterEl2.value === 'pf' ? 'flex' : 'none';
 				}
 			}
-			renderIllustration();
 			updateCodePreview();
 		}
 
@@ -457,10 +436,6 @@ export function getTssmHtml(): string {
 		document.querySelectorAll('textarea.form-input').forEach(function(el) {
 			el.addEventListener('input', updateCodePreview);
 			el.addEventListener('keydown', function(e) { e.stopPropagation(); });
-		});
-
-		document.getElementById('illus-toggle').addEventListener('click', function() {
-			document.getElementById('illus-section').classList.toggle('collapsed');
 		});
 
 		document.getElementById('btn-copy').addEventListener('click', function() {

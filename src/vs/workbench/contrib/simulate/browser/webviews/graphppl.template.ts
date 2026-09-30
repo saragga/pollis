@@ -41,13 +41,6 @@ export function getGraphpplHtml(): string {
 		textarea.form-input { resize: none; overflow-x: auto; overflow-y: hidden; white-space: nowrap; height: 37px; line-height: 1.4; }
 		textarea.form-input::-webkit-scrollbar { display: none; }
 		.param-input { text-align: center; }
-		.illus-section { margin: 0 0 20px 0; }
-		.illus-toggle { display: flex; align-items: center; gap: 6px; background: transparent; border: none; color: var(--vscode-textLink-foreground); font-size: 13px; font-family: var(--vscode-font-family); cursor: pointer; padding: 0 0 6px 0; user-select: none; }
-		.illus-toggle:hover { text-decoration: underline; }
-		.illus-chevron { display: inline-flex; align-items: center; transition: transform 0.15s; flex-shrink: 0; }
-		.illus-section.collapsed .illus-chevron { transform: rotate(-90deg); }
-		.illus-section.collapsed .illus-body { display: none; }
-		.illus-body { background: var(--vscode-textCodeBlock-background); border: 1px solid var(--vscode-widget-border); border-radius: 6px; padding: 16px 20px; overflow-x: auto; }
 		.code-preview-wrapper { position: relative; margin: 20px 0; }
 		.code-preview { background: var(--vscode-textCodeBlock-background); border: 1px solid var(--vscode-widget-border); border-radius: 6px; padding: 20px; padding-right: 50px; font-family: 'Consolas', 'Monaco', 'Courier New', monospace; font-size: 12px; line-height: 1.6; overflow-x: auto; }
 		.code-line { color: var(--vscode-foreground); margin: 4px 0; white-space: pre; }
@@ -111,14 +104,6 @@ export function getGraphpplHtml(): string {
 			<button class="toggle-btn" data-model="bp">Belief Propagation</button>
 			<button class="toggle-btn" data-model="vmp">Variational Message Passing</button>
 			<button class="toggle-btn" data-model="ep">Expectation Propagation</button>
-		</div>
-
-		<div class="illus-section" id="illus-section">
-			<button class="illus-toggle" id="illus-toggle">
-				<span class="illus-chevron"><svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M7.976 10.072l-4.054-4.014-.92.92 4.49 4.45.978.01 4.525-4.46-.918-.92-4.101 4.014z"/></svg></span>
-				Illustration
-			</button>
-			<div class="illus-body" id="illus-body"></div>
 		</div>
 
 		<!-- Belief Propagation inputs -->
@@ -219,11 +204,6 @@ export function getGraphpplHtml(): string {
 
 		var MODELS = ['bp', 'vmp', 'ep'];
 
-		function renderIllustration() {
-			var body = document.getElementById('illus-body');
-			body.innerHTML = '<p style="margin:0;color:var(--vscode-descriptionForeground);font-style:italic;">Coming soon!</p>';
-		}
-
 		function modelBlock(modelName, data) {
 			var c = '';
 			c += cline(kw('@model') + ' ' + kw('function') + ' ' + modelName + '(' + data + ')', 'GraphPPL @model macro — distributions use keyword arguments unlike Turing.jl');
@@ -303,7 +283,6 @@ export function getGraphpplHtml(): string {
 					el.style.display = m === model ? 'flex' : 'none';
 				});
 			});
-			renderIllustration();
 			updateCodePreview();
 		}
 
@@ -315,10 +294,6 @@ export function getGraphpplHtml(): string {
 		document.querySelectorAll('textarea.form-input').forEach(function(el) {
 			el.addEventListener('input', updateCodePreview);
 			el.addEventListener('keydown', function(e) { e.stopPropagation(); });
-		});
-
-		document.getElementById('illus-toggle').addEventListener('click', function() {
-			document.getElementById('illus-section').classList.toggle('collapsed');
 		});
 
 		document.getElementById('btn-copy').addEventListener('click', function() {

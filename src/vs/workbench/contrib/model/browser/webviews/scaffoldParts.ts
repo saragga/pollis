@@ -146,6 +146,7 @@ export function buildScaffoldHtml(panelId: string, data: IScaffoldPanelData, opt
 		actionsJs: buildActionsJs(data),
 		inputsHtml: buildInputsHtml(data),
 		...buildNextSteps(panelId, data),
+		omitIllustration: !data.miniCharts?.length && !options.illustrationOverrideJs,
 		...options,
 	});
 }

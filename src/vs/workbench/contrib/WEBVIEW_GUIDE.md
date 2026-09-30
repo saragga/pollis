@@ -257,7 +257,7 @@ Some webviews include a three-column Decision Table for structured method compar
 .decision-table td { padding: 5px 10px; border-bottom: 1px solid var(--vscode-widget-border); color: var(--vscode-foreground); vertical-align: top; line-height: 1.4; }
 .decision-table tr:last-child td { border-bottom: none; }
 .decision-table td:first-child { color: var(--vscode-textLink-foreground); font-weight: 500; white-space: nowrap; }
-.decision-table td:nth-child(2) { white-space: nowrap; }
+.decision-table td:nth-child(2) { min-width: 140px; }  /* Data Type: sentences may wrap, but never squeeze below 140px */
 ```
 
 Column 2 must always reflect the *deciding criterion* — the reason to choose the method — never a consequence of it. Keep values brief (one to four words). The column header itself should be one word, two at most.
@@ -1612,6 +1612,7 @@ The **Illustration pane** is the standard collapsible pane for any supplementary
 
 **Single-model webviews:** pane starts collapsed; content is rendered lazily on first open.
 **Multi-model webviews:** pane starts **open** (no `collapsed` class); `renderIllustration()` is called inside `setModel()` every time the model changes, so content always reflects the active model.
+**No content, no pane:** a scaffold panel with neither `[miniCharts]` in its TOML nor an `illustrationOverrideJs` omits the pane entirely (`buildScaffoldHtml` sets `omitIllustration`); never ship an empty Illustration toggle.
 
 ### Number of panes
 

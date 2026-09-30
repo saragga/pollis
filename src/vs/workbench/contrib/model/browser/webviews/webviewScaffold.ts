@@ -111,6 +111,8 @@ export interface WebviewParts {
 	readonly hiddenRowCss?: string;
 	/** Start the illustration pane collapsed (e.g. webviews with no gallery yet). Default: open. */
 	readonly illusCollapsed?: boolean;
+	/** Leave the illustration pane out entirely (a panel with neither a gallery nor an override). Default: shown. */
+	readonly omitIllustration?: boolean;
 	/**
 	 * JS injected at the top of `renderIllustration` (after `var body = ...`). If it renders custom
 	 * content into `body` and `return`s, the shared mini-chart gallery is skipped — this is the hook
@@ -401,7 +403,7 @@ ${parts.decisionRows}</tbody>
 			</div>
 		</div>
 
-
+${parts.omitIllustration ? '' : `
 		<div class="illus-section ${parts.illusCollapsed === false ? '' : 'collapsed'}" id="illus-section">
 			<button class="illus-toggle" id="illus-toggle">
 				<span class="illus-chevron"><svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M7.976 10.072l-4.054-4.014-.92.92 4.49 4.45.978.01 4.525-4.46-.918-.92-4.101 4.014z"/></svg></span>
@@ -409,6 +411,7 @@ ${parts.decisionRows}</tbody>
 			</button>${parts.illustrationIntro ? `\n\t\t\t<p class="pane-intro illus-note">${parts.illustrationIntro}</p>` : ''}
 			<div class="illus-body" id="illus-body"></div>${parts.illustrationFootnote ? `\n\t\t\t<p class="pane-note illus-note">${parts.illustrationFootnote}</p>` : ''}
 		</div>
+`}
 
 		<div class="section" id="sec-code">
 			<button class="section-toggle"><span class="illus-chevron"><svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M7.976 10.072l-4.054-4.014-.92.92 4.49 4.45.978.01 4.525-4.46-.918-.92-4.101 4.014z"/></svg></span>Example Code<span class="code-custom-tag" title="Your saved version of this example. Restore Default brings back the original.">Customised</span></button>
@@ -561,6 +564,7 @@ ${parts.headScriptJs ?? ''}
 		// ── Gallery illustration ─────────────────────────────────────────────
 		function renderIllustration() {
 			var body = document.getElementById('illus-body');
+			if (!body) { return; }
 ${parts.illustrationOverrideJs ?? ''}			var activeIdx = MODELS.indexOf(currentModel);
 
 			var vbX = CHART_STARTS[0] - 20;
@@ -1463,9 +1467,12 @@ ${parts.nextStepsWiringJs ?? `		document.getElementById('btn-viz').addEventListe
 			vscode.postMessage({ command: 'runCode', target: 'juliaRepl', code: extractCode() });
 		});
 
-		document.getElementById('illus-toggle').addEventListener('click', function() {
-			document.getElementById('illus-section').classList.toggle('collapsed');
-		});
+		var illusToggle = document.getElementById('illus-toggle');
+		if (illusToggle) {
+			illusToggle.addEventListener('click', function() {
+				document.getElementById('illus-section').classList.toggle('collapsed');
+			});
+		}
 		document.querySelectorAll('.section-toggle').forEach(function(t) {
 			t.addEventListener('click', function() { t.closest('.section').classList.toggle('collapsed'); });
 		});
