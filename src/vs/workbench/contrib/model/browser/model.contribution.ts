@@ -67,7 +67,6 @@ import { CEVAL_PANEL } from './commands/ceval.command.js';
 import { CPS_PANEL } from './commands/cps.command.js';
 import { PPL_PANEL } from './commands/ppl.command.js';
 import { RXINFER_PANEL } from './commands/rxinfer.command.js';
-import { BNET_PANEL } from './commands/bnet.command.js';
 import { RULEBASED_PANEL } from './commands/rulebased.command.js';
 import { BFMB_PANEL } from './commands/bfmb.command.js';
 import { HFCME_PANEL } from './commands/hfcme.command.js';
@@ -193,7 +192,6 @@ const PPL_OPEN = (accessor: ServicesAccessor) => openScaffoldWebview(accessor, P
 CommandsRegistry.registerCommand('chiara.statistics.ppl', PPL_OPEN);
 CommandsRegistry.registerCommand('chiara.statistics.ppl.turing', PPL_OPEN);
 
-CommandsRegistry.registerCommand('chiara.statistics.ba.bnet', accessor => openScaffoldWebview(accessor, BNET_PANEL));
 
 CommandsRegistry.registerCommand('chiara.statistics.ba.rxinfer', accessor => openScaffoldWebview(accessor, RXINFER_PANEL));
 
@@ -2109,12 +2107,6 @@ MenuRegistry.appendMenuItem(BASubmenuId, {
 	command: { id: 'chiara.statistics.ba.rxinfer', title: localize('ba.rxinfer', 'Fast Variational Bayesian Inference') },
 	order: 2,
 }); // Automated Bayesian inference on factor graphs
-
-MenuRegistry.appendMenuItem(BASubmenuId, {
-	group: '1_ba',
-	command: { id: 'chiara.statistics.ba.bnet', title: localize('ba.bnet', 'Bayesian Network Inference') },
-	order: 3,
-}); // Structure learning, exact and approximate inference via BayesNets.jl
 
 
 // ============================================

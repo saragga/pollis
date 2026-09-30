@@ -1,3 +1,0 @@
-# Decision Guide
-
-Coming soon!

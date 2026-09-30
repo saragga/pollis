@@ -2398,7 +2398,7 @@ The script parses every panel TOML with `parseToml` and renders, for every model
 
 - `<panel>/<model>.jl`: the default code, then each action as a block headed `# --- <group> / <label> (<id>)` and its description;
 - `index.json`: one record per snippet (`panel`, `title`, `model`, `kind`, `group`, `actionId`, `label`, `desc`, `packages`, `code`, `lines`);
-- `SUMMARY.md`: totals (checked against 210 panels, 687 code branches, 2072 actions), counts per panel and the anomalies found: leftover placeholders, guards naming unknown inputs or values, select defaults that are not options, models without a branch and branches without a model, actions that render empty, Greek letters in code, `DataFrames`/`Zygote`, and possible postfix transposes.
+- `SUMMARY.md`: totals (checked against 209 panels, 683 code branches, 2063 actions), counts per panel and the anomalies found: leftover placeholders, guards naming unknown inputs or values, select defaults that are not options, models without a branch and branches without a model, actions that render empty, Greek letters in code, `DataFrames`/`Zygote`, and possible postfix transposes.
 
 It changes no TOML and runs no Julia. Panels without a TOML file (`epi-ude` and the galleries) are not covered.
 

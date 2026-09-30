@@ -25,7 +25,7 @@ const WEBVIEWS_DIR = path.join(ROOT, 'src', 'vs', 'workbench', 'contrib', 'model
 const OUT_DIR = path.join(ROOT, '.build', 'code-examples');
 
 /** Expected totals, from the Pollis Polish Roadmap (task 3.1). */
-const EXPECTED = { panels: 210, branches: 687, actions: 2072 };
+const EXPECTED = { panels: 209, branches: 683, actions: 2063 };
 
 interface InputOption {
 	readonly value: string;
