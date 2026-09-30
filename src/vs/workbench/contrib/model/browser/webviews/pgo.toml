@@ -191,8 +191,8 @@ newRow = true
 [[inputs]]
 id = "ub"
 label = "Upper Bounds"
-tooltip = "Julia vector of upper bounds, one per variable."
-default = "[5.12, 5.12]"
+tooltip = "Julia vector of upper bounds, one per variable. The default box is deliberately not centred on the Rastrigin optimum at the origin: DIRECT samples the centre first and the search starts there, so a symmetric box would hand every method the answer at its first evaluation."
+default = "[7.0, 6.0]"
 
 [[inputs]]
 id = "budget"
