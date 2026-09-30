@@ -5,27 +5,21 @@
 
 import { localize } from '../../../../../vs/nls.js';
 import { MenuRegistry, MenuId } from '../../../../platform/actions/common/actions.js';
-import { CommandsRegistry, ICommandService } from '../../../../platform/commands/common/commands.js';
+import { CommandsRegistry } from '../../../../platform/commands/common/commands.js';
 import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
-import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
-import { IOpenerService } from '../../../../platform/opener/common/opener.js';
-import { IEditorService } from '../../../services/editor/common/editorService.js';
-import { IQuickInputService } from '../../../../platform/quickinput/common/quickInput.js';
-import { IClipboardService } from '../../../../platform/clipboard/common/clipboardService.js';
-import { INotificationService } from '../../../../platform/notification/common/notification.js';
 
-import { openPtpsWebview } from './commands/ptps.command.js';
+import { PTPS_PANEL } from '../../model/browser/commands/ptps.command.js';
 import { SID_PANEL } from '../../model/browser/commands/sid.command.js';
 import { openScaffoldWebview } from '../../model/browser/commands/scaffold.command.js';
 import { MCMC_PANEL } from '../../model/browser/commands/mcmc.command.js';
 import { SMC_PANEL } from '../../model/browser/commands/smc.command.js';
 import { MLMC_PANEL } from '../../model/browser/commands/mlmc.command.js';
-import { openSdeWebview } from './commands/sde.command.js';
-import { openTssmWebview } from './commands/tssm.command.js';
-import { openDynpplWebview } from './commands/dynppl.command.js';
-import { openGraphpplWebview } from './commands/graphppl.command.js';
-import { openJdpWebview } from './commands/jdp.command.js';
-import { openSdeaWebview } from './commands/sdea.command.js';
+import { SDE_PANEL } from '../../model/browser/commands/sde.command.js';
+import { TSSM_PANEL } from '../../model/browser/commands/tssm.command.js';
+import { DYNPPL_PANEL } from '../../model/browser/commands/dynppl.command.js';
+import { GRAPHPPL_PANEL } from '../../model/browser/commands/graphppl.command.js';
+import { JDP_PANEL } from '../../model/browser/commands/jdp.command.js';
+import { SDEA_PANEL } from '../../model/browser/commands/sdea.command.js';
 
 // Register the Simulate menu to the main menu
 MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
@@ -351,15 +345,7 @@ MenuRegistry.appendMenuItem(NCMSubmenuId, {
 // ============================================
 
 CommandsRegistry.registerCommand('chiara.simulate.pp', (accessor: ServicesAccessor) =>
-	openPtpsWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	)
+	openScaffoldWebview(accessor, PTPS_PANEL)
 );
 
 CommandsRegistry.registerCommand('chiara.statistics.id', (accessor: ServicesAccessor) =>
@@ -379,73 +365,25 @@ CommandsRegistry.registerCommand('chiara.simulate.mc.mlmc', (accessor: ServicesA
 );
 
 CommandsRegistry.registerCommand('chiara.simulate.sde', (accessor: ServicesAccessor) =>
-	openSdeWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	)
+	openScaffoldWebview(accessor, SDE_PANEL)
 );
 
 CommandsRegistry.registerCommand('chiara.simulate.jdp', (accessor: ServicesAccessor) =>
-	openJdpWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	)
+	openScaffoldWebview(accessor, JDP_PANEL)
 );
 
 CommandsRegistry.registerCommand('chiara.simulate.sdea', (accessor: ServicesAccessor) =>
-	openSdeaWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	)
+	openScaffoldWebview(accessor, SDEA_PANEL)
 );
 
 CommandsRegistry.registerCommand('chiara.statistics.timeseries.ssm', (accessor: ServicesAccessor) =>
-	openTssmWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	)
+	openScaffoldWebview(accessor, TSSM_PANEL)
 );
 
 CommandsRegistry.registerCommand('chiara.statistics.ppl.dynppl', (accessor: ServicesAccessor) =>
-	openDynpplWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	)
+	openScaffoldWebview(accessor, DYNPPL_PANEL)
 );
 
 CommandsRegistry.registerCommand('chiara.statistics.ppl.graphppl', (accessor: ServicesAccessor) =>
-	openGraphpplWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	)
+	openScaffoldWebview(accessor, GRAPHPPL_PANEL)
 );

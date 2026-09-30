@@ -1,0 +1,416 @@
+# Diffusion Processes Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/sde.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Diffusion Processes"
+viewType = "pollis.sde"
+defaultModel = "add"
+
+[[packages]]
+name = "StochasticDiffEq.jl"
+github = "https://github.com/SciML/StochasticDiffEq.jl"
+
+[[packages]]
+name = "DifferentialEquations.jl"
+github = "https://github.com/SciML/DifferentialEquations.jl"
+
+[requires]
+packages = ["Plots.jl", "DiffEqDevTools.jl", "StatsBase.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Additive Noise"
+file = "sde/tutorial-01-additive.ipynb"
+bundled = true
+description = "Define and solve an Itô SDE with constant diffusion using Euler-Maruyama"
+
+[[notebookSections.notebooks]]
+name = "Multiplicative Noise"
+file = "sde/tutorial-02-multiplicative.ipynb"
+bundled = true
+description = "State-dependent diffusion with the SRIW1 adaptive Itô solver"
+
+[[notebookSections.notebooks]]
+name = "Stratonovich"
+file = "sde/tutorial-03-stratonovich.ipynb"
+bundled = true
+description = "Stratonovich interpretation using EulerHeun; compare with Itô solution"
+
+[[wikis]]
+name = "Factsheet"
+file = "sde/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "sde/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "sde/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "sde/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "sde/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "sde/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Methods"
+
+[[wikis]]
+name = "Additive Noise"
+file = "sde/additive.md"
+bundled = true
+
+[[wikis]]
+name = "Multiplicative Noise"
+file = "sde/multiplicative.md"
+bundled = true
+
+[[wikis]]
+name = "Stratonovich"
+file = "sde/stratonovich.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "DifferentialEquations.jl: A Performant and Feature-Rich Ecosystem for Solving Differential Equations in Julia"
+authors = "Rackauckas, Christopher; Nie, Qing"
+year = 2017
+journal = "Journal of Open Research Software"
+doi = "10.5334/jors.151"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Stochastic Differential Equations: An Introduction with Applications"
+authors = "Øksendal, Bernt"
+year = 2003
+journal = "Springer (6th ed.)"
+doi = "10.1007/978-3-642-14394-6"
+openAccess = false
+
+[[references]]
+title = "An Introduction to Stochastic Differential Equations"
+authors = "Evans, Lawrence C."
+year = 2013
+journal = "American Mathematical Society"
+url = "https://math.berkeley.edu/~evans/SDE.course.pdf"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Adaptive Stepsize Based on Control Theory for Stochastic Differential Equations"
+authors = "Burrage, Kevin; Burrage, Pamela; Higham, Desmond; Kloeden, Peter; Platen, Eckhard"
+year = 2004
+journal = "Numerical Algorithms"
+doi = "10.1023/B:NUMA.0000027736.85078.be"
+openAccess = false
+
+[[models]]
+id = "add"
+label = "Additive Noise"
+
+[[models]]
+id = "mul"
+label = "Multiplicative Noise"
+
+[[models]]
+id = "strat"
+label = "Stratonovich"
+
+[[bullets]]
+text = "Define continuous-time stochastic systems as dX = f(X,t) dt + g(X,t) dW and solve with high-performance adaptive solvers"
+detail = ""
+
+[[bullets]]
+text = "Choose between constant (additive) and state-dependent (multiplicative) noise; select Itô or Stratonovich calculus"
+detail = ""
+
+[[bullets]]
+text = "All three formulations use the unified SDEProblem / solve() interface from StochasticDiffEq.jl"
+detail = ""
+
+[[decisionRows]]
+task = "Additive Noise"
+context = "Constant noise strength sigma"
+purpose = "Environmental forcing, Ornstein-Uhlenbeck, perturbations independent of state"
+
+[[decisionRows]]
+task = "Multiplicative Noise"
+context = "State-dependent noise sigma(X)"
+purpose = "Geometric Brownian motion, proportional volatility, population dynamics"
+
+[[decisionRows]]
+task = "Stratonovich"
+context = "State-dependent noise (Stratonovich calculus)"
+purpose = "Physics-derived models, smooth-noise limits, Wong-Zakai approximations"
+
+[[inputs]]
+id = "f"
+label = "Drift f(X,t)"
+tooltip = "Julia expression for the drift function f(X, p, t). Example: -0.5*X for mean-reversion, 0.5*X for geometric growth."
+default = "-0.5*X"
+
+[[inputs]]
+id = "sigma"
+label = "Noise sigma"
+tooltip = "Constant noise strength sigma. The diffusion term is g(X, p, t) = sigma (independent of state)."
+default = "0.3"
+models = ["add"]
+
+[[inputs]]
+id = "g"
+label = "Diffusion g(X,t)"
+tooltip = "Julia expression for the diffusion function g(X, p, t). Example: 0.2*X for multiplicative (geometric BM) noise."
+default = "0.2*X"
+models = ["mul", "strat"]
+
+[[inputs]]
+id = "solver"
+label = "Solver"
+tooltip = "StochasticDiffEq.jl solver. Fixed-step solvers require a step size dt; adaptive solvers choose dt automatically. Strong order controls pathwise accuracy; weak order controls distribution accuracy."
+kind = "select"
+newRow = true
+
+[[inputs.options]]
+value = "SRIW1"
+label = "SRIW1 (Adaptive, Strong 3/2)"
+models = ["mul"]
+
+[[inputs.options]]
+value = "EM"
+label = "EM (Fixed Step, Strong 1/2)"
+models = ["add", "mul"]
+
+[[inputs.options]]
+value = "LambaEM"
+label = "LambaEM (Adaptive, Strong 1/2)"
+models = ["add", "mul"]
+
+[[inputs.options]]
+value = "SRA1"
+label = "SRA1 (Fixed Step, Weak 2)"
+models = ["add"]
+
+[[inputs.options]]
+value = "SOSRA2"
+label = "SOSRA2 (Adaptive, Weak 2)"
+models = ["add"]
+
+[[inputs.options]]
+value = "RKMil"
+label = "RKMil (Fixed Step, Strong 1)"
+models = ["mul"]
+
+[[inputs.options]]
+value = "EulerHeun"
+label = "EulerHeun (Fixed Step, Order 1)"
+models = ["strat"]
+
+[[inputs.options]]
+value = "LambaEulerHeun"
+label = "LambaEulerHeun (Adaptive, Order 1)"
+models = ["strat"]
+
+[[inputs.options]]
+value = "RKMilCommute"
+label = "RKMilCommute (Fixed Step, Order 1)"
+models = ["strat"]
+
+[[inputs]]
+id = "X0"
+label = "Initial state X0"
+tooltip = "Initial condition X0. Use a scalar for a 1D SDE or a vector for a system of SDEs."
+default = "1.0"
+
+[[inputs]]
+id = "T"
+label = "Time span T"
+tooltip = "End time T of the simulation. The time span is (0.0, T)."
+default = "10.0"
+
+[[inputs]]
+id = "dt"
+label = "Step size dt"
+tooltip = "Fixed time step used by the selected solver. Smaller values improve accuracy at higher compute cost. Not needed for adaptive solvers."
+default = "0.01"
+when = "solver!=LambaEM|SOSRA2|SRIW1|LambaEulerHeun"
+
+[[codeBranches]]
+model = "add"
+code = '''
+using StochasticDiffEq  # additive-noise Ito SDE: dX = f(X,t) dt + sigma dW
+
+f(X, p, t) = {{f}}  # drift function
+g(X, p, t) = {{sigma}}  # constant diffusion: additive noise strength sigma = {{sigma}}
+
+prob = SDEProblem(f, g, {{X0}}, (0.0, {{T}}))  # SDE with X0 = {{X0}}, t in [0, {{T}}]
+{{?solver=LambaEM|SOSRA2|SRIW1|LambaEulerHeun}} sol  = solve(prob, {{solver}}())  # {{solver}} (adaptive)
+{{?solver!=LambaEM|SOSRA2|SRIW1|LambaEulerHeun}} sol  = solve(prob, {{solver}}(), dt={{dt}})  # {{solver}}, fixed step dt = {{dt}}
+'''
+
+[[codeBranches]]
+model = "mul"
+code = '''
+using StochasticDiffEq  # multiplicative-noise Ito SDE: dX = f(X,t) dt + g(X,t) dW
+
+f(X, p, t) = {{f}}  # drift function
+g(X, p, t) = {{g}}  # state-dependent diffusion: g(X,t) = {{g}}
+
+prob = SDEProblem(f, g, {{X0}}, (0.0, {{T}}))  # multiplicative SDE
+{{?solver=LambaEM|SOSRA2|SRIW1|LambaEulerHeun}} sol  = solve(prob, {{solver}}())  # {{solver}} (adaptive)
+{{?solver!=LambaEM|SOSRA2|SRIW1|LambaEulerHeun}} sol  = solve(prob, {{solver}}(), dt={{dt}})  # {{solver}}, fixed step dt = {{dt}}
+'''
+
+[[codeBranches]]
+model = "strat"
+code = '''
+using StochasticDiffEq  # Stratonovich SDE: dX = f(X,t) dt + g(X,t) o dW
+
+f(X, p, t) = {{f}}  # drift (Stratonovich form)
+g(X, p, t) = {{g}}  # diffusion (Stratonovich interpretation)
+
+prob = SDEProblem(f, g, {{X0}}, (0.0, {{T}}))  # Stratonovich SDE
+{{?solver=LambaEM|SOSRA2|SRIW1|LambaEulerHeun}} sol  = solve(prob, {{solver}}())  # {{solver}} (adaptive)
+{{?solver!=LambaEM|SOSRA2|SRIW1|LambaEulerHeun}} sol  = solve(prob, {{solver}}(), dt={{dt}})  # {{solver}}, fixed step dt = {{dt}}
+
+# Ito equivalent: f_ito(X,t) = f(X,t) + 0.5 * g(X,t) * dg/dX  # Ito-Stratonovich correction for reference
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "plot-path"
+label = "Plot Trajectory"
+desc = "Plot a single simulated SDE path against time"
+code = '''
+using StochasticDiffEq, Plots  # simulate and plot one SDE trajectory
+
+f(X, p, t) = {{f}}; g(X, p, t) = 0.3  # drift and diffusion
+sol = solve(SDEProblem(f, g, {{X0}}, (0.0, {{T}})), EM(), dt=0.01)  # solve
+plot(sol, xlabel="t", ylabel="X(t)", label="SDE path")  # plot the trajectory
+'''
+
+[[actionGroups.actions]]
+id = "plot-ensemble"
+label = "Ensemble Paths"
+desc = "Plot multiple trajectories to visualise path-to-path variability"
+code = '''
+using StochasticDiffEq, Plots  # simulate an ensemble and plot all paths
+
+f(X, p, t) = {{f}}; g(X, p, t) = 0.3  # drift and diffusion
+prob = SDEProblem(f, g, {{X0}}, (0.0, {{T}}))  # base problem
+ens  = EnsembleProblem(prob)  # ensemble wrapper
+sim  = solve(ens, EM(), EnsembleThreads(), dt=0.01, trajectories=50)  # 50 parallel paths
+plot(sim, alpha=0.3, legend=false)  # overlay all trajectories
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "convergence"
+label = "Strong Convergence"
+desc = "Check strong convergence order by comparing against a finer reference solution"
+code = '''
+using StochasticDiffEq, DiffEqDevTools  # convergence analysis for SDE solvers
+
+f(X, p, t) = -0.5 * X; g(X, p, t) = 0.3  # Ornstein-Uhlenbeck drift and diffusion
+prob = SDEProblem(f, g, 1.0, (0.0, 1.0))  # short horizon for convergence test
+dts  = (1/2) .^ (9:-1:4)  # decreasing step sizes
+errs = analyticalsolution_vs_numerical(prob, EM(), dts)  # compare EM to analytical OU solution
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "mean-variance"
+label = "Mean and Variance"
+desc = "Estimate E[X(t)] and Var[X(t)] at each time point from an ensemble"
+code = '''
+using StochasticDiffEq, Statistics  # estimate mean and variance from ensemble
+
+f(X, p, t) = {{f}}; g(X, p, t) = 0.3  # drift and diffusion
+prob = SDEProblem(f, g, {{X0}}, (0.0, {{T}}))  # base SDE problem
+ens  = solve(EnsembleProblem(prob), EM(), EnsembleThreads(), dt=0.01, trajectories=1000)  # 1000 paths
+t_grid = 0:0.1:{{T}}  # evaluation time grid
+means  = [mean(s(t) for s in ens) for t in t_grid]  # E[X(t)]
+vars   = [var(s(t)  for s in ens) for t in t_grid]  # Var[X(t)]
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "ito-vs-strat"
+label = "Ito vs Stratonovich"
+desc = "Compare solutions under both interpretations for the same f and g"
+code = '''
+using StochasticDiffEq, Plots  # compare Ito and Stratonovich solutions
+
+f(X, p, t) = {{f}}; g(X, p, t) = 0.2 * X  # same f and g for both
+W = WienerProcess(0.0, 0.0)  # shared noise path for fair comparison
+p_ito   = SDEProblem(f, g, {{X0}}, (0.0, {{T}}); noise=W)  # Ito problem
+p_strat = SDEProblem(f, g, {{X0}}, (0.0, {{T}}); noise=W)  # Stratonovich problem
+sol_ito   = solve(p_ito,   SRIW1())  # Ito solution
+sol_strat = solve(p_strat, EulerHeun(), dt=0.01)  # Stratonovich solution
+plot(sol_ito, label="Ito"); plot!(sol_strat, label="Stratonovich")  # overlay both solutions
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "stationary"
+label = "Stationary Distribution"
+desc = "Estimate the long-run stationary distribution from a long trajectory"
+code = '''
+using StochasticDiffEq, StatsBase, Plots  # estimate stationary distribution
+
+f(X, p, t) = {{f}}; g(X, p, t) = 0.3  # Ornstein-Uhlenbeck: stationary ~ Normal(0, sigma^2 / 2*theta)
+sol = solve(SDEProblem(f, g, {{X0}}, (0.0, 1000.0)), EM(), dt=0.01)  # long trajectory
+h   = fit(Histogram, sol.u, nbins=50)  # histogram of visited states
+plot(h, normalize=:pdf, xlabel="X", ylabel="density")  # empirical stationary distribution
+'''

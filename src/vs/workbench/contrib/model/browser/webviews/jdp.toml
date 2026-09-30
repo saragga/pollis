@@ -1,0 +1,436 @@
+# Jump-Diffusion Processes Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/jdp.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Jump-Diffusion Processes"
+viewType = "pollis.jdp"
+defaultModel = "cpj"
+
+[[packages]]
+name = "JumpProcesses.jl"
+github = "https://github.com/SciML/JumpProcesses.jl"
+
+[[packages]]
+name = "DifferentialEquations.jl"
+github = "https://github.com/SciML/DifferentialEquations.jl"
+
+[requires]
+packages = ["Plots.jl", "Distributions.jl", "StochasticDiffEq.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Compound Poisson"
+file = "jdp/tutorial-01-compound-poisson.ipynb"
+bundled = true
+description = "SDE with Compound Poisson jumps of arbitrary distribution via ConstantRateJump"
+
+[[notebookSections.notebooks]]
+name = "Gaussian Jumps"
+file = "jdp/tutorial-02-gaussian-jumps.ipynb"
+bundled = true
+description = "Merton-style jump-diffusion: normally distributed jump sizes with constant rate"
+
+[[notebookSections.notebooks]]
+name = "Custom Rate"
+file = "jdp/tutorial-03-custom-rate.ipynb"
+bundled = true
+description = "State-dependent jump intensity using VariableRateJump"
+
+[[wikis]]
+name = "Factsheet"
+file = "jdp/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "jdp/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "jdp/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "jdp/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "jdp/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "jdp/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Methods"
+
+[[wikis]]
+name = "Compound Poisson"
+file = "jdp/compound-poisson.md"
+bundled = true
+
+[[wikis]]
+name = "Gaussian Jumps"
+file = "jdp/gaussian-jumps.md"
+bundled = true
+
+[[wikis]]
+name = "Custom Rate"
+file = "jdp/custom-rate.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "JumpProcesses.jl: A Julia Package for Stochastic Jump Processes"
+authors = "Rackauckas, Christopher; Nie, Qing; et al."
+year = 2022
+journal = "GitHub"
+url = "https://github.com/SciML/JumpProcesses.jl"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Financial Modelling with Jump Processes"
+authors = "Cont, Rama; Tankov, Peter"
+year = 2004
+journal = "Chapman and Hall / CRC"
+doi = "10.1201/9780203485217"
+openAccess = false
+
+[[references]]
+title = "Stochastic Calculus for Finance II: Continuous-Time Models"
+authors = "Shreve, Steven E."
+year = 2004
+journal = "Springer"
+doi = "10.1007/978-1-4757-4296-1"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Option Pricing When Underlying Stock Returns Are Discontinuous"
+authors = "Merton, Robert C."
+year = 1976
+journal = "Journal of Financial Economics"
+doi = "10.1016/0304-405X(76)90022-2"
+openAccess = false
+
+[[references]]
+title = "A Jump-Diffusion Model for Option Pricing"
+authors = "Kou, Steven G."
+year = 2002
+journal = "Management Science"
+doi = "10.1287/mnsc.48.8.1086.166"
+openAccess = false
+
+[[models]]
+id = "cpj"
+label = "Compound Poisson"
+
+[[models]]
+id = "gauss"
+label = "Gaussian Jumps"
+
+[[models]]
+id = "custom"
+label = "Custom Rate"
+
+[[bullets]]
+text = "Combine continuous Brownian diffusion with discrete Poisson-driven jumps via the unified JumpProblem interface in JumpProcesses.jl"
+detail = ""
+
+[[bullets]]
+text = "Specify jumps as ConstantRateJump (fixed lambda) or VariableRateJump (state-dependent intensity); any jump-size distribution is supported"
+detail = ""
+
+[[bullets]]
+text = "Solve with standard SDE solvers; the jump process is handled transparently by the Direct (Gillespie) or RSSA algorithm"
+detail = ""
+
+[[decisionRows]]
+task = "Compound Poisson"
+context = "Any jump-size distribution"
+purpose = "Rare discrete events with arbitrary jump sizes; constant arrival rate lambda"
+
+[[decisionRows]]
+task = "Gaussian Jumps"
+context = "Normal(muJ, sigmaJ) jump sizes"
+purpose = "Symmetric, bounded-tail jumps; news shocks, Merton-style models"
+
+[[decisionRows]]
+task = "Custom Rate"
+context = "State-dependent jump intensity"
+purpose = "Jump intensity lambda(X) depends on current state; nonlinear feedback"
+
+[[inputs]]
+id = "f"
+label = "Drift f(X,t)"
+tooltip = "Continuous drift function f(X, p, t). Example: 0.05*X for geometric growth, -0.1*(X-1.0) for mean-reversion."
+default = "0.05*X"
+
+[[inputs]]
+id = "g"
+label = "Diffusion g(X,t)"
+tooltip = "Continuous diffusion function g(X, p, t). Example: 0.2*X for multiplicative noise, 0.1 for additive."
+default = "0.2*X"
+
+[[inputs]]
+id = "lambda"
+label = "Jump rate lambda"
+tooltip = "Expected number of jumps per unit time (Compound Poisson and Gaussian Jumps). Larger lambda means more frequent jumps."
+default = "2.0"
+
+[[inputs]]
+id = "muj"
+label = "Jump mean muJ"
+tooltip = "Mean of the Gaussian jump-size distribution. Positive for upward drift in jumps, negative for downward."
+default = "-0.1"
+models = ["gauss"]
+
+[[inputs]]
+id = "sigmaj"
+label = "Jump std sigmaJ"
+tooltip = "Standard deviation of the Gaussian jump-size distribution. Controls the spread of jump magnitudes."
+default = "0.05"
+models = ["gauss"]
+
+[[inputs]]
+id = "aggregator"
+label = "Jump aggregator"
+tooltip = "Algorithm used to schedule jump events. Direct (Gillespie) is simplest and exact for constant rates. SortingDirect improves cache performance. RSSA scales better for large systems. Coevolve is required for variable-rate (state-dependent) jumps."
+kind = "select"
+default = "Direct"
+models = ["cpj", "gauss"]
+newRow = true
+
+[[inputs.options]]
+value = "Direct"
+label = "Direct"
+
+[[inputs.options]]
+value = "SortingDirect"
+label = "SortingDirect"
+
+[[inputs.options]]
+value = "RSSA"
+label = "RSSA"
+
+[[inputs]]
+id = "solver"
+label = "SDE solver"
+tooltip = "Solver for the continuous diffusion part between jump events. Adaptive solvers (SRIW1, LambaEM) choose dt automatically. Fixed-step solvers (EM, RKMil) require a dt value."
+kind = "select"
+default = "SRIW1"
+
+[[inputs.options]]
+value = "SRIW1"
+label = "SRIW1 (Adaptive)"
+
+[[inputs.options]]
+value = "EM"
+label = "EM (Fixed Step)"
+
+[[inputs.options]]
+value = "LambaEM"
+label = "LambaEM (Adaptive)"
+
+[[inputs.options]]
+value = "RKMil"
+label = "RKMil (Fixed Step)"
+
+[[inputs]]
+id = "X0"
+label = "Initial state X0"
+tooltip = "Initial value of the process X(0)."
+default = "1.0"
+
+[[inputs]]
+id = "T"
+label = "Time span T"
+tooltip = "End time T of the simulation. The time span is (0.0, T)."
+default = "5.0"
+
+[[inputs]]
+id = "dt"
+label = "Step size dt"
+tooltip = "Fixed time step for the SDE solver between jump events. Not needed for adaptive solvers."
+default = "0.001"
+when = "solver!=SRIW1|LambaEM"
+
+[[codeBranches]]
+model = "cpj"
+code = '''
+using DifferentialEquations, JumpProcesses, Distributions  # Compound Poisson jump-diffusion: dX = f dt + g dW + dJ
+
+f(X, p, t) = {{f}}  # continuous drift
+g(X, p, t) = {{g}}  # continuous diffusion
+
+rate(X, p, t)   = {{lambda}}  # constant jump rate lambda = {{lambda}} jumps per unit time
+affect!(integ)  = (integ.u += rand(Uniform(-0.2, 0.2)))  # uniform jump size in [-0.2, 0.2]
+jump = ConstantRateJump(rate, affect!)  # fixed-rate jump
+
+prob  = SDEProblem(f, g, {{X0}}, (0.0, {{T}}))  # base SDE
+jprob = JumpProblem(prob, {{aggregator}}(), jump)  # augment with jump process using {{aggregator}} aggregator
+{{?solver=SRIW1|LambaEM}} solve(jprob, {{solver}}())  # solve jump-diffusion
+{{?solver!=SRIW1|LambaEM}} solve(jprob, {{solver}}(), dt={{dt}})  # solve jump-diffusion
+'''
+
+[[codeBranches]]
+model = "gauss"
+code = '''
+using DifferentialEquations, JumpProcesses, Distributions  # Gaussian jump-diffusion (Merton-style): Normal jump sizes
+
+f(X, p, t) = {{f}}  # continuous drift
+g(X, p, t) = {{g}}  # continuous diffusion
+
+rate(X, p, t)   = {{lambda}}  # Poisson arrival rate lambda = {{lambda}}
+affect!(integ)  = (integ.u += rand(Normal({{muj}}, {{sigmaj}})))  # jump size ~ Normal(mu_J={{muj}}, sigma_J={{sigmaj}})
+jump = ConstantRateJump(rate, affect!)  # constant-rate Gaussian jump
+
+prob  = SDEProblem(f, g, {{X0}}, (0.0, {{T}}))  # base SDE
+jprob = JumpProblem(prob, {{aggregator}}(), jump)  # augment with {{aggregator}} aggregator
+{{?solver=SRIW1|LambaEM}} solve(jprob, {{solver}}())  # solve
+{{?solver!=SRIW1|LambaEM}} solve(jprob, {{solver}}(), dt={{dt}})  # solve
+'''
+
+[[codeBranches]]
+model = "custom"
+code = '''
+using DifferentialEquations, JumpProcesses  # state-dependent jump rate: lambda(X,t) — requires Coevolve aggregator
+
+f(X, p, t) = {{f}}  # continuous drift
+g(X, p, t) = {{g}}  # continuous diffusion
+
+rate(X, p, t)    = {{lambda}} * abs(X)  # state-dependent rate: proportional to |X|
+affect!(integ)   = (integ.u *= (1.0 + 0.1 * randn()))  # multiplicative jump: X -> X * (1 + noise)
+urate(X, p, t)   = {{lambda}} * (abs(X) + 1.0)  # upper bound on rate for Coevolve thinning
+jump = VariableRateJump(rate, affect!; urate=urate)  # variable-rate jump specification
+
+prob  = SDEProblem(f, g, {{X0}}, (0.0, {{T}}))  # base SDE
+jprob = JumpProblem(prob, Coevolve(), jump)  # Coevolve: required for VariableRateJump
+{{?solver=SRIW1|LambaEM}} solve(jprob, {{solver}}())  # solve the state-dependent jump-diffusion
+{{?solver!=SRIW1|LambaEM}} solve(jprob, {{solver}}(), dt={{dt}})  # solve the state-dependent jump-diffusion
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "plot-path"
+label = "Plot Trajectory"
+desc = "Plot a single jump-diffusion path highlighting jump times"
+code = '''
+using DifferentialEquations, JumpProcesses, Plots  # simulate and plot one jump-diffusion path
+
+f(X, p, t) = {{f}}; g(X, p, t) = {{g}}  # drift and diffusion
+rate(X, p, t) = {{lambda}}; affect!(i) = (i.u += rand() - 0.5)  # jump specification
+jump  = ConstantRateJump(rate, affect!)  # constant-rate jump
+prob  = SDEProblem(f, g, {{X0}}, (0.0, {{T}}))  # base SDE
+sol   = solve(JumpProblem(prob, Direct(), jump), SRIW1())  # solve
+plot(sol, xlabel="t", ylabel="X(t)", label="jump-diffusion")  # plot (discontinuities mark jump events)
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "jump-count"
+label = "Jump Counting"
+desc = "Count and inspect actual jump times from a realised path"
+code = '''
+using DifferentialEquations, JumpProcesses  # inspect jump events in a realised path
+
+f(X, p, t) = 0.0; g(X, p, t) = 0.1  # minimal drift/diffusion to isolate jumps
+rate(X, p, t) = {{lambda}}; affect!(i) = (i.u += 1.0)  # unit jump for easy counting
+prob  = SDEProblem(f, g, {{X0}}, (0.0, {{T}}))  # base problem
+sol   = solve(JumpProblem(prob, Direct(), ConstantRateJump(rate, affect!)), EM(), dt=0.001)  # solve
+println("Jumps observed: ", sol.u[end] - {{X0}}, "  Expected: ", {{lambda}} * {{T}})  # compare observed vs expected jump count
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "ensemble-moments"
+label = "Ensemble Moments"
+desc = "Estimate E[X(t)] and Var[X(t)] over many jump-diffusion paths"
+code = '''
+using DifferentialEquations, JumpProcesses, Statistics  # ensemble statistics for jump-diffusion
+
+f(X, p, t) = {{f}}; g(X, p, t) = {{g}}  # drift and diffusion
+rate(X, p, t) = {{lambda}}; affect!(i) = (i.u += rand() - 0.5)  # jump
+prob  = SDEProblem(f, g, {{X0}}, (0.0, {{T}}))  # base SDE
+jprob = JumpProblem(prob, Direct(), ConstantRateJump(rate, affect!))  # jump problem
+ens   = solve(EnsembleProblem(jprob), SRIW1(), EnsembleThreads(), trajectories=500)  # 500 paths
+println("E[X(T)]: ", mean(s.u[end] for s in ens))  # terminal mean
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "with-without-jumps"
+label = "With vs Without Jumps"
+desc = "Compare a pure diffusion with its jump-diffusion counterpart"
+code = '''
+using DifferentialEquations, JumpProcesses, Plots  # compare pure diffusion vs jump-diffusion
+
+f(X, p, t) = {{f}}; g(X, p, t) = {{g}}  # shared drift and diffusion
+W = WienerProcess(0.0, 0.0)  # shared Brownian path
+sde_sol  = solve(SDEProblem(f, g, {{X0}}, (0.0, {{T}}); noise=W), SRIW1())  # pure diffusion
+rate(X, p, t) = {{lambda}}; affect!(i) = (i.u += rand() - 0.5)  # jump on top
+jprob    = JumpProblem(SDEProblem(f, g, {{X0}}, (0.0, {{T}}); noise=W), Direct(), ConstantRateJump(rate, affect!))  # jump-diffusion with same Brownian path
+jde_sol  = solve(jprob, SRIW1())  # jump-diffusion solution
+plot(sde_sol, label="diffusion only"); plot!(jde_sol, label="jump-diffusion")  # overlay both paths
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "jump-dist"
+label = "Jump Size Distribution"
+desc = "Collect realised jump sizes from an ensemble and plot their distribution"
+code = '''
+using DifferentialEquations, JumpProcesses, StatsBase, Plots  # collect and plot realised jump sizes
+
+jump_sizes = Float64[]  # accumulate jump sizes across paths
+rate(X, p, t) = {{lambda}}  # constant rate
+affect!(i) = begin j = randn() * 0.05; push!(jump_sizes, j); i.u += j end  # record each jump size
+prob  = SDEProblem(x->0.05*x, x->0.1*x, {{X0}}, (0.0, {{T}}))  # base SDE
+for _ in 1:200  # run 200 paths
+    solve(JumpProblem(prob, Direct(), ConstantRateJump(rate, affect!)), EM(), dt=0.001)
+end
+histogram(jump_sizes, nbins=40, normalize=:pdf, xlabel="jump size", ylabel="density")  # empirical jump-size distribution
+'''

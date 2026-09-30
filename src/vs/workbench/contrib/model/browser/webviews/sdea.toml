@@ -1,0 +1,398 @@
+# SDE Ensemble Analysis Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/sdea.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "SDE Ensemble Analysis"
+viewType = "pollis.sdea"
+defaultModel = "paths"
+
+[[packages]]
+name = "DifferentialEquations.jl"
+github = "https://github.com/SciML/DifferentialEquations.jl"
+
+[[packages]]
+name = "StochasticDiffEq.jl"
+github = "https://github.com/SciML/StochasticDiffEq.jl"
+
+[requires]
+packages = ["Plots.jl", "StatsBase.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Path Statistics"
+file = "sdea/tutorial-01-path-statistics.ipynb"
+bundled = true
+description = "Compute mean and variance envelopes over SDE trajectories using EnsembleProblem"
+
+[[notebookSections.notebooks]]
+name = "First Passage Time"
+file = "sdea/tutorial-02-first-passage.ipynb"
+bundled = true
+description = "Estimate hitting-time distributions using ContinuousCallback and ensemble termination"
+
+[[notebookSections.notebooks]]
+name = "Invariant Distribution"
+file = "sdea/tutorial-03-invariant.ipynb"
+bundled = true
+description = "Estimate the stationary distribution from terminal values of a long-horizon ensemble"
+
+[[wikis]]
+name = "Factsheet"
+file = "sdea/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "sdea/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "sdea/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "sdea/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "sdea/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "sdea/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Methods"
+
+[[wikis]]
+name = "Path Statistics"
+file = "sdea/path-statistics.md"
+bundled = true
+
+[[wikis]]
+name = "First Passage Time"
+file = "sdea/first-passage.md"
+bundled = true
+
+[[wikis]]
+name = "Invariant Distribution"
+file = "sdea/invariant.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "DifferentialEquations.jl: A Performant and Feature-Rich Ecosystem for Solving Differential Equations in Julia"
+authors = "Rackauckas, Christopher; Nie, Qing"
+year = 2017
+journal = "Journal of Open Research Software"
+doi = "10.5334/jors.151"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Stochastic Differential Equations: An Introduction with Applications"
+authors = "Øksendal, Bernt"
+year = 2003
+journal = "Springer (6th ed.)"
+doi = "10.1007/978-3-642-14394-6"
+openAccess = false
+
+[[references]]
+title = "A First Passage Time Primer for Stochastic Differential Equations"
+authors = "Tuckwell, Henry C."
+year = 1988
+journal = "Cambridge University Press"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Parallel Methods for Stochastic Differential Equations and Statistical Simulation"
+authors = "Rackauckas, Christopher; et al."
+year = 2020
+journal = "arXiv"
+url = "https://arxiv.org/abs/2012.12720"
+openAccess = true
+
+[[models]]
+id = "paths"
+label = "Path Statistics"
+
+[[models]]
+id = "fpt"
+label = "First Passage Time"
+
+[[models]]
+id = "inv"
+label = "Invariant Distribution"
+
+[[bullets]]
+text = "Run large parallel ensembles of SDE trajectories using EnsembleProblem with EnsembleThreads or EnsembleDistributed for multi-core acceleration"
+detail = ""
+
+[[bullets]]
+text = "Extract path-level statistics (mean, variance), hitting-time distributions, and long-run invariant densities from a single ensemble solve"
+detail = ""
+
+[[bullets]]
+text = "Use ContinuousCallback to terminate individual paths at a threshold, enabling first-passage time analysis without post-processing"
+detail = ""
+
+[[decisionRows]]
+task = "Path Statistics"
+context = "E[X(t)], Var[X(t)]"
+purpose = "Characterising trajectory uncertainty over time; mean and variance envelopes"
+
+[[decisionRows]]
+task = "First Passage Time"
+context = "FPT distribution"
+purpose = "Reliability, exit problems, threshold-crossing events; hitting-time statistics"
+
+[[decisionRows]]
+task = "Invariant Distribution"
+context = "Stationary density"
+purpose = "Long-run equilibrium of ergodic systems; Fokker-Planck steady state"
+
+[[inputs]]
+id = "f"
+label = "Drift f(X,t)"
+tooltip = "Drift function f(X, p, t) defining the deterministic part of the SDE. Example: -0.5*X for mean-reversion."
+default = "-0.5*X"
+
+[[inputs]]
+id = "g"
+label = "Diffusion g(X,t)"
+tooltip = "Diffusion function g(X, p, t). Use a constant for additive noise (e.g. 0.3) or a state expression for multiplicative noise (e.g. 0.2*X)."
+default = "0.3"
+
+[[inputs]]
+id = "X0"
+label = "Initial state X0"
+tooltip = "Initial condition for each trajectory in the ensemble."
+default = "1.0"
+
+[[inputs]]
+id = "T"
+label = "Time span T"
+tooltip = "End time T. For Invariant Distribution use a long horizon (e.g. 1000.0) so paths converge to the stationary measure."
+default = "20.0"
+models = ["paths", "inv"]
+
+[[inputs]]
+id = "threshold"
+label = "Threshold"
+tooltip = "Value of X at which each path is terminated. The first passage time is the time to reach this threshold from X0."
+default = "2.0"
+models = ["fpt"]
+
+[[inputs]]
+id = "solver"
+label = "Solver"
+tooltip = "StochasticDiffEq.jl solver applied to each trajectory in the ensemble. Adaptive solvers (SRIW1, LambaEM) choose dt automatically; fixed-step solvers (EM, RKMil) require a dt value."
+kind = "select"
+default = "SRIW1"
+newRow = true
+
+[[inputs.options]]
+value = "SRIW1"
+label = "SRIW1 (Adaptive, Strong 3/2)"
+
+[[inputs.options]]
+value = "EM"
+label = "EM (Fixed Step, Strong 1/2)"
+
+[[inputs.options]]
+value = "LambaEM"
+label = "LambaEM (Adaptive, Strong 1/2)"
+
+[[inputs.options]]
+value = "RKMil"
+label = "RKMil (Fixed Step, Strong 1)"
+
+[[inputs]]
+id = "N"
+label = "Trajectories N"
+tooltip = "Number of independent paths to simulate. Larger N gives better statistical estimates at higher compute cost."
+default = "500"
+
+[[inputs]]
+id = "dt"
+label = "Step size dt"
+tooltip = "Fixed time step for the selected solver. Required for EM and RKMil; not needed for adaptive solvers."
+default = "0.01"
+when = "solver!=SRIW1|LambaEM"
+
+[[codeBranches]]
+model = "paths"
+code = '''
+using StochasticDiffEq, Statistics  # path statistics: E[X(t)] and Var[X(t)] over N trajectories
+
+f(X, p, t) = {{f}}  # drift
+g(X, p, t) = {{g}}  # diffusion
+prob = SDEProblem(f, g, {{X0}}, (0.0, {{T}}))  # base SDE problem
+{{?solver=SRIW1|LambaEM}} ens  = solve(EnsembleProblem(prob), {{solver}}(), EnsembleThreads(), trajectories={{N}})  # {{N}} parallel paths
+{{?solver!=SRIW1|LambaEM}} ens  = solve(EnsembleProblem(prob), {{solver}}(), EnsembleThreads(), trajectories={{N}}, dt={{dt}})  # {{N}} parallel paths
+
+t_grid    = range(0.0, {{T}}, length=200)  # evaluation time grid
+mean_path = [mean(s(t) for s in ens) for t in t_grid]  # E[X(t)] at each grid point
+std_path  = [std(s(t)  for s in ens) for t in t_grid]  # std[X(t)]: width of uncertainty band
+'''
+
+[[codeBranches]]
+model = "fpt"
+code = '''
+using StochasticDiffEq, Statistics  # first passage time: distribution of hitting times to threshold
+
+f(X, p, t) = {{f}}; g(X, p, t) = {{g}}  # drift and diffusion
+
+condition(X, t, integ) = X - {{threshold}}  # event: X crosses threshold = {{threshold}}
+affect!(integ)          = terminate!(integ)  # terminate path on first crossing
+cb = ContinuousCallback(condition, affect!)  # callback that stops each path at threshold
+
+prob = SDEProblem(f, g, {{X0}}, (0.0, 1000.0))  # long horizon: paths terminate early via callback
+{{?solver=SRIW1|LambaEM}} ens  = solve(EnsembleProblem(prob), {{solver}}(), EnsembleThreads(), trajectories={{N}}, callback=cb)  # run ensemble with termination callback
+{{?solver!=SRIW1|LambaEM}} ens  = solve(EnsembleProblem(prob), {{solver}}(), EnsembleThreads(), trajectories={{N}}, callback=cb, dt={{dt}})  # run ensemble with termination callback
+fpt  = [sol.t[end] for sol in ens]  # collect first passage times
+println("Mean FPT: ", mean(fpt), "  Std: ", std(fpt))  # summary statistics
+'''
+
+[[codeBranches]]
+model = "inv"
+code = '''
+using StochasticDiffEq, StatsBase  # invariant distribution: stationary density from terminal ensemble values
+
+f(X, p, t) = {{f}}; g(X, p, t) = {{g}}  # drift and diffusion
+prob = SDEProblem(f, g, {{X0}}, (0.0, {{T}}))  # long horizon T = {{T}} for stationarity
+{{?solver=SRIW1|LambaEM}} ens  = solve(EnsembleProblem(prob), {{solver}}(), EnsembleThreads(), trajectories={{N}})  # {{N}} independent long paths
+{{?solver!=SRIW1|LambaEM}} ens  = solve(EnsembleProblem(prob), {{solver}}(), EnsembleThreads(), trajectories={{N}}, dt={{dt}})  # {{N}} independent long paths
+
+terminal = [sol.u[end] for sol in ens]  # terminal values: samples from stationary distribution
+h = fit(Histogram, terminal, nbins=50)  # histogram approximation of the invariant density
+println("Stationary mean: ", mean(terminal), "  Std: ", std(terminal))  # sample statistics
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "fan-chart"
+label = "Fan Chart"
+desc = "Plot mean path with shaded confidence bands from path statistics"
+code = '''
+using StochasticDiffEq, Statistics, Plots  # fan chart: mean +/- 1 and 2 standard deviations
+
+f(X,p,t)={{f}}; g(X,p,t)={{g}}  # drift and diffusion
+ens = solve(EnsembleProblem(SDEProblem(f,g,{{X0}},(0.0,{{T}}))), SRIW1(), EnsembleThreads(), trajectories={{N}})  # {{N}} paths
+t  = range(0.0,{{T}},length=200)  # time grid
+mu = [mean(s(ti) for s in ens) for ti in t]  # mean path
+sd = [std(s(ti) for s in ens)  for ti in t]  # std path
+plot(t, mu, ribbon=2 .* sd, fillalpha=0.2, label="mean +/- 2 std")  # fan chart
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "convergence-n"
+label = "Convergence in N"
+desc = "Check that E[X(T)] stabilises as the ensemble size increases"
+code = '''
+using StochasticDiffEq, Statistics  # verify E[X(T)] converges with ensemble size
+
+f(X,p,t)={{f}}; g(X,p,t)={{g}}  # drift and diffusion
+prob = SDEProblem(f, g, {{X0}}, (0.0, {{T}}))  # base problem
+for N in [50, 100, 250, 500, 1000]  # sweep ensemble sizes
+    ens = solve(EnsembleProblem(prob), SRIW1(), EnsembleThreads(), trajectories=N)
+    println("N=", N, "  E[X(T)]=", mean(s.u[end] for s in ens))
+end
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "quantile-bands"
+label = "Quantile Bands"
+desc = "Compute 10th, 50th, 90th percentile envelopes over the ensemble"
+code = '''
+using StochasticDiffEq, Statistics, Plots  # quantile envelopes: 10th, 50th, 90th percentile paths
+
+f(X,p,t)={{f}}; g(X,p,t)={{g}}  # drift and diffusion
+ens = solve(EnsembleProblem(SDEProblem(f,g,{{X0}},(0.0,{{T}}))), SRIW1(), EnsembleThreads(), trajectories={{N}})  # {{N}} paths
+t   = range(0.0,{{T}},length=200)  # time grid
+q10 = [quantile([s(ti) for s in ens], 0.10) for ti in t]  # 10th percentile
+q50 = [quantile([s(ti) for s in ens], 0.50) for ti in t]  # median
+q90 = [quantile([s(ti) for s in ens], 0.90) for ti in t]  # 90th percentile
+plot(t, q50, ribbon=(q50.-q10, q90.-q50), fillalpha=0.2, label="10-90% band")  # fan chart with quantile bands
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "compare-noise"
+label = "Compare Noise Levels"
+desc = "Run ensembles with different diffusion strengths and compare mean paths"
+code = '''
+using StochasticDiffEq, Statistics, Plots  # compare ensembles with different noise levels
+
+f(X, p, t) = {{f}}  # shared drift
+t = range(0.0, {{T}}, length=200)  # time grid
+for sigma in [0.1, 0.3, 0.6]  # sweep noise strengths
+    g(X, p, t) = sigma
+    ens = solve(EnsembleProblem(SDEProblem(f, g, {{X0}}, (0.0, {{T}}))), SRIW1(), EnsembleThreads(), trajectories={{N}})
+    mu  = [mean(s(ti) for s in ens) for ti in t]
+    plot!(t, mu, label="sigma=" * string(sigma))
+end
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "fokker-planck"
+label = "Fokker-Planck Density"
+desc = "Compare empirical invariant density against the analytical Fokker-Planck solution"
+code = '''
+using StochasticDiffEq, StatsBase, Plots  # compare empirical stationary density to Fokker-Planck solution
+
+f(X, p, t) = -0.5 * X; g(X, p, t) = 0.3  # Ornstein-Uhlenbeck: stationary ~ Normal(0, sigma^2/(2*theta))
+ens = solve(EnsembleProblem(SDEProblem(f, g, {{X0}}, (0.0, 1000.0))), SRIW1(), EnsembleThreads(), trajectories={{N}})  # long-horizon ensemble
+samples = [s.u[end] for s in ens]  # terminal samples from stationary distribution
+
+h = fit(Histogram, samples, nbins=40, closed=:left)  # empirical histogram
+x = -2:0.01:2  # evaluation grid
+fp_density = exp.(-x.^2 / (0.3^2 / 0.5)) ./ sqrt(pi * 0.3^2 / 0.5)  # Fokker-Planck stationary density for OU
+plot(h, normalize=:pdf, alpha=0.5, label="empirical"); plot!(x, fp_density, label="Fokker-Planck")  # overlay analytical vs empirical
+'''

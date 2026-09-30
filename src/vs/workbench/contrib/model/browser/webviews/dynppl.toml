@@ -1,0 +1,490 @@
+# Probabilistic Programming with Turing.jl Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/dynppl.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Probabilistic Programming with Turing.jl"
+viewType = "pollis.dynppl"
+defaultModel = "nuts"
+
+[[packages]]
+name = "Turing.jl"
+github = "https://github.com/TuringLang/Turing.jl"
+
+[[packages]]
+name = "MCMCChains.jl"
+github = "https://github.com/TuringLang/MCMCChains.jl"
+
+[requires]
+packages = ["Turing.jl", "MCMCChains.jl", "Plots.jl", "StatsPlots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "No-U-Turn Sampler"
+file = "dynppl/tutorial-01-nuts.ipynb"
+bundled = true
+description = "Adaptive HMC with NUTS — define a model and sample with the Turing default"
+
+[[notebookSections.notebooks]]
+name = "Hamiltonian Monte Carlo"
+file = "dynppl/tutorial-02-hmc.ipynb"
+bundled = true
+description = "Explicit step size and leapfrog trajectory via HMC"
+
+[[notebookSections.notebooks]]
+name = "Metropolis-Hastings"
+file = "dynppl/tutorial-03-mh.ipynb"
+bundled = true
+description = "Gradient-free random-walk MCMC for discrete or non-differentiable models"
+
+[[wikis]]
+name = "Factsheet"
+file = "dynppl/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "dynppl/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "dynppl/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "dynppl/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "dynppl/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "dynppl/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Samplers"
+
+[[wikis]]
+name = "NUTS"
+file = "dynppl/nuts.md"
+bundled = true
+
+[[wikis]]
+name = "Hamiltonian Monte Carlo"
+file = "dynppl/hmc.md"
+bundled = true
+
+[[wikis]]
+name = "Metropolis-Hastings"
+file = "dynppl/metropolis-hastings.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "Turing: A Language for Flexible Probabilistic Inference"
+authors = "Ge, Hong; Xu, Kai; Ghahramani, Zoubin"
+year = 2018
+journal = "Proceedings of the 21st International Conference on Artificial Intelligence and Statistics (AISTATS)"
+url = "http://proceedings.mlr.press/v84/ge18b.html"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Probabilistic Programming and Bayesian Methods for Hackers"
+authors = "Davidson-Pilon, Cameron"
+year = 2015
+journal = "Addison-Wesley"
+url = "https://github.com/CamDavidsonPilon/Probabilistic-Programming-and-Bayesian-Methods-for-Hackers"
+openAccess = true
+
+[[references]]
+title = "Bayesian Data Analysis"
+authors = "Gelman, Andrew; Carlin, John B.; Stern, Hal S.; Dunson, David B.; Vehtari, Aki; Rubin, Donald B."
+year = 2013
+journal = "CRC Press (3rd ed.)"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "The No-U-Turn Sampler: Adaptively Setting Path Lengths in Hamiltonian Monte Carlo"
+authors = "Hoffman, Matthew D.; Gelman, Andrew"
+year = 2014
+journal = "Journal of Machine Learning Research"
+url = "https://jmlr.org/papers/v15/hoffman14a.html"
+openAccess = true
+
+[[references]]
+title = "Hybrid Monte Carlo"
+authors = "Duane, Simon; Kennedy, Anthony D.; Pendleton, Brian J.; Roweth, Duncan"
+year = 1987
+journal = "Physics Letters B"
+doi = "10.1016/0370-2693(87)91197-X"
+openAccess = false
+
+[[references]]
+title = "Equation of State Calculations by Fast Computing Machines"
+authors = "Metropolis, Nicholas; Rosenbluth, Arianna W.; Rosenbluth, Marshall N.; Teller, Augusta H.; Teller, Edward"
+year = 1953
+journal = "Journal of Chemical Physics"
+doi = "10.1063/1.1699114"
+openAccess = false
+
+[[models]]
+id = "nuts"
+label = "No-U-Turn Sampler"
+
+[[models]]
+id = "hmc"
+label = "Hamiltonian Monte Carlo"
+
+[[models]]
+id = "mh"
+label = "Metropolis-Hastings"
+
+[[bullets]]
+text = "No-U-Turn Sampler (NUTS)"
+detail = "adaptive Hamiltonian Monte Carlo (HMC); default sampler in Turing; no manual tuning of step size or trajectory length required"
+
+[[bullets]]
+text = "Hamiltonian Monte Carlo (HMC)"
+detail = "gradient-based sampler with explicit step size epsilon and leapfrog steps L; efficient for continuous parameters"
+
+[[bullets]]
+text = "Metropolis-Hastings"
+detail = "gradient-free random-walk MCMC; no gradient computation required; suitable for discrete or non-differentiable models"
+
+[[inputs]]
+id = "nuts-model"
+label = "Model Name"
+tooltip = "Name of the @model function to define."
+default = "my_model"
+models = ["nuts"]
+
+[[inputs]]
+id = "nuts-data"
+label = "Data Variable"
+tooltip = "Name of the observed data vector passed to the model."
+default = "y"
+models = ["nuts"]
+
+[[inputs]]
+id = "nuts-n"
+label = "Samples (n)"
+tooltip = "Number of MCMC draws per chain."
+default = "1000"
+models = ["nuts"]
+
+[[inputs]]
+id = "nuts-chains"
+label = "Chains"
+tooltip = "Number of chains sampled in parallel with MCMCThreads()."
+default = "4"
+models = ["nuts"]
+
+[[inputs]]
+id = "nuts-accept"
+label = "Target Acceptance"
+tooltip = "Target acceptance rate of the NUTS step-size adaptation."
+default = "0.65"
+models = ["nuts"]
+
+[[inputs]]
+id = "nuts-adapt"
+label = "Adaptation Steps"
+tooltip = "Number of warm-up steps used to adapt the step size."
+default = "500"
+models = ["nuts"]
+
+[[inputs]]
+id = "hmc-model"
+label = "Model Name"
+tooltip = "Name of the @model function to define."
+default = "my_model"
+models = ["hmc"]
+
+[[inputs]]
+id = "hmc-data"
+label = "Data Variable"
+tooltip = "Name of the observed data vector passed to the model."
+default = "y"
+models = ["hmc"]
+
+[[inputs]]
+id = "hmc-n"
+label = "Samples (n)"
+tooltip = "Number of MCMC draws per chain."
+default = "1000"
+models = ["hmc"]
+
+[[inputs]]
+id = "hmc-chains"
+label = "Chains"
+tooltip = "Number of chains sampled in parallel with MCMCThreads()."
+default = "4"
+models = ["hmc"]
+
+[[inputs]]
+id = "hmc-eps"
+label = "Step Size (epsilon)"
+tooltip = "Leapfrog integrator step size."
+default = "0.05"
+models = ["hmc"]
+
+[[inputs]]
+id = "hmc-L"
+label = "Leapfrog Steps (L)"
+tooltip = "Number of leapfrog steps per HMC proposal."
+default = "10"
+models = ["hmc"]
+
+[[inputs]]
+id = "mh-model"
+label = "Model Name"
+tooltip = "Name of the @model function to define."
+default = "my_model"
+models = ["mh"]
+
+[[inputs]]
+id = "mh-data"
+label = "Data Variable"
+tooltip = "Name of the observed data vector passed to the model."
+default = "y"
+models = ["mh"]
+
+[[inputs]]
+id = "mh-n"
+label = "Samples (n)"
+tooltip = "Number of MCMC draws per chain."
+default = "2000"
+models = ["mh"]
+
+[[inputs]]
+id = "mh-chains"
+label = "Chains"
+tooltip = "Number of chains sampled in parallel with MCMCThreads()."
+default = "4"
+models = ["mh"]
+
+[[codeBranches]]
+model = "nuts"
+code = '''
+using Turing, MCMCChains  # probabilistic programming and chain diagnostics
+
+@model function {{nuts-model}}({{nuts-data}})  # define probabilistic model — replace priors and likelihood as needed
+    mu    ~ Normal(0, 1)
+    sigma ~ Exponential(1)
+    {{nuts-data}} .~ Normal(mu, sigma)  # .~ broadcasts the scalar distribution element-wise over the vector; plain ~ would require a multivariate distribution
+end
+
+model = {{nuts-model}}({{nuts-data}})  # instantiate model with observed data
+
+chain = sample(model, NUTS({{nuts-adapt}}, {{nuts-accept}}), MCMCThreads(), {{nuts-n}}, {{nuts-chains}})  # NUTS: {{nuts-adapt}} adaptation steps, target acceptance {{nuts-accept}}, {{nuts-chains}} parallel chains
+summarystats(chain)  # mean, std, and R-hat convergence diagnostic per parameter
+'''
+
+[[codeBranches]]
+model = "hmc"
+code = '''
+using Turing, MCMCChains  # probabilistic programming and chain diagnostics
+
+@model function {{hmc-model}}({{hmc-data}})  # define probabilistic model — replace priors and likelihood as needed
+    mu    ~ Normal(0, 1)
+    sigma ~ Exponential(1)
+    {{hmc-data}} .~ Normal(mu, sigma)  # .~ broadcasts the scalar distribution element-wise over the vector; plain ~ would require a multivariate distribution
+end
+
+model = {{hmc-model}}({{hmc-data}})  # instantiate model with observed data
+
+chain = sample(model, HMC({{hmc-eps}}, {{hmc-L}}), MCMCThreads(), {{hmc-n}}, {{hmc-chains}})  # HMC: step size {{hmc-eps}}, {{hmc-L}} leapfrog steps, {{hmc-chains}} parallel chains
+summarystats(chain)  # mean, std, and R-hat convergence diagnostic per parameter
+'''
+
+[[codeBranches]]
+model = "mh"
+code = '''
+using Turing, MCMCChains  # probabilistic programming and chain diagnostics
+
+@model function {{mh-model}}({{mh-data}})  # define probabilistic model — replace priors and likelihood as needed
+    mu    ~ Normal(0, 1)
+    sigma ~ Exponential(1)
+    {{mh-data}} .~ Normal(mu, sigma)  # .~ broadcasts the scalar distribution element-wise over the vector; plain ~ would require a multivariate distribution
+end
+
+model = {{mh-model}}({{mh-data}})  # instantiate model with observed data
+
+chain = sample(model, MH(), MCMCThreads(), {{mh-n}}, {{mh-chains}})  # Metropolis-Hastings: gradient-free, {{mh-chains}} parallel chains
+summarystats(chain)  # mean, std, and R-hat convergence diagnostic per parameter
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "trace-plot"
+label = "Trace Plot"
+desc = "Plot sampled parameter values over MCMC iterations"
+code = '''
+using Plots  # plotting library
+
+plot(chain)  # trace plots for all parameters across all chains
+'''
+
+[[actionGroups.actions]]
+id = "density-plot"
+label = "Density Plot"
+desc = "Marginal posterior density for each parameter"
+code = '''
+using StatsPlots  # statistics and plotting
+
+density(chain)  # marginal posterior densities across all chains
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "rhat"
+label = "R-hat"
+desc = "Gelman-Rubin convergence diagnostic — values near 1.0 indicate convergence"
+code = '''
+using MCMCChains  # chain diagnostics
+
+summarystats(chain)  # R-hat in the last column — values above 1.01 indicate poor convergence
+'''
+
+[[actionGroups.actions]]
+id = "ess"
+label = "Effective Sample Size"
+desc = "Number of independent draws equivalent to the correlated chain"
+code = '''
+using MCMCChains  # chain diagnostics
+
+ess_rhat(chain)  # bulk and tail effective sample size per parameter
+'''
+
+[[actionGroups.actions]]
+id = "autocorr"
+label = "Autocorrelation"
+desc = "Within-chain autocorrelation — slow decay indicates poor mixing"
+code = '''
+using StatsPlots  # statistics and plotting
+
+autocorplot(chain)  # autocorrelation per parameter and chain — should decay quickly
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "prior-pred"
+label = "Prior Predictive"
+desc = "Sample from the prior without conditioning on data"
+code = '''
+using Turing  # probabilistic programming
+
+prior_chain = sample(model, Prior(), 1000)  # draw 1000 samples from the prior predictive distribution
+summarystats(prior_chain)  # inspect prior parameter ranges
+'''
+
+[[actionGroups.actions]]
+id = "post-pred"
+label = "Posterior Predictive"
+desc = "Generate new observations from the fitted posterior"
+code = '''
+using Turing  # probabilistic programming
+
+model_pred   = model | get_params(chain)  # condition model on posterior samples
+pred_chain   = predict(model_pred, chain)  # generate posterior predictive samples
+summarystats(pred_chain)  # inspect predicted observation distribution
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "compare-samplers"
+label = "Compare Samplers"
+desc = "Run NUTS and Metropolis-Hastings on the same model and compare ESS"
+code = '''
+using Turing, MCMCChains  # probabilistic programming and chain diagnostics
+
+chain_nuts = sample(model, NUTS(500, 0.65), 1000)  # No-U-Turn Sampler
+chain_mh   = sample(model, MH(), 2000)  # Metropolis-Hastings
+
+println("NUTS ESS: ", ess_rhat(chain_nuts))  # compare effective sample size
+println("MH ESS:   ", ess_rhat(chain_mh))  # compare effective sample size
+'''
+
+[[actionGroups.actions]]
+id = "prior-sensitivity"
+label = "Prior Sensitivity"
+desc = "Vary prior hyperparameters and compare posterior summaries"
+code = '''
+using Turing, MCMCChains  # probabilistic programming and chain diagnostics
+
+for sigma_prior in [0.5, 1.0, 2.0, 5.0]  # sweep prior standard deviation
+    @model function model_v(y)
+        mu    ~ Normal(0, sigma_prior)
+        sigma ~ Exponential(1)
+        y .~ Normal(mu, sigma)
+    end
+    c = sample(model_v(y), NUTS(), 500)  # sample with current prior
+    println("sigma_prior=", sigma_prior, " -> mu mean=", mean(c[:mu]))  # compare posterior means
+end
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "summary"
+label = "Summary Statistics"
+desc = "Mean, std, and quantiles per parameter across all chains"
+code = '''
+using MCMCChains  # chain diagnostics
+
+summarystats(chain)  # mean, std, naive SE, MCE, and quantiles
+quantile(chain)  # credible intervals: 2.5%, 25%, 50%, 75%, 97.5%
+'''
+
+[[actionGroups.actions]]
+id = "corner"
+label = "Parameter Correlations"
+desc = "Pairwise scatter plots of posterior samples"
+code = '''
+using StatsPlots  # statistics and plotting
+
+corner(chain)  # pairwise posterior scatter and marginal histograms
+'''

@@ -1,0 +1,599 @@
+# State Space Models Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/tssm.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "State Space Models"
+viewType = "pollis.tssm"
+defaultModel = "lg"
+
+[[packages]]
+name = "StateSpaceModels.jl"
+github = "https://github.com/LAMPSPUC/StateSpaceModels.jl"
+
+[[packages]]
+name = "LowLevelParticleFilters.jl"
+github = "https://github.com/baggepinnen/LowLevelParticleFilters.jl"
+
+[requires]
+packages = ["Plots.jl", "StatsBase.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Local Level Model"
+file = "tssm/tutorial-01-local-level.ipynb"
+bundled = true
+description = "Simulate a random walk plus noise using the Local Level model"
+
+[[notebookSections.notebooks]]
+name = "Local Linear Trend"
+file = "tssm/tutorial-02-local-linear-trend.ipynb"
+bundled = true
+description = "Simulate level and slope state with Gaussian noise"
+
+[[notebookSections.notebooks]]
+name = "Nonlinear SSM"
+file = "tssm/tutorial-03-nonlinear-ssm.ipynb"
+bundled = true
+description = "Define nonlinear dynamics and measurement, simulate, then filter with UKF or Particle Filter"
+
+[[notebookSections.notebooks]]
+name = "Custom System Matrices"
+file = "tssm/tutorial-04-custom-ssm.ipynb"
+bundled = true
+description = "User-defined T, Z, Q, H matrices and simulation"
+
+[[wikis]]
+name = "Factsheet"
+file = "tssm/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "tssm/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "tssm/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "tssm/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "tssm/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "tssm/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "State Space Models"
+
+[[wikis]]
+name = "Linear Gaussian"
+file = "tssm/linear-gaussian.md"
+bundled = true
+
+[[wikis]]
+name = "Nonlinear SSM"
+file = "tssm/nonlinear-ssm.md"
+bundled = true
+
+[[wikis]]
+name = "Custom SSM"
+file = "tssm/custom-ssm.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "StateSpaceModels.jl: A Julia Package for Time-Series Analysis in a State-Space Framework"
+authors = "Guilherme Bodin; Raphael Saavedra; Thuener Silva; Alexandre Street"
+year = 2021
+journal = "Journal of Open Source Software"
+doi = "10.21105/joss.02429"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Time Series Analysis by State Space Methods"
+authors = "Durbin, James; Koopman, Siem Jan"
+year = 2012
+journal = "Oxford University Press (2nd ed.)"
+doi = "10.1093/acprof:oso/9780199641178.001.0001"
+openAccess = false
+
+[[references]]
+title = "Forecasting, Structural Time Series Models and the Kalman Filter"
+authors = "Harvey, Andrew C."
+year = 1990
+journal = "Cambridge University Press"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "The Unscented Kalman Filter for Nonlinear Estimation"
+authors = "Wan, Eric A.; Van Der Merwe, Rudolph"
+year = 2000
+journal = "Proceedings of the IEEE Adaptive Systems for Signal Processing, Communications, and Control Symposium"
+doi = "10.1109/ASSPCC.2000.882463"
+openAccess = false
+
+[[references]]
+title = "Novel Approach to Nonlinear/Non-Gaussian Bayesian State Estimation"
+authors = "Gordon, Neil J.; Salmond, David J.; Smith, Adrian F. M."
+year = 1993
+journal = "IEE Proceedings F: Radar and Signal Processing"
+doi = "10.1049/ip-f-2.1993.0015"
+openAccess = false
+
+[[references]]
+title = "A New Approach to Linear Filtering and Prediction Problems"
+authors = "Kalman, Rudolf E."
+year = 1960
+journal = "Journal of Basic Engineering"
+doi = "10.1115/1.3662552"
+openAccess = false
+
+[[references]]
+title = "Maximum Likelihood Estimation of Misspecified Models"
+authors = "White, Halbert"
+year = 1982
+journal = "Econometrica"
+doi = "10.2307/1912526"
+openAccess = false
+
+[[models]]
+id = "lg"
+label = "Linear Gaussian"
+
+[[models]]
+id = "nl"
+label = "Nonlinear SSM"
+
+[[models]]
+id = "custom"
+label = "Custom SSM"
+
+[[bullets]]
+text = "Linear Gaussian"
+detail = "built-in LocalLevel and LocalLinearTrend models; exact Kalman recursion; fast closed-form simulation via StateSpaceModels.jl"
+
+[[bullets]]
+text = "Nonlinear SSM"
+detail = "user-defined dynamics and measurement functions; simulate synthetic data then filter with Unscented Kalman Filter or Particle Filter"
+
+[[bullets]]
+text = "Custom SSM"
+detail = "full control over system matrices T, Z, Q, H; any linear Gaussian structure not covered by built-in models"
+
+[[inputs]]
+id = "lg-model"
+label = "Model"
+tooltip = "Built-in StateSpaceModels.jl structure: Local Level (random-walk level) or Local Linear Trend (level plus random-walk slope)."
+kind = "select"
+default = "llt"
+models = ["lg"]
+
+[[inputs.options]]
+value = "ll"
+label = "Local Level"
+
+[[inputs.options]]
+value = "llt"
+label = "Local Linear Trend"
+
+[[inputs]]
+id = "lg-n"
+label = "Time Steps (n)"
+tooltip = "Number of time steps to simulate."
+default = "200"
+models = ["lg"]
+
+[[inputs]]
+id = "lg-sigma-lev"
+label = "Level Noise (sigma_1)"
+tooltip = "Standard deviation of the level disturbance."
+default = "0.1"
+models = ["lg"]
+
+[[inputs]]
+id = "lg-sigma-slp"
+label = "Slope Noise (sigma_2)"
+tooltip = "Standard deviation of the slope disturbance (Local Linear Trend only)."
+default = "0.05"
+models = ["lg"]
+when = "lg-model=llt"
+
+[[inputs]]
+id = "lg-sigma-obs"
+label = "Obs. Noise (sigma_eps)"
+tooltip = "Standard deviation of the observation noise."
+default = "0.2"
+models = ["lg"]
+
+[[inputs]]
+id = "lg-seed"
+label = "Seed"
+tooltip = "Random seed for reproducibility."
+default = "42"
+models = ["lg"]
+
+[[inputs]]
+id = "nl-dyn"
+label = "Dynamics f(x,u,p,t)"
+tooltip = "Julia expression for the state transition, returning a vector of length nx."
+default = "[x[1]+x[2], x[2]*0.5]"
+models = ["nl"]
+
+[[inputs]]
+id = "nl-meas"
+label = "Measurement h(x,u,p,t)"
+tooltip = "Julia expression for the measurement, returning a vector of length ny."
+default = "[sin(x[1])]"
+models = ["nl"]
+
+[[inputs]]
+id = "nl-filter"
+label = "Filter"
+tooltip = "LowLevelParticleFilters.jl filter used to simulate and then filter the data."
+kind = "select"
+default = "ukf"
+models = ["nl"]
+
+[[inputs.options]]
+value = "ukf"
+label = "Unscented Kalman Filter"
+
+[[inputs.options]]
+value = "pf"
+label = "Particle Filter"
+
+[[inputs]]
+id = "nl-nx"
+label = "State Dim (nx)"
+tooltip = "Dimension of the state vector."
+default = "2"
+models = ["nl"]
+newRow = true
+
+[[inputs]]
+id = "nl-ny"
+label = "Obs. Dim (ny)"
+tooltip = "Dimension of the observation vector."
+default = "1"
+models = ["nl"]
+
+[[inputs]]
+id = "nl-nu"
+label = "Input Dim (nu)"
+tooltip = "Dimension of the control input (0 for none)."
+default = "0"
+models = ["nl"]
+
+[[inputs]]
+id = "nl-N"
+label = "Particles (N)"
+tooltip = "Number of particles of the Particle Filter."
+default = "1000"
+models = ["nl"]
+when = "nl-filter=pf"
+
+[[inputs]]
+id = "nl-sigma-x"
+label = "Process Noise (sigma)"
+tooltip = "Standard deviation of the process noise."
+default = "0.1"
+models = ["nl"]
+
+[[inputs]]
+id = "nl-sigma-y"
+label = "Obs. Noise (sigma)"
+tooltip = "Standard deviation of the observation noise."
+default = "0.2"
+models = ["nl"]
+
+[[inputs]]
+id = "nl-n"
+label = "Time Steps (n)"
+tooltip = "Number of time steps to simulate."
+default = "100"
+models = ["nl"]
+
+[[inputs]]
+id = "nl-seed"
+label = "Seed"
+tooltip = "Random seed for reproducibility."
+default = "42"
+models = ["nl"]
+
+[[inputs]]
+id = "c-m"
+label = "State Dim (m)"
+tooltip = "Dimension of the state vector."
+default = "2"
+models = ["custom"]
+
+[[inputs]]
+id = "c-p"
+label = "Obs. Dim (p)"
+tooltip = "Dimension of the observation vector."
+default = "1"
+models = ["custom"]
+
+[[inputs]]
+id = "c-n"
+label = "Time Steps (n)"
+tooltip = "Number of time steps to simulate."
+default = "200"
+models = ["custom"]
+
+[[inputs]]
+id = "c-seed"
+label = "Seed"
+tooltip = "Random seed for reproducibility."
+default = "42"
+models = ["custom"]
+
+[[inputs]]
+id = "c-T"
+label = "T Matrix (m x m)"
+tooltip = "State transition matrix."
+default = "[1.0 1.0; 0.0 1.0]"
+models = ["custom"]
+newRow = true
+
+[[inputs]]
+id = "c-Z"
+label = "Z Matrix (p x m)"
+tooltip = "Measurement matrix."
+default = "[1.0 0.0]"
+models = ["custom"]
+
+[[inputs]]
+id = "c-Q"
+label = "Q Matrix (m x m)"
+tooltip = "Process noise covariance."
+default = "diagm([0.01, 0.001])"
+models = ["custom"]
+newRow = true
+
+[[inputs]]
+id = "c-H"
+label = "H Matrix (p x p)"
+tooltip = "Observation noise covariance."
+default = "[0.04]"
+models = ["custom"]
+
+[[codeBranches]]
+model = "lg"
+code = '''
+using StateSpaceModels, Random  # state-space models and random number generator
+Random.seed!({{lg-seed}})  # fix random seed for reproducibility
+
+n = {{lg-n}}  # number of time steps to simulate
+
+sigma_lev = {{lg-sigma-lev}}  # level disturbance std
+{{?lg-model=llt}} sigma_slp = {{lg-sigma-slp}}  # slope disturbance std
+sigma_obs = {{lg-sigma-obs}}  # observation noise std
+
+{{?lg-model=ll}} model = LocalLevel(zeros(n))  # y_t = mu_t + eps, mu_{t+1} = mu_t + eta
+{{?lg-model=ll}} update_hyperparameters!(model, [sigma_lev, sigma_obs])  # set noise parameters before simulation
+{{?lg-model=llt}} model = LocalLinearTrend(zeros(n))  # level + slope state; level_{t+1} = level_t + slope_t + eta1
+{{?lg-model=llt}} update_hyperparameters!(model, [sigma_lev, sigma_slp, sigma_obs])  # set level, slope, and obs noise
+
+y, alpha = simulate(model, n)  # simulate n observations and latent state path
+'''
+
+[[codeBranches]]
+model = "nl"
+code = '''
+using LowLevelParticleFilters, LinearAlgebra, Random  # particle and Kalman filters, matrix utilities, RNG
+Random.seed!({{nl-seed}})  # fix random seed for reproducibility
+
+nx, ny, nu = {{nl-nx}}, {{nl-ny}}, {{nl-nu}}  # state / observation / input dimensions
+
+{{?nl-filter=pf}} function dynamics(x, u, p, t, noise)  # stochastic state transition with additive noise
+{{?nl-filter=pf}}     {{nl-dyn}} .+ noise
+{{?nl-filter=ukf}} function dynamics(x, u, p, t)  # deterministic state transition function
+{{?nl-filter=ukf}}     {{nl-dyn}}
+end
+
+function measurement(x, u, p, t)  # nonlinear measurement function
+    {{nl-meas}}
+end
+
+{{?nl-filter=pf}} noise_dist = MvNormal(zeros(nx), {{nl-sigma-x}}^2 * I)  # process noise distribution
+{{?nl-filter=pf}} x0         = MvNormal(zeros(nx), I)  # initial state distribution
+{{?nl-filter=pf}}
+{{?nl-filter=pf}} pf       = ParticleFilter({{nl-N}}, dynamics, measurement, noise_dist, x0; ny)  # build Particle Filter with {{nl-N}} particles
+{{?nl-filter=pf}} sol_sim  = simulate(pf, {{nl-n}})  # simulate {{nl-n}} steps of synthetic data from the nonlinear SSM
+{{?nl-filter=pf}} sol_filt = forward_trajectory(pf, sol_sim.u, sol_sim.y)  # filter simulated observations with Particle Filter
+{{?nl-filter=ukf}} Q  = {{nl-sigma-x}}^2 * Matrix(I, nx, nx)  # process noise covariance
+{{?nl-filter=ukf}} R  = {{nl-sigma-y}}^2 * Matrix(I, ny, ny)  # observation noise covariance
+{{?nl-filter=ukf}} x0 = MvNormal(zeros(nx), I)  # initial state distribution
+{{?nl-filter=ukf}}
+{{?nl-filter=ukf}} ukf      = UnscentedKalmanFilter(dynamics, measurement, Q, R, x0; nu)  # build Unscented Kalman Filter (UKF)
+{{?nl-filter=ukf}} sol_sim  = simulate(ukf, {{nl-n}})  # simulate {{nl-n}} steps of synthetic data from the nonlinear SSM
+{{?nl-filter=ukf}} sol_filt = forward_trajectory(ukf, sol_sim.u, sol_sim.y)  # filter simulated observations with UKF
+'''
+
+[[codeBranches]]
+model = "custom"
+code = '''
+using StateSpaceModels, LinearAlgebra, Random  # SSM, matrix utilities, RNG
+Random.seed!({{c-seed}})  # fix random seed for reproducibility
+
+m, p = {{c-m}}, {{c-p}}  # state dimension, observation dimension
+n    = {{c-n}}  # number of time steps to simulate
+
+T_mat = {{c-T}}  # state transition matrix (m x m)
+Z_mat = {{c-Z}}  # measurement matrix (p x m)
+Q_mat = {{c-Q}}  # process noise covariance (m x m)
+H_mat = {{c-H}}  # observation noise covariance (p x p)
+a1    = zeros(m)  # initial state mean
+P1    = Matrix(I, m, m)  # initial state covariance
+
+sys      = LinearUnivariateTimeInvariant(T_mat, Z_mat, Q_mat, H_mat, a1, P1)  # build custom linear Gaussian SSM
+y, alpha = simulate(sys, n)  # simulate n observations and state path
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "plot-series"
+label = "Plot Simulated Series"
+desc = "Plot the simulated observation series y over time"
+code = '''
+using Plots  # plotting library
+
+plot(y, label="y", xlabel="t", ylabel="value")  # plot simulated observations
+'''
+
+[[actionGroups.actions]]
+id = "plot-state"
+label = "Plot State Path"
+desc = "Overlay latent state and noisy observations"
+code = '''
+using Plots  # plotting library
+
+plot(y,     label="observations", alpha=0.6)  # simulated noisy observations
+plot!(alpha, label="state path",   lw=2)  # latent state trajectory
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "acf"
+label = "Autocorrelation"
+desc = "Check ACF of observations for temporal structure"
+code = '''
+using StatsBase, Plots  # statistics and plotting
+
+lags  = 0:40  # lag range to inspect
+acf_y = autocor(y, collect(lags))  # compute autocorrelation of observations
+bar(lags, acf_y, xlabel="Lag", ylabel="ACF", label="")  # bar plot of ACF
+'''
+
+[[actionGroups.actions]]
+id = "histogram"
+label = "Distribution"
+desc = "Histogram of simulated observation values"
+code = '''
+using Plots  # plotting library
+
+histogram(y, bins=30, xlabel="value", ylabel="count", label="")  # empirical distribution of observations
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "extend"
+label = "Extend Forward"
+desc = "Simulate additional steps from the end of the current path"
+code = '''
+n_ahead = 50  # additional steps to simulate
+y_ext, alpha_ext = simulate(model, n_ahead)  # simulate forward from current model
+using Plots  # plotting library
+plot([y; y_ext], label="extended series")  # concatenate and plot original + extension
+'''
+
+[[actionGroups.actions]]
+id = "scenarios"
+label = "Multiple Scenarios"
+desc = "Generate K independent realisations from the same model"
+code = '''
+K = 10  # number of independent realisations
+scenarios = [simulate(model, n)[1] for _ in 1:K]  # simulate K independent observation paths
+using Plots  # plotting library
+plot(hcat(scenarios...), alpha=0.4, legend=false)  # overlay all K scenarios
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "snr"
+label = "Signal-to-Noise Ratio"
+desc = "Compute the ratio of state variance to observation noise variance"
+code = '''
+state_var = var(alpha)  # variance of the latent state path
+obs_var   = var(y .- alpha)  # variance of the observation noise
+snr       = state_var / obs_var  # signal-to-noise ratio
+println("SNR = ", round(snr, digits=3))  # print result
+'''
+
+[[actionGroups.actions]]
+id = "noise-sweep"
+label = "Noise Sensitivity"
+desc = "Vary observation noise and compare simulated paths"
+code = '''
+using Plots  # plotting library
+plot(title="Noise sensitivity")  # initialise plot
+for s in [0.05, 0.1, 0.2, 0.5]  # sweep over sigma_obs values
+    update_hyperparameters!(model, [sigma_lev, s])  # update observation noise
+    y_s, _ = simulate(model, n)  # simulate with current noise level
+    plot!(y_s, label="sigma=" * string(s), alpha=0.7)  # overlay on plot
+end
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "decompose"
+label = "Decompose Components"
+desc = "Separate trend, slope and noise contributions"
+code = '''
+using Plots  # plotting library
+
+noise = y .- alpha  # observation noise realisation
+plot(alpha, label="state (trend)")  # latent trend component
+plot(noise, label="observation noise")  # noise component
+'''
+
+[[actionGroups.actions]]
+id = "marginal-var"
+label = "Marginal Variance"
+desc = "Compute and print marginal variance of observations"
+code = '''
+sigma2_y = var(y)  # marginal variance of the simulated series
+sigma2_a = var(alpha)  # variance of the latent state
+println("Var(y) = ",     round(sigma2_y, digits=4))  # print obs variance
+println("Var(alpha) = ", round(sigma2_a, digits=4))  # print state variance
+'''
