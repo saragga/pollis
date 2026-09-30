@@ -207,8 +207,8 @@ models = ["paths", "inv"]
 [[inputs]]
 id = "threshold"
 label = "Threshold"
-tooltip = "Value of X at which each path is terminated. The first passage time is the time to reach this threshold from X0."
-default = "2.0"
+tooltip = "Value of X at which each path is terminated. The first passage time is the time to reach this threshold from X0. The default 0.0 is the long-run mean of the default Ornstein-Uhlenbeck process; a level far outside its stationary spread (sd 0.3) is almost never reached, and every path is then censored at the horizon."
+default = "0.0"
 models = ["fpt"]
 
 [[inputs]]
@@ -278,8 +278,10 @@ cb = ContinuousCallback(condition, affect!)  # callback that stops each path at 
 prob = SDEProblem(f, g, {{X0}}, (0.0, 1000.0))  # long horizon: paths terminate early via callback
 {{?solver=SRIW1|LambaEM}} ens  = solve(EnsembleProblem(prob), {{solver}}(), EnsembleThreads(), trajectories={{N}}, callback=cb)  # run ensemble with termination callback
 {{?solver!=SRIW1|LambaEM}} ens  = solve(EnsembleProblem(prob), {{solver}}(), EnsembleThreads(), trajectories={{N}}, callback=cb, dt={{dt}})  # run ensemble with termination callback
-fpt  = [sol.t[end] for sol in ens]  # collect first passage times
-println("Mean FPT: ", mean(fpt), "  Std: ", std(fpt))  # summary statistics
+hit  = [sol.t[end] < 1000.0 for sol in ens]  # paths stopped by the threshold; the others are censored at the horizon
+fpt  = [sol.t[end] for sol in ens][hit]  # first passage times of the paths that crossed
+println("Crossed: ", count(hit), " of ", length(hit), " paths")
+println("Mean FPT: ", mean(fpt), "  Std: ", std(fpt))  # summary statistics (conditional on crossing before the horizon)
 '''
 
 [[codeBranches]]
@@ -362,18 +364,20 @@ label = "Compare"
 [[actionGroups.actions]]
 id = "compare-noise"
 label = "Compare Noise Levels"
-desc = "Run ensembles with different diffusion strengths and compare mean paths"
+desc = "Run ensembles with different diffusion strengths and compare the spread of the paths (with a linear drift the mean path does not depend on the noise)"
 code = '''
 using StochasticDiffEq, Statistics, Plots  # compare ensembles with different noise levels
 
 f(X, p, t) = {{f}}  # shared drift
 t = range(0.0, {{T}}, length=200)  # time grid
+plt = plot(xlabel="t", ylabel="std of X(t)")
 for sigma in [0.1, 0.3, 0.6]  # sweep noise strengths
     g(X, p, t) = sigma
     ens = solve(EnsembleProblem(SDEProblem(f, g, {{X0}}, (0.0, {{T}}))), SRIW1(), EnsembleThreads(), trajectories={{N}})
-    mu  = [mean(s(ti) for s in ens) for ti in t]
-    plot!(t, mu, label="sigma=" * string(sigma))
+    sd  = [std(s(ti) for s in ens) for ti in t]  # spread across paths: this is what the noise level changes
+    plot!(plt, t, sd, label="sigma=" * string(sigma))
 end
+plt
 '''
 
 [[actionGroups]]
