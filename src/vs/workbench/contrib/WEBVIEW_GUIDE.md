@@ -2388,6 +2388,20 @@ The parser (`build/lib/toml-to-ts.ts`) supports the subset of TOML used by Polli
 
 **No third-party TOML library is used.** The parser depends only on Node built-ins.
 
+### 22.6 Extracting every code example
+
+```bash
+node build/pollis/extractCodeExamples.ts
+```
+
+The script parses every panel TOML with `parseToml` and renders, for every model, the default code and every Next Steps action with every input at its default. The rendering is a port of the panel's own template code (`inputRaw`, `holds`, `codeLine`, `applyInputsForModel` in `webviewScaffold.ts`), so the output is what the panel shows. It writes, into `.build/code-examples/` (gitignored, never committed):
+
+- `<panel>/<model>.jl`: the default code, then each action as a block headed `# --- <group> / <label> (<id>)` and its description;
+- `index.json`: one record per snippet (`panel`, `title`, `model`, `kind`, `group`, `actionId`, `label`, `desc`, `packages`, `code`, `lines`);
+- `SUMMARY.md`: totals (checked against 210 panels, 687 code branches, 2072 actions), counts per panel and the anomalies found: leftover placeholders, guards naming unknown inputs or values, select defaults that are not options, models without a branch and branches without a model, actions that render empty, Greek letters in code, `DataFrames`/`Zygote`, and possible postfix transposes.
+
+It changes no TOML and runs no Julia. Panels without a TOML file (`epi-ude` and the galleries) are not covered.
+
 ## 23. Package install-status indicator (Powered-by check / Install nudge)
 
 A small status indicator on the **"Powered by:"** line shows whether the webview's declared packages are installed in the active Julia environment: a **green check** when all are present, or a clickable **Install** icon when some are missing (which the user may ignore). Reference implementation: `yfin` (Yahoo Finance).
