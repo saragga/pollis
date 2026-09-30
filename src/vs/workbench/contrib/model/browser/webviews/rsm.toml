@@ -477,7 +477,8 @@ desc = "grid_search_msm searches regimes, intercept type, switching of each regr
 code = '''
 using MarSwitching
 {{?model=msar}} Xg = X[:, 2:end]
-{{?model!=msar}} Xg = {{xs}}  # regressors to test as switching or not
+{{?xs!=}} Xg = {{xs}}  # regressors to test as switching or not
+@isdefined(Xg) || error("grid_search_msm needs switching regressors: fill in Switching regressors, or use the Markov-switching AR model, whose lags serve as regressors")
 best, crit, space = grid_search_msm(yt, Xg, "AIC"; k=[2, 3], random_n=20, verbose=false)
 summary_msm(best)
 '''
