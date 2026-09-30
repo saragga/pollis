@@ -368,11 +368,11 @@ desc = "Count and inspect actual jump times from a realised path"
 code = '''
 using DifferentialEquations, JumpProcesses  # inspect jump events in a realised path
 
-f(X, p, t) = 0.0; g(X, p, t) = 0.1  # minimal drift/diffusion to isolate jumps
+f(X, p, t) = 0.0; g(X, p, t) = 0.0  # no drift or diffusion, so X(T) - X(0) counts the unit jumps exactly
 rate(X, p, t) = {{lambda}}; affect!(i) = (i.u += 1.0)  # unit jump for easy counting
 prob  = SDEProblem(f, g, {{X0}}, (0.0, {{T}}))  # base problem
 sol   = solve(JumpProblem(prob, Direct(), ConstantRateJump(rate, affect!)), EM(), dt=0.001)  # solve
-println("Jumps observed: ", sol.u[end] - {{X0}}, "  Expected: ", {{lambda}} * {{T}})  # compare observed vs expected jump count
+println("Jumps observed: ", sol.u[end] - {{X0}}, "  Expected: ", {{lambda}} * {{T}})  # one path: the count is Poisson, so +/- 2 sqrt(lambda T) around the expectation is normal
 '''
 
 [[actionGroups]]
