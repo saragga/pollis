@@ -579,14 +579,14 @@ when = "dist-truncated=Pareto"
 id = "lower"
 label = "Lower Bound"
 tooltip = "Left end of the support after truncation; -Inf for no lower bound."
-default = "-Inf"
+default = "-1.0"
 models = ["truncated"]
 
 [[inputs]]
 id = "upper"
 label = "Upper Bound"
 tooltip = "Right end of the support after truncation; Inf for no upper bound."
-default = "Inf"
+default = "2.0"
 models = ["truncated"]
 
 [[inputs]]
