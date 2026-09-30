@@ -29,6 +29,9 @@ github = "https://github.com/FluxML/Flux.jl"
 name = "Lux.jl"
 github = "https://github.com/LuxDL/Lux.jl"
 
+[requires]
+packages = ["Optimisers.jl", "Enzyme.jl", "Functors.jl", "Plots.jl"]
+
 [[notebookSections]]
 label = ""
 
@@ -470,7 +473,7 @@ ps, st = Lux.setup(rng, model)  # explicit parameters and state
 
 y_hat, st = model({{xvar}}, ps, st)  # {{xvar}}: (input_size, T, batch)
 {{?cell=OriginalLSTM|PeepholeLSTM|MGU|LiGRU|MinimalRNN|IndRNN|RAN|coRNN|FastGRNN}}
-{{?cell=OriginalLSTM|PeepholeLSTM|MGU|LiGRU|MinimalRNN|IndRNN|RAN|coRNN|FastGRNN}}using Optimisers, Zygote
+{{?cell=OriginalLSTM|PeepholeLSTM|MGU|LiGRU|MinimalRNN|IndRNN|RAN|coRNN|FastGRNN}}using Optimisers, Enzyme
 {{?cell=OriginalLSTM|PeepholeLSTM|MGU|LiGRU|MinimalRNN|IndRNN|RAN|coRNN|FastGRNN}}opt_state = Optimisers.setup(Adam(1f-3), ps)
 {{?cell=OriginalLSTM|PeepholeLSTM|MGU|LiGRU|MinimalRNN|IndRNN|RAN|coRNN|FastGRNN}}loss(model, ps, st, {{xvar}}, {{yvar}}) = Lux.MSELoss()(model, ps, st, ({{xvar}}, {{yvar}}))
 '''
@@ -524,8 +527,8 @@ desc = "Size of the loss gradient, to spot vanishing or exploding gradients"
 code = '''
 using Functors
 {{?model=flux}}grads = Flux.gradient(m -> Flux.mse(m[2](m[1]({{xvar}})[:, end]), {{yvar}}), (rnn, readout))[1]
-{{?model=lux}}using Zygote
-{{?model=lux}}grads = Zygote.gradient(p -> first(Lux.MSELoss()(model, p, st, ({{xvar}}, {{yvar}}))), ps)[1]
+{{?model=lux}}using Enzyme
+{{?model=lux}}grads = Enzyme.gradient(Reverse, (p, x, y) -> first(Lux.MSELoss()(model, p, st, (x, y))), ps, Const({{xvar}}), Const({{yvar}}))[1]
 norm2 = sum(g -> g isa AbstractArray ? sum(abs2, g) : 0.0, Functors.fleaves(grads))
 println("Gradient norm: ", sqrt(norm2))
 '''
@@ -604,8 +607,8 @@ desc = "Gradient of the prediction with respect to each input feature and time s
 code = '''
 using Plots
 {{?model=flux}}gx = Flux.gradient(x -> sum(predict(x)), {{xvar}})[1]
-{{?model=lux}}using Zygote
-{{?model=lux}}gx = Zygote.gradient(x -> sum(first(model(x, ps, st))), {{xvar}})[1][:, :, 1]
+{{?model=lux}}using Enzyme
+{{?model=lux}}gx = Enzyme.gradient(Reverse, x -> sum(first(model(x, ps, st))), {{xvar}})[1][:, :, 1]
 heatmap(abs.(gx), xlabel="time step", ylabel="input feature", title="Input sensitivity")
 '''
 
