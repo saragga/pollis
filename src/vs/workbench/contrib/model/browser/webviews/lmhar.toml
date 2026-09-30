@@ -1,0 +1,238 @@
+# Linear Models with Heteroskedasticity + AR(1) Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/lmhar.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Linear Models with Heteroskedasticity + AR(1)"
+viewType = "pollis.lmhar"
+defaultModel = "sequential"
+
+[[packages]]
+name = "HARE.jl"
+github = "https://github.com/Trumpingtons/HARE.jl"
+
+[requires]
+packages = ["HARE.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Sequential (Two-Step)"
+file = "lm-hjar/tutorial-01-seq-twostep.ipynb"
+bundled = true
+description = "Sequential two-step: correct AR(1) via Prais-Winsten, then correct heteroskedasticity via Harvey FGLS"
+
+[[notebookSections.notebooks]]
+name = "Sequential (Iterated)"
+file = "lm-hjar/tutorial-02-seq-iterated.ipynb"
+bundled = true
+description = "Iterated sequential: alternate between AR(1) and heteroskedasticity corrections until convergence"
+
+[[notebookSections.notebooks]]
+name = "Joint (Two-Step)"
+file = "lm-hjar/tutorial-03-joint-twostep.ipynb"
+bundled = true
+description = "Joint two-step: simultaneous MLE for beta, rho, and variance parameters"
+
+[[notebookSections.notebooks]]
+name = "Joint (Iterated)"
+file = "lm-hjar/tutorial-04-joint-iterated.ipynb"
+bundled = true
+description = "Iterated joint MLE: iterates the joint estimation until full convergence"
+
+[[wikis]]
+name = "Overview"
+file = "lm-hjar/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Factsheet"
+file = "lm-hjar/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "lm-hjar/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Sequential Method"
+file = "lm-hjar/sequential.md"
+bundled = true
+
+[[wikis]]
+name = "Joint Method"
+file = "lm-hjar/joint.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "lm-hjar/diagnostics.md"
+bundled = true
+
+[[models]]
+id = "sequential"
+label = "Sequential"
+
+[[models]]
+id = "joint"
+label = "Joint"
+
+[[bullets]]
+text = "Sequential"
+detail = "alternates between AR(1) correction (Prais-Winsten) and heteroskedasticity correction (Harvey FGLS); two-step or iterated (HARE.jl)"
+
+[[bullets]]
+text = "Joint"
+detail = "simultaneously estimates beta, rho, and variance parameters alpha via MLE; accepts optional separate variance regressors Z (HARE.jl)"
+
+[[inputs]]
+id = "X"
+label = "Covariate matrix (X)"
+tooltip = "Design matrix of mean-equation regressors (T × k). Include a column of ones for the intercept if needed."
+default = "X"
+
+[[inputs]]
+id = "y"
+label = "Response vector (y)"
+tooltip = "Column vector of the dependent variable observations (T × 1), ordered in time."
+default = "y"
+
+[[inputs]]
+id = "Z"
+label = "Variance regressors (Z) — optional"
+tooltip = "Optional matrix of variance-driving regressors (T × q). Leave blank to use X for the variance equation. Defaults to nothing."
+default = "nothing"
+
+[[inputs]]
+id = "method"
+label = "Method"
+tooltip = "Two-Step estimates the AR(1) and variance parameters once and then applies the corrections. Iterated repeats until beta, rho and the variance parameters converge jointly."
+kind = "select"
+default = "two_step"
+newRow = true
+
+[[inputs.options]]
+value = "two_step"
+label = "Two-Step"
+
+[[inputs.options]]
+value = "iterated"
+label = "Iterated"
+
+[[codeBranches]]
+model = "sequential"
+code = '''
+using HARE
+
+result = {{method}}_sequential({{X}}, {{y}})  # sequential two-step: AR(1) correction then heteroskedasticity correction
+
+println(coeftable(result))  # coefficient table with corrected standard errors
+println(coef(result))  # point estimates of beta
+println(result.rho)  # estimated AR(1) coefficient rho
+println(result.alpha)  # estimated variance parameters alpha
+'''
+
+[[codeBranches]]
+model = "joint"
+code = '''
+using HARE
+
+result = {{method}}_joint({{X}}, {{y}}, Z={{Z}})  # joint two-step: simultaneous MLE for beta, rho, and variance params
+
+println(coeftable(result))  # coefficient table with corrected standard errors
+println(coef(result))  # point estimates of beta
+println(result.rho)  # estimated AR(1) coefficient rho
+println(result.alpha)  # estimated variance parameters alpha
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "durbin-watson"
+label = "Durbin-Watson Test"
+desc = "Test for AR(1) autocorrelation in OLS residuals before applying the combined correction"
+code = '''
+using GLM, HypothesisTests
+
+ols   = lm({{X}}, {{y}})  # OLS baseline
+resid = residuals(ols)  # OLS residuals
+DurbinWatsonTest(resid)  # DW near 2 = no autocorrelation
+'''
+
+[[actionGroups.actions]]
+id = "harvey-test"
+label = "Harvey Test"
+desc = "Likelihood-ratio test for exponential heteroskedasticity in OLS residuals"
+code = '''
+using HARE
+
+harvey_test({{y}}, {{X}}, {{X}})  # LR test: H0 = homoskedasticity; Z defaults to X
+'''
+
+[[actionGroups.actions]]
+id = "residual-plot"
+label = "Residual Diagnostics"
+desc = "Plot OLS residuals over time (AR(1) pattern) and squared residuals vs fitted (heteroskedasticity pattern)"
+code = '''
+using GLM, Plots
+
+ols   = lm({{X}}, {{y}})  # OLS baseline
+resid = residuals(ols)  # OLS residuals
+fitt  = fitted(ols)  # fitted values
+
+plot(resid, title="Residuals over time")  # look for autocorrelation pattern
+scatter(fitt, resid .^ 2, title="Squared residuals vs fitted")  # fan shape = heteroskedasticity
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "rho-alpha"
+label = "Estimated rho and alpha"
+desc = "Extract the estimated AR(1) coefficient rho and variance parameters alpha from the result"
+code = '''
+using HARE
+
+{{?model=sequential}} result = {{method}}_sequential({{X}}, {{y}})
+{{?model=joint}} result = {{method}}_joint({{X}}, {{y}}, Z={{Z}})
+
+println("rho = ", result.rho)  # AR(1) coefficient
+println("alpha = ", result.alpha)  # variance parameters
+println("sigma2 = ", result.sigma2)  # baseline error variance
+'''
+
+[[actionGroups.actions]]
+id = "compare-ols"
+label = "Compare with OLS"
+desc = "Side-by-side comparison of OLS and FGLS coefficients and standard errors"
+code = '''
+using HARE, GLM
+
+ols_fit  = lm({{X}}, {{y}})  # OLS baseline
+{{?model=sequential}} fgls_fit = {{method}}_sequential({{X}}, {{y}})  # FGLS corrected
+{{?model=joint}} fgls_fit = {{method}}_joint({{X}}, {{y}}, Z={{Z}})  # FGLS corrected
+
+println("OLS:  ", coeftable(ols_fit))  # OLS coefficients
+println("FGLS: ", coeftable(fgls_fit))  # corrected coefficients
+'''
+
+[[actionGroups.actions]]
+id = "predict"
+label = "Predictions"
+desc = "Generate in-sample fitted values and out-of-sample predictions from the FGLS model"
+code = '''
+using HARE
+
+{{?model=sequential}} result = {{method}}_sequential({{X}}, {{y}})
+{{?model=joint}} result = {{method}}_joint({{X}}, {{y}}, Z={{Z}})
+
+y_hat = fitted(result)  # in-sample fitted values
+y_new = predict(result, X_new)  # out-of-sample predictions
+'''

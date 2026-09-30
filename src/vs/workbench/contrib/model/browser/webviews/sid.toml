@@ -1,0 +1,414 @@
+# Sampling from Intractable Distributions Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/sid.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Sampling from Intractable Distributions"
+viewType = "pollis.sid"
+defaultModel = "main"
+
+[[packages]]
+name = "Pigeons.jl"
+github = "https://github.com/Julia-Tempering/Pigeons.jl"
+
+[requires]
+packages = ["Pigeons.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Basics"
+file = "sid/tutorial-01-basics.ipynb"
+bundled = true
+description = "Introduction to Pigeons.jl: setup, custom log-potentials, and retrieving posterior samples"
+
+[[notebookSections.notebooks]]
+name = "Custom Targets"
+file = "sid/tutorial-02-custom-targets.ipynb"
+bundled = true
+description = "Defining custom target distributions for complex multimodal posteriors"
+
+[[notebookSections.notebooks]]
+name = "Diagnostics"
+file = "sid/tutorial-03-diagnostics.ipynb"
+bundled = true
+description = "PT swap rates, round-trip diagnostics, ESS, and normalising constant estimation"
+
+[[wikis]]
+name = "Factsheet"
+file = "sid/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "sid/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "sid/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "sid/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "sid/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "sid/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Algorithm Details"
+
+[[wikis]]
+name = "Parallel Tempering"
+file = "sid/parallel-tempering.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "Pigeons.jl: Distributed Sampling from Intractable Distributions"
+authors = "Surjanovic, Nikola; Biron-Lattes, Miguel; Tiede, Paul; Syed, Saifuddin; Campbell, Trevor; Bouchard-Cote, Alexandre"
+year = 2023
+journal = "arXiv preprint"
+doi = "10.48550/arXiv.2308.09769"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Monte Carlo Statistical Methods"
+authors = "Robert, Christian P.; Casella, George"
+year = 2004
+journal = "Springer (2nd ed.)"
+doi = "10.1007/978-1-4757-4145-2"
+openAccess = false
+
+[[references]]
+title = "Handbook of Markov Chain Monte Carlo"
+authors = "Brooks, Steve; Gelman, Andrew; Jones, Galin; Meng, Xiao-Li"
+year = 2011
+journal = "Chapman & Hall/CRC"
+doi = "10.1201/b10905"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Non-reversible parallel tempering: a scalable highly parallel MCMC scheme"
+authors = "Syed, Saifuddin; Bouchard-Cote, Alexandre; Deligiannidis, George; Doucet, Arnaud"
+year = 2022
+journal = "Journal of the Royal Statistical Society: Series B"
+doi = "10.1111/rssb.12464"
+openAccess = true
+
+[[references]]
+title = "Exchange Monte Carlo method and application to spin glass simulations"
+authors = "Hukushima, Koji; Nemoto, Koji"
+year = 1996
+journal = "Journal of the Physical Society of Japan"
+doi = "10.1143/JPSJ.65.1604"
+openAccess = false
+
+[[bullets]]
+text = "Parallel tempering - runs K chains at annealed temperatures from prior to target, enabling global mixing"
+detail = ""
+
+[[bullets]]
+text = "Designed for multimodal and high-dimensional posteriors that defeat standard single-chain MCMC"
+detail = ""
+
+[[bullets]]
+text = "Swap proposals between adjacent chains carry probability mass across the temperature ladder"
+detail = ""
+
+[[inputs]]
+id = "log-p"
+label = "Log-potential log p(x)"
+tooltip = "Julia expression for the log-density of the target (up to a constant). Use x[1], x[2], ... to index vector components. Example: -0.5 * sum(x .^ 2) for a standard Gaussian."
+default = "-0.5 * sum(x .^ 2)"
+
+[[inputs]]
+id = "d"
+label = "Dimension d"
+tooltip = "Number of dimensions of the target distribution. The initial state is drawn from a d-dimensional standard Gaussian."
+default = "2"
+
+[[inputs]]
+id = "n-rounds"
+label = "Rounds"
+tooltip = "Number of PT rounds. Each round doubles the number of samples. More rounds give better mixing and lower variance estimates. Typical range: 8 to 14."
+default = "10"
+
+[[inputs]]
+id = "n-chains"
+label = "Chains"
+tooltip = "Number of parallel chains (temperature ladder rungs). More chains improve swap acceptance and help with complex posteriors. Typical range: 4 to 20."
+default = "10"
+
+[[codeBranches]]
+model = "main"
+code = '''
+using Pigeons
+
+struct Target  # callable target struct
+    d::Int  # number of dimensions
+end
+
+function Pigeons.log_potential(target::Target, x)  # log-density of target
+    return {{log-p}}  # user-supplied expression
+end
+
+Pigeons.initialization(target::Target, rng, i) = randn(rng, target.d)  # initial state per chain
+
+pt = pigeons(  # run parallel tempering
+    target   = Target({{d}}),
+    n_rounds = {{n-rounds}},
+    n_chains = {{n-chains}},
+)
+
+samples = get_sample(pt)  # posterior draws from cold chain
+println("n_samples: ", length(samples))  # number of samples
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "trace-plot"
+label = "Trace Plot"
+desc = "Plot samples over index to assess mixing"
+code = '''
+using Pigeons, Plots
+
+struct Target; d::Int; end
+Pigeons.log_potential(t::Target, x) = {{log-p}}
+Pigeons.initialization(t::Target, rng, i) = randn(rng, t.d)
+
+pt = pigeons(target = Target({{d}}), n_rounds = {{n-rounds}}, n_chains = {{n-chains}})
+samples = get_sample(pt)  # posterior draws
+
+x1 = [s[1] for s in samples]  # first dimension
+plot(x1, xlabel = "Sample", ylabel = "x[1]", title = "Trace Plot", lw = 0.5)  # trace
+'''
+
+[[actionGroups.actions]]
+id = "marginal-hist"
+label = "Marginal Histogram"
+desc = "Histogram of each marginal dimension"
+code = '''
+using Pigeons, Plots
+
+struct Target; d::Int; end
+Pigeons.log_potential(t::Target, x) = {{log-p}}
+Pigeons.initialization(t::Target, rng, i) = randn(rng, t.d)
+
+pt      = pigeons(target = Target({{d}}), n_rounds = {{n-rounds}}, n_chains = {{n-chains}})
+samples = get_sample(pt)
+
+x1 = [s[1] for s in samples]  # first marginal
+histogram(x1, bins = 50, normalize = :pdf, xlabel = "x[1]", ylabel = "Density", title = "Marginal Histogram")  # normalised histogram
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "swap-rates"
+label = "Swap Acceptance"
+desc = "PT swap acceptance rates between adjacent chains"
+code = '''
+using Pigeons
+
+struct Target; d::Int; end
+Pigeons.log_potential(t::Target, x) = {{log-p}}
+Pigeons.initialization(t::Target, rng, i) = randn(rng, t.d)
+
+pt = pigeons(  # swap_acceptance_pr logged automatically
+    target   = Target({{d}}),
+    n_rounds = {{n-rounds}},
+    n_chains = {{n-chains}},
+    record   = [Pigeons.swap_acceptance_pr, Pigeons.round_trip],
+)
+
+println("Round trips: ", Pigeons.n_round_trips(pt))  # full traversals of temperature ladder
+'''
+
+[[actionGroups.actions]]
+id = "ess"
+label = "Effective Sample Size"
+desc = "ESS per dimension via StatsBase.jl"
+code = '''
+using Pigeons, StatsBase
+
+struct Target; d::Int; end
+Pigeons.log_potential(t::Target, x) = {{log-p}}
+Pigeons.initialization(t::Target, rng, i) = randn(rng, t.d)
+
+pt      = pigeons(target = Target({{d}}), n_rounds = {{n-rounds}}, n_chains = {{n-chains}})
+samples = get_sample(pt)
+
+for i in 1:{{d}}  # ESS per dimension
+    xi  = [s[i] for s in samples]
+    println("ESS[", i, "] = ", Int(round(ess(xi))))  # effective sample size
+end
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "posterior-mean"
+label = "Posterior Mean"
+desc = "Sample mean and variance per dimension"
+code = '''
+using Pigeons, Statistics
+
+struct Target; d::Int; end
+Pigeons.log_potential(t::Target, x) = {{log-p}}
+Pigeons.initialization(t::Target, rng, i) = randn(rng, t.d)
+
+pt      = pigeons(target = Target({{d}}), n_rounds = {{n-rounds}}, n_chains = {{n-chains}})
+samples = get_sample(pt)
+
+means = [mean([s[i] for s in samples]) for i in 1:{{d}}]  # posterior mean
+vars  = [var([s[i] for s in samples]) for i in 1:{{d}}]  # posterior variance
+println("Means:     ", means)  # per-dimension means
+println("Variances: ", vars)  # per-dimension variances
+'''
+
+[[actionGroups.actions]]
+id = "credible-intervals"
+label = "Credible Intervals"
+desc = "95% credible intervals per dimension"
+code = '''
+using Pigeons, Statistics
+
+struct Target; d::Int; end
+Pigeons.log_potential(t::Target, x) = {{log-p}}
+Pigeons.initialization(t::Target, rng, i) = randn(rng, t.d)
+
+pt      = pigeons(target = Target({{d}}), n_rounds = {{n-rounds}}, n_chains = {{n-chains}})
+samples = get_sample(pt)
+
+for i in 1:{{d}}  # 95% credible interval per dimension
+    xi       = [s[i] for s in samples]
+    lo, hi   = quantile(xi, [0.025, 0.975])
+    println("CI[", i, "]: [", round(lo, digits=4), ", ", round(hi, digits=4), "]")  # print interval
+end
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "n-chains-sweep"
+label = "Chain Count Sweep"
+desc = "Compare round-trip rates for different n_chains"
+code = '''
+using Pigeons, Printf
+
+struct Target; d::Int; end
+Pigeons.log_potential(t::Target, x) = {{log-p}}
+Pigeons.initialization(t::Target, rng, i) = randn(rng, t.d)
+
+for nc in [4, 8, 16]  # sweep number of chains
+    pt = pigeons(target = Target({{d}}), n_rounds = {{n-rounds}}, n_chains = nc,
+              record = [Pigeons.round_trip])
+    rt = Pigeons.n_round_trips(pt)  # round trips completed
+    @printf("n_chains=%-4d  round_trips=%d
+", nc, rt)  # print row
+end
+'''
+
+[[actionGroups.actions]]
+id = "rounds-sweep"
+label = "Rounds Sweep"
+desc = "Compare ESS vs number of rounds"
+code = '''
+using Pigeons, StatsBase, Printf
+
+struct Target; d::Int; end
+Pigeons.log_potential(t::Target, x) = {{log-p}}
+Pigeons.initialization(t::Target, rng, i) = randn(rng, t.d)
+
+for nr in [8, 10, 12]  # sweep number of rounds
+    pt      = pigeons(target = Target({{d}}), n_rounds = nr, n_chains = {{n-chains}})
+    samples = get_sample(pt)
+    x1      = [s[1] for s in samples]
+    @printf("n_rounds=%-4d  n=%d  ESS=%.0f
+", nr, length(x1), ess(x1))  # print row
+end
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "log-z"
+label = "Normalising Constant"
+desc = "Stepping-stone estimate of log Z"
+code = '''
+using Pigeons
+
+struct Target; d::Int; end
+Pigeons.log_potential(t::Target, x) = {{log-p}}
+Pigeons.initialization(t::Target, rng, i) = randn(rng, t.d)
+
+pt = pigeons(target = Target({{d}}), n_rounds = {{n-rounds}}, n_chains = {{n-chains}})
+
+log_Z = Pigeons.stepping_stone(pt)  # stepping-stone estimate
+println("log Z: ", log_Z)  # log normalising constant
+println("Z:     ", exp(log_Z))  # normalising constant
+'''
+
+[[actionGroups.actions]]
+id = "summary-stats"
+label = "Summary Statistics"
+desc = "Sample count, means, and round-trip rate"
+code = '''
+using Pigeons, Statistics
+
+struct Target; d::Int; end
+Pigeons.log_potential(t::Target, x) = {{log-p}}
+Pigeons.initialization(t::Target, rng, i) = randn(rng, t.d)
+
+pt      = pigeons(target = Target({{d}}), n_rounds = {{n-rounds}}, n_chains = {{n-chains}},
+              record = [Pigeons.round_trip])
+samples = get_sample(pt)
+
+println("Samples:      ", length(samples))  # number of posterior draws
+println("Dimension:    ", {{d}})  # target dimension
+println("Means:        ", [mean([s[i] for s in samples]) for i in 1:{{d}}])  # posterior mean
+println("Round trips:  ", Pigeons.n_round_trips(pt))  # PT efficiency
+'''

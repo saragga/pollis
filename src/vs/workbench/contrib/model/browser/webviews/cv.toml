@@ -1,0 +1,531 @@
+# Cross-Validation Strategies Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/cv.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Cross-Validation Strategies"
+viewType = "pollis.cv"
+defaultModel = "main"
+
+[[packages]]
+name = "DataSplits.jl"
+github = "https://github.com/davide-grheco/DataSplits.jl"
+
+[requires]
+packages = ["DataSplits.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "K-Fold CV"
+file = "cv/tutorial-01-kfold.ipynb"
+bundled = true
+description = "Standard k-fold cross-validation with DataSplits.jl KFold iterator"
+
+[[notebookSections.notebooks]]
+name = "Stratified K-Fold"
+file = "cv/tutorial-02-stratified.ipynb"
+bundled = true
+description = "Class-preserving folds with StratifiedKFold for imbalanced datasets"
+
+[[notebookSections.notebooks]]
+name = "Nested CV"
+file = "cv/tutorial-03-nested.ipynb"
+bundled = true
+description = "Outer evaluation loop + inner hyperparameter tuning loop with NestedCV"
+
+[[notebookSections.notebooks]]
+name = "Kennard-Stone"
+file = "cv/tutorial-04-kennardstone.ipynb"
+bundled = true
+description = "Space-filling train set selection with KennardStoneSplit for spectral and chemical data"
+
+[[notebookSections.notebooks]]
+name = "SPXY Split"
+file = "cv/tutorial-05-spxy.ipynb"
+bundled = true
+description = "Joint X/y space coverage with SPXYSplit for regression on continuous responses"
+
+[[notebookSections.notebooks]]
+name = "Time-Series Split"
+file = "cv/tutorial-06-timeseries.ipynb"
+bundled = true
+description = "Chronological expanding-window CV with TimeSeriesSplit"
+
+[[notebookSections.notebooks]]
+name = "Group K-Fold"
+file = "cv/tutorial-07-group.ipynb"
+bundled = true
+description = "Keep entire groups (patients, batches) intact across folds with GroupKFold"
+
+[[wikis]]
+name = "Factsheet"
+file = "cv/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "cv/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "cv/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "cv/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "cv/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "cv/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Strategies"
+
+[[wikis]]
+name = "Cross-Validation"
+file = "cv/cross-validation.md"
+bundled = true
+
+[[wikis]]
+name = "Distance-Based"
+file = "cv/distance-based.md"
+bundled = true
+
+[[wikis]]
+name = "Group-Aware"
+file = "cv/group-aware.md"
+bundled = true
+
+[[wikis]]
+name = "Time-Series"
+file = "cv/time-series.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "DataSplits.jl: Resampling Strategies for Machine Learning"
+authors = "Grheco, Davide"
+year = 2024
+journal = "GitHub"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "The Elements of Statistical Learning"
+authors = "Hastie, Trevor; Tibshirani, Robert; Friedman, Jerome"
+year = 2009
+journal = "Springer (2nd ed.)"
+openAccess = true
+
+[[references]]
+title = "Pattern Recognition and Machine Learning"
+authors = "Bishop, Christopher M."
+year = 2006
+journal = "Springer"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "A Study of Cross-Validation and Bootstrap for Accuracy Estimation and Model Selection"
+authors = "Kohavi, Ron"
+year = 1995
+journal = "IJCAI"
+openAccess = true
+
+[[references]]
+title = "Sample Selection via Kennard-Stone Algorithm"
+authors = "Kennard, R. W.; Stone, L. A."
+year = 1969
+journal = "Technometrics"
+doi = "10.1080/00401706.1969.10490666"
+openAccess = false
+
+[[references]]
+title = "Combinatorial Framework for Leave-One-Out Cross-Validation"
+authors = "Arlot, Sylvain; Celisse, Alain"
+year = 2010
+journal = "Statistics Surveys"
+doi = "10.1214/09-SS054"
+openAccess = true
+
+[[bullets]]
+text = "Cross-validation strategies"
+detail = "KFold and all its stratified, group-aware, and time-series variants — for model evaluation and hyperparameter tuning"
+
+[[bullets]]
+text = "Distance-based strategies"
+detail = "Kennard–Stone, SPXY, MDKS, OptiSim, Minimum and Maximum Dissimilarity — for small-to-medium datasets where training-set coverage of the feature space matters"
+
+[[bullets]]
+text = "Group-aware strategies"
+detail = "split or fold data while keeping entire groups intact"
+
+[[bullets]]
+text = "Time-series strategies"
+detail = "chronological train/test and cross-validation that respect temporal order"
+
+[[decisionRows]]
+task = "Small dataset, continuous features"
+context = ""
+purpose = "KennardStoneSplit or SPXYSplit"
+
+[[decisionRows]]
+task = "Large dataset, memory constrained"
+context = ""
+purpose = "LazyKennardStoneSplit, LazyOptiSimSplit"
+
+[[decisionRows]]
+task = "Observations belong to groups (patients, scaffolds, batches)"
+context = ""
+purpose = "GroupShuffleSplit / GroupKFold"
+
+[[decisionRows]]
+task = "Time-ordered data"
+context = ""
+purpose = "TimeSeriesSplit for CV, TimeSplit for a single split"
+
+[[decisionRows]]
+task = "Financial / autocorrelated time series"
+context = ""
+purpose = "BlockedCV or PurgedKFold"
+
+[[decisionRows]]
+task = "Balanced class distribution across folds"
+context = ""
+purpose = "StratifiedKFold"
+
+[[decisionRows]]
+task = "Hyperparameter tuning + unbiased evaluation"
+context = ""
+purpose = "NestedCV"
+
+[[decisionRows]]
+task = "Large i.i.d. dataset, need many resamples"
+context = ""
+purpose = "ShuffleSplit or BootstrapSplit"
+
+[[decisionRows]]
+task = "Need a reproducible random baseline"
+context = ""
+purpose = "RandomSplit"
+
+[[inputs]]
+id = "strategy"
+label = "Strategy"
+tooltip = "The resampling strategy. Controls how data is partitioned into training and test sets across folds or splits."
+kind = "select"
+default = "KFold"
+
+[[inputs.options]]
+value = "KFold"
+label = "KFold"
+
+[[inputs.options]]
+value = "StratifiedKFold"
+label = "StratifiedKFold"
+
+[[inputs.options]]
+value = "GroupKFold"
+label = "GroupKFold"
+
+[[inputs.options]]
+value = "RepeatedKFold"
+label = "RepeatedKFold"
+
+[[inputs.options]]
+value = "LeaveOneOut"
+label = "LeaveOneOut"
+
+[[inputs.options]]
+value = "LeavePOut"
+label = "LeavePOut"
+
+[[inputs.options]]
+value = "NestedCV"
+label = "NestedCV"
+
+[[inputs.options]]
+value = "RandomSplit"
+label = "RandomSplit"
+
+[[inputs.options]]
+value = "ShuffleSplit"
+label = "ShuffleSplit"
+
+[[inputs.options]]
+value = "BootstrapSplit"
+label = "BootstrapSplit"
+
+[[inputs.options]]
+value = "StratifiedShuffleSplit"
+label = "StratifiedShuffleSplit"
+
+[[inputs.options]]
+value = "GroupShuffleSplit"
+label = "GroupShuffleSplit"
+
+[[inputs.options]]
+value = "KennardStoneSplit"
+label = "KennardStoneSplit"
+
+[[inputs.options]]
+value = "LazyKennardStoneSplit"
+label = "LazyKennardStoneSplit"
+
+[[inputs.options]]
+value = "SPXYSplit"
+label = "SPXYSplit"
+
+[[inputs.options]]
+value = "MDKSSplit"
+label = "MDKSSplit"
+
+[[inputs.options]]
+value = "OptiSimSplit"
+label = "OptiSimSplit"
+
+[[inputs.options]]
+value = "LazyOptiSimSplit"
+label = "LazyOptiSimSplit"
+
+[[inputs.options]]
+value = "MinDissimilaritySplit"
+label = "MinDissimilaritySplit"
+
+[[inputs.options]]
+value = "MaxDissimilaritySplit"
+label = "MaxDissimilaritySplit"
+
+[[inputs.options]]
+value = "TimeSeriesSplit"
+label = "TimeSeriesSplit"
+
+[[inputs.options]]
+value = "TimeSplit"
+label = "TimeSplit"
+
+[[inputs.options]]
+value = "BlockedCV"
+label = "BlockedCV"
+
+[[inputs.options]]
+value = "PurgedKFold"
+label = "PurgedKFold"
+
+[[inputs]]
+id = "n"
+label = "n"
+tooltip = "Number of observations in the dataset."
+default = "100"
+
+[[inputs]]
+id = "k"
+label = "k"
+tooltip = "Number of folds (for k-fold strategies)."
+default = "5"
+
+[[inputs]]
+id = "seed"
+label = "Seed"
+tooltip = "Random seed for reproducibility."
+default = "42"
+
+[[codeBranches]]
+model = "main"
+code = '''
+using DataSplits  # resampling strategies
+
+X = rand({{n}}, 4)  # n x p feature matrix
+y = rand({{n}})  # response vector
+
+{{?strategy=NestedCV}} inner = KFold({{k}})  # inner loop: hyperparameter tuning
+{{?strategy=NestedCV}} outer = KFold({{k}})  # outer loop: performance evaluation
+{{?strategy=NestedCV}} cv = NestedCV(inner, outer)  # nested cross-validation
+{{?strategy=LeaveOneOut}} cv = LeaveOneOut()  # n folds, each with one test sample
+{{?strategy=LeavePOut}} cv = LeavePOut(p=2)  # leave-p-out: C(n,p) test sets
+{{?strategy=TimeSplit}} cv = TimeSplit(train_ratio=0.8)  # single chronological split
+{{?strategy=BlockedCV}} cv = BlockedCV({{k}})  # blocked CV respecting temporal order
+{{?strategy=PurgedKFold}} cv = PurgedKFold({{k}}, embargo=0.01)  # purged + embargo gap for financial series
+{{?strategy=TimeSeriesSplit}} cv = TimeSeriesSplit({{k}})  # expanding-window time-series CV
+{{?strategy=KennardStoneSplit|LazyKennardStoneSplit|SPXYSplit|MDKSSplit|OptiSimSplit|LazyOptiSimSplit|MinDissimilaritySplit|MaxDissimilaritySplit}} cv = {{strategy}}(train_ratio=0.8)  # distance-based; no random seed needed
+{{?strategy=RandomSplit|ShuffleSplit|BootstrapSplit|StratifiedShuffleSplit|GroupShuffleSplit}} cv = {{strategy}}(rng=MersenneTwister({{seed}}))  # random split, seed {{seed}}
+{{?strategy=KFold|StratifiedKFold|GroupKFold|RepeatedKFold}} cv = {{strategy}}({{k}}, rng=MersenneTwister({{seed}}))  # {{k}} folds, seed {{seed}}
+
+for (train_idx, test_idx) in splits(cv, X, y)  # iterate folds
+    X_train, X_test = X[train_idx, :], X[test_idx, :]
+    y_train, y_test = y[train_idx],    y[test_idx]
+    println("train: ", length(train_idx), "  test: ", length(test_idx))  # fold sizes
+end
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "fold-sizes"
+label = "Fold Sizes"
+desc = "Bar chart of train and test sizes across folds"
+code = '''
+using DataSplits, Plots  # resampling + Plots
+
+X = rand({{n}}, 4); y = rand({{n}})  # dummy data
+cv = {{strategy}}({{k}}, rng=MersenneTwister({{seed}}))  # strategy
+
+train_sz, test_sz = Int[], Int[]
+for (tr, te) in splits(cv, X, y)  # iterate folds
+    push!(train_sz, length(tr)); push!(test_sz, length(te))
+end
+
+groupedbar([train_sz test_sz]; label=["Train" "Test"], xlabel="Fold", ylabel="n")  # grouped bar chart
+'''
+
+[[actionGroups.actions]]
+id = "feature-coverage"
+label = "Feature Coverage"
+desc = "Scatter of train vs test samples in 2D to inspect space coverage"
+code = '''
+using DataSplits, Plots  # resampling + Plots
+
+X = rand({{n}}, 2)  # 2-D feature matrix for visualisation
+y = rand({{n}})  # response
+cv = {{strategy}}({{k}}, rng=MersenneTwister({{seed}}))  # strategy
+
+tr, te = first(splits(cv, X, y))  # first fold only
+scatter(X[tr,1], X[tr,2]; label="Train", alpha=0.6)
+scatter!(X[te,1], X[te,2]; label="Test", alpha=0.9, marker=:diamond)  # overlay test set
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "class-balance"
+label = "Class Balance"
+desc = "Check class proportions in each fold to detect imbalance"
+code = '''
+using DataSplits, StatsBase  # resampling + StatsBase
+
+y = rand(["A","B"], {{n}})  # binary labels
+cv = {{strategy}}({{k}}, rng=MersenneTwister({{seed}}))  # strategy
+
+for (i, (tr, _)) in enumerate(splits(cv, y, y))  # iterate folds
+    println("Fold $i: ", countmap(y[tr]))
+end
+'''
+
+[[actionGroups.actions]]
+id = "leakage-check"
+label = "Leakage Check"
+desc = "Verify train and test index sets are disjoint in every fold"
+code = '''
+using DataSplits  # resampling
+
+X = rand({{n}}, 4); y = rand({{n}})  # dummy data
+cv = {{strategy}}({{k}}, rng=MersenneTwister({{seed}}))  # strategy
+
+for (i, (tr, te)) in enumerate(splits(cv, X, y))  # each fold
+    @assert isempty(intersect(tr, te)) "Fold $i: data leakage!"  # should never fire
+end
+println("No leakage detected.")  # all folds clean
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "cv-score"
+label = "CV Score"
+desc = "Compute mean and std of a metric across all folds"
+code = '''
+using DataSplits, Statistics  # resampling + Statistics
+
+X = rand({{n}}, 4); y = rand({{n}})  # dummy data
+cv = {{strategy}}({{k}}, rng=MersenneTwister({{seed}}))  # strategy
+
+scores = Float64[]
+for (tr, te) in splits(cv, X, y)  # iterate folds
+    score = my_model_eval(X[tr,:], y[tr], X[te,:], y[te])  # user-defined metric function
+    push!(scores, score)
+end
+
+println("CV mean: ", mean(scores), "  std: ", std(scores))  # summary statistics
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "compare-strategies"
+label = "Compare Strategies"
+desc = "Run the same model under two strategies and compare score distributions"
+code = '''
+using DataSplits, Statistics  # resampling + Statistics
+
+X = rand({{n}}, 4); y = rand({{n}})  # dummy data
+cv_a = KFold({{k}}, rng=MersenneTwister({{seed}}))  # strategy A: k-fold
+cv_b = ShuffleSplit(rng=MersenneTwister({{seed}}))  # strategy B: shuffle split
+
+function cv_scores(cv)
+    [my_model_eval(X[tr,:], y[tr], X[te,:], y[te]) for (tr, te) in splits(cv, X, y)]
+end
+
+println("KFold:        mean=", mean(cv_scores(cv_a)))  # A results
+println("ShuffleSplit: mean=", mean(cv_scores(cv_b)))  # B results
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "optimism"
+label = "Optimism Bias"
+desc = "Estimate training-set optimism: in-sample minus out-of-sample score"
+code = '''
+using DataSplits, Statistics  # resampling + Statistics
+
+X = rand({{n}}, 4); y = rand({{n}})  # dummy data
+cv = {{strategy}}({{k}}, rng=MersenneTwister({{seed}}))  # strategy
+
+in_s, out_s = Float64[], Float64[]
+for (tr, te) in splits(cv, X, y)  # each fold
+    push!(in_s,  my_model_eval(X[tr,:], y[tr], X[tr,:], y[tr]))
+    push!(out_s, my_model_eval(X[tr,:], y[tr], X[te,:], y[te]))
+end
+
+println("Optimism: ", mean(in_s) - mean(out_s))  # positive = overfitting
+'''

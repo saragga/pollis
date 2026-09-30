@@ -1,0 +1,920 @@
+# Distribution Sampling Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/distSampling.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Distribution Sampling"
+viewType = "pollis.dist.sampling"
+defaultModel = "discrete"
+
+[[packages]]
+name = "Distributions.jl"
+github = "https://github.com/JuliaStats/Distributions.jl"
+
+[requires]
+packages = ["Distributions.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Univariate Distributions (Jupyter)"
+file = "dist/tutorial-01-univariate.ipynb"
+bundled = true
+description = "Working with discrete and continuous univariate distributions"
+
+[[notebookSections.notebooks]]
+name = "Univariate Distributions (Pluto)"
+file = "dist/tutorial-01-univariate.jl"
+bundled = true
+description = "Reactive Pluto notebook — discrete and continuous univariate distributions"
+
+[[notebookSections.notebooks]]
+name = "Truncated and Censored"
+file = "dist/tutorial-02-truncated-censored.ipynb"
+bundled = true
+description = "Constraining distributions with bounds"
+
+[[notebookSections.notebooks]]
+name = "Multivariate Distributions"
+file = "dist/tutorial-03-multivariate.ipynb"
+bundled = true
+description = "Vector-valued distributions including MvNormal and Dirichlet"
+
+[[notebookSections.notebooks]]
+name = "Mixture and Composite"
+file = "dist/tutorial-04-mixture-composite.ipynb"
+bundled = true
+description = "Mixture models, product distributions, and convolutions"
+
+[[wikis]]
+name = "Overview"
+file = "dist/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Factsheet"
+file = "dist/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "dist/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "dist/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "dist/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "dist/decision-guide.md"
+bundled = true
+
+[[wikis]]
+name = "Pollis vs Crystal Ball"
+file = "dist/pollis-vs-crystalball.md"
+bundled = true
+
+[[models]]
+id = "discrete"
+label = "Discrete"
+
+[[models]]
+id = "continuous"
+label = "Continuous"
+
+[[models]]
+id = "truncated"
+label = "Truncated"
+
+[[models]]
+id = "multivariate"
+label = "Multivariate"
+
+[[models]]
+id = "matrixvariate"
+label = "Matrix-Variate"
+
+[[models]]
+id = "mixture"
+label = "Mixture"
+
+[[models]]
+id = "product"
+label = "Product"
+
+[[models]]
+id = "convolutions"
+label = "Convolutions"
+
+[[bullets]]
+text = "Discrete"
+detail = "integer-valued distributions (Binomial, Poisson, Geometric, …)"
+
+[[bullets]]
+text = "Continuous"
+detail = "real-valued distributions (Normal, Gamma, Beta, Weibull, …)"
+
+[[bullets]]
+text = "Truncated"
+detail = "base distribution constrained to a bounded interval"
+
+[[bullets]]
+text = "Multivariate"
+detail = "vector-valued distributions (MvNormal, Dirichlet, Multinomial)"
+
+[[bullets]]
+text = "Matrix-Variate"
+detail = "matrix-valued distributions (Wishart, MatrixNormal, …)"
+
+[[bullets]]
+text = "Mixture Models, Product Distributions, Convolutions"
+detail = ""
+
+[[inputs]]
+id = "dist-discrete"
+label = "Distribution"
+tooltip = ""
+kind = "select"
+default = "Bernoulli"
+models = ["discrete"]
+
+[[inputs.options]]
+value = "Bernoulli"
+label = "Bernoulli"
+
+[[inputs.options]]
+value = "Binomial"
+label = "Binomial"
+
+[[inputs.options]]
+value = "Poisson"
+label = "Poisson"
+
+[[inputs.options]]
+value = "Geometric"
+label = "Geometric"
+
+[[inputs.options]]
+value = "NegativeBinomial"
+label = "NegativeBinomial"
+
+[[inputs.options]]
+value = "DiscreteUniform"
+label = "DiscreteUniform"
+
+[[inputs.options]]
+value = "Hypergeometric"
+label = "Hypergeometric"
+
+[[inputs.options]]
+value = "Categorical"
+label = "Categorical"
+
+[[inputs]]
+id = "discrete-Bernoulli"
+label = "Parameters (p)"
+tooltip = "Comma-separated."
+default = "0.5"
+models = ["discrete"]
+when = "dist-discrete=Bernoulli"
+
+[[inputs]]
+id = "discrete-Binomial"
+label = "Parameters (n, p)"
+tooltip = "Comma-separated."
+default = "10, 0.5"
+models = ["discrete"]
+when = "dist-discrete=Binomial"
+
+[[inputs]]
+id = "discrete-Poisson"
+label = "Parameters (lambda)"
+tooltip = "Comma-separated."
+default = "1.0"
+models = ["discrete"]
+when = "dist-discrete=Poisson"
+
+[[inputs]]
+id = "discrete-Geometric"
+label = "Parameters (p)"
+tooltip = "Comma-separated."
+default = "0.5"
+models = ["discrete"]
+when = "dist-discrete=Geometric"
+
+[[inputs]]
+id = "discrete-NegativeBinomial"
+label = "Parameters (r, p)"
+tooltip = "Comma-separated."
+default = "5, 0.5"
+models = ["discrete"]
+when = "dist-discrete=NegativeBinomial"
+
+[[inputs]]
+id = "discrete-DiscreteUniform"
+label = "Parameters (a, b)"
+tooltip = "Comma-separated."
+default = "1, 10"
+models = ["discrete"]
+when = "dist-discrete=DiscreteUniform"
+
+[[inputs]]
+id = "discrete-Hypergeometric"
+label = "Parameters (S, f, n)"
+tooltip = "Comma-separated."
+default = "10, 10, 5"
+models = ["discrete"]
+when = "dist-discrete=Hypergeometric"
+
+[[inputs]]
+id = "discrete-Categorical"
+label = "Parameters (p)"
+tooltip = "Comma-separated."
+default = "[0.2, 0.3, 0.5]"
+models = ["discrete"]
+when = "dist-discrete=Categorical"
+
+[[inputs]]
+id = "dist-continuous"
+label = "Distribution"
+tooltip = ""
+kind = "select"
+default = "Normal"
+models = ["continuous"]
+
+[[inputs.options]]
+value = "Normal"
+label = "Normal"
+
+[[inputs.options]]
+value = "Uniform"
+label = "Uniform"
+
+[[inputs.options]]
+value = "Exponential"
+label = "Exponential"
+
+[[inputs.options]]
+value = "Gamma"
+label = "Gamma"
+
+[[inputs.options]]
+value = "Beta"
+label = "Beta"
+
+[[inputs.options]]
+value = "LogNormal"
+label = "LogNormal"
+
+[[inputs.options]]
+value = "Cauchy"
+label = "Cauchy"
+
+[[inputs.options]]
+value = "Laplace"
+label = "Laplace"
+
+[[inputs.options]]
+value = "Logistic"
+label = "Logistic"
+
+[[inputs.options]]
+value = "TDist"
+label = "TDist"
+
+[[inputs.options]]
+value = "Chisq"
+label = "Chisq"
+
+[[inputs.options]]
+value = "Weibull"
+label = "Weibull"
+
+[[inputs.options]]
+value = "Gumbel"
+label = "Gumbel"
+
+[[inputs.options]]
+value = "Pareto"
+label = "Pareto"
+
+[[inputs.options]]
+value = "Triangular"
+label = "Triangular"
+
+[[inputs.options]]
+value = "InverseGaussian"
+label = "InverseGaussian"
+
+[[inputs.options]]
+value = "Epanechnikov"
+label = "Epanechnikov"
+
+[[inputs.options]]
+value = "GeneralizedExtremeValue"
+label = "GeneralizedExtremeValue"
+
+[[inputs.options]]
+value = "GeneralizedPareto"
+label = "GeneralizedPareto"
+
+[[inputs.options]]
+value = "Levy"
+label = "Levy"
+
+[[inputs.options]]
+value = "SkewNormal"
+label = "SkewNormal"
+
+[[inputs]]
+id = "continuous-Normal"
+label = "Parameters (mu, sigma)"
+tooltip = "Comma-separated."
+default = "0.0, 1.0"
+models = ["continuous"]
+when = "dist-continuous=Normal"
+
+[[inputs]]
+id = "continuous-Uniform"
+label = "Parameters (a, b)"
+tooltip = "Comma-separated."
+default = "0.0, 1.0"
+models = ["continuous"]
+when = "dist-continuous=Uniform"
+
+[[inputs]]
+id = "continuous-Exponential"
+label = "Parameters (theta)"
+tooltip = "Comma-separated."
+default = "1.0"
+models = ["continuous"]
+when = "dist-continuous=Exponential"
+
+[[inputs]]
+id = "continuous-Gamma"
+label = "Parameters (alpha, theta)"
+tooltip = "Comma-separated."
+default = "2.0, 1.0"
+models = ["continuous"]
+when = "dist-continuous=Gamma"
+
+[[inputs]]
+id = "continuous-Beta"
+label = "Parameters (alpha, beta)"
+tooltip = "Comma-separated."
+default = "2.0, 5.0"
+models = ["continuous"]
+when = "dist-continuous=Beta"
+
+[[inputs]]
+id = "continuous-LogNormal"
+label = "Parameters (mu, sigma)"
+tooltip = "Comma-separated."
+default = "0.0, 1.0"
+models = ["continuous"]
+when = "dist-continuous=LogNormal"
+
+[[inputs]]
+id = "continuous-Cauchy"
+label = "Parameters (mu, sigma)"
+tooltip = "Comma-separated."
+default = "0.0, 1.0"
+models = ["continuous"]
+when = "dist-continuous=Cauchy"
+
+[[inputs]]
+id = "continuous-Laplace"
+label = "Parameters (mu, b)"
+tooltip = "Comma-separated."
+default = "0.0, 1.0"
+models = ["continuous"]
+when = "dist-continuous=Laplace"
+
+[[inputs]]
+id = "continuous-Logistic"
+label = "Parameters (mu, theta)"
+tooltip = "Comma-separated."
+default = "0.0, 1.0"
+models = ["continuous"]
+when = "dist-continuous=Logistic"
+
+[[inputs]]
+id = "continuous-TDist"
+label = "Parameters (nu)"
+tooltip = "Comma-separated."
+default = "5.0"
+models = ["continuous"]
+when = "dist-continuous=TDist"
+
+[[inputs]]
+id = "continuous-Chisq"
+label = "Parameters (k)"
+tooltip = "Comma-separated."
+default = "3"
+models = ["continuous"]
+when = "dist-continuous=Chisq"
+
+[[inputs]]
+id = "continuous-Weibull"
+label = "Parameters (alpha, theta)"
+tooltip = "Comma-separated."
+default = "1.0, 1.0"
+models = ["continuous"]
+when = "dist-continuous=Weibull"
+
+[[inputs]]
+id = "continuous-Gumbel"
+label = "Parameters (mu, beta)"
+tooltip = "Comma-separated."
+default = "0.0, 1.0"
+models = ["continuous"]
+when = "dist-continuous=Gumbel"
+
+[[inputs]]
+id = "continuous-Pareto"
+label = "Parameters (alpha, theta)"
+tooltip = "Comma-separated."
+default = "1.0, 1.0"
+models = ["continuous"]
+when = "dist-continuous=Pareto"
+
+[[inputs]]
+id = "continuous-Triangular"
+label = "Parameters (a, b, c)"
+tooltip = "Comma-separated."
+default = "0.0, 1.0, 0.5"
+models = ["continuous"]
+when = "dist-continuous=Triangular"
+
+[[inputs]]
+id = "continuous-InverseGaussian"
+label = "Parameters (mu, lambda)"
+tooltip = "Comma-separated."
+default = "1.0, 1.0"
+models = ["continuous"]
+when = "dist-continuous=InverseGaussian"
+
+[[inputs]]
+id = "continuous-GeneralizedExtremeValue"
+label = "Parameters (mu, sigma, xi)"
+tooltip = "Comma-separated."
+default = "0.0, 1.0, 0.1"
+models = ["continuous"]
+when = "dist-continuous=GeneralizedExtremeValue"
+
+[[inputs]]
+id = "continuous-GeneralizedPareto"
+label = "Parameters (mu, sigma, xi)"
+tooltip = "Comma-separated."
+default = "0.0, 1.0, 0.1"
+models = ["continuous"]
+when = "dist-continuous=GeneralizedPareto"
+
+[[inputs]]
+id = "continuous-Levy"
+label = "Parameters (mu, c)"
+tooltip = "Comma-separated."
+default = "0.0, 1.0"
+models = ["continuous"]
+when = "dist-continuous=Levy"
+
+[[inputs]]
+id = "continuous-SkewNormal"
+label = "Parameters (xi, omega, alpha)"
+tooltip = "Comma-separated."
+default = "0.0, 1.0, 3.0"
+models = ["continuous"]
+when = "dist-continuous=SkewNormal"
+
+[[inputs]]
+id = "dist-truncated"
+label = "Base Distribution"
+tooltip = ""
+kind = "select"
+default = "Normal"
+models = ["truncated"]
+
+[[inputs.options]]
+value = "Normal"
+label = "Normal"
+
+[[inputs.options]]
+value = "Gamma"
+label = "Gamma"
+
+[[inputs.options]]
+value = "Exponential"
+label = "Exponential"
+
+[[inputs.options]]
+value = "LogNormal"
+label = "LogNormal"
+
+[[inputs.options]]
+value = "Weibull"
+label = "Weibull"
+
+[[inputs.options]]
+value = "Pareto"
+label = "Pareto"
+
+[[inputs]]
+id = "truncated-Normal"
+label = "Parameters (mu, sigma)"
+tooltip = "Comma-separated."
+default = "0.0, 1.0"
+models = ["truncated"]
+when = "dist-truncated=Normal"
+
+[[inputs]]
+id = "truncated-Gamma"
+label = "Parameters (alpha, theta)"
+tooltip = "Comma-separated."
+default = "2.0, 1.0"
+models = ["truncated"]
+when = "dist-truncated=Gamma"
+
+[[inputs]]
+id = "truncated-Exponential"
+label = "Parameters (theta)"
+tooltip = "Comma-separated."
+default = "1.0"
+models = ["truncated"]
+when = "dist-truncated=Exponential"
+
+[[inputs]]
+id = "truncated-LogNormal"
+label = "Parameters (mu, sigma)"
+tooltip = "Comma-separated."
+default = "0.0, 1.0"
+models = ["truncated"]
+when = "dist-truncated=LogNormal"
+
+[[inputs]]
+id = "truncated-Weibull"
+label = "Parameters (alpha, theta)"
+tooltip = "Comma-separated."
+default = "1.0, 1.0"
+models = ["truncated"]
+when = "dist-truncated=Weibull"
+
+[[inputs]]
+id = "truncated-Pareto"
+label = "Parameters (alpha, theta)"
+tooltip = "Comma-separated."
+default = "1.0, 1.0"
+models = ["truncated"]
+when = "dist-truncated=Pareto"
+
+[[inputs]]
+id = "lower"
+label = "Lower bound"
+tooltip = ""
+default = "-Inf"
+models = ["truncated"]
+
+[[inputs]]
+id = "upper"
+label = "Upper bound"
+tooltip = ""
+default = "Inf"
+models = ["truncated"]
+
+[[inputs]]
+id = "dist-multivariate"
+label = "Distribution"
+tooltip = ""
+kind = "select"
+default = "MvNormal"
+models = ["multivariate"]
+
+[[inputs.options]]
+value = "MvNormal"
+label = "MvNormal"
+
+[[inputs.options]]
+value = "Dirichlet"
+label = "Dirichlet"
+
+[[inputs.options]]
+value = "Multinomial"
+label = "Multinomial"
+
+[[inputs]]
+id = "multivariate-MvNormal-mu"
+label = "mu"
+tooltip = ""
+default = "[0.0, 0.0]"
+models = ["multivariate"]
+when = "dist-multivariate=MvNormal"
+
+[[inputs]]
+id = "multivariate-MvNormal-sigma"
+label = "Sigma"
+tooltip = ""
+default = "[1.0 0.0; 0.0 1.0]"
+models = ["multivariate"]
+when = "dist-multivariate=MvNormal"
+
+[[inputs]]
+id = "multivariate-Dirichlet-alpha"
+label = "alpha"
+tooltip = ""
+default = "[1.0, 1.0, 1.0]"
+models = ["multivariate"]
+when = "dist-multivariate=Dirichlet"
+
+[[inputs]]
+id = "multivariate-Multinomial-n"
+label = "n"
+tooltip = ""
+default = "10"
+models = ["multivariate"]
+when = "dist-multivariate=Multinomial"
+
+[[inputs]]
+id = "multivariate-Multinomial-probs"
+label = "p"
+tooltip = ""
+default = "[0.2, 0.3, 0.5]"
+models = ["multivariate"]
+when = "dist-multivariate=Multinomial"
+
+[[inputs]]
+id = "dist-matrixvariate"
+label = "Distribution"
+tooltip = ""
+kind = "select"
+default = "Wishart"
+models = ["matrixvariate"]
+
+[[inputs.options]]
+value = "Wishart"
+label = "Wishart"
+
+[[inputs.options]]
+value = "InverseWishart"
+label = "InverseWishart"
+
+[[inputs.options]]
+value = "MatrixNormal"
+label = "MatrixNormal"
+
+[[inputs]]
+id = "matrixvariate-Wishart-nu"
+label = "nu"
+tooltip = ""
+default = "5.0"
+models = ["matrixvariate"]
+when = "dist-matrixvariate=Wishart"
+
+[[inputs]]
+id = "matrixvariate-Wishart-s"
+label = "S"
+tooltip = ""
+default = "[1.0 0.0; 0.0 1.0]"
+models = ["matrixvariate"]
+when = "dist-matrixvariate=Wishart"
+
+[[inputs]]
+id = "matrixvariate-InverseWishart-nu"
+label = "nu"
+tooltip = ""
+default = "5.0"
+models = ["matrixvariate"]
+when = "dist-matrixvariate=InverseWishart"
+
+[[inputs]]
+id = "matrixvariate-InverseWishart-s"
+label = "S"
+tooltip = ""
+default = "[1.0 0.0; 0.0 1.0]"
+models = ["matrixvariate"]
+when = "dist-matrixvariate=InverseWishart"
+
+[[inputs]]
+id = "matrixvariate-MatrixNormal-m"
+label = "M"
+tooltip = ""
+default = "[0.0 0.0; 0.0 0.0]"
+models = ["matrixvariate"]
+when = "dist-matrixvariate=MatrixNormal"
+
+[[inputs]]
+id = "matrixvariate-MatrixNormal-u"
+label = "U"
+tooltip = ""
+default = "[1.0 0.0; 0.0 1.0]"
+models = ["matrixvariate"]
+when = "dist-matrixvariate=MatrixNormal"
+
+[[inputs]]
+id = "matrixvariate-MatrixNormal-vv"
+label = "V"
+tooltip = ""
+default = "[1.0 0.0; 0.0 1.0]"
+models = ["matrixvariate"]
+when = "dist-matrixvariate=MatrixNormal"
+
+[[inputs]]
+id = "mix-components"
+label = "Components"
+tooltip = ""
+default = "Normal(0.0, 1.0), Normal(5.0, 1.0)"
+models = ["mixture"]
+
+[[inputs]]
+id = "mix-weights"
+label = "Weights"
+tooltip = ""
+default = "[0.5, 0.5]"
+models = ["mixture"]
+
+[[inputs]]
+id = "prod-components"
+label = "Components"
+tooltip = ""
+default = "Normal(0.0, 1.0), Exponential(1.0)"
+models = ["product"]
+
+[[inputs]]
+id = "conv-d1"
+label = "d1"
+tooltip = ""
+default = "Poisson(2.0)"
+models = ["convolutions"]
+
+[[inputs]]
+id = "conv-d2"
+label = "d2"
+tooltip = ""
+default = "Poisson(3.0)"
+models = ["convolutions"]
+
+[[inputs]]
+id = "method-param"
+label = "Samples (n)"
+tooltip = ""
+default = "10"
+
+[[inputs]]
+id = "seed-param"
+label = "Seed"
+tooltip = ""
+default = "42"
+
+[[codeBranches]]
+model = "discrete"
+code = '''
+using Distributions, Random  # Distributions.jl + Random stdlib for seeding
+
+{{?dist-discrete=Bernoulli}} d = Bernoulli({{discrete-Bernoulli}})
+{{?dist-discrete=Binomial}} d = Binomial({{discrete-Binomial}})
+{{?dist-discrete=Poisson}} d = Poisson({{discrete-Poisson}})
+{{?dist-discrete=Geometric}} d = Geometric({{discrete-Geometric}})
+{{?dist-discrete=NegativeBinomial}} d = NegativeBinomial({{discrete-NegativeBinomial}})
+{{?dist-discrete=DiscreteUniform}} d = DiscreteUniform({{discrete-DiscreteUniform}})
+{{?dist-discrete=Hypergeometric}} d = Hypergeometric({{discrete-Hypergeometric}})
+{{?dist-discrete=Categorical}} d = Categorical({{discrete-Categorical}})
+rng = MersenneTwister({{seed-param}})  # reproducible seed
+x = rand(rng, d, {{method-param}})  # draw {{method-param}} samples
+println("Mean:    ", mean(d))  # mean of the distribution
+{{?dist-discrete=Bernoulli|Binomial|Poisson|Geometric|NegativeBinomial|DiscreteUniform|Hypergeometric}} println("Var:     ", var(d))  # variance
+println("Samples: ", x)  # inspect drawn samples
+'''
+
+[[codeBranches]]
+model = "continuous"
+code = '''
+using Distributions, Random  # Distributions.jl + Random stdlib for seeding
+
+{{?dist-continuous=Normal}} d = Normal({{continuous-Normal}})
+{{?dist-continuous=Uniform}} d = Uniform({{continuous-Uniform}})
+{{?dist-continuous=Exponential}} d = Exponential({{continuous-Exponential}})
+{{?dist-continuous=Gamma}} d = Gamma({{continuous-Gamma}})
+{{?dist-continuous=Beta}} d = Beta({{continuous-Beta}})
+{{?dist-continuous=LogNormal}} d = LogNormal({{continuous-LogNormal}})
+{{?dist-continuous=Cauchy}} d = Cauchy({{continuous-Cauchy}})
+{{?dist-continuous=Laplace}} d = Laplace({{continuous-Laplace}})
+{{?dist-continuous=Logistic}} d = Logistic({{continuous-Logistic}})
+{{?dist-continuous=TDist}} d = TDist({{continuous-TDist}})
+{{?dist-continuous=Chisq}} d = Chisq({{continuous-Chisq}})
+{{?dist-continuous=Weibull}} d = Weibull({{continuous-Weibull}})
+{{?dist-continuous=Gumbel}} d = Gumbel({{continuous-Gumbel}})
+{{?dist-continuous=Pareto}} d = Pareto({{continuous-Pareto}})
+{{?dist-continuous=Triangular}} d = Triangular({{continuous-Triangular}})
+{{?dist-continuous=InverseGaussian}} d = InverseGaussian({{continuous-InverseGaussian}})
+{{?dist-continuous=Epanechnikov}} d = Epanechnikov()
+{{?dist-continuous=GeneralizedExtremeValue}} d = GeneralizedExtremeValue({{continuous-GeneralizedExtremeValue}})
+{{?dist-continuous=GeneralizedPareto}} d = GeneralizedPareto({{continuous-GeneralizedPareto}})
+{{?dist-continuous=Levy}} d = Levy({{continuous-Levy}})
+{{?dist-continuous=SkewNormal}} d = SkewNormal({{continuous-SkewNormal}})
+rng = MersenneTwister({{seed-param}})  # reproducible seed
+x = rand(rng, d, {{method-param}})  # draw {{method-param}} samples
+{{?dist-continuous=Normal|Uniform|Exponential|Gamma|Beta|LogNormal|Laplace|Logistic|TDist|Chisq|Weibull|Gumbel|Pareto|Triangular|InverseGaussian|Epanechnikov|GeneralizedExtremeValue|GeneralizedPareto|Levy|SkewNormal}} println("Mean:    ", mean(d))  # mean of the distribution
+{{?dist-continuous=Chisq}} println("Var:     ", var(d))  # variance
+{{?dist-continuous=Normal|Uniform|Exponential|Gamma|Beta|LogNormal|Laplace|Logistic|TDist|Weibull|Gumbel|Pareto|Triangular|InverseGaussian|Epanechnikov|GeneralizedExtremeValue|GeneralizedPareto|Levy|SkewNormal}} println("Std:     ", std(d))  # standard deviation
+{{?dist-continuous=Cauchy}} println("Median:  ", median(d))  # median of the distribution
+println("Samples: ", x)  # inspect drawn samples
+'''
+
+[[codeBranches]]
+model = "truncated"
+code = '''
+using Distributions, Random  # Distributions.jl + Random stdlib for seeding
+
+{{?dist-truncated=Normal}} base = Normal({{truncated-Normal}})
+{{?dist-truncated=Gamma}} base = Gamma({{truncated-Gamma}})
+{{?dist-truncated=Exponential}} base = Exponential({{truncated-Exponential}})
+{{?dist-truncated=LogNormal}} base = LogNormal({{truncated-LogNormal}})
+{{?dist-truncated=Weibull}} base = Weibull({{truncated-Weibull}})
+{{?dist-truncated=Pareto}} base = Pareto({{truncated-Pareto}})
+d = truncated(base, lower={{lower}}, upper={{upper}})  # restrict support to [lower, upper]
+rng = MersenneTwister({{seed-param}})  # reproducible seed
+x = rand(rng, d, {{method-param}})  # draw {{method-param}} samples
+println("Mean:    ", mean(d))  # mean of the distribution
+println("Std:     ", std(d))  # standard deviation
+println("Samples: ", x)  # inspect drawn samples
+'''
+
+[[codeBranches]]
+model = "multivariate"
+code = '''
+using Distributions, Random  # Distributions.jl + Random stdlib for seeding
+
+{{?dist-multivariate=MvNormal}} mu = {{multivariate-MvNormal-mu}}
+{{?dist-multivariate=MvNormal}} Sigma = {{multivariate-MvNormal-sigma}}
+{{?dist-multivariate=MvNormal}} d = MvNormal(mu, Sigma)
+{{?dist-multivariate=Dirichlet}} alpha = {{multivariate-Dirichlet-alpha}}
+{{?dist-multivariate=Dirichlet}} d = Dirichlet(alpha)
+{{?dist-multivariate=Multinomial}} p = {{multivariate-Multinomial-probs}}
+{{?dist-multivariate=Multinomial}} d = Multinomial({{multivariate-Multinomial-n}}, p)
+rng = MersenneTwister({{seed-param}})  # reproducible seed
+x = rand(rng, d, {{method-param}})  # draw {{method-param}} samples
+println("Mean:    ", mean(d))  # mean of the distribution
+{{?dist-multivariate=MvNormal}} println("Cov:     ", cov(d))  # covariance matrix
+println("Samples: ", x)  # inspect drawn samples
+'''
+
+[[codeBranches]]
+model = "matrixvariate"
+code = '''
+using Distributions, Random  # Distributions.jl + Random stdlib for seeding
+
+{{?dist-matrixvariate=Wishart}} nu = {{matrixvariate-Wishart-nu}}
+{{?dist-matrixvariate=Wishart}} S = {{matrixvariate-Wishart-s}}
+{{?dist-matrixvariate=Wishart}} d = Wishart(nu, S)
+{{?dist-matrixvariate=InverseWishart}} nu = {{matrixvariate-InverseWishart-nu}}
+{{?dist-matrixvariate=InverseWishart}} S = {{matrixvariate-InverseWishart-s}}
+{{?dist-matrixvariate=InverseWishart}} d = InverseWishart(nu, S)
+{{?dist-matrixvariate=MatrixNormal}} M = {{matrixvariate-MatrixNormal-m}}
+{{?dist-matrixvariate=MatrixNormal}} U = {{matrixvariate-MatrixNormal-u}}
+{{?dist-matrixvariate=MatrixNormal}} V = {{matrixvariate-MatrixNormal-vv}}
+{{?dist-matrixvariate=MatrixNormal}} d = MatrixNormal(M, U, V)
+rng = MersenneTwister({{seed-param}})  # reproducible seed
+x = rand(rng, d, {{method-param}})  # draw {{method-param}} samples
+println("Mean:    ", mean(d))  # mean of the distribution
+println("Samples: ", x)  # inspect drawn samples
+'''
+
+[[codeBranches]]
+model = "mixture"
+code = '''
+using Distributions, Random  # Distributions.jl + Random stdlib for seeding
+
+d = MixtureModel([{{mix-components}}], {{mix-weights}})  # weighted mixture of component distributions
+rng = MersenneTwister({{seed-param}})  # reproducible seed
+x = rand(rng, d, {{method-param}})  # draw {{method-param}} samples
+println("Samples: ", x)  # inspect drawn samples
+'''
+
+[[codeBranches]]
+model = "product"
+code = '''
+using Distributions, Random  # Distributions.jl + Random stdlib for seeding
+
+d = product_distribution([{{prod-components}}])  # independent product of marginal distributions
+rng = MersenneTwister({{seed-param}})  # reproducible seed
+x = rand(rng, d, {{method-param}})  # draw {{method-param}} samples
+println("Samples: ", x)  # inspect drawn samples
+'''
+
+[[codeBranches]]
+model = "convolutions"
+code = '''
+using Distributions, Random  # Distributions.jl + Random stdlib for seeding
+
+d = convolve({{conv-d1}}, {{conv-d2}})  # convolution: distribution of X1 + X2
+rng = MersenneTwister({{seed-param}})  # reproducible seed
+x = rand(rng, d, {{method-param}})  # draw {{method-param}} samples
+println("Samples: ", x)  # inspect drawn samples
+'''

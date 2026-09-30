@@ -1,0 +1,423 @@
+# MeshCat — 3D Visualisation Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/mcat.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "MeshCat — 3D Visualisation"
+viewType = "pollis.mcat"
+defaultModel = "scene"
+
+[[packages]]
+name = "MeshCat.jl"
+github = "https://github.com/rdeits/MeshCat.jl"
+
+[[packages]]
+name = "CoordinateTransformations.jl"
+github = "https://github.com/JuliaGeometry/CoordinateTransformations.jl"
+
+[requires]
+packages = ["MeshCat.jl", "CoordinateTransformations.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Scene Setup"
+file = "mcat/tutorial-01-scene.ipynb"
+bundled = true
+description = "Initialise a MeshCat visualizer, add geometry and set transforms"
+
+[[notebookSections.notebooks]]
+name = "Trajectory Animation"
+file = "mcat/tutorial-02-anim.ipynb"
+bundled = true
+description = "Animate a robot state trajectory from a simulation result"
+
+[[notebookSections.notebooks]]
+name = "Frame Visualization"
+file = "mcat/tutorial-03-frame.ipynb"
+bundled = true
+description = "Display coordinate frames (Triad) to debug kinematic transforms"
+
+[[notebookSections.notebooks]]
+name = "URDF Robot"
+file = "mcat/tutorial-04-urdf.ipynb"
+bundled = true
+description = "Load a complete articulated robot from a URDF file"
+
+[[wikis]]
+name = "Factsheet"
+file = "mcat/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "mcat/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "mcat/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "mcat/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "mcat/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "mcat/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Methods"
+
+[[wikis]]
+name = "Scene Setup"
+file = "mcat/scene.md"
+bundled = true
+
+[[wikis]]
+name = "Trajectory Animation"
+file = "mcat/anim.md"
+bundled = true
+
+[[wikis]]
+name = "Frame Visualization"
+file = "mcat/frame.md"
+bundled = true
+
+[[wikis]]
+name = "URDF Robot"
+file = "mcat/urdf.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "MeshCat.jl: WebGL-Based 3D Visualizer for Julia"
+authors = "Deits, Robin"
+year = 2018
+journal = "GitHub"
+url = "https://github.com/rdeits/MeshCat.jl"
+openAccess = true
+
+[[references]]
+title = "CoordinateTransformations.jl: A Fresh Approach to Coordinate Transformations in Julia"
+authors = "Ferris, Andy"
+year = 2016
+journal = "GitHub"
+url = "https://github.com/JuliaGeometry/CoordinateTransformations.jl"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Robotics: Modelling, Planning and Control"
+authors = "Siciliano, Bruno; Sciavicco, Lorenzo; Villani, Luigi; Oriolo, Giuseppe"
+year = 2009
+journal = "Springer"
+doi = "10.1007/978-1-84628-642-1"
+openAccess = false
+
+[[references]]
+title = "A Mathematical Introduction to Robotic Manipulation"
+authors = "Murray, Richard M.; Li, Zexiang; Sastry, S. Shankar"
+year = 1994
+journal = "CRC Press"
+url = "https://www.cds.caltech.edu/~murray/mlswiki/"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Drake: Model-Based Design and Verification for Robotics"
+authors = "Tedrake, Russ; Drake Development Team"
+year = 2019
+journal = "Technical Report"
+url = "https://drake.mit.edu"
+openAccess = true
+
+[[models]]
+id = "scene"
+label = "Scene Setup"
+
+[[models]]
+id = "anim"
+label = "Trajectory Animation"
+
+[[models]]
+id = "frame"
+label = "Frame Visualization"
+
+[[models]]
+id = "urdf"
+label = "URDF Robot"
+
+[[bullets]]
+text = "Visualise 3D scenes, robot models, and simulation results in the browser via WebGL"
+detail = "no desktop GUI required"
+
+[[bullets]]
+text = "Place and orient geometry nodes using CoordinateTransformations.jl affine maps; update poses in real time inside a simulation loop"
+detail = ""
+
+[[bullets]]
+text = "Animate state trajectories frame-by-frame at a configurable frame rate using the MeshCat Animation API"
+detail = ""
+
+[[bullets]]
+text = "Display complete articulated robots from Unified Robot Description Format (URDF) files and update joint angles interactively"
+detail = ""
+
+[[decisionRows]]
+task = "Scene Setup"
+context = "Geometry + poses"
+purpose = "Placing and orienting 3D objects in the browser visualizer"
+
+[[decisionRows]]
+task = "Trajectory Animation"
+context = "State sequence replay"
+purpose = "Animating simulation results or planned trajectories over time"
+
+[[decisionRows]]
+task = "Frame Visualization"
+context = "Coordinate frames (Triad)"
+purpose = "Debugging kinematic transforms and orientation in 3D space"
+
+[[decisionRows]]
+task = "Unified Robot Description Format (URDF) Robot"
+context = "Articulated mesh + joint angles"
+purpose = "Displaying a complete articulated robot from a URDF file"
+
+[[inputs]]
+id = "vis"
+label = "Visualizer"
+tooltip = "Variable name for the MeshCat Visualizer object. All scene operations use this handle to update the 3D view."
+default = "vis"
+
+[[inputs]]
+id = "obj"
+label = "Object path"
+tooltip = "MeshCat path string for the geometry node, e.g. \"robot/link1\". Used to address and update specific objects in the scene."
+default = "geom"
+models = ["scene"]
+
+[[inputs]]
+id = "T"
+label = "Transform"
+tooltip = "A CoordinateTransformations.jl AffineMap or LinearMap giving the pose of the object in the world frame."
+default = "T"
+models = ["scene"]
+
+[[inputs]]
+id = "X"
+label = "State trajectory"
+tooltip = "X: vector of state vectors from a simulation. Each entry is one frame of the animation."
+default = "X"
+models = ["anim"]
+
+[[inputs]]
+id = "dt"
+label = "Time step"
+tooltip = "dt: duration of each animation frame in seconds. Controls playback speed."
+default = "0.01"
+models = ["anim"]
+
+[[inputs]]
+id = "fname"
+label = "Frame path"
+tooltip = "MeshCat path string for the frame node, e.g. \"robot/ee_frame\". The Triad geometry will be placed here."
+default = "frame"
+models = ["frame"]
+
+[[inputs]]
+id = "Tf"
+label = "Transform"
+tooltip = "A CoordinateTransformations.jl AffineMap giving the frame pose (position + orientation) to display."
+default = "T"
+models = ["frame"]
+
+[[inputs]]
+id = "mechanism"
+label = "Mechanism"
+tooltip = "A RigidBodyDynamics.jl Mechanism built from the URDF. Used to link joint angles to mesh poses."
+default = "mechanism"
+models = ["urdf"]
+
+[[inputs]]
+id = "urdf"
+label = "URDF path"
+tooltip = "Variable holding the URDF file path string. The meshes referenced in the URDF will be loaded automatically."
+default = "robot_urdf"
+models = ["urdf"]
+
+[[codeBranches]]
+model = "scene"
+code = '''
+using MeshCat, CoordinateTransformations, GeometryBasics  # WebGL-based 3D scene: geometry and poses
+
+{{vis}} = Visualizer()  # create MeshCat visualizer (opens in browser on open())
+open({{vis}})  # launch browser window showing the 3D scene
+
+setobject!({{vis}}["{{obj}}"], Sphere(Point(0, 0, 0), 0.1))  # add a sphere at the object path "{{obj}}"
+settransform!({{vis}}["{{obj}}"], {{T}})  # set pose of "{{obj}}" using transform {{T}}
+'''
+
+[[codeBranches]]
+model = "anim"
+code = '''
+using MeshCat, MeshCatMechanisms, RigidBodyDynamics  # animate a state trajectory in the browser
+
+anim = Animation({{vis}}, framerate=round(Int, 1/{{dt}}))  # create animation at {{dt}} s per frame
+for (i, x) in enumerate({{X}})  # loop over state trajectory
+    atframe(anim, i) do
+        set_configuration!(mvis, x)
+    end
+end
+setanimation!({{vis}}, anim)  # send animation to browser; use playback controls to replay
+'''
+
+[[codeBranches]]
+model = "frame"
+code = '''
+using MeshCat, CoordinateTransformations  # display a coordinate frame (Triad) in the 3D scene
+
+setobject!({{vis}}["{{fname}}"], Triad())  # add a Triad (RGB = XYZ axes) at path "{{fname}}"
+settransform!({{vis}}["{{fname}}"], {{Tf}})  # position and orient the frame using transform {{Tf}}
+
+open({{vis}})  # open browser to view the frame in 3D space
+'''
+
+[[codeBranches]]
+model = "urdf"
+code = '''
+using MeshCat, MeshCatMechanisms, RigidBodyDynamics  # load a URDF robot and animate joint configurations
+
+mvis = MechanismVisualizer({{mechanism}}, URDFVisuals({{urdf}}), {{vis}})  # link mechanism to URDF meshes in the visualizer
+open({{vis}})  # open browser showing the robot in its default pose
+
+set_configuration!(mvis, q)  # update joint angles: robot mesh updates in real time
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "scene-loop"
+label = "Live Update Loop"
+desc = "Update the visualizer pose in a simulation loop for real-time feedback"
+code = '''
+using MeshCat, CoordinateTransformations  # real-time scene update inside a simulation loop
+
+open({{vis}})  # open browser before starting loop
+for t in 0:0.01:10  # simulation time steps
+    T_new = compute_transform(t)
+    settransform!({{vis}}["{{obj}}"], T_new)
+    sleep(0.01)
+end
+'''
+
+[[actionGroups.actions]]
+id = "multi-object"
+label = "Multiple Objects"
+desc = "Add several objects to the scene using a hierarchical path structure"
+code = '''
+using MeshCat, CoordinateTransformations, GeometryBasics  # populate scene with multiple geometry nodes
+
+setobject!({{vis}}["robot/base"], Box(Vec(0.4, 0.2, 0.1)))  # box for the robot base
+setobject!({{vis}}["robot/link1"], Cylinder(Point(0,0,0), Point(0,0,0.5), 0.05))  # cylinder for link 1
+setobject!({{vis}}["robot/ee"], Sphere(Point(0,0,0), 0.03))  # sphere for end-effector
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "check-open"
+label = "Connection Check"
+desc = "Verify the MeshCat visualizer is open and reachable in the browser"
+code = '''
+using MeshCat  # check visualizer status
+
+println("MeshCat URL: ", url({{vis}}))  # print the URL to open in a browser manually
+isopen({{vis}})  # returns true if at least one browser is connected
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "record-animation"
+label = "Record Animation"
+desc = "Record a simulation loop as an animation and export it"
+code = '''
+using MeshCat, MeshCatMechanisms  # record trajectory and export animation
+
+anim = Animation({{vis}}, framerate=round(Int, 1/{{dt}}))  # animation at {{dt}} s per frame
+for (i, x) in enumerate({{X}})  # write each frame
+    atframe(anim, i) do
+        set_configuration!(mvis, x)
+    end
+end
+setanimation!({{vis}}, anim)  # send to browser; export via browser controls
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "two-trajectories"
+label = "Two Trajectories"
+desc = "Show two robot trajectories side by side using separate scene paths"
+code = '''
+using MeshCat, MeshCatMechanisms, RigidBodyDynamics  # display two robot instances for trajectory comparison
+
+mvis_a = MechanismVisualizer({{mechanism}}, URDFVisuals({{urdf}}), {{vis}}["robot_a"])  # first robot instance at path "robot_a"
+mvis_b = MechanismVisualizer({{mechanism}}, URDFVisuals({{urdf}}), {{vis}}["robot_b"])  # second robot instance at path "robot_b"
+
+set_configuration!(mvis_a, q_a)  # set first trajectory pose
+set_configuration!(mvis_b, q_b)  # set second trajectory pose
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "introspect"
+label = "Scene Introspection"
+desc = "List all objects currently in the MeshCat scene tree"
+code = '''
+using MeshCat  # inspect the current scene graph structure
+
+url({{vis}})  # browser URL for this visualizer instance
+delete!({{vis}})  # clear all objects from the scene
+delete!({{vis}}["path/to/object"])  # remove a specific subtree of objects
+'''

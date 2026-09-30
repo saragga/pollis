@@ -1,0 +1,601 @@
+# State-Space Inference Methods Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/ssm.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "State-Space Inference Methods"
+viewType = "pollis.ssm"
+defaultModel = "kf"
+
+[[packages]]
+name = "LowLevelParticleFilters.jl"
+github = "https://github.com/baggepinnen/LowLevelParticleFilters.jl"
+
+[requires]
+packages = ["LowLevelParticleFilters.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Kalman Filter"
+file = "ssm/tutorial-01-kalman.ipynb"
+bundled = true
+description = "Linear state-space models and the Kalman filter"
+
+[[notebookSections.notebooks]]
+name = "Extended Kalman Filter"
+file = "ssm/tutorial-02-ekf.ipynb"
+bundled = true
+description = "Nonlinear filtering via Jacobian linearisation"
+
+[[notebookSections.notebooks]]
+name = "Unscented Kalman Filter"
+file = "ssm/tutorial-03-ukf.ipynb"
+bundled = true
+description = "Sigma-point approximation for nonlinear systems"
+
+[[notebookSections.notebooks]]
+name = "Particle Filter"
+file = "ssm/tutorial-04-particle.ipynb"
+bundled = true
+description = "Sequential Monte Carlo for nonlinear / non-Gaussian models"
+
+[[notebookSections.notebooks]]
+name = "Rao-Blackwellized Filter"
+file = "ssm/tutorial-08-rbf.ipynb"
+bundled = true
+description = "Combined analytical and particle-based state estimation"
+
+[[notebookSections.notebooks]]
+name = "Dynamic Nelson-Siegel Model"
+file = "ssm/tutorial-05-dns.ipynb"
+bundled = true
+description = "Term structure modelling with latent factors"
+
+[[wikis]]
+name = "Overview"
+file = "ssm/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Factsheet"
+file = "ssm/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "ssm/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "ssm/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "ssm/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "ssm/decision-guide.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Optimal State Estimation: Kalman, H-infinity, and Nonlinear Approaches"
+authors = "Simon, Dan"
+year = 2006
+journal = "Wiley-Interscience"
+doi = "10.1002/0470045345"
+openAccess = false
+
+[[references]]
+title = "Probabilistic Robotics"
+authors = "Thrun, Sebastian; Burgard, Wolfram; Fox, Dieter"
+year = 2005
+journal = "MIT Press"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "A New Approach to Linear Filtering and Prediction Problems"
+authors = "Kalman, Rudolf E."
+year = 1960
+journal = "Journal of Basic Engineering"
+doi = "10.1115/1.3662552"
+openAccess = false
+
+[[references]]
+title = "A New Extension of the Kalman Filter to Nonlinear Systems"
+authors = "Julier, Simon J.; Uhlmann, Jeffrey K."
+year = 1997
+journal = "Proc. SPIE 3068, Signal Processing, Sensor Fusion, and Target Recognition VI"
+doi = "10.1117/12.280797"
+openAccess = false
+
+[[references]]
+title = "The Unscented Kalman Filter for Nonlinear Estimation"
+authors = "Wan, Eric A.; Van Der Merwe, Rudolph"
+year = 2000
+journal = "Proceedings of the IEEE Adaptive Systems for Signal Processing, Communications, and Control Symposium"
+doi = "10.1109/ASSPCC.2000.882463"
+openAccess = false
+
+[[references]]
+title = "Novel Approach to Nonlinear/Non-Gaussian Bayesian State Estimation"
+authors = "Gordon, Neil J.; Salmond, David J.; Smith, Adrian F. M."
+year = 1993
+journal = "IEE Proceedings F: Radar and Signal Processing"
+doi = "10.1049/ip-f-2.1993.0015"
+openAccess = false
+
+[[references]]
+title = "Rao-Blackwellised Particle Filtering for Dynamic Bayesian Networks"
+authors = "Doucet, Arnaud; de Freitas, Joao F. G.; Murphy, Kevin P.; Russell, Stuart J."
+year = 2000
+journal = "Proceedings of the 16th Conference on Uncertainty in Artificial Intelligence"
+openAccess = false
+
+[[models]]
+id = "kf"
+label = "Kalman Filter"
+
+[[models]]
+id = "ekf"
+label = "Extended Kalman Filter"
+
+[[models]]
+id = "ukf"
+label = "Unscented Kalman Filter"
+
+[[models]]
+id = "pf"
+label = "Particle Filter"
+
+[[models]]
+id = "rbf"
+label = "Rao-Blackwellized Filter"
+
+[[decisionRows]]
+task = "Kalman Filter"
+context = "Linear, Gaussian"
+purpose = "Linear dynamics, Gaussian noise; analytic and exact; baseline for all extensions"
+
+[[decisionRows]]
+task = "Extended Kalman Filter"
+context = "Nonlinear, Jacobian"
+purpose = "Nonlinear Gaussian systems; linearises via first-order Taylor expansion; requires differentiable dynamics"
+
+[[decisionRows]]
+task = "Unscented Kalman Filter"
+context = "Nonlinear, no Jacobian"
+purpose = "Nonlinear Gaussian systems; sigma-point propagation; more accurate than EKF without requiring Jacobians"
+
+[[decisionRows]]
+task = "Particle Filter"
+context = "Nonlinear / non-Gaussian"
+purpose = "Strongly nonlinear or non-Gaussian systems; N particles traded for accuracy"
+
+[[decisionRows]]
+task = "Rao-Blackwellized Filter"
+context = "Mixed linear + nonlinear"
+purpose = "Combines sample-based flexibility of particle filters with the analytical efficiency of Kalman filters; for mixed linear/nonlinear systems"
+
+[[inputs]]
+id = "nx"
+models = ["kf", "ekf", "ukf", "pf"]
+label = "state dimension nx"
+tooltip = "Dimension of the latent state vector x_t. For a 2D position-velocity model, nx = 4."
+default = "2"
+
+[[inputs]]
+id = "ny"
+models = ["kf", "ekf", "ukf", "pf"]
+label = "measurement ny"
+tooltip = "Dimension of the measurement vector y_t. Must match the number of signals measured at each time step."
+default = "1"
+
+[[inputs]]
+id = "nu"
+models = ["kf", "ekf", "ukf", "pf"]
+label = "input nu"
+tooltip = "Dimension of the known input (control) vector u_t. Set to 0 if there are no external inputs."
+default = "0"
+
+[[inputs]]
+id = "n-particles"
+models = ["pf"]
+label = "particles N"
+tooltip = ""
+default = "1000"
+
+[[inputs]]
+id = "nl"
+models = ["rbf"]
+label = "linear dim nl"
+tooltip = "Dimension of the linear part of the state vector in the Rao-Blackwellized filter. This part is handled analytically."
+default = "2"
+
+[[inputs]]
+id = "nnl"
+models = ["rbf"]
+label = "nonlinear dim nnl"
+tooltip = "Dimension of the nonlinear part of the state vector. Particle approximation is used for this part."
+default = "2"
+
+[[inputs]]
+id = "ny-rbf"
+models = ["rbf"]
+label = "measurement ny"
+tooltip = ""
+default = "1"
+
+[[inputs]]
+id = "nu-rbf"
+models = ["rbf"]
+label = "input nu"
+tooltip = ""
+default = "0"
+
+[[inputs]]
+id = "n-particles-rbf"
+models = ["rbf"]
+label = "particles N"
+tooltip = ""
+default = "1000"
+
+[[inputs]]
+id = "q-scale"
+models = ["kf", "ekf", "ukf", "pf"]
+label = "Q scale"
+tooltip = ""
+default = "0.1"
+
+[[inputs]]
+id = "r-scale"
+models = ["kf", "ekf", "ukf"]
+label = "R scale"
+tooltip = ""
+default = "0.1"
+
+[[inputs]]
+id = "mu0"
+models = ["kf", "ekf", "ukf", "pf"]
+label = "initial state mu₀"
+tooltip = "Initial state estimate mu_0 (vector of length nx). Mean of the initial distribution x_0 ~ N(mu_0, Sigma_0)."
+default = "zeros(nx)"
+
+[[inputs]]
+id = "sigma0"
+models = ["kf", "ekf", "ukf", "pf"]
+label = "initial covariance Sigma₀"
+tooltip = "Initial error covariance Sigma_0. Reflects uncertainty in the initial state. Default I (identity matrix)."
+default = "I"
+
+[[inputs]]
+id = "data"
+models = ["kf", "ekf", "ukf", "pf"]
+label = "data variable"
+tooltip = "Named tuple or struct with fields .u (inputs) and .y (observations), one entry per time step."
+default = "df"
+
+[[inputs]]
+id = "dyn-expr"
+models = ["ekf", "ukf", "pf"]
+label = "dynamics f(x,u,p,t)"
+tooltip = ""
+default = "x  # replace with your dynamics"
+
+[[inputs]]
+id = "meas-expr"
+models = ["ekf", "ukf", "pf"]
+label = "measurement h(x,u,p,t)"
+tooltip = ""
+default = "y  # replace with measurement"
+
+[[inputs]]
+id = "rbf-dyn-expr"
+label = "nonlinear dynamics f_nl(x_nl, x_l, u, p, t)"
+tooltip = ""
+default = "x_nl  # replace with nonlinear state transition"
+models = ["rbf"]
+
+[[inputs]]
+id = "data-rbf"
+models = ["rbf"]
+label = "data variable"
+tooltip = ""
+default = "df"
+
+[[codeBranches]]
+model = "kf"
+code = '''
+using LowLevelParticleFilters  # state-space filtering
+
+const nx, ny, nu = {{nx}}, {{ny}}, {{nu}}  # state / obs / input dimensions
+
+F  = Matrix(I, nx, nx)  # state transition matrix
+B  = zeros(nx, nu)  # input matrix
+H  = Matrix(I, ny, nx)  # measurement matrix
+
+dynamics(x, u, p, t)    = F*x + B*u  # linear state transition
+measurement(x, u, p, t) = H*x  # linear measurement
+
+Q  = {{q-scale}} * Matrix(I, nx, nx)  # process noise covariance
+R  = {{r-scale}} * Matrix(I, ny, ny)  # measurement noise covariance
+x0 = MvNormal({{mu0}}, {{sigma0}})  # initial state x0 ~ N(mu0, Sigma0)
+
+kf = KalmanFilter(F, B, H, zeros(ny, nu), Q, R, x0)  # build Kalman filter
+
+sol = forward_trajectory(kf, {{data}}.u, {{data}}.y)  # run forward pass
+println(mean.(sol.x))
+'''
+
+[[codeBranches]]
+model = "ekf"
+code = '''
+using LowLevelParticleFilters  # state-space filtering
+
+const nx, ny, nu = {{nx}}, {{ny}}, {{nu}}  # state / obs / input dimensions
+
+function dynamics(x, u, p, t)  # nonlinear state transition f(x,u,p,t)
+    {{dyn-expr}}
+end
+
+function measurement(x, u, p, t)  # nonlinear measurement h(x,u,p,t)
+    {{meas-expr}}
+end
+
+Q  = {{q-scale}} * Matrix(I, nx, nx)  # process noise covariance
+R  = {{r-scale}} * Matrix(I, ny, ny)  # measurement noise covariance
+x0 = MvNormal({{mu0}}, {{sigma0}})  # initial state x0 ~ N(mu0, Sigma0)
+
+ekf = ExtendedKalmanFilter(dynamics, measurement, Q, R, x0; nu)  # build EKF
+
+sol = forward_trajectory(ekf, {{data}}.u, {{data}}.y)  # run forward pass
+println(mean.(sol.x))
+'''
+
+[[codeBranches]]
+model = "ukf"
+code = '''
+using LowLevelParticleFilters  # state-space filtering
+
+const nx, ny, nu = {{nx}}, {{ny}}, {{nu}}  # state / obs / input dimensions
+
+function dynamics(x, u, p, t)  # nonlinear state transition f(x,u,p,t)
+    {{dyn-expr}}
+end
+
+function measurement(x, u, p, t)  # nonlinear measurement h(x,u,p,t)
+    {{meas-expr}}
+end
+
+Q  = {{q-scale}} * Matrix(I, nx, nx)  # process noise covariance
+R  = {{r-scale}} * Matrix(I, ny, ny)  # measurement noise covariance
+x0 = MvNormal({{mu0}}, {{sigma0}})  # initial state x0 ~ N(mu0, Sigma0)
+
+ukf = UnscentedKalmanFilter(dynamics, measurement, Q, R, x0; nu)  # build UKF
+
+sol = forward_trajectory(ukf, {{data}}.u, {{data}}.y)  # run forward pass
+println(mean.(sol.x))
+'''
+
+[[codeBranches]]
+model = "pf"
+code = '''
+using LowLevelParticleFilters  # state-space filtering
+
+const nx, ny, nu = {{nx}}, {{ny}}, {{nu}}  # state / obs / input dimensions
+
+const N = {{n-particles}}  # number of particles
+
+function dynamics(x, u, p, t, noise)  # stochastic state transition
+    {{dyn-expr}}
+end
+
+function measurement(x, u, p, t)  # measurement function
+    {{meas-expr}}
+end
+
+noise_dist = MvNormal(zeros(nx), {{q-scale}} * I)  # process noise distribution
+x0         = MvNormal({{mu0}}, {{sigma0}})  # initial state distribution
+
+pf = ParticleFilter({{n-particles}}, dynamics, measurement, noise_dist, x0; ny)  # build filter with {{n-particles}} particles
+
+sol = forward_trajectory(pf, {{data}}.u, {{data}}.y)  # run forward pass
+println(mean.(sol.x))
+'''
+
+[[codeBranches]]
+model = "rbf"
+code = '''
+using LowLevelParticleFilters  # state-space filtering
+
+const nl, nnl, ny, nu = {{nl}}, {{nnl}}, {{ny-rbf}}, {{nu-rbf}}  # linear / nonlinear / obs / input dims
+const N = {{n-particles-rbf}}  # number of particles
+
+function dynamics_nl(x_nl, x_l, u, p, t)  # nonlinear state transition
+    {{rbf-dyn-expr}}
+end
+
+noise_nl = MvNormal(zeros(nnl), 0.1 * I)  # nonlinear process noise
+noise_l  = MvNormal(zeros(nl),  0.1 * I)  # linear process noise
+
+H_l  = Matrix(I, ny, nl)  # linear measurement matrix
+H_nl = zeros(ny, nnl)  # nonlinear part of measurement
+R    = 0.1 * Matrix(I, ny, ny)  # measurement noise covariance
+x0   = MvNormal(zeros(nl + nnl), I)  # initial state distribution
+
+rbf = RaoBlackwellizedParticleFilter(N, dynamics_nl, noise_nl, noise_l, H_l, H_nl, R, x0)  # build Rao-Blackwellized filter
+
+sol = forward_trajectory(rbf, {{data-rbf}}.u, {{data-rbf}}.y)  # run forward pass
+println(mean.(sol.x))
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "state-estimate"
+label = "State Estimates"
+desc = "Plot filtered state estimates over time"
+code = '''
+using LowLevelParticleFilters, Plots  # filter + plotting
+
+sol = forward_trajectory(filter, {{data}}.u, {{data}}.y)  # run filter
+
+plot(reduce(hcat, mean.(sol.x))', label=reshape(["x$i" for i in 1:nx], 1, :))  # plot mean state estimates
+'''
+
+[[actionGroups.actions]]
+id = "filter-smoother"
+label = "Filter vs Smoother"
+desc = "Compare forward-filtered and smoothed state estimates"
+code = '''
+using LowLevelParticleFilters, Plots  # filter + plotting
+
+sol_f = forward_trajectory(filter, {{data}}.u, {{data}}.y)  # forward filtered estimates
+sol_s = smooth(filter, sol_f, {{data}}.u, {{data}}.y)  # smoothed estimates (backward pass)
+
+plot(reduce(hcat, mean.(sol_f.x))', label="Filtered")  # filtered
+plot!(reduce(hcat, mean.(sol_s.x))', label="Smoothed")  # smoothed — lower variance at cost of delay
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "innovations"
+label = "Innovation Sequence"
+desc = "Check innovations for whiteness — should be uncorrelated if model is correct"
+code = '''
+using LowLevelParticleFilters, Plots  # filter + plotting
+
+sol = forward_trajectory(filter, {{data}}.u, {{data}}.y)  # run filter
+innov = reduce(hcat, sol.e)  # innovation sequence (ny x T matrix)
+
+plot(innov', layout=ny, title="Innovation")  # should be zero-mean and uncorrelated
+'''
+
+[[actionGroups.actions]]
+id = "log-likelihood"
+label = "Log-Likelihood"
+desc = "Compute the log-likelihood of the observations under the model"
+code = '''
+using LowLevelParticleFilters  # filter
+
+ll = loglik(filter, {{data}}.u, {{data}}.y)  # log p(y | theta) — higher is better
+println("Log-likelihood: ", ll)
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "simulate"
+label = "Simulate Forward"
+desc = "Simulate state trajectories from current estimates"
+code = '''
+using LowLevelParticleFilters, Plots  # filter + plotting
+
+sol = forward_trajectory(filter, {{data}}.u, {{data}}.y)  # run filter
+x_last = sol.x[end]  # particle cloud at final time
+
+sim = simulate(filter, x_last, {{data}}.u[end:end], 20)  # simulate 20 steps from last state
+plot(sim)  # predicted future trajectories
+'''
+
+[[actionGroups.actions]]
+id = "one-step-ahead"
+label = "One-Step-Ahead"
+desc = "Generate one-step-ahead predictions and compare with observations"
+code = '''
+using LowLevelParticleFilters, Plots  # filter + plotting
+
+sol = forward_trajectory(filter, {{data}}.u, {{data}}.y)  # run filter
+yhat = reduce(hcat, mean.(sol.yhat))  # predicted observations (ny x T)
+
+plot(reduce(hcat, {{data}}.y)', label="Observed")  # true observations
+plot!(yhat', label="Predicted", ls=:dash)  # one-step-ahead predictions
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "compare-filters"
+label = "Compare Filters"
+desc = "Run KF, EKF, and UKF on the same data and compare estimates"
+code = '''
+using LowLevelParticleFilters, Plots  # filter + plotting
+
+sol_kf  = forward_trajectory(kf,  {{data}}.u, {{data}}.y)  # Kalman filter
+sol_ekf = forward_trajectory(ekf, {{data}}.u, {{data}}.y)  # Extended Kalman filter
+sol_ukf = forward_trajectory(ukf, {{data}}.u, {{data}}.y)  # Unscented Kalman filter
+
+plot(reduce(hcat, mean.(sol_kf.x))', label="KF")  # compare estimates
+plot!(reduce(hcat, mean.(sol_ekf.x))', label="EKF")  # 
+plot!(reduce(hcat, mean.(sol_ukf.x))', label="UKF")  # 
+'''
+
+[[actionGroups.actions]]
+id = "particle-count"
+label = "Particle Count"
+desc = "Vary number of particles and compare accuracy vs. computation time"
+code = '''
+using LowLevelParticleFilters, BenchmarkTools  # filter + benchmarks
+
+for N in [100, 500, 1000, 5000]  # sweep particle counts
+    pf_n = ParticleFilter(N, dynamics, measurement, noise_dist, x0; ny)  # build filter
+    ll = loglik(pf_n, {{data}}.u, {{data}}.y)  # log-likelihood
+    t  = @belapsed loglik(pf_n, $({{data}}.u), $({{data}}.y))  # timing
+    println("N=$N: ll=$ll, t=$(round(t*1000, digits=1))ms")
+end
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "state-covariance"
+label = "State Uncertainty"
+desc = "Plot posterior state variance (diagonal of covariance) over time"
+code = '''
+using LowLevelParticleFilters, Plots  # filter + plotting
+
+sol = forward_trajectory(filter, {{data}}.u, {{data}}.y)  # run filter
+vars = reduce(hcat, var.(sol.x))  # state variance over time (nx x T)
+
+plot(vars', label=reshape(["Var x$i" for i in 1:nx], 1, :))  # higher variance = more uncertain state
+'''
+
+[[actionGroups.actions]]
+id = "smoothed-states"
+label = "Smoothed States"
+desc = "Kalman smoother provides lower-variance estimates using future data"
+code = '''
+using LowLevelParticleFilters, Plots  # filter + plotting
+
+sol_f = forward_trajectory(kf, {{data}}.u, {{data}}.y)  # forward pass
+sol_s = smooth(kf, sol_f, {{data}}.u, {{data}}.y)  # backward smoothing pass
+
+mu_f = reduce(hcat, mean.(sol_f.x))  # filtered means
+mu_s = reduce(hcat, mean.(sol_s.x))  # smoothed means
+plot([mu_f' mu_s'], label=["Filtered" "Smoothed"])  # smoother uses all data — lower variance
+'''

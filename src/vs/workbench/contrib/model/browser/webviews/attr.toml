@@ -1,0 +1,439 @@
+# Attractor & Basin Analysis Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/attr.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Attractor & Basin Analysis"
+viewType = "pollis.attr"
+defaultModel = "attract"
+
+[[packages]]
+name = "Attractors.jl"
+github = "https://github.com/JuliaDynamics/Attractors.jl"
+
+[[packages.videos]]
+title = "Julia in Academia"
+description = "Overview of Julia for academic and scientific computing"
+url = "https://www.youtube.com/watch?v=wPFPT-Ech2c"
+
+[requires]
+packages = ["Attractors.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Finding Attractors"
+file = "dyn-attr/tutorial-01-attractors.ipynb"
+bundled = true
+description = "Find all attractors of a system using AttractorsViaRecurrences on a state-space grid"
+
+[[notebookSections.notebooks]]
+name = "Basins of Attraction"
+file = "dyn-attr/tutorial-02-basins.ipynb"
+bundled = true
+description = "Map the basin of attraction for each attractor and compute basin fractions"
+
+[[notebookSections.notebooks]]
+name = "Bifurcation Diagrams"
+file = "dyn-attr/tutorial-03-bifurcation.ipynb"
+bundled = true
+description = "Trace how attractors change as a parameter varies using global_continuation"
+
+[[wikis]]
+name = "Factsheet"
+file = "dyn-attr/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "dyn-attr/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "dyn-attr/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "dyn-attr/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "dyn-attr/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "dyn-attr/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Analysis Methods"
+
+[[wikis]]
+name = "Attractor Finding"
+file = "dyn-attr/attractors.md"
+bundled = true
+
+[[wikis]]
+name = "Basins of Attraction"
+file = "dyn-attr/basins.md"
+bundled = true
+
+[[wikis]]
+name = "Bifurcation Diagrams"
+file = "dyn-attr/bifurcation.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "DynamicalSystems.jl: A Julia software library for chaos and nonlinear dynamics"
+authors = "Datseris, George"
+year = 2018
+journal = "Journal of Open Source Software"
+doi = "10.21105/joss.00598"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Nonlinear Dynamics and Chaos"
+authors = "Strogatz, Steven H."
+year = 2015
+journal = "Westview Press (2nd ed.)"
+openAccess = false
+
+[[references]]
+title = "An Introduction to Dynamical Systems and Chaos"
+authors = "Layek, G. C."
+year = 2015
+journal = "Springer"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Attractors on an N-Torus: Quasiperiodicity versus Chaos"
+authors = "Grebogi, Celso; Ott, Edward; Yorke, James A."
+year = 1985
+journal = "Physica D: Nonlinear Phenomena"
+doi = "10.1016/0167-2789(85)90182-4"
+openAccess = false
+
+[[references]]
+title = "Effortless estimation of basins of attraction"
+authors = "Datseris, George; Wagemakers, Alexandre"
+year = 2022
+journal = "Chaos"
+doi = "10.1063/5.0076568"
+openAccess = true
+
+[[references]]
+title = "Continuation of bifurcations for dynamical systems"
+authors = "Kuehn, Christian"
+year = 2015
+journal = "Springer"
+openAccess = false
+
+[[models]]
+id = "attract"
+label = "Attractor Finding"
+
+[[models]]
+id = "basins"
+label = "Basins of Attraction"
+
+[[models]]
+id = "bifur"
+label = "Bifurcation"
+
+[[bullets]]
+text = "Attractor Finding"
+detail = "locate all coexisting attractors in a state-space grid using recurrence-based or proximity mappers"
+
+[[bullets]]
+text = "Basins of Attraction"
+detail = "classify every grid point by the attractor it converges to and compute basin fractions"
+
+[[bullets]]
+text = "Bifurcation Diagrams"
+detail = "trace how attractors and their basins evolve as a system parameter varies using global continuation"
+
+[[inputs]]
+id = "u0"
+label = "Initial state (u0)"
+tooltip = "Starting point for the system. Used as the seed for the attractor mapper and basin classifier."
+default = "u0"
+
+[[inputs]]
+id = "p"
+label = "Parameters (p)"
+tooltip = "System parameter tuple. Lorenz: (10.0, 28.0, 2.667). Henon: (1.4, 0.3)."
+default = "p"
+
+[[inputs]]
+id = "N"
+label = "Grid resolution (N)"
+tooltip = "Number of grid points per dimension for the basin/attractor mapper. Higher values give finer resolution at greater computational cost."
+default = "20"
+
+[[codeBranches]]
+model = "attract"
+code = '''
+using DynamicalSystems, Attractors
+
+ds = CoupledODEs(lorenz!, {{u0}}, {{p}})  # define system
+grid = (range(-30, 30; length={{N}}), range(-30, 30; length={{N}}), range(0, 60; length={{N}}))  # state-space search grid
+mapper = AttractorsViaRecurrences(ds, grid)  # recurrence-based attractor mapper
+
+attractors = extract_attractors(mapper)  # find all coexisting attractors
+println("Number of attractors found: ", length(attractors))  # count distinct attractors
+'''
+
+[[codeBranches]]
+model = "basins"
+code = '''
+using DynamicalSystems, Attractors
+
+ds = CoupledODEs(lorenz!, {{u0}}, {{p}})  # define system
+grid = (range(-30, 30; length={{N}}), range(-30, 30; length={{N}}), range(0, 60; length={{N}}))  # search grid
+mapper = AttractorsViaRecurrences(ds, grid)  # recurrence mapper
+
+basins, attractors = basins_of_attraction(mapper, grid)  # classify every grid point
+fracs = basin_fractions(basins)  # fraction of grid in each basin
+println("Basin fractions: ", fracs)  # relative size of each basin
+'''
+
+[[codeBranches]]
+model = "bifur"
+code = '''
+using DynamicalSystems, Attractors
+
+ds = CoupledODEs(lorenz!, {{u0}}, {{p}})  # define system
+grid = (range(-30, 30; length={{N}}), range(-30, 30; length={{N}}), range(0, 60; length={{N}}))  # search grid
+mapper = AttractorsViaRecurrences(ds, grid)  # mapper
+
+prange = range(20.0, 35.0; length=30)  # parameter sweep range for rho
+pidx   = 2  # index of rho in parameter tuple
+sampler, _ = statespace_sampler(Random.MersenneTwister(1234); min_bounds={{u0}} .- 5, max_bounds={{u0}} .+ 5)  # random IC sampler
+
+cont_alg = AttractorSeedContinuation(mapper)  # seed-based continuation
+fracs_cont, attractors_cont = global_continuation(cont_alg, prange, pidx, sampler)  # trace attractors vs parameter
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "basin-portrait"
+label = "Basin Portrait"
+desc = "Colour-code a 2D cross-section of state space by which attractor each point converges to"
+code = '''
+using DynamicalSystems, Attractors, GLMakie
+
+ds = CoupledODEs(lorenz!, {{u0}}, {{p}})
+grid = (range(-30, 30; length={{N}}), range(-30, 30; length={{N}}), range(25, 25; length=1))  # 2D slice at z=25
+mapper = AttractorsViaRecurrences(ds, grid)  # mapper
+basins, attractors = basins_of_attraction(mapper, grid)  # classify grid
+
+heatmap(basins[:, :, 1])  # colour map of basins in x-y plane
+'''
+
+[[actionGroups.actions]]
+id = "attractor-plot"
+label = "Attractor Plot"
+desc = "Plot each attractor as a distinct trajectory coloured by attractor index"
+code = '''
+using DynamicalSystems, Attractors, GLMakie
+
+ds = CoupledODEs(lorenz!, {{u0}}, {{p}})
+grid = (range(-30, 30; length={{N}}), range(-30, 30; length={{N}}), range(0, 60; length={{N}}))  # search grid
+mapper = AttractorsViaRecurrences(ds, grid)  # mapper
+attractors = extract_attractors(mapper)  # find attractors
+
+for (k, A) in attractors
+    scatter!(vec(A[:, 1]), vec(A[:, 3]); label="A$k")  # plot each attractor
+end
+'''
+
+[[actionGroups.actions]]
+id = "bifurcation-diagram"
+label = "Bifurcation Diagram"
+desc = "Show how attractor basin fractions evolve as a parameter is varied"
+code = '''
+using DynamicalSystems, Attractors, GLMakie
+
+ds = CoupledODEs(lorenz!, {{u0}}, {{p}})
+grid = (range(-30, 30; length={{N}}), range(-30, 30; length={{N}}), range(0, 60; length={{N}}))  # grid
+mapper = AttractorsViaRecurrences(ds, grid)  # mapper
+prange = range(20.0, 35.0; length=20)  # parameter range
+sampler, _ = statespace_sampler(Random.MersenneTwister(1))  # IC sampler
+fracs_cont, _ = global_continuation(AttractorSeedContinuation(mapper), prange, 2, sampler)  # continuation
+
+plot_basins_curves(fracs_cont, prange)  # basin fraction vs parameter
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "basin-fractions"
+label = "Basin Fractions"
+desc = "Compute what fraction of the state-space grid converges to each attractor"
+code = '''
+using DynamicalSystems, Attractors
+
+ds = CoupledODEs(lorenz!, {{u0}}, {{p}})
+grid = (range(-30, 30; length={{N}}), range(-30, 30; length={{N}}), range(0, 60; length={{N}}))  # grid
+basins, attractors = basins_of_attraction(AttractorsViaRecurrences(ds, grid), grid)  # classify
+
+fracs = basin_fractions(basins)  # relative basin sizes
+for (k, f) in fracs
+    println("Attractor ", k, ": ", round(f*100; digits=1), "%")  # print each fraction
+end
+'''
+
+[[actionGroups.actions]]
+id = "convergence-check"
+label = "Convergence Check"
+desc = "Verify that the mapper consistently assigns the same attractor to repeated initial conditions"
+code = '''
+using DynamicalSystems, Attractors
+
+ds = CoupledODEs(lorenz!, {{u0}}, {{p}})
+grid = (range(-30, 30; length={{N}}), range(-30, 30; length={{N}}), range(0, 60; length={{N}}))  # grid
+mapper = AttractorsViaRecurrences(ds, grid)  # mapper
+
+label1 = mapper({{u0}})  # label for reference IC
+label2 = mapper({{u0}} .+ 1e-6)  # label for slightly perturbed IC
+println("Same basin: ", label1 == label2)  # true if ICs share a basin
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "attractor-change"
+label = "Attractor under Param Change"
+desc = "Predict which attractors survive as a system parameter crosses a bifurcation point"
+code = '''
+using DynamicalSystems, Attractors
+
+p_before = {{p}}  # original parameters
+p_after  = (10.0, 24.0, 8/3)  # parameters past a bifurcation
+
+for p_i in [p_before, p_after]
+    ds = CoupledODEs(lorenz!, {{u0}}, p_i)
+    grid = (range(-30, 30; length={{N}}), range(-30, 30; length={{N}}), range(0, 60; length={{N}}))  # grid
+    att = extract_attractors(AttractorsViaRecurrences(ds, grid))  # find attractors
+    println("p=", p_i, " -> ", length(att), " attractor(s)")  # count attractors
+end
+'''
+
+[[actionGroups.actions]]
+id = "tipping-point"
+label = "Tipping Point"
+desc = "Identify the parameter value where an attractor disappears or a basin collapses"
+code = '''
+using DynamicalSystems, Attractors
+
+prange = range(10.0, 30.0; length=40)  # sweep rho over [10, 30]
+
+for rho in prange
+    ds = CoupledODEs(lorenz!, {{u0}}, (10.0, rho, 8/3))
+    grid = (range(-30, 30; length={{N}}), range(-30, 30; length={{N}}), range(0, 60; length={{N}}))  # grid
+    att = extract_attractors(AttractorsViaRecurrences(ds, grid))  # find attractors
+    println("rho=", rho, ": ", length(att), " attractor(s)")  # detect transition
+end
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "mappers"
+label = "Recurrence vs Proximity"
+desc = "Compare AttractorsViaRecurrences and AttractorsViaProximity on the same system"
+code = '''
+using DynamicalSystems, Attractors
+
+ds = CoupledODEs(lorenz!, {{u0}}, {{p}})
+grid = (range(-30, 30; length={{N}}), range(-30, 30; length={{N}}), range(0, 60; length={{N}}))  # grid
+
+m_rec  = AttractorsViaRecurrences(ds, grid)  # recurrence mapper
+att_r  = extract_attractors(m_rec)  # attractors via recurrence
+
+println("Recurrence: ", length(att_r), " attractor(s)")  # compare counts
+'''
+
+[[actionGroups.actions]]
+id = "single-vs-multi"
+label = "Single vs Multi-Stability"
+desc = "Check whether a system has one or multiple coexisting attractors at the current parameters"
+code = '''
+using DynamicalSystems, Attractors
+
+ds = CoupledODEs(lorenz!, {{u0}}, {{p}})
+grid = (range(-30, 30; length={{N}}), range(-30, 30; length={{N}}), range(0, 60; length={{N}}))  # grid
+att = extract_attractors(AttractorsViaRecurrences(ds, grid))  # find attractors
+
+println(length(att) == 1 ? "Monostable" : "Multistable ($(length(att)) attractors)")  # stability diagnosis
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "basin-entropy"
+label = "Basin Entropy"
+desc = "Compute basin entropy as a scalar measure of how intermingled the basins are"
+code = '''
+using DynamicalSystems, Attractors
+
+ds = CoupledODEs(lorenz!, {{u0}}, {{p}})
+grid = (range(-30, 30; length={{N}}), range(-30, 30; length={{N}}), range(0, 60; length={{N}}))  # grid
+basins, _ = basins_of_attraction(AttractorsViaRecurrences(ds, grid), grid)  # classify
+
+Sb = basin_entropy(basins)  # basin entropy (0 = simple, high = fractal)
+println("Basin entropy: ", Sb)  # interpret: > 0.5 indicates fractal boundaries
+'''
+
+[[actionGroups.actions]]
+id = "attractor-dimension"
+label = "Attractor Dimension"
+desc = "Estimate the correlation dimension of the found attractor to characterise its geometry"
+code = '''
+using DynamicalSystems, Attractors, FractalDimensions
+
+ds = CoupledODEs(lorenz!, {{u0}}, {{p}})
+tr, _ = trajectory(ds, 200.0; Dt=0.01)  # long orbit on attractor
+
+eps_vals = exp10.(range(-2, 1; length=20))  # length scales
+D2 = correlationdim(tr, eps_vals)  # correlation dimension
+println("Correlation dimension: ", D2)  # Lorenz attractor ~ 2.05
+'''

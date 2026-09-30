@@ -1,0 +1,229 @@
+# Bayesian Linear Stochastic Discount Factor Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/blsdf.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Bayesian Linear Stochastic Discount Factor"
+viewType = "pollis.blsdf"
+defaultModel = "sdf"
+
+[[packages]]
+name = "BayesianFactorZoo.jl"
+github = "https://github.com/eohne/BayesianFactorZoo.jl"
+
+[requires]
+packages = ["BayesianFactorZoo.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "BayesianSDF Basics"
+file = "blsdf/tutorial-01-sdf.ipynb"
+bundled = true
+description = "Estimating the stochastic discount factor with BayesianSDF() and interpreting posterior risk prices"
+
+[[notebookSections.notebooks]]
+name = "Spike-and-Slab Factor Selection"
+file = "blsdf/tutorial-02-spike-slab.ipynb"
+bundled = true
+description = "Automatic factor selection via continuous_ss_sdf() and posterior inclusion probabilities"
+
+[[notebookSections.notebooks]]
+name = "Traded Factors Extension"
+file = "blsdf/tutorial-03-traded.ipynb"
+bundled = true
+description = "continuous_ss_sdf_2(): spike-and-slab SDF with tradable factors as additional test assets"
+
+[[notebookSections.notebooks]]
+name = "Factor Zoo Application"
+file = "blsdf/tutorial-04-factor-zoo.ipynb"
+bundled = true
+description = "Applying Bayesian SDF model selection to a large cross-section of candidate factors"
+
+[[wikis]]
+name = "Overview"
+file = "blsdf/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Factsheet"
+file = "blsdf/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "blsdf/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "blsdf/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "blsdf/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "blsdf/decision-guide.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Original Papers (from packages)"
+
+[[references]]
+title = "Bayesian Solutions for the Factor Zoo: We Just Ran Two Quadrillion Models"
+authors = "Bryzgalova, Huang & Julliard"
+year = 2023
+journal = "Journal of Finance"
+doi = "10.1111/jofi.13197"
+openAccess = false
+
+[[models]]
+id = "sdf"
+label = "Bayesian SDF"
+
+[[models]]
+id = "css"
+label = "Spike-and-Slab"
+
+[[models]]
+id = "css2"
+label = "Spike-and-Slab (Traded)"
+
+[[bullets]]
+text = "BayesianSDF"
+detail = "full posterior inference on SDF loadings b with a Gaussian prior; yields risk prices lambda = Sigmaf b and maximum Sharpe ratio"
+
+[[bullets]]
+text = "continuous_ss_sdf"
+detail = "spike-and-slab prior for automatic factor selection; each loading switches between a spike (near-zero) and a slab (active) component"
+
+[[bullets]]
+text = "continuous_ss_sdf_2"
+detail = "extends spike-and-slab by treating a subset of tradable factors as additional test assets, imposing their return moments as extra constraints"
+
+[[inputs]]
+id = "f"
+label = "Factor returns (f)"
+tooltip = "T×K matrix of factor excess returns. Rows are time periods, columns are candidate factors. Use monthly excess returns in percent for standard asset pricing."
+default = "f"
+
+[[inputs]]
+id = "R"
+label = "Test asset returns (R)"
+tooltip = "T×N matrix of test asset excess returns. Rows are time periods, columns are portfolios (e.g. 25 Fama-French size/value portfolios)."
+default = "R"
+
+[[inputs]]
+id = "psi0"
+label = "psi0"
+tooltip = "Prior scale on SDF loadings b. Larger values give a more diffuse prior. Default 5.0 is calibrated for monthly excess returns in percent."
+default = "5.0"
+
+[[inputs]]
+id = "sim-length"
+label = "MCMC draws"
+tooltip = "Number of MCMC posterior draws retained after burnin. Increase to 50 000 or more for publication-quality inference."
+default = "10_000"
+
+[[inputs]]
+id = "burnin"
+label = "Burnin"
+tooltip = "Number of initial MCMC draws to discard as warmup. Should be at least 10–20% of sim_length."
+default = "1_000"
+
+[[inputs]]
+id = "intercept"
+label = "Intercept"
+tooltip = "true to allow a non-zero intercept in the SDF pricing equation (pricing errors); false imposes exact factor pricing. Only available for BayesianSDF."
+default = "false"
+models = ["sdf"]
+
+[[inputs]]
+id = "v0"
+label = "v0"
+tooltip = "Spike variance: controls how tightly inactive factors are shrunk toward zero loading. Very small (e.g. 0.001) concentrates the spike near b_k = 0."
+default = "0.001"
+models = ["css", "css2"]
+
+[[inputs]]
+id = "v1"
+label = "v1"
+tooltip = "Slab variance: controls the spread of the prior for active factors. Larger values (e.g. 1.0) allow large SDF loadings when a factor is included."
+default = "1.0"
+models = ["css", "css2"]
+
+[[inputs]]
+id = "t-factors"
+label = "Tradable factor indices (t_factors)"
+tooltip = "Integer vector of column indices (1-based) identifying which factors in f are tradable. E.g. [1, 2] means columns 1 and 2 of f are traded assets whose excess returns impose an extra moment condition."
+default = "[1, 2]"
+models = ["css2"]
+
+[[codeBranches]]
+model = "sdf"
+code = '''
+using BayesianFactorZoo, Statistics  # Bayesian SDF estimation + Statistics stdlib
+
+result = BayesianSDF({{f}}, {{R}};  # Bayesian linear SDF with Gaussian prior
+    psi0       = {{psi0}},  # prior scale on SDF loadings b
+    intercept  = {{intercept}},  # allow non-zero SDF intercept (pricing errors)
+    sim_length = {{sim-length}},  # MCMC posterior draws
+    burnin     = {{burnin}}
+)
+
+b_mean  = mean(result.b, dims=2)  # posterior mean SDF loadings (K-vector)
+lambda_mean  = mean(result.lambda, dims=2)  # posterior mean risk prices
+SR_mean = mean(result.sh_max)  # posterior mean maximum Sharpe ratio
+
+println("b (mean):  ", b_mean)  # print posterior mean SDF loadings
+println("lambda (mean):  ", lambda_mean)  # print posterior mean risk prices
+println("SR (mean): ", SR_mean)  # print posterior mean maximum Sharpe ratio
+'''
+
+[[codeBranches]]
+model = "css"
+code = '''
+using BayesianFactorZoo, Statistics  # Bayesian SDF estimation + Statistics stdlib
+
+result = continuous_ss_sdf({{f}}, {{R}};  # spike-and-slab SDF model selection
+    psi0       = {{psi0}},  # prior scale on SDF loadings
+    v0         = {{v0}},  # spike variance (inactive factors near zero)
+    v1         = {{v1}},  # slab variance (active factor loadings)
+    sim_length = {{sim-length}},  # MCMC posterior draws
+    burnin     = {{burnin}}
+)
+
+pip    = mean(result.gamma, dims=2)  # posterior inclusion probabilities (K-vector)
+b_mean = mean(result.b, dims=2)  # posterior mean SDF loadings
+
+println("PIP:      ", pip)  # print posterior inclusion probabilities
+println("b (mean): ", b_mean)  # print posterior mean SDF loadings
+'''
+
+[[codeBranches]]
+model = "css2"
+code = '''
+using BayesianFactorZoo, Statistics  # Bayesian SDF estimation + Statistics stdlib
+
+result = continuous_ss_sdf_2({{f}}, {{R}};  # spike-and-slab SDF with tradable factors
+    psi0       = {{psi0}},  # prior scale on SDF loadings
+    v0         = {{v0}},  # spike variance (inactive factors near zero)
+    v1         = {{v1}},  # slab variance (active factor loadings)
+    t_factors  = {{t-factors}},  # column indices of tradable factors in f
+    sim_length = {{sim-length}},  # MCMC posterior draws
+    burnin     = {{burnin}}
+)
+
+pip    = mean(result.gamma, dims=2)  # posterior inclusion probabilities (K-vector)
+b_mean = mean(result.b, dims=2)  # posterior mean SDF loadings
+
+println("PIP:      ", pip)  # print posterior inclusion probabilities
+println("b (mean): ", b_mean)  # print posterior mean SDF loadings
+'''

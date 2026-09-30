@@ -1,0 +1,668 @@
+# Range-Based Volatility Estimation Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/rvol.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Range-Based Volatility Estimation"
+viewType = "pollis.rvol"
+defaultModel = "yz"
+
+[[packages]]
+name = "RangeVol.jl"
+github = "https://github.com/Trumpingtons/RangeVol.jl"
+
+[[packages.videos]]
+title = "Julia in Academia"
+description = "Overview of Julia for academic and scientific computing"
+url = "https://www.youtube.com/watch?v=wPFPT-Ech2c"
+
+[requires]
+packages = ["Plots.jl", "StatsBase.jl", "HypothesisTests.jl", "ARCHModels.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Introduction"
+file = "range-vol/tutorial-01-introduction.ipynb"
+bundled = true
+description = "Overview of all range-based volatility estimators with worked examples"
+
+[[notebookSections.notebooks]]
+name = "Estimator Comparison"
+file = "range-vol/tutorial-02-comparison.ipynb"
+bundled = true
+description = "Side-by-side comparison of efficiency and bias across all estimators"
+
+[[wikis]]
+name = "Factsheet"
+file = "range-vol/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "range-vol/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "range-vol/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "range-vol/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "range-vol/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "range-vol/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Estimators"
+
+[[wikis]]
+name = "Close-to-Close"
+file = "range-vol/close-to-close.md"
+bundled = true
+
+[[wikis]]
+name = "Parkinson"
+file = "range-vol/parkinson.md"
+bundled = true
+
+[[wikis]]
+name = "Garman-Klass"
+file = "range-vol/garman-klass.md"
+bundled = true
+
+[[wikis]]
+name = "Rogers-Satchell"
+file = "range-vol/rogers-satchell.md"
+bundled = true
+
+[[wikis]]
+name = "Garman-Klass-Yang-Zhang"
+file = "range-vol/garman-klass-yang-zhang.md"
+bundled = true
+
+[[wikis]]
+name = "Yang-Zhang"
+file = "range-vol/yang-zhang.md"
+bundled = true
+
+[[wikis]]
+name = "Alizadeh-Brandt-Diebold"
+file = "range-vol/alizadeh-brandt-diebold.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Options, Futures, and Other Derivatives"
+authors = "Hull, John C."
+year = 2022
+journal = "Pearson (11th ed.)"
+url = "https://www.pearson.com/en-us/subject-catalog/p/options-futures-and-other-derivatives/P200000005938"
+openAccess = false
+
+[[references]]
+title = "Volatility Trading"
+authors = "Sinclair, Euan"
+year = 2013
+journal = "Wiley (2nd ed.)"
+url = "https://www.wiley.com/en-us/Volatility+Trading%2C+2nd+Edition-p-9781118347133"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "On Estimating the Expected Return on the Market: An Exploratory Investigation"
+authors = "Merton, Robert C."
+year = 1980
+journal = "Journal of Financial Economics"
+doi = "10.1016/0304-405X(80)90007-0"
+openAccess = false
+
+[[references]]
+title = "The Extreme Value Method for Estimating the Variance of the Rate of Return"
+authors = "Parkinson, Michael"
+year = 1980
+journal = "Journal of Business"
+url = "https://www.jstor.org/stable/2352357"
+openAccess = false
+
+[[references]]
+title = "On the Estimation of Security Price Volatilities from Historical Data"
+authors = "Garman, Mark B.; Klass, Michael J."
+year = 1980
+journal = "Journal of Business"
+url = "https://www.jstor.org/stable/2352358"
+openAccess = false
+
+[[references]]
+title = "Estimating Variance from High, Low and Closing Prices"
+authors = "Rogers, L. C. G.; Satchell, S. E."
+year = 1991
+journal = "Annals of Applied Probability"
+doi = "10.1214/aoap/1177005835"
+openAccess = false
+
+[[references]]
+title = "Drift-Independent Volatility Estimation Based on High, Low, Open, and Close Prices"
+authors = "Yang, Dennis; Zhang, Qiang"
+year = 2000
+journal = "Journal of Business"
+doi = "10.1086/209650"
+openAccess = false
+
+[[references]]
+title = "Range-Based Estimation of Stochastic Volatility Models"
+authors = "Alizadeh, Sassan; Brandt, Michael W.; Diebold, Francis X."
+year = 2002
+journal = "Journal of Finance"
+doi = "10.1111/1540-6261.00454"
+openAccess = false
+
+[[bullets]]
+text = "Close-to-Close"
+detail = "classical baseline; sample std of log-returns, annualised by √T"
+
+[[bullets]]
+text = "Parkinson"
+detail = "high-low range; ~5.2× more efficient than close-to-close"
+
+[[bullets]]
+text = "Garman-Klass"
+detail = "OHLC estimator; ~7.4× more efficient; assumes zero drift and no overnight gaps"
+
+[[bullets]]
+text = "Rogers-Satchell"
+detail = "OHLC estimator; drift-independent; ~8× more efficient"
+
+[[bullets]]
+text = "Garman-Klass-Yang-Zhang"
+detail = "extends Garman-Klass to account for overnight price gaps"
+
+[[bullets]]
+text = "Yang-Zhang"
+detail = "minimum-variance combination of overnight, open-to-close, and Rogers-Satchell; ~14× more efficient"
+
+[[bullets]]
+text = "Alizadeh-Brandt-Diebold"
+detail = "log-range proxy log(H/L); near-Gaussian signal for latent log-volatility"
+
+[[models]]
+id = "ctc"
+label = "Close-to-Close"
+
+[[models]]
+id = "park"
+label = "Parkinson"
+
+[[models]]
+id = "gk"
+label = "Garman-Klass"
+
+[[models]]
+id = "rs"
+label = "Rogers-Satchell"
+
+[[models]]
+id = "gkyz"
+label = "GK-Yang-Zhang"
+
+[[models]]
+id = "yz"
+label = "Yang-Zhang"
+
+[[models]]
+id = "abd"
+label = "Alizadeh-Brandt-Diebold"
+
+[[decisionRows]]
+task = "Close-to-Close"
+context = "Only closing prices are available, or a textbook baseline is needed"
+purpose = "Sample standard deviation of daily log-returns; unbiased but the least efficient use of the data"
+
+[[decisionRows]]
+task = "Parkinson"
+context = "High and low prices, negligible drift and no overnight trading gaps (24-hour markets such as FX or crypto)"
+purpose = "Uses the daily high-low range only; about 5 times more efficient than close-to-close"
+
+[[decisionRows]]
+task = "Garman-Klass"
+context = "Full OHLC data, negligible drift and no overnight gaps"
+purpose = "Adds the open-to-close return to the range; about 7 times more efficient than close-to-close"
+
+[[decisionRows]]
+task = "Rogers-Satchell"
+context = "Full OHLC data from a trending asset without large overnight gaps"
+purpose = "Drift-independent range estimator; stays unbiased when prices trend within the day"
+
+[[decisionRows]]
+task = "GK-Yang-Zhang"
+context = "Full OHLC data from an exchange that closes overnight"
+purpose = "Garman-Klass plus the overnight close-to-open jump, so gaps are no longer ignored"
+
+[[decisionRows]]
+task = "Yang-Zhang"
+context = "Full OHLC data with both drift and overnight gaps: the usual case for equities"
+purpose = "Minimum-variance blend of overnight, open-to-close and Rogers-Satchell variances; about 14 times more efficient"
+
+[[decisionRows]]
+task = "Alizadeh-Brandt-Diebold"
+context = "Building a stochastic-volatility or state-space model of log-volatility"
+purpose = "The log of the daily range is nearly Gaussian around log-volatility, which makes it a clean observation for a Kalman filter"
+
+[[inputs]]
+id = "open"
+label = "Open prices (O)"
+tooltip = "Vector of daily opening prices, oldest first. All four price vectors must have the same length."
+default = "open"
+
+[[inputs]]
+id = "high"
+label = "High prices (H)"
+tooltip = "Vector of daily high prices."
+default = "high"
+
+[[inputs]]
+id = "low"
+label = "Low prices (L)"
+tooltip = "Vector of daily low prices."
+default = "low"
+
+[[inputs]]
+id = "close"
+label = "Close prices (C)"
+tooltip = "Vector of daily closing prices."
+default = "close"
+
+[[inputs]]
+id = "periods"
+label = "Trading periods"
+tooltip = "Periods per year used to annualise: 252 for equities, 260 for FX, 365 for crypto."
+default = "252"
+newRow = true
+
+[[inputs]]
+id = "window"
+label = "Window (days)"
+tooltip = "Rolling window used by the rolling, forecast, backtest and efficiency actions. Typical: 20 to 60."
+default = "30"
+
+[[inputs]]
+id = "h"
+label = "Horizon (days)"
+tooltip = "Forecast horizon in trading days for the Predict actions."
+default = "10"
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.ctc]
+# Closing prices joined by a line
+svg = '''
+var y = [50, 44, 48, 38, 42, 34, 40, 36];
+var d = '', s = '';
+for (var i = 0; i < y.length; i++) { d += (i ? 'L' : 'M') + (6 + i * 6) + ',' + y[i]; s += '<circle cx="' + (6 + i * 6) + '" cy="' + y[i] + '" r="1.6" fill="currentColor"/>'; }
+return '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.2"/>' + s;
+'''
+
+[miniCharts.park]
+# Daily high-low ranges only
+svg = '''
+var r = [[40, 58], [34, 50], [38, 56], [30, 46], [34, 52], [26, 44], [32, 48]];
+var s = '';
+r.forEach(function(v, i) { s += '<line x1="' + (8 + i * 6.5) + '" y1="' + v[0] + '" x2="' + (8 + i * 6.5) + '" y2="' + v[1] + '" stroke="currentColor" stroke-width="2"/>'; });
+return s;
+'''
+
+[miniCharts.gk]
+# OHLC bars: range with open and close ticks
+svg = '''
+var r = [[40, 58, 52, 44], [34, 50, 44, 38], [38, 56, 40, 50], [30, 46, 44, 34], [34, 52, 38, 48], [26, 44, 42, 30]];
+var s = '';
+r.forEach(function(v, i) {
+	var x = 9 + i * 7.5;
+	s += '<line x1="' + x + '" y1="' + v[0] + '" x2="' + x + '" y2="' + v[1] + '" stroke="currentColor" stroke-width="1.5"/>'
+		+ '<line x1="' + (x - 3) + '" y1="' + v[2] + '" x2="' + x + '" y2="' + v[2] + '" stroke="currentColor" stroke-width="1.5"/>'
+		+ '<line x1="' + x + '" y1="' + v[3] + '" x2="' + (x + 3) + '" y2="' + v[3] + '" stroke="currentColor" stroke-width="1.5"/>';
+});
+return s;
+'''
+
+[miniCharts.rs]
+# OHLC bars riding a drift line
+svg = '''
+var s = '<line x1="4" y1="62" x2="50" y2="26" stroke="currentColor" stroke-width="1" stroke-dasharray="3,2"/>';
+for (var i = 0; i < 6; i++) {
+	var x = 9 + i * 7.5, m = 58 - i * 6.5;
+	s += '<line x1="' + x + '" y1="' + (m - 8) + '" x2="' + x + '" y2="' + (m + 6) + '" stroke="currentColor" stroke-width="1.5"/>'
+		+ '<line x1="' + (x - 3) + '" y1="' + (m + 3) + '" x2="' + x + '" y2="' + (m + 3) + '" stroke="currentColor" stroke-width="1.5"/>'
+		+ '<line x1="' + x + '" y1="' + (m - 4) + '" x2="' + (x + 3) + '" y2="' + (m - 4) + '" stroke="currentColor" stroke-width="1.5"/>';
+}
+return s;
+'''
+
+[miniCharts.gkyz]
+# Candles separated by overnight gaps
+svg = '''
+var c = [[46, 54], [36, 42], [44, 50], [30, 38]];
+var s = '';
+c.forEach(function(v, i) {
+	var x = 8 + i * 12;
+	s += '<rect x="' + x + '" y="' + v[0] + '" width="5" height="' + (v[1] - v[0]) + '" fill="currentColor" opacity="0.8"/>'
+		+ '<line x1="' + (x + 2.5) + '" y1="' + (v[0] - 5) + '" x2="' + (x + 2.5) + '" y2="' + (v[1] + 5) + '" stroke="currentColor" stroke-width="1"/>';
+	if (i < 3) { s += '<line x1="' + (x + 5) + '" y1="' + v[0] + '" x2="' + (x + 12) + '" y2="' + c[i + 1][1] + '" stroke="currentColor" stroke-width="1" stroke-dasharray="2,2"/>'; }
+});
+return s;
+'''
+
+[miniCharts.yz]
+# Overnight, open-to-close and intraday parts blended into one estimate
+svg = '''
+var s = '';
+[[10, 40, 52], [22, 32, 46], [34, 36, 50]].forEach(function(v) {
+	s += '<rect x="' + v[0] + '" y="' + v[1] + '" width="6" height="' + (v[2] - v[1]) + '" fill="currentColor" opacity="0.8"/>'
+		+ '<line x1="' + (v[0] + 3) + '" y1="' + (v[1] - 6) + '" x2="' + (v[0] + 3) + '" y2="' + (v[2] + 6) + '" stroke="currentColor" stroke-width="1"/>';
+});
+return s + '<line x1="4" y1="68" x2="50" y2="68" stroke="currentColor" stroke-width="1.5"/>'
+	+ '<line x1="4" y1="22" x2="50" y2="22" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3,2"/>';
+'''
+
+[miniCharts.abd]
+# Near-Gaussian density of the log range
+svg = '''
+var d = '';
+for (var i = 0; i <= 46; i++) { var z = (i - 23) / 8; d += (i ? 'L' : 'M') + (4 + i) + ',' + (66 - 34 * Math.exp(-z * z / 2)).toFixed(1); }
+return '<path d="' + d + '" fill="currentColor" fill-opacity="0.2" stroke="currentColor" stroke-width="1.5"/>'
+	+ '<line x1="27" y1="30" x2="27" y2="66" stroke="currentColor" stroke-width="1" stroke-dasharray="3,2"/>';
+'''
+
+[[codeBranches]]
+model = "ctc"
+code = '''
+using RangeVol
+
+O, H, L, C = Float64.({{open}}), Float64.({{high}}), Float64.({{low}}), Float64.({{close}})
+T = {{periods}}  # trading periods per year
+est(O, H, L, C; T=1) = close_to_close(C; trading_periods=T)  # std of daily log-returns; uses closes only
+sigma = est(O, H, L, C; T=T)
+
+(annualised_pct = round(100sigma, digits=2), daily_pct = round(100est(O, H, L, C), digits=3), observations = length(C))
+'''
+
+[[codeBranches]]
+model = "park"
+code = '''
+using RangeVol
+
+O, H, L, C = Float64.({{open}}), Float64.({{high}}), Float64.({{low}}), Float64.({{close}})
+T = {{periods}}  # trading periods per year
+est(O, H, L, C; T=1) = parkinson(H, L; trading_periods=T)  # high-low range; assumes no drift and no overnight gaps
+sigma = est(O, H, L, C; T=T)
+
+(annualised_pct = round(100sigma, digits=2), daily_pct = round(100est(O, H, L, C), digits=3), observations = length(C))
+'''
+
+[[codeBranches]]
+model = "gk"
+code = '''
+using RangeVol
+
+O, H, L, C = Float64.({{open}}), Float64.({{high}}), Float64.({{low}}), Float64.({{close}})
+T = {{periods}}  # trading periods per year
+est(O, H, L, C; T=1) = garman_klass(O, H, L, C; trading_periods=T)  # range plus open-to-close; assumes no drift and no gaps
+sigma = est(O, H, L, C; T=T)
+
+(annualised_pct = round(100sigma, digits=2), daily_pct = round(100est(O, H, L, C), digits=3), observations = length(C))
+'''
+
+[[codeBranches]]
+model = "rs"
+code = '''
+using RangeVol
+
+O, H, L, C = Float64.({{open}}), Float64.({{high}}), Float64.({{low}}), Float64.({{close}})
+T = {{periods}}  # trading periods per year
+est(O, H, L, C; T=1) = rogers_satchell(O, H, L, C; trading_periods=T)  # drift-independent; ignores overnight gaps
+sigma = est(O, H, L, C; T=T)
+
+(annualised_pct = round(100sigma, digits=2), daily_pct = round(100est(O, H, L, C), digits=3), observations = length(C))
+'''
+
+[[codeBranches]]
+model = "gkyz"
+code = '''
+using RangeVol
+
+O, H, L, C = Float64.({{open}}), Float64.({{high}}), Float64.({{low}}), Float64.({{close}})
+T = {{periods}}  # trading periods per year
+est(O, H, L, C; T=1) = garman_klass_yang_zhang(O, H, L, C; trading_periods=T)  # Garman-Klass plus the overnight jump
+sigma = est(O, H, L, C; T=T)
+
+(annualised_pct = round(100sigma, digits=2), daily_pct = round(100est(O, H, L, C), digits=3), observations = length(C))
+'''
+
+[[codeBranches]]
+model = "yz"
+code = '''
+using RangeVol
+
+O, H, L, C = Float64.({{open}}), Float64.({{high}}), Float64.({{low}}), Float64.({{close}})
+T = {{periods}}  # trading periods per year
+est(O, H, L, C; T=1) = yang_zhang(O, H, L, C; trading_periods=T)  # robust to drift and overnight gaps
+sigma = est(O, H, L, C; T=T)
+
+(annualised_pct = round(100sigma, digits=2), daily_pct = round(100est(O, H, L, C), digits=3), observations = length(C))
+'''
+
+[[codeBranches]]
+model = "abd"
+code = '''
+using RangeVol, Statistics
+
+O, H, L, C = Float64.({{open}}), Float64.({{high}}), Float64.({{low}}), Float64.({{close}})
+T = {{periods}}  # trading periods per year
+lr = alizadeh_brandt_diebold(H, L)  # daily log-range log(H/L): the observation for a log-volatility state-space model
+# Under geometric Brownian motion E[log(log(H/L))] = log(sigma_daily) + 0.43 (sd 0.29), which gives an implied volatility
+est(O, H, L, C; T=1) = exp(mean(log.(filter(>(0), alizadeh_brandt_diebold(H, L)))) - 0.43) * sqrt(T)
+sigma = est(O, H, L, C; T=T)
+
+(annualised_pct = round(100sigma, digits=2), daily_pct = round(100est(O, H, L, C), digits=3),
+ mean_log_range = round(mean(log.(filter(>(0), lr))), digits=3), sd_log_range = round(std(log.(filter(>(0), lr))), digits=3))
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "rolling-vol"
+label = "Rolling Volatility"
+desc = "Annualised volatility over a rolling window for this estimator, against close-to-close: the range-based line is smoother because each day carries more information"
+code = '''
+using Plots
+w = {{window}}
+roll(f) = [f(O[i-w+1:i], H[i-w+1:i], L[i-w+1:i], C[i-w+1:i]; T=T) for i in w:length(C)]
+ctc_f(O, H, L, C; T=1) = close_to_close(C; trading_periods=T)
+Plots.plot(w:length(C), 100 .* roll(ctc_f), lw=1, alpha=0.6, label="close-to-close", xlabel="day", ylabel="annualised volatility (%)")
+Plots.plot!(w:length(C), 100 .* roll(est), lw=1.8, label="this estimator", title="Rolling {{window}}-day volatility")
+'''
+
+[[actionGroups.actions]]
+id = "range-plot"
+label = "Prices and Ranges"
+desc = "Closing price inside its daily high-low band, and the daily range log(H/L) that the range-based estimators feed on"
+code = '''
+using Plots
+t = 1:length(C)
+p1 = Plots.plot(t, C, ribbon=(C .- L, H .- C), fillalpha=0.3, lw=1, label="close within high-low", ylabel="price")
+p2 = Plots.bar(t, 100 .* log.(H ./ L), lw=0, label="daily range log(H/L) (%)", xlabel="day")
+Plots.plot(p1, p2, layout=(2, 1), link=:x)
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "clustering"
+label = "Volatility Clustering"
+desc = "Autocorrelation of squared returns and of the daily range with a Ljung-Box test: persistent volatility means a single full-sample number hides a lot, so look at the rolling estimates"
+code = '''
+using StatsBase, HypothesisTests, Plots
+r = diff(log.(C))  # daily log-returns
+lags = 1:20
+acf = hcat(autocor(r .^ 2, lags), autocor(log.(H ./ L), lags))
+Plots.plot(lags, acf, marker=:circle, label=["squared returns" "daily range"], xlabel="lag", ylabel="autocorrelation")
+display(Plots.hline!([-1.96, 1.96] ./ sqrt(length(r)), ls=:dash, color=:gray, label="95% band"))
+(ljung_box_squared_returns_p = pvalue(LjungBoxTest(r .^ 2, 20)), ljung_box_range_p = pvalue(LjungBoxTest(log.(H ./ L), 20)))
+'''
+
+[[actionGroups.actions]]
+id = "assumptions"
+label = "Drift and Overnight Gaps"
+desc = "Checks the assumptions that separate the estimators: a trend in prices biases Parkinson and Garman-Klass, overnight gaps bias every estimator that ignores the close-to-open jump; also flags inconsistent OHLC rows"
+code = '''
+using Statistics
+r = diff(log.(C))  # close-to-close returns
+ro = log.(O[2:end] ./ C[1:end-1])  # overnight: previous close to open
+rc = log.(C ./ O)  # intraday: open to close
+drift_t = mean(r) / (std(r) / sqrt(length(r)))
+gap_share = var(ro) / (var(ro) + var(rc))
+bad_rows = count((H .< max.(O, C)) .| (L .> min.(O, C)))
+(drift_t_stat = round(drift_t, digits=2), overnight_variance_share = round(gap_share, digits=3),
+ zero_range_days = count(H .== L), inconsistent_ohlc_rows = bad_rows,
+ advice = gap_share > 0.1 ? "overnight gaps matter: prefer Yang-Zhang or GK-Yang-Zhang" :
+          abs(drift_t) > 2 ? "noticeable drift: prefer Rogers-Satchell or Yang-Zhang" :
+          "gaps and drift are small: Parkinson and Garman-Klass are fine")
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "forecast"
+label = "Volatility Forecast"
+desc = "Persistence forecast: the volatility of the last window carried forward over the horizon, scaled by the square root of time, with the implied 95% price band"
+code = '''
+w, h = {{window}}, {{h}}
+s_now = est(O[end-w+1:end], H[end-w+1:end], L[end-w+1:end], C[end-w+1:end])  # daily volatility of the last window
+s_h = s_now * sqrt(h)  # volatility over the horizon
+(daily_pct = round(100s_now, digits=3), annualised_pct = round(100s_now * sqrt(T), digits=2),
+ horizon_pct = round(100s_h, digits=2), price_band_95 = round.(C[end] .* exp.((-1.96s_h, 1.96s_h)), digits=2),
+ full_sample_annualised_pct = round(100sigma, digits=2))
+'''
+
+[[actionGroups.actions]]
+id = "backtest"
+label = "Forecast Backtest"
+desc = "Each rolling estimate forecasts the realised volatility of the next window; RMSE and correlation of this estimator against close-to-close show whether the extra efficiency pays off out of sample"
+code = '''
+using Statistics
+w = {{window}}
+r = diff(log.(C))  # r[i] is the return from day i to day i+1
+idx = w:(length(C) - w)
+f_this = [est(O[i-w+1:i], H[i-w+1:i], L[i-w+1:i], C[i-w+1:i]) for i in idx]
+f_ctc = [close_to_close(C[i-w+1:i]) for i in idx]
+realised = [sqrt(mean(r[i:i+w-1] .^ 2)) for i in idx]  # next-window realised volatility
+rmse(f) = round(100sqrt(mean((f .- realised) .^ 2)), digits=4)
+(windows = length(idx), rmse_this_pct = rmse(f_this), rmse_close_to_close_pct = rmse(f_ctc),
+ correlation_this = round(cor(f_this, realised), digits=3), correlation_close_to_close = round(cor(f_ctc, realised), digits=3))
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "compare-all"
+label = "All Estimators"
+desc = "All seven estimators on the same data with their theoretical efficiency relative to close-to-close; large disagreements point to drift, gaps or bad OHLC rows"
+code = '''
+using RangeVol, Statistics
+abd(H, L) = exp(mean(log.(filter(>(0), alizadeh_brandt_diebold(H, L)))) - 0.43)
+rows = [("Close-to-Close", close_to_close(C; trading_periods=T), "1 (baseline)"),
+        ("Parkinson", parkinson(H, L; trading_periods=T), "about 5.2"),
+        ("Garman-Klass", garman_klass(O, H, L, C; trading_periods=T), "about 7.4"),
+        ("Rogers-Satchell", rogers_satchell(O, H, L, C; trading_periods=T), "about 8, drift-free"),
+        ("GK-Yang-Zhang", garman_klass_yang_zhang(O, H, L, C; trading_periods=T), "Garman-Klass with gaps"),
+        ("Yang-Zhang", yang_zhang(O, H, L, C; trading_periods=T), "about 14"),
+        ("Alizadeh-Brandt-Diebold", abd(H, L) * sqrt(T), "implied from log-range")]
+[(estimator = e, annualised_pct = round(100v, digits=2), efficiency = k) for (e, v, k) in rows]
+'''
+
+[[actionGroups.actions]]
+id = "compare-garch"
+label = "Compare with GARCH"
+desc = "GARCH(1,1) conditional volatility from close-to-close returns against the rolling range-based estimate: GARCH reacts to shocks, the range estimate measures what happened inside each day"
+code = '''
+using ARCHModels, Statistics, Plots
+r = diff(log.(C))
+am = fit(GARCH{1, 1}, r)  # GARCH(1,1) by maximum likelihood
+g = volatilities(am)  # conditional standard deviation per day
+w = {{window}}
+rolling = [est(O[i-w+1:i], H[i-w+1:i], L[i-w+1:i], C[i-w+1:i]) for i in w:length(C)]
+Plots.plot(2:length(C), 100sqrt(T) .* g, lw=1, label="GARCH(1,1)", xlabel="day", ylabel="annualised volatility (%)")
+display(Plots.plot!(w:length(C), 100sqrt(T) .* rolling, lw=1.8, label="this estimator, {{window}}-day"))
+(garch_latest_pct = round(100sqrt(T) * g[end], digits=2), garch_mean_pct = round(100sqrt(T) * mean(g), digits=2),
+ this_latest_pct = round(100sqrt(T) * rolling[end], digits=2), this_full_sample_pct = round(100sigma, digits=2))
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "annualisation"
+label = "Time Scaling"
+desc = "The same volatility over a day, a week, a month and a year: volatility scales with the square root of time when returns are uncorrelated"
+code = '''
+s = est(O, H, L, C)  # daily volatility
+(daily_pct = round(100s, digits=3), weekly_pct = round(100s * sqrt(5), digits=2),
+ monthly_pct = round(100s * sqrt(21), digits=2), annualised_pct = round(100s * sqrt(T), digits=2),
+ rule = "sigma over k days = daily sigma x sqrt(k)")
+'''
+
+[[actionGroups.actions]]
+id = "efficiency"
+label = "Empirical Efficiency"
+desc = "Relative sampling variance of this estimator against close-to-close over non-overlapping windows: above 1 means it pins down volatility with fewer days of data (genuine volatility changes add to both, so this understates the theoretical gain)"
+code = '''
+using Statistics
+w = {{window}}
+blocks = [(i - w + 1):i for i in w:w:length(C)]
+ctc_b = [close_to_close(C[b]) for b in blocks]
+this_b = [est(O[b], H[b], L[b], C[b]) for b in blocks]
+cv2(x) = var(x) / mean(x)^2  # squared coefficient of variation
+(windows = length(blocks), cv_close_to_close = round(sqrt(cv2(ctc_b)), digits=3), cv_this = round(sqrt(cv2(this_b)), digits=3),
+ empirical_efficiency = round(cv2(ctc_b) / cv2(this_b), digits=2))
+'''

@@ -1,0 +1,438 @@
+# Advanced Time-Series Forecasting Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/atsf.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Advanced Time-Series Forecasting"
+viewType = "pollis.atsf"
+defaultModel = "bats"
+
+[[packages]]
+name = "Durbyn.jl"
+github = "https://github.com/taf-society/Durbyn.jl"
+
+[requires]
+packages = ["Plots.jl", "HypothesisTests.jl", "StatsBase.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "BATS and TBATS"
+file = "tsf/tutorial-03-bats.ipynb"
+bundled = true
+description = "Box-Cox ARMA trend and seasonal forecasting for complex or multiple seasonalities"
+
+[[notebookSections.notebooks]]
+name = "Theta Models"
+file = "tsf/tutorial-04-theta.ipynb"
+bundled = true
+description = "Theta method for univariate decomposition and forecasting"
+
+[[notebookSections.notebooks]]
+name = "Intermittent Demand"
+file = "tsf/tutorial-05-demand.ipynb"
+bundled = true
+description = "Croston SBA and SBJ for sparse, intermittent demand time series"
+
+[[wikis]]
+name = "Overview"
+file = "tsf/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Factsheet"
+file = "tsf/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "tsf/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "tsf/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "tsf/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "tsf/decision-guide.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Forecasting: Principles and Practice"
+authors = "Hyndman, Rob J.; Athanasopoulos, George"
+year = 2021
+journal = "OTexts"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Forecasting Time Series With Complex Seasonal Patterns Using Exponential Smoothing"
+authors = "De Livera, Alysha M.; Hyndman, Rob J.; Snyder, Ralph D."
+year = 2011
+journal = "Journal of the American Statistical Association"
+doi = "10.1198/jasa.2011.tm09771"
+openAccess = false
+
+[[references]]
+title = "The Theta Model: A Decomposition Approach to Forecasting"
+authors = "Assimakopoulos, Vassilis; Nikolopoulos, Konstantinos"
+year = 2000
+journal = "International Journal of Forecasting"
+doi = "10.1016/S0169-2070(00)00066-2"
+openAccess = false
+
+[[references]]
+title = "Forecasting and Stock Control for Intermittent Demands"
+authors = "Croston, J. D."
+year = 1972
+journal = "Journal of the Operational Research Society"
+doi = "10.1057/jors.1972.50"
+openAccess = false
+
+[[references]]
+title = "The Accuracy of Intermittent Demand Estimates"
+authors = "Syntetos, Aris A.; Boylan, John E."
+year = 2005
+journal = "International Journal of Forecasting"
+doi = "10.1016/j.ijpe.2004.06.004"
+openAccess = false
+
+[[models]]
+id = "bats"
+label = "BATS / TBATS"
+
+[[models]]
+id = "theta"
+label = "Theta Method"
+
+[[models]]
+id = "demand"
+label = "Intermittent Demand"
+
+[[bullets]]
+text = "BATS / TBATS"
+detail = "Box-Cox ARMA trend-seasonal for complex or multiple seasonalities"
+
+[[bullets]]
+text = "Theta Method"
+detail = "simple and effective univariate decomposition method"
+
+[[bullets]]
+text = "Intermittent Demand"
+detail = "Croston SBA / SBJ for sparse, irregular demand series"
+
+[[decisionRows]]
+task = "BATS / TBATS"
+context = "High-frequency data with several or non-integer seasonal periods (hourly with daily and weekly cycles, weekly data with period 52.18)"
+purpose = "Box-Cox transform, damped trend, ARMA errors and seasonal states; TBATS writes each season as trigonometric (Fourier) terms, so long and fractional periods stay cheap"
+
+[[decisionRows]]
+task = "Theta Method"
+context = "A robust, hard-to-beat benchmark for monthly or yearly series, as in the M3 competition"
+purpose = "Splits the deseasonalised series into a long-run linear trend (theta line 0) and a short-run curvature line smoothed by SES, then recombines them; optimised and dynamic variants re-estimate the weight"
+
+[[decisionRows]]
+task = "Intermittent Demand"
+context = "Sparse series with many zeros: spare parts, slow-moving retail items"
+purpose = "Croston smooths demand sizes and intervals between demands separately; SBA and SBJ correct Croston's upward bias in the demand rate"
+
+[[inputs]]
+id = "yvar"
+label = "Data variable"
+tooltip = "Your univariate time series (Vector of Float64), oldest observation first. For intermittent demand, a non-negative series with zeros."
+default = "y"
+
+[[inputs]]
+id = "h"
+label = "Horizon"
+tooltip = "Forecast horizon in observations."
+default = "24"
+
+[[inputs]]
+id = "kind"
+label = "Model"
+tooltip = "BATS uses integer seasonal periods with seasonal states; TBATS uses Fourier terms and accepts several and non-integer periods."
+kind = "select"
+default = "tbats"
+models = ["bats"]
+newRow = true
+
+[[inputs.options]]
+value = "tbats"
+label = "TBATS"
+
+[[inputs.options]]
+value = "bats"
+label = "BATS"
+
+[[inputs]]
+id = "periods"
+label = "Seasonal Periods"
+tooltip = "Vector of seasonal periods, e.g. [12] for monthly or [24, 168] for hourly data; TBATS also accepts non-integer periods such as [52.18]."
+default = "[12]"
+models = ["bats"]
+
+[[inputs]]
+id = "ttype"
+label = "Variant"
+tooltip = "STM: standard theta (theta = 2). OTM: theta optimised. DSTM / DOTM: dynamic versions that update the trend line as data arrive."
+kind = "select"
+default = "OTM"
+models = ["theta"]
+newRow = true
+
+[[inputs.options]]
+value = "STM"
+label = "Standard (STM)"
+
+[[inputs.options]]
+value = "OTM"
+label = "Optimised (OTM)"
+
+[[inputs.options]]
+value = "DSTM"
+label = "Dynamic Standard (DSTM)"
+
+[[inputs.options]]
+value = "DOTM"
+label = "Dynamic Optimised (DOTM)"
+
+[[inputs]]
+id = "period"
+label = "Period"
+tooltip = "Seasonal period used for the classical decomposition before the theta lines are fitted; 1 for non-seasonal data."
+default = "12"
+models = ["theta"]
+
+[[inputs]]
+id = "method"
+label = "Method"
+tooltip = "Classic Croston is biased upwards; SBA (Syntetos-Boylan) and SBJ (Shale-Boylan-Johnston) correct the bias."
+kind = "select"
+default = "sba"
+models = ["demand"]
+newRow = true
+
+[[inputs.options]]
+value = "classic"
+label = "Croston Classic"
+
+[[inputs.options]]
+value = "sba"
+label = "Croston SBA"
+
+[[inputs.options]]
+value = "sbj"
+label = "Croston SBJ"
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.bats]
+# Two superimposed seasonal cycles of different period
+svg = '''
+var d = '';
+for (var i = 0; i <= 46; i++) { d += (i ? 'L' : 'M') + (4 + i) + ',' + (46 - 9 * Math.sin(i * Math.PI / 4) - 6 * Math.sin(i * Math.PI / 23)).toFixed(1); }
+return '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.5"/>';
+'''
+
+[miniCharts.theta]
+# Data between a straight trend line and a doubled-curvature line
+svg = '''
+var y = [56, 50, 54, 44, 48, 38, 42, 34], d = '';
+for (var i = 0; i < y.length; i++) { d += (i ? 'L' : 'M') + (5 + i * 6) + ',' + y[i]; }
+return '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.5"/>'
+	+ '<line x1="5" y1="56" x2="47" y2="34" stroke="currentColor" stroke-width="1" stroke-dasharray="3,2"/>'
+	+ '<line x1="47" y1="36" x2="53" y2="32" stroke="currentColor" stroke-width="1.5"/>';
+'''
+
+[miniCharts.demand]
+# Sparse demand spikes with a flat Croston forecast
+svg = '''
+var s = '<line x1="4" y1="66" x2="50" y2="66" stroke="currentColor" stroke-width="0.8"/>';
+[[8, 20], [17, 12], [21, 26], [33, 16], [44, 22]].forEach(function(b) { s += '<rect x="' + b[0] + '" y="' + (66 - b[1]) + '" width="3" height="' + b[1] + '" fill="currentColor"/>'; });
+return s + '<line x1="4" y1="58" x2="50" y2="58" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3,2"/>';
+'''
+
+[[codeBranches]]
+model = "bats"
+code = '''
+using Durbyn
+
+y = Float64.({{yvar}})
+{{?kind=tbats}} build(y) = tbats(y, {{periods}})  # trigonometric seasonality, Box-Cox, damping and ARMA errors chosen by AIC
+{{?kind=bats}} build(y) = bats(y, Int.({{periods}}))  # integer seasonal periods with seasonal states
+model = build(y)
+fc = forecast(model; h={{h}})  # {{h}}-step-ahead forecast with 80% and 95% intervals
+'''
+
+[[codeBranches]]
+model = "theta"
+code = '''
+using Durbyn
+
+y = Float64.({{yvar}})
+build(y) = theta(y, {{period}}; model_type={{ttype}})  # {{ttype}} theta model, period {{period}}
+model = build(y)
+fc = forecast(model; h={{h}})  # {{h}}-step-ahead forecast with 80% and 95% intervals
+'''
+
+[[codeBranches]]
+model = "demand"
+code = '''
+using Durbyn
+
+y = Float64.({{yvar}})
+build(y) = croston_{{method}}(y)  # smooths demand sizes and inter-demand intervals separately
+model = build(y)
+fc = forecast(model; h={{h}})  # flat forecast of the demand rate per period
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "forecast-plot"
+label = "Forecast Plot"
+desc = "The series, the in-sample fit and the forecast with its 80% and 95% prediction intervals (point forecast only for intermittent demand)"
+code = '''
+using Plots
+fit_in = fitted(model)
+p = Plots.plot(y, lw=1.5, c=:black, label="data", xlabel="t", title="Forecast, {{h}} steps")
+Plots.plot!(fit_in, lw=1, ls=:dash, label="fitted")
+tf = length(y) .+ (1:{{h}})
+{{?model!=demand}} Plots.plot!(tf, fc.mean, ribbon=(fc.mean .- fc.lower[:, 2], fc.upper[:, 2] .- fc.mean), fillalpha=0.2, lw=2, label="forecast, 95%")
+{{?model=demand}} Plots.plot!(tf, fc.mean, lw=2, label="forecast (demand rate)")
+p
+'''
+
+[[actionGroups.actions]]
+id = "structure"
+label = "Series Structure"
+desc = "What the model sees: for BATS/TBATS a periodogram with the seasonal periods marked; for theta the deseasonalised series and its linear trend; for intermittent demand the demand sizes and the intervals between them"
+code = '''
+using Plots, Statistics
+{{?model=bats}} n = length(y); f = (1:n ÷ 2) ./ n; P = abs2.([sum(y[t] * cis(-2pi * k * t / n) for t in 1:n) for k in 1:n ÷ 2]) ./ n
+{{?model=bats}} Plots.plot(1 ./ f, P, xscale=:log10, lw=1.5, label="periodogram", xlabel="Period", title="Periodogram"); Plots.vline!({{periods}}, c=:red, ls=:dash, label="seasonal periods")
+{{?model=theta}} ya = model.decompose ? model.y : y; tt = 1:length(ya); b = cov(tt, ya) / var(tt)
+{{?model=theta}} Plots.plot(ya, lw=1.5, label="deseasonalised", title="Theta line 0 (linear trend)"); Plots.plot!(tt, mean(ya) .+ b .* (tt .- mean(tt)), lw=2, label="theta = 0 line")
+{{?model=demand}} nz = findall(>(0), y); sizes = y[nz]; gaps = diff([0; nz])
+{{?model=demand}} Plots.plot(Plots.bar(nz, sizes, legend=false, title="Demand sizes"), Plots.histogram(gaps, legend=false, title="Intervals between demands"), layout=(2, 1))
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "residuals"
+label = "Residual Diagnostics"
+desc = "Residuals over time, their autocorrelation and the Ljung-Box test up to lag 2 x period (lag 10 for non-seasonal data): leftover structure means the model has missed something"
+code = '''
+using Plots, HypothesisTests, StatsBase
+r = filter(isfinite, Durbyn.residuals(model))  # qualified: StatsBase also exports residuals
+L = min(24, length(r) ÷ 4)
+display((ljung_box_lags = L, p_value = pvalue(LjungBoxTest(r, L)), residual_sd = std(r)))
+p1 = Plots.plot(r, legend=false, title="Residuals")
+p2 = Plots.bar(1:L, autocor(r, 1:L), legend=false, title="Residual ACF"); Plots.hline!(p2, [-1.96, 1.96] ./ sqrt(length(r)), c=:red, ls=:dash)
+Plots.plot(p1, p2, layout=(2, 1))
+'''
+
+[[actionGroups.actions]]
+id = "intermittency"
+label = "Demand Pattern (ADI / CV2)"
+desc = "Average inter-demand interval (ADI) and squared coefficient of variation of demand sizes (CV2), with the Syntetos-Boylan class: smooth, erratic, intermittent or lumpy"
+code = '''
+using Statistics
+nz = findall(>(0), y); sizes = y[nz]
+adi = length(y) / length(nz); cv2 = (std(sizes) / mean(sizes))^2
+class = adi < 1.32 ? (cv2 < 0.49 ? "smooth" : "erratic") : (cv2 < 0.49 ? "intermittent" : "lumpy")
+(share_zero = round(1 - length(nz) / length(y), digits=3), adi = round(adi, digits=2), cv2 = round(cv2, digits=3), class = class,
+ advice = class == "smooth" ? "demand is regular: ETS or theta will do" : "Croston-type methods (SBA for intermittent and lumpy)")
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "forecast-table"
+label = "Forecast Table"
+desc = "Point forecasts with 80% and 95% prediction intervals for each step"
+code = '''
+{{?model!=demand}} [(step = i, mean = round(fc.mean[i], digits=3), lower95 = round(fc.lower[i, 2], digits=3), upper95 = round(fc.upper[i, 2], digits=3)) for i in 1:{{h}}]
+{{?model=demand}} [(step = i, demand_rate = round(fc.mean[i], digits=4)) for i in 1:{{h}}]
+'''
+
+[[actionGroups.actions]]
+id = "backtest"
+label = "Holdout Accuracy"
+desc = "Refits on all but the last h observations and scores the forecast of the held-out part: MAE, RMSE and MASE (for intermittent demand also the bias)"
+code = '''
+using Statistics
+H = min({{h}}, length(y) ÷ 5)
+train, test = y[1:end-H], y[end-H+1:end]
+f = forecast(build(train); h=H).mean
+e = test .- f
+(holdout = H, mae = mean(abs.(e)), rmse = sqrt(mean(e .^ 2)), mase = mean(abs.(e)) / mean(abs.(diff(train))), bias = mean(f .- test))
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "compare-methods"
+label = "Compare Methods"
+desc = "Holdout accuracy of this model against TBATS, the optimised theta method, SBA and the naive and seasonal-naive benchmarks on the same split"
+code = '''
+using Statistics
+H = min({{h}}, length(y) ÷ 5)
+{{?model=bats}} m = round(Int, first({{periods}}))
+{{?model=theta}} m = {{period}}
+{{?model=demand}} m = 1
+train, test = y[1:end-H], y[end-H+1:end]
+cands = [("This model", () -> build(train)), ("TBATS", () -> tbats(train, m > 1 ? [m] : nothing)), ("Theta (OTM)", () -> theta(train, m)),
+         ("Croston SBA", () -> croston_sba(train)), ("Naive", () -> naive(train)), ("Seasonal naive", () -> snaive(train, max(m, 1)))]
+rows = []
+for (name, make) in cands
+    try
+        local fh = forecast(make(); h=H).mean
+        push!(rows, (method = name, mae = round(mean(abs.(test .- fh)), digits=3), rmse = round(sqrt(mean((test .- fh) .^ 2)), digits=3)))
+    catch
+        push!(rows, (method = name, mae = NaN, rmse = NaN))
+    end
+end
+sort(rows, by = r -> r.mae)
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "parameters"
+label = "Model Parameters"
+desc = "The fitted components: Box-Cox lambda, smoothing, trend damping and ARMA terms for BATS/TBATS; alpha and theta for the theta method; smoothing weights for Croston"
+code = '''
+{{?model=bats}} (lambda = model.lambda, alpha = model.alpha, beta = model.beta, damping = model.damping_parameter, arma = (ar = model.ar_coefficients, ma = model.ma_coefficients), seasonal_periods = model.seasonal_periods, aic = model.aic)
+{{?model=theta}} (variant = model.model_type, alpha = round(model.alpha, digits=4), theta = round(model.theta, digits=4), seasonally_adjusted = model.decompose, mse = round(model.mse, digits=4))
+{{?model=demand}} (method = model.method, smoothing_weights = round.(model.weights, digits=4), initial_size_and_interval = round.(model.initial, digits=3))
+'''

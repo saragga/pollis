@@ -1,0 +1,394 @@
+# Discrete-Time Stochastic Volatility Models Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/dtsv.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Discrete-Time Stochastic Volatility Models"
+viewType = "pollis.dtsv"
+defaultModel = "basic"
+
+[[packages]]
+name = "MacroEconometricModels.jl"
+github = "https://github.com/FriedmanJP/MacroEconometricModels.jl"
+
+[requires]
+packages = ["MacroEconometricModels.jl", "MCMCDiagnosticTools.jl", "Plots.jl", "StatsBase.jl", "HypothesisTests.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Quick Start"
+file = "dtsv/tutorial-01-quickstart.ipynb"
+bundled = true
+description = "Fit a basic stochastic volatility model to financial returns"
+
+[[notebookSections.notebooks]]
+name = "Basic SV"
+file = "dtsv/tutorial-02-basic.ipynb"
+bundled = true
+description = "KSC Gibbs sampler: posterior inference for the baseline SV model"
+
+[[notebookSections.notebooks]]
+name = "Leverage SV"
+file = "dtsv/tutorial-03-leverage.ipynb"
+bundled = true
+description = "Leverage SV: correlated return and volatility innovations"
+
+[[notebookSections.notebooks]]
+name = "Student-t SV"
+file = "dtsv/tutorial-04-student.ipynb"
+bundled = true
+description = "Heavy-tailed SV: Student-t observation equation with estimated degrees of freedom"
+
+[[notebookSections.notebooks]]
+name = "Diagnostics"
+file = "dtsv/tutorial-05-diagnostics.ipynb"
+bundled = true
+description = "MCMC convergence checks and latent volatility path extraction"
+
+[[wikis]]
+name = "Overview"
+file = "dtsv/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Factsheet"
+file = "dtsv/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "dtsv/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "dtsv/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "dtsv/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "dtsv/decision-guide.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Original Papers (from packages)"
+
+[[references]]
+title = "Stochastic volatility: Likelihood inference and comparison with ARCH models"
+authors = "Kim, S., Shephard, N., & Chib, S."
+year = 1998
+journal = ""
+url = "https://doi.org/10.1111/1467-937X.00050"
+openAccess = false
+
+[[references]]
+title = "Financial returns modelled by the product of two stochastic processes — a study of daily sugar prices 1961–79"
+authors = "Taylor, S. J."
+year = 1982
+journal = ""
+url = "https://doi.org/10.1007/978-94-015-7819-6_9"
+openAccess = false
+
+[[references]]
+title = "Bayesian analysis of stochastic volatility models"
+authors = "Jacquier, E., Polson, N. G., & Rossi, P. E."
+year = 1994
+journal = ""
+url = "https://doi.org/10.1080/01621459.1994.10476873"
+openAccess = false
+
+[[references]]
+title = "Stochastic volatility with leverage: Fast and efficient likelihood inference"
+authors = "Yu, J."
+year = 2005
+journal = ""
+url = "https://doi.org/10.1016/j.jeconom.2004.09.014"
+openAccess = false
+
+[[models]]
+id = "basic"
+label = "Basic"
+
+[[models]]
+id = "lev"
+label = "Leverage"
+
+[[models]]
+id = "stut"
+label = "Student-t"
+
+[[bullets]]
+text = "Basic SV"
+detail = "Kim–Shephard–Chib Gibbs sampler; latent log-volatility follows an AR(1) with Gaussian shocks, approximated via mixture of normals"
+
+[[bullets]]
+text = "Leverage SV"
+detail = "extends Basic SV with a contemporaneous correlation rho between return innovations epsilont and volatility innovations etat"
+
+[[bullets]]
+text = "Student-t SV"
+detail = "heavy-tailed return distribution; degrees of freedom nu estimated from the data via a Gamma prior, improving robustness to outliers"
+
+[[decisionRows]]
+task = "Basic"
+context = "Returns show volatility clustering and you want the latent volatility path with full posterior uncertainty"
+purpose = "Log-variance follows a Gaussian AR(1); the Kim-Shephard-Chib sampler draws the whole volatility path jointly with mu, phi and sigma_eta"
+
+[[decisionRows]]
+task = "Leverage"
+context = "Equity-type returns where falls are followed by higher volatility than rises of the same size"
+purpose = "Correlates the return shock with the next volatility shock, so bad news raises future volatility more than good news"
+
+[[decisionRows]]
+task = "Student-t"
+context = "Returns still have extreme outliers after allowing for changing volatility"
+purpose = "Heavy-tailed return shocks with estimated degrees of freedom, so single outliers do not inflate the volatility path"
+
+[[inputs]]
+id = "y"
+label = "Returns"
+tooltip = "Vector of (demeaned) asset returns or log-returns, at least 20 observations."
+default = "y"
+
+[[inputs]]
+id = "draws"
+label = "Posterior draws"
+tooltip = "Number of MCMC draws kept after burn-in."
+default = "2000"
+
+[[inputs]]
+id = "burnin"
+label = "Burn-in"
+tooltip = "Number of initial MCMC iterations discarded while the sampler converges."
+default = "1000"
+
+[[inputs]]
+id = "seed"
+label = "Seed"
+tooltip = "Random seed, so the MCMC run can be reproduced exactly."
+default = "1"
+
+[[inputs]]
+id = "h"
+label = "Horizon"
+tooltip = "Number of periods ahead to forecast the variance."
+default = "20"
+newRow = true
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.basic]
+# Returns whose spread follows a smooth latent volatility path
+svg = '''
+var s = '', v = '';
+for (var i = 0; i <= 44; i += 2) { var w = 4 + 10 * Math.pow(Math.sin(i / 9), 2); v += (i ? 'L' : 'M') + (5 + i) + ',' + (43 - w).toFixed(1); s += '<line x1="' + (5 + i) + '" y1="43" x2="' + (5 + i) + '" y2="' + (43 + (i % 4 ? -1 : 1) * w * 0.8).toFixed(1) + '" stroke="currentColor" stroke-width="1"/>'; }
+return s + '<path d="' + v + '" fill="none" stroke="currentColor" stroke-width="1.5"/>';
+'''
+
+[miniCharts.lev]
+# A fall followed by a volatility burst
+svg = '''
+var s = '', v = '';
+for (var i = 0; i <= 44; i += 2) { var w = i < 16 ? 3 : 3 + 12 * Math.exp(-(i - 16) / 10); v += (i ? 'L' : 'M') + (5 + i) + ',' + (43 - w).toFixed(1); var d = i === 16 ? 16 : (i % 4 ? -1 : 1) * w * 0.8; s += '<line x1="' + (5 + i) + '" y1="43" x2="' + (5 + i) + '" y2="' + (43 + d).toFixed(1) + '" stroke="currentColor" stroke-width="1"/>'; }
+return s + '<path d="' + v + '" fill="none" stroke="currentColor" stroke-width="1.5"/>';
+'''
+
+[miniCharts.stut]
+# Heavy-tailed density against a normal one
+svg = '''
+var n = '', t = '';
+for (var i = 0; i <= 44; i++) { var x = (i - 22) / 6; var yn = Math.exp(-x * x / 2); var yt = Math.pow(1 + x * x / 3, -2); n += (i ? 'L' : 'M') + (5 + i) + ',' + (62 - 34 * yn).toFixed(1); t += (i ? 'L' : 'M') + (5 + i) + ',' + (62 - 30 * yt).toFixed(1); }
+return '<line x1="5" y1="62" x2="49" y2="62" stroke="currentColor" stroke-width="0.8"/><path d="' + n + '" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="3,2"/><path d="' + t + '" fill="none" stroke="currentColor" stroke-width="1.5"/>';
+'''
+
+[[codeBranches]]
+model = "basic"
+code = '''
+using MacroEconometricModels, Statistics
+
+yv = Float64.({{y}})
+estimate(y) = estimate_sv(y; n_samples={{draws}}, burnin={{burnin}}, seed={{seed}})  # KSC Gibbs sampler, Gaussian shocks
+result = estimate(yv)
+'''
+
+[[codeBranches]]
+model = "lev"
+code = '''
+using MacroEconometricModels, Statistics
+
+yv = Float64.({{y}})
+estimate(y) = estimate_sv(y; n_samples={{draws}}, burnin={{burnin}}, seed={{seed}}, leverage=true)  # return and volatility shocks correlated
+result = estimate(yv)
+'''
+
+[[codeBranches]]
+model = "stut"
+code = '''
+using MacroEconometricModels, Statistics
+
+yv = Float64.({{y}})
+estimate(y) = estimate_sv(y; n_samples={{draws}}, burnin={{burnin}}, seed={{seed}}, dist=:studentt)  # heavy-tailed return shocks
+result = estimate(yv)
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "vol-path"
+label = "Volatility Path"
+desc = "Posterior mean of the latent volatility with its 95% credible band, over the absolute returns it has to explain"
+code = '''
+using Plots
+q = sqrt.(result.volatility_quantiles)  # columns: 2.5%, 50%, 97.5% of the volatility
+Plots.plot(abs.(yv), color=:gray, alpha=0.5, label="|return|", xlabel="t")
+Plots.plot!(sqrt.(result.volatility_mean), ribbon=(sqrt.(result.volatility_mean) .- q[:, 1], q[:, 3] .- sqrt.(result.volatility_mean)), fillalpha=0.25, lw=1.5, label="volatility (posterior mean, 95% band)")
+'''
+
+[[actionGroups.actions]]
+id = "traces"
+label = "Posterior Traces"
+desc = "Trace plots and histograms of mu, phi and sigma_eta: traces should look like stationary noise with no trends or long flat stretches"
+code = '''
+using Plots
+draws = (mu = result.mu_post, phi = result.phi_post, sigma_eta = result.sigma_eta_post)
+Plots.plot([Plots.plot(v, lw=0.5, label="", title=string(k)) for (k, v) in pairs(draws)]...,
+	[Plots.histogram(v, bins=40, label="", title="$(k) posterior") for (k, v) in pairs(draws)]..., layout=(2, 3), size=(900, 500))
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "clustering"
+label = "Volatility Clustering"
+desc = "Autocorrelation of squared returns with a Ljung-Box test: significant autocorrelation is the evidence that motivates a volatility model"
+code = '''
+using StatsBase, HypothesisTests, Plots
+display(Plots.bar(autocor(yv .^ 2, 1:20), label="ACF of squared returns", xlabel="lag"))
+Plots.hline!([-1.96, 1.96] ./ sqrt(length(yv)), ls=:dash, color=:gray, label="")
+(ljung_box_squared_p = pvalue(LjungBoxTest(yv .^ 2, 10)), lag1_acf = round(autocor(yv .^ 2, [1])[1], digits=3))
+'''
+
+[[actionGroups.actions]]
+id = "convergence"
+label = "MCMC Convergence"
+desc = "Effective sample size and split R-hat for each parameter: ESS well above 100 and R-hat below 1.01 indicate a reliable posterior"
+code = '''
+using MCMCDiagnosticTools
+draws = (mu = result.mu_post, phi = result.phi_post, sigma_eta = result.sigma_eta_post)
+[(parameter = string(k), ess = round(Int, MCMCDiagnosticTools.ess(reshape(v, :, 1, 1))[1]), rhat = round(MCMCDiagnosticTools.rhat(reshape(v, :, 1, 1))[1], digits=4)) for (k, v) in pairs(draws)]
+'''
+
+[[actionGroups.actions]]
+id = "standardised"
+label = "Standardised Returns"
+desc = "Returns divided by their fitted volatility: if the model fits, they have no remaining clustering and a variance close to 1"
+code = '''
+using StatsBase, HypothesisTests
+r = residuals(result)  # y_t / sqrt(posterior mean variance)
+(variance = round(var(r), digits=3), ljung_box_squared_p = pvalue(LjungBoxTest(r .^ 2, 10)),
+ jarque_bera_p = pvalue(JarqueBeraTest(r)), excess_kurtosis = round(kurtosis(r), digits=3))
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "forecast"
+label = "Variance Forecast"
+desc = "Posterior predictive forecast of the variance: each draw of the parameters is simulated forward from its last latent volatility"
+code = '''
+using Plots
+fc = forecast(result, {{h}})
+n = length(yv)
+Plots.plot(max(1, n - 100):n, result.volatility_mean[max(1, n - 100):n], lw=1.5, label="fitted variance", xlabel="t")
+display(Plots.plot!(n+1:n+{{h}}, fc.forecast, ribbon=(fc.forecast .- fc.ci_lower, fc.ci_upper .- fc.forecast), fillalpha=0.25, lw=1.5, label="forecast (95% band)"))
+[(step = j, variance = round(fc.forecast[j], sigdigits=4), volatility = round(sqrt(fc.forecast[j]), sigdigits=4), lower95 = round(fc.ci_lower[j], sigdigits=4), upper95 = round(fc.ci_upper[j], sigdigits=4)) for j in 1:{{h}}]
+'''
+
+[[actionGroups.actions]]
+id = "long-run"
+label = "Long-Run Volatility"
+desc = "The level volatility reverts to, exp(mu/2), with its 95% credible interval, next to the current fitted volatility"
+code = '''
+lr = exp.(result.mu_post ./ 2)
+(long_run_volatility = round(mean(lr), sigdigits=4), lower95 = round(quantile(lr, 0.025), sigdigits=4), upper95 = round(quantile(lr, 0.975), sigdigits=4),
+ current_volatility = round(sqrt(result.volatility_mean[end]), sigdigits=4), sample_sd = round(std(yv), sigdigits=4))
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "vs-garch"
+label = "Compare with GARCH(1,1)"
+desc = "GARCH(1,1) conditional variance against the SV posterior mean: GARCH reacts mechanically to past squared returns, SV lets volatility have its own shock"
+code = '''
+using Plots
+g = estimate_garch(yv, 1, 1)
+display(Plots.plot([sqrt.(predict(g)) sqrt.(result.volatility_mean)], label=["GARCH(1,1)" "SV"], lw=1.2, xlabel="t", ylabel="volatility"))
+(correlation = round(cor(predict(g), result.volatility_mean), digits=3), garch_persistence = round(sum(g.alpha) + sum(g.beta), digits=4),
+ sv_persistence = round(mean(result.phi_post), digits=4), garch_loglik = round(loglikelihood(g), digits=2))
+'''
+
+[[actionGroups.actions]]
+id = "variants"
+label = "Compare SV Variants"
+desc = "Basic, leverage and Student-t SV fitted to the same returns: posterior means of the volatility parameters and the fit of the standardised returns"
+code = '''
+using StatsBase
+fits = [("Basic", estimate_sv(yv; n_samples={{draws}}, burnin={{burnin}}, seed={{seed}})),
+        ("Leverage", estimate_sv(yv; n_samples={{draws}}, burnin={{burnin}}, seed={{seed}}, leverage=true)),
+        ("Student-t", estimate_sv(yv; n_samples={{draws}}, burnin={{burnin}}, seed={{seed}}, dist=:studentt))]
+[(model = n, mu = round(mean(m.mu_post), digits=3), phi = round(mean(m.phi_post), digits=4), sigma_eta = round(mean(m.sigma_eta_post), digits=4),
+  std_resid_kurtosis = round(kurtosis(residuals(m)), digits=3)) for (n, m) in fits]
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "parameters"
+label = "Posterior Summary"
+desc = "Posterior mean, standard deviation and 95% credible interval of mu (log-variance level), phi (persistence) and sigma_eta (volatility of volatility)"
+code = '''
+draws = (mu = result.mu_post, phi = result.phi_post, sigma_eta = result.sigma_eta_post)
+[(parameter = string(k), mean = round(mean(v), digits=4), sd = round(std(v), digits=4), lower95 = round(quantile(v, 0.025), digits=4), upper95 = round(quantile(v, 0.975), digits=4)) for (k, v) in pairs(draws)]
+'''
+
+[[actionGroups.actions]]
+id = "persistence"
+label = "Volatility Persistence"
+desc = "How long a volatility shock lasts: the half-life log(0.5)/log(phi) in periods, with its posterior credible interval"
+code = '''
+hl = log(0.5) ./ log.(clamp.(result.phi_post, 1e-6, 1 - 1e-9))  # half-life for each posterior draw
+(phi = round(mean(result.phi_post), digits=4), half_life = round(median(hl), digits=1), half_life_lower95 = round(quantile(hl, 0.025), digits=1),
+ half_life_upper95 = round(quantile(hl, 0.975), digits=1), prob_phi_above_0_9 = round(mean(result.phi_post .> 0.9), digits=3))
+'''
+
+[[actionGroups.actions]]
+id = "vol-of-vol"
+label = "Volatility of Volatility"
+desc = "sigma_eta and what it implies: the typical one-period percentage move in volatility, and the unconditional spread of log-variance"
+code = '''
+s = result.sigma_eta_post
+sd_h = s ./ sqrt.(1 .- clamp.(result.phi_post, 0, 1 - 1e-9) .^ 2)  # unconditional sd of log-variance per draw
+(sigma_eta = round(mean(s), digits=4), typical_vol_move_pct = round(100 * (exp(mean(s) / 2) - 1), digits=1),
+ log_variance_sd = round(median(sd_h), digits=3), high_to_median_vol_ratio = round(exp(1.96 * median(sd_h) / 2), digits=2))
+'''

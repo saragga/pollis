@@ -1,0 +1,208 @@
+# Robust and Quantile Regression Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/rqr.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Robust and Quantile Regression"
+viewType = "pollis.rqr"
+defaultModel = "robust"
+
+[[packages]]
+name = "RobustModels.jl"
+github = "https://github.com/getzze/RobustModels.jl"
+
+[requires]
+packages = ["RobustModels.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Robust Regression"
+file = "rqr/tutorial-01-robust-regression.ipynb"
+bundled = true
+description = "Introduction to robust M-estimators and outlier resistance"
+
+[[notebookSections.notebooks]]
+name = "Quantile Regression"
+file = "rqr/tutorial-02-quantile-regression.ipynb"
+bundled = true
+description = "Fitting conditional quantiles and interpreting tau"
+
+[[notebookSections.notebooks]]
+name = "Penalised Fitting"
+file = "rqr/tutorial-03-penalties.ipynb"
+bundled = true
+description = "L1 and L2 regularisation for robust and quantile models"
+
+[[notebookSections.notebooks]]
+name = "Practical Examples"
+file = "rqr/tutorial-04-examples.ipynb"
+bundled = true
+description = "Real-world examples and comparison with OLS"
+
+[[wikis]]
+name = "Overview"
+file = "rqr/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Factsheet"
+file = "rqr/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "rqr/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "rqr/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "rqr/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "rqr/decision-guide.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Original Papers (from packages)"
+
+[[references]]
+title = "Robust Estimation of a Location Parameter"
+authors = "Huber, P.J."
+year = 1964
+journal = "The Annals of Mathematical Statistics"
+doi = "10.1214/aoms/1177703732"
+openAccess = true
+
+[[references]]
+title = "Robust Statistics: Theory and Methods (with R)"
+authors = "Maronna, R.A.; Martin, R.D.; Yohai, V.J.; Salibián-Barrera, M."
+year = 2019
+journal = "Wiley Series in Probability and Statistics"
+openAccess = false
+
+[[models]]
+id = "robust"
+label = "Robust Regression"
+
+[[models]]
+id = "quantile"
+label = "Quantile Regression"
+
+[[bullets]]
+text = "Robust regression"
+detail = "M-estimators that down-weight outliers (Huber, Tukey, Hampel, Andrews, L1)"
+
+[[bullets]]
+text = "Quantile regression"
+detail = "fits the conditional tau-quantile instead of the mean"
+
+[[bullets]]
+text = "Optional L1 / L2 regularisation for sparse or shrunken coefficients"
+detail = ""
+
+[[inputs]]
+id = "formula"
+label = "Formula (replace example with your own)"
+tooltip = "Julia formula using the @formula macro. Response goes left of ~, predictors right.\ny ~ x1 + x2 — additive effects\ny ~ x1 * x2 — includes interaction x1:x2\ny ~ x1 + x2 + x3 — multivariate"
+default = "y ~ x1 + x2"
+
+[[inputs]]
+id = "data"
+label = "Data variable"
+tooltip = "DataFrame containing all variables referenced in the formula. Column names must match formula symbols exactly."
+default = "df"
+
+[[inputs]]
+id = "estimator"
+label = "M-estimator"
+tooltip = "M-estimator loss function controlling outlier resistance.\nHuber — moderate resistance, efficient near normality (recommended default)\nTukey bisquare — strong resistance, fully rejects large outliers\nHampel — three-part redescending loss\nAndrews wave — smooth redescending\nL1 (LAD) — median regression, maximum resistance"
+kind = "select"
+default = "HuberEstimator()"
+models = ["robust"]
+
+[[inputs.options]]
+value = "HuberEstimator()"
+label = "Huber"
+
+[[inputs.options]]
+value = "MEstimator{TukeyLoss}()"
+label = "Tukey bisquare"
+
+[[inputs.options]]
+value = "MEstimator{HampelLoss}()"
+label = "Hampel"
+
+[[inputs.options]]
+value = "MEstimator{AndrewsLoss}()"
+label = "Andrews wave"
+
+[[inputs.options]]
+value = "L1Estimator()"
+label = "L1 (LAD)"
+
+[[inputs]]
+id = "tau"
+label = "tau (quantile level)"
+tooltip = "Quantile level tau ∈ (0, 1). The model fits the conditional tau-quantile of the response.\ntau = 0.5 — median regression (most common)\ntau = 0.25 — lower quartile\ntau = 0.75 — upper quartile"
+default = "0.5"
+models = ["quantile"]
+
+[[inputs]]
+id = "penalty"
+label = "Penalty"
+tooltip = "Optional coefficient penalty.\nNo Penalty - ordinary robust or quantile fit\nL1 - promotes sparsity (some coefficients set exactly to zero)\nL2 - shrinks all coefficients, none forced to zero"
+kind = "select"
+default = "none"
+newRow = true
+
+[[inputs.options]]
+value = "none"
+label = "No Penalty"
+
+[[inputs.options]]
+value = "l1"
+label = "L1"
+
+[[inputs.options]]
+value = "l2"
+label = "L2"
+
+[[inputs]]
+id = "lambda"
+label = "lambda (penalty strength)"
+tooltip = "Regularisation strength lambda ≥ 0. Larger values shrink coefficients more strongly.\nL1 penalty — promotes sparsity (some coefficients set exactly to zero)\nL2 penalty — shrinks all coefficients, none forced to zero"
+default = "0.1"
+when = "penalty!=none"
+
+[[codeBranches]]
+model = "robust"
+code = '''
+using RobustModels
+{{?penalty=none}} model = rlm(@formula({{formula}}), {{data}}, {{estimator}})  # fit robust model
+{{?penalty=l1}} model = rlm(@formula({{formula}}), {{data}}, {{estimator}}, penalty=L1Penalty({{lambda}}))  # fit robust model with L1 penalty
+{{?penalty=l2}} model = rlm(@formula({{formula}}), {{data}}, {{estimator}}, penalty=L2Penalty({{lambda}}))  # fit robust model with L2 penalty
+println(coef(model))
+println(stderror(model))
+'''
+
+[[codeBranches]]
+model = "quantile"
+code = '''
+using RobustModels
+{{?penalty=none}} model = rlm(@formula({{formula}}), {{data}}, QuantileRegression({{tau}}))  # fit tau-quantile model
+{{?penalty=l1}} model = rlm(@formula({{formula}}), {{data}}, QuantileRegression({{tau}}), penalty=L1Penalty({{lambda}}))  # fit tau-quantile model with L1 penalty
+{{?penalty=l2}} model = rlm(@formula({{formula}}), {{data}}, QuantileRegression({{tau}}), penalty=L2Penalty({{lambda}}))  # fit tau-quantile model with L2 penalty
+println(coef(model))
+println(stderror(model))
+'''

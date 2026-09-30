@@ -1,0 +1,753 @@
+# Fast Variational Bayesian Inference Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/rxinfer.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Fast Variational Bayesian Inference"
+viewType = "pollis.rxinfer"
+defaultModel = "gaussian"
+
+[[packages]]
+name = "RxInfer.jl"
+github = "https://github.com/ReactiveBayes/RxInfer.jl"
+
+[[packages.videos]]
+title = "RxInfer.jl: Reactive Variational Bayesian Inference"
+description = "JuliaCon 2023 talk introducing RxInfer and reactive message passing"
+url = "https://www.youtube.com/watch?v=_vVHWzK9NEI"
+
+[[packages.videos]]
+title = "Probabilistic Programming with RxInfer.jl"
+description = "Tutorial demonstrating factor graph models and VMP inference"
+url = "https://www.youtube.com/watch?v=qXrvDVm_fnE"
+
+[requires]
+packages = ["RxInfer.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Binomial Regression"
+file = "rxinfer/basic-01-binomial-regression.ipynb"
+bundled = true
+description = "Bayesian binomial regression using Expectation Propagation and Polya-Gamma augmentation"
+
+[[notebookSections.notebooks]]
+name = "Linear Regression (Extended)"
+file = "rxinfer/basic-02-linear-regression.ipynb"
+bundled = true
+description = "Extensive tutorial on Bayesian linear regression including multivariate and hierarchical variants"
+
+[[notebookSections.notebooks]]
+name = "Multinomial Regression"
+file = "rxinfer/basic-03-multinomial-regression.ipynb"
+bundled = true
+description = "Bayesian multinomial regression for categorical outcomes via EP and Polya-Gamma augmentation"
+
+[[notebookSections.notebooks]]
+name = "Bayesian Networks: Sprinkler"
+file = "rxinfer/basic-04-bayesian-networks-sprinkler.ipynb"
+bundled = true
+description = "Classic sprinkler Bayesian network: belief propagation and evidence-based inference"
+
+[[notebookSections.notebooks]]
+name = "Coin Toss (Beta-Bernoulli)"
+file = "rxinfer/basic-05-coin-toss-beta-bernoulli.ipynb"
+bundled = true
+description = "Bayesian inference in a conjugate Beta-Bernoulli model with IID observations"
+
+[[notebookSections.notebooks]]
+name = "Contextual Bandits"
+file = "rxinfer/basic-06-contextual-bandits.ipynb"
+bundled = true
+description = "RxInfer applied to the contextual bandits exploration-exploitation problem"
+
+[[notebookSections.notebooks]]
+name = "Feature Functions in Regression"
+file = "rxinfer/basic-07-feature-functions-regression.ipynb"
+bundled = true
+description = "Parametric Bayesian regression with basis functions; based on Probabilistic Numerics (Hennig et al.)"
+
+[[notebookSections.notebooks]]
+name = "Forgetting Factors"
+file = "rxinfer/basic-08-forgetting-factors.ipynb"
+bundled = true
+description = "Online Bayesian inference with forgetting factors to track non-stationary processes"
+
+[[notebookSections.notebooks]]
+name = "Hidden Markov Model"
+file = "rxinfer/basic-09-hidden-markov-model.ipynb"
+bundled = true
+description = "Structured variational inference in an HMM with unknown transition and observation matrices"
+
+[[notebookSections.notebooks]]
+name = "Incomplete Data"
+file = "rxinfer/basic-10-incomplete-data.ipynb"
+bundled = true
+description = "Bayesian inference with missing observations using RxInfer"
+
+[[notebookSections.notebooks]]
+name = "Kalman Filtering and Smoothing"
+file = "rxinfer/basic-11-kalman-filtering-smoothing.ipynb"
+bundled = true
+description = "Bayesian state estimation in linear, nonlinear, and missing-data state-space models"
+
+[[notebookSections.notebooks]]
+name = "POMDP Control"
+file = "rxinfer/basic-12-pomdp-control.ipynb"
+bundled = true
+description = "Control in Partially Observable MDPs via reactive message passing and variational inference"
+
+[[notebookSections.notebooks]]
+name = "Bike Rental Demand"
+file = "rxinfer/basic-13-bike-rental-demand.ipynb"
+bundled = true
+description = "Time-series forecasting with RxInfer using bike rental demand as a real-data example"
+
+[[notebookSections.notebooks]]
+name = "T-Maze Active Inference"
+file = "rxinfer/basic-14-t-maze-active-inference.ipynb"
+bundled = true
+description = "Active inference on a T-maze task: planning via Expected Free Energy minimisation"
+
+[[notebookSections.notebooks]]
+name = "Active Inference: Mountain Car"
+file = "rxinfer/advanced-01-active-inference-mountain-car.ipynb"
+bundled = true
+description = "Active inference for the mountain car control problem using RxInfer"
+
+[[notebookSections.notebooks]]
+name = "Assessing Skills"
+file = "rxinfer/advanced-02-assessing-skills.ipynb"
+bundled = true
+description = "Exact inference to assess student skills from test results; inspired by Bishop MBML Chapter 2"
+
+[[notebookSections.notebooks]]
+name = "Bayesian Structured Time Series"
+file = "rxinfer/advanced-03-bayesian-structured-time-series.ipynb"
+bundled = true
+description = "Bayesian structured time series modelling with RxInfer"
+
+[[notebookSections.notebooks]]
+name = "Chance-Constrained Active Inference"
+file = "rxinfer/advanced-04-chance-constrained-active-inference.ipynb"
+bundled = true
+description = "Reactive message passing for active inference under chance constraints"
+
+[[notebookSections.notebooks]]
+name = "CVI (Conjugate-Computational VMP)"
+file = "rxinfer/advanced-05-cvi.ipynb"
+bundled = true
+description = "Non-conjugate message passing via local CVI approximation: extensive tutorial"
+
+[[notebookSections.notebooks]]
+name = "Drone Dynamics"
+file = "rxinfer/advanced-06-drone-dynamics.ipynb"
+bundled = true
+description = "Automated inference to simulate drone dynamics with RxInfer"
+
+[[notebookSections.notebooks]]
+name = "EFE Minimization"
+file = "rxinfer/advanced-07-efe-minimization.ipynb"
+bundled = true
+description = "Minimising Expected Free Energy inside the RxInfer message-passing framework"
+
+[[notebookSections.notebooks]]
+name = "GP Regression via SDE"
+file = "rxinfer/advanced-08-gp-regression-sde.ipynb"
+bundled = true
+description = "Gaussian process regression via stochastic differential equations and sequential state-space inference"
+
+[[notebookSections.notebooks]]
+name = "Infinite Data Stream"
+file = "rxinfer/advanced-09-infinite-data-stream.ipynb"
+bundled = true
+description = "RxInfer running inference over infinite time-series data streams"
+
+[[notebookSections.notebooks]]
+name = "Neural Networks with Flux.jl"
+file = "rxinfer/advanced-10-neural-networks-flux.ipynb"
+bundled = true
+description = "Integrating neural networks into probabilistic models using RxInfer and Flux.jl"
+
+[[notebookSections.notebooks]]
+name = "Neural Networks with Lux.jl"
+file = "rxinfer/advanced-11-neural-networks-lux.ipynb"
+bundled = true
+description = "Integrating neural networks into probabilistic models using RxInfer and Lux.jl"
+
+[[notebookSections.notebooks]]
+name = "Learning Dynamics with VAEs"
+file = "rxinfer/advanced-12-learning-dynamics-vae.ipynb"
+bundled = true
+description = "Learning dynamics in latent space of a variational autoencoder with RxInfer"
+
+[[notebookSections.notebooks]]
+name = "Multi-agent Trajectory Planning"
+file = "rxinfer/advanced-13-multi-agent-trajectory.ipynb"
+bundled = true
+description = "Planning collision-free multi-agent trajectories with probabilistic inference"
+
+[[notebookSections.notebooks]]
+name = "Nonlinear Sensor Fusion"
+file = "rxinfer/advanced-14-nonlinear-sensor-fusion.ipynb"
+bundled = true
+description = "Nonlinear object position identification from a sparse set of sensors"
+
+[[notebookSections.notebooks]]
+name = "Parameter Optimisation with Optim.jl"
+file = "rxinfer/advanced-15-parameter-optimisation-optim.ipynb"
+bundled = true
+description = "Parameter optimisation in probabilistic models using RxInfer and Optim.jl"
+
+[[notebookSections.notebooks]]
+name = "Robotic Arm Path Planning"
+file = "rxinfer/advanced-16-robotic-arm.ipynb"
+bundled = true
+description = "Probabilistic path planning for a robotic arm via Bayesian inference with RxInfer"
+
+[[notebookSections.notebooks]]
+name = "Autoregressive Models"
+file = "rxinfer/problem-01-autoregressive-models.ipynb"
+bundled = true
+description = "Bayesian treatment of latent AR and ARMA models (Podusenko et al. 2021)"
+
+[[notebookSections.notebooks]]
+name = "Gamma Mixture Model"
+file = "rxinfer/problem-02-gamma-mixture-model.ipynb"
+bundled = true
+description = "Gamma mixture model inference via message passing (BIASlab)"
+
+[[notebookSections.notebooks]]
+name = "Gaussian Mixture"
+file = "rxinfer/problem-03-gaussian-mixture.ipynb"
+bundled = true
+description = "Variational Bayesian inference in univariate and multivariate Gaussian mixtures with mean-field"
+
+[[notebookSections.notebooks]]
+name = "Hierarchical Gaussian Filter"
+file = "rxinfer/problem-04-hierarchical-gaussian-filter.ipynb"
+bundled = true
+description = "Online VMP inference in a Hierarchical Gaussian Filter (Senoz et al. 2021)"
+
+[[notebookSections.notebooks]]
+name = "Invertible Neural Networks"
+file = "rxinfer/problem-05-invertible-neural-networks.ipynb"
+bundled = true
+description = "Variational inference with invertible neural networks in factor graphs (van Erp)"
+
+[[notebookSections.notebooks]]
+name = "Ising Model"
+file = "rxinfer/problem-06-ising-model.ipynb"
+bundled = true
+description = "Temperature estimation over a grid with binary observations using RxInfer"
+
+[[notebookSections.notebooks]]
+name = "Litter Model"
+file = "rxinfer/problem-07-litter-model.ipynb"
+bundled = true
+description = "Estimating daily litter events from real data with Bayesian inference"
+
+[[notebookSections.notebooks]]
+name = "ODE Parameter Estimation"
+file = "rxinfer/problem-08-ode-parameter-estimation.ipynb"
+bundled = true
+description = "Solving Lotka-Volterra ODE parameter estimation with RxInfer"
+
+[[notebookSections.notebooks]]
+name = "Probit Model (EP)"
+file = "rxinfer/problem-09-probit-model-ep.ipynb"
+bundled = true
+description = "Expectation Propagation for state estimation in a linear SSM with discrete observations"
+
+[[notebookSections.notebooks]]
+name = "RTS vs BIFM Smoothing"
+file = "rxinfer/problem-10-rts-vs-bifm-smoothing.ipynb"
+bundled = true
+description = "Comparing BIFM Kalman smoother with RTS implementation via message passing"
+
+[[notebookSections.notebooks]]
+name = "Simple Nonlinear Node"
+file = "rxinfer/problem-11-simple-nonlinear-node.ipynb"
+bundled = true
+description = "Custom non-conjugate factor node with nonlinear link function and arbitrary message rules"
+
+[[notebookSections.notebooks]]
+name = "Structural Dynamics (AKF)"
+file = "rxinfer/problem-12-structural-dynamics-akf.ipynb"
+bundled = true
+description = "State and unknown input estimation for structural dynamics via Augmented Kalman Filter"
+
+[[notebookSections.notebooks]]
+name = "Universal Mixtures"
+file = "rxinfer/problem-13-universal-mixtures.ipynb"
+bundled = true
+description = "Universal mixture modelling with RxInfer"
+
+[[notebookSections.notebooks]]
+name = "Bayesian Trust Learning"
+file = "rxinfer/experimental-01-bayesian-trust-learning.ipynb"
+bundled = true
+description = "Bayesian trust learning for LLM routing with hierarchical Bayesian models"
+
+[[notebookSections.notebooks]]
+name = "Large Language Models"
+file = "rxinfer/experimental-02-large-language-models.ipynb"
+bundled = true
+description = "LLM integration with RxInfer for probabilistic reasoning"
+
+[[notebookSections.notebooks]]
+name = "Latent VAR Model"
+file = "rxinfer/experimental-03-latent-var-autoregressive.ipynb"
+bundled = true
+description = "Latent Vector Autoregressive Model with recurrent switching dynamics"
+
+[[notebookSections.notebooks]]
+name = "Recurrent Switching LDS"
+file = "rxinfer/experimental-04-recurrent-switching-lds.ipynb"
+bundled = true
+description = "Recurrent Switching Linear Dynamical System model"
+
+[[wikis]]
+name = "Factsheet"
+file = "rxinfer/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "rxinfer/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "rxinfer/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "rxinfer/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "rxinfer/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "rxinfer/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Models"
+
+[[wikis]]
+name = "Gaussian"
+file = "rxinfer/gaussian.md"
+bundled = true
+
+[[wikis]]
+name = "Linear Regression"
+file = "rxinfer/linear-regression.md"
+bundled = true
+
+[[wikis]]
+name = "Streaming"
+file = "rxinfer/streaming.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "RxInfer: A Julia package for reactive real-time Bayesian inference"
+authors = "Bagaev, Dmitry; de Vries, Bert"
+year = 2023
+journal = "Journal of Open Source Software"
+doi = "10.21105/joss.05161"
+openAccess = true
+
+[[references]]
+title = "ReactiveMP.jl: A Julia package for reactive message passing-based Bayesian inference"
+authors = "Bagaev, Dmitry; de Vries, Bert"
+year = 2023
+journal = "Software Impacts"
+doi = "10.1016/j.simpa.2023.100558"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Pattern Recognition and Machine Learning"
+authors = "Bishop, Christopher M."
+year = 2006
+journal = "Springer"
+url = "https://www.springer.com/book/9780387310732"
+openAccess = false
+
+[[references]]
+title = "Probabilistic Graphical Models: Principles and Techniques"
+authors = "Koller, Daphne; Friedman, Nir"
+year = 2009
+journal = "MIT Press"
+url = "https://mitpress.mit.edu/9780262013192/probabilistic-graphical-models/"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "A Factor Graph Approach to Signal Modeling, System Identification and Filtering"
+authors = "Loeliger, Hans-Andrea; Dauwels, Justin; Hu, Junli; Korl, Sascha; Ping, Li; Kschischang, Frank R."
+year = 2007
+journal = "Proceedings of the IEEE"
+doi = "10.1109/JPROC.2007.906491"
+openAccess = false
+
+[[references]]
+title = "Variational Inference: A Review for Statisticians"
+authors = "Blei, David M.; Kucukelbir, Alp; McAuliffe, Jon D."
+year = 2017
+journal = "Journal of the American Statistical Association"
+doi = "10.1080/01621459.2017.1285773"
+openAccess = false
+
+[[references]]
+title = "Reactive Message Passing for Scalable Bayesian Inference"
+authors = "Bagaev, Dmitry; de Vries, Bert"
+year = 2023
+journal = "Entropy"
+doi = "10.3390/e25040529"
+openAccess = true
+
+[[models]]
+id = "gaussian"
+label = "Gaussian"
+
+[[models]]
+id = "regression"
+label = "Linear Regression"
+
+[[models]]
+id = "streaming"
+label = "Streaming"
+
+[[bullets]]
+text = "Converts inference into an optimization problem using variational approximations"
+detail = ""
+
+[[bullets]]
+text = "Produces an approximate posterior distribution rather than asymptotically exact samples"
+detail = ""
+
+[[bullets]]
+text = "Much faster and more scalable than sampling-based approaches, optimised for reactive inference"
+detail = ""
+
+[[bullets]]
+text = "Better suited for: real-time inference, streaming data, large-scale systems, probabilistic signal processing and reactive models"
+detail = ""
+
+[[inputs]]
+id = "n"
+label = "N (observations)"
+tooltip = "Number of data points passed to the model. For the Streaming model this is the length of the data stream."
+default = "100"
+
+[[inputs]]
+id = "iter"
+label = "Iterations"
+tooltip = "Number of VMP iterations. Each iteration passes messages forward and backward through the factor graph until the variational free energy converges."
+default = "50"
+
+[[codeBranches]]
+model = "gaussian"
+code = '''
+using RxInfer
+
+@model function gaussian_model(n, y)  # conjugate Gaussian with unknown mean and precision
+    mu  ~ Normal(0.0, 1.0)  # mean prior
+    tau ~ Gamma(1.0, 1.0)  # precision prior
+    for i in 1:n
+        y[i] ~ Normal(mu, sqrt(1 / tau))  # likelihood
+    end
+end
+
+observations = rand(Normal(2.0, 0.5), {{n}})  # replace with real data
+result = infer(  # run VMP
+    model      = gaussian_model(n = {{n}}),
+    data       = (y = observations,),
+    iterations = {{iter}},
+    returnvars = (mu = KeepLast(), tau = KeepLast()),
+)
+
+mu_post  = result.posteriors[:mu]  # posterior over mean
+tau_post = result.posteriors[:tau]  # posterior over precision
+println("mu:  ", mean(mu_post),  " +/- ", std(mu_post))  # mean estimate
+println("tau: ", mean(tau_post), " +/- ", std(tau_post))  # precision estimate
+'''
+
+[[codeBranches]]
+model = "regression"
+code = '''
+using RxInfer
+
+@model function linear_regression(n, x, y)  # Bayesian linear regression via VMP
+    beta0 ~ Normal(0.0, 10.0)  # intercept prior
+    beta1 ~ Normal(0.0, 10.0)  # slope prior
+    tau   ~ Gamma(1.0, 1.0)  # noise precision prior
+    for i in 1:n
+        y[i] ~ Normal(beta0 + beta1 * x[i], sqrt(1 / tau))  # likelihood
+    end
+end
+
+x_data = randn({{n}})  # replace with real covariates
+y_data = 1.5 .+ 2.3 .* x_data .+ 0.3 .* randn({{n}})  # replace with real response
+result = infer(  # run VMP
+    model      = linear_regression(n = {{n}}, x = x_data),
+    data       = (y = y_data,),
+    iterations = {{iter}},
+    returnvars = (beta0 = KeepLast(), beta1 = KeepLast(), tau = KeepLast()),
+)
+
+println("Intercept: ", mean(result.posteriors[:beta0]))  # posterior mean intercept
+println("Slope:     ", mean(result.posteriors[:beta1]))  # posterior mean slope
+'''
+
+[[codeBranches]]
+model = "streaming"
+code = '''
+using RxInfer, Distributions
+
+@model function tracking_model(y, mu_mean, mu_var)  # reactive single-observation update
+    mu ~ Normal(mu_mean, sqrt(mu_var))  # prior from previous posterior
+    tau ~ Gamma(1.0, 1.0)  # noise precision
+    y ~ Normal(mu, sqrt(1 / tau))  # likelihood
+end
+
+stream = randn({{n}}) .+ 2.0  # replace with real data stream
+mu_mean, mu_var = 0.0, 1.0  # initial prior
+posteriors = []  # collect results
+
+for obs in stream
+    result = infer(  # update posterior on each observation
+        model      = tracking_model(mu_mean = mu_mean, mu_var = mu_var),
+        data       = (y = obs,),
+        iterations = {{iter}},
+        returnvars = (mu = KeepLast(),),
+    )
+    post = result.posteriors[:mu]  # updated posterior
+    push!(posteriors, post)
+    mu_mean, mu_var = mean(post), var(post)  # carry forward
+end
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "posterior-marginals"
+label = "Posterior Marginals"
+desc = "Plot the posterior mean and variance for each latent variable as a Gaussian density"
+code = '''
+using RxInfer, GLMakie
+
+observations = rand(Normal(2.0, 0.5), {{n}})  # replace with real data
+result = infer(model = gaussian_model(n = {{n}}), data = (y = observations,), iterations = {{iter}}, returnvars = (mu = KeepLast(), tau = KeepLast()))  # run VMP
+
+mu_post  = result.posteriors[:mu]  # Normal posterior over mean
+tau_post = result.posteriors[:tau]  # Gamma posterior over precision
+
+xs = range(mean(mu_post) - 3std(mu_post), mean(mu_post) + 3std(mu_post), length = 200)  # plot range
+fig = Figure(); ax1 = Axis(fig[1,1], title = "Posterior: mu", xlabel = "mu")
+lines!(ax1, xs, pdf.(mu_post, xs), color = :blue)
+display(fig)
+'''
+
+[[actionGroups.actions]]
+id = "free-energy"
+label = "Free Energy"
+desc = "Plot the variational free energy across VMP iterations to assess convergence"
+code = '''
+using RxInfer, GLMakie
+
+observations = rand(Normal(2.0, 0.5), {{n}})  # replace with real data
+result = infer(  # request free energy history
+    model      = gaussian_model(n = {{n}}),
+    data       = (y = observations,),
+    iterations = {{iter}},
+    returnvars = (mu = KeepEach(), tau = KeepEach()),
+    free_energy = true,
+)
+
+fig = Figure(); ax = Axis(fig[1,1], title = "VMP Free Energy", xlabel = "Iteration", ylabel = "F")
+lines!(ax, 1:{{iter}}, result.free_energy, color = :red)
+display(fig)
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "convergence-check"
+label = "Convergence Check"
+desc = "Compare posterior means across iterations to verify VMP has converged"
+code = '''
+using RxInfer, Statistics
+
+observations = rand(Normal(2.0, 0.5), {{n}})  # replace with real data
+result = infer(model = gaussian_model(n = {{n}}), data = (y = observations,), iterations = {{iter}}, returnvars = (mu = KeepEach(),), free_energy = true)  # track each iteration
+
+mu_means = mean.(getindex.(result.posteriors[:mu], 1))  # mean of mu posterior at each iteration
+delta = abs.(diff(mu_means))  # change between iterations
+println("Max delta (last 5 iters): ", maximum(delta[end-4:end]))  # convergence metric
+println("Converged: ", maximum(delta[end-4:end]) < 1e-6)  # convergence verdict
+'''
+
+[[actionGroups.actions]]
+id = "prior-sensitivity"
+label = "Prior Sensitivity"
+desc = "Compare posterior marginals under wide vs narrow priors to assess sensitivity"
+code = '''
+using RxInfer, Statistics
+
+@model function gaussian_model_prior(n, y, mu_var)  # parameterise prior width
+    mu  ~ Normal(0.0, sqrt(mu_var))
+    tau ~ Gamma(1.0, 1.0)
+    for i in 1:n; y[i] ~ Normal(mu, sqrt(1/tau)); end
+end
+
+obs = rand(Normal(2.0, 0.5), {{n}})  # data
+r_narrow = infer(model = gaussian_model_prior(n = {{n}}, mu_var = 0.1), data = (y = obs,), iterations = {{iter}}, returnvars = (mu = KeepLast(),))  # narrow prior
+r_wide   = infer(model = gaussian_model_prior(n = {{n}}, mu_var = 100.0), data = (y = obs,), iterations = {{iter}}, returnvars = (mu = KeepLast(),))  # wide prior
+
+println("mu (narrow prior): ", mean(r_narrow.posteriors[:mu]))  # compare
+println("mu (wide prior):   ", mean(r_wide.posteriors[:mu]))  # compare
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "posterior-predictive"
+label = "Posterior Predictive"
+desc = "Draw samples from the posterior predictive distribution and overlay against observed data"
+code = '''
+using RxInfer, GLMakie, Statistics
+
+obs = rand(Normal(2.0, 0.5), {{n}})  # replace with real data
+result = infer(model = gaussian_model(n = {{n}}), data = (y = obs,), iterations = {{iter}}, returnvars = (mu = KeepLast(), tau = KeepLast()))  # fit
+
+mu_post  = result.posteriors[:mu]  # posterior mean
+tau_post = result.posteriors[:tau]  # posterior precision
+ppc = [rand(Normal(rand(mu_post), sqrt(1/rand(tau_post)))) for _ in 1:1000]  # posterior predictive samples
+
+fig = Figure(); ax = Axis(fig[1,1], title = "Posterior Predictive Check")
+hist!(ax, obs, normalization = :pdf, color = (:blue, 0.4), label = "Observed")  # data histogram
+hist!(ax, ppc, normalization = :pdf, color = (:red, 0.3), label = "PPC")  # predictive histogram
+axislegend(ax); display(fig)
+'''
+
+[[actionGroups.actions]]
+id = "streaming-forecast"
+label = "Streaming Forecast"
+desc = "Extend the reactive model forward to predict the next K observations with credible intervals"
+code = '''
+
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "vmp-vs-mcmc"
+label = "VMP vs MCMC"
+desc = "Compare posterior means from VMP (RxInfer.jl) and MCMC (Turing.jl) on the same Gaussian model"
+code = '''
+using RxInfer, Turing, Statistics
+
+obs = rand(Normal(2.0, 0.5), {{n}})  # shared data
+
+vmp_result = infer(model = gaussian_model(n = {{n}}), data = (y = obs,), iterations = {{iter}}, returnvars = (mu = KeepLast(),))  # VMP via RxInfer
+vmp_mu = mean(vmp_result.posteriors[:mu])  # VMP posterior mean
+
+@model function turing_gaussian(y)
+    mu  ~ Normal(0.0, 1.0); tau ~ Gamma(1.0, 1.0)
+    for i in eachindex(y); y[i] ~ Normal(mu, sqrt(1/tau)); end
+end
+chain = sample(turing_gaussian(obs), NUTS(), 2000)  # MCMC via Turing
+mcmc_mu = mean(chain[:mu])  # MCMC posterior mean
+
+println("VMP  mu: ", round(vmp_mu;  digits=4))  # compare
+println("MCMC mu: ", round(mcmc_mu; digits=4))  # compare
+'''
+
+[[actionGroups.actions]]
+id = "model-comparison"
+label = "Model Comparison"
+desc = "Compare Gaussian vs Laplace noise models via variational free energy as a model selection criterion"
+code = '''
+using RxInfer
+
+obs = rand(Normal(2.0, 0.5), {{n}})  # replace with real data
+
+r_gaussian = infer(model = gaussian_model(n = {{n}}), data = (y = obs,), iterations = {{iter}}, returnvars = (mu = KeepLast(),), free_energy = true)  # Gaussian noise
+
+println("Gaussian free energy: ", r_gaussian.free_energy[end])  # lower = better fit
+println("Use the model with lower final free energy")  # model selection rule
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "parameter-posteriors"
+label = "Parameter Posteriors"
+desc = "Extract and display the posterior mean, variance, and 95% credible interval for all latent variables"
+code = '''
+using RxInfer, Statistics
+
+obs = rand(Normal(2.0, 0.5), {{n}})  # replace with real data
+result = infer(model = gaussian_model(n = {{n}}), data = (y = obs,), iterations = {{iter}}, returnvars = (mu = KeepLast(), tau = KeepLast()))  # fit
+
+mu_post  = result.posteriors[:mu]  # Normal posterior
+tau_post = result.posteriors[:tau]  # Gamma posterior
+
+println("mu  | mean: ", round(mean(mu_post);  digits=3), "  std: ", round(std(mu_post); digits=3), "  95% CI: [", round(quantile(mu_post, 0.025); digits=3), ", ", round(quantile(mu_post, 0.975); digits=3), "]")  # mu summary
+println("tau | mean: ", round(mean(tau_post); digits=3), "  std: ", round(std(tau_post); digits=3))  # tau summary
+'''
+
+[[actionGroups.actions]]
+id = "factor-graph"
+label = "Factor Graph"
+desc = "Inspect the factor graph structure generated by RxInfer for the current model"
+code = '''
+using RxInfer
+
+obs = rand(Normal(2.0, 0.5), {{n}})  # replace with real data
+
+graph = create_model(gaussian_model(n = {{n}}) | (y = obs,))  # build the factor graph
+println("Variables:  ", length(getvariables(graph)))  # number of variable nodes
+println("Factors:    ", length(getfactors(graph)))  # number of factor nodes
+println("Interfaces: ", length(getinterfaces(graph)))  # message-passing edges
+'''

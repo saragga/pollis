@@ -1,0 +1,400 @@
+# Statistical Language Model Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/slm.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Statistical Language Model"
+viewType = "pollis.slm"
+defaultModel = "unigram"
+
+[[packages]]
+name = "TextAnalysis.jl"
+github = "https://github.com/JuliaText/TextAnalysis.jl"
+
+[[packages]]
+name = "Languages.jl"
+github = "https://github.com/JuliaText/Languages.jl"
+
+[requires]
+packages = ["TextAnalysis.jl", "Languages.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Unigram Model"
+file = "lang-model/tutorial-01-unigram.ipynb"
+bundled = true
+description = "Unigram language model with maximum likelihood and Laplace smoothing"
+
+[[notebookSections.notebooks]]
+name = "Bigram Model"
+file = "lang-model/tutorial-02-bigram.ipynb"
+bundled = true
+description = "Bigram language model with MLE and Add-k smoothing using TextAnalysis.jl"
+
+[[notebookSections.notebooks]]
+name = "Trigram Model"
+file = "lang-model/tutorial-03-trigram.ipynb"
+bundled = true
+description = "Trigram language model with backoff and interpolation strategies"
+
+[[wikis]]
+name = "Factsheet"
+file = "lang-model/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "lang-model/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "lang-model/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "lang-model/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "lang-model/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "lang-model/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Models"
+
+[[wikis]]
+name = "Unigram"
+file = "lang-model/unigram.md"
+bundled = true
+
+[[wikis]]
+name = "Bigram"
+file = "lang-model/bigram.md"
+bundled = true
+
+[[wikis]]
+name = "Trigram"
+file = "lang-model/trigram.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "TextAnalysis.jl: Julia NLP Toolkit"
+authors = "JuliaText Contributors"
+year = 2023
+journal = "GitHub"
+url = "https://github.com/JuliaText/TextAnalysis.jl"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Speech and Language Processing"
+authors = "Jurafsky, Daniel; Martin, James H."
+year = 2024
+journal = "Pearson (3rd ed., draft)"
+url = "https://web.stanford.edu/~jurafsky/slp3/"
+openAccess = true
+
+[[references]]
+title = "Foundations of Statistical Natural Language Processing"
+authors = "Manning, Christopher D.; Schutze, Hinrich"
+year = 1999
+journal = "MIT Press"
+doi = "10.7551/mitpress/3112.001.0001"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Estimation of Probabilities from Sparse Data for the Language Model Component of a Speech Recognizer"
+authors = "Katz, Slava M."
+year = 1987
+journal = "IEEE Transactions on Acoustics Speech and Signal Processing"
+doi = "10.1109/TASSP.1987.1165125"
+openAccess = false
+
+[[references]]
+title = "A Bit of Progress in Language Modeling"
+authors = "Goodman, Joshua T."
+year = 2001
+journal = "Computer Speech and Language"
+doi = "10.1006/csla.2001.0174"
+openAccess = false
+
+[[models]]
+id = "unigram"
+label = "Unigram"
+
+[[models]]
+id = "bigram"
+label = "Bigram"
+
+[[models]]
+id = "trigram"
+label = "Trigram"
+
+[[bullets]]
+text = "Unigram"
+detail = "probability of each word independent of context; P(w) = count(w) / N"
+
+[[bullets]]
+text = "Bigram"
+detail = "probability of each word given the previous word; P(w | w−₁)"
+
+[[bullets]]
+text = "Trigram"
+detail = "probability of each word given the two preceding words; P(w | w−₁, w−₂)"
+
+[[inputs]]
+id = "corpus"
+label = "Corpus"
+tooltip = "Array of text documents to train on, e.g. docs = [\"first text\", \"second text\"]"
+default = "corpus"
+
+[[inputs]]
+id = "k"
+label = "Smoothing k"
+tooltip = "Add-k smoothing constant; k=1 is Laplace smoothing; k=0 gives maximum likelihood"
+default = "1"
+
+[[codeBranches]]
+model = "unigram"
+code = '''
+using TextAnalysis, Languages
+
+crps = Corpus([StringDocument(d) for d in {{corpus}}])  # build corpus from documents
+prepare!(crps, strip_punctuation | strip_case)  # normalise text
+
+tokens   = vcat([tokens(d) for d in crps]...)  # flatten all tokens
+unigrams = ngrams(NGramDocument(join(tokens, " "), 1))  # unigram counts
+N        = sum(values(unigrams))  # total token count
+V        = length(unigrams)  # vocabulary size
+prob(w)  = (get(unigrams, w, 0) + {{k}}) / (N + {{k}} * V)  # Add-k smoothing
+'''
+
+[[codeBranches]]
+model = "bigram"
+code = '''
+using TextAnalysis, Languages
+
+crps    = Corpus([StringDocument(d) for d in {{corpus}}])  # build corpus from documents
+prepare!(crps, strip_punctuation | strip_case)  # normalise text
+
+tokens   = vcat([tokens(d) for d in crps]...)  # flatten all tokens
+unigrams = ngrams(NGramDocument(join(tokens, " "), 1))  # unigram counts
+bigrams  = ngrams(NGramDocument(join(tokens, " "), 2))  # bigram counts
+V        = length(unigrams)  # vocabulary size
+'''
+
+[[codeBranches]]
+model = "trigram"
+code = '''
+using TextAnalysis, Languages
+
+crps     = Corpus([StringDocument(d) for d in {{corpus}}])  # build corpus from documents
+prepare!(crps, strip_punctuation | strip_case)  # normalise text
+
+tokens   = vcat([tokens(d) for d in crps]...)  # flatten all tokens
+unigrams = ngrams(NGramDocument(join(tokens, " "), 1))  # unigram counts
+bigrams  = ngrams(NGramDocument(join(tokens, " "), 2))  # bigram counts
+trigrams = ngrams(NGramDocument(join(tokens, " "), 3))  # trigram counts
+V        = length(unigrams)  # vocabulary size; use backoff or interpolation for unseen trigrams
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "unigram-dist"
+label = "Unigram Distribution"
+desc = "Top-N most probable words"
+code = '''
+using TextAnalysis, Languages
+
+crps     = Corpus([StringDocument(d) for d in {{corpus}}])  # build corpus
+prepare!(crps, strip_punctuation | strip_case)  # normalise
+tokens   = vcat([tokens(d) for d in crps]...)  # all tokens
+unigrams = ngrams(NGramDocument(join(tokens, " "), 1))  # counts
+top10    = sort(collect(unigrams), by=x->x[2], rev=true)[1:10]  # top-10 words by frequency
+'''
+
+[[actionGroups.actions]]
+id = "ngram-probs"
+label = "N-gram Probabilities"
+desc = "Probability of each n-gram in the corpus"
+code = '''
+using TextAnalysis, Languages
+
+crps     = Corpus([StringDocument(d) for d in {{corpus}}])  # build corpus
+prepare!(crps, strip_punctuation | strip_case)  # normalise
+tokens   = vcat([tokens(d) for d in crps]...)  # all tokens
+unigrams = ngrams(NGramDocument(join(tokens, " "), 1))  # unigram counts
+N = sum(values(unigrams)); V = length(unigrams)  # corpus size and vocabulary
+probs = Dict(w => (cnt + {{k}}) / (N + {{k}} * V) for (w, cnt) in unigrams)  # Add-k smoothed probabilities
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "perplexity"
+label = "Perplexity"
+desc = "Perplexity on a held-out test corpus"
+code = '''
+using TextAnalysis, Languages
+
+crps     = Corpus([StringDocument(d) for d in {{corpus}}])  # training corpus
+prepare!(crps, strip_punctuation | strip_case)  # normalise
+tokens   = vcat([tokens(d) for d in crps]...)  # training tokens
+unigrams = ngrams(NGramDocument(join(tokens, " "), 1))  # unigram counts
+N = sum(values(unigrams)); V = length(unigrams)  # size and vocabulary
+log_pp   = -mean([log2((get(unigrams, w, 0) + {{k}}) / (N + {{k}} * V)) for w in test_tokens])  # per-token log-prob on test set
+'''
+
+[[actionGroups.actions]]
+id = "oov-rate"
+label = "OOV Rate"
+desc = "Fraction of test tokens unseen in training"
+code = '''
+using TextAnalysis, Languages
+
+crps     = Corpus([StringDocument(d) for d in {{corpus}}])  # training corpus
+prepare!(crps, strip_punctuation | strip_case)  # normalise
+tokens   = vcat([tokens(d) for d in crps]...)  # training tokens
+vocab    = Set(tokens)  # training vocabulary
+oov_rate = mean(w -> !(w in vocab), test_tokens)  # fraction of OOV test tokens
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "sentence-prob"
+label = "Sentence Probability"
+desc = "Log-probability of a new sentence"
+code = '''
+using TextAnalysis, Languages
+
+crps     = Corpus([StringDocument(d) for d in {{corpus}}])  # training corpus
+prepare!(crps, strip_punctuation | strip_case)  # normalise
+tokens   = vcat([tokens(d) for d in crps]...)  # training tokens
+unigrams = ngrams(NGramDocument(join(tokens, " "), 1))  # unigram counts
+N = sum(values(unigrams)); V = length(unigrams)  # size and vocabulary
+log_p    = sum(log2((get(unigrams, w, 0) + {{k}}) / (N + {{k}} * V)) for w in new_sentence)  # log-probability of sentence
+'''
+
+[[actionGroups.actions]]
+id = "next-word"
+label = "Next Word Prediction"
+desc = "Most likely next word given context"
+code = '''
+using TextAnalysis, Languages
+
+crps     = Corpus([StringDocument(d) for d in {{corpus}}])  # training corpus
+prepare!(crps, strip_punctuation | strip_case)  # normalise
+tokens   = vcat([tokens(d) for d in crps]...)  # training tokens
+bigrams  = ngrams(NGramDocument(join(tokens, " "), 2))  # bigram counts for context lookup
+unigrams = ngrams(NGramDocument(join(tokens, " "), 1))  # unigram counts
+next_w   = argmax(w -> get(bigrams, context * " " * w, 0) + {{k}}, collect(keys(unigrams)))  # most probable next word
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "compare-orders"
+label = "Compare Orders"
+desc = "Perplexity for unigram, bigram and trigram"
+code = '''
+using TextAnalysis, Languages
+
+crps     = Corpus([StringDocument(d) for d in {{corpus}}])  # training corpus
+prepare!(crps, strip_punctuation | strip_case)  # normalise
+tokens   = vcat([tokens(d) for d in crps]...)  # training tokens
+unigrams = ngrams(NGramDocument(join(tokens, " "), 1))  # unigram counts
+bigrams  = ngrams(NGramDocument(join(tokens, " "), 2))  # bigram counts
+trigrams = ngrams(NGramDocument(join(tokens, " "), 3))  # trigram counts; compare test-set perplexity across orders
+'''
+
+[[actionGroups.actions]]
+id = "compare-smoothing"
+label = "Compare Smoothing"
+desc = "MLE vs Laplace vs Add-k perplexity"
+code = '''
+using TextAnalysis, Languages
+
+crps     = Corpus([StringDocument(d) for d in {{corpus}}])  # training corpus
+prepare!(crps, strip_punctuation | strip_case)  # normalise
+tokens   = vcat([tokens(d) for d in crps]...)  # training tokens
+unigrams = ngrams(NGramDocument(join(tokens, " "), 1))  # unigram counts
+N = sum(values(unigrams)); V = length(unigrams)  # size and vocabulary
+pp_mle    = perplexity(unigrams, test_tokens, 0, N, V)  # MLE perplexity (k=0)
+pp_laplace = perplexity(unigrams, test_tokens, 1, N, V)  # Laplace perplexity (k=1)
+pp_addk   = perplexity(unigrams, test_tokens, {{k}}, N, V)  # Add-k perplexity
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "top-ngrams"
+label = "Top N-grams"
+desc = "Most frequent n-grams in the corpus"
+code = '''
+using TextAnalysis, Languages
+
+crps     = Corpus([StringDocument(d) for d in {{corpus}}])  # build corpus
+prepare!(crps, strip_punctuation | strip_case)  # normalise
+tokens   = vcat([tokens(d) for d in crps]...)  # all tokens
+bigrams  = ngrams(NGramDocument(join(tokens, " "), 2))  # bigram counts
+top_bg   = sort(collect(bigrams), by=x->x[2], rev=true)[1:10]  # top-10 most frequent bigrams
+'''
+
+[[actionGroups.actions]]
+id = "prob-ratios"
+label = "Probability Ratios"
+desc = "PMI between word pairs"
+code = '''
+using TextAnalysis, Languages
+
+crps     = Corpus([StringDocument(d) for d in {{corpus}}])  # build corpus
+prepare!(crps, strip_punctuation | strip_case)  # normalise
+tokens   = vcat([tokens(d) for d in crps]...)  # all tokens
+unigrams = ngrams(NGramDocument(join(tokens, " "), 1))  # unigram counts
+bigrams  = ngrams(NGramDocument(join(tokens, " "), 2))  # bigram counts
+N = sum(values(unigrams))  # total tokens
+pmi(w1, w2) = log2((get(bigrams, w1 * " " * w2, 0) * N) / (get(unigrams, w1, 0) * get(unigrams, w2, 0) + 1))  # pointwise mutual information
+'''

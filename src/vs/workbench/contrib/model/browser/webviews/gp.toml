@@ -1,0 +1,282 @@
+# Generalized Pareto Distribution Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/gp.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Generalized Pareto Distribution"
+viewType = "pollis.gp"
+defaultModel = "fit"
+
+[[packages]]
+name = "Extremes.jl"
+github = "https://github.com/jojal5/Extremes.jl"
+
+[requires]
+packages = ["Extremes.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Quick Start"
+file = "gp/tutorial-01-quickstart.ipynb"
+bundled = true
+description = "Fit a GP distribution to threshold exceedances"
+
+[[notebookSections.notebooks]]
+name = "Threshold Selection"
+file = "gp/tutorial-02-threshold.ipynb"
+bundled = true
+description = "Mean excess plot and threshold stability methods"
+
+[[notebookSections.notebooks]]
+name = "Exceedance Modelling"
+file = "gp/tutorial-03-exceedances.ipynb"
+bundled = true
+description = "Model excess losses above a threshold with the GP distribution"
+
+[[wikis]]
+name = "Overview"
+file = "gp/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Factsheet"
+file = "gp/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "gp/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "gp/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "gp/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "gp/decision-guide.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Original Papers (from packages)"
+
+[[references]]
+title = "Extremes.jl: Extreme Value Analysis in Julia"
+authors = "Jalbert, J., Farmer, M., Gobeil, G., & Roy, P."
+year = 2024
+journal = ""
+url = "https://doi.org/10.18637/jss.v109.i06"
+openAccess = true
+
+[[references]]
+title = "Statistical Inference Using Extreme Order Statistics"
+authors = "Pickands, J."
+year = 1975
+journal = ""
+url = "https://doi.org/10.1214/aos/1176343003"
+openAccess = false
+
+[[models]]
+id = "fit"
+label = "Fit"
+
+[[models]]
+id = "eval"
+label = "Evaluate"
+
+[[models]]
+id = "sample"
+label = "Sample"
+
+[[bullets]]
+text = "Fit GP distribution to threshold exceedances via maximum likelihood estimation"
+detail = ""
+
+[[bullets]]
+text = "Evaluate pdf, cdf and quantiles for specified parameters"
+detail = ""
+
+[[bullets]]
+text = "Generate random samples from the GP distribution"
+detail = ""
+
+[[bullets]]
+text = "Used in Peaks-Over-Threshold (POT) analysis for modelling tail events"
+detail = ""
+
+[[inputs]]
+id = "data"
+label = "Data series"
+tooltip = "Full data series from which exceedances above the threshold will be extracted."
+default = "losses"
+models = ["fit"]
+
+[[inputs]]
+id = "threshold"
+label = "Threshold u"
+tooltip = "Threshold u for fitting. Observations exceeding u are used to fit the GP distribution. Choose using the mean excess plot."
+default = "0.0"
+models = ["fit"]
+
+[[inputs]]
+id = "method"
+label = "Estimation method"
+tooltip = "Estimation method. Maximum Likelihood is the default. Probability-Weighted Moments is faster. Bayesian Estimation yields posterior distributions for the parameters."
+kind = "select"
+default = "mle"
+models = ["fit"]
+
+[[inputs.options]]
+value = "mle"
+label = "Maximum Likelihood"
+
+[[inputs.options]]
+value = "pwm"
+label = "Probability-Weighted Moments"
+
+[[inputs.options]]
+value = "bayes"
+label = "Bayesian Estimation"
+
+[[inputs]]
+id = "threshold-param"
+label = "Threshold mu"
+tooltip = "Location parameter mu (threshold) for the GP distribution. Sets the lower bound of support."
+default = "0.0"
+models = ["eval", "sample"]
+
+[[inputs]]
+id = "sigma"
+label = "sigma"
+tooltip = "Scale parameter sigma > 0. Controls the spread of exceedances above the threshold."
+default = "1.0"
+models = ["eval", "sample"]
+
+[[inputs]]
+id = "xi"
+label = "xi"
+tooltip = "Shape parameter xi. xi > 0: heavy tail; xi = 0: exponential; xi < 0: bounded support above threshold."
+default = "0.1"
+models = ["eval", "sample"]
+
+[[inputs]]
+id = "x"
+label = "Eval point x"
+tooltip = "Point at which to evaluate the pdf and cdf (must be above the threshold mu)."
+default = "1.0"
+models = ["eval"]
+
+[[inputs]]
+id = "p"
+label = "Quantile p"
+tooltip = "Probability level for the quantile. E.g., 0.99 gives the 99th percentile; 0.999 gives the 99.9th percentile."
+default = "0.99"
+models = ["eval"]
+
+[[inputs]]
+id = "n"
+label = "Sample size n"
+tooltip = "Number of random samples to generate."
+default = "500"
+models = ["sample"]
+
+[[codeBranches]]
+model = "fit"
+code = '''
+using Extremes
+
+exceedances        = {{data}}[{{data}} .> {{threshold}}] .- {{threshold}}  # excesses above u
+fm                 = gpfit(exceedances; method = :{{method}})  # fit GP
+sigma_hat, xi_hat  = params(fm)  # extract scale and shape
+println("sigma_hat (scale):  ", round(sigma_hat, digits = 6))
+println("xi_hat (shape):     ", round(xi_hat,    digits = 6))
+println("N exceedances:      ", length(exceedances))
+'''
+
+[[codeBranches]]
+model = "eval"
+code = '''
+using Distributions
+
+d = GeneralizedPareto({{threshold-param}}, {{sigma}}, {{xi}})  # construct GP (location, scale, shape)
+f = pdf(d, {{x}})  # density at x
+F = cdf(d, {{x}})  # cumulative prob at x
+q = quantile(d, {{p}})  # quantile at probability p
+println("pdf(", {{x}}, "):         ", round(f, digits = 6))
+println("cdf(", {{x}}, "):         ", round(F, digits = 6))
+println("Quantile(", {{p}}, "): ", round(q, digits = 6))
+'''
+
+[[codeBranches]]
+model = "sample"
+code = '''
+using Distributions, Statistics
+
+d       = GeneralizedPareto({{threshold-param}}, {{sigma}}, {{xi}})  # construct GP (location, scale, shape)
+samples = rand(d, {{n}})  # draw n samples
+println("First 10 samples: ", round.(samples[1:min(10,end)], digits = 4))
+println("Sample mean:      ", round(mean(samples), digits = 6))
+println("Sample std:       ", round(std(samples),  digits = 6))
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "fit_diagnostics"
+label = "Fit Diagnostics"
+desc = "PP and QQ plot for GP goodness of fit to exceedances"
+code = '''
+using Extremes, Plots
+exceedances = {{data}}[{{data}} .> {{threshold}}] .- {{threshold}}  # POT excesses
+fm = gpfit(exceedances)  # fit GP
+p1 = plot(probplot(fm); title = "Probability Plot", legend = false)  # PP plot
+p2 = plot(qqplot(fm);   title = "Quantile Plot",    legend = false)  # QQ plot
+plot(p1, p2; layout = (1,2), size = (800,400))
+'''
+
+[[actionGroups.actions]]
+id = "tail_probability"
+label = "Tail Probability"
+desc = "Estimate the probability of exceeding high quantiles using the fitted GP"
+code = '''
+using Extremes, Distributions
+exceedances = {{data}}[{{data}} .> {{threshold}}] .- {{threshold}}  # POT excesses
+fm                 = gpfit(exceedances)  # fit GP
+sigma_hat, xi_hat  = params(fm)  # extract scale and shape
+d_gp = GeneralizedPareto({{threshold}}, sigma_hat, xi_hat)  # GP distribution
+p_exceed_99  = 1 - cdf(d_gp, quantile(d_gp, 0.99))  # P(X > Q0.99)
+p_exceed_999 = 1 - cdf(d_gp, quantile(d_gp, 0.999))  # P(X > Q0.999)
+println("P(X > Q0.99):   ", round(p_exceed_99,  digits = 8))
+println("P(X > Q0.999):  ", round(p_exceed_999, digits = 8))
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "tail_behaviour"
+label = "Tail Behaviour"
+desc = "Classify tail type from shape parameter"
+code = '''
+using Extremes
+exceedances = {{data}}[{{data}} .> {{threshold}}] .- {{threshold}}  # POT excesses
+fm = gpfit(exceedances)  # fit GP
+sigmâ, xî = params(fm)  # extract parameters
+tail = xî > 0.05 ? "Heavy tail" : xî < -0.05 ? "Bounded support" : "Exponential tail"  # classify tail
+println("Tail type:       ", tail)
+println("Shape (xî):       ", round(xî, digits = 4))
+println("Scale (sigmâ):       ", round(sigmâ, digits = 4))
+'''

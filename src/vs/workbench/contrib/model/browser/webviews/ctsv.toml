@@ -1,0 +1,244 @@
+# Continuous-Time Stochastic Volatility Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/ctsv.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Continuous-Time Stochastic Volatility"
+viewType = "pollis.ctsv"
+defaultModel = "heston"
+
+[[packages]]
+name = "DiffEqFinancial.jl"
+github = "https://github.com/SciML/DiffEqFinancial.jl"
+
+[[packages]]
+name = "QuantLib.jl"
+github = "https://github.com/pazzo83/QuantLib.jl"
+
+[requires]
+packages = ["DiffEqFinancial.jl", "QuantLib.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Heston Model"
+file = "ctsv/tutorial-01-heston.ipynb"
+bundled = true
+description = "Simulating asset paths under the Heston stochastic volatility model"
+
+[[notebookSections.notebooks]]
+name = "Bates Model"
+file = "ctsv/tutorial-02-bates.ipynb"
+bundled = true
+description = "Stochastic volatility with jumps using the Bates model"
+
+[[notebookSections.notebooks]]
+name = "Implied Volatility Surface"
+file = "ctsv/tutorial-03-implied-vol.ipynb"
+bundled = true
+description = "Constructing and visualising implied volatility surfaces"
+
+[[notebookSections.notebooks]]
+name = "Model Calibration"
+file = "ctsv/tutorial-04-calibration.ipynb"
+bundled = true
+description = "Calibrating Heston and Bates parameters to market option prices"
+
+[[wikis]]
+name = "Overview"
+file = "ctsv/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Factsheet"
+file = "ctsv/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "ctsv/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "ctsv/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "ctsv/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "ctsv/decision-guide.md"
+bundled = true
+
+[[wikis]]
+name = "Comparison of Time-Varying Volatility Models"
+file = "tvm/Time-VaryingVolatilityModels.md"
+bundled = true
+
+[[models]]
+id = "heston"
+label = "Heston"
+
+[[models]]
+id = "bates"
+label = "Bates"
+
+[[models]]
+id = "sabr"
+label = "SABR"
+
+[[bullets]]
+text = "Heston"
+detail = "stochastic variance with mean-reverting CIR dynamics"
+
+[[bullets]]
+text = "Bates"
+detail = "Heston extended with compound Poisson–log-normal jump diffusion"
+
+[[bullets]]
+text = "SABR"
+detail = "CEV-type forward with log-normal volatility (reference only — no Julia package)"
+
+[[inputs]]
+id = "kappa"
+label = "kappa (kappa)"
+tooltip = "Mean-reversion speed of variance — controls how quickly v_t reverts to theta. Higher kappa means faster reversion. Default 2."
+default = "2"
+models = ["heston", "bates"]
+
+[[inputs]]
+id = "theta"
+label = "theta (theta)"
+tooltip = "Long-run mean of variance. As t → ∞, E[v_t] → theta. Set theta = sigmā² for the target long-run volatility sigmā. Default 0.04 (≈ 20% vol)."
+default = "0.04"
+models = ["heston", "bates"]
+
+[[inputs]]
+id = "xi"
+label = "xi (xi)"
+tooltip = "Vol-of-vol — volatility of the variance process. Higher xi increases the curvature of the implied volatility smile. Default 0.5."
+default = "0.5"
+models = ["heston", "bates"]
+
+[[inputs]]
+id = "rho"
+label = "rho (rho)"
+tooltip = "Correlation between the asset and variance Brownian motions. Negative rho captures the leverage effect (volatility rises when price falls). Default −0.7."
+default = "-0.7"
+models = ["heston", "bates"]
+
+[[inputs]]
+id = "S0"
+label = "S₀ (price)"
+tooltip = "Initial asset price. Default 100."
+default = "100"
+models = ["heston", "bates"]
+
+[[inputs]]
+id = "v0"
+label = "v₀ (variance)"
+tooltip = "Initial variance (not volatility). Initial instantaneous volatility is sigma₀ = √v₀. Default 0.04 (≈ 20% vol)."
+default = "0.04"
+models = ["heston", "bates"]
+
+[[inputs]]
+id = "T"
+label = "T (horizon)"
+tooltip = "Simulation horizon in years. Default 1."
+default = "1"
+models = ["heston", "bates"]
+
+[[inputs]]
+id = "mu"
+label = "mu (drift)"
+tooltip = "Risk-neutral drift of the asset price. Set to the risk-free rate minus the continuous dividend yield for pricing. Default 0.05."
+default = "0.05"
+models = ["heston"]
+
+[[inputs]]
+id = "lambda"
+label = "lambda (intensity)"
+tooltip = "Jump intensity — expected number of jumps per year (Poisson arrival rate lambda). Default 0.5."
+default = "0.5"
+models = ["bates"]
+
+[[inputs]]
+id = "muJ"
+label = "muJ (mean jump)"
+tooltip = "Mean log-jump size. The expected relative jump size is mū_J = exp(mu_J + delta²_J / 2) − 1. Default −0.1."
+default = "-0.1"
+models = ["bates"]
+
+[[inputs]]
+id = "sigmaJ"
+label = "deltaJ (jump vol)"
+tooltip = "Standard deviation of log-jump size. Controls the dispersion of individual jump magnitudes. Default 0.2."
+default = "0.2"
+models = ["bates"]
+
+[[inputs]]
+id = "alpha"
+label = "alpha (alpha)"
+tooltip = "Initial stochastic volatility in the SABR model. Default 0.4."
+default = "0.4"
+models = ["sabr"]
+
+[[inputs]]
+id = "beta"
+label = "beta (beta)"
+tooltip = "CEV exponent — controls the relationship between forward price and local volatility. beta = 0: normal model, beta = 1: log-normal. Default 0.5."
+default = "0.5"
+models = ["sabr"]
+
+[[inputs]]
+id = "rho-sabr"
+label = "rho (rho)"
+tooltip = ""
+default = "-0.3"
+models = ["sabr"]
+
+[[inputs]]
+id = "F0"
+label = "F₀ (forward)"
+tooltip = "Initial forward price. Default 100."
+default = "100"
+models = ["sabr"]
+
+[[inputs]]
+id = "T-sabr"
+label = "T (expiry)"
+tooltip = ""
+default = "1"
+models = ["sabr"]
+
+[[codeBranches]]
+model = "heston"
+code = '''
+using DiffEqFinancial, DifferentialEquations
+
+u0   = [{{S0}}, {{v0}}]  # initial [price, variance]
+prob = HestonProblem({{mu}}, {{kappa}}, {{theta}}, {{xi}}, {{rho}}, u0, (0.0, {{T}}))  # Heston SDE problem
+sol  = solve(prob, SRIW1())  # simulate path
+'''
+
+[[codeBranches]]
+model = "bates"
+code = '''
+using QuantLib
+
+spot = QuoteHandle(SimpleQuote({{S0}}))  # spot price handle
+rf   = YieldTermStructureHandle(FlatForward(today, 0.0, Actual365Fixed()))  # flat risk-free rate
+proc = BatesProcess(rf, rf, spot, {{v0}}, {{kappa}}, {{theta}}, {{xi}}, {{rho}}, {{lambda}}, {{muJ}}, {{sigmaJ}})  # Bates SDE process
+'''
+
+[[codeBranches]]
+model = "sabr"
+code = '''
+
+'''

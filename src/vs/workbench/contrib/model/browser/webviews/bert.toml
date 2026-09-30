@@ -1,0 +1,423 @@
+# BERT Embeddings Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/bert.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "BERT Embeddings"
+viewType = "pollis.bert"
+defaultModel = "embed"
+
+[[packages]]
+name = "Transformers.jl"
+github = "https://github.com/chengchingwen/Transformers.jl"
+
+[[packages]]
+name = "Lux.jl"
+github = "https://github.com/LuxDL/Lux.jl"
+
+[requires]
+packages = ["Transformers.jl", "Lux.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "BERT Embeddings"
+file = "bert/tutorial-01-bert-embeddings.ipynb"
+bundled = true
+description = "Load a pre-trained BERT model via Transformers.jl and generate contextual text embeddings"
+
+[[notebookSections.notebooks]]
+name = "Semantic Similarity"
+file = "bert/tutorial-02-semantic-similarity.ipynb"
+bundled = true
+description = "Compute cosine similarity between sentence embeddings for semantic search"
+
+[[notebookSections.notebooks]]
+name = "Fine-tuning BERT"
+file = "bert/tutorial-03-fine-tuning.ipynb"
+bundled = true
+description = "Fine-tune a BERT model on a custom text classification dataset using Lux.jl"
+
+[[wikis]]
+name = "Factsheet"
+file = "bert/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "bert/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "bert/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "bert/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "bert/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "bert/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Architecture"
+
+[[wikis]]
+name = "Tokenisation"
+file = "bert/tokenisation.md"
+bundled = true
+
+[[wikis]]
+name = "Attention"
+file = "bert/attention.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "Transformers.jl: Transformers in Julia"
+authors = "Cheng, Ching-Wen"
+year = 2023
+journal = "GitHub"
+url = "https://github.com/chengchingwen/Transformers.jl"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Speech and Language Processing"
+authors = "Jurafsky, Daniel; Martin, James H."
+year = 2024
+journal = "Pearson (3rd ed., draft)"
+url = "https://web.stanford.edu/~jurafsky/slp3/"
+openAccess = true
+
+[[references]]
+title = "Deep Learning"
+authors = "Goodfellow, Ian; Bengio, Yoshua; Courville, Aaron"
+year = 2016
+journal = "MIT Press"
+url = "https://www.deeplearningbook.org/"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding"
+authors = "Devlin, Jacob; Chang, Ming-Wei; Lee, Kenton; Toutanova, Kristina"
+year = 2019
+journal = "NAACL-HLT"
+url = "https://arxiv.org/abs/1810.04805"
+openAccess = true
+
+[[references]]
+title = "Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks"
+authors = "Reimers, Nils; Gurevych, Iryna"
+year = 2019
+journal = "EMNLP"
+url = "https://arxiv.org/abs/1908.10084"
+openAccess = true
+
+[[references]]
+title = "Attention Is All You Need"
+authors = "Vaswani, Ashish; Shazeer, Noam; Parmar, Niki; Uszkoreit, Jakob; Jones, Llion; Gomez, Aidan N.; Kaiser, Lukasz; Polosukhin, Illia"
+year = 2017
+journal = "NeurIPS"
+url = "https://arxiv.org/abs/1706.03762"
+openAccess = true
+
+[[models]]
+id = "embed"
+label = "Embed"
+
+[[models]]
+id = "similarity"
+label = "Similarity"
+
+[[bullets]]
+text = "Embed"
+detail = "encode text into a contextual dense vector using the Bidirectional Encoder Representations from Transformers (BERT) CLS token; suited for downstream tasks and semantic search"
+
+[[bullets]]
+text = "Similarity"
+detail = "compute cosine similarity between two sentence embeddings; measures semantic closeness without task-specific fine-tuning"
+
+[[inputs]]
+id = "bertmodel"
+label = "Model"
+tooltip = "HuggingFace model name, e.g. \"bert-base-uncased\" or \"sentence-transformers/all-MiniLM-L6-v2\""
+default = "bert-base-uncased"
+
+[[inputs]]
+id = "text"
+label = "Text"
+tooltip = "Input text to encode into a dense embedding vector"
+default = "text"
+models = ["embed"]
+
+[[inputs]]
+id = "text1"
+label = "Text 1"
+tooltip = "First sentence for similarity comparison"
+default = "text1"
+models = ["similarity"]
+
+[[inputs]]
+id = "text2"
+label = "Text 2"
+tooltip = "Second sentence for similarity comparison"
+default = "text2"
+models = ["similarity"]
+
+[[codeBranches]]
+model = "embed"
+code = '''
+using Transformers
+using Transformers.HuggingFace
+
+tkr  = HuggingFace.load_tokenizer({{bertmodel}})  # load tokenizer from HuggingFace Hub
+bert = HuggingFace.load_model(BertModel, {{bertmodel}})  # load pre-trained BERT weights
+
+enc  = tkr({{text}})  # tokenise input text
+out  = bert(enc.token, enc.segment, enc.attention_mask)  # forward pass through BERT encoder
+emb  = out.hidden_state[:, 1, :]  # CLS token embedding (hidden_dim × batch)
+'''
+
+[[codeBranches]]
+model = "similarity"
+code = '''
+using Transformers, LinearAlgebra
+using Transformers.HuggingFace
+
+tkr  = HuggingFace.load_tokenizer({{bertmodel}})  # load tokenizer
+bert = HuggingFace.load_model(BertModel, {{bertmodel}})  # load BERT model
+
+enc1 = tkr({{text1}})  # tokenise first sentence
+enc2 = tkr({{text2}})  # tokenise second sentence
+emb1 = vec(bert(enc1.token, enc1.segment, enc1.attention_mask).hidden_state[:, 1, :])  # CLS embedding for text 1
+emb2 = vec(bert(enc2.token, enc2.segment, enc2.attention_mask).hidden_state[:, 1, :])  # CLS embedding for text 2
+
+sim  = dot(emb1, emb2) / (norm(emb1) * norm(emb2))  # cosine similarity in [-1, 1]
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "embedding-scatter"
+label = "Embedding Scatter"
+desc = "Project embeddings to 2D with UMAP or PCA for visual inspection"
+code = '''
+using Transformers, UMAP, Plots
+using Transformers.HuggingFace
+
+tkr  = HuggingFace.load_tokenizer({{bertmodel}})  # load tokenizer
+bert = HuggingFace.load_model(BertModel, {{bertmodel}})  # load BERT
+
+embs = hcat([vec(bert(tkr(d).token, tkr(d).segment, tkr(d).attention_mask).hidden_state[:, 1, :]) for d in docs]...)  # embed all docs
+proj = umap(embs, 2)  # reduce to 2D with UMAP
+scatter(proj[1, :], proj[2, :], xlabel="UMAP 1", ylabel="UMAP 2")  # scatter plot of document embeddings
+'''
+
+[[actionGroups.actions]]
+id = "similarity-heatmap"
+label = "Similarity Heatmap"
+desc = "Pairwise cosine similarity matrix across a document set"
+code = '''
+using Transformers, LinearAlgebra, Plots
+using Transformers.HuggingFace
+
+tkr  = HuggingFace.load_tokenizer({{bertmodel}})  # load tokenizer
+bert = HuggingFace.load_model(BertModel, {{bertmodel}})  # load BERT
+
+E    = hcat([vec(bert(tkr(d).token, tkr(d).segment, tkr(d).attention_mask).hidden_state[:, 1, :]) for d in docs]...)  # embed all docs
+E    = E ./ norm.(eachcol(E))  # L2-normalise columns
+sim  = E' * E  # pairwise cosine similarity matrix
+heatmap(sim, title="Cosine similarity")  # annotated heatmap
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "embedding-norm"
+label = "Embedding Norms"
+desc = "Distribution of CLS embedding L2 norms across the corpus"
+code = '''
+using Transformers, LinearAlgebra, StatsBase, Plots
+using Transformers.HuggingFace
+
+tkr    = HuggingFace.load_tokenizer({{bertmodel}})  # load tokenizer
+bert   = HuggingFace.load_model(BertModel, {{bertmodel}})  # load BERT
+
+norms  = [norm(vec(bert(tkr(d).token, tkr(d).segment, tkr(d).attention_mask).hidden_state[:, 1, :])) for d in docs]  # L2 norm per document
+histogram(norms, xlabel="L2 norm", title="CLS embedding norm distribution")  # norm histogram
+'''
+
+[[actionGroups.actions]]
+id = "attention-weights"
+label = "Attention Weights"
+desc = "Visualise last-layer attention for a single input"
+code = '''
+using Transformers, Plots
+using Transformers.HuggingFace
+
+tkr    = HuggingFace.load_tokenizer({{bertmodel}})  # load tokenizer
+bert   = HuggingFace.load_model(BertModel, {{bertmodel}})  # load BERT
+
+enc    = tkr({{text}})  # tokenise text
+out    = bert(enc.token, enc.segment, enc.attention_mask; output_attentions=true)  # run with attention output
+attn   = out.attentions[end][:, :, 1, 1]  # last-layer attention for first example and first head
+tokens = enc.tokens  # token strings
+heatmap(attn, xticks=(1:length(tokens), tokens), yticks=(1:length(tokens), tokens))  # attention heatmap
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "nearest-neighbour"
+label = "Nearest Neighbour"
+desc = "Find the top-k most similar documents to a query"
+code = '''
+using Transformers, LinearAlgebra
+using Transformers.HuggingFace
+
+tkr  = HuggingFace.load_tokenizer({{bertmodel}})  # load tokenizer
+bert = HuggingFace.load_model(BertModel, {{bertmodel}})  # load BERT
+
+E    = hcat([vec(bert(tkr(d).token, tkr(d).segment, tkr(d).attention_mask).hidden_state[:, 1, :]) for d in docs]...)  # embed corpus
+E    = E ./ norm.(eachcol(E))  # L2-normalise
+
+q    = vec(bert(tkr(query).token, tkr(query).segment, tkr(query).attention_mask).hidden_state[:, 1, :])  # embed query
+q    = q ./ norm(q)  # normalise query
+sims = E' * q  # cosine similarities
+top5 = sortperm(sims, rev=true)[1:5]  # top-5 document indices
+'''
+
+[[actionGroups.actions]]
+id = "batch-encode"
+label = "Batch Encoding"
+desc = "Encode a large corpus in mini-batches for efficiency"
+code = '''
+using Transformers, LinearAlgebra
+using Transformers.HuggingFace
+
+tkr    = HuggingFace.load_tokenizer({{bertmodel}})  # load tokenizer
+bert   = HuggingFace.load_model(BertModel, {{bertmodel}})  # load BERT
+
+batch  = 32  # mini-batch size
+embs   = vcat([hcat([vec(bert(tkr(d).token, tkr(d).segment, tkr(d).attention_mask).hidden_state[:, 1, :]) for d in docs[i:min(i+batch-1,end)]]...) for i in 1:batch:length(docs)]...)  # embed in batches
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "compare-models"
+label = "Compare Models"
+desc = "Benchmark similarity scores from different checkpoints"
+code = '''
+using Transformers, LinearAlgebra
+using Transformers.HuggingFace
+
+models = ["bert-base-uncased", "sentence-transformers/all-MiniLM-L6-v2"]  # candidate checkpoints
+
+for m in models
+    tkr  = HuggingFace.load_tokenizer(m)  # load tokenizer for model m
+    bert = HuggingFace.load_model(BertModel, m)  # load model m
+    e1   = vec(bert(tkr(text1).token, tkr(text1).segment, tkr(text1).attention_mask).hidden_state[:, 1, :])  # embed text 1
+    e2   = vec(bert(tkr(text2).token, tkr(text2).segment, tkr(text2).attention_mask).hidden_state[:, 1, :])  # embed text 2
+    sim  = dot(e1, e2) / (norm(e1) * norm(e2))  # cosine similarity
+    println(m, " sim: ", sim)
+end
+'''
+
+[[actionGroups.actions]]
+id = "compare-pooling"
+label = "Compare Pooling"
+desc = "CLS token vs mean pooling for sentence representation"
+code = '''
+using Transformers, LinearAlgebra
+using Transformers.HuggingFace
+
+tkr    = HuggingFace.load_tokenizer({{bertmodel}})  # load tokenizer
+bert   = HuggingFace.load_model(BertModel, {{bertmodel}})  # load BERT
+
+out    = bert(tkr({{text}}).token, tkr({{text}}).segment, tkr({{text}}).attention_mask)  # run encoder
+cls    = vec(out.hidden_state[:, 1, :])  # CLS token (first position)
+mean_p = vec(mean(out.hidden_state, dims=2))  # mean-pool over all token positions
+println("CLS norm: ", norm(cls), "  Mean norm: ", norm(mean_p))  # compare norms
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "top-similar"
+label = "Top Similar Docs"
+desc = "Rank and display the most similar documents to each query"
+code = '''
+using Transformers, LinearAlgebra
+using Transformers.HuggingFace
+
+tkr  = HuggingFace.load_tokenizer({{bertmodel}})  # load tokenizer
+bert = HuggingFace.load_model(BertModel, {{bertmodel}})  # load BERT
+
+E    = hcat([vec(bert(tkr(d).token, tkr(d).segment, tkr(d).attention_mask).hidden_state[:, 1, :]) for d in docs]...)  # embed corpus
+E    = E ./ norm.(eachcol(E))  # normalise
+
+for (i, q) in enumerate(queries)
+    qe   = vec(bert(tkr(q).token, tkr(q).segment, tkr(q).attention_mask).hidden_state[:, 1, :]) |> v -> v ./ norm(v)  # normalised query embedding
+    idx  = sortperm(E' * qe, rev=true)[1:3]  # top-3 document indices
+    println("Q$i: ", docs[idx])
+end
+'''
+
+[[actionGroups.actions]]
+id = "token-attribution"
+label = "Token Attribution"
+desc = "Gradient-based importance scores for each input token"
+code = '''
+using Transformers, Zygote, LinearAlgebra
+using Transformers.HuggingFace
+
+tkr    = HuggingFace.load_tokenizer({{bertmodel}})  # load tokenizer
+bert   = HuggingFace.load_model(BertModel, {{bertmodel}})  # load BERT
+
+enc    = tkr({{text}})  # tokenise input
+grads  = gradient(x -> sum(bert(x, enc.segment, enc.attention_mask).hidden_state[:, 1, :]), enc.token)[1]  # gradient of CLS norm wrt input token ids
+scores = vec(norm.(eachcol(grads)))  # attribution score per token
+println(zip(enc.tokens, scores))  # token-score pairs
+'''

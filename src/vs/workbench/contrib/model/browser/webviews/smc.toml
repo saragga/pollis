@@ -1,0 +1,449 @@
+# Sequential Monte Carlo Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/smc.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Sequential Monte Carlo"
+viewType = "pollis.smc"
+defaultModel = "filter"
+
+[[packages]]
+name = "SequentialMonteCarlo.jl"
+github = "https://github.com/awllee/SequentialMonteCarlo.jl"
+
+[requires]
+packages = ["SequentialMonteCarlo.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Particle Filter"
+file = "smc/tutorial-01-filter.ipynb"
+bundled = true
+description = "Bootstrap particle filter for sequential state estimation in hidden Markov models"
+
+[[notebookSections.notebooks]]
+name = "Particle Smoother"
+file = "smc/tutorial-02-smoother.ipynb"
+bundled = true
+description = "Full-path smoothing via ancestor tracing and backward simulation"
+
+[[notebookSections.notebooks]]
+name = "SMC Samplers"
+file = "smc/tutorial-03-samplers.ipynb"
+bundled = true
+description = "SMC for static Bayesian inference: annealed targets and log marginal likelihood estimation"
+
+[[wikis]]
+name = "Factsheet"
+file = "smc/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "smc/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "smc/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "smc/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "smc/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "smc/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Algorithm Details"
+
+[[wikis]]
+name = "Bootstrap Filter"
+file = "smc/bootstrap-filter.md"
+bundled = true
+
+[[wikis]]
+name = "Resampling Schemes"
+file = "smc/resampling-schemes.md"
+bundled = true
+
+[[wikis]]
+name = "Smoothing"
+file = "smc/smoothing.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "SequentialMonteCarlo.jl: An Efficient, Extensible Implementation of SMC"
+authors = "Whiteley, Nick; Lee, Anthony; Sherlock, Chris"
+year = 2016
+journal = "arXiv preprint"
+doi = "10.48550/arXiv.1606.09396"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "An Introduction to Sequential Monte Carlo"
+authors = "Chopin, Nicolas; Papaspiliopoulos, Omiros"
+year = 2020
+journal = "Springer"
+doi = "10.1007/978-3-030-47845-2"
+openAccess = false
+
+[[references]]
+title = "Sequential Monte Carlo Methods in Practice"
+authors = "Doucet, Arnaud; de Freitas, Nando; Gordon, Neil J."
+year = 2001
+journal = "Springer"
+doi = "10.1007/978-1-4757-3437-9"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Sequential Monte Carlo Samplers"
+authors = "Del Moral, Pierre; Doucet, Arnaud; Jasra, Ajay"
+year = 2006
+journal = "Journal of the Royal Statistical Society: Series B"
+doi = "10.1111/j.1467-9868.2006.00553.x"
+openAccess = false
+
+[[references]]
+title = "Monte Carlo Filter and Smoother for Non-Gaussian Nonlinear State Space Models"
+authors = "Kitagawa, Genshiro"
+year = 1996
+journal = "Journal of Computational and Graphical Statistics"
+doi = "10.1080/10618600.1996.10474692"
+openAccess = false
+
+[[models]]
+id = "filter"
+label = "Particle Filter"
+
+[[models]]
+id = "smoother"
+label = "Particle Smoother"
+
+[[bullets]]
+text = "Particle Filter"
+detail = "propagate N weighted particles through time; resample when ESS drops below threshold"
+
+[[bullets]]
+text = "Particle Smoother"
+detail = "recover full-path distributions via ancestor tracing or backward simulation"
+
+[[bullets]]
+text = "SMC Samplers"
+detail = "sample from a sequence of annealed targets; estimates log marginal likelihood"
+
+[[inputs]]
+id = "log-w"
+label = "lG body"
+tooltip = "Julia expression for the log potential (observation weight) at each step. Receives t (Int64), p (Particle), and a data argument. Example: -0.5 * p.x^2"
+default = "-0.5 * p.x^2"
+
+[[inputs]]
+id = "n"
+label = "Particles (N)"
+tooltip = "Number of particles. More particles reduce variance but increase computation linearly."
+default = "1000"
+
+[[inputs]]
+id = "t"
+label = "Steps (T)"
+tooltip = "Number of time steps. Defines the length of the sequential target sequence."
+default = "50"
+
+[[codeBranches]]
+model = "filter"
+code = '''
+using SequentialMonteCarlo
+
+mutable struct Particle
+    x::Float64  # state variable
+end
+
+function M!(p::Particle, rng, t::Int64, pOld::Particle, ::Nothing)
+    p.x = pOld.x + randn(rng)  # transition: Gaussian random walk
+end
+
+function lG(t::Int64, p::Particle, ::Nothing)
+    return {{log-w}}  # log potential at step t
+end
+
+model = SMCModel(M!, lG, {{t}}, Particle, Nothing)  # defines the sequential model
+smcio = SMCIO{model.particle, model.internal}({{n}}, {{t}}, 1, false)  # {{n}} particles; no ancestor storage
+smc!(model, smcio)  # run particle filter
+println("log Z: ", smcio.logZhats[end])  # log normalising constant estimate
+'''
+
+[[codeBranches]]
+model = "smoother"
+code = '''
+using SequentialMonteCarlo
+
+mutable struct Particle
+    x::Float64  # state variable
+end
+
+function M!(p::Particle, rng, t::Int64, pOld::Particle, ::Nothing)
+    p.x = pOld.x + randn(rng)  # transition: Gaussian random walk
+end
+
+function lG(t::Int64, p::Particle, ::Nothing)
+    return {{log-w}}  # log potential at step t
+end
+
+model = SMCModel(M!, lG, {{t}}, Particle, Nothing)  # defines the sequential model
+smcio = SMCIO{model.particle, model.internal}({{n}}, {{t}}, 1, true)  # {{n}} particles; store ancestors for smoothing
+smc!(model, smcio)  # run particle filter with ancestor tracing
+paths = allAncestors(smcio)  # full particle trajectories
+println("log Z: ", smcio.logZhats[end])  # log normalising constant estimate
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "particle-cloud"
+label = "Particle Cloud"
+desc = "Scatter plot of particle positions at a given time step"
+code = '''
+using Plots
+
+t_plot    = {{t}}  # time step to inspect
+positions = [smcio.particles[t_plot][i].x for i in 1:{{n}}]  # extract x from each particle
+weights   = exp.(smcio.logWeights[t_plot])  # normalised importance weights
+
+scatter(positions, weights,  # particle weight vs position
+    xlabel="x", ylabel="weight", legend=false, markersize=3)
+'''
+
+[[actionGroups.actions]]
+id = "ess-trajectory"
+label = "ESS Trajectory"
+desc = "Effective sample size over time steps"
+code = '''
+using Plots
+
+ess_t = {{n}} .* exp.(smcio.logZhats .- 2 .* smcio.logZhats)  # ESS approximation at each step
+
+plot(1:{{t}}, smcio.esses,  # esses stored by SMCIO
+    xlabel="t", ylabel="ESS", ylims=(0, {{n}}), legend=false)
+hline!([{{n}} * 0.5], linestyle=:dash)  # 50% ESS resampling threshold
+'''
+
+[[actionGroups.actions]]
+id = "weight-hist"
+label = "Weight Distribution"
+desc = "Histogram of log-weights at the final step"
+code = '''
+using Plots
+
+lw = smcio.logWeights[{{t}}]  # log-weights at final step
+histogram(lw, normalize=:pdf,  # distribution of log-weights
+    xlabel="log weight", ylabel="density", legend=false)
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "ess-check"
+label = "ESS per Step"
+desc = "Print ESS at each time step; flag steps below 50%"
+code = '''
+threshold = {{n}} * 0.5  # 50% ESS triggers resampling
+for t in 1:{{t}}
+    ess_t = smcio.esses[t]  # stored ESS at step t
+    flag  = ess_t < threshold ? " *" : ""  # mark low-ESS steps
+    println("t=", t, "  ESS=", round(ess_t; digits=1), flag)  # print each step
+end
+'''
+
+[[actionGroups.actions]]
+id = "logz-trajectory"
+label = "Log-Z Trajectory"
+desc = "Cumulative log normalising constant over time"
+code = '''
+using Plots
+
+plot(1:{{t}}, smcio.logZhats,  # log Z estimate at each step
+    xlabel="t", ylabel="log Z", legend=false)
+println("Final log Z: ", smcio.logZhats[end])  # log normalising constant
+'''
+
+[[actionGroups.actions]]
+id = "resampling-count"
+label = "Resampling Steps"
+desc = "Count how many steps triggered resampling"
+code = '''
+n_resamp = sum(smcio.resampled)  # steps where resampling occurred
+println("Resampled at ", n_resamp, " of ", length(smcio.resampled), " steps")  # resampling frequency
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "filter-mean"
+label = "Filter Mean"
+desc = "E[x_t | y_{1:t}] filtering mean at each step"
+code = '''
+using Plots
+
+means = zeros({{t}})  # filter mean trajectory
+for t in 1:{{t}}
+    w = exp.(smcio.logWeights[t])  # normalised weights at step t
+    means[t] = sum(w .* [smcio.particles[t][i].x for i in 1:{{n}}])  # weighted mean
+end
+
+plot(1:{{t}}, means, xlabel="t", ylabel="E[x|y]", legend=false)  # filtering mean over time
+'''
+
+[[actionGroups.actions]]
+id = "predictive-dist"
+label = "One-Step Predictive"
+desc = "Marginal predictive distribution at t+1"
+code = '''
+using Distributions, Plots
+
+rng    = MersenneTwister(42)  # reproducible RNG
+preds  = Particle.[]  # placeholder for predictive particles
+w_last = exp.(smcio.logWeights[{{t}}])  # final filter weights
+idx    = sample(1:{{n}}, Weights(w_last), {{n}})  # resample
+for i in 1:{{n}}
+    pOld = smcio.particles[{{t}}][idx[i]]  # resampled particle
+    p    = Particle(0.0)  # new particle
+    M!(p, rng, {{t}} + 1, pOld, nothing)  # propagate forward
+    push!(preds, p)  # collect predictive sample
+end
+histogram([p.x for p in preds], normalize=:pdf, xlabel="x", legend=false)  # predictive density at t+1
+'''
+
+[[actionGroups.actions]]
+id = "smooth-path"
+label = "Smooth Path"
+desc = "Draw a full trajectory from the particle smoother"
+code = '''
+using Plots
+
+paths  = allAncestors(smcio)  # full trajectories (requires store_ancestors=true)
+path_x = [smcio.particles[t][paths[1][t]].x for t in 1:{{t}}]  # extract first path
+
+plot(1:{{t}}, path_x, xlabel="t", ylabel="x", legend=false)  # one sampled trajectory
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "particle-study"
+label = "Particle Count Study"
+desc = "Variance of log Z estimate vs number of particles"
+code = '''
+using Plots, Statistics
+
+Ns      = [100, 250, 500, 1000, 2000]  # particle counts to test
+n_reps  = 20  # repetitions per N
+logz_sd = zeros(length(Ns))  # std of log Z estimates
+for (j, N) in enumerate(Ns)
+    lzs = [begin io = SMCIO{model.particle,model.internal}(N,{{t}},1,false); smc!(model,io); io.logZhats[end] end for _ in 1:n_reps]  # n_reps runs per N
+    logz_sd[j] = std(lzs)  # std across repetitions
+end
+plot(Ns, logz_sd, xlabel="N", ylabel="std(log Z)", legend=false, xscale=:log10)  # should decay as 1/sqrt(N)
+'''
+
+[[actionGroups.actions]]
+id = "ess-ratio"
+label = "ESS Ratio"
+desc = "Mean ESS / N ratio across all time steps"
+code = '''
+ess_ratio = mean(smcio.esses) / {{n}}  # average ESS fraction
+println("Mean ESS/N: ", round(ess_ratio; digits=3))  # near 1.0 = efficient; near 0 = weight degeneracy
+'''
+
+[[actionGroups.actions]]
+id = "logz-variance"
+label = "Log-Z Variance"
+desc = "Estimate variance of the log normalising constant"
+code = '''
+using Statistics
+
+n_reps = 30  # number of independent SMC runs
+logzs  = [begin io = SMCIO{model.particle,model.internal}({{n}},{{t}},1,false); smc!(model,io); io.logZhats[end] end for _ in 1:n_reps]  # collect log Z estimates
+println("log Z mean: ", mean(logzs))  # unbiased estimate
+println("log Z std:  ", std(logzs))  # Monte Carlo error
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "log-normaliser"
+label = "Log Normaliser"
+desc = "Log marginal likelihood log p(y_{1:T})"
+code = '''
+logZ = smcio.logZhats[end]  # log normalising constant = log p(y_{1:T})
+println("log p(y_{1:T}) = ", logZ)  # use for model comparison (higher is better)
+'''
+
+[[actionGroups.actions]]
+id = "filter-means-table"
+label = "Filtering Means"
+desc = "Print E[x_t | y_{1:t}] for all t"
+code = '''
+for t in 1:{{t}}
+    w    = exp.(smcio.logWeights[t])  # normalised weights
+    xbar = sum(w .* [smcio.particles[t][i].x for i in 1:{{n}}])  # weighted mean
+    println("t=", t, "  E[x|y]=", round(xbar; digits=4))  # print filter mean
+end
+'''
+
+[[actionGroups.actions]]
+id = "weight-entropy"
+label = "Weight Entropy"
+desc = "Shannon entropy of normalised weights at each step"
+code = '''
+using Statistics
+
+for t in 1:{{t}}
+    w = exp.(smcio.logWeights[t])  # normalised weights
+    H = -sum(w .* log.(w .+ 1e-300))  # Shannon entropy
+    println("t=", t, "  H=", round(H; digits=2), "  (max=", round(log({{n}}); digits=2), ")")  # compare to log(N) max
+end
+'''

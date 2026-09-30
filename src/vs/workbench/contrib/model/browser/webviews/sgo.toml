@@ -1,0 +1,774 @@
+# Stochastic Global Methods Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/sgo.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Stochastic Global Methods"
+viewType = "pollis.sgo"
+defaultModel = "crs"
+
+[[packages]]
+name = "NLopt.jl"
+github = "https://github.com/JuliaOpt/NLopt.jl"
+
+[[packages]]
+name = "Optim.jl"
+github = "https://github.com/JuliaNLSolvers/Optim.jl"
+
+[[packages]]
+name = "Basinhopping.jl"
+github = "https://github.com/gamatos/Basinhopping.jl"
+
+[requires]
+packages = ["NLopt.jl", "Optim.jl", "Basinhopping.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "CRS & MLSL"
+file = "sgo/tutorial-01-crs-mlsl.ipynb"
+bundled = true
+description = "Controlled Random Search and MLSL with NLopt.jl: setup, bounds, and convergence"
+
+[[notebookSections.notebooks]]
+name = "StoGO"
+file = "sgo/tutorial-02-stogo.ipynb"
+bundled = true
+description = "Stochastic branch-and-bound (StoGO and StoGO-R) with NLopt.jl"
+
+[[notebookSections.notebooks]]
+name = "Simulated Annealing"
+file = "sgo/tutorial-03-sa.ipynb"
+bundled = true
+description = "Bounded simulated annealing (SAMIN) with Optim.jl: temperature schedule and bounds"
+
+[[notebookSections.notebooks]]
+name = "AGS"
+file = "sgo/tutorial-04-ags.ipynb"
+bundled = true
+description = "Adaptive global search (AGS) with NLopt.jl: Lipschitz-model-based global optimisation"
+
+[[notebookSections.notebooks]]
+name = "Basin-Hopping"
+file = "sgo/tutorial-05-bh.ipynb"
+bundled = true
+description = "Basin-hopping with Basinhopping.jl: random perturbation + local descent with Metropolis acceptance"
+
+[[wikis]]
+name = "Factsheet"
+file = "sgo/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "sgo/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "sgo/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "sgo/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "sgo/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "sgo/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Algorithm Details"
+
+[[wikis]]
+name = "CRS"
+file = "sgo/crs.md"
+bundled = true
+
+[[wikis]]
+name = "MLSL"
+file = "sgo/mlsl.md"
+bundled = true
+
+[[wikis]]
+name = "StoGO & StoGO-R"
+file = "sgo/stogo.md"
+bundled = true
+
+[[wikis]]
+name = "Simulated Annealing"
+file = "sgo/sa.md"
+bundled = true
+
+[[wikis]]
+name = "AGS"
+file = "sgo/ags.md"
+bundled = true
+
+[[wikis]]
+name = "Basin-Hopping"
+file = "sgo/bh.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "Optim: A Mathematical Optimization Package for Julia"
+authors = "Mogensen, Patrick K.; Riseth, Asbjorn N."
+year = 2018
+journal = "Journal of Open Source Software"
+doi = "10.21105/joss.00615"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Introduction to Global Optimization"
+authors = "Neumaier, Arnold"
+year = 2004
+journal = "Cambridge University Press"
+doi = "10.1017/CBO9780511569029"
+openAccess = false
+
+[[references]]
+title = "Deterministic Global Optimization"
+authors = "Floudas, Christodoulos A."
+year = 2000
+journal = "Springer"
+doi = "10.1007/978-1-4757-4949-6"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Global Optimization by Controlled Random Search"
+authors = "Price, W. L."
+year = 1983
+journal = "Journal of Optimization Theory and Applications"
+doi = "10.1007/BF00933504"
+openAccess = false
+
+[[references]]
+title = "Stochastic Global Optimization Methods Part I: Clustering Methods"
+authors = "Rinnooy Kan, A. H. G.; Timmer, G. T."
+year = 1987
+journal = "Mathematical Programming"
+doi = "10.1007/BF02592071"
+openAccess = false
+
+[[references]]
+title = "A Global Search Method for Optimizing Nonlinear Systems"
+authors = "Stuckman, B. E."
+year = 1988
+journal = "IEEE Transactions on Systems, Man, and Cybernetics"
+doi = "10.1109/21.87070"
+openAccess = false
+
+[[references]]
+title = "Optimization by Simulated Annealing"
+authors = "Kirkpatrick, Scott; Gelatt, C. D.; Vecchi, M. P."
+year = 1983
+journal = "Science"
+doi = "10.1126/science.220.4598.671"
+openAccess = false
+
+[[references]]
+title = "Global Optimization of Statistical Functions with Simulated Annealing"
+authors = "Goffe, William L.; Ferrier, Gary D.; Rogers, John"
+year = 1994
+journal = "Journal of Econometrics"
+doi = "10.1016/0304-4076(94)90038-8"
+openAccess = false
+
+[[references]]
+title = "Global Optimization by Basin-Hopping and the Lowest Energy Structures of Lennard-Jones Clusters Containing up to 110 Atoms"
+authors = "Wales, David J.; Doye, Jonathan P. K."
+year = 1997
+journal = "Journal of Physical Chemistry A"
+doi = "10.1021/jp9803344"
+openAccess = false
+
+[[references]]
+title = "Global Search Based on Efficient Diagonal Partitions and a Set of Lipschitz Constants"
+authors = "Sergeyev, Yaroslav D.; Kvasov, Dmitri E."
+year = 2006
+journal = "SIAM Journal on Optimization"
+doi = "10.1137/040621132"
+openAccess = false
+
+[[models]]
+id = "crs"
+label = "CRS"
+
+[[models]]
+id = "mlsl"
+label = "MLSL"
+
+[[models]]
+id = "stogo"
+label = "StoGO"
+
+[[models]]
+id = "stogo-r"
+label = "StoGO-R"
+
+[[models]]
+id = "sa"
+label = "SA"
+
+[[models]]
+id = "ags"
+label = "AGS"
+
+[[models]]
+id = "bh"
+label = "BH"
+
+[[bullets]]
+text = "CRS"
+detail = "controlled random search; population-based, robust for multimodal functions; no gradient needed"
+
+[[bullets]]
+text = "MLSL"
+detail = "multi-level single-linkage; clusters multiple local searches globally; efficient basin detection"
+
+[[bullets]]
+text = "StoGO"
+detail = "stochastic branch-and-bound; gradient-based global search with bounding"
+
+[[bullets]]
+text = "StoGO-R"
+detail = "randomised StoGO; stochastic branching decisions; often faster on highly multimodal problems"
+
+[[bullets]]
+text = "SA"
+detail = "simulated annealing (Optim.jl SAMIN); temperature-schedule search with box constraints; very general"
+
+[[bullets]]
+text = "AGS"
+detail = "adaptive global search; Lipschitz-model-based; no gradient needed; effective on smooth multimodal problems"
+
+[[bullets]]
+text = "BH"
+detail = "basin-hopping (Basinhopping.jl); random perturbation + local descent; Metropolis acceptance; effective on rugged landscapes"
+
+[[inputs]]
+id = "obj"
+label = "Objective function body"
+tooltip = "Julia expression(s) for the objective function body. Must end with a return statement. Example: return x[1]^2 + x[2]^2"
+default = "return x[1]^2 + x[2]^2"
+
+[[inputs]]
+id = "lb"
+label = "Lower bounds (lb)"
+tooltip = "Julia vector of lower bounds, one per dimension. Example: [-2.0, -2.0]"
+default = "[-2.0, -2.0]"
+
+[[inputs]]
+id = "ub"
+label = "Upper bounds (ub)"
+tooltip = "Julia vector of upper bounds, one per dimension. Example: [2.0, 2.0]"
+default = "[2.0, 2.0]"
+
+[[inputs]]
+id = "n"
+label = "Dimension (n)"
+tooltip = "Number of decision variables (length of x)."
+default = "2"
+
+[[inputs]]
+id = "budget"
+label = "Budget"
+tooltip = "For NLopt methods: maximum number of objective function evaluations (maxeval). For SA: number of iterations passed to Optim.Options."
+default = "1000"
+
+[[codeBranches]]
+model = "crs"
+code = '''
+using NLopt
+
+function obj(x::Vector{Float64}, grad::Vector{Float64})
+    {{obj}}  # objective body
+end
+
+lb  = {{lb}}  # lower bounds (length {{n}})
+ub  = {{ub}}  # upper bounds (length {{n}})
+x0  = (lb .+ ub) ./ 2  # midpoint starting point
+
+opt = Opt(:GN_CRS2_LM, {{n}})  # CRS: controlled random search with LM
+opt.lower_bounds = lb  # box constraint lower
+opt.upper_bounds = ub  # box constraint upper
+opt.min_objective = obj  # minimise the objective
+opt.maxeval = {{budget}}  # budget: stop after this many evaluations
+
+(minf, minx, ret) = optimize(opt, x0)  # run stochastic global search
+
+println("min val: ", minf)  # best objective value found
+println("min x:   ", minx)  # best point found
+println("return:  ", ret)  # :MAXEVAL_REACHED is expected and normal
+'''
+
+[[codeBranches]]
+model = "mlsl"
+code = '''
+using NLopt
+
+function obj(x::Vector{Float64}, grad::Vector{Float64})
+    {{obj}}  # objective body
+end
+
+lb  = {{lb}}  # lower bounds (length {{n}})
+ub  = {{ub}}  # upper bounds (length {{n}})
+x0  = (lb .+ ub) ./ 2  # midpoint starting point
+
+opt = Opt(:GN_MLSL_LDS, {{n}})  # MLSL: multi-level single-linkage (LDS)
+opt.lower_bounds = lb  # box constraint lower
+opt.upper_bounds = ub  # box constraint upper
+opt.min_objective = obj  # minimise the objective
+opt.maxeval = {{budget}}  # budget: stop after this many evaluations
+
+(minf, minx, ret) = optimize(opt, x0)  # run stochastic global search
+
+println("min val: ", minf)  # best objective value found
+println("min x:   ", minx)  # best point found
+println("return:  ", ret)  # :MAXEVAL_REACHED is expected and normal
+'''
+
+[[codeBranches]]
+model = "stogo"
+code = '''
+using NLopt
+
+function obj(x::Vector{Float64}, grad::Vector{Float64})
+    if length(grad) > 0  # StoGO requires gradient: fill grad[i] = df/dx[i]
+    end  # 
+    {{obj}}  # objective body
+end
+
+lb  = {{lb}}  # lower bounds (length {{n}})
+ub  = {{ub}}  # upper bounds (length {{n}})
+x0  = (lb .+ ub) ./ 2  # midpoint starting point
+
+opt = Opt(:GD_STOGO, {{n}})  # StoGO: gradient-based stochastic branch-and-bound
+opt.lower_bounds = lb  # box constraint lower
+opt.upper_bounds = ub  # box constraint upper
+opt.min_objective = obj  # minimise the objective
+opt.maxeval = {{budget}}  # budget: stop after this many evaluations
+
+(minf, minx, ret) = optimize(opt, x0)  # run stochastic global search
+
+println("min val: ", minf)  # best objective value found
+println("min x:   ", minx)  # best point found
+println("return:  ", ret)  # :MAXEVAL_REACHED is expected and normal
+'''
+
+[[codeBranches]]
+model = "stogo-r"
+code = '''
+using NLopt
+
+function obj(x::Vector{Float64}, grad::Vector{Float64})
+    if length(grad) > 0  # StoGO requires gradient: fill grad[i] = df/dx[i]
+    end  # 
+    {{obj}}  # objective body
+end
+
+lb  = {{lb}}  # lower bounds (length {{n}})
+ub  = {{ub}}  # upper bounds (length {{n}})
+x0  = (lb .+ ub) ./ 2  # midpoint starting point
+
+opt = Opt(:GD_STOGO_RAND, {{n}})  # StoGO-R: randomised stochastic branch-and-bound
+opt.lower_bounds = lb  # box constraint lower
+opt.upper_bounds = ub  # box constraint upper
+opt.min_objective = obj  # minimise the objective
+opt.maxeval = {{budget}}  # budget: stop after this many evaluations
+
+(minf, minx, ret) = optimize(opt, x0)  # run stochastic global search
+
+println("min val: ", minf)  # best objective value found
+println("min x:   ", minx)  # best point found
+println("return:  ", ret)  # :MAXEVAL_REACHED is expected and normal
+'''
+
+[[codeBranches]]
+model = "sa"
+code = '''
+using Optim
+
+function obj(x::Vector{Float64})
+    {{obj}}  # objective body
+end
+
+lb = {{lb}}  # lower bounds
+ub = {{ub}}  # upper bounds
+x0 = (lb .+ ub) ./ 2  # midpoint starting point
+
+result = optimize(obj, lb, ub, x0, SAMIN(rt=0.9), Optim.Options(iterations={{budget}}))  # bounded simulated annealing
+
+println("min val:   ", result.minimum)  # best objective value found
+println("min x:     ", result.minimizer)  # best point found
+println("converged: ", result.converged)  # convergence status
+'''
+
+[[codeBranches]]
+model = "ags"
+code = '''
+using NLopt
+
+function obj(x::Vector{Float64}, grad::Vector{Float64})
+    {{obj}}  # objective body
+end
+
+lb  = {{lb}}  # lower bounds (length {{n}})
+ub  = {{ub}}  # upper bounds (length {{n}})
+x0  = (lb .+ ub) ./ 2  # midpoint starting point
+
+opt = Opt(:GN_AGS, {{n}})  # AGS: adaptive global search (Lipschitz model)
+opt.lower_bounds = lb  # box constraint lower
+opt.upper_bounds = ub  # box constraint upper
+opt.min_objective = obj  # minimise the objective
+opt.maxeval = {{budget}}  # budget: stop after this many evaluations
+
+(minf, minx, ret) = optimize(opt, x0)  # run stochastic global search
+
+println("min val: ", minf)  # best objective value found
+println("min x:   ", minx)  # best point found
+println("return:  ", ret)  # :MAXEVAL_REACHED is expected and normal
+'''
+
+[[codeBranches]]
+model = "bh"
+code = '''
+using Optim, Basinhopping
+
+function obj(x::Vector{Float64})
+    {{obj}}  # objective body
+end
+
+lb  = {{lb}}  # lower bounds
+ub  = {{ub}}  # upper bounds
+x0  = (lb .+ ub) ./ 2  # midpoint starting point
+
+local_opt = x -> optimize(obj, lb, ub, x, Fminbox(LBFGS()))  # bounded local solver
+
+result = basinhopping(local_opt, x0, BasinhoppingParams(niter={{budget}}))  # basin-hopping global search
+
+println("min val: ", result.minimum)  # best objective value found
+println("min x:   ", result.minimizer)  # best point found
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "landscape"
+label = "Objective Landscape"
+desc = "Evaluate f on a 2-D grid and plot a heatmap"
+code = '''
+using Plots
+
+lb, ub = {{lb}}, {{ub}}  # bounds (2-D example)
+xs = range(lb[1], ub[1]; length=80)  # x1 grid
+ys = range(lb[2], ub[2]; length=80)  # x2 grid
+Z  = [obj([x, y]) for y in ys, x in xs]  # evaluate on grid
+
+heatmap(xs, ys, Z, xlabel="x1", ylabel="x2", title="Objective landscape")  # darker = lower value
+'''
+
+[[actionGroups.actions]]
+id = "convergence"
+label = "Convergence Curve"
+desc = "Best objective value found vs evaluations"
+code = '''
+using NLopt, Plots
+
+history = Float64[]  # track best value per eval
+best_so_far = Inf  # running minimum
+
+function obj_tracked(x, grad)
+    v = obj(x, grad)  # call original objective
+    global best_so_far = min(best_so_far, v)  # update running min
+    push!(history, best_so_far)  # record
+    return v  # 
+end
+
+opt = Opt(:GN_CRS2_LM, {{n}}); opt.lower_bounds = {{lb}}; opt.upper_bounds = {{ub}}  # CRS setup
+opt.min_objective = obj_tracked; opt.maxeval = {{budget}}  # tracked objective
+optimize(opt, (({{lb}} .+ {{ub}}) ./ 2))  # run
+
+plot(history, xlabel="evaluations", ylabel="best f", legend=false)  # convergence curve
+'''
+
+[[actionGroups.actions]]
+id = "search-scatter"
+label = "Search Points"
+desc = "Scatter plot of all evaluated points (2-D)"
+code = '''
+using NLopt, Plots
+
+pts = Vector{Vector{Float64}}()  # record evaluated points
+function obj_pts(x, grad)
+    push!(pts, copy(x))  # store point
+    return obj(x, grad)  # 
+end
+
+opt = Opt(:GN_CRS2_LM, {{n}}); opt.lower_bounds = {{lb}}; opt.upper_bounds = {{ub}}  # CRS setup
+opt.min_objective = obj_pts; opt.maxeval = {{budget}}  # 
+optimize(opt, (({{lb}} .+ {{ub}}) ./ 2))  # run
+
+xs_pts = getindex.(pts, 1); ys_pts = getindex.(pts, 2)  # extract coordinates
+scatter(xs_pts, ys_pts, ms=2, alpha=0.5, xlabel="x1", ylabel="x2", legend=false)  # all evaluated points
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "eval-budget"
+label = "Evaluation Budget"
+desc = "Check evals used vs budget and return code"
+code = '''
+using NLopt
+
+evals_used = 0  # count evaluations
+function obj_count(x, grad)
+    global evals_used += 1  # increment counter
+    return obj(x, grad)  # 
+end
+
+(minf, minx, ret) = optimize(opt, x0)  # run (reuse opt with obj_count)
+
+println("Budget:    ", {{budget}})  # configured budget
+println("Used:      ", evals_used)  # actual evaluations
+println("Return:    ", ret)  # :MAXEVAL_REACHED means budget exhausted
+println("Remaining: ", {{budget}} - evals_used)  # unused budget
+'''
+
+[[actionGroups.actions]]
+id = "boundary-check"
+label = "Boundary Check"
+desc = "Check whether bounds are active at the solution"
+code = '''
+lb, ub = {{lb}}, {{ub}}  # bounds
+tol = 1e-6  # tolerance for active bound detection
+
+for i in 1:{{n}}
+    at_lb = abs(minx[i] - lb[i]) < tol  # active lower
+    at_ub = abs(minx[i] - ub[i]) < tol  # active upper
+    println("x[", i, "] = ", minx[i], at_lb ? " (at lb)" : at_ub ? " (at ub)" : " (interior)")  # bound status
+end
+'''
+
+[[actionGroups.actions]]
+id = "restart-study"
+label = "Restart Study"
+desc = "Run multiple times to check robustness"
+code = '''
+using NLopt, Random
+
+Random.seed!(0)  # reproducibility
+lb, ub = {{lb}}, {{ub}}  # bounds
+
+for trial in 1:5
+    x0_t = lb .+ (rand({{n}}) .* (ub .- lb))  # random starting point
+    opt_t = Opt(:GN_CRS2_LM, {{n}}); opt_t.lower_bounds = lb; opt_t.upper_bounds = ub  # fresh opt
+    opt_t.min_objective = obj; opt_t.maxeval = {{budget}}  # 
+    (f_t, x_t, _) = optimize(opt_t, x0_t)  # run
+    println("trial ", trial, ": f* = ", round(f_t; digits=6), "  x* = ", x_t)  # result
+end
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "solution"
+label = "Solution"
+desc = "Print x*, f*, and return code with context"
+code = '''
+println("=== Global Optimum ===")  # 
+for i in 1:{{n}}
+    println("x[", i, "] = ", result.minimizer[i])  # decision variable
+end
+println("f* = ", result.minimum)  # optimal objective value
+'''
+
+[[actionGroups.actions]]
+id = "local-refine"
+label = "Local Refinement"
+desc = "Polish the global solution with a local method"
+code = '''
+using NLopt
+
+opt_local = Opt(:LN_COBYLA, {{n}})  # local derivative-free polishing
+opt_local.lower_bounds = {{lb}}  # same bounds
+opt_local.upper_bounds = {{ub}}  # 
+opt_local.min_objective = obj_nlopt  # NLopt-signature objective
+opt_local.xtol_rel = 1e-8  # tight local tolerance
+
+x_start = result.minimizer  # starting point from global search result
+(minf2, minx2, ret2) = optimize(opt_local, x_start)  # warm-start from global solution
+
+println("Refined f*: ", minf2, "  x*: ", minx2)  # polished result
+'''
+
+[[actionGroups.actions]]
+id = "multistart"
+label = "Multistart"
+desc = "Run from multiple starting points and keep best"
+code = '''
+using NLopt
+
+best_f = Inf; best_x = zeros({{n}})  # track global best
+for _ in 1:5
+    x0_ms = {{lb}} .+ (rand({{n}}) .* ({{ub}} .- {{lb}}))  # uniform random start
+    opt_ms = Opt(:GN_CRS2_LM, {{n}})  # CRS global search
+    opt_ms.lower_bounds = {{lb}}; opt_ms.upper_bounds = {{ub}}  # 
+    opt_ms.min_objective = obj; opt_ms.maxeval = {{budget}}  # 
+    (f_ms, x_ms, _) = optimize(opt_ms, x0_ms)  # 
+    if f_ms < best_f; best_f = f_ms; best_x = x_ms; end  # keep best
+end
+println("Best f*: ", best_f, "  x*: ", best_x)  # multistart result
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "crs-vs-mlsl"
+label = "CRS vs MLSL"
+desc = "Compare the two population-based NLopt methods"
+code = '''
+using NLopt
+
+x0 = ({{lb}} .+ {{ub}}) ./ 2  # midpoint start
+
+opt_crs = Opt(:GN_CRS2_LM, {{n}}); opt_crs.lower_bounds = {{lb}}; opt_crs.upper_bounds = {{ub}}  # CRS
+opt_crs.min_objective = obj; opt_crs.maxeval = {{budget}}  # 
+(f_crs, x_crs, _) = optimize(opt_crs, x0)  # run CRS
+
+opt_mlsl = Opt(:GN_MLSL_LDS, {{n}}); opt_mlsl.lower_bounds = {{lb}}; opt_mlsl.upper_bounds = {{ub}}  # MLSL
+opt_mlsl.min_objective = obj; opt_mlsl.maxeval = {{budget}}  # 
+(f_mlsl, x_mlsl, _) = optimize(opt_mlsl, x0)  # run MLSL
+
+println("CRS  f*: ", f_crs,  "  x*: ", x_crs)  # CRS result
+println("MLSL f*: ", f_mlsl, "  x*: ", x_mlsl)  # MLSL result
+'''
+
+[[actionGroups.actions]]
+id = "nlopt-vs-sa"
+label = "NLopt vs SA"
+desc = "Compare CRS (NLopt) with SAMIN (Optim.jl)"
+code = '''
+using NLopt, Optim
+
+lb, ub = {{lb}}, {{ub}}  # bounds
+
+function obj_nl(x, grad); return obj(x); end  # NLopt-signature wrapper
+opt = Opt(:GN_CRS2_LM, {{n}}); opt.lower_bounds = lb; opt.upper_bounds = ub  # CRS setup
+opt.min_objective = obj_nl; opt.maxeval = {{budget}}  # 
+(f_nl, x_nl, _) = optimize(opt, (lb .+ ub) ./ 2)  # run NLopt CRS
+
+res_sa = optimize(obj, lb, ub, (lb .+ ub) ./ 2, SAMIN(rt=0.9), Optim.Options(iterations={{budget}}))  # run SA
+
+println("CRS  f*: ", f_nl,          "  x*: ", x_nl)  # NLopt CRS result
+println("SA   f*: ", res_sa.minimum, "  x*: ", res_sa.minimizer)  # SA result
+'''
+
+[[actionGroups.actions]]
+id = "budget-study"
+label = "Budget Study"
+desc = "Solution quality vs evaluation budget"
+code = '''
+using NLopt
+
+budgets = [100, 250, 500, 1000, 2000]  # evaluation budgets to test
+for budget in budgets
+    opt_b = Opt(:GN_CRS2_LM, {{n}})  # fresh opt per budget
+    opt_b.lower_bounds = {{lb}}; opt_b.upper_bounds = {{ub}}  # 
+    opt_b.min_objective = obj; opt_b.maxeval = budget  # 
+    (f_b, _, _) = optimize(opt_b, ({{lb}} .+ {{ub}}) ./ 2)  # 
+    println("budget=", budget, "  f*=", round(f_b; digits=6))  # result per budget
+end
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "summary"
+label = "Summary"
+desc = "Full solution summary with algorithm and result"
+code = '''
+println("=== SGO Summary ===")  # 
+println("Algorithm:  Basin-Hopping")  # selected algorithm
+println("Dimension:  {{n}}")  # number of variables
+println("Budget:     {{budget}}")  # evaluation budget
+println("Lower:      ", {{lb}})  # lower bounds
+println("Upper:      ", {{ub}})  # upper bounds
+println("x*:         ", result.minimizer)  # optimal point
+println("f*:         ", result.minimum)  # optimal value
+'''
+
+[[actionGroups.actions]]
+id = "sensitivity"
+label = "Solution Sensitivity"
+desc = "Perturb x* to verify it is a local minimum"
+code = '''
+x_opt = result.minimizer  # optimal point
+f_opt = result.minimum  # optimal value
+delta = 1e-3  # perturbation size
+
+for i in 1:{{n}}
+    x_p = copy(x_opt); x_p[i] += delta  # perturb up
+    x_m = copy(x_opt); x_m[i] -= delta  # perturb down
+    f_p = obj(x_p)  # evaluate perturbed points
+    f_m = obj(x_m)  # 
+    println("x[", i, "]: f+delta=", f_p, "  f-delta=", f_m, "  f*=", f_opt)  # 
+end
+println("(f* should be <= both f+delta and f-delta)")  # local optimality check
+'''
+
+[[actionGroups.actions]]
+id = "bounds-analysis"
+label = "Bounds Analysis"
+desc = "Relative position of x* within the search box"
+code = '''
+lb, ub  = {{lb}}, {{ub}}  # bounds
+x_opt   = result.minimizer  # optimal point
+width   = ub .- lb  # box width per dimension
+rel     = (x_opt .- lb) ./ width  # relative position in [0, 1]
+
+for i in 1:{{n}}
+    println("x[", i, "] = ", x_opt[i], "  (", round(100*rel[i]; digits=1), "% of box)")  # relative position
+end
+'''

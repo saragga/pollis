@@ -1,0 +1,417 @@
+# LLM Text Analysis Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/llm-ta.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "LLM Text Analysis"
+viewType = "pollis.llm-ta"
+defaultModel = "tag"
+
+[[packages]]
+name = "LLMTextAnalysis.jl"
+github = "https://github.com/svilupp/LLMTextAnalysis.jl"
+
+[requires]
+packages = ["LLMTextAnalysis.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Document Tagging"
+file = "llm-ta/tutorial-01-tagging.ipynb"
+bundled = true
+description = "Tag a corpus with predefined labels using LLMs — build_index + aitag with GPT-4o-mini"
+
+[[notebookSections.notebooks]]
+name = "Document Classification"
+file = "llm-ta/tutorial-02-classification.ipynb"
+bundled = true
+description = "Classify documents into mutually exclusive categories using aiclassify"
+
+[[notebookSections.notebooks]]
+name = "Corpus Summarisation"
+file = "llm-ta/tutorial-03-summarisation.ipynb"
+bundled = true
+description = "Summarise a document corpus with aisummarize — extract key themes and insights"
+
+[[notebookSections.notebooks]]
+name = "Semantic Q&A"
+file = "llm-ta/tutorial-04-qa.ipynb"
+bundled = true
+description = "Answer questions about a document corpus using retrieval-augmented generation (aiask)"
+
+[[wikis]]
+name = "Factsheet"
+file = "llm-ta/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "llm-ta/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "llm-ta/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "llm-ta/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "llm-ta/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "llm-ta/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Analysis Modes"
+
+[[wikis]]
+name = "Tagging"
+file = "llm-ta/tagging.md"
+bundled = true
+
+[[wikis]]
+name = "Classification"
+file = "llm-ta/classification.md"
+bundled = true
+
+[[wikis]]
+name = "Summarisation"
+file = "llm-ta/summarisation.md"
+bundled = true
+
+[[wikis]]
+name = "Q&A"
+file = "llm-ta/qa.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Speech and Language Processing"
+authors = "Jurafsky, Daniel; Martin, James H."
+year = 2024
+journal = "Pearson (3rd ed., draft)"
+url = "https://web.stanford.edu/~jurafsky/slp3/"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Attention Is All You Need"
+authors = "Vaswani, Ashish; Shazeer, Noam; Parmar, Niki; Uszkoreit, Jakob; Jones, Llion; Gomez, Aidan N.; Kaiser, Lukasz; Polosukhin, Illia"
+year = 2017
+journal = "NeurIPS"
+url = "https://arxiv.org/abs/1706.03762"
+openAccess = true
+
+[[references]]
+title = "Language Models are Few-Shot Learners"
+authors = "Brown, Tom B.; Mann, Benjamin; Ryder, Nick; Subbiah, Melanie; Kaplan, Jared; Dhariwal, Prafulla; Neelakantan, Arvind; Shyam, Pranav; Sastry, Girish; Askell, Amanda; Agarwal, Sandhini; Herbert-Voss, Ariel; Krueger, Gretchen; Henighan, Tom; Child, Rewon; Ramesh, Aditya; Ziegler, Daniel M.; Wu, Jeffrey; Winter, Clemens; Hesse, Christopher; Chen, Mark; Sigler, Eric; Litwin, Mateusz; Gray, Scott; Chess, Benjamin; Clark, Jack; Berner, Christopher; McCandlish, Sam; Radford, Alec; Sutskever, Ilya; Amodei, Dario"
+year = 2020
+journal = "NeurIPS"
+url = "https://arxiv.org/abs/2005.14165"
+openAccess = true
+
+[[references]]
+title = "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks"
+authors = "Lewis, Patrick; Perez, Ethan; Piktus, Aleksandra; Petroni, Fabio; Karpukhin, Vladimir; Goyal, Naman; Kuttler, Heinrich; Lewis, Mike; Yih, Wen-tau; Rocktaschel, Tim; Riedel, Sebastian; Kiela, Douwe"
+year = 2020
+journal = "NeurIPS"
+url = "https://arxiv.org/abs/2005.11401"
+openAccess = true
+
+[[models]]
+id = "tag"
+label = "Tag"
+
+[[models]]
+id = "classify"
+label = "Classify"
+
+[[models]]
+id = "summarise"
+label = "Summarise"
+
+[[models]]
+id = "qa"
+label = "Q&A"
+
+[[bullets]]
+text = "Tag"
+detail = "assign predefined labels to each document using an LLM; returns per-document tag vectors"
+
+[[bullets]]
+text = "Classify"
+detail = "assign each document to one mutually exclusive category; returns category labels"
+
+[[bullets]]
+text = "Summarise"
+detail = "extract key themes and a concise summary from a document corpus"
+
+[[bullets]]
+text = "Q&A"
+detail = "answer natural-language questions about the corpus using retrieval-augmented generation"
+
+[[inputs]]
+id = "texts"
+label = "texts"
+tooltip = "A vector of strings (one per document) or a vector of file paths. Each element is treated as one document in the index. Example: texts = readlines(\"corpus.txt\") or texts = [\"doc1...\", \"doc2...\"]."
+default = "texts"
+
+[[inputs]]
+id = "llmmodel"
+label = "model"
+tooltip = "LLM model name passed to PromptingTools.jl. Examples: \"gpt-4o-mini\" (default, fast and cheap), \"gpt-4o\" (more capable), \"claude-3-5-haiku-20241022\", or any Ollama model name for local inference."
+default = "gpt-4o-mini"
+
+[[inputs]]
+id = "tags"
+label = "tags"
+tooltip = "A vector of tag strings to apply. The LLM decides which tags apply to each document. Example: tags = [\"finance\", \"technology\", \"health\", \"politics\"]."
+default = "tags"
+models = ["tag"]
+
+[[inputs]]
+id = "categories"
+label = "categories"
+tooltip = "A vector of mutually exclusive category strings. The LLM assigns exactly one category per document. Example: categories = [\"positive\", \"negative\", \"neutral\"]."
+default = "categories"
+models = ["classify"]
+
+[[inputs]]
+id = "question"
+label = "question"
+tooltip = "A natural-language question about the corpus. Relevant document chunks are retrieved and passed to the LLM as context. Example: \"What are the main risks mentioned across these reports?\"."
+default = "question"
+models = ["qa"]
+
+[[codeBranches]]
+model = "tag"
+code = '''
+using LLMTextAnalysis
+
+index = build_index({{texts}})  # build semantic index from documents
+
+results = aitag(index, {{tags}}; model={{llmmodel}})  # assign matching tags to each document
+
+find_tags(index, {{tags}}[1])  # retrieve documents matching the first tag
+'''
+
+[[codeBranches]]
+model = "classify"
+code = '''
+using LLMTextAnalysis
+
+index = build_index({{texts}})  # build semantic index from documents
+
+labels = aiclassify(index, {{categories}}; model={{llmmodel}})  # classify each document into one category
+'''
+
+[[codeBranches]]
+model = "summarise"
+code = '''
+using LLMTextAnalysis
+
+index = build_index({{texts}})  # build semantic index from documents
+
+summary = aisummarize(index; model={{llmmodel}})  # generate a corpus-level summary
+'''
+
+[[codeBranches]]
+model = "qa"
+code = '''
+using LLMTextAnalysis
+
+index = build_index({{texts}})  # build semantic index from documents
+
+answer = aiask(index, {{question}}; model={{llmmodel}})  # answer the question using retrieved context
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "tag-frequency"
+label = "Tag Frequency"
+desc = "Bar chart of tag counts across the corpus"
+code = '''
+using LLMTextAnalysis, Plots
+
+index   = build_index({{texts}})  # build semantic index
+results = aitag(index, {{tags}}; model={{llmmodel}})  # tag each document
+
+counts = map(t -> sum(find_tags(index, t) .!= 0), {{tags}})  # count documents per tag
+bar({{tags}}, counts, xlabel="Tag", ylabel="Count", title="Tag Frequency", legend=false)  # plot tag distribution
+'''
+
+[[actionGroups.actions]]
+id = "result-heatmap"
+label = "Result Heatmap"
+desc = "Heatmap of tag presence across documents"
+code = '''
+using LLMTextAnalysis, Plots
+
+index   = build_index({{texts}})  # build semantic index
+results = aitag(index, {{tags}}; model={{llmmodel}})  # tag each document
+
+mat = hcat([map(r -> in(t, r), results) for t in {{tags}}]...)  # build tag-document matrix
+heatmap({{tags}}, 1:length({{texts}}), mat, title="Tag Presence", xlabel="Tag", ylabel="Document")  # visualise tag coverage
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "index-stats"
+label = "Index Statistics"
+desc = "Size, chunk count and embedding model of the index"
+code = '''
+using LLMTextAnalysis
+
+index = build_index({{texts}})  # build semantic index
+
+println("Documents : ", length({{texts}}))  # number of source documents
+println("Chunks    : ", length(index.chunks))  # number of embedded chunks
+println("Embedding : ", index.embedder)  # embedding model used
+'''
+
+[[actionGroups.actions]]
+id = "tag-coverage"
+label = "Tag Coverage"
+desc = "Fraction of documents matched by each tag"
+code = '''
+using LLMTextAnalysis
+
+index   = build_index({{texts}})  # build semantic index
+results = aitag(index, {{tags}}; model={{llmmodel}})  # tag documents
+
+n = length({{texts}})  # total document count
+for t in {{tags}}
+    matched = sum(find_tags(index, t) .!= 0)
+    println(t, ": ", round(matched/n*100, digits=1), "%")
+end
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "semantic-search"
+label = "Semantic Search"
+desc = "Retrieve the most relevant document chunks for a query"
+code = '''
+using LLMTextAnalysis
+
+index = build_index({{texts}})  # build semantic index
+
+hits = find_closest(index, {{question}}; top_k=5)  # retrieve 5 most relevant chunks
+for h in hits
+    println(h.score, "  ", h.content[1:min(120, length(h.content))])
+end
+'''
+
+[[actionGroups.actions]]
+id = "batch-qa"
+label = "Batch Q&A"
+desc = "Answer multiple questions in one pass over the index"
+code = '''
+using LLMTextAnalysis
+
+index     = build_index({{texts}})  # build semantic index once
+questions = ["What is the main topic?", "What are key conclusions?"]  # list of questions
+
+answers = map(q -> aiask(index, q; model={{llmmodel}}), questions)
+for (q, a) in zip(questions, answers)
+    println("Q: ", q, "
+A: ", a, "
+")
+end
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "compare-models"
+label = "Compare Models"
+desc = "Run same analysis with two different LLMs and compare output"
+code = '''
+using LLMTextAnalysis
+
+index    = build_index({{texts}})  # build index once
+
+res_mini = aitag(index, {{tags}}; model="gpt-4o-mini")  # fast, cheap model
+res_full = aitag(index, {{tags}}; model="gpt-4o")  # more capable model
+
+agreement = mean(res_mini .== res_full)  # fraction of matching outputs
+println("Agreement: ", round(agreement * 100, digits=1), "%")  # print agreement rate
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "view-tags"
+label = "View Tag Results"
+desc = "Print tag assignments for each document"
+code = '''
+using LLMTextAnalysis
+
+index   = build_index({{texts}})  # build semantic index
+results = aitag(index, {{tags}}; model={{llmmodel}})  # tag documents
+
+for (i, tags_i) in enumerate(results)
+    println("Doc ", i, ": ", tags_i)
+end
+'''
+
+[[actionGroups.actions]]
+id = "top-docs-per-tag"
+label = "Top Docs per Tag"
+desc = "Show the most representative document for each tag"
+code = '''
+using LLMTextAnalysis
+
+index   = build_index({{texts}})  # build semantic index
+
+for t in {{tags}}
+    hits = find_tags(index, t)
+    isempty(hits) && continue
+    println("
+[", t, "]
+", hits[1].content[1:min(200, length(hits[1].content))])
+end
+'''

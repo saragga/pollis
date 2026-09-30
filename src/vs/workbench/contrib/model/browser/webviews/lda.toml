@@ -1,0 +1,421 @@
+# Latent Dirichlet Allocation Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/lda.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Latent Dirichlet Allocation"
+viewType = "pollis.lda"
+defaultModel = "lda"
+
+[[packages]]
+name = "TopicModels.jl"
+github = "https://github.com/slycoder/TopicModels.jl"
+
+[[packages]]
+name = "TextAnalysis.jl"
+github = "https://github.com/JuliaText/TextAnalysis.jl"
+
+[requires]
+packages = ["TopicModels.jl", "TextAnalysis.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "LDA"
+file = "lda/tutorial-01-lda.ipynb"
+bundled = true
+description = "Latent Dirichlet Allocation topic modelling using TopicModels.jl"
+
+[[notebookSections.notebooks]]
+name = "Focused LDA"
+file = "lda/tutorial-02-flda.ipynb"
+bundled = true
+description = "Focused LDA topic modelling with background word separation using TopicModels.jl"
+
+[[wikis]]
+name = "Factsheet"
+file = "lda/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "lda/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "lda/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "lda/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "lda/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "lda/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Models"
+
+[[wikis]]
+name = "LDA"
+file = "lda/lda.md"
+bundled = true
+
+[[wikis]]
+name = "Focused LDA"
+file = "lda/flda.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "TopicModels.jl"
+authors = "Zeng, Jonathan"
+year = 2015
+journal = "GitHub"
+url = "https://github.com/slycoder/TopicModels.jl"
+openAccess = true
+
+[[references]]
+title = "TextAnalysis.jl: Julia NLP Toolkit"
+authors = "JuliaText Contributors"
+year = 2023
+journal = "GitHub"
+url = "https://github.com/JuliaText/TextAnalysis.jl"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Speech and Language Processing"
+authors = "Jurafsky, Daniel; Martin, James H."
+year = 2024
+journal = "Pearson (3rd ed., draft)"
+url = "https://web.stanford.edu/~jurafsky/slp3/"
+openAccess = true
+
+[[references]]
+title = "Pattern Recognition and Machine Learning"
+authors = "Bishop, Christopher M."
+year = 2006
+journal = "Springer"
+doi = "10.1007/978-0-387-45528-0"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Latent Dirichlet Allocation"
+authors = "Blei, David M.; Ng, Andrew Y.; Jordan, Michael I."
+year = 2003
+journal = "Journal of Machine Learning Research"
+url = "https://jmlr.org/papers/v3/blei03a.html"
+openAccess = true
+
+[[references]]
+title = "The IBP Compound Dirichlet Process and its Application to Focused Topic Analysis"
+authors = "Williamson, Sinead; Wang, Chong; Heller, Katherine A.; Blei, David M."
+year = 2010
+journal = "ICML"
+url = "https://icml.cc/Conferences/2010/papers/279.pdf"
+openAccess = true
+
+[[models]]
+id = "lda"
+label = "LDA"
+
+[[models]]
+id = "flda"
+label = "Focused LDA"
+
+[[bullets]]
+text = "LDA"
+detail = "probabilistic generative model; documents as mixtures of topics, topics as distributions over words (Dirichlet priors)"
+
+[[bullets]]
+text = "Focused LDA"
+detail = "structured variant; each word token is either topic-specific or drawn from a background distribution"
+
+[[bullets]]
+text = "TopicModels.jl"
+detail = "Julia implementation of LDA, Focused LDA, CTM and related topic models"
+
+[[inputs]]
+id = "corpus"
+label = "Corpus"
+tooltip = "Array of text documents, e.g. docs = [\"first doc\", \"second doc\"]"
+default = "corpus"
+
+[[inputs]]
+id = "k"
+label = "Topics (k)"
+tooltip = "Number of latent topics to discover"
+default = "10"
+
+[[inputs]]
+id = "iters"
+label = "Iterations"
+tooltip = "Number of training iterations for the variational EM algorithm"
+default = "1000"
+
+[[codeBranches]]
+model = "lda"
+code = '''
+using TopicModels, TextAnalysis
+
+crps  = Corpus([StringDocument(d) for d in {{corpus}}])  # build corpus from documents
+prepare!(crps, strip_punctuation | strip_case)  # clean text
+update_lexicon!(crps)  # build vocabulary
+dtm   = DocumentTermMatrix(crps)  # document-term matrix
+
+model = LDA(dtm.dtm, {{k}})  # initialise LDA with {{k}} topics
+train!(model, iter={{iters}})  # variational EM training
+
+topicdist(model)  # topic-word distributions (k x V)
+'''
+
+[[codeBranches]]
+model = "flda"
+code = '''
+using TopicModels, TextAnalysis
+
+crps  = Corpus([StringDocument(d) for d in {{corpus}}])  # build corpus from documents
+prepare!(crps, strip_punctuation | strip_case)  # clean text
+update_lexicon!(crps)  # build vocabulary
+dtm   = DocumentTermMatrix(crps)  # document-term matrix
+
+model = fLDA(dtm.dtm, {{k}})  # focused LDA with {{k}} topics
+train!(model, iter={{iters}})  # variational EM training
+
+topicdist(model)  # topic-word distributions (k x V)
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "topic-words"
+label = "Top Words per Topic"
+desc = "Highest-probability words for each discovered topic"
+code = '''
+using TopicModels, TextAnalysis
+
+crps  = Corpus([StringDocument(d) for d in {{corpus}}])
+prepare!(crps, strip_punctuation | strip_case)
+update_lexicon!(crps)
+dtm   = DocumentTermMatrix(crps)
+
+model = LDA(dtm.dtm, {{k}})  # initialise LDA
+train!(model, iter={{iters}})  # train model
+
+showtopics(model, 10)  # print top 10 words per topic
+'''
+
+[[actionGroups.actions]]
+id = "doc-topic-dist"
+label = "Document-Topic Distribution"
+desc = "Topic mixture proportions for each document"
+code = '''
+using TopicModels, TextAnalysis
+
+crps  = Corpus([StringDocument(d) for d in {{corpus}}])
+prepare!(crps, strip_punctuation | strip_case)
+update_lexicon!(crps)
+dtm   = DocumentTermMatrix(crps)
+
+model = LDA(dtm.dtm, {{k}})  # initialise LDA
+train!(model, iter={{iters}})  # train model
+
+topicdist(model)  # document-topic matrix (N x k)
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "perplexity"
+label = "Perplexity"
+desc = "Perplexity on held-out documents; lower is better"
+code = '''
+using TopicModels, TextAnalysis
+
+crps  = Corpus([StringDocument(d) for d in {{corpus}}])
+prepare!(crps, strip_punctuation | strip_case)
+update_lexicon!(crps)
+dtm   = DocumentTermMatrix(crps)
+
+model = LDA(dtm.dtm, {{k}})  # initialise LDA
+train!(model, iter={{iters}})  # train model
+
+perplexity(model)  # perplexity on held-out data
+'''
+
+[[actionGroups.actions]]
+id = "topic-coherence"
+label = "Topic Coherence"
+desc = "Average PMI of top word pairs within each topic"
+code = '''
+using TopicModels, TextAnalysis
+
+crps  = Corpus([StringDocument(d) for d in {{corpus}}])
+prepare!(crps, strip_punctuation | strip_case)
+update_lexicon!(crps)
+dtm   = DocumentTermMatrix(crps)
+
+model = LDA(dtm.dtm, {{k}})  # initialise LDA
+train!(model, iter={{iters}})  # train model
+
+coherence(model)  # average PMI coherence per topic
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "infer-topics"
+label = "Infer Topics"
+desc = "Topic distribution for a new document"
+code = '''
+using TopicModels, TextAnalysis
+
+crps  = Corpus([StringDocument(d) for d in {{corpus}}])
+prepare!(crps, strip_punctuation | strip_case)
+update_lexicon!(crps)
+dtm   = DocumentTermMatrix(crps)
+
+model = LDA(dtm.dtm, {{k}})  # initialise LDA
+train!(model, iter={{iters}})  # train model
+
+infer(model, new_doc_dtm)  # topic distribution for a new document
+'''
+
+[[actionGroups.actions]]
+id = "top-docs"
+label = "Top Documents"
+desc = "Documents most representative of a given topic"
+code = '''
+using TopicModels, TextAnalysis
+
+crps  = Corpus([StringDocument(d) for d in {{corpus}}])
+prepare!(crps, strip_punctuation | strip_case)
+update_lexicon!(crps)
+dtm   = DocumentTermMatrix(crps)
+
+model = LDA(dtm.dtm, {{k}})  # initialise LDA
+train!(model, iter={{iters}})  # train model
+
+sortperm(topicdist(model)[:, topic_id], rev=true)  # document indices ranked by topic weight
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "compare-k"
+label = "Compare k Topics"
+desc = "Perplexity across different numbers of topics"
+code = '''
+using TopicModels, TextAnalysis
+
+crps  = Corpus([StringDocument(d) for d in {{corpus}}])
+prepare!(crps, strip_punctuation | strip_case)
+update_lexicon!(crps)
+dtm   = DocumentTermMatrix(crps)
+
+for k in [5, 10, 20, 50]  # sweep over number of topics
+    model = LDA(dtm.dtm, k)
+    train!(model, iter={{iters}})  # train each model
+    println("k=", k, " perplexity=", perplexity(model))  # report perplexity
+end
+'''
+
+[[actionGroups.actions]]
+id = "lda-vs-flda"
+label = "LDA vs Focused LDA"
+desc = "Topic quality and background word separation"
+code = '''
+using TopicModels, TextAnalysis
+
+crps  = Corpus([StringDocument(d) for d in {{corpus}}])
+prepare!(crps, strip_punctuation | strip_case)
+update_lexicon!(crps)
+dtm   = DocumentTermMatrix(crps)
+
+lda_model  = LDA(dtm.dtm, {{k}})  # standard LDA
+flda_model = fLDA(dtm.dtm, {{k}})  # focused LDA
+train!(lda_model,  iter={{iters}})  # train LDA
+train!(flda_model, iter={{iters}})  # train fLDA
+
+println("LDA perplexity:  ", perplexity(lda_model))  # compare perplexity
+println("fLDA perplexity: ", perplexity(flda_model))  # lower is better
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "topic-labels"
+label = "Topic Labels"
+desc = "Top-5 words as a label for each topic"
+code = '''
+using TopicModels, TextAnalysis
+
+crps  = Corpus([StringDocument(d) for d in {{corpus}}])
+prepare!(crps, strip_punctuation | strip_case)
+update_lexicon!(crps)
+dtm   = DocumentTermMatrix(crps)
+
+model = LDA(dtm.dtm, {{k}})  # initialise LDA
+train!(model, iter={{iters}})  # train model
+
+showtopics(model, 5)  # top-5 words per topic as labels
+'''
+
+[[actionGroups.actions]]
+id = "topic-prevalence"
+label = "Topic Prevalence"
+desc = "Average topic weight across the corpus"
+code = '''
+using TopicModels, TextAnalysis
+
+crps  = Corpus([StringDocument(d) for d in {{corpus}}])
+prepare!(crps, strip_punctuation | strip_case)
+update_lexicon!(crps)
+dtm   = DocumentTermMatrix(crps)
+
+model = LDA(dtm.dtm, {{k}})  # initialise LDA
+train!(model, iter={{iters}})  # train model
+
+mean(topicdist(model), dims=1)  # average topic weight across documents
+'''

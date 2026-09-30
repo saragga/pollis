@@ -1,0 +1,269 @@
+# Non-Negative Least Squares (NNLS) Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/nnls.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Non-Negative Least Squares (NNLS)"
+viewType = "pollis.nnls"
+defaultModel = "main"
+
+[[packages]]
+name = "NonNegLeastSquares.jl"
+github = "https://github.com/JuliaLinearAlgebra/NonNegLeastSquares.jl"
+
+[requires]
+packages = ["NonNegLeastSquares.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Quick Start"
+file = "nnls/tutorial-01-quickstart.ipynb"
+bundled = true
+description = "Solve an NNLS problem and inspect the solution"
+
+[[notebookSections.notebooks]]
+name = "Algorithm Comparison"
+file = "nnls/tutorial-02-algorithms.ipynb"
+bundled = true
+description = "Compare pivot, FNNLS, ADMM, and block-pivot solvers"
+
+[[notebookSections.notebooks]]
+name = "Applications"
+file = "nnls/tutorial-03-applications.ipynb"
+bundled = true
+description = "Spectral unmixing, signal recovery, and NMF pre-processing"
+
+[[wikis]]
+name = "Overview"
+file = "nnls/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Factsheet"
+file = "nnls/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "nnls/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "nnls/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "nnls/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "nnls/decision-guide.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Original Papers (from packages)"
+
+[[references]]
+title = "Solving Least Squares Problems"
+authors = "Lawson, C. L., & Hanson, R. J."
+year = 1987
+journal = ""
+url = "https://doi.org/10.1137/1.9781611971217"
+openAccess = false
+
+[[references]]
+title = "A fast non-negativity-constrained least squares algorithm"
+authors = "Bro, R., & De Jong, S."
+year = 1997
+journal = ""
+url = "https://doi.org/10.1002/(SICI)1099-128X(199709/10)11:5<393::AID-CEM483>3.0.CO;2-L"
+openAccess = false
+
+[[references]]
+title = "Toward faster nonnegative matrix factorization: A new algorithm and comparisons"
+authors = "Kim, D., & Park, H."
+year = 2008
+journal = ""
+url = "https://doi.org/10.1109/ICDM.2008.149"
+openAccess = false
+
+[[bullets]]
+text = "Solves the constrained least squares problem: minimise ||Ax − b||² subject to x ≥ 0"
+detail = ""
+
+[[bullets]]
+text = "Five solver algorithms: :pivot (Lawson–Hanson, default), :fnnls (fast dense), :admm (large sparse), :blockpivot (batch), :nnls (classic)"
+detail = ""
+
+[[bullets]]
+text = "Accepts multiple right-hand sides: when b is a matrix (m × k), returns a solution matrix X (n × k) column-by-column"
+detail = ""
+
+[[bullets]]
+text = "Applications: spectral unmixing, signal recovery, non-negative matrix factorisation pre-processing, portfolio constraints"
+detail = ""
+
+[[inputs]]
+id = "A"
+label = "Matrix A"
+tooltip = "m × n coefficient matrix. Each column is a predictor; each row is an observation."
+default = "A"
+
+[[inputs]]
+id = "b"
+label = "Vector b"
+tooltip = "Response vector of length m. Pass a matrix (m × k) to solve k systems simultaneously."
+default = "b"
+
+[[inputs]]
+id = "alg"
+label = "Algorithm"
+tooltip = "Solver algorithm: :pivot (Lawson–Hanson, default), :fnnls (fast, dense), :admm (large sparse), :blockpivot (batch NMF), :nnls (classic)."
+kind = "select"
+default = "pivot"
+
+[[inputs.options]]
+value = "pivot"
+label = ":pivot"
+
+[[inputs.options]]
+value = "nnls"
+label = ":nnls"
+
+[[inputs.options]]
+value = "fnnls"
+label = ":fnnls"
+
+[[inputs.options]]
+value = "admm"
+label = ":admm"
+
+[[inputs.options]]
+value = "blockpivot"
+label = ":blockpivot"
+
+[[codeBranches]]
+model = "main"
+code = '''
+using NonNegLeastSquares
+using LinearAlgebra: norm
+
+x = nonneg_lsq({{A}}, {{b}}; alg = :{{alg}})  # minimise ||A*x - b||^2 subject to x >= 0
+
+println("Solution x:  ", x)  # non-negative solution vector
+println("Residual:    ", norm({{A}} * x - {{b}}))  # Euclidean residual norm
+println("Nonzeros:    ", sum(x .> 0))  # number of strictly positive components
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "residuals"
+label = "Residual Analysis"
+desc = "Compute per-observation residuals and summary statistics of the fit quality"
+code = '''
+using NonNegLeastSquares
+using LinearAlgebra: norm
+
+x         = nonneg_lsq({{A}}, {{b}}; alg = :{{alg}})  # NNLS solution
+residuals = {{A}} * x - {{b}}  # per-observation residuals
+
+println("Residual norm:  ", norm(residuals))  # ||Ax - b||
+println("Max abs error:  ", maximum(abs.(residuals)))  # largest individual error
+println("Mean abs error: ", sum(abs.(residuals)) / length(residuals))  # average absolute error
+'''
+
+[[actionGroups.actions]]
+id = "active_set"
+label = "Active Set"
+desc = "Identify which components of the solution are strictly positive (active) versus zero (at the bound)"
+code = '''
+using NonNegLeastSquares
+
+x        = nonneg_lsq({{A}}, {{b}}; alg = :{{alg}})  # NNLS solution
+active   = findall(x .> 0)  # indices with nonzero solution
+inactive = findall(x .<= 0)  # indices at the zero lower bound
+
+println("Active (nonzero): ", length(active),   " / ", length(x))  # count of nonzero components
+println("Inactive (zero):  ", length(inactive), " / ", length(x))  # count of zero components
+println("Active indices:   ", active)  # list of active variable positions
+'''
+
+[[actionGroups.actions]]
+id = "kkt"
+label = "KKT Conditions"
+desc = "Verify optimality via Karush-Kuhn-Tucker conditions: dual feasibility and complementary slackness"
+code = '''
+using NonNegLeastSquares
+using LinearAlgebra: norm, transpose
+
+x = nonneg_lsq({{A}}, {{b}}; alg = :{{alg}})  # NNLS solution
+
+w = transpose({{A}}) * ({{b}} - {{A}} * x)  # dual variable: negative gradient at solution
+
+println("Dual feasibility (w <= 0):    ", all(w .<= 1e-8))  # should be true at optimum
+println("Complementary slackness max:  ", maximum(abs.(w .* x)))  # should be ~0 at optimum
+println("Primal feasibility (x >= 0):  ", all(x .>= 0))  # solution is non-negative
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "sparsity"
+label = "Solution Sparsity"
+desc = "Fraction of solution components driven to zero by the non-negativity constraint"
+code = '''
+using NonNegLeastSquares
+
+x        = nonneg_lsq({{A}}, {{b}}; alg = :{{alg}})  # NNLS solution
+n_active = sum(x .> 0)  # number of nonzero components
+sparsity = 1.0 - n_active / length(x)  # fraction of zero components
+
+println("Active components: ", n_active, " / ", length(x))  # nonzero count
+println("Sparsity:          ", round(sparsity, digits = 3))  # 0 = dense; 1 = all zeros
+'''
+
+[[actionGroups.actions]]
+id = "relative_residual"
+label = "Relative Residual"
+desc = "Normalised residual ||Ax - b|| / ||b|| measuring the fit relative to the scale of the response"
+code = '''
+using NonNegLeastSquares
+using LinearAlgebra: norm
+
+x       = nonneg_lsq({{A}}, {{b}}; alg = :{{alg}})  # NNLS solution
+abs_res = norm({{A}} * x - {{b}})  # absolute residual norm
+rel_res = abs_res / norm({{b}})  # relative residual (scale-free)
+
+println("Absolute residual: ", round(abs_res, digits = 4))  # ||Ax - b||
+println("Relative residual: ", round(rel_res, digits = 4))  # ||Ax - b|| / ||b||
+'''
+
+[[actionGroups.actions]]
+id = "fitted_vs_observed"
+label = "Fitted vs Observed"
+desc = "Scatter plot of model-fitted values A*x against observed response b to assess systematic bias"
+code = '''
+using NonNegLeastSquares
+import StatsPlots
+
+x     = nonneg_lsq({{A}}, {{b}}; alg = :{{alg}})  # NNLS solution
+b_hat = {{A}} * x  # fitted values
+
+StatsPlots.scatter({{b}}, b_hat;  # scatter: observed vs fitted
+    xlabel = "Observed", ylabel = "Fitted",
+    title  = "Fitted vs Observed", legend = false)
+StatsPlots.plot!([minimum({{b}}), maximum({{b}})],  # add 45-degree reference line
+     [minimum({{b}}), maximum({{b}})]; color = :red, linestyle = :dash)
+'''

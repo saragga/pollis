@@ -1,0 +1,442 @@
+# Complexity & Entropy Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/cmplx.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Complexity & Entropy"
+viewType = "pollis.cmplx"
+defaultModel = "perm"
+
+[[packages]]
+name = "ComplexityMeasures.jl"
+github = "https://github.com/JuliaDynamics/ComplexityMeasures.jl"
+
+[[packages.videos]]
+title = "Julia in Academia"
+description = "Overview of Julia for academic and scientific computing"
+url = "https://www.youtube.com/watch?v=wPFPT-Ech2c"
+
+[[packages]]
+name = "TimeseriesSurrogates.jl"
+github = "https://github.com/JuliaDynamics/TimeseriesSurrogates.jl"
+
+[requires]
+packages = ["ComplexityMeasures.jl", "TimeseriesSurrogates.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Permutation Entropy"
+file = "dyn-cmplx/tutorial-01-permutation-entropy.ipynb"
+bundled = true
+description = "Compute permutation entropy for a time series to quantify ordinal complexity"
+
+[[notebookSections.notebooks]]
+name = "Sample Entropy"
+file = "dyn-cmplx/tutorial-02-sample-entropy.ipynb"
+bundled = true
+description = "Estimate sample entropy to measure signal regularity without template self-matching"
+
+[[notebookSections.notebooks]]
+name = "Surrogate Testing"
+file = "dyn-cmplx/tutorial-03-surrogates.ipynb"
+bundled = true
+description = "Generate surrogate time series and perform hypothesis tests for nonlinearity"
+
+[[wikis]]
+name = "Factsheet"
+file = "dyn-cmplx/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "dyn-cmplx/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "dyn-cmplx/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "dyn-cmplx/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "dyn-cmplx/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "dyn-cmplx/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Entropy Measures"
+
+[[wikis]]
+name = "Permutation Entropy"
+file = "dyn-cmplx/permutation-entropy.md"
+bundled = true
+
+[[wikis]]
+name = "Sample Entropy"
+file = "dyn-cmplx/sample-entropy.md"
+bundled = true
+
+[[wikis]]
+name = "Surrogate Testing"
+file = "dyn-cmplx/surrogates.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "DynamicalSystems.jl: A Julia software library for chaos and nonlinear dynamics"
+authors = "Datseris, George"
+year = 2018
+journal = "Journal of Open Source Software"
+doi = "10.21105/joss.00598"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Nonlinear Time Series Analysis"
+authors = "Kantz, Holger; Schreiber, Thomas"
+year = 2004
+journal = "Cambridge University Press (2nd ed.)"
+openAccess = false
+
+[[references]]
+title = "Elements of Information Theory"
+authors = "Cover, Thomas M.; Thomas, Joy A."
+year = 2006
+journal = "Wiley-Interscience (2nd ed.)"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Permutation Entropy: A Natural Complexity Measure for Time Series"
+authors = "Bandt, Christoph; Pompe, Bernd"
+year = 2002
+journal = "Physical Review Letters"
+doi = "10.1103/PhysRevLett.88.174102"
+openAccess = false
+
+[[references]]
+title = "Physiological time-series analysis using approximate entropy and sample entropy"
+authors = "Richman, Joshua S.; Moorman, J. Randall"
+year = 2000
+journal = "American Journal of Physiology"
+doi = "10.1152/ajpheart.2000.278.6.H2039"
+openAccess = false
+
+[[references]]
+title = "Surrogate data for hypothesis testing of physical systems"
+authors = "Schreiber, Thomas; Schmitz, Andreas"
+year = 2000
+journal = "Physica D: Nonlinear Phenomena"
+doi = "10.1016/S0167-2789(99)00233-9"
+openAccess = false
+
+[[models]]
+id = "perm"
+label = "Permutation Entropy"
+
+[[models]]
+id = "sampen"
+label = "Sample Entropy"
+
+[[models]]
+id = "surr"
+label = "Surrogate Testing"
+
+[[bullets]]
+text = "Permutation Entropy"
+detail = "quantify ordinal complexity of a time series by comparing the relative ordering of consecutive values in embedding windows"
+
+[[bullets]]
+text = "Sample Entropy"
+detail = "estimate regularity and unpredictability of a time series without self-matching of templates, robust to short and noisy data"
+
+[[bullets]]
+text = "Surrogate Testing"
+detail = "generate null-hypothesis surrogates and perform hypothesis tests to detect nonlinearity, nonstationarity, or other structure"
+
+[[inputs]]
+id = "x"
+label = "Time series (x)"
+tooltip = "A univariate time series vector. For permutation and sample entropy this is the raw signal; for surrogate testing it is the series whose null hypothesis you wish to test."
+default = "x"
+
+[[inputs]]
+id = "m"
+label = "Embedding dim (m)"
+tooltip = "Order (embedding dimension) for permutation entropy and template length for sample entropy. Typical values: 3–7. Larger m captures more structure but requires longer series."
+default = "5"
+
+[[inputs]]
+id = "r"
+label = "Tolerance (r)"
+tooltip = "Similarity threshold for sample entropy template matching. Usually set to 0.1–0.25 times the standard deviation of the series. Not used for permutation entropy."
+default = "0.2"
+
+[[codeBranches]]
+model = "perm"
+code = '''
+using ComplexityMeasures
+
+est = SymbolicPermutation(; m={{m}})  # permutation estimator, order m
+pe  = entropy(est, {{x}})  # permutation entropy (normalised)
+
+println("Permutation entropy: ", pe)  # near 0 = regular, near 1 = complex
+'''
+
+[[codeBranches]]
+model = "sampen"
+code = '''
+using ComplexityMeasures
+
+sampen = entropy_sample({{x}}; m={{m}}, r={{r}})  # sample entropy
+
+println("Sample entropy: ", sampen)  # near 0 = regular, large = irregular
+'''
+
+[[codeBranches]]
+model = "surr"
+code = '''
+using ComplexityMeasures
+
+using TimeseriesSurrogates  # surrogate module
+
+sg = surrogenerator({{x}}, RandomFourier())  # phase-randomised surrogate generator
+surrogates = [sg() for _ in 1:99]  # 99 null surrogates
+
+est = SymbolicPermutation(; m={{m}})  # test statistic: permutation entropy
+obs  = entropy(est, {{x}})  # observed value
+null = [entropy(est, s) for s in surrogates]  # null distribution
+
+pval = mean(null .>= obs)  # one-sided p-value
+println("p-value: ", pval)  # small p => reject null (nonlinear structure)
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "pe-vs-time"
+label = "Entropy vs Time"
+desc = "Compute rolling permutation entropy over sliding windows to track complexity changes"
+code = '''
+using ComplexityMeasures, GLMakie
+
+est  = SymbolicPermutation(; m={{m}})  # permutation estimator
+win  = 200  # sliding window size
+step = 10  # step between windows
+pe_series = [entropy(est, {{x}}[i:i+win-1]) for i in 1:step:length({{x}})-win+1]  # rolling PE
+
+lines(pe_series, axis=(xlabel="Window index", ylabel="Permutation Entropy"))  # visualise complexity evolution
+'''
+
+[[actionGroups.actions]]
+id = "surrogate-dist"
+label = "Surrogate Distribution"
+desc = "Plot the null distribution of the test statistic alongside the observed value"
+code = '''
+using ComplexityMeasures, TimeseriesSurrogates, GLMakie
+
+sg  = surrogenerator({{x}}, RandomFourier())  # surrogate generator
+est = SymbolicPermutation(; m={{m}})  # test statistic
+obs  = entropy(est, {{x}})  # observed PE
+null = [entropy(est, sg()) for _ in 1:199]  # null distribution
+
+hist(null, axis=(xlabel="Permutation Entropy",))  # null histogram
+vlines!([obs], color=:red, label="observed")  # mark observed value
+'''
+
+[[actionGroups.actions]]
+id = "sampen-vs-r"
+label = "SampEn vs r"
+desc = "Sweep the tolerance r and plot sample entropy to assess sensitivity to threshold choice"
+code = '''
+using ComplexityMeasures, GLMakie
+
+sigma = std({{x}})  # series standard deviation
+rs = range(0.05, 0.5; length=20) .* sigma  # tolerance range (5-50% sigma)
+se_vals = [entropy_sample({{x}}; m={{m}}, r=r) for r in rs]  # sweep
+
+lines(rs ./ sigma, se_vals, axis=(xlabel="r / sigma", ylabel="Sample Entropy"))  # sensitivity curve
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "stationarity-pe"
+label = "Stationarity (PE)"
+desc = "Split the series in halves and compare permutation entropy to check for stationarity"
+code = '''
+using ComplexityMeasures
+
+est = SymbolicPermutation(; m={{m}})  # estimator
+n   = length({{x}})  # series length
+pe1 = entropy(est, {{x}}[1:div(n,2)])  # first half
+pe2 = entropy(est, {{x}}[div(n,2)+1:end])  # second half
+
+println("PE first half:  ", pe1)  # baseline
+println("PE second half: ", pe2)  # large difference => non-stationary
+'''
+
+[[actionGroups.actions]]
+id = "order-sensitivity"
+label = "Order Sensitivity"
+desc = "Sweep embedding order m and check stability of permutation entropy across orders"
+code = '''
+using ComplexityMeasures
+
+orders = 3:8  # embedding orders to test
+pes = [entropy(SymbolicPermutation(; m=m), {{x}}) for m in orders]  # PE for each order
+
+println("Order => PE: ", collect(zip(orders, pes)))  # stable values => robust estimate
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "complexity-regime"
+label = "Complexity Regime"
+desc = "Classify the series as low, medium, or high complexity based on permutation entropy thresholds"
+code = '''
+using ComplexityMeasures
+
+pe = entropy(SymbolicPermutation(; m={{m}}), {{x}})  # normalised PE in [0,1]
+
+if pe < 0.3
+    println("Low complexity: highly regular or periodic signal")
+elseif pe < 0.7
+    println("Moderate complexity: mixed regular and chaotic behaviour")
+else
+    println("High complexity: stochastic or fully chaotic signal")
+end
+'''
+
+[[actionGroups.actions]]
+id = "entropy-rate"
+label = "Entropy Rate"
+desc = "Estimate the entropy rate by extrapolating sample entropy values to large m"
+code = '''
+using ComplexityMeasures
+
+sigma = std({{x}})  # standard deviation
+tol   = {{r}} * sigma  # absolute tolerance
+ms = 2:6  # template lengths
+ses = [entropy_sample({{x}}; m=m, r=tol) for m in ms]  # sample entropy at each m
+
+println("SampEn by m: ", collect(zip(ms, ses)))  # decreasing => finite entropy rate
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "pe-vs-sampen"
+label = "PE vs SampEn"
+desc = "Compare permutation entropy and sample entropy on the same series to cross-validate complexity"
+code = '''
+using ComplexityMeasures
+
+sigma = std({{x}})  # standard deviation
+pe     = entropy(SymbolicPermutation(; m={{m}}), {{x}})  # permutation entropy
+sampen = entropy_sample({{x}}; m={{m}}, r={{r}}*sigma)  # sample entropy
+
+println("Permutation entropy: ", pe)  # ordinal complexity
+println("Sample entropy:      ", sampen)  # template regularity
+println("Agreement: ", abs(pe - sampen/log(factorial({{m}}))) < 0.1)  # rough scale comparison
+'''
+
+[[actionGroups.actions]]
+id = "multi-surrogate"
+label = "Multiple Surrogates"
+desc = "Test multiple null hypotheses (IAAFT, random shuffle, phase-random) and compare p-values"
+code = '''
+using ComplexityMeasures, TimeseriesSurrogates
+
+est  = SymbolicPermutation(; m={{m}})  # test statistic
+obs  = entropy(est, {{x}})  # observed value
+
+methods = [RandomFourier(), IAAFT(), RandomShuffle()]  # three null hypotheses
+for method in methods
+    sg   = surrogenerator({{x}}, method)
+    null = [entropy(est, sg()) for _ in 1:199]
+    pval = mean(null .>= obs)
+    println(method, "  p=", pval)
+end
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "complexity-summary"
+label = "Complexity Summary"
+desc = "Print a full complexity profile including permutation entropy, sample entropy, and complexity index"
+code = '''
+using ComplexityMeasures
+
+sigma  = std({{x}})  # standard deviation
+est    = SymbolicPermutation(; m={{m}})  # estimator
+pe     = entropy(est, {{x}})  # permutation entropy
+sampen = entropy_sample({{x}}; m={{m}}, r={{r}}*sigma)  # sample entropy
+
+println("=== Complexity Summary ===")  # header
+println("N (length):          ", length({{x}}))  # series length
+println("Permutation entropy: ", pe, "  (0=regular, 1=complex)")  # ordinal
+println("Sample entropy:      ", sampen, "  (0=regular, large=irregular)")  # template
+'''
+
+[[actionGroups.actions]]
+id = "nonlinearity-test"
+label = "Nonlinearity Test"
+desc = "Formal surrogate hypothesis test for nonlinearity with a printed verdict"
+code = '''
+using ComplexityMeasures, TimeseriesSurrogates
+
+est  = SymbolicPermutation(; m={{m}})  # test statistic: permutation entropy
+obs  = entropy(est, {{x}})  # observed value
+sg   = surrogenerator({{x}}, RandomFourier())  # phase-random null
+null = [entropy(est, sg()) for _ in 1:999]  # 999 surrogates (p-value resolution 0.001)
+pval = mean(null .>= obs)  # one-sided p-value
+
+if pval < 0.05
+    println("Reject linear null (p=", pval, "): nonlinear structure detected")
+else
+    println("Fail to reject linear null (p=", pval, "): no significant nonlinearity")
+end
+'''

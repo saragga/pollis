@@ -1,0 +1,459 @@
+# Density Estimation Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/de.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Density Estimation"
+viewType = "pollis.de"
+defaultModel = "histogram"
+
+[[packages]]
+name = "StatsBase.jl"
+github = "https://github.com/JuliaStats/StatsBase.jl"
+
+[[packages]]
+name = "KernelDensity.jl"
+github = "https://github.com/JuliaStats/KernelDensity.jl"
+
+[[packages]]
+name = "Distributions.jl"
+github = "https://github.com/JuliaStats/Distributions.jl"
+
+[requires]
+packages = ["StatsBase.jl", "KernelDensity.jl", "Distributions.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Non-Parametric Methods"
+file = "de/tutorial-01-nonparametric.ipynb"
+bundled = true
+description = "Histogram, kernel density and average shifted histogram estimation"
+
+[[notebookSections.notebooks]]
+name = "Parametric Fitting"
+file = "de/tutorial-02-parametric.ipynb"
+bundled = true
+description = "Fitting parametric distributions to data via MLE"
+
+[[wikis]]
+name = "Overview"
+file = "de/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Factsheet"
+file = "de/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "de/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "de/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "de/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "de/decision-guide.md"
+bundled = true
+
+[[models]]
+id = "histogram"
+label = "Histogram"
+
+[[models]]
+id = "kde"
+label = "Kernel Density"
+
+[[models]]
+id = "parametric"
+label = "Parametric"
+
+[[bullets]]
+text = "Histogram"
+detail = "bin-based density estimate (StatsBase.jl)"
+
+[[bullets]]
+text = "Kernel Density"
+detail = "smooth non-parametric density estimate (KernelDensity.jl)"
+
+[[bullets]]
+text = "Parametric"
+detail = "fit a parametric distribution to data (Distributions.jl)"
+
+[[inputs]]
+id = "hist-dim"
+label = "Dimensions"
+tooltip = ""
+kind = "select"
+default = "uni"
+models = ["histogram"]
+
+[[inputs.options]]
+value = "uni"
+label = "Univariate"
+
+[[inputs.options]]
+value = "multi"
+label = "Multivariate"
+
+[[inputs]]
+id = "data-hist"
+label = "Data"
+tooltip = ""
+default = "randn(100)"
+models = ["histogram"]
+when = "hist-dim=uni"
+
+[[inputs]]
+id = "data-hist2"
+label = "Data"
+tooltip = ""
+default = "(randn(100), randn(100))"
+models = ["histogram"]
+when = "hist-dim=multi"
+
+[[inputs]]
+id = "hist-mode"
+label = "Specification"
+tooltip = ""
+kind = "select"
+default = "nbins"
+models = ["histogram"]
+
+[[inputs.options]]
+value = "nbins"
+label = "Bins"
+
+[[inputs.options]]
+value = "edges"
+label = "Edges"
+
+[[inputs]]
+id = "nbins"
+label = "Bins (n)"
+tooltip = "Number of bins; a tuple such as (10, 10) for multivariate data."
+default = "10"
+models = ["histogram"]
+when = "hist-mode=nbins"
+
+[[inputs]]
+id = "edges"
+label = "Edges"
+tooltip = "Bin edges; a tuple of edge vectors such as ([0.0, 0.5, 1.0], [0.0, 0.5, 1.0]) for multivariate data."
+default = "[0.0, 0.5, 1.0, 1.5, 2.0]"
+models = ["histogram"]
+when = "hist-mode=edges"
+
+[[inputs]]
+id = "closed"
+label = "Bin Intervals"
+tooltip = ""
+kind = "select"
+default = ":right"
+models = ["histogram"]
+
+[[inputs.options]]
+value = ":right"
+label = "(a,b]"
+
+[[inputs.options]]
+value = ":left"
+label = "[a,b)"
+
+[[inputs]]
+id = "hist-norm"
+label = "Normalize"
+tooltip = ""
+kind = "select"
+default = "none"
+models = ["histogram"]
+
+[[inputs.options]]
+value = "none"
+label = "None"
+
+[[inputs.options]]
+value = "pdf"
+label = "PDF"
+
+[[inputs.options]]
+value = "density"
+label = "Density"
+
+[[inputs.options]]
+value = "probability"
+label = "Probability"
+
+[[inputs]]
+id = "kde-dim"
+label = "Dimensions"
+tooltip = ""
+kind = "select"
+default = "uni"
+models = ["kde"]
+
+[[inputs.options]]
+value = "uni"
+label = "Univariate"
+
+[[inputs.options]]
+value = "bi"
+label = "Bivariate"
+
+[[inputs]]
+id = "data-kde"
+label = "Data"
+tooltip = ""
+default = "randn(100)"
+models = ["kde"]
+when = "kde-dim=uni"
+
+[[inputs]]
+id = "data-kde2"
+label = "Data"
+tooltip = ""
+default = "(randn(100), randn(100))"
+models = ["kde"]
+when = "kde-dim=bi"
+
+[[inputs]]
+id = "kernel"
+label = "Kernel"
+tooltip = ""
+kind = "select"
+default = "Normal"
+models = ["kde"]
+
+[[inputs.options]]
+value = "Normal"
+label = "Normal"
+
+[[inputs.options]]
+value = "Epanechnikov"
+label = "Epanechnikov"
+
+[[inputs.options]]
+value = "Uniform"
+label = "Uniform"
+
+[[inputs.options]]
+value = "Laplace"
+label = "Laplace"
+
+[[inputs.options]]
+value = "Logistic"
+label = "Logistic"
+
+[[inputs]]
+id = "bandwidth"
+label = "Bandwidth"
+tooltip = "Default: Silverman's rule. Otherwise > 0, or (bw1, bw2) for bivariate data, each > 0."
+default = "KernelDensity.default_bandwidth(data)"
+models = ["kde"]
+
+[[inputs]]
+id = "param-dim"
+label = "Dimensions"
+tooltip = ""
+kind = "select"
+default = "uni"
+models = ["parametric"]
+
+[[inputs.options]]
+value = "uni"
+label = "Univariate"
+
+[[inputs.options]]
+value = "multi"
+label = "Multivariate"
+
+[[inputs]]
+id = "dist"
+label = "Distribution"
+tooltip = ""
+kind = "select"
+default = "Normal"
+models = ["parametric"]
+
+[[inputs.options]]
+value = "Bernoulli"
+label = "Bernoulli"
+when = "param-dim=uni"
+
+[[inputs.options]]
+value = "Beta"
+label = "Beta"
+when = "param-dim=uni"
+
+[[inputs.options]]
+value = "Binomial"
+label = "Binomial"
+when = "param-dim=uni"
+
+[[inputs.options]]
+value = "Categorical"
+label = "Categorical"
+when = "param-dim=uni"
+
+[[inputs.options]]
+value = "DiscreteUniform"
+label = "DiscreteUniform"
+when = "param-dim=uni"
+
+[[inputs.options]]
+value = "Exponential"
+label = "Exponential"
+when = "param-dim=uni"
+
+[[inputs.options]]
+value = "Gamma"
+label = "Gamma"
+when = "param-dim=uni"
+
+[[inputs.options]]
+value = "GeneralizedExtremeValue"
+label = "GeneralizedExtremeValue"
+when = "param-dim=uni"
+
+[[inputs.options]]
+value = "GeneralizedPareto"
+label = "GeneralizedPareto"
+when = "param-dim=uni"
+
+[[inputs.options]]
+value = "Geometric"
+label = "Geometric"
+when = "param-dim=uni"
+
+[[inputs.options]]
+value = "InverseGaussian"
+label = "InverseGaussian"
+when = "param-dim=uni"
+
+[[inputs.options]]
+value = "Laplace"
+label = "Laplace"
+when = "param-dim=uni"
+
+[[inputs.options]]
+value = "LogNormal"
+label = "LogNormal"
+when = "param-dim=uni"
+
+[[inputs.options]]
+value = "Normal"
+label = "Normal"
+when = "param-dim=uni"
+
+[[inputs.options]]
+value = "Pareto"
+label = "Pareto"
+when = "param-dim=uni"
+
+[[inputs.options]]
+value = "Poisson"
+label = "Poisson"
+when = "param-dim=uni"
+
+[[inputs.options]]
+value = "Rayleigh"
+label = "Rayleigh"
+when = "param-dim=uni"
+
+[[inputs.options]]
+value = "Uniform"
+label = "Uniform"
+when = "param-dim=uni"
+
+[[inputs.options]]
+value = "Weibull"
+label = "Weibull"
+when = "param-dim=uni"
+
+[[inputs.options]]
+value = "Dirichlet"
+label = "Dirichlet"
+when = "param-dim=multi"
+
+[[inputs.options]]
+value = "Multinomial"
+label = "Multinomial"
+when = "param-dim=multi"
+
+[[inputs.options]]
+value = "MvNormal"
+label = "MvNormal"
+when = "param-dim=multi"
+
+[[inputs]]
+id = "data-param"
+label = "Data"
+tooltip = ""
+default = "randn(100)"
+models = ["parametric"]
+when = "param-dim=uni"
+
+[[inputs]]
+id = "data-param2"
+label = "Data"
+tooltip = ""
+default = "randn(2, 100)"
+models = ["parametric"]
+when = "param-dim=multi"
+
+[[codeBranches]]
+model = "histogram"
+code = '''
+{{?hist-norm=none}} using StatsBase, Random
+{{?hist-norm!=none}} using StatsBase, Random, LinearAlgebra
+
+{{?hist-dim=uni}} data = {{data-hist}}
+{{?hist-dim=multi}} data = {{data-hist2}}
+{{?hist-mode=nbins}} h = fit(Histogram, data; nbins={{nbins}}, closed={{closed}})
+{{?hist-mode=edges}} h = fit(Histogram, data, {{edges}}; closed={{closed}})
+{{?hist-dim=uni}} println("Bin edges: ", h.edges[1])
+{{?hist-dim=multi}} println("Bin edges: ", h.edges)
+{{?hist-norm!=none}} h = normalize(h, mode=:{{hist-norm}})
+println("Counts:    ", h.weights)
+'''
+
+[[codeBranches]]
+model = "kde"
+code = '''
+using KernelDensity, Random
+
+{{?kde-dim=uni}} data = {{data-kde}}
+{{?kde-dim=bi}} data = {{data-kde2}}
+k = kde(data; kernel={{kernel}}, bandwidth={{bandwidth}})
+println("Bandwidth: ", k.bw)
+println("x range:   ", (minimum(k.x), maximum(k.x)))
+{{?kde-dim=bi}} println("y range:   ", (minimum(k.y), maximum(k.y)))
+'''
+
+[[codeBranches]]
+model = "parametric"
+code = '''
+using Distributions, Random
+
+{{?param-dim=uni}} data = {{data-param}}
+{{?param-dim=multi}} data = {{data-param2}}
+{{?dist!=Binomial}} d = fit({{dist}}, data)
+{{?dist=Binomial}} d = fit(Binomial, n, data)  # n = number of trials, must be provided
+
+println("Parameters: ", params(d))
+println("Mean:       ", mean(d))
+{{?param-dim=uni}} println("Std:        ", std(d))
+{{?dist=MvNormal}} println("Covariance: ", cov(d))
+'''

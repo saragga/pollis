@@ -1,0 +1,443 @@
+# Chaos Characterisation Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/chaos.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Chaos Characterisation"
+viewType = "pollis.chaos"
+defaultModel = "lyap"
+
+[[packages]]
+name = "DynamicalSystems.jl"
+github = "https://github.com/JuliaDynamics/DynamicalSystems.jl"
+
+[[packages.videos]]
+title = "Julia in Academia"
+description = "Overview of Julia for academic and scientific computing"
+url = "https://www.youtube.com/watch?v=wPFPT-Ech2c"
+
+[requires]
+packages = ["DynamicalSystems.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Lyapunov Exponents"
+file = "dyn-chaos/tutorial-01-lyapunov.ipynb"
+bundled = true
+description = "Compute the full Lyapunov spectrum and maximal exponent to quantify sensitivity to initial conditions"
+
+[[notebookSections.notebooks]]
+name = "Fractal Dimension"
+file = "dyn-chaos/tutorial-02-fractal-dim.ipynb"
+bundled = true
+description = "Estimate the correlation dimension of an attractor using the Grassberger-Procaccia algorithm"
+
+[[notebookSections.notebooks]]
+name = "Recurrence Analysis"
+file = "dyn-chaos/tutorial-03-rqa.ipynb"
+bundled = true
+description = "Build a recurrence matrix and compute RQA measures (RR, DET, LAM) for a time series"
+
+[[wikis]]
+name = "Factsheet"
+file = "dyn-chaos/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "dyn-chaos/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "dyn-chaos/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "dyn-chaos/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "dyn-chaos/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "dyn-chaos/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Characterisation Methods"
+
+[[wikis]]
+name = "Lyapunov Exponents"
+file = "dyn-chaos/lyapunov.md"
+bundled = true
+
+[[wikis]]
+name = "Fractal Dimension"
+file = "dyn-chaos/fractal-dim.md"
+bundled = true
+
+[[wikis]]
+name = "Recurrence Analysis"
+file = "dyn-chaos/rqa.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "DynamicalSystems.jl: A Julia software library for chaos and nonlinear dynamics"
+authors = "Datseris, George"
+year = 2018
+journal = "Journal of Open Source Software"
+doi = "10.21105/joss.00598"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Nonlinear Time Series Analysis"
+authors = "Kantz, Holger; Schreiber, Thomas"
+year = 2004
+journal = "Cambridge University Press (2nd ed.)"
+openAccess = false
+
+[[references]]
+title = "Chaos: Making a New Science"
+authors = "Gleick, James"
+year = 1987
+journal = "Viking Penguin"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Lyapunov Characteristic Exponents for smooth dynamical systems and for Hamiltonian systems; a method for computing all of them"
+authors = "Benettin, Giancarlo; Galgani, Luigi; Giorgilli, Antonio; Strelcyn, Jean-Marie"
+year = 1980
+journal = "Meccanica"
+doi = "10.1007/BF02128236"
+openAccess = false
+
+[[references]]
+title = "Characterization of Strange Attractors"
+authors = "Grassberger, Peter; Procaccia, Itamar"
+year = 1983
+journal = "Physical Review Letters"
+doi = "10.1103/PhysRevLett.50.346"
+openAccess = false
+
+[[references]]
+title = "Recurrence Plots of Dynamical Systems"
+authors = "Eckmann, Jean-Pierre; Kamphorst, S. Oliffson; Ruelle, David"
+year = 1987
+journal = "Europhysics Letters"
+doi = "10.1209/0295-5075/4/9/004"
+openAccess = false
+
+[[models]]
+id = "lyap"
+label = "Lyapunov Exponents"
+
+[[models]]
+id = "fracdim"
+label = "Fractal Dimension"
+
+[[models]]
+id = "rqa"
+label = "Recurrence (RQA)"
+
+[[bullets]]
+text = "Lyapunov Exponents"
+detail = "quantify the average exponential rate of divergence of nearby trajectories; positive maximal exponent indicates chaos"
+
+[[bullets]]
+text = "Fractal Dimension"
+detail = "estimate the self-similar geometry of an attractor via the correlation dimension (Grassberger–Procaccia)"
+
+[[bullets]]
+text = "Recurrence Analysis (RQA)"
+detail = "build a recurrence matrix from a time series and extract quantifiers such as RR, DET, and LAM"
+
+[[inputs]]
+id = "x"
+label = "Time series (x)"
+tooltip = "A univariate time series vector. For Lyapunov and fractal dimension this can also be a trajectory matrix from trajectory(ds, T)."
+default = "x"
+
+[[inputs]]
+id = "T"
+label = "Integration time (T)"
+tooltip = "Total time for ODE integration or number of map iterations used to generate the trajectory before characterisation."
+default = "200"
+
+[[inputs]]
+id = "eps"
+label = "Threshold (epsilon)"
+tooltip = "Recurrence threshold: two states are considered recurrent if their distance is below this value. Typical: 5-10% of the attractor diameter."
+default = "0.1"
+
+[[codeBranches]]
+model = "lyap"
+code = '''
+using DynamicalSystems
+
+ds = CoupledODEs(lorenz!, [1.0, 0.0, 0.0], (10.0, 28.0, 8/3))  # define system
+lambda_max = lyapunov(ds, {{T}})  # maximal Lyapunov exponent
+spectrum  = lyapunovspectrum(ds, {{T}})  # full Lyapunov spectrum
+
+println("Max exponent:  ", lambda_max)  # positive => chaotic, negative => stable
+println("Full spectrum: ", spectrum)  # all exponents ordered descending
+println("KY dimension:  ", kaplanyorke_dim(spectrum))  # Kaplan-Yorke attractor dimension
+'''
+
+[[codeBranches]]
+model = "fracdim"
+code = '''
+using DynamicalSystems
+
+ds = CoupledODEs(lorenz!, [1.0, 0.0, 0.0], (10.0, 28.0, 8/3))  # define system
+tr, _ = trajectory(ds, {{T}}; Dt=0.01)  # generate orbit
+
+using FractalDimensions  # correlation dimension module
+eps_vals = exp10.(range(-2, 1; length=20))  # log-spaced length scales
+D2 = correlationdim(tr, eps_vals)  # Grassberger-Procaccia dimension
+
+println("Correlation dimension D2: ", D2)  # Lorenz ~ 2.05, integer => non-chaotic
+'''
+
+[[codeBranches]]
+model = "rqa"
+code = '''
+using DynamicalSystems
+
+using RecurrenceAnalysis  # recurrence analysis module
+
+R = RecurrenceMatrix({{x}}, {{eps}})  # build recurrence matrix
+
+stats = rqa(R)  # compute all RQA quantifiers
+println("RR  (recurrence rate):   ", stats.RR)  # fraction of recurrent points
+println("DET (determinism):       ", stats.DET)  # fraction in diagonal lines
+println("LAM (laminarity):        ", stats.LAM)  # fraction in vertical lines
+println("L   (avg diagonal len):  ", stats.L)  # average diagonal line length
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "lyap-convergence"
+label = "Lyapunov Convergence"
+desc = "Plot how the maximal Lyapunov exponent estimate converges as integration time grows"
+code = '''
+using DynamicalSystems, GLMakie
+
+ds = CoupledODEs(lorenz!, [1.0, 0.0, 0.0], (10.0, 28.0, 8/3))  # Lorenz system
+Ts = range(10, 500; length=50)  # integration times to test
+lambdas = [lyapunov(ds, T) for T in Ts]  # estimate at each T
+
+lines(Ts, lambdas, axis=(xlabel="T", ylabel="lambda_max"))  # convergence to true value
+'''
+
+[[actionGroups.actions]]
+id = "recurrence-plot"
+label = "Recurrence Plot"
+desc = "Visualise the recurrence matrix as a binary image to identify periodic and chaotic structure"
+code = '''
+using RecurrenceAnalysis, GLMakie
+
+R = RecurrenceMatrix({{x}}, {{eps}})  # build recurrence matrix
+heatmap(Array(R), colormap=:binary)  # plot as binary image
+'''
+
+[[actionGroups.actions]]
+id = "corr-dim-plot"
+label = "Correlation Dimension"
+desc = "Log-log plot of correlation sum vs length scale to read off the fractal dimension as a slope"
+code = '''
+using DynamicalSystems, FractalDimensions, GLMakie
+
+ds = CoupledODEs(lorenz!, [1.0, 0.0, 0.0], (10.0, 28.0, 8/3))  # system
+tr, _ = trajectory(ds, {{T}}; Dt=0.01)  # orbit
+eps_vals = exp10.(range(-2, 1; length=20))  # scales
+Cs = correlationsum(tr, eps_vals)  # correlation sum at each scale
+
+lines(log10.(eps_vals), log10.(Cs), axis=(xlabel="log eps", ylabel="log C(eps)"))  # slope = D2
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "stationarity"
+label = "Stationarity Check"
+desc = "Split the series in halves and compare Lyapunov estimates to test for stationarity"
+code = '''
+using RecurrenceAnalysis
+
+n = length({{x}})  # series length
+R1 = RecurrenceMatrix({{x}}[1:div(n,2)], {{eps}})  # first half
+R2 = RecurrenceMatrix({{x}}[div(n,2)+1:end], {{eps}})  # second half
+
+s1 = rqa(R1); s2 = rqa(R2)  # RQA on each half
+println("DET half 1: ", s1.DET, "  half 2: ", s2.DET)  # large difference => non-stationary
+'''
+
+[[actionGroups.actions]]
+id = "noise-sensitivity"
+label = "Noise Sensitivity"
+desc = "Add small noise and observe the change in Lyapunov exponent to assess robustness"
+code = '''
+using DynamicalSystems
+
+ds = CoupledODEs(lorenz!, [1.0, 0.0, 0.0], (10.0, 28.0, 8/3))
+lambda_clean = lyapunov(ds, {{T}})  # clean estimate
+
+tr, t = trajectory(ds, {{T}}; Dt=0.01)  # generate orbit
+tr_noisy = tr .+ 0.01 .* randn(size(tr))  # add 1% noise
+
+println("Clean  lambda: ", lambda_clean)  # baseline
+println("Orbit rows: ", size(tr_noisy, 1))  # confirm size
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "predictability-horizon"
+label = "Predictability Horizon"
+desc = "Estimate how many time steps ahead the system remains predictable using the Lyapunov time"
+code = '''
+using DynamicalSystems
+
+ds = CoupledODEs(lorenz!, [1.0, 0.0, 0.0], (10.0, 28.0, 8/3))
+lambda_max = lyapunov(ds, {{T}})  # maximal Lyapunov exponent
+
+T_lyapunov = 1.0 / lambda_max  # Lyapunov time = inverse of max exponent
+delta0 = 1e-6  # initial error magnitude
+delta_max = 0.1  # acceptable error threshold
+T_pred = T_lyapunov * log(delta_max / delta0)  # predictability horizon
+
+println("Lyapunov time:        ", T_lyapunov)  # 1/lambda
+println("Predictability horizon: ", T_pred)  # time until error reaches threshold
+'''
+
+[[actionGroups.actions]]
+id = "embedding-dim"
+label = "Embedding Dimension"
+desc = "Estimate the minimal embedding dimension for phase-space reconstruction from a scalar series"
+code = '''
+using DynamicalSystems
+
+tau = estimate_delay({{x}}, "mi_min")  # mutual information minimum for delay
+d_emb, _ = estimate_dimension({{x}}, tau, 1:10)  # false nearest neighbours up to dim 10
+
+println("Optimal delay tau:      ", tau)  # time-delay for embedding
+println("Embedding dimension d:  ", d_emb)  # minimum d for unfolding attractor
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "surrogate"
+label = "vs Linear Surrogate"
+desc = "Compare the Lyapunov exponent of the original data against phase-randomised surrogates"
+code = '''
+using DynamicalSystems, TimeseriesSurrogates
+
+tau = estimate_delay({{x}}, "mi_min")  # embedding delay
+d   = 3  # embedding dimension
+X   = embed({{x}}, d, tau)  # reconstruct phase space
+
+surr = surrogenerator({{x}}, RandomFourier())  # phase-randomised surrogate generator
+surr_lambdas = [lyapunov(CoupledODEs(embed(surr(), d, tau)), 100) for _ in 1:19]  # 19 surrogate exponents
+
+println("Data lambda:     ", lyapunov(X, 100))  # original
+println("Surrogate range: ", extrema(surr_lambdas))  # null distribution
+'''
+
+[[actionGroups.actions]]
+id = "lyap-vs-fracdim"
+label = "Lyapunov vs Fractal Dim"
+desc = "Compute both the Lyapunov exponent and correlation dimension and check Kaplan-Yorke consistency"
+code = '''
+using DynamicalSystems, FractalDimensions
+
+ds = CoupledODEs(lorenz!, [1.0, 0.0, 0.0], (10.0, 28.0, 8/3))
+spectrum = lyapunovspectrum(ds, {{T}})  # full spectrum
+D_KY = kaplanyorke_dim(spectrum)  # Kaplan-Yorke dimension
+
+tr, _ = trajectory(ds, {{T}}; Dt=0.01)  # orbit
+eps_vals = exp10.(range(-2, 1; length=20))  # scales
+D2 = correlationdim(tr, eps_vals)  # correlation dimension
+
+println("Kaplan-Yorke D_KY: ", D_KY)  # from Lyapunov spectrum
+println("Correlation D2:    ", D2)  # from GP algorithm; should be close
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "chaos-classification"
+label = "Chaos Classification"
+desc = "Classify the orbit as periodic, quasiperiodic, or chaotic from the Lyapunov spectrum"
+code = '''
+using DynamicalSystems
+
+ds = CoupledODEs(lorenz!, [1.0, 0.0, 0.0], (10.0, 28.0, 8/3))
+spectrum = lyapunovspectrum(ds, {{T}})  # full Lyapunov spectrum
+
+lambda1 = spectrum[1]  # maximal exponent
+if lambda1 > 0.01
+    println("Chaotic: sensitive dependence on ICs")
+elseif lambda1 > -0.01
+    println("Quasiperiodic or neutral orbit")
+else
+    println("Periodic or fixed-point attractor")
+end
+'''
+
+[[actionGroups.actions]]
+id = "rqa-summary"
+label = "RQA Summary"
+desc = "Print all standard RQA quantifiers and interpret their values for the input series"
+code = '''
+using RecurrenceAnalysis
+
+R = RecurrenceMatrix({{x}}, {{eps}})  # recurrence matrix
+s = rqa(R)  # all quantifiers
+
+println("RR:  ", s.RR,  "  (recurrence rate; near 0 = rare recurrence)")  # density
+println("DET: ", s.DET, "  (determinism; near 1 = predictable)")  # diagonal structure
+println("LAM: ", s.LAM, "  (laminarity; near 1 = laminar phases)")  # vertical structure
+println("L:   ", s.L,   "  (mean diagonal length)")  # avg predictability
+println("TT:  ", s.TT,  "  (trapping time)")  # avg vertical line length
+'''

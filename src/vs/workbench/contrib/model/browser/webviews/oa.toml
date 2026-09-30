@@ -1,0 +1,440 @@
+# Online Algorithms Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/oa.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Online Algorithms"
+viewType = "pollis.oa"
+defaultModel = "desc"
+
+[[packages]]
+name = "OnlineStats.jl"
+github = "https://github.com/joshday/OnlineStats.jl"
+
+[[packages.videos]]
+title = "Julia in Academia"
+description = "Overview of Julia for academic and scientific computing"
+url = "https://www.youtube.com/watch?v=wPFPT-Ech2c"
+
+[requires]
+packages = ["OnlineStats.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Descriptive Statistics"
+file = "online-alg/tutorial-01-descriptive.ipynb"
+bundled = true
+description = "Single-pass mean, variance, extrema and moments on streaming data using OnlineStats Series"
+
+[[notebookSections.notebooks]]
+name = "Quantile Estimation"
+file = "online-alg/tutorial-02-quantile.ipynb"
+bundled = true
+description = "Approximate quantile estimation on a data stream with the P-squared algorithm"
+
+[[notebookSections.notebooks]]
+name = "Online Histogram"
+file = "online-alg/tutorial-03-histogram.ipynb"
+bundled = true
+description = "Adaptive histogram of streaming data without storing observations"
+
+[[notebookSections.notebooks]]
+name = "Online Linear Regression"
+file = "online-alg/tutorial-04-linreg.ipynb"
+bundled = true
+description = "Recursive least-squares linear regression updating coefficients as new observations arrive"
+
+[[wikis]]
+name = "Factsheet"
+file = "online-alg/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "online-alg/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "online-alg/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "online-alg/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "online-alg/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "online-alg/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Online Estimators"
+
+[[wikis]]
+name = "Descriptive Stats"
+file = "online-alg/descriptive.md"
+bundled = true
+
+[[wikis]]
+name = "Quantile"
+file = "online-alg/quantile.md"
+bundled = true
+
+[[wikis]]
+name = "Histogram"
+file = "online-alg/histogram.md"
+bundled = true
+
+[[wikis]]
+name = "Linear Regression"
+file = "online-alg/linreg.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "OnlineStats.jl: A Julia package for statistics on data streams"
+authors = "Day, Josh"
+year = 2020
+journal = "Journal of Open Source Software"
+doi = "10.21105/joss.01816"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Mining of Massive Datasets"
+authors = "Leskovec, Jure; Rajaraman, Anand; Ullman, Jeffrey D."
+year = 2020
+journal = "Cambridge University Press (3rd ed.)"
+url = "http://www.mmds.org"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Note on a Method for Calculating Corrected Sums of Squares and Products"
+authors = "Welford, B. P."
+year = 1962
+journal = "Technometrics"
+doi = "10.1080/00401706.1962.10490022"
+openAccess = false
+
+[[references]]
+title = "Sequential Estimation of Quantiles with Applications to A/B Testing and Best-Arm Identification"
+authors = "Waudby-Smith, Ian; Ramdas, Aaditya"
+year = 2023
+journal = "Bernoulli"
+doi = "10.3150/22-BEJ1518"
+openAccess = true
+
+[[references]]
+title = "Recursive Least Squares Estimation: Theory and Applications"
+authors = "Plackett, Robin L."
+year = 1950
+journal = "Biometrika"
+doi = "10.1093/biomet/37.1-2.149"
+openAccess = false
+
+[[models]]
+id = "desc"
+label = "Descriptive Stats"
+
+[[models]]
+id = "quantile"
+label = "Quantile"
+
+[[models]]
+id = "hist"
+label = "Histogram"
+
+[[models]]
+id = "linreg"
+label = "Linear Regression"
+
+[[bullets]]
+text = "Descriptive Statistics"
+detail = "single-pass mean, variance, extrema and moments; updates in O(1) per observation without storing data"
+
+[[bullets]]
+text = "Quantile Estimation"
+detail = "approximate streaming quantiles via the P² algorithm; no sorting or full data retention required"
+
+[[bullets]]
+text = "Online Histogram"
+detail = "adaptive histogram that refines bin boundaries as data arrives; memory-bounded density estimation"
+
+[[bullets]]
+text = "Online Linear Regression"
+detail = "recursive least-squares; updates beta and standard errors incrementally as each observation is processed"
+
+[[inputs]]
+id = "data"
+label = "Data stream"
+tooltip = "Vector or iterator of observations. Can be processed in a single pass with fit! or flushed observation by observation."
+default = "data"
+
+[[inputs]]
+id = "X"
+models = ["linreg"]
+label = "Covariate matrix (X)"
+tooltip = "Design matrix (T × k) paired row-by-row with the response vector. Include a column of ones for the intercept."
+default = "X"
+
+[[codeBranches]]
+model = "desc"
+code = '''
+using OnlineStats
+
+o = Series(Mean(), Variance(), Extrema())  # bundle multiple stats into one pass
+fit!(o, {{data}})  # update all stats in a single pass
+
+println("Mean:     ", value(o[1]))  # running mean
+println("Variance: ", value(o[2]))  # running variance (Welford)
+println("Extrema:  ", value(o[3]))  # running min and max
+'''
+
+[[codeBranches]]
+model = "quantile"
+code = '''
+using OnlineStats
+
+o = P2Quantile(0.5)  # online median via P-squared algorithm
+fit!(o, {{data}})  # update quantile estimate
+
+println("Median: ", value(o))  # current quantile estimate
+
+qs = Series(P2Quantile(0.25), P2Quantile(0.5), P2Quantile(0.75))  # quartiles in one pass
+fit!(qs, {{data}})  # update all quartile estimators
+'''
+
+[[codeBranches]]
+model = "hist"
+code = '''
+using OnlineStats
+
+o = Hist(20)  # adaptive histogram with up to 20 bins
+fit!(o, {{data}})  # update histogram as data arrives
+
+println(value(o))  # bin edges and counts
+println(pdf(o, 0.0))  # density estimate at a given point
+'''
+
+[[codeBranches]]
+model = "linreg"
+code = '''
+using OnlineStats
+
+o = LinReg(size({{X}}, 2))  # online regression: k = number of predictors
+fit!(o, zip(eachrow({{X}}), {{data}}))  # stream (x_t, y_t) pairs row by row
+
+beta = coef(o)  # current coefficient estimates
+println("Coefficients: ", beta)  # print recursive least-squares estimates
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "running-mean"
+label = "Running Mean"
+desc = "Plot the running mean after each observation to inspect convergence"
+code = '''
+using OnlineStats, Plots
+
+o = Mean()  # online mean
+means = map(x -> (fit!(o, x); value(o)), {{data}})  # running mean series
+plot(means, xlabel="Observations", ylabel="Running mean", label="Mean")  # convergence plot
+'''
+
+[[actionGroups.actions]]
+id = "hist-plot"
+label = "Online Histogram"
+desc = "Visualise the adaptive histogram density built from the data stream"
+code = '''
+using OnlineStats, Plots
+
+o = Hist(30)  # adaptive histogram with 30 bins
+fit!(o, {{data}})  # single-pass update
+plot(o)  # plot density estimate
+'''
+
+[[actionGroups.actions]]
+id = "quantile-convergence"
+label = "Quantile Convergence"
+desc = "Track how the online median estimate converges as observations accumulate"
+code = '''
+using OnlineStats, Plots
+
+o = P2Quantile(0.5)  # online median
+medians = map(x -> (fit!(o, x); value(o)), {{data}})  # running median series
+plot(medians, xlabel="Observations", ylabel="Online median")  # convergence plot
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "compare-batch"
+label = "vs Batch Statistics"
+desc = "Compare online estimates against exact batch values to verify accuracy"
+code = '''
+using OnlineStats, Statistics
+
+o = Series(Mean(), Variance())  # online estimators
+fit!(o, {{data}})  # single pass
+
+println("Online mean:      ", value(o[1]))  # online estimate
+println("Batch  mean:      ", mean({{data}}))  # exact batch value
+println("Online variance:  ", value(o[2]))  # online estimate
+println("Batch  variance:  ", var({{data}}))  # exact batch value
+'''
+
+[[actionGroups.actions]]
+id = "nobs"
+label = "Observation Count"
+desc = "Inspect how many observations have been processed by each online stat"
+code = '''
+using OnlineStats
+
+o = Mean()  # online mean
+fit!(o, {{data}})  # process data stream
+
+println("Observations processed: ", nobs(o))  # number of observations seen
+println("Current estimate:       ", value(o))  # current statistic value
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "predict-linreg"
+label = "Regression Predictions"
+desc = "Use the online regression model to predict responses for new covariates"
+code = '''
+using OnlineStats
+
+o = LinReg(size({{X}}, 2))  # online linear regression
+fit!(o, zip(eachrow({{X}}), {{data}}))  # stream training data
+
+x_new = [1.0, 2.0]  # new covariate vector (including intercept term)
+println("Prediction: ", predict(o, x_new))  # out-of-sample prediction
+'''
+
+[[actionGroups.actions]]
+id = "stream-predict"
+label = "Rolling Predictions"
+desc = "Update the regression model and produce predictions simultaneously as data streams in"
+code = '''
+using OnlineStats
+
+o = LinReg(size({{X}}, 2))  # online model
+preds = Float64[]  # store rolling predictions
+
+for (x_t, y_t) in zip(eachrow({{X}}), {{data}})
+    push!(preds, predict(o, x_t))  # predict before update
+    fit!(o, (x_t, y_t))  # then update with true label
+end
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "merge-stats"
+label = "Merge Parallel Streams"
+desc = "Combine online stats from two independent data partitions without re-reading data"
+code = '''
+using OnlineStats
+
+n = length({{data}})  # total observations
+o1 = fit!(Mean(), {{data}}[1:div(n,2)])  # stats on first half
+o2 = fit!(Mean(), {{data}}[div(n,2)+1:end])  # stats on second half
+
+merge!(o1, o2)  # combine both estimates exactly
+println("Merged mean: ", value(o1))  # equivalent to batch mean over all data
+'''
+
+[[actionGroups.actions]]
+id = "windowed-vs-global"
+label = "Windowed vs Global"
+desc = "Compare a fixed-window moving average against the global running mean"
+code = '''
+using OnlineStats, Plots
+
+global_mean   = Mean()  # cumulative mean (all history)
+windowed_mean = WindowMean(50)  # mean over last 50 observations
+
+gm = Float64[]  # store global means
+wm = Float64[]  # store windowed means
+
+for x in {{data}}
+    fit!(global_mean, x); fit!(windowed_mean, x)
+    push!(gm, value(global_mean)); push!(wm, value(windowed_mean))
+end
+plot([gm wm], label=["Global" "Window=50"])  # compare both estimates over time
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "summary-stats"
+label = "Summary Statistics"
+desc = "Full descriptive summary: mean, variance, skewness, kurtosis and extrema in one pass"
+code = '''
+using OnlineStats
+
+o = Series(Mean(), Variance(), Skewness(), Kurtosis(), Extrema())  # full summary in one pass
+fit!(o, {{data}})  # single-pass computation
+
+println("Mean:     ", value(o[1]))  # first moment
+println("Variance: ", value(o[2]))  # second central moment
+println("Skewness: ", value(o[3]))  # third standardised moment
+println("Kurtosis: ", value(o[4]))  # fourth standardised moment
+println("Extrema:  ", value(o[5]))  # min and max
+'''
+
+[[actionGroups.actions]]
+id = "regression-coefs"
+label = "Regression Coefficients"
+desc = "Extract and display the recursive least-squares coefficient estimates"
+code = '''
+using OnlineStats
+
+o = LinReg(size({{X}}, 2))  # online regression
+fit!(o, zip(eachrow({{X}}), {{data}}))  # stream data
+
+println("Coefficients: ", coef(o))  # recursive least-squares estimates
+println("Observations: ", nobs(o))  # number of observations processed
+'''

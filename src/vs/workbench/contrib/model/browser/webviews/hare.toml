@@ -1,0 +1,500 @@
+# Linear Models with Heteroskedasticity Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/hare.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Linear Models with Heteroskedasticity"
+viewType = "pollis.hare"
+defaultModel = "exponential"
+
+[[packages]]
+name = "HARE.jl"
+github = "https://github.com/Trumpingtons/HARE.jl"
+
+[[packages.videos]]
+title = "Julia in Academia"
+description = "Overview of Julia for academic and scientific computing"
+url = "https://www.youtube.com/watch?v=wPFPT-Ech2c"
+
+[requires]
+packages = ["GLM.jl", "Plots.jl", "StatsBase.jl", "HypothesisTests.jl", "Distributions.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Exponential"
+file = "lm-hetero/tutorial-01-exponential.ipynb"
+bundled = true
+description = "Exponential variance FGLS: Var(u) = sigma^2 * exp(z alpha) via two-step FWLS and MLE"
+
+[[notebookSections.notebooks]]
+name = "Power"
+file = "lm-hetero/tutorial-02-power.ipynb"
+bundled = true
+description = "Power variance FGLS: std(u) proportional to |z alpha|^p via two-step FWLS and MLE"
+
+[[notebookSections.notebooks]]
+name = "Quadratic"
+file = "lm-hetero/tutorial-03-quadratic.ipynb"
+bundled = true
+description = "Quadratic variance FGLS: Var(u) proportional to (z alpha)^2 via two-step FWLS and MLE"
+
+[[notebookSections.notebooks]]
+name = "Linear"
+file = "lm-hetero/tutorial-04-linear.ipynb"
+bundled = true
+description = "Linear variance FGLS: Var(u) proportional to z alpha via two-step FWLS and MLE"
+
+[[wikis]]
+name = "Factsheet"
+file = "lm-hetero/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "lm-hetero/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "lm-hetero/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "lm-hetero/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "lm-hetero/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "lm-hetero/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Variance Models"
+
+[[wikis]]
+name = "Exponential"
+file = "lm-hetero/exponential.md"
+bundled = true
+
+[[wikis]]
+name = "Power"
+file = "lm-hetero/power.md"
+bundled = true
+
+[[wikis]]
+name = "Quadratic"
+file = "lm-hetero/quadratic.md"
+bundled = true
+
+[[wikis]]
+name = "Linear"
+file = "lm-hetero/linear.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Econometric Analysis"
+authors = "Greene, William H."
+year = 2018
+journal = "Pearson (8th ed.)"
+url = "https://www.pearson.com/en-us/subject-catalog/p/econometric-analysis/P200000006119"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Estimating Regression Models with Multiplicative Heteroscedasticity"
+authors = "Harvey, Andrew C."
+year = 1976
+journal = "Econometrica"
+doi = "10.2307/1913974"
+openAccess = false
+
+[[references]]
+title = "A New Test for Heteroskedasticity"
+authors = "Glejser, Herbert"
+year = 1969
+journal = "Journal of the American Statistical Association"
+doi = "10.1080/01621459.1969.10500975"
+openAccess = false
+
+[[references]]
+title = "A Heteroskedasticity-Consistent Covariance Matrix Estimator and a Direct Test for Heteroskedasticity"
+authors = "White, Halbert"
+year = 1980
+journal = "Econometrica"
+doi = "10.2307/1912934"
+openAccess = false
+
+[[models]]
+id = "exponential"
+label = "Exponential"
+
+[[models]]
+id = "power"
+label = "Power"
+
+[[models]]
+id = "quadratic"
+label = "Quadratic"
+
+[[models]]
+id = "linear"
+label = "Linear"
+
+[[bullets]]
+text = "Exponential"
+detail = "variance model: Var(u) = sigma² exp(z′alpha); two-step FWLS or MLE via HARE.jl"
+
+[[bullets]]
+text = "Power"
+detail = "variance model: std(u) ∝ |z′alpha|p; two-step FWLS or MLE via HARE.jl"
+
+[[bullets]]
+text = "Quadratic"
+detail = "variance model: Var(u) ∝ (z′alpha)²; two-step FWLS or MLE via HARE.jl"
+
+[[bullets]]
+text = "Linear"
+detail = "variance model: Var(u) ∝ z′alpha; two-step FWLS or MLE via HARE.jl"
+
+[[decisionRows]]
+task = "Exponential"
+context = "The spread of the errors grows multiplicatively with the drivers (income, firm size, levels): the usual default"
+purpose = "Harvey's model: log variance is linear in z, so the variance stays positive and each unit of z multiplies it by a constant factor"
+
+[[decisionRows]]
+task = "Power"
+context = "The variance scales with a power of a strictly positive size variable (sales, population)"
+purpose = "Variance proportional to |z| raised to a power: the exponent is the elasticity of the variance with respect to z"
+
+[[decisionRows]]
+task = "Quadratic"
+context = "The standard deviation, rather than the variance, grows linearly with z"
+purpose = "Glejser's model: sigma is linear in z, so the variance is quadratic; estimated from the absolute residuals"
+
+[[decisionRows]]
+task = "Linear"
+context = "The variance itself is additive in z, with z bounded away from values that would make it negative"
+purpose = "Variance linear in z; the most direct form but fitted variances must be clipped at zero"
+
+[[inputs]]
+id = "X"
+label = "Regressors (X)"
+tooltip = "Matrix of mean-equation regressors (n x k). Do not add a column of ones: HARE adds the intercept itself."
+default = "X"
+
+[[inputs]]
+id = "y"
+label = "Response (y)"
+tooltip = "Vector of the dependent variable (length n)."
+default = "y"
+
+[[inputs]]
+id = "z"
+label = "Variance drivers (Z)"
+tooltip = "Matrix of the variables that drive the variance (n x q), without a column of ones. nothing uses the regressors X. For the power model the drivers must be non-zero."
+default = "nothing"
+
+[[inputs]]
+id = "method"
+label = "Estimation"
+tooltip = "Two-step FWLS: one auxiliary regression for the variance, then weighted least squares. Iterated FWLS repeats until the coefficients settle. MLE maximises the likelihood of both equations jointly, with standard errors for the variance parameters."
+kind = "select"
+default = "fwls"
+newRow = true
+
+[[inputs.options]]
+value = "fwls"
+label = "Two-step FWLS"
+
+[[inputs.options]]
+value = "ifwls"
+label = "Iterated FWLS"
+
+[[inputs.options]]
+value = "mle"
+label = "Maximum likelihood"
+
+[[inputs]]
+id = "xnew"
+label = "New regressors"
+tooltip = "Rows of regressor values to predict at. The default reuses the last 5 rows of X as a placeholder."
+default = "Xm[end-4:end, :]"
+newRow = true
+
+[[inputs]]
+id = "znew"
+label = "New variance drivers"
+tooltip = "Variance-driver rows matching the new regressors. Leave as nothing when Z is nothing (the new regressor rows are used)."
+default = "nothing"
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.exponential]
+# Scatter fanning out along an exponential envelope
+svg = '''
+var s = '', up = '', lo = '';
+for (var i = 0; i <= 44; i += 2) { var w = 2 * Math.exp(i / 16); up += (i ? 'L' : 'M') + (5 + i) + ',' + (45 - w).toFixed(1); lo += (i ? 'L' : 'M') + (5 + i) + ',' + (45 + w).toFixed(1); }
+[[8, 1], [14, -2], [19, 3], [24, -4], [28, 6], [33, -8], [37, 10], [41, -12], [45, 14], [48, -9]].forEach(function(p) { s += '<circle cx="' + p[0] + '" cy="' + (45 + p[1]) + '" r="1.3" fill="currentColor"/>'; });
+return '<path d="' + up + '" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="3,2"/><path d="' + lo + '" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="3,2"/>' + s;
+'''
+
+[miniCharts.power]
+# Log-log line: variance against size
+svg = '''
+return '<line x1="6" y1="66" x2="6" y2="22" stroke="currentColor" stroke-width="0.8"/><line x1="6" y1="66" x2="50" y2="66" stroke="currentColor" stroke-width="0.8"/>'
+	+ '<line x1="8" y1="60" x2="48" y2="28" stroke="currentColor" stroke-width="1.5"/>'
+	+ '<circle cx="14" cy="58" r="1.3" fill="currentColor"/><circle cx="22" cy="48" r="1.3" fill="currentColor"/><circle cx="30" cy="46" r="1.3" fill="currentColor"/><circle cx="38" cy="36" r="1.3" fill="currentColor"/><circle cx="45" cy="32" r="1.3" fill="currentColor"/>';
+'''
+
+[miniCharts.quadratic]
+# Straight-line envelope: sigma linear in z
+svg = '''
+var s = '';
+[[8, 2], [14, -3], [19, 4], [24, -6], [28, 7], [33, -9], [37, 10], [41, -11], [45, 12], [48, -13]].forEach(function(p) { s += '<circle cx="' + p[0] + '" cy="' + (45 + p[1]) + '" r="1.3" fill="currentColor"/>'; });
+return '<line x1="5" y1="42" x2="50" y2="30" stroke="currentColor" stroke-width="1" stroke-dasharray="3,2"/><line x1="5" y1="48" x2="50" y2="60" stroke="currentColor" stroke-width="1" stroke-dasharray="3,2"/>' + s;
+'''
+
+[miniCharts.linear]
+# Square-root envelope: variance linear in z
+svg = '''
+var s = '', up = '', lo = '';
+for (var i = 0; i <= 44; i += 2) { var w = 2 + 2.2 * Math.sqrt(i); up += (i ? 'L' : 'M') + (5 + i) + ',' + (45 - w).toFixed(1); lo += (i ? 'L' : 'M') + (5 + i) + ',' + (45 + w).toFixed(1); }
+[[8, 3], [14, -5], [19, 6], [24, -8], [28, 9], [33, -10], [37, 11], [41, -12], [45, 12], [48, -10]].forEach(function(p) { s += '<circle cx="' + p[0] + '" cy="' + (45 + p[1]) + '" r="1.3" fill="currentColor"/>'; });
+return '<path d="' + up + '" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="3,2"/><path d="' + lo + '" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="3,2"/>' + s;
+'''
+
+[[codeBranches]]
+model = "exponential"
+code = '''
+using HARE, GLM
+
+yv = Float64.({{y}})
+Xm = reshape(Float64.({{X}}), length(yv), :)  # regressors without a constant: HARE adds the intercept
+Zm = {{z}} === nothing ? nothing : reshape(Float64.({{z}}), length(yv), :)
+Zv = something(Zm, Xm)  # variance drivers actually used
+estimate(X, y) = exponential_{{method}}(X, y; Z=Zm)  # sigma_i^2 = exp(gamma_0 + z_i gamma)
+result = estimate(Xm, yv)
+variance(Z) = exp.(hcat(ones(size(Z, 1)), Z) * result.gamma)  # fitted variance at drivers Z
+result
+'''
+
+[[codeBranches]]
+model = "power"
+code = '''
+using HARE, GLM
+
+yv = Float64.({{y}})
+Xm = reshape(Float64.({{X}}), length(yv), :)  # regressors without a constant: HARE adds the intercept
+Zm = {{z}} === nothing ? nothing : reshape(Float64.({{z}}), length(yv), :)
+Zv = something(Zm, Xm)  # variance drivers actually used (must be non-zero)
+estimate(X, y) = power_{{method}}(X, y; Z=Zv)  # sigma_i^2 = sigma^2 * prod |z_ij|^gamma_j
+result = estimate(Xm, yv)
+variance(Z) = exp.(hcat(ones(size(Z, 1)), log.(abs.(Z))) * result.gamma)  # fitted variance at drivers Z
+result
+'''
+
+[[codeBranches]]
+model = "quadratic"
+code = '''
+using HARE, GLM
+
+yv = Float64.({{y}})
+Xm = reshape(Float64.({{X}}), length(yv), :)  # regressors without a constant: HARE adds the intercept
+Zm = {{z}} === nothing ? nothing : reshape(Float64.({{z}}), length(yv), :)
+Zv = something(Zm, Xm)  # variance drivers actually used
+estimate(X, y) = quadratic_{{method}}(X, y; Z=Zm)  # sigma_i = gamma_0 + z_i gamma
+result = estimate(Xm, yv)
+variance(Z) = max.(hcat(ones(size(Z, 1)), Z) * result.gamma, 1e-8) .^ 2  # fitted variance at drivers Z
+result
+'''
+
+[[codeBranches]]
+model = "linear"
+code = '''
+using HARE, GLM
+
+yv = Float64.({{y}})
+Xm = reshape(Float64.({{X}}), length(yv), :)  # regressors without a constant: HARE adds the intercept
+Zm = {{z}} === nothing ? nothing : reshape(Float64.({{z}}), length(yv), :)
+Zv = something(Zm, Xm)  # variance drivers actually used
+estimate(X, y) = linear_{{method}}(X, y; Z=Zm)  # sigma_i^2 = gamma_0 + z_i gamma
+result = estimate(Xm, yv)
+variance(Z) = max.(hcat(ones(size(Z, 1)), Z) * result.gamma, 1e-10)  # fitted variance at drivers Z
+result
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "spread"
+label = "Residual Spread"
+desc = "Absolute residuals against the fitted values with the spread the variance model expects: the envelope should follow the fan of the points"
+code = '''
+using Plots
+s = sqrt.(variance(Zv))
+o = sortperm(fitted(result))
+Plots.scatter(fitted(result), abs.(residuals(result)), ms=2.5, alpha=0.6, label="|residual|", xlabel="fitted value")
+Plots.plot!(fitted(result)[o], sqrt(2 / pi) .* s[o], lw=2, label="expected |residual| from the model")
+'''
+
+[[actionGroups.actions]]
+id = "standardised"
+label = "Standardised Residuals"
+desc = "Residuals divided by their fitted standard deviation: if the variance model is right they form an even band of width about 2 around zero"
+code = '''
+using Plots
+r = residuals(result) ./ sqrt.(variance(Zv))
+Plots.scatter(fitted(result), r, ms=2.5, alpha=0.6, label="", xlabel="fitted value", ylabel="residual / sigma_i")
+Plots.hline!([-2, 0, 2], ls=:dash, color=:gray, label="")
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "het-tests"
+label = "Heteroskedasticity Tests"
+desc = "Harvey (exponential), Glejser (standard deviation), Breusch-Pagan (linear) and White (general) tests on the OLS residuals: small p-values mean the constant-variance assumption fails"
+code = '''
+(harvey_p = pvalue(harvey_test(Xm, yv; Z=Zm)), glejser_p = pvalue(glejser_test(Xm, yv; Z=Zm)),
+ breusch_pagan_p = pvalue(breusch_pagan_test(Xm, yv)), white_p = pvalue(white_test(Xm, yv)))
+'''
+
+[[actionGroups.actions]]
+id = "after-fit"
+label = "Remaining Heteroskedasticity"
+desc = "Breusch-Pagan test on the standardised residuals, and their normality: a significant result means the chosen variance model has not captured the pattern"
+code = '''
+using HypothesisTests
+r = residuals(result) ./ sqrt.(variance(Zv))
+(breusch_pagan_standardised_p = pvalue(WhiteTest(hcat(ones(length(r)), Zv), r; type=:linear)),
+ jarque_bera_p = pvalue(JarqueBeraTest(r)), sd_standardised = round(sqrt(sum(abs2, r) / length(r)), digits=3))
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "intervals"
+label = "Prediction Intervals"
+desc = "95% prediction intervals whose width follows the fitted variance, with their in-sample coverage: close to 95% for the model, while constant-width OLS bands miss in the noisy region"
+code = '''
+using Plots, Statistics
+s = sqrt.(variance(Zv))
+o = sortperm(fitted(result))
+f = fitted(result)
+s_ols = sqrt(sum(abs2, residuals(lm(hcat(ones(length(yv)), Xm), yv))) / (length(yv) - size(Xm, 2) - 1))
+Plots.scatter(f, yv, ms=2.5, alpha=0.5, label="data", xlabel="fitted value", ylabel="y")
+display(Plots.plot!(f[o], f[o], ribbon=1.96 .* s[o], fillalpha=0.25, lw=1.5, label="95% interval"))
+(coverage_model = round(mean(abs.(residuals(result)) .<= 1.96 .* s), digits=3), coverage_constant_width = round(mean(abs.(residuals(result)) .<= 1.96s_ols), digits=3))
+'''
+
+[[actionGroups.actions]]
+id = "forecast"
+label = "Predict at New Values"
+desc = "Point predictions and 95% intervals at the new regressor rows; the interval width comes from the variance model evaluated at the new drivers (parameter uncertainty ignored)"
+code = '''
+Xn = reshape(Float64.({{xnew}}), :, size(Xm, 2))
+Zn = {{znew}} === nothing ? Xn : reshape(Float64.({{znew}}), size(Xn, 1), :)
+m = hcat(ones(size(Xn, 1)), Xn) * coef(result)
+s = sqrt.(variance(Zn))
+[(row = i, prediction = round(m[i], digits=4), sd = round(s[i], digits=4), lower95 = round(m[i] - 1.96s[i], digits=4), upper95 = round(m[i] + 1.96s[i], digits=4)) for i in eachindex(m)]
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "vs-ols"
+label = "Compare with OLS"
+desc = "OLS with classical and White (HC1) standard errors against the weighted estimates: robust errors fix inference, weighting also gains precision"
+code = '''
+using LinearAlgebra
+X1 = hcat(ones(length(yv)), Xm)
+ols = lm(X1, yv)
+e = residuals(ols)
+B = inv(X1' * X1)
+hc1 = sqrt.(diag(B * (X1' * (e .^ 2 .* X1)) * B) .* length(yv) ./ (length(yv) - size(X1, 2)))  # White HC1 standard errors
+[(term = n, ols = round(a, digits=4), ols_se = round(sa, digits=4), white_se = round(w, digits=4), weighted = round(b, digits=4), weighted_se = round(sb, digits=4))
+ for (n, a, sa, w, b, sb) in zip(coefnames(result), coef(ols), stderror(ols), hc1, coef(result), stderror(result))]
+'''
+
+[[actionGroups.actions]]
+id = "links"
+label = "Compare Variance Models"
+desc = "All four variance models fitted by two-step FWLS and scored by their Gaussian log-likelihood and AIC: the best-fitting shape of the heteroskedasticity"
+code = '''
+Z1 = hcat(ones(length(yv)), Zv)
+fits = [("Exponential", exponential_fwls(Xm, yv; Z=Zm), g -> exp.(Z1 * g)),
+        ("Power", power_fwls(Xm, yv; Z=Zv), g -> exp.(hcat(ones(length(yv)), log.(abs.(Zv))) * g)),
+        ("Quadratic", quadratic_fwls(Xm, yv; Z=Zm), g -> max.(Z1 * g, 1e-8) .^ 2),
+        ("Linear", linear_fwls(Xm, yv; Z=Zm), g -> max.(Z1 * g, 1e-10))]
+loglik(r, v) = -0.5 * sum(log.(2pi .* v) .+ residuals(r) .^ 2 ./ v)
+rows = [(model = n, loglik = round(loglik(r, v(r.gamma)), digits=2), aic = round(-2loglik(r, v(r.gamma)) + 2(length(coef(r)) + length(r.gamma)), digits=2), coef = round.(coef(r), digits=4)) for (n, r, v) in fits]
+sort(rows, by = r -> r.aic)
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "variance-equation"
+label = "Variance Equation"
+desc = "The variance parameters with standard errors and what each one means for the spread of y"
+code = '''
+using Distributions
+names = ["intercept"; ["z$j" for j in 1:size(Zv, 2)]]
+se = sqrt.(max.(diag(result.gamma_vcov), 0))
+{{?model=exponential}} meaning(j, g) = j == 1 ? "log of the baseline variance" : "each unit of z$(j-1) multiplies the variance by $(round(exp(g), digits=3))"
+{{?model=power}} meaning(j, g) = j == 1 ? "log of the baseline variance" : "elasticity: a 1% rise in |z$(j-1)| raises the variance by $(round(g, digits=3))%"
+{{?model=quadratic}} meaning(j, g) = j == 1 ? "baseline standard deviation" : "each unit of z$(j-1) adds $(round(g, digits=4)) to the standard deviation"
+{{?model=linear}} meaning(j, g) = j == 1 ? "baseline variance" : "each unit of z$(j-1) adds $(round(g, digits=4)) to the variance"
+[(parameter = names[j], estimate = round(g, digits=4), std_error = round(se[j], digits=4), p = round(2ccdf(Normal(), abs(g / se[j])), digits=4), meaning = meaning(j, g))
+ for (j, g) in enumerate(result.gamma)]
+'''
+
+[[actionGroups.actions]]
+id = "coefficients"
+label = "Coefficients"
+desc = "Mean-equation estimates with weighted standard errors, t statistics, p-values and 95% confidence intervals"
+code = '''
+ci = confint(result)
+[(term = n, estimate = round(b, digits=4), std_error = round(s, digits=4), t = round(t, digits=2), p = round(p, digits=4), lower95 = round(ci[i, 1], digits=4), upper95 = round(ci[i, 2], digits=4))
+ for (i, (n, b, s, t, p)) in enumerate(zip(coefnames(result), coef(result), stderror(result), tstat(result), pvalues(result)))]
+'''

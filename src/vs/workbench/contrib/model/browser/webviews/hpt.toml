@@ -1,0 +1,284 @@
+# Hyperparameter Tuning Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/hpt.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Hyperparameter Tuning"
+viewType = "pollis.hpt"
+defaultModel = "grid"
+
+[[packages]]
+name = "MLJ.jl"
+github = "https://github.com/alan-turing-institute/MLJ.jl"
+
+[[packages]]
+name = "Hyperopt.jl"
+github = "https://github.com/baggepinnen/Hyperopt.jl"
+
+[requires]
+packages = ["MLJ.jl", "Hyperopt.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Grid Search"
+file = "model-workflow/tutorial-01-grid-search.ipynb"
+bundled = true
+description = "Exhaustive grid search over hyperparameter combinations with MLJ.jl"
+
+[[notebookSections.notebooks]]
+name = "Random Search"
+file = "model-workflow/tutorial-02-random-search.ipynb"
+bundled = true
+description = "Efficient random sampling from parameter distributions with MLJ.jl"
+
+[[notebookSections.notebooks]]
+name = "Bayesian Optimisation"
+file = "model-workflow/tutorial-03-bayesian-hpt.ipynb"
+bundled = true
+description = "GP-guided Bayesian optimisation of hyperparameters with Hyperopt.jl"
+
+[[wikis]]
+name = "Overview"
+file = "model-workflow/hpt-overview.md"
+bundled = true
+
+[[wikis]]
+name = "Grid Search"
+file = "model-workflow/hpt-grid.md"
+bundled = true
+
+[[wikis]]
+name = "Random Search"
+file = "model-workflow/hpt-random.md"
+bundled = true
+
+[[wikis]]
+name = "Bayesian Optimisation"
+file = "model-workflow/hpt-bayesian.md"
+bundled = true
+
+[[wikis]]
+name = "Choosing a Strategy"
+file = "model-workflow/hpt-strategy.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Original Papers (from packages)"
+
+[[references]]
+title = "MLJ: A Julia Package for Composable Machine Learning"
+authors = "Blaom, A.D., Kiraly, F., Lienart, T. et al."
+year = 2020
+journal = ""
+url = "https://doi.org/10.21105/joss.02704"
+openAccess = true
+
+[[models]]
+id = "grid"
+label = "Grid Search"
+
+[[models]]
+id = "random"
+label = "Random Search"
+
+[[models]]
+id = "bayesian"
+label = "Bayesian"
+
+[[bullets]]
+text = "Grid Search"
+detail = "exhaustive evaluation of every combination in a discrete hyperparameter lattice; exact but scales exponentially with dimension (MLJ.jl)"
+
+[[bullets]]
+text = "Random Search"
+detail = "sample configurations uniformly from the search space; often finds near-optimal solutions with far fewer evaluations than grid search (MLJ.jl)"
+
+[[bullets]]
+text = "Bayesian Optimisation"
+detail = "sequential GP-guided search using an acquisition function; concentrates budget on promising regions (Hyperopt.jl)"
+
+[[inputs]]
+id = "model"
+label = "Model"
+tooltip = "MLJ model type, e.g. DecisionTreeClassifier or EvoTreeRegressor. Use @load to import it."
+default = "DecisionTreeClassifier"
+
+[[inputs]]
+id = "measure"
+label = "Performance Measure"
+tooltip = "MLJ measure used to score each configuration, e.g. accuracy, rmse, cross_entropy. Must match your task type."
+default = "accuracy"
+
+[[inputs]]
+id = "X"
+label = "Feature Matrix"
+tooltip = "n_samples × n_features matrix or table of input features passed to the machine."
+default = "X_train"
+
+[[inputs]]
+id = "y"
+label = "Target Vector"
+tooltip = "n_samples response vector. Use categorical(y) for classification tasks."
+default = "y_train"
+
+[[inputs]]
+id = "cv"
+label = "CV Folds"
+tooltip = "Number of cross-validation folds used to evaluate each hyperparameter configuration. 5 or 10 is typical."
+default = "5"
+
+[[inputs]]
+id = "resolution"
+label = "Resolution"
+tooltip = "Number of equally-spaced values sampled per continuous range. Applies to all ranges that do not specify their own values list."
+default = "5"
+models = ["grid"]
+
+[[inputs]]
+id = "niter"
+label = "Iterations"
+tooltip = "Total number of random configurations to evaluate. More iterations give a better chance of finding the optimum."
+default = "50"
+models = ["random"]
+
+[[inputs]]
+id = "ncalls"
+label = "Calls"
+tooltip = "Total number of objective evaluations. The GP surrogate is updated after each call and guides subsequent sampling."
+default = "30"
+models = ["bayesian"]
+
+[[codeBranches]]
+model = "grid"
+code = '''
+using MLJ
+
+{{model}} = @load {{model}} pkg=  # import model type
+model  = {{model}}()  # instantiate with defaults
+
+r1 = range(model, :param1, values=[v1, v2, v3])  # discrete hyperparameter range
+r2 = range(model, :param2, lower=0.01, upper=1.0, scale=:log)  # continuous log-scale range
+
+tuned = TunedModel(
+    model      = model,  # 
+    tuning     = Grid(resolution={{resolution}}),  # {{resolution}} values per continuous range
+    resampling = CV(nfolds={{cv}}),  # {{cv}}-fold cross-validation
+    measure    = {{measure}},  # optimisation criterion
+    range      = [r1, r2],
+)
+
+mach = machine(tuned, {{X}}, {{y}})  # bind tuned model to data
+fit!(mach)  # run grid search
+
+best = fitted_params(mach).best_model  # retrieve best hyperparameter configuration
+report = report(mach)  # full tuning history
+'''
+
+[[codeBranches]]
+model = "random"
+code = '''
+using MLJ
+
+{{model}} = @load {{model}} pkg=  # import model type
+model  = {{model}}()  # instantiate with defaults
+
+r1 = range(model, :param1, lower=v_lo, upper=v_hi)  # continuous uniform range
+r2 = range(model, :param2, values=[v1, v2, v3])  # discrete range
+
+tuned = TunedModel(
+    model      = model,  # 
+    tuning     = RandomSearch(rng=42),  # reproducible random search
+    n          = {{niter}},  # {{niter}} sampled configurations
+    resampling = CV(nfolds={{cv}}),  # {{cv}}-fold cross-validation
+    measure    = {{measure}},  # optimisation criterion
+    range      = [r1, r2],
+)
+
+mach = machine(tuned, {{X}}, {{y}})  # bind tuned model to data
+fit!(mach)  # run random search
+
+best = fitted_params(mach).best_model  # best configuration
+'''
+
+[[codeBranches]]
+model = "bayesian"
+code = '''
+using Hyperopt, MLJ
+
+function objective(p1, p2)  # evaluate one hyperparameter configuration
+    model = {{model}}(param1=p1, param2=p2)  # instantiate with candidate params
+    mach  = machine(model, {{X}}, {{y}})  # 
+    ev    = evaluate!(mach, resampling=CV(nfolds={{cv}}), measure={{measure}})  # 
+    return -mean(ev.measurement)  # negate to minimise
+end
+
+@hyperopt for i = {{ncalls}},
+    sampler = GPSampler(),  # Gaussian Process surrogate
+    p1      = LinRange(lo1, hi1, 100),  # continuous search space
+    p2      = [v1, v2, v3]  # discrete candidates
+    objective(p1, p2)
+end
+
+best_params = ho.minimizer  # optimal hyperparameter vector
+best_loss   = ho.minimum  # best observed objective value
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "tuning-curve"
+label = "Tuning Curve"
+desc = "CV score plotted against each hyperparameter individually; reveals sensitivity and optimal range"
+code = '''
+using MLJ, Plots
+
+r = range(model, :param1, lower=lo, upper=hi)  # hyperparameter to sweep
+curve = learning_curve(model, {{X}}, {{y}};  # 
+    range=r, resampling=CV(nfolds={{cv}}), measure={{measure}})  # 
+
+plot(curve.parameter_values, curve.measurements,  # 
+    xlabel="param1", ylabel=string({{measure}}), legend=false)  # tuning curve
+'''
+
+[[actionGroups.actions]]
+id = "learning-curve"
+label = "Learning Curve"
+desc = "CV score vs training set size; diagnoses bias/variance and the value of collecting more data"
+code = '''
+using MLJ, Plots
+
+curve = learning_curve(best, {{X}}, {{y}};  # best: fitted_params(mach).best_model
+    resampling=CV(nfolds={{cv}}), measure={{measure}},  # 
+    train_sizes=0.1:0.1:1.0)  # sweep 10 % to 100 % of training data
+
+plot(curve.training_sizes, curve.measurements,  # 
+    xlabel="Training size", ylabel=string({{measure}}), legend=false)  # learning curve
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "best-params"
+label = "Best Parameters Summary"
+desc = "Print the optimal hyperparameter configuration and its cross-validated score"
+code = '''
+using MLJ
+
+best   = fitted_params(mach).best_model  # best hyperparameter configuration
+report = report(mach)  # full tuning history
+
+best_entry = report.best_history_entry  # entry with optimal {{measure}}
+println("Best {{measure}}: ", best_entry.measurement[1])  # 
+println("Best params:  ", best_entry.model)  # 
+
+history = report.history  # DataFrame of all evaluated configs
+sort(history, :measurement, rev=true)[1:5, :]  # top-5 configurations
+'''

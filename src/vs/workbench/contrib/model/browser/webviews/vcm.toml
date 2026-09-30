@@ -1,0 +1,214 @@
+# GARCH-Type Models Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/vcm.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "GARCH-Type Models"
+viewType = "pollis.vcm"
+defaultModel = "garch"
+
+[[packages]]
+name = "ARCHModels.jl"
+github = "https://github.com/s-broda/ARCHModels.jl"
+
+[requires]
+packages = ["ARCHModels.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "GARCH Modelling"
+file = "vcm/tutorial-01-garch.ipynb"
+bundled = true
+description = "Univariate GARCH, EGARCH and GJR-GARCH volatility models"
+
+[[notebookSections.notebooks]]
+name = "Multivariate GARCH (DCC)"
+file = "vcm/tutorial-02-dcc.ipynb"
+bundled = true
+description = "Dynamic conditional correlation modelling"
+
+[[notebookSections.notebooks]]
+name = "Volatility Forecasting"
+file = "vcm/tutorial-03-forecast.ipynb"
+bundled = true
+description = "Multi-step volatility forecasting and model comparison"
+
+[[notebookSections.notebooks]]
+name = "Value-at-Risk"
+file = "vcm/tutorial-04-var.ipynb"
+bundled = true
+description = "Measuring Value-at-Risk when returns are not i.i.d."
+
+[[wikis]]
+name = "Overview"
+file = "vcm/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Factsheet"
+file = "vcm/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "vcm/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "vcm/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "vcm/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "vcm/decision-guide.md"
+bundled = true
+
+[[wikis]]
+name = "Comparison of Time-Varying Volatility Models"
+file = "tvm/Time-VaryingVolatilityModels.md"
+bundled = true
+
+[[models]]
+id = "garch"
+label = "GARCH"
+
+[[models]]
+id = "egarch"
+label = "EGARCH"
+
+[[models]]
+id = "gjr"
+label = "GJR-GARCH"
+
+[[models]]
+id = "dcc"
+label = "DCC"
+
+[[bullets]]
+text = "GARCH"
+detail = "standard autoregressive conditional heteroskedasticity"
+
+[[bullets]]
+text = "EGARCH"
+detail = "exponential GARCH with asymmetric leverage effect"
+
+[[bullets]]
+text = "GJR-GARCH"
+detail = "threshold GARCH with asymmetric shock response"
+
+[[bullets]]
+text = "DCC"
+detail = "dynamic conditional correlation for multivariate returns"
+
+[[inputs]]
+id = "p"
+label = "ARCH order p"
+tooltip = "ARCH order — number of lagged squared residuals in the variance equation. For DCC, applies to each inner GARCH volatility model. Default 1."
+default = "1"
+
+[[inputs]]
+id = "q"
+label = "GARCH order q"
+tooltip = "GARCH order — number of lagged conditional variances. Default 1."
+default = "1"
+
+[[inputs]]
+id = "o"
+models = ["egarch", "gjr"]
+label = "asymmetry o"
+tooltip = "Asymmetry order — number of leverage terms. Captures the tendency of negative shocks to increase volatility more than positive shocks of the same magnitude. Default 1."
+default = "1"
+
+[[inputs]]
+id = "dist"
+label = "distribution"
+tooltip = "Innovation distribution. For DCC, the same distribution is applied to all individual GARCH models uniformly."
+kind = "select"
+default = ""
+
+[[inputs.options]]
+value = "StdNormal"
+label = "Gaussian — N(0, 1)"
+
+[[inputs.options]]
+value = "StdT"
+label = "Student's t"
+
+[[inputs.options]]
+value = "StdGED"
+label = "GED — Generalised Error"
+
+[[inputs.options]]
+value = "StdSkewT"
+label = "Skewed Student's t"
+
+[[inputs]]
+id = "dcc-p"
+label = "DCC order p"
+tooltip = ""
+default = "1"
+models = ["dcc"]
+
+[[inputs]]
+id = "dcc-q"
+label = "DCC order q"
+tooltip = ""
+default = "1"
+models = ["dcc"]
+
+[[inputs]]
+id = "data"
+label = "data variable"
+tooltip = "Julia vector of log returns for univariate models, or a matrix with one asset per column for DCC."
+default = "returns"
+
+[[codeBranches]]
+model = "garch"
+code = '''
+using ARCHModels
+
+am = fit(GARCH{{{p}}, {{q}}}, {{data}}; dist={{dist}})  # fit GARCH({{p}}, {{q}})
+coeftable(am)  # estimated parameters
+vol = volatilities(am)  # conditional volatilities sigma_t
+predict(am, :volatility)  # one-step volatility forecast
+'''
+
+[[codeBranches]]
+model = "egarch"
+code = '''
+using ARCHModels
+
+am = fit(EGARCH{{{p}}, {{o}}, {{q}}}, {{data}}; dist={{dist}})  # fit EGARCH({{p}}, {{o}}, {{q}})
+coeftable(am)  # estimated parameters
+vol = volatilities(am)  # conditional volatilities sigma_t
+predict(am, :volatility)  # one-step volatility forecast
+'''
+
+[[codeBranches]]
+model = "gjr"
+code = '''
+using ARCHModels
+
+am = fit(GJR{{{p}}, {{o}}, {{q}}}, {{data}}; dist={{dist}})  # fit GJR-GARCH({{p}}, {{o}}, {{q}})
+coeftable(am)  # estimated parameters
+vol = volatilities(am)  # conditional volatilities sigma_t
+predict(am, :volatility)  # one-step volatility forecast
+'''
+
+[[codeBranches]]
+model = "dcc"
+code = '''
+using ARCHModels
+
+am = fit(DCC{{{dcc-p}}, {{dcc-q}}}(GARCH{{{p}}, {{q}}}), {{data}}; dist={{dist}})  # fit DCC({{dcc-p}}, {{dcc-q}})-GARCH({{p}}, {{q}})
+coeftable(am)  # estimated parameters
+'''

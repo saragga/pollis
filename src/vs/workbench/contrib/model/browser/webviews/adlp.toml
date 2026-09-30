@@ -1,0 +1,273 @@
+# AD Log-Likelihood Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/adlp.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "AD Log-Likelihood"
+viewType = "pollis.adlp"
+defaultModel = "dist"
+
+[[packages]]
+name = "DistributionsAD.jl"
+github = "https://github.com/TuringLang/DistributionsAD.jl"
+
+[requires]
+packages = ["DistributionsAD.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Distribution Estimation via AD"
+file = "adlp/tutorial-01-distribution.ipynb"
+bundled = true
+description = "Estimating distribution parameters using automatic differentiation of the log-likelihood"
+
+[[notebookSections.notebooks]]
+name = "Linear Regression via AD"
+file = "adlp/tutorial-02-linear.ipynb"
+bundled = true
+description = "Bayesian and MLE linear regression using differentiable log-likelihood"
+
+[[notebookSections.notebooks]]
+name = "Logistic Regression via AD"
+file = "adlp/tutorial-03-logistic.ipynb"
+bundled = true
+description = "Binary classification via differentiable cross-entropy / log-likelihood"
+
+[[wikis]]
+name = "Overview"
+file = "adlp/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Automatic Differentiation"
+file = "adlp/autodiff.md"
+bundled = true
+
+[[wikis]]
+name = "ChainRules Integration"
+file = "adlp/chainrules.md"
+bundled = true
+
+[[wikis]]
+name = "Zygote Backend"
+file = "adlp/zygote.md"
+bundled = true
+
+[[wikis]]
+name = "ForwardDiff Backend"
+file = "adlp/forwarddiff.md"
+bundled = true
+
+[[wikis]]
+name = "Distribution Estimation"
+file = "adlp/distribution-estimation.md"
+bundled = true
+
+[[wikis]]
+name = "Unconstrained Optimisation"
+file = "adlp/unconstrained.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Original Papers (from packages)"
+
+[[references]]
+title = "Automatic Differentiation in Machine Learning: a Survey"
+authors = "Baydin, A.G., Pearlmutter, B.A., Radul, A.A. & Siskind, J.M."
+year = 2018
+journal = ""
+url = "https://jmlr.org/papers/v18/17-468.html"
+openAccess = true
+
+[[references]]
+title = "Zygote: a Differentiable Programming System to Bridge Machine Learning and Scientific Computing"
+authors = "Innes, M. et al."
+year = 2019
+journal = ""
+url = "https://arxiv.org/abs/1907.07587"
+openAccess = true
+
+[[references]]
+title = "Forward-Mode Automatic Differentiation in Julia"
+authors = "Revels, J., Lubin, M. & Papamarkou, T."
+year = 2016
+journal = ""
+url = "https://arxiv.org/abs/1607.07892"
+openAccess = true
+
+[[models]]
+id = "dist"
+label = "Distribution"
+
+[[models]]
+id = "lr"
+label = "Linear Regression"
+
+[[models]]
+id = "logr"
+label = "Logistic Regression"
+
+[[bullets]]
+text = "Automatic differentiation of log-likelihoods via DistributionsAD.jl"
+detail = "provides ChainRules.jl adjoint rules for Distributions"
+
+[[bullets]]
+text = "Compatible with Zygote.jl (reverse-mode) and ForwardDiff.jl (forward-mode) AD backends"
+detail = ""
+
+[[bullets]]
+text = "Enables gradient-based MLE and integration with HMC/NUTS samplers in Turing.jl"
+detail = ""
+
+[[bullets]]
+text = "Unconstrained parameterisation"
+detail = "positive parameters are mapped through exp(·) so the optimiser operates on all of ℝ"
+
+[[inputs]]
+id = "backend-select"
+label = "AD Backend"
+tooltip = ""
+kind = "select"
+default = "zygote"
+
+[[inputs.options]]
+value = "zygote"
+label = "Zygote"
+
+[[inputs.options]]
+value = "forwarddiff"
+label = "ForwardDiff"
+
+[[inputs]]
+id = "dist-select"
+label = "Distribution"
+tooltip = ""
+kind = "select"
+default = "Normal"
+models = ["dist"]
+
+[[inputs.options]]
+value = "Normal"
+label = "Normal"
+
+[[inputs.options]]
+value = "LogNormal"
+label = "LogNormal"
+
+[[inputs.options]]
+value = "Gamma"
+label = "Gamma"
+
+[[inputs.options]]
+value = "Beta"
+label = "Beta"
+
+[[inputs.options]]
+value = "Exponential"
+label = "Exponential"
+
+[[inputs]]
+id = "dist-data"
+label = "Data (y)"
+tooltip = ""
+default = "y"
+models = ["dist"]
+
+[[inputs]]
+id = "p1"
+label = "Initial p[1]"
+tooltip = "Normal, LogNormal: initial mu. Gamma, Beta: initial log_alpha. Exponential: initial log_theta."
+default = "0.0"
+models = ["dist"]
+
+[[inputs]]
+id = "p2"
+label = "Initial p[2]"
+tooltip = "Normal, LogNormal: initial log_sigma. Gamma: initial log_theta. Beta: initial log_beta."
+default = "0.0"
+models = ["dist"]
+when = "dist-select!=Exponential"
+
+[[inputs]]
+id = "reg-X"
+label = "Design Matrix (X)"
+tooltip = ""
+default = "X"
+models = ["lr", "logr"]
+
+[[inputs]]
+id = "reg-y"
+label = "Response (y)"
+tooltip = "Response vector. Binary (0/1) for logistic regression."
+default = "y"
+models = ["lr", "logr"]
+
+[[codeBranches]]
+model = "dist"
+code = '''
+{{?backend-select=zygote}} using DistributionsAD, Zygote, Optim
+{{?backend-select=forwarddiff}} using DistributionsAD, ForwardDiff, Optim
+
+function negloglik(p)
+{{?dist-select!=Exponential}}     d = {{dist-select}}(exp(p[1]), exp(p[2]))  # {{dist-select}} with exp-transformed parameters
+{{?dist-select=Exponential}}     d = Exponential(exp(p[1]))  # Exponential with exp-transformed parameters
+    -sum(logpdf.(d, {{dist-data}}))  # negative log-likelihood
+end
+
+{{?dist-select!=Exponential}} p0      = [{{p1}}, {{p2}}]  # initial parameters (unconstrained)
+{{?dist-select=Exponential}} p0      = [{{p1}}]  # initial parameters (unconstrained)
+{{?backend-select=zygote}} res     = optimize(negloglik, Zygote.gradient, p0, LBFGS())  # L-BFGS with Zygote gradient
+{{?backend-select=forwarddiff}} res     = optimize(negloglik, p0, LBFGS(); autodiff = :forward)  # L-BFGS with ForwardDiff
+p_hat   = Optim.minimizer(res)  # optimal unconstrained parameters
+
+{{?dist-select=Normal|LogNormal}} mu_hat    = p_hat[1]  # MLE mean
+{{?dist-select=Normal|LogNormal}} sigma_hat = exp(p_hat[2])  # MLE std dev (back-transformed)
+{{?dist-select=Gamma|Beta}} alpha_hat = exp(p_hat[1])  # MLE shape (back-transformed)
+{{?dist-select=Gamma|Beta}} theta_hat = exp(p_hat[2])  # MLE scale (back-transformed)
+{{?dist-select=Exponential}} theta_hat = exp(p_hat[1])  # MLE mean (back-transformed)
+'''
+
+[[codeBranches]]
+model = "lr"
+code = '''
+{{?backend-select=zygote}} using DistributionsAD, Zygote, Optim
+{{?backend-select=forwarddiff}} using DistributionsAD, ForwardDiff, Optim
+
+function negloglik(p)
+    beta  = p[1:end-1]  # regression coefficients
+    sigma = exp(p[end])  # noise std (exp ensures positivity)
+    mu    = {{reg-X}} * beta  # predicted means
+    -sum(logpdf.(Normal.(mu, sigma), {{reg-y}}))  # normal log-likelihood
+end
+
+p0        = zeros(size({{reg-X}}, 2) + 1)  # initial params: [beta; log_sigma]
+{{?backend-select=zygote}} res       = optimize(negloglik, Zygote.gradient, p0, LBFGS())  # L-BFGS with Zygote gradient
+{{?backend-select=forwarddiff}} res       = optimize(negloglik, p0, LBFGS(); autodiff = :forward)  # L-BFGS with ForwardDiff
+p_hat     = Optim.minimizer(res)  # optimal parameters
+
+beta_hat  = p_hat[1:end-1]  # MLE coefficients
+sigma_hat = exp(p_hat[end])  # MLE noise std (back-transformed)
+'''
+
+[[codeBranches]]
+model = "logr"
+code = '''
+{{?backend-select=zygote}} using DistributionsAD, Zygote, Optim
+{{?backend-select=forwarddiff}} using DistributionsAD, ForwardDiff, Optim
+
+sigmoid(z) = 1 / (1 + exp(-z))
+
+function negloglik(p)
+    prob = sigmoid.({{reg-X}} * p)  # predicted probabilities
+    -sum(logpdf.(Bernoulli.(prob), {{reg-y}}))  # Bernoulli log-likelihood
+end
+
+p0       = zeros(size({{reg-X}}, 2))  # initial coefficients
+{{?backend-select=zygote}} res      = optimize(negloglik, Zygote.gradient, p0, LBFGS())  # L-BFGS with Zygote gradient
+{{?backend-select=forwarddiff}} res      = optimize(negloglik, p0, LBFGS(); autodiff = :forward)  # L-BFGS with ForwardDiff
+beta_hat = Optim.minimizer(res)  # MLE log-odds coefficients
+'''

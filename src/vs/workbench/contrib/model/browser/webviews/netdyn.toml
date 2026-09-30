@@ -1,0 +1,504 @@
+# Network Dynamics Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/netdyn.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Network Dynamics"
+viewType = "pollis.netdyn"
+defaultModel = "kuramoto"
+
+[[packages]]
+name = "NetworkDynamics.jl"
+github = "https://juliadynamics.github.io/NetworkDynamics.jl/dev/"
+
+[[packages]]
+name = "Graphs.jl"
+github = "https://juliagraphs.org/Graphs.jl/stable/"
+
+[requires]
+packages = ["NetworkDynamics.jl", "Graphs.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Kuramoto Oscillators"
+file = "netdyn/tutorial-01-kuramoto.ipynb"
+bundled = true
+description = "Simulate coupled phase oscillators on a network and measure synchronisation as coupling strength increases"
+
+[[notebookSections.notebooks]]
+name = "Cascade Failures"
+file = "netdyn/tutorial-02-cascade.ipynb"
+bundled = true
+description = "Trigger load-redistribution cascades and study how network topology determines systemic fragility"
+
+[[wikis]]
+name = "Factsheet"
+file = "netdyn/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "netdyn/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "netdyn/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "netdyn/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "netdyn/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "netdyn/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Models"
+
+[[wikis]]
+name = "Kuramoto Oscillators"
+file = "netdyn/kuramoto.md"
+bundled = true
+
+[[wikis]]
+name = "Cascade Failures"
+file = "netdyn/cascade.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "NetworkDynamics.jl: Composing and Simulating Complex Networks in Julia"
+authors = "Lindner, Michael; Lincoln, Lucas; Drauschke, Franziska; Koulen, Julia M.; Wurfel, Hans; Plietzsch, Anton; Hellmann, Frank"
+year = 2021
+journal = "Chaos"
+doi = "10.1063/5.0051387"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Networks: An Introduction"
+authors = "Newman, Mark E. J."
+year = 2010
+journal = "Oxford University Press"
+openAccess = false
+
+[[references]]
+title = "Dynamical Processes on Complex Networks"
+authors = "Barrat, Alain; Barthelemy, Marc; Vespignani, Alessandro"
+year = 2008
+journal = "Cambridge University Press"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Chemical Oscillations, Waves, and Turbulence"
+authors = "Kuramoto, Yoshiki"
+year = 1984
+journal = "Springer"
+openAccess = false
+
+[[references]]
+title = "Cascade-based Attacks on Complex Networks"
+authors = "Motter, Adilson E.; Lai, Ying-Cheng"
+year = 2002
+journal = "Physical Review E"
+doi = "10.1103/PhysRevE.66.065102"
+openAccess = false
+
+[[models]]
+id = "kuramoto"
+label = "Kuramoto"
+
+[[models]]
+id = "cascade"
+label = "Cascade"
+
+[[bullets]]
+text = "Kuramoto Oscillators"
+detail = "couple phase oscillators on a graph with coupling strength K and track synchronisation as the order parameter r approaches 1"
+
+[[bullets]]
+text = "Cascade Failures"
+detail = "trigger load-redistribution failure cascades and measure the fraction of nodes that fail under different network topologies"
+
+[[inputs]]
+id = "N"
+label = "N (nodes)"
+tooltip = "Number of nodes in the Barabasi-Albert network. Larger networks show smoother synchronisation transitions but increase computation time."
+default = "100"
+
+[[inputs]]
+id = "T"
+label = "T (time)"
+tooltip = "Integration time for Kuramoto dynamics. Use longer T to observe whether synchronisation persists. Not used by the discrete cascade model."
+default = "50"
+
+[[inputs]]
+id = "beta"
+label = "K (coupling)"
+tooltip = "Coupling strength for Kuramoto oscillators: controls how strongly neighbours pull each other toward phase alignment. Above the critical K_c, global synchronisation emerges. Not used by the cascade model."
+default = "0.3"
+
+[[inputs]]
+id = "gamma"
+label = "sigma (freq.)"
+tooltip = "Standard deviation of the Gaussian natural frequency distribution. Higher sigma means greater frequency diversity, requiring stronger K to synchronise. Not used by the cascade model."
+default = "0.1"
+
+[[codeBranches]]
+model = "kuramoto"
+code = '''
+using Graphs, NetworkDynamics, OrdinaryDiffEq, Statistics, LinearAlgebra
+
+g     = barabasi_albert({{N}}, 3)  # underlying network
+omega = randn({{N}}) .* {{gamma}}  # natural frequencies (spread = sigma)
+
+function kura_vertex!(dv, v, edges, p, t)
+    idx = round(Int, p[1])
+    K   = p[2]
+    dv[1] = omega[idx] + K * sum(e[1] for e in edges; init=0.0)
+end
+function kura_edge!(de, e, v_src, v_dst, p, t)
+    de[1] = sin(v_dst[1] - v_src[1])  # phase coupling
+end
+
+vf  = VertexModel(f=kura_vertex!, dim=1, sym=[:theta], pdim=2, psym=[:idx,:K])
+ef  = EdgeModel(f=kura_edge!, dim=1, coupling=AntiSymmetric())
+nd  = Network(g, vf, ef)
+
+u0  = 2pi .* rand({{N}})  # random initial phases
+p   = [(float(i), {{beta}}) for i in 1:{{N}}]  # per-node params: (index, K)
+sol = solve(ODEProblem(nd, u0, (0.0, {{T}}), p), Tsit5())
+
+r = abs(mean(exp.(im .* sol[end])))  # order parameter r at final time
+println("Order parameter r: ", round(r; digits=3), "  (0=incoherent, 1=locked)")  # synchronisation result
+'''
+
+[[codeBranches]]
+model = "cascade"
+code = '''
+using Graphs, Statistics
+
+g          = barabasi_albert({{N}}, 3)  # scale-free network
+loads      = rand({{N}}) .* 0.8  # initial loads in [0, 0.8]
+capacities = ones({{N}})  # unit capacity at each node
+failed     = Set{Int}()
+queue      = collect(findall(loads .> capacities))  # nodes that fail at t=0
+union!(failed, queue)
+
+while !isempty(queue)
+    v    = popfirst!(queue)
+    nbrs = [u for u in neighbors(g, v) if !(u in failed)]
+    isempty(nbrs) && continue
+    share = loads[v] / length(nbrs)
+    for u in nbrs
+        loads[u] += share
+        if loads[u] > capacities[u]
+            push!(failed, u); push!(queue, u)
+        end
+    end
+    loads[v] = 0.0
+end
+
+println("Nodes failed:    ", length(failed), " / ", {{N}})  # cascade size
+println("Fraction failed: ", round(length(failed) / {{N}}; digits=3))  # systemic loss
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "order-parameter"
+label = "Order Parameter"
+desc = "Plot the Kuramoto synchronisation order parameter r(t) over time to observe the transition to coherence"
+code = '''
+using Graphs, NetworkDynamics, OrdinaryDiffEq, Statistics, GLMakie
+
+g=barabasi_albert({{N}},3); omega=randn({{N}}).*{{gamma}}
+function kv!(dv,v,edges,p,t); dv[1]=omega[round(Int,p[1])]+p[2]*sum(e[1] for e in edges;init=0.0); end
+function ke!(de,e,s,d,p,t); de[1]=sin(d[1]-s[1]); end
+vf=VertexModel(f=kv!,dim=1,sym=[:theta],pdim=2,psym=[:idx,:K]); ef=EdgeModel(f=ke!,dim=1,coupling=AntiSymmetric())
+nd=Network(g,vf,ef); u0=2pi.*rand({{N}}); p=[(float(i),{{beta}}) for i in 1:{{N}}]
+sol=solve(ODEProblem(nd,u0,(0.0,{{T}}),p),Tsit5())
+
+r_t = [abs(mean(exp.(im.*sol(t)))) for t in sol.t]  # order parameter over time
+fig,ax=Figure(),Axis(fig[1,1],xlabel="Time",ylabel="r",title="Kuramoto Order Parameter",limits=(nothing,(0,1)))
+lines!(ax, sol.t, r_t, color=:purple)
+hlines!(ax, [1.0], linestyle=:dash, color=:gray)
+display(fig)
+'''
+
+[[actionGroups.actions]]
+id = "cascade-distribution"
+label = "Cascade Distribution"
+desc = "Run 200 cascade trials and plot the histogram of final failure fractions across random load initialisations"
+code = '''
+using Graphs, Statistics, GLMakie
+
+g = barabasi_albert({{N}}, 3)  # scale-free network
+sizes = Float64[]  # failure fractions
+
+for _ in 1:200
+    loads = rand({{N}}) .* 0.8; caps = ones({{N}}); failed = Set{Int}()
+    queue = collect(findall(loads .> caps)); union!(failed, queue)
+    while !isempty(queue)
+        v=popfirst!(queue); nbrs=[u for u in neighbors(g,v) if !(u in failed)]
+        isempty(nbrs) && continue; share=loads[v]/length(nbrs)
+        for u in nbrs; loads[u]+=share; loads[u]>caps[u] && (push!(failed,u); push!(queue,u)); end
+        loads[v]=0.0
+    end
+    push!(sizes, length(failed)/{{N}})
+end
+
+fig,ax=Figure(),Axis(fig[1,1],xlabel="Fraction failed",ylabel="Count",title="Cascade Size Distribution")
+hist!(ax, sizes, bins=20, color=:red, strokewidth=1)
+display(fig)
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "critical-coupling"
+label = "Critical Coupling"
+desc = "Estimate the critical coupling K_c from the algebraic connectivity of the network and compare with the current K"
+code = '''
+using Graphs, LinearAlgebra, Statistics
+
+g      = barabasi_albert({{N}}, 3)  # contact network
+omega  = randn({{N}}) .* {{gamma}}  # natural frequencies
+L      = Float64.(Matrix(laplacian_matrix(g)))  # dense Laplacian
+lambda2 = sort(eigvals(L))[2]  # algebraic connectivity (Fiedler value)
+
+K_c = 2 * std(omega) / lambda2  # estimated critical coupling
+
+println("Algebraic connectivity lambda_2: ", round(lambda2; digits=4))
+println("Estimated K_c:                   ", round(K_c; digits=4))
+println("Current K:                       ", {{beta}})
+println("Status: K ", {{beta}} > K_c ? "above" : "below", " critical coupling")  # synchronisation verdict
+'''
+
+[[actionGroups.actions]]
+id = "cascade-size"
+label = "Cascade Size Distribution"
+desc = "Run 200 cascade simulations and report mean, median and maximum failure fraction across random load seeds"
+code = '''
+using Graphs, Statistics
+
+g = barabasi_albert({{N}}, 3)  # contact network
+sizes = Float64[]  # store cascade sizes
+
+for _ in 1:200
+    loads = rand({{N}}) .* 0.8; caps = ones({{N}}); failed = Set{Int}()
+    queue = collect(findall(loads .> caps)); union!(failed, queue)
+    while !isempty(queue)
+        v=popfirst!(queue); nbrs=[u for u in neighbors(g,v) if !(u in failed)]
+        isempty(nbrs) && continue; share=loads[v]/length(nbrs)
+        for u in nbrs; loads[u]+=share; loads[u]>caps[u] && (push!(failed,u); push!(queue,u)); end
+        loads[v]=0.0
+    end
+    push!(sizes, length(failed)/{{N}})
+end
+
+println("Mean fraction failed:   ", round(mean(sizes); digits=3))  # expected cascade size
+println("Median fraction failed: ", round(median(sizes); digits=3))  # typical outcome
+println("Max fraction failed:    ", round(maximum(sizes); digits=3))  # worst case
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "coupling-sweep"
+label = "Coupling Sweep"
+desc = "Sweep coupling strength K and plot the final order parameter r to locate the synchronisation transition"
+code = '''
+using Graphs, NetworkDynamics, OrdinaryDiffEq, Statistics, GLMakie
+
+g     = barabasi_albert({{N}}, 3)  # fixed network topology
+omega = randn({{N}}) .* {{gamma}}  # fixed natural frequencies
+
+function kv!(dv,v,edges,p,t); dv[1]=omega[round(Int,p[1])]+p[2]*sum(e[1] for e in edges;init=0.0); end
+function ke!(de,e,s,d,p,t); de[1]=sin(d[1]-s[1]); end
+vf=VertexModel(f=kv!,dim=1,sym=[:theta],pdim=2,psym=[:idx,:K]); ef=EdgeModel(f=ke!,dim=1,coupling=AntiSymmetric())
+nd=Network(g,vf,ef)
+
+Ks     = 0.0:0.05:1.5  # coupling sweep range
+r_vals = Float64[]  # final order parameter per K
+for K_val in Ks
+    u0 = 2pi .* rand({{N}}); p = [(float(i), K_val) for i in 1:{{N}}]
+    sol = solve(ODEProblem(nd, u0, (0.0, {{T}}), p), Tsit5())
+    push!(r_vals, abs(mean(exp.(im .* sol[end]))))
+end
+
+fig,ax=Figure(),Axis(fig[1,1],xlabel="K (coupling)",ylabel="r (order parameter)",title="Synchronisation Transition",limits=(nothing,(0,1)))
+lines!(ax, collect(Ks), r_vals, color=:purple)
+hlines!(ax, [0.5], linestyle=:dash, color=:gray)
+display(fig)
+'''
+
+[[actionGroups.actions]]
+id = "load-sweep"
+label = "Load Threshold Sweep"
+desc = "Vary the initial load ceiling and plot mean cascade fraction to identify the critical load at which cascades become systemic"
+code = '''
+using Graphs, Statistics, GLMakie
+
+function cascade_frac(g, lmax, n=100)
+    N = nv(g); total = 0.0
+    for _ in 1:n
+        loads = rand(N) .* lmax; caps = ones(N)
+        failed = Set{Int}(); queue = collect(findall(loads .> caps)); union!(failed, queue)
+        while !isempty(queue)
+            v=popfirst!(queue); nbrs=[u for u in neighbors(g,v) if !(u in failed)]
+            isempty(nbrs) && continue; share=loads[v]/length(nbrs)
+            for u in nbrs; loads[u]+=share; loads[u]>caps[u] && (push!(failed,u);push!(queue,u)); end
+            loads[v]=0.0
+        end
+        total += length(failed) / N
+    end
+    total / n
+end
+
+g = barabasi_albert({{N}}, 3)  # scale-free network
+ceilings = 0.5:0.05:1.0  # sweep initial load ceiling
+fracs    = [cascade_frac(g, lmax) for lmax in ceilings]  # mean cascade per level
+
+fig,ax=Figure(),Axis(fig[1,1],xlabel="Initial load ceiling",ylabel="Mean fraction failed",title="Cascade Load Threshold")
+lines!(ax, collect(ceilings), fracs, color=:red)
+display(fig)
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "topology-sync"
+label = "Topology vs Sync"
+desc = "Compare algebraic connectivity and estimated critical coupling K_c across Erdos-Renyi, Barabasi-Albert and Small-World topologies"
+code = '''
+using Graphs, LinearAlgebra, Statistics
+
+sigma = {{gamma}}  # natural frequency spread
+graphs = [("Erdos-Renyi", erdos_renyi({{N}}, 6/{{N}})), ("Barabasi-Albert", barabasi_albert({{N}}, 3)), ("Small-World", watts_strogatz({{N}}, 6, 0.1))]  # topology list
+
+for (label, g) in graphs
+    L       = Float64.(Matrix(laplacian_matrix(g)))
+    lambda2 = sort(eigvals(L))[2]
+    K_c = 2 * sigma / lambda2  # estimated critical coupling
+    println(label, "  lambda_2=", round(lambda2;digits=3), "  K_c~=", round(K_c;digits=3))
+end
+'''
+
+[[actionGroups.actions]]
+id = "topology-cascade"
+label = "Topology vs Cascade"
+desc = "Compare mean cascade failure fractions on Erdos-Renyi and Barabasi-Albert networks with the same node count"
+code = '''
+using Graphs, Statistics
+
+function mean_cascade(g, n=200)
+    N = nv(g); total = 0.0
+    for _ in 1:n
+        loads=rand(N).*0.8; caps=ones(N); failed=Set{Int}()
+        queue=collect(findall(loads.>caps)); union!(failed,queue)
+        while !isempty(queue)
+            v=popfirst!(queue); nbrs=[u for u in neighbors(g,v) if !(u in failed)]
+            isempty(nbrs) && continue; share=loads[v]/length(nbrs)
+            for u in nbrs; loads[u]+=share; loads[u]>caps[u] && (push!(failed,u);push!(queue,u)); end
+            loads[v]=0.0
+        end
+        total += length(failed)/N
+    end
+    total/n
+end
+
+topologies = [("Erdos-Renyi", erdos_renyi({{N}}, 6/{{N}})), ("Barabasi-Albert", barabasi_albert({{N}}, 3))]  # two topologies
+for (label, g) in topologies
+    println(label, "  mean cascade: ", round(mean_cascade(g); digits=3))  # average fraction failed
+end
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "sync-state"
+label = "Synchronisation State"
+desc = "Run Kuramoto and interpret the order parameter r: incoherent, partially synchronised, or locked"
+code = '''
+using Graphs, NetworkDynamics, OrdinaryDiffEq, Statistics, LinearAlgebra
+
+g=barabasi_albert({{N}},3); omega=randn({{N}}).*{{gamma}}
+function kv!(dv,v,edges,p,t); dv[1]=omega[round(Int,p[1])]+p[2]*sum(e[1] for e in edges;init=0.0); end
+function ke!(de,e,s,d,p,t); de[1]=sin(d[1]-s[1]); end
+vf=VertexModel(f=kv!,dim=1,sym=[:theta],pdim=2,psym=[:idx,:K]); ef=EdgeModel(f=ke!,dim=1,coupling=AntiSymmetric())
+nd=Network(g,vf,ef); u0=2pi.*rand({{N}}); p=[(float(i),{{beta}}) for i in 1:{{N}}]
+sol=solve(ODEProblem(nd,u0,(0.0,{{T}}),p),Tsit5())
+
+r = abs(mean(exp.(im .* sol[end])))  # order parameter
+L = Float64.(Matrix(laplacian_matrix(g)))  # dense Laplacian
+lambda2 = sort(eigvals(L))[2]  # Fiedler value
+K_c = 2 * std(omega) / lambda2  # estimated critical coupling
+
+println("r = ", round(r;digits=3), "   K_c ~ ", round(K_c;digits=3))
+if r > 0.85
+    println("State: synchronised -- oscillators are globally phase-locked")  # K well above K_c
+elseif r > 0.4
+    println("State: partial sync -- coherent clusters are forming")  # near-critical regime
+else
+    println("State: incoherent -- K is likely below K_c")  # K below threshold
+end
+'''
+
+[[actionGroups.actions]]
+id = "cascade-resilience"
+label = "Cascade Resilience"
+desc = "Test which node removal triggers the largest cascade by targeting the five highest-betweenness hub nodes"
+code = '''
+using Graphs, Statistics
+
+g  = barabasi_albert({{N}}, 3)  # network
+bc = betweenness_centrality(g)  # betweenness centrality
+top5 = partialsortperm(bc, 1:5, rev=true)  # top-5 hub nodes
+
+for target in top5
+    loads = rand({{N}}).*0.8; caps=ones({{N}}); failed=Set{Int}()
+    push!(failed, target); loads[target]=caps[target]+1.0
+    queue=[target]
+    while !isempty(queue)
+        v=popfirst!(queue); nbrs=[u for u in neighbors(g,v) if !(u in failed)]
+        isempty(nbrs)&&continue; share=loads[v]/length(nbrs)
+        for u in nbrs; loads[u]+=share; loads[u]>caps[u]&&(push!(failed,u);push!(queue,u)); end
+        loads[v]=0.0
+    end
+    println("Node ", target, "  bc=", round(bc[target];digits=3), "  cascade=", round(length(failed)/{{N}};digits=3))  # cascade fraction
+end
+'''

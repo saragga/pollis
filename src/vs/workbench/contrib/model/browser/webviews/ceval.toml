@@ -1,0 +1,356 @@
+# Copula Evaluation Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/ceval.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Copula Evaluation"
+viewType = "pollis.ceval"
+defaultModel = "main"
+
+[[packages]]
+name = "Copulas.jl"
+github = "https://github.com/lrnv/Copulas.jl"
+
+[requires]
+packages = ["Copulas.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Elliptical Copulas"
+file = "copula/tutorial-01-elliptical.ipynb"
+bundled = true
+description = "Gaussian and Student-t copulas — correlation matrices, sampling, tail dependence"
+
+[[notebookSections.notebooks]]
+name = "Archimedean Copulas"
+file = "copula/tutorial-02-archimedean.ipynb"
+bundled = true
+description = "Clayton, Gumbel, Frank, and Joe copulas — generators, parameter estimation"
+
+[[notebookSections.notebooks]]
+name = "Extreme Value Copulas"
+file = "copula/tutorial-03-extreme-value.ipynb"
+bundled = true
+description = "Max-stable copulas — Gumbel–Hougaard, Galambos, and Pickands representation"
+
+[[notebookSections.notebooks]]
+name = "Dependence Measures"
+file = "copula/tutorial-04-dependence.ipynb"
+bundled = true
+description = "Kendall’s tau, Spearman’s rho, and upper/lower tail dependence coefficients"
+
+[[wikis]]
+name = "Overview"
+file = "copula/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Factsheet"
+file = "copula/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "copula/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "copula/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "copula/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "copula/decision-guide.md"
+bundled = true
+
+[[wikis]]
+name = "Elliptical Copulas"
+file = "copula/elliptical.md"
+bundled = true
+
+[[wikis]]
+name = "Archimedean Copulas"
+file = "copula/archimedean.md"
+bundled = true
+
+[[wikis]]
+name = "Extreme Value Copulas"
+file = "copula/extreme-value.md"
+bundled = true
+
+[[wikis]]
+name = "Marshall–Olkin Copulas"
+file = "copula/marshall-olkin.md"
+bundled = true
+
+[[wikis]]
+name = "Vine Copulas"
+file = "copula/vine.md"
+bundled = true
+
+[[wikis]]
+name = "Dependence Measures"
+file = "copula/dependence-measures.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Original Papers (from packages)"
+
+[[references]]
+title = "An Introduction to Copulas"
+authors = "Nelsen, R.B."
+year = 2006
+journal = ""
+url = "https://link.springer.com/book/10.1007/0-387-28678-0"
+openAccess = false
+
+[[references]]
+title = "Modeling Dependence with Copulas and Applications to Risk Management"
+authors = "Embrechts, P., McNeil, A. & Straumann, D."
+year = 2002
+journal = ""
+url = "https://people.math.ethz.ch/~embrecht/ftp/copchapter.pdf"
+openAccess = true
+
+[[references]]
+title = "Everything You Always Wanted to Know about Copula Modeling but Were Afraid to Ask"
+authors = "Genest, C. & Favre, A.-C."
+year = 2007
+journal = ""
+url = "https://doi.org/10.1061/(ASCE)1084-0699(2007)12:4(347)"
+openAccess = false
+
+[[bullets]]
+text = "Construction of a d-dimensional multivariate distribution through specification of the copula, marginal distributions, and associated parameters"
+detail = ""
+
+[[bullets]]
+text = "Evaluation of the copula's PDF c(u) and CDF C(u) at a specific point u ∈ [0,1]d"
+detail = ""
+
+[[bullets]]
+text = "Evaluation of the Sklar distribution's PDF f(x) and CDF F(x) with the chosen marginals at a specific point x ∈ ℝd"
+detail = ""
+
+[[inputs]]
+id = "family"
+label = "Copula"
+tooltip = ""
+kind = "select"
+default = "gaussian"
+
+[[inputs.options]]
+value = "gaussian"
+label = "Gaussian"
+
+[[inputs.options]]
+value = "studentt"
+label = "Student's t"
+
+[[inputs.options]]
+value = "gumbel"
+label = "Gumbel"
+
+[[inputs.options]]
+value = "clayton"
+label = "Clayton"
+
+[[inputs.options]]
+value = "frank"
+label = "Frank"
+
+[[inputs.options]]
+value = "joe"
+label = "Joe"
+
+[[inputs.options]]
+value = "amh"
+label = "AMH"
+
+[[inputs.options]]
+value = "bb1"
+label = "BB1"
+
+[[inputs.options]]
+value = "galambos"
+label = "Galambos"
+
+[[inputs.options]]
+value = "husler"
+label = "Hüsler–Reiss"
+
+[[inputs.options]]
+value = "tev"
+label = "tEV"
+
+[[inputs.options]]
+value = "mo"
+label = "Marshall–Olkin"
+
+[[inputs.options]]
+value = "empirical"
+label = "Unsmoothed Empirical"
+
+[[inputs.options]]
+value = "beta-emp"
+label = "Beta Smoothed"
+
+[[inputs.options]]
+value = "bernstein"
+label = "Bernstein"
+
+[[inputs.options]]
+value = "checkerboard"
+label = "Checkerboard"
+
+[[inputs.options]]
+value = "empirical-ev"
+label = "Empirical EV"
+
+[[inputs.options]]
+value = "upper-frechet"
+label = "M — Upper Fréchet"
+
+[[inputs.options]]
+value = "independence"
+label = "Pi — Independence"
+
+[[inputs.options]]
+value = "lower-frechet"
+label = "W — Lower Fréchet"
+
+[[inputs]]
+id = "dim"
+label = "Dimension (d)"
+tooltip = "Dimension d — number of marginal variables modelled jointly. Must be an integer >= 2. For Elliptical and Archimedean copulas any d >= 2 is supported; bivariate-only families (Galambos, Hüsler–Reiss, tEV, Marshall–Olkin, W) are fixed at d = 2."
+default = "2"
+when = "family!=galambos|husler|tev|mo|lower-frechet"
+
+[[inputs]]
+id = "rho"
+label = "Correlation (rho)"
+tooltip = ""
+default = "0.5"
+when = "family=gaussian|studentt|tev"
+
+[[inputs]]
+id = "theta"
+label = "Dependence (theta)"
+tooltip = ""
+default = "2.0"
+when = "family=gumbel|clayton|frank|joe|amh|bb1|galambos|husler"
+
+[[inputs]]
+id = "nu"
+label = "Deg. of Freedom (nu)"
+tooltip = "Degrees of freedom nu > 0. For Student-t: lower values give heavier tails; as nu -> infinity it converges to Gaussian. For tEV: same parameter governs the extreme-value tail; lower nu increases tail dependence."
+default = "4"
+when = "family=studentt|tev"
+
+[[inputs]]
+id = "data"
+label = "Data"
+tooltip = ""
+default = "data"
+when = "family=empirical|beta-emp|bernstein|checkerboard|empirical-ev"
+
+[[inputs]]
+id = "delta"
+label = "delta (shape)"
+tooltip = "Second shape parameter delta for the BB1 copula (Joe–Clayton nesting). delta >= 1 controls the lower tail dependence strength independently of theta. BB1 nests Clayton (theta -> 0) and Gumbel (delta = 1) as special cases."
+default = "2.0"
+when = "family=bb1"
+
+[[inputs]]
+id = "lambda1"
+label = "lambda1"
+tooltip = ""
+default = "1.0"
+when = "family=mo"
+
+[[inputs]]
+id = "lambda2"
+label = "lambda2"
+tooltip = ""
+default = "1.0"
+when = "family=mo"
+
+[[inputs]]
+id = "lambda12"
+label = "lambda12"
+tooltip = ""
+default = "0.5"
+when = "family=mo"
+
+[[inputs]]
+id = "marginals"
+label = "Marginal Distributions"
+tooltip = "One marginal distribution per variable, comma-separated (one entry per dimension d). Choices: Normal, Uniform, LogNormal, Exponential, Beta, Gamma, Weibull, Pareto, TDist, Cauchy, Laplace, Gumbel, Frechet, GeneralizedExtremeValue, Poisson, NegativeBinomial."
+default = "Normal(0.0, 1.0), Normal(0.0, 1.0)"
+when = "family!=empirical|beta-emp|bernstein|checkerboard|empirical-ev"
+
+[[inputs]]
+id = "u"
+label = "Evaluation Point u in [0,1]^d"
+tooltip = "Comma-separated, one coordinate per dimension."
+default = "0.5, 0.5"
+when = "family=empirical|beta-emp|bernstein|checkerboard|empirical-ev"
+
+[[inputs]]
+id = "point"
+label = "Evaluation Point x"
+tooltip = "Comma-separated, one coordinate per marginal."
+default = "0.0, 0.0"
+when = "family!=empirical|beta-emp|bernstein|checkerboard|empirical-ev"
+
+[[codeBranches]]
+model = "main"
+code = '''
+{{?family=empirical|beta-emp|bernstein|checkerboard|empirical-ev}} using Copulas
+{{?family=gaussian|studentt}} using Copulas, Distributions, LinearAlgebra
+{{?family!=empirical|beta-emp|bernstein|checkerboard|empirical-ev|gaussian|studentt}} using Copulas, Distributions
+
+{{?family=gaussian|studentt}} Sigma = {{rho}} .* ones({{dim}}, {{dim}}) + (1 - {{rho}}) .* I({{dim}})  # equicorrelation matrix
+{{?family=gaussian}} C = GaussianCopula({{dim}}, Sigma)  # Gaussian copula
+{{?family=studentt}} C = TCopula({{nu}}, Sigma)  # Student's t copula
+{{?family=gumbel}} C = GumbelCopula({{dim}}, {{theta}})  # Gumbel copula (theta >= 1)
+{{?family=clayton}} C = ClaytonCopula({{dim}}, {{theta}})  # Clayton copula (theta > 0)
+{{?family=frank}} C = FrankCopula({{dim}}, {{theta}})  # Frank copula (theta != 0)
+{{?family=joe}} C = JoeCopula({{dim}}, {{theta}})  # Joe copula (theta >= 1)
+{{?family=amh}} C = AMHCopula({{dim}}, {{theta}})  # AMH copula (theta in [-1, 1))
+{{?family=bb1}} C = BB1Copula({{dim}}, {{theta}}, {{delta}})  # BB1 copula (theta > 0, delta >= 1)
+{{?family=galambos}} C = GalambosCopula({{theta}})  # Galambos copula (theta > 0), bivariate
+{{?family=husler}} C = HuslerReissCopula({{theta}})  # Hüsler–Reiss copula, bivariate
+{{?family=tev}} C = TEVCopula({{nu}}, {{rho}})  # extreme-t copula, bivariate
+{{?family=mo}} C = MarshallOlkinCopula(2, [{{lambda1}}, {{lambda2}}, {{lambda12}}])  # Marshall–Olkin copula, bivariate
+{{?family=empirical}} C = EmpiricalCopula({{data}})  # unsmoothed empirical copula
+{{?family=beta-emp}} C = BetaCopula({{data}})  # beta-smoothed empirical copula
+{{?family=bernstein}} C = BernsteinCopula({{data}})  # Bernstein polynomial copula
+{{?family=checkerboard}} C = CheckerboardCopula({{data}})  # checkerboard copula
+{{?family=empirical-ev}} C = EmpiricalEVCopula({{data}})  # empirical extreme-value copula
+{{?family=upper-frechet}} C = MCopula({{dim}})  # upper Fréchet bound (comonotonicity)
+{{?family=independence}} C = IndependenceCopula({{dim}})  # independence copula Pi
+{{?family=lower-frechet}} C = WCopula()  # lower Fréchet bound, d = 2 only
+
+{{?family!=empirical|beta-emp|bernstein|checkerboard|empirical-ev}} margs = ({{marginals}},)  # marginal distributions
+{{?family!=empirical|beta-emp|bernstein|checkerboard|empirical-ev}} D = SklarDist(C, margs)  # multivariate Sklar distribution
+
+{{?family=empirical|beta-emp|bernstein|checkerboard|empirical-ev}} u = [{{u}}]  # evaluation point u in [0,1]^d
+{{?family!=empirical|beta-emp|bernstein|checkerboard|empirical-ev}} point = [{{point}}]  # evaluation point x in R^d
+{{?family!=empirical|beta-emp|bernstein|checkerboard|empirical-ev}} u = [cdf(m, x) for (m, x) in zip(margs, point)]  # probability integral transform u in [0,1]^d
+
+println("Copula PDF  c(u) = ", pdf(C, u))
+println("Copula CDF  C(u) = ", cdf(C, u))
+{{?family!=empirical|beta-emp|bernstein|checkerboard|empirical-ev}} println("Joint  PDF  f(x) = ", pdf(D, point))
+{{?family!=empirical|beta-emp|bernstein|checkerboard|empirical-ev}} println("Joint  CDF  F(x) = ", cdf(D, point))
+'''

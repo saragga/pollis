@@ -1,0 +1,490 @@
+# Network Analysis Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/net.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Network Analysis"
+viewType = "pollis.net"
+defaultModel = "erdos"
+
+[[packages]]
+name = "Graphs.jl"
+github = "https://juliagraphs.org/Graphs.jl/stable/"
+
+[[packages]]
+name = "MetaGraphsNext.jl"
+github = "https://github.com/JuliaGraphs/MetaGraphsNext.jl"
+
+[requires]
+packages = ["Graphs.jl", "MetaGraphsNext.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Erdos-Renyi Random Graph"
+file = "net/tutorial-01-erdos-renyi.ipynb"
+bundled = true
+description = "Generate and analyse Erdos-Renyi random graphs and study how connectivity emerges with edge probability"
+
+[[notebookSections.notebooks]]
+name = "Scale-Free Networks"
+file = "net/tutorial-02-scale-free.ipynb"
+bundled = true
+description = "Build Barabasi-Albert preferential attachment networks and measure their heavy-tailed degree distributions"
+
+[[notebookSections.notebooks]]
+name = "Small-World Networks"
+file = "net/tutorial-03-small-world.ipynb"
+bundled = true
+description = "Construct Watts-Strogatz small-world graphs and quantify the clustering-path-length trade-off"
+
+[[notebookSections.notebooks]]
+name = "Attributed Graphs"
+file = "net/tutorial-04-metagraphs.ipynb"
+bundled = true
+description = "Attach typed vertex and edge metadata with MetaGraphsNext.jl and query graphs by attribute"
+
+[[wikis]]
+name = "Factsheet"
+file = "net/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "net/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "net/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "net/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "net/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "net/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Graph Types"
+
+[[wikis]]
+name = "Erdos-Renyi"
+file = "net/erdos-renyi.md"
+bundled = true
+
+[[wikis]]
+name = "Scale-Free"
+file = "net/scale-free.md"
+bundled = true
+
+[[wikis]]
+name = "Small-World"
+file = "net/small-world.md"
+bundled = true
+
+[[wikis]]
+name = "Attributed Graphs"
+file = "net/metagraphs.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Graphs.jl: a General-Purpose Graph Library for the Julia Programming Language"
+authors = "Bromberger, Seth; Fairbanks, James; contributors"
+year = 2017
+journal = "JuliaCon Proceedings"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Networks: An Introduction"
+authors = "Newman, Mark E. J."
+year = 2010
+journal = "Oxford University Press"
+openAccess = false
+
+[[references]]
+title = "Network Science"
+authors = "Barabasi, Albert-Laszlo"
+year = 2016
+journal = "Cambridge University Press"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "On the Evolution of Random Graphs"
+authors = "Erdos, Paul; Renyi, Alfred"
+year = 1960
+journal = "Publications of the Mathematical Institute of the Hungarian Academy of Sciences"
+openAccess = false
+
+[[references]]
+title = "Emergence of Scaling in Random Networks"
+authors = "Barabasi, Albert-Laszlo; Albert, Reka"
+year = 1999
+journal = "Science"
+doi = "10.1126/science.286.5439.509"
+openAccess = false
+
+[[references]]
+title = "Collective Dynamics of Small-World Networks"
+authors = "Watts, Duncan J.; Strogatz, Steven H."
+year = 1998
+journal = "Nature"
+doi = "10.1038/30918"
+openAccess = false
+
+[[models]]
+id = "erdos"
+label = "Erdos-Renyi"
+
+[[models]]
+id = "scalefree"
+label = "Scale-Free"
+
+[[models]]
+id = "smallworld"
+label = "Small-World"
+
+[[models]]
+id = "meta"
+label = "Attributed"
+
+[[bullets]]
+text = "Erdos-Renyi"
+detail = "generate random graphs with uniform edge probability p and study percolation and connectivity thresholds"
+
+[[bullets]]
+text = "Scale-Free"
+detail = "grow preferential-attachment networks where k new edges per node produce heavy-tailed degree distributions"
+
+[[bullets]]
+text = "Small-World"
+detail = "rewire a regular lattice with probability p to interpolate between ordered and random graph regimes"
+
+[[bullets]]
+text = "Attributed Graphs"
+detail = "attach typed vertex and edge metadata with MetaGraphsNext.jl and query subgraphs by attribute"
+
+[[inputs]]
+id = "N"
+label = "N (nodes)"
+tooltip = "Number of vertices in the graph. Larger graphs show structural properties more clearly but take longer to compute."
+default = "100"
+
+[[inputs]]
+id = "k"
+label = "k (edges / neighbours)"
+tooltip = "For Scale-Free: edges added per new node (controls hub formation). For Small-World: nearest neighbours in the initial ring lattice before rewiring."
+default = "3"
+
+[[inputs]]
+id = "p"
+label = "p (probability)"
+tooltip = "For Erdos-Renyi: probability that any pair of nodes is connected. For Small-World: rewiring probability (0 = ring lattice, 1 = random graph)."
+default = "0.05"
+
+[[codeBranches]]
+model = "erdos"
+code = '''
+using Graphs, Statistics
+
+g = erdos_renyi({{N}}, {{p}})  # random graph: {{N}} nodes, edge prob {{p}}
+
+n_nodes  = nv(g)  # vertex count
+n_edges  = ne(g)  # edge count
+deg      = degree(g)  # degree sequence
+clust    = global_clustering_coefficient(g)  # triangle density
+apl      = mean(gdistances(g, 1))  # avg path length from node 1
+
+println("Nodes:       ", n_nodes)  # vertex count
+println("Edges:       ", n_edges)  # edge count
+println("Mean degree: ", round(mean(deg); digits=2))  # average degree
+println("Clustering:  ", round(clust; digits=4))  # clustering coefficient
+println("Avg path:    ", round(apl; digits=2))  # average path length
+'''
+
+[[codeBranches]]
+model = "scalefree"
+code = '''
+using Graphs, Statistics
+
+g = barabasi_albert({{N}}, {{k}})  # preferential attachment: {{N}} nodes, {{k}} edges each
+
+deg   = degree(g)  # degree sequence
+bc    = betweenness_centrality(g)  # fraction of shortest paths through each node
+hubs  = partialsortperm(bc, 1:5, rev=true)  # top-5 hub nodes
+
+println("Max degree:       ", maximum(deg))  # maximum degree
+println("Mean degree:      ", round(mean(deg); digits=2))  # average degree
+println("Clustering coeff: ", round(global_clustering_coefficient(g); digits=4))  # clustering coefficient
+println("Top hub nodes:    ", hubs)  # hub node indices
+println("Hub centralities: ", round.(bc[hubs]; digits=4))  # betweenness of hubs
+'''
+
+[[codeBranches]]
+model = "smallworld"
+code = '''
+using Graphs, Statistics
+
+g      = watts_strogatz({{N}}, {{k}}, {{p}})  # ring lattice rewired with prob {{p}}
+g_rand = erdos_renyi({{N}}, {{k}} / {{N}})  # random baseline for comparison
+
+clust      = global_clustering_coefficient(g)  # WS clustering
+clust_rand = global_clustering_coefficient(g_rand)  # random clustering
+apl        = mean(gdistances(g, 1))  # WS avg path length
+apl_rand   = mean(gdistances(g_rand, 1))  # random avg path length
+sigma      = (clust / clust_rand) / (apl / apl_rand)  # small-world index
+
+println("Clustering (WS):   ", round(clust; digits=4))  # WS clustering
+println("Clustering (rand): ", round(clust_rand; digits=4))  # random clustering
+println("Avg path (WS):     ", round(apl; digits=2))  # WS path length
+println("Avg path (rand):   ", round(apl_rand; digits=2))  # random path length
+println("Small-world index: ", round(sigma; digits=2), "  (> 1 = small-world)")  # sigma index
+'''
+
+[[codeBranches]]
+model = "meta"
+code = '''
+using Graphs, MetaGraphsNext
+
+mg = MetaGraph(
+    Graph(),
+    Label = Int,
+    VertexData = NamedTuple{(:weight, :state), Tuple{Float64, Symbol}},
+    EdgeData  = Float64,
+)
+
+for i in 1:{{N}}  # add {{N}} vertices with metadata
+    mg[i] = (weight = rand(), state = rand([:S, :I, :R]))
+end
+for _ in 1:round(Int, {{N}} * {{p}})  # add random edges
+    u, v = rand(1:{{N}}), rand(1:{{N}})
+    u != v && (mg[u, v] = rand())
+end
+
+infected = [v for v in labels(mg) if mg[v].state == :I]  # infected vertices
+println("Vertices:  ", nv(mg))  # vertex count
+println("Edges:     ", ne(mg))  # edge count
+println("Infected:  ", length(infected), " / ", {{N}})  # infected count
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "degree-distribution"
+label = "Degree Distribution"
+desc = "Plot the degree histogram to visualise hub formation and power-law behaviour"
+code = '''
+using Graphs, GLMakie
+
+using MetaGraphsNext
+g = MetaGraph(Graph(), Label=Int, VertexData=Float64, EdgeData=Float64)  # attributed graph
+deg = degree(g)  # degree sequence
+
+fig, ax, _ = hist(deg, bins=20, color=:steelblue, label="Degree")  # degree histogram
+ax.xlabel = "Degree"; ax.ylabel = "Count"  # axis labels
+display(fig)  # show
+'''
+
+[[actionGroups.actions]]
+id = "adjacency-heatmap"
+label = "Adjacency Heatmap"
+desc = "Render the adjacency matrix as a heatmap to reveal graph structure"
+code = '''
+using Graphs, GLMakie
+
+g = erdos_renyi({{N}}, {{p}})  # graph for heatmap
+A = Float64.(Matrix(adjacency_matrix(g)))  # dense adjacency matrix
+
+fig, ax, _ = heatmap(A, colormap=:grays)  # adjacency heatmap
+ax.xlabel = "Node"; ax.ylabel = "Node"  # axis labels
+display(fig)  # show
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "connectivity"
+label = "Connectivity"
+desc = "Test whether the graph is connected and find the sizes of all connected components"
+code = '''
+using Graphs
+
+g = erdos_renyi({{N}}, {{p}})  # graph for connectivity
+
+connected = is_connected(g)  # true if one component
+comps     = connected_components(g)  # list of component vertex sets
+sizes     = length.(connected_components(g))  # size of each component
+
+println("Connected:   ", connected)  # global connectivity
+println("Components:  ", length(comps))  # number of components
+println("Largest:     ", maximum(sizes))  # giant component size
+println("Smallest:    ", minimum(sizes))  # smallest component size
+'''
+
+[[actionGroups.actions]]
+id = "centrality-profile"
+label = "Centrality Profile"
+desc = "Compute betweenness and closeness centrality and identify the most influential nodes"
+code = '''
+using Graphs
+
+g = erdos_renyi({{N}}, {{p}})  # graph for centrality
+
+bc   = betweenness_centrality(g)  # betweenness centrality
+cc   = closeness_centrality(g)  # closeness centrality
+top5 = partialsortperm(bc, 1:5, rev=true)  # top 5 nodes by betweenness
+
+println("Top 5 nodes (betweenness): ", top5)  # most central nodes
+println("Betweenness: ", round.(bc[top5]; digits=4))  # betweenness values
+println("Closeness:   ", round.(cc[top5]; digits=4))  # closeness values
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "percolation-threshold"
+label = "Percolation Threshold"
+desc = "Sweep edge probability and find the critical p at which a giant component appears"
+code = '''
+using Graphs, Statistics
+
+for p_sweep in 0.01:0.01:0.2  # sweep edge probability
+    g = erdos_renyi({{N}}, p_sweep)
+    sizes = length.(connected_components(g))
+    giant = maximum(sizes) / {{N}}
+    println("p=", round(p_sweep; digits=2), "  giant_frac=", round(giant; digits=3))
+end
+'''
+
+[[actionGroups.actions]]
+id = "degree-distribution-fit"
+label = "Degree Distribution Fit"
+desc = "Fit a power-law exponent to the scale-free degree distribution"
+code = '''
+using Graphs, StatsBase
+
+g   = barabasi_albert({{N}}, {{k}})  # scale-free graph
+deg = degree(g)  # degree sequence
+
+counts = countmap(deg)  # frequency of each degree
+ks     = collect(keys(counts))  # unique degree values
+freq   = collect(values(counts))  # corresponding counts
+
+log_k = log.(ks)  # log degree
+log_f = log.(freq)  # log frequency
+gamma_est = -cov(log_k, log_f) / var(log_k)  # power-law exponent estimate
+
+println("Estimated power-law exponent: ", round(gamma_est; digits=2))  # gamma ~ 3 for BA networks
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "er-ba-ws"
+label = "ER vs BA vs WS"
+desc = "Compare clustering and path length across the three graph models at the same N and mean degree"
+code = '''
+using Graphs, Statistics
+
+g_er = erdos_renyi({{N}}, {{p}})  # Erdos-Renyi
+g_ba = barabasi_albert({{N}}, {{k}})  # Barabasi-Albert
+g_ws = watts_strogatz({{N}}, {{k}}, {{p}})  # Watts-Strogatz
+
+for (label, g) in [("ER", g_er), ("BA", g_ba), ("WS", g_ws)]  # compare all three
+    clust = global_clustering_coefficient(g)
+    apl   = mean(gdistances(g, 1))
+    println(label, "  clustering=", round(clust; digits=4), "  apl=", round(apl; digits=2))
+end
+'''
+
+[[actionGroups.actions]]
+id = "degree-variance"
+label = "Degree Variance"
+desc = "Measure degree heterogeneity across topologies"
+code = '''
+using Graphs, Statistics
+
+g_er = erdos_renyi({{N}}, {{p}})  # Erdos-Renyi
+g_ba = barabasi_albert({{N}}, {{k}})  # Barabasi-Albert
+g_ws = watts_strogatz({{N}}, {{k}}, {{p}})  # Watts-Strogatz
+
+for (label, g) in [("ER", g_er), ("BA", g_ba), ("WS", g_ws)]  # degree heterogeneity
+    deg = degree(g)
+    println(label, "  var(degree)=", round(var(deg); digits=2), "  max=", maximum(deg))
+end
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "small-world-index"
+label = "Small-World Index"
+desc = "Compute the sigma index: sigma > 1 indicates small-world structure"
+code = '''
+using Graphs, Statistics
+
+g      = watts_strogatz({{N}}, {{k}}, {{p}})  # small-world graph
+g_rand = erdos_renyi({{N}}, {{k}} / {{N}})  # random baseline
+
+clust      = global_clustering_coefficient(g)  # WS clustering
+clust_rand = global_clustering_coefficient(g_rand)  # random clustering
+apl        = mean(gdistances(g, 1))  # WS avg path length
+apl_rand   = mean(gdistances(g_rand, 1))  # random avg path length
+sigma      = (clust / clust_rand) / (apl / apl_rand)  # small-world index
+
+println("Small-world index: ", round(sigma; digits=2), "  (> 1 = small-world)")  # sigma interpretation
+'''
+
+[[actionGroups.actions]]
+id = "hub-influence"
+label = "Hub Influence"
+desc = "Remove the top hub by betweenness and measure the increase in average path length"
+code = '''
+using Graphs, Statistics
+
+g    = barabasi_albert({{N}}, {{k}})  # scale-free graph
+bc   = betweenness_centrality(g)  # betweenness centrality
+hub  = argmax(bc)  # top hub node
+
+apl_before = mean(gdistances(g, 1))  # avg path length before removal
+rem_vertex!(g, hub)  # remove the hub
+apl_after  = mean(gdistances(g, 1))  # avg path length after removal
+
+println("APL before hub removal: ", round(apl_before; digits=2))  # baseline
+println("APL after hub removal:  ", round(apl_after;  digits=2))  # degraded
+println("Change: ", round(apl_after - apl_before; digits=2))  # increase in path length
+'''

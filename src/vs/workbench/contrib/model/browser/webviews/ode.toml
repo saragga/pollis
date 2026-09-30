@@ -1,0 +1,602 @@
+# ODE Inference Methods Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/ode.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "ODE Inference Methods"
+viewType = "pollis.ode"
+defaultModel = "struct"
+
+[[packages]]
+name = "PEtab.jl"
+github = "https://github.com/sebapersson/PEtab.jl"
+
+[[packages]]
+name = "StructuralIdentifiability.jl"
+github = "https://github.com/SciML/StructuralIdentifiability.jl"
+
+[requires]
+packages = ["PEtab.jl", "StructuralIdentifiability.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Basic Estimation"
+file = "ode/tutorial-01-basic-estimation.ipynb"
+bundled = true
+description = "Set up a PEtab problem and run single-start optimisation"
+
+[[notebookSections.notebooks]]
+name = "Multi-Start"
+file = "ode/tutorial-02-multistart.ipynb"
+bundled = true
+description = "Run multi-start optimisation to find a global optimum"
+
+[[notebookSections.notebooks]]
+name = "Profile Likelihood"
+file = "ode/tutorial-03-profile-likelihood.ipynb"
+bundled = true
+description = "Compute profile likelihoods to quantify parameter uncertainty"
+
+[[notebookSections.notebooks]]
+name = "Identifiability"
+file = "ode/tutorial-04-identifiability.ipynb"
+bundled = true
+description = "Assess structural and practical identifiability of parameters"
+
+[[wikis]]
+name = "Factsheet"
+file = "ode/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "ode/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "ode/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "ode/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "ode/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "ode/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Methods"
+
+[[wikis]]
+name = "PEtab Format"
+file = "ode/petab-format.md"
+bundled = true
+
+[[wikis]]
+name = "Profile Likelihood"
+file = "ode/profile-likelihood.md"
+bundled = true
+
+[[wikis]]
+name = "Identifiability"
+file = "ode/identifiability.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "Differential Elimination for Dynamical Models via Projections with Applications to Structural Identifiability"
+authors = "Dong, Ruiwen; Goodbrake, Christian; Harrington, Heather A.; Pogudin, Gleb"
+year = 2023
+journal = "SIAM Journal on Applied Algebra and Geometry"
+doi = "10.1137/22M1469067"
+openAccess = true
+
+[[references]]
+title = "PEtab.jl: Advancing the Efficiency and Utility of Dynamic Modelling"
+authors = "Persson, Sebastian; Frohlich, Fabian; Grein, Stephan; Loman, Torkel; Ognissanti, Damiano; Hasselgren, Viktor; Hasenauer, Jan; Cvijovic, Marija"
+year = 2025
+journal = "Bioinformatics"
+doi = "10.1093/bioinformatics/btaf497"
+openAccess = true
+
+[[references]]
+title = "ModelingToolkit: A Composable Graph Transformation System for Equation-Based Modeling"
+authors = "Ma, Yingbo; Gowda, Shashi; Anantharaman, Ranjan; Laughman, Chris; Shah, Viral; Rackauckas, Christopher"
+year = 2021
+journal = "arXiv preprint"
+doi = "10.48550/arXiv.2103.05244"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Nonlinear Regression Analysis and Its Applications"
+authors = "Bates, Douglas M.; Watts, Donald G."
+year = 1988
+journal = "Wiley"
+doi = "10.1002/9780470316757"
+openAccess = false
+
+[[references]]
+title = "Dynamic Modelling and Parameter Estimation in Systems Biology"
+authors = "Raue, Andreas; Kreutz, Clemens; Maiwald, Thomas; Bachmann, Julie; Schilling, Marcel; Timmer, Jens"
+year = 2009
+journal = "Bioinformatics"
+doi = "10.1093/bioinformatics/btp358"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "PEtab: Interoperable Specification of Parameter Estimation Problems in Systems Biology"
+authors = "Schmiester, Leonard; Schaelte, Yannik; Bergmann, Frank T.; Camba, Tacio; Dudkin, Erika; Egert, Janine; Frhlich, Fabian; Fuhrmann, Lara; Hauber, Adrian L.; Kemmer, Svenja; Lakrisenko, Polina; Loos, Carolin; Merkt, Simon; Muller, Wolfgang; Pathirana, Dilan; Raue, Andreas; Sahle, Sven; Schaber, Jorg; Stapor, Paul; Ulrich, Elba; Villaverde, Alejandro F.; Weindl, Daniel; Wierling, Christoph; Stelling, Joerg; Timmer, Jens; Hasenauer, Jan; Theis, Fabian"
+year = 2021
+journal = "PLOS Computational Biology"
+doi = "10.1371/journal.pcbi.1008646"
+openAccess = true
+
+[[references]]
+title = "Structural and Practical Identifiability Analysis of Partially Observed Dynamical Models"
+authors = "Raue, Andreas; Kreutz, Clemens; Maiwald, Thomas; Bachmann, Julie; Schilling, Marcel; Klingmuller, Ursula; Timmer, Jens"
+year = 2009
+journal = "Bioinformatics"
+doi = "10.1093/bioinformatics/btp358"
+openAccess = false
+
+[[references]]
+title = "A Benchmark Study of Numerical Approaches for Fitting and Estimating Parameters of Biochemical Systems"
+authors = "Raue, Andreas; Schilling, Marcel; Bachmann, Julie; Matteson, Andrew; Schelker, Max; Kaschek, Daniel; Hug, Sabine; Kreutz, Clemens; Harms, Brian D.; Theis, Fabian J.; Klingmuller, Ursula; Timmer, Jens"
+year = 2013
+journal = "PLOS ONE"
+doi = "10.1371/journal.pone.0075114"
+openAccess = true
+
+[[models]]
+id = "struct"
+label = "Structural Identifiability"
+
+[[models]]
+id = "single"
+label = "Single-Start"
+
+[[models]]
+id = "multi"
+label = "Multi-Start"
+
+[[models]]
+id = "profile"
+label = "Profile Likelihood"
+
+[[models]]
+id = "bayes"
+label = "Bayesian Inference"
+
+[[decisionRows]]
+task = "Structural Identifiability"
+context = "Recoverability check"
+purpose = "Verify parameters are theoretically recoverable from the model structure before fitting any data"
+
+[[decisionRows]]
+task = "Single-Start"
+context = "Point estimate"
+purpose = "Good starting point available; quick objective evaluation; model exploration"
+
+[[decisionRows]]
+task = "Multi-Start"
+context = "Robust point estimate"
+purpose = "Multiple local minima suspected; no prior on parameters; robustness required"
+
+[[decisionRows]]
+task = "Profile Likelihood"
+context = "CIs + identifiability"
+purpose = "Identifiability analysis; asymmetric CIs; reporting uncertainty for publication"
+
+[[decisionRows]]
+task = "Bayesian Inference"
+context = "Full posterior"
+purpose = "Full posterior distribution needed; parameter uncertainty quantification; prior knowledge available"
+
+[[inputs]]
+id = "struct-model"
+label = "ODE model"
+tooltip = "A ModelingToolkit ODESystem or StructuralIdentifiability @ODEmodel variable. The model must declare state variables, parameters, and the right-hand side equations."
+default = "ode_model"
+models = ["struct"]
+
+[[inputs]]
+id = "struct-observed"
+label = "Observed outputs"
+tooltip = "List of measured quantities as ModelingToolkit equations mapping output names to state variables, e.g. [y ~ x1, z ~ x2]. Only observed states affect identifiability."
+default = "[y ~ x1]"
+models = ["struct"]
+
+[[inputs]]
+id = "path"
+label = "PEtab YAML path"
+tooltip = "Path to the PEtab problem YAML file, or a Julia variable holding the PEtabModel object. The YAML file references measurement, condition, parameter, and observable tables."
+default = "petab_problem.yaml"
+models = ["single", "multi", "profile"]
+
+[[inputs]]
+id = "optimizer"
+label = "Optimizer"
+tooltip = "Local optimizer passed to calibrate_model. LBFGS is fast for smooth problems; IPNewton handles box constraints; Fides is purpose-built for parameter estimation in systems biology."
+kind = "select"
+default = "Optim.LBFGS()"
+models = ["single", "multi", "profile"]
+
+[[inputs.options]]
+value = "Optim.LBFGS()"
+label = "Optim.LBFGS()"
+
+[[inputs.options]]
+value = "Optim.IPNewton()"
+label = "Optim.IPNewton()"
+
+[[inputs.options]]
+value = "Fides(verbose=false)"
+label = "Fides(verbose=false)"
+
+[[inputs]]
+id = "gradient"
+label = "Gradient method"
+tooltip = "Method used to compute gradients of the objective. ForwardDiff is reliable for small models; adjoint methods scale better for large ODE systems."
+kind = "select"
+default = ":ForwardDiff"
+models = ["single", "multi", "profile"]
+
+[[inputs.options]]
+value = ":ForwardDiff"
+label = ":ForwardDiff"
+
+[[inputs.options]]
+value = ":adjoint"
+label = ":adjoint"
+
+[[inputs.options]]
+value = ":ForwardEquations"
+label = ":ForwardEquations"
+
+[[inputs]]
+id = "nstarts"
+label = "n starts"
+tooltip = "Number of independent optimisation runs from different Latin hypercube starting points. More starts improve robustness at the cost of computation time."
+default = "50"
+models = ["multi"]
+
+[[inputs]]
+id = "bayes-path"
+label = "PEtab YAML path"
+tooltip = "Path to the PEtab problem YAML file, or a Julia variable holding the PEtabModel object."
+default = "petab_problem.yaml"
+models = ["bayes"]
+
+[[inputs]]
+id = "sampler"
+label = "Sampler"
+tooltip = "MCMC sampler used for posterior sampling. NUTS (No-U-Turn Sampler) adapts step size automatically and is recommended for most problems. HMC requires manual step size tuning."
+kind = "select"
+default = "NUTS"
+models = ["bayes"]
+
+[[inputs.options]]
+value = "NUTS"
+label = "NUTS"
+
+[[inputs.options]]
+value = "HMC"
+label = "HMC"
+
+[[inputs]]
+id = "target-acceptance"
+label = "Target acceptance"
+tooltip = "Target acceptance probability for the NUTS dual-averaging step-size adaptation. Values between 0.6 and 0.9 are typical; higher values give smaller steps and better mixing at higher cost."
+default = "0.8"
+when = "sampler=NUTS"
+models = ["bayes"]
+
+[[inputs]]
+id = "nsamples"
+label = "n samples"
+tooltip = "Number of MCMC samples drawn per chain after warm-up. More samples give better posterior estimates at higher computational cost."
+default = "1000"
+models = ["bayes"]
+
+[[inputs]]
+id = "nchains"
+label = "n chains"
+tooltip = "Number of independent MCMC chains run in parallel. Multiple chains allow convergence diagnostics (R-hat). Four chains is a common default."
+default = "4"
+models = ["bayes"]
+
+[[codeBranches]]
+model = "struct"
+code = '''
+using StructuralIdentifiability  # symbolic identifiability analysis
+
+result = assess_identifiability({{struct-model}}; measured_quantities={{struct-observed}})  # classify each parameter
+
+for (param, status) in result  # iterate over all parameters
+    println(param, " => ", status)
+end  # :globally / :locally / :nonidentifiable
+'''
+
+[[codeBranches]]
+model = "single"
+code = '''
+using PEtab, OrdinaryDiffEq, Optim  # PEtab + ODE solver + optimizer
+
+petab_model = PEtabModel({{path}})  # load PEtab problem from YAML
+prob = PEtabODEProblem(petab_model; gradient_method={{gradient}})  # build objective with gradient
+
+result = calibrate_model(prob, {{optimizer}}; save_trace=true)  # single-start local optimisation
+
+println(result)  # display estimated parameters and objective
+println("Cost: ", result.xmin)  # best objective value found
+'''
+
+[[codeBranches]]
+model = "multi"
+code = '''
+using PEtab, OrdinaryDiffEq, Optim  # PEtab + ODE solver + optimizer
+
+petab_model = PEtabModel({{path}})  # load PEtab problem from YAML
+prob = PEtabODEProblem(petab_model; gradient_method={{gradient}})  # build objective with gradient
+
+results = calibrate_model_multistart(prob, {{optimizer}}, {{nstarts}})  # multi-start: LHS sampling + {{nstarts}} local runs
+
+best = get_best(results)  # extract run with lowest objective
+println(best)  # best parameter estimates
+waterfall_plot(results)  # waterfall plot of all start objectives
+'''
+
+[[codeBranches]]
+model = "profile"
+code = '''
+using PEtab, OrdinaryDiffEq, Optim  # PEtab + ODE solver + optimizer
+
+petab_model = PEtabModel({{path}})  # load PEtab problem from YAML
+prob = PEtabODEProblem(petab_model; gradient_method={{gradient}})  # build objective with gradient
+
+result = calibrate_model_multistart(prob, {{optimizer}}, {{nstarts}})  # first: calibrate to find best fit
+
+profiles = compute_profile_likelihood(prob, result)  # profile each parameter individually
+
+plot_profiles(profiles)  # plot profile likelihood curves
+get_confidence_intervals(profiles, 0.95)  # 95% confidence intervals from profile
+'''
+
+[[codeBranches]]
+model = "bayes"
+code = '''
+using PEtab, OrdinaryDiffEq, Turing, MCMCChains  # PEtab + Turing sampler
+
+petab_model = PEtabModel({{bayes-path}})  # load PEtab problem from YAML
+prob = PEtabODEProblem(petab_model)  # build ODE problem
+bayes_prob = PEtabBayesianProblem(prob)  # wrap as Turing model for posterior sampling
+
+{{?sampler=NUTS}} chain = sample(bayes_prob, NUTS({{target-acceptance}}), MCMCThreads(), {{nsamples}}, {{nchains}})  # run {{nchains}} parallel chains with {{nsamples}} samples each
+{{?sampler=HMC}} chain = sample(bayes_prob, HMC(0.05, 10), MCMCThreads(), {{nsamples}}, {{nchains}})  # run {{nchains}} parallel chains with {{nsamples}} samples each
+
+println(summarystats(chain))  # posterior means, std, R-hat convergence
+plot(chain)  # trace and density plots for all parameters
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "obs-vs-sim"
+label = "Observed vs. Simulated"
+desc = "Overlay calibrated model trajectories on experimental measurements"
+code = '''
+using PEtab, OrdinaryDiffEq, Optim, Plots  # PEtab + plotting
+
+petab_model = PEtabModel({{path}})  # load problem
+prob = PEtabODEProblem(petab_model; gradient_method={{gradient}})  # build objective
+results = calibrate_model_multistart(prob, {{optimizer}}, {{nstarts}})  # calibrate
+
+plot_fits(prob, get_best(results))  # observed vs. simulated for each observable
+'''
+
+[[actionGroups.actions]]
+id = "waterfall"
+label = "Waterfall Plot"
+desc = "Sorted final objective values across all multi-start runs"
+code = '''
+using PEtab, OrdinaryDiffEq, Optim, Plots  # PEtab + plotting
+
+petab_model = PEtabModel({{path}})  # load problem
+prob = PEtabODEProblem(petab_model; gradient_method={{gradient}})  # build objective
+results = calibrate_model_multistart(prob, {{optimizer}}, {{nstarts}})  # calibrate
+
+waterfall_plot(results)  # flat plateau = global minimum found; slope = local minima
+'''
+
+[[actionGroups.actions]]
+id = "profile-plot"
+label = "Profile Likelihood"
+desc = "Profile likelihood curves with confidence thresholds"
+code = '''
+using PEtab, OrdinaryDiffEq, Optim, Plots  # PEtab + plotting
+
+petab_model = PEtabModel({{path}})  # load problem
+prob = PEtabODEProblem(petab_model; gradient_method={{gradient}})  # build objective
+result = calibrate_model_multistart(prob, {{optimizer}}, {{nstarts}})  # calibrate
+
+profiles = compute_profile_likelihood(prob, result)  # compute profiles
+plot_profiles(profiles)  # flat curves indicate non-identifiable parameters
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "residuals"
+label = "Residual Analysis"
+desc = "Weighted residuals between model predictions and measurements"
+code = '''
+using PEtab, OrdinaryDiffEq, Optim, Plots  # PEtab + plotting
+
+petab_model = PEtabModel({{path}})  # load problem
+prob = PEtabODEProblem(petab_model; gradient_method={{gradient}})  # build objective
+result = calibrate_model(prob, {{optimizer}}; save_trace=true)  # calibrate
+
+res = get_residuals(prob, result)  # weighted residuals (obs - sim) / sigma
+scatter(res; xlabel="Measurement", ylabel="Weighted residual")  # should be N(0,1) if model is correct
+'''
+
+[[actionGroups.actions]]
+id = "identifiability"
+label = "Identifiability"
+desc = "Detect structurally or practically non-identifiable parameters"
+code = '''
+using PEtab, OrdinaryDiffEq, Optim  # PEtab
+
+petab_model = PEtabModel({{path}})  # load problem
+prob = PEtabODEProblem(petab_model; gradient_method={{gradient}})  # build objective
+result = calibrate_model_multistart(prob, {{optimizer}}, {{nstarts}})  # calibrate
+
+profiles = compute_profile_likelihood(prob, result)  # compute all profiles
+println(get_identifiability(profiles))  # identifiable / non-identifiable per parameter
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "simulate"
+label = "Simulate Model"
+desc = "Solve the ODE forward using calibrated parameter estimates"
+code = '''
+using PEtab, OrdinaryDiffEq, Optim, Plots  # PEtab + plotting
+
+petab_model = PEtabModel({{path}})  # load problem
+prob = PEtabODEProblem(petab_model; gradient_method={{gradient}})  # build objective
+result = calibrate_model_multistart(prob, {{optimizer}}, {{nstarts}})  # calibrate
+
+best = get_best(result)  # best parameter set
+sol  = get_odesol(prob, best.xmin)  # solve ODE with calibrated parameters
+plot(sol)  # plot all state trajectories
+'''
+
+[[actionGroups.actions]]
+id = "new-condition"
+label = "New Condition"
+desc = "Predict system behaviour under a new experimental condition"
+code = '''
+using PEtab, OrdinaryDiffEq, Optim, Plots  # PEtab + plotting
+
+petab_model = PEtabModel({{path}})  # load problem
+prob = PEtabODEProblem(petab_model; gradient_method={{gradient}})  # build objective
+result = calibrate_model_multistart(prob, {{optimizer}}, {{nstarts}})  # calibrate
+
+best   = get_best(result)  # best parameter set
+u0_new = [1.0, 0.0, 0.0]  # new initial conditions
+sol    = get_odesol(prob, best.xmin; u0=u0_new)  # simulate under new condition
+plot(sol)  # predicted trajectory
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "compare-optimizers"
+label = "Compare Optimizers"
+desc = "Run LBFGS and Fides on the same problem and compare convergence"
+code = '''
+using PEtab, OrdinaryDiffEq, Optim, Fides  # PEtab + optimizers
+
+petab_model = PEtabModel({{path}})  # load problem
+prob = PEtabODEProblem(petab_model; gradient_method={{gradient}})  # build objective
+
+r_lbfgs = calibrate_model_multistart(prob, Optim.LBFGS(), {{nstarts}})  # LBFGS
+r_fides = calibrate_model_multistart(prob, Fides(verbose=false), {{nstarts}})  # Fides
+
+println("LBFGS best: ", get_best(r_lbfgs).xmin)  # LBFGS minimum
+println("Fides best: ", get_best(r_fides).xmin)  # Fides minimum
+'''
+
+[[actionGroups.actions]]
+id = "compare-gradient"
+label = "Compare Gradients"
+desc = "Compare ForwardDiff vs. adjoint gradient accuracy and timing"
+code = '''
+using PEtab, OrdinaryDiffEq, Optim, BenchmarkTools  # PEtab + benchmarks
+
+petab_model = PEtabModel({{path}})  # load problem
+prob_fd  = PEtabODEProblem(petab_model; gradient_method=:ForwardDiff)  # ForwardDiff gradients
+prob_adj = PEtabODEProblem(petab_model; gradient_method=:adjoint)  # adjoint gradients
+
+x0 = get_startguess(prob_fd)  # sample starting point
+@btime prob_fd.grad($x0)  # ForwardDiff gradient time
+@btime prob_adj.grad($x0)  # adjoint gradient time
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "ci-profile"
+label = "Confidence Intervals"
+desc = "95% profile-likelihood confidence intervals for all parameters"
+code = '''
+using PEtab, OrdinaryDiffEq, Optim  # PEtab
+
+petab_model = PEtabModel({{path}})  # load problem
+prob = PEtabODEProblem(petab_model; gradient_method={{gradient}})  # build objective
+result = calibrate_model_multistart(prob, {{optimizer}}, {{nstarts}})  # calibrate
+
+profiles = compute_profile_likelihood(prob, result)  # compute profiles
+ci = get_confidence_intervals(profiles, 0.95)  # 95% CIs via chi2 threshold
+println(ci)  # lower and upper bound per parameter
+'''
+
+[[actionGroups.actions]]
+id = "parameter-values"
+label = "Parameter Values"
+desc = "Best-fit parameter estimates with names from the PEtab problem"
+code = '''
+using PEtab, OrdinaryDiffEq, Optim  # PEtab
+
+petab_model = PEtabModel({{path}})  # load problem
+prob = PEtabODEProblem(petab_model; gradient_method={{gradient}})  # build objective
+result = calibrate_model_multistart(prob, {{optimizer}}, {{nstarts}})  # calibrate
+
+best   = get_best(result)  # best run
+params = get_parameter_dict(prob, best.xmin)  # named parameter dict
+println(params)  # estimated value for each parameter
+'''

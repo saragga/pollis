@@ -1,0 +1,415 @@
+# Ensemble & Parameter Scanning Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/abm-ens.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Ensemble & Parameter Scanning"
+viewType = "pollis.abm-ens"
+defaultModel = "ensemble"
+
+[[packages]]
+name = "Agents.jl"
+github = "https://github.com/JuliaDynamics/Agents.jl"
+
+[[packages.videos]]
+title = "Agents.jl Tutorial"
+description = "Step-by-step introduction to building agent-based models with Agents.jl"
+url = "https://www.youtube.com/watch?v=QL-bDjzS1pg"
+
+[requires]
+packages = ["Agents.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Ensemble Runs"
+file = "abm-ens/tutorial-01-ensemble.ipynb"
+bundled = true
+description = "Run multiple independent replications of a model and aggregate results with ensemblerun!"
+
+[[notebookSections.notebooks]]
+name = "Parameter Scanning"
+file = "abm-ens/tutorial-02-paramscan.ipynb"
+bundled = true
+description = "Systematically vary model parameters and collect outcomes with paramscan"
+
+[[notebookSections.notebooks]]
+name = "Sensitivity Analysis"
+file = "abm-ens/tutorial-03-sensitivity.ipynb"
+bundled = true
+description = "Rank parameter importance using Sobol indices via global sensitivity analysis"
+
+[[wikis]]
+name = "Factsheet"
+file = "abm-ens/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "abm-ens/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "abm-ens/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "abm-ens/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "abm-ens/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "abm-ens/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Methods"
+
+[[wikis]]
+name = "Ensemble Runs"
+file = "abm-ens/ensemble.md"
+bundled = true
+
+[[wikis]]
+name = "Parameter Scanning"
+file = "abm-ens/parameter-scanning.md"
+bundled = true
+
+[[wikis]]
+name = "Sensitivity Analysis"
+file = "abm-ens/sensitivity.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Agents.jl: A performant and feature-full agent based modelling software of minimal code complexity"
+authors = "Datseris, George; Vahdati, Ali R.; DuBois, Timothy C."
+year = 2022
+journal = "SIMULATION"
+doi = "10.1177/00375497211068820"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "An Introduction to Agent-Based Modeling"
+authors = "Wilensky, Uri; Rand, William"
+year = 2015
+journal = "MIT Press"
+openAccess = false
+
+[[references]]
+title = "Complex Adaptive Systems: An Introduction to Computational Models of Social Life"
+authors = "Miller, John H.; Page, Scott E."
+year = 2007
+journal = "Princeton University Press"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Sensitivity analysis of agent-based models: A new protocol"
+authors = "Saltelli, Andrea; Ratto, Marco; Andres, Terry; Campolongo, Francesca"
+year = 2008
+journal = "Environmental Modelling & Software"
+doi = "10.1016/j.envsoft.2008.01.006"
+openAccess = false
+
+[[references]]
+title = "Global sensitivity analysis of agent-based models"
+authors = "Ten Broeke, Guus; van Voorn, George; Ligtenberg, Arend"
+year = 2016
+journal = "Journal of Artificial Societies and Social Simulation"
+doi = "10.18564/jasss.2857"
+openAccess = true
+
+[[models]]
+id = "ensemble"
+label = "Ensemble Runs"
+
+[[models]]
+id = "paramscan"
+label = "Parameter Scanning"
+
+[[bullets]]
+text = "Ensemble Runs"
+detail = "run multiple independent replications with different random seeds using ensemblerun! and aggregate outcomes to quantify stochastic variability"
+
+[[bullets]]
+text = "Parameter Scanning"
+detail = "systematically sweep one or more model parameters and record observables at each combination using paramscan"
+
+[[bullets]]
+text = "Sensitivity Analysis"
+detail = "rank parameter importance using Sobol indices via global sensitivity analysis to identify which inputs drive output variance"
+
+[[inputs]]
+id = "init"
+label = "Model initializer"
+tooltip = "Name of the function that creates and returns a fresh ABM instance. It must accept keyword argument seed for ensemble runs, or keyword arguments matching the parameter names for paramscan."
+default = "initialize_model"
+
+[[inputs]]
+id = "R"
+label = "Replications (R)"
+tooltip = "Number of independent replications for ensemble runs. Each replication uses a different random seed. More replications reduce the standard error of aggregate statistics at the cost of compute time."
+default = "20"
+
+[[inputs]]
+id = "T"
+label = "Steps (T)"
+tooltip = "Number of model steps to run per replication or per parameter combination. One step calls the agent step function for every agent, then optionally a model step function."
+default = "50"
+
+[[codeBranches]]
+model = "ensemble"
+code = '''
+using Agents, Statistics
+
+models = [{{init}}(seed=i) for i in 1:{{R}}]  # {{R}} independent replications
+adata  = [(:mood, mean)]  # aggregate observable per step
+
+data, _ = ensemblerun!(models, {{T}}; adata=adata)  # run all replications
+
+final = filter(r -> r.step == {{T}}, data)  # last-step rows only
+println("Mean across replications: ", mean(final.mean_mood))  # ensemble average
+println("Std  across replications: ", std(final.mean_mood))  # stochastic variability
+'''
+
+[[codeBranches]]
+model = "paramscan"
+code = '''
+using Agents, Statistics
+
+params = Dict(:threshold => [0.2, 0.4, 0.6, 0.8],  # first parameter
+              :density   => [0.5, 0.7, 0.9])
+adata  = [(:mood, mean)]  # observable to collect
+
+data, _ = paramscan(params, {{init}}; n={{T}}, adata=adata)  # full factorial scan
+
+println("Parameter combinations: ", nrow(unique(data[:, [:threshold, :density]])))  # check grid size
+println("Final mean mood range:  ", extrema(filter(r->r.step=={{T}}, data).mean_mood))  # outcome range
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "ensemble-trajectories"
+label = "Ensemble Trajectories"
+desc = "Plot the mean observable across steps with a shaded confidence band across replications"
+code = '''
+using Agents, GLMakie, Statistics
+
+models = [{{init}}(seed=i) for i in 1:{{R}}]  # replications
+data, _ = ensemblerun!(models, {{T}}; adata=[(:mood,mean)])  # run ensemble
+
+gdf = groupby(data, :step)  # group by time step
+mu  = combine(gdf, :mean_mood => mean => :mu)  # mean across runs
+sig = combine(gdf, :mean_mood => std => :sig)  # std dev across runs
+
+fig = Figure()  # create figure
+ax  = Axis(fig[1,1], xlabel="Step", ylabel="Mean mood")  # axes
+band!(ax, mu.step, mu.mu .- sig.sig, mu.mu .+ sig.sig, color=(:blue,0.2))  # confidence band
+lines!(ax, mu.step, mu.mu, color=:blue)  # ensemble mean
+display(fig)  # show
+'''
+
+[[actionGroups.actions]]
+id = "paramscan-heatmap"
+label = "Parameter Heatmap"
+desc = "Visualise the equilibrium outcome across two swept parameters as a 2-D heatmap"
+code = '''
+using Agents, GLMakie
+
+params = Dict(:threshold => 0.0:0.1:1.0, :density => 0.0:0.1:1.0)  # parameter grid
+data, _ = paramscan(params, {{init}}; n={{T}}, adata=[(:mood,mean)])  # scan
+
+final = filter(r -> r.step == {{T}}, data)  # equilibrium rows
+ts = sort(unique(final.threshold))  # x-axis values
+ds = sort(unique(final.density))  # y-axis values
+Z  = [first(filter(r->r.threshold==t && r.density==d, final).mean_mood) for t in ts, d in ds]  # outcome matrix
+
+heatmap(ts, ds, Z, axis=(xlabel="threshold", ylabel="density", title="Equilibrium mood"))  # heatmap
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "variance-across-runs"
+label = "Variance Across Runs"
+desc = "Compute the standard deviation of the final-step outcome across replications to quantify stochastic noise"
+code = '''
+using Agents, Statistics
+
+models = [{{init}}(seed=i) for i in 1:{{R}}]  # replications
+data, _ = ensemblerun!(models, {{T}}; adata=[(:mood,mean)])  # run
+
+final = filter(r -> r.step == {{T}}, data).mean_mood  # final-step values
+
+println("N replications: ", {{R}})  # sample size
+println("Mean:  ", round(mean(final); digits=4))  # ensemble mean
+println("Std:   ", round(std(final); digits=4))  # stochastic noise
+println("SE:    ", round(std(final)/sqrt({{R}}); digits=4))  # standard error
+'''
+
+[[actionGroups.actions]]
+id = "burn-in"
+label = "Burn-in Detection"
+desc = "Plot ensemble mean over time and identify when trajectories stabilise to set an appropriate burn-in period"
+code = '''
+using Agents, GLMakie, Statistics
+
+models = [{{init}}(seed=i) for i in 1:{{R}}]  # replications
+data, _ = ensemblerun!(models, {{T}}; adata=[(:mood,mean)])  # run
+
+gdf = groupby(data, :step)  # group by step
+mu  = combine(gdf, :mean_mood => mean => :mu)  # mean trajectory
+
+fig, ax, _ = lines(mu.step, mu.mu, axis=(xlabel="Step", ylabel="Mean mood"))  # plot trajectory
+vlines!(ax, [10], color=:red, linestyle=:dash)  # mark candidate burn-in
+display(fig)  # inspect
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "larger-ensemble"
+label = "Larger Ensemble"
+desc = "Increase the number of replications to reduce the standard error of the ensemble mean"
+code = '''
+using Agents, Statistics
+
+Rs = [10, 20, 50, 100]  # replication counts to test
+for R in Rs
+    models = [{{init}}(seed=i) for i in 1:R]
+    data, _ = ensemblerun!(models, {{T}}; adata=[(:mood,mean)])
+    final  = filter(r->r.step=={{T}}, data).mean_mood
+    println("R=", R, "  SE=", round(std(final)/sqrt(R); digits=4))
+end
+'''
+
+[[actionGroups.actions]]
+id = "finer-grid"
+label = "Finer Parameter Grid"
+desc = "Increase the resolution of the paramscan grid to locate phase boundaries more precisely"
+code = '''
+using Agents, Statistics
+
+coarse = Dict(:threshold => 0.0:0.2:1.0)  # coarse scan
+fine   = Dict(:threshold => 0.0:0.05:1.0)  # fine scan
+
+for (label, params) in [("coarse", coarse), ("fine", fine)]
+    data, _ = paramscan(params, {{init}}; n={{T}}, adata=[(:mood,mean)])
+    final  = filter(r->r.step=={{T}}, data)
+    println(label, "  grid points: ", nrow(final), "  range: ", extrema(final.mean_mood))
+end
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "ensemble-vs-single"
+label = "Ensemble vs Single Run"
+desc = "Show how much a single run can deviate from the ensemble mean due to stochastic noise"
+code = '''
+using Agents, Statistics, GLMakie
+
+single_data, _ = run!({{init}}(seed=1), {{T}}; adata=[(:mood,mean)])  # single run
+
+models = [{{init}}(seed=i) for i in 1:{{R}}]  # ensemble
+ens_data, _ = ensemblerun!(models, {{T}}; adata=[(:mood,mean)])  # run ensemble
+ens_mu  = combine(groupby(ens_data, :step), :mean_mood => mean => :mu)  # ensemble mean
+
+fig, ax, _ = lines(ens_mu.step, ens_mu.mu, label="Ensemble mean")  # ensemble trajectory
+lines!(ax, single_data.step, single_data.mean_mood, label="Single run", linestyle=:dash)  # single trajectory
+axislegend(ax)  # show legend
+display(fig)  # compare
+'''
+
+[[actionGroups.actions]]
+id = "oa-vs-factorial"
+label = "OAT vs Factorial"
+desc = "Compare one-at-a-time (OAT) sensitivity estimates against the full factorial paramscan to check for interaction effects"
+code = '''
+using Agents, Statistics
+
+baseline = Dict(:threshold => [0.5], :density => [0.7])  # baseline
+oa_thr   = Dict(:threshold => 0.1:0.2:0.9, :density => [0.7])  # OAT: vary threshold
+oa_den   = Dict(:threshold => [0.5], :density => 0.1:0.2:0.9)  # OAT: vary density
+full     = Dict(:threshold => 0.1:0.2:0.9, :density => 0.1:0.2:0.9)  # full factorial
+
+for (label, params) in [("OAT-thr", oa_thr), ("OAT-den", oa_den), ("Full", full)]
+    data, _ = paramscan(params, {{init}}; n={{T}}, adata=[(:mood,mean)])
+    final  = filter(r->r.step=={{T}}, data)
+    println(label, "  variance explained: ", round(var(final.mean_mood); digits=4))
+end
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "sobol-sensitivity"
+label = "Sobol Sensitivity"
+desc = "Compute first-order and total Sobol indices to rank which parameters drive output variance"
+code = '''
+using Agents, GlobalSensitivity, QuasiMonteCarlo
+
+f = function(p)  # wrapper: p = [threshold, density]
+    model = {{init}}(threshold=p[1], density=p[2])
+    data, _ = run!(model, {{T}}; adata=[(:mood,mean)])
+    return [last(data.mean_mood)]
+end
+
+lb = [0.0, 0.0]; ub = [1.0, 1.0]  # parameter bounds
+res = gsa(f, Sobol(), SobolSample(), lb, ub; samples=512)  # global sensitivity
+
+println("S1 threshold: ", res.S1[1])  # first-order index
+println("S1 density:   ", res.S1[2])  # first-order index
+println("ST threshold: ", res.ST[1])  # total-effect index
+println("ST density:   ", res.ST[2])  # total-effect index
+'''
+
+[[actionGroups.actions]]
+id = "equilibrium-summary"
+label = "Equilibrium Summary"
+desc = "Print a table of equilibrium outcomes for each parameter combination from a paramscan"
+code = '''
+using Agents, Statistics, DataFrames
+
+params = Dict(:threshold => [0.2, 0.5, 0.8], :density => [0.5, 0.7])  # parameter grid
+data, _ = paramscan(params, {{init}}; n={{T}}, adata=[(:mood,mean)])  # scan
+
+final  = filter(r -> r.step == {{T}}, data)  # equilibrium rows
+summary = combine(groupby(final, [:threshold, :density]),  # group by params
+            :mean_mood => mean => :eq_mean,
+            :mean_mood => std => :eq_std)
+
+println(summary)  # print summary table
+'''

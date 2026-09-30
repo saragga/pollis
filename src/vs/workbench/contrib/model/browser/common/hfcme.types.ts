@@ -3,28 +3,8 @@
  *  Licensed under the GNU Affero General Public License v3.0 or later. See LICENSE.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IModelPackage, IModelNotebook, IModelWiki } from './model.types.js';
-
-export interface IHfcmeTooltips {
-	readonly p?: string;
-	readonly assets?: string;
-	readonly H?: string;
-	readonly K?: string;
-}
+import { IScaffoldPanelData } from './model.types.js';
 
 export interface IHfcmeMetadata {
-	readonly hfcme: {
-		readonly packages: IModelPackage[];
-		readonly notebooks: IModelNotebook[];
-		readonly wikis: IModelWiki[];
-		readonly tooltips?: IHfcmeTooltips;
-	};
+	readonly hfcme: IScaffoldPanelData;
 }
-
-export type HfcmeWebviewMessage =
-	| { command: 'openDocs'; target: 'wiki' | 'documentation' | 'paper' | 'repository' }
-	| { command: 'openNotebookList' }
-	| { command: 'openNotebook'; target: string }
-	| { command: 'openUrl'; url: string }
-	| { command: 'getPaperLinks' }
-	| { command: 'cancelAction' };

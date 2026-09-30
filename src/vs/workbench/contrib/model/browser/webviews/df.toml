@@ -1,0 +1,276 @@
+# Distribution Factories Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/df.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Distribution Factories"
+viewType = "pollis.df"
+defaultModel = "moments"
+
+[[packages]]
+name = "DistributionsFactories.jl"
+github = "https://github.com/Distribution-Matching/DistributionsFactories.jl"
+
+[[packages]]
+name = "Distributions.jl"
+github = "https://github.com/JuliaStats/Distributions.jl"
+
+[requires]
+packages = ["DistributionsFactories.jl", "Distributions.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Mean & Std Factories"
+file = "df/tutorial-01-moments.ipynb"
+bundled = true
+description = "Constructing distributions from mean, standard deviation, and variance"
+
+[[notebookSections.notebooks]]
+name = "Quantile Matching"
+file = "df/tutorial-02-quantiles.ipynb"
+bundled = true
+description = "Finding distributions that match specified probability-quantile pairs"
+
+[[notebookSections.notebooks]]
+name = "Fit to Data"
+file = "df/tutorial-03-fit.ipynb"
+bundled = true
+description = "Maximum likelihood and method-of-moments fitting to observed data"
+
+[[notebookSections.notebooks]]
+name = "Practical Examples"
+file = "df/tutorial-04-examples.ipynb"
+bundled = true
+description = "Real-world scenarios: insurance losses, component lifetimes, and count data"
+
+[[wikis]]
+name = "Overview"
+file = "df/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Factsheet"
+file = "df/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "df/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "df/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "df/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "df/decision-guide.md"
+bundled = true
+
+[[bullets]]
+text = "Moments"
+detail = "construct any of 27 distributions from statistical moments or quantiles via make_dist"
+
+[[bullets]]
+text = "Discover"
+detail = "find all feasible distribution families for any combination of constraints via available_distributions"
+
+[[models]]
+id = "moments"
+label = "Moments"
+
+[[models]]
+id = "discover"
+label = "Discover"
+
+[[inputs]]
+id = "dist"
+label = "Distribution Family"
+tooltip = ""
+kind = "select"
+default = "Normal"
+models = ["moments"]
+
+[[inputs.options]]
+value = "Normal"
+label = "Normal"
+
+[[inputs.options]]
+value = "TDist"
+label = "TDist"
+
+[[inputs.options]]
+value = "Laplace"
+label = "Laplace"
+
+[[inputs.options]]
+value = "Logistic"
+label = "Logistic"
+
+[[inputs.options]]
+value = "Gumbel"
+label = "Gumbel"
+
+[[inputs.options]]
+value = "Cauchy"
+label = "Cauchy (quantile only)"
+
+[[inputs.options]]
+value = "Gamma"
+label = "Gamma"
+
+[[inputs.options]]
+value = "Erlang"
+label = "Erlang"
+
+[[inputs.options]]
+value = "LogNormal"
+label = "LogNormal"
+
+[[inputs.options]]
+value = "Weibull"
+label = "Weibull"
+
+[[inputs.options]]
+value = "Frechet"
+label = "Frechet"
+
+[[inputs.options]]
+value = "FDist"
+label = "FDist"
+
+[[inputs.options]]
+value = "InverseGamma"
+label = "InverseGamma"
+
+[[inputs.options]]
+value = "Exponential"
+label = "Exponential"
+
+[[inputs.options]]
+value = "Chisq"
+label = "Chisq"
+
+[[inputs.options]]
+value = "FoldedNormal"
+label = "FoldedNormal"
+
+[[inputs.options]]
+value = "Pareto"
+label = "Pareto"
+
+[[inputs.options]]
+value = "Chi"
+label = "Chi"
+
+[[inputs.options]]
+value = "Rayleigh"
+label = "Rayleigh"
+
+[[inputs.options]]
+value = "Beta"
+label = "Beta"
+
+[[inputs.options]]
+value = "Uniform"
+label = "Uniform"
+
+[[inputs.options]]
+value = "SymTriangularDist"
+label = "SymTriangularDist"
+
+[[inputs.options]]
+value = "Binomial"
+label = "Binomial"
+
+[[inputs.options]]
+value = "NegativeBinomial"
+label = "NegativeBinomial"
+
+[[inputs.options]]
+value = "Geometric"
+label = "Geometric"
+
+[[inputs.options]]
+value = "Poisson"
+label = "Poisson"
+
+[[inputs.options]]
+value = "DiscreteUniform"
+label = "DiscreteUniform"
+
+[[inputs]]
+id = "params1"
+label = "Parameters"
+tooltip = "Fix one parameter as key=value pairs, comma-separated. Keys: mean, var, std, cv, scv, second_moment (E[X^2]), mode, median, q1, q3, iqr, quantiles (vector of (p, q), e.g. [(0.10, 1.0), (0.90, 10.0)]). Optionally append support=0..Inf (or 2..7, 0:20)."
+default = "mean=5.0"
+models = ["moments"]
+when = "dist=Exponential|Chisq|FoldedNormal|Pareto|Chi|Rayleigh|Binomial|Geometric|Poisson"
+
+[[inputs]]
+id = "params2"
+label = "Parameters"
+tooltip = "Fix two parameters as key=value pairs, comma-separated. Keys: mean, var, std, cv, scv, second_moment (E[X^2]), mode, median, q1, q3, iqr, quantiles (vector of (p, q), e.g. [(0.10, 1.0), (0.90, 10.0)]). Optionally append support=0..Inf (or 2..7, 0:20)."
+default = "mean=5.0, var=2.0"
+models = ["moments"]
+when = "dist=Normal|Laplace|Logistic|Gumbel|Gamma|Erlang|LogNormal|Weibull|Frechet|FDist|InverseGamma|Beta|NegativeBinomial"
+
+[[inputs]]
+id = "params3"
+label = "Parameters"
+tooltip = "Fix three parameters as key=value pairs, comma-separated. Keys: mean, var, std, cv, scv, second_moment (E[X^2]), mode, median, q1, q3, iqr, quantiles (vector of (p, q), e.g. [(0.10, 1.0), (0.90, 10.0)]). Optionally append support=0..Inf (or 2..7, 0:20)."
+default = "mean=5.0, var=2.0, std=1.5"
+models = ["moments"]
+when = "dist=TDist"
+
+[[inputs]]
+id = "paramsq"
+label = "Parameters"
+tooltip = "Fix two quantile parameters (median, q1, q3, iqr, quantiles) as key=value pairs, comma-separated. Keys: median, q1, q3, iqr, quantiles. Optionally append support=0..Inf (or 2..7, 0:20)."
+default = "median=5.0, q1=2.0"
+models = ["moments"]
+when = "dist=Cauchy"
+
+[[inputs]]
+id = "constraints"
+label = "Constraints"
+tooltip = "Constraints as key=value pairs, comma-separated. Keys: mean, var, std, cv, scv, second_moment (E[X^2]), mode, median, q1, q3, iqr, quantiles (vector of (p, q), e.g. [(0.10, 1.0), (0.90, 10.0)]), support (0..Inf, 0..1, -Inf..Inf, 0:Inf, or a custom interval such as 3..Inf)."
+default = "mean=5.0"
+models = ["discover"]
+
+[[codeBranches]]
+model = "moments"
+code = '''
+using DistributionsFactories, Distributions
+
+{{?dist=Uniform|SymTriangularDist|DiscreteUniform}} d = make_dist({{dist}})
+{{?dist=Uniform|SymTriangularDist|DiscreteUniform}} println("support: [", minimum(d), ", ", maximum(d), "]")
+{{?dist=Exponential|Chisq|FoldedNormal|Pareto|Chi|Rayleigh|Binomial|Geometric|Poisson}} if dist_exists({{dist}}, {{params1}})  # feasibility check
+{{?dist=Exponential|Chisq|FoldedNormal|Pareto|Chi|Rayleigh|Binomial|Geometric|Poisson}}     d = make_dist({{dist}}, {{params1}})
+{{?dist=Normal|Laplace|Logistic|Gumbel|Gamma|Erlang|LogNormal|Weibull|Frechet|FDist|InverseGamma|Beta|NegativeBinomial}} if dist_exists({{dist}}, {{params2}})  # feasibility check
+{{?dist=Normal|Laplace|Logistic|Gumbel|Gamma|Erlang|LogNormal|Weibull|Frechet|FDist|InverseGamma|Beta|NegativeBinomial}}     d = make_dist({{dist}}, {{params2}})
+{{?dist=TDist}} if dist_exists({{dist}}, {{params3}})  # feasibility check
+{{?dist=TDist}}     d = make_dist({{dist}}, {{params3}})
+{{?dist=Cauchy}} if dist_exists({{dist}}, {{paramsq}})  # feasibility check
+{{?dist=Cauchy}}     d = make_dist({{dist}}, {{paramsq}})
+{{?dist!=Uniform|SymTriangularDist|DiscreteUniform|Cauchy}}     println("mean: ", mean(d), "  var: ", var(d), "  median: ", median(d))
+{{?dist=Cauchy}}     println("q25: ", quantile(d, 0.25), "  q75: ", quantile(d, 0.75))
+{{?dist!=Uniform|SymTriangularDist|DiscreteUniform}} end
+'''
+
+[[codeBranches]]
+model = "discover"
+code = '''
+using DistributionsFactories, Distributions
+
+available_distributions({{constraints}})  # returns all feasible families
+'''

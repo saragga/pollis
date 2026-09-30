@@ -1,0 +1,420 @@
+# ABM Visualisation Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/abm-viz.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "ABM Visualisation"
+viewType = "pollis.abm-viz"
+defaultModel = "static"
+
+[[packages]]
+name = "Agents.jl"
+github = "https://github.com/JuliaDynamics/Agents.jl"
+
+[[packages.videos]]
+title = "Agents.jl Tutorial"
+description = "Step-by-step introduction to building agent-based models with Agents.jl"
+url = "https://www.youtube.com/watch?v=QL-bDjzS1pg"
+
+[requires]
+packages = ["Agents.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Static Plot (abmplot)"
+file = "abm-viz/tutorial-01-static.ipynb"
+bundled = true
+description = "Produce a static snapshot of agent positions and states using abmplot"
+
+[[notebookSections.notebooks]]
+name = "Animation (abmvideo)"
+file = "abm-viz/tutorial-02-video.ipynb"
+bundled = true
+description = "Record an MP4 animation of a model run with abmvideo"
+
+[[notebookSections.notebooks]]
+name = "Interactive Explorer"
+file = "abm-viz/tutorial-03-interactive.ipynb"
+bundled = true
+description = "Launch a live interactive dashboard with abmexploration to tune parameters in real time"
+
+[[wikis]]
+name = "Factsheet"
+file = "abm-viz/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "abm-viz/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "abm-viz/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "abm-viz/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "abm-viz/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "abm-viz/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Visualisation Methods"
+
+[[wikis]]
+name = "Static Plot"
+file = "abm-viz/static-plot.md"
+bundled = true
+
+[[wikis]]
+name = "Video Animation"
+file = "abm-viz/video.md"
+bundled = true
+
+[[wikis]]
+name = "Interactive Explorer"
+file = "abm-viz/interactive.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Agents.jl: A performant and feature-full agent based modelling software of minimal code complexity"
+authors = "Datseris, George; Vahdati, Ali R.; DuBois, Timothy C."
+year = 2022
+journal = "SIMULATION"
+doi = "10.1177/00375497211068820"
+openAccess = true
+
+[[references]]
+title = "Makie.jl: Flexible high-performance data visualization for Julia"
+authors = "Danisch, Simon; Krumbiegel, Julius"
+year = 2021
+journal = "Journal of Open Source Software"
+doi = "10.21105/joss.03349"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "An Introduction to Agent-Based Modeling"
+authors = "Wilensky, Uri; Rand, William"
+year = 2015
+journal = "MIT Press"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Flocks, herds and schools: A distributed behavioral model"
+authors = "Reynolds, Craig W."
+year = 1987
+journal = "ACM SIGGRAPH Computer Graphics"
+doi = "10.1145/37401.37406"
+openAccess = false
+
+[[references]]
+title = "Interactive data visualization for the web"
+authors = "Murray, Scott"
+year = 2017
+journal = "O'Reilly Media (2nd ed.)"
+openAccess = false
+
+[[models]]
+id = "static"
+label = "Static Plot"
+
+[[models]]
+id = "video"
+label = "Video Animation"
+
+[[models]]
+id = "interactive"
+label = "Interactive Explorer"
+
+[[bullets]]
+text = "Static Plot"
+detail = "produce a snapshot of agent positions and states at a given time step using abmplot from Agents.jl + Makie.jl"
+
+[[bullets]]
+text = "Video Animation"
+detail = "record an MP4 of the model evolving over time using abmvideo, with per-frame agent colour and size encodings"
+
+[[bullets]]
+text = "Interactive Explorer"
+detail = "launch a live GUI dashboard with sliders and observables using abmexploration to tune parameters in real time"
+
+[[inputs]]
+id = "T"
+label = "Frames / Steps (T)"
+tooltip = "Number of frames for video animations, or number of steps for the interactive explorer. Each frame records the model state after one agent-step cycle. More frames produce longer videos but increase file size and render time."
+default = "50"
+
+[[inputs]]
+id = "fps"
+label = "Frame rate (fps)"
+tooltip = "Frames per second for the output MP4. Higher frame rates produce smoother animations. Typical values: 5 fps for slow dynamics, 15-30 fps for faster motion. Only used by abmvideo."
+default = "10"
+
+[[inputs]]
+id = "file"
+label = "Output file"
+tooltip = "File name for the recorded video. Must end in .mp4. The file is saved in the current working directory. Only used by abmvideo."
+default = "sim.mp4"
+
+[[codeBranches]]
+model = "static"
+code = '''
+using Agents, GLMakie
+
+fig, ax, abmobs = abmplot(model)  # snapshot of current model state
+
+display(fig)  # show figure in window
+
+fig, ax, abmobs = abmplot(model;  # with colour and size encodings
+    agent_color = a -> a.status == :I ? :red : :blue,
+    agent_size  = 10,
+    axis        = (title = "Agent States",))
+display(fig)  # show styled snapshot
+'''
+
+[[codeBranches]]
+model = "video"
+code = '''
+using Agents, GLMakie
+
+abmvideo({{file}}, model; frames={{T}}, framerate={{fps}})  # record animation to file
+
+abmvideo({{file}}, model;  # with encodings
+    frames    = {{T}},
+    framerate = {{fps}},
+    agent_color = a -> a.status == :I ? :red : :blue,
+    agent_size  = 10)
+
+println("Saved: ", {{file}})  # confirm output
+'''
+
+[[codeBranches]]
+model = "interactive"
+code = '''
+using Agents, GLMakie
+
+params = Dict(:threshold => 0.0:0.05:1.0, :density => 0.1:0.1:1.0)  # sliders for interactive tuning
+
+fig, abmobs = abmexploration(model; params=params)  # launch interactive dashboard
+
+display(fig)  # open GUI window
+
+on(abmobs.t) do t  # hook: run code after each step
+    println("Step ", t, ": N_infected=", count(a->a.status==:I, allagents(abmobs.model[])))
+end
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "multi-panel"
+label = "Multi-Panel Figure"
+desc = "Arrange multiple abmplot snapshots side-by-side to compare states at different time steps"
+code = '''
+using Agents, GLMakie
+
+fig = Figure(size=(900,300))  # wide figure for panels
+checkpoints = [0, div(parse(Int,{{T}}),2), parse(Int,{{T}})]  # three time points
+for (i, t) in enumerate(checkpoints)
+    m = deepcopy(model)
+    t > 0 && step!(m, t)
+    abmplot!(fig[1,i], m; axis=(title="t=" * string(t),))
+end
+display(fig)  # compare snapshots
+'''
+
+[[actionGroups.actions]]
+id = "observable-overlay"
+label = "Observable Overlay"
+desc = "Add a time-series chart of an aggregate observable below the spatial plot"
+code = '''
+using Agents, GLMakie
+
+adata = [(:mood, mean)]  # aggregate to track
+data, _ = run!(model, parse(Int,{{T}}); adata=adata)  # collect data
+
+fig = Figure(size=(700,600))  # tall figure
+abmplot!(fig[1,1], model)  # spatial snapshot top
+ax = Axis(fig[2,1], xlabel="Step", ylabel="Mean mood")  # chart below
+lines!(ax, data.step, data.mean_mood)  # time series
+display(fig)  # combined view
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "frame-inspection"
+label = "Frame Inspection"
+desc = "Step through frames manually to inspect agent states at specific time points"
+code = '''
+using Agents, GLMakie
+
+fig, ax, abmobs = abmplot(model)  # create observable plot
+
+display(fig)  # show initial state
+step!(abmobs, 10)  # advance 10 steps and update plot
+display(fig)  # inspect at t=10
+step!(abmobs, 10)  # advance another 10
+display(fig)  # inspect at t=20
+'''
+
+[[actionGroups.actions]]
+id = "colour-check"
+label = "Colour Encoding Check"
+desc = "Verify that agent colour and size encodings correctly reflect the underlying state variable"
+code = '''
+using Agents, GLMakie
+
+n_states = length(unique(a.status for a in allagents(model)))  # count distinct states
+println("Distinct agent states: ", n_states)  # should match colour palette size
+
+fig, ax, abmobs = abmplot(model;  # verify encoding visually
+    agent_color = a -> a.status == :I ? :red : a.status == :R ? :green : :blue,
+    agent_size  = 12)
+display(fig)  # check all states appear
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "longer-video"
+label = "Longer Video"
+desc = "Record a higher-resolution video with more frames to capture long-run dynamics"
+code = '''
+using Agents, GLMakie
+
+frame_counts = [50, 200, 500]  # test different durations
+for T in frame_counts
+    fname = "sim_T" * string(T) * ".mp4"
+    abmvideo(fname, deepcopy(model); frames=T, framerate=10)
+    println("Saved ", fname)
+end
+'''
+
+[[actionGroups.actions]]
+id = "interactive-scenario"
+label = "Interactive Scenario"
+desc = "Use the abmexploration sliders to set parameters to an extreme scenario and observe dynamics"
+code = '''
+using Agents, GLMakie
+
+params = Dict(  # slider ranges for exploration
+    :threshold => 0.0:0.05:1.0,
+    :density   => 0.1:0.05:1.0,
+    :infection_rate => 0.01:0.01:0.5)
+
+fig, abmobs = abmexploration(model; params=params)  # launch with extended sliders
+display(fig)  # tune to extreme parameter values
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "static-vs-video"
+label = "Static vs Video"
+desc = "Compare a snapshot plot against a video to identify which representation reveals more structure"
+code = '''
+using Agents, GLMakie
+
+m1 = deepcopy(model)  # copy for static plot
+m2 = deepcopy(model)  # copy for video
+
+step!(m1, parse(Int,{{T}}))  # advance to final frame
+fig, _, _ = abmplot(m1)  # static snapshot at t=T
+display(fig)  # show static
+
+abmvideo({{file}}, m2; frames={{T}}, framerate={{fps}})  # record full trajectory
+println("Video saved: ", {{file}})  # confirm video
+'''
+
+[[actionGroups.actions]]
+id = "colour-schemes"
+label = "Colour Schemes"
+desc = "Compare different agent colour encodings to find the most informative visual representation"
+code = '''
+using Agents, GLMakie
+
+schemes = [  # three colour mappings to compare
+    (label="Binary",     f=a->(a.status==:I ? :red : :blue)),
+    (label="Tristate",   f=a->(a.status==:I ? :red : a.status==:R ? :green : :blue)),
+    (label="Continuous", f=a->a.mood/10.0))
+
+fig = Figure(size=(900,300))  # side-by-side panels
+for (i, s) in enumerate(schemes)
+    abmplot!(fig[1,i], deepcopy(model); agent_color=s.f, axis=(title=s.label,))
+end
+display(fig)  # compare encodings
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "spatial-clustering"
+label = "Spatial Clustering"
+desc = "Measure the degree of spatial clustering in agent states to quantify emergent segregation"
+code = '''
+using Agents, Statistics
+
+step!(model, parse(Int,{{T}}))  # advance model to t=T
+
+agents = collect(allagents(model))  # snapshot of agents
+infected = filter(a -> a.status == :I, agents)  # infected agents
+pct_infected = length(infected) / length(agents)  # global prevalence
+
+println("=== Spatial Summary ===")  # header
+println("Total agents:   ", length(agents))  # population size
+println("Infected:       ", length(infected))  # infected count
+println("Prevalence:     ", round(pct_infected*100; digits=1), "%")  # percentage
+'''
+
+[[actionGroups.actions]]
+id = "animation-summary"
+label = "Animation Summary"
+desc = "Print a summary of what changed across the recorded frames to interpret the dynamics"
+code = '''
+using Agents, Statistics
+
+adata = [(:status, x -> count(==(s), x)/length(x)) for s in [:S, :I, :R]]  # fractions per state
+data, _ = run!(model, parse(Int,{{T}}); adata=adata)  # run with collection
+
+println("=== Animation Summary ===")  # header
+println("Steps recorded: ", {{T}})  # duration
+println("Peak infected:  ", round(100*maximum(data[:,3]); digits=1), "%")  # epidemic peak
+println("Final immune:   ", round(100*last(data[:,4]); digits=1), "%")  # recovered fraction
+'''

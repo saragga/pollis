@@ -1,0 +1,612 @@
+# Time-Series Forecasting Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/tsf.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Time-Series Forecasting"
+viewType = "pollis.tsf"
+defaultModel = "loess"
+
+[[packages]]
+name = "StateSpaceModels.jl"
+github = "https://github.com/LAMPSPUC/StateSpaceModels.jl"
+
+[requires]
+packages = ["Loess.jl", "Plots.jl", "HypothesisTests.jl", "StatsBase.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "LOESS"
+file = "tsf/tutorial-01-loess.ipynb"
+bundled = true
+description = "Local polynomial smoothing for trend and cycle extraction"
+
+[[notebookSections.notebooks]]
+name = "Local Level / Trend"
+file = "tsf/tutorial-02-local.ipynb"
+bundled = true
+description = "Random walk and local linear trend state space models"
+
+[[notebookSections.notebooks]]
+name = "Seasonal Model"
+file = "tsf/tutorial-03-seasonal.ipynb"
+bundled = true
+description = "State space seasonal decomposition"
+
+[[notebookSections.notebooks]]
+name = "ETS Framework"
+file = "tsf/tutorial-04-ets.ipynb"
+bundled = true
+description = "Error, Trend, and Seasonality framework"
+
+[[notebookSections.notebooks]]
+name = "ARIMA"
+file = "tsf/tutorial-05-arima.ipynb"
+bundled = true
+description = "Auto-regressive integrated moving average models"
+
+[[notebookSections.notebooks]]
+name = "Unobserved Components"
+file = "tsf/tutorial-06-ucm.ipynb"
+bundled = true
+description = "Flexible structural decomposition into trend, cycle, and seasonal"
+
+[[wikis]]
+name = "Factsheet"
+file = "tsf/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "tsf/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "tsf/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "tsf/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "tsf/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "tsf/decision-guide.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "StateSpaceModels.jl: A Julia Package for Time-Series Analysis in a State-Space Framework"
+authors = "Bodin, Raphael; Guilherme Bodin, Thuener; Pereira, Davi M."
+year = 2019
+journal = "arXiv"
+doi = "10.48550/arXiv.1908.01757"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Forecasting: Principles and Practice"
+authors = "Hyndman, Rob J.; Athanasopoulos, George"
+year = 2021
+journal = "OTexts"
+openAccess = true
+
+[[references]]
+title = "Time Series Analysis by State Space Methods"
+authors = "Durbin, James; Koopman, Siem Jan"
+year = 2012
+journal = "Oxford University Press"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Smoothing by Spline Functions"
+authors = "Cleveland, William S."
+year = 1979
+journal = "Journal of the American Statistical Association"
+doi = "10.2307/2286407"
+openAccess = false
+
+[[references]]
+title = "Forecasting Exponential Smoothing: The State Space Approach"
+authors = "Hyndman, Rob J.; Koehler, Anne B.; Ord, J. Keith; Snyder, Ralph D."
+year = 2008
+journal = "Springer"
+openAccess = false
+
+[[references]]
+title = "ARIMA Models for Time Series Forecasting"
+authors = "Box, George E. P.; Jenkins, Gwilym M.; Reinsel, Gregory C.; Ljung, Greta M."
+year = 2015
+journal = "Wiley"
+openAccess = false
+
+[[models]]
+id = "loess"
+label = "LOESS"
+
+[[models]]
+id = "local"
+label = "Local Level / Trend"
+
+[[models]]
+id = "seasonal"
+label = "Seasonal Model"
+
+[[models]]
+id = "ets"
+label = "ETS Framework"
+
+[[models]]
+id = "arima"
+label = "ARIMA"
+
+[[models]]
+id = "ucm"
+label = "Unobserved Components"
+
+[[decisionRows]]
+task = "LOESS"
+context = "Exploring the shape of a trend without committing to a model; no forecast beyond a short extrapolation"
+purpose = "Locally weighted polynomial regression on time: a smooth trend whose flexibility is set by the span"
+
+[[decisionRows]]
+task = "Local Level / Trend"
+context = "A series that wanders with no seasonality: a level (random walk plus noise) or a level with a drifting slope"
+purpose = "Separates signal from noise with the Kalman filter; the signal-to-noise ratio decides how quickly the level adapts"
+
+[[decisionRows]]
+task = "Seasonal Model"
+context = "A trending series with a stable seasonal pattern of known period"
+purpose = "Basic structural model: stochastic level, slope and dummy seasonal, each with its own variance"
+
+[[decisionRows]]
+task = "ETS Framework"
+context = "Operational forecasting of many series; a fast, reliable benchmark"
+purpose = "Exponential smoothing in state space form: weighted averages of the past with optional (damped) trend and seasonality"
+
+[[decisionRows]]
+task = "ARIMA"
+context = "Series whose autocorrelation structure, after differencing, is short and regular"
+purpose = "Differenced autoregressive moving-average model; the order is picked from the ACF and PACF or by AICc"
+
+[[decisionRows]]
+task = "Unobserved Components"
+context = "When trend, seasonal and cycle should be estimated and read as separate components"
+purpose = "Harvey's structural model: choose a trend type and stochastic or deterministic seasonality, all estimated jointly"
+
+[[inputs]]
+id = "yvar"
+label = "Data variable"
+tooltip = "Your univariate time series (Vector of Float64), oldest observation first."
+default = "y"
+
+[[inputs]]
+id = "h"
+label = "Horizon"
+tooltip = "Forecast horizon in observations."
+default = "12"
+
+[[inputs]]
+id = "span"
+label = "Span"
+tooltip = "Share of the data in each local fit: small values follow the data closely, large values give a smoother trend. Typical: 0.3 to 0.9."
+default = "0.5"
+models = ["loess"]
+newRow = true
+
+[[inputs]]
+id = "degree"
+label = "Degree"
+tooltip = "Degree of the local polynomial: 1 (local linear) or 2 (local quadratic, follows peaks better)."
+kind = "select"
+default = "1"
+models = ["loess"]
+
+[[inputs.options]]
+value = "1"
+label = "Linear"
+
+[[inputs.options]]
+value = "2"
+label = "Quadratic"
+
+[[inputs]]
+id = "ltype"
+label = "Model Type"
+tooltip = "Local Level: a random-walk level plus noise. Local Linear Trend: a level with a stochastic slope."
+kind = "select"
+default = "LocalLevel"
+models = ["local"]
+newRow = true
+
+[[inputs.options]]
+value = "LocalLevel"
+label = "Local Level"
+
+[[inputs.options]]
+value = "LocalLinearTrend"
+label = "Local Linear Trend"
+
+[[inputs]]
+id = "etstrend"
+label = "Trend"
+tooltip = "None: simple exponential smoothing. Additive: Holt's linear trend. Damped: a trend that flattens out over the horizon."
+kind = "select"
+default = "none"
+models = ["ets"]
+newRow = true
+
+[[inputs.options]]
+value = "none"
+label = "None"
+
+[[inputs.options]]
+value = "additive"
+label = "Additive"
+
+[[inputs.options]]
+value = "damped"
+label = "Damped"
+
+[[inputs]]
+id = "order"
+label = "Order (p, d, q)"
+tooltip = "ARIMA order: autoregressive lags, differencing, moving-average lags."
+default = "(1, 1, 1)"
+models = ["arima"]
+newRow = true
+
+[[inputs]]
+id = "uctrend"
+label = "Trend"
+tooltip = "Trend component: local level, random walk (no irregular), local linear trend, or smooth trend (integrated random walk)."
+kind = "select"
+default = "local linear trend"
+models = ["ucm"]
+newRow = true
+
+[[inputs.options]]
+value = "local level"
+label = "Local Level"
+
+[[inputs.options]]
+value = "random walk"
+label = "Random Walk"
+
+[[inputs.options]]
+value = "local linear trend"
+label = "Local Linear Trend"
+
+[[inputs.options]]
+value = "smooth trend"
+label = "Smooth Trend"
+
+[[inputs]]
+id = "ucseas"
+label = "Seasonality"
+tooltip = "Stochastic: the seasonal pattern may evolve over time. Deterministic: a fixed pattern. None: no seasonal component."
+kind = "select"
+default = "stochastic"
+models = ["ucm"]
+
+[[inputs.options]]
+value = "stochastic"
+label = "Stochastic"
+
+[[inputs.options]]
+value = "deterministic"
+label = "Deterministic"
+
+[[inputs.options]]
+value = "no"
+label = "None"
+
+[[inputs]]
+id = "period"
+label = "Period"
+tooltip = "Seasonal period in observations: 12 for monthly, 4 for quarterly data. For ETS, 0 means no seasonality."
+default = "12"
+models = ["seasonal", "ets", "ucm"]
+when = "ucseas!=no"
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.loess]
+# Scattered points with a smooth curve through them
+svg = '''
+var pts = [[6,62],[11,54],[16,58],[21,46],[26,50],[31,40],[36,44],[41,34],[46,38]];
+return pts.map(function(p) { return '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="1.8" fill="currentColor" opacity="0.6"/>'; }).join('')
+	+ '<path d="M6,60 C18,54 30,46 48,34" fill="none" stroke="currentColor" stroke-width="1.8"/>';
+'''
+
+[miniCharts.local]
+# Noisy series with a smooth filtered level
+svg = '''
+var y = [52, 44, 50, 40, 46, 36, 42, 38, 30, 36];
+var d = '';
+for (var i = 0; i < y.length; i++) { d += (i ? 'L' : 'M') + (5 + i * 5) + ',' + y[i]; }
+return '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1" opacity="0.5"/><path d="M5,50 C20,45 32,40 50,33" fill="none" stroke="currentColor" stroke-width="2"/>';
+'''
+
+[miniCharts.seasonal]
+# Seasonal wave riding on a rising trend
+svg = '''
+var d = '';
+for (var i = 0; i <= 44; i++) { d += (i ? 'L' : 'M') + (5 + i) + ',' + (62 - i * 0.45 - 7 * Math.sin(i * Math.PI / 6)).toFixed(1); }
+return '<line x1="5" y1="62" x2="49" y2="42" stroke="currentColor" stroke-width="0.8" stroke-dasharray="2,2"/><path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.5"/>';
+'''
+
+[miniCharts.ets]
+# Exponentially decaying weights on past observations
+svg = '''
+var s = '';
+for (var i = 0; i < 8; i++) { var hgt = 36 * Math.pow(0.7, i); s += '<rect x="' + (44 - i * 5.5) + '" y="' + (68 - hgt).toFixed(1) + '" width="4" height="' + hgt.toFixed(1) + '" fill="currentColor" opacity="' + (1 - i * 0.1).toFixed(1) + '"/>'; }
+return s;
+'''
+
+[miniCharts.arima]
+# Autocorrelation bars dying out
+svg = '''
+var r = [30, -20, 13, -8, 5, -3, 2];
+var s = '<line x1="4" y1="46" x2="50" y2="46" stroke="currentColor" stroke-width="0.8"/>';
+for (var i = 0; i < r.length; i++) { s += '<rect x="' + (7 + i * 6) + '" y="' + (r[i] > 0 ? 46 - r[i] : 46) + '" width="3.5" height="' + Math.abs(r[i]) + '" fill="currentColor"/>'; }
+return s;
+'''
+
+[miniCharts.ucm]
+# Stacked trend, seasonal and irregular components
+svg = '''
+var seas = '', irr = '';
+for (var i = 0; i <= 44; i++) {
+	seas += (i ? 'L' : 'M') + (5 + i) + ',' + (48 - 5 * Math.sin(i * Math.PI / 6)).toFixed(1);
+	irr += (i ? 'L' : 'M') + (5 + i) + ',' + (66 + 3 * Math.sin(i * 2.3) * Math.cos(i * 1.7)).toFixed(1);
+}
+return '<path d="M5,34 C20,30 32,26 49,20" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="' + seas + '" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="' + irr + '" fill="none" stroke="currentColor" stroke-width="1" opacity="0.6"/>';
+'''
+
+[[codeBranches]]
+model = "loess"
+code = '''
+using Loess
+
+y = Float64.({{yvar}})
+t = collect(1.0:length(y))  # time index
+build(y) = loess(collect(1.0:length(y)), y; span={{span}}, degree={{degree}})
+model = build(y)  # local polynomial regression on time
+trend = predict(model, t)
+fc = predict(model, [Float64(length(y))])[1] .+ (trend[end] - trend[end-1]) .* (1:{{h}})  # extrapolate the last local slope
+(span = {{span}}, degree = {{degree}}, residual_sd = sqrt(sum(abs2, y .- trend) / (length(y) - 1)), forecast = round.(fc, digits=3))
+'''
+
+[[codeBranches]]
+model = "local"
+code = '''
+using StateSpaceModels
+
+y = Float64.({{yvar}})
+build(y) = {{ltype}}(y)
+model = build(y)
+fit!(model)  # maximum likelihood via the Kalman filter
+print_results(model)
+'''
+
+[[codeBranches]]
+model = "seasonal"
+code = '''
+using StateSpaceModels
+
+y = Float64.({{yvar}})
+build(y) = BasicStructural(y, {{period}})  # level + slope + seasonal({{period}})
+model = build(y)
+fit!(model)  # maximum likelihood via the Kalman filter
+print_results(model)
+'''
+
+[[codeBranches]]
+model = "ets"
+code = '''
+using StateSpaceModels
+
+y = Float64.({{yvar}})
+{{?etstrend=none}} build(y) = ExponentialSmoothing(y; seasonal={{period}})  # simple exponential smoothing
+{{?etstrend=additive}} build(y) = ExponentialSmoothing(y; trend=true, seasonal={{period}})  # Holt's linear trend
+{{?etstrend=damped}} build(y) = ExponentialSmoothing(y; trend=true, damped_trend=true, seasonal={{period}})  # damped trend
+model = build(y)
+fit!(model)  # maximum likelihood via the Kalman filter
+print_results(model)
+'''
+
+[[codeBranches]]
+model = "arima"
+code = '''
+using StateSpaceModels
+
+y = Float64.({{yvar}})
+build(y) = SARIMA(y; order={{order}})
+model = build(y)  # ARIMA{{order}}
+fit!(model)  # maximum likelihood via the Kalman filter
+print_results(model)
+'''
+
+[[codeBranches]]
+model = "ucm"
+code = '''
+using StateSpaceModels
+
+y = Float64.({{yvar}})
+{{?ucseas!=no}} build(y) = UnobservedComponents(y; trend="{{uctrend}}", seasonal="{{ucseas}} {{period}}")
+{{?ucseas=no}} build(y) = UnobservedComponents(y; trend="{{uctrend}}")
+model = build(y)
+fit!(model)  # maximum likelihood via the Kalman filter
+print_results(model)
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "plot-fit"
+label = "Fitted Values"
+desc = "The data against the model's in-sample fit (smoothed trend for LOESS, one-step-ahead predictions for the state space models)"
+code = '''
+using Plots
+{{?model=loess}} fit = trend; lab = "LOESS trend"
+{{?model!=loess}} fit = y .- vec(get_innovations(kalman_filter(model))); lab = "one-step prediction"
+{{?model!=loess}} fit[1:2] .= NaN  # diffuse start
+plot(y, lw=1.5, label="data", xlabel="t", title="Fitted values")
+plot!(fit, lw=1.5, ls=:dash, label=lab)
+'''
+
+[[actionGroups.actions]]
+id = "decomposition"
+label = "Components"
+desc = "Smoothed states of the model (level, slope, seasonal ...) from the Kalman smoother; for LOESS, the trend and the remainder"
+code = '''
+using Plots
+{{?model=loess}} plot(plot(t, [y trend], label=["data" "trend"]), plot(t, y .- trend, label="remainder"), layout=(2, 1))
+{{?model!=loess}} a = get_smoothed_state(kalman_smoother(model))  # T x states
+{{?model!=loess}} k = min(size(a, 2), 3)
+{{?model!=loess}} plot(a[:, 1:k], layout=(k, 1), label=permutedims(["state " * string(i) for i in 1:k]), title="Smoothed states", titlefontsize=9)
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "residuals"
+label = "Residual Analysis"
+desc = "Standardised residuals over time and their histogram: they should look like white noise with no pattern or outliers"
+code = '''
+using Statistics, Plots
+{{?model=loess}} r = (y .- trend) ./ std(y .- trend)
+{{?model!=loess}} r = filter(isfinite, vec(StateSpaceModels.get_standard_residuals(kalman_filter(model))))[3:end]
+plot(plot(r, legend=false, title="Standardised residuals"), histogram(r, legend=false, title="Distribution"), layout=(1, 2))
+'''
+
+[[actionGroups.actions]]
+id = "ljung-box"
+label = "Ljung-Box and ACF"
+desc = "Residual autocorrelation with 95% bands and the Ljung-Box test up to lag 20: p above 0.05 means no leftover structure"
+code = '''
+using HypothesisTests, StatsBase, Plots
+{{?model=loess}} r = y .- trend
+{{?model!=loess}} r = filter(isfinite, vec(StateSpaceModels.get_standard_residuals(kalman_filter(model))))[3:end]
+L = min(20, length(r) ÷ 4)
+display((ljung_box_lags = L, p_value = pvalue(LjungBoxTest(r, L))))
+bar(1:L, autocor(r, 1:L), legend=false, xlabel="Lag", title="Residual ACF")
+hline!([-1.96, 1.96] ./ sqrt(length(r)), c=:red, ls=:dash)
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "forecast-plot"
+label = "Forecast with Intervals"
+desc = "Point forecasts over the horizon with 80% and 95% prediction intervals (LOESS: linear extrapolation of the last local slope, no interval)"
+code = '''
+using Plots
+{{?model=loess}} plot(t, y, label="data", title="LOESS trend extrapolation"); plot!(t, trend, label="trend"); plot!(length(y) .+ (1:{{h}}), fc, ls=:dash, label="extrapolation")
+{{?model!=loess}} plot(model, forecast(model, {{h}}); label="data", title="Forecast, {{h}} steps")
+'''
+
+[[actionGroups.actions]]
+id = "intervals"
+label = "Forecast Table"
+desc = "Mean forecast and 95% prediction interval for each step of the horizon"
+code = '''
+{{?model=loess}} [(step = i, mean = round(fc[i], digits=3)) for i in 1:{{h}}]
+{{?model!=loess}} f = forecast(model, {{h}})
+{{?model!=loess}} m = [v[1] for v in f.expected_value]; s = [sqrt(c[1, 1]) for c in f.covariance]
+{{?model!=loess}} [(step = i, mean = round(m[i], digits=3), lower95 = round(m[i] - 1.96s[i], digits=3), upper95 = round(m[i] + 1.96s[i], digits=3)) for i in 1:{{h}}]
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "aic-bic"
+label = "Information Criteria"
+desc = "AIC, AICc and BIC of local level, local linear trend, basic structural, ETS (auto_ets) and ARIMA (auto_arima) fitted to the same series; the seasonal auto_arima search can take a couple of minutes"
+code = '''
+using StateSpaceModels
+s = {{period}}
+cands = [("Local Level", () -> LocalLevel(y)), ("Local Linear Trend", () -> LocalLinearTrend(y)),
+         ("Basic Structural", () -> BasicStructural(y, max(s, 2))), ("ETS (auto)", () -> auto_ets(y; seasonal=s)), ("ARIMA (auto)", () -> auto_arima(y; seasonal=s))]
+rows = []
+for (name, make) in cands
+    m = make(); StateSpaceModels.isfitted(m) || StateSpaceModels.fit!(m)
+    push!(rows, (model = name, aic = round(m.results.aic, digits=1), aicc = round(m.results.aicc, digits=1), bic = round(m.results.bic, digits=1)))
+end
+rows
+'''
+
+[[actionGroups.actions]]
+id = "cross-validate"
+label = "Rolling-Origin Backtest"
+desc = "Refits the model on expanding windows (last 30% of the data) and scores the forecasts that followed: mean absolute error by horizon"
+code = '''
+using Statistics, Plots
+H = min({{h}}, 12); origins = round.(Int, range(0.7 * length(y), length(y) - H, length=8))
+err = zeros(length(origins), H)
+for (k, n) in enumerate(origins)
+{{?model=loess}}     m = build(y[1:n]); tr = predict(m, collect(1.0:n)); f = tr[end] .+ (tr[end] - tr[end-1]) .* (1:H)
+{{?model!=loess}}     m = build(y[1:n]); StateSpaceModels.fit!(m); f = [v[1] for v in forecast(m, H).expected_value]
+    err[k, :] = abs.(y[n+1:n+H] .- f)
+end
+display((mae_by_horizon = round.(vec(mean(err, dims=1)), digits=3),))
+plot(1:H, vec(mean(err, dims=1)), marker=:o, lw=2, legend=false, xlabel="Horizon", ylabel="MAE", title="Out-of-sample error by horizon")
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "parameters"
+label = "Model Parameters"
+desc = "Estimated variances and smoothing parameters with standard errors; for LOESS, the span, degree and equivalent smoothness"
+code = '''
+{{?model=loess}} (span = {{span}}, degree = {{degree}}, observations_per_local_fit = round(Int, {{span}} * length(y)))
+{{?model!=loess}} ct = model.results.coef_table
+{{?model!=loess}} [(parameter = n, estimate = round(c, sigdigits=4), std_error = round(s, sigdigits=3)) for (n, c, s) in zip(ct.names, ct.coef, ct.std_err)]
+'''
+
+[[actionGroups.actions]]
+id = "signal-noise"
+label = "Adaptiveness"
+desc = "How quickly the model reacts to new data: signal-to-noise ratios of the state variances (structural models), the memory implied by the smoothing weights (ETS), the persistence of shocks (ARIMA) or the window of each local fit (LOESS)"
+code = '''
+{{?model=loess}} (span = {{span}}, observations_per_local_fit = round(Int, {{span}} * length(y)), note = "larger windows react more slowly")
+{{?model!=loess}} ct = model.results.coef_table
+{{?model=local|seasonal|ucm}} iv = findfirst(n -> endswith(n, "\u03b5") || n == "sigma2_irregular", ct.names)  # observation noise variance
+{{?model=local|seasonal|ucm}} [(component = n, variance = round(c, sigdigits=4), ratio_to_noise = round(c / ct.coef[iv], sigdigits=3)) for (n, c) in zip(ct.names, ct.coef) if startswith(n, "sigma2") && n != ct.names[iv]]
+{{?model=ets}} [(parameter = n, weight = round(c, digits=4), memory_in_observations = round(1 / max(c, 1e-6), sigdigits=3)) for (n, c) in zip(ct.names, ct.coef) if startswith(n, "smoothing")]
+{{?model=arima}} phi = [c for (n, c) in zip(ct.names, ct.coef) if startswith(n, "ar_L")]
+{{?model=arima}} (ar_persistence = round(sum(phi; init=0.0), digits=4), shock_half_life = isempty(phi) || sum(phi) <= 0 ? 0.0 : round(log(0.5) / log(min(sum(phi), 0.9999)), digits=2), note = "on the differenced series; with d >= 1 every shock also shifts the level permanently")
+'''

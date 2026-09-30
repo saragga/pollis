@@ -1,0 +1,493 @@
+# Robot Control Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/rctl.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Robot Control"
+viewType = "pollis.rctl"
+defaultModel = "ik"
+
+[[packages]]
+name = "RobotDynamics.jl"
+github = "https://github.com/RoboticExplorationLab/RobotDynamics.jl"
+
+[[packages]]
+name = "RigidBodyDynamics.jl"
+github = "https://github.com/JuliaRobotics/RigidBodyDynamics.jl"
+
+[requires]
+packages = ["RobotDynamics.jl", "RigidBodyDynamics.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Inverse Kinematics"
+file = "rctl/tutorial-01-ik.ipynb"
+bundled = true
+description = "Jacobian pseudoinverse IK for Cartesian position targets"
+
+[[notebookSections.notebooks]]
+name = "PD Joint Control"
+file = "rctl/tutorial-02-pd.ipynb"
+bundled = true
+description = "Independent joint PD control with gravity compensation"
+
+[[notebookSections.notebooks]]
+name = "Computed Torque"
+file = "rctl/tutorial-03-ct.ipynb"
+bundled = true
+description = "Exact nonlinear feedback linearisation via RNEA"
+
+[[notebookSections.notebooks]]
+name = "Impedance Control"
+file = "rctl/tutorial-04-imp.ipynb"
+bundled = true
+description = "Cartesian spring-damper law for compliant interaction"
+
+[[wikis]]
+name = "Factsheet"
+file = "rctl/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "rctl/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "rctl/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "rctl/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "rctl/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "rctl/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Methods"
+
+[[wikis]]
+name = "Inverse Kinematics"
+file = "rctl/ik.md"
+bundled = true
+
+[[wikis]]
+name = "PD Joint Control"
+file = "rctl/pd.md"
+bundled = true
+
+[[wikis]]
+name = "Computed Torque"
+file = "rctl/ct.md"
+bundled = true
+
+[[wikis]]
+name = "Impedance Control"
+file = "rctl/imp.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "RobotDynamics.jl: Flexible Rigid Body Dynamics in Julia"
+authors = "Howell, Taylor; Jackson, Brian; Manchester, Zachary"
+year = 2019
+journal = "GitHub"
+url = "https://github.com/RoboticExplorationLab/RobotDynamics.jl"
+openAccess = true
+
+[[references]]
+title = "RigidBodyDynamics.jl: Rigid Body Dynamics and Control in Julia"
+authors = "Koolen, Twan; Deits, Robin"
+year = 2016
+journal = "GitHub"
+url = "https://github.com/JuliaRobotics/RigidBodyDynamics.jl"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Robot Modeling and Control"
+authors = "Spong, Mark W.; Hutchinson, Seth; Vidyasagar, M."
+year = 2005
+journal = "Wiley"
+openAccess = false
+
+[[references]]
+title = "Robotics: Modelling, Planning and Control"
+authors = "Siciliano, Bruno; Sciavicco, Lorenzo; Villani, Luigi; Oriolo, Giuseppe"
+year = 2009
+journal = "Springer"
+doi = "10.1007/978-1-84628-642-1"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Impedance Control: An Approach to Manipulation"
+authors = "Hogan, Neville"
+year = 1985
+journal = "Journal of Dynamic Systems, Measurement, and Control"
+doi = "10.1115/1.3140702"
+openAccess = false
+
+[[references]]
+title = "A Unified Approach for Motion and Force Control of Robot Manipulators: The Operational Space Formulation"
+authors = "Khatib, Oussama"
+year = 1987
+journal = "IEEE Journal of Robotics and Automation"
+doi = "10.1109/JRA.1987.1087068"
+openAccess = false
+
+[[models]]
+id = "ik"
+label = "Inverse Kinematics"
+
+[[models]]
+id = "pd"
+label = "PD Joint Control"
+
+[[models]]
+id = "ct"
+label = "Computed Torque"
+
+[[models]]
+id = "imp"
+label = "Impedance Control"
+
+[[bullets]]
+text = "Design joint-space and task-space controllers for articulated robots using RigidBodyDynamics.jl"
+detail = ""
+
+[[bullets]]
+text = "Solve inverse kinematics iteratively via Jacobian pseudoinverse to reach Cartesian position targets"
+detail = ""
+
+[[bullets]]
+text = "Cancel nonlinear robot dynamics exactly with computed-torque control for precise trajectory tracking"
+detail = ""
+
+[[bullets]]
+text = "Implement compliant Cartesian interaction via impedance control for contact and force-sensitive tasks"
+detail = ""
+
+[[decisionRows]]
+task = "Inverse Kinematics"
+context = "Jacobian pseudoinverse"
+purpose = "Mapping a Cartesian position target to joint space iteratively"
+
+[[decisionRows]]
+task = "PD Joint Control"
+context = "Independent joint PD + gravity comp"
+purpose = "Simple setpoint tracking when dynamics are approximately decoupled"
+
+[[decisionRows]]
+task = "Computed Torque"
+context = "Feedback linearisation via RNEA"
+purpose = "Full nonlinear dynamic cancellation for accurate trajectory tracking"
+
+[[decisionRows]]
+task = "Impedance Control"
+context = "Cartesian spring-damper law"
+purpose = "Contact tasks and compliant interaction with the environment"
+
+[[inputs]]
+id = "robot"
+label = "Mechanism"
+tooltip = "A RigidBodyDynamics.jl Mechanism or RobotDynamics.jl AbstractModel representing the robot."
+default = "mechanism"
+
+[[inputs]]
+id = "x"
+label = "Current state"
+tooltip = "x = [q; v]: current joint configuration q and velocity v. Used to evaluate Jacobians and gravity forces."
+default = "x"
+
+[[inputs]]
+id = "p_des-ik"
+label = "Desired position"
+tooltip = "p_des: target end-effector position (3-vector in root frame) to reach via IK iteration."
+default = "p_des"
+models = ["ik"]
+
+[[inputs]]
+id = "dt-ik"
+label = "IK step size"
+tooltip = "dt: integration step for the pseudoinverse IK update. Smaller values give more stable but slower convergence."
+default = "0.01"
+models = ["ik"]
+
+[[inputs]]
+id = "q_des-pd"
+label = "Desired config"
+tooltip = "q_des: target joint configuration (length nq) that the PD controller drives the robot towards."
+default = "q_des"
+models = ["pd"]
+
+[[inputs]]
+id = "Kp-pd"
+label = "Stiffness"
+tooltip = "Kp: proportional gain matrix or vector (length nq). Higher Kp gives faster response but may cause overshoot."
+default = "Kp"
+models = ["pd"]
+
+[[inputs]]
+id = "Kd-pd"
+label = "Damping"
+tooltip = "Kd: derivative gain matrix or vector (length nq). Damps oscillations caused by high Kp."
+default = "Kd"
+models = ["pd"]
+
+[[inputs]]
+id = "q_des-ct"
+label = "Desired config"
+tooltip = "q_des: target joint configuration. Computed torque drives the robot to exactly track this setpoint."
+default = "q_des"
+models = ["ct"]
+
+[[inputs]]
+id = "Kp-ct"
+label = "Stiffness"
+tooltip = "Kp: proportional gain for the PD outer loop. Acts in the linearised joint-space after dynamic cancellation."
+default = "Kp"
+models = ["ct"]
+
+[[inputs]]
+id = "Kd-ct"
+label = "Damping"
+tooltip = "Kd: derivative gain for the PD outer loop. Cancellation makes the closed-loop behave as a double integrator."
+default = "Kd"
+models = ["ct"]
+
+[[inputs]]
+id = "p_des-imp"
+label = "Desired position"
+tooltip = "p_des: Cartesian equilibrium position (3-vector). The impedance controller generates restoring forces towards this point."
+default = "p_des"
+models = ["imp"]
+
+[[inputs]]
+id = "Kd-imp"
+label = "Cartesian stiffness"
+tooltip = "Kd: Cartesian stiffness matrix (3x3 or diagonal). Scales the position error in the spring-damper force law."
+default = "Kd"
+models = ["imp"]
+
+[[inputs]]
+id = "Bd-imp"
+label = "Cartesian damping"
+tooltip = "Bd: Cartesian damping matrix (3x3 or diagonal). Damps end-effector velocity to prevent oscillation."
+default = "Bd"
+models = ["imp"]
+
+[[codeBranches]]
+model = "ik"
+code = '''
+using RigidBodyDynamics, LinearAlgebra  # Jacobian pseudoinverse inverse kinematics
+
+state = MechanismState({{robot}})  # mutable state for the mechanism
+set_configuration!(state, {{x}}[1:num_positions({{robot}})])  # set joint configuration from state x
+
+J     = Matrix(geometric_jacobian(state, path))[1:3, :]  # position-only rows of the geometric Jacobian
+p_ee  = translation(transform(state, ee_body, root_body({{robot}})))  # current end-effector position
+e     = {{p_des-ik}} - p_ee  # Cartesian position error
+
+q_dot = pinv(J) * e  # pseudoinverse maps Cartesian error to joint velocity
+q_new = {{x}}[1:end] + {{dt-ik}} * [q_dot; zeros(length(q_dot))]  # integrate one IK step
+'''
+
+[[codeBranches]]
+model = "pd"
+code = '''
+using RobotDynamics, LinearAlgebra  # PD joint control with gravity compensation
+
+nv    = RobotDynamics.nv({{robot}})  # velocity dimension
+q     = {{x}}[1:nv]  # current joint configuration
+v     = {{x}}[nv+1:end]  # current joint velocity
+
+e     = {{q_des-pd}} - q  # joint position error
+tau_g = gravity_compensation({{robot}}, q)  # gravity torques to cancel gravitational loading
+u     = {{Kp-pd}} .* e - {{Kd-pd}} .* v + tau_g  # PD control law with gravity feed-forward
+'''
+
+[[codeBranches]]
+model = "ct"
+code = '''
+using RobotDynamics, LinearAlgebra  # computed torque: exact nonlinear feedback linearisation via RNEA
+
+nv    = RobotDynamics.nv({{robot}})  # velocity dimension
+q     = {{x}}[1:nv]  # current joint configuration
+v     = {{x}}[nv+1:end]  # current joint velocity
+
+e     = {{q_des-ct}} - q  # configuration error
+a_des = {{Kp-ct}} * e - {{Kd-ct}} * v  # desired acceleration: PD outer loop after linearisation
+u     = inverse_dynamics({{robot}}, q, v, a_des)  # RNEA maps desired acceleration to exact joint torques
+'''
+
+[[codeBranches]]
+model = "imp"
+code = '''
+using RigidBodyDynamics, LinearAlgebra  # Cartesian impedance control: spring-damper in task space
+
+state = MechanismState({{robot}})  # mutable state for the mechanism
+set_configuration!(state, {{x}}[1:num_positions({{robot}})])  # set joint configuration
+
+J     = Matrix(geometric_jacobian(state, path))[1:3, :]  # position Jacobian (3 x nq)
+p_ee  = translation(transform(state, ee_body, root_body({{robot}})))  # end-effector position
+nv    = num_velocities({{robot}})  # velocity dimension
+v_ee  = J * {{x}}[num_positions({{robot}})+1:end]  # end-effector Cartesian velocity
+
+F     = {{Kd-imp}} * ({{p_des-imp}} - p_ee) - {{Bd-imp}} * v_ee  # impedance force: Cartesian spring-damper law
+u     = transpose(J) * F  # map Cartesian force to joint torques via Jacobian transpose
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "ik-convergence"
+label = "IK Convergence"
+desc = "Plot the position error norm over IK iterations to verify convergence"
+code = '''
+using RigidBodyDynamics, LinearAlgebra, Plots  # track IK convergence over iterations
+
+state  = MechanismState({{robot}})  # mechanism state
+errors = Float64[]  # position error at each iteration
+for _ in 1:50  # run 50 IK iterations
+    J    = Matrix(geometric_jacobian(state, path))[1:3, :]
+    p_ee = translation(transform(state, ee_body, root_body({{robot}})))
+    e    = {{p_des-ik}} - p_ee
+    push!(errors, norm(e))
+    dq   = pinv(J) * e
+    set_configuration!(state, configuration(state) + 0.01 * dq)
+end
+plot(errors, xlabel="Iteration", ylabel="Position error", yscale=:log10)  # log-scale convergence of IK
+'''
+
+[[actionGroups.actions]]
+id = "torque-profile"
+label = "Torque Profile"
+desc = "Plot the joint torques produced by the controller at each time step"
+code = '''
+using Plots  # visualise joint torque commands over time
+
+plot(t_hist, transpose(reduce(hcat, u_hist)), xlabel="Time", ylabel="Torque", label=false)  # one series per joint
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "jacobian-rank"
+label = "Jacobian Rank"
+desc = "Check the Jacobian rank to detect singularities where IK or impedance control fails"
+code = '''
+using RigidBodyDynamics, LinearAlgebra  # detect kinematic singularities
+
+state = MechanismState({{robot}})  # mechanism state
+set_configuration!(state, {{x}}[1:num_positions({{robot}})])  # set configuration
+J     = Matrix(geometric_jacobian(state, path))[1:3, :]  # position Jacobian
+J_rank = rank(J)  # full rank = 3 means no singularity in this configuration
+sigma  = svd(J).S  # singular values: smallest reveals proximity to singularity
+'''
+
+[[actionGroups.actions]]
+id = "tracking-error"
+label = "Tracking Error"
+desc = "Compute joint and Cartesian tracking error at current state"
+code = '''
+using RigidBodyDynamics, LinearAlgebra  # evaluate tracking error in joint and Cartesian space
+
+state = MechanismState({{robot}})  # mechanism state
+set_configuration!(state, {{x}}[1:num_positions({{robot}})])  # set configuration
+p_ee   = translation(transform(state, ee_body, root_body({{robot}})))  # end-effector position
+e_cart = norm({{p_des-imp}} - p_ee)  # Cartesian position tracking error (metres)
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "closed-loop-sim"
+label = "Closed-Loop Simulation"
+desc = "Simulate the controlled robot under the chosen controller for N steps"
+code = '''
+using RobotDynamics  # closed-loop simulation with explicit Euler integration
+
+dt    = 0.01; N = 500  # time step and number of steps
+x_sim = [{{x}}]  # initialise simulation from current state
+for _ in 1:N  # integrate forward
+    u    = controller(x_sim[end])
+    xdot = dynamics({{robot}}, x_sim[end], u)
+    push!(x_sim, x_sim[end] + dt * xdot)
+end
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "pd-vs-ct"
+label = "PD vs Computed Torque"
+desc = "Compare tracking performance: PD with gravity comp vs exact feedback linearisation"
+code = '''
+using RobotDynamics, LinearAlgebra, Plots  # compare PD and computed torque controllers
+
+nv    = RobotDynamics.nv({{robot}})  # velocity dimension
+q, v  = {{x}}[1:nv], {{x}}[nv+1:end]  # extract configuration and velocity
+
+e     = {{q_des-pd}} - q  # configuration error
+u_pd  = {{Kp-pd}} .* e - {{Kd-pd}} .* v + gravity_compensation({{robot}}, q)  # PD with gravity compensation
+u_ct  = inverse_dynamics({{robot}}, q, v, {{Kp-pd}} * e - {{Kd-pd}} * v)  # computed torque via RNEA
+
+norm(u_pd - u_ct)  # torque difference: large when nonlinearities dominate
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "manipulability"
+label = "Manipulability"
+desc = "Compute Yoshikawa manipulability measure: higher = more dexterous configuration"
+code = '''
+using RigidBodyDynamics, LinearAlgebra  # Yoshikawa manipulability: det(J*J^T)^0.5
+
+state = MechanismState({{robot}})  # mechanism state
+set_configuration!(state, {{x}}[1:num_positions({{robot}})])  # set configuration
+J     = Matrix(geometric_jacobian(state, path))[1:3, :]  # position Jacobian
+w     = sqrt(det(J * transpose(J)))  # manipulability: 0 at singularity, maximum at best pose
+'''

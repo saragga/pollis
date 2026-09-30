@@ -1,0 +1,209 @@
+# Classification Performance Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/clf.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Classification Performance"
+viewType = "pollis.clf"
+defaultModel = "metrics"
+
+[[packages]]
+name = "MLJ.jl"
+github = "https://github.com/alan-turing-institute/MLJ.jl"
+
+[requires]
+packages = ["MLJ.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Confusion Matrix and Metrics"
+file = "model-workflow/tutorial-01-clf-metrics.ipynb"
+bundled = true
+description = "Accuracy, precision, recall, F1 and MCC from a confusion matrix with MLJ.jl"
+
+[[notebookSections.notebooks]]
+name = "ROC Curve and AUC"
+file = "model-workflow/tutorial-02-clf-roc.ipynb"
+bundled = true
+description = "ROC curve, AUC and Youden optimal threshold with MLJ.jl"
+
+[[wikis]]
+name = "Overview"
+file = "model-workflow/clf-overview.md"
+bundled = true
+
+[[wikis]]
+name = "Metric Guide"
+file = "model-workflow/clf-metrics.md"
+bundled = true
+
+[[wikis]]
+name = "ROC Analysis"
+file = "model-workflow/clf-roc.md"
+bundled = true
+
+[[wikis]]
+name = "Imbalanced Classes"
+file = "model-workflow/clf-imbalanced.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Original Papers (from packages)"
+
+[[references]]
+title = "MLJ: A Julia Package for Composable Machine Learning"
+authors = "Blaom, A.D., Kiraly, F., Lienart, T. et al."
+year = 2020
+journal = ""
+url = "https://doi.org/10.21105/joss.02704"
+openAccess = true
+
+[[models]]
+id = "metrics"
+label = "Metrics"
+
+[[models]]
+id = "roc"
+label = "ROC"
+
+[[bullets]]
+text = "Confusion-Matrix Metrics"
+detail = "accuracy, precision, recall, F1 and Matthews correlation from a hard prediction vector (MLJ.jl)"
+
+[[bullets]]
+text = "ROC Analysis"
+detail = "receiver operating characteristic curve, AUC and optimal Youden threshold from a probability score vector (MLJ.jl)"
+
+[[inputs]]
+id = "ytrue"
+label = "True Labels"
+tooltip = "n-element categorical vector of true class labels. Must match the length of the predicted labels or score vector."
+default = "y"
+
+[[inputs]]
+id = "ypred"
+label = "Predicted Labels"
+tooltip = "n-element categorical vector of hard predicted class labels, e.g., from predict_mode(mach, X_test) in MLJ.jl."
+default = "yhat"
+models = ["metrics"]
+
+[[inputs]]
+id = "scores"
+label = "Score Vector"
+tooltip = "n-element vector of predicted probability scores ∈ [0, 1] for the positive class, e.g., pdf.(predict(mach, X_test), pos_class)."
+default = "scores"
+models = ["roc"]
+
+[[codeBranches]]
+model = "metrics"
+code = '''
+using MLJ
+
+cm  = confmat({{ypred}}, {{ytrue}})  # confusion matrix
+acc = accuracy({{ypred}}, {{ytrue}})  # (TP + TN) / n
+pre = precision({{ypred}}, {{ytrue}})  # TP / (TP + FP)
+rec = recall({{ypred}}, {{ytrue}})  # TP / (TP + FN)
+f1  = f1score({{ypred}}, {{ytrue}})  # 2 * P * R / (P + R)
+mcc = matthews_correlation({{ypred}}, {{ytrue}})  # robust to class imbalance
+
+println("Accuracy:  ", round(acc, digits=3))  # 
+println("Precision: ", round(pre, digits=3))  # 
+println("Recall:    ", round(rec, digits=3))  # 
+println("F1:        ", round(f1,  digits=3))  # 
+println("MCC:       ", round(mcc, digits=3))  # 
+'''
+
+[[codeBranches]]
+model = "roc"
+code = '''
+using MLJ
+
+fprs, tprs, ts = roc_curve({{scores}}, {{ytrue}})  # ROC curve coordinates
+auc_val         = auc(fprs, tprs)  # area under the curve
+best_ix         = argmax(tprs .- fprs)  # Youden index
+opt_t           = ts[best_ix]  # optimal classification threshold
+
+println("AUC:               ", round(auc_val, digits=3))  # 
+println("Optimal threshold: ", round(opt_t,   digits=3))  # 
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "pr-curve"
+label = "Precision-Recall Curve"
+desc = "Sweep decision threshold from 0 to 1 — visualises the precision/recall trade-off; more informative than ROC for imbalanced classes"
+code = '''
+using MLJ, Plots
+
+ts    = collect(0.0:0.01:1.0)  # threshold grid
+precs = [precision(categorical({{scores}} .>= t), {{ytrue}}) for t in ts]  # precision at each threshold
+recs  = [recall(categorical({{scores}} .>= t), {{ytrue}}) for t in ts]  # recall at each threshold
+
+plot(recs, precs,  # 
+    xlabel="Recall", ylabel="Precision",  # 
+    title="Precision-Recall Curve", legend=false)  # 
+'''
+
+[[actionGroups.actions]]
+id = "class-balance"
+label = "Class Imbalance Check"
+desc = "Print per-class sample counts and proportions — severe imbalance (< 10 %) warrants oversampling or threshold adjustment"
+code = '''
+using StatsBase
+
+counts  = countmap({{ytrue}})  # occurrences per class
+classes = sort(collect(keys(counts)))  # sorted class labels
+
+for cls in classes
+    n = counts[cls]  # samples in this class
+    f = round(100n / length({{ytrue}}), digits=1)  # percentage
+    println(cls, ": ", n, " (", f, "%)")  # 
+end
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "mcc-interpretation"
+label = "MCC Interpretation"
+desc = "Matthews Correlation Coefficient ranges from -1 to +1 and remains reliable under class imbalance, unlike accuracy or F1"
+code = '''
+using MLJ
+
+mcc = matthews_correlation({{ypred}}, {{ytrue}})  # compute MCC
+
+println("MCC = ", round(mcc, digits=3))  # 
+
+println("-1  = perfect anti-prediction")  # 
+println(" 0  = no better than random")  # 
+println("+1  = perfect prediction")  # 
+println("|MCC| > 0.7 = strong")  # 
+println("|MCC| 0.3-0.7 = moderate")  # 
+println("|MCC| < 0.3 = weak")  # 
+'''
+
+[[actionGroups.actions]]
+id = "lift-curve"
+label = "Lift Curve"
+desc = "Compare model ranking against a random baseline — lift > 1 means the classifier targets positives better than chance"
+code = '''
+using Statistics, Plots
+
+pos   = first(unique({{ytrue}}))  # positive class (adjust if needed)
+ord   = sortperm({{scores}}, rev=true)  # sort by descending score
+ysort = {{ytrue}}[ord]  # true labels in score order
+base  = mean({{ytrue}} .== pos)  # positive class base rate
+lift  = cumsum(ysort .== pos) ./ (1:length({{ytrue}})) ./ base  # cumulative lift at each rank
+
+plot(lift, xlabel="n ranked", ylabel="Lift", legend=false)  # 
+hline!([1.0], ls=:dash, label="random baseline")  # lift = 1 is the random baseline
+'''

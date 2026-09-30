@@ -1,0 +1,263 @@
+# Quasi-Random Numbers Generation Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/qrng.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Quasi-Random Numbers Generation"
+viewType = "pollis.qrng"
+defaultModel = "sobol"
+
+[[packages]]
+name = "QuasiMonteCarlo.jl"
+github = "https://github.com/SciML/QuasiMonteCarlo.jl"
+
+[requires]
+packages = ["QuasiMonteCarlo.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "QMC Basics"
+file = "qrng/tutorial-01-qmc-basics.ipynb"
+bundled = true
+description = "Introduction to quasi-random sampling and low-discrepancy sequences"
+
+[[notebookSections.notebooks]]
+name = "Sobol and Halton Sequences"
+file = "qrng/tutorial-02-sobol-halton.ipynb"
+bundled = true
+description = "Sobol and Halton sequences: generation, properties, and convergence"
+
+[[notebookSections.notebooks]]
+name = "Latin Hypercube Sampling"
+file = "qrng/tutorial-03-lhc.ipynb"
+bundled = true
+description = "Latin hypercube sampling for design of experiments and space-filling"
+
+[[notebookSections.notebooks]]
+name = "Kronecker and Golden Sequences"
+file = "qrng/tutorial-04-kronecker-golden.ipynb"
+bundled = true
+description = "Additive recurrence and golden ratio sequences"
+
+[[wikis]]
+name = "Overview"
+file = "qrng/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Factsheet"
+file = "qrng/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "qrng/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "qrng/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "qrng/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "qrng/decision-guide.md"
+bundled = true
+
+[[models]]
+id = "sobol"
+label = "Sobol"
+
+[[models]]
+id = "halton"
+label = "Halton"
+
+[[models]]
+id = "faure"
+label = "Faure"
+
+[[models]]
+id = "lhc"
+label = "Latin Hypercube"
+
+[[models]]
+id = "kronecker"
+label = "Kronecker"
+
+[[models]]
+id = "golden"
+label = "Golden"
+
+[[models]]
+id = "grid"
+label = "Grid"
+
+[[bullets]]
+text = "Sobol"
+detail = "(t,s)-net low-discrepancy sequence, excellent for high-dimensional integration"
+
+[[bullets]]
+text = "Halton"
+detail = "prime-base van der Corput sequence, reliable coverage up to ~10 dimensions"
+
+[[bullets]]
+text = "Faure"
+detail = "base-q permuted sequence, uniform marginals in all axis projections"
+
+[[bullets]]
+text = "Latin Hypercube"
+detail = "randomised stratified sampling, exact uniformity per axis"
+
+[[bullets]]
+text = "Kronecker"
+detail = "additive recurrence with irrational alpha, near-optimal space-filling"
+
+[[bullets]]
+text = "Golden"
+detail = "golden ratio additive recurrence, very well-spaced in 1D and 2D"
+
+[[bullets]]
+text = "Grid"
+detail = "uniform Cartesian lattice, deterministic; n = kd required"
+
+[[inputs]]
+id = "n"
+label = "Number of Samples (n)"
+tooltip = "Number of quasi-random points to generate. For Grid sampling n should equal k^d for integer k."
+default = "100"
+
+[[inputs]]
+id = "lb"
+label = "Lower Bounds (lb)"
+tooltip = "Lower bounds vector, one entry per dimension. E.g. zeros(2) for a 2D unit hypercube."
+default = "zeros(2)"
+
+[[inputs]]
+id = "ub"
+label = "Upper Bounds (ub)"
+tooltip = "Upper bounds vector, one entry per dimension. E.g. ones(2) for a 2D unit hypercube."
+default = "ones(2)"
+
+[[inputs]]
+id = "alpha"
+label = "Alpha Vector (alpha)"
+tooltip = "Direction vector alpha for Kronecker sequences. Length must match the number of dimensions. Irrational values (e.g. sqrt(2), sqrt(3)) give the best coverage."
+default = "[sqrt(2), sqrt(3)]"
+models = ["kronecker"]
+
+[[inputs]]
+id = "dx"
+label = "Grid Spacing (dx)"
+tooltip = ""
+default = "[0.1, 0.1]"
+models = ["grid"]
+
+[[codeBranches]]
+model = "sobol"
+code = '''
+using QuasiMonteCarlo  # SciML quasi-random sampling library
+
+n  = {{n}}  # number of sample points
+lb = {{lb}}  # lower bounds (one per dimension)
+ub = {{ub}}  # upper bounds (one per dimension)
+
+s = QuasiMonteCarlo.sample(n, lb, ub, SobolSample())  # d × n matrix of quasi-random points
+
+println(size(s))  # should print (d, n)
+'''
+
+[[codeBranches]]
+model = "halton"
+code = '''
+using QuasiMonteCarlo  # SciML quasi-random sampling library
+
+n  = {{n}}  # number of sample points
+lb = {{lb}}  # lower bounds (one per dimension)
+ub = {{ub}}  # upper bounds (one per dimension)
+
+s = QuasiMonteCarlo.sample(n, lb, ub, HaltonSample())  # d × n matrix of quasi-random points
+
+println(size(s))  # should print (d, n)
+'''
+
+[[codeBranches]]
+model = "faure"
+code = '''
+using QuasiMonteCarlo  # SciML quasi-random sampling library
+
+n  = {{n}}  # number of sample points
+lb = {{lb}}  # lower bounds (one per dimension)
+ub = {{ub}}  # upper bounds (one per dimension)
+
+s = QuasiMonteCarlo.sample(n, lb, ub, FaureSample())  # d × n matrix of quasi-random points
+
+println(size(s))  # should print (d, n)
+'''
+
+[[codeBranches]]
+model = "lhc"
+code = '''
+using QuasiMonteCarlo  # SciML quasi-random sampling library
+
+n  = {{n}}  # number of sample points
+lb = {{lb}}  # lower bounds (one per dimension)
+ub = {{ub}}  # upper bounds (one per dimension)
+
+s = QuasiMonteCarlo.sample(n, lb, ub, LatinHypercubeSample())  # d × n matrix of quasi-random points
+
+println(size(s))  # should print (d, n)
+'''
+
+[[codeBranches]]
+model = "kronecker"
+code = '''
+using QuasiMonteCarlo  # SciML quasi-random sampling library
+
+n  = {{n}}  # number of sample points
+lb = {{lb}}  # lower bounds (one per dimension)
+ub = {{ub}}  # upper bounds (one per dimension)
+
+alpha  = {{alpha}}  # irrational direction vector (length = d)
+
+s = QuasiMonteCarlo.sample(n, lb, ub, KroneckerSample(alpha))  # d × n matrix of quasi-random points
+
+println(size(s))  # should print (d, n)
+'''
+
+[[codeBranches]]
+model = "golden"
+code = '''
+using QuasiMonteCarlo  # SciML quasi-random sampling library
+
+n  = {{n}}  # number of sample points
+lb = {{lb}}  # lower bounds (one per dimension)
+ub = {{ub}}  # upper bounds (one per dimension)
+
+s = QuasiMonteCarlo.sample(n, lb, ub, GoldenSample())  # d × n matrix of quasi-random points
+
+println(size(s))  # should print (d, n)
+'''
+
+[[codeBranches]]
+model = "grid"
+code = '''
+using QuasiMonteCarlo  # SciML quasi-random sampling library
+
+n  = {{n}}  # number of sample points
+lb = {{lb}}  # lower bounds (one per dimension)
+ub = {{ub}}  # upper bounds (one per dimension)
+
+dx = {{dx}}  # grid spacing per axis; n should equal k^d
+
+s = QuasiMonteCarlo.sample(n, lb, ub, GridSample(dx))  # d × n matrix of uniformly-spaced points
+
+println(size(s))  # should print (d, n)
+'''

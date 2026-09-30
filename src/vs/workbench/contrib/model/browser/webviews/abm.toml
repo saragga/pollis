@@ -1,0 +1,437 @@
+# Agent-Based Models Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/abm.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Agent-Based Models"
+viewType = "pollis.abm"
+defaultModel = "grid"
+
+[[packages]]
+name = "Agents.jl"
+github = "https://github.com/JuliaDynamics/Agents.jl"
+
+[[packages.videos]]
+title = "Agents.jl Tutorial"
+description = "Step-by-step introduction to building agent-based models with Agents.jl"
+url = "https://www.youtube.com/watch?v=QL-bDjzS1pg"
+
+[requires]
+packages = ["Agents.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Grid Space: Schelling Segregation"
+file = "abm/tutorial-01-grid.ipynb"
+bundled = true
+description = "Build the classic Schelling segregation model on a 2-D grid space"
+
+[[notebookSections.notebooks]]
+name = "Continuous Space: Flocking (Boids)"
+file = "abm/tutorial-02-continuous.ipynb"
+bundled = true
+description = "Simulate flocking behaviour using Reynolds rules in continuous 2-D space"
+
+[[notebookSections.notebooks]]
+name = "Graph Space: Spreading Processes"
+file = "abm/tutorial-03-graph.ipynb"
+bundled = true
+description = "Model an SIR epidemic spreading over a social network graph"
+
+[[notebookSections.notebooks]]
+name = "Data Collection & Observables"
+file = "abm/tutorial-04-data.ipynb"
+bundled = true
+description = "Collect agent and model-level data during a run and export to DataFrame"
+
+[[wikis]]
+name = "Factsheet"
+file = "abm/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "abm/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "abm/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "abm/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "abm/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "abm/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Space Types"
+
+[[wikis]]
+name = "Grid Space"
+file = "abm/grid-space.md"
+bundled = true
+
+[[wikis]]
+name = "Continuous Space"
+file = "abm/continuous-space.md"
+bundled = true
+
+[[wikis]]
+name = "Graph Space"
+file = "abm/graph-space.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Agents.jl: A performant and feature-full agent based modelling software of minimal code complexity"
+authors = "Datseris, George; Vahdati, Ali R.; DuBois, Timothy C."
+year = 2022
+journal = "SIMULATION"
+doi = "10.1177/00375497211068820"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "An Introduction to Agent-Based Modeling: Modeling Natural, Social, and Engineered Complex Systems"
+authors = "Wilensky, Uri; Rand, William"
+year = 2015
+journal = "MIT Press"
+openAccess = false
+
+[[references]]
+title = "Growing Artificial Societies: Social Science from the Bottom Up"
+authors = "Epstein, Joshua M.; Axtell, Robert"
+year = 1996
+journal = "MIT Press"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Dynamic models of segregation"
+authors = "Schelling, Thomas C."
+year = 1971
+journal = "Journal of Mathematical Sociology"
+doi = "10.1080/0022250X.1971.9989794"
+openAccess = false
+
+[[references]]
+title = "Flocks, herds and schools: A distributed behavioral model"
+authors = "Reynolds, Craig W."
+year = 1987
+journal = "ACM SIGGRAPH Computer Graphics"
+doi = "10.1145/37401.37406"
+openAccess = false
+
+[[references]]
+title = "Artificial life: Organization, adaptation and complexity from the bottom up"
+authors = "Bedau, Mark A."
+year = 2003
+journal = "Trends in Cognitive Sciences"
+doi = "10.1016/S1364-6613(03)00144-6"
+openAccess = false
+
+[[models]]
+id = "grid"
+label = "Grid Space"
+
+[[models]]
+id = "continuous"
+label = "Continuous Space"
+
+[[models]]
+id = "graph"
+label = "Graph Space"
+
+[[bullets]]
+text = "Grid Space"
+detail = "place agents on a discrete lattice; supports Moore and von Neumann neighbourhoods, periodic boundary conditions, and multi-occupancy"
+
+[[bullets]]
+text = "Continuous Space"
+detail = "agents move freely in a continuous N-dimensional box with optional periodic boundaries and nearest-neighbour queries"
+
+[[bullets]]
+text = "Graph Space"
+detail = "agents occupy nodes of an arbitrary graph (social network, road network, etc.) and interact along edges"
+
+[[inputs]]
+id = "N"
+label = "Agents (N)"
+tooltip = "Number of agents to initialise in the model. For grid space this must not exceed the number of grid cells (if single-occupancy); for continuous and graph spaces any positive integer is valid."
+default = "100"
+
+[[inputs]]
+id = "dims"
+label = "Space dims"
+tooltip = "Dimensions of the space as a tuple. For grid space: (rows, cols) e.g. (20, 20). For continuous space: (Lx, Ly) as floats. For graph space: pass a SimpleGraph or Graphs.jl graph object."
+default = "(20, 20)"
+
+[[inputs]]
+id = "T"
+label = "Steps (T)"
+tooltip = "Number of model steps to simulate. One step calls the agent step function once for every agent according to the chosen scheduler, then optionally a model step function."
+default = "50"
+
+[[codeBranches]]
+model = "grid"
+code = '''
+using Agents
+
+@agent struct SchellingAgent GridAgent{2}  # agent on a 2-D grid
+    happy::Bool = false
+    mood::Int = 0
+end
+
+space = GridSpace({{dims}}; periodic=false)  # finite grid, no wraparound
+model = ABM(SchellingAgent, space)  # create model
+for _ in 1:{{N}}  # add agents
+    add_agent!(model; mood=rand(0:3))
+end
+
+agent_step!(a, m) = move_agent!(a, m)  # each agent moves randomly
+data, _ = run!(model, {{T}}; adata=[:mood])  # run and collect :mood
+'''
+
+[[codeBranches]]
+model = "continuous"
+code = '''
+using Agents
+
+@agent struct Bird ContinuousAgent{2,Float64}  # agent in 2-D continuous space
+    speed::Float64 = 1.0
+    vel::NTuple{2,Float64} = (0.0, 0.0)
+end
+
+space = ContinuousSpace({{dims}}; periodic=true)  # continuous box, periodic
+model = ABM(Bird, space)  # create model
+for _ in 1:{{N}}  # scatter agents randomly
+    add_agent!(model; speed=1.0, vel=Tuple(randn(2)))
+end
+
+agent_step!(a, m) = move_agent!(a, m, a.speed)  # move along vel each step
+data, _ = run!(model, {{T}}; adata=[:speed])  # run and collect :speed
+'''
+
+[[codeBranches]]
+model = "graph"
+code = '''
+using Agents
+
+using Graphs  # graph library
+
+@agent struct SIRAgent GraphAgent  # agent on a graph node
+    status::Symbol = :S
+end
+
+g     = watts_strogatz({{N}}, 6, 0.1)  # small-world network
+space = GraphSpace(g)  # wrap graph in Agents.jl space
+model = ABM(SIRAgent, space)  # create model
+for v in vertices(g)  # one agent per node
+    add_agent!(v, model; status=:S)
+end
+
+agent_step!(a, m) = a.status == :I && infect_neighbours!(a, m, 0.1)  # spread infection
+data, _ = run!(model, {{T}}; adata=[:status])  # run and collect :status
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "abmplot"
+label = "Snapshot Plot"
+desc = "Plot the current agent positions and states as a static figure using abmplot"
+code = '''
+using Agents, GLMakie
+
+fig, ax, abmobs = abmplot(model)  # static snapshot of current state
+display(fig)  # show in window
+'''
+
+[[actionGroups.actions]]
+id = "abmvideo"
+label = "Animation"
+desc = "Record an MP4 animation of the model evolving over T steps"
+code = '''
+using Agents, GLMakie
+
+abmvideo("sim.mp4", model; frames={{T}}, framerate=5)  # record animation to file
+'''
+
+[[actionGroups.actions]]
+id = "agent-density"
+label = "Agent Density"
+desc = "Plot a heatmap of agent occupancy on the grid over time"
+code = '''
+using Agents, GLMakie
+
+data, _ = run!(model, {{T}}; adata=[:pos])  # collect positions
+final = filter(r -> r.step == {{T}}, data)  # last step only
+grid = zeros(Int, {{dims}})  # occupancy matrix
+for r in eachrow(final)  # count agents per cell
+    grid[r.pos...] += 1
+end
+heatmap(grid, axis=(title="Agent density at t={{T}}",))  # display density map
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "convergence"
+label = "Convergence Check"
+desc = "Plot an aggregate observable over time to check whether the model has reached a steady state"
+code = '''
+using Agents, GLMakie
+
+adata = [(:mood, mean)]  # collect mean mood each step
+data, _ = run!(model, {{T}}; adata=adata)  # run
+
+lines(data.step, data.mean_mood, axis=(xlabel="Step", ylabel="Mean mood"))  # convergence plot
+'''
+
+[[actionGroups.actions]]
+id = "reproducibility"
+label = "Reproducibility"
+desc = "Run the model twice with the same seed and confirm identical outcomes"
+code = '''
+using Agents, Random
+
+model1 = initialize_model(seed=42)  # first run with seed
+model2 = initialize_model(seed=42)  # second run with same seed
+d1, _ = run!(model1, {{T}}; adata=[:mood])  # run 1
+d2, _ = run!(model2, {{T}}; adata=[:mood])  # run 2
+
+println("Identical: ", d1.mood == d2.mood)  # must be true
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "ensemble"
+label = "Ensemble Run"
+desc = "Run multiple independent replications and average the outcome to reduce stochastic noise"
+code = '''
+using Agents
+
+models = [initialize_model(seed=i) for i in 1:20]  # 20 replications
+adata = [(:mood, mean)]  # aggregate per step
+data, _ = ensemblerun!(models, {{T}}; adata=adata)  # parallel ensemble
+
+println("Ensemble mean at t={{T}}: ", mean(filter(r->r.step=={{T}}, data).mean_mood))  # final mean
+'''
+
+[[actionGroups.actions]]
+id = "paramscan"
+label = "Parameter Scan"
+desc = "Sweep a model parameter and see how the equilibrium state changes"
+code = '''
+using Agents
+
+params = Dict(:threshold => [0.2, 0.4, 0.6, 0.8])  # parameter sweep
+adata = [(:mood, mean)]  # observable
+data, _ = paramscan(params, initialize_model; n={{T}}, adata=adata)  # scan
+
+println(unique(data.threshold))  # check parameter values
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "grid-vs-continuous"
+label = "Grid vs Continuous"
+desc = "Run the same agent rules in grid and continuous space and compare emergent patterns"
+code = '''
+using Agents
+
+model_g = initialize_grid_model(N={{N}}, seed=1)  # grid version
+model_c = initialize_continuous_model(N={{N}}, seed=1)  # continuous version
+adata = [(:mood, mean)]  # shared observable
+dg, _ = run!(model_g, {{T}}; adata=adata)  # grid run
+dc, _ = run!(model_c, {{T}}; adata=adata)  # continuous run
+
+println("Grid final mean:       ", last(dg.mean_mood))  # grid outcome
+println("Continuous final mean: ", last(dc.mean_mood))  # continuous outcome
+'''
+
+[[actionGroups.actions]]
+id = "network-topologies"
+label = "Network Topologies"
+desc = "Compare spreading dynamics on random, small-world, and scale-free graphs"
+code = '''
+using Agents, Graphs
+
+topologies = [erdos_renyi({{N}}, 0.05), watts_strogatz({{N}}, 4, 0.1), barabasi_albert({{N}}, 2)]  # 3 network types
+labels = ["Erdos-Renyi", "Watts-Strogatz", "Barabasi-Albert"]  # topology names
+for (g, label) in zip(topologies, labels)
+    model = initialize_sir_model(g)
+    data, _ = run!(model, {{T}}; adata=[(:status, count_infected)])
+    println(label, "  peak infected: ", maximum(data.count_infected_status))
+end
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "emergent-summary"
+label = "Emergent Summary"
+desc = "Print a concise summary of emergent population-level statistics at the end of the run"
+code = '''
+using Agents, Statistics
+
+adata = [(:mood, mean), (:mood, std)]  # collect mean and std
+data, mdata = run!(model, {{T}}; adata=adata)  # run with collection
+final = last(data.mean_mood)  # final mean mood
+spread = last(data.std_mood)  # final std dev
+
+println("=== Emergent Summary ===")  # header
+println("Steps run:        ", {{T}})  # duration
+println("Final mean mood:  ", round(final; digits=3))  # equilibrium
+println("Mood dispersion:  ", round(spread; digits=3))  # heterogeneity
+'''
+
+[[actionGroups.actions]]
+id = "phase-diagram"
+label = "Phase Diagram"
+desc = "Map equilibrium outcomes across two parameters to identify phase transitions"
+code = '''
+using Agents, GLMakie
+
+alphas = 0.0:0.1:1.0  # first parameter
+betas  = 0.0:0.1:1.0  # second parameter
+Z = [last(run!(init_model(alpha=a, beta=b), {{T}}; adata=[(:mood,mean)]).mean_mood) for a in alphas, b in betas]  # outcome matrix
+
+heatmap(alphas, betas, Z, axis=(xlabel="alpha", ylabel="beta", title="Phase diagram"))  # phase diagram
+'''

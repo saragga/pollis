@@ -1,0 +1,394 @@
+# Collaborative Topic Poisson Factorisation Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/ctpf.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Collaborative Topic Poisson Factorisation"
+viewType = "pollis.ctpf"
+defaultModel = "main"
+
+[[packages]]
+name = "TopicModels.jl"
+github = "https://github.com/slycoder/TopicModels.jl"
+
+[[packages]]
+name = "TextAnalysis.jl"
+github = "https://github.com/JuliaText/TextAnalysis.jl"
+
+[requires]
+packages = ["TopicModels.jl", "TextAnalysis.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "CTPF"
+file = "ctpf/tutorial-01-ctpf.ipynb"
+bundled = true
+description = "Collaborative Topic Poisson Factorisation: joint document modelling and recommendation using TopicModels.jl"
+
+[[wikis]]
+name = "Factsheet"
+file = "ctpf/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "ctpf/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "ctpf/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "ctpf/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "ctpf/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "ctpf/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Components"
+
+[[wikis]]
+name = "Topic Model"
+file = "ctpf/topic-model.md"
+bundled = true
+
+[[wikis]]
+name = "Poisson Factorisation"
+file = "ctpf/poisson-factorisation.md"
+bundled = true
+
+[[wikis]]
+name = "User-Item Ratings"
+file = "ctpf/user-item-ratings.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "TopicModels.jl"
+authors = "Zeng, Jonathan"
+year = 2015
+journal = "GitHub"
+url = "https://github.com/slycoder/TopicModels.jl"
+openAccess = true
+
+[[references]]
+title = "TextAnalysis.jl: Julia NLP Toolkit"
+authors = "JuliaText Contributors"
+year = 2023
+journal = "GitHub"
+url = "https://github.com/JuliaText/TextAnalysis.jl"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Speech and Language Processing"
+authors = "Jurafsky, Daniel; Martin, James H."
+year = 2024
+journal = "Pearson (3rd ed., draft)"
+url = "https://web.stanford.edu/~jurafsky/slp3/"
+openAccess = true
+
+[[references]]
+title = "Probabilistic Topic Models"
+authors = "Blei, David M."
+year = 2012
+journal = "Communications of the ACM"
+doi = "10.1145/2133806.2133826"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Collaborative Topic Modeling for Recommending Scientific Articles"
+authors = "Wang, Chong; Blei, David M."
+year = 2011
+journal = "ACM SIGKDD"
+doi = "10.1145/2020408.2020480"
+openAccess = false
+
+[[references]]
+title = "Scalable Recommendation with Hierarchical Poisson Factorization"
+authors = "Gopalan, Prem; Hofman, Jake M.; Blei, David M."
+year = 2014
+journal = "UAI"
+url = "https://auai.org/uai2015/proceedings/papers/208.pdf"
+openAccess = true
+
+[[bullets]]
+text = "CTPF"
+detail = "joint model combining a topic model for document content with Poisson factorisation for user-item ratings"
+
+[[bullets]]
+text = "k topics"
+detail = "number of latent topics shared between the document model and the recommendation model"
+
+[[bullets]]
+text = "TopicModels.jl"
+detail = "Julia implementation of CTPF, LDA, CTM and related probabilistic topic models"
+
+[[inputs]]
+id = "corpus"
+label = "Corpus"
+tooltip = "Array of text documents (one per item), e.g. docs = [\"first doc\", \"second doc\"]"
+default = "corpus"
+
+[[inputs]]
+id = "ratings"
+label = "Ratings"
+tooltip = "Sparse user-item rating matrix; rows = users, cols = items (documents)"
+default = "ratings"
+
+[[inputs]]
+id = "k"
+label = "Topics (k)"
+tooltip = "Number of latent topics shared between the topic model and the rating model"
+default = "10"
+
+[[inputs]]
+id = "iters"
+label = "Iterations"
+tooltip = "Number of variational EM training iterations"
+default = "1000"
+
+[[codeBranches]]
+model = "main"
+code = '''
+using TopicModels, TextAnalysis  # 
+
+crps   = Corpus([StringDocument(d) for d in {{corpus}}])  # build corpus from document array
+prepare!(crps, strip_punctuation | strip_case)  # normalise text
+update_lexicon!(crps)  # build vocabulary
+dtm    = DocumentTermMatrix(crps)  # document-term matrix
+
+model  = CTPF(dtm.dtm, {{ratings}}, {{k}})  # joint topic + Poisson model
+train!(model, iter={{iters}})  # variational EM training
+
+topicdist(model)  # topic-word distributions (k x V)
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "topic-words"
+label = "Top Words per Topic"
+desc = "Highest-probability words for each latent topic"
+code = '''
+using TopicModels, TextAnalysis
+
+crps  = Corpus([StringDocument(d) for d in {{corpus}}])
+prepare!(crps, strip_punctuation | strip_case)
+update_lexicon!(crps)
+dtm   = DocumentTermMatrix(crps)
+model = CTPF(dtm.dtm, {{ratings}}, {{k}})
+train!(model)  # train with default iterations
+
+showtopics(model, n=10)  # top 10 words per topic
+'''
+
+[[actionGroups.actions]]
+id = "user-topic-dist"
+label = "User-Topic Distribution"
+desc = "Latent topic preferences inferred per user"
+code = '''
+using TopicModels, TextAnalysis
+
+crps  = Corpus([StringDocument(d) for d in {{corpus}}])
+prepare!(crps, strip_punctuation | strip_case)
+update_lexicon!(crps)
+dtm   = DocumentTermMatrix(crps)
+model = CTPF(dtm.dtm, {{ratings}}, {{k}})
+train!(model)
+
+model.theta  # user-topic matrix (users x k)
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "perplexity"
+label = "Perplexity"
+desc = "Held-out perplexity on unseen documents"
+code = '''
+using TopicModels, TextAnalysis
+
+crps  = Corpus([StringDocument(d) for d in {{corpus}}])
+prepare!(crps, strip_punctuation | strip_case)
+update_lexicon!(crps)
+dtm   = DocumentTermMatrix(crps)
+model = CTPF(dtm.dtm, {{ratings}}, {{k}})
+train!(model)
+
+perplexity(model)  # held-out perplexity (lower is better)
+'''
+
+[[actionGroups.actions]]
+id = "recommendation-recall"
+label = "Recommendation Recall"
+desc = "Recall at k for held-out user-item pairs"
+code = '''
+using TopicModels, TextAnalysis
+
+crps  = Corpus([StringDocument(d) for d in {{corpus}}])
+prepare!(crps, strip_punctuation | strip_case)
+update_lexicon!(crps)
+dtm   = DocumentTermMatrix(crps)
+model = CTPF(dtm.dtm, {{ratings}}, {{k}})
+train!(model)
+
+recommend(model, user_id, n={{k}})  # top-N item indices for given user
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "recommend"
+label = "Recommend Items"
+desc = "Top-N document recommendations for a given user"
+code = '''
+using TopicModels, TextAnalysis
+
+crps  = Corpus([StringDocument(d) for d in {{corpus}}])
+prepare!(crps, strip_punctuation | strip_case)
+update_lexicon!(crps)
+dtm   = DocumentTermMatrix(crps)
+model = CTPF(dtm.dtm, {{ratings}}, {{k}})
+train!(model)
+
+recommend(model, user_id, n=10)  # top-10 document indices for user
+'''
+
+[[actionGroups.actions]]
+id = "infer-topics"
+label = "Infer Topics"
+desc = "Topic distribution for a new document"
+code = '''
+using TopicModels, TextAnalysis
+
+crps  = Corpus([StringDocument(d) for d in {{corpus}}])
+prepare!(crps, strip_punctuation | strip_case)
+update_lexicon!(crps)
+dtm   = DocumentTermMatrix(crps)
+model = CTPF(dtm.dtm, {{ratings}}, {{k}})
+train!(model)
+
+topicdist(model, new_doc_bow)  # topic distribution for a new document
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "compare-k"
+label = "Compare k Topics"
+desc = "Perplexity and recall across different topic counts"
+code = '''
+using TopicModels, TextAnalysis
+
+crps  = Corpus([StringDocument(d) for d in {{corpus}}])
+prepare!(crps, strip_punctuation | strip_case)
+update_lexicon!(crps)
+dtm   = DocumentTermMatrix(crps)
+
+for k in [5, 10, 20, 50]  # sweep over topic counts
+    model = CTPF(dtm.dtm, {{ratings}}, k)
+    train!(model)
+    println("k=", k, " perplexity=", perplexity(model))  # log perplexity per k
+end
+'''
+
+[[actionGroups.actions]]
+id = "ctpf-vs-lda"
+label = "CTPF vs LDA"
+desc = "Topic quality with and without user-rating signal"
+code = '''
+using TopicModels, TextAnalysis
+
+crps  = Corpus([StringDocument(d) for d in {{corpus}}])
+prepare!(crps, strip_punctuation | strip_case)
+update_lexicon!(crps)
+dtm   = DocumentTermMatrix(crps)
+
+lda  = LDA(dtm.dtm, {{k}})  # text-only topic model
+ctpf = CTPF(dtm.dtm, {{ratings}}, {{k}})  # joint model with ratings
+train!(lda)
+train!(ctpf)
+
+println("LDA perplexity:  ", perplexity(lda))  # text-only baseline
+println("CTPF perplexity: ", perplexity(ctpf))  # joint model
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "topic-labels"
+label = "Topic Labels"
+desc = "Top-5 words as a label for each topic"
+code = '''
+using TopicModels, TextAnalysis
+
+crps  = Corpus([StringDocument(d) for d in {{corpus}}])
+prepare!(crps, strip_punctuation | strip_case)
+update_lexicon!(crps)
+dtm   = DocumentTermMatrix(crps)
+model = CTPF(dtm.dtm, {{ratings}}, {{k}})
+train!(model)
+
+showtopics(model, n=5)  # top-5 words per topic as label
+'''
+
+[[actionGroups.actions]]
+id = "item-topics"
+label = "Item-Topic Mix"
+desc = "Latent topic composition of each document"
+code = '''
+using TopicModels, TextAnalysis
+
+crps  = Corpus([StringDocument(d) for d in {{corpus}}])
+prepare!(crps, strip_punctuation | strip_case)
+update_lexicon!(crps)
+dtm   = DocumentTermMatrix(crps)
+model = CTPF(dtm.dtm, {{ratings}}, {{k}})
+train!(model)
+
+model.phi  # item-topic matrix (items x k)
+'''

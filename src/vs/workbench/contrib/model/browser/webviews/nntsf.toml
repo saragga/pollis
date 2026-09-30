@@ -1,0 +1,542 @@
+# Neural Network Time-Series Forecasting Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/nntsf.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Neural Network Time-Series Forecasting"
+viewType = "pollis.nntsf"
+defaultModel = "lstnet"
+
+[[packages]]
+name = "FluxArchitectures.jl"
+github = "https://github.com/sdobber/FluxArchitectures.jl"
+
+[[packages]]
+name = "Flux.jl"
+github = "https://github.com/FluxML/Flux.jl"
+
+[requires]
+packages = ["FluxArchitectures.jl", "Flux.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "LSTnet"
+file = "nntsf/tutorial-01-lstnet.ipynb"
+bundled = true
+description = "CNN + recurrent-skip GRU + autoregressive term"
+
+[[notebookSections.notebooks]]
+name = "DA-RNN"
+file = "nntsf/tutorial-02-darnn.ipynb"
+bundled = true
+description = "Input-attention encoder + temporal-attention decoder"
+
+[[notebookSections.notebooks]]
+name = "TPA-LSTM"
+file = "nntsf/tutorial-03-tpa-lstm.ipynb"
+bundled = true
+description = "LSTM with temporal pattern attention"
+
+[[notebookSections.notebooks]]
+name = "DSANet"
+file = "nntsf/tutorial-04-dsanet.ipynb"
+bundled = true
+description = "Global and local self-attention, no recurrence"
+
+[[wikis]]
+name = "Factsheet"
+file = "nntsf/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "nntsf/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "nntsf/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "nntsf/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "nntsf/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "nntsf/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Architectures"
+
+[[wikis]]
+name = "LSTnet"
+file = "nntsf/lstnet.md"
+bundled = true
+
+[[wikis]]
+name = "DA-RNN"
+file = "nntsf/darnn.md"
+bundled = true
+
+[[wikis]]
+name = "TPA-LSTM"
+file = "nntsf/tpa-lstm.md"
+bundled = true
+
+[[wikis]]
+name = "DSANet"
+file = "nntsf/dsanet.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Fashionable Modelling with Flux"
+authors = "Innes, Mike; Saba, Elliot; Fischer, Keno; Gandhi, Dhairya; Rudilosso, Marco Concetto; Joy, Neethu Mariya; Karmali, Tejan; Pal, Avik; Shah, Viral"
+year = 2018
+journal = "arXiv"
+doi = "10.48550/arXiv.1811.01457"
+openAccess = true
+
+[[references]]
+title = "Flux: Elegant Machine Learning with Julia"
+authors = "Innes, Mike"
+year = 2018
+journal = "Journal of Open Source Software"
+doi = "10.21105/joss.00602"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Deep Learning"
+authors = "Goodfellow, Ian; Bengio, Yoshua; Courville, Aaron"
+year = 2016
+journal = "MIT Press"
+url = "https://www.deeplearningbook.org"
+openAccess = true
+
+[[references]]
+title = "Forecasting: Principles and Practice"
+authors = "Hyndman, Rob J.; Athanasopoulos, George"
+year = 2021
+journal = "OTexts"
+url = "https://otexts.com/fpp3/"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Modeling Long- and Short-Term Temporal Patterns with Deep Neural Networks (LSTNet)"
+authors = "Lai, Guokun; Chang, Wei-Cheng; Yang, Yiming; Liu, Hanxiao"
+year = 2018
+journal = "SIGIR"
+doi = "10.1145/3209978.3210006"
+openAccess = false
+
+[[references]]
+title = "A Dual-Stage Attention-Based Recurrent Neural Network for Time Series Prediction (DA-RNN)"
+authors = "Qin, Yao; Song, Dongjin; Chen, Haifeng; Cheng, Wei; Jiang, Guofei; Cottrell, Garrison W."
+year = 2017
+journal = "IJCAI"
+doi = "10.24963/ijcai.2017/366"
+openAccess = true
+
+[[references]]
+title = "Temporal Pattern Attention for Multivariate Time Series Forecasting (TPA-LSTM)"
+authors = "Shih, Shun-Yao; Sun, Fan-Keng; Lee, Hung-yi"
+year = 2019
+journal = "Machine Learning"
+doi = "10.1007/s10994-019-05815-0"
+openAccess = true
+
+[[references]]
+title = "DSANet: Dual Self-Attention Network for Multivariate Time Series Forecasting"
+authors = "Huang, Siteng; Wang, Donglin; Wu, Xuehan; Tang, Ao"
+year = 2019
+journal = "CIKM"
+doi = "10.1145/3357384.3358132"
+openAccess = false
+
+[[models]]
+id = "lstnet"
+label = "LSTnet"
+
+[[models]]
+id = "darnn"
+label = "DA-RNN"
+
+[[models]]
+id = "tpalstm"
+label = "TPA-LSTM"
+
+[[models]]
+id = "dsanet"
+label = "DSANet"
+
+[[decisionRows]]
+task = "LSTnet"
+context = "CNN + GRU + skip + AR"
+purpose = "Series mixing short-term local patterns with long seasonal cycles"
+
+[[decisionRows]]
+task = "DA-RNN"
+context = "Dual-stage attention (input + temporal)"
+purpose = "You want attention over both driving series and time steps"
+
+[[decisionRows]]
+task = "TPA-LSTM"
+context = "LSTM + temporal pattern attention"
+purpose = "Many variables with different periodicities to weight"
+
+[[decisionRows]]
+task = "DSANet"
+context = "Global + local self-attention"
+purpose = "Many correlated series; prefer parallelism with no recurrence"
+
+[[inputs]]
+id = "lstnet-pool"
+label = "pool length"
+tooltip = ""
+default = "10"
+models = ["lstnet"]
+
+[[inputs]]
+id = "lstnet-conv"
+label = "conv filters"
+tooltip = ""
+default = "2"
+models = ["lstnet"]
+
+[[inputs]]
+id = "lstnet-recur"
+label = "recur size"
+tooltip = ""
+default = "3"
+models = ["lstnet"]
+
+[[inputs]]
+id = "lstnet-skip"
+label = "skip length"
+tooltip = ""
+default = "120"
+models = ["lstnet"]
+
+[[inputs]]
+id = "lstnet-epochs"
+label = "epochs"
+tooltip = ""
+default = "20"
+models = ["lstnet"]
+
+[[inputs]]
+id = "darnn-pool"
+label = "pool length"
+tooltip = ""
+default = "10"
+models = ["darnn"]
+
+[[inputs]]
+id = "darnn-encoder"
+label = "encoder size"
+tooltip = ""
+default = "10"
+models = ["darnn"]
+
+[[inputs]]
+id = "darnn-decoder"
+label = "decoder size"
+tooltip = ""
+default = "10"
+models = ["darnn"]
+
+[[inputs]]
+id = "darnn-epochs"
+label = "epochs"
+tooltip = ""
+default = "20"
+models = ["darnn"]
+
+[[inputs]]
+id = "tpalstm-pool"
+label = "pool length"
+tooltip = ""
+default = "10"
+models = ["tpalstm"]
+
+[[inputs]]
+id = "tpalstm-hidden"
+label = "hidden size"
+tooltip = ""
+default = "10"
+models = ["tpalstm"]
+
+[[inputs]]
+id = "tpalstm-layers"
+label = "layers"
+tooltip = ""
+default = "1"
+models = ["tpalstm"]
+
+[[inputs]]
+id = "tpalstm-filters"
+label = "filters"
+tooltip = ""
+default = "32"
+models = ["tpalstm"]
+
+[[inputs]]
+id = "tpalstm-epochs"
+label = "epochs"
+tooltip = ""
+default = "20"
+models = ["tpalstm"]
+
+[[inputs]]
+id = "dsanet-pool"
+label = "pool length"
+tooltip = ""
+default = "10"
+models = ["dsanet"]
+
+[[inputs]]
+id = "dsanet-local"
+label = "local length"
+tooltip = ""
+default = "3"
+models = ["dsanet"]
+
+[[inputs]]
+id = "dsanet-kernels"
+label = "kernels"
+tooltip = ""
+default = "3"
+models = ["dsanet"]
+
+[[inputs]]
+id = "dsanet-dmodel"
+label = "d-model"
+tooltip = ""
+default = "4"
+models = ["dsanet"]
+
+[[inputs]]
+id = "dsanet-epochs"
+label = "epochs"
+tooltip = ""
+default = "20"
+models = ["dsanet"]
+
+[[codeBranches]]
+model = "lstnet"
+code = '''
+using FluxArchitectures  # Flux plus the four architectures
+
+poollength = {{lstnet-pool}}  # past steps per input window
+input, target = get_data(:exchange_rate, poollength, 1000, 6)  # sample multivariate series (features x steps)
+inputsize = size(input, 1)  # number of input features
+
+model = LSTnet(inputsize, {{lstnet-conv}}, {{lstnet-recur}}, poollength, {{lstnet-skip}})  # CNN + GRU + skip-GRU + autoregressive
+loss(x, y) = (Flux.reset!(model); Flux.mse(model(x), transpose(y)))  # reset recurrent state each pass
+opt = Flux.ADAM(0.007)  # optimiser
+Flux.train!(loss, Flux.params(model), Iterators.repeated((input, target), {{lstnet-epochs}}), opt)  # train for {{lstnet-epochs}} epochs
+'''
+
+[[codeBranches]]
+model = "darnn"
+code = '''
+using FluxArchitectures  # Flux plus the four architectures
+
+poollength = {{darnn-pool}}  # past steps per input window
+input, target = get_data(:exchange_rate, poollength, 1000, 6)  # sample multivariate series (features x steps)
+inputsize = size(input, 1)  # number of input features
+
+model = DARNN(inputsize, {{darnn-encoder}}, {{darnn-decoder}}, poollength, 1)  # dual-stage attention RNN
+loss(x, y) = (Flux.reset!(model); Flux.mse(model(x), transpose(y)))  # reset recurrent state each pass
+opt = Flux.ADAM(0.007)  # optimiser
+Flux.train!(loss, Flux.params(model), Iterators.repeated((input, target), {{darnn-epochs}}), opt)  # train for {{darnn-epochs}} epochs
+'''
+
+[[codeBranches]]
+model = "tpalstm"
+code = '''
+using FluxArchitectures  # Flux plus the four architectures
+
+poollength = {{tpalstm-pool}}  # past steps per input window
+input, target = get_data(:exchange_rate, poollength, 1000, 6)  # sample multivariate series (features x steps)
+inputsize = size(input, 1)  # number of input features
+
+model = TPALSTM(inputsize, {{tpalstm-hidden}}, poollength, {{tpalstm-layers}}, {{tpalstm-filters}}, 1)  # LSTM + temporal pattern attention
+loss(x, y) = (Flux.reset!(model); Flux.mse(model(x), transpose(y)))  # reset recurrent state each pass
+opt = Flux.ADAM(0.007)  # optimiser
+Flux.train!(loss, Flux.params(model), Iterators.repeated((input, target), {{tpalstm-epochs}}), opt)  # train for {{tpalstm-epochs}} epochs
+'''
+
+[[codeBranches]]
+model = "dsanet"
+code = '''
+using FluxArchitectures  # Flux plus the four architectures
+
+poollength = {{dsanet-pool}}  # past steps per input window
+input, target = get_data(:exchange_rate, poollength, 1000, 6)  # sample multivariate series (features x steps)
+inputsize = size(input, 1)  # number of input features
+
+model = DSANet(inputsize, poollength, {{dsanet-local}}, {{dsanet-kernels}}, {{dsanet-dmodel}}, 1, 1, 1, 6)  # global + local self-attention
+loss(x, y) = (Flux.reset!(model); Flux.mse(model(x), transpose(y)))  # reset recurrent state each pass
+opt = Flux.ADAM(0.007)  # optimiser
+Flux.train!(loss, Flux.params(model), Iterators.repeated((input, target), {{dsanet-epochs}}), opt)  # train for {{dsanet-epochs}} epochs
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "pred-vs-target"
+label = "Prediction vs Target"
+desc = "Overlay the model prediction on the target series"
+code = '''
+using Plots  # plotting
+
+pred = model(input)  # forward pass over every window
+plot(vec(transpose(target)); label="target")  # ground truth
+plot!(vec(pred); label="prediction", lw=2)  # model output
+'''
+
+[[actionGroups.actions]]
+id = "loss-curve"
+label = "Training Loss Curve"
+desc = "Record the loss each epoch and plot the learning curve"
+code = '''
+using Plots  # plotting
+
+history = Float64[]  # collect loss per epoch
+cb() = push!(history, loss(input, target))  # callback after each epoch
+Flux.train!(loss, Flux.params(model), Iterators.repeated((input, target), 50), Flux.ADAM(0.007); cb=cb)  # train with logging
+plot(history; xlabel="epoch", ylabel="MSE", legend=false)  # learning curve
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "residuals"
+label = "Residual Plot"
+desc = "Plot prediction residuals and their distribution"
+code = '''
+using Plots  # plotting
+
+res = vec(model(input)) .- vec(transpose(target))  # prediction errors
+plot(res; title="Residuals", legend=false)  # should look like white noise
+histogram(res; title="Residual distribution")  # check for skew or heavy tails
+'''
+
+[[actionGroups.actions]]
+id = "grad-norm"
+label = "Gradient Norms"
+desc = "Inspect per-parameter gradient magnitudes for vanishing or exploding gradients"
+code = '''
+using Flux  # autodiff
+
+gs = gradient(() -> loss(input, target), Flux.params(model))  # one backward pass
+for p in Flux.params(model)  # each parameter array
+    println(sqrt(sum(abs2, gs[p])))  # L2 norm of the gradient
+end
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "forecast"
+label = "Forecast Horizon"
+desc = "Run the trained model and read off the most recent forecast"
+code = '''
+yhat = model(input)  # horizon-step prediction for every window
+println(yhat[:, end])  # forecast from the latest window
+'''
+
+[[actionGroups.actions]]
+id = "save-model"
+label = "Save Model"
+desc = "Serialise the trained model with BSON for later reuse"
+code = '''
+using BSON  # serialisation
+
+BSON.@save "model.bson" model  # write weights to disk
+BSON.@load "model.bson" model  # reload later
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "naive-baseline"
+label = "Naive Baseline"
+desc = "Compare the model MSE against a last-value baseline"
+code = '''
+using Flux  # loss helpers
+
+mse_model = Flux.mse(model(input), transpose(target))  # trained model error
+naive = repeat(input[end, :, :], 1, 1)  # last observed value as forecast
+mse_naive = Flux.mse(naive, transpose(target))  # baseline error
+println("naive: ", mse_naive, "  model: ", mse_model)  # lower is better
+'''
+
+[[actionGroups.actions]]
+id = "swap-arch"
+label = "Swap Architecture"
+desc = "All four models share the same training loop; swap only the constructor"
+code = '''
+model = LSTnet(inputsize, 2, 3, poollength, 120)  # CNN + GRU + skip + AR
+model = DARNN(inputsize, 10, 10, poollength, 1)  # dual-stage attention
+model = TPALSTM(inputsize, 10, poollength, 1, 32, 1)  # temporal pattern attention
+model = DSANet(inputsize, poollength, 3, 3, 4, 1, 1, 1, 6)  # dual self-attention
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "param-count"
+label = "Parameter Count"
+desc = "Count the trainable parameters in the model"
+code = '''
+using Flux  # parameter access
+
+n = sum(length, Flux.params(model))  # total trainable scalars
+println("trainable parameters: ", n)  # model capacity
+'''
+
+[[actionGroups.actions]]
+id = "attention-note"
+label = "Attention Weights"
+desc = "DA-RNN, TPA-LSTM and DSANet learn attention; inspect the weight arrays"
+code = '''
+using Flux  # parameter access
+
+ps = Flux.params(model)  # all learned weight arrays
+println("weight arrays: ", length(ps))  # attention layers are among them
+'''

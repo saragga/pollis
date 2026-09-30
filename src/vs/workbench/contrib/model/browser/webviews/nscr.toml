@@ -1,0 +1,179 @@
+# Net Survival & Competing Risks Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/nscr.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Net Survival & Competing Risks"
+viewType = "pollis.nscr"
+defaultModel = "cif"
+
+[[packages]]
+name = "NetSurvival.jl"
+github = "https://github.com/JuliaSurv/NetSurvival.jl"
+
+[requires]
+packages = ["NetSurvival.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Cumulative Incidence Functions"
+file = "nscr/tutorial-01-cif.ipynb"
+bundled = true
+description = "Competing-risks analysis using cumulative incidence functions"
+
+[[notebookSections.notebooks]]
+name = "Net Survival Estimation"
+file = "nscr/tutorial-02-ns.ipynb"
+bundled = true
+description = "Population-based net survival with Pohar-Perme and Ederer estimators"
+
+[[notebookSections.notebooks]]
+name = "Grafféo's Log-Rank Test"
+file = "nscr/tutorial-03-lr.ipynb"
+bundled = true
+description = "Non-parametric comparison of net survival curves"
+
+[[wikis]]
+name = "Overview"
+file = "nscr/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Factsheet"
+file = "nscr/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "nscr/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "nscr/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "nscr/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "nscr/decision-guide.md"
+bundled = true
+
+[[models]]
+id = "cif"
+label = "Cumulative Incidence"
+
+[[models]]
+id = "ns"
+label = "Net Survival"
+
+[[models]]
+id = "lr"
+label = "Log-Rank Test"
+
+[[bullets]]
+text = "Cumulative Incidence"
+detail = "competing-risks CIF via cause-specific hazards"
+
+[[bullets]]
+text = "Net Survival"
+detail = "population-based relative survival estimator"
+
+[[bullets]]
+text = "Log-Rank Test"
+detail = "non-parametric comparison of net survival curves"
+
+[[inputs]]
+id = "time"
+label = "time variable"
+tooltip = "Column name for observed event or censoring times."
+default = "time"
+
+[[inputs]]
+id = "event"
+label = "event variable"
+tooltip = "Column name for event type. Use 0 for censored observations; integer codes ≥ 1 identify each competing event."
+default = "event"
+
+[[inputs]]
+id = "data"
+label = "data"
+tooltip = "Julia DataFrame containing the survival data."
+default = "df"
+
+[[inputs]]
+id = "cause"
+label = "cause"
+tooltip = "Integer code identifying the cause of interest for the cumulative incidence function."
+default = "1"
+models = ["cif"]
+
+[[inputs]]
+id = "method"
+label = "estimator"
+tooltip = "Net survival estimator. Pohar-Perme is the recommended unbiased estimator for population-based studies."
+kind = "select"
+default = "PoharPerme"
+models = ["ns"]
+
+[[inputs.options]]
+value = "PoharPerme"
+label = "Pohar-Perme (recommended)"
+
+[[inputs.options]]
+value = "EdererI"
+label = "Ederer I"
+
+[[inputs.options]]
+value = "EdererII"
+label = "Ederer II"
+
+[[inputs.options]]
+value = "Hakulinen"
+label = "Hakulinen"
+
+[[inputs]]
+id = "expected"
+label = "expected hazard"
+tooltip = "Variable or expression providing the expected (population) hazard at each observation, typically derived from a population mortality ratetable."
+default = "ratetable"
+models = ["ns", "lr"]
+
+[[inputs]]
+id = "group"
+label = "group variable"
+tooltip = "Column name for the grouping variable used to compare net survival curves in the log-rank test."
+default = "group"
+models = ["lr"]
+
+[[codeBranches]]
+model = "cif"
+code = '''
+using NetSurvival
+
+cif = fit(CumulativeIncidence, {{data}}.{{time}}, {{data}}.{{event}}; cause={{cause}})  # cumulative incidence for cause {{cause}}
+'''
+
+[[codeBranches]]
+model = "ns"
+code = '''
+using NetSurvival
+
+ns = fit({{method}}, @formula(EventTime({{time}}, {{event}}) ~ 1), {{data}}, {{expected}})  # {{method}} net survival estimator
+'''
+
+[[codeBranches]]
+model = "lr"
+code = '''
+using NetSurvival
+
+test = fit(GraffeoTest, @formula(EventTime({{time}}, {{event}}) ~ {{group}}), {{data}}, {{expected}})  # Grafféo log-rank test
+pvalue(test)  # p-value
+'''

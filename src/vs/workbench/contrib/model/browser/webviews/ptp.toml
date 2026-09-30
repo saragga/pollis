@@ -1,0 +1,654 @@
+# Point Processes Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/ptp.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Point Processes"
+viewType = "pollis.ptp"
+defaultModel = "poisson"
+
+[[packages]]
+name = "PointProcesses.jl"
+github = "https://github.com/JoseKling/PointProcesses.jl"
+
+[[packages]]
+name = "HawkesProcesses.jl"
+github = "https://github.com/dm13450/HawkesProcesses.jl"
+
+[[packages]]
+name = "NetworkHawkesProcesses.jl"
+github = "https://github.com/cswaney/NetworkHawkesProcesses.jl"
+
+[requires]
+packages = ["PointProcesses.jl", "HawkesProcesses.jl", "NetworkHawkesProcesses.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Poisson MLE"
+file = "ptp/ptp-poisson-02-mle.ipynb"
+bundled = true
+description = "Maximum likelihood estimation of the Poisson rate: closed-form MLE and confidence intervals"
+
+[[notebookSections.notebooks]]
+name = "Poisson Bayesian"
+file = "ptp/ptp-poisson-03-bayesian.ipynb"
+bundled = true
+description = "Bayesian inference for Poisson processes: conjugate Gamma prior and posterior updating"
+
+[[notebookSections.notebooks]]
+name = "Inhomogeneous Poisson"
+file = "ptp/ptp-poisson-04-inhomogeneous.ipynb"
+bundled = true
+description = "Inhomogeneous Poisson processes: thinning algorithm, Lewis-Shedler method, and rate estimation"
+
+[[notebookSections.notebooks]]
+name = "Hawkes MLE"
+file = "ptp/ptp-hawkes-02-mle.ipynb"
+bundled = true
+description = "MLE for Hawkes processes: log-likelihood function and numerical optimisation"
+
+[[notebookSections.notebooks]]
+name = "Hawkes Bayesian"
+file = "ptp/ptp-hawkes-03-bayesian.ipynb"
+bundled = true
+description = "Bayesian estimation of Hawkes processes: MCMC sampling of (mu, alpha, beta)"
+
+[[notebookSections.notebooks]]
+name = "Hawkes Diagnostics"
+file = "ptp/ptp-hawkes-04-diagnostics.ipynb"
+bundled = true
+description = "Hawkes process diagnostics: residual analysis via time-rescaling theorem and Q-Q plots"
+
+[[notebookSections.notebooks]]
+name = "Cox Process"
+file = "ptp/ptp-advanced-01-cox.ipynb"
+bundled = true
+description = "Cox processes: doubly stochastic Poisson processes with Gaussian process intensity"
+
+[[notebookSections.notebooks]]
+name = "Network Hawkes"
+file = "ptp/ptp-advanced-02-network.ipynb"
+bundled = true
+description = "Network Hawkes processes: multivariate point processes with directed network interactions"
+
+[[notebookSections.notebooks]]
+name = "Goodness of Fit"
+file = "ptp/ptp-advanced-03-gof.ipynb"
+bundled = true
+description = "Goodness-of-fit testing: time-rescaling theorem and Kolmogorov-Smirnov test for point processes"
+
+[[notebookSections.notebooks]]
+name = "Point Process Regression"
+file = "ptp/ptp-advanced-04-regression.ipynb"
+bundled = true
+description = "Point process regression: incorporating covariates into the intensity function"
+
+[[wikis]]
+name = "Factsheet"
+file = "ptp/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "ptp/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "ptp/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "ptp/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "ptp/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "ptp/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Process Types"
+
+[[wikis]]
+name = "Poisson Process"
+file = "ptp/poisson-process.md"
+bundled = true
+
+[[wikis]]
+name = "Hawkes Process"
+file = "ptp/hawkes-process.md"
+bundled = true
+
+[[wikis]]
+name = "Cox Process"
+file = "ptp/cox-process.md"
+bundled = true
+
+[[wikis]]
+name = "Network Hawkes"
+file = "ptp/network-hawkes.md"
+bundled = true
+
+[[wikis]]
+name = "Intensity Function"
+file = "ptp/intensity-function.md"
+bundled = true
+
+[[wikis]]
+name = "Goodness of Fit"
+file = "ptp/goodness-of-fit.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "An Introduction to the Theory of Point Processes, Vol. I: Elementary Theory and Methods"
+authors = "Daley, Daryl J.; Vere-Jones, David"
+year = 2003
+journal = "Springer (2nd ed.)"
+url = "https://link.springer.com/book/9780387955414"
+openAccess = false
+
+[[references]]
+title = "An Introduction to the Theory of Point Processes, Vol. II: General Theory and Structure"
+authors = "Daley, Daryl J.; Vere-Jones, David"
+year = 2008
+journal = "Springer (2nd ed.)"
+url = "https://link.springer.com/book/9780387213378"
+openAccess = false
+
+[[references]]
+title = "Stochastic Processes"
+authors = "Ross, Sheldon M."
+year = 2014
+journal = "Wiley (3rd ed.)"
+url = "https://www.wiley.com/en-us/Stochastic+Processes%2C+3rd+Edition-p-9780471120629"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Spectra of Some Self-Exciting and Mutually Exciting Point Processes"
+authors = "Hawkes, Alan G."
+year = 1971
+journal = "Biometrika"
+doi = "10.1093/biomet/58.1.83"
+openAccess = false
+
+[[references]]
+title = "Some Statistical Methods Connected with Series of Events"
+authors = "Cox, David R."
+year = 1955
+journal = "Journal of the Royal Statistical Society, Series B"
+doi = "10.1111/j.2517-6161.1955.tb00188.x"
+openAccess = false
+
+[[references]]
+title = "On Lewis Simulation Method for Point Processes"
+authors = "Ogata, Yosihiko"
+year = 1981
+journal = "IEEE Transactions on Information Theory"
+doi = "10.1109/TIT.1981.1056305"
+openAccess = false
+
+[[references]]
+title = "Space-Time Point-Process Models for Earthquake Occurrences"
+authors = "Ogata, Yosihiko"
+year = 1998
+journal = "Annals of the Institute of Statistical Mathematics"
+doi = "10.1023/A:1003403601725"
+openAccess = false
+
+[[models]]
+id = "poisson"
+label = "Poisson"
+
+[[models]]
+id = "inhomogeneous"
+label = "Inhomogeneous"
+
+[[models]]
+id = "cox"
+label = "Cox"
+
+[[models]]
+id = "hawkes"
+label = "Hawkes"
+
+[[models]]
+id = "network"
+label = "Network Hawkes"
+
+[[bullets]]
+text = "Homogeneous Poisson"
+detail = "constant rate lambda; inter-event times are iid Exp(lambda)"
+
+[[bullets]]
+text = "Inhomogeneous Poisson"
+detail = "time-varying rate lambda(t); simulated via thinning (Lewis-Shedler)"
+
+[[bullets]]
+text = "Cox"
+detail = "doubly stochastic Poisson; log-intensity is a Gaussian process: log lambda(t) ~ GP"
+
+[[bullets]]
+text = "Hawkes"
+detail = "self-exciting; lambda*(t) = mu + alpha ∑ti<t exp(−beta(t−ti)); branching ratio alpha/beta < 1"
+
+[[bullets]]
+text = "Network Hawkes"
+detail = "multivariate Hawkes with directed network weight matrix W"
+
+[[inputs]]
+id = "mu0"
+label = "Log baseline (mu0)"
+tooltip = "GP prior mean for the log-intensity: E[f(t)] = mu0. The intensity is lambda(t) = exp(f(t))."
+default = "0.0"
+models = ["cox"]
+
+[[inputs]]
+id = "gp-var"
+label = "GP variance (sigma2)"
+tooltip = "Signal variance of the GP kernel. Controls the amplitude of intensity fluctuations."
+default = "1.0"
+models = ["cox"]
+
+[[inputs]]
+id = "gp-ls"
+label = "Length scale (l)"
+tooltip = "Kernel length scale. Larger values give smoother intensity functions over time."
+default = "10.0"
+models = ["cox"]
+
+[[inputs]]
+id = "kernel"
+label = "Kernel"
+tooltip = ""
+kind = "select"
+default = "se"
+models = ["cox"]
+
+[[inputs.options]]
+value = "se"
+label = "Squared Exp."
+
+[[inputs.options]]
+value = "matern32"
+label = "Matern 3/2"
+
+[[inputs.options]]
+value = "matern52"
+label = "Matern 5/2"
+
+[[inputs]]
+id = "mu"
+label = "Baseline (mu)"
+tooltip = "Exogenous (immigrant) event rate. Contribution to intensity independent of past events."
+default = "0.3"
+models = ["hawkes"]
+
+[[inputs]]
+id = "alpha"
+label = "Excitation (alpha)"
+tooltip = "Jump size added to intensity at each event. alpha/beta is the branching ratio and must be less than 1 for stationarity."
+default = "0.5"
+models = ["hawkes"]
+
+[[inputs]]
+id = "beta"
+label = "Decay (beta)"
+tooltip = "Exponential decay rate. Excitation from a past event decays as alpha * exp(-beta * (t - t_i)). Branching ratio = alpha/beta must be less than 1."
+default = "1.0"
+models = ["hawkes"]
+
+[[inputs]]
+id = "N"
+label = "Nodes (N)"
+tooltip = "Number of event streams. Each node has its own conditional intensity driven by all nodes via the weight matrix W."
+default = "3"
+models = ["network"]
+
+[[inputs]]
+id = "net-mu"
+label = "Baseline (mu)"
+tooltip = "Exogenous rate per node. Endogenous interactions are captured by the weight matrix W."
+default = "0.3"
+models = ["network"]
+
+[[inputs]]
+id = "net-beta"
+label = "Decay (beta)"
+tooltip = "Exponential decay rate shared across all node pairs. Influence decays as W[n,m] * beta * exp(-beta * (t - t_i))."
+default = "1.0"
+models = ["network"]
+
+[[inputs]]
+id = "T"
+label = "Time Horizon (T)"
+tooltip = "Observation window [0, T]. Events outside this interval are not counted."
+default = "100"
+
+[[inputs]]
+id = "data"
+label = "Data"
+tooltip = "Variable name for the event times array. Used throughout the generated code snippets."
+default = "events"
+
+[[codeBranches]]
+model = "poisson"
+code = '''
+using PointProcesses
+
+T = {{T}}  # observation window [0, T]
+
+n          = length({{data}})  # observed event count
+lambda_hat = n / T  # MLE: closed-form N/T
+ci_half    = 1.96 * sqrt(lambda_hat / T)  # 95% Wald CI half-width
+
+println("Event count: ", n)  # observed N
+println("lambda MLE:  ", lambda_hat)  # point estimate
+println("95% CI:      [", lambda_hat - ci_half, ", ", lambda_hat + ci_half, "]")  # confidence interval
+'''
+
+[[codeBranches]]
+model = "inhomogeneous"
+code = '''
+using PointProcesses, KernelDensity
+
+T = {{T}}  # observation window [0, T]
+n = length({{data}})  # observed event count
+
+kde_fit    = kde({{data}}; bandwidth = T / 20)  # kernel density estimate
+ts         = range(0, T, length = 200)  # evaluation grid
+lambda_est = n .* pdf(kde_fit, collect(ts))  # estimated intensity at each t
+
+println("Event count: ", n)  # observed N
+println("Mean rate:   ", n / T)  # average intensity
+println("Peak rate:   ", maximum(lambda_est))  # maximum intensity
+'''
+
+[[codeBranches]]
+model = "cox"
+code = '''
+using PointProcesses, GaussianProcesses
+
+T   = {{T}}  # observation window [0, T]
+mu0 = {{mu0}}  # GP prior mean for log-intensity
+
+{{?kernel=se}} kernel = SEIso(log({{gp-var}}), log({{gp-ls}}))  # squared-exponential kernel: log(sigma^2), log(l)
+{{?kernel=matern32}} kernel = Mat32Iso(log({{gp-var}}), log({{gp-ls}}))  # Matern 3/2 kernel: log(sigma^2), log(l)
+{{?kernel=matern52}} kernel = Mat52Iso(log({{gp-var}}), log({{gp-ls}}))  # Matern 5/2 kernel: log(sigma^2), log(l)
+cox    = CoxProcess(kernel; mu = {{mu0}})  # log-Gaussian Cox process
+
+result = fit(cox, {{data}}, T)  # Laplace approximation to GP posterior
+println("Log posterior mean: ", result.mu_post)  # fitted log-intensity mean
+println("Log posterior std:  ", result.sigma_post)  # posterior uncertainty
+'''
+
+[[codeBranches]]
+model = "hawkes"
+code = '''
+using HawkesProcesses
+
+mu    = {{mu}}  # baseline (immigrant) rate
+alpha = {{alpha}}  # excitation: jump size at each event
+beta  = {{beta}}  # decay rate; alpha/beta = branching ratio (must be < 1)
+T     = {{T}}  # time horizon
+
+process = HawkesProcess(mu, alpha, beta)  # exponential kernel Hawkes process
+result  = fit(process, {{data}})  # fit by MLE given observed events
+
+println("mu    = ", result.mu)  # fitted baseline
+println("alpha = ", result.alpha)  # fitted excitation
+println("beta  = ", result.beta)  # fitted decay
+println("rho   = ", result.alpha / result.beta)  # branching ratio < 1
+'''
+
+[[codeBranches]]
+model = "network"
+code = '''
+using NetworkHawkesProcesses
+
+N    = {{N}}  # number of nodes
+mu   = {{net-mu}}  # baseline rate per node
+beta = {{net-beta}}  # exponential decay rate
+T    = {{T}}  # time horizon
+
+W = rand({{N}}, {{N}}) .* 0.3  # random weight matrix; spectral radius < 1
+
+process = NetworkHawkesProcess(mu .* ones({{N}}), W, beta)  # multivariate Hawkes process
+result  = fit(process, {{data}})  # fit by MLE given observed events dict
+
+for n in 1:{{N}}
+    println("Node ", n, " mu = ", result.mu[n])  # fitted baseline per node
+end
+println("W = ", result.W)  # fitted weight matrix
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "event-timeline"
+label = "Event Timeline"
+desc = "Plot event times on a horizontal axis"
+code = '''
+using Plots
+
+scatter({{data}}, zeros(length({{data}})),  # tick marks at event times
+    xlabel="t", yticks=[], marker=:vline,
+    markersize=10, legend=false, xlims=(0, {{T}}))
+'''
+
+[[actionGroups.actions]]
+id = "intensity-plot"
+label = "Intensity Function"
+desc = "Plot conditional intensity lambda*(t) over time"
+code = '''
+using Plots
+
+ts = range(0, {{T}}, length=500)  # fine time grid
+plot(ts, intensity.(Ref(process), ts, Ref({{data}})),  # lambda*(t) at each grid point
+    xlabel="t", ylabel="lambda*(t)", legend=false)
+'''
+
+[[actionGroups.actions]]
+id = "inter-event-hist"
+label = "Inter-Event Times"
+desc = "Histogram of waiting times between events"
+code = '''
+using Plots
+
+diffs = diff({{data}})  # inter-event durations
+histogram(diffs, normalize=:pdf,  # empirical density
+    xlabel="inter-event time", ylabel="density")
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "time-rescaling"
+label = "Time-Rescaling Test"
+desc = "Transform to unit Poisson via compensator; KS test"
+code = '''
+using HypothesisTests, Distributions
+
+Lambda = cumulative_intensity(process, {{data}})  # compensator at each event
+U      = 1 .- exp.(-diff([0; Lambda]))  # transform to Uniform(0,1)
+
+println(KSTest(U, Uniform()))  # KS test: p > 0.05 => good fit
+'''
+
+[[actionGroups.actions]]
+id = "qq-plot"
+label = "Q-Q Plot"
+desc = "Transformed inter-event times vs Exp(1)"
+code = '''
+using Plots, Distributions, StatsBase
+
+Lambda_i  = cumulative_intensity(process, {{data}})  # compensator increments
+residuals = diff([0; Lambda_i])  # iid Exp(1) under correct model
+
+qqplot(Exponential(1), residuals,  # deviations indicate misspecification
+    xlabel="Exp(1) quantiles", ylabel="Empirical quantiles")
+'''
+
+[[actionGroups.actions]]
+id = "branching-ratio"
+label = "Branching Ratio"
+desc = "alpha/beta stationarity check (Hawkes)"
+code = '''
+alpha = {{alpha}}; beta = {{beta}}  # fitted parameters
+rho   = alpha / beta  # branching ratio
+println("rho = ", rho)  # must be < 1 for stationarity
+println("Mean intensity = ", mu / (1 - rho))  # stationary mean
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "next-event"
+label = "Next Event Time"
+desc = "Sample the next arrival given observed history"
+code = '''
+using HawkesProcesses
+
+t_next = next_event(process, {{data}}, {{T}})  # next event after T given history
+println("Next event at t = ", t_next)  # expected next arrival
+'''
+
+[[actionGroups.actions]]
+id = "future-events"
+label = "Future Events"
+desc = "Forward-simulate in [T, T+h] given history"
+code = '''
+using HawkesProcesses
+
+h      = 50  # forecast horizon
+future = simulate(process, {{T}} + h; history = {{data}})  # condition on observed events
+new_ev = filter(t -> t > {{T}}, future)  # retain only future events
+
+println("Predicted events in [T, T+h]: ", length(new_ev))  # forecast count
+'''
+
+[[actionGroups.actions]]
+id = "expected-count"
+label = "Expected Count"
+desc = "E[N(T, T+h) | H_T] via intensity integral"
+code = '''
+using QuadGK
+
+h = 50  # forecast horizon
+mu_fc, _ = quadgk(t -> intensity(process, t, {{data}}), {{T}}, {{T}} + h)  # integrate conditional intensity
+
+println("E[N(T, T+h) | H_T] = ", mu_fc)  # expected count in forecast window
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "log-likelihood"
+label = "Log-Likelihood"
+desc = "Evaluate log L = sum log lambda*(t_i) - integral lambda*(t) dt"
+code = '''
+using HawkesProcesses
+
+ll = loglikelihood(process, {{data}})  # point-process log-likelihood
+println("Log-likelihood: ", ll)  # higher is better
+'''
+
+[[actionGroups.actions]]
+id = "aic-bic"
+label = "AIC / BIC"
+desc = "Information criteria for model selection"
+code = '''
+using HawkesProcesses
+
+ll = loglikelihood(process, {{data}})  # log-likelihood at MLE
+k  = 3  # parameters: mu, alpha, beta
+n  = length({{data}})  # observed event count
+
+AIC = -2ll + 2k  # Akaike; lower is preferred
+BIC = -2ll + k * log(n)  # Bayesian; lower is preferred
+
+println("AIC = ", AIC, "  BIC = ", BIC)  # compare across models
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "branching-interpret"
+label = "Branching Structure"
+desc = "Decompose events into immigrants and offspring"
+code = '''
+mu = {{mu}}; alpha = {{alpha}}; beta = {{beta}}  # fitted parameters
+rho      = alpha / beta  # branching ratio = avg offspring per event
+mean_lam = mu / (1 - rho)  # stationary mean intensity
+imm_frac = mu / mean_lam  # fraction of exogenous events
+
+println("Branching ratio:     ", rho)  # rho < 1 required
+println("Immigrant fraction:  ", imm_frac)  # share of exogenous events
+println("Endogenous fraction: ", 1 - imm_frac)  # share of self-excited events
+'''
+
+[[actionGroups.actions]]
+id = "network-heatmap"
+label = "Network Connectivity"
+desc = "Heatmap of the weight matrix W"
+code = '''
+using Plots
+
+W_fit = weight_matrix(result)  # N x N excitation weights
+heatmap(W_fit, color=:Blues,  # row n, col m: excitation from m to n
+    xlabel="Source node", ylabel="Target node",
+    title="Network weight matrix W")
+'''
+
+[[actionGroups.actions]]
+id = "effective-intensity"
+label = "Effective Intensity"
+desc = "Conditional intensity value at each event time"
+code = '''
+using Plots
+
+lam_i = [intensity(process, t, filter(s -> s < t, {{data}})) for t in {{data}}]  # lambda*(t_i) at each event
+
+scatter({{data}}, lam_i,  # intensity at event times
+    xlabel="t", ylabel="lambda*(t_i)", legend=false)
+'''

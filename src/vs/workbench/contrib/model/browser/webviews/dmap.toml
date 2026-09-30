@@ -1,0 +1,368 @@
+# Discrete Maps Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/dmap.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Discrete Maps"
+viewType = "pollis.dmap"
+defaultModel = "main"
+
+[[packages]]
+name = "DynamicalSystems.jl"
+github = "https://github.com/JuliaDynamics/DynamicalSystems.jl"
+
+[requires]
+packages = ["DynamicalSystems.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Henon Map"
+file = "dmap/tutorial-01-henon.ipynb"
+bundled = true
+description = "Iterate the Henon map and explore sensitivity to initial conditions"
+
+[[notebookSections.notebooks]]
+name = "Bifurcation Diagram"
+file = "dmap/tutorial-02-bifurcation.ipynb"
+bundled = true
+description = "Build a bifurcation diagram by sweeping a parameter and recording attractors"
+
+[[notebookSections.notebooks]]
+name = "Lyapunov Exponents"
+file = "dmap/tutorial-03-lyapunov.ipynb"
+bundled = true
+description = "Compute maximal Lyapunov exponent to classify orbits as periodic or chaotic"
+
+[[wikis]]
+name = "Factsheet"
+file = "dmap/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "dmap/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "dmap/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "dmap/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "dmap/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "dmap/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Maps"
+
+[[wikis]]
+name = "Fixed Points"
+file = "dmap/fixed-points.md"
+bundled = true
+
+[[wikis]]
+name = "Bifurcation"
+file = "dmap/bifurcation.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "DynamicalSystems.jl: A Julia software library for chaos and nonlinear dynamics"
+authors = "Datseris, George"
+year = 2018
+journal = "Journal of Open Source Software"
+doi = "10.21105/joss.00598"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Chaos: An Introduction to Dynamical Systems"
+authors = "Alligood, Kathleen T.; Sauer, Tim D.; Yorke, James A."
+year = 1996
+journal = "Springer"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "A Two-Dimensional Mapping with a Strange Attractor"
+authors = "Henon, Michel"
+year = 1976
+journal = "Communications in Mathematical Physics"
+doi = "10.1007/BF01608556"
+openAccess = false
+
+[[bullets]]
+text = "DeterministicIteratedMap"
+detail = "iterate a deterministic map step by step to explore orbits and fixed points"
+
+[[bullets]]
+text = "Bifurcation diagrams"
+detail = "sweep a parameter and record attractors to reveal period-doubling routes to chaos"
+
+[[bullets]]
+text = "Lyapunov exponents"
+detail = "quantify exponential divergence of nearby orbits to classify chaotic behaviour"
+
+[[inputs]]
+id = "u0"
+label = "Initial state (u0)"
+tooltip = "Initial point for the map. For the Henon map use [0.0, 0.0]."
+default = "u0"
+
+[[inputs]]
+id = "p"
+label = "Parameters (p)"
+tooltip = "Map parameters tuple. Henon: (a=1.4, b=0.3)."
+default = "p"
+
+[[inputs]]
+id = "n"
+label = "Iterations (n)"
+tooltip = "Number of map iterations (e.g. 1000)."
+default = "n"
+
+[[codeBranches]]
+model = "main"
+code = '''
+using DynamicalSystems
+
+function henon(u, p, n)  # Henon map definition
+    a, b = p
+    x, y = u
+    return SVector(1 - a*x^2 + y, b*x)
+end
+
+ds = DeterministicIteratedMap(henon, {{u0}}, {{p}})  # define discrete map
+tr, t = trajectory(ds, {{n}})  # iterate for n steps
+
+println("Final state: ", current_state(ds))  # state after n iterations
+println("Orbit size:  ", length(tr))  # number of points in orbit
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "orbit-plot"
+label = "Orbit Plot"
+desc = "Plot the orbit in phase space to reveal strange attractor structure"
+code = '''
+using DynamicalSystems, GLMakie
+
+ds = DeterministicIteratedMap(henon, {{u0}}, {{p}})
+tr, _ = trajectory(ds, {{n}})  # iterate
+
+scatter(vec(tr[:, 1]), vec(tr[:, 2]))  # phase portrait (x vs y)
+'''
+
+[[actionGroups.actions]]
+id = "time-series"
+label = "Time Series"
+desc = "Plot x[n] and y[n] over iteration count to inspect transients and attractors"
+code = '''
+using DynamicalSystems, GLMakie
+
+ds = DeterministicIteratedMap(henon, {{u0}}, {{p}})
+tr, t = trajectory(ds, {{n}})  # iterate with step index
+
+lines(t, vec(tr[:, 1]), axis=(xlabel="n", ylabel="x[n]"))  # x component over iterations
+'''
+
+[[actionGroups.actions]]
+id = "bifurcation-diagram"
+label = "Bifurcation Diagram"
+desc = "Sweep parameter a and record last 100 points to reveal period-doubling routes to chaos"
+code = '''
+using DynamicalSystems, GLMakie
+
+a_vals = range(0.8, 1.4; length=200)  # sweep parameter a
+xs = Float64[]  # collect attractor points
+as = Float64[]  # collect corresponding a values
+
+for a in a_vals
+    ds = DeterministicIteratedMap(henon, {{u0}}, (a, 0.3))
+    tr, _ = trajectory(ds, {{n}})  # long transient
+    last100 = vec(tr[end-99:end, 1])  # last 100 x values
+    append!(xs, last100)
+    append!(as, fill(a, 100))
+end
+
+scatter(as, xs; markersize=1, axis=(xlabel="a", ylabel="x"))  # bifurcation diagram
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "sensitivity"
+label = "Sensitivity to ICs"
+desc = "Run two nearby orbits and measure distance divergence over iterations"
+code = '''
+using DynamicalSystems
+
+ds1 = DeterministicIteratedMap(henon, {{u0}}, {{p}})
+ds2 = DeterministicIteratedMap(henon, {{u0}} .+ 1e-8, {{p}})  # perturbed IC
+tr1, _ = trajectory(ds1, {{n}})  # reference orbit
+tr2, _ = trajectory(ds2, {{n}})  # perturbed orbit
+
+dist = norm.(eachrow(tr1 .- tr2))  # distance at each step
+println("Max divergence: ", maximum(dist))  # large = chaotic
+'''
+
+[[actionGroups.actions]]
+id = "fixed-points"
+label = "Fixed Points of Map"
+desc = "Find fixed points of the map using interval arithmetic search"
+code = '''
+using DynamicalSystems
+
+ds = DeterministicIteratedMap(henon, [0.0, 0.0], {{p}})  # map definition
+fps = fixedpoints(ds, IntervalBox(-2..2, -1..1))  # search box
+
+for fp in fps
+    println("Fixed point: ", fp)  # each fixed point
+end
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "forward-iter"
+label = "Forward Iteration"
+desc = "Advance from a new initial condition and record the resulting orbit"
+code = '''
+using DynamicalSystems
+
+u_new = [0.5, 0.5]  # new initial condition
+ds = DeterministicIteratedMap(henon, u_new, {{p}})
+tr, t = trajectory(ds, {{n}})  # forward iteration
+
+println("Final state: ", tr[end, :])  # state after n iterations
+'''
+
+[[actionGroups.actions]]
+id = "param-sweep"
+label = "Parameter Sweep"
+desc = "Iterate for each parameter value and record final states to map attractors"
+code = '''
+using DynamicalSystems
+
+a_vals = range(1.0, 1.4; length=20)  # sweep parameter a
+
+for a in a_vals
+    ds = DeterministicIteratedMap(henon, {{u0}}, (a, 0.3))
+    tr, _ = trajectory(ds, {{n}})  # iterate
+    println("a=", a, " -> final x=", tr[end, 1])  # final state
+end
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "multi-ics"
+label = "Multiple Initial Conditions"
+desc = "Use reinit! to compare orbits from different starting points"
+code = '''
+using DynamicalSystems
+
+ds = DeterministicIteratedMap(henon, [0.0, 0.0], {{p}})
+
+for x0 in [0.0, 0.1, 0.5, -0.5]
+    reinit!(ds, [x0, 0.0])  # reset to new IC
+    tr, _ = trajectory(ds, {{n}})  # orbit from this IC
+    println("x0=", x0, " -> final x=", tr[end, 1])  # compare endpoints
+end
+'''
+
+[[actionGroups.actions]]
+id = "diff-maps"
+label = "Different Maps"
+desc = "Compare Henon map vs logistic map orbits side by side"
+code = '''
+using DynamicalSystems
+
+function logistic(u, p, n)  # logistic map
+    r = p[1]
+    return SVector(r * u[1] * (1 - u[1]))
+end
+
+ds_henon = DeterministicIteratedMap(henon, [0.0, 0.0], (1.4, 0.3))  # Henon map
+ds_logistic = DeterministicIteratedMap(logistic, [0.5], (3.9,))  # logistic map r=3.9
+
+tr_h, _ = trajectory(ds_henon, {{n}})  # Henon orbit
+tr_l, _ = trajectory(ds_logistic, {{n}})  # logistic orbit
+
+println("Henon x range:    ", extrema(vec(tr_h[:, 1])))  # Henon attractor extent
+println("Logistic x range: ", extrema(vec(tr_l[:, 1])))  # logistic attractor extent
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "lyapunov"
+label = "Lyapunov Exponent"
+desc = "Compute maximal Lyapunov exponent — positive means chaotic orbit"
+code = '''
+using DynamicalSystems
+
+ds = DeterministicIteratedMap(henon, {{u0}}, {{p}})
+lambda = lyapunov(ds, {{n}})  # maximal Lyapunov exponent
+
+println("Lyapunov exponent: ", lambda)  # positive = chaotic
+println("Orbit type: ", lambda > 0 ? "chaotic" : "regular")  # classification
+'''
+
+[[actionGroups.actions]]
+id = "state-stats"
+label = "State Statistics"
+desc = "Compute mean, std, and extrema of a long orbit to characterise the attractor"
+code = '''
+using DynamicalSystems, Statistics
+
+ds = DeterministicIteratedMap(henon, {{u0}}, {{p}})
+tr, _ = trajectory(ds, {{n}})  # long orbit
+
+println("Mean: ",    mean.(eachcol(tr)))  # time-averaged state
+println("Std:  ",    std.(eachcol(tr)))  # spread
+println("Range: ",   extrema.(eachcol(tr)))  # min/max per dimension
+'''

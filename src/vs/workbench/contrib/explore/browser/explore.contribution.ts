@@ -20,10 +20,10 @@ import { INotebookKernelService } from '../../notebook/common/notebookKernelServ
 import { ILanguageService } from '../../../../editor/common/languages/language.js';
 import { IThemeService } from '../../../../platform/theme/common/themeService.js';
 import { IRequestService } from '../../../../platform/request/common/request.js';
-import { openRdynWebview } from '../../model/browser/commands/rdyn.command.js';
-import { openRctlWebview } from '../../model/browser/commands/rctl.command.js';
-import { openMcatWebview } from '../../model/browser/commands/mcat.command.js';
-import { openRzooWebview } from '../../model/browser/commands/rzoo.command.js';
+import { RDYN_PANEL } from '../../model/browser/commands/rdyn.command.js';
+import { RCTL_PANEL } from '../../model/browser/commands/rctl.command.js';
+import { MCAT_PANEL } from '../../model/browser/commands/mcat.command.js';
+import { RZOO_PANEL } from '../../model/browser/commands/rzoo.command.js';
 import { DSTATS_PANEL } from '../../model/browser/commands/dstats.command.js';
 import { openScaffoldWebview } from '../../model/browser/commands/scaffold.command.js';
 import { NOD_PANEL } from '../../model/browser/commands/nod.command.js';
@@ -343,53 +343,13 @@ CommandsRegistry.registerCommand(HMD_ID, (accessor: ServicesAccessor) => openSca
 
 CommandsRegistry.registerCommand(NOVD_ID, (accessor: ServicesAccessor) => openScaffoldWebview(accessor, NOVD_PANEL));
 
-CommandsRegistry.registerCommand(RDYN_ID, (accessor: ServicesAccessor) => {
-	openRdynWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	);
-});
+CommandsRegistry.registerCommand(RDYN_ID, (accessor: ServicesAccessor) => openScaffoldWebview(accessor, RDYN_PANEL));
 
-CommandsRegistry.registerCommand(RCTL_ID, (accessor: ServicesAccessor) => {
-	openRctlWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	);
-});
+CommandsRegistry.registerCommand(RCTL_ID, (accessor: ServicesAccessor) => openScaffoldWebview(accessor, RCTL_PANEL));
 
-CommandsRegistry.registerCommand(MCAT_ID, (accessor: ServicesAccessor) => {
-	openMcatWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	);
-});
+CommandsRegistry.registerCommand(MCAT_ID, (accessor: ServicesAccessor) => openScaffoldWebview(accessor, MCAT_PANEL));
 
-CommandsRegistry.registerCommand(RZOO_ID, (accessor: ServicesAccessor) => {
-	openRzooWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	);
-});
+CommandsRegistry.registerCommand(RZOO_ID, (accessor: ServicesAccessor) => openScaffoldWebview(accessor, RZOO_PANEL));
 
 
 CommandsRegistry.registerCommand(CVIZ_SCATTER_ID, (accessor: ServicesAccessor) => {

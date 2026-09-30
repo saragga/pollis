@@ -1,0 +1,283 @@
+# Extreme Value Risk Measures Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/evtRisk.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Extreme Value Risk Measures"
+viewType = "pollis.evtRisk"
+defaultModel = "rl"
+
+[[packages]]
+name = "Extremes.jl"
+github = "https://github.com/jojal5/Extremes.jl"
+
+[requires]
+packages = ["Extremes.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Quick Start"
+file = "evt-risk/tutorial-01-quickstart.ipynb"
+bundled = true
+description = "Introduction to Extreme Value risk measures"
+
+[[notebookSections.notebooks]]
+name = "Return Level Estimation"
+file = "evt-risk/tutorial-02-return-levels.ipynb"
+bundled = true
+description = "Compute return levels from fitted GEV models"
+
+[[notebookSections.notebooks]]
+name = "Peaks-Over-Threshold Analysis"
+file = "evt-risk/tutorial-03-pot.ipynb"
+bundled = true
+description = "Peaks-Over-Threshold analysis with GP distribution"
+
+[[notebookSections.notebooks]]
+name = "Extreme Value VaR and ES"
+file = "evt-risk/tutorial-04-var-es.ipynb"
+bundled = true
+description = "Value at Risk and Expected Shortfall via Extreme Value methods"
+
+[[wikis]]
+name = "Overview"
+file = "evt-risk/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Factsheet"
+file = "evt-risk/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "evt-risk/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "evt-risk/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "evt-risk/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "evt-risk/decision-guide.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Original Papers (from packages)"
+
+[[references]]
+title = "Extremes.jl: Extreme Value Analysis in Julia"
+authors = "Jalbert, J., Farmer, M., Gobeil, G., & Roy, P."
+year = 2024
+journal = ""
+url = "https://doi.org/10.18637/jss.v109.i06"
+openAccess = true
+
+[[references]]
+title = "Modelling Extremal Events for Insurance and Finance"
+authors = "Embrechts, P., Klüppelberg, C., & Mikosch, T."
+year = 1997
+journal = ""
+url = "https://doi.org/10.1007/978-3-642-33483-2"
+openAccess = false
+
+[[references]]
+title = "Estimation of Tail-Related Risk Measures for Heteroscedastic Financial Time Series"
+authors = "McNeil, A. J., & Frey, R."
+year = 2000
+journal = ""
+url = "https://doi.org/10.1016/S0927-5398(00)00012-8"
+openAccess = false
+
+[[models]]
+id = "rl"
+label = "Return Levels"
+
+[[models]]
+id = "pot"
+label = "Peaks-Over-Threshold"
+
+[[models]]
+id = "tr"
+label = "Tail Risk"
+
+[[bullets]]
+text = "Return levels: GEV-based T-period return level estimates"
+detail = ""
+
+[[bullets]]
+text = "Peaks-Over-Threshold: GP distribution fit to exceedances above a threshold"
+detail = ""
+
+[[bullets]]
+text = "Tail risk: Extreme Value-based Value at Risk and Expected Shortfall"
+detail = ""
+
+[[bullets]]
+text = "Exceedance rate, tail index and extreme quantile estimation"
+detail = ""
+
+[[inputs]]
+id = "evtr-data"
+label = "Data series"
+tooltip = ""
+default = "losses"
+
+[[inputs]]
+id = "evtr-method"
+label = "Estimation method"
+tooltip = ""
+kind = "select"
+default = "mle"
+
+[[inputs.options]]
+value = "mle"
+label = "Maximum Likelihood"
+
+[[inputs.options]]
+value = "pwm"
+label = "Probability-Weighted Moments"
+
+[[inputs.options]]
+value = "bayes"
+label = "Bayesian Estimation"
+
+[[inputs]]
+id = "evtr-periods"
+label = "Return periods"
+tooltip = ""
+default = "10 50 100"
+models = ["rl"]
+
+[[inputs]]
+id = "evtr-threshold"
+label = "Threshold u"
+tooltip = ""
+default = "0.0"
+models = ["pot"]
+
+[[inputs]]
+id = "evtr-threshold-tr"
+label = "Threshold u"
+tooltip = ""
+default = "0.0"
+models = ["tr"]
+
+[[inputs]]
+id = "evtr-alpha"
+label = "alpha (level)"
+tooltip = ""
+default = "0.05"
+models = ["tr"]
+
+[[codeBranches]]
+model = "rl"
+code = '''
+using Extremes
+
+fm     = gevfit({{evtr-data}}; method = :{{evtr-method}})  # fit GEV to block maxima
+T_vals = [{{evtr-periods}}]  # return periods
+rls    = [returnlevel(fm, T) for T in T_vals]  # compute return levels
+for (T, rl) in zip(T_vals, rls)
+    println("Return level (T=", T, "): ", round(rl, digits = 4))
+end
+'''
+
+[[codeBranches]]
+model = "pot"
+code = '''
+using Extremes, Distributions
+
+exceedances        = {{evtr-data}}[{{evtr-data}} .> {{evtr-threshold}}] .- {{evtr-threshold}}  # excesses above threshold
+fm_gp              = gpfit(exceedances; method = :{{evtr-method}})  # fit GP to exceedances
+sigma_hat, xi_hat  = params(fm_gp)  # extract scale and shape
+rate               = length(exceedances) / length({{evtr-data}})  # exceedance rate
+d_gp               = GeneralizedPareto({{evtr-threshold}}, sigma_hat, xi_hat)  # GP distribution
+q99                = quantile(d_gp, 0.99)  # 99th percentile
+println("sigma_hat (scale):  ", round(sigma_hat, digits = 6))
+println("xi_hat (shape):     ", round(xi_hat,    digits = 6))
+println("Exceedance rate:    ", round(rate,       digits = 4))
+println("99th percentile:    ", round(q99,        digits = 4))
+'''
+
+[[codeBranches]]
+model = "tr"
+code = '''
+using Extremes, Distributions
+
+exceedances        = {{evtr-data}}[{{evtr-data}} .> {{evtr-threshold-tr}}] .- {{evtr-threshold-tr}}  # excesses above threshold
+fm_gp              = gpfit(exceedances; method = :{{evtr-method}})  # fit GP to exceedances
+sigma_hat, xi_hat  = params(fm_gp)  # extract scale and shape
+rate               = length(exceedances) / length({{evtr-data}})  # exceedance rate
+
+var_evt = {{evtr-threshold-tr}} + (sigma_hat/xi_hat) * (({{evtr-alpha}} * length({{evtr-data}})/length(exceedances))^(-xi_hat) - 1)  # Extreme Value VaR
+es_evt  = (var_evt + sigma_hat - xi_hat * {{evtr-threshold-tr}}) / (1 - xi_hat)  # Extreme Value Expected Shortfall
+println("VaR (Extreme Value): ", round(var_evt, digits = 4))
+println("ES  (Extreme Value): ", round(es_evt,  digits = 4))
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "exceedance_rate"
+label = "Exceedance Rate Analysis"
+desc = "Plot exceedance rate as a function of threshold to validate the POT setup"
+code = '''
+using Extremes, Plots
+thresholds = range(minimum({{evtr-data}}), quantile({{evtr-data}}, 0.95); length = 50)  # threshold grid
+rates = [mean({{evtr-data}} .> u) for u in thresholds]  # exceedance rates
+plot(thresholds, rates;
+    xlabel = "Threshold u", ylabel = "Exceedance Rate",
+    title  = "Exceedance Rate vs Threshold", legend = false)
+'''
+
+[[actionGroups.actions]]
+id = "return_level_uncertainty"
+label = "Return Level Uncertainty"
+desc = "Profile-likelihood confidence intervals for return levels"
+code = '''
+using Extremes
+fm     = gevfit({{evtr-data}})  # fit GEV
+ci_10  = returnlevel(fm, 10;  confidencelevel = 0.95)  # 10-period RL with CI
+ci_50  = returnlevel(fm, 50;  confidencelevel = 0.95)  # 50-period RL with CI
+ci_100 = returnlevel(fm, 100; confidencelevel = 0.95)  # 100-period RL with CI
+println("10-period RL:  ", round(ci_10.estimate, digits=4), " [", round(ci_10.lower, digits=4), ", ", round(ci_10.upper, digits=4), "]")
+println("50-period RL:  ", round(ci_50.estimate, digits=4), " [", round(ci_50.lower, digits=4), ", ", round(ci_50.upper, digits=4), "]")
+println("100-period RL: ", round(ci_100.estimate, digits=4), " [", round(ci_100.lower, digits=4), ", ", round(ci_100.upper, digits=4), "]")
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "risk_comparison"
+label = "Empirical vs Extreme Value Risk"
+desc = "Compare historical empirical VaR/ES against Extreme Value-based estimates"
+code = '''
+using Extremes, Distributions, Statistics
+exceedances        = {{evtr-data}}[{{evtr-data}} .> {{evtr-threshold-tr}}] .- {{evtr-threshold-tr}}  # excesses above threshold
+fm_gp              = gpfit(exceedances; method = :{{evtr-method}})  # fit GP to exceedances
+sigma_hat, xi_hat  = params(fm_gp)  # extract parameters
+var_emp            = quantile({{evtr-data}}, 1 - {{evtr-alpha}})  # empirical VaR
+es_emp             = mean({{evtr-data}}[{{evtr-data}} .> var_emp])  # empirical ES
+var_evt            = {{evtr-threshold-tr}} + (sigma_hat/xi_hat)*(({{evtr-alpha}}*length({{evtr-data}})/length(exceedances))^(-xi_hat) - 1)  # Extreme Value VaR
+es_evt             = (var_evt + sigma_hat - xi_hat * {{evtr-threshold-tr}}) / (1 - xi_hat)  # Extreme Value Expected Shortfall
+println("Empirical VaR:                   ", round(var_emp, digits = 4))
+println("VaR (Extreme Value):      ", round(var_evt, digits = 4))
+println("Empirical ES:                    ", round(es_emp,  digits = 4))
+println("ES  (Extreme Value):      ", round(es_evt,  digits = 4))
+'''

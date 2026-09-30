@@ -1,0 +1,366 @@
+# Continuous Dynamical Systems Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/cds.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Continuous Dynamical Systems"
+viewType = "pollis.cds"
+defaultModel = "main"
+
+[[packages]]
+name = "DynamicalSystems.jl"
+github = "https://github.com/JuliaDynamics/DynamicalSystems.jl"
+
+[requires]
+packages = ["DynamicalSystems.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Lorenz System"
+file = "cds/tutorial-01-lorenz.ipynb"
+bundled = true
+description = "Define and simulate the Lorenz system using CoupledODEs and trajectory"
+
+[[notebookSections.notebooks]]
+name = "Poincare Sections"
+file = "cds/tutorial-02-poincare.ipynb"
+bundled = true
+description = "Compute Poincare sections of a continuous flow to reduce phase-space dimensionality"
+
+[[notebookSections.notebooks]]
+name = "Parameter Sensitivity"
+file = "cds/tutorial-03-sensitivity.ipynb"
+bundled = true
+description = "Explore how trajectories change with system parameters using reinit! and re-simulation"
+
+[[wikis]]
+name = "Factsheet"
+file = "cds/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "cds/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "cds/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "cds/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "cds/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "cds/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "ODE Systems"
+
+[[wikis]]
+name = "Solvers"
+file = "cds/solvers.md"
+bundled = true
+
+[[wikis]]
+name = "Poincare Sections"
+file = "cds/poincare.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "DynamicalSystems.jl: A Julia software library for chaos and nonlinear dynamics"
+authors = "Datseris, George"
+year = 2018
+journal = "Journal of Open Source Software"
+doi = "10.21105/joss.00598"
+openAccess = true
+
+[[references]]
+title = "DifferentialEquations.jl: A Performant and Feature-Rich Ecosystem for Solving Differential Equations in Julia"
+authors = "Rackauckas, Christopher; Nie, Qing"
+year = 2017
+journal = "Journal of Open Research Software"
+doi = "10.5334/jors.151"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Nonlinear Dynamics and Chaos"
+authors = "Strogatz, Steven H."
+year = 2015
+journal = "Westview Press (2nd ed.)"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Deterministic Nonperiodic Flow"
+authors = "Lorenz, Edward N."
+year = 1963
+journal = "Journal of the Atmospheric Sciences"
+doi = "10.1175/1520-0469(1963)020<0130:DNF>2.0.CO;2"
+openAccess = false
+
+[[bullets]]
+text = "CoupledODEs"
+detail = "define and integrate a system of differential equations forward in time using a high-performance adaptive solver"
+
+[[bullets]]
+text = "Poincaré sections"
+detail = "intersect the continuous flow with a hyperplane to reveal attractor structure"
+
+[[bullets]]
+text = "Parameter sensitivity"
+detail = "re-initialise with reinit! to compare orbits across different conditions"
+
+[[inputs]]
+id = "u0"
+label = "Initial state (u0)"
+tooltip = "Initial condition vector. For the Lorenz system use [1.0, 0.0, 0.0]."
+default = "u0"
+
+[[inputs]]
+id = "p"
+label = "Parameters (p)"
+tooltip = "System parameters tuple. Lorenz: (sigma=10, rho=28, beta=8/3)."
+default = "p"
+
+[[inputs]]
+id = "T"
+label = "Time span (T)"
+tooltip = "Total integration time (e.g. 100.0)."
+default = "T"
+
+[[codeBranches]]
+model = "main"
+code = '''
+using DynamicalSystems
+
+function lorenz!(du, u, p, t)  # Lorenz system right-hand side
+    sigma, rho, beta = p
+    du[1] = sigma * (u[2] - u[1])
+    du[2] = u[1] * (rho - u[3]) - u[2]
+    du[3] = u[1] * u[2] - beta * u[3]
+end
+
+ds = CoupledODEs(lorenz!, {{u0}}, {{p}})  # define continuous dynamical system
+tr, t = trajectory(ds, {{T}}; Dt=0.01)  # integrate for time T, sampling every Dt
+
+println("Final state: ", current_state(ds))  # state after integration
+println("Trajectory size: ", size(tr))  # rows = time steps, cols = dimensions
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "phase-portrait"
+label = "Phase Portrait"
+desc = "Plot the trajectory in 2D or 3D phase space to reveal attractor structure"
+code = '''
+using DynamicalSystems, GLMakie
+
+ds = CoupledODEs(lorenz!, {{u0}}, {{p}})
+tr, _ = trajectory(ds, {{T}}; Dt=0.01)  # integrate
+
+lines(vec(tr[:, 1]), vec(tr[:, 3]))  # x vs z projection
+'''
+
+[[actionGroups.actions]]
+id = "time-series"
+label = "Time Series"
+desc = "Plot each state variable against time to inspect oscillations and transients"
+code = '''
+using DynamicalSystems, GLMakie
+
+ds = CoupledODEs(lorenz!, {{u0}}, {{p}})
+tr, t = trajectory(ds, {{T}}; Dt=0.01)  # integrate with time vector
+
+lines(t, vec(tr[:, 1]), axis=(xlabel="time", ylabel="x(t)"))  # first component vs time
+'''
+
+[[actionGroups.actions]]
+id = "poincare"
+label = "Poincare Section"
+desc = "Reduce a continuous flow to a discrete map by intersecting with a hyperplane"
+code = '''
+using DynamicalSystems, GLMakie
+
+ds = CoupledODEs(lorenz!, {{u0}}, {{p}})
+plane = (1, 0.0)  # section: u[1] = 0
+psos = poincaresos(ds, plane, {{T}})  # Poincare section points
+
+scatter(vec(psos[:, 2]), vec(psos[:, 3]))  # plot section (y vs z)
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "sensitivity"
+label = "Sensitivity to ICs"
+desc = "Run two nearby trajectories and measure divergence to detect chaotic behaviour"
+code = '''
+using DynamicalSystems
+
+ds1 = CoupledODEs(lorenz!, {{u0}}, {{p}})
+ds2 = CoupledODEs(lorenz!, {{u0}} .+ 1e-8, {{p}})  # perturbed IC
+tr1, _ = trajectory(ds1, {{T}}; Dt=0.01)  # reference orbit
+tr2, _ = trajectory(ds2, {{T}}; Dt=0.01)  # perturbed orbit
+
+dist = norm.(eachrow(tr1 .- tr2))  # distance between orbits at each step
+println("Max divergence: ", maximum(dist))  # large = chaotic
+'''
+
+[[actionGroups.actions]]
+id = "fixed-points"
+label = "Fixed Points"
+desc = "Find equilibria of the system where the right-hand side is zero"
+code = '''
+using DynamicalSystems
+
+ds = CoupledODEs(lorenz!, [0.0, 0.0, 0.0], {{p}})  # system definition
+fps = fixedpoints(ds, IntervalBox(-30..30, -30..30, 0..60))  # search box for equilibria
+
+for fp in fps
+    println("Fixed point: ", fp)  # print each equilibrium
+end
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "forward-sim"
+label = "Forward Simulation"
+desc = "Advance the system from a new initial condition and record the trajectory"
+code = '''
+using DynamicalSystems
+
+u_new = [2.0, 3.0, 25.0]  # new initial condition
+ds = CoupledODEs(lorenz!, u_new, {{p}})
+tr, t = trajectory(ds, {{T}}; Dt=0.01)  # forward simulation
+
+println("Final state: ", tr[end, :])  # final predicted state
+'''
+
+[[actionGroups.actions]]
+id = "param-sweep"
+label = "Parameter Sweep"
+desc = "Simulate the system across a range of parameter values to map long-run behaviour"
+code = '''
+using DynamicalSystems
+
+rho_vals = range(20.0, 30.0; length=50)  # sweep rho over [20, 30]
+
+for rho in rho_vals
+    p_i = (10.0, rho, 8/3)
+    ds = CoupledODEs(lorenz!, {{u0}}, p_i)
+    tr, _ = trajectory(ds, {{T}}; Dt=0.05)  # skip transient, then record
+    println("rho=", rho, " -> x_end=", tr[end, 1])  # final x for this rho
+end
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "reinit"
+label = "Multiple Initial Conditions"
+desc = "Re-use the same system definition with reinit! to compare orbits from different starts"
+code = '''
+using DynamicalSystems
+
+ds = CoupledODEs(lorenz!, [1.0, 0.0, 0.0], {{p}})
+
+for x0 in [1.0, 5.0, 10.0, -5.0]
+    reinit!(ds, [x0, 0.0, 25.0])  # reset to new IC without rebuilding
+    tr, _ = trajectory(ds, {{T}}; Dt=0.1)  # integrate from this IC
+    println("x0=", x0, " -> final x=", tr[end, 1])  # compare endpoints
+end
+'''
+
+[[actionGroups.actions]]
+id = "nearby-trajectories"
+label = "Nearby Trajectories"
+desc = "Compare two orbits from close initial conditions to visualise divergence over time"
+code = '''
+using DynamicalSystems, GLMakie
+
+u1 = [1.0, 0.0, 0.0]  # first IC
+u2 = [1.0 + 1e-4, 0.0, 0.0]  # nearby IC (perturbed by 1e-4)
+ds1 = CoupledODEs(lorenz!, u1, {{p}})
+ds2 = CoupledODEs(lorenz!, u2, {{p}})
+tr1, t = trajectory(ds1, {{T}}; Dt=0.01)  # first orbit
+tr2, _ = trajectory(ds2, {{T}}; Dt=0.01)  # second orbit
+
+lines(t, vec(tr1[:, 1]), label="u1")  # first x(t)
+lines!(t, vec(tr2[:, 1]), label="u2")  # second x(t)
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "lyapunov-indicator"
+label = "Lyapunov Indicator"
+desc = "Compute the maximal Lyapunov exponent to classify the orbit as periodic or chaotic"
+code = '''
+using DynamicalSystems
+
+ds = CoupledODEs(lorenz!, {{u0}}, {{p}})
+lambda = lyapunov(ds, {{T}})  # maximal Lyapunov exponent
+
+println("Max Lyapunov exponent: ", lambda)  # positive = chaotic, negative = stable
+println("Orbit type: ", lambda > 0 ? "chaotic" : "regular")  # classification
+'''
+
+[[actionGroups.actions]]
+id = "state-summary"
+label = "State Summary"
+desc = "Extract statistics of the long-run trajectory to characterise the attractor"
+code = '''
+using DynamicalSystems, Statistics
+
+ds = CoupledODEs(lorenz!, {{u0}}, {{p}})
+tr, _ = trajectory(ds, {{T}}; Dt=0.01)  # long orbit
+
+println("Mean state: ",   mean.(eachcol(tr)))  # time-averaged state
+println("Std state:  ",   std.(eachcol(tr)))  # spread around mean
+println("State range: ",  extrema.(eachcol(tr)))  # min/max per dimension
+'''

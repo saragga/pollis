@@ -1,0 +1,595 @@
+# Hypothesis Testing Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/ht.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Hypothesis Testing"
+viewType = "pollis.ht"
+defaultModel = "parametric"
+
+[[packages]]
+name = "HypothesisTests.jl"
+github = "https://github.com/JuliaStats/HypothesisTests.jl"
+
+[requires]
+packages = ["HypothesisTests.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Parametric Tests"
+file = "ht/tutorial-01-parametric.ipynb"
+bundled = true
+description = "z-test, t-test, F-test, ANOVA and chi-squared tests"
+
+[[notebookSections.notebooks]]
+name = "Nonparametric Tests"
+file = "ht/tutorial-02-nonparametric.ipynb"
+bundled = true
+description = "Rank-based, permutation, and distribution-free tests"
+
+[[notebookSections.notebooks]]
+name = "Time-Series Tests"
+file = "ht/tutorial-03-timeseries.ipynb"
+bundled = true
+description = "Stationarity, autocorrelation, and forecast evaluation tests"
+
+[[notebookSections.notebooks]]
+name = "Multivariate Tests"
+file = "ht/tutorial-04-multivariate.ipynb"
+bundled = true
+description = "Hotelling's T², covariance equality, and correlation tests"
+
+[[wikis]]
+name = "Overview"
+file = "ht/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Factsheet"
+file = "ht/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "ht/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "ht/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "ht/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "ht/decision-guide.md"
+bundled = true
+
+[[models]]
+id = "parametric"
+label = "Parametric"
+
+[[models]]
+id = "nonparametric"
+label = "Nonparametric"
+
+[[models]]
+id = "timeseries"
+label = "Time Series"
+
+[[models]]
+id = "multivariate"
+label = "Multivariate"
+
+[[bullets]]
+text = "Parametric"
+detail = "t-test, z-test, F-test, ANOVA, chi-squared, power divergence..."
+
+[[bullets]]
+text = "Nonparametric"
+detail = "Wilcoxon, Mann-Whitney, KS, binomial, sign, permutation..."
+
+[[bullets]]
+text = "Time Series"
+detail = "ADF, Ljung-Box, Durbin-Watson, Jarque-Bera, Diebold-Mariano..."
+
+[[bullets]]
+text = "Multivariate"
+detail = "Hotelling’s T², covariance equality, correlation"
+
+[[inputs]]
+id = "test"
+label = "Test"
+tooltip = ""
+kind = "select"
+default = "one-sample-t-test"
+
+[[inputs.options]]
+value = "one-sample-t-test"
+label = "One-Sample t-test"
+models = ["parametric"]
+
+[[inputs.options]]
+value = "two-sample-t-test"
+label = "Two-Sample t-test"
+models = ["parametric"]
+
+[[inputs.options]]
+value = "welch-t-test"
+label = "Welch t-test"
+models = ["parametric"]
+
+[[inputs.options]]
+value = "one-sample-z-test"
+label = "One-Sample z-test"
+models = ["parametric"]
+
+[[inputs.options]]
+value = "two-sample-z-test"
+label = "Two-Sample z-test"
+models = ["parametric"]
+
+[[inputs.options]]
+value = "f-test"
+label = "F-test"
+models = ["parametric"]
+
+[[inputs.options]]
+value = "one-way-anova"
+label = "One-Way ANOVA"
+models = ["parametric"]
+
+[[inputs.options]]
+value = "levene-s-test"
+label = "Levene's test"
+models = ["parametric"]
+
+[[inputs.options]]
+value = "brown-forsythe-test"
+label = "Brown-Forsythe test"
+models = ["parametric"]
+
+[[inputs.options]]
+value = "chi-squared-test"
+label = "Chi-Squared test"
+models = ["parametric"]
+
+[[inputs.options]]
+value = "power-divergence-test"
+label = "Power Divergence test"
+models = ["parametric"]
+
+[[inputs.options]]
+value = "multinomial-lr-test"
+label = "Multinomial LR test"
+models = ["parametric"]
+
+[[inputs.options]]
+value = "binomial-test"
+label = "Binomial test"
+models = ["nonparametric"]
+
+[[inputs.options]]
+value = "fisher-exact-test"
+label = "Fisher Exact test"
+models = ["nonparametric"]
+
+[[inputs.options]]
+value = "ks-one-sample-test"
+label = "KS One-Sample test"
+models = ["nonparametric"]
+
+[[inputs.options]]
+value = "ks-two-sample-test"
+label = "KS Two-Sample test"
+models = ["nonparametric"]
+
+[[inputs.options]]
+value = "sign-test"
+label = "Sign test"
+models = ["nonparametric"]
+
+[[inputs.options]]
+value = "wilcoxon-signed-rank"
+label = "Wilcoxon Signed-Rank"
+models = ["nonparametric"]
+
+[[inputs.options]]
+value = "mann-whitney-u-test"
+label = "Mann-Whitney U test"
+models = ["nonparametric"]
+
+[[inputs.options]]
+value = "kruskal-wallis-test"
+label = "Kruskal-Wallis test"
+models = ["nonparametric"]
+
+[[inputs.options]]
+value = "anderson-darling-test"
+label = "Anderson-Darling test"
+models = ["nonparametric"]
+
+[[inputs.options]]
+value = "fligner-killeen-test"
+label = "Fligner-Killeen test"
+models = ["nonparametric"]
+
+[[inputs.options]]
+value = "wald-wolfowitz-test"
+label = "Wald-Wolfowitz test"
+models = ["nonparametric"]
+
+[[inputs.options]]
+value = "shapiro-wilk-test"
+label = "Shapiro-Wilk test"
+models = ["nonparametric"]
+
+[[inputs.options]]
+value = "permutation-test"
+label = "Permutation test"
+models = ["nonparametric"]
+
+[[inputs.options]]
+value = "augmented-dickey-fuller"
+label = "Augmented Dickey-Fuller"
+models = ["timeseries"]
+
+[[inputs.options]]
+value = "durbin-watson"
+label = "Durbin-Watson"
+models = ["timeseries"]
+
+[[inputs.options]]
+value = "ljung-box"
+label = "Ljung-Box"
+models = ["timeseries"]
+
+[[inputs.options]]
+value = "box-pierce"
+label = "Box-Pierce"
+models = ["timeseries"]
+
+[[inputs.options]]
+value = "breusch-godfrey"
+label = "Breusch-Godfrey"
+models = ["timeseries"]
+
+[[inputs.options]]
+value = "jarque-bera"
+label = "Jarque-Bera"
+models = ["timeseries"]
+
+[[inputs.options]]
+value = "clark-west"
+label = "Clark-West"
+models = ["timeseries"]
+
+[[inputs.options]]
+value = "diebold-mariano"
+label = "Diebold-Mariano"
+models = ["timeseries"]
+
+[[inputs.options]]
+value = "white-test"
+label = "White test"
+models = ["timeseries"]
+
+[[inputs.options]]
+value = "hotelling-s-t"
+label = "Hotelling's T²"
+models = ["multivariate"]
+
+[[inputs.options]]
+value = "equality-of-covariance"
+label = "Equality of Covariance"
+models = ["multivariate"]
+
+[[inputs.options]]
+value = "correlation-test"
+label = "Correlation test"
+models = ["multivariate"]
+
+[[inputs]]
+id = "x"
+label = "x"
+tooltip = ""
+default = "x"
+models = ["parametric",  "nonparametric",  "timeseries",  "multivariate"]
+when = "test=one-sample-t-test|two-sample-t-test|welch-t-test|one-sample-z-test|two-sample-z-test|f-test|ks-one-sample-test|ks-two-sample-test|sign-test|wilcoxon-signed-rank|mann-whitney-u-test|anderson-darling-test|wald-wolfowitz-test|shapiro-wilk-test|permutation-test|augmented-dickey-fuller|ljung-box|box-pierce|jarque-bera|correlation-test"
+
+[[inputs]]
+id = "mu01"
+label = "mu0"
+tooltip = ""
+default = "0.0"
+models = ["parametric",  "nonparametric"]
+when = "test=one-sample-t-test|one-sample-z-test|sign-test|wilcoxon-signed-rank"
+
+[[inputs]]
+id = "y"
+label = "y"
+tooltip = ""
+default = "y"
+models = ["parametric",  "nonparametric",  "multivariate"]
+when = "test=two-sample-t-test|welch-t-test|two-sample-z-test|f-test|ks-two-sample-test|mann-whitney-u-test|wald-wolfowitz-test|permutation-test|correlation-test"
+
+[[inputs]]
+id = "sig"
+label = "sigma"
+tooltip = ""
+default = "1.0"
+models = ["parametric"]
+when = "test=one-sample-z-test|two-sample-z-test"
+
+[[inputs]]
+id = "grp1"
+label = "groups"
+tooltip = ""
+default = "x, y, z"
+models = ["parametric",  "nonparametric"]
+when = "test=one-way-anova|levene-s-test|brown-forsythe-test|kruskal-wallis-test|fligner-killeen-test"
+
+[[inputs]]
+id = "obs"
+label = "observed"
+tooltip = ""
+default = "observed"
+models = ["parametric"]
+when = "test=chi-squared-test|power-divergence-test|multinomial-lr-test"
+
+[[inputs]]
+id = "exp"
+label = "expected"
+tooltip = ""
+default = "expected"
+models = ["parametric"]
+when = "test=chi-squared-test"
+
+[[inputs]]
+id = "lam"
+label = "lambda"
+tooltip = ""
+default = "1.0"
+models = ["parametric"]
+when = "test=power-divergence-test"
+
+[[inputs]]
+id = "k"
+label = "k"
+tooltip = ""
+default = "k"
+models = ["nonparametric"]
+when = "test=binomial-test"
+
+[[inputs]]
+id = "n"
+label = "n"
+tooltip = ""
+default = "n"
+models = ["nonparametric"]
+when = "test=binomial-test"
+
+[[inputs]]
+id = "p0"
+label = "p0"
+tooltip = ""
+default = "0.5"
+models = ["nonparametric"]
+when = "test=binomial-test"
+
+[[inputs]]
+id = "a"
+label = "a"
+tooltip = ""
+default = "a"
+models = ["nonparametric"]
+when = "test=fisher-exact-test"
+
+[[inputs]]
+id = "b"
+label = "b"
+tooltip = ""
+default = "b"
+models = ["nonparametric"]
+when = "test=fisher-exact-test"
+
+[[inputs]]
+id = "c"
+label = "c"
+tooltip = ""
+default = "c"
+models = ["nonparametric"]
+when = "test=fisher-exact-test"
+
+[[inputs]]
+id = "d"
+label = "d"
+tooltip = ""
+default = "d"
+models = ["nonparametric"]
+when = "test=fisher-exact-test"
+
+[[inputs]]
+id = "dist"
+label = "distribution"
+tooltip = ""
+default = "Normal()"
+models = ["nonparametric"]
+when = "test=ks-one-sample-test|anderson-darling-test"
+
+[[inputs]]
+id = "f"
+label = "statistic"
+tooltip = ""
+default = "(a,b)->mean(a)-mean(b)"
+models = ["nonparametric"]
+when = "test=permutation-test"
+
+[[inputs]]
+id = "det"
+label = "deterministic"
+tooltip = ""
+default = ":constant"
+models = ["timeseries"]
+when = "test=augmented-dickey-fuller"
+
+[[inputs]]
+id = "lags1"
+label = "lags"
+tooltip = ""
+default = "1"
+models = ["timeseries"]
+when = "test=augmented-dickey-fuller|breusch-godfrey"
+
+[[inputs]]
+id = "e"
+label = "residuals"
+tooltip = ""
+default = "residuals"
+models = ["timeseries"]
+when = "test=durbin-watson"
+
+[[inputs]]
+id = "lags2"
+label = "lags"
+tooltip = ""
+default = "10"
+models = ["timeseries"]
+when = "test=ljung-box|box-pierce"
+
+[[inputs]]
+id = "fitted"
+label = "model"
+tooltip = ""
+default = "model"
+models = ["timeseries"]
+when = "test=breusch-godfrey|white-test"
+
+[[inputs]]
+id = "e1"
+label = "e1"
+tooltip = ""
+default = "e1"
+models = ["timeseries"]
+when = "test=clark-west|diebold-mariano"
+
+[[inputs]]
+id = "e2"
+label = "e2"
+tooltip = ""
+default = "e2"
+models = ["timeseries"]
+when = "test=clark-west|diebold-mariano"
+
+[[inputs]]
+id = "h"
+label = "h"
+tooltip = ""
+default = "1"
+models = ["timeseries"]
+when = "test=clark-west"
+
+[[inputs]]
+id = "X"
+label = "X"
+tooltip = ""
+default = "X"
+models = ["multivariate"]
+when = "test=hotelling-s-t"
+
+[[inputs]]
+id = "mu02"
+label = "mu0"
+tooltip = ""
+default = "[0.0, 0.0]"
+models = ["multivariate"]
+when = "test=hotelling-s-t"
+
+[[inputs]]
+id = "grp2"
+label = "groups"
+tooltip = ""
+default = "X1, X2"
+models = ["multivariate"]
+when = "test=equality-of-covariance"
+
+[[codeBranches]]
+model = "parametric"
+code = '''
+using HypothesisTests
+{{?test=one-sample-t-test}} result = OneSampleTTest({{x}}, {{mu01}})
+{{?test=two-sample-t-test}} result = EqualVarianceTTest({{x}}, {{y}})
+{{?test=welch-t-test}} result = UnequalVarianceTTest({{x}}, {{y}})
+{{?test=one-sample-z-test}} result = OneSampleZTest({{x}}, {{sig}}, {{mu01}})
+{{?test=two-sample-z-test}} result = EqualVarianceZTest({{x}}, {{y}}, {{sig}})
+{{?test=f-test}} result = VarianceFTest({{x}}, {{y}})
+{{?test=one-way-anova}} result = OneWayANOVATest({{grp1}})
+{{?test=levene-s-test}} result = LeveneTest({{grp1}})
+{{?test=brown-forsythe-test}} result = BrownForsytheTest({{grp1}})
+{{?test=chi-squared-test}} result = ChisqTest({{obs}}, {{exp}})
+{{?test=power-divergence-test}} result = PowerDivergenceTest({{obs}}; lambda={{lam}})
+{{?test=multinomial-lr-test}} result = PowerDivergenceTest({{obs}}; lambda=0.0)
+println("Test statistic: ", teststatistic(result))
+println("p-value:        ", pvalue(result))
+{{?test=one-sample-t-test|two-sample-t-test|welch-t-test|one-sample-z-test|two-sample-z-test}} println("95% CI:         ", confint(result, 0.95))
+'''
+
+[[codeBranches]]
+model = "nonparametric"
+code = '''
+{{?test!=shapiro-wilk-test}} using HypothesisTests
+{{?test=shapiro-wilk-test}} using ShapiroWilk
+{{?test=binomial-test}} result = BinomialTest({{k}}, {{n}}, {{p0}})
+{{?test=fisher-exact-test}} result = FisherExactTest({{a}}, {{b}}, {{c}}, {{d}})
+{{?test=ks-one-sample-test}} result = ExactOneSampleKSTest({{x}}, {{dist}})
+{{?test=ks-two-sample-test}} result = ApproximateTwoSampleKSTest({{x}}, {{y}})
+{{?test=sign-test}} result = SignTest({{x}}, {{mu01}})
+{{?test=wilcoxon-signed-rank}} result = SignedRankTest({{x}}, {{mu01}})
+{{?test=mann-whitney-u-test}} result = MannWhitneyUTest({{x}}, {{y}})
+{{?test=kruskal-wallis-test}} result = KruskalWallisTest({{grp1}})
+{{?test=anderson-darling-test}} result = OneSampleADTest({{x}}, {{dist}})
+{{?test=fligner-killeen-test}} result = FlignerKilleenTest({{grp1}})
+{{?test=wald-wolfowitz-test}} result = WaldWolfowitzTest({{x}}, {{y}})
+{{?test=shapiro-wilk-test}} result = shapiro_test({{x}})
+{{?test=permutation-test}} result = ExactPermutationTest({{x}}, {{y}}, {{f}})
+println("Test statistic: ", teststatistic(result))
+println("p-value:        ", pvalue(result))
+{{?test=binomial-test|fisher-exact-test|sign-test|wilcoxon-signed-rank|mann-whitney-u-test}} println("95% CI:         ", confint(result, 0.95))
+'''
+
+[[codeBranches]]
+model = "timeseries"
+code = '''
+using HypothesisTests
+{{?test=augmented-dickey-fuller}} result = ADFTest({{x}}, {{det}}, {{lags1}})
+{{?test=durbin-watson}} result = DurbinWatsonTest({{e}})
+{{?test=ljung-box}} result = LjungBoxTest({{x}}, {{lags2}})
+{{?test=box-pierce}} result = BoxPierceTest({{x}}, {{lags2}})
+{{?test=breusch-godfrey}} result = BreuschGodfreyTest({{fitted}}, {{lags1}})
+{{?test=jarque-bera}} result = JarqueBeraTest({{x}})
+{{?test=clark-west}} result = ClarkWestTest({{e1}}, {{e2}}, {{h}})
+{{?test=diebold-mariano}} result = DieboldMarianoTest({{e1}}, {{e2}})
+{{?test=white-test}} result = WhiteTest({{fitted}})
+println("Test statistic: ", teststatistic(result))
+println("p-value:        ", pvalue(result))
+'''
+
+[[codeBranches]]
+model = "multivariate"
+code = '''
+using HypothesisTests
+{{?test=hotelling-s-t}} result = HotellingT2Test({{X}}, {{mu02}})
+{{?test=equality-of-covariance}} result = EqualCovarianceTest({{grp2}})
+{{?test=correlation-test}} result = CorrelationTest({{x}}, {{y}})
+println("Test statistic: ", teststatistic(result))
+println("p-value:        ", pvalue(result))
+{{?test=correlation-test}} println("95% CI:         ", confint(result, 0.95))
+'''
+

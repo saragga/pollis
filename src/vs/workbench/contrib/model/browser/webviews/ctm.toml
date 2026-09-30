@@ -1,0 +1,393 @@
+# Correlated Topic Model Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/ctm.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Correlated Topic Model"
+viewType = "pollis.ctm"
+defaultModel = "ctm"
+
+[[packages]]
+name = "TopicModels.jl"
+github = "https://github.com/slycoder/TopicModels.jl"
+
+[[packages]]
+name = "TextAnalysis.jl"
+github = "https://github.com/JuliaText/TextAnalysis.jl"
+
+[requires]
+packages = ["TopicModels.jl", "TextAnalysis.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "CTM"
+file = "ctm/tutorial-01-ctm.ipynb"
+bundled = true
+description = "Correlated Topic Model with logistic-normal prior for capturing topic correlations using TopicModels.jl"
+
+[[notebookSections.notebooks]]
+name = "Focused CTM"
+file = "ctm/tutorial-02-fctm.ipynb"
+bundled = true
+description = "Focused CTM with background word separation using TopicModels.jl"
+
+[[wikis]]
+name = "Factsheet"
+file = "ctm/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "ctm/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "ctm/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "ctm/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "ctm/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "ctm/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Models"
+
+[[wikis]]
+name = "CTM"
+file = "ctm/ctm.md"
+bundled = true
+
+[[wikis]]
+name = "Focused CTM"
+file = "ctm/fctm.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "TopicModels.jl"
+authors = "Zeng, Jonathan"
+year = 2015
+journal = "GitHub"
+url = "https://github.com/slycoder/TopicModels.jl"
+openAccess = true
+
+[[references]]
+title = "TextAnalysis.jl: Julia NLP Toolkit"
+authors = "JuliaText Contributors"
+year = 2023
+journal = "GitHub"
+url = "https://github.com/JuliaText/TextAnalysis.jl"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Speech and Language Processing"
+authors = "Jurafsky, Daniel; Martin, James H."
+year = 2024
+journal = "Pearson (3rd ed., draft)"
+url = "https://web.stanford.edu/~jurafsky/slp3/"
+openAccess = true
+
+[[references]]
+title = "Pattern Recognition and Machine Learning"
+authors = "Bishop, Christopher M."
+year = 2006
+journal = "Springer"
+doi = "10.1007/978-0-387-45528-0"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Correlated Topic Models"
+authors = "Blei, David M.; Lafferty, John D."
+year = 2006
+journal = "Advances in Neural Information Processing Systems"
+url = "https://proceedings.neurips.cc/paper/2005/hash/9e82757e9a1c12cb710ad680db11f6f1-Abstract.html"
+openAccess = true
+
+[[references]]
+title = "Latent Dirichlet Allocation"
+authors = "Blei, David M.; Ng, Andrew Y.; Jordan, Michael I."
+year = 2003
+journal = "Journal of Machine Learning Research"
+url = "https://jmlr.org/papers/v3/blei03a.html"
+openAccess = true
+
+[[models]]
+id = "ctm"
+label = "CTM"
+
+[[models]]
+id = "fctm"
+label = "Focused CTM"
+
+[[bullets]]
+text = "CTM"
+detail = "extends LDA with a logistic-normal prior; captures correlations between topics via a covariance matrix"
+
+[[bullets]]
+text = "Focused CTM"
+detail = "structured variant of CTM; separates background words from topic-specific words"
+
+[[bullets]]
+text = "TopicModels.jl"
+detail = "Julia implementation of CTM, Focused CTM, LDA and related topic models"
+
+[[inputs]]
+id = "corpus"
+label = "Corpus"
+tooltip = "Array of text documents, e.g. docs = [\"first doc\", \"second doc\"]"
+default = "corpus"
+
+[[inputs]]
+id = "k"
+label = "Topics (k)"
+tooltip = "Number of latent topics to discover"
+default = "10"
+
+[[inputs]]
+id = "iters"
+label = "Iterations"
+tooltip = "Number of variational EM training iterations"
+default = "1000"
+
+[[codeBranches]]
+model = "ctm"
+code = '''
+using TopicModels, TextAnalysis
+
+crps  = Corpus([StringDocument(d) for d in {{corpus}}])  # wrap documents
+prepare!(crps, strip_punctuation | strip_case)  # normalise text
+update_lexicon!(crps)  # build vocabulary
+dtm   = DocumentTermMatrix(crps)  # document-term matrix
+
+model = CTM(dtm.dtm, {{k}})  # logistic-normal prior; {{k}} topics
+train!(model, iter={{iters}})  # variational EM training
+
+topicdist(model)  # topic-word distributions (k x V)
+'''
+
+[[codeBranches]]
+model = "fctm"
+code = '''
+using TopicModels, TextAnalysis
+
+crps  = Corpus([StringDocument(d) for d in {{corpus}}])  # wrap documents
+prepare!(crps, strip_punctuation | strip_case)  # normalise text
+update_lexicon!(crps)  # build vocabulary
+dtm   = DocumentTermMatrix(crps)  # document-term matrix
+
+model = fCTM(dtm.dtm, {{k}})  # focused CTM with {{k}} topics
+train!(model, iter={{iters}})  # variational EM training
+
+topicdist(model)  # topic-word distributions (k x V)
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "topic-words"
+label = "Top Words per Topic"
+desc = "Highest-probability words for each discovered topic"
+code = '''
+using TopicModels, TextAnalysis
+
+crps = Corpus([StringDocument(d) for d in {{corpus}}])  # build corpus
+prepare!(crps, strip_punctuation | strip_case); update_lexicon!(crps)  # normalise
+dtm = DocumentTermMatrix(crps)  # document-term matrix
+model = CTM(dtm.dtm, {{k}}); train!(model)  # fit CTM
+
+showtopics(model, 10)  # top 10 words per topic
+'''
+
+[[actionGroups.actions]]
+id = "topic-correlation"
+label = "Topic Correlations"
+desc = "Heatmap of the topic covariance matrix"
+code = '''
+using TopicModels, TextAnalysis, Plots
+
+crps = Corpus([StringDocument(d) for d in {{corpus}}])  # build corpus
+prepare!(crps, strip_punctuation | strip_case); update_lexicon!(crps)  # normalise
+dtm = DocumentTermMatrix(crps)  # document-term matrix
+model = CTM(dtm.dtm, {{k}}); train!(model)  # fit CTM
+
+heatmap(model.sigma, title="Topic Covariance")  # covariance matrix heatmap
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "perplexity"
+label = "Perplexity"
+desc = "Perplexity on held-out documents; lower is better"
+code = '''
+using TopicModels, TextAnalysis
+
+crps = Corpus([StringDocument(d) for d in {{corpus}}])  # build corpus
+prepare!(crps, strip_punctuation | strip_case); update_lexicon!(crps)  # normalise
+dtm = DocumentTermMatrix(crps)  # document-term matrix
+model = CTM(dtm.dtm, {{k}}); train!(model, iter={{iters}})  # fit CTM
+
+perplexity(model)  # perplexity on training corpus
+'''
+
+[[actionGroups.actions]]
+id = "topic-coherence"
+label = "Topic Coherence"
+desc = "Average PMI of top word pairs within each topic"
+code = '''
+using TopicModels, TextAnalysis
+
+crps = Corpus([StringDocument(d) for d in {{corpus}}])  # build corpus
+prepare!(crps, strip_punctuation | strip_case); update_lexicon!(crps)  # normalise
+dtm = DocumentTermMatrix(crps)  # document-term matrix
+model = CTM(dtm.dtm, {{k}}); train!(model, iter={{iters}})  # fit CTM
+
+coherence(model, dtm.dtm, 10)  # average PMI coherence using top 10 words
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "infer-topics"
+label = "Infer Topics"
+desc = "Topic distribution for a new document"
+code = '''
+using TopicModels, TextAnalysis
+
+crps = Corpus([StringDocument(d) for d in {{corpus}}])  # build corpus
+prepare!(crps, strip_punctuation | strip_case); update_lexicon!(crps)  # normalise
+dtm = DocumentTermMatrix(crps)  # document-term matrix
+model = CTM(dtm.dtm, {{k}}); train!(model)  # fit CTM
+
+infer(model, new_doc_bow)  # topic distribution for a new document bow vector
+'''
+
+[[actionGroups.actions]]
+id = "top-docs"
+label = "Top Documents"
+desc = "Documents most representative of a given topic"
+code = '''
+using TopicModels, TextAnalysis
+
+crps = Corpus([StringDocument(d) for d in {{corpus}}])  # build corpus
+prepare!(crps, strip_punctuation | strip_case); update_lexicon!(crps)  # normalise
+dtm = DocumentTermMatrix(crps)  # document-term matrix
+model = CTM(dtm.dtm, {{k}}); train!(model)  # fit CTM
+
+gamma = topicdist(model)  # document-topic matrix
+sortperm(gamma[:, topic_idx], rev=true)[1:10]  # top 10 documents for a chosen topic
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "compare-k"
+label = "Compare k Topics"
+desc = "Perplexity across different numbers of topics"
+code = '''
+using TopicModels, TextAnalysis
+
+crps = Corpus([StringDocument(d) for d in {{corpus}}])  # build corpus
+prepare!(crps, strip_punctuation | strip_case); update_lexicon!(crps)  # normalise
+dtm = DocumentTermMatrix(crps)  # document-term matrix
+
+for k in [5, 10, 20, 50]  # sweep over topic counts
+    m = CTM(dtm.dtm, k); train!(m, iter={{iters}})  # fit model
+    println("k=", k, " perplexity=", perplexity(m))  # report perplexity
+end
+'''
+
+[[actionGroups.actions]]
+id = "ctm-vs-fctm"
+label = "CTM vs Focused CTM"
+desc = "Topic quality with and without background separation"
+code = '''
+using TopicModels, TextAnalysis
+
+crps = Corpus([StringDocument(d) for d in {{corpus}}])  # build corpus
+prepare!(crps, strip_punctuation | strip_case); update_lexicon!(crps)  # normalise
+dtm = DocumentTermMatrix(crps)  # document-term matrix
+
+m1 = CTM(dtm.dtm, {{k}}); train!(m1, iter={{iters}})  # standard CTM
+m2 = fCTM(dtm.dtm, {{k}}); train!(m2, iter={{iters}})  # focused CTM
+println("CTM perplexity:  ", perplexity(m1))  # compare perplexity
+println("fCTM perplexity: ", perplexity(m2))  # compare perplexity
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "topic-network"
+label = "Topic Network"
+desc = "Graph of positively correlated topic pairs"
+code = '''
+using TopicModels, TextAnalysis, Graphs, GraphPlot
+
+crps = Corpus([StringDocument(d) for d in {{corpus}}])  # build corpus
+prepare!(crps, strip_punctuation | strip_case); update_lexicon!(crps)  # normalise
+dtm = DocumentTermMatrix(crps)  # document-term matrix
+model = CTM(dtm.dtm, {{k}}); train!(model)  # fit CTM
+
+adj = model.sigma .> 0  # positive correlation adjacency
+gplot(SimpleGraph(adj))  # visualise topic network
+'''
+
+[[actionGroups.actions]]
+id = "topic-labels"
+label = "Topic Labels"
+desc = "Top-5 words as a label for each topic"
+code = '''
+using TopicModels, TextAnalysis
+
+crps = Corpus([StringDocument(d) for d in {{corpus}}])  # build corpus
+prepare!(crps, strip_punctuation | strip_case); update_lexicon!(crps)  # normalise
+dtm = DocumentTermMatrix(crps)  # document-term matrix
+model = CTM(dtm.dtm, {{k}}); train!(model)  # fit CTM
+
+showtopics(model, 5)  # top 5 words per topic as label
+'''

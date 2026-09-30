@@ -1,0 +1,582 @@
+# Sampling-Based Bayesian Inference Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/ppl.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Sampling-Based Bayesian Inference"
+viewType = "pollis.ppl"
+defaultModel = "gaussian"
+
+[[packages]]
+name = "Turing.jl"
+github = "https://github.com/TuringLang/Turing.jl"
+
+[requires]
+packages = ["Turing.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Coin Flipping"
+file = "turing/turing-coin-flipping.ipynb"
+bundled = true
+description = "Hello-world Bayesian inference: estimate coin bias with a Beta-Bernoulli model and NUTS"
+
+[[notebookSections.notebooks]]
+name = "Linear Regression"
+file = "turing/turing-linear-regression.ipynb"
+bundled = true
+description = "Bayesian linear regression: posterior inference on intercept and slope with credible intervals"
+
+[[notebookSections.notebooks]]
+name = "Logistic Regression"
+file = "turing/turing-logistic-regression.ipynb"
+bundled = true
+description = "Bayesian logistic regression for binary outcomes with NUTS sampling"
+
+[[notebookSections.notebooks]]
+name = "Poisson Regression"
+file = "turing/turing-poisson-regression.ipynb"
+bundled = true
+description = "Bayesian Poisson regression for count data with log-link and weakly informative priors"
+
+[[notebookSections.notebooks]]
+name = "Multinomial Regression"
+file = "turing/turing-multinomial-regression.ipynb"
+bundled = true
+description = "Multinomial logistic regression for multi-class outcomes with softmax link"
+
+[[notebookSections.notebooks]]
+name = "Gaussian Mixtures"
+file = "turing/turing-gaussian-mixtures.ipynb"
+bundled = true
+description = "Bayesian Gaussian mixture model with Dirichlet prior on mixing weights"
+
+[[notebookSections.notebooks]]
+name = "Infinite Mixtures"
+file = "turing/turing-infinite-mixtures.ipynb"
+bundled = true
+description = "Dirichlet process mixture model: non-parametric Bayesian clustering"
+
+[[notebookSections.notebooks]]
+name = "Probabilistic PCA"
+file = "turing/turing-probabilistic-pca.ipynb"
+bundled = true
+description = "Probabilistic PCA: Bayesian dimensionality reduction with latent Gaussian factors"
+
+[[notebookSections.notebooks]]
+name = "Hidden Markov Models"
+file = "turing/turing-hmm.ipynb"
+bundled = true
+description = "Bayesian HMM: forward-backward inference and posterior decoding of hidden states"
+
+[[notebookSections.notebooks]]
+name = "Time-Series Analysis"
+file = "turing/turing-time-series.ipynb"
+bundled = true
+description = "Bayesian AR models with posterior inference on autoregressive coefficients"
+
+[[notebookSections.notebooks]]
+name = "GP Introduction"
+file = "turing/turing-gaussian-processes.ipynb"
+bundled = true
+description = "Gaussian process regression with Turing: posterior mean and credible bands"
+
+[[notebookSections.notebooks]]
+name = "GP Latent Variable Models"
+file = "turing/turing-gplvm.ipynb"
+bundled = true
+description = "Gaussian process latent variable model for non-linear dimensionality reduction"
+
+[[notebookSections.notebooks]]
+name = "Bayesian Neural Networks"
+file = "turing/turing-neural-networks.ipynb"
+bundled = true
+description = "BNNs via NUTS: posterior over network weights for uncertainty-aware predictions"
+
+[[notebookSections.notebooks]]
+name = "Bayesian Differential Equations"
+file = "turing/turing-differential-equations.ipynb"
+bundled = true
+description = "Bayesian ODE parameter estimation: combine SciML solvers with Turing posteriors"
+
+[[notebookSections.notebooks]]
+name = "Variational Inference"
+file = "turing/turing-variational-inference.ipynb"
+bundled = true
+description = "ADVI with Turing: fast approximate posteriors using automatic differentiation"
+
+[[wikis]]
+name = "Factsheet"
+file = "ppl/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "ppl/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "ppl/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "ppl/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "ppl/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "ppl/decision-guide.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "Turing: A Language for Flexible Probabilistic Inference"
+authors = "Ge, Hong; Xu, Kai; Ghahramani, Zoubin"
+year = 2018
+journal = "AISTATS"
+url = "http://proceedings.mlr.press/v84/ge18b.html"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Bayesian Data Analysis"
+authors = "Gelman, Andrew; Carlin, John B.; Stern, Hal S.; Dunson, David B.; Vehtari, Aki; Rubin, Donald B."
+year = 2013
+journal = "CRC Press (3rd ed.)"
+url = "http://www.stat.columbia.edu/~gelman/book/"
+openAccess = false
+
+[[references]]
+title = "Statistical Rethinking: A Bayesian Course with Examples in R and Stan"
+authors = "McElreath, Richard"
+year = 2020
+journal = "CRC Press (2nd ed.)"
+url = "https://xcelab.net/rm/statistical-rethinking/"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "The No-U-Turn Sampler: Adaptively Setting Path Lengths in Hamiltonian Monte Carlo"
+authors = "Hoffman, Matthew D.; Gelman, Andrew"
+year = 2014
+journal = "Journal of Machine Learning Research"
+url = "https://jmlr.org/papers/v15/hoffman14a.html"
+openAccess = true
+
+[[references]]
+title = "Hybrid Monte Carlo"
+authors = "Duane, Simon; Kennedy, Anthony D.; Pendleton, Brian J.; Roweth, Duncan"
+year = 1987
+journal = "Physics Letters B"
+doi = "10.1016/0370-2693(87)91197-X"
+openAccess = false
+
+[[references]]
+title = "Equation of State Calculations by Fast Computing Machines"
+authors = "Metropolis, Nicholas; Rosenbluth, Arianna W.; Rosenbluth, Marshall N.; Teller, Augusta H.; Teller, Edward"
+year = 1953
+journal = "Journal of Chemical Physics"
+doi = "10.1063/1.1699114"
+openAccess = false
+
+[[models]]
+id = "gaussian"
+label = "Gaussian"
+
+[[models]]
+id = "linear"
+label = "Linear Regression"
+
+[[models]]
+id = "logistic"
+label = "Logistic Regression"
+
+[[models]]
+id = "hierarchical"
+label = "Hierarchical"
+
+[[bullets]]
+text = "Full posterior distribution sampling using Markov Chain Monte Carlo (MCMC) methods: Metropolis-Hastings (MH), Hamiltonian Monte Carlo (HMC), No-U-Turn Sampler (NUTS)"
+detail = ""
+
+[[bullets]]
+text = "High-fidelity uncertainty estimation and accurate posterior inference"
+detail = ""
+
+[[bullets]]
+text = "Convergence diagnostics are important (effective sample size, R-hat diagnostics, trace plots)"
+detail = ""
+
+[[bullets]]
+text = "Computationally expensive, especially for large datasets or complex hierarchical models"
+detail = ""
+
+[[inputs]]
+id = "sampler"
+label = "Sampler"
+tooltip = ""
+kind = "select"
+default = "nuts"
+
+[[inputs.options]]
+value = "nuts"
+label = "NUTS"
+
+[[inputs.options]]
+value = "hmc"
+label = "HMC"
+
+[[inputs.options]]
+value = "mh"
+label = "MH"
+
+[[inputs]]
+id = "n-samples"
+label = "Samples (n)"
+tooltip = ""
+default = "1000"
+
+[[inputs]]
+id = "n-chains"
+label = "Chains (k)"
+tooltip = ""
+default = "2"
+
+[[inputs]]
+id = "delta"
+label = "Target Acceptance (delta)"
+tooltip = ""
+default = "0.65"
+when = "sampler=nuts"
+
+[[inputs]]
+id = "epsilon"
+label = "Step Size (epsilon)"
+tooltip = ""
+default = "0.05"
+when = "sampler=hmc"
+
+[[inputs]]
+id = "leapfrog"
+label = "Leapfrog Steps (L)"
+tooltip = ""
+default = "10"
+when = "sampler=hmc"
+
+[[inputs]]
+id = "adtype"
+label = "AD Backend"
+tooltip = ""
+kind = "select"
+default = "AutoForwardDiff"
+when = "sampler=hmc"
+
+[[inputs.options]]
+value = "AutoForwardDiff"
+label = "AutoForwardDiff"
+
+[[inputs.options]]
+value = "AutoReverseDiff"
+label = "AutoReverseDiff"
+
+[[inputs.options]]
+value = "AutoEnzyme"
+label = "AutoEnzyme"
+
+[[inputs.options]]
+value = "AutoMooncake"
+label = "AutoMooncake"
+
+[[inputs]]
+id = "y"
+label = "Observations (y)"
+tooltip = ""
+default = "y"
+
+[[inputs]]
+id = "X"
+label = "Covariates (X)"
+tooltip = ""
+default = "X"
+models = ["linear", "logistic"]
+
+[[inputs]]
+id = "group"
+label = "Group IDs (group)"
+tooltip = ""
+default = "group"
+models = ["hierarchical"]
+
+[[inputs]]
+id = "ngroups"
+label = "Groups (G)"
+tooltip = ""
+default = "3"
+models = ["hierarchical"]
+
+[[codeBranches]]
+model = "gaussian"
+code = '''
+using Turing, Distributions
+
+@model function gaussian_model({{y}})
+    mu ~ Normal(0, 10)  # prior: mean
+    sigma ~ Exponential(1)  # prior: std dev
+    {{y}} .~ Normal(mu, sigma)  # likelihood
+end
+
+{{?sampler=nuts}} sampler = NUTS({{delta}})
+{{?sampler=hmc}} sampler = HMC({{epsilon}}, {{leapfrog}}; adtype={{adtype}}())
+{{?sampler=mh}} sampler = MH()
+chain = sample(gaussian_model({{y}}), sampler, MCMCThreads(), {{n-samples}}, {{n-chains}})  # {{n-samples}} samples, {{n-chains}} chains
+summarize(chain)
+'''
+
+[[codeBranches]]
+model = "linear"
+code = '''
+using Turing, Distributions
+
+@model function linear_model({{X}}, {{y}})
+    alpha ~ Normal(0, 10)  # intercept prior
+    beta  ~ Normal(0, 10)  # slope prior
+    sigma ~ Exponential(1)  # noise prior
+    {{y}} .~ Normal.(alpha .+ beta .* {{X}}, sigma)
+end
+
+{{?sampler=nuts}} sampler = NUTS({{delta}})
+{{?sampler=hmc}} sampler = HMC({{epsilon}}, {{leapfrog}}; adtype={{adtype}}())
+{{?sampler=mh}} sampler = MH()
+chain = sample(linear_model({{X}}, {{y}}), sampler, MCMCThreads(), {{n-samples}}, {{n-chains}})  # {{n-samples}} samples, {{n-chains}} chains
+summarize(chain)
+'''
+
+[[codeBranches]]
+model = "logistic"
+code = '''
+using Turing, Distributions
+
+@model function logistic_model({{X}}, {{y}})
+    alpha ~ Normal(0, 10)  # intercept prior
+    beta  ~ Normal(0, 10)  # slope prior
+    p = logistic.(alpha .+ beta .* {{X}})
+    {{y}} .~ Bernoulli.(p)
+end
+
+{{?sampler=nuts}} sampler = NUTS({{delta}})
+{{?sampler=hmc}} sampler = HMC({{epsilon}}, {{leapfrog}}; adtype={{adtype}}())
+{{?sampler=mh}} sampler = MH()
+chain = sample(logistic_model({{X}}, {{y}}), sampler, MCMCThreads(), {{n-samples}}, {{n-chains}})  # {{n-samples}} samples, {{n-chains}} chains
+summarize(chain)
+'''
+
+[[codeBranches]]
+model = "hierarchical"
+code = '''
+using Turing, Distributions
+
+@model function hierarchical_model({{y}}, {{group}}, G)
+    mu0   ~ Normal(0, 10)  # hyperprior: global mean
+    sigma0 ~ Exponential(1)  # hyperprior: group spread
+    sigma  ~ Exponential(1)  # observation noise
+    mu = Vector{Real}(undef, G)
+    for g in 1:G
+        mu[g] ~ Normal(mu0, sigma0)  # group-level means
+    end
+    for i in eachindex({{y}})
+        {{y}}[i] ~ Normal(mu[{{group}}[i]], sigma)
+    end
+end
+
+{{?sampler=nuts}} sampler = NUTS({{delta}})
+{{?sampler=hmc}} sampler = HMC({{epsilon}}, {{leapfrog}}; adtype={{adtype}}())
+{{?sampler=mh}} sampler = MH()
+chain = sample(hierarchical_model({{y}}, {{group}}, {{ngroups}}), sampler, MCMCThreads(), {{n-samples}}, {{n-chains}})  # {{n-samples}} samples, {{n-chains}} chains
+summarize(chain)
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "trace-plot"
+label = "Trace Plot"
+desc = "MCMC chain trajectories per parameter across all iterations"
+code = '''
+using StatsPlots
+
+plot(chain)  # trace + density for all parameters
+'''
+
+[[actionGroups.actions]]
+id = "density-plot"
+label = "Density Plot"
+desc = "Marginal posterior densities for all sampled parameters"
+code = '''
+using StatsPlots
+
+density(chain)  # posterior density per parameter
+'''
+
+[[actionGroups.actions]]
+id = "pair-plot"
+label = "Pair Plot"
+desc = "Joint posteriors and correlations between all parameter pairs"
+code = '''
+using PairPlots
+
+pairplot(chain)  # corner plot of joint posteriors
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "rhat"
+label = "R-hat"
+desc = "Gelman-Rubin diagnostic: values close to 1.0 indicate convergence"
+code = '''
+summarize(chain)  # includes rhat and ess columns
+
+summarize(chain)[:, [:parameters, :rhat]]  # rhat: should be < 1.01
+'''
+
+[[actionGroups.actions]]
+id = "ess"
+label = "Effective Sample Size"
+desc = "ESS below 100 per chain is a warning sign for unreliable estimates"
+code = '''
+summarize(chain)[:, [:parameters, :ess_bulk, :ess_tail]]  # bulk and tail ESS
+'''
+
+[[actionGroups.actions]]
+id = "autocorr"
+label = "Autocorrelation"
+desc = "High autocorrelation indicates poor mixing; consider thinning"
+code = '''
+using StatsPlots
+
+autocorplot(chain)  # lag-autocorrelation per parameter
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "ppc"
+label = "Posterior Predictive Check"
+desc = "Sample from the posterior predictive to assess model fit"
+code = '''
+missing_model = gaussian_model(missing)  # replace y with missing to predict
+y_pred = predict(missing_model, chain)  # posterior predictive samples
+
+using StatsPlots
+density(vec(Array(y_pred)))  # predictive distribution
+scatter!({{y}}, zeros(length({{y}})))  # overlay observed data
+'''
+
+[[actionGroups.actions]]
+id = "loo"
+label = "LOO-CV"
+desc = "Pareto-smoothed importance-sampling leave-one-out cross-validation"
+code = '''
+using PosteriorStats, Turing
+
+log_lik = pointwise_loglikelihoods(model, chain)  # log-likelihood per observation
+loo_result = loo(stack(log_lik))  # LOO-CV via PSIS
+print(loo_result)  # ELPD, p_loo, Pareto k diagnostics
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "loo-compare"
+label = "LOO Compare"
+desc = "Compare models by expected log predictive density (ELPD)"
+code = '''
+using PosteriorStats
+
+loo_a = loo(stack(log_lik_a))  # LOO for model A
+loo_b = loo(stack(log_lik_b))  # LOO for model B
+loo_compare(loo_a, loo_b)  # negative = B preferred
+'''
+
+[[actionGroups.actions]]
+id = "waic"
+label = "WAIC"
+desc = "Widely applicable information criterion for Bayesian model selection"
+code = '''
+using PosteriorStats
+
+log_lik = pointwise_loglikelihoods(model, chain)  # log-likelihood matrix
+waic_result = waic(stack(log_lik))  # WAIC and p_waic
+print(waic_result)  # ELPD_waic and effective params
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "summary"
+label = "Posterior Summary"
+desc = "Mean, std, credible intervals, R-hat, and ESS for all parameters"
+code = '''
+summarize(chain)  # full posterior summary table
+
+summarize(chain; q=[0.025, 0.5, 0.975])  # with 95% credible intervals
+'''
+
+[[actionGroups.actions]]
+id = "hdi"
+label = "HPD Interval"
+desc = "Highest posterior density interval: shortest interval containing p% of probability mass"
+code = '''
+using PosteriorStats
+
+samples = Array(chain[:, :mu, :])  # extract parameter samples
+hdi(vec(samples); prob=0.95)  # 95% HPD interval
+'''
+
+[[actionGroups.actions]]
+id = "marginals"
+label = "Marginal Posteriors"
+desc = "Posterior density overlaid with prior to assess prior sensitivity"
+code = '''
+using StatsPlots, Distributions
+
+density(chain[:, :mu, :])  # posterior for mu
+plot!(Normal(0, 10), label="prior")  # overlay prior
+'''

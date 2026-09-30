@@ -1,0 +1,603 @@
+# Symbolic Regression Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/sreg.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Symbolic Regression"
+viewType = "pollis.sreg"
+defaultModel = "main"
+
+[[packages]]
+name = "SymbolicRegression.jl"
+github = "https://github.com/MilesCranmer/SymbolicRegression.jl"
+
+[requires]
+packages = ["SymbolicRegression.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Basic Search"
+file = "sreg/tutorial-01-basic.ipynb"
+bundled = true
+description = "Run equation_search on a toy dataset and inspect the Pareto frontier of discovered expressions"
+
+[[notebookSections.notebooks]]
+name = "Custom Operators"
+file = "sreg/tutorial-02-operators.ipynb"
+bundled = true
+description = "Define custom binary and unary operators and control expression complexity with maxsize"
+
+[[notebookSections.notebooks]]
+name = "Pareto Analysis"
+file = "sreg/tutorial-03-pareto.ipynb"
+bundled = true
+description = "Analyse complexity-accuracy trade-offs using calculate_pareto_frontier and string_tree"
+
+[[wikis]]
+name = "Factsheet"
+file = "sreg/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "sreg/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "sreg/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "sreg/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "sreg/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "sreg/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Algorithm Details"
+
+[[wikis]]
+name = "Expression Trees"
+file = "sreg/expression-trees.md"
+bundled = true
+
+[[wikis]]
+name = "Operators"
+file = "sreg/operators.md"
+bundled = true
+
+[[wikis]]
+name = "Pareto Frontier"
+file = "sreg/pareto-frontier.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "Interpretable Machine Learning for Science with PySR and SymbolicRegression.jl"
+authors = "Cranmer, Miles"
+year = 2023
+journal = "arXiv"
+doi = "10.48550/arXiv.2305.01582"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Genetic Programming: On the Programming of Computers by Means of Natural Selection"
+authors = "Koza, John R."
+year = 1992
+journal = "MIT Press"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Distilling Free-Form Natural Laws from Experimental Data"
+authors = "Schmidt, Michael; Lipson, Hod"
+year = 2009
+journal = "Science"
+doi = "10.1126/science.1165893"
+openAccess = false
+
+[[references]]
+title = "Discovering Symbolic Models from Deep Learning with Inductive Biases"
+authors = "Cranmer, Miles; Sanchez-Gonzalez, Alvaro; Battaglia, Peter; Xu, Rui; Cranmer, Kyle; Spergel, David; Ho, Shirley"
+year = 2020
+journal = "NeurIPS"
+doi = "10.48550/arXiv.2006.11287"
+openAccess = true
+
+[[bullets]]
+text = "Evolutionary Search"
+detail = "population-based search over expression trees using mutation, crossover, and simplification"
+
+[[bullets]]
+text = "Pareto-Optimal Expressions"
+detail = "returns a frontier of equations trading off accuracy against symbolic complexity"
+
+[[bullets]]
+text = "Custom Operators"
+detail = "specify binary and unary operators to guide the space of discoverable expressions"
+
+[[inputs]]
+id = "X"
+label = "Feature Matrix X"
+tooltip = "Feature matrix as a Julia matrix literal (n_samples × n_features). Example: [1.0 2.0; 3.0 4.0; 5.0 6.0]"
+default = "[1.0 2.0; 3.0 4.0; 5.0 6.0]"
+
+[[inputs]]
+id = "y"
+label = "Target Vector y"
+tooltip = "Target vector as a Julia vector literal. Example: [3.0, 7.0, 11.0]"
+default = "[3.0, 7.0, 11.0]"
+
+[[inputs]]
+id = "niter"
+label = "Iterations"
+tooltip = "Number of evolutionary search iterations. Higher values yield better expressions but increase runtime."
+default = "100"
+
+[[inputs]]
+id = "maxsize"
+label = "Max Size"
+tooltip = "Maximum number of nodes in the expression tree. Larger values allow more complex expressions."
+default = "20"
+
+[[inputs]]
+id = "binary"
+label = "Binary Operators"
+tooltip = "Comma-separated list of binary operators available to the search. Example: +, -, *, /"
+default = "+, -, *, /"
+
+[[inputs]]
+id = "unary"
+label = "Unary Operators"
+tooltip = "Comma-separated list of unary operators available to the search. Example: exp, log, sin, cos"
+default = "exp, log, sin, cos"
+
+[[codeBranches]]
+model = "main"
+code = '''
+using SymbolicRegression  # Julia package
+
+X = {{X}}  # n_samples x n_features
+y = {{y}}
+
+options = Options(
+    binary_operators=[{{binary}}],
+    unary_operators=[{{unary}}],
+    maxsize={{maxsize}},
+)
+
+hof = equation_search(X', y; niterations={{niter}}, options)  # transpose: SymbolicRegression expects n_features x n_samples
+
+pareto = calculate_pareto_frontier(hof)
+for member in pareto
+    println(member.loss, "  ", string_tree(member.tree, options))
+end
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "pareto-plot"
+label = "Pareto Frontier"
+desc = "Plot complexity vs loss for all discovered expressions on the Pareto frontier"
+code = '''
+using SymbolicRegression  # Julia package
+
+X = {{X}}  # n_samples x n_features
+y = {{y}}
+
+options = Options(
+    binary_operators=[{{binary}}],
+    unary_operators=[{{unary}}],
+    maxsize={{maxsize}},
+)
+
+using Plots  # plotting
+
+hof = equation_search(X', y; niterations={{niter}}, options)
+pareto = calculate_pareto_frontier(hof)
+
+complexities = [m.complexity for m in pareto]
+losses = [m.loss for m in pareto]
+plot(complexities, losses; xlabel="Complexity", ylabel="Loss",
+     yscale=:log10, marker=:circle, title="Pareto Frontier", lw=2)
+'''
+
+[[actionGroups.actions]]
+id = "prediction-scatter"
+label = "Prediction Scatter"
+desc = "Scatter plot of predicted vs actual values for the best expression"
+code = '''
+using SymbolicRegression  # Julia package
+
+X = {{X}}  # n_samples x n_features
+y = {{y}}
+
+options = Options(
+    binary_operators=[{{binary}}],
+    unary_operators=[{{unary}}],
+    maxsize={{maxsize}},
+)
+
+using Plots  # plotting
+
+hof = equation_search(X', y; niterations={{niter}}, options)
+pareto = calculate_pareto_frontier(hof)
+best = pareto[argmin([m.loss for m in pareto])]
+
+y_pred = eval_tree_array(best.tree, X', options)[1]
+scatter(y, y_pred; xlabel="Actual", ylabel="Predicted",
+          title="Best Expression Fit", legend=false)
+plot!([minimum(y), maximum(y)], [minimum(y), maximum(y)]; ls=:dash, c=:red)
+'''
+
+[[actionGroups.actions]]
+id = "expression-table"
+label = "Expression Table"
+desc = "Print all Pareto-optimal expressions with their complexity and loss"
+code = '''
+using SymbolicRegression  # Julia package
+
+X = {{X}}  # n_samples x n_features
+y = {{y}}
+
+options = Options(
+    binary_operators=[{{binary}}],
+    unary_operators=[{{unary}}],
+    maxsize={{maxsize}},
+)
+
+hof = equation_search(X', y; niterations={{niter}}, options)
+pareto = calculate_pareto_frontier(hof)
+
+println("Complexity  Loss           Expression")
+println("-" ^ 60)
+for m in pareto
+    expr = string_tree(m.tree, options)
+    println(lpad(m.complexity, 10), "  ", lpad(round(m.loss; digits=6), 13), "  ", expr)
+end
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "residual-analysis"
+label = "Residual Analysis"
+desc = "Plot residuals of the best expression to check for systematic errors"
+code = '''
+using SymbolicRegression  # Julia package
+
+X = {{X}}  # n_samples x n_features
+y = {{y}}
+
+options = Options(
+    binary_operators=[{{binary}}],
+    unary_operators=[{{unary}}],
+    maxsize={{maxsize}},
+)
+
+using Plots  # plotting
+
+hof = equation_search(X', y; niterations={{niter}}, options)
+pareto = calculate_pareto_frontier(hof)
+best = pareto[argmin([m.loss for m in pareto])]
+
+y_pred = eval_tree_array(best.tree, X', options)[1]
+residuals = y .- y_pred
+scatter(y_pred, residuals; xlabel="Fitted", ylabel="Residual",
+          title="Residuals vs Fitted", legend=false)
+hline!([0]; ls=:dash, c=:red)
+'''
+
+[[actionGroups.actions]]
+id = "complexity-check"
+label = "Complexity Check"
+desc = "Report the number of nodes in the best expression tree"
+code = '''
+using SymbolicRegression  # Julia package
+
+X = {{X}}  # n_samples x n_features
+y = {{y}}
+
+options = Options(
+    binary_operators=[{{binary}}],
+    unary_operators=[{{unary}}],
+    maxsize={{maxsize}},
+)
+
+hof = equation_search(X', y; niterations={{niter}}, options)
+pareto = calculate_pareto_frontier(hof)
+best = pareto[argmin([m.loss for m in pareto])]
+
+println("Expression:  ", string_tree(best.tree, options))
+println("Complexity:  ", best.complexity)
+println("Loss:        ", best.loss)
+'''
+
+[[actionGroups.actions]]
+id = "evaluate-expression"
+label = "Evaluate Expression"
+desc = "Evaluate a chosen Pareto expression on the training data and report metrics"
+code = '''
+using SymbolicRegression  # Julia package
+
+X = {{X}}  # n_samples x n_features
+y = {{y}}
+
+options = Options(
+    binary_operators=[{{binary}}],
+    unary_operators=[{{unary}}],
+    maxsize={{maxsize}},
+)
+
+hof = equation_search(X', y; niterations={{niter}}, options)
+pareto = calculate_pareto_frontier(hof)
+
+idx = 1  # choose index into pareto (1 = simplest)
+member = pareto[idx]
+y_pred = eval_tree_array(member.tree, X', options)[1]
+
+ss_res = sum((y .- y_pred) .^ 2)
+ss_tot = sum((y .- mean(y)) .^ 2)
+r2 = 1 - ss_res / ss_tot
+println("R2: ", r2, "  RMSE: ", sqrt(ss_res / length(y)))
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "run-search"
+label = "Run Search"
+desc = "Run equation_search and display the best discovered expression"
+code = '''
+using SymbolicRegression  # Julia package
+
+X = {{X}}  # n_samples x n_features
+y = {{y}}
+
+options = Options(
+    binary_operators=[{{binary}}],
+    unary_operators=[{{unary}}],
+    maxsize={{maxsize}},
+)
+
+hof = equation_search(X', y; niterations={{niter}}, options)
+
+pareto = calculate_pareto_frontier(hof)
+for member in pareto
+    println(member.loss, "  ", string_tree(member.tree, options))
+end
+'''
+
+[[actionGroups.actions]]
+id = "predict-new"
+label = "Predict New Data"
+desc = "Apply the best expression to new input data"
+code = '''
+using SymbolicRegression  # Julia package
+
+X = {{X}}  # n_samples x n_features
+y = {{y}}
+
+options = Options(
+    binary_operators=[{{binary}}],
+    unary_operators=[{{unary}}],
+    maxsize={{maxsize}},
+)
+
+hof = equation_search(X', y; niterations={{niter}}, options)
+pareto = calculate_pareto_frontier(hof)
+best = pareto[argmin([m.loss for m in pareto])]
+
+X_new = X  # replace with new data matrix
+y_pred = eval_tree_array(best.tree, X_new', options)[1]
+println("Predictions: ", y_pred)
+'''
+
+[[actionGroups.actions]]
+id = "select-by-complexity"
+label = "Select by Complexity"
+desc = "Choose an expression at a specific complexity level from the Pareto frontier"
+code = '''
+using SymbolicRegression  # Julia package
+
+X = {{X}}  # n_samples x n_features
+y = {{y}}
+
+options = Options(
+    binary_operators=[{{binary}}],
+    unary_operators=[{{unary}}],
+    maxsize={{maxsize}},
+)
+
+hof = equation_search(X', y; niterations={{niter}}, options)
+pareto = calculate_pareto_frontier(hof)
+
+target_complexity = div({{maxsize}}, 2)  # pick mid-range complexity
+idx = argmin([abs(m.complexity - target_complexity) for m in pareto])
+chosen = pareto[idx]
+println("Expression: ", string_tree(chosen.tree, options))
+println("Complexity: ", chosen.complexity, "  Loss: ", chosen.loss)
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "operator-comparison"
+label = "Operator Comparison"
+desc = "Compare search results with and without transcendental operators"
+code = '''
+using SymbolicRegression  # Julia package
+
+X = {{X}}  # n_samples x n_features
+y = {{y}}
+
+opts_simple = Options(binary_operators=[+, -, *, /], unary_operators=[], maxsize={{maxsize}})
+opts_full   = Options(binary_operators=[+, -, *, /], unary_operators=[exp, log, sin, cos], maxsize={{maxsize}})
+
+hof_s = equation_search(X', y; niterations={{niter}}, options=opts_simple)
+hof_f = equation_search(X', y; niterations={{niter}}, options=opts_full)
+
+best_s = calculate_pareto_frontier(hof_s)[argmin([m.loss for m in calculate_pareto_frontier(hof_s)])]
+best_f = calculate_pareto_frontier(hof_f)[argmin([m.loss for m in calculate_pareto_frontier(hof_f)])]
+
+println("Simple ops: loss=", best_s.loss, "  ", string_tree(best_s.tree, opts_simple))
+println("Full ops:   loss=", best_f.loss, "  ", string_tree(best_f.tree, opts_full))
+'''
+
+[[actionGroups.actions]]
+id = "maxsize-comparison"
+label = "Complexity Budget"
+desc = "Run search at different maxsize values and compare best-loss expressions"
+code = '''
+using SymbolicRegression  # Julia package
+
+X = {{X}}  # n_samples x n_features
+y = {{y}}
+
+for maxsz in [10, 20, 30]
+    opts = Options(binary_operators=[{{binary}}], unary_operators=[{{unary}}], maxsize=maxsz)
+    hof  = equation_search(X', y; niterations={{niter}}, options=opts)
+    p    = calculate_pareto_frontier(hof)
+    best = p[argmin([m.loss for m in p])]
+    println("maxsize=", maxsz, "  loss=", best.loss, "  ", string_tree(best.tree, opts))
+end
+'''
+
+[[actionGroups.actions]]
+id = "iteration-comparison"
+label = "Iteration Budget"
+desc = "Compare expression quality at different iteration counts"
+code = '''
+using SymbolicRegression  # Julia package
+
+X = {{X}}  # n_samples x n_features
+y = {{y}}
+
+opts = Options(binary_operators=[{{binary}}], unary_operators=[{{unary}}], maxsize={{maxsize}})
+
+for niter in [10, 50, 200]
+    hof  = equation_search(X', y; niterations=niter, options=opts)
+    p    = calculate_pareto_frontier(hof)
+    best = p[argmin([m.loss for m in p])]
+    println("iters=", niter, "  loss=", best.loss, "  ", string_tree(best.tree, opts))
+end
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "solution-summary"
+label = "Solution Summary"
+desc = "Print the full Pareto frontier with complexity, loss, and symbolic expression"
+code = '''
+using SymbolicRegression  # Julia package
+
+X = {{X}}  # n_samples x n_features
+y = {{y}}
+
+options = Options(
+    binary_operators=[{{binary}}],
+    unary_operators=[{{unary}}],
+    maxsize={{maxsize}},
+)
+
+hof = equation_search(X', y; niterations={{niter}}, options)
+pareto = calculate_pareto_frontier(hof)
+
+println("=== Symbolic Regression Solution ===")
+println("Pareto frontier (", length(pareto), " expressions):")
+for (i, m) in enumerate(pareto)
+    println("  [", i, "] complexity=", m.complexity, "  loss=", m.loss)
+    println("      ", string_tree(m.tree, options))
+end
+'''
+
+[[actionGroups.actions]]
+id = "feature-importance"
+label = "Feature Usage"
+desc = "Count how often each feature variable appears in Pareto expressions"
+code = '''
+using SymbolicRegression  # Julia package
+
+X = {{X}}  # n_samples x n_features
+y = {{y}}
+
+options = Options(
+    binary_operators=[{{binary}}],
+    unary_operators=[{{unary}}],
+    maxsize={{maxsize}},
+)
+
+hof = equation_search(X', y; niterations={{niter}}, options)
+pareto = calculate_pareto_frontier(hof)
+
+n_features = size(X, 2)  # number of columns
+counts = zeros(Int, n_features)
+for m in pareto
+    expr = string_tree(m.tree, options)
+    for j in 1:n_features
+        counts[j] += count("x" * string(j), expr)
+    end
+end
+for j in 1:n_features
+    println("x", j, ": ", counts[j], " occurrences across Pareto frontier")
+end
+'''
+
+[[actionGroups.actions]]
+id = "algorithm-guide"
+label = "Algorithm Guide"
+desc = "Rules of thumb for configuring SymbolicRegression.jl"
+code = '''
+  # Operators: start with [+, -, *, /]; add exp/log/sin only if domain knowledge supports it
+  # maxsize: keep <= 20 for interpretable expressions; larger permits more complex fits
+  # niterations: 50-200 for exploration; increase if loss is still improving
+  # Pareto frontier: prefer simplest expression with acceptable loss over lowest-loss
+
+  # X must be transposed: SymbolicRegression expects n_features x n_samples (X')
+  # Use eval_tree_array(member.tree, X', options)[1] to get predictions from any member
+  # string_tree(member.tree, options) returns a human-readable symbolic expression
+'''

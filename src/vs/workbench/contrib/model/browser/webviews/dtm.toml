@@ -1,0 +1,397 @@
+# Document-Term Matrix & TF-IDF Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/dtm.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Document-Term Matrix & TF-IDF"
+viewType = "pollis.dtm"
+defaultModel = "dtm"
+
+[[packages]]
+name = "TextAnalysis.jl"
+github = "https://github.com/JuliaText/TextAnalysis.jl"
+
+[requires]
+packages = ["TextAnalysis.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Document-Term Matrix & TF-IDF"
+file = "dtm/tutorial-01-dtm-tfidf.ipynb"
+bundled = true
+description = "Build document-term matrices and compute TF-IDF weights using TextAnalysis.jl"
+
+[[wikis]]
+name = "Factsheet"
+file = "dtm/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "dtm/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "dtm/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "dtm/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "dtm/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "dtm/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Weighting Schemes"
+
+[[wikis]]
+name = "TF-IDF"
+file = "dtm/tf-idf.md"
+bundled = true
+
+[[wikis]]
+name = "BM25"
+file = "dtm/bm25.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "TextAnalysis.jl: Julia NLP Toolkit"
+authors = "JuliaText Contributors"
+year = 2023
+journal = "GitHub"
+url = "https://github.com/JuliaText/TextAnalysis.jl"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Speech and Language Processing"
+authors = "Jurafsky, Daniel; Martin, James H."
+year = 2024
+journal = "Pearson (3rd ed., draft)"
+url = "https://web.stanford.edu/~jurafsky/slp3/"
+openAccess = true
+
+[[references]]
+title = "Introduction to Information Retrieval"
+authors = "Manning, Christopher D.; Raghavan, Prabhakar; Schutze, Hinrich"
+year = 2008
+journal = "Cambridge University Press"
+url = "https://nlp.stanford.edu/IR-book/"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "A Statistical Interpretation of Term Specificity and Its Application in Retrieval"
+authors = "Sparck Jones, Karen"
+year = 1972
+journal = "Journal of Documentation"
+doi = "10.1108/eb026526"
+openAccess = false
+
+[[references]]
+title = "Term-Weighting Approaches in Automatic Text Retrieval"
+authors = "Salton, Gerard; Buckley, Christopher"
+year = 1988
+journal = "Information Processing & Management"
+doi = "10.1016/0306-4573(88)90021-0"
+openAccess = false
+
+[[models]]
+id = "dtm"
+label = "DTM"
+
+[[models]]
+id = "tfidf"
+label = "TF-IDF"
+
+[[models]]
+id = "bm25"
+label = "BM25"
+
+[[bullets]]
+text = "DTM"
+detail = "counts how often each term appears in each document; produces a sparse D × V integer matrix"
+
+[[bullets]]
+text = "TF-IDF"
+detail = "re-weights raw counts by inverse document frequency to down-weight common terms"
+
+[[bullets]]
+text = "BM25"
+detail = "probabilistic extension of TF-IDF with document-length normalisation; standard in information retrieval"
+
+[[inputs]]
+id = "corpus"
+label = "Corpus variable"
+tooltip = "A Julia vector of strings, one per document (e.g. a Vector{String} or a TextAnalysis.jl Corpus)."
+default = "docs"
+
+[[inputs]]
+id = "lexicon"
+label = "Lexicon variable"
+tooltip = "Optional pre-built lexicon (Dict{String,Int}). Leave blank to build one automatically from the corpus."
+default = "lexicon"
+
+[[codeBranches]]
+model = "dtm"
+code = '''
+using TextAnalysis
+
+crps    = Corpus(map(StringDocument, {{corpus}}))  # wrap strings as StringDocuments
+update_lexicon!(crps)  # build vocabulary from corpus
+m       = DocumentTermMatrix(crps)  # sparse DTM (D x V)
+
+dtm(m)  # dense integer matrix
+dtm(m, :sparse)  # sparse representation
+'''
+
+[[codeBranches]]
+model = "tfidf"
+code = '''
+using TextAnalysis
+
+crps    = Corpus(map(StringDocument, {{corpus}}))  # wrap strings as StringDocuments
+update_lexicon!(crps)  # build vocabulary from corpus
+m       = DocumentTermMatrix(crps)  # sparse DTM
+
+weights = tf_idf(m)  # TF-IDF weighted matrix (D x V)
+'''
+
+[[codeBranches]]
+model = "bm25"
+code = '''
+using TextAnalysis
+
+crps    = Corpus(map(StringDocument, {{corpus}}))  # wrap strings as StringDocuments
+update_lexicon!(crps)  # build vocabulary from corpus
+m       = DocumentTermMatrix(crps)  # sparse DTM
+
+weights = bm25(m)  # BM25-weighted matrix (D x V)
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "term-frequency-bar"
+label = "Term Frequency Bar Chart"
+desc = "Top-N most frequent terms across the corpus"
+code = '''
+using TextAnalysis, Plots
+
+crps = Corpus(map(StringDocument, {{corpus}}))  # build corpus
+update_lexicon!(crps)  # build vocabulary
+lex  = lexicon(crps)  # term => count dictionary
+
+top  = sort(collect(lex), by=x->x[2], rev=true)[1:20]  # top 20 terms by frequency
+bar(map(x->x[1], top), map(x->x[2], top), xlabel="Term", ylabel="Count", xrotation=45, legend=false)  # bar chart
+'''
+
+[[actionGroups.actions]]
+id = "tfidf-heatmap"
+label = "TF-IDF Heatmap"
+desc = "Heatmap of TF-IDF weights (documents x top terms)"
+code = '''
+using TextAnalysis, Plots
+
+crps    = Corpus(map(StringDocument, {{corpus}}))  # build corpus
+update_lexicon!(crps)  # build vocabulary
+m       = DocumentTermMatrix(crps)  # DTM
+weights = Matrix(tf_idf(m))  # dense TF-IDF matrix
+
+heatmap(weights, xlabel="Term index", ylabel="Document", title="TF-IDF Weights")  # heatmap
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "sparsity"
+label = "Sparsity Report"
+desc = "Fraction of zero entries in the DTM"
+code = '''
+using TextAnalysis, SparseArrays
+
+crps    = Corpus(map(StringDocument, {{corpus}}))  # build corpus
+update_lexicon!(crps)  # build vocabulary
+m       = DocumentTermMatrix(crps)  # DTM
+mat     = dtm(m, :sparse)  # sparse integer matrix
+
+sparsity = 1.0 - nnz(mat) / length(mat)  # fraction of zeros
+println("Sparsity: ", round(sparsity * 100, digits=2), "%")  # print result
+'''
+
+[[actionGroups.actions]]
+id = "vocab-size"
+label = "Vocabulary Report"
+desc = "Total vocabulary size and per-document statistics"
+code = '''
+using TextAnalysis, Statistics
+
+crps = Corpus(map(StringDocument, {{corpus}}))  # build corpus
+update_lexicon!(crps)  # build vocabulary
+
+println("Vocabulary size: ", length(lexicon(crps)))  # V
+println("Documents: ", length(crps))  # D
+lens = map(d -> length(tokens(d)), crps)  # tokens per document
+println("Avg tokens/doc: ", round(mean(lens), digits=1))  # mean document length
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "query-vector"
+label = "Query Vector"
+desc = "Represent a new query document as a TF-IDF vector"
+code = '''
+using TextAnalysis
+
+crps  = Corpus(map(StringDocument, {{corpus}}))  # build corpus
+update_lexicon!(crps)  # build vocabulary
+m     = DocumentTermMatrix(crps)  # DTM
+
+query = StringDocument("example query text here")  # new document
+qvec  = dtv(query, lexicon(crps))  # raw count vector aligned to corpus vocabulary
+'''
+
+[[actionGroups.actions]]
+id = "cosine-similarity"
+label = "Cosine Similarity"
+desc = "Find the most similar documents to a query"
+code = '''
+using TextAnalysis, LinearAlgebra
+
+crps    = Corpus(map(StringDocument, {{corpus}}))  # build corpus
+update_lexicon!(crps)  # build vocabulary
+m       = DocumentTermMatrix(crps)  # DTM
+weights = Matrix(tf_idf(m))  # TF-IDF matrix
+
+query   = StringDocument("example query text")  # query document
+qvec    = Float64.(dtv(query, lexicon(crps)))  # query count vector
+sims    = weights * qvec ./ (norm.(eachrow(weights)) .* norm(qvec) .+ 1e-10)  # cosine similarity per document
+sortperm(sims, rev=true)  # ranked document indices
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "dtm-vs-tfidf"
+label = "DTM vs TF-IDF"
+desc = "Side-by-side raw counts and TF-IDF weights for top terms"
+code = '''
+using TextAnalysis
+
+crps    = Corpus(map(StringDocument, {{corpus}}))  # build corpus
+update_lexicon!(crps)  # build vocabulary
+m       = DocumentTermMatrix(crps)  # DTM
+
+raw     = dtm(m)  # raw count matrix
+weighted = Matrix(tf_idf(m))  # TF-IDF matrix
+
+println("DTM row 1:    ", raw[1, 1:10])  # first document, first 10 terms
+println("TF-IDF row 1: ", round.(weighted[1, 1:10], digits=4))  # same document, TF-IDF weights
+'''
+
+[[actionGroups.actions]]
+id = "tfidf-vs-bm25"
+label = "TF-IDF vs BM25"
+desc = "Compare TF-IDF and BM25 rankings for a query"
+code = '''
+using TextAnalysis, LinearAlgebra
+
+crps     = Corpus(map(StringDocument, {{corpus}}))  # build corpus
+update_lexicon!(crps)  # build vocabulary
+m        = DocumentTermMatrix(crps)  # DTM
+
+w_tfidf  = Matrix(tf_idf(m))  # TF-IDF matrix
+w_bm25   = Matrix(bm25(m))  # BM25 matrix
+
+query    = StringDocument("example query")  # query
+qvec     = Float64.(dtv(query, lexicon(crps)))  # query vector
+rank_tf  = sortperm(w_tfidf * qvec, rev=true)  # TF-IDF ranking
+rank_bm  = sortperm(w_bm25  * qvec, rev=true)  # BM25 ranking
+
+println("TF-IDF top-5: ", rank_tf[1:5])  # compare top results
+println("BM25    top-5: ", rank_bm[1:5])  # compare top results
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "top-terms-per-doc"
+label = "Top Terms Per Document"
+desc = "Highest TF-IDF terms for each document"
+code = '''
+using TextAnalysis
+
+crps    = Corpus(map(StringDocument, {{corpus}}))  # build corpus
+update_lexicon!(crps)  # build vocabulary
+m       = DocumentTermMatrix(crps)  # DTM
+weights = Matrix(tf_idf(m))  # TF-IDF matrix
+terms   = collect(keys(lexicon(crps)))  # vocabulary terms
+
+for d in 1:min(5, size(weights, 1))
+    idx = sortperm(weights[d, :], rev=true)[1:5]
+    println("Doc ", d, ": ", terms[idx])
+end
+'''
+
+[[actionGroups.actions]]
+id = "idf-weights"
+label = "IDF Weights"
+desc = "Inverse document frequency for each vocabulary term"
+code = '''
+using TextAnalysis
+
+crps  = Corpus(map(StringDocument, {{corpus}}))  # build corpus
+update_lexicon!(crps)  # build vocabulary
+m     = DocumentTermMatrix(crps)  # DTM
+
+D     = size(dtm(m), 1)  # number of documents
+df    = vec(sum(dtm(m) .> 0, dims=1))  # document frequency per term
+idf   = log.(D ./ df)  # IDF vector
+terms = collect(keys(lexicon(crps)))  # vocabulary
+
+sorted = sort(collect(zip(terms, idf)), by=x->x[2], rev=true)  # terms with highest IDF first
+println(sorted[1:10])  # top 10 discriminative terms
+'''

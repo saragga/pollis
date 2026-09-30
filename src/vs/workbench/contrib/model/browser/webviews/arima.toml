@@ -1,0 +1,392 @@
+# ARIMA Models Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/arima.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "ARIMA Models"
+viewType = "pollis.arima"
+defaultModel = "arima"
+
+[[packages]]
+name = "StateSpaceModels.jl"
+github = "https://github.com/LAMPSPUC/StateSpaceModels.jl"
+
+[requires]
+packages = ["Plots.jl", "HypothesisTests.jl", "StatsBase.jl", "Distributions.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "ARIMA Modelling"
+file = "arima/tutorial-01-arima.ipynb"
+bundled = true
+description = "Fitting and diagnosing ARIMA models with StateSpaceModels.jl"
+
+[[notebookSections.notebooks]]
+name = "Seasonal ARIMA"
+file = "arima/tutorial-02-sarima.ipynb"
+bundled = true
+description = "Seasonal ARIMA for periodic time series"
+
+[[notebookSections.notebooks]]
+name = "Automatic Model Selection"
+file = "arima/tutorial-03-auto.ipynb"
+bundled = true
+description = "Automatic order selection via information criteria"
+
+[[notebookSections.notebooks]]
+name = "Forecasting"
+file = "arima/tutorial-04-forecast.ipynb"
+bundled = true
+description = "Point forecasts and prediction intervals"
+
+[[wikis]]
+name = "Overview"
+file = "arima/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Factsheet"
+file = "arima/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "arima/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "arima/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "arima/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "arima/decision-guide.md"
+bundled = true
+
+[[models]]
+id = "arima"
+label = "ARIMA"
+
+[[models]]
+id = "sarima"
+label = "Seasonal ARIMA"
+
+[[bullets]]
+text = "ARIMA"
+detail = "integrated autoregressive moving-average model for univariate time series"
+
+[[bullets]]
+text = "Seasonal ARIMA"
+detail = "extends ARIMA with multiplicative seasonal structure"
+
+[[decisionRows]]
+task = "ARIMA"
+context = "A single non-seasonal series whose trend or level drift is removed by differencing"
+purpose = "Models the differenced series as autoregressive (p) plus moving-average (q) terms; short-horizon forecasts with prediction intervals"
+
+[[decisionRows]]
+task = "Seasonal ARIMA"
+context = "Monthly, quarterly or other periodic data with a repeating pattern of period s"
+purpose = "Adds multiplicative seasonal AR (P), differencing (D) and MA (Q) terms at lag s, so the same shock recurs one season later"
+
+[[inputs]]
+id = "yvar"
+label = "Data variable"
+tooltip = "Your univariate time series (Vector of Float64), oldest observation first."
+default = "y"
+
+[[inputs]]
+id = "p"
+label = "p (AR)"
+tooltip = "Non-seasonal autoregressive order: lags of the differenced series. Read from the PACF cut-off. Typical: 0 to 3."
+default = "1"
+newRow = true
+
+[[inputs]]
+id = "d"
+label = "d (diff)"
+tooltip = "Non-seasonal differencing order: 1 removes a stochastic trend, 2 is rarely needed. Check with the ADF test."
+default = "1"
+
+[[inputs]]
+id = "q"
+label = "q (MA)"
+tooltip = "Non-seasonal moving-average order: lagged forecast errors. Read from the ACF cut-off. Typical: 0 to 3."
+default = "0"
+
+[[inputs]]
+id = "sp"
+label = "P (seas. AR)"
+tooltip = "Seasonal autoregressive order, at multiples of the period s. Typical: 0 or 1."
+default = "1"
+models = ["sarima"]
+newRow = true
+
+[[inputs]]
+id = "sd"
+label = "D (seas. diff)"
+tooltip = "Seasonal differencing order: 1 removes a stable seasonal pattern. Rarely more than 1."
+default = "1"
+models = ["sarima"]
+
+[[inputs]]
+id = "sq"
+label = "Q (seas. MA)"
+tooltip = "Seasonal moving-average order, at multiples of the period s. Typical: 0 or 1."
+default = "1"
+models = ["sarima"]
+
+[[inputs]]
+id = "s"
+label = "s (period)"
+tooltip = "Seasonal period in observations: 12 for monthly, 4 for quarterly, 7 for daily data with a weekly cycle."
+default = "12"
+models = ["sarima"]
+
+[[inputs]]
+id = "h"
+label = "Horizon"
+tooltip = "Forecast horizon in observations, used by the Predict actions."
+default = "24"
+newRow = true
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.arima]
+# Drifting series continued by a forecast with a widening band
+svg = '''
+var y = [60, 56, 58, 52, 54, 48, 50, 45];
+var d = '';
+for (var i = 0; i < y.length; i++) { d += (i ? 'L' : 'M') + (4 + i * 4.5) + ',' + y[i]; }
+return '<path d="M35.5,45 L50,38 L50,52 Z" fill="currentColor" opacity="0.2"/>'
+	+ '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.5"/>'
+	+ '<line x1="35.5" y1="45" x2="50" y2="45" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3,2"/>';
+'''
+
+[miniCharts.sarima]
+# Seasonal wave on a trend, continued by a forecast
+svg = '''
+var d = '', f = '';
+for (var i = 0; i <= 32; i++) { d += (i ? 'L' : 'M') + (4 + i) + ',' + (62 - i * 0.5 - 8 * Math.sin(i * Math.PI / 6)).toFixed(1); }
+for (var j = 32; j <= 46; j++) { f += (j === 32 ? 'M' : 'L') + (4 + j) + ',' + (62 - j * 0.5 - 8 * Math.sin(j * Math.PI / 6)).toFixed(1); }
+return '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.5"/>'
+	+ '<path d="' + f + '" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3,2"/>';
+'''
+
+[[codeBranches]]
+model = "arima"
+code = '''
+using StateSpaceModels
+
+y = Float64.({{yvar}})
+seas = (0, 0, 0, 0)  # no seasonal part
+arima(p, d, q) = SARIMA(y; order=(p, d, q))
+model = arima({{p}}, {{d}}, {{q}})  # ARIMA({{p}},{{d}},{{q}})
+fit!(model)  # maximum-likelihood estimation via the Kalman filter
+
+print_results(model)  # estimates, standard errors, log-likelihood, AIC/BIC
+'''
+
+[[codeBranches]]
+model = "sarima"
+code = '''
+using StateSpaceModels
+
+y = Float64.({{yvar}})
+seas = ({{sp}}, {{sd}}, {{sq}}, {{s}})  # seasonal (P, D, Q, s)
+arima(p, d, q) = SARIMA(y; order=(p, d, q), seasonal_order=seas)
+model = arima({{p}}, {{d}}, {{q}})  # SARIMA({{p}},{{d}},{{q}})({{sp}},{{sd}},{{sq}})_{{s}}
+fit!(model)  # maximum-likelihood estimation via the Kalman filter
+
+print_results(model)  # estimates, standard errors, log-likelihood, AIC/BIC
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "fitted"
+label = "Series and One-Step Fit"
+desc = "The data against the one-step-ahead predictions of the fitted model: where the model tracks the series and where it lags behind turning points"
+code = '''
+using StateSpaceModels, Plots
+kf = kalman_filter(model)
+yhat = y .- vec(get_innovations(kf))  # one-step-ahead prediction = data - innovation
+skip = {{d}} + seas[2] * seas[4]  # observations lost to differencing
+plot(y, lw=1.5, label="data", xlabel="t", title="One-step-ahead fit")
+plot!(skip+1:length(y), yhat[skip+1:end], lw=1.5, ls=:dash, label="one-step prediction")
+'''
+
+[[actionGroups.actions]]
+id = "differenced"
+label = "Differenced Series"
+desc = "The series after the differencing the model applies: it should look stationary, with a constant mean and variance and no remaining trend"
+code = '''
+using Plots
+z = reduce((z, _) -> diff(z), 1:{{d}}; init=y)  # regular differences
+z = reduce((z, _) -> z[seas[4]+1:end] .- z[1:end-seas[4]], 1:seas[2]; init=z)  # seasonal differences
+plot(z, lw=1, legend=false, xlabel="t", title="Differenced series")
+hline!([0], c=:gray, ls=:dash)
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "acf"
+label = "Residual ACF and PACF"
+desc = "Autocorrelation and partial autocorrelation of the standardised residuals with 95% bands: bars outside the bands mean structure the model has missed"
+code = '''
+using StateSpaceModels, StatsBase, Plots
+r = filter(isfinite, vec(StateSpaceModels.get_standard_residuals(kalman_filter(model))))
+L = min(24, length(r) ÷ 4); band = 1.96 / sqrt(length(r))
+p1 = bar(1:L, autocor(r, 1:L), legend=false, title="Residual ACF", xlabel="Lag")
+hline!(p1, [-band, band], c=:red, ls=:dash)
+p2 = bar(1:L, pacf(r, 1:L), legend=false, title="Residual PACF", xlabel="Lag")
+hline!(p2, [-band, band], c=:red, ls=:dash)
+plot(p1, p2, layout=(2, 1))
+'''
+
+[[actionGroups.actions]]
+id = "ljung-box"
+label = "Ljung-Box and Normality"
+desc = "Ljung-Box test for leftover autocorrelation (degrees of freedom net of the ARMA parameters) and Jarque-Bera test for normal residuals"
+code = '''
+using StateSpaceModels, HypothesisTests
+r = filter(isfinite, vec(StateSpaceModels.get_standard_residuals(kalman_filter(model))))
+L = min(24, length(r) ÷ 4)
+npar = {{p}} + {{q}} + seas[1] + seas[3]  # estimated ARMA terms
+lb = LjungBoxTest(r, L, npar); jb = JarqueBeraTest(r)
+(ljung_box_lags = L, ljung_box_p = pvalue(lb), jarque_bera_p = pvalue(jb), verdict = pvalue(lb) > 0.05 ? "no leftover autocorrelation" : "residuals still autocorrelated: revise p or q")
+'''
+
+[[actionGroups.actions]]
+id = "adf"
+label = "ADF Unit Root Test"
+desc = "Augmented Dickey-Fuller test on the levels and on the first difference: a unit root in the levels but not in the difference supports d = 1"
+code = '''
+using HypothesisTests
+lag = floor(Int, length(y)^(1/3))
+t0 = ADFTest(y, :constant, lag); t1 = ADFTest(diff(y), :constant, lag)
+(levels_p = pvalue(t0), first_difference_p = pvalue(t1), suggested_d = pvalue(t0) < 0.05 ? 0 : pvalue(t1) < 0.05 ? 1 : 2)
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "forecast"
+label = "Forecast with Intervals"
+desc = "Point forecasts over the horizon with 80% and 95% prediction intervals"
+code = '''
+using StateSpaceModels, Plots
+fc = forecast(model, {{h}})
+plot(model, fc; label="data", title="Forecast, {{h}} steps")
+'''
+
+[[actionGroups.actions]]
+id = "scenarios"
+label = "Simulated Scenarios"
+desc = "500 simulated future paths from the fitted model and their quantile fan: the full distribution of outcomes, not only the mean and variance"
+code = '''
+using StateSpaceModels, Statistics, Plots
+S = simulate_scenarios(model, {{h}}, 500)[:, 1, :]  # horizon x scenarios
+t = length(y) .+ (1:{{h}})
+q(a) = [quantile(S[i, :], a) for i in axes(S, 1)]
+p = plot(max(1, length(y) - 4 * {{h}}):length(y), y[max(1, end - 4 * {{h}}):end], lw=1.5, c=:black, label="data", title="Simulated scenarios")
+plot!(t, S[:, 1:20], c=:gray, alpha=0.3, label=false)
+plot!(t, q(0.5), ribbon=(q(0.5) .- q(0.05), q(0.95) .- q(0.5)), fillalpha=0.2, lw=2, label="median, 90% band")
+'''
+
+[[actionGroups.actions]]
+id = "backtest"
+label = "Rolling Backtest"
+desc = "Refits the model on expanding windows and scores its forecasts on the data that followed: out-of-sample error by horizon"
+code = '''
+using StateSpaceModels, Statistics, Plots
+H = min({{h}}, 12); origins = round.(Int, range(0.7 * length(y), length(y) - H, length=6))
+err = zeros(length(origins), H)
+for (k, n) in enumerate(origins)
+    m = SARIMA(y[1:n]; order=({{p}}, {{d}}, {{q}}), seasonal_order=seas); StateSpaceModels.fit!(m)
+    err[k, :] = y[n+1:n+H] .- vcat(forecast(m, H).expected_value...)
+end
+display((rmse_by_horizon = round.(vec(sqrt.(mean(err .^ 2, dims=1))), digits=3),))
+plot(1:H, vec(sqrt.(mean(err .^ 2, dims=1))), marker=:o, lw=2, legend=false, xlabel="Horizon", ylabel="RMSE", title="Out-of-sample error by horizon")
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "auto-arima"
+label = "Automatic Order Selection"
+desc = "auto_arima searches over orders (Hyndman-Khandakar stepwise search, AICc) and reports the order it picks next to this model; a seasonal search can take a few minutes"
+code = '''
+using StateSpaceModels
+best = auto_arima(y; seasonal=seas[4])  # seasonal = 0: non-seasonal search
+spec(m) = (order = (m.order.p, m.order.d, m.order.q), seasonal = (m.order.P, m.order.D, m.order.Q, m.order.s), aicc = m.results.aicc)
+(this_model = spec(model), auto_arima = spec(best))
+'''
+
+[[actionGroups.actions]]
+id = "order-grid"
+label = "Order Grid (AICc)"
+desc = "AICc of every (p, q) with p, q in 0..3 at the current differencing: a heat map of how sensitive the fit is to the chosen order (16 fits: about a minute for seasonal models)"
+code = '''
+using StateSpaceModels, Plots
+ic = fill(NaN, 4, 4)
+for p in 0:3, q in 0:3
+    try
+        m = arima(p, {{d}}, q); StateSpaceModels.fit!(m); ic[p+1, q+1] = m.results.aicc
+    catch
+    end
+end
+display((best_p_q = Tuple(argmin(replace(ic, NaN => Inf))) .- 1, current = ({{p}}, {{q}})))
+heatmap(0:3, 0:3, ic, xlabel="q", ylabel="p", title="AICc by order (d = {{d}})", c=:viridis)
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "coefficients"
+label = "Coefficient Table"
+desc = "Estimates with standard errors, z statistics and p-values: which AR and MA terms are distinguishable from zero"
+code = '''
+using StateSpaceModels, Distributions
+ct = model.results.coef_table
+[(parameter = n, estimate = round(c, digits=4), std_error = round(s, digits=4), z = round(z, digits=2), p_value = round(2ccdf(Normal(), abs(z)), digits=4))  # two-sided, from z
+ for (n, c, s, z) in zip(ct.names, ct.coef, ct.std_err, ct.z)]
+'''
+
+[[actionGroups.actions]]
+id = "impulse"
+label = "Impulse Response (Psi Weights)"
+desc = "Effect of a one-off unit shock on the differenced series over the next 24 steps, from the fitted AR and MA polynomials; on the level it accumulates d times"
+code = '''
+using StateSpaceModels, Plots
+ct = model.results.coef_table
+coef(prefix) = [ct.coef[i] for i in eachindex(ct.names) if startswith(ct.names[i], prefix)]
+phi, theta = coef("ar_L"), coef("ma_L")
+psi = zeros(25); psi[1] = 1.0
+for j in 1:24
+    psi[j+1] = (j <= length(theta) ? theta[j] : 0.0) + sum((phi[i] * psi[j+1-i] for i in eachindex(phi) if i <= j); init=0.0)
+end
+level = reduce((l, _) -> cumsum(l), 1:{{d}}; init=psi)  # accumulate over the d differences
+plot(0:24, [psi level], marker=:o, label=["differenced series" "level"], xlabel="Steps after shock", title="Impulse response (non-seasonal part)")
+'''

@@ -1,0 +1,212 @@
+# Time-to-Event Analysis Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/tte.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Time-to-Event Analysis"
+viewType = "pollis.tte"
+defaultModel = "km"
+
+[[packages]]
+name = "Survival.jl"
+github = "https://github.com/JuliaStats/Survival.jl"
+
+[[packages]]
+name = "LSurvival.jl"
+github = "https://github.com/alexpkeil1/LSurvival.jl"
+
+[requires]
+packages = ["Survival.jl", "LSurvival.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Kaplan-Meier & Nelson-Aalen"
+file = "tte/tutorial-01-km-na.ipynb"
+bundled = true
+description = "Non-parametric estimation of the survival and cumulative hazard functions"
+
+[[notebookSections.notebooks]]
+name = "Aalen-Johansen Estimator"
+file = "tte/tutorial-02-aj.ipynb"
+bundled = true
+description = "Competing-risks cumulative incidence via the Aalen-Johansen estimator"
+
+[[notebookSections.notebooks]]
+name = "Cox Proportional Hazards"
+file = "tte/tutorial-03-cox.ipynb"
+bundled = true
+description = "Semi-parametric regression with proportional hazards"
+
+[[notebookSections.notebooks]]
+name = "Accelerated Failure Time"
+file = "tte/tutorial-04-aft.ipynb"
+bundled = true
+description = "Parametric survival regression with AFT models"
+
+[[wikis]]
+name = "Overview"
+file = "tte/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Factsheet"
+file = "tte/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "tte/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "tte/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "tte/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "tte/decision-guide.md"
+bundled = true
+
+[[models]]
+id = "km"
+label = "Kaplan-Meier"
+
+[[models]]
+id = "na"
+label = "Nelson-Aalen"
+
+[[models]]
+id = "aj"
+label = "Aalen-Johansen"
+
+[[models]]
+id = "cox"
+label = "Cox PH"
+
+[[models]]
+id = "aft"
+label = "AFT"
+
+[[bullets]]
+text = "Kaplan-Meier"
+detail = "non-parametric estimator of the survival function"
+
+[[bullets]]
+text = "Nelson-Aalen"
+detail = "non-parametric estimator of the cumulative hazard"
+
+[[bullets]]
+text = "Aalen-Johansen"
+detail = "competing-risks cumulative incidence estimator"
+
+[[bullets]]
+text = "Cox PH"
+detail = "semi-parametric proportional hazards regression"
+
+[[bullets]]
+text = "AFT"
+detail = "parametric accelerated failure time regression"
+
+[[inputs]]
+id = "time"
+label = "time variable"
+tooltip = "Column name for observed event or censoring times."
+default = "time"
+
+[[inputs]]
+id = "event"
+label = "event variable"
+tooltip = "Column name for the event indicator. Use 0 for censored observations and 1 for events. For Aalen-Johansen, integer codes identify competing event types."
+default = "event"
+
+[[inputs]]
+id = "data"
+label = "data"
+tooltip = "Julia DataFrame containing the survival data."
+default = "df"
+
+[[inputs]]
+id = "covariates"
+label = "covariates"
+tooltip = "Right-hand side of the survival formula — covariate terms separated by +, e.g. age + treatment. Leave blank for an intercept-only model."
+default = "age + treatment"
+models = ["cox", "aft"]
+
+[[inputs]]
+id = "dist"
+label = "distribution"
+tooltip = "Baseline distribution for the AFT model. Determines the shape of the log-survival function."
+kind = "select"
+default = "LogNormal"
+models = ["aft"]
+
+[[inputs.options]]
+value = "LogNormal"
+label = "Log-Normal"
+
+[[inputs.options]]
+value = "Weibull"
+label = "Weibull"
+
+[[inputs.options]]
+value = "Exponential"
+label = "Exponential"
+
+[[inputs.options]]
+value = "Gamma"
+label = "Gamma"
+
+[[inputs.options]]
+value = "LogLogistic"
+label = "Log-Logistic"
+
+[[codeBranches]]
+model = "km"
+code = '''
+using Survival
+
+km = fit(KaplanMeier, {{data}}.{{time}}, {{data}}.{{event}})  # Kaplan-Meier estimator
+'''
+
+[[codeBranches]]
+model = "na"
+code = '''
+using Survival
+
+na = fit(NelsonAalen, {{data}}.{{time}}, {{data}}.{{event}})  # Nelson-Aalen estimator
+'''
+
+[[codeBranches]]
+model = "aj"
+code = '''
+using LSurvival
+
+aj = fit(AalenJohansen, {{data}}.{{time}}, {{data}}.{{event}})  # Aalen-Johansen estimator
+'''
+
+[[codeBranches]]
+model = "cox"
+code = '''
+using Survival
+
+model = coxph(@formula(EventTime({{time}}, {{event}}) ~ {{covariates}}), {{data}})  # fit Cox proportional hazards
+coeftable(model)  # estimated coefficients
+'''
+
+[[codeBranches]]
+model = "aft"
+code = '''
+using LSurvival
+
+model = fit(AFTModel{{{dist}}}, @formula(EventTime({{time}}, {{event}}) ~ {{covariates}}), {{data}})  # fit AFT model
+coeftable(model)  # estimated coefficients
+'''

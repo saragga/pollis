@@ -1,0 +1,446 @@
+# Linear Models with Autocorrelation Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/lmar.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Linear Models with Autocorrelation"
+viewType = "pollis.lmar"
+defaultModel = "pw2step"
+
+[[packages]]
+name = "HARE.jl"
+github = "https://github.com/Trumpingtons/HARE.jl"
+
+[[packages.videos]]
+title = "Julia in Academia"
+description = "Overview of Julia for academic and scientific computing"
+url = "https://www.youtube.com/watch?v=wPFPT-Ech2c"
+
+[requires]
+packages = ["GLM.jl", "Plots.jl", "StatsBase.jl", "HypothesisTests.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Prais-Winsten (Two-Step)"
+file = "lm-ar1/tutorial-01-pw-twostep.ipynb"
+bundled = true
+description = "Two-step Prais-Winsten FGLS: estimate rho from OLS residuals, then apply GLS transformation preserving the first observation"
+
+[[notebookSections.notebooks]]
+name = "Prais-Winsten (Iterated)"
+file = "lm-ar1/tutorial-02-pw-iterated.ipynb"
+bundled = true
+description = "Iterated Prais-Winsten: cycle between rho estimation and GLS until convergence"
+
+[[notebookSections.notebooks]]
+name = "Hildreth-Lu"
+file = "lm-ar1/tutorial-03-hildreth-lu.ipynb"
+bundled = true
+description = "Hildreth-Lu grid search over rho in (-1, 1) minimising the sum of squared residuals"
+
+[[notebookSections.notebooks]]
+name = "Beach-MacKinnon (MLE)"
+file = "lm-ar1/tutorial-04-beach-mackinnon.ipynb"
+bundled = true
+description = "Beach-MacKinnon exact MLE: joint estimation of beta and rho for asymptotically efficient inference"
+
+[[wikis]]
+name = "Factsheet"
+file = "lm-ar1/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "lm-ar1/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "lm-ar1/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "lm-ar1/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "lm-ar1/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "lm-ar1/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "AR(1) Methods"
+
+[[wikis]]
+name = "Prais-Winsten"
+file = "lm-ar1/prais-winsten.md"
+bundled = true
+
+[[wikis]]
+name = "Hildreth-Lu"
+file = "lm-ar1/hildreth-lu.md"
+bundled = true
+
+[[wikis]]
+name = "Beach-MacKinnon (MLE)"
+file = "lm-ar1/beach-mackinnon.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Econometric Analysis"
+authors = "Greene, William H."
+year = 2018
+journal = "Pearson (8th ed.)"
+url = "https://www.pearson.com/en-us/subject-catalog/p/econometric-analysis/P200000006119"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Estimation of the First-Order Moving Average Model with Positive Residual Autocorrelation"
+authors = "Beach, Charles M.; MacKinnon, James G."
+year = 1978
+journal = "Econometrica"
+doi = "10.2307/1911252"
+openAccess = false
+
+[[references]]
+title = "Trend Estimators and Serial Correlation"
+authors = "Prais, Sigbert J.; Winsten, Christopher B."
+year = 1954
+journal = "Cowles Commission Discussion Paper"
+url = "https://cowles.yale.edu/sites/default/files/files/pub/d00/d0383.pdf"
+openAccess = true
+
+[[models]]
+id = "pw2step"
+label = "Prais-Winsten (2-Step)"
+
+[[models]]
+id = "pwiter"
+label = "Prais-Winsten (Iterated)"
+
+[[models]]
+id = "hildreth"
+label = "Hildreth-Lu"
+
+[[models]]
+id = "beach"
+label = "Beach-MacKinnon"
+
+[[bullets]]
+text = "Prais-Winsten (Two-Step)"
+detail = "FGLS preserving the first observation; single-pass estimate of rho from OLS residuals"
+
+[[bullets]]
+text = "Prais-Winsten (Iterated)"
+detail = "cycles between rho estimation and GLS until convergence; more efficient in small samples"
+
+[[bullets]]
+text = "Hildreth-Lu"
+detail = "grid search over rho ∈ (−1, 1) minimising the sum of squared residuals; robust to poor starting values"
+
+[[bullets]]
+text = "Beach-MacKinnon"
+detail = "exact MLE for beta and rho jointly; asymptotically efficient with exact likelihood"
+
+[[decisionRows]]
+task = "Prais-Winsten (2-Step)"
+context = "Time-series regression whose OLS residuals fail the Durbin-Watson test; moderate or large sample"
+purpose = "Estimates rho from the OLS residuals once, then runs GLS on the quasi-differenced data, keeping the first observation"
+
+[[decisionRows]]
+task = "Prais-Winsten (Iterated)"
+context = "Small samples, or when the two-step rho looks unstable"
+purpose = "Repeats the rho and GLS steps until both settle; usually closer to the maximum-likelihood answer"
+
+[[decisionRows]]
+task = "Hildreth-Lu"
+context = "Strong autocorrelation or a suspected local optimum in the iterative methods"
+purpose = "Grid search over rho in (-1, 1) for the smallest transformed residual sum of squares: a global answer"
+
+[[decisionRows]]
+task = "Beach-MacKinnon"
+context = "When a likelihood is needed (tests, information criteria) or rho may be close to 1"
+purpose = "Exact maximum likelihood for beta and rho jointly; the likelihood keeps rho strictly inside the unit circle"
+
+[[inputs]]
+id = "X"
+label = "Regressors (X)"
+tooltip = "Matrix of regressors (T x k), rows ordered in time. Do not add a column of ones: HARE adds the intercept itself."
+default = "X"
+
+[[inputs]]
+id = "y"
+label = "Response (y)"
+tooltip = "Vector of the dependent variable (length T), ordered in time."
+default = "y"
+
+[[inputs]]
+id = "xnew"
+label = "Future regressors"
+tooltip = "Rows of regressor values for the forecast periods, one row per step. The default reuses the last 5 rows as a placeholder: replace it with the real future values."
+default = "Xm[end-4:end, :]"
+newRow = true
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.pw2step]
+# Residual series with a single rho arrow between neighbours
+svg = '''
+var y = [46, 40, 36, 40, 48, 54, 52, 44, 38];
+var d = '';
+for (var i = 0; i < y.length; i++) { d += (i ? 'L' : 'M') + (6 + i * 5.5) + ',' + y[i]; }
+return '<line x1="4" y1="45" x2="50" y2="45" stroke="currentColor" stroke-width="0.8" opacity="0.5"/>'
+	+ '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.5"/>'
+	+ '<path d="M17,30 Q20,24 23,30" fill="none" stroke="currentColor" stroke-width="1.2"/>';
+'''
+
+[miniCharts.pwiter]
+# Circular arrows: rho and beta updated until convergence
+svg = '''
+return '<path d="M16,40 A11,11 0 0 1 38,40" fill="none" stroke="currentColor" stroke-width="1.5"/>'
+	+ '<path d="M38,48 A11,11 0 0 1 16,48" fill="none" stroke="currentColor" stroke-width="1.5"/>'
+	+ '<path d="M35,36 L38,41 L41,36" fill="none" stroke="currentColor" stroke-width="1.5"/>'
+	+ '<path d="M19,52 L16,47 L13,52" fill="none" stroke="currentColor" stroke-width="1.5"/>';
+'''
+
+[miniCharts.hildreth]
+# Residual sum of squares over a grid of rho with its minimum marked
+svg = '''
+var d = '', s = '';
+for (var i = 0; i <= 10; i++) { var x = 6 + i * 4.2, r = (i - 6.5) / 4; var y = (32 + 26 * r * r).toFixed(1); d += (i ? 'L' : 'M') + x + ',' + y; s += '<circle cx="' + x + '" cy="' + y + '" r="1.2" fill="currentColor"/>'; }
+return '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1"/>' + s
+	+ '<line x1="33.3" y1="24" x2="33.3" y2="66" stroke="currentColor" stroke-width="1" stroke-dasharray="3,2"/>';
+'''
+
+[miniCharts.beach]
+# Log-likelihood peak in rho
+svg = '''
+var d = '';
+for (var i = 0; i <= 46; i++) { var r = (i - 28) / 10; d += (i ? 'L' : 'M') + (4 + i) + ',' + (66 - 38 * Math.exp(-r * r)).toFixed(1); }
+return '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.5"/>'
+	+ '<line x1="32" y1="28" x2="32" y2="66" stroke="currentColor" stroke-width="1" stroke-dasharray="3,2"/>';
+'''
+
+[[codeBranches]]
+model = "pw2step"
+code = '''
+using HARE, GLM
+
+yv = Float64.({{y}})
+Xm = reshape(Float64.({{X}}), length(yv), :)  # regressors without a constant: HARE adds the intercept
+estimate(X, y) = two_step_prais_winsten(X, y)  # rho from OLS residuals, then GLS keeping the first observation
+result = estimate(Xm, yv)
+'''
+
+[[codeBranches]]
+model = "pwiter"
+code = '''
+using HARE, GLM
+
+yv = Float64.({{y}})
+Xm = reshape(Float64.({{X}}), length(yv), :)  # regressors without a constant: HARE adds the intercept
+estimate(X, y) = iterated_prais_winsten(X, y)  # alternates rho and GLS steps until convergence
+result = estimate(Xm, yv)
+'''
+
+[[codeBranches]]
+model = "hildreth"
+code = '''
+using HARE, GLM
+
+yv = Float64.({{y}})
+Xm = reshape(Float64.({{X}}), length(yv), :)  # regressors without a constant: HARE adds the intercept
+estimate(X, y) = hildreth_lu(X, y)  # grid search over rho for the smallest transformed RSS
+result = estimate(Xm, yv)
+'''
+
+[[codeBranches]]
+model = "beach"
+code = '''
+using HARE, GLM
+
+yv = Float64.({{y}})
+Xm = reshape(Float64.({{X}}), length(yv), :)  # regressors without a constant: HARE adds the intercept
+estimate(X, y) = beach_mackinnon(X, y)  # exact maximum likelihood for beta and rho
+result = estimate(Xm, yv)
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "residuals-time"
+label = "Residuals over Time"
+desc = "Structural residuals y - Xb against the innovations left after removing the AR(1) part: long runs above or below zero are the autocorrelation the model absorbs"
+code = '''
+using Plots
+e = residuals(result)  # structural residuals y - Xb
+v = e[2:end] .- result.rho .* e[1:end-1]  # innovations e_t - rho e_(t-1)
+Plots.plot(e, lw=1.4, label="residuals y - Xb", xlabel="t", title="rho = $(round(result.rho, digits=3))")
+Plots.plot!(2:length(e), v, lw=1, alpha=0.8, label="innovations")
+Plots.hline!([0], color=:gray, ls=:dash, label="")
+'''
+
+[[actionGroups.actions]]
+id = "acf-pacf"
+label = "ACF and PACF"
+desc = "Autocorrelation and partial autocorrelation of the residuals, and the ACF of the innovations: a single PACF spike at lag 1 and a clean innovation ACF say AR(1) is enough"
+code = '''
+using StatsBase, Plots
+e = residuals(result)
+v = e[2:end] .- result.rho .* e[1:end-1]
+lags = 1:20
+band = 1.96 / sqrt(length(e))  # approximate 95% band under white noise
+panel(vals, t) = Plots.hline!(Plots.bar(lags, vals, label="", title=t), [-band, band], ls=:dash, color=:gray, label="")
+Plots.plot(panel(autocor(e, lags), "ACF of residuals"), panel(pacf(e, lags), "PACF of residuals"),
+           panel(autocor(v, lags), "ACF of innovations"), layout=(3, 1), size=(700, 700))
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "serial-tests"
+label = "Serial Correlation Tests"
+desc = "Durbin-Watson and Breusch-Godfrey tests on the OLS residuals: the evidence that a correction is needed in the first place (Breusch-Godfrey stays valid with lagged dependent variables)"
+code = '''
+using HypothesisTests
+dw = durbin_watson_test(Xm, yv)
+bg1 = breusch_godfrey_test(Xm, yv, 1)
+bg4 = breusch_godfrey_test(Xm, yv, 4)
+(durbin_watson = round(dw.DW, digits=3), dw_p = pvalue(dw), breusch_godfrey_lag1_p = pvalue(bg1), breusch_godfrey_lag4_p = pvalue(bg4),
+ reading = dw.DW < 2 ? "DW below 2: positive autocorrelation" : "DW above 2: negative autocorrelation")
+'''
+
+[[actionGroups.actions]]
+id = "innovation-check"
+label = "Is AR(1) Enough?"
+desc = "Ljung-Box and Jarque-Bera tests on the innovations after the AR(1) correction, plus Harvey's test for heteroskedasticity: significant results point to a richer error model"
+code = '''
+using HypothesisTests
+e = residuals(result)
+v = e[2:end] .- result.rho .* e[1:end-1]
+(ljung_box_innovations_p = pvalue(LjungBoxTest(v, 10)), jarque_bera_p = pvalue(JarqueBeraTest(v)),
+ harvey_heteroskedasticity_p = pvalue(harvey_test(Xm, yv)),
+ hint = "if Harvey is significant, the Heteroskedasticity + AR(1) panel corrects both at once")
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "fitted"
+label = "One-Step Predictions"
+desc = "In-sample fit from the regression alone against the one-step prediction that also uses last period's residual: the AR(1) term is what makes the second one track the data"
+code = '''
+using Plots, Statistics
+b, e = coef(result), residuals(result)
+mean_fit = fitted(result)  # X b
+one_step = mean_fit[2:end] .+ result.rho .* e[1:end-1]  # X b + rho e_(t-1)
+Plots.plot(yv, lw=1.4, label="data", xlabel="t")
+Plots.plot!(mean_fit, lw=1, label="X b")
+display(Plots.plot!(2:length(yv), one_step, lw=1, ls=:dash, label="X b + rho e_(t-1)"))
+(rmse_regression_only = sqrt(mean(abs2, e)), rmse_one_step = sqrt(mean(abs2, yv[2:end] .- one_step)))
+'''
+
+[[actionGroups.actions]]
+id = "forecast"
+label = "Forecast"
+desc = "Forecasts for the future regressor rows: the regression part plus the last residual decaying as rho^h, with 95% intervals from the innovation variance (parameter uncertainty ignored)"
+code = '''
+using Statistics
+Xn = reshape(Float64.({{xnew}}), :, size(Xm, 2))
+h = size(Xn, 1)
+e = residuals(result)
+v = e[2:end] .- result.rho .* e[1:end-1]
+s2 = sum(abs2, v) / (length(v) - length(coef(result)))  # innovation variance
+fc = hcat(ones(h), Xn) * coef(result) .+ result.rho .^ (1:h) .* e[end]
+se = sqrt.(s2 .* cumsum(result.rho .^ (2 .* (0:h-1))))
+[(step = j, forecast = round(fc[j], digits=4), lower95 = round(fc[j] - 1.96se[j], digits=4), upper95 = round(fc[j] + 1.96se[j], digits=4)) for j in 1:h]
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "vs-ols"
+label = "Compare with OLS"
+desc = "OLS and the corrected estimates side by side: the coefficients are often close, but OLS standard errors are too small under positive autocorrelation"
+code = '''
+ols = lm(hcat(ones(length(yv)), Xm), yv)
+[(term = n, ols = round(a, digits=4), ols_se = round(sa, digits=4), corrected = round(b, digits=4), corrected_se = round(sb, digits=4))
+ for (n, a, sa, b, sb) in zip(coefnames(result), coef(ols), stderror(ols), coef(result), stderror(result))]
+'''
+
+[[actionGroups.actions]]
+id = "all-estimators"
+label = "All AR(1) Estimators"
+desc = "Prais-Winsten, Cochrane-Orcutt (which drops the first observation), Hildreth-Lu and Beach-MacKinnon on the same data: agreement means the answer does not hinge on the method"
+code = '''
+ests = [("Prais-Winsten (2-step)", two_step_prais_winsten), ("Prais-Winsten (iterated)", iterated_prais_winsten),
+        ("Cochrane-Orcutt (2-step)", two_step_cochrane_orcutt), ("Cochrane-Orcutt (iterated)", iterated_cochrane_orcutt),
+        ("Hildreth-Lu", hildreth_lu), ("Beach-MacKinnon", beach_mackinnon)]
+fits = [(n, f(Xm, yv)) for (n, f) in ests]
+[(estimator = n, rho = round(r.rho, digits=4), coef = round.(coef(r), digits=4), std_error = round.(stderror(r), digits=4)) for (n, r) in fits]
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "rho"
+label = "Autocorrelation Strength"
+desc = "rho with an approximate 95% interval, the half-life of a shock in the errors and the effective sample size: how much independent information the T observations really carry"
+code = '''
+n, r = length(yv), result.rho
+se_rho = sqrt((1 - r^2) / n)  # asymptotic standard error of rho
+(rho = round(r, digits=4), ci95 = round.((r - 1.96se_rho, r + 1.96se_rho), digits=4),
+ half_life_periods = r > 0 ? round(log(0.5) / log(r), digits=2) : NaN,
+ effective_sample_size = round(n * (1 - r) / (1 + r), digits=1), observations = n)
+'''
+
+[[actionGroups.actions]]
+id = "coefficients"
+label = "Coefficients"
+desc = "Estimates with GLS standard errors, t statistics, p-values and 95% confidence intervals: each slope is the change in y for a one-unit change in that regressor"
+code = '''
+ci = confint(result)
+[(term = n, estimate = round(b, digits=4), std_error = round(s, digits=4), t = round(t, digits=2), p = round(p, digits=4), lower95 = round(ci[i, 1], digits=4), upper95 = round(ci[i, 2], digits=4))
+ for (i, (n, b, s, t, p)) in enumerate(zip(coefnames(result), coef(result), stderror(result), tstat(result), pvalues(result)))]
+'''

@@ -1,0 +1,236 @@
+# Model Calibration Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/mc.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Model Calibration"
+viewType = "pollis.mc"
+defaultModel = "platt"
+
+[[packages]]
+name = "GLM.jl"
+github = "https://github.com/JuliaStats/GLM.jl"
+
+[[packages]]
+name = "CalibrationErrors.jl"
+github = "https://github.com/devmotion/CalibrationErrors.jl"
+
+[requires]
+packages = ["GLM.jl", "CalibrationErrors.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Platt Scaling"
+file = "model-workflow/tutorial-01-platt-scaling.ipynb"
+bundled = true
+description = "Logistic regression recalibration of raw classifier scores with GLM.jl"
+
+[[notebookSections.notebooks]]
+name = "Isotonic Regression"
+file = "model-workflow/tutorial-02-isotonic.ipynb"
+bundled = true
+description = "Non-parametric monotone calibration via the Pool Adjacent Violators algorithm"
+
+[[notebookSections.notebooks]]
+name = "Temperature Scaling"
+file = "model-workflow/tutorial-03-temperature.ipynb"
+bundled = true
+description = "Single-parameter logit rescaling for neural network confidence calibration"
+
+[[notebookSections.notebooks]]
+name = "Reliability Diagrams"
+file = "model-workflow/tutorial-04-reliability-diagrams.ipynb"
+bundled = true
+description = "Visualising and measuring calibration quality with CalibrationErrors.jl"
+
+[[wikis]]
+name = "Overview"
+file = "model-workflow/mc-overview.md"
+bundled = true
+
+[[wikis]]
+name = "Platt Scaling"
+file = "model-workflow/mc-platt.md"
+bundled = true
+
+[[wikis]]
+name = "Isotonic Regression"
+file = "model-workflow/mc-isotonic.md"
+bundled = true
+
+[[wikis]]
+name = "Temperature Scaling"
+file = "model-workflow/mc-temperature.md"
+bundled = true
+
+[[wikis]]
+name = "ECE and Brier Score"
+file = "model-workflow/mc-metrics.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Original Papers (from packages)"
+
+[[references]]
+title = "Calibration tests beyond classification"
+authors = "Widmann, D., Lindsten, F. & Zachariah, D."
+year = 2022
+journal = ""
+url = "https://arxiv.org/abs/2210.00983"
+openAccess = true
+
+[[models]]
+id = "platt"
+label = "Platt Scaling"
+
+[[models]]
+id = "isotonic"
+label = "Isotonic"
+
+[[models]]
+id = "temperature"
+label = "Temperature"
+
+[[bullets]]
+text = "Platt Scaling"
+detail = "fit a logistic regression on raw classifier scores; parametric, fast, and suitable when the score distribution is roughly sigmoid-shaped (GLM.jl)"
+
+[[bullets]]
+text = "Isotonic Regression"
+detail = "non-parametric monotone recalibration via the Pool Adjacent Violators algorithm; no distributional assumptions (no external package)"
+
+[[bullets]]
+text = "Temperature Scaling"
+detail = "single-parameter logit rescaling for neural networks; minimises NLL over a held-out set without changing accuracy (Optim.jl)"
+
+[[inputs]]
+id = "scores"
+label = "Raw Scores / Logits"
+tooltip = "Vector of uncalibrated classifier scores or logits from the validation set. For Platt/Isotonic use probability scores; for Temperature use raw logits."
+default = "scores_val"
+
+[[inputs]]
+id = "y"
+label = "True Labels"
+tooltip = "Binary ground-truth labels (0/1 or false/true) for the validation set corresponding to the scores vector."
+default = "y_val"
+
+[[codeBranches]]
+model = "platt"
+code = '''
+using GLM, DataFrames
+
+df = DataFrame(score={{scores}}, y={{y}})  # collect validation scores and labels
+
+platt = glm(@formula(y ~ score), df, Binomial(), LogitLink())  # logistic regression on raw scores
+
+cal_probs = predict(platt, df)  # calibrated probabilities
+'''
+
+[[codeBranches]]
+model = "isotonic"
+code = '''
+function pav(scores, labels)  # Pool Adjacent Violators algorithm
+    n    = length(scores)  # 
+    idx  = sortperm(scores)  # sort by score ascending
+    y    = float(labels[idx])  # 
+    pool = collect(1:n)  # each point starts in its own pool
+    avg  = copy(y)  # pool averages
+
+    for i in 2:n  # 
+        if avg[pool[i]] < avg[pool[i-1]]  # monotonicity violated
+            merged = [pool[i-1]; pool[i]]  # 
+            m = mean(y[merged])  # 
+            for j in merged; avg[j] = m; pool[j] = pool[i-1]; end  # 
+        end  # 
+    end  # 
+
+    return avg[pool]  # isotonic probabilities (sorted order)
+end
+
+idx       = sortperm({{scores}})  # 
+cal_probs = pav({{scores}}, {{y}})  # calibrated probabilities
+'''
+
+[[codeBranches]]
+model = "temperature"
+code = '''
+using Optim
+
+logits = {{scores}}  # raw pre-sigmoid logits from the model
+
+function nll(T)  # negative log-likelihood under temperature T
+    p = 1 ./ (1 .+ exp.(-logits ./ T[1]))  # sigmoid with temperature
+    return -sum({{y}} .* log.(p .+ 1e-12) .+ (1 .- {{y}}) .* log.(1 .- p .+ 1e-12))  # 
+end
+
+res   = optimize(nll, [1.0], LBFGS())  # optimise T on validation set
+T_opt = Optim.minimizer(res)[1]  # optimal temperature
+
+cal_probs = 1 ./ (1 .+ exp.(-logits ./ T_opt))  # calibrated probabilities
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "reliability"
+label = "Reliability Diagram"
+desc = "Binned calibration curve comparing mean predicted probability to observed fraction of positives"
+code = '''
+using CalibrationErrors, Plots
+
+n_bins = 10  # number of equal-width bins
+bins   = range(0, 1, length=n_bins+1)  # bin edges
+
+mean_pred = zeros(n_bins)  # mean predicted probability per bin
+frac_pos  = zeros(n_bins)  # observed positive fraction per bin
+
+for i in 1:n_bins
+    mask        = bins[i] .<= cal_probs .< bins[i+1]  # 
+    mean_pred[i] = isempty(cal_probs[mask]) ? (bins[i]+bins[i+1])/2 : mean(cal_probs[mask])  # 
+    frac_pos[i]  = isempty({{y}}[mask])  ? 0.0 : mean({{y}}[mask])  # 
+end
+
+plot([0,1], [0,1], lc=:grey, ls=:dash, label="Perfect calibration")  # diagonal reference
+scatter!(mean_pred, frac_pos,  # 
+    xlabel="Mean predicted probability", ylabel="Fraction of positives", legend=:topleft)  # 
+'''
+
+[[actionGroups.actions]]
+id = "ece"
+label = "Expected Calibration Error (ECE)"
+desc = "Weighted mean absolute deviation between predicted probabilities and observed frequencies across bins"
+code = '''
+using CalibrationErrors
+
+ece_raw = ECE(UniformBinning(10))  # ECE estimator with 10 bins
+ece_cal = ECE(UniformBinning(10))  # 
+
+calibrationerror(ece_raw, {{scores}}, {{y}})  # ECE of raw scores
+calibrationerror(ece_cal, cal_probs, {{y}})  # ECE after calibration
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "brier"
+label = "Brier Score Comparison"
+desc = "Mean squared error of probability predictions; lower is better — compare raw vs calibrated scores"
+code = '''
+using Statistics
+
+brier_raw = mean(({{scores}} .- {{y}}) .^ 2)  # Brier score of uncalibrated model
+brier_cal = mean((cal_probs .- {{y}}) .^ 2)  # Brier score after calibration
+
+println("Brier (raw):  ", round(brier_raw, digits=4))  # 
+println("Brier (cal):  ", round(brier_cal, digits=4))  # 
+println("Improvement:  ", round(brier_raw - brier_cal, digits=4))  # positive = calibration helped
+'''

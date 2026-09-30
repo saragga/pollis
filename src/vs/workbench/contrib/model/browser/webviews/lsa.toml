@@ -1,0 +1,356 @@
+# Latent Semantic Analysis Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/lsa.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Latent Semantic Analysis"
+viewType = "pollis.lsa"
+defaultModel = "main"
+
+[[packages]]
+name = "TextAnalysis.jl"
+github = "https://github.com/JuliaText/TextAnalysis.jl"
+
+[[packages]]
+name = "LinearAlgebra.jl"
+github = "https://github.com/JuliaLang/LinearAlgebra.jl"
+
+[requires]
+packages = ["TextAnalysis.jl", "LinearAlgebra.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "LSA"
+file = "lsa/tutorial-01-lsa.ipynb"
+bundled = true
+description = "Latent Semantic Analysis via truncated SVD on a TF-IDF matrix using TextAnalysis.jl and LinearAlgebra.jl"
+
+[[wikis]]
+name = "Factsheet"
+file = "lsa/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "lsa/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "lsa/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "lsa/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "lsa/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "lsa/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Decomposition"
+
+[[wikis]]
+name = "SVD"
+file = "lsa/svd.md"
+bundled = true
+
+[[wikis]]
+name = "Dimensionality"
+file = "lsa/dimensionality.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "TextAnalysis.jl: Julia NLP Toolkit"
+authors = "JuliaText Contributors"
+year = 2023
+journal = "GitHub"
+url = "https://github.com/JuliaText/TextAnalysis.jl"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Speech and Language Processing"
+authors = "Jurafsky, Daniel; Martin, James H."
+year = 2024
+journal = "Pearson (3rd ed., draft)"
+url = "https://web.stanford.edu/~jurafsky/slp3/"
+openAccess = true
+
+[[references]]
+title = "Introduction to Information Retrieval"
+authors = "Manning, Christopher D.; Raghavan, Prabhakar; Schutze, Hinrich"
+year = 2008
+journal = "Cambridge University Press"
+doi = "10.1017/CBO9780511809071"
+url = "https://nlp.stanford.edu/IR-book/"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Indexing by Latent Semantic Analysis"
+authors = "Deerwester, Scott; Dumais, Susan T.; Furnas, George W.; Landauer, Thomas K.; Harshman, Richard"
+year = 1990
+journal = "Journal of the American Society for Information Science"
+doi = "10.1002/(SICI)1097-4571(199009)41:6<391::AID-ASI1>3.0.CO;2-9"
+openAccess = false
+
+[[references]]
+title = "Latent Semantic Analysis"
+authors = "Dumais, Susan T."
+year = 2004
+journal = "Annual Review of Information Science and Technology"
+doi = "10.1002/aris.1440380105"
+openAccess = false
+
+[[bullets]]
+text = "LSA"
+detail = "low-rank SVD approximation of the TF-IDF matrix; captures latent semantic structure across documents"
+
+[[bullets]]
+text = "k dimensions"
+detail = "number of latent dimensions to retain; trade-off between noise reduction and information loss"
+
+[[bullets]]
+text = "LinearAlgebra.jl"
+detail = "Julia standard library used for the truncated SVD decomposition"
+
+[[inputs]]
+id = "corpus"
+label = "Corpus"
+tooltip = "Array of text documents, e.g. docs = [\"first doc\", \"second doc\"]"
+default = "corpus"
+
+[[inputs]]
+id = "k"
+label = "Dimensions (k)"
+tooltip = "Number of latent dimensions to retain from the SVD; typically 50–300"
+default = "50"
+
+[[codeBranches]]
+model = "main"
+code = '''
+using TextAnalysis, LinearAlgebra
+
+crps    = Corpus([StringDocument(d) for d in {{corpus}}])  # build corpus from document array
+prepare!(crps, strip_punctuation | strip_case)  # normalise text
+update_lexicon!(crps)  # build vocabulary
+
+dtm     = DocumentTermMatrix(crps)  # document-term matrix
+M       = Matrix(tf_idf(dtm))  # TF-IDF matrix (docs x terms)
+U, S, V = svd(M)  # full SVD decomposition
+
+U_k     = U[:, 1:{{k}}]  # document vectors in latent space
+S_k     = S[1:{{k}}]  # singular values (variance explained)
+V_k     = V[:, 1:{{k}}]  # term vectors in latent space
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "doc-similarity"
+label = "Document Similarity"
+desc = "Cosine similarity between document vectors in latent space"
+code = '''
+using TextAnalysis, LinearAlgebra
+
+crps = Corpus([StringDocument(d) for d in {{corpus}}])  # build corpus
+prepare!(crps, strip_punctuation | strip_case); update_lexicon!(crps)
+U_k = Matrix(tf_idf(DocumentTermMatrix(crps))) |> M -> svd(M).U[:, 1:{{k}}]  # doc vectors
+
+norms   = norm.(eachrow(U_k))  # L2 norm per document
+U_norm  = U_k ./ norms  # normalised document matrix
+sim_mat = U_norm * U_norm'  # cosine similarity matrix
+'''
+
+[[actionGroups.actions]]
+id = "term-space"
+label = "Term Space"
+desc = "Top terms projected onto the first two latent dimensions"
+code = '''
+using TextAnalysis, LinearAlgebra, Plots
+
+crps = Corpus([StringDocument(d) for d in {{corpus}}])  # build corpus
+prepare!(crps, strip_punctuation | strip_case); update_lexicon!(crps)
+dtm  = DocumentTermMatrix(crps)  # document-term matrix
+
+F    = svd(Matrix(tf_idf(dtm)))  # SVD decomposition
+scatter(F.V[:, 1], F.V[:, 2], xlabel="Dim 1", ylabel="Dim 2")  # term projections on first two dimensions
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "variance-explained"
+label = "Variance Explained"
+desc = "Cumulative variance captured by the top-k singular values"
+code = '''
+using TextAnalysis, LinearAlgebra, Plots
+
+crps = Corpus([StringDocument(d) for d in {{corpus}}])  # build corpus
+prepare!(crps, strip_punctuation | strip_case); update_lexicon!(crps)
+S    = svd(Matrix(tf_idf(DocumentTermMatrix(crps)))).S  # singular values
+
+var_exp = cumsum(S .^ 2) ./ sum(S .^ 2)  # cumulative variance explained
+plot(1:{{k}}, var_exp[1:{{k}}], xlabel="k", ylabel="Cumulative variance")  # scree-style plot
+'''
+
+[[actionGroups.actions]]
+id = "reconstruction-error"
+label = "Reconstruction Error"
+desc = "Frobenius norm of the rank-k approximation residual"
+code = '''
+using TextAnalysis, LinearAlgebra
+
+crps = Corpus([StringDocument(d) for d in {{corpus}}])  # build corpus
+prepare!(crps, strip_punctuation | strip_case); update_lexicon!(crps)
+M    = Matrix(tf_idf(DocumentTermMatrix(crps)))  # TF-IDF matrix
+
+F    = svd(M)  # full SVD
+M_k  = F.U[:, 1:{{k}}] * Diagonal(F.S[1:{{k}}]) * F.Vt[1:{{k}}, :]  # rank-k approximation
+println("Frobenius error: ", norm(M - M_k))  # reconstruction error
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "query-docs"
+label = "Query Documents"
+desc = "Find documents most similar to a query vector"
+code = '''
+using TextAnalysis, LinearAlgebra
+
+crps = Corpus([StringDocument(d) for d in {{corpus}}])  # build corpus
+prepare!(crps, strip_punctuation | strip_case); update_lexicon!(crps)
+F    = svd(Matrix(tf_idf(DocumentTermMatrix(crps))))  # SVD
+
+q_vec = F.U[query_idx, 1:{{k}}]  # query document vector in latent space
+sims  = F.U[:, 1:{{k}}] * q_vec ./ (norm.(eachrow(F.U[:, 1:{{k}}])) .* norm(q_vec))  # cosine similarities
+sortperm(sims, rev=true)  # ranked document indices
+'''
+
+[[actionGroups.actions]]
+id = "fold-in"
+label = "Fold-In New Doc"
+desc = "Project a new document into the existing latent space"
+code = '''
+using TextAnalysis, LinearAlgebra
+
+d_new = StringDocument(new_text)  # new document to fold in
+v_new = dtm_row(d_new, dtm.terms)  # term-frequency vector aligned to existing vocabulary
+
+S_inv = 1.0 ./ F.S[1:{{k}}]  # pseudo-inverse of singular values
+u_new = v_new * F.V[:, 1:{{k}}] .* S_inv'  # fold-in: project into latent space
+println("Latent vector: ", u_new)  # latent representation of new document
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "compare-k"
+label = "Compare k Values"
+desc = "Reconstruction error vs. number of dimensions"
+code = '''
+using TextAnalysis, LinearAlgebra, Plots
+
+crps = Corpus([StringDocument(d) for d in {{corpus}}])  # build corpus
+prepare!(crps, strip_punctuation | strip_case); update_lexicon!(crps)
+M    = Matrix(tf_idf(DocumentTermMatrix(crps))); F = svd(M)  # TF-IDF and SVD
+
+ks     = [10, 25, 50, 100, 200]  # candidate dimension counts
+errors = [norm(M - F.U[:,1:k] * Diagonal(F.S[1:k]) * F.Vt[1:k,:]) for k in ks]  # Frobenius error per k
+plot(ks, errors, xlabel="k", ylabel="Reconstruction error")  # elbow plot for k selection
+'''
+
+[[actionGroups.actions]]
+id = "compare-tfidf"
+label = "Raw vs TF-IDF"
+desc = "LSA on raw counts vs. TF-IDF weighted DTM"
+code = '''
+using TextAnalysis, LinearAlgebra
+
+crps = Corpus([StringDocument(d) for d in {{corpus}}])  # build corpus
+prepare!(crps, strip_punctuation | strip_case); update_lexicon!(crps)
+dtm   = DocumentTermMatrix(crps)  # document-term matrix
+
+F_raw   = svd(Matrix(dtm.dtm))  # SVD on raw term counts
+F_tfidf = svd(Matrix(tf_idf(dtm)))  # SVD on TF-IDF weighted matrix
+println("Variance (raw):   ", F_raw.S[1:{{k}}] .^ 2 |> sum)  # variance captured by raw LSA
+println("Variance (tfidf): ", F_tfidf.S[1:{{k}}] .^ 2 |> sum)  # variance captured by TF-IDF LSA
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "top-terms"
+label = "Top Terms per Topic"
+desc = "Highest-loading terms for each latent dimension"
+code = '''
+using TextAnalysis, LinearAlgebra
+
+crps = Corpus([StringDocument(d) for d in {{corpus}}])  # build corpus
+prepare!(crps, strip_punctuation | strip_case); update_lexicon!(crps)
+dtm  = DocumentTermMatrix(crps)  # document-term matrix
+
+F     = svd(Matrix(tf_idf(dtm)))  # SVD decomposition
+terms = dtm.terms  # vocabulary aligned to columns of V
+for dim in 1:min({{k}}, 5)  # inspect top 5 dimensions
+    idx = sortperm(abs.(F.V[:, dim]), rev=true)[1:10]  # top 10 term indices
+    println("Dim $dim: ", terms[idx])
+end
+'''
+
+[[actionGroups.actions]]
+id = "doc-topics"
+label = "Document-Topic Mix"
+desc = "Latent dimension weights for each document"
+code = '''
+using TextAnalysis, LinearAlgebra
+
+crps = Corpus([StringDocument(d) for d in {{corpus}}])  # build corpus
+prepare!(crps, strip_punctuation | strip_case); update_lexicon!(crps)
+F    = svd(Matrix(tf_idf(DocumentTermMatrix(crps))))  # SVD decomposition
+
+doc_weights = F.U[:, 1:{{k}}] .* F.S[1:{{k}}]'  # scale by singular values
+println("Document-topic matrix: ", size(doc_weights))  # shape: n_docs x k
+'''

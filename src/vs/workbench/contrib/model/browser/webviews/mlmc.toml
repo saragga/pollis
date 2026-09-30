@@ -1,0 +1,495 @@
+# Multilevel Monte Carlo Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/mlmc.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Multilevel Monte Carlo"
+viewType = "pollis.mlmc"
+defaultModel = "mlmc"
+
+[[packages]]
+name = "MultilevelEstimators.jl"
+github = "https://github.com/PieterjanRobbe/MultilevelEstimators.jl"
+
+[requires]
+packages = ["MultilevelEstimators.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "MLMC Basics"
+file = "mlmc/tutorial-01-mlmc.ipynb"
+bundled = true
+description = "Multilevel Monte Carlo with MultilevelEstimators.jl: setup, sample functions, and variance analysis"
+
+[[notebookSections.notebooks]]
+name = "MLQMC"
+file = "mlmc/tutorial-02-mlqmc.ipynb"
+bundled = true
+description = "Multilevel Quasi-Monte Carlo with lattice rules: improved convergence rates over MLMC"
+
+[[notebookSections.notebooks]]
+name = "Diagnostics"
+file = "mlmc/tutorial-03-diagnostics.ipynb"
+bundled = true
+description = "Estimating convergence rates alpha, beta, gamma and verifying the complexity theorem"
+
+[[wikis]]
+name = "Factsheet"
+file = "mlmc/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "mlmc/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "mlmc/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "mlmc/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "mlmc/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "mlmc/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Algorithm Details"
+
+[[wikis]]
+name = "MLMC Algorithm"
+file = "mlmc/mlmc-algorithm.md"
+bundled = true
+
+[[wikis]]
+name = "Complexity Theorem"
+file = "mlmc/complexity-theorem.md"
+bundled = true
+
+[[wikis]]
+name = "Quasi-Monte Carlo Extension"
+file = "mlmc/qmc-extension.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "MultilevelEstimators.jl: A Framework for Multilevel Monte Carlo in Julia"
+authors = "Robbe, Pieterjan"
+year = 2019
+journal = "arXiv preprint"
+doi = "10.48550/arXiv.1910.07711"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Multilevel Monte Carlo Methods"
+authors = "Giles, Michael B."
+year = 2015
+journal = "Acta Numerica"
+doi = "10.1017/S096249291500001X"
+openAccess = false
+
+[[references]]
+title = "Monte Carlo Statistical Methods"
+authors = "Robert, Christian P.; Casella, George"
+year = 2004
+journal = "Springer (2nd ed.)"
+doi = "10.1007/978-1-4757-4145-2"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Multilevel Monte Carlo Path Simulation"
+authors = "Giles, Michael B."
+year = 2008
+journal = "Operations Research"
+doi = "10.1287/opre.1070.0496"
+openAccess = false
+
+[[references]]
+title = "Monte Carlo Complexity of Global Solution of Integral Equations"
+authors = "Heinrich, Stefan"
+year = 1998
+journal = "Journal of Complexity"
+doi = "10.1006/jcom.1998.0471"
+openAccess = false
+
+[[references]]
+title = "Multilevel Quasi-Monte Carlo Methods for Lognormal Diffusion Problems"
+authors = "Kuo, Frances Y.; Scheichl, Robert; Schwab, Christoph; Sloan, Ian H.; Ullmann, Elisabeth"
+year = 2017
+journal = "Mathematics of Computation"
+doi = "10.1090/mcom/3207"
+openAccess = false
+
+[[models]]
+id = "mlmc"
+label = "MLMC"
+
+[[models]]
+id = "mlqmc"
+label = "MLQMC"
+
+[[bullets]]
+text = "MLMC"
+detail = "telescoping sum over levels; combines cheap coarse and accurate fine estimates; achieves optimal complexity"
+
+[[bullets]]
+text = "MLQMC"
+detail = "replaces random samples with quasi-random lattice rules; improves convergence from O(N-1/2) to O(N-1) per level"
+
+[[inputs]]
+id = "body"
+label = "Sample function body"
+tooltip = "Julia expression for the level-l estimand. Receives l (level index vector) and samples (random inputs). Should return the telescoping difference Q_l - Q_{l-1}, or Q_0 when l[1] == 0. Example: sin(2^(-l[1]) * samples[1])"
+default = "sin(2^(-l[1]) * samples[1])"
+
+[[inputs]]
+id = "d"
+label = "Dimension (d)"
+tooltip = "Number of random input dimensions passed to the sample function as the samples vector."
+default = "1"
+
+[[inputs]]
+id = "levels"
+label = "Levels"
+tooltip = "Maximum number of levels. The algorithm selects the optimal number automatically up to this limit."
+default = "6"
+
+[[inputs]]
+id = "mse"
+label = "Target MSE"
+tooltip = "Mean square error tolerance epsilon^2. The estimator allocates samples across levels to meet this target."
+default = "1e-3"
+
+[[codeBranches]]
+model = "mlmc"
+code = '''
+using MultilevelEstimators
+
+function sample_fn(l, samples)
+    return {{body}}  # level-l estimand: Q_l - Q_{l-1} (or Q_0 at l=0)
+end
+
+estimator = Estimator(MLMC(), GaussianSampler({{d}}), sample_fn;  # MLMC with Gaussian random inputs
+    NumberOfLevels = {{levels}},  # maximum level
+    MSE          = {{mse}},  # target mean square error
+)
+
+run(estimator)  # adaptive sample allocation across levels
+
+println("mean:     ", mean(estimator))  # multilevel estimate
+println("variance: ", var(estimator))  # variance of the estimator
+println("mse:      ", mse(estimator))  # achieved mean square error
+'''
+
+[[codeBranches]]
+model = "mlqmc"
+code = '''
+using MultilevelEstimators
+
+function sample_fn(l, samples)
+    return {{body}}  # level-l estimand: Q_l - Q_{l-1} (or Q_0 at l=0)
+end
+
+estimator = Estimator(MLQMC(), LatticeRule32({{d}}), sample_fn;  # MLQMC with lattice rule quasi-random inputs
+    NumberOfLevels = {{levels}},  # maximum level
+    MSE          = {{mse}},  # target mean square error
+)
+
+run(estimator)  # adaptive sample allocation across levels
+
+println("mean:     ", mean(estimator))  # multilevel estimate
+println("variance: ", var(estimator))  # variance of the estimator
+println("mse:      ", mse(estimator))  # achieved mean square error
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "level-contributions"
+label = "Level Contributions"
+desc = "Variance and cost breakdown per level"
+code = '''
+using Plots, MultilevelEstimators
+
+lvls  = nb_of_levels(estimator)  # number of levels used
+vl    = [varest(estimator, [l]) for l in 0:lvls-1]  # variance per level
+cl    = [cost(estimator, [l]) for l in 0:lvls-1]  # cost per level
+
+bar(0:lvls-1, vl, yscale=:log10, xlabel="level", ylabel="variance", legend=false)  # variance should decay geometrically
+'''
+
+[[actionGroups.actions]]
+id = "sample-allocation"
+label = "Sample Allocation"
+desc = "Optimal number of samples per level"
+code = '''
+using Plots, MultilevelEstimators
+
+lvls = nb_of_levels(estimator)  # number of levels used
+nl   = [nb_of_samples(estimator, [l]) for l in 0:lvls-1]  # samples per level
+
+bar(0:lvls-1, nl, yscale=:log10, xlabel="level", ylabel="N_l", legend=false)  # coarse levels need more samples
+'''
+
+[[actionGroups.actions]]
+id = "convergence-plot"
+label = "Convergence Plot"
+desc = "RMSE vs total cost across MSE targets"
+code = '''
+using Plots, MultilevelEstimators
+
+mse_targets = [1e-1, 1e-2, 1e-3, 1e-4]  # decreasing MSE targets
+costs = Float64[]  # total cost at each target
+rmses = Float64[]  # achieved RMSE
+for eps2 in mse_targets
+    run(estimator; MSE = eps2)  # re-run at each target
+    push!(costs, total_work(estimator))  # cumulative cost
+    push!(rmses, sqrt(mse(estimator)))  # root MSE
+end
+plot(costs, rmses, xscale=:log10, yscale=:log10, xlabel="cost", ylabel="RMSE", legend=false)  # slope should match complexity theorem
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "variance-decay"
+label = "Variance Decay"
+desc = "Estimate rate beta: Var[Y_l] ~ 2^(-beta * l)"
+code = '''
+using MultilevelEstimators, Statistics
+
+lvls = nb_of_levels(estimator)  # number of levels
+vl   = [varest(estimator, [l]) for l in 0:lvls-1]  # variance per level
+ls   = collect(0:lvls-1)  # level indices
+
+beta_hat = -cov(ls[2:end], log2.(vl[2:end])) / var(ls[2:end])  # OLS slope on log2 scale
+println("beta (variance decay rate): ", round(beta_hat; digits=2))  # should be > 0 for efficiency
+'''
+
+[[actionGroups.actions]]
+id = "cost-growth"
+label = "Cost Growth"
+desc = "Estimate rate gamma: Cost[Y_l] ~ 2^(gamma * l)"
+code = '''
+using MultilevelEstimators, Statistics
+
+lvls = nb_of_levels(estimator)  # number of levels
+cl   = [cost(estimator, [l]) for l in 0:lvls-1]  # cost per sample at each level
+ls   = collect(0:lvls-1)  # level indices
+
+gamma_hat = cov(ls, log2.(cl)) / var(ls)  # OLS slope on log2 scale
+println("gamma (cost growth rate): ", round(gamma_hat; digits=2))  # typically 1 for 1-D problems
+'''
+
+[[actionGroups.actions]]
+id = "weak-convergence"
+label = "Weak Convergence"
+desc = "Estimate rate alpha: |E[Y_l]| ~ 2^(-alpha * l)"
+code = '''
+using MultilevelEstimators, Statistics
+
+lvls = nb_of_levels(estimator)  # number of levels
+ml   = [abs(mean(estimator, [l])) for l in 1:lvls-1]  # absolute level means (skip l=0)
+ls   = collect(1:lvls-1)  # level indices
+
+alpha_hat = -cov(ls, log2.(ml)) / var(ls)  # OLS slope on log2 scale
+println("alpha (weak convergence rate): ", round(alpha_hat; digits=2))  # larger alpha = faster bias decay
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "mean-ci"
+label = "Mean with CI"
+desc = "Point estimate and 95% confidence interval"
+code = '''
+using MultilevelEstimators
+
+mu    = mean(estimator)  # multilevel mean estimate
+sigma = sqrt(var(estimator))  # standard deviation of estimator
+
+println("Estimate: ", mu)  # point estimate
+println("95% CI:   [", mu - 1.96*sigma, ", ", mu + 1.96*sigma, "]")  # approximate CI
+'''
+
+[[actionGroups.actions]]
+id = "cost-forecast"
+label = "Cost Forecast"
+desc = "Predict total work to meet a tighter MSE target"
+code = '''
+using MultilevelEstimators
+
+eps2_target = {{mse}} / 10  # 10x tighter MSE target
+w_now       = total_work(estimator)  # current total cost
+
+println("Current cost:     ", w_now)  # work already done
+println("Projected cost:   ~", w_now * 10)  # rough estimate for MLMC complexity
+println("(Run again with MSE = eps2_target for exact value)")  # 
+'''
+
+[[actionGroups.actions]]
+id = "optimal-levels"
+label = "Optimal Levels"
+desc = "Number of levels selected by the adaptive algorithm"
+code = '''
+using MultilevelEstimators
+
+L        = nb_of_levels(estimator)  # levels actually used
+nl       = [nb_of_samples(estimator, [l]) for l in 0:L-1]  # samples per level
+
+for l in 0:L-1
+    println("Level ", l, ": N_l = ", nl[l+1])  # sample allocation per level
+end
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "mlmc-vs-mc"
+label = "MLMC vs MC"
+desc = "Cost comparison at the same MSE target"
+code = '''
+using MultilevelEstimators
+
+est_mc = Estimator(MC(), GaussianSampler({{d}}), sample_fn; MSE = {{mse}})  # standard MC estimator
+run(est_mc)  # run MC
+
+w_mc   = total_work(est_mc)  # cost of standard MC
+w_mlmc = total_work(estimator)  # cost of MLMC
+
+println("MC cost:   ", w_mc)  # standard MC total work
+println("MLMC cost: ", w_mlmc)  # multilevel MC total work
+println("Speedup:   ", w_mc / w_mlmc)  # MLMC cost savings factor
+'''
+
+[[actionGroups.actions]]
+id = "mse-decomposition"
+label = "MSE Decomposition"
+desc = "Split achieved MSE into bias^2 and variance"
+code = '''
+using MultilevelEstimators
+
+total_mse = mse(estimator)  # total achieved MSE
+var_part  = var(estimator)  # statistical variance component
+bias2     = total_mse - var_part  # bias^2 component
+
+println("MSE:      ", total_mse)  # should be <= target
+println("Variance: ", var_part)  # statistical error
+println("Bias^2:   ", bias2)  # discretisation error
+'''
+
+[[actionGroups.actions]]
+id = "level-sweep"
+label = "Level Sweep"
+desc = "Mean and variance estimates as max levels increases"
+code = '''
+using MultilevelEstimators
+
+for L in 2:8
+    est = Estimator(MLMC(), GaussianSampler({{d}}), sample_fn; NumberOfLevels = L, MSE = {{mse}})  # vary max levels
+    run(est)  # run
+    println("L=", L, "  mean=", round(mean(est); digits=6), "  cost=", total_work(est))  # print summary
+end
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "full-summary"
+label = "Summary"
+desc = "Mean, variance, MSE and total cost"
+code = '''
+using MultilevelEstimators
+
+println("=== MLMC Summary ===")  # 
+println("Levels:    ", nb_of_levels(estimator))  # levels selected
+println("Mean:      ", mean(estimator))  # multilevel estimate
+println("Variance:  ", var(estimator))  # variance of estimator
+println("MSE:       ", mse(estimator))  # achieved MSE
+println("Total cost:", total_work(estimator))  # total computational work
+'''
+
+[[actionGroups.actions]]
+id = "rate-summary"
+label = "Rate Parameters"
+desc = "Estimated alpha, beta, gamma convergence rates"
+code = '''
+using MultilevelEstimators, Statistics
+
+lvls  = nb_of_levels(estimator)  # levels used
+ls    = collect(0:lvls-1)  # level indices
+ml    = [abs(mean(estimator, [l])) for l in 0:lvls-1]  # level means
+vl    = [varest(estimator, [l]) for l in 0:lvls-1]  # level variances
+cl    = [cost(estimator, [l]) for l in 0:lvls-1]  # level costs
+
+alpha = -cov(ls[2:end], log2.(ml[2:end])) / var(ls[2:end])  # weak convergence
+beta  = -cov(ls[2:end], log2.(vl[2:end])) / var(ls[2:end])  # variance decay
+gamma =  cov(ls, log2.(cl))        / var(ls)  # cost growth
+
+println("alpha = ", round(alpha; digits=2), "  (weak convergence)")  # bias decays at 2^(-alpha)
+println("beta  = ", round(beta;  digits=2), "  (variance decay)")  # var decays at 2^(-beta)
+println("gamma = ", round(gamma; digits=2), "  (cost growth)")  # cost grows at 2^(gamma)
+'''
+
+[[actionGroups.actions]]
+id = "complexity-check"
+label = "Complexity Check"
+desc = "Verify complexity theorem condition beta > gamma"
+code = '''
+using MultilevelEstimators, Statistics
+
+lvls  = nb_of_levels(estimator)  # levels used
+ls    = collect(0:lvls-1)  # level indices
+vl    = [varest(estimator, [l]) for l in 0:lvls-1]  # level variances
+cl    = [cost(estimator, [l]) for l in 0:lvls-1]  # level costs
+
+beta  = -cov(ls[2:end], log2.(vl[2:end])) / var(ls[2:end])  # variance rate
+gamma =  cov(ls, log2.(cl))        / var(ls)  # cost rate
+
+println("beta  = ", round(beta;  digits=2))  # need beta > gamma for MLMC speedup
+println("gamma = ", round(gamma; digits=2))  # complexity theorem condition
+println(beta > gamma ? "MLMC is efficient (beta > gamma)" : "Consider finer levels or problem reformulation")  # verdict
+'''

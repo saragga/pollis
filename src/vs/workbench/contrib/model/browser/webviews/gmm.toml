@@ -1,0 +1,346 @@
+# Generalized Method of Moments (GMM) Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/gmm.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Generalized Method of Moments (GMM)"
+viewType = "pollis.gmm"
+defaultModel = "main"
+
+[[packages]]
+name = "Microeconometrics.jl"
+github = "https://github.com/lbittarello/Microeconometrics.jl"
+
+[requires]
+packages = ["Microeconometrics.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Quick Start"
+file = "gmm/tutorial-01-quickstart.ipynb"
+bundled = true
+description = "Estimate a GMM model and read the coefficient table"
+
+[[notebookSections.notebooks]]
+name = "Two-Step GMM"
+file = "gmm/tutorial-02-twostep.ipynb"
+bundled = true
+description = "Efficient two-step GMM with optimal weighting matrix"
+
+[[notebookSections.notebooks]]
+name = "J-Statistic"
+file = "gmm/tutorial-03-jtest.ipynb"
+bundled = true
+description = "Hansen overidentification test for instrument validity"
+
+[[notebookSections.notebooks]]
+name = "Standard Errors"
+file = "gmm/tutorial-04-vcov.ipynb"
+bundled = true
+description = "Heteroscedastic and clustered standard errors for GMM"
+
+[[wikis]]
+name = "Overview"
+file = "gmm/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Factsheet"
+file = "gmm/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "gmm/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "gmm/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "gmm/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "gmm/decision-guide.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Original Papers (from packages)"
+
+[[references]]
+title = "Large Sample Properties of Generalized Method of Moments Estimators"
+authors = "Hansen, L. P."
+year = 1982
+journal = ""
+url = "https://doi.org/10.2307/1912775"
+openAccess = false
+
+[[references]]
+title = "A Simple, Positive Semi-Definite, Heteroskedasticity and Autocorrelation Consistent Covariance Matrix"
+authors = "Newey, W. K., & West, K. D."
+year = 1987
+journal = ""
+url = "https://doi.org/10.2307/1913610"
+openAccess = false
+
+[[references]]
+title = "Finite-Sample Properties of Some Alternative GMM Estimators"
+authors = "Hansen, L. P., Heaton, J., & Yaron, A."
+year = 1996
+journal = ""
+url = "https://doi.org/10.1080/07350015.1996.10524656"
+openAccess = false
+
+[[references]]
+title = "Generalized Instrumental Variables Estimation of Nonlinear Rational Expectations Models"
+authors = "Hansen, L. P., & Singleton, K. J."
+year = 1982
+journal = ""
+url = "https://doi.org/10.2307/1911873"
+openAccess = false
+
+[[bullets]]
+text = "Estimates parameters by matching sample moment conditions to their theoretical counterparts, without requiring full distributional assumptions"
+detail = ""
+
+[[bullets]]
+text = "Encompasses OLS, IV, and 2SLS as special cases; efficient GMM uses the optimal two-step weighting matrix"
+detail = ""
+
+[[bullets]]
+text = "The J-statistic (Hansen overidentification test) assesses instrument validity when the model is overidentified"
+detail = ""
+
+[[bullets]]
+text = "Supports heteroscedastic (efficient two-step) and clustered standard errors for moment conditions"
+detail = ""
+
+[[inputs]]
+id = "y"
+label = "Response"
+tooltip = "Response (dependent) variable column name in the data frame."
+default = "y"
+
+[[inputs]]
+id = "exog"
+label = "Exogenous regressors"
+tooltip = "Space-separated names of exogenous regressors included in the moment conditions."
+default = "x1 x2"
+
+[[inputs]]
+id = "endog"
+label = "Endogenous"
+tooltip = "Space-separated names of endogenous regressors — variables correlated with the structural error."
+default = "w1"
+
+[[inputs]]
+id = "instr"
+label = "Instruments (excluded)"
+tooltip = "Space-separated names of excluded instruments. Requires at least as many instruments as endogenous variables for identification."
+default = "z1 z2"
+
+[[inputs]]
+id = "vcov"
+label = "VCov"
+tooltip = "Moment-condition variance estimator. Heteroscedastic gives the efficient two-step GMM weighting matrix; Clustered is recommended with grouped data."
+kind = "select"
+default = "het"
+
+[[inputs.options]]
+value = "het"
+label = "Heteroscedastic"
+
+[[inputs.options]]
+value = "hom"
+label = "Homoscedastic"
+
+[[inputs.options]]
+value = "clustered"
+label = "Clustered"
+
+[[inputs]]
+id = "data"
+label = "Data"
+tooltip = "Name of the data frame (AbstractDataFrame). Must contain all columns referenced in the model."
+default = "df"
+
+[[inputs]]
+id = "cluster"
+label = "Cluster by"
+tooltip = "Column name for cluster groups. Clusters the moment conditions, producing cluster-robust standard errors."
+default = "firm_id"
+when = "vcov=clustered"
+
+[[codeBranches]]
+model = "main"
+code = '''
+using Microeconometrics
+
+{{?vcov=hom}} result = fit(GMM(Homoscedastic()), {{data}};
+{{?vcov=het}} result = fit(GMM(Heteroscedastic()), {{data}};
+{{?vcov=clustered}} result = fit(GMM(Clustered(:{{cluster}})), {{data}};
+    response    = :{{y}},
+    regressors  = [:{{exog}}],  # exogenous regressors (included in moment conditions)
+    endogenous  = [:{{endog}}],  # endogenous regressors
+    instruments = [:{{instr}}])  # excluded instruments
+
+coef(result)  # GMM coefficient estimates
+coefnames(result)  # variable names
+stderror(result)  # standard errors
+confint(result)  # 95% confidence intervals
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "j_statistic"
+label = "J-Statistic (Hansen Test)"
+desc = "Compute the overidentification test statistic; rejection suggests at least one instrument is invalid"
+code = '''
+using Microeconometrics, Distributions
+
+{{?vcov=hom}} result = fit(GMM(Homoscedastic()), {{data}};
+{{?vcov=het}} result = fit(GMM(Heteroscedastic()), {{data}};
+{{?vcov=clustered}} result = fit(GMM(Clustered(:{{cluster}})), {{data}};
+    response = :{{y}}, regressors = [:{{exog}}],
+    endogenous = [:{{endog}}], instruments = [:{{instr}}])
+
+n      = nobs(result)  # number of observations
+k_endog = length([:{{endog}}])  # number of endogenous regressors
+k_instr = length([:{{instr}}])  # number of excluded instruments
+df_j   = k_instr - k_endog  # degrees of freedom for J-test
+
+e      = residuals(result)  # GMM residuals
+J      = n * mean(e).^2 / var(e)  # J-statistic (simplified)
+p_val  = 1 - cdf(Chisq(df_j), J)  # p-value under H0: all instruments valid
+
+println("J-statistic: ", round(J, digits=4))
+println("df:          ", df_j)
+println("p-value:     ", round(p_val, digits=4))
+'''
+
+[[actionGroups.actions]]
+id = "first_stage"
+label = "First-Stage Analysis"
+desc = "Regress each endogenous variable on all instruments to check instrument relevance (rule of thumb: F > 10)"
+code = '''
+using Microeconometrics
+
+fs = fit(OLS(Homoscedastic()), {{data}};  # first-stage OLS: endogenous on all instruments
+    response   = [:{{endog}}][1],
+    regressors = [:{{exog}}, :{{instr}}])
+
+coef(fs)  # first-stage coefficients
+stderror(fs)  # instrument coefficient SEs
+
+{{?vcov=hom}} result = fit(GMM(Homoscedastic()), {{data}};  # GMM structural equation
+{{?vcov=het}} result = fit(GMM(Heteroscedastic()), {{data}};  # GMM structural equation
+{{?vcov=clustered}} result = fit(GMM(Clustered(:{{cluster}})), {{data}};  # GMM structural equation
+    response = :{{y}}, regressors = [:{{exog}}],
+    endogenous = [:{{endog}}], instruments = [:{{instr}}])
+coef(result)  # GMM structural coefficients
+'''
+
+[[actionGroups.actions]]
+id = "residuals"
+label = "Residual Diagnostics"
+desc = "Examine moment condition residuals for patterns that may indicate model misspecification"
+code = '''
+using Microeconometrics
+
+{{?vcov=hom}} result = fit(GMM(Homoscedastic()), {{data}};
+{{?vcov=het}} result = fit(GMM(Heteroscedastic()), {{data}};
+{{?vcov=clustered}} result = fit(GMM(Clustered(:{{cluster}})), {{data}};
+    response = :{{y}}, regressors = [:{{exog}}],
+    endogenous = [:{{endog}}], instruments = [:{{instr}}])
+
+e = residuals(result)  # GMM residuals
+n = nobs(result)  # number of observations
+
+println("Residual mean:   ", round(sum(e)/n, digits = 6))  # should be ~0
+println("Residual std:    ", round(sqrt(sum(e.^2)/(n-2)), digits = 4))  # residual standard deviation
+println("Max abs residual:", round(maximum(abs.(e)), digits = 4))  # largest absolute residual
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "coef_table"
+label = "Coefficient Table"
+desc = "Print a formatted table of GMM estimates, standard errors, and z-statistics"
+code = '''
+using Microeconometrics
+
+{{?vcov=hom}} result = fit(GMM(Homoscedastic()), {{data}};
+{{?vcov=het}} result = fit(GMM(Heteroscedastic()), {{data}};
+{{?vcov=clustered}} result = fit(GMM(Clustered(:{{cluster}})), {{data}};
+    response = :{{y}}, regressors = [:{{exog}}],
+    endogenous = [:{{endog}}], instruments = [:{{instr}}])
+
+names = coefnames(result)  # variable names
+b     = coef(result)  # GMM estimates
+se    = stderror(result)  # standard errors
+z     = b ./ se  # z-statistics
+
+for i in eachindex(names)
+    println(names[i], ": ", round(b[i], digits=4),
+        "  SE=", round(se[i], digits=4), "  z=", round(z[i], digits=2))
+end
+'''
+
+[[actionGroups.actions]]
+id = "confint"
+label = "Confidence Intervals"
+desc = "Compute 95% confidence intervals for all GMM coefficients"
+code = '''
+using Microeconometrics
+
+{{?vcov=hom}} result = fit(GMM(Homoscedastic()), {{data}};
+{{?vcov=het}} result = fit(GMM(Heteroscedastic()), {{data}};
+{{?vcov=clustered}} result = fit(GMM(Clustered(:{{cluster}})), {{data}};
+    response = :{{y}}, regressors = [:{{exog}}],
+    endogenous = [:{{endog}}], instruments = [:{{instr}}])
+
+ci    = confint(result)  # 95% confidence intervals (n x 2 matrix)
+names = coefnames(result)  # variable names
+
+for i in eachindex(names)
+    println(names[i], ": [", round(ci[i,1], digits=4), ", ", round(ci[i,2], digits=4), "]")
+end
+'''
+
+[[actionGroups.actions]]
+id = "gmm_vs_2sls"
+label = "Efficiency vs 2SLS"
+desc = "Compare GMM and 2SLS estimates; efficient GMM should have smaller standard errors in heteroscedastic settings"
+code = '''
+using Microeconometrics
+
+iv  = fit(IV(Homoscedastic()), {{data}};  # 2SLS: efficient only under homoscedasticity
+    response = :{{y}}, regressors = [:{{exog}}],
+    endogenous = [:{{endog}}], instruments = [:{{instr}}])
+
+{{?vcov=hom}} gmm = fit(GMM(Homoscedastic()), {{data}};  # efficient GMM: optimal weighting matrix
+{{?vcov=het}} gmm = fit(GMM(Heteroscedastic()), {{data}};  # efficient GMM: optimal weighting matrix
+{{?vcov=clustered}} gmm = fit(GMM(Clustered(:{{cluster}})), {{data}};  # efficient GMM: optimal weighting matrix
+    response = :{{y}}, regressors = [:{{exog}}],
+    endogenous = [:{{endog}}], instruments = [:{{instr}}])
+
+println("2SLS estimates: ", round.(coef(iv),  digits=4))  # 2SLS coefficients
+println("GMM estimates:  ", round.(coef(gmm), digits=4))  # efficient GMM coefficients
+println("2SLS SEs:       ", round.(stderror(iv),  digits=4))  # 2SLS standard errors
+println("GMM SEs:        ", round.(stderror(gmm), digits=4))  # GMM standard errors (should be smaller)
+'''

@@ -1,0 +1,483 @@
+# Markov Chain Monte Carlo Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/mcmc.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Markov Chain Monte Carlo"
+viewType = "pollis.mcmc"
+defaultModel = "nuts"
+
+[[packages]]
+name = "Turing.jl"
+github = "https://github.com/TuringLang/Turing.jl"
+
+[[packages]]
+name = "AdvancedHMC.jl"
+github = "https://github.com/TuringLang/AdvancedHMC.jl"
+
+[[packages]]
+name = "MCMCChains.jl"
+github = "https://github.com/TuringLang/MCMCChains.jl"
+
+[requires]
+packages = ["Turing.jl", "AdvancedHMC.jl", "MCMCChains.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "NUTS (Turing)"
+file = "mcmc/tutorial-01-nuts.ipynb"
+bundled = true
+description = "Bayesian inference with the No-U-Turn Sampler using Turing.jl @model syntax"
+
+[[notebookSections.notebooks]]
+name = "HMC (AdvancedHMC)"
+file = "mcmc/tutorial-02-hmc.ipynb"
+bundled = true
+description = "Low-level Hamiltonian Monte Carlo with custom log-densities via AdvancedHMC.jl"
+
+[[notebookSections.notebooks]]
+name = "Metropolis-Hastings"
+file = "mcmc/tutorial-03-mh.ipynb"
+bundled = true
+description = "Random-walk Metropolis-Hastings sampler and proposal tuning with Turing.jl"
+
+[[wikis]]
+name = "Factsheet"
+file = "mcmc/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "mcmc/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "mcmc/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "mcmc/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "mcmc/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "mcmc/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Algorithm Details"
+
+[[wikis]]
+name = "NUTS"
+file = "mcmc/nuts.md"
+bundled = true
+
+[[wikis]]
+name = "HMC"
+file = "mcmc/hmc.md"
+bundled = true
+
+[[wikis]]
+name = "Metropolis-Hastings"
+file = "mcmc/metropolis-hastings.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "Turing: A Language for Flexible Probabilistic Inference"
+authors = "Ge, Hong; Xu, Kai; Ghahramani, Zoubin"
+year = 2018
+journal = "Proceedings of Machine Learning Research"
+doi = "10.48550/arXiv.1907.07111"
+openAccess = true
+
+[[references]]
+title = "AdvancedHMC.jl: A Robust, Modular and Efficient Implementation of Advanced HMC Algorithms"
+authors = "Xu, Kai; Ge, Hong; Tebbutt, Will; Tarek, Mohamed; Trapp, Martin; Ghahramani, Zoubin"
+year = 2020
+journal = "Proceedings of The 3rd Symposium on Advances in Approximate Bayesian Inference"
+doi = "10.48550/arXiv.1907.07114"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Monte Carlo Statistical Methods"
+authors = "Robert, Christian P.; Casella, George"
+year = 2004
+journal = "Springer (2nd ed.)"
+doi = "10.1007/978-1-4757-4145-2"
+openAccess = false
+
+[[references]]
+title = "Handbook of Markov Chain Monte Carlo"
+authors = "Brooks, Steve; Gelman, Andrew; Jones, Galin; Meng, Xiao-Li"
+year = 2011
+journal = "Chapman & Hall/CRC"
+doi = "10.1201/b10905"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "MCMC Using Hamiltonian Dynamics"
+authors = "Neal, Radford M."
+year = 2011
+journal = "Handbook of Markov Chain Monte Carlo"
+doi = "10.1201/b10905"
+openAccess = true
+
+[[references]]
+title = "The No-U-Turn Sampler: Adaptively Setting Path Lengths in Hamiltonian Monte Carlo"
+authors = "Hoffman, Matthew D.; Gelman, Andrew"
+year = 2014
+journal = "Journal of Machine Learning Research"
+doi = "10.48550/arXiv.1111.4246"
+openAccess = true
+
+[[models]]
+id = "nuts"
+label = "NUTS"
+
+[[models]]
+id = "hmc"
+label = "HMC"
+
+[[models]]
+id = "mh"
+label = "Metropolis-Hastings"
+
+[[bullets]]
+text = "NUTS"
+detail = "gradient-based; auto-tunes step size and trajectory length; gold standard for continuous posteriors"
+
+[[bullets]]
+text = "HMC"
+detail = "Hamiltonian dynamics with leapfrog integrator; controlled by step size and leapfrog steps"
+
+[[bullets]]
+text = "Metropolis-Hastings"
+detail = "random-walk proposals; no gradients required; accepts/rejects via M-H ratio"
+
+[[inputs]]
+id = "body"
+label = "@model body"
+tooltip = "Julia statements inside the @model function. Example: mu ~ Normal(0, 1); x ~ Normal(mu, 1)"
+default = "mu ~ Normal(0, 1); x ~ Normal(mu, 1)"
+models = ["nuts"]
+
+[[inputs]]
+id = "n-samples"
+label = "Samples"
+tooltip = "Number of posterior draws to collect after warm-up."
+default = "1000"
+models = ["nuts"]
+
+[[inputs]]
+id = "n-warmup"
+label = "Warm-up"
+tooltip = "Number of adaptation steps. NUTS uses these to tune the step size and mass matrix."
+default = "500"
+models = ["nuts"]
+
+[[inputs]]
+id = "log-p"
+label = "log_density(x)"
+tooltip = "Julia expression for the unnormalised log-density as a function of vector x. Example: sum(-0.5 .* x.^2)"
+default = "sum(-0.5 .* x.^2)"
+models = ["hmc"]
+
+[[inputs]]
+id = "d"
+label = "Dimension (d)"
+tooltip = "Number of parameters in the target distribution."
+default = "2"
+models = ["hmc"]
+
+[[inputs]]
+id = "n-samples-hmc"
+label = "Samples"
+tooltip = "Number of HMC draws to collect after adaptation."
+default = "1000"
+models = ["hmc"]
+
+[[inputs]]
+id = "n-leapfrog"
+label = "Leapfrog steps"
+tooltip = "Number of leapfrog integration steps per HMC proposal. Larger values reduce correlation but increase cost per sample."
+default = "10"
+models = ["hmc"]
+
+[[inputs]]
+id = "body-mh"
+label = "@model body"
+tooltip = "Julia statements inside the @model function. Example: mu ~ Normal(0, 1); x ~ Normal(mu, 1)"
+default = "mu ~ Normal(0, 1); x ~ Normal(mu, 1)"
+models = ["mh"]
+
+[[inputs]]
+id = "n-samples-mh"
+label = "Samples"
+tooltip = "Number of posterior draws to collect."
+default = "10000"
+models = ["mh"]
+
+[[codeBranches]]
+model = "nuts"
+code = '''
+using Turing, MCMCChains
+
+@model function model(data)
+    {{body}}  # model body: priors and likelihood
+end
+
+chain = sample(model(data), NUTS({{n-warmup}}, 0.65), {{n-samples}})  # NUTS with target acceptance 0.65
+println(chain)  # summary: mean, std, ESS, R-hat
+'''
+
+[[codeBranches]]
+model = "hmc"
+code = '''
+using AdvancedHMC, ForwardDiff, MCMCChains
+
+function log_density(x)
+    return {{log-p}}  # unnormalised log-density
+end
+
+D          = {{d}}  # parameter dimension
+theta0     = randn(D)  # random starting point
+metric     = DiagEuclideanMetric(D)  # diagonal mass matrix
+hamiltonian = Hamiltonian(metric, log_density, ForwardDiff)  # auto-diff gradients
+eps0       = find_good_stepsize(hamiltonian, theta0)  # heuristic initial step size
+integrator = Leapfrog(eps0)  # leapfrog integrator
+kernel     = HMCKernel(Trajectory{EndPointTS}(integrator, FixedNSteps({{n-leapfrog}})))  # {{n-leapfrog}} leapfrog steps per proposal
+adaptor    = StanHMCAdaptor(MassMatrixAdaptor(metric), StepSizeAdaptor(0.65, integrator))  # dual averaging adaptation
+samples, _ = sample(hamiltonian, kernel, theta0, {{n-samples-hmc}}, adaptor, 500; progress=true)  # {{n-samples-hmc}} draws; 500 warm-up
+mat        = permutedims(reduce(hcat, samples))  # n_samples x D matrix
+chain      = Chains(mat, ["x[$i]" for i in 1:D])  # MCMCChains.jl diagnostics
+println(chain)  # summary: mean, std, ESS, R-hat
+'''
+
+[[codeBranches]]
+model = "mh"
+code = '''
+using Turing, MCMCChains
+
+@model function model(data)
+    {{body-mh}}  # model body: priors and likelihood
+end
+
+chain = sample(model(data), MH(), {{n-samples-mh}})  # random-walk Metropolis-Hastings
+println(chain)  # summary: mean, std, ESS, R-hat
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "trace-plot"
+label = "Trace Plot"
+desc = "Plot chain samples over iteration to assess mixing"
+code = '''
+using Plots, MCMCChains
+
+plot(chain; seriestype = :traceplot)  # one panel per parameter
+'''
+
+[[actionGroups.actions]]
+id = "marginal-hist"
+label = "Marginal Histogram"
+desc = "Posterior density estimate for each parameter"
+code = '''
+using Plots, MCMCChains, StatsPlots
+
+plot(chain; seriestype = :histogram)  # marginal posterior distributions
+'''
+
+[[actionGroups.actions]]
+id = "pair-plot"
+label = "Pair Plot"
+desc = "Bivariate scatter plots for joint posteriors"
+code = '''
+using StatsPlots, MCMCChains
+
+corner(chain)  # pairwise scatter and marginal densities
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "rhat"
+label = "R-hat"
+desc = "Gelman-Rubin potential scale reduction factor"
+code = '''
+using MCMCChains
+
+stats = summarystats(chain)  # includes R-hat and ESS per parameter
+println(stats)  # R-hat near 1.0 indicates convergence
+'''
+
+[[actionGroups.actions]]
+id = "ess"
+label = "ESS"
+desc = "Effective sample size accounting for autocorrelation"
+code = '''
+using MCMCChains
+
+ess_vals = ess(chain)  # ESS per parameter
+println("ESS: ", ess_vals)  # aim for ESS > 100 per parameter
+'''
+
+[[actionGroups.actions]]
+id = "autocorr"
+label = "Autocorrelation"
+desc = "Lag autocorrelation plot to detect slow mixing"
+code = '''
+using Plots, MCMCChains
+
+plot(chain; seriestype = :autocorplot)  # ACF should decay quickly to zero
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "post-mean"
+label = "Posterior Mean"
+desc = "Extract posterior mean for each parameter"
+code = '''
+using MCMCChains, Statistics
+
+mu_hat = mean(chain)  # posterior mean per parameter
+println("Posterior means: ", mu_hat)  # point estimate
+'''
+
+[[actionGroups.actions]]
+id = "credible-interval"
+label = "Credible Interval"
+desc = "95% equal-tailed credible intervals"
+code = '''
+using MCMCChains, Statistics
+
+q = quantile(chain, q=[0.025, 0.975])  # 95% equal-tailed credible interval
+println(q)  # lower and upper bounds per parameter
+'''
+
+[[actionGroups.actions]]
+id = "post-predictive"
+label = "Posterior Predictive"
+desc = "Sample from the posterior predictive distribution"
+code = '''
+using Turing
+
+pred = predict(model(missing), chain)  # sample x_new for each posterior draw
+println(pred)  # posterior predictive samples
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "waic"
+label = "WAIC"
+desc = "Widely applicable information criterion"
+code = '''
+using Turing, ParetoSmooth
+
+log_liks = pointwise_loglikelihoods(model(data), chain)  # log-likelihood per observation per draw
+waic_val = waic(log_liks)  # WAIC: lower is better
+println("WAIC: ", waic_val)  # use for model comparison
+'''
+
+[[actionGroups.actions]]
+id = "loo"
+label = "LOO-CV"
+desc = "Leave-one-out cross-validation via Pareto smoothing"
+code = '''
+using Turing, ParetoSmooth
+
+log_liks = pointwise_loglikelihoods(model(data), chain)  # log-likelihood per observation per draw
+loo_val  = psis_loo(log_liks)  # PSIS-LOO: lower elpd_loo is worse
+println("LOO: ", loo_val)  # k-hat > 0.7 flags problematic observations
+'''
+
+[[actionGroups.actions]]
+id = "sampler-efficiency"
+label = "Sampler Efficiency"
+desc = "ESS per second to compare samplers"
+code = '''
+using MCMCChains
+
+stats     = summarystats(chain)  # ESS, R-hat, mean, std
+wall_time = chain.info[:elapsed]  # total wall-clock time in seconds
+ess_s     = stats[:ess] ./ wall_time  # ESS per second per parameter
+println("ESS/s: ", ess_s)  # higher is more efficient
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "summary-stats"
+label = "Summary Statistics"
+desc = "Mean, std, quantiles, ESS, R-hat per parameter"
+code = '''
+using MCMCChains
+
+stats = summarystats(chain)  # comprehensive posterior summary
+println(stats)  # mean, std, 2.5%, 25%, 50%, 75%, 97.5%
+'''
+
+[[actionGroups.actions]]
+id = "hpd-interval"
+label = "HPD Interval"
+desc = "Highest posterior density credible region"
+code = '''
+using MCMCChains
+
+hpd_vals = hpd(chain; alpha = 0.05)  # 95% HPD interval per parameter
+println(hpd_vals)  # shortest interval containing 95% of mass
+'''
+
+[[actionGroups.actions]]
+id = "marginal-densities"
+label = "Marginal Densities"
+desc = "KDE of posterior marginals for all parameters"
+code = '''
+using StatsPlots, MCMCChains
+
+plot(chain; seriestype = :density)  # KDE of posterior marginals
+title!("Posterior Marginal Densities")  # overlay all chains per parameter
+'''

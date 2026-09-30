@@ -1,0 +1,569 @@
+# Compartmental Models Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/epi-comp.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Compartmental Models"
+viewType = "pollis.epi-comp"
+defaultModel = "sir"
+
+[[packages]]
+name = "DifferentialEquations.jl"
+github = "https://docs.sciml.ai/DiffEqDocs/stable/"
+
+[requires]
+packages = ["DifferentialEquations.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "SIR Model"
+file = "epi-comp/tutorial-01-sir.ipynb"
+bundled = true
+description = "Simulate the classic SIR epidemic and explore how transmission rate and recovery rate shape outbreak size and duration"
+
+[[notebookSections.notebooks]]
+name = "SIS Model"
+file = "epi-comp/tutorial-02-sis.ipynb"
+bundled = true
+description = "Model SIS endemic dynamics and find the equilibrium infected fraction above the epidemic threshold"
+
+[[notebookSections.notebooks]]
+name = "SEIR Model"
+file = "epi-comp/tutorial-03-seir.ipynb"
+bundled = true
+description = "Add an exposed latent period to the SIR model and study how incubation time affects outbreak timing"
+
+[[notebookSections.notebooks]]
+name = "SIRS Model"
+file = "epi-comp/tutorial-04-sirs.ipynb"
+bundled = true
+description = "Simulate waning immunity with the SIRS model and observe recurrent epidemic waves"
+
+[[notebookSections.notebooks]]
+name = "SEIRD Model"
+file = "epi-comp/tutorial-05-seird.ipynb"
+bundled = true
+description = "Extend SEIR with a dead compartment to track disease-attributable mortality alongside epidemic dynamics"
+
+[[wikis]]
+name = "Factsheet"
+file = "epi-comp/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "epi-comp/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "epi-comp/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "epi-comp/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "epi-comp/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "epi-comp/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Models"
+
+[[wikis]]
+name = "SIR"
+file = "epi-comp/sir.md"
+bundled = true
+
+[[wikis]]
+name = "SIS"
+file = "epi-comp/sis.md"
+bundled = true
+
+[[wikis]]
+name = "SEIR"
+file = "epi-comp/seir.md"
+bundled = true
+
+[[wikis]]
+name = "SIRS"
+file = "epi-comp/sirs.md"
+bundled = true
+
+[[wikis]]
+name = "SEIRD"
+file = "epi-comp/seird.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "DifferentialEquations.jl: A Performant and Feature-Rich Ecosystem for Solving Differential Equations in Julia"
+authors = "Rackauckas, Christopher; Nie, Qing"
+year = 2017
+journal = "Journal of Open Research Software"
+doi = "10.5334/jors.151"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "An Introduction to Mathematical Epidemiology"
+authors = "Martcheva, Maia"
+year = 2015
+journal = "Springer"
+openAccess = false
+
+[[references]]
+title = "Infectious Diseases of Humans: Dynamics and Control"
+authors = "Anderson, Roy M.; May, Robert M."
+year = 1991
+journal = "Oxford University Press"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "A Contribution to the Mathematical Theory of Epidemics"
+authors = "Kermack, William O.; McKendrick, Anderson G."
+year = 1927
+journal = "Proceedings of the Royal Society A"
+doi = "10.1098/rspa.1927.0118"
+openAccess = false
+
+[[references]]
+title = "Contributions to the Mathematical Theory of Epidemics II"
+authors = "Kermack, William O.; McKendrick, Anderson G."
+year = 1932
+journal = "Proceedings of the Royal Society A"
+doi = "10.1098/rspa.1932.0171"
+openAccess = false
+
+[[references]]
+title = "An SEIRD Epidemic Model for Predicting the Spread of COVID-19 over a Long Period"
+authors = "Ghostine, Rabih; Gharamti, Mohamad; Hassrouny, Sally; Hoteit, Ibrahim"
+year = 2021
+journal = "Biology"
+doi = "10.3390/biology10060482"
+openAccess = true
+
+[[models]]
+id = "sir"
+label = "SIR"
+
+[[models]]
+id = "sis"
+label = "SIS"
+
+[[models]]
+id = "seir"
+label = "SEIR"
+
+[[models]]
+id = "sirs"
+label = "SIRS"
+
+[[models]]
+id = "seird"
+label = "SEIRD"
+
+[[bullets]]
+text = "Compartmental models divide a population into discrete health states"
+detail = "susceptible (S), exposed (E), infectious (I), recovered (R), or dead (D) — and describe transmission dynamics via ordinary differential equations. The choice of variant controls which transitions are modelled."
+
+[[bullets]]
+text = "Best suited to large, well-mixed populations where average-rate assumptions hold: national-level influenza forecasting, endemic disease modelling, and policy evaluation."
+detail = ""
+
+[[decisionRows]]
+task = "SIR"
+context = "S → I → R"
+purpose = "Outbreaks with permanent immunity after recovery"
+
+[[decisionRows]]
+task = "SIS"
+context = "S → I → S"
+purpose = "Endemic diseases where immunity wanes immediately"
+
+[[decisionRows]]
+task = "SEIR"
+context = "S → E → I → R"
+purpose = "Diseases with a latent incubation period before infectiousness"
+
+[[decisionRows]]
+task = "SIRS"
+context = "S → I → R → S"
+purpose = "Waning immunity leading to recurrent epidemic waves"
+
+[[decisionRows]]
+task = "SEIRD"
+context = "S → E → I → R/D"
+purpose = "Tracking disease-attributable mortality alongside recovery"
+
+[[inputs]]
+id = "N"
+label = "N (population)"
+tooltip = "Total population size. Compartmental models are deterministic ODE systems, so N scales the initial conditions but does not affect the dynamics qualitatively."
+default = "10000"
+
+[[inputs]]
+id = "T"
+label = "T (days)"
+tooltip = "Simulation duration in days. Choose long enough to see the epidemic peak and resolution, or the endemic steady state for SIS/SIRS."
+default = "160"
+
+[[inputs]]
+id = "beta"
+label = "beta (transmission)"
+tooltip = "Transmission rate: expected contacts per day times probability of transmission per contact. The basic reproduction number R0 = beta / gamma for SIR/SIS."
+default = "0.3"
+
+[[inputs]]
+id = "gamma"
+label = "gamma (recovery)"
+tooltip = "Recovery rate: inverse of the mean infectious period in days. For example, gamma = 0.1 gives a 10-day mean infectious period."
+default = "0.1"
+
+[[codeBranches]]
+model = "sir"
+code = '''
+using DifferentialEquations, Plots
+
+beta  = {{beta}}  # transmission rate
+gamma = {{gamma}}  # recovery rate
+N     = {{N}}  # total population
+
+function sir!(du, u, p, t)
+    S, I, R = u; b, g = p
+    du[1] = -b * S * I / N  # dS/dt
+    du[2] =  b * S * I / N - g * I  # dI/dt
+    du[3] =  g * I  # dR/dt
+end
+
+u0  = [{{N}} - 1.0, 1.0, 0.0]  # S0, I0, R0
+tspan = (0.0, {{T}})  # time span in days
+prob = ODEProblem(sir!, u0, tspan, (beta, gamma))
+sol  = solve(prob, Tsit5())
+
+R0 = beta / gamma  # basic reproduction number
+println("R0 = ", round(R0; digits=2), "  Peak I = ", round(maximum(sol[2,:]); digits=0))  # epidemic summary
+'''
+
+[[codeBranches]]
+model = "sis"
+code = '''
+using DifferentialEquations, Plots
+
+beta  = {{beta}}  # transmission rate
+gamma = {{gamma}}  # recovery rate
+N     = {{N}}  # total population
+
+function sis!(du, u, p, t)
+    S, I = u; b, g = p
+    du[1] = -b * S * I / N + g * I  # dS/dt: infection out, recovery in
+    du[2] =  b * S * I / N - g * I  # dI/dt
+end
+
+u0    = [{{N}} - 1.0, 1.0]  # S0, I0
+prob  = ODEProblem(sis!, u0, (0.0, {{T}}), (beta, gamma))
+sol   = solve(prob, Tsit5())
+
+R0    = beta / gamma  # basic reproduction number
+I_end = R0 > 1 ? (1 - 1/R0) * {{N}} : 0.0  # endemic equilibrium
+println("R0 = ", round(R0;digits=2), "  Endemic I* = ", round(I_end;digits=0))  # endemic summary
+'''
+
+[[codeBranches]]
+model = "seir"
+code = '''
+using DifferentialEquations, Plots
+
+beta   = {{beta}}  # transmission rate
+sigma  = 1.0/5.0  # progression rate (5-day latent period)
+gamma  = {{gamma}}  # recovery rate
+N      = {{N}}  # total population
+
+function seir!(du, u, p, t)
+    S, E, I, R = u; b, s, g = p
+    du[1] = -b * S * I / N  # dS/dt
+    du[2] =  b * S * I / N - s * E  # dE/dt: exposed become infectious
+    du[3] =  s * E - g * I  # dI/dt
+    du[4] =  g * I  # dR/dt
+end
+
+u0   = [{{N}}-1.0, 0.0, 1.0, 0.0]  # S0, E0, I0, R0
+prob = ODEProblem(seir!, u0, (0.0, {{T}}), (beta, sigma, gamma))
+sol  = solve(prob, Tsit5())
+
+R0 = beta / gamma  # basic reproduction number
+println("R0 = ", round(R0;digits=2), "  Peak I = ", round(maximum(sol[3,:]);digits=0))  # SEIR summary
+'''
+
+[[codeBranches]]
+model = "sirs"
+code = '''
+using DifferentialEquations, Plots
+
+beta  = {{beta}}  # transmission rate
+gamma = {{gamma}}  # recovery rate
+xi    = 1.0/180.0  # waning immunity rate (180-day immunity)
+N     = {{N}}  # total population
+
+function sirs!(du, u, p, t)
+    S, I, R = u; b, g, x = p
+    du[1] = -b * S * I / N + x * R  # dS/dt: waning immunity returns R to S
+    du[2] =  b * S * I / N - g * I  # dI/dt
+    du[3] =  g * I - x * R  # dR/dt
+end
+
+u0   = [{{N}}-1.0, 1.0, 0.0]  # S0, I0, R0
+prob = ODEProblem(sirs!, u0, (0.0, {{T}}), (beta, gamma, xi))
+sol  = solve(prob, Tsit5())
+
+R0 = beta / gamma  # basic reproduction number
+println("R0 = ", round(R0;digits=2), "  Recurrent waves expected: ", R0 > 1)  # SIRS summary
+'''
+
+[[codeBranches]]
+model = "seird"
+code = '''
+using DifferentialEquations, Plots
+
+beta   = {{beta}}  # transmission rate
+sigma  = 1.0/5.0  # progression rate from E to I
+gamma  = {{gamma}}  # recovery rate
+mu     = 0.01  # disease-induced mortality rate
+N      = {{N}}  # total population
+
+function seird!(du, u, p, t)
+    S, E, I, R, D = u; b, s, g, m = p
+    du[1] = -b * S * I / N  # dS/dt
+    du[2] =  b * S * I / N - s * E  # dE/dt
+    du[3] =  s * E - g * I - m * I  # dI/dt: recovery and death
+    du[4] =  g * I  # dR/dt
+    du[5] =  m * I  # dD/dt: disease-attributable deaths
+end
+
+u0   = [{{N}}-1.0, 0.0, 1.0, 0.0, 0.0]  # S0, E0, I0, R0, D0
+prob = ODEProblem(seird!, u0, (0.0, {{T}}), (beta, sigma, gamma, mu))
+sol  = solve(prob, Tsit5())
+
+println("Peak I = ", round(maximum(sol[3,:]);digits=0), "  Total deaths = ", round(sol[5,end];digits=0))  # SEIRD summary
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "epidemic-curve"
+label = "Epidemic Curve"
+desc = "Plot all compartment trajectories over time for the selected model"
+code = '''
+using DifferentialEquations, GLMakie
+
+function sir!(du,u,p,t); S,I,R=u; b,g=p; du[1]=-b*S*I/{{N}}; du[2]=b*S*I/{{N}}-g*I; du[3]=g*I; end
+sol = solve(ODEProblem(sir!,[{{N}}-1.0,1.0,0.0],(0.0,{{T}}),({{beta}},{{gamma}})),Tsit5())
+
+fig,ax=Figure(),Axis(fig[1,1],xlabel="Days",ylabel="People",title="SIR Epidemic Curve")
+lines!(ax,sol.t,sol[1,:],label="S",color=:blue)
+lines!(ax,sol.t,sol[2,:],label="I",color=:red)
+lines!(ax,sol.t,sol[3,:],label="R",color=:green)
+axislegend(ax); display(fig)
+'''
+
+[[actionGroups.actions]]
+id = "phase-portrait"
+label = "Phase Portrait"
+desc = "Plot the S-I phase plane trajectory to visualise the epidemic path from initial seed to final state"
+code = '''
+using DifferentialEquations, GLMakie
+
+function sir!(du,u,p,t); S,I,R=u; b,g=p; du[1]=-b*S*I/{{N}}; du[2]=b*S*I/{{N}}-g*I; du[3]=g*I; end
+sol = solve(ODEProblem(sir!,[{{N}}-1.0,1.0,0.0],(0.0,{{T}}),({{beta}},{{gamma}})),Tsit5())
+
+fig,ax=Figure(),Axis(fig[1,1],xlabel="S",ylabel="I",title="SIR Phase Portrait")
+lines!(ax, sol[1,:], sol[2,:], color=:red)
+scatter!(ax, [sol[1,1]], [sol[2,1]], color=:blue, markersize=10)  # initial state
+display(fig)
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "r0"
+label = "Basic R0"
+desc = "Compute R0 = beta/gamma and the herd immunity threshold for all five compartmental models"
+code = '''
+R0  = {{beta}} / {{gamma}}  # basic reproduction number (SIR/SIS/SEIR/SIRS)
+HIT = 1 - 1 / R0  # herd immunity threshold
+
+println("R0 = ", round(R0; digits=3))
+println("Epidemic occurs: ", R0 > 1)
+println("Herd immunity threshold: ", round(HIT * 100; digits=1), "%")
+println("Note: SEIRD R0 = beta / (gamma + mu)")  # adjust for mortality
+'''
+
+[[actionGroups.actions]]
+id = "final-size"
+label = "Final Epidemic Size"
+desc = "Solve the implicit final-size equation for SIR to find the total fraction of the population infected"
+code = '''
+using Roots
+
+R0 = {{beta}} / {{gamma}}  # basic reproduction number
+f  = z -> z + exp(-R0 * z) - 1  # implicit final-size equation
+z  = find_zero(f, 0.5)  # final infected fraction
+
+println("R0                  = ", round(R0; digits=3))
+println("Final size fraction = ", round(z; digits=4))
+println("Peak I fraction     = ", round(1 - 1/R0 - log(R0)/R0; digits=4))
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "beta-sweep"
+label = "Transmission Sweep"
+desc = "Sweep transmission rate beta and plot final epidemic size to identify the epidemic threshold"
+code = '''
+using DifferentialEquations, GLMakie
+
+function sir!(du,u,p,t); S,I,R=u; b,g=p; du[1]=-b*S*I/{{N}}; du[2]=b*S*I/{{N}}-g*I; du[3]=g*I; end
+betas    = 0.01:0.01:0.5  # sweep range
+R_finals = Float64[]  # store final R fraction
+for b in betas
+    sol = solve(ODEProblem(sir!,[{{N}}-1.0,1.0,0.0],(0.0,{{T}}),(b,{{gamma}})),Tsit5())
+    push!(R_finals, sol[3,end]/{{N}})
+end
+
+fig,ax=Figure(),Axis(fig[1,1],xlabel="beta",ylabel="Final R fraction",title="Epidemic Threshold")
+lines!(ax,collect(betas),R_finals,color=:red)
+vlines!(ax,[{{gamma}}],linestyle=:dash,color=:gray,label="beta = gamma")  # threshold
+axislegend(ax); display(fig)
+'''
+
+[[actionGroups.actions]]
+id = "vaccination"
+label = "Vaccination Impact"
+desc = "Model a vaccination campaign that moves a fraction of susceptibles to recovered at t=0 and compare outbreak size"
+code = '''
+using DifferentialEquations, GLMakie
+
+function sir!(du,u,p,t); S,I,R=u; b,g=p; du[1]=-b*S*I/{{N}}; du[2]=b*S*I/{{N}}-g*I; du[3]=g*I; end
+vax_levels = [0.0, 0.3, 0.6, 0.8]  # vaccination fractions
+fig,ax=Figure(),Axis(fig[1,1],xlabel="Days",ylabel="Infected",title="Vaccination Impact")
+for v in vax_levels
+    S0 = {{N}} * (1-v) - 1.0; R0_init = {{N}} * v
+    sol = solve(ODEProblem(sir!,[S0,1.0,R0_init],(0.0,{{T}}),({{beta}},{{gamma}})),Tsit5())
+    lines!(ax,sol.t,sol[2,:],label=string(Int(round(v*100)),"%"))
+end
+axislegend(ax,title="Coverage"); display(fig)
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "model-comparison"
+label = "Model Comparison"
+desc = "Compare peak infected and final epidemic size across SIR, SEIR and SEIRD at identical beta and gamma"
+code = '''
+using DifferentialEquations, Statistics
+
+p_sir   = ({{beta}}, {{gamma}})  # SIR parameters
+p_seir  = ({{beta}}, 1.0/5.0, {{gamma}})  # SEIR: beta, sigma, gamma
+p_seird = ({{beta}}, 1.0/5.0, {{gamma}}, 0.01)  # SEIRD: adds mu mortality
+
+function sir!(du,u,p,t);   S,I,R=u;       b,g=p;       du[1]=-b*S*I/{{N}}; du[2]=b*S*I/{{N}}-g*I;       du[3]=g*I;             end
+function seir!(du,u,p,t);  S,E,I,R=u;     b,s,g=p;     du[1]=-b*S*I/{{N}}; du[2]=b*S*I/{{N}}-s*E; du[3]=s*E-g*I; du[4]=g*I;     end
+function seird!(du,u,p,t); S,E,I,R,D=u;   b,s,g,m=p;   du[1]=-b*S*I/{{N}}; du[2]=b*S*I/{{N}}-s*E; du[3]=s*E-(g+m)*I; du[4]=g*I; du[5]=m*I; end
+
+s1=solve(ODEProblem(sir!,[{{N}}-1.0,1.0,0.0],(0.0,{{T}}),p_sir),Tsit5())
+s2=solve(ODEProblem(seir!,[{{N}}-1.0,0.0,1.0,0.0],(0.0,{{T}}),p_seir),Tsit5())
+s3=solve(ODEProblem(seird!,[{{N}}-1.0,0.0,1.0,0.0,0.0],(0.0,{{T}}),p_seird),Tsit5())
+
+println("SIR   peak I = ",round(maximum(s1[2,:]);digits=0))  # SIR peak
+println("SEIR  peak I = ",round(maximum(s2[3,:]);digits=0))  # SEIR peak (delayed)
+println("SEIRD peak I = ",round(maximum(s3[3,:]);digits=0),"  deaths = ",round(s3[5,end];digits=0))  # SEIRD peak and mortality
+'''
+
+[[actionGroups.actions]]
+id = "intervention-timing"
+label = "Intervention Timing"
+desc = "Compare epidemic outcomes when a 50% contact reduction is applied at days 0, 20, 40 and 60"
+code = '''
+using DifferentialEquations, GLMakie
+
+function sir_intervention!(du,u,p,t)
+    S,I,R=u; b0,g,t_int=p
+    b = t >= t_int ? b0 * 0.5 : b0  # 50% reduction after intervention
+    du[1]=-b*S*I/{{N}}; du[2]=b*S*I/{{N}}-g*I; du[3]=g*I
+end
+
+fig,ax=Figure(),Axis(fig[1,1],xlabel="Days",ylabel="Infected",title="Intervention Timing")
+for t_int in [0, 20, 40, 60]
+    sol=solve(ODEProblem(sir_intervention!,[{{N}}-1.0,1.0,0.0],(0.0,{{T}}),({{beta}},{{gamma}},float(t_int))),Tsit5())
+    lines!(ax,sol.t,sol[2,:],label="day "*string(t_int))
+end
+axislegend(ax,title="Intervention"); display(fig)
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "r0-interpretation"
+label = "R0 Interpretation"
+desc = "Compute R0 and interpret the epidemic trajectory: will it grow, plateau or fade?"
+code = '''
+R0  = {{beta}} / {{gamma}}  # basic reproduction number
+HIT = 1.0 - 1.0 / R0  # herd immunity threshold
+
+println("R0 = ", round(R0; digits=2))
+if R0 > 1
+    println("Epidemic grows: each case generates ", round(R0;digits=2), " secondary cases")  # growing phase
+    println("Herd immunity requires ", round(HIT*100;digits=1), "% immune")  # threshold
+else
+    println("R0 < 1: epidemic cannot sustain -- each case infects < 1 person")  # subcritical
+end
+'''
+
+[[actionGroups.actions]]
+id = "endemic-interpretation"
+label = "Endemic Equilibrium"
+desc = "For SIS and SIRS, compute and interpret the endemic infected fraction at long-run equilibrium"
+code = '''
+R0     = {{beta}} / {{gamma}}  # basic reproduction number
+I_star = R0 > 1 ? 1.0 - 1.0/R0 : 0.0  # SIS endemic infected fraction
+xi     = 1.0/180.0  # waning rate (180-day immunity for SIRS)
+I_sirs = R0 > 1 ? (1.0 - 1.0/R0) * xi / (gamma + xi) : 0.0  # SIRS endemic fraction (approx)
+
+println("R0 = ", round(R0; digits=2))
+println("SIS  endemic I* = ", round(I_star * 100; digits=1), "%")
+println("SIRS endemic I* ~ ", round(I_sirs * 100; digits=1), "% (waning immunity)")
+'''

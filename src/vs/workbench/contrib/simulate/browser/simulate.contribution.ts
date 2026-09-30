@@ -15,10 +15,11 @@ import { IClipboardService } from '../../../../platform/clipboard/common/clipboa
 import { INotificationService } from '../../../../platform/notification/common/notification.js';
 
 import { openPtpsWebview } from './commands/ptps.command.js';
-import { openSidWebview } from '../../model/browser/commands/sid.command.js';
-import { openMcmcWebview } from '../../model/browser/commands/mcmc.command.js';
-import { openSmcWebview } from '../../model/browser/commands/smc.command.js';
-import { openMlmcWebview } from '../../model/browser/commands/mlmc.command.js';
+import { SID_PANEL } from '../../model/browser/commands/sid.command.js';
+import { openScaffoldWebview } from '../../model/browser/commands/scaffold.command.js';
+import { MCMC_PANEL } from '../../model/browser/commands/mcmc.command.js';
+import { SMC_PANEL } from '../../model/browser/commands/smc.command.js';
+import { MLMC_PANEL } from '../../model/browser/commands/mlmc.command.js';
 import { openSdeWebview } from './commands/sde.command.js';
 import { openTssmWebview } from './commands/tssm.command.js';
 import { openDynpplWebview } from './commands/dynppl.command.js';
@@ -362,51 +363,19 @@ CommandsRegistry.registerCommand('chiara.simulate.pp', (accessor: ServicesAccess
 );
 
 CommandsRegistry.registerCommand('chiara.statistics.id', (accessor: ServicesAccessor) =>
-	openSidWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	)
+	openScaffoldWebview(accessor, SID_PANEL)
 );
 
 CommandsRegistry.registerCommand('chiara.simulate.mc.mcmc', (accessor: ServicesAccessor) =>
-	openMcmcWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	)
+	openScaffoldWebview(accessor, MCMC_PANEL)
 );
 
 CommandsRegistry.registerCommand('chiara.simulate.mc.smc', (accessor: ServicesAccessor) =>
-	openSmcWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	)
+	openScaffoldWebview(accessor, SMC_PANEL)
 );
 
 CommandsRegistry.registerCommand('chiara.simulate.mc.mlmc', (accessor: ServicesAccessor) =>
-	openMlmcWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-	)
+	openScaffoldWebview(accessor, MLMC_PANEL)
 );
 
 CommandsRegistry.registerCommand('chiara.simulate.sde', (accessor: ServicesAccessor) =>

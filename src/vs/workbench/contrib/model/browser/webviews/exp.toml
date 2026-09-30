@@ -1,0 +1,234 @@
+# Expectations Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/exp.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Expectations"
+viewType = "pollis.exp"
+defaultModel = "main"
+
+[[packages]]
+name = "Expectations.jl"
+github = "https://github.com/QuantEcon/Expectations.jl"
+
+[requires]
+packages = ["Expectations.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Quick Start"
+file = "exp/tutorial-01-quickstart.ipynb"
+bundled = true
+description = "Compute E[f(X)] for standard distributions using the expectation operator"
+
+[[notebookSections.notebooks]]
+name = "Distributions"
+file = "exp/tutorial-02-distributions.ipynb"
+bundled = true
+description = "Normal, Gamma, Beta, Exponential, Uniform and ChiSq with automatic quadrature selection"
+
+[[notebookSections.notebooks]]
+name = "Quadrature Methods"
+file = "exp/tutorial-03-quadrature.ipynb"
+bundled = true
+description = "Gauss-Hermite, Gauss-Laguerre and Gauss-Legendre quadrature in depth"
+
+[[notebookSections.notebooks]]
+name = "Mixture Models"
+file = "exp/tutorial-04-mixtures.ipynb"
+bundled = true
+description = "Component-wise expectations and mixture weights via MixtureModel"
+
+[[wikis]]
+name = "Overview"
+file = "exp/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Factsheet"
+file = "exp/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "exp/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "exp/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "exp/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "exp/decision-guide.md"
+bundled = true
+
+[[bullets]]
+text = "Computes E[f(X)] for any univariate distribution using Gaussian quadrature"
+detail = ""
+
+[[bullets]]
+text = "Quadrature rule chosen automatically: Gauss-Hermite, Gauss-Laguerre, or Gauss-Legendre"
+detail = ""
+
+[[bullets]]
+text = "Returns a reusable linear operator"
+detail = "cache once, evaluate at any function"
+
+[[bullets]]
+text = "Supports Normal, LogNormal, Gamma, Exponential, Beta, Uniform, ChiSq and mixture models"
+detail = ""
+
+[[bullets]]
+text = "Compatible with all univariate distributions from Distributions.jl"
+detail = ""
+
+[[inputs]]
+id = "dist"
+label = "Distribution"
+tooltip = ""
+kind = "select"
+default = "Normal"
+
+[[inputs.options]]
+value = "Normal"
+label = "Normal"
+
+[[inputs.options]]
+value = "LogNormal"
+label = "LogNormal"
+
+[[inputs.options]]
+value = "Gamma"
+label = "Gamma"
+
+[[inputs.options]]
+value = "Exponential"
+label = "Exponential"
+
+[[inputs.options]]
+value = "Beta"
+label = "Beta"
+
+[[inputs.options]]
+value = "Uniform"
+label = "Uniform"
+
+[[inputs.options]]
+value = "ChiSq"
+label = "ChiSq"
+
+[[inputs.options]]
+value = "MixtureModel"
+label = "MixtureModel"
+
+[[inputs]]
+id = "f"
+label = "Function f(x)"
+tooltip = ""
+default = "x -> x^2"
+
+[[inputs]]
+id = "params-Normal"
+label = "Parameters (mean mu, std dev sigma)"
+tooltip = "Comma-separated."
+default = "0, 1"
+when = "dist=Normal"
+
+[[inputs]]
+id = "params-LogNormal"
+label = "Parameters (mean mu, std dev sigma)"
+tooltip = "Comma-separated."
+default = "0, 1"
+when = "dist=LogNormal"
+
+[[inputs]]
+id = "params-Gamma"
+label = "Parameters (shape alpha, rate beta)"
+tooltip = "Comma-separated."
+default = "2, 1"
+when = "dist=Gamma"
+
+[[inputs]]
+id = "params-Exponential"
+label = "Parameters (rate lambda)"
+tooltip = "Comma-separated."
+default = "1"
+when = "dist=Exponential"
+
+[[inputs]]
+id = "params-Beta"
+label = "Parameters (shape alpha, shape beta)"
+tooltip = "Comma-separated."
+default = "2, 5"
+when = "dist=Beta"
+
+[[inputs]]
+id = "params-Uniform"
+label = "Parameters (lower a, upper b)"
+tooltip = "Comma-separated."
+default = "0, 1"
+when = "dist=Uniform"
+
+[[inputs]]
+id = "params-ChiSq"
+label = "Parameters (degrees k)"
+tooltip = "Comma-separated."
+default = "3"
+when = "dist=ChiSq"
+
+[[inputs]]
+id = "mix-components"
+label = "Components"
+tooltip = "Component distributions, comma-separated: Normal, LogNormal, Gamma, Exponential, Beta, Uniform, Chisq."
+default = "Normal(0.0, 1.0), Gamma(2.0, 1.0)"
+when = "dist=MixtureModel"
+
+[[inputs]]
+id = "mix-weights"
+label = "Weights"
+tooltip = "One mixing weight per component, comma-separated."
+default = "1/2, 1/2"
+when = "dist=MixtureModel"
+
+[[inputs]]
+id = "n"
+label = "Nodes (n)"
+tooltip = ""
+default = "20"
+
+[[codeBranches]]
+model = "main"
+code = '''
+using Expectations, Distributions  # numerical expectations via quadrature
+
+{{?dist=Normal}} dist = Normal({{params-Normal}})  # distribution
+{{?dist=Normal}} E    = expectation(dist; n={{n}})  # Gauss-Hermite quadrature, {{n}} nodes
+{{?dist=LogNormal}} dist = LogNormal({{params-LogNormal}})  # distribution
+{{?dist=LogNormal}} E    = expectation(dist; n={{n}})  # Gauss-Hermite quadrature, {{n}} nodes
+{{?dist=Gamma}} dist = Gamma({{params-Gamma}})  # distribution
+{{?dist=Gamma}} E    = expectation(dist; n={{n}})  # Gauss-Laguerre quadrature, {{n}} nodes
+{{?dist=Exponential}} dist = Exponential({{params-Exponential}})  # distribution
+{{?dist=Exponential}} E    = expectation(dist; n={{n}})  # Gauss-Laguerre quadrature, {{n}} nodes
+{{?dist=Beta}} dist = Beta({{params-Beta}})  # distribution
+{{?dist=Beta}} E    = expectation(dist; n={{n}})  # Gauss-Legendre quadrature, {{n}} nodes
+{{?dist=Uniform}} dist = Uniform({{params-Uniform}})  # distribution
+{{?dist=Uniform}} E    = expectation(dist; n={{n}})  # Gauss-Legendre quadrature, {{n}} nodes
+{{?dist=ChiSq}} dist = Chisq({{params-ChiSq}})  # distribution
+{{?dist=ChiSq}} E    = expectation(dist; n={{n}})  # Gauss-Laguerre quadrature, {{n}} nodes
+{{?dist=MixtureModel}} d = MixtureModel([{{mix-components}}], [{{mix-weights}}])  # composite distribution with mixing weights
+{{?dist=MixtureModel}} E = expectation(d; n={{n}})  # component-wise quadrature, {{n}} nodes per component
+
+E({{f}})  # E[f(X)]
+{{?dist!=MixtureModel}} dot(({{f}}).(nodes(E)), weights(E))  # equivalent linear algebra form
+{{?dist=MixtureModel}} expectations(E)  # component expectations
+'''

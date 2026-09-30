@@ -1,0 +1,476 @@
+# Network Flows Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/netflow.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Network Flows"
+viewType = "pollis.netflow"
+defaultModel = "maxflow"
+
+[[packages]]
+name = "GraphsFlows.jl"
+github = "https://github.com/JuliaGraphs/GraphsFlows.jl"
+
+[[packages]]
+name = "Graphs.jl"
+github = "https://juliagraphs.org/Graphs.jl/stable/"
+
+[requires]
+packages = ["GraphsFlows.jl", "Graphs.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Maximum Flow"
+file = "netflow/tutorial-01-max-flow.ipynb"
+bundled = true
+description = "Find the maximum flow from source to sink in a capacitated network using the Dinic algorithm"
+
+[[notebookSections.notebooks]]
+name = "Minimum Cost Flow"
+file = "netflow/tutorial-02-min-cost.ipynb"
+bundled = true
+description = "Route a given flow demand through a network at minimum total cost using successive shortest paths"
+
+[[notebookSections.notebooks]]
+name = "Minimum Cut"
+file = "netflow/tutorial-03-min-cut.ipynb"
+bundled = true
+description = "Find the minimum cut separating source and sink and identify the bottleneck edges via max-flow min-cut duality"
+
+[[wikis]]
+name = "Factsheet"
+file = "netflow/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "netflow/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "netflow/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "netflow/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "netflow/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "netflow/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Algorithms"
+
+[[wikis]]
+name = "Maximum Flow"
+file = "netflow/max-flow.md"
+bundled = true
+
+[[wikis]]
+name = "Minimum Cost Flow"
+file = "netflow/min-cost-flow.md"
+bundled = true
+
+[[wikis]]
+name = "Minimum Cut"
+file = "netflow/min-cut.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Graphs.jl: a General-Purpose Graph Library for the Julia Programming Language"
+authors = "Bromberger, Seth; Fairbanks, James; contributors"
+year = 2017
+journal = "JuliaCon Proceedings"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Network Flows: Theory, Algorithms, and Applications"
+authors = "Ahuja, Ravindra K.; Magnanti, Thomas L.; Orlin, James B."
+year = 1993
+journal = "Prentice Hall"
+openAccess = false
+
+[[references]]
+title = "Introduction to Algorithms"
+authors = "Cormen, Thomas H.; Leiserson, Charles E.; Rivest, Ronald L.; Stein, Clifford"
+year = 2022
+journal = "MIT Press (4th ed.)"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Maximal Flow Through a Network"
+authors = "Ford, Lester R.; Fulkerson, Delbert R."
+year = 1956
+journal = "Canadian Journal of Mathematics"
+doi = "10.4153/CJM-1956-045-5"
+openAccess = false
+
+[[references]]
+title = "Algorithm for Solution of a Problem of Maximum Flow in Networks with Power Estimation"
+authors = "Dinic, Efim A."
+year = 1970
+journal = "Soviet Mathematics Doklady"
+openAccess = false
+
+[[references]]
+title = "A Simple Min-Cut Algorithm"
+authors = "Stoer, Mechthild; Wagner, Frank"
+year = 1997
+journal = "Journal of the ACM"
+doi = "10.1145/263867.263872"
+openAccess = false
+
+[[models]]
+id = "maxflow"
+label = "Max Flow"
+
+[[models]]
+id = "mincost"
+label = "Min Cost"
+
+[[models]]
+id = "mincut"
+label = "Min Cut"
+
+[[bullets]]
+text = "Maximum Flow"
+detail = "find the maximum throughput from source to sink in a capacitated directed network using Dinic’s O(V²E) algorithm"
+
+[[bullets]]
+text = "Minimum Cost Flow"
+detail = "route a required demand through a network while minimising total edge cost using successive shortest paths"
+
+[[bullets]]
+text = "Minimum Cut"
+detail = "identify the bottleneck edge set whose removal disconnects source from sink, dual to maximum flow by the max-flow min-cut theorem"
+
+[[inputs]]
+id = "N"
+label = "N (nodes)"
+tooltip = "Number of nodes in the flow network. Source is node 1 and sink is node N."
+default = "20"
+
+[[inputs]]
+id = "M"
+label = "M (edges)"
+tooltip = "Number of directed edges randomly added to the network. Denser graphs provide more routing options and generally support higher maximum flow."
+default = "40"
+
+[[inputs]]
+id = "cap"
+label = "cap (max capacity)"
+tooltip = "Maximum capacity of each edge, drawn uniformly from [1, cap]. Higher values allow more flow on individual edges and increase the achievable maximum flow."
+default = "10"
+
+[[codeBranches]]
+model = "maxflow"
+code = '''
+using Graphs, GraphsFlows
+
+g   = DiGraph({{N}})  # directed flow network
+cap_mat = zeros(Int, {{N}}, {{N}})  # capacity matrix
+
+for _ in 1:{{M}}
+    u, v = rand(1:{{N}}), rand(1:{{N}})
+    u == v && continue
+    add_edge!(g, u, v)
+    cap_mat[u, v] += rand(1:{{cap}})  # random capacity
+end
+
+source, sink = 1, {{N}}  # source = node 1, sink = node N
+flow_val, flow_mat = maximum_flow(g, source, sink, cap_mat)  # Dinic algorithm
+
+println("Max flow value:  ", flow_val)  # total throughput
+println("Edges with flow: ", count(flow_mat .> 0))  # active edges
+println("Saturated edges: ", count(flow_mat .== cap_mat .&& cap_mat .> 0))  # bottleneck edges
+'''
+
+[[codeBranches]]
+model = "mincost"
+code = '''
+using Graphs, GraphsFlows
+
+g    = DiGraph({{N}})  # directed network
+cap  = zeros(Int, {{N}}, {{N}})  # edge capacities
+cost = zeros(Int, {{N}}, {{N}})  # edge costs
+
+for _ in 1:{{M}}
+    u, v = rand(1:{{N}}), rand(1:{{N}})
+    u == v && continue
+    add_edge!(g, u, v)
+    cap[u, v]  += rand(1:{{cap}})
+    cost[u, v]  = rand(1:5)
+end
+
+demand    = zeros(Int, {{N}})  # node demand vector
+demand[1] = -10  # source supplies 10 units
+demand[{{N}}] =  10  # sink consumes 10 units
+
+flow_mat, total_cost = mincost_flow(g, cap, cost, demand)  # successive shortest paths
+
+println("Total cost:    ", total_cost)  # objective value
+println("Flow edges:    ", count(flow_mat .> 0))  # edges carrying flow
+println("Max edge flow: ", maximum(flow_mat))  # busiest edge
+'''
+
+[[codeBranches]]
+model = "mincut"
+code = '''
+using Graphs, GraphsFlows
+
+g       = DiGraph({{N}})  # directed network
+cap_mat = zeros(Int, {{N}}, {{N}})  # capacity matrix
+
+for _ in 1:{{M}}
+    u, v = rand(1:{{N}}), rand(1:{{N}})
+    u == v && continue
+    add_edge!(g, u, v); cap_mat[u, v] += rand(1:{{cap}})
+end
+
+source, sink = 1, {{N}}  # source and sink
+flow_val, flow_mat = maximum_flow(g, source, sink, cap_mat)  # max flow = min cut by duality
+
+cut_edges = [(u,v) for u in 1:{{N}} for v in 1:{{N}}  # bottleneck edges
+    if cap_mat[u,v] > 0 && flow_mat[u,v] == cap_mat[u,v]]
+
+println("Min cut value:    ", flow_val)  # equals max flow
+println("Bottleneck edges: ", length(cut_edges))  # number of saturated edges
+println("First cut edges:  ", first(cut_edges, 3))  # sample of cut edges
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "flow-network"
+label = "Flow Network"
+desc = "Draw the network with edge widths proportional to the fraction of capacity used"
+code = '''
+using Graphs, GraphsFlows, GraphMakie, GLMakie
+
+g=DiGraph({{N}}); cap_mat=zeros(Int,{{N}},{{N}})
+for _ in 1:{{M}}; u,v=rand(1:{{N}}),rand(1:{{N}}); u==v&&continue; add_edge!(g,u,v); cap_mat[u,v]+=rand(1:{{cap}}); end
+flow_val, flow_mat = maximum_flow(g, 1, {{N}}, cap_mat)
+
+edge_widths = [flow_mat[src(e), dst(e)] / max(cap_mat[src(e), dst(e)], 1) * 5 for e in edges(g)]  # width = flow fraction
+fig, ax, p = graphplot(g, edge_width=edge_widths, arrow_show=true)
+display(fig)
+'''
+
+[[actionGroups.actions]]
+id = "capacity-bars"
+label = "Capacity vs Flow"
+desc = "Bar chart comparing edge capacity and actual flow to reveal slack and saturated edges"
+code = '''
+using Graphs, GraphsFlows, GLMakie
+
+g=DiGraph({{N}}); cap_mat=zeros(Int,{{N}},{{N}})
+for _ in 1:{{M}}; u,v=rand(1:{{N}}),rand(1:{{N}}); u==v&&continue; add_edge!(g,u,v); cap_mat[u,v]+=rand(1:{{cap}}); end
+_, flow_mat = maximum_flow(g, 1, {{N}}, cap_mat)
+
+active = [(u,v) for u in 1:{{N}} for v in 1:{{N}} if cap_mat[u,v]>0]  # edges with capacity
+caps  = [cap_mat[u,v] for (u,v) in active]
+flows = [flow_mat[u,v] for (u,v) in active]
+
+fig,ax=Figure(),Axis(fig[1,1],xlabel="Edge index",ylabel="Units",title="Capacity vs Flow")
+barplot!(ax, 1:length(active), caps,  label="Capacity", color=(:blue, 0.4))
+barplot!(ax, 1:length(active), flows, label="Flow",     color=(:red,  0.7))
+axislegend(ax); display(fig)
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "bottleneck-edges"
+label = "Bottleneck Edges"
+desc = "List all edges whose flow equals their capacity — these form the minimum cut"
+code = '''
+using Graphs, GraphsFlows
+
+g=DiGraph({{N}}); cap_mat=zeros(Int,{{N}},{{N}})
+for _ in 1:{{M}}; u,v=rand(1:{{N}}),rand(1:{{N}}); u==v&&continue; add_edge!(g,u,v); cap_mat[u,v]+=rand(1:{{cap}}); end
+flow_val, flow_mat = maximum_flow(g, 1, {{N}}, cap_mat)
+
+bottleneck = [(u,v) for u in 1:{{N}} for v in 1:{{N}}  # saturated edges
+    if cap_mat[u,v] > 0 && flow_mat[u,v] == cap_mat[u,v]]
+
+println("Max flow:         ", flow_val)  # total throughput
+println("Bottleneck count: ", length(bottleneck))  # number of saturated edges
+println("Cut edges: ", bottleneck)  # list all saturated edges
+'''
+
+[[actionGroups.actions]]
+id = "flow-conservation"
+label = "Flow Conservation"
+desc = "Verify that inflow equals outflow at every intermediate node"
+code = '''
+using Graphs, GraphsFlows
+
+g=DiGraph({{N}}); cap_mat=zeros(Int,{{N}},{{N}})
+for _ in 1:{{M}}; u,v=rand(1:{{N}}),rand(1:{{N}}); u==v&&continue; add_edge!(g,u,v); cap_mat[u,v]+=rand(1:{{cap}}); end
+_, flow_mat = maximum_flow(g, 1, {{N}}, cap_mat)
+
+for v in 2:{{N}}-1  # check every internal node
+    inflow  = sum(flow_mat[u, v] for u in 1:{{N}})
+    outflow = sum(flow_mat[v, u] for u in 1:{{N}})
+    println("Node ", v, ":  in=", inflow, "  out=", outflow, "  ok=", inflow==outflow)
+end
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "capacity-sweep"
+label = "Capacity Sweep"
+desc = "Scale edge capacities from 1x to 5x and plot the resulting maximum flow"
+code = '''
+using Graphs, GraphsFlows, GLMakie
+
+g=DiGraph({{N}}); base_cap=zeros(Int,{{N}},{{N}})
+for _ in 1:{{M}}; u,v=rand(1:{{N}}),rand(1:{{N}}); u==v&&continue; add_edge!(g,u,v); base_cap[u,v]+=rand(1:{{cap}}); end
+
+multipliers = 1:5  # scale factor sweep
+max_flows   = [maximum_flow(g, 1, {{N}}, m .* base_cap)[1] for m in multipliers]  # max flow per scale
+
+fig,ax=Figure(),Axis(fig[1,1],xlabel="Capacity multiplier",ylabel="Max flow",title="Flow vs Capacity Scale")
+scatterlines!(ax, multipliers, max_flows, color=:blue)
+display(fig)
+'''
+
+[[actionGroups.actions]]
+id = "density-sweep"
+label = "Density Sweep"
+desc = "Vary the number of edges M and measure the maximum achievable flow"
+code = '''
+using Graphs, GraphsFlows, GLMakie
+
+edge_counts = 10:10:100  # sweep M
+max_flows   = Float64[]  # store results
+
+for m in edge_counts
+    g=DiGraph({{N}}); cm=zeros(Int,{{N}},{{N}})
+    for _ in 1:m; u,v=rand(1:{{N}}),rand(1:{{N}}); u==v&&continue; add_edge!(g,u,v); cm[u,v]+=rand(1:{{cap}}); end
+    push!(max_flows, maximum_flow(g, 1, {{N}}, cm)[1])
+end
+
+fig,ax=Figure(),Axis(fig[1,1],xlabel="Number of edges M",ylabel="Max flow",title="Flow vs Graph Density")
+scatterlines!(ax, collect(edge_counts), max_flows, color=:green)
+display(fig)
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "directed-vs-undirected"
+label = "Directed vs Undirected"
+desc = "Compare maximum flow on a directed vs undirected version of the same graph"
+code = '''
+using Graphs, GraphsFlows
+
+gd  = DiGraph({{N}}); gu  = Graph({{N}})
+cap_mat = zeros(Int,{{N}},{{N}})
+for _ in 1:{{M}}
+    u,v=rand(1:{{N}}),rand(1:{{N}}); u==v&&continue
+    add_edge!(gd,u,v); add_edge!(gu,u,v); add_edge!(gu,v,u)
+    cap_mat[u,v]+=rand(1:{{cap}}); cap_mat[v,u]=cap_mat[u,v]
+end
+
+fv_dir, _ = maximum_flow(gd, 1, {{N}}, cap_mat)  # directed: one-way edges
+fv_und, _ = maximum_flow(gu, 1, {{N}}, cap_mat)  # undirected: both directions available
+
+println("Directed max flow:   ", fv_dir)  # lower bound
+println("Undirected max flow: ", fv_und)  # upper bound
+println("Ratio:               ", round(fv_und / max(fv_dir,1); digits=2))  # benefit of bidirectional edges
+'''
+
+[[actionGroups.actions]]
+id = "sparse-vs-dense"
+label = "Sparse vs Dense"
+desc = "Compare max flow on sparse (M = N) and dense (M = 4N) random networks with the same capacity budget"
+code = '''
+using Graphs, GraphsFlows
+
+for (label, m) in [("Sparse (M=N)", {{N}}), ("Dense (M=4N)", 4*{{N}})]
+    g=DiGraph({{N}}); cm=zeros(Int,{{N}},{{N}})
+    for _ in 1:m; u,v=rand(1:{{N}}),rand(1:{{N}}); u==v&&continue; add_edge!(g,u,v); cm[u,v]+=rand(1:{{cap}}); end
+    fv,_=maximum_flow(g,1,{{N}},cm)  # run max flow
+    println(label, "  edges=", ne(g), "  max_flow=", fv)
+end
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "network-utilisation"
+label = "Network Utilisation"
+desc = "Compute the fraction of total edge capacity used by the optimal flow"
+code = '''
+using Graphs, GraphsFlows
+
+g=DiGraph({{N}}); cap_mat=zeros(Int,{{N}},{{N}})
+for _ in 1:{{M}}; u,v=rand(1:{{N}}),rand(1:{{N}}); u==v&&continue; add_edge!(g,u,v); cap_mat[u,v]+=rand(1:{{cap}}); end
+flow_val, flow_mat = maximum_flow(g, 1, {{N}}, cap_mat)
+
+total_cap  = sum(cap_mat)  # total installed capacity
+total_flow = sum(flow_mat)  # total flow across all edges
+utilisation = total_flow / total_cap  # fraction of capacity used
+
+println("Max flow:      ", flow_val)  # throughput
+println("Total capacity: ", total_cap)  # installed capacity
+println("Utilisation:   ", round(utilisation*100; digits=1), "%")  # efficiency
+'''
+
+[[actionGroups.actions]]
+id = "bottleneck-sensitivity"
+label = "Bottleneck Sensitivity"
+desc = "Test how doubling each bottleneck edge capacity increases total max flow"
+code = '''
+using Graphs, GraphsFlows
+
+g=DiGraph({{N}}); cap_mat=zeros(Int,{{N}},{{N}})
+for _ in 1:{{M}}; u,v=rand(1:{{N}}),rand(1:{{N}}); u==v&&continue; add_edge!(g,u,v); cap_mat[u,v]+=rand(1:{{cap}}); end
+base_flow, flow_mat = maximum_flow(g, 1, {{N}}, cap_mat)
+
+bottleneck = [(u,v) for u in 1:{{N}} for v in 1:{{N}} if cap_mat[u,v]>0 && flow_mat[u,v]==cap_mat[u,v]]  # cut edges
+
+for (u, v) in bottleneck
+    new_cap = copy(cap_mat); new_cap[u,v] *= 2
+    new_flow, _ = maximum_flow(g, 1, {{N}}, new_cap)
+    gain = new_flow - base_flow
+    println("Edge (", u, ",", v, ")  gain=", gain, "  new_flow=", new_flow)
+end
+'''

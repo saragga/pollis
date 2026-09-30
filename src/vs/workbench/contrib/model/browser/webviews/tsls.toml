@@ -1,0 +1,338 @@
+# Two-Stage Least Squares (2SLS) Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/tsls.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Two-Stage Least Squares (2SLS)"
+viewType = "pollis.tsls"
+defaultModel = "main"
+
+[[packages]]
+name = "Microeconometrics.jl"
+github = "https://github.com/lbittarello/Microeconometrics.jl"
+
+[requires]
+packages = ["Microeconometrics.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Quick Start"
+file = "tsls/tutorial-01-quickstart.ipynb"
+bundled = true
+description = "Estimate a 2SLS model and interpret the structural coefficients"
+
+[[notebookSections.notebooks]]
+name = "Instrument Validity"
+file = "tsls/tutorial-02-instruments.ipynb"
+bundled = true
+description = "Test instrument relevance and exogeneity"
+
+[[notebookSections.notebooks]]
+name = "Standard Errors"
+file = "tsls/tutorial-03-vcov.ipynb"
+bundled = true
+description = "Homoscedastic, heteroscedastic, and clustered SEs"
+
+[[notebookSections.notebooks]]
+name = "Hausman Test"
+file = "tsls/tutorial-04-hausman.ipynb"
+bundled = true
+description = "Test endogeneity: compare OLS and 2SLS estimates"
+
+[[wikis]]
+name = "Overview"
+file = "tsls/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Factsheet"
+file = "tsls/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "tsls/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "tsls/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "tsls/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "tsls/decision-guide.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Original Papers (from packages)"
+
+[[references]]
+title = "A Generalized Classical Method of Linear Estimation of Coefficients in a Structural Equation"
+authors = "Basmann, R. L."
+year = 1957
+journal = ""
+url = "https://doi.org/10.2307/1907743"
+openAccess = false
+
+[[references]]
+title = "The Estimation of Economic Relationships Using Instrumental Variables"
+authors = "Sargan, J. D."
+year = 1958
+journal = ""
+url = "https://doi.org/10.2307/1907619"
+openAccess = false
+
+[[references]]
+title = "Instrumental Variables and the Search for Identification: From Supply and Demand to Natural Experiments"
+authors = "Angrist, J. D., & Krueger, A. B."
+year = 2001
+journal = ""
+url = "https://doi.org/10.1257/jep.15.4.69"
+openAccess = true
+
+[[references]]
+title = "A Survey of Weak Instruments and Weak Identification in Generalized Method of Moments"
+authors = "Stock, J. H., Wright, J. H., & Yogo, M."
+year = 2002
+journal = ""
+url = "https://doi.org/10.1198/073500102288618658"
+openAccess = false
+
+[[bullets]]
+text = "Estimates structural parameters in linear models with endogenous regressors using excluded instrumental variables"
+detail = ""
+
+[[bullets]]
+text = "Consistent when OLS is not: instruments must be correlated with endogenous regressors (relevance) and uncorrelated with the error (exogeneity)"
+detail = ""
+
+[[bullets]]
+text = "First stage regresses each endogenous variable on all instruments; second stage uses the fitted values in the structural equation"
+detail = ""
+
+[[bullets]]
+text = "Supports homoscedastic, heteroscedastic (White-robust), and clustered standard errors"
+detail = ""
+
+[[inputs]]
+id = "y"
+label = "Response"
+tooltip = "Response (dependent) variable column name in the data frame."
+default = "y"
+
+[[inputs]]
+id = "exog"
+label = "Exogenous regressors"
+tooltip = "Space-separated names of exogenous regressors (included instruments). An intercept is added automatically."
+default = "x1 x2"
+
+[[inputs]]
+id = "endog"
+label = "Endogenous"
+tooltip = "Space-separated names of endogenous regressors — variables correlated with the structural error."
+default = "w1"
+
+[[inputs]]
+id = "instr"
+label = "Instruments (excluded)"
+tooltip = "Space-separated names of excluded instruments. Must be correlated with endogenous regressors and uncorrelated with the error (rank and exclusion conditions)."
+default = "z1 z2"
+
+[[inputs]]
+id = "vcov"
+label = "VCov"
+tooltip = "Variance-covariance estimator for standard errors. Homoscedastic assumes IID errors; Heteroscedastic gives White-robust SEs."
+kind = "select"
+default = "hom"
+
+[[inputs.options]]
+value = "hom"
+label = "Homoscedastic"
+
+[[inputs.options]]
+value = "het"
+label = "Heteroscedastic"
+
+[[inputs.options]]
+value = "clustered"
+label = "Clustered"
+
+[[inputs]]
+id = "data"
+label = "Data"
+tooltip = "Name of the data frame (AbstractDataFrame). Must contain all columns referenced in the model."
+default = "df"
+
+[[inputs]]
+id = "cluster"
+label = "Cluster by"
+tooltip = "Column name identifying cluster groups for clustered standard errors (e.g. firm ID, region code)."
+default = "firm_id"
+when = "vcov=clustered"
+
+[[codeBranches]]
+model = "main"
+code = '''
+using Microeconometrics
+
+{{?vcov=hom}} result = fit(IV(Homoscedastic()), {{data}};
+{{?vcov=het}} result = fit(IV(Heteroscedastic()), {{data}};
+{{?vcov=clustered}} result = fit(IV(Clustered(:{{cluster}})), {{data}};
+    response    = :{{y}},
+    regressors  = [:{{exog}}],  # exogenous regressors (included instruments)
+    endogenous  = [:{{endog}}],  # endogenous regressors
+    instruments = [:{{instr}}])  # excluded instruments
+
+coef(result)  # 2SLS coefficient estimates
+coefnames(result)  # variable names
+stderror(result)  # standard errors
+confint(result)  # 95% confidence intervals
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "first_stage"
+label = "First-Stage Analysis"
+desc = "Regress each endogenous variable on all instruments to assess instrument relevance (rule of thumb: F > 10)"
+code = '''
+using Microeconometrics
+
+fs = fit(OLS(Homoscedastic()), {{data}};  # first-stage OLS: endogenous on all instruments
+    response   = [:{{endog}}][1],
+    regressors = [:{{exog}}, :{{instr}}])
+
+coef(fs)  # first-stage coefficients
+stderror(fs)  # instrument coefficient SEs
+
+{{?vcov=hom}} result = fit(IV(Homoscedastic()), {{data}};  # 2SLS structural equation
+{{?vcov=het}} result = fit(IV(Heteroscedastic()), {{data}};  # 2SLS structural equation
+{{?vcov=clustered}} result = fit(IV(Clustered(:{{cluster}})), {{data}};  # 2SLS structural equation
+    response = :{{y}}, regressors = [:{{exog}}],
+    endogenous = [:{{endog}}], instruments = [:{{instr}}])
+coef(result)  # 2SLS structural coefficients
+'''
+
+[[actionGroups.actions]]
+id = "vcov_matrix"
+label = "Variance-Covariance Matrix"
+desc = "Display the full coefficient VCov matrix and per-coefficient standard errors"
+code = '''
+using Microeconometrics
+
+{{?vcov=hom}} result = fit(IV(Homoscedastic()), {{data}};
+{{?vcov=het}} result = fit(IV(Heteroscedastic()), {{data}};
+{{?vcov=clustered}} result = fit(IV(Clustered(:{{cluster}})), {{data}};
+    response = :{{y}}, regressors = [:{{exog}}],
+    endogenous = [:{{endog}}], instruments = [:{{instr}}])
+
+V     = vcov(result)  # coefficient variance-covariance matrix
+names = coefnames(result)  # variable names
+
+for (i, n) in enumerate(names)
+    println(n, ": SE = ", round(sqrt(V[i,i]), digits = 4))  # per-coefficient standard error
+end
+'''
+
+[[actionGroups.actions]]
+id = "residuals"
+label = "Residual Diagnostics"
+desc = "Examine structural residuals for patterns that may indicate model misspecification"
+code = '''
+using Microeconometrics
+
+{{?vcov=hom}} result = fit(IV(Homoscedastic()), {{data}};
+{{?vcov=het}} result = fit(IV(Heteroscedastic()), {{data}};
+{{?vcov=clustered}} result = fit(IV(Clustered(:{{cluster}})), {{data}};
+    response = :{{y}}, regressors = [:{{exog}}],
+    endogenous = [:{{endog}}], instruments = [:{{instr}}])
+
+e = residuals(result)  # structural equation residuals
+n = nobs(result)  # number of observations
+
+println("Residual mean:   ", round(sum(e)/n, digits = 6))  # should be ~0
+println("Residual std:    ", round(sqrt(sum(e.^2)/(n-2)), digits = 4))  # residual standard deviation
+println("Max abs residual:", round(maximum(abs.(e)), digits = 4))  # largest absolute residual
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "coef_table"
+label = "Coefficient Table"
+desc = "Print a formatted table of 2SLS estimates, standard errors, and z-statistics"
+code = '''
+using Microeconometrics
+
+{{?vcov=hom}} result = fit(IV(Homoscedastic()), {{data}};
+{{?vcov=het}} result = fit(IV(Heteroscedastic()), {{data}};
+{{?vcov=clustered}} result = fit(IV(Clustered(:{{cluster}})), {{data}};
+    response = :{{y}}, regressors = [:{{exog}}],
+    endogenous = [:{{endog}}], instruments = [:{{instr}}])
+
+names = coefnames(result)  # variable names
+b     = coef(result)  # 2SLS estimates
+se    = stderror(result)  # standard errors
+z     = b ./ se  # z-statistics
+
+for i in eachindex(names)
+    println(names[i], ": ", round(b[i], digits=4),
+        "  SE=", round(se[i], digits=4), "  z=", round(z[i], digits=2))
+end
+'''
+
+[[actionGroups.actions]]
+id = "confint"
+label = "Confidence Intervals"
+desc = "Compute 95% confidence intervals for all structural coefficients"
+code = '''
+using Microeconometrics
+
+{{?vcov=hom}} result = fit(IV(Homoscedastic()), {{data}};
+{{?vcov=het}} result = fit(IV(Heteroscedastic()), {{data}};
+{{?vcov=clustered}} result = fit(IV(Clustered(:{{cluster}})), {{data}};
+    response = :{{y}}, regressors = [:{{exog}}],
+    endogenous = [:{{endog}}], instruments = [:{{instr}}])
+
+ci    = confint(result)  # 95% confidence intervals (n x 2 matrix)
+names = coefnames(result)  # variable names
+
+for i in eachindex(names)
+    println(names[i], ": [", round(ci[i,1], digits=4), ", ", round(ci[i,2], digits=4), "]")
+end
+'''
+
+[[actionGroups.actions]]
+id = "ols_comparison"
+label = "OLS vs 2SLS Comparison"
+desc = "Compare OLS and 2SLS estimates; large differences indicate meaningful endogeneity bias in OLS"
+code = '''
+using Microeconometrics
+
+ols = fit(OLS(Homoscedastic()), {{data}};  # OLS: inconsistent if endogeneity present
+    response = :{{y}}, regressors = [:{{exog}}, :{{endog}}])
+
+{{?vcov=hom}} iv  = fit(IV(Homoscedastic()), {{data}};  # 2SLS: consistent under valid instruments
+{{?vcov=het}} iv  = fit(IV(Heteroscedastic()), {{data}};  # 2SLS: consistent under valid instruments
+{{?vcov=clustered}} iv  = fit(IV(Clustered(:{{cluster}})), {{data}};  # 2SLS: consistent under valid instruments
+    response = :{{y}}, regressors = [:{{exog}}],
+    endogenous = [:{{endog}}], instruments = [:{{instr}}])
+
+println("OLS estimates:   ", round.(coef(ols), digits=4))  # biased if endogeneity exists
+println("2SLS estimates:  ", round.(coef(iv),  digits=4))  # consistent structural estimates
+println("Hausman diff:    ", round.(coef(iv) - coef(ols), digits=4))  # large diff signals endogeneity
+'''

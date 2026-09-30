@@ -1,0 +1,206 @@
+# Penalised & Projection Regression Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/lasso.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Penalised & Projection Regression"
+viewType = "pollis.lasso"
+defaultModel = "lasso"
+
+[[packages]]
+name = "Lasso.jl"
+github = "https://github.com/JuliaStats/Lasso.jl"
+
+[[packages]]
+name = "MultivariateStats.jl"
+github = "https://github.com/JuliaStats/MultivariateStats.jl"
+
+[requires]
+packages = ["Lasso.jl", "MultivariateStats.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Lasso Basics"
+file = "lasso/tutorial-01-lasso.ipynb"
+bundled = true
+description = "Introduction to Lasso regression and regularisation paths"
+
+[[notebookSections.notebooks]]
+name = "ElasticNet"
+file = "lasso/tutorial-02-elasticnet.ipynb"
+bundled = true
+description = "ElasticNet regression and the alpha mixing parameter"
+
+[[notebookSections.notebooks]]
+name = "lambda Selection"
+file = "lasso/tutorial-03-lambda-selection.ipynb"
+bundled = true
+description = "Cross-validation and AICc for optimal lambda selection"
+
+[[notebookSections.notebooks]]
+name = "Variable Selection"
+file = "lasso/tutorial-04-variable-selection.ipynb"
+bundled = true
+description = "Using sparsity for automatic variable selection"
+
+[[notebookSections.notebooks]]
+name = "PLSR"
+file = "lasso/tutorial-05-plsr.ipynb"
+bundled = true
+description = "Partial Least Squares Regression with MultivariateStats.jl — components, scores, and prediction"
+
+[[wikis]]
+name = "Overview"
+file = "lasso/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Factsheet"
+file = "lasso/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "lasso/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "lasso/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "lasso/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "lasso/decision-guide.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Original Papers (from packages)"
+
+[[references]]
+title = "PLS-regression: a basic tool of chemometrics"
+authors = "Wold, S., Sjöström, M. & Eriksson, L."
+year = 2001
+journal = ""
+url = "https://doi.org/10.1016/S0169-7439(01)00155-1"
+openAccess = false
+
+[[models]]
+id = "lasso"
+label = "Lasso"
+
+[[models]]
+id = "enet"
+label = "ElasticNet"
+
+[[models]]
+id = "plsr"
+label = "PLSR"
+
+[[bullets]]
+text = "Lasso"
+detail = "L1 penalty; promotes sparse coefficients via automatic variable selection (Lasso.jl)"
+
+[[bullets]]
+text = "ElasticNet"
+detail = "L1 + L2 penalty; grouped sparsity with alpha controlling the penalty mix (Lasso.jl)"
+
+[[bullets]]
+text = "PLSR"
+detail = "extracts latent components that maximise covariance between X and y; robust under multicollinearity and high dimensionality (MultivariateStats.jl)"
+
+[[inputs]]
+id = "formula"
+label = "Formula (replace example with your own)"
+tooltip = "Julia formula using the @formula macro. Response goes left of ~, predictors right. E.g. y ~ x1 + x2 + x3."
+default = "y ~ x1 + x2"
+
+[[inputs]]
+id = "data"
+label = "Data variable"
+tooltip = "DataFrame containing all variables referenced in the formula. Column names must match formula symbols exactly."
+default = "df"
+
+[[inputs]]
+id = "lambda"
+label = "lambda (optional)"
+tooltip = "Regularisation strength (lambda ≥ 0). Leave empty to fit the full regularisation path and select lambda automatically via AICc. Larger lambda = stronger penalty = sparser model."
+default = ""
+
+[[inputs]]
+id = "alpha"
+label = "alpha mixing parameter"
+tooltip = "alpha = 1 — pure Lasso. alpha = 0 — pure Ridge. 0 < alpha < 1 — ElasticNet. Default: 0.5."
+default = "0.5"
+
+[[inputs]]
+id = "plsr-X"
+label = "Feature Matrix"
+tooltip = "n_samples × n_features matrix. The template transposes automatically since MultivariateStats.jl expects features × samples."
+default = "X_train"
+models = ["plsr"]
+
+[[inputs]]
+id = "plsr-y"
+label = "Response"
+tooltip = "Response vector or matrix (n_samples × n_targets). Single continuous target for PLS1; multiple targets for PLS2."
+default = "y_train"
+models = ["plsr"]
+
+[[inputs]]
+id = "plsr-ncomp"
+label = "No. of Components"
+tooltip = "Number of PLS latent components to extract. Use cross-validation to select the optimal value. Typically 2–10 components suffice."
+default = "2"
+models = ["plsr"]
+
+[[inputs]]
+id = "plsr-Xtest"
+label = "Test Matrix (optional)"
+tooltip = "n_test × n_features matrix for prediction. Leave empty to omit the prediction step."
+default = ""
+models = ["plsr"]
+
+[[codeBranches]]
+model = "lasso"
+code = '''
+using Lasso
+
+{{?lambda=}} model = fit(LassoModel, @formula({{formula}}), {{data}})
+{{?lambda!=}} model = fit(LassoModel, @formula({{formula}}), {{data}}, lambda={{lambda}})
+println(coef(model))
+'''
+
+[[codeBranches]]
+model = "enet"
+code = '''
+using Lasso
+
+{{?lambda=}} model = fit(LassoModel, @formula({{formula}}), {{data}}, alpha={{alpha}})
+{{?lambda!=}} model = fit(LassoModel, @formula({{formula}}), {{data}}, lambda={{lambda}}, alpha={{alpha}})
+println(coef(model))
+'''
+
+[[codeBranches]]
+model = "plsr"
+code = '''
+using MultivariateStats
+
+Xt = Matrix(Float64.(transpose({{plsr-X}})))
+yt = Float64.(reshape({{plsr-y}}, 1, :))
+
+M = fit(PLSR, Xt, yt; ncomp={{plsr-ncomp}})
+B = coef(M)
+{{?plsr-Xtest!=}}
+{{?plsr-Xtest!=}} Xte   = Matrix(Float64.(transpose({{plsr-Xtest}})))
+{{?plsr-Xtest!=}} y_hat = vec(predict(M, Xte))
+'''

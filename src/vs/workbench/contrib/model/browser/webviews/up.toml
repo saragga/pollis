@@ -1,0 +1,183 @@
+# Uncertainty Propagation Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/up.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Uncertainty Propagation"
+viewType = "pollis.up"
+defaultModel = "main"
+
+[[packages]]
+name = "MonteCarloMeasurements.jl"
+github = "https://github.com/baggepinnen/MonteCarloMeasurements.jl"
+
+[[packages]]
+name = "Distributions.jl"
+github = "https://github.com/JuliaStats/Distributions.jl"
+
+[requires]
+packages = ["MonteCarloMeasurements.jl", "Distributions.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Uncertainty Propagation Basics"
+file = "up/tutorial-01-basics.ipynb"
+bundled = true
+description = "Introduction to uncertain particles and basic arithmetic propagation"
+
+[[notebookSections.notebooks]]
+name = "Nonlinear Propagation"
+file = "up/tutorial-02-nonlinear.ipynb"
+bundled = true
+description = "Propagating uncertainty through nonlinear functions and composite expressions"
+
+[[notebookSections.notebooks]]
+name = "Confidence Intervals"
+file = "up/tutorial-03-confidence-intervals.ipynb"
+bundled = true
+description = "Computing credible intervals and percentile statistics from particles"
+
+[[notebookSections.notebooks]]
+name = "Sensitivity Analysis"
+file = "up/tutorial-04-sensitivity.ipynb"
+bundled = true
+description = "Identifying which uncertain inputs contribute most to output variance"
+
+[[notebookSections.notebooks]]
+name = "Correlated Inputs"
+file = "up/tutorial-05-correlated-inputs.ipynb"
+bundled = true
+description = "Propagating uncertainty when input variables are statistically correlated using copulas and multivariate distributions"
+
+[[wikis]]
+name = "Overview"
+file = "up/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Factsheet"
+file = "up/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "up/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "up/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "up/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "up/decision-guide.md"
+bundled = true
+
+[[bullets]]
+text = "Particles (n)"
+detail = "Monte Carlo representation of uncertain quantities using n random samples from each input distribution"
+
+[[bullets]]
+text = "Uncertain Inputs"
+detail = "define uncertain variables as probability distributions (Normal, Uniform, Beta, and more)"
+
+[[bullets]]
+text = "Statistics"
+detail = "mean, standard deviation, and confidence intervals (CI) of the propagated output"
+
+[[inputs]]
+id = "variables"
+label = "Uncertain Variables"
+tooltip = "One variable per line: name = Particles(n, Distribution(parameters)). Distributions: Normal, Uniform, LogNormal, Exponential, Beta, Gamma, Weibull, TDist, ..."
+kind = "textarea"
+default = "x = Particles(n, Normal(0.0, 1.0))\ny = Particles(n, Uniform(0.0, 1.0))"
+
+[[inputs]]
+id = "expression"
+label = "Expression"
+tooltip = ""
+default = "x + y"
+
+[[inputs]]
+id = "n-particles"
+label = "Particles (n)"
+tooltip = ""
+kind = "select"
+default = "1000"
+
+[[inputs.options]]
+value = "100"
+label = "100"
+
+[[inputs.options]]
+value = "500"
+label = "500"
+
+[[inputs.options]]
+value = "1000"
+label = "1000"
+
+[[inputs.options]]
+value = "2000"
+label = "2000"
+
+[[inputs.options]]
+value = "5000"
+label = "5000"
+
+[[inputs.options]]
+value = "10000"
+label = "10000"
+
+[[inputs]]
+id = "seed"
+label = "Seed"
+tooltip = ""
+default = "42"
+
+[[inputs]]
+id = "ci-level"
+label = "CI Level"
+tooltip = ""
+kind = "select"
+default = "95"
+
+[[inputs.options]]
+value = "90"
+label = "90%"
+
+[[inputs.options]]
+value = "95"
+label = "95%"
+
+[[inputs.options]]
+value = "99"
+label = "99%"
+
+[[codeBranches]]
+model = "main"
+code = '''
+using MonteCarloMeasurements, Distributions
+using Random
+Random.seed!({{seed}})  # for reproducibility
+
+n = {{n-particles}}  # number of particles
+{{variables}}
+
+result = {{expression}}  # propagated output
+
+println("Mean:  ", mean(result))
+println("Std:   ", std(result))
+{{?ci-level=90}} println("90% CI: [", quantile(result, 0.05), ", ", quantile(result, 0.95), "]")  # 90% confidence interval
+{{?ci-level=95}} println("95% CI: [", quantile(result, 0.025), ", ", quantile(result, 0.975), "]")  # 95% confidence interval
+{{?ci-level=99}} println("99% CI: [", quantile(result, 0.005), ", ", quantile(result, 0.995), "]")  # 99% confidence interval
+'''

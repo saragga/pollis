@@ -1,0 +1,196 @@
+# Robust Covariance Matrix Estimation Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/rcme.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Robust Covariance Matrix Estimation"
+viewType = "pollis.rcme"
+defaultModel = "lw"
+
+[[packages]]
+name = "CovarianceEstimation.jl"
+github = "https://github.com/mateuszbaran/CovarianceEstimation.jl"
+
+[requires]
+packages = ["CovarianceEstimation.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Linear Shrinkage Basics"
+file = "rcme/tutorial-01-linear.ipynb"
+bundled = true
+description = "Ledoit-Wolf and OAS linear shrinkage with different structured targets"
+
+[[notebookSections.notebooks]]
+name = "Shrinkage Target Selection"
+file = "rcme/tutorial-02-targets.ipynb"
+bundled = true
+description = "Comparing DiagonalUnitVariance, ConstantCorrelation and other targets"
+
+[[notebookSections.notebooks]]
+name = "Nonlinear Shrinkage"
+file = "rcme/tutorial-03-nonlinear.ipynb"
+bundled = true
+description = "Eigenvalue-wise optimal estimation with AnalyticalNonlinearShrinkage"
+
+[[notebookSections.notebooks]]
+name = "Portfolio Applications"
+file = "rcme/tutorial-04-portfolio.ipynb"
+bundled = true
+description = "Minimum variance and maximum Sharpe portfolios using shrinkage covariance"
+
+[[wikis]]
+name = "Overview"
+file = "rcme/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Factsheet"
+file = "rcme/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "rcme/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "rcme/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "rcme/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "rcme/decision-guide.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Original Papers (from packages)"
+
+[[references]]
+title = "A Well-Conditioned Estimator for Large-Dimensional Covariance Matrices"
+authors = "Ledoit & Wolf"
+year = 2004
+journal = "Journal of Multivariate Analysis"
+doi = "10.1016/S0047-259X(03)00096-4"
+openAccess = false
+
+[[references]]
+title = "Shrinkage Algorithms for MMSE Covariance Estimation"
+authors = "Chen, Wiesel, Eldar & Hero"
+year = 2010
+journal = "IEEE Transactions on Signal Processing"
+doi = "10.1109/TSP.2010.2053029"
+openAccess = false
+
+[[references]]
+title = "Analytical Nonlinear Shrinkage of Large-Dimensional Covariance Matrices"
+authors = "Ledoit & Wolf"
+year = 2020
+journal = "Annals of Statistics"
+doi = "10.1214/19-AOS1921"
+openAccess = false
+
+[[models]]
+id = "lw"
+label = "Ledoit-Wolf"
+
+[[models]]
+id = "oas"
+label = "OAS"
+
+[[models]]
+id = "nls"
+label = "Nonlinear"
+
+[[bullets]]
+text = "Ledoit-Wolf"
+detail = "analytically estimates the optimal linear shrinkage intensity that minimises the expected Frobenius loss between the shrinkage estimator and the true covariance, under a structured target matrix"
+
+[[bullets]]
+text = "OAS"
+detail = "Oracle Approximating Shrinkage computes a closed-form shrinkage intensity by substituting the sample covariance for the unknown truth, yielding lower finite-sample bias than Ledoit-Wolf in high dimensions"
+
+[[bullets]]
+text = "Nonlinear"
+detail = "applies an eigenvalue-wise optimal shrinkage function derived analytically from the Marčenko-Pastur law; fully non-parametric and asymptotically optimal under random matrix theory (Ledoit & Wolf 2020)"
+
+[[inputs]]
+id = "X"
+label = "Data matrix (X)"
+tooltip = "T×N data matrix: T observations in rows, N variables (assets) in columns. The estimator demeans each column internally before computing the covariance. Use returns, not price levels."
+default = "X"
+
+[[inputs]]
+id = "target"
+label = "Shrinkage target"
+tooltip = "Structured matrix to shrink towards. Common choices: DiagonalUnitVariance() (scaled identity), DiagonalCommonVariance() (diagonal with average variance), ConstantCorrelation() (equal pairwise correlations). A well-specified target reduces finite-sample error."
+kind = "select"
+default = "DiagonalUnitVariance()"
+models = ["lw", "oas"]
+
+[[inputs.options]]
+value = "DiagonalUnitVariance()"
+label = "DiagonalUnitVariance"
+
+[[inputs.options]]
+value = "DiagonalCommonVariance()"
+label = "DiagonalCommonVariance"
+
+[[inputs.options]]
+value = "ConstantCorrelation()"
+label = "ConstantCorrelation"
+
+[[codeBranches]]
+model = "lw"
+code = '''
+using CovarianceEstimation, LinearAlgebra  # shrinkage estimators + linear algebra
+
+Sigma = cov(LinearShrinkage({{target}}, :lw), {{X}})  # Ledoit-Wolf linear shrinkage covariance
+
+rho = cov2cor(Sigma)  # derived N×N correlation matrix
+kappa = cond(Sigma)  # condition number (stability check)
+Omega = inv(Sigma)  # precision matrix (inverse covariance)
+
+println("Covariance: ", round.(Sigma, digits=6))  # print estimated covariance matrix
+println("Condition number: ", round(kappa, digits=2))  # print condition number
+'''
+
+[[codeBranches]]
+model = "oas"
+code = '''
+using CovarianceEstimation, LinearAlgebra  # shrinkage estimators + linear algebra
+
+Sigma = cov(LinearShrinkage({{target}}, :oas), {{X}})  # OAS linear shrinkage covariance
+
+rho = cov2cor(Sigma)  # derived N×N correlation matrix
+kappa = cond(Sigma)  # condition number (stability check)
+Omega = inv(Sigma)  # precision matrix (inverse covariance)
+
+println("Covariance: ", round.(Sigma, digits=6))  # print estimated covariance matrix
+println("Condition number: ", round(kappa, digits=2))  # print condition number
+'''
+
+[[codeBranches]]
+model = "nls"
+code = '''
+using CovarianceEstimation, LinearAlgebra  # shrinkage estimators + linear algebra
+
+Sigma = cov(AnalyticalNonlinearShrinkage(), {{X}})  # analytical nonlinear shrinkage covariance
+
+rho = cov2cor(Sigma)  # derived N×N correlation matrix
+kappa = cond(Sigma)  # condition number (stability check)
+Omega = inv(Sigma)  # precision matrix (inverse covariance)
+
+println("Covariance: ", round.(Sigma, digits=6))  # print estimated covariance matrix
+println("Condition number: ", round(kappa, digits=2))  # print condition number
+'''

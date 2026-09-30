@@ -1,0 +1,387 @@
+# ColBERT Retrieval Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/clbt.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "ColBERT Retrieval"
+viewType = "pollis.clbt"
+defaultModel = "main"
+
+[[packages]]
+name = "ColBERT.jl"
+github = "https://github.com/codetalker7/ColBERT.jl"
+
+[requires]
+packages = ["ColBERT.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "ColBERT Indexing"
+file = "clbt/tutorial-01-colbert-indexing.ipynb"
+bundled = true
+description = "Build a ColBERT index over a document collection using ColBERT.jl"
+
+[[notebookSections.notebooks]]
+name = "ColBERT Search"
+file = "clbt/tutorial-02-colbert-search.ipynb"
+bundled = true
+description = "Run ranked retrieval queries against a ColBERT index and inspect results"
+
+[[notebookSections.notebooks]]
+name = "Classical Corpus Retrieval"
+file = "clbt/tutorial-03-classical-corpus.ipynb"
+bundled = true
+description = "Apply ColBERT retrieval to a classical-text corpus (Homer, Confucian canon)"
+
+[[wikis]]
+name = "Factsheet"
+file = "clbt/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "clbt/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "clbt/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "clbt/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "clbt/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "clbt/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Retrieval"
+
+[[wikis]]
+name = "Late Interaction"
+file = "clbt/late-interaction.md"
+bundled = true
+
+[[wikis]]
+name = "Index Structure"
+file = "clbt/index-structure.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "ColBERT.jl: Late-Interaction Retrieval in Julia"
+authors = "Dhruv Agarwal; contributors"
+year = 2024
+journal = "GitHub"
+url = "https://github.com/codetalker7/ColBERT.jl"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Introduction to Information Retrieval"
+authors = "Manning, Christopher D.; Raghavan, Prabhakar; Schutze, Hinrich"
+year = 2008
+journal = "Cambridge University Press"
+doi = "10.1017/CBO9780511809071"
+url = "https://nlp.stanford.edu/IR-book/"
+openAccess = true
+
+[[references]]
+title = "Speech and Language Processing"
+authors = "Jurafsky, Daniel; Martin, James H."
+year = 2024
+journal = "Pearson (3rd ed., draft)"
+url = "https://web.stanford.edu/~jurafsky/slp3/"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "ColBERT: Efficient and Effective Passage Search via Contextualized Late Interaction over BERT"
+authors = "Khattab, Omar; Zaharia, Matei"
+year = 2020
+journal = "SIGIR"
+url = "https://arxiv.org/abs/2004.12832"
+openAccess = true
+
+[[references]]
+title = "ColBERTv2: Effective and Efficient Retrieval via Lightweight Late Interaction"
+authors = "Santhanam, Keshav; Khattab, Omar; Saad-Falcon, Jon; Potts, Christopher; Zaharia, Matei"
+year = 2022
+journal = "NAACL"
+url = "https://arxiv.org/abs/2112.01488"
+openAccess = true
+
+[[references]]
+title = "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding"
+authors = "Devlin, Jacob; Chang, Ming-Wei; Lee, Kenton; Toutanova, Kristina"
+year = 2019
+journal = "NAACL-HLT"
+url = "https://arxiv.org/abs/1810.04805"
+openAccess = true
+
+[[bullets]]
+text = "Late Interaction"
+detail = "Contextualized Late Interaction over BERT (ColBERT) scores query-document pairs with per-token MaxSim, combining expressiveness of cross-encoders with the speed of bi-encoders"
+
+[[bullets]]
+text = "Indexing"
+detail = "offline phase encodes the document collection into compressed token embeddings stored in a ColBERT index for fast retrieval"
+
+[[bullets]]
+text = "Search"
+detail = "online phase encodes the query and retrieves top-k passages using approximate nearest-neighbour search over the index"
+
+[[inputs]]
+id = "collection"
+label = "Collection"
+tooltip = "Variable name of a String vector holding the document collection, e.g. docs"
+default = "docs"
+
+[[inputs]]
+id = "index"
+label = "Index Name"
+tooltip = "Directory path or name for the ColBERT index, e.g. \"my_index\""
+default = "my_index"
+
+[[inputs]]
+id = "query"
+label = "Query"
+tooltip = "Search query string, e.g. \"Who wrote the Iliad?\""
+default = "query"
+
+[[inputs]]
+id = "k"
+label = "Top-k"
+tooltip = "Number of top passages to retrieve; typical values are 5–100"
+default = "10"
+
+[[codeBranches]]
+model = "main"
+code = '''
+using ColBERT
+
+config  = ColBERTConfig(use_gpu=false, checkpoint="colbert-ir/colbertv2.0")  # ColBERT configuration
+
+indexer = Indexer(config)  # create indexer
+index(indexer, {{collection}}, {{index}})  # encode and store the collection
+
+searcher        = Searcher({{index}}, config)  # load index for retrieval
+pids, _, scores = search(searcher, {{query}}, {{k}})  # retrieve top-{{k}} passage IDs and scores
+
+for (pid, sc) in zip(pids, scores)  # display results
+    println(sc, "  ", {{collection}}[pid])
+end
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "score-distribution"
+label = "Score Distribution"
+desc = "Histogram of retrieval scores for a query over the corpus"
+code = '''
+using ColBERT, Plots
+
+config   = ColBERTConfig(use_gpu=false)  # ColBERT config
+searcher = Searcher({{index}}, config)  # load index
+
+_, _, scores = search(searcher, {{query}}, length({{collection}}))  # score all documents
+histogram(scores, xlabel="ColBERT score", title="Score distribution")  # score histogram
+'''
+
+[[actionGroups.actions]]
+id = "result-preview"
+label = "Result Preview"
+desc = "Print the top-k retrieved passages with their scores"
+code = '''
+using ColBERT
+
+config          = ColBERTConfig(use_gpu=false)  # ColBERT config
+searcher        = Searcher({{index}}, config)  # load index
+pids, _, scores = search(searcher, {{query}}, {{k}})  # retrieve top-{{k}}
+
+for (rank, (pid, sc)) in enumerate(zip(pids, scores))
+    println(rank, ". [", round(sc; digits=3), "] ", {{collection}}[pid])
+end
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "recall-at-k"
+label = "Recall@k"
+desc = "Fraction of relevant documents found in top-k results"
+code = '''
+using ColBERT
+
+config   = ColBERTConfig(use_gpu=false)  # ColBERT config
+searcher = Searcher({{index}}, config)  # load index
+
+recall   = mean([length(intersect(search(searcher, q, {{k}})[1], relevant[i])) / length(relevant[i]) for (i, q) in enumerate(queries)])  # mean Recall@{{k}} over all queries
+println("Recall@{{k}}: ", round(recall; digits=3))  # print result
+'''
+
+[[actionGroups.actions]]
+id = "mrr"
+label = "Mean Reciprocal Rank"
+desc = "Average reciprocal rank of the first relevant result"
+code = '''
+using ColBERT
+
+config   = ColBERTConfig(use_gpu=false)  # ColBERT config
+searcher = Searcher({{index}}, config)  # load index
+
+mrr = mean([  # MRR over all queries
+    begin
+        pids = search(searcher, q, {{k}})[1]  # retrieve top-{{k}} passage IDs
+        idx  = findfirst(pid -> pid in relevant[i], pids)  # rank of first relevant result
+        isnothing(idx) ? 0.0 : 1.0 / idx
+    end
+for (i, q) in enumerate(queries)])
+println("MRR@{{k}}: ", round(mrr; digits=3))  # print result
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "batch-search"
+label = "Batch Search"
+desc = "Run multiple queries against the index in one call"
+code = '''
+using ColBERT
+
+config   = ColBERTConfig(use_gpu=false)  # ColBERT config
+searcher = Searcher({{index}}, config)  # load index
+
+results  = [search(searcher, q, {{k}}) for q in queries]  # retrieve for each query
+all_pids = [r[1] for r in results]  # top-{{k}} passage IDs per query
+all_scrs = [r[3] for r in results]  # scores per query
+'''
+
+[[actionGroups.actions]]
+id = "rerank"
+label = "Re-rank Results"
+desc = "Use ColBERT scores to re-rank a candidate set from BM25"
+code = '''
+using ColBERT
+
+config   = ColBERTConfig(use_gpu=false)  # ColBERT config
+searcher = Searcher({{index}}, config)  # load index
+
+candidates      = bm25_retrieve({{query}}, {{collection}}, 100)  # first-stage BM25 retrieval
+_, _, scores    = search(searcher, {{query}}, {{k}})  # ColBERT scores for candidates
+reranked        = candidates[sortperm(scores, rev=true)]  # re-ranked by ColBERT score
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "vs-bm25"
+label = "vs BM25"
+desc = "Compare ColBERT and BM25 Recall@k on the same query set"
+code = '''
+using ColBERT
+
+config   = ColBERTConfig(use_gpu=false)  # ColBERT config
+searcher = Searcher({{index}}, config)  # load ColBERT index
+
+r_colbert = mean([length(intersect(search(searcher, q, {{k}})[1], rel)) / length(rel) for (q, rel) in zip(queries, relevant)])  # ColBERT Recall@{{k}}
+r_bm25    = mean([length(intersect(bm25_retrieve(q, {{collection}}, {{k}}), rel)) / length(rel) for (q, rel) in zip(queries, relevant)])  # BM25 Recall@{{k}}
+println("ColBERT: ", r_colbert, "  BM25: ", r_bm25)  # print comparison
+'''
+
+[[actionGroups.actions]]
+id = "compare-checkpoints"
+label = "Compare Checkpoints"
+desc = "Evaluate different ColBERT checkpoint versions"
+code = '''
+using ColBERT
+
+checkpoints = ["colbert-ir/colbertv1.9", "colbert-ir/colbertv2.0"]  # candidate checkpoints
+
+for ckpt in checkpoints
+    cfg      = ColBERTConfig(use_gpu=false, checkpoint=ckpt)  # config for this checkpoint
+    indexer  = Indexer(cfg)  # create indexer
+    index(indexer, {{collection}}, "tmp_" * ckpt)  # build index
+    searcher = Searcher("tmp_" * ckpt, cfg)  # load index
+    recall   = mean([length(intersect(search(searcher, q, {{k}})[1], rel)) / length(rel) for (q, rel) in zip(queries, relevant)])  # Recall@{{k}}
+    println(ckpt, "  Recall@{{k}}: ", round(recall; digits=3))
+end
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "maxsim-breakdown"
+label = "MaxSim Breakdown"
+desc = "Per-query-token MaxSim contribution to the final score"
+code = '''
+using ColBERT
+
+config          = ColBERTConfig(use_gpu=false)  # ColBERT config
+searcher        = Searcher({{index}}, config)  # load index
+
+pids, _, scores = search(searcher, {{query}}, 1)  # retrieve top-1 passage
+q_embs          = encode_query(searcher, {{query}})  # per-token query embeddings
+d_embs          = encode_doc(searcher, pids[1])  # per-token doc embeddings for top result
+
+sim_matrix      = q_embs * d_embs'  # token-level similarity matrix (nq x nd)
+maxsim_per_qtok = maximum(sim_matrix, dims=2)  # MaxSim contribution per query token
+println("Token contributions: ", maxsim_per_qtok)  # print per-token scores
+'''
+
+[[actionGroups.actions]]
+id = "query-expansion"
+label = "Query Analysis"
+desc = "Inspect tokenised query and punctuation mask"
+code = '''
+using ColBERT
+
+config   = ColBERTConfig(use_gpu=false)  # ColBERT config
+searcher = Searcher({{index}}, config)  # load index
+
+tokens   = tokenize_query(searcher, {{query}})  # subword tokens including [Q] marker
+q_embs   = encode_query(searcher, {{query}})  # token embeddings (dim x n_tokens)
+println("Tokens: ", tokens)  # print tokenised query
+println("Embedding shape: ", size(q_embs))  # show embedding dimensions
+'''

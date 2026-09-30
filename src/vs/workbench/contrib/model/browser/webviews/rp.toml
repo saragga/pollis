@@ -1,0 +1,185 @@
+# Regression Performance Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/rp.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Regression Performance"
+viewType = "pollis.rp"
+defaultModel = "main"
+
+[[packages]]
+name = "Statistics.jl"
+github = "https://github.com/JuliaStats/Statistics.jl"
+
+[[packages]]
+name = "StatsBase.jl"
+github = "https://github.com/JuliaStats/StatsBase.jl"
+
+[requires]
+packages = ["Statistics.jl", "StatsBase.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Regression Metrics"
+file = "model-workflow/tutorial-01-regression-metrics.ipynb"
+bundled = true
+description = "Computing RMSE, MAE, R² and Adjusted R² — choosing the right metric for your task"
+
+[[notebookSections.notebooks]]
+name = "Residual Diagnostics"
+file = "model-workflow/tutorial-02-residual-diagnostics.ipynb"
+bundled = true
+description = "Residual plots, Q-Q plots, and leverage diagnostics to validate regression assumptions"
+
+[[wikis]]
+name = "Overview"
+file = "model-workflow/rp-overview.md"
+bundled = true
+
+[[wikis]]
+name = "Metric Guide"
+file = "model-workflow/rp-metric-guide.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "model-workflow/rp-assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "model-workflow/rp-interpretation.md"
+bundled = true
+
+[[bullets]]
+text = "RMSE"
+detail = "root mean squared error; penalises large errors quadratically; same units as the target"
+
+[[bullets]]
+text = "MAE"
+detail = "mean absolute error; robust to outliers; easier to interpret than RMSE"
+
+[[bullets]]
+text = "R²"
+detail = "proportion of variance explained by the model; scale-free; 1 is a perfect fit"
+
+[[bullets]]
+text = "Adjusted R²"
+detail = "penalises for additional predictors; comparable across models with different feature counts"
+
+[[bullets]]
+text = "MAPE"
+detail = "mean absolute percentage error; scale-free relative error expressed as a percentage"
+
+[[inputs]]
+id = "yhat"
+label = "Predicted Values"
+tooltip = "Vector of model predictions ŷ (n_samples). Produced by predict(mach, X_test) or equivalent."
+default = "y_hat"
+
+[[inputs]]
+id = "y"
+label = "Actual Values"
+tooltip = "Vector of ground-truth target values y (n_samples). Must be the same length as Predicted Values."
+default = "y_test"
+
+[[inputs]]
+id = "p"
+label = "No. of Predictors"
+tooltip = "Number of features p used to train the model. Required only for Adjusted R²; does not affect RMSE, MAE, R² or MAPE."
+default = "p"
+
+[[codeBranches]]
+model = "main"
+code = '''
+using Statistics
+
+n         = length({{y}})  # number of observations
+residuals = {{y}} .- {{yhat}}  # raw residuals
+ss_res    = sum(residuals .^ 2)  # sum of squared residuals
+ss_tot    = sum(({{y}} .- mean({{y}})) .^ 2)  # total sum of squares
+
+rmse   = sqrt(ss_res / n)  # root mean squared error
+mae    = mean(abs.(residuals))  # mean absolute error
+r2     = 1 - ss_res / ss_tot  # coefficient of determination
+adj_r2 = 1 - (1 - r2) * (n - 1) / (n - {{p}} - 1)  # adjusted R², penalised for {{p}} predictors
+mape   = mean(abs.(residuals ./ {{y}})) * 100  # mean absolute percentage error (%)
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "residual-plot"
+label = "Residual Plot"
+desc = "Scatter of residuals vs fitted values — reveals heteroscedasticity, non-linearity, and outliers"
+code = '''
+using Plots
+
+residuals = {{y}} .- {{yhat}}  # raw residuals
+
+scatter({{yhat}}, residuals;
+    xlabel="Fitted Values", ylabel="Residuals",
+    title="Residuals vs Fitted", label=nothing,
+    markersize=3, alpha=0.6)
+hline!([0]; color=:red, linestyle=:dash, label=nothing)
+'''
+
+[[actionGroups.actions]]
+id = "qq-plot"
+label = "Q-Q Plot"
+desc = "Normal quantile-quantile plot of standardised residuals — checks the normality assumption"
+code = '''
+using Plots, Statistics, Distributions
+
+residuals = {{y}} .- {{yhat}}  # raw residuals
+std_res   = (residuals .- mean(residuals)) ./ std(residuals)  # standardised
+
+n           = length(std_res)  # sample size
+theoretical = quantile(Normal(), range(0.01, 0.99; length=n))  # N(0,1) quantiles
+observed    = sort(std_res)  # sorted sample quantiles
+
+scatter(theoretical, observed;
+    xlabel="Theoretical Quantiles", ylabel="Sample Quantiles",
+    title="Normal Q-Q Plot of Residuals", label=nothing, markersize=3)
+plot!(extrema(theoretical), extrema(theoretical); color=:red, label="reference")
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "pred-vs-actual"
+label = "Predicted vs Actual"
+desc = "Scatter of model predictions against ground-truth values — points on the diagonal indicate a perfect fit"
+code = '''
+using Plots
+
+scatter({{y}}, {{yhat}};
+    xlabel="Actual", ylabel="Predicted",
+    title="Predicted vs Actual", label=nothing,
+    markersize=3, alpha=0.6)
+lims = extrema(vcat({{y}}, {{yhat}}))  # shared axis limits
+plot!(collect(lims), collect(lims); color=:red, linestyle=:dash, label="perfect fit")
+'''
+
+[[actionGroups.actions]]
+id = "error-distribution"
+label = "Error Distribution"
+desc = "Histogram of residuals with mean and zero lines — reveals systematic bias and error shape"
+code = '''
+using Plots, Statistics
+
+residuals = {{y}} .- {{yhat}}  # raw residuals
+
+histogram(residuals;
+    xlabel="Residual", ylabel="Count",
+    title="Residual Distribution", label=nothing, bins=30, alpha=0.7)
+vline!([mean(residuals)]; color=:red,  label="mean")
+vline!([0];                             color=:gray, linestyle=:dash, label="zero")
+'''

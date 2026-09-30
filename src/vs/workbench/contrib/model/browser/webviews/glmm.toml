@@ -1,0 +1,169 @@
+# Generalized Linear Mixed-Effects Models Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/glmm.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Generalized Linear Mixed-Effects Models"
+viewType = "pollis.glmm"
+defaultModel = "main"
+
+[[packages]]
+name = "MixedModels.jl"
+github = "https://github.com/JuliaStats/MixedModels.jl"
+
+[requires]
+packages = ["MixedModels.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "GLMM Basics"
+file = "glmm/tutorial-01-glmm-basics.ipynb"
+bundled = true
+description = "Introduction to generalized linear mixed-effects models"
+
+[[notebookSections.notebooks]]
+name = "Binary GLMM"
+file = "glmm/tutorial-02-glmm-binary.ipynb"
+bundled = true
+description = "Logistic mixed-effects models for binary outcomes"
+
+[[notebookSections.notebooks]]
+name = "Count GLMM"
+file = "glmm/tutorial-03-glmm-count.ipynb"
+bundled = true
+description = "Poisson and Negative Binomial mixed-effects models"
+
+[[notebookSections.notebooks]]
+name = "Model Comparison"
+file = "glmm/tutorial-04-glmm-model-comparison.ipynb"
+bundled = true
+description = "Model selection and likelihood ratio tests for GLMM"
+
+[[wikis]]
+name = "Overview"
+file = "glmm/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Factsheet"
+file = "glmm/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "glmm/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "glmm/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "glmm/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "glmm/decision-guide.md"
+bundled = true
+
+[[bullets]]
+text = "Binary and count outcomes with random intercepts and slopes"
+detail = ""
+
+[[bullets]]
+text = "Non-Gaussian families"
+detail = "Bernoulli, Binomial, Poisson, NegativeBinomial, Gamma, InverseGaussian"
+
+[[bullets]]
+text = "Likelihood-based inference"
+detail = "ML and REML estimation with likelihood ratio tests"
+
+[[inputs]]
+id = "formula"
+label = "Formula"
+tooltip = "MixedModels formula: random effects in parentheses.\n(1|group) — random intercept\n(1+x|group) — random intercept + slope\n(0+x|group) — random slope only\n(1|g1) + (1|g2) — crossed random effects\n(1|g1/g2) — nested random effects"
+default = "y ~ x1 + x2"
+
+[[inputs]]
+id = "family"
+label = "Family"
+tooltip = "Response distribution for the GLMM.\nBernoulli — binary 0/1 outcome\nBinomial — proportion or count with known N\nPoisson — count data\nNegativeBinomial — overdispersed counts\nGamma — positive skewed continuous\nInverseGaussian — positive heavy-tailed continuous"
+kind = "select"
+default = ""
+
+[[inputs.options]]
+value = "Bernoulli"
+label = "Bernoulli"
+
+[[inputs.options]]
+value = "Binomial"
+label = "Binomial"
+
+[[inputs.options]]
+value = "Poisson"
+label = "Poisson"
+
+[[inputs.options]]
+value = "NegativeBinomial"
+label = "NegativeBinomial"
+
+[[inputs.options]]
+value = "Gamma"
+label = "Gamma"
+
+[[inputs.options]]
+value = "InverseGaussian"
+label = "InverseGaussian"
+
+[[inputs.options]]
+value = "Normal"
+label = "Normal"
+
+[[inputs]]
+id = "link"
+label = "Link"
+tooltip = "Link function connecting the linear predictor to the mean. The default for each family is shown in parentheses — override only when theory requires a different link."
+kind = "select"
+default = ""
+
+[[inputs.options]]
+value = "LogitLink"
+label = "LogitLink (default)"
+
+[[inputs.options]]
+value = "ProbitLink"
+label = "ProbitLink"
+
+[[inputs.options]]
+value = "CloglogLink"
+label = "CloglogLink"
+
+[[inputs]]
+id = "data"
+label = "Data"
+tooltip = "DataFrame containing all variables referenced in the formula. Column names must match the formula symbols exactly."
+default = "df"
+
+[[inputs]]
+id = "group"
+label = "Group"
+tooltip = ""
+default = "group"
+
+[[codeBranches]]
+model = "main"
+code = '''
+using MixedModels  # mixed-effects models
+
+model = fit(MixedModel, @formula({{formula}} + (1|{{group}})), {{data}}, {{family}}(), {{link}}())  # {{family}}, (1|{{group}}), {{link}}
+
+println(model)  # model summary
+println(VarCorr(model))  # variance components
+println(ranef(model))  # random effects BLUPs
+'''

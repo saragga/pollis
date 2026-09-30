@@ -1,0 +1,270 @@
+# Generalized Extreme Value Distribution Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/gev.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Generalized Extreme Value Distribution"
+viewType = "pollis.gev"
+defaultModel = "fit"
+
+[[packages]]
+name = "Extremes.jl"
+github = "https://github.com/jojal5/Extremes.jl"
+
+[requires]
+packages = ["Extremes.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Quick Start"
+file = "gev/tutorial-01-quickstart.ipynb"
+bundled = true
+description = "Fit a GEV distribution to block maxima and extract parameters"
+
+[[notebookSections.notebooks]]
+name = "Parameter Estimation"
+file = "gev/tutorial-02-estimation.ipynb"
+bundled = true
+description = "Maximum likelihood estimation and uncertainty quantification for GEV"
+
+[[notebookSections.notebooks]]
+name = "Return Levels"
+file = "gev/tutorial-03-returnlevels.ipynb"
+bundled = true
+description = "Compute and plot return levels from a fitted GEV model"
+
+[[wikis]]
+name = "Overview"
+file = "gev/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Factsheet"
+file = "gev/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "gev/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "gev/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "gev/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "gev/decision-guide.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Original Papers (from packages)"
+
+[[references]]
+title = "Extremes.jl: Extreme Value Analysis in Julia"
+authors = "Jalbert, J., Farmer, M., Gobeil, G., & Roy, P."
+year = 2024
+journal = ""
+url = "https://doi.org/10.18637/jss.v109.i06"
+openAccess = true
+
+[[references]]
+title = "An Introduction to Statistical Modeling of Extreme Values"
+authors = "Coles, S."
+year = 2001
+journal = ""
+url = "https://doi.org/10.1007/978-1-4471-3675-0"
+openAccess = false
+
+[[models]]
+id = "fit"
+label = "Fit"
+
+[[models]]
+id = "eval"
+label = "Evaluate"
+
+[[models]]
+id = "sample"
+label = "Sample"
+
+[[bullets]]
+text = "Fit GEV distribution to block maxima via maximum likelihood estimation"
+detail = ""
+
+[[bullets]]
+text = "Evaluate pdf, cdf and quantiles for specified parameters"
+detail = ""
+
+[[bullets]]
+text = "Generate random samples from the GEV distribution"
+detail = ""
+
+[[bullets]]
+text = "Supports Gumbel (xi=0), Fréchet (xi>0) and Weibull (xi<0) tail types"
+detail = ""
+
+[[inputs]]
+id = "data"
+models = ["fit"]
+label = "Block maxima series"
+tooltip = "Vector of block maxima (e.g., annual maxima of daily losses). The GEV is fitted to this series."
+default = "maxima"
+
+[[inputs]]
+id = "method"
+models = ["fit"]
+label = "Estimation method"
+tooltip = "Estimation method. Maximum Likelihood is the default and most widely used. Probability-Weighted Moments is faster and closed-form. Bayesian Estimation yields posterior distributions for the parameters."
+kind = "select"
+default = ""
+
+[[inputs.options]]
+value = "mle"
+label = "Maximum Likelihood"
+
+[[inputs.options]]
+value = "pwm"
+label = "Probability-Weighted Moments"
+
+[[inputs.options]]
+value = "bayes"
+label = "Bayesian Estimation"
+
+[[inputs]]
+id = "mu"
+models = ["eval", "sample"]
+label = "mu"
+tooltip = "Location parameter mu. Shifts the distribution along the real line."
+default = "0.0"
+
+[[inputs]]
+id = "sigma"
+models = ["eval", "sample"]
+label = "sigma"
+tooltip = "Scale parameter sigma > 0. Controls the spread of the distribution."
+default = "1.0"
+
+[[inputs]]
+id = "xi"
+models = ["eval", "sample"]
+label = "xi"
+tooltip = "Shape parameter xi. xi > 0: heavy tail (Fréchet); xi = 0: Gumbel; xi < 0: bounded tail (Weibull)."
+default = "0.1"
+
+[[inputs]]
+id = "x"
+models = ["eval"]
+label = "Eval point x"
+tooltip = "Point at which to evaluate the pdf and cdf."
+default = "0.0"
+
+[[inputs]]
+id = "p"
+models = ["eval"]
+label = "Quantile p"
+tooltip = "Probability level for the quantile. E.g., 0.99 gives the 99th percentile (1-in-100 event); 0.999 gives the 99.9th percentile."
+default = "0.99"
+
+[[inputs]]
+id = "n"
+models = ["sample"]
+label = "Sample size n"
+tooltip = "Number of random samples to generate."
+default = "500"
+
+[[codeBranches]]
+model = "fit"
+code = '''
+using Extremes, Distributions
+
+fm                        = gevfit({{data}}; method = :{{method}})  # fit GEV to block maxima
+mu_hat, sigma_hat, xi_hat = params(fm)  # extract location, scale, shape
+println("mu_hat (location): ", round(mu_hat,    digits = 6))
+println("sigma_hat (scale):  ", round(sigma_hat, digits = 6))
+println("xi_hat (shape):     ", round(xi_hat,   digits = 6))
+'''
+
+[[codeBranches]]
+model = "eval"
+code = '''
+using Distributions
+
+d = GeneralizedExtremeValue({{mu}}, {{sigma}}, {{xi}})  # construct GEV
+f = pdf(d, {{x}})  # density at x
+F = cdf(d, {{x}})  # cumulative prob at x
+q = quantile(d, {{p}})  # quantile at probability p
+println("pdf(", {{x}}, "):         ", round(f, digits = 6))
+println("cdf(", {{x}}, "):         ", round(F, digits = 6))
+println("Quantile(", {{p}}, "): ", round(q, digits = 6))
+'''
+
+[[codeBranches]]
+model = "sample"
+code = '''
+using Distributions, Statistics
+
+d       = GeneralizedExtremeValue({{mu}}, {{sigma}}, {{xi}})  # construct GEV
+samples = rand(d, {{n}})  # draw n samples
+println("First 10 samples: ", round.(samples[1:min(10,end)], digits = 4))
+println("Sample mean:      ", round(mean(samples), digits = 6))
+println("Sample std:       ", round(std(samples),  digits = 6))
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "fit_diagnostics"
+label = "Fit Diagnostics"
+desc = "PP plot and QQ plot to assess GEV goodness of fit"
+code = '''
+using Extremes, Plots
+fm = gevfit({{data}})  # fit GEV
+p1 = plot(probplot(fm);   title = "Probability Plot",  legend = false)  # PP plot
+p2 = plot(qqplot(fm);     title = "Quantile Plot",     legend = false)  # QQ plot
+plot(p1, p2; layout = (1,2), size = (800, 400))
+'''
+
+[[actionGroups.actions]]
+id = "return_level_plot"
+label = "Return Level Plot"
+desc = "Plot return levels against return periods on a log scale"
+code = '''
+using Extremes, Plots
+fm = gevfit({{data}})  # fit GEV
+plot(returnlevelplot(fm); title = "Return Level Plot", legend = false)
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "tail_behaviour"
+label = "Tail Behaviour"
+desc = "Classify tail type from shape parameter and compute tail probability"
+code = '''
+using Extremes, Distributions
+
+fm                        = gevfit({{data}})  # fit GEV
+mu_hat, sigma_hat, xi_hat = params(fm)  # extract parameters
+tail    = xi_hat > 0.05 ? "Heavy (Frechet)" : xi_hat < -0.05 ? "Bounded (Weibull)" : "Light (Gumbel)"  # classify tail by shape
+d_gev   = GeneralizedExtremeValue(mu_hat, sigma_hat, xi_hat)  # build fitted distribution
+p_tail  = 1 - cdf(d_gev, quantile(d_gev, 0.99))  # prob of exceeding 99th pct
+
+println("Tail type:          ", tail)
+println("xi_hat (shape):     ", round(xi_hat, digits = 4))
+println("P(X > Q0.99):       ", round(p_tail, digits = 6))
+'''

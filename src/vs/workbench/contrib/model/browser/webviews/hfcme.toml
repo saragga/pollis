@@ -1,0 +1,223 @@
+# High-Frequency Covariance Matrix Estimation Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/hfcme.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "High-Frequency Covariance Matrix Estimation"
+viewType = "pollis.hfcme"
+defaultModel = "rc"
+
+[[packages]]
+name = "HighFrequencyCovariance.jl"
+github = "https://github.com/s-baumann/HighFrequencyCovariance.jl"
+
+[requires]
+packages = ["HighFrequencyCovariance.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Realized Covariance Basics"
+file = "hfcme/tutorial-01-rc.ipynb"
+bundled = true
+description = "Synchronising tick data and computing realized covariance with Simple()"
+
+[[notebookSections.notebooks]]
+name = "Pre-averaged Estimation"
+file = "hfcme/tutorial-02-pav.ipynb"
+bundled = true
+description = "Noise-robust covariance via pre-averaging with bandwidth H"
+
+[[notebookSections.notebooks]]
+name = "Two-Scales Estimation"
+file = "hfcme/tutorial-03-tsrc.ipynb"
+bundled = true
+description = "Bias-corrected covariance combining slow and fast realized covariance"
+
+[[notebookSections.notebooks]]
+name = "PSD Regularization"
+file = "hfcme/tutorial-04-psd.ipynb"
+bundled = true
+description = "Nearest positive semi-definite projection and eigenvalue clipping"
+
+[[wikis]]
+name = "Overview"
+file = "hfcme/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Factsheet"
+file = "hfcme/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "hfcme/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "hfcme/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "hfcme/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "hfcme/decision-guide.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Original Papers (from packages)"
+
+[[references]]
+title = "Multivariate Realised Kernels: Consistent Positive Semi-Definite Estimators of the Covariation of Equity Prices with Noise and Non-Synchronous Trading"
+authors = "Barndorff-Nielsen, Hansen, Lunde & Shephard"
+year = 2011
+journal = "Journal of Econometrics"
+doi = "10.1016/j.jeconom.2011.02.007"
+openAccess = false
+
+[[references]]
+title = "Estimating Covariation: Epps Effect, Microstructure Noise"
+authors = "Zhang"
+year = 2011
+journal = "Journal of Econometrics"
+doi = "10.1016/j.jeconom.2010.07.006"
+openAccess = false
+
+[[models]]
+id = "rc"
+label = "Realized"
+
+[[models]]
+id = "pav"
+label = "Pre-averaged"
+
+[[models]]
+id = "tsrc"
+label = "Two-Scales"
+
+[[models]]
+id = "rk"
+label = "Realized Kernel"
+
+[[bullets]]
+text = "Realized Covariance"
+detail = "synchronises asynchronous tick data by refresh-time sampling, then sums outer products of log-returns; fast and consistent under idealised conditions"
+
+[[bullets]]
+text = "Pre-averaged"
+detail = "smooths tick log-returns over an H-tick window before forming outer products, reducing the influence of additive microstructure noise"
+
+[[bullets]]
+text = "Two-Scales"
+detail = "combines a slow-scale (K sub-sampled grids) and a fast-scale (all ticks) realized covariance to cancel the noise bias; generalises Zhang, Mykland & Aït-Sahalia (2005) to the multivariate setting"
+
+[[bullets]]
+text = "Realized Kernel"
+detail = "applies a Parzen kernel to the autocovariance matrices of tick returns up to lag L, yielding a positive semi-definite estimate robust to both noise and non-synchronicity"
+
+[[inputs]]
+id = "p"
+label = "Tick price data (p)"
+tooltip = "Price data for N assets. Accepts a matrix of synchronised prices (T×N) or a vector of N tick-data series with irregular timestamps. Prices should be raw levels, not returns — log-returns are computed internally."
+default = "p"
+
+[[inputs]]
+id = "assets"
+label = "Assets"
+tooltip = "Names or integer count of assets to estimate. When passing raw tick series, supply a string vector of asset tickers matching the column order of p."
+default = "assets"
+
+[[inputs]]
+id = "H"
+label = "Bandwidth (H)"
+tooltip = "Pre-averaging bandwidth: number of consecutive ticks over which each return is smoothed before forming outer products. Larger H removes more noise but reduces the effective number of observations. Typical range: 3–15."
+default = "5"
+models = ["pav"]
+
+[[inputs]]
+id = "K"
+label = "Sub-grids (K)"
+tooltip = "Number of sub-sampling grids for the slow scale. The two-scales estimator uses K evenly spaced sub-grids of ticks to estimate slow-scale covariation and subtracts a fast-scale noise correction. Typical range: 5–30."
+default = "5"
+models = ["tsrc"]
+
+[[inputs]]
+id = "L"
+label = "Bandwidth (L)"
+tooltip = "Number of autocovariance lags used in the kernel sum. Larger L captures more lead-lag structure but increases variance. Leave blank to use the package default."
+default = ""
+models = ["rk"]
+
+[[codeBranches]]
+model = "rc"
+code = '''
+using HighFrequencyCovariance, LinearAlgebra  # high-frequency covariance + linear algebra
+
+result = estimate_covariance({{p}}, {{assets}};  # realized covariance from synchronised tick data
+    method = Simple())
+
+Sigma = result.covariance  # estimated N×N covariance matrix
+rho = cov2cor(Sigma)  # derived N×N correlation matrix
+sigma = sqrt.(diag(Sigma))  # per-asset annualised volatilities
+
+println("Covariance matrix: ", round.(Sigma, digits=6))  # print covariance matrix
+println("Correlation matrix: ", round.(rho, digits=4))  # print correlation matrix
+'''
+
+[[codeBranches]]
+model = "pav"
+code = '''
+using HighFrequencyCovariance, LinearAlgebra  # high-frequency covariance + linear algebra
+
+result = estimate_covariance({{p}}, {{assets}};  # pre-averaged realized covariance
+    method = PreAveraged(H = {{H}}))
+
+Sigma = result.covariance  # estimated N×N covariance matrix
+rho = cov2cor(Sigma)  # derived N×N correlation matrix
+sigma = sqrt.(diag(Sigma))  # per-asset annualised volatilities
+
+println("Covariance matrix: ", round.(Sigma, digits=6))  # print covariance matrix
+println("Correlation matrix: ", round.(rho, digits=4))  # print correlation matrix
+'''
+
+[[codeBranches]]
+model = "tsrc"
+code = '''
+using HighFrequencyCovariance, LinearAlgebra  # high-frequency covariance + linear algebra
+
+result = estimate_covariance({{p}}, {{assets}};  # two-scales realized covariance
+    method = TwoScales(K = {{K}}))
+
+Sigma = result.covariance  # estimated N×N covariance matrix
+rho = cov2cor(Sigma)  # derived N×N correlation matrix
+sigma = sqrt.(diag(Sigma))  # per-asset annualised volatilities
+
+println("Covariance matrix: ", round.(Sigma, digits=6))  # print covariance matrix
+println("Correlation matrix: ", round.(rho, digits=4))  # print correlation matrix
+'''
+
+[[codeBranches]]
+model = "rk"
+code = '''
+using HighFrequencyCovariance, LinearAlgebra  # high-frequency covariance + linear algebra
+
+result = estimate_covariance({{p}}, {{assets}};  # realized kernel covariance (Parzen kernel)
+{{?L=}}     method = RealizedKernel())
+{{?L!=}}     method = RealizedKernel(L = {{L}}))
+
+Sigma = result.covariance  # estimated N×N covariance matrix
+rho = cov2cor(Sigma)  # derived N×N correlation matrix
+sigma = sqrt.(diag(Sigma))  # per-asset annualised volatilities
+
+println("Covariance matrix: ", round.(Sigma, digits=6))  # print covariance matrix
+println("Correlation matrix: ", round.(rho, digits=4))  # print correlation matrix
+'''

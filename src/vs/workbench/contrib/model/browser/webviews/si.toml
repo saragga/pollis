@@ -1,0 +1,508 @@
+# System Identification Methods Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/si.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "System Identification Methods"
+viewType = "pollis.si"
+defaultModel = "arx"
+
+[[packages]]
+name = "ControlSystemIdentification.jl"
+github = "https://github.com/baggepinnen/ControlSystemIdentification.jl"
+
+[requires]
+packages = ["ControlSystemIdentification.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "ARX Identification"
+file = "si/tutorial-01-arx.ipynb"
+bundled = true
+description = "Fitting ARX and ARMAX models, order selection via AIC/BIC, and residual analysis"
+
+[[notebookSections.notebooks]]
+name = "State-Space (N4SID)"
+file = "si/tutorial-02-statespace.ipynb"
+bundled = true
+description = "Subspace identification of state-space models with N4SID for SISO and MIMO systems"
+
+[[notebookSections.notebooks]]
+name = "Robust Identification"
+file = "si/tutorial-05-robust.ipynb"
+bundled = true
+description = "Robust identification using regularisation and uncertainty-aware model fitting"
+
+[[notebookSections.notebooks]]
+name = "Spectral Analysis"
+file = "si/tutorial-03-spectral.ipynb"
+bundled = true
+description = "Non-parametric frequency-response estimation via spectral analysis and Welch periodogram"
+
+[[notebookSections.notebooks]]
+name = "Impulse Response"
+file = "si/tutorial-04-impulse-response.ipynb"
+bundled = true
+description = "Estimating impulse response functions and converting to frequency-domain representations"
+
+[[notebookSections.notebooks]]
+name = "Time vs Frequency Domain"
+file = "si/tutorial-06-time-vs-freq.ipynb"
+bundled = true
+description = "Comparing time-domain PEM and frequency-domain methods on the same identification problem"
+
+[[wikis]]
+name = "Factsheet"
+file = "si/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "si/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "si/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "si/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "si/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "si/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Model Structures"
+
+[[wikis]]
+name = "ARX / ARMAX"
+file = "si/arx-armax.md"
+bundled = true
+
+[[wikis]]
+name = "Subspace (N4SID)"
+file = "si/n4sid.md"
+bundled = true
+
+[[wikis]]
+name = "Output Error"
+file = "si/output-error.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "ControlSystems.jl: A Control Toolbox for Julia"
+authors = "Bagge Carlson, Fredrik; Fält, Mattias; Heimerson, Albin; Troeng, Olof"
+year = 2021
+journal = "GitHub"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "System Identification: Theory for the User"
+authors = "Ljung, Lennart"
+year = 1999
+journal = "Prentice Hall (2nd ed.)"
+openAccess = false
+
+[[references]]
+title = "Identification of Linear Systems"
+authors = "Soderstrom, Torsten; Stoica, Petre"
+year = 1989
+journal = "Prentice Hall"
+openAccess = false
+
+[[references]]
+title = "Subspace Methods for System Identification"
+authors = "Katayama, Tohru"
+year = 2005
+journal = "Springer"
+doi = "10.1007/1-84628-158-X"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "A New Algorithm for Optimal Filtering of Noisy Observations"
+authors = "Van Overschee, Peter; De Moor, Bart"
+year = 1994
+journal = "Automatica"
+doi = "10.1016/0005-1098(94)90230-5"
+openAccess = false
+
+[[references]]
+title = "N4SID: Subspace Algorithms for the Identification of Combined Deterministic-Stochastic Systems"
+authors = "Van Overschee, Peter; De Moor, Bart"
+year = 1994
+journal = "Automatica"
+doi = "10.1016/0005-1098(94)90231-3"
+openAccess = false
+
+[[references]]
+title = "Frequency-Domain System Identification Using Non-Parametric Noise Models"
+authors = "Pintelon, Rik; Schoukens, Johan"
+year = 2012
+journal = "IEEE Transactions on Automatic Control"
+doi = "10.1109/TAC.2012.2199974"
+openAccess = false
+
+[[models]]
+id = "arx"
+label = "ARX"
+
+[[models]]
+id = "armax"
+label = "ARMAX"
+
+[[models]]
+id = "n4sid"
+label = "N4SID"
+
+[[models]]
+id = "oe"
+label = "OE"
+
+[[decisionRows]]
+task = "ARX"
+context = "A(q)y = B(q)u + e"
+purpose = "Autoregressive model with exogenous input, fast linear least-squares fit via arx"
+
+[[decisionRows]]
+task = "ARMAX"
+context = "A(q)y = B(q)u + C(q)e"
+purpose = "ARX with coloured noise model, C(q) shapes the noise spectrum independently"
+
+[[decisionRows]]
+task = "N4SID"
+context = "State-space: x′ = Ax + Bu + Ke, y = Cx + Du"
+purpose = "Subspace identification of state-space models; handles MIMO systems and unknown model order"
+
+[[decisionRows]]
+task = "OE"
+context = "y = [B(q)/F(q)]u + e"
+purpose = "Output-error model, plant dynamics decoupled from noise model"
+
+[[inputs]]
+id = "y"
+label = "Output data (y)"
+tooltip = "Measured output signal (n x 1 vector). Must be sampled at constant rate h."
+default = "y"
+
+[[inputs]]
+id = "u"
+label = "Input data (u)"
+tooltip = "Measured input signal (n x 1 for SISO, n x m for MIMO). Use a persistently exciting signal for accurate identification."
+default = "u"
+
+[[inputs]]
+id = "h"
+label = "h"
+tooltip = "Sample time in seconds. Must be constant throughout the experiment."
+default = "0.01"
+
+[[inputs]]
+id = "na"
+label = "na"
+tooltip = "Order of the A(q) polynomial (autoregressive part). Number of past outputs used to predict the current output."
+default = "2"
+models = ["arx", "armax", "oe"]
+
+[[inputs]]
+id = "nb"
+label = "nb"
+tooltip = "Order of the B(q) polynomial (exogenous input part). Number of past inputs used in the model."
+default = "2"
+models = ["arx", "armax", "oe"]
+
+[[inputs]]
+id = "nc"
+label = "nc"
+tooltip = "Order of the C(q) polynomial (moving-average noise model). Only used in ARMAX."
+default = "1"
+models = ["armax"]
+
+[[inputs]]
+id = "nf"
+label = "nf"
+tooltip = "Order of the F(q) polynomial (denominator of plant transfer function). Only used in OE models."
+default = "2"
+models = ["oe"]
+
+[[inputs]]
+id = "nk"
+label = "nk"
+tooltip = "Input delay (dead time) in samples. Use nk=1 when there is no extra delay beyond the inherent one-step delay."
+default = "1"
+models = ["arx", "armax", "oe"]
+
+[[inputs]]
+id = "nx"
+label = "nx"
+tooltip = "Number of states (model order) for the identified state-space system. Use model order selection (svd plot) to choose nx."
+default = "4"
+models = ["n4sid"]
+
+[[inputs]]
+id = "l"
+label = "l (horizon)"
+tooltip = "Future horizon for the subspace algorithm. Larger values improve accuracy but increase computation. Leave blank for automatic selection."
+default = ""
+models = ["n4sid"]
+
+[[codeBranches]]
+model = "arx"
+code = '''
+using ControlSystemIdentification, ControlSystems  # SI toolbox
+
+data = iddata({{y}}, {{u}}, {{h}})  # create identification dataset
+
+model = arx(data, {{na}}, {{nb}}, {{nk}})  # ARX: A(q)y = B(q)u + e
+
+println(model)  # display identified model
+bodeplot(model)  # Bode plot of frequency response
+'''
+
+[[codeBranches]]
+model = "armax"
+code = '''
+using ControlSystemIdentification, ControlSystems  # SI toolbox
+
+data = iddata({{y}}, {{u}}, {{h}})  # create identification dataset
+
+model = armax(data, {{na}}, {{nb}}, {{nc}}, {{nk}})  # ARMAX: A(q)y = B(q)u + C(q)e
+
+println(model)  # display identified model
+bodeplot(model)  # Bode plot of frequency response
+'''
+
+[[codeBranches]]
+model = "n4sid"
+code = '''
+using ControlSystemIdentification, ControlSystems  # SI toolbox
+
+data = iddata({{y}}, {{u}}, {{h}})  # create identification dataset
+
+{{?l=}} model = n4sid(data, {{nx}})  # subspace ID: state-space, nx={{nx}} states
+{{?l!=}} model = n4sid(data, {{nx}}, {{l}})  # subspace ID: state-space, nx states, horizon {{l}}
+
+println(model)  # display identified model
+bodeplot(model)  # Bode plot of frequency response
+'''
+
+[[codeBranches]]
+model = "oe"
+code = '''
+using ControlSystemIdentification, ControlSystems  # SI toolbox
+
+data = iddata({{y}}, {{u}}, {{h}})  # create identification dataset
+
+model = oe(data, {{nb}}, {{nf}}, {{nk}})  # OE: y = [B(q)/F(q)]u + e
+
+println(model)  # display identified model
+bodeplot(model)  # Bode plot of frequency response
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "bode-plot"
+label = "Bode Plot"
+desc = "Frequency response magnitude and phase of the identified model"
+code = '''
+using ControlSystemIdentification, ControlSystems, Plots  # SI + plotting
+
+data  = iddata({{y}}, {{u}}, {{h}})  # identification dataset
+model = arx(data, {{na}}, {{nb}}, {{nk}})  # fit ARX model
+
+bodeplot(model)  # magnitude and phase vs. frequency
+'''
+
+[[actionGroups.actions]]
+id = "predicted-output"
+label = "Predicted Output"
+desc = "Overlay model-predicted output on measured data"
+code = '''
+using ControlSystemIdentification, Plots  # SI + plotting
+
+data  = iddata({{y}}, {{u}}, {{h}})  # identification dataset
+model = arx(data, {{na}}, {{nb}}, {{nk}})  # fit ARX model
+
+predplot(model, data)  # predicted vs. measured output
+'''
+
+[[actionGroups.actions]]
+id = "pole-zero-map"
+label = "Pole-Zero Map"
+desc = "Poles and zeros of the identified transfer function"
+code = '''
+using ControlSystemIdentification, ControlSystems, Plots  # SI + plotting
+
+data  = iddata({{y}}, {{u}}, {{h}})  # identification dataset
+model = arx(data, {{na}}, {{nb}}, {{nk}})  # fit ARX model
+
+pzmap(model)  # poles marked with x, zeros with o
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "residual-analysis"
+label = "Residual Analysis"
+desc = "Autocorrelation and cross-correlation of prediction errors"
+code = '''
+using ControlSystemIdentification, Plots  # SI + plotting
+
+data  = iddata({{y}}, {{u}}, {{h}})  # identification dataset
+model = arx(data, {{na}}, {{nb}}, {{nk}})  # fit ARX model
+
+residualplot(model, data)  # auto- and cross-correlation of residuals; should be white
+'''
+
+[[actionGroups.actions]]
+id = "fit-percent"
+label = "Fit Percentage"
+desc = "Model fit as percent variance explained"
+code = '''
+using ControlSystemIdentification  # SI toolbox
+
+data  = iddata({{y}}, {{u}}, {{h}})  # identification dataset
+model = arx(data, {{na}}, {{nb}}, {{nk}})  # fit ARX model
+
+yhat  = predict(model, data)  # one-step-ahead predictions
+fit   = fitpercent({{y}}, vec(yhat.y))  # 100% = perfect fit; 0% = no better than mean
+println("Fit: ", fit, "%")  # display fit score
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "simulate"
+label = "Simulate"
+desc = "Free-run simulation of identified model with new input"
+code = '''
+using ControlSystemIdentification, ControlSystems  # SI + control
+
+data  = iddata({{y}}, {{u}}, {{h}})  # identification dataset
+model = arx(data, {{na}}, {{nb}}, {{nk}})  # fit ARX model
+
+u_new = randn(200)  # new test input (200 samples)
+y_sim = simulate(model, u_new)  # free-run simulation (no feedback correction)
+simplot(model, data)  # plot simulated vs. measured output
+'''
+
+[[actionGroups.actions]]
+id = "predict-kstep"
+label = "k-Step Prediction"
+desc = "k-step-ahead prediction using the fitted model"
+code = '''
+using ControlSystemIdentification, Plots  # SI + plotting
+
+data  = iddata({{y}}, {{u}}, {{h}})  # identification dataset
+model = arx(data, {{na}}, {{nb}}, {{nk}})  # fit ARX model
+
+yhat  = predict(model, data, 5)  # 5-step-ahead prediction
+predplot(model, data, 5)  # plot 5-step predictions vs. measured
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "order-selection"
+label = "Order Selection"
+desc = "Compare model fit and AIC across different polynomial orders"
+code = '''
+using ControlSystemIdentification  # SI toolbox
+
+data = iddata({{y}}, {{u}}, {{h}})  # identification dataset
+
+for na in 1:4, nb in 1:4
+    m = arx(data, na, nb, 1)
+    println("na=", na, " nb=", nb, " AIC=", round(aic(m), digits=2))  # lower AIC is better
+end
+'''
+
+[[actionGroups.actions]]
+id = "compare-structures"
+label = "Compare Structures"
+desc = "ARX vs. N4SID on the same dataset"
+code = '''
+using ControlSystemIdentification, Plots  # SI + plotting
+
+data    = iddata({{y}}, {{u}}, {{h}})  # identification dataset
+m_arx   = arx(data, {{na}}, {{nb}}, {{nk}})  # ARX model
+m_n4sid = n4sid(data, {{nx}})  # N4SID state-space model
+
+bodeplot(m_arx, m_n4sid; label=["ARX" "N4SID"])  # compare frequency responses
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "transfer-function"
+label = "Transfer Function"
+desc = "Extract and display the identified discrete-time transfer function"
+code = '''
+using ControlSystemIdentification, ControlSystems  # SI + control
+
+data  = iddata({{y}}, {{u}}, {{h}})  # identification dataset
+model = arx(data, {{na}}, {{nb}}, {{nk}})  # fit ARX model
+
+G = tf(model)  # extract discrete-time transfer function
+println(G)  # display B(q)/A(q)
+println(poles(G))  # display poles
+println(zeros(G))  # display zeros
+'''
+
+[[actionGroups.actions]]
+id = "uncertainty"
+label = "Parameter Uncertainty"
+desc = "Covariance of estimated parameters and confidence bounds on Bode plot"
+code = '''
+using ControlSystemIdentification, ControlSystems, Plots  # SI + control + plotting
+
+data  = iddata({{y}}, {{u}}, {{h}})  # identification dataset
+model = arx(data, {{na}}, {{nb}}, {{nk}})  # fit ARX model
+
+println(model.P)  # parameter covariance matrix
+bodeconfplot(model, data)  # Bode plot with 3-sigma confidence bands
+'''

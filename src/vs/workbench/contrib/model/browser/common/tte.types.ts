@@ -3,30 +3,8 @@
  *  Licensed under the GNU Affero General Public License v3.0 or later. See LICENSE.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IModelPackage, IModelNotebook, IModelWiki } from './model.types.js';
-
-export interface ITteTooltips {
-	readonly time?: string;
-	readonly event?: string;
-	readonly data?: string;
-	readonly covariates?: string;
-	readonly dist?: string;
-}
+import { IScaffoldPanelData } from './model.types.js';
 
 export interface ITteMetadata {
-	readonly tte: {
-		readonly packages: IModelPackage[];
-		readonly notebooks: IModelNotebook[];
-		readonly wikis: IModelWiki[];
-		readonly tooltips?: ITteTooltips;
-	};
+	readonly tte: IScaffoldPanelData;
 }
-
-export type TteWebviewMessage =
-	| { command: 'openDocs'; target: 'wiki' | 'documentation' | 'paper' | 'repository' }
-	| { command: 'openNotebookList' }
-	| { command: 'openNotebook'; target: string }
-	| { command: 'openPanel'; target: string }
-	| { command: 'openUrl'; url: string }
-	| { command: 'getPaperLinks' }
-	| { command: 'cancelAction' };

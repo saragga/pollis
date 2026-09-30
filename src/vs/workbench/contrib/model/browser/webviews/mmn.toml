@@ -1,0 +1,236 @@
+# Market Microstructure Noise Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/mmn.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Market Microstructure Noise"
+viewType = "pollis.mmn"
+defaultModel = "main"
+
+[[packages]]
+name = "MicrostructureNoise.jl"
+github = "https://github.com/mschauer/MicrostructureNoise.jl"
+
+[requires]
+packages = ["MicrostructureNoise.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Quick Start"
+file = "mmn/tutorial-01-quickstart.ipynb"
+bundled = true
+description = "Bayesian nonparametric volatility estimation from noisy high-frequency observations"
+
+[[notebookSections.notebooks]]
+name = "Prior Specification"
+file = "mmn/tutorial-02-prior.ipynb"
+bundled = true
+description = "Configure the Prior struct: bin count, InvGamma hyperparameters, and smoothing prior"
+
+[[notebookSections.notebooks]]
+name = "MCMC Sampling"
+file = "mmn/tutorial-03-mcmc.ipynb"
+bundled = true
+description = "Run the Gibbs sampler with FFBS and inspect acceptance rates and mixing"
+
+[[notebookSections.notebooks]]
+name = "Posterior Volatility"
+file = "mmn/tutorial-04-posterior.ipynb"
+bundled = true
+description = "Extract posterior mean and credible bands from MCMC output via posterior_volatility"
+
+[[wikis]]
+name = "Overview"
+file = "mmn/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Factsheet"
+file = "mmn/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "mmn/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "mmn/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "mmn/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "mmn/decision-guide.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Original Papers (from packages)"
+
+[[references]]
+title = "Nonparametric Bayesian volatility estimation"
+authors = "Gugushvili, S., van der Meulen, F., Schauer, M., & Spreij, P."
+year = 2019
+journal = ""
+url = "https://arxiv.org/abs/1801.09956"
+openAccess = true
+
+[[references]]
+title = "Fast and scalable non-parametric Bayesian inference for Poisson point processes"
+authors = "Gugushvili, S., van der Meulen, F., Schauer, M., & Spreij, P."
+year = 2023
+journal = ""
+url = "https://doi.org/10.48550/arXiv.1804.03616"
+openAccess = true
+
+[[bullets]]
+text = "Bayesian nonparametric volatility estimation from noisy high-frequency price observations"
+detail = ""
+
+[[bullets]]
+text = "Model: dXt = s(t)dWt, observed as Yi = X(ti) + Vi with Vi  ∼ N(0, eta²)"
+detail = ""
+
+[[bullets]]
+text = "Gibbs sampler with Forward Filtering Backward Sampling (FFBS) for the latent path"
+detail = ""
+
+[[bullets]]
+text = "Returns posterior mean and credible bands for the piecewise-constant volatility s(t)"
+detail = ""
+
+[[inputs]]
+id = "N"
+label = "Bins (N)"
+tooltip = "Number of bins for the piecewise-constant volatility path. Higher values capture finer structure but increase computation time."
+default = "40"
+
+[[inputs]]
+id = "alpha1"
+label = "alpha₁ (vol shape)"
+tooltip = "Shape parameter alpha₁ of the InvGamma prior on the first volatility bin. Controls the prior mean of the initial variance level."
+default = "0.5"
+
+[[inputs]]
+id = "beta1"
+label = "beta₁ (vol rate)"
+tooltip = "Rate parameter beta₁ of the InvGamma prior on the first volatility bin. Larger values concentrate the prior around lower volatility."
+default = "0.05"
+
+[[inputs]]
+id = "alphaEta"
+label = "alphaeta (noise shape)"
+tooltip = "Shape parameter alphaeta of the InvGamma prior on the microstructure noise variance eta²."
+default = "0.3"
+
+[[inputs]]
+id = "betaEta"
+label = "betaeta (noise rate)"
+tooltip = "Rate parameter betaeta of the InvGamma prior on the noise variance eta². Together with alphaeta sets the noise prior mean beta/(alpha−1)."
+default = "0.01"
+
+[[inputs]]
+id = "mu0"
+label = "mu₀ (init mean)"
+tooltip = "Prior mean mu₀ of the initial state X(0). Typically set near the first observed price."
+default = "0.0"
+
+[[inputs]]
+id = "C0"
+label = "C₀ (init var)"
+tooltip = "Prior variance C₀ of the initial state X(0). Controls initial uncertainty. Set large for a diffuse prior."
+default = "5.0"
+
+[[inputs]]
+id = "pia-type"
+label = "Pialpha (smoothing prior)"
+tooltip = ""
+kind = "select"
+default = "LogNormal"
+
+[[inputs.options]]
+value = "LogNormal"
+label = "LogNormal"
+
+[[inputs.options]]
+value = "Normal"
+label = "Normal"
+
+[[inputs]]
+id = "pia-mu"
+label = "Pialpha mu"
+tooltip = ""
+default = "1.0"
+
+[[inputs]]
+id = "pia-sigma"
+label = "Pialpha sigma"
+tooltip = ""
+default = "0.5"
+
+[[inputs]]
+id = "alpha0"
+label = "alpha₀ (init vol)"
+tooltip = "Initial volatility vector alpha₀ passed to MCMC. Length must equal N. Often initialised to a constant."
+default = "0.3"
+
+[[inputs]]
+id = "sigmaAlpha"
+label = "sigmaalpha (proposal)"
+tooltip = "Proposal standard deviation sigmaalpha for the random-walk Metropolis step on log-volatility bins."
+default = "0.15"
+
+[[inputs]]
+id = "iter"
+label = "Iterations"
+tooltip = ""
+default = "5000"
+
+[[inputs]]
+id = "burnin"
+label = "Burn-in"
+tooltip = "Number of initial MCMC draws to discard as burn-in when computing posterior_volatility."
+default = "1000"
+
+[[inputs]]
+id = "qu"
+label = "Quantile"
+tooltip = "Credible interval quantile for the posterior volatility bands, e.g. 0.9 gives 90% bands."
+default = "0.9"
+
+[[codeBranches]]
+model = "main"
+code = '''
+using MicrostructureNoise, Distributions
+
+# Observed log-price data
+t = [0.0, ...]  # observation times, length n+1
+y = [...]       # log-prices, length n
+
+# Define prior
+prior = MicrostructureNoise.Prior(
+    N     = {{N}},
+    alpha1 = {{alpha1}}, beta1 = {{beta1}},   # InvGamma prior on first vol bin
+    alphaeta = {{alphaEta}}, betaeta = {{betaEta}},   # InvGamma prior on noise variance
+    Pialpha = {{pia-type}}({{pia-mu}}, {{pia-sigma}}),   # smoothing prior on log-vol ratios
+    mu0 = {{mu0}}, C0 = {{C0}}  # initial state prior
+)
+
+# Initial volatility vector
+alpha0 = fill({{alpha0}}, prior.N)
+
+# Run Gibbs sampler (FFBS)
+td, thetas, etas, alphas, pacc = MicrostructureNoise.MCMC(prior, t, y, alpha0, {{sigmaAlpha}}, {{iter}})
+
+# Posterior volatility with credible bands
+post = MicrostructureNoise.posterior_volatility(td, thetas; burnin={{burnin}}, qu={{qu}})
+'''

@@ -1,0 +1,217 @@
+# Linear Mixed-Effects Models Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/lmm.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Linear Mixed-Effects Models"
+viewType = "pollis.lmm"
+defaultModel = "lmm"
+
+[[packages]]
+name = "MixedModels.jl"
+github = "https://github.com/JuliaStats/MixedModels.jl"
+
+[[packages]]
+name = "FixedEffectModels.jl"
+github = "https://github.com/FixedEffects/FixedEffectModels.jl"
+
+[requires]
+packages = ["MixedModels.jl", "FixedEffectModels.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "LMM Basics"
+file = "lmm/tutorial-01-lmm-basics.ipynb"
+bundled = true
+description = "Introduction to linear mixed-effects models"
+
+[[notebookSections.notebooks]]
+name = "Random Effects"
+file = "lmm/tutorial-02-lmm-random-effects.ipynb"
+bundled = true
+description = "Crossed, nested, and correlated random effects"
+
+[[notebookSections.notebooks]]
+name = "Model Comparison"
+file = "lmm/tutorial-03-lmm-model-comparison.ipynb"
+bundled = true
+description = "Likelihood ratio tests and AIC/BIC model selection"
+
+[[notebookSections.notebooks]]
+name = "Diagnostics"
+file = "lmm/tutorial-04-lmm-diagnostics.ipynb"
+bundled = true
+description = "Residual analysis and model checking for LMM"
+
+[[wikis]]
+name = "Overview"
+file = "lmm/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Factsheet"
+file = "lmm/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "lmm/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "lmm/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "lmm/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "lmm/decision-guide.md"
+bundled = true
+
+[[models]]
+id = "lmm"
+label = "Mixed-Effects"
+
+[[models]]
+id = "panel-fe"
+label = "Panel Fixed-Effects"
+
+[[models]]
+id = "twoway-fe"
+label = "Two-Way Fixed-Effects"
+
+[[models]]
+id = "iv"
+label = "IV / 2SLS"
+
+[[bullets]]
+text = "Mixed-Effects"
+detail = "random intercepts and slopes via MixedModels.jl"
+
+[[bullets]]
+text = "Panel Fixed-Effects and Two-Way Fixed-Effects"
+detail = "high-dimensional fixed effects via FixedEffectModels.jl"
+
+[[bullets]]
+text = "IV / 2SLS"
+detail = "instrumental variables with within-entity fixed effects absorption"
+
+[[inputs]]
+id = "formula"
+label = "Formula"
+tooltip = "MixedModels formula: random effects in parentheses.\n(1|group) — random intercept\n(0+x|group) — random slope only\n(1+x|group) — random intercept + slope\n(1|g1) + (1|g2) — crossed random effects\n(1|g1/g2) — nested random effects\n\nFixedEffectModels formula: absorb fixed effects with fe().\nfe(id) — entity fixed effects\nfe(id) + fe(t) — two-way (entity + time) FE\n(x_end ~ z_iv) — IV endogenous regressor"
+default = "y ~ x1 + x2"
+models = ["lmm", "panel-fe", "twoway-fe"]
+
+[[inputs]]
+id = "formula-iv"
+label = "Formula"
+tooltip = "FixedEffectModels IV formula: put the endogenous regressor and its instruments in parentheses.\n(x_end ~ z_iv) - x_end instrumented by z_iv\nx_ex - exogenous regressors outside the parentheses"
+default = "y ~ (x_end ~ z_iv) + x_ex"
+models = ["iv"]
+
+[[inputs]]
+id = "data"
+label = "Data"
+tooltip = "DataFrame containing all variables referenced in the formula. Column names must match the formula symbols exactly."
+default = "df"
+
+[[inputs]]
+id = "group"
+label = "Group"
+tooltip = ""
+default = "group"
+
+[[inputs]]
+id = "time-var"
+label = "Time variable"
+tooltip = ""
+default = "t"
+models = ["panel-fe", "twoway-fe", "iv"]
+
+[[inputs]]
+id = "inference"
+label = "Inference"
+tooltip = "Standard errors for the fixed-effects fit.\nStandard - classical\nRobust - heteroskedasticity-robust\nClustered - clustered by the group variable\nTwo-Way Clustered - clustered by group and time"
+kind = "select"
+default = "standard"
+models = ["panel-fe", "twoway-fe", "iv"]
+newRow = true
+
+[[inputs.options]]
+value = "standard"
+label = "Standard"
+
+[[inputs.options]]
+value = "robust"
+label = "Robust"
+
+[[inputs.options]]
+value = "clustered"
+label = "Clustered"
+
+[[inputs.options]]
+value = "twoway-clustered"
+label = "Two-Way Clustered"
+
+[[codeBranches]]
+model = "lmm"
+code = '''
+using MixedModels  # linear mixed-effects models
+
+model = fit(MixedModel, @formula({{formula}} + (1|{{group}})), {{data}})  # random intercept per {{group}}
+
+println(model)  # model summary
+println(VarCorr(model))  # variance components
+println(ranef(model))  # random effects BLUPs
+'''
+
+[[codeBranches]]
+model = "panel-fe"
+code = '''
+using FixedEffectModels  # high-dimensional fixed effects
+
+{{?inference=standard}} model = reg({{data}}, @formula({{formula}} + fe({{group}})))  # entity FE: {{group}}
+{{?inference=robust}} model = reg({{data}}, @formula({{formula}} + fe({{group}})), Vcov.robust())  # entity FE: {{group}}
+{{?inference=clustered}} model = reg({{data}}, @formula({{formula}} + fe({{group}})), Vcov.cluster(:{{group}}))  # entity FE: {{group}}
+{{?inference=twoway-clustered}} model = reg({{data}}, @formula({{formula}} + fe({{group}})), Vcov.cluster(:{{group}}, :{{time-var}}))  # entity FE: {{group}}
+
+println(coeftable(model))  # coefficient table
+println("R²: ", r2(model))  # goodness of fit
+'''
+
+[[codeBranches]]
+model = "twoway-fe"
+code = '''
+using FixedEffectModels  # two-way fixed effects
+
+{{?inference=standard}} model = reg({{data}}, @formula({{formula}} + fe({{group}}) + fe({{time-var}})))  # entity + time FE: {{group}}, {{time-var}}
+{{?inference=robust}} model = reg({{data}}, @formula({{formula}} + fe({{group}}) + fe({{time-var}})), Vcov.robust())  # entity + time FE: {{group}}, {{time-var}}
+{{?inference=clustered}} model = reg({{data}}, @formula({{formula}} + fe({{group}}) + fe({{time-var}})), Vcov.cluster(:{{group}}))  # entity + time FE: {{group}}, {{time-var}}
+{{?inference=twoway-clustered}} model = reg({{data}}, @formula({{formula}} + fe({{group}}) + fe({{time-var}})), Vcov.cluster(:{{group}}, :{{time-var}}))  # entity + time FE: {{group}}, {{time-var}}
+
+println(coeftable(model))  # coefficient table
+println("R²: ", r2(model))  # goodness of fit
+'''
+
+[[codeBranches]]
+model = "iv"
+code = '''
+using FixedEffectModels  # IV / 2SLS with fixed effects
+
+{{?inference=standard}} model = reg({{data}}, @formula({{formula-iv}} + fe({{group}})))  # IV/2SLS: (x_end ~ z_iv) notation
+{{?inference=robust}} model = reg({{data}}, @formula({{formula-iv}} + fe({{group}})), Vcov.robust())  # IV/2SLS: (x_end ~ z_iv) notation
+{{?inference=clustered}} model = reg({{data}}, @formula({{formula-iv}} + fe({{group}})), Vcov.cluster(:{{group}}))  # IV/2SLS: (x_end ~ z_iv) notation
+{{?inference=twoway-clustered}} model = reg({{data}}, @formula({{formula-iv}} + fe({{group}})), Vcov.cluster(:{{group}}, :{{time-var}}))  # IV/2SLS: (x_end ~ z_iv) notation
+
+println(coeftable(model))  # coefficient table
+println("First-stage F: ", first_stage_fstat(model))  # instrument strength
+'''

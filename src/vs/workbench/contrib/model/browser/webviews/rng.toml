@@ -1,0 +1,313 @@
+# Random Numbers Generation Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/rng.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Random Numbers Generation"
+viewType = "pollis.rng"
+defaultModel = "stable"
+
+[[packages]]
+name = "Random"
+github = "https://github.com/JuliaLang/julia/tree/master/stdlib/Random"
+
+[[packages]]
+name = "StableRNGs.jl"
+github = "https://github.com/JuliaRandom/StableRNGs.jl"
+
+[requires]
+packages = ["StableRNGs.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "RNG Basics"
+file = "rng/tutorial-01-rng-basics.ipynb"
+bundled = true
+description = "Introduction to RNG types, seeding, and basic usage"
+
+[[notebookSections.notebooks]]
+name = "Reproducibility"
+file = "rng/tutorial-02-reproducibility.ipynb"
+bundled = true
+description = "Ensuring reproducible results with StableRNG and seeds"
+
+[[notebookSections.notebooks]]
+name = "Parallel RNG"
+file = "rng/tutorial-03-parallel.ipynb"
+bundled = true
+description = "Using TaskLocalRNG for safe parallel random number generation"
+
+[[notebookSections.notebooks]]
+name = "Distributions"
+file = "rng/tutorial-04-distributions.ipynb"
+bundled = true
+description = "Sampling from various distributions with different RNG backends"
+
+[[wikis]]
+name = "Overview"
+file = "rng/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Factsheet"
+file = "rng/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "rng/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "rng/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "rng/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "rng/decision-guide.md"
+bundled = true
+
+[[models]]
+id = "stable"
+label = "Stable RNG"
+
+[[models]]
+id = "mt"
+label = "Mersenne Twister"
+
+[[models]]
+id = "xoshiro"
+label = "Xoshiro"
+
+[[models]]
+id = "tasklocal"
+label = "Task Local RNG"
+
+[[models]]
+id = "device"
+label = "Random Device"
+
+[[bullets]]
+text = "StableRNG"
+detail = "cross-version stable (StableRNGs.jl), ideal for reproducible tests and pipelines"
+
+[[bullets]]
+text = "MersenneTwister"
+detail = "classic PRNG (Random stdlib), widely used and well understood"
+
+[[bullets]]
+text = "Xoshiro"
+detail = "fast modern PRNG (Random stdlib), default algorithm since Julia 1.7"
+
+[[bullets]]
+text = "TaskLocalRNG"
+detail = "task-local Xoshiro instance (Random stdlib), safe for parallel code"
+
+[[bullets]]
+text = "RandomDevice"
+detail = "OS entropy source (Random stdlib), suitable for cryptographic seeding"
+
+[[inputs]]
+id = "seed"
+label = "Seed"
+tooltip = "Integer seed for reproducibility. StableRNG requires a seed. TaskLocalRNG uses seed!(rng, n). RandomDevice does not support seeding."
+default = "42"
+models = ["stable", "mt", "xoshiro", "tasklocal"]
+
+[[inputs]]
+id = "operation"
+label = "Operation"
+tooltip = "rand — uniform samples. randn — standard normal (mu=0, sigma=1). randexp — exponential(lambda=1). bitrand — random Bool array. shuffle — random permutation of a collection. randperm — integer permutation 1:n."
+kind = "select"
+default = "uniform_float"
+
+[[inputs.options]]
+value = "uniform_float"
+label = "Uniform Floats — rand(rng, n)"
+
+[[inputs.options]]
+value = "uniform_int"
+label = "Uniform Integers — rand(rng, T, n)"
+
+[[inputs.options]]
+value = "int_range"
+label = "Integer Range — rand(rng, a:b, n)"
+
+[[inputs.options]]
+value = "normal"
+label = "Standard Normal — randn(rng, n)"
+
+[[inputs.options]]
+value = "exponential"
+label = "Exponential — randexp(rng, n)"
+
+[[inputs.options]]
+value = "bits"
+label = "Random Bits — bitrand(rng, n)"
+
+[[inputs.options]]
+value = "shuffle"
+label = "Shuffle — shuffle(rng, v)"
+
+[[inputs.options]]
+value = "permutation"
+label = "Permutation — randperm(rng, n)"
+
+[[inputs]]
+id = "count"
+label = "Count (n)"
+tooltip = "Number of values to generate (n). For shuffle, this is the length of the output collection."
+default = "10"
+when = "operation!=shuffle"
+
+[[inputs]]
+id = "float-type"
+label = "Numeric Type"
+tooltip = ""
+kind = "select"
+default = "Float64"
+when = "operation=uniform_float|normal|exponential"
+
+[[inputs.options]]
+value = "Float64"
+label = "Float64"
+
+[[inputs.options]]
+value = "Float32"
+label = "Float32"
+
+[[inputs]]
+id = "int-type"
+label = "Numeric Type"
+tooltip = ""
+kind = "select"
+default = "Int64"
+when = "operation=uniform_int"
+
+[[inputs.options]]
+value = "Int64"
+label = "Int64"
+
+[[inputs.options]]
+value = "Int32"
+label = "Int32"
+
+[[inputs.options]]
+value = "UInt64"
+label = "UInt64"
+
+[[inputs]]
+id = "range-min"
+label = "Min"
+tooltip = ""
+default = "1"
+when = "operation=int_range"
+
+[[inputs]]
+id = "range-max"
+label = "Max"
+tooltip = ""
+default = "100"
+when = "operation=int_range"
+
+[[inputs]]
+id = "collection"
+label = "Collection"
+tooltip = ""
+default = "v"
+when = "operation=shuffle"
+
+[[codeBranches]]
+model = "stable"
+code = '''
+using StableRNGs
+rng = StableRNG({{seed}})
+
+{{?operation=uniform_float}} x = rand(rng, {{float-type}}, {{count}})
+{{?operation=uniform_int}} x = rand(rng, {{int-type}}, {{count}})
+{{?operation=int_range}} x = rand(rng, {{range-min}}:{{range-max}}, {{count}})
+{{?operation=normal}} x = randn(rng, {{float-type}}, {{count}})
+{{?operation=exponential}} x = randexp(rng, {{float-type}}, {{count}})
+{{?operation=bits}} x = bitrand(rng, {{count}})
+{{?operation=shuffle}} x = shuffle(rng, {{collection}})
+{{?operation=permutation}} x = randperm(rng, {{count}})
+println(x)
+'''
+
+[[codeBranches]]
+model = "mt"
+code = '''
+using Random
+rng = MersenneTwister({{seed}})
+
+{{?operation=uniform_float}} x = rand(rng, {{float-type}}, {{count}})
+{{?operation=uniform_int}} x = rand(rng, {{int-type}}, {{count}})
+{{?operation=int_range}} x = rand(rng, {{range-min}}:{{range-max}}, {{count}})
+{{?operation=normal}} x = randn(rng, {{float-type}}, {{count}})
+{{?operation=exponential}} x = randexp(rng, {{float-type}}, {{count}})
+{{?operation=bits}} x = bitrand(rng, {{count}})
+{{?operation=shuffle}} x = shuffle(rng, {{collection}})
+{{?operation=permutation}} x = randperm(rng, {{count}})
+println(x)
+'''
+
+[[codeBranches]]
+model = "xoshiro"
+code = '''
+using Random
+rng = Xoshiro({{seed}})
+
+{{?operation=uniform_float}} x = rand(rng, {{float-type}}, {{count}})
+{{?operation=uniform_int}} x = rand(rng, {{int-type}}, {{count}})
+{{?operation=int_range}} x = rand(rng, {{range-min}}:{{range-max}}, {{count}})
+{{?operation=normal}} x = randn(rng, {{float-type}}, {{count}})
+{{?operation=exponential}} x = randexp(rng, {{float-type}}, {{count}})
+{{?operation=bits}} x = bitrand(rng, {{count}})
+{{?operation=shuffle}} x = shuffle(rng, {{collection}})
+{{?operation=permutation}} x = randperm(rng, {{count}})
+println(x)
+'''
+
+[[codeBranches]]
+model = "tasklocal"
+code = '''
+using Random
+rng = TaskLocalRNG()
+seed!(rng, {{seed}})
+
+{{?operation=uniform_float}} x = rand(rng, {{float-type}}, {{count}})
+{{?operation=uniform_int}} x = rand(rng, {{int-type}}, {{count}})
+{{?operation=int_range}} x = rand(rng, {{range-min}}:{{range-max}}, {{count}})
+{{?operation=normal}} x = randn(rng, {{float-type}}, {{count}})
+{{?operation=exponential}} x = randexp(rng, {{float-type}}, {{count}})
+{{?operation=bits}} x = bitrand(rng, {{count}})
+{{?operation=shuffle}} x = shuffle(rng, {{collection}})
+{{?operation=permutation}} x = randperm(rng, {{count}})
+println(x)
+'''
+
+[[codeBranches]]
+model = "device"
+code = '''
+using Random
+rng = RandomDevice()
+
+{{?operation=uniform_float}} x = rand(rng, {{float-type}}, {{count}})
+{{?operation=uniform_int}} x = rand(rng, {{int-type}}, {{count}})
+{{?operation=int_range}} x = rand(rng, {{range-min}}:{{range-max}}, {{count}})
+{{?operation=normal}} x = randn(rng, {{float-type}}, {{count}})
+{{?operation=exponential}} x = randexp(rng, {{float-type}}, {{count}})
+{{?operation=bits}} x = bitrand(rng, {{count}})
+{{?operation=shuffle}} x = shuffle(rng, {{collection}})
+{{?operation=permutation}} x = randperm(rng, {{count}})
+println(x)
+'''
