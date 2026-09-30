@@ -497,7 +497,10 @@ id = "ppc"
 label = "Posterior Predictive Check"
 desc = "Sample from the posterior predictive to assess model fit"
 code = '''
-missing_model = gaussian_model(missing)  # replace y with missing to predict
+{{?model=gaussian}}missing_model = gaussian_model(fill(missing, length({{y}})))  # y replaced by missing values of the same length: predict it
+{{?model=linear}}missing_model = linear_model({{X}}, fill(missing, length({{y}})))  # y replaced by missing values of the same length: predict it
+{{?model=logistic}}missing_model = logistic_model({{X}}, fill(missing, length({{y}})))  # y replaced by missing values of the same length: predict it
+{{?model=hierarchical}}missing_model = hierarchical_model(fill(missing, length({{y}})), {{group}}, {{ngroups}})  # y replaced by missing values of the same length: predict it
 y_pred = predict(missing_model, chain)  # posterior predictive samples
 
 using StatsPlots
@@ -512,6 +515,10 @@ desc = "Pareto-smoothed importance-sampling leave-one-out cross-validation"
 code = '''
 using PosteriorStats, Turing
 
+{{?model=gaussian}}model = gaussian_model({{y}})  # the model that was sampled
+{{?model=linear}}model = linear_model({{X}}, {{y}})  # the model that was sampled
+{{?model=logistic}}model = logistic_model({{X}}, {{y}})  # the model that was sampled
+{{?model=hierarchical}}model = hierarchical_model({{y}}, {{group}}, {{ngroups}})  # the model that was sampled
 log_lik = pointwise_loglikelihoods(model, chain)  # log-likelihood per observation
 loo_result = loo(stack(log_lik))  # LOO-CV via PSIS
 print(loo_result)  # ELPD, p_loo, Pareto k diagnostics
@@ -540,6 +547,10 @@ desc = "Widely applicable information criterion for Bayesian model selection"
 code = '''
 using PosteriorStats
 
+{{?model=gaussian}}model = gaussian_model({{y}})  # the model that was sampled
+{{?model=linear}}model = linear_model({{X}}, {{y}})  # the model that was sampled
+{{?model=logistic}}model = logistic_model({{X}}, {{y}})  # the model that was sampled
+{{?model=hierarchical}}model = hierarchical_model({{y}}, {{group}}, {{ngroups}})  # the model that was sampled
 log_lik = pointwise_loglikelihoods(model, chain)  # log-likelihood matrix
 waic_result = waic(stack(log_lik))  # WAIC and p_waic
 print(waic_result)  # ELPD_waic and effective params
