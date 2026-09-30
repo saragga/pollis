@@ -188,8 +188,8 @@ detail = "random-walk proposals; no gradients required; accepts/rejects via M-H 
 [[inputs]]
 id = "body"
 label = "@model body"
-tooltip = "Julia statements inside the @model function. Example: mu ~ Normal(0, 1); x ~ Normal(mu, 1)"
-default = "mu ~ Normal(0, 1); x ~ Normal(mu, 1)"
+tooltip = "Julia statements inside the @model function. Example: mu ~ Normal(0, 10); for i in eachindex(data); data[i] ~ Normal(mu, 1); end (each observation in data must appear on the left of a ~, or the data are ignored)"
+default = "mu ~ Normal(0, 10); for i in eachindex(data); data[i] ~ Normal(mu, 1); end"
 models = ["nuts"]
 
 [[inputs]]
@@ -237,8 +237,8 @@ models = ["hmc"]
 [[inputs]]
 id = "body-mh"
 label = "@model body"
-tooltip = "Julia statements inside the @model function. Example: mu ~ Normal(0, 1); x ~ Normal(mu, 1)"
-default = "mu ~ Normal(0, 1); x ~ Normal(mu, 1)"
+tooltip = "Julia statements inside the @model function. Example: mu ~ Normal(0, 10); for i in eachindex(data); data[i] ~ Normal(mu, 1); end (each observation in data must appear on the left of a ~, or the data are ignored)"
+default = "mu ~ Normal(0, 10); for i in eachindex(data); data[i] ~ Normal(mu, 1); end"
 models = ["mh"]
 
 [[inputs]]
@@ -278,7 +278,7 @@ eps0       = find_good_stepsize(hamiltonian, theta0)  # heuristic initial step s
 integrator = Leapfrog(eps0)  # leapfrog integrator
 kernel     = HMCKernel(Trajectory{EndPointTS}(integrator, FixedNSteps({{n-leapfrog}})))  # {{n-leapfrog}} leapfrog steps per proposal
 adaptor    = StanHMCAdaptor(MassMatrixAdaptor(metric), StepSizeAdaptor(0.65, integrator))  # dual averaging adaptation
-samples, _ = sample(hamiltonian, kernel, theta0, {{n-samples-hmc}}, adaptor, 500; progress=true)  # {{n-samples-hmc}} draws; 500 warm-up
+samples, _ = sample(hamiltonian, kernel, theta0, {{n-samples-hmc}} + 500, adaptor, 500; drop_warmup=true, progress=true)  # 500 adaptation steps discarded, {{n-samples-hmc}} draws kept
 mat        = permutedims(reduce(hcat, samples))  # n_samples x D matrix
 chain      = Chains(mat, ["x[$i]" for i in 1:D])  # MCMCChains.jl diagnostics
 println(chain)  # summary: mean, std, ESS, R-hat
@@ -400,7 +400,7 @@ desc = "Sample from the posterior predictive distribution"
 code = '''
 using Turing
 
-pred = predict(model(missing), chain)  # sample x_new for each posterior draw
+pred = predict(model(fill(missing, length(data))), chain)  # a new data set of the same size for each posterior draw
 println(pred)  # posterior predictive samples
 '''
 
