@@ -150,8 +150,8 @@ detail = ""
 [[inputs]]
 id = "log-p"
 label = "Log-potential log p(x)"
-tooltip = "Julia expression for the log-density of the target (up to a constant). Use x[1], x[2], ... to index vector components. Example: -0.5 * sum(x .^ 2) for a standard Gaussian."
-default = "-0.5 * sum(x .^ 2)"
+tooltip = "Julia expression for the log-density of the target (up to a constant). Use x[1], x[2], ... to index vector components. The default is an equal mixture of two unit Gaussians centred at (3, 3) and (-3, -3): a single MCMC chain rarely crosses between them, which is what parallel tempering is for. A single Gaussian such as -0.5 * sum(x .^ 2) needs no tempering."
+default = "log(exp(-0.5 * sum((x .- 3) .^ 2)) + exp(-0.5 * sum((x .+ 3) .^ 2)))"
 
 [[inputs]]
 id = "d"
