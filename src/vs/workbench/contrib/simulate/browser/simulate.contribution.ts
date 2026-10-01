@@ -77,7 +77,7 @@ MenuRegistry.appendMenuItem(MenuId.MenubarSimulateMenu, {
 	group: '1_simulation',
 	command: { id: 'chiara.simulate.mc.smc', title: localize('mc.smc', 'Sequential Monte Carlo') },
 	order: 3,
-}); // SequentialMonteCarlo.jl
+}); // LowLevelParticleFilters.jl
 
 MenuRegistry.appendMenuItem(MenuId.MenubarSimulateMenu, {
 	group: '1_simulation',

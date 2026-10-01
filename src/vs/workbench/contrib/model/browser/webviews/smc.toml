@@ -9,11 +9,19 @@ viewType = "pollis.smc"
 defaultModel = "filter"
 
 [[packages]]
-name = "SequentialMonteCarlo.jl"
-github = "https://github.com/awllee/SequentialMonteCarlo.jl"
+name = "LowLevelParticleFilters.jl"
+github = "https://github.com/baggepinnen/LowLevelParticleFilters.jl"
+
+[[packages]]
+name = "Distributions.jl"
+github = "https://github.com/JuliaStats/Distributions.jl"
+
+[[packages]]
+name = "StaticArrays.jl"
+github = "https://github.com/JuliaArrays/StaticArrays.jl"
 
 [requires]
-packages = ["SequentialMonteCarlo.jl"]
+packages = ["LowLevelParticleFilters.jl", "Distributions.jl", "StaticArrays.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""
@@ -84,7 +92,6 @@ bundled = true
 name = "Smoothing"
 file = "smc/smoothing.md"
 bundled = true
-
 [[references]]
 separator = true
 label = "Software"
@@ -96,14 +103,6 @@ year = 2017
 journal = "SIAM Review"
 doi = "10.1137/141000671"
 openAccess = false
-
-[[references]]
-title = "SequentialMonteCarlo.jl: An Efficient, Extensible Implementation of SMC"
-authors = "Whiteley, Nick; Lee, Anthony; Sherlock, Chris"
-year = 2016
-journal = "arXiv preprint"
-doi = "10.48550/arXiv.1606.09396"
-openAccess = true
 
 [[references]]
 separator = true
@@ -130,11 +129,11 @@ separator = true
 label = "Original Papers"
 
 [[references]]
-title = "Sequential Monte Carlo Samplers"
-authors = "Del Moral, Pierre; Doucet, Arnaud; Jasra, Ajay"
-year = 2006
-journal = "Journal of the Royal Statistical Society: Series B"
-doi = "10.1111/j.1467-9868.2006.00553.x"
+title = "Novel Approach to Nonlinear/Non-Gaussian Bayesian State Estimation"
+authors = "Gordon, Neil J.; Salmond, David J.; Smith, Adrian F. M."
+year = 1993
+journal = "IEE Proceedings F (Radar and Signal Processing)"
+doi = "10.1049/ip-f-2.1993.0015"
 openAccess = false
 
 [[references]]
@@ -143,6 +142,30 @@ authors = "Kitagawa, Genshiro"
 year = 1996
 journal = "Journal of Computational and Graphical Statistics"
 doi = "10.1080/10618600.1996.10474692"
+openAccess = false
+
+[[references]]
+title = "Monte Carlo Smoothing for Nonlinear Time Series"
+authors = "Godsill, Simon J.; Doucet, Arnaud; West, Mike"
+year = 2004
+journal = "Journal of the American Statistical Association"
+doi = "10.1198/016214504000000151"
+openAccess = false
+
+[[references]]
+title = "A New Approach to Linear Filtering and Prediction Problems"
+authors = "Kalman, Rudolph E."
+year = 1960
+journal = "Journal of Basic Engineering"
+doi = "10.1115/1.3662552"
+openAccess = false
+
+[[references]]
+title = "Sequential Monte Carlo Samplers"
+authors = "Del Moral, Pierre; Doucet, Arnaud; Jasra, Ajay"
+year = 2006
+journal = "Journal of the Royal Statistical Society: Series B"
+doi = "10.1111/j.1467-9868.2006.00553.x"
 openAccess = false
 
 [[models]]
@@ -154,80 +177,183 @@ id = "smoother"
 label = "Particle Smoother"
 
 [[bullets]]
+text = "Question"
+detail = "how closely does a bootstrap particle filter recover the filtering distribution, the likelihood and the smoothing distribution? The model is linear-Gaussian, so the Kalman filter and smoother give the exact answers to compare against"
+
+[[bullets]]
 text = "Particle Filter"
-detail = "propagate N weighted particles through time; resample when ESS drops below threshold"
+detail = "propagate N particles through the dynamics, weight them by p(y | x), and resample when the ESS falls below threshold x N; the product of the mean incremental weights estimates p(y[1:T]) without bias"
 
 [[bullets]]
 text = "Particle Smoother"
-detail = "recover full-path distributions via ancestor tracing or backward simulation"
-
-[[bullets]]
-text = "SMC Samplers"
-detail = "sample from a sequence of annealed targets; estimates log marginal likelihood"
+detail = "forward filtering, backward simulation: draw M trajectories backwards through the stored particles, reweighted by the transition density; this avoids the path degeneracy of the genealogy stored by the filter"
 
 [[inputs]]
-id = "log-w"
-label = "lG body"
-tooltip = "Julia expression for the log potential (observation weight) at each step. Receives t (Int64), p (Particle), and a data argument. Example: -0.5 * p.x^2"
-default = "-0.5 * p.x^2"
+id = "a"
+label = "State Coefficient a"
+tooltip = "x[t + 1] = a x[t] + w[t]. |a| < 1 gives a stationary state; a = 1 is a random walk."
+default = "0.9"
+
+[[inputs]]
+id = "c"
+label = "Observation Coefficient c"
+tooltip = "y[t] = c x[t] + e[t]."
+default = "1.2"
+
+[[inputs]]
+id = "q"
+label = "State Noise Variance q"
+tooltip = "Variance of the state noise w[t]. The bootstrap filter proposes from the dynamics, so a small q relative to r makes proposals and observations agree and keeps the ESS high."
+default = "0.6"
+
+[[inputs]]
+id = "r"
+label = "Observation Noise Variance r"
+tooltip = "Variance of the observation noise e[t]. A small r makes the likelihood sharp, the weights uneven and the ESS low: the weak spot of the bootstrap filter."
+default = "1.5"
+
+[[inputs]]
+id = "m0"
+label = "Initial Mean m0"
+tooltip = "Mean of the initial state x[1] ~ N(m0, v0)."
+default = "1.0"
+
+[[inputs]]
+id = "v0"
+label = "Initial Variance v0"
+tooltip = "Variance of the initial state x[1] ~ N(m0, v0)."
+default = "2.0"
 
 [[inputs]]
 id = "n"
 label = "Particles (N)"
-tooltip = "Number of particles. More particles reduce variance but increase computation linearly."
+tooltip = "Number of particles. The sd of the log-likelihood estimate falls like 1 / sqrt(N); the cost grows linearly."
 default = "1000"
 
 [[inputs]]
 id = "t"
 label = "Steps (T)"
-tooltip = "Number of time steps. Defines the length of the sequential target sequence."
+tooltip = "Number of time steps simulated from the model and then filtered."
 default = "50"
+
+[[inputs]]
+id = "threshold"
+label = "Resampling Threshold"
+tooltip = "Resample when ESS < threshold x N, with ESS = 1 / sum(w^2) for normalised weights w. 0 never resamples (sequential importance sampling), 1 resamples every step. LowLevelParticleFilters defaults to 0.1; 0.5 is common."
+default = "0.5"
+
+[[inputs]]
+id = "m"
+label = "Smoother Trajectories (M)"
+tooltip = "Number of trajectories drawn by forward filtering, backward simulation (at most N). The cost is about M x N x T transition-density evaluations."
+default = "100"
+
+[[inputs]]
+id = "seed"
+label = "Seed"
+tooltip = "Seeds the filter RNG (simulation, propagation, backward simulation) and the global RNG (resampling). The same seed and inputs give the same run."
+default = "1"
 
 [[codeBranches]]
 model = "filter"
 code = '''
-using SequentialMonteCarlo
+using LowLevelParticleFilters, Distributions, StaticArrays, LinearAlgebra, Random, Statistics
 
-mutable struct Particle
-    x::Float64  # state variable
-end
+# Linear-Gaussian model, so the Kalman filter gives the exact answer to check against:
+#   x[1] ~ N(m0, v0),   x[t + 1] = a x[t] + w[t],   y[t] = c x[t] + e[t],   w ~ N(0, q),   e ~ N(0, r)
+a, c, q, r = {{a}}, {{c}}, {{q}}, {{r}}
+A, B, C = SA[a;;], SA[0.0;;], SA[c;;]  # B = 0: the model has no input
+dynamics(x, u, p, t)    = A * x
+measurement(x, u, p, t) = C * x
+df = MvNormal(zeros(1), [q;;])  # state noise
+dg = MvNormal(zeros(1), [r;;])  # observation noise
+d0 = MvNormal([{{m0}}], [{{v0}};;])  # initial state x[1]
 
-function M!(p::Particle, rng, t::Int64, pOld::Particle, ::Nothing)
-    p.x = pOld.x + randn(rng)  # transition: Gaussian random walk
-end
+N, T, seed, threshold = {{n}}, {{t}}, {{seed}}, {{threshold}}
+Random.seed!(seed)  # resampling draws from the global RNG; the filter rng drives the rest
+make_pf(N; threshold = threshold, rng = Xoshiro(seed)) =
+    ParticleFilter(N, dynamics, measurement, df, dg, d0; resample_threshold = threshold, rng)
+pf = make_pf(N)  # bootstrap filter: propose from the dynamics, weight by p(y | x)
+kf = KalmanFilter(A, B, C, 0, cov(df), cov(dg), d0)  # exact filter for the same model
 
-function lG(t::Int64, p::Particle, ::Nothing)
-    return {{log-w}}  # log potential at step t
-end
+u = fill(SA[0.0], T)
+xs, _, ys = simulate(pf, u; sample_initial = true)  # true states and observations
+x_true = first.(xs)
+y = [SVector{1}(yt) for yt in ys]
 
-model = SMCModel(M!, lG, {{t}}, Particle, Nothing)  # defines the sequential model
-smcio = SMCIO{model.particle, model.internal}({{n}}, {{t}}, 1, false)  # {{n}} particles; no ancestor storage
-smc!(model, smcio)  # run particle filter
-println("log Z: ", smcio.logZhats[end])  # log normalising constant estimate
+llp, anc = Float64[], Vector{Int}[]  # per-step log p(y[t] | y[1:t-1]); ancestor indices at each prediction
+sol = forward_trajectory(pf, u, y;
+    post_correct_cb = (f, ut, yt, p, t, lli) -> push!(llp, lli),
+    post_predict_cb = (f, ut, yt, p, t) -> push!(anc, copy(f.state.j)))
+llk  = Float64[]
+ksol = forward_trajectory(kf, u, y; post_correct_cb = (f, p, ret) -> push!(llk, ret.ll))
+
+X, W = first.(sol.x), sol.we  # N x T particles and normalised weights of x(t|t), before resampling
+ess  = [effective_particles(W[:, t]) for t in 1:T]  # 1 / sum(w .^ 2), between 1 and N
+resampled = [threshold == 1 || e < threshold * N for e in ess]  # predict! resamples when ESS < threshold * N
+pf_mean = vec(sum(X .* W; dims = 1))
+pf_sd   = sqrt.(max.(vec(sum(X .^ 2 .* W; dims = 1)) .- pf_mean .^ 2, 0))
+kf_mean, kf_sd = first.(ksol.xt), sqrt.(first.(ksol.Rt))
+
+println("log p(y[1:T]): particle filter ", round(sol.ll; digits = 3), "   Kalman (exact) ", round(ksol.ll; digits = 3))
+println("Filter mean error: max |PF - Kalman| / Kalman sd = ", round(maximum(abs.(pf_mean .- kf_mean) ./ kf_sd); digits = 3))
+println("ESS / N: mean ", round(mean(ess) / N; digits = 3), "   min ", round(minimum(ess) / N; digits = 3), "   resampled after ", count(resampled[1:T-1]), " of ", T - 1, " steps")
 '''
 
 [[codeBranches]]
 model = "smoother"
 code = '''
-using SequentialMonteCarlo
+using LowLevelParticleFilters, Distributions, StaticArrays, LinearAlgebra, Random, Statistics
 
-mutable struct Particle
-    x::Float64  # state variable
-end
+# Linear-Gaussian model, so the Kalman filter gives the exact answer to check against:
+#   x[1] ~ N(m0, v0),   x[t + 1] = a x[t] + w[t],   y[t] = c x[t] + e[t],   w ~ N(0, q),   e ~ N(0, r)
+a, c, q, r = {{a}}, {{c}}, {{q}}, {{r}}
+A, B, C = SA[a;;], SA[0.0;;], SA[c;;]  # B = 0: the model has no input
+dynamics(x, u, p, t)    = A * x
+measurement(x, u, p, t) = C * x
+df = MvNormal(zeros(1), [q;;])  # state noise
+dg = MvNormal(zeros(1), [r;;])  # observation noise
+d0 = MvNormal([{{m0}}], [{{v0}};;])  # initial state x[1]
 
-function M!(p::Particle, rng, t::Int64, pOld::Particle, ::Nothing)
-    p.x = pOld.x + randn(rng)  # transition: Gaussian random walk
-end
+N, T, seed, threshold = {{n}}, {{t}}, {{seed}}, {{threshold}}
+Random.seed!(seed)  # resampling draws from the global RNG; the filter rng drives the rest
+make_pf(N; threshold = threshold, rng = Xoshiro(seed)) =
+    ParticleFilter(N, dynamics, measurement, df, dg, d0; resample_threshold = threshold, rng)
+pf = make_pf(N)  # bootstrap filter: propose from the dynamics, weight by p(y | x)
+kf = KalmanFilter(A, B, C, 0, cov(df), cov(dg), d0)  # exact filter for the same model
 
-function lG(t::Int64, p::Particle, ::Nothing)
-    return {{log-w}}  # log potential at step t
-end
+u = fill(SA[0.0], T)
+xs, _, ys = simulate(pf, u; sample_initial = true)  # true states and observations
+x_true = first.(xs)
+y = [SVector{1}(yt) for yt in ys]
 
-model = SMCModel(M!, lG, {{t}}, Particle, Nothing)  # defines the sequential model
-smcio = SMCIO{model.particle, model.internal}({{n}}, {{t}}, 1, true)  # {{n}} particles; store ancestors for smoothing
-smc!(model, smcio)  # run particle filter with ancestor tracing
-paths = allAncestors(smcio)  # full particle trajectories
-println("log Z: ", smcio.logZhats[end])  # log normalising constant estimate
+llp, anc = Float64[], Vector{Int}[]  # per-step log p(y[t] | y[1:t-1]); ancestor indices at each prediction
+sol = forward_trajectory(pf, u, y;
+    post_correct_cb = (f, ut, yt, p, t, lli) -> push!(llp, lli),
+    post_predict_cb = (f, ut, yt, p, t) -> push!(anc, copy(f.state.j)))
+llk  = Float64[]
+ksol = forward_trajectory(kf, u, y; post_correct_cb = (f, p, ret) -> push!(llk, ret.ll))
+
+X, W = first.(sol.x), sol.we  # N x T particles and normalised weights of x(t|t), before resampling
+ess  = [effective_particles(W[:, t]) for t in 1:T]  # 1 / sum(w .^ 2), between 1 and N
+resampled = [threshold == 1 || e < threshold * N for e in ess]  # predict! resamples when ESS < threshold * N
+pf_mean = vec(sum(X .* W; dims = 1))
+pf_sd   = sqrt.(max.(vec(sum(X .^ 2 .* W; dims = 1)) .- pf_mean .^ 2, 0))
+kf_mean, kf_sd = first.(ksol.xt), sqrt.(first.(ksol.Rt))
+
+println("log p(y[1:T]): particle filter ", round(sol.ll; digits = 3), "   Kalman (exact) ", round(ksol.ll; digits = 3))
+println("Filter mean error: max |PF - Kalman| / Kalman sd = ", round(maximum(abs.(pf_mean .- kf_mean) ./ kf_sd); digits = 3))
+println("ESS / N: mean ", round(mean(ess) / N; digits = 3), "   min ", round(minimum(ess) / N; digits = 3), "   resampled after ", count(resampled[1:T-1]), " of ", T - 1, " steps")
+
+M = {{m}}  # backward trajectories, at most N
+xb, _ = smooth(pf, M, u, y)  # forward filtering, backward simulation (reruns the filter)
+Xb = smoothed_trajs(xb)[1, :, :]  # M x T smoothed trajectories
+ps_mean, ps_sd = vec(mean(Xb; dims = 1)), vec(std(Xb; dims = 1))
+ks = smooth(ksol)  # Rauch-Tung-Striebel smoother: exact x(t|T)
+ks_mean, ks_sd = first.(ks.xT), sqrt.(first.(ks.RT))
+
+println("Smoother mean error: max |PF - Kalman| / Kalman sd = ", round(maximum(abs.(ps_mean .- ks_mean) ./ ks_sd); digits = 3))
+println("Smoother sd / filter sd at t = 1: ", round(ks_sd[1] / kf_sd[1]; digits = 3), " (Kalman), ", round(ps_sd[1] / pf_sd[1]; digits = 3), " (particles); later data sharpens early states")
 '''
 
 [[actionGroups]]
@@ -236,43 +362,39 @@ label = "Visualise"
 
 [[actionGroups.actions]]
 id = "particle-cloud"
-label = "Particle Cloud"
-desc = "Scatter plot of particle positions at a given time step"
+label = "Filtering Density"
+desc = "Weighted histogram of the particles at the last step against the exact Kalman filtering density"
 code = '''
 using Plots
 
-t_plot    = {{t}}  # time step to inspect
-positions = [smcio.particles[t_plot][i].x for i in 1:{{n}}]  # extract x from each particle
-weights   = exp.(smcio.logWeights[t_plot])  # normalised importance weights
-
-scatter(positions, weights,  # particle weight vs position
-    xlabel="x", ylabel="weight", legend=false, markersize=3)
+k = T  # step to inspect
+histogram(X[:, k]; weights = W[:, k], normalize = :pdf, bins = 40, alpha = 0.5, label = "Weighted particles", xlabel = "x at the last step", ylabel = "Density")
+plot!(z -> pdf(Normal(kf_mean[k], kf_sd[k]), z), kf_mean[k] - 4 * kf_sd[k], kf_mean[k] + 4 * kf_sd[k]; lw = 2, label = "Kalman filter (exact)")
+vline!([x_true[k]]; ls = :dash, label = "True state")
 '''
 
 [[actionGroups.actions]]
 id = "ess-trajectory"
 label = "ESS Trajectory"
-desc = "Effective sample size over time steps"
+desc = "ESS / N at every step, the resampling threshold, and the steps after which the filter resampled"
 code = '''
 using Plots
 
-ess_t = {{n}} .* exp.(smcio.logZhats .- 2 .* smcio.logZhats)  # ESS approximation at each step
-
-plot(1:{{t}}, smcio.esses,  # esses stored by SMCIO
-    xlabel="t", ylabel="ESS", ylims=(0, {{n}}), legend=false)
-hline!([{{n}} * 0.5], linestyle=:dash)  # 50% ESS resampling threshold
+plot(1:T, ess ./ N; ylims = (0, 1.05), lw = 2, label = "ESS / N", xlabel = "t", ylabel = "ESS / N")
+hline!([threshold]; ls = :dash, label = "Resampling threshold")
+scatter!(findall(resampled), ess[resampled] ./ N; ms = 3, label = "Resampled after this step")
 '''
 
 [[actionGroups.actions]]
 id = "weight-hist"
 label = "Weight Distribution"
-desc = "Histogram of log-weights at the final step"
+desc = "Histogram of N x normalised weight at the last step: 1 for every particle means uniform weights"
 code = '''
 using Plots
 
-lw = smcio.logWeights[{{t}}]  # log-weights at final step
-histogram(lw, normalize=:pdf,  # distribution of log-weights
-    xlabel="log weight", ylabel="density", legend=false)
+k = T
+histogram(N .* W[:, k]; bins = 50, label = false, xlabel = "N x normalised weight (1 = uniform)", ylabel = "Particles")
+println("ESS at the last step: ", round(ess[k]; digits = 1), " of ", N, " particles")
 '''
 
 [[actionGroups]]
@@ -282,35 +404,44 @@ label = "Diagnose"
 [[actionGroups.actions]]
 id = "ess-check"
 label = "ESS per Step"
-desc = "Print ESS at each time step; flag steps below 50%"
+desc = "ESS at each step and whether the filter resampled after it"
 code = '''
-threshold = {{n}} * 0.5  # 50% ESS triggers resampling
-for t in 1:{{t}}
-    ess_t = smcio.esses[t]  # stored ESS at step t
-    flag  = ess_t < threshold ? " *" : ""  # mark low-ESS steps
-    println("t=", t, "  ESS=", round(ess_t; digits=1), flag)  # print each step
+for t in 1:T
+    println("t = ", lpad(t, 3), "   ESS = ", lpad(round(ess[t]; digits = 1), 8), "   ESS / N = ", round(ess[t] / N; digits = 3), resampled[t] ? "   resampled" : "")
 end
+println("The filter resamples when ESS < ", threshold, " N. A sudden drop flags an observation the particles did not anticipate: an outlier, or a proposal far from the posterior.")
 '''
 
 [[actionGroups.actions]]
 id = "logz-trajectory"
-label = "Log-Z Trajectory"
-desc = "Cumulative log normalising constant over time"
+label = "Log-Likelihood Trajectory"
+desc = "Cumulative log p(y[1:t]) from the particle filter against the exact Kalman value, and the per-step differences"
 code = '''
 using Plots
 
-plot(1:{{t}}, smcio.logZhats,  # log Z estimate at each step
-    xlabel="t", ylabel="log Z", legend=false)
-println("Final log Z: ", smcio.logZhats[end])  # log normalising constant
+p1 = plot(1:T, cumsum(llk); lw = 2, label = "Kalman (exact)", ylabel = "log p(y[1:t])")
+plot!(p1, 1:T, cumsum(llp); lw = 2, ls = :dash, label = "Particle filter")
+p2 = bar(1:T, llp .- llk; label = false, xlabel = "t", ylabel = "PF - Kalman per step")
+plot(p1, p2; layout = (2, 1))
 '''
 
 [[actionGroups.actions]]
 id = "resampling-count"
-label = "Resampling Steps"
-desc = "Count how many steps triggered resampling"
+label = "Resampling and Path Degeneracy"
+desc = "How often the filter resampled, and how many distinct ancestors the final particles have at each earlier step"
 code = '''
-n_resamp = sum(smcio.resampled)  # steps where resampling occurred
-println("Resampled at ", n_resamp, " of ", length(smcio.resampled), " steps")  # resampling frequency
+using Plots
+
+idx = collect(1:N)  # trace the final particles back: anc[s] maps particles at s + 1 to their parents at s
+distinct = fill(N, T)
+for s in T-1:-1:1
+    idx = anc[s][idx]
+    distinct[s] = length(unique(idx))
+end
+println("Resampled at ", count(resampled[1:T-1]), " of ", T - 1, " transitions")
+println("Distinct step-1 ancestors of the ", N, " final particles: ", distinct[1])
+println("The paths stored by the filter coalesce, so early states are represented by few distinct particles. This is why the smoother simulates backwards instead of reusing the genealogy.")
+plot(1:T, distinct; yscale = :log10, lw = 2, label = false, xlabel = "t", ylabel = "Distinct ancestors of final particles")
 '''
 
 [[actionGroups]]
@@ -320,50 +451,45 @@ label = "Predict"
 [[actionGroups.actions]]
 id = "filter-mean"
 label = "Filter Mean"
-desc = "E[x_t | y_{1:t}] filtering mean at each step"
+desc = "E[x[t] | y[1:t]] with 2 sd bands from the particle filter and the Kalman filter, against the true state"
 code = '''
 using Plots
 
-means = zeros({{t}})  # filter mean trajectory
-for t in 1:{{t}}
-    w = exp.(smcio.logWeights[t])  # normalised weights at step t
-    means[t] = sum(w .* [smcio.particles[t][i].x for i in 1:{{n}}])  # weighted mean
-end
-
-plot(1:{{t}}, means, xlabel="t", ylabel="E[x|y]", legend=false)  # filtering mean over time
+plot(1:T, kf_mean; ribbon = 2 .* kf_sd, fillalpha = 0.2, lw = 2, label = "Kalman filter +-2 sd", xlabel = "t", ylabel = "x")
+plot!(1:T, pf_mean; ribbon = 2 .* pf_sd, fillalpha = 0.1, lw = 2, ls = :dash, label = "Particle filter +-2 sd")
+scatter!(1:T, x_true; ms = 2, label = "True state")
 '''
 
 [[actionGroups.actions]]
 id = "predictive-dist"
 label = "One-Step Predictive"
-desc = "Marginal predictive distribution at t+1"
+desc = "Density of y[T + 1] given y[1:T]: a mixture over the weighted particles against the exact Kalman Gaussian"
 code = '''
-using Distributions, Plots, StatsBase, Random  # StatsBase for sample and Weights, Random for MersenneTwister
+using Plots
 
-rng    = MersenneTwister(42)  # reproducible RNG
-preds  = Particle[]  # predictive particles
-w_last = exp.(smcio.logWeights[{{t}}])  # final filter weights
-idx    = sample(1:{{n}}, Weights(w_last), {{n}})  # resample
-for i in 1:{{n}}
-    pOld = smcio.particles[{{t}}][idx[i]]  # resampled particle
-    p    = Particle(0.0)  # new particle
-    M!(p, rng, {{t}} + 1, pOld, nothing)  # propagate forward
-    push!(preds, p)  # collect predictive sample
-end
-histogram([p.x for p in preds], normalize=:pdf, xlabel="x", legend=false)  # predictive density at t+1
+s_y  = sqrt(c^2 * q + r)  # given x[T], y[T + 1] ~ N(c a x[T], c^2 q + r)
+pf_pred(z) = sum(W[:, T] .* pdf.(Normal.(c * a .* X[:, T], s_y), z))  # average that density over the filter particles
+kf_m = c * a * kf_mean[T]
+kf_s = sqrt(c^2 * (a^2 * kf_sd[T]^2 + q) + r)
+println("y[T + 1] given y[1:T]: Kalman mean ", round(kf_m; digits = 3), "   sd ", round(kf_s; digits = 3))
+plot(z -> pdf(Normal(kf_m, kf_s), z), kf_m - 4 * kf_s, kf_m + 4 * kf_s; lw = 2, label = "Kalman (exact)", xlabel = "y[T + 1]", ylabel = "Density")
+plot!(pf_pred, kf_m - 4 * kf_s, kf_m + 4 * kf_s; lw = 2, ls = :dash, label = "Particle filter")
 '''
 
 [[actionGroups.actions]]
 id = "smooth-path"
 label = "Smooth Path"
-desc = "Draw a full trajectory from the particle smoother"
+desc = "Backward-simulated trajectories and their mean against the exact Kalman smoother, E[x[t] | y[1:T]]"
 code = '''
 using Plots
+{{?model=filter}} xb, _ = smooth(pf, {{m}}, u, y)  # forward filtering, backward simulation
+{{?model=filter}} Xb = smoothed_trajs(xb)[1, :, :]  # M x T smoothed trajectories
+{{?model=filter}} ks = smooth(ksol); ks_mean, ks_sd = first.(ks.xT), sqrt.(first.(ks.RT))  # exact smoother
 
-paths  = allAncestors(smcio)  # full trajectories (requires store_ancestors=true)
-path_x = [smcio.particles[t][paths[1][t]].x for t in 1:{{t}}]  # extract first path
-
-plot(1:{{t}}, path_x, xlabel="t", ylabel="x", legend=false)  # one sampled trajectory
+plot(1:T, ks_mean; ribbon = 2 .* ks_sd, fillalpha = 0.2, lw = 2, label = "Kalman smoother +-2 sd", xlabel = "t", ylabel = "x")
+plot!(1:T, transpose(Xb[1:min(20, end), :]); color = :gray, alpha = 0.4, lw = 0.7, label = false)  # up to 20 trajectories
+plot!(1:T, vec(mean(Xb; dims = 1)); lw = 2, ls = :dash, label = "Mean of backward trajectories")
+scatter!(1:T, x_true; ms = 2, label = "True state")
 '''
 
 [[actionGroups]]
@@ -373,40 +499,44 @@ label = "Compare"
 [[actionGroups.actions]]
 id = "particle-study"
 label = "Particle Count Study"
-desc = "Variance of log Z estimate vs number of particles"
+desc = "Bias and sd of the log-likelihood estimate for N from 100 to 2000, 20 runs each: the sd falls like 1 / sqrt(N)"
 code = '''
-using Plots, Statistics
+using Plots
 
-Ns      = [100, 250, 500, 1000, 2000]  # particle counts to test
-n_reps  = 20  # repetitions per N
-logz_sd = zeros(length(Ns))  # std of log Z estimates
-for (j, N) in enumerate(Ns)
-    lzs = [begin io = SMCIO{model.particle,model.internal}(N,{{t}},1,false); smc!(model,io); io.logZhats[end] end for _ in 1:n_reps]  # n_reps runs per N
-    logz_sd[j] = std(lzs)  # std across repetitions
+Ns, reps = [100, 250, 500, 1000, 2000], 20
+sds = map(Ns) do Nk
+    lls = [loglik(make_pf(Nk; rng = Xoshiro(seed + k)), u, y) for k in 1:reps]
+    println("N = ", rpad(Nk, 6), "mean estimate - exact ", rpad(round(mean(lls) - ksol.ll; digits = 3), 9), "sd ", round(std(lls); digits = 3))
+    std(lls)
 end
-plot(Ns, logz_sd, xlabel="N", ylabel="std(log Z)", legend=false, xscale=:log10)  # should decay as 1/sqrt(N)
+plot(Ns, sds; xscale = :log10, yscale = :log10, marker = :circle, label = "sd of log p(y) estimate", xlabel = "N", ylabel = "sd")
+plot!(Ns, sds[1] .* sqrt.(Ns[1] ./ Ns); ls = :dash, label = "1 / sqrt(N) reference")
 '''
 
 [[actionGroups.actions]]
-id = "ess-ratio"
-label = "ESS Ratio"
-desc = "Mean ESS / N ratio across all time steps"
+id = "threshold-sweep"
+label = "Resampling Threshold Sweep"
+desc = "Bias and sd of the log-likelihood estimate for thresholds 0 (never resample) to 1 (always), 20 runs each"
 code = '''
-ess_ratio = mean(smcio.esses) / {{n}}  # average ESS fraction
-println("Mean ESS/N: ", round(ess_ratio; digits=3))  # near 1.0 = efficient; near 0 = weight degeneracy
+reps = 20
+for th in [0.0, 0.1, 0.5, 1.0]
+    lls = [loglik(make_pf(N; threshold = th, rng = Xoshiro(seed + k)), u, y) for k in 1:reps]
+    println("threshold ", rpad(th, 5), "mean estimate - exact ", rpad(round(mean(lls) - ksol.ll; digits = 3), 9), "sd ", round(std(lls); digits = 3))
+end
+println("Threshold 0 is sequential importance sampling: the weights degenerate over time and the estimate is poor. Resampling every step adds some noise; adaptive resampling sits in between.")
 '''
 
 [[actionGroups.actions]]
 id = "logz-variance"
-label = "Log-Z Variance"
-desc = "Estimate variance of the log normalising constant"
+label = "Log-Likelihood Variance"
+desc = "50 independent runs at the chosen N: the likelihood estimate is unbiased, its log is biased low by about half its variance"
 code = '''
-using Statistics
-
-n_reps = 30  # number of independent SMC runs
-logzs  = [begin io = SMCIO{model.particle,model.internal}({{n}},{{t}},1,false); smc!(model,io); io.logZhats[end] end for _ in 1:n_reps]  # collect log Z estimates
-println("log Z mean: ", mean(logzs))  # unbiased estimate
-println("log Z std:  ", std(logzs))  # Monte Carlo error
+reps = 50
+lls = [loglik(make_pf(N; rng = Xoshiro(seed + k)), u, y) for k in 1:reps]
+println("log p(y[1:T]) exact (Kalman): ", round(ksol.ll; digits = 3))
+println("Particle filter, ", reps, " runs:     mean ", round(mean(lls); digits = 3), "   sd ", round(std(lls); digits = 3))
+println("Mean of exp(estimate - exact): ", round(mean(exp.(lls .- ksol.ll)); digits = 3), "   (near 1: the likelihood estimate is unbiased)")
+println("var / 2 = ", round(var(lls) / 2; digits = 3), "   (about how far the mean log estimate sits below the exact value)")
 '''
 
 [[actionGroups]]
@@ -415,35 +545,34 @@ label = "Interpret"
 
 [[actionGroups.actions]]
 id = "log-normaliser"
-label = "Log Normaliser"
-desc = "Log marginal likelihood log p(y_{1:T})"
+label = "Log-Likelihood"
+desc = "log p(y[1:T]) from the particle filter against the exact Kalman value"
 code = '''
-logZ = smcio.logZhats[end]  # log normalising constant = log p(y_{1:T})
-println("log p(y_{1:T}) = ", logZ)  # use for model comparison (higher is better)
+println("log p(y[1:T]) particle filter: ", round(sol.ll; digits = 4))
+println("log p(y[1:T]) Kalman (exact):  ", round(ksol.ll; digits = 4))
+println("Difference:                    ", round(sol.ll - ksol.ll; digits = 4))
+println("The particle estimate of p(y[1:T]) is unbiased, which is what lets it drive pseudo-marginal MCMC (PMMH) over model parameters. Its log is biased low; see Log-Likelihood Variance.")
 '''
 
 [[actionGroups.actions]]
 id = "filter-means-table"
 label = "Filtering Means"
-desc = "Print E[x_t | y_{1:t}] for all t"
+desc = "Particle and Kalman filtering means and sds at every step, with the error in Kalman sds"
 code = '''
-for t in 1:{{t}}
-    w    = exp.(smcio.logWeights[t])  # normalised weights
-    xbar = sum(w .* [smcio.particles[t][i].x for i in 1:{{n}}])  # weighted mean
-    println("t=", t, "  E[x|y]=", round(xbar; digits=4))  # print filter mean
-end
+[(t = t, pf_mean = round(pf_mean[t]; digits = 4), kalman_mean = round(kf_mean[t]; digits = 4),
+  pf_sd = round(pf_sd[t]; digits = 4), kalman_sd = round(kf_sd[t]; digits = 4),
+  error_in_sd = round((pf_mean[t] - kf_mean[t]) / kf_sd[t]; digits = 3)) for t in 1:T]
 '''
 
 [[actionGroups.actions]]
 id = "weight-entropy"
 label = "Weight Entropy"
-desc = "Shannon entropy of normalised weights at each step"
+desc = "Perplexity exp(H) of the normalised weights, relative to N, against ESS / N: two measures of how evenly the weight is spread"
 code = '''
-using Statistics
+using Plots
 
-for t in 1:{{t}}
-    w = exp.(smcio.logWeights[t])  # normalised weights
-    H = -sum(w .* log.(w .+ 1e-300))  # Shannon entropy
-    println("t=", t, "  H=", round(H; digits=2), "  (max=", round(log({{n}}); digits=2), ")")  # compare to log(N) max
-end
+perplexity = [exp(-sum(w * log(w) for w in W[:, t] if w > 0)) for t in 1:T]  # exp(Shannon entropy), between 1 and N
+println("Mean perplexity / N ", round(mean(perplexity) / N; digits = 3), "   mean ESS / N ", round(mean(ess) / N; digits = 3))
+plot(1:T, perplexity ./ N; ylims = (0, 1.05), lw = 2, label = "Perplexity / N", xlabel = "t")
+plot!(1:T, ess ./ N; lw = 2, ls = :dash, label = "ESS / N")
 '''
