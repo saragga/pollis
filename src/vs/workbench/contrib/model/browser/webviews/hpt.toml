@@ -102,10 +102,16 @@ text = "Bayesian Optimisation"
 detail = "sequential GP-guided search using an acquisition function; concentrates budget on promising regions (Hyperopt.jl)"
 
 [[inputs]]
-id = "model"
+id = "learner"
 label = "Model"
 tooltip = "MLJ model type, e.g. DecisionTreeClassifier or EvoTreeRegressor. Use @load to import it."
 default = "DecisionTreeClassifier"
+
+[[inputs]]
+id = "pkg"
+label = "Package"
+tooltip = "The package that provides the model type, e.g. DecisionTree for DecisionTreeClassifier or EvoTrees for EvoTreeRegressor."
+default = "DecisionTree"
 
 [[inputs]]
 id = "measure"
@@ -157,8 +163,8 @@ model = "grid"
 code = '''
 using MLJ
 
-{{model}} = @load {{model}} pkg=  # import model type
-model  = {{model}}()  # instantiate with defaults
+{{learner}} = @load {{learner}} pkg={{pkg}} verbosity=0  # import the model type from its package
+model  = {{learner}}()  # instantiate with defaults
 
 r1 = range(model, :param1, values=[v1, v2, v3])  # discrete hyperparameter range
 r2 = range(model, :param2, lower=0.01, upper=1.0, scale=:log)  # continuous log-scale range
@@ -183,8 +189,8 @@ model = "random"
 code = '''
 using MLJ
 
-{{model}} = @load {{model}} pkg=  # import model type
-model  = {{model}}()  # instantiate with defaults
+{{learner}} = @load {{learner}} pkg={{pkg}} verbosity=0  # import the model type from its package
+model  = {{learner}}()  # instantiate with defaults
 
 r1 = range(model, :param1, lower=v_lo, upper=v_hi)  # continuous uniform range
 r2 = range(model, :param2, values=[v1, v2, v3])  # discrete range
@@ -210,7 +216,7 @@ code = '''
 using Hyperopt, MLJ
 
 function objective(p1, p2)  # evaluate one hyperparameter configuration
-    model = {{model}}(param1=p1, param2=p2)  # instantiate with candidate params
+    model = {{learner}}(param1=p1, param2=p2)  # instantiate with candidate params
     mach  = machine(model, {{X}}, {{y}})  # 
     ev    = evaluate!(mach, resampling=CV(nfolds={{cv}}), measure={{measure}})  # 
     return -mean(ev.measurement)  # negate to minimise

@@ -248,11 +248,11 @@ using RxInfer  # reactive Bayesian inference via factor graph message passing
 
 @model function {{bp-model}}({{bp-data}})  # GraphPPL @model macro — distributions use keyword arguments unlike Turing.jl
     mu    ~ Normal(mean = 0.0, variance = 1.0)
-    sigma ~ Gamma(shape = 1.0, rate = 1.0)
+    sigma ~ Gamma(shape = 1.0, rate = 1.0)  # despite the name, sigma is the variance of y below, not its standard deviation
     {{bp-data}} .~ Normal(mean = mu, variance = sigma)  # .~ broadcasts the scalar distribution element-wise over the vector
 end
 
-result = infer(  # run sum-product Belief Propagation — exact for conjugate Gaussian models
+result = infer(  # sum-product belief propagation: exact only when every factor is conjugate; an unknown mean and variance together are not, so check against the VMP toggle
     model      = {{bp-model}}({{bp-data}} = {{bp-data}}_data),
     returnvars = (mu = KeepLast(), sigma = KeepLast()),
     iterations = {{bp-iter}}
@@ -268,7 +268,7 @@ using RxInfer  # reactive Bayesian inference via factor graph message passing
 
 @model function {{vmp-model}}({{vmp-data}})  # GraphPPL @model macro — distributions use keyword arguments unlike Turing.jl
     mu    ~ Normal(mean = 0.0, variance = 1.0)
-    sigma ~ Gamma(shape = 1.0, rate = 1.0)
+    sigma ~ Gamma(shape = 1.0, rate = 1.0)  # despite the name, sigma is the variance of y below, not its standard deviation
     {{vmp-data}} .~ Normal(mean = mu, variance = sigma)  # .~ broadcasts the scalar distribution element-wise over the vector
 end
 
@@ -280,7 +280,7 @@ result = infer(  # Variational Message Passing with mean-field factorization
     iterations  = {{vmp-iter}}
 )
 
-println(result.free_energy)  # ELBO should decrease monotonically if VMP has converged
+println(result.free_energy)  # free energy (minus the ELBO) should decrease and level off as VMP converges
 '''
 
 [[codeBranches]]
@@ -290,7 +290,7 @@ using RxInfer  # reactive Bayesian inference via factor graph message passing
 
 @model function {{ep-model}}({{ep-data}})  # GraphPPL @model macro — distributions use keyword arguments unlike Turing.jl
     mu    ~ Normal(mean = 0.0, variance = 1.0)
-    sigma ~ Gamma(shape = 1.0, rate = 1.0)
+    sigma ~ Gamma(shape = 1.0, rate = 1.0)  # despite the name, sigma is the variance of y below, not its standard deviation
     {{ep-data}} .~ Normal(mean = mu, variance = sigma)  # .~ broadcasts the scalar distribution element-wise over the vector
 end
 
@@ -348,7 +348,7 @@ code = '''
 using Plots  # plotting library
 
 result_fe = infer(model = model, constraints = MeanField(), free_energy = true, iterations = 50)  # run VMP with free energy tracking
-plot(result_fe.free_energy, xlabel="iteration", ylabel="Free Energy", label="")  # should decrease monotonically toward the ELBO
+plot(result_fe.free_energy, xlabel="iteration", ylabel="Free Energy", label="")  # free energy = minus the ELBO: it should decrease and level off, an upper bound on minus the log evidence
 '''
 
 [[actionGroups.actions]]

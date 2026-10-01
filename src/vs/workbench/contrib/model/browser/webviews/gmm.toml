@@ -189,9 +189,9 @@ using Microeconometrics
 {{?vcov=het}} result = fit(GMM(Heteroscedastic()), {{data}};
 {{?vcov=clustered}} result = fit(GMM(Clustered(:{{cluster}})), {{data}};
     response    = :{{y}},
-    regressors  = [:{{exog}}],  # exogenous regressors (included in moment conditions)
-    endogenous  = [:{{endog}}],  # endogenous regressors
-    instruments = [:{{instr}}])  # excluded instruments
+    regressors  = Symbol.(split("{{exog}}")),  # exogenous regressors (included in moment conditions)
+    endogenous  = Symbol.(split("{{endog}}")),  # endogenous regressors
+    instruments = Symbol.(split("{{instr}}")))  # excluded instruments
 
 coef(result)  # GMM coefficient estimates
 coefnames(result)  # variable names
@@ -208,21 +208,24 @@ id = "j_statistic"
 label = "J-Statistic (Hansen Test)"
 desc = "Compute the overidentification test statistic; rejection suggests at least one instrument is invalid"
 code = '''
-using Microeconometrics, Distributions
+using Microeconometrics, Distributions, LinearAlgebra, Tables
 
 {{?vcov=hom}} result = fit(GMM(Homoscedastic()), {{data}};
 {{?vcov=het}} result = fit(GMM(Heteroscedastic()), {{data}};
 {{?vcov=clustered}} result = fit(GMM(Clustered(:{{cluster}})), {{data}};
-    response = :{{y}}, regressors = [:{{exog}}],
-    endogenous = [:{{endog}}], instruments = [:{{instr}}])
+    response = :{{y}}, regressors = Symbol.(split("{{exog}}")),
+    endogenous = Symbol.(split("{{endog}}")), instruments = Symbol.(split("{{instr}}")))
 
 n      = nobs(result)  # number of observations
-k_endog = length([:{{endog}}])  # number of endogenous regressors
-k_instr = length([:{{instr}}])  # number of excluded instruments
+k_endog = length(Symbol.(split("{{endog}}")))  # number of endogenous regressors
+k_instr = length(Symbol.(split("{{instr}}")))  # number of excluded instruments
 df_j   = k_instr - k_endog  # degrees of freedom for J-test
 
 e      = residuals(result)  # GMM residuals
-J      = n * mean(e).^2 / var(e)  # J-statistic (simplified)
+Z      = hcat(ones(n), (Float64.(Tables.getcolumn({{data}}, s)) for s in Symbol.(split("{{exog}} {{instr}}")))...)  # all instruments: constant, exogenous regressors, excluded instruments
+g      = transpose(Z) * e ./ n  # sample moment conditions E[z e]
+S      = transpose(Z .* e) * (Z .* e) ./ n  # heteroskedasticity-robust covariance of the moments
+J      = n * dot(g, S \ g)  # Hansen J = n g' S^-1 g
 p_val  = 1 - cdf(Chisq(df_j), J)  # p-value under H0: all instruments valid
 
 println("J-statistic: ", round(J, digits=4))
@@ -238,8 +241,8 @@ code = '''
 using Microeconometrics
 
 fs = fit(OLS(Homoscedastic()), {{data}};  # first-stage OLS: endogenous on all instruments
-    response   = [:{{endog}}][1],
-    regressors = [:{{exog}}, :{{instr}}])
+    response   = Symbol(first(split("{{endog}}"))),
+    regressors = Symbol.(split("{{exog}} {{instr}}")))
 
 coef(fs)  # first-stage coefficients
 stderror(fs)  # instrument coefficient SEs
@@ -247,8 +250,8 @@ stderror(fs)  # instrument coefficient SEs
 {{?vcov=hom}} result = fit(GMM(Homoscedastic()), {{data}};  # GMM structural equation
 {{?vcov=het}} result = fit(GMM(Heteroscedastic()), {{data}};  # GMM structural equation
 {{?vcov=clustered}} result = fit(GMM(Clustered(:{{cluster}})), {{data}};  # GMM structural equation
-    response = :{{y}}, regressors = [:{{exog}}],
-    endogenous = [:{{endog}}], instruments = [:{{instr}}])
+    response = :{{y}}, regressors = Symbol.(split("{{exog}}")),
+    endogenous = Symbol.(split("{{endog}}")), instruments = Symbol.(split("{{instr}}")))
 coef(result)  # GMM structural coefficients
 '''
 
@@ -262,8 +265,8 @@ using Microeconometrics
 {{?vcov=hom}} result = fit(GMM(Homoscedastic()), {{data}};
 {{?vcov=het}} result = fit(GMM(Heteroscedastic()), {{data}};
 {{?vcov=clustered}} result = fit(GMM(Clustered(:{{cluster}})), {{data}};
-    response = :{{y}}, regressors = [:{{exog}}],
-    endogenous = [:{{endog}}], instruments = [:{{instr}}])
+    response = :{{y}}, regressors = Symbol.(split("{{exog}}")),
+    endogenous = Symbol.(split("{{endog}}")), instruments = Symbol.(split("{{instr}}")))
 
 e = residuals(result)  # GMM residuals
 n = nobs(result)  # number of observations
@@ -287,8 +290,8 @@ using Microeconometrics
 {{?vcov=hom}} result = fit(GMM(Homoscedastic()), {{data}};
 {{?vcov=het}} result = fit(GMM(Heteroscedastic()), {{data}};
 {{?vcov=clustered}} result = fit(GMM(Clustered(:{{cluster}})), {{data}};
-    response = :{{y}}, regressors = [:{{exog}}],
-    endogenous = [:{{endog}}], instruments = [:{{instr}}])
+    response = :{{y}}, regressors = Symbol.(split("{{exog}}")),
+    endogenous = Symbol.(split("{{endog}}")), instruments = Symbol.(split("{{instr}}")))
 
 names = coefnames(result)  # variable names
 b     = coef(result)  # GMM estimates
@@ -311,8 +314,8 @@ using Microeconometrics
 {{?vcov=hom}} result = fit(GMM(Homoscedastic()), {{data}};
 {{?vcov=het}} result = fit(GMM(Heteroscedastic()), {{data}};
 {{?vcov=clustered}} result = fit(GMM(Clustered(:{{cluster}})), {{data}};
-    response = :{{y}}, regressors = [:{{exog}}],
-    endogenous = [:{{endog}}], instruments = [:{{instr}}])
+    response = :{{y}}, regressors = Symbol.(split("{{exog}}")),
+    endogenous = Symbol.(split("{{endog}}")), instruments = Symbol.(split("{{instr}}")))
 
 ci    = confint(result)  # 95% confidence intervals (n x 2 matrix)
 names = coefnames(result)  # variable names
@@ -330,14 +333,14 @@ code = '''
 using Microeconometrics
 
 iv  = fit(IV(Homoscedastic()), {{data}};  # 2SLS: efficient only under homoscedasticity
-    response = :{{y}}, regressors = [:{{exog}}],
-    endogenous = [:{{endog}}], instruments = [:{{instr}}])
+    response = :{{y}}, regressors = Symbol.(split("{{exog}}")),
+    endogenous = Symbol.(split("{{endog}}")), instruments = Symbol.(split("{{instr}}")))
 
 {{?vcov=hom}} gmm = fit(GMM(Homoscedastic()), {{data}};  # efficient GMM: optimal weighting matrix
 {{?vcov=het}} gmm = fit(GMM(Heteroscedastic()), {{data}};  # efficient GMM: optimal weighting matrix
 {{?vcov=clustered}} gmm = fit(GMM(Clustered(:{{cluster}})), {{data}};  # efficient GMM: optimal weighting matrix
-    response = :{{y}}, regressors = [:{{exog}}],
-    endogenous = [:{{endog}}], instruments = [:{{instr}}])
+    response = :{{y}}, regressors = Symbol.(split("{{exog}}")),
+    endogenous = Symbol.(split("{{endog}}")), instruments = Symbol.(split("{{instr}}")))
 
 println("2SLS estimates: ", round.(coef(iv),  digits=4))  # 2SLS coefficients
 println("GMM estimates:  ", round.(coef(gmm), digits=4))  # efficient GMM coefficients

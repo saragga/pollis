@@ -388,6 +388,7 @@ f(x) = {{obj}}  # objective
 lb, ub = {{lb}}, {{ub}}  # search box
 n = length(lb)
 budget = {{budget}}  # evaluation budget
+x_start = lb .+ 0.85 .* (ub .- lb)  # start near a corner: the centre of the box is the global minimum of the default Rastrigin function
 
 # wraps f so that every evaluation is recorded
 function recorder()
@@ -414,7 +415,7 @@ function search(; budget=budget, seed=1, knob=POP)
     opt.lower_bounds, opt.upper_bounds, opt.maxeval = lb, ub, budget
     knob > 0 && (opt.population = knob)
     opt.min_objective = (x, g) -> fc(x)
-    fx, x, ret = NLopt.optimize(opt, (lb .+ ub) ./ 2)
+    fx, x, ret = NLopt.optimize(opt, x_start)
     result(x, fx, pts, vals; ret = ret)
 end
 
@@ -432,6 +433,7 @@ f(x) = {{obj}}  # objective
 lb, ub = {{lb}}, {{ub}}  # search box
 n = length(lb)
 budget = {{budget}}  # evaluation budget
+x_start = lb .+ 0.85 .* (ub .- lb)  # start near a corner: the centre of the box is the global minimum of the default Rastrigin function
 
 # wraps f so that every evaluation is recorded
 function recorder()
@@ -454,7 +456,7 @@ KNOB, GRID = "perturbation scale", [0.02, 0.05, 0.1, 0.2, 0.4]
 function search(; budget=budget, seed=1, knob=SCALE)
     Random.seed!(seed)
     fc, pts, vals = recorder()
-    bx, bf = descend(fc, (lb .+ ub) ./ 2)
+    bx, bf = descend(fc, x_start)
     while length(vals) < budget
         x, fx = descend(fc, bx .+ knob .* (ub .- lb) .* randn(n))  # kick the incumbent, then descend
         if fx < bf
@@ -478,6 +480,7 @@ f(x) = {{obj}}  # objective
 lb, ub = {{lb}}, {{ub}}  # search box
 n = length(lb)
 budget = {{budget}}  # evaluation budget
+x_start = lb .+ 0.85 .* (ub .- lb)  # start near a corner: the centre of the box is the global minimum of the default Rastrigin function
 
 # wraps f so that every evaluation is recorded
 function recorder()
@@ -508,7 +511,7 @@ end
 function search(; budget=budget, seed=1, knob=FRAC)
     Random.seed!(seed)
     fc, pts, vals = recorder()
-    bx, bf = descend(fc, (lb .+ ub) ./ 2)
+    bx, bf = descend(fc, x_start)
     while length(vals) < budget
         x, fx = descend(fc, destroy(bx, knob))  # destroy, then repair
         if fx < bf
@@ -532,6 +535,7 @@ f(x) = {{obj}}  # objective
 lb, ub = {{lb}}, {{ub}}  # search box
 n = length(lb)
 budget = {{budget}}  # evaluation budget
+x_start = lb .+ 0.85 .* (ub .- lb)  # start near a corner: the centre of the box is the global minimum of the default Rastrigin function
 
 # wraps f so that every evaluation is recorded
 function recorder()
@@ -564,7 +568,7 @@ function search(; budget=budget, seed=1, knob=REACT)
     fc, pts, vals = recorder()
     w = ones(length(FRACS))  # operator weights
     uses = zeros(Int, length(FRACS))
-    bx, bf = descend(fc, (lb .+ ub) ./ 2)
+    bx, bf = descend(fc, x_start)
     while length(vals) < budget
         k = findfirst(cumsum(w ./ sum(w)) .>= rand())  # roulette-wheel choice
         uses[k] += 1
@@ -592,6 +596,7 @@ f(x) = {{obj}}  # objective
 lb, ub = {{lb}}, {{ub}}  # search box
 n = length(lb)
 budget = {{budget}}  # evaluation budget
+x_start = lb .+ 0.85 .* (ub .- lb)  # start near a corner: the centre of the box is the global minimum of the default Rastrigin function
 
 # wraps f so that every evaluation is recorded
 function recorder()
@@ -615,7 +620,7 @@ KNOB, GRID = "temperature", [0.0, 0.3, 1.0, 3.0, 10.0]
 function search(; budget=budget, seed=1, knob=TEMP)
     Random.seed!(seed)
     fc, pts, vals = recorder()
-    cx, cf = descend(fc, (lb .+ ub) ./ 2)  # current basin
+    cx, cf = descend(fc, x_start)  # current basin
     bx, bf = cx, cf
     accepted = 0
     while length(vals) < budget
@@ -645,6 +650,7 @@ f(x) = {{obj}}  # objective
 lb, ub = {{lb}}, {{ub}}  # search box
 n = length(lb)
 budget = {{budget}}  # evaluation budget
+x_start = lb .+ 0.85 .* (ub .- lb)  # start near a corner: the centre of the box is the global minimum of the default Rastrigin function
 
 # wraps f so that every evaluation is recorded
 function recorder()
@@ -667,7 +673,7 @@ KNOB, GRID = "cooling rate", [0.5, 0.7, 0.85, 0.9, 0.95]
 function search(; budget=budget, seed=1, knob=RT)
     Random.seed!(seed)
     fc, pts, vals = recorder()
-    r = Optim.optimize(fc, lb, ub, (lb .+ ub) ./ 2, SAMIN(rt=knob, verbosity=0), Optim.Options(iterations=budget))
+    r = Optim.optimize(fc, lb, ub, x_start, SAMIN(rt=knob, verbosity=0), Optim.Options(iterations=budget))
     result(Optim.minimizer(r), Optim.minimum(r), pts, vals)
 end
 
@@ -771,11 +777,11 @@ function crs(seed)
     opt = Opt(:GN_CRS2_LM, n)
     opt.lower_bounds, opt.upper_bounds, opt.maxeval = lb, ub, budget
     opt.min_objective = (x, g) -> f(x)
-    NLopt.optimize(opt, (lb .+ ub) ./ 2)[1]
+    NLopt.optimize(opt, x_start)[1]
 end
 function samin(seed)
     Random.seed!(seed)
-    Optim.minimum(Optim.optimize(f, lb, ub, (lb .+ ub) ./ 2, SAMIN(verbosity=0), Optim.Options(iterations=budget)))
+    Optim.minimum(Optim.optimize(f, lb, ub, x_start, SAMIN(verbosity=0), Optim.Options(iterations=budget)))
 end
 runs = ["selected method" => s -> search(seed=s).fx, "CRS" => crs, "SA" => samin]
 map(runs) do (name, run)

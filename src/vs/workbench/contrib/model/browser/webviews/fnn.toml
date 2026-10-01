@@ -207,8 +207,8 @@ when = "head=standard"
 [[inputs]]
 id = "latent-dim"
 label = "latent_dim"
-tooltip = "Dimension of the bottleneck (latent) space in autoencoders. Smaller values force stronger compression; larger values preserve more information. Typical range: 2-64."
-default = "16"
+tooltip = "Dimension of the bottleneck (latent) space in autoencoders. It must be smaller than the input size, or the network can learn the identity and compresses nothing. Smaller values force stronger compression; larger values preserve more information."
+default = "3"
 models = ["ae", "vae"]
 
 [[inputs]]
@@ -524,6 +524,9 @@ using Random
 n = size({{xvar}}, 2)
 idx = randperm(n)
 val, tr = idx[1:div(n, 5)], idx[div(n, 5) + 1:end]
+reinit(p) = p isa AbstractMatrix{Float32} ? Flux.glorot_uniform(size(p)...) : p isa AbstractVector{Float32} ? zero(p) : p
+model = Flux.fmap(reinit, model)  # fresh weights: the model above was trained on every sample, validation rows included
+opt_state = Flux.setup(Adam(1f-3), model)
 {{?model=mlp}} train_loader = Flux.DataLoader(({{xvar}}[:, tr], {{yvar}}[:, tr]), batchsize=64, shuffle=true)
 {{?model!=mlp}} train_loader = Flux.DataLoader({{xvar}}[:, tr], batchsize=64, shuffle=true)
 for epoch in 1:100
