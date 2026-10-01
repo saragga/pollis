@@ -279,8 +279,8 @@ detail = "basin-hopping (Basinhopping.jl); random perturbation + local descent; 
 [[inputs]]
 id = "obj"
 label = "Objective function body"
-tooltip = "Julia expression(s) for the objective function body. Must end with a return statement. Example: return x[1]^2 + x[2]^2"
-default = "return x[1]^2 + x[2]^2"
+tooltip = "Julia expression(s) for the objective function body. Must end with a return statement. The default is the Rastrigin function, with many local minima and the global minimum 0 at the origin; a single bowl such as x[1]^2 + x[2]^2 gives a global method nothing to do."
+default = "return 20 + x[1]^2 + x[2]^2 - 10 * (cos(2pi * x[1]) + cos(2pi * x[2]))"
 
 [[inputs]]
 id = "lb"
@@ -291,8 +291,8 @@ default = "[-2.0, -2.0]"
 [[inputs]]
 id = "ub"
 label = "Upper bounds (ub)"
-tooltip = "Julia vector of upper bounds, one per dimension. Example: [2.0, 2.0]"
-default = "[2.0, 2.0]"
+tooltip = "Julia vector of upper bounds, one per dimension. The default box is not centred on the optimum at the origin, because the search starts at the box midpoint."
+default = "[3.0, 2.5]"
 
 [[inputs]]
 id = "n"
@@ -346,6 +346,8 @@ ub  = {{ub}}  # upper bounds (length {{n}})
 x0  = (lb .+ ub) ./ 2  # midpoint starting point
 
 opt = Opt(:GN_MLSL_LDS, {{n}})  # MLSL: multi-level single-linkage (LDS)
+loc = Opt(:LN_BOBYQA, {{n}}); loc.xtol_rel = 1e-6  # MLSL needs a local optimiser to start from its sample points
+opt.local_optimizer = loc
 opt.lower_bounds = lb  # box constraint lower
 opt.upper_bounds = ub  # box constraint upper
 opt.min_objective = obj  # minimise the objective
@@ -361,12 +363,14 @@ println("return:  ", ret)  # :MAXEVAL_REACHED is expected and normal
 [[codeBranches]]
 model = "stogo"
 code = '''
-using NLopt
+using NLopt, ForwardDiff
 
-function obj(x::Vector{Float64}, grad::Vector{Float64})
-    if length(grad) > 0  # StoGO requires gradient: fill grad[i] = df/dx[i]
-    end  # 
+function f_val(x)
     {{obj}}  # objective body
+end
+function obj(x::Vector{Float64}, grad::Vector{Float64})
+    length(grad) > 0 && (grad .= ForwardDiff.gradient(f_val, x))  # StoGO uses the gradient: supply it, or it sees zeros
+    return f_val(x)
 end
 
 lb  = {{lb}}  # lower bounds (length {{n}})
@@ -389,12 +393,14 @@ println("return:  ", ret)  # :MAXEVAL_REACHED is expected and normal
 [[codeBranches]]
 model = "stogo-r"
 code = '''
-using NLopt
+using NLopt, ForwardDiff
 
-function obj(x::Vector{Float64}, grad::Vector{Float64})
-    if length(grad) > 0  # StoGO requires gradient: fill grad[i] = df/dx[i]
-    end  # 
+function f_val(x)
     {{obj}}  # objective body
+end
+function obj(x::Vector{Float64}, grad::Vector{Float64})
+    length(grad) > 0 && (grad .= ForwardDiff.gradient(f_val, x))  # StoGO uses the gradient: supply it, or it sees zeros
+    return f_val(x)
 end
 
 lb  = {{lb}}  # lower bounds (length {{n}})
@@ -676,6 +682,7 @@ opt_crs.min_objective = obj; opt_crs.maxeval = {{budget}}  #
 (f_crs, x_crs, _) = optimize(opt_crs, x0)  # run CRS
 
 opt_mlsl = Opt(:GN_MLSL_LDS, {{n}}); opt_mlsl.lower_bounds = {{lb}}; opt_mlsl.upper_bounds = {{ub}}  # MLSL
+loc = Opt(:LN_BOBYQA, {{n}}); loc.xtol_rel = 1e-6; opt_mlsl.local_optimizer = loc  # MLSL needs a local optimiser
 opt_mlsl.min_objective = obj; opt_mlsl.maxeval = {{budget}}  # 
 (f_mlsl, x_mlsl, _) = optimize(opt_mlsl, x0)  # run MLSL
 

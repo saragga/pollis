@@ -719,7 +719,7 @@ println("MCMC mu: ", round(mcmc_mu; digits=4))  # compare
 [[actionGroups.actions]]
 id = "model-comparison"
 label = "Model Comparison"
-desc = "Compare Gaussian vs Laplace noise models via variational free energy as a model selection criterion"
+desc = "Final variational free energy of the Gaussian model, the quantity used to compare models: fit an alternative (for example Laplace noise) to the same data and prefer the lower value"
 code = '''
 using RxInfer
 
@@ -727,8 +727,8 @@ obs = rand(Normal(2.0, 0.5), {{n}})  # replace with real data
 
 r_gaussian = infer(model = gaussian_model(n = {{n}}), data = (y = obs,), iterations = {{iter}}, returnvars = (mu = KeepLast(),), free_energy = true)  # Gaussian noise
 
-println("Gaussian free energy: ", r_gaussian.free_energy[end])  # lower = better fit
-println("Use the model with lower final free energy")  # model selection rule
+println("Gaussian free energy: ", r_gaussian.free_energy[end])  # an upper bound on -log evidence: lower means more evidence, with complexity already penalised
+println("Fit a competing model to the same obs and keep the one with the lower final free energy")  # only one model is fitted here
 '''
 
 [[actionGroups]]

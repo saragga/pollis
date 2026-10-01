@@ -338,10 +338,10 @@ id = "predictive-dist"
 label = "One-Step Predictive"
 desc = "Marginal predictive distribution at t+1"
 code = '''
-using Distributions, Plots
+using Distributions, Plots, StatsBase, Random  # StatsBase for sample and Weights, Random for MersenneTwister
 
 rng    = MersenneTwister(42)  # reproducible RNG
-preds  = Particle.[]  # placeholder for predictive particles
+preds  = Particle[]  # predictive particles
 w_last = exp.(smcio.logWeights[{{t}}])  # final filter weights
 idx    = sample(1:{{n}}, Weights(w_last), {{n}})  # resample
 for i in 1:{{n}}

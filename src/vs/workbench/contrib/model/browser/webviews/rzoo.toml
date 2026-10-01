@@ -407,13 +407,15 @@ label = "Compare"
 [[actionGroups.actions]]
 id = "param-sweep"
 label = "Parameter Sensitivity"
-desc = "Simulate the model with different parameter values and compare trajectories"
+desc = "The pendulum's state derivative for three masses, away from rest (at rest every mass gives zero)"
 code = '''
-using RobotZoo, RobotDynamics, Plots  # parameter sensitivity: vary mass and compare dynamics
+using RobotZoo, RobotDynamics, Plots  # parameter sensitivity: vary the pendulum mass
 
-for mass in [0.5, 1.0, 2.0]  # sweep over three mass values
+{{?model!=pend}}error("This sweep uses the pendulum model: select Pendulum to run it")
+x_test, u_test = [pi / 4, 0.0], [0.0]  # released at 45 degrees with no torque; the default state hangs at rest, where xdot = 0 for every mass
+for mass in [0.5, 1.0, 2.0]  # sweep over three mass values (inertia held fixed, so more mass means more gravity torque)
     m_i = RobotZoo.Pendulum(mass=mass, length=0.5)
-    xdot_i = dynamics(m_i, x0, u0)
+    xdot_i = dynamics(m_i, x_test, u_test)
     println("mass=", mass, "  xdot=", xdot_i)
 end
 '''
