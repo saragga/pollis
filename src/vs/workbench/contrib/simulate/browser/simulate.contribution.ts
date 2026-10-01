@@ -14,6 +14,7 @@ import { openScaffoldWebview } from '../../model/browser/commands/scaffold.comma
 import { MCMC_PANEL } from '../../model/browser/commands/mcmc.command.js';
 import { SMC_PANEL } from '../../model/browser/commands/smc.command.js';
 import { MLMC_PANEL } from '../../model/browser/commands/mlmc.command.js';
+import { BOOT_PANEL } from '../../model/browser/commands/boot.command.js';
 import { SDE_PANEL } from '../../model/browser/commands/sde.command.js';
 import { TSSM_PANEL } from '../../model/browser/commands/tssm.command.js';
 import { DYNPPL_PANEL } from '../../model/browser/commands/dynppl.command.js';
@@ -84,6 +85,12 @@ MenuRegistry.appendMenuItem(MenuId.MenubarSimulateMenu, {
 	command: { id: 'chiara.simulate.mc.mlmc', title: localize('mc.mlmc', 'Multilevel Monte Carlo') },
 	order: 4,
 }); // MultilevelEstimators.jl
+
+MenuRegistry.appendMenuItem(MenuId.MenubarSimulateMenu, {
+	group: '1_simulation',
+	command: { id: 'chiara.simulate.mc.boot', title: localize('mc.boot', 'Bootstrap Resampling') },
+	order: 5,
+}); // Bootstrap.jl
 
 
 // MenuRegistry.appendMenuItem(MenuId.MenubarSimulateMenu, {
@@ -362,6 +369,10 @@ CommandsRegistry.registerCommand('chiara.simulate.mc.smc', (accessor: ServicesAc
 
 CommandsRegistry.registerCommand('chiara.simulate.mc.mlmc', (accessor: ServicesAccessor) =>
 	openScaffoldWebview(accessor, MLMC_PANEL)
+);
+
+CommandsRegistry.registerCommand('chiara.simulate.mc.boot', (accessor: ServicesAccessor) =>
+	openScaffoldWebview(accessor, BOOT_PANEL)
 );
 
 CommandsRegistry.registerCommand('chiara.simulate.sde', (accessor: ServicesAccessor) =>
