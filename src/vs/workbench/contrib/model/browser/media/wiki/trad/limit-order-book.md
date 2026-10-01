@@ -52,9 +52,12 @@ best_bid_ask(ob)                     # (nothing, 10002): one share left at 100.0
 |---|---|---|
 | The sell-side cross test compares the limit price with the best **ask** instead of the best bid | A marketable sell limit order is neither matched nor rested: it is silently dropped | Marketable orders are sent as one-share market orders, which is identical for one-share orders |
 | `pop_order!` lowers the order count even when the order id is not at that price | Cancelling an order that has already traded corrupts `n_orders_bid_ask` | Filled orders are removed from the panel's list of live orders, so they are never cancelled |
+| No compat bound on AVLTrees, whose 0.4.0 release removed `findkey` | A fresh install fails with `UndefVarError: findkey not defined` | Pollis installs a fork that bounds AVLTrees to 0.3 |
 | `FILLORKILL_ORDER` is exported but not defined | `using LimitOrderBook` cannot reach the fill-or-kill mode by that name | Not used; it is defined as `LimitOrderBook.FILLORKILL_FILLTYPE` |
 
-With the first bug fixed, orders of more than one share could be sent as limit orders that take what crosses and rest the rest, which is the natural extension to variable order sizes.
+Pollis installs the fork [Trumpingtons/LimitOrderBook.jl](https://github.com/Trumpingtons/LimitOrderBook.jl), which fixes the first three issues (pull request [#9](https://github.com/p-casgrain/LimitOrderBook.jl/pull/9) upstream). The panel code keeps its workarounds, so it gives the same results on either version.
+
+With the sell-side bug fixed, orders of more than one share could be sent as limit orders that take what crosses and rest the rest, which is the natural extension to variable order sizes.
 
 ## See Also
 - [Factsheet](factsheet.md) · [Overview](overview.md) · [Assumptions](assumptions.md) · [Trading Agents](trading-agents.md) · [Market Microstructure](market-microstructure.md)

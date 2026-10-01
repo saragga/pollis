@@ -25,7 +25,7 @@
 ## Computational
 
 - **Integer tick prices.** The book stores prices as whole ticks; a price is multiplied by the tick (0.01) only for display. With floating-point prices, a price computed two ways can differ in the last bit, and a cancellation would miss its price level.
-- **Package workarounds.** `LimitOrderBook.jl` 0.1.0 has two bugs (see [Limit Order Book](limit-order-book.md)): marketable *sell* limit orders are dropped instead of matched, and cancelling an order that is no longer in the book corrupts the order count. The panel therefore sends every marketable order as a one-share market order (identical for one-share orders) and removes filled orders from its list of live orders, so it never cancels a missing order.
+- **Package workarounds.** The original `LimitOrderBook.jl` 0.1.0 has two bugs, fixed in the fork Pollis installs (see [Limit Order Book](limit-order-book.md)): marketable *sell* limit orders are dropped instead of matched, and cancelling an order that is no longer in the book corrupts the order count. The panel therefore sends every marketable order as a one-share market order (identical for one-share orders) and removes filled orders from its list of live orders, so it never cancels a missing order.
 - **Single runs are random draws.** One simulation is one draw; the Predict and Compare actions average over 20 seeds and report standard errors.
 
 ## See Also

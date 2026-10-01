@@ -95,7 +95,7 @@ const UNREGISTERED_PACKAGE_URLS = new Map<string, string>([
 	['EDGAR', 'https://github.com/Trumpingtons/EDGAR.jl'],
 	['GMMTools', 'https://github.com/Gkreindler/GMMTools.jl'],
 	['HARE', 'https://github.com/Trumpingtons/HARE.jl'],
-	['LimitOrderBook', 'https://github.com/p-casgrain/LimitOrderBook.jl'],
+	['LimitOrderBook', 'https://github.com/Trumpingtons/LimitOrderBook.jl'], // fork with fixes (default branch fix-sell-cross); upstream PR p-casgrain/LimitOrderBook.jl#9
 	['LSurvival', 'https://github.com/alexpkeil1/LSurvival.jl'],
 	['MultilevelEstimators', 'https://github.com/PieterjanRobbe/MultilevelEstimators.jl'],
 	['PerformanceAnalytics', 'https://github.com/eohne/PerformanceAnalytics.jl'],
