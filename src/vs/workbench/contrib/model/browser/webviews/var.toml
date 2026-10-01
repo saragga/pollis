@@ -17,7 +17,7 @@ name = "TransmissionChannelAnalysis.jl"
 github = "https://github.com/enweg/TransmissionChannelAnalysis.jl"
 
 [requires]
-packages = ["Plots.jl"]
+packages = ["MacroEconometricModels.jl", "TransmissionChannelAnalysis.jl"]
 
 [[notebookSections]]
 label = ""
@@ -104,7 +104,7 @@ detail = "vector autoregression for joint modelling of multiple time series"
 
 [[bullets]]
 text = "Structural VAR"
-detail = "VAR with short-run or long-run identification restrictions"
+detail = "VAR with recursive, long-run or sign identification restrictions"
 
 [[bullets]]
 text = "FAVAR"
@@ -122,7 +122,7 @@ purpose = "Joint dynamics, forecasts and Granger causality"
 [[decisionRows]]
 task = "Structural VAR"
 context = "Economic shocks to identify"
-purpose = "Causal impulse responses under short- or long-run restrictions"
+purpose = "Causal impulse responses under recursive, long-run or sign restrictions"
 
 [[decisionRows]]
 task = "FAVAR"
@@ -136,59 +136,75 @@ purpose = "Long-run equilibrium relations plus short-run adjustment"
 
 [[inputs]]
 id = "xvar"
-label = "Panel data (X)"
-tooltip = "T x N large panel of observables summarised by the latent factors."
+label = "Panel Data (X)"
+tooltip = "T x N panel of stationary series summarised by the latent factors. With the default X, the code builds a balanced panel from the FRED-QD database shipped with the package, with the federal funds rate in levels."
 default = "X"
 models = ["favar"]
 
 [[inputs]]
 id = "yvar"
-label = "Data variable"
-tooltip = "T x n matrix of endogenous variables. For FAVAR, the fast-moving / policy variables; for VECM, the I(1) series."
+label = "Data Variable"
+tooltip = "T x n matrix of endogenous variables, one column per series. For FAVAR, the observed key series (with the default X, the federal funds rate); for VECM, the I(1) series in levels. With the default y, the code loads an example dataset shipped with the package."
 default = "y"
 
 [[inputs]]
 id = "p"
-label = "p (lags)"
-tooltip = "Lag order: number of lagged vectors of endogenous variables in each equation. Select by AIC or BIC. Default 1."
-default = "1"
+label = "p (Lags)"
+tooltip = "Lag order of the VAR in levels. For VECM this is the levels order, so the model has p - 1 lagged differences. Choose it with the Lag Selection action. Default 2."
+default = "2"
 newRow = true
 
 [[inputs]]
 id = "trend"
-label = "Trend"
-tooltip = "Deterministic component: const (intercept only), trend (linear trend only), both (intercept and trend) or none. Default const."
+label = "Deterministic Terms"
+tooltip = "Deterministic terms of the VECM and the Johansen test: an unrestricted constant, a constant and a linear trend, or none. The VAR always has an intercept in every equation. Default constant."
 kind = "select"
-default = "const"
-models = ["var", "svar", "vecm"]
+default = "constant"
+models = ["vecm"]
 
 [[inputs.options]]
-value = "const"
-label = "Constant (const)"
+value = "constant"
+label = "Constant"
 
 [[inputs.options]]
 value = "trend"
-label = "Linear trend (trend)"
-
-[[inputs.options]]
-value = "both"
-label = "Constant + trend (both)"
+label = "Constant + Trend"
 
 [[inputs.options]]
 value = "none"
 label = "None"
 
 [[inputs]]
+id = "ident"
+label = "Identification"
+tooltip = "How the structural shocks are identified. Recursive (Cholesky): column order matters, slow-moving series first. Long-run (Blanchard-Quah): shock j has no long-run effect on variables 1 to j - 1, which suits growth rates. Sign: the last shock raises variable 3 and does not raise variables 1 and 2 for two quarters, so the data need at least 3 columns."
+kind = "select"
+default = "cholesky"
+models = ["svar"]
+
+[[inputs.options]]
+value = "cholesky"
+label = "Recursive (Cholesky)"
+
+[[inputs.options]]
+value = "long_run"
+label = "Long-Run (Blanchard-Quah)"
+
+[[inputs.options]]
+value = "sign"
+label = "Sign Restrictions"
+
+[[inputs]]
 id = "nfactors"
 label = "Factors"
-tooltip = "Number of latent factors for FAVAR. Factors summarise large panels of observable variables not included directly in the VAR. Default 1."
-default = "1"
+tooltip = "Number of latent factors extracted from the panel by principal components. Default 3, as in Bernanke, Boivin and Eliasz (2005)."
+default = "3"
 models = ["favar"]
 
 [[inputs]]
 id = "r"
-label = "r (rank)"
-tooltip = "Cointegration rank: number of cointegrating vectors for VECM. Determine via Johansen trace or max-eigenvalue tests. Default 1."
+label = "r (Rank)"
+tooltip = "Cointegrating rank: the number of long-run relations, between 1 and n - 1. Choose it with the Johansen Cointegration Test action, or write :auto to let the trace test pick it at the 5% level. Default 1."
 default = "1"
 models = ["vecm"]
 
@@ -250,10 +266,19 @@ model = "var"
 code = '''
 using MacroEconometricModels
 
-model = VAR({{yvar}}, {{p}}, trend="{{trend}}")  # VAR({{p}})
-fit!(model)  # OLS equation by equation
+{{?yvar=y}}# Example: US output gap, GDP-deflator inflation and federal funds rate, quarterly
+{{?yvar=y}}# (McKay and Wolf 2023 data appendix, shipped with the package)
+{{?yvar=y}}mpd = load_example(:mp_shocks)[:, ["ygap", "infl", "ffr"]]
+{{?yvar=y}}rows = findall(i -> all(isfinite, Matrix(mpd)[i, :]), 1:size(Matrix(mpd), 1))  # the gap starts in 1969Q1
+{{?yvar=y}}y = Matrix(mpd)[rows, :]
+{{?yvar=y}}varnames = mpd.varnames
+{{?yvar!=y}}varnames = ["y$i" for i in 1:size({{yvar}}, 2)]
 
-print_results(model)  # display estimates and diagnostics
+model = estimate_var({{yvar}}, {{p}}; varnames)  # VAR({{p}}) by OLS, intercept in every equation
+ident = (method = :cholesky,)  # orthogonalised shocks, recursive in column order
+ci = (ci_type = :bootstrap, reps = 500)  # residual-bootstrap bands for the impulse responses
+
+report(model)  # coefficients, residual covariance and information criteria
 '''
 
 [[codeBranches]]
@@ -261,10 +286,28 @@ model = "svar"
 code = '''
 using MacroEconometricModels
 
-var  = VAR({{yvar}}, {{p}}, trend="{{trend}}")  # reduced-form VAR
-fit!(var)  # estimate reduced form
-svar = SVAR(var, ...)  # add identification restrictions
-fit!(svar)  # identify structural shocks
+{{?yvar=y}}# Example: US output gap, GDP-deflator inflation and federal funds rate, quarterly
+{{?yvar=y}}# (McKay and Wolf 2023 data appendix, shipped with the package)
+{{?yvar=y}}mpd = load_example(:mp_shocks)[:, ["ygap", "infl", "ffr"]]
+{{?yvar=y}}rows = findall(i -> all(isfinite, Matrix(mpd)[i, :]), 1:size(Matrix(mpd), 1))  # the gap starts in 1969Q1
+{{?yvar=y}}y = Matrix(mpd)[rows, :]
+{{?yvar=y}}varnames = mpd.varnames
+{{?yvar!=y}}varnames = ["y$i" for i in 1:size({{yvar}}, 2)]
+
+model = estimate_var({{yvar}}, {{p}}; varnames)  # reduced-form VAR({{p}})
+{{?ident=cholesky}}ident = (method = :cholesky,)  # recursive: shock j moves only variables j to n on impact (order slow to fast)
+{{?ident=long_run}}ident = (method = :long_run,)  # Blanchard-Quah: shock j has no long-run (cumulative) effect on variables 1 to j - 1
+{{?ident=sign}}# Monetary tightening = the last shock: for two quarters it raises variable 3 (the rate)
+{{?ident=sign}}# and does not raise variables 1 and 2. resp is indexed [horizon, variable, shock];
+{{?ident=sign}}# the other shocks are left unidentified.
+{{?ident=sign}}tightening(resp) = all(resp[1:2, 3, 3] .> 0) && all(resp[1:2, 1, 3] .<= 0) && all(resp[1:2, 2, 3] .<= 0)
+{{?ident=sign}}ident = (method = :sign, check_func = tightening, max_draws = 5000)
+{{?ident!=sign}}ci = (ci_type = :bootstrap, reps = 500)  # residual-bootstrap bands
+{{?ident=sign}}ci = (;)  # sign restrictions: bands span the accepted rotations (the identified set)
+
+responses = irf(model, 20; ident..., ci...)  # every later action reuses ident, so the identification carries through
+println("Impact responses (rows = variables, columns = shocks):")
+display(round.(responses.values[1, :, :]; digits = 3))
 '''
 
 [[codeBranches]]
@@ -272,8 +315,25 @@ model = "favar"
 code = '''
 using MacroEconometricModels
 
-model = FAVAR({{xvar}}, {{yvar}}, {{p}}, {{nfactors}})  # FAVAR({{p}}) with {{nfactors}} factor(s)
-fit!(model)  # two-step principal components + VAR
+{{?xvar=X}}# Example: FRED-QD (McCracken and Ng 2020), January 2026 vintage, shipped with the package
+{{?xvar=X}}qd = load_example(:fred_qd)
+{{?xvar=X}}tq = apply_tcode(qd)  # each series made stationary by its FRED-QD transformation code
+{{?xvar=X}}M = Matrix(tq)[1:end-1, :]  # drop the last quarter, still incomplete for many series
+{{?xvar=X}}keep = findall(j -> all(isfinite, M[:, j]), 1:size(M, 2))  # balanced panel
+{{?xvar=X}}X = M[:, keep]
+{{?xvar=X}}panel_names = tq.varnames[keep]
+{{?xvar=X}}iffr = findfirst(==("FEDFUNDS"), panel_names)
+{{?xvar=X}}ffr = qd[:, "FEDFUNDS"]
+{{?xvar=X}}X[:, iffr] = ffr[(end - size(X, 1)):(end - 1)]  # the policy rate in levels, as in Bernanke, Boivin and Eliasz (2005)
+{{?xvar!=X}}panel_names = ["x$j" for j in 1:size({{xvar}}, 2)]
+{{?yvar=y}}y = X[:, [iffr]]  # key series: the federal funds rate (needs the default X)
+
+# Two steps: principal-component factors from X, purged of y, then a VAR({{p}}) on [factors, y]
+model = estimate_favar({{xvar}}, {{yvar}}, {{nfactors}}, {{p}}; panel_varnames = panel_names)
+ident = (method = :cholesky,)  # recursive with y last: the rate reacts within the quarter, the factors do not
+ci = (ci_type = :bootstrap, reps = 500)  # the bootstrap treats the estimated factors as data
+
+display(model)
 '''
 
 [[codeBranches]]
@@ -281,10 +341,19 @@ model = "vecm"
 code = '''
 using MacroEconometricModels
 
-model = VECM({{yvar}}, {{p}}, {{r}}, trend="{{trend}}")  # VECM with rank {{r}}
-fit!(model)  # Johansen ML estimation
+{{?yvar=y}}# Example: Danish money demand, 1974Q1-1987Q3 (Johansen and Juselius 1990):
+{{?yvar=y}}# log real M2, log real income, bond rate and deposit rate
+{{?yvar=y}}dk = load_example(:denmark)[:, ["LRM", "LRY", "IBO", "IDE"]]
+{{?yvar=y}}y = Matrix(dk)
+{{?yvar=y}}varnames = dk.varnames
+{{?yvar!=y}}varnames = ["y$i" for i in 1:size({{yvar}}, 2)]
 
-print_results(model)  # cointegrating vectors and loading matrix
+# Johansen ML; {{p}} is the VAR order in levels, so the VECM has {{p}} - 1 lagged differences
+model = estimate_vecm({{yvar}}, {{p}}; rank = {{r}}, deterministic = :{{trend}}, varnames)
+ident = (method = :cholesky,)  # recursive shocks on the implied VAR in levels
+ci = (;)  # no bootstrap bands: the levels-VAR bootstrap would drop the rank restriction
+
+report(model)  # alpha (adjustment), beta (cointegrating vectors), Gamma (short-run dynamics)
 '''
 
 [[actionGroups]]
@@ -294,27 +363,29 @@ label = "Visualise"
 [[actionGroups.actions]]
 id = "series-plot"
 label = "Series Plot"
-desc = "Plot every endogenous series on a shared time axis"
+desc = "Plot every series of the VAR system on a shared time axis"
 code = '''
-using Plots
+using MacroEconometricModels
 
-plot({{yvar}}; layout = (size({{yvar}}, 2), 1), legend = false, xlabel = "Period")  # one panel per variable
+{{?model=favar}}sys = to_var(model)  # the VAR system: estimated factors, then y
+{{?model=favar}}display_plot(plot_result(TimeSeriesData(sys.Y; varnames = sys.varnames)))
+{{?model!=favar}}display_plot(plot_result(TimeSeriesData({{yvar}}; varnames)))  # opens in the browser
 '''
 
 [[actionGroups.actions]]
 id = "irf-plot"
 label = "Impulse Responses"
-desc = "Plot the responses of every variable to each shock over 20 periods"
+desc = "Responses of every variable to each identified shock over 20 quarters, with bands"
 code = '''
-using MacroEconometricModels, Plots
+using MacroEconometricModels
 
-{{?model=var|svar}} model = VAR({{yvar}}, {{p}}, trend="{{trend}}")  # reduced-form VAR({{p}})
-{{?model=favar}} model = FAVAR({{xvar}}, {{yvar}}, {{p}}, {{nfactors}})  # FAVAR({{p}}) with {{nfactors}} factor(s)
-{{?model=vecm}} model = VECM({{yvar}}, {{p}}, {{r}}, trend="{{trend}}")  # VECM with rank {{r}}
-fit!(model)
-
-responses = irf(model, 20)  # impulse responses, horizon 20
-plot(responses)
+responses = irf(model, 20; ident..., ci...)  # identification and bands from the main code
+display_plot(plot_result(responses))
+{{?model=favar}}panel = favar_panel_irf(model, responses)  # map the responses to every panel series through the loadings
+{{?model=favar}}for name in intersect(["GDPC1", "UNRATE", "GS10"], panel.variables)  # responses to the last shock (y)
+{{?model=favar}}     i = findfirst(==(name), panel.variables)
+{{?model=favar}}    println(rpad(name, 8), round.(panel.values[[1, 5, 9, 13], i, end]; digits = 3))  # quarters 0, 4, 8, 12; transformed-series units
+{{?model=favar}}end
 '''
 
 [[actionGroups]]
@@ -328,24 +399,45 @@ desc = "Trace and max-eigenvalue tests for the number of cointegrating vectors a
 code = '''
 using MacroEconometricModels
 
-result = JohansenTest({{yvar}}, :trace, {{p}})  # trace test for cointegrating rank
-
-println(result)
-println("Rank: ", rank(result))  # number of cointegrating vectors
+jo = johansen_test({{yvar}}, {{p}}; deterministic = :{{trend}})  # one trace and one max-eigenvalue test per rank
+display(jo)
+println("Rank selected by the trace test at 5%: ", jo.rank)
+println("0 = no cointegration (VAR in differences); n = stationary levels (VAR in levels); in between = VECM")
 '''
 
 [[actionGroups.actions]]
 id = "lag-selection"
 label = "Lag Selection"
-desc = "Compare information criteria across lag orders to choose p"
+desc = "AIC, BIC and HQ for p = 1 to 6, all fitted on the same sample"
 code = '''
 using MacroEconometricModels
 
-for lags in 1:8
-    m = VAR({{yvar}}, lags)
-    fit!(m)
-    println("p = ", lags, "  AIC = ", round(aic(m), digits = 2), "  BIC = ", round(bic(m), digits = 2))  # pick the minimum
+{{?model=favar}}Ylag = to_var(model).Y  # the VAR system: factors and y
+{{?model!=favar}}Ylag = {{yvar}}  # for VECM, the levels VAR order
+max_p = 6
+println("p    AIC      BIC      HQ")
+for lags in 1:max_p
+    m = estimate_var(Ylag[(max_p - lags + 1):end, :], lags; check_stability = false)  # drop the same max_p start-up rows for every p
+    println(rpad(lags, 5), rpad(round(m.aic, digits = 3), 9), rpad(round(m.bic, digits = 3), 9), round(m.hqic, digits = 3))
 end
+println("Chosen p: AIC ", select_lag_order(Ylag, max_p; criterion = :aic),
+    ", BIC ", select_lag_order(Ylag, max_p; criterion = :bic),
+    ", HQ ", select_lag_order(Ylag, max_p; criterion = :hqic))
+'''
+
+[[actionGroups.actions]]
+id = "stability"
+label = "Stability Check"
+desc = "Moduli of the companion-matrix eigenvalues: below 1 means shocks die out"
+code = '''
+using MacroEconometricModels, LinearAlgebra
+
+{{?model=var|svar}}sys = model
+{{?model=vecm|favar}}sys = to_var(model)  # the implied VAR in levels
+moduli = sort(abs.(eigvals(companion_matrix(sys.B, nvars(sys), sys.p))); rev = true)
+println("Largest moduli: ", round.(moduli[1:min(6, end)]; digits = 3))
+{{?model=vecm}}println("Rank ", model.rank, " implies ", nvars(model) - model.rank, " unit root(s); every other modulus should be below 1")
+{{?model!=vecm}}println(moduli[1] < 1 ? "Stable: every modulus is below 1" : "Not stable: a modulus is at or above 1, so responses do not die out")
 '''
 
 [[actionGroups]]
@@ -355,17 +447,14 @@ label = "Predict"
 [[actionGroups.actions]]
 id = "forecast"
 label = "Forecast"
-desc = "Forecast every variable 12 periods ahead"
+desc = "Forecast every variable 12 quarters ahead with 95% intervals"
 code = '''
 using MacroEconometricModels
 
-{{?model=var|svar}} model = VAR({{yvar}}, {{p}}, trend="{{trend}}")  # reduced-form VAR({{p}})
-{{?model=favar}} model = FAVAR({{xvar}}, {{yvar}}, {{p}}, {{nfactors}})  # FAVAR({{p}}) with {{nfactors}} factor(s)
-{{?model=vecm}} model = VECM({{yvar}}, {{p}}, {{r}}, trend="{{trend}}")  # VECM with rank {{r}}
-fit!(model)
-
-fc = forecast(model, 12)  # 12-step-ahead forecasts
-println(fc)
+{{?model=var|svar|favar}}fc = forecast(model, 12)  # residual-bootstrap intervals
+{{?model=svar}}# Forecasts come from the reduced form: identification rotates the shocks but does not change them.
+{{?model=vecm}}fc = forecast(model, 12; ci_method = :bootstrap)  # iterates the VECM, so the paths respect the cointegrating relations
+display_plot(plot_result(fc))
 '''
 
 [[actionGroups]]
@@ -375,15 +464,23 @@ label = "Compare"
 [[actionGroups.actions]]
 id = "var-vs-vecm"
 label = "VAR vs VECM"
-desc = "Fit a VAR in levels and a VECM and compare their information criteria"
+desc = "AIC and BIC of the VAR in levels and of a VECM at every rank, on the same sample"
 code = '''
-using MacroEconometricModels
+using MacroEconometricModels, LinearAlgebra
 
-var  = VAR({{yvar}}, {{p}});       fit!(var)  # VAR in levels
-vecm = VECM({{yvar}}, {{p}}, {{r}}); fit!(vecm)  # imposes {{r}} cointegrating relation(s)
-
-println("VAR  AIC: ", round(aic(var),  digits = 2))
-println("VECM AIC: ", round(aic(vecm), digits = 2))
+{{?model=favar}}println("VAR vs VECM needs several I(1) series in levels; a FAVAR system is stationary by construction.")
+{{?model!=favar}}n = size({{yvar}}, 2)
+{{?model!=favar}}levels = estimate_var({{yvar}}, {{p}}; check_stability = false)  # unrestricted VAR({{p}}) = VECM with full rank n
+{{?model!=favar}}Teff = size(levels.U, 1)  # T - p, the same sample as every VECM below
+{{?model!=favar}}# Same formula for both: log det of the ML residual covariance plus a penalty on the free parameters.
+{{?model!=favar}}# VAR: n(1 + n p). VECM rank r: n constants + n^2 (p - 1) Gamma + r(2n - r) for alpha and beta (net of normalisation).
+{{?model!=favar}}crit(S, k) = (round(logdet(S) + 2k / Teff, digits = 3), round(logdet(S) + k * log(Teff) / Teff, digits = 3))
+{{?model!=favar}}println("model         AIC, BIC")
+{{?model!=favar}}for rk in 1:(n - 1)
+{{?model!=favar}}     m = estimate_vecm({{yvar}}, {{p}}; rank = rk, deterministic = :constant)
+{{?model!=favar}}     println(rpad("VECM r = $rk", 14), crit(m.Sigma, n + n^2 * ({{p}} - 1) + rk * (2n - rk)))
+{{?model!=favar}}end
+{{?model!=favar}}println(rpad("VAR (r = $n)", 14), crit(levels.Sigma, n * (1 + n * {{p}})))
 '''
 
 [[actionGroups]]
@@ -393,17 +490,70 @@ label = "Interpret"
 [[actionGroups.actions]]
 id = "fevd"
 label = "Variance Decomposition"
-desc = "Share of each variable's forecast error variance explained by each shock"
+desc = "Share of the forecast error variance of each variable due to each identified shock"
 code = '''
 using MacroEconometricModels
 
-{{?model=var|svar}} model = VAR({{yvar}}, {{p}}, trend="{{trend}}")  # reduced-form VAR({{p}})
-{{?model=favar}} model = FAVAR({{xvar}}, {{yvar}}, {{p}}, {{nfactors}})  # FAVAR({{p}}) with {{nfactors}} factor(s)
-{{?model=vecm}} model = VECM({{yvar}}, {{p}}, {{r}}, trend="{{trend}}")  # VECM with rank {{r}}
-fit!(model)
+decomp = fevd(model, 20; ident...)  # same identification as the impulse responses
+display_plot(plot_result(decomp))
+'''
 
-decomp = fevd(model, 20)  # forecast error variance decomposition, horizon 20
-println(decomp)
+[[actionGroups.actions]]
+id = "historical-decomposition"
+label = "Historical Decomposition"
+desc = "Split each observed series into initial conditions plus the contribution of each identified shock"
+code = '''
+using MacroEconometricModels
+
+hd = historical_decomposition(model; ident...)  # same identification as the impulse responses
+println("Contributions add up to the data: ", verify_decomposition(hd))
+display_plot(plot_result(hd))
+'''
+
+[[actionGroups.actions]]
+id = "transmission-channels"
+label = "Transmission Channels"
+desc = "Split the response of variable 2 to the last shock into the part that goes through variable 1 and the direct part (TransmissionChannelAnalysis.jl)"
+code = '''
+{{?model=favar|vecm}}println("Transmission channels are set up for the VAR and SVAR (rate, output gap, inflation); not for this model.")
+{{?model=var|svar}}using MacroEconometricModels, TransmissionChannelAnalysis, LinearAlgebra, Logging, Statistics
+{{?model=var|svar}}
+{{?model=var|svar}}# Transmission channel analysis (Wegner, Lieb, Smeekes and Wilms 2024). With the default y:
+{{?model=var|svar}}# shock 3 (monetary policy), channel = variable 1 (output gap), outcome = variable 2 (inflation).
+{{?model=var|svar}}# The transmission order puts the rate first, then the channel, then the outcome.
+{{?model=var|svar}}shock, channel, outcome = 3, 1, 2
+{{?model=var|svar}}n, p, H = nvars(model), model.p, 16  # quarters 0 to 16
+{{?model=var|svar}}order = [shock; channel; outcome; setdiff(1:n, [shock, channel, outcome])]
+{{?model=var|svar}}As = extract_ar_coefficients(model.B, n, p)  # reduced-form lag matrices A_1 ... A_p
+{{?model=var|svar}}Sigma = Matrix(Symmetric(model.Sigma))
+{{?model=var|svar}}direct_q = not_through(channel, 0:H, order)  # paths that never pass through the channel
+{{?model=var|svar}}rows = [map_y_to_x(outcome, h, n, order) for h in 0:H]  # the outcome at each horizon in the systems form
+{{?model=var|svar}}
+{{?model=var|svar}}# Impact matrix of the identified shocks: one for recursive or long-run identification,
+{{?model=var|svar}}# one per accepted rotation for sign restrictions (the median response is not itself a model).
+{{?model=var|svar}}impacts = if ident.method === :sign
+{{?model=var|svar}}    set = identify_sign(model, H + 1, ident.check_func; max_draws = ident.max_draws, store_all = true)
+{{?model=var|svar}}    [set.irf_draws[d, 1, :, :] for d in 1:set.n_accepted]
+{{?model=var|svar}}else
+{{?model=var|svar}}    [irf(model, 1; ident...).values[1, :, :]]
+{{?model=var|svar}}end
+{{?model=var|svar}}
+{{?model=var|svar}}effects = with_logger(NullLogger()) do  # transmission() logs the method on every call
+{{?model=var|svar}}    map(impacts) do Phi0
+{{?model=var|svar}}        B, Omega = make_systems_form(Phi0, As, Matrix{Float64}[], Sigma, order, H)  # x = B x + Omega e
+{{?model=var|svar}}        total = ((I - B) \ Omega[:, shock])[rows]
+{{?model=var|svar}}        direct = transmission(shock, B, Omega, direct_q; method = :BOmega)[rows]
+{{?model=var|svar}}        (; total, direct, through = total .- direct)
+{{?model=var|svar}}    end
+{{?model=var|svar}}end
+{{?model=var|svar}}
+{{?model=var|svar}}vn = model.varnames
+{{?model=var|svar}}println("Response of $(vn[outcome]) to shock $shock: through $(vn[channel]) vs direct", length(effects) > 1 ? " (median over $(length(effects)) rotations)" : "")
+{{?model=var|svar}}cell(f, h) = round(median(getfield(e, f)[h + 1] for e in effects); digits = 3)
+{{?model=var|svar}}println(rpad("h", 5), rpad("total", 10), rpad("through", 10), "direct")
+{{?model=var|svar}}for h in [0, 1, 2, 4, 8, 12, 16]
+{{?model=var|svar}}    println(rpad(h, 5), rpad(cell(:total, h), 10), rpad(cell(:through, h), 10), cell(:direct, h))
+{{?model=var|svar}}end
 '''
 
 [[actionGroups.actions]]
@@ -413,7 +563,9 @@ desc = "Test whether the lags of one variable help predict another"
 code = '''
 using MacroEconometricModels
 
-model = VAR({{yvar}}, {{p}})
-fit!(model)
-println(granger_test(model, 1, 2))  # does variable 1 Granger-cause variable 2?
+{{?model=var|svar}}G = granger_test_all(model)  # Wald tests; G[effect, cause]
+{{?model=favar}}G = granger_test_all(to_var(model))  # on the system [factors, y]
+{{?model!=vecm}}println("p-values (rows = effect, columns = cause):")
+{{?model!=vecm}}display([isnothing(g) ? NaN : round(g.pvalue, digits = 3) for g in G])
+{{?model=vecm}}display(granger_causality_vecm(model, 1, 2))  # does variable 1 cause variable 2: short run, long run (via alpha) and strong
 '''
