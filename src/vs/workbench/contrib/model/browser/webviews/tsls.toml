@@ -9,11 +9,19 @@ viewType = "pollis.tsls"
 defaultModel = "main"
 
 [[packages]]
-name = "Microeconometrics.jl"
-github = "https://github.com/lbittarello/Microeconometrics.jl"
+name = "FixedEffectModels.jl"
+github = "https://github.com/FixedEffects/FixedEffectModels.jl"
+
+[[packages]]
+name = "Distributions.jl"
+github = "https://github.com/JuliaStats/Distributions.jl"
+
+[[packages]]
+name = "Tables.jl"
+github = "https://github.com/JuliaData/Tables.jl"
 
 [requires]
-packages = ["Microeconometrics.jl"]
+packages = ["FixedEffectModels.jl", "Distributions.jl", "Tables.jl"]
 
 [[notebookSections]]
 label = ""
@@ -34,7 +42,7 @@ description = "Test instrument relevance and exogeneity"
 name = "Standard Errors"
 file = "tsls/tutorial-03-vcov.ipynb"
 bundled = true
-description = "Homoscedastic, heteroscedastic, and clustered SEs"
+description = "Classical, robust and clustered standard errors"
 
 [[notebookSections.notebooks]]
 name = "Hausman Test"
@@ -108,6 +116,38 @@ journal = ""
 url = "https://doi.org/10.1198/073500102288618658"
 openAccess = false
 
+[[references]]
+title = "Estimation of the Parameters of a Single Equation in a Complete System of Stochastic Equations"
+authors = "Anderson, T. W., & Rubin, H."
+year = 1949
+journal = ""
+url = "https://doi.org/10.1214/aoms/1177730090"
+openAccess = true
+
+[[references]]
+title = "Specification Tests in Econometrics"
+authors = "Hausman, J. A."
+year = 1978
+journal = ""
+url = "https://doi.org/10.2307/1913827"
+openAccess = false
+
+[[references]]
+title = "Instrumental Variables Regression with Weak Instruments"
+authors = "Staiger, D., & Stock, J. H."
+year = 1997
+journal = ""
+url = "https://doi.org/10.2307/2171753"
+openAccess = false
+
+[[references]]
+title = "Generalized Reduced Rank Tests Using the Singular Value Decomposition"
+authors = "Kleibergen, F., & Paap, R."
+year = 2006
+journal = ""
+url = "https://doi.org/10.1016/j.jeconom.2005.02.011"
+openAccess = false
+
 [[bullets]]
 text = "Estimates structural parameters in linear models with endogenous regressors using excluded instrumental variables"
 detail = ""
@@ -121,47 +161,47 @@ text = "First stage regresses each endogenous variable on all instruments; secon
 detail = ""
 
 [[bullets]]
-text = "Supports homoscedastic, heteroscedastic (White-robust), and clustered standard errors"
+text = "Classical, heteroskedasticity-robust or cluster-robust standard errors, with the Kleibergen-Paap first-stage F reported for every fit"
 detail = ""
 
 [[inputs]]
 id = "y"
 label = "Response"
-tooltip = "Response (dependent) variable column name in the data frame."
+tooltip = "Name of the response (dependent) variable column."
 default = "y"
 
 [[inputs]]
 id = "exog"
-label = "Exogenous regressors"
+label = "Exogenous Regressors"
 tooltip = "Space-separated names of exogenous regressors (included instruments). An intercept is added automatically."
 default = "x1 x2"
 
 [[inputs]]
 id = "endog"
 label = "Endogenous"
-tooltip = "Space-separated names of endogenous regressors — variables correlated with the structural error."
+tooltip = "Space-separated names of endogenous regressors: variables correlated with the structural error."
 default = "w1"
 
 [[inputs]]
 id = "instr"
-label = "Instruments (excluded)"
-tooltip = "Space-separated names of excluded instruments. Must be correlated with endogenous regressors and uncorrelated with the error (rank and exclusion conditions)."
+label = "Instruments (Excluded)"
+tooltip = "Space-separated names of excluded instruments. Identification needs at least as many as there are endogenous regressors; they must move the endogenous regressors (relevance) and affect the response only through them (exclusion)."
 default = "z1 z2"
 
 [[inputs]]
 id = "vcov"
-label = "VCov"
-tooltip = "Variance-covariance estimator for standard errors. Homoscedastic assumes IID errors; Heteroscedastic gives White-robust SEs."
+label = "Standard Errors"
+tooltip = "Classical standard errors assume independent errors with constant variance. Robust (HC1) standard errors allow the variance to differ across observations. Clustered standard errors also allow correlation within groups."
 kind = "select"
-default = "hom"
-
-[[inputs.options]]
-value = "hom"
-label = "Homoscedastic"
+default = "het"
 
 [[inputs.options]]
 value = "het"
-label = "Heteroscedastic"
+label = "Robust (HC1)"
+
+[[inputs.options]]
+value = "hom"
+label = "Classical (Homoskedastic)"
 
 [[inputs.options]]
 value = "clustered"
@@ -170,33 +210,43 @@ label = "Clustered"
 [[inputs]]
 id = "data"
 label = "Data"
-tooltip = "Name of the data frame (AbstractDataFrame). Must contain all columns referenced in the model."
+tooltip = "Name of a Tables.jl table (for example a NamedTuple of column vectors or a CSV.File) holding all the columns above. With the default df, the code first simulates an example dataset with known coefficients."
 default = "df"
 
 [[inputs]]
 id = "cluster"
-label = "Cluster by"
-tooltip = "Column name identifying cluster groups for clustered standard errors (e.g. firm ID, region code)."
+label = "Cluster By"
+tooltip = "Column holding the cluster (group) identifier, for example a firm ID or region code."
 default = "firm_id"
 when = "vcov=clustered"
 
 [[codeBranches]]
 model = "main"
 code = '''
-using Microeconometrics
+using FixedEffectModels, Random
 
-{{?vcov=hom}} result = fit(IV(Homoscedastic()), {{data}};
-{{?vcov=het}} result = fit(IV(Heteroscedastic()), {{data}};
-{{?vcov=clustered}} result = fit(IV(Clustered(:{{cluster}})), {{data}};
-    response    = :{{y}},
-    regressors  = [:{{exog}}],  # exogenous regressors (included instruments)
-    endogenous  = [:{{endog}}],  # endogenous regressors
-    instruments = [:{{instr}}])  # excluded instruments
+{{?data=df}}# Simulated example: 200 firms over 5 years. y = log sales; w1 = log advertising spend, which managers raise
+{{?data=df}}# when unobserved demand u is high, so w1 is endogenous and OLS overstates its effect; z1, z2 = shifters of
+{{?data=df}}# advertising prices (valid instruments); x1, x2 = exogenous controls.
+{{?data=df}}# True coefficients: intercept 2.0, x1 0.5, x2 -0.3, w1 0.25.
+{{?data=df}}Random.seed!(42)
+{{?data=df}}n_sim = 1_000
+{{?data=df}}firm_id = repeat(1:200, inner = 5)  # firm identifier (5 observations per firm)
+{{?data=df}}x1 = randn(n_sim); x2 = randn(n_sim); z1 = randn(n_sim); z2 = randn(n_sim)
+{{?data=df}}u = randn(n_sim)  # unobserved demand shock
+{{?data=df}}w1 = 1.0 .+ 0.6 .* z1 .- 0.4 .* z2 .+ 0.3 .* x1 .+ 0.8 .* u .+ 0.5 .* randn(n_sim)
+{{?data=df}}firm_shock = 0.3 .* randn(200)
+{{?data=df}}e_sim = 0.5 .* u .+ firm_shock[firm_id] .+ 0.4 .* (1 .+ abs.(x1)) .* randn(n_sim)  # endogenous, clustered, heteroskedastic error
+{{?data=df}}y_sim = 2.0 .+ 0.5 .* x1 .- 0.3 .* x2 .+ 0.25 .* w1 .+ e_sim
+{{?data=df}}df = (y = y_sim, x1 = x1, x2 = x2, w1 = w1, z1 = z1, z2 = z2, firm_id = firm_id)
 
-coef(result)  # 2SLS coefficient estimates
-coefnames(result)  # variable names
-stderror(result)  # standard errors
-confint(result)  # 95% confidence intervals
+terms_of(s) = foldl(+, term.(Symbol.(split(s))))  # "x1 x2" -> x1 + x2, for building formulas from names
+f = term(:{{y}}) ~ terms_of("{{exog}}") + (terms_of("{{endog}}") ~ terms_of("{{instr}}"))  # y ~ x1 + x2 + (w1 ~ z1 + z2); intercept added automatically
+{{?vcov=het}}vc = Vcov.robust()  # heteroskedasticity-robust (HC1) standard errors
+{{?vcov=hom}}vc = Vcov.simple()  # classical standard errors
+{{?vcov=clustered}}vc = Vcov.cluster(:{{cluster}})  # cluster-robust standard errors
+result = reg({{data}}, f, vc)  # 2SLS
+println(result)  # coefficient table; the bottom rows give the Kleibergen-Paap first-stage F and its p-value
 '''
 
 [[actionGroups]]
@@ -205,66 +255,140 @@ label = "Diagnose"
 
 [[actionGroups.actions]]
 id = "first_stage"
-label = "First-Stage Analysis"
-desc = "Regress each endogenous variable on all instruments to assess instrument relevance (rule of thumb: F > 10)"
+label = "First-Stage Strength"
+desc = "First-stage F of the excluded instruments for each endogenous regressor, plus the joint Kleibergen-Paap F"
 code = '''
-using Microeconometrics
+using Distributions
 
-fs = fit(OLS(Homoscedastic()), {{data}};  # first-stage OLS: endogenous on all instruments
-    response   = [:{{endog}}][1],
-    regressors = [:{{exog}}, :{{instr}}])
-
-coef(fs)  # first-stage coefficients
-stderror(fs)  # instrument coefficient SEs
-
-{{?vcov=hom}} result = fit(IV(Homoscedastic()), {{data}};  # 2SLS structural equation
-{{?vcov=het}} result = fit(IV(Heteroscedastic()), {{data}};  # 2SLS structural equation
-{{?vcov=clustered}} result = fit(IV(Clustered(:{{cluster}})), {{data}};  # 2SLS structural equation
-    response = :{{y}}, regressors = [:{{exog}}],
-    endogenous = [:{{endog}}], instruments = [:{{instr}}])
-coef(result)  # 2SLS structural coefficients
+instr = split("{{instr}}")
+for w in split("{{endog}}")
+    fs = reg({{data}}, term(Symbol(w)) ~ terms_of("{{exog}} {{instr}}"), vc)  # first stage, with the same standard errors as the main fit
+    idx = [findfirst(==(nm), coefnames(fs)) for nm in instr]
+    g = coef(fs)[idx]
+    F = transpose(g) * (vcov(fs)[idx, idx] \ g) / length(idx)  # Wald F: the excluded instruments are jointly zero
+    p = ccdf(FDist(length(idx), dof_residual(fs)), F)
+    println(rpad(w, 10), " first-stage F = ", round(F, digits = 1), "   p-value = ", round(p, digits = 4),
+        F > 10 ? "   instruments look strong" : "   WEAK: 2SLS is biased toward OLS and its intervals are unreliable")
+end
+println("Kleibergen-Paap F, all endogenous regressors jointly: ", round(result.F_kp, digits = 1), "   p-value = ", round(result.p_kp, digits = 4))
+println()
+println("F > 10 is the Staiger-Stock rule of thumb for one endogenous regressor with classical errors. With robust or")
+println("clustered errors it is only a rough guide. With several endogenous regressors, the joint Kleibergen-Paap F matters:")
+println("each first stage can look strong while the instruments still fail to separate the regressors from each other.")
 '''
 
 [[actionGroups.actions]]
-id = "vcov_matrix"
-label = "Variance-Covariance Matrix"
-desc = "Display the full coefficient VCov matrix and per-coefficient standard errors"
+id = "endogeneity"
+label = "Endogeneity Test (Durbin-Wu-Hausman)"
+desc = "Control-function test of whether the endogenous regressors are in fact exogenous, in which case OLS is preferable"
 code = '''
-using Microeconometrics
+using Distributions, Tables
 
-{{?vcov=hom}} result = fit(IV(Homoscedastic()), {{data}};
-{{?vcov=het}} result = fit(IV(Heteroscedastic()), {{data}};
-{{?vcov=clustered}} result = fit(IV(Clustered(:{{cluster}})), {{data}};
-    response = :{{y}}, regressors = [:{{exog}}],
-    endogenous = [:{{endog}}], instruments = [:{{instr}}])
+tab = Tables.columntable({{data}})
+vh = Symbol[]
+for w in split("{{endog}}")
+    fs = reg(tab, term(Symbol(w)) ~ terms_of("{{exog}} {{instr}}"), vc)  # first stage
+    v = Symbol("vhat_", w)
+    tab = merge(tab, NamedTuple{(v,)}((residuals(fs, tab),)))  # first-stage residual: the part of w not explained by the instruments
+    push!(vh, v)
+end
+cf = reg(tab, term(:{{y}}) ~ terms_of("{{exog}} {{endog}}") + foldl(+, term.(vh)), vc)  # OLS with the first-stage residuals added
+idx = [findfirst(==(String(v)), coefnames(cf)) for v in vh]
+g = coef(cf)[idx]
+F = transpose(g) * (vcov(cf)[idx, idx] \ g) / length(idx)  # Wald F: the residual coefficients are jointly zero
+p = ccdf(FDist(length(idx), dof_residual(cf)), F)
 
-V     = vcov(result)  # coefficient variance-covariance matrix
-names = coefnames(result)  # variable names
+println("Durbin-Wu-Hausman (control function): F = ", round(F, digits = 2), "   p-value = ", round(p, digits = 4))
+println(p < 0.05 ?
+    "Rejected at 5%: the regressors in {{endog}} are correlated with the error, so OLS is biased and 2SLS is needed." :
+    "Not rejected at 5%: no evidence of endogeneity. OLS is then consistent and more precise, though the test has low power with weak instruments.")
+println("The test uses the selected standard errors, so it stays valid with heteroskedastic or clustered errors.")
+println("It is only as good as the instruments: with invalid instruments, neither 2SLS nor this test can be trusted.")
+'''
 
-for (i, n) in enumerate(names)
-    println(n, ": SE = ", round(sqrt(V[i,i]), digits = 4))  # per-coefficient standard error
+[[actionGroups.actions]]
+id = "overid"
+label = "Overidentification Test (Sargan)"
+desc = "Sargan test: when there are more instruments than endogenous regressors, do the extra instruments agree with each other?"
+code = '''
+using Distributions, Tables
+
+q = length(split("{{instr}}")) - length(split("{{endog}}"))  # overidentifying restrictions
+if q == 0
+    println("Exactly identified: one excluded instrument per endogenous regressor, so there is nothing to test.")
+else
+    e = residuals(result, {{data}})  # 2SLS residuals
+    aux = reg(merge(Tables.columntable({{data}}), (e_2sls = e,)), term(:e_2sls) ~ terms_of("{{exog}} {{instr}}"))
+    S = nobs(aux) * r2(aux)  # Sargan statistic n R^2, chi-squared with q degrees of freedom under H0
+    p = ccdf(Chisq(q), S)
+    println("Sargan statistic: ", round(S, digits = 3), "   df = ", q, "   p-value = ", round(p, digits = 4))
+    println(p < 0.05 ?
+        "Rejected at 5%: at least one instrument looks invalid, or the model is misspecified." :
+        "Not rejected at 5%. This is consistent with valid instruments but cannot prove it: the test has low power and assumes at least one valid instrument.")
+    println("The Sargan test assumes homoskedastic, independent errors; the GMM panel's Hansen J test is the robust version.")
 end
 '''
 
 [[actionGroups.actions]]
 id = "residuals"
 label = "Residual Diagnostics"
-desc = "Examine structural residuals for patterns that may indicate model misspecification"
+desc = "Structural residuals and a simple check for heteroskedasticity"
 code = '''
-using Microeconometrics
+using Statistics, Tables
 
-{{?vcov=hom}} result = fit(IV(Homoscedastic()), {{data}};
-{{?vcov=het}} result = fit(IV(Heteroscedastic()), {{data}};
-{{?vcov=clustered}} result = fit(IV(Clustered(:{{cluster}})), {{data}};
-    response = :{{y}}, regressors = [:{{exog}}],
-    endogenous = [:{{endog}}], instruments = [:{{instr}}])
+e = residuals(result, {{data}})  # structural residuals y - X b, using the observed (not fitted) endogenous regressors
+k = length(coef(result))
+println("Residual mean: ", round(mean(e), digits = 4))
+println("Residual SD:   ", round(sqrt(sum(abs2, e) / (length(e) - k)), digits = 4))  # n - k degrees of freedom
+println("Correlation of |e| with each regressor (large values suggest heteroskedasticity; use robust standard errors):")
+for nm in split("{{exog}} {{endog}}")
+    println("  ", rpad(nm, 12), round(cor(abs.(e), Float64.(Tables.getcolumn({{data}}, Symbol(nm)))), digits = 3))
+end
+'''
 
-e = residuals(result)  # structural equation residuals
-n = nobs(result)  # number of observations
+[[actionGroups]]
+id = "compare"
+label = "Compare"
 
-println("Residual mean:   ", round(sum(e)/n, digits = 6))  # should be ~0
-println("Residual std:    ", round(sqrt(sum(e.^2)/(n - length(coef(result)))), digits = 4))  # residual standard deviation (n - k degrees of freedom)
-println("Max abs residual:", round(maximum(abs.(e)), digits = 4))  # largest absolute residual
+[[actionGroups.actions]]
+id = "ols_comparison"
+label = "OLS vs 2SLS"
+desc = "Show how far OLS moves when the endogenous regressors are treated as exogenous"
+code = '''
+ols = reg({{data}}, term(:{{y}}) ~ terms_of("{{exog}} {{endog}}"), vc)  # OLS: treats every regressor as exogenous
+tab = hcat(coef(ols), coef(result))  # both list the intercept, then the exogenous, then the endogenous regressors
+hdr = ["OLS", "2SLS"]
+{{?data=df}}size(tab, 1) == 4 && (tab = hcat(tab, [2.0, 0.5, -0.3, 0.25]); push!(hdr, "True"))  # coefficients used to simulate df
+
+println(rpad("", 12), join(lpad.(hdr, 10)))
+for (i, nm) in enumerate(coefnames(result))
+    println(rpad(nm, 12), join(lpad.(round.(tab[i, :], digits = 3), 10)))
+end
+println()
+println("OLS assumes every regressor is uncorrelated with the error. When an endogenous regressor moves with")
+println("unobserved factors that also drive the response, OLS mixes its effect with theirs. 2SLS uses only the")
+println("variation explained by the excluded instruments. The gap alone is not a test: see the Durbin-Wu-Hausman action.")
+{{?data=df}}println("In the simulated data, high demand raises both advertising and sales, so OLS overstates the effect of w1.")
+'''
+
+[[actionGroups.actions]]
+id = "se_comparison"
+label = "Standard Errors Compared"
+desc = "The same 2SLS estimates with classical, robust and, when selected, clustered standard errors"
+code = '''
+fits = [reg({{data}}, f, Vcov.simple()), reg({{data}}, f, Vcov.robust())]
+hdr = ["Classical", "Robust"]
+{{?vcov=clustered}}push!(fits, reg({{data}}, f, Vcov.cluster(:{{cluster}}))); push!(hdr, "Clustered")
+
+println(rpad("", 12), lpad("Estimate", 10), join(lpad.(hdr, 11)))
+for (i, nm) in enumerate(coefnames(result))
+    println(rpad(nm, 12), lpad(round(coef(result)[i], digits = 4), 10), join(lpad.([round(stderror(m)[i], digits = 4) for m in fits], 11)))
+end
+println()
+println("The estimates do not change; only their estimated precision does. Classical standard errors are valid only")
+println("if the errors have constant variance and are independent. When robust standard errors are clearly larger,")
+println("trust them. When observations within a group share shocks, clustered standard errors are needed and are")
+println("usually larger still.")
 '''
 
 [[actionGroups]]
@@ -274,65 +398,74 @@ label = "Interpret"
 [[actionGroups.actions]]
 id = "coef_table"
 label = "Coefficient Table"
-desc = "Print a formatted table of 2SLS estimates, standard errors, and z-statistics"
+desc = "Estimates, standard errors, t-statistics, two-sided p-values and 95% intervals, with a reading of the main effect"
 code = '''
-using Microeconometrics
+println(coeftable(result))  # the intercept is listed last
 
-{{?vcov=hom}} result = fit(IV(Homoscedastic()), {{data}};
-{{?vcov=het}} result = fit(IV(Heteroscedastic()), {{data}};
-{{?vcov=clustered}} result = fit(IV(Clustered(:{{cluster}})), {{data}};
-    response = :{{y}}, regressors = [:{{exog}}],
-    endogenous = [:{{endog}}], instruments = [:{{instr}}])
-
-names = coefnames(result)  # variable names
-b     = coef(result)  # 2SLS estimates
-se    = stderror(result)  # standard errors
-z     = b ./ se  # z-statistics
-
-for i in eachindex(names)
-    println(names[i], ": ", round(b[i], digits=4),
-        "  SE=", round(se[i], digits=4), "  z=", round(z[i], digits=2))
-end
+w = first(split("{{endog}}"))
+j = findfirst(==(w), coefnames(result))
+println()
+println("Holding the exogenous regressors fixed, a one-unit increase in ", w, " changes {{y}} by ",
+    round(coef(result)[j], digits = 3), " units. This is a causal effect only if the excluded instruments")
+println("affect {{y}} through ", w, " alone (exclusion) and are uncorrelated with the error.")
+println("With heterogeneous effects, 2SLS estimates the average effect for the units whose ", w, " responds to the instruments.")
+{{?data=df}}println("In the simulated data both variables are logs, so 0.25 is an elasticity: 1% more advertising raises sales by about 0.25%.")
 '''
 
 [[actionGroups.actions]]
 id = "confint"
 label = "Confidence Intervals"
-desc = "Compute 95% confidence intervals for all structural coefficients"
+desc = "95% confidence intervals for all coefficients (t critical values, selected standard errors)"
 code = '''
-using Microeconometrics
-
-{{?vcov=hom}} result = fit(IV(Homoscedastic()), {{data}};
-{{?vcov=het}} result = fit(IV(Heteroscedastic()), {{data}};
-{{?vcov=clustered}} result = fit(IV(Clustered(:{{cluster}})), {{data}};
-    response = :{{y}}, regressors = [:{{exog}}],
-    endogenous = [:{{endog}}], instruments = [:{{instr}}])
-
-ci    = confint(result)  # 95% confidence intervals (n x 2 matrix)
-names = coefnames(result)  # variable names
-
-for i in eachindex(names)
-    println(names[i], ": [", round(ci[i,1], digits=4), ", ", round(ci[i,2], digits=4), "]")
+ci = confint(result)  # 95% intervals, rows in the order of coefnames(result)
+for (i, nm) in enumerate(coefnames(result))
+    println(rpad(nm, 12), "[", round(ci[i, 1], digits = 4), ", ", round(ci[i, 2], digits = 4), "]")
 end
+println()
+println("Each interval comes from a procedure that covers the true coefficient in about 95% of repeated samples")
+println("(a large-sample approximation). It is not a 95% probability statement about this particular interval.")
+println("With weak instruments these intervals are too narrow; the Anderson-Rubin action gives one that stays valid.")
 '''
 
 [[actionGroups.actions]]
-id = "ols_comparison"
-label = "OLS vs 2SLS Comparison"
-desc = "Compare OLS and 2SLS estimates; large differences indicate meaningful endogeneity bias in OLS"
+id = "anderson_rubin"
+label = "Weak-Instrument Robust Interval (Anderson-Rubin)"
+desc = "95% Anderson-Rubin confidence set for the endogenous coefficient, valid however weak the instruments are"
 code = '''
-using Microeconometrics
+using Distributions, Tables
 
-ols = fit(OLS(Homoscedastic()), {{data}};  # OLS: inconsistent if endogeneity present
-    response = :{{y}}, regressors = [:{{exog}}, :{{endog}}])
-
-{{?vcov=hom}} iv  = fit(IV(Homoscedastic()), {{data}};  # 2SLS: consistent under valid instruments
-{{?vcov=het}} iv  = fit(IV(Heteroscedastic()), {{data}};  # 2SLS: consistent under valid instruments
-{{?vcov=clustered}} iv  = fit(IV(Clustered(:{{cluster}})), {{data}};  # 2SLS: consistent under valid instruments
-    response = :{{y}}, regressors = [:{{exog}}],
-    endogenous = [:{{endog}}], instruments = [:{{instr}}])
-
-println("OLS estimates:   ", round.(coef(ols), digits=4))  # biased if endogeneity exists
-println("2SLS estimates:  ", round.(coef(iv),  digits=4))  # consistent structural estimates
-println("2SLS - OLS:       ", round.(coef(iv) - coef(ols), digits=4))  # raw gap, not a Hausman test: check that both list the coefficients in the same order, and judge it against the 2SLS standard errors
+endog = split("{{endog}}")
+if length(endog) != 1
+    println("This action handles one endogenous regressor; the model has ", length(endog), ".")
+else
+    w = only(endog)
+    tab = Tables.columntable({{data}})
+    yv = Float64.(Tables.getcolumn(tab, Symbol("{{y}}")))
+    wv = Float64.(Tables.getcolumn(tab, Symbol(w)))
+    instr = split("{{instr}}")
+    j = findfirst(==(w), coefnames(result))
+    b, s = coef(result)[j], stderror(result)[j]
+    grid = range(b - 8 * s, b + 8 * s, length = 321)  # candidate values b0 for the coefficient on w
+    keep = map(grid) do b0
+        m = reg(merge(tab, (y_ar = yv .- b0 .* wv,)), term(:y_ar) ~ terms_of("{{exog}} {{instr}}"), vc)
+        idx = [findfirst(==(nm), coefnames(m)) for nm in instr]
+        g = coef(m)[idx]
+        F = transpose(g) * (vcov(m)[idx, idx] \ g) / length(idx)  # if b0 is the true value, the instruments cannot explain y - b0 w
+        ccdf(FDist(length(idx), dof_residual(m)), F) > 0.05  # keep b0 when not rejected at 5%
+    end
+    ci = confint(result)
+    println("Usual (Wald) 95% interval for ", w, ": [", round(ci[j, 1], digits = 4), ", ", round(ci[j, 2], digits = 4), "]")
+    if !any(keep)
+        println("Anderson-Rubin: every value on the grid is rejected, which points to invalid instruments or a misspecified model.")
+    else
+        lo, hi = findfirst(keep), findlast(keep)
+        println("Anderson-Rubin 95% set for ", w, ":  [", round(grid[lo], digits = 4), ", ", round(grid[hi], digits = 4), "]")
+        all(keep[lo:hi]) || println("The set has gaps: it is a union of intervals within this range.")
+        (keep[1] || keep[end]) && println("The set reaches the edge of the grid (8 standard errors), so it may be unbounded: the instruments are weak.")
+    end
+    println()
+    println("The Anderson-Rubin set collects every value of the coefficient that the instruments cannot reject. Its coverage")
+    println("does not depend on instrument strength. When it is close to the usual interval, weak instruments are not a")
+    println("concern; when it is much wider, report it instead.")
+end
 '''
