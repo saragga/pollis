@@ -30,8 +30,6 @@ const E_ETSubmenuId = new MenuId('menubarE_ETSubmenu');
 // Define a new submenu ID for "Epidemiology Toolbox"
 const E_CMTSubmenuId = new MenuId('menubarE_CMTSubmenu');
 
-// Define a new submenu ID for "Robotics Toolbox"
-const E_RTSubmenuId = new MenuId('menubarE_RTSubmenu');
 
 // ------------------- TOOLBOXES ------------------------
 
@@ -79,14 +77,6 @@ MenuRegistry.appendMenuItem(MenuId.MenubarToolboxesMenu, {
 	order: 1,
 });
 
-
-// Robotics Toolbox
-MenuRegistry.appendMenuItem(MenuId.MenubarToolboxesMenu, {
-	group: '4_toolboxes',
-	submenu: E_RTSubmenuId,
-	title: localize('showStatistics.robot', 'Robotics Toolbox'),
-	order: 1,
-});
 
 
 // ===================================================
@@ -345,44 +335,3 @@ MenuRegistry.appendMenuItem(E_CMTSubmenuId, {
 	command: { id: 'chiara.simulate.epi-ude', title: localize('ect.epi-ude', 'Universal Differential Equations for Epidemiology') },
 	order: 3,
 }); // DiffEqFlux.jl, Lux.jl
-
-
-// ===================================================
-// SUBMENU: ROBOTICS TOOLBOX
-// ===================================================
-
-MenuRegistry.appendMenuItem(E_RTSubmenuId, {
-	group: '1_rt',
-	command: {
-		id: RDYN_ID,
-		title: localize('showRobotics.rdyn', 'Robot Dynamics'),
-	},
-	order: 1,
-}); // Rotation Representations, FK, FD, ID; Rotations.jl, RobotDynamics.jl, RigidBodyDynamics.jl
-
-MenuRegistry.appendMenuItem(E_RTSubmenuId, {
-	group: '1_rt',
-	command: {
-		id: RCTL_ID,
-		title: localize('showRobotics.rctl', 'Robot Control'),
-	},
-	order: 2,
-}); // IK, PD Joint Control, Computed Torque, Impedance; RobotDynamics.jl, RigidBodyDynamics.jl
-
-MenuRegistry.appendMenuItem(E_RTSubmenuId, {
-	group: '2_rt',
-	command: {
-		id: MCAT_ID,
-		title: localize('showRobotics.mcat', 'MeshCat 3D Visualisation'),
-	},
-	order: 1,
-}); // MeshCat.jl, CoordinateTransformations.jl, MeshCatMechanisms.jl
-
-MenuRegistry.appendMenuItem(E_RTSubmenuId, {
-	group: '2_rt',
-	command: {
-		id: RZOO_ID,
-		title: localize('showRobotics.rzoo', 'Robot Model Library'),
-	},
-	order: 2,
-}); // RobotZoo.jl, RobotDynamics.jl
