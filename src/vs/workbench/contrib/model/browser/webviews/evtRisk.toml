@@ -204,11 +204,11 @@ fm_gp              = gpfit(exceedances; method = :{{evtr-method}})  # fit GP to 
 sigma_hat, xi_hat  = params(fm_gp)  # extract scale and shape
 rate               = length(exceedances) / length({{evtr-data}})  # exceedance rate
 d_gp               = GeneralizedPareto({{evtr-threshold}}, sigma_hat, xi_hat)  # GP distribution
-q99                = quantile(d_gp, 0.99)  # 99th percentile of the excess over u, among losses that exceed u (not of all losses)
+q99                = quantile(d_gp, 0.99)  # 99th percentile of the losses that exceed u (d_gp is located at u, so this is a loss level, not an excess)
 println("sigma_hat (scale):  ", round(sigma_hat, digits = 6))
 println("xi_hat (shape):     ", round(xi_hat,    digits = 6))
 println("Exceedance rate:    ", round(rate,       digits = 4))
-println("99% excess over u:  ", round(q99,        digits = 4))  # a loss of u + q99 is exceeded by 1% of the losses above u
+println("99th pct above u:   ", round(q99,        digits = 4))  # 1% of the losses above u exceed this level
 '''
 
 [[codeBranches]]
