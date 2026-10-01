@@ -529,7 +529,7 @@ label = "Branching Ratio"
 desc = "alpha/beta stationarity check (Hawkes)"
 code = '''
 {{?model=hawkes}}mu, alpha, beta = result.mu, result.alpha, result.beta  # fitted parameters
-{{?model!=hawkes}}alpha = {{alpha}}; beta = {{beta}}  # input values: this check is for the Hawkes model
+{{?model!=hawkes}}mu = {{mu}}; alpha = {{alpha}}; beta = {{beta}}  # input values: this check is for the Hawkes model
 rho   = alpha / beta  # branching ratio
 println("rho = ", rho)  # must be < 1 for stationarity
 println("Mean intensity = ", mu / (1 - rho))  # stationary mean
