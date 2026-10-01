@@ -282,8 +282,8 @@ models = ["gk", "rs", "yz"]
 [[inputs]]
 id = "k"
 label = "k weight"
-tooltip = "Weighting parameter between close-to-close and Rogers-Satchell variance components. The value k = 0.34 / (1 + (n+1)/(n-1)) minimises MSE; default 0.34 is a widely used approximation."
-default = "0.34"
+tooltip = "Weight of the open-to-close variance against the Rogers-Satchell component. nothing uses the MSE-minimising k = 0.34 / (1.34 + (n+1)/(n-1)) of Yang and Zhang (2000), about 0.14 for long samples."
+default = "nothing"
 models = ["yz"]
 
 [[inputs]]
@@ -455,7 +455,7 @@ function yang_zhang_volatility(open, high, low, close; k = nothing)
                      (log.(low_t./close_t).*log.(low_t./open_t)))
 
     # Optimal k weight (Yang-Zhang 2000, eq. 14) unless k is given
-    k = something(k, 0.34 / (1 + (n+1)/(n-1)))
+    k = something(k, 0.34 / (1.34 + (n+1)/(n-1)))
 
     return sqrt(sigma_o2 + k*sigma_c2 + (1-k)*sigma_rs2)
 end
@@ -506,7 +506,7 @@ model = "bpv"
 code = '''
 r   = diff(log.({{price}}))
 
-BPV = sum(abs.(r[2:end]) .* abs.(r[1:end-1]))
+BPV = (pi / 2) * sum(abs.(r[2:end]) .* abs.(r[1:end-1]))  # pi/2 = 1/mu1^2 makes it estimate the integrated variance
 println("Bipower Variation: ", BPV)
 '''
 
@@ -666,7 +666,7 @@ id = "annualise"
 label = "Annualise"
 desc = "Scale daily volatility to annual: sigma_annual = sigma_daily x sqrt(252)"
 code = '''
-{{?model=bpv}} sigma = sqrt(pi / 2 * BPV)  # daily volatility from bipower variation
+{{?model=bpv}} sigma = sqrt(BPV)  # daily volatility from bipower variation
 sigma_annual = sigma * sqrt(252)  # 252 trading days per year
 println("Annualised volatility: ", round(100 * sigma_annual, digits = 2), "%")
 '''

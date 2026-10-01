@@ -411,9 +411,10 @@ end
 
 using NLsolve
 
-# Pontryagin: H = stage + lambda' f; with control-affine dynamics, dH/du = 0 gives u = -R^-1 f_u' lambda
-ham(x, u, lam) = stage(x, u) + dot(lam, f(x, u))
-ustar(x, lam) = -(R \ (ForwardDiff.jacobian(v -> f(x, v), zeros(eltype(x), m))' * lam))
+# Pontryagin: the other methods sum stage(x, u) once per interval, i.e. integrate stage / dt over time,
+# so H = stage / dt + lambda' f; with control-affine dynamics, dH/du = 0 gives u = -dt R^-1 f_u' lambda
+ham(x, u, lam) = stage(x, u) / dt + dot(lam, f(x, u))
+ustar(x, lam) = -dt * (R \ (ForwardDiff.jacobian(v -> f(x, v), zeros(eltype(x), m))' * lam))
 function canonical(z)  # state and costate equations
     x, lam = z[1:n], z[n+1:end]
     u = ustar(x, lam)

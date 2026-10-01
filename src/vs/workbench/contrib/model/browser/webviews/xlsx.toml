@@ -295,9 +295,9 @@ mktempdir() do dir
 
 		for col in ["A", "B"]
 			XLSX.setFont(ws, col * "1"; bold=true, color="FFFFFF")
-			XLSX.setFill(ws, col * "1"; fgColor="4472C4")
+			XLSX.setFill(ws, col * "1"; pattern="solid", fgColor="4472C4")  # a fill colour shows only with a pattern
 		end
-		XLSX.setConditionalFormat(ws, "B2:B3"; rule="<1000", fgColor="FFC7CE")
+		XLSX.setConditionalFormat(ws, "B2:B3", :cellIs; operator="lessThan", value="1000", dxStyle="redfilltext")  # light red where revenue < 1000
 	end
 end
 """
@@ -327,7 +327,7 @@ mktempdir() do dir
 		println("Sheets: ", XLSX.sheetnames(xf))
 		for name in XLSX.sheetnames(xf)
 			dim = XLSX.get_dimension(xf[name])
-			println(name, " → ", dim)
+			println(name, ": ", dim)
 		end
 	end
 end

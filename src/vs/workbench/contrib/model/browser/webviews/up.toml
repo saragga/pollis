@@ -176,7 +176,7 @@ n = {{n-particles}}  # number of particles
 result = {{expression}}  # propagated output
 
 here = @__MODULE__
-ins = [s => getfield(here, s) for s in names(here) if s !== :result && isdefined(here, s) && getfield(here, s) isa Particles]  # the uncertain inputs
+ins = [s => getfield(here, s) for s in names(here; all=true) if s !== :result && isdefined(here, s) && getfield(here, s) isa Particles]  # the uncertain inputs
 fexpr = eval(Expr(:->, Expr(:tuple, first.(ins)...), :({{expression}})))  # the expression as a function of the inputs
 tail = (100 - {{ci-level}}) / 200  # tail probability on each side
 
@@ -192,7 +192,7 @@ label = "Visualise"
 [[actionGroups.actions]]
 id = "distribution"
 label = "Output Distribution"
-desc = "Histogram of the output particles with the mean and the {{ci-level}}% interval"
+desc = "Histogram of the output particles with the mean and the chosen credible interval"
 code = '''
 using Plots
 histogram(result.particles, bins=60, normalize=:pdf, alpha=0.6, label="output particles")
@@ -287,7 +287,7 @@ label = "Interpret"
 [[actionGroups.actions]]
 id = "summary"
 label = "In Plain Terms"
-desc = "The result as a value with its uncertainty, the relative uncertainty and the {{ci-level}}% interval"
+desc = "The result as a value with its uncertainty, the relative uncertainty and the chosen interval"
 code = '''
 m, s = pmean(result), pstd(result)
 println("The output is ", round(m, sigdigits=4), " +/- ", round(s, sigdigits=2), " (one standard deviation).")
