@@ -17,8 +17,12 @@ title = "Julia in Academia"
 description = "Overview of Julia for academic and scientific computing"
 url = "https://www.youtube.com/watch?v=wPFPT-Ech2c"
 
+[[packages]]
+name = "Clarabel.jl"
+github = "https://github.com/oxfordcontrol/Clarabel.jl"
+
 [requires]
-packages = ["Plots.jl", "StatsBase.jl"]
+packages = ["PortfolioOptimisers.jl", "Clarabel.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""
@@ -169,6 +173,26 @@ journal = "Financial Analysts Journal"
 doi = "10.2469/faj.v48.n5.28"
 openAccess = false
 
+[[references]]
+separator = true
+label = "Out-of-Sample Evaluation"
+
+[[references]]
+title = "Optimal Versus Naive Diversification: How Inefficient Is the 1/N Portfolio Strategy?"
+authors = "DeMiguel, Victor; Garlappi, Lorenzo; Uppal, Raman"
+year = 2009
+journal = "Review of Financial Studies"
+doi = "10.1093/rfs/hhm075"
+openAccess = false
+
+[[references]]
+title = "The Statistics of Sharpe Ratios"
+authors = "Lo, Andrew W."
+year = 2002
+journal = "Financial Analysts Journal"
+doi = "10.2469/faj.v58.n4.2453"
+openAccess = false
+
 [[models]]
 id = "mv"
 label = "Mean-Variance"
@@ -223,16 +247,49 @@ purpose = "Equalise risk contributions across and within clusters"
 
 [[inputs]]
 id = "R"
-label = "Returns matrix (R)"
-tooltip = "Matrix of asset returns (T x N): T observations, N assets. Each column is one asset's return series."
+label = "Returns Matrix (R)"
+tooltip = "T x N matrix of daily simple returns: T trading days, N assets, one column per asset. Annualised figures assume 252 trading days. With the default R, the code first simulates an example with known means and a two-sector correlation structure."
 default = "R"
 
 [[inputs]]
 id = "obj"
 label = "Objective"
-tooltip = "Optimisation objective. MinRisk minimises the risk measure; Sharpe maximises the risk-adjusted return."
-default = "MinRisk()"
+tooltip = "Minimum Risk minimises the risk measure. Maximum Risk-Adjusted Return maximises excess return per unit of risk: the Sharpe ratio for Mean-Variance (volatility in the denominator), the STARR ratio for Mean-CVaR. Maximum Utility maximises E[r] - l * risk."
+kind = "select"
+default = "minrisk"
 models = ["mv", "cvar"]
+
+[[inputs.options]]
+value = "minrisk"
+label = "Minimum Risk"
+
+[[inputs.options]]
+value = "maxratio"
+label = "Maximum Risk-Adjusted Return"
+
+[[inputs.options]]
+value = "utility"
+label = "Maximum Utility"
+
+[[inputs]]
+id = "l"
+label = "Risk Aversion (l)"
+tooltip = "Risk-aversion coefficient of the Maximum Utility objective, E[r] - l * risk on daily returns (risk = variance for Mean-Variance, CVaR for Mean-CVaR). Larger values give more conservative portfolios. Ignored by the other objectives."
+default = "2"
+models = ["mv", "cvar"]
+
+[[inputs]]
+id = "alpha"
+label = "CVaR Tail Probability (alpha)"
+tooltip = "CVaR is the average loss on the worst alpha share of days. 0.05 averages the worst 5% of daily returns."
+default = "0.05"
+models = ["cvar"]
+
+[[inputs]]
+id = "rf"
+label = "Risk-Free Rate (Annual)"
+tooltip = "Annual risk-free rate as a decimal (0.02 = 2%). It is converted to a daily rate (rf / 252) for the Sharpe and STARR ratios and for excess returns."
+default = "0.02"
 
 [miniCharts]
 # SVG drawing functions for each model's mini-chart icon (54 x 86 box)
@@ -285,49 +342,142 @@ return s;
 [[codeBranches]]
 model = "mv"
 code = '''
-using PortfolioOptimisers
+using PortfolioOptimisers, Clarabel, Random, Statistics
 
-port = Portfolio(; returns = {{R}})  # construct portfolio from return matrix
-optimise!(port, Trad(; obj = {{obj}}, rm = Variance()))  # Mean-Variance: minimise portfolio variance (Markowitz)
+{{?R=R}}# Simulated example: 1,000 trading days of daily simple returns for 8 assets in two sectors. A market factor
+{{?R=R}}# moves every asset, a sector factor moves each sector, and Student-t (5 df) shocks give fat tails.
+{{?R=R}}# True annualised means: Tech 12%, Util 6%; Tech volatility is about 29% a year, Util about 15%.
+{{?R=R}}Random.seed!(42)
+{{?R=R}}T_sim, n_assets = 1_000, 8
+{{?R=R}}t5(n) = sqrt(3 / 5) .* randn(n) ./ sqrt.(vec(sum(abs2, randn(5, n); dims = 1)) ./ 5)  # unit-variance Student-t(5) shocks
+{{?R=R}}mkt = 0.008 .* t5(T_sim); tech = 0.010 .* t5(T_sim); util = 0.005 .* t5(T_sim)  # market and sector factors
+{{?R=R}}mu_d = [fill(0.12, 4); fill(0.06, 4)] ./ 252  # true daily means
+{{?R=R}}R = hcat([j <= 4 ? mu_d[j] .+ 1.2 .* mkt .+ tech .+ 0.012 .* t5(T_sim) : mu_d[j] .+ 0.6 .* mkt .+ util .+ 0.006 .* t5(T_sim) for j in 1:n_assets]...)
+{{?R=R}}asset_names = ["Tech1", "Tech2", "Tech3", "Tech4", "Util1", "Util2", "Util3", "Util4"]
+{{?R!=R}}asset_names = [string("Asset", j) for j in 1:size({{R}}, 2)]
 
-w = port.weights  # optimal portfolio weights (N-vector, sum to 1)
-println(w)  # print weights
+rd = ReturnsResult(; nx = asset_names, X = Float64.({{R}}))  # T x N daily returns
+rf_daily = {{rf}} / 252  # annual risk-free rate as a daily rate (252 trading days)
+slv = Solver(; name = :clarabel, solver = Clarabel.Optimizer, settings = Dict("verbose" => false),
+             check_sol = (; allow_local = true, allow_almost = true))
+
+{{?obj!=maxratio}}rm = Variance()  # risk measure: portfolio variance w' Sigma w
+{{?obj=maxratio}}rm = StandardDeviation()  # the Sharpe ratio divides by volatility, so the ratio objective uses sqrt(w' Sigma w)
+opt = JuMPOptimiser(; slv = slv)  # sample mean and covariance (EmpiricalPrior); long-only and fully invested by default
+{{?obj=minrisk}}est = MeanRisk(; opt = opt, r = rm, obj = MinimumRisk())  # global minimum-variance portfolio
+{{?obj=maxratio}}est = MeanRisk(; opt = opt, r = rm, obj = MaximumRatio(; rf = rf_daily))  # maximum Sharpe ratio (tangency) portfolio
+{{?obj=utility}}est = MeanRisk(; opt = opt, r = rm, obj = MaximumUtility(; l = {{l}}))  # maximise E[r] - l * variance
+res = optimise(est, rd)
+w, pr = res.w, res.pr  # optimal weights and the fitted prior (sample moments)
+
+println("Solver status: ", res.retcode isa OptimisationSuccess ? "success" : res.retcode)
+for (nm, wi) in zip(asset_names, w)
+    println(rpad(nm, 10), lpad(round(100 * wi, digits = 2), 8), " %")
+end
+println("Weights estimated in-sample. Judge them with Out-of-Sample Performance, not with in-sample ratios.")
 '''
 
 [[codeBranches]]
 model = "cvar"
 code = '''
-using PortfolioOptimisers
+using PortfolioOptimisers, Clarabel, Random, Statistics
 
-port = Portfolio(; returns = {{R}})  # construct portfolio from return matrix
-optimise!(port, Trad(; obj = {{obj}}, rm = CVaR()))  # Mean-CVaR: minimise Conditional Value-at-Risk
+{{?R=R}}# Simulated example: 1,000 trading days of daily simple returns for 8 assets in two sectors. A market factor
+{{?R=R}}# moves every asset, a sector factor moves each sector, and Student-t (5 df) shocks give fat tails.
+{{?R=R}}# True annualised means: Tech 12%, Util 6%; Tech volatility is about 29% a year, Util about 15%.
+{{?R=R}}Random.seed!(42)
+{{?R=R}}T_sim, n_assets = 1_000, 8
+{{?R=R}}t5(n) = sqrt(3 / 5) .* randn(n) ./ sqrt.(vec(sum(abs2, randn(5, n); dims = 1)) ./ 5)  # unit-variance Student-t(5) shocks
+{{?R=R}}mkt = 0.008 .* t5(T_sim); tech = 0.010 .* t5(T_sim); util = 0.005 .* t5(T_sim)  # market and sector factors
+{{?R=R}}mu_d = [fill(0.12, 4); fill(0.06, 4)] ./ 252  # true daily means
+{{?R=R}}R = hcat([j <= 4 ? mu_d[j] .+ 1.2 .* mkt .+ tech .+ 0.012 .* t5(T_sim) : mu_d[j] .+ 0.6 .* mkt .+ util .+ 0.006 .* t5(T_sim) for j in 1:n_assets]...)
+{{?R=R}}asset_names = ["Tech1", "Tech2", "Tech3", "Tech4", "Util1", "Util2", "Util3", "Util4"]
+{{?R!=R}}asset_names = [string("Asset", j) for j in 1:size({{R}}, 2)]
 
-w = port.weights  # optimal portfolio weights (N-vector, sum to 1)
-println(w)  # print weights
+rd = ReturnsResult(; nx = asset_names, X = Float64.({{R}}))  # T x N daily returns
+rf_daily = {{rf}} / 252  # annual risk-free rate as a daily rate (252 trading days)
+slv = Solver(; name = :clarabel, solver = Clarabel.Optimizer, settings = Dict("verbose" => false),
+             check_sol = (; allow_local = true, allow_almost = true))
+
+rm = ConditionalValueatRisk(; alpha = {{alpha}})  # average loss on the worst alpha share of days (Rockafellar-Uryasev LP)
+opt = JuMPOptimiser(; slv = slv)  # empirical scenarios; long-only and fully invested by default
+{{?obj=minrisk}}est = MeanRisk(; opt = opt, r = rm, obj = MinimumRisk())  # minimum-CVaR portfolio
+{{?obj=maxratio}}est = MeanRisk(; opt = opt, r = rm, obj = MaximumRatio(; rf = rf_daily))  # maximum STARR ratio: excess return / CVaR
+{{?obj=utility}}est = MeanRisk(; opt = opt, r = rm, obj = MaximumUtility(; l = {{l}}))  # maximise E[r] - l * CVaR
+res = optimise(est, rd)
+w, pr = res.w, res.pr  # optimal weights and the fitted prior (empirical scenarios)
+
+println("Solver status: ", res.retcode isa OptimisationSuccess ? "success" : res.retcode)
+for (nm, wi) in zip(asset_names, w)
+    println(rpad(nm, 10), lpad(round(100 * wi, digits = 2), 8), " %")
+end
+println("Daily CVaR at alpha = ", {{alpha}}, ": ", round(100 * expected_risk(rm, w, pr), digits = 3), " %  (average loss on the worst days, in-sample)")
 '''
 
 [[codeBranches]]
 model = "hrp"
 code = '''
-using PortfolioOptimisers
+using PortfolioOptimisers, Clarabel, Random, Statistics
 
-port = Portfolio(; returns = {{R}})  # construct portfolio from return matrix
-optimise!(port, HRP())  # Hierarchical Risk Parity: cluster then allocate by risk
+{{?R=R}}# Simulated example: 1,000 trading days of daily simple returns for 8 assets in two sectors. A market factor
+{{?R=R}}# moves every asset, a sector factor moves each sector, and Student-t (5 df) shocks give fat tails.
+{{?R=R}}# True annualised means: Tech 12%, Util 6%; Tech volatility is about 29% a year, Util about 15%.
+{{?R=R}}Random.seed!(42)
+{{?R=R}}T_sim, n_assets = 1_000, 8
+{{?R=R}}t5(n) = sqrt(3 / 5) .* randn(n) ./ sqrt.(vec(sum(abs2, randn(5, n); dims = 1)) ./ 5)  # unit-variance Student-t(5) shocks
+{{?R=R}}mkt = 0.008 .* t5(T_sim); tech = 0.010 .* t5(T_sim); util = 0.005 .* t5(T_sim)  # market and sector factors
+{{?R=R}}mu_d = [fill(0.12, 4); fill(0.06, 4)] ./ 252  # true daily means
+{{?R=R}}R = hcat([j <= 4 ? mu_d[j] .+ 1.2 .* mkt .+ tech .+ 0.012 .* t5(T_sim) : mu_d[j] .+ 0.6 .* mkt .+ util .+ 0.006 .* t5(T_sim) for j in 1:n_assets]...)
+{{?R=R}}asset_names = ["Tech1", "Tech2", "Tech3", "Tech4", "Util1", "Util2", "Util3", "Util4"]
+{{?R!=R}}asset_names = [string("Asset", j) for j in 1:size({{R}}, 2)]
 
-w = port.weights  # optimal portfolio weights (N-vector, sum to 1)
-println(w)  # print weights
+rd = ReturnsResult(; nx = asset_names, X = Float64.({{R}}))  # T x N daily returns
+rf_daily = {{rf}} / 252  # annual risk-free rate as a daily rate (252 trading days)
+slv = Solver(; name = :clarabel, solver = Clarabel.Optimizer, settings = Dict("verbose" => false),
+             check_sol = (; allow_local = true, allow_almost = true))  # used by the frontier and comparison actions
+
+rm = Variance()  # risk measure used for the recursive bisection
+est = HierarchicalRiskParity(; r = rm)  # cluster on correlation distance, then split weight between sub-clusters by inverse risk
+res = optimise(est, rd)
+w, pr = res.w, res.pr  # weights and the fitted prior (sample moments); no covariance inversion and no expected returns
+
+for (nm, wi) in zip(asset_names, w)
+    println(rpad(nm, 10), lpad(round(100 * wi, digits = 2), 8), " %")
+end
+println("HRP ignores expected returns: it allocates by risk alone, so riskier clusters get less capital.")
 '''
 
 [[codeBranches]]
 model = "herc"
 code = '''
-using PortfolioOptimisers
+using PortfolioOptimisers, Clarabel, Random, Statistics
 
-port = Portfolio(; returns = {{R}})  # construct portfolio from return matrix
-optimise!(port, HERC())  # Hierarchical Equal Risk Contribution
+{{?R=R}}# Simulated example: 1,000 trading days of daily simple returns for 8 assets in two sectors. A market factor
+{{?R=R}}# moves every asset, a sector factor moves each sector, and Student-t (5 df) shocks give fat tails.
+{{?R=R}}# True annualised means: Tech 12%, Util 6%; Tech volatility is about 29% a year, Util about 15%.
+{{?R=R}}Random.seed!(42)
+{{?R=R}}T_sim, n_assets = 1_000, 8
+{{?R=R}}t5(n) = sqrt(3 / 5) .* randn(n) ./ sqrt.(vec(sum(abs2, randn(5, n); dims = 1)) ./ 5)  # unit-variance Student-t(5) shocks
+{{?R=R}}mkt = 0.008 .* t5(T_sim); tech = 0.010 .* t5(T_sim); util = 0.005 .* t5(T_sim)  # market and sector factors
+{{?R=R}}mu_d = [fill(0.12, 4); fill(0.06, 4)] ./ 252  # true daily means
+{{?R=R}}R = hcat([j <= 4 ? mu_d[j] .+ 1.2 .* mkt .+ tech .+ 0.012 .* t5(T_sim) : mu_d[j] .+ 0.6 .* mkt .+ util .+ 0.006 .* t5(T_sim) for j in 1:n_assets]...)
+{{?R=R}}asset_names = ["Tech1", "Tech2", "Tech3", "Tech4", "Util1", "Util2", "Util3", "Util4"]
+{{?R!=R}}asset_names = [string("Asset", j) for j in 1:size({{R}}, 2)]
 
-w = port.weights  # optimal portfolio weights (N-vector, sum to 1)
-println(w)  # print weights
+rd = ReturnsResult(; nx = asset_names, X = Float64.({{R}}))  # T x N daily returns
+rf_daily = {{rf}} / 252  # annual risk-free rate as a daily rate (252 trading days)
+slv = Solver(; name = :clarabel, solver = Clarabel.Optimizer, settings = Dict("verbose" => false),
+             check_sol = (; allow_local = true, allow_almost = true))  # used by the frontier and comparison actions
+
+rm = Variance()  # risk measure for both the within-cluster (ri) and across-cluster (ro) allocation
+est = HierarchicalEqualRiskContribution(; ri = rm, ro = rm)  # cut the dendrogram into clusters, equalise risk across and within them
+res = optimise(est, rd)
+w, pr = res.w, res.pr  # weights and the fitted prior (sample moments)
+
+for (nm, wi) in zip(asset_names, w)
+    println(rpad(nm, 10), lpad(round(100 * wi, digits = 2), 8), " %")
+end
+println("HERC ignores expected returns: each cluster carries a similar share of total risk, not of capital.")
 '''
 
 [[actionGroups]]
@@ -337,38 +487,53 @@ label = "Visualise"
 [[actionGroups.actions]]
 id = "efficient-frontier"
 label = "Efficient Frontier"
-desc = "Plot the mean-variance efficient frontier and locate the minimum-risk and Sharpe-optimal portfolios"
+desc = "Mean-variance efficient frontier with the minimum-variance and maximum-Sharpe portfolios, the capital market line and the current portfolio"
 code = '''
 using PortfolioOptimisers, Plots
 
-port = Portfolio(; returns = {{R}})  # build portfolio
-frontier = efficient_frontier!(port, Trad(; rm = Variance()), 50)  # compute 50 frontier points
-plot(frontier.risk, frontier.ret, xlabel="Volatility", ylabel="Return", label="Frontier")  # risk-return frontier
+ret_f = ArithmeticReturn(; settings = JuMPReturnsSettings(; lb = Frontier(; N = 30)))  # 30 return floors from min-risk to max-return
+fr = optimise(MeanRisk(; opt = JuMPOptimiser(; slv = slv, ret = ret_f), r = Variance()), rd)  # minimum variance at each floor
+ok = [rc isa OptimisationSuccess for rc in fr.retcode]  # keep the points that solved
+ann_vol(v) = sqrt(252) * expected_risk(StandardDeviation(), v, pr)  # annualised volatility
+ann_ret(v) = 252 * expected_return(ArithmeticReturn(), v, pr)  # annualised arithmetic mean return
+
+w_tan = optimise(MeanRisk(; opt = JuMPOptimiser(; slv = slv), r = StandardDeviation(), obj = MaximumRatio(; rf = rf_daily)), rd).w
+w_minv = fr.w[findfirst(ok)]  # first frontier point: the minimum-variance portfolio
+
+plot(ann_vol.(fr.w[ok]), ann_ret.(fr.w[ok]); label = "Efficient frontier", lw = 2,
+     xlabel = "Annualised volatility", ylabel = "Annualised mean return", title = "Mean-Variance Frontier (In-Sample)")
+plot!([0, 1.5 * ann_vol(w_tan)], [{{rf}}, {{rf}} + 1.5 * (ann_ret(w_tan) - {{rf}})]; label = "Capital market line", ls = :dash)
+scatter!([ann_vol(w_minv)], [ann_ret(w_minv)]; label = "Minimum variance", ms = 6)
+scatter!([ann_vol(w_tan)], [ann_ret(w_tan)]; label = "Maximum Sharpe", ms = 6)
+scatter!([ann_vol(w)], [ann_ret(w)]; label = "Current portfolio", ms = 7, marker = :star5)
+scatter!([sqrt(252) * std(c) for c in eachcol(rd.X)], [252 * mean(c) for c in eachcol(rd.X)];
+         label = "Single assets", ms = 3, series_annotations = text.(asset_names, 7, :left))
 '''
 
 [[actionGroups.actions]]
 id = "weights-bar"
 label = "Weights Bar Chart"
-desc = "Bar chart of optimal portfolio weights across assets"
+desc = "Bar chart of the optimal portfolio weights next to the 1/N weight"
 code = '''
-using PortfolioOptimisers, Plots
+using Plots
 
-port = Portfolio(; returns = {{R}})  # build portfolio
-optimise!(port, Trad(; rm = Variance()))  # optimise
-bar(port.weights, xlabel="Asset", ylabel="Weight", title="Portfolio Weights")  # plot weights
+bar(asset_names, 100 .* w; label = "Optimal weight", xlabel = "Asset", ylabel = "Weight (%)",
+    title = "Portfolio Weights", xrotation = 45)
+hline!([100 / length(w)]; label = "Equal weight (1/N)", ls = :dash)
 '''
 
 [[actionGroups.actions]]
 id = "risk-contribution"
 label = "Risk Contribution"
-desc = "Pie or bar chart of per-asset contribution to total portfolio risk"
+desc = "Each asset's share of total portfolio risk (Euler decomposition) against its share of capital"
 code = '''
 using PortfolioOptimisers, Plots
 
-port = Portfolio(; returns = {{R}})  # build portfolio
-optimise!(port, Trad(; rm = Variance()))  # optimise
-rc = risk_contribution(port)  # marginal risk contributions
-bar(rc, xlabel="Asset", ylabel="Risk contribution", title="Risk Decomposition")  # plot
+rc = risk_contribution(rm, w, pr)  # Euler contributions w_i * d(risk)/d(w_i); they add up to the portfolio risk
+share = rc ./ sum(rc)  # fraction of total risk carried by each asset
+bar(asset_names, 100 .* share; label = "Share of risk", xlabel = "Asset", ylabel = "%",
+    title = "Risk Contribution vs Capital Weight", xrotation = 45)
+scatter!(asset_names, 100 .* w; label = "Share of capital", ms = 6)
 '''
 
 [[actionGroups]]
@@ -378,26 +543,29 @@ label = "Diagnose"
 [[actionGroups.actions]]
 id = "correlation-heatmap"
 label = "Correlation Heatmap"
-desc = "Heatmap of the asset correlation matrix to inspect clustering structure"
+desc = "Heatmap of the sample correlation matrix to inspect the cluster structure the hierarchical methods rely on"
 code = '''
-using PortfolioOptimisers, StatsBase, Plots
+using Statistics, Plots
 
-C = cor({{R}})  # correlation matrix (N x N)
-heatmap(C, title="Asset Correlation Matrix", color=:RdBu)  # diverging colourmap: red = negative, blue = positive
+C = cor(rd.X)  # N x N sample correlation matrix
+heatmap(asset_names, asset_names, C; clims = (-1, 1), color = :RdBu, yflip = true,
+        title = "Asset Correlation Matrix", xrotation = 45)  # red = negative, blue = positive correlation
 '''
 
 [[actionGroups.actions]]
 id = "rolling-sharpe"
 label = "Rolling Sharpe Ratio"
-desc = "Rolling annualised Sharpe ratio of the optimal portfolio over time"
+desc = "Rolling 6-month annualised Sharpe ratio of the in-sample portfolio, to check whether its risk-adjusted return is stable over time"
 code = '''
-using PortfolioOptimisers, Plots
+using Statistics, Plots
 
-port = Portfolio(; returns = {{R}})  # build portfolio
-optimise!(port, Trad(; rm = Variance()))  # optimise
-port_ret = {{R}} * port.weights  # portfolio return series
-sharpe   = rolling_sharpe(port_ret; window = 60)  # rolling 60-period Sharpe
-plot(sharpe, xlabel="Time", ylabel="Sharpe ratio")  # plot
+rp = rd.X * w  # daily portfolio returns with the full-sample weights
+win = 126  # about six months of trading days
+roll = [sqrt(252) * (mean(rp[t-win+1:t]) - rf_daily) / std(rp[t-win+1:t]) for t in win:length(rp)]
+plot(win:length(rp), roll; label = "126-day Sharpe", xlabel = "Day", ylabel = "Annualised Sharpe ratio",
+     title = "Rolling Sharpe Ratio (In-Sample Weights)")
+hline!([0]; label = "", color = :black, ls = :dot)
+println("The weights use the whole sample, including the days plotted, so this shows stability, not achievable performance.")
 '''
 
 [[actionGroups]]
@@ -407,19 +575,24 @@ label = "Predict"
 [[actionGroups.actions]]
 id = "oos-performance"
 label = "Out-of-Sample Performance"
-desc = "Apply weights estimated on training data to a held-out test period"
+desc = "Walk-forward backtest: re-estimate on a rolling two-year window, hold for a quarter, and evaluate only the held-out returns"
 code = '''
-using PortfolioOptimisers
+using PortfolioOptimisers, Statistics, Plots
 
-T = size({{R}}, 1)  # total observations
-R_train = {{R}}[1:div(T,2), :]  # in-sample half
-R_test  = {{R}}[div(T,2)+1:end, :]  # out-of-sample half
+cv = IndexWalkForward(504, 63)  # train on 504 days (2 years), hold the weights for the next 63 days, then roll forward
+pred = cross_val_predict(est, rd, cv)  # refits the selected model on every training window
+r_oos = pred.mrd.X  # held-out daily portfolio returns, concatenated across folds
 
-port = Portfolio(; returns = R_train)  # fit on training data
-optimise!(port, Trad(; rm = Variance()))  # optimise in-sample
-
-oos_ret = R_test * port.weights  # out-of-sample portfolio returns
-println("OOS Sharpe: ", mean(oos_ret) / std(oos_ret) * sqrt(252))  # annualised OOS Sharpe
+ex = r_oos .- rf_daily
+sr = mean(ex) / std(r_oos)  # daily Sharpe ratio
+wealth = cumprod(1 .+ r_oos)
+println("Folds: ", length(pred.pred), "   out-of-sample days: ", length(r_oos))
+println("Annualised excess return: ", round(100 * 252 * mean(ex), digits = 2), " %")
+println("Annualised volatility:    ", round(100 * sqrt(252) * std(r_oos), digits = 2), " %")
+println("Annualised Sharpe ratio:  ", round(sqrt(252) * sr, digits = 2),
+        "   (SE about ", round(sqrt(252 * (1 + sr^2 / 2) / length(r_oos)), digits = 2), ", Lo 2002, iid returns)")
+println("Maximum drawdown:         ", round(100 * maximum(1 .- wealth ./ accumulate(max, wealth)), digits = 2), " %")
+plot(wealth; label = "Out-of-sample wealth", xlabel = "Out-of-sample day", ylabel = "Growth of 1", title = "Walk-Forward Backtest")
 '''
 
 [[actionGroups]]
@@ -429,41 +602,56 @@ label = "Compare"
 [[actionGroups.actions]]
 id = "compare-equal-weight"
 label = "vs Equal Weight"
-desc = "Compare optimised portfolio Sharpe and volatility against a naive equal-weight benchmark"
+desc = "Out-of-sample Sharpe ratio of the selected model against the 1/N portfolio on the same walk-forward folds, with a test of the difference"
 code = '''
-using PortfolioOptimisers
+using PortfolioOptimisers, Statistics
 
-port = Portfolio(; returns = {{R}})  # build portfolio
-optimise!(port, Trad(; rm = Variance()))  # optimise
+cv = IndexWalkForward(504, 63)  # same folds for both strategies
+r_opt = cross_val_predict(est, rd, cv).mrd.X  # selected model, refitted on each window
+r_ew = cross_val_predict(EqualWeighted(), rd, cv).mrd.X  # 1/N benchmark (DeMiguel, Garlappi and Uppal 2009)
 
-N       = size({{R}}, 2)  # number of assets
-w_ew    = fill(1/N, N)  # equal-weight benchmark
-ret_opt = {{R}} * port.weights  # optimal portfolio returns
-ret_ew  = {{R}} * w_ew  # equal-weight returns
+sharpe_d(x) = (mean(x) - rf_daily) / std(x)  # daily Sharpe ratio of excess returns
+s1, s2, n = sharpe_d(r_opt), sharpe_d(r_ew), length(r_opt)
+rho = cor(r_opt, r_ew)
+z = (s1 - s2) / sqrt((2 - 2 * rho + 0.5 * (s1^2 + s2^2 - 2 * s1 * s2 * rho^2)) / n)  # Jobson-Korkie test, Memmel (2003) correction
 
-println("Opt  Sharpe: ", mean(ret_opt) / std(ret_opt))  # optimised Sharpe
-println("EW   Sharpe: ", mean(ret_ew)  / std(ret_ew))  # equal-weight Sharpe
+println(rpad("Optimised", 12), "Sharpe ", lpad(round(sqrt(252) * s1, digits = 2), 6), "   vol ", round(100 * sqrt(252) * std(r_opt), digits = 1), " %")
+println(rpad("1/N", 12), "Sharpe ", lpad(round(sqrt(252) * s2, digits = 2), 6), "   vol ", round(100 * sqrt(252) * std(r_ew), digits = 1), " %")
+println("Difference test: z = ", round(z, digits = 2), "   (|z| > 1.96 rejects equal Sharpe ratios at the 5% level)")
+println(abs(z) > 1.96 ? "The out-of-sample Sharpe ratios differ at the 5% level." :
+        "No significant difference: with this sample, the optimiser has not beaten (or lost to) 1/N.")
 '''
 
 [[actionGroups.actions]]
 id = "compare-methods"
 label = "Compare Methods"
-desc = "Side-by-side Sharpe ratio and maximum drawdown for all four methods"
+desc = "Out-of-sample Sharpe ratio, volatility and maximum drawdown of every method and two naive benchmarks on the same walk-forward folds"
 code = '''
-using PortfolioOptimisers
+using PortfolioOptimisers, Statistics
 
-port = Portfolio(; returns = {{R}})
-
-for (label, strategy) in [
-    ("MV",   () -> optimise!(port, Trad(; rm = Variance()))),
-    ("CVaR", () -> optimise!(port, Trad(; rm = CVaR()))),
-    ("HRP",  () -> optimise!(port, HRP())),
-    ("HERC", () -> optimise!(port, HERC())),
+cv = IndexWalkForward(504, 63)  # identical folds for every strategy
+mr(r, obj = MinimumRisk()) = MeanRisk(; opt = JuMPOptimiser(; slv = slv), r = r, obj = obj)
+strategies = [
+    ("Min Variance", mr(Variance())),
+    ("Max Sharpe", mr(StandardDeviation(), MaximumRatio(; rf = rf_daily))),
+    ("Min CVaR 5%", mr(ConditionalValueatRisk(; alpha = 0.05))),
+    ("HRP", HierarchicalRiskParity()),
+    ("HERC", HierarchicalEqualRiskContribution()),
+    ("Inverse Vol", InverseVolatility()),
+    ("Equal Weight", EqualWeighted()),
 ]
-    strategy()
-    ret = {{R}} * port.weights  # portfolio return series
-    println(label, " Sharpe: ", mean(ret) / std(ret))  # print Sharpe
+
+println(rpad("Method", 14), lpad("Sharpe", 8), lpad("SE", 7), lpad("Vol %", 8), lpad("MaxDD %", 9))
+for (nm, s) in strategies
+    x = cross_val_predict(s, rd, cv).mrd.X  # held-out daily returns
+    sr = (mean(x) - rf_daily) / std(x)
+    wealth = cumprod(1 .+ x)
+    println(rpad(nm, 14), lpad(round(sqrt(252) * sr, digits = 2), 8),
+            lpad(round(sqrt(252 * (1 + sr^2 / 2) / length(x)), digits = 2), 7),
+            lpad(round(100 * sqrt(252) * std(x), digits = 1), 8),
+            lpad(round(100 * maximum(1 .- wealth ./ accumulate(max, wealth)), digits = 1), 9))
 end
+println("SE = standard error of each Sharpe ratio (Lo 2002). Differences well inside about 2 SE are not evidence of a better method.")
 '''
 
 [[actionGroups]]
@@ -473,30 +661,31 @@ label = "Interpret"
 [[actionGroups.actions]]
 id = "portfolio-weights"
 label = "Portfolio Weights"
-desc = "Extract and display the optimal weights with asset labels"
+desc = "Weights sorted from largest to smallest, with the effective number of assets as a concentration measure"
 code = '''
-using PortfolioOptimisers
-
-port = Portfolio(; returns = {{R}})  # build portfolio
-optimise!(port, Trad(; rm = Variance()))  # optimise
-
-println("Weights: ", port.weights)  # optimal weight vector (sums to 1)
-println("Max weight: ", maximum(port.weights))  # most concentrated position
-println("Min weight: ", minimum(port.weights))  # smallest position
+order = sortperm(w; rev = true)
+for i in order
+    println(rpad(asset_names[i], 10), lpad(round(100 * w[i], digits = 2), 8), " %")
+end
+n_eff = 1 / sum(abs2, w)  # inverse Herfindahl index: N for 1/N, 1 for a single asset
+println("Effective number of assets: ", round(n_eff, digits = 2), " of ", length(w))
+println("Assets with a weight below 0.1%: ", count(<(0.001), w))
 '''
 
 [[actionGroups.actions]]
 id = "expected-risk-return"
 label = "Expected Risk & Return"
-desc = "Annualised expected return, volatility and Sharpe ratio of the optimal portfolio"
+desc = "In-sample annualised expected return, volatility, Sharpe ratio and daily CVaR of the optimal portfolio"
 code = '''
 using PortfolioOptimisers
 
-port = Portfolio(; returns = {{R}})  # build portfolio
-optimise!(port, Trad(; rm = Variance()))  # optimise
+vol_d, ret_d, sr_d = expected_risk_ret_ratio(StandardDeviation(), ArithmeticReturn(), w, pr; rf = rf_daily)  # daily figures
+cvar_d = expected_risk(ConditionalValueatRisk(; alpha = 0.05), w, pr)
 
-port_ret = {{R}} * port.weights  # portfolio return series
-println("E[r]  = ", mean(port_ret) * 252)  # annualised expected return
-println("Vol   = ", std(port_ret)  * sqrt(252))  # annualised volatility
-println("Sharpe = ", mean(port_ret) / std(port_ret) * sqrt(252))  # annualised Sharpe ratio
+println("Expected return (annualised): ", round(100 * 252 * ret_d, digits = 2), " %")
+println("Volatility (annualised):      ", round(100 * sqrt(252) * vol_d, digits = 2), " %")
+println("Sharpe ratio (annualised):    ", round(sqrt(252) * sr_d, digits = 2), "   (risk-free rate ", 100 * {{rf}}, " %)")
+println("Daily CVaR at 5%:             ", round(100 * cvar_d, digits = 2), " %  average loss on the worst 5% of days")
+{{?R=R}}println("True expected return of these weights (simulation): ", round(100 * 252 * sum(w .* mu_d), digits = 2), " %")
+println("These are in-sample estimates on the data used to choose w, so they overstate future performance; see Out-of-Sample Performance.")
 '''
