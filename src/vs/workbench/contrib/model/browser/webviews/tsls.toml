@@ -263,7 +263,7 @@ e = residuals(result)  # structural equation residuals
 n = nobs(result)  # number of observations
 
 println("Residual mean:   ", round(sum(e)/n, digits = 6))  # should be ~0
-println("Residual std:    ", round(sqrt(sum(e.^2)/(n-2)), digits = 4))  # residual standard deviation
+println("Residual std:    ", round(sqrt(sum(e.^2)/(n - length(coef(result)))), digits = 4))  # residual standard deviation (n - k degrees of freedom)
 println("Max abs residual:", round(maximum(abs.(e)), digits = 4))  # largest absolute residual
 '''
 
@@ -334,5 +334,5 @@ ols = fit(OLS(Homoscedastic()), {{data}};  # OLS: inconsistent if endogeneity pr
 
 println("OLS estimates:   ", round.(coef(ols), digits=4))  # biased if endogeneity exists
 println("2SLS estimates:  ", round.(coef(iv),  digits=4))  # consistent structural estimates
-println("Hausman diff:    ", round.(coef(iv) - coef(ols), digits=4))  # large diff signals endogeneity
+println("2SLS - OLS:       ", round.(coef(iv) - coef(ols), digits=4))  # raw gap, not a Hausman test: check that both list the coefficients in the same order, and judge it against the 2SLS standard errors
 '''
