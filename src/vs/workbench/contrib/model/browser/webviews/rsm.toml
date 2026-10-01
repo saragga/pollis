@@ -405,11 +405,12 @@ label = "Diagnose"
 [[actionGroups.actions]]
 id = "residuals"
 label = "Residual Checks"
-desc = "Residuals from the probability-weighted fit: Ljung-Box on the residuals and their squares, Jarque-Bera for normality, and the residual ACF"
+desc = "Residuals from the probability-weighted fit: Ljung-Box on the residuals and their squares, Jarque-Bera for normality, and the residual ACF. A rough check: these residuals mix the regimes, so they are not i.i.d. even when the model is right; read clear departures, not borderline p-values"
 code = '''
 using MarSwitching, HypothesisTests, StatsBase, Plots
 r = yt .- predict(model, true)  # instantaneous fit: regime means weighted by filtered probabilities
-L = min(20, length(r) ÷ 4); band = 1.96 / sqrt(length(r))
+# not i.i.d. under the true model either (regime mixing): the tests below are indicative, not exact
+L = min(20, div(length(r), 4)); band = 1.96 / sqrt(length(r))
 display((ljung_box_p = pvalue(LjungBoxTest(r, L)), ljung_box_squared_p = pvalue(LjungBoxTest(r .^ 2, L)), jarque_bera_p = pvalue(JarqueBeraTest(r))))
 bar(1:L, autocor(r, 1:L), legend=false, xlabel="Lag", title="Residual ACF")
 hline!([-band, band], c=:red, ls=:dash)
@@ -460,20 +461,21 @@ label = "Compare"
 [[actionGroups.actions]]
 id = "k-select"
 label = "Number of Regimes (AIC and BIC)"
-desc = "Refits the model with 2, 3 and 4 regimes and compares information criteria from the log-likelihood and parameter count"
+desc = "Refits the model with 2, 3 and 4 regimes and compares information criteria from the log-likelihood and parameter count. A heuristic: the extra regime has parameters that are unidentified when it is absent, so the usual likelihood-ratio and information-criterion theory does not apply; simulation studies find BIC a reasonable guide, AIC prone to too many regimes"
 code = '''
 using MarSwitching
 function ic(m)
     n = length(m.raw_params)  # estimated parameters
     (aic = round(-2m.Likelihood + 2n, digits=1), bic = round(-2m.Likelihood + n * log(m.T), digits=1))
 end
+println("Heuristic only: under k regimes the parameters of a (k+1)th regime are unidentified, so standard IC and LR theory do not apply (Hansen 1992; Garcia 1998).")
 [(k = k, ic(fitms(k))...) for k in 2:4]
 '''
 
 [[actionGroups.actions]]
 id = "grid"
 label = "Specification Search"
-desc = "grid_search_msm searches regimes, intercept type, switching of each regressor and of the variance, and keeps the best model by AIC; it needs switching regressors (or the autoregression lags) and does not cover Markov-Switching ARCH or time-varying transitions"
+desc = "grid_search_msm searches regimes, intercept type, switching of each regressor and of the variance, and keeps the best model by AIC (the same caveat as the regime count applies to k); it needs switching regressors (or the autoregression lags) and does not cover Markov-Switching ARCH or time-varying transitions"
 code = '''
 using MarSwitching
 {{?model=msar}} Xg = X[:, 2:end]

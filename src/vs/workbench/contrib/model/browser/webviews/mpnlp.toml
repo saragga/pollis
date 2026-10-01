@@ -248,15 +248,15 @@ default = "sum(x .^ 2) <= 4"
 [[inputs]]
 id = "lb"
 label = "Lower Bound"
-tooltip = "Lower bound on every x[i]. Global solvers need finite bounds; for MINLP it must be at most 0 so that x[i] can switch off."
-default = "-5"
+tooltip = "Lower bound on every x[i]. Global solvers need finite bounds, and tighter bounds help them. For MINLP it must be at most 0 so that x[i] can switch off, and it is the big-M of the switch, so keep it as tight as the constraint allows (the default ball sum(x .^ 2) <= 4 implies -2)."
+default = "-2"
 newRow = true
 
 [[inputs]]
 id = "ub"
 label = "Upper Bound"
-tooltip = "Upper bound on every x[i]. Global solvers need finite bounds."
-default = "5"
+tooltip = "Upper bound on every x[i]. Global solvers need finite bounds, and tighter bounds help them. For MINLP it is also the big-M of the switch (the default ball implies 2)."
+default = "2"
 
 [[inputs]]
 id = "card"
@@ -385,7 +385,7 @@ function build(optimizer)
     @objective(m, {{sense}}, {{obj}})
     @constraint(m, {{cons}})
     @variable(m, z[1:n], Bin)  # z[i] = 1 lets x[i] be nonzero
-    @constraint(m, [i = 1:n], lb * z[i] <= x[i] <= ub * z[i])
+    @constraint(m, [i = 1:n], lb * z[i] <= x[i] <= ub * z[i])  # big-M switch: the bounds are the M, so tight bounds give a tight relaxation
     @constraint(m, sum(z) <= {{card}})  # cardinality limit
     m, x
 end
@@ -469,16 +469,18 @@ code = '''
 [[actionGroups.actions]]
 id = "multistart"
 label = "Multi-Start"
-desc = "Re-solve from 20 random starting points: differing optima reveal a nonconvex problem with several local solutions"
+desc = "Re-solve from 20 random starting points: differing optima reveal a nonconvex problem with several local solutions. The original start is restored and re-solved afterwards"
 code = '''
 using Random, Plots
 
 Random.seed!(1)
+start0 = start_value.(x)
 objs = map(1:20) do _
     set_start_value.(x, lb .+ (ub - lb) .* rand(n))
     optimize!(model)
     is_solved_and_feasible(model) ? objective_value(model) : NaN
 end
+set_start_value.(x, start0); optimize!(model)  # restore, so the other actions see the original solution
 histogram(filter(!isnan, objs), bins=20, xlabel="objective at the solution found", ylabel="starts", legend=false)
 '''
 
@@ -509,7 +511,7 @@ cons = all_constraints(model; include_variable_in_set_constraints=true)
 [[actionGroups.actions]]
 id = "parametric"
 label = "Parametric Sweep"
-desc = "Tighten the upper bound on every variable step by step and track the optimal objective"
+desc = "Tighten the upper bound on every variable step by step and track the optimal objective. The bound is restored and the model re-solved afterwards"
 code = '''
 using Plots
 
@@ -519,7 +521,7 @@ vals = map(caps) do b
     optimize!(model)
     is_solved_and_feasible(model) ? objective_value(model) : NaN
 end
-set_upper_bound.(x, ub)  # restore
+set_upper_bound.(x, ub); optimize!(model)  # restore, so the other actions see the original solution
 plot(caps, vals, marker=:circle, xlabel="upper bound on x[i]", ylabel="optimal objective", legend=false)
 '''
 

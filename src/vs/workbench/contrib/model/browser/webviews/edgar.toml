@@ -230,15 +230,14 @@ using EDGAR
 # Click "Set contact" on the Powered-by line once; Pollis injects it as
 # ENV["SEC_USER_AGENT"], which EDGAR.jl reads automatically on every request.
 
-# Submissions history by 10-digit zero-padded CIK (Apple Inc. = 320193)
-sub = fetch_submissions("0000320193")
+# Filer profile from the submissions API (Apple Inc. = CIK 320193)
+p = profile(320193)
+println(p.name, " - ", p.sicDescription, " (fiscal year ends ", p.fiscalYearEnd, ")")
 
-println(sub.name, " - ", sub.sicDescription)
-
-# filings.recent holds parallel arrays: form, filingDate, accessionNumber, ...
-recent = sub.filings.recent
-for i in 1:5
-    println(recent.filingDate[i], "  ", recent.form[i], "  ", recent.primaryDocument[i])
+# One row per filing, newest first, 100 per page (from = 100, 200, ... for older ones)
+rows = filings_by_cik(320193)
+for r in first(rows, 5)
+    println(r.filed, "  ", r.form, "  ", r.document)
 end
 """
 
@@ -267,9 +266,12 @@ using EDGAR
 # One us-gaap concept over time: net income (NetIncomeLoss)
 concept = company_concept("320193", "us-gaap", "NetIncomeLoss")
 
-# Values are grouped by unit (here USD); each entry has end, form, val, ...
-for o in last(concept.units.USD, 5)
-    println(getproperty(o, :end), "  ", o.form, "  ", o.val)
+# Values are grouped by unit (here USD). The raw entries mix quarters and years and
+# repeat each period as a comparative in later filings. The frame field marks the one
+# canonical fact per calendar period (CY2023 = a year, CY2023Q1 = a quarter)
+annual = filter(o -> haskey(o, :frame) && !occursin('Q', o.frame), concept.units.USD)
+for o in last(annual, 5)
+    println(o.frame, "  ", o.start, " to ", getproperty(o, :end), "  ", o.form, "  ", o.val)
 end
 """
 
@@ -295,13 +297,13 @@ code = """
 using EDGAR
 # Contact is injected by Pollis as ENV["SEC_USER_AGENT"] and read automatically.
 
-# Full-text search across filing contents (2001 onward), limited to 10-K forms
-res = full_text_search("climate risk"; forms = "10-K")
+# Full-text search across filing contents (2001 onward), limited to 10-K forms.
+# Returns one row per filing, ranked by relevance, 100 rows per page
+rows = full_text_search("climate risk"; forms = "10-K")
 
-println("Total matches: ", res.hits.total.value)
-for h in first(res.hits.hits, 5)
-    src = h._source
-    println(src.file_date, "  ", src.form, "  ", first(src.display_names))
+println("Hits on the first page: ", length(rows))
+for r in first(rows, 5)
+    println(r.filed, "  ", r.form, "  ", r.entity)
 end
 """
 
@@ -318,12 +320,10 @@ code = """
 using EDGAR
 # Contact is injected by Pollis as ENV["SEC_USER_AGENT"] and read automatically.
 
-recent = fetch_submissions("0000320193").filings.recent
+rows = filings_by_cik(320193; forms = ["10-K", "10-Q"])
 
-for i in eachindex(recent.form)
-    if recent.form[i] in ("10-K", "10-Q")
-        println(recent.filingDate[i], "  ", recent.form[i])
-    end
+for r in rows
+    println(r.filed, "  ", r.form, "  period ending ", r.reportDate)
 end
 """
 
@@ -335,12 +335,11 @@ code = """
 using EDGAR
 # Contact is injected by Pollis as ENV["SEC_USER_AGENT"] and read automatically.
 
-cik = 320193
-recent = fetch_submissions(lpad(cik, 10, '0')).filings.recent
+filer = 320193
+r = first(filings_by_cik(filer; forms = "10-K"))  # the latest 10-K
 
-acc = replace(recent.accessionNumber[1], "-" => "")
-doc = recent.primaryDocument[1]
-println("https://www.sec.gov/Archives/edgar/data/$cik/$acc/$doc")
+acc = replace(r.accession, "-" => "")  # the archive folder drops the dashes
+println("https://www.sec.gov/Archives/edgar/data/$filer/$acc/$(r.document)")
 """
 
 [[actionGroups.actions]]
@@ -404,16 +403,29 @@ label = "Company Concept"
 [[actionGroups.actions]]
 id = "edgar-con-revenue"
 label = "Revenue Over Time"
-desc = "Annual revenue from the contract-with-customer concept"
+desc = "Annual revenue across the pre-2018 and ASC 606 revenue tags, one fact per year"
 code = """
 using EDGAR
 # Contact is injected by Pollis as ENV["SEC_USER_AGENT"] and read automatically.
 
-tag = "RevenueFromContractWithCustomerExcludingAssessedTax"
-rev = company_concept("320193", "us-gaap", tag).units.USD
+# Apple tagged revenue as SalesRevenueNet until FY2017, then switched to the
+# ASC 606 contract-with-customer tag, so one tag alone gives a broken series
+tags = ["SalesRevenueNet", "RevenueFromContractWithCustomerExcludingAssessedTax"]
 
-for o in filter(o -> o.form == "10-K", rev)  # each 10-K repeats the two prior years as comparatives
-    println(o.start, " to ", getproperty(o, :end), "  ", o.val, "  (from the FY", o.fy, " 10-K)")  # fy is the filing's fiscal year, not the period's
+annual = Dict{String, Any}()
+for tag in tags
+    for o in company_concept("320193", "us-gaap", tag).units.USD
+        # each 10-K repeats the two prior years as comparatives; the frame field keeps
+        # one canonical fact per calendar year (quarterly frames contain a Q)
+        if haskey(o, :frame) && !occursin('Q', o.frame)
+            annual[String(o.frame)] = (start = o.start, stop = getproperty(o, :end), val = o.val, tag = tag)
+        end
+    end
+end
+
+for f in sort(collect(keys(annual)))
+    a = annual[f]
+    println(f, "  ", a.start, " to ", a.stop, "  ", a.val, "  (", a.tag, ")")
 end
 """
 
@@ -459,14 +471,22 @@ end
 [[actionGroups.actions]]
 id = "edgar-fr-duration"
 label = "Duration Concept"
-desc = "A flow concept (revenue) summed over a full year, across filers"
+desc = "A flow concept (revenue) over a full year, across filers and revenue tags"
 code = """
 using EDGAR
 # Contact is injected by Pollis as ENV["SEC_USER_AGENT"] and read automatically.
 
-# No trailing "I": CY2022 is a duration (the whole year), used for flows
-data = xbrl_frames("us-gaap", "Revenues", "USD", "CY2022").data
-println("Filers with full-year revenue: ", length(data))
+# No trailing "I": CY2022 is a duration (the whole year), used for flows.
+# Filers choose different revenue tags, so any one tag undercounts them
+tags = ["Revenues", "RevenueFromContractWithCustomerExcludingAssessedTax", "RevenueFromContractWithCustomerIncludingAssessedTax", "SalesRevenueNet"]
+
+ciks = Set{Int}()
+for tag in tags
+    data = xbrl_frames("us-gaap", tag, "USD", "CY2022").data
+    union!(ciks, (d.cik for d in data))
+    println(rpad(tag, 54), length(data), " filers")
+end
+println("Filers with any of these tags: ", length(ciks))
 """
 
 [[actionGroups]]
@@ -481,8 +501,15 @@ code = """
 using EDGAR
 # Contact is injected by Pollis as ENV["SEC_USER_AGENT"] and read automatically.
 
-res = full_text_search("supply chain disruption"; forms = "10-K", startdate = "2023-01-01", enddate = "2023-12-31")
-println("Matches in 2023 10-Ks: ", res.hits.total.value)
+# EFTS returns 100 rows per page and no total count: page until a short page
+n, from = 0, 0
+while true
+    rows = full_text_search("supply chain disruption"; forms = "10-K", startdate = "2023-01-01", enddate = "2023-12-31", from = from)
+    global n += length(rows)
+    (length(rows) < 100 || from >= 9900) && break  # EFTS stops paging at 10000 hits
+    global from += 100
+end
+println("2023 10-K filings with the phrase: ", n)
 """
 
 [[actionGroups.actions]]
@@ -493,5 +520,6 @@ code = """
 using EDGAR
 # Contact is injected by Pollis as ENV["SEC_USER_AGENT"] and read automatically.
 
-println("AAPL -> CIK ", cik_for_ticker("AAPL"))
+# cik() matches names and tickers; by = :ticker matches the ticker exactly
+println("AAPL -> CIK ", only(cik("AAPL"; by = :ticker)).cik)
 """

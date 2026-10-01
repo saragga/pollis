@@ -307,7 +307,7 @@ purpose = "Momentum plus per-coordinate scaling; AdaMax uses the infinity norm, 
 [[inputs]]
 id = "f"
 label = "Objective f(x)"
-tooltip = "Julia expression for the scalar loss to minimise. Use x[1], x[2], ... for the components."
+tooltip = "Julia expression for the scalar loss to minimise. Use x[1], x[2], ... for the components. The default quadratic has curvatures 2 and 20, a mild condition number of 10; raise the 10 to 100 or 1000 to see the rules differ on an ill-conditioned valley (SGD then needs lr below 2 / the largest curvature)."
 default = "(x[1] - 1)^2 + 10 * (x[2] + 0.5)^2"
 
 [[inputs]]
@@ -333,7 +333,7 @@ models = ["momentum", "nesterov"]
 [[inputs]]
 id = "decay"
 label = "Weight Decay"
-tooltip = "Decoupled weight decay: each step also shrinks the parameters by lr * decay * x, independently of the adaptive scaling."
+tooltip = "Decoupled weight decay: each step also shrinks the parameters by lr * decay * x, independently of the adaptive scaling. It is a regulariser, so AdamW settles where the Adam step balances decay * x: short of the minimiser of f, pulled towards 0. Set 0 to recover Adam."
 default = "0.01"
 models = ["adamw"]
 
@@ -628,7 +628,7 @@ f(x) = {{f}}
 x0    = {{x0}}  # initial parameters
 iters = {{iters}}  # update steps
 noise = {{noise}}  # std of the gradient noise (stands in for minibatch sampling)
-rule(lr) = AdamW(lr, (0.9, 0.999), {{decay}})  # Adam plus decoupled weight decay
+rule(lr) = AdamW(lr, (0.9, 0.999), {{decay}})  # Adam plus decoupled weight decay: pulls x towards 0, away from the minimiser of f
 
 function train(r; x0=x0, iters=iters, noise=noise, seed=1)
     rng = Xoshiro(seed)
@@ -738,19 +738,23 @@ label = "Compare"
 [[actionGroups.actions]]
 id = "compare-rules"
 label = "Compare Rules"
-desc = "All eight Optimisers.jl rules at the same learning rate: late average loss over 5 seeds (mean and spread) and the loss curves overlaid"
+desc = "All eight Optimisers.jl rules, each at its own best learning rate from the Learning-Rate Sensitivity grid (the same lr means different steps: SGD scales the gradient, Adam steps about lr per coordinate). The rate is tuned on one seed and the late average loss reported over 5 fresh seeds, with the loss curves overlaid"
 code = '''
 using Plots
 
 rules = ["SGD" => Descent, "Momentum" => Momentum, "Nesterov" => Nesterov, "AdaGrad" => AdaGrad,
-         "RMSProp" => RMSProp, "Adam" => Adam, "AdaMax" => AdaMax, "AdamW" => AdamW]
+         "RMSProp" => RMSProp, "Adam" => Adam, "AdaMax" => AdaMax,
+         "AdamW" => (a -> AdamW(a, (0.9, 0.999), 0.01))]  # AdamW with weight decay 0.01
+lrs = 10.0 .^ (-4:0.5:0)  # the Learning-Rate Sensitivity grid
 tail(L) = mean(L[end - div(length(L), 10):end])
+score(L) = (s = tail(L); isfinite(s) ? s : Inf)  # a diverged run scores Inf
 p = plot(xlabel="iteration", ylabel="loss", yscale=:log10)
 table = map(rules) do (name, R)
-    runs = [train(R({{lr}}); seed=k) for k in 1:5]
-    plot!(p, runs[1].losses .+ eps(), label=name)
+    best = lrs[argmin([score(train(R(a); seed=0).losses) for a in lrs])]  # tune the rate on seed 0
+    runs = [train(R(best); seed=k) for k in 1:5]  # evaluate on 5 fresh seeds
+    plot!(p, runs[1].losses .+ eps(), label="$name (lr = $(round(best; sigdigits=2)))")
     s = tail.(getfield.(runs, :losses))
-    (rule = name, late_loss_mean = mean(s), late_loss_std = std(s))
+    (rule = name, best_lr = best, late_loss_mean = mean(s), late_loss_std = std(s))
 end
 display(p)
 table

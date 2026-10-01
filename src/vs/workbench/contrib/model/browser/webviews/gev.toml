@@ -118,7 +118,7 @@ detail = ""
 id = "data"
 models = ["fit"]
 label = "Block maxima series"
-tooltip = "Vector of block maxima (e.g., annual maxima of daily losses). The GEV is fitted to this series."
+tooltip = "Vector of block maxima (e.g., annual maxima of daily losses), defined before running, e.g. maxima = [maximum(b) for b in blocks]. The GEV is fitted to this series; with few blocks (under about 50) the shape xi is poorly determined."
 default = "maxima"
 
 [[inputs]]
@@ -159,7 +159,7 @@ default = "1.0"
 id = "xi"
 models = ["eval", "sample"]
 label = "xi"
-tooltip = "Shape parameter xi. xi > 0: heavy tail (Fréchet); xi = 0: Gumbel; xi < 0: bounded tail (Weibull)."
+tooltip = "Shape parameter xi. xi > 0: heavy tail (Frechet); xi = 0: Gumbel; xi < 0: bounded tail (Weibull)."
 default = "0.1"
 
 [[inputs]]
@@ -186,39 +186,41 @@ default = "500"
 [[codeBranches]]
 model = "fit"
 code = '''
-using Extremes, Distributions
-
-fm                        = gevfit({{data}}; method = :{{method}})  # fit GEV to block maxima
-mu_hat, sigma_hat, xi_hat = params(fm)  # extract location, scale, shape
+using Extremes, Distributions, Statistics
+y = {{data}}  # block maxima, e.g. annual maxima of daily losses
+{{?method=mle}} fm = gevfit(y)  # maximum likelihood
+{{?method=pwm}} fm = gevfitpwm(y)  # probability-weighted moments
+{{?method=bayes}} fm = gevfitbayes(y)  # Bayesian (MCMC)
+point(v) = mean(v)  # MLE and PWM: one value; Bayesian: the posterior mean over the draws
+mu_hat, sigma_hat, xi_hat = point(location(fm)), point(scale(fm)), point(shape(fm))
+ci = cint(fm)  # 95% intervals for (mu, log sigma, xi)
 println("mu_hat (location): ", round(mu_hat,    digits = 6))
 println("sigma_hat (scale):  ", round(sigma_hat, digits = 6))
-println("xi_hat (shape):     ", round(xi_hat,   digits = 6))
+println("xi_hat (shape):     ", round(xi_hat,   digits = 6), "  95% interval ", round.(ci[3], digits = 3))
 '''
 
 [[codeBranches]]
 model = "eval"
 code = '''
 using Distributions
-
 d = GeneralizedExtremeValue({{mu}}, {{sigma}}, {{xi}})  # construct GEV
 f = pdf(d, {{x}})  # density at x
-F = cdf(d, {{x}})  # cumulative prob at x
-q = quantile(d, {{p}})  # quantile at probability p
+F = cdf(d, {{x}})  # probability that a block maximum is at most x
+q = quantile(d, {{p}})  # level exceeded by a block maximum with probability 1 - p
 println("pdf(", {{x}}, "):         ", round(f, digits = 6))
-println("cdf(", {{x}}, "):         ", round(F, digits = 6))
-println("Quantile(", {{p}}, "): ", round(q, digits = 6))
+println("cdf(", {{x}}, "):         ", round(F, digits = 6), "  (x is exceeded once every ", round(1 / (1 - F), digits = 1), " blocks on average)")
+println("Quantile(", {{p}}, "): ", round(q, digits = 6), "  (the ", round(1 / (1 - {{p}}), digits = 1), "-block return level)")
 '''
 
 [[codeBranches]]
 model = "sample"
 code = '''
 using Distributions, Statistics
-
 d       = GeneralizedExtremeValue({{mu}}, {{sigma}}, {{xi}})  # construct GEV
-samples = rand(d, {{n}})  # draw n samples
+samples = rand(d, {{n}})  # draw n simulated block maxima
 println("First 10 samples: ", round.(samples[1:min(10,end)], digits = 4))
-println("Sample mean:      ", round(mean(samples), digits = 6))
-println("Sample std:       ", round(std(samples),  digits = 6))
+println("Sample mean:      ", round(mean(samples), digits = 6), {{xi}} < 1 ? "  (theoretical " * string(round(mean(d), digits = 6)) * ")" : "  (no finite mean: xi >= 1)")
+println("Sample std:       ", round(std(samples),  digits = 6), {{xi}} < 0.5 ? "  (theoretical " * string(round(std(d), digits = 6)) * ")" : "  (no finite variance: xi >= 0.5)")
 '''
 
 [[actionGroups]]
@@ -228,23 +230,36 @@ label = "Diagnose"
 [[actionGroups.actions]]
 id = "fit_diagnostics"
 label = "Fit Diagnostics"
-desc = "PP plot and QQ plot to assess GEV goodness of fit"
+desc = "PP plot and QQ plot of the maximum likelihood GEV fit: points on the red line mean a good fit"
 code = '''
-using Extremes, Plots
-fm = gevfit({{data}})  # fit GEV
-p1 = plot(probplot(fm);   title = "Probability Plot",  legend = false)  # PP plot
-p2 = plot(qqplot(fm);     title = "Quantile Plot",     legend = false)  # QQ plot
+using Extremes, Distributions, Plots
+y  = sort({{data}})
+fm = gevfit(y)  # maximum likelihood fit
+d  = GeneralizedExtremeValue(location(fm)[1], scale(fm)[1], shape(fm)[1])  # fitted GEV
+n  = length(y); pp = ((1:n) .- 0.5) ./ n  # plotting positions
+q  = quantile.(d, pp)  # fitted quantiles
+p1 = scatter(cdf.(d, y), pp; xlabel = "Fitted probability", ylabel = "Empirical probability", title = "Probability Plot", legend = false)
+plot!(p1, [0, 1], [0, 1]; color = :red)
+p2 = scatter(q, y; xlabel = "Fitted quantile", ylabel = "Empirical quantile", title = "Quantile Plot", legend = false)
+plot!(p2, q, q; color = :red)
 plot(p1, p2; layout = (1,2), size = (800, 400))
 '''
 
 [[actionGroups.actions]]
 id = "return_level_plot"
 label = "Return Level Plot"
-desc = "Plot return levels against return periods on a log scale"
+desc = "Fitted return levels with 95% delta-method intervals against the return period (log scale), with the data at their empirical return periods"
 code = '''
 using Extremes, Plots
-fm = gevfit({{data}})  # fit GEV
-plot(returnlevelplot(fm); title = "Return Level Plot", legend = false)
+fm  = gevfit({{data}})  # maximum likelihood fit
+T   = [2, 5, 10, 20, 50, 100, 200, 500]  # return periods, in blocks
+rl  = [returnlevel(fm, t) for t in T]
+lev = [r.value[1] for r in rl]  # return levels
+ci  = [cint(r)[1] for r in rl]  # 95% delta-method intervals
+y = sort({{data}}); n = length(y)
+plot(T, lev; xscale = :log10, ribbon = (lev .- first.(ci), last.(ci) .- lev), fillalpha = 0.2,
+    label = "fitted return level (95% interval)", xlabel = "Return period (blocks)", ylabel = "Return level", title = "Return Level Plot")
+scatter!(1 ./ (1 .- ((1:n) .- 0.5) ./ n), y; ms = 3, label = "data (empirical return period)")
 '''
 
 [[actionGroups]]
@@ -254,17 +269,18 @@ label = "Interpret"
 [[actionGroups.actions]]
 id = "tail_behaviour"
 label = "Tail Behaviour"
-desc = "Classify tail type from the shape parameter, and the chance that a block maximum exceeds the largest one observed"
+desc = "Classify the tail from the 95% interval for the shape xi (heavy, bounded, or not distinguishable from Gumbel), and the chance that a block maximum exceeds the largest one observed"
 code = '''
 using Extremes, Distributions
-
-fm                        = gevfit({{data}})  # fit GEV
-mu_hat, sigma_hat, xi_hat = params(fm)  # extract parameters
-tail    = xi_hat > 0.05 ? "Heavy (Frechet)" : xi_hat < -0.05 ? "Bounded (Weibull)" : "Light (Gumbel)"  # classify tail by shape
-d_gev   = GeneralizedExtremeValue(mu_hat, sigma_hat, xi_hat)  # build fitted distribution
-p_tail  = ccdf(d_gev, maximum({{data}}))  # chance a new block maximum beats the record
-
+fm = gevfit({{data}})  # maximum likelihood fit
+xi_hat = shape(fm)[1]
+xi_lo, xi_hi = cint(fm)[3]  # 95% interval for xi (the parameters are mu, log sigma, xi)
+tail = xi_lo > 0 ? "Heavy (Frechet): the whole 95% interval for xi is above 0" :
+       xi_hi < 0 ? "Bounded (Weibull): the whole 95% interval for xi is below 0" :
+       "Not distinguishable from Gumbel: xi = 0 lies inside the 95% interval"  # with few blocks the interval is wide
+d_gev  = GeneralizedExtremeValue(location(fm)[1], scale(fm)[1], xi_hat)  # fitted distribution
+p_tail = ccdf(d_gev, maximum({{data}}))  # chance a new block maximum beats the record
 println("Tail type:          ", tail)
-println("xi_hat (shape):     ", round(xi_hat, digits = 4))
+println("xi_hat (shape):     ", round(xi_hat, digits = 4), "  95% interval [", round(xi_lo, digits = 3), ", ", round(xi_hi, digits = 3), "]")
 println("P(X > record):      ", round(p_tail, digits = 6), "  (return period ", round(1 / p_tail, digits = 1), " blocks)")
 '''

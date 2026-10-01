@@ -253,7 +253,7 @@ default = "data"
 [[inputs]]
 id = "link"
 label = "Link"
-tooltip = "Link function connecting the linear predictor to the mean. The default for each family is marked; override it only when theory requires a different link."
+tooltip = "Link function connecting the linear predictor to the mean. The default for each family is marked; override it only when theory requires a different link. For Gamma, the default InverseLink can predict negative means, so LogLink is the usual choice in practice. For NegBin, LogLink is the usual choice too (as in R glm.nb)."
 kind = "select"
 newRow = true
 
@@ -485,8 +485,11 @@ code = '''
 {{?inference=standard}}using GLM  # generalized linear models
 {{?inference!=standard}}using GLM, CovarianceMatrices, Tables  # GLM + robust standard errors
 
-{{?link=}}model = glm(@formula({{formula}}), {{data}}, {{model}}())  # {{model}} family with its default link
-{{?link!=}}model = glm(@formula({{formula}}), {{data}}, {{model}}(), {{link}}())  # {{model}} family with {{link}}
+{{?link=}}link = ()  # the default link of the {{model}} family
+{{?link!=}}link = ({{link}}(),)  # {{link}} instead of the default link
+{{?model!=NegativeBinomial}}model = glm(@formula({{formula}}), {{data}}, {{model}}(), link...)  # {{model}} family
+{{?model=NegativeBinomial}}model = negbin(@formula({{formula}}), {{data}}, link...)  # estimates theta by maximum likelihood; NegativeBinomial() would fix theta = 1
+{{?model=NegativeBinomial}}println("theta: ", round(model.model.rr.d.r; digits=3))  # variance = mu + mu^2 / theta
 
 {{?inference=HC0|HC1|HC2|HC3}}V = vcov(model, {{inference}}())  # robust variance-covariance matrix
 {{?inference=HAC}}V = vcov(model, HAC(BartlettKernel(), NeweyWest()))  # robust variance-covariance matrix
@@ -543,7 +546,7 @@ using GLM, Plots
 
 mu = predict(model)  # fitted mean
 y  = response(model)  # observed response
-rp = (y .- mu) ./ sqrt.(GLM.glmvar.(Ref({{model}}()), mu))  # Pearson residuals
+rp = (y .- mu) ./ sqrt.(GLM.glmvar.(Ref(model.model.rr.d), mu))  # Pearson residuals under the fitted family
 scatter(mu, rp, xlabel="Fitted mean", ylabel="Pearson residual", label=false, alpha=0.5)
 hline!([0], linestyle=:dash, label=false)  # residuals should scatter evenly around zero
 '''
@@ -551,15 +554,19 @@ hline!([0], linestyle=:dash, label=false)  # residuals should scatter evenly aro
 [[actionGroups.actions]]
 id = "overdispersion"
 label = "Overdispersion Check"
-desc = "Pearson dispersion ratio for Poisson and Binomial families"
+desc = "Pearson dispersion ratio for count families (Poisson, Binomial counts, NegBin, Geometric); not applicable to 0/1 data or to families with a free dispersion"
 code = '''
 using GLM
 
-mu  = predict(model)  # fitted mean
-rp  = (response(model) .- mu) ./ sqrt.(GLM.glmvar.(Ref({{model}}()), mu))  # Pearson residuals
-phi = sum(abs2, rp) / dof_residual(model)  # dispersion ratio (about 1 if the family fits)
-println("Dispersion ratio: ", round(phi; digits=3))
-println(phi > 1.5 ? "Overdispersed: consider NegativeBinomial or robust SEs" : "No strong overdispersion")
+{{?model=Bernoulli}}println("Not applicable: 0/1 data cannot be overdispersed; check the link and the predictors instead")
+{{?model=Gamma|InverseGaussian|Normal}}println("Not applicable: the {{model}} family estimates its dispersion freely; see dispersion(model.model, true)")
+{{?model=Poisson|Binomial|NegativeBinomial|Geometric}}mu  = predict(model)  # fitted mean
+{{?model=Poisson|Binomial|NegativeBinomial|Geometric}}rp  = (response(model) .- mu) ./ sqrt.(GLM.glmvar.(Ref(model.model.rr.d), mu))  # Pearson residuals under the fitted family
+{{?model=Poisson|Binomial|NegativeBinomial|Geometric}}phi = sum(abs2, rp) / dof_residual(model)  # dispersion ratio (about 1 if the family fits)
+{{?model=Poisson|Binomial|NegativeBinomial|Geometric}}println("Dispersion ratio: ", round(phi; digits=3))
+{{?model=Poisson|Geometric}}println(phi > 1.5 ? "Overdispersed: consider NegBin (negbin estimates theta) or robust SEs" : "No strong overdispersion")
+{{?model=Binomial}}println(phi > 1.5 ? "Overdispersed: consider robust SEs or a quasi-binomial correction (scale the SEs by sqrt(phi))" : "No strong overdispersion")
+{{?model=NegativeBinomial}}println(phi > 1.5 ? "Still overdispersed after estimating theta: check for zero inflation or missing predictors" : "No strong overdispersion")
 '''
 
 [[actionGroups.actions]]
@@ -615,7 +622,8 @@ desc = "Test the model against an intercept-only model"
 code = '''
 using GLM
 
-model0 = glm(@formula(y ~ 1), {{data}}, {{model}}())  # intercept-only model (use your response)
+{{?model!=NegativeBinomial}}model0 = glm(@formula(y ~ 1), {{data}}, {{model}}(), link...)  # intercept-only model with the same link (use your response)
+{{?model=NegativeBinomial}}model0 = negbin(@formula(y ~ 1), {{data}}, link...)  # intercept-only model with the same link and its own theta (use your response)
 println(lrtest(model0, model))  # likelihood ratio test of the nested models
 '''
 
@@ -648,7 +656,7 @@ link_name = "{{link}}"  # the link chosen above
 ratio_scale = link_name in ("LogitLink", "LogLink")  # only then is exp(coef) an odds ratio (logit) or a rate ratio (log)
 ratio = ratio_scale ? exp.(coef(model)) : coef(model)
 ci    = ratio_scale ? exp.(confint(model)) : confint(model)  # 95% confidence interval on the same scale
-println(ratio_scale ? (link_name == "LogitLink" ? "Odds ratios" : "Rate ratios") : "Coefficients on the $(link_name) scale", " with 95% confidence intervals")
+println(ratio_scale ? (link_name == "LogitLink" ? "Odds ratios" : "Mean ratios (rate ratios for counts)") : "Coefficients on the $(link_name) scale", " with 95% confidence intervals")
 for (name, r, lo, hi) in zip(coefnames(model), ratio, ci[:, 1], ci[:, 2])
     println(rpad(name, 16), round(r; digits=3), "  [", round(lo; digits=3), ", ", round(hi; digits=3), "]")
 end

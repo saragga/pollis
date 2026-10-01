@@ -235,76 +235,19 @@ mktempdir() do dir
 		ws["A2"] = "Feb"; ws["B2"] = 15000.0; ws["C2"] = 9500.0
 		ws["A3"] = "Mar"; ws["B3"] = 11000.0; ws["C3"] = 7500.0
 
-		XLSX.setFormula(ws, "D1", "B1-C1")
-		XLSX.setFormula(ws, "D2", "B2-C2")
-		XLSX.setFormula(ws, "D3", "B3-C3")
+		XLSX.setFormula(ws, "D1:D3", "=B1-C1")  # margin; XLSX.jl writes the formula text only, it never evaluates it
 		XLSX.addDefinedName(xf, "Revenue", "Sheet1!$B$1:$B$3")
 	end
+	println("Written: ", path)
+	println("D1:D3 hold formulas with no cached values: they show numbers only after Excel (or LibreOffice) recalculates the file, which it does on open.")
+	println("Reading the file back in Julia before it has been recalculated and saved gives no values for D1:D3.")
 end
 """
 
 # Next Steps action groups
 [[actionGroups]]
-id = "write"
-label = "Write Workbook"
-
-[[actionGroups.actions]]
-id = "xlsx-write-cells"
-label = "Write Cells"
-desc = "Create a workbook with two sheets by writing cells directly"
-code = """
-using XLSX
-
-mktempdir() do dir
-	path = joinpath(dir, "output.xlsx")
-	XLSX.openxlsx(path; mode="w") do xf
-		XLSX.rename!(xf[1], "Results")
-		ws1 = xf[1]
-		ws1["A1"] = "name";  ws1["B1"] = "score"
-		ws1["A2"] = "Alice"; ws1["B2"] = 95
-		ws1["A3"] = "Bob";   ws1["B3"] = 87
-
-		XLSX.addsheet!(xf, "Inventory")
-		ws2 = xf["Inventory"]
-		ws2["A1"] = "product"; ws2["B1"] = "qty"
-		ws2["A2"] = "A";       ws2["B2"] = 10
-		ws2["A3"] = "B";       ws2["B3"] = 20
-	end
-	println("Written: ", path)
-end
-"""
-
-[[actionGroups]]
-id = "format"
-label = "Format Cells"
-
-[[actionGroups.actions]]
-id = "xlsx-write-format"
-label = "Write and Format"
-desc = "Write data and apply bold header, fill, and conditional formatting in one block"
-code = """
-using XLSX
-
-mktempdir() do dir
-	path = joinpath(dir, "report.xlsx")
-	XLSX.openxlsx(path; mode="w") do xf
-		ws = xf[1]
-		ws["A1"] = "Product"; ws["B1"] = "Revenue"
-		ws["A2"] = "Alpha";   ws["B2"] = 5200.0
-		ws["A3"] = "Beta";    ws["B3"] = 800.0
-
-		for col in ["A", "B"]
-			XLSX.setFont(ws, col * "1"; bold=true, color="FFFFFF")
-			XLSX.setFill(ws, col * "1"; pattern="solid", fgColor="4472C4")  # a fill colour shows only with a pattern
-		end
-		XLSX.setConditionalFormat(ws, "B2:B3", :cellIs; operator="lessThan", value="1000", dxStyle="redfilltext")  # light red where revenue < 1000
-	end
-end
-"""
-
-[[actionGroups]]
-id = "inspect"
-label = "Inspect"
+id = "diagnose"
+label = "Diagnose"
 
 [[actionGroups.actions]]
 id = "xlsx-inspect"
@@ -332,10 +275,6 @@ mktempdir() do dir
 	end
 end
 """
-
-[[actionGroups]]
-id = "read"
-label = "Read Formats"
 
 [[actionGroups.actions]]
 id = "xlsx-read-cells"
@@ -406,6 +345,60 @@ mktempdir() do dir
 		for name in XLSX.sheetnames(xf)
 			println(name, ": ", xf[name]["A1:A2"])
 		end
+	end
+end
+"""
+
+[[actionGroups]]
+id = "export"
+label = "Export"
+
+[[actionGroups.actions]]
+id = "xlsx-write-cells"
+label = "Write Cells"
+desc = "Create a workbook with two sheets by writing cells directly"
+code = """
+using XLSX
+
+mktempdir() do dir
+	path = joinpath(dir, "output.xlsx")
+	XLSX.openxlsx(path; mode="w") do xf
+		XLSX.rename!(xf[1], "Results")
+		ws1 = xf[1]
+		ws1["A1"] = "name";  ws1["B1"] = "score"
+		ws1["A2"] = "Alice"; ws1["B2"] = 95
+		ws1["A3"] = "Bob";   ws1["B3"] = 87
+
+		XLSX.addsheet!(xf, "Inventory")
+		ws2 = xf["Inventory"]
+		ws2["A1"] = "product"; ws2["B1"] = "qty"
+		ws2["A2"] = "A";       ws2["B2"] = 10
+		ws2["A3"] = "B";       ws2["B3"] = 20
+	end
+	println("Written: ", path)
+end
+"""
+
+[[actionGroups.actions]]
+id = "xlsx-write-format"
+label = "Write and Format"
+desc = "Write data and apply bold header, fill, and conditional formatting in one block"
+code = """
+using XLSX
+
+mktempdir() do dir
+	path = joinpath(dir, "report.xlsx")
+	XLSX.openxlsx(path; mode="w") do xf
+		ws = xf[1]
+		ws["A1"] = "Product"; ws["B1"] = "Revenue"
+		ws["A2"] = "Alpha";   ws["B2"] = 5200.0
+		ws["A3"] = "Beta";    ws["B3"] = 800.0
+
+		for col in ["A", "B"]
+			XLSX.setFont(ws, col * "1"; bold=true, color="FFFFFF")
+			XLSX.setFill(ws, col * "1"; pattern="solid", fgColor="4472C4")  # a fill colour shows only with a pattern
+		end
+		XLSX.setConditionalFormat(ws, "B2:B3", :cellIs; operator="lessThan", value="1000", dxStyle="redfilltext")  # light red where revenue < 1000
 	end
 end
 """

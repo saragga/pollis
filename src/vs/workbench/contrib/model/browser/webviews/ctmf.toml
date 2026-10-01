@@ -127,58 +127,130 @@ detail = ""
 [[inputs]]
 id = "gamma"
 label = "gamma (risk aversion)"
-tooltip = "Coefficient of relative risk aversion in the recursive Epstein-Zin utility specification."
-default = "10.0"
-
-[[inputs]]
-id = "rho"
-label = "rho (discount rate)"
-tooltip = "Subjective discount rate in continuous time."
-default = "0.02"
-
-[[inputs]]
-id = "sigma"
-label = "sigma (volatility)"
-tooltip = "Diffusion volatility of the consumption growth or state variable process."
-default = "0.0072"
+tooltip = "Coefficient of relative risk aversion in the Epstein-Zin utility. The package example uses 7.5."
+default = "7.5"
 
 [[inputs]]
 id = "psi"
 label = "psi (EIS)"
-tooltip = "Elasticity of intertemporal substitution (EIS). Separates risk aversion from intertemporal substitution preferences."
+tooltip = "Elasticity of intertemporal substitution. Must differ from 1. Long-run risk is priced (and the wealth-consumption ratio rises with expected growth) only when psi > 1."
 default = "1.5"
+
+[[inputs]]
+id = "rho"
+label = "rho (discount rate)"
+tooltip = "Subjective discount rate per year, in continuous time."
+default = "0.024"
+
+[[inputs]]
+id = "mubar"
+label = "mubar (mean growth)"
+tooltip = "Long-run mean of expected consumption growth, per year."
+default = "0.018"
+newRow = true
+
+[[inputs]]
+id = "sigma"
+label = "sigma (consumption volatility)"
+tooltip = "Volatility of consumption growth per year (annual units, continuous time). About 0.027 for US consumption; Bansal and Yaron calibrate 0.0078 per month, which is the same order (0.0078 times sqrt(12) = 0.027)."
+default = "0.027"
 
 [[inputs]]
 id = "kappa"
 label = "kappa (mean reversion)"
-tooltip = "Mean-reversion speed of the state variable (e.g. expected consumption growth or surplus ratio)."
-default = "0.3"
+tooltip = "Mean-reversion speed of expected growth per year. 0.252 matches the Bansal-Yaron monthly persistence 0.979 (minus 12 log 0.979)."
+default = "0.252"
+
+[[inputs]]
+id = "nu"
+label = "nu (growth-news volatility)"
+tooltip = "Volatility of expected growth as a multiple of sigma, in annual drift units: d mu = kappa (mubar - mu) dt + nu sigma dW. 0.528 gives a stationary standard deviation of expected growth of about 2% per year, as in Bansal and Yaron."
+default = "0.528"
 
 [[inputs]]
 id = "N"
 label = "N (grid points)"
-tooltip = "Number of grid points for the state space discretisation. More points give higher accuracy at greater computational cost."
+tooltip = "Number of grid points for expected growth, spanning the mean plus or minus 3 stationary standard deviations. More points give higher accuracy at greater computational cost."
 default = "100"
+newRow = true
 
 [[codeBranches]]
 model = "main"
 code = '''
 using EconPDEs
-using OrderedCollections: OrderedDict
 
-m = BansalYaronModel(  # long-run risk model (Bansal-Yaron 2004)
-    gamma = {{gamma}}, rho = {{rho}},  # Epstein-Zin preference parameters
-    psi = {{psi}}, sigma = {{sigma}},  # EIS and consumption volatility
-    kappa = {{kappa}})
+# Bansal-Yaron (2004) long-run risk with constant volatility, in continuous time and annual units:
+#   dC/C = mu dt + sigma dZc,   d mu = kappa (mubar - mu) dt + nu sigma dZmu
+# The unknown is the wealth-consumption ratio p(mu) of the consumption claim (two-state version: EconPDEs examples/asset_pricing/bansal_yaron.jl)
+Base.@kwdef struct LongRunRisk
+    mubar::Float64; sigma::Float64; kappa::Float64; nu::Float64
+    rho::Float64; gamma::Float64; psi::Float64
+end
 
-stategrid = OrderedDict(:x => range(-0.03, 0.03; length = {{N}}))  # state grid over expected consumption growth
-y0        = OrderedDict(:p => zeros({{N}}))  # initial guess for price-dividend ratio
+function (m::LongRunRisk)(state::NamedTuple, u::NamedTuple)
+    (; mubar, sigma, kappa, nu, rho, gamma, psi) = m
+    (; mu) = state
+    (; p, pmu_up, pmu_down, pmumu) = u
+    drift = kappa * (mubar - mu)  # drift of expected growth
+    vol   = nu * sigma  # volatility of expected growth
+    pmu   = drift >= 0 ? pmu_up : pmu_down  # upwind on the sign of the drift
+    sigma_p = pmu / p * vol  # volatility of p from growth news
+    mu_p    = pmu / p * drift + 0.5 * pmumu / p * vol^2  # drift of p, divided by p
+    price_c  = gamma * sigma  # market price of short-run consumption risk
+    price_mu = (gamma * psi - 1) / (psi - 1) * sigma_p  # market price of long-run risk (zero under power utility, gamma psi = 1)
+    r = rho + mu / psi - (1 + 1 / psi) / 2 * gamma * sigma^2 - (gamma * psi - 1) / (2 * (psi - 1)) * sigma_p^2  # risk-free rate
+    excess = price_c * sigma + price_mu * sigma_p  # expected excess return on the consumption claim
+    vol_R  = sqrt(sigma^2 + sigma_p^2)  # return volatility
+    pt = -p * (1 / p + mu + mu_p - r - excess)  # zero at the solution: expected return = r + excess
+    return (; pt), (; r, excess, vol_R, sharpe = excess / vol_R, msr = sqrt(price_c^2 + price_mu^2))
+end
 
-result, _ = pdesolve(m, stategrid, y0)  # solve the HJB equation
+m  = LongRunRisk(mubar = {{mubar}}, sigma = {{sigma}}, kappa = {{kappa}}, nu = {{nu}}, rho = {{rho}}, gamma = {{gamma}}, psi = {{psi}})
+sd = m.nu * m.sigma / sqrt(2 * m.kappa)  # stationary sd of expected growth (OU)
+mus = range(m.mubar - 3sd, m.mubar + 3sd; length = {{N}})  # grid over expected growth
 
-p  = result[:p]  # price-dividend ratio on state grid
-mu = result[:mu]  # expected excess return
-sr = result[:sr]  # Sharpe ratio
+result = pdesolve(m, (; mu = mus), (; p = ones({{N}})))
+p = result.solution.p  # wealth-consumption ratio on the grid, in years of consumption
+s = result.saved  # r, excess, vol_R, sharpe and msr on the grid
+w = exp.(-0.5 .* ((mus .- m.mubar) ./ sd) .^ 2); w = w ./ sum(w)  # stationary (normal) density of mu on the grid, for unconditional moments
+
+println("Converged: ", result.converged)
+println("Mean wealth-consumption ratio: ", round(sum(w .* p), digits=1), " years")
+println("Mean excess return on the consumption claim: ", round(100 * sum(w .* s.excess), digits=2), "% a year")
+println("Mean risk-free rate: ", round(100 * sum(w .* s.r), digits=2), "% a year")
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "pd_ratio"
+label = "Wealth-Consumption Ratio"
+desc = "Plot the wealth-consumption ratio against expected growth, with the stationary density of expected growth for scale"
+code = '''
+using Plots
+
+plot(100 .* mus, p; xlabel = "Expected consumption growth (% a year)", ylabel = "Wealth-consumption ratio (years)",
+    title = "Price of the consumption claim", label = "p(mu)")  # rises with mu when psi > 1
+vline!([100 * m.mubar]; linestyle = :dash, color = :gray, label = "mubar")
+plot!(twinx(), 100 .* mus, w; color = :orange, alpha = 0.5, ylabel = "Stationary weight", label = "", yticks = false)
+'''
+
+[[actionGroups.actions]]
+id = "risk_premium"
+label = "Risk Premium"
+desc = "Plot the conditional excess return on the consumption claim, split into short-run and long-run risk"
+code = '''
+using Plots
+
+short_run = fill(m.gamma * m.sigma^2, length(mus))  # price_c * sigma: constant
+long_run  = s.excess .- short_run  # price of growth news times exposure to it
+
+plot(100 .* mus, 100 .* s.excess; xlabel = "Expected consumption growth (% a year)", ylabel = "% a year",
+    title = "Conditional excess return (consumption claim)", label = "Total")
+plot!(100 .* mus, 100 .* short_run; linestyle = :dash, label = "Short-run risk")
+plot!(100 .* mus, 100 .* long_run; linestyle = :dot, label = "Long-run risk")
 '''
 
 [[actionGroups]]
@@ -188,58 +260,17 @@ label = "Diagnose"
 [[actionGroups.actions]]
 id = "convergence"
 label = "Convergence Check"
-desc = "Verify that the HJB solver converged and inspect the solution residuals"
+desc = "Check the solver residual and re-solve on a grid twice as fine to see whether the moments change"
 code = '''
-using EconPDEs, OrderedCollections: OrderedDict
+using EconPDEs
 
-m         = BansalYaronModel(gamma = {{gamma}}, rho = {{rho}}, psi = {{psi}}, sigma = {{sigma}}, kappa = {{kappa}})
-stategrid = OrderedDict(:x => range(-0.03, 0.03; length = {{N}}))
-y0        = OrderedDict(:p => zeros({{N}}))
+println("Converged: ", result.converged, ", residual norm ", result.residual_norm, " (tolerance ", result.tolerance, ")")
 
-result, iterations = pdesolve(m, stategrid, y0)
-
-println("Solver iterations: ", iterations)  # Newton iterations to convergence
-println("P/D range: [", round(minimum(result[:p]), digits=2), ", ", round(maximum(result[:p]), digits=2), "]")  # price-dividend ratio range
-println("Grid-average P/D:  ", round(mean(result[:p]), digits=2))  # equal weight on every grid point, not the unconditional mean (weight by the stationary density of x for that)
-'''
-
-[[actionGroups.actions]]
-id = "risk_premium"
-label = "Risk Premium"
-desc = "Plot the conditional equity risk premium as a function of the state variable"
-code = '''
-using EconPDEs, OrderedCollections: OrderedDict, Plots
-
-m         = BansalYaronModel(gamma = {{gamma}}, rho = {{rho}}, psi = {{psi}}, sigma = {{sigma}}, kappa = {{kappa}})
-x_grid    = range(-0.03, 0.03; length = {{N}})
-stategrid = OrderedDict(:x => x_grid)
-y0        = OrderedDict(:p => zeros({{N}}))
-
-result, _ = pdesolve(m, stategrid, y0)
-
-plot(x_grid, result[:mu] .* 100;  # conditional risk premium in %
-    xlabel = "Expected Consumption Growth", ylabel = "Risk Premium (%)",
-    title = "Conditional Equity Risk Premium", legend = false)
-'''
-
-[[actionGroups.actions]]
-id = "pd_ratio"
-label = "Price-Dividend Ratio"
-desc = "Plot the price-dividend ratio as a function of the state variable and compare to historical levels"
-code = '''
-using EconPDEs, OrderedCollections: OrderedDict, Plots
-
-m         = BansalYaronModel(gamma = {{gamma}}, rho = {{rho}}, psi = {{psi}}, sigma = {{sigma}}, kappa = {{kappa}})
-x_grid    = range(-0.03, 0.03; length = {{N}})
-stategrid = OrderedDict(:x => x_grid)
-y0        = OrderedDict(:p => zeros({{N}}))
-
-result, _ = pdesolve(m, stategrid, y0)
-
-plot(x_grid, result[:p];  # price-dividend ratio vs state variable
-    xlabel = "Expected Consumption Growth", ylabel = "Price-Dividend Ratio",
-    title = "Price-Dividend Ratio", legend = false)
-hline!([25.0]; linestyle = :dash, color = :red, label = "Historical avg")  # historical US P/D ~25
+mus2 = range(first(mus), last(mus); length = 2 * length(mus))  # twice as fine, same span
+fine = pdesolve(m, (; mu = mus2), (; p = ones(length(mus2))))
+w2 = exp.(-0.5 .* ((mus2 .- m.mubar) ./ sd) .^ 2); w2 = w2 ./ sum(w2)
+println("Mean wealth-consumption ratio, N = ", length(mus), ": ", round(sum(w .* p), digits=3), ", N = ", length(mus2), ": ", round(sum(w2 .* fine.solution.p), digits=3))
+println("Mean excess return (%),        N = ", length(mus), ": ", round(100 * sum(w .* s.excess), digits=4), ", N = ", length(mus2), ": ", round(100 * sum(w2 .* fine.saved.excess), digits=4))
 '''
 
 [[actionGroups]]
@@ -249,63 +280,39 @@ label = "Interpret"
 [[actionGroups.actions]]
 id = "sharpe_ratio"
 label = "Sharpe Ratio"
-desc = "Compute the maximum Sharpe ratio and compare to the equity premium puzzle benchmark"
+desc = "Sharpe ratio of the consumption claim and the maximum Sharpe ratio (the market price of risk), against the power-utility benchmark gamma sigma"
 code = '''
-using EconPDEs, OrderedCollections: OrderedDict, Statistics
-
-m         = BansalYaronModel(gamma = {{gamma}}, rho = {{rho}}, psi = {{psi}}, sigma = {{sigma}}, kappa = {{kappa}})
-stategrid = OrderedDict(:x => range(-0.03, 0.03; length = {{N}}))
-y0        = OrderedDict(:p => zeros({{N}}))
-
-result, _ = pdesolve(m, stategrid, y0)
-
-sr_mean = mean(result[:sr])  # grid average, not the unconditional mean: the grid gives the tails of x as much weight as the centre
-sr_max  = maximum(result[:sr])  # maximum (peak) Sharpe ratio
-ep_mean = mean(result[:mu]) * 100  # grid-average equity premium in %
-
-println("Grid-average Sharpe ratio:  ", round(sr_mean, digits=3))
-println("Max Sharpe ratio:   ", round(sr_max,  digits=3))
-println("Grid-average equity premium: ", round(ep_mean, digits=2), "%")  # US historical ~6%, an unconditional mean: compare with care
+println("Mean Sharpe ratio, consumption claim: ", round(sum(w .* s.sharpe), digits=3))
+println("Maximum Sharpe ratio (market price of risk): ", round(sum(w .* s.msr), digits=3))
+println("Power utility (gamma psi = 1) would give gamma sigma = ", round(m.gamma * m.sigma, digits=3))  # the long-run-risk term is what lifts the Sharpe ratio
+println("The US equity Sharpe ratio is about 0.3-0.4; equity is a levered claim on dividends, so compare with care.")
 '''
 
 [[actionGroups.actions]]
 id = "ap_moments"
 label = "Asset Pricing Moments"
-desc = "Report key model-implied moments: mean return, volatility, P/D ratio, and risk-free rate"
+desc = "Unconditional moments of the consumption claim, weighted by the stationary density of expected growth"
 code = '''
-using EconPDEs, OrderedCollections: OrderedDict, Statistics
+avg(x) = sum(w .* x)  # stationary-density weights from the main code
 
-m         = BansalYaronModel(gamma = {{gamma}}, rho = {{rho}}, psi = {{psi}}, sigma = {{sigma}}, kappa = {{kappa}})
-stategrid = OrderedDict(:x => range(-0.03, 0.03; length = {{N}}))
-y0        = OrderedDict(:p => zeros({{N}}))
-
-result, _ = pdesolve(m, stategrid, y0)
-
-println("--- Model-Implied Asset Pricing Moments ---")  # 
-println("Grid-average moments (equal weight on each grid point; weight by the stationary density of x for unconditional moments)")
-println("Mean P/D ratio:      ", round(mean(result[:p]),      digits=2))  # grid-average P/D
-println("Mean equity premium: ", round(mean(result[:mu])*100, digits=2), "%")  # annualised excess return
-println("Return volatility:   ", round(mean(result[:vol])*100, digits=2), "%")  # annualised equity vol
-println("Mean Sharpe ratio:   ", round(mean(result[:sr]),      digits=3))  # equity Sharpe ratio
-println("Risk-free rate:      ", round(mean(result[:rf])*100,  digits=2), "%")  # annualised risk-free rate
+println("--- Consumption claim, unconditional moments ---")
+println("Wealth-consumption ratio: ", round(avg(p), digits=1), " years")
+println("Excess return:            ", round(100 * avg(s.excess), digits=2), "% a year")
+println("Return volatility:        ", round(100 * avg(s.vol_R), digits=2), "% a year")
+println("Sharpe ratio:             ", round(avg(s.sharpe), digits=3))
+println("Risk-free rate:           ", round(100 * avg(s.r), digits=2), "% a year")
+println("Bansal and Yaron price equity as a dividend claim levered on growth (leverage about 3), which has a larger premium than the consumption claim.")
 '''
 
 [[actionGroups.actions]]
 id = "state_dynamics"
 label = "State Variable Dynamics"
-desc = "Half-life of shocks to expected consumption growth, and the stationary standard deviation of x as an OU process: vol(x) / sqrt(2 kappa)"
+desc = "Half-life of shocks to expected growth, its stationary standard deviation nu sigma / sqrt(2 kappa), and its share of consumption-growth variance"
 code = '''
-using EconPDEs, OrderedCollections: OrderedDict, Statistics
+half_life = log(2) / m.kappa  # years for a shock to expected growth to halve
 
-m         = BansalYaronModel(gamma = {{gamma}}, rho = {{rho}}, psi = {{psi}}, sigma = {{sigma}}, kappa = {{kappa}})
-stategrid = OrderedDict(:x => range(-0.03, 0.03; length = {{N}}))
-y0        = OrderedDict(:p => zeros({{N}}))
-
-result, _ = pdesolve(m, stategrid, y0)
-
-sigma_x = {{sigma}} / sqrt(2 * {{kappa}})  # OU stationary sd, if sigma were the volatility of x; in Bansal-Yaron x moves far less than consumption (about 4% of its volatility), so use the model's own x volatility
-half_life = log(2) / {{kappa}}  # half-life of shock in years
-
-println("State variable std:   ", round(sigma_x, digits=5))
-println("Shock half-life:      ", round(half_life, digits=2), " years")  # persistence of expected growth shocks
+println("Shock half-life:                    ", round(half_life, digits=2), " years")
+println("Stationary sd of expected growth:   ", round(100 * sd, digits=2), "% a year")
+println("Instantaneous sd of consumption:    ", round(100 * m.sigma, digits=2), "% a year")
+println("Expected growth is small and persistent: its variance is ", round(100 * sd^2 / (sd^2 + m.sigma^2), digits=1), "% of the variance of one-year consumption growth (ignoring time aggregation).")
 '''
