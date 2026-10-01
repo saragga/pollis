@@ -374,7 +374,7 @@ end
 chain = sample(rt_model(cases, T), NUTS(), MCMCThreads(), {{iter}}, {{chains}})  # run inference
 
 plot(chain[:sigma])  # sigma trace across all chains
-plot(chain[[Symbol("log_Rt[1]"), Symbol("log_Rt[NaN]"), Symbol("log_Rt[{{T}}]")]])  # log_Rt traces at start, mid, end
+plot(chain[[Symbol("log_Rt[1]"), Symbol("log_Rt[$(div({{T}}, 2))]"), Symbol("log_Rt[{{T}}]")]])  # log_Rt traces at start, mid, end
 '''
 
 [[actionGroups.actions]]
@@ -415,7 +415,7 @@ code = '''
 using Turing, Distributions, GLMakie, Random
 
 Random.seed!(42)  # reproducible
-T = {{T}}; T_fwd = NaN  # observed and forecast horizon
+T = {{T}}; T_fwd = T + 14  # observed days, then 14 forecast days
 cases_obs = rand(Poisson(20), T)  # replace with observed daily counts
 
 @model function rt_model_fwd(cases, T, T_fwd)

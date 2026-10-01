@@ -244,9 +244,9 @@ code = '''
 using Catalyst, DifferentialEquations, Plots
 
 rn = @reaction_network begin  # Repressilator: 3-gene transcriptional oscillator
-    hillr(Pz, {{k1}}, 1.0, 2), --> Px  # Pz represses Px transcription
-    hillr(Px, {{k1}}, 1.0, 2), --> Py  # Px represses Py transcription
-    hillr(Py, {{k1}}, 1.0, 2), --> Pz  # Py represses Pz transcription
+    hillr(Pz, {{k1}}, 1.0, 3), --> Px  # Pz represses Px transcription; Hill coefficient 3: with 2 the loop gain is too low and the levels settle to a fixed point
+    hillr(Px, {{k1}}, 1.0, 3), --> Py  # Px represses Py transcription
+    hillr(Py, {{k1}}, 1.0, 3), --> Pz  # Py represses Pz transcription
     {{k2}}, Px --> 0  # protein Px degradation
     {{k2}}, Py --> 0  # protein Py degradation
     {{k2}}, Pz --> 0  # protein Pz degradation
@@ -257,7 +257,7 @@ tspan = (0.0, {{T}}.0)  # time span
 prob  = ODEProblem(rn, u0, tspan, [])
 sol   = solve(prob, Tsit5())
 
-plot(sol, xlabel="Time", ylabel="Protein level", title="Repressilator Oscillator")  # sustained oscillations if parameters are in limit-cycle regime
+plot(sol, xlabel="Time", ylabel="Protein level", title="Repressilator Oscillator")  # sustained oscillations: three identical repression steps need a loop gain above 8, which Hill coefficient 3 gives
 '''
 
 [[codeBranches]]
@@ -472,7 +472,7 @@ axislegend(ax); display(fig)
 [[actionGroups.actions]]
 id = "network-domains"
 label = "Cross-Domain Comparison"
-desc = "Run Lotka-Volterra, repressilator, and SIR and compare their oscillation periods"
+desc = "Run Lotka-Volterra and the repressilator and compare their oscillation amplitudes (maximum minus minimum over the run)"
 code = '''
 using Catalyst, DifferentialEquations, Statistics
 
@@ -480,7 +480,7 @@ lv = @reaction_network begin  # Lotka-Volterra
     {{k1}}, X --> 2X; 0.05, X + Y --> 2Y; {{k2}}, Y --> 0
 end
 rep = @reaction_network begin  # Repressilator
-    hillr(Pz,{{k1}},1.0,2),-->Px; hillr(Px,{{k1}},1.0,2),-->Py; hillr(Py,{{k1}},1.0,2),-->Pz
+    hillr(Pz,{{k1}},1.0,3),-->Px; hillr(Px,{{k1}},1.0,3),-->Py; hillr(Py,{{k1}},1.0,3),-->Pz
     {{k2}},Px-->0; {{k2}},Py-->0; {{k2}},Pz-->0
 end
 

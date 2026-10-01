@@ -216,9 +216,9 @@ println("Permutation entropy: ", pe)  # near 0 = regular, near 1 = complex
 [[codeBranches]]
 model = "sampen"
 code = '''
-using ComplexityMeasures
+using ComplexityMeasures, Statistics
 
-sampen = entropy_sample({{x}}; m={{m}}, r={{r}})  # sample entropy
+sampen = entropy_sample({{x}}; m={{m}}, r={{r}} * std({{x}}))  # sample entropy; the tolerance is a fraction of the series sd
 
 println("Sample entropy: ", sampen)  # near 0 = regular, large = irregular
 '''
@@ -237,7 +237,7 @@ est = SymbolicPermutation(; m={{m}})  # test statistic: permutation entropy
 obs  = entropy(est, {{x}})  # observed value
 null = [entropy(est, s) for s in surrogates]  # null distribution
 
-pval = mean(null .>= obs)  # one-sided p-value
+pval = (1 + count(null .<= obs)) / (1 + length(null))  # one-sided: deterministic structure lowers PE below the linear surrogates
 println("p-value: ", pval)  # small p => reject null (nonlinear structure)
 '''
 
@@ -394,7 +394,7 @@ methods = [RandomFourier(), IAAFT(), RandomShuffle()]  # three null hypotheses
 for method in methods
     sg   = surrogenerator({{x}}, method)
     null = [entropy(est, sg()) for _ in 1:199]
-    pval = mean(null .>= obs)
+    pval = (1 + count(null .<= obs)) / (1 + length(null))  # one-sided: structure lowers PE
     println(method, "  p=", pval)
 end
 '''
@@ -432,7 +432,7 @@ est  = SymbolicPermutation(; m={{m}})  # test statistic: permutation entropy
 obs  = entropy(est, {{x}})  # observed value
 sg   = surrogenerator({{x}}, RandomFourier())  # phase-random null
 null = [entropy(est, sg()) for _ in 1:999]  # 999 surrogates (p-value resolution 0.001)
-pval = mean(null .>= obs)  # one-sided p-value
+pval = (1 + count(null .<= obs)) / (1 + length(null))  # one-sided: deterministic structure lowers PE below the linear surrogates
 
 if pval < 0.05
     println("Reject linear null (p=", pval, "): nonlinear structure detected")

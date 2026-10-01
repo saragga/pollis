@@ -469,7 +469,7 @@ foreach((i, m) -> println("Marginal $i: ", m), 1:length(marginals), marginals)
 [[actionGroups.actions]]
 id = "tail"
 label = "Tail Dependence"
-desc = "Chance that variable 2 is extreme given variable 1 is (5% tails), in the data and the fitted copula: Gaussian copulas give near 0, Clayton loads the lower tail, Gumbel the upper"
+desc = "Chance that variable 2 is extreme given variable 1 is (5% tails), in the data and the fitted copula. Gaussian copulas have no tail dependence in the limit, but at 5% tails still give clearly positive values when the correlation is moderate (about 0.25 at rho = 0.5); Clayton loads the lower tail, Gumbel the upper"
 code = '''
 using Copulas, Statistics
 p = 0.05; U = pseudos({{data}}); V = rand(copula, 100_000)

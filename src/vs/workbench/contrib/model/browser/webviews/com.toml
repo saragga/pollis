@@ -191,7 +191,7 @@ update_lexicon!(crps)  # build the vocabulary from the corpus
 m      = DocumentTermMatrix(crps)  # document-term matrix (basis for co-occurrence)
 
 C    = co_occurrence_matrix(crps, {{window}}, iswindow)  # raw co-occurrence counts
-ppmi = ppmi(C)  # positive PMI weighting (negatives set to 0)
+P = ppmi(C)  # positive PMI weighting (negatives set to 0); a variable named ppmi would clash with the function
 '''
 
 [[codeBranches]]
@@ -204,7 +204,7 @@ update_lexicon!(crps)  # build the vocabulary from the corpus
 m      = DocumentTermMatrix(crps)  # document-term matrix (basis for co-occurrence)
 
 C   = co_occurrence_matrix(crps, {{window}}, iswindow)  # raw co-occurrence counts
-pmi = pmi(C)  # PMI weighting (retains negative values)
+P = pmi(C)  # PMI weighting (retains negative values); a variable named pmi would clash with the function
 '''
 
 [[actionGroups]]
