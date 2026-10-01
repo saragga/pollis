@@ -429,9 +429,9 @@ code = '''
 using StateSpaceModels
 
 y = Float64.({{yvar}})
-{{?etstrend=none}} build(y) = ExponentialSmoothing(y; seasonal={{period}})  # simple exponential smoothing
-{{?etstrend=additive}} build(y) = ExponentialSmoothing(y; trend=true, seasonal={{period}})  # Holt's linear trend
-{{?etstrend=damped}} build(y) = ExponentialSmoothing(y; trend=true, damped_trend=true, seasonal={{period}})  # damped trend
+{{?etstrend=none}} build(y) = ExponentialSmoothing(y; seasonal={{period}})  # level only, plus a seasonal component of period {{period}} (0: simple exponential smoothing)
+{{?etstrend=additive}} build(y) = ExponentialSmoothing(y; trend=true, seasonal={{period}})  # Holt's linear trend, plus seasonal period {{period}} (0: none)
+{{?etstrend=damped}} build(y) = ExponentialSmoothing(y; trend=true, damped_trend=true, seasonal={{period}})  # damped trend, plus seasonal period {{period}} (0: none)
 model = build(y)
 fit!(model)  # maximum likelihood via the Kalman filter
 print_results(model)
@@ -514,7 +514,7 @@ code = '''
 using HypothesisTests, StatsBase, Plots
 {{?model=loess}} r = y .- trend
 {{?model!=loess}} r = filter(isfinite, vec(StateSpaceModels.get_standard_residuals(kalman_filter(model))))[3:end]
-L = min(20, length(r) ÷ 4)
+L = min(20, div(length(r), 4))
 display((ljung_box_lags = L, p_value = pvalue(LjungBoxTest(r, L))))
 bar(1:L, autocor(r, 1:L), legend=false, xlabel="Lag", title="Residual ACF")
 hline!([-1.96, 1.96] ./ sqrt(length(r)), c=:red, ls=:dash)
