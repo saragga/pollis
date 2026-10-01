@@ -146,6 +146,14 @@ year = 2000
 journal = "Proceedings of the 16th Conference on Uncertainty in Artificial Intelligence"
 openAccess = false
 
+[[references]]
+title = "Marginalized Particle Filters for Mixed Linear/Nonlinear State-Space Models"
+authors = "Schon, Thomas; Gustafsson, Fredrik; Nordlund, Per-Johan"
+year = 2005
+journal = "IEEE Transactions on Signal Processing"
+doi = "10.1109/TSP.2005.849151"
+openAccess = false
+
 [[models]]
 id = "kf"
 label = "Kalman Filter"
@@ -256,14 +264,14 @@ default = "1000"
 
 [[inputs]]
 id = "q-scale"
-models = ["kf", "ekf", "ukf", "pf"]
+models = ["kf", "ekf", "ukf", "pf", "rbf"]
 label = "Q scale"
 tooltip = ""
 default = "0.1"
 
 [[inputs]]
 id = "r-scale"
-models = ["kf", "ekf", "ukf", "pf"]
+models = ["kf", "ekf", "ukf", "pf", "rbf"]
 label = "R scale"
 tooltip = ""
 default = "0.1"
@@ -284,7 +292,7 @@ default = "I"
 
 [[inputs]]
 id = "data"
-models = ["kf", "ekf", "ukf", "pf"]
+models = ["kf", "ekf", "ukf", "pf", "rbf"]
 label = "data variable"
 tooltip = "Named tuple or struct with fields .u (inputs) and .y (observations), one entry per time step."
 default = "df"
@@ -305,17 +313,17 @@ default = "x[1:ny]  # replace with measurement"
 
 [[inputs]]
 id = "rbf-dyn-expr"
-label = "nonlinear dynamics f_nl(x_nl, x_l, u, p, t)"
-tooltip = ""
-default = "x_nl  # replace with nonlinear state transition"
+label = "nonlinear dynamics f_n(xn,u,p,t)"
+tooltip = "Nonlinear part of the transition of the nonlinear substate xn. The filter adds An * xl and Gaussian noise. Must return a vector of length nnl."
+default = "atan.(xn)  # replace with your nonlinear dynamics"
 models = ["rbf"]
 
 [[inputs]]
-id = "data-rbf"
+id = "rbf-meas-expr"
+label = "nonlinear measurement g(xn,u,p,t)"
+tooltip = "Contribution of the nonlinear substate xn to the measurement. The filter adds C * xl and Gaussian noise. Must return a vector of length ny."
+default = "fill(0.1 * sum(abs2, xn), ny)  # replace with your measurement"
 models = ["rbf"]
-label = "data variable"
-tooltip = ""
-default = "df"
 
 [[codeBranches]]
 model = "kf"
@@ -418,27 +426,40 @@ sol = forward_trajectory(pf, {{data}}.u, {{data}}.y)  # run forward pass (u, y: 
 [[codeBranches]]
 model = "rbf"
 code = '''
-using LowLevelParticleFilters  # state-space filtering
+using LowLevelParticleFilters, LinearAlgebra  # filtering, I
+using LowLevelParticleFilters: SimpleMvNormal  # Gaussian from a mean and a covariance matrix (not exported)
 
-const nl, nnl, ny, nu = {{nl}}, {{nnl}}, {{ny-rbf}}, {{nu-rbf}}  # linear / nonlinear / obs / input dims
+const nnl, nl, ny, nu = {{nnl}}, {{nl}}, {{ny-rbf}}, {{nu-rbf}}  # nonlinear / linear / obs / input dimensions
 const N = {{n-particles-rbf}}  # number of particles
 
-function dynamics_nl(x_nl, x_l, u, p, t)  # nonlinear state transition
+# Mixed linear / nonlinear model (model 2 of Schon, Gustafsson and Nordlund 2005), state [xn; xl]:
+#   xn(t+1) = f_n(xn) + An xl + wn,   xl(t+1) = Al xl + Bl u + wl,   y(t) = g(xn) + C xl + e
+function fn(xn, u, p, t)  # nonlinear part of the xn transition
     {{rbf-dyn-expr}}
 end
 
-noise_nl = MvNormal(zeros(nnl), 0.1 * I)  # nonlinear process noise
-noise_l  = MvNormal(zeros(nl),  0.1 * I)  # linear process noise
+function g(xn, u, p, t)  # contribution of xn to the measurement
+    {{rbf-meas-expr}}
+end
 
-H_l  = Matrix(I, ny, nl)  # linear measurement matrix
-H_nl = zeros(ny, nnl)  # nonlinear part of measurement
-R    = 0.1 * Matrix(I, ny, ny)  # measurement noise covariance
-x0   = MvNormal(zeros(nl + nnl), I)  # initial state distribution
+An = Matrix(1.0I, nnl, nl)  # effect of xl on xn
+Al = Matrix(1.0I, nl, nl)  # linear dynamics of xl (random walk)
+Bl = zeros(nl, nu)  # input matrix of xl
+C  = Matrix(1.0I, ny, nl)  # effect of xl on y
 
-rbf = RaoBlackwellizedParticleFilter(N, dynamics_nl, noise_nl, noise_l, H_l, H_nl, R, x0)  # build Rao-Blackwellized filter
+R1n = {{q-scale}} * Matrix(1.0I, nnl, nnl)  # xn noise covariance (must be Gaussian, since An is not zero)
+R1l = {{q-scale}} * Matrix(1.0I, nl, nl)  # xl noise covariance
+R2  = {{r-scale}} * Matrix(1.0I, ny, ny)  # measurement noise covariance
+d0n = SimpleMvNormal(zeros(nnl), Matrix(1.0I, nnl, nnl))  # initial xn, sampled by the particles
+d0l = SimpleMvNormal(zeros(nl), Matrix(1.0I, nl, nl))  # initial xl, tracked exactly by each Kalman filter
 
-sol = forward_trajectory(rbf, {{data-rbf}}.u, {{data-rbf}}.y)  # run forward pass
-println(mean.(sol.x))
+kf_l = KalmanFilter(Al, Bl, C, 0, R1l, R2, d0l; ny, nu)  # linear substate: one Kalman mean and covariance per particle
+mm = RBMeasurementModel(g, R2, ny)  # g and the measurement noise
+signals = SignalNames(x = [["xn$i" for i in 1:nnl]; ["xl$i" for i in 1:nl]], u = ["u$i" for i in 1:nu], y = ["y$i" for i in 1:ny], name = "RBPF")  # names is a required keyword
+rbf = RBPF(N, kf_l, fn, mm, R1n, d0n; An, nu, names = signals)  # Rao-Blackwellised (marginalised) particle filter
+
+sol = forward_trajectory(rbf, {{data}}.u, {{data}}.y)  # run forward pass (u, y: vectors of vectors)
+(log_likelihood = sol.ll, final_state = mean_trajectory(sol)[end, :])  # weighted mean of [xn; xl] at time T
 '''
 
 [[actionGroups]]
@@ -470,11 +491,12 @@ sol_f = forward_trajectory({{model}}, {{data}}.u, {{data}}.y)  # forward filtere
 {{?model!=pf|rbf}} xf = reduce(hcat, sol_f.xt)  # filtered x(t|t), nx x T
 {{?model!=pf|rbf}} xs = reduce(hcat, smooth(sol_f, {{model}}).xT)  # RTS smoother x(t|T), nx x T
 {{?model=pf|rbf}} xf = transpose(mean_trajectory(sol_f))  # filtered particle means, nx x T
-{{?model=pf|rbf}} xb, _ = smooth({{model}}, 100, {{data}}.u, {{data}}.y)  # forward-filter backward-simulation, 100 trajectories
-{{?model=pf|rbf}} xs = LowLevelParticleFilters.smoothed_mean(xb)  # smoothed means, nx x T
+{{?model=pf}} xb, _ = smooth({{model}}, 100, {{data}}.u, {{data}}.y)  # forward-filter backward-simulation, 100 trajectories
+{{?model=pf}} xs = LowLevelParticleFilters.smoothed_mean(xb)  # smoothed means, nx x T
+{{?model=rbf}} # The package has no RBPF smoother: its particle smoother scores whole-state transitions, which the marginalised xl does not have
 
 plot(transpose(xf), label="Filtered", color=1)  # filtered
-plot!(transpose(xs), label="Smoothed", color=2, ls=:dash)  # smoothed: uses future data, so less noisy (offline only)
+{{?model!=rbf}} plot!(transpose(xs), label="Smoothed", color=2, ls=:dash)  # smoothed: uses future data, so less noisy (offline only)
 '''
 
 [[actionGroups]]
@@ -565,7 +587,8 @@ code = '''
 using LowLevelParticleFilters, BenchmarkTools, Statistics  # filter + benchmarks + mean/std
 
 for N in [100, 500, 1000, 5000]  # sweep particle counts
-    pf_n = ParticleFilter(N, dynamics, measurement, noise_dist, meas_dist, x0)  # build filter
+{{?model!=rbf}}     pf_n = ParticleFilter(N, dynamics, measurement, noise_dist, meas_dist, x0)  # build filter
+{{?model=rbf}}     pf_n = RBPF(N, kf_l, fn, mm, R1n, d0n; An, nu, names = signals)  # build filter
     lls = [loglik(pf_n, {{data}}.u, {{data}}.y) for _ in 1:5]  # the estimate is random: its spread shrinks with N
     t  = @belapsed loglik($pf_n, $({{data}}.u), $({{data}}.y))  # timing
     println("N=$N: ll=$(round(mean(lls), digits=2)) +/- $(round(std(lls), digits=2)), t=$(round(t*1000, digits=1))ms")
@@ -582,10 +605,14 @@ label = "State Uncertainty"
 desc = "Plot posterior state variance (diagonal of covariance) over time"
 code = '''
 using LowLevelParticleFilters, LinearAlgebra, Plots  # filter + diag + plotting
+{{?model=rbf}} using StaticArrays  # fixed-size particle means for weighted_cov
 
 sol = forward_trajectory({{model}}, {{data}}.u, {{data}}.y)  # run filter
 {{?model!=pf|rbf}} vars = reduce(hcat, diag.(sol.Rt))  # diagonal of the filter covariance R(t|t), nx x T
-{{?model=pf|rbf}} vars = reduce(hcat, diag.(weighted_cov(sol)))  # particle variances, nx x T
+{{?model=pf}} vars = reduce(hcat, diag.(weighted_cov(sol)))  # particle variances, nx x T
+{{?model=rbf}} Xm = [SVector{nnl + nl}(sol.x[i, t]) for i in axes(sol.x, 1), t in axes(sol.x, 2)]  # particle means [xn; xl], N x T
+{{?model=rbf}} Rl = [sum(sol.we[i, t] * sol.x[i, t].R for i in axes(sol.x, 1)) for t in axes(sol.x, 2)]  # weighted mean of the particle Kalman covariances of xl
+{{?model=rbf}} vars = reduce(hcat, [diag(Cm) .+ [zeros(nnl); diag(Rm)] for (Cm, Rm) in zip(weighted_cov(Xm, sol.we), Rl)])  # total variance: spread of the means plus the mean Kalman variance, nx x T
 
 plot(transpose(vars), label=reshape(["Var x$i" for i in 1:size(vars, 1)], 1, :), yscale=:log10)  # higher variance = more uncertain state
 '''
