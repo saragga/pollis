@@ -328,7 +328,7 @@ power[1:div(n,2)+1]  # one-sided spectrum (non-redundant half)
 [[actionGroups.actions]]
 id = "variance_ratio"
 label = "Variance Ratio"
-desc = "Fraction of total variance attributed to trend vs cycle — a simple decomposition quality check"
+desc = "Variance of the trend and of the cycle relative to the variance of the series, with the covariance term that makes the shares add to one"
 code = '''
 using MacroEconometricModels, Statistics
 
@@ -338,8 +338,11 @@ var_trend = var(trend)  # variance of trend component
 var_cycle = var(cycle)  # variance of cyclical component
 var_total = var({{y}})  # total variance of original series
 
-println("Trend share: ", var_trend / var_total)  # fraction explained by trend
-println("Cycle share: ", var_cycle / var_total)  # fraction explained by cycle
+cov_share = 2 * cov(trend, cycle) / var_total  # trend and cycle are not orthogonal in general
+
+println("Trend share: ", var_trend / var_total)  # var(trend) / var(y)
+println("Cycle share: ", var_cycle / var_total)  # var(cycle) / var(y)
+println("Covariance:  ", cov_share)  # the three add to one; the shares are variance explained only when this is near zero
 '''
 
 [[actionGroups.actions]]

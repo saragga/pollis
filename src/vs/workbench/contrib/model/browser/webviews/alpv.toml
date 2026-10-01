@@ -213,8 +213,8 @@ println(daily)
 intraday = time_series_intraday("AAPL"; interval="5min")
 
 # Latest global quote: price, change, and volume
-quote = stock_quote("AAPL")
-println(quote)
+last_quote = stock_quote("AAPL")  # quote is a Julia keyword, so it cannot name a variable
+println(last_quote)
 """
 
 [[codeBranches]]
@@ -309,8 +309,8 @@ desc = "Read the latest price, change, and volume for a symbol"
 code = """
 using AlphaVantage
 
-quote = stock_quote("AAPL")
-println(quote)
+last_quote = stock_quote("AAPL")  # quote is a Julia keyword, so it cannot name a variable
+println(last_quote)
 """
 
 [[actionGroups]]

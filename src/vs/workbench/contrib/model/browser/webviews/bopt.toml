@@ -520,7 +520,7 @@ println("=== GP Kernel Hyperparameters ===")  #
 println("Log length scales: ", opt.model.kernel.ll)  # one value per dimension
 println("Length scales:     ", exp.(opt.model.kernel.ll))  # exponentiated for interpretability
 println("Log noise:         ", opt.model.logNoise.value)  # measurement noise (log scale)
-println("Noise std:         ", exp(opt.model.logNoise.value / 2))  # noise standard deviation
+println("Noise std:         ", exp(opt.model.logNoise.value))  # logNoise is the log of the noise standard deviation
 println("Observed minimum:  ", result.observed_optimum)  # best objective found
 '''
 
@@ -771,7 +771,7 @@ end
 [[actionGroups.actions]]
 id = "vs-gradient"
 label = "vs Gradient-Based"
-desc = "Compare BO with L-BFGS from random starts"
+desc = "Compare BO with L-BFGS from random starts, counting the evaluations each uses: the budgets are not equal"
 code = '''
 using BayesianOptimization, GaussianProcesses
 import Optim  # import to avoid name conflict with optimize
@@ -796,14 +796,12 @@ opt = BOpt(
     fill(lb, n), fill(ub, n), maxiterations = {{budget}}, sense = Min)  # BO configuration
 r_bo   = boptimize!(opt)  # global BO search
 
-# L-BFGS with same evaluation budget from random starts  # 
-r_grad = minimum(begin  # 
-    x0 = lb .+ rand(n) .* (ub - lb)  # random starting point
-    Optim.optimize(obj, x0, Optim.LBFGS()).minimum  # gradient descent
-end for _ in 1:{{budget}})
+# L-BFGS from {{budget}} random starts: each start makes many function and gradient calls, far more than BO's {{budget}} evaluations
+runs = [Optim.optimize(obj, lb .+ rand(n) .* (ub - lb), Optim.LBFGS()) for _ in 1:{{budget}}]
+r_grad = minimum(Optim.minimum.(runs))
 
-println("BO best:      ", r_bo.observed_optimum)  # Bayesian optimisation result
-println("L-BFGS best: ", r_grad)  # gradient-based result
+println("BO best:     ", r_bo.observed_optimum, "  (", {{budget}}, " evaluations)")  # Bayesian optimisation result
+println("L-BFGS best: ", r_grad, "  (", sum(Optim.f_calls.(runs)), " function and ", sum(Optim.g_calls.(runs)), " gradient calls)")  # gradient-based result
 '''
 
 [[actionGroups]]
@@ -887,7 +885,7 @@ println("Length scales: ", exp.(opt.model.kernel.ll))  # one per dimension
 println("  short length scale -> function varies rapidly in that dimension")  # 
 println("  long  length scale -> that dimension has little influence")  # 
 
-println("Noise std: ", exp(opt.model.logNoise.value / 2))  # measurement noise level
+println("Noise std: ", exp(opt.model.logNoise.value))  # measurement noise level
 println("  high noise -> model trusts observations less; more exploration")  # 
 println("  low noise  -> model interpolates closely; faster exploitation")  # 
 '''

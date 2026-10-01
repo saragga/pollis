@@ -203,15 +203,15 @@ model = "video"
 code = '''
 using Agents, GLMakie
 
-abmvideo({{file}}, model; frames={{T}}, framerate={{fps}})  # record animation to file
+abmvideo("{{file}}", model; frames={{T}}, framerate={{fps}})  # record animation to file
 
-abmvideo({{file}}, model;  # with encodings
+abmvideo("{{file}}", model;  # with encodings
     frames    = {{T}},
     framerate = {{fps}},
     agent_color = a -> a.status == :I ? :red : :blue,
     agent_size  = 10)
 
-println("Saved: ", {{file}})  # confirm output
+println("Saved: ", "{{file}}")  # confirm output
 '''
 
 [[codeBranches]]
@@ -242,7 +242,7 @@ code = '''
 using Agents, GLMakie
 
 fig = Figure(size=(900,300))  # wide figure for panels
-checkpoints = [0, div(parse(Int,{{T}}),2), parse(Int,{{T}})]  # three time points
+checkpoints = [0, div({{T}},2), {{T}}]  # three time points
 for (i, t) in enumerate(checkpoints)
     m = deepcopy(model)
     t > 0 && step!(m, t)
@@ -259,7 +259,7 @@ code = '''
 using Agents, GLMakie
 
 adata = [(:mood, mean)]  # aggregate to track
-data, _ = run!(model, parse(Int,{{T}}); adata=adata)  # collect data
+data, _ = run!(model, {{T}}; adata=adata)  # collect data
 
 fig = Figure(size=(700,600))  # tall figure
 abmplot!(fig[1,1], model)  # spatial snapshot top
@@ -353,12 +353,12 @@ using Agents, GLMakie
 m1 = deepcopy(model)  # copy for static plot
 m2 = deepcopy(model)  # copy for video
 
-step!(m1, parse(Int,{{T}}))  # advance to final frame
+step!(m1, {{T}})  # advance to final frame
 fig, _, _ = abmplot(m1)  # static snapshot at t=T
 display(fig)  # show static
 
-abmvideo({{file}}, m2; frames={{T}}, framerate={{fps}})  # record full trajectory
-println("Video saved: ", {{file}})  # confirm video
+abmvideo("{{file}}", m2; frames={{T}}, framerate={{fps}})  # record full trajectory
+println("Video saved: ", "{{file}}")  # confirm video
 '''
 
 [[actionGroups.actions]]
@@ -386,18 +386,18 @@ label = "Interpret"
 
 [[actionGroups.actions]]
 id = "spatial-clustering"
-label = "Spatial Clustering"
-desc = "Measure the degree of spatial clustering in agent states to quantify emergent segregation"
+label = "Prevalence Summary"
+desc = "Count infected agents and their share of the population at the final step (a global count: it does not measure spatial clustering)"
 code = '''
 using Agents, Statistics
 
-step!(model, parse(Int,{{T}}))  # advance model to t=T
+step!(model, {{T}})  # advance model to t=T
 
 agents = collect(allagents(model))  # snapshot of agents
 infected = filter(a -> a.status == :I, agents)  # infected agents
 pct_infected = length(infected) / length(agents)  # global prevalence
 
-println("=== Spatial Summary ===")  # header
+println("=== Prevalence Summary ===")  # header
 println("Total agents:   ", length(agents))  # population size
 println("Infected:       ", length(infected))  # infected count
 println("Prevalence:     ", round(pct_infected*100; digits=1), "%")  # percentage
@@ -411,7 +411,7 @@ code = '''
 using Agents, Statistics
 
 adata = [(:status, x -> count(==(s), x)/length(x)) for s in [:S, :I, :R]]  # fractions per state
-data, _ = run!(model, parse(Int,{{T}}); adata=adata)  # run with collection
+data, _ = run!(model, {{T}}; adata=adata)  # run with collection
 
 println("=== Animation Summary ===")  # header
 println("Steps recorded: ", {{T}})  # duration

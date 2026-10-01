@@ -289,8 +289,9 @@ rho_vals = range(20.0, 30.0; length=50)  # sweep rho over [20, 30]
 for rho in rho_vals
     p_i = (10.0, rho, 8/3)
     ds = CoupledODEs(lorenz!, {{u0}}, p_i)
-    tr, _ = trajectory(ds, {{T}}; Dt=0.05)  # skip transient, then record
-    println("rho=", rho, " -> x_end=", tr[end, 1])  # final x for this rho
+    tr, _ = trajectory(ds, {{T}}; Dt=0.05, Ttr=100)  # discard 100 time units of transient, then record
+    lo, hi = extrema(tr[:, 1])  # a range near zero: the orbit settled on a fixed point; a wide range: it keeps moving
+    println("rho=", round(rho, digits=2), " -> x range [", round(lo, digits=2), ", ", round(hi, digits=2), "]")
 end
 '''
 

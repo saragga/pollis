@@ -215,7 +215,7 @@ label = "Visualise"
 [[actionGroups.actions]]
 id = "ensemble-trajectories"
 label = "Ensemble Trajectories"
-desc = "Plot the mean observable across steps with a shaded confidence band across replications"
+desc = "Plot the mean observable across steps with a band of plus or minus one standard deviation across replications (the spread of single runs, not a confidence interval for the mean)"
 code = '''
 using Agents, GLMakie, Statistics
 
@@ -228,7 +228,7 @@ sig = combine(gdf, :mean_mood => std => :sig)  # std dev across runs
 
 fig = Figure()  # create figure
 ax  = Axis(fig[1,1], xlabel="Step", ylabel="Mean mood")  # axes
-band!(ax, mu.step, mu.mu .- sig.sig, mu.mu .+ sig.sig, color=(:blue,0.2))  # confidence band
+band!(ax, mu.step, mu.mu .- sig.sig, mu.mu .+ sig.sig, color=(:blue,0.2))  # +/- 1 sd across runs; a 95% CI for the mean would be +/- 1.96 sd / sqrt(R)
 lines!(ax, mu.step, mu.mu, color=:blue)  # ensemble mean
 display(fig)  # show
 '''
@@ -354,7 +354,7 @@ display(fig)  # compare
 [[actionGroups.actions]]
 id = "oa-vs-factorial"
 label = "OAT vs Factorial"
-desc = "Compare one-at-a-time (OAT) sensitivity estimates against the full factorial paramscan to check for interaction effects"
+desc = "Output variance under one-at-a-time (OAT) designs and the full factorial design; a factorial variance well above the sum of the OAT variances hints at interaction, which OAT cannot see"
 code = '''
 using Agents, Statistics
 
@@ -366,7 +366,7 @@ full     = Dict(:threshold => 0.1:0.2:0.9, :density => 0.1:0.2:0.9)  # full fact
 for (label, params) in [("OAT-thr", oa_thr), ("OAT-den", oa_den), ("Full", full)]
     data, _ = paramscan(params, {{init}}; n={{T}}, adata=[(:mood,mean)])
     final  = filter(r->r.step=={{T}}, data)
-    println(label, "  variance explained: ", round(var(final.mean_mood); digits=4))
+    println(label, "  output variance: ", round(var(final.mean_mood); digits=4))  # variance of the outcome over the design, not a share explained
 end
 '''
 

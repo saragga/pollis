@@ -250,8 +250,8 @@ end
 g     = watts_strogatz({{N}}, 6, 0.1)  # small-world network
 space = GraphSpace(g)  # wrap graph in Agents.jl space
 model = ABM(SIRAgent, space)  # create model
-for v in vertices(g)  # one agent per node
-    add_agent!(v, model; status=:S)
+for v in vertices(g)  # one agent per node; the first 5 start infected, or nothing can spread
+    add_agent!(v, model; status = v <= 5 ? :I : :S)
 end
 
 agent_step!(a, m) = a.status == :I && infect_neighbours!(a, m, 0.1)  # spread infection
