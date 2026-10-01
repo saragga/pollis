@@ -303,7 +303,7 @@ exchange = Broker()  # create exchange
 asset    = Asset("STOCK", {{fv}})  # asset with fundamental {{fv}}
 
 for i in 1:{{N}}  # register {{N}} agents
-    strategy = i <= {{N}} ÷ 2 ? FundamentalTrader({{fv}}) : MomentumTrader()
+    strategy = i <= div({{N}}, 2) ? FundamentalTrader({{fv}}) : MomentumTrader()
     add_agent!(exchange, strategy)
 end
 
@@ -369,7 +369,7 @@ id = "stylized-facts"
 label = "Stylized Facts"
 desc = "Check whether simulated returns reproduce fat tails and volatility clustering seen in real markets"
 code = '''
-using TradingAgents, Statistics, GLMakie
+using TradingAgents, Statistics, StatsBase, GLMakie  # kurtosis and autocor are in StatsBase
 
 market = create_market(; n_periods={{T}}, fundamental={{fv}})  # simulate
 run_simulation!(market)  # run
@@ -503,7 +503,6 @@ prices = price_history(market)  # price series
 
 mae  = mean(abs.(prices .- {{fv}}))  # mean absolute deviation
 rmse = sqrt(mean((prices .- {{fv}}) .^ 2))  # root mean squared error
-rho  = cor(prices, fill({{fv}}, {{T}}))  # correlation with fundamental
 
 println("=== Market Efficiency ===")  # header
 println("MAE from fundamental:  ", round(mae;  digits=2))  # average pricing error
@@ -531,6 +530,6 @@ mid    = (best_bid_price(lob) + best_ask_price(lob)) / 2  # mid-price
 println("=== Microstructure Summary ===")  # header
 println("Mid-price:    ", round(mid;    digits=2))  # current mid
 println("Quoted spread:", round(spread;  digits=4))  # spread in price units
-println("Rel. spread:  ", round(spread/mid*100; digits=4), "%")  # spread in bps
+println("Rel. spread:  ", round(spread/mid*10_000; digits=2), " bps")  # spread in basis points
 println("Resting orders: ", n_orders(lob))  # total queue depth
 '''
