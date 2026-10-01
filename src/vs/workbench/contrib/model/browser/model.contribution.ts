@@ -888,7 +888,6 @@ export const NLP_LANG_MODEL_ID = 'chiara.statistics.nlp.languageModel';
 // Natural Language Processing — Topic & Semantic Models
 export const NLP_LSA_ID = 'chiara.statistics.nlp.lsa';
 export const NLP_LDA_ID = 'chiara.statistics.nlp.lda';
-export const NLP_FLDA_ID = 'chiara.statistics.nlp.flda';
 export const NLP_CTM_ID = 'chiara.statistics.nlp.ctm';
 export const NLP_FCTM_ID = 'chiara.statistics.nlp.fctm';
 export const NLP_CTPF_ID = 'chiara.statistics.nlp.ctpf';
@@ -2208,7 +2207,6 @@ CommandsRegistry.registerCommand(NLP_COOCCURRENCE_ID, accessor => openScaffoldWe
 CommandsRegistry.registerCommand(NLP_LANG_MODEL_ID, accessor => openScaffoldWebview(accessor, SLM_PANEL));
 CommandsRegistry.registerCommand(NLP_LSA_ID, accessor => openScaffoldWebview(accessor, LSA_PANEL));
 CommandsRegistry.registerCommand(NLP_LDA_ID, accessor => openScaffoldWebview(accessor, LDA_PANEL, 'lda'));
-CommandsRegistry.registerCommand(NLP_FLDA_ID, accessor => openScaffoldWebview(accessor, LDA_PANEL, 'flda'));
 CommandsRegistry.registerCommand(NLP_CTM_ID, accessor => openScaffoldWebview(accessor, CTM_PANEL, 'ctm'));
 CommandsRegistry.registerCommand(NLP_FCTM_ID, accessor => openScaffoldWebview(accessor, CTM_PANEL, 'fctm'));
 CommandsRegistry.registerCommand(NLP_CTPF_ID, accessor => openScaffoldWebview(accessor, CTPF_PANEL));
@@ -2297,7 +2295,7 @@ MenuRegistry.appendMenuItem(TopicModelsSubmenuId, {
 	group: '2_tm',
 	command: { id: NLP_LDA_ID, title: localize('nlp.lda', 'Latent Dirichlet Allocation') },
 	order: 1,
-}); // TopicModels.jl
+}); // TextAnalysis.jl
 
 MenuRegistry.appendMenuItem(TopicModelsSubmenuId, {
 	group: '2_tm',
