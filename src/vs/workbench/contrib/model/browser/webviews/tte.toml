@@ -223,7 +223,7 @@ label = "Survival Curve With 95% CI"
 desc = "Kaplan-Meier survival curve with pointwise log-log 95% confidence band; tick marks show censored times"
 code = '''
 using Survival, Plots
-S = fit(KaplanMeier, {{data}}.{{time}}, {{data}}.{{event}})
+S = fit(KaplanMeier, {{data}}.{{time}}, {{data}}.{{event}} .!= 0)  # any event counts: with competing causes this is event-free survival
 t, s, ci = S.events.time, S.survival, confint(S)
 plot([0; t], [1; s], seriestype=:steppost, lw=2, label="Kaplan-Meier", xlabel="Time", ylabel="Survival probability", ylims=(0, 1), title="Survival curve")
 plot!([0; t], [1; first.(ci)], seriestype=:steppost, c=1, ls=:dash, label="95% CI")
@@ -238,7 +238,7 @@ label = "Cumulative Hazard"
 desc = "Nelson-Aalen cumulative hazard, and log H(t) against log t: a straight line suggests a Weibull model (slope = shape; slope 1 = exponential)"
 code = '''
 using Survival, Plots
-H = fit(NelsonAalen, {{data}}.{{time}}, {{data}}.{{event}})
+H = fit(NelsonAalen, {{data}}.{{time}}, {{data}}.{{event}} .!= 0)
 t, h = H.events.time, H.chaz
 ok = (t .> 0) .& (h .> 0)
 p1 = plot(t, h, seriestype=:steppost, lw=2, label=false, xlabel="Time", ylabel="H(t)", title="Cumulative hazard")
@@ -256,7 +256,7 @@ label = "Censoring Summary"
 desc = "Share of censored observations and when censoring happens: heavy or early censoring makes the tail of the curve unreliable"
 code = '''
 using Plots
-t, e = {{data}}.{{time}}, Bool.({{data}}.{{event}})
+t, e = {{data}}.{{time}}, ({{data}}.{{event}} .!= 0)
 println("n = ", length(t), "   events = ", count(e), "   censored = ", count(!, e), " (", round(100 * count(!, e) / length(t), digits=1), "%)")
 println("Follow-up: median ", sort(t)[cld(length(t), 2)], "   max ", maximum(t))
 histogram([t[e], t[.!e]], bins=30, alpha=0.6, label=["event" "censored"], xlabel="Time", title="Event and censoring times")
@@ -289,7 +289,7 @@ label = "Median and Quartile Survival Times"
 desc = "Times by which 25%, 50% and 75% of subjects have had the event, read off the Kaplan-Meier curve (NA if the curve never drops that far)"
 code = '''
 using Survival
-S = fit(KaplanMeier, {{data}}.{{time}}, {{data}}.{{event}})
+S = fit(KaplanMeier, {{data}}.{{time}}, {{data}}.{{event}} .!= 0)
 for q in (0.75, 0.5, 0.25)
     i = findfirst(<=(q), S.survival)
     println("S(t) = ", q, " at t = ", i === nothing ? "NA (not reached)" : S.events.time[i])
@@ -302,7 +302,7 @@ label = "Survival at Fixed Horizons"
 desc = "Estimated survival probability with 95% CI at the quartiles of follow-up time"
 code = '''
 using Survival, Statistics
-S = fit(KaplanMeier, {{data}}.{{time}}, {{data}}.{{event}}); ci = confint(S)
+S = fit(KaplanMeier, {{data}}.{{time}}, {{data}}.{{event}} .!= 0); ci = confint(S)
 for h in quantile({{data}}.{{time}}, [0.25, 0.5, 0.75])
     i = searchsortedlast(S.events.time, h)
     s, (lo, hi) = i == 0 ? (1.0, (1.0, 1.0)) : (S.survival[i], ci[i])
@@ -321,7 +321,7 @@ desc = "Kaplan-Meier curves by the last covariate in the formula (e.g. treatment
 code = '''
 using Survival, Plots, Distributions, LinearAlgebra
 gvar = Symbol(strip(last(split("{{covariates}}", "+"))))  # grouping column: last covariate
-t, e, g = {{data}}.{{time}}, Bool.({{data}}.{{event}}), getproperty({{data}}, gvar)
+t, e, g = {{data}}.{{time}}, ({{data}}.{{event}} .!= 0), getproperty({{data}}, gvar)
 lv = sort(unique(g)); length(lv) > 10 && error("$gvar has $(length(lv)) levels: log-rank needs a categorical grouping variable")
 O, E, V = zeros(length(lv)), zeros(length(lv)), zeros(length(lv), length(lv))
 for s in sort(unique(t[e]))
@@ -351,7 +351,7 @@ using Survival, Distributions, Plots
 {{?model=cox}} LR = 2 * (loglikelihood(model) - nullloglikelihood(model))
 {{?model=cox}} println("LR = ", round(LR, digits=3), "  df = ", dof(model), "  p = ", round(ccdf(Chisq(dof(model)), LR), digits=5))
 {{?model=cox}} println("AIC = ", round(-2 * loglikelihood(model) + 2 * dof(model), digits=2))
-{{?model=km|na}} S = fit(KaplanMeier, {{data}}.{{time}}, {{data}}.{{event}}); H = fit(NelsonAalen, {{data}}.{{time}}, {{data}}.{{event}})
+{{?model=km|na}} S = fit(KaplanMeier, {{data}}.{{time}}, {{data}}.{{event}} .!= 0); H = fit(NelsonAalen, {{data}}.{{time}}, {{data}}.{{event}} .!= 0)
 {{?model=km|na}} plot(S.events.time, S.survival, seriestype=:steppost, lw=2, label="Kaplan-Meier", xlabel="Time", ylabel="Survival probability", title="KM vs exp(-Nelson-Aalen)")
 {{?model=km|na}} plot!(H.events.time, exp.(-H.chaz), seriestype=:steppost, lw=2, ls=:dash, label="exp(-H), Fleming-Harrington")
 '''
@@ -366,7 +366,7 @@ label = "Restricted Mean Survival Time"
 desc = "Area under the Kaplan-Meier curve up to the last observed time: the average event-free time over the follow-up window, easier to communicate than a hazard ratio"
 code = '''
 using Survival
-S = fit(KaplanMeier, {{data}}.{{time}}, {{data}}.{{event}})
+S = fit(KaplanMeier, {{data}}.{{time}}, {{data}}.{{event}} .!= 0)
 t = [0; S.events.time]; s = [1; S.survival]
 tau = last(t)  # restriction horizon: last observed time
 println("RMST up to t = ", tau, ": ", round(sum(s[1:end-1] .* diff(t)), digits=3), " time units")
