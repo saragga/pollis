@@ -9,25 +9,24 @@ viewType = "pollis.trad"
 defaultModel = "agents"
 
 [[packages]]
+name = "LimitOrderBook.jl"
+github = "https://github.com/p-casgrain/LimitOrderBook.jl"
+
+[[packages]]
 name = "TradingAgents.jl"
 github = "https://github.com/aaron-wheeler/TradingAgents.jl"
 
 [[packages.videos]]
-title = "Scalable Agent-Based Modeling for Complex Financial Market Simulations"
-description = "JuliaCon talk demonstrating TradingAgents.jl for large-scale financial market simulation"
+title = "Introducing a Financial Simulation Ecosystem in Julia"
+description = "JuliaCon 2023 talk by Aaron Wheeler on TradingAgents.jl and Brokerage.jl"
 url = "https://www.youtube.com/watch?v=C2Itnbwf9hg"
-
-[[packages]]
-name = "VLLimitOrderBook.jl"
-github = "https://github.com/Renruize12306/VLLimitOrderBook.jl"
 
 [[packages]]
 name = "Brokerage.jl"
 github = "https://github.com/aaron-wheeler/Brokerage.jl"
 
-[[packages]]
-name = "TotalViewITCH.jl"
-github = "https://github.com/cswaney/TotalViewITCH.jl"
+[requires]
+packages = ["LimitOrderBook.jl", "TradingAgents.jl", "Brokerage.jl", "VLLimitOrderBook.jl", "StatsBase.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""
@@ -105,9 +104,10 @@ label = "Software"
 
 [[references]]
 title = "Scalable Agent-Based Modeling for Complex Financial Market Simulations"
-authors = "Raman, Anand; Ramirez, Jose Mauricio; Szabo, Krisztian; Saba, Louis"
-year = 2024
-journal = "JuliaCon Proceedings"
+authors = "Wheeler, Aaron; Varner, Jeffrey D."
+year = 2023
+journal = "arXiv"
+url = "https://arxiv.org/abs/2312.14903"
 openAccess = true
 
 [[references]]
@@ -122,15 +122,47 @@ journal = "Cambridge University Press"
 openAccess = false
 
 [[references]]
-title = "Market Microstructure Theory"
-authors = "O'Hara, Maureen"
-year = 1995
-journal = "Blackwell"
+title = "Trades, Quotes and Prices: Financial Markets Under the Microscope"
+authors = "Bouchaud, Jean-Philippe; Bonart, Julius; Donier, Jonathan; Gould, Martin"
+year = 2018
+journal = "Cambridge University Press"
 openAccess = false
 
 [[references]]
 separator = true
 label = "Original Papers"
+
+[[references]]
+title = "A Simulation Analysis of the Microstructure of Double Auction Markets"
+authors = "Chiarella, Carl; Iori, Giulia"
+year = 2002
+journal = "Quantitative Finance"
+doi = "10.1088/1469-7688/2/5/303"
+openAccess = false
+
+[[references]]
+title = "Statistical Theory of the Continuous Double Auction"
+authors = "Smith, Eric; Farmer, J. Doyne; Gillemot, Laszlo; Krishnamurthy, Supriya"
+year = 2003
+journal = "Quantitative Finance"
+doi = "10.1088/1469-7688/3/6/307"
+openAccess = false
+
+[[references]]
+title = "Fluctuations and Response in Financial Markets: The Subtle Nature of Random Price Changes"
+authors = "Bouchaud, Jean-Philippe; Gefen, Yuval; Potters, Marc; Wyart, Matthieu"
+year = 2004
+journal = "Quantitative Finance"
+doi = "10.1080/14697680400000022"
+openAccess = false
+
+[[references]]
+title = "Stock Market Prices Do Not Follow Random Walks: Evidence from a Simple Specification Test"
+authors = "Lo, Andrew W.; MacKinlay, A. Craig"
+year = 1988
+journal = "Review of Financial Studies"
+doi = "10.1093/rfs/1.1.41"
+openAccess = false
 
 [[references]]
 title = "Allocative Efficiency of Markets with Zero-Intelligence Traders: Market as a Partial Substitute for Individual Rationality"
@@ -141,15 +173,7 @@ doi = "10.1086/261868"
 openAccess = false
 
 [[references]]
-title = "Agent-based computational finance"
-authors = "LeBaron, Blake"
-year = 2006
-journal = "Handbook of Computational Economics"
-doi = "10.1016/S1574-0021(05)02024-1"
-openAccess = false
-
-[[references]]
-title = "Empirical properties of asset returns: stylized facts and statistical issues"
+title = "Empirical Properties of Asset Returns: Stylized Facts and Statistical Issues"
 authors = "Cont, Rama"
 year = 2001
 journal = "Quantitative Finance"
@@ -169,48 +193,56 @@ id = "market"
 label = "Market Microstructure"
 
 [[bullets]]
-text = "Trading Agent Population"
-detail = "simulate large populations of heterogeneous trading agents (fundamentalists, chartists, noise traders) and observe emergent price discovery with TradingAgents.jl"
+text = "Trading Agents"
+detail = "Chiarella-Iori (2002) market: each period one agent mixes a fundamentalist, a chartist and a noise forecast, then sends a one-share limit or market order to a LimitOrderBook.jl book, which does all matching and pricing"
 
 [[bullets]]
 text = "Limit Order Book"
-detail = "build and simulate a continuous double auction with explicit bid and ask queues, order matching, and spread dynamics using VLLimitOrderBook.jl"
+detail = "zero-intelligence order flow (Smith, Farmer, Gillemot and Krishnamurthy 2003): Poisson limit orders, market orders and cancellations on the same LimitOrderBook.jl book, so spread, depth and impact come from the order flow alone"
 
 [[bullets]]
 text = "Market Microstructure"
-detail = "run a full exchange simulation with the Brokerage.jl platform: agents submit and cancel orders while the exchange matches trades and clears positions"
+detail = "a live Brokerage.jl exchange server with TradingAgents.jl fundamental traders, zero-intelligence liquidity takers and a random market maker, run for a short session in real (wall-clock) time"
 
 [[decisionRows]]
 task = "Trading Agents"
-context = "Heterogeneous agent population"
-purpose = "Study emergent prices from fundamentalists, chartists and noise traders"
+context = "Heterogeneous expectations"
+purpose = "See how the fundamentalist / chartist mix drives volatility, fat tails and mispricing"
 
 [[decisionRows]]
 task = "Limit Order Book"
-context = "Continuous double auction"
-purpose = "Inspect queues, spread, depth and price impact of orders"
+context = "No strategies, only order flow"
+purpose = "Isolate what the order-book mechanics alone do to spread, depth and price impact"
 
 [[decisionRows]]
 task = "Market Microstructure"
-context = "Full exchange with brokerage"
-purpose = "Simulate order submission, matching and clearing end to end"
+context = "Exchange, accounts and agents over HTTP"
+purpose = "Run an end-to-end exchange simulation with cash and share balances"
 
 [[inputs]]
 id = "N"
-label = "Agents / Orders (N)"
-tooltip = "Number of trading agents for agent-population and market-microstructure modes. For the limit order book mode this is the number of initial resting orders seeded into the book before simulation begins."
+label = "Agents / Initial Orders (N)"
+tooltip = "Trading Agents: number of agents, each with its own fundamentalist, chartist and noise weights. Limit Order Book: number of one-share orders seeded into the book before the order flow starts. Market Microstructure: number of traders, half TradingAgents fundamental traders and half zero-intelligence liquidity takers."
 default = "100"
 
 [[inputs]]
 id = "T"
-label = "Trading periods (T)"
-tooltip = "Number of discrete time steps to simulate. Each step represents one trading period in which every agent observes prices, forms beliefs, and submits or cancels orders according to its strategy."
-default = "500"
+label = "Periods / Events (T)"
+tooltip = "Trading Agents: periods, with one randomly chosen agent sending one order per period. Limit Order Book: order-flow events (limit order, market order or cancellation)."
+default = "5000"
+models = ["agents", "lob"]
+
+[[inputs]]
+id = "minutes"
+label = "Session Length (Minutes)"
+tooltip = "The Brokerage server runs in wall-clock time: the market opens 30 seconds after the code starts (to create the accounts) and closes this many minutes later. The code blocks until the close."
+default = "2"
+models = ["market"]
 
 [[inputs]]
 id = "fv"
-label = "Fundamental value"
-tooltip = "The true underlying value of the asset (used by fundamentalist agents as their price target). Fundamentalist agents buy when the market price is below this value and sell when it is above it."
+label = "Fundamental Value"
+tooltip = "Trading Agents: the fundamental value F that fundamentalists expect the price to return to. Limit Order Book and Market Microstructure: the opening mid price, around which the initial book is seeded."
 default = "100.0"
 
 [miniCharts]
@@ -257,63 +289,228 @@ return s + '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="
 [[codeBranches]]
 model = "agents"
 code = '''
-using TradingAgents, Statistics
+using LimitOrderBook, Random, Statistics, StatsBase
 
-market = create_market(; n_agents={{N}}, n_periods={{T}}, fundamental={{fv}})  # heterogeneous agent population
+N, T, F = {{N}}, {{T}}, {{fv}}  # agents, periods, fundamental value
+tick = 0.01  # the book stores prices as whole ticks
+L, tau, kmax, se = 20, 20, 0.01, 0.005  # chartist window, forecast horizon and order life, max mark-up, noise sd (illustrative values)
 
-run_simulation!(market)  # simulate {{T}} trading periods
+# Market order for one share; drops the filled resting orders from `live` so they are never cancelled
+function hit!(ob, live, side, tp, sgn)
+    fills, _ = submit_market_order!(ob, side, 1)
+    foreach(o -> delete!(live, o.orderid), fills)
+    isempty(fills) && return
+    push!(tp, fills[1].price * tick)
+    push!(sgn, side == BUY_ORDER ? 1 : -1)
+end
 
-prices  = price_history(market)  # simulated price series
-returns = diff(log.(prices))  # log returns
+# Chiarella-Iori (2002): each period one random agent forecasts the price tau periods ahead and trades one share
+function simulate(; s1 = 1.0, s2 = 1.0, sn = 1.0, seed = 1)
+    rng = Xoshiro(seed)
+    g1, g2, gn = s1 .* abs.(randn(rng, N)), s2 .* abs.(randn(rng, N)), sn .* abs.(randn(rng, N))  # fundamentalist, chartist and noise weights
+    ob = OrderBook{Int,Int,Int,Int}()  # size, price (ticks), order id, account id
+    live = Dict{Int,Tuple{Int,OrderSide,Int}}()  # order id => (expiry, side, price)
+    p, spread = fill(F, T), fill(NaN, T)  # last trade price and spread at the end of each period
+    tp, sgn = Float64[], Int[]  # trade prices and trade signs (+1 buyer-initiated)
+    for t in 1:T
+        for (id, (expiry, side, px)) in collect(live)  # unfilled orders expire after tau periods
+            if expiry <= t
+                cancel_order!(ob, id, side, px)
+                delete!(live, id)
+            end
+        end
+        last = isempty(tp) ? F : tp[end]
+        i = rand(rng, 1:N)
+        rbar = length(tp) > L ? mean(diff(log.(tp[end-L:end]))) : 0.0  # chartist signal: mean of the last L trade-to-trade returns
+        rhat = (g1[i] * log(F / last) / tau + g2[i] * rbar + gn[i] * se * randn(rng)) / (g1[i] + g2[i] + gn[i])  # expected return per period
+        phat = last * exp(rhat * tau)  # expected price tau periods ahead
+        k = kmax * rand(rng)  # mark-up away from the forecast
+        bid, ask = best_bid_ask(ob)
+        if phat > last  # buyer: bid below the forecast
+            px = max(1, round(Int, phat * (1 - k) / tick))
+            if !isnothing(ask) && px >= ask
+                hit!(ob, live, BUY_ORDER, tp, sgn)  # marketable: take the best ask
+            else
+                submit_limit_order!(ob, t, BUY_ORDER, px, 1)
+                live[t] = (t + tau, BUY_ORDER, px)
+            end
+        elseif phat < last  # seller: ask above the forecast
+            px = max(1, round(Int, phat * (1 + k) / tick))
+            if !isnothing(bid) && px <= bid
+                hit!(ob, live, SELL_ORDER, tp, sgn)  # marketable: hit the best bid (a market order, see the report on submit_limit_order!)
+            else
+                submit_limit_order!(ob, t, SELL_ORDER, px, 1)
+                live[t] = (t + tau, SELL_ORDER, px)
+            end
+        end
+        p[t] = isempty(tp) ? F : tp[end]
+        bid, ask = best_bid_ask(ob)
+        isnothing(bid) || isnothing(ask) || (spread[t] = (ask - bid) * tick)
+    end
+    return (; p, tp, sgn, spread, ob)
+end
 
-println("Mean return:    ", round(mean(returns); digits=6))  # average log return
-println("Volatility:     ", round(std(returns); digits=4))  # return std dev
-println("Final price:    ", round(last(prices); digits=2))  # terminal price
-println("Deviation from fundamental: ", round(abs(last(prices) - {{fv}}); digits=2))  # pricing error
+sem(v) = std(v) / sqrt(length(v))
+metrics(s) = (vol = std(diff(log.(s.tp))), kurt = kurtosis(diff(log.(s.tp))), spread = mean(filter(!isnan, s.spread)), gap = mean(abs.(s.p .- F)) / F)
+
+# Mean +- standard error over seeds, and the paired difference (same seeds, so the same agents)
+function compare(a, b, la, lb)
+    for k in keys(first(a))
+        va, vb = getindex.(a, k), getindex.(b, k)
+        println(rpad(string(k), 8), la, " ", round(mean(va); sigdigits = 3), " +- ", round(sem(va); sigdigits = 2), "   ", lb, " ", round(mean(vb); sigdigits = 3), " +- ", round(sem(vb); sigdigits = 2), "   difference ", round(mean(vb .- va); sigdigits = 3), " +- ", round(sem(vb .- va); sigdigits = 2))
+    end
+end
+
+sim = simulate()
+p, tp, sgn, spread, ob = sim.p, sim.tp, sim.sgn, sim.spread, sim.ob
+r = diff(log.(tp))  # trade-to-trade log returns
+x, xlab = 1:T, "Period"
+d = book_depth_info(ob, 10)
+bid_px, bid_vol = d[:BID][:price] .* tick, d[:BID][:volume]
+ask_px, ask_vol = d[:ASK][:price] .* tick, d[:ASK][:volume]
+
+println("True values: F = ", F, ", weight scales s1 = s2 = sn = 1, L = ", L, ", tau = ", tau)
+println("Trades:              ", length(tp), " in ", T, " periods")
+println("Final price:         ", round(p[end]; digits = 2))
+println("Mean |p - F| / F:    ", round(100 * metrics(sim).gap; digits = 2), "%")
+println("Mean spread:         ", round(metrics(sim).spread; digits = 3))
+println("Return sd per trade: ", round(1e4 * std(r); digits = 1), " bp")
 '''
 
 [[codeBranches]]
 model = "lob"
 code = '''
-using VLLimitOrderBook
+using LimitOrderBook, Random, Statistics, StatsBase
 
-lob = LimitOrderBook{Int64, Float64, Int64}()  # empty continuous double auction
+N, T, F = {{N}}, {{T}}, {{fv}}  # initial orders, events, opening mid price
+tick, K = 0.01, 20  # tick size; limit orders land uniformly within K ticks of the opposite quote
 
-for i in 1:{{N}}  # seed {{N}} resting orders
-    side  = iseven(i) ? BID_SIDE : ASK_SIDE
-    price = {{fv}} + (iseven(i) ? -1.0 : 1.0) * rand(0.01:0.01:0.50)
-    submit_limit_order!(lob, i, side, price, rand(1:20), i)
+# Market order for one share; drops the filled resting orders from `live` so they are never cancelled
+function hit!(ob, live, side, tp, sgn)
+    fills, _ = submit_market_order!(ob, side, 1)
+    foreach(o -> delete!(live, o.orderid), fills)
+    isempty(fills) && return
+    push!(tp, fills[1].price * tick)
+    push!(sgn, side == BUY_ORDER ? 1 : -1)
 end
 
-best_bid = best_bid_price(lob)  # highest resting buy price
-best_ask = best_ask_price(lob)  # lowest resting sell price
+# Zero-intelligence order flow (Smith, Farmer, Gillemot and Krishnamurthy 2003): each event is a limit order,
+# a market order or a cancellation, drawn in proportion to its Poisson rate
+function simulate(; alpha = 0.5, mu = 2.0, delta = 0.02, seed = 1)  # limit rate per price level, market-order rate, cancel rate per order
+    rng = Xoshiro(seed)
+    ob = OrderBook{Int,Int,Int,Int}()  # size, price (ticks), order id, account id
+    live = Dict{Int,Tuple{OrderSide,Int}}()  # order id => (side, price)
+    m0 = round(Int, F / tick)
+    for id in 1:N  # seed the book with N one-share orders within K ticks of F
+        side = isodd(id) ? BUY_ORDER : SELL_ORDER
+        px = side == BUY_ORDER ? m0 - rand(rng, 1:K) : m0 + rand(rng, 1:K)
+        submit_limit_order!(ob, id, side, px, 1)
+        live[id] = (side, px)
+    end
+    p, spread = fill(F, T), fill(NaN, T)  # last trade price and spread after each event
+    tp, sgn = Float64[], Int[]  # trade prices and trade signs (+1 buyer-initiated)
+    id = N
+    for t in 1:T
+        bid, ask = best_bid_ask(ob)
+        ref_bid = something(bid, something(ask, m0 + 1) - 1)
+        ref_ask = something(ask, ref_bid + 1)
+        rates = cumsum([alpha * K, alpha * K, mu / 2, mu / 2, delta * length(live)])  # limit buy, limit sell, market buy, market sell, cancel
+        e = findfirst(>=(rand(rng) * rates[end]), rates)
+        if e <= 2  # limit orders never cross: buys rest below the ask, sells above the bid
+            id += 1
+            side = e == 1 ? BUY_ORDER : SELL_ORDER
+            px = e == 1 ? max(1, ref_ask - rand(rng, 1:K)) : ref_bid + rand(rng, 1:K)
+            submit_limit_order!(ob, id, side, px, 1)
+            live[id] = (side, px)
+        elseif e <= 4
+            hit!(ob, live, e == 3 ? BUY_ORDER : SELL_ORDER, tp, sgn)
+        else  # cancel a random resting order
+            cid = rand(rng, collect(keys(live)))
+            cancel_order!(ob, cid, live[cid]...)
+            delete!(live, cid)
+        end
+        p[t] = isempty(tp) ? F : tp[end]
+        bid, ask = best_bid_ask(ob)
+        isnothing(bid) || isnothing(ask) || (spread[t] = (ask - bid) * tick)
+    end
+    return (; p, tp, sgn, spread, ob)
+end
 
-println("Best bid: ", round(best_bid; digits=2))  # top of book
-println("Best ask: ", round(best_ask; digits=2))  # top of book
-println("Spread:   ", round(best_ask - best_bid; digits=4))  # bid-ask spread
-println("Orders:   ", n_orders(lob))  # total resting depth
+sem(v) = std(v) / sqrt(length(v))
+metrics(s) = (vol = std(diff(log.(s.tp))), kurt = kurtosis(diff(log.(s.tp))), spread = mean(filter(!isnan, s.spread)), depth = mean(n_orders_bid_ask(s.ob)))
+
+# Mean +- standard error over seeds, and the paired difference (same seeds)
+function compare(a, b, la, lb)
+    for k in keys(first(a))
+        va, vb = getindex.(a, k), getindex.(b, k)
+        println(rpad(string(k), 8), la, " ", round(mean(va); sigdigits = 3), " +- ", round(sem(va); sigdigits = 2), "   ", lb, " ", round(mean(vb); sigdigits = 3), " +- ", round(sem(vb); sigdigits = 2), "   difference ", round(mean(vb .- va); sigdigits = 3), " +- ", round(sem(vb .- va); sigdigits = 2))
+    end
+end
+
+sim = simulate()
+p, tp, sgn, spread, ob = sim.p, sim.tp, sim.sgn, sim.spread, sim.ob
+r = diff(log.(tp))  # trade-to-trade log returns
+x, xlab = 1:T, "Event"
+d = book_depth_info(ob, 10)
+bid_px, bid_vol = d[:BID][:price] .* tick, d[:BID][:volume]
+ask_px, ask_vol = d[:ASK][:price] .* tick, d[:ASK][:volume]
+
+println("True rates: alpha = 0.5 per level, mu = 2.0, delta = 0.02 per order, K = ", K, " ticks")
+println("Trades:              ", length(tp), " in ", T, " events")
+println("Mean spread:         ", round(metrics(sim).spread; digits = 3), " (", round(Int, metrics(sim).spread / tick), " ticks)")
+println("Resting orders:      ", n_orders_bid_ask(ob), " (bid, ask)")
+println("Return sd per trade: ", round(1e4 * std(r); digits = 1), " bp")
 '''
 
 [[codeBranches]]
 model = "market"
 code = '''
-using Brokerage
+using Brokerage, TradingAgents, Dates, Statistics
 
-exchange = Broker()  # create exchange
-asset    = Asset("STOCK", {{fv}})  # asset with fundamental {{fv}}
+N, F, minutes = {{N}}, {{fv}}, {{minutes}}  # traders, opening mid price, session length
+NF = div(N, 2)  # fundamental traders; the other N - NF are zero-intelligence liquidity takers
 
-for i in 1:{{N}}  # register {{N}} agents
-    strategy = i <= div({{N}}, 2) ? FundamentalTrader({{fv}}) : MomentumTrader()
-    add_agent!(exchange, strategy)
+# Exchange server, in this Julia session, on 0.0.0.0:8080
+DBFILE = joinpath(mktempdir(), "portfolios.sqlite")  # fresh account database: the package folder is read-only
+AUTHFILE = "file://" * joinpath(dirname(pathof(Brokerage)), "../resources/authkeys.json")
+Mapper.MM_COUNTER[] = 30  # account ids 1-30 are reserved for market makers
+OMS.NUM_ASSETS[] = 1
+OMS.PRICE_BUFFER_CAPACITY[] = 100  # recent prices the fundamental traders use for volatility
+OMS.MARKET_OPEN_T[] = now() + Second(30)  # time to create the accounts
+OMS.MARKET_CLOSE_T[] = OMS.MARKET_OPEN_T[] + Minute(minutes)
+OMS.init_LOB!(OMS.ob, [F], OMS.LP_order_vol, OMS.LP_cancel_vol, OMS.trade_volume_t, OMS.price_buffer)  # seeds the book around F
+server = @async Brokerage.run(DBFILE, AUTHFILE)
+sleep(5)
+
+# Agents from TradingAgents.jl; each run blocks until the close, so they run as tasks
+ft = @async FT_run(NF, 1, (init_cash_range = 5000.0:0.01:15000.0, init_shares_range = 50:1:150, prob_wait = 0.5, trade_freq = 1, num_ids = 30),
+    (host_ip_address = "0.0.0.0", port = "8080", username = "Fundamental Trader", password = "value123"))
+while Mapper.PORTFOLIO_COUNTER[] < 30 + NF  # account ids are positional: start the takers after the fundamental traders' accounts exist
+    sleep(0.5)
 end
+zt = @async ZT_run(N - NF, 1, (username = "Zero Trader", password = "zero123", init_cash_range = 5000.0:0.01:15000.0, init_shares_range = 50:1:150, prob_wait = 0.5, trade_freq = 1, num_MM = 30 + NF),
+    (host_ip_address = "0.0.0.0", port = "8080"))
+mm = @async RandomMM_run(1, (id = 1, eps_min = -0.5, eps_max = 0.5, inventory_limit = 3000, unit_trade_size = 15, trade_freq = 2), (cash = 0, z = 0),
+    (host_ip_address = "0.0.0.0", port = "8080", username = "Market Maker", password = "liquidity000"))
+foreach(wait, (ft, zt, mm))
 
-simulate!(exchange, asset, {{T}})  # run {{T}} trading steps
+# Trade tape kept by the exchange. It records market orders only: Brokerage logs no trade when a limit order crosses
+tp = copy(OMS.tick_last_prices)
+sgn = Int.(sign.(OMS.tick_trading_volume))  # +1 buy, -1 sell
+q = abs.(OMS.tick_trading_volume)  # shares per market order
+spread = OMS.tick_ask_prices .- OMS.tick_bid_prices
+p = tp
+r = diff(log.(tp))  # trade-to-trade log returns
+x, xlab = Dates.value.(OMS.tick_time .- OMS.MARKET_OPEN_T[]) ./ 1000, "Seconds Since Open"
+d = Client.getBookDepth(1)
+bid_px, bid_vol = Float64.(d[:BID][:price]), Float64.(d[:BID][:volume])
+ask_px, ask_vol = Float64.(d[:ASK][:price]), Float64.(d[:ASK][:volume])
 
-prices  = price_series(exchange, asset)  # price history
-volumes = volume_series(exchange, asset)  # trade volume history
-
-println("Price range:  ", extrema(round.(prices; digits=2)))  # min/max price
-println("Total volume: ", sum(volumes))  # total shares traded
+println("Recorded trades:  ", length(tp), " in ", minutes, " minutes (", NF, " fundamental traders, ", N - NF, " liquidity takers, 1 market maker)")
+println("Price range:      ", round.(extrema(tp); digits = 2))
+println("Shares traded:    ", sum(q))
+println("Mean spread:      ", round(mean(spread); digits = 3))
+println("Net order flow:   ", Client.getTradeVolume(1), " shares (buys minus sells)")
 '''
 
 [[actionGroups]]
@@ -323,41 +520,25 @@ label = "Visualise"
 [[actionGroups.actions]]
 id = "price-trajectory"
 label = "Price Trajectory"
-desc = "Plot the simulated price series alongside the fundamental value to visualise price discovery"
+desc = "Plot the last trade price against the fundamental value or opening price"
 code = '''
-using TradingAgents, GLMakie
+using Plots
 
-market = create_market(; n_periods={{T}}, fundamental={{fv}})  # run simulation
-run_simulation!(market)  # simulate
-prices = price_history(market)  # extract prices
-
-fig, ax, _ = lines(1:{{T}}, prices, label="Market price")  # price trajectory
-hlines!(ax, [{{fv}}], color=:red, linestyle=:dash, label="Fundamental")  # fundamental value
-axislegend(ax)  # legend
-display(fig)  # show
+plot(x, p; label = "Last Trade Price", xlabel = xlab, ylabel = "Price")
+{{?model=agents}}hline!([F]; label = "Fundamental Value", linestyle = :dash)
+{{?model=lob|market}}hline!([F]; label = "Opening Mid Price", linestyle = :dash)
 '''
 
 [[actionGroups.actions]]
 id = "lob-depth"
 label = "Order Book Depth"
-desc = "Visualise the bid and ask side depth of the limit order book as a step chart"
+desc = "Cumulative resting volume on each side of the final book"
 code = '''
-using VLLimitOrderBook, GLMakie
+using Plots
 
-lob = LimitOrderBook{Int64, Float64, Int64}()  # build order book
-for i in 1:{{N}}  # seed orders
-    side  = iseven(i) ? BID_SIDE : ASK_SIDE
-    price = {{fv}} + (iseven(i) ? -1.0 : 1.0) * rand(0.01:0.01:1.0)
-    submit_limit_order!(lob, i, side, price, rand(1:20), i)
-end
-
-bid_prices, bid_vols = bid_side(lob)  # bid schedule
-ask_prices, ask_vols = ask_side(lob)  # ask schedule
-
-fig, ax = Figure(), Axis(fig[1,1], xlabel="Price", ylabel="Cumulative volume")  # figure
-stairs!(ax, bid_prices, cumsum(bid_vols), color=:blue, label="Bids")  # bid depth
-stairs!(ax, ask_prices, cumsum(ask_vols), color=:red, label="Asks")  # ask depth
-display(fig)  # show
+bar(bid_px, cumsum(bid_vol); label = "Bids", xlabel = "Price", ylabel = "Cumulative Shares", alpha = 0.6)
+bar!(ask_px, cumsum(ask_vol); label = "Asks", alpha = 0.6)
+isempty(bid_px) || isempty(ask_px) || println("Best bid ", first(bid_px), ", best ask ", first(ask_px), ", spread ", round(first(ask_px) - first(bid_px); digits = 2))
 '''
 
 [[actionGroups]]
@@ -367,40 +548,32 @@ label = "Diagnose"
 [[actionGroups.actions]]
 id = "stylized-facts"
 label = "Stylized Facts"
-desc = "Check whether simulated returns reproduce fat tails and volatility clustering seen in real markets"
+desc = "Fat tails, no return autocorrelation, but persistent volatility (Cont 2001)"
 code = '''
-using TradingAgents, Statistics, StatsBase, GLMakie  # kurtosis and autocor are in StatsBase
+using StatsBase, Plots
 
-market = create_market(; n_periods={{T}}, fundamental={{fv}})  # simulate
-run_simulation!(market)  # run
-returns = diff(log.(price_history(market)))  # log returns
-
-k = kurtosis(returns)  # excess kurtosis (fat tails if > 0)
-a = autocor(returns .^ 2, [1, 2, 3, 4, 5])  # squared return autocorr (clustering)
-
-println("Kurtosis:      ", round(k; digits=2), "  (normal = 0)")  # fat tails
-println("Vol clustering (lag 1): ", round(a[1]; digits=3))  # first autocorr of sq returns
+lags = 1:min(20, length(r) - 1)
+println("Trade-to-trade returns: ", length(r))
+println("Excess kurtosis:        ", round(kurtosis(r); digits = 2), " (0 for a normal distribution; fat tails make it positive)")
+println("Lag-1 autocorrelation:  ", round(autocor(r, [1])[1]; digits = 3), " (bid-ask bounce makes it negative)")
+plot(lags, autocor(r, lags); label = "Returns", xlabel = "Lag (Trades)", ylabel = "Autocorrelation", marker = :circle)
+plot!(lags, autocor(abs.(r), lags); label = "Absolute Returns", marker = :circle)
+hline!([0]; label = "", color = :gray)
 '''
 
 [[actionGroups.actions]]
 id = "price-impact"
 label = "Price Impact"
-desc = "Measure how a large market order moves the mid-price in the limit order book"
+desc = "Response function R(l) = E[s_t (log p_{t+l} - log p_t)] (Bouchaud et al. 2004)"
 code = '''
-using VLLimitOrderBook
+using Statistics, Plots
 
-lob = LimitOrderBook{Int64, Float64, Int64}()  # build book
-for i in 1:{{N}}  # seed resting orders
-    side  = iseven(i) ? BID_SIDE : ASK_SIDE
-    price = {{fv}} + (iseven(i) ? -1.0 : 1.0) * rand(0.01:0.01:1.0)
-    submit_limit_order!(lob, i, side, price, 5, i)
-end
-
-mid_before = (best_bid_price(lob) + best_ask_price(lob)) / 2  # initial mid-price
-submit_market_order!(lob, {{N}}+1, ASK_SIDE, 20, {{N}}+1)  # large market sell order
-mid_after  = (best_bid_price(lob) + best_ask_price(lob)) / 2  # post-trade mid-price
-
-println("Price impact: ", round(mid_before - mid_after; digits=4))  # downward shift in mid-price
+lp = log.(tp)
+ls = 1:min(20, length(tp) - 1)
+R = [mean(sgn[1:end-l] .* (lp[1+l:end] .- lp[1:end-l])) for l in ls]  # average signed price move l trades after a trade
+println("R(1) = ", round(1e4 * R[1]; digits = 2), " bp, R(", last(ls), ") = ", round(1e4 * R[end]; digits = 2), " bp")
+println("Positive R: buyer-initiated trades push the price up; a decaying R means part of the impact is temporary")
+plot(ls, 1e4 .* R; xlabel = "Lag (Trades)", ylabel = "Response (bp)", label = "R(l)", marker = :circle)
 '''
 
 [[actionGroups]]
@@ -410,42 +583,31 @@ label = "Predict"
 [[actionGroups.actions]]
 id = "stress-test"
 label = "Stress Test"
-desc = "Run the market under extreme parameter configurations to assess model robustness"
+desc = "Agents: chartists three times stronger. LOB: market orders twice as frequent. Averaged over 20 seeds"
 code = '''
-using TradingAgents, Statistics
+using Statistics
 
-scenarios = [  # stress test scenarios
-    (label="Baseline",        noise=0.01, chartist_frac=0.3),
-    (label="High noise",      noise=0.10, chartist_frac=0.3),
-    (label="Chartist-heavy",  noise=0.01, chartist_frac=0.8),
-    (label="Crash scenario",  noise=0.10, chartist_frac=0.8),
-]
-
-for s in scenarios
-    m = create_market(; n_periods={{T}}, fundamental={{fv}}, noise=s.noise, chartist_frac=s.chartist_frac)
-    run_simulation!(m)
-    p = price_history(m)
-    println(s.label, "  final=", round(last(p);digits=1), "  vol=", round(std(diff(log.(p)));digits=4))
-end
+{{?model=agents|lob}}seeds = 1:20  # one run is one random draw, so average over seeds
+{{?model=agents}}compare([metrics(simulate(seed = s)) for s in seeds], [metrics(simulate(s2 = 3.0, seed = s)) for s in seeds], "base", "chartists x3")
+{{?model=lob}}compare([metrics(simulate(seed = s)) for s in seeds], [metrics(simulate(mu = 4.0, seed = s)) for s in seeds], "base", "market orders x2")
+{{?model=market}}h = 10  # trades ahead
+{{?model=market}}move = [sgn[i] * (log(tp[i + h]) - log(tp[i])) for i in 1:length(tp) - h]  # signed move after each market order
+{{?model=market}}big = q[1:length(move)] .>= quantile(q, 0.95)  # largest 5% of market orders
+{{?model=market}}println("Signed move over the next ", h, " trades: largest 5% of orders ", round(1e4 * mean(move[big]); digits = 1), " bp, other orders ", round(1e4 * mean(move[.!big]); digits = 1), " bp")
+{{?model=market}}println("One session only: the server runs in wall-clock time, so this is not averaged over seeds")
 '''
 
 [[actionGroups.actions]]
 id = "counterfactual"
 label = "Counterfactual"
-desc = "Compare a market with and without noise traders to isolate their effect on price efficiency"
+desc = "Agents: no chartists. LOB: no cancellations. Same seeds, averaged over 20"
 code = '''
-using TradingAgents, Statistics
+using Statistics
 
-m_base  = create_market(; n_periods={{T}}, fundamental={{fv}}, noise_frac=0.3)  # baseline with noise traders
-m_clean = create_market(; n_periods={{T}}, fundamental={{fv}}, noise_frac=0.0)  # no noise traders
-
-run_simulation!(m_base);  run_simulation!(m_clean)  # run both
-
-mae_base  = mean(abs.(price_history(m_base)  .- {{fv}}))  # mean pricing error with noise
-mae_clean = mean(abs.(price_history(m_clean) .- {{fv}}))  # mean pricing error without noise
-
-println("MAE with noise traders:    ", round(mae_base;  digits=2))  # less efficient
-println("MAE without noise traders: ", round(mae_clean; digits=2))  # more efficient
+{{?model=agents|lob}}seeds = 1:20  # same seeds in both runs, so the differences are paired
+{{?model=agents}}compare([metrics(simulate(seed = s)) for s in seeds], [metrics(simulate(s2 = 0.0, seed = s)) for s in seeds], "base", "no chartists")
+{{?model=lob}}compare([metrics(simulate(seed = s)) for s in seeds], [metrics(simulate(delta = 0.0, seed = s)) for s in seeds], "base", "no cancels")
+{{?model=market}}println("A counterfactual needs a second Brokerage session: the server, its port 8080 and its tape are global to this Julia session. Restart Julia, change the agent mix in the main code and run it again.")
 '''
 
 [[actionGroups]]
@@ -455,35 +617,38 @@ label = "Compare"
 [[actionGroups.actions]]
 id = "fundamentalist-vs-chartist"
 label = "Fundamentalists vs Chartists"
-desc = "Vary the fraction of chartist agents and measure the effect on price volatility and deviation"
+desc = "Fundamentalist-led against chartist-led markets, averaged over 20 seeds"
 code = '''
-using TradingAgents, Statistics
+using Statistics
 
-fracs = 0.0:0.1:1.0  # chartist fraction sweep
-for f in fracs
-    m = create_market(; n_periods={{T}}, fundamental={{fv}}, chartist_frac=f)
-    run_simulation!(m)
-    p   = price_history(m)
-    vol = std(diff(log.(p)))
-    mae = mean(abs.(p .- {{fv}}))
-    println("chartist=", round(f;digits=1), "  vol=", round(vol;digits=4), "  MAE=", round(mae;digits=2))
-end
+{{?model=agents}}seeds = 1:20
+{{?model=agents}}compare([metrics(simulate(s1 = 2.0, s2 = 0.5, seed = s)) for s in seeds], [metrics(simulate(s1 = 0.5, s2 = 2.0, seed = s)) for s in seeds], "fundamentalist-led", "chartist-led")
+{{?model=lob}}println("Zero-intelligence order flow has no fundamentalists or chartists: use the Trading Agents model")
+{{?model=market}}println("Brokerage's tape does not record which trader sent each order, so trades cannot be split by strategy: use the Trading Agents model")
 '''
 
 [[actionGroups.actions]]
 id = "lob-vs-walrasian"
 label = "LOB vs Walrasian"
-desc = "Compare continuous limit order book clearing against Walrasian batch-auction price-setting"
+desc = "Same agents trading through the book or at the price that clears all their demands, averaged over 20 seeds"
 code = '''
-using TradingAgents, Statistics
+using Random, Statistics, StatsBase
 
-m_lob = create_market(; n_agents={{N}}, n_periods={{T}}, fundamental={{fv}}, clearing=:lob)  # continuous double auction
-m_wal = create_market(; n_agents={{N}}, n_periods={{T}}, fundamental={{fv}}, clearing=:walrasian)  # Walrasian batch auction
-
-run_simulation!(m_lob); run_simulation!(m_wal)  # run both
-
-println("LOB  volatility: ", round(std(diff(log.(price_history(m_lob)))); digits=4))  # LOB vol
-println("Wal. volatility: ", round(std(diff(log.(price_history(m_wal)))); digits=4))  # Walrasian vol
+{{?model=agents}}# Walrasian benchmark: every period all N agents forecast, and the price clears the linear demands d_i = phat_i - p, so p = mean(phat)
+{{?model=agents}}function walrasian(; s1 = 1.0, s2 = 1.0, sn = 1.0, seed = 1)
+{{?model=agents}}    rng = Xoshiro(seed)
+{{?model=agents}}    g1, g2, gn = s1 .* abs.(randn(rng, N)), s2 .* abs.(randn(rng, N)), sn .* abs.(randn(rng, N))  # the same agents as simulate(seed = seed)
+{{?model=agents}}    p = fill(F, T)
+{{?model=agents}}    for t in 2:T
+{{?model=agents}}        rbar = t > L + 1 ? mean(diff(log.(p[t-L-1:t-1]))) : 0.0
+{{?model=agents}}        p[t] = mean(p[t-1] * exp(tau * (g1[i] * log(F / p[t-1]) / tau + g2[i] * rbar + gn[i] * se * randn(rng)) / (g1[i] + g2[i] + gn[i])) for i in 1:N)
+{{?model=agents}}    end
+{{?model=agents}}    return (; p, tp = p, spread = zeros(T))  # no book, so no spread
+{{?model=agents}}end
+{{?model=agents}}seeds = 1:20
+{{?model=agents}}compare([metrics(simulate(seed = s)) for s in seeds], [metrics(walrasian(seed = s)) for s in seeds], "order book", "Walrasian")
+{{?model=lob}}println("Zero-intelligence orders carry no valuations, so there is no Walrasian price to compare with: use the Trading Agents model")
+{{?model=market}}println("No Walrasian counterpart for the Brokerage session: use the Trading Agents model")
 '''
 
 [[actionGroups]]
@@ -493,43 +658,31 @@ label = "Interpret"
 [[actionGroups.actions]]
 id = "market-efficiency"
 label = "Market Efficiency"
-desc = "Measure how closely the simulated price tracks the fundamental value over time"
+desc = "Variance ratios (Lo and MacKinlay 1988) of trade-to-trade returns"
 code = '''
-using TradingAgents, Statistics
+using Statistics
 
-market = create_market(; n_periods={{T}}, fundamental={{fv}})  # simulate
-run_simulation!(market)  # run
-prices = price_history(market)  # price series
-
-mae  = mean(abs.(prices .- {{fv}}))  # mean absolute deviation
-rmse = sqrt(mean((prices .- {{fv}}) .^ 2))  # root mean squared error
-
-println("=== Market Efficiency ===")  # header
-println("MAE from fundamental:  ", round(mae;  digits=2))  # average pricing error
-println("RMSE from fundamental: ", round(rmse; digits=2))  # error magnitude
-println("Final price deviation: ", round(abs(last(prices) - {{fv}}); digits=2))  # terminal error
+lp = log.(tp)
+for k in (2, 5, 10)
+    rk = lp[1+k:end] .- lp[1:end-k]  # overlapping k-trade returns
+    println("VR(", k, ") = ", round(var(rk) / (k * var(r)); digits = 3))
+end
+println("VR = 1 for a random walk; below 1 means mean reversion (bid-ask bounce, fundamentalists), above 1 means trends (chartists)")
+{{?model=agents}}println("Mean |p - F| / F: ", round(100 * mean(abs.(p .- F)) / F; digits = 2), "% of the fundamental value")
 '''
 
 [[actionGroups.actions]]
 id = "microstructure-summary"
 label = "Microstructure Summary"
-desc = "Print a concise summary of bid-ask spread, depth, and trade volume from the order book"
+desc = "Spread, volatility, order-flow sign and its persistence"
 code = '''
-using VLLimitOrderBook, Statistics
+using Statistics
 
-lob = LimitOrderBook{Int64, Float64, Int64}()  # build book
-for i in 1:{{N}}  # seed {{N}} resting orders
-    side  = iseven(i) ? BID_SIDE : ASK_SIDE
-    price = {{fv}} + (iseven(i) ? -1.0 : 1.0) * rand(0.01:0.01:1.0)
-    submit_limit_order!(lob, i, side, price, rand(1:20), i)
-end
-
-spread = best_ask_price(lob) - best_bid_price(lob)  # quoted spread
-mid    = (best_bid_price(lob) + best_ask_price(lob)) / 2  # mid-price
-
-println("=== Microstructure Summary ===")  # header
-println("Mid-price:    ", round(mid;    digits=2))  # current mid
-println("Quoted spread:", round(spread;  digits=4))  # spread in price units
-println("Rel. spread:  ", round(spread/mid*10_000; digits=2), " bps")  # spread in basis points
-println("Resting orders: ", n_orders(lob))  # total queue depth
+sp = filter(!isnan, spread)
+println("Trades:                     ", length(tp))
+println("Mean spread:                ", round(mean(sp); digits = 3), " (", round(1e4 * mean(sp) / mean(tp); digits = 1), " bp of the price)")
+println("Volatility:                 ", round(1e4 * std(r); digits = 1), " bp per trade")
+println("Buyer-initiated:            ", round(100 * mean(sgn .> 0); digits = 1), "% of trades")
+println("Sign autocorrelation lag 1: ", round(cor(sgn[1:end-1], sgn[2:end]); digits = 3), " (order flow is persistent when positive)")
+{{?model=agents|lob}}println("Resting orders (bid, ask):  ", n_orders_bid_ask(ob))
 '''

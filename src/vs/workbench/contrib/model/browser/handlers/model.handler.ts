@@ -95,6 +95,7 @@ const UNREGISTERED_PACKAGE_URLS = new Map<string, string>([
 	['EDGAR', 'https://github.com/Trumpingtons/EDGAR.jl'],
 	['GMMTools', 'https://github.com/Gkreindler/GMMTools.jl'],
 	['HARE', 'https://github.com/Trumpingtons/HARE.jl'],
+	['LimitOrderBook', 'https://github.com/p-casgrain/LimitOrderBook.jl'],
 	['LSurvival', 'https://github.com/alexpkeil1/LSurvival.jl'],
 	['MultilevelEstimators', 'https://github.com/PieterjanRobbe/MultilevelEstimators.jl'],
 	['PerformanceAnalytics', 'https://github.com/eohne/PerformanceAnalytics.jl'],
@@ -103,7 +104,7 @@ const UNREGISTERED_PACKAGE_URLS = new Map<string, string>([
 	['TopicModels', 'https://github.com/slycoder/TopicModels.jl'],
 	['TotalViewITCH', 'https://github.com/cswaney/TotalViewITCH.jl'],
 	['TradingAgents', 'https://github.com/aaron-wheeler/TradingAgents.jl'],
-	['VLLimitOrderBook', 'https://github.com/Renruize12306/VLLimitOrderBook.jl'],
+	['VLLimitOrderBook', 'https://github.com/aaron-wheeler/VLLimitOrderBook.jl'],
 ]);
 
 /** Strip a trailing ".jl" to recover the importable Julia package name. */
