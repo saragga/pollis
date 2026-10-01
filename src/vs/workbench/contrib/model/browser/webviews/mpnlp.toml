@@ -235,7 +235,7 @@ label = "Maximise"
 [[inputs]]
 id = "obj"
 label = "Objective"
-tooltip = "Nonlinear expression in the vector x, for example sum((x .- 1) .^ 2) + 3 * x[1] * x[2] + x[1] (nonconvex: two local minima inside the ball, about -0.54 and 1.69) or sum(sin.(x)). JuMP builds the nonlinear expression directly; user functions need @operator."
+tooltip = "Nonlinear expression in the vector x, for example sum((x .- 1) .^ 2) + 3 * x[1] * x[2] + x[1] (nonconvex: with n = 5 and the default constraint, two local minima with objective values of about -0.54 and 1.69) or sum(sin.(x)). JuMP builds the nonlinear expression directly; user functions need @operator."
 default = "sum((x .- 1) .^ 2) + 3 * x[1] * x[2] + x[1]"
 newRow = true
 
