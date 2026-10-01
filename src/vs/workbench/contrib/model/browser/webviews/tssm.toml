@@ -395,7 +395,7 @@ models = ["custom"]
 [[codeBranches]]
 model = "lg"
 code = '''
-using StateSpaceModels, Random  # state-space models and random number generator
+using StateSpaceModels, LinearAlgebra, Random  # state-space models, diagm, random number generator
 Random.seed!({{lg-seed}})  # fix random seed for reproducibility
 
 n = {{lg-n}}  # number of time steps to simulate
@@ -404,45 +404,60 @@ sigma_lev = {{lg-sigma-lev}}  # level disturbance std
 {{?lg-model=llt}} sigma_slp = {{lg-sigma-slp}}  # slope disturbance std
 sigma_obs = {{lg-sigma-obs}}  # observation noise std
 
-{{?lg-model=ll}} model = LocalLevel(zeros(n))  # y_t = mu_t + eps, mu_{t+1} = mu_t + eta
-{{?lg-model=ll}} update_hyperparameters!(model, [sigma_lev, sigma_obs])  # set noise parameters before simulation
-{{?lg-model=llt}} model = LocalLinearTrend(zeros(n))  # level + slope state; level_{t+1} = level_t + slope_t + eta1
-{{?lg-model=llt}} update_hyperparameters!(model, [sigma_lev, sigma_slp, sigma_obs])  # set level, slope, and obs noise
+{{?lg-model=ll}} model = LocalLevel(zeros(n))  # y_t = mu_t + eps_t, mu_{t+1} = mu_t + eta_t
+{{?lg-model=ll}} model.system.Q .= sigma_lev^2  # level disturbance variance
+{{?lg-model=llt}} model = LocalLinearTrend(zeros(n))  # level_{t+1} = level_t + slope_t + xi_t, slope_{t+1} = slope_t + zeta_t
+{{?lg-model=llt}} model.system.Q .= diagm([sigma_lev^2, sigma_slp^2])  # level and slope disturbance variances
+model.system.H = sigma_obs^2  # observation noise variance
+sys = model.system  # the model's system matrices Z, T, R, H, Q
 
-y, alpha = simulate(model, n)  # simulate n observations and latent state path
+# n observations and the n x m state path; from = a previous state to continue (default: start at zero)
+function sim(n; obs_sd=sigma_obs, from=nothing)
+    s = deepcopy(sys); s.H = obs_sd^2
+    a0 = from === nothing ? zeros(size(s.T, 1)) : s.T * from
+    simulate(s, a0, n; return_simulated_states=true)
+end
+
+y, alpha = sim(n)  # simulated observations and latent states
+signal = alpha * sys.Z  # noise-free part of y: Z * alpha_t
 '''
 
 [[codeBranches]]
 model = "nl"
 code = '''
-using LowLevelParticleFilters, LinearAlgebra, Random  # particle and Kalman filters, matrix utilities, RNG
+using LowLevelParticleFilters, LinearAlgebra, Distributions, Random  # filters, I, MvNormal, RNG
 Random.seed!({{nl-seed}})  # fix random seed for reproducibility
 
 nx, ny, nu = {{nl-nx}}, {{nl-ny}}, {{nl-nu}}  # state / observation / input dimensions
+n = {{nl-n}}  # number of time steps to simulate
+sigma_x, sigma_y = {{nl-sigma-x}}, {{nl-sigma-y}}  # process and observation noise std
 
-{{?nl-filter=pf}} function dynamics(x, u, p, t, noise)  # stochastic state transition with additive noise
-{{?nl-filter=pf}}     {{nl-dyn}} .+ noise
-{{?nl-filter=ukf}} function dynamics(x, u, p, t)  # deterministic state transition function
-{{?nl-filter=ukf}}     {{nl-dyn}}
+function dynamics(x, u, p, t)  # state transition; the noise is added outside
+    {{nl-dyn}}
 end
 
 function measurement(x, u, p, t)  # nonlinear measurement function
     {{nl-meas}}
 end
 
-{{?nl-filter=pf}} noise_dist = MvNormal(zeros(nx), {{nl-sigma-x}}^2 * I)  # process noise distribution
-{{?nl-filter=pf}} x0         = MvNormal(zeros(nx), I)  # initial state distribution
-{{?nl-filter=pf}}
-{{?nl-filter=pf}} pf       = ParticleFilter({{nl-N}}, dynamics, measurement, noise_dist, x0; ny)  # build Particle Filter with {{nl-N}} particles
-{{?nl-filter=pf}} sol_sim  = simulate(pf, {{nl-n}})  # simulate {{nl-n}} steps of synthetic data from the nonlinear SSM
-{{?nl-filter=pf}} sol_filt = forward_trajectory(pf, sol_sim.u, sol_sim.y)  # filter simulated observations with Particle Filter
-{{?nl-filter=ukf}} Q  = {{nl-sigma-x}}^2 * Matrix(I, nx, nx)  # process noise covariance
-{{?nl-filter=ukf}} R  = {{nl-sigma-y}}^2 * Matrix(I, ny, ny)  # observation noise covariance
-{{?nl-filter=ukf}} x0 = MvNormal(zeros(nx), I)  # initial state distribution
-{{?nl-filter=ukf}}
-{{?nl-filter=ukf}} ukf      = UnscentedKalmanFilter(dynamics, measurement, Q, R, x0; nu)  # build Unscented Kalman Filter (UKF)
-{{?nl-filter=ukf}} sol_sim  = simulate(ukf, {{nl-n}})  # simulate {{nl-n}} steps of synthetic data from the nonlinear SSM
-{{?nl-filter=ukf}} sol_filt = forward_trajectory(ukf, sol_sim.u, sol_sim.y)  # filter simulated observations with UKF
+x0 = MvNormal(zeros(nx), I)  # initial state distribution
+
+# n observation vectors and the n x nx state path, with additive Gaussian noise; from = a previous state to continue
+function sim(n; obs_sd=sigma_y, from=nothing)
+    xs = [from === nothing ? rand(x0) : dynamics(from, zeros(nu), nothing, 0) .+ sigma_x .* randn(nx)]
+    for t in 2:n
+        push!(xs, dynamics(xs[end], zeros(nu), nothing, t) .+ sigma_x .* randn(nx))
+    end
+    ys = [measurement(x, zeros(nu), nothing, 0) .+ obs_sd .* randn(ny) for x in xs]
+    (first.(ys), permutedims(reduce(hcat, xs)), ys)  # first observed signal, states, all observations
+end
+
+y, alpha, ys = sim(n)
+signal = [measurement(x, zeros(nu), nothing, 0)[1] for x in eachrow(alpha)]  # noise-free part of y
+
+{{?nl-filter=ukf}} filt = UnscentedKalmanFilter(dynamics, measurement, sigma_x^2 * Matrix(I, nx, nx), sigma_y^2 * Matrix(I, ny, ny), x0; nu, ny)  # Unscented Kalman Filter
+{{?nl-filter=pf}} filt = ParticleFilter({{nl-N}}, dynamics, measurement, MvNormal(zeros(nx), sigma_x^2 * I), MvNormal(zeros(ny), sigma_y^2 * I), x0)  # bootstrap Particle Filter, {{nl-N}} particles
+sol_filt = forward_trajectory(filt, [zeros(nu) for _ in 1:n], ys)  # filter the simulated observations
 '''
 
 [[codeBranches]]
@@ -451,18 +466,27 @@ code = '''
 using StateSpaceModels, LinearAlgebra, Random  # SSM, matrix utilities, RNG
 Random.seed!({{c-seed}})  # fix random seed for reproducibility
 
-m, p = {{c-m}}, {{c-p}}  # state dimension, observation dimension
+m, p = {{c-m}}, {{c-p}}  # state dimension, observation dimension (LinearUnivariateTimeInvariant needs p = 1)
 n    = {{c-n}}  # number of time steps to simulate
 
-T_mat = {{c-T}}  # state transition matrix (m x m)
-Z_mat = {{c-Z}}  # measurement matrix (p x m)
-Q_mat = {{c-Q}}  # process noise covariance (m x m)
-H_mat = {{c-H}}  # observation noise covariance (p x p)
-a1    = zeros(m)  # initial state mean
-P1    = Matrix(I, m, m)  # initial state covariance
+T_mat = Float64.({{c-T}})  # state transition matrix (m x m)
+Z_vec = vec(Float64.({{c-Z}}))  # measurement matrix (1 x m), as a vector
+Q_mat = Float64.({{c-Q}})  # process noise covariance (m x m)
+H     = only({{c-H}})  # observation noise variance (scalar for p = 1)
+sigma_obs = sqrt(H)
 
-sys      = LinearUnivariateTimeInvariant(T_mat, Z_mat, Q_mat, H_mat, a1, P1)  # build custom linear Gaussian SSM
-y, alpha = simulate(sys, n)  # simulate n observations and state path
+# y_t = Z alpha_t + eps_t, alpha_{t+1} = T alpha_t + eta_t (y, Z, T, R, d, c, H, Q; R = I, no intercepts)
+sys = LinearUnivariateTimeInvariant{Float64}(zeros(n), Z_vec, T_mat, Matrix(1.0I, m, m), 0.0, zeros(m), H, Q_mat)
+
+# n observations and the n x m state path; from = a previous state to continue (default: start at zero)
+function sim(n; obs_sd=sigma_obs, from=nothing)
+    s = deepcopy(sys); s.H = obs_sd^2
+    a0 = from === nothing ? zeros(m) : s.T * from
+    simulate(s, a0, n; return_simulated_states=true)
+end
+
+y, alpha = sim(n)  # simulated observations and latent states
+signal = alpha * Z_vec  # noise-free part of y: Z * alpha_t
 '''
 
 [[actionGroups]]
@@ -482,12 +506,12 @@ plot(y, label="y", xlabel="t", ylabel="value")  # plot simulated observations
 [[actionGroups.actions]]
 id = "plot-state"
 label = "Plot State Path"
-desc = "Overlay latent state and noisy observations"
+desc = "Overlay the noise-free signal on the noisy observations"
 code = '''
 using Plots  # plotting library
 
-plot(y,     label="observations", alpha=0.6)  # simulated noisy observations
-plot!(alpha, label="state path",   lw=2)  # latent state trajectory
+plot(y,      label="observations", alpha=0.6)  # simulated noisy observations
+plot!(signal, label="signal (noise-free)", lw=2)  # what y would be without observation noise
 '''
 
 [[actionGroups]]
@@ -501,8 +525,8 @@ desc = "Check ACF of observations for temporal structure"
 code = '''
 using StatsBase, Plots  # statistics and plotting
 
-lags  = 0:40  # lag range to inspect
-acf_y = autocor(y, collect(lags))  # compute autocorrelation of observations
+lags  = 0:min(40, length(y) - 1)  # lag range to inspect
+acf_y = autocor(y, collect(lags))  # slow decay means a trend or random walk, not short memory
 bar(lags, acf_y, xlabel="Lag", ylabel="ACF", label="")  # bar plot of ACF
 '''
 
@@ -526,9 +550,10 @@ label = "Extend Forward"
 desc = "Simulate additional steps from the end of the current path"
 code = '''
 n_ahead = 50  # additional steps to simulate
-y_ext, alpha_ext = simulate(model, n_ahead)  # simulate forward from current model
+y_ext, _ = sim(n_ahead; from=alpha[end, :])  # continue from the last simulated state
 using Plots  # plotting library
-plot([y; y_ext], label="extended series")  # concatenate and plot original + extension
+plot(1:length(y), y, label="simulated")
+plot!(length(y) .+ (1:n_ahead), y_ext, label="extension")
 '''
 
 [[actionGroups.actions]]
@@ -537,9 +562,9 @@ label = "Multiple Scenarios"
 desc = "Generate K independent realisations from the same model"
 code = '''
 K = 10  # number of independent realisations
-scenarios = [simulate(model, n)[1] for _ in 1:K]  # simulate K independent observation paths
+scenarios = [sim(n)[1] for _ in 1:K]  # simulate K independent observation paths
 using Plots  # plotting library
-plot(hcat(scenarios...), alpha=0.4, legend=false)  # overlay all K scenarios
+plot(reduce(hcat, scenarios), alpha=0.4, legend=false)  # overlay all K scenarios
 '''
 
 [[actionGroups]]
@@ -549,12 +574,14 @@ label = "Compare"
 [[actionGroups.actions]]
 id = "snr"
 label = "Signal-to-Noise Ratio"
-desc = "Compute the ratio of state variance to observation noise variance"
+desc = "Compute the ratio of signal variance to observation noise variance"
 code = '''
-state_var = var(alpha)  # variance of the latent state path
-obs_var   = var(y .- alpha)  # variance of the observation noise
-snr       = state_var / obs_var  # signal-to-noise ratio
-println("SNR = ", round(snr, digits=3))  # print result
+using Statistics
+
+signal_var = var(signal)  # sample variance of the noise-free signal
+noise_var  = var(y .- signal)  # sample variance of the observation noise
+println("Sample SNR = ", round(signal_var / noise_var, digits=3))  # for a random-walk level this grows with n
+{{?model=lg}} println("q = level variance / noise variance = ", round(sigma_lev^2 / sigma_obs^2, digits=3))  # the SNR of structural models
 '''
 
 [[actionGroups.actions]]
@@ -562,13 +589,14 @@ id = "noise-sweep"
 label = "Noise Sensitivity"
 desc = "Vary observation noise and compare simulated paths"
 code = '''
-using Plots  # plotting library
+using Plots, Random  # plotting library, seed
 plot(title="Noise sensitivity")  # initialise plot
-for s in [0.05, 0.1, 0.2, 0.5]  # sweep over sigma_obs values
-    update_hyperparameters!(model, [sigma_lev, s])  # update observation noise
-    y_s, _ = simulate(model, n)  # simulate with current noise level
+for s in [0.05, 0.1, 0.2, 0.5]  # sweep over the observation noise std
+    Random.seed!(1)  # same draws each time, so only the noise level changes
+    y_s, _ = sim(n; obs_sd=s)  # simulate with this observation noise
     plot!(y_s, label="sigma=" * string(s), alpha=0.7)  # overlay on plot
 end
+plot!()
 '''
 
 [[actionGroups]]
@@ -578,13 +606,13 @@ label = "Interpret"
 [[actionGroups.actions]]
 id = "decompose"
 label = "Decompose Components"
-desc = "Separate trend, slope and noise contributions"
+desc = "Separate the latent states (level, slope, ...) from the observation noise"
 code = '''
 using Plots  # plotting library
 
-noise = y .- alpha  # observation noise realisation
-plot(alpha, label="state (trend)")  # latent trend component
-plot(noise, label="observation noise")  # noise component
+noise = y .- signal  # observation noise realisation
+plot(plot(alpha, label=permutedims(["state $i" for i in 1:size(alpha, 2)]), title="latent states"),
+     plot(noise, label="observation noise"), layout=(2, 1))
 '''
 
 [[actionGroups.actions]]
@@ -592,8 +620,11 @@ id = "marginal-var"
 label = "Marginal Variance"
 desc = "Compute and print marginal variance of observations"
 code = '''
-sigma2_y = var(y)  # marginal variance of the simulated series
-sigma2_a = var(alpha)  # variance of the latent state
-println("Var(y) = ",     round(sigma2_y, digits=4))  # print obs variance
-println("Var(alpha) = ", round(sigma2_a, digits=4))  # print state variance
+using Statistics
+
+sigma2_y = var(y)  # sample variance of the simulated series
+sigma2_s = var(signal)  # sample variance of the noise-free signal
+println("Var(y) = ",      round(sigma2_y, digits=4))  # for non-stationary states (random walks) these depend on n
+println("Var(signal) = ", round(sigma2_s, digits=4))
+println("Var(y - signal) = ", round(var(y .- signal), digits=4))  # should be close to the observation noise variance
 '''
