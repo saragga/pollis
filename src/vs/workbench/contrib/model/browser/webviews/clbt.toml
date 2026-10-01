@@ -10,10 +10,18 @@ defaultModel = "main"
 
 [[packages]]
 name = "ColBERT.jl"
-github = "https://github.com/codetalker7/ColBERT.jl"
+github = "https://github.com/JuliaGenAI/ColBERT.jl"
+
+[[packages]]
+name = "RAGTools.jl"
+github = "https://github.com/JuliaGenAI/RAGTools.jl"
+
+[[packages]]
+name = "CairoMakie.jl"
+github = "https://github.com/MakieOrg/Makie.jl"
 
 [requires]
-packages = ["ColBERT.jl"]
+packages = ["ColBERT.jl", "RAGTools.jl", "CairoMakie.jl"]
 
 [[notebookSections]]
 label = ""
@@ -93,11 +101,19 @@ doi = "10.1137/141000671"
 openAccess = false
 
 [[references]]
-title = "ColBERT.jl: Late-Interaction Retrieval in Julia"
-authors = "Dhruv Agarwal; contributors"
+title = "ColBERT.jl: Efficient, Late-Interaction Retrieval Systems in Julia"
+authors = "Chaudhary, Siddhant; contributors"
 year = 2024
 journal = "GitHub"
-url = "https://github.com/codetalker7/ColBERT.jl"
+url = "https://github.com/JuliaGenAI/ColBERT.jl"
+openAccess = true
+
+[[references]]
+title = "RAGTools.jl: Retrieval-Augmented Generation Tools in Julia"
+authors = "Simsa, Jan; contributors"
+year = 2025
+journal = "GitHub"
+url = "https://github.com/JuliaGenAI/RAGTools.jl"
 openAccess = true
 
 [[references]]
@@ -149,58 +165,153 @@ journal = "NAACL-HLT"
 url = "https://arxiv.org/abs/1810.04805"
 openAccess = true
 
+[[references]]
+title = "The Probabilistic Relevance Framework: BM25 and Beyond"
+authors = "Robertson, Stephen; Zaragoza, Hugo"
+year = 2009
+journal = "Foundations and Trends in Information Retrieval"
+doi = "10.1561/1500000019"
+openAccess = false
+
 [[bullets]]
 text = "Late Interaction"
-detail = "Contextualized Late Interaction over BERT (ColBERT) scores query-document pairs with per-token MaxSim, combining expressiveness of cross-encoders with the speed of bi-encoders"
+detail = "ColBERT encodes the query and each passage into one normalised vector per token; the score is the sum over query tokens of the best cosine match among the passage tokens (MaxSim)"
 
 [[bullets]]
 text = "Indexing"
-detail = "offline phase encodes the document collection into compressed token embeddings stored in a ColBERT index for fast retrieval"
+detail = "Offline phase: the passages are encoded with the colbertv2.0 checkpoint, the token vectors are clustered with k-means, and each vector is stored as its centroid plus a residual compressed to a few bits"
 
 [[bullets]]
 text = "Search"
-detail = "online phase encodes the query and retrieves top-k passages using approximate nearest-neighbour search over the index"
+detail = "Online phase: the query tokens probe their nearest centroids to collect candidate passages, which are decompressed and ranked by MaxSim"
 
-[[inputs]]
-id = "collection"
-label = "Collection"
-tooltip = "Variable name of a String vector holding the document collection, e.g. docs"
-default = "docs"
-
-[[inputs]]
-id = "index"
-label = "Index Name"
-tooltip = "Directory path or name for the ColBERT index, e.g. \"my_index\""
-default = "my_index"
+[[bullets]]
+text = "Evaluation"
+detail = "A built-in corpus of 24 passages on classical texts with 8 labelled queries; Recall@k and MRR@k compare ColBERT with an Okapi BM25 baseline and with BM25 candidates re-ranked by ColBERT"
 
 [[inputs]]
 id = "query"
 label = "Query"
-tooltip = "Search query string, e.g. \"Who wrote the Iliad?\""
-default = "query"
+tooltip = "A Julia string to search for. The labelled queries are listed in the code; any other text also works, but then no relevance labels are shown."
+default = "\"how should a state be governed\""
 
 [[inputs]]
 id = "k"
 label = "Top-k"
-tooltip = "Number of top passages to retrieve; typical values are 5–100"
+tooltip = "Number of passages to retrieve and the cut-off for Recall@k and MRR@k. Keep it small: the corpus has 24 passages, and search fails if fewer than k passages are candidates."
+default = "5"
+
+[[inputs]]
+id = "candidates"
+label = "BM25 Candidates"
+tooltip = "Number of BM25 candidates that ColBERT re-ranks in Re-rank BM25 and vs BM25. It must be at least Top-k."
 default = "10"
+
+[[inputs]]
+id = "checkpoint"
+label = "Checkpoint Folder"
+tooltip = "Local folder for the colbert-ir/colbertv2.0 checkpoint. ColBERT.jl loads checkpoints from disk only, so the files (about 440 MB) are downloaded here on the first run."
+default = "joinpath(homedir(), \"models\", \"colbertv2.0\")"
+
+[[inputs]]
+id = "seed"
+label = "Seed"
+tooltip = "Random seed for the passage sample and the k-means centroids used to build the index."
+default = "0"
 
 [[codeBranches]]
 model = "main"
 code = '''
-using ColBERT
+using ColBERT, RAGTools, Downloads, Random, Statistics  # late-interaction retrieval; BM25 baseline; checkpoint download; seeds; means
 
-config  = ColBERTConfig(use_gpu=false, checkpoint="colbert-ir/colbertv2.0")  # ColBERT configuration
+# Built-in labelled corpus: 24 passages on classical texts, 8 queries, and the relevant passages for each query
+docs = [
+    "Odysseus spends ten years sailing home from Troy to Ithaca, where his wife Penelope waits for him.",
+    "On the island of the Cyclops, Odysseus blinds Polyphemus and escapes by hiding his men under the sheep.",
+    "The sorceress Circe turns the crew into pigs, and the nymph Calypso keeps the wanderer on her island for seven years.",
+    "Back in Ithaca in disguise, the king strings his old bow and kills the suitors who courted his queen.",
+    "The Iliad opens with the rage of Achilles after Agamemnon takes the captive Briseis from him.",
+    "Hector, prince of Troy, says farewell to Andromache and their infant son before returning to battle.",
+    "After Patroclus is killed, Achilles returns to the fighting and slays Hector outside the walls of Troy.",
+    "Old King Priam crosses the Greek camp at night to ransom the body of his son from Achilles.",
+    "Confucius taught that the gentleman cultivates himself and acts with ren, a humane concern for others.",
+    "In the Analects, filial piety means serving parents with respect while they live and honouring them with ritual after death.",
+    "Confucius said that learning without thinking is wasted labour, and thinking without learning is dangerous.",
+    "A ruler who governs by virtue is like the pole star, which stays in its place while the other stars turn around it.",
+    "The Daodejing begins: the Way that can be spoken of is not the constant Way.",
+    "Laozi praised water, which is soft and yielding yet wears away the hardest stone.",
+    "The sage acts through non-action, wu wei, and so nothing is left undone.",
+    "Zhuangzi dreamed he was a butterfly, and on waking did not know if he was a man who had dreamed of a butterfly or a butterfly dreaming of a man.",
+    "In the allegory of the cave, prisoners chained since birth take the shadows on the wall for reality.",
+    "Plato argued that cities will not be free of evil until philosophers become kings or kings become philosophers.",
+    "The Republic divides the soul into reason, spirit and appetite, and calls justice the right order among them.",
+    "Socrates was tried in Athens for impiety and corrupting the young, and he chose to drink hemlock rather than flee.",
+    "Julius Caesar crossed the Rubicon with one legion in 49 BC, starting a civil war against Pompey and the Senate.",
+    "Caesar writes of himself in the third person and describes Gaul as divided into three parts.",
+    "At Alesia the Romans built two rings of walls and forced Vercingetorix to surrender.",
+    "On the Ides of March, 44 BC, a group of senators led by Brutus and Cassius stabbed Caesar to death.",
+]
+queries = [
+    "a hero who needs ten years to get back to his wife",
+    "the anger of the greatest Greek warrior at Troy",
+    "duties of children towards their mother and father",
+    "doing nothing yet achieving everything",
+    "people who mistake appearances for the truth",
+    "the murder of a Roman dictator",
+    "how should a state be governed",
+    "the death of a philosopher in Athens",
+]
+relevant = [[1, 2, 3, 4], [5, 7, 8], [10], [15], [17], [24], [12, 18], [20]]
 
-indexer = Indexer(config)  # create indexer
-index(indexer, {{collection}}, {{index}})  # encode and store the collection
-
-searcher        = Searcher({{index}}, config)  # load index for retrieval
-pids, _, scores = search(searcher, {{query}}, {{k}})  # retrieve top-{{k}} passage IDs and scores
-
-for (pid, sc) in zip(pids, scores)  # display results
-    println(sc, "  ", {{collection}}[pid])
+# ColBERT.jl loads a checkpoint from a local folder only: fetch the Hugging Face files once
+function fetch_checkpoint(dir, repo)
+    mkpath(dir)
+    for f in ["config.json", "tokenizer_config.json", "special_tokens_map.json", "tokenizer.json", "artifact.metadata", "pytorch_model.bin"]
+        isfile(joinpath(dir, f)) || Downloads.download("https://huggingface.co/" * repo * "/resolve/main/" * f, joinpath(dir, f))
+    end
+    dir
 end
+checkpoint = fetch_checkpoint({{checkpoint}}, "colbert-ir/colbertv2.0")  # about 440 MB on the first run
+
+# Index: encode the passages, cluster the token vectors and store compressed residuals
+Random.seed!({{seed}})  # the passage sample and the k-means centroids are random
+index_path = joinpath(mktempdir(), "index")  # a new folder each run: index skips a folder that already exists
+config = ColBERTConfig(; use_gpu = false, checkpoint, collection = docs, index_path, nprobe = 8)  # 8 centroids per query token
+encoder = Indexer(config)  # BERT model, projection layer, passage tokenizer and punctuation skiplist
+index(encoder)
+searcher = Searcher(index_path)  # loads the index and the query encoder
+
+# Exact MaxSim with the package encoders and no compression, for re-ranking and diagnostics
+encode_query(q) = ColBERT.encode_queries(searcher.bert, searcher.linear, searcher.tokenizer, [q], config.dim, config.index_bsize, config.query_token, config.attend_to_mask_tokens, searcher.skiplist)[:, :, 1]  # dim x query_maxlen
+encode_docs(texts) = ColBERT.encode_passages(encoder.bert, encoder.linear, encoder.tokenizer, texts, config.dim, config.index_bsize, config.doc_token_id, encoder.skiplist)  # token vectors and passage lengths
+function maxsim_scores(q, ids)  # ColBERT score of q against each docs[ids]
+    D, doclens = encode_docs(docs[ids])
+    ColBERT.maxsim(encode_query(q), D, collect(1:length(ids)), doclens)
+end
+word(id) = ColBERT.TextEncodeBase.lookup(searcher.tokenizer.vocab, Int(id))  # token id to WordPiece string
+
+# BM25 baseline: Okapi BM25 over stemmed tokens without stopwords
+stemmer = RAGTools.Snowball.Stemmer("english")
+stopwords = Set(RAGTools.STOPWORDS)
+bm25_terms(text) = RAGTools.preprocess_tokens(text, stemmer; stopwords)
+dtm = RAGTools.document_term_matrix(bm25_terms.(docs))
+bm25_rank(q) = sortperm(RAGTools.bm25(dtm, bm25_terms(q)); rev = true)  # every passage, best first
+
+# Evaluation at cut-off k
+colbert_rank(q, k) = first(search(searcher, q, k))
+recall_at(ranked, rel, k) = length(intersect(first(ranked, k), rel)) / length(rel)
+reciprocal_rank(ranked, rel, k) = (r = findfirst(in(rel), first(ranked, k)); r === nothing ? 0.0 : 1 / r)
+
+k = {{k}}
+q = {{query}}
+j = findfirst(==(q), queries)
+rel = j === nothing ? Int[] : relevant[j]  # labels exist only for the built-in queries
+pids, scores = search(searcher, q, k)
+println("Top ", k, " for: ", q)
+for (r, (p, s)) in enumerate(zip(pids, scores))
+    println(r, ". [", round(s; digits = 2), "] ", p in rel ? "* " : "  ", p, ": ", docs[p])
+end
+isempty(rel) || println("* relevant.  Recall@", k, " = ", round(recall_at(pids, rel, k); digits = 2), ",  RR@", k, " = ", round(reciprocal_rank(pids, rel, k); digits = 2))
 '''
 
 [[actionGroups]]
@@ -208,33 +319,38 @@ id = "visualise"
 label = "Visualise"
 
 [[actionGroups.actions]]
-id = "score-distribution"
-label = "Score Distribution"
-desc = "Histogram of retrieval scores for a query over the corpus"
+id = "score-heatmap"
+label = "Score Heatmap"
+desc = "Exact ColBERT score of every labelled query against every passage, with the relevant passages circled"
 code = '''
-using ColBERT, Plots
-
-config   = ColBERTConfig(use_gpu=false)  # ColBERT config
-searcher = Searcher({{index}}, config)  # load index
-
-_, _, scores = search(searcher, {{query}}, length({{collection}}))  # score all documents
-histogram(scores, xlabel="ColBERT score", title="Score distribution")  # score histogram
+using CairoMakie
+S = reduce(hcat, [maxsim_scores(qq, collect(eachindex(docs))) for qq in queries])  # passages x queries
+fig = Figure(size = (1000, 450))
+ax = Axis(fig[1, 1]; xlabel = "Passage", yticks = (1:length(queries), queries), xticks = 1:length(docs), title = "ColBERT score: sum over query tokens of the best passage-token match")
+hm = heatmap!(ax, 1:length(docs), 1:length(queries), S)
+xs = [p for rr in relevant for p in rr]
+ys = [i for (i, rr) in enumerate(relevant) for _ in rr]
+scatter!(ax, xs, ys; color = :transparent, strokecolor = :white, strokewidth = 2, markersize = 14)  # labelled relevant passages
+Colorbar(fig[1, 2], hm)
+display(fig)
+hits = count(i -> argmax(S[:, i]) in relevant[i], eachindex(queries))
+println("The best-scoring passage is relevant for ", hits, " of ", length(queries), " queries")
 '''
 
 [[actionGroups.actions]]
 id = "result-preview"
 label = "Result Preview"
-desc = "Print the top-k retrieved passages with their scores"
+desc = "Top-k passages for the query from the ColBERT index and from BM25, side by side, with relevant passages starred"
 code = '''
-using ColBERT
-
-config          = ColBERTConfig(use_gpu=false)  # ColBERT config
-searcher        = Searcher({{index}}, config)  # load index
-pids, _, scores = search(searcher, {{query}}, {{k}})  # retrieve top-{{k}}
-
-for (rank, (pid, sc)) in enumerate(zip(pids, scores))
-    println(rank, ". [", round(sc; digits=3), "] ", {{collection}}[pid])
+bm = RAGTools.bm25(dtm, bm25_terms(q))
+bpids = first(sortperm(bm; rev = true), k)
+star(p) = p in rel ? "*" : " "
+println(rpad("Rank", 6), rpad("ColBERT (score, passage)", 30), "BM25 (score, passage)")
+for r in 1:k
+    println(rpad(r, 6), rpad(string(star(pids[r]), round(scores[r]; digits = 2), "  #", pids[r]), 30), star(bpids[r]), round(bm[bpids[r]]; digits = 2), "  #", bpids[r])
 end
+count(iszero, bm[bpids]) > 0 && println("BM25 scores of 0 share no stemmed term with the query; their order is arbitrary")
+isempty(rel) || println("* relevant. Passages: ", join(["#" * string(p) * " " * docs[p] for p in rel], "  "))
 '''
 
 [[actionGroups]]
@@ -242,37 +358,32 @@ id = "diagnose"
 label = "Diagnose"
 
 [[actionGroups.actions]]
-id = "recall-at-k"
-label = "Recall@k"
-desc = "Fraction of relevant documents found in top-k results"
+id = "recall-mrr"
+label = "Recall and MRR"
+desc = "Recall@k and reciprocal rank of the ColBERT index for every labelled query, with their means"
 code = '''
-using ColBERT
-
-config   = ColBERTConfig(use_gpu=false)  # ColBERT config
-searcher = Searcher({{index}}, config)  # load index
-
-recall   = mean([length(intersect(search(searcher, q, {{k}})[1], relevant[i])) / length(relevant[i]) for (i, q) in enumerate(queries)])  # mean Recall@{{k}} over all queries
-println("Recall@{{k}}: ", round(recall; digits=3))  # print result
+ranked = [colbert_rank(qq, k) for qq in queries]
+recall = [recall_at(r, rr, k) for (r, rr) in zip(ranked, relevant)]
+rrank = [reciprocal_rank(r, rr, k) for (r, rr) in zip(ranked, relevant)]
+for (qq, a, b) in zip(queries, recall, rrank)
+    println(rpad(qq, 54), "Recall@", k, " = ", round(a; digits = 2), "   RR@", k, " = ", round(b; digits = 2))
+end
+println("Mean Recall@", k, " = ", round(mean(recall); digits = 3), ",  MRR@", k, " = ", round(mean(rrank); digits = 3))
+worst = argmin(rrank .+ recall)
+println("Weakest query: ", queries[worst], " (top ", k, ": ", ranked[worst], ", relevant: ", relevant[worst], ")")
 '''
 
 [[actionGroups.actions]]
-id = "mrr"
-label = "Mean Reciprocal Rank"
-desc = "Average reciprocal rank of the first relevant result"
+id = "compression-check"
+label = "Compression Check"
+desc = "Compare the index scores, built from centroids and compressed residuals, with exact MaxSim on the full token vectors"
 code = '''
-using ColBERT
-
-config   = ColBERTConfig(use_gpu=false)  # ColBERT config
-searcher = Searcher({{index}}, config)  # load index
-
-mrr = mean([  # MRR over all queries
-    begin
-        pids = search(searcher, q, {{k}})[1]  # retrieve top-{{k}} passage IDs
-        idx  = findfirst(pid -> pid in relevant[i], pids)  # rank of first relevant result
-        isnothing(idx) ? 0.0 : 1.0 / idx
-    end
-for (i, q) in enumerate(queries)])
-println("MRR@{{k}}: ", round(mrr; digits=3))  # print result
+exact = maxsim_scores(q, pids)
+for (p, a, e) in zip(pids, scores, exact)
+    println("#", rpad(p, 4), "index ", rpad(round(a; digits = 3), 8), "exact ", rpad(round(e; digits = 3), 8), "gap ", round(a - e; digits = 3))
+end
+k > 1 && println("Correlation ", round(cor(scores, exact); digits = 3), "; same order: ", sortperm(exact; rev = true) == 1:k)
+println("The index stores each token vector as one of ", size(searcher.centroids, 2), " centroids plus a ", config.nbits, "-bit residual per dimension")
 '''
 
 [[actionGroups]]
@@ -282,31 +393,36 @@ label = "Predict"
 [[actionGroups.actions]]
 id = "batch-search"
 label = "Batch Search"
-desc = "Run multiple queries against the index in one call"
+desc = "Search the index for every labelled query and collect the results in a column table: query, rank, passage, score and relevance"
 code = '''
-using ColBERT
-
-config   = ColBERTConfig(use_gpu=false)  # ColBERT config
-searcher = Searcher({{index}}, config)  # load index
-
-results  = [search(searcher, q, {{k}}) for q in queries]  # retrieve for each query
-all_pids = [r[1] for r in results]  # top-{{k}} passage IDs per query
-all_scrs = [r[3] for r in results]  # scores per query
+results = (query = String[], rank = Int[], pid = Int[], score = Float32[], relevant = Bool[])  # a Tables.jl column table
+for (qq, rr) in zip(queries, relevant)
+    p, s = search(searcher, qq, k)
+    append!(results.query, fill(qq, length(p)))
+    append!(results.rank, 1:length(p))
+    append!(results.pid, p)
+    append!(results.score, s)
+    append!(results.relevant, in.(p, Ref(rr)))
+end
+println(length(results.pid), " results for ", length(queries), " queries; ", count(results.relevant), " are relevant")
+println("Relevant hits at rank 1: ", count(results.relevant .& (results.rank .== 1)), " of ", length(queries))
 '''
 
 [[actionGroups.actions]]
 id = "rerank"
-label = "Re-rank Results"
-desc = "Use ColBERT scores to re-rank a candidate set from BM25"
+label = "Re-rank BM25"
+desc = "Two-stage retrieval for the query: take the BM25 top candidates, score each with exact ColBERT MaxSim, and sort by that score"
 code = '''
-using ColBERT
-
-config   = ColBERTConfig(use_gpu=false)  # ColBERT config
-searcher = Searcher({{index}}, config)  # load index
-
-candidates      = bm25_retrieve({{query}}, {{collection}}, 100)  # first-stage BM25 retrieval
-_, _, scores    = search(searcher, {{query}}, {{k}})  # ColBERT scores for candidates
-reranked        = candidates[sortperm(scores, rev=true)]  # re-ranked by ColBERT score
+cand = first(bm25_rank(q), {{candidates}})  # first stage: BM25 over the whole corpus
+s = maxsim_scores(q, cand)  # second stage: ColBERT score of each candidate
+order = sortperm(s; rev = true)
+println("BM25 order:     ", cand)
+println("ColBERT order:  ", cand[order])
+for (r, i) in enumerate(first(order, k))
+    println(r, ". [", round(s[i]; digits = 2), "] ", cand[i] in rel ? "* " : "  ", cand[i], ": ", docs[cand[i]])
+end
+missed = setdiff(rel, cand)
+isempty(missed) || println("Relevant passages outside the BM25 candidates, which re-ranking cannot recover: ", missed)
 '''
 
 [[actionGroups]]
@@ -316,34 +432,43 @@ label = "Compare"
 [[actionGroups.actions]]
 id = "vs-bm25"
 label = "vs BM25"
-desc = "Compare ColBERT and BM25 Recall@k on the same query set"
+desc = "Mean Recall@k and MRR@k over the labelled queries for BM25, the ColBERT index, and BM25 candidates re-ranked by ColBERT"
 code = '''
-using ColBERT
-
-config   = ColBERTConfig(use_gpu=false)  # ColBERT config
-searcher = Searcher({{index}}, config)  # load ColBERT index
-
-r_colbert = mean([length(intersect(search(searcher, q, {{k}})[1], rel)) / length(rel) for (q, rel) in zip(queries, relevant)])  # ColBERT Recall@{{k}}
-r_bm25    = mean([length(intersect(bm25_retrieve(q, {{collection}}, {{k}}), rel)) / length(rel) for (q, rel) in zip(queries, relevant)])  # BM25 Recall@{{k}}
-println("ColBERT: ", r_colbert, "  BM25: ", r_bm25)  # print comparison
+using CairoMakie
+function bm25_then_colbert(qq)
+    cand = first(bm25_rank(qq), {{candidates}})
+    cand[sortperm(maxsim_scores(qq, cand); rev = true)]
+end
+systems = ["BM25" => bm25_rank, "ColBERT" => qq -> colbert_rank(qq, k), "BM25 + ColBERT" => bm25_then_colbert]
+ranked = [[f(qq) for qq in queries] for (_, f) in systems]
+R = [mean(recall_at(r, rr, k) for (r, rr) in zip(rs, relevant)) for rs in ranked]
+M = [mean(reciprocal_rank(r, rr, k) for (r, rr) in zip(rs, relevant)) for rs in ranked]
+for (i, (name, _)) in enumerate(systems)
+    println(rpad(name, 16), "Recall@", k, " = ", round(R[i]; digits = 3), "   MRR@", k, " = ", round(M[i]; digits = 3))
+end
+colors = [:steelblue, :darkorange]
+fig = Figure(size = (750, 400))
+ax = Axis(fig[1, 1]; xticks = (1:3, first.(systems)), ylabel = "Mean over queries", title = "Retrieval quality at k = $k")
+barplot!(ax, [1, 2, 3, 1, 2, 3], [R; M]; dodge = [1, 1, 1, 2, 2, 2], color = colors[[1, 1, 1, 2, 2, 2]])
+Legend(fig[1, 2], [PolyElement(color = c) for c in colors], ["Recall@$k", "MRR@$k"])
+display(fig)
 '''
 
 [[actionGroups.actions]]
 id = "compare-checkpoints"
 label = "Compare Checkpoints"
-desc = "Evaluate different ColBERT checkpoint versions"
+desc = "Build an index with colbertv1.9 and with colbertv2.0 and compare Recall@k and MRR@k; colbertv1.9 is a second download of about 440 MB"
 code = '''
-using ColBERT
-
-checkpoints = ["colbert-ir/colbertv1.9", "colbert-ir/colbertv2.0"]  # candidate checkpoints
-
-for ckpt in checkpoints
-    cfg      = ColBERTConfig(use_gpu=false, checkpoint=ckpt)  # config for this checkpoint
-    indexer  = Indexer(cfg)  # create indexer
-    index(indexer, {{collection}}, "tmp_" * ckpt)  # build index
-    searcher = Searcher("tmp_" * ckpt, cfg)  # load index
-    recall   = mean([length(intersect(search(searcher, q, {{k}})[1], rel)) / length(rel) for (q, rel) in zip(queries, relevant)])  # Recall@{{k}}
-    println(ckpt, "  Recall@{{k}}: ", round(recall; digits=3))
+for repo in ["colbert-ir/colbertv1.9", "colbert-ir/colbertv2.0"]
+    ckpt = endswith(repo, "2.0") ? checkpoint : fetch_checkpoint(joinpath(dirname(checkpoint), "colbertv1.9"), repo)
+    path = joinpath(mktempdir(), "index")
+    Random.seed!({{seed}})
+    index(Indexer(ColBERTConfig(; use_gpu = false, checkpoint = ckpt, collection = docs, index_path = path, nprobe = 8)))
+    s = Searcher(path)
+    ranked = [first(search(s, qq, k)) for qq in queries]
+    R = mean(recall_at(r, rr, k) for (r, rr) in zip(ranked, relevant))
+    M = mean(reciprocal_rank(r, rr, k) for (r, rr) in zip(ranked, relevant))
+    println(rpad(repo, 24), "Recall@", k, " = ", round(R; digits = 3), "   MRR@", k, " = ", round(M; digits = 3))
 end
 '''
 
@@ -354,34 +479,44 @@ label = "Interpret"
 [[actionGroups.actions]]
 id = "maxsim-breakdown"
 label = "MaxSim Breakdown"
-desc = "Per-query-token MaxSim contribution to the final score"
+desc = "For the top passage of the query, how much each query token adds to the score and which passage token it matches"
 code = '''
-using ColBERT
-
-config          = ColBERTConfig(use_gpu=false)  # ColBERT config
-searcher        = Searcher({{index}}, config)  # load index
-
-pids, _, scores = search(searcher, {{query}}, 1)  # retrieve top-1 passage
-q_embs          = encode_query(searcher, {{query}})  # per-token query embeddings
-d_embs          = encode_doc(searcher, pids[1])  # per-token doc embeddings for top result
-
-sim_matrix      = q_embs * d_embs'  # token-level similarity matrix (nq x nd)
-maxsim_per_qtok = maximum(sim_matrix, dims=2)  # MaxSim contribution per query token
-println("Token contributions: ", maxsim_per_qtok)  # print per-token scores
+using CairoMakie
+p = first(pids)
+Q = encode_query(q)
+D, _ = encode_docs([docs[p]])
+qtok = word.(vec(first(ColBERT.tensorize_queries(config.query_token, config.attend_to_mask_tokens, searcher.tokenizer, [q]))))
+dtok = word.(filter(!in(encoder.skiplist), vec(first(ColBERT.tensorize_docs(config.doc_token_id, encoder.tokenizer, [docs[p]])))))  # tokens that keep a vector
+S = transpose(Q) * D  # cosine similarity of each query token with each passage token
+best = vec(maximum(S; dims = 2))
+matched = [dtok[argmax(S[i, :])] for i in axes(S, 1)]
+println("Top passage #", p, ": ", docs[p])
+println("Score ", round(sum(best); digits = 2), " = sum of the best match of each of ", length(best), " query tokens")
+for i in sortperm(best; rev = true)[1:min(12, end)]
+    println(rpad(qtok[i], 14), "-> ", rpad(matched[i], 14), round(best[i]; digits = 3))
+end
+fig = Figure(size = (900, 400))
+ax = Axis(fig[1, 1]; xticks = (1:length(best), qtok), xticklabelrotation = pi / 3, ylabel = "MaxSim", title = "Contribution of each query token")
+barplot!(ax, 1:length(best), best)
+display(fig)
 '''
 
 [[actionGroups.actions]]
-id = "query-expansion"
+id = "query-analysis"
 label = "Query Analysis"
-desc = "Inspect tokenised query and punctuation mask"
+desc = "Show the query tokens and the [MASK] padding that ColBERT adds, and how the ranking changes without the [MASK] tokens"
 code = '''
-using ColBERT
-
-config   = ColBERTConfig(use_gpu=false)  # ColBERT config
-searcher = Searcher({{index}}, config)  # load index
-
-tokens   = tokenize_query(searcher, {{query}})  # subword tokens including [Q] marker
-q_embs   = encode_query(searcher, {{query}})  # token embeddings (dim x n_tokens)
-println("Tokens: ", tokens)  # print tokenised query
-println("Embedding shape: ", size(q_embs))  # show embedding dimensions
+qtok = word.(vec(first(ColBERT.tensorize_queries(config.query_token, config.attend_to_mask_tokens, searcher.tokenizer, [q]))))
+masked = qtok .== "[MASK]"
+println("Tokens: ", join(qtok[.!masked], " "), "  + ", count(masked), " [MASK] to reach query_maxlen = ", config.query_maxlen)
+Q = encode_query(q)
+D, doclens = encode_docs(docs)
+ids = collect(eachindex(docs))
+full = ColBERT.maxsim(Q, D, ids, doclens)
+plain = ColBERT.maxsim(Q[:, .!masked], D, ids, doclens)
+top_full, top_plain = first(sortperm(full; rev = true), k), first(sortperm(plain; rev = true), k)
+println("Top ", k, " with [MASK] tokens:    ", top_full)
+println("Top ", k, " without [MASK] tokens: ", top_plain)
+println("Share of the top score from [MASK] tokens: ", round(1 - plain[top_full[1]] / full[top_full[1]]; digits = 2))
+isempty(rel) || println("Recall@", k, ": ", round(recall_at(top_full, rel, k); digits = 2), " with, ", round(recall_at(top_plain, rel, k); digits = 2), " without")
 '''
