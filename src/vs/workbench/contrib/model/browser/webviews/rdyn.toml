@@ -374,7 +374,7 @@ using Rotations, Plots  # visualise rotation by transforming standard basis vect
 
 R_mat  = RotMatrix{3}({{R}})  # rotation matrix
 basis  = [SVector(1,0,0), SVector(0,1,0), SVector(0,0,1)]  # standard basis in source frame
-rotated = R_mat .* basis  # rotated basis vectors
+rotated = [R_mat * b for b in basis]  # rotated basis vectors (R_mat .* basis would broadcast the matrix entry by entry)
 quiver([0,0,0], [0,0,0], [0,0,0], quiver=(getindex.(rotated,1), getindex.(rotated,2), getindex.(rotated,3)))  # plot rotated frame axes
 '''
 

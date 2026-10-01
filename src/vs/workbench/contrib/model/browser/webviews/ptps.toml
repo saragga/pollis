@@ -370,9 +370,9 @@ using PointProcesses, GaussianProcesses
 T   = {{T}}  # simulation horizon
 mu0 = {{mu0}}  # GP prior mean (log-intensity)
 
-{{?kernel=se}} kernel = SEIso(log({{gp-var}}), log({{gp-ls}}))  # squared-exponential kernel
-{{?kernel=matern32}} kernel = Mat32Iso(log({{gp-var}}), log({{gp-ls}}))  # Matern 3/2 kernel
-{{?kernel=matern52}} kernel = Mat52Iso(log({{gp-var}}), log({{gp-ls}}))  # Matern 5/2 kernel
+{{?kernel=se}} kernel = SEIso(log({{gp-ls}}), log({{gp-var}}) / 2)  # squared-exponential kernel: GaussianProcesses takes log(l), then log(sigma)
+{{?kernel=matern32}} kernel = Mat32Iso(log({{gp-ls}}), log({{gp-var}}) / 2)  # Matern 3/2 kernel: GaussianProcesses takes log(l), then log(sigma)
+{{?kernel=matern52}} kernel = Mat52Iso(log({{gp-ls}}), log({{gp-var}}) / 2)  # Matern 5/2 kernel: GaussianProcesses takes log(l), then log(sigma)
 cox    = CoxProcess(kernel; mu = {{mu0}})  # log-Gaussian Cox process
 
 events = rand(cox, T)  # sample GP intensity, then simulate events

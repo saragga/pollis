@@ -412,7 +412,7 @@ end
 
 {{?cell=OriginalLSTM|PeepholeLSTM|MGU|LiGRU|MinimalRNN|IndRNN|RAN|coRNN|FastGRNN}}params    = Flux.params(rnn, readout)
 opt_state = Flux.setup(Adam(1f-3), (rnn, readout))
-loss({{xvar}}, {{yvar}}) = Flux.mse(predict({{xvar}}), {{yvar}})
+loss(m, {{xvar}}, {{yvar}}) = Flux.mse(m[2](m[1]({{xvar}})[:, end]), {{yvar}})  # explicit form: train! calls loss(model, x, y) with model = (rnn, readout)
 {{?cell=OriginalLSTM|PeepholeLSTM|MGU|LiGRU|MinimalRNN|IndRNN|RAN|coRNN|FastGRNN}}
 {{?cell=OriginalLSTM|PeepholeLSTM|MGU|LiGRU|MinimalRNN|IndRNN|RAN|coRNN|FastGRNN}}Flux.train!(loss, (rnn, readout), data, opt_state)  # one epoch over (X, y) pairs
 '''
@@ -490,7 +490,7 @@ code = '''
 using Plots
 {{?model=flux}}H = rnn({{xvar}})  # (hidden_size, T)
 {{?model=lux}}rnn_seq = Recurrence({{cell}}Cell(input_size => hidden_size); return_sequence=true)
-{{?model=lux}}ps_seq, st_seq = Lux.setup(rng, rnn_seq)
+{{?model=lux}}ps_seq, st_seq = ps.layer_1, st.layer_1  # the model's recurrent parameters, not a fresh random draw
 {{?model=lux}}H_steps, _ = rnn_seq({{xvar}}, ps_seq, st_seq)
 {{?model=lux}}H = reduce(hcat, [h[:, 1] for h in H_steps])  # (hidden_size, T)
 heatmap(H, xlabel="time step", ylabel="hidden unit", title="Hidden state")

@@ -402,9 +402,9 @@ using PointProcesses, GaussianProcesses
 T   = {{T}}  # observation window [0, T]
 mu0 = {{mu0}}  # GP prior mean for log-intensity
 
-{{?kernel=se}} kernel = SEIso(log({{gp-var}}), log({{gp-ls}}))  # squared-exponential kernel: log(sigma^2), log(l)
-{{?kernel=matern32}} kernel = Mat32Iso(log({{gp-var}}), log({{gp-ls}}))  # Matern 3/2 kernel: log(sigma^2), log(l)
-{{?kernel=matern52}} kernel = Mat52Iso(log({{gp-var}}), log({{gp-ls}}))  # Matern 5/2 kernel: log(sigma^2), log(l)
+{{?kernel=se}} kernel = SEIso(log({{gp-ls}}), log({{gp-var}}) / 2)  # squared-exponential kernel: GaussianProcesses takes log(l), then log(sigma)
+{{?kernel=matern32}} kernel = Mat32Iso(log({{gp-ls}}), log({{gp-var}}) / 2)  # Matern 3/2 kernel: GaussianProcesses takes log(l), then log(sigma)
+{{?kernel=matern52}} kernel = Mat52Iso(log({{gp-ls}}), log({{gp-var}}) / 2)  # Matern 5/2 kernel: GaussianProcesses takes log(l), then log(sigma)
 cox    = CoxProcess(kernel; mu = {{mu0}})  # log-Gaussian Cox process
 
 result = fit(cox, {{data}}, T)  # Laplace approximation to GP posterior
@@ -528,7 +528,8 @@ id = "branching-ratio"
 label = "Branching Ratio"
 desc = "alpha/beta stationarity check (Hawkes)"
 code = '''
-alpha = {{alpha}}; beta = {{beta}}  # fitted parameters
+{{?model=hawkes}}mu, alpha, beta = result.mu, result.alpha, result.beta  # fitted parameters
+{{?model!=hawkes}}mu = {{mu}}; alpha = {{alpha}}; beta = {{beta}}  # input values: this check is for the Hawkes model
 rho   = alpha / beta  # branching ratio
 println("rho = ", rho)  # must be < 1 for stationarity
 println("Mean intensity = ", mu / (1 - rho))  # stationary mean
@@ -617,7 +618,8 @@ id = "branching-interpret"
 label = "Branching Structure"
 desc = "Decompose events into immigrants and offspring"
 code = '''
-mu = {{mu}}; alpha = {{alpha}}; beta = {{beta}}  # fitted parameters
+{{?model=hawkes}}mu, alpha, beta = result.mu, result.alpha, result.beta  # fitted parameters
+{{?model!=hawkes}}mu = {{mu}}; alpha = {{alpha}}; beta = {{beta}}  # input values: this decomposition is for the Hawkes model
 rho      = alpha / beta  # branching ratio = avg offspring per event
 mean_lam = mu / (1 - rho)  # stationary mean intensity
 imm_frac = mu / mean_lam  # fraction of exogenous events
