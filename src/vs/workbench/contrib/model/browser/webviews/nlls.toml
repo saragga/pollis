@@ -181,7 +181,7 @@ context = "Small-residual problems with a good starting point"
 purpose = "Linearise the residuals and solve the normal equations J'J d = -J'r at each step; fast near the solution, may diverge far from it"
 
 [[inputs]]
-id = "model"
+id = "fmodel"
 label = "Model f(t, p)"
 tooltip = "Julia expression for the model prediction at a single input t with parameter vector p. The residuals are y - f(t, p). Example: p[1] * exp(-p[2] * t)."
 default = "p[1] * exp(-p[2] * t)"
@@ -237,7 +237,7 @@ model = "lm"
 code = '''
 using ForwardDiff, LinearAlgebra, Statistics
 
-f(t, p) = {{model}}  # model prediction at one input
+f(t, p) = {{fmodel}}  # model prediction at one input
 t = {{tdata}}  # inputs
 y = {{ydata}}  # observations
 p0 = {{p0}}  # initial parameters
@@ -262,7 +262,7 @@ model = "dogleg"
 code = '''
 using ForwardDiff, LinearAlgebra, Statistics
 
-f(t, p) = {{model}}  # model prediction at one input
+f(t, p) = {{fmodel}}  # model prediction at one input
 t = {{tdata}}  # inputs
 y = {{ydata}}  # observations
 p0 = {{p0}}  # initial parameters
@@ -287,7 +287,7 @@ model = "gn"
 code = '''
 using ForwardDiff, LinearAlgebra, Statistics
 
-f(t, p) = {{model}}  # model prediction at one input
+f(t, p) = {{fmodel}}  # model prediction at one input
 t = {{tdata}}  # inputs
 y = {{ydata}}  # observations
 p0 = {{p0}}  # initial parameters

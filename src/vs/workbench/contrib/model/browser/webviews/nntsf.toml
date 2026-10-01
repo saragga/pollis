@@ -446,8 +446,9 @@ code = '''
 using Plots  # plotting
 
 res = vec(model(input)) .- vec(transpose(target))  # prediction errors
-plot(res; title="Residuals", legend=false)  # should look like white noise
-histogram(res; title="Residual distribution")  # check for skew or heavy tails
+p1 = plot(res; title="Residuals", legend=false)  # 6-step-ahead errors from overlapping windows are autocorrelated up to lag 5 even for an optimal forecast: look for trends and level shifts, not white noise
+p2 = histogram(res; title="Residual distribution", legend=false)  # check for skew or heavy tails
+plot(p1, p2, layout=(2, 1))  # show both
 '''
 
 [[actionGroups.actions]]

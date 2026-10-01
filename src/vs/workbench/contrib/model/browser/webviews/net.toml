@@ -197,7 +197,7 @@ default = "100"
 [[inputs]]
 id = "k"
 label = "k (edges / neighbours)"
-tooltip = "For Scale-Free: edges added per new node (controls hub formation). For Small-World: nearest neighbours in the initial ring lattice before rewiring."
+tooltip = "For Scale-Free: edges added per new node (controls hub formation; mean degree about 2k). For Small-World: neighbours on each side in the initial ring lattice before rewiring (mean degree 2k, as for Scale-Free)."
 default = "3"
 
 [[inputs]]
@@ -217,7 +217,7 @@ n_nodes  = nv(g)  # vertex count
 n_edges  = ne(g)  # edge count
 deg      = degree(g)  # degree sequence
 clust    = global_clustering_coefficient(g)  # triangle density
-apl      = mean(gdistances(g, 1))  # avg path length from node 1
+apl      = mean(d for s in vertices(g) for d in gdistances(g, s) if 0 < d < typemax(Int))  # mean shortest path over all reachable pairs
 
 println("Nodes:       ", n_nodes)  # vertex count
 println("Edges:       ", n_edges)  # edge count
@@ -249,13 +249,13 @@ model = "smallworld"
 code = '''
 using Graphs, Statistics
 
-g      = watts_strogatz({{N}}, {{k}}, {{p}})  # ring lattice rewired with prob {{p}}
-g_rand = erdos_renyi({{N}}, {{k}} / {{N}})  # random baseline for comparison
+g      = watts_strogatz({{N}}, 2 * {{k}}, {{p}})  # ring lattice (k neighbours per side, mean degree 2k) rewired with prob {{p}}
+g_rand = erdos_renyi({{N}}, 2 * {{k}} / ({{N}} - 1))  # random baseline for comparison
 
 clust      = global_clustering_coefficient(g)  # WS clustering
 clust_rand = global_clustering_coefficient(g_rand)  # random clustering
-apl        = mean(gdistances(g, 1))  # WS avg path length
-apl_rand   = mean(gdistances(g_rand, 1))  # random avg path length
+apl        = mean(d for s in vertices(g) for d in gdistances(g, s) if 0 < d < typemax(Int))  # WS avg path length
+apl_rand   = mean(d for s in vertices(g_rand) for d in gdistances(g_rand, s) if 0 < d < typemax(Int))  # random avg path length
 sigma      = (clust / clust_rand) / (apl / apl_rand)  # small-world index
 
 println("Clustering (WS):   ", round(clust; digits=4))  # WS clustering
@@ -302,8 +302,9 @@ desc = "Plot the degree histogram to visualise hub formation and power-law behav
 code = '''
 using Graphs, GLMakie
 
-using MetaGraphsNext
-g = MetaGraph(Graph(), Label=Int, VertexData=Float64, EdgeData=Float64)  # attributed graph
+{{?model=erdos|meta}}g = erdos_renyi({{N}}, {{p}})  # Poisson-like degrees: no hubs
+{{?model=scalefree}}g = barabasi_albert({{N}}, {{k}})  # heavy right tail: hubs
+{{?model=smallworld}}g = watts_strogatz({{N}}, 2 * {{k}}, {{p}})  # degrees concentrated near 2k
 deg = degree(g)  # degree sequence
 
 fig, ax, _ = hist(deg, bins=20, color=:steelblue, label="Degree")  # degree histogram
@@ -391,7 +392,7 @@ id = "degree-distribution-fit"
 label = "Degree Distribution Fit"
 desc = "Fit a power-law exponent to the scale-free degree distribution"
 code = '''
-using Graphs, StatsBase
+using Graphs, StatsBase, Statistics
 
 g   = barabasi_albert({{N}}, {{k}})  # scale-free graph
 deg = degree(g)  # degree sequence
@@ -418,13 +419,13 @@ desc = "Compare clustering and path length across the three graph models at the 
 code = '''
 using Graphs, Statistics
 
-g_er = erdos_renyi({{N}}, {{p}})  # Erdos-Renyi
+g_er = erdos_renyi({{N}}, 2 * {{k}} / ({{N}} - 1))  # Erdos-Renyi with the same mean degree 2k
 g_ba = barabasi_albert({{N}}, {{k}})  # Barabasi-Albert
-g_ws = watts_strogatz({{N}}, {{k}}, {{p}})  # Watts-Strogatz
+g_ws = watts_strogatz({{N}}, 2 * {{k}}, {{p}})  # Watts-Strogatz
 
 for (label, g) in [("ER", g_er), ("BA", g_ba), ("WS", g_ws)]  # compare all three
     clust = global_clustering_coefficient(g)
-    apl   = mean(gdistances(g, 1))
+    apl   = mean(d for s in vertices(g) for d in gdistances(g, s) if 0 < d < typemax(Int))
     println(label, "  clustering=", round(clust; digits=4), "  apl=", round(apl; digits=2))
 end
 '''
@@ -436,9 +437,9 @@ desc = "Measure degree heterogeneity across topologies"
 code = '''
 using Graphs, Statistics
 
-g_er = erdos_renyi({{N}}, {{p}})  # Erdos-Renyi
+g_er = erdos_renyi({{N}}, 2 * {{k}} / ({{N}} - 1))  # Erdos-Renyi with the same mean degree 2k
 g_ba = barabasi_albert({{N}}, {{k}})  # Barabasi-Albert
-g_ws = watts_strogatz({{N}}, {{k}}, {{p}})  # Watts-Strogatz
+g_ws = watts_strogatz({{N}}, 2 * {{k}}, {{p}})  # Watts-Strogatz
 
 for (label, g) in [("ER", g_er), ("BA", g_ba), ("WS", g_ws)]  # degree heterogeneity
     deg = degree(g)
@@ -457,13 +458,13 @@ desc = "Compute the sigma index: sigma > 1 indicates small-world structure"
 code = '''
 using Graphs, Statistics
 
-g      = watts_strogatz({{N}}, {{k}}, {{p}})  # small-world graph
-g_rand = erdos_renyi({{N}}, {{k}} / {{N}})  # random baseline
+g      = watts_strogatz({{N}}, 2 * {{k}}, {{p}})  # small-world graph
+g_rand = erdos_renyi({{N}}, 2 * {{k}} / ({{N}} - 1))  # random baseline
 
 clust      = global_clustering_coefficient(g)  # WS clustering
 clust_rand = global_clustering_coefficient(g_rand)  # random clustering
-apl        = mean(gdistances(g, 1))  # WS avg path length
-apl_rand   = mean(gdistances(g_rand, 1))  # random avg path length
+apl        = mean(d for s in vertices(g) for d in gdistances(g, s) if 0 < d < typemax(Int))  # WS avg path length
+apl_rand   = mean(d for s in vertices(g_rand) for d in gdistances(g_rand, s) if 0 < d < typemax(Int))  # random avg path length
 sigma      = (clust / clust_rand) / (apl / apl_rand)  # small-world index
 
 println("Small-world index: ", round(sigma; digits=2), "  (> 1 = small-world)")  # sigma interpretation
@@ -480,9 +481,9 @@ g    = barabasi_albert({{N}}, {{k}})  # scale-free graph
 bc   = betweenness_centrality(g)  # betweenness centrality
 hub  = argmax(bc)  # top hub node
 
-apl_before = mean(gdistances(g, 1))  # avg path length before removal
+apl_before = mean(d for s in vertices(g) for d in gdistances(g, s) if 0 < d < typemax(Int))  # avg path length before removal
 rem_vertex!(g, hub)  # remove the hub
-apl_after  = mean(gdistances(g, 1))  # avg path length after removal
+apl_after  = mean(d for s in vertices(g) for d in gdistances(g, s) if 0 < d < typemax(Int))  # avg path length after removal
 
 println("APL before hub removal: ", round(apl_before; digits=2))  # baseline
 println("APL after hub removal:  ", round(apl_after;  digits=2))  # degraded

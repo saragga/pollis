@@ -542,5 +542,9 @@ using LinearAlgebra
 t = range(0f0, 2T; length=400)
 dist = norm.(eachcol(predict(p_opt, u0, t) .- predict(p_opt, u0 .+ 1f-4, t)))
 lyap = (log(dist[end]) - log(dist[1])) / (t[end] - t[1])  # growth rate of the separation
-(lyapunov = lyap, dynamics = lyap > 0 ? "chaotic or unstable" : "stable")
+{{?model!=augmented}}state_dim = n  # dimension of the ODE that is integrated
+{{?model=augmented}}state_dim = n + aug  # the augmented ODE is integrated in n + aug dimensions
+(lyapunov = lyap, dynamics = lyap <= 0 ? "nearby trajectories converge" :
+    state_dim <= 2 ? "nearby trajectories separate: divergence or drift along a cycle (an autonomous ODE in 2 dimensions cannot be chaotic)" :
+    "nearby trajectories separate: unstable, or chaotic if the separation saturates at the attractor's size")
 '''
