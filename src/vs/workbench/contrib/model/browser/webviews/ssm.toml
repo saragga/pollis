@@ -486,11 +486,11 @@ id = "innovations"
 label = "Innovation Sequence"
 desc = "Check innovations for whiteness: they should be uncorrelated if the model is correct"
 code = '''
-using LowLevelParticleFilters, Plots, StatsBase  # filter + plotting + autocor
+using LowLevelParticleFilters, LinearAlgebra, Plots, StatsBase  # filter + cholesky + plotting + autocor
 
 sol = forward_trajectory({{model}}, {{data}}.u, {{data}}.y)  # run filter (Kalman-type filters)
 innov = reduce(hcat, sol.e)  # innovations y(t) - yhat(t|t-1), ny x T
-z = reduce(hcat, [sol.S[t].L \ sol.e[t] for t in eachindex(sol.e)])  # standardised by the innovation covariance
+z = reduce(hcat, [cholesky(Symmetric(Matrix(sol.S[t]))).L \ sol.e[t] for t in eachindex(sol.e)])  # standardised by the innovation covariance S(t) (stored as a matrix or a Cholesky factor, depending on the filter)
 
 plot(transpose(z), layout=size(z, 1), title="Standardised innovation")  # zero mean, unit variance if the model fits
 bar(autocor(z[1, :], 1:20), legend=false, xlabel="lag", ylabel="autocorrelation")  # near zero at all lags if white
