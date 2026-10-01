@@ -7,7 +7,7 @@ import { localize } from '../../../../../vs/nls.js';
 import { MenuRegistry, MenuId } from '../../../../platform/actions/common/actions.js';
 import { ContextKeyExpr } from '../../../../platform/contextkey/common/contextkey.js';
 import { ECO_BFMB_ID, ECO_BLSDF_ID, ARMA_ARIMA_WEBVIEW_ID, ARMA_VAR_WEBVIEW_ID } from '../../model/browser/model.contribution.js';
-import { EXPL_COMMAND_ID, RDYN_ID, RCTL_ID, MCAT_ID, RZOO_ID, FRED_ID, ECB_ID } from '../../explore/browser/explore.contribution.js';
+import { EXPL_COMMAND_ID, FRED_ID, ECB_ID } from '../../explore/browser/explore.contribution.js';
 
 const SYMB_ID = 'chiara.toolboxes.symb';
 const NLIN_ID = 'chiara.toolboxes.nlin';
