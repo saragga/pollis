@@ -265,35 +265,35 @@ label = "Mistral"
 id = "chat-ollama"
 label = "Chat Model"
 tooltip = "Any model pulled into Ollama, as listed by ollama list. Examples: gemma3:4b, gemma4:12b, llama3.1, qwen2.5:7b. Larger models label more reliably but run slower."
-default = "gemma3:4b"
+default = ""
 when = "chat-provider=ollama"
 
 [[inputs]]
 id = "chat-anthropic"
 label = "Chat Model"
 tooltip = "Any Claude model name. Example: claude-haiku-4-5 (fast) or claude-sonnet-4-5."
-default = "claude-haiku-4-5"
+default = ""
 when = "chat-provider=anthropic"
 
 [[inputs]]
 id = "chat-google"
 label = "Chat Model"
 tooltip = "Any Gemini model name. Example: gemini-2.5-flash. To run Gemma, choose Ollama."
-default = "gemini-2.5-flash"
+default = ""
 when = "chat-provider=google"
 
 [[inputs]]
 id = "chat-openai"
 label = "Chat Model"
 tooltip = "Any non-reasoning OpenAI chat model (reasoning models reject temperature 0). Example: gpt-4o-mini or gpt-4.1."
-default = "gpt-4o-mini"
+default = ""
 when = "chat-provider=openai"
 
 [[inputs]]
 id = "chat-mistral"
 label = "Chat Model"
 tooltip = "Any Mistral chat model name. Example: mistral-small-latest."
-default = "mistral-small-latest"
+default = ""
 when = "chat-provider=mistral"
 
 [[inputs]]
@@ -323,28 +323,28 @@ label = "Mistral"
 id = "embed-ollama"
 label = "Embedding Model"
 tooltip = "Any embedding model pulled into Ollama. Examples: embeddinggemma, nomic-embed-text, mxbai-embed-large."
-default = "embeddinggemma"
+default = ""
 when = "embed-provider=ollama"
 
 [[inputs]]
 id = "embed-google"
 label = "Embedding Model"
 tooltip = "A Gemini embedding model. Example: gemini-embedding-001."
-default = "gemini-embedding-001"
+default = ""
 when = "embed-provider=google"
 
 [[inputs]]
 id = "embed-openai"
 label = "Embedding Model"
 tooltip = "An OpenAI embedding model. Example: text-embedding-3-small or text-embedding-3-large."
-default = "text-embedding-3-small"
+default = ""
 when = "embed-provider=openai"
 
 [[inputs]]
 id = "embed-mistral"
 label = "Embedding Model"
 tooltip = "A Mistral embedding model. Example: mistral-embed."
-default = "mistral-embed"
+default = ""
 when = "embed-provider=mistral"
 
 [[inputs]]
@@ -377,36 +377,36 @@ label = "Mistral"
 [[inputs]]
 id = "chat2-ollama"
 label = "Second Chat Model"
-tooltip = "Model compared with the first one by Compare Models."
-default = "gemma4:12b"
+tooltip = "Model compared with the first one by Compare Models: any model in ollama list, e.g. gemma4:12b or qwen2.5:14b."
+default = ""
 when = "chat-provider2=ollama"
 
 [[inputs]]
 id = "chat2-anthropic"
 label = "Second Chat Model"
-tooltip = "Model compared with the first one by Compare Models."
-default = "claude-sonnet-4-5"
+tooltip = "Model compared with the first one by Compare Models: e.g. claude-sonnet-4-5."
+default = ""
 when = "chat-provider2=anthropic"
 
 [[inputs]]
 id = "chat2-google"
 label = "Second Chat Model"
-tooltip = "Model compared with the first one by Compare Models."
-default = "gemini-2.5-pro"
+tooltip = "Model compared with the first one by Compare Models: e.g. gemini-2.5-pro."
+default = ""
 when = "chat-provider2=google"
 
 [[inputs]]
 id = "chat2-openai"
 label = "Second Chat Model"
-tooltip = "Model compared with the first one by Compare Models."
-default = "gpt-4o"
+tooltip = "Model compared with the first one by Compare Models: a non-reasoning model, e.g. gpt-4o."
+default = ""
 when = "chat-provider2=openai"
 
 [[inputs]]
 id = "chat2-mistral"
 label = "Second Chat Model"
-tooltip = "Model compared with the first one by Compare Models."
-default = "mistral-large-latest"
+tooltip = "Model compared with the first one by Compare Models: e.g. mistral-large-latest."
+default = ""
 when = "chat-provider2=mistral"
 
 [[inputs]]
@@ -475,15 +475,16 @@ use_model(name, schema) = (haskey(PT.MODEL_REGISTRY, name) && PT.MODEL_REGISTRY[
 # Temperature 0 for repeatable answers; Ollama takes it inside options
 fixed_temperature(model) = PT.MODEL_REGISTRY[model].schema isa PT.AbstractOllamaSchema ? (; options = (; temperature = 0)) : (; temperature = 0)
 
-{{?chat-provider=ollama}} llm = "{{chat-ollama}}"; use_model(llm, PT.OllamaSchema())  # local, no key; first run: ollama pull {{chat-ollama}}
+{{?chat-provider=ollama}} llm = "{{chat-ollama}}"; use_model(llm, PT.OllamaSchema())  # local, no key; the model must be pulled first (ollama pull)
 {{?chat-provider=anthropic}} llm = "{{chat-anthropic}}"; use_model(llm, PT.AnthropicSchema())  # needs ANTHROPIC_API_KEY
 {{?chat-provider=google}} llm = "{{chat-google}}"; use_model(llm, PT.GoogleOpenAISchema())  # needs GOOGLE_API_KEY
 {{?chat-provider=openai}} llm = "{{chat-openai}}"; use_model(llm, PT.OpenAISchema())  # needs OPENAI_API_KEY
 {{?chat-provider=mistral}} llm = "{{chat-mistral}}"; use_model(llm, PT.MistralOpenAISchema())  # needs MISTRAL_API_KEY
-{{?embed-provider=ollama}} emb_model = "{{embed-ollama}}"; use_model(emb_model, PT.OllamaSchema())  # local, no key; first run: ollama pull {{embed-ollama}}
+{{?embed-provider=ollama}} emb_model = "{{embed-ollama}}"; use_model(emb_model, PT.OllamaSchema())  # local, no key; the model must be pulled first (ollama pull)
 {{?embed-provider=google}} emb_model = "{{embed-google}}"; use_model(emb_model, PT.GoogleOpenAISchema())  # needs GOOGLE_API_KEY
 {{?embed-provider=openai}} emb_model = "{{embed-openai}}"; use_model(emb_model, PT.OpenAISchema())  # needs OPENAI_API_KEY
 {{?embed-provider=mistral}} emb_model = "{{embed-mistral}}"; use_model(emb_model, PT.MistralOpenAISchema())  # needs MISTRAL_API_KEY
+isempty(llm) && error("Enter a chat model in the panel.")
 emb = (; model = emb_model)  # passed to every embedding call
 tokens(msgs) = sum(m -> sum(m.tokens), msgs)  # prompt + reply tokens, comparable across providers
 
@@ -525,15 +526,16 @@ use_model(name, schema) = (haskey(PT.MODEL_REGISTRY, name) && PT.MODEL_REGISTRY[
 # Temperature 0 for repeatable answers; Ollama takes it inside options
 fixed_temperature(model) = PT.MODEL_REGISTRY[model].schema isa PT.AbstractOllamaSchema ? (; options = (; temperature = 0)) : (; temperature = 0)
 
-{{?chat-provider=ollama}} llm = "{{chat-ollama}}"; use_model(llm, PT.OllamaSchema())  # local, no key; first run: ollama pull {{chat-ollama}}
+{{?chat-provider=ollama}} llm = "{{chat-ollama}}"; use_model(llm, PT.OllamaSchema())  # local, no key; the model must be pulled first (ollama pull)
 {{?chat-provider=anthropic}} llm = "{{chat-anthropic}}"; use_model(llm, PT.AnthropicSchema())  # needs ANTHROPIC_API_KEY
 {{?chat-provider=google}} llm = "{{chat-google}}"; use_model(llm, PT.GoogleOpenAISchema())  # needs GOOGLE_API_KEY
 {{?chat-provider=openai}} llm = "{{chat-openai}}"; use_model(llm, PT.OpenAISchema())  # needs OPENAI_API_KEY
 {{?chat-provider=mistral}} llm = "{{chat-mistral}}"; use_model(llm, PT.MistralOpenAISchema())  # needs MISTRAL_API_KEY
-{{?embed-provider=ollama}} emb_model = "{{embed-ollama}}"; use_model(emb_model, PT.OllamaSchema())  # local, no key; first run: ollama pull {{embed-ollama}}
+{{?embed-provider=ollama}} emb_model = "{{embed-ollama}}"; use_model(emb_model, PT.OllamaSchema())  # local, no key; the model must be pulled first (ollama pull)
 {{?embed-provider=google}} emb_model = "{{embed-google}}"; use_model(emb_model, PT.GoogleOpenAISchema())  # needs GOOGLE_API_KEY
 {{?embed-provider=openai}} emb_model = "{{embed-openai}}"; use_model(emb_model, PT.OpenAISchema())  # needs OPENAI_API_KEY
 {{?embed-provider=mistral}} emb_model = "{{embed-mistral}}"; use_model(emb_model, PT.MistralOpenAISchema())  # needs MISTRAL_API_KEY
+isempty(llm) && error("Enter a chat model in the panel.")
 emb = (; model = emb_model)  # passed to every embedding call
 tokens(msgs) = sum(m -> sum(m.tokens), msgs)  # prompt + reply tokens, comparable across providers
 
@@ -572,15 +574,17 @@ use_model(name, schema) = (haskey(PT.MODEL_REGISTRY, name) && PT.MODEL_REGISTRY[
 # Temperature 0 for repeatable answers; Ollama takes it inside options
 fixed_temperature(model) = PT.MODEL_REGISTRY[model].schema isa PT.AbstractOllamaSchema ? (; options = (; temperature = 0)) : (; temperature = 0)
 
-{{?chat-provider=ollama}} llm = "{{chat-ollama}}"; use_model(llm, PT.OllamaSchema())  # local, no key; first run: ollama pull {{chat-ollama}}
+{{?chat-provider=ollama}} llm = "{{chat-ollama}}"; use_model(llm, PT.OllamaSchema())  # local, no key; the model must be pulled first (ollama pull)
 {{?chat-provider=anthropic}} llm = "{{chat-anthropic}}"; use_model(llm, PT.AnthropicSchema())  # needs ANTHROPIC_API_KEY
 {{?chat-provider=google}} llm = "{{chat-google}}"; use_model(llm, PT.GoogleOpenAISchema())  # needs GOOGLE_API_KEY
 {{?chat-provider=openai}} llm = "{{chat-openai}}"; use_model(llm, PT.OpenAISchema())  # needs OPENAI_API_KEY
 {{?chat-provider=mistral}} llm = "{{chat-mistral}}"; use_model(llm, PT.MistralOpenAISchema())  # needs MISTRAL_API_KEY
-{{?embed-provider=ollama}} emb_model = "{{embed-ollama}}"; use_model(emb_model, PT.OllamaSchema())  # local, no key; first run: ollama pull {{embed-ollama}}
+{{?embed-provider=ollama}} emb_model = "{{embed-ollama}}"; use_model(emb_model, PT.OllamaSchema())  # local, no key; the model must be pulled first (ollama pull)
 {{?embed-provider=google}} emb_model = "{{embed-google}}"; use_model(emb_model, PT.GoogleOpenAISchema())  # needs GOOGLE_API_KEY
 {{?embed-provider=openai}} emb_model = "{{embed-openai}}"; use_model(emb_model, PT.OpenAISchema())  # needs OPENAI_API_KEY
 {{?embed-provider=mistral}} emb_model = "{{embed-mistral}}"; use_model(emb_model, PT.MistralOpenAISchema())  # needs MISTRAL_API_KEY
+isempty(llm) && error("Enter a chat model in the panel.")
+isempty(emb_model) && error("Enter an embedding model in the panel.")
 emb = (; model = emb_model)  # passed to every embedding call
 tokens(msgs) = sum(m -> sum(m.tokens), msgs)  # prompt + reply tokens, comparable across providers
 
@@ -615,15 +619,17 @@ use_model(name, schema) = (haskey(PT.MODEL_REGISTRY, name) && PT.MODEL_REGISTRY[
 # Temperature 0 for repeatable answers; Ollama takes it inside options
 fixed_temperature(model) = PT.MODEL_REGISTRY[model].schema isa PT.AbstractOllamaSchema ? (; options = (; temperature = 0)) : (; temperature = 0)
 
-{{?chat-provider=ollama}} llm = "{{chat-ollama}}"; use_model(llm, PT.OllamaSchema())  # local, no key; first run: ollama pull {{chat-ollama}}
+{{?chat-provider=ollama}} llm = "{{chat-ollama}}"; use_model(llm, PT.OllamaSchema())  # local, no key; the model must be pulled first (ollama pull)
 {{?chat-provider=anthropic}} llm = "{{chat-anthropic}}"; use_model(llm, PT.AnthropicSchema())  # needs ANTHROPIC_API_KEY
 {{?chat-provider=google}} llm = "{{chat-google}}"; use_model(llm, PT.GoogleOpenAISchema())  # needs GOOGLE_API_KEY
 {{?chat-provider=openai}} llm = "{{chat-openai}}"; use_model(llm, PT.OpenAISchema())  # needs OPENAI_API_KEY
 {{?chat-provider=mistral}} llm = "{{chat-mistral}}"; use_model(llm, PT.MistralOpenAISchema())  # needs MISTRAL_API_KEY
-{{?embed-provider=ollama}} emb_model = "{{embed-ollama}}"; use_model(emb_model, PT.OllamaSchema())  # local, no key; first run: ollama pull {{embed-ollama}}
+{{?embed-provider=ollama}} emb_model = "{{embed-ollama}}"; use_model(emb_model, PT.OllamaSchema())  # local, no key; the model must be pulled first (ollama pull)
 {{?embed-provider=google}} emb_model = "{{embed-google}}"; use_model(emb_model, PT.GoogleOpenAISchema())  # needs GOOGLE_API_KEY
 {{?embed-provider=openai}} emb_model = "{{embed-openai}}"; use_model(emb_model, PT.OpenAISchema())  # needs OPENAI_API_KEY
 {{?embed-provider=mistral}} emb_model = "{{embed-mistral}}"; use_model(emb_model, PT.MistralOpenAISchema())  # needs MISTRAL_API_KEY
+isempty(llm) && error("Enter a chat model in the panel.")
+isempty(emb_model) && error("Enter an embedding model in the panel.")
 emb = (; model = emb_model)  # passed to every embedding call
 tokens(msgs) = sum(m -> sum(m.tokens), msgs)  # prompt + reply tokens, comparable across providers
 
@@ -672,6 +678,7 @@ code = '''
 using LLMTextAnalysis, Plots  # loading Plots enables the LLMTextAnalysis plot recipe
 
 {{?model=tag}} heatmap(tag_list, 1:length(docs), Int.(tagmat), yflip = true, ylabel = "document", title = "Tag Assignments", colorbar = false)
+{{?model=classify}} isempty(emb_model) && error("Enter an embedding model in the panel.")
 {{?model=classify}} index = build_index(docs; aiembed_kwargs = emb)  # embeddings for the map; the labels themselves came from the chat model
 {{?model=classify}} present = unique(labels)
 {{?model=classify}} build_clusters!(index, [findfirst(==(l), present) for l in labels]; topic_level = "LLM categories", labels = present)
@@ -750,6 +757,7 @@ desc = "Label every document from embeddings alone (train_classifier or train_co
 code = '''
 using LLMTextAnalysis  # build_index, train_classifier, train_concept, score
 
+{{?model=tag|classify}} isempty(emb_model) && error("Enter an embedding model in the panel.")
 {{?model=tag|classify}} index = build_index(docs; aiembed_kwargs = emb)  # embeddings of every document
 {{?model=classify}} ids, gold = {{gold-ids}}, {{gold-labels}}
 {{?model=classify}} # trained on your hand labels when given (every category needed), else on LLM-written examples of each category
@@ -774,11 +782,12 @@ id = "compare-models"
 label = "Compare Models"
 desc = "Run the same analysis with the second model, from any provider, and measure agreement (Cohen kappa)"
 code = '''
-{{?chat-provider2=ollama}} llm2 = "{{chat2-ollama}}"; use_model(llm2, PT.OllamaSchema())  # local, no key; first run: ollama pull {{chat2-ollama}}
+{{?chat-provider2=ollama}} llm2 = "{{chat2-ollama}}"; use_model(llm2, PT.OllamaSchema())  # local, no key; the model must be pulled first (ollama pull)
 {{?chat-provider2=anthropic}} llm2 = "{{chat2-anthropic}}"; use_model(llm2, PT.AnthropicSchema())  # needs ANTHROPIC_API_KEY
 {{?chat-provider2=google}} llm2 = "{{chat2-google}}"; use_model(llm2, PT.GoogleOpenAISchema())  # needs GOOGLE_API_KEY
 {{?chat-provider2=openai}} llm2 = "{{chat2-openai}}"; use_model(llm2, PT.OpenAISchema())  # needs OPENAI_API_KEY
 {{?chat-provider2=mistral}} llm2 = "{{chat2-mistral}}"; use_model(llm2, PT.MistralOpenAISchema())  # needs MISTRAL_API_KEY
+isempty(llm2) && error("Enter a second chat model in the panel.")
 {{?model=tag}} msgs2   = run_tags(llm2)
 {{?model=tag}} tagmat2 = tag_matrix(msgs2)
 {{?model=tag}} for (j, t) in enumerate(tag_list)
