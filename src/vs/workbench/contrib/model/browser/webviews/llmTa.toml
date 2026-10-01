@@ -30,13 +30,13 @@ label = ""
 name = "Document Tagging"
 file = "llm-ta/tutorial-01-tagging.ipynb"
 bundled = true
-description = "Tag a corpus with predefined labels: one aiclassify yes/no judgement per document and tag"
+description = "Tag a corpus with predefined labels: one LLM call per document, local (Ollama) or hosted"
 
 [[notebookSections.notebooks]]
 name = "Document Classification"
 file = "llm-ta/tutorial-02-classification.ipynb"
 bundled = true
-description = "Classify documents into mutually exclusive categories with aiclassify and check them against hand labels"
+description = "Classify documents into mutually exclusive categories with an LLM and check them against hand labels"
 
 [[notebookSections.notebooks]]
 name = "Topic Discovery"
@@ -206,11 +206,11 @@ label = "Q&A"
 
 [[bullets]]
 text = "Tag"
-detail = "any number of predefined tags per document; one aiclassify true/false judgement per document and tag"
+detail = "any number of predefined tags per document; one LLM call per document, with the reply checked against the tag list"
 
 [[bullets]]
 text = "Classify"
-detail = "exactly one category per document; aiclassify forces a one-token choice among the numbered categories"
+detail = "exactly one category per document; a reply that matches no category is counted as unclassified"
 
 [[bullets]]
 text = "Topics"
@@ -221,38 +221,205 @@ text = "Q&A"
 detail = "retrieval-augmented generation: the most similar chunks are passed to the LLM as context (RAGTools airag)"
 
 [[bullets]]
+text = "Providers"
+detail = "chat from Ollama (local open models such as Gemma, no key), Anthropic, Google, OpenAI or Mistral; embeddings from Ollama, Google, OpenAI or Mistral"
+
+[[bullets]]
 text = "Evaluation"
-detail = "accuracy and Cohen kappa against a hand-labelled sample and between two LLMs (StatisticalMeasures.jl), plus API cost"
+detail = "accuracy and Cohen kappa against a hand-labelled sample and between two models (StatisticalMeasures.jl), plus token counts"
 
 [[inputs]]
 id = "texts"
 label = "Documents"
-tooltip = "A vector of strings, one per document. Example: texts = readlines(\"corpus.txt\") or texts = [\"doc1...\", \"doc2...\"]. Needs OPENAI_API_KEY: embeddings use the OpenAI embedding model."
+tooltip = "A vector of strings, one per document. Example: texts = readlines(\"corpus.txt\") or texts = [\"doc1...\", \"doc2...\"]."
 default = "texts"
 
 [[inputs]]
-id = "llmmodel"
-label = "Model"
-tooltip = "OpenAI chat model passed to PromptingTools.jl. Tag and Classify use aiclassify, which only supports the gpt-4o, gpt-4 and gpt-3.5 families. Example: \"gpt-4o-mini\" (fast and cheap) or \"gpt-4o\"."
-default = "gpt-4o-mini"
+id = "chat-provider"
+label = "Chat Provider"
+tooltip = "Who runs the chat model that tags, classifies, names topics and answers. Ollama runs open models such as Gemma, Llama or Qwen on this machine with no key (install Ollama and pull the model). The others need an API key: ANTHROPIC_API_KEY, GOOGLE_API_KEY, OPENAI_API_KEY or MISTRAL_API_KEY. The key is read from the environment when PromptingTools loads, so set it before starting Julia."
+kind = "select"
+default = "ollama"
+
+[[inputs.options]]
+value = "ollama"
+label = "Ollama (local)"
+
+[[inputs.options]]
+value = "anthropic"
+label = "Anthropic (Claude)"
+
+[[inputs.options]]
+value = "google"
+label = "Google (Gemini)"
+
+[[inputs.options]]
+value = "openai"
+label = "OpenAI"
+
+[[inputs.options]]
+value = "mistral"
+label = "Mistral"
 
 [[inputs]]
-id = "llmmodel2"
-label = "Second Model"
-tooltip = "Model used by Compare Models to measure agreement with the first model. Same restrictions as Model."
+id = "chat-ollama"
+label = "Chat Model"
+tooltip = "Any model pulled into Ollama, as listed by ollama list. Examples: gemma3:4b, gemma4:12b, llama3.1, qwen2.5:7b. Larger models label more reliably but run slower."
+default = "gemma3:4b"
+when = "chat-provider=ollama"
+
+[[inputs]]
+id = "chat-anthropic"
+label = "Chat Model"
+tooltip = "Any Claude model name. Example: claude-haiku-4-5 (fast) or claude-sonnet-4-5."
+default = "claude-haiku-4-5"
+when = "chat-provider=anthropic"
+
+[[inputs]]
+id = "chat-google"
+label = "Chat Model"
+tooltip = "Any Gemini model name. Example: gemini-2.5-flash. To run Gemma, choose Ollama."
+default = "gemini-2.5-flash"
+when = "chat-provider=google"
+
+[[inputs]]
+id = "chat-openai"
+label = "Chat Model"
+tooltip = "Any non-reasoning OpenAI chat model (reasoning models reject temperature 0). Example: gpt-4o-mini or gpt-4.1."
+default = "gpt-4o-mini"
+when = "chat-provider=openai"
+
+[[inputs]]
+id = "chat-mistral"
+label = "Chat Model"
+tooltip = "Any Mistral chat model name. Example: mistral-small-latest."
+default = "mistral-small-latest"
+when = "chat-provider=mistral"
+
+[[inputs]]
+id = "embed-provider"
+label = "Embedding Provider"
+tooltip = "Who embeds the documents for Topics, Q&A, the document map and the embedding classifier. Anthropic has no embedding models, so Claude users pair it with another provider here. The key is read from the environment when PromptingTools loads, so set it before starting Julia."
+kind = "select"
+default = "ollama"
+
+[[inputs.options]]
+value = "ollama"
+label = "Ollama (local)"
+
+[[inputs.options]]
+value = "google"
+label = "Google (Gemini)"
+
+[[inputs.options]]
+value = "openai"
+label = "OpenAI"
+
+[[inputs.options]]
+value = "mistral"
+label = "Mistral"
+
+[[inputs]]
+id = "embed-ollama"
+label = "Embedding Model"
+tooltip = "Any embedding model pulled into Ollama. Examples: embeddinggemma, nomic-embed-text, mxbai-embed-large."
+default = "embeddinggemma"
+when = "embed-provider=ollama"
+
+[[inputs]]
+id = "embed-google"
+label = "Embedding Model"
+tooltip = "A Gemini embedding model. Example: gemini-embedding-001."
+default = "gemini-embedding-001"
+when = "embed-provider=google"
+
+[[inputs]]
+id = "embed-openai"
+label = "Embedding Model"
+tooltip = "An OpenAI embedding model. Example: text-embedding-3-small or text-embedding-3-large."
+default = "text-embedding-3-small"
+when = "embed-provider=openai"
+
+[[inputs]]
+id = "embed-mistral"
+label = "Embedding Model"
+tooltip = "A Mistral embedding model. Example: mistral-embed."
+default = "mistral-embed"
+when = "embed-provider=mistral"
+
+[[inputs]]
+id = "chat-provider2"
+label = "Second Chat Provider"
+tooltip = "Provider of the second model, used only by Compare Models. It may differ from the first, e.g. a local Gemma against Claude."
+kind = "select"
+default = "ollama"
+
+[[inputs.options]]
+value = "ollama"
+label = "Ollama (local)"
+
+[[inputs.options]]
+value = "anthropic"
+label = "Anthropic (Claude)"
+
+[[inputs.options]]
+value = "google"
+label = "Google (Gemini)"
+
+[[inputs.options]]
+value = "openai"
+label = "OpenAI"
+
+[[inputs.options]]
+value = "mistral"
+label = "Mistral"
+
+[[inputs]]
+id = "chat2-ollama"
+label = "Second Chat Model"
+tooltip = "Model compared with the first one by Compare Models."
+default = "gemma4:12b"
+when = "chat-provider2=ollama"
+
+[[inputs]]
+id = "chat2-anthropic"
+label = "Second Chat Model"
+tooltip = "Model compared with the first one by Compare Models."
+default = "claude-sonnet-4-5"
+when = "chat-provider2=anthropic"
+
+[[inputs]]
+id = "chat2-google"
+label = "Second Chat Model"
+tooltip = "Model compared with the first one by Compare Models."
+default = "gemini-2.5-pro"
+when = "chat-provider2=google"
+
+[[inputs]]
+id = "chat2-openai"
+label = "Second Chat Model"
+tooltip = "Model compared with the first one by Compare Models."
 default = "gpt-4o"
+when = "chat-provider2=openai"
+
+[[inputs]]
+id = "chat2-mistral"
+label = "Second Chat Model"
+tooltip = "Model compared with the first one by Compare Models."
+default = "mistral-large-latest"
+when = "chat-provider2=mistral"
 
 [[inputs]]
 id = "tags"
 label = "Tags"
-tooltip = "A vector of tag strings. Any number of tags may apply to a document. Example: tags = [\"finance\", \"technology\", \"health\", \"politics\"]."
+tooltip = "A vector of tag strings, without commas or semicolons. Any number of tags may apply to a document. Example: tags = [\"finance\", \"technology\", \"health\", \"politics\"]."
 default = "tags"
 models = ["tag"]
 
 [[inputs]]
 id = "categories"
 label = "Categories"
-tooltip = "A vector of mutually exclusive category strings (at most 40). Each document gets exactly one. Example: categories = [\"positive\", \"negative\", \"neutral\"]."
+tooltip = "A vector of mutually exclusive category strings. Each document gets exactly one. Example: categories = [\"positive\", \"negative\", \"neutral\"]."
 default = "categories"
 models = ["classify"]
 
@@ -300,64 +467,131 @@ default = "\"replace with a new document or question\""
 [[codeBranches]]
 model = "tag"
 code = '''
-using PromptingTools, StatisticalMeasures  # aiclassify; confusion matrices, accuracy, Cohen kappa
+using PromptingTools  # aigenerate, aiembed and the model registry
+PT = PromptingTools
+
+# Register each model name with its provider, so any current model works (the built-in model list of PromptingTools is older)
+use_model(name, schema) = (haskey(PT.MODEL_REGISTRY, name) && PT.MODEL_REGISTRY[name].schema isa typeof(schema)) || PT.register_model!(; name, schema)
+# Temperature 0 for repeatable answers; Ollama takes it inside options
+fixed_temperature(model) = PT.MODEL_REGISTRY[model].schema isa PT.AbstractOllamaSchema ? (; options = (; temperature = 0)) : (; temperature = 0)
+
+{{?chat-provider=ollama}} llm = "{{chat-ollama}}"; use_model(llm, PT.OllamaSchema())  # local, no key; first run: ollama pull {{chat-ollama}}
+{{?chat-provider=anthropic}} llm = "{{chat-anthropic}}"; use_model(llm, PT.AnthropicSchema())  # needs ANTHROPIC_API_KEY
+{{?chat-provider=google}} llm = "{{chat-google}}"; use_model(llm, PT.GoogleOpenAISchema())  # needs GOOGLE_API_KEY
+{{?chat-provider=openai}} llm = "{{chat-openai}}"; use_model(llm, PT.OpenAISchema())  # needs OPENAI_API_KEY
+{{?chat-provider=mistral}} llm = "{{chat-mistral}}"; use_model(llm, PT.MistralOpenAISchema())  # needs MISTRAL_API_KEY
+{{?embed-provider=ollama}} emb_model = "{{embed-ollama}}"; use_model(emb_model, PT.OllamaSchema())  # local, no key; first run: ollama pull {{embed-ollama}}
+{{?embed-provider=google}} emb_model = "{{embed-google}}"; use_model(emb_model, PT.GoogleOpenAISchema())  # needs GOOGLE_API_KEY
+{{?embed-provider=openai}} emb_model = "{{embed-openai}}"; use_model(emb_model, PT.OpenAISchema())  # needs OPENAI_API_KEY
+{{?embed-provider=mistral}} emb_model = "{{embed-mistral}}"; use_model(emb_model, PT.MistralOpenAISchema())  # needs MISTRAL_API_KEY
+emb = (; model = emb_model)  # passed to every embedding call
+tokens(msgs) = sum(m -> sum(m.tokens), msgs)  # prompt + reply tokens, comparable across providers
+
+using StatisticalMeasures  # confusion matrices, accuracy, Cohen kappa
 
 docs     = {{texts}}  # one string per document
 tag_list = {{tags}}  # candidate tags; any number may apply to a document
-llm      = "{{llmmodel}}"  # OpenAI chat model
 
-# One yes/no judgement per (document, tag): aiclassify restricts the reply to a single true/false/unknown token
-judge(d, t; model = llm) = aiclassify(:JudgeIsItTrue; it = "Document: $d\n\nStatement: the tag \"$t\" applies to this document.", model)
-pairs_dt = vec(collect(Iterators.product(docs, tag_list)))  # (document, tag) pairs, documents varying fastest
-run_tags(model) = reshape(asyncmap(p -> judge(p...; model), pairs_dt; ntasks = 10), length(docs), length(tag_list))
+# One call per document; the reply is checked against the tag list, so a model that breaks the format cannot invent tags
+tag_prompt(d) = "Tags: " * join(tag_list, "; ") * "\n\nDocument: " * d *
+    "\n\nReply with the tags that apply to the document, exactly as written above and separated by semicolons, or with none. Reply with nothing else."
+clean(s) = lowercase(strip(s, collect(" .\"*`")))  # drop spaces, quotes and markdown around an item
+function parse_tags(reply)  # (Bool per tag, reply items that match no tag)
+    items = filter(!isempty, clean.(split(reply, r"[;,\n]")))
+    ([clean(t) in items for t in tag_list], filter(i -> i != "none" && !(i in clean.(tag_list)), items))
+end
+tag_reply(d; model = llm) = aigenerate(tag_prompt(d); model, api_kwargs = fixed_temperature(model), verbose = false)
+run_tags(model) = asyncmap(d -> tag_reply(d; model), docs; ntasks = 10)
+tag_matrix(msgs) = permutedims(reduce(hcat, [parse_tags(m.content)[1] for m in msgs]))  # N x T Bool
 
-msgs   = run_tags(llm)  # N x T messages
-tagmat = map(m -> m.content == "true", msgs)  # N x T Bool; "unknown" or an undecodable reply counts as not tagged
-cost   = sum(m -> something(m.cost, 0.0), msgs)
+msgs   = run_tags(llm)
+tagmat = tag_matrix(msgs)
 confusion(a, b) = ConfusionMatrix(levels = ["false", "true"])(string.(a), string.(b))  # fixed levels, so a tag never used still works
 
 for i in eachindex(docs)
     println("Doc $i: ", join(tag_list[tagmat[i, :]], ", "))
 end
-println("API cost: \$", round(cost; digits = 4), " (\$", round(cost / length(docs); digits = 5), " per document)")
+println("LLM tokens: ", tokens(msgs), " (", round(Int, tokens(msgs) / length(docs)), " per document)")
 '''
 
 [[codeBranches]]
 model = "classify"
 code = '''
-using PromptingTools, StatisticalMeasures  # aiclassify; confusion matrices, accuracy, Cohen kappa
+using PromptingTools  # aigenerate, aiembed and the model registry
+PT = PromptingTools
+
+# Register each model name with its provider, so any current model works (the built-in model list of PromptingTools is older)
+use_model(name, schema) = (haskey(PT.MODEL_REGISTRY, name) && PT.MODEL_REGISTRY[name].schema isa typeof(schema)) || PT.register_model!(; name, schema)
+# Temperature 0 for repeatable answers; Ollama takes it inside options
+fixed_temperature(model) = PT.MODEL_REGISTRY[model].schema isa PT.AbstractOllamaSchema ? (; options = (; temperature = 0)) : (; temperature = 0)
+
+{{?chat-provider=ollama}} llm = "{{chat-ollama}}"; use_model(llm, PT.OllamaSchema())  # local, no key; first run: ollama pull {{chat-ollama}}
+{{?chat-provider=anthropic}} llm = "{{chat-anthropic}}"; use_model(llm, PT.AnthropicSchema())  # needs ANTHROPIC_API_KEY
+{{?chat-provider=google}} llm = "{{chat-google}}"; use_model(llm, PT.GoogleOpenAISchema())  # needs GOOGLE_API_KEY
+{{?chat-provider=openai}} llm = "{{chat-openai}}"; use_model(llm, PT.OpenAISchema())  # needs OPENAI_API_KEY
+{{?chat-provider=mistral}} llm = "{{chat-mistral}}"; use_model(llm, PT.MistralOpenAISchema())  # needs MISTRAL_API_KEY
+{{?embed-provider=ollama}} emb_model = "{{embed-ollama}}"; use_model(emb_model, PT.OllamaSchema())  # local, no key; first run: ollama pull {{embed-ollama}}
+{{?embed-provider=google}} emb_model = "{{embed-google}}"; use_model(emb_model, PT.GoogleOpenAISchema())  # needs GOOGLE_API_KEY
+{{?embed-provider=openai}} emb_model = "{{embed-openai}}"; use_model(emb_model, PT.OpenAISchema())  # needs OPENAI_API_KEY
+{{?embed-provider=mistral}} emb_model = "{{embed-mistral}}"; use_model(emb_model, PT.MistralOpenAISchema())  # needs MISTRAL_API_KEY
+emb = (; model = emb_model)  # passed to every embedding call
+tokens(msgs) = sum(m -> sum(m.tokens), msgs)  # prompt + reply tokens, comparable across providers
+
+using StatisticalMeasures  # confusion matrices, accuracy, Cohen kappa
 
 docs = {{texts}}  # one string per document
 cats = {{categories}}  # mutually exclusive categories
-llm  = "{{llmmodel}}"  # OpenAI chat model
 
-# aiclassify numbers the categories and forces a one-token reply, so each document gets exactly one
-classify(d; model = llm) = aiclassify(:InputClassifier; choices = cats, input = d, model)
+# One call per document; a reply that matches no category exactly (ignoring case) becomes "unclassified"
+cat_prompt(d) = "Categories: " * join(cats, "; ") * "\n\nDocument: " * d *
+    "\n\nReply with the one category that fits the document best, exactly as written above. Reply with nothing else."
+clean(s) = lowercase(strip(s, collect(" .\"*`\n")))  # drop spaces, quotes and markdown around the reply
+match_cat(reply) = (i = findfirst(c -> clean(c) == clean(reply), cats); isnothing(i) ? "unclassified" : cats[i])
+classify(d; model = llm) = aigenerate(cat_prompt(d); model, api_kwargs = fixed_temperature(model), verbose = false)
 run_labels(model) = asyncmap(d -> classify(d; model), docs; ntasks = 10)
 
 msgs   = run_labels(llm)
-labels = [String(something(m.content, "unclassified")) for m in msgs]  # an undecodable reply becomes "unclassified"
-cost   = sum(m -> something(m.cost, 0.0), msgs)
+labels = [match_cat(m.content) for m in msgs]
 cat_levels = [cats; "unclassified"]
 confusion(a, b) = ConfusionMatrix(levels = cat_levels)(a, b)  # fixed levels, so an unused category still works
 
 for (i, l) in enumerate(labels)
     println("Doc $i: ", l)
 end
-println("API cost: \$", round(cost; digits = 4), " (\$", round(cost / length(docs); digits = 5), " per document)")
+println("LLM tokens: ", tokens(msgs), " (", round(Int, tokens(msgs) / length(docs)), " per document)")
 '''
 
 [[codeBranches]]
 model = "topics"
 code = '''
+using PromptingTools  # aigenerate, aiembed and the model registry
+PT = PromptingTools
+
+# Register each model name with its provider, so any current model works (the built-in model list of PromptingTools is older)
+use_model(name, schema) = (haskey(PT.MODEL_REGISTRY, name) && PT.MODEL_REGISTRY[name].schema isa typeof(schema)) || PT.register_model!(; name, schema)
+# Temperature 0 for repeatable answers; Ollama takes it inside options
+fixed_temperature(model) = PT.MODEL_REGISTRY[model].schema isa PT.AbstractOllamaSchema ? (; options = (; temperature = 0)) : (; temperature = 0)
+
+{{?chat-provider=ollama}} llm = "{{chat-ollama}}"; use_model(llm, PT.OllamaSchema())  # local, no key; first run: ollama pull {{chat-ollama}}
+{{?chat-provider=anthropic}} llm = "{{chat-anthropic}}"; use_model(llm, PT.AnthropicSchema())  # needs ANTHROPIC_API_KEY
+{{?chat-provider=google}} llm = "{{chat-google}}"; use_model(llm, PT.GoogleOpenAISchema())  # needs GOOGLE_API_KEY
+{{?chat-provider=openai}} llm = "{{chat-openai}}"; use_model(llm, PT.OpenAISchema())  # needs OPENAI_API_KEY
+{{?chat-provider=mistral}} llm = "{{chat-mistral}}"; use_model(llm, PT.MistralOpenAISchema())  # needs MISTRAL_API_KEY
+{{?embed-provider=ollama}} emb_model = "{{embed-ollama}}"; use_model(emb_model, PT.OllamaSchema())  # local, no key; first run: ollama pull {{embed-ollama}}
+{{?embed-provider=google}} emb_model = "{{embed-google}}"; use_model(emb_model, PT.GoogleOpenAISchema())  # needs GOOGLE_API_KEY
+{{?embed-provider=openai}} emb_model = "{{embed-openai}}"; use_model(emb_model, PT.OpenAISchema())  # needs OPENAI_API_KEY
+{{?embed-provider=mistral}} emb_model = "{{embed-mistral}}"; use_model(emb_model, PT.MistralOpenAISchema())  # needs MISTRAL_API_KEY
+emb = (; model = emb_model)  # passed to every embedding call
+tokens(msgs) = sum(m -> sum(m.tokens), msgs)  # prompt + reply tokens, comparable across providers
+
 using LLMTextAnalysis  # build_index, build_clusters!
 
 docs = {{texts}}  # one string per document
-llm  = "{{llmmodel}}"  # chat model that names and summarises the topics
 k    = {{k}}  # number of topics
 
-index = build_index(docs)  # OpenAI embeddings, cosine distances and keywords of every document
-build_clusters!(index; k, add_label = true, add_summary = true, labeler_kwargs = (; model = llm))  # complete-linkage clustering cut at k
+index = build_index(docs; aiembed_kwargs = emb)  # embeddings, cosine distances and keywords of every document
+# complete-linkage clustering cut at k; the chat model names and summarises each cluster
+build_clusters!(index; k, add_label = true, add_summary = true, labeler_kwargs = (; model = llm, api_kwargs = fixed_temperature(llm)))
 topics = index.topic_levels[k]
 assign = zeros(Int, length(docs))  # topic of each document
 for t in topics
@@ -373,24 +607,43 @@ end
 [[codeBranches]]
 model = "qa"
 code = '''
-using PromptingTools, LinearAlgebra, SparseArrays, Unicode  # the last three load RAGTools
+using PromptingTools  # aigenerate, aiembed and the model registry
+PT = PromptingTools
+
+# Register each model name with its provider, so any current model works (the built-in model list of PromptingTools is older)
+use_model(name, schema) = (haskey(PT.MODEL_REGISTRY, name) && PT.MODEL_REGISTRY[name].schema isa typeof(schema)) || PT.register_model!(; name, schema)
+# Temperature 0 for repeatable answers; Ollama takes it inside options
+fixed_temperature(model) = PT.MODEL_REGISTRY[model].schema isa PT.AbstractOllamaSchema ? (; options = (; temperature = 0)) : (; temperature = 0)
+
+{{?chat-provider=ollama}} llm = "{{chat-ollama}}"; use_model(llm, PT.OllamaSchema())  # local, no key; first run: ollama pull {{chat-ollama}}
+{{?chat-provider=anthropic}} llm = "{{chat-anthropic}}"; use_model(llm, PT.AnthropicSchema())  # needs ANTHROPIC_API_KEY
+{{?chat-provider=google}} llm = "{{chat-google}}"; use_model(llm, PT.GoogleOpenAISchema())  # needs GOOGLE_API_KEY
+{{?chat-provider=openai}} llm = "{{chat-openai}}"; use_model(llm, PT.OpenAISchema())  # needs OPENAI_API_KEY
+{{?chat-provider=mistral}} llm = "{{chat-mistral}}"; use_model(llm, PT.MistralOpenAISchema())  # needs MISTRAL_API_KEY
+{{?embed-provider=ollama}} emb_model = "{{embed-ollama}}"; use_model(emb_model, PT.OllamaSchema())  # local, no key; first run: ollama pull {{embed-ollama}}
+{{?embed-provider=google}} emb_model = "{{embed-google}}"; use_model(emb_model, PT.GoogleOpenAISchema())  # needs GOOGLE_API_KEY
+{{?embed-provider=openai}} emb_model = "{{embed-openai}}"; use_model(emb_model, PT.OpenAISchema())  # needs OPENAI_API_KEY
+{{?embed-provider=mistral}} emb_model = "{{embed-mistral}}"; use_model(emb_model, PT.MistralOpenAISchema())  # needs MISTRAL_API_KEY
+emb = (; model = emb_model)  # passed to every embedding call
+tokens(msgs) = sum(m -> sum(m.tokens), msgs)  # prompt + reply tokens, comparable across providers
+
+using LinearAlgebra, SparseArrays, Unicode  # these load RAGTools
 RT = PromptingTools.Experimental.RAGTools
 
 docs  = {{texts}}  # one string per document
-llm   = "{{llmmodel}}"  # chat model that writes the answer
 top_n = {{top-n}}  # chunks passed to the LLM as context
 
-rag_index = RT.build_index(docs; chunker_kwargs = (; sources = ["document $i" for i in eachindex(docs)]))  # chunk and embed
+rag_index = RT.build_index(docs; chunker_kwargs = (; sources = ["document $i" for i in eachindex(docs)]), embedder_kwargs = emb)  # chunk and embed
 function ask(q; model = llm)
-    tracker = Threads.Atomic{Float64}(0.0)
-    r = RT.airag(rag_index; question = q, return_all = true, retriever_kwargs = (; top_n),
-                 generator_kwargs = (; answerer_kwargs = (; model)), cost_tracker = tracker)
-    (r, tracker[])
+    r = RT.airag(rag_index; question = q, return_all = true, verbose = false,
+                 retriever_kwargs = (; top_n, embedder_kwargs = emb),
+                 generator_kwargs = (; answerer_kwargs = (; model, api_kwargs = fixed_temperature(model))))
+    (r, sum(r.conversations[:answer][end].tokens))
 end
 
-result, cost = ask({{question}})
+result, ntokens = ask({{question}})
 println(result.final_answer)
-println("\nSources: ", join(unique(result.sources), ", "), "   API cost: \$", round(cost; digits = 4))
+println("\nSources: ", join(unique(result.sources), ", "), "   LLM tokens: ", ntokens)
 '''
 
 [[actionGroups]]
@@ -419,7 +672,7 @@ code = '''
 using LLMTextAnalysis, Plots  # loading Plots enables the LLMTextAnalysis plot recipe
 
 {{?model=tag}} heatmap(tag_list, 1:length(docs), Int.(tagmat), yflip = true, ylabel = "document", title = "Tag Assignments", colorbar = false)
-{{?model=classify}} index = build_index(docs)  # embeddings for the map; the labels themselves came from aiclassify
+{{?model=classify}} index = build_index(docs; aiembed_kwargs = emb)  # embeddings for the map; the labels themselves came from the chat model
 {{?model=classify}} present = unique(labels)
 {{?model=classify}} build_clusters!(index, [findfirst(==(l), present) for l in labels]; topic_level = "LLM categories", labels = present)
 {{?model=classify}} plot(index; topic_level = "LLM categories", title = "Documents by LLM Category")
@@ -453,15 +706,15 @@ gold = {{gold-labels}}  # your labels, in the same order
 [[actionGroups.actions]]
 id = "evidence"
 label = "Evidence"
-desc = "Undecided judgements, topic keywords and central documents, or the retrieved context"
+desc = "Replies that broke the format, topic keywords and central documents, or the retrieved context"
 code = '''
-{{?model=tag}} undecided = findall(m -> !(m.content in ("true", "false")), msgs)  # (document, tag) positions
-{{?model=tag}} println(length(undecided), " of ", length(msgs), " judgements were unknown or undecodable")
-{{?model=tag}} for c in first(undecided, 10)
-{{?model=tag}}     println("  doc ", c[1], ", tag ", tag_list[c[2]], ": ", first(docs[c[1]], 80))
-{{?model=tag}} end
-{{?model=classify}} undecided = findall(==("unclassified"), labels)
-{{?model=classify}} println(length(undecided), " of ", length(docs), " documents could not be decoded: ", undecided)
+{{?model=tag}} off = [(i, parse_tags(m.content)[2]) for (i, m) in enumerate(msgs)]
+{{?model=tag}} off = filter(x -> !isempty(x[2]), off)  # replies with items that match no tag
+{{?model=tag}} println(length(off), " of ", length(msgs), " replies contained items that match no tag (ignored)")
+{{?model=tag}} foreach(x -> println("  doc ", x[1], ": ", join(x[2], "; ")), first(off, 10))
+{{?model=classify}} off = findall(==("unclassified"), labels)
+{{?model=classify}} println(length(off), " of ", length(docs), " replies matched no category")
+{{?model=classify}} foreach(i -> println("  doc ", i, ": ", first(msgs[i].content, 80)), first(off, 10))
 {{?model=topics}} for t in topics
 {{?model=topics}}     println(t.topic_idx, ". ", t.label, ": keywords ", join(index.keywords_vocab[t.keywords_idx], ", "))
 {{?model=topics}}     println("   central document: ", first(docs[t.docs_idx[t.center_doc_idx]], 120))
@@ -481,33 +734,33 @@ label = "Apply to New Text"
 desc = "Tag, classify or place a new document in a topic; ask a follow-up question in Q&A mode"
 code = '''
 new = {{new-text}}
-{{?model=tag}} println("Tags: ", join([t for t in tag_list if judge(new, t).content == "true"], ", "))
-{{?model=classify}} println("Category: ", something(classify(new).content, "unclassified"))
+{{?model=tag}} println("Tags: ", join(tag_list[parse_tags(tag_reply(new).content)[1]], ", "))
+{{?model=classify}} println("Category: ", match_cat(classify(new).content))
 {{?model=topics}} # an embedding classifier trained on the topic assignments places the text without re-clustering
-{{?model=topics}} cls = train_classifier(index, ["$(t.topic_idx). $(t.label)" for t in topics]; docs_ids = collect(eachindex(docs)), docs_labels = assign)
-{{?model=topics}} println("Topic: ", only(score(build_index([new]; verbose = false), cls; return_labels = true, check_index = false)))
-{{?model=qa}} r, c = ask(new)  # the new text is asked as a question
+{{?model=topics}} cls = train_classifier(index, ["$(t.topic_idx). $(t.label)" for t in topics]; docs_ids = collect(eachindex(docs)), docs_labels = assign, aiembed_kwargs = emb)
+{{?model=topics}} println("Topic: ", only(score(build_index([new]; verbose = false, aiembed_kwargs = emb), cls; return_labels = true, check_index = false)))
+{{?model=qa}} r, n = ask(new)  # the new text is asked as a question
 {{?model=qa}} println(r.final_answer, "\nSources: ", join(unique(r.sources), ", "))
 '''
 
 [[actionGroups.actions]]
 id = "embedding-labels"
 label = "Embedding Classifier"
-desc = "Label every document from embeddings alone (train_classifier or train_concept) and measure agreement with the LLM"
+desc = "Label every document from embeddings alone (train_classifier or train_concept) and measure agreement with the chat model"
 code = '''
 using LLMTextAnalysis  # build_index, train_classifier, train_concept, score
 
-{{?model=tag|classify}} index = build_index(docs)  # OpenAI embeddings of every document
+{{?model=tag|classify}} index = build_index(docs; aiembed_kwargs = emb)  # embeddings of every document
 {{?model=classify}} ids, gold = {{gold-ids}}, {{gold-labels}}
 {{?model=classify}} # trained on your hand labels when given (every category needed), else on LLM-written examples of each category
-{{?model=classify}} cls = isempty(ids) ? train_classifier(index, cats; num_samples = 5, aigenerate_kwargs = (; model = llm)) :
-{{?model=classify}}       train_classifier(index, cats; docs_ids = ids, docs_labels = [findfirst(==(g), cats) for g in gold])
-{{?model=classify}} emb = score(index, cls; return_labels = true)  # one category per document, no further LLM calls
-{{?model=classify}} println("Agreement with aiclassify: Cohen kappa ", round(kappa(confusion(emb, labels)); digits = 2))
+{{?model=classify}} cls = isempty(ids) ? train_classifier(index, cats; num_samples = 5, aigenerate_kwargs = (; model = llm), aiembed_kwargs = emb) :
+{{?model=classify}}       train_classifier(index, cats; docs_ids = ids, docs_labels = [findfirst(==(g), cats) for g in gold], aiembed_kwargs = emb)
+{{?model=classify}} emb_labels = score(index, cls; return_labels = true)  # one category per document, no further LLM calls
+{{?model=classify}} println("Agreement with the chat model: Cohen kappa ", round(kappa(confusion(emb_labels, labels)); digits = 2))
 {{?model=tag}} # one concept per tag: the LLM rewrites sample documents through the tag and a logistic model learns that direction
-{{?model=tag}} S = reduce(hcat, [score(index, train_concept(index, t; num_samples = min(20, length(docs)), aigenerate_kwargs = (; model = llm))) for t in tag_list])
+{{?model=tag}} S = reduce(hcat, [score(index, train_concept(index, t; num_samples = min(20, length(docs)), aigenerate_kwargs = (; model = llm), aiembed_kwargs = emb)) for t in tag_list])
 {{?model=tag}} for (j, t) in enumerate(tag_list)
-{{?model=tag}}     println(rpad(t, 20), "agreement with aiclassify: Cohen kappa ", round(kappa(confusion(S[:, j] .> 0.5, tagmat[:, j])); digits = 2))
+{{?model=tag}}     println(rpad(t, 20), "agreement with the chat model: Cohen kappa ", round(kappa(confusion(S[:, j] .> 0.5, tagmat[:, j])); digits = 2))
 {{?model=tag}} end
 {{?model=topics|qa}} println("The embedding classifier applies to the Tag and Classify modes.")
 '''
@@ -519,26 +772,31 @@ label = "Compare"
 [[actionGroups.actions]]
 id = "compare-models"
 label = "Compare Models"
-desc = "Run the same analysis with the second model and measure agreement (Cohen kappa)"
+desc = "Run the same analysis with the second model, from any provider, and measure agreement (Cohen kappa)"
 code = '''
-llm2 = "{{llmmodel2}}"
+{{?chat-provider2=ollama}} llm2 = "{{chat2-ollama}}"; use_model(llm2, PT.OllamaSchema())  # local, no key; first run: ollama pull {{chat2-ollama}}
+{{?chat-provider2=anthropic}} llm2 = "{{chat2-anthropic}}"; use_model(llm2, PT.AnthropicSchema())  # needs ANTHROPIC_API_KEY
+{{?chat-provider2=google}} llm2 = "{{chat2-google}}"; use_model(llm2, PT.GoogleOpenAISchema())  # needs GOOGLE_API_KEY
+{{?chat-provider2=openai}} llm2 = "{{chat2-openai}}"; use_model(llm2, PT.OpenAISchema())  # needs OPENAI_API_KEY
+{{?chat-provider2=mistral}} llm2 = "{{chat2-mistral}}"; use_model(llm2, PT.MistralOpenAISchema())  # needs MISTRAL_API_KEY
 {{?model=tag}} msgs2   = run_tags(llm2)
-{{?model=tag}} tagmat2 = map(m -> m.content == "true", msgs2)
+{{?model=tag}} tagmat2 = tag_matrix(msgs2)
 {{?model=tag}} for (j, t) in enumerate(tag_list)
 {{?model=tag}}     println(rpad(t, 20), "Cohen kappa ", round(kappa(confusion(tagmat2[:, j], tagmat[:, j])); digits = 2))
 {{?model=tag}} end
-{{?model=tag}} println("API cost: $llm \$", round(cost; digits = 4), "   $llm2 \$", round(sum(m -> something(m.cost, 0.0), msgs2); digits = 4))
-{{?model=classify}} labels2 = [String(something(m.content, "unclassified")) for m in run_labels(llm2)]
+{{?model=tag}} println("LLM tokens: $llm ", tokens(msgs), "   $llm2 ", tokens(msgs2))
+{{?model=classify}} msgs2   = run_labels(llm2)
+{{?model=classify}} labels2 = [match_cat(m.content) for m in msgs2]
 {{?model=classify}} c = confusion(labels2, labels)  # rows: second model, columns: first model
-{{?model=classify}} println("Cohen kappa between $llm and $llm2: ", round(kappa(c); digits = 2))
+{{?model=classify}} println("Cohen kappa between $llm and $llm2: ", round(kappa(c); digits = 2), "   LLM tokens: ", tokens(msgs), " vs ", tokens(msgs2))
 {{?model=classify}} c
 {{?model=topics}} saved = index.topic_levels[k]  # same clusters, relabelled by the second model
-{{?model=topics}} build_clusters!(index; k, add_label = true, add_summary = false, labeler_kwargs = (; model = llm2))
+{{?model=topics}} build_clusters!(index; k, add_label = true, add_summary = false, labeler_kwargs = (; model = llm2, api_kwargs = fixed_temperature(llm2)))
 {{?model=topics}} for (a, b) in zip(saved, index.topic_levels[k])
 {{?model=topics}}     println(a.topic_idx, ". ", a.label, "   |   ", b.label)
 {{?model=topics}} end
 {{?model=topics}} index.topic_levels[k] = saved  # restore the labels and summaries of the first model
-{{?model=qa}} r2, cost2 = ask({{question}}; model = llm2)
+{{?model=qa}} r2, ntokens2 = ask({{question}}; model = llm2)
 {{?model=qa}} println(llm, ":\n", result.final_answer, "\n\n", llm2, ":\n", r2.final_answer)
 '''
 
