@@ -263,7 +263,7 @@ default = "0.1"
 
 [[inputs]]
 id = "r-scale"
-models = ["kf", "ekf", "ukf"]
+models = ["kf", "ekf", "ukf", "pf"]
 label = "R scale"
 tooltip = ""
 default = "0.1"
@@ -301,7 +301,7 @@ id = "meas-expr"
 models = ["ekf", "ukf", "pf"]
 label = "measurement h(x,u,p,t)"
 tooltip = ""
-default = "y  # replace with measurement"
+default = "x[1:ny]  # replace with measurement"
 
 [[inputs]]
 id = "rbf-dyn-expr"
@@ -320,7 +320,7 @@ default = "df"
 [[codeBranches]]
 model = "kf"
 code = '''
-using LowLevelParticleFilters  # state-space filtering
+using LowLevelParticleFilters, LinearAlgebra, Distributions  # filtering, I, MvNormal
 
 const nx, ny, nu = {{nx}}, {{ny}}, {{nu}}  # state / obs / input dimensions
 
@@ -328,23 +328,20 @@ F  = Matrix(I, nx, nx)  # state transition matrix
 B  = zeros(nx, nu)  # input matrix
 H  = Matrix(I, ny, nx)  # measurement matrix
 
-dynamics(x, u, p, t)    = F*x + B*u  # linear state transition
-measurement(x, u, p, t) = H*x  # linear measurement
-
 Q  = {{q-scale}} * Matrix(I, nx, nx)  # process noise covariance
 R  = {{r-scale}} * Matrix(I, ny, ny)  # measurement noise covariance
 x0 = MvNormal({{mu0}}, {{sigma0}})  # initial state x0 ~ N(mu0, Sigma0)
 
 kf = KalmanFilter(F, B, H, zeros(ny, nu), Q, R, x0)  # build Kalman filter
 
-sol = forward_trajectory(kf, {{data}}.u, {{data}}.y)  # run forward pass
-println(mean.(sol.x))
+sol = forward_trajectory(kf, {{data}}.u, {{data}}.y)  # run forward pass (u, y: vectors of vectors)
+(log_likelihood = sol.ll, final_state = sol.xt[end], final_covariance = sol.Rt[end])  # filtered x(T|T) and its covariance
 '''
 
 [[codeBranches]]
 model = "ekf"
 code = '''
-using LowLevelParticleFilters  # state-space filtering
+using LowLevelParticleFilters, LinearAlgebra, Distributions  # filtering, I, MvNormal
 
 const nx, ny, nu = {{nx}}, {{ny}}, {{nu}}  # state / obs / input dimensions
 
@@ -360,16 +357,16 @@ Q  = {{q-scale}} * Matrix(I, nx, nx)  # process noise covariance
 R  = {{r-scale}} * Matrix(I, ny, ny)  # measurement noise covariance
 x0 = MvNormal({{mu0}}, {{sigma0}})  # initial state x0 ~ N(mu0, Sigma0)
 
-ekf = ExtendedKalmanFilter(dynamics, measurement, Q, R, x0; nu)  # build EKF
+ekf = ExtendedKalmanFilter(dynamics, measurement, Q, R, x0; nu)  # build EKF (Jacobians by ForwardDiff)
 
-sol = forward_trajectory(ekf, {{data}}.u, {{data}}.y)  # run forward pass
-println(mean.(sol.x))
+sol = forward_trajectory(ekf, {{data}}.u, {{data}}.y)  # run forward pass (u, y: vectors of vectors)
+(log_likelihood = sol.ll, final_state = sol.xt[end], final_covariance = sol.Rt[end])  # filtered x(T|T) and its covariance
 '''
 
 [[codeBranches]]
 model = "ukf"
 code = '''
-using LowLevelParticleFilters  # state-space filtering
+using LowLevelParticleFilters, LinearAlgebra, Distributions  # filtering, I, MvNormal
 
 const nx, ny, nu = {{nx}}, {{ny}}, {{nu}}  # state / obs / input dimensions
 
@@ -385,36 +382,37 @@ Q  = {{q-scale}} * Matrix(I, nx, nx)  # process noise covariance
 R  = {{r-scale}} * Matrix(I, ny, ny)  # measurement noise covariance
 x0 = MvNormal({{mu0}}, {{sigma0}})  # initial state x0 ~ N(mu0, Sigma0)
 
-ukf = UnscentedKalmanFilter(dynamics, measurement, Q, R, x0; nu)  # build UKF
+ukf = UnscentedKalmanFilter(dynamics, measurement, Q, R, x0; nu, ny)  # build UKF (ny is a required keyword)
 
-sol = forward_trajectory(ukf, {{data}}.u, {{data}}.y)  # run forward pass
-println(mean.(sol.x))
+sol = forward_trajectory(ukf, {{data}}.u, {{data}}.y)  # run forward pass (u, y: vectors of vectors)
+(log_likelihood = sol.ll, final_state = sol.xt[end], final_covariance = sol.Rt[end])  # filtered x(T|T) and its covariance
 '''
 
 [[codeBranches]]
 model = "pf"
 code = '''
-using LowLevelParticleFilters  # state-space filtering
+using LowLevelParticleFilters, LinearAlgebra, Distributions  # filtering, I, MvNormal
 
 const nx, ny, nu = {{nx}}, {{ny}}, {{nu}}  # state / obs / input dimensions
 
 const N = {{n-particles}}  # number of particles
 
-function dynamics(x, u, p, t, noise)  # stochastic state transition
+function dynamics(x, u, p, t)  # state transition; the filter adds noise drawn from noise_dist
     {{dyn-expr}}
 end
 
-function measurement(x, u, p, t)  # measurement function
+function measurement(x, u, p, t)  # measurement function; the filter scores y with meas_dist
     {{meas-expr}}
 end
 
 noise_dist = MvNormal(zeros(nx), {{q-scale}} * I)  # process noise distribution
+meas_dist  = MvNormal(zeros(ny), {{r-scale}} * I)  # measurement noise distribution
 x0         = MvNormal({{mu0}}, {{sigma0}})  # initial state distribution
 
-pf = ParticleFilter({{n-particles}}, dynamics, measurement, noise_dist, x0; ny)  # build filter with {{n-particles}} particles
+pf = ParticleFilter(N, dynamics, measurement, noise_dist, meas_dist, x0)  # bootstrap particle filter
 
-sol = forward_trajectory(pf, {{data}}.u, {{data}}.y)  # run forward pass
-println(mean.(sol.x))
+sol = forward_trajectory(pf, {{data}}.u, {{data}}.y)  # run forward pass (u, y: vectors of vectors)
+(log_likelihood = sol.ll, final_state = mean_trajectory(sol)[end, :])  # weighted particle mean at time T
 '''
 
 [[codeBranches]]
@@ -454,9 +452,11 @@ desc = "Plot filtered state estimates over time"
 code = '''
 using LowLevelParticleFilters, Plots  # filter + plotting
 
-sol = forward_trajectory(filter, {{data}}.u, {{data}}.y)  # run filter
+sol = forward_trajectory({{model}}, {{data}}.u, {{data}}.y)  # run filter
+{{?model!=pf|rbf}} xf = reduce(hcat, sol.xt)  # filtered estimates x(t|t), nx x T
+{{?model=pf|rbf}} xf = transpose(mean_trajectory(sol))  # weighted particle means, nx x T
 
-plot(reduce(hcat, mean.(sol.x))', label=reshape(["x$i" for i in 1:nx], 1, :))  # plot mean state estimates
+plot(transpose(xf), label=reshape(["x$i" for i in 1:size(xf, 1)], 1, :))  # filtered state estimates
 '''
 
 [[actionGroups.actions]]
@@ -466,11 +466,15 @@ desc = "Compare forward-filtered and smoothed state estimates"
 code = '''
 using LowLevelParticleFilters, Plots  # filter + plotting
 
-sol_f = forward_trajectory(filter, {{data}}.u, {{data}}.y)  # forward filtered estimates
-sol_s = smooth(filter, sol_f, {{data}}.u, {{data}}.y)  # smoothed estimates (backward pass)
+sol_f = forward_trajectory({{model}}, {{data}}.u, {{data}}.y)  # forward filtered estimates
+{{?model!=pf|rbf}} xf = reduce(hcat, sol_f.xt)  # filtered x(t|t), nx x T
+{{?model!=pf|rbf}} xs = reduce(hcat, smooth(sol_f, {{model}}).xT)  # RTS smoother x(t|T), nx x T
+{{?model=pf|rbf}} xf = transpose(mean_trajectory(sol_f))  # filtered particle means, nx x T
+{{?model=pf|rbf}} xb, _ = smooth({{model}}, 100, {{data}}.u, {{data}}.y)  # forward-filter backward-simulation, 100 trajectories
+{{?model=pf|rbf}} xs = LowLevelParticleFilters.smoothed_mean(xb)  # smoothed means, nx x T
 
-plot(reduce(hcat, mean.(sol_f.x))', label="Filtered")  # filtered
-plot!(reduce(hcat, mean.(sol_s.x))', label="Smoothed")  # smoothed — lower variance at cost of delay
+plot(transpose(xf), label="Filtered", color=1)  # filtered
+plot!(transpose(xs), label="Smoothed", color=2, ls=:dash)  # smoothed: uses future data, so less noisy (offline only)
 '''
 
 [[actionGroups]]
@@ -480,14 +484,16 @@ label = "Diagnose"
 [[actionGroups.actions]]
 id = "innovations"
 label = "Innovation Sequence"
-desc = "Check innovations for whiteness — should be uncorrelated if model is correct"
+desc = "Check innovations for whiteness: they should be uncorrelated if the model is correct"
 code = '''
-using LowLevelParticleFilters, Plots  # filter + plotting
+using LowLevelParticleFilters, Plots, StatsBase  # filter + plotting + autocor
 
-sol = forward_trajectory(filter, {{data}}.u, {{data}}.y)  # run filter
-innov = reduce(hcat, sol.e)  # innovation sequence (ny x T matrix)
+sol = forward_trajectory({{model}}, {{data}}.u, {{data}}.y)  # run filter (Kalman-type filters)
+innov = reduce(hcat, sol.e)  # innovations y(t) - yhat(t|t-1), ny x T
+z = reduce(hcat, [sol.S[t].L \ sol.e[t] for t in eachindex(sol.e)])  # standardised by the innovation covariance
 
-plot(innov', layout=ny, title="Innovation")  # should be zero-mean and uncorrelated
+plot(transpose(z), layout=size(z, 1), title="Standardised innovation")  # zero mean, unit variance if the model fits
+bar(autocor(z[1, :], 1:20), legend=false, xlabel="lag", ylabel="autocorrelation")  # near zero at all lags if white
 '''
 
 [[actionGroups.actions]]
@@ -497,7 +503,7 @@ desc = "Compute the log-likelihood of the observations under the model"
 code = '''
 using LowLevelParticleFilters  # filter
 
-ll = loglik(filter, {{data}}.u, {{data}}.y)  # log p(y | theta) — higher is better
+ll = loglik({{model}}, {{data}}.u, {{data}}.y)  # log p(y | theta), higher is better
 println("Log-likelihood: ", ll)
 '''
 
@@ -508,15 +514,14 @@ label = "Predict"
 [[actionGroups.actions]]
 id = "simulate"
 label = "Simulate Forward"
-desc = "Simulate state trajectories from current estimates"
+desc = "Simulate trajectories from the model with the observed inputs (prior predictive check)"
 code = '''
 using LowLevelParticleFilters, Plots  # filter + plotting
 
-sol = forward_trajectory(filter, {{data}}.u, {{data}}.y)  # run filter
-x_last = sol.x[end]  # particle cloud at final time
+x_sim, u_sim, y_sim = simulate({{model}}, {{data}}.u)  # one draw from the model, starting at the initial distribution
 
-sim = simulate(filter, x_last, {{data}}.u[end:end], 20)  # simulate 20 steps from last state
-plot(sim)  # predicted future trajectories
+plot(reduce(hcat, {{data}}.y)[1, :], label="Observed y1")  # data
+plot!(reduce(hcat, y_sim)[1, :], label="Simulated y1", ls=:dash)  # a reasonable model produces similar-looking signals
 '''
 
 [[actionGroups.actions]]
@@ -526,11 +531,8 @@ desc = "Generate one-step-ahead predictions and compare with observations"
 code = '''
 using LowLevelParticleFilters, Plots  # filter + plotting
 
-sol = forward_trajectory(filter, {{data}}.u, {{data}}.y)  # run filter
-yhat = reduce(hcat, mean.(sol.yhat))  # predicted observations (ny x T)
-
-plot(reduce(hcat, {{data}}.y)', label="Observed")  # true observations
-plot!(yhat', label="Predicted", ls=:dash)  # one-step-ahead predictions
+sol = forward_trajectory({{model}}, {{data}}.u, {{data}}.y)  # run filter
+plot(sol, plotx=false, plotxt=false, plotR=false, plotRt=false, plote=false, plotu=false, ploty=true, plotyh=true, plotyht=false)  # observed y vs predicted yhat(t|t-1)
 '''
 
 [[actionGroups]]
@@ -544,13 +546,15 @@ desc = "Run KF, EKF, and UKF on the same data and compare estimates"
 code = '''
 using LowLevelParticleFilters, Plots  # filter + plotting
 
+# needs kf, ekf and ukf built from the same Q, R and x0 (run those panels' code first)
 sol_kf  = forward_trajectory(kf,  {{data}}.u, {{data}}.y)  # Kalman filter
 sol_ekf = forward_trajectory(ekf, {{data}}.u, {{data}}.y)  # Extended Kalman filter
 sol_ukf = forward_trajectory(ukf, {{data}}.u, {{data}}.y)  # Unscented Kalman filter
 
-plot(reduce(hcat, mean.(sol_kf.x))', label="KF")  # compare estimates
-plot!(reduce(hcat, mean.(sol_ekf.x))', label="EKF")  # 
-plot!(reduce(hcat, mean.(sol_ukf.x))', label="UKF")  # 
+plot(transpose(reduce(hcat, sol_kf.xt)), label="KF", color=1)  # filtered estimates x(t|t)
+plot!(transpose(reduce(hcat, sol_ekf.xt)), label="EKF", color=2)
+plot!(transpose(reduce(hcat, sol_ukf.xt)), label="UKF", color=3)
+(kf = sol_kf.ll, ekf = sol_ekf.ll, ukf = sol_ukf.ll)  # log-likelihoods
 '''
 
 [[actionGroups.actions]]
@@ -558,13 +562,13 @@ id = "particle-count"
 label = "Particle Count"
 desc = "Vary number of particles and compare accuracy vs. computation time"
 code = '''
-using LowLevelParticleFilters, BenchmarkTools  # filter + benchmarks
+using LowLevelParticleFilters, BenchmarkTools, Statistics  # filter + benchmarks + mean/std
 
 for N in [100, 500, 1000, 5000]  # sweep particle counts
-    pf_n = ParticleFilter(N, dynamics, measurement, noise_dist, x0; ny)  # build filter
-    ll = loglik(pf_n, {{data}}.u, {{data}}.y)  # log-likelihood
-    t  = @belapsed loglik(pf_n, $({{data}}.u), $({{data}}.y))  # timing
-    println("N=$N: ll=$ll, t=$(round(t*1000, digits=1))ms")
+    pf_n = ParticleFilter(N, dynamics, measurement, noise_dist, meas_dist, x0)  # build filter
+    lls = [loglik(pf_n, {{data}}.u, {{data}}.y) for _ in 1:5]  # the estimate is random: its spread shrinks with N
+    t  = @belapsed loglik($pf_n, $({{data}}.u), $({{data}}.y))  # timing
+    println("N=$N: ll=$(round(mean(lls), digits=2)) +/- $(round(std(lls), digits=2)), t=$(round(t*1000, digits=1))ms")
 end
 '''
 
@@ -577,12 +581,13 @@ id = "state-covariance"
 label = "State Uncertainty"
 desc = "Plot posterior state variance (diagonal of covariance) over time"
 code = '''
-using LowLevelParticleFilters, Plots  # filter + plotting
+using LowLevelParticleFilters, LinearAlgebra, Plots  # filter + diag + plotting
 
-sol = forward_trajectory(filter, {{data}}.u, {{data}}.y)  # run filter
-vars = reduce(hcat, var.(sol.x))  # state variance over time (nx x T)
+sol = forward_trajectory({{model}}, {{data}}.u, {{data}}.y)  # run filter
+{{?model!=pf|rbf}} vars = reduce(hcat, diag.(sol.Rt))  # diagonal of the filter covariance R(t|t), nx x T
+{{?model=pf|rbf}} vars = reduce(hcat, diag.(weighted_cov(sol)))  # particle variances, nx x T
 
-plot(vars', label=reshape(["Var x$i" for i in 1:nx], 1, :))  # higher variance = more uncertain state
+plot(transpose(vars), label=reshape(["Var x$i" for i in 1:size(vars, 1)], 1, :), yscale=:log10)  # higher variance = more uncertain state
 '''
 
 [[actionGroups.actions]]
@@ -590,12 +595,13 @@ id = "smoothed-states"
 label = "Smoothed States"
 desc = "Kalman smoother provides lower-variance estimates using future data"
 code = '''
-using LowLevelParticleFilters, Plots  # filter + plotting
+using LowLevelParticleFilters, LinearAlgebra, Plots  # filter + diag + plotting
 
-sol_f = forward_trajectory(kf, {{data}}.u, {{data}}.y)  # forward pass
-sol_s = smooth(kf, sol_f, {{data}}.u, {{data}}.y)  # backward smoothing pass
+sol_f = forward_trajectory(kf, {{data}}.u, {{data}}.y)  # forward pass (linear Kalman filter)
+sol_s = smooth(sol_f, kf)  # Rauch-Tung-Striebel backward pass
 
-mu_f = reduce(hcat, mean.(sol_f.x))  # filtered means
-mu_s = reduce(hcat, mean.(sol_s.x))  # smoothed means
-plot([mu_f' mu_s'], label=["Filtered" "Smoothed"])  # smoother uses all data — lower variance
+var_f = reduce(hcat, diag.(sol_f.Rt))  # filtered variances
+var_s = reduce(hcat, diag.(sol_s.RT))  # smoothed variances: never larger than the filtered ones
+plot(transpose(var_f), label="Filtered", color=1)
+plot!(transpose(var_s), label="Smoothed", color=2, ls=:dash)
 '''
