@@ -639,14 +639,16 @@ label = "Interpret"
 [[actionGroups.actions]]
 id = "coefficients"
 label = "Coefficient Interpretation"
-desc = "Odds ratios (logit link) or rate ratios (log link) with confidence intervals; for other links, the coefficients on the link scale"
+desc = "Odds ratios (logit link) or rate ratios (log link) with confidence intervals; for any other link, the coefficients on the link scale"
 code = '''
 using GLM
 
-{{?model=Bernoulli|Binomial|Poisson|Geometric}}ratio = exp.(coef(model))  # odds ratio (Bernoulli, Binomial: logit link) or rate ratio (Poisson, Geometric: log link), with the default link
-{{?model=Bernoulli|Binomial|Poisson|Geometric}}ci    = exp.(confint(model))  # 95% confidence interval on the same scale
-{{?model!=Bernoulli|Binomial|Poisson|Geometric}}ratio = coef(model)  # the default link here is not log or logit, so exp(coef) is not an odds or rate ratio: effects are on the link scale
-{{?model!=Bernoulli|Binomial|Poisson|Geometric}}ci    = confint(model)  # 95% confidence interval on the link scale
+link_name = "{{link}}"  # the link chosen above
+{{?link=}}link_name = Dict("Bernoulli" => "LogitLink", "Binomial" => "LogitLink", "Poisson" => "LogLink", "Geometric" => "LogLink", "NegativeBinomial" => "NegativeBinomialLink", "Gamma" => "InverseLink", "InverseGaussian" => "InverseSquareLink", "Normal" => "IdentityLink")["{{model}}"]  # the family's default link
+ratio_scale = link_name in ("LogitLink", "LogLink")  # only then is exp(coef) an odds ratio (logit) or a rate ratio (log)
+ratio = ratio_scale ? exp.(coef(model)) : coef(model)
+ci    = ratio_scale ? exp.(confint(model)) : confint(model)  # 95% confidence interval on the same scale
+println(ratio_scale ? (link_name == "LogitLink" ? "Odds ratios" : "Rate ratios") : "Coefficients on the $(link_name) scale", " with 95% confidence intervals")
 for (name, r, lo, hi) in zip(coefnames(model), ratio, ci[:, 1], ci[:, 2])
     println(rpad(name, 16), round(r; digits=3), "  [", round(lo; digits=3), ", ", round(hi; digits=3), "]")
 end
