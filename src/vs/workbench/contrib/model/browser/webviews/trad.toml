@@ -35,19 +35,19 @@ label = ""
 name = "Trading Agent Population"
 file = "trad/tutorial-01-trading-agents.ipynb"
 bundled = true
-description = "Simulate a large population of heterogeneous trading agents and observe emergent price discovery"
+description = "Chiarella-Iori fundamentalists, chartists and noise traders on a LimitOrderBook.jl book: emergent prices, stylized facts and averages over seeds"
 
 [[notebookSections.notebooks]]
 name = "Limit Order Book"
 file = "trad/tutorial-02-limit-order-book.ipynb"
 bundled = true
-description = "Build and simulate a continuous double auction limit order book with VLLimitOrderBook.jl"
+description = "LimitOrderBook.jl by hand (price-time priority, walking the book, cancellations), then zero-intelligence order flow"
 
 [[notebookSections.notebooks]]
 name = "Market Microstructure"
 file = "trad/tutorial-03-market-microstructure.ipynb"
 bundled = true
-description = "Full market simulation with the Brokerage.jl platform: agents, exchange, and order flow"
+description = "A live Brokerage.jl exchange with TradingAgents.jl traders and a market maker: the trade tape, price impact and accounts"
 
 [[wikis]]
 name = "Factsheet"
