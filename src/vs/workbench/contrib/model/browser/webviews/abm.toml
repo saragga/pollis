@@ -17,8 +17,24 @@ title = "Agents.jl Tutorial"
 description = "Step-by-step introduction to building agent-based models with Agents.jl"
 url = "https://www.youtube.com/watch?v=QL-bDjzS1pg"
 
+[[packages]]
+name = "Graphs.jl"
+github = "https://github.com/JuliaGraphs/Graphs.jl"
+
+[[packages]]
+name = "Tables.jl"
+github = "https://github.com/JuliaData/Tables.jl"
+
+[[packages]]
+name = "CairoMakie.jl"
+github = "https://github.com/MakieOrg/Makie.jl"
+
+[[packages]]
+name = "GraphMakie.jl"
+github = "https://github.com/MakieOrg/GraphMakie.jl"
+
 [requires]
-packages = ["Agents.jl"]
+packages = ["Agents.jl", "Graphs.jl", "Tables.jl", "CairoMakie.jl", "GraphMakie.jl"]
 
 [[notebookSections]]
 label = ""
@@ -27,25 +43,25 @@ label = ""
 name = "Grid Space: Schelling Segregation"
 file = "abm/tutorial-01-grid.ipynb"
 bundled = true
-description = "Build the classic Schelling segregation model on a 2-D grid space"
+description = "Build the Schelling segregation model on a 2-D grid: two groups, a share-of-like-neighbours threshold, and moves to empty cells"
 
 [[notebookSections.notebooks]]
-name = "Continuous Space: Flocking (Boids)"
+name = "Continuous Space: Flocking (Vicsek)"
 file = "abm/tutorial-02-continuous.ipynb"
 bundled = true
-description = "Simulate flocking behaviour using Reynolds rules in continuous 2-D space"
+description = "Simulate Vicsek flocking in continuous 2-D space: alignment with neighbours plus noise, and the polarisation order parameter"
 
 [[notebookSections.notebooks]]
 name = "Graph Space: Spreading Processes"
 file = "abm/tutorial-03-graph.ipynb"
 bundled = true
-description = "Model an SIR epidemic spreading over a social network graph"
+description = "Model an SIR epidemic with recovery on a contact network, and compare random, small-world and scale-free graphs"
 
 [[notebookSections.notebooks]]
 name = "Data Collection & Observables"
 file = "abm/tutorial-04-data.ipynb"
 bundled = true
-description = "Collect agent and model-level data during a run and export to DataFrame"
+description = "Collect model-level observables with run!, ensemblerun! and paramscan, and read them as plain columns with Tables.jl"
 
 [[wikis]]
 name = "Factsheet"
@@ -154,6 +170,30 @@ journal = "Trends in Cognitive Sciences"
 doi = "10.1016/S1364-6613(03)00144-6"
 openAccess = false
 
+[[references]]
+title = "Novel type of phase transition in a system of self-driven particles"
+authors = "Vicsek, Tamas; Czirok, Andras; Ben-Jacob, Eshel; Cohen, Inon; Shochet, Ofer"
+year = 1995
+journal = "Physical Review Letters"
+doi = "10.1103/PhysRevLett.75.1226"
+openAccess = false
+
+[[references]]
+title = "Epidemic spreading in scale-free networks"
+authors = "Pastor-Satorras, Romualdo; Vespignani, Alessandro"
+year = 2001
+journal = "Physical Review Letters"
+doi = "10.1103/PhysRevLett.86.3200"
+openAccess = false
+
+[[references]]
+title = "Spread of epidemic disease on networks"
+authors = "Newman, M. E. J."
+year = 2002
+journal = "Physical Review E"
+doi = "10.1103/PhysRevE.66.016128"
+openAccess = false
+
 [[models]]
 id = "grid"
 label = "Grid Space"
@@ -168,94 +208,270 @@ label = "Graph Space"
 
 [[bullets]]
 text = "Grid Space"
-detail = "place agents on a discrete lattice; supports Moore and von Neumann neighbourhoods, periodic boundary conditions, and multi-occupancy"
+detail = "Schelling segregation: two groups on a grid; a resident is happy when at least a threshold share of its neighbours belong to its group, and unhappy residents move to random empty cells"
 
 [[bullets]]
 text = "Continuous Space"
-detail = "agents move freely in a continuous N-dimensional box with optional periodic boundaries and nearest-neighbour queries"
+detail = "Vicsek flocking: particles move at constant speed and turn to the mean heading of the neighbours within a radius, plus noise; the polarisation order parameter measures how ordered the flock is"
 
 [[bullets]]
 text = "Graph Space"
-detail = "agents occupy nodes of an arbitrary graph (social network, road network, etc.) and interact along edges"
-
-[[inputs]]
-id = "N"
-label = "Agents (N)"
-tooltip = "Number of agents to initialise in the model. For grid space this must not exceed the number of grid cells (if single-occupancy); for continuous and graph spaces any positive integer is valid."
-default = "100"
-
-[[inputs]]
-id = "dims"
-label = "Space dims"
-tooltip = "Dimensions of the space as a tuple. For grid space: (rows, cols) e.g. (20, 20). For continuous space: (Lx, Ly) as floats. For graph space: pass a SimpleGraph or Graphs.jl graph object."
-default = "(20, 20)"
+detail = "SIR epidemic on a contact network: infectious people infect each susceptible neighbour with probability beta per step and recover with probability gamma; random, small-world and scale-free networks with the same mean degree"
 
 [[inputs]]
 id = "T"
 label = "Steps (T)"
-tooltip = "Number of model steps to simulate. One step calls the agent step function once for every agent according to the chosen scheduler, then optionally a model step function."
-default = "50"
+tooltip = "Number of model steps. In one step every agent acts once, in random order."
+default = "100"
+
+[[inputs]]
+id = "side"
+label = "Grid Side"
+tooltip = "The grid has side x side cells, with no wraparound at the edges."
+default = "20"
+models = ["grid"]
+
+[[inputs]]
+id = "density"
+label = "Density"
+tooltip = "Share of cells occupied by residents, split equally between the two groups. The rest are empty cells that unhappy residents can move to."
+default = "0.9"
+models = ["grid"]
+
+[[inputs]]
+id = "threshold"
+label = "Threshold"
+tooltip = "Minimum share of neighbours from the same group for a resident to be happy, between 0 and 1. Schelling showed that mild values such as 0.3 already produce strong segregation."
+default = "0.3"
+models = ["grid"]
+
+[[inputs]]
+id = "n-particles"
+label = "Particles (N)"
+tooltip = "Number of self-propelled particles in the Vicsek model."
+default = "300"
+models = ["continuous"]
+
+[[inputs]]
+id = "L"
+label = "Box Side (L)"
+tooltip = "Side of the square box, with periodic boundaries. Density is N / L^2; the interaction radius is 1 and the speed 0.3."
+default = "10.0"
+models = ["continuous"]
+
+[[inputs]]
+id = "noise"
+label = "Noise"
+tooltip = "Angular noise as a share of pi, between 0 and 1: each turn adds a uniform random angle in [-noise pi, noise pi]. Low noise gives an ordered flock, high noise a disordered gas."
+default = "0.2"
+models = ["continuous"]
+
+[[inputs]]
+id = "n-people"
+label = "People (N)"
+tooltip = "Number of people, one per network node."
+default = "500"
+models = ["graph"]
+
+[[inputs]]
+id = "k"
+label = "Mean Degree (k)"
+tooltip = "Mean number of contacts per person, shared by all three network types. Must be even, since the small-world and scale-free generators use k / 2."
+default = "4"
+models = ["graph"]
+
+[[inputs]]
+id = "topology"
+label = "Network"
+tooltip = "Contact network. Erdos-Renyi: random links. Watts-Strogatz: a ring lattice with 10% of links rewired, so high clustering. Barabasi-Albert: preferential attachment, so a few highly connected hubs."
+kind = "select"
+default = "erdos_renyi"
+models = ["graph"]
+
+[[inputs.options]]
+value = "erdos_renyi"
+label = "Erdos-Renyi"
+
+[[inputs.options]]
+value = "watts_strogatz"
+label = "Watts-Strogatz"
+
+[[inputs.options]]
+value = "barabasi_albert"
+label = "Barabasi-Albert"
+
+[[inputs]]
+id = "beta"
+label = "Infection Probability (beta)"
+tooltip = "Probability per step that an infectious person infects each susceptible neighbour."
+default = "0.1"
+models = ["graph"]
+
+[[inputs]]
+id = "gamma"
+label = "Recovery Probability (gamma)"
+tooltip = "Probability per step that an infectious person recovers; the mean infectious period is 1 / gamma steps."
+default = "0.1"
+models = ["graph"]
+
+[[inputs]]
+id = "I0"
+label = "Initial Infectious"
+tooltip = "Number of people infectious at step 0, chosen at random."
+default = "5"
+models = ["graph"]
+
+[[inputs]]
+id = "seed"
+label = "Seed"
+tooltip = "Random seed for the initial layout or network and for the model random number generator."
+default = "42"
 
 [[codeBranches]]
 model = "grid"
 code = '''
-using Agents
+using Agents, Random, Statistics, Tables, CairoMakie  # ABM framework; seeds; means; plain columns; plots
 
-@agent struct SchellingAgent GridAgent{2}  # agent on a 2-D grid
-    happy::Bool = false
-    mood::Int = 0
+# Schelling segregation: two groups on a grid; each resident wants a minimum share of like neighbours
+@agent struct Resident(GridAgent{2})
+    group::Int  # 1 or 2
 end
 
-space = GridSpace({{dims}}; periodic=false)  # finite grid, no wraparound
-model = ABM(SchellingAgent, space)  # create model
-for _ in 1:{{N}}  # add agents
-    add_agent!(model; mood=rand(0:3))
+function same_share(agent, model)  # share of the neighbours (8 surrounding cells) in the same group; NaN when alone
+    nbs = collect(nearby_agents(agent, model))
+    return isempty(nbs) ? NaN : count(nb -> nb.group == agent.group, nbs) / length(nbs)
+end
+is_happy(agent, model) = (s = same_share(agent, model); isnan(s) || s >= model.min_to_be_happy)
+
+function schelling_step!(agent, model)  # unhappy residents move to a random empty cell
+    is_happy(agent, model) || move_agent_single!(agent, model)
+    return
 end
 
-agent_step!(a, m) = move_agent!(a, m)  # each agent moves randomly
-data, _ = run!(model, {{T}}; adata=[:mood])  # run and collect :mood
+segregation(model) = mean(filter(!isnan, [same_share(a, model) for a in allagents(model)]))  # mean same-group neighbour share
+share_happy(model) = mean(a -> is_happy(a, model), allagents(model))
+
+function initialize(; side = {{side}}, density = {{density}}, min_to_be_happy = {{threshold}}, seed = {{seed}})
+    space = GridSpaceSingle((side, side); periodic = false)  # at most one resident per cell
+    model = StandardABM(Resident, space; agent_step! = schelling_step!, properties = Dict(:min_to_be_happy => min_to_be_happy),
+        rng = Xoshiro(seed), scheduler = Schedulers.Randomly(), container = Vector)
+    n = round(Int, density * side^2)
+    for i in 1:n
+        add_agent_single!(model; group = i <= n / 2 ? 1 : 2)  # two equal groups on random empty cells
+    end
+    return model
+end
+
+T = {{T}}  # steps
+mdata = [segregation, share_happy]  # model observables, one column each
+model = initialize()
+_, mdf = run!(model, T; mdata)
+res = Tables.columntable(mdf)  # plain columns: time, segregation, share_happy
+println("Same-group neighbours: ", round(res.segregation[1]; digits = 2), " at step 0, ", round(res.segregation[end]; digits = 2), " at step ", T)
+println("Happy residents:       ", round(res.share_happy[1]; digits = 2), " at step 0, ", round(res.share_happy[end]; digits = 2), " at step ", T)
 '''
 
 [[codeBranches]]
 model = "continuous"
 code = '''
-using Agents
+using Agents, Random, Statistics, LinearAlgebra, Tables, CairoMakie  # ABM framework; seeds; means; norm; plain columns; plots
 
-@agent struct Bird ContinuousAgent{2,Float64}  # agent in 2-D continuous space
-    speed::Float64 = 1.0
-    vel::NTuple{2,Float64} = (0.0, 0.0)
+# Vicsek flocking: each particle turns to the mean heading of its neighbours, plus random noise
+@agent struct Particle(ContinuousAgent{2, Float64}) end  # pos and vel are 2-D vectors; vel has unit length
+
+function vicsek_step!(agent, model)
+    heading = agent.vel  # the average includes the particle itself
+    for nb in nearby_agents(agent, model, model.radius; search = :exact)
+        heading += nb.vel
+    end
+    angle = atan(heading[2], heading[1]) + model.noise * pi * (2 * rand(abmrng(model)) - 1)  # uniform noise in [-noise pi, noise pi]
+    agent.vel = SVector(cos(angle), sin(angle))
+    move_agent!(agent, model, model.speed)  # move speed units along the new heading
+    return
 end
 
-space = ContinuousSpace({{dims}}; periodic=true)  # continuous box, periodic
-model = ABM(Bird, space)  # create model
-for _ in 1:{{N}}  # scatter agents randomly
-    add_agent!(model; speed=1.0, vel=Tuple(randn(2)))
+polarisation(model) = norm(sum(a.vel for a in allagents(model))) / nagents(model)  # 1 = all aligned, near 0 = disordered
+
+function initialize(; particles = {{n-particles}}, side = {{L}}, noise = {{noise}}, radius = 1.0, speed = 0.3, seed = {{seed}})
+    space = ContinuousSpace((side, side); spacing = radius / 1.5, periodic = true)
+    properties = Dict(:noise => noise, :radius => radius, :speed => speed)
+    model = StandardABM(Particle, space; agent_step! = vicsek_step!, properties,
+        rng = Xoshiro(seed), scheduler = Schedulers.Randomly(), container = Vector)
+    for _ in 1:particles
+        angle = 2pi * rand(abmrng(model))
+        add_agent!(model, SVector(cos(angle), sin(angle)))  # random position, random heading
+    end
+    return model
 end
 
-agent_step!(a, m) = move_agent!(a, m, a.speed)  # move along vel each step
-data, _ = run!(model, {{T}}; adata=[:speed])  # run and collect :speed
+T = {{T}}  # steps
+mdata = [polarisation]  # model observables, one column each
+model = initialize()
+_, mdf = run!(model, T; mdata)
+res = Tables.columntable(mdf)  # plain columns: time, polarisation
+settled = res.polarisation[(div(T, 2) + 1):end]  # second half of the run
+println("Polarisation: ", round(res.polarisation[1]; digits = 2), " at step 0, mean ", round(mean(settled); digits = 2), " over the second half")
+println("Density: ", round({{n-particles}} / {{L}}^2; digits = 2), " particles per unit area, noise ", {{noise}})
 '''
 
 [[codeBranches]]
 model = "graph"
 code = '''
-using Agents
+using Agents, Graphs, Random, Statistics, Tables, CairoMakie  # ABM framework; network generators; seeds; means; plain columns; plots
 
-using Graphs  # graph library
-
-@agent struct SIRAgent GraphAgent  # agent on a graph node
-    status::Symbol = :S
+# SIR epidemic on a contact network: one person per node, infection passes along edges
+@agent struct Person(GraphAgent)
+    status::Symbol = :S  # :S susceptible, :I infectious, :R recovered
+    infected_at::Int = -1  # step of infection
 end
 
-g     = watts_strogatz({{N}}, 6, 0.1)  # small-world network
-space = GraphSpace(g)  # wrap graph in Agents.jl space
-model = ABM(SIRAgent, space)  # create model
-for v in vertices(g)  # one agent per node; the first 5 start infected, or nothing can spread
-    add_agent!(v, model; status = v <= 5 ? :I : :S)
+function sir_step!(agent, model)
+    (agent.status == :I && agent.infected_at < abmtime(model)) || return  # people infected in this step wait for the next
+    for nb in nearby_agents(agent, model)  # people on neighbouring nodes
+        if nb.status == :S && rand(abmrng(model)) < model.beta
+            nb.status, nb.infected_at = :I, abmtime(model)
+        end
+    end
+    if rand(abmrng(model)) < model.gamma
+        agent.status = :R
+    end
+    return
 end
 
-agent_step!(a, m) = a.status == :I && infect_neighbours!(a, m, 0.1)  # spread infection
-data, _ = run!(model, {{T}}; adata=[:status])  # run and collect :status
+function contact_network(topology, n, k, rng)  # three network types with the same mean degree k
+    topology == :erdos_renyi && return erdos_renyi(n, k / (n - 1); rng = rng)  # random links
+    topology == :watts_strogatz && return watts_strogatz(n, k, 0.1; rng = rng)  # ring lattice, 10% of links rewired
+    return barabasi_albert(n, div(k, 2); rng = rng)  # preferential attachment: a few hubs
+end
+
+function initialize(; people = {{n-people}}, k = {{k}}, topology = :{{topology}}, beta = {{beta}}, gamma = {{gamma}}, initial = {{I0}}, seed = {{seed}})
+    rng = Xoshiro(seed)
+    g = contact_network(topology, people, k, rng)
+    model = StandardABM(Person, GraphSpace(g); agent_step! = sir_step!, properties = Dict(:beta => beta, :gamma => gamma),
+        rng = rng, scheduler = Schedulers.Randomly(), container = Vector)
+    for node in 1:people
+        add_agent!(node, model)  # one susceptible person per node, so agent id = node
+    end
+    for id in randperm(rng, people)[1:initial]
+        model[id].status = :I
+    end
+    return model
+end
+
+share(model, s) = count(a -> a.status == s, allagents(model)) / nagents(model)
+susceptible(model) = share(model, :S)
+infectious(model) = share(model, :I)
+recovered(model) = share(model, :R)
+
+T = {{T}}  # steps
+mdata = [susceptible, infectious, recovered]  # model observables, one column each
+model = initialize()
+_, mdf = run!(model, T; mdata)
+res = Tables.columntable(mdf)  # plain columns: time, susceptible, infectious, recovered
+peak, ipeak = findmax(res.infectious)
+println("Peak: ", round(100 * peak; digits = 1), "% infectious at step ", res.time[ipeak])
+println("Ever infected by step ", T, ": ", round(100 * (1 - res.susceptible[end]); digits = 1), "%")
+infectious(model) > 0 && println("Still ", round(100 * infectious(model); digits = 1), "% infectious: raise T to see the end of the epidemic")
 '''
 
 [[actionGroups]]
@@ -263,40 +479,58 @@ id = "visualise"
 label = "Visualise"
 
 [[actionGroups.actions]]
-id = "abmplot"
-label = "Snapshot Plot"
-desc = "Plot the current agent positions and states as a static figure using abmplot"
+id = "snapshots"
+label = "Snapshots"
+desc = "Grid: the layout at step 0 and step T, and segregation over time. Continuous: the flock at step 0 and step T, and polarisation over time. Graph: the network coloured by status at step T, and the S, I and R curves"
 code = '''
-using Agents, GLMakie
-
-fig, ax, abmobs = abmplot(model)  # static snapshot of current state
-display(fig)  # show in window
+{{?model=grid}} groupcolor(a) = a.group == 1 ? :steelblue : :darkorange
+{{?model=grid}} fig = Figure(size = (1200, 400))
+{{?model=grid}} abmplot!(Axis(fig[1, 1]; title = "Step 0", aspect = 1), initialize(); agent_color = groupcolor, agent_marker = :rect, agent_size = 12)  # same seed: the starting layout
+{{?model=grid}} abmplot!(Axis(fig[1, 2]; title = "Step $T", aspect = 1), model; agent_color = groupcolor, agent_marker = :rect, agent_size = 12)
+{{?model=grid}} ax = Axis(fig[1, 3]; xlabel = "Step", ylabel = "Share", title = "Segregation over time")
+{{?model=grid}} lines!(ax, res.time, res.segregation; label = "Same-group neighbours")
+{{?model=grid}} lines!(ax, res.time, res.share_happy; label = "Happy residents")
+{{?model=grid}} axislegend(ax; position = :rb)
+{{?model=grid}} display(fig)
+{{?model=continuous}} arrow = Makie.Polygon(Point2f[(-0.1, -0.08), (0.2, 0.0), (-0.1, 0.08)])  # a triangle pointing along the heading
+{{?model=continuous}} heading_marker(a) = rotate_polygon(arrow, atan(a.vel[2], a.vel[1]))
+{{?model=continuous}} fig = Figure(size = (1200, 400))
+{{?model=continuous}} abmplot!(Axis(fig[1, 1]; title = "Step 0", aspect = 1), initialize(); agent_marker = heading_marker, agent_color = :steelblue)  # same seed: the starting flock
+{{?model=continuous}} abmplot!(Axis(fig[1, 2]; title = "Step $T", aspect = 1), model; agent_marker = heading_marker, agent_color = :steelblue)
+{{?model=continuous}} ax = Axis(fig[1, 3]; xlabel = "Step", ylabel = "Polarisation", title = "Alignment over time")
+{{?model=continuous}} lines!(ax, res.time, res.polarisation)
+{{?model=continuous}} ylims!(ax, 0, 1)
+{{?model=continuous}} display(fig)
+{{?model=graph}} using GraphMakie  # loads the Agents.jl extension that draws GraphSpace models
+{{?model=graph}} statuscolor(people) = (s = first(people).status; s == :S ? :steelblue : s == :I ? :crimson : :seagreen)  # one person per node
+{{?model=graph}} fig = Figure(size = (1100, 450))
+{{?model=graph}} ax1 = Axis(fig[1, 1]; title = "Network at step $T (blue S, red I, green R)")
+{{?model=graph}} abmplot!(ax1, model; agent_color = statuscolor, agent_size = 8, agentsplotkwargs = (edge_color = (:gray, 0.3),))
+{{?model=graph}} hidedecorations!(ax1)
+{{?model=graph}} ax = Axis(fig[1, 2]; xlabel = "Step", ylabel = "Share of people", title = "SIR curves")
+{{?model=graph}} lines!(ax, res.time, res.susceptible; label = "Susceptible", color = :steelblue)
+{{?model=graph}} lines!(ax, res.time, res.infectious; label = "Infectious", color = :crimson)
+{{?model=graph}} lines!(ax, res.time, res.recovered; label = "Recovered", color = :seagreen)
+{{?model=graph}} axislegend(ax; position = :rc)
+{{?model=graph}} display(fig)
 '''
 
 [[actionGroups.actions]]
-id = "abmvideo"
-label = "Animation"
-desc = "Record an MP4 animation of the model evolving over T steps"
+id = "video"
+label = "Video"
+desc = "Record an animation of the model from step 0 with abmvideo and save it as an MP4 file in the working directory"
 code = '''
-using Agents, GLMakie
-
-abmvideo("sim.mp4", model; frames={{T}}, framerate=5)  # record animation to file
-'''
-
-[[actionGroups.actions]]
-id = "agent-density"
-label = "Agent Density"
-desc = "Plot a heatmap of agent occupancy on the grid over time"
-code = '''
-using Agents, GLMakie
-
-data, _ = run!(model, {{T}}; adata=[:pos])  # collect positions
-final = filter(r -> r.step == {{T}}, data)  # last step only
-grid = zeros(Int, {{dims}})  # occupancy matrix
-for r in eachrow(final)  # count agents per cell
-    grid[r.pos...] += 1
-end
-heatmap(grid, axis=(title="Agent density at t={{T}}",))  # display density map
+{{?model=grid}} groupcolor(a) = a.group == 1 ? :steelblue : :darkorange
+{{?model=grid}} abmvideo("schelling.mp4", initialize(); agent_color = groupcolor, agent_marker = :rect, agent_size = 12, framerate = 5, frames = min(T, 60) + 1, title = "Schelling segregation")
+{{?model=grid}} println("Saved ", joinpath(pwd(), "schelling.mp4"))
+{{?model=continuous}} arrow = Makie.Polygon(Point2f[(-0.1, -0.08), (0.2, 0.0), (-0.1, 0.08)])  # a triangle pointing along the heading
+{{?model=continuous}} heading_marker(a) = rotate_polygon(arrow, atan(a.vel[2], a.vel[1]))
+{{?model=continuous}} abmvideo("vicsek.mp4", initialize(); agent_marker = heading_marker, agent_color = :steelblue, framerate = 20, frames = T + 1, title = "Vicsek flocking")
+{{?model=continuous}} println("Saved ", joinpath(pwd(), "vicsek.mp4"))
+{{?model=graph}} using GraphMakie  # loads the Agents.jl extension that draws GraphSpace models
+{{?model=graph}} statuscolor(people) = (s = first(people).status; s == :S ? :steelblue : s == :I ? :crimson : :seagreen)  # one person per node
+{{?model=graph}} abmvideo("sir-network.mp4", initialize(); agent_color = statuscolor, agent_size = 8, agentsplotkwargs = (edge_color = (:gray, 0.3),), framerate = 5, frames = T + 1, title = "SIR on a network")
+{{?model=graph}} println("Saved ", joinpath(pwd(), "sir-network.mp4"))
 '''
 
 [[actionGroups]]
@@ -305,30 +539,67 @@ label = "Diagnose"
 
 [[actionGroups.actions]]
 id = "convergence"
-label = "Convergence Check"
-desc = "Plot an aggregate observable over time to check whether the model has reached a steady state"
+label = "Convergence"
+desc = "Grid: step until every resident is happy, the absorbing state where nobody moves again. Continuous: compare polarisation in the last two quarters of the run, with its running mean. Graph: step until nobody is infectious and report when the epidemic ended"
 code = '''
-using Agents, GLMakie
-
-adata = [(:mood, mean)]  # collect mean mood each step
-data, _ = run!(model, {{T}}; adata=adata)  # run
-
-lines(data.step, data.mean_mood, axis=(xlabel="Step", ylabel="Mean mood"))  # convergence plot
+{{?model=grid}} m = initialize()
+{{?model=grid}} step!(m, (x, t) -> share_happy(x) == 1 || t >= 1000)  # stop when nobody wants to move, or after 1000 steps
+{{?model=grid}} if share_happy(m) == 1
+{{?model=grid}}     println("Converged at step ", abmtime(m), ": every resident is happy, so nobody moves again")
+{{?model=grid}} else
+{{?model=grid}}     println("No convergence in 1000 steps: ", round(100 * (1 - share_happy(m)); digits = 1), "% still unhappy. With a high threshold or few empty cells residents keep moving")
+{{?model=grid}} end
+{{?model=grid}} println("Same-group neighbours at the end: ", round(segregation(m); digits = 2))
+{{?model=grid}} abmtime(m) > T && println("Convergence comes after T = ", T, ": raise T so the main run reaches it")
+{{?model=continuous}} q = div(T, 4)
+{{?model=continuous}} third, fourth = res.polarisation[(2q + 1):(3q)], res.polarisation[(3q + 1):(4q + 1)]
+{{?model=continuous}} println("Mean polarisation: ", round(mean(third); digits = 3), " in the third quarter, ", round(mean(fourth); digits = 3), " in the last quarter")
+{{?model=continuous}} println(abs(mean(fourth) - mean(third)) < 0.05 ? "Stationary: the flock has settled" : "Still drifting: raise T")
+{{?model=continuous}} fig = Figure(size = (800, 350))
+{{?model=continuous}} ax = Axis(fig[1, 1]; xlabel = "Step", ylabel = "Polarisation", title = "Polarisation and its running mean")
+{{?model=continuous}} lines!(ax, res.time, res.polarisation; label = "Polarisation")
+{{?model=continuous}} lines!(ax, res.time, cumsum(res.polarisation) ./ (1:length(res.polarisation)); label = "Running mean")
+{{?model=continuous}} axislegend(ax; position = :rb)
+{{?model=continuous}} display(fig)
+{{?model=graph}} m = initialize()
+{{?model=graph}} step!(m, (x, t) -> infectious(x) == 0 || t >= 10_000)  # stop when nobody is infectious
+{{?model=graph}} println("The epidemic ended at step ", abmtime(m), " with ", round(100 * recovered(m); digits = 1), "% ever infected")
+{{?model=graph}} abmtime(m) > T && println("That is after T = ", T, ": raise T so the curves show the whole epidemic")
+{{?model=graph}} recovered(m) < 0.05 && println("A minor outbreak: chains of infection died out early, which happens by chance even when R0 > 1")
 '''
 
 [[actionGroups.actions]]
 id = "reproducibility"
 label = "Reproducibility"
-desc = "Run the model twice with the same seed and confirm identical outcomes"
+desc = "Run the model twice with the same seed to check the runs are identical, then with seeds 1 to 10 to show how much of the outcome is chance"
 code = '''
-using Agents, Random
-
-model1 = initialize_model(seed=42)  # first run with seed
-model2 = initialize_model(seed=42)  # second run with same seed
-d1, _ = run!(model1, {{T}}; adata=[:mood])  # run 1
-d2, _ = run!(model2, {{T}}; adata=[:mood])  # run 2
-
-println("Identical: ", d1.mood == d2.mood)  # must be true
+{{?model=grid}} twice = [Tables.columntable(run!(initialize(), T; mdata)[2]) for _ in 1:2]
+{{?model=grid}} println("Same seed twice gives identical runs: ", twice[1] == twice[2])
+{{?model=grid}} function final_segregation(s)
+{{?model=grid}}     m = initialize(; seed = s)
+{{?model=grid}}     step!(m, T)
+{{?model=grid}}     return segregation(m)
+{{?model=grid}} end
+{{?model=grid}} finals = [final_segregation(s) for s in 1:10]
+{{?model=grid}} println("Same-group neighbours at step ", T, " over seeds 1 to 10: mean ", round(mean(finals); digits = 3), ", SD ", round(std(finals); digits = 3), ", range [", round(minimum(finals); digits = 3), ", ", round(maximum(finals); digits = 3), "]")
+{{?model=continuous}} twice = [Tables.columntable(run!(initialize(), T; mdata)[2]) for _ in 1:2]
+{{?model=continuous}} println("Same seed twice gives identical runs: ", twice[1] == twice[2])
+{{?model=continuous}} function settled_polarisation(s)  # mean over the second half of a run
+{{?model=continuous}}     _, d = run!(initialize(; seed = s), T; mdata)
+{{?model=continuous}}     return mean(Tables.columntable(d).polarisation[(div(T, 2) + 1):end])
+{{?model=continuous}} end
+{{?model=continuous}} finals = [settled_polarisation(s) for s in 1:10]
+{{?model=continuous}} println("Settled polarisation over seeds 1 to 10: mean ", round(mean(finals); digits = 3), ", SD ", round(std(finals); digits = 3), ", range [", round(minimum(finals); digits = 3), ", ", round(maximum(finals); digits = 3), "]")
+{{?model=graph}} twice = [Tables.columntable(run!(initialize(), T; mdata)[2]) for _ in 1:2]
+{{?model=graph}} println("Same seed twice gives identical runs: ", twice[1] == twice[2])
+{{?model=graph}} function ever_infected(s)  # the seed sets both the network and the epidemic
+{{?model=graph}}     m = initialize(; seed = s)
+{{?model=graph}}     step!(m, T)
+{{?model=graph}}     return 1 - susceptible(m)
+{{?model=graph}} end
+{{?model=graph}} finals = [ever_infected(s) for s in 1:10]
+{{?model=graph}} println("Ever infected by step ", T, " over seeds 1 to 10: ", join(string.(round.(Int, 100 .* finals)), "%, "), "%")
+{{?model=graph}} println("Mean ", round(100 * mean(finals); digits = 1), "%, SD ", round(100 * std(finals); digits = 1), " points: epidemics on networks are very variable")
 '''
 
 [[actionGroups]]
@@ -337,30 +608,91 @@ label = "Predict"
 
 [[actionGroups.actions]]
 id = "ensemble"
-label = "Ensemble Run"
-desc = "Run multiple independent replications and average the outcome to reduce stochastic noise"
+label = "Ensemble"
+desc = "Run 20 replicates with seeds 1 to 20 using ensemblerun!, plot every trajectory and give the mean and 90% range of the outcome at step T"
 code = '''
-using Agents
-
-models = [initialize_model(seed=i) for i in 1:20]  # 20 replications
-adata = [(:mood, mean)]  # aggregate per step
-data, _ = ensemblerun!(models, {{T}}; adata=adata)  # parallel ensemble
-
-println("Ensemble mean at t={{T}}: ", mean(filter(r->r.step=={{T}}, data).mean_mood))  # final mean
+{{?model=grid}} _, emdf, _ = ensemblerun!(s -> initialize(; seed = s), T; mdata, ensemble = 20, seeds = collect(1:20))
+{{?model=grid}} ens = Tables.columntable(emdf)  # columns: time, segregation, share_happy, ensemble
+{{?model=grid}} fig = Figure(size = (800, 400))
+{{?model=grid}} ax = Axis(fig[1, 1]; xlabel = "Step", ylabel = "Same-group neighbour share", title = "20 replicates")
+{{?model=grid}} for e in 1:20
+{{?model=grid}}     rows = ens.ensemble .== e
+{{?model=grid}}     lines!(ax, ens.time[rows], ens.segregation[rows]; color = (:steelblue, 0.4))
+{{?model=grid}} end
+{{?model=grid}} display(fig)
+{{?model=grid}} final = ens.segregation[ens.time .== T]
+{{?model=grid}} println("Same-group neighbours at step ", T, ": mean ", round(mean(final); digits = 2), ", 90% of replicates in [", round(quantile(final, 0.05); digits = 2), ", ", round(quantile(final, 0.95); digits = 2), "]")
+{{?model=continuous}} _, emdf, _ = ensemblerun!(s -> initialize(; seed = s), T; mdata, ensemble = 20, seeds = collect(1:20))
+{{?model=continuous}} ens = Tables.columntable(emdf)  # columns: time, polarisation, ensemble
+{{?model=continuous}} fig = Figure(size = (800, 400))
+{{?model=continuous}} ax = Axis(fig[1, 1]; xlabel = "Step", ylabel = "Polarisation", title = "20 replicates")
+{{?model=continuous}} for e in 1:20
+{{?model=continuous}}     rows = ens.ensemble .== e
+{{?model=continuous}}     lines!(ax, ens.time[rows], ens.polarisation[rows]; color = (:steelblue, 0.4))
+{{?model=continuous}} end
+{{?model=continuous}} ylims!(ax, 0, 1)
+{{?model=continuous}} display(fig)
+{{?model=continuous}} final = [mean(ens.polarisation[(ens.ensemble .== e) .& (ens.time .> div(T, 2))]) for e in 1:20]  # settled value per replicate
+{{?model=continuous}} println("Settled polarisation: mean ", round(mean(final); digits = 2), ", 90% of replicates in [", round(quantile(final, 0.05); digits = 2), ", ", round(quantile(final, 0.95); digits = 2), "]")
+{{?model=graph}} _, emdf, _ = ensemblerun!(s -> initialize(; seed = s), T; mdata, ensemble = 20, seeds = collect(1:20))
+{{?model=graph}} ens = Tables.columntable(emdf)  # columns: time, susceptible, infectious, recovered, ensemble
+{{?model=graph}} fig = Figure(size = (1100, 400))
+{{?model=graph}} ax = Axis(fig[1, 1]; xlabel = "Step", ylabel = "Share infectious", title = "20 replicates")
+{{?model=graph}} for e in 1:20
+{{?model=graph}}     rows = ens.ensemble .== e
+{{?model=graph}}     lines!(ax, ens.time[rows], ens.infectious[rows]; color = (:crimson, 0.4))
+{{?model=graph}} end
+{{?model=graph}} sizes = [1 - ens.susceptible[(ens.ensemble .== e) .& (ens.time .== T)][1] for e in 1:20]
+{{?model=graph}} hist(fig[1, 2], sizes; bins = 15, axis = (xlabel = "Share ever infected by step T", ylabel = "Replicates", title = "Final size"))
+{{?model=graph}} display(fig)
+{{?model=graph}} major = sizes .> 0.1
+{{?model=graph}} println("Major outbreaks (more than 10% infected): ", count(major), " of 20")
+{{?model=graph}} any(major) && println("Final size of major outbreaks: mean ", round(100 * mean(sizes[major]); digits = 1), "%, range [", round(100 * minimum(sizes[major]); digits = 1), "%, ", round(100 * maximum(sizes[major]); digits = 1), "%]")
 '''
 
 [[actionGroups.actions]]
-id = "paramscan"
-label = "Parameter Scan"
-desc = "Sweep a model parameter and see how the equilibrium state changes"
+id = "scenario"
+label = "Scenario"
+desc = "Grid: lower the threshold to 0.1 once segregation has formed and see whether the grid mixes again. Continuous: raise the noise to 0.8 for T steps, then restore it. Graph: vaccinate 30% of people at random or the 30% with most contacts, over 20 replicates"
 code = '''
-using Agents
-
-params = Dict(:threshold => [0.2, 0.4, 0.6, 0.8])  # parameter sweep
-adata = [(:mood, mean)]  # observable
-data, _ = paramscan(params, initialize_model; n={{T}}, adata=adata)  # scan
-
-println(unique(data.threshold))  # check parameter values
+{{?model=grid}} m = initialize()
+{{?model=grid}} step!(m, T)
+{{?model=grid}} before = segregation(m)
+{{?model=grid}} m.min_to_be_happy = 0.1  # residents become far more tolerant
+{{?model=grid}} _, d = run!(m, T; mdata)
+{{?model=grid}} after = Tables.columntable(d)
+{{?model=grid}} println("Same-group neighbours: ", round(before; digits = 2), " at step ", T, " with threshold ", {{threshold}}, ", ", round(after.segregation[end]; digits = 2), " after ", T, " more steps with threshold 0.1")
+{{?model=grid}} println(abs(after.segregation[end] - before) < 0.02 ? "Segregation persists: once everyone is happy nobody moves, so tolerance alone does not mix the grid again" : "Segregation changed after the threshold was lowered")
+{{?model=continuous}} m = initialize()
+{{?model=continuous}} phases = [(T, {{noise}}, "Noise {{noise}}"), (T, 0.8, "Noise 0.8"), (T, {{noise}}, "Noise {{noise}} again")]
+{{?model=continuous}} fig = Figure(size = (900, 350))
+{{?model=continuous}} ax = Axis(fig[1, 1]; xlabel = "Step", ylabel = "Polarisation", title = "Noise shock")
+{{?model=continuous}} for (steps, eta, name) in phases
+{{?model=continuous}}     m.noise = eta
+{{?model=continuous}}     _, d = run!(m, steps; mdata)
+{{?model=continuous}}     p = Tables.columntable(d)
+{{?model=continuous}}     lines!(ax, p.time, p.polarisation; label = name)
+{{?model=continuous}}     println(rpad(name, 20), " mean polarisation over the last half ", round(mean(p.polarisation[(div(steps, 2) + 1):end]); digits = 2))
+{{?model=continuous}} end
+{{?model=continuous}} ylims!(ax, 0, 1)
+{{?model=continuous}} axislegend(ax; position = :rb)
+{{?model=continuous}} display(fig)
+{{?model=graph}} function vaccinated_run(strategy, s; coverage = 0.3)
+{{?model=graph}}     m = initialize(; seed = s)
+{{?model=graph}}     g = abmspace(m).graph
+{{?model=graph}}     order = strategy == :hubs ? sortperm(degree(g); rev = true) : randperm(abmrng(m), nv(g))  # agent id = node
+{{?model=graph}}     targets = filter(id -> m[id].status == :S, order)[1:round(Int, coverage * nv(g))]
+{{?model=graph}}     for id in targets
+{{?model=graph}}         m[id].status = :R  # immune from the start
+{{?model=graph}}     end
+{{?model=graph}}     step!(m, T)
+{{?model=graph}}     return 1 - susceptible(m) - length(targets) / nv(g)  # share infected, vaccinated people left out
+{{?model=graph}} end
+{{?model=graph}} for strategy in (:none, :random, :hubs)
+{{?model=graph}}     sizes = strategy == :none ? [vaccinated_run(:random, s; coverage = 0.0) for s in 1:20] : [vaccinated_run(strategy, s) for s in 1:20]
+{{?model=graph}}     println(rpad(string(strategy), 7), " mean share infected ", round(100 * mean(sizes); digits = 1), "%, major outbreaks ", count(sizes .> 0.1), " of 20")
+{{?model=graph}} end
+{{?model=graph}} println("Vaccinating hubs removes the links that carry most transmission; on Barabasi-Albert networks the gap is largest")
 '''
 
 [[actionGroups]]
@@ -368,36 +700,118 @@ id = "compare"
 label = "Compare"
 
 [[actionGroups.actions]]
-id = "grid-vs-continuous"
-label = "Grid vs Continuous"
-desc = "Run the same agent rules in grid and continuous space and compare emergent patterns"
+id = "parameter-sweep"
+label = "Parameter Sweep"
+desc = "Scan the key parameter with paramscan over 5 seeds each. Grid: threshold from 0.1 to 0.8. Continuous: noise from 0 to 1, the order-disorder transition. Graph: infection probability, against the epidemic threshold R0 = 1"
 code = '''
-using Agents
-
-model_g = initialize_grid_model(N={{N}}, seed=1)  # grid version
-model_c = initialize_continuous_model(N={{N}}, seed=1)  # continuous version
-adata = [(:mood, mean)]  # shared observable
-dg, _ = run!(model_g, {{T}}; adata=adata)  # grid run
-dc, _ = run!(model_c, {{T}}; adata=adata)  # continuous run
-
-println("Grid final mean:       ", last(dg.mean_mood))  # grid outcome
-println("Continuous final mean: ", last(dc.mean_mood))  # continuous outcome
+{{?model=grid}} params = Dict(:min_to_be_happy => collect(0.1:0.1:0.8), :seed => collect(1:5))
+{{?model=grid}} _, smdf = paramscan(params, initialize; mdata, n = T)
+{{?model=grid}} scan = Tables.columntable(smdf)  # columns: time, segregation, share_happy, min_to_be_happy, seed
+{{?model=grid}} final_rows = scan.time .== T
+{{?model=grid}} xs = sort(unique(scan.min_to_be_happy))
+{{?model=grid}} seg = [mean(scan.segregation[final_rows .& (scan.min_to_be_happy .== x)]) for x in xs]
+{{?model=grid}} hap = [mean(scan.share_happy[final_rows .& (scan.min_to_be_happy .== x)]) for x in xs]
+{{?model=grid}} fig = Figure(size = (800, 400))
+{{?model=grid}} ax = Axis(fig[1, 1]; xlabel = "Threshold", ylabel = "Share at step T", title = "Segregation against the threshold")
+{{?model=grid}} scatterlines!(ax, xs, seg; label = "Same-group neighbours")
+{{?model=grid}} scatterlines!(ax, xs, hap; label = "Happy residents")
+{{?model=grid}} lines!(ax, [0.1, 0.8], [0.1, 0.8]; linestyle = :dash, color = :gray, label = "What residents ask for")
+{{?model=grid}} axislegend(ax; position = :lt)
+{{?model=grid}} display(fig)
+{{?model=grid}} for (x, s, h) in zip(xs, seg, hap)
+{{?model=grid}}     println("Threshold ", x, ": same-group neighbours ", round(s; digits = 2), ", happy ", round(h; digits = 2))
+{{?model=grid}} end
+{{?model=grid}} println("At high thresholds nobody can be satisfied: residents keep moving and segregation falls back")
+{{?model=continuous}} params = Dict(:noise => collect(0.0:0.1:1.0), :seed => collect(1:5))
+{{?model=continuous}} _, smdf = paramscan(params, initialize; mdata, n = T)
+{{?model=continuous}} scan = Tables.columntable(smdf)  # columns: time, polarisation, noise, seed
+{{?model=continuous}} late = scan.time .> div(T, 2)  # settled part of each run
+{{?model=continuous}} xs = sort(unique(scan.noise))
+{{?model=continuous}} pol = [mean(scan.polarisation[late .& (scan.noise .== x)]) for x in xs]
+{{?model=continuous}} spread = [std(scan.polarisation[late .& (scan.noise .== x)]) for x in xs]
+{{?model=continuous}} fig = Figure(size = (800, 400))
+{{?model=continuous}} ax = Axis(fig[1, 1]; xlabel = "Noise (share of pi)", ylabel = "Settled polarisation", title = "Order-disorder transition")
+{{?model=continuous}} band!(ax, xs, pol .- spread, pol .+ spread; color = (:steelblue, 0.2))
+{{?model=continuous}} scatterlines!(ax, xs, pol)
+{{?model=continuous}} display(fig)
+{{?model=continuous}} cross = findfirst(<(0.5), pol)
+{{?model=continuous}} println(cross === nothing ? "Polarisation stays above 0.5 at every noise level: raise the noise or lower the density" : string("Polarisation first drops below 0.5 at noise ", xs[cross], ": the flock loses its order"))
+{{?model=continuous}} println("Fluctuations peak near the transition: largest SD ", round(maximum(spread); digits = 3), " at noise ", xs[argmax(spread)])
+{{?model=graph}} params = Dict(:beta => collect(0.02:0.02:0.2), :seed => collect(1:5))
+{{?model=graph}} _, smdf = paramscan(params, initialize; mdata, n = T)
+{{?model=graph}} scan = Tables.columntable(smdf)  # columns: time, susceptible, infectious, recovered, beta, seed
+{{?model=graph}} final_rows = scan.time .== T
+{{?model=graph}} xs = sort(unique(scan.beta))
+{{?model=graph}} size_mean = [mean(1 .- scan.susceptible[final_rows .& (scan.beta .== x)]) for x in xs]
+{{?model=graph}} kd = degree(abmspace(model).graph)
+{{?model=graph}} tc = mean(kd) / (mean(kd .^ 2) - mean(kd))  # critical transmissibility, R0 = 1
+{{?model=graph}} beta_c = tc * {{gamma}} / (1 - tc + tc * {{gamma}})  # infection probability with that transmissibility
+{{?model=graph}} fig = Figure(size = (800, 400))
+{{?model=graph}} ax = Axis(fig[1, 1]; xlabel = "Infection probability beta", ylabel = "Share ever infected by step T", title = "Final size against beta")
+{{?model=graph}} scatterlines!(ax, xs, size_mean)
+{{?model=graph}} vlines!(ax, [beta_c]; linestyle = :dash, color = :gray)
+{{?model=graph}} display(fig)
+{{?model=graph}} println("Epidemic threshold (R0 = 1) on this network: beta about ", round(beta_c; digits = 3))
+{{?model=graph}} for (x, s) in zip(xs, size_mean)
+{{?model=graph}}     println("beta ", x, ": mean share ever infected ", round(100 * s; digits = 1), "%")
+{{?model=graph}} end
 '''
 
 [[actionGroups.actions]]
-id = "network-topologies"
-label = "Network Topologies"
-desc = "Compare spreading dynamics on random, small-world, and scale-free graphs"
+id = "structure"
+label = "Structure"
+desc = "Grid: density from 0.5 to 0.98, which sets how many empty cells there are to move to. Continuous: number of particles at the chosen noise, since density drives alignment. Graph: Erdos-Renyi, Watts-Strogatz and Barabasi-Albert networks with the same mean degree"
 code = '''
-using Agents, Graphs
-
-topologies = [erdos_renyi({{N}}, 0.05), watts_strogatz({{N}}, 4, 0.1), barabasi_albert({{N}}, 2)]  # 3 network types
-labels = ["Erdos-Renyi", "Watts-Strogatz", "Barabasi-Albert"]  # topology names
-for (g, label) in zip(topologies, labels)
-    model = initialize_sir_model(g)
-    data, _ = run!(model, {{T}}; adata=[(:status, count_infected)])
-    println(label, "  peak infected: ", maximum(data.count_infected_status))
-end
+{{?model=grid}} params = Dict(:density => [0.5, 0.7, 0.8, 0.9, 0.95, 0.98], :seed => collect(1:5))
+{{?model=grid}} _, smdf = paramscan(params, initialize; mdata, n = T)
+{{?model=grid}} scan = Tables.columntable(smdf)  # columns: time, segregation, share_happy, density, seed
+{{?model=grid}} final_rows = scan.time .== T
+{{?model=grid}} ds = sort(unique(scan.density))
+{{?model=grid}} seg = [mean(scan.segregation[final_rows .& (scan.density .== d)]) for d in ds]
+{{?model=grid}} hap = [mean(scan.share_happy[final_rows .& (scan.density .== d)]) for d in ds]
+{{?model=grid}} fig = Figure(size = (800, 400))
+{{?model=grid}} ax = Axis(fig[1, 1]; xlabel = "Density", ylabel = "Share at step T", title = "Segregation against density")
+{{?model=grid}} scatterlines!(ax, ds, seg; label = "Same-group neighbours")
+{{?model=grid}} scatterlines!(ax, ds, hap; label = "Happy residents")
+{{?model=grid}} axislegend(ax; position = :lb)
+{{?model=grid}} display(fig)
+{{?model=grid}} for (d, s, h) in zip(ds, seg, hap)
+{{?model=grid}}     println("Density ", d, ": same-group neighbours ", round(s; digits = 2), ", happy ", round(h; digits = 2))
+{{?model=grid}} end
+{{?model=grid}} println("With few empty cells unhappy residents have nowhere good to go, so sorting is slower and less complete")
+{{?model=continuous}} params = Dict(:particles => [50, 100, 200, 400, 800], :seed => collect(1:3))
+{{?model=continuous}} _, smdf = paramscan(params, initialize; mdata, n = T)
+{{?model=continuous}} scan = Tables.columntable(smdf)  # columns: time, polarisation, particles, seed
+{{?model=continuous}} late = scan.time .> div(T, 2)
+{{?model=continuous}} ns = sort(unique(scan.particles))
+{{?model=continuous}} pol = [mean(scan.polarisation[late .& (scan.particles .== x)]) for x in ns]
+{{?model=continuous}} fig = Figure(size = (800, 400))
+{{?model=continuous}} ax = Axis(fig[1, 1]; xlabel = "Density (particles per unit area)", ylabel = "Settled polarisation", title = "Alignment against density at noise {{noise}}")
+{{?model=continuous}} scatterlines!(ax, ns ./ {{L}}^2, pol)
+{{?model=continuous}} ylims!(ax, 0, 1)
+{{?model=continuous}} display(fig)
+{{?model=continuous}} for (x, p) in zip(ns, pol)
+{{?model=continuous}}     println(rpad(x, 4), " particles (density ", round(x / {{L}}^2; digits = 2), "): settled polarisation ", round(p; digits = 2))
+{{?model=continuous}} end
+{{?model=continuous}} println("Denser flocks have more neighbours to average over, so the same noise disrupts them less")
+{{?model=graph}} params = Dict(:topology => [:erdos_renyi, :watts_strogatz, :barabasi_albert], :seed => collect(1:10))
+{{?model=graph}} _, smdf = paramscan(params, initialize; mdata, n = T)
+{{?model=graph}} scan = Tables.columntable(smdf)  # columns: time, susceptible, infectious, recovered, topology, seed
+{{?model=graph}} fig = Figure(size = (900, 400))
+{{?model=graph}} ax = Axis(fig[1, 1]; xlabel = "Step", ylabel = "Share infectious (mean of 10 runs)", title = "Same mean degree, different networks")
+{{?model=graph}} for tp in (:erdos_renyi, :watts_strogatz, :barabasi_albert)
+{{?model=graph}}     rows = scan.topology .== tp
+{{?model=graph}}     ts = sort(unique(scan.time[rows]))
+{{?model=graph}}     curve = [mean(scan.infectious[rows .& (scan.time .== t)]) for t in ts]
+{{?model=graph}}     lines!(ax, ts, curve; label = string(tp))
+{{?model=graph}}     peaks = [maximum(scan.infectious[rows .& (scan.seed .== s)]) for s in 1:10]
+{{?model=graph}}     sizes = [1 - scan.susceptible[rows .& (scan.seed .== s) .& (scan.time .== T)][1] for s in 1:10]
+{{?model=graph}}     kd = degree(contact_network(tp, {{n-people}}, {{k}}, Xoshiro({{seed}})))
+{{?model=graph}}     println(rpad(string(tp), 16), " mean peak ", round(100 * mean(peaks); digits = 1), "%, mean final size ", round(100 * mean(sizes); digits = 1), "%, degree variance ", round(var(kd); digits = 1))
+{{?model=graph}} end
+{{?model=graph}} axislegend(ax; position = :rt)
+{{?model=graph}} display(fig)
+{{?model=graph}} println("Hubs spread infection early (faster, sharper peaks); clustering on the small-world ring slows it down")
 '''
 
 [[actionGroups]]
@@ -405,33 +819,89 @@ id = "interpret"
 label = "Interpret"
 
 [[actionGroups.actions]]
-id = "emergent-summary"
-label = "Emergent Summary"
-desc = "Print a concise summary of emergent population-level statistics at the end of the run"
+id = "summary"
+label = "Summary"
+desc = "Grid: what residents asked for against the segregation that emerged. Continuous: whether the flock is ordered, disordered or near the transition. Graph: R0 from the network degrees and the per-step probabilities, and the herd-immunity share"
 code = '''
-using Agents, Statistics
-
-adata = [(:mood, mean), (:mood, std)]  # collect mean and std
-data, mdata = run!(model, {{T}}; adata=adata)  # run with collection
-final = last(data.mean_mood)  # final mean mood
-spread = last(data.std_mood)  # final std dev
-
-println("=== Emergent Summary ===")  # header
-println("Steps run:        ", {{T}})  # duration
-println("Final mean mood:  ", round(final; digits=3))  # equilibrium
-println("Mood dispersion:  ", round(spread; digits=3))  # heterogeneity
+{{?model=grid}} s0, s1 = res.segregation[1], res.segregation[end]
+{{?model=grid}} println("Each resident asked for at least ", round(Int, 100 * {{threshold}}), "% same-group neighbours")
+{{?model=grid}} println("Random start: ", round(Int, 100 * s0), "% same-group neighbours. After ", T, " steps: ", round(Int, 100 * s1), "%")
+{{?model=grid}} println("Happy residents after ", T, " steps: ", round(Int, 100 * res.share_happy[end]), "%")
+{{?model=grid}} if s1 > {{threshold}} + 0.2
+{{?model=grid}}     println("Mild individual preferences produced far more segregation than anyone asked for: an emergent outcome (Schelling 1971)")
+{{?model=grid}} else
+{{?model=grid}}     println("Segregation stayed close to what residents asked for at this threshold and density")
+{{?model=grid}} end
+{{?model=continuous}} p, sd = mean(settled), std(settled)
+{{?model=continuous}} println("Settled polarisation ", round(p; digits = 2), " (SD ", round(sd; digits = 3), ") at noise ", {{noise}}, " and density ", round({{n-particles}} / {{L}}^2; digits = 2))
+{{?model=continuous}} if p > 0.7
+{{?model=continuous}}     println("Ordered: a flock moving in one direction emerges from local alignment, with no leader and no global information")
+{{?model=continuous}} elseif p < 0.3
+{{?model=continuous}}     println("Disordered: the noise beats alignment and headings stay random, like a gas")
+{{?model=continuous}} else
+{{?model=continuous}}     println("Near the transition: polarisation is intermediate and fluctuates; compare with the Parameter Sweep")
+{{?model=continuous}} end
+{{?model=graph}} kd = degree(abmspace(model).graph)
+{{?model=graph}} k1, k2 = mean(kd), mean(kd .^ 2)
+{{?model=graph}} trans = {{beta}} / ({{beta}} + {{gamma}} - {{beta}} * {{gamma}})  # chance an infectious person infects a given neighbour before recovering
+{{?model=graph}} R0 = trans * (k2 - k1) / k1  # transmissibility times the mean excess degree
+{{?model=graph}} println("Mean degree ", round(k1; digits = 2), ", mean excess degree ", round((k2 - k1) / k1; digits = 2), " (higher when degrees vary more)")
+{{?model=graph}} println("Transmissibility ", round(trans; digits = 3), ", R0 about ", round(R0; digits = 2))
+{{?model=graph}} if R0 > 1
+{{?model=graph}}     println("R0 > 1: a major outbreak is possible. Random vaccination needs about ", round(Int, 100 * (1 - 1 / R0)), "% coverage for herd immunity")
+{{?model=graph}} else
+{{?model=graph}}     println("R0 < 1: outbreaks die out")
+{{?model=graph}} end
+{{?model=graph}} println("Simulated: ", round(100 * (1 - res.susceptible[end]); digits = 1), "% ever infected by step ", T, ". R0 here ignores clustering, so it overstates spread on Watts-Strogatz networks")
 '''
 
 [[actionGroups.actions]]
 id = "phase-diagram"
 label = "Phase Diagram"
-desc = "Map equilibrium outcomes across two parameters to identify phase transitions"
+desc = "Scan two parameters with paramscan and show the outcome as a heatmap. Grid: threshold against density. Continuous: noise against number of particles. Graph: infection against recovery probability, with the R0 = 1 line"
 code = '''
-using Agents, GLMakie
-
-alphas = 0.0:0.1:1.0  # first parameter
-betas  = 0.0:0.1:1.0  # second parameter
-Z = [last(run!(init_model(alpha=a, beta=b), {{T}}; adata=[(:mood,mean)]).mean_mood) for a in alphas, b in betas]  # outcome matrix
-
-heatmap(alphas, betas, Z, axis=(xlabel="alpha", ylabel="beta", title="Phase diagram"))  # phase diagram
+{{?model=grid}} params = Dict(:min_to_be_happy => collect(0.1:0.1:0.8), :density => [0.5, 0.6, 0.7, 0.8, 0.9, 0.95])
+{{?model=grid}} _, smdf = paramscan(params, initialize; mdata, n = T)
+{{?model=grid}} scan = Tables.columntable(smdf)  # columns: time, segregation, share_happy, min_to_be_happy, density
+{{?model=grid}} final_rows = scan.time .== T
+{{?model=grid}} xs, ds = sort(unique(scan.min_to_be_happy)), sort(unique(scan.density))
+{{?model=grid}} Z = [mean(scan.segregation[final_rows .& (scan.min_to_be_happy .== x) .& (scan.density .== d)]) for x in xs, d in ds]
+{{?model=grid}} fig = Figure(size = (700, 500))
+{{?model=grid}} ax = Axis(fig[1, 1]; xlabel = "Threshold", ylabel = "Density", title = "Same-group neighbour share at step $T")
+{{?model=grid}} hm = heatmap!(ax, xs, ds, Z)
+{{?model=grid}} Colorbar(fig[1, 2], hm)
+{{?model=grid}} display(fig)
+{{?model=grid}} best = argmax(Z)
+{{?model=grid}} println("Most segregated: threshold ", xs[best[1]], ", density ", ds[best[2]], " (", round(Z[best]; digits = 2), ")")
+{{?model=continuous}} params = Dict(:noise => collect(0.0:0.1:1.0), :particles => [100, 200, 400])
+{{?model=continuous}} _, smdf = paramscan(params, initialize; mdata, n = T)
+{{?model=continuous}} scan = Tables.columntable(smdf)  # columns: time, polarisation, noise, particles
+{{?model=continuous}} late = scan.time .> div(T, 2)
+{{?model=continuous}} xs, ns = sort(unique(scan.noise)), sort(unique(scan.particles))
+{{?model=continuous}} Z = [mean(scan.polarisation[late .& (scan.noise .== x) .& (scan.particles .== k)]) for x in xs, k in ns]
+{{?model=continuous}} fig = Figure(size = (700, 500))
+{{?model=continuous}} ax = Axis(fig[1, 1]; xlabel = "Noise (share of pi)", ylabel = "Density", title = "Settled polarisation")
+{{?model=continuous}} hm = heatmap!(ax, xs, ns ./ {{L}}^2, Z; colorrange = (0, 1))
+{{?model=continuous}} Colorbar(fig[1, 2], hm)
+{{?model=continuous}} display(fig)
+{{?model=continuous}} for (j, k) in enumerate(ns)
+{{?model=continuous}}     cross = findfirst(<(0.5), Z[:, j])
+{{?model=continuous}}     println("Density ", round(k / {{L}}^2; digits = 2), ": order lost at noise ", cross === nothing ? "above 1" : xs[cross])
+{{?model=continuous}} end
+{{?model=graph}} params = Dict(:beta => collect(0.02:0.04:0.3), :gamma => collect(0.05:0.05:0.3))
+{{?model=graph}} _, smdf = paramscan(params, initialize; mdata, n = T)
+{{?model=graph}} scan = Tables.columntable(smdf)  # columns: time, susceptible, infectious, recovered, beta, gamma
+{{?model=graph}} final_rows = scan.time .== T
+{{?model=graph}} bs, gs = sort(unique(scan.beta)), sort(unique(scan.gamma))
+{{?model=graph}} Z = [mean(1 .- scan.susceptible[final_rows .& (scan.beta .== b) .& (scan.gamma .== g)]) for b in bs, g in gs]
+{{?model=graph}} kd = degree(abmspace(model).graph)
+{{?model=graph}} excess = (mean(kd .^ 2) - mean(kd)) / mean(kd)
+{{?model=graph}} R0grid = [excess * b / (b + g - b * g) for b in bs, g in gs]
+{{?model=graph}} fig = Figure(size = (700, 500))
+{{?model=graph}} ax = Axis(fig[1, 1]; xlabel = "Infection probability beta", ylabel = "Recovery probability gamma", title = "Share ever infected by step $T")
+{{?model=graph}} hm = heatmap!(ax, bs, gs, Z; colorrange = (0, 1))
+{{?model=graph}} contour!(ax, bs, gs, R0grid; levels = [1.0], color = :white, linewidth = 2)  # R0 = 1
+{{?model=graph}} Colorbar(fig[1, 2], hm)
+{{?model=graph}} display(fig)
+{{?model=graph}} println("The white line is R0 = 1: large outbreaks happen above and to the left of it")
 '''
