@@ -278,7 +278,7 @@ label = "Predict"
 [[actionGroups.actions]]
 id = "query-vector"
 label = "Query Vector"
-desc = "Represent a new query document as a TF-IDF vector"
+desc = "Represent a new query document as a raw count vector over the corpus vocabulary (weight it by IDF before comparing it with TF-IDF documents)"
 code = '''
 using TextAnalysis
 
@@ -368,7 +368,7 @@ crps    = Corpus(map(StringDocument, {{corpus}}))  # build corpus
 update_lexicon!(crps)  # build vocabulary
 m       = DocumentTermMatrix(crps)  # DTM
 weights = Matrix(tf_idf(m))  # TF-IDF matrix
-terms   = collect(keys(lexicon(crps)))  # vocabulary terms
+terms   = m.terms  # the DTM's own column order (the keys of lexicon(crps) come in Dict order, which does not match the columns)
 
 for d in 1:min(5, size(weights, 1))
     idx = sortperm(weights[d, :], rev=true)[1:5]
@@ -390,7 +390,7 @@ m     = DocumentTermMatrix(crps)  # DTM
 D     = size(dtm(m), 1)  # number of documents
 df    = vec(sum(dtm(m) .> 0, dims=1))  # document frequency per term
 idf   = log.(D ./ df)  # IDF vector
-terms = collect(keys(lexicon(crps)))  # vocabulary
+terms = m.terms  # the DTM's own column order, so each IDF is paired with its term
 
 sorted = sort(collect(zip(terms, idf)), by=x->x[2], rev=true)  # terms with highest IDF first
 println(sorted[1:10])  # top 10 discriminative terms

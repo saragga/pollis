@@ -176,8 +176,8 @@ label = "Bayesian Estimation"
 [[inputs]]
 id = "evtd-threshold-qq"
 label = "Threshold u (GP)"
-tooltip = ""
-default = "0.0"
+tooltip = "A high threshold: the generalised Pareto describes only the excesses over it. The 90th percentile of the losses is a common start; check it with the mean excess and threshold stability plots."
+default = "quantile(losses, 0.9)"
 models = ["qq"]
 
 [[codeBranches]]
@@ -225,7 +225,7 @@ model = "qq"
 code = '''
 using Extremes, Distributions, Statistics, Plots
 
-{{?evtd-dist-select=gev}} fm                        = gevfit({{evtd-data}}; method = :{{evtd-qq-method}})  # fit Generalized Extreme Value
+{{?evtd-dist-select=gev}} fm                        = gevfit({{evtd-data}}; method = :{{evtd-qq-method}})  # fit Generalized Extreme Value: the data must be block maxima (e.g. monthly maximum losses), since the GEV describes maxima, not every loss
 {{?evtd-dist-select=gev}} mu_hat, sigma_hat, xi_hat = params(fm)  # extract parameters
 {{?evtd-dist-select=gev}} d_gev                     = GeneralizedExtremeValue(mu_hat, sigma_hat, xi_hat)  # GEV distribution
 {{?evtd-dist-select=gev}} n                         = length({{evtd-data}})  # sample size

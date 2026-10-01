@@ -269,7 +269,7 @@ concept = company_concept("320193", "us-gaap", "NetIncomeLoss")
 
 # Values are grouped by unit (here USD); each entry has end, form, val, ...
 for o in last(concept.units.USD, 5)
-    println(o.end, "  ", o.form, "  ", o.val)
+    println(getproperty(o, :end), "  ", o.form, "  ", o.val)
 end
 """
 
@@ -379,7 +379,8 @@ facts = company_facts("320193")
 
 assets = facts.facts[Symbol("us-gaap")].Assets.units.USD
 annual = filter(o -> o.form == "10-K", assets)
-println("Latest reported total assets: ", last(annual).val)
+latest = last(sort(annual, by = o -> getproperty(o, :end)))  # a 10-K also repeats the prior year-end: take the latest balance-sheet date
+println("Total assets at ", getproperty(latest, :end), ": ", latest.val)
 """
 
 [[actionGroups.actions]]
@@ -411,8 +412,8 @@ using EDGAR
 tag = "RevenueFromContractWithCustomerExcludingAssessedTax"
 rev = company_concept("320193", "us-gaap", tag).units.USD
 
-for o in filter(o -> o.form == "10-K", rev)
-    println(o.fy, "  ", o.val)
+for o in filter(o -> o.form == "10-K", rev)  # each 10-K repeats the two prior years as comparatives
+    println(o.start, " to ", getproperty(o, :end), "  ", o.val, "  (from the FY", o.fy, " 10-K)")  # fy is the filing's fiscal year, not the period's
 end
 """
 
@@ -427,7 +428,8 @@ using EDGAR
 function latest_net_income(cik)
     concept = company_concept(string(cik), "us-gaap", "NetIncomeLoss")
     annual = filter(o -> o.form == "10-K", concept.units.USD)
-    return last(annual).val
+    latest = last(sort(annual, by = o -> getproperty(o, :end)))  # latest fiscal year, not a prior-year comparative
+    return (period_end = getproperty(latest, :end), net_income = latest.val)  # fiscal years end in different months (Apple: September, Microsoft: June)
 end
 
 println("Apple:     ", latest_net_income(320193))

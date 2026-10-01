@@ -279,7 +279,7 @@ println("Final state: ", tr[end, :])  # state after n iterations
 [[actionGroups.actions]]
 id = "param-sweep"
 label = "Parameter Sweep"
-desc = "Iterate for each parameter value and record final states to map attractors"
+desc = "Iterate for each parameter value and count the distinct values the orbit visits in its last 100 steps: 1 is a fixed point, 2, 4, 8 a periodic cycle, about 100 no period (chaos)"
 code = '''
 using DynamicalSystems
 
@@ -288,7 +288,8 @@ a_vals = range(1.0, 1.4; length=20)  # sweep parameter a
 for a in a_vals
     ds = DeterministicIteratedMap(henon, {{u0}}, (a, 0.3))
     tr, _ = trajectory(ds, {{n}})  # iterate
-    println("a=", a, " -> final x=", tr[end, 1])  # final state
+    period = length(unique(round.(tr[end-99:end, 1], digits=6)))  # distinct x values after the transient
+    println("a=", round(a, digits=3), " -> ", period == 100 ? "no period within 100 steps" : "period $period")
 end
 '''
 

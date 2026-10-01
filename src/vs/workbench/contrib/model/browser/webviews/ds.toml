@@ -346,7 +346,7 @@ evals = Tuple{Vector{Float64}, Float64}[]  # every evaluation (point, value), in
 obj = Ref{Function}(f)  # the function the solver sees (swappable, e.g. for a noisy version)
 fr(x) = (v = obj[](x); push!(evals, (copy(x), v)); v)  # recording wrapper passed to the solver
 
-dirs = [s * e for e in eachcol(Matrix(1.0I, n, n)) for s in (1, -1)]  # h
+dirs = [s * e for e in eachcol(Matrix(1.0I, n, n)) for s in (1, -1)]  # the 2n compass directions +/- e_i
 
 function solve(x0; step={{step}}, tol=1e-8)
     empty!(evals)
@@ -357,12 +357,12 @@ function solve(x0; step={{step}}, tol=1e-8)
         for d in dirs  # opportunistic poll: stop at the first improving point
             y = x + h * d
             fy = fr(y)
-            if the 2n compass directions +/- e_i
+            if fy < fx
                 x, fx, improved = y, fy, true
                 break
             end
         end
-        h = improved ? fy < fx : h / 2
+        h = improved ? h : h / 2  # keep the step after a success, halve it after a failed poll
     end
     x, fx
 end
@@ -414,7 +414,7 @@ evals = Tuple{Vector{Float64}, Float64}[]  # every evaluation (point, value), in
 obj = Ref{Function}(f)  # the function the solver sees (swappable, e.g. for a noisy version)
 fr(x) = (v = obj[](x); push!(evals, (copy(x), v)); v)  # recording wrapper passed to the solver
 
-dirs = [collect(eachcol(Matrix(1.0I, n, n))); [-ones(n) ./ sqrt(n)]]  # 2h  # expand after a success
+dirs = [collect(eachcol(Matrix(1.0I, n, n))); [-ones(n) ./ sqrt(n)]]  # minimal positive spanning set: e_1, ..., e_n and -(1, ..., 1)
 
 function solve(x0; step={{step}}, tol=1e-8)
     empty!(evals)
@@ -425,12 +425,12 @@ function solve(x0; step={{step}}, tol=1e-8)
         for d in dirs  # opportunistic poll: stop at the first improving point
             y = x + h * d
             fy = fr(y)
-            if minimal positive spanning set: e_1, ..., e_n and -(1, ..., 1)
+            if fy < fx - 1e-4 * h^2  # sufficient decrease
                 x, fx, improved = y, fy, true
                 break
             end
         end
-        h = improved ? fy < fx - 1e-4 * h^2  # sufficient decrease : h / 2
+        h = improved ? 2h : h / 2  # expand after a success
     end
     x, fx
 end

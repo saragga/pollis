@@ -432,10 +432,10 @@ using MacroModelling, StatsPlots
 {{?dsgemodel=custom}}
 {{?dsgemodel=custom}} @parameters {{custom}} begin
 {{?dsgemodel=custom}}     std_z = 0.01
-{{?dsgemodel=custom}}     rho = 0.2
+{{?dsgemodel=custom}}     rho = 0.95  # quarterly TFP persistence: shocks have a half-life of about 3.5 years
 {{?dsgemodel=custom}}     delta = 0.02
-{{?dsgemodel=custom}}     alpha = 0.5
-{{?dsgemodel=custom}}     beta = 0.95
+{{?dsgemodel=custom}}     alpha = 0.36  # capital share of income
+{{?dsgemodel=custom}}     beta = 0.99  # quarterly discount factor: about 4% a year
 {{?dsgemodel=custom}} end
 {{?dsgemodel=custom}}
 {{?dsgemodel=custom}} dsge = {{custom}}  # your model object
@@ -462,10 +462,10 @@ using MacroModelling, StatsPlots
 {{?dsgemodel=custom}}
 {{?dsgemodel=custom}} @parameters {{custom}} begin
 {{?dsgemodel=custom}}     std_z = 0.01
-{{?dsgemodel=custom}}     rho = 0.2
+{{?dsgemodel=custom}}     rho = 0.95  # quarterly TFP persistence: shocks have a half-life of about 3.5 years
 {{?dsgemodel=custom}}     delta = 0.02
-{{?dsgemodel=custom}}     alpha = 0.5
-{{?dsgemodel=custom}}     beta = 0.95
+{{?dsgemodel=custom}}     alpha = 0.36  # capital share of income
+{{?dsgemodel=custom}}     beta = 0.99  # quarterly discount factor: about 4% a year
 {{?dsgemodel=custom}} end
 {{?dsgemodel=custom}}
 {{?dsgemodel=custom}} dsge = {{custom}}  # your model object
@@ -491,10 +491,10 @@ using MacroModelling, StatsPlots
 {{?dsgemodel=custom}}
 {{?dsgemodel=custom}} @parameters {{custom}} begin
 {{?dsgemodel=custom}}     std_z = 0.01
-{{?dsgemodel=custom}}     rho = 0.2
+{{?dsgemodel=custom}}     rho = 0.95  # quarterly TFP persistence: shocks have a half-life of about 3.5 years
 {{?dsgemodel=custom}}     delta = 0.02
-{{?dsgemodel=custom}}     alpha = 0.5
-{{?dsgemodel=custom}}     beta = 0.95
+{{?dsgemodel=custom}}     alpha = 0.36  # capital share of income
+{{?dsgemodel=custom}}     beta = 0.99  # quarterly discount factor: about 4% a year
 {{?dsgemodel=custom}} end
 {{?dsgemodel=custom}}
 {{?dsgemodel=custom}} dsge = {{custom}}  # your model object
@@ -664,8 +664,8 @@ hist_dec[end, 1, :]  # shock contributions to first variable in last period
 
 [[actionGroups.actions]]
 id = "cond_forecast"
-label = "Conditional Forecast"
-desc = "Model-consistent forecast conditional on a user-specified path for observable variables"
+label = "Model Forecast"
+desc = "Unconditional model forecast from the state filtered at the end of the data (a forecast conditional on a path for some variables needs get_conditional_forecast)"
 code = '''
 using MacroModelling
 
