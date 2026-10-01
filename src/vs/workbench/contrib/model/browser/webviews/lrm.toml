@@ -406,17 +406,20 @@ println("Max Drawdown: ", round(minimum(dd_series), digits = 4))
 [[actionGroups.actions]]
 id = "var-backtest"
 label = "VaR Backtest"
-desc = "Count VaR breaches (exceedances) and test whether the violation rate matches the confidence level"
+desc = "Count breaches of out-of-sample rolling VaR forecasts and test whether the violation rate matches the confidence level"
 code = '''
-using PerformanceAnalytics
+using Statistics, HypothesisTests
 
-var_h = valueAtRisk({{returns}}; method = :historical, alpha = {{alpha}})  # historical VaR estimate
-violations = sum({{returns}} .< -var_h)  # count returns below -VaR
-viol_rate  = violations / length({{returns}})  # empirical violation rate
+r = {{returns}}
+w = 250  # estimation window: each VaR uses only the w periods before the one it is tested on
+fc = [-quantile(r[t-w:t-1], {{alpha}}) for t in (w + 1):length(r)]  # out-of-sample VaR forecasts
+hits = r[(w + 1):end] .< -fc  # breaches (in-sample VaR would breach at rate alpha by construction)
+violations, n = sum(hits), length(hits)
 
-println("Expected violations: ",  round({{alpha}} * length({{returns}}), digits = 1))
+println("Expected violations: ",  round({{alpha}} * n, digits = 1), " of ", n)
 println("Observed violations: ",  violations)
-println("Violation rate:      ",  round(viol_rate, digits = 4))
+println("Violation rate:      ",  round(violations / n, digits = 4))
+println("Coverage p-value:    ",  round(pvalue(BinomialTest(violations, n, {{alpha}})), digits = 4))  # exact binomial test of unconditional coverage (Kupiec's LR test is its large-sample version)
 '''
 
 [[actionGroups]]
