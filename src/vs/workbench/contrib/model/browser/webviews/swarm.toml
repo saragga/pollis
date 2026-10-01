@@ -665,9 +665,11 @@ bench = ["sphere" => x -> sum(x .^ 2),
          "Rosenbrock" => x -> sum(100 .* (x[2:end] .- x[1:end-1] .^ 2) .^ 2 .+ (1 .- x[1:end-1]) .^ 2),
          "Rastrigin" => x -> 10 * length(x) + sum(x .^ 2 .- 10 .* cos.(2pi .* x)),
          "Ackley" => x -> -20exp(-0.2sqrt(mean(x .^ 2))) - exp(mean(cos.(2pi .* x))) + 20 + exp(1)]
+# all four have minimum value 0, at the origin except Rosenbrock (at all ones)
 map(bench) do (name, g)
     r = search(f=g)
-    (function_name = name, best_value = r.fx, distance_to_origin = norm(r.x))
+    x_opt = name == "Rosenbrock" ? ones(length(r.x)) : zeros(length(r.x))
+    (function_name = name, best_value = r.fx, distance_to_optimum = norm(r.x - x_opt))
 end
 '''
 
