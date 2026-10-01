@@ -9,11 +9,19 @@ viewType = "pollis.gmm"
 defaultModel = "main"
 
 [[packages]]
-name = "Microeconometrics.jl"
-github = "https://github.com/lbittarello/Microeconometrics.jl"
+name = "GMMTools.jl"
+github = "https://github.com/Gkreindler/GMMTools.jl"
+
+[[packages]]
+name = "Distributions.jl"
+github = "https://github.com/JuliaStats/Distributions.jl"
+
+[[packages]]
+name = "Tables.jl"
+github = "https://github.com/JuliaData/Tables.jl"
 
 [requires]
-packages = ["Microeconometrics.jl"]
+packages = ["GMMTools.jl", "Distributions.jl", "Tables.jl"]
 
 [[notebookSections]]
 label = ""
@@ -108,6 +116,22 @@ journal = ""
 url = "https://doi.org/10.2307/1911873"
 openAccess = false
 
+[[references]]
+title = "A Finite Sample Correction for the Variance of Linear Efficient Two-Step GMM Estimators"
+authors = "Windmeijer, F."
+year = 2005
+journal = ""
+url = "https://doi.org/10.1016/j.jeconom.2004.02.005"
+openAccess = false
+
+[[references]]
+title = "The Bayesian Bootstrap"
+authors = "Rubin, D. B."
+year = 1981
+journal = ""
+url = "https://doi.org/10.1214/aos/1176345338"
+openAccess = false
+
 [[bullets]]
 text = "Estimates parameters by matching sample moment conditions to their theoretical counterparts, without requiring full distributional assumptions"
 detail = ""
@@ -121,82 +145,108 @@ text = "The J-statistic (Hansen overidentification test) assesses instrument val
 detail = ""
 
 [[bullets]]
-text = "Supports heteroscedastic (efficient two-step) and clustered standard errors for moment conditions"
+text = "Robust (sandwich) standard errors, or a cluster Bayesian bootstrap when observations are grouped"
 detail = ""
+
 
 [[inputs]]
 id = "y"
 label = "Response"
-tooltip = "Response (dependent) variable column name in the data frame."
+tooltip = "Name of the response (dependent) variable column."
 default = "y"
 
 [[inputs]]
 id = "exog"
-label = "Exogenous regressors"
-tooltip = "Space-separated names of exogenous regressors included in the moment conditions."
+label = "Exogenous Regressors"
+tooltip = "Space-separated names of exogenous regressors. They enter the model and also serve as their own instruments."
 default = "x1 x2"
 
 [[inputs]]
 id = "endog"
 label = "Endogenous"
-tooltip = "Space-separated names of endogenous regressors — variables correlated with the structural error."
+tooltip = "Space-separated names of endogenous regressors: variables correlated with the structural error."
 default = "w1"
 
 [[inputs]]
 id = "instr"
-label = "Instruments (excluded)"
-tooltip = "Space-separated names of excluded instruments. Requires at least as many instruments as endogenous variables for identification."
+label = "Instruments (Excluded)"
+tooltip = "Space-separated names of excluded instruments. Identification needs at least as many as there are endogenous regressors; with more, the model is overidentified and Hansen's J test applies."
 default = "z1 z2"
 
 [[inputs]]
 id = "vcov"
-label = "VCov"
-tooltip = "Moment-condition variance estimator. Heteroscedastic gives the efficient two-step GMM weighting matrix; Clustered is recommended with grouped data."
+label = "Estimator"
+tooltip = "Two-step efficient GMM re-weights the moments by the inverse of their estimated covariance. One-step GMM with W = (Z'Z/n)^-1 reproduces 2SLS. The cluster option uses two-step GMM with a cluster Bayesian bootstrap for the standard errors."
 kind = "select"
 default = "het"
 
 [[inputs.options]]
 value = "het"
-label = "Heteroscedastic"
+label = "Two-Step Efficient GMM"
 
 [[inputs.options]]
 value = "hom"
-label = "Homoscedastic"
+label = "One-Step GMM (2SLS Weights)"
 
 [[inputs.options]]
 value = "clustered"
-label = "Clustered"
+label = "Two-Step GMM, Cluster Bootstrap SEs"
 
 [[inputs]]
 id = "data"
 label = "Data"
-tooltip = "Name of the data frame (AbstractDataFrame). Must contain all columns referenced in the model."
+tooltip = "Name of a Tables.jl table (for example a NamedTuple of column vectors or a CSV.File) holding all the columns above. With the default df, the code first simulates an example dataset with known coefficients."
 default = "df"
 
 [[inputs]]
 id = "cluster"
-label = "Cluster by"
-tooltip = "Column name for cluster groups. Clusters the moment conditions, producing cluster-robust standard errors."
+label = "Cluster By"
+tooltip = "Column holding the cluster (group) identifier. The bootstrap draws one random weight per cluster, so the standard errors allow for correlation within clusters."
 default = "firm_id"
 when = "vcov=clustered"
 
 [[codeBranches]]
 model = "main"
 code = '''
-using Microeconometrics
+using GMMTools, Distributions, LinearAlgebra, Random, Tables
 
-{{?vcov=hom}} result = fit(GMM(Homoscedastic()), {{data}};
-{{?vcov=het}} result = fit(GMM(Heteroscedastic()), {{data}};
-{{?vcov=clustered}} result = fit(GMM(Clustered(:{{cluster}})), {{data}};
-    response    = :{{y}},
-    regressors  = Symbol.(split("{{exog}}")),  # exogenous regressors (included in moment conditions)
-    endogenous  = Symbol.(split("{{endog}}")),  # endogenous regressors
-    instruments = Symbol.(split("{{instr}}")))  # excluded instruments
+{{?data=df}}# Simulated example: 200 firms over 5 years. y = log sales; w1 = log advertising spend, which managers raise
+{{?data=df}}# when unobserved demand u is high, so w1 is endogenous; z1, z2 = shifters of advertising prices (valid
+{{?data=df}}# instruments); x1, x2 = exogenous controls. True coefficients: intercept 2.0, x1 0.5, x2 -0.3, w1 0.25.
+{{?data=df}}Random.seed!(42)
+{{?data=df}}n_sim = 1_000
+{{?data=df}}firm_id = repeat(1:200, inner = 5)  # firm identifier (5 observations per firm)
+{{?data=df}}x1 = randn(n_sim); x2 = randn(n_sim); z1 = randn(n_sim); z2 = randn(n_sim)
+{{?data=df}}u = randn(n_sim)  # unobserved demand shock
+{{?data=df}}w1 = 1.0 .+ 0.6 .* z1 .- 0.4 .* z2 .+ 0.3 .* x1 .+ 0.8 .* u .+ 0.5 .* randn(n_sim)
+{{?data=df}}firm_shock = 0.3 .* randn(200)
+{{?data=df}}e_sim = 0.5 .* u .+ firm_shock[firm_id] .+ 0.4 .* (1 .+ abs.(x1)) .* randn(n_sim)  # endogenous, clustered, heteroskedastic error
+{{?data=df}}y_sim = 2.0 .+ 0.5 .* x1 .- 0.3 .* x2 .+ 0.25 .* w1 .+ e_sim
+{{?data=df}}df = (y = y_sim, x1 = x1, x2 = x2, w1 = w1, z1 = z1, z2 = z2, firm_id = firm_id)
 
-coef(result)  # GMM coefficient estimates
-coefnames(result)  # variable names
-stderror(result)  # standard errors
-confint(result)  # 95% confidence intervals
+col(s) = Float64.(Tables.getcolumn({{data}}, Symbol(s)))  # read one column of any Tables.jl table
+y = col("{{y}}")
+X = hcat(ones(length(y)), col.(split("{{exog}} {{endog}}"))...)  # regressors: constant, exogenous, endogenous
+Z = hcat(ones(length(y)), col.(split("{{exog}} {{instr}}"))...)  # instruments: constant, exogenous, excluded
+gdata = (y = y, X = X, Z = Z)
+mom_fn(d, theta) = d.Z .* (d.y .- d.X * theta)  # n x m matrix; row i is z_i * e_i(theta), and E[z e] = 0
+theta0 = X \ y  # OLS estimates as starting values
+opts = GMMOptions(theta_names = ["(Intercept)"; String.(split("{{exog}} {{endog}}"))])
+
+{{?vcov=het}}result = GMMTools.fit(gdata, mom_fn, theta0; mode = :twostep, opts = opts)  # two-step efficient GMM
+{{?vcov=hom}}result = GMMTools.fit(gdata, mom_fn, theta0; W = inv(transpose(Z) * Z ./ length(y)), opts = opts)  # one-step GMM with W = (Z'Z/n)^-1, which is 2SLS
+{{?vcov=clustered}}result = GMMTools.fit(gdata, mom_fn, theta0; mode = :twostep, opts = opts)  # two-step efficient GMM
+{{?vcov!=clustered}}GMMTools.vcov_simple(gdata, mom_fn, result)  # robust (sandwich) covariance of the estimates
+{{?vcov=clustered}}cl = Tables.getcolumn({{data}}, :{{cluster}})
+{{?vcov=clustered}}ids = unique(cl); pos = Dict(c => i for (i, c) in enumerate(ids)); idx = [pos[c] for c in cl]
+{{?vcov=clustered}}cluster_weights(rng, d, n) = rand(rng, Dirichlet(length(ids), 1.0))[idx]  # one random weight per cluster
+{{?vcov=clustered}}bw = GMMTools.boot_weights(gdata, result; method = :user, boot_weights_fn = cluster_weights, nboot = 200)
+{{?vcov=clustered}}GMMTools.vcov_bboot(gdata, mom_fn, theta0, result, bw; W = result.W, run_parallel = false, opts = opts)  # cluster Bayesian bootstrap
+se = sqrt.(diag(result.vcov.V))  # standard errors
+
+for (nm, b, s) in zip(opts.theta_names, result.theta_hat, se)
+    println(rpad(nm, 12), lpad(round(b, digits = 4), 10), "   SE ", round(s, digits = 4))
+end
 '''
 
 [[actionGroups]]
@@ -206,74 +256,111 @@ label = "Diagnose"
 [[actionGroups.actions]]
 id = "j_statistic"
 label = "J-Statistic (Hansen Test)"
-desc = "Compute the overidentification test statistic; rejection suggests at least one instrument is invalid"
+desc = "Hansen's overidentification test: do the extra instruments agree with each other?"
 code = '''
-using Microeconometrics, Distributions, LinearAlgebra, Tables
+using GMMTools, Distributions
 
-{{?vcov=hom}} result = fit(GMM(Homoscedastic()), {{data}};
-{{?vcov=het}} result = fit(GMM(Heteroscedastic()), {{data}};
-{{?vcov=clustered}} result = fit(GMM(Clustered(:{{cluster}})), {{data}};
-    response = :{{y}}, regressors = Symbol.(split("{{exog}}")),
-    endogenous = Symbol.(split("{{endog}}")), instruments = Symbol.(split("{{instr}}")))
+{{?vcov=hom}}eff = GMMTools.fit(gdata, mom_fn, theta0; mode = :twostep, opts = opts)  # J needs the efficient (two-step) weights
+{{?vcov!=hom}}eff = result
+J = eff.n_obs * eff.obj_value  # J = n * gbar' S^-1 gbar at the two-step estimate
+df_j = eff.n_moms - length(eff.theta_hat)  # overidentifying restrictions: instruments minus regressors
+p_val = ccdf(Chisq(df_j), J)  # p-value under H0: all moment conditions hold
 
-n      = nobs(result)  # number of observations
-k_endog = length(Symbol.(split("{{endog}}")))  # number of endogenous regressors
-k_instr = length(Symbol.(split("{{instr}}")))  # number of excluded instruments
-df_j   = k_instr - k_endog  # degrees of freedom for J-test
-
-e      = residuals(result)  # GMM residuals
-Z      = hcat(ones(n), (Float64.(Tables.getcolumn({{data}}, s)) for s in Symbol.(split("{{exog}} {{instr}}")))...)  # all instruments: constant, exogenous regressors, excluded instruments
-g      = transpose(Z) * e ./ n  # sample moment conditions E[z e]
-S      = transpose(Z .* e) * (Z .* e) ./ n  # heteroskedasticity-robust covariance of the moments
-J      = n * dot(g, S \ g)  # Hansen J = n g' S^-1 g
-p_val  = 1 - cdf(Chisq(df_j), J)  # p-value under H0: all instruments valid
-
-println("J-statistic: ", round(J, digits=4))
-println("df:          ", df_j)
-println("p-value:     ", round(p_val, digits=4))
+println("J-statistic: ", round(J, digits = 3), "   df = ", df_j, "   p-value = ", round(p_val, digits = 4))
+println(p_val < 0.05 ?
+    "Rejected at 5%: at least one instrument looks invalid, or the model is misspecified." :
+    "Not rejected at 5%. This is consistent with valid instruments, but cannot prove it: the test has low power and needs at least one valid instrument to begin with.")
+{{?vcov=clustered}}println("Note: this J treats observations as independent; with clustered errors it tends to reject too often.")
 '''
 
 [[actionGroups.actions]]
 id = "first_stage"
 label = "First-Stage Analysis"
-desc = "Regress each endogenous variable on all instruments to check instrument relevance (rule of thumb: F > 10)"
+desc = "Partial F of the excluded instruments for each endogenous regressor (rule of thumb: F > 10)"
 code = '''
-using Microeconometrics
+using Distributions
 
-fs = fit(OLS(Homoscedastic()), {{data}};  # first-stage OLS: endogenous on all instruments
-    response   = Symbol(first(split("{{endog}}"))),
-    regressors = Symbol.(split("{{exog}} {{instr}}")))
-
-coef(fs)  # first-stage coefficients
-stderror(fs)  # instrument coefficient SEs
-
-{{?vcov=hom}} result = fit(GMM(Homoscedastic()), {{data}};  # GMM structural equation
-{{?vcov=het}} result = fit(GMM(Heteroscedastic()), {{data}};  # GMM structural equation
-{{?vcov=clustered}} result = fit(GMM(Clustered(:{{cluster}})), {{data}};  # GMM structural equation
-    response = :{{y}}, regressors = Symbol.(split("{{exog}}")),
-    endogenous = Symbol.(split("{{endog}}")), instruments = Symbol.(split("{{instr}}")))
-coef(result)  # GMM structural coefficients
+n = length(y)
+Zx = hcat(ones(n), col.(split("{{exog}}"))...)  # included exogenous regressors only
+q = size(Z, 2) - size(Zx, 2)  # number of excluded instruments
+for s in split("{{endog}}")
+    w = col(s)
+    rss_u = sum(abs2, w .- Z * (Z \ w))  # first stage with the excluded instruments
+    rss_r = sum(abs2, w .- Zx * (Zx \ w))  # first stage without them
+    F = ((rss_r - rss_u) / q) / (rss_u / (n - size(Z, 2)))  # partial F statistic (homoskedastic form)
+    println(rpad(s, 10), " partial F = ", round(F, digits = 1), "   p-value = ", round(ccdf(FDist(q, n - size(Z, 2)), F), digits = 4),
+        F > 10 ? "   instruments look strong" : "   WEAK: estimates can be biased toward OLS")
+end
+println("F > 10 is the Staiger-Stock rule of thumb for one endogenous regressor; with heteroskedastic errors, a robust F is preferable.")
 '''
 
 [[actionGroups.actions]]
 id = "residuals"
 label = "Residual Diagnostics"
-desc = "Examine moment condition residuals for patterns that may indicate model misspecification"
+desc = "Structural residuals and the sample moment conditions at the estimate"
 code = '''
-using Microeconometrics
+using Statistics
 
-{{?vcov=hom}} result = fit(GMM(Homoscedastic()), {{data}};
-{{?vcov=het}} result = fit(GMM(Heteroscedastic()), {{data}};
-{{?vcov=clustered}} result = fit(GMM(Clustered(:{{cluster}})), {{data}};
-    response = :{{y}}, regressors = Symbol.(split("{{exog}}")),
-    endogenous = Symbol.(split("{{endog}}")), instruments = Symbol.(split("{{instr}}")))
+e = y .- X * result.theta_hat  # structural residuals
+k = length(result.theta_hat)
+println("Residual mean: ", round(mean(e), digits = 4))
+println("Residual SD:   ", round(sqrt(sum(abs2, e) / (length(e) - k)), digits = 4))
+println("Sample moments Z'e/n (exactly 0 when just identified; close to 0 otherwise):")
+for (nm, g) in zip(["(Intercept)"; split("{{exog}} {{instr}}")], transpose(Z) * e ./ length(e))
+    println("  ", rpad(nm, 12), round(g, digits = 4))
+end
+println("Correlation of |e| with each regressor (large values suggest heteroskedasticity):")
+for (nm, j) in zip(split("{{exog}} {{endog}}"), 2:size(X, 2))
+    println("  ", rpad(nm, 12), round(cor(abs.(e), X[:, j]), digits = 3))
+end
+'''
 
-e = residuals(result)  # GMM residuals
-n = nobs(result)  # number of observations
+[[actionGroups]]
+id = "compare"
+label = "Compare"
 
-println("Residual mean:   ", round(sum(e)/n, digits = 6))  # should be ~0
-println("Residual std:    ", round(sqrt(sum(e.^2)/(n-2)), digits = 4))  # residual standard deviation
-println("Max abs residual:", round(maximum(abs.(e)), digits = 4))  # largest absolute residual
+[[actionGroups.actions]]
+id = "ols_vs_gmm"
+label = "OLS vs GMM"
+desc = "Show how far OLS moves when an endogenous regressor is treated as exogenous"
+code = '''
+b_ols = X \ y  # OLS: treats every regressor as exogenous
+tab = hcat(b_ols, result.theta_hat)
+hdr = ["OLS", "GMM"]
+{{?data=df}}size(tab, 1) == 4 && (tab = hcat(tab, [2.0, 0.5, -0.3, 0.25]); push!(hdr, "True"))  # coefficients used to simulate df
+
+println(rpad("", 12), join(lpad.(hdr, 10)))
+for (i, nm) in enumerate(opts.theta_names)
+    println(rpad(nm, 12), join(lpad.(round.(tab[i, :], digits = 3), 10)))
+end
+println()
+println("OLS assumes every regressor is uncorrelated with the error. When an endogenous regressor moves with")
+println("unobserved factors that also drive the response, OLS mixes its effect with theirs. GMM uses only the")
+println("variation explained by the excluded instruments, so a large OLS-GMM gap points to endogeneity, provided")
+println("the instruments are valid and strong (see the Diagnose actions).")
+'''
+
+[[actionGroups.actions]]
+id = "gmm_vs_2sls"
+label = "Efficiency vs 2SLS"
+desc = "Compare 2SLS (one-step GMM) with two-step efficient GMM, both with robust standard errors"
+code = '''
+using GMMTools
+
+tsls = GMMTools.fit(gdata, mom_fn, theta0; W = inv(transpose(Z) * Z ./ length(y)), opts = opts)  # one-step GMM with 2SLS weights
+GMMTools.vcov_simple(gdata, mom_fn, tsls)
+eff = GMMTools.fit(gdata, mom_fn, theta0; mode = :twostep, opts = opts)  # two-step efficient GMM
+GMMTools.vcov_simple(gdata, mom_fn, eff)
+
+println(rpad("", 12), lpad("2SLS", 10), lpad("SE", 9), lpad("GMM", 10), lpad("SE", 9))
+for (i, nm) in enumerate(opts.theta_names)
+    println(rpad(nm, 12), lpad(round(tsls.theta_hat[i], digits = 3), 10), lpad(round(tsls.vcov.ses[i], digits = 3), 9),
+        lpad(round(eff.theta_hat[i], digits = 3), 10), lpad(round(eff.vcov.ses[i], digits = 3), 9))
+end
+println()
+println("2SLS is the efficient GMM estimator only when the errors are homoskedastic. With heteroskedastic errors,")
+println("two-step GMM is asymptotically at least as efficient. In small samples, though, two-step standard errors")
+println("tend to be too small (Windmeijer 2005), so a modest SE gain is not by itself evidence of a better estimate.")
 '''
 
 [[actionGroups]]
@@ -283,67 +370,38 @@ label = "Interpret"
 [[actionGroups.actions]]
 id = "coef_table"
 label = "Coefficient Table"
-desc = "Print a formatted table of GMM estimates, standard errors, and z-statistics"
+desc = "Estimates, standard errors, z-statistics and two-sided p-values, with a reading of the main effect"
 code = '''
-using Microeconometrics
+using Distributions
 
-{{?vcov=hom}} result = fit(GMM(Homoscedastic()), {{data}};
-{{?vcov=het}} result = fit(GMM(Heteroscedastic()), {{data}};
-{{?vcov=clustered}} result = fit(GMM(Clustered(:{{cluster}})), {{data}};
-    response = :{{y}}, regressors = Symbol.(split("{{exog}}")),
-    endogenous = Symbol.(split("{{endog}}")), instruments = Symbol.(split("{{instr}}")))
-
-names = coefnames(result)  # variable names
-b     = coef(result)  # GMM estimates
-se    = stderror(result)  # standard errors
-z     = b ./ se  # z-statistics
-
-for i in eachindex(names)
-    println(names[i], ": ", round(b[i], digits=4),
-        "  SE=", round(se[i], digits=4), "  z=", round(z[i], digits=2))
+println(rpad("", 12), lpad("Estimate", 10), lpad("SE", 9), lpad("z", 8), lpad("p", 8))
+for (nm, b, s) in zip(opts.theta_names, result.theta_hat, se)
+    z = b / s
+    println(rpad(nm, 12), lpad(round(b, digits = 4), 10), lpad(round(s, digits = 4), 9),
+        lpad(round(z, digits = 2), 8), lpad(round(2 * ccdf(Normal(), abs(z)), digits = 4), 8))  # two-sided p-value
 end
+
+w = first(split("{{endog}}"))
+j = findfirst(==(w), opts.theta_names)
+println()
+println("Holding the exogenous regressors fixed, a one-unit increase in ", w, " changes {{y}} by ",
+    round(result.theta_hat[j], digits = 3), " units. This is a causal effect only if the excluded instruments")
+println("affect {{y}} through ", w, " alone (exclusion) and are uncorrelated with the error.")
+{{?data=df}}println("In the simulated data both variables are logs, so 0.25 is an elasticity: 1% more advertising raises sales by about 0.25%.")
 '''
 
 [[actionGroups.actions]]
 id = "confint"
 label = "Confidence Intervals"
-desc = "Compute 95% confidence intervals for all GMM coefficients"
+desc = "Large-sample 95% confidence intervals for all coefficients"
 code = '''
-using Microeconometrics
+using Distributions
 
-{{?vcov=hom}} result = fit(GMM(Homoscedastic()), {{data}};
-{{?vcov=het}} result = fit(GMM(Heteroscedastic()), {{data}};
-{{?vcov=clustered}} result = fit(GMM(Clustered(:{{cluster}})), {{data}};
-    response = :{{y}}, regressors = Symbol.(split("{{exog}}")),
-    endogenous = Symbol.(split("{{endog}}")), instruments = Symbol.(split("{{instr}}")))
-
-ci    = confint(result)  # 95% confidence intervals (n x 2 matrix)
-names = coefnames(result)  # variable names
-
-for i in eachindex(names)
-    println(names[i], ": [", round(ci[i,1], digits=4), ", ", round(ci[i,2], digits=4), "]")
+zc = quantile(Normal(), 0.975)  # 1.96
+for (nm, b, s) in zip(opts.theta_names, result.theta_hat, se)
+    println(rpad(nm, 12), "[", round(b - zc * s, digits = 4), ", ", round(b + zc * s, digits = 4), "]")
 end
-'''
-
-[[actionGroups.actions]]
-id = "gmm_vs_2sls"
-label = "Efficiency vs 2SLS"
-desc = "Compare GMM and 2SLS estimates; efficient GMM should have smaller standard errors in heteroscedastic settings"
-code = '''
-using Microeconometrics
-
-iv  = fit(IV(Homoscedastic()), {{data}};  # 2SLS: efficient only under homoscedasticity
-    response = :{{y}}, regressors = Symbol.(split("{{exog}}")),
-    endogenous = Symbol.(split("{{endog}}")), instruments = Symbol.(split("{{instr}}")))
-
-{{?vcov=hom}} gmm = fit(GMM(Homoscedastic()), {{data}};  # efficient GMM: optimal weighting matrix
-{{?vcov=het}} gmm = fit(GMM(Heteroscedastic()), {{data}};  # efficient GMM: optimal weighting matrix
-{{?vcov=clustered}} gmm = fit(GMM(Clustered(:{{cluster}})), {{data}};  # efficient GMM: optimal weighting matrix
-    response = :{{y}}, regressors = Symbol.(split("{{exog}}")),
-    endogenous = Symbol.(split("{{endog}}")), instruments = Symbol.(split("{{instr}}")))
-
-println("2SLS estimates: ", round.(coef(iv),  digits=4))  # 2SLS coefficients
-println("GMM estimates:  ", round.(coef(gmm), digits=4))  # efficient GMM coefficients
-println("2SLS SEs:       ", round.(stderror(iv),  digits=4))  # 2SLS standard errors
-println("GMM SEs:        ", round.(stderror(gmm), digits=4))  # GMM standard errors (should be smaller)
+println("Each interval comes from a procedure that covers the true coefficient in about 95% of repeated samples")
+println("(a large-sample approximation). It is not a 95% probability statement about this particular interval.")
+{{?vcov=clustered}}println("The standard errors come from the cluster bootstrap, so the intervals allow for correlation within clusters.")
 '''

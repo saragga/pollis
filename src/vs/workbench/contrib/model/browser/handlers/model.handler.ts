@@ -93,6 +93,7 @@ const JULIA_STDLIBS = new Set(['Base64', 'Dates', 'DelimitedFiles', 'Distributed
 const UNREGISTERED_PACKAGE_URLS = new Map<string, string>([
 	['Brokerage', 'https://github.com/aaron-wheeler/Brokerage.jl'],
 	['EDGAR', 'https://github.com/Trumpingtons/EDGAR.jl'],
+	['GMMTools', 'https://github.com/Gkreindler/GMMTools.jl'],
 	['HARE', 'https://github.com/Trumpingtons/HARE.jl'],
 	['LSurvival', 'https://github.com/alexpkeil1/LSurvival.jl'],
 	['MultilevelEstimators', 'https://github.com/PieterjanRobbe/MultilevelEstimators.jl'],
