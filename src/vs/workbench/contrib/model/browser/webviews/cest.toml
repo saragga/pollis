@@ -9,15 +9,23 @@ viewType = "pollis.cest"
 defaultModel = "rt"
 
 [[packages]]
+name = "Turing.jl"
+github = "https://github.com/TuringLang/Turing.jl"
+
+[[packages]]
 name = "Pathogen.jl"
 github = "https://github.com/jangevaare/Pathogen.jl"
 
 [[packages]]
-name = "Rt-without-renewal"
-github = "https://github.com/CDCgov/Rt-without-renewal"
+name = "MCMCChains.jl"
+github = "https://github.com/TuringLang/MCMCChains.jl"
+
+[[packages]]
+name = "Plots.jl"
+github = "https://github.com/JuliaPlots/Plots.jl"
 
 [requires]
-packages = ["Pathogen.jl"]
+packages = ["Turing.jl", "Pathogen.jl", "MCMCChains.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""
@@ -26,19 +34,19 @@ label = ""
 name = "Rt Estimation"
 file = "cest/tutorial-01-rt.ipynb"
 bundled = true
-description = "Estimate the time-varying effective reproduction number R(t) from daily case counts using a latent Gaussian random walk on the log-Rt scale"
+description = "Estimate the time-varying reproduction number Rt from daily case counts with the renewal equation and a random walk on log Rt in Turing.jl"
 
 [[notebookSections.notebooks]]
 name = "SIR Inference"
 file = "cest/tutorial-02-sir.ipynb"
 bundled = true
-description = "Recover transmission rate beta and removal rate gamma of an individual-level SIR model from observed event times using Pathogen.jl MCMC"
+description = "Recover the spatial kernel and removal rate of an individual-level SIR model from delayed event times using Pathogen.jl MCMC"
 
 [[notebookSections.notebooks]]
 name = "SEIR Inference"
 file = "cest/tutorial-03-seir.ipynb"
 bundled = true
-description = "Infer all SEIR transition rates and reconstruct the posterior who-infected-whom transmission network with credible intervals"
+description = "Infer SEIR latent and infectious periods with unobserved exposure times, and reconstruct the posterior who-infected-whom network"
 
 [[wikis]]
 name = "Factsheet"
@@ -155,6 +163,14 @@ journal = "PLOS Computational Biology"
 doi = "10.1371/journal.pcbi.1008409"
 openAccess = true
 
+[[references]]
+title = "How Generation Intervals Shape the Relationship between Growth Rates and Reproductive Numbers"
+authors = "Wallinga, Jacco; Lipsitch, Marc"
+year = 2007
+journal = "Proceedings of the Royal Society B"
+doi = "10.1098/rspb.2006.3754"
+openAccess = true
+
 [[models]]
 id = "rt"
 label = "Rt Estimation"
@@ -169,121 +185,231 @@ label = "SEIR Inference"
 
 [[bullets]]
 text = "Rt Estimation"
-detail = "Bayesian latent Gaussian random walk on log-Rt; estimates the time-varying effective reproduction number from daily case counts using Turing.jl NUTS sampler"
+detail = "Cori renewal equation: expected cases are Rt times the serial-interval weighted sum of past cases; a random walk on log Rt, fitted with the Turing.jl NUTS sampler"
 
 [[bullets]]
 text = "SIR Inference"
-detail = "individual-level SIR model with Pathogen.jl MCMC; recovers transmission rate beta and removal rate gamma from observed event times in a spatial population"
+detail = "individual-level spatial SIR model in Pathogen.jl; MCMC with event-time augmentation recovers the distance-kernel power, the removal rate and who infected whom from delayed observations"
 
 [[bullets]]
 text = "SEIR Inference"
-detail = "full SEIR model; infers all transition rates and reconstructs the posterior who-infected-whom transmission network with credible intervals"
-
-[[inputs]]
-id = "N"
-label = "N (individuals)"
-tooltip = "Population size for SIR and SEIR individual-level inference with Pathogen.jl. Each individual is tracked explicitly with a spatial position, so N is typically in the range 100–2000 for tractable MCMC."
-default = "1000"
+detail = "adds a latent period: exposure times are never observed and are inferred together with the transmission network, the latency rate and the removal rate"
 
 [[inputs]]
 id = "T"
 label = "T (days)"
-tooltip = "Observation window in days. For Rt Estimation, T is the length of the case count series. For SIR and SEIR inference with Pathogen.jl, T is the maximum event time passed to observe()."
+tooltip = "Observation window in days: the length of the simulated case series for Rt Estimation, and the end of the simulated outbreak (tmax) for SIR and SEIR Inference."
 default = "100"
 
 [[inputs]]
+id = "r-before"
+label = "Rt Before"
+tooltip = "True reproduction number of the simulated epidemic before the change day."
+default = "1.8"
+models = ["rt"]
+
+[[inputs]]
+id = "r-after"
+label = "Rt After"
+tooltip = "True reproduction number from the change day on, for example after an intervention."
+default = "0.7"
+models = ["rt"]
+
+[[inputs]]
+id = "change-day"
+label = "Change Day"
+tooltip = "Day on which the true Rt drops from Rt Before to Rt After. Must be at least 9, since the first week seeds the epidemic."
+default = "40"
+models = ["rt"]
+
+[[inputs]]
+id = "si-mean"
+label = "Serial Interval Mean (days)"
+tooltip = "Mean of the Gamma serial interval: the time from symptom onset in a case to onset in the people it infects. Used both to simulate and to fit."
+default = "5"
+models = ["rt"]
+
+[[inputs]]
+id = "si-sd"
+label = "Serial Interval SD (days)"
+tooltip = "Standard deviation of the Gamma serial interval."
+default = "3"
+models = ["rt"]
+
+[[inputs]]
+id = "samples"
+label = "NUTS Samples"
+tooltip = "Posterior samples per chain drawn by the Turing.jl NUTS sampler after adaptation."
+default = "1000"
+models = ["rt"]
+
+[[inputs]]
+id = "N"
+label = "N (individuals)"
+tooltip = "Number of individuals in the spatial population. Each one is tracked explicitly, so a few hundred at most keeps the Pathogen.jl MCMC tractable."
+default = "100"
+models = ["sir", "seir"]
+
+[[inputs]]
 id = "iter"
-label = "Iterations"
-tooltip = "Number of MCMC iterations. For Turing.jl NUTS this is the number of HMC samples per chain after warm-up. For Pathogen.jl MCMC this is the total number of samples drawn by the Gibbs sampler."
-default = "10000"
+label = "MCMC Iterations"
+tooltip = "Metropolis-within-Gibbs iterations per chain in Pathogen.jl. Each iteration updates the parameters, a batch of event times and the transmission network."
+default = "20000"
+models = ["sir", "seir"]
+
+[[inputs]]
+id = "burnin"
+label = "Burn-in"
+tooltip = "Iterations discarded from the start of each Pathogen.jl chain before summaries. Must be at least 1."
+default = "5000"
+models = ["sir", "seir"]
 
 [[inputs]]
 id = "chains"
 label = "Chains"
-tooltip = "Number of parallel MCMC chains. Multiple chains allow R-hat convergence diagnostics. Used by Turing.jl via MCMCThreads(); Pathogen.jl runs a single Gibbs chain by default."
+tooltip = "Number of MCMC chains, needed for R-hat. Turing.jl runs them with MCMCThreads; Pathogen.jl starts each from its own draw from the priors."
 default = "4"
+
+[[inputs]]
+id = "seed"
+label = "Seed"
+tooltip = "Random seed for the simulated data and the samplers."
+default = "42"
 
 [[codeBranches]]
 model = "rt"
 code = '''
-using Turing, Distributions, Random
+using Turing, Random, Plots  # NUTS, Chains and Distributions (re-exported by Turing); seed; plotting
 
-Random.seed!(42)  # reproducible inference
-T = {{T}}  # number of observation days
-cases = rand(Poisson(20), T)  # replace with observed daily case counts
+Random.seed!({{seed}})  # reproducible simulation and sampling
+T = {{T}}  # days of case counts
 
-@model function rt_model(cases, T)
-    sigma ~ Exponential(0.1)  # random walk step size
-    log_Rt = Vector{Real}(undef, T)  # latent log Rt vector
-    log_Rt[1] ~ Normal(0.0, 1.0)  # initial log Rt prior
-    for t in 2:T
-        log_Rt[t] ~ Normal(log_Rt[t-1], sigma)  # Gaussian random walk
-    end
-    Rt = exp.(log_Rt)  # Rt on natural scale
-    for t in 2:T
-        cases[t] ~ Poisson(Rt[t] * cases[t-1] + 1e-6)  # renewal-like likelihood
-    end
+# Serial interval: Gamma with the given mean and SD, discretised to daily weights w[s], s = 1..21
+si = Gamma(({{si-mean}} / {{si-sd}})^2, {{si-sd}}^2 / {{si-mean}})
+w = diff(cdf.(si, 0:21)); w ./= sum(w)
+infectious(x, t, wt = w) = sum(wt[s] * x[t - s] for s in 1:min(t - 1, length(wt)); init = 0.0)  # serial-interval weighted past cases
+
+# Simulate an epidemic wave from the renewal equation; Rt drops on the change day (replace cases with your own counts)
+Rt_true = [t < {{change-day}} ? {{r-before}} : {{r-after}} for t in 1:T]
+cases = zeros(Int, T); cases[1:7] .= 10  # seed week
+for t in 8:T
+    cases[t] = rand(Poisson(Rt_true[t] * infectious(cases, t)))
 end
 
-model = rt_model(cases, T)  # instantiate model
-chain = sample(model, NUTS(), MCMCThreads(), {{iter}}, {{chains}})  # run NUTS sampler across {{chains}} chains
-plot(chain[:sigma])  # posterior sigma trace
+# Cori renewal model: cases[t] ~ Poisson(Rt * infectiousness), random walk on log Rt
+days = 8:T  # fitted days: each has a full seed week behind it
+lambda = [infectious(cases, t) for t in 1:T]  # observed infectiousness, data in the likelihood
+@model function renewal(cases, lambda, days)
+    sigma ~ truncated(Normal(0, 0.1); lower = 0)  # daily step SD of log Rt
+    log_R_start ~ Normal(0, 0.5)  # log Rt on the first fitted day
+    z ~ filldist(Normal(), length(days) - 1)  # non-centred random-walk steps
+    log_Rt = log_R_start .+ cumsum(vcat(0.0, sigma .* z))
+    for (j, t) in enumerate(days)
+        cases[t] ~ Poisson(exp(log_Rt[j]) * lambda[t] + 1e-6)
+    end
+    return exp.(log_Rt)
+end
+model = renewal(cases, lambda, days)
+chain = sample(model, NUTS(), MCMCThreads(), {{samples}}, {{chains}})  # {{chains}} chains on threads
+
+Rt_draws = permutedims(reduce(hcat, vec(returned(model, chain))))  # draws x fitted days
+Rt_med, Rt_lo, Rt_hi = ([quantile(v, q) for v in eachcol(Rt_draws)] for q in (0.5, 0.05, 0.95))
+col(t) = t - first(days) + 1  # column of day t in Rt_draws
+for t in ({{change-day}} - 1, min({{change-day}} + 14, T), T)
+    println("Day ", rpad(t, 4), " Rt median ", round(Rt_med[col(t)]; digits = 2), ", 90% credible interval [", round(Rt_lo[col(t)]; digits = 2), ", ", round(Rt_hi[col(t)]; digits = 2), "], true ", Rt_true[t])
+end
 '''
 
 [[codeBranches]]
 model = "sir"
 code = '''
-using Pathogen, Distributions, Random
+using Pathogen, Random, Plots  # Pathogen re-exports Distributions and DataFrames (Population takes a DataFrame)
 
-Random.seed!(42)  # reproducible inference
-N = {{N}}  # population size
-pop = Population({{N}}, rand({{N}}, 2))  # random 2-D spatial positions
+Random.seed!({{seed}})  # reproducible simulation and MCMC
+n = {{N}}  # individuals
+tmax = Float64({{T}})  # end of the observation window (days)
 
-rf = RiskFunctions{SIR}(  # individual-level risk functions
-    (a, p, i) -> a[1],  # sparks: external force of infection
-    (a, p, i) -> 1.0,  # susceptibility: uniform
-    (b, p, k) -> b[1],  # transmissibility
-    (b, p, i, k) -> exp(-b[2] * norm(p.risks[i] - p.risks[k])),  # spatial kernel
-    (g, p, k) -> g[1])  # removal rate
+# Spatial population: random positions and their Euclidean distances
+risks = DataFrame(x = rand(Uniform(0, 15), n), y = rand(Uniform(0, 30), n))
+dists = [hypot(risks.x[i] - risks.x[k], risks.y[i] - risks.y[k]) for i in 1:n, k in 1:n]
+pop = Population(risks, dists)
 
-rp_true = RiskParameters{SIR}([0.0001], [0.5, 2.0], [0.1])  # true parameters for data generation
-obs = observe(Simulation(pop, rf, rp_true), Uniform(0.0, {{T}}.0))  # generate observed event times
+# Risk functions: constant sparks, power-law distance kernel, constant removal rate
+spark_risk(p, pop, i) = p[1]  # infection pressure from outside the population
+one_risk(p, pop, i) = 1.0  # no susceptibility or transmissibility covariates
+powerlaw(p, pop, i, k) = pop.distances[k, i]^(-p[1])  # infectivity from k to i decays with distance
+constant_rate(p, pop, i) = p[1]
+rf = RiskFunctions{SIR}(spark_risk, one_risk, powerlaw, one_risk, constant_rate)
+rp_true = RiskParameters{SIR}([0.0001], Float64[], [4.0], Float64[], [0.1])  # true sparks, kernel power, removal rate
 
-priors = RiskParameterPriors{SIR}(  # Bayesian priors
-    [Uniform(0, 0.01)],  # sparks prior
-    [Uniform(0, 2), Uniform(0, 5)],  # transmissibility priors
-    [Uniform(0, 1)])  # removal prior
-chains = MCMC(obs, priors, rf, pop, {{iter}})  # run Pathogen.jl Gibbs sampler
-plot(chains[end])  # posterior distributions
+# Simulate an outbreak from one index case, then observe onsets and removals 0.5 to 2.5 days late
+starting = [State_I; fill(State_S, n - 1)]
+sim = Simulation(pop, starting, rf, rp_true)
+simulate!(sim; tmax = tmax)
+obs = observe(sim, Uniform(0.5, 2.5), Uniform(0.5, 2.5); force = true)
+println(count(!isnan, obs.infection), " of ", n, " individuals infected by day ", tmax)
+
+# MCMC: parameters, true event times and the transmission network are updated in turn
+priors = RiskPriors{SIR}([Exponential(0.0001)], UnivariateDistribution[], [Uniform(1.0, 7.0)], UnivariateDistribution[], [Uniform(0.0, 1.0)])
+ee = EventExtents{SIR}(5.0, 5.0)  # true onset and removal up to 5 days before their observation
+mcmc = MCMC(obs, ee, pop, starting, rf, priors)
+start!(mcmc, {{chains}}; attempts = 50000)  # one starting point per chain
+iterate!(mcmc, {{iter}}, 1.0; condition_on_network = true, event_batches = 5)
+display(summary(mcmc; burnin = {{burnin}}, thin = 20))  # posterior mean, variance and 95% credible interval per chain
+
+pars = [:sparks, :power, :removal]  # parameter order of RiskParameters
+draws = [rp for mc in mcmc.markov_chains for rp in mc.risk_parameters[({{burnin}} + 1):20:end]]  # thinned draws, all chains
+function outbreak(rf, rp)  # a fresh outbreak in the same population from the same index case
+    s = Simulation(pop, starting, rf, rp)
+    simulate!(s; tmax = tmax)
+    return s
+end
 '''
 
 [[codeBranches]]
 model = "seir"
 code = '''
-using Pathogen, Distributions, Random
+using Pathogen, Random, Plots  # Pathogen re-exports Distributions and DataFrames (Population takes a DataFrame)
 
-Random.seed!(42)  # reproducible inference
-N = {{N}}  # population size
-pop = Population({{N}}, rand({{N}}, 2))  # random 2-D spatial positions
+Random.seed!({{seed}})  # reproducible simulation and MCMC
+n = {{N}}  # individuals
+tmax = Float64({{T}})  # end of the observation window (days)
 
-rf = RiskFunctions{SEIR}(  # individual-level risk functions
-    (a, p, i) -> a[1],  # sparks
-    (a, p, i) -> 1.0,  # susceptibility: uniform
-    (b, p, k) -> b[1],  # transmissibility
-    (b, p, i, k) -> exp(-b[2] * norm(p.risks[i] - p.risks[k])),  # spatial kernel
-    (s, p, k) -> s[1],  # latent-to-infectious progression rate
-    (g, p, k) -> g[1])  # removal rate
+# Spatial population: random positions and their Euclidean distances
+risks = DataFrame(x = rand(Uniform(0, 15), n), y = rand(Uniform(0, 30), n))
+dists = [hypot(risks.x[i] - risks.x[k], risks.y[i] - risks.y[k]) for i in 1:n, k in 1:n]
+pop = Population(risks, dists)
 
-rp_true = RiskParameters{SEIR}([0.0001], [0.5, 2.0], [0.2], [0.1])  # true parameters for data generation
-obs = observe(Simulation(pop, rf, rp_true), Uniform(0.0, {{T}}.0))  # generate observed event times
+# Risk functions: constant sparks, power-law distance kernel, constant rate (latency and removal)
+spark_risk(p, pop, i) = p[1]  # infection pressure from outside the population
+one_risk(p, pop, i) = 1.0  # no susceptibility or transmissibility covariates
+powerlaw(p, pop, i, k) = pop.distances[k, i]^(-p[1])  # infectivity from k to i decays with distance
+constant_rate(p, pop, i) = p[1]
+rf = RiskFunctions{SEIR}(spark_risk, one_risk, powerlaw, one_risk, constant_rate, constant_rate)
+rp_true = RiskParameters{SEIR}([0.0001], Float64[], [4.0], Float64[], [0.2], [0.1])  # true sparks, kernel power, latency rate, removal rate
 
-priors = RiskParameterPriors{SEIR}(  # Bayesian priors
-    [Uniform(0, 0.01)],  # sparks prior
-    [Uniform(0, 2), Uniform(0, 5)],  # transmissibility priors
-    [Uniform(0, 1)],  # progression prior
-    [Uniform(0, 1)])  # removal prior
-chains = MCMC(obs, priors, rf, pop, {{iter}})  # run Pathogen.jl Gibbs sampler
-plot(chains[end])  # posterior distributions and transmission network
+# Simulate an outbreak from one index case, then observe onsets and removals 0.5 to 2.5 days late
+starting = [State_I; fill(State_S, n - 1)]
+sim = Simulation(pop, starting, rf, rp_true)
+simulate!(sim; tmax = tmax)
+obs = observe(sim, Uniform(0.5, 2.5), Uniform(0.5, 2.5); force = true)
+println(count(!isnan, obs.infection), " of ", n, " individuals infected by day ", tmax)
+
+# MCMC: parameters, true event times and the transmission network are updated in turn
+priors = RiskPriors{SEIR}([Exponential(0.0001)], UnivariateDistribution[], [Uniform(1.0, 7.0)], UnivariateDistribution[], [Uniform(0.0, 1.0)], [Uniform(0.0, 1.0)])
+ee = EventExtents{SEIR}(20.0, 5.0, 5.0)  # exposure up to 20 days before onset; true onset and removal up to 5 days before their observation
+mcmc = MCMC(obs, ee, pop, starting, rf, priors)
+start!(mcmc, {{chains}}; attempts = 50000)  # one starting point per chain
+iterate!(mcmc, {{iter}}, 1.0; condition_on_network = true, event_batches = 5)
+display(summary(mcmc; burnin = {{burnin}}, thin = 20))  # posterior mean, variance and 95% credible interval per chain
+
+pars = [:sparks, :power, :latency, :removal]  # parameter order of RiskParameters
+draws = [rp for mc in mcmc.markov_chains for rp in mc.risk_parameters[({{burnin}} + 1):20:end]]  # thinned draws, all chains
+function outbreak(rf, rp)  # a fresh outbreak in the same population from the same index case
+    s = Simulation(pop, starting, rf, rp)
+    simulate!(s; tmax = tmax)
+    return s
+end
 '''
 
 [[actionGroups]]
@@ -291,63 +417,47 @@ id = "visualise"
 label = "Visualise"
 
 [[actionGroups.actions]]
-id = "rt-trajectory"
-label = "Rt Trajectory"
-desc = "Plot posterior median and 90% credible interval of Rt over the observation window"
+id = "epidemic-curve"
+label = "Epidemic Curve"
+desc = "Rt: observed cases against the one-day-ahead posterior predictive band. SIR and SEIR: posterior reconstructions of the number infectious over time against the truth"
 code = '''
-using Turing, Distributions, GLMakie, Random
-
-Random.seed!(42)  # reproducible
-T = {{T}}  # observation days
-cases = rand(Poisson(20), T)  # replace with observed data
-
-@model function rt_model(cases, T)
-    sigma ~ Exponential(0.1)
-    log_Rt = Vector{Real}(undef, T)
-    log_Rt[1] ~ Normal(0.0, 1.0)
-    for t in 2:T; log_Rt[t] ~ Normal(log_Rt[t-1], sigma); end
-    Rt = exp.(log_Rt)
-    for t in 2:T; cases[t] ~ Poisson(Rt[t] * cases[t-1] + 1e-6); end
-end
-
-chain = sample(rt_model(cases, T), NUTS(), MCMCThreads(), {{iter}}, {{chains}})  # run inference
-log_Rt_samples = Array(chain[namesingroup(chain, :log_Rt)])  # extract log_Rt samples
-Rt_median = median(log_Rt_samples, dims=1)[1,:] .|> exp  # posterior median Rt
-Rt_lo = quantile.(eachcol(log_Rt_samples), 0.05) .|> exp  # 5th percentile
-Rt_hi = quantile.(eachcol(log_Rt_samples), 0.95) .|> exp  # 95th percentile
-
-fig,ax=Figure(),Axis(fig[1,1],xlabel="Day",ylabel="Rt",title="Effective Reproduction Number")
-band!(ax,1:T,Rt_lo,Rt_hi,color=(:blue,0.2))
-lines!(ax,1:T,Rt_median,color=:blue)
-hlines!(ax,[1.0],color=:red,linestyle=:dash)  # Rt = 1 threshold
-display(fig)
+{{?model=rt}} d = rand(1:size(Rt_draws, 1), 500)  # posterior draws
+{{?model=rt}} reps = [rand(Poisson(Rt_draws[i, j] * lambda[t] + 1e-6)) for i in d, (j, t) in enumerate(days)]  # one-day-ahead predictive counts
+{{?model=rt}} med, lo, hi = ([quantile(v, q) for v in eachcol(reps)] for q in (0.5, 0.05, 0.95))
+{{?model=rt}} p = plot(days, med; ribbon = (med .- lo, hi .- med), fillalpha = 0.3, label = "Posterior predictive (90%)", xlabel = "Day", ylabel = "Cases", title = "Epidemic curve")
+{{?model=rt}} scatter!(p, 1:T, cases; markersize = 2, color = :black, label = "Observed cases")
+{{?model=rt}} vline!(p, [{{change-day}}]; linestyle = :dash, color = :gray, label = "Change day")
+{{?model=rt}} display(p)
+{{?model=rt}} println("Share of days inside the 90% band: ", round(mean(lo[j] <= cases[t] <= hi[j] for (j, t) in enumerate(days)); digits = 2))
+{{?model=sir|seir}} p = plot(xlabel = "Time (days)", ylabel = "Infectious", title = "Posterior reconstructions of the epidemic curve")
+{{?model=sir|seir}} for mc in mcmc.markov_chains, e in mc.events[({{burnin}} + 1):100:end]
+{{?model=sir|seir}}     plot!(p, e, State_I, 0.0, tmax; linecolor = :steelblue, linealpha = 0.05, label = "")  # one augmented history per draw
+{{?model=sir|seir}} end
+{{?model=sir|seir}} plot!(p, sim.events, State_I, 0.0, tmax; linecolor = :black, linewidth = 2, label = "True")
+{{?model=sir|seir}} display(p)
 '''
 
 [[actionGroups.actions]]
-id = "epidemic-curve"
-label = "Epidemic Curve"
-desc = "Posterior predictive check: overlay simulated case counts against observed data"
+id = "reproduction-number"
+label = "Reproduction Number"
+desc = "Rt: posterior median and 90% credible interval of Rt against the true Rt. SIR and SEIR: posterior expected number of people each case infected, against the true offspring"
 code = '''
-using Turing, Distributions, GLMakie, Random
-
-Random.seed!(42)  # reproducible
-T = {{T}}; cases = rand(Poisson(20), T)  # replace with observed counts
-
-@model function rt_model(cases, T)
-    sigma ~ Exponential(0.1); log_Rt = Vector{Real}(undef, T)
-    log_Rt[1] ~ Normal(0.0, 1.0)
-    for t in 2:T; log_Rt[t] ~ Normal(log_Rt[t-1], sigma); end
-    Rt = exp.(log_Rt)
-    for t in 2:T; cases[t] ~ Poisson(Rt[t] * cases[t-1] + 1e-6); end
-end
-
-chain = sample(rt_model(cases, T), NUTS(), MCMCThreads(), {{iter}}, {{chains}})  # run inference
-ppc = predict(rt_model(missing, T) | chain)  # posterior predictive samples
-
-fig,ax=Figure(),Axis(fig[1,1],xlabel="Day",ylabel="Cases",title="Posterior Predictive Check")
-scatter!(ax,1:T,cases,color=:black,markersize=4)  # observed data
-band!(ax,1:T,vec(quantile(Array(ppc),0.05,dims=1)),vec(quantile(Array(ppc),0.95,dims=1)),color=(:blue,0.2))  # 90% CI
-display(fig)
+{{?model=rt}} p = plot(days, Rt_med; ribbon = (Rt_med .- Rt_lo, Rt_hi .- Rt_med), fillalpha = 0.3, label = "Posterior median (90% CrI)", xlabel = "Day", ylabel = "Rt", title = "Time-varying reproduction number")
+{{?model=rt}} plot!(p, 1:T, Rt_true; linestyle = :dash, color = :black, label = "True Rt")
+{{?model=rt}} hline!(p, [1.0]; linestyle = :dot, color = :red, label = "Rt = 1")
+{{?model=rt}} display(p)
+{{?model=sir|seir}} tnp = TNPosterior(mcmc; burnin = {{burnin}}, thin = 20)  # posterior probability of each who-infected-whom link
+{{?model=sir|seir}} offspring = vec(sum(tnp.internal; dims = 2))  # posterior expected secondary infections (rows are sources)
+{{?model=sir|seir}} offspring_true = vec(sum(sim.transmission_network.internal; dims = 2))
+{{?model=sir|seir}} infected = findall(isfinite, obs.infection)  # observed cases (the index case, infected at -Inf, is left out)
+{{?model=sir|seir}} p = scatter(obs.infection[infected], offspring[infected]; label = "Posterior mean", xlabel = "Observed onset (day)", ylabel = "Secondary infections", title = "Individual reproduction numbers")
+{{?model=sir|seir}} scatter!(p, obs.infection[infected], offspring_true[infected]; marker = :x, color = :black, label = "True")
+{{?model=sir|seir}} display(p)
+{{?model=sir|seir}} early = infected[obs.infection[infected] .<= median(obs.infection[infected])]
+{{?model=sir|seir}} late = setdiff(infected, early)
+{{?model=sir|seir}} println("Mean offspring of early cases: ", round(mean(offspring[early]); digits = 2), " (true ", round(mean(offspring_true[early]); digits = 2), ")")
+{{?model=sir|seir}} println("Mean offspring of late cases:  ", round(mean(offspring[late]); digits = 2), " (true ", round(mean(offspring_true[late]); digits = 2), ")")
+{{?model=sir|seir}} println("Late cases infect fewer: susceptibles are depleted, and infections after day ", tmax, " are not seen")
 '''
 
 [[actionGroups]]
@@ -357,50 +467,38 @@ label = "Diagnose"
 [[actionGroups.actions]]
 id = "trace-plots"
 label = "Trace Plots"
-desc = "Plot MCMC sample traces for sigma and a selection of log_Rt values to assess chain mixing"
+desc = "Rt: traces of the random-walk SD and the starting log Rt, and the number of divergent transitions. SIR and SEIR: parameter traces per chain (log scale) and log-posterior traces"
 code = '''
-using Turing, Distributions, MCMCChains, Random
-
-Random.seed!(42)  # reproducible
-T = {{T}}; cases = rand(Poisson(20), T)  # replace with observed counts
-
-@model function rt_model(cases, T)
-    sigma ~ Exponential(0.1); log_Rt = Vector{Real}(undef, T)
-    log_Rt[1] ~ Normal(0.0, 1.0)
-    for t in 2:T; log_Rt[t] ~ Normal(log_Rt[t-1], sigma); end
-    for t in 2:T; cases[t] ~ Poisson(exp(log_Rt[t]) * cases[t-1] + 1e-6); end
-end
-
-chain = sample(rt_model(cases, T), NUTS(), MCMCThreads(), {{iter}}, {{chains}})  # run inference
-
-plot(chain[:sigma])  # sigma trace across all chains
-plot(chain[[Symbol("log_Rt[1]"), Symbol("log_Rt[$(div({{T}}, 2))]"), Symbol("log_Rt[{{T}}]")]])  # log_Rt traces at start, mid, end
+{{?model=rt}} p1 = plot(Array(chain[:sigma]); xlabel = "Iteration", ylabel = "sigma", label = permutedims(string.("Chain ", 1:{{chains}})))
+{{?model=rt}} p2 = plot(Array(chain[:log_R_start]); xlabel = "Iteration", ylabel = "log_R_start", legend = false)
+{{?model=rt}} display(plot(p1, p2; layout = (2, 1)))
+{{?model=rt}} println("Divergent transitions: ", Int(sum(chain[:numerical_error])))
+{{?model=sir|seir}} ps = [plot(1:length(mc.risk_parameters), mc.risk_parameters; yscale = :log10, title = string("Chain ", c)) for (c, mc) in enumerate(mcmc.markov_chains)]  # one line per parameter
+{{?model=sir|seir}} foreach(p -> vline!(p, [{{burnin}}]; color = :red, linestyle = :dash), ps)  # end of burn-in
+{{?model=sir|seir}} display(plot(ps...; layout = length(ps)))
+{{?model=sir|seir}} lp = plot(xlabel = "Iteration", ylabel = "Log posterior", title = "Log posterior per chain")
+{{?model=sir|seir}} for mc in mcmc.markov_chains
+{{?model=sir|seir}}     plot!(lp, mc.log_posterior; label = "")
+{{?model=sir|seir}} end
+{{?model=sir|seir}} display(lp)
 '''
 
 [[actionGroups.actions]]
 id = "rhat"
-label = "R-hat Convergence"
-desc = "Compute and display the Gelman-Rubin R-hat statistic for all parameters; values above 1.01 indicate poor mixing"
+label = "R-hat and ESS"
+desc = "Rt: R-hat and effective sample size of the random-walk SD and the starting log Rt, plus the worst values over all parameters. SIR and SEIR: R-hat and ESS of the Pathogen.jl chains via MCMCChains.jl"
 code = '''
-using Turing, Distributions, MCMCChains, Statistics, Random
-
-Random.seed!(42)  # reproducible
-T = {{T}}; cases = rand(Poisson(20), T)  # replace with observed counts
-
-@model function rt_model(cases, T)
-    sigma ~ Exponential(0.1); log_Rt = Vector{Real}(undef, T)
-    log_Rt[1] ~ Normal(0.0, 1.0)
-    for t in 2:T; log_Rt[t] ~ Normal(log_Rt[t-1], sigma); end
-    for t in 2:T; cases[t] ~ Poisson(exp(log_Rt[t]) * cases[t-1] + 1e-6); end
-end
-
-chain = sample(rt_model(cases, T), NUTS(), MCMCThreads(), {{iter}}, {{chains}})  # run inference
-
-rhat_vals = gelmandiag(chain).nt.psrf  # R-hat per parameter
-println("sigma R-hat: ", round(rhat_vals[findfirst(isequal(:sigma), names(chain, :parameters))]; digits=3))  # check sigma convergence
-max_rhat = maximum(rhat_vals)  # worst-case convergence
-println("Max R-hat across all parameters: ", round(max_rhat; digits=3))
-println(max_rhat > 1.01 ? "WARNING: poor mixing detected" : "Converged")  # convergence verdict
+{{?model=rt}} rh, es = rhat(chain), ess(chain)
+{{?model=rt}} for (k, name) in enumerate(rh.nt.parameters)
+{{?model=rt}}     name in (:sigma, :log_R_start) && println(rpad(string(name), 12), " R-hat ", round(rh.nt.rhat[k]; digits = 3), "  ESS ", round(Int, es.nt.ess[k]))
+{{?model=rt}} end
+{{?model=rt}} println("Max R-hat over all parameters: ", round(maximum(rh.nt.rhat); digits = 3), " (below 1.01 is good)")
+{{?model=rt}} println("Min ESS over all parameters:   ", round(Int, minimum(es.nt.ess)))
+{{?model=sir|seir}} using MCMCChains  # R-hat and ESS on the Pathogen.jl draws
+{{?model=sir|seir}} vals = cat([convert(Array{Float64, 2}, mc.risk_parameters[({{burnin}} + 1):end]) for mc in mcmc.markov_chains]...; dims = 3)  # iterations x parameters x chains
+{{?model=sir|seir}} pchain = Chains(vals, pars)
+{{?model=sir|seir}} display(rhat(pchain))
+{{?model=sir|seir}} display(ess(pchain))
 '''
 
 [[actionGroups]]
@@ -409,56 +507,69 @@ label = "Predict"
 
 [[actionGroups.actions]]
 id = "forecast"
-label = "Case Forecast"
-desc = "Extend the Rt random walk forward to produce a probabilistic case count forecast with uncertainty bands"
+label = "Forecast"
+desc = "Rt: 14-day case forecast by continuing the random walk and the renewal equation from 500 posterior draws. SIR and SEIR: predictive distribution of outbreak size from 200 outbreaks re-simulated from posterior draws"
 code = '''
-using Turing, Distributions, GLMakie, Random
-
-Random.seed!(42)  # reproducible
-T = {{T}}; T_fwd = T + 14  # observed days, then 14 forecast days
-cases_obs = rand(Poisson(20), T)  # replace with observed daily counts
-
-@model function rt_model_fwd(cases, T, T_fwd)
-    sigma ~ Exponential(0.1)
-    log_Rt = Vector{Real}(undef, T_fwd)
-    log_Rt[1] ~ Normal(0.0, 1.0)
-    for t in 2:T_fwd; log_Rt[t] ~ Normal(log_Rt[t-1], sigma); end
-    for t in 2:T; cases[t] ~ Poisson(exp(log_Rt[t]) * cases[t-1] + 1e-6); end
-end
-
-chain = sample(rt_model_fwd(cases_obs, T, T_fwd), NUTS(), MCMCThreads(), {{iter}}, {{chains}})  # fit to observed
-cases_fwd = missing.(ones(Int, T_fwd))  # missing for all time points
-ppc = predict(rt_model_fwd(cases_fwd, T, T_fwd) | chain)  # draw predictive samples
-
-fig,ax=Figure(),Axis(fig[1,1],xlabel="Day",ylabel="Cases",title="14-Day Case Forecast")
-vlines!(ax,[T],color=:black,linestyle=:dash)  # forecast start
-scatter!(ax,1:T,cases_obs,color=:black,markersize=4)  # observed
-band!(ax,1:T_fwd,...)  # replace ... with 5th/95th quantiles from ppc
-display(fig)
+{{?model=rt}} H = 14  # forecast horizon (days)
+{{?model=rt}} sig = vec(Array(chain[:sigma]))  # same draw order as Rt_draws
+{{?model=rt}} function forecast_path(i)
+{{?model=rt}}     x = float.(cases)
+{{?model=rt}}     logR = log(Rt_draws[i, end])
+{{?model=rt}}     for h in 1:H
+{{?model=rt}}         logR += sig[i] * randn()  # the random walk continues
+{{?model=rt}}         push!(x, rand(Poisson(exp(logR) * infectious(x, T + h) + 1e-6)))
+{{?model=rt}}     end
+{{?model=rt}}     return x[(T + 1):end]
+{{?model=rt}} end
+{{?model=rt}} paths = permutedims(reduce(hcat, [forecast_path(i) for i in rand(1:size(Rt_draws, 1), 500)]))
+{{?model=rt}} med, lo, hi = ([quantile(v, q) for v in eachcol(paths)] for q in (0.5, 0.05, 0.95))
+{{?model=rt}} p = scatter(1:T, cases; markersize = 2, color = :black, label = "Observed", xlabel = "Day", ylabel = "Cases", title = "14-day forecast")
+{{?model=rt}} plot!(p, (T + 1):(T + H), med; ribbon = (med .- lo, hi .- med), fillalpha = 0.3, label = "Forecast median (90%)")
+{{?model=rt}} display(p)
+{{?model=rt}} println("Cases on day ", T + H, ": median ", med[end], ", 90% interval [", lo[end], ", ", hi[end], "]")
+{{?model=sir|seir}} sizes = [count(!isnan, outbreak(rf, rp).events.infection) for rp in rand(draws, 200)]  # final sizes of re-simulated outbreaks
+{{?model=sir|seir}} observed = count(!isnan, obs.infection)
+{{?model=sir|seir}} p = histogram(sizes; bins = 20, label = "Posterior predictive", xlabel = "People infected by day {{T}}", ylabel = "Simulations", title = "Outbreak size")
+{{?model=sir|seir}} vline!(p, [observed]; color = :black, linewidth = 2, label = "Observed")
+{{?model=sir|seir}} display(p)
+{{?model=sir|seir}} println("P(size >= observed): ", round(mean(sizes .>= observed); digits = 2))
+{{?model=sir|seir}} println("Size quantiles (5%, 50%, 95%): ", quantile(sizes, [0.05, 0.5, 0.95]))
 '''
 
 [[actionGroups.actions]]
 id = "counterfactual"
 label = "Counterfactual"
-desc = "Compare the observed trajectory to a counterfactual scenario with constant Rt = 1 from day 1"
+desc = "Rt: what if Rt had stayed at its pre-change posterior value; 500 simulated paths and the cases averted. SIR and SEIR: outbreak sizes if cases were removed (isolated) twice as fast"
 code = '''
-using Turing, Distributions, GLMakie, Random
-
-Random.seed!(42)  # reproducible
-T = {{T}}  # observation days
-cases_obs = rand(Poisson(20), T)  # replace with observed counts
-
-cases_cf = zeros(Int, T)  # counterfactual: Rt = 1.0 throughout
-cases_cf[1] = cases_obs[1]
-for t in 2:T
-    cases_cf[t] = rand(Poisson(1.0 * cases_cf[t-1] + 1e-6))  # flat renewal with Rt = 1
-end
-
-fig,ax=Figure(),Axis(fig[1,1],xlabel="Day",ylabel="Cases",title="Observed vs Counterfactual (Rt = 1)")
-lines!(ax,1:T,cases_obs,color=:red,label="Observed")  # actual trajectory
-lines!(ax,1:T,cases_cf, color=:blue,label="Counterfactual (Rt=1)")  # flat Rt scenario
-axislegend(ax)
-display(fig)
+{{?model=rt}} c = {{change-day}}
+{{?model=rt}} jc = col(c - 1)  # Rt on the day before the change
+{{?model=rt}} function no_change_path(i)
+{{?model=rt}}     x = float.(cases[1:(c - 1)])
+{{?model=rt}}     for t in c:T
+{{?model=rt}}         push!(x, rand(Poisson(Rt_draws[i, jc] * infectious(x, t) + 1e-6)))
+{{?model=rt}}     end
+{{?model=rt}}     return x
+{{?model=rt}} end
+{{?model=rt}} cf = permutedims(reduce(hcat, [no_change_path(i) for i in rand(1:size(Rt_draws, 1), 500)]))
+{{?model=rt}} med, lo, hi = ([quantile(v, q) for v in eachcol(cf)] for q in (0.5, 0.05, 0.95))
+{{?model=rt}} p = plot(1:T, max.(hi, 1); fillrange = max.(lo, 1), fillalpha = 0.3, linealpha = 0, label = "No change (90%)", yscale = :log10, xlabel = "Day", ylabel = "Cases (log scale)", title = "Counterfactual: Rt not reduced")
+{{?model=rt}} plot!(p, 1:T, max.(med, 1); label = "No change (median)")
+{{?model=rt}} scatter!(p, 1:T, max.(cases, 1); markersize = 2, color = :black, label = "Observed")
+{{?model=rt}} vline!(p, [c]; linestyle = :dash, color = :gray, label = "Change day")
+{{?model=rt}} display(p)
+{{?model=rt}} averted = vec(sum(cf[:, c:T]; dims = 2)) .- sum(cases[c:T])
+{{?model=rt}} println("Cases averted by the change: median ", round(Int, median(averted)), ", 90% interval [", round(Int, quantile(averted, 0.05)), ", ", round(Int, quantile(averted, 0.95)), "]")
+{{?model=rt}} println("An upper bound: the renewal equation has no susceptible depletion")
+{{?model=sir}} faster(rp) = RiskParameters{SIR}(rp.sparks, rp.susceptibility, rp.infectivity, rp.transmissibility, 2 .* rp.removal)  # removal twice as fast
+{{?model=seir}} faster(rp) = RiskParameters{SEIR}(rp.sparks, rp.susceptibility, rp.infectivity, rp.transmissibility, rp.latency, 2 .* rp.removal)  # removal twice as fast
+{{?model=sir|seir}} ds = rand(draws, 200)  # the same posterior draws for both scenarios
+{{?model=sir|seir}} fitted = [count(!isnan, outbreak(rf, rp).events.infection) for rp in ds]
+{{?model=sir|seir}} isolated = [count(!isnan, outbreak(rf, faster(rp)).events.infection) for rp in ds]
+{{?model=sir|seir}} p = histogram(fitted; bins = 20, alpha = 0.5, label = "Fitted removal rate", xlabel = "People infected by day {{T}}", ylabel = "Simulations", title = "Counterfactual: faster isolation")
+{{?model=sir|seir}} histogram!(p, isolated; bins = 20, alpha = 0.5, label = "Removal twice as fast")
+{{?model=sir|seir}} display(p)
+{{?model=sir|seir}} println("Median outbreak size: fitted ", median(fitted), ", faster isolation ", median(isolated))
+{{?model=sir|seir}} println("Share of outbreaks with 10 or more people: fitted ", round(mean(fitted .>= 10); digits = 2), ", faster isolation ", round(mean(isolated .>= 10); digits = 2))
 '''
 
 [[actionGroups]]
@@ -466,54 +577,77 @@ id = "compare"
 label = "Compare"
 
 [[actionGroups.actions]]
-id = "sir-vs-seir-fit"
-label = "SIR vs SEIR Fit"
-desc = "Fit SIR and SEIR models to the same observed event times and compare posterior log-likelihoods"
+id = "model-comparison"
+label = "Model Comparison"
+desc = "Rt: the renewal Rt against a naive day-on-day growth factor that ignores the serial interval. SIR and SEIR: fit the other model to the same data and compare posterior predictive outbreaks"
 code = '''
-using Pathogen, Distributions, Statistics, Random
-
-Random.seed!(42)  # reproducible
-pop = Population({{N}}, rand({{N}}, 2))  # shared population
-kernel = (b,p,i,k) -> exp(-b[2]*norm(p.risks[i]-p.risks[k]))  # spatial kernel
-
-rf_sir  = RiskFunctions{SIR}((a,p,i)->a[1],(a,p,i)->1.0,(b,p,k)->b[1],kernel,(g,p,k)->g[1])  # SIR
-rp_true = RiskParameters{SIR}([0.0001],[0.5,2.0],[0.1])  # generate data from SIR truth
-obs = observe(Simulation(pop,rf_sir,rp_true),Uniform(0.0,{{T}}.0))  # shared observed data
-
-pr_sir = RiskParameterPriors{SIR}([Uniform(0,0.01)],[Uniform(0,2),Uniform(0,5)],[Uniform(0,1)])  # SIR priors
-ch_sir = MCMC(obs, pr_sir, rf_sir, pop, {{iter}})  # fit SIR
-
-rf_seir  = RiskFunctions{SEIR}((a,p,i)->a[1],(a,p,i)->1.0,(b,p,k)->b[1],kernel,(s,p,k)->s[1],(g,p,k)->g[1])  # SEIR
-pr_seir = RiskParameterPriors{SEIR}([Uniform(0,0.01)],[Uniform(0,2),Uniform(0,5)],[Uniform(0,1)],[Uniform(0,1)])  # SEIR priors
-ch_seir = MCMC(obs, pr_seir, rf_seir, pop, {{iter}})  # fit SEIR
-
-println("SIR  posterior log-lik (last): ",  ch_sir[end].log_posterior)  # SIR fit quality
-println("SEIR posterior log-lik (last): ", ch_seir[end].log_posterior)  # SEIR fit quality
+{{?model=rt}} prev = [t > 1 ? float(cases[t - 1]) : 0.0 for t in 1:T]  # yesterday cases instead of the serial-interval weighted sum
+{{?model=rt}} naive = renewal(cases, prev, days)
+{{?model=rt}} naive_chain = sample(naive, NUTS(), MCMCThreads(), {{samples}}, {{chains}})
+{{?model=rt}} G = permutedims(reduce(hcat, vec(returned(naive, naive_chain))))
+{{?model=rt}} G_med = [median(v) for v in eachcol(G)]
+{{?model=rt}} p = plot(days, Rt_med; label = "Renewal Rt (median)", xlabel = "Day", ylabel = "Rt", title = "Renewal Rt against the growth factor")
+{{?model=rt}} plot!(p, days, G_med; label = "Day-on-day growth factor (median)")
+{{?model=rt}} plot!(p, 1:T, Rt_true; linestyle = :dash, color = :black, label = "True Rt")
+{{?model=rt}} hline!(p, [1.0]; linestyle = :dot, color = :red, label = "")
+{{?model=rt}} display(p)
+{{?model=rt}} mae(x) = mean(abs.(x .- Rt_true[days]))
+{{?model=rt}} println("Mean absolute error against the true Rt: renewal ", round(mae(Rt_med); digits = 3), ", growth factor ", round(mae(G_med); digits = 3))
+{{?model=rt}} println("The growth factor ignores the serial interval, so it stays near 1 even when Rt is far from 1")
+{{?model=sir}} model_names = ("SIR", "SEIR")
+{{?model=sir}} obs2 = EventObservations{SEIR}(obs.infection, obs.removal)  # the same data, now with unobserved exposure
+{{?model=sir}} rf2 = RiskFunctions{SEIR}(spark_risk, one_risk, powerlaw, one_risk, constant_rate, constant_rate)
+{{?model=sir}} priors2 = RiskPriors{SEIR}([Exponential(0.0001)], UnivariateDistribution[], [Uniform(1.0, 7.0)], UnivariateDistribution[], [Uniform(0.0, 1.0)], [Uniform(0.0, 1.0)])
+{{?model=sir}} ee2 = EventExtents{SEIR}(20.0, 5.0, 5.0)
+{{?model=seir}} model_names = ("SEIR", "SIR")
+{{?model=seir}} obs2 = EventObservations{SIR}(obs.infection, obs.removal)  # the same data, with no latent period
+{{?model=seir}} rf2 = RiskFunctions{SIR}(spark_risk, one_risk, powerlaw, one_risk, constant_rate)
+{{?model=seir}} priors2 = RiskPriors{SIR}([Exponential(0.0001)], UnivariateDistribution[], [Uniform(1.0, 7.0)], UnivariateDistribution[], [Uniform(0.0, 1.0)])
+{{?model=seir}} ee2 = EventExtents{SIR}(5.0, 5.0)
+{{?model=sir|seir}} mcmc2 = MCMC(obs2, ee2, pop, starting, rf2, priors2)
+{{?model=sir|seir}} start!(mcmc2, {{chains}}; attempts = 50000)
+{{?model=sir|seir}} iterate!(mcmc2, {{iter}}, 1.0; condition_on_network = true, event_batches = 5)
+{{?model=sir|seir}} draws2 = [rp for mc in mcmc2.markov_chains for rp in mc.risk_parameters[({{burnin}} + 1):20:end]]
+{{?model=sir|seir}} function predictive(rf, ds)  # observed final size and last onset of 200 re-simulated outbreaks
+{{?model=sir|seir}}     sims = [observe(outbreak(rf, rp), Uniform(0.5, 2.5), Uniform(0.5, 2.5); force = true) for rp in rand(ds, 200)]
+{{?model=sir|seir}}     return [count(!isnan, o.infection) for o in sims], [maximum(filter(isfinite, o.infection); init = 0.0) for o in sims]
+{{?model=sir|seir}} end
+{{?model=sir|seir}} results = (predictive(rf, draws), predictive(rf2, draws2))
+{{?model=sir|seir}} observed_size, observed_last = count(!isnan, obs.infection), maximum(filter(isfinite, obs.infection); init = 0.0)
+{{?model=sir|seir}} p = histogram(results[1][1]; bins = 20, alpha = 0.5, label = model_names[1], xlabel = "People infected", ylabel = "Simulations", title = "Posterior predictive outbreak size")
+{{?model=sir|seir}} histogram!(p, results[2][1]; bins = 20, alpha = 0.5, label = model_names[2])
+{{?model=sir|seir}} vline!(p, [observed_size]; color = :black, linewidth = 2, label = "Observed")
+{{?model=sir|seir}} display(p)
+{{?model=sir|seir}} for (name, (s, l)) in zip(model_names, results)
+{{?model=sir|seir}}     println(rpad(name, 5), " P(size >= observed) ", round(mean(s .>= observed_size); digits = 2), ", median last onset ", round(median(l); digits = 1), " (observed ", round(observed_last; digits = 1), ")")
+{{?model=sir|seir}} end
+{{?model=sir|seir}} println("A posterior predictive check, not formal model choice: Pathogen.jl gives no marginal likelihood")
 '''
 
 [[actionGroups.actions]]
-id = "prior-sensitivity"
-label = "Prior Sensitivity"
-desc = "Compare Rt posteriors under a narrow vs wide sigma prior for the Gaussian random walk"
+id = "sensitivity"
+label = "Sensitivity"
+desc = "Rt: refit with serial-interval means of 4, the chosen value and 7 days and overlay the Rt medians. SIR and SEIR: refit with much wider priors and compare the posterior summaries"
 code = '''
-using Turing, Distributions, GLMakie, Random
-
-Random.seed!(42)  # reproducible
-T = {{T}}; cases = rand(Poisson(20), T)  # replace with observed counts
-
-@model function rt_model_prior(cases, T, sigma_scale)
-    sigma ~ Exponential(sigma_scale)
-    log_Rt = Vector{Real}(undef, T)
-    log_Rt[1] ~ Normal(0.0, 1.0)
-    for t in 2:T; log_Rt[t] ~ Normal(log_Rt[t-1], sigma); end
-    for t in 2:T; cases[t] ~ Poisson(exp(log_Rt[t]) * cases[t-1] + 1e-6); end
-end
-
-ch_narrow = sample(rt_model_prior(cases, T, 0.05), NUTS(), MCMCThreads(), {{iter}}, {{chains}})  # narrow sigma prior
-ch_wide   = sample(rt_model_prior(cases, T, 0.5),  NUTS(), MCMCThreads(), {{iter}}, {{chains}})  # wide sigma prior
-
-println("sigma (narrow prior) median: ", median(vec(Array(ch_narrow[:sigma]))))  # compare sigma posteriors
-println("sigma (wide prior)   median: ", median(vec(Array(ch_wide[:sigma]))))  # sensitivity to prior choice
+{{?model=rt}} p = plot(1:T, Rt_true; linestyle = :dash, color = :black, label = "True Rt", xlabel = "Day", ylabel = "Rt (posterior median)", title = "Sensitivity to the serial interval")
+{{?model=rt}} for m in unique([4.0, {{si-mean}}, 7.0])
+{{?model=rt}}     si_m = Gamma((m / {{si-sd}})^2, {{si-sd}}^2 / m)
+{{?model=rt}}     wm = diff(cdf.(si_m, 0:21)); wm ./= sum(wm)
+{{?model=rt}}     mod_m = renewal(cases, [infectious(cases, t, wm) for t in 1:T], days)
+{{?model=rt}}     R = permutedims(reduce(hcat, vec(returned(mod_m, sample(mod_m, NUTS(), MCMCThreads(), {{samples}}, {{chains}})))))
+{{?model=rt}}     plot!(p, days, [median(v) for v in eachcol(R)]; label = string("Mean ", m, " days"))
+{{?model=rt}} end
+{{?model=rt}} display(p)
+{{?model=rt}} println("A shorter assumed serial interval pulls Rt towards 1; a longer one pushes it away from 1")
+{{?model=sir}} wide = RiskPriors{SIR}([Exponential(0.001)], UnivariateDistribution[], [Uniform(0.0, 20.0)], UnivariateDistribution[], [Uniform(0.0, 5.0)])
+{{?model=seir}} wide = RiskPriors{SEIR}([Exponential(0.001)], UnivariateDistribution[], [Uniform(0.0, 20.0)], UnivariateDistribution[], [Uniform(0.0, 5.0)], [Uniform(0.0, 5.0)])
+{{?model=sir|seir}} mcmc_w = MCMC(obs, ee, pop, starting, rf, wide)
+{{?model=sir|seir}} start!(mcmc_w, {{chains}}; attempts = 50000)
+{{?model=sir|seir}} iterate!(mcmc_w, {{iter}}, 1.0; condition_on_network = true, event_batches = 5)
+{{?model=sir|seir}} println("Default priors:")
+{{?model=sir|seir}} display(summary(mcmc; burnin = {{burnin}}, thin = 20))
+{{?model=sir|seir}} println("Wider priors:")
+{{?model=sir|seir}} display(summary(mcmc_w; burnin = {{burnin}}, thin = 20))
 '''
 
 [[actionGroups]]
@@ -523,42 +657,53 @@ label = "Interpret"
 [[actionGroups.actions]]
 id = "param-posteriors"
 label = "Parameter Posteriors"
-desc = "Extract marginal posterior distributions for beta, gamma, and sigma from the fitted model"
+desc = "Rt: posterior of the random-walk SD, Rt before and at the end with 95% credible intervals, and the first day with P(Rt > 1) below 5%. SIR and SEIR: median and 95% credible interval of each parameter against the truth, with the implied periods"
 code = '''
-using Pathogen, Distributions, Statistics, GLMakie, Random
-
-Random.seed!(42)  # reproducible
-pop = Population({{N}}, rand({{N}}, 2))  # population
-rf  = RiskFunctions{SIR}((a,p,i)->a[1],(a,p,i)->1.0,(b,p,k)->b[1],(b,p,i,k)->exp(-b[2]*norm(p.risks[i]-p.risks[k])),(g,p,k)->g[1])  # risk functions
-rp  = RiskParameters{SIR}([0.0001],[0.5,2.0],[0.1])  # true parameters
-obs = observe(Simulation(pop,rf,rp),Uniform(0.0,{{T}}.0))  # observed event times
-
-pr  = RiskParameterPriors{SIR}([Uniform(0,0.01)],[Uniform(0,2),Uniform(0,5)],[Uniform(0,1)])  # priors
-ch  = MCMC(obs, pr, rf, pop, {{iter}})  # run MCMC
-
-beta_samples  = [s.transmissibility[1] for s in ch]  # transmissibility samples
-gamma_samples = [s.removal[1] for s in ch]  # removal rate samples
-
-println("beta  95% CI: [", round(quantile(beta_samples,0.025);digits=3), ", ", round(quantile(beta_samples,0.975);digits=3), "]")
-println("gamma 95% CI: [", round(quantile(gamma_samples,0.025);digits=3), ", ", round(quantile(gamma_samples,0.975);digits=3), "]")
+{{?model=rt}} sig = vec(Array(chain[:sigma]))
+{{?model=rt}} println("sigma (daily SD of log Rt): median ", round(median(sig); digits = 3), ", 95% credible interval [", round(quantile(sig, 0.025); digits = 3), ", ", round(quantile(sig, 0.975); digits = 3), "]")
+{{?model=rt}} for t in ({{change-day}} - 1, T)
+{{?model=rt}}     v = Rt_draws[:, col(t)]
+{{?model=rt}}     println("Rt on day ", t, ": median ", round(median(v); digits = 2), ", 95% credible interval [", round(quantile(v, 0.025); digits = 2), ", ", round(quantile(v, 0.975); digits = 2), "], true ", Rt_true[t])
+{{?model=rt}} end
+{{?model=rt}} p_above = vec(mean(Rt_draws .> 1; dims = 1))  # posterior probability that Rt > 1, per day
+{{?model=rt}} below = findfirst(t -> t >= {{change-day}} && p_above[col(t)] < 0.05, days)
+{{?model=rt}} println(below === nothing ? "P(Rt > 1) never falls below 5% after the change" : string("First day after the change with P(Rt > 1) below 5%: day ", days[below]))
+{{?model=sir|seir}} P = convert(Array{Float64, 2}, draws)  # draws x parameters
+{{?model=sir|seir}} truth = convert(Vector{Float64}, rp_true)
+{{?model=sir|seir}} for (k, name) in enumerate(pars)
+{{?model=sir|seir}}     v = P[:, k]
+{{?model=sir|seir}}     println(rpad(string(name), 9), " median ", round(median(v); sigdigits = 3), ", 95% credible interval [", round(quantile(v, 0.025); sigdigits = 3), ", ", round(quantile(v, 0.975); sigdigits = 3), "], true ", truth[k])
+{{?model=sir|seir}} end
+{{?model=sir|seir}} println("Infectious period (1 / removal rate): median ", round(median(1 ./ P[:, end]); digits = 1), " days, true ", round(1 / truth[end]; digits = 1))
+{{?model=seir}} println("Latent period (1 / latency rate): median ", round(median(1 ./ P[:, 3]); digits = 1), " days, true ", round(1 / truth[3]; digits = 1))
 '''
 
 [[actionGroups.actions]]
 id = "transmission-network"
-label = "Transmission Network"
-desc = "Visualise the posterior who-infected-whom network from Pathogen.jl MCMC with credible transmission edges"
+label = "Growth and Transmission"
+desc = "Rt: the epidemic growth rate implied by Rt and the serial interval (Wallinga and Lipsitch), with doubling or halving times. SIR and SEIR: how well the posterior recovers who infected whom, and the true and posterior networks on the map"
 code = '''
-using Pathogen, Distributions, Random
-
-Random.seed!(42)  # reproducible
-pop = Population({{N}}, rand({{N}}, 2))  # population
-rf  = RiskFunctions{SEIR}((a,p,i)->a[1],(a,p,i)->1.0,(b,p,k)->b[1],(b,p,i,k)->exp(-b[2]*norm(p.risks[i]-p.risks[k])),(s,p,k)->s[1],(g,p,k)->g[1])  # SEIR risk functions
-rp  = RiskParameters{SEIR}([0.0001],[0.5,2.0],[0.2],[0.1])  # true parameters
-obs = observe(Simulation(pop,rf,rp),Uniform(0.0,{{T}}.0))  # observed event times
-
-pr  = RiskParameterPriors{SEIR}([Uniform(0,0.01)],[Uniform(0,2),Uniform(0,5)],[Uniform(0,1)],[Uniform(0,1)])  # priors
-ch  = MCMC(obs, pr, rf, pop, {{iter}})  # run MCMC
-
-plot(ch[end], obs, pop)  # posterior transmission network overlaid on spatial map
-println("Posterior mean R0: ", mean([mean(filter(!isnothing, s.network.sources) .|> x -> 1) for s in ch]))  # crude R0 estimate from network
+{{?model=rt}} k, th = params(si)  # Gamma shape and scale of the serial interval
+{{?model=rt}} r = (Rt_draws .^ (1 / k) .- 1) ./ th  # growth rate implied by each Rt draw
+{{?model=rt}} r_med, r_lo, r_hi = ([quantile(v, q) for v in eachcol(r)] for q in (0.5, 0.05, 0.95))
+{{?model=rt}} p = plot(days, r_med; ribbon = (r_med .- r_lo, r_hi .- r_med), fillalpha = 0.3, label = "Growth rate (median, 90% CrI)", xlabel = "Day", ylabel = "r (per day)", title = "Epidemic growth rate")
+{{?model=rt}} hline!(p, [0.0]; linestyle = :dot, color = :red, label = "")
+{{?model=rt}} display(p)
+{{?model=rt}} for t in ({{change-day}} - 1, T)
+{{?model=rt}}     g = r_med[col(t)]
+{{?model=rt}}     println("Day ", t, ": r = ", round(g; digits = 3), " per day, ", g > 0 ? "doubling" : "halving", " time ", round(log(2) / abs(g); digits = 1), " days")
+{{?model=rt}} end
+{{?model=sir|seir}} source(tn, i) = tn.external[i] > 0 ? 0 : findfirst(>(0), tn.internal[:, i])  # 0 = infected from outside
+{{?model=sir|seir}} tnp = TNPosterior(mcmc; burnin = {{burnin}}, thin = 20)
+{{?model=sir|seir}} tn_true = sim.transmission_network
+{{?model=sir|seir}} tn_mode = mode(tnp)  # most probable source of each case
+{{?model=sir|seir}} cases_i = setdiff(findall(!isnan, sim.events.infection), 1)  # infected individuals other than the index case
+{{?model=sir|seir}} prob_true(i) = (s = source(tn_true, i); s == 0 ? tnp.external[i] : tnp.internal[s, i])
+{{?model=sir|seir}} println("Posterior mode source correct for ", round(100 * mean(source(tn_mode, i) == source(tn_true, i) for i in cases_i); digits = 1), "% of cases")
+{{?model=sir|seir}} println("Mean posterior probability of the true source: ", round(mean(prob_true(i) for i in cases_i); digits = 2))
+{{?model=sir|seir}} top_share(o) = (s = sort(o; rev = true); sum(s[1:max(1, round(Int, 0.2 * length(s)))]) / max(sum(s), 1))
+{{?model=sir|seir}} infected = findall(!isnan, sim.events.infection)
+{{?model=sir|seir}} println("Share of transmissions by the top 20% of spreaders: true ", round(top_share(vec(sum(tn_true.internal; dims = 2))[infected]); digits = 2), ", posterior mean ", round(top_share(vec(sum(tnp.internal; dims = 2))[infected]); digits = 2))
+{{?model=sir|seir}} println("Mean offspring is close to 1 by construction: almost every case has exactly one source")
+{{?model=sir|seir}} display(plot(plot(tn_true, pop; title = "True network"), plot(tnp, pop; title = "Posterior network"); layout = (1, 2), size = (900, 450)))
 '''
