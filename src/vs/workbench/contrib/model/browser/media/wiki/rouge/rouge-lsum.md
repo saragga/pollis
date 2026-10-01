@@ -1,3 +1,3 @@
-# ROUGE-S
+# ROUGE-Lsum
 
 Coming soon.
