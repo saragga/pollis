@@ -453,7 +453,7 @@ end
 [[actionGroups.actions]]
 id = "compare-systems"
 label = "Compare Systems"
-desc = "Is System A better than System B? Paired t-test, Wilcoxon signed-rank and paired bootstrap over documents"
+desc = "Is System A better than System B? Paired t-test, Wilcoxon signed-rank and paired bootstrap over documents; the Bootstrap Resampling panel in the Simulate menu compares interval methods, resampling schemes and their coverage"
 code = '''
 using HypothesisTests, Bootstrap, Random  # paired tests; bootstrap resampling; seeding
 

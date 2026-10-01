@@ -404,7 +404,7 @@ println(yhat)
 [[actionGroups.actions]]
 id = "bootstrap"
 label = "Parametric Bootstrap"
-desc = "Bootstrap confidence intervals for all parameters"
+desc = "Bootstrap confidence intervals for all parameters (MixedModels parametric bootstrap); the Bootstrap Resampling panel in the Simulate menu compares interval methods, resampling schemes and their coverage"
 code = '''
 using MixedModels, Random
 

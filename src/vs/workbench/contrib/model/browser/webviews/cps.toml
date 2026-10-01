@@ -13,7 +13,7 @@ name = "Copulas.jl"
 github = "https://github.com/lrnv/Copulas.jl"
 
 [requires]
-packages = ["Copulas.jl"]
+packages = ["Copulas.jl", "Bootstrap.jl"]
 
 [[notebookSections]]
 label = ""
@@ -404,6 +404,24 @@ using StatsBase
 batches = Iterators.partition(axes(X, 2), div(size(X, 2), 10))
 taus = [corkendall(X[1, b], X[2, b]) for b in batches]
 (whole_sample = corkendall(X[1, :], X[2, :]), batch_mean = mean(taus), batch_sd = std(taus), standard_error = std(taus) / sqrt(length(taus)))
+'''
+
+[[actionGroups.actions]]
+id = "bootstrap-dependence"
+label = "Bootstrap Dependence Intervals"
+desc = "Bootstrap (Bootstrap.jl) standard errors and 95% intervals for the Kendall and Spearman correlations of the first two coordinates; the Bootstrap Resampling panel in the Simulate menu compares interval methods, resampling schemes and their coverage"
+code = '''
+using Bootstrap, StatsBase, Random
+Random.seed!(1)  # Bootstrap.jl draws with the global RNG
+M = Matrix(transpose(X))[:, 1:2]  # first two coordinates, one observation per row
+dep(m) = (corkendall(m[:, 1], m[:, 2]), corspearman(m[:, 1], m[:, 2]))
+bs = bootstrap(dep, M, BasicSampling(500))
+for (i, nm) in enumerate(("Kendall tau", "Spearman rho"))
+    _, plo, phi = confint(bs, PercentileConfInt(0.95), i)
+    _, nlo, nhi = confint(bs, NormalConfInt(0.95), i)
+    println(rpad(nm, 14), "estimate ", round(original(bs, i), digits = 4), ", SE ", round(stderror(bs, i), digits = 4),
+        ", percentile [", round(plo, digits = 4), ", ", round(phi, digits = 4), "], normal [", round(nlo, digits = 4), ", ", round(nhi, digits = 4), "]")
+end
 '''
 
 [[actionGroups]]

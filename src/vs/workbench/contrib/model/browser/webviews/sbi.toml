@@ -426,7 +426,7 @@ err = point_estimate(simulator(theta_test, m)) .- theta_test
 [[actionGroups.actions]]
 id = "coverage"
 label = "Interval Coverage"
-desc = "Share of test data sets whose interval contains the true parameter; it should match the nominal level"
+desc = "Share of test data sets whose interval contains the true parameter; it should match the nominal level; for classical bootstrap intervals, the Bootstrap Resampling panel in the Simulate menu compares interval methods, resampling schemes and their coverage"
 code = '''
 using Statistics
 

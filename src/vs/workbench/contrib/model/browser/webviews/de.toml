@@ -21,7 +21,7 @@ name = "Distributions.jl"
 github = "https://github.com/JuliaStats/Distributions.jl"
 
 [requires]
-packages = ["StatsBase.jl", "KernelDensity.jl", "Distributions.jl", "Extremes.jl"]
+packages = ["StatsBase.jl", "KernelDensity.jl", "Distributions.jl", "Extremes.jl", "Bootstrap.jl"]
 
 [[notebookSections]]
 label = ""
@@ -525,6 +525,27 @@ x = data isa Tuple ? data[1] : data isa AbstractMatrix ? data[1, :] : data  # th
 {{?model=parametric}}     p = getindex.(boot, i)
 {{?model=parametric}}     p isa AbstractVector{<:Real} && println("parameter $i: estimate = ", params(d)[i], ", bootstrap SE = ", std(p), ", 95% interval = ", quantile(p, [0.025, 0.975]))
 {{?model=parametric}} end
+'''
+
+[[actionGroups.actions]]
+id = "bootstrap-params"
+label = "Bootstrap Parameter Intervals"
+desc = "Nonparametric and parametric bootstrap (Bootstrap.jl) of the fitted parameters: standard errors and 95% percentile intervals; the Bootstrap Resampling panel in the Simulate menu compares interval methods, resampling schemes and their coverage"
+code = '''
+using Bootstrap, Distributions, Random
+{{?model!=parametric}} error("This action covers the parameters of a fitted distribution")
+{{?param-dim=multi}} error("This action covers univariate fits")
+{{?dist=Binomial}} error("Binomial fits need the known number of trials: not covered here")
+Random.seed!(1)  # Bootstrap.jl draws with the global RNG
+D = typeof(d).name.wrapper  # the fitted family
+pars(v) = Tuple(Float64.(params(fit(D, v))))  # refit and return every parameter
+for (nm, bs) in [("Nonparametric", bootstrap(pars, data, BasicSampling(1000))), ("Parametric", bootstrap(pars, data, Model(D), BasicSampling(1000)))]
+    println(nm, nm == "Parametric" ? " bootstrap (draws from the fitted distribution):" : " bootstrap (resamples the data):")
+    for i in 1:nvar(bs)
+        _, lo, hi = confint(bs, PercentileConfInt(0.95), i)
+        println("  parameter $i: estimate = ", round(original(bs, i), digits=4), ", SE = ", round(stderror(bs, i), digits=4), ", 95% interval = [", round(lo, digits=4), ", ", round(hi, digits=4), "]")
+    end
+end
 '''
 
 [[actionGroups.actions]]

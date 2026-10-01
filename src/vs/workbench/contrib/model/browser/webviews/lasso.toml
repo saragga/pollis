@@ -13,7 +13,7 @@ name = "Lasso.jl"
 github = "https://github.com/JuliaStats/Lasso.jl"
 
 [requires]
-packages = ["Lasso.jl"]
+packages = ["Lasso.jl", "Bootstrap.jl"]
 
 [[notebookSections]]
 label = ""
@@ -274,6 +274,27 @@ for _ in 1:100
     hits .+= coef(fit(LassoModel, X[i, :], y[i]; kw...))[end-size(X, 2)+1:end] .!= 0
 end
 foreach(j -> println(rpad(nm[j], 20), " selected in ", Int(hits[j]), "% of resamples"), sortperm(hits, rev=true))
+'''
+
+[[actionGroups.actions]]
+id = "bootstrap-coefs"
+label = "Bootstrap Coefficient Intervals"
+desc = "Pairs bootstrap (Bootstrap.jl) of the refitted coefficients: 95% percentile intervals and how often each coefficient is exactly zero; the Bootstrap Resampling panel in the Simulate menu compares interval methods, resampling schemes and their coverage"
+code = '''
+using Lasso, Bootstrap, Statistics, Random
+{{?model=plsr}} error("These steps cover Lasso and Elastic Net")
+Random.seed!(1)  # Bootstrap.jl draws with the global RNG
+X, y = modelmatrix(model), response(model); nm = string.(vcat(coefnames(model)))
+{{?model=lasso}} kw = ()
+{{?model=enet}} kw = (Symbol(Char(0x3b1)) => {{alpha}},)
+p = size(X, 2)
+refit(M) = Tuple(coef(fit(LassoModel, M[:, 2:end], M[:, 1]; kw...))[end-p+1:end])  # refit as in Selection Stability
+bs = bootstrap(refit, hcat(y, X), BasicSampling(500))  # resample (y, x) rows together
+for j in 1:p
+    _, lo, hi = confint(bs, PercentileConfInt(0.95), j)
+    println(rpad(nm[j], 20), " estimate ", rpad(round(original(bs, j), digits=4), 10), " 95% [", round(lo, digits=4), ", ", round(hi, digits=4), "]   zero in ", round(100 * mean(straps(bs, j) .== 0), digits=1), "% of resamples")
+end
+println("Bootstrap intervals for lasso coefficients are unreliable near zero (Chatterjee and Lahiri, 2011): read them together with the selection frequencies")
 '''
 
 [[actionGroups]]

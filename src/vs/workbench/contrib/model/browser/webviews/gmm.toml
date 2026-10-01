@@ -21,7 +21,7 @@ name = "Tables.jl"
 github = "https://github.com/JuliaData/Tables.jl"
 
 [requires]
-packages = ["GMMTools.jl", "Distributions.jl", "Tables.jl"]
+packages = ["GMMTools.jl", "Distributions.jl", "Tables.jl", "Bootstrap.jl"]
 
 [[notebookSections]]
 label = ""
@@ -404,4 +404,28 @@ end
 println("Each interval comes from a procedure that covers the true coefficient in about 95% of repeated samples")
 println("(a large-sample approximation). It is not a 95% probability statement about this particular interval.")
 {{?vcov=clustered}}println("The standard errors come from the cluster bootstrap, so the intervals allow for correlation within clusters.")
+'''
+
+[[actionGroups.actions]]
+id = "bootstrap_ci"
+label = "Bootstrap Confidence Intervals"
+desc = "Pairs bootstrap (Bootstrap.jl, 200 refits) of the GMM estimates: bootstrap against sandwich standard errors, with percentile and basic intervals; the Bootstrap Resampling panel in the Simulate menu compares interval methods, resampling schemes and their coverage"
+code = '''
+using Bootstrap, Random
+{{?vcov=clustered}}error("Bootstrap.jl resamples single observations: with clustered data the main code already uses the cluster Bayesian bootstrap")
+Random.seed!(1)  # Bootstrap.jl draws with the global RNG
+kx = size(X, 2)
+function refit(M)  # one resample of (y, x, z) rows, estimated as in the main code
+    d = (y = M[:, 1], X = M[:, 2:1+kx], Z = M[:, 2+kx:end])
+{{?vcov=het}}    r = GMMTools.fit(d, mom_fn, theta0; mode = :twostep, opts = opts)
+{{?vcov=hom}}    r = GMMTools.fit(d, mom_fn, theta0; W = inv(transpose(d.Z) * d.Z ./ length(d.y)), opts = opts)
+    return Tuple(r.theta_hat)
+end
+bs = bootstrap(refit, hcat(y, X, Z), BasicSampling(200))
+for (i, nm) in enumerate(opts.theta_names)
+    _, plo, phi = confint(bs, PercentileConfInt(0.95), i)
+    _, blo, bhi = confint(bs, BasicConfInt(0.95), i)
+    println(rpad(nm, 12), "SE ", rpad(round(se[i], digits = 4), 8), " boot SE ", rpad(round(stderror(bs, i), digits = 4), 8),
+        " percentile [", round(plo, digits = 4), ", ", round(phi, digits = 4), "]  basic [", round(blo, digits = 4), ", ", round(bhi, digits = 4), "]")
+end
 '''

@@ -13,7 +13,7 @@ name = "HypothesisTests.jl"
 github = "https://github.com/JuliaStats/HypothesisTests.jl"
 
 [requires]
-packages = ["HypothesisTests.jl"]
+packages = ["HypothesisTests.jl", "Bootstrap.jl"]
 
 [[notebookSections]]
 label = ""
@@ -724,6 +724,25 @@ effect = length(samples) == 1 ? (s -> mean(s[1]) - {{mu01}}) : length(samples) =
 rng = MersenneTwister(1)
 boot = [effect([rand(rng, s, length(s)) for s in samples]) for _ in 1:5000]
 println("Effect = ", round(effect(samples), digits=4), "   95% bootstrap CI: ", round.(quantile(boot, [0.025, 0.975]), digits=4))
+'''
+
+[[actionGroups.actions]]
+id = "bootstrap-intervals"
+label = "Bootstrap Interval Methods"
+desc = "Percentile, basic, normal and BCa intervals from Bootstrap.jl for a one-sample effect (mean or median minus the null value); the Bootstrap Resampling panel in the Simulate menu compares interval methods, resampling schemes and their coverage"
+code = '''
+using Bootstrap, Statistics, Random
+{{?test!=one-sample-t-test|one-sample-z-test|sign-test|wilcoxon-signed-rank}} error("This action covers one-sample location tests: use Bootstrap Confidence Interval for two or more samples")
+Random.seed!(1)  # Bootstrap.jl draws with the global RNG
+x = Float64.({{x}})
+{{?test=one-sample-t-test|one-sample-z-test}} stat = v -> mean(v) - {{mu01}}  # the effect the test measures
+{{?test=sign-test|wilcoxon-signed-rank}} stat = v -> median(v) - {{mu01}}
+bs = bootstrap(stat, x, BasicSampling(5000))
+println("Effect = ", round(original(bs, 1), digits=4), "   bias = ", round(bias(bs, 1), digits=4), "   SE = ", round(stderror(bs, 1), digits=4))
+for (nm, ci) in [("Percentile", PercentileConfInt(0.95)), ("Basic", BasicConfInt(0.95)), ("Normal", NormalConfInt(0.95)), ("BCa", BCaConfInt(0.95))]
+    _, lo, hi = confint(bs, ci, 1)
+    println(rpad(nm, 12), "[", round(lo, digits=4), ", ", round(hi, digits=4), "]", lo <= 0 <= hi ? "   contains 0" : "   excludes 0")
+end
 '''
 
 [[actionGroups]]
