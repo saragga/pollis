@@ -13,7 +13,7 @@ name = "TextAnalysis.jl"
 github = "https://github.com/JuliaText/TextAnalysis.jl"
 
 [requires]
-packages = ["TextAnalysis.jl"]
+packages = ["TextAnalysis.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""
@@ -22,7 +22,7 @@ label = ""
 name = "Co-Occurrence Matrix"
 file = "com/tutorial-01-com.ipynb"
 bundled = true
-description = "Build co-occurrence matrices, apply PPMI weighting, and explore distributional similarity with TextAnalysis.jl"
+description = "Count word co-occurrences with the TextAnalysis.jl CooMatrix, weight them with PMI and PPMI, and explore distributional similarity"
 
 [[wikis]]
 name = "Factsheet"
@@ -118,6 +118,14 @@ separator = true
 label = "Original Papers"
 
 [[references]]
+title = "Word Association Norms, Mutual Information, and Lexicography"
+authors = "Church, Kenneth Ward; Hanks, Patrick"
+year = 1990
+journal = "Computational Linguistics"
+url = "https://aclanthology.org/J90-1003/"
+openAccess = true
+
+[[references]]
 title = "Distributional Structure"
 authors = "Harris, Zellig S."
 year = 1954
@@ -147,64 +155,318 @@ label = "PMI"
 
 [[bullets]]
 text = "Raw Counts"
-detail = "C(w, c) counts how often word w co-occurs with context word c within a window"
+detail = "C(w, c) counts how often word w occurs within the window around context word c, from the TextAnalysis.jl CooMatrix"
 
 [[bullets]]
 text = "PPMI"
-detail = "Positive Pointwise Mutual Information discounts frequent words and sets negative PMI to zero"
+detail = "Positive PMI keeps only above-chance associations and sets the rest to zero; the usual weighting for word vectors"
 
 [[bullets]]
 text = "PMI"
-detail = "Pointwise Mutual Information measures association strength; can be negative for below-chance pairs"
+detail = "log of p(w, c) / (p(w) p(c)): positive above chance, negative below; unobserved pairs (PMI of minus infinity) are left empty"
+
+[[bullets]]
+text = "Context smoothing"
+detail = "raising context counts to the power alpha = 0.75 reduces the bias of PMI towards rare words (Levy, Goldberg and Dagan 2015)"
 
 [[inputs]]
 id = "corpus"
 label = "Corpus"
-tooltip = "A vector of strings (documents or sentences). Each element is tokenised and used to count word co-occurrences within the specified context window."
+tooltip = "A vector of strings, one per sentence or document. The default docs is a small built-in corpus defined in the code; replace it with your own vector."
 default = "docs"
 
 [[inputs]]
 id = "window"
-label = "Window size"
-tooltip = "Number of tokens to the left and right of the target word that count as context. A window of 2 means 2 words on each side (4 context positions total)."
+label = "Window Size"
+tooltip = "Number of tokens on each side of a word that count as its context, after stopwords and punctuation are removed."
 default = "2"
+
+[[inputs]]
+id = "min_count"
+label = "Minimum Count"
+tooltip = "Words seen fewer times than this in the corpus are left out of the matrix. PMI is unreliable for rare words, so a minimum count of 2 or more helps on small corpora."
+default = "2"
+
+[[inputs]]
+id = "normalize"
+label = "Distance Weighting"
+tooltip = "Whether each co-occurrence counts 1, or 1/d for words d positions apart (the normalize keyword of CooMatrix)."
+default = "false"
+kind = "select"
+
+[[inputs.options]]
+value = "false"
+label = "None (Counts)"
+
+[[inputs.options]]
+value = "true"
+label = "Harmonic (1/d)"
+
+[[inputs]]
+id = "alpha"
+label = "Context Smoothing"
+tooltip = "Exponent alpha applied to context counts in PMI and PPMI. 1 gives plain PMI; 0.75 reduces the bias towards rare context words."
+default = "0.75"
+
+[[inputs]]
+id = "query"
+label = "Query Word"
+tooltip = "A Julia string with a word from the corpus vocabulary, after lowercasing. Used for nearest neighbours and the word-level actions."
+default = "\"coffee\""
+
+[[inputs]]
+id = "k"
+label = "Neighbours"
+tooltip = "Number of nearest neighbours or top entries to show."
+default = "5"
 
 [[codeBranches]]
 model = "raw"
 code = '''
-using TextAnalysis
+using TextAnalysis, SparseArrays, LinearAlgebra  # CooMatrix and preprocessing; sparse matrices; norms
 
-crps   = Corpus(map(StringDocument, {{corpus}}))  # wrap strings as a Corpus
-update_lexicon!(crps)  # build the vocabulary from the corpus
-m      = DocumentTermMatrix(crps)  # document-term matrix (basis for co-occurrence)
+# Built-in corpus: four topics with shared contexts (drinks, pets, finance, rivers); bank appears in two senses
+docs = [
+    "she drinks hot coffee every morning",
+    "he drinks hot tea every evening",
+    "a cup of strong coffee with milk",
+    "a cup of green tea with honey",
+    "coffee beans are roasted and ground",
+    "tea leaves are dried and brewed",
+    "they ordered coffee at the cafe",
+    "they ordered tea at the cafe",
+    "the cat chased a small mouse",
+    "the dog chased a red ball",
+    "the cat sleeps on the warm sofa",
+    "the dog sleeps on the warm rug",
+    "feed the hungry cat in the kitchen",
+    "feed the hungry dog in the garden",
+    "the vet examined the sick cat",
+    "the vet examined the old dog",
+    "the bank raised interest rates",
+    "the central bank cut interest rates",
+    "investors bought shares in the bank",
+    "investors sold shares after the report",
+    "the market fell as rates rose",
+    "the market rallied as rates fell",
+    "they walked along the river bank",
+    "the boat drifted down the river",
+    "fish swim in the cold river",
+    "the fisherman sat on the bank of the river",
+]
 
-C = co_occurrence_matrix(crps, {{window}}, iswindow)  # raw co-occurrence counts, window size {{window}}
+flags = strip_case | strip_punctuation | strip_numbers | strip_stopwords  # lowercase; drop punctuation, numbers and stopwords
+crps  = Corpus(StringDocument.({{corpus}}))
+prepare!(crps, flags)
+update_lexicon!(crps)
+vocab = sort([t for (t, n) in lexicon(crps) if n >= {{min_count}}])  # words seen at least min_count times
+
+# mode = :directional counts each pair of positions once and still returns a symmetric matrix;
+# the default mode counts every pair twice
+coo   = CooMatrix(crps, vocab; window = {{window}}, normalize = {{normalize}}, mode = :directional)
+C     = coom(coo)  # sparse word x context counts
+terms = coo.terms  # row and column labels, in matrix order
+index = coo.column_indices  # word => row
+
+# PMI = log p(w, c) / (p(w) p(c)) on the observed pairs, with context counts raised to alpha;
+# unobserved pairs (PMI of minus infinity) stay empty
+function pmi_matrix(C; alpha = 0.75, positive = true)
+    I, J, V = findnz(C)
+    total = sum(V)
+    pw = vec(sum(C; dims = 2)) ./ total
+    cc = vec(sum(C; dims = 1)) .^ alpha
+    pc = cc ./ sum(cc)
+    vals = [log((v / total) / (pw[i] * pc[j])) for (i, j, v) in zip(I, J, V)]
+    positive && (vals = max.(vals, 0.0))
+    M = sparse(I, J, vals, size(C)...)
+    return positive ? dropzeros(M) : M
+end
+
+# Cosine similarity of the row of word to every other row of W, top k
+function neighbours(W, word; k = {{k}})
+    haskey(index, word) || error("not in the vocabulary: " * word)
+    X = Matrix(W)
+    i = index[word]
+    nrm = map(norm, eachrow(X))
+    sims = (X * X[i, :]) ./ (nrm .* nrm[i] .+ eps())
+    sims[i] = -Inf
+    top = first(sortperm(sims; rev = true), k)
+    return [(terms[j], sims[j]) for j in top]
+end
+
+W = C  # raw counts as word vectors
+
+println(length(terms), " words kept (minimum count {{min_count}}), ", nnz(triu(C, 1)), " distinct co-occurring pairs")
+println("Nearest neighbours of ", {{query}}, " by cosine similarity:")
+for (w, s) in neighbours(W, {{query}})
+    println("  ", rpad(w, 12), round(s; digits = 3))
+end
 '''
 
 [[codeBranches]]
 model = "ppmi"
 code = '''
-using TextAnalysis
+using TextAnalysis, SparseArrays, LinearAlgebra  # CooMatrix and preprocessing; sparse matrices; norms
 
-crps   = Corpus(map(StringDocument, {{corpus}}))  # wrap strings as a Corpus
-update_lexicon!(crps)  # build the vocabulary from the corpus
-m      = DocumentTermMatrix(crps)  # document-term matrix (basis for co-occurrence)
+# Built-in corpus: four topics with shared contexts (drinks, pets, finance, rivers); bank appears in two senses
+docs = [
+    "she drinks hot coffee every morning",
+    "he drinks hot tea every evening",
+    "a cup of strong coffee with milk",
+    "a cup of green tea with honey",
+    "coffee beans are roasted and ground",
+    "tea leaves are dried and brewed",
+    "they ordered coffee at the cafe",
+    "they ordered tea at the cafe",
+    "the cat chased a small mouse",
+    "the dog chased a red ball",
+    "the cat sleeps on the warm sofa",
+    "the dog sleeps on the warm rug",
+    "feed the hungry cat in the kitchen",
+    "feed the hungry dog in the garden",
+    "the vet examined the sick cat",
+    "the vet examined the old dog",
+    "the bank raised interest rates",
+    "the central bank cut interest rates",
+    "investors bought shares in the bank",
+    "investors sold shares after the report",
+    "the market fell as rates rose",
+    "the market rallied as rates fell",
+    "they walked along the river bank",
+    "the boat drifted down the river",
+    "fish swim in the cold river",
+    "the fisherman sat on the bank of the river",
+]
 
-C    = co_occurrence_matrix(crps, {{window}}, iswindow)  # raw co-occurrence counts
-P = ppmi(C)  # positive PMI weighting (negatives set to 0); a variable named ppmi would clash with the function
+flags = strip_case | strip_punctuation | strip_numbers | strip_stopwords  # lowercase; drop punctuation, numbers and stopwords
+crps  = Corpus(StringDocument.({{corpus}}))
+prepare!(crps, flags)
+update_lexicon!(crps)
+vocab = sort([t for (t, n) in lexicon(crps) if n >= {{min_count}}])  # words seen at least min_count times
+
+# mode = :directional counts each pair of positions once and still returns a symmetric matrix;
+# the default mode counts every pair twice
+coo   = CooMatrix(crps, vocab; window = {{window}}, normalize = {{normalize}}, mode = :directional)
+C     = coom(coo)  # sparse word x context counts
+terms = coo.terms  # row and column labels, in matrix order
+index = coo.column_indices  # word => row
+
+# PMI = log p(w, c) / (p(w) p(c)) on the observed pairs, with context counts raised to alpha;
+# unobserved pairs (PMI of minus infinity) stay empty
+function pmi_matrix(C; alpha = 0.75, positive = true)
+    I, J, V = findnz(C)
+    total = sum(V)
+    pw = vec(sum(C; dims = 2)) ./ total
+    cc = vec(sum(C; dims = 1)) .^ alpha
+    pc = cc ./ sum(cc)
+    vals = [log((v / total) / (pw[i] * pc[j])) for (i, j, v) in zip(I, J, V)]
+    positive && (vals = max.(vals, 0.0))
+    M = sparse(I, J, vals, size(C)...)
+    return positive ? dropzeros(M) : M
+end
+
+# Cosine similarity of the row of word to every other row of W, top k
+function neighbours(W, word; k = {{k}})
+    haskey(index, word) || error("not in the vocabulary: " * word)
+    X = Matrix(W)
+    i = index[word]
+    nrm = map(norm, eachrow(X))
+    sims = (X * X[i, :]) ./ (nrm .* nrm[i] .+ eps())
+    sims[i] = -Inf
+    top = first(sortperm(sims; rev = true), k)
+    return [(terms[j], sims[j]) for j in top]
+end
+
+W = pmi_matrix(C; alpha = {{alpha}})  # PPMI word vectors
+
+println(length(terms), " words kept (minimum count {{min_count}}), ", nnz(triu(C, 1)), " distinct co-occurring pairs")
+println("Nearest neighbours of ", {{query}}, " by cosine similarity:")
+for (w, s) in neighbours(W, {{query}})
+    println("  ", rpad(w, 12), round(s; digits = 3))
+end
 '''
 
 [[codeBranches]]
 model = "pmi"
 code = '''
-using TextAnalysis
+using TextAnalysis, SparseArrays, LinearAlgebra  # CooMatrix and preprocessing; sparse matrices; norms
 
-crps   = Corpus(map(StringDocument, {{corpus}}))  # wrap strings as a Corpus
-update_lexicon!(crps)  # build the vocabulary from the corpus
-m      = DocumentTermMatrix(crps)  # document-term matrix (basis for co-occurrence)
+# Built-in corpus: four topics with shared contexts (drinks, pets, finance, rivers); bank appears in two senses
+docs = [
+    "she drinks hot coffee every morning",
+    "he drinks hot tea every evening",
+    "a cup of strong coffee with milk",
+    "a cup of green tea with honey",
+    "coffee beans are roasted and ground",
+    "tea leaves are dried and brewed",
+    "they ordered coffee at the cafe",
+    "they ordered tea at the cafe",
+    "the cat chased a small mouse",
+    "the dog chased a red ball",
+    "the cat sleeps on the warm sofa",
+    "the dog sleeps on the warm rug",
+    "feed the hungry cat in the kitchen",
+    "feed the hungry dog in the garden",
+    "the vet examined the sick cat",
+    "the vet examined the old dog",
+    "the bank raised interest rates",
+    "the central bank cut interest rates",
+    "investors bought shares in the bank",
+    "investors sold shares after the report",
+    "the market fell as rates rose",
+    "the market rallied as rates fell",
+    "they walked along the river bank",
+    "the boat drifted down the river",
+    "fish swim in the cold river",
+    "the fisherman sat on the bank of the river",
+]
 
-C   = co_occurrence_matrix(crps, {{window}}, iswindow)  # raw co-occurrence counts
-P = pmi(C)  # PMI weighting (retains negative values); a variable named pmi would clash with the function
+flags = strip_case | strip_punctuation | strip_numbers | strip_stopwords  # lowercase; drop punctuation, numbers and stopwords
+crps  = Corpus(StringDocument.({{corpus}}))
+prepare!(crps, flags)
+update_lexicon!(crps)
+vocab = sort([t for (t, n) in lexicon(crps) if n >= {{min_count}}])  # words seen at least min_count times
+
+# mode = :directional counts each pair of positions once and still returns a symmetric matrix;
+# the default mode counts every pair twice
+coo   = CooMatrix(crps, vocab; window = {{window}}, normalize = {{normalize}}, mode = :directional)
+C     = coom(coo)  # sparse word x context counts
+terms = coo.terms  # row and column labels, in matrix order
+index = coo.column_indices  # word => row
+
+# PMI = log p(w, c) / (p(w) p(c)) on the observed pairs, with context counts raised to alpha;
+# unobserved pairs (PMI of minus infinity) stay empty
+function pmi_matrix(C; alpha = 0.75, positive = true)
+    I, J, V = findnz(C)
+    total = sum(V)
+    pw = vec(sum(C; dims = 2)) ./ total
+    cc = vec(sum(C; dims = 1)) .^ alpha
+    pc = cc ./ sum(cc)
+    vals = [log((v / total) / (pw[i] * pc[j])) for (i, j, v) in zip(I, J, V)]
+    positive && (vals = max.(vals, 0.0))
+    M = sparse(I, J, vals, size(C)...)
+    return positive ? dropzeros(M) : M
+end
+
+# Cosine similarity of the row of word to every other row of W, top k
+function neighbours(W, word; k = {{k}})
+    haskey(index, word) || error("not in the vocabulary: " * word)
+    X = Matrix(W)
+    i = index[word]
+    nrm = map(norm, eachrow(X))
+    sims = (X * X[i, :]) ./ (nrm .* nrm[i] .+ eps())
+    sims[i] = -Inf
+    top = first(sortperm(sims; rev = true), k)
+    return [(terms[j], sims[j]) for j in top]
+end
+
+W = pmi_matrix(C; alpha = {{alpha}}, positive = false)  # PMI on observed pairs, negatives kept
+
+println(length(terms), " words kept (minimum count {{min_count}}), ", nnz(triu(C, 1)), " distinct co-occurring pairs")
+println("Nearest neighbours of ", {{query}}, " by cosine similarity:")
+for (w, s) in neighbours(W, {{query}})
+    println("  ", rpad(w, 12), round(s; digits = 3))
+end
 '''
 
 [[actionGroups]]
@@ -214,31 +476,29 @@ label = "Visualise"
 [[actionGroups.actions]]
 id = "heatmap"
 label = "Co-Occurrence Heatmap"
-desc = "Heatmap of the full co-occurrence matrix"
+desc = "Heatmap of the current matrix for the 20 most frequent words, labelled by word"
 code = '''
-using TextAnalysis, Plots
+using Plots
 
-crps = Corpus(map(StringDocument, {{corpus}}))  # build corpus
-update_lexicon!(crps)  # build vocabulary
-C    = co_occurrence_matrix(crps, {{window}}, iswindow)  # raw co-occurrence counts
-
-heatmap(Matrix(C), title="Co-Occurrence Matrix", color=:Blues)  # plot as heatmap
+freq = [lexicon(crps)[t] for t in terms]
+top  = sort(first(sortperm(freq; rev = true), min(20, length(terms))))
+heatmap(terms[top], terms[top], Matrix(W[top, top]); xrotation = 60, color = :Blues,
+    title = "Co-occurrence, window {{window}}", size = (700, 600))
 '''
 
 [[actionGroups.actions]]
 id = "word-similarity"
 label = "Word Similarity Plot"
-desc = "Cosine similarity scatter for top word pairs"
+desc = "Cosine similarity between the PPMI vectors of the 20 most frequent words"
 code = '''
-using TextAnalysis, LinearAlgebra, Plots
+using Plots
 
-crps = Corpus(map(StringDocument, {{corpus}}))  # build corpus
-update_lexicon!(crps)  # build vocabulary
-C    = Matrix(ppmi(co_occurrence_matrix(crps, {{window}}, iswindow)))  # PPMI matrix
-
-norms = map(norm, eachrow(C))  # row norms for cosine similarity
-S     = (C * transpose(C)) ./ (norms * transpose(norms))  # pairwise cosine similarity matrix
-heatmap(S, title="Word Cosine Similarity", color=:RdBu)  # similarity heatmap
+P    = Matrix(pmi_matrix(C; alpha = {{alpha}}))
+freq = [lexicon(crps)[t] for t in terms]
+top  = sort(first(sortperm(freq; rev = true), min(20, length(terms))))
+X    = P[top, :] ./ (map(norm, eachrow(P[top, :])) .+ eps())
+heatmap(terms[top], terms[top], X * transpose(X); xrotation = 60, color = :RdBu, clims = (-1, 1),
+    title = "PPMI cosine similarity", size = (700, 600))
 '''
 
 [[actionGroups]]
@@ -248,37 +508,24 @@ label = "Diagnose"
 [[actionGroups.actions]]
 id = "sparsity"
 label = "Matrix Sparsity"
-desc = "Fraction of zero entries in the co-occurrence matrix"
+desc = "Vocabulary kept by the minimum count, density of the matrix and how many words have no context"
 code = '''
-using TextAnalysis, SparseArrays
-
-crps = Corpus(map(StringDocument, {{corpus}}))  # build corpus
-update_lexicon!(crps)  # build vocabulary
-C    = co_occurrence_matrix(crps, {{window}}, iswindow)  # raw co-occurrence matrix
-
-n       = length(C)  # total number of entries
-nz      = nnz(C)  # number of non-zero entries
-density = nz / n  # fraction of non-zero entries (1 - sparsity)
-println("Non-zero: ", nz, " / ", n, "  density=", round(density, digits=4))  # report sparsity
+n = length(terms)
+println("Words in the corpus: ", length(lexicon(crps)), ", kept with count >= {{min_count}}: ", n)
+println("Non-zero cells: ", nnz(C), " of ", n * n, ", density ", round(nnz(C) / (n * n); digits = 4))
+empty = terms[vec(sum(C; dims = 2)) .== 0]
+println("Words with no context in the window: ", isempty(empty) ? "none" : join(empty, ", "))
 '''
 
 [[actionGroups.actions]]
 id = "top-pairs"
 label = "Top Co-Occurring Pairs"
-desc = "Word pairs with highest co-occurrence counts"
+desc = "Word pairs with the highest counts, each pair once and without the diagonal, with their PPMI"
 code = '''
-using TextAnalysis
-
-crps  = Corpus(map(StringDocument, {{corpus}}))  # build corpus
-update_lexicon!(crps)  # build vocabulary
-C     = co_occurrence_matrix(crps, {{window}}, iswindow)  # raw co-occurrence counts
-vocab = collect(keys(lexicon(crps)))  # vocabulary list
-
-I, J, V = findnz(C)  # non-zero entries as (row, col, value) triples
-order   = sortperm(V, rev=true)  # sort by count descending
-
-for k in order[1:min(10, length(order))]
-    println(vocab[I[k]], " + ", vocab[J[k]], "  count=", V[k])
+P = pmi_matrix(C; alpha = {{alpha}})
+I, J, V = findnz(triu(C, 1))  # upper triangle: each unordered pair once, no self pairs
+for t in first(sortperm(V; rev = true), min(10, length(V)))
+    println(rpad(terms[I[t]] * " + " * terms[J[t]], 26), "count = ", round(V[t]; digits = 2), "  ppmi = ", round(P[I[t], J[t]]; digits = 3))
 end
 '''
 
@@ -289,36 +536,31 @@ label = "Predict"
 [[actionGroups.actions]]
 id = "nearest-neighbours"
 label = "Nearest Neighbours"
-desc = "Top-k most similar words to a query word"
+desc = "Top-k words most similar to the query word, with raw counts and with PPMI vectors"
 code = '''
-using TextAnalysis, LinearAlgebra
-
-crps  = Corpus(map(StringDocument, {{corpus}}))  # build corpus
-update_lexicon!(crps)  # build vocabulary
-C     = Matrix(ppmi(co_occurrence_matrix(crps, {{window}}, iswindow)))  # PPMI vectors
-vocab = collect(keys(lexicon(crps)))  # vocabulary list
-
-query = "word"  # replace with your query word
-idx   = findfirst(isequal(query), vocab)  # find query index
-sims  = C * C[idx, :] ./ (map(norm, eachrow(C)) .* norm(C[idx, :]))  # cosine similarity to query
-top   = sortperm(sims, rev=true)[2:6]  # top 5 excluding the query itself
-for i in top; println(vocab[i], "  sim=", round(sims[i], digits=4)); end
+P = pmi_matrix(C; alpha = {{alpha}})
+for (name, M) in (("raw counts", C), ("PPMI", P))
+    println(name, ": ", join([w * " (" * string(round(s; digits = 2)) * ")" for (w, s) in neighbours(M, {{query}})], ", "))
+end
 '''
 
 [[actionGroups.actions]]
 id = "apply-new-doc"
-label = "Apply to New Document"
-desc = "Project a new document into the co-occurrence space"
+label = "Apply to New Sentence"
+desc = "Represent a new sentence as the mean PPMI vector of its known words and find the closest words"
 code = '''
-using TextAnalysis
-
-crps    = Corpus(map(StringDocument, {{corpus}}))  # build corpus
-update_lexicon!(crps)  # build vocabulary
-new_doc = StringDocument("your new text here")  # new document to project
-update_lexicon!(crps, new_doc)  # extend vocabulary if needed
-
-dtm_new = DocumentTermMatrix(Corpus([new_doc]), lexicon(crps))  # DTM row for new document
-println(dtm_new)  # sparse representation in corpus vocabulary
+new_text = "a cup of hot tea with lemon"  # replace with your own sentence
+d = StringDocument(new_text)
+prepare!(d, flags)
+known = filter(w -> haskey(index, w), tokens(d))
+isempty(known) && error("no word of the sentence is in the vocabulary")
+P = Matrix(pmi_matrix(C; alpha = {{alpha}}))
+v = vec(sum(P[[index[w] for w in known], :]; dims = 1)) ./ length(known)
+sims = (P * v) ./ (map(norm, eachrow(P)) .* norm(v) .+ eps())
+println("Known words: ", join(known, ", "))
+for j in first(sortperm(sims; rev = true), {{k}})
+    println("  ", rpad(terms[j], 12), round(sims[j]; digits = 3))
+end
 '''
 
 [[actionGroups]]
@@ -328,37 +570,41 @@ label = "Compare"
 [[actionGroups.actions]]
 id = "raw-vs-ppmi"
 label = "Raw vs. PPMI"
-desc = "Compare raw counts and PPMI weights for a word"
+desc = "Contexts of the query word ranked by raw count and by PPMI, side by side"
 code = '''
-using TextAnalysis
-
-crps  = Corpus(map(StringDocument, {{corpus}}))  # build corpus
-update_lexicon!(crps)  # build vocabulary
-C     = co_occurrence_matrix(crps, {{window}}, iswindow)  # raw counts
-P     = ppmi(C)  # PPMI weights
-vocab = collect(keys(lexicon(crps)))  # vocabulary
-
-idx = 1  # index of word to inspect (adjust as needed)
-for j in 1:min(5, size(C, 2))
-    println(vocab[j], "  raw=", C[idx,j], "  ppmi=", round(P[idx,j], digits=4))
+P = pmi_matrix(C; alpha = {{alpha}})
+i = index[{{query}}]
+by_count = first(sortperm(Vector(C[i, :]); rev = true), {{k}})
+by_ppmi  = first(sortperm(Vector(P[i, :]); rev = true), {{k}})
+println(rpad("by count", 28), "by PPMI")
+for (a, b) in zip(by_count, by_ppmi)
+    println(rpad(terms[a] * " " * string(round(C[i, a]; digits = 2)), 28), terms[b], " ", round(P[i, b]; digits = 3))
 end
 '''
 
 [[actionGroups.actions]]
 id = "window-sizes"
 label = "Compare Window Sizes"
-desc = "Co-occurrence counts for window=1 vs window=5"
+desc = "PPMI nearest neighbours of the query word with windows of 1, 2 and 5"
 code = '''
-using TextAnalysis, LinearAlgebra
+for w in (1, 2, 5)
+    Cw = coom(CooMatrix(crps, vocab; window = w, normalize = {{normalize}}, mode = :directional))
+    nb = neighbours(pmi_matrix(Cw; alpha = {{alpha}}), {{query}})
+    println("window ", w, " (density ", round(nnz(Cw) / length(Cw); digits = 3), "): ", join(first.(nb), ", "))
+end
+'''
 
-crps = Corpus(map(StringDocument, {{corpus}}))  # build corpus
-update_lexicon!(crps)  # build vocabulary
-
-C1 = co_occurrence_matrix(crps, 1, iswindow)  # narrow window (w=1)
-C5 = co_occurrence_matrix(crps, 5, iswindow)  # wide window (w=5)
-
-println("Density w=1: ", nnz(C1) / length(C1))  # sparsity with narrow window
-println("Density w=5: ", nnz(C5) / length(C5))  # sparsity with wide window
+[[actionGroups.actions]]
+id = "smoothing"
+label = "Context Smoothing"
+desc = "Top PPMI pairs with alpha = 1 and with the chosen alpha, with the corpus count of each word"
+code = '''
+cnt(t) = lexicon(crps)[t]
+for a in (1.0, {{alpha}})
+    I, J, V = findnz(triu(pmi_matrix(C; alpha = a), 1))
+    top = first(sortperm(V; rev = true), min(8, length(V)))
+    println("alpha = ", a, ": ", join([terms[I[t]] * "+" * terms[J[t]] * " (" * string(cnt(terms[I[t]])) * "," * string(cnt(terms[J[t]])) * ")" for t in top], "  "))
+end
 '''
 
 [[actionGroups]]
@@ -368,36 +614,29 @@ label = "Interpret"
 [[actionGroups.actions]]
 id = "pmi-interpretation"
 label = "PMI Interpretation"
-desc = "Explain PMI values for a target word"
+desc = "Strongest and weakest observed associations of the query word, as how many times more often than chance they co-occur"
 code = '''
-using TextAnalysis
-
-crps  = Corpus(map(StringDocument, {{corpus}}))  # build corpus
-update_lexicon!(crps)  # build vocabulary
-C     = co_occurrence_matrix(crps, {{window}}, iswindow)  # raw co-occurrence counts
-P     = pmi(C)  # PMI matrix (retains negatives)
-vocab = collect(keys(lexicon(crps)))  # vocabulary
-
-idx = 1  # index of target word
-row = collect(P[idx, :])  # PMI of target with all context words
-top = sortperm(row, rev=true)[1:min(5, length(row))]  # top associated context words
-for j in top; println(vocab[j], "  pmi=", round(row[j], digits=4)); end
+P = pmi_matrix(C; alpha = {{alpha}}, positive = false)
+i = index[{{query}}]
+J, V = findnz(P[i, :])
+order = sortperm(V; rev = true)
+for (label, sel) in (("above chance", first(order, {{k}})), ("least above or below chance", last(order, min({{k}}, length(order)))))
+    println(label, ":")
+    for t in sel
+        println("  ", rpad(terms[J[t]], 12), "pmi = ", round(V[t]; digits = 3), ", ", round(exp(V[t]); digits = 2), " times chance")
+    end
+end
 '''
 
 [[actionGroups.actions]]
 id = "row-vector"
 label = "Word Vector"
-desc = "Extract the distributional vector for a word"
+desc = "The PPMI vector of the query word: its non-zero contexts and weights"
 code = '''
-using TextAnalysis
-
-crps  = Corpus(map(StringDocument, {{corpus}}))  # build corpus
-update_lexicon!(crps)  # build vocabulary
-C     = Matrix(ppmi(co_occurrence_matrix(crps, {{window}}, iswindow)))  # PPMI matrix
-vocab = collect(keys(lexicon(crps)))  # vocabulary
-
-word = "example"  # replace with your target word
-idx  = findfirst(isequal(word), vocab)  # find word index in vocabulary
-vec  = C[idx, :]  # distributional PPMI vector for the word
-println("Vector length: ", length(vec), "  non-zero: ", count(!iszero, vec))  # inspect vector
+P = pmi_matrix(C; alpha = {{alpha}})
+J, V = findnz(P[index[{{query}}], :])
+println("Length ", length(terms), ", non-zero ", length(V))
+for t in sortperm(V; rev = true)
+    println("  ", rpad(terms[J[t]], 12), round(V[t]; digits = 3))
+end
 '''
