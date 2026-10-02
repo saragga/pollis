@@ -13,7 +13,7 @@ name = "ControlSystemIdentification.jl"
 github = "https://github.com/baggepinnen/ControlSystemIdentification.jl"
 
 [requires]
-packages = ["ControlSystemIdentification.jl"]
+packages = ["ControlSystemIdentification.jl", "ControlSystems.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""
@@ -235,14 +235,14 @@ id = "na"
 label = "na"
 tooltip = "Order of the A(q) polynomial (autoregressive part). Number of past outputs used to predict the current output."
 default = "2"
-models = ["arx", "armax", "oe"]
+models = ["arx", "armax"]
 
 [[inputs]]
 id = "nb"
 label = "nb"
 tooltip = "Order of the B(q) polynomial (exogenous input part). Number of past inputs used in the model."
 default = "2"
-models = ["arx", "armax", "oe"]
+models = ["arx", "armax"]
 
 [[inputs]]
 id = "nc"
@@ -263,7 +263,7 @@ id = "nk"
 label = "nk"
 tooltip = "Input delay (dead time) in samples. Use nk=1 when there is no extra delay beyond the inherent one-step delay."
 default = "1"
-models = ["arx", "armax", "oe"]
+models = ["arx", "armax"]
 
 [[inputs]]
 id = "nx"
@@ -282,7 +282,7 @@ models = ["n4sid"]
 [[codeBranches]]
 model = "arx"
 code = '''
-using ControlSystemIdentification, ControlSystems, Plots  # SI toolbox
+using ControlSystemIdentification, ControlSystems, LinearAlgebra, Plots  # SI toolbox
 
 data = iddata({{y}}, {{u}}, {{h}})  # create identification dataset
 ntr = round(Int, 0.7 * length(data))  # first 70% for estimation, last 30% held out for validation
@@ -290,6 +290,19 @@ dtr, dval = data[1:ntr], data[ntr+1:end]
 
 fitm(d) = arx(d, {{na}}, {{nb}}; inputdelay = {{nk}})  # ARX: A(q)y = B(q)u + e, input delay nk
 model = fitm(dtr)
+
+# The package predicts h > 1 steps only for state-space models, so build the predictor of A(q)y = B(q)u + C(q)e
+function predictor(G, c = Float64[])  # innovation form in observer canonical form (Ljung, ch. 4), C = 1 + c1/q + ...
+    a, b = denvec(G)[1], numvec(G)[1]
+    b = [zeros(length(a) - length(b)); b]  # B over the same powers of z as A
+    n = max(length(a) - 1, length(c))
+    pad(v, m) = [v; zeros(m - length(v))]  # extra powers of 1/q with zero coefficients
+    a, b, c = pad(a, n + 1), pad(b, n + 1), pad(c, n)
+    F = [-a[2:end] [I(n - 1); zeros(1, n - 1)]]
+    sys = ss(F, reshape(b[2:end] .- b[1] .* a[2:end], n, 1), [1 zeros(1, n - 1)], fill(b[1], 1, 1), G.Ts)
+    PredictionStateSpace(sys, reshape(c .- a[2:end], n, 1))  # innovation gain K = c - a
+end
+pmodel = predictor(model)  # predictor with the ARX noise model 1/A
 
 println(model)  # display identified model
 println("Validation fit (simulation): ", round(modelfit(vec(output(dval)), vec(simulate(model, dval))), digits = 2), "%")
@@ -299,20 +312,33 @@ bodeplot(model)  # Bode plot of frequency response
 [[codeBranches]]
 model = "armax"
 code = '''
-using ControlSystemIdentification, ControlSystems, Plots  # SI toolbox
+using ControlSystemIdentification, ControlSystems, LinearAlgebra, Plots  # SI toolbox
 
 data = iddata({{y}}, {{u}}, {{h}})  # create identification dataset
 ntr = round(Int, 0.7 * length(data))  # first 70% for estimation, last 30% held out for validation
 dtr, dval = data[1:ntr], data[ntr+1:end]
 
 zd = tf(1, [1; zeros({{nk}} - 1)], {{h}})  # pure delay of nk - 1 samples (armax has a built-in delay of one)
-function fitm(d)
+function fitm(d; noise = false)
     k = {{nk}}
     ds = iddata(output(d)[:, k:end], input(d)[:, 1:end-k+1], d.Ts)  # shift the input by nk - 1 samples
-    G, Gn = armax(ds, {{na}}, {{nb}}, {{nc}})  # ARMAX: A(q)y = B(q)u + C(q)e; returns system and noise model C/A
-    G * zd  # restore the delay
+    G, Gn = armax(ds, {{na}}, {{nb}}, {{nc}})  # ARMAX: A(q)y = B(q)u + C(q)e; returns system and noise model (its numerator holds c1..cnc)
+    noise ? (G * zd, Gn) : G * zd  # restore the delay
 end
-model = fitm(dtr)
+model, noisemodel = fitm(dtr; noise = true)
+
+# The package predicts h > 1 steps only for state-space models, so build the predictor of A(q)y = B(q)u + C(q)e
+function predictor(G, c = Float64[])  # innovation form in observer canonical form (Ljung, ch. 4), C = 1 + c1/q + ...
+    a, b = denvec(G)[1], numvec(G)[1]
+    b = [zeros(length(a) - length(b)); b]  # B over the same powers of z as A
+    n = max(length(a) - 1, length(c))
+    pad(v, m) = [v; zeros(m - length(v))]  # extra powers of 1/q with zero coefficients
+    a, b, c = pad(a, n + 1), pad(b, n + 1), pad(c, n)
+    F = [-a[2:end] [I(n - 1); zeros(1, n - 1)]]
+    sys = ss(F, reshape(b[2:end] .- b[1] .* a[2:end], n, 1), [1 zeros(1, n - 1)], fill(b[1], 1, 1), G.Ts)
+    PredictionStateSpace(sys, reshape(c .- a[2:end], n, 1))  # innovation gain K = c - a
+end
+pmodel = predictor(model, numvec(noisemodel)[1])  # predictor with the ARMAX noise model C/A
 
 println(model)  # display identified model
 println("Validation fit (simulation): ", round(modelfit(vec(output(dval)), vec(simulate(model, dval))), digits = 2), "%")
@@ -331,6 +357,7 @@ dtr, dval = data[1:ntr], data[ntr+1:end]
 {{?l=}} fitm(d) = n4sid(d, {{nx}})  # subspace ID: state-space, nx={{nx}} states
 {{?l!=}} fitm(d) = n4sid(d, {{nx}}; i = {{l}})  # subspace ID: state-space, nx states, horizon {{l}}
 model = fitm(dtr)
+pmodel = model  # already a predictor model (Kalman gain for N4SID; noise model 1 for OE)
 
 println(model)  # display identified model
 println("Validation fit (simulation): ", round(modelfit(vec(output(dval)), vec(simulate(model, dval))), digits = 2), "%")
@@ -347,9 +374,10 @@ ntr = round(Int, 0.7 * length(data))  # first 70% for estimation, last 30% held 
 dtr, dval = data[1:ntr], data[ntr+1:end]
 
 # The package has no polynomial OE estimator; minimising the simulation error (focus = :simulation, noise model 1)
-# is the OE criterion, here in state-space form with nf = {{nf}} poles (nb and nk are not used)
+# is the OE criterion, here in state-space form with nf = {{nf}} poles
 fitm(d) = first(newpem(d, {{nf}}; focus = :simulation, show_trace = false))  # returns (model, x0, optimiser result)
 model = fitm(dtr)
+pmodel = model  # already a predictor model (Kalman gain for N4SID; noise model 1 for OE)
 
 println(model)  # display identified model
 println("Validation fit (simulation): ", round(modelfit(vec(output(dval)), vec(simulate(model, dval))), digits = 2), "%")
@@ -373,11 +401,11 @@ bodeplot(model)  # magnitude and phase vs. frequency
 [[actionGroups.actions]]
 id = "predicted-output"
 label = "Predicted Output"
-desc = "One-step-ahead prediction overlaid on the held-out validation data (N4SID uses its Kalman predictor; ARX, ARMAX and OE models are transfer functions without a noise model here, so their prediction equals simulation)"
+desc = "One-step-ahead prediction overlaid on the held-out validation data. N4SID uses its Kalman predictor; ARX and ARMAX use their innovation-form predictor (noise model 1/A or C/A); OE has no noise model, so its prediction equals simulation"
 code = '''
 using ControlSystemIdentification, Plots  # SI + plotting
 
-predplot(model, dval)  # predicted vs. measured output on validation data
+predplot(pmodel, dval)  # predicted vs. measured output on validation data
 '''
 
 [[actionGroups.actions]]
@@ -401,7 +429,7 @@ desc = "Autocorrelation of the validation residuals and their cross-correlation 
 code = '''
 using ControlSystemIdentification, Plots  # SI + plotting
 
-residualplot(model, dval)  # auto- and cross-correlation of residuals on validation data; should be white
+residualplot(pmodel, dval)  # auto- and cross-correlation of one-step prediction errors on validation data; should be white
 '''
 
 [[actionGroups.actions]]
@@ -439,13 +467,11 @@ plot(p1, p2, layout = (2, 1), size = (700, 600))
 [[actionGroups.actions]]
 id = "predict-kstep"
 label = "k-Step Prediction"
-desc = "5-step-ahead prediction on the validation data. N4SID uses its Kalman predictor and OE has no noise model (prediction equals simulation); ARX and ARMAX are transfer functions here, for which the package supports only simulation, so that is shown"
+desc = "5-step-ahead prediction on the validation data. N4SID uses its Kalman predictor; ARX and ARMAX use their innovation-form predictor (noise model 1/A or C/A); OE has no noise model, so its prediction equals simulation"
 code = '''
 using ControlSystemIdentification, Plots  # SI + plotting
 
-{{?model=n4sid|oe}} predplot(model, dval; h = 5)  # 5-step predictions vs. measured
-{{?model=arx|armax}} println("Transfer-function models support h = 1 only in this package; showing simulation (h = infinity) instead")
-{{?model=arx|armax}} simplot(model, dval)
+predplot(pmodel, dval; h = 5)  # 5-step predictions vs. measured
 '''
 
 [[actionGroups]]
