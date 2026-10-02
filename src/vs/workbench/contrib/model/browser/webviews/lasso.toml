@@ -171,7 +171,7 @@ model = "lasso"
 code = '''
 using Lasso
 
-lambda_kw = Symbol(Char(0x3bb))  # Lasso.jl names the penalty keyword with the Greek letter lambda
+{{?lambda!=}} lambda_kw = Symbol(Char(0x3bb))  # Lasso.jl names the penalty keyword with the Greek letter lambda
 {{?lambda=}} model = fit(LassoModel, @formula({{formula}}), {{data}})
 {{?lambda!=}} model = fit(LassoModel, @formula({{formula}}), {{data}}; lambda_kw => [{{lambda}}])
 println(coef(model))
