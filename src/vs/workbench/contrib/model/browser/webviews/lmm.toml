@@ -192,7 +192,7 @@ using FixedEffectModels  # high-dimensional fixed effects
 {{?inference=twoway-clustered}} model = reg({{data}}, @formula({{formula}} + fe({{group}})), Vcov.cluster(:{{group}}, :{{time-var}}))  # entity FE: {{group}}
 
 println(coeftable(model))  # coefficient table
-println("R²: ", r2(model))  # goodness of fit
+println("R2: ", r2(model))  # goodness of fit
 '''
 
 [[codeBranches]]
@@ -206,7 +206,7 @@ using FixedEffectModels  # two-way fixed effects
 {{?inference=twoway-clustered}} model = reg({{data}}, @formula({{formula}} + fe({{group}}) + fe({{time-var}})), Vcov.cluster(:{{group}}, :{{time-var}}))  # entity + time FE: {{group}}, {{time-var}}
 
 println(coeftable(model))  # coefficient table
-println("R²: ", r2(model))  # goodness of fit
+println("R2: ", r2(model))  # goodness of fit
 '''
 
 [[codeBranches]]
@@ -349,6 +349,7 @@ code = '''
 {{?model=lmm}} using GLM
 {{?model=lmm}} ols = lm(@formula({{formula}}), {{data}})  # same fixed effects, no grouping
 {{?model=lmm}} display(MixedModels.likelihoodratiotest(ols, model))
+{{?model=lmm}} println("Note: the random-intercept variance is tested on its boundary (0), so the chi-square p-value is conservative: roughly halve it")
 {{?model=panel-fe|twoway-fe}} pooled = reg({{data}}, @formula({{formula}}))
 {{?model=iv}} pooled = reg({{data}}, @formula({{formula-iv}}))
 {{?model!=lmm}} using RegressionTables

@@ -311,10 +311,10 @@ y = f.(rand(Xoshiro(1), dist, 10^6))
 [[actionGroups.actions]]
 id = "excess"
 label = "Expected Excess Over Thresholds"
-desc = "E[max(X - K, 0)], the expected amount by which X exceeds K (a call payoff or stop-loss premium), for K at the 50th to 99th percentiles"
+desc = "E[max(X - K, 0)], the expected amount by which X exceeds K (a call payoff or stop-loss premium), for K at the 50th to 99th percentiles; the kink at K is not polynomial, so Gaussian quadrature converges slowly here (raise n or compare with a fine grid)"
 code = '''
 ps = [0.5, 0.75, 0.9, 0.95, 0.99]
-[(percentile = p, K = quantile(dist, p), expected_excess = E(x -> max(x - quantile(dist, p), 0.0))) for p in ps]
+[(percentile = p, K = quantile(dist, p), expected_excess = E(x -> max(x - quantile(dist, p), 0.0))) for p in ps]  # kinked payoff: approximate at moderate n
 '''
 
 [[actionGroups]]
@@ -341,7 +341,9 @@ label = "Jensen's Inequality"
 desc = "E[g(X)] against g(E[X]) for convex and concave g: the gap shows how the curvature of g interacts with the spread of X"
 code = '''
 m = E(x -> x)
-gs = [("x^2", x -> x^2), ("exp(x)", exp), ("abs(x)", abs)]
+expok(d) = d isa MixtureModel ? all(expok, components(d)) : d isa Union{Normal, Uniform, Beta} || (d isa Union{Gamma, Exponential} && scale(d) < 1)  # E[exp(X)] finite
+gs = [("x^2", x -> x^2), ("abs(x)", abs)]
+expok(dist) && push!(gs, ("exp(x)", exp))  # skipped where E[exp(X)] is infinite (LogNormal, Chisq, heavy Gamma tails)
 minimum(dist) > 0 && push!(gs, ("log(x)", log), ("sqrt(x)", sqrt))
 [(g = name, E_g_of_X = E(g), g_of_E_X = g(m), gap = E(g) - g(m)) for (name, g) in gs]
 '''

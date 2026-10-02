@@ -291,7 +291,7 @@ label = "Predict"
 [[actionGroups.actions]]
 id = "vol-path"
 label = "Volatility Forecast Path"
-desc = "Volatility forecasts 1 to 20 steps ahead converging to the long-run level (GARCH and GJR-GARCH; DCC shows the one-step covariance matrix)"
+desc = "Volatility forecasts 1 to 20 steps ahead converging to the long-run level (GARCH and GJR-GARCH; DCC shows the one-step covariance matrix). For GJR, ARCHModels sets future shocks to 0 in the threshold term, so the path levels off below the dashed line, which includes gamma / 2"
 code = '''
 using ARCHModels, Plots
 {{?model=egarch}} error("ARCHModels.jl forecasts EGARCH one step ahead only: use predict(am, :volatility)")
@@ -299,7 +299,7 @@ using ARCHModels, Plots
 {{?model!=dcc}} H = 1:20
 {{?model!=dcc}} path = [sqrt(predict(am, :variance, h)) for h in H]
 {{?model!=dcc}} o = typeof(am.spec).parameters[1]; c = am.spec.coefs
-{{?model!=dcc}} longrun = sqrt(c[1] / (1 - sum(c[2+o:end]) - sum(c[2:1+o]) / 2))  # omega / (1 - persistence)
+{{?model!=dcc}} longrun = sqrt(c[1] / (1 - sum(c[2+o:end]) - sum(c[2:1+o]) / 2))  # omega / (1 - persistence); the GJR forecast path omits the gamma / 2 term, so it stays below this
 {{?model!=dcc}} plot(H, path, lw=2, marker=:circle, label="forecast", xlabel="horizon", ylabel="volatility", title="Volatility forecast path")
 {{?model!=dcc}} hline!([longrun], c=:red, ls=:dash, label="long-run volatility")
 '''

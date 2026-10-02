@@ -473,7 +473,7 @@ function grid(n, bcond, ends)  # grid points, spacing, second-difference matrix 
     if bcond == "dirichlet"
         bvec[1], bvec[n] = ends
     elseif bcond == "neumann"
-        A[1, 1] = A[n, n] = -1.0
+        A[1, 1] = A[n, n] = -1.0  # homogeneous no-flux ends (ghost cells): uleft and uright are not used
     else
         A[1, n] = A[n, 1] = 1.0
     end
@@ -515,7 +515,7 @@ function grid(n, bcond, ends)  # grid points, spacing, second-difference matrix 
     if bcond == "dirichlet"
         bvec[1], bvec[n] = ends
     elseif bcond == "neumann"
-        A[1, 1] = A[n, n] = -1.0
+        A[1, 1] = A[n, n] = -1.0  # homogeneous no-flux ends (ghost cells): uleft and uright are not used
     else
         A[1, n] = A[n, 1] = 1.0
     end

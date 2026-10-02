@@ -396,12 +396,12 @@ function solve(x0)
     opt.maxeval = 2000
     opt.ftol_rel = 1e-12
     minf, minx, ret = NLopt.optimize(opt, copy(x0))
-    (x = minx, f = minf, path = path, iterations = calls[], converged = ret in (:SUCCESS, :FTOL_REACHED, :XTOL_REACHED))
+    (x = minx, f = minf, path = path, iterations = calls[], converged = ret in (:SUCCESS, :FTOL_REACHED, :XTOL_REACHED))  # NLopt reports no iteration count: "iterations" holds function evaluations
 end
 
 sol = solve(x0)
 x_opt = sol.x
-(minimizer = x_opt, minimum = sol.f, iterations = sol.iterations, converged = sol.converged)
+(minimizer = x_opt, minimum = sol.f, function_evaluations = sol.iterations, converged = sol.converged)
 '''
 
 [[actionGroups]]
@@ -442,7 +442,7 @@ label = "Diagnose"
 [[actionGroups.actions]]
 id = "convergence-check"
 label = "Convergence Check"
-desc = "Convergence flag, iterations, gradient norm at the solution, and the observed convergence order from the last iterates (about 2 = quadratic)"
+desc = "Convergence flag, iterations, gradient norm at the solution, and the observed convergence order from the last iterates (about 2 = quadratic; for truncated Newton the path holds improving evaluations, not iterates, and the count is function evaluations)"
 code = '''
 e = [norm(p - x_opt) for p in sol.path]
 e = e[e .> 1e-12]

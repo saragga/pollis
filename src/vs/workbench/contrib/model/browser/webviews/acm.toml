@@ -341,7 +341,7 @@ function train(; steps=steps, seed=seed, nstep=5, lr=1f-3, ent=1f-3)
             -mean(logp .* adv) - ent * ls + 0.5f0 * mean((Rall .- vec(m.critic(Xall))) .^ 2)
         end
         Flux.update!(opt, model, grads[1])
-        push!(hist.critic_loss, mean((Rall .- V0) .^ 2)); push!(hist.actor_loss, -mean(adv .* (-0.5f0 .* ((Aall .- vec(model.actor(Xall))) ./ exp(model.logstd[1])) .^ 2)))
+        push!(hist.critic_loss, mean((Rall .- V0) .^ 2)); push!(hist.actor_loss, -mean(adv .* (-0.5f0 .* ((Aall .- vec(model.actor(Xall))) ./ exp(model.logstd[1])) .^ 2 .- model.logstd[1])))
         push!(hist.value, mean(V0))
         t += n; total += n
         if t == horizon  # all environments finish their episode together
@@ -566,7 +566,7 @@ plot([mean(res.hist.critic_loss[max(1, i - w + 1):i]) for i in eachindex(res.his
 [[actionGroups.actions]]
 id = "actor-loss"
 label = "Actor Loss"
-desc = "Actor objective over the updates (moving average); for SAC and TD3 it is minus the critic's value of the actor's actions"
+desc = "Actor objective over the updates (moving average); for TD3 it is minus the critic value of the actor actions, for SAC that plus the entropy term alpha log pi"
 code = '''
 using Plots
 

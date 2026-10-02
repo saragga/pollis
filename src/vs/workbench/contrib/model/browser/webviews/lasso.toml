@@ -353,7 +353,7 @@ sel = ["AICc" => MinAICc(), "BIC" => MinBIC(), "CV min" => MinCVmse(path, 10), "
 B = [s.first => coef(path, s.second)[end-length(nm)+1:end] for s in sel]
 println(rpad("", 20), join(rpad.(first.(B), 10)))
 foreach(j -> println(rpad(nm[j], 20), join(rpad.([round(b.second[j], digits=3) for b in B], 10))), eachindex(nm))
-println(rpad("non-zero", 20), join(rpad.([count(!=(0), b.second) for b in B], 10)))
+println(rpad("non-zero slopes", 20), join(rpad.([count(!=(0), b.second[nm .!= "(Intercept)"]) for b in B], 10)))  # intercept not counted
 '''
 
 [[actionGroups.actions]]
@@ -391,10 +391,10 @@ println(count(==(0), b), " of ", length(b), " predictors removed by the penalty"
 [[actionGroups.actions]]
 id = "fit-summary"
 label = "Fit Summary"
-desc = "Pseudo R-squared (1 - deviance / null deviance) and the number of non-zero coefficients in the selected model"
+desc = "Pseudo R-squared (1 - deviance / null deviance) and the number of non-zero coefficients (intercept excluded) in the selected model"
 code = '''
 using Lasso
 {{?model=plsr}} error("These steps cover Lasso and Elastic Net")
 println("R-squared: ", round(1 - deviance(model) / nulldeviance(model), digits=4))
-println("Non-zero coefficients: ", count(!=(0), coef(model)), "   observations: ", nobs(model))
+println("Non-zero coefficients: ", count(!=(0), coef(model)[coefnames(model) .!= "(Intercept)"]), " (excluding the intercept)   observations: ", nobs(model))
 '''

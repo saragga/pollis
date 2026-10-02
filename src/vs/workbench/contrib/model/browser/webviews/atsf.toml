@@ -329,7 +329,7 @@ label = "Series Structure"
 desc = "What the model sees: for BATS/TBATS a periodogram with the seasonal periods marked; for theta the deseasonalised series and its linear trend; for intermittent demand the demand sizes and the intervals between them"
 code = '''
 using Plots, Statistics
-{{?model=bats}} n = length(y); f = (1:n ÷ 2) ./ n; P = abs2.([sum(y[t] * cis(-2pi * k * t / n) for t in 1:n) for k in 1:n ÷ 2]) ./ n
+{{?model=bats}} n = length(y); f = (1:div(n, 2)) ./ n; P = abs2.([sum(y[t] * cis(-2pi * k * t / n) for t in 1:n) for k in 1:div(n, 2)]) ./ n
 {{?model=bats}} Plots.plot(1 ./ f, P, xscale=:log10, lw=1.5, label="periodogram", xlabel="Period", title="Periodogram"); Plots.vline!({{periods}}, c=:red, ls=:dash, label="seasonal periods")
 {{?model=theta}} ya = model.decompose ? model.y : y; tt = 1:length(ya); b = cov(tt, ya) / var(tt)
 {{?model=theta}} Plots.plot(ya, lw=1.5, label="deseasonalised", title="Theta line 0 (linear trend)"); Plots.plot!(tt, mean(ya) .+ b .* (tt .- mean(tt)), lw=2, label="theta = 0 line")
@@ -344,11 +344,11 @@ label = "Diagnose"
 [[actionGroups.actions]]
 id = "residuals"
 label = "Residual Diagnostics"
-desc = "Residuals over time, their autocorrelation and the Ljung-Box test up to lag 2 x period (lag 10 for non-seasonal data): leftover structure means the model has missed something"
+desc = "Residuals over time, their autocorrelation and the Ljung-Box test up to lag min(24, n/4): leftover structure means the model has missed something"
 code = '''
 using Plots, HypothesisTests, StatsBase
 r = filter(isfinite, Durbyn.residuals(model))  # qualified: StatsBase also exports residuals
-L = min(24, length(r) ÷ 4)
+L = min(24, div(length(r), 4))
 display((ljung_box_lags = L, p_value = pvalue(LjungBoxTest(r, L)), residual_sd = std(r)))
 p1 = Plots.plot(r, legend=false, title="Residuals")
 p2 = Plots.bar(1:L, autocor(r, 1:L), legend=false, title="Residual ACF"); Plots.hline!(p2, [-1.96, 1.96] ./ sqrt(length(r)), c=:red, ls=:dash)
@@ -384,10 +384,10 @@ code = '''
 [[actionGroups.actions]]
 id = "backtest"
 label = "Holdout Accuracy"
-desc = "Refits on all but the last h observations and scores the forecast of the held-out part: MAE, RMSE and MASE (for intermittent demand also the bias)"
+desc = "Refits on all but the last h observations and scores the forecast of the held-out part: MAE, RMSE and MASE (scaled by the in-sample one-step naive error, not the seasonal naive; for intermittent demand also the bias)"
 code = '''
 using Statistics
-H = min({{h}}, length(y) ÷ 5)
+H = min({{h}}, div(length(y), 5))
 train, test = y[1:end-H], y[end-H+1:end]
 f = forecast(build(train); h=H).mean
 e = test .- f
@@ -404,7 +404,7 @@ label = "Compare Methods"
 desc = "Holdout accuracy of this model against TBATS, the optimised theta method, SBA and the naive and seasonal-naive benchmarks on the same split"
 code = '''
 using Statistics
-H = min({{h}}, length(y) ÷ 5)
+H = min({{h}}, div(length(y), 5))
 {{?model=bats}} m = round(Int, first({{periods}}))
 {{?model=theta}} m = {{period}}
 {{?model=demand}} m = 1

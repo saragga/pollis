@@ -213,7 +213,7 @@ println(gdp.data)
 
 # Industrial Production index (INDPRO), monthly
 indpro = get_data(f, "INDPRO")
-println(indpro.title, " — ", indpro.units)
+println(indpro.title, ": ", indpro.units)
 """
 
 [[codeBranches]]
@@ -259,7 +259,7 @@ f = Fred()
 funds = get_data(f, "FEDFUNDS")
 println(funds.data)
 
-# 10-year minus 2-year treasury spread (T10Y2Y) — the classic yield-curve gauge
+# 10-year minus 2-year treasury spread (T10Y2Y): the classic yield-curve gauge
 spread = get_data(f, "T10Y2Y")
 println(spread.data)
 """

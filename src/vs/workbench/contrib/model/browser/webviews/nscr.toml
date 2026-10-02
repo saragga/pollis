@@ -254,10 +254,11 @@ using Plots
 [[actionGroups.actions]]
 id = "hazards"
 label = "Excess and Expected Hazards"
-desc = "Cumulative excess hazard of the disease next to the cumulative hazard expected from the population table"
+desc = "Cumulative excess hazard of the disease next to the cumulative hazard expected from the population table and the observed all-cause (Nelson-Aalen) hazard"
 code = '''
 using Plots
-plot(grid ./ 365.241, [cumsum(dLe) cumsum(dLp) cumsum(dLo)], label=["excess (disease)" "expected (population)" "observed (all causes)"], xlabel="years since diagnosis", ylabel="cumulative hazard")
+e2 = EdererII(T, D, age, date, covs, rt)  # unweighted at-risk sums: Nelson-Aalen observed hazard, Ederer II expected hazard (same grid as est)
+plot(grid ./ 365.241, [cumsum(dLe) cumsum(field(e2, Char(0x2202), Char(0x39b), Char(0x209a))) cumsum(field(e2, Char(0x2202), Char(0x39b), Char(0x2092)))], label=["excess (disease)" "expected (population)" "observed (all causes)"], xlabel="years since diagnosis", ylabel="cumulative hazard")
 '''
 
 [[actionGroups]]
@@ -300,10 +301,11 @@ yrs = filter(y -> 365.241 * y <= maximum(grid), [1, 3, 5, 10])
 [[actionGroups.actions]]
 id = "relative"
 label = "Observed, Expected and Relative Survival"
-desc = "Observed (all-cause) survival, the survival expected from the rate table, and their ratio, the relative survival"
+desc = "Observed (all-cause, Kaplan-Meier) survival, the survival expected from the rate table (Ederer II), their ratio, the relative survival, and the net survival of the chosen estimator"
 code = '''
-So = cumprod(1 .- dLo)  # observed survival
-Sp = exp.(-cumsum(dLp))  # expected survival of a comparable population group
+e2 = EdererII(T, D, age, date, covs, rt)  # unweighted at-risk sums (Pohar-Perme increments are inverse-probability weighted)
+So = cumprod(1 .- field(e2, Char(0x2202), Char(0x39b), Char(0x2092)))  # observed survival: Kaplan-Meier
+Sp = cumprod(1 .- field(e2, Char(0x2202), Char(0x39b), Char(0x209a)))  # expected survival of the patients still at risk (Ederer II)
 yrs = filter(y -> 365.241 * y <= maximum(grid), [1, 3, 5, 10])
 [(years = y, observed = round(So[at(365.241y)], digits=3), expected = round(Sp[at(365.241y)], digits=3), relative = round(So[at(365.241y)] / Sp[at(365.241y)], digits=3), net = round(Se[at(365.241y)], digits=3)) for y in yrs]
 '''

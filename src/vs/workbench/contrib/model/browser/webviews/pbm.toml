@@ -499,7 +499,7 @@ scatter(X[:, 1], size(X, 2) > 1 ? X[:, 2] : zeros(size(X, 1)), zcolor=Fv[:, 1], 
 
 [[actionGroups.actions]]
 id = "knee"
-label = "Knee Point"
+label = "Compromise Point"
 desc = "The compromise solution closest to the ideal point after scaling each objective to [0, 1]: a natural default when no preference is given"
 code = '''
 Fv = reduce(vcat, [transpose(s.f) for s in sols])

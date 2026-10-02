@@ -324,7 +324,7 @@ code = '''
 {{?family=gaussian|studentt}} using Copulas, Distributions, LinearAlgebra
 {{?family!=empirical|beta-emp|bernstein|checkerboard|empirical-ev|gaussian|studentt}} using Copulas, Distributions
 
-{{?family=gaussian|studentt}} Sigma = {{rho}} .* ones({{dim}}, {{dim}}) + (1 - {{rho}}) .* I({{dim}})  # example equicorrelation matrix — replace with any valid p.s.d. Sigma
+{{?family=gaussian|studentt}} Sigma = {{rho}} .* ones({{dim}}, {{dim}}) + (1 - {{rho}}) .* I({{dim}})  # example equicorrelation matrix: replace with any valid p.s.d. Sigma
 {{?family=gaussian}} C = GaussianCopula({{dim}}, Sigma)  # Gaussian copula
 {{?family=studentt}} C = TCopula({{nu}}, Sigma)  # Student's t copula
 {{?family=gumbel}} C = GumbelCopula({{dim}}, {{theta}})  # Gumbel copula (theta >= 1)
@@ -334,17 +334,17 @@ code = '''
 {{?family=amh}} C = AMHCopula({{dim}}, {{theta}})  # AMH copula (theta in [-1, 1))
 {{?family=bb1}} C = BB1Copula({{dim}}, {{theta}}, {{delta}})  # BB1 copula (theta > 0, delta >= 1)
 {{?family=galambos}} C = GalambosCopula({{theta}})  # Galambos copula (theta > 0), bivariate
-{{?family=husler}} C = HuslerReissCopula({{theta}})  # Hüsler–Reiss copula, bivariate
+{{?family=husler}} C = HuslerReissCopula({{theta}})  # Husler-Reiss copula, bivariate
 {{?family=tev}} C = tEVCopula({{nu}}, {{rho}})  # extreme-t copula, bivariate
-{{?family=mo}} C = MOCopula({{lambda1}}, {{lambda2}}, {{lambda12}})  # Marshall–Olkin copula, bivariate
+{{?family=mo}} C = MOCopula({{lambda1}}, {{lambda2}}, {{lambda12}})  # Marshall-Olkin copula, bivariate
 {{?family=empirical}} C = EmpiricalCopula({{data}})  # unsmoothed empirical copula
 {{?family=beta-emp}} C = BetaCopula({{data}})  # beta-smoothed empirical copula
 {{?family=bernstein}} C = BernsteinCopula({{data}})  # Bernstein polynomial copula
 {{?family=checkerboard}} C = CheckerboardCopula({{data}})  # checkerboard copula
 {{?family=empirical-ev}} C = EmpiricalEVCopula({{data}})  # empirical extreme-value copula
-{{?family=upper-frechet}} C = MCopula({{dim}})  # upper Fréchet bound (comonotonicity)
+{{?family=upper-frechet}} C = MCopula({{dim}})  # upper Frechet bound (comonotonicity)
 {{?family=independence}} C = IndependentCopula({{dim}})  # independence copula Pi
-{{?family=lower-frechet}} C = WCopula()  # lower Fréchet bound, d = 2 only
+{{?family=lower-frechet}} C = WCopula()  # lower Frechet bound, d = 2 only
 
 {{?family!=empirical|beta-emp|bernstein|checkerboard|empirical-ev}} margs = ({{marginals}},)  # marginal distributions
 {{?family!=empirical|beta-emp|bernstein|checkerboard|empirical-ev}} D = SklarDist(C, margs)  # multivariate Sklar distribution

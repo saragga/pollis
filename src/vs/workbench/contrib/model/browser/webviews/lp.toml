@@ -197,7 +197,7 @@ purpose = "Optimise a linear objective over a polyhedron; the optimum is a verte
 [[decisionRows]]
 task = "Mixed-Integer LP (MILP)"
 context = "Indivisible units or yes/no decisions: scheduling, facility location, knapsack"
-purpose = "Branch and bound over LP relaxations; the optimum is exact but duals only hold with the integers fixed"
+purpose = "Branch and bound over LP relaxations; the optimum is exact, and the duals shown are those of the LP relaxation"
 
 [[inputs]]
 id = "c"
@@ -401,9 +401,9 @@ label = "Predict"
 [[actionGroups.actions]]
 id = "sensitivity"
 label = "Sensitivity Analysis"
-desc = "Ranges over which each objective coefficient and right-hand side can move without changing the optimal basis (MILP: with the integers fixed)"
+desc = "Ranges over which each objective coefficient and right-hand side can move without changing the optimal basis (MILP: of the LP relaxation, a guide only)"
 code = '''
-{{?model=milp}} undo = fix_discrete_variables(model); optimize!(model)  # duals hold for the LP with the integers fixed
+{{?model=milp}} undo = relax_integrality(model); optimize!(model)  # duals of the LP relaxation: every variable is integer, so fixing them would leave all duals at zero
 report = lp_sensitivity_report(model)
 objective_ranges = [(variable = i, c = c[i], range = c[i] .+ report[x[i]]) for i in 1:n]
 rhs_ranges = [(constraint = i, b = b[i], range = b[i] .+ report[model[:cons][i]]) for i in eachindex(b)]
@@ -472,9 +472,9 @@ label = "Interpret"
 [[actionGroups.actions]]
 id = "shadow-prices"
 label = "Shadow Prices"
-desc = "The change in the optimal value per extra unit of each right-hand side (MILP: with the integers fixed, so valid only locally)"
+desc = "The change in the optimal value per extra unit of each right-hand side (MILP: of the LP relaxation, a guide only)"
 code = '''
-{{?model=milp}} undo = fix_discrete_variables(model); optimize!(model)  # duals hold for the LP with the integers fixed
+{{?model=milp}} undo = relax_integrality(model); optimize!(model)  # duals of the LP relaxation: every variable is integer, so fixing them would leave all duals at zero
 sp = shadow_price.(model[:cons])
 {{?model=milp}} undo(); optimize!(model)
 [(constraint = i, limit = b[i], shadow_price = sp[i]) for i in eachindex(b)]
@@ -485,7 +485,7 @@ id = "reduced-costs"
 label = "Reduced Costs"
 desc = "How much each variable's cost must improve before it enters the solution (non-zero only for variables at 0)"
 code = '''
-{{?model=milp}} undo = fix_discrete_variables(model); optimize!(model)  # duals hold for the LP with the integers fixed
+{{?model=milp}} undo = relax_integrality(model); optimize!(model)  # duals of the LP relaxation: every variable is integer, so fixing them would leave all duals at zero
 rc = reduced_cost.(x)
 {{?model=milp}} undo(); optimize!(model)
 [(variable = i, value = value(x[i]), cost = c[i], reduced_cost = rc[i]) for i in 1:n]

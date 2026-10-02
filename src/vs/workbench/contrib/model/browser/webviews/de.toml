@@ -551,7 +551,7 @@ end
 [[actionGroups.actions]]
 id = "fit-check"
 label = "Goodness of Fit and Tuning Rules"
-desc = "Sturges, Scott and Freedman-Diaconis bin counts, the Silverman against the least-squares cross-validated bandwidth, or a Kolmogorov-Smirnov test of the fitted distribution"
+desc = "Sturges, Scott and Freedman-Diaconis bin counts, the Silverman against the least-squares cross-validated bandwidth, or a Kolmogorov-Smirnov test of the fitted distribution (its parameters come from the same data, so the p-value is too large: a Lilliefors-type correction or a parametric bootstrap is needed for an exact test)"
 code = '''
 using StatsBase
 x = data isa Tuple ? data[1] : data isa AbstractMatrix ? data[1, :] : data  # the first margin

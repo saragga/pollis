@@ -484,7 +484,7 @@ code = '''
 [[actionGroups.actions]]
 id = "robustness"
 label = "Stability Margins"
-desc = "Gain and phase margins of the loop broken at the plant input (SISO): LQR guarantees generous margins with full state; LQG can lose them"
+desc = "Gain and phase margins of the loop broken at the plant input (SISO): continuous-time LQR guarantees generous margins with full state (infinite gain, 60 degrees phase), but this discrete-time design has no such guarantee; LQG can lose them"
 code = '''
 {{?model=sf}} loop = ss(A, B, K, 0, Ts)  # loop transfer K (zI - A)^-1 B
 {{?model=of}} ctrl = ss(A - B * K - L * C, L, K, 0, Ts); loop = ctrl * ss(A, B, C, 0, Ts)  # LQG controller in series with the plant

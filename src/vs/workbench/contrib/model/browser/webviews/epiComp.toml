@@ -339,7 +339,7 @@ prob = ODEProblem(sirs!, u0, (0.0, {{T}}), (beta, gamma, xi))
 sol  = solve(prob, Tsit5())
 
 R0 = beta / gamma  # basic reproduction number
-println("R0 = ", round(R0;digits=2), "  Recurrent waves expected: ", R0 > 1)  # SIRS summary
+println("R0 = ", round(R0;digits=2), "  Endemic equilibrium (reached through damped oscillations): ", R0 > 1)  # SIRS summary
 '''
 
 [[codeBranches]]
@@ -376,7 +376,7 @@ label = "Visualise"
 [[actionGroups.actions]]
 id = "epidemic-curve"
 label = "Epidemic Curve"
-desc = "Plot all compartment trajectories over time for the selected model"
+desc = "Plot the S, I and R trajectories over time of the SIR model at the chosen beta, gamma and N"
 code = '''
 using DifferentialEquations, GLMakie
 
@@ -393,7 +393,7 @@ axislegend(ax); display(fig)
 [[actionGroups.actions]]
 id = "phase-portrait"
 label = "Phase Portrait"
-desc = "Plot the S-I phase plane trajectory to visualise the epidemic path from initial seed to final state"
+desc = "Plot the S-I phase plane trajectory of the SIR model to visualise the epidemic path from initial seed to final state"
 code = '''
 using DifferentialEquations, GLMakie
 
@@ -447,7 +447,7 @@ label = "Predict"
 [[actionGroups.actions]]
 id = "beta-sweep"
 label = "Transmission Sweep"
-desc = "Sweep transmission rate beta and plot final epidemic size to identify the epidemic threshold"
+desc = "Sweep transmission rate beta and plot the recovered fraction at day T to identify the epidemic threshold (near the threshold the epidemic is slow, so this can be below the final size)"
 code = '''
 using DifferentialEquations, GLMakie
 
@@ -456,10 +456,10 @@ betas    = 0.01:0.01:0.5  # sweep range
 R_finals = Float64[]  # store final R fraction
 for b in betas
     sol = solve(ODEProblem(sir!,[{{N}}-1.0,1.0,0.0],(0.0,{{T}}),(b,{{gamma}})),Tsit5())
-    push!(R_finals, sol[3,end]/{{N}})
+    push!(R_finals, sol[3,end]/{{N}})  # recovered fraction at day T
 end
 
-fig,ax=Figure(),Axis(fig[1,1],xlabel="beta",ylabel="Final R fraction",title="Epidemic Threshold")
+fig,ax=Figure(),Axis(fig[1,1],xlabel="beta",ylabel="R fraction at day T",title="Epidemic Threshold")
 lines!(ax,collect(betas),R_finals,color=:red)
 vlines!(ax,[{{gamma}}],linestyle=:dash,color=:gray,label="beta = gamma")  # threshold
 axislegend(ax); display(fig)
@@ -509,6 +509,7 @@ s3=solve(ODEProblem(seird!,[{{N}}-1.0,0.0,1.0,0.0,0.0],(0.0,{{T}}),p_seird),Tsit
 println("SIR   peak I = ",round(maximum(s1[2,:]);digits=0))  # SIR peak
 println("SEIR  peak I = ",round(maximum(s2[3,:]);digits=0))  # SEIR peak (delayed)
 println("SEIRD peak I = ",round(maximum(s3[3,:]);digits=0),"  deaths = ",round(s3[5,end];digits=0))  # SEIRD peak and mortality
+println("Epidemic size at day T: SIR ",round(s1[3,end]/{{N}};digits=3),"  SEIR ",round(s2[4,end]/{{N}};digits=3),"  SEIRD ",round((s3[4,end]+s3[5,end])/{{N}};digits=3))  # share ever infected and removed
 '''
 
 [[actionGroups.actions]]
@@ -561,7 +562,7 @@ code = '''
 R0     = {{beta}} / {{gamma}}  # basic reproduction number
 I_star = R0 > 1 ? 1.0 - 1.0/R0 : 0.0  # SIS endemic infected fraction
 xi     = 1.0/180.0  # waning rate (180-day immunity for SIRS)
-I_sirs = R0 > 1 ? (1.0 - 1.0/R0) * xi / (gamma + xi) : 0.0  # SIRS endemic fraction (approx)
+I_sirs = R0 > 1 ? (1.0 - 1.0/R0) * xi / (gamma + xi) : 0.0  # SIRS endemic fraction (exact equilibrium)
 
 println("R0 = ", round(R0; digits=2))
 println("SIS  endemic I* = ", round(I_star * 100; digits=1), "%")

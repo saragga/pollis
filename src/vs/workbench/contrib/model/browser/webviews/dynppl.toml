@@ -297,7 +297,7 @@ model = "nuts"
 code = '''
 using Turing, MCMCChains  # probabilistic programming and chain diagnostics
 
-@model function {{nuts-model}}({{nuts-data}})  # define probabilistic model — replace priors and likelihood as needed
+@model function {{nuts-model}}({{nuts-data}})  # define probabilistic model: replace priors and likelihood as needed
     mu    ~ Normal(0, 1)
     sigma ~ Exponential(1)
     {{nuts-data}} .~ Normal(mu, sigma)  # .~ broadcasts the scalar distribution element-wise over the vector; plain ~ would require a multivariate distribution
@@ -314,7 +314,7 @@ model = "hmc"
 code = '''
 using Turing, MCMCChains  # probabilistic programming and chain diagnostics
 
-@model function {{hmc-model}}({{hmc-data}})  # define probabilistic model — replace priors and likelihood as needed
+@model function {{hmc-model}}({{hmc-data}})  # define probabilistic model: replace priors and likelihood as needed
     mu    ~ Normal(0, 1)
     sigma ~ Exponential(1)
     {{hmc-data}} .~ Normal(mu, sigma)  # .~ broadcasts the scalar distribution element-wise over the vector; plain ~ would require a multivariate distribution
@@ -331,7 +331,7 @@ model = "mh"
 code = '''
 using Turing, MCMCChains  # probabilistic programming and chain diagnostics
 
-@model function {{mh-model}}({{mh-data}})  # define probabilistic model — replace priors and likelihood as needed
+@model function {{mh-model}}({{mh-data}})  # define probabilistic model: replace priors and likelihood as needed
     mu    ~ Normal(0, 1)
     sigma ~ Exponential(1)
     {{mh-data}} .~ Normal(mu, sigma)  # .~ broadcasts the scalar distribution element-wise over the vector; plain ~ would require a multivariate distribution
@@ -374,11 +374,11 @@ label = "Diagnose"
 [[actionGroups.actions]]
 id = "rhat"
 label = "R-hat"
-desc = "Gelman-Rubin convergence diagnostic — values near 1.0 indicate convergence"
+desc = "Rank-normalised split R-hat (the modern Gelman-Rubin diagnostic): values near 1.0 indicate convergence"
 code = '''
 using MCMCChains  # chain diagnostics
 
-summarystats(chain)  # R-hat in the last column — values above 1.01 indicate poor convergence
+summarystats(chain)  # see the rhat column: values above 1.01 indicate poor convergence
 '''
 
 [[actionGroups.actions]]
@@ -398,7 +398,7 @@ desc = "Within-chain autocorrelation — slow decay indicates poor mixing"
 code = '''
 using StatsPlots  # statistics and plotting
 
-autocorplot(chain)  # autocorrelation per parameter and chain — should decay quickly
+autocorplot(chain)  # autocorrelation per parameter and chain: should decay quickly
 '''
 
 [[actionGroups]]
@@ -477,7 +477,7 @@ desc = "Mean, std, and quantiles per parameter across all chains"
 code = '''
 using MCMCChains  # chain diagnostics
 
-summarystats(chain)  # mean, std, naive SE, MCE, and quantiles
+summarystats(chain)  # mean, std, MCSE, ESS and R-hat
 quantile(chain)  # credible intervals: 2.5%, 25%, 50%, 75%, 97.5%
 '''
 

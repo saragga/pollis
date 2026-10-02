@@ -204,7 +204,7 @@ label = "Visualise"
 [[actionGroups.actions]]
 id = "caterpillar"
 label = "Random Effects Caterpillar"
-desc = "Random intercepts per group on the linear-predictor scale, sorted, with approximate 95% intervals"
+desc = "Random intercepts per group on the linear-predictor scale, sorted, with approximate 95% intervals (conditional variances of the working linear mixed model)"
 code = '''
 using Plots
 b = vec(ranef(model)[1][1, :]); se = sqrt.(condVar(model.LMM)[1][1, 1, :])  # conditional modes and approximate std. errors
@@ -248,13 +248,14 @@ plot!(identity, 0, 1, c=:red, ls=:dash, label=false)
 [[actionGroups.actions]]
 id = "overdispersion"
 label = "Overdispersion Check"
-desc = "Pearson chi-square over residual degrees of freedom: well above 1 for a Poisson or Binomial model means overdispersion (try NegativeBinomial or an observation-level random effect)"
+desc = "Pearson chi-square over residual degrees of freedom: well above 1 for a Poisson or aggregated Binomial model means overdispersion (try NegativeBinomial or an observation-level random effect); not informative for 0/1 data"
 code = '''
 using GLM, Distributions
 y, mu = response(model), fitted(model)
 pr = (y .- mu) ./ sqrt.(GLM.glmvar.(Distribution(model)(), mu))  # Pearson residuals
 ratio = sum(abs2, pr) / dof_residual(model)
 println("Pearson chi2 / df = ", round(ratio, digits=3), ratio > 1.5 ? "  -> overdispersed" : "  -> no strong sign of overdispersion")
+all(in((0, 1)), y) && println("Note: for 0/1 (Bernoulli) data a single observation cannot be overdispersed, so this ratio carries no information")
 '''
 
 [[actionGroups.actions]]
@@ -320,6 +321,7 @@ code = '''
 using GLM
 g = glm(@formula({{formula}}), {{data}}, fam, lk)  # no random effects
 display(MixedModels.likelihoodratiotest(g, model))
+println("Note: the random-intercept variance is tested on its boundary (0), so the chi-square p-value is conservative: roughly halve it")
 println("AIC: GLM ", round(aic(g), digits=2), "  GLMM ", round(aic(model), digits=2))
 println("BIC: GLM ", round(bic(g), digits=2), "  GLMM ", round(bic(model), digits=2))
 '''

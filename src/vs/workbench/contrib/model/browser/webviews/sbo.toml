@@ -513,7 +513,7 @@ desc = "Polish the best point with Nelder-Mead on the true objective, limited to
 code = '''
 using Optim
 
-r = Optim.optimize(f, x_best, NelderMead(), Optim.Options(f_calls_limit=100))
+r = Optim.optimize(x -> f(clamp.(x, lb, ub)), x_best, NelderMead(), Optim.Options(f_calls_limit=100))  # evaluated inside the box, so the value matches the clamped point
 (surrogate_best = f_best, refined = Optim.minimum(r), improvement = f_best - Optim.minimum(r),
  refined_point = round.(clamp.(Optim.minimizer(r), lb, ub), sigdigits=6), extra_evaluations = Optim.f_calls(r))
 '''

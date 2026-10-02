@@ -253,7 +253,7 @@ function solve_qvi(F=Fop; x0=zeros(n), iters=200, tol=1e-9, damp=0.5)  # damped 
     (x = x, ok = steps[end] < 1e-6, steps = steps)
 end
 
-solve(F=Fop) = solve_qvi(F; damp=1.0)  # a fixed K converges in one undamped step
+solve(F=Fop) = (r = solve_vi(F); (x = r.x, ok = r.ok, steps = [0.0]))  # a fixed K needs a single VI solve
 residual(x, F=Fop) = norm(x .- clamp.(x .- F(x), Kset(x)...))  # natural residual: zero exactly at a solution
 
 {{?model=vi}}sol = solve()
@@ -425,11 +425,11 @@ Fx = Fop(sol.x)
 [[actionGroups.actions]]
 id = "gap"
 label = "Gap Function"
-desc = "Gap function g(x) = max over y in K(x) of F(x)'(x - y): non-negative on K(x) and zero exactly at a solution, compared at the start point and at x*"
+desc = "Gap function g(x) = max over y in K(x) of F(x)'(x - y): non-negative on K(x) and zero exactly at a solution, compared at the start point and at x* (infinite when F pushes towards an infinite bound)"
 code = '''
 function gapfun(x)
     Fx, (l, u) = Fop(x), Kset(x)
-    sum(Fx[i] * (x[i] - (Fx[i] > 0 ? l[i] : u[i])) for i in 1:n)  # y at the bound F pushes toward
+    sum(abs(Fx[i]) <= 1e-9 ? 0.0 : Fx[i] * (x[i] - (Fx[i] > 0 ? l[i] : u[i])) for i in 1:n)  # y at the bound F pushes toward (Inf if that bound is infinite)
 end
 x0 = clamp.(zeros(n), Kset(zeros(n))...)
 (gap_at_start = gapfun(x0), gap_at_solution = gapfun(sol.x))

@@ -552,10 +552,11 @@ status = SciMLBase.successful_retcode(sol) ? "converged" : "did not converge ($(
 [[actionGroups.actions]]
 id = "convergence-order"
 label = "Convergence Order"
-desc = "Estimates the order of convergence from successive residuals: about 1 is linear (bisection), about 1.6 superlinear (secant, Broyden), about 2 quadratic (Newton near a simple root)"
+desc = "Estimates the order of convergence from successive residuals: about 1 is linear (bisection), about 1.6 superlinear (secant, Broyden), about 2 quadratic (Newton near a simple root); for bracketing methods only the improving evaluations are used, so the estimate is rough"
 code = '''
 {{?model=scalar|system}} r = [e.fnorm for e in sol.trace.history if e.fnorm > 0]
-{{?model=bracket}} solve_from(start0); r = [abs(f(x, nothing)) for x in evals if f(x, nothing) != 0]
+{{?model=bracket}} solve_from(start0); ra = [abs(f(x, nothing)) for x in evals if f(x, nothing) != 0]
+{{?model=bracket}} r = [ra[k] for k in eachindex(ra) if ra[k] < minimum(ra[1:k-1]; init=Inf)]  # best-so-far residuals: bracketing evaluations are not a monotone iterate sequence
 q = [log(r[k+1] / r[k]) / log(r[k] / r[k-1]) for k in 2:length(r)-1]
 (residuals = r, order_estimates = round.(q, digits=2))
 '''

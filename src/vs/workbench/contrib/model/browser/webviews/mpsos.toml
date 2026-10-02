@@ -464,13 +464,13 @@ label = "Interpret"
 [[actionGroups.actions]]
 id = "gram-decomp"
 label = "Gram Decomposition"
-desc = "The explicit squares: p = sum_i s_i(x)^2, from the eigendecomposition of the Gram matrix"
+desc = "The explicit squares from the eigendecomposition of the Gram matrix: p = sum_i s_i(x)^2 for a certificate; on a domain only sigma_0, so p - t = sum_i s_i(x)^2 + sum_j sigma_j g_j"
 code = '''
 g = gram_matrix(c)
 F = eigen(Symmetric(Matrix(g.Q)))
 m = g.basis.monomials
 keep = findall(>(1e-8), F.values)
-squares = [sqrt(F.values[i]) * dot(F.vectors[:, i], m) for i in keep]  # p = sum(s .^ 2) (plus t for the bound)
+squares = [sqrt(F.values[i]) * dot(F.vectors[:, i], m) for i in keep]  # sos: p = sum(s .^ 2); polyopt: p - t = sum(s .^ 2) + sum_j sigma_j g_j
 (number_of_squares = length(squares), squares = squares)
 '''
 

@@ -566,12 +566,14 @@ code = '''
 using Clarabel, COSMO, SCS
 
 m0 = model
-map(["Clarabel" => Clarabel.Optimizer, "COSMO" => COSMO.Optimizer, "SCS" => SCS.Optimizer]) do (name, opt)
+res = map(["Clarabel" => Clarabel.Optimizer, "COSMO" => COSMO.Optimizer, "SCS" => SCS.Optimizer]) do (name, opt)
     set_optimizer(m0, opt)
     set_silent(m0)
     t = @elapsed optimize!(m0)
     (solver = name, status = termination_status(m0), objective = objective_value(m0), seconds = t)
 end
+set_optimizer(model, {{solver}}.Optimizer); set_silent(model); optimize!(model)  # m0 is the model itself: back on the chosen solver for later actions
+res
 '''
 
 [[actionGroups.actions]]

@@ -463,12 +463,12 @@ desc = "RMSE of the neural estimator against the closed-form MLE of the example 
 code = '''
 using Statistics
 
-{{?arch=DeepSet}} values(Z, k) = vec(Z[k])
-{{?arch=LSTM}} values(Z, k) = vec(Z[:, :, k])
-{{?arch=GNN}} values(Z, k) = vec(Z[k].ndata.Z)
+{{?arch=DeepSet}} dataset_values(Z, k) = vec(Z[k])
+{{?arch=LSTM}} dataset_values(Z, k) = vec(Z[:, :, k])
+{{?arch=GNN}} dataset_values(Z, k) = vec(Z[k].ndata.Z)
 theta_test = sampler(1000)
 Z_test = simulator(theta_test, m)
-mle = reduce(hcat, [[mean(values(Z_test, k)), std(values(Z_test, k); corrected=false)] for k in 1:nsets(Z_test)])
+mle = reduce(hcat, [[mean(dataset_values(Z_test, k)), std(dataset_values(Z_test, k); corrected=false)] for k in 1:nsets(Z_test)])
 rmse(est) = vec(sqrt.(mean(abs2, est .- theta_test; dims=2)))
 (neural = rmse(point_estimate(Z_test)), mle = rmse(mle))
 '''

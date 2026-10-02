@@ -501,9 +501,9 @@ label = "Missing Values"
 desc = "NULL count and share per column, counted in the database over every row"
 code = '''
 cols = Tables.columntable(DBInterface.execute({{con}}, "SELECT * FROM $relation LIMIT 0"))
-counts = Tables.columntable(DBInterface.execute({{con}}, "SELECT count(*) AS n, " *
+counts = Tables.columntable(DBInterface.execute({{con}}, "SELECT count(*) AS __rows__, " *
 	join(("count(*) - count(\"$c\") AS \"$c\"" for c in keys(cols)), ", ") * " FROM $relation"))
-n = first(counts.n)
+n = first(counts.__rows__)  # unusual alias, so it cannot collide with a column name
 for c in keys(cols)
 	k = first(counts[c])
 	println(rpad(c, 16), lpad(k, 8), " missing  (", round(100 * k / max(n, 1), digits=1), "%)")

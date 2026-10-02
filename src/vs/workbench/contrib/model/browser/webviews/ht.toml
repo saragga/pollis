@@ -678,7 +678,7 @@ using HypothesisTests, Random, Plots
 {{?test=one-sample-t-test}} testfun = s -> OneSampleTTest(s[1], {{mu01}})
 {{?test=two-sample-t-test}} testfun = s -> EqualVarianceTTest(s[1], s[2])
 {{?test=welch-t-test}} testfun = s -> UnequalVarianceTTest(s[1], s[2])
-{{?test=one-sample-z-test}} testfun = s -> OneSampleZTest(s[1], {{mu01}})
+{{?test=one-sample-z-test}} testfun = s -> OneSampleZTest(mean(s[1]), {{sig}}, length(s[1]), {{mu01}})  # known sigma, as in the main test
 {{?test=two-sample-z-test}} testfun = s -> EqualVarianceZTest(s[1], s[2])
 {{?test=f-test}} testfun = s -> VarianceFTest(s[1], s[2])
 {{?test=one-way-anova}} testfun = s -> OneWayANOVATest(s...)
