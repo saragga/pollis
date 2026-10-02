@@ -338,7 +338,7 @@ bert_a = HuggingFace.load_model("{{bertmodel}}", :model; config=cfg)  # same wei
 sample = encode(textenc, [attn_text])
 out    = bert_a(sample)
 attn   = out.outputs[end].attention_score[:, :, 1, 1]  # last layer, head 1, sentence 1; rows are keys, columns are queries
-tokens = vec(decode(textenc, sample.token))  # token strings
+tokens = vec(lookup(String, textenc.vocab, sample.token))  # WordPiece token strings from the vocabulary
 heatmap(transpose(attn), xticks=(1:length(tokens), tokens), yticks=(1:length(tokens), tokens), xrotation=45, yflip=true,
         xlabel="Key", ylabel="Query")
 '''
@@ -474,7 +474,7 @@ x0     = e0.hidden_state  # hidden x tokens x 1
 target(x) = norm(bert.encoder(merge(e0, (hidden_state = x,))).hidden_state[:, 1, 1])  # norm of the CLS output vector
 g      = Zygote.gradient(target, x0)[1]  # gradient with respect to the input embeddings (token ids are not differentiable)
 scores = vec(sum(g .* x0, dims=1))  # gradient times input, one score per token
-tokens = vec(decode(textenc, sample.token))
+tokens = vec(lookup(String, textenc.vocab, sample.token))  # WordPiece token strings from the vocabulary
 for (t, s) in zip(tokens, scores)
     println(rpad(t, 15), round(s, digits=4))
 end

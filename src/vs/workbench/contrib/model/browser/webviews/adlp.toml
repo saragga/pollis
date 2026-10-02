@@ -372,6 +372,7 @@ label = "Predictions"
 desc = "Distribution: quantiles of the fitted law. Linear: predictions with plug-in 95% intervals (+-1.96 sigma, parameter uncertainty ignored). Logistic: predicted probabilities, for the first five rows"
 code = '''
 {{?model=dist}} [(p = p, quantile = quantile(d_hat, p)) for p in [0.05, 0.25, 0.5, 0.75, 0.95]]
+{{?model=lr|logr}} using LinearAlgebra
 {{?model=lr}} [(row = i, prediction = dot(X[i, :], beta_hat), lower = dot(X[i, :], beta_hat) - 1.96 * sigma_hat, upper = dot(X[i, :], beta_hat) + 1.96 * sigma_hat, observed = y[i]) for i in 1:5]
 {{?model=logr}} [(row = i, probability = sigmoid(dot(X[i, :], beta_hat)), observed = y[i]) for i in 1:5]
 '''

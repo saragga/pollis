@@ -210,7 +210,7 @@ daily = time_series_daily("AAPL"; outputsize="compact")
 println(daily)
 
 # Intraday bars at a chosen interval
-intraday = time_series_intraday("AAPL"; interval="5min")
+intraday = time_series_intraday("AAPL", "5min")
 
 # Latest global quote: price, change, and volume
 last_quote = stock_quote("AAPL")  # quote is a Julia keyword, so it cannot name a variable
@@ -251,11 +251,11 @@ code = """
 using AlphaVantage
 
 # Simple moving average over a daily series (computed by Alpha Vantage)
-sma = SMA("AAPL"; interval="daily", time_period=20, series_type="close")
+sma = SMA("AAPL", "daily", 20, "close")
 println(sma)
 
 # Relative Strength Index
-rsi = RSI("AAPL"; interval="daily", time_period=14, series_type="close")
+rsi = RSI("AAPL", "daily", 14, "close")
 println(rsi)
 """
 
@@ -265,12 +265,12 @@ code = """
 using AlphaVantage
 
 # US real GDP (annual or quarterly)
-gdp = real_gdp(; interval="annual")
+gdp = real_gdp("annual")
 println(gdp)
 
 # Consumer Price Index and the 10-year treasury yield
-inflation = cpi(; interval="monthly")
-yield10y  = treasury_yield(; interval="monthly", maturity="10year")
+inflation = cpi("monthly")
+yield10y  = treasury_yield("monthly", "10year")
 println(yield10y)
 """
 
@@ -298,7 +298,7 @@ desc = "Fetch intraday bars at a chosen interval"
 code = """
 using AlphaVantage
 
-intraday = time_series_intraday("MSFT"; interval="15min", outputsize="compact")
+intraday = time_series_intraday("MSFT", "15min"; outputsize="compact")
 println(intraday)
 """
 
@@ -361,7 +361,7 @@ desc = "Compute a simple moving average server-side"
 code = """
 using AlphaVantage
 
-sma = SMA("AAPL"; interval="daily", time_period=50, series_type="close")
+sma = SMA("AAPL", "daily", 50, "close")
 println(sma)
 """
 
@@ -372,7 +372,7 @@ desc = "Compute the Relative Strength Index server-side"
 code = """
 using AlphaVantage
 
-rsi = RSI("AAPL"; interval="daily", time_period=14, series_type="close")
+rsi = RSI("AAPL", "daily", 14, "close")
 println(rsi)
 """
 
@@ -387,8 +387,8 @@ desc = "Pull US real GDP and the Consumer Price Index"
 code = """
 using AlphaVantage
 
-gdp = real_gdp(; interval="annual")
-inflation = cpi(; interval="monthly")
+gdp = real_gdp("annual")
+inflation = cpi("monthly")
 println(gdp)
 println(inflation)
 """
@@ -400,8 +400,8 @@ desc = "Pull treasury yields and the federal funds rate"
 code = """
 using AlphaVantage
 
-yield10y = treasury_yield(; interval="monthly", maturity="10year")
-funds    = federal_fund_rate(; interval="monthly")
+yield10y = treasury_yield("monthly", "10year")
+funds    = federal_fund_rate("monthly")
 println(yield10y)
 println(funds)
 """

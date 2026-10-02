@@ -129,7 +129,7 @@ using HARE
 
 result = {{method}}_sequential({{X}}, {{y}}, Z={{Z}})  # sequential FGLS: AR(1) correction first, then the heteroskedasticity correction
 
-println(coeftable(result))  # coefficient table with corrected standard errors
+display(coeftable(result))  # coefficient table with corrected standard errors
 println(result.rho)  # estimated AR(1) coefficient rho
 println(result.gamma)  # log-variance parameters gamma: log(sigma_t^2) = gamma_0 + z_t' gamma
 '''
@@ -141,7 +141,7 @@ using HARE
 
 result = {{method}}_joint({{X}}, {{y}}, Z={{Z}})  # joint: rho and gamma by maximum likelihood with beta concentrated out, then GLS for beta (Iterated alternates the two until convergence)
 
-println(coeftable(result))  # coefficient table with corrected standard errors
+display(coeftable(result))  # coefficient table with corrected standard errors
 println(result.rho)  # estimated AR(1) coefficient rho
 println(result.gamma)  # log-variance parameters gamma: log(sigma_t^2) = gamma_0 + z_t' gamma
 '''
@@ -218,8 +218,10 @@ ols_fit  = lm(hcat(ones(length({{y}})), {{X}}), {{y}})  # OLS baseline with the 
 {{?model=sequential}} fgls_fit = {{method}}_sequential({{X}}, {{y}}, Z={{Z}})  # FGLS corrected
 {{?model=joint}} fgls_fit = {{method}}_joint({{X}}, {{y}}, Z={{Z}})  # FGLS corrected
 
-println("OLS:  ", coeftable(ols_fit))  # OLS coefficients
-println("FGLS: ", coeftable(fgls_fit))  # corrected coefficients
+println("OLS:")
+display(coeftable(ols_fit))  # OLS coefficients
+println("FGLS:")
+display(coeftable(fgls_fit))  # corrected coefficients
 '''
 
 [[actionGroups.actions]]

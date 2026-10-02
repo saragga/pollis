@@ -498,8 +498,8 @@ code = '''
 {{?inference=HAC}}V = vcov(model, HAC(BartlettKernel(), NeweyWest()))  # robust variance-covariance matrix
 {{?inference=clustered}}V = vcov(model, CRHC0(Tables.getcolumn({{data}}, :{{cluster}})))  # cluster-robust variance-covariance matrix
 {{?inference=driscoll-kraay}}V = vcov(DriscollKraay(Bartlett(5), tis=Tables.getcolumn({{data}}, :{{dktime}}), iis=Tables.getcolumn({{data}}, :{{dkentity}})), model)  # Driscoll-Kraay variance-covariance matrix
-{{?inference!=standard}}println(coeftable(model, V))  # coefficients with robust SEs
-{{?inference=standard}}println(coeftable(model))  # coefficient table
+{{?inference!=standard}}display(coeftable(model, V))  # coefficients with robust SEs
+{{?inference=standard}}display(coeftable(model))  # coefficient table
 
 println("Deviance: ", deviance(model))  # model deviance
 println("AIC:      ", aic(model))  # Akaike information criterion
@@ -570,20 +570,6 @@ using GLM
 {{?model=Poisson|Geometric}}println(phi > 1.5 ? "Overdispersed: consider NegBin (negbin estimates theta) or robust SEs" : "No strong overdispersion")
 {{?model=Binomial}}println(phi > 1.5 ? "Overdispersed: consider robust SEs or a quasi-binomial correction (scale the SEs by sqrt(phi))" : "No strong overdispersion")
 {{?model=NegativeBinomial}}println(phi > 1.5 ? "Still overdispersed after estimating theta: check for zero inflation or missing predictors" : "No strong overdispersion")
-'''
-
-[[actionGroups.actions]]
-id = "leverage"
-label = "Leverage"
-desc = "Hat-matrix leverage to flag influential observations"
-code = '''
-using GLM, StatsBase
-
-h = leverage(model)  # diagonal of the hat matrix
-p = length(coef(model))  # number of parameters
-n = nobs(model)  # number of observations
-high = findall(h .> 2p / n)  # rule of thumb: leverage above 2p/n
-println("High-leverage observations: ", high)
 '''
 
 [[actionGroups]]

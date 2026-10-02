@@ -435,22 +435,6 @@ id = "compare"
 label = "Compare"
 
 [[actionGroups.actions]]
-id = "f-test"
-label = "Nested F-Test"
-desc = "Test whether extra predictors improve the fit, with the chosen variance estimator"
-code = '''
-using GLM, Distributions, LinearAlgebra
-
-{{?model=ols}}model0 = lm(@formula(y ~ x1), {{data}})  # restricted model (edit to a nested formula)
-{{?model=wls}}model0 = lm(@formula(y ~ x1), {{data}}, weights={{weights}})  # restricted model, same weights (edit to a nested formula)
-{{?inference=standard}}println(ftest(model0.model, model.model))  # classical F-test of the nested models
-{{?inference!=standard}}j = findall(!in(coefnames(model0)), coefnames(model))  # coefficients dropped by the restricted model
-{{?inference!=standard}}b = coef(model)[j]
-{{?inference!=standard}}F = dot(b, V[j, j] \ b) / length(j)  # robust Wald F: the classical F-test assumes constant variance
-{{?inference!=standard}}println("Wald F(", length(j), ", ", dof_residual(model), ") = ", round(F, digits=3), ", p = ", round(ccdf(FDist(length(j), dof_residual(model)), F), digits=4))
-'''
-
-[[actionGroups.actions]]
 id = "info-criteria"
 label = "Information Criteria"
 desc = "Adjusted R2, AIC and BIC for model comparison"

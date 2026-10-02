@@ -400,7 +400,7 @@ id = "coef_table"
 label = "Coefficient Table"
 desc = "Estimates, standard errors, t-statistics, two-sided p-values and 95% intervals, with a reading of the main effect"
 code = '''
-println(coeftable(result))  # the intercept is listed last
+display(coeftable(result))  # the intercept is listed last
 
 w = first(split("{{endog}}"))
 j = findfirst(==(w), coefnames(result))

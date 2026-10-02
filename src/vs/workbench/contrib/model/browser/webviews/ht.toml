@@ -529,9 +529,9 @@ using HypothesisTests
 {{?test=chi-squared-test}} result = ChisqTest({{obs}}, {{exp}} ./ sum({{exp}}))  # observed counts vs expected proportions
 {{?test=power-divergence-test}} result = PowerDivergenceTest({{obs}}; lambda={{lam}})
 {{?test=multinomial-lr-test}} result = PowerDivergenceTest({{obs}}; lambda=0.0)
-println(result)  # full report, including the test statistic
+display(result)  # full report, including the test statistic
 println("p-value:        ", pvalue(result))
-{{?test=one-sample-t-test|two-sample-t-test|welch-t-test|one-sample-z-test|two-sample-z-test}} println("95% CI:         ", confint(result, 0.95))
+{{?test=one-sample-t-test|two-sample-t-test|welch-t-test|one-sample-z-test|two-sample-z-test}} println("95% CI:         ", confint(result; level = 0.95))
 '''
 
 [[codeBranches]]
@@ -544,7 +544,7 @@ code = '''
 {{?test=ks-one-sample-test}} result = ExactOneSampleKSTest({{x}}, {{dist}})
 {{?test=ks-two-sample-test}} result = ApproximateTwoSampleKSTest({{x}}, {{y}})
 {{?test=sign-test}} result = SignTest({{x}}, {{mu01}})
-{{?test=wilcoxon-signed-rank}} result = SignedRankTest({{x}}, {{mu01}})
+{{?test=wilcoxon-signed-rank}} result = SignedRankTest({{x}} .- {{mu01}})
 {{?test=mann-whitney-u-test}} result = MannWhitneyUTest({{x}}, {{y}})
 {{?test=kruskal-wallis-test}} result = KruskalWallisTest({{grp1}})
 {{?test=anderson-darling-test}} result = OneSampleADTest({{x}}, {{dist}})
@@ -552,9 +552,9 @@ code = '''
 {{?test=wald-wolfowitz-test}} result = WaldWolfowitzTest({{x}}, {{y}})
 {{?test=shapiro-wilk-test}} result = shapiro_test({{x}})
 {{?test=permutation-test}} result = ExactPermutationTest({{x}}, {{y}}, {{f}})
-println(result)  # full report, including the test statistic
+display(result)  # full report, including the test statistic
 println("p-value:        ", pvalue(result))
-{{?test=binomial-test|fisher-exact-test|sign-test|wilcoxon-signed-rank|mann-whitney-u-test}} println("95% CI:         ", confint(result, 0.95))
+{{?test=binomial-test|fisher-exact-test|sign-test|wilcoxon-signed-rank|mann-whitney-u-test}} println("95% CI:         ", confint(result; level = 0.95))
 '''
 
 [[codeBranches]]
@@ -570,7 +570,7 @@ using HypothesisTests
 {{?test=clark-west}} result = ClarkWestTest({{e1}}, {{e2}}, {{h}})
 {{?test=diebold-mariano}} result = DieboldMarianoTest({{e1}}, {{e2}})
 {{?test=white-test}} result = WhiteTest(modelmatrix({{fitted}}), residuals({{fitted}}))  # regressors and residuals of the fitted model
-println(result)  # full report, including the test statistic
+display(result)  # full report, including the test statistic
 println("p-value:        ", pvalue(result))
 '''
 
@@ -581,7 +581,7 @@ using HypothesisTests
 {{?test=hotelling-s-t}} result = OneSampleHotellingT2Test({{X}}, {{mu02}})
 {{?test=equality-of-covariance}} result = BartlettTest({{grp2}})  # two data matrices, observations in rows
 {{?test=correlation-test}} result = CorrelationTest({{x}}, {{y}})
-println(result)  # full report, including the test statistic
+display(result)  # full report, including the test statistic
 println("p-value:        ", pvalue(result))
 {{?test=correlation-test}} println("95% CI:         ", confint(result, 0.95))
 '''
@@ -687,7 +687,7 @@ using HypothesisTests, Random, Plots
 {{?test=ks-one-sample-test}} testfun = s -> ExactOneSampleKSTest(s[1], {{dist}})
 {{?test=ks-two-sample-test}} testfun = s -> ApproximateTwoSampleKSTest(s[1], s[2])
 {{?test=sign-test}} testfun = s -> SignTest(s[1], {{mu01}})
-{{?test=wilcoxon-signed-rank}} testfun = s -> SignedRankTest(s[1], {{mu01}})
+{{?test=wilcoxon-signed-rank}} testfun = s -> SignedRankTest(s[1] .- {{mu01}})
 {{?test=mann-whitney-u-test}} testfun = s -> MannWhitneyUTest(s[1], s[2])
 {{?test=kruskal-wallis-test}} testfun = s -> KruskalWallisTest(s...)
 {{?test=anderson-darling-test}} testfun = s -> OneSampleADTest(s[1], {{dist}})
@@ -752,7 +752,7 @@ using HypothesisTests
 {{?test=one-way-anova|levene-s-test|brown-forsythe-test|kruskal-wallis-test|fligner-killeen-test}} samples = [{{grp1}}]
 {{?test=chi-squared-test|power-divergence-test|multinomial-lr-test|binomial-test|fisher-exact-test|durbin-watson|breusch-godfrey|clark-west|diebold-mariano|white-test|hotelling-s-t|equality-of-covariance|correlation-test}} error("This action works on raw samples (location, scale and distribution tests): not available for the selected test")
 k = length(samples); x = samples[1]
-tests = k == 1 ? ["one-sample t" => OneSampleTTest(x, {{mu01}}), "Wilcoxon signed-rank" => SignedRankTest(x, {{mu01}}), "sign" => SignTest(x, {{mu01}})] :
+tests = k == 1 ? ["one-sample t" => OneSampleTTest(x, {{mu01}}), "Wilcoxon signed-rank" => SignedRankTest(x .- {{mu01}}), "sign" => SignTest(x, {{mu01}})] :
         k == 2 ? ["pooled t" => EqualVarianceTTest(x, samples[2]), "Welch t" => UnequalVarianceTTest(x, samples[2]), "Mann-Whitney U" => MannWhitneyUTest(x, samples[2]), "two-sample KS" => ApproximateTwoSampleKSTest(x, samples[2])] :
         ["one-way ANOVA" => OneWayANOVATest(samples...), "Kruskal-Wallis" => KruskalWallisTest(samples...)]
 foreach(t -> println(rpad(t.first, 22), " p = ", round(pvalue(t.second), digits=5)), tests)

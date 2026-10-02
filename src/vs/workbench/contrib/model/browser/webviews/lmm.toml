@@ -191,7 +191,7 @@ using FixedEffectModels  # high-dimensional fixed effects
 {{?inference=clustered}} model = reg({{data}}, @formula({{formula}} + fe({{group}})), Vcov.cluster(:{{group}}))  # entity FE: {{group}}
 {{?inference=twoway-clustered}} model = reg({{data}}, @formula({{formula}} + fe({{group}})), Vcov.cluster(:{{group}}, :{{time-var}}))  # entity FE: {{group}}
 
-println(coeftable(model))  # coefficient table
+display(coeftable(model))  # coefficient table
 println("R2: ", r2(model))  # goodness of fit
 '''
 
@@ -205,7 +205,7 @@ using FixedEffectModels  # two-way fixed effects
 {{?inference=clustered}} model = reg({{data}}, @formula({{formula}} + fe({{group}}) + fe({{time-var}})), Vcov.cluster(:{{group}}))  # entity + time FE: {{group}}, {{time-var}}
 {{?inference=twoway-clustered}} model = reg({{data}}, @formula({{formula}} + fe({{group}}) + fe({{time-var}})), Vcov.cluster(:{{group}}, :{{time-var}}))  # entity + time FE: {{group}}, {{time-var}}
 
-println(coeftable(model))  # coefficient table
+display(coeftable(model))  # coefficient table
 println("R2: ", r2(model))  # goodness of fit
 '''
 
@@ -219,7 +219,7 @@ using FixedEffectModels  # IV / 2SLS with fixed effects
 {{?inference=clustered}} model = reg({{data}}, @formula({{formula-iv}} + fe({{group}})), Vcov.cluster(:{{group}}))  # IV/2SLS: (x_end ~ z_iv) notation
 {{?inference=twoway-clustered}} model = reg({{data}}, @formula({{formula-iv}} + fe({{group}})), Vcov.cluster(:{{group}}, :{{time-var}}))  # IV/2SLS: (x_end ~ z_iv) notation
 
-println(coeftable(model))  # coefficient table
+display(coeftable(model))  # coefficient table
 println("First-stage F: ", model.F_kp)  # instrument strength (Kleibergen-Paap)
 '''
 
