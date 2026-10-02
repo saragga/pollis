@@ -20,10 +20,6 @@ import { INotebookKernelService } from '../../notebook/common/notebookKernelServ
 import { ILanguageService } from '../../../../editor/common/languages/language.js';
 import { IThemeService } from '../../../../platform/theme/common/themeService.js';
 import { IRequestService } from '../../../../platform/request/common/request.js';
-import { RDYN_PANEL } from '../../model/browser/commands/rdyn.command.js';
-import { RCTL_PANEL } from '../../model/browser/commands/rctl.command.js';
-import { MCAT_PANEL } from '../../model/browser/commands/mcat.command.js';
-import { RZOO_PANEL } from '../../model/browser/commands/rzoo.command.js';
 import { DSTATS_PANEL } from '../../model/browser/commands/dstats.command.js';
 import { openScaffoldWebview } from '../../model/browser/commands/scaffold.command.js';
 import { NOD_PANEL } from '../../model/browser/commands/nod.command.js';
@@ -56,10 +52,6 @@ import { IPathService } from '../../../services/path/common/pathService.js';
 import { IWorkspaceContextService } from '../../../../platform/workspace/common/workspace.js';
 
 export const EXPL_COMMAND_ID = 'workbench.action.showExplore';
-export const RDYN_ID = 'chiara.explore.rt.1_rdyn';
-export const RCTL_ID = 'chiara.explore.rt.2_rctl';
-export const MCAT_ID = 'chiara.explore.rt.3_mcat';
-export const RZOO_ID = 'chiara.explore.rt.4_rzoo';
 const DSTATS_ID = 'chiara.explore.dstats';
 const NOD_ID = 'chiara.explore.nod';
 const ANDE_ID = 'chiara.explore.ande';
@@ -342,14 +334,6 @@ CommandsRegistry.registerCommand(EDGAR_ID, (accessor: ServicesAccessor) => {
 CommandsRegistry.registerCommand(HMD_ID, (accessor: ServicesAccessor) => openScaffoldWebview(accessor, HMD_PANEL));
 
 CommandsRegistry.registerCommand(NOVD_ID, (accessor: ServicesAccessor) => openScaffoldWebview(accessor, NOVD_PANEL));
-
-CommandsRegistry.registerCommand(RDYN_ID, (accessor: ServicesAccessor) => openScaffoldWebview(accessor, RDYN_PANEL));
-
-CommandsRegistry.registerCommand(RCTL_ID, (accessor: ServicesAccessor) => openScaffoldWebview(accessor, RCTL_PANEL));
-
-CommandsRegistry.registerCommand(MCAT_ID, (accessor: ServicesAccessor) => openScaffoldWebview(accessor, MCAT_PANEL));
-
-CommandsRegistry.registerCommand(RZOO_ID, (accessor: ServicesAccessor) => openScaffoldWebview(accessor, RZOO_PANEL));
 
 
 CommandsRegistry.registerCommand(CVIZ_SCATTER_ID, (accessor: ServicesAccessor) => {
