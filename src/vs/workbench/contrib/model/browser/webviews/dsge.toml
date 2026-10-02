@@ -221,7 +221,7 @@ text = "Estimate nonlinear models using the inversion filter (higher-order pertu
 detail = ""
 
 [[bullets]]
-text = "Compute impulse responses, variance decomposition, historical decomposition, and conditional forecasts"
+text = "Compute impulse responses, variance decomposition, shock decomposition, and conditional forecasts"
 detail = ""
 
 [[decisionRows]]
@@ -242,7 +242,7 @@ purpose = "Dynamic response of every variable to a structural shock"
 [[inputs]]
 id = "dsgemodel"
 label = "Model"
-tooltip = "Name of the MacroModelling.jl model object defined via the @model macro (e.g. RBC, SW07). Choose Custom to write your own."
+tooltip = "Name of the MacroModelling.jl model object defined via the @model macro (e.g. FS2000, Smets_Wouters_2007). Choose Custom to write your own."
 kind = "select"
 default = "custom"
 
@@ -283,7 +283,7 @@ value = "Aguiar_Gopinath_2007"
 label = "Aguiar and Gopinath (2007)"
 
 [[inputs.options]]
-value = "SW07"
+value = "Smets_Wouters_2007"
 label = "Smets and Wouters (2007)"
 
 [[inputs.options]]
@@ -303,7 +303,7 @@ value = "SGU_2003_debt_premium"
 label = "Schmitt-Grohe and Uribe (2003)"
 
 [[inputs.options]]
-value = "SW03"
+value = "Smets_Wouters_2003"
 label = "Smets and Wouters (2003)"
 
 [[inputs.options]]
@@ -321,14 +321,14 @@ label = "Backus, Kehoe, and Kydland (1992)"
 [[inputs]]
 id = "custom"
 label = "Custom DSGE"
-tooltip = "Name for your own @model object. The code defines a small RBC model under this name as a starting point."
+tooltip = "Name for your own @model object. The code defines a small RBC model with a technology shock and a government spending shock under this name as a starting point."
 default = "MyModel"
 when = "dsgemodel=custom"
 
 [[inputs]]
 id = "shock"
 label = "Shock"
-tooltip = "Shock variable name for impulse response computation. Omit the leading colon; it is added automatically."
+tooltip = "Shock for the impulse responses. Omit the leading colon; it is added automatically. The custom model has eps_z (technology) and eps_g (government spending); get_shocks(dsge) lists the shocks of a library model."
 default = "eps_z"
 models = ["irf"]
 
@@ -342,14 +342,28 @@ models = ["irf"]
 [[inputs]]
 id = "data"
 label = "Data"
-tooltip = "Julia variable name of the data matrix used for estimation (T x n_observables). Columns correspond to observable variables."
-default = "data"
+tooltip = "simulated: estimate on 200 quarters simulated from the model at its calibration, so the true parameter values are known. Otherwise the Julia name of a KeyedArray (Variables x Periods, in levels) whose variable names match the model."
+default = "simulated"
+models = ["est"]
+
+[[inputs]]
+id = "obs"
+label = "Observables"
+tooltip = "Comma-separated model variables used as data. Use at most as many observables as shocks, or the likelihood is singular. Library models have their own names: get_variables(dsge) lists them."
+default = "q, c"
+models = ["est"]
+
+[[inputs]]
+id = "estparams"
+label = "Estimated Parameters"
+tooltip = "Comma-separated parameters to estimate; the others stay at their calibrated values. get_parameters(dsge) lists them."
+default = "rho, rho_g, std_z, std_g"
 models = ["est"]
 
 [[inputs]]
 id = "sampler"
 label = "Sampler"
-tooltip = "Gradient-based MCMC sampler: NUTS (No-U-Turn Sampler, recommended) or HMC (Hamiltonian Monte Carlo)."
+tooltip = "Gradient-based MCMC sampler: NUTS (No-U-Turn Sampler, recommended) or HMC (Hamiltonian Monte Carlo with a fixed step size)."
 kind = "select"
 default = "NUTS"
 models = ["est"]
@@ -372,16 +386,29 @@ models = ["est"]
 [[inputs]]
 id = "burnin"
 label = "Burn-in"
-tooltip = "Number of initial MCMC draws discarded to allow the chain to reach the posterior before collecting samples."
+tooltip = "Initial draws discarded. For NUTS these are the step-size adaptation draws; for HMC they let the chain reach the posterior."
 default = "200"
 models = ["est"]
 
 [[inputs]]
 id = "order"
-label = "Order"
-tooltip = "Perturbation order for moment computation: 1 (linear), 2 (quadratic), or 3 (cubic). Higher orders capture nonlinear dynamics."
-default = "2"
+label = "Solution Order"
+tooltip = "Perturbation solution used for the moments: first order (linear) or pruned second or third order, which capture nonlinear effects such as precautionary saving."
+kind = "select"
+default = "pruned_second_order"
 models = ["mom"]
+
+[[inputs.options]]
+value = "first_order"
+label = "First Order"
+
+[[inputs.options]]
+value = "pruned_second_order"
+label = "Pruned Second Order"
+
+[[inputs.options]]
+value = "pruned_third_order"
+label = "Pruned Third Order"
 
 [miniCharts]
 # SVG drawing functions for each model's mini-chart icon (54 x 86 box)
@@ -425,56 +452,105 @@ using MacroModelling, StatsPlots
 
 {{?dsgemodel=custom}} @model {{custom}} begin
 {{?dsgemodel=custom}}     1 / c[0] = (beta / c[1]) * (alpha * exp(z[1]) * k[0]^(alpha - 1) + (1 - delta))
-{{?dsgemodel=custom}}     c[0] + k[0] = (1 - delta) * k[-1] + q[0]
+{{?dsgemodel=custom}}     c[0] + k[0] + g[0] = (1 - delta) * k[-1] + q[0]  # output is consumed, invested or bought by the government
 {{?dsgemodel=custom}}     q[0] = exp(z[0]) * k[-1]^alpha
-{{?dsgemodel=custom}}     z[0] = rho * z[-1] + std_z * eps_z[x]
+{{?dsgemodel=custom}}     z[0] = rho * z[-1] + std_z * eps_z[x]  # technology shock
+{{?dsgemodel=custom}}     g[0] = (1 - rho_g) * g_bar + rho_g * g[-1] + std_g * eps_g[x]  # government spending shock
 {{?dsgemodel=custom}} end
 {{?dsgemodel=custom}}
 {{?dsgemodel=custom}} @parameters {{custom}} begin
 {{?dsgemodel=custom}}     std_z = 0.01
 {{?dsgemodel=custom}}     rho = 0.95  # quarterly TFP persistence: shocks have a half-life of about 3.5 years
+{{?dsgemodel=custom}}     std_g = 0.008  # a one standard deviation shock moves spending by 1%
+{{?dsgemodel=custom}}     rho_g = 0.9
+{{?dsgemodel=custom}}     g_bar = 0.8  # steady-state spending: about 20% of output
 {{?dsgemodel=custom}}     delta = 0.02
 {{?dsgemodel=custom}}     alpha = 0.36  # capital share of income
 {{?dsgemodel=custom}}     beta = 0.99  # quarterly discount factor: about 4% a year
 {{?dsgemodel=custom}} end
 {{?dsgemodel=custom}}
 {{?dsgemodel=custom}} dsge = {{custom}}  # your model object
+{{?dsgemodel!=custom}} include(joinpath(pkgdir(MacroModelling), "models", "{{dsgemodel}}.jl"))  # load the model and its calibration from the package library
 {{?dsgemodel!=custom}} dsge = {{dsgemodel}}  # model from the MacroModelling.jl model library
 
-moments = get_moments(dsge, order = {{order}})  # model-implied moments at perturbation order {{order}}
+moments = get_moments(dsge, algorithm = :{{order}}, derivatives = false)  # model-implied moments, no parameter derivatives
+moments[:standard_deviation]  # standard deviation of every variable
 
-var_dec = get_variance_decomposition(dsge, order = {{order}})  # fraction of variance explained by each shock
+var_dec = get_variance_decomposition(dsge)  # first-order share of each shock in the variance of each variable (rows sum to 1)
 
-autocov = get_autocorrelation(dsge, order = {{order}})  # model-implied autocorrelation function
+autocorr = get_autocorrelation(dsge, algorithm = :{{order}})  # rows: variables; columns: lags 1 to 5
 '''
 
 [[codeBranches]]
 model = "est"
 code = '''
-using MacroModelling, StatsPlots
+using MacroModelling, StatsPlots, Statistics
+import Turing  # MacroModelling estimates through Turing: priors plus the Kalman filter likelihood
 
 {{?dsgemodel=custom}} @model {{custom}} begin
 {{?dsgemodel=custom}}     1 / c[0] = (beta / c[1]) * (alpha * exp(z[1]) * k[0]^(alpha - 1) + (1 - delta))
-{{?dsgemodel=custom}}     c[0] + k[0] = (1 - delta) * k[-1] + q[0]
+{{?dsgemodel=custom}}     c[0] + k[0] + g[0] = (1 - delta) * k[-1] + q[0]  # output is consumed, invested or bought by the government
 {{?dsgemodel=custom}}     q[0] = exp(z[0]) * k[-1]^alpha
-{{?dsgemodel=custom}}     z[0] = rho * z[-1] + std_z * eps_z[x]
+{{?dsgemodel=custom}}     z[0] = rho * z[-1] + std_z * eps_z[x]  # technology shock
+{{?dsgemodel=custom}}     g[0] = (1 - rho_g) * g_bar + rho_g * g[-1] + std_g * eps_g[x]  # government spending shock
 {{?dsgemodel=custom}} end
 {{?dsgemodel=custom}}
 {{?dsgemodel=custom}} @parameters {{custom}} begin
 {{?dsgemodel=custom}}     std_z = 0.01
 {{?dsgemodel=custom}}     rho = 0.95  # quarterly TFP persistence: shocks have a half-life of about 3.5 years
+{{?dsgemodel=custom}}     std_g = 0.008  # a one standard deviation shock moves spending by 1%
+{{?dsgemodel=custom}}     rho_g = 0.9
+{{?dsgemodel=custom}}     g_bar = 0.8  # steady-state spending: about 20% of output
 {{?dsgemodel=custom}}     delta = 0.02
 {{?dsgemodel=custom}}     alpha = 0.36  # capital share of income
 {{?dsgemodel=custom}}     beta = 0.99  # quarterly discount factor: about 4% a year
 {{?dsgemodel=custom}} end
 {{?dsgemodel=custom}}
 {{?dsgemodel=custom}} dsge = {{custom}}  # your model object
+{{?dsgemodel!=custom}} include(joinpath(pkgdir(MacroModelling), "models", "{{dsgemodel}}.jl"))  # load the model and its calibration from the package library
 {{?dsgemodel!=custom}} dsge = {{dsgemodel}}  # model from the MacroModelling.jl model library
 
-result = estimate(dsge, {{data}}, n_draws = {{draws}}, burnin = {{burnin}}, sampler = :{{sampler}})  # Bayesian estimation via Kalman filter
+observables = Symbol.(strip.(split("{{obs}}", ",")))  # at most as many observables as shocks
+{{?data=simulated}} data = simulate(dsge, periods = 200)(observables, :, :simulate)  # 200 quarters simulated at the calibration, in levels
+{{?data!=simulated}} data = {{data}}(observables, :)  # your KeyedArray: Variables x Periods, in levels
 
-println("Post. mean std_z: ", mean(result[:std_z]))  # posterior mean for shock std dev
-println("Post. mean rho:   ", mean(result[:rho]))  # posterior mean for AR persistence
+# Parameters to estimate; the rest stay at their calibrated values
+est_names = Symbol.(strip.(split("{{estparams}}", ",")))
+idx = [findfirst(==(p), Symbol.(get_parameters(dsge))) for p in est_names]
+truth = dsge.parameter_values[idx]  # the calibration: with simulated data, the values that generated it
+
+# Priors centred on the calibration: Beta for values in (0, 1), inverse gamma for other positive values, normal otherwise
+function prior(v)
+    if 0 < v < 1
+        s = 0.5 * min(v, 1 - v)  # prior standard deviation
+        n = v * (1 - v) / s^2 - 1
+        return Beta(v * n, (1 - v) * n)  # mean v, standard deviation s
+    elseif v > 0
+        return InverseGamma(3, 2 * v)  # mean v, standard deviation v
+    else
+        return Normal(v, 0.1 * abs(v) + 0.01)
+    end
+end
+priors = prior.(truth)
+
+Turing.@model function posterior(priors, data, m, idx)
+    theta ~ Turing.product_distribution(priors)
+    params = eltype(theta).(m.parameter_values)  # same number type as theta, so gradients flow through
+    params[idx] = theta
+    Turing.@addlogprob! get_loglikelihood(m, data, params)  # Kalman filter log likelihood at first order
+end
+
+model = posterior(priors, data, dsge, idx)
+start = Turing.InitFromParams((; theta = truth))
+{{?sampler=NUTS}} chain = Turing.sample(model, Turing.NUTS({{burnin}}, 0.65), {{draws}}; initial_params = start)  # the {{burnin}} adaptation draws are discarded
+{{?sampler=HMC}} chain = Turing.sample(model, Turing.HMC(0.01, 10), {{draws}}; discard_initial = {{burnin}}, initial_params = start)  # step size 0.01, 10 leapfrog steps
+
+draws = chain[:theta, stack = true]  # iterations x chains x parameters
+for (j, p) in enumerate(est_names)
+    d = vec(draws[:, :, j])
+    println(rpad(p, 8), " true ", round(truth[j], sigdigits = 3), "  posterior mean ", round(mean(d), sigdigits = 3),
+        "  90% interval ", round.(quantile(d, [0.05, 0.95]), sigdigits = 3))
+end
 '''
 
 [[codeBranches]]
@@ -484,25 +560,30 @@ using MacroModelling, StatsPlots
 
 {{?dsgemodel=custom}} @model {{custom}} begin
 {{?dsgemodel=custom}}     1 / c[0] = (beta / c[1]) * (alpha * exp(z[1]) * k[0]^(alpha - 1) + (1 - delta))
-{{?dsgemodel=custom}}     c[0] + k[0] = (1 - delta) * k[-1] + q[0]
+{{?dsgemodel=custom}}     c[0] + k[0] + g[0] = (1 - delta) * k[-1] + q[0]  # output is consumed, invested or bought by the government
 {{?dsgemodel=custom}}     q[0] = exp(z[0]) * k[-1]^alpha
-{{?dsgemodel=custom}}     z[0] = rho * z[-1] + std_z * eps_z[x]
+{{?dsgemodel=custom}}     z[0] = rho * z[-1] + std_z * eps_z[x]  # technology shock
+{{?dsgemodel=custom}}     g[0] = (1 - rho_g) * g_bar + rho_g * g[-1] + std_g * eps_g[x]  # government spending shock
 {{?dsgemodel=custom}} end
 {{?dsgemodel=custom}}
 {{?dsgemodel=custom}} @parameters {{custom}} begin
 {{?dsgemodel=custom}}     std_z = 0.01
 {{?dsgemodel=custom}}     rho = 0.95  # quarterly TFP persistence: shocks have a half-life of about 3.5 years
+{{?dsgemodel=custom}}     std_g = 0.008  # a one standard deviation shock moves spending by 1%
+{{?dsgemodel=custom}}     rho_g = 0.9
+{{?dsgemodel=custom}}     g_bar = 0.8  # steady-state spending: about 20% of output
 {{?dsgemodel=custom}}     delta = 0.02
 {{?dsgemodel=custom}}     alpha = 0.36  # capital share of income
 {{?dsgemodel=custom}}     beta = 0.99  # quarterly discount factor: about 4% a year
 {{?dsgemodel=custom}} end
 {{?dsgemodel=custom}}
 {{?dsgemodel=custom}} dsge = {{custom}}  # your model object
+{{?dsgemodel!=custom}} include(joinpath(pkgdir(MacroModelling), "models", "{{dsgemodel}}.jl"))  # load the model and its calibration from the package library
 {{?dsgemodel!=custom}} dsge = {{dsgemodel}}  # model from the MacroModelling.jl model library
 
-plot_irf(dsge, shock = :{{shock}}, periods = {{periods}})  # plot impulse response functions
+plot_irf(dsge, shocks = :{{shock}}, periods = {{periods}})  # plot impulse response functions
 
-irfs = get_irfs(dsge, shock = :{{shock}}, periods = {{periods}})  # return IRF array (periods x variables x shocks)
+irfs = get_irf(dsge, shocks = :{{shock}}, periods = {{periods}})  # variables x periods x shocks
 '''
 
 [[actionGroups]]
@@ -516,8 +597,10 @@ desc = "Plot the responses of all variables to every shock"
 code = '''
 using MacroModelling, StatsPlots
 
-{{?dsgemodel=custom}} plot_irf({{custom}})  # every variable, every shock
-{{?dsgemodel!=custom}} plot_irf({{dsgemodel}})  # every variable, every shock
+{{?dsgemodel=custom}} dsge = {{custom}}  # your model object, defined by the main code
+{{?dsgemodel!=custom}} isdefined(Main, :{{dsgemodel}}) || include(joinpath(pkgdir(MacroModelling), "models", "{{dsgemodel}}.jl"))  # load from the model library once
+{{?dsgemodel!=custom}} dsge = {{dsgemodel}}  # model from the MacroModelling.jl model library
+plot_irf(dsge)  # every variable, every shock
 '''
 
 [[actionGroups.actions]]
@@ -527,8 +610,10 @@ desc = "Plot the conditional forecast error variance decomposition over the hori
 code = '''
 using MacroModelling, StatsPlots
 
-{{?dsgemodel=custom}} plot_conditional_variance_decomposition({{custom}})  # share of each shock by horizon
-{{?dsgemodel!=custom}} plot_conditional_variance_decomposition({{dsgemodel}})  # share of each shock by horizon
+{{?dsgemodel=custom}} dsge = {{custom}}  # your model object, defined by the main code
+{{?dsgemodel!=custom}} isdefined(Main, :{{dsgemodel}}) || include(joinpath(pkgdir(MacroModelling), "models", "{{dsgemodel}}.jl"))  # load from the model library once
+{{?dsgemodel!=custom}} dsge = {{dsgemodel}}  # model from the MacroModelling.jl model library
+plot_conditional_variance_decomposition(dsge)  # share of each shock by horizon
 '''
 
 [[actionGroups]]
@@ -538,35 +623,39 @@ label = "Diagnose"
 [[actionGroups.actions]]
 id = "steady_state"
 label = "Steady State"
-desc = "Compute and display all non-stochastic steady state values for the model variables"
+desc = "Non-stochastic steady state, and the stochastic steady state that accounts for risk at second order"
 code = '''
 using MacroModelling
 
-{{?dsgemodel=custom}} dsge = {{custom}}  # your model object
+{{?dsgemodel=custom}} dsge = {{custom}}  # your model object, defined by the main code
+{{?dsgemodel!=custom}} isdefined(Main, :{{dsgemodel}}) || include(joinpath(pkgdir(MacroModelling), "models", "{{dsgemodel}}.jl"))  # load from the model library once
 {{?dsgemodel!=custom}} dsge = {{dsgemodel}}  # model from the MacroModelling.jl model library
-ss = get_steady_state(dsge)  # dictionary of steady state values
+ss = get_steady_state(dsge, derivatives = false)  # non-stochastic steady state of every variable
+display(ss)
 
-for (var, val_ss) in ss  # iterate over all variables
-    println(var, ": ", val_ss)
-end
+sss = get_steady_state(dsge, stochastic = true, derivatives = false)  # where the economy settles with shocks expected but not realised
+display(sss)
 '''
 
 [[actionGroups.actions]]
 id = "blanchard_kahn"
-label = "Blanchard-Kahn Conditions"
-desc = "Verify that the number of explosive eigenvalues matches the number of forward-looking variables"
+label = "Saddle-Path Stability"
+desc = "Check that a unique stable first-order solution exists (the Blanchard-Kahn conditions) and how persistent its state dynamics are"
 code = '''
-using MacroModelling
+using MacroModelling, LinearAlgebra
 
-{{?dsgemodel=custom}} dsge = {{custom}}  # your model object
+{{?dsgemodel=custom}} dsge = {{custom}}  # your model object, defined by the main code
+{{?dsgemodel!=custom}} isdefined(Main, :{{dsgemodel}}) || include(joinpath(pkgdir(MacroModelling), "models", "{{dsgemodel}}.jl"))  # load from the model library once
 {{?dsgemodel!=custom}} dsge = {{dsgemodel}}  # model from the MacroModelling.jl model library
-sol = get_solution(dsge)  # compute perturbation solution (order 1)
+solved = get_solution(dsge, dsge.parameter_values)[3]  # true if a unique stable first-order solution was found
+println("Unique stable solution: ", solved)  # false: indeterminacy or no stable solution (Blanchard-Kahn fails)
 
-n_fwd = length(get_variables(dsge, filter = :forward_looking))  # number of forward-looking variables
-n_exp = sum(abs.(get_eigenvalues(dsge)) .> 1)  # eigenvalues outside unit circle
-
-println("Forward-looking: ", n_fwd)  # must equal explosive eigenvalues for BK
-println("Explosive eigen: ", n_exp)  # if equal: unique stable solution exists
+sol = get_solution(dsge)  # rows: steady state, lagged states, shocks; columns: variables
+states = get_state_variables(dsge)
+cols = [findfirst(==(s), string.(axiskeys(sol, 2))) for s in states]
+A = Matrix(sol[2:length(states)+1, cols])  # state transition (transposed; the eigenvalues are the same)
+println("States: ", length(states), "  jump variables: ", length(get_jump_variables(dsge)))
+println("Largest root of the state transition: ", round(maximum(abs.(eigvals(A))), digits = 4))  # below 1: shocks die out
 '''
 
 [[actionGroups.actions]]
@@ -576,14 +665,10 @@ desc = "Theoretical autocorrelation function from the solved model at 1st order"
 code = '''
 using MacroModelling
 
-{{?dsgemodel=custom}} dsge = {{custom}}  # your model object
+{{?dsgemodel=custom}} dsge = {{custom}}  # your model object, defined by the main code
+{{?dsgemodel!=custom}} isdefined(Main, :{{dsgemodel}}) || include(joinpath(pkgdir(MacroModelling), "models", "{{dsgemodel}}.jl"))  # load from the model library once
 {{?dsgemodel!=custom}} dsge = {{dsgemodel}}  # model from the MacroModelling.jl model library
-autocov = get_autocorrelation(dsge, order = 1)  # model-implied ACF at first order
-
-vars = get_variables(dsge)  # list of model variables
-for v in vars[1:min(3, end)]  # print ACF for first 3 variables
-    println(v, ": ", autocov[v])
-end
+autocorr = get_autocorrelation(dsge, algorithm = :first_order)  # rows: variables; columns: lags 1 to 5
 '''
 
 [[actionGroups]]
@@ -597,11 +682,30 @@ desc = "Simulate the model forward for 100 periods with random shocks"
 code = '''
 using MacroModelling, StatsPlots
 
-{{?dsgemodel=custom}} dsge = {{custom}}  # your model object
+{{?dsgemodel=custom}} dsge = {{custom}}  # your model object, defined by the main code
+{{?dsgemodel!=custom}} isdefined(Main, :{{dsgemodel}}) || include(joinpath(pkgdir(MacroModelling), "models", "{{dsgemodel}}.jl"))  # load from the model library once
 {{?dsgemodel!=custom}} dsge = {{dsgemodel}}  # model from the MacroModelling.jl model library
-sim = simulate(dsge, periods = 100)  # variables x periods x 1 draw
+sim = simulate(dsge, periods = 100)  # variables x periods x 1 draw, in levels
 
-plot_simulations(dsge, periods = 100)  # plot a simulated path of every variable
+plot_simulations(dsge, periods = 100)  # plot a simulated path of every variable (a fresh draw)
+'''
+
+[[actionGroups.actions]]
+id = "cond_forecast"
+label = "Conditional Forecast"
+desc = "Forecast in which the first observable follows a set path for four quarters; the shocks are chosen to deliver it"
+code = '''
+using MacroModelling, StatsPlots
+
+{{?dsgemodel=custom}} dsge = {{custom}}  # your model object, defined by the main code
+{{?dsgemodel!=custom}} isdefined(Main, :{{dsgemodel}}) || include(joinpath(pkgdir(MacroModelling), "models", "{{dsgemodel}}.jl"))  # load from the model library once
+{{?dsgemodel!=custom}} dsge = {{dsgemodel}}  # model from the MacroModelling.jl model library
+observables = Symbol.(strip.(split("{{obs}}", ",")))
+conditions = KeyedArray(Matrix{Union{Nothing,Float64}}(undef, 1, 4), Variables = [observables[1]], Periods = 1:4)
+conditions[1, 1:4] .= [-0.01, 0, 0.01, 0.02]  # path as deviations from steady state; other variables are free
+
+fc = get_conditional_forecast(dsge, conditions, conditions_in_levels = false, periods = 20)  # variables and the shocks that hit the path
+plot_conditional_forecast(dsge, conditions, conditions_in_levels = false, periods = 20)
 '''
 
 [[actionGroups]]
@@ -615,13 +719,15 @@ desc = "Compare model-implied standard deviations under first- and second-order 
 code = '''
 using MacroModelling
 
-{{?dsgemodel=custom}} dsge = {{custom}}  # your model object
+{{?dsgemodel=custom}} dsge = {{custom}}  # your model object, defined by the main code
+{{?dsgemodel!=custom}} isdefined(Main, :{{dsgemodel}}) || include(joinpath(pkgdir(MacroModelling), "models", "{{dsgemodel}}.jl"))  # load from the model library once
 {{?dsgemodel!=custom}} dsge = {{dsgemodel}}  # model from the MacroModelling.jl model library
-sd1 = get_standard_deviation(dsge, algorithm = :first_order)  # linear approximation
-sd2 = get_standard_deviation(dsge, algorithm = :pruned_second_order)  # captures nonlinear effects
+sd1 = get_standard_deviation(dsge, algorithm = :first_order, derivatives = false)  # linear approximation
+sd2 = get_standard_deviation(dsge, algorithm = :pruned_second_order, derivatives = false)  # captures nonlinear effects
 
-println("First order:  ", sd1)
-println("Second order: ", sd2)
+for (i, v) in enumerate(axiskeys(sd1, 1))
+    println(rpad(v, 12), "first ", round(sd1[i], sigdigits = 4), "  second ", round(sd2[i], sigdigits = 4))
+end
 '''
 
 [[actionGroups]]
@@ -635,45 +741,26 @@ desc = "Fraction of each variable variance explained by each structural shock"
 code = '''
 using MacroModelling
 
-{{?dsgemodel=custom}} dsge = {{custom}}  # your model object
+{{?dsgemodel=custom}} dsge = {{custom}}  # your model object, defined by the main code
+{{?dsgemodel!=custom}} isdefined(Main, :{{dsgemodel}}) || include(joinpath(pkgdir(MacroModelling), "models", "{{dsgemodel}}.jl"))  # load from the model library once
 {{?dsgemodel!=custom}} dsge = {{dsgemodel}}  # model from the MacroModelling.jl model library
-var_dec = get_variance_decomposition(dsge, order = {{order}})  # rows: variables; columns: shocks
-
-vars   = get_variables(dsge)  # variable names
-shocks = get_shocks(dsge)  # shock names
-
-for (i, v) in enumerate(vars)  # print share per shock for each variable
-    println(v, ": ", round.(var_dec[i, :], digits=3))
-end
+var_dec = get_variance_decomposition(dsge)  # rows: variables; columns: shocks; each row sums to 1
+round.(var_dec, digits = 3)
 '''
 
 [[actionGroups.actions]]
 id = "historical_decomp"
-label = "Historical Decomposition"
-desc = "Contribution of each structural shock to historical fluctuations around steady state"
+label = "Shock Decomposition"
+desc = "Contribution of each smoothed structural shock to the observed fluctuations around steady state"
 code = '''
-using MacroModelling
+using MacroModelling, StatsPlots
 
-{{?dsgemodel=custom}} dsge = {{custom}}  # your model object
+{{?dsgemodel=custom}} dsge = {{custom}}  # your model object, defined by the main code
+{{?dsgemodel!=custom}} isdefined(Main, :{{dsgemodel}}) || include(joinpath(pkgdir(MacroModelling), "models", "{{dsgemodel}}.jl"))  # load from the model library once
 {{?dsgemodel!=custom}} dsge = {{dsgemodel}}  # model from the MacroModelling.jl model library
-hist_dec = get_historical_decomposition(dsge, {{data}}, order = 1)  # T x variables x shocks array
-
-shocks = get_shocks(dsge)  # shock names
-hist_dec[end, 1, :]  # shock contributions to first variable in last period
-'''
-
-[[actionGroups.actions]]
-id = "cond_forecast"
-label = "Model Forecast"
-desc = "Unconditional model forecast from the state filtered at the end of the data (a forecast conditional on a path for some variables needs get_conditional_forecast)"
-code = '''
-using MacroModelling
-
-{{?dsgemodel=custom}} dsge = {{custom}}  # your model object
-{{?dsgemodel!=custom}} dsge = {{dsgemodel}}  # model from the MacroModelling.jl model library
-horizon = 8  # forecast horizon in periods
-
-fc = get_forecast(dsge, {{data}}, horizon = horizon)  # unconditional model forecast
-
-get_variables(dsge)  # list of variables available in the forecast
+observables = Symbol.(strip.(split("{{obs}}", ",")))  # at most as many observables as shocks
+{{?data=simulated}} data = simulate(dsge, periods = 200)(observables, :, :simulate)  # 200 quarters simulated at the calibration, in levels
+{{?data!=simulated}} data = {{data}}(observables, :)  # your KeyedArray: Variables x Periods, in levels
+decomp = get_shock_decomposition(dsge, data)  # contribution of each shock and of the initial state, by variable and period
+plot_shock_decomposition(dsge, data)  # pass parameters = ... to decompose at estimated values
 '''

@@ -131,7 +131,7 @@ default = "event"
 [[inputs]]
 id = "data"
 label = "data"
-tooltip = "Julia DataFrame containing the survival data."
+tooltip = "A table with the survival data: any Tables.jl source, e.g. a NamedTuple of columns or a CSV.File."
 default = "df"
 
 [[inputs]]
@@ -244,6 +244,26 @@ ok = (t .> 0) .& (h .> 0)
 p1 = plot(t, h, seriestype=:steppost, lw=2, label=false, xlabel="Time", ylabel="H(t)", title="Cumulative hazard")
 p2 = scatter(log.(t[ok]), log.(h[ok]), ms=3, label=false, xlabel="log t", ylabel="log H(t)", title="Weibull check")
 plot(p1, p2, layout=(1, 2), size=(800, 360))
+'''
+
+[[actionGroups.actions]]
+id = "cif-curves"
+label = "Cumulative Incidence Curves"
+desc = "Aalen-Johansen: cumulative incidence of each cause with pointwise 95% CI, and the event-free survival; at every time the incidences and the survival add up to 1"
+code = '''
+using LSurvival, Plots
+{{?model!=aj}} error("Cumulative incidence curves come from the Aalen-Johansen model: select Aalen-Johansen and run it first")
+causes = aj.R.eventtypes[2:end]  # eventtypes[1] is the censoring code 0
+ci = confint(aj; level=0.95)  # normal-approximation band: lower and upper for cause 1, then cause 2, ...
+t = [0; aj.times]
+plot(xlabel="Time", ylabel="Probability", ylims=(0, 1), title="Cumulative incidence by cause", legend=:topleft)
+for (j, c) in enumerate(causes)
+    plot!(t, [0; aj.risk[:, j]], seriestype=:steppost, lw=2, c=j, label="cause $c")
+    plot!(t, [0; clamp.(ci[:, 2j-1], 0, 1)], seriestype=:steppost, c=j, ls=:dash, label=false)
+    plot!(t, [0; clamp.(ci[:, 2j], 0, 1)], seriestype=:steppost, c=j, ls=:dash, label=false)
+end
+plot!(t, [1; aj.surv], seriestype=:steppost, lw=2, c=:black, label="event-free survival")
+println("Check at the last time: incidences + survival = ", round(sum(aj.risk[end, :]) + aj.surv[end], digits=4))
 '''
 
 [[actionGroups]]

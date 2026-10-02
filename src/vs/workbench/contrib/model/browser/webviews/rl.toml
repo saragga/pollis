@@ -171,7 +171,7 @@ purpose = "The full catalogue of 37 cells"
 [[decisionRows]]
 task = "Lux"
 context = "Explicit parameters and state, functional workflows"
-purpose = "31 of the cells, wrapped in Recurrence"
+purpose = "33 of the 37 cells, wrapped in Recurrence"
 
 [[inputs]]
 id = "cell"
@@ -182,7 +182,6 @@ default = "MGU"
 [[inputs.options]]
 value = "OriginalLSTM"
 label = "OriginalLSTM"
-models = ["flux"]
 [[inputs.options]]
 value = "PeepholeLSTM"
 label = "PeepholeLSTM"
@@ -207,7 +206,6 @@ label = "LightRU"
 [[inputs.options]]
 value = "UGRNN"
 label = "UGRNN"
-models = ["flux"]
 [[inputs.options]]
 value = "MinimalRNN"
 label = "MinimalRNN"
@@ -319,12 +317,14 @@ default = "1"
 [[inputs]]
 id = "xvar"
 label = "Sequence Data"
+tooltip = "Float32 array of input sequences, sized (input_size, T, n_sequences). 20% of the sequences are held out for validation."
 default = "X"
 newRow = true
 
 [[inputs]]
 id = "yvar"
 label = "Target Variable"
+tooltip = "Float32 array of targets, one column per sequence: (output_size, n_sequences)."
 default = "y"
 
 [miniCharts]
@@ -396,25 +396,41 @@ code = '''
 {{?cell=NBR}}# NBR: Recurrently-connected Bistable Recurrent cell for long-term memory.
 {{?cell=MiRU1}}# MiRU1: Minimal Recurrent Unit variant #1 with a single lightweight gate.
 {{?cell=MiRU2}}# MiRU2: Minimal Recurrent Unit variant #2 with a single lightweight gate.
-using Flux, RecurrentLayers
+using Flux, RecurrentLayers, Enzyme, Random
 
 input_size  = {{inputsize}}  # input features per time step
 hidden_size = {{hiddensize}}  # recurrent state width
 output_size = {{outputsize}}  # prediction dimension
 
-rnn     = {{cell}}(input_size => hidden_size)  # {{cell}} recurrent layer
-readout = Dense(hidden_size => output_size)
+# {{xvar}}: Float32 array (input_size, T, n_sequences); {{yvar}}: (output_size, n_sequences)
+model = Chain(
+    {{cell}}(input_size => hidden_size),  # {{cell}} layer: hidden state at every step, (hidden_size, T, n_sequences)
+    h -> h[:, end, :],  # keep the final hidden state of each sequence
+    Dense(hidden_size => output_size),  # readout
+)
+rnn = model[1]  # the recurrent layer, for inspecting hidden states
+loss(m, x, y) = Flux.mse(m(x), y)
 
-function predict({{xvar}})
-    H = rnn({{xvar}})  # {{xvar}}: (input_size, T); H: (hidden_size, T)
-    readout(H[:, end])  # map the final hidden state to the output
+# Hold out 20% of the sequences: training never sees them, so their error measures generalisation
+n_seq = size({{xvar}}, 3)
+perm = randperm(Xoshiro(1), n_seq)
+n_val = round(Int, 0.2 * n_seq)
+val_idx, train_idx = perm[1:n_val], perm[n_val+1:end]
+X_train, y_train = {{xvar}}[:, :, train_idx], {{yvar}}[:, train_idx]
+X_val, y_val = {{xvar}}[:, :, val_idx], {{yvar}}[:, val_idx]
+loader = Flux.DataLoader((X_train, y_train), batchsize = 32, shuffle = true)
+
+function fit!(m; epochs = 50)
+    opt_state = Flux.setup(Adam(1f-3), m)
+    dup = Duplicated(m)  # Enzyme reverse mode: the model plus a shadow copy that receives the gradients
+    for epoch in 1:epochs
+        Flux.train!(loss, dup, loader, opt_state)  # one pass over the training sequences
+    end
+    return m
 end
+fit!(model)
 
-{{?cell=OriginalLSTM|PeepholeLSTM|MGU|LiGRU|MinimalRNN|IndRNN|RAN|coRNN|FastGRNN}}params    = Flux.params(rnn, readout)
-opt_state = Flux.setup(Adam(1f-3), (rnn, readout))
-loss(m, {{xvar}}, {{yvar}}) = Flux.mse(m[2](m[1]({{xvar}})[:, end]), {{yvar}})  # explicit form: train! calls loss(model, x, y) with model = (rnn, readout)
-{{?cell=OriginalLSTM|PeepholeLSTM|MGU|LiGRU|MinimalRNN|IndRNN|RAN|coRNN|FastGRNN}}
-{{?cell=OriginalLSTM|PeepholeLSTM|MGU|LiGRU|MinimalRNN|IndRNN|RAN|coRNN|FastGRNN}}Flux.train!(loss, (rnn, readout), data, opt_state)  # one epoch over (X, y) pairs
+println("Train MSE: ", loss(model, X_train, y_train), "  validation MSE: ", loss(model, X_val, y_val))
 '''
 
 [[codeBranches]]
@@ -457,25 +473,39 @@ code = '''
 {{?cell=NBR}}# NBR: Recurrently-connected Bistable Recurrent cell for long-term memory.
 {{?cell=MiRU1}}# MiRU1: Minimal Recurrent Unit variant #1 with a single lightweight gate.
 {{?cell=MiRU2}}# MiRU2: Minimal Recurrent Unit variant #2 with a single lightweight gate.
-using Lux, LuxRecurrentLayers, Random
+using Lux, LuxRecurrentLayers, Optimisers, Enzyme, Random
 
-rng = Random.default_rng()  # reproducible initialisation
 input_size  = {{inputsize}}  # input features per time step
 hidden_size = {{hiddensize}}  # recurrent state width
 output_size = {{outputsize}}  # prediction dimension
 
+# {{xvar}}: Float32 array (input_size, T, n_sequences); {{yvar}}: (output_size, n_sequences)
 model = Chain(
     Recurrence({{cell}}Cell(input_size => hidden_size)),  # wrap the cell; returns the last state
     Dense(hidden_size => output_size),
 )
 
-ps, st = Lux.setup(rng, model)  # explicit parameters and state
+# Hold out 20% of the sequences: training never sees them, so their error measures generalisation
+n_seq = size({{xvar}}, 3)
+perm = randperm(Xoshiro(1), n_seq)
+n_val = round(Int, 0.2 * n_seq)
+val_idx, train_idx = perm[1:n_val], perm[n_val+1:end]
+X_train, y_train = {{xvar}}[:, :, train_idx], {{yvar}}[:, train_idx]
+X_val, y_val = {{xvar}}[:, :, val_idx], {{yvar}}[:, val_idx]
 
-y_hat, st = model({{xvar}}, ps, st)  # {{xvar}}: (input_size, T, batch)
-{{?cell=OriginalLSTM|PeepholeLSTM|MGU|LiGRU|MinimalRNN|IndRNN|RAN|coRNN|FastGRNN}}
-{{?cell=OriginalLSTM|PeepholeLSTM|MGU|LiGRU|MinimalRNN|IndRNN|RAN|coRNN|FastGRNN}}using Optimisers, Enzyme
-{{?cell=OriginalLSTM|PeepholeLSTM|MGU|LiGRU|MinimalRNN|IndRNN|RAN|coRNN|FastGRNN}}opt_state = Optimisers.setup(Adam(1f-3), ps)
-{{?cell=OriginalLSTM|PeepholeLSTM|MGU|LiGRU|MinimalRNN|IndRNN|RAN|coRNN|FastGRNN}}loss(model, ps, st, {{xvar}}, {{yvar}}) = Lux.MSELoss()(model, ps, st, ({{xvar}}, {{yvar}}))
+function fit(m; epochs = 50)
+    ps, st = Lux.setup(Xoshiro(0), m)  # explicit parameters and state
+    ts = Training.TrainState(m, ps, st, Optimisers.Adam(1f-3))
+    n = length(train_idx)
+    for epoch in 1:epochs, b in Iterators.partition(randperm(n), 32)  # shuffled minibatches of 32 sequences
+        _, _, _, ts = Training.single_train_step!(AutoEnzyme(), MSELoss(), (X_train[:, :, b], y_train[:, b]), ts)
+    end
+    return ts.parameters, Lux.testmode(ts.states)
+end
+ps, st = fit(model)
+
+mse(m, p, s, x, y) = MSELoss()(first(m(x, p, s)), y)
+println("Train MSE: ", mse(model, ps, st, X_train, y_train), "  validation MSE: ", mse(model, ps, st, X_val, y_val))
 '''
 
 [[actionGroups]]
@@ -485,26 +515,26 @@ label = "Visualise"
 [[actionGroups.actions]]
 id = "hidden-heatmap"
 label = "Hidden State Heatmap"
-desc = "How each hidden unit evolves over the time steps of the first sequence"
+desc = "How each hidden unit of the trained model evolves over the time steps of the first sequence"
 code = '''
 using Plots
-{{?model=flux}}H = rnn({{xvar}})  # (hidden_size, T)
+{{?model=flux}}H = rnn({{xvar}})[:, :, 1]  # (hidden_size, T) for the first sequence
 {{?model=lux}}rnn_seq = Recurrence({{cell}}Cell(input_size => hidden_size); return_sequence=true)
-{{?model=lux}}ps_seq, st_seq = ps.layer_1, st.layer_1  # the model's recurrent parameters, not a fresh random draw
-{{?model=lux}}H_steps, _ = rnn_seq({{xvar}}, ps_seq, st_seq)
-{{?model=lux}}H = reduce(hcat, [h[:, 1] for h in H_steps])  # (hidden_size, T)
+{{?model=lux}}H_steps, _ = rnn_seq({{xvar}}, ps.layer_1, st.layer_1)  # the trained recurrent parameters
+{{?model=lux}}H = reduce(hcat, [h[:, 1] for h in H_steps])  # (hidden_size, T) for the first sequence
 heatmap(H, xlabel="time step", ylabel="hidden unit", title="Hidden state")
 '''
 
 [[actionGroups.actions]]
 id = "pred-vs-target"
 label = "Predictions vs Targets"
-desc = "Scatter of the model predictions against the targets"
+desc = "Scatter of the predictions against the targets on the held-out sequences"
 code = '''
 using Plots
-{{?model=flux}}y_pred = predict({{xvar}})
-{{?model=lux}}y_pred, _ = model({{xvar}}, ps, Lux.testmode(st))
-scatter(vec({{yvar}}), vec(y_pred), xlabel="target", ylabel="prediction", legend=false)
+{{?model=flux}}y_pred = model(X_val)
+{{?model=lux}}y_pred, _ = model(X_val, ps, st)
+scatter(vec(y_val), vec(y_pred), xlabel="target", ylabel="prediction", title="Validation sequences", legend=false)
+plot!(identity, extrema(vec(y_val))..., linestyle=:dash)  # perfect prediction
 '''
 
 [[actionGroups]]
@@ -516,19 +546,18 @@ id = "param-count"
 label = "Parameter Count"
 desc = "Number of trainable parameters in the model"
 code = '''
-{{?model=flux}}println("Parameters: ", sum(length, Flux.trainables((rnn, readout))))
+{{?model=flux}}println("Parameters: ", sum(length, Flux.trainables(model)))
 {{?model=lux}}println("Parameters: ", Lux.parameterlength(model))
 '''
 
 [[actionGroups.actions]]
 id = "gradient-norm"
 label = "Gradient Norm"
-desc = "Size of the loss gradient, to spot vanishing or exploding gradients"
+desc = "Size of the training-loss gradient, to spot vanishing or exploding gradients"
 code = '''
-using Functors
-{{?model=flux}}grads = Flux.gradient(m -> Flux.mse(m[2](m[1]({{xvar}})[:, end]), {{yvar}}), (rnn, readout))[1]
-{{?model=lux}}using Enzyme
-{{?model=lux}}grads = Enzyme.gradient(Reverse, (p, x, y) -> first(Lux.MSELoss()(model, p, st, (x, y))), ps, Const({{xvar}}), Const({{yvar}}))[1]
+using Enzyme, Functors
+{{?model=flux}}grads = Flux.gradient(m -> loss(m, X_train, y_train), Duplicated(model))[1]  # Enzyme reverse mode
+{{?model=lux}}grads = Enzyme.gradient(Reverse, (p, x, y) -> mse(model, p, st, x, y), ps, Const(X_train), Const(y_train))[1]
 norm2 = sum(g -> g isa AbstractArray ? sum(abs2, g) : 0.0, Functors.fleaves(grads))
 println("Gradient norm: ", sqrt(norm2))
 '''
@@ -538,9 +567,9 @@ id = "output-shape"
 label = "Output Shapes"
 desc = "Check the shape of the recurrent output and of the prediction"
 code = '''
-{{?model=flux}}println("Hidden states: ", size(rnn({{xvar}})))
-{{?model=flux}}println("Prediction:    ", size(predict({{xvar}})))
-{{?model=lux}}println("Prediction: ", size(first(model({{xvar}}, ps, st))))
+{{?model=flux}}println("Hidden states: ", size(rnn({{xvar}})))  # (hidden_size, T, n_sequences)
+{{?model=flux}}println("Prediction:    ", size(model({{xvar}})))  # (output_size, n_sequences)
+{{?model=lux}}println("Prediction: ", size(first(model({{xvar}}, ps, st))))  # (output_size, n_sequences)
 '''
 
 [[actionGroups]]
@@ -550,20 +579,23 @@ label = "Predict"
 [[actionGroups.actions]]
 id = "predict-new"
 label = "Predict New Sequences"
-desc = "Apply the model to new input sequences"
+desc = "Apply the trained model to new input sequences"
 code = '''
-{{?model=flux}}y_new = predict(X_new)
-{{?model=lux}}y_new, _ = model(X_new, ps, Lux.testmode(st))
+# X_new: Float32 array (input_size, T, n_new_sequences)
+{{?model=flux}}y_new = model(X_new)
+{{?model=lux}}y_new, _ = model(X_new, ps, st)
 '''
 
 [[actionGroups.actions]]
 id = "validation-loss"
 label = "Validation Loss"
-desc = "Mean squared error on held-out sequences"
+desc = "Mean squared error on the held-out sequences, against predicting the training mean"
 code = '''
-{{?model=flux}}println("Validation MSE: ", Flux.mse(predict(X_val), y_val))
-{{?model=lux}}y_val_hat, _ = model(X_val, ps, Lux.testmode(st))
-{{?model=lux}}println("Validation MSE: ", Lux.MSELoss()(y_val_hat, y_val))
+using Statistics
+{{?model=flux}}val_mse = loss(model, X_val, y_val)
+{{?model=lux}}val_mse = mse(model, ps, st, X_val, y_val)
+baseline = mean(abs2, y_val .- mean(y_train, dims=2))  # a model that always predicts the training mean
+println("Validation MSE: ", val_mse, "  training-mean baseline: ", baseline)
 '''
 
 [[actionGroups]]
@@ -572,28 +604,30 @@ label = "Compare"
 
 [[actionGroups.actions]]
 id = "vs-lstm"
-label = "Size vs LSTM"
-desc = "Compare the parameter count with a standard LSTM of the same width"
+label = "Compare with LSTM"
+desc = "Train a standard LSTM of the same width on the same split and compare size and validation error"
 code = '''
-{{?model=flux}}lstm = LSTM(input_size => hidden_size)
-{{?model=flux}}println("{{cell}}: ", sum(length, Flux.trainables(rnn)), " parameters")
-{{?model=flux}}println("LSTM: ", sum(length, Flux.trainables(lstm)), " parameters")
+{{?model=flux}}lstm = fit!(Chain(LSTM(input_size => hidden_size), h -> h[:, end, :], Dense(hidden_size => output_size)))
+{{?model=flux}}println("{{cell}}: ", sum(length, Flux.trainables(model)), " parameters, validation MSE ", loss(model, X_val, y_val))
+{{?model=flux}}println("LSTM: ", sum(length, Flux.trainables(lstm)), " parameters, validation MSE ", loss(lstm, X_val, y_val))
 {{?model=lux}}lstm = Chain(Recurrence(LSTMCell(input_size => hidden_size)), Dense(hidden_size => output_size))
-{{?model=lux}}println("{{cell}}: ", Lux.parameterlength(model), " parameters")
-{{?model=lux}}println("LSTM: ", Lux.parameterlength(lstm), " parameters")
+{{?model=lux}}ps_lstm, st_lstm = fit(lstm)
+{{?model=lux}}println("{{cell}}: ", Lux.parameterlength(model), " parameters, validation MSE ", mse(model, ps, st, X_val, y_val))
+{{?model=lux}}println("LSTM: ", Lux.parameterlength(lstm), " parameters, validation MSE ", mse(lstm, ps_lstm, st_lstm, X_val, y_val))
 '''
 
 [[actionGroups.actions]]
 id = "vs-gru"
-label = "Size vs GRU"
-desc = "Compare the parameter count with a standard GRU of the same width"
+label = "Compare with GRU"
+desc = "Train a standard GRU of the same width on the same split and compare size and validation error"
 code = '''
-{{?model=flux}}gru = GRU(input_size => hidden_size)
-{{?model=flux}}println("{{cell}}: ", sum(length, Flux.trainables(rnn)), " parameters")
-{{?model=flux}}println("GRU: ", sum(length, Flux.trainables(gru)), " parameters")
+{{?model=flux}}gru = fit!(Chain(GRU(input_size => hidden_size), h -> h[:, end, :], Dense(hidden_size => output_size)))
+{{?model=flux}}println("{{cell}}: ", sum(length, Flux.trainables(model)), " parameters, validation MSE ", loss(model, X_val, y_val))
+{{?model=flux}}println("GRU: ", sum(length, Flux.trainables(gru)), " parameters, validation MSE ", loss(gru, X_val, y_val))
 {{?model=lux}}gru = Chain(Recurrence(GRUCell(input_size => hidden_size)), Dense(hidden_size => output_size))
-{{?model=lux}}println("{{cell}}: ", Lux.parameterlength(model), " parameters")
-{{?model=lux}}println("GRU: ", Lux.parameterlength(gru), " parameters")
+{{?model=lux}}ps_gru, st_gru = fit(gru)
+{{?model=lux}}println("{{cell}}: ", Lux.parameterlength(model), " parameters, validation MSE ", mse(model, ps, st, X_val, y_val))
+{{?model=lux}}println("GRU: ", Lux.parameterlength(gru), " parameters, validation MSE ", mse(gru, ps_gru, st_gru, X_val, y_val))
 '''
 
 [[actionGroups]]
@@ -603,21 +637,21 @@ label = "Interpret"
 [[actionGroups.actions]]
 id = "input-sensitivity"
 label = "Input Sensitivity"
-desc = "Gradient of the prediction with respect to each input feature and time step"
+desc = "Gradient of the prediction for the first sequence with respect to each input feature and time step"
 code = '''
-using Plots
-{{?model=flux}}gx = Flux.gradient(x -> sum(predict(x)), {{xvar}})[1]
-{{?model=lux}}using Enzyme
-{{?model=lux}}gx = Enzyme.gradient(Reverse, x -> sum(first(model(x, ps, st))), {{xvar}})[1][:, :, 1]
+using Plots, Enzyme
+x1 = {{xvar}}[:, :, 1:1]  # the first sequence, kept 3-dimensional
+{{?model=flux}}gx = Enzyme.gradient(Reverse, (m, x) -> sum(m(x)), Const(model), x1)[2][:, :, 1]
+{{?model=lux}}gx = Enzyme.gradient(Reverse, (x, p, s) -> sum(first(model(x, p, s))), x1, Const(ps), Const(st))[1][:, :, 1]
 heatmap(abs.(gx), xlabel="time step", ylabel="input feature", title="Input sensitivity")
 '''
 
 [[actionGroups.actions]]
 id = "final-state"
 label = "Final Hidden State"
-desc = "The hidden state the readout layer sees after the last time step"
+desc = "The hidden state the readout layer sees after the last time step of the first sequence"
 code = '''
-{{?model=flux}}h_final = rnn({{xvar}})[:, end]
-{{?model=lux}}h_final, _ = Recurrence({{cell}}Cell(input_size => hidden_size))({{xvar}}, ps.layer_1, st.layer_1)
-println("Final hidden state: ", h_final)
+{{?model=flux}}h_final = rnn({{xvar}})[:, end, 1]
+{{?model=lux}}h_final, _ = Recurrence({{cell}}Cell(input_size => hidden_size))({{xvar}}[:, :, 1:1], ps.layer_1, st.layer_1)
+println("Final hidden state: ", vec(h_final))
 '''
