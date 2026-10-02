@@ -178,52 +178,99 @@ default = "bert-base-uncased"
 id = "text"
 label = "Text"
 tooltip = "Input text to encode into a dense embedding vector"
-default = "text"
+default = "sentence"
 models = ["embed"]
 
 [[inputs]]
 id = "text1"
 label = "Text 1"
 tooltip = "First sentence for similarity comparison"
-default = "text1"
+default = "sentence1"
 models = ["similarity"]
 
 [[inputs]]
 id = "text2"
 label = "Text 2"
 tooltip = "Second sentence for similarity comparison"
-default = "text2"
+default = "sentence2"
 models = ["similarity"]
 
 [[codeBranches]]
 model = "embed"
 code = '''
-using Transformers
-using Transformers.HuggingFace
+using Transformers, Transformers.TextEncoders, Transformers.HuggingFace, Statistics
 
-tkr  = HuggingFace.load_tokenizer("{{bertmodel}}")  # load tokenizer from HuggingFace Hub
-bert = HuggingFace.load_model(BertModel, "{{bertmodel}}")  # load pre-trained BERT weights
+textenc = HuggingFace.load_tokenizer("{{bertmodel}}")  # tokenizer from the HuggingFace Hub
+bert    = HuggingFace.load_model("{{bertmodel}}")  # pre-trained encoder (task :model), hidden_state is hidden x tokens x batch
 
-enc  = tkr({{text}})  # tokenise input text
-out  = bert(enc.token, enc.segment, enc.attention_mask)  # forward pass through BERT encoder
-emb  = out.hidden_state[:, 1, :]  # CLS token embedding (hidden_dim × batch)
+# Sentence vectors: mean of the token vectors over the real tokens (the attention mask), or the CLS vector
+function embed_texts(texts; pooling=:mean)
+    sample = encode(textenc, texts)  # a vector of strings is a batch of independent sentences
+    h      = bert(sample).hidden_state
+    pooling === :cls && return h[:, 1, :]  # CLS token: first position
+    lens   = sample.attention_mask.len  # number of real tokens per sentence, padding excluded
+    return hcat([vec(mean(h[:, 1:lens[b], b], dims=2)) for b in 1:size(h, 3)]...)
+end
+
+if !@isdefined({{text}})  # no text defined: demo sentence
+    global {{text}} = "The central bank raised interest rates to curb inflation."
+end
+if !@isdefined(docs)  # demo corpus used by the actions; replace with your own vector of strings
+    global docs = ["The central bank raised interest rates to curb inflation.",
+                   "Monetary policy was tightened to bring prices under control.",
+                   "Inflation fell after the rate hikes.",
+                   "The striker scored twice in the second half.",
+                   "The team won the league after a late goal.",
+                   "Fresh basil and tomatoes make a simple pasta sauce.",
+                   "Simmer the sauce and season it with salt and pepper.",
+                   "The recipe needs olive oil, garlic and parmesan."]
+end
+
+emb = embed_texts([{{text}}])  # mean-pooled sentence embedding (hidden_dim x 1)
+println("Embedding dimension: ", size(emb, 1))
 '''
 
 [[codeBranches]]
 model = "similarity"
 code = '''
-using Transformers, LinearAlgebra
-using Transformers.HuggingFace
+using Transformers, Transformers.TextEncoders, Transformers.HuggingFace, Statistics, LinearAlgebra
 
-tkr  = HuggingFace.load_tokenizer("{{bertmodel}}")  # load tokenizer
-bert = HuggingFace.load_model(BertModel, "{{bertmodel}}")  # load BERT model
+textenc = HuggingFace.load_tokenizer("{{bertmodel}}")  # tokenizer from the HuggingFace Hub
+bert    = HuggingFace.load_model("{{bertmodel}}")  # pre-trained encoder (task :model), hidden_state is hidden x tokens x batch
 
-enc1 = tkr({{text1}})  # tokenise first sentence
-enc2 = tkr({{text2}})  # tokenise second sentence
-emb1 = vec(bert(enc1.token, enc1.segment, enc1.attention_mask).hidden_state[:, 1, :])  # CLS embedding for text 1
-emb2 = vec(bert(enc2.token, enc2.segment, enc2.attention_mask).hidden_state[:, 1, :])  # CLS embedding for text 2
+# Sentence vectors: mean of the token vectors over the real tokens (the attention mask), or the CLS vector
+function embed_texts(texts; pooling=:mean)
+    sample = encode(textenc, texts)  # a vector of strings is a batch of independent sentences
+    h      = bert(sample).hidden_state
+    pooling === :cls && return h[:, 1, :]  # CLS token: first position
+    lens   = sample.attention_mask.len  # number of real tokens per sentence, padding excluded
+    return hcat([vec(mean(h[:, 1:lens[b], b], dims=2)) for b in 1:size(h, 3)]...)
+end
+cosine(a, b) = dot(a, b) / (norm(a) * norm(b))
 
-sim  = dot(emb1, emb2) / (norm(emb1) * norm(emb2))  # cosine similarity in [-1, 1]
+if !@isdefined({{text1}})  # no text defined: demo paraphrase pair
+    global {{text1}} = "The central bank raised interest rates to curb inflation."
+end
+if !@isdefined({{text2}})
+    global {{text2}} = "Monetary policy was tightened to bring prices under control."
+end
+if !@isdefined(docs)  # demo corpus used by the actions; replace with your own vector of strings
+    global docs = ["The central bank raised interest rates to curb inflation.",
+                   "Monetary policy was tightened to bring prices under control.",
+                   "Inflation fell after the rate hikes.",
+                   "The striker scored twice in the second half.",
+                   "The team won the league after a late goal.",
+                   "Fresh basil and tomatoes make a simple pasta sauce.",
+                   "Simmer the sauce and season it with salt and pepper.",
+                   "The recipe needs olive oil, garlic and parmesan."]
+end
+
+E   = embed_texts([{{text1}}, {{text2}}])
+sim = cosine(E[:, 1], E[:, 2])  # cosine similarity in [-1, 1]
+println("Cosine similarity: ", round(sim, digits=3))
+# Caution: a pre-trained, not fine-tuned BERT gives anisotropic embeddings, so most pairs score high (often above 0.8)
+# and the raw number is a poor measure of meaning (Reimers and Gurevych 2019). Compare it with an unrelated pair,
+# or use a sentence-transformers checkpoint such as sentence-transformers/all-MiniLM-L6-v2 (see Compare Models).
 '''
 
 [[actionGroups]]
@@ -233,34 +280,32 @@ label = "Visualise"
 [[actionGroups.actions]]
 id = "embedding-scatter"
 label = "Embedding Scatter"
-desc = "Project embeddings to 2D with UMAP or PCA for visual inspection"
+desc = "Project the document embeddings to 2D with PCA for visual inspection (UMAP needs far more documents than a small corpus provides)"
 code = '''
-using Transformers, UMAP, Plots
-using Transformers.HuggingFace
+using LinearAlgebra, Statistics, Plots
 
-tkr  = HuggingFace.load_tokenizer("{{bertmodel}}")  # load tokenizer
-bert = HuggingFace.load_model(BertModel, "{{bertmodel}}")  # load BERT
-
-embs = hcat([vec(bert(tkr(d).token, tkr(d).segment, tkr(d).attention_mask).hidden_state[:, 1, :]) for d in docs]...)  # embed all docs
-proj = umap(embs, 2)  # reduce to 2D with UMAP
-scatter(proj[1, :], proj[2, :], xlabel="UMAP 1", ylabel="UMAP 2")  # scatter plot of document embeddings
+embs = embed_texts(docs)  # hidden_dim x n_docs
+Xc   = embs .- mean(embs, dims=2)  # centre each dimension
+F    = svd(Xc)
+proj = transpose(F.V[:, 1:2]) .* F.S[1:2]  # 2 x n_docs principal component scores
+share = F.S[1:2] .^ 2 ./ sum(F.S .^ 2)
+scatter(proj[1, :], proj[2, :], series_annotations=Plots.text.(1:length(docs), 8, :bottom), legend=false,
+        xlabel="PC 1 ($(round(100 * share[1], digits=1)) pct)", ylabel="PC 2 ($(round(100 * share[2], digits=1)) pct)")
 '''
 
 [[actionGroups.actions]]
 id = "similarity-heatmap"
 label = "Similarity Heatmap"
-desc = "Pairwise cosine similarity matrix across a document set"
+desc = "Pairwise cosine similarity matrix across a document set; with a pre-trained, not fine-tuned BERT most pairs score high, so read the contrasts, not the levels"
 code = '''
-using Transformers, LinearAlgebra, Plots
-using Transformers.HuggingFace
+using LinearAlgebra, Statistics, Plots
 
-tkr  = HuggingFace.load_tokenizer("{{bertmodel}}")  # load tokenizer
-bert = HuggingFace.load_model(BertModel, "{{bertmodel}}")  # load BERT
-
-E    = hcat([vec(bert(tkr(d).token, tkr(d).segment, tkr(d).attention_mask).hidden_state[:, 1, :]) for d in docs]...)  # embed all docs
-E    = E ./ norm.(eachcol(E))  # L2-normalise columns
-sim  = E' * E  # pairwise cosine similarity matrix
-heatmap(sim, title="Cosine similarity")  # annotated heatmap
+E   = embed_texts(docs)  # mean-pooled embeddings, hidden_dim x n_docs
+E   = E ./ transpose(norm.(eachcol(E)))  # L2-normalise each column
+sim = transpose(E) * E  # pairwise cosine similarity matrix
+off = [sim[i, j] for i in axes(sim, 1), j in axes(sim, 2) if i < j]
+println("Mean off-diagonal similarity: ", round(mean(off), digits=3), "  (high values for unrelated pairs signal anisotropic embeddings)")
+heatmap(sim, title="Cosine similarity", yflip=true)
 '''
 
 [[actionGroups]]
@@ -270,34 +315,32 @@ label = "Diagnose"
 [[actionGroups.actions]]
 id = "embedding-norm"
 label = "Embedding Norms"
-desc = "Distribution of CLS embedding L2 norms across the corpus"
+desc = "Distribution of the L2 norms of the sentence embeddings across the corpus"
 code = '''
-using Transformers, LinearAlgebra, StatsBase, Plots
-using Transformers.HuggingFace
+using LinearAlgebra, Plots
 
-tkr    = HuggingFace.load_tokenizer("{{bertmodel}}")  # load tokenizer
-bert   = HuggingFace.load_model(BertModel, "{{bertmodel}}")  # load BERT
-
-norms  = [norm(vec(bert(tkr(d).token, tkr(d).segment, tkr(d).attention_mask).hidden_state[:, 1, :])) for d in docs]  # L2 norm per document
-histogram(norms, xlabel="L2 norm", title="CLS embedding norm distribution")  # norm histogram
+norms = norm.(eachcol(embed_texts(docs)))  # L2 norm per document
+histogram(norms, xlabel="L2 norm", title="Sentence embedding norm distribution", legend=false)
 '''
 
 [[actionGroups.actions]]
 id = "attention-weights"
 label = "Attention Weights"
-desc = "Visualise last-layer attention for a single input"
+desc = "Visualise the last-layer attention of one head for a single input"
 code = '''
-using Transformers, Plots
-using Transformers.HuggingFace
+using Transformers, Transformers.TextEncoders, Transformers.HuggingFace, Plots
 
-tkr    = HuggingFace.load_tokenizer("{{bertmodel}}")  # load tokenizer
-bert   = HuggingFace.load_model(BertModel, "{{bertmodel}}")  # load BERT
-
-enc    = tkr({{text}})  # tokenise text
-out    = bert(enc.token, enc.segment, enc.attention_mask; output_attentions=true)  # run with attention output
-attn   = out.attentions[end][:, :, 1, 1]  # last-layer attention for first example and first head
-tokens = enc.tokens  # token strings
-heatmap(attn, xticks=(1:length(tokens), tokens), yticks=(1:length(tokens), tokens))  # attention heatmap
+if !@isdefined(attn_text)  # sentence to inspect
+    global attn_text = docs[1]
+end
+cfg    = HuggingFace.HGFConfig(HuggingFace.load_config("{{bertmodel}}"); output_attentions=true)
+bert_a = HuggingFace.load_model("{{bertmodel}}", :model; config=cfg)  # same weights, attention scores returned per layer
+sample = encode(textenc, [attn_text])
+out    = bert_a(sample)
+attn   = out.outputs[end].attention_score[:, :, 1, 1]  # last layer, head 1, sentence 1; rows are keys, columns are queries
+tokens = vec(decode(textenc, sample.token))  # token strings
+heatmap(transpose(attn), xticks=(1:length(tokens), tokens), yticks=(1:length(tokens), tokens), xrotation=45, yflip=true,
+        xlabel="Key", ylabel="Query")
 '''
 
 [[actionGroups]]
@@ -307,21 +350,23 @@ label = "Predict"
 [[actionGroups.actions]]
 id = "nearest-neighbour"
 label = "Nearest Neighbour"
-desc = "Find the top-k most similar documents to a query"
+desc = "Find the top-k most similar documents to a query; with a pre-trained, not fine-tuned BERT the ranking is more reliable than the similarity values"
 code = '''
-using Transformers, LinearAlgebra
-using Transformers.HuggingFace
+using LinearAlgebra
 
-tkr  = HuggingFace.load_tokenizer("{{bertmodel}}")  # load tokenizer
-bert = HuggingFace.load_model(BertModel, "{{bertmodel}}")  # load BERT
-
-E    = hcat([vec(bert(tkr(d).token, tkr(d).segment, tkr(d).attention_mask).hidden_state[:, 1, :]) for d in docs]...)  # embed corpus
-E    = E ./ norm.(eachcol(E))  # L2-normalise
-
-q    = vec(bert(tkr(query).token, tkr(query).segment, tkr(query).attention_mask).hidden_state[:, 1, :])  # embed query
-q    = q ./ norm(q)  # normalise query
-sims = E' * q  # cosine similarities
-top5 = sortperm(sims, rev=true)[1:5]  # top-5 document indices
+if !@isdefined(query)
+    global query = "How do central banks fight inflation?"
+end
+E    = embed_texts(docs)
+E    = E ./ transpose(norm.(eachcol(E)))  # L2-normalise
+q    = vec(embed_texts([query]))
+q    = q ./ norm(q)
+sims = transpose(E) * q  # cosine similarities
+k    = min(5, length(docs))
+topk = sortperm(sims, rev=true)[1:k]  # top-k document indices
+for i in topk
+    println(round(sims[i], digits=3), "  ", docs[i])
+end
 '''
 
 [[actionGroups.actions]]
@@ -329,14 +374,9 @@ id = "batch-encode"
 label = "Batch Encoding"
 desc = "Encode a large corpus in mini-batches for efficiency"
 code = '''
-using Transformers, LinearAlgebra
-using Transformers.HuggingFace
-
-tkr    = HuggingFace.load_tokenizer("{{bertmodel}}")  # load tokenizer
-bert   = HuggingFace.load_model(BertModel, "{{bertmodel}}")  # load BERT
-
-batch  = 32  # mini-batch size
-embs   = vcat([hcat([vec(bert(tkr(d).token, tkr(d).segment, tkr(d).attention_mask).hidden_state[:, 1, :]) for d in docs[i:min(i+batch-1,end)]]...) for i in 1:batch:length(docs)]...)  # embed in batches
+batch = 32  # mini-batch size: one encoder call per batch, padding to the longest sentence in the batch
+embs  = reduce(hcat, [embed_texts(docs[i:min(i+batch-1, end)]) for i in 1:batch:length(docs)])  # hidden_dim x n_docs
+println("Encoded ", size(embs, 2), " documents into ", size(embs, 1), "-dimensional vectors")
 '''
 
 [[actionGroups]]
@@ -346,38 +386,50 @@ label = "Compare"
 [[actionGroups.actions]]
 id = "compare-models"
 label = "Compare Models"
-desc = "Benchmark similarity scores from different checkpoints"
+desc = "Contrast a pre-trained BERT with a sentence-transformers checkpoint: similarity of a paraphrase pair against an unrelated pair, each model with its own pooling"
 code = '''
-using Transformers, LinearAlgebra
-using Transformers.HuggingFace
+using Transformers, Transformers.TextEncoders, Transformers.HuggingFace, Statistics, LinearAlgebra
 
-models = ["bert-base-uncased", "sentence-transformers/all-MiniLM-L6-v2"]  # candidate checkpoints
+pairs_ = [("paraphrase", "The central bank raised interest rates to curb inflation.", "Monetary policy was tightened to bring prices under control."),
+          ("unrelated",  "The central bank raised interest rates to curb inflation.", "Fresh basil and tomatoes make a simple pasta sauce.")]
+checkpoints = [("bert-base-uncased", :cls),  # raw CLS of a pre-trained BERT, as often (mis)used
+               ("sentence-transformers/all-MiniLM-L6-v2", :mean)]  # trained with mean pooling over the attention mask
 
-for m in models
-    tkr  = HuggingFace.load_tokenizer(m)  # load tokenizer for model m
-    bert = HuggingFace.load_model(BertModel, m)  # load model m
-    e1   = vec(bert(tkr(text1).token, tkr(text1).segment, tkr(text1).attention_mask).hidden_state[:, 1, :])  # embed text 1
-    e2   = vec(bert(tkr(text2).token, tkr(text2).segment, tkr(text2).attention_mask).hidden_state[:, 1, :])  # embed text 2
-    sim  = dot(e1, e2) / (norm(e1) * norm(e2))  # cosine similarity
-    println(m, " sim: ", sim)
+for (name, pooling) in checkpoints
+    te  = HuggingFace.load_tokenizer(name)
+    mdl = HuggingFace.load_model(name)
+    for (kind, a, b) in pairs_
+        smp  = encode(te, [a, b])
+        h    = mdl(smp).hidden_state
+        lens = smp.attention_mask.len
+        v    = pooling === :cls ? h[:, 1, :] : hcat([vec(mean(h[:, 1:lens[j], j], dims=2)) for j in 1:2]...)
+        s    = dot(v[:, 1], v[:, 2]) / (norm(v[:, 1]) * norm(v[:, 2]))
+        println(rpad(name, 42), rpad(kind, 12), round(s, digits=3))
+    end
 end
+# A useful model separates the two: a high paraphrase score and a clearly lower unrelated score
 '''
 
 [[actionGroups.actions]]
 id = "compare-pooling"
 label = "Compare Pooling"
-desc = "CLS token vs mean pooling for sentence representation"
+desc = "CLS token vs mean pooling for the selected model: similarity of a paraphrase pair against an unrelated pair under each pooling"
 code = '''
-using Transformers, LinearAlgebra
-using Transformers.HuggingFace
+using LinearAlgebra
 
-tkr    = HuggingFace.load_tokenizer("{{bertmodel}}")  # load tokenizer
-bert   = HuggingFace.load_model(BertModel, "{{bertmodel}}")  # load BERT
+a = "The central bank raised interest rates to curb inflation."
+b = "Monetary policy was tightened to bring prices under control."  # paraphrase of a
+u = "Fresh basil and tomatoes make a simple pasta sauce."  # unrelated to a
+cosine_(x, y) = dot(x, y) / (norm(x) * norm(y))
 
-out    = bert(tkr({{text}}).token, tkr({{text}}).segment, tkr({{text}}).attention_mask)  # run encoder
-cls    = vec(out.hidden_state[:, 1, :])  # CLS token (first position)
-mean_p = vec(mean(out.hidden_state, dims=2))  # mean-pool over all token positions
-println("CLS norm: ", norm(cls), "  Mean norm: ", norm(mean_p))  # compare norms
+for pooling in (:cls, :mean)
+    V = embed_texts([a, b, u]; pooling=pooling)
+    s_para = cosine_(V[:, 1], V[:, 2])
+    s_unrel = cosine_(V[:, 1], V[:, 3])
+    println(rpad(string(pooling), 6), " paraphrase = ", round(s_para, digits=3), "  unrelated = ", round(s_unrel, digits=3),
+            "  gap = ", round(s_para - s_unrel, digits=3))
+end
+# The pooling with the larger gap separates meaning better; the norms of the vectors say nothing about this
 '''
 
 [[actionGroups]]
@@ -387,37 +439,43 @@ label = "Interpret"
 [[actionGroups.actions]]
 id = "top-similar"
 label = "Top Similar Docs"
-desc = "Rank and display the most similar documents to each query"
+desc = "Rank and display the most similar documents to each query; with a pre-trained, not fine-tuned BERT treat the ranking with caution and compare against a sentence-transformers checkpoint"
 code = '''
-using Transformers, LinearAlgebra
-using Transformers.HuggingFace
+using LinearAlgebra
 
-tkr  = HuggingFace.load_tokenizer("{{bertmodel}}")  # load tokenizer
-bert = HuggingFace.load_model(BertModel, "{{bertmodel}}")  # load BERT
-
-E    = hcat([vec(bert(tkr(d).token, tkr(d).segment, tkr(d).attention_mask).hidden_state[:, 1, :]) for d in docs]...)  # embed corpus
-E    = E ./ norm.(eachcol(E))  # normalise
-
+if !@isdefined(queries)
+    global queries = ["How do central banks fight inflation?", "Who won the match?", "How do I make tomato sauce?"]
+end
+E  = embed_texts(docs)
+E  = E ./ transpose(norm.(eachcol(E)))  # normalise
+Q  = embed_texts(queries)
+Q  = Q ./ transpose(norm.(eachcol(Q)))
+S  = transpose(E) * Q  # n_docs x n_queries cosine similarities
 for (i, q) in enumerate(queries)
-    qe   = vec(bert(tkr(q).token, tkr(q).segment, tkr(q).attention_mask).hidden_state[:, 1, :]) |> v -> v ./ norm(v)  # normalised query embedding
-    idx  = sortperm(E' * qe, rev=true)[1:3]  # top-3 document indices
-    println("Q$i: ", docs[idx])
+    top = sortperm(S[:, i], rev=true)[1:min(3, length(docs))]  # top-3 document indices
+    println("Q", i, ": ", q)
+    foreach(j -> println("    ", round(S[j, i], digits=3), "  ", docs[j]), top)
 end
 '''
 
 [[actionGroups.actions]]
 id = "token-attribution"
 label = "Token Attribution"
-desc = "Gradient-based importance scores for each input token"
+desc = "Gradient times input importance of each token for the norm of the CLS vector"
 code = '''
-using Transformers, Zygote, LinearAlgebra
-using Transformers.HuggingFace
+using Transformers, Transformers.TextEncoders, Transformers.HuggingFace, Zygote, LinearAlgebra
 
-tkr    = HuggingFace.load_tokenizer("{{bertmodel}}")  # load tokenizer
-bert   = HuggingFace.load_model(BertModel, "{{bertmodel}}")  # load BERT
-
-enc    = tkr({{text}})  # tokenise input
-grads  = gradient(x -> sum(bert(x, enc.segment, enc.attention_mask).hidden_state[:, 1, :]), enc.token)[1]  # gradient of CLS norm wrt input token ids
-scores = vec(norm.(eachcol(grads)))  # attribution score per token
-println(zip(enc.tokens, scores))  # token-score pairs
+if !@isdefined(attr_text)  # sentence to explain
+    global attr_text = docs[1]
+end
+sample = encode(textenc, [attr_text])
+e0     = bert.embed(sample)  # token + position + segment embeddings, merged with the mask
+x0     = e0.hidden_state  # hidden x tokens x 1
+target(x) = norm(bert.encoder(merge(e0, (hidden_state = x,))).hidden_state[:, 1, 1])  # norm of the CLS output vector
+g      = Zygote.gradient(target, x0)[1]  # gradient with respect to the input embeddings (token ids are not differentiable)
+scores = vec(sum(g .* x0, dims=1))  # gradient times input, one score per token
+tokens = vec(decode(textenc, sample.token))
+for (t, s) in zip(tokens, scores)
+    println(rpad(t, 15), round(s, digits=4))
+end
 '''

@@ -368,7 +368,7 @@ end
 
 function search(; iters=budget, N=NP, seed=1, lb=lb, ub=ub, f=f)
     fr, vals = recorder(f)
-    alg = PSO(N=N, options=Options(iterations=iters, seed=seed))  # particle swarm optimisation
+    alg = PSO(N=N, options=Options(iterations=iters, f_calls_limit=1e12, seed=seed))  # explicit cap: otherwise PSO and ABC stop at 10000 n evaluations  # particle swarm optimisation
     r = Metaheuristics.optimize(fr, [transpose(lb); transpose(ub)], alg)
     (x = minimizer(r), fx = minimum(r), trace = accumulate(min, vals), evals = length(vals), pop = positions(r))
 end
@@ -442,7 +442,7 @@ end
 
 function search(; iters=budget, N=NP, seed=1, lb=lb, ub=ub, f=f)
     fr, vals = recorder(f)
-    alg = ABC(N=N, options=Options(iterations=iters, seed=seed))  # artificial bee colony
+    alg = ABC(N=N, options=Options(iterations=iters, f_calls_limit=1e12, seed=seed))  # explicit cap: otherwise PSO and ABC stop at 10000 n evaluations  # artificial bee colony
     r = Metaheuristics.optimize(fr, [transpose(lb); transpose(ub)], alg)
     (x = minimizer(r), fx = minimum(r), trace = accumulate(min, vals), evals = length(vals), pop = positions(r))
 end
@@ -472,7 +472,7 @@ end
 
 function search(; iters=budget, N=NP, seed=1, lb=lb, ub=ub, f=f)
     fr, vals = recorder(f)
-    alg = WOA(N=N, options=Options(iterations=iters, seed=seed))  # whale optimisation algorithm
+    alg = WOA(N=N, options=Options(iterations=iters, f_calls_limit=1e12, seed=seed))  # explicit cap: otherwise PSO and ABC stop at 10000 n evaluations  # whale optimisation algorithm
     r = Metaheuristics.optimize(fr, [transpose(lb); transpose(ub)], alg)
     (x = minimizer(r), fx = minimum(r), trace = accumulate(min, vals), evals = length(vals), pop = positions(r))
 end
@@ -502,7 +502,7 @@ end
 
 function search(; iters=budget, N=NP, seed=1, lb=lb, ub=ub, f=f)
     fr, vals = recorder(f)
-    alg = CGSA(N=N, options=Options(iterations=iters, seed=seed))  # chaotic gravitational search algorithm
+    alg = CGSA(N=N, options=Options(iterations=iters, f_calls_limit=1e12, seed=seed))  # explicit cap: otherwise PSO and ABC stop at 10000 n evaluations  # chaotic gravitational search algorithm
     r = Metaheuristics.optimize(fr, [transpose(lb); transpose(ub)], alg)
     (x = minimizer(r), fx = minimum(r), trace = accumulate(min, vals), evals = length(vals), pop = positions(r))
 end

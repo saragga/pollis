@@ -352,6 +352,9 @@ using Turing, Distributions
     {{y}} .~ Normal(mu, sigma)  # likelihood
 end
 
+{{?adtype=AutoReverseDiff}} import ReverseDiff  # loads the backend chosen for HMC
+{{?adtype=AutoEnzyme}} import Enzyme  # loads the backend chosen for HMC
+{{?adtype=AutoMooncake}} import Mooncake  # loads the backend chosen for HMC
 {{?sampler=nuts}} sampler = NUTS({{delta}})
 {{?sampler=hmc}} sampler = HMC({{epsilon}}, {{leapfrog}}; adtype={{adtype}}())
 {{?sampler=mh}} sampler = MH()
@@ -371,6 +374,9 @@ using Turing, Distributions
     {{y}} .~ Normal.(alpha .+ beta .* {{X}}, sigma)
 end
 
+{{?adtype=AutoReverseDiff}} import ReverseDiff  # loads the backend chosen for HMC
+{{?adtype=AutoEnzyme}} import Enzyme  # loads the backend chosen for HMC
+{{?adtype=AutoMooncake}} import Mooncake  # loads the backend chosen for HMC
 {{?sampler=nuts}} sampler = NUTS({{delta}})
 {{?sampler=hmc}} sampler = HMC({{epsilon}}, {{leapfrog}}; adtype={{adtype}}())
 {{?sampler=mh}} sampler = MH()
@@ -390,6 +396,9 @@ using Turing, Distributions
     {{y}} .~ Bernoulli.(p)
 end
 
+{{?adtype=AutoReverseDiff}} import ReverseDiff  # loads the backend chosen for HMC
+{{?adtype=AutoEnzyme}} import Enzyme  # loads the backend chosen for HMC
+{{?adtype=AutoMooncake}} import Mooncake  # loads the backend chosen for HMC
 {{?sampler=nuts}} sampler = NUTS({{delta}})
 {{?sampler=hmc}} sampler = HMC({{epsilon}}, {{leapfrog}}; adtype={{adtype}}())
 {{?sampler=mh}} sampler = MH()
@@ -406,15 +415,16 @@ using Turing, Distributions
     mu0   ~ Normal(0, 10)  # hyperprior: global mean
     sigma0 ~ Exponential(1)  # hyperprior: group spread
     sigma  ~ Exponential(1)  # observation noise
-    mu = Vector{Real}(undef, G)
-    for g in 1:G
-        mu[g] ~ Normal(mu0, sigma0)  # group-level means
-    end
+    z ~ filldist(Normal(0, 1), G)  # non-centred: standardised group effects
+    mu = mu0 .+ sigma0 .* z  # group-level means; avoids the funnel between sigma0 and the means when groups are small
     for i in eachindex({{y}})
         {{y}}[i] ~ Normal(mu[{{group}}[i]], sigma)
     end
 end
 
+{{?adtype=AutoReverseDiff}} import ReverseDiff  # loads the backend chosen for HMC
+{{?adtype=AutoEnzyme}} import Enzyme  # loads the backend chosen for HMC
+{{?adtype=AutoMooncake}} import Mooncake  # loads the backend chosen for HMC
 {{?sampler=nuts}} sampler = NUTS({{delta}})
 {{?sampler=hmc}} sampler = HMC({{epsilon}}, {{leapfrog}}; adtype={{adtype}}())
 {{?sampler=mh}} sampler = MH()
@@ -481,11 +491,12 @@ summarize(chain)[:, [:parameters, :ess_bulk, :ess_tail]]  # bulk and tail ESS
 [[actionGroups.actions]]
 id = "autocorr"
 label = "Autocorrelation"
-desc = "High autocorrelation indicates poor mixing; consider thinning"
+desc = "High autocorrelation lowers the effective sample size: read ESS rather than thinning, which discards draws"
 code = '''
 using StatsPlots
 
 autocorplot(chain)  # lag-autocorrelation per parameter
+summarize(chain)[:, [:parameters, :ess_bulk]]  # what the autocorrelation costs: ESS against the {{n-samples}} x {{n-chains}} draws
 '''
 
 [[actionGroups]]
@@ -495,17 +506,21 @@ label = "Predict"
 [[actionGroups.actions]]
 id = "ppc"
 label = "Posterior Predictive Check"
-desc = "Sample from the posterior predictive to assess model fit"
+desc = "Compare replicated datasets from the posterior predictive with the observed data"
 code = '''
-{{?model=gaussian}}missing_model = gaussian_model(fill(missing, length({{y}})))  # y replaced by missing values of the same length: predict it
-{{?model=linear}}missing_model = linear_model({{X}}, fill(missing, length({{y}})))  # y replaced by missing values of the same length: predict it
-{{?model=logistic}}missing_model = logistic_model({{X}}, fill(missing, length({{y}})))  # y replaced by missing values of the same length: predict it
-{{?model=hierarchical}}missing_model = hierarchical_model(fill(missing, length({{y}})), {{group}}, {{ngroups}})  # y replaced by missing values of the same length: predict it
-y_pred = predict(missing_model, chain)  # posterior predictive samples
+using StatsPlots, Statistics
 
-using StatsPlots
-density(vec(Array(y_pred)))  # predictive distribution
-scatter!({{y}}, zeros(length({{y}})))  # overlay observed data
+{{?model=gaussian}} missing_model = gaussian_model(fill(missing, length({{y}})))  # y replaced by missing values of the same length: predict it
+{{?model=linear}} missing_model = linear_model({{X}}, fill(missing, length({{y}})))  # y replaced by missing values of the same length: predict it
+{{?model=logistic}} missing_model = logistic_model({{X}}, fill(missing, length({{y}})))  # y replaced by missing values of the same length: predict it
+{{?model=hierarchical}} missing_model = hierarchical_model(fill(missing, length({{y}})), {{group}}, {{ngroups}})  # y replaced by missing values of the same length: predict it
+y_pred = predict(missing_model, chain)  # posterior predictive samples
+yrep = reduce(hcat, [vec(Array(y_pred[Symbol("{{y}}[", i, "]")])) for i in eachindex({{y}})])  # draws x observations, in data order
+{{?model!=logistic}} plt = density({{y}}; lw=3, color=:black, label="observed")  # observed distribution
+{{?model!=logistic}} for d in rand(1:size(yrep, 1), 50) density!(plt, yrep[d, :]; alpha=0.2, color=:steelblue, label="") end  # 50 replicated datasets
+{{?model!=logistic}} plt  # the observed curve should look like one of the replicates
+{{?model=logistic}} histogram(vec(mean(yrep; dims=2)); label="replicated share of ones")  # binary data: compare the share of ones
+{{?model=logistic}} vline!([mean({{y}})]; lw=3, label="observed")
 '''
 
 [[actionGroups.actions]]
@@ -513,14 +528,15 @@ id = "loo"
 label = "LOO-CV"
 desc = "Pareto-smoothed importance-sampling leave-one-out cross-validation"
 code = '''
-using PosteriorStats, Turing
+import PosteriorStats  # imported, not used: its summarize would clash with the one from MCMCChains
 
-{{?model=gaussian}}model = gaussian_model({{y}})  # the model that was sampled
-{{?model=linear}}model = linear_model({{X}}, {{y}})  # the model that was sampled
-{{?model=logistic}}model = logistic_model({{X}}, {{y}})  # the model that was sampled
-{{?model=hierarchical}}model = hierarchical_model({{y}}, {{group}}, {{ngroups}})  # the model that was sampled
-log_lik = pointwise_loglikelihoods(model, chain)  # log-likelihood per observation
-loo_result = loo(stack(log_lik))  # LOO-CV via PSIS
+{{?model=gaussian}} fitted = gaussian_model({{y}})  # the model that was sampled
+{{?model=linear}} fitted = linear_model({{X}}, {{y}})  # the model that was sampled
+{{?model=logistic}} fitted = logistic_model({{X}}, {{y}})  # the model that was sampled
+{{?model=hierarchical}} fitted = hierarchical_model({{y}}, {{group}}, {{ngroups}})  # the model that was sampled
+obs_syms = [Symbol("{{y}}[", i, "]") for i in eachindex({{y}})]  # observation names, in data order
+loglik(m, ch) = (pll = pointwise_loglikelihoods(m, ch; factorize=true); cat([Array(pll[s]) for s in obs_syms]...; dims=3))  # draws x chains x observations
+loo_result = PosteriorStats.loo(loglik(fitted, chain))  # LOO-CV via PSIS
 print(loo_result)  # ELPD, p_loo, Pareto k diagnostics
 '''
 
@@ -531,13 +547,39 @@ label = "Compare"
 [[actionGroups.actions]]
 id = "loo-compare"
 label = "LOO Compare"
-desc = "Compare models by expected log predictive density (ELPD)"
+desc = "Compare the fitted model with a simpler or more robust alternative by expected log predictive density (ELPD)"
 code = '''
-using PosteriorStats
+import PosteriorStats  # imported, not used: its summarize would clash with the one from MCMCChains
 
-loo_a = loo(stack(log_lik_a))  # LOO for model A
-loo_b = loo(stack(log_lik_b))  # LOO for model B
-loo_compare(loo_a, loo_b)  # negative = B preferred
+{{?model=gaussian}} fitted = gaussian_model({{y}})  # the model that was sampled
+{{?model=linear}} fitted = linear_model({{X}}, {{y}})  # the model that was sampled
+{{?model=logistic}} fitted = logistic_model({{X}}, {{y}})  # the model that was sampled
+{{?model=hierarchical}} fitted = hierarchical_model({{y}}, {{group}}, {{ngroups}})  # the model that was sampled
+obs_syms = [Symbol("{{y}}[", i, "]") for i in eachindex({{y}})]  # observation names, in data order
+loglik(m, ch) = (pll = pointwise_loglikelihoods(m, ch; factorize=true); cat([Array(pll[s]) for s in obs_syms]...; dims=3))  # draws x chains x observations
+{{?model=gaussian}} @model function alt_model({{y}})  # alternative: heavy-tailed Student-t likelihood
+{{?model=gaussian}}     mu ~ Normal(0, 10); sigma ~ Exponential(1); nu ~ Gamma(2, 10)
+{{?model=gaussian}}     {{y}} .~ mu + sigma * TDist(nu)
+{{?model=gaussian}} end
+{{?model=gaussian}} alt = alt_model({{y}})
+{{?model=linear}} @model function alt_model({{y}})  # alternative: intercept only, no covariate
+{{?model=linear}}     alpha ~ Normal(0, 10); sigma ~ Exponential(1)
+{{?model=linear}}     {{y}} .~ Normal(alpha, sigma)
+{{?model=linear}} end
+{{?model=linear}} alt = alt_model({{y}})
+{{?model=logistic}} @model function alt_model({{y}})  # alternative: intercept only, no covariate
+{{?model=logistic}}     alpha ~ Normal(0, 10)
+{{?model=logistic}}     {{y}} .~ Bernoulli(logistic(alpha))
+{{?model=logistic}} end
+{{?model=logistic}} alt = alt_model({{y}})
+{{?model=hierarchical}} @model function alt_model({{y}})  # alternative: complete pooling, one mean for all groups
+{{?model=hierarchical}}     mu ~ Normal(0, 10); sigma ~ Exponential(1)
+{{?model=hierarchical}}     {{y}} .~ Normal(mu, sigma)
+{{?model=hierarchical}} end
+{{?model=hierarchical}} alt = alt_model({{y}})
+chain_alt = sample(alt, NUTS(), MCMCThreads(), {{n-samples}}, {{n-chains}})  # same data, same draws
+mc = PosteriorStats.compare((fitted = PosteriorStats.loo(loglik(fitted, chain)), alternative = PosteriorStats.loo(loglik(alt, chain_alt))))
+print(mc)  # rank 1 has the higher ELPD; elpd_diff is each model ELPD below rank 1 (0 for the best): a difference within about 2 se_elpd_diff is not decisive
 '''
 
 [[actionGroups.actions]]
@@ -545,15 +587,19 @@ id = "waic"
 label = "WAIC"
 desc = "Widely applicable information criterion for Bayesian model selection"
 code = '''
-using PosteriorStats
+using Statistics
 
-{{?model=gaussian}}model = gaussian_model({{y}})  # the model that was sampled
-{{?model=linear}}model = linear_model({{X}}, {{y}})  # the model that was sampled
-{{?model=logistic}}model = logistic_model({{X}}, {{y}})  # the model that was sampled
-{{?model=hierarchical}}model = hierarchical_model({{y}}, {{group}}, {{ngroups}})  # the model that was sampled
-log_lik = pointwise_loglikelihoods(model, chain)  # log-likelihood matrix
-waic_result = waic(stack(log_lik))  # WAIC and p_waic
-print(waic_result)  # ELPD_waic and effective params
+{{?model=gaussian}} fitted = gaussian_model({{y}})  # the model that was sampled
+{{?model=linear}} fitted = linear_model({{X}}, {{y}})  # the model that was sampled
+{{?model=logistic}} fitted = logistic_model({{X}}, {{y}})  # the model that was sampled
+{{?model=hierarchical}} fitted = hierarchical_model({{y}}, {{group}}, {{ngroups}})  # the model that was sampled
+obs_syms = [Symbol("{{y}}[", i, "]") for i in eachindex({{y}})]  # observation names, in data order
+loglik(m, ch) = (pll = pointwise_loglikelihoods(m, ch; factorize=true); cat([Array(pll[s]) for s in obs_syms]...; dims=3))  # draws x chains x observations
+ll = reshape(loglik(fitted, chain), :, length(obs_syms))  # all draws x observations
+lme(v) = maximum(v) + log(mean(exp.(v .- maximum(v))))  # log of the mean of exp(v), computed stably
+lppd = sum(lme(c) for c in eachcol(ll))  # log pointwise predictive density
+p_waic = sum(var(c) for c in eachcol(ll))  # effective number of parameters
+(elpd_waic = lppd - p_waic, p_waic = p_waic, waic = -2 * (lppd - p_waic))  # PosteriorStats no longer provides waic; PSIS-LOO is preferred
 '''
 
 [[actionGroups]]
@@ -567,7 +613,7 @@ desc = "Mean, std, credible intervals, R-hat, and ESS for all parameters"
 code = '''
 summarize(chain)  # full posterior summary table
 
-summarize(chain; q=[0.025, 0.5, 0.975])  # with 95% credible intervals
+quantile(chain; q=[0.025, 0.5, 0.975])  # 2.5%, 50% and 97.5% quantiles: the 95% equal-tailed credible interval
 '''
 
 [[actionGroups.actions]]
@@ -575,10 +621,13 @@ id = "hdi"
 label = "HPD Interval"
 desc = "Highest posterior density interval: shortest interval containing p% of probability mass"
 code = '''
-using PosteriorStats
+import PosteriorStats  # imported, not used: its summarize would clash with the one from MCMCChains
 
-samples = Array(chain[:, :mu, :])  # extract parameter samples
-hdi(vec(samples); prob=0.95)  # 95% HPD interval
+{{?model=gaussian}} par = :mu  # the mean
+{{?model=linear|logistic}} par = :beta  # the slope
+{{?model=hierarchical}} par = :mu0  # the global mean
+samples = Array(chain[:, par, :])  # draws of that parameter
+PosteriorStats.hdi(vec(samples); prob=0.95)  # 95% HPD interval
 '''
 
 [[actionGroups.actions]]
@@ -588,6 +637,9 @@ desc = "Posterior density overlaid with prior to assess prior sensitivity"
 code = '''
 using StatsPlots, Distributions
 
-density(chain[:, :mu, :])  # posterior for mu
-plot!(Normal(0, 10), label="prior")  # overlay prior
+{{?model=gaussian}} par = :mu  # the mean
+{{?model=linear|logistic}} par = :beta  # the slope
+{{?model=hierarchical}} par = :mu0  # the global mean
+density(vec(Array(chain[:, par, :])); label="posterior")  # posterior for par
+plot!(Normal(0, 10); label="prior Normal(0, 10)")  # its prior: a posterior much narrower than the prior is driven by the data
 '''

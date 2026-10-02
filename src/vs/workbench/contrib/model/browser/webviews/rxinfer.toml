@@ -480,24 +480,33 @@ model = "gaussian"
 code = '''
 using RxInfer
 
-@model function gaussian_model(n, y)  # conjugate Gaussian with unknown mean and precision
-    mu  ~ Normal(0.0, 1.0)  # mean prior
-    tau ~ Gamma(1.0, 1.0)  # precision prior
-    for i in 1:n
-        y[i] ~ Normal(mu, sqrt(1 / tau))  # likelihood
-    end
+@model function gaussian_model(y, mu_var)  # Gaussian with unknown mean and precision
+    mu  ~ Normal(mean = 0.0, var = mu_var)  # mean prior
+    tau ~ Gamma(shape = 1.0, rate = 1.0)  # precision prior
+    y .~ Normal(mean = mu, precision = tau)  # likelihood
+end
+
+constraints = @constraints begin
+    q(mu, tau) = q(mu)q(tau)  # mean-field: mu and tau share the likelihood factor, so VMP needs this split
+end
+init = @initialization begin
+    q(mu)  = NormalMeanVariance(0.0, 1.0)  # starting marginals for the VMP iterations
+    q(tau) = GammaShapeRate(1.0, 1.0)
 end
 
 observations = rand(Normal(2.0, 0.5), {{n}})  # replace with real data
 result = infer(  # run VMP
-    model      = gaussian_model(n = {{n}}),
-    data       = (y = observations,),
-    iterations = {{iter}},
-    returnvars = (mu = KeepLast(), tau = KeepLast()),
+    model          = gaussian_model(mu_var = 1.0),
+    data           = (y = observations,),
+    constraints    = constraints,
+    initialization = init,
+    iterations     = {{iter}},
+    returnvars     = (mu = KeepEach(), tau = KeepEach()),  # one posterior per iteration
+    free_energy    = true,
 )
 
-mu_post  = result.posteriors[:mu]  # posterior over mean
-tau_post = result.posteriors[:tau]  # posterior over precision
+mu_post  = last(result.posteriors[:mu])  # posterior over mean (final iteration)
+tau_post = last(result.posteriors[:tau])  # posterior over precision
 println("mu:  ", mean(mu_post),  " +/- ", std(mu_post))  # mean estimate
 println("tau: ", mean(tau_post), " +/- ", std(tau_post))  # precision estimate
 '''
@@ -507,54 +516,80 @@ model = "regression"
 code = '''
 using RxInfer
 
-@model function linear_regression(n, x, y)  # Bayesian linear regression via VMP
-    beta0 ~ Normal(0.0, 10.0)  # intercept prior
-    beta1 ~ Normal(0.0, 10.0)  # slope prior
-    tau   ~ Gamma(1.0, 1.0)  # noise precision prior
-    for i in 1:n
-        y[i] ~ Normal(beta0 + beta1 * x[i], sqrt(1 / tau))  # likelihood
+@model function linear_regression(x, y, b_var)  # Bayesian linear regression via VMP
+    beta0 ~ Normal(mean = 0.0, var = b_var)  # intercept prior
+    beta1 ~ Normal(mean = 0.0, var = b_var)  # slope prior
+    tau   ~ Gamma(shape = 1.0, rate = 1.0)  # noise precision prior
+    for i in eachindex(y)
+        y[i] ~ Normal(mean = beta0 + beta1 * x[i], precision = tau)  # likelihood
     end
+end
+
+constraints = MeanField()  # coefficients and noise precision share the likelihood factor
+init = @initialization begin
+    q(beta0) = NormalMeanVariance(0.0, 100.0)  # starting marginals for the VMP iterations
+    q(beta1) = NormalMeanVariance(0.0, 100.0)
+    q(tau)   = GammaShapeRate(1.0, 1.0)
 end
 
 x_data = randn({{n}})  # replace with real covariates
 y_data = 1.5 .+ 2.3 .* x_data .+ 0.3 .* randn({{n}})  # replace with real response
 result = infer(  # run VMP
-    model      = linear_regression(n = {{n}}, x = x_data),
-    data       = (y = y_data,),
-    iterations = {{iter}},
-    returnvars = (beta0 = KeepLast(), beta1 = KeepLast(), tau = KeepLast()),
+    model          = linear_regression(x = x_data, b_var = 100.0),
+    data           = (y = y_data,),
+    constraints    = constraints,
+    initialization = init,
+    iterations     = {{iter}},
+    returnvars     = (beta0 = KeepEach(), beta1 = KeepEach(), tau = KeepEach()),
+    free_energy    = true,
 )
 
-println("Intercept: ", mean(result.posteriors[:beta0]))  # posterior mean intercept
-println("Slope:     ", mean(result.posteriors[:beta1]))  # posterior mean slope
+println("Intercept: ", mean(last(result.posteriors[:beta0])))  # posterior mean intercept
+println("Slope:     ", mean(last(result.posteriors[:beta1])))  # posterior mean slope
+println("Noise sd:  ", sqrt(1 / mean(last(result.posteriors[:tau]))))  # plug-in noise scale
 '''
 
 [[codeBranches]]
 model = "streaming"
 code = '''
-using RxInfer, Distributions
+using RxInfer
 
-@model function tracking_model(y, mu_mean, mu_var)  # reactive single-observation update
-    mu ~ Normal(mu_mean, sqrt(mu_var))  # prior from previous posterior
-    tau ~ Gamma(1.0, 1.0)  # noise precision
-    y ~ Normal(mu, sqrt(1 / tau))  # likelihood
+@model function tracking_model(y, mu_mean, mu_var, tau_shape, tau_rate)  # one observation per update
+    mu  ~ Normal(mean = mu_mean, var = mu_var)  # prior = previous posterior
+    tau ~ Gamma(shape = tau_shape, rate = tau_rate)  # precision prior = previous posterior
+    y   ~ Normal(mean = mu, precision = tau)  # likelihood
+end
+
+constraints = @constraints begin
+    q(mu, tau) = q(mu)q(tau)  # mean-field split needed for VMP
+end
+autoupdates = @autoupdates begin  # carry BOTH posteriors forward as the next priors
+    mu_mean   = mean(q(mu))
+    mu_var    = var(q(mu))
+    tau_shape = shape(q(tau))
+    tau_rate  = rate(q(tau))
+end
+init = @initialization begin  # initial priors (the autoupdates start from these)
+    q(mu)  = NormalMeanVariance(0.0, 1.0)
+    q(tau) = GammaShapeRate(1.0, 1.0)
 end
 
 stream = randn({{n}}) .+ 2.0  # replace with real data stream
-mu_mean, mu_var = 0.0, 1.0  # initial prior
-posteriors = []  # collect results
+result = infer(  # observations are processed one at a time
+    model          = tracking_model(),
+    data           = (y = stream,),
+    autoupdates    = autoupdates,
+    constraints    = constraints,
+    initialization = init,
+    iterations     = {{iter}},  # VMP iterations per observation
+    historyvars    = (mu = KeepLast(), tau = KeepLast()),
+    keephistory    = {{n}},
+    free_energy    = true,
+)
 
-for obs in stream
-    result = infer(  # update posterior on each observation
-        model      = tracking_model(mu_mean = mu_mean, mu_var = mu_var),
-        data       = (y = obs,),
-        iterations = {{iter}},
-        returnvars = (mu = KeepLast(),),
-    )
-    post = result.posteriors[:mu]  # updated posterior
-    push!(posteriors, post)
-    mu_mean, mu_var = mean(post), var(post)  # carry forward
-end
+mu_hist, tau_hist = result.history[:mu], result.history[:tau]  # posterior after each observation
+println("Final mu:  ", mean(last(mu_hist)), " +/- ", std(last(mu_hist)))
+println("Final tau: ", mean(last(tau_hist)), " +/- ", std(last(tau_hist)))
 '''
 
 [[actionGroups]]
@@ -564,40 +599,35 @@ label = "Visualise"
 [[actionGroups.actions]]
 id = "posterior-marginals"
 label = "Posterior Marginals"
-desc = "Plot the posterior mean and variance for each latent variable as a Gaussian density"
+desc = "Plot the posterior density of each latent variable: the final VMP iteration, or for streaming the posterior after the last observation"
 code = '''
 using RxInfer, GLMakie
 
-observations = rand(Normal(2.0, 0.5), {{n}})  # replace with real data
-result = infer(model = gaussian_model(n = {{n}}), data = (y = observations,), iterations = {{iter}}, returnvars = (mu = KeepLast(), tau = KeepLast()))  # run VMP
+{{?model=gaussian}} posts = ["mu" => mu_post, "tau" => tau_post]
+{{?model=regression}} posts = [string(v) => last(result.posteriors[v]) for v in (:beta0, :beta1, :tau)]
+{{?model=streaming}} posts = ["mu" => last(mu_hist), "tau" => last(tau_hist)]
 
-mu_post  = result.posteriors[:mu]  # Normal posterior over mean
-tau_post = result.posteriors[:tau]  # Gamma posterior over precision
-
-xs = range(mean(mu_post) - 3std(mu_post), mean(mu_post) + 3std(mu_post), length = 200)  # plot range
-fig = Figure(); ax1 = Axis(fig[1,1], title = "Posterior: mu", xlabel = "mu")
-lines!(ax1, xs, pdf.(mu_post, xs), color = :blue)
+fig = Figure(size = (350 * length(posts), 320))
+for (j, (name, d)) in enumerate(posts)
+    m, s = mean(d), std(d)
+    xs = range(name == "tau" ? max(m - 4s, 1e-6) : m - 4s, m + 4s, length = 200)  # precision is positive
+    ax = Axis(fig[1, j], title = "Posterior: " * name, xlabel = name)
+    lines!(ax, xs, pdf.(d, xs), color = :blue)
+end
 display(fig)
 '''
 
 [[actionGroups.actions]]
 id = "free-energy"
 label = "Free Energy"
-desc = "Plot the variational free energy across VMP iterations to assess convergence"
+desc = "Plot the variational free energy: across VMP iterations for the batch models (it should fall and flatten), and after each observation for streaming"
 code = '''
 using RxInfer, GLMakie
 
-observations = rand(Normal(2.0, 0.5), {{n}})  # replace with real data
-result = infer(  # request free energy history
-    model      = gaussian_model(n = {{n}}),
-    data       = (y = observations,),
-    iterations = {{iter}},
-    returnvars = (mu = KeepEach(), tau = KeepEach()),
-    free_energy = true,
-)
-
-fig = Figure(); ax = Axis(fig[1,1], title = "VMP Free Energy", xlabel = "Iteration", ylabel = "F")
-lines!(ax, 1:{{iter}}, result.free_energy, color = :red)
+{{?model=gaussian|regression}} F, xl = result.free_energy, "Iteration"
+{{?model=streaming}} F, xl = result.free_energy_final_only_history, "Observation"  # final-iteration value at each update
+fig = Figure(); ax = Axis(fig[1,1], title = "VMP Free Energy", xlabel = xl, ylabel = "F")
+lines!(ax, eachindex(F), F, color = :red)
 display(fig)
 '''
 
@@ -608,38 +638,38 @@ label = "Diagnose"
 [[actionGroups.actions]]
 id = "convergence-check"
 label = "Convergence Check"
-desc = "Compare posterior means across iterations to verify VMP has converged"
+desc = "Change in each posterior mean over the last VMP iterations and the free-energy trend: VMP has converged when both are near zero (for streaming, the free energy averaged over observations per iteration)"
 code = '''
 using RxInfer, Statistics
 
-observations = rand(Normal(2.0, 0.5), {{n}})  # replace with real data
-result = infer(model = gaussian_model(n = {{n}}), data = (y = observations,), iterations = {{iter}}, returnvars = (mu = KeepEach(),), free_energy = true)  # track each iteration
-
-mu_means = mean.(getindex.(result.posteriors[:mu], 1))  # mean of mu posterior at each iteration
-delta = abs.(diff(mu_means))  # change between iterations
-println("Max delta (last 5 iters): ", maximum(delta[end-4:end]))  # convergence metric
-println("Converged: ", maximum(delta[end-4:end]) < 1e-6)  # convergence verdict
+{{?model=gaussian|regression}} for (v, qs) in pairs(result.posteriors)
+{{?model=gaussian|regression}}     d = abs.(diff(mean.(qs)))  # change of the posterior mean between iterations
+{{?model=gaussian|regression}}     println(rpad(string(v), 6), " max change in mean over the last 5 iterations: ", maximum(d[max(end - 4, 1):end]))
+{{?model=gaussian|regression}} end
+{{?model=gaussian|regression}} F = result.free_energy
+{{?model=streaming}} F = result.free_energy_history  # averaged over observations, one value per iteration
+dF = diff(F)
+println("Free energy change over the last 5 iterations: ", maximum(abs.(dF[max(end - 4, 1):end])))
+println("Free energy never increased: ", all(dF .<= 1e-8))  # VMP decreases F monotonically
 '''
 
 [[actionGroups.actions]]
 id = "prior-sensitivity"
 label = "Prior Sensitivity"
-desc = "Compare posterior marginals under wide vs narrow priors to assess sensitivity"
+desc = "Refit with a narrow (variance 0.1) and a wide (variance 100) prior on the mean or coefficients and compare the key posterior; for streaming the initial prior is changed"
 code = '''
 using RxInfer, Statistics
 
-@model function gaussian_model_prior(n, y, mu_var)  # parameterise prior width
-    mu  ~ Normal(0.0, sqrt(mu_var))
-    tau ~ Gamma(1.0, 1.0)
-    for i in 1:n; y[i] ~ Normal(mu, sqrt(1/tau)); end
+{{?model=gaussian}} fitp(v) = infer(model = gaussian_model(mu_var = v), data = (y = observations,), constraints = constraints, initialization = init, iterations = {{iter}}, returnvars = (mu = KeepLast(),))
+{{?model=gaussian}} target(r) = r.posteriors[:mu]
+{{?model=regression}} fitp(v) = infer(model = linear_regression(x = x_data, b_var = v), data = (y = y_data,), constraints = constraints, initialization = init, iterations = {{iter}}, returnvars = (beta1 = KeepLast(),))
+{{?model=regression}} target(r) = r.posteriors[:beta1]
+{{?model=streaming}} fitp(v) = infer(model = tracking_model(), data = (y = stream,), autoupdates = autoupdates, constraints = constraints, initialization = @initialization(begin q(mu) = NormalMeanVariance(0.0, v); q(tau) = GammaShapeRate(1.0, 1.0) end), iterations = {{iter}}, keephistory = {{n}})
+{{?model=streaming}} target(r) = last(r.history[:mu])
+for v in (0.1, 100.0)
+    q = target(fitp(v))
+    println("prior variance ", rpad(v, 6), " posterior mean = ", round(mean(q), digits = 4), "  sd = ", round(std(q), digits = 4))
 end
-
-obs = rand(Normal(2.0, 0.5), {{n}})  # data
-r_narrow = infer(model = gaussian_model_prior(n = {{n}}, mu_var = 0.1), data = (y = obs,), iterations = {{iter}}, returnvars = (mu = KeepLast(),))  # narrow prior
-r_wide   = infer(model = gaussian_model_prior(n = {{n}}, mu_var = 100.0), data = (y = obs,), iterations = {{iter}}, returnvars = (mu = KeepLast(),))  # wide prior
-
-println("mu (narrow prior): ", mean(r_narrow.posteriors[:mu]))  # compare
-println("mu (wide prior):   ", mean(r_wide.posteriors[:mu]))  # compare
 '''
 
 [[actionGroups]]
@@ -649,16 +679,16 @@ label = "Predict"
 [[actionGroups.actions]]
 id = "posterior-predictive"
 label = "Posterior Predictive"
-desc = "Draw samples from the posterior predictive distribution and overlay against observed data"
+desc = "Draw replicated data from the posterior predictive distribution and overlay it on the observed data"
 code = '''
 using RxInfer, GLMakie, Statistics
 
-obs = rand(Normal(2.0, 0.5), {{n}})  # replace with real data
-result = infer(model = gaussian_model(n = {{n}}), data = (y = obs,), iterations = {{iter}}, returnvars = (mu = KeepLast(), tau = KeepLast()))  # fit
-
-mu_post  = result.posteriors[:mu]  # posterior mean
-tau_post = result.posteriors[:tau]  # posterior precision
-ppc = [rand(Normal(rand(mu_post), sqrt(1/rand(tau_post)))) for _ in 1:1000]  # posterior predictive samples
+{{?model=gaussian}} obs, qm, qt = observations, mu_post, tau_post
+{{?model=streaming}} obs, qm, qt = stream, last(mu_hist), last(tau_hist)
+{{?model=gaussian|streaming}} ppc = [rand(Normal(rand(qm), sqrt(1 / rand(qt)))) for _ in 1:1000]  # posterior predictive samples
+{{?model=regression}} obs = y_data
+{{?model=regression}} qb0, qb1, qt = (last(result.posteriors[v]) for v in (:beta0, :beta1, :tau))
+{{?model=regression}} ppc = vec([rand(Normal(rand(qb0) + rand(qb1) * xi, sqrt(1 / rand(qt)))) for xi in x_data, _ in 1:20])  # 20 replicated datasets at the observed x
 
 fig = Figure(); ax = Axis(fig[1,1], title = "Posterior Predictive Check")
 hist!(ax, obs, normalization = :pdf, color = (:blue, 0.4), label = "Observed")  # data histogram
@@ -669,23 +699,28 @@ axislegend(ax); display(fig)
 [[actionGroups.actions]]
 id = "streaming-forecast"
 label = "Streaming Forecast"
-desc = "Extend the fitted model forward to predict the next K observations with 95% predictive intervals"
+desc = "Gaussian and streaming: predictive median and 95% interval for the next K observations from the final posterior. Regression: the 95% predictive band over a grid of new x values"
 code = '''
 using RxInfer, GLMakie, Statistics
 
-obs = rand(Normal(2.0, 0.5), 100)  # replace with real data
-result = infer(model = gaussian_model(n = 100), data = (y = obs,), iterations = 50, returnvars = (mu = KeepLast(), tau = KeepLast()))  # fit
-
-mu_post, tau_post = result.posteriors[:mu], result.posteriors[:tau]
-K = 20  # forecast horizon
-draws = [rand(Normal(rand(mu_post), sqrt(1 / rand(tau_post)))) for _ in 1:2000, _ in 1:K]  # predictive draws, one column per step
-lo, mid, hi = ([quantile(draws[:, k], q) for k in 1:K] for q in (0.025, 0.5, 0.975))  # 95% predictive interval and median
-
-n = length(obs); steps = n+1:n+K
-fig = Figure(); ax = Axis(fig[1,1], title = "Streaming Forecast", xlabel = "t", ylabel = "y")
-lines!(ax, 1:n, obs, color = :gray, label = "Observed")
-band!(ax, steps, lo, hi, color = (:red, 0.2), label = "95% predictive interval")
-lines!(ax, steps, mid, color = :red, label = "Forecast median")
+{{?model=gaussian}} obs, qm, qt = observations, mu_post, tau_post
+{{?model=streaming}} obs, qm, qt = stream, last(mu_hist), last(tau_hist)
+{{?model=gaussian|streaming}} K = 20  # forecast horizon
+{{?model=gaussian|streaming}} draws = [rand(Normal(rand(qm), sqrt(1 / rand(qt)))) for _ in 1:2000, _ in 1:K]  # predictive draws, one column per step
+{{?model=gaussian|streaming}} lo, mid, hi = ([quantile(draws[:, k], q) for k in 1:K] for q in (0.025, 0.5, 0.975))  # 95% predictive interval and median
+{{?model=gaussian|streaming}} n = length(obs); steps = n+1:n+K
+{{?model=gaussian|streaming}} fig = Figure(); ax = Axis(fig[1,1], title = "Streaming Forecast", xlabel = "t", ylabel = "y")
+{{?model=gaussian|streaming}} lines!(ax, 1:n, obs, color = :gray, label = "Observed")
+{{?model=gaussian|streaming}} band!(ax, steps, lo, hi, color = (:red, 0.2), label = "95% predictive interval")
+{{?model=gaussian|streaming}} lines!(ax, steps, mid, color = :red, label = "Forecast median")
+{{?model=regression}} qb0, qb1, qt = (last(result.posteriors[v]) for v in (:beta0, :beta1, :tau))
+{{?model=regression}} xg = range(extrema(x_data)..., length = 50)  # new x values
+{{?model=regression}} draws = [rand(Normal(rand(qb0) + rand(qb1) * xi, sqrt(1 / rand(qt)))) for _ in 1:2000, xi in xg]
+{{?model=regression}} lo, mid, hi = ([quantile(draws[:, k], q) for k in eachindex(xg)] for q in (0.025, 0.5, 0.975))
+{{?model=regression}} fig = Figure(); ax = Axis(fig[1,1], title = "Posterior predictive band", xlabel = "x", ylabel = "y")
+{{?model=regression}} scatter!(ax, x_data, y_data, color = :gray, markersize = 4, label = "Observed")
+{{?model=regression}} band!(ax, xg, lo, hi, color = (:red, 0.2), label = "95% predictive interval")
+{{?model=regression}} lines!(ax, xg, mid, color = :red, label = "Predictive median")
 axislegend(ax, position = :lt); display(fig)
 '''
 
@@ -696,39 +731,44 @@ label = "Compare"
 [[actionGroups.actions]]
 id = "vmp-vs-mcmc"
 label = "VMP vs MCMC"
-desc = "Compare posterior means from VMP (RxInfer.jl) and MCMC (Turing.jl) on the same Gaussian model"
+desc = "Posterior means AND standard deviations from VMP (RxInfer.jl) against NUTS (Turing.jl) with the same priors and data: mean-field VMP typically understates posterior spread, shown by an sd ratio below 1"
 code = '''
-using RxInfer, Turing, Statistics
+using RxInfer, Statistics
+import Turing  # qualified: Turing and RxInfer both export a model macro
 
-obs = rand(Normal(2.0, 0.5), {{n}})  # shared data
+{{?model=gaussian|streaming}} Turing.@model function turing_model(y)  # same priors as the RxInfer model
+{{?model=gaussian|streaming}}     mu ~ Normal(0.0, 1.0); tau ~ Gamma(1.0, 1.0)  # Gamma(shape 1, scale 1) = Gamma(shape 1, rate 1)
+{{?model=gaussian|streaming}}     for i in eachindex(y); y[i] ~ Normal(mu, sqrt(1 / tau)); end
+{{?model=gaussian|streaming}} end
+{{?model=gaussian}} chain = Turing.sample(turing_model(observations), Turing.NUTS(), 2000)
+{{?model=gaussian}} vq = ["mu" => mu_post, "tau" => tau_post]
+{{?model=streaming}} chain = Turing.sample(turing_model(stream), Turing.NUTS(), 2000)  # batch posterior on the whole stream
+{{?model=streaming}} vq = ["mu" => last(mu_hist), "tau" => last(tau_hist)]
+{{?model=regression}} Turing.@model function turing_model(x, y)
+{{?model=regression}}     beta0 ~ Normal(0.0, 10.0); beta1 ~ Normal(0.0, 10.0); tau ~ Gamma(1.0, 1.0)  # variance 100 priors as in the RxInfer model
+{{?model=regression}}     for i in eachindex(y); y[i] ~ Normal(beta0 + beta1 * x[i], sqrt(1 / tau)); end
+{{?model=regression}} end
+{{?model=regression}} chain = Turing.sample(turing_model(x_data, y_data), Turing.NUTS(), 2000)
+{{?model=regression}} vq = [string(v) => last(result.posteriors[v]) for v in (:beta0, :beta1, :tau)]
 
-vmp_result = infer(model = gaussian_model(n = {{n}}), data = (y = obs,), iterations = {{iter}}, returnvars = (mu = KeepLast(),))  # VMP via RxInfer
-vmp_mu = mean(vmp_result.posteriors[:mu])  # VMP posterior mean
-
-@model function turing_gaussian(y)
-    mu  ~ Normal(0.0, 1.0); tau ~ Gamma(1.0, 1.0)
-    for i in eachindex(y); y[i] ~ Normal(mu, sqrt(1/tau)); end
+println(rpad("", 7), rpad("VMP mean", 12), rpad("MCMC mean", 12), rpad("VMP sd", 12), rpad("MCMC sd", 12), "sd ratio")
+for (name, q) in vq
+    c = vec(chain[Symbol(name)])  # MCMC draws
+    println(rpad(name, 7), rpad(round(mean(q), digits = 4), 12), rpad(round(mean(c), digits = 4), 12), rpad(round(std(q), digits = 4), 12), rpad(round(std(c), digits = 4), 12), round(std(q) / std(c), digits = 3))
 end
-chain = sample(turing_gaussian(obs), NUTS(), 2000)  # MCMC via Turing
-mcmc_mu = mean(chain[:mu])  # MCMC posterior mean
-
-println("VMP  mu: ", round(vmp_mu;  digits=4))  # compare
-println("MCMC mu: ", round(mcmc_mu; digits=4))  # compare
 '''
 
 [[actionGroups.actions]]
 id = "model-comparison"
 label = "Model Comparison"
-desc = "Final variational free energy of the Gaussian model, the quantity used to compare models: fit an alternative (for example Laplace noise) to the same data and prefer the lower value"
+desc = "Final variational free energy, the quantity used to compare models: fit an alternative (for example Laplace noise) to the same data and prefer the lower value. For streaming the per-observation values are summed"
 code = '''
 using RxInfer
 
-obs = rand(Normal(2.0, 0.5), {{n}})  # replace with real data
-
-r_gaussian = infer(model = gaussian_model(n = {{n}}), data = (y = obs,), iterations = {{iter}}, returnvars = (mu = KeepLast(),), free_energy = true)  # Gaussian noise
-
-println("Gaussian free energy: ", r_gaussian.free_energy[end])  # an upper bound on -log evidence: lower means more evidence, with complexity already penalised
-println("Fit a competing model to the same obs and keep the one with the lower final free energy")  # only one model is fitted here
+{{?model=gaussian|regression}} F = result.free_energy[end]
+{{?model=streaming}} F = sum(result.free_energy_final_only_history)  # sequential (prequential) bound over the stream
+println("Free energy: ", F)  # an upper bound on -log evidence: lower means more evidence, with complexity already penalised
+println("Fit a competing model to the same data and keep the one with the lower final free energy")  # only one model is fitted here
 '''
 
 [[actionGroups]]
@@ -738,31 +778,31 @@ label = "Interpret"
 [[actionGroups.actions]]
 id = "parameter-posteriors"
 label = "Parameter Posteriors"
-desc = "Extract and display the posterior mean, variance, and 95% credible interval for all latent variables"
+desc = "Posterior mean, standard deviation and 95% credible interval (from 10000 posterior draws) for every latent variable"
 code = '''
 using RxInfer, Statistics
 
-obs = rand(Normal(2.0, 0.5), {{n}})  # replace with real data
-result = infer(model = gaussian_model(n = {{n}}), data = (y = obs,), iterations = {{iter}}, returnvars = (mu = KeepLast(), tau = KeepLast()))  # fit
-
-mu_post  = result.posteriors[:mu]  # Normal posterior
-tau_post = result.posteriors[:tau]  # Gamma posterior
-
-println("mu  | mean: ", round(mean(mu_post);  digits=3), "  std: ", round(std(mu_post); digits=3), "  95% CI: [", round(quantile(mu_post, 0.025); digits=3), ", ", round(quantile(mu_post, 0.975); digits=3), "]")  # mu summary
-println("tau | mean: ", round(mean(tau_post); digits=3), "  std: ", round(std(tau_post); digits=3))  # tau summary
+{{?model=gaussian}} posts = ["mu" => mu_post, "tau" => tau_post]
+{{?model=regression}} posts = [string(v) => last(result.posteriors[v]) for v in (:beta0, :beta1, :tau)]
+{{?model=streaming}} posts = ["mu" => last(mu_hist), "tau" => last(tau_hist)]
+for (name, q) in posts
+    s = rand(q, 10000)  # draws from the variational posterior
+    println(rpad(name, 6), "| mean: ", round(mean(q); digits=3), "  std: ", round(std(q); digits=3), "  95% CI: [", round(quantile(s, 0.025); digits=3), ", ", round(quantile(s, 0.975); digits=3), "]")
+end
 '''
 
 [[actionGroups.actions]]
 id = "factor-graph"
 label = "Factor Graph"
-desc = "Inspect the factor graph structure generated by RxInfer for the current model"
+desc = "Count the variable and factor nodes of the factor graph RxInfer builds for the current model (for streaming, the graph of one update step)"
 code = '''
 using RxInfer
 
-obs = rand(Normal(2.0, 0.5), {{n}})  # replace with real data
-
-graph = create_model(gaussian_model(n = {{n}}) | (y = obs,))  # build the factor graph
-println("Variables:  ", length(getvariables(graph)))  # number of variable nodes
-println("Factors:    ", length(getfactors(graph)))  # number of factor nodes
-println("Interfaces: ", length(getinterfaces(graph)))  # message-passing edges
+{{?model=gaussian}} graph = RxInfer.create_model(gaussian_model(mu_var = 1.0) | (y = observations,))  # build the factor graph
+{{?model=regression}} graph = RxInfer.create_model(linear_regression(x = x_data, b_var = 100.0) | (y = y_data,))
+{{?model=streaming}} graph = RxInfer.create_model(tracking_model(mu_mean = 0.0, mu_var = 1.0, tau_shape = 1.0, tau_rate = 1.0) | (y = stream[1],))
+println("Random variables:   ", length(getrandomvars(graph)))  # latent variable nodes
+println("Data variables:     ", length(getdatavars(graph)))  # observed variable nodes
+println("Constant variables: ", length(getconstantvars(graph)))  # fixed hyperparameters
+println("Factor nodes:       ", length(getfactornodes(graph)))  # factors exchanging messages
 '''

@@ -287,6 +287,7 @@ return '<path d="' + d1 + '" fill="none" stroke="currentColor" stroke-width="1.2
 model = "node"
 code = '''
 using DiffEqFlux, OrdinaryDiffEq, SciMLSensitivity, Lux, ComponentArrays, Optimization, OptimizationOptimisers, Random
+import Enzyme  # reverse-mode AD: AutoEnzyme for the loss, EnzymeVJP inside the adjoint
 
 n       = {{n}}  # state dimension
 hidden  = {{hidden}}  # hidden units per layer
@@ -294,6 +295,12 @@ T       = {{tspan}}f0  # end of the training time span
 lr      = {{lr}}  # Adam learning rate
 maxiter = {{maxiter}}  # training iterations
 
+if !@isdefined(obs_data)  # no data in the session: simulate the damped cubic spiral of the DiffEqFlux tutorial as a demo
+    n == 2 || error("the demo data is 2-dimensional: set n = 2 or define obs_data and tsteps")
+    A_true = Float32[-0.1 2.0; -2.0 -0.1]
+    tsteps = range(0f0, T; length=40)
+    obs_data = Array(solve(ODEProblem((u, p, t) -> transpose(A_true) * u .^ 3, Float32[2.0, 0.0], (0f0, T)), Tsit5(); saveat=tsteps))
+end
 obs_data = Float32.({{yvar}})  # observed trajectory, n x number of time points
 tsteps   = Float32.(collect({{tvar}}))  # observation times in [0, T]
 u0       = obs_data[:, 1]  # initial condition: the first observation
@@ -302,13 +309,13 @@ solver   = (reltol=1f-3, abstol=1f-3)  # ODE solver tolerances
 nn = Chain(Dense(n => hidden, tanh), Dense(hidden => hidden, tanh), Dense(hidden => n))  # learned vector field du/dt = nn(u)
 ps, st = Lux.setup(Random.default_rng(), nn)
 ps = ComponentArray(ps)
-predict(p, u0, t) = Array(first(NeuralODE(nn, (0f0, t[end]), Tsit5(); saveat=t, solver...)(u0, p, st)))  # n x length(t)
+predict(p, u0, t) = Array(first(NeuralODE(nn, (0f0, t[end]), Tsit5(); saveat=t, solver..., sensealg=InterpolatingAdjoint(autojacvec=EnzymeVJP()))(u0, p, st)))  # n x length(t)
 vector_field(u, p) = first(nn(u, p, st))  # du/dt at state u
 
 loss(p) = sum(abs2, predict(p, u0, tsteps) .- obs_data)  # squared error against the observed trajectory
 losses = Float32[]
 callback(state, l) = (push!(losses, l); false)  # record the loss at every iteration
-optf = OptimizationFunction((p, _) -> loss(p), Optimization.AutoZygote())
+optf = OptimizationFunction((p, _) -> loss(p), Optimization.AutoEnzyme())
 res = solve(OptimizationProblem(optf, ps), OptimizationOptimisers.Adam(lr); maxiters=maxiter, callback)
 p_opt = res.u  # fitted parameters
 '''
@@ -317,6 +324,7 @@ p_opt = res.u  # fitted parameters
 model = "augmented"
 code = '''
 using DiffEqFlux, OrdinaryDiffEq, SciMLSensitivity, Lux, ComponentArrays, Optimization, OptimizationOptimisers, Random
+import Enzyme  # reverse-mode AD: AutoEnzyme for the loss, EnzymeVJP inside the adjoint
 
 n       = {{n}}  # state dimension
 hidden  = {{hidden}}  # hidden units per layer
@@ -324,6 +332,12 @@ T       = {{tspan}}f0  # end of the training time span
 lr      = {{lr}}  # Adam learning rate
 maxiter = {{maxiter}}  # training iterations
 
+if !@isdefined(obs_data)  # no data in the session: simulate the damped cubic spiral of the DiffEqFlux tutorial as a demo
+    n == 2 || error("the demo data is 2-dimensional: set n = 2 or define obs_data and tsteps")
+    A_true = Float32[-0.1 2.0; -2.0 -0.1]
+    tsteps = range(0f0, T; length=40)
+    obs_data = Array(solve(ODEProblem((u, p, t) -> transpose(A_true) * u .^ 3, Float32[2.0, 0.0], (0f0, T)), Tsit5(); saveat=tsteps))
+end
 obs_data = Float32.({{yvar}})  # observed trajectory, n x number of time points
 tsteps   = Float32.(collect({{tvar}}))  # observation times in [0, T]
 u0       = obs_data[:, 1]  # initial condition: the first observation
@@ -334,13 +348,14 @@ nn = Chain(Dense(n + aug => hidden, tanh), Dense(hidden => hidden, tanh), Dense(
 ps, st = Lux.setup(Random.default_rng(), nn)
 ps = ComponentArray(ps)
 lift(u) = vcat(u, zeros(Float32, aug))  # append the augmented states
-predict(p, u0, t) = Array(first(NeuralODE(nn, (0f0, t[end]), Tsit5(); saveat=t, solver...)(lift(u0), p, st)))[1:n, :]  # keep the observed states
-vector_field(u, p) = first(nn(lift(u), p, st))[1:n]  # du/dt of the observed states at u
+predict_full(p, u0, t) = Array(first(NeuralODE(nn, (0f0, t[end]), Tsit5(); saveat=t, solver..., sensealg=InterpolatingAdjoint(autojacvec=EnzymeVJP()))(lift(u0), p, st)))  # (n + aug) x length(t)
+predict(p, u0, t) = predict_full(p, u0, t)[1:n, :]  # keep the observed states
+vector_field_full(z, p) = first(nn(z, p, st))  # dz/dt in the augmented space: the observed states alone do not determine their velocity
 
 loss(p) = sum(abs2, predict(p, u0, tsteps) .- obs_data)  # squared error against the observed trajectory
 losses = Float32[]
 callback(state, l) = (push!(losses, l); false)  # record the loss at every iteration
-optf = OptimizationFunction((p, _) -> loss(p), Optimization.AutoZygote())
+optf = OptimizationFunction((p, _) -> loss(p), Optimization.AutoEnzyme())
 res = solve(OptimizationProblem(optf, ps), OptimizationOptimisers.Adam(lr); maxiters=maxiter, callback)
 p_opt = res.u  # fitted parameters
 '''
@@ -349,6 +364,7 @@ p_opt = res.u  # fitted parameters
 model = "ude"
 code = '''
 using DiffEqFlux, OrdinaryDiffEq, SciMLSensitivity, Lux, ComponentArrays, Optimization, OptimizationOptimisers, Random
+import Enzyme  # reverse-mode AD: AutoEnzyme for the loss, EnzymeVJP inside the adjoint
 
 n       = {{n}}  # state dimension
 hidden  = {{hidden}}  # hidden units per layer
@@ -356,6 +372,12 @@ T       = {{tspan}}f0  # end of the training time span
 lr      = {{lr}}  # Adam learning rate
 maxiter = {{maxiter}}  # training iterations
 
+if !@isdefined(obs_data)  # no data in the session: simulate the damped cubic spiral of the DiffEqFlux tutorial as a demo
+    n == 2 || error("the demo data is 2-dimensional: set n = 2 or define obs_data and tsteps")
+    A_true = Float32[-0.1 2.0; -2.0 -0.1]
+    tsteps = range(0f0, T; length=40)
+    obs_data = Array(solve(ODEProblem((u, p, t) -> transpose(A_true) * u .^ 3, Float32[2.0, 0.0], (0f0, T)), Tsit5(); saveat=tsteps))
+end
 obs_data = Float32.({{yvar}})  # observed trajectory, n x number of time points
 tsteps   = Float32.(collect({{tvar}}))  # observation times in [0, T]
 u0       = obs_data[:, 1]  # initial condition: the first observation
@@ -368,12 +390,12 @@ ps = ComponentArray(theta=zeros(Float32, n), nn=ps_nn)
 vector_field(u, p) = known(u, p.theta) .+ first(nn(u, p.nn, st))  # du/dt = known + learned
 prob = ODEProblem((u, p, t) -> vector_field(u, p), u0, (0f0, T), ps)
 predict(p, u0, t) = Array(solve(remake(prob; u0, p, tspan=(0f0, t[end])), Tsit5(); saveat=t, solver...,
-                                sensealg=InterpolatingAdjoint(autojacvec=ZygoteVJP())))  # n x length(t)
+                                sensealg=InterpolatingAdjoint(autojacvec=EnzymeVJP())))  # n x length(t)
 
 loss(p) = sum(abs2, predict(p, u0, tsteps) .- obs_data)  # squared error against the observed trajectory
 losses = Float32[]
 callback(state, l) = (push!(losses, l); false)  # record the loss at every iteration
-optf = OptimizationFunction((p, _) -> loss(p), Optimization.AutoZygote())
+optf = OptimizationFunction((p, _) -> loss(p), Optimization.AutoEnzyme())
 res = solve(OptimizationProblem(optf, ps), OptimizationOptimisers.Adam(lr); maxiters=maxiter, callback)
 p_opt = res.u  # fitted parameters
 '''
@@ -443,7 +465,7 @@ using Plots
 
 cut = round(Int, 0.8 * length(tsteps))
 loss_fit(p) = sum(abs2, predict(p, u0, tsteps[1:cut]) .- obs_data[:, 1:cut])
-res_fit = solve(OptimizationProblem(OptimizationFunction((p, _) -> loss_fit(p), Optimization.AutoZygote()), ps),
+res_fit = solve(OptimizationProblem(OptimizationFunction((p, _) -> loss_fit(p), Optimization.AutoEnzyme()), ps),
                 OptimizationOptimisers.Adam(lr); maxiters=maxiter)
 pred = predict(res_fit.u, u0, tsteps)
 println("held-out squared error: ", sum(abs2, pred[:, cut+1:end] .- obs_data[:, cut+1:end]))
@@ -502,14 +524,20 @@ label = "Compare"
 [[actionGroups.actions]]
 id = "vs-linear"
 label = "vs Linear ODE"
-desc = "Fit the linear ODE du/dt = A u to the same data: the gap shows how much nonlinearity the network adds"
+desc = "Fit the model and the linear ODE du/dt = A u on the first 80% of the data and compare their errors on the last 20%"
 code = '''
+cut = round(Int, 0.8 * length(tsteps))  # both models see only the first 80% of the time points
+held = cut+1:length(tsteps)  # held-out horizon
+loss_fit(p) = sum(abs2, predict(p, u0, tsteps[1:cut]) .- obs_data[:, 1:cut])
+res_fit = solve(OptimizationProblem(OptimizationFunction((p, _) -> loss_fit(p), Optimization.AutoEnzyme()), ps),
+                OptimizationOptimisers.Adam(lr); maxiters=maxiter)  # neural model refit on the training part
 prob_lin = ODEProblem((u, A, t) -> A * u, u0, (0f0, tsteps[end]), zeros(Float32, n, n))
-predict_lin(A) = Array(solve(remake(prob_lin; p=A), Tsit5(); saveat=tsteps, solver...,
-                             sensealg=InterpolatingAdjoint(autojacvec=ZygoteVJP())))
-optf_lin = OptimizationFunction((A, _) -> sum(abs2, predict_lin(A) .- obs_data), Optimization.AutoZygote())
+predict_lin(A, t) = Array(solve(remake(prob_lin; p=A, tspan=(0f0, t[end])), Tsit5(); saveat=t, solver...,
+                                sensealg=InterpolatingAdjoint(autojacvec=EnzymeVJP())))
+optf_lin = OptimizationFunction((A, _) -> sum(abs2, predict_lin(A, tsteps[1:cut]) .- obs_data[:, 1:cut]), Optimization.AutoEnzyme())
 res_lin = solve(OptimizationProblem(optf_lin, zeros(Float32, n, n)), OptimizationOptimisers.Adam(lr); maxiters=maxiter)
-(neural = loss(p_opt), linear = sum(abs2, predict_lin(res_lin.u) .- obs_data), A = res_lin.u)
+(neural_heldout = sum(abs2, predict(res_fit.u, u0, tsteps)[:, held] .- obs_data[:, held]),
+ linear_heldout = sum(abs2, predict_lin(res_lin.u, tsteps)[:, held] .- obs_data[:, held]), A = res_lin.u)  # lower held-out error wins
 '''
 
 [[actionGroups]]
@@ -519,14 +547,17 @@ label = "Interpret"
 [[actionGroups.actions]]
 id = "vector-field"
 label = "Learned Vector Field"
-desc = "Arrows of the learned du/dt over the observed range of the first two states (other states at their mean)"
+desc = "Arrows of the learned du/dt of the first two states: a grid field, or along the fitted path when the model is augmented"
 code = '''
 using LinearAlgebra, Plots, Statistics
 
 r1, r2 = extrema(obs_data[1, :]), extrema(obs_data[2, :])
-base = vec(mean(obs_data; dims=2))  # states beyond the first two held at their mean
-grid = vec([(x, y) for x in range(r1..., length=15), y in range(r2..., length=15)])
-field = [vector_field(Float32.(vcat(x, y, base[3:end])), p_opt) for (x, y) in grid]
+{{?model!=augmented}} base = vec(mean(obs_data; dims=2))  # states beyond the first two held at their mean
+{{?model!=augmented}} grid = vec([(x, y) for x in range(r1..., length=15), y in range(r2..., length=15)])
+{{?model!=augmented}} field = [vector_field(Float32.(vcat(x, y, base[3:end])), p_opt) for (x, y) in grid]
+{{?model=augmented}} full = predict_full(p_opt, u0, range(0f0, T; length=60))  # fitted path including the extra states
+{{?model=augmented}} grid = [(z[1], z[2]) for z in eachcol(full)]  # no grid: the velocity of x1, x2 depends on the extra states, so it is only defined along a path
+{{?model=augmented}} field = [vector_field_full(z, p_opt)[1:2] for z in eachcol(full)]  # du/dt of x1, x2 with the extra states at their fitted values
 scale = 0.06 * (r1[2] - r1[1]) / maximum(norm, field)
 quiver(first.(grid), last.(grid), quiver=(scale .* getindex.(field, 1), scale .* getindex.(field, 2)), xlabel="x1", ylabel="x2")
 plot!(obs_data[1, :], obs_data[2, :], lw=2, label="observed")
@@ -537,14 +568,20 @@ id = "lyapunov-estimate"
 label = "Lyapunov Estimate"
 desc = "Slope of the log-distance between two nearby trajectories: a rough maximal Lyapunov exponent"
 code = '''
-using LinearAlgebra
+using LinearAlgebra, Statistics
 
-t = range(0f0, 2T; length=400)
-dist = norm.(eachcol(predict(p_opt, u0, t) .- predict(p_opt, u0 .+ 1f-4, t)))
-lyap = (log(dist[end]) - log(dist[1])) / (t[end] - t[1])  # growth rate of the separation
+solver_fit = solver
+solver = (reltol=1f-6, abstol=1f-7)  # tight tolerances: solver error must stay well below the 1e-4 perturbation
+t = collect(range(0f0, 2T; length=400))
+traj = predict(p_opt, u0, t)
+dist = norm.(eachcol(traj .- predict(p_opt, u0 .+ 1f-4, t)))
+solver = solver_fit  # restore the fitting tolerances
+spread = maximum(norm.(eachcol(traj .- mean(traj; dims=2))))  # size of the visited region: the separation saturates there
+lin = findall((t .> 0.05f0 * t[end]) .& (dist .< 0.1f0 * spread) .& (dist .> 0))  # linear phase: past the initial transient, before saturation
+lyap = length(lin) < 10 ? NaN : (X = [ones(length(lin)) t[lin]]; (X \ log.(dist[lin]))[2])  # least-squares slope of log distance over the linear phase
 {{?model!=augmented}}state_dim = n  # dimension of the ODE that is integrated
 {{?model=augmented}}state_dim = n + aug  # the augmented ODE is integrated in n + aug dimensions
-(lyapunov = lyap, dynamics = lyap <= 0 ? "nearby trajectories converge" :
+(lyapunov = lyap, points_in_fit = length(lin), dynamics = isnan(lyap) ? "too few points before the separation saturates: no reliable slope" : lyap <= 0 ? "nearby trajectories converge" :
     state_dim <= 2 ? "nearby trajectories separate: divergence or drift along a cycle (an autonomous ODE in 2 dimensions cannot be chaotic)" :
     "nearby trajectories separate: unstable, or chaotic if the separation saturates at the attractor's size")
 '''

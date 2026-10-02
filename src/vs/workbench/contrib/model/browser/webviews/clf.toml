@@ -103,18 +103,26 @@ model = "metrics"
 code = '''
 using MLJ
 
-cm  = confmat({{ypred}}, {{ytrue}})  # confusion matrix
-acc = accuracy({{ypred}}, {{ytrue}})  # (TP + TN) / n
-pre = precision({{ypred}}, {{ytrue}})  # TP / (TP + FP)
-rec = recall({{ypred}}, {{ytrue}})  # TP / (TP + FN)
-f1  = f1score({{ypred}}, {{ytrue}})  # 2 * P * R / (P + R)
-mcc = matthews_correlation({{ypred}}, {{ytrue}})  # robust to class imbalance
+y_raw     = {{ytrue}}  # ground truth labels (two classes)
+pos_class = last(sort(unique(y_raw)))  # positive class; set it explicitly, for example pos_class = "default"
+neg_class = only(filter(!=(pos_class), unique(y_raw)))
+lv        = [neg_class, pos_class]  # MLJ binary measures treat the second (last) level as the positive class
+y_c       = categorical(y_raw, levels=lv, ordered=true)
+yhat_c    = categorical({{ypred}}, levels=lv, ordered=true)  # predicted labels on the same levels
 
-println("Accuracy:  ", round(acc, digits=3))  # 
-println("Precision: ", round(pre, digits=3))  # 
-println("Recall:    ", round(rec, digits=3))  # 
-println("F1:        ", round(f1,  digits=3))  # 
-println("MCC:       ", round(mcc, digits=3))  # 
+cm  = confmat(yhat_c, y_c)  # confusion matrix, positive class last
+acc = accuracy(yhat_c, y_c)  # (TP + TN) / n
+pre = ppv(yhat_c, y_c)  # precision, TP / (TP + FP)
+rec = recall(yhat_c, y_c)  # TP / (TP + FN)
+f1  = f1score(yhat_c, y_c)  # 2 * P * R / (P + R)
+mcc = matthews_correlation(yhat_c, y_c)  # uses all four cells of the confusion matrix
+
+println("Positive class: ", pos_class)
+println("Accuracy:  ", round(acc, digits=3))
+println("Precision: ", round(pre, digits=3))
+println("Recall:    ", round(rec, digits=3))
+println("F1:        ", round(f1,  digits=3))
+println("MCC:       ", round(mcc, digits=3))
 '''
 
 [[codeBranches]]
@@ -122,13 +130,27 @@ model = "roc"
 code = '''
 using MLJ
 
-fprs, tprs, ts = roc_curve({{scores}}, {{ytrue}})  # ROC curve coordinates
-auc_val         = auc(fprs, tprs)  # area under the curve
-best_ix         = argmax(tprs .- fprs)  # Youden index
-opt_t           = ts[best_ix]  # optimal classification threshold
+y_raw     = {{ytrue}}  # ground truth labels (two classes)
+pos_class = last(sort(unique(y_raw)))  # positive class: the scores must be the predicted probabilities (or scores) of THIS class; set it explicitly if needed
+scores    = Float64.({{scores}})
 
-println("AUC:               ", round(auc_val, digits=3))  # 
-println("Optimal threshold: ", round(opt_t,   digits=3))  # 
+fprs, tprs, ts = Functions.roc_curve(scores, y_raw, pos_class)  # ROC coordinates at each distinct score threshold (descending)
+auc_val        = Functions.auc(scores, y_raw, pos_class)  # area under the ROC curve (Mann-Whitney U statistic)
+best_ix        = argmax(tprs .- fprs)  # Youden index J = TPR - FPR
+opt_t          = ts[best_ix]  # Youden threshold: optimal only when a false positive and a false negative cost the same
+
+# With unequal costs choose the threshold that minimises expected cost instead (credit, fraud and audit work)
+cost_fp = 1.0  # cost of a false positive
+cost_fn = 5.0  # cost of a false negative
+P       = count(==(pos_class), y_raw)  # observed positives
+N       = length(y_raw) - P  # observed negatives
+cost    = cost_fp .* fprs .* N .+ cost_fn .* (1 .- tprs) .* P  # total misclassification cost at each threshold
+cost_t  = ts[argmin(cost)]
+
+println("Positive class:          ", pos_class)
+println("AUC:                     ", round(auc_val, digits=3))
+println("Youden threshold:        ", round(opt_t, digits=3), "  (equal error costs)")
+println("Minimum-cost threshold:  ", round(cost_t, digits=3), "  (cost_fn / cost_fp = ", cost_fn / cost_fp, ")")
 '''
 
 [[actionGroups]]
@@ -138,23 +160,25 @@ label = "Diagnose"
 [[actionGroups.actions]]
 id = "pr-curve"
 label = "Precision-Recall Curve"
-desc = "Sweep decision threshold from 0 to 1 — visualises the precision/recall trade-off; more informative than ROC for imbalanced classes"
+desc = "Precision and recall at every distinct score threshold (no 0 to 1 grid, so any score scale works); more informative than ROC for imbalanced classes"
 code = '''
 using MLJ, Plots
 
-ts    = collect(0.0:0.01:1.0)  # threshold grid
-precs = [precision(categorical({{scores}} .>= t), {{ytrue}}) for t in ts]  # precision at each threshold
-recs  = [recall(categorical({{scores}} .>= t), {{ytrue}}) for t in ts]  # recall at each threshold
+y_raw     = {{ytrue}}
+pos_class = last(sort(unique(y_raw)))  # positive class; must match the class the scores refer to
+scores    = Float64.({{scores}})
 
-plot(recs, precs,  # 
-    xlabel="Recall", ylabel="Precision",  # 
-    title="Precision-Recall Curve", legend=false)  # 
+recs, precs, ts = Functions.precision_recall_curve(scores, y_raw, pos_class)  # note the order: recalls first
+base = count(==(pos_class), y_raw) / length(y_raw)  # precision of a random classifier
+
+plot(recs, precs, xlabel="Recall", ylabel="Precision", title="Precision-Recall Curve", label="model")
+hline!([base], ls=:dash, label="random baseline")
 '''
 
 [[actionGroups.actions]]
 id = "class-balance"
 label = "Class Imbalance Check"
-desc = "Print per-class sample counts and proportions — severe imbalance (< 10 %) warrants oversampling or threshold adjustment"
+desc = "Print per-class sample counts and proportions; with strong imbalance, judge the model with proper scoring rules and a cost-based threshold before considering resampling"
 code = '''
 using StatsBase
 
@@ -164,8 +188,10 @@ classes = sort(collect(keys(counts)))  # sorted class labels
 for cls in classes
     n = counts[cls]  # samples in this class
     f = round(100n / length({{ytrue}}), digits=1)  # percentage
-    println(cls, ": ", n, " (", f, "%)")  # 
+    println(cls, ": ", n, " (", f, " pct)")
 end
+# Resampling (over- or under-sampling) changes the predicted probabilities; with proper scoring rules (log loss,
+# Brier score) and a threshold chosen from error costs it is often unnecessary
 '''
 
 [[actionGroups]]
@@ -175,35 +201,34 @@ label = "Interpret"
 [[actionGroups.actions]]
 id = "mcc-interpretation"
 label = "MCC Interpretation"
-desc = "Matthews Correlation Coefficient ranges from -1 to +1 and remains reliable under class imbalance, unlike accuracy or F1"
+desc = "Matthews Correlation Coefficient ranges from -1 to +1 and uses all four cells of the confusion matrix, so it stays informative under class imbalance, unlike accuracy or F1"
 code = '''
 using MLJ
 
-mcc = matthews_correlation({{ypred}}, {{ytrue}})  # compute MCC
+lv_  = sort(unique({{ytrue}}))  # MCC is symmetric in the two classes, so the level order does not matter here
+mcc  = matthews_correlation(categorical({{ypred}}, levels=lv_), categorical({{ytrue}}, levels=lv_))
 
-println("MCC = ", round(mcc, digits=3))  # 
-
-println("-1  = perfect anti-prediction")  # 
-println(" 0  = no better than random")  # 
-println("+1  = perfect prediction")  # 
-println("|MCC| > 0.7 = strong")  # 
-println("|MCC| 0.3-0.7 = moderate")  # 
-println("|MCC| < 0.3 = weak")  # 
+println("MCC = ", round(mcc, digits=3))
+println("-1  = perfect anti-prediction")
+println(" 0  = no better than random")
+println("+1  = perfect prediction")
+println("Rule-of-thumb bands only (no formal basis): |MCC| > 0.7 strong, 0.3 to 0.7 moderate, < 0.3 weak")
 '''
 
 [[actionGroups.actions]]
 id = "lift-curve"
 label = "Lift Curve"
-desc = "Compare model ranking against a random baseline — lift > 1 means the classifier targets positives better than chance"
+desc = "Compare model ranking against a random baseline; lift > 1 means the classifier targets the positive class better than chance"
 code = '''
 using Statistics, Plots
 
-pos   = first(unique({{ytrue}}))  # positive class (adjust if needed)
-ord   = sortperm({{scores}}, rev=true)  # sort by descending score
-ysort = {{ytrue}}[ord]  # true labels in score order
-base  = mean({{ytrue}} .== pos)  # positive class base rate
-lift  = cumsum(ysort .== pos) ./ (1:length({{ytrue}})) ./ base  # cumulative lift at each rank
+y_raw     = {{ytrue}}
+pos_class = last(sort(unique(y_raw)))  # positive class: must be the class the scores refer to, or lift falls below 1
+ord       = sortperm({{scores}}, rev=true)  # sort by descending score
+ysort     = y_raw[ord]  # true labels in score order
+base      = mean(y_raw .== pos_class)  # positive class base rate
+lift      = cumsum(ysort .== pos_class) ./ (1:length(y_raw)) ./ base  # cumulative lift at each rank
 
-plot(lift, xlabel="n ranked", ylabel="Lift", legend=false)  # 
+plot(lift, xlabel="n ranked", ylabel="Lift", label="model")
 hline!([1.0], ls=:dash, label="random baseline")  # lift = 1 is the random baseline
 '''

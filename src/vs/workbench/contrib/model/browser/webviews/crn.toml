@@ -224,16 +224,16 @@ code = '''
 using Catalyst, DifferentialEquations, Plots
 
 rn = @reaction_network begin  # Michaelis-Menten enzyme kinetics
-    {{k1}}, S + E --> SE  # binding: substrate + enzyme form complex
-    {{k2}}, SE --> S + E  # unbinding: complex dissociates
-    0.5, SE --> P + E  # catalysis: product release, rate kcat=0.5
+    k1, S + E --> SE  # binding: substrate + enzyme form complex
+    k2, SE --> S + E  # unbinding: complex dissociates
+    kcat, SE --> P + E  # catalysis: product release
 end
 
-u0  = [:S => {{u0}}.0, :E => 10.0, :SE => 0.0, :P => 0.0]  # initial conditions
-p   = []  # rates embedded in network definition above
-tspan = (0.0, {{T}}.0)  # time span
-prob = ODEProblem(rn, u0, tspan, p)
-sol  = solve(prob, Tsit5())
+ps    = [:k1 => {{k1}}, :k2 => {{k2}}, :kcat => 0.5]  # rate constants per unit time
+u0    = [:S => Float64({{u0}}), :E => 10.0, :SE => 0.0, :P => 0.0]  # initial amounts; they fix the conserved totals E + SE and S + SE + P
+tspan = (0.0, Float64({{T}}))
+prob  = ODEProblem(rn, u0, tspan, ps)
+sol   = solve(prob, Tsit5())
 
 plot(sol, xlabel="Time", ylabel="Amount", title="Michaelis-Menten Kinetics")  # plot species trajectories
 '''
@@ -244,17 +244,18 @@ code = '''
 using Catalyst, DifferentialEquations, Plots
 
 rn = @reaction_network begin  # Repressilator: 3-gene transcriptional oscillator
-    hillr(Pz, {{k1}}, 1.0, 3), --> Px  # Pz represses Px transcription; Hill coefficient 3: with 2 the loop gain is too low and the levels settle to a fixed point
-    hillr(Px, {{k1}}, 1.0, 3), --> Py  # Px represses Py transcription
-    hillr(Py, {{k1}}, 1.0, 3), --> Pz  # Py represses Pz transcription
-    {{k2}}, Px --> 0  # protein Px degradation
-    {{k2}}, Py --> 0  # protein Py degradation
-    {{k2}}, Pz --> 0  # protein Pz degradation
+    hillr(Pz, v, K, 3), 0 --> Px  # Pz represses Px transcription; Hill coefficient 3: with 2 the loop gain is too low and the levels settle to a fixed point
+    hillr(Px, v, K, 3), 0 --> Py  # Px represses Py transcription
+    hillr(Py, v, K, 3), 0 --> Pz  # Py represses Pz transcription
+    d, Px --> 0  # protein Px degradation
+    d, Py --> 0  # protein Py degradation
+    d, Pz --> 0  # protein Pz degradation
 end
 
-u0    = [:Px => {{u0}}.0, :Py => 0.0, :Pz => 0.0]  # asymmetric initial conditions trigger oscillation
-tspan = (0.0, {{T}}.0)  # time span
-prob  = ODEProblem(rn, u0, tspan, [])
+ps    = [:v => {{k1}}, :K => 1.0, :d => {{k2}}]  # maximal transcription rate, repression threshold, degradation rate
+u0    = [:Px => Float64({{u0}}), :Py => 0.0, :Pz => 0.0]  # asymmetric initial conditions trigger oscillation
+tspan = (0.0, Float64({{T}}))
+prob  = ODEProblem(rn, u0, tspan, ps)
 sol   = solve(prob, Tsit5())
 
 plot(sol, xlabel="Time", ylabel="Protein level", title="Repressilator Oscillator")  # sustained oscillations: three identical repression steps need a loop gain above 8, which Hill coefficient 3 gives
@@ -266,14 +267,15 @@ code = '''
 using Catalyst, DifferentialEquations, Plots
 
 rn = @reaction_network begin  # Lotka-Volterra predator-prey
-    {{k1}}, X --> 2X  # prey reproduction at rate a={{k1}}
-    0.05, X + Y --> 2Y  # predation and predator reproduction
-    {{k2}}, Y --> 0  # predator death at rate c={{k2}}
+    a, X --> 2X  # prey reproduction
+    b, X + Y --> 2Y  # predation and predator reproduction
+    c, Y --> 0  # predator death
 end
 
-u0    = [:X => {{u0}}.0, :Y => 10.0]  # initial prey and predator populations
-tspan = (0.0, {{T}}.0)  # time span
-prob  = ODEProblem(rn, u0, tspan, [])
+ps    = [:a => {{k1}}, :b => 0.05, :c => {{k2}}]
+u0    = [:X => Float64({{u0}}), :Y => 10.0]  # initial prey and predator populations
+tspan = (0.0, Float64({{T}}))
+prob  = ODEProblem(rn, u0, tspan, ps)
 sol   = solve(prob, Tsit5())
 
 plot(sol, xlabel="Time", ylabel="Population", title="Lotka-Volterra Predator-Prey")  # cyclic oscillations in prey and predator
@@ -284,19 +286,20 @@ model = "epidemic"
 code = '''
 using Catalyst, DifferentialEquations, Plots
 
-rn = @reaction_network begin  # SIR epidemic as a reaction network
-    {{k1}}/{{u0}}, S + I --> 2I  # transmission: susceptible contacts infectious
-    {{k2}}, I --> R  # recovery: infectious becomes recovered
+rn = @reaction_network begin  # SIR epidemic as a reaction network (time unit: days)
+    beta / N, S + I --> 2I  # transmission: susceptible contacts infectious (mass action, frequency-dependent)
+    gamma, I --> R  # recovery: infectious becomes recovered
 end
 
-N     = {{u0}}  # total population
+N     = Float64({{u0}})  # total population
+ps    = [:beta => {{k1}}, :gamma => {{k2}}, :N => N]  # rates per day: contact rate and recovery rate (mean infectious period 1/gamma days)
 u0    = [:S => N - 1.0, :I => 1.0, :R => 0.0]  # initial conditions: one seed case
-tspan = (0.0, {{T}}.0)  # time span in days
-prob  = ODEProblem(rn, u0, tspan, [])
+tspan = (0.0, Float64({{T}}))  # days
+prob  = ODEProblem(rn, u0, tspan, ps)
 sol   = solve(prob, Tsit5())
 
-R0 = {{k1}} / {{k2}}  # basic reproduction number
-println("R0 = ", round(R0; digits=2))  # epidemic threshold check
+R0 = {{k1}} / {{k2}}  # basic reproduction number (defaults give 10, measles-like)
+println("R0 = ", round(R0; digits=2), ", mean infectious period = ", round(1 / {{k2}}; digits=1), " days")
 plot(sol, xlabel="Days", ylabel="People", title="SIR as Reaction Network")  # epidemic curve
 '''
 
@@ -307,42 +310,30 @@ label = "Visualise"
 [[actionGroups.actions]]
 id = "species-trajectories"
 label = "Species Trajectories"
-desc = "Plot all species concentrations over time for the selected reaction network"
+desc = "Plot all species of the selected reaction network over time"
 code = '''
-using Catalyst, DifferentialEquations, GLMakie
+using GLMakie
 
-rn = @reaction_network begin  # Lotka-Volterra as example
-    {{k1}}, X --> 2X  # prey growth
-    0.05, X + Y --> 2Y  # predation
-    {{k2}}, Y --> 0  # predator death
+fig = Figure()
+ax  = Axis(fig[1, 1], xlabel="Time", ylabel="Amount", title="Reaction Network Trajectories")
+for s in species(rn)  # every species of the network built by the selected model
+    lines!(ax, sol.t, sol[s], label=string(Catalyst.getname(s)))
 end
-
-sol = solve(ODEProblem(rn, [:X=>{{u0}}.0,:Y=>10.0], (0.0,{{T}}.0), []), Tsit5())
-
-fig,ax=Figure(),Axis(fig[1,1],xlabel="Time",ylabel="Population",title="Reaction Network Trajectories")
-lines!(ax,sol.t,sol[:X,:],label="Prey X",color=:blue)
-lines!(ax,sol.t,sol[:Y,:],label="Predator Y",color=:red)
 axislegend(ax); display(fig)
 '''
 
 [[actionGroups.actions]]
 id = "phase-portrait"
 label = "Phase Portrait"
-desc = "Plot the phase plane of two key species to reveal limit cycles, fixed points, and nullclines"
+desc = "Plot the phase plane of the first two species of the selected network to reveal limit cycles and fixed points"
 code = '''
-using Catalyst, DifferentialEquations, GLMakie
+using GLMakie
 
-rn = @reaction_network begin  # Lotka-Volterra
-    {{k1}}, X --> 2X  # prey growth
-    0.05, X + Y --> 2Y  # predation
-    {{k2}}, Y --> 0  # predator death
-end
-
-sol = solve(ODEProblem(rn, [:X=>{{u0}}.0,:Y=>10.0], (0.0,{{T}}.0), []), Tsit5())
-
-fig,ax=Figure(),Axis(fig[1,1],xlabel="Prey X",ylabel="Predator Y",title="Phase Portrait")
-lines!(ax,sol[:X,:],sol[:Y,:],color=:purple)
-scatter!(ax,[sol[:X,1]],[sol[:Y,1]],color=:blue,markersize=10)  # initial state
+sp = species(rn)[1:2]  # first two species of the selected network
+fig = Figure()
+ax  = Axis(fig[1, 1], xlabel=string(Catalyst.getname(sp[1])), ylabel=string(Catalyst.getname(sp[2])), title="Phase Portrait")
+lines!(ax, sol[sp[1]], sol[sp[2]], color=:purple)
+scatter!(ax, [sol[sp[1]][1]], [sol[sp[2]][1]], color=:blue, markersize=10)  # initial state
 display(fig)
 '''
 
@@ -353,40 +344,42 @@ label = "Diagnose"
 [[actionGroups.actions]]
 id = "steady-states"
 label = "Steady States"
-desc = "Compute all steady states of the reaction network using HomotopyContinuation.jl via Catalyst"
+desc = "Compute the steady states of the Michaelis-Menten network with HomotopyContinuation.jl, fixing the conserved totals from the initial amounts so the steady states are isolated points"
 code = '''
 using Catalyst, HomotopyContinuation
 
-rn = @reaction_network begin  # Michaelis-Menten example
-    {{k1}}, S + E --> SE  # binding
-    {{k2}}, SE --> S + E  # unbinding
-    0.5, SE --> P + E  # catalysis
+mm = @reaction_network begin  # Michaelis-Menten
+    k1, S + E --> SE  # binding
+    k2, SE --> S + E  # unbinding
+    kcat, SE --> P + E  # catalysis
 end
 
-ss = steady_states(rn, [])  # find all steady states (polynomial system solver)
+ps_mm = [:k1 => {{k1}}, :k2 => {{k2}}, :kcat => 0.5]
+u0_mm = [:S => Float64({{u0}}), :E => 10.0, :SE => 0.0, :P => 0.0]  # sets E + SE = 10 and S + SE + P = {{u0}}
+# Without fixing the conserved totals the steady states form a continuum and the polynomial system is under-determined
+ss = hc_steady_states(mm, ps_mm; u0=u0_mm)  # real, non-negative steady states
+println("Species: ", species(mm))
 println("Number of steady states: ", length(ss))
-for s in ss
-    println(s)
-end
+foreach(println, ss)  # catalysis is irreversible, so all substrate ends as product: S = SE = 0
 '''
 
 [[actionGroups.actions]]
 id = "conservation-laws"
 label = "Conservation Laws"
-desc = "Find conserved moieties in the network — quantities that remain constant under all reactions"
+desc = "Find conserved moieties in the network: quantities that remain constant under all reactions"
 code = '''
 using Catalyst
 
-rn = @reaction_network begin  # Michaelis-Menten
-    {{k1}}, S + E --> SE  # binding
-    {{k2}}, SE --> S + E  # unbinding
-    0.5, SE --> P + E  # catalysis
+mm = @reaction_network begin  # Michaelis-Menten
+    k1, S + E --> SE  # binding
+    k2, SE --> S + E  # unbinding
+    kcat, SE --> P + E  # catalysis
 end
 
-cl = conservationlaws(rn)  # stoichiometry-based conservation law matrix
+cl = conservationlaws(mm)  # each row is a conserved linear combination of the species
+println("Species: ", species(mm))
 println("Conservation law matrix:")
-println(cl)
-println("Species: ", species(rn))  # E + SE = const  and  S + SE + P = const
+println(cl)  # E + SE = const and S + SE + P = const
 '''
 
 [[actionGroups]]
@@ -396,47 +389,50 @@ label = "Predict"
 [[actionGroups.actions]]
 id = "rate-sweep"
 label = "Rate Sweep"
-desc = "Sweep the forward rate k1 and record the final state or oscillation amplitude across values"
+desc = "Sweep the prey growth rate of the Lotka-Volterra network and record the peak predator population"
 code = '''
 using Catalyst, DifferentialEquations, GLMakie
 
-k2 = {{k2}}  # fixed predator death rate
-k1_vals = 0.2:0.2:2.0  # sweep prey growth rate
-max_Y   = Float64[]  # record peak predator population
-for k1 in k1_vals
-    rn = @reaction_network begin
-        k1, X --> 2X; 0.05, X + Y --> 2Y; k2, Y --> 0
-    end
-    sol = solve(ODEProblem(rn, [:X=>{{u0}}.0,:Y=>10.0], (0.0,{{T}}.0), []), Tsit5())
-    push!(max_Y, maximum(sol[:Y,:]))
+lv = @reaction_network begin
+    a, X --> 2X; b, X + Y --> 2Y; c, Y --> 0
 end
 
-fig,ax=Figure(),Axis(fig[1,1],xlabel="k1 (prey growth)",ylabel="Peak predator Y",title="Rate Sweep")
-lines!(ax,collect(k1_vals),max_Y,color=:red)
+a_vals = 0.2:0.2:2.0  # prey growth rates to sweep
+max_Y  = Float64[]  # peak predator population per rate
+for a_val in a_vals
+    prob_a = ODEProblem(lv, [:X => Float64({{u0}}), :Y => 10.0], (0.0, Float64({{T}})), [:a => a_val, :b => 0.05, :c => {{k2}}])  # the swept value is passed as the parameter a
+    sol_a  = solve(prob_a, Tsit5())
+    push!(max_Y, maximum(sol_a[:Y]))
+end
+
+fig = Figure()
+ax  = Axis(fig[1, 1], xlabel="a (prey growth)", ylabel="Peak predator Y", title="Rate Sweep")
+lines!(ax, collect(a_vals), max_Y, color=:red)
 display(fig)
 '''
 
 [[actionGroups.actions]]
 id = "gillespie"
 label = "Stochastic Simulation"
-desc = "Run the Gillespie exact stochastic simulation algorithm for small copy-number systems"
+desc = "Run the Gillespie exact stochastic simulation algorithm for the SIR network with integer copy numbers"
 code = '''
 using Catalyst, JumpProcesses, GLMakie
 
-rn = @reaction_network begin  # SIR as reaction network (integer copy numbers)
-    {{k1}}/{{u0}}, S + I --> 2I  # transmission
-    {{k2}}, I --> R  # recovery
+sir = @reaction_network begin  # SIR as reaction network (time unit: days)
+    beta / N, S + I --> 2I  # transmission
+    gamma, I --> R  # recovery
 end
 
-u0    = [:S => {{u0}} - 1, :I => 1, :R => 0]  # integer initial conditions for Gillespie
-tspan = (0.0, {{T}}.0)  # time span
-jprob = JumpProblem(rn, DiscreteProblem(rn, u0, tspan, []), Direct())
-sol   = solve(jprob, SSAStepper())
+ps_j  = [:beta => {{k1}}, :gamma => {{k2}}, :N => Float64({{u0}})]
+u0_j  = [:S => round(Int, {{u0}}) - 1, :I => 1, :R => 0]  # integer initial conditions for Gillespie
+jprob = JumpProblem(sir, u0_j, (0.0, Float64({{T}})), ps_j)  # Direct method by default
+sol_j = solve(jprob, SSAStepper())
 
-fig,ax=Figure(),Axis(fig[1,1],xlabel="Days",ylabel="Count",title="Gillespie SIR Simulation")
-stairs!(ax,sol.t,sol[:S,:],label="S",color=:blue)
-stairs!(ax,sol.t,sol[:I,:],label="I",color=:red)
-stairs!(ax,sol.t,sol[:R,:],label="R",color=:green)
+fig = Figure()
+ax  = Axis(fig[1, 1], xlabel="Days", ylabel="Count", title="Gillespie SIR Simulation")
+stairs!(ax, sol_j.t, sol_j[:S], label="S", color=:blue)
+stairs!(ax, sol_j.t, sol_j[:I], label="I", color=:red)
+stairs!(ax, sol_j.t, sol_j[:R], label="R", color=:green)
 axislegend(ax); display(fig)
 '''
 
@@ -447,25 +443,35 @@ label = "Compare"
 [[actionGroups.actions]]
 id = "ode-vs-gillespie"
 label = "ODE vs Gillespie"
-desc = "Overlay the deterministic ODE solution and a stochastic Gillespie trajectory on the same axes"
+desc = "Overlay the deterministic SIR solution and many Gillespie runs from one infective; counts the runs that die out early, which is about 1 / R0 of them"
 code = '''
 using Catalyst, DifferentialEquations, JumpProcesses, GLMakie
 
-rn = @reaction_network begin  # SIR reaction network
-    {{k1}}/{{u0}}, S + I --> 2I  # transmission
-    {{k2}}, I --> R  # recovery
+sir = @reaction_network begin  # SIR reaction network (time unit: days)
+    beta / N, S + I --> 2I  # transmission
+    gamma, I --> R  # recovery
 end
 
-u0_ode = [:S=>{{u0}}-1.0, :I=>1.0, :R=>0.0]  # ODE: continuous
-sol_ode = solve(ODEProblem(rn, u0_ode, (0.0,{{T}}.0), []), Tsit5())
+Npop    = Float64({{u0}})
+ps_s    = [:beta => {{k1}}, :gamma => {{k2}}, :N => Npop]
+tspan   = (0.0, Float64({{T}}))
+sol_ode = solve(ODEProblem(sir, [:S => Npop - 1, :I => 1.0, :R => 0.0], tspan, ps_s), Tsit5())
 
-u0_ssa = [:S=>{{u0}}-1, :I=>1, :R=>0]  # Gillespie: integer
-jprob  = JumpProblem(rn, DiscreteProblem(rn, u0_ssa, (0.0,{{T}}.0), []), Direct())
-sol_ssa = solve(jprob, SSAStepper())
+jprob  = JumpProblem(sir, [:S => round(Int, Npop) - 1, :I => 1, :R => 0], tspan, ps_s)
+n_runs = 200
+ens    = solve(EnsembleProblem(jprob), SSAStepper(); trajectories=n_runs)
 
-fig,ax=Figure(),Axis(fig[1,1],xlabel="Days",ylabel="Infectious",title="ODE vs Gillespie")
-lines!(ax,sol_ode.t,sol_ode[:I,:],color=:red,label="ODE")
-stairs!(ax,sol_ssa.t,sol_ssa[:I,:],color=:orange,linestyle=:dash,label="Gillespie")
+final_R  = [s[:R][end] for s in ens]
+died_out = count(<(0.1 * Npop), final_R)  # minor outbreaks: fewer than 10 pct ever infected
+R0       = {{k1}} / {{k2}}
+println("Early extinction: ", died_out, " of ", n_runs, " runs (", round(100 * died_out / n_runs, digits=1), " pct); branching-process approximation 1/R0 = ", round(100 / R0, digits=1), " pct")
+
+fig = Figure()
+ax  = Axis(fig[1, 1], xlabel="Days", ylabel="Infectious", title="ODE vs Gillespie ($(n_runs) runs)")
+for s in ens[1:min(30, n_runs)]
+    stairs!(ax, s.t, s[:I], color=(:orange, 0.3))
+end
+lines!(ax, sol_ode.t, sol_ode[:I], color=:red, linewidth=3, label="ODE")
 axislegend(ax); display(fig)
 '''
 
@@ -477,18 +483,19 @@ code = '''
 using Catalyst, DifferentialEquations, Statistics
 
 lv = @reaction_network begin  # Lotka-Volterra
-    {{k1}}, X --> 2X; 0.05, X + Y --> 2Y; {{k2}}, Y --> 0
+    a, X --> 2X; b, X + Y --> 2Y; c, Y --> 0
 end
 rep = @reaction_network begin  # Repressilator
-    hillr(Pz,{{k1}},1.0,3),-->Px; hillr(Px,{{k1}},1.0,3),-->Py; hillr(Py,{{k1}},1.0,3),-->Pz
-    {{k2}},Px-->0; {{k2}},Py-->0; {{k2}},Pz-->0
+    hillr(Pz, v, K, 3), 0 --> Px; hillr(Px, v, K, 3), 0 --> Py; hillr(Py, v, K, 3), 0 --> Pz
+    d, Px --> 0; d, Py --> 0; d, Pz --> 0
 end
 
-sol_lv  = solve(ODEProblem(lv,  [:X=>{{u0}}.0,:Y=>10.0],          (0.0,{{T}}.0),[]),Tsit5())
-sol_rep = solve(ODEProblem(rep, [:Px=>{{u0}}.0,:Py=>0.0,:Pz=>0.0], (0.0,{{T}}.0),[]),Tsit5())
+tspan   = (0.0, Float64({{T}}))
+sol_lv  = solve(ODEProblem(lv,  [:X => Float64({{u0}}), :Y => 10.0], tspan, [:a => {{k1}}, :b => 0.05, :c => {{k2}}]), Tsit5())
+sol_rep = solve(ODEProblem(rep, [:Px => Float64({{u0}}), :Py => 0.0, :Pz => 0.0], tspan, [:v => {{k1}}, :K => 1.0, :d => {{k2}}]), Tsit5())
 
-println("LV   peak X amplitude: ", round(maximum(sol_lv[:X,:]) - minimum(sol_lv[:X,:]); digits=1))  # prey oscillation range
-println("Rep  peak Px amplitude: ", round(maximum(sol_rep[:Px,:]) - minimum(sol_rep[:Px,:]); digits=1))  # repressilator amplitude
+println("LV   peak X amplitude:  ", round(maximum(sol_lv[:X]) - minimum(sol_lv[:X]); digits=1))  # prey oscillation range
+println("Rep  peak Px amplitude: ", round(maximum(sol_rep[:Px]) - minimum(sol_rep[:Px]); digits=1))  # repressilator amplitude
 '''
 
 [[actionGroups]]
@@ -498,38 +505,37 @@ label = "Interpret"
 [[actionGroups.actions]]
 id = "stoichiometry-matrix"
 label = "Stoichiometry Matrix"
-desc = "Print the stoichiometry matrix and species/reaction lists to understand network structure"
+desc = "Print the stoichiometry matrix and the species and reaction lists of the selected network"
 code = '''
 using Catalyst
 
-rn = @reaction_network begin  # Michaelis-Menten enzyme kinetics
-    {{k1}}, S + E --> SE  # binding
-    {{k2}}, SE --> S + E  # unbinding
-    0.5, SE --> P + E  # catalysis
-end
-
-println("Species: ", species(rn))  # list all species
-println("Reactions: ", reactions(rn))  # list all reactions
-N = netstoichmat(rn)  # net stoichiometry matrix (species x reactions)
+println("Species: ", species(rn))  # network built by the selected model
+println("Reactions: ", reactions(rn))
+Nst = netstoichmat(rn)  # net stoichiometry matrix (species x reactions)
 println("Stoichiometry matrix:")
-println(N)
+println(Nst)
 '''
 
 [[actionGroups.actions]]
 id = "network-summary"
 label = "Network Summary"
-desc = "Print structural properties: number of species, reactions, complexes, and deficiency index"
+desc = "Print structural properties of the selected network: species, reactions, complexes, linkage classes, deficiency and weak reversibility, and what the deficiency zero theorem says"
 code = '''
 using Catalyst
 
-rn = @reaction_network begin  # Lotka-Volterra predator-prey
-    {{k1}}, X --> 2X  # prey growth
-    0.05, X + Y --> 2Y  # predation
-    {{k2}}, Y --> 0  # predator death
-end
+cmplxs, _ = reactioncomplexes(rn)  # network built by the selected model
+delta     = deficiency(rn)  # n complexes - l linkage classes - s rank of the stoichiometry
+wr        = isweaklyreversible(rn, subnetworks(rn))
 
-println("Species:   ", numspecies(rn))  # number of distinct species
-println("Reactions: ", numreactions(rn))  # number of reactions
-println("Complexes: ", numcomplexes(rn))  # number of reaction complexes
-println("Deficiency (delta): ", deficiency(rn))  # delta = n - l - s; 0 means well-behaved dynamics
+println("Species:         ", numspecies(rn))
+println("Reactions:       ", numreactions(rn))
+println("Complexes:       ", length(cmplxs))
+println("Linkage classes: ", length(linkageclasses(rn)))
+println("Deficiency:      ", delta)
+println("Weakly reversible: ", wr)
+if delta == 0 && wr
+    println("Deficiency zero theorem applies: for any rates, one positive steady state per compatibility class, locally asymptotically stable, no oscillations")
+else
+    println("Deficiency zero theorem does not apply (it needs deficiency 0 AND weak reversibility); the dynamics may oscillate or have several steady states")
+end
 '''

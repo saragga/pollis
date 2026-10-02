@@ -282,53 +282,77 @@ models = ["n4sid"]
 [[codeBranches]]
 model = "arx"
 code = '''
-using ControlSystemIdentification, ControlSystems  # SI toolbox
+using ControlSystemIdentification, ControlSystems, Plots  # SI toolbox
 
 data = iddata({{y}}, {{u}}, {{h}})  # create identification dataset
+ntr = round(Int, 0.7 * length(data))  # first 70% for estimation, last 30% held out for validation
+dtr, dval = data[1:ntr], data[ntr+1:end]
 
-model = arx(data, {{na}}, {{nb}}, {{nk}})  # ARX: A(q)y = B(q)u + e
+fitm(d) = arx(d, {{na}}, {{nb}}; inputdelay = {{nk}})  # ARX: A(q)y = B(q)u + e, input delay nk
+model = fitm(dtr)
 
 println(model)  # display identified model
+println("Validation fit (simulation): ", round(modelfit(vec(output(dval)), vec(simulate(model, dval))), digits = 2), "%")
 bodeplot(model)  # Bode plot of frequency response
 '''
 
 [[codeBranches]]
 model = "armax"
 code = '''
-using ControlSystemIdentification, ControlSystems  # SI toolbox
+using ControlSystemIdentification, ControlSystems, Plots  # SI toolbox
 
 data = iddata({{y}}, {{u}}, {{h}})  # create identification dataset
+ntr = round(Int, 0.7 * length(data))  # first 70% for estimation, last 30% held out for validation
+dtr, dval = data[1:ntr], data[ntr+1:end]
 
-model = armax(data, {{na}}, {{nb}}, {{nc}}, {{nk}})  # ARMAX: A(q)y = B(q)u + C(q)e
+zd = tf(1, [1; zeros({{nk}} - 1)], {{h}})  # pure delay of nk - 1 samples (armax has a built-in delay of one)
+function fitm(d)
+    k = {{nk}}
+    ds = iddata(output(d)[:, k:end], input(d)[:, 1:end-k+1], d.Ts)  # shift the input by nk - 1 samples
+    G, Gn = armax(ds, {{na}}, {{nb}}, {{nc}})  # ARMAX: A(q)y = B(q)u + C(q)e; returns system and noise model C/A
+    G * zd  # restore the delay
+end
+model = fitm(dtr)
 
 println(model)  # display identified model
+println("Validation fit (simulation): ", round(modelfit(vec(output(dval)), vec(simulate(model, dval))), digits = 2), "%")
 bodeplot(model)  # Bode plot of frequency response
 '''
 
 [[codeBranches]]
 model = "n4sid"
 code = '''
-using ControlSystemIdentification, ControlSystems  # SI toolbox
+using ControlSystemIdentification, ControlSystems, Plots  # SI toolbox
 
 data = iddata({{y}}, {{u}}, {{h}})  # create identification dataset
+ntr = round(Int, 0.7 * length(data))  # first 70% for estimation, last 30% held out for validation
+dtr, dval = data[1:ntr], data[ntr+1:end]
 
-{{?l=}} model = n4sid(data, {{nx}})  # subspace ID: state-space, nx={{nx}} states
-{{?l!=}} model = n4sid(data, {{nx}}, {{l}})  # subspace ID: state-space, nx states, horizon {{l}}
+{{?l=}} fitm(d) = n4sid(d, {{nx}})  # subspace ID: state-space, nx={{nx}} states
+{{?l!=}} fitm(d) = n4sid(d, {{nx}}; i = {{l}})  # subspace ID: state-space, nx states, horizon {{l}}
+model = fitm(dtr)
 
 println(model)  # display identified model
+println("Validation fit (simulation): ", round(modelfit(vec(output(dval)), vec(simulate(model, dval))), digits = 2), "%")
 bodeplot(model)  # Bode plot of frequency response
 '''
 
 [[codeBranches]]
 model = "oe"
 code = '''
-using ControlSystemIdentification, ControlSystems  # SI toolbox
+using ControlSystemIdentification, ControlSystems, Plots  # SI toolbox
 
 data = iddata({{y}}, {{u}}, {{h}})  # create identification dataset
+ntr = round(Int, 0.7 * length(data))  # first 70% for estimation, last 30% held out for validation
+dtr, dval = data[1:ntr], data[ntr+1:end]
 
-model = oe(data, {{nb}}, {{nf}}, {{nk}})  # OE: y = [B(q)/F(q)]u + e
+# The package has no polynomial OE estimator; minimising the simulation error (focus = :simulation, noise model 1)
+# is the OE criterion, here in state-space form with nf = {{nf}} poles (nb and nk are not used)
+fitm(d) = first(newpem(d, {{nf}}; focus = :simulation, show_trace = false))  # returns (model, x0, optimiser result)
+model = fitm(dtr)
 
 println(model)  # display identified model
+println("Validation fit (simulation): ", round(modelfit(vec(output(dval)), vec(simulate(model, dval))), digits = 2), "%")
 bodeplot(model)  # Bode plot of frequency response
 '''
 
@@ -343,23 +367,17 @@ desc = "Frequency response magnitude and phase of the identified model"
 code = '''
 using ControlSystemIdentification, ControlSystems, Plots  # SI + plotting
 
-data  = iddata({{y}}, {{u}}, {{h}})  # identification dataset
-model = arx(data, {{na}}, {{nb}}, {{nk}})  # fit ARX model
-
 bodeplot(model)  # magnitude and phase vs. frequency
 '''
 
 [[actionGroups.actions]]
 id = "predicted-output"
 label = "Predicted Output"
-desc = "Overlay model-predicted output on measured data"
+desc = "One-step-ahead prediction overlaid on the held-out validation data (N4SID uses its Kalman predictor; ARX, ARMAX and OE models are transfer functions without a noise model here, so their prediction equals simulation)"
 code = '''
 using ControlSystemIdentification, Plots  # SI + plotting
 
-data  = iddata({{y}}, {{u}}, {{h}})  # identification dataset
-model = arx(data, {{na}}, {{nb}}, {{nk}})  # fit ARX model
-
-predplot(model, data)  # predicted vs. measured output
+predplot(model, dval)  # predicted vs. measured output on validation data
 '''
 
 [[actionGroups.actions]]
@@ -368,9 +386,6 @@ label = "Pole-Zero Map"
 desc = "Poles and zeros of the identified transfer function"
 code = '''
 using ControlSystemIdentification, ControlSystems, Plots  # SI + plotting
-
-data  = iddata({{y}}, {{u}}, {{h}})  # identification dataset
-model = arx(data, {{na}}, {{nb}}, {{nk}})  # fit ARX model
 
 pzmap(model)  # poles marked with x, zeros with o
 '''
@@ -382,29 +397,25 @@ label = "Diagnose"
 [[actionGroups.actions]]
 id = "residual-analysis"
 label = "Residual Analysis"
-desc = "Autocorrelation and cross-correlation of prediction errors"
+desc = "Autocorrelation of the validation residuals and their cross-correlation with the input: a good model leaves white residuals uncorrelated with past inputs"
 code = '''
 using ControlSystemIdentification, Plots  # SI + plotting
 
-data  = iddata({{y}}, {{u}}, {{h}})  # identification dataset
-model = arx(data, {{na}}, {{nb}}, {{nk}})  # fit ARX model
-
-residualplot(model, data)  # auto- and cross-correlation of residuals; should be white
+residualplot(model, dval)  # auto- and cross-correlation of residuals on validation data; should be white
 '''
 
 [[actionGroups.actions]]
 id = "fit-percent"
 label = "Fit Percentage"
-desc = "Model fit as percent variance explained"
+desc = "NRMSE fit of the simulated output on the held-out validation data: 100 * (1 - norm(y - yhat) / norm(y - mean(y))). 100% is perfect, 0% is no better than the mean; it is a norm ratio, not variance explained"
 code = '''
 using ControlSystemIdentification  # SI toolbox
 
-data  = iddata({{y}}, {{u}}, {{h}})  # identification dataset
-model = arx(data, {{na}}, {{nb}}, {{nk}})  # fit ARX model
-
-yhat  = predict(model, data)  # one-step-ahead predictions
-fit   = fitpercent({{y}}, vec(yhat.y))  # 100% = perfect fit; 0% = no better than mean
-println("Fit: ", fit, "%")  # display fit score
+yv  = vec(output(dval))  # held-out measured output
+ysim = vec(simulate(model, dval))  # free-run simulation from the validation input (initial state estimated)
+fit = modelfit(yv, ysim)  # NRMSE fit in percent
+println("Validation fit (simulation): ", round(fit, digits = 2), "%")
+println("Estimation fit (simulation): ", round(modelfit(vec(output(dtr)), vec(simulate(model, dtr))), digits = 2), "%  (a much higher value suggests overfitting)")
 '''
 
 [[actionGroups]]
@@ -414,30 +425,27 @@ label = "Predict"
 [[actionGroups.actions]]
 id = "simulate"
 label = "Simulate"
-desc = "Free-run simulation of identified model with new input"
+desc = "Free-run simulation of the identified model driven by a new random input, beside its simulation on the held-out validation data"
 code = '''
-using ControlSystemIdentification, ControlSystems  # SI + control
+using ControlSystemIdentification, ControlSystems, Plots  # SI + control
 
-data  = iddata({{y}}, {{u}}, {{h}})  # identification dataset
-model = arx(data, {{na}}, {{nb}}, {{nk}})  # fit ARX model
-
-u_new = randn(200)  # new test input (200 samples)
-y_sim = simulate(model, u_new)  # free-run simulation (no feedback correction)
-simplot(model, data)  # plot simulated vs. measured output
+u_new = randn(1, 200)  # new test input (200 samples)
+res = lsim(model, u_new)  # free-run simulation from zero initial state
+p1 = plot(res, title = "Response to a new random input")
+p2 = simplot(model, dval)  # simulated vs. measured output on validation data
+plot(p1, p2, layout = (2, 1), size = (700, 600))
 '''
 
 [[actionGroups.actions]]
 id = "predict-kstep"
 label = "k-Step Prediction"
-desc = "k-step-ahead prediction using the fitted model"
+desc = "5-step-ahead prediction on the validation data. N4SID uses its Kalman predictor and OE has no noise model (prediction equals simulation); ARX and ARMAX are transfer functions here, for which the package supports only simulation, so that is shown"
 code = '''
 using ControlSystemIdentification, Plots  # SI + plotting
 
-data  = iddata({{y}}, {{u}}, {{h}})  # identification dataset
-model = arx(data, {{na}}, {{nb}}, {{nk}})  # fit ARX model
-
-yhat  = predict(model, data, 5)  # 5-step-ahead prediction
-predplot(model, data, 5)  # plot 5-step predictions vs. measured
+{{?model=n4sid|oe}} predplot(model, dval; h = 5)  # 5-step predictions vs. measured
+{{?model=arx|armax}} println("Transfer-function models support h = 1 only in this package; showing simulation (h = infinity) instead")
+{{?model=arx|armax}} simplot(model, dval)
 '''
 
 [[actionGroups]]
@@ -447,30 +455,35 @@ label = "Compare"
 [[actionGroups.actions]]
 id = "order-selection"
 label = "Order Selection"
-desc = "Compare model fit and AIC across different polynomial orders"
+desc = "Refit the current structure over a grid of orders and rank them by simulation fit on the held-out validation data, which penalises overfitting directly"
 code = '''
-using ControlSystemIdentification  # SI toolbox
+using ControlSystemIdentification, ControlSystems  # SI toolbox
 
-data = iddata({{y}}, {{u}}, {{h}})  # identification dataset
-
-for na in 1:4, nb in 1:4
-    m = arx(data, na, nb, 1)
-    println("na=", na, " nb=", nb, " AIC=", round(aic(m), digits=2))  # lower AIC is better
-end
+vfit(m) = modelfit(vec(output(dval)), vec(simulate(m, dval)))  # validation NRMSE fit
+{{?model=arx}} grid = [(na, nb) => arx(dtr, na, nb; inputdelay = {{nk}}) for na in 1:4 for nb in 1:4]
+{{?model=armax}} grid = [(na, nb) => first(armax(dtr, na, nb, {{nc}})) for na in 1:4 for nb in 1:na]  # armax needs nb <= na; delay of one sample
+{{?model=n4sid}} grid = [nx => n4sid(dtr, nx) for nx in 1:8]
+{{?model=oe}} grid = [nf => first(newpem(dtr, nf; focus = :simulation, show_trace = false)) for nf in 1:4]
+scores = sort([o.first => vfit(o.second) for o in grid], by = last, rev = true)
+foreach(s -> println(rpad(string(s.first), 10), " validation fit = ", round(s.second, digits = 2), "%"), scores)
 '''
 
 [[actionGroups.actions]]
 id = "compare-structures"
 label = "Compare Structures"
-desc = "ARX vs. N4SID on the same dataset"
+desc = "ARX, ARMAX, N4SID and simulation-focused (OE) models fitted to the same estimation data, compared by validation fit and frequency response"
 code = '''
-using ControlSystemIdentification, Plots  # SI + plotting
+using ControlSystemIdentification, ControlSystems, Plots  # SI + plotting
 
-data    = iddata({{y}}, {{u}}, {{h}})  # identification dataset
-m_arx   = arx(data, {{na}}, {{nb}}, {{nk}})  # ARX model
-m_n4sid = n4sid(data, {{nx}})  # N4SID state-space model
-
-bodeplot(m_arx, m_n4sid; label=["ARX" "N4SID"])  # compare frequency responses
+vfit(m) = modelfit(vec(output(dval)), vec(simulate(m, dval)))  # validation NRMSE fit
+cands = [
+    "ARX"   => arx(dtr, {{na}}, {{nb}}; inputdelay = {{nk}}),
+    "ARMAX" => first(armax(dtr, {{na}}, {{nb}}, {{nc}})),  # delay of one sample
+    "N4SID" => n4sid(dtr, {{nx}}),
+    "OE"    => first(newpem(dtr, {{nf}}; focus = :simulation, show_trace = false)),
+]
+foreach(c -> println(rpad(c.first, 7), " validation fit = ", round(vfit(c.second), digits = 2), "%"), cands)
+bodeplot(last.(cands); label = permutedims(first.(cands)))  # compare frequency responses
 '''
 
 [[actionGroups]]
@@ -484,25 +497,21 @@ desc = "Extract and display the identified discrete-time transfer function"
 code = '''
 using ControlSystemIdentification, ControlSystems  # SI + control
 
-data  = iddata({{y}}, {{u}}, {{h}})  # identification dataset
-model = arx(data, {{na}}, {{nb}}, {{nk}})  # fit ARX model
-
-G = tf(model)  # extract discrete-time transfer function
+G = tf(model)  # discrete-time transfer function
 println(G)  # display B(q)/A(q)
 println(poles(G))  # display poles
-println(zeros(G))  # display zeros
+println(tzeros(G))  # display transmission zeros
 '''
 
 [[actionGroups.actions]]
 id = "uncertainty"
 label = "Parameter Uncertainty"
-desc = "Covariance of estimated parameters and confidence bounds on Bode plot"
+desc = "ARX: coefficient means and standard deviations from the least-squares covariance. All models: refit on each half of the estimation data and overlay the Bode plots; large differences mean poorly determined dynamics"
 code = '''
 using ControlSystemIdentification, ControlSystems, Plots  # SI + control + plotting
 
-data  = iddata({{y}}, {{u}}, {{h}})  # identification dataset
-model = arx(data, {{na}}, {{nb}}, {{nk}})  # fit ARX model
-
-println(model.P)  # parameter covariance matrix
-bodeconfplot(model, data)  # Bode plot with 3-sigma confidence bands
+{{?model=arx}} println(arx(dtr, {{na}}, {{nb}}; inputdelay = {{nk}}, stochastic = true))  # coefficients as mean +/- std (MonteCarloMeasurements particles)
+m = div(length(dtr), 2)
+halves = [fitm(dtr[1:m]), fitm(dtr[m+1:end])]  # split-sample refits
+bodeplot([model; halves]; label = ["all estimation data" "first half" "second half"])
 '''

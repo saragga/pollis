@@ -286,56 +286,69 @@ when = "solver!=SRIW1|LambaEM"
 [[codeBranches]]
 model = "cpj"
 code = '''
-using DifferentialEquations, JumpProcesses, Distributions  # Compound Poisson jump-diffusion: dX = f dt + g dW + dJ
+using DifferentialEquations, JumpProcesses, Distributions  # compound Poisson jump-diffusion: dX = f dt + g dW + X- (e^J - 1) dN
 
 f(X, p, t) = {{f}}  # continuous drift
 g(X, p, t) = {{g}}  # continuous diffusion
 
-rate(X, p, t)   = {{lambda}}  # constant jump rate lambda = {{lambda}} jumps per unit time
-affect!(integ)  = (integ.u += rand(Uniform(-0.2, 0.2)))  # uniform jump size in [-0.2, 0.2]
+a = 0.2  # log-jump half-width: J ~ Uniform(-a, a), so X -> X e^J stays positive and scales with the level
+kappa  = sinh(a) / a - 1  # E[e^J] - 1: mean relative jump size
+kappa2 = sinh(2a) / (2a) - 1  # E[e^(2J)] - 1: used for the second moment
+rate(X, p, t)  = {{lambda}}  # constant jump rate lambda = {{lambda}} jumps per unit time
+affect!(integ) = (integ.u *= exp(rand(Uniform(-a, a))))  # multiplicative jump X -> X e^J
 jump = ConstantRateJump(rate, affect!)  # fixed-rate jump
 
 prob  = SDEProblem(f, g, {{X0}}, (0.0, {{T}}))  # base SDE
 jprob = JumpProblem(prob, {{aggregator}}(), jump)  # augment with jump process using {{aggregator}} aggregator
-{{?solver=SRIW1|LambaEM}} solve(jprob, {{solver}}())  # solve jump-diffusion
-{{?solver!=SRIW1|LambaEM}} solve(jprob, {{solver}}(), dt={{dt}})  # solve jump-diffusion
+alg = {{solver}}()  # SDE solver
+{{?solver=SRIW1|LambaEM}} skw = NamedTuple()  # adaptive solver: no fixed step
+{{?solver!=SRIW1|LambaEM}} skw = (dt = {{dt}},)  # fixed-step solver
+sol = solve(jprob, alg; skw...)  # solve jump-diffusion
 '''
 
 [[codeBranches]]
 model = "gauss"
 code = '''
-using DifferentialEquations, JumpProcesses, Distributions  # Gaussian jump-diffusion (Merton-style): Normal jump sizes
+using DifferentialEquations, JumpProcesses, Distributions  # Merton jump-diffusion: log-normal multiplicative jumps
 
-f(X, p, t) = {{f}}  # continuous drift
+mu(X) = {{f}}  # user drift = total expected growth (jumps included)
 g(X, p, t) = {{g}}  # continuous diffusion
 
-rate(X, p, t)   = {{lambda}}  # Poisson arrival rate lambda = {{lambda}}
-affect!(integ)  = (integ.u += rand(Normal({{muj}}, {{sigmaj}})))  # jump size ~ Normal(mu_J={{muj}}, sigma_J={{sigmaj}})
-jump = ConstantRateJump(rate, affect!)  # constant-rate Gaussian jump
+kappa  = exp({{muj}} + {{sigmaj}}^2 / 2) - 1  # E[e^J] - 1 for J ~ Normal(mu_J, sigma_J)
+kappa2 = exp(2 * {{muj}} + 2 * {{sigmaj}}^2) - 1  # E[e^(2J)] - 1
+f(X, p, t) = mu(X) - {{lambda}} * kappa * X  # Merton compensated drift: jumps add no expected growth on top of mu
+rate(X, p, t)  = {{lambda}}  # Poisson arrival rate lambda = {{lambda}}
+affect!(integ) = (integ.u *= exp(rand(Normal({{muj}}, {{sigmaj}}))))  # X -> X e^J, J ~ Normal(mu_J={{muj}}, sigma_J={{sigmaj}})
+jump = ConstantRateJump(rate, affect!)  # constant-rate log-normal jump
 
 prob  = SDEProblem(f, g, {{X0}}, (0.0, {{T}}))  # base SDE
 jprob = JumpProblem(prob, {{aggregator}}(), jump)  # augment with {{aggregator}} aggregator
-{{?solver=SRIW1|LambaEM}} solve(jprob, {{solver}}())  # solve
-{{?solver!=SRIW1|LambaEM}} solve(jprob, {{solver}}(), dt={{dt}})  # solve
+alg = {{solver}}()  # SDE solver
+{{?solver=SRIW1|LambaEM}} skw = NamedTuple()  # adaptive solver: no fixed step
+{{?solver!=SRIW1|LambaEM}} skw = (dt = {{dt}},)  # fixed-step solver
+sol = solve(jprob, alg; skw...)  # solve
 '''
 
 [[codeBranches]]
 model = "custom"
 code = '''
-using DifferentialEquations, JumpProcesses  # state-dependent jump rate: lambda(X,t) — requires Coevolve aggregator
+using DifferentialEquations, JumpProcesses  # state-dependent jump rate lambda(X): a VariableRateJump
 
-f(X, p, t) = {{f}}  # continuous drift
-g(X, p, t) = {{g}}  # continuous diffusion
+drift(X) = {{f}}  # continuous drift (scalar)
+vol(X)   = {{g}}  # continuous diffusion (scalar)
+f!(dU, U, p, t) = (dU[1] = drift(U[1]); nothing)  # in-place form: variable-rate jumps need an array state
+g!(dU, U, p, t) = (dU[1] = vol(U[1]); nothing)
 
-rate(X, p, t)    = {{lambda}} * abs(X)  # state-dependent rate: proportional to |X|
-affect!(integ)   = (integ.u *= (1.0 + 0.1 * randn()))  # multiplicative jump: X -> X * (1 + noise)
-urate(X, p, t)   = {{lambda}} * (abs(X) + 1.0)  # upper bound on rate for Coevolve thinning
-jump = VariableRateJump(rate, affect!; urate=urate)  # variable-rate jump specification
+rate(U, p, t)  = {{lambda}} * abs(U[1])  # state-dependent rate: proportional to |X|
+affect!(integ) = (integ.u[1] *= (1.0 + 0.1 * randn()))  # multiplicative jump: X -> X (1 + noise)
+jump = VariableRateJump(rate, affect!)  # no rate bounds: the diffusion moves X between jumps, so a bound would not hold
 
-prob  = SDEProblem(f, g, {{X0}}, (0.0, {{T}}))  # base SDE
-jprob = JumpProblem(prob, Coevolve(), jump)  # Coevolve: required for VariableRateJump
-{{?solver=SRIW1|LambaEM}} solve(jprob, {{solver}}())  # solve the state-dependent jump-diffusion
-{{?solver!=SRIW1|LambaEM}} solve(jprob, {{solver}}(), dt={{dt}})  # solve the state-dependent jump-diffusion
+prob  = SDEProblem(f!, g!, [{{X0}}], (0.0, {{T}}))  # base SDE on a one-element state
+jprob = JumpProblem(prob, Direct(), jump)  # the rate is integrated along the path, so jump times track X(t)
+alg = {{solver}}()  # SDE solver
+{{?solver=SRIW1|LambaEM}} skw = NamedTuple()  # adaptive solver: no fixed step
+{{?solver!=SRIW1|LambaEM}} skw = (dt = {{dt}},)  # fixed-step solver
+sol = solve(jprob, alg; skw...)  # solve the state-dependent jump-diffusion
 '''
 
 [[actionGroups]]
@@ -345,16 +358,14 @@ label = "Visualise"
 [[actionGroups.actions]]
 id = "plot-path"
 label = "Plot Trajectory"
-desc = "Plot a single jump-diffusion path highlighting jump times"
+desc = "Plot the solved jump-diffusion path and mark the jump times"
 code = '''
-using DifferentialEquations, JumpProcesses, Plots  # simulate and plot one jump-diffusion path
+using Plots  # plot the path solved above (sol)
 
-f(X, p, t) = {{f}}; g(X, p, t) = {{g}}  # drift and diffusion
-rate(X, p, t) = {{lambda}}; affect!(i) = (i.u += rand() - 0.5)  # jump specification
-jump  = ConstantRateJump(rate, affect!)  # constant-rate jump
-prob  = SDEProblem(f, g, {{X0}}, (0.0, {{T}}))  # base SDE
-sol   = solve(JumpProblem(prob, Direct(), jump), SRIW1())  # solve
-plot(sol, xlabel="t", ylabel="X(t)", label="jump-diffusion")  # plot (discontinuities mark jump events)
+x  = first.(sol.u)  # level X(t) at each saved time
+jx = findall(i -> sol.t[i+1] == sol.t[i], 1:length(sol.t)-1)  # a jump saves the state twice at the same time
+plot(sol.t, x, xlabel="t", ylabel="X(t)", label="jump-diffusion")  # path
+scatter!(sol.t[jx .+ 1], x[jx .+ 1], ms=3, label="after jump")  # jump events
 '''
 
 [[actionGroups]]
@@ -364,15 +375,13 @@ label = "Diagnose"
 [[actionGroups.actions]]
 id = "jump-count"
 label = "Jump Counting"
-desc = "Count and inspect actual jump times from a realised path"
+desc = "Count the jumps in the realised path and compare with the integrated intensity"
 code = '''
-using DifferentialEquations, JumpProcesses  # inspect jump events in a realised path
-
-f(X, p, t) = 0.0; g(X, p, t) = 0.0  # no drift or diffusion, so X(T) - X(0) counts the unit jumps exactly
-rate(X, p, t) = {{lambda}}; affect!(i) = (i.u += 1.0)  # unit jump for easy counting
-prob  = SDEProblem(f, g, {{X0}}, (0.0, {{T}}))  # base problem
-sol   = solve(JumpProblem(prob, Direct(), ConstantRateJump(rate, affect!)), EM(), dt=0.001)  # solve
-println("Jumps observed: ", sol.u[end] - {{X0}}, "  Expected: ", {{lambda}} * {{T}})  # one path: the count is Poisson, so +/- 2 sqrt(lambda T) around the expectation is normal
+# count jumps in the solved path (sol) and compare with the compensator: the integral of lambda(X(t)) dt
+jx = findall(i -> sol.t[i+1] == sol.t[i], 1:length(sol.t)-1)  # a jump saves the state twice at the same time
+Lambda = sum(rate(sol.u[i], nothing, sol.t[i]) * (sol.t[i+1] - sol.t[i]) for i in 1:length(sol.t)-1)  # expected count given the path
+println("Jumps observed: ", length(jx), "  Expected (integrated intensity): ", round(Lambda, digits=2))
+println("One path: the count is Poisson, so +/- 2 sqrt(", round(Lambda, digits=2), ") = +/- ", round(2 * sqrt(Lambda), digits=2), " is normal")
 '''
 
 [[actionGroups]]
@@ -382,16 +391,18 @@ label = "Predict"
 [[actionGroups.actions]]
 id = "ensemble-moments"
 label = "Ensemble Moments"
-desc = "Estimate E[X(t)] and Var[X(t)] over many jump-diffusion paths"
+desc = "Estimate E[X(T)] and Var[X(T)] over many jump-diffusion paths"
 code = '''
-using DifferentialEquations, JumpProcesses, Statistics  # ensemble statistics for jump-diffusion
+using Statistics  # ensemble statistics for the jump problem above (jprob)
 
-f(X, p, t) = {{f}}; g(X, p, t) = {{g}}  # drift and diffusion
-rate(X, p, t) = {{lambda}}; affect!(i) = (i.u += rand() - 0.5)  # jump
-prob  = SDEProblem(f, g, {{X0}}, (0.0, {{T}}))  # base SDE
-jprob = JumpProblem(prob, Direct(), ConstantRateJump(rate, affect!))  # jump problem
-ens   = solve(EnsembleProblem(jprob), SRIW1(), EnsembleThreads(), trajectories=500)  # 500 paths
-println("E[X(T)]: ", mean(s.u[end] for s in ens))  # terminal mean
+ens = solve(EnsembleProblem(jprob), alg, EnsembleThreads(); trajectories=500, skw...)  # 500 paths
+XT  = [first(s.u[end]) for s in ens]  # terminal values
+println("Monte Carlo: E[X(T)] = ", round(mean(XT), digits=4), "  Var[X(T)] = ", round(var(XT), digits=4), "  (se of mean ", round(std(XT) / sqrt(500), digits=4), ")")
+{{?model=cpj|gauss}} m, s = f(1.0, nothing, 0.0), g(1.0, nothing, 0.0)  # drift and volatility coefficients, valid when f = m X and g = s X
+{{?model=cpj|gauss}} EX  = {{X0}} * exp((m + {{lambda}} * kappa) * {{T}})  # E[X(T)] for linear drift with multiplicative jumps
+{{?model=cpj|gauss}} EX2 = {{X0}}^2 * exp((2m + s^2 + {{lambda}} * kappa2) * {{T}})  # E[X(T)^2]
+{{?model=cpj|gauss}} println("Theory (linear f, g): E[X(T)] = ", round(EX, digits=4), "  Var[X(T)] = ", round(EX2 - EX^2, digits=4))
+{{?model=custom}} println("No closed form with a state-dependent rate: the Monte Carlo values are the estimate")
 '''
 
 [[actionGroups]]
@@ -401,17 +412,19 @@ label = "Compare"
 [[actionGroups.actions]]
 id = "with-without-jumps"
 label = "With vs Without Jumps"
-desc = "Compare a pure diffusion with its jump-diffusion counterpart"
+desc = "Compare the terminal distribution of the pure diffusion with its jump-diffusion counterpart"
 code = '''
-using DifferentialEquations, JumpProcesses, Plots  # compare pure diffusion vs jump-diffusion
+using Statistics, StatsBase, Plots  # same drift and diffusion, with and without the jump process
 
-f(X, p, t) = {{f}}; g(X, p, t) = {{g}}  # shared drift and diffusion
-W = WienerProcess(0.0, 0.0)  # shared Brownian path
-sde_sol  = solve(SDEProblem(f, g, {{X0}}, (0.0, {{T}}); noise=W), SRIW1())  # pure diffusion
-rate(X, p, t) = {{lambda}}; affect!(i) = (i.u += rand() - 0.5)  # jump on top
-jprob    = JumpProblem(SDEProblem(f, g, {{X0}}, (0.0, {{T}}); noise=W), Direct(), ConstantRateJump(rate, affect!))  # jump-diffusion with same Brownian path
-jde_sol  = solve(jprob, SRIW1())  # jump-diffusion solution
-plot(sde_sol, label="diffusion only"); plot!(jde_sol, label="jump-diffusion")  # overlay both paths
+ens_d = solve(EnsembleProblem(prob), alg, EnsembleThreads(); trajectories=500, skw...)  # pure diffusion (base SDE)
+ens_j = solve(EnsembleProblem(jprob), alg, EnsembleThreads(); trajectories=500, skw...)  # jump-diffusion
+rd = [log(first(s.u[end]) / {{X0}}) for s in ens_d]  # log growth over [0, T]
+rj = [log(first(s.u[end]) / {{X0}}) for s in ens_j]
+for (name, r) in (("diffusion only", rd), ("jump-diffusion", rj))
+    println(rpad(name, 16), " mean ", round(mean(r), digits=4), "  sd ", round(std(r), digits=4), "  skew ", round(skewness(r), digits=3), "  excess kurtosis ", round(kurtosis(r), digits=3))
+end
+histogram(rd, nbins=40, normalize=:pdf, alpha=0.5, label="diffusion only", xlabel="log(X(T) / X(0))", ylabel="density")
+histogram!(rj, nbins=40, normalize=:pdf, alpha=0.5, label="jump-diffusion")  # jumps fatten the tails
 '''
 
 [[actionGroups]]
@@ -421,16 +434,22 @@ label = "Interpret"
 [[actionGroups.actions]]
 id = "jump-dist"
 label = "Jump Size Distribution"
-desc = "Collect realised jump sizes from an ensemble and plot their distribution"
+desc = "Recover realised log-jump sizes from the path discontinuities and plot their distribution"
 code = '''
-using DifferentialEquations, JumpProcesses, StatsBase, Plots  # collect and plot realised jump sizes
+using StatsBase, Distributions, Plots  # recover jumps from the simulated paths, not from the random draws
 
-jump_sizes = Float64[]  # accumulate jump sizes across paths
-rate(X, p, t) = {{lambda}}  # constant rate
-affect!(i) = begin j = randn() * 0.05; push!(jump_sizes, j); i.u += j end  # record each jump size
-prob  = SDEProblem(x->0.05*x, x->0.1*x, {{X0}}, (0.0, {{T}}))  # base SDE
-for _ in 1:200  # run 200 paths
-    solve(JumpProblem(prob, Direct(), ConstantRateJump(rate, affect!)), EM(), dt=0.001)
+ens = solve(EnsembleProblem(jprob), alg, EnsembleThreads(); trajectories=200, skw...)  # 200 paths of the model above
+logjumps = Float64[]
+for s in ens
+    for i in 1:length(s.t)-1
+        if s.t[i+1] == s.t[i]  # a jump saves the state before and after at the same time
+            push!(logjumps, log(first(s.u[i+1]) / first(s.u[i])))  # realised log-jump log(X(t+) / X(t-))
+        end
+    end
 end
-histogram(jump_sizes, nbins=40, normalize=:pdf, xlabel="jump size", ylabel="density")  # empirical jump-size distribution
+println(length(logjumps), " jumps  mean ", round(mean(logjumps), digits=4), "  sd ", round(std(logjumps), digits=4))
+histogram(logjumps, nbins=40, normalize=:pdf, label="realised", xlabel="log-jump size", ylabel="density")
+{{?model=cpj}} plot!(range(-a, a, length=100), x -> pdf(Uniform(-a, a), x), lw=2, label="Uniform(-a, a)")  # model distribution
+{{?model=gauss}} plot!(x -> pdf(Normal({{muj}}, {{sigmaj}}), x), lw=2, label="Normal(mu_J, sigma_J)")  # model distribution
+{{?model=custom}} plot!(x -> pdf(Normal(0, 0.1), exp(x) - 1) * exp(x), lw=2, label="log(1 + 0.1 Z)")  # density of log(1 + 0.1 Z)
 '''

@@ -348,61 +348,93 @@ models = ["dsanet"]
 [[codeBranches]]
 model = "lstnet"
 code = '''
-using FluxArchitectures  # Flux plus the four architectures
+using FluxArchitectures  # Flux plus the four architectures (FluxArchitectures pins Flux 0.13)
 
 poollength = {{lstnet-pool}}  # past steps per input window
-input, target = get_data(:exchange_rate, poollength, 1000, 6)  # sample multivariate series (features x steps)
-inputsize = size(input, 1)  # number of input features
+h = 6  # forecast horizon: steps after the last value in each window
+horizon = poollength - 1 + h  # get_data counts the horizon from the window start, so a smaller value would put the label inside the window
+input, target = get_data(:exchange_rate, poollength, 1000, horizon)  # features x poollength x 1 x windows; label = series 1, h steps after the window
+n = 1000 - horizon  # circshift wraps the last labels around to the start: drop them
+ntrain = 700  # chronological split: train on the first windows, test on later ones
+xtr, ytr = input[:, :, :, 1:ntrain], target[1:ntrain]
+xte, yte = input[:, :, :, ntrain+1:n], target[ntrain+1:n]  # every test label lies after every training label
+inputsize = size(input, 1)  # number of input series (series 1 is the target)
 
 model = LSTnet(inputsize, {{lstnet-conv}}, {{lstnet-recur}}, poollength, {{lstnet-skip}})  # CNN + GRU + skip-GRU + autoregressive
-loss(x, y) = (Flux.reset!(model); Flux.mse(model(x), transpose(y)))  # reset recurrent state each pass
-opt = Flux.ADAM(0.007)  # optimiser
-Flux.train!(loss, Flux.params(model), Iterators.repeated((input, target), {{lstnet-epochs}}), opt)  # train for {{lstnet-epochs}} epochs
+loss(x, y) = (Flux.ChainRulesCore.ignore_derivatives(() -> Flux.reset!(model)); Flux.mse(model(x), transpose(y)))  # reset recurrent state each pass
+predict(x) = (Flux.reset!(model); vec(model(x)))  # forecasts for a block of windows
+opt = Flux.Adam(0.007)  # optimiser
+Flux.train!(loss, Flux.params(model), Iterators.repeated((xtr, ytr), {{lstnet-epochs}}), opt)  # implicit params: the training API of Flux 0.13, which FluxArchitectures requires
+println("train MSE ", round(loss(xtr, ytr), digits=4), "  test MSE ", round(Flux.mse(predict(xte), yte), digits=4))  # out-of-sample error is the one that matters
 '''
 
 [[codeBranches]]
 model = "darnn"
 code = '''
-using FluxArchitectures  # Flux plus the four architectures
+using FluxArchitectures  # Flux plus the four architectures (FluxArchitectures pins Flux 0.13)
 
 poollength = {{darnn-pool}}  # past steps per input window
-input, target = get_data(:exchange_rate, poollength, 1000, 6)  # sample multivariate series (features x steps)
-inputsize = size(input, 1)  # number of input features
+h = 6  # forecast horizon: steps after the last value in each window
+horizon = poollength - 1 + h  # get_data counts the horizon from the window start, so a smaller value would put the label inside the window
+input, target = get_data(:exchange_rate, poollength, 1000, horizon)  # features x poollength x 1 x windows; label = series 1, h steps after the window
+n = 1000 - horizon  # circshift wraps the last labels around to the start: drop them
+ntrain = 700  # chronological split: train on the first windows, test on later ones
+xtr, ytr = input[:, :, :, 1:ntrain], target[1:ntrain]
+xte, yte = input[:, :, :, ntrain+1:n], target[ntrain+1:n]  # every test label lies after every training label
+inputsize = size(input, 1)  # number of input series (series 1 is the target)
 
-model = DARNN(inputsize, {{darnn-encoder}}, {{darnn-decoder}}, poollength, 1)  # dual-stage attention RNN
-loss(x, y) = (Flux.reset!(model); Flux.mse(model(x), transpose(y)))  # reset recurrent state each pass
-opt = Flux.ADAM(0.007)  # optimiser
-Flux.train!(loss, Flux.params(model), Iterators.repeated((input, target), {{darnn-epochs}}), opt)  # train for {{darnn-epochs}} epochs
+model = DARNN(inputsize, {{darnn-encoder}}, {{darnn-decoder}}, poollength, 1)  # dual-stage attention RNN; 1 = index of the target series
+loss(x, y) = (Flux.ChainRulesCore.ignore_derivatives(() -> Flux.reset!(model)); Flux.mse(model(x), transpose(y)))  # reset recurrent state each pass
+predict(x) = (Flux.reset!(model); vec(model(x)))  # forecasts for a block of windows
+opt = Flux.Adam(0.007)  # optimiser
+Flux.train!(loss, Flux.params(model), Iterators.repeated((xtr, ytr), {{darnn-epochs}}), opt)  # implicit params: the training API of Flux 0.13, which FluxArchitectures requires
+println("train MSE ", round(loss(xtr, ytr), digits=4), "  test MSE ", round(Flux.mse(predict(xte), yte), digits=4))  # out-of-sample error is the one that matters
 '''
 
 [[codeBranches]]
 model = "tpalstm"
 code = '''
-using FluxArchitectures  # Flux plus the four architectures
+using FluxArchitectures  # Flux plus the four architectures (FluxArchitectures pins Flux 0.13)
 
 poollength = {{tpalstm-pool}}  # past steps per input window
-input, target = get_data(:exchange_rate, poollength, 1000, 6)  # sample multivariate series (features x steps)
-inputsize = size(input, 1)  # number of input features
+h = 6  # forecast horizon: steps after the last value in each window
+horizon = poollength - 1 + h  # get_data counts the horizon from the window start, so a smaller value would put the label inside the window
+input, target = get_data(:exchange_rate, poollength, 1000, horizon)  # features x poollength x 1 x windows; label = series 1, h steps after the window
+n = 1000 - horizon  # circshift wraps the last labels around to the start: drop them
+ntrain = 700  # chronological split: train on the first windows, test on later ones
+xtr, ytr = input[:, :, :, 1:ntrain], target[1:ntrain]
+xte, yte = input[:, :, :, ntrain+1:n], target[ntrain+1:n]  # every test label lies after every training label
+inputsize = size(input, 1)  # number of input series (series 1 is the target)
 
-model = TPALSTM(inputsize, {{tpalstm-hidden}}, poollength, {{tpalstm-layers}}, {{tpalstm-filters}}, 1)  # LSTM + temporal pattern attention
-loss(x, y) = (Flux.reset!(model); Flux.mse(model(x), transpose(y)))  # reset recurrent state each pass
-opt = Flux.ADAM(0.007)  # optimiser
-Flux.train!(loss, Flux.params(model), Iterators.repeated((input, target), {{tpalstm-epochs}}), opt)  # train for {{tpalstm-epochs}} epochs
+model = TPALSTM(inputsize, {{tpalstm-hidden}}, poollength, {{tpalstm-layers}}, {{tpalstm-filters}}, 1)  # LSTM + temporal pattern attention (filter size 1)
+loss(x, y) = (Flux.ChainRulesCore.ignore_derivatives(() -> Flux.reset!(model)); Flux.mse(model(x), transpose(y)))  # reset recurrent state each pass
+predict(x) = (Flux.reset!(model); vec(model(x)))  # forecasts for a block of windows
+opt = Flux.Adam(0.007)  # optimiser
+Flux.train!(loss, Flux.params(model), Iterators.repeated((xtr, ytr), {{tpalstm-epochs}}), opt)  # implicit params: the training API of Flux 0.13, which FluxArchitectures requires
+println("train MSE ", round(loss(xtr, ytr), digits=4), "  test MSE ", round(Flux.mse(predict(xte), yte), digits=4))  # out-of-sample error is the one that matters
 '''
 
 [[codeBranches]]
 model = "dsanet"
 code = '''
-using FluxArchitectures  # Flux plus the four architectures
+using FluxArchitectures  # Flux plus the four architectures (FluxArchitectures pins Flux 0.13)
 
 poollength = {{dsanet-pool}}  # past steps per input window
-input, target = get_data(:exchange_rate, poollength, 1000, 6)  # sample multivariate series (features x steps)
-inputsize = size(input, 1)  # number of input features
+h = 6  # forecast horizon: steps after the last value in each window
+horizon = poollength - 1 + h  # get_data counts the horizon from the window start, so a smaller value would put the label inside the window
+input, target = get_data(:exchange_rate, poollength, 1000, horizon)  # features x poollength x 1 x windows; label = series 1, h steps after the window
+n = 1000 - horizon  # circshift wraps the last labels around to the start: drop them
+ntrain = 700  # chronological split: train on the first windows, test on later ones
+xtr, ytr = input[:, :, :, 1:ntrain], target[1:ntrain]
+xte, yte = input[:, :, :, ntrain+1:n], target[ntrain+1:n]  # every test label lies after every training label
+inputsize = size(input, 1)  # number of input series (series 1 is the target)
 
-model = DSANet(inputsize, poollength, {{dsanet-local}}, {{dsanet-kernels}}, {{dsanet-dmodel}}, 1, 1, 1, 6)  # global + local self-attention
-loss(x, y) = (Flux.reset!(model); Flux.mse(model(x), transpose(y)))  # reset recurrent state each pass
-opt = Flux.ADAM(0.007)  # optimiser
-Flux.train!(loss, Flux.params(model), Iterators.repeated((input, target), {{dsanet-epochs}}), opt)  # train for {{dsanet-epochs}} epochs
+model = DSANet(inputsize, poollength, {{dsanet-local}}, {{dsanet-kernels}}, {{dsanet-dmodel}}, 1, 1, 1, 1)  # global + local self-attention: d_hid 1, 1 layer, 1 head, 1 output series
+loss(x, y) = (Flux.ChainRulesCore.ignore_derivatives(() -> Flux.reset!(model)); Flux.mse(model(x), transpose(y)))  # reset recurrent state each pass
+predict(x) = (Flux.reset!(model); vec(model(x)))  # forecasts for a block of windows
+opt = Flux.Adam(0.007)  # optimiser
+Flux.train!(loss, Flux.params(model), Iterators.repeated((xtr, ytr), {{dsanet-epochs}}), opt)  # implicit params: the training API of Flux 0.13, which FluxArchitectures requires
+println("train MSE ", round(loss(xtr, ytr), digits=4), "  test MSE ", round(Flux.mse(predict(xte), yte), digits=4))  # out-of-sample error is the one that matters
 '''
 
 [[actionGroups]]
@@ -412,26 +444,29 @@ label = "Visualise"
 [[actionGroups.actions]]
 id = "pred-vs-target"
 label = "Prediction vs Target"
-desc = "Overlay the model prediction on the target series"
+desc = "Overlay the in-sample fit and the out-of-sample forecasts on the target series"
 code = '''
 using Plots  # plotting
 
-pred = model(input)  # forward pass over every window
-plot(vec(transpose(target)); label="target")  # ground truth
-plot!(vec(pred); label="prediction", lw=2)  # model output
+plot(1:n, target[1:n]; label="target", color=:black)  # series 1, h steps after each window
+plot!(1:ntrain, predict(xtr); label="fit (train)", lw=2)  # in-sample
+plot!(ntrain+1:n, predict(xte); label="forecast (test)", lw=2)  # out-of-sample
+vline!([ntrain + 0.5]; label="", ls=:dash, color=:gray)  # train/test split
 '''
 
 [[actionGroups.actions]]
 id = "loss-curve"
 label = "Training Loss Curve"
-desc = "Record the loss each epoch and plot the learning curve"
+desc = "Continue training and plot train and test loss per epoch"
 code = '''
 using Plots  # plotting
 
-history = Float64[]  # collect loss per epoch
-cb() = push!(history, loss(input, target))  # callback after each epoch
-Flux.train!(loss, Flux.params(model), Iterators.repeated((input, target), 50), Flux.ADAM(0.007); cb=cb)  # train with logging
-plot(history; xlabel="epoch", ylabel="MSE", legend=false)  # learning curve
+trn, tst = Float64[], Float64[]  # loss per epoch
+for epoch in 1:50  # 50 more full-batch epochs on the model above
+    Flux.train!(loss, Flux.params(model), [(xtr, ytr)], opt)
+    push!(trn, loss(xtr, ytr)); push!(tst, Flux.mse(predict(xte), yte))
+end
+plot([trn tst]; label=["train" "test"], xlabel="epoch", ylabel="MSE")  # a rising test curve means overfitting
 '''
 
 [[actionGroups]]
@@ -441,12 +476,12 @@ label = "Diagnose"
 [[actionGroups.actions]]
 id = "residuals"
 label = "Residual Plot"
-desc = "Plot prediction residuals and their distribution"
+desc = "Plot out-of-sample forecast residuals and their distribution"
 code = '''
 using Plots  # plotting
 
-res = vec(model(input)) .- vec(transpose(target))  # prediction errors
-p1 = plot(res; title="Residuals", legend=false)  # 6-step-ahead errors from overlapping windows are autocorrelated up to lag 5 even for an optimal forecast: look for trends and level shifts, not white noise
+res = predict(xte) .- yte  # test-set forecast errors
+p1 = plot(res; title="Test residuals", legend=false)  # h-step errors from overlapping windows are autocorrelated up to lag h - 1 even for an optimal forecast: look for trends and level shifts, not white noise
 p2 = histogram(res; title="Residual distribution", legend=false)  # check for skew or heavy tails
 plot(p1, p2, layout=(2, 1))  # show both
 '''
@@ -456,11 +491,10 @@ id = "grad-norm"
 label = "Gradient Norms"
 desc = "Inspect per-parameter gradient magnitudes for vanishing or exploding gradients"
 code = '''
-using Flux  # autodiff
-
-gs = gradient(() -> loss(input, target), Flux.params(model))  # one backward pass
+gs = gradient(() -> loss(xtr, ytr), Flux.params(model))  # one backward pass (implicit params, Flux 0.13)
 for p in Flux.params(model)  # each parameter array
-    println(sqrt(sum(abs2, gs[p])))  # L2 norm of the gradient
+    g = gs[p]
+    println(rpad(string(size(p)), 14), g === nothing ? "no gradient" : sqrt(sum(abs2, g)))  # L2 norm of the gradient
 end
 '''
 
@@ -471,10 +505,10 @@ label = "Predict"
 [[actionGroups.actions]]
 id = "forecast"
 label = "Forecast Horizon"
-desc = "Run the trained model and read off the most recent forecast"
+desc = "Forecast series 1 h steps after the most recent window, beyond every label used"
 code = '''
-yhat = model(input)  # horizon-step prediction for every window
-println(yhat[:, end])  # forecast from the latest window
+xnew = input[:, :, :, end:end]  # most recent window: its target time lies after all training and test labels
+println("forecast of series 1 (normalised), ", h, " steps after the last window: ", only(predict(xnew)))
 '''
 
 [[actionGroups.actions]]
@@ -495,25 +529,30 @@ label = "Compare"
 [[actionGroups.actions]]
 id = "naive-baseline"
 label = "Naive Baseline"
-desc = "Compare the model MSE against a last-value baseline"
+desc = "Compare the test MSE against a last-value (random walk) forecast"
 code = '''
-using Flux  # loss helpers
-
-mse_model = Flux.mse(model(input), transpose(target))  # trained model error
-naive = repeat(input[end, :, :], 1, 1)  # last observed value as forecast
-mse_naive = Flux.mse(naive, transpose(target))  # baseline error
-println("naive: ", mse_naive, "  model: ", mse_model)  # lower is better
+mse_model = Flux.mse(predict(xte), yte)  # out-of-sample model error
+naive = vec(xte[1, end, 1, :])  # last observed value of series 1 in each window
+mse_naive = Flux.mse(naive, yte)  # random-walk forecast error, hard to beat for exchange rates
+println("naive: ", round(mse_naive, digits=4), "  model: ", round(mse_model, digits=4), "  ratio: ", round(mse_model / mse_naive, digits=3))  # ratio below 1 means the model adds value
 '''
 
 [[actionGroups.actions]]
 id = "swap-arch"
 label = "Swap Architecture"
-desc = "All four models share the same training loop; swap only the constructor"
+desc = "Train all four architectures with the same loop and split and compare test MSE"
 code = '''
-model = LSTnet(inputsize, 2, 3, poollength, 120)  # CNN + GRU + skip + AR
-model = DARNN(inputsize, 10, 10, poollength, 1)  # dual-stage attention
-model = TPALSTM(inputsize, 10, poollength, 1, 32, 1)  # temporal pattern attention
-model = DSANet(inputsize, poollength, 3, 3, 4, 1, 1, 1, 6)  # dual self-attention
+model0 = model  # keep the panel model
+archs = ["LSTnet" => () -> LSTnet(inputsize, 2, 3, poollength, 120),  # CNN + GRU + skip + AR
+         "DA-RNN" => () -> DARNN(inputsize, 10, 10, poollength, 1),  # dual-stage attention
+         "TPA-LSTM" => () -> TPALSTM(inputsize, 10, poollength, 1, 32, 1),  # temporal pattern attention
+         "DSANet" => () -> DSANet(inputsize, poollength, 3, 3, 4, 1, 1, 1, 1)]  # dual self-attention
+for (name, build) in archs
+    global model = build()  # loss and predict use the global model
+    Flux.train!(loss, Flux.params(model), Iterators.repeated((xtr, ytr), 20), Flux.Adam(0.007))
+    println(rpad(name, 10), " test MSE ", round(Flux.mse(predict(xte), yte), digits=4))
+end
+model = model0  # restore the panel model
 '''
 
 [[actionGroups]]
@@ -525,19 +564,24 @@ id = "param-count"
 label = "Parameter Count"
 desc = "Count the trainable parameters in the model"
 code = '''
-using Flux  # parameter access
-
-n = sum(length, Flux.params(model))  # total trainable scalars
-println("trainable parameters: ", n)  # model capacity
+n_par = sum(length, Flux.params(model))  # total trainable scalars
+println("trainable parameters: ", n_par, "  training windows: ", ntrain)  # capacity relative to the data
 '''
 
 [[actionGroups.actions]]
 id = "attention-note"
 label = "Attention Weights"
-desc = "DA-RNN, TPA-LSTM and DSANet learn attention; inspect the weight arrays"
+desc = "Permutation importance of each input series and time step: what the attention layers learned to weigh"
 code = '''
-using Flux  # parameter access
+using Random  # shuffle
 
-ps = Flux.params(model)  # all learned weight arrays
-println("weight arrays: ", length(ps))  # attention layers are among them
+base = Flux.mse(predict(xte), yte)  # test MSE with intact inputs
+for j in 1:inputsize  # input attention: which driving series matter
+    xp = copy(xte); xp[j, :, 1, :] = xp[j, :, 1, shuffle(1:size(xp, 4))]  # break series j across windows
+    println("series ", j, ": MSE increase ", round(Flux.mse(predict(xp), yte) - base, digits=4))
+end
+for k in 1:poollength  # temporal attention: which lags matter
+    xp = copy(xte); xp[:, k, 1, :] = xp[:, k, 1, shuffle(1:size(xp, 4))]  # break time step k across windows
+    println("step ", k, " of ", poollength, ": MSE increase ", round(Flux.mse(predict(xp), yte) - base, digits=4))
+end
 '''
