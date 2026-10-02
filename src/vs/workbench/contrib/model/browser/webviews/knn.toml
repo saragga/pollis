@@ -96,13 +96,13 @@ purpose = "Every point within radius r, e.g. for density or DBSCAN-style cluster
 id = "data"
 label = "Data matrix"
 tooltip = "d x n matrix of data points: d features, n samples (one point per column)."
-default = "data"
+default = "rand(2, 200)"
 
 [[inputs]]
 id = "query"
 label = "Query point(s)"
 tooltip = "d-element vector for a single query, or d x m matrix for m simultaneous queries."
-default = "query"
+default = "[0.5, 0.5]"
 
 [[inputs]]
 id = "tree-type"
@@ -216,25 +216,35 @@ return s;
 [[codeBranches]]
 model = "knn"
 code = '''
-using NearestNeighbors, Distances
+using NearestNeighbors, Distances, Statistics
+
+X  = {{data}}  # d x n data matrix, one point per column
+mu = vec(mean(X, dims=2)); sd = vec(std(X, dims=2))  # per-feature centre and scale
+Z  = (X .- mu) ./ sd  # standardised: otherwise the feature with the largest units dominates every distance
+q  = ({{query}} .- mu) ./ sd  # the query on the same scale
 
 {{?metric=Minkowski}} metric = Minkowski({{p}})
 {{?metric!=Minkowski}} metric = {{metric}}()
-{{?tree-type=BruteTree}} tree = BruteTree({{data}}, metric)  # d x n data matrix, one point per column
-{{?tree-type!=BruteTree}} tree = {{tree-type}}({{data}}, metric, leafsize={{leafsize}})  # d x n data matrix, one point per column
-idxs, dists = knn(tree, {{query}}, {{k}}, true)  # {{k}} nearest neighbours, sorted by distance
+{{?tree-type=BruteTree}} tree = BruteTree(Z, metric)
+{{?tree-type!=BruteTree}} tree = {{tree-type}}(Z, metric, leafsize={{leafsize}})
+idxs, dists = knn(tree, q, {{k}}, true)  # {{k}} nearest neighbours, sorted by distance
 '''
 
 [[codeBranches]]
 model = "range"
 code = '''
-using NearestNeighbors, Distances
+using NearestNeighbors, Distances, Statistics
+
+X  = {{data}}  # d x n data matrix, one point per column
+mu = vec(mean(X, dims=2)); sd = vec(std(X, dims=2))  # per-feature centre and scale
+Z  = (X .- mu) ./ sd  # standardised: otherwise the feature with the largest units dominates every distance
+q  = ({{query}} .- mu) ./ sd  # the query on the same scale
 
 {{?metric=Minkowski}} metric = Minkowski({{p}})
 {{?metric!=Minkowski}} metric = {{metric}}()
-{{?tree-type=BruteTree}} tree = BruteTree({{data}}, metric)  # d x n data matrix, one point per column
-{{?tree-type!=BruteTree}} tree = {{tree-type}}({{data}}, metric, leafsize={{leafsize}})  # d x n data matrix, one point per column
-idxs = inrange(tree, {{query}}, {{r}})  # all points within radius {{r}}
+{{?tree-type=BruteTree}} tree = BruteTree(Z, metric)
+{{?tree-type!=BruteTree}} tree = {{tree-type}}(Z, metric, leafsize={{leafsize}})
+idxs = inrange(tree, q, {{r}})  # all points within radius {{r}}, in standard deviations
 '''
 
 [[actionGroups]]
@@ -260,11 +270,11 @@ label = "Diagnose"
 [[actionGroups.actions]]
 id = "k-distance"
 label = "k-Distance Curve"
-desc = "Sorted distance of every point to its k-th neighbour; the elbow suggests a good radius r"
+desc = "Sorted distance of every point to its k-th neighbour; the elbow suggests a good radius r (in standardised units)"
 code = '''
 using Plots
 
-_, d = knn(tree, {{data}}, {{k}} + 1, true)  # +1: each point is its own nearest neighbour
+_, d = knn(tree, Z, {{k}} + 1, true)  # +1: each point is its own nearest neighbour
 kdist = sort(last.(d))
 plot(kdist, xlabel="point (sorted)", ylabel="distance to k-th neighbour", legend=false)
 '''
@@ -274,8 +284,8 @@ id = "brute-check"
 label = "Exactness Check"
 desc = "Confirm the tree returns the same neighbours as an exhaustive brute-force search"
 code = '''
-idxs_brute, _ = knn(BruteTree({{data}}, metric), {{query}}, {{k}}, true)
-idxs_tree, _  = knn(tree, {{query}}, {{k}}, true)
+idxs_brute, _ = knn(BruteTree(Z, metric), q, {{k}}, true)
+idxs_tree, _  = knn(tree, q, {{k}}, true)
 idxs_tree == idxs_brute
 '''
 
@@ -286,21 +296,40 @@ label = "Predict"
 [[actionGroups.actions]]
 id = "knn-classify"
 label = "kNN Classification"
-desc = "Label new points by a majority vote of their k nearest training labels"
+desc = "Choose k by leave-one-out cross-validation, then label new points by a majority vote of their k nearest training labels"
 code = '''
-using StatsBase
+using StatsBase, Statistics
 
-nbrs, _ = knn(tree, X_new, {{k}})  # X_new: d x m matrix of points to classify
-y_hat = [mode(labels[i]) for i in nbrs]  # labels: class of each column of {{data}}
+labels = Z[1, :] .+ Z[2, :] .> 0  # replace with the class of each column of the data
+nb, _ = knn(tree, Z, 30, true)  # each point first, then its 29 nearest others
+loo(k) = mean(mode(labels[n[2:k+1]]) == labels[j] for (j, n) in enumerate(nb))  # leave-one-out accuracy: the point does not vote for itself
+ks = 1:2:27  # odd k avoids ties between two classes
+k_best = ks[argmax(loo.(ks))]
+println("LOO accuracy by k: ", round.(loo.(ks), digits=3), "  best k = ", k_best)
+
+X_new = rand(size(Z, 1), 10)  # replace with a d x m matrix of points to classify, in the original units
+nbrs, _ = knn(tree, (X_new .- mu) ./ sd, k_best)  # scaled like the training data
+y_hat = [mode(labels[i]) for i in nbrs]
 '''
 
 [[actionGroups.actions]]
 id = "knn-regress"
 label = "kNN Regression"
-desc = "Predict a continuous target as the inverse-distance weighted mean of the neighbours"
+desc = "Choose k by leave-one-out cross-validation, then predict a continuous target as the inverse-distance weighted mean of the neighbours"
 code = '''
-nbrs, d = knn(tree, X_new, {{k}})  # X_new: d x m matrix of points to predict
-y_hat = [sum(y[i] ./ (dj .+ 1e-12)) / sum(1 ./ (dj .+ 1e-12)) for (i, dj) in zip(nbrs, d)]
+using Statistics
+
+y = vec(sum(X, dims=1)) .+ 0.1 .* randn(size(X, 2))  # replace with the target of each column of the data
+idw(i, dj) = sum(y[i] ./ (dj .+ 1e-12)) / sum(1 ./ (dj .+ 1e-12))  # inverse-distance weighted mean
+nb, nd = knn(tree, Z, 31, true)  # each point first, then its 30 nearest others
+loo(k) = sqrt(mean((idw(n[2:k+1], dd[2:k+1]) - y[j])^2 for (j, (n, dd)) in enumerate(zip(nb, nd))))  # leave-one-out RMSE
+ks = 1:30
+k_best = ks[argmin(loo.(ks))]
+println("best k = ", k_best, ", LOO RMSE = ", round(loo(k_best), digits=3))
+
+X_new = rand(size(Z, 1), 10)  # replace with a d x m matrix of points to predict, in the original units
+nbrs, d = knn(tree, (X_new .- mu) ./ sd, k_best)  # scaled like the training data
+y_hat = [idw(i, dj) for (i, dj) in zip(nbrs, d)]
 '''
 
 [[actionGroups]]
@@ -315,8 +344,8 @@ code = '''
 using BenchmarkTools
 
 for T in (KDTree, BallTree, BruteTree)
-	t = T({{data}}, metric)
-	println(rpad(string(T), 10), @belapsed knn($t, $({{query}}), {{k}}))
+	t = T(Z, metric)
+	println(rpad(string(T), 10), @belapsed knn($t, $q, {{k}}))
 end
 '''
 
@@ -329,8 +358,9 @@ id = "nearest-examples"
 label = "Nearest Examples"
 desc = "Show which training points drive a prediction and how far away they are"
 code = '''
-i, d = knn(tree, {{query}}, {{k}}, true)
+labels = Z[1, :] .+ Z[2, :] .> 0  # replace with the class of each column of the data
+i, d = knn(tree, q, {{k}}, true)
 for (j, dj) in zip(i, d)
-	println("point ", j, "  label ", labels[j], "  distance ", round(dj, digits=3))
+	println("point ", j, "  ", X[:, j], "  label ", labels[j], "  distance ", round(dj, digits=3), " sd")
 end
 '''

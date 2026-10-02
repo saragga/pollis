@@ -187,33 +187,39 @@ default = "1000"
 [[codeBranches]]
 model = "ctm"
 code = '''
-using TopicModels, TextAnalysis
+using TopicModelsVB
 
-crps  = Corpus([StringDocument(d) for d in {{corpus}}])  # wrap documents
-prepare!(crps, strip_punctuation | strip_case)  # normalise text
-update_lexicon!(crps)  # build vocabulary
-dtm   = DocumentTermMatrix(crps)  # document-term matrix
+docs  = {{corpus}}  # vector of strings, one per document
+words = [split(lowercase(replace(d, r"[^A-Za-z ]" => " "))) for d in docs]  # lowercase words, punctuation stripped
+vocab = sort(unique(reduce(vcat, words)))  # vocabulary
+key   = Dict(w => i for (i, w) in enumerate(vocab))  # word -> vocabulary key
+corp  = Corpus([Document([key[w] for w in ws]) for ws in words], vocab=vocab)  # TopicModelsVB corpus (its own type, not a document-term matrix)
+fixcorp!(corp, stop=true, condense=true, remove_empty_docs=true, trim=true)  # drop stop words, merge repeated words into counts
 
-model = CTM(dtm.dtm, {{k}})  # logistic-normal prior; {{k}} topics
+model = CTM(corp, {{k}})  # logistic-normal prior on topic proportions; {{k}} topics
 train!(model, iter={{iters}})  # variational EM training
 
-topicdist(model)  # topic-word distributions (k x V)
+showtopics(model, 10)  # top 10 words of each topic
+topicdist(model, 1)  # topic proportions of document 1 (sums to 1)
 '''
 
 [[codeBranches]]
 model = "fctm"
 code = '''
-using TopicModels, TextAnalysis
+using TopicModelsVB
 
-crps  = Corpus([StringDocument(d) for d in {{corpus}}])  # wrap documents
-prepare!(crps, strip_punctuation | strip_case)  # normalise text
-update_lexicon!(crps)  # build vocabulary
-dtm   = DocumentTermMatrix(crps)  # document-term matrix
+docs  = {{corpus}}  # vector of strings, one per document
+words = [split(lowercase(replace(d, r"[^A-Za-z ]" => " "))) for d in docs]  # lowercase words, punctuation stripped
+vocab = sort(unique(reduce(vcat, words)))  # vocabulary
+key   = Dict(w => i for (i, w) in enumerate(vocab))  # word -> vocabulary key
+corp  = Corpus([Document([key[w] for w in ws]) for ws in words], vocab=vocab)  # TopicModelsVB corpus (its own type, not a document-term matrix)
+fixcorp!(corp, stop=true, condense=true, remove_empty_docs=true, trim=true)  # drop stop words, merge repeated words into counts
 
-model = fCTM(dtm.dtm, {{k}})  # focused CTM with {{k}} topics
+model = fCTM(corp, {{k}})  # filtered CTM: background words are filtered out of the topics; {{k}} topics
 train!(model, iter={{iters}})  # variational EM training
 
-topicdist(model)  # topic-word distributions (k x V)
+showtopics(model, 10)  # top 10 words of each topic
+topicdist(model, 1)  # topic proportions of document 1 (sums to 1)
 '''
 
 [[actionGroups]]
@@ -225,12 +231,15 @@ id = "topic-words"
 label = "Top Words per Topic"
 desc = "Highest-probability words for each discovered topic"
 code = '''
-using TopicModels, TextAnalysis
+using TopicModelsVB
 
-crps = Corpus([StringDocument(d) for d in {{corpus}}])  # build corpus
-prepare!(crps, strip_punctuation | strip_case); update_lexicon!(crps)  # normalise
-dtm = DocumentTermMatrix(crps)  # document-term matrix
-model = CTM(dtm.dtm, {{k}}); train!(model)  # fit CTM
+docs  = {{corpus}}  # vector of strings, one per document
+words = [split(lowercase(replace(d, r"[^A-Za-z ]" => " "))) for d in docs]  # lowercase words, punctuation stripped
+vocab = sort(unique(reduce(vcat, words)))  # vocabulary
+key   = Dict(w => i for (i, w) in enumerate(vocab))  # word -> vocabulary key
+corp  = Corpus([Document([key[w] for w in ws]) for ws in words], vocab=vocab)  # TopicModelsVB corpus (its own type, not a document-term matrix)
+fixcorp!(corp, stop=true, condense=true, remove_empty_docs=true, trim=true)  # drop stop words, merge repeated words into counts
+model = CTM(corp, {{k}}); train!(model, iter={{iters}}, printelbo=false)  # fit CTM
 
 showtopics(model, 10)  # top 10 words per topic
 '''
@@ -238,16 +247,21 @@ showtopics(model, 10)  # top 10 words per topic
 [[actionGroups.actions]]
 id = "topic-correlation"
 label = "Topic Correlations"
-desc = "Heatmap of the topic covariance matrix"
+desc = "Heatmap of the topic correlation matrix implied by the logistic-normal covariance"
 code = '''
-using TopicModels, TextAnalysis, Plots
+using TopicModelsVB, LinearAlgebra, Plots
 
-crps = Corpus([StringDocument(d) for d in {{corpus}}])  # build corpus
-prepare!(crps, strip_punctuation | strip_case); update_lexicon!(crps)  # normalise
-dtm = DocumentTermMatrix(crps)  # document-term matrix
-model = CTM(dtm.dtm, {{k}}); train!(model)  # fit CTM
+docs  = {{corpus}}  # vector of strings, one per document
+words = [split(lowercase(replace(d, r"[^A-Za-z ]" => " "))) for d in docs]  # lowercase words, punctuation stripped
+vocab = sort(unique(reduce(vcat, words)))  # vocabulary
+key   = Dict(w => i for (i, w) in enumerate(vocab))  # word -> vocabulary key
+corp  = Corpus([Document([key[w] for w in ws]) for ws in words], vocab=vocab)  # TopicModelsVB corpus (its own type, not a document-term matrix)
+fixcorp!(corp, stop=true, condense=true, remove_empty_docs=true, trim=true)  # drop stop words, merge repeated words into counts
+model = CTM(corp, {{k}}); train!(model, iter={{iters}}, printelbo=false)  # fit CTM
 
-heatmap(model.sigma, title="Topic Covariance")  # covariance matrix heatmap
+s = sqrt.(diag(model.sigma))  # topic standard deviations
+R = Matrix(model.sigma) ./ (s * transpose(s))  # covariance to correlation
+heatmap(R, clims=(-1, 1), color=:balance, title="Topic Correlation")  # correlation heatmap
 '''
 
 [[actionGroups]]
@@ -257,31 +271,66 @@ label = "Diagnose"
 [[actionGroups.actions]]
 id = "perplexity"
 label = "Perplexity"
-desc = "Perplexity on the training documents (in-sample: it keeps falling as topics are added, so hold out documents to compare models); lower is better"
+desc = "Perplexity on held-out documents (document completion); lower is better. In-sample perplexity keeps falling as topics are added, so it cannot choose a model"
 code = '''
-using TopicModels, TextAnalysis
+using TopicModelsVB, LinearAlgebra, Random
 
-crps = Corpus([StringDocument(d) for d in {{corpus}}])  # build corpus
-prepare!(crps, strip_punctuation | strip_case); update_lexicon!(crps)  # normalise
-dtm = DocumentTermMatrix(crps)  # document-term matrix
-model = CTM(dtm.dtm, {{k}}); train!(model, iter={{iters}})  # fit CTM
+docs  = {{corpus}}  # vector of strings, one per document
+words = [split(lowercase(replace(d, r"[^A-Za-z ]" => " "))) for d in docs]  # lowercase words, punctuation stripped
+vocab = sort(unique(reduce(vcat, words)))  # vocabulary
+key   = Dict(w => i for (i, w) in enumerate(vocab))  # word -> vocabulary key
+corp  = Corpus([Document([key[w] for w in ws]) for ws in words], vocab=vocab)  # TopicModelsVB corpus (its own type, not a document-term matrix)
+fixcorp!(corp, stop=true, condense=true, remove_empty_docs=true, trim=true)  # drop stop words, merge repeated words into counts
+test  = randperm(Xoshiro(1), length(corp))[1:max(1, div(length(corp), 5))]  # hold out 20% of the documents
+train = Corpus(docs=corp.docs[setdiff(eachindex(corp.docs), test)], vocab=corp.vocab)  # same vocabulary keys
+held  = filter(d -> length(d.terms) >= 2, corp.docs[test])  # held-out documents with at least two distinct words
 
-perplexity(model)  # perplexity on training corpus
+function heldout_perplexity(model, held)  # document completion: infer each topic mix from half the words, score the other half
+    obs = Corpus(docs=[Document(terms=d.terms[1:2:end], counts=d.counts[1:2:end]) for d in held], vocab=model.corp.vocab)
+    fit = predict(obs, model)  # topic proportions of the held-out documents, topics fixed
+    ll, n = 0.0, 0
+    for (j, d) in enumerate(held)
+        t, c = d.terms[2:2:end], d.counts[2:2:end]  # the unseen half
+        keep = vec(sum(model.beta[:, t], dims=1)) .> 0; t, c = t[keep], c[keep]  # words absent from the training documents have zero topic weight, so are not scored
+        pw = transpose(model.beta[:, t]) * topicdist(fit, j)  # p(word) = sum over topics of theta times beta
+        model isa fCTM && (pw = model.eta .* pw .+ (1 - model.eta) .* model.kappa[t])  # fCTM: mix in the filtered background words
+        ll += dot(c, log.(pw)); n += sum(c)
+    end
+    exp(-ll / n)  # lower is better, comparable across k because the documents were not used for fitting
+end
+
+model = CTM(train, {{k}}); train!(model, iter={{iters}}, printelbo=false)  # fit on the training documents only
+heldout_perplexity(model, held)  # held-out perplexity
 '''
 
 [[actionGroups.actions]]
 id = "topic-coherence"
 label = "Topic Coherence"
-desc = "Average PMI of top word pairs within each topic"
+desc = "UMass coherence of each topic from how often its top words appear in the same documents"
 code = '''
-using TopicModels, TextAnalysis
+using TopicModelsVB, Statistics
 
-crps = Corpus([StringDocument(d) for d in {{corpus}}])  # build corpus
-prepare!(crps, strip_punctuation | strip_case); update_lexicon!(crps)  # normalise
-dtm = DocumentTermMatrix(crps)  # document-term matrix
-model = CTM(dtm.dtm, {{k}}); train!(model, iter={{iters}})  # fit CTM
+docs  = {{corpus}}  # vector of strings, one per document
+words = [split(lowercase(replace(d, r"[^A-Za-z ]" => " "))) for d in docs]  # lowercase words, punctuation stripped
+vocab = sort(unique(reduce(vcat, words)))  # vocabulary
+key   = Dict(w => i for (i, w) in enumerate(vocab))  # word -> vocabulary key
+corp  = Corpus([Document([key[w] for w in ws]) for ws in words], vocab=vocab)  # TopicModelsVB corpus (its own type, not a document-term matrix)
+fixcorp!(corp, stop=true, condense=true, remove_empty_docs=true, trim=true)  # drop stop words, merge repeated words into counts
+model = CTM(corp, {{k}}); train!(model, iter={{iters}}, printelbo=false)  # fit CTM
 
-coherence(model, dtm.dtm, 10)  # average PMI coherence using top 10 words
+function umass(model, corp; n=10)  # UMass coherence of each topic from document co-occurrence: closer to 0 is more coherent
+    D = [Set(d.terms) for d in corp.docs]
+    nd(a) = count(S -> a in S, D)
+    nd(a, b) = count(S -> a in S && b in S, D)
+    map(1:model.K) do i
+        top = sortperm(model.beta[i, :], rev=true)[1:n]  # top n words of topic i
+        sum(log((nd(top[m], top[j]) + 1) / nd(top[j])) for m in 2:n for j in 1:m-1)
+    end
+end
+
+c = umass(model, corp)  # one score per topic
+foreach(i -> println("Topic ", i, ": ", round(c[i], digits=2)), sortperm(c))  # least coherent first
+println("Mean coherence: ", round(mean(c), digits=2))
 '''
 
 [[actionGroups]]
@@ -293,14 +342,21 @@ id = "infer-topics"
 label = "Infer Topics"
 desc = "Topic distribution for a new document"
 code = '''
-using TopicModels, TextAnalysis
+using TopicModelsVB
 
-crps = Corpus([StringDocument(d) for d in {{corpus}}])  # build corpus
-prepare!(crps, strip_punctuation | strip_case); update_lexicon!(crps)  # normalise
-dtm = DocumentTermMatrix(crps)  # document-term matrix
-model = CTM(dtm.dtm, {{k}}); train!(model)  # fit CTM
+docs  = {{corpus}}  # vector of strings, one per document
+words = [split(lowercase(replace(d, r"[^A-Za-z ]" => " "))) for d in docs]  # lowercase words, punctuation stripped
+vocab = sort(unique(reduce(vcat, words)))  # vocabulary
+key   = Dict(w => i for (i, w) in enumerate(vocab))  # word -> vocabulary key
+corp  = Corpus([Document([key[w] for w in ws]) for ws in words], vocab=vocab)  # TopicModelsVB corpus (its own type, not a document-term matrix)
+fixcorp!(corp, stop=true, condense=true, remove_empty_docs=true, trim=true)  # drop stop words, merge repeated words into counts
+model = CTM(corp, {{k}}); train!(model, iter={{iters}}, printelbo=false)  # fit CTM
 
-infer(model, new_doc_bow)  # topic distribution for a new document bow vector
+new_text = "replace with the text of a new document"
+ids = [key[w] for w in split(lowercase(replace(new_text, r"[^A-Za-z ]" => " "))) if haskey(key, w)]  # known words only
+new_corp = Corpus(Document(ids), vocab=corp.vocab)  # same vocabulary keys as the training corpus
+fixcorp!(new_corp, condense=true)  # merge repeated words into counts
+topicdist(predict(new_corp, model), 1)  # topic proportions of the new document, topics held fixed
 '''
 
 [[actionGroups.actions]]
@@ -308,15 +364,19 @@ id = "top-docs"
 label = "Top Documents"
 desc = "Documents most representative of a given topic"
 code = '''
-using TopicModels, TextAnalysis
+using TopicModelsVB
 
-crps = Corpus([StringDocument(d) for d in {{corpus}}])  # build corpus
-prepare!(crps, strip_punctuation | strip_case); update_lexicon!(crps)  # normalise
-dtm = DocumentTermMatrix(crps)  # document-term matrix
-model = CTM(dtm.dtm, {{k}}); train!(model)  # fit CTM
+docs  = {{corpus}}  # vector of strings, one per document
+words = [split(lowercase(replace(d, r"[^A-Za-z ]" => " "))) for d in docs]  # lowercase words, punctuation stripped
+vocab = sort(unique(reduce(vcat, words)))  # vocabulary
+key   = Dict(w => i for (i, w) in enumerate(vocab))  # word -> vocabulary key
+corp  = Corpus([Document([key[w] for w in ws]) for ws in words], vocab=vocab)  # TopicModelsVB corpus (its own type, not a document-term matrix)
+fixcorp!(corp, stop=true, condense=true, remove_empty_docs=true, trim=true)  # drop stop words, merge repeated words into counts
+model = CTM(corp, {{k}}); train!(model, iter={{iters}}, printelbo=false)  # fit CTM
 
-gamma = topicdist(model)  # document-topic matrix
-sortperm(gamma[:, topic_idx], rev=true)[1:10]  # top 10 documents for a chosen topic
+topic_idx = 1  # topic of interest
+theta = [topicdist(model, d)[topic_idx] for d in 1:length(corp)]  # share of the topic in each document
+first(sortperm(theta, rev=true), 10)  # top 10 documents for the topic
 '''
 
 [[actionGroups]]
@@ -326,35 +386,95 @@ label = "Compare"
 [[actionGroups.actions]]
 id = "compare-k"
 label = "Compare k Topics"
-desc = "Perplexity across different numbers of topics"
+desc = "Held-out perplexity and topic coherence across numbers of topics"
 code = '''
-using TopicModels, TextAnalysis
+using TopicModelsVB, LinearAlgebra, Random, Statistics
 
-crps = Corpus([StringDocument(d) for d in {{corpus}}])  # build corpus
-prepare!(crps, strip_punctuation | strip_case); update_lexicon!(crps)  # normalise
-dtm = DocumentTermMatrix(crps)  # document-term matrix
+docs  = {{corpus}}  # vector of strings, one per document
+words = [split(lowercase(replace(d, r"[^A-Za-z ]" => " "))) for d in docs]  # lowercase words, punctuation stripped
+vocab = sort(unique(reduce(vcat, words)))  # vocabulary
+key   = Dict(w => i for (i, w) in enumerate(vocab))  # word -> vocabulary key
+corp  = Corpus([Document([key[w] for w in ws]) for ws in words], vocab=vocab)  # TopicModelsVB corpus (its own type, not a document-term matrix)
+fixcorp!(corp, stop=true, condense=true, remove_empty_docs=true, trim=true)  # drop stop words, merge repeated words into counts
+test  = randperm(Xoshiro(1), length(corp))[1:max(1, div(length(corp), 5))]  # hold out 20% of the documents
+train = Corpus(docs=corp.docs[setdiff(eachindex(corp.docs), test)], vocab=corp.vocab)  # same vocabulary keys
+held  = filter(d -> length(d.terms) >= 2, corp.docs[test])  # held-out documents with at least two distinct words
+
+function heldout_perplexity(model, held)  # document completion: infer each topic mix from half the words, score the other half
+    obs = Corpus(docs=[Document(terms=d.terms[1:2:end], counts=d.counts[1:2:end]) for d in held], vocab=model.corp.vocab)
+    fit = predict(obs, model)  # topic proportions of the held-out documents, topics fixed
+    ll, n = 0.0, 0
+    for (j, d) in enumerate(held)
+        t, c = d.terms[2:2:end], d.counts[2:2:end]  # the unseen half
+        keep = vec(sum(model.beta[:, t], dims=1)) .> 0; t, c = t[keep], c[keep]  # words absent from the training documents have zero topic weight, so are not scored
+        pw = transpose(model.beta[:, t]) * topicdist(fit, j)  # p(word) = sum over topics of theta times beta
+        model isa fCTM && (pw = model.eta .* pw .+ (1 - model.eta) .* model.kappa[t])  # fCTM: mix in the filtered background words
+        ll += dot(c, log.(pw)); n += sum(c)
+    end
+    exp(-ll / n)  # lower is better, comparable across k because the documents were not used for fitting
+end
+
+function umass(model, corp; n=10)  # UMass coherence of each topic from document co-occurrence: closer to 0 is more coherent
+    D = [Set(d.terms) for d in corp.docs]
+    nd(a) = count(S -> a in S, D)
+    nd(a, b) = count(S -> a in S && b in S, D)
+    map(1:model.K) do i
+        top = sortperm(model.beta[i, :], rev=true)[1:n]  # top n words of topic i
+        sum(log((nd(top[m], top[j]) + 1) / nd(top[j])) for m in 2:n for j in 1:m-1)
+    end
+end
 
 for k in [5, 10, 20, 50]  # sweep over topic counts
-    m = CTM(dtm.dtm, k); train!(m, iter={{iters}})  # fit model
-    println("k=", k, " perplexity=", perplexity(m))  # report perplexity
+    m = CTM(train, k); train!(m, iter={{iters}}, printelbo=false)  # fit on the training documents only
+    println("k=", k, "  held-out perplexity=", round(heldout_perplexity(m, held), digits=1), "  mean coherence=", round(mean(umass(m, corp)), digits=2))
 end
 '''
 
 [[actionGroups.actions]]
 id = "ctm-vs-fctm"
 label = "CTM vs Focused CTM"
-desc = "Topic quality with and without background separation"
+desc = "Topic quality with and without background separation: held-out perplexity and topic coherence"
 code = '''
-using TopicModels, TextAnalysis
+using TopicModelsVB, LinearAlgebra, Random, Statistics
 
-crps = Corpus([StringDocument(d) for d in {{corpus}}])  # build corpus
-prepare!(crps, strip_punctuation | strip_case); update_lexicon!(crps)  # normalise
-dtm = DocumentTermMatrix(crps)  # document-term matrix
+docs  = {{corpus}}  # vector of strings, one per document
+words = [split(lowercase(replace(d, r"[^A-Za-z ]" => " "))) for d in docs]  # lowercase words, punctuation stripped
+vocab = sort(unique(reduce(vcat, words)))  # vocabulary
+key   = Dict(w => i for (i, w) in enumerate(vocab))  # word -> vocabulary key
+corp  = Corpus([Document([key[w] for w in ws]) for ws in words], vocab=vocab)  # TopicModelsVB corpus (its own type, not a document-term matrix)
+fixcorp!(corp, stop=true, condense=true, remove_empty_docs=true, trim=true)  # drop stop words, merge repeated words into counts
+test  = randperm(Xoshiro(1), length(corp))[1:max(1, div(length(corp), 5))]  # hold out 20% of the documents
+train = Corpus(docs=corp.docs[setdiff(eachindex(corp.docs), test)], vocab=corp.vocab)  # same vocabulary keys
+held  = filter(d -> length(d.terms) >= 2, corp.docs[test])  # held-out documents with at least two distinct words
 
-m1 = CTM(dtm.dtm, {{k}}); train!(m1, iter={{iters}})  # standard CTM
-m2 = fCTM(dtm.dtm, {{k}}); train!(m2, iter={{iters}})  # focused CTM
-println("CTM perplexity:  ", perplexity(m1))  # compare perplexity
-println("fCTM perplexity: ", perplexity(m2))  # compare perplexity
+function umass(model, corp; n=10)  # UMass coherence of each topic from document co-occurrence: closer to 0 is more coherent
+    D = [Set(d.terms) for d in corp.docs]
+    nd(a) = count(S -> a in S, D)
+    nd(a, b) = count(S -> a in S && b in S, D)
+    map(1:model.K) do i
+        top = sortperm(model.beta[i, :], rev=true)[1:n]  # top n words of topic i
+        sum(log((nd(top[m], top[j]) + 1) / nd(top[j])) for m in 2:n for j in 1:m-1)
+    end
+end
+
+function heldout_perplexity(model, held)  # document completion: infer each topic mix from half the words, score the other half
+    obs = Corpus(docs=[Document(terms=d.terms[1:2:end], counts=d.counts[1:2:end]) for d in held], vocab=model.corp.vocab)
+    fit = predict(obs, model)  # topic proportions of the held-out documents, topics fixed
+    ll, n = 0.0, 0
+    for (j, d) in enumerate(held)
+        t, c = d.terms[2:2:end], d.counts[2:2:end]  # the unseen half
+        keep = vec(sum(model.beta[:, t], dims=1)) .> 0; t, c = t[keep], c[keep]  # words absent from the training documents have zero topic weight, so are not scored
+        pw = transpose(model.beta[:, t]) * topicdist(fit, j)  # p(word) = sum over topics of theta times beta
+        model isa fCTM && (pw = model.eta .* pw .+ (1 - model.eta) .* model.kappa[t])  # fCTM: mix in the filtered background words
+        ll += dot(c, log.(pw)); n += sum(c)
+    end
+    exp(-ll / n)
+end
+
+m1 = CTM(train, {{k}}); train!(m1, iter={{iters}}, printelbo=false)  # standard CTM
+m2 = fCTM(train, {{k}}); train!(m2, iter={{iters}}, printelbo=false)  # filtered CTM
+println("CTM  held-out perplexity: ", round(heldout_perplexity(m1, held), digits=1), "  mean coherence: ", round(mean(umass(m1, corp)), digits=2))
+println("fCTM held-out perplexity: ", round(heldout_perplexity(m2, held), digits=1), "  mean coherence: ", round(mean(umass(m2, corp)), digits=2))
 '''
 
 [[actionGroups]]
@@ -366,15 +486,20 @@ id = "topic-network"
 label = "Topic Network"
 desc = "Graph of positively correlated topic pairs"
 code = '''
-using TopicModels, TextAnalysis, Graphs, GraphPlot
+using TopicModelsVB, LinearAlgebra, Graphs, GraphPlot
 
-crps = Corpus([StringDocument(d) for d in {{corpus}}])  # build corpus
-prepare!(crps, strip_punctuation | strip_case); update_lexicon!(crps)  # normalise
-dtm = DocumentTermMatrix(crps)  # document-term matrix
-model = CTM(dtm.dtm, {{k}}); train!(model)  # fit CTM
+docs  = {{corpus}}  # vector of strings, one per document
+words = [split(lowercase(replace(d, r"[^A-Za-z ]" => " "))) for d in docs]  # lowercase words, punctuation stripped
+vocab = sort(unique(reduce(vcat, words)))  # vocabulary
+key   = Dict(w => i for (i, w) in enumerate(vocab))  # word -> vocabulary key
+corp  = Corpus([Document([key[w] for w in ws]) for ws in words], vocab=vocab)  # TopicModelsVB corpus (its own type, not a document-term matrix)
+fixcorp!(corp, stop=true, condense=true, remove_empty_docs=true, trim=true)  # drop stop words, merge repeated words into counts
+model = CTM(corp, {{k}}); train!(model, iter={{iters}}, printelbo=false)  # fit CTM
 
-adj = model.sigma .> 0  # positive correlation adjacency
-gplot(SimpleGraph(adj))  # visualise topic network
+s = sqrt.(diag(model.sigma))  # topic standard deviations
+R = Matrix(model.sigma) ./ (s * transpose(s))  # covariance to correlation
+adj = (R .> 0.1) .& .!Matrix{Bool}(I, model.K, model.K)  # edges: correlation above 0.1, no self-loops
+gplot(SimpleGraph(adj), nodelabel=1:model.K)  # visualise topic network
 '''
 
 [[actionGroups.actions]]
@@ -382,12 +507,15 @@ id = "topic-labels"
 label = "Topic Labels"
 desc = "Top-5 words as a label for each topic"
 code = '''
-using TopicModels, TextAnalysis
+using TopicModelsVB
 
-crps = Corpus([StringDocument(d) for d in {{corpus}}])  # build corpus
-prepare!(crps, strip_punctuation | strip_case); update_lexicon!(crps)  # normalise
-dtm = DocumentTermMatrix(crps)  # document-term matrix
-model = CTM(dtm.dtm, {{k}}); train!(model)  # fit CTM
+docs  = {{corpus}}  # vector of strings, one per document
+words = [split(lowercase(replace(d, r"[^A-Za-z ]" => " "))) for d in docs]  # lowercase words, punctuation stripped
+vocab = sort(unique(reduce(vcat, words)))  # vocabulary
+key   = Dict(w => i for (i, w) in enumerate(vocab))  # word -> vocabulary key
+corp  = Corpus([Document([key[w] for w in ws]) for ws in words], vocab=vocab)  # TopicModelsVB corpus (its own type, not a document-term matrix)
+fixcorp!(corp, stop=true, condense=true, remove_empty_docs=true, trim=true)  # drop stop words, merge repeated words into counts
+model = CTM(corp, {{k}}); train!(model, iter={{iters}}, printelbo=false)  # fit CTM
 
 showtopics(model, 5)  # top 5 words per topic as label
 '''

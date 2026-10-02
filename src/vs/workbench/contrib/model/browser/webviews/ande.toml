@@ -304,6 +304,15 @@ model = "ae"
 code = '''
 using OutlierDetection, OutlierDetectionNetworks, Flux, Statistics
 using OutlierDetectionNetworks.Templates: MLPAutoEncoder
+using Random
+
+# Example data: 1000 points near a 2-D plane in 6 dimensions, 5% of them moved off the plane
+rng = Xoshiro(42)
+n, p = 1000, 6
+W = randn(rng, 2, p)  # the plane
+X = randn(rng, n, 2) * W .+ 0.1 .* randn(rng, n, p)  # normal points: plane plus small noise
+out_idx = randperm(rng, n)[1:50]  # the injected anomalies (ground truth, unknown in real data)
+X[out_idx, :] = 1.5 .* randn(rng, 50, p)  # off the plane, but within the range of each feature
 
 lo, hi = minimum({{data}}, dims=1), maximum({{data}}, dims=1)
 Xs = Float32.(permutedims(({{data}} .- lo) ./ (hi .- lo)))  # scale to [0, 1], observations in columns
@@ -312,9 +321,12 @@ encoder, decoder = MLPAutoEncoder(size(Xs, 1), {{latent}}, {{hidden}}; bias=true
 detector = AEDetector(encoder=encoder, decoder=decoder, epochs={{epochs}}, opt=Adam(1e-3))
 model, scores = OutlierDetection.fit(detector, Xs; verbosity=0)  # score = reconstruction error
 
-threshold = quantile(scores, 1 - {{contam}})  # flag the top {{contam}} of scores
+threshold = quantile(scores, 1 - {{contam}})  # flag the top {{contam}} share of scores; the contamination is an assumption about the data
 anomalies = findall(scores .> threshold)  # row indices of the flagged points
 println("Anomalies detected: ", length(anomalies))
+
+hits = length(intersect(anomalies, out_idx))  # flagged points that are injected anomalies (example data only)
+println("Precision: ", round(hits / length(anomalies); digits = 2), "  Recall: ", round(hits / length(out_idx); digits = 2))
 '''
 
 [[codeBranches]]
@@ -322,19 +334,35 @@ model = "deepsad"
 code = '''
 using OutlierDetection, OutlierDetectionNetworks, Flux, Statistics
 using OutlierDetectionNetworks.Templates: MLPAutoEncoder
+using Random
+
+# Example data: 1000 points near a 2-D plane in 6 dimensions, 5% of them moved off the plane
+rng = Xoshiro(42)
+n, p = 1000, 6
+W = randn(rng, 2, p)  # the plane
+X = randn(rng, n, 2) * W .+ 0.1 .* randn(rng, n, p)  # normal points: plane plus small noise
+out_idx = randperm(rng, n)[1:50]  # the injected anomalies (ground truth, unknown in real data)
+X[out_idx, :] = 1.5 .* randn(rng, 50, p)  # off the plane, but within the range of each feature
+anom_idx = out_idx[1:10]  # only 10 anomalies carry a label; the other 40 stay hidden
 
 lo, hi = minimum({{data}}, dims=1), maximum({{data}}, dims=1)
 Xs = Float32.(permutedims(({{data}} .- lo) ./ (hi .- lo)))  # scale to [0, 1], observations in columns
-y  = fill("normal", size({{data}}, 1))  # unlabelled rows are treated as normal
+y  = fill("normal", size({{data}}, 1))  # unlabelled rows get the label normal: this package cannot take missing labels (its loss tests y == class);
+                                       # with eta = 1 that is exactly the unlabelled term of Deep SAD, with eta != 1 it reweights them as labelled normals
 y[{{known}}] .= "outlier"  # rows known to be anomalies
 
 encoder, decoder = MLPAutoEncoder(size(Xs, 1), {{latent}}, {{hidden}}; bias=true)  # the decoder is used for pretraining only
 detector = DSADDetector(encoder=encoder, decoder=decoder, epochs=(10, {{epochs}}), eta={{eta}})  # (pretraining, training) epochs
 model, scores = OutlierDetection.fit(detector, Xs, to_categorical(y); verbosity=0)  # score = distance to the centre
 
-threshold = quantile(scores, 1 - {{contam}})  # flag the top {{contam}} of scores
+threshold = quantile(scores, 1 - {{contam}})  # flag the top {{contam}} share of scores; the contamination is an assumption about the data
 anomalies = findall(scores .> threshold)  # row indices of the flagged points
 println("Anomalies detected: ", length(anomalies))
+
+hits = length(intersect(anomalies, out_idx))  # flagged points that are injected anomalies (example data only)
+println("Precision: ", round(hits / length(anomalies); digits = 2), "  Recall: ", round(hits / length(out_idx); digits = 2))
+hidden = setdiff(out_idx, {{known}})  # anomalies the detector was not told about
+println("Recall on unlabelled anomalies: ", round(mean(in(anomalies), hidden); digits = 2))
 '''
 
 [[codeBranches]]
@@ -342,19 +370,34 @@ model = "esad"
 code = '''
 using OutlierDetection, OutlierDetectionNetworks, Flux, Statistics
 using OutlierDetectionNetworks.Templates: MLPAutoEncoder
+using Random
+
+# Example data: 1000 points near a 2-D plane in 6 dimensions, 5% of them moved off the plane
+rng = Xoshiro(42)
+n, p = 1000, 6
+W = randn(rng, 2, p)  # the plane
+X = randn(rng, n, 2) * W .+ 0.1 .* randn(rng, n, p)  # normal points: plane plus small noise
+out_idx = randperm(rng, n)[1:50]  # the injected anomalies (ground truth, unknown in real data)
+X[out_idx, :] = 1.5 .* randn(rng, 50, p)  # off the plane, but within the range of each feature
+anom_idx = out_idx[1:10]  # only 10 anomalies carry a label; the other 40 stay hidden
 
 lo, hi = minimum({{data}}, dims=1), maximum({{data}}, dims=1)
 Xs = Float32.(permutedims(({{data}} .- lo) ./ (hi .- lo)))  # scale to [0, 1], observations in columns
-y  = fill("normal", size({{data}}, 1))  # unlabelled rows are treated as normal
+y  = fill("normal", size({{data}}, 1))  # unlabelled rows get the label normal, as ESAD assumes; this package cannot take missing labels
 y[{{known}}] .= "outlier"  # rows known to be anomalies
 
 encoder, decoder = MLPAutoEncoder(size(Xs, 1), {{latent}}, {{hidden}}; bias=true)
 detector = ESADDetector(encoder=encoder, decoder=decoder, epochs={{epochs}})  # one end-to-end training stage
 model, scores = OutlierDetection.fit(detector, Xs, to_categorical(y); verbosity=0)  # score = distance in latent space
 
-threshold = quantile(scores, 1 - {{contam}})  # flag the top {{contam}} of scores
+threshold = quantile(scores, 1 - {{contam}})  # flag the top {{contam}} share of scores; the contamination is an assumption about the data
 anomalies = findall(scores .> threshold)  # row indices of the flagged points
 println("Anomalies detected: ", length(anomalies))
+
+hits = length(intersect(anomalies, out_idx))  # flagged points that are injected anomalies (example data only)
+println("Precision: ", round(hits / length(anomalies); digits = 2), "  Recall: ", round(hits / length(out_idx); digits = 2))
+hidden = setdiff(out_idx, {{known}})  # anomalies the detector was not told about
+println("Recall on unlabelled anomalies: ", round(mean(in(anomalies), hidden); digits = 2))
 '''
 
 [[actionGroups]]
@@ -432,6 +475,7 @@ desc = "Apply the fitted network to new observations X_new"
 code = '''
 using OutlierDetection, OutlierDetectionNetworks, Statistics
 
+X_new = vcat(randn(200, 2) * W .+ 0.1 .* randn(200, p), 1.5 .* randn(10, p))  # example: 200 points from the plane, 10 off it; use your own new data here
 threshold  = quantile(scores, 1 - {{contam}})  # calibrated on the training scores
 Xn         = Float32.(permutedims((X_new .- lo) ./ (hi .- lo)))  # same scaling as the training data
 new_scores = OutlierDetection.transform(detector, model, Xn)

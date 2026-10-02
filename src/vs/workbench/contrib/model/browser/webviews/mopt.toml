@@ -506,13 +506,15 @@ code = '''
 [[actionGroups.actions]]
 id = "multiple-restarts"
 label = "Multiple Restarts"
-desc = "Solve from 10 random points on the manifold to look for other local minima"
+desc = "Solve from 10 random points on the manifold and compare the end points; for the default Rayleigh quotient on the sphere every local minimum is global (the two unit eigenvectors of the smallest eigenvalue) and all other critical points are saddles, so every run should reach the same cost"
 code = '''
 Random.seed!(3)
 runs = [solve(rand(M)) for _ in 1:10]
 c = [f(M, r.p) for r in runs]
-(costs = round.(c, sigdigits=8), best = minimum(c), worst = maximum(c), share_at_best = count(c .<= minimum(c) + 1e-8) / length(c),
- selected_run_cost = f(M, p_opt))
+gn = [norm(M, r.p, grad_f(M, r.p)) for r in runs]  # a small gradient norm with a higher cost marks a saddle or a stalled run
+(costs = round.(c, sigdigits=8), gradient_norms = round.(gn, sigdigits=3), best = minimum(c), worst = maximum(c),
+ share_at_best = count(c .<= minimum(c) + 1e-8) / length(c), selected_run_cost = f(M, p_opt),
+ smallest_eigenvalue_of_A = eigmin(A))  # the global minimum for the default Rayleigh quotient on the sphere
 '''
 
 [[actionGroups.actions]]
@@ -537,6 +539,7 @@ code = '''
 solvers = ["gradient descent" => gradient_descent, "conjugate gradient" => conjugate_gradient_descent,
            "quasi-Newton" => quasi_Newton, "trust regions" => trust_regions]
 map(solvers) do (name, s)
+    s(M, f, grad_f, p0; stopping_criterion=StopAfterIteration(2))  # warm-up run so the timing excludes compilation
     sec = @elapsed st = s(M, f, grad_f, p0; stopping_criterion=StopAfterIteration(maxiters) | StopWhenGradientNormLess(tol),
                           record=[:Cost], return_state=true)
     p = get_solver_result(st)
@@ -598,5 +601,5 @@ code = '''
 [(solver = "gradient descent", per_iteration = "one gradient, a few costs (line search)", convergence = "linear", use_when = "baseline; cheap or very large problems"),
  (solver = "conjugate gradient", per_iteration = "as gradient descent plus a vector transport", convergence = "faster linear", use_when = "large problems without memory for curvature"),
  (solver = "quasi-Newton", per_iteration = "gradient plus limited-memory updates", convergence = "superlinear in practice", use_when = "moderate dimension; usually the best default"),
- (solver = "trust regions", per_iteration = "an inner truncated-CG solve with Hessian-vector products", convergence = "superlinear to quadratic", use_when = "high accuracy, saddle points, or an exact Hessian is available")]
+ (solver = "trust regions", per_iteration = "an inner truncated-CG solve with Hessian-vector products", convergence = "superlinear with the finite-difference Hessian approximation used here; quadratic only with an exact Hessian", use_when = "high accuracy, saddle points, or an exact Hessian is available")]
 '''

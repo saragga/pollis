@@ -288,20 +288,27 @@ return s;
 [[codeBranches]]
 model = "*"
 code = '''
-{{?inference=standard}}using GLM  # linear models
-{{?inference!=standard}}using GLM, CovarianceMatrices, Tables  # linear models + robust standard errors
+{{?inference=standard}}using GLM, Distributions, LinearAlgebra  # linear models
+{{?inference!=standard}}using GLM, Distributions, LinearAlgebra, CovarianceMatrices, Tables  # linear models + robust standard errors
 
 {{?model=ols}}model = lm(@formula({{formula}}), {{data}})  # ordinary least squares
-{{?model=wls}}model = lm(@formula({{formula}}), {{data}}, wts={{weights}})  # weighted least squares
+{{?model=wls}}model = lm(@formula({{formula}}), {{data}}, weights={{weights}})  # weighted least squares
 
-{{?inference=HC0|HC1|HC2|HC3}}V = vcov(model, {{inference}}())  # robust variance-covariance matrix
-{{?inference=HAC}}V = vcov(model, HAC(BartlettKernel(), NeweyWest()))  # robust variance-covariance matrix
-{{?inference=clustered}}V = vcov(model, CRHC0(Tables.getcolumn({{data}}, :{{cluster}})))  # cluster-robust variance-covariance matrix
-{{?inference=driscoll-kraay}}V = vcov(DriscollKraay(Bartlett(5), tis=Tables.getcolumn({{data}}, :{{dktime}}), iis=Tables.getcolumn({{data}}, :{{dkentity}})), model)  # Driscoll-Kraay variance-covariance matrix
-{{?inference!=standard}}println(coeftable(model, V))  # coefficients with robust SEs
-{{?inference=standard}}println(coeftable(model))  # coefficient table
+{{?inference=standard}}V = vcov(model)  # classical variance-covariance matrix
+{{?inference=HC0|HC1|HC2|HC3}}V = vcov({{inference}}(), model)  # heteroskedasticity-robust variance-covariance matrix
+{{?inference=HAC}}V = vcov(Bartlett{NeweyWest}(), model)  # Newey-West HAC, data-driven bandwidth (rows must be in time order)
+{{?inference=clustered}}V = vcov(CR1(Tables.getcolumn({{data}}, :{{cluster}})), model)  # cluster-robust, small-sample corrected
+{{?inference=driscoll-kraay}}V = vcov(DriscollKraay(Bartlett(5), tis=Tables.getcolumn({{data}}, :{{dktime}}), iis=Tables.getcolumn({{data}}, :{{dkentity}})), model)  # Driscoll-Kraay, 5 lags
 
-println("R² = ", r2(model))  # share of variance explained
+se = sqrt.(diag(V))  # standard errors from V: every later action uses the same V
+t  = coef(model) ./ se
+pv = 2 .* ccdf.(TDist(dof_residual(model)), abs.(t))
+println(rpad("", 16), lpad("Coef.", 12), lpad("Std. Error", 12), lpad("t", 9), lpad("Pr(>|t|)", 10))
+for (name, b, s, tt, pp) in zip(coefnames(model), coef(model), se, t, pv)
+	println(rpad(name, 16), lpad(round(b, digits=4), 12), lpad(round(s, digits=4), 12), lpad(round(tt, digits=2), 9), lpad(round(pp, digits=4), 10))
+end
+
+println("R2 = ", r2(model))  # share of variance explained
 '''
 
 [[actionGroups]]
@@ -324,14 +331,14 @@ plot!(identity, extrema(yhat)..., linestyle=:dash, label="45-degree line")  # pe
 [[actionGroups.actions]]
 id = "coef-plot"
 label = "Coefficient Plot"
-desc = "Estimates with 95% confidence intervals"
+desc = "Estimates with 95% confidence intervals from the chosen variance estimator"
 code = '''
-using GLM, Plots
+using GLM, Plots, Distributions, LinearAlgebra
 
 est = coef(model)  # point estimates
-ci  = confint(model)  # 95% confidence intervals (p x 2)
+hw  = quantile(TDist(dof_residual(model)), 0.975) .* sqrt.(diag(V))  # 95% half-width, from V (robust if selected)
 k   = length(est)
-scatter(est, 1:k, xerror=(est .- ci[:, 1], ci[:, 2] .- est), yticks=(1:k, coefnames(model)), label=false)
+scatter(est, 1:k, xerror=hw, yticks=(1:k, coefnames(model)), label=false)
 vline!([0], linestyle=:dash, label=false)  # zero-effect reference
 '''
 
@@ -346,7 +353,8 @@ desc = "Check linearity and constant variance"
 code = '''
 using GLM, Plots
 
-r = residuals(model)  # raw residuals
+{{?model=ols}}r = residuals(model)  # raw residuals
+{{?model=wls}}r = sqrt.({{weights}}) .* residuals(model)  # weighted residuals: constant variance if the weights are right
 scatter(predict(model), r, xlabel="Fitted", ylabel="Residual", label=false, alpha=0.5)
 hline!([0], linestyle=:dash, label=false)  # a funnel shape suggests heteroskedasticity
 '''
@@ -358,7 +366,9 @@ desc = "Compare residuals with a normal distribution"
 code = '''
 using GLM, StatsPlots, Distributions
 
-qqplot(Normal(), residuals(model), xlabel="Normal quantiles", ylabel="Residual quantiles")  # points near the line = normal errors
+{{?model=ols}}r = residuals(model)  # raw residuals
+{{?model=wls}}r = sqrt.({{weights}}) .* residuals(model)  # weighted residuals share one variance
+qqplot(Normal(), r, xlabel="Normal quantiles", ylabel="Residual quantiles")  # points near the line = normal errors
 '''
 
 [[actionGroups.actions]]
@@ -366,11 +376,15 @@ id = "influence"
 label = "Leverage and Influence"
 desc = "Hat-matrix leverage and Cook distance"
 code = '''
-using GLM
+using GLM, LinearAlgebra
 
-h = leverage(model)  # diagonal of the hat matrix
-d = cooksdistance(model)  # Cook distance of each observation
-n, p = nobs(model), length(coef(model))
+X = modelmatrix(model)
+{{?model=ols}}Xw, r = X, residuals(model)
+{{?model=wls}}Xw, r = sqrt.({{weights}}) .* X, sqrt.({{weights}}) .* residuals(model)  # weighted design and residuals
+h  = vec(sum((Xw / cholesky(Symmetric(transpose(Xw) * Xw)).U) .^ 2, dims=2))  # diagonal of the hat matrix
+n, p = size(X)
+s2 = deviance(model) / dof_residual(model)  # residual variance
+d  = r .^ 2 .* h ./ (p .* s2 .* (1 .- h) .^ 2)  # Cook distance of each observation
 println("High leverage (h > 2p/n): ", findall(h .> 2p / n))
 println("Influential (D > 4/n):    ", findall(d .> 4 / n))
 '''
@@ -384,11 +398,14 @@ id = "predict-ci"
 label = "Confidence Interval"
 desc = "Predicted mean with a 95% confidence interval"
 code = '''
-using GLM, Tables
+using GLM, Tables, Distributions
 
 newdata = map(c -> c[1:5], Tables.columntable({{data}}))  # first 5 rows; replace with new observations
-pred = predict(model, newdata; interval=:confidence, level=0.95)  # prediction, lower, upper
-println(pred)
+X0   = modelcols(formula(model).rhs, newdata)  # design matrix of the new rows
+yhat = X0 * coef(model)
+se   = sqrt.(vec(sum((X0 * V) .* X0, dims=2)))  # standard error of the mean, from V (robust if selected)
+q    = quantile(TDist(dof_residual(model)), 0.975)
+println((prediction=yhat, lower=yhat .- q .* se, upper=yhat .+ q .* se))
 '''
 
 [[actionGroups.actions]]
@@ -396,11 +413,17 @@ id = "predict-pi"
 label = "Prediction Interval"
 desc = "Range for a new individual observation"
 code = '''
-using GLM, Tables
+using GLM, Tables, Distributions
 
 newdata = map(c -> c[1:5], Tables.columntable({{data}}))  # first 5 rows; replace with new observations
-pred = predict(model, newdata; interval=:prediction, level=0.95)  # wider than the confidence interval
-println(pred)
+X0   = modelcols(formula(model).rhs, newdata)  # design matrix of the new rows
+yhat = X0 * coef(model)
+s2   = deviance(model) / dof_residual(model)  # error variance of a unit-weight observation (assumes constant variance)
+{{?model=ols}}w0 = ones(length(yhat))  # unweighted: every new observation has the same error variance
+{{?model=wls}}w0 = ones(length(yhat))  # weights of the new observations: replace; error variance = s2 / w0
+se   = sqrt.(vec(sum((X0 * V) .* X0, dims=2)) .+ s2 ./ w0)  # mean uncertainty + noise of one new observation
+q    = quantile(TDist(dof_residual(model)), 0.975)
+println((prediction=yhat, lower=yhat .- q .* se, upper=yhat .+ q .* se))  # wider than the confidence interval
 '''
 
 [[actionGroups]]
@@ -410,23 +433,27 @@ label = "Compare"
 [[actionGroups.actions]]
 id = "f-test"
 label = "Nested F-Test"
-desc = "Test whether extra predictors improve the fit"
+desc = "Test whether extra predictors improve the fit, with the chosen variance estimator"
 code = '''
-using GLM
+using GLM, Distributions, LinearAlgebra
 
 {{?model=ols}}model0 = lm(@formula(y ~ x1), {{data}})  # restricted model (edit to a nested formula)
-{{?model=wls}}model0 = lm(@formula(y ~ x1), {{data}}, wts={{weights}})  # restricted model, same weights (edit to a nested formula)
-println(ftest(model0.model, model.model))  # F-test of the nested models
+{{?model=wls}}model0 = lm(@formula(y ~ x1), {{data}}, weights={{weights}})  # restricted model, same weights (edit to a nested formula)
+{{?inference=standard}}println(ftest(model0.model, model.model))  # classical F-test of the nested models
+{{?inference!=standard}}j = findall(!in(coefnames(model0)), coefnames(model))  # coefficients dropped by the restricted model
+{{?inference!=standard}}b = coef(model)[j]
+{{?inference!=standard}}F = dot(b, V[j, j] \ b) / length(j)  # robust Wald F: the classical F-test assumes constant variance
+{{?inference!=standard}}println("Wald F(", length(j), ", ", dof_residual(model), ") = ", round(F, digits=3), ", p = ", round(ccdf(FDist(length(j), dof_residual(model)), F), digits=4))
 '''
 
 [[actionGroups.actions]]
 id = "info-criteria"
 label = "Information Criteria"
-desc = "Adjusted R², AIC and BIC for model comparison"
+desc = "Adjusted R2, AIC and BIC for model comparison"
 code = '''
 using GLM
 
-println("Adjusted R²: ", adjr2(model))  # penalised for the number of predictors
+println("Adjusted R2: ", adjr2(model))  # penalised for the number of predictors
 println("AIC: ", aic(model))  # lower is better
 println("BIC: ", bic(model))  # stronger penalty on parameters
 '''
@@ -438,13 +465,15 @@ label = "Interpret"
 [[actionGroups.actions]]
 id = "coefficients"
 label = "Coefficient Table"
-desc = "Estimates, confidence intervals and p-values"
+desc = "Estimates, confidence intervals and p-values from the chosen variance estimator"
 code = '''
-using GLM
+using GLM, Distributions, LinearAlgebra
 
-ct = coeftable(model)  # estimate, SE, t, p, 95% CI
-for (name, b, lo, hi) in zip(coefnames(model), coef(model), confint(model)[:, 1], confint(model)[:, 2])
-    println(rpad(name, 16), round(b; digits=4), "  [", round(lo; digits=4), ", ", round(hi; digits=4), "]")
+se = sqrt.(diag(V))  # standard errors from V (robust if selected)
+q  = quantile(TDist(dof_residual(model)), 0.975)
+pv = 2 .* ccdf.(TDist(dof_residual(model)), abs.(coef(model) ./ se))
+for (name, b, s, pp) in zip(coefnames(model), coef(model), se, pv)
+	println(rpad(name, 16), round(b; digits=4), "  [", round(b - q * s; digits=4), ", ", round(b + q * s; digits=4), "]  p = ", round(pp; digits=4))
 end
 '''
 
@@ -456,6 +485,6 @@ code = '''
 using GLM, Statistics
 
 X = modelmatrix(model)[:, 2:end]  # predictors without the intercept
-beta_std = coef(model)[2:end] .* transpose(std(X; dims=1)) ./ std(response(model))  # standardised effects
+beta_std = coef(model)[2:end] .* vec(std(X; dims=1)) ./ std(response(model))  # standardised effects
 println(beta_std)
 '''

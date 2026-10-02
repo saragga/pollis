@@ -147,19 +147,19 @@ detail = "re-initialise with reinit! to compare orbits across different conditio
 id = "u0"
 label = "Initial state (u0)"
 tooltip = "Initial condition vector. For the Lorenz system use [1.0, 0.0, 0.0]."
-default = "u0"
+default = "[1.0, 0.0, 0.0]"
 
 [[inputs]]
 id = "p"
 label = "Parameters (p)"
-tooltip = "System parameters tuple. Lorenz: (sigma=10, rho=28, beta=8/3)."
-default = "p"
+tooltip = "System parameters [sigma, rho, beta]. Lorenz: [10.0, 28.0, 8/3]."
+default = "[10.0, 28.0, 8/3]"
 
 [[inputs]]
 id = "T"
 label = "Time span (T)"
 tooltip = "Total integration time (e.g. 100.0)."
-default = "T"
+default = "100.0"
 
 [[codeBranches]]
 model = "main"
@@ -233,15 +233,18 @@ id = "sensitivity"
 label = "Sensitivity to ICs"
 desc = "Run two nearby trajectories and measure divergence to detect chaotic behaviour"
 code = '''
-using DynamicalSystems
+using DynamicalSystems, LinearAlgebra, Statistics
 
 ds1 = CoupledODEs(lorenz!, {{u0}}, {{p}})
 ds2 = CoupledODEs(lorenz!, {{u0}} .+ 1e-8, {{p}})  # perturbed IC
-tr1, _ = trajectory(ds1, {{T}}; Dt=0.01)  # reference orbit
+tr1, t = trajectory(ds1, {{T}}; Dt=0.01)  # reference orbit
 tr2, _ = trajectory(ds2, {{T}}; Dt=0.01)  # perturbed orbit
 
-dist = norm.(eachrow(tr1 .- tr2))  # distance between orbits at each step
-println("Max divergence: ", maximum(dist))  # large = chaotic
+dist = norm.(eachrow(Matrix(tr1) .- Matrix(tr2)))  # distance between orbits at each step
+k = something(findfirst(>(1.0), dist), length(dist))  # stop before the distance saturates at the attractor size
+slope = cov(t[1:k], log.(dist[1:k])) / var(t[1:k])  # growth rate of log distance: estimates the maximal Lyapunov exponent
+println("Max divergence: ", maximum(dist), " (bounded by the attractor diameter)")
+println("Log-distance slope: ", round(slope; digits=3), " (about 0.91 for the standard Lorenz parameters; positive = exponential divergence)")
 '''
 
 [[actionGroups.actions]]
@@ -251,11 +254,14 @@ desc = "Find equilibria of the system where the right-hand side is zero"
 code = '''
 using DynamicalSystems
 
-ds = CoupledODEs(lorenz!, [0.0, 0.0, 0.0], {{p}})  # system definition
-fps = fixedpoints(ds, IntervalBox(-30..30, -30..30, 0..60))  # search box for equilibria
+lorenz_rule(u, p, t) = SVector(p[1] * (u[2] - u[1]), u[1] * (p[2] - u[3]) - u[2], u[1] * u[2] - p[3] * u[3])  # out-of-place form: fixedpoints rejects in-place systems
+lorenz_jac(u, p, t) = SMatrix{3,3}(-p[1], p[2] - u[3], u[2],  p[1], -1.0, u[1],  0.0, -u[1], -p[3])  # hand-coded Jacobian (column-major): fixedpoints needs one
+ds = CoupledODEs(lorenz_rule, SVector{3}({{u0}}), {{p}})  # system definition
+box = [interval(-30, 30), interval(-30, 30), interval(0, 60)]  # search box for equilibria
+fps, eigs, stable = fixedpoints(ds, box, lorenz_jac)  # equilibria, Jacobian eigenvalues, stability
 
-for fp in fps
-    println("Fixed point: ", fp)  # print each equilibrium
+for (fp, ev, st) in zip(fps, eigs, stable)
+    println("Fixed point: ", round.(fp; digits=3), "  stable: ", st, "  max Re(eig): ", round(maximum(real, ev); digits=3))  # all unstable for rho = 28: the orbit cannot settle
 end
 '''
 
@@ -272,9 +278,12 @@ using DynamicalSystems
 
 u_new = [2.0, 3.0, 25.0]  # new initial condition
 ds = CoupledODEs(lorenz!, u_new, {{p}})
-tr, t = trajectory(ds, {{T}}; Dt=0.01)  # forward simulation
+lambda = lyapunov(ds, {{T}}; Ttr=100)  # maximal Lyapunov exponent: rate at which forecast errors grow
+tr, t = trajectory(ds, {{T}}, u_new; Dt=0.01, Ttr=100)  # forward simulation after a 100-unit transient
 
-println("Final state: ", tr[end, :])  # final predicted state
+d0, tol = 1e-6, 1.0  # initial-state error and tolerated forecast error
+println("x range on the attractor: ", round.(extrema(tr[:, 1]); digits=2))  # where the state will be, not when
+lambda > 0 && println("Predictability horizon: ", round(log(tol / d0) / lambda; digits=1), " time units")  # beyond this a point forecast is no better than the attractor range
 '''
 
 [[actionGroups.actions]]
@@ -309,9 +318,11 @@ using DynamicalSystems
 ds = CoupledODEs(lorenz!, [1.0, 0.0, 0.0], {{p}})
 
 for x0 in [1.0, 5.0, 10.0, -5.0]
-    reinit!(ds, [x0, 0.0, 25.0])  # reset to new IC without rebuilding
-    tr, _ = trajectory(ds, {{T}}; Dt=0.1)  # integrate from this IC
-    println("x0=", x0, " -> final x=", tr[end, 1])  # compare endpoints
+    u = [x0, 0.0, 25.0]
+    reinit!(ds, u)  # reset to new IC without rebuilding
+    tr, _ = trajectory(ds, {{T}}; Dt=0.1, Ttr=100)  # discard 100 time units of transient, then record
+    lambda = lyapunov(ds, {{T}}; u0=u, Ttr=100)  # maximal Lyapunov exponent from this IC
+    println("x0=", x0, " -> x range ", round.(extrema(tr[:, 1]); digits=2), ", lambda=", round(lambda; digits=3))  # same range and lambda: every start reaches the same attractor
 end
 '''
 
@@ -345,10 +356,11 @@ code = '''
 using DynamicalSystems
 
 ds = CoupledODEs(lorenz!, {{u0}}, {{p}})
-lambda = lyapunov(ds, {{T}})  # maximal Lyapunov exponent
+lambda = lyapunov(ds, {{T}}; Ttr=100)  # maximal Lyapunov exponent, after a 100-unit transient
+tol = 0.01  # numerical estimates of a zero exponent are slightly positive or negative
 
-println("Max Lyapunov exponent: ", lambda)  # positive = chaotic, negative = stable
-println("Orbit type: ", lambda > 0 ? "chaotic" : "regular")  # classification
+println("Max Lyapunov exponent: ", lambda)  # positive: chaos; about zero: periodic or quasi-periodic; negative: fixed point
+println("Orbit type: ", lambda > tol ? "chaotic" : lambda < -tol ? "fixed point" : "periodic or quasi-periodic")  # classification with a tolerance
 '''
 
 [[actionGroups.actions]]

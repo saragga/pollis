@@ -466,65 +466,93 @@ return s;
 [[codeBranches]]
 model = "multimodal"
 code = """
-using ONNX, Images
+using ONNX
+using ONNX: Umlaut  # ONNX.load returns an Umlaut tape, run with Umlaut.play!
 
-model = ONNX.load("clip-vit-base.onnx")  # load CLIP model from Kaggle weights
+# ONNX.jl runs the graph only: CLIP needs its own BPE tokenizer and image preprocessing, which ONNX.jl does not provide
+ids    = reshape(Int64[49406, 320, 2368, 525, 320, 7063, 49407], :, 1)  # token ids of "a cat on a mat" from the CLIP tokenizer, shape (seq, batch)
+pixels = rand(Float32, 224, 224, 3, 1)  # replace with the CLIP-normalised image, shape (W, H, C, batch)
+mask   = ones(Int64, size(ids))  # attention mask
 
-img   = load("photo.jpg")  # load image
-img_t = preprocess(img)  # resize to 224x224, normalise
-txt_t = tokenize("a cat on a mat")  # tokenise text query
-out   = model(img_t, txt_t)  # joint vision–language forward pass
-sim   = out["logits_per_image"]  # image–text similarity logits
+# arguments follow the order of the graph inputs (see Model Info); some exports use operators ONNX.jl does not implement yet
+model = ONNX.load("clip-vit-base.onnx", ids, pixels, mask)
+outs  = Umlaut.play!(model, ids, pixels, mask)  # a tuple in the order of the graph outputs
+sim   = outs[1]  # logits_per_image when it is the first output: image-text similarity
 """
 
 [[codeBranches]]
 model = "nlp"
 code = """
 using ONNX
+using ONNX: Umlaut  # ONNX.load returns an Umlaut tape, run with Umlaut.play!
 
-model = ONNX.load("gemma-2b-it.onnx")  # load NLP model from Kaggle weights
+# ONNX.jl runs the graph only: token ids come from the model tokenizer, and decoding them back to text needs it too
+ids   = Int64[2, 9083, 736, 5078, 235292]  # token ids of the prompt (placeholder values from the Gemma tokenizer)
+model = ONNX.load("gemma-2b-it.onnx", reshape(ids, :, 1))  # an export without KV-cache inputs, traced with shape (seq, batch)
 
-ids   = tokenize("Summarise this article:")  # tokenise prompt
-out   = model(ids)  # autoregressive forward pass
-text  = decode(out["logits"])  # decode output token ids
+for step in 1:20  # greedy generation: one forward pass per new token
+    logits = Umlaut.play!(model, reshape(ids, :, 1))  # (vocab, seq, batch)
+    push!(ids, argmax(logits[:, end, 1]) - 1)  # most likely next token (ids are 0-based)
+end
+ids  # generated token ids: decode them with the same tokenizer
 """
 
 [[codeBranches]]
 model = "vision"
 code = """
 using ONNX, Images
+using ONNX: Umlaut  # ONNX.load returns an Umlaut tape, run with Umlaut.play!
 
-model = ONNX.load("resnet50.onnx")  # load ResNet from Kaggle weights
+path = "resnet18.onnx"  # an ONNX ImageNet classifier, e.g. from Kaggle Models or the ONNX model zoo
+isfile(path) || download("https://github.com/onnx/models/raw/main/validated/vision/classification/resnet/model/resnet18-v1-7.onnx", path)
+include(download("https://raw.githubusercontent.com/FluxML/ONNX.jl/master/examples/imagenet_classes.jl"))  # IMAGENET_CLASSES, 0-based
 
-img    = load("image.jpg")  # load image
-img_t  = preprocess(img)  # resize and normalise to (3, 224, 224)
-logits = model(img_t)["output"]  # forward pass; shape: (1000,)
-pred   = argmax(logits)  # predicted ImageNet class index
+function preprocess(file)  # image -> (W, H, C, 1) Float32: Julia dims are the reverse of the ONNX (1, C, H, W) layout
+    x = permutedims(Float32.(channelview(RGB.(imresize(load(file), (224, 224))))), (3, 2, 1))  # CHW -> WHC
+    x = (x .- reshape(Float32[0.485, 0.456, 0.406], 1, 1, 3)) ./ reshape(Float32[0.229, 0.224, 0.225], 1, 1, 3)  # ImageNet normalisation
+    reshape(x, size(x)..., 1)
+end
+
+model = ONNX.load(path, rand(Float32, 224, 224, 3, 1))  # trace the graph with a dummy input of the right shape
+
+logits = vec(Umlaut.play!(model, preprocess("image.jpg")))  # forward pass: 1000 ImageNet logits
+pred   = argmax(logits)  # predicted class (1-based)
+IMAGENET_CLASSES[pred - 1]  # its label
 """
 
 [[codeBranches]]
 model = "audio"
 code = """
-using ONNX, WAV
+using ONNX
+using ONNX: Umlaut  # ONNX.load returns an Umlaut tape, run with Umlaut.play!
 
-model = ONNX.load("whisper-small.onnx")  # load Whisper from Kaggle weights
+# Whisper is an encoder-decoder, usually exported as two graphs; ONNX.jl provides neither the log-mel features nor the tokenizer
+mel     = rand(Float32, 3000, 80, 1)  # replace with the 80-bin log-mel spectrogram of 30 s of 16 kHz audio, shape (frames, mels, batch)
+encoder = ONNX.load("whisper-small-encoder.onnx", mel)
+hidden  = Umlaut.play!(encoder, mel)  # audio embedding
 
-wave, sr = wavread("audio.wav")  # load 16 kHz mono waveform
-feats    = log_mel_spectrogram(wave)  # extract log-mel features
-out      = model(feats)  # run encoder–decoder forward pass
-text     = decode(out["token_ids"])  # decoded transcript
+ids     = reshape(Int64[50258, 50259, 50359, 50363], :, 1)  # start-of-transcript prompt tokens (English, transcribe, no timestamps)
+decoder = ONNX.load("whisper-small-decoder.onnx", ids, hidden)  # arguments in the order of the graph inputs
+for step in 1:100  # greedy decoding, one token per pass
+    logits = Umlaut.play!(decoder, ids, hidden)  # (vocab, seq, batch)
+    next = argmax(logits[:, end, 1]) - 1  # most likely next token (0-based)
+    next == 50257 && break  # end of transcript
+    global ids = vcat(ids, fill(next, 1, 1))
+end
+ids  # transcript token ids: decode them with the Whisper tokenizer
 """
 
 [[codeBranches]]
 model = "tabular"
 code = """
 using ONNX, CSV, Tables
-
-model = ONNX.load("tabular-classifier.onnx")  # load tabular model from Kaggle weights
+using ONNX: Umlaut  # ONNX.load returns an Umlaut tape, run with Umlaut.play!
 
 tbl   = CSV.File("data.csv")  # load tabular data
-X     = Tables.matrix(tbl)[:, 1:end-1]  # feature matrix, shape (n_samples, n_features)
-probs = model(transpose(X))  # class probabilities, shape (n_classes, n_samples)
+X     = Float32.(Tables.matrix(tbl)[:, 1:end-1])  # feature matrix, shape (n_samples, n_features)
+Xt    = Matrix(transpose(X))  # (n_features, n_samples): Julia dims are the reverse of the ONNX (n_samples, n_features)
+model = ONNX.load("tabular-classifier.onnx", Xt)
+probs = Umlaut.play!(model, Xt)  # class scores, shape (n_classes, n_samples)
 pred  = argmax.(eachcol(probs))  # predicted class for each sample
 """
 
@@ -532,21 +560,23 @@ pred  = argmax.(eachcol(probs))  # predicted class for each sample
 model = "rl"
 code = """
 using ONNX
+using ONNX: Umlaut  # ONNX.load returns an Umlaut tape, run with Umlaut.play!
 
-policy = ONNX.load("ppo-cartpole.onnx")  # load RL policy from Kaggle weights
-
-obs    = Float32.([0.02, -0.01, 0.03, -0.02])  # CartPole observation vector
-out    = policy(obs)  # forward pass through policy network
-action = argmax(out["action_probs"])  # greedy action selection
+obs    = reshape(Float32[0.02, -0.01, 0.03, -0.02], :, 1)  # CartPole observation, shape (4, batch)
+policy = ONNX.load("ppo-cartpole.onnx", obs)  # load RL policy from Kaggle weights
+out    = Umlaut.play!(policy, obs)  # action logits or probabilities, shape (2, batch)
+action = argmax(out[:, 1]) - 1  # greedy action (CartPole actions are 0 and 1)
 """
 
 [[codeBranches]]
 model = "*"
 code = """
 using ONNX
+using ONNX: Umlaut  # ONNX.load returns an Umlaut tape, run with Umlaut.play!
 
-model = ONNX.load("model.onnx")  # load any Kaggle ONNX model
-out   = model(input)  # run forward pass
+x     = rand(Float32, 224, 224, 3, 1)  # an input of the shape the graph expects, dims reversed from ONNX
+model = ONNX.load("model.onnx", x)  # load any Kaggle ONNX model
+out   = Umlaut.play!(model, x)  # run forward pass
 """
 
 [[actionGroups]]
@@ -558,14 +588,25 @@ id = "prediction-probs"
 label = "Prediction Probabilities"
 desc = "Plot the top-5 class probabilities from the model output"
 code = """
-using ONNX, Plots, Images
+using ONNX, Images, Plots
+using ONNX: Umlaut  # ONNX.load returns an Umlaut tape, run with Umlaut.play!
 
-model  = ONNX.load("resnet50.onnx")  # load vision model
-img_t  = preprocess(load("image.jpg"))  # preprocess image
-logits = model(img_t)["output"]  # forward pass
+path = "resnet18.onnx"  # an ONNX ImageNet classifier, e.g. from Kaggle Models or the ONNX model zoo
+isfile(path) || download("https://github.com/onnx/models/raw/main/validated/vision/classification/resnet/model/resnet18-v1-7.onnx", path)
+include(download("https://raw.githubusercontent.com/FluxML/ONNX.jl/master/examples/imagenet_classes.jl"))  # IMAGENET_CLASSES, 0-based
+
+function preprocess(file)  # image -> (W, H, C, 1) Float32: Julia dims are the reverse of the ONNX (1, C, H, W) layout
+    x = permutedims(Float32.(channelview(RGB.(imresize(load(file), (224, 224))))), (3, 2, 1))  # CHW -> WHC
+    x = (x .- reshape(Float32[0.485, 0.456, 0.406], 1, 1, 3)) ./ reshape(Float32[0.229, 0.224, 0.225], 1, 1, 3)  # ImageNet normalisation
+    reshape(x, size(x)..., 1)
+end
+
+model = ONNX.load(path, rand(Float32, 224, 224, 3, 1))  # trace the graph with a dummy input of the right shape
+
+logits = vec(Umlaut.play!(model, preprocess("image.jpg")))  # forward pass
 probs  = exp.(logits .- maximum(logits)); probs ./= sum(probs)  # softmax: the network outputs logits, not probabilities
 top5   = sortperm(probs, rev=true)[1:5]  # top-5 class indices
-bar(IMAGENET_LABELS[top5], probs[top5], title="Top-5 predictions", ylabel="probability")  # plot probabilities
+bar([IMAGENET_CLASSES[i - 1] for i in top5], probs[top5], title="Top-5 predictions", ylabel="probability", xrotation=30)  # plot probabilities
 """
 
 [[actionGroups]]
@@ -579,10 +620,13 @@ desc = "Inspect ONNX model inputs, outputs, and operator graph"
 code = """
 using ONNX
 
-model = ONNX.load("model.onnx")  # load model
-println("Inputs:  ", ONNX.input_names(model))  # list input names
-println("Outputs: ", ONNX.output_names(model))  # list output names
-println("Nodes:   ", length(model.graph.node))  # operator count
+proto = open(io -> ONNX.decode(ONNX.ProtoDecoder(io), ONNX.ModelProto), "model.onnx")  # the raw ONNX protobuf
+g     = proto.graph
+inits = Set(t.name for t in g.initializer)  # weights are listed as inputs too
+println("Inputs:  ", [i.name for i in g.input if !(i.name in inits)])  # inputs to feed, in order
+println("Outputs: ", [o.name for o in g.output])  # outputs, in order
+println("Nodes:   ", length(g.node))  # operator count
+println("Ops:     ", unique(n.op_type for n in g.node))  # check these against the operators ONNX.jl implements
 """
 
 [[actionGroups]]
@@ -595,12 +639,13 @@ label = "Batch Inference"
 desc = "Run inference over a list of inputs in mini-batches"
 code = """
 using ONNX
+using ONNX: Umlaut
 
-model = ONNX.load("model.onnx")  # load model once
 batch = 16  # mini-batch size
-for i in 1:batch:length(inputs)
-    chunk = inputs[i:min(i+batch-1, end)]  # current mini-batch
-    outs  = model(stack(chunk))  # one forward pass on the stacked batch (model.(x) would apply it to every array element)
+model = ONNX.load("model.onnx", stack(inputs[1:batch]))  # trace once with a full batch; inputs: vector of arrays of the shape the graph expects
+outs  = []
+for i in 1:batch:length(inputs) - batch + 1  # full batches only: the traced graph may fix the batch size
+    push!(outs, Umlaut.play!(model, stack(inputs[i:i+batch-1])))  # one forward pass on the stacked batch
 end
 """
 
@@ -614,44 +659,50 @@ label = "Compare Models"
 desc = "Benchmark two Kaggle ONNX models on the same input"
 code = """
 using ONNX, BenchmarkTools
+using ONNX: Umlaut
 
 files = ["model-a.onnx", "model-b.onnx"]  # models to compare
+x = rand(Float32, 224, 224, 3, 1)  # the same input for both, dims reversed from ONNX
 
 for f in files
-    m   = ONNX.load(f)  # load model
-    t   = @benchmark m(input)  # benchmark forward pass
-    println(f, " median: ", median(t).time, " ns")  # report median time
+    m = ONNX.load(f, x)  # load model
+    t = @benchmark Umlaut.play!($m, $x)  # benchmark forward pass
+    println(f, " median: ", round(median(t).time / 1e6, digits=2), " ms")  # report median time
 end
 """
 
 [[actionGroups.actions]]
 id = "julia-onnx-vs-python"
 label = "Julia (ONNX) vs Python"
-desc = "Run the same Kaggle ONNX model in Julia and Python; compare outputs and latency"
+desc = "Run the same Kaggle ONNX model in Julia and Python on the same input; compare outputs and median latency"
 code = """
-# ── Julia side (ONNX.jl) ──────────────────────────────────────
+# Julia side (ONNX.jl)
 using ONNX, BenchmarkTools
+using ONNX: Umlaut
 
-model  = ONNX.load("resnet50.onnx")  # load Kaggle ONNX model (e.g. keras/resnet)
-input  = rand(Float32, 224, 224, 3, 1)  # random image input (H, W, C, batch)
-out_jl = model(input)  # forward pass
-pred_jl = argmax(out_jl["logits"][:, 1])  # top-1 class index
+x = rand(Float32, 224, 224, 3, 1)  # (W, H, C, batch): ONNX.jl reverses the ONNX (batch, C, H, W) dimensions
+write("input.bin", x)  # the same values for Python: column-major (W, H, C, batch) is row-major (batch, C, H, W)
 
-t_jl   = @benchmark model(input)  # benchmark
-println("Julia  median: ", median(t_jl).time ÷ 1_000_000, " ms")  # report latency
+model  = ONNX.load("resnet50.onnx", x)
+out_jl = vec(Umlaut.play!(model, x))  # forward pass
+t_jl   = @benchmark Umlaut.play!($model, $x)  # warm-up included: median over many runs
+println("Julia  median: ", round(median(t_jl).time / 1e6, digits=1), " ms, top-1 ", argmax(out_jl) - 1)
 
-# ── Python side (run in terminal) ─────────────────────────────
+# Python side (run in a terminal), on the same input and also with warm-up and a median:
 # pip install onnxruntime numpy
 # python3 - <<EOF
 # import onnxruntime as ort, numpy as np, time
-# sess  = ort.InferenceSession("resnet50.onnx")
-# inp   = {sess.get_inputs()[0].name:
-#          np.random.rand(1, 3, 224, 224).astype(np.float32)}
-# t0    = time.perf_counter()
-# out   = sess.run(None, inp)
-# print(f"Python median: {(time.perf_counter()-t0)*1000:.1f} ms")
-# print(f"Top-1 class:   {out[0].argmax()}")
+# sess = ort.InferenceSession("resnet50.onnx")
+# feed = {sess.get_inputs()[0].name: np.fromfile("input.bin", dtype=np.float32).reshape(1, 3, 224, 224)}
+# out = sess.run(None, feed)  # warm-up
+# ts = []
+# for _ in range(50):
+#     t0 = time.perf_counter(); out = sess.run(None, feed); ts.append(time.perf_counter() - t0)
+# print("Python median:", round(np.median(ts) * 1000, 1), "ms, top-1", out[0].argmax())
+# out[0].astype(np.float32).tofile("out_py.bin")
 # EOF
+# then compare the outputs in Julia:
+# maximum(abs.(out_jl .- read!("out_py.bin", similar(out_jl))))
 """
 
 [[actionGroups]]
@@ -663,9 +714,23 @@ id = "intermediate-activations"
 label = "Intermediate Activations"
 desc = "Extract and plot activations from an intermediate ONNX node"
 code = """
-using ONNX, Plots
+using ONNX, Images, Plots
+using ONNX: Umlaut  # ONNX.load returns an Umlaut tape, run with Umlaut.play!
 
-model = ONNX.load("resnet50.onnx")  # load model
-acts  = ONNX.run(model, input; intermediate="layer4")  # run with intermediate output
-heatmap(acts[:, :, 1, 1], title="Layer 4 activation map")  # plot first channel
+path = "resnet18.onnx"  # an ONNX ImageNet classifier, e.g. from Kaggle Models or the ONNX model zoo
+isfile(path) || download("https://github.com/onnx/models/raw/main/validated/vision/classification/resnet/model/resnet18-v1-7.onnx", path)
+include(download("https://raw.githubusercontent.com/FluxML/ONNX.jl/master/examples/imagenet_classes.jl"))  # IMAGENET_CLASSES, 0-based
+
+function preprocess(file)  # image -> (W, H, C, 1) Float32: Julia dims are the reverse of the ONNX (1, C, H, W) layout
+    x = permutedims(Float32.(channelview(RGB.(imresize(load(file), (224, 224))))), (3, 2, 1))  # CHW -> WHC
+    x = (x .- reshape(Float32[0.485, 0.456, 0.406], 1, 1, 3)) ./ reshape(Float32[0.229, 0.224, 0.225], 1, 1, 3)  # ImageNet normalisation
+    reshape(x, size(x)..., 1)
+end
+
+model = ONNX.load(path, rand(Float32, 224, 224, 3, 1))  # trace the graph with a dummy input of the right shape
+
+Umlaut.play!(model, preprocess("image.jpg"))  # forward pass; every op on the tape keeps its value
+maps = [op.val for op in model.ops if op.val isa AbstractArray{<:Real, 4} && size(op.val, 1) > 1]  # feature maps, (W, H, C, batch)
+acts = maps[end]  # the last convolutional block
+heatmap(transpose(acts[:, :, 1, 1]), title="Last block activation map, channel 1", yflip=true)  # transpose: rows are image rows
 """

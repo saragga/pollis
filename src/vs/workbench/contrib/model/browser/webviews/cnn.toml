@@ -436,6 +436,7 @@ id = "multi-step"
 label = "Recursive Multi-Step Forecast"
 desc = "Feed each one-step prediction back as the newest input to forecast 12 steps ahead"
 code = '''
+any(l -> l isa GlobalMaxPool, model) && @warn "GlobalMaxPool takes the maximum over the window and forgets when each feature fired, so this model cannot tell the newest value from an old one: choose Causal padding (reads the last time step) or the TCN for forecasting"
 window = {{xvar}}[:, :, end:end]  # most recent window, T x in_channels x 1 (needs in_channels == output_size)
 forecast = Vector{Float32}[]
 for h in 1:12
@@ -453,12 +454,11 @@ label = "Compare"
 [[actionGroups.actions]]
 id = "linear-baseline"
 label = "vs Linear Baseline"
-desc = "Training MSE of the network against least squares on the flattened input windows"
+desc = "Held-out MSE of the network against least squares on the flattened input windows"
 code = '''
-Z = reshape({{xvar}}, :, size({{xvar}}, 3))  # flatten each window into one feature vector
-Z1 = vcat(Z, ones(Float32, 1, size(Z, 2)))  # add an intercept row
-W = {{yvar}} / Z1  # least-squares coefficients
-(network = loss(model, {{xvar}}, {{yvar}}), linear = Flux.mse(W * Z1, {{yvar}}))
+flat(X) = vcat(reshape(X, :, size(X, 3)), ones(Float32, 1, size(X, 3)))  # each window as one feature vector, plus an intercept row
+W = {{yvar}} / flat({{xvar}})  # least-squares coefficients, fitted on the training windows
+(network = loss(model, X_test, y_test), linear = Flux.mse(W * flat(X_test), y_test))  # both on held-out windows: in-sample the network wins by capacity alone
 '''
 
 [[actionGroups]]

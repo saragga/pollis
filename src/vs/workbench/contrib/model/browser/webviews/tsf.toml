@@ -514,8 +514,10 @@ code = '''
 using HypothesisTests, StatsBase, Plots
 {{?model=loess}} r = y .- trend
 {{?model!=loess}} r = filter(isfinite, vec(StateSpaceModels.get_standard_residuals(kalman_filter(model))))[3:end]
-L = min(20, div(length(r), 4))
-display((ljung_box_lags = L, p_value = pvalue(LjungBoxTest(r, L))))
+{{?model=arima}}dof = model.order.p + model.order.q + model.order.P + model.order.Q  # lose one degree of freedom per estimated ARMA coefficient
+{{?model!=arima}}dof = 0  # no ARMA coefficients; for the structural models Harvey suggests (number of hyperparameters - 1)
+L = max(min(20, div(length(r), 4)), dof + 1)
+display((ljung_box_lags = L, dof = dof, p_value = pvalue(LjungBoxTest(r, L, dof))))
 bar(1:L, autocor(r, 1:L), legend=false, xlabel="Lag", title="Residual ACF")
 hline!([-1.96, 1.96] ./ sqrt(length(r)), c=:red, ls=:dash)
 '''
@@ -561,9 +563,13 @@ cands = [("Local Level", () -> LocalLevel(y)), ("Local Linear Trend", () -> Loca
 rows = []
 for (name, make) in cands
     m = make(); StateSpaceModels.isfitted(m) || StateSpaceModels.fit!(m)
-    push!(rows, (model = name, aic = round(m.results.aic, digits=1), aicc = round(m.results.aicc, digits=1), bic = round(m.results.bic, digits=1)))
+    skip = StateSpaceModels.default_filter(m).skip_llk_instants  # diffuse instants left out of the likelihood
+    push!(rows, (model = name, llk_observations = length(y) - skip, aic = round(m.results.aic, digits=1), aicc = round(m.results.aicc, digits=1), bic = round(m.results.bic, digits=1)))
 end
-rows
+# Each model drops a different number of diffuse start-up observations (differencing order, number of nonstationary states),
+# so its likelihood is on a different sample: compare the criteria only between rows with the same llk_observations
+length(unique(r.llk_observations for r in rows)) > 1 && @warn "Likelihoods use different numbers of observations; rank only within equal llk_observations"
+sort(rows, by = r -> (r.llk_observations, r.aic))
 '''
 
 [[actionGroups.actions]]

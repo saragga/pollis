@@ -139,19 +139,19 @@ detail = "quantify exponential divergence of nearby orbits to classify chaotic b
 id = "u0"
 label = "Initial state (u0)"
 tooltip = "Initial point for the map. For the Henon map use [0.0, 0.0]."
-default = "u0"
+default = "[0.0, 0.0]"
 
 [[inputs]]
 id = "p"
 label = "Parameters (p)"
 tooltip = "Map parameters tuple. Henon: (a=1.4, b=0.3)."
-default = "p"
+default = "[1.4, 0.3]"
 
 [[inputs]]
 id = "n"
 label = "Iterations (n)"
 tooltip = "Number of map iterations (e.g. 1000)."
-default = "n"
+default = "10000"
 
 [[codeBranches]]
 model = "main"
@@ -165,10 +165,11 @@ function henon(u, p, n)  # Henon map definition
 end
 
 ds = DeterministicIteratedMap(henon, {{u0}}, {{p}})  # define discrete map
-tr, t = trajectory(ds, {{n}})  # iterate for n steps
+tr, t = trajectory(ds, {{n}}; Ttr=1000)  # n steps after a 1000-step transient
 
-println("Final state: ", current_state(ds))  # state after n iterations
-println("Orbit size:  ", length(tr))  # number of points in orbit
+println("Bounded: ", all(isfinite, tr[end]))  # false if the orbit escaped to infinity
+println("x range: ", extrema(tr[:, 1]), "  y range: ", extrema(tr[:, 2]))  # extent of the attractor
+println("Orbit size: ", length(tr))  # number of points in orbit
 '''
 
 [[actionGroups]]
@@ -182,10 +183,16 @@ desc = "Plot the orbit in phase space to reveal strange attractor structure"
 code = '''
 using DynamicalSystems, GLMakie
 
-ds = DeterministicIteratedMap(henon, {{u0}}, {{p}})
-tr, _ = trajectory(ds, {{n}})  # iterate
+function henon(u, p, n)  # Henon map definition
+    a, b = p
+    x, y = u
+    return SVector(1 - a*x^2 + y, b*x)
+end
 
-scatter(vec(tr[:, 1]), vec(tr[:, 2]))  # phase portrait (x vs y)
+ds = DeterministicIteratedMap(henon, {{u0}}, {{p}})
+tr, _ = trajectory(ds, {{n}}; Ttr=1000)  # iterate after the transient
+
+scatter(tr[:, 1], tr[:, 2]; markersize=1)  # phase portrait (x vs y)
 '''
 
 [[actionGroups.actions]]
@@ -195,10 +202,16 @@ desc = "Plot x[n] and y[n] over iteration count to inspect transients and attrac
 code = '''
 using DynamicalSystems, GLMakie
 
-ds = DeterministicIteratedMap(henon, {{u0}}, {{p}})
-tr, t = trajectory(ds, {{n}})  # iterate with step index
+function henon(u, p, n)  # Henon map definition
+    a, b = p
+    x, y = u
+    return SVector(1 - a*x^2 + y, b*x)
+end
 
-lines(t, vec(tr[:, 1]), axis=(xlabel="n", ylabel="x[n]"))  # x component over iterations
+ds = DeterministicIteratedMap(henon, {{u0}}, {{p}})
+tr, t = trajectory(ds, {{n}})  # iterate with step index, transient included
+
+lines(t, tr[:, 1], axis=(xlabel="n", ylabel="x[n]"))  # x component over iterations
 '''
 
 [[actionGroups.actions]]
@@ -208,15 +221,21 @@ desc = "Sweep parameter a and record last 100 points to reveal period-doubling r
 code = '''
 using DynamicalSystems, GLMakie
 
+function henon(u, p, n)  # Henon map definition
+    a, b = p
+    x, y = u
+    return SVector(1 - a*x^2 + y, b*x)
+end
+
 a_vals = range(0.8, 1.4; length=200)  # sweep parameter a
 xs = Float64[]  # collect attractor points
 as = Float64[]  # collect corresponding a values
 
 for a in a_vals
-    ds = DeterministicIteratedMap(henon, {{u0}}, (a, 0.3))
-    tr, _ = trajectory(ds, {{n}})  # long transient
-    last100 = vec(tr[end-99:end, 1])  # last 100 x values
-    append!(xs, last100)
+    ds = DeterministicIteratedMap(henon, {{u0}}, [a, 0.3])
+    tr, _ = trajectory(ds, 99; Ttr={{n}})  # 100 points after an n-step transient
+    all(isfinite, tr[end]) || continue  # the orbit escaped to infinity: no attractor for this a and u0
+    append!(xs, tr[:, 1])
     append!(as, fill(a, 100))
 end
 
@@ -230,17 +249,26 @@ label = "Diagnose"
 [[actionGroups.actions]]
 id = "sensitivity"
 label = "Sensitivity to ICs"
-desc = "Run two nearby orbits and measure distance divergence over iterations"
+desc = "Run two nearby orbits on the attractor; the slope of log distance against time estimates the Lyapunov exponent (about 0.42 for Henon at a = 1.4, b = 0.3)"
 code = '''
-using DynamicalSystems
+using DynamicalSystems, LinearAlgebra, Statistics
 
-ds1 = DeterministicIteratedMap(henon, {{u0}}, {{p}})
-ds2 = DeterministicIteratedMap(henon, {{u0}} .+ 1e-8, {{p}})  # perturbed IC
-tr1, _ = trajectory(ds1, {{n}})  # reference orbit
-tr2, _ = trajectory(ds2, {{n}})  # perturbed orbit
+function henon(u, p, n)  # Henon map definition
+    a, b = p
+    x, y = u
+    return SVector(1 - a*x^2 + y, b*x)
+end
 
-dist = norm.(eachrow(tr1 .- tr2))  # distance at each step
-println("Max divergence: ", maximum(dist))  # large = chaotic
+ds = DeterministicIteratedMap(henon, {{u0}}, {{p}})
+step!(ds, 1000); u = current_state(ds)  # a point on the attractor
+tr1, _ = trajectory(ds, 100, u)  # reference orbit
+tr2, _ = trajectory(ds, 100, u .+ 1e-8)  # perturbed orbit
+
+dist = [norm(a - b) for (a, b) in zip(tr1, tr2)]  # distance at each step
+m = something(findfirst(>(0.1), dist), length(dist))  # stop before the distance saturates at the attractor size
+slope = cov(0:m-1, log.(dist[1:m])) / var(0:m-1)  # least-squares slope of log distance
+println("Growth rate (Lyapunov estimate): ", round(slope, digits=3))  # positive = chaotic
+println("Max divergence: ", round(maximum(dist), digits=3), " (bounded by the attractor size)")
 '''
 
 [[actionGroups.actions]]
@@ -250,11 +278,23 @@ desc = "Find fixed points of the map using interval arithmetic search"
 code = '''
 using DynamicalSystems
 
-ds = DeterministicIteratedMap(henon, [0.0, 0.0], {{p}})  # map definition
-fps = fixedpoints(ds, IntervalBox(-2..2, -1..1))  # search box
+function henon(u, p, n)  # Henon map definition
+    a, b = p
+    x, y = u
+    return SVector(1 - a*x^2 + y, b*x)
+end
 
-for fp in fps
-    println("Fixed point: ", fp)  # each fixed point
+function henon_jac(u, p, n)  # Jacobian [-2ax 1; b 0], column-major
+    a, b = p
+    return SMatrix{2, 2}(-2a*u[1], b, 1.0, 0.0)
+end
+
+ds = DeterministicIteratedMap(henon, [0.0, 0.0], {{p}})  # map definition
+box = [interval(-2, 2), interval(-1, 1)]  # search box
+fps, eigs, stable = fixedpoints(ds, box, henon_jac)
+
+for (fp, ev, s) in zip(fps, eigs, stable)
+    println("Fixed point: ", fp, "  |eigenvalues| = ", round.(abs.(ev), digits=3), s ? "  stable" : "  unstable")
 end
 '''
 
@@ -265,15 +305,28 @@ label = "Predict"
 [[actionGroups.actions]]
 id = "forward-iter"
 label = "Forward Iteration"
-desc = "Advance from a new initial condition and record the resulting orbit"
+desc = "Advance from a new initial condition, record the resulting orbit, and estimate how long it stays predictable"
 code = '''
 using DynamicalSystems
+
+function henon(u, p, n)  # Henon map definition
+    a, b = p
+    x, y = u
+    return SVector(1 - a*x^2 + y, b*x)
+end
 
 u_new = [0.5, 0.5]  # new initial condition
 ds = DeterministicIteratedMap(henon, u_new, {{p}})
 tr, t = trajectory(ds, {{n}})  # forward iteration
 
-println("Final state: ", tr[end, :])  # state after n iterations
+println("First steps: ", tr[1:5])  # the short-term orbit is predictable
+if all(isfinite, tr[end])
+    lambda = lyapunov(ds, 10000; u0=u_new, Ttr=1000)  # maximal Lyapunov exponent
+    println("x range on the attractor: ", extrema(tr[1001:end, 1]))
+    println("Steps before an error of 1e-8 grows to 0.1: ", round(Int, log(0.1 / 1e-8) / lambda))  # predictability horizon
+else
+    println("The orbit escaped to infinity")
+end
 '''
 
 [[actionGroups.actions]]
@@ -283,12 +336,22 @@ desc = "Iterate for each parameter value and count the distinct values the orbit
 code = '''
 using DynamicalSystems
 
+function henon(u, p, n)  # Henon map definition
+    a, b = p
+    x, y = u
+    return SVector(1 - a*x^2 + y, b*x)
+end
+
 a_vals = range(1.0, 1.4; length=20)  # sweep parameter a
 
 for a in a_vals
-    ds = DeterministicIteratedMap(henon, {{u0}}, (a, 0.3))
-    tr, _ = trajectory(ds, {{n}})  # iterate
-    period = length(unique(round.(tr[end-99:end, 1], digits=6)))  # distinct x values after the transient
+    ds = DeterministicIteratedMap(henon, {{u0}}, [a, 0.3])
+    tr, _ = trajectory(ds, 99; Ttr={{n}})  # 100 points after an n-step transient
+    if !all(isfinite, tr[end])
+        println("a=", round(a, digits=3), " -> escaped to infinity")
+        continue
+    end
+    period = length(unique(round.(tr[:, 1], digits=6)))  # distinct x values after the transient
     println("a=", round(a, digits=3), " -> ", period == 100 ? "no period within 100 steps" : "period $period")
 end
 '''
@@ -300,16 +363,27 @@ label = "Compare"
 [[actionGroups.actions]]
 id = "multi-ics"
 label = "Multiple Initial Conditions"
-desc = "Use reinit! to compare orbits from different starting points"
+desc = "Use reinit! to compare orbits from different starting points: whether they stay bounded, the region they settle on, and their Lyapunov exponent"
 code = '''
 using DynamicalSystems
+
+function henon(u, p, n)  # Henon map definition
+    a, b = p
+    x, y = u
+    return SVector(1 - a*x^2 + y, b*x)
+end
 
 ds = DeterministicIteratedMap(henon, [0.0, 0.0], {{p}})
 
 for x0 in [0.0, 0.1, 0.5, -0.5]
     reinit!(ds, [x0, 0.0])  # reset to new IC
-    tr, _ = trajectory(ds, {{n}})  # orbit from this IC
-    println("x0=", x0, " -> final x=", tr[end, 1])  # compare endpoints
+    tr, _ = trajectory(ds, {{n}}, [x0, 0.0]; Ttr=1000)  # orbit after the transient
+    if !all(isfinite, tr[end])
+        println("x0=", x0, " -> escaped to infinity")
+        continue
+    end
+    lambda = lyapunov(ds, 10000; u0=[x0, 0.0], Ttr=1000)
+    println("x0=", x0, " -> x range ", round.(extrema(tr[:, 1]), digits=3), ", Lyapunov ", round(lambda, digits=3))  # same attractor = same range and exponent
 end
 '''
 
@@ -320,19 +394,25 @@ desc = "Compare Henon map vs logistic map orbits side by side"
 code = '''
 using DynamicalSystems
 
+function henon(u, p, n)  # Henon map definition
+    a, b = p
+    x, y = u
+    return SVector(1 - a*x^2 + y, b*x)
+end
+
 function logistic(u, p, n)  # logistic map
     r = p[1]
     return SVector(r * u[1] * (1 - u[1]))
 end
 
-ds_henon = DeterministicIteratedMap(henon, [0.0, 0.0], (1.4, 0.3))  # Henon map
-ds_logistic = DeterministicIteratedMap(logistic, [0.5], (3.9,))  # logistic map r=3.9
+ds_henon = DeterministicIteratedMap(henon, [0.0, 0.0], [1.4, 0.3])  # Henon map
+ds_logistic = DeterministicIteratedMap(logistic, [0.5], [3.9])  # logistic map r=3.9
 
-tr_h, _ = trajectory(ds_henon, {{n}})  # Henon orbit
-tr_l, _ = trajectory(ds_logistic, {{n}})  # logistic orbit
+tr_h, _ = trajectory(ds_henon, {{n}}; Ttr=1000)  # Henon orbit
+tr_l, _ = trajectory(ds_logistic, {{n}}; Ttr=1000)  # logistic orbit
 
-println("Henon x range:    ", extrema(vec(tr_h[:, 1])))  # Henon attractor extent
-println("Logistic x range: ", extrema(vec(tr_l[:, 1])))  # logistic attractor extent
+println("Henon x range:    ", extrema(tr_h[:, 1]), "  Lyapunov ", round(lyapunov(ds_henon, 10000; Ttr=1000), digits=3))  # about 0.42
+println("Logistic x range: ", extrema(tr_l[:, 1]), "  Lyapunov ", round(lyapunov(ds_logistic, 10000; Ttr=1000), digits=3))  # about 0.49
 '''
 
 [[actionGroups]]
@@ -342,15 +422,21 @@ label = "Interpret"
 [[actionGroups.actions]]
 id = "lyapunov"
 label = "Lyapunov Exponent"
-desc = "Compute maximal Lyapunov exponent — positive means chaotic orbit"
+desc = "Compute maximal Lyapunov exponent: positive means chaotic orbit"
 code = '''
 using DynamicalSystems
 
-ds = DeterministicIteratedMap(henon, {{u0}}, {{p}})
-lambda = lyapunov(ds, {{n}})  # maximal Lyapunov exponent
+function henon(u, p, n)  # Henon map definition
+    a, b = p
+    x, y = u
+    return SVector(1 - a*x^2 + y, b*x)
+end
 
-println("Lyapunov exponent: ", lambda)  # positive = chaotic
-println("Orbit type: ", lambda > 0 ? "chaotic" : "regular")  # classification
+ds = DeterministicIteratedMap(henon, {{u0}}, {{p}})
+lambda = lyapunov(ds, {{n}}; Ttr=1000)  # maximal Lyapunov exponent, after a transient
+
+println("Lyapunov exponent: ", lambda)  # about 0.42 for a = 1.4, b = 0.3
+println("Orbit type: ", lambda > 0.01 ? "chaotic" : "regular")  # small positive values are numerical noise
 '''
 
 [[actionGroups.actions]]
@@ -360,8 +446,14 @@ desc = "Compute mean, std, and extrema of a long orbit to characterise the attra
 code = '''
 using DynamicalSystems, Statistics
 
+function henon(u, p, n)  # Henon map definition
+    a, b = p
+    x, y = u
+    return SVector(1 - a*x^2 + y, b*x)
+end
+
 ds = DeterministicIteratedMap(henon, {{u0}}, {{p}})
-tr, _ = trajectory(ds, {{n}})  # long orbit
+tr, _ = trajectory(ds, {{n}}; Ttr=1000)  # long orbit, transient discarded
 
 println("Mean: ",    mean.(eachcol(tr)))  # time-averaged state
 println("Std:  ",    std.(eachcol(tr)))  # spread

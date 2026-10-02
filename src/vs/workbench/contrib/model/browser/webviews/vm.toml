@@ -478,8 +478,8 @@ sigma = realized_volatility({{price}})  # daily realized volatility
 model = "tsv"
 code = '''
 function two_scales_volatility(price; K=5)
-    n = length(price)
     log_r = diff(log.(price))
+    n = length(log_r)  # number of returns (not prices)
 
     # Fast scale: all-observations RV
     rv_all = sum(log_r.^2)
@@ -492,10 +492,11 @@ function two_scales_volatility(price; K=5)
     end
     rv_slow /= K
 
-    # Bias correction (Zhang, Mykland and Ait-Sahalia 2005)
-    n_bar = (n - K) / K
+    # Bias correction with the small-sample adjustment (Zhang, Mykland and Ait-Sahalia 2005)
+    n_bar = (n - K + 1) / K  # average number of returns per subgrid
+    tsrv = (rv_slow - (n_bar / n) * rv_all) / (1 - n_bar / n)
 
-    return sqrt(rv_slow - (n_bar / n) * rv_all)
+    return tsrv > 0 ? sqrt(tsrv) : NaN  # TSRV can be negative in short samples (e.g. small rolling windows); NaN instead of a sqrt error
 end
 
 sigma = two_scales_volatility({{price}}; K = {{nsub}})  # noise-corrected daily volatility
@@ -572,7 +573,7 @@ plot(roll; label = "Rolling volatility (w = $w)", xlabel = "Window end")
 [[actionGroups.actions]]
 id = "bns"
 label = "Barndorff-Nielsen and Shephard Test"
-desc = "BNS jump test: standardised Z-statistic for the null hypothesis of no jumps. Significant if |Z| > 1.96."
+desc = "BNS jump test on intraday returns: standardised (RV - BV) statistic for the null hypothesis of no jumps; jumps only push RV above BV, so the test is one-sided (reject if Z > 1.645 at 5%)."
 code = '''
 using SpecialFunctions  # gamma
 
@@ -600,13 +601,14 @@ function bns_test(r)
     return Z
 end
 
-{{?model=park}} r = log.({{high}} ./ {{low}})  # daily log range (the test is designed for intraday returns)
-{{?model=gk|rs|yz}} r = diff(log.({{close}}))  # close-to-close log returns (the test is designed for intraday returns)
-{{?model=rv|tsv|bpv}} r = diff(log.({{price}}))  # intraday log returns
+{{?model=park}}error("The BNS test needs returns; log ranges are not returns. Select Realized, Two-Scales or Bipower with intraday prices")
+{{?model=gk|rs|yz}}@warn "BNS asymptotics are for many intraday returns within one day; on daily close-to-close returns the result is only indicative"
+{{?model=gk|rs|yz}}r = diff(log.({{close}}))  # close-to-close log returns
+{{?model=rv|tsv|bpv}}r = diff(log.({{price}}))  # intraday log returns
 Z = bns_test(r)
-println("BNS Z-statistic: ", Z)
+println("BNS Z-statistic: ", Z, "  one-sided p-value: ", 1 - 0.5 * erfc(-Z / sqrt(2)))
 
-if abs(Z) > 1.96
+if Z > 1.645  # one-sided 5% critical value
     println("Reject null -> evidence of jumps")
 else
     println("No significant jumps detected")

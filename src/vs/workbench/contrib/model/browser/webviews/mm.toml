@@ -326,15 +326,18 @@ label = "Visualise"
 [[actionGroups.actions]]
 id = "caterpillar"
 label = "Caterpillar Plot"
-desc = "Random effects of each group with prediction intervals"
+desc = "Random effects of each group with approximate 95% prediction intervals"
 code = '''
 using MixedModels, Plots
 
-re = raneftables(model)[1]  # random effects of the first grouping factor
-v  = [r[2] for r in re]  # random intercepts
-o  = sortperm(v)
-scatter(v[o], 1:length(v), xlabel="Random intercept", ylabel="Group (sorted)", label=false)
-vline!([0], linestyle=:dash, label=false)  # population average
+b = vec(ranef(model)[1][1, :])  # random intercepts (conditional modes) of the first grouping factor
+{{?model=lmm}}se = sqrt.(condVar(model)[1][1, 1, :])  # conditional standard deviations
+{{?model=glmm}}phi = dispersion_parameter(model) ? dispersion(model, true) : 1.0  # 1 for Bernoulli, Binomial and Poisson
+{{?model=glmm}}se = sqrt.(condVar(model.LMM)[1][1, 1, :] ./ sdest(model.LMM)^2 .* phi)  # Laplace approximation: the working LMM carries the final PIRLS weights
+o  = sortperm(b)
+{{?model=lmm}}scatter(b[o], 1:length(b), xerror=1.96 .* se[o], ms=3, xlabel="Random intercept", ylabel="Group (sorted)", label=false)
+{{?model=glmm}}scatter(b[o], 1:length(b), xerror=1.96 .* se[o], ms=3, xlabel="Random intercept (link scale)", ylabel="Group (sorted)", label=false)
+vline!([0], linestyle=:dash, label=false)  # population average: groups whose interval misses 0 differ from it
 '''
 
 [[actionGroups.actions]]
@@ -342,10 +345,16 @@ id = "fitted-observed"
 label = "Fitted vs Observed"
 desc = "Conditional fitted values against the response"
 code = '''
-using MixedModels, Plots
+using MixedModels, Plots, Statistics
 
-scatter(fitted(model), response(model), xlabel="Fitted", ylabel="Observed", label=false, alpha=0.5)
-plot!(identity, extrema(fitted(model))..., linestyle=:dash, label="45-degree line")
+mu, y = fitted(model), response(model)  # conditional fitted means and observed response
+{{?model=lmm}}scatter(mu, y, xlabel="Fitted", ylabel="Observed", label=false, alpha=0.5)
+{{?model=lmm}}plot!(identity, extrema(mu)..., linestyle=:dash, label="45-degree line")
+{{?model=glmm}}nb = max(5, round(Int, sqrt(length(mu))))  # number of equal-count bins: single binary or count responses say little
+{{?model=glmm}}bins = ceil.(Int, nb .* invperm(sortperm(mu)) ./ length(mu))  # bin of each observation, by rank of its fitted mean
+{{?model=glmm}}pm, om = [mean(mu[bins .== k]) for k in 1:nb], [mean(y[bins .== k]) for k in 1:nb]
+{{?model=glmm}}scatter(pm, om, xlabel="Mean fitted", ylabel="Mean observed", label="bins")
+{{?model=glmm}}plot!(identity, extrema(pm)..., linestyle=:dash, label="45-degree line")  # calibration: bins on the line are well predicted
 '''
 
 [[actionGroups]]
@@ -357,10 +366,18 @@ id = "residuals-fitted"
 label = "Residuals vs Fitted"
 desc = "Check linearity and constant variance"
 code = '''
-using MixedModels, Plots
+using MixedModels, Plots, Statistics
 
-scatter(fitted(model), residuals(model), xlabel="Fitted", ylabel="Residual", label=false, alpha=0.5)
-hline!([0], linestyle=:dash, label=false)  # a funnel shape suggests heteroskedasticity
+mu = fitted(model)
+r  = response(model) .- mu  # response residuals
+{{?model=lmm}}scatter(mu, r, xlabel="Fitted", ylabel="Residual", label=false, alpha=0.5)  # a funnel shape suggests heteroskedasticity
+{{?model=glmm}}nb = max(5, round(Int, sqrt(length(mu))))  # binned residuals (Gelman and Hill): raw GLMM residuals form uninformative bands
+{{?model=glmm}}bins = ceil.(Int, nb .* invperm(sortperm(mu)) ./ length(mu))  # equal-count bins of fitted mean
+{{?model=glmm}}fb, rb = [mean(mu[bins .== k]) for k in 1:nb], [mean(r[bins .== k]) for k in 1:nb]
+{{?model=glmm}}sb = [2 * std(r[bins .== k]) / sqrt(count(==(k), bins)) for k in 1:nb]  # about 2 standard errors of each bin mean
+{{?model=glmm}}scatter(fb, rb, xlabel="Mean fitted", ylabel="Mean residual", label="binned residuals")
+{{?model=glmm}}plot!(fb, [sb -sb], linestyle=:dash, color=:gray, label=["+/- 2 SE" ""])  # about 95% of bins should fall inside; a trend means misfit
+hline!([0], linestyle=:dash, label=false)
 '''
 
 [[actionGroups.actions]]
@@ -424,7 +441,9 @@ code = '''
 using MixedModels, GLM
 
 # model0 must be nested in model: here the same fixed effects with no random effects, and the same family and link
-model0 = model isa LinearMixedModel ? lm(@formula(y ~ x1 + x2), {{data}}) : glm(@formula(y ~ x1 + x2), {{data}}, model.resp.d, model.resp.link)
+X, y = modelmatrix(model), response(model)  # fixed-effects design and response of the fitted model, so model0 follows the formula input
+{{?model=lmm}}model0 = lm(X, y)
+{{?model=glmm}}model0 = glm(X, y, model.resp.d, model.resp.link)
 println(MixedModels.likelihoodratiotest(model0, model))  # a variance tested at 0 is on the boundary: the chi-square p-value is conservative (roughly halve it)
 '''
 

@@ -100,13 +100,16 @@ using Statistics
 n         = length({{y}})  # number of observations
 residuals = {{y}} .- {{yhat}}  # raw residuals
 ss_res    = sum(residuals .^ 2)  # sum of squared residuals
-ss_tot    = sum(({{y}} .- mean({{y}})) .^ 2)  # total sum of squares
+ybar      = mean(y_train)  # baseline = TRAINING mean, so the test R2 does not peek at the test targets (use mean({{y}}) for in-sample fit)
+ss_tot    = sum(({{y}} .- ybar) .^ 2)  # total sum of squares around the baseline
 
 rmse   = sqrt(ss_res / n)  # root mean squared error
 mae    = mean(abs.(residuals))  # mean absolute error
-r2     = 1 - ss_res / ss_tot  # coefficient of determination
-adj_r2 = 1 - (1 - r2) * (n - 1) / (n - {{p}} - 1)  # adjusted R², penalised for {{p}} predictors
-mape   = mean(abs.(residuals ./ {{y}})) * 100  # mean absolute percentage error (%)
+r2     = 1 - ss_res / ss_tot  # coefficient of determination (can be negative out of sample)
+adj_r2 = 1 - (1 - r2) * (n - 1) / (n - {{p}} - 1)  # adjusted R2, penalised for {{p}} predictors; meaningful only IN-SAMPLE (training data), not on a test set
+nz     = abs.({{y}}) .> 1e-8 * maximum(abs.({{y}}))  # MAPE divides by y and explodes when actual values are near zero
+any(.!nz) && @warn "MAPE skips $(count(.!nz)) near-zero actual values; prefer MAE or RMSE for such targets"
+mape   = mean(abs.(residuals[nz] ./ {{y}}[nz])) * 100  # mean absolute percentage error (%)
 '''
 
 [[actionGroups]]
@@ -140,7 +143,7 @@ residuals = {{y}} .- {{yhat}}  # raw residuals
 std_res   = (residuals .- mean(residuals)) ./ std(residuals)  # standardised
 
 n           = length(std_res)  # sample size
-theoretical = quantile(Normal(), range(0.01, 0.99; length=n))  # N(0,1) quantiles
+theoretical = quantile.(Normal(), ((1:n) .- 0.5) ./ n)  # N(0,1) quantiles at plotting positions (i - 0.5)/n
 observed    = sort(std_res)  # sorted sample quantiles
 
 scatter(theoretical, observed;
