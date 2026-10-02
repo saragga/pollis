@@ -13,7 +13,7 @@ name = "Turing.jl"
 github = "https://github.com/TuringLang/Turing.jl"
 
 [requires]
-packages = ["Turing.jl", "Distributions.jl", "PosteriorStats.jl", "StatsPlots.jl", "PairPlots.jl", "ReverseDiff.jl", "Enzyme.jl", "Mooncake.jl", "LogExpFunctions.jl"]
+packages = ["Turing.jl", "Distributions.jl", "PosteriorStats.jl", "StatsPlots.jl", "PairPlots.jl", "ReverseDiff.jl", "Enzyme.jl", "Mooncake.jl", "LogExpFunctions.jl", "MCMCChains.jl"]
 
 [[notebookSections]]
 label = ""
@@ -344,7 +344,7 @@ models = ["hierarchical"]
 [[codeBranches]]
 model = "gaussian"
 code = '''
-using Turing, Distributions
+using Turing, MCMCChains, Distributions
 
 @model function gaussian_model({{y}})
     mu ~ Normal(0, 10)  # prior: mean
@@ -358,14 +358,14 @@ end
 {{?sampler=nuts}} sampler = NUTS({{delta}})
 {{?sampler=hmc}} sampler = HMC({{epsilon}}, {{leapfrog}}; adtype={{adtype}})
 {{?sampler=mh}} sampler = MH()
-chain = sample(gaussian_model({{y}}), sampler, MCMCThreads(), {{n-samples}}, {{n-chains}})  # {{n-samples}} samples, {{n-chains}} chains
+chain = sample(gaussian_model({{y}}), sampler, MCMCThreads(), {{n-samples}}, {{n-chains}}; chain_type=MCMCChains.Chains)  # {{n-samples}} samples, {{n-chains}} chains
 summarize(chain)
 '''
 
 [[codeBranches]]
 model = "linear"
 code = '''
-using Turing, Distributions
+using Turing, MCMCChains, Distributions
 
 @model function linear_model({{X}}, {{y}})
     alpha ~ Normal(0, 10)  # intercept prior
@@ -380,14 +380,14 @@ end
 {{?sampler=nuts}} sampler = NUTS({{delta}})
 {{?sampler=hmc}} sampler = HMC({{epsilon}}, {{leapfrog}}; adtype={{adtype}})
 {{?sampler=mh}} sampler = MH()
-chain = sample(linear_model({{X}}, {{y}}), sampler, MCMCThreads(), {{n-samples}}, {{n-chains}})  # {{n-samples}} samples, {{n-chains}} chains
+chain = sample(linear_model({{X}}, {{y}}), sampler, MCMCThreads(), {{n-samples}}, {{n-chains}}; chain_type=MCMCChains.Chains)  # {{n-samples}} samples, {{n-chains}} chains
 summarize(chain)
 '''
 
 [[codeBranches]]
 model = "logistic"
 code = '''
-using Turing, Distributions, LogExpFunctions  # logistic is no longer exported by Turing 0.49
+using Turing, MCMCChains, Distributions, LogExpFunctions  # logistic is no longer exported by Turing 0.49
 
 @model function logistic_model({{X}}, {{y}})
     alpha ~ Normal(0, 10)  # intercept prior
@@ -402,14 +402,14 @@ end
 {{?sampler=nuts}} sampler = NUTS({{delta}})
 {{?sampler=hmc}} sampler = HMC({{epsilon}}, {{leapfrog}}; adtype={{adtype}})
 {{?sampler=mh}} sampler = MH()
-chain = sample(logistic_model({{X}}, {{y}}), sampler, MCMCThreads(), {{n-samples}}, {{n-chains}})  # {{n-samples}} samples, {{n-chains}} chains
+chain = sample(logistic_model({{X}}, {{y}}), sampler, MCMCThreads(), {{n-samples}}, {{n-chains}}; chain_type=MCMCChains.Chains)  # {{n-samples}} samples, {{n-chains}} chains
 summarize(chain)
 '''
 
 [[codeBranches]]
 model = "hierarchical"
 code = '''
-using Turing, Distributions
+using Turing, MCMCChains, Distributions
 
 @model function hierarchical_model({{y}}, {{group}}, G)
     mu0   ~ Normal(0, 10)  # hyperprior: global mean
@@ -428,7 +428,7 @@ end
 {{?sampler=nuts}} sampler = NUTS({{delta}})
 {{?sampler=hmc}} sampler = HMC({{epsilon}}, {{leapfrog}}; adtype={{adtype}})
 {{?sampler=mh}} sampler = MH()
-chain = sample(hierarchical_model({{y}}, {{group}}, {{ngroups}}), sampler, MCMCThreads(), {{n-samples}}, {{n-chains}})  # {{n-samples}} samples, {{n-chains}} chains
+chain = sample(hierarchical_model({{y}}, {{group}}, {{ngroups}}), sampler, MCMCThreads(), {{n-samples}}, {{n-chains}}; chain_type=MCMCChains.Chains)  # {{n-samples}} samples, {{n-chains}} chains
 summarize(chain)
 '''
 
@@ -577,7 +577,7 @@ loglik(m, ch) = (pll = pointwise_loglikelihoods(m, ch; factorize=true); cat([Arr
 {{?model=hierarchical}}     {{y}} .~ Normal(mu, sigma)
 {{?model=hierarchical}} end
 {{?model=hierarchical}} alt = alt_model({{y}})
-chain_alt = sample(alt, NUTS(), MCMCThreads(), {{n-samples}}, {{n-chains}})  # same data, same draws
+chain_alt = sample(alt, NUTS(), MCMCThreads(), {{n-samples}}, {{n-chains}}; chain_type=MCMCChains.Chains)  # same data, same draws
 mc = PosteriorStats.compare((fitted = PosteriorStats.loo(loglik(fitted, chain)), alternative = PosteriorStats.loo(loglik(alt, chain_alt))))
 print(mc)  # rank 1 has the higher ELPD; elpd_diff is each model ELPD below rank 1 (0 for the best): a difference within about 2 se_elpd_diff is not decisive
 '''

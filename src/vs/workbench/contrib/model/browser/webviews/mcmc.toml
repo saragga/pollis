@@ -21,7 +21,7 @@ name = "MCMCChains.jl"
 github = "https://github.com/TuringLang/MCMCChains.jl"
 
 [requires]
-packages = ["Turing.jl", "AdvancedHMC.jl", "MCMCChains.jl", "ForwardDiff.jl", "ParetoSmooth.jl", "Plots.jl", "StatsPlots.jl"]
+packages = ["Turing.jl", "AdvancedHMC.jl", "MCMCChains.jl", "ForwardDiff.jl", "ParetoSmooth.jl", "Plots.jl", "StatsPlots.jl", "LogExpFunctions.jl"]
 
 [[notebookSections]]
 label = ""
@@ -257,7 +257,7 @@ using Turing, MCMCChains
     {{body}}  # model body: priors and likelihood
 end
 
-chain = sample(model(data), NUTS({{n-warmup}}, 0.65), {{n-samples}})  # NUTS with target acceptance 0.65
+chain = sample(model(data), NUTS({{n-warmup}}, 0.65), {{n-samples}}; chain_type=MCMCChains.Chains)  # NUTS with target acceptance 0.65
 println(chain)  # summary: mean, std, ESS, R-hat
 '''
 
@@ -293,7 +293,7 @@ using Turing, MCMCChains
     {{body-mh}}  # model body: priors and likelihood
 end
 
-chain = sample(model(data), MH(), {{n-samples-mh}})  # random-walk Metropolis-Hastings
+chain = sample(model(data), MH(), {{n-samples-mh}}; chain_type=MCMCChains.Chains)  # random-walk Metropolis-Hastings
 println(chain)  # summary: mean, std, ESS, R-hat
 '''
 
@@ -413,10 +413,13 @@ id = "waic"
 label = "WAIC"
 desc = "Widely applicable information criterion"
 code = '''
-using Turing, ParetoSmooth
+using Turing, MCMCChains, Statistics, LogExpFunctions
 
-log_liks = pointwise_loglikelihoods(model(data), chain)  # log-likelihood per observation per draw
-waic_val = waic(log_liks)  # WAIC: lower is better
+pll = pointwise_loglikelihoods(model(data), chain; factorize=true)  # Chains with one log-likelihood column per observation
+ll  = reshape(permutedims(Array(pll.value), (2, 1, 3)), size(pll, 2), :)  # observations x draws (chains stacked)
+lppd   = sum(logsumexp(ll; dims=2) .- log(size(ll, 2)))  # log pointwise predictive density
+p_waic = sum(var(ll; dims=2))  # effective number of parameters
+waic_val = -2 * (lppd - p_waic)  # WAIC on the deviance scale: lower is better
 println("WAIC: ", waic_val)  # use for model comparison
 '''
 
@@ -425,9 +428,10 @@ id = "loo"
 label = "LOO-CV"
 desc = "Leave-one-out cross-validation via Pareto smoothing"
 code = '''
-using Turing, ParetoSmooth
+using Turing, MCMCChains, ParetoSmooth
 
-log_liks = pointwise_loglikelihoods(model(data), chain)  # log-likelihood per observation per draw
+pll = pointwise_loglikelihoods(model(data), chain; factorize=true)  # Chains with one log-likelihood column per observation
+log_liks = permutedims(Array(pll.value), (2, 1, 3))  # observations x draws x chains, the layout ParetoSmooth expects
 loo_val  = psis_loo(log_liks)  # PSIS-LOO: lower elpd_loo is worse
 println("LOO: ", loo_val)  # k-hat > 0.7 flags problematic observations
 '''

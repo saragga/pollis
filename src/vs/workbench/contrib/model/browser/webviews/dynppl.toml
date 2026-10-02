@@ -305,7 +305,7 @@ end
 
 model = {{nuts-model}}({{nuts-data}})  # instantiate model with observed data
 
-chain = sample(model, NUTS({{nuts-adapt}}, {{nuts-accept}}), MCMCThreads(), {{nuts-n}}, {{nuts-chains}})  # NUTS: {{nuts-adapt}} adaptation steps, target acceptance {{nuts-accept}}, {{nuts-chains}} parallel chains
+chain = sample(model, NUTS({{nuts-adapt}}, {{nuts-accept}}), MCMCThreads(), {{nuts-n}}, {{nuts-chains}}; chain_type=MCMCChains.Chains)  # NUTS: {{nuts-adapt}} adaptation steps, target acceptance {{nuts-accept}}, {{nuts-chains}} parallel chains
 summarystats(chain)  # mean, std, and R-hat convergence diagnostic per parameter
 '''
 
@@ -322,7 +322,7 @@ end
 
 model = {{hmc-model}}({{hmc-data}})  # instantiate model with observed data
 
-chain = sample(model, HMC({{hmc-eps}}, {{hmc-L}}), MCMCThreads(), {{hmc-n}}, {{hmc-chains}})  # HMC: step size {{hmc-eps}}, {{hmc-L}} leapfrog steps, {{hmc-chains}} parallel chains
+chain = sample(model, HMC({{hmc-eps}}, {{hmc-L}}), MCMCThreads(), {{hmc-n}}, {{hmc-chains}}; chain_type=MCMCChains.Chains)  # HMC: step size {{hmc-eps}}, {{hmc-L}} leapfrog steps, {{hmc-chains}} parallel chains
 summarystats(chain)  # mean, std, and R-hat convergence diagnostic per parameter
 '''
 
@@ -339,7 +339,7 @@ end
 
 model = {{mh-model}}({{mh-data}})  # instantiate model with observed data
 
-chain = sample(model, MH(), MCMCThreads(), {{mh-n}}, {{mh-chains}})  # Metropolis-Hastings: gradient-free, {{mh-chains}} parallel chains
+chain = sample(model, MH(), MCMCThreads(), {{mh-n}}, {{mh-chains}}; chain_type=MCMCChains.Chains)  # Metropolis-Hastings: gradient-free, {{mh-chains}} parallel chains
 summarystats(chain)  # mean, std, and R-hat convergence diagnostic per parameter
 '''
 
@@ -410,9 +410,9 @@ id = "prior-pred"
 label = "Prior Predictive"
 desc = "Sample from the prior without conditioning on data"
 code = '''
-using Turing  # probabilistic programming
+using Turing, MCMCChains  # probabilistic programming and chain diagnostics
 
-prior_chain = sample(model, Prior(), 1000)  # draw 1000 samples from the prior predictive distribution
+prior_chain = sample(model, Prior(), 1000; chain_type=MCMCChains.Chains)  # draw 1000 samples from the prior predictive distribution
 summarystats(prior_chain)  # inspect prior parameter ranges
 '''
 
@@ -441,8 +441,8 @@ desc = "Run NUTS and Metropolis-Hastings on the same model and compare ESS"
 code = '''
 using Turing, MCMCChains  # probabilistic programming and chain diagnostics
 
-chain_nuts = sample(model, NUTS(500, 0.65), 1000)  # No-U-Turn Sampler
-chain_mh   = sample(model, MH(), 2000)  # Metropolis-Hastings
+chain_nuts = sample(model, NUTS(500, 0.65), 1000; chain_type=MCMCChains.Chains)  # No-U-Turn Sampler
+chain_mh   = sample(model, MH(), 2000; chain_type=MCMCChains.Chains)  # Metropolis-Hastings
 
 println("NUTS ESS: ", ess_rhat(chain_nuts))  # compare effective sample size
 println("MH ESS:   ", ess_rhat(chain_mh))  # compare effective sample size
@@ -461,7 +461,7 @@ for sigma_prior in [0.5, 1.0, 2.0, 5.0]  # sweep prior standard deviation
         sigma ~ Exponential(1)
         y .~ Normal(mu, sigma)
     end
-    c = sample(model_v(y), NUTS(), 500)  # sample with current prior
+    c = sample(model_v(y), NUTS(), 500; chain_type=MCMCChains.Chains)  # sample with current prior
     println("sigma_prior=", sigma_prior, " -> mu mean=", mean(c[:mu]))  # compare posterior means
 end
 '''

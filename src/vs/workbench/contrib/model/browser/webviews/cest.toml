@@ -279,7 +279,7 @@ default = "42"
 [[codeBranches]]
 model = "rt"
 code = '''
-using Turing, Random, Plots  # NUTS, Chains and Distributions (re-exported by Turing); seed; plotting
+using Turing, MCMCChains, Random, Plots  # NUTS and Distributions (re-exported by Turing); Chains; seed; plotting
 
 Random.seed!({{seed}})  # reproducible simulation and sampling
 T = {{T}}  # days of case counts
@@ -310,7 +310,7 @@ lambda = [infectious(cases, t) for t in 1:T]  # observed infectiousness, data in
     return exp.(log_Rt)
 end
 model = renewal(cases, lambda, days)
-chain = sample(model, NUTS(), MCMCThreads(), {{samples}}, {{chains}})  # {{chains}} chains on threads
+chain = sample(model, NUTS(), MCMCThreads(), {{samples}}, {{chains}}; chain_type=MCMCChains.Chains)  # {{chains}} chains on threads
 
 Rt_draws = permutedims(reduce(hcat, vec(returned(model, chain))))  # draws x fitted days
 Rt_med, Rt_lo, Rt_hi = ([quantile(v, q) for v in eachcol(Rt_draws)] for q in (0.5, 0.05, 0.95))
@@ -583,7 +583,7 @@ desc = "Rt: the renewal Rt against a naive day-on-day growth factor that ignores
 code = '''
 {{?model=rt}} prev = [t > 1 ? float(cases[t - 1]) : 0.0 for t in 1:T]  # yesterday cases instead of the serial-interval weighted sum
 {{?model=rt}} naive = renewal(cases, prev, days)
-{{?model=rt}} naive_chain = sample(naive, NUTS(), MCMCThreads(), {{samples}}, {{chains}})
+{{?model=rt}} naive_chain = sample(naive, NUTS(), MCMCThreads(), {{samples}}, {{chains}}; chain_type=MCMCChains.Chains)
 {{?model=rt}} G = permutedims(reduce(hcat, vec(returned(naive, naive_chain))))
 {{?model=rt}} G_med = [median(v) for v in eachcol(G)]
 {{?model=rt}} p = plot(days, Rt_med; label = "Renewal Rt (median)", xlabel = "Day", ylabel = "Rt", title = "Renewal Rt against the growth factor")
@@ -634,7 +634,7 @@ code = '''
 {{?model=rt}}     si_m = Gamma((m / {{si-sd}})^2, {{si-sd}}^2 / m)
 {{?model=rt}}     wm = diff(cdf.(si_m, 0:21)); wm ./= sum(wm)
 {{?model=rt}}     mod_m = renewal(cases, [infectious(cases, t, wm) for t in 1:T], days)
-{{?model=rt}}     R = permutedims(reduce(hcat, vec(returned(mod_m, sample(mod_m, NUTS(), MCMCThreads(), {{samples}}, {{chains}})))))
+{{?model=rt}}     R = permutedims(reduce(hcat, vec(returned(mod_m, sample(mod_m, NUTS(), MCMCThreads(), {{samples}}, {{chains}}; chain_type=MCMCChains.Chains)))))
 {{?model=rt}}     plot!(p, days, [median(v) for v in eachcol(R)]; label = string("Mean ", m, " days"))
 {{?model=rt}} end
 {{?model=rt}} display(p)
