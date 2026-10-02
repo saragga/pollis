@@ -13,7 +13,7 @@ name = "Turing.jl"
 github = "https://github.com/TuringLang/Turing.jl"
 
 [requires]
-packages = ["Turing.jl"]
+packages = ["Turing.jl", "Distributions.jl", "PosteriorStats.jl", "StatsPlots.jl", "PairPlots.jl", "ReverseDiff.jl", "Enzyme.jl", "Mooncake.jl"]
 
 [[notebookSections]]
 label = ""
@@ -295,23 +295,23 @@ id = "adtype"
 label = "AD Backend"
 tooltip = ""
 kind = "select"
-default = "AutoForwardDiff"
+default = "AutoForwardDiff()"
 when = "sampler=hmc"
 
 [[inputs.options]]
-value = "AutoForwardDiff"
+value = "AutoForwardDiff()"
 label = "AutoForwardDiff"
 
 [[inputs.options]]
-value = "AutoReverseDiff"
+value = "AutoReverseDiff()"
 label = "AutoReverseDiff"
 
 [[inputs.options]]
-value = "AutoEnzyme"
+value = "AutoEnzyme()"
 label = "AutoEnzyme"
 
 [[inputs.options]]
-value = "AutoMooncake"
+value = "AutoMooncake(; config=nothing)"
 label = "AutoMooncake"
 
 [[inputs]]
@@ -352,11 +352,11 @@ using Turing, Distributions
     {{y}} .~ Normal(mu, sigma)  # likelihood
 end
 
-{{?adtype=AutoReverseDiff}} import ReverseDiff  # loads the backend chosen for HMC
-{{?adtype=AutoEnzyme}} import Enzyme  # loads the backend chosen for HMC
-{{?adtype=AutoMooncake}} import Mooncake  # loads the backend chosen for HMC
+{{?adtype=AutoReverseDiff()}} import ReverseDiff  # loads the backend chosen for HMC
+{{?adtype=AutoEnzyme()}} import Enzyme  # loads the backend chosen for HMC
+{{?adtype=AutoMooncake(; config=nothing)}} import Mooncake  # loads the backend chosen for HMC
 {{?sampler=nuts}} sampler = NUTS({{delta}})
-{{?sampler=hmc}} sampler = HMC({{epsilon}}, {{leapfrog}}; adtype={{adtype}}())
+{{?sampler=hmc}} sampler = HMC({{epsilon}}, {{leapfrog}}; adtype={{adtype}})
 {{?sampler=mh}} sampler = MH()
 chain = sample(gaussian_model({{y}}), sampler, MCMCThreads(), {{n-samples}}, {{n-chains}})  # {{n-samples}} samples, {{n-chains}} chains
 summarize(chain)
@@ -374,11 +374,11 @@ using Turing, Distributions
     {{y}} .~ Normal.(alpha .+ beta .* {{X}}, sigma)
 end
 
-{{?adtype=AutoReverseDiff}} import ReverseDiff  # loads the backend chosen for HMC
-{{?adtype=AutoEnzyme}} import Enzyme  # loads the backend chosen for HMC
-{{?adtype=AutoMooncake}} import Mooncake  # loads the backend chosen for HMC
+{{?adtype=AutoReverseDiff()}} import ReverseDiff  # loads the backend chosen for HMC
+{{?adtype=AutoEnzyme()}} import Enzyme  # loads the backend chosen for HMC
+{{?adtype=AutoMooncake(; config=nothing)}} import Mooncake  # loads the backend chosen for HMC
 {{?sampler=nuts}} sampler = NUTS({{delta}})
-{{?sampler=hmc}} sampler = HMC({{epsilon}}, {{leapfrog}}; adtype={{adtype}}())
+{{?sampler=hmc}} sampler = HMC({{epsilon}}, {{leapfrog}}; adtype={{adtype}})
 {{?sampler=mh}} sampler = MH()
 chain = sample(linear_model({{X}}, {{y}}), sampler, MCMCThreads(), {{n-samples}}, {{n-chains}})  # {{n-samples}} samples, {{n-chains}} chains
 summarize(chain)
@@ -396,11 +396,11 @@ using Turing, Distributions
     {{y}} .~ Bernoulli.(p)
 end
 
-{{?adtype=AutoReverseDiff}} import ReverseDiff  # loads the backend chosen for HMC
-{{?adtype=AutoEnzyme}} import Enzyme  # loads the backend chosen for HMC
-{{?adtype=AutoMooncake}} import Mooncake  # loads the backend chosen for HMC
+{{?adtype=AutoReverseDiff()}} import ReverseDiff  # loads the backend chosen for HMC
+{{?adtype=AutoEnzyme()}} import Enzyme  # loads the backend chosen for HMC
+{{?adtype=AutoMooncake(; config=nothing)}} import Mooncake  # loads the backend chosen for HMC
 {{?sampler=nuts}} sampler = NUTS({{delta}})
-{{?sampler=hmc}} sampler = HMC({{epsilon}}, {{leapfrog}}; adtype={{adtype}}())
+{{?sampler=hmc}} sampler = HMC({{epsilon}}, {{leapfrog}}; adtype={{adtype}})
 {{?sampler=mh}} sampler = MH()
 chain = sample(logistic_model({{X}}, {{y}}), sampler, MCMCThreads(), {{n-samples}}, {{n-chains}})  # {{n-samples}} samples, {{n-chains}} chains
 summarize(chain)
@@ -422,11 +422,11 @@ using Turing, Distributions
     end
 end
 
-{{?adtype=AutoReverseDiff}} import ReverseDiff  # loads the backend chosen for HMC
-{{?adtype=AutoEnzyme}} import Enzyme  # loads the backend chosen for HMC
-{{?adtype=AutoMooncake}} import Mooncake  # loads the backend chosen for HMC
+{{?adtype=AutoReverseDiff()}} import ReverseDiff  # loads the backend chosen for HMC
+{{?adtype=AutoEnzyme()}} import Enzyme  # loads the backend chosen for HMC
+{{?adtype=AutoMooncake(; config=nothing)}} import Mooncake  # loads the backend chosen for HMC
 {{?sampler=nuts}} sampler = NUTS({{delta}})
-{{?sampler=hmc}} sampler = HMC({{epsilon}}, {{leapfrog}}; adtype={{adtype}}())
+{{?sampler=hmc}} sampler = HMC({{epsilon}}, {{leapfrog}}; adtype={{adtype}})
 {{?sampler=mh}} sampler = MH()
 chain = sample(hierarchical_model({{y}}, {{group}}, {{ngroups}}), sampler, MCMCThreads(), {{n-samples}}, {{n-chains}})  # {{n-samples}} samples, {{n-chains}} chains
 summarize(chain)
@@ -585,7 +585,7 @@ print(mc)  # rank 1 has the higher ELPD; elpd_diff is each model ELPD below rank
 [[actionGroups.actions]]
 id = "waic"
 label = "WAIC"
-desc = "Widely applicable information criterion for Bayesian model selection"
+desc = "Widely applicable information criterion, computed directly from the pointwise log-likelihoods (PosteriorStats no longer provides waic); LOO-CV is preferred"
 code = '''
 using Statistics
 
@@ -599,7 +599,7 @@ ll = reshape(loglik(fitted, chain), :, length(obs_syms))  # all draws x observat
 lme(v) = maximum(v) + log(mean(exp.(v .- maximum(v))))  # log of the mean of exp(v), computed stably
 lppd = sum(lme(c) for c in eachcol(ll))  # log pointwise predictive density
 p_waic = sum(var(c) for c in eachcol(ll))  # effective number of parameters
-(elpd_waic = lppd - p_waic, p_waic = p_waic, waic = -2 * (lppd - p_waic))  # PosteriorStats no longer provides waic; PSIS-LOO is preferred
+(elpd_waic = lppd - p_waic, p_waic = p_waic, waic = -2 * (lppd - p_waic))  # computed by hand: PosteriorStats no longer provides waic; PSIS-LOO (LOO-CV action) is preferred
 '''
 
 [[actionGroups]]

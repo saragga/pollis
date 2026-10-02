@@ -23,7 +23,7 @@ description = "Tutorial demonstrating factor graph models and VMP inference"
 url = "https://www.youtube.com/watch?v=qXrvDVm_fnE"
 
 [requires]
-packages = ["RxInfer.jl"]
+packages = ["RxInfer.jl", "GLMakie.jl", "Turing.jl"]
 
 [[notebookSections]]
 label = ""
@@ -525,11 +525,12 @@ using RxInfer
     end
 end
 
-constraints = MeanField()  # coefficients and noise precision share the likelihood factor
+constraints = MeanField()  # splits the likelihood factor into q(mean)q(tau); the deterministic + and * nodes are never split
 init = @initialization begin
     q(beta0) = NormalMeanVariance(0.0, 100.0)  # starting marginals for the VMP iterations
     q(beta1) = NormalMeanVariance(0.0, 100.0)
     q(tau)   = GammaShapeRate(1.0, 1.0)
+    μ(beta1) = NormalMeanVariance(0.0, 100.0)  # starting message (RxInfer accepts only this Greek form): beta0 and beta1 meet at every + node, so the graph has loops
 end
 
 x_data = randn({{n}})  # replace with real covariates
@@ -761,14 +762,32 @@ end
 [[actionGroups.actions]]
 id = "model-comparison"
 label = "Model Comparison"
-desc = "Final variational free energy, the quantity used to compare models: fit an alternative (for example Laplace noise) to the same data and prefer the lower value. For streaming the per-observation values are summed"
+desc = "Fit an alternative model to the same data and compare final variational free energies (lower wins): the mean fixed at 0 (Gaussian, Streaming) or an intercept-only model (Regression). For streaming the per-observation values are summed"
 code = '''
 using RxInfer
 
-{{?model=gaussian|regression}} F = result.free_energy[end]
-{{?model=streaming}} F = sum(result.free_energy_final_only_history)  # sequential (prequential) bound over the stream
-println("Free energy: ", F)  # an upper bound on -log evidence: lower means more evidence, with complexity already penalised
-println("Fit a competing model to the same data and keep the one with the lower final free energy")  # only one model is fitted here
+{{?model=gaussian}} @model function alt_model(y)  # alternative: mean fixed at 0, only the precision is unknown
+{{?model=gaussian}}     tau ~ Gamma(shape = 1.0, rate = 1.0)
+{{?model=gaussian}}     y .~ Normal(mean = 0.0, precision = tau)
+{{?model=gaussian}} end
+{{?model=gaussian}} alt = infer(model = alt_model(), data = (y = observations,), constraints = MeanField(), initialization = @initialization(begin q(tau) = GammaShapeRate(1.0, 1.0) end), iterations = {{iter}}, free_energy = true)
+{{?model=regression}} @model function alt_model(y)  # alternative: intercept only, no covariate
+{{?model=regression}}     beta0 ~ Normal(mean = 0.0, var = 100.0)
+{{?model=regression}}     tau   ~ Gamma(shape = 1.0, rate = 1.0)
+{{?model=regression}}     y .~ Normal(mean = beta0, precision = tau)
+{{?model=regression}} end
+{{?model=regression}} alt = infer(model = alt_model(), data = (y = y_data,), constraints = MeanField(), initialization = @initialization(begin q(beta0) = NormalMeanVariance(0.0, 100.0); q(tau) = GammaShapeRate(1.0, 1.0) end), iterations = {{iter}}, free_energy = true)
+{{?model=streaming}} @model function alt_model(y, tau_shape, tau_rate)  # alternative: mean fixed at 0, only the precision is tracked
+{{?model=streaming}}     tau ~ Gamma(shape = tau_shape, rate = tau_rate)
+{{?model=streaming}}     y   ~ Normal(mean = 0.0, precision = tau)
+{{?model=streaming}} end
+{{?model=streaming}} alt_updates = @autoupdates begin tau_shape = shape(q(tau)); tau_rate = rate(q(tau)) end
+{{?model=streaming}} alt = infer(model = alt_model(), data = (y = stream,), autoupdates = alt_updates, constraints = MeanField(), initialization = @initialization(begin q(tau) = GammaShapeRate(1.0, 1.0) end), iterations = {{iter}}, keephistory = {{n}}, free_energy = true)
+{{?model=gaussian|regression}} F, F_alt = result.free_energy[end], alt.free_energy[end]
+{{?model=streaming}} F, F_alt = sum(result.free_energy_final_only_history), sum(alt.free_energy_final_only_history)  # sequential (prequential) bound over the stream
+println("Free energy, fitted model: ", F)  # an upper bound on -log evidence: lower means more evidence, with complexity already penalised
+println("Free energy, alternative:  ", F_alt)
+println(F < F_alt ? "The fitted model is preferred" : "The alternative is preferred", "; log Bayes factor approx ", round(F_alt - F, digits = 2))  # a difference of a few units is already strong evidence
 '''
 
 [[actionGroups]]
