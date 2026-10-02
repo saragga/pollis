@@ -182,7 +182,8 @@ model = "enet"
 code = '''
 using Lasso
 
-alpha_kw, lambda_kw = Symbol(Char(0x3b1)), Symbol(Char(0x3bb))  # Lasso.jl names these keywords with Greek letters
+alpha_kw = Symbol(Char(0x3b1))  # Lasso.jl names the mixing keyword with the Greek letter alpha
+{{?lambda!=}} lambda_kw = Symbol(Char(0x3bb))  # and the penalty keyword with the Greek letter lambda
 {{?lambda=}} model = fit(LassoModel, @formula({{formula}}), {{data}}; alpha_kw => {{alpha}})
 {{?lambda!=}} model = fit(LassoModel, @formula({{formula}}), {{data}}; alpha_kw => {{alpha}}, lambda_kw => [{{lambda}}])
 println(coef(model))
