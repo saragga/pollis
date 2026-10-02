@@ -298,6 +298,7 @@ code = '''
 {{?inference=HC0|HC1|HC2|HC3}}V = vcov({{inference}}(), model)  # heteroskedasticity-robust variance-covariance matrix
 {{?inference=HAC}}V = vcov(Bartlett{NeweyWest}(), model)  # Newey-West HAC, data-driven bandwidth (rows must be in time order)
 {{?inference=clustered}}V = vcov(CR1(Tables.getcolumn({{data}}, :{{cluster}})), model)  # cluster-robust, small-sample corrected
+{{?inference=driscoll-kraay}}pkgversion(CovarianceMatrices) >= v"0.32" || error("Driscoll-Kraay needs CovarianceMatrices 0.32 or later (earlier versions have no vcov method for it): run  ] up CovarianceMatrices")
 {{?inference=driscoll-kraay}}V = vcov(DriscollKraay(Bartlett(5), tis=Tables.getcolumn({{data}}, :{{dktime}}), iis=Tables.getcolumn({{data}}, :{{dkentity}})), model)  # Driscoll-Kraay, 5 lags
 
 se = sqrt.(diag(V))  # standard errors from V: every later action uses the same V

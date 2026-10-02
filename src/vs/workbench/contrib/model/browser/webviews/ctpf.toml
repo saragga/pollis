@@ -9,15 +9,11 @@ viewType = "pollis.ctpf"
 defaultModel = "main"
 
 [[packages]]
-name = "TopicModels.jl"
-github = "https://github.com/slycoder/TopicModels.jl"
-
-[[packages]]
-name = "TextAnalysis.jl"
-github = "https://github.com/JuliaText/TextAnalysis.jl"
+name = "TopicModelsVB.jl"
+github = "https://github.com/ericproffitt/TopicModelsVB.jl"
 
 [requires]
-packages = ["TopicModels.jl", "TextAnalysis.jl"]
+packages = ["TopicModelsVB.jl"]
 
 [[notebookSections]]
 label = ""
@@ -26,7 +22,7 @@ label = ""
 name = "CTPF"
 file = "ctpf/tutorial-01-ctpf.ipynb"
 bundled = true
-description = "Collaborative Topic Poisson Factorisation: joint document modelling and recommendation using TopicModels.jl"
+description = "Collaborative Topic Poisson Factorisation: joint document modelling and recommendation using TopicModelsVB.jl"
 
 [[wikis]]
 name = "Factsheet"
@@ -90,19 +86,11 @@ doi = "10.1137/141000671"
 openAccess = false
 
 [[references]]
-title = "TopicModels.jl"
-authors = "Zeng, Jonathan"
-year = 2015
+title = "TopicModelsVB.jl: Variational Bayesian Topic Modeling in Julia"
+authors = "Proffitt, Eric"
+year = 2016
 journal = "GitHub"
-url = "https://github.com/slycoder/TopicModels.jl"
-openAccess = true
-
-[[references]]
-title = "TextAnalysis.jl: Julia NLP Toolkit"
-authors = "JuliaText Contributors"
-year = 2023
-journal = "GitHub"
-url = "https://github.com/JuliaText/TextAnalysis.jl"
+url = "https://github.com/ericproffitt/TopicModelsVB.jl"
 openAccess = true
 
 [[references]]
@@ -154,8 +142,8 @@ text = "k topics"
 detail = "number of latent topics shared between the document model and the recommendation model"
 
 [[bullets]]
-text = "TopicModels.jl"
-detail = "Julia implementation of CTPF, LDA, CTM and related probabilistic topic models"
+text = "TopicModelsVB.jl"
+detail = "variational Bayes implementation of CTPF, LDA, fLDA, CTM and Focused CTM"
 
 [[inputs]]
 id = "corpus"

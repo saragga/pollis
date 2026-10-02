@@ -9,11 +9,15 @@ viewType = "pollis.lrm"
 defaultModel = "dd"
 
 [[packages]]
-name = "PerformanceAnalytics.jl"
-github = "https://github.com/eohne/PerformanceAnalytics.jl"
+name = "Distributions.jl"
+github = "https://github.com/JuliaStats/Distributions.jl"
+
+[[packages]]
+name = "StatsBase.jl"
+github = "https://github.com/JuliaStats/StatsBase.jl"
 
 [requires]
-packages = ["Plots.jl", "Distributions.jl", "StatsBase.jl"]
+packages = ["HypothesisTests.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""

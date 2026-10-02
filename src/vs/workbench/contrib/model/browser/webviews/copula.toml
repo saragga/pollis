@@ -275,45 +275,10 @@ value = ":ecdf"
 label = "Pseudo-Observations"
 
 [[inputs]]
-id = "nu"
-label = "Deg. of Freedom (nu)"
-tooltip = "Degrees of freedom nu > 0. For Student-t: lower values give heavier tails; as nu → ∞ it converges to Gaussian. For tEV: same parameter governs the extreme-value tail; lower nu increases tail dependence."
-default = "4"
-when = "family=TCopula|tEVCopula"
-
-[[inputs]]
 id = "data"
 label = "Data"
 tooltip = ""
 default = "data"
-
-[[inputs]]
-id = "delta"
-label = "delta (shape)"
-tooltip = "Second shape parameter delta for the BB1 copula (Joe–Clayton nesting). delta ≥ 1 controls the lower tail dependence strength independently of theta. BB1 nests Clayton (theta → 0) and Gumbel (delta = 1) as special cases."
-default = "2.0"
-when = "family=BB1Copula"
-
-[[inputs]]
-id = "lambda1"
-label = "lambda1"
-tooltip = ""
-default = "1.0"
-when = "family=MOCopula"
-
-[[inputs]]
-id = "lambda2"
-label = "lambda2"
-tooltip = ""
-default = "1.0"
-when = "family=MOCopula"
-
-[[inputs]]
-id = "lambda12"
-label = "lambda12"
-tooltip = ""
-default = "0.5"
-when = "family=MOCopula"
 
 [[codeBranches]]
 model = "main"
