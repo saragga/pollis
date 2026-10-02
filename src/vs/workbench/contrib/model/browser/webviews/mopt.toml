@@ -44,7 +44,7 @@ description = "Limited-memory BFGS Hessian approximation with vector transport; 
 name = "Trust Regions"
 file = "mopt/tutorial-04-tr.ipynb"
 bundled = true
-description = "Subproblem solved in the tangent space using tCG; second-order convergence; most robust for ill-conditioned and high-curvature problems"
+description = "Subproblem solved in the tangent space using tCG; superlinear local convergence with the default finite-difference Hessian approximation (quadratic with an exact Hessian); most robust for ill-conditioned and high-curvature problems"
 
 [[wikis]]
 name = "Factsheet"
@@ -205,7 +205,7 @@ detail = "L-BFGS Hessian approximation with vector transport; superlinear conver
 
 [[bullets]]
 text = "Trust Regions"
-detail = "subproblem solved in tangent space via tCG; second-order convergence rate"
+detail = "subproblem solved in tangent space via tCG; superlinear local convergence with a Hessian approximation, quadratic with the exact Hessian"
 
 [[decisionRows]]
 task = "Gradient Descent"

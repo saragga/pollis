@@ -18,7 +18,7 @@ description = "An 18-video course by Jamie Mair on writing fast Julia code"
 url = "https://www.youtube.com/playlist?list=PLUAq6xQKFgGr39PiyrPk_C9dhBKvWcjUA"
 
 [requires]
-packages = ["Plots.jl", "OrdinaryDiffEq.jl", "SciMLSensitivity.jl", "Lux.jl", "ComponentArrays.jl", "Optimization.jl", "OptimizationOptimisers.jl"]
+packages = ["Plots.jl", "DiffEqFlux.jl", "OrdinaryDiffEq.jl", "SciMLSensitivity.jl", "Lux.jl", "ComponentArrays.jl", "Optimization.jl", "OptimizationOptimisers.jl", "Enzyme.jl"]
 
 [[notebookSections]]
 label = ""

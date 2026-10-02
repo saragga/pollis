@@ -2,8 +2,8 @@
 # Declarative source. The build script generates hfm.data.ts.
 # Run: npm run gulp compile-toml
 #
-# Approach: models are loaded in Julia with Transformers.jl (HuggingFace submodule),
-# exported ONNX models run with ONNX.jl. The Explore pane queries the public Hub REST
+# Approach: models are loaded and run in Julia with Transformers.jl (HuggingFace submodule);
+# the ONNX comparison runs the ONNX export in Python onnxruntime. The Explore pane queries the public Hub REST
 # API (huggingface.co/api/models) live. A personal access token (shared with the
 # Hugging Face Datasets webview) is only required for gated or private models; it is
 # injected into the REPL session as ENV["HUGGING_FACE_HUB_TOKEN"] and never written
@@ -309,13 +309,9 @@ github = "https://github.com/chengchingwen/Transformers.jl"
 name = "HuggingFaceHub.jl"
 github = "https://github.com/cjdoris/HuggingFaceHub.jl"
 
-[[packages]]
-name = "ONNX.jl"
-github = "https://github.com/FluxML/ONNX.jl"
-
 # Further packages the examples use: checked by the install indicator, not listed on the Powered-by line
 [requires]
-packages = ["BenchmarkTools.jl", "Images.jl", "Plots.jl", "UMAP.jl", "WAV.jl"]
+packages = ["BenchmarkTools.jl", "DelimitedFiles.jl", "Flux.jl", "Images.jl", "NNlib.jl", "Plots.jl", "UMAP.jl"]
 
 [[notebookSections]]
 label = "Getting Started"
@@ -389,12 +385,6 @@ name = "Transformers.jl"
 file = "hfm/transformers-jl.md"
 bundled = true
 description = "Architecture reference, inference patterns, GPU, and fine-tuning"
-
-[[wikis]]
-name = "ONNX.jl"
-file = "hfm/onnx-jl.md"
-bundled = true
-description = "Export HF models to ONNX and run inference in Julia without Python"
 
 [[references]]
 separator = true
@@ -478,7 +468,7 @@ label = "Embedding"
 
 [[bullets]]
 text = "Multimodal"
-detail = "models that combine vision and language (CLIP, LLaVA, BLIP-2)"
+detail = "models that combine vision and language; the example matches an image against captions with CLIP"
 
 [[bullets]]
 text = "Natural Language Processing (NLP)"
@@ -861,7 +851,7 @@ end
 
 [[actionGroups.actions]]
 id = "julia-onnx-vs-python"
-label = "Julia (ONNX) vs Python"
+label = "Julia (Transformers.jl) vs Python (ONNX Runtime)"
 desc = "Run all-MiniLM-L6-v2 natively in Julia and as an ONNX export in Python onnxruntime on the same sentence; compare the mean-pooled outputs and the median latency after warm-up"
 code = '''
 using Transformers, Transformers.TextEncoders, Transformers.HuggingFace, BenchmarkTools, Statistics, DelimitedFiles

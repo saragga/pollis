@@ -87,6 +87,12 @@ tooltip = "Vector of ground-truth target values y (n_samples). Must be the same 
 default = "y_test"
 
 [[inputs]]
+id = "y-train"
+label = "Training Targets"
+tooltip = "Target values the model was trained on. Their mean is the R2 baseline, so the test R2 does not peek at the test targets; enter the Actual Values again for an in-sample fit."
+default = "y_train"
+
+[[inputs]]
 id = "p"
 label = "No. of Predictors"
 tooltip = "Number of features p used to train the model. Required only for Adjusted R²; does not affect RMSE, MAE, R² or MAPE."
@@ -100,7 +106,7 @@ using Statistics
 n         = length({{y}})  # number of observations
 residuals = {{y}} .- {{yhat}}  # raw residuals
 ss_res    = sum(residuals .^ 2)  # sum of squared residuals
-ybar      = mean(y_train)  # baseline = TRAINING mean, so the test R2 does not peek at the test targets (use mean({{y}}) for in-sample fit)
+ybar      = mean({{y-train}})  # baseline = TRAINING mean, so the test R2 does not peek at the test targets (enter the actual values for an in-sample fit)
 ss_tot    = sum(({{y}} .- ybar) .^ 2)  # total sum of squares around the baseline
 
 rmse   = sqrt(ss_res / n)  # root mean squared error

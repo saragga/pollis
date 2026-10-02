@@ -147,4 +147,4 @@ opt = Flux.setup(Adam(1e-3), classifier)
 ```
 
 ## See Also
-- [ONNX.jl](onnx-jl.md) · [Package Guide](package-guide.md) · [Run Inference](run-inference.md)
+- [ONNXRunTime.jl](onnxruntime-jl.md) · [Package Guide](package-guide.md) · [Run Inference](run-inference.md)

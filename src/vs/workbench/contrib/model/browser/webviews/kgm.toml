@@ -299,10 +299,10 @@ bundled = true
 description = "Neural network library: layers, training, GPU support"
 
 [[wikis]]
-name = "ONNX.jl"
-file = "kgm/onnx-jl.md"
+name = "ONNXRunTime.jl"
+file = "kgm/onnxruntime-jl.md"
 bundled = true
-description = "Load ONNX model files exported from PyTorch or TensorFlow"
+description = "Run ONNX models exported from PyTorch or TensorFlow with ONNX Runtime"
 
 [[references]]
 separator = true

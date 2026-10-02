@@ -162,7 +162,7 @@ label = "Similarity"
 
 [[bullets]]
 text = "Embed"
-detail = "encode text into a contextual dense vector using the Bidirectional Encoder Representations from Transformers (BERT) CLS token; suited for downstream tasks and semantic search"
+detail = "encode text into a contextual dense vector by mean-pooling the Bidirectional Encoder Representations from Transformers (BERT) token vectors over the attention mask; suited for downstream tasks and semantic search"
 
 [[bullets]]
 text = "Similarity"

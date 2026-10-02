@@ -6,7 +6,7 @@
 [meta]
 title = "Heterogeneous-Agent Models"
 viewType = "pollis.ham"
-defaultModel = "main"
+defaultModel = "huggett"
 
 [[packages]]
 name = "EconPDEs.jl"
@@ -108,16 +108,24 @@ journal = ""
 url = "https://doi.org/10.1257/aer.20160042"
 openAccess = false
 
+[[models]]
+id = "huggett"
+label = "Huggett"
+
+[[models]]
+id = "aiyagari"
+label = "Aiyagari"
+
 [[bullets]]
 text = "Solves Hamilton-Jacobi-Bellman (HJB) equations and Kolmogorov Forward Equations (KFE) for heterogeneous-agent models using finite difference methods"
 detail = ""
 
 [[bullets]]
-text = "Handles Huggett, Aiyagari, and HANK-style models with idiosyncratic income risk and incomplete asset markets"
+text = "Handles Huggett (bond economy) and Aiyagari (production economy) models with idiosyncratic income risk and incomplete asset markets"
 detail = ""
 
 [[bullets]]
-text = "Computes the stationary wealth distribution and equilibrium interest rate from the market-clearing condition"
+text = "Computes the stationary wealth distribution and equilibrium interest rate from the market-clearing condition: zero net bond supply (Huggett) or household wealth equal to firm capital (Aiyagari)"
 detail = ""
 
 [[bullets]]
@@ -151,7 +159,7 @@ default = "0.3"
 [[inputs]]
 id = "phi"
 label = "phi (borrowing limit)"
-tooltip = "Borrowing limit (ad hoc constraint). phi = 0 means no borrowing; negative values allow debt up to |phi|."
+tooltip = "Borrowing limit (ad hoc constraint). phi = 0 means no borrowing; negative values allow debt up to |phi|. Huggett needs phi below 0 for an equilibrium; Aiyagari is usually solved with phi = 0."
 default = "-1.0"
 
 [[inputs]]
@@ -160,32 +168,53 @@ label = "N (grid points)"
 tooltip = "Number of grid points for the wealth state space discretisation. More points give higher accuracy."
 default = "500"
 
+[[inputs]]
+id = "alpha"
+label = "alpha (capital share)"
+tooltip = "Capital share in the Cobb-Douglas production function Y = K^alpha L^(1 - alpha)."
+default = "0.36"
+models = ["aiyagari"]
+
+[[inputs]]
+id = "delta"
+label = "delta (depreciation)"
+tooltip = "Depreciation rate of capital. The firm rents capital at r + delta."
+default = "0.05"
+models = ["aiyagari"]
+
 [[codeBranches]]
-model = "main"
+model = "*"
 code = '''
 using EconPDEs, SparseArrays, LinearAlgebra
 
-# Huggett (1993) economy in continuous time (Achdou, Han, Lasry, Lions and Moll 2022):
-# income y follows an Ornstein-Uhlenbeck process around ybar = 1, the bond a pays r, and a >= amin = phi (phi < 0 allows borrowing)
+{{?model=huggett}}# Huggett (1993) economy in continuous time (Achdou, Han, Lasry, Lions and Moll 2022):
+{{?model=huggett}}# income y follows an Ornstein-Uhlenbeck process around ybar = 1, the bond a pays r, and a >= amin = phi (phi < 0 allows borrowing)
+{{?model=aiyagari}}# Aiyagari (1994) economy in continuous time (Achdou, Han, Lasry, Lions and Moll 2022):
+{{?model=aiyagari}}# households earn w * y, with labour efficiency y an Ornstein-Uhlenbeck process around ybar = 1, and save in capital a >= amin = phi at rate r;
+{{?model=aiyagari}}# a Cobb-Douglas firm rents capital at r + delta, and aggregate labour is ybar = 1 (the mean of the stationary income distribution)
 util(c, gamma) = gamma == 1 ? log(c) : c^(1 - gamma) / (1 - gamma)
+{{?model=huggett}}wage(r) = 1.0  # endowment economy: income is the draw y itself
+{{?model=aiyagari}}alpha, delta = {{alpha}}, {{delta}}  # capital share and depreciation rate
+{{?model=aiyagari}}capital_demand(r) = (alpha / (r + delta))^(1 / (1 - alpha))  # firm capital per unit of labour, from r + delta = alpha K^(alpha - 1)
+{{?model=aiyagari}}wage(r) = (1 - alpha) * capital_demand(r)^alpha  # marginal product of labour at that capital stock
 
-function huggett_hjb(par)  # HJB residual in the EconPDEs convention: returns (; vt) and the saved policies
+function household_hjb(par)  # HJB residual in the EconPDEs convention: returns (; vt) and the saved policies
     return function (state, u)
         y, a = state.y, state.a
         mu_y = par.kappa * (par.ybar - y)
         vy   = mu_y >= 0 ? u.vy_up : u.vy_down  # upwind in income (exogenous drift)
-        cmax = 100.0 * max(y + par.r * a, y)  # caps consumption when Newton tries a negative marginal value
+        cmax = 100.0 * max(par.w * y + par.r * a, par.w * y)  # caps consumption when Newton tries a negative marginal value
         c_up  = u.va_up > 0 ? min(u.va_up^(-1 / par.gamma), cmax) : cmax
-        mu_up = y + par.r * a - c_up
+        mu_up = par.w * y + par.r * a - c_up
         if mu_up >= 0  # upwind in assets: forward difference when saving
             c, va, mu_a = c_up, u.va_up, mu_up
         else
             c_dn  = u.va_down > 0 ? min(u.va_down^(-1 / par.gamma), cmax) : cmax
-            mu_dn = y + par.r * a - c_dn
+            mu_dn = par.w * y + par.r * a - c_dn
             if mu_dn <= 0 && a > par.amin  # backward difference when dissaving
                 c, va, mu_a = c_dn, u.va_down, mu_dn
             else  # borrowing constraint binds: consume income plus interest
-                c, mu_a = y + par.r * a, 0.0
+                c, mu_a = par.w * y + par.r * a, 0.0
                 va = c^(-par.gamma)
             end
         end
@@ -194,12 +223,12 @@ function huggett_hjb(par)  # HJB residual in the EconPDEs convention: returns (;
     end
 end
 
-function huggett_grid(par; Ny = 15)
+function household_grid(par; Ny = 15)
     sd   = par.sigma / sqrt(2 * par.kappa)  # stationary standard deviation of income
     y_lo = max(par.ybar - 3 * sd, 0.05)
     ys   = range(y_lo, par.ybar + 3 * sd; length = Ny)
-    as   = range(par.amin, 20.0; length = {{N}})  # wealth grid from the borrowing limit
-    y_lo + par.r * par.amin > 0 || error("Borrowing limit too loose: the lowest income cannot pay the interest on the maximal debt")
+    as   = range(par.amin, 20.0 * par.w; length = {{N}})  # wealth grid from the borrowing limit, scaled with the wage
+    par.w * y_lo + par.r * par.amin > 0 || error("Borrowing limit too loose: the lowest income cannot pay the interest on the maximal debt")
     return ys, as
 end
 
@@ -234,22 +263,23 @@ function stationary_distribution(mu_a, par, ys, as)  # KFE: EconPDEs solves only
     return reshape(M \ b, Ny, Na)  # probability mass of each grid cell (not a density)
 end
 
-function solve_huggett(r)
-    par    = (; gamma = {{gamma}}, rho = {{rho}}, sigma = {{sigma}}, kappa = {{kappa}}, ybar = 1.0, r = r, amin = Float64({{phi}}))
-    ys, as = huggett_grid(par)
-    guess  = (; v = [util(max(y + r * a, 0.1), par.gamma) / par.rho for y in ys, a in as])  # value of consuming income plus interest forever
-    res    = pdesolve(huggett_hjb(par), (; y = ys, a = as), guess; verbose = false)
+function solve_household(r)  # household block at interest rate r (and, for Aiyagari, the wage the firm pays at r)
+    par    = (; gamma = {{gamma}}, rho = {{rho}}, sigma = {{sigma}}, kappa = {{kappa}}, ybar = 1.0, r = r, w = wage(r), amin = Float64({{phi}}))
+    ys, as = household_grid(par)
+    guess  = (; v = [util(max(par.w * y + r * a, 0.1), par.gamma) / par.rho for y in ys, a in as])  # value of consuming income plus interest forever
+    res    = pdesolve(household_hjb(par), (; y = ys, a = as), guess; verbose = false)
     g      = stationary_distribution(res.saved.mu_a, par, ys, as)
     return (; res, g, ys, as, par)
 end
 
-sol = solve_huggett({{rho}} - 0.01)  # partial equilibrium at an r below rho; the Equilibrium Interest Rate action finds the market-clearing r
+sol = solve_household({{rho}} - 0.01)  # partial equilibrium at an r below rho; the Equilibrium Interest Rate action finds the market-clearing r
 res, g, ys, as = sol.res, sol.g, sol.ys, sol.as
 V     = res.solution.v  # value function on the (income, wealth) grid
 c_pol = res.saved.c  # consumption policy
 mu_a  = res.saved.mu_a  # saving policy
 g_a   = vec(sum(g; dims = 1))  # marginal probability mass on the wealth grid (sums to 1)
-println("Converged: ", res.converged, "; aggregate bond holdings at r = ", sol.par.r, ": ", round(dot(g_a, as), digits = 4), " (0 in equilibrium: bonds are in zero net supply)")
+{{?model=huggett}}println("Converged: ", res.converged, "; aggregate bond holdings at r = ", sol.par.r, ": ", round(dot(g_a, as), digits = 4), " (0 in equilibrium: bonds are in zero net supply)")
+{{?model=aiyagari}}println("Converged: ", res.converged, "; at r = ", sol.par.r, " and w = ", round(sol.par.w, digits = 4), ": household capital ", round(dot(g_a, as), digits = 4), ", firm demand ", round(capital_demand(sol.par.r), digits = 4), " (equal in equilibrium)")
 '''
 
 [[actionGroups]]
@@ -308,25 +338,30 @@ label = "Interpret"
 [[actionGroups.actions]]
 id = "equilibrium_rate"
 label = "Equilibrium Interest Rate"
-desc = "Find the risk-free rate at which aggregate bond holdings are zero, as bonds are in zero net supply; needs a borrowing limit phi below 0"
+desc = "Huggett: find the risk-free rate at which aggregate bond holdings are zero, as bonds are in zero net supply (needs a borrowing limit phi below 0). Aiyagari: find the rate at which household wealth equals the capital firms demand"
 code = '''
-function aggregate_bonds(r)  # aggregate wealth of the stationary distribution at rate r
-    s = solve_huggett(r)
+function aggregate_wealth(r)  # aggregate wealth of the stationary distribution at rate r
+    s = solve_household(r)
     return dot(vec(sum(s.g; dims = 1)), s.as)
 end
+{{?model=huggett}}excess(r) = aggregate_wealth(r)  # bonds are in zero net supply
+{{?model=aiyagari}}excess(r) = aggregate_wealth(r) - capital_demand(r)  # household capital supply minus firm demand
 
-function equilibrium_rate(lo, hi; tol = 1e-5)  # bisection: holdings rise with r
-    s_lo, s_hi = aggregate_bonds(lo), aggregate_bonds(hi)
-    s_lo < 0 < s_hi || error("No sign change on [", lo, ", ", hi, "]: with phi = 0 nobody can borrow, holdings are positive at every r and there is no equilibrium")
+function equilibrium_rate(lo, hi; tol = 1e-5)  # bisection: excess supply rises with r
+    s_lo, s_hi = excess(lo), excess(hi)
+{{?model=huggett}}     s_lo < 0 < s_hi || error("No sign change on [", lo, ", ", hi, "]: with phi = 0 nobody can borrow, holdings are positive at every r and there is no equilibrium")
+{{?model=aiyagari}}     s_lo < 0 < s_hi || error("No sign change on [", lo, ", ", hi, "]: widen the bracket")
     while hi - lo > tol
         mid = (lo + hi) / 2
-        aggregate_bonds(mid) < 0 ? (lo = mid) : (hi = mid)
+        excess(mid) < 0 ? (lo = mid) : (hi = mid)
     end
     return (lo + hi) / 2
 end
 
-r_eq = equilibrium_rate({{rho}} - 0.05, {{rho}} - 0.001)  # equilibrium r lies below rho: precautionary saving
+{{?model=huggett}}r_eq = equilibrium_rate({{rho}} - 0.05, {{rho}} - 0.001)  # equilibrium r lies below rho: precautionary saving
+{{?model=aiyagari}}r_eq = equilibrium_rate(max({{rho}} - 0.05, -delta + 0.01), {{rho}} - 0.001)  # r below rho (precautionary saving) and above -delta (positive rental rate)
 println("Equilibrium interest rate: ", round(r_eq, digits = 5), " (rho = ", {{rho}}, ")")
+{{?model=aiyagari}}println("Capital: ", round(capital_demand(r_eq), digits = 4), "   wage: ", round(wage(r_eq), digits = 4), "   output: ", round(capital_demand(r_eq)^alpha, digits = 4))
 '''
 
 [[actionGroups.actions]]
@@ -334,7 +369,7 @@ id = "wealth_gini"
 label = "Wealth Gini Coefficient"
 desc = "Compute the Gini index of wealth above the borrowing limit, a minus phi, from the stationary distribution"
 code = '''
-x  = collect(as) .- first(as)  # wealth above the borrowing limit: non-negative, so the Gini is well defined (in equilibrium mean bond holdings are 0)
+x  = collect(as) .- first(as)  # wealth above the borrowing limit: non-negative, so the Gini is well defined (in a Huggett equilibrium mean bond holdings are 0)
 Sx = cumsum(g_a .* x)  # grid is sorted, so this is the Lorenz numerator
 Gini = 1 - sum(g_a .* (vcat(0.0, Sx[1:end-1]) .+ Sx)) / Sx[end]  # Gini of a discrete distribution with masses g_a
 println("Wealth Gini (a - phi): ", round(Gini, digits = 4))

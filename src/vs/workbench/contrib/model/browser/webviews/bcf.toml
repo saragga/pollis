@@ -240,16 +240,28 @@ models = ["bhp"]
 [[inputs]]
 id = "bhp-maxiter"
 label = "Max iter"
-tooltip = ""
+tooltip = "Upper bound on the boosting iterations; with the Fixed stopping rule, the exact number of iterations."
 default = "100"
 models = ["bhp"]
 
 [[inputs]]
-id = "bhp-tol"
-label = "Tolerance"
-tooltip = ""
-default = "1e-6"
+id = "bhp-stopping"
+label = "Stopping Rule"
+tooltip = "When boosting stops: BIC stops when the Phillips-Shi information criterion rises; ADF stops once an ADF test rejects a unit root in the cycle at the 5% level; Fixed runs exactly Max iter iterations."
+kind = "select"
 models = ["bhp"]
+
+[[inputs.options]]
+value = "BIC"
+label = "BIC"
+
+[[inputs.options]]
+value = "ADF"
+label = "ADF"
+
+[[inputs.options]]
+value = "fixed"
+label = "Fixed"
 
 [[codeBranches]]
 model = "hp"
@@ -342,8 +354,8 @@ if !@isdefined({{y}})  # no series loaded: simulate a quarterly series in 100 x 
 end
 y_obs = Float64.({{y}})  # 100 x log of a quarterly real series (for example real GDP), so the cycle is in percent deviations from trend
 
-# boosted_hp has no tolerance argument: it stops when the Phillips-Shi BIC rises (stopping=:BIC), when ADF rejects a unit root (:ADF), or after max_iter
-run_filter(v) = boosted_hp(v, lambda={{bhp-lambda}}, stopping=:BIC, max_iter={{bhp-maxiter}})  # Boosted HP filter (Phillips and Shi 2021), reused by the actions
+# stopping rule: :BIC stops when the Phillips-Shi BIC rises, :ADF when an ADF test rejects a unit root in the cycle, :fixed after max_iter
+run_filter(v) = boosted_hp(v, lambda={{bhp-lambda}}, stopping=:{{bhp-stopping}}, max_iter={{bhp-maxiter}})  # Boosted HP filter (Phillips and Shi 2021), reused by the actions
 res = run_filter(y_obs)
 tau = trend(res)  # trend after boosting
 c   = cycle(res)  # cyclical component, percent deviation from trend
@@ -463,7 +475,7 @@ results = ["HP" => hp_filter(y_obs, lambda={{hp-lambda}}),
            "Hamilton" => hamilton_filter(y_obs, h={{ham-h}}, p={{ham-p}}),
            "BN" => beveridge_nelson(y_obs, p={{bn-p}}, q={{bn-q}}),
            "BK" => baxter_king(y_obs, pl={{bk-pl}}, pu={{bk-ph}}, K={{bk-K}}),
-           "BHP" => boosted_hp(y_obs, lambda={{bhp-lambda}}, max_iter={{bhp-maxiter}})]
+           "BHP" => boosted_hp(y_obs, lambda={{bhp-lambda}}, stopping=:{{bhp-stopping}}, max_iter={{bhp-maxiter}})]
 span(r)  = hasproperty(r, :valid_range) ? r.valid_range : (1:T_obs)  # dates each cycle covers
 common   = reduce(intersect, [span(r) for (_, r) in results])  # Hamilton loses h + p - 1 at the start, BK loses K at each end
 aligned  = [label => cycle(r)[common .- first(span(r)) .+ 1] for (label, r) in results]

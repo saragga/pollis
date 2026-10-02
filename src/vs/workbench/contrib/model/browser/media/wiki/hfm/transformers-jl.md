@@ -212,4 +212,4 @@ end
 | Julia Discourse — ML | discourse.julialang.org/c/domain/ml |
 
 ## See Also
-- [ONNX.jl](onnx-jl.md) · [Package Guide](package-guide.md) · [Run Inference](run-inference.md)
+- [Package Guide](package-guide.md) · [Run Inference](run-inference.md)

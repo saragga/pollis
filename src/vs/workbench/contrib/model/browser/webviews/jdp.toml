@@ -170,28 +170,28 @@ text = "Specify jumps as ConstantRateJump (fixed lambda) or VariableRateJump (st
 detail = ""
 
 [[bullets]]
-text = "Solve with standard SDE solvers; the jump process is handled transparently by the Direct (Gillespie) or RSSA algorithm"
+text = "Solve with standard SDE solvers: a constant-rate jump is scheduled by a jump aggregator such as Direct (Gillespie), a variable-rate jump is integrated along the path by the solver"
 detail = ""
 
 [[decisionRows]]
 task = "Compound Poisson"
-context = "Any jump-size distribution"
-purpose = "Rare discrete events with arbitrary jump sizes; constant arrival rate lambda"
+context = "Constant rate, any jump-size distribution"
+purpose = "Discrete events at a constant rate lambda; the example uses uniform log-jumps, swap the distribution in affect! for others"
 
 [[decisionRows]]
 task = "Gaussian Jumps"
-context = "Normal(muJ, sigmaJ) jump sizes"
-purpose = "Symmetric, bounded-tail jumps; news shocks, Merton-style models"
+context = "Normal(muJ, sigmaJ) log-jumps"
+purpose = "Log-normal jump sizes, as in the Merton (1976) model: crashes and news shocks in asset prices"
 
 [[decisionRows]]
 task = "Custom Rate"
 context = "State-dependent jump intensity"
-purpose = "Jump intensity lambda(X) depends on current state; nonlinear feedback"
+purpose = "Jumps arrive faster as X grows (the example uses lambda times |X|); edit rate for other feedback"
 
 [[inputs]]
 id = "f"
 label = "Drift f(X,t)"
-tooltip = "Continuous drift function f(X, p, t). Example: 0.05*X for geometric growth, -0.1*(X-1.0) for mean-reversion."
+tooltip = "Drift as a function of X. Compound Poisson and Custom Rate: the drift of the continuous part, so the jumps add expected growth on top of it. Gaussian Jumps: the total expected growth, jumps included; the code subtracts the Merton compensator lambda*kappa*X from it. Example: 0.05*X for geometric growth, -0.1*(X-1.0) for mean-reversion."
 default = "0.05*X"
 
 [[inputs]]
@@ -209,21 +209,21 @@ default = "2.0"
 [[inputs]]
 id = "muj"
 label = "Jump mean muJ"
-tooltip = "Mean of the Gaussian jump-size distribution. Positive for upward drift in jumps, negative for downward."
+tooltip = "Mean of the Gaussian log-jump J, where a jump multiplies X by e^J. Negative values make downward jumps (crashes) more likely, positive values upward ones."
 default = "-0.1"
 models = ["gauss"]
 
 [[inputs]]
 id = "sigmaj"
 label = "Jump std sigmaJ"
-tooltip = "Standard deviation of the Gaussian jump-size distribution. Controls the spread of jump magnitudes."
+tooltip = "Standard deviation of the Gaussian log-jump J. Controls the spread of jump magnitudes."
 default = "0.05"
 models = ["gauss"]
 
 [[inputs]]
 id = "aggregator"
 label = "Jump aggregator"
-tooltip = "Algorithm used to schedule jump events. Direct (Gillespie) is simplest and exact for constant rates. SortingDirect improves cache performance. RSSA scales better for large systems. Coevolve is required for variable-rate (state-dependent) jumps."
+tooltip = "Algorithm that schedules the constant-rate jumps of Compound Poisson and Gaussian Jumps. All are exact; with a single jump they give the same paths, and SortingDirect only pays off in systems with many jumps. Custom Rate has no selector: its state-dependent jump is integrated along the path by the SDE solver."
 kind = "select"
 default = "Direct"
 models = ["cpj", "gauss"]
@@ -236,10 +236,6 @@ label = "Direct"
 [[inputs.options]]
 value = "SortingDirect"
 label = "SortingDirect"
-
-[[inputs.options]]
-value = "RSSA"
-label = "RSSA"
 
 [[inputs]]
 id = "solver"
@@ -299,7 +295,9 @@ affect!(integ) = (integ.u *= exp(rand(Uniform(-a, a))))  # multiplicative jump X
 jump = ConstantRateJump(rate, affect!)  # fixed-rate jump
 
 prob  = SDEProblem(f, g, {{X0}}, (0.0, {{T}}))  # base SDE
-jprob = JumpProblem(prob, {{aggregator}}(), jump)  # augment with jump process using {{aggregator}} aggregator
+{{?aggregator=Direct}}jkw = NamedTuple()
+{{?aggregator=SortingDirect}}jkw = (dep_graph = [[1]],)  # SortingDirect needs the jump dependency graph: the one jump only affects its own rate
+jprob = JumpProblem(prob, {{aggregator}}(), jump; jkw...)  # augment with jump process using {{aggregator}} aggregator
 alg = {{solver}}()  # SDE solver
 {{?solver=SRIW1|LambaEM}} skw = NamedTuple()  # adaptive solver: no fixed step
 {{?solver!=SRIW1|LambaEM}} skw = (dt = {{dt}},)  # fixed-step solver
@@ -322,7 +320,9 @@ affect!(integ) = (integ.u *= exp(rand(Normal({{muj}}, {{sigmaj}}))))  # X -> X e
 jump = ConstantRateJump(rate, affect!)  # constant-rate log-normal jump
 
 prob  = SDEProblem(f, g, {{X0}}, (0.0, {{T}}))  # base SDE
-jprob = JumpProblem(prob, {{aggregator}}(), jump)  # augment with {{aggregator}} aggregator
+{{?aggregator=Direct}}jkw = NamedTuple()
+{{?aggregator=SortingDirect}}jkw = (dep_graph = [[1]],)  # SortingDirect needs the jump dependency graph: the one jump only affects its own rate
+jprob = JumpProblem(prob, {{aggregator}}(), jump; jkw...)  # augment with {{aggregator}} aggregator
 alg = {{solver}}()  # SDE solver
 {{?solver=SRIW1|LambaEM}} skw = NamedTuple()  # adaptive solver: no fixed step
 {{?solver!=SRIW1|LambaEM}} skw = (dt = {{dt}},)  # fixed-step solver
