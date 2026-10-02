@@ -143,6 +143,10 @@ export interface IModelAction {
 	readonly label: string;
 	readonly desc: string;
 	readonly code: string;
+	/** List the action only for these model toggles. Default: all. */
+	readonly models?: string[];
+	/** List the action only while an input matches, as `id=a|b` or `id!=a|b`. */
+	readonly when?: string;
 }
 
 /** A Next Steps action group shown in the right panel. */

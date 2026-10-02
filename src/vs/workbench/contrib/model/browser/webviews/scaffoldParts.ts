@@ -82,7 +82,11 @@ function buildCodeBranchesJs(data: IScaffoldPanelData): string {
 
 function buildActionsJs(data: IScaffoldPanelData): string {
 	return (data.actionGroups ?? []).map(g => {
-		const actions = g.actions.map(a => `\t\t\t{ id: '${jsEscape(a.id)}', label: '${jsEscape(a.label)}', desc: '${jsEscape(a.desc)}', code: function() { return ${codeLinesJs(a.code)}; } }`).join(',\n');
+		const actions = g.actions.map(a => {
+			const models = a.models?.length ? `, models: [${a.models.map(m => `'${jsEscape(m)}'`).join(', ')}]` : '';
+			const when = a.when ? `, when: '${jsEscape(a.when)}'` : '';
+			return `\t\t\t{ id: '${jsEscape(a.id)}', label: '${jsEscape(a.label)}', desc: '${jsEscape(a.desc)}'${models}${when}, code: function() { return ${codeLinesJs(a.code)}; } }`;
+		}).join(',\n');
 		return `\t\tvar ${actionsVar(g.id)} = [\n${actions}\n\t\t];`;
 	}).join('\n');
 }

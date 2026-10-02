@@ -1050,10 +1050,10 @@ using Distributions
 {{?dist=Hypergeometric}}d = Hypergeometric({{hypergeometric_s}}, {{hypergeometric_f}}, {{hypergeometric_n}})  # support: x in {0, ..., min(n, s)}
 {{?dist=Categorical}}d = Categorical({{categorical_probs}})  # support: x in {1, ..., k}
 
-{{?method!=quantile}}x = {{xint}}  # evaluation point
+x = {{xint}}  # evaluation point
 {{?method=pdf}}println("pdf: ", pdf(d, x))
 {{?method=cdf}}println("cdf: ", cdf(d, x))
-{{?method=quantile}}prob = {{prob}}  # evaluation point
+{{?method=quantile}}prob = {{prob}}  # probability level
 {{?method=quantile}}println("quantile: ", quantile(d, prob))
 '''
 
@@ -1084,10 +1084,10 @@ using Distributions
 {{?dist=Levy}}d = Levy({{levy_mu}}, {{levy_c}})  # support: x in [mu, Inf)
 {{?dist=SkewNormal}}d = SkewNormal({{skewnormal_xi}}, {{skewnormal_omega}}, {{skewnormal_alpha}})  # support: x in (-Inf, Inf)
 
-{{?method!=quantile}}x = {{x}}  # evaluation point
+x = {{x}}  # evaluation point
 {{?method=pdf}}println("pdf: ", pdf(d, x))
 {{?method=cdf}}println("cdf: ", cdf(d, x))
-{{?method=quantile}}prob = {{prob}}  # evaluation point
+{{?method=quantile}}prob = {{prob}}  # probability level
 {{?method=quantile}}println("quantile: ", quantile(d, prob))
 '''
 
@@ -1104,10 +1104,10 @@ using Distributions
 {{?dist=Pareto}}base = Pareto({{pareto_alpha}}, {{pareto_theta}})
 d = truncated(base, lower={{lower}}, upper={{upper}})  # support: x in [{{lower}}, {{upper}}]
 
-{{?method!=quantile}}x = {{x}}  # evaluation point
+x = {{x}}  # evaluation point
 {{?method=pdf}}println("pdf: ", pdf(d, x))
 {{?method=cdf}}println("cdf: ", cdf(d, x))
-{{?method=quantile}}prob = {{prob}}  # evaluation point
+{{?method=quantile}}prob = {{prob}}  # probability level
 {{?method=quantile}}println("quantile: ", quantile(d, prob))
 '''
 
@@ -1155,10 +1155,10 @@ using Distributions
 
 d = MixtureModel([{{mixcomponents}}], {{mixweights}})
 
-{{?method!=quantile}}x = {{x}}  # evaluation point
+x = {{x}}  # evaluation point
 {{?method=pdf}}println("pdf: ", pdf(d, x))
 {{?method=cdf}}println("cdf: ", cdf(d, x))
-{{?method=quantile}}prob = {{prob}}  # evaluation point
+{{?method=quantile}}prob = {{prob}}  # probability level
 {{?method=quantile}}println("quantile: ", quantile(d, prob))
 '''
 
@@ -1180,10 +1180,10 @@ using Distributions
 
 d = convolve({{d1}}, {{d2}})
 
-{{?method!=quantile}}x = {{xconv}}  # evaluation point
+x = {{xconv}}  # evaluation point
 {{?method=pdf}}println("pdf: ", pdf(d, x))
 {{?method=cdf}}println("cdf: ", cdf(d, x))
-{{?method=quantile}}prob = {{prob}}  # evaluation point
+{{?method=quantile}}prob = {{prob}}  # probability level
 {{?method=quantile}}println("quantile: ", quantile(d, prob))
 '''
 
@@ -1195,6 +1195,7 @@ label = "Visualise"
 id = "plot-density"
 label = "Density Plot"
 desc = "Plot the density (or mass function) of d"
+models = ["discrete", "continuous", "truncated", "mixture", "convolutions"]
 code = '''
 using StatsPlots
 plot(d, lw=2, label="pdf", title="Density")
@@ -1204,6 +1205,7 @@ plot(d, lw=2, label="pdf", title="Density")
 id = "plot-cdf"
 label = "Cumulative Distribution Plot"
 desc = "Plot the cdf of d between its 0.1% and 99.9% quantiles"
+models = ["discrete", "continuous", "truncated", "mixture", "convolutions"]
 code = '''
 using StatsPlots
 plot(x -> cdf(d, x), quantile(d, 0.001), quantile(d, 0.999), lw=2, label="cdf", title="Cumulative distribution")
@@ -1212,12 +1214,18 @@ plot(x -> cdf(d, x), quantile(d, 0.001), quantile(d, 0.999), lw=2, label="cdf", 
 [[actionGroups.actions]]
 id = "plot-samples"
 label = "Samples vs Density"
-desc = "Histogram of random draws with the density on top"
+desc = "Histogram of random draws with the density on top (pairwise draws for vector-valued d)"
+models = ["discrete", "continuous", "truncated", "mixture", "convolutions", "multivariate", "product"]
 code = '''
 using StatsPlots
-xs = rand(d, 10_000)
-histogram(xs, normalize=:pdf, alpha=0.4, label="samples")
-plot!(d, lw=2, label="pdf")
+{{?model=discrete|continuous|truncated|mixture|convolutions}}xs = rand(d, 10_000)
+{{?model=discrete}}histogram(xs, bins=minimum(xs) - 0.5:1:maximum(xs) + 0.5, normalize=:pdf, alpha=0.4, label="samples")  # one bin per integer
+{{?model=mixture|convolutions}}bins = d isa DiscreteDistribution ? (minimum(xs) - 0.5:1:maximum(xs) + 0.5) : :auto  # one bin per integer for integer draws
+{{?model=mixture|convolutions}}histogram(xs, bins=bins, normalize=:pdf, alpha=0.4, label="samples")
+{{?model=continuous|truncated}}histogram(xs, normalize=:pdf, alpha=0.4, label="samples")
+{{?model=discrete|continuous|truncated|mixture|convolutions}}plot!(d, lw=2, label="pdf")
+{{?model=multivariate|product}}xs = rand(d, 5_000)  # one draw per column
+{{?model=multivariate|product}}cornerplot(Matrix{Float64}(transpose(xs)), compact=true)  # pairwise scatter plots and marginal histograms
 '''
 
 [[actionGroups]]
@@ -1227,12 +1235,19 @@ label = "Diagnose"
 [[actionGroups.actions]]
 id = "moments"
 label = "Moments"
-desc = "Mean, variance, skewness and kurtosis of d"
+desc = "Mean, variance, skewness and kurtosis of d (mean and covariance for vector-valued d)"
+models = ["discrete", "continuous", "mixture", "convolutions", "multivariate", "product", "matrixvariate"]
 code = '''
-println("Mean:     ", mean(d))
-println("Variance: ", var(d))
-println("Skewness: ", skewness(d))
-println("Excess kurtosis: ", kurtosis(d))  # Distributions.jl reports excess kurtosis: 0 for a normal, not 3
+{{?model=discrete|continuous|mixture|convolutions}}println("Mean:     ", mean(d))
+{{?model=discrete|continuous|mixture|convolutions}}println("Variance: ", var(d))
+{{?model=discrete|continuous|convolutions}}println("Skewness: ", skewness(d))
+{{?model=discrete|continuous|convolutions}}println("Excess kurtosis: ", kurtosis(d))  # Distributions.jl reports excess kurtosis: 0 for a normal, not 3
+{{?model=multivariate|product|matrixvariate}}println("Mean:")
+{{?model=multivariate|product|matrixvariate}}display(mean(d))
+{{?model=multivariate|product}}println("Covariance:")
+{{?model=multivariate|product}}display(Matrix(cov(d)))
+{{?model=matrixvariate}}println("Variance of each entry:")
+{{?model=matrixvariate}}display(var(d))
 '''
 
 [[actionGroups.actions]]
@@ -1240,15 +1255,20 @@ id = "parameters"
 label = "Parameters and Support"
 desc = "The parameters of d and whether the evaluation point is in its support"
 code = '''
-println("Parameters: ", params(d))
-println("Support:    ", minimum(d), " to ", maximum(d))
-println("x in support: ", insupport(d, x))
+{{?model!=product}}println("Parameters: ", params(d))
+{{?model=discrete|continuous|truncated|mixture|convolutions}}println("Support:    ", minimum(d), " to ", maximum(d))
+{{?model=multivariate|product}}println("Dimension:  ", length(d))
+{{?model=matrixvariate}}println("Size:       ", size(d))
+{{?model!=matrixvariate}}println("x in support: ", insupport(d, x))
+{{?model=matrixvariate}}println("X in support: ", insupport(d, X))
 '''
 
 [[actionGroups.actions]]
 id = "entropy"
 label = "Entropy"
 desc = "Differential (or Shannon) entropy of d"
+models = ["discrete", "continuous", "convolutions", "multivariate", "product"]
+when = "dist!=NegativeBinomial|InverseGaussian|Epanechnikov|GeneralizedPareto|SkewNormal"
 code = '''
 println("Entropy: ", entropy(d))
 '''
@@ -1264,16 +1284,27 @@ desc = "Draw a sample of 1000 values from d"
 code = '''
 using Random
 Random.seed!(1)
-xs = rand(d, 1000)
+{{?model=discrete|continuous|truncated|mixture|convolutions}}xs = rand(d, 1000)
+{{?model=multivariate|product}}xs = rand(d, 1000)  # a matrix with one draw per column
+{{?model=matrixvariate}}Xs = rand(d, 1000)  # a vector of matrices
 '''
 
 [[actionGroups.actions]]
 id = "monte-carlo"
 label = "Monte Carlo Check"
-desc = "Compare the sample mean of many draws with the theoretical mean"
+desc = "Compare the sample mean of many draws, with its standard error, against the theoretical mean"
+models = ["discrete", "continuous", "mixture", "convolutions", "multivariate", "product", "matrixvariate"]
+when = "dist!=Cauchy|Levy"
 code = '''
-xs = rand(d, 100_000)
-println("Sample mean:      ", mean(xs))
+{{?model=discrete|continuous|mixture|convolutions}}xs = rand(d, 100_000)
+{{?model=discrete|continuous|mixture|convolutions}}println("Sample mean:      ", mean(xs))
+{{?model=discrete|continuous|mixture|convolutions}}println("Standard error:   ", std(xs) / sqrt(length(xs)))
+{{?model=multivariate|product}}xs = rand(d, 100_000)  # one draw per column
+{{?model=multivariate|product}}println("Sample mean:      ", vec(mean(xs, dims=2)))
+{{?model=multivariate|product}}println("Standard error:   ", vec(std(xs, dims=2)) ./ sqrt(size(xs, 2)))
+{{?model=matrixvariate}}Xs = rand(d, 100_000)
+{{?model=matrixvariate}}println("Sample mean:      ", mean(Xs))
+{{?model=matrixvariate}}println("Standard error:   ", [std(getindex.(Xs, i, j)) for i in axes(X, 1), j in axes(X, 2)] ./ sqrt(length(Xs)))
 println("Theoretical mean: ", mean(d))
 '''
 
@@ -1281,6 +1312,7 @@ println("Theoretical mean: ", mean(d))
 id = "tail"
 label = "Tail Probabilities"
 desc = "Probability of exceeding the evaluation point, and its log density"
+models = ["discrete", "continuous", "truncated", "mixture", "convolutions"]
 code = '''
 println("P(X > x): ", ccdf(d, x))
 println("log pdf:  ", logpdf(d, x))
@@ -1294,29 +1326,40 @@ label = "Compare"
 id = "fit-mle"
 label = "Refit by Maximum Likelihood"
 desc = "Simulate data from d and recover its parameters with fit_mle"
+models = ["discrete", "continuous", "multivariate"]
+when = "dist!=NegativeBinomial|Hypergeometric|Cauchy|Logistic|TDist|Gumbel|Triangular|Epanechnikov|GeneralizedExtremeValue|GeneralizedPareto|Levy|SkewNormal"
 code = '''
-data = rand(d, 500)
-D = Base.typename(typeof(d)).wrapper
-d_hat = fit_mle(D, data)
+{{?model!=multivariate}}data = rand(d, 500)
+{{?model=multivariate}}data = rand(d, 500)  # one draw per column
+{{?dist=Binomial}}d_hat = fit_mle(Binomial, ntrials(d), data)  # the number of trials is known; only p is estimated
+{{?dist=Categorical}}d_hat = fit_mle(Categorical, ncategories(d), data)
+{{?dist!=Binomial|Categorical}}d_hat = fit_mle({{dist}}, data)
+println("True:   ", d)
+println("Fitted: ", d_hat)
 '''
 
 [[actionGroups.actions]]
 id = "normal-approx"
 label = "Normal Approximation"
-desc = "Monte Carlo KL divergence from d to a Normal with the same mean and std"
+desc = "KL divergence from d to a Normal with the same mean and standard deviation"
+models = ["continuous", "truncated", "mixture"]
+when = "dist!=Cauchy|Levy"
 code = '''
-d_alt = Normal(mean(d), std(d))
-xs = rand(d, 100_000)
-println("KL(d || Normal): ", mean(logpdf.(d, xs) .- logpdf.(d_alt, xs)))
+{{?model!=truncated}}d_alt = Normal(mean(d), std(d))
+{{?model=truncated}}xs = rand(d, 100_000)
+{{?model=truncated}}d_alt = Normal(mean(xs), std(xs))  # moments from draws: Distributions.jl has closed forms only for a truncated Normal or Exponential
+println("KL(d || Normal): ", kldivergence(d, d_alt))  # numerical integration over the support of d
 '''
 
 [[actionGroups.actions]]
 id = "qq-plot"
 label = "Q-Q Plot vs Normal"
-desc = "Quantile-quantile plot of draws from d against a matching Normal"
+desc = "Quantile-quantile plot of draws from d against a Normal with the sample mean and standard deviation"
+models = ["continuous", "truncated", "mixture"]
 code = '''
 using StatsPlots
-qqplot(Normal(mean(d), std(d)), rand(d, 1000), title="Q-Q vs Normal")
+xs = rand(d, 1000)
+qqplot(Normal(mean(xs), std(xs)), xs, title="Q-Q vs Normal")
 '''
 
 [[actionGroups]]
@@ -1327,6 +1370,7 @@ label = "Interpret"
 id = "quantile-table"
 label = "Quantile Table"
 desc = "Selected quantiles of d"
+models = ["discrete", "continuous", "truncated", "mixture", "convolutions"]
 code = '''
 for p in (0.01, 0.05, 0.25, 0.5, 0.75, 0.95, 0.99)
 	println(rpad(p, 6), quantile(d, p))
@@ -1337,6 +1381,7 @@ end
 id = "central-interval"
 label = "95% Central Interval"
 desc = "The interval holding the middle 95% of the probability"
+models = ["discrete", "continuous", "truncated", "mixture", "convolutions"]
 code = '''
 lo, hi = quantile(d, 0.025), quantile(d, 0.975)
 println("95% of the probability lies in [", lo, ", ", hi, "]")
@@ -1345,8 +1390,9 @@ println("95% of the probability lies in [", lo, ", ", hi, "]")
 [[actionGroups.actions]]
 id = "loglik"
 label = "Log-Likelihood of Data"
-desc = "How well d explains a data vector"
+desc = "How well d explains a data set drawn from it"
 code = '''
-data = rand(d, 100)
+{{?model!=matrixvariate}}data = rand(d, 100)
+{{?model=matrixvariate}}data = rand(d, 100)  # a vector of matrices
 println("Log-likelihood: ", loglikelihood(d, data))
 '''

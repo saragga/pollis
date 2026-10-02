@@ -539,6 +539,14 @@ ${parts.headScriptJs ?? ''}
 			var m = el.dataset.when && /^([\\w-]+)(!?=)(.*)$/.exec(el.dataset.when);
 			return !m || holds(m[1], m[2], m[3]);
 		}
+		// A Next Steps action is listed only for its models and while its \`when\` condition holds; a condition on an input the model hides does not apply.
+		function actionShown(a) {
+			if (a.models && a.models.indexOf(currentModel) < 0) { return false; }
+			var m = a.when && /^([\\w-]+)(!?=)(.*)$/.exec(a.when);
+			var input = m && document.getElementById('in-' + m[1]);
+			var group = input && input.closest('.scaffold-input');
+			return !m || (group && group.hidden) || holds(m[1], m[2], m[3]);
+		}
 		// Show the inputs (and select choices) of the current model and input values; a hidden choice falls back to the first available one.
 		function applyInputsForModel() {
 			document.querySelectorAll('.scaffold-input select').forEach(function(select) {
@@ -728,6 +736,7 @@ ${parts.setModelExtraJs ?? ''}			document.querySelectorAll('#model-group .toggle
 			});
 			renderIllustration();
 			updateCodePreview();
+			refreshActionList();
 		}
 
 		document.getElementById('model-group').addEventListener('click', function(e) {
@@ -739,7 +748,8 @@ ${parts.setModelExtraJs ?? ''}			document.querySelectorAll('#model-group .toggle
 		function onInputsChanged() {
 			applyInputsForModel();
 			if (!editingCode) { updateCodePreview(); }
-			if (panelAction && !panelEditing && document.getElementById('panel-code')) { renderRightCode(panelAction, panelNav.actions, panelNav.title); }
+			if (panelAction && !panelEditing && document.getElementById('panel-code') && actionShown(panelAction)) { renderRightCode(panelAction, panelNav.actions, panelNav.title); }
+			refreshActionList();
 		}
 		var inputsBox = document.getElementById('scaffold-inputs');
 		if (inputsBox) { inputsBox.addEventListener('input', onInputsChanged); }   // fires for text inputs and selects
@@ -759,9 +769,16 @@ ${parts.setModelExtraJs ?? ''}			document.querySelectorAll('#model-group .toggle
 			currentPanelId = null;
 		}
 
+		// Re-list the open Next Steps group after a model or input change; an example no longer listed falls back to the list.
+		function refreshActionList() {
+			if (!listNav || panelEditing || currentPanelId !== listNav.panelId) { return; }
+			if (!panelAction || !actionShown(panelAction)) { renderRightList(listNav.actions, listNav.title); }
+		}
+
 		function renderRightList(actions, title) {
 			panelAction = null;
-			var cards = actions.map(function(a) {
+			listNav = { actions: actions, title: title, panelId: currentPanelId };
+			var cards = actions.filter(actionShown).map(function(a) {
 				return '<button class="action-card' + (typeof customSteps[a.id] === 'string' ? ' has-custom' : '') + '" data-id="' + a.id + '">'
 					+ '<span class="action-label">' + esc(a.label) + '</span>'
 					+ '<span class="action-desc">' + esc(a.desc) + '</span>'
@@ -877,6 +894,7 @@ ${parts.setModelExtraJs ?? ''}			document.querySelectorAll('#model-group .toggle
 		var customSteps = {};          // action id -> saved source, sent by the host
 		var panelAction = null;        // the Next Steps example open in the panel, if any
 		var panelNav = null;           // the list it was opened from ({ actions, title }), for re-rendering
+		var listNav = null;            // the Next Steps list last shown ({ actions, title, panelId }), re-filtered on model/input changes
 		var panelDefaultCode = '';     // its generated source
 		var panelEditing = false;
 		var panelRestoreTimer = null;
