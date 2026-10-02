@@ -41,7 +41,7 @@ name = "ForwardDiff.jl"
 github = "https://github.com/JuliaDiff/ForwardDiff.jl"
 
 [requires]
-packages = ["OrdinaryDiffEq.jl", "NonlinearSolve.jl", "ForwardDiff.jl", "Plots.jl"]
+packages = ["OrdinaryDiffEq.jl", "NonlinearSolve.jl", "ForwardDiff.jl", "Plots.jl", "OrdinaryDiffEqLowOrderRK.jl"]
 
 [[notebookSections]]
 label = ""
@@ -384,7 +384,7 @@ models = ["scalar", "system", "second"]
 [[codeBranches]]
 model = "scalar"
 code = '''
-using OrdinaryDiffEq
+using OrdinaryDiffEq, OrdinaryDiffEqLowOrderRK  # RK4 and Euler live in the sub-package since OrdinaryDiffEq 7
 
 f(t, y) = {{fs}}
 rhs(y, p, t) = f(t, y)  # the form OrdinaryDiffEq expects: du/dt = rhs(u, p, t)
@@ -405,7 +405,7 @@ sol = solve_with(alg)
 [[codeBranches]]
 model = "system"
 code = '''
-using OrdinaryDiffEq
+using OrdinaryDiffEq, OrdinaryDiffEqLowOrderRK  # RK4 and Euler live in the sub-package since OrdinaryDiffEq 7
 
 rhs(u, p, t) = {{F}}
 u0 = float.({{uv0}})
@@ -426,7 +426,7 @@ sol = solve_with(alg)
 [[codeBranches]]
 model = "second"
 code = '''
-using OrdinaryDiffEq
+using OrdinaryDiffEq, OrdinaryDiffEqLowOrderRK  # RK4 and Euler live in the sub-package since OrdinaryDiffEq 7
 
 g(t, y, dy) = {{g}}
 rhs(u, p, t) = [u[2], g(t, u[1], u[2])]  # the second-order equation becomes the system dy/dt = v, dv/dt = g(t, y, v)

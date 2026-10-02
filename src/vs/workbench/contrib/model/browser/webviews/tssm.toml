@@ -17,7 +17,7 @@ name = "LowLevelParticleFilters.jl"
 github = "https://github.com/baggepinnen/LowLevelParticleFilters.jl"
 
 [requires]
-packages = ["Plots.jl", "StatsBase.jl"]
+packages = ["Plots.jl", "StatsBase.jl", "Distributions.jl"]
 
 [[notebookSections]]
 label = ""

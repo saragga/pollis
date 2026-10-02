@@ -13,7 +13,7 @@ name = "DifferentialEquations.jl"
 github = "https://docs.sciml.ai/DiffEqDocs/stable/"
 
 [requires]
-packages = ["DifferentialEquations.jl"]
+packages = ["DifferentialEquations.jl", "GLMakie.jl", "Plots.jl", "Roots.jl"]
 
 [[notebookSections]]
 label = ""

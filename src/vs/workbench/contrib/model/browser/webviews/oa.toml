@@ -18,7 +18,7 @@ description = "Overview of Julia for academic and scientific computing"
 url = "https://www.youtube.com/watch?v=wPFPT-Ech2c"
 
 [requires]
-packages = ["OnlineStats.jl"]
+packages = ["OnlineStats.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""
@@ -242,7 +242,7 @@ o = KHist(20)  # adaptive histogram with up to 20 bins
 fit!(o, {{data}})  # update histogram as data arrives
 
 println(value(o))  # bin edges and counts
-println(pdf(o, 0.0))  # density estimate at a given point
+println(OnlineStats.pdf(o, 0.0))  # density estimate at a given point
 '''
 
 [[codeBranches]]

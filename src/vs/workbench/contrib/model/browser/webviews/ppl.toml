@@ -13,7 +13,7 @@ name = "Turing.jl"
 github = "https://github.com/TuringLang/Turing.jl"
 
 [requires]
-packages = ["Turing.jl", "Distributions.jl", "PosteriorStats.jl", "StatsPlots.jl", "PairPlots.jl", "ReverseDiff.jl", "Enzyme.jl", "Mooncake.jl"]
+packages = ["Turing.jl", "Distributions.jl", "PosteriorStats.jl", "StatsPlots.jl", "PairPlots.jl", "ReverseDiff.jl", "Enzyme.jl", "Mooncake.jl", "LogExpFunctions.jl"]
 
 [[notebookSections]]
 label = ""
@@ -387,7 +387,7 @@ summarize(chain)
 [[codeBranches]]
 model = "logistic"
 code = '''
-using Turing, Distributions
+using Turing, Distributions, LogExpFunctions  # logistic is no longer exported by Turing 0.49
 
 @model function logistic_model({{X}}, {{y}})
     alpha ~ Normal(0, 10)  # intercept prior

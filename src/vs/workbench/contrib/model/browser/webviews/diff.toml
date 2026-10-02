@@ -630,10 +630,10 @@ code = '''
 import TaylorSeries
 {{?model=deriv}} t = TaylorSeries.taylor_expand(f, x0; order={{order}})  # f(x0 + t) as a polynomial in t
 {{?model=deriv}} (polynomial = t, derivatives_at_x0 = [TaylorSeries.getcoeff(t, k) * prod(1:k; init=1.0) for k in 0:{{order}}], approximation_at_x0_plus_w = t({{w}}), exact_at_x0_plus_w = f(x0 + {{w}}))
-{{?model=grad}} TaylorSeries.set_variables("dx", numvars=length(x0), order={{order}})
+{{?model=grad}} TaylorSeries.variables!("dx"; numvars=length(x0), order={{order}})
 {{?model=grad}} t = TaylorSeries.taylor_expand(f, x0)  # f(x0 + dx) as a polynomial in dx1, dx2, ...
 {{?model=grad}} (polynomial = t, approximation_at_x0_plus_w = t(fill({{w}}, length(x0))), exact_at_x0_plus_w = f(x0 .+ {{w}}))
-{{?model=jac}} TaylorSeries.set_variables("dx", numvars=length(x0), order={{order}})
+{{?model=jac}} TaylorSeries.variables!("dx"; numvars=length(x0), order={{order}})
 {{?model=jac}} t = TaylorSeries.taylor_expand(F, x0)  # one polynomial per output
 {{?model=jac}} (polynomials = t, approximation_at_x0_plus_w = [ti(fill({{w}}, length(x0))) for ti in t], exact_at_x0_plus_w = F(x0 .+ {{w}}))
 '''

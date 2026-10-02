@@ -17,7 +17,7 @@ name = "LSurvival.jl"
 github = "https://github.com/alexpkeil1/LSurvival.jl"
 
 [requires]
-packages = ["Survival.jl", "LSurvival.jl"]
+packages = ["Survival.jl", "LSurvival.jl", "Distributions.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""

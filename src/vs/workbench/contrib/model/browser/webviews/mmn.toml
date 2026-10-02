@@ -13,7 +13,7 @@ name = "MicrostructureNoise.jl"
 github = "https://github.com/mschauer/MicrostructureNoise.jl"
 
 [requires]
-packages = ["MicrostructureNoise.jl"]
+packages = ["MicrostructureNoise.jl", "Distributions.jl", "Plots.jl", "StatsBase.jl"]
 
 [[notebookSections]]
 label = ""

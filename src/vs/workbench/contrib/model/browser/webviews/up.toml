@@ -17,7 +17,7 @@ name = "Distributions.jl"
 github = "https://github.com/JuliaStats/Distributions.jl"
 
 [requires]
-packages = ["MonteCarloMeasurements.jl", "Distributions.jl"]
+packages = ["MonteCarloMeasurements.jl", "Distributions.jl", "Measurements.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""

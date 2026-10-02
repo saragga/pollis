@@ -13,7 +13,7 @@ name = "Metaheuristics.jl"
 github = "https://github.com/jmejia8/Metaheuristics.jl"
 
 [requires]
-packages = ["Metaheuristics", " Plots"]
+packages = ["Metaheuristics", " Plots", "Plots.jl"]
 
 [[notebookSections]]
 label = ""

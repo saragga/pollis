@@ -13,7 +13,7 @@ name = "Copulas.jl"
 github = "https://github.com/lrnv/Copulas.jl"
 
 [requires]
-packages = ["Copulas.jl", "Bootstrap.jl"]
+packages = ["Copulas.jl", "Bootstrap.jl", "Distributions.jl", "Plots.jl", "StatsBase.jl"]
 
 [[notebookSections]]
 label = ""

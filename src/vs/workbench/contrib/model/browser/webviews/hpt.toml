@@ -17,7 +17,7 @@ name = "Hyperopt.jl"
 github = "https://github.com/baggepinnen/Hyperopt.jl"
 
 [requires]
-packages = ["MLJ.jl", "Hyperopt.jl"]
+packages = ["MLJ.jl", "Hyperopt.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""

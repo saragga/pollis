@@ -13,7 +13,7 @@ name = "RobustModels.jl"
 github = "https://github.com/getzze/RobustModels.jl"
 
 [requires]
-packages = ["RobustModels.jl"]
+packages = ["RobustModels.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""

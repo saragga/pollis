@@ -13,7 +13,7 @@ name = "Extremes.jl"
 github = "https://github.com/jojal5/Extremes.jl"
 
 [requires]
-packages = ["Extremes.jl"]
+packages = ["Extremes.jl", "Distributions.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""

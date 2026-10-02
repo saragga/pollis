@@ -17,7 +17,7 @@ name = "Lux.jl"
 github = "https://github.com/LuxDL/Lux.jl"
 
 [requires]
-packages = ["Transformers.jl", "Lux.jl"]
+packages = ["Transformers.jl", "Lux.jl", "Plots.jl", "Zygote.jl"]
 
 [[notebookSections]]
 label = ""

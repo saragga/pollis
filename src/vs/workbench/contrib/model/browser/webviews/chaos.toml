@@ -18,7 +18,7 @@ description = "Overview of Julia for academic and scientific computing"
 url = "https://www.youtube.com/watch?v=wPFPT-Ech2c"
 
 [requires]
-packages = ["DynamicalSystems.jl"]
+packages = ["DynamicalSystems.jl", "FractalDimensions.jl", "GLMakie.jl", "RecurrenceAnalysis.jl", "TimeseriesSurrogates.jl"]
 
 [[notebookSections]]
 label = ""

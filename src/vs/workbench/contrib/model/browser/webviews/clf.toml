@@ -13,7 +13,7 @@ name = "MLJ.jl"
 github = "https://github.com/alan-turing-institute/MLJ.jl"
 
 [requires]
-packages = ["MLJ.jl"]
+packages = ["MLJ.jl", "Plots.jl", "StatsBase.jl"]
 
 [[notebookSections]]
 label = ""

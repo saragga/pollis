@@ -13,7 +13,7 @@ name = "QuasiMonteCarlo.jl"
 github = "https://github.com/SciML/QuasiMonteCarlo.jl"
 
 [requires]
-packages = ["QuasiMonteCarlo.jl"]
+packages = ["QuasiMonteCarlo.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""

@@ -8,6 +8,9 @@ title = "Generalized Linear Models"
 viewType = "pollis.glm"
 defaultModel = "Bernoulli"
 
+[requires]
+packages = ["Plots.jl", "Tables.jl", "StatsBase.jl"]
+
 [[packages]]
 name = "GLM.jl"
 github = "https://github.com/JuliaStats/GLM.jl"
@@ -482,8 +485,8 @@ return s;
 [[codeBranches]]
 model = "*"
 code = '''
-{{?inference=standard}}using GLM  # generalized linear models
-{{?inference!=standard}}using GLM, CovarianceMatrices, Tables  # GLM + robust standard errors
+{{?inference=standard}}using GLM, StatsBase  # generalized linear models; StatsBase exports aic
+{{?inference!=standard}}using GLM, StatsBase, CovarianceMatrices, Tables  # GLM + robust standard errors
 
 {{?link=}}link = ()  # the default link of the {{model}} family
 {{?link!=}}link = ({{link}}(),)  # {{link}} instead of the default link
@@ -574,7 +577,7 @@ id = "leverage"
 label = "Leverage"
 desc = "Hat-matrix leverage to flag influential observations"
 code = '''
-using GLM
+using GLM, StatsBase
 
 h = leverage(model)  # diagonal of the hat matrix
 p = length(coef(model))  # number of parameters
@@ -632,7 +635,7 @@ id = "info-criteria"
 label = "Information Criteria"
 desc = "AIC, AICc, BIC and log-likelihood for model comparison"
 code = '''
-using GLM
+using GLM, StatsBase
 
 println("Log-likelihood: ", loglikelihood(model))
 println("AIC:  ", aic(model))  # lower is better

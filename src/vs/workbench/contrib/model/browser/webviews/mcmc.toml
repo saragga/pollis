@@ -21,7 +21,7 @@ name = "MCMCChains.jl"
 github = "https://github.com/TuringLang/MCMCChains.jl"
 
 [requires]
-packages = ["Turing.jl", "AdvancedHMC.jl", "MCMCChains.jl"]
+packages = ["Turing.jl", "AdvancedHMC.jl", "MCMCChains.jl", "ForwardDiff.jl", "ParetoSmooth.jl", "Plots.jl", "StatsPlots.jl"]
 
 [[notebookSections]]
 label = ""

@@ -22,7 +22,7 @@ name = "TimeseriesSurrogates.jl"
 github = "https://github.com/JuliaDynamics/TimeseriesSurrogates.jl"
 
 [requires]
-packages = ["ComplexityMeasures.jl", "TimeseriesSurrogates.jl"]
+packages = ["ComplexityMeasures.jl", "TimeseriesSurrogates.jl", "GLMakie.jl"]
 
 [[notebookSections]]
 label = ""

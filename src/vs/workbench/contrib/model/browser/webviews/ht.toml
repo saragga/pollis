@@ -13,7 +13,7 @@ name = "HypothesisTests.jl"
 github = "https://github.com/JuliaStats/HypothesisTests.jl"
 
 [requires]
-packages = ["HypothesisTests.jl", "Bootstrap.jl"]
+packages = ["HypothesisTests.jl", "Bootstrap.jl", "Distributions.jl", "Plots.jl", "StatsPlots.jl"]
 
 [[notebookSections]]
 label = ""
@@ -529,7 +529,7 @@ using HypothesisTests
 {{?test=chi-squared-test}} result = ChisqTest({{obs}}, {{exp}} ./ sum({{exp}}))  # observed counts vs expected proportions
 {{?test=power-divergence-test}} result = PowerDivergenceTest({{obs}}; lambda={{lam}})
 {{?test=multinomial-lr-test}} result = PowerDivergenceTest({{obs}}; lambda=0.0)
-println("Test statistic: ", teststatistic(result))
+println(result)  # full report, including the test statistic
 println("p-value:        ", pvalue(result))
 {{?test=one-sample-t-test|two-sample-t-test|welch-t-test|one-sample-z-test|two-sample-z-test}} println("95% CI:         ", confint(result, 0.95))
 '''
@@ -552,7 +552,7 @@ code = '''
 {{?test=wald-wolfowitz-test}} result = WaldWolfowitzTest({{x}}, {{y}})
 {{?test=shapiro-wilk-test}} result = shapiro_test({{x}})
 {{?test=permutation-test}} result = ExactPermutationTest({{x}}, {{y}}, {{f}})
-println("Test statistic: ", teststatistic(result))
+println(result)  # full report, including the test statistic
 println("p-value:        ", pvalue(result))
 {{?test=binomial-test|fisher-exact-test|sign-test|wilcoxon-signed-rank|mann-whitney-u-test}} println("95% CI:         ", confint(result, 0.95))
 '''
@@ -570,7 +570,7 @@ using HypothesisTests
 {{?test=clark-west}} result = ClarkWestTest({{e1}}, {{e2}}, {{h}})
 {{?test=diebold-mariano}} result = DieboldMarianoTest({{e1}}, {{e2}})
 {{?test=white-test}} result = WhiteTest(modelmatrix({{fitted}}), residuals({{fitted}}))  # regressors and residuals of the fitted model
-println("Test statistic: ", teststatistic(result))
+println(result)  # full report, including the test statistic
 println("p-value:        ", pvalue(result))
 '''
 
@@ -578,10 +578,10 @@ println("p-value:        ", pvalue(result))
 model = "multivariate"
 code = '''
 using HypothesisTests
-{{?test=hotelling-s-t}} result = HotellingT2Test({{X}}, {{mu02}})
+{{?test=hotelling-s-t}} result = OneSampleHotellingT2Test({{X}}, {{mu02}})
 {{?test=equality-of-covariance}} result = BartlettTest({{grp2}})  # two data matrices, observations in rows
 {{?test=correlation-test}} result = CorrelationTest({{x}}, {{y}})
-println("Test statistic: ", teststatistic(result))
+println(result)  # full report, including the test statistic
 println("p-value:        ", pvalue(result))
 {{?test=correlation-test}} println("95% CI:         ", confint(result, 0.95))
 '''
@@ -774,7 +774,7 @@ if length(samples) == 1
     perm = [abs(mean(x .* rand(rng, (-1, 1), length(x)))) for _ in 1:B]  # random sign flips under H0
 else
     pooled = reduce(vcat, samples); cuts = cumsum([0; length.(samples)])
-    stat = v -> teststatistic(OneWayANOVATest([v[cuts[i]+1:cuts[i+1]] for i in eachindex(samples)]...))  # F (= t^2 for two samples)
+    stat = v -> HypothesisTests.teststatistic(OneWayANOVATest([v[cuts[i]+1:cuts[i+1]] for i in eachindex(samples)]...))  # F (= t^2 for two samples)
     obs = stat(pooled); perm = [stat(shuffle(rng, pooled)) for _ in 1:B]
 end
 println("Permutation p = ", round((count(>=(obs), perm) + 1) / (B + 1), digits=5))

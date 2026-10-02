@@ -13,7 +13,7 @@ name = "MacroEconometricModels.jl"
 github = "https://github.com/FriedmanJP/MacroEconometricModels.jl"
 
 [requires]
-packages = ["MacroEconometricModels.jl"]
+packages = ["MacroEconometricModels.jl", "FFTW.jl"]
 
 [[notebookSections]]
 label = ""

@@ -29,7 +29,7 @@ name = "StateSpaceEcon.jl"
 github = "https://github.com/bankofcanada/StateSpaceEcon.jl"
 
 [requires]
-packages = ["StatsPlots.jl"]
+packages = ["StatsPlots.jl", "Turing.jl"]
 
 [[notebookSections]]
 label = ""

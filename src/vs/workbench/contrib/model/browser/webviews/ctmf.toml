@@ -13,7 +13,7 @@ name = "EconPDEs.jl"
 github = "https://github.com/matthieugomez/EconPDEs.jl"
 
 [requires]
-packages = ["EconPDEs.jl"]
+packages = ["EconPDEs.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""

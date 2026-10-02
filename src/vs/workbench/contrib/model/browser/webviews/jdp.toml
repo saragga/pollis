@@ -17,7 +17,7 @@ name = "DifferentialEquations.jl"
 github = "https://github.com/SciML/DifferentialEquations.jl"
 
 [requires]
-packages = ["Plots.jl", "Distributions.jl", "StochasticDiffEq.jl"]
+packages = ["Plots.jl", "Distributions.jl", "StochasticDiffEq.jl", "StatsBase.jl"]
 
 [[notebookSections]]
 label = ""
@@ -282,7 +282,7 @@ when = "solver!=SRIW1|LambaEM"
 [[codeBranches]]
 model = "cpj"
 code = '''
-using DifferentialEquations, JumpProcesses, Distributions  # compound Poisson jump-diffusion: dX = f dt + g dW + X- (e^J - 1) dN
+using DifferentialEquations, StochasticDiffEq, JumpProcesses, Distributions  # compound Poisson jump-diffusion: dX = f dt + g dW + X- (e^J - 1) dN
 
 f(X, p, t) = {{f}}  # continuous drift
 g(X, p, t) = {{g}}  # continuous diffusion
@@ -307,7 +307,7 @@ sol = solve(jprob, alg; skw...)  # solve jump-diffusion
 [[codeBranches]]
 model = "gauss"
 code = '''
-using DifferentialEquations, JumpProcesses, Distributions  # Merton jump-diffusion: log-normal multiplicative jumps
+using DifferentialEquations, StochasticDiffEq, JumpProcesses, Distributions  # Merton jump-diffusion: log-normal multiplicative jumps
 
 mu(X) = {{f}}  # user drift = total expected growth (jumps included)
 g(X, p, t) = {{g}}  # continuous diffusion
@@ -332,7 +332,7 @@ sol = solve(jprob, alg; skw...)  # solve
 [[codeBranches]]
 model = "custom"
 code = '''
-using DifferentialEquations, JumpProcesses  # state-dependent jump rate lambda(X): a VariableRateJump
+using DifferentialEquations, StochasticDiffEq, JumpProcesses  # state-dependent jump rate lambda(X): a VariableRateJump
 
 drift(X) = {{f}}  # continuous drift (scalar)
 vol(X)   = {{g}}  # continuous diffusion (scalar)

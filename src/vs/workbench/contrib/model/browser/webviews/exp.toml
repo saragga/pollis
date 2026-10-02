@@ -13,7 +13,7 @@ name = "Expectations.jl"
 github = "https://github.com/QuantEcon/Expectations.jl"
 
 [requires]
-packages = ["Expectations.jl"]
+packages = ["Expectations.jl", "Distributions.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""

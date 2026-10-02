@@ -266,6 +266,7 @@ end
 {{?arch=GNN}} S = rand(Float32, 100, 2)  # spatial locations of the observations (here 100 random points)
 {{?arch=GNN}} simulator(theta, m) = [spatialgraph(S, theta[1, k] .+ theta[2, k] .* randn(Float32, size(S, 1), m); r=0.15) for k in 1:size(theta, 2)]  # neighbourhood graph with m replicates per location
 nsets(Z) = Z isa AbstractVector ? length(Z) : size(Z, ndims(Z))  # number of data sets in Z
+dataset(Z, k) = Z isa AbstractVector ? Z[k:k] : selectdim(Z, ndims(Z), k:k)  # the k-th data set, in the same container as Z
 
 {{?arch=DeepSet}} network(out) = DeepSet(Chain(Dense(1 => 64, relu), Dense(64 => 64, relu)),  # psi: summarises each replicate
 {{?arch=DeepSet}}                        Chain(Dense(64 => 64, relu), Dense(64 => out)))  # phi: pooled summary -> estimates
@@ -277,7 +278,7 @@ estimator = PointEstimator(network(p))
 estimator = train(estimator, sampler, simulator; m, K, epochs)  # absolute-error loss: posterior median
 point_estimate(Z) = estimate(estimator, Z)  # p x number of data sets
 function bounds(Z; B=100)  # 95% parametric-bootstrap intervals for every data set in Z
-    ci = [interval(bootstrap(estimator, point_estimate(subsetdata(Z, k)), simulator, m; B)) for k in 1:nsets(Z)]
+    ci = [interval(bootstrap(estimator, point_estimate(dataset(Z, k)), simulator, m; B)) for k in 1:nsets(Z)]
     (reduce(hcat, [c[:, 1] for c in ci]), reduce(hcat, [c[:, 2] for c in ci]))
 end
 

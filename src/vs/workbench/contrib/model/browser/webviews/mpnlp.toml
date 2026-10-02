@@ -37,7 +37,7 @@ name = "Couenne_jll.jl"
 github = "https://github.com/JuliaBinaryWrappers/Couenne_jll.jl"
 
 [requires]
-packages = ["JuMP.jl", "Ipopt.jl", "Plots.jl"]
+packages = ["JuMP.jl", "Ipopt.jl", "Plots.jl", "MadNLP.jl"]
 
 [[notebookSections]]
 label = ""

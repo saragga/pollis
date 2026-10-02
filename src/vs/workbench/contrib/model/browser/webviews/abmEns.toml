@@ -18,7 +18,7 @@ description = "Step-by-step introduction to building agent-based models with Age
 url = "https://www.youtube.com/watch?v=QL-bDjzS1pg"
 
 [requires]
-packages = ["Agents.jl"]
+packages = ["Agents.jl", "GLMakie.jl", "GlobalSensitivity.jl", "Tables.jl"]
 
 [[notebookSections]]
 label = ""

@@ -381,7 +381,7 @@ eta       = {{eta}}  # learning rate (shrinkage)
 
 {{?task=classification}} config = EvoTreeClassifier(nrounds=ntrees, max_depth=max_depth, eta=eta)
 {{?task=regression}} config = EvoTreeRegressor(nrounds=ntrees, max_depth=max_depth, eta=eta)
-model = fit_evotree(config; x_train=X, y_train=y)  # each round fits a tree to the current gradients
+model = EvoTrees.fit(config; x_train=X, y_train=y)  # each round fits a tree to the current gradients
 
 {{?task=classification}} proba(X) = model(X)  # n x classes
 {{?task=classification}} yhat(X) = classes[argmax.(eachrow(proba(X)))]

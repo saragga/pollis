@@ -17,7 +17,7 @@ name = "Distributions.jl"
 github = "https://github.com/JuliaStats/Distributions.jl"
 
 [requires]
-packages = ["DiffEqFinancial.jl", "Distributions.jl"]
+packages = ["DiffEqFinancial.jl", "Distributions.jl", "DifferentialEquations.jl", "Plots.jl", "StatsBase.jl", "StochasticDiffEq.jl"]
 
 [[notebookSections]]
 label = ""
@@ -227,7 +227,7 @@ models = ["sabr"]
 [[codeBranches]]
 model = "heston"
 code = '''
-using DiffEqFinancial, DifferentialEquations
+using DiffEqFinancial, DifferentialEquations, StochasticDiffEq  # SDE solvers are no longer part of DifferentialEquations 8
 
 S0, v0, T = {{S0}}, {{v0}}, {{T}}  # initial price, initial variance, horizon
 heston() = HestonProblem({{mu}}, {{kappa}}, {{theta}}, {{xi}}, {{rho}}, [S0, v0], (0.0, T))  # Heston SDE, fresh random seed per call

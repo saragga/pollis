@@ -22,7 +22,7 @@ name = "Optimization.jl"
 github = "https://github.com/SciML/Optimization.jl"
 
 [requires]
-packages = ["Optimisers.jl", "Enzyme.jl", "Optimization.jl", "Plots.jl"]
+packages = ["Optimisers.jl", "Enzyme.jl", "Optimization.jl", "Plots.jl", "OptimizationOptimisers.jl"]
 
 [[notebookSections]]
 label = ""

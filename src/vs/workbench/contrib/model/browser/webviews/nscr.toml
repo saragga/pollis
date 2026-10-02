@@ -21,7 +21,7 @@ name = "Tables.jl"
 github = "https://github.com/JuliaData/Tables.jl"
 
 [requires]
-packages = ["NetSurvival.jl", "RateTables.jl", "Tables.jl"]
+packages = ["NetSurvival.jl", "RateTables.jl", "Tables.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""

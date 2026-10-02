@@ -55,7 +55,7 @@ description = "Verdugo and colleagues at JuliaCon 2021: finite elements on gener
 url = "https://www.youtube.com/watch?v=hsQiFP4S5RY"
 
 [requires]
-packages = ["OrdinaryDiffEq.jl", "Krylov.jl", "Plots.jl"]
+packages = ["OrdinaryDiffEq.jl", "Krylov.jl", "Plots.jl", "OrdinaryDiffEqStabilizedRK.jl"]
 
 [[notebookSections]]
 label = ""
@@ -456,7 +456,7 @@ models = ["poisson"]
 [[codeBranches]]
 model = "heat"
 code = '''
-using OrdinaryDiffEq, SparseArrays, LinearAlgebra
+using OrdinaryDiffEq, OrdinaryDiffEqStabilizedRK, SparseArrays, LinearAlgebra  # ROCK2 lives in the sub-package since OrdinaryDiffEq 7
 
 L = float({{L}})
 D = float({{D}})
@@ -498,7 +498,7 @@ u_at(t) = P.ufield(sol(t))
 [[codeBranches]]
 model = "wave"
 code = '''
-using OrdinaryDiffEq, SparseArrays, LinearAlgebra
+using OrdinaryDiffEq, OrdinaryDiffEqStabilizedRK, SparseArrays, LinearAlgebra  # ROCK2 lives in the sub-package since OrdinaryDiffEq 7
 
 L = float({{L}})
 c = float({{c}})

@@ -13,7 +13,7 @@ name = "SymbolicRegression.jl"
 github = "https://github.com/MilesCranmer/SymbolicRegression.jl"
 
 [requires]
-packages = ["SymbolicRegression.jl"]
+packages = ["SymbolicRegression.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""

@@ -457,7 +457,7 @@ function (sc::SplineCoupling)(x)
     d = size(xb, 1)
     out = map(1:size(x, 2)) do j
         p = reshape(P[:, j], d, 3K - 1)
-        rqs = RationalQuadraticSpline(p[:, 1:K], p[:, K+1:2K], p[:, 2K+1:end], B)  # one spline per dimension
+        rqs = Bijectors.RationalQuadraticSpline(p[:, 1:K], p[:, K+1:2K], p[:, 2K+1:end], B)  # one spline per dimension
         with_logabsdet_jacobian(rqs, xb[:, j])
     end
     yb = reduce(hcat, first.(out))

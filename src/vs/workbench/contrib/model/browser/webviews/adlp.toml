@@ -13,7 +13,7 @@ name = "DistributionsAD.jl"
 github = "https://github.com/TuringLang/DistributionsAD.jl"
 
 [requires]
-packages = ["DistributionsAD.jl"]
+packages = ["DistributionsAD.jl", "Distributions.jl", "Enzyme.jl", "ForwardDiff.jl", "GLM.jl", "Optim.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""

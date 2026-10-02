@@ -13,7 +13,7 @@ name = "DynamicalSystems.jl"
 github = "https://github.com/JuliaDynamics/DynamicalSystems.jl"
 
 [requires]
-packages = ["DynamicalSystems.jl"]
+packages = ["DynamicalSystems.jl", "GLMakie.jl"]
 
 [[notebookSections]]
 label = ""

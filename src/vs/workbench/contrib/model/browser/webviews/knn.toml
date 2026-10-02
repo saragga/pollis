@@ -13,7 +13,7 @@ name = "NearestNeighbors.jl"
 github = "https://github.com/KristofferC/NearestNeighbors.jl"
 
 [requires]
-packages = ["Plots.jl", "StatsBase.jl", "BenchmarkTools.jl"]
+packages = ["Plots.jl", "StatsBase.jl", "BenchmarkTools.jl", "Distances.jl"]
 
 [[notebookSections]]
 label = ""

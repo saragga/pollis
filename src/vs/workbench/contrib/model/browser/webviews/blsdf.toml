@@ -13,7 +13,7 @@ name = "BayesianFactorZoo.jl"
 github = "https://github.com/eohne/BayesianFactorZoo.jl"
 
 [requires]
-packages = ["BayesianFactorZoo.jl"]
+packages = ["BayesianFactorZoo.jl", "Plots.jl", "StatsBase.jl"]
 
 [[notebookSections]]
 label = ""

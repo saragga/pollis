@@ -13,7 +13,7 @@ name = "Optim.jl"
 github = "https://github.com/JuliaNLSolvers/Optim.jl"
 
 [requires]
-packages = ["Optim.jl", "ADTypes.jl", "Plots.jl"]
+packages = ["Optim.jl", "ADTypes.jl", "Plots.jl", "FiniteDiff.jl", "ForwardDiff.jl"]
 
 [[notebookSections]]
 label = ""

@@ -13,7 +13,7 @@ name = "HARE.jl"
 github = "https://github.com/Trumpingtons/HARE.jl"
 
 [requires]
-packages = ["HARE.jl"]
+packages = ["HARE.jl", "GLM.jl", "HypothesisTests.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""

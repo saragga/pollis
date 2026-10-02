@@ -13,7 +13,7 @@ name = "DataSplits.jl"
 github = "https://github.com/davide-grheco/DataSplits.jl"
 
 [requires]
-packages = ["DataSplits.jl", "StatsPlots.jl"]
+packages = ["DataSplits.jl", "StatsPlots.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""

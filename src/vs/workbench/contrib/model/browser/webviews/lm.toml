@@ -8,6 +8,9 @@ title = "Linear Regression"
 viewType = "pollis.lm"
 defaultModel = "ols"
 
+[requires]
+packages = ["Distributions.jl", "Plots.jl", "StatsPlots.jl", "Tables.jl", "StatsBase.jl"]
+
 [[packages]]
 name = "GLM.jl"
 github = "https://github.com/JuliaStats/GLM.jl"
@@ -452,7 +455,7 @@ id = "info-criteria"
 label = "Information Criteria"
 desc = "Adjusted R2, AIC and BIC for model comparison"
 code = '''
-using GLM
+using GLM, StatsBase
 
 println("Adjusted R2: ", adjr2(model))  # penalised for the number of predictors
 println("AIC: ", aic(model))  # lower is better

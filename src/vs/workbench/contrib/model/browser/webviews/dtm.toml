@@ -13,7 +13,7 @@ name = "TextAnalysis.jl"
 github = "https://github.com/JuliaText/TextAnalysis.jl"
 
 [requires]
-packages = ["TextAnalysis.jl"]
+packages = ["TextAnalysis.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""
@@ -198,7 +198,7 @@ crps    = Corpus(map(StringDocument, {{corpus}}))  # wrap strings as StringDocum
 update_lexicon!(crps)  # build vocabulary from corpus
 m       = DocumentTermMatrix(crps)  # sparse DTM
 
-weights = bm25(m)  # BM25-weighted matrix (D x V)
+weights = bm_25(m)  # BM25-weighted matrix (D x V)
 '''
 
 [[actionGroups]]
@@ -342,7 +342,7 @@ update_lexicon!(crps)  # build vocabulary
 m        = DocumentTermMatrix(crps)  # DTM
 
 w_tfidf  = Matrix(tf_idf(m))  # TF-IDF matrix
-w_bm25   = Matrix(bm25(m))  # BM25 matrix
+w_bm25   = Matrix(bm_25(m))  # BM25 matrix
 
 query    = StringDocument("example query")  # query
 qvec     = Float64.(dtv(query, lexicon(crps)))  # query vector

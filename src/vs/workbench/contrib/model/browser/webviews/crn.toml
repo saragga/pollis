@@ -13,7 +13,7 @@ name = "Catalyst.jl"
 github = "https://docs.sciml.ai/Catalyst/stable/"
 
 [requires]
-packages = ["Catalyst.jl"]
+packages = ["Catalyst.jl", "DifferentialEquations.jl", "GLMakie.jl", "HomotopyContinuation.jl", "JumpProcesses.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""

@@ -17,7 +17,7 @@ name = "FixedEffectModels.jl"
 github = "https://github.com/FixedEffects/FixedEffectModels.jl"
 
 [requires]
-packages = ["MixedModels.jl", "FixedEffectModels.jl"]
+packages = ["MixedModels.jl", "FixedEffectModels.jl", "Distributions.jl", "GLM.jl", "HypothesisTests.jl", "Plots.jl", "RegressionTables.jl", "Tables.jl"]
 
 [[notebookSections]]
 label = ""

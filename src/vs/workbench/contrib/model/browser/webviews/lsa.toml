@@ -17,7 +17,7 @@ name = "LinearAlgebra.jl"
 github = "https://github.com/JuliaLang/LinearAlgebra.jl"
 
 [requires]
-packages = ["TextAnalysis.jl", "LinearAlgebra.jl"]
+packages = ["TextAnalysis.jl", "LinearAlgebra.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""

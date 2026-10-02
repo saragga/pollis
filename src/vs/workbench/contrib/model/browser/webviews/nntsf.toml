@@ -17,7 +17,7 @@ name = "Flux.jl"
 github = "https://github.com/FluxML/Flux.jl"
 
 [requires]
-packages = ["FluxArchitectures.jl", "Flux.jl"]
+packages = ["FluxArchitectures.jl", "Flux.jl", "BSON.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""

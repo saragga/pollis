@@ -13,7 +13,7 @@ name = "TopicModelsVB.jl"
 github = "https://github.com/ericproffitt/TopicModelsVB.jl"
 
 [requires]
-packages = ["TopicModelsVB.jl"]
+packages = ["TopicModelsVB.jl", "GraphPlot.jl", "Graphs.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""

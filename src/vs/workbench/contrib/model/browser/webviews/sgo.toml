@@ -21,7 +21,7 @@ name = "Basinhopping.jl"
 github = "https://github.com/gamatos/Basinhopping.jl"
 
 [requires]
-packages = ["NLopt.jl", "Optim.jl", "Basinhopping.jl"]
+packages = ["NLopt.jl", "Optim.jl", "Basinhopping.jl", "ForwardDiff.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""

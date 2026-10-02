@@ -17,7 +17,7 @@ name = "CalibrationErrors.jl"
 github = "https://github.com/devmotion/CalibrationErrors.jl"
 
 [requires]
-packages = ["GLM.jl", "CalibrationErrors.jl"]
+packages = ["GLM.jl", "CalibrationErrors.jl", "Optim.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""
@@ -212,8 +212,8 @@ ece_cal = ECE(UniformBinning(10))  #
 
 {{?model=temperature}}raw = 1 ./ (1 .+ exp.(-{{scores}}))  # uncalibrated probabilities: sigmoid of the logits (T = 1)
 {{?model!=temperature}}raw = {{scores}}  # uncalibrated probability scores
-calibrationerror(ece_raw, raw, {{y}})  # ECE of raw scores
-calibrationerror(ece_cal, cal_probs, {{y}})  # ECE after calibration
+ece_raw(raw, Bool.({{y}}))  # ECE of raw scores
+ece_cal(cal_probs, Bool.({{y}}))  # ECE after calibration
 '''
 
 [[actionGroups]]

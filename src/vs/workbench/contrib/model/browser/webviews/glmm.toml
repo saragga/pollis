@@ -13,7 +13,7 @@ name = "MixedModels.jl"
 github = "https://github.com/JuliaStats/MixedModels.jl"
 
 [requires]
-packages = ["MixedModels.jl"]
+packages = ["MixedModels.jl", "Distributions.jl", "GLM.jl", "HypothesisTests.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""

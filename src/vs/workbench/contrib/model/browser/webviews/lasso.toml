@@ -13,7 +13,7 @@ name = "Lasso.jl"
 github = "https://github.com/JuliaStats/Lasso.jl"
 
 [requires]
-packages = ["Lasso.jl", "Bootstrap.jl"]
+packages = ["Lasso.jl", "Bootstrap.jl", "GLM.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""
