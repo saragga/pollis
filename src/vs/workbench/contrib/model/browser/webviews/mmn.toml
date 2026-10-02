@@ -224,13 +224,13 @@ using MicrostructureNoise, Distributions, Random
 {{?data=simulated}} y = x .+ 0.005 .* randn(n + 1)  # observed log-price with microstructure noise
 {{?data!=simulated}} t, y = {{data}}  # observation times and log-prices, equal length
 
-# Prior (the package's keyword names are Greek, so they are built with Symbol)
-prior = MicrostructureNoise.Prior(;
-    :N => {{N}},  # number of volatility bins
-    Symbol(Char(0x3b1), 1) => {{alpha1}}, Symbol(Char(0x3b2), 1) => {{beta1}},  # InvGamma prior on the first bin
-    Symbol(Char(0x3b1), Char(0x3b7)) => {{alphaEta}}, Symbol(Char(0x3b2), Char(0x3b7)) => {{betaEta}},  # InvGamma prior on the noise variance
-    Symbol(Char(0x3a0), Char(0x3b1)) => {{pia-type}}({{pia-mu}}, {{pia-sigma}}),  # prior on the smoothing parameter alpha
-    Symbol(Char(0x3bc), 0) => {{mu0}}, :C0 => {{C0}})  # Normal prior on the initial state
+# Prior
+prior = MicrostructureNoise.Prior(
+    N = {{N}},  # number of volatility bins
+    α1 = {{alpha1}}, β1 = {{beta1}},  # InvGamma prior on the first bin
+    αη = {{alphaEta}}, βη = {{betaEta}},  # InvGamma prior on the noise variance
+    Πα = {{pia-type}}({{pia-mu}}, {{pia-sigma}}),  # prior on the smoothing parameter alpha
+    μ0 = {{mu0}}, C0 = {{C0}})  # Normal prior on the initial state
 
 # Gibbs sampler with forward filtering backward sampling
 td, thetas, etas, alphas, pacc = MicrostructureNoise.MCMC(prior, t, y, {{alpha0}}, {{sigmaAlpha}}, {{iter}}; printiter=1000)
@@ -342,7 +342,7 @@ label = "Ignoring the Noise"
 desc = "Refits with the noise variance fixed at almost zero: the volatility is then overstated wherever noise dominates"
 code = '''
 using Statistics
-res0 = MicrostructureNoise.MCMC(prior, t, y, {{alpha0}}, {{sigmaAlpha}}, 2000; printiter=10_000, fixeta=true, Symbol(Char(0x3b7), 0) => 1e-10)
+res0 = MicrostructureNoise.MCMC(prior, t, y, {{alpha0}}, {{sigmaAlpha}}, 2000; printiter=10_000, fixeta=true, η0 = 1e-10)
 post0 = MicrostructureNoise.posterior_volatility(res0[1], res0[2]; burnin=500)
 (average_vol_with_noise_model = mean(post.post_mean_root), average_vol_noise_ignored = mean(post0.post_mean_root))
 '''

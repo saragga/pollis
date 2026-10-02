@@ -188,7 +188,7 @@ model = "robust"
 code = '''
 using RobustModels
 {{?penalty=none}} model = rlm(@formula({{formula}}), {{data}}, {{estimator}})  # fit robust model
-{{?penalty=l2}} model = rlm(@formula({{formula}}), {{data}}, {{estimator}}; Symbol("ridge", Char(0x3bb)) => {{lambda}})  # robust ridge; the keyword name ends in the Greek letter lambda
+{{?penalty=l2}} model = rlm(@formula({{formula}}), {{data}}, {{estimator}}; ridgeλ = {{lambda}})  # robust ridge
 println(coef(model))
 println(stderror(model))
 '''
