@@ -423,8 +423,10 @@ desc = "Generate new observations from the fitted posterior"
 code = '''
 using Turing  # probabilistic programming
 
-model_pred   = model | get_params(chain)  # condition model on posterior samples
-pred_chain   = predict(model_pred, chain)  # generate posterior predictive samples
+{{?model=nuts}} model_pred = {{nuts-model}}(similar({{nuts-data}}, Missing))  # same model with the data left unobserved
+{{?model=hmc}} model_pred = {{hmc-model}}(similar({{hmc-data}}, Missing))  # same model with the data left unobserved
+{{?model=mh}} model_pred = {{mh-model}}(similar({{mh-data}}, Missing))  # same model with the data left unobserved
+pred_chain = predict(model_pred, chain)  # draw new observations for each posterior sample
 summarystats(pred_chain)  # inspect predicted observation distribution
 '''
 

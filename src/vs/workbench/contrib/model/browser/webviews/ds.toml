@@ -17,7 +17,7 @@ name = "DirectSearch.jl"
 github = "https://github.com/ImperialCollegeLondon/DirectSearch.jl"
 
 [requires]
-packages = ["Optim.jl", "DirectSearch.jl", "Plots.jl"]
+packages = ["Optim.jl", "ADTypes.jl", "DirectSearch.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""
@@ -557,9 +557,9 @@ id = "vs-gradient"
 label = "vs Gradient-Based"
 desc = "BFGS with automatic differentiation from the same start: much cheaper on smooth problems, unreliable on non-smooth ones"
 code = '''
-using Optim
+using Optim, ADTypes
 
-rb = optimize(f, x0, BFGS(); autodiff=:forward)
+rb = optimize(f, x0, BFGS(); autodiff=AutoForwardDiff())
 [(method = "this method", minimum = f_opt, evaluations = length(evals), gradient_calls = 0),
  (method = "BFGS", minimum = Optim.minimum(rb), evaluations = Optim.f_calls(rb), gradient_calls = Optim.g_calls(rb))]
 '''

@@ -399,8 +399,9 @@ id = "two-groups"
 label = "Two Groups"
 desc = "Side-by-side summary for two subsets"
 code = '''
-using StatsBase
+using StatsBase, Statistics
 
+mask = {{data}} .> median({{data}})  # replace with your own grouping (true = group 1)
 g1, g2 = {{data}}[mask], {{data}}[.!mask]  # split by Boolean mask
 println("Group 1: ", summarystats(g1))  # summary for group 1
 println("Group 2: ", summarystats(g2))  # summary for group 2

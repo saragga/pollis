@@ -449,14 +449,6 @@ models = ["timeseries"]
 when = "test=augmented-dickey-fuller|breusch-godfrey"
 
 [[inputs]]
-id = "e"
-label = "residuals"
-tooltip = ""
-default = "residuals"
-models = ["timeseries"]
-when = "test=durbin-watson"
-
-[[inputs]]
 id = "lags2"
 label = "lags"
 tooltip = ""
@@ -470,7 +462,7 @@ label = "model"
 tooltip = ""
 default = "model"
 models = ["timeseries"]
-when = "test=breusch-godfrey|white-test"
+when = "test=durbin-watson|breusch-godfrey|white-test"
 
 [[inputs]]
 id = "e1"
@@ -570,14 +562,14 @@ model = "timeseries"
 code = '''
 using HypothesisTests
 {{?test=augmented-dickey-fuller}} result = ADFTest({{x}}, {{det}}, {{lags1}})
-{{?test=durbin-watson}} result = DurbinWatsonTest({{e}})
+{{?test=durbin-watson}} result = DurbinWatsonTest(modelmatrix({{fitted}}), residuals({{fitted}}))  # regressors and residuals of the fitted model
 {{?test=ljung-box}} result = LjungBoxTest({{x}}, {{lags2}})
 {{?test=box-pierce}} result = BoxPierceTest({{x}}, {{lags2}})
-{{?test=breusch-godfrey}} result = BreuschGodfreyTest({{fitted}}, {{lags1}})
+{{?test=breusch-godfrey}} result = BreuschGodfreyTest(modelmatrix({{fitted}}), residuals({{fitted}}), {{lags1}})  # regressors and residuals of the fitted model
 {{?test=jarque-bera}} result = JarqueBeraTest({{x}})
 {{?test=clark-west}} result = ClarkWestTest({{e1}}, {{e2}}, {{h}})
 {{?test=diebold-mariano}} result = DieboldMarianoTest({{e1}}, {{e2}})
-{{?test=white-test}} result = WhiteTest({{fitted}})
+{{?test=white-test}} result = WhiteTest(modelmatrix({{fitted}}), residuals({{fitted}}))  # regressors and residuals of the fitted model
 println("Test statistic: ", teststatistic(result))
 println("p-value:        ", pvalue(result))
 '''

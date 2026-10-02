@@ -240,9 +240,9 @@ using AlphaVantage
 btc = digital_currency_daily("BTC", "USD")
 println(btc)
 
-# FCAS rating: a fundamental health score for a coin
-rating = crypto_rating("BTC")
-println(rating)
+# Real-time exchange rate of the coin (the FCAS rating endpoint has been discontinued)
+rate = currency_exchange_rate("BTC", "USD")
+println(rate)
 """
 
 [[codeBranches]]
@@ -282,12 +282,12 @@ label = "Equities"
 [[actionGroups.actions]]
 id = "alpv-eq-daily"
 label = "Daily Series"
-desc = "Download the full daily-adjusted OHLC history for a symbol"
+desc = "Download the latest 100 days of daily OHLC prices for a symbol (the full and adjusted histories need a premium key)"
 code = """
 using AlphaVantage
 
-# outputsize="full" returns 20+ years; "compact" returns the latest 100 points
-daily = time_series_daily_adjusted("AAPL"; outputsize="full")
+# "compact" returns the latest 100 points; "full" (20+ years) and the adjusted series need a premium key
+daily = time_series_daily("AAPL"; outputsize="compact")
 println(daily)
 """
 

@@ -238,7 +238,7 @@ model = "hist"
 code = '''
 using OnlineStats
 
-o = Hist(20)  # adaptive histogram with up to 20 bins
+o = KHist(20)  # adaptive histogram with up to 20 bins
 fit!(o, {{data}})  # update histogram as data arrives
 
 println(value(o))  # bin edges and counts
@@ -280,7 +280,7 @@ desc = "Visualise the adaptive histogram density built from the data stream"
 code = '''
 using OnlineStats, Plots
 
-o = Hist(30)  # adaptive histogram with 30 bins
+o = KHist(30)  # adaptive histogram with up to 30 bins
 fit!(o, {{data}})  # single-pass update
 plot(o)  # plot density estimate
 '''
@@ -344,6 +344,7 @@ using OnlineStats
 
 o = LinReg(size({{X}}, 2))  # online linear regression
 fit!(o, zip(eachrow({{X}}), {{data}}))  # stream training data
+coef(o)  # solve for the coefficients (predict uses the last solved values)
 
 x_new = [1.0, 2.0]  # new covariate vector (including intercept term)
 println("Prediction: ", predict(o, x_new))  # out-of-sample prediction
@@ -360,7 +361,7 @@ o = LinReg(size({{X}}, 2))  # online model
 preds = Float64[]  # store rolling predictions
 
 for (x_t, y_t) in zip(eachrow({{X}}), {{data}})
-    push!(preds, predict(o, x_t))  # predict before update
+    push!(preds, nobs(o) > length(x_t) ? (coef(o); predict(o, x_t)) : NaN)  # predict before update, once there are more rows than coefficients
     fit!(o, (x_t, y_t))  # then update with true label
 end
 '''
@@ -389,17 +390,17 @@ id = "windowed-vs-global"
 label = "Windowed vs Global"
 desc = "Compare a fixed-window moving average against the global running mean"
 code = '''
-using OnlineStats, Plots
+using OnlineStats, Statistics, Plots
 
 global_mean   = Mean()  # cumulative mean (all history)
-windowed_mean = WindowMean(50)  # mean over last 50 observations
+windowed_mean = MovingWindow(50, Float64)  # last 50 observations
 
 gm = Float64[]  # store global means
 wm = Float64[]  # store windowed means
 
 for x in {{data}}
     fit!(global_mean, x); fit!(windowed_mean, x)
-    push!(gm, value(global_mean)); push!(wm, value(windowed_mean))
+    push!(gm, value(global_mean)); push!(wm, mean(value(windowed_mean)))
 end
 plot([gm wm], label=["Global" "Window=50"])  # compare both estimates over time
 '''
@@ -415,14 +416,14 @@ desc = "Full descriptive summary: mean, variance, skewness, kurtosis and extrema
 code = '''
 using OnlineStats
 
-o = Series(Mean(), Variance(), Skewness(), Kurtosis(), Extrema())  # full summary in one pass
+o = Series(Mean(), Variance(), Moments(), Extrema())  # full summary in one pass
 fit!(o, {{data}})  # single-pass computation
 
 println("Mean:     ", value(o[1]))  # first moment
 println("Variance: ", value(o[2]))  # second central moment
-println("Skewness: ", value(o[3]))  # third standardised moment
-println("Kurtosis: ", value(o[4]))  # fourth standardised moment
-println("Extrema:  ", value(o[5]))  # min and max
+println("Skewness: ", skewness(o[3]))  # third standardised moment
+println("Kurtosis: ", kurtosis(o[3]))  # excess kurtosis (0 for a normal)
+println("Extrema:  ", value(o[4]))  # min and max
 '''
 
 [[actionGroups.actions]]
