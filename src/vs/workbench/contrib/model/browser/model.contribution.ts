@@ -16,7 +16,6 @@ import { IQuickInputService } from '../../../../platform/quickinput/common/quick
 
 import { NLLS_PANEL } from './commands/nlls.command.js';
 import { LM_PANEL } from './commands/lm.command.js';
-import { MM_PANEL } from './commands/mm.command.js';
 import { GLM_PANEL } from './commands/glm.command.js';
 import { openScaffoldWebview } from './commands/scaffold.command.js';
 import { LMM_PANEL } from './commands/lmm.command.js';
@@ -211,8 +210,6 @@ CommandsRegistry.registerCommand('chiara.statistics.rng', accessor => openScaffo
 CommandsRegistry.registerCommand('chiara.statistics.qrng', accessor => openScaffoldWebview(accessor, QRNG_PANEL));
 
 CommandsRegistry.registerCommand('chiara.statistics.nlls', accessor => openScaffoldWebview(accessor, NLLS_PANEL));
-
-CommandsRegistry.registerCommand('chiara.statistics.pdme', accessor => openScaffoldWebview(accessor, MM_PANEL));
 
 CommandsRegistry.registerCommand('chiara.statistics.lmm', accessor => openScaffoldWebview(accessor, LMM_PANEL));
 
@@ -644,7 +641,6 @@ export const RQR_QUANTILE_L1L2_ID = 'chiara.statistics.rqr.ql1l2';
 
 
 // Panel Data and Mixed-Effects
-// export const PDME_MEPD_COMMAND_ID = 'chiara.statistics.pdme';
 export const LMM_COMMAND_ID = 'chiara.statistics.lmm';
 export const GLMM_COMMAND_ID = 'chiara.statistics.glmm';
 

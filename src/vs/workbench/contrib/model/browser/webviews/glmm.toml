@@ -87,7 +87,7 @@ detail = "ML and REML estimation with likelihood ratio tests"
 [[inputs]]
 id = "formula"
 label = "Formula"
-tooltip = "MixedModels formula: random effects in parentheses.\n(1|group) — random intercept\n(1+x|group) — random intercept + slope\n(0+x|group) — random slope only\n(1|g1) + (1|g2) — crossed random effects\n(1|g1/g2) — nested random effects"
+tooltip = "Fixed effects only (response ~ predictors); random effects go in the Random Effects input."
 default = "y ~ x1 + x2"
 
 [[inputs]]
@@ -172,8 +172,14 @@ default = "df"
 [[inputs]]
 id = "group"
 label = "Group"
-tooltip = ""
+tooltip = "Grouping factor named in the plots and the ICC (the factor of the first random-effects term)."
 default = "group"
+
+[[inputs]]
+id = "re"
+label = "Random Effects"
+tooltip = "Random-effects terms of the MixedModels formula, each in parentheses.\n(1|group) - random intercept\n(1+x|group) - random intercept + slope\n(0+x|group) - random slope only\n(1|g1) + (1|g2) - crossed random effects\n(1|g1/g2) - nested random effects\n\nThe Group input names the factor the caterpillar plot and ICC refer to: list its term first."
+default = "(1|group)"
 
 [[codeBranches]]
 model = "main"
@@ -184,7 +190,7 @@ using MixedModels  # mixed-effects models
 {{?family=NegativeBinomial}} fam = MixedModels.GLM.Distributions.NegativeBinomial()  # not exported by MixedModels
 {{?link=canonical}} lk = MixedModels.GLM.canonicallink(fam)
 {{?link!=canonical}} lk = MixedModels.GLM.{{link}}()
-model = fit(MixedModel, @formula({{formula}} + (1|{{group}})), {{data}}, fam, lk)  # random intercept for each {{group}}
+model = fit(MixedModel, @formula({{formula}} + {{re}}), {{data}}, fam, lk)  # random effects: {{re}}
 
 println(model)  # model summary
 println(VarCorr(model))  # variance components
@@ -251,6 +257,27 @@ ratio = sum(abs2, pr) / dof_residual(model)
 println("Pearson chi2 / df = ", round(ratio, digits=3), ratio > 1.5 ? "  -> overdispersed" : "  -> no strong sign of overdispersion")
 '''
 
+[[actionGroups.actions]]
+id = "singularity"
+label = "Singular Fit Check"
+desc = "Detect variance components estimated at zero (or correlations of +/-1): a singular fit means the random-effects structure is too rich for the data"
+code = '''
+println("Singular fit: ", issingular(model))  # true: simplify the random-effects structure
+println(VarCorr(model))  # look for zero variances or correlations of +/-1
+'''
+
+[[actionGroups.actions]]
+id = "qq-ranef"
+label = "Random-Effects Q-Q Plot"
+desc = "Normal Q-Q plot of the random intercepts of the first random-effects term: the model assumes they are normally distributed"
+code = '''
+using Plots, Distributions, Statistics
+b = sort(vec(ranef(model)[1][1, :]))  # first coefficient of the first random-effects term
+q = quantile.(Normal(), ((1:length(b)) .- 0.5) ./ length(b))
+scatter(q, b, ms=3, label=false, xlabel="Normal quantiles", ylabel="Random-effect quantiles", title="Random-effects Q-Q plot")
+plot!(q, mean(b) .+ std(b) .* q, c=:red, ls=:dash, label=false)
+'''
+
 [[actionGroups]]
 id = "predict"
 label = "Predict"
@@ -302,7 +329,7 @@ id = "quadrature"
 label = "Laplace vs Adaptive Quadrature"
 desc = "Refits with 9-point adaptive Gauss-Hermite quadrature: if the estimates move, the default Laplace approximation is not accurate enough"
 code = '''
-mq = fit(MixedModel, @formula({{formula}} + (1|{{group}})), {{data}}, fam, lk; nAGQ=9)
+mq = fit(MixedModel, @formula({{formula}} + {{re}}), {{data}}, fam, lk; nAGQ=9)  # nAGQ > 1 needs a single scalar random-effects term such as (1|g)
 foreach((n, a, b) -> println(rpad(n, 20), " Laplace = ", round(a, digits=4), "   AGQ(9) = ", round(b, digits=4)), coefnames(model), fixef(model), fixef(mq))
 println("Deviance: Laplace ", round(deviance(model), digits=3), "   AGQ(9) ", round(deviance(mq), digits=3))
 '''
@@ -335,4 +362,14 @@ lv = lk isa LogitLink ? pi^2 / 3 :                   # latent logistic variance
     error("The latent-scale ICC is defined for logit, probit and cloglog links")
 println("Random-intercept SD: ", round(sg, digits=4))
 println("Latent-scale ICC: ", round(sg^2 / (sg^2 + lv), digits=3))
+'''
+
+[[actionGroups.actions]]
+id = "bootstrap"
+label = "Parametric Bootstrap"
+desc = "Bootstrap confidence intervals for all parameters, variance components included (MixedModels parametric bootstrap); the Bootstrap Resampling panel in the Simulate menu compares interval methods, resampling schemes and their coverage"
+code = '''
+using MixedModels, Random
+boot = parametricbootstrap(MersenneTwister(42), 1000, model)  # 1000 simulated refits
+println(confint(boot))  # shortest 95% coverage intervals
 '''
