@@ -59,7 +59,7 @@ export function registerDcmpWebviewHandlers(
 		for (const t of Object.keys(lastCode)) { void postColorized(lastCode[t], t); }
 	}));
 	const dcmpData = metadata.dcmp;
-	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, dcmpData.packages.map(p => p.name), fileService, pathService, commandService, notificationService, workspaceContextService);
+	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, dcmpData.packages, [], fileService, pathService, commandService, notificationService, workspaceContextService);
 	createExampleCodeWiring(webviewInput.webview, disposables, 'dcmp', fileService, pathService, notificationService);
 	createCustomCopyWiring(webviewInput.webview, disposables, dcmpData.wikis, dcmpData.notebooks, fileService, pathService, editorService, commandService, notificationService);
 	createReferenceWiring(webviewInput.webview, disposables, 'dcmp', dcmpData.references, fileService, pathService, commandService, notificationService);

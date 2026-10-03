@@ -24,6 +24,8 @@ export interface IModelVideo {
 export interface IModelPackage {
 	readonly name: string;
 	readonly github: string;
+	/** A fork of a registered package: install from `github` instead of the registry. */
+	readonly fork?: boolean;
 	readonly papers: IModelPaper[];
 	readonly videos?: IModelVideo[];
 	readonly license?: string;

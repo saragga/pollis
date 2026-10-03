@@ -71,7 +71,7 @@ export function registerHfdsWebviewHandlers(
 		for (const t of Object.keys(lastCode)) { void postColorized(lastCode[t], t); }
 	}));
 	const hfdsData = metadata.hfds;
-	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, hfdsData.packages.map(p => p.name), fileService, pathService, commandService, notificationService, workspaceContextService);
+	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, hfdsData.packages, [], fileService, pathService, commandService, notificationService, workspaceContextService);
 	createExampleCodeWiring(webviewInput.webview, disposables, 'hfds', fileService, pathService, notificationService);
 	createCustomCopyWiring(webviewInput.webview, disposables, hfdsData.wikis, hfdsData.notebooks, fileService, pathService, editorService, commandService, notificationService);
 	createReferenceWiring(webviewInput.webview, disposables, 'hfds', hfdsData.references, fileService, pathService, commandService, notificationService);

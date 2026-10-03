@@ -59,7 +59,7 @@ export function registerTsvizWebviewHandlers(
 		for (const t of Object.keys(lastCode)) { void postColorized(lastCode[t], t); }
 	}));
 	const tsvizData = metadata.tsviz;
-	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, tsvizData.packages.map(p => p.name), fileService, pathService, commandService, notificationService, workspaceContextService);
+	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, tsvizData.packages, [], fileService, pathService, commandService, notificationService, workspaceContextService);
 	createExampleCodeWiring(webviewInput.webview, disposables, 'tsviz', fileService, pathService, notificationService);
 	createCustomCopyWiring(webviewInput.webview, disposables, tsvizData.wikis, tsvizData.notebooks, fileService, pathService, editorService, commandService, notificationService);
 	createReferenceWiring(webviewInput.webview, disposables, 'tsviz', tsvizData.references, fileService, pathService, commandService, notificationService);

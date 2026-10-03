@@ -58,7 +58,7 @@ export function registerYfinWebviewHandlers(
 		for (const t of Object.keys(lastCode)) { void postColorized(lastCode[t], t); }
 	}));
 	const yfinData = metadata.yfin;
-	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, [...yfinData.packages.map(p => p.name), ...(yfinData.requires ?? [])], fileService, pathService, commandService, notificationService, workspaceContextService);
+	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, yfinData.packages, yfinData.requires ?? [], fileService, pathService, commandService, notificationService, workspaceContextService);
 	createExampleCodeWiring(webviewInput.webview, disposables, 'yfin', fileService, pathService, notificationService);
 	createCustomCopyWiring(webviewInput.webview, disposables, yfinData.wikis, yfinData.notebooks, fileService, pathService, editorService, commandService, notificationService);
 	createReferenceWiring(webviewInput.webview, disposables, 'yfin', yfinData.references, fileService, pathService, commandService, notificationService);

@@ -18,7 +18,7 @@ description = "An 18-video course by Jamie Mair on writing fast Julia code"
 url = "https://www.youtube.com/playlist?list=PLUAq6xQKFgGr39PiyrPk_C9dhBKvWcjUA"
 
 [requires]
-packages = ["Metaheuristics", " Plots", "Plots.jl"]
+packages = ["Metaheuristics.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""

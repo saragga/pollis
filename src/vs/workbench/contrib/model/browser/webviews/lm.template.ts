@@ -9,7 +9,7 @@ import { buildScaffoldHtml } from './scaffoldParts.js';
 export function getLmHtml(): string {
 	return buildScaffoldHtml('lm', LM_METADATA.lm, {
 		title: 'Linear Regression',
-		defaultModel: 'ols',
+		defaultModel: 'standard',
 		decisionFirstColumn: 'Estimator',
 	});
 }

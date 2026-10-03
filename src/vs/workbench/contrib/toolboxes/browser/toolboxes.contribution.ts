@@ -27,8 +27,11 @@ const E_MTDataSourcesSubmenuId = new MenuId('menubarE_MTDataSourcesSubmenu');
 // Define a new submenu ID for "Econometrics Toolbox"
 const E_ETSubmenuId = new MenuId('menubarE_ETSubmenu');
 
+// Epidemiology Toolbox hidden for now: uncomment its three blocks to restore it.
+/*
 // Define a new submenu ID for "Epidemiology Toolbox"
 const E_CMTSubmenuId = new MenuId('menubarE_CMTSubmenu');
+*/
 
 
 // ------------------- TOOLBOXES ------------------------
@@ -69,6 +72,7 @@ MenuRegistry.appendMenuItem(MenuId.MenubarToolboxesMenu, {
 	order: 2,
 });
 
+/*
 // Epidemiology Toolbox
 MenuRegistry.appendMenuItem(MenuId.MenubarToolboxesMenu, {
 	group: '3_toolboxes',
@@ -76,6 +80,7 @@ MenuRegistry.appendMenuItem(MenuId.MenubarToolboxesMenu, {
 	title: localize('showStatistics.ept', 'Epidemiology Toolbox'),
 	order: 1,
 });
+*/
 
 
 
@@ -314,6 +319,7 @@ MenuRegistry.appendMenuItem(E_ETSubmenuId, {
 
 
 
+/*
 // ===================================================
 // SUBMENU: Epidemiology
 // ===================================================
@@ -335,3 +341,4 @@ MenuRegistry.appendMenuItem(E_CMTSubmenuId, {
 	command: { id: 'chiara.simulate.epi-ude', title: localize('ect.epi-ude', 'Universal Differential Equations for Epidemiology') },
 	order: 3,
 }); // DiffEqFlux.jl, Lux.jl
+*/

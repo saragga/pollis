@@ -13,11 +13,11 @@ name = "MLJ.jl"
 github = "https://github.com/alan-turing-institute/MLJ.jl"
 
 [[packages]]
-name = "Hyperopt.jl"
-github = "https://github.com/baggepinnen/Hyperopt.jl"
+name = "TreeParzen.jl"
+github = "https://github.com/IQVIA-ML/TreeParzen.jl"
 
 [requires]
-packages = ["MLJ.jl", "Hyperopt.jl", "Plots.jl"]
+packages = ["MLJ.jl", "TreeParzen.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""
@@ -38,7 +38,7 @@ description = "Efficient random sampling from parameter distributions with MLJ.j
 name = "Bayesian Optimisation"
 file = "model-workflow/tutorial-03-bayesian-hpt.ipynb"
 bundled = true
-description = "GP-guided Bayesian optimisation of hyperparameters with Hyperopt.jl"
+description = "Bayesian optimisation of hyperparameters with a Tree-structured Parzen Estimator (TreeParzen.jl)"
 
 [[wikis]]
 name = "Overview"
@@ -99,7 +99,7 @@ detail = "sample configurations uniformly from the search space; often finds nea
 
 [[bullets]]
 text = "Bayesian Optimisation"
-detail = "sequential GP-guided search using an acquisition function; concentrates budget on promising regions (Hyperopt.jl)"
+detail = "sequential model-guided search with a Tree-structured Parzen Estimator; concentrates budget on promising regions (TreeParzen.jl)"
 
 [[inputs]]
 id = "learner"
@@ -154,7 +154,7 @@ models = ["random"]
 [[inputs]]
 id = "ncalls"
 label = "Calls"
-tooltip = "Total number of objective evaluations. The GP surrogate is updated after each call and guides subsequent sampling."
+tooltip = "Total number of configurations to evaluate. After the first random draws, the Parzen estimator is updated after each call and guides subsequent sampling."
 default = "30"
 models = ["bayesian"]
 
@@ -181,7 +181,7 @@ mach = machine(tuned, {{X}}, {{y}})  # bind tuned model to data
 fit!(mach)  # run grid search
 
 best = fitted_params(mach).best_model  # retrieve best hyperparameter configuration
-report = report(mach)  # full tuning history
+rep  = report(mach)  # full tuning history
 '''
 
 [[codeBranches]]
@@ -213,24 +213,29 @@ best = fitted_params(mach).best_model  # best configuration
 [[codeBranches]]
 model = "bayesian"
 code = '''
-using Hyperopt, MLJ
+using MLJ, TreeParzen
 
-function objective(p1, p2)  # evaluate one hyperparameter configuration
-    model = {{learner}}(param1=p1, param2=p2)  # instantiate with candidate params
-    mach  = machine(model, {{X}}, {{y}})  # 
-    ev    = evaluate!(mach, resampling=CV(nfolds={{cv}}), measure={{measure}})  # 
-    return -mean(ev.measurement)  # negate to minimise
-end
+{{learner}} = @load {{learner}} pkg={{pkg}} verbosity=0  # import the model type from its package
+model  = {{learner}}()  # instantiate with defaults
 
-@hyperopt for i = {{ncalls}},
-    sampler = GPSampler(),  # Gaussian Process surrogate
-    p1      = LinRange(lo1, hi1, 100),  # continuous search space
-    p2      = [v1, v2, v3]  # discrete candidates
-    objective(p1, p2)
-end
+space = Dict(
+    :param1 => HP.Choice(:param1, [v1, v2, v3]),  # discrete candidates
+    :param2 => HP.LogUniform(:param2, log(0.01), log(1.0)),  # continuous log-scale range (bounds as logs)
+)
 
-best_params = ho.minimizer  # optimal hyperparameter vector
-best_loss   = ho.minimum  # best observed objective value
+tuned = TunedModel(
+    model      = model,  # 
+    tuning     = MLJTreeParzenTuning(random_trials=10),  # 10 random draws, then Parzen-estimator guided
+    n          = {{ncalls}},  # {{ncalls}} evaluated configurations
+    resampling = CV(nfolds={{cv}}),  # {{cv}}-fold cross-validation
+    measure    = {{measure}},  # optimisation criterion
+    range      = space,
+)
+
+mach = machine(tuned, {{X}}, {{y}})  # bind tuned model to data
+fit!(mach)  # run Bayesian optimisation
+
+best = fitted_params(mach).best_model  # best configuration
 '''
 
 [[actionGroups]]
@@ -257,13 +262,17 @@ id = "learning-curve"
 label = "Learning Curve"
 desc = "CV score vs training set size; diagnoses bias/variance and the value of collecting more data"
 code = '''
-using MLJ, Plots
+using MLJ, Plots, Random
 
-curve = learning_curve(best, {{X}}, {{y}};  # best: fitted_params(mach).best_model
-    resampling=CV(nfolds={{cv}}), measure={{measure}},  # 
-    train_sizes=0.1:0.1:1.0)  # sweep 10 % to 100 % of training data
+best  = fitted_params(mach).best_model  # best hyperparameter configuration
+perm  = randperm(Xoshiro(42), nrows({{X}}))  # random row order, so each subset is representative
+sizes = round.(Int, (0.1:0.1:1.0) .* length(perm))  # 10 % to 100 % of the training data
+scores = map(sizes) do k
+    evaluate(best, {{X}}, {{y}}; rows=perm[1:k],  # 
+        resampling=CV(nfolds={{cv}}), measure={{measure}}, verbosity=0).measurement[1]
+end
 
-plot(curve.training_sizes, curve.measurements,  # 
+plot(sizes, scores,  # 
     xlabel="Training size", ylabel=string({{measure}}), legend=false)  # learning curve
 '''
 
@@ -278,13 +287,14 @@ desc = "Print the optimal hyperparameter configuration and its cross-validated s
 code = '''
 using MLJ
 
-best   = fitted_params(mach).best_model  # best hyperparameter configuration
-report = report(mach)  # full tuning history
+rep = report(mach)  # full tuning history
 
-best_entry = report.best_history_entry  # entry with optimal {{measure}}
+best_entry = rep.best_history_entry  # entry with optimal {{measure}}
 println("Best {{measure}}: ", best_entry.measurement[1])  # 
 println("Best params:  ", best_entry.model)  # 
 
-history = report.history  # DataFrame of all evaluated configs
-sort(history, :measurement, rev=true)[1:5, :]  # top-5 configurations
+scores = [entry.measurement[1] for entry in rep.history]  # one score per evaluated configuration
+higher_is_better = best_entry.measurement[1] == maximum(scores)  # score (accuracy) or loss (rmse)
+top = sortperm(scores, rev=higher_is_better)[1:min(5, length(scores))]
+[(rank = i, score = scores[j], model = rep.history[j].model) for (i, j) in enumerate(top)]  # top-5 configurations
 '''

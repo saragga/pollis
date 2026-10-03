@@ -58,7 +58,7 @@ export function registerXlsxWebviewHandlers(
 		for (const t of Object.keys(lastCode)) { void postColorized(lastCode[t], t); }
 	}));
 	const xlsxData = metadata.xlsx;
-	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, xlsxData.packages.map(p => p.name), fileService, pathService, commandService, notificationService, workspaceContextService);
+	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, xlsxData.packages, [], fileService, pathService, commandService, notificationService, workspaceContextService);
 	createExampleCodeWiring(webviewInput.webview, disposables, 'xlsx', fileService, pathService, notificationService);
 	createCustomCopyWiring(webviewInput.webview, disposables, xlsxData.wikis, xlsxData.notebooks, fileService, pathService, editorService, commandService, notificationService);
 	createReferenceWiring(webviewInput.webview, disposables, 'xlsx', xlsxData.references, fileService, pathService, commandService, notificationService);

@@ -59,7 +59,7 @@ export function registerCpvizWebviewHandlers(
 		for (const t of Object.keys(lastCode)) { void postColorized(lastCode[t], t); }
 	}));
 	const cpvizData = metadata.cpviz;
-	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, cpvizData.packages.map(p => p.name), fileService, pathService, commandService, notificationService, workspaceContextService);
+	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, cpvizData.packages, [], fileService, pathService, commandService, notificationService, workspaceContextService);
 	createExampleCodeWiring(webviewInput.webview, disposables, 'cpviz', fileService, pathService, notificationService);
 	createCustomCopyWiring(webviewInput.webview, disposables, cpvizData.wikis, cpvizData.notebooks, fileService, pathService, editorService, commandService, notificationService);
 	createReferenceWiring(webviewInput.webview, disposables, 'cpviz', cpvizData.references, fileService, pathService, commandService, notificationService);

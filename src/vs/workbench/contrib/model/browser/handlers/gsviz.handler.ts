@@ -59,7 +59,7 @@ export function registerGsvizWebviewHandlers(
 		for (const t of Object.keys(lastCode)) { void postColorized(lastCode[t], t); }
 	}));
 	const gsvizData = metadata.gsviz;
-	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, gsvizData.packages.map(p => p.name), fileService, pathService, commandService, notificationService, workspaceContextService);
+	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, gsvizData.packages, [], fileService, pathService, commandService, notificationService, workspaceContextService);
 	createExampleCodeWiring(webviewInput.webview, disposables, 'gsviz', fileService, pathService, notificationService);
 	createCustomCopyWiring(webviewInput.webview, disposables, gsvizData.wikis, gsvizData.notebooks, fileService, pathService, editorService, commandService, notificationService);
 	createReferenceWiring(webviewInput.webview, disposables, 'gsviz', gsvizData.references, fileService, pathService, commandService, notificationService);

@@ -49,3 +49,6 @@ dist
 .codex/
 # TOML-generated webview data files
 src/vs/workbench/contrib/model/browser/webviews/*.data.ts
+
+# Internal review reports (not part of Pollis)
+/internal-reports/

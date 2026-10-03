@@ -65,7 +65,7 @@ export function registerAlpvWebviewHandlers(
 		for (const t of Object.keys(lastCode)) { void postColorized(lastCode[t], t); }
 	}));
 	const alpvData = metadata.alpv;
-	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, alpvData.packages.map(p => p.name), fileService, pathService, commandService, notificationService, workspaceContextService);
+	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, alpvData.packages, [], fileService, pathService, commandService, notificationService, workspaceContextService);
 	createExampleCodeWiring(webviewInput.webview, disposables, 'alpv', fileService, pathService, notificationService);
 	createCustomCopyWiring(webviewInput.webview, disposables, alpvData.wikis, alpvData.notebooks, fileService, pathService, editorService, commandService, notificationService);
 	createReferenceWiring(webviewInput.webview, disposables, 'alpv', alpvData.references, fileService, pathService, commandService, notificationService);

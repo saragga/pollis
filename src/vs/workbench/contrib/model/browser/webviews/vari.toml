@@ -17,7 +17,7 @@ name = "PATHSolver.jl"
 github = "https://github.com/chkwon/PATHSolver.jl"
 
 [requires]
-packages = ["JuMP.jl PATHSolver.jl Plots.jl", "JuMP.jl", "Plots.jl"]
+packages = ["JuMP.jl", "PATHSolver.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""

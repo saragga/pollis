@@ -89,24 +89,6 @@ export interface IJuliaEnvStatus {
 /** Julia standard libraries: always loadable (through `@stdlib` on the load path), so never missing. */
 const JULIA_STDLIBS = new Set(['Base64', 'Dates', 'DelimitedFiles', 'Distributed', 'Downloads', 'InteractiveUtils', 'LinearAlgebra', 'Logging', 'Markdown', 'Mmap', 'Pkg', 'Printf', 'Random', 'Serialization', 'SHA', 'Sockets', 'SparseArrays', 'Statistics', 'TOML', 'Test', 'Unicode', 'UUIDs']);
 
-/** Packages used by the panels that are not in the General registry, so `Pkg.add` needs their repository URL. */
-const UNREGISTERED_PACKAGE_URLS = new Map<string, string>([
-	['Brokerage', 'https://github.com/aaron-wheeler/Brokerage.jl'],
-	['EDGAR', 'https://github.com/Trumpingtons/EDGAR.jl'],
-	['GMMTools', 'https://github.com/Gkreindler/GMMTools.jl'],
-	['HARE', 'https://github.com/Trumpingtons/HARE.jl'],
-	['LimitOrderBook', 'https://github.com/Trumpingtons/LimitOrderBook.jl'], // fork with fixes (default branch fix-sell-cross); upstream PR p-casgrain/LimitOrderBook.jl#9
-	['LSurvival', 'https://github.com/alexpkeil1/LSurvival.jl'],
-	['MultilevelEstimators', 'https://github.com/PieterjanRobbe/MultilevelEstimators.jl'],
-	['PerformanceAnalytics', 'https://github.com/eohne/PerformanceAnalytics.jl'],
-	['QuadDIRECT', 'https://github.com/timholy/QuadDIRECT.jl'],
-	['RangeVol', 'https://github.com/Trumpingtons/RangeVol.jl'],
-	['TopicModels', 'https://github.com/slycoder/TopicModels.jl'],
-	['TotalViewITCH', 'https://github.com/cswaney/TotalViewITCH.jl'],
-	['TradingAgents', 'https://github.com/aaron-wheeler/TradingAgents.jl'],
-	['VLLimitOrderBook', 'https://github.com/aaron-wheeler/VLLimitOrderBook.jl'],
-]);
-
 /** Strip a trailing ".jl" to recover the importable Julia package name. */
 function juliaPackageName(displayName: string): string {
 	return displayName.replace(/\.jl$/i, '');
@@ -222,15 +204,15 @@ export async function sendToJuliaRepl(code: string, commandService: ICommandServ
 	return true;
 }
 
-/** Install the given packages (display names accepted) via `Pkg.add` in the Julia REPL. */
-export async function installJuliaPackages(packageNames: string[], commandService: ICommandService): Promise<void> {
-	if (!packageNames.length) { return; }
-	const list = packageNames.map(n => {
-		const name = juliaPackageName(n);
-		const url = UNREGISTERED_PACKAGE_URLS.get(name);
-		return url ? `Pkg.PackageSpec(url="${url}")` : `Pkg.PackageSpec(name="${name}")`;
-	}).join(', ');
-	await sendToJuliaRepl(`import Pkg; Pkg.add([${list}])`, commandService);
+/**
+ * Install the given packages (display names accepted) via `Pkg.add` in the Julia REPL. A fork is added
+ * from its Powered-by repository link; otherwise Julia checks the reachable registries: a registered
+ * package is added by name, an unregistered one from its link.
+ */
+export async function installJuliaPackages(packages: ReadonlyArray<{ readonly name: string; readonly github?: string; readonly fork?: boolean }>, commandService: ICommandService): Promise<void> {
+	if (!packages.length) { return; }
+	const list = packages.map(p => `("${juliaPackageName(p.name)}", "${p.github ?? ''}", ${p.fork ? 'true' : 'false'})`).join(', ');
+	await sendToJuliaRepl(`import Pkg; regs = Pkg.Registry.reachable_registries(); Pkg.add([!f && any(r -> !isempty(Pkg.Registry.uuids_from_name(r, n)), regs) ? Pkg.PackageSpec(name=n) : Pkg.PackageSpec(url=u) for (n, u, f) in [${list}]])`, commandService);
 }
 
 /** Reusable wiring for the Powered-by package install-status indicator (see WEBVIEW_GUIDE.md §23). */
@@ -254,13 +236,15 @@ export interface IPackageStatusWiring {
 export function createPackageStatusWiring(
 	webview: { postMessage(message: unknown): void },
 	disposables: DisposableStore,
-	packageDisplayNames: string[],
+	packages: readonly IModelPackage[],
+	requires: readonly string[],
 	fileService: IFileService,
 	pathService: IPathService,
 	commandService: ICommandService,
 	notificationService: INotificationService,
 	workspaceContextService: IWorkspaceContextService,
 ): IPackageStatusWiring {
+	const packageDisplayNames = [...new Set([...packages.map(p => p.name), ...requires])];
 	const postStatus = async (): Promise<boolean> => {
 		const { statuses, env } = await checkJuliaPackagesInstalled(packageDisplayNames, fileService, pathService, workspaceContextService);
 		webview.postMessage({ command: 'packageStatus', statuses, env });
@@ -273,22 +257,27 @@ export function createPackageStatusWiring(
 			if (!allInstalled) { scheduleRecheck(attempt + 1); }
 		}, 5000));
 	};
-	const missingNames = async (): Promise<string[]> => {
+	const missingPackages = async (): Promise<Array<{ name: string; github?: string; fork?: boolean }>> => {
 		const { statuses } = await checkJuliaPackagesInstalled(packageDisplayNames, fileService, pathService, workspaceContextService);
-		return statuses.filter(s => !s.installed).map(s => s.name);
+		// A fork may already be present from the registry, so it is always (re)added from its link when anything is installed
+		const anyMissing = statuses.some(s => !s.installed);
+		return statuses.filter(s => !s.installed || (anyMissing && packages.some(p => p.name === s.name && p.fork))).map(s => {
+			const pkg = packages.find(p => p.name === s.name);
+			return { name: s.name, github: pkg?.github, fork: pkg?.fork };
+		});
 	};
 	const handleInstall = async (): Promise<void> => {
-		await installJuliaPackages(await missingNames(), commandService);
+		await installJuliaPackages(await missingPackages(), commandService);
 		scheduleRecheck(0);
 	};
 	const nudgeIfMissing = async (target: string | undefined): Promise<void> => {
 		// Only the targets that actually execute code need the packages present.
 		if (target !== 'juliaRepl' && target !== 'notebook') { return; }
-		const missing = await missingNames();
+		const missing = await missingPackages();
 		if (!missing.length) { return; }
 		notificationService.prompt(
 			Severity.Info,
-			localize('pollis.installMissing', "Install missing: {0}", missing.join(', ')),
+			localize('pollis.installMissing', "Install missing: {0}", missing.map(p => p.name).join(', ')),
 			[{ label: localize('pollis.install', "Install"), run: () => { void installJuliaPackages(missing, commandService).then(() => scheduleRecheck(0)); } }],
 		);
 	};

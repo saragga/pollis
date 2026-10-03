@@ -6,18 +6,28 @@
 [meta]
 title = "Linear Regression"
 viewType = "pollis.lm"
-defaultModel = "ols"
+defaultModel = "standard"
 
 [requires]
-packages = ["Distributions.jl", "Plots.jl", "StatsPlots.jl", "Tables.jl", "StatsBase.jl"]
+packages = ["Distributions.jl", "Plots.jl", "StatsPlots.jl"]
 
 [[packages]]
 name = "GLM.jl"
 github = "https://github.com/JuliaStats/GLM.jl"
 
 [[packages]]
+name = "Regress.jl"
+github = "https://github.com/gragusa/Regress.jl"
+
+[[packages]]
 name = "CovarianceMatrices.jl"
-github = "https://github.com/gragusa/CovarianceMatrices.jl"
+# Fork of gragusa/CovarianceMatrices.jl accepting ForwardDiff 0.10 (the registered 0.32 needs >= 1.2, which the shared environment cannot reach)
+github = "https://github.com/Trumpingtons/CovarianceMatrices.jl"
+fork = true
+
+[[packages]]
+name = "PollisDatasets.jl"
+github = "https://github.com/Trumpingtons/PollisDatasets.jl"
 
 [[notebookSections]]
 label = ""
@@ -111,6 +121,17 @@ openAccess = false
 
 [[references]]
 separator = true
+label = "Data"
+
+[[references]]
+title = "Why Has Productivity Growth Declined? Productivity and Public Investment"
+authors = "Munnell, Alicia H."
+year = 1990
+journal = "New England Economic Review"
+openAccess = true
+
+[[references]]
+separator = true
 label = "Original Papers"
 
 [[references]]
@@ -138,34 +159,37 @@ doi = "10.1162/003465398557825"
 openAccess = false
 
 [[models]]
-id = "ols"
-label = "OLS"
+id = "standard"
+label = "Standard"
 
 [[models]]
-id = "wls"
-label = "WLS"
+id = "hc"
+label = "HC0-HC3"
+
+[[models]]
+id = "hac"
+label = "HAC"
+
+[[models]]
+id = "clustered"
+label = "Clustered"
+
+[[models]]
+id = "dk"
+label = "Driscoll-Kraay"
 
 [[bullets]]
 text = "OLS"
 detail = "Ordinary Least-Squares: minimise the sum of squared residuals with equal weight on every observation"
 
 [[bullets]]
-text = "WLS"
-detail = "Weighted Least-Squares: weight each observation, e.g. by inverse variance, when errors are heteroskedastic with a known pattern"
-
-[[bullets]]
 text = "Robust Inference"
-detail = "Heteroskedasticity-Consistent (HC0&#8211;HC3), Heteroskedasticity and Autocorrelation Consistent (HAC), Clustered, and Driscoll-Kraay covariance matrix estimators via CovarianceMatrices.jl"
+detail = "Heteroskedasticity-Consistent (HC0&#8211;HC3), Heteroskedasticity and Autocorrelation Consistent (HAC), Clustered, and Driscoll-Kraay covariance matrix estimators via Regress.jl and CovarianceMatrices.jl"
 
 [[decisionRows]]
 task = "OLS"
 context = "Continuous response"
 purpose = "Errors have roughly constant variance, or robust standard errors will be used"
-
-[[decisionRows]]
-task = "WLS"
-context = "Continuous response with weights"
-purpose = "Error variance differs across observations in a known way, or rows are group averages"
 
 [[decisionRows]]
 task = "OLS + HC0-HC3"
@@ -182,136 +206,43 @@ task = "OLS + Clustered / Driscoll-Kraay"
 context = "Grouped or panel data"
 purpose = "Errors are correlated within clusters, or across entities and over time"
 
-[[inputs]]
-id = "formula"
-label = "Formula"
-tooltip = "Julia formula using the @formula macro. The response variable goes on the left of ~, predictors on the right. Example: y ~ x1 + x2. Use x1*x2 for interaction terms (includes main effects), x1:x2 for the interaction only."
-default = "y ~ x1 + x2"
-
-[[inputs]]
-id = "data"
-label = "Data"
-tooltip = "Table containing all variables referenced in the formula: any Tables.jl source, e.g. a named tuple of vectors or a CSV.File. Column names must match the formula symbols exactly."
-default = "data"
-
-[[inputs]]
-id = "weights"
-label = "Weights"
-tooltip = "Weight vector for weighted least squares (WLS). Must have the same length as the number of rows in the data."
-default = "w"
-models = ["wls"]
-
-[[inputs]]
-id = "inference"
-label = "Inference"
-tooltip = "Standard errors: model-based (Standard), heteroskedasticity-consistent (HC0-HC3), heteroskedasticity and autocorrelation consistent (HAC), clustered, or Driscoll-Kraay (cross-sectional and serial dependence in panels) via CovarianceMatrices.jl"
-kind = "select"
-newRow = true
-
-[[inputs.options]]
-value = "standard"
-label = "Standard"
-
-[[inputs.options]]
-value = "HC0"
-label = "HC0"
-
-[[inputs.options]]
-value = "HC1"
-label = "HC1"
-
-[[inputs.options]]
-value = "HC2"
-label = "HC2"
-
-[[inputs.options]]
-value = "HC3"
-label = "HC3"
-
-[[inputs.options]]
-value = "HAC"
-label = "HAC"
-
-[[inputs.options]]
-value = "clustered"
-label = "Clustered"
-
-[[inputs.options]]
-value = "driscoll-kraay"
-label = "Driscoll-Kraay"
-
-[[inputs]]
-id = "cluster"
-label = "Cluster Variable"
-tooltip = "Column of the data table that identifies the clusters (e.g. firm or school)"
-default = "cluster_id"
-when = "inference=clustered"
-
-[[inputs]]
-id = "dktime"
-label = "Time Variable"
-tooltip = "Column of the data table with the time period of each observation"
-default = "year"
-when = "inference=driscoll-kraay"
-
-[[inputs]]
-id = "dkentity"
-label = "Entity Variable"
-tooltip = "Column of the data table that identifies the panel entity of each observation"
-default = "firm"
-when = "inference=driscoll-kraay"
-
-[miniCharts]
-# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
-
-[miniCharts.ols]
-# Scatter with a fitted line, equal-size points
-svg = '''
-var pts = [[8, 62], [14, 58], [19, 60], [24, 50], [29, 48], [33, 44], [38, 40], [43, 34], [47, 32]];
-var s = '';
-for (var i = 0; i < pts.length; i++) {
-	s += '<circle cx="' + pts[i][0] + '" cy="' + pts[i][1] + '" r="2" fill="currentColor" opacity="0.5"/>';
-}
-s += '<line x1="6" y1="65" x2="49" y2="29" stroke="currentColor" stroke-width="1.5"/>';
-return s;
-'''
-
-[miniCharts.wls]
-# Scatter with a fitted line, point size = weight
-svg = '''
-var pts = [[8, 62, 3.5], [14, 56, 3], [19, 62, 2.6], [24, 48, 2.2], [29, 52, 1.8], [33, 40, 1.5], [38, 46, 1.2], [43, 28, 1], [47, 38, 0.8]];
-var s = '';
-for (var i = 0; i < pts.length; i++) {
-	s += '<circle cx="' + pts[i][0] + '" cy="' + pts[i][1] + '" r="' + pts[i][2] + '" fill="currentColor" opacity="0.5"/>';
-}
-s += '<line x1="6" y1="65" x2="49" y2="29" stroke="currentColor" stroke-width="1.5"/>';
-return s;
-'''
-
 [[codeBranches]]
 model = "*"
 code = '''
-{{?inference=standard}}using GLM, Distributions, LinearAlgebra  # linear models
-{{?inference!=standard}}using GLM, Distributions, LinearAlgebra, CovarianceMatrices, Tables  # linear models + robust standard errors
+{{?model=standard}}using GLM, Random
+{{?model=hc|hac}}using Regress, Random  # least squares with robust standard errors
+{{?model=clustered|dk}}using Regress, PollisDatasets  # least squares with robust standard errors; curated example datasets
 
-{{?model=ols}}model = lm(@formula({{formula}}), {{data}})  # ordinary least squares
-{{?model=wls}}model = lm(@formula({{formula}}), {{data}}, weights={{weights}})  # weighted least squares
+{{?model=standard}}# Simulated example data: 500 independent observations with constant error variance. Replace it with your own table.
+{{?model=hc}}# Simulated example data: 500 independent observations whose error variance grows with x1. Replace it with your own table.
+{{?model=hac}}# Simulated example data: one series observed over 200 periods, with autocorrelated errors. Replace it with your own table.
+{{?model=clustered|dk}}# Example data: Munnell (1990), output, capital and employment of 48 US states observed yearly over 1970-1986. Replace it with your own table.
+{{?model!=clustered|dk}}rng  = Xoshiro(42);  # fixed seed: the same data on every run
+{{?model=standard|hc}}n  = 500;
+{{?model=standard|hc}}x1 = randn(rng, n);
+{{?model=standard|hc}}x2 = randn(rng, n);
+{{?model=standard}}e  = randn(rng, n);  # independent errors with constant variance
+{{?model=hc}}e  = exp.(0.5 .* x1) .* randn(rng, n);  # error spread grows with x1: heteroskedastic
+{{?model=hac}}n  = 200;
+{{?model=hac}}x1 = zeros(n);
+{{?model=hac}}e  = zeros(n);
+{{?model=hac}}for i in 2:n
+{{?model=hac}}	x1[i] = 0.7 * x1[i-1] + randn(rng)  # persistent predictor
+{{?model=hac}}	e[i]  = 0.6 * e[i-1] + randn(rng)  # AR(1) errors: autocorrelated
+{{?model=hac}}end
+{{?model=hac}}x2 = randn(rng, n);
+{{?model!=clustered|dk}}y  = 1.0 .+ 2.0 .* x1 .- 1.5 .* x2 .+ e;  # true coefficients 1, 2 and -1.5
+{{?model=standard|hc}}data = (; y, x1, x2);  # a named tuple of columns is a Tables.jl table
+{{?model=hac}}data = (; y, x1, x2);  # rows in time order, as HAC requires
+{{?model=clustered|dk}}data = dataset("produc");  # one row per state and year; datasetinfo("produc") describes the columns
 
-{{?inference=standard}}V = vcov(model)  # classical variance-covariance matrix
-{{?inference=HC0|HC1|HC2|HC3}}V = vcov({{inference}}(), model)  # heteroskedasticity-robust variance-covariance matrix
-{{?inference=HAC}}V = vcov(Bartlett{NeweyWest}(), model)  # Newey-West HAC, data-driven bandwidth (rows must be in time order)
-{{?inference=clustered}}V = vcov(CR1(Tables.getcolumn({{data}}, :{{cluster}})), model)  # cluster-robust, small-sample corrected
-{{?inference=driscoll-kraay}}pkgversion(CovarianceMatrices) >= v"0.32" || error("Driscoll-Kraay needs CovarianceMatrices 0.32 or later (earlier versions have no vcov method for it): run  ] up CovarianceMatrices")
-{{?inference=driscoll-kraay}}V = vcov(DriscollKraay(Bartlett(5), tis=Tables.getcolumn({{data}}, :{{dktime}}), iis=Tables.getcolumn({{data}}, :{{dkentity}})), model)  # Driscoll-Kraay, 5 lags
+{{?model=standard}}model = lm(@formula(y ~ x1 + x2), data);  # least squares, classical standard errors
+{{?model=hc}}model = Regress.ols(data, @formula(y ~ x1 + x2)) + vcov(HC3());  # heteroskedasticity-robust; HC0, HC1, HC2 and HC3 all work
+{{?model=hac}}model = Regress.ols(data, @formula(y ~ x1 + x2)) + vcov(Bartlett{NeweyWest}());  # Newey-West HAC, data-driven bandwidth
+{{?model=clustered}}model = Regress.ols(data, @formula(log(gsp) ~ log(pcap) + log(pc) + log(emp) + unemp), save_cluster=:state) + vcov(CR1(:state));  # production function, cluster-robust by state
+{{?model=dk}}model = Regress.ols(data, @formula(log(gsp) ~ log(pcap) + log(pc) + log(emp) + unemp)) + vcov(DriscollKraay(Bartlett(2), tis=data.year, iis=data.state));  # production function, Driscoll-Kraay with 2 lags (rule of thumb for 17 years)
 
-se = sqrt.(diag(V))  # standard errors from V: every later action uses the same V
-t  = coef(model) ./ se
-pv = 2 .* ccdf.(TDist(dof_residual(model)), abs.(t))
-println(rpad("", 16), lpad("Coef.", 12), lpad("Std. Error", 12), lpad("t", 9), lpad("Pr(>|t|)", 10))
-for (name, b, s, tt, pp) in zip(coefnames(model), coef(model), se, t, pv)
-	println(rpad(name, 16), lpad(round(b, digits=4), 12), lpad(round(s, digits=4), 12), lpad(round(tt, digits=2), 9), lpad(round(pp, digits=4), 10))
-end
-
+display(coeftable(model))  # estimates, standard errors, t-values, p-values and 95% intervals
 println("R2 = ", r2(model))  # share of variance explained
 '''
 
@@ -324,10 +255,10 @@ id = "fitted-observed"
 label = "Fitted vs Observed"
 desc = "Fitted values against the observed response"
 code = '''
-using GLM, Plots
+using Plots
 
-yhat = predict(model)  # fitted values
-y    = response(model)  # observed response
+yhat = fitted(model);
+y    = response(model);  # observed response
 scatter(yhat, y, xlabel="Fitted", ylabel="Observed", label=false, alpha=0.5)
 plot!(identity, extrema(yhat)..., linestyle=:dash, label="45-degree line")  # perfect-fit reference
 '''
@@ -335,13 +266,13 @@ plot!(identity, extrema(yhat)..., linestyle=:dash, label="45-degree line")  # pe
 [[actionGroups.actions]]
 id = "coef-plot"
 label = "Coefficient Plot"
-desc = "Estimates with 95% confidence intervals from the chosen variance estimator"
+desc = "Estimates with 95% confidence intervals from the selected standard errors"
 code = '''
-using GLM, Plots, Distributions, LinearAlgebra
+using Plots, Distributions
 
-est = coef(model)  # point estimates
-hw  = quantile(TDist(dof_residual(model)), 0.975) .* sqrt.(diag(V))  # 95% half-width, from V (robust if selected)
-k   = length(est)
+est = coef(model);
+hw  = quantile(TDist(dof_residual(model)), 0.975) .* stderror(model);  # 95% half-width
+k   = length(est);
 scatter(est, 1:k, xerror=hw, yticks=(1:k, coefnames(model)), label=false)
 vline!([0], linestyle=:dash, label=false)  # zero-effect reference
 '''
@@ -355,11 +286,9 @@ id = "residuals-fitted"
 label = "Residuals vs Fitted"
 desc = "Check linearity and constant variance"
 code = '''
-using GLM, Plots
+using Plots
 
-{{?model=ols}}r = residuals(model)  # raw residuals
-{{?model=wls}}r = sqrt.({{weights}}) .* residuals(model)  # weighted residuals: constant variance if the weights are right
-scatter(predict(model), r, xlabel="Fitted", ylabel="Residual", label=false, alpha=0.5)
+scatter(fitted(model), residuals(model), xlabel="Fitted", ylabel="Residual", label=false, alpha=0.5)
 hline!([0], linestyle=:dash, label=false)  # a funnel shape suggests heteroskedasticity
 '''
 
@@ -368,11 +297,9 @@ id = "qq-residuals"
 label = "Residual Q-Q Plot"
 desc = "Compare residuals with a normal distribution"
 code = '''
-using GLM, StatsPlots, Distributions
+using StatsPlots, Distributions
 
-{{?model=ols}}r = residuals(model)  # raw residuals
-{{?model=wls}}r = sqrt.({{weights}}) .* residuals(model)  # weighted residuals share one variance
-qqplot(Normal(), r, xlabel="Normal quantiles", ylabel="Residual quantiles")  # points near the line = normal errors
+qqplot(Normal(), residuals(model), xlabel="Normal quantiles", ylabel="Residual quantiles")  # points near the line = normal errors
 '''
 
 [[actionGroups.actions]]
@@ -380,15 +307,11 @@ id = "influence"
 label = "Leverage and Influence"
 desc = "Hat-matrix leverage and Cook distance"
 code = '''
-using GLM, LinearAlgebra
-
-X = modelmatrix(model)
-{{?model=ols}}Xw, r = X, residuals(model)
-{{?model=wls}}Xw, r = sqrt.({{weights}}) .* X, sqrt.({{weights}}) .* residuals(model)  # weighted design and residuals
-h  = vec(sum((Xw / cholesky(Symmetric(transpose(Xw) * Xw)).U) .^ 2, dims=2))  # diagonal of the hat matrix
-n, p = size(X)
-s2 = deviance(model) / dof_residual(model)  # residual variance
-d  = r .^ 2 .* h ./ (p .* s2 .* (1 .- h) .^ 2)  # Cook distance of each observation
+X  = modelmatrix(model);
+h  = vec(sum((X / (transpose(X) * X)) .* X, dims=2));  # diagonal of the hat matrix
+n, p = size(X);
+s2 = deviance(model) / dof_residual(model);  # residual variance
+d  = residuals(model) .^ 2 .* h ./ (p .* s2 .* (1 .- h) .^ 2);  # Cook distance of each observation
 println("High leverage (h > 2p/n): ", findall(h .> 2p / n))
 println("Influential (D > 4/n):    ", findall(d .> 4 / n))
 '''
@@ -402,13 +325,13 @@ id = "predict-ci"
 label = "Confidence Interval"
 desc = "Predicted mean with a 95% confidence interval"
 code = '''
-using GLM, Tables, Distributions
+using Distributions
 
-newdata = map(c -> c[1:5], Tables.columntable({{data}}))  # first 5 rows; replace with new observations
-X0   = modelcols(formula(model).rhs, newdata)  # design matrix of the new rows
-yhat = X0 * coef(model)
-se   = sqrt.(vec(sum((X0 * V) .* X0, dims=2)))  # standard error of the mean, from V (robust if selected)
-q    = quantile(TDist(dof_residual(model)), 0.975)
+newdata = map(c -> c[1:5], data);  # first 5 rows; replace with new observations
+X0   = modelcols(formula(model).rhs, newdata);  # design matrix of the new rows
+yhat = X0 * coef(model);
+se   = sqrt.(vec(sum((X0 * vcov(model)) .* X0, dims=2)));  # standard error of the mean
+q    = quantile(TDist(dof_residual(model)), 0.975);
 println((prediction=yhat, lower=yhat .- q .* se, upper=yhat .+ q .* se))
 '''
 
@@ -417,16 +340,14 @@ id = "predict-pi"
 label = "Prediction Interval"
 desc = "Range for a new individual observation"
 code = '''
-using GLM, Tables, Distributions
+using Distributions
 
-newdata = map(c -> c[1:5], Tables.columntable({{data}}))  # first 5 rows; replace with new observations
-X0   = modelcols(formula(model).rhs, newdata)  # design matrix of the new rows
-yhat = X0 * coef(model)
-s2   = deviance(model) / dof_residual(model)  # error variance of a unit-weight observation (assumes constant variance)
-{{?model=ols}}w0 = ones(length(yhat))  # unweighted: every new observation has the same error variance
-{{?model=wls}}w0 = ones(length(yhat))  # weights of the new observations: replace; error variance = s2 / w0
-se   = sqrt.(vec(sum((X0 * V) .* X0, dims=2)) .+ s2 ./ w0)  # mean uncertainty + noise of one new observation
-q    = quantile(TDist(dof_residual(model)), 0.975)
+newdata = map(c -> c[1:5], data);  # first 5 rows; replace with new observations
+X0   = modelcols(formula(model).rhs, newdata);  # design matrix of the new rows
+yhat = X0 * coef(model);
+s2   = deviance(model) / dof_residual(model);  # error variance of one observation (assumes constant variance)
+se   = sqrt.(vec(sum((X0 * vcov(model)) .* X0, dims=2)) .+ s2);  # mean uncertainty + noise of one new observation
+q    = quantile(TDist(dof_residual(model)), 0.975);
 println((prediction=yhat, lower=yhat .- q .* se, upper=yhat .+ q .* se))  # wider than the confidence interval
 '''
 
@@ -435,15 +356,97 @@ id = "compare"
 label = "Compare"
 
 [[actionGroups.actions]]
-id = "info-criteria"
-label = "Information Criteria"
-desc = "Adjusted R2, AIC and BIC for model comparison"
+id = "nested-ftest"
+label = "Nested F-Test"
+desc = "Does x2 improve the fit? F-test of the model without it against the full model"
+models = ["standard"]
 code = '''
-using GLM, StatsBase
+small = lm(@formula(y ~ x1), data);  # the same model without x2
+ftest(small.model, model.model)  # a small p-value: x2 improves the fit
+'''
 
-println("Adjusted R2: ", adjr2(model))  # penalised for the number of predictors
-println("AIC: ", aic(model))  # lower is better
-println("BIC: ", bic(model))  # stronger penalty on parameters
+[[actionGroups.actions]]
+id = "hc-variants"
+label = "HC Variants"
+desc = "Classical standard errors against HC0, HC1, HC2 and HC3"
+models = ["hc"]
+code = '''
+using Printf, LinearAlgebra
+
+X  = modelmatrix(model);
+s2 = deviance(model) / dof_residual(model);
+classical = sqrt.(s2 .* diag(inv(transpose(X) * X)));  # assumes iid errors
+se = ["Classical" => classical,
+	"HC0" => stderror(model + vcov(HC0())),  # White (1980)
+	"HC1" => stderror(model + vcov(HC1())),  # degrees-of-freedom correction
+	"HC2" => stderror(model + vcov(HC2())),  # leverage-adjusted
+	"HC3" => stderror(model + vcov(HC3()))];  # jackknife-like, safest in small samples
+@printf("%-12s", ""); foreach(p -> @printf("%14s", first(p)), se); println()
+for (i, name) in enumerate(coefnames(model))
+	@printf("%-12s", name); foreach(p -> @printf("%14.4f", last(p)[i]), se); println()
+end
+'''
+
+[[actionGroups.actions]]
+id = "hac-kernels"
+label = "HAC Kernels"
+desc = "Classical standard errors against the Newey-West, Parzen and Andrews quadratic spectral estimators"
+models = ["hac"]
+code = '''
+using Printf, LinearAlgebra
+
+X  = modelmatrix(model);
+s2 = deviance(model) / dof_residual(model);
+classical = sqrt.(s2 .* diag(inv(transpose(X) * X)));  # assumes iid errors
+se = ["Classical" => classical,
+	"Newey-West" => stderror(model + vcov(Bartlett{NeweyWest}())),  # Newey-West (1987): Bartlett kernel
+	"Parzen" => stderror(model + vcov(Parzen{NeweyWest}())),  # Gallant (1987): Parzen kernel
+	"Andrews QS" => stderror(model + vcov(QuadraticSpectral{Andrews}()))];  # Andrews (1991): quadratic spectral kernel, plug-in bandwidth
+@printf("%-12s", ""); foreach(p -> @printf("%14s", first(p)), se); println()
+for (i, name) in enumerate(coefnames(model))
+	@printf("%-12s", name); foreach(p -> @printf("%14.4f", last(p)[i]), se); println()
+end
+'''
+
+[[actionGroups.actions]]
+id = "clustering-effect"
+label = "Clustering Effect"
+desc = "Classical, heteroskedasticity-robust (HC1) and clustered standard errors"
+models = ["clustered"]
+code = '''
+using Printf, LinearAlgebra
+
+X  = modelmatrix(model);
+s2 = deviance(model) / dof_residual(model);
+classical = sqrt.(s2 .* diag(inv(transpose(X) * X)));  # assumes iid errors
+se = ["Classical" => classical,
+	"HC1" => stderror(model + vcov(HC1())),  # robust to heteroskedasticity only
+	"Clustered" => stderror(model)];  # also robust to correlation within each state
+@printf("%-12s", ""); foreach(p -> @printf("%14s", first(p)), se); println()
+for (i, name) in enumerate(coefnames(model))
+	@printf("%-12s", name); foreach(p -> @printf("%14.4f", last(p)[i]), se); println()
+end
+'''
+
+[[actionGroups.actions]]
+id = "cross-sectional-dependence"
+label = "Cross-Sectional Dependence"
+desc = "Classical, clustered by state and Driscoll-Kraay standard errors"
+models = ["dk"]
+code = '''
+using Printf, LinearAlgebra
+
+X  = modelmatrix(model);
+s2 = deviance(model) / dof_residual(model);
+classical = sqrt.(s2 .* diag(inv(transpose(X) * X)));  # assumes iid errors
+clustered = Regress.ols(data, @formula(log(gsp) ~ log(pcap) + log(pc) + log(emp) + unemp), save_cluster=:state) + vcov(CR1(:state));
+se = ["Classical" => classical,
+	"Clustered" => stderror(clustered),  # correlation within each state over time
+	"Driscoll-Kraay" => stderror(model)];  # also correlation across states in the same year
+@printf("%-12s", ""); foreach(p -> @printf("%14s", first(p)), se); println()
+for (i, name) in enumerate(coefnames(model))
+	@printf("%-12s", name); foreach(p -> @printf("%14.4f", last(p)[i]), se); println()
+end
 '''
 
 [[actionGroups]]
@@ -452,17 +455,10 @@ label = "Interpret"
 
 [[actionGroups.actions]]
 id = "coefficients"
-label = "Coefficient Table"
-desc = "Estimates, confidence intervals and p-values from the chosen variance estimator"
+label = "Confidence Intervals"
+desc = "95% confidence intervals of the coefficients, from the selected standard errors"
 code = '''
-using GLM, Distributions, LinearAlgebra
-
-se = sqrt.(diag(V))  # standard errors from V (robust if selected)
-q  = quantile(TDist(dof_residual(model)), 0.975)
-pv = 2 .* ccdf.(TDist(dof_residual(model)), abs.(coef(model) ./ se))
-for (name, b, s, pp) in zip(coefnames(model), coef(model), se, pv)
-	println(rpad(name, 16), round(b; digits=4), "  [", round(b - q * s; digits=4), ", ", round(b + q * s; digits=4), "]  p = ", round(pp; digits=4))
-end
+confint(model)  # one row per coefficient: lower and upper bound
 '''
 
 [[actionGroups.actions]]
@@ -470,9 +466,9 @@ id = "standardised"
 label = "Standardised Coefficients"
 desc = "Effect of a one-standard-deviation change in each predictor"
 code = '''
-using GLM, Statistics
+using Statistics
 
-X = modelmatrix(model)[:, 2:end]  # predictors without the intercept
-beta_std = coef(model)[2:end] .* vec(std(X; dims=1)) ./ std(response(model))  # standardised effects
+X = modelmatrix(model)[:, 2:end];  # predictors without the intercept
+beta_std = coef(model)[2:end] .* vec(std(X; dims=1)) ./ std(response(model));  # standardised effects
 println(beta_std)
 '''

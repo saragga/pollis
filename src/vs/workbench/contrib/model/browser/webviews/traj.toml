@@ -22,7 +22,7 @@ name = "Altro.jl"
 github = "https://github.com/RoboticExplorationLab/Altro.jl"
 
 [requires]
-packages = ["ForwardDiff.jl", "JuMP.jl", "Ipopt.jl", "NLsolve.jl", "Plots.jl"]
+packages = ["ForwardDiff.jl", "JuMP.jl", "Ipopt.jl", "NLsolve.jl", "ADTypes.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""
@@ -409,7 +409,7 @@ function tvlqr(X, U)
     K
 end
 
-using NLsolve
+using NLsolve, ADTypes
 
 # Pontryagin: the other methods sum stage(x, u) once per interval, i.e. integrate stage / dt over time,
 # so H = stage / dt + lambda' f; with control-affine dynamics, dH/du = 0 gives u = -dt R^-1 f_u' lambda
@@ -440,7 +440,7 @@ function plan(x0; lam0=zeros(n))
         # continuity of state and costate at the nodes, then transversality: lambda(tf) = gradient of the terminal cost
         vcat((ends[j] - zs[j+1] for j in 1:segments-1)..., zT[n+1:end] - Qf * (zT[1:n] - xf))
     end
-    sol = nlsolve(residual, guess; autodiff=:forward, iterations={{maxiter}})
+    sol = nlsolve(residual, guess; autodiff=AutoForwardDiff(), iterations={{maxiter}})
     zs = starts(sol.zero)
     Z = [zs[1]]
     for j in 1:segments

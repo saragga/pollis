@@ -10,7 +10,8 @@ defaultModel = "agents"
 
 [[packages]]
 name = "LimitOrderBook.jl"
-github = "https://github.com/p-casgrain/LimitOrderBook.jl"
+# Fork with fixes (default branch fix-sell-cross); upstream PR p-casgrain/LimitOrderBook.jl#9
+github = "https://github.com/Trumpingtons/LimitOrderBook.jl"
 
 [[packages]]
 name = "TradingAgents.jl"
@@ -24,6 +25,10 @@ url = "https://www.youtube.com/watch?v=C2Itnbwf9hg"
 [[packages]]
 name = "Brokerage.jl"
 github = "https://github.com/aaron-wheeler/Brokerage.jl"
+
+[[packages]]
+name = "VLLimitOrderBook.jl"
+github = "https://github.com/aaron-wheeler/VLLimitOrderBook.jl"
 
 [requires]
 packages = ["LimitOrderBook.jl", "TradingAgents.jl", "Brokerage.jl", "VLLimitOrderBook.jl", "StatsBase.jl", "Plots.jl"]

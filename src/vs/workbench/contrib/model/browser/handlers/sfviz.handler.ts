@@ -59,7 +59,7 @@ export function registerSfvizWebviewHandlers(
 		for (const t of Object.keys(lastCode)) { void postColorized(lastCode[t], t); }
 	}));
 	const sfvizData = metadata.sfviz;
-	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, sfvizData.packages.map(p => p.name), fileService, pathService, commandService, notificationService, workspaceContextService);
+	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, sfvizData.packages, [], fileService, pathService, commandService, notificationService, workspaceContextService);
 	createExampleCodeWiring(webviewInput.webview, disposables, 'sfviz', fileService, pathService, notificationService);
 	createCustomCopyWiring(webviewInput.webview, disposables, sfvizData.wikis, sfvizData.notebooks, fileService, pathService, editorService, commandService, notificationService);
 	createReferenceWiring(webviewInput.webview, disposables, 'sfviz', sfvizData.references, fileService, pathService, commandService, notificationService);

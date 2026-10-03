@@ -22,7 +22,7 @@ name = "BaryPlots.jl"
 github = "https://github.com/datadreamscorp/BaryPlots.jl"
 
 [requires]
-packages = ["GameTheory.jl BaryPlots.jl Plots.jl JuMP.jl HiGHS.jl", "HiGHS.jl", "JuMP.jl", "Plots.jl"]
+packages = ["BaryPlots.jl", "GameTheory.jl", "HiGHS.jl", "JuMP.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""

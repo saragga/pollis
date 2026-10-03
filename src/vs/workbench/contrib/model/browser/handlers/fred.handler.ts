@@ -65,7 +65,7 @@ export function registerFredWebviewHandlers(
 		for (const t of Object.keys(lastCode)) { void postColorized(lastCode[t], t); }
 	}));
 	const fredData = metadata.fred;
-	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, fredData.packages.map(p => p.name), fileService, pathService, commandService, notificationService, workspaceContextService);
+	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, fredData.packages, [], fileService, pathService, commandService, notificationService, workspaceContextService);
 	createExampleCodeWiring(webviewInput.webview, disposables, 'fred', fileService, pathService, notificationService);
 	createCustomCopyWiring(webviewInput.webview, disposables, fredData.wikis, fredData.notebooks, fileService, pathService, editorService, commandService, notificationService);
 	createReferenceWiring(webviewInput.webview, disposables, 'fred', fredData.references, fileService, pathService, commandService, notificationService);
