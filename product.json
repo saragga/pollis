@@ -16,6 +16,16 @@
 	"licenseName": "AGPL-3.0-or-later",
 	"sourceUrl": "https://github.com/saragga/pollis",
 	"reportIssueUrl": "https://github.com/saragga/pollis/issues/new",
+	"extensionsGallery": {
+		"serviceUrl": "https://open-vsx.org/vscode/gallery",
+		"controlUrl": "",
+		"extensionUrlTemplate": "https://open-vsx.org/vscode/gallery/{publisher}/{name}/latest",
+		"resourceUrlTemplate": "https://open-vsx.org/vscode/unpkg/{publisher}/{name}/{version}/{path}",
+		"nlsBaseUrl": ""
+	},
+	"linkProtectionTrustedDomains": [
+		"https://open-vsx.org"
+	],
 	"requestFeatureUrl": "https://github.com/saragga/pollis/issues?q=is%3Aissue+label%3Aenhancement",
 	"serverGreeting": [],
 	"serverLicense": [],

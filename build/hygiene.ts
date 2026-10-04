@@ -74,8 +74,9 @@ export function hygiene(some: NodeJS.ReadWriteStream | string[] | undefined, run
 	const productJson = es.through(function (file: VinylFile) {
 		const product = JSON.parse(file.contents!.toString('utf8'));
 
-		if (product.extensionsGallery) {
-			console.error(`product.json: Contains 'extensionsGallery'`);
+		// Pollis uses Open VSX; only the Microsoft Marketplace must never be configured
+		if (/marketplace\.visualstudio\.com/i.test(JSON.stringify(product.extensionsGallery ?? {}))) {
+			console.error(`product.json: 'extensionsGallery' points to the Microsoft Marketplace`);
 			errorCount++;
 		}
 

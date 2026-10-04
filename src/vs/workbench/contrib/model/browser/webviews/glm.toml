@@ -147,6 +147,66 @@ journal = "Econometrica"
 doi = "10.2307/1913610"
 openAccess = false
 
+[[references]]
+separator = true
+label = "Data Sources"
+
+[[references]]
+title = "Regression Towards Mediocrity in Hereditary Stature"
+authors = "Galton, Francis"
+year = 1886
+journal = "Journal of the Anthropological Institute of Great Britain and Ireland"
+doi = "10.2307/2841583"
+openAccess = false
+
+[[references]]
+title = "The Sensitivity of an Empirical Model of Married Women's Hours of Work to Economic and Statistical Assumptions"
+authors = "Mroz, Thomas A."
+year = 1987
+journal = "Econometrica"
+doi = "10.2307/1911029"
+openAccess = false
+
+[[references]]
+title = "Risk Analysis of the Space Shuttle: Pre-Challenger Prediction of Failure"
+authors = "Dalal, Siddhartha R.; Fowlkes, Edward B.; Hoadley, Bruce"
+year = 1989
+journal = "Journal of the American Statistical Association"
+doi = "10.1080/01621459.1989.10478858"
+openAccess = false
+
+[[references]]
+title = "The Origins of Sex Differences in Science"
+authors = "Long, J. Scott"
+year = 1990
+journal = "Social Forces"
+doi = "10.2307/2579146"
+openAccess = false
+
+[[references]]
+title = "Prospective Evaluation of Prognostic Variables from Patient-Completed Questionnaires"
+authors = "Loprinzi, Charles L.; et al."
+year = 1994
+journal = "Journal of Clinical Oncology"
+doi = "10.1200/JCO.1994.12.3.601"
+openAccess = false
+
+[[references]]
+title = "Using Geographic Variation in College Proximity to Estimate the Return to Schooling"
+authors = "Card, David"
+year = 1995
+journal = "Aspects of Labour Market Behaviour, University of Toronto Press"
+url = "https://www.nber.org/papers/w4483"
+openAccess = true
+
+[[references]]
+title = "titanic3: Titanic Passenger Data"
+authors = "Harrell, Frank E.; Cason, Thomas"
+year = 2002
+journal = "Vanderbilt University Department of Biostatistics (from Encyclopedia Titanica)"
+url = "https://hbiostat.org/data/"
+openAccess = true
+
 # Model toggles: one per response family (ids are the GLM.jl distribution names)
 
 [[models]]
