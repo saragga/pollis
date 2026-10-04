@@ -1017,8 +1017,9 @@ export class GettingStartedPage extends EditorPane {
 			this.registerDispatchListeners();
 		};
 		renderAlerts();
-		const databaseFile = joinPath(this.pathService.userHome({ preferLocal: true }), '.pollis', 'pollis.duckdb');
-		this.fileService.exists(databaseFile).then(exists => {
+		// PollisDB.install() creates Pollis' Julia environment when it installs DuckDB and the PollisDatasets.
+		const pollisEnvironment = joinPath(this.pathService.userHome({ preferLocal: true }), '.pollis', 'julia', 'environments');
+		this.fileService.exists(pollisEnvironment).then(exists => {
 			databaseReady = exists;
 			renderAlerts();
 		}, () => { });
@@ -1090,8 +1091,8 @@ export class GettingStartedPage extends EditorPane {
 					? localize('pollis.databaseReady', "The built-in database is ready")
 					: localize('pollis.databaseBuiltIn', "A database is built in")),
 				$('p.pollis-alert-description', {}, ready
-					? localize('pollis.databaseReadyDescription', "Your Pollis DuckDB database is kept in ~/.pollis/pollis.duckdb. Connect to it from the Databases view to query it as {0} in the Julia REPL.", 'pollis')
-					: localize('pollis.databaseBuiltInDescription', "Pollis comes with a DuckDB database for your data, so no database server is needed. DuckDB is installed the first time you connect to it from the Databases view.")),
+					? localize('pollis.databaseReadyDescription', "It holds the PollisDatasets as tables, described column by column. Connect to it from the Databases view to query it as {0} in the Julia REPL.", 'pollis')
+					: localize('pollis.databaseBuiltInDescription', "Pollis comes with a DuckDB database holding the PollisDatasets, so no database server is needed. DuckDB and the datasets are installed the first time the Julia REPL starts.")),
 				$('.pollis-alert-actions', {},
 					$('button.button-link', { 'x-dispatch': 'openDatabases' }, localize('pollis.openDatabases', "Open Databases")),
 				),

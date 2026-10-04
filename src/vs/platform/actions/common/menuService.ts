@@ -15,6 +15,7 @@ import { IStorageService, StorageScope, StorageTarget } from '../../storage/comm
 import { removeFastWithoutKeepingOrder } from '../../../base/common/arrays.js';
 import { localize } from '../../../nls.js';
 import { IKeybindingService } from '../../keybinding/common/keybinding.js';
+import { MenuViewFilter, MenuViewScope } from './menuViewFilter.js';
 
 export class MenuService implements IMenuService {
 
@@ -262,27 +263,33 @@ class MenuInfoSnapshot {
 
 class MenuInfo extends MenuInfoSnapshot {
 
+	private readonly _viewScope: MenuViewScope;
+
 	constructor(
 		_id: MenuId,
 		private readonly _hiddenStates: PersistedMenuHideState,
 		_collectContextKeysForSubmenus: boolean,
 		@ICommandService private readonly _commandService: ICommandService,
 		@IKeybindingService private readonly _keybindingService: IKeybindingService,
-		@IContextKeyService private readonly _contextKeyService: IContextKeyService
+		@IContextKeyService private readonly _contextKeyService: IContextKeyService,
+		parentViewScope?: MenuViewScope,
+		private readonly _shownByParentView?: boolean
 	) {
 		super(_id, _collectContextKeysForSubmenus);
+		this._viewScope = MenuViewFilter.scopeOf(_id, parentViewScope);
 		this.refresh();
 	}
 
 	createActionGroups(options: IMenuActionOptions | undefined): [string, Array<MenuItemAction | SubmenuItemAction>][] {
 		const result: [string, Array<MenuItemAction | SubmenuItemAction>][] = [];
+		const shownByView = this._shownByParentView ?? MenuViewFilter.isShown(this._id.id, this._viewScope, false);
 
 		for (const group of this._menuGroups) {
 			const [id, items] = group;
 
 			let activeActions: Array<MenuItemAction | SubmenuItemAction> | undefined;
 			for (const item of items) {
-				if (this._contextKeyService.contextMatchesRules(item.when)) {
+				if (this._contextKeyService.contextMatchesRules(item.when) && this._isShownByView(item, shownByView)) {
 					const isMenuItem = isIMenuItem(item);
 					if (isMenuItem) {
 						this._hiddenStates.setDefaultState(this._id, item.command.id, !!item.isHiddenByDefault);
@@ -295,7 +302,10 @@ class MenuInfo extends MenuInfoSnapshot {
 						(activeActions ??= []).push(new MenuItemAction(item.command, item.alt, options, menuHide, menuKeybinding, this._contextKeyService, this._commandService));
 					} else {
 						// SubmenuItemAction
-						const groups = new MenuInfo(item.submenu, this._hiddenStates, this._collectContextKeysForSubmenus, this._commandService, this._keybindingService, this._contextKeyService).createActionGroups(options);
+						const submenuScope = MenuViewFilter.scopeOf(item.submenu, this._viewScope);
+						// Only a Pollis menu passes on what its View shows: the menu bar itself shows everything
+						const submenuShown = MenuViewFilter.isShown(item.submenu.id, submenuScope, this._viewScope === 'pollis' && shownByView);
+						const groups = new MenuInfo(item.submenu, this._hiddenStates, this._collectContextKeysForSubmenus, this._commandService, this._keybindingService, this._contextKeyService, this._viewScope, submenuShown).createActionGroups(options);
 						const submenuActions = Separator.join(...groups.map(g => g[1]));
 						if (submenuActions.length > 0) {
 							(activeActions ??= []).push(new SubmenuItemAction(item, menuHide, submenuActions));
@@ -308,6 +318,17 @@ class MenuInfo extends MenuInfoSnapshot {
 			}
 		}
 		return result;
+	}
+
+	/**
+	 * Whether the active Pollis View shows an item. A submenu is checked against the `hide` list
+	 * only: it disappears anyway when nothing in it is shown.
+	 */
+	private _isShownByView(item: IMenuItem | ISubmenuItem, shownByView: boolean): boolean {
+		if (isIMenuItem(item)) {
+			return !MenuViewFilter.isHidden(item.command.id, this._viewScope) && MenuViewFilter.isShown(item.command.id, this._viewScope, shownByView);
+		}
+		return !MenuViewFilter.isHidden(item.submenu.id, this._viewScope);
 	}
 
 	protected override _sort(menuItems: (IMenuItem | ISubmenuItem)[]): (IMenuItem | ISubmenuItem)[] {
@@ -391,6 +412,7 @@ class MenuImpl implements IMenu {
 			this._onDidChange.fire({ menu: this, isStructuralChange: true, isEnablementChange: true, isToggleChange: true });
 		}, options.eventDebounceDelay);
 		this._disposables.add(rebuildMenuSoon);
+		this._disposables.add(MenuViewFilter.onDidChange(() => rebuildMenuSoon.schedule()));
 		this._disposables.add(MenuRegistry.onDidChangeMenu(e => {
 			for (const id of this._menuInfo.allMenuIds) {
 				if (e.has(id)) {

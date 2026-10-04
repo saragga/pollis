@@ -24,6 +24,7 @@ import { IInstantiationService, ServicesAccessor } from '../../../../platform/in
 import { Emitter, Event } from '../../../../base/common/event.js';
 import { IStorageService, StorageScope } from '../../../../platform/storage/common/storage.js';
 import { Parts, IWorkbenchLayoutService, ActivityBarPosition, LayoutSettings, EditorActionsLocation, EditorTabsMode } from '../../../services/layout/browser/layoutService.js';
+import { IActionViewItemService } from '../../../../platform/actions/browser/actionViewItemService.js';
 import { createActionViewItem, fillInActionBarActions } from '../../../../platform/actions/browser/menuEntryActionViewItem.js';
 import { Action2, IMenu, IMenuService, MenuId, registerAction2 } from '../../../../platform/actions/common/actions.js';
 import { IContextKey, IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
@@ -310,7 +311,8 @@ export class BrowserTitlebarPart extends Part implements ITitlebarPart {
 		@IHostService private readonly hostService: IHostService,
 		@IEditorService editorService: IEditorService,
 		@IMenuService private readonly menuService: IMenuService,
-		@IKeybindingService private readonly keybindingService: IKeybindingService
+		@IKeybindingService private readonly keybindingService: IKeybindingService,
+		@IActionViewItemService private readonly actionViewItemService: IActionViewItemService
 	) {
 		super(id, { hasTitle: false }, themeService, storageService, layoutService);
 
@@ -617,6 +619,12 @@ export class BrowserTitlebarPart extends Part implements ITitlebarPart {
 			}
 		}
 
+		// --- Layout Actions with their own view item (e.g. the Pollis View button)
+		const layoutViewItemFactory = this.actionViewItemService.lookUp(MenuId.LayoutControlMenu, action.id);
+		if (layoutViewItemFactory) {
+			return layoutViewItemFactory(action, options, this.instantiationService, getWindowId(getWindow(this.element)));
+		}
+
 		// --- Editor Actions
 		const activeEditorPane = this.editorGroupsContainer.activeGroup?.activeEditorPane;
 		if (activeEditorPane && activeEditorPane instanceof EditorPane) {
@@ -886,10 +894,10 @@ export class BrowserTitlebarPart extends Part implements ITitlebarPart {
 
 		if (this.customMenubar.value) {
 			this.customMenubar.value.layout();
-
-			const hasCenter = this.isCommandCenterVisible || this.title.textContent !== '';
-			this.rootContainer.classList.toggle('has-center', hasCenter);
 		}
+
+		const hasCenter = this.isCommandCenterVisible || this.title.textContent !== '';
+		this.rootContainer.classList.toggle('has-center', hasCenter);
 	}
 
 	focus(): void {
@@ -930,8 +938,9 @@ export class MainBrowserTitlebarPart extends BrowserTitlebarPart {
 		@IEditorService editorService: IEditorService,
 		@IMenuService menuService: IMenuService,
 		@IKeybindingService keybindingService: IKeybindingService,
+		@IActionViewItemService actionViewItemService: IActionViewItemService,
 	) {
-		super(Parts.TITLEBAR_PART, mainWindow, editorGroupService.mainPart, contextMenuService, configurationService, environmentService, instantiationService, themeService, storageService, layoutService, contextKeyService, hostService, editorService, menuService, keybindingService);
+		super(Parts.TITLEBAR_PART, mainWindow, editorGroupService.mainPart, contextMenuService, configurationService, environmentService, instantiationService, themeService, storageService, layoutService, contextKeyService, hostService, editorService, menuService, keybindingService, actionViewItemService);
 	}
 }
 
@@ -965,9 +974,10 @@ export class AuxiliaryBrowserTitlebarPart extends BrowserTitlebarPart implements
 		@IEditorService editorService: IEditorService,
 		@IMenuService menuService: IMenuService,
 		@IKeybindingService keybindingService: IKeybindingService,
+		@IActionViewItemService actionViewItemService: IActionViewItemService,
 	) {
 		const id = AuxiliaryBrowserTitlebarPart.COUNTER++;
-		super(`workbench.parts.auxiliaryTitle.${id}`, getWindow(container), editorGroupsContainer, contextMenuService, configurationService, environmentService, instantiationService, themeService, storageService, layoutService, contextKeyService, hostService, editorService, menuService, keybindingService);
+		super(`workbench.parts.auxiliaryTitle.${id}`, getWindow(container), editorGroupsContainer, contextMenuService, configurationService, environmentService, instantiationService, themeService, storageService, layoutService, contextKeyService, hostService, editorService, menuService, keybindingService, actionViewItemService);
 	}
 
 	override get preventZoom(): boolean {

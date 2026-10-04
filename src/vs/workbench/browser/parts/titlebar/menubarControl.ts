@@ -91,7 +91,8 @@ MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
 		original: 'Explore',
 		mnemonicTitle: localize({ key: 'mExplore', comment: ['&& denotes a mnemonic'] }, "&&Explore")
 	},
-	order: 4.1
+	// After Run (6), as the native macOS menu bar has it
+	order: 6.5
 });
 
 MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {

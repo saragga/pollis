@@ -6,11 +6,11 @@ The panel writes Julia code that talks to a DuckDB database through **DBInterfac
 using DuckDB, DBInterface, Tables
 
 if !isdefined(Main, :pollis)
-	pollis = DBInterface.connect(DuckDB.DB, joinpath(homedir(), ".pollis", "pollis.duckdb"))
+	pollis = DBInterface.connect(DuckDB.DB, ":memory:")
 end
 ```
 
-It connects only if the connection variable does not exist yet, so running the code again reuses the open connection. This matters: a DuckDB file can be opened for writing by **one process at a time**, and connecting twice from the same Julia session would fail. The Databases view connects the built-in database under the same name, `pollis`, and the code registers its own connection with the view, so both see the same tables.
+It connects only if the connection variable does not exist yet, so running the code again reuses the open connection. The built-in database lives in memory: each Julia session gets its own, filled with the PollisDatasets when it connects, so it is never locked by another process. The Databases view connects it under the same name, `pollis`, and the code registers its own connection with the view, so both see the same tables. Your own tables belong in a database file of your own: a DuckDB file can be opened for writing by **one process at a time**.
 
 ## The Four Tabs
 

@@ -4,8 +4,9 @@ The Import File tab stores a CSV, Parquet or JSON file as a **table** in the dat
 
 ## Construction
 ```julia
-DBInterface.execute(pollis, "CREATE OR REPLACE TABLE sales AS SELECT * FROM read_csv('sales.csv')")
-DBInterface.execute(pollis, "INSERT INTO sales SELECT * FROM read_csv('sales_2027.csv')")   # append
+mydb = DBInterface.connect(DuckDB.DB, "mydata.duckdb")   # a database of your own, created if new
+DBInterface.execute(mydb, "CREATE OR REPLACE TABLE sales AS SELECT * FROM read_csv('sales.csv')")
+DBInterface.execute(mydb, "INSERT INTO sales SELECT * FROM read_csv('sales_2027.csv')")   # append
 ```
 
 ## Readers

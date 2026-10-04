@@ -1,6 +1,6 @@
 # SQL Databases — Factsheet
 
-A **SQL database** stores tables and answers questions about them in SQL, the standard language for filtering, joining and aggregating tables. Pollis has one built in: **DuckDB**, an analytical database that runs inside the Julia process and keeps everything in a single file, `~/.pollis/pollis.duckdb`. DBInterface.jl sends it SQL, and Tables.jl brings the results back as Julia columns.
+A **SQL database** stores tables and answers questions about them in SQL, the standard language for filtering, joining and aggregating tables. Pollis has one built in: **DuckDB**, an analytical database that runs inside the Julia process. The built-in database holds the PollisDatasets in memory; your own tables go in a DuckDB file of your own. DBInterface.jl sends it SQL, and Tables.jl brings the results back as Julia columns.
 
 | | |
 |---|---|

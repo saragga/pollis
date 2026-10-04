@@ -113,8 +113,8 @@ export function getCvizHtml(): string {
 		}
 
 		function miniPie() {
-			// Donut chart centred in the 54 x 86 box; slices echo the code's data
-			var cx = 27, cy = 43, R = 22, ir = 11;
+			// Pie chart centred in the 54 x 86 box; slices echo the code's data
+			var cx = 27, cy = 43, R = 22;
 			var data = [36, 12, 68, 5, 42, 27];
 			var total = data.reduce(function(a, b) { return a + b; }, 0);
 			var ops = [0.85, 0.3, 0.65, 0.18, 0.5, 0.4]; // distinct shades per slice
@@ -127,12 +127,9 @@ export function getCvizHtml(): string {
 				var large = (a1 - a0) > Math.PI ? 1 : 0;
 				var x0 = cx + R * Math.cos(a0),  y0 = cy + R * Math.sin(a0);
 				var x1 = cx + R * Math.cos(a1),  y1 = cy + R * Math.sin(a1);
-				var xi1 = cx + ir * Math.cos(a1), yi1 = cy + ir * Math.sin(a1);
-				var xi0 = cx + ir * Math.cos(a0), yi0 = cy + ir * Math.sin(a0);
-				var p = 'M ' + x0.toFixed(2) + ' ' + y0.toFixed(2)
+				var p = 'M ' + cx + ' ' + cy
+					+ ' L ' + x0.toFixed(2) + ' ' + y0.toFixed(2)
 					+ ' A ' + R + ' ' + R + ' 0 ' + large + ' 1 ' + x1.toFixed(2) + ' ' + y1.toFixed(2)
-					+ ' L ' + xi1.toFixed(2) + ' ' + yi1.toFixed(2)
-					+ ' A ' + ir + ' ' + ir + ' 0 ' + large + ' 0 ' + xi0.toFixed(2) + ' ' + yi0.toFixed(2)
 					+ ' Z';
 				s += '<path d="' + p + '" fill="currentColor" fill-opacity="' + ops[i]
 					+ '" stroke="var(--vscode-editor-background)" stroke-width="0.8"/>';
@@ -223,20 +220,15 @@ export function getCvizHtml(): string {
 				c += cline(fn('plot!') + '(x, b0 .+ b1 .* x; label="Fitted line", lw=2)', 'connect the fitted values with a line');
 
 			} else if (currentModel === 'pie') {
-				c += cline(kw('using') + ' ' + ty('CairoMakie'), 'Makie backend for a static donut');
+				c += cline(kw('using') + ' ' + ty('StatsPlots'), 'statistical plotting');
 				c += blank();
+				c += cline('labels = ["Yellow", "Orange", "Red", "Blue", "Purple", "Green"]', 'one label per slice');
 				c += cline('data   = [36, 12, 68, 5, 42, 27]', 'one value per slice');
 				c += cline('colors = [:yellow, :orange, :red, :blue, :purple, :green]', 'slice colours');
 				c += blank();
-				c += line('f, ax, plt = ' + fn('pie') + '(data,');
-				c += line('    color = colors,');
-				c += cline('    radius = 4, inner_radius = 2,', 'inner_radius > 0 makes a donut');
-				c += cline('    strokecolor = :white, strokewidth = 5,', 'white gaps between slices');
-				c += cline('    axis = (autolimitaspect = 1, ),', 'keep the slices circular');
-				c += line('    label = [' + fn('string') + '(c) => (; color = c) for c in colors])');
-				c += blank();
-				c += cline(ty('Legend') + '(f[1, 2], ax)', 'legend in a second column');
-				c += cline(fn('display') + '(f)', 'render the figure');
+				c += cline(fn('pie') + '(labels, data;', 'slice angles proportional to the values');
+				c += cline('    color=colors, linecolor=:white, linewidth=3,', 'white gaps between slices');
+				c += cline('    aspect_ratio=:equal, legend=:outerright)', 'keep the slices circular');
 
 			} else {
 				c += cline(kw('using') + ' ' + ty('StatsPlots') + ', ' + ty('Random'), 'plotting and RNG');

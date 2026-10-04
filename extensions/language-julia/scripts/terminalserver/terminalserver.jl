@@ -13,6 +13,12 @@ let
     catch err
         @debug "PollisDB not loaded" exception=err
     end
+    # Pollis: DuckDB and the PollisDatasets are built in; installed once, the first time a REPL starts.
+    try
+        isdefined(Main, :PollisDB) && Base.invokelatest(Main.PollisDB.install)
+    catch err
+        @warn "Pollis: could not install DuckDB and the PollisDatasets" exception=err
+    end
 
     @debug "vscodeserver loaded" time=round(Int, time()*10)
     # load Revise ?

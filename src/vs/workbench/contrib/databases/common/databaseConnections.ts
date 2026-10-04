@@ -12,12 +12,16 @@ export const IDatabaseConnectionsService = createDecorator<IDatabaseConnectionsS
 export interface IDatabaseColumn {
 	readonly name: string;
 	readonly type: string;
+	/** What the column holds, e.g. the description of a PollisDatasets column. */
+	readonly comment?: string;
 }
 
 export interface IDatabaseTable {
 	readonly name: string;
 	readonly kind: 'table' | 'view';
 	readonly columns: readonly IDatabaseColumn[];
+	/** What the table holds, e.g. the title, description and source of a PollisDatasets dataset. */
+	readonly comment?: string;
 }
 
 export interface IDatabaseSchema {
