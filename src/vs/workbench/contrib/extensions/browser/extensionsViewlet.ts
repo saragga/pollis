@@ -133,7 +133,7 @@ export class ExtensionsViewletViewsContribution extends Disposable implements IW
 
 		viewDescriptors.push({
 			id: 'workbench.views.extensions.marketplaceAccess',
-			name: localize2('marketPlace', "Marketplace"),
+			name: localize2('marketPlace', "Open VSX"),
 			ctorDescriptor: new SyncDescriptor(class extends ViewPane {
 				public override shouldShowWelcome() {
 					return true;
@@ -325,7 +325,7 @@ export class ExtensionsViewletViewsContribution extends Disposable implements IW
 		 */
 		viewDescriptors.push({
 			id: 'workbench.views.extensions.marketplace',
-			name: localize2('marketPlace', "Marketplace"),
+			name: localize2('marketPlace', "Open VSX"),
 			ctorDescriptor: new SyncDescriptor(SearchMarketplaceExtensionsView, [{}]),
 			when: ContextKeyExpr.and(ContextKeyExpr.has('searchMarketplaceExtensions'), CONTEXT_HAS_GALLERY)
 		});
@@ -623,7 +623,7 @@ export class ExtensionsViewPaneContainer extends ViewPaneContainer<IExtensionsVi
 		hide(overlay);
 
 		this.header = append(this.root, $('.header'));
-		const placeholder = localize('searchExtensions', "Search Extensions in Marketplace");
+		const placeholder = localize('searchExtensions', "Search Extensions in Open VSX");
 
 		const searchValue = this.searchViewletState['query.value'] ? this.searchViewletState['query.value'] : '';
 

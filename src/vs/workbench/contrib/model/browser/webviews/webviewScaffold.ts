@@ -525,8 +525,9 @@ ${parts.headScriptJs ?? ''}
 		// One line of declarative code: an optional {{?id=a|b}} / {{?id!=a|b}} guard, then {{id}} placeholders.
 		function holds(id, op, values) { return (values.split('|').indexOf(inputRaw(id)) >= 0) !== (op === '!='); }
 		function codeLine(s) {
-			var m = /^[{][{][?]([\\w-]+)(!?=)([^}]*)[}][}] ?/.exec(s);
-			if (m) {
+			// Guards stack: every leading {{?id=a|b}} must hold.
+			var m;
+			while ((m = /^[{][{][?]([\\w-]+)(!?=)([^}]*)[}][}] ?/.exec(s))) {
 				if (!holds(m[1], m[2], m[3])) { return ''; }
 				s = s.slice(m[0].length);
 			}
