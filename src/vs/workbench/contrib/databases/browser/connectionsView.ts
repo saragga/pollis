@@ -161,7 +161,7 @@ class ItemRenderer implements ITreeRenderer<DatabaseItem, void, IItemTemplate> {
 				name = connectionName(item.profile, item.session);
 				const { profile, session } = item;
 				const inMemory = !!profile && isInMemoryConnection(profile);
-				icon = inMemory && !profile?.builtin ? Codicon.zap : Codicon.database;
+				icon = inMemory ? Codicon.zap : Codicon.database;
 				// The list shows only the names; the hover tells the engine, the location and the connection.
 				if (profile?.builtin) {
 					description = localize('connection.builtin', "built-in");

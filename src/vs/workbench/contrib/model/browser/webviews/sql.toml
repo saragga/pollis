@@ -393,7 +393,7 @@ using DuckDB, DBInterface, Tables
 
 if !isdefined(Main, :{{con}})  # connect once, to the built-in database, as the Databases view does
 	{{con}} = DBInterface.connect(DuckDB.DB, ":memory:")
-	isdefined(Main, :PollisDB) && PollisDB.register("pollis", {{con}}; name = "Pollis")  # loads the PollisDatasets
+	isdefined(Main, :PollisDB) && PollisDB.register("pollis", {{con}}; name = "PollisDatasets")  # loads the PollisDatasets
 end
 
 sql = raw"""
@@ -473,7 +473,7 @@ using DuckDB, DBInterface, Tables
 
 if !isdefined(Main, :{{con}})  # connect once, to the built-in database, as the Databases view does
 	{{con}} = DBInterface.connect(DuckDB.DB, ":memory:")
-	isdefined(Main, :PollisDB) && PollisDB.register("pollis", {{con}}; name = "Pollis")  # loads the PollisDatasets
+	isdefined(Main, :PollisDB) && PollisDB.register("pollis", {{con}}; name = "PollisDatasets")  # loads the PollisDatasets
 end
 
 sql = raw"""

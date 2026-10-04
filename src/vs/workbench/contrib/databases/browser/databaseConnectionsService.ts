@@ -55,7 +55,7 @@ export class DatabaseConnectionsService extends Disposable implements IDatabaseC
 		// In memory: PollisDB.seed fills it with the PollisDatasets each time it connects.
 		this.builtin = {
 			id: BUILTIN_DATABASE_ID,
-			name: 'Pollis',
+			name: 'PollisDatasets',
 			driver: 'duckdb',
 			target: 'global',
 			variable: 'pollis',
