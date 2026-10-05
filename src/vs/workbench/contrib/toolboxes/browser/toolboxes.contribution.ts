@@ -8,7 +8,8 @@ import { MenuRegistry, MenuId } from '../../../../platform/actions/common/action
 import './toolboxExtensions.js';
 
 // The Analytics Toolbox comes from its extension (extensions/pollis-toolbox-analytics), see toolboxExtensions.ts
-// The Economics and Econometrics Toolboxes come from their extensions (extensions/pollis-toolbox-economics, extensions/pollis-toolbox-econometrics)
+// The Economics and Econometrics Toolboxes come from their extensions (extensions/pollis-toolbox-economics, extensions/pollis-toolbox-econometrics);
+// Game Theory is in the Optimise menu
 
 // Epidemiology Toolbox hidden for now: uncomment its three blocks to restore it.
 /*
@@ -43,17 +44,6 @@ MenuRegistry.appendMenuItem(MenuId.MenubarToolboxesMenu, {
 
 
 
-// ===================================================
-// ECONOMICS TOOLBOX: GAME THEORY
-// ===================================================
-
-// Game Theory stays in the core, as Optimise opens its panel on the potential-game model, but its
-// menu item goes in the Economics Toolbox submenu of the extension (see toolboxExtensions.ts).
-MenuRegistry.appendMenuItem(MenuId.for('pollisToolbox.economics'), {
-	group: '5_mt',
-	command: { id: 'chiara.statistics.macro.gt', title: localize('macro.gt', 'Game Theory') },
-	order: 1,
-}); // GameTheory.jl, StrategicGames.jl, BaryPlots.jl
 
 
 

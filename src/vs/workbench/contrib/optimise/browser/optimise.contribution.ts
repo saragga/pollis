@@ -373,6 +373,12 @@ MenuRegistry.appendMenuItem(MenuId.MenubarOptimiseMenu, {
 
 MenuRegistry.appendMenuItem(MenuId.MenubarOptimiseMenu, {
 	group: '6_optimisation',
+	command: { id: 'chiara.statistics.macro.gt', title: localize('mp.gt', 'Game Theory') },
+	order: 6.5,
+}); // GameTheory.jl, StrategicGames.jl, BaryPlots.jl
+
+MenuRegistry.appendMenuItem(MenuId.MenubarOptimiseMenu, {
+	group: '6_optimisation',
 	submenu: CVPSubmenuId,
 	title: localize('mp.cvp', 'Complementarity and Variational Problems'),
 	order: 7,
