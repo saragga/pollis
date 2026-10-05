@@ -7,7 +7,9 @@ description: "Extension Agent: build a Pollis extension (a data-only toolbox) fr
 
 Turns a spec TOML into a Pollis extension under `toolboxes/<name>/`, packaged in `.build/toolboxes/` for the Toolboxes section of the Extensions pane. A Pollis extension has no code: a `package.json` with a `pollisToolboxes` contribution, the panels' TOML files, their wikis and notebooks, an icon and a README.
 
-The mechanical work is done by `build/pollis/makeExtension.ts`; the agent does the parts that need judgment.
+The mechanical work is done by `build/pollis/makeExtension.ts`; the agent does the parts that need judgment. How a menu entry resolves to its panel (command, panel constant, template, TOML, wikis, notebooks) is in `build/pollis/panelResolver.ts`.
+
+This is the developer version, for the source tree. Pollis users get the same agent as an agent plugin, `plugins/pollis-extension-agent/` (listed by `.claude-plugin/marketplace.json`, installed from the Agent Plugins section of the Extensions pane): its builder, `scripts/makeToolbox.mjs`, needs only Node and reads the panels from the public repository through `plugins/pollis-extension-agent/panel-index.json`. Regenerate that index with `node build/pollis/makePanelIndex.ts` (and commit it) whenever a panel, a command, a menu title, a wiki or notebook file, or a toolbox under `toolboxes/` is added, renamed or removed; `node build/pollis/makePanelIndex.ts --check` tells whether it is up to date. A change to the resolution in `panelResolver.ts` goes in the index too, and the plugin's builder must read the index the same way.
 
 ## The spec
 
@@ -56,5 +58,5 @@ order = 1
 ## Rules
 
 - `packageToolboxes.ts` packages every folder under `toolboxes/`: never leave a test toolbox there.
-- Copy mode leaves two panels with the same panel id and view type (Pollis' and the extension's): they share the wiki and notebook folders and the editor tab. Say so when the user picks copy.
+- Copy mode here leaves two panels with the same panel id and view type (Pollis' and the extension's): they share the editor tab and the `~/.pollis` folders, and while the extension is installed its copies of the wiki and notebook folders are served for Pollis' own panel too (the folders are registered by name). Say so when the user picks copy. The plugin's builder makes independent copies instead (panel `<prefix>.<id>`, folders `<prefix>.<folder>`, the TOML's `file` entries rewritten); use it when the copy must not touch Pollis' panel.
 - Never use DataFrames, never name a university, Open VSX not Marketplace (the Pollis documentation rules apply to READMEs too).
