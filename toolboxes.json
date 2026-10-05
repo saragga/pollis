@@ -1,0 +1,31 @@
+{
+	"toolboxes": [
+		{
+			"id": "pollis.pollis-toolbox-analytics",
+			"name": "Mathematical Foundations Toolbox",
+			"description": "Pollis Mathematical Foundations Toolbox: symbolic math, nonlinear systems, numerical differentiation and integration, and ordinary and partial differential equations.",
+			"author": "Pollis",
+			"version": "1.0.4",
+			"vsix": "pollis-toolbox-analytics-1.0.4.vsix",
+			"readme": "pollis-toolbox-analytics-README.md"
+		},
+		{
+			"id": "pollis.pollis-toolbox-econometrics",
+			"name": "Financial Econometrics Toolbox",
+			"description": "Pollis Financial Econometrics Toolbox: ARIMAX models, VAR/VECM systems, GARCH-type and regime switching models, time-series forecasting, and Bayesian asset-pricing factor models.",
+			"author": "Pollis",
+			"version": "1.0.4",
+			"vsix": "pollis-toolbox-econometrics-1.0.4.vsix",
+			"readme": "pollis-toolbox-econometrics-README.md"
+		},
+		{
+			"id": "pollis.pollis-toolbox-economics",
+			"name": "Macroeconomics Toolbox",
+			"description": "Pollis Macroeconomics Toolbox: business cycle filters, stochastic volatility macroeconomic models, DSGE models, heterogeneous-agent models and continuous-time macro-finance.",
+			"author": "Pollis",
+			"version": "1.0.4",
+			"vsix": "pollis-toolbox-economics-1.0.4.vsix",
+			"readme": "pollis-toolbox-economics-README.md"
+		}
+	]
+}
