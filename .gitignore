@@ -30,6 +30,8 @@ test-output.json
 test/componentFixtures/.screenshots/*
 !test/componentFixtures/.screenshots/baseline/
 dist
+!src/vs/workbench/contrib/model/browser/media/wiki/dist/
+!src/vs/workbench/contrib/model/browser/media/notebooks/dist/
 .playwright-cli
 .claude/
 .agents/agents/*.local.md
