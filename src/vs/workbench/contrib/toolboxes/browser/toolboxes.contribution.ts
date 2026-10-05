@@ -5,16 +5,10 @@
 
 import { localize } from '../../../../../vs/nls.js';
 import { MenuRegistry, MenuId } from '../../../../platform/actions/common/actions.js';
-import { ECO_BFMB_ID, ECO_BLSDF_ID, ARMA_ARIMA_WEBVIEW_ID, ARMA_VAR_WEBVIEW_ID } from '../../model/browser/model.contribution.js';
 import './toolboxExtensions.js';
 
 // The Analytics Toolbox comes from its extension (extensions/pollis-toolbox-analytics), see toolboxExtensions.ts
-
-// Define a new submenu ID for "Economics Toolbox"
-const E_MTSubmenuId = new MenuId('menubarE_MTSubmenu');
-
-// Define a new submenu ID for "Econometrics Toolbox"
-const E_ETSubmenuId = new MenuId('menubarE_ETSubmenu');
+// The Economics and Econometrics Toolboxes come from their extensions (extensions/pollis-toolbox-economics, extensions/pollis-toolbox-econometrics)
 
 // Epidemiology Toolbox hidden for now: uncomment its three blocks to restore it.
 /*
@@ -37,22 +31,6 @@ MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
 	order: 9.5
 });
 
-// Economics Toolbox
-MenuRegistry.appendMenuItem(MenuId.MenubarToolboxesMenu, {
-	group: '2_toolboxes',
-	submenu: E_MTSubmenuId,
-	title: localize('showStatistics.mt', 'Economics Toolbox'),
-	order: 1,
-});
-
-// Econometrics Toolbox
-MenuRegistry.appendMenuItem(MenuId.MenubarToolboxesMenu, {
-	group: '2_toolboxes',
-	submenu: E_ETSubmenuId,
-	title: localize('showStatistics.et', 'Econometrics Toolbox'),
-	order: 2,
-});
-
 /*
 // Epidemiology Toolbox
 MenuRegistry.appendMenuItem(MenuId.MenubarToolboxesMenu, {
@@ -66,104 +44,16 @@ MenuRegistry.appendMenuItem(MenuId.MenubarToolboxesMenu, {
 
 
 // ===================================================
-// SUBMENU: ECONOMICS TOOLBOX
+// ECONOMICS TOOLBOX: GAME THEORY
 // ===================================================
 
-// Models
-MenuRegistry.appendMenuItem(E_MTSubmenuId, {
-	group: '4_mt',
-	command: { id: 'chiara.statistics.macro.hpf', title: localize('macro.hpf', 'Business Cycle Filters') },
-	order: 1,
-}); // TrendDecomposition.jl
-
-MenuRegistry.appendMenuItem(E_MTSubmenuId, {
-	group: '4_mt',
-	command: { id: 'chiara.statistics.macro.dtsvm', title: localize('macro.dtsvm', 'Stochastic Volatility Macroeconomic Models') },
-	order: 2,
-}); // MacroEconometricModels.jl
-
-MenuRegistry.appendMenuItem(E_MTSubmenuId, {
-	group: '4_mt',
-	command: { id: 'chiara.statistics.macro.dsge', title: localize('macro.dsge', 'Dynamic Stochastic General Equilibrium (DSGE)') },
-	order: 3,
-}); // DSGE.jl, EconPDEs.jl, JuliaPerturbation.jl
-
-MenuRegistry.appendMenuItem(E_MTSubmenuId, {
-	group: '4_mt',
-	command: { id: 'chiara.statistics.macro.ham', title: localize('macro.ham', 'Heterogeneous-Agent Models') },
-	order: 4,
-}); // EconPDEs.jl
-
-MenuRegistry.appendMenuItem(E_MTSubmenuId, {
-	group: '4_mt',
-	command: { id: 'chiara.statistics.macro.ctmf', title: localize('macro.ctmf', 'Continuous-Time Macro-Finance') },
-	order: 5,
-}); // EconPDEs.jl
-
-MenuRegistry.appendMenuItem(E_MTSubmenuId, {
+// Game Theory stays in the core, as Optimise opens its panel on the potential-game model, but its
+// menu item goes in the Economics Toolbox submenu of the extension (see toolboxExtensions.ts).
+MenuRegistry.appendMenuItem(MenuId.for('pollisToolbox.economics'), {
 	group: '5_mt',
 	command: { id: 'chiara.statistics.macro.gt', title: localize('macro.gt', 'Game Theory') },
 	order: 1,
 }); // GameTheory.jl, StrategicGames.jl, BaryPlots.jl
-
-
-// ===================================================
-// SUBMENU: ECONOMETRICS TOOLBOX
-// ===================================================
-
-MenuRegistry.appendMenuItem(E_ETSubmenuId, {
-	group: '1_et',
-	command: { id: ARMA_ARIMA_WEBVIEW_ID, title: localize('et.arimax', 'ARIMAX Models') },
-	order: 1,
-});
-
-MenuRegistry.appendMenuItem(E_ETSubmenuId, {
-	group: '1_et',
-	command: { id: ARMA_VAR_WEBVIEW_ID, title: localize('et.var', 'VAR/VECM Systems') },
-	order: 2,
-});
-
-MenuRegistry.appendMenuItem(E_ETSubmenuId, {
-	group: '1_et',
-	command: { id: 'chiara.statistics.vcm', title: localize('et.garch', 'GARCH-Type Models') },
-	order: 3,
-});
-
-MenuRegistry.appendMenuItem(E_ETSubmenuId, {
-	group: '1_et',
-	command: { id: 'chiara.statistics.rsm', title: localize('showStatistics.rsm', 'Regime Switching Models') },
-	order: 4,
-}); // MarSwitching.jl, HiddenMarkovModels.jl
-
-MenuRegistry.appendMenuItem(E_ETSubmenuId, {
-	group: '2_et',
-	command: { id: 'chiara.statistics.atsf', title: localize('et.atsf', 'Advanced Time-Series Forecasting') },
-	order: 1,
-}); // Durbyn.jl
-
-MenuRegistry.appendMenuItem(E_ETSubmenuId, {
-	group: '2_et',
-	command: { id: 'chiara.statistics.nntsf', title: localize('showStatistics.nntsf', 'Neural Network Time-Series Forecasting') },
-	order: 2,
-}); // Flux.jl + FluxArchitectures.jl
-
-MenuRegistry.appendMenuItem(E_ETSubmenuId, {
-	group: '2_et',
-	command: { id: 'chiara.statistics.autotsf', title: localize('et.autotsf', 'Automatic Time-Series Forecasting') },
-	order: 3,
-}); // Durbyn.jl
-
-MenuRegistry.appendMenuItem(E_ETSubmenuId, {
-	group: '3_et',
-	command: { id: ECO_BLSDF_ID, title: localize('eco.blsdf', 'Bayesian Linear Stochastic Discount Factor') },
-	order: 1,
-}); // BayesianFactorZoo.jl
-
-MenuRegistry.appendMenuItem(E_ETSubmenuId, {
-	group: '3_et',
-	command: { id: ECO_BFMB_ID, title: localize('ft.bfmb', 'Fama-MacBeth Regression') },
-	order: 2,
-}); // BayesianFactorZoo.jl
 
 
 

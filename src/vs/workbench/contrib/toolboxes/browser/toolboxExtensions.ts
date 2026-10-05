@@ -113,7 +113,8 @@ class ToolboxExtensionsContribution extends Disposable implements IWorkbenchCont
 		for (const extension of extensions) {
 			const location = extension.description.extensionLocation;
 			for (const toolbox of extension.value) {
-				const toolboxMenu = this.submenus.get(toolbox.id) ?? new MenuId(`pollisToolbox.${toolbox.id}`);
+				// `MenuId.for`: the core may already add items to a toolbox's submenu (Game Theory, in Economics)
+				const toolboxMenu = this.submenus.get(toolbox.id) ?? MenuId.for(`pollisToolbox.${toolbox.id}`);
 				this.submenus.set(toolbox.id, toolboxMenu);
 				items.push(store => store.add(MenuRegistry.appendMenuItem(MenuId.MenubarToolboxesMenu, { group: toolbox.group, order: toolbox.order, submenu: toolboxMenu, title: toolbox.title })));
 				for (const contribution of toolbox.panels) {
