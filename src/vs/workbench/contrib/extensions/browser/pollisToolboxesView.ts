@@ -37,9 +37,13 @@ import { IViewDescriptorService } from '../../../common/views.js';
 import { IHostService } from '../../../services/host/browser/host.js';
 import { ExtensionRuntimeActionType, ExtensionState, IExtension, IExtensionsWorkbenchService } from '../common/extensions.js';
 
-/** The GitHub release that holds the toolboxes: its toolboxes.json and the .vsix files it names (written by build/pollis/packageToolboxes.ts). */
-const TOOLBOXES_RELEASE_URL = 'https://github.com/saragga/pollis/releases/download/toolboxes';
-const TOOLBOXES_INDEX_URL = `${TOOLBOXES_RELEASE_URL}/toolboxes.json`;
+/**
+ * The branch toolboxes-dist of saragga/pollis holds the toolboxes: its toolboxes.json and the .vsix
+ * files it names (written by build/pollis/packageToolboxes.ts). Served by raw.githubusercontent.com,
+ * which allows cross-origin requests; GitHub release downloads do not, so the window cannot fetch them.
+ */
+const TOOLBOXES_URL = 'https://raw.githubusercontent.com/saragga/pollis/toolboxes-dist';
+const TOOLBOXES_INDEX_URL = `${TOOLBOXES_URL}/toolboxes.json`;
 
 /** The context key the Extensions viewlet sets to the search text (ExtensionsSearchValueContext). */
 const SEARCH_VALUE_CONTEXT_KEY = 'extensionsSearchValue';
@@ -260,7 +264,7 @@ export class PollisToolboxesView extends ViewPane {
 					: localize('pollisToolboxes.installingNamed', "Installing the {0}...", toolbox.name),
 			}, async () => {
 				const vsix = joinPath(folder, toolbox.vsix);
-				await this.download(`${TOOLBOXES_RELEASE_URL}/${encodeURIComponent(toolbox.vsix)}`, vsix);
+				await this.download(`${TOOLBOXES_URL}/${encodeURIComponent(toolbox.vsix)}`, vsix);
 				return this.extensionsWorkbenchService.install(vsix, { installGivenVersion: true });
 			});
 			this.promptRuntimeAction(toolbox, extension, update);

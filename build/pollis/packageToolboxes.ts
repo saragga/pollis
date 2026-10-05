@@ -18,10 +18,15 @@
 // To publish the toolboxes (bump "version" in a toolbox's package.json when it changes, or the
 // installed copies are not offered the update):
 //   1. node build/pollis/packageToolboxes.ts
-//   2. Attach every file in .build/toolboxes (each .vsix and toolboxes.json) to the GitHub release
-//      with tag `toolboxes` on saragga/pollis, replacing the files already there. Pollis downloads
-//      https://github.com/saragga/pollis/releases/download/toolboxes/toolboxes.json and the .vsix
-//      files next to it.
+//   2. Replace the files of the branch toolboxes-dist of saragga/pollis (one commit, no history
+//      kept) by every file in .build/toolboxes (each .vsix and toolboxes.json):
+//        git worktree add --detach /tmp/toolboxes-dist && cd /tmp/toolboxes-dist
+//        git checkout --orphan toolboxes-dist-new && git rm -rfq . && cp <repo>/.build/toolboxes/* .
+//        git add -A && git commit --no-verify -m "Toolboxes" && git push -f origin HEAD:toolboxes-dist
+//        cd <repo> && git worktree remove /tmp/toolboxes-dist && git branch -D toolboxes-dist-new
+//      Pollis downloads https://raw.githubusercontent.com/saragga/pollis/toolboxes-dist/toolboxes.json
+//      and the .vsix files next to it (raw.githubusercontent.com allows the cross-origin requests
+//      that GitHub release downloads refuse). raw.githubusercontent.com caches for up to 5 minutes.
 
 import * as fs from 'fs';
 import * as path from 'path';
@@ -248,7 +253,7 @@ function main(): void {
 	const toolboxes = folders.map(folder => packageToolbox(folder));
 	fs.writeFileSync(path.join(OUT_DIR, 'toolboxes.json'), JSON.stringify({ toolboxes }, null, '\t') + '\n', 'utf-8');
 	console.log(`${toolboxes.length} toolboxes written to ${path.relative(ROOT, OUT_DIR)}/ (the .vsix files and toolboxes.json)`);
-	console.log('Attach every file there to the GitHub release with tag `toolboxes` on saragga/pollis.');
+	console.log('Publish every file there to the branch toolboxes-dist of saragga/pollis (see the steps at the top of this script).');
 }
 
 main();

@@ -197,10 +197,11 @@ export abstract class MenubarControl extends Disposable {
 		this._register(this.mainMenu.onDidChange(() => { this.setupMainMenu(); this.doUpdateMenubar(true); }));
 
 		// An empty top-level menu is left out of the main menu, which does not change when that menu
-		// gets its first items (the Toolboxes menu, which only toolbox extensions fill): set it up then
+		// gets its first items or loses its last (the Toolboxes menu, which only toolbox extensions
+		// fill): set the main menu up again then
 		this._register(MenuRegistry.onDidChangeMenu(e => {
-			const added = MenuRegistry.getMenuItems(MenuId.MenubarMainMenu).some(item => isISubmenuItem(item) && typeof item.title !== 'string' && e.has(item.submenu) && !this.menus[item.title.original]);
-			if (added) {
+			const changed = MenuRegistry.getMenuItems(MenuId.MenubarMainMenu).some(item => isISubmenuItem(item) && typeof item.title !== 'string' && e.has(item.submenu) && !this.menus[item.title.original] !== (MenuRegistry.getMenuItems(item.submenu).length === 0));
+			if (changed) {
 				this.setupMainMenu();
 				this.doUpdateMenubar(true);
 			}
