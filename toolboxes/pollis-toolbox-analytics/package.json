@@ -2,9 +2,10 @@
   "name": "pollis-toolbox-analytics",
   "displayName": "Analytics Toolbox",
   "description": "The Pollis Analytics Toolbox: symbolic math, nonlinear systems, numerical differentiation and integration, and ordinary and partial differential equations.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "publisher": "pollis",
   "license": "AGPL-3.0-or-later",
+  "icon": "icon.png",
   "repository": {
     "type": "git",
     "url": "https://github.com/saragga/pollis"

@@ -9,8 +9,10 @@
 //   node build/pollis/packageToolboxes.ts
 //
 // For every toolboxes/<name>/package.json, writes .build/toolboxes/<name>-<version>.vsix and an
-// index of them all, .build/toolboxes/toolboxes.json:
-//   { "toolboxes": [ { "id", "name", "description", "version", "vsix" } ] }
+// index of them all, .build/toolboxes/toolboxes.json, and a copy of each toolbox's README.md,
+// .build/toolboxes/<name>-README.md, which Pollis shows before the toolbox is installed (both
+// READMEs, this one and the one in the .vsix, get the version on the line below their title):
+//   { "toolboxes": [ { "id", "name", "description", "version", "vsix", "readme" } ] }
 // The .vsix is the zip that vsce writes (extension.vsixmanifest, [Content_Types].xml and the
 // extension's files under extension/), written here so that packaging needs neither vsce nor the
 // network. A toolbox has no code, so nothing is compiled and there are no dependencies.
@@ -19,7 +21,7 @@
 // installed copies are not offered the update):
 //   1. node build/pollis/packageToolboxes.ts
 //   2. Replace the files of the branch toolboxes-dist of saragga/pollis (one commit, no history
-//      kept) by every file in .build/toolboxes (each .vsix and toolboxes.json):
+//      kept) by every file in .build/toolboxes (each .vsix and README, and toolboxes.json):
 //        git worktree add --detach /tmp/toolboxes-dist && cd /tmp/toolboxes-dist
 //        git checkout --orphan toolboxes-dist-new && git rm -rfq . && cp <repo>/.build/toolboxes/* .
 //        git add -A && git commit --no-verify -m "Toolboxes" && git push -f origin HEAD:toolboxes-dist
@@ -47,6 +49,8 @@ interface ToolboxManifest {
 	readonly categories?: string[];
 	readonly engines?: { readonly vscode?: string };
 	readonly repository?: { readonly url?: string };
+	/** The icon, relative to the extension folder. */
+	readonly icon?: string;
 }
 
 /** One toolbox in toolboxes.json. */
@@ -56,6 +60,8 @@ interface ToolboxIndexEntry {
 	readonly description: string;
 	readonly version: string;
 	readonly vsix: string;
+	/** The toolbox's README.md, published as `<name>-README.md`; absent when it has none. */
+	readonly readme?: string;
 }
 
 /** A file of the zip: its path in the zip (forward slashes) and its content. */
@@ -179,7 +185,7 @@ function contentTypesXml(names: readonly string[]): string {
 	return `<?xml version="1.0" encoding="utf-8"?>\n<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">${defaults.join('')}</Types>\n`;
 }
 
-function vsixManifestXml(manifest: ToolboxManifest): string {
+function vsixManifestXml(manifest: ToolboxManifest, hasReadme: boolean): string {
 	const repository = manifest.repository?.url ?? '';
 	const properties = [
 		['Microsoft.VisualStudio.Code.Engine', manifest.engines?.vscode ?? '*'],
@@ -212,10 +218,17 @@ function vsixManifestXml(manifest: ToolboxManifest): string {
 		'\t<Dependencies/>',
 		'\t<Assets>',
 		'\t\t<Asset Type="Microsoft.VisualStudio.Code.Manifest" Path="extension/package.json" Addressable="true" />',
+		...(hasReadme ? ['\t\t<Asset Type="Microsoft.VisualStudio.Services.Content.Details" Path="extension/README.md" Addressable="true" />'] : []),
+		...(manifest.icon ? [`\t\t<Asset Type="Microsoft.VisualStudio.Services.Icons.Default" Path="extension/${escapeXml(manifest.icon)}" Addressable="true" />`] : []),
 		'\t</Assets>',
 		'</PackageManifest>',
 		'',
 	].join('\n');
+}
+
+/** The README with the version on the line below its title, so it is always the packaged one. */
+function readmeWithVersion(readme: string, version: string): string {
+	return readme.replace(/^(#[^\n]*\n)/, `$1\nVersion ${version}\n`);
 }
 
 /** Writes the .vsix of the toolbox in `folder` and returns its index entry. */
@@ -225,20 +238,34 @@ function packageToolbox(folder: string): ToolboxIndexEntry {
 		throw new Error(`${path.relative(ROOT, folder)}/package.json needs a name, a publisher and a version`);
 	}
 	const files = listFiles(folder);
+	if (manifest.icon && !files.includes(manifest.icon)) {
+		throw new Error(`${path.relative(ROOT, folder)}/package.json names the icon ${manifest.icon}, which does not exist`);
+	}
+	const hasReadme = files.includes('README.md');
 	const entries: ZipEntry[] = [
-		{ name: 'extension.vsixmanifest', data: Buffer.from(vsixManifestXml(manifest), 'utf-8') },
+		{ name: 'extension.vsixmanifest', data: Buffer.from(vsixManifestXml(manifest, hasReadme), 'utf-8') },
 		{ name: '[Content_Types].xml', data: Buffer.from(contentTypesXml(['extension.vsixmanifest', ...files]), 'utf-8') },
-		...files.map(file => ({ name: `extension/${file}`, data: fs.readFileSync(path.join(folder, file)) })),
+		...files.map(file => ({
+			name: `extension/${file}`,
+			data: file === 'README.md'
+				? Buffer.from(readmeWithVersion(fs.readFileSync(path.join(folder, file), 'utf-8'), manifest.version), 'utf-8')
+				: fs.readFileSync(path.join(folder, file)),
+		})),
 	];
 	const vsix = `${manifest.name}-${manifest.version}.vsix`;
 	fs.writeFileSync(path.join(OUT_DIR, vsix), writeZip(entries));
 	console.log(`${vsix}: ${files.length} files`);
+	const readme = hasReadme ? `${manifest.name}-README.md` : undefined;
+	if (readme) {
+		fs.writeFileSync(path.join(OUT_DIR, readme), readmeWithVersion(fs.readFileSync(path.join(folder, 'README.md'), 'utf-8'), manifest.version), 'utf-8');
+	}
 	return {
 		id: `${manifest.publisher}.${manifest.name}`,
 		name: manifest.displayName ?? manifest.name,
 		description: manifest.description ?? '',
 		version: manifest.version,
 		vsix,
+		readme,
 	};
 }
 
@@ -252,7 +279,7 @@ function main(): void {
 		.sort();
 	const toolboxes = folders.map(folder => packageToolbox(folder));
 	fs.writeFileSync(path.join(OUT_DIR, 'toolboxes.json'), JSON.stringify({ toolboxes }, null, '\t') + '\n', 'utf-8');
-	console.log(`${toolboxes.length} toolboxes written to ${path.relative(ROOT, OUT_DIR)}/ (the .vsix files and toolboxes.json)`);
+	console.log(`${toolboxes.length} toolboxes written to ${path.relative(ROOT, OUT_DIR)}/ (the .vsix files, the READMEs and toolboxes.json)`);
 	console.log('Publish every file there to the branch toolboxes-dist of saragga/pollis (see the steps at the top of this script).');
 }
 

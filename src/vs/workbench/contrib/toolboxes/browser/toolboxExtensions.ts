@@ -6,12 +6,14 @@
 import { localize } from '../../../../nls.js';
 import { Disposable, DisposableStore, MutableDisposable } from '../../../../base/common/lifecycle.js';
 import { joinPath, isEqualOrParent } from '../../../../base/common/resources.js';
+import { hasKey } from '../../../../base/common/types.js';
 import { MenuId, MenuRegistry } from '../../../../platform/actions/common/actions.js';
 import { CommandsRegistry } from '../../../../platform/commands/common/commands.js';
 import { IFileService } from '../../../../platform/files/common/files.js';
 import { ILogService } from '../../../../platform/log/common/log.js';
 import { IWorkbenchContribution, registerWorkbenchContribution2, WorkbenchPhase } from '../../../common/contributions.js';
 import { ExtensionsRegistry, IExtensionPointUser } from '../../../services/extensions/common/extensionsRegistry.js';
+import { IModelNotebook, IModelWiki } from '../../model/browser/common/model.types.js';
 import { IScaffoldPanel, openScaffoldWebview } from '../../model/browser/commands/scaffold.command.js';
 import { registerExternalFolder } from '../../model/browser/common/customCopyFileSystem.js';
 import { parseToml, tomlToPanelData } from '../../model/browser/common/tomlPanelData.js';
@@ -38,15 +40,31 @@ interface IToolboxPanelContribution {
 	readonly decisionFirstColumn?: string;
 }
 
-/** A toolbox contributed by an extension: a submenu of the Toolboxes menu. */
+/** A toolbox contributed by an extension: a submenu of the Toolboxes menu, or of another menu. */
 interface IToolboxContribution {
 	readonly id: string;
 	readonly title: string;
-	/** The group in the Toolboxes menu. */
-	readonly group: string;
-	readonly order: number;
+	/**
+	 * The menu the toolbox goes in: a top-level menu (Toolboxes, Explore, Model, Simulate or
+	 * Optimise) or the id of an existing submenu. Default: Toolboxes.
+	 */
+	readonly menu?: string;
+	/** Put the panels straight into that menu instead of into a submenu of their own. */
+	readonly inline?: boolean;
+	/** The group in that menu. Default: `9_extensions`. */
+	readonly group?: string;
+	readonly order?: number;
 	readonly panels: IToolboxPanelContribution[];
 }
+
+/** The top-level menus a toolbox can go in, by the name the user sees. */
+const TOP_LEVEL_MENUS: Record<string, MenuId> = {
+	toolboxes: MenuId.MenubarToolboxesMenu,
+	explore: MenuId.MenubarExploreMenu,
+	model: MenuId.MenubarModelMenu,
+	simulate: MenuId.MenubarSimulateMenu,
+	optimise: MenuId.MenubarOptimiseMenu,
+};
 
 const toolboxesExtensionPoint = ExtensionsRegistry.registerExtensionPoint<IToolboxContribution[]>({
 	extensionPoint: 'pollisToolboxes',
@@ -55,11 +73,13 @@ const toolboxesExtensionPoint = ExtensionsRegistry.registerExtensionPoint<IToolb
 		type: 'array',
 		items: {
 			type: 'object',
-			required: ['id', 'title', 'group', 'order', 'panels'],
+			required: ['id', 'title', 'panels'],
 			properties: {
 				id: { type: 'string', description: localize('pollisToolboxes.id', "The toolbox id.") },
 				title: { type: 'string', description: localize('pollisToolboxes.title', "The toolbox's menu title.") },
-				group: { type: 'string', description: localize('pollisToolboxes.group', "The group in the Toolboxes menu.") },
+				menu: { type: 'string', description: localize('pollisToolboxes.menu', "The menu the toolbox goes in: Toolboxes, Explore, Model, Simulate, Optimise or the id of an existing submenu. Default: Toolboxes.") },
+				inline: { type: 'boolean', description: localize('pollisToolboxes.inline', "Put the panels straight into that menu instead of into a submenu of their own.") },
+				group: { type: 'string', description: localize('pollisToolboxes.group', "The group in that menu.") },
 				order: { type: 'number', description: localize('pollisToolboxes.order', "The order in that group.") },
 				panels: {
 					type: 'array',
@@ -85,9 +105,11 @@ const toolboxesExtensionPoint = ExtensionsRegistry.registerExtensionPoint<IToolb
 });
 
 /**
- * Adds the toolboxes that extensions contribute to the Toolboxes menu. A toolbox extension has no
+ * Adds the toolboxes that extensions contribute to the menus (the Toolboxes menu unless a toolbox
+ * names another menu, as a submenu unless it is inline). A toolbox extension has no
  * code: its panels are TOML files read here and opened on the shared scaffold, and its wikis and
- * notebooks (folders `wiki/<panel id>/` and `notebooks/<panel id>/`) are served as if bundled.
+ * notebooks (folders `wiki/<folder>/` and `notebooks/<folder>/`, where the folder is the panel id
+ * or the folder the panel's TOML names) are served as if bundled.
  * The toolbox extensions are not built in (their sources are in toolboxes/ at the repository root):
  * the user installs them from the Toolboxes section of the Extensions pane, into the user's
  * extensions folder, and the files are read from wherever the extension is installed.
@@ -116,9 +138,14 @@ class ToolboxExtensionsContribution extends Disposable implements IWorkbenchCont
 		for (const extension of extensions) {
 			const location = extension.description.extensionLocation;
 			for (const toolbox of extension.value) {
-				const toolboxMenu = this.submenus.get(toolbox.id) ?? new MenuId(`pollisToolbox.${toolbox.id}`);
-				this.submenus.set(toolbox.id, toolboxMenu);
-				items.push(store => store.add(MenuRegistry.appendMenuItem(MenuId.MenubarToolboxesMenu, { group: toolbox.group, order: toolbox.order, submenu: toolboxMenu, title: toolbox.title })));
+				const destination = toolbox.menu ? TOP_LEVEL_MENUS[toolbox.menu.toLowerCase()] ?? MenuId.for(toolbox.menu) : MenuId.MenubarToolboxesMenu;
+				let toolboxMenu = destination;
+				if (!toolbox.inline) {
+					const submenu = this.submenus.get(toolbox.id) ?? new MenuId(`pollisToolbox.${toolbox.id}`);
+					this.submenus.set(toolbox.id, submenu);
+					toolboxMenu = submenu;
+					items.push(store => store.add(MenuRegistry.appendMenuItem(destination, { group: toolbox.group ?? '9_extensions', order: toolbox.order, submenu, title: toolbox.title })));
+				}
 				for (const contribution of toolbox.panels) {
 					const toml = joinPath(location, contribution.data);
 					if (!isEqualOrParent(toml, location)) {
@@ -139,9 +166,17 @@ class ToolboxExtensionsContribution extends Disposable implements IWorkbenchCont
 						this.logService.error(`Pollis toolbox ${toolbox.id}: cannot read panel ${contribution.id} (${toml.toString()})`, error);
 						continue;
 					}
+					// The folders the panel's wikis and notebooks are in: its id, or another name (e.g. `game-theory`)
+					const folders = (entries: readonly (IModelWiki | IModelNotebook)[], extra: string) => new Set([extra, ...entries.map(entry => hasKey(entry, { file: true }) ? entry.file.split('/')[0] : '').filter(folder => folder)]);
+					const wikiFolders = folders(panel.data.wikis, contribution.id);
+					const notebookFolders = folders(panel.data.notebooks, contribution.id);
 					items.push(store => {
-						store.add(registerExternalFolder('wiki', contribution.id, joinPath(location, 'wiki', contribution.id)));
-						store.add(registerExternalFolder('notebook', contribution.id, joinPath(location, 'notebooks', contribution.id)));
+						for (const folder of wikiFolders) {
+							store.add(registerExternalFolder('wiki', folder, joinPath(location, 'wiki', folder)));
+						}
+						for (const folder of notebookFolders) {
+							store.add(registerExternalFolder('notebook', folder, joinPath(location, 'notebooks', folder)));
+						}
 						store.add(CommandsRegistry.registerCommand(contribution.command, accessor => openScaffoldWebview(accessor, panel)));
 						store.add(MenuRegistry.appendMenuItem(toolboxMenu, { group: contribution.group, order: contribution.order, command: { id: contribution.command, title: contribution.menuTitle ?? contribution.title } }));
 					});

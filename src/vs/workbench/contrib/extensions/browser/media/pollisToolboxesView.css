@@ -22,7 +22,24 @@
 	display: flex;
 	align-items: center;
 	gap: 8px;
-	padding: 4px 12px 4px 20px;
+	padding: 4px 12px 4px 16px;
+	cursor: pointer;
+}
+
+.pollis-toolboxes .pollis-toolbox:hover {
+	background-color: var(--vscode-list-hoverBackground);
+}
+
+.pollis-toolboxes .pollis-toolbox:focus {
+	outline: 1px solid var(--vscode-focusBorder);
+	outline-offset: -1px;
+}
+
+.pollis-toolboxes .pollis-toolbox .icon {
+	flex-shrink: 0;
+	width: 42px;
+	height: 42px;
+	margin-right: 6px; /* with the row gap, the 14px of the extension list */
 }
 
 .pollis-toolboxes .pollis-toolbox .details {
@@ -42,12 +59,6 @@
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
-}
-
-.pollis-toolboxes .pollis-toolbox .version {
-	flex-shrink: 0;
-	font-size: 90%;
-	opacity: 0.7;
 }
 
 .pollis-toolboxes .pollis-toolbox .description {

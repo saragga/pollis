@@ -1,3 +1,0 @@
-# Factsheet
-
-Coming soon!

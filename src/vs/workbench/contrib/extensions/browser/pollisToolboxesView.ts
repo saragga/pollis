@@ -9,13 +9,16 @@ import { Button } from '../../../../base/browser/ui/button/button.js';
 import { CancellationToken } from '../../../../base/common/cancellation.js';
 import { toErrorMessage } from '../../../../base/common/errorMessage.js';
 import { isCancellationError } from '../../../../base/common/errors.js';
+import { KeyCode } from '../../../../base/common/keyCodes.js';
 import { DisposableStore } from '../../../../base/common/lifecycle.js';
+import { FileAccess } from '../../../../base/common/network.js';
 import { joinPath } from '../../../../base/common/resources.js';
 import * as semver from '../../../../base/common/semver/semver.js';
 import Severity from '../../../../base/common/severity.js';
 import { URI } from '../../../../base/common/uri.js';
 import { generateUuid } from '../../../../base/common/uuid.js';
 import { localize } from '../../../../nls.js';
+import { ICommandService } from '../../../../platform/commands/common/commands.js';
 import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
 import { IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
 import { IContextMenuService } from '../../../../platform/contextview/browser/contextView.js';
@@ -45,6 +48,9 @@ import { ExtensionRuntimeActionType, ExtensionState, IExtension, IExtensionsWork
 const TOOLBOXES_URL = 'https://raw.githubusercontent.com/saragga/pollis/toolboxes-dist';
 const TOOLBOXES_INDEX_URL = `${TOOLBOXES_URL}/toolboxes.json`;
 
+/** The icon of every toolbox row: the Pollis icon, also the toolboxes' own icon. */
+const TOOLBOX_ICON = FileAccess.asBrowserUri('vs/workbench/contrib/extensions/browser/media/pollis-toolbox-icon.png').toString(true);
+
 /** The context key the Extensions viewlet sets to the search text (ExtensionsSearchValueContext). */
 const SEARCH_VALUE_CONTEXT_KEY = 'extensionsSearchValue';
 
@@ -55,8 +61,10 @@ interface IToolboxIndexEntry {
 	readonly name: string;
 	readonly description: string;
 	readonly version: string;
-	/** The .vsix file name, next to toolboxes.json in the release. */
+	/** The .vsix file name, next to toolboxes.json. */
 	readonly vsix: string;
+	/** The README file name, next to toolboxes.json: shown when the toolbox is not installed. */
+	readonly readme?: string;
 }
 
 /** The content of toolboxes.json. */
@@ -78,7 +86,8 @@ export function toolboxesSearchText(query: string): string {
 
 /**
  * The Toolboxes section of the Extensions pane: the Pollis toolbox extensions published on the
- * `toolboxes` GitHub release, each with a button to install, update or uninstall it. A search in
+ * toolboxes-dist branch, each with a button to install, update or uninstall it. A click on a
+ * toolbox opens its details: the extension page when it is installed, else its README. A search in
  * the Extensions search box shows only the toolboxes whose name or description contains its text;
  * `@toolboxes` shows them all.
  */
@@ -108,6 +117,7 @@ export class PollisToolboxesView extends ViewPane {
 		@INotificationService private readonly notificationService: INotificationService,
 		@IProgressService private readonly progressService: IProgressService,
 		@IHostService private readonly hostService: IHostService,
+		@ICommandService private readonly commandService: ICommandService,
 		@IKeybindingService keybindingService: IKeybindingService,
 		@IContextMenuService contextMenuService: IContextMenuService,
 		@IConfigurationService configurationService: IConfigurationService,
@@ -212,16 +222,31 @@ export class PollisToolboxesView extends ViewPane {
 		const installed = this.getInstalled(toolbox);
 		const action = this.getAction(toolbox, installed);
 		const row = dom.append(container, dom.$('.pollis-toolbox'));
+		row.tabIndex = 0;
+		row.title = action === ToolboxAction.Update && installed
+			? localize('pollisToolboxes.showDetailsUpdate', "{0} {1} (installed: {2}): show its details", toolbox.name, toolbox.version, installed.version)
+			: localize('pollisToolboxes.showDetailsVersion', "{0} {1}: show its details", toolbox.name, toolbox.version);
+		dom.append(row, dom.$('img.icon', { src: TOOLBOX_ICON, alt: '' }));
 		const details = dom.append(row, dom.$('.details'));
 		const header = dom.append(details, dom.$('.header'));
 		dom.append(header, dom.$('span.name', undefined, toolbox.name));
-		dom.append(header, dom.$('span.version', undefined, action === ToolboxAction.Update && installed
-			? localize('pollisToolboxes.versionUpdate', "{0} (installed: {1})", toolbox.version, installed.version)
-			: toolbox.version));
 		const description = dom.append(details, dom.$('.description', undefined, toolbox.description ?? ''));
 		description.title = toolbox.description ?? '';
 
-		const button = this.rowDisposables.add(new Button(dom.append(row, dom.$('.action')), { ...defaultButtonStyles, secondary: action === ToolboxAction.Uninstall }));
+		const actionContainer = dom.append(row, dom.$('.action'));
+		this.rowDisposables.add(dom.addDisposableListener(row, dom.EventType.CLICK, e => {
+			if (!actionContainer.contains(e.target as Node)) {
+				this.showDetails(toolbox, installed);
+			}
+		}));
+		this.rowDisposables.add(dom.addStandardDisposableListener(row, dom.EventType.KEY_DOWN, e => {
+			if (e.target === row && (e.keyCode === KeyCode.Enter || e.keyCode === KeyCode.Space)) {
+				e.preventDefault();
+				this.showDetails(toolbox, installed);
+			}
+		}));
+
+		const button = this.rowDisposables.add(new Button(actionContainer, { ...defaultButtonStyles, secondary: action === ToolboxAction.Uninstall }));
 		this.firstButton ??= button;
 		const busy = this.busy.has(toolbox.id) || installed?.state === ExtensionState.Installing || installed?.state === ExtensionState.Uninstalling;
 		if (busy) {
@@ -249,6 +274,28 @@ export class PollisToolboxesView extends ViewPane {
 				this.install(toolbox, action === ToolboxAction.Update);
 			}
 		}));
+	}
+
+	/**
+	 * Opens the extension page of an installed toolbox. A toolbox that is not installed has no
+	 * extension to show (it is in no gallery), so its README is downloaded and previewed instead.
+	 */
+	private async showDetails(toolbox: IToolboxIndexEntry, installed: IExtension | undefined): Promise<void> {
+		if (installed && installed.state === ExtensionState.Installed) {
+			await this.extensionsWorkbenchService.open(installed);
+			return;
+		}
+		if (!toolbox.readme) {
+			this.notificationService.info(localize('pollisToolboxes.noReadme', "The {0} has no description yet. Install it to see its details.", toolbox.name));
+			return;
+		}
+		try {
+			const readme = joinPath(this.environmentService.cacheHome, 'pollisToolboxes', 'readme', `${toolbox.name}.md`);
+			await this.download(`${TOOLBOXES_URL}/${encodeURIComponent(toolbox.readme)}`, readme);
+			await this.commandService.executeCommand('markdown.showPreview', readme);
+		} catch (error) {
+			this.notificationService.error(localize('pollisToolboxes.readmeFailed', "Could not show the details of the {0}: {1}", toolbox.name, toErrorMessage(error)));
+		}
 	}
 
 	/** Downloads the toolbox's .vsix to a temporary folder, installs it and deletes the folder. */

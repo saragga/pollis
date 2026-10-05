@@ -77,7 +77,7 @@ export const vscodeWebResourceIncludes = [
 	'out-build/vs/workbench/contrib/welcomeOnboarding/browser/media/*.svg',
 
 	// Extensions
-	'out-build/vs/workbench/contrib/extensions/browser/media/{theme-icon.png,language-icon.svg}',
+	'out-build/vs/workbench/contrib/extensions/browser/media/{theme-icon.png,language-icon.svg,pollis-toolbox-icon.png}',
 	'out-build/vs/workbench/services/extensionManagement/common/media/*.{svg,png}',
 
 	// Webview

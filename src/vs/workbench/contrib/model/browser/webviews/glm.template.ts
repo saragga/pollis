@@ -11,6 +11,5 @@ export function getGlmHtml(): string {
 		title: 'Generalized Linear Models',
 		defaultModel: 'Bernoulli',
 		decisionFirstColumn: 'Family',
-		chartW: 40,
 	});
 }

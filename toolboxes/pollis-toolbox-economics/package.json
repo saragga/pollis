@@ -2,9 +2,10 @@
   "name": "pollis-toolbox-economics",
   "displayName": "Economics Toolbox",
   "description": "The Pollis Economics Toolbox: business cycle filters, stochastic volatility macroeconomic models, DSGE models, heterogeneous-agent models and continuous-time macro-finance.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "publisher": "pollis",
   "license": "AGPL-3.0-or-later",
+  "icon": "icon.png",
   "repository": {
     "type": "git",
     "url": "https://github.com/saragga/pollis"
