@@ -18,7 +18,7 @@ import { Event } from '../../../../../base/common/event.js';
 import { VSBuffer } from '../../../../../base/common/buffer.js';
 import { INotebookKernelService, INotebookTextModelLike } from '../../../notebook/common/notebookKernelService.js';
 import { INotebookEditorModelResolverService } from '../../../notebook/common/notebookEditorModelResolverService.js';
-import { IFileService } from '../../../../../platform/files/common/files.js';
+import { FileSystemProviderCapabilities, IFileService } from '../../../../../platform/files/common/files.js';
 import { IPathService } from '../../../../services/path/common/pathService.js';
 import { customCopyOverlayUri, customCopyUri, CustomCopyKind } from '../common/customCopyFileSystem.js';
 import { ISecretStorageService } from '../../../../../platform/secrets/common/secrets.js';
@@ -395,6 +395,8 @@ interface IExampleCodeMessage {
 	readonly model?: string;
 	readonly step?: string;
 	readonly code?: string;
+	/** The name of a tab the user added (`saveAddedTab` / `removeAddedTab`). */
+	readonly name?: string;
 }
 
 /**
@@ -403,7 +405,8 @@ interface IExampleCodeMessage {
  * tabs) and `~/.pollis/examples/<panelId>/next-steps/<id>.jl` (Next Steps examples), outside the
  * application, so they survive updates, work in compiled builds and can be copied between
  * machines (e.g. a teacher handing out a set of examples). An example without a file shows the
- * generated default.
+ * generated default. Tabs the user adds to the main box are `~/.pollis/examples/<panelId>/added/<name>.jl`,
+ * shown in the order they were created; removing one moves its file to the Trash.
  */
 export function createExampleCodeWiring(
 	webview: { postMessage(message: unknown): void; readonly onMessage: Event<{ readonly message: IExampleCodeMessage }> },
@@ -415,7 +418,23 @@ export function createExampleCodeWiring(
 ): void {
 	const folder = URI.joinPath(pathService.userHome({ preferLocal: true }), '.pollis', 'examples', panelId);
 	const stepsFolder = URI.joinPath(folder, 'next-steps');
+	const addedFolder = URI.joinPath(folder, 'added');
 	const isExampleId = (id: string) => /^[\w-]+$/.test(id);
+	// The same rule as the webview's name box: also a safe file name on every platform
+	const isAddedName = (name: string) => /^[A-Za-z0-9][\w .()-]{0,39}$/.test(name) && !/[ .]$/.test(name);
+	const readAddedTabs = async (): Promise<{ name: string; code: string }[]> => {
+		if (!await fileService.exists(addedFolder)) {
+			return [];
+		}
+		const stat = await fileService.resolve(addedFolder, { resolveMetadata: true });
+		const files = (stat.children ?? []).filter(c => !c.isDirectory && c.name.endsWith('.jl') && isAddedName(c.name.replace(/\.jl$/, '')));
+		files.sort((a, b) => a.ctime - b.ctime);
+		const tabs: { name: string; code: string }[] = [];
+		for (const file of files) {
+			tabs.push({ name: file.name.replace(/\.jl$/, ''), code: (await fileService.readFile(file.resource)).value.toString().replace(/\s+$/, '') });
+		}
+		return tabs;
+	};
 	const readExamples = async (dir: URI): Promise<{ [id: string]: string }> => {
 		const examples: { [id: string]: string } = {};
 		if (await fileService.exists(dir)) {
@@ -430,10 +449,27 @@ export function createExampleCodeWiring(
 		return examples;
 	};
 	const postExamples = async (): Promise<void> => {
-		webview.postMessage({ command: 'customExamples', examples: await readExamples(folder), steps: await readExamples(stepsFolder) });
+		webview.postMessage({ command: 'customExamples', examples: await readExamples(folder), steps: await readExamples(stepsFolder), added: await readAddedTabs() });
 	};
 	disposables.add(webview.onMessage(async e => {
 		const msg = e.message;
+		if (msg.command === 'saveAddedTab' || msg.command === 'removeAddedTab') {
+			if (typeof msg.name !== 'string' || !isAddedName(msg.name)) {
+				return;
+			}
+			const file = URI.joinPath(addedFolder, `${msg.name}.jl`);
+			try {
+				if (msg.command === 'saveAddedTab' && typeof msg.code === 'string') {
+					await fileService.writeFile(file, VSBuffer.fromString(msg.code ? msg.code + '\n' : ''));
+				} else if (msg.command === 'removeAddedTab' && await fileService.exists(file)) {
+					await fileService.del(file, { useTrash: fileService.hasCapability(file, FileSystemProviderCapabilities.Trash) });
+				}
+			} catch (error) {
+				notificationService.error(localize('pollis.exampleCode.addedTabFailed', "Could not update the tab in {0}: {1}", file.fsPath, String(error)));
+			}
+			await postExamples();
+			return;
+		}
 		if (msg.command !== 'saveExample' && msg.command !== 'restoreExample') {
 			return;
 		}
@@ -446,7 +482,7 @@ export function createExampleCodeWiring(
 			if (msg.command === 'saveExample' && typeof msg.code === 'string') {
 				await fileService.writeFile(file, VSBuffer.fromString(msg.code + '\n'));
 			} else if (msg.command === 'restoreExample' && await fileService.exists(file)) {
-				await fileService.del(file);
+				await fileService.del(file, { useTrash: fileService.hasCapability(file, FileSystemProviderCapabilities.Trash) });
 			}
 		} catch (error) {
 			notificationService.error(localize('pollis.exampleCode.saveFailed', "Could not update the example in {0}: {1}", file.fsPath, String(error)));

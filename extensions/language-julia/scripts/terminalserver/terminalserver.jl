@@ -13,7 +13,7 @@ let
     catch err
         @debug "PollisDB not loaded" exception=err
     end
-    # Pollis: DuckDB and the PollisDatasets are built in; installed once, the first time a REPL starts.
+    # Pollis: DuckDB and the PollisDatasets are built in; installed the first time a REPL starts, the PollisDatasets updated at every start.
     try
         isdefined(Main, :PollisDB) && Base.invokelatest(Main.PollisDB.install)
     catch err

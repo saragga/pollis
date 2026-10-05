@@ -6,6 +6,7 @@
 // import { METHODS } from 'http';
 import { localize } from '../../../../../vs/nls.js';
 import { MenuRegistry, MenuId } from '../../../../platform/actions/common/actions.js';
+import { ContextKeyExpr } from '../../../../platform/contextkey/common/contextkey.js';
 import { CommandsRegistry, ICommandService } from '../../../../platform/commands/common/commands.js';
 import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
@@ -1225,7 +1226,62 @@ MenuRegistry.appendMenuItem(ADRSubmenuId, {
 //});  // XbrlXML.jl
 // Regulatory filings
 
-// FRED and ECB moved to Economics Toolbox -> Data Sources (macro data belongs with the domain).
+// Macroeconomic data sources
+MenuRegistry.appendMenuItem(ADRSubmenuId, {
+	group: '3_ds',
+	command: {
+		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
+		title: localize('mt.dbnomics', 'DBnomics Platform'),
+	},
+	order: 1,
+}); // DBnomics.jl
+
+MenuRegistry.appendMenuItem(ADRSubmenuId, {
+	group: '4_ds',
+	command: {
+		id: FRED_ID,
+		title: localize('mt.fred', 'Federal Reserve Economic Data (FRED)'),
+	},
+	order: 2,
+}); // Fred.jl
+
+MenuRegistry.appendMenuItem(ADRSubmenuId, {
+	group: '4_ds',
+	command: {
+		id: ECB_ID,
+		title: localize('mt.ecb', 'European Central Bank Data Portal'),
+	},
+	order: 3,
+}); // European Central Bank
+
+// Research and institutional datasets
+
+MenuRegistry.appendMenuItem(ADRSubmenuId, {
+	group: '4_ds',
+	command: {
+		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
+		title: localize('mt.ifm', 'International Monetary Fund Datasets'),
+	},
+	order: 4,
+}); // IMFData.jl
+
+MenuRegistry.appendMenuItem(ADRSubmenuId, {
+	group: '4_ds',
+	command: {
+		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
+		title: localize('mt.wbd', 'World Bank Indicators'),
+	},
+	order: 5,
+}); // WorldBankData.jl
+
+MenuRegistry.appendMenuItem(ADRSubmenuId, {
+	group: '4_ds',
+	command: {
+		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
+		title: localize('mt.french', 'Kenneth French Data Library'),
+	},
+	order: 6,
+}); // FamaFrenchData.jl
 
 // ===================================================
 // SUBMENU: FORMATS AND PROTOCOLS

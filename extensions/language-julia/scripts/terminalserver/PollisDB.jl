@@ -42,6 +42,8 @@ const BUILTIN = "pollis"
 """PollisDatasets.jl, whose datasets `seed` loads into the built-in database."""
 const DATASETS = Base.PkgId(UUID("b43d2445-bde6-43fd-b0e7-0c8ab91b08dc"), "PollisDatasets")
 const DATASETS_URL = "https://github.com/Trumpingtons/PollisDatasets.jl"
+"""The commit of PollisDatasets.jl that `install()` last installed into `ENVIRONMENT`."""
+const DATASETS_COMMIT = joinpath(ENVIRONMENT, "PollisDatasets.commit")
 
 """The folder of the snapshots, one `<id>.json` per connection, watched by the Databases view."""
 const SESSIONS = joinpath(homedir(), ".pollis", "databases", "sessions")
@@ -294,24 +296,58 @@ function seed(con)
     return nothing
 end
 
+"""The commit at the head of PollisDatasets.jl's main branch on GitHub, or `nothing` when GitHub cannot be reached."""
+function latest_datasets_commit()
+    try
+        Downloads = Base.require(Base.PkgId(UUID("f43a241f-c20a-4ad4-852c-f6b1247861c6"), "Downloads"))
+        io = IOBuffer()
+        url = replace(DATASETS_URL, "https://github.com/" => "https://api.github.com/repos/") * "/commits/main"
+        response = Base.invokelatest(Downloads.request, url; output = io, headers = ["Accept" => "application/vnd.github.sha"], timeout = 3)
+        return response.status == 200 ? String(take!(io)) : nothing
+    catch
+        return nothing
+    end
+end
+
 """
     install()
 
 Install the packages built into Pollis, and the PollisDatasets, that no environment on the load path provides yet into
-`ENVIRONMENT`. Runs once: afterwards it finds them and returns at once. The active project is
-left as it was.
+`ENVIRONMENT`. The first time, it adds them; afterwards it keeps the PollisDatasets installed there up to
+date with GitHub, so that new datasets reach the built-in database. Pkg runs (and precompiles) only when
+something is missing or GitHub has a newer commit than `DATASETS_COMMIT`; offline, the installed copy is
+kept. The active project is left as it was.
 """
 function install()
     missing_packages = filter(p -> Base.identify_package(p) === nothing, PACKAGES)
     missing_datasets = Base.locate_package(DATASETS) === nothing
-    isempty(missing_packages) && !missing_datasets && return nothing
-    println("Pollis: installing ", join([missing_packages; missing_datasets ? [DATASETS.name] : String[]], ", "), " for the built-in database. This happens only once.")
+    manifest = joinpath(ENVIRONMENT, "Manifest.toml")
+    # Installed by Pollis, so ours to update; a copy in the user's own environment is left alone.
+    ours = missing_datasets || (isfile(manifest) && occursin(string(DATASETS.uuid), read(manifest, String)))
+    latest = ours ? latest_datasets_commit() : nothing
+    installed = isfile(DATASETS_COMMIT) ? strip(read(DATASETS_COMMIT, String)) : ""
+    outdated = !missing_datasets && latest !== nothing && latest != installed
+    isempty(missing_packages) && !missing_datasets && !outdated && return nothing
+    if !isempty(missing_packages) || missing_datasets
+        println("Pollis: installing ", join([missing_packages; missing_datasets ? [DATASETS.name] : String[]], ", "), " for the built-in database. This happens only once.")
+    end
     Pkg = Base.require(Main, :Pkg)
     active = Base.ACTIVE_PROJECT[]
     try
         Base.invokelatest(Pkg.activate, ENVIRONMENT; io = devnull)
         isempty(missing_packages) || Base.invokelatest(Pkg.add, missing_packages)
-        missing_datasets && Base.invokelatest(Pkg.add; url = DATASETS_URL)
+        if missing_datasets
+            Base.invokelatest(Pkg.add; url = DATASETS_URL)
+        elseif outdated
+            try
+                # One git fetch, without the registry; Pkg then precompiles the new version.
+                Base.invokelatest(Pkg.update, DATASETS.name; update_registry = false, io = devnull)
+            catch err
+                @debug "Pollis: PollisDatasets not updated" exception = err
+                latest = nothing
+            end
+        end
+        latest === nothing || write(DATASETS_COMMIT, latest)
     finally
         Base.ACTIVE_PROJECT[] = active
     end

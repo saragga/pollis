@@ -5,7 +5,7 @@
 
 import { VSBuffer } from '../../../../../base/common/buffer.js';
 import { Emitter, Event } from '../../../../../base/common/event.js';
-import { Disposable, IDisposable } from '../../../../../base/common/lifecycle.js';
+import { Disposable, IDisposable, toDisposable } from '../../../../../base/common/lifecycle.js';
 import { AppResourcePath, FileAccess } from '../../../../../base/common/network.js';
 import { URI } from '../../../../../base/common/uri.js';
 import { createFileSystemProviderError, FileChangeType, FileSystemProviderCapabilities, FileSystemProviderErrorCode, FileType, IFileChange, IFileDeleteOptions, IFileOverwriteOptions, IFileService, IFileSystemProviderWithFileReadWriteCapability, IFileWriteOptions, IStat, IWatchOptions } from '../../../../../platform/files/common/files.js';
@@ -27,6 +27,24 @@ export const CUSTOM_COPY_KINDS: { readonly [kind in CustomCopyKind]: ICustomCopy
 	wiki: { scheme: 'pollis-wiki', bundledBase: 'vs/workbench/contrib/model/browser/media/wiki/', customFolder: 'wikis' },
 	notebook: { scheme: 'pollis-notebook', bundledBase: 'vs/workbench/contrib/model/browser/media/notebooks/', customFolder: 'notebooks' },
 };
+
+/** Folders of originals shipped outside the app, e.g. by a Pollis toolbox extension, keyed by kind, then by folder name. */
+const externalFolders: { readonly [kind in CustomCopyKind]: Map<string, URI> } = { wiki: new Map(), notebook: new Map() };
+
+/**
+ * Serves the originals of a folder (e.g. wiki `symb`) from `location` instead of the app's bundled
+ * material, so a toolbox extension can ship its panels' wikis and notebooks. Customised copies
+ * still live under `~/.pollis/`.
+ */
+export function registerExternalFolder(kind: CustomCopyKind, folder: string, location: URI): IDisposable {
+	const folders = externalFolders[kind];
+	folders.set(folder, location);
+	return toDisposable(() => {
+		if (folders.get(folder) === location) {
+			folders.delete(folder);
+		}
+	});
+}
 
 /** The overlay URI of a bundled file, e.g. wiki `dcmp/marginal.md` -> `pollis-wiki:/dcmp/marginal.md`. */
 export function customCopyOverlayUri(kind: CustomCopyKind, file: string): URI {
@@ -70,6 +88,11 @@ export class CustomCopyFileSystemProvider extends Disposable implements IFileSys
 	}
 
 	private bundledUri(resource: URI): URI {
+		const [folder, ...rest] = resource.path.replace(/^\/+/, '').split('/');
+		const external = externalFolders[this.kind].get(folder);
+		if (external) {
+			return URI.joinPath(external, ...rest);
+		}
 		return FileAccess.asFileUri((CUSTOM_COPY_KINDS[this.kind].bundledBase + resource.path.replace(/^\/+/, '')) as AppResourcePath);
 	}
 

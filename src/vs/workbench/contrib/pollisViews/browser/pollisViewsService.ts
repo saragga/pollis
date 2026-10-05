@@ -57,6 +57,7 @@ const BUILTIN_VIEWS: readonly IPollisView[] = [
 			'chiara.explore.dvsf.surface',
 			'chiara.explore.dstats',
 			// Model
+			'chiara.statistics.d',
 			'chiara.statistics.de',
 			'chiara.statistics.ht',
 			'chiara.statistics.lm.hac',

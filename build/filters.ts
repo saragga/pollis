@@ -72,6 +72,7 @@ export const unicodeFilter = Object.freeze<string[]>([
 
 	// Pollis-owned new contributions may use unicode in string literals
 	'!src/vs/workbench/contrib/model/**',
+	'!extensions/pollis-toolbox-*/**',
 	'!src/vs/workbench/contrib/explore/**',
 	'!src/vs/workbench/contrib/simulate/**',
 	'!src/vs/workbench/contrib/optimise/**',
@@ -147,6 +148,7 @@ export const indentationFilter = Object.freeze<string[]>([
 
 	// Pollis-owned new contributions have their own indentation conventions
 	'!src/vs/workbench/contrib/model/**',
+	'!extensions/pollis-toolbox-*/**',
 	'!src/vs/workbench/contrib/explore/**',
 	'!src/vs/workbench/contrib/simulate/**',
 	'!src/vs/workbench/contrib/optimise/**',
@@ -229,6 +231,7 @@ export const copyrightFilter = Object.freeze<string[]>([
 	'!extensions/language-julia/**',
 	// Pollis-owned new contributions have their own copyright header
 	'!src/vs/workbench/contrib/model/**',
+	'!extensions/pollis-toolbox-*/**',
 	'!src/vs/workbench/contrib/explore/**',
 	'!src/vs/workbench/contrib/simulate/**',
 	'!src/vs/workbench/contrib/optimise/**',
@@ -257,6 +260,7 @@ export const tsFormattingFilter = Object.freeze<string[]>([
 	'!extensions/copilot/**',
 	// Pollis-owned new contributions have their own formatting conventions
 	'!src/vs/workbench/contrib/model/**',
+	'!extensions/pollis-toolbox-*/**',
 	'!src/vs/workbench/contrib/explore/**',
 	'!src/vs/workbench/contrib/simulate/**',
 	'!src/vs/workbench/contrib/optimise/**',

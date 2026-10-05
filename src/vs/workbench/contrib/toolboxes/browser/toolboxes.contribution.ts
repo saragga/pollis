@@ -5,24 +5,13 @@
 
 import { localize } from '../../../../../vs/nls.js';
 import { MenuRegistry, MenuId } from '../../../../platform/actions/common/actions.js';
-import { ContextKeyExpr } from '../../../../platform/contextkey/common/contextkey.js';
 import { ECO_BFMB_ID, ECO_BLSDF_ID, ARMA_ARIMA_WEBVIEW_ID, ARMA_VAR_WEBVIEW_ID } from '../../model/browser/model.contribution.js';
-import { EXPL_COMMAND_ID, FRED_ID, ECB_ID } from '../../explore/browser/explore.contribution.js';
+import './toolboxExtensions.js';
 
-const SYMB_ID = 'chiara.toolboxes.symb';
-const NLIN_ID = 'chiara.toolboxes.nlin';
-const DIFF_ID = 'chiara.toolboxes.diff';
-const INTEG_ID = 'chiara.toolboxes.integ';
-const ODE_ID = 'chiara.toolboxes.ode';
-const PDE_ID = 'chiara.toolboxes.pde';
-const SDE_ID = 'chiara.simulate.sde';
-
-// Define a new submenu ID for "Analytics Toolbox"
-const E_ATSubmenuId = new MenuId('menubarE_ATSubmenu');
+// The Analytics Toolbox comes from its extension (extensions/pollis-toolbox-analytics), see toolboxExtensions.ts
 
 // Define a new submenu ID for "Economics Toolbox"
 const E_MTSubmenuId = new MenuId('menubarE_MTSubmenu');
-const E_MTDataSourcesSubmenuId = new MenuId('menubarE_MTDataSourcesSubmenu');
 
 // Define a new submenu ID for "Econometrics Toolbox"
 const E_ETSubmenuId = new MenuId('menubarE_ETSubmenu');
@@ -46,14 +35,6 @@ MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
 		mnemonicTitle: localize({ key: 'mToolboxes', comment: ['&& denotes a mnemonic'] }, "&&Toolboxes")
 	},
 	order: 9.5
-});
-
-// Analytics Toolbox
-MenuRegistry.appendMenuItem(MenuId.MenubarToolboxesMenu, {
-	group: '1_toolboxes',
-	submenu: E_ATSubmenuId,
-	title: localize('showStatistics.at', 'Analytics Toolbox'),
-	order: 1,
 });
 
 // Economics Toolbox
@@ -85,141 +66,8 @@ MenuRegistry.appendMenuItem(MenuId.MenubarToolboxesMenu, {
 
 
 // ===================================================
-// SUBMENU: ANALYTICS TOOLBOX
-// ===================================================
-MenuRegistry.appendMenuItem(E_ATSubmenuId, {
-	group: '1_at',
-	command: {
-		id: SYMB_ID,
-		title: localize('at.symb', 'Symbolic Math'),
-	},
-	order: 1,
-});
-
-MenuRegistry.appendMenuItem(E_ATSubmenuId, {
-	group: '1_at',
-	command: {
-		id: NLIN_ID,
-		title: localize('at.roots', 'Nonlinear Systems'),
-	},
-	order: 2,
-});
-
-MenuRegistry.appendMenuItem(E_ATSubmenuId, {
-	group: '2_at',
-	command: {
-		id: DIFF_ID,
-		title: localize('at.diff', 'Numerical Differentiation'),
-	},
-	order: 1,
-});
-
-MenuRegistry.appendMenuItem(E_ATSubmenuId, {
-	group: '2_at',
-	command: {
-		id: INTEG_ID,
-		title: localize('at.integ', 'Numerical Integration'),
-	},
-	order: 2,
-});
-
-MenuRegistry.appendMenuItem(E_ATSubmenuId, {
-	group: '3_at',
-	command: {
-		id: ODE_ID,
-		title: localize('at.ode', 'Ordinary Differential Equations'),
-	},
-	order: 1,
-});
-
-MenuRegistry.appendMenuItem(E_ATSubmenuId, {
-	group: '3_at',
-	command: {
-		id: PDE_ID,
-		title: localize('at.pde', 'Partial Differential Equations'),
-	},
-	order: 2,
-});
-
-MenuRegistry.appendMenuItem(E_ATSubmenuId, {
-	group: '3_at',
-	command: {
-		id: SDE_ID,
-		title: localize('at.sde', 'Stochastic Differential Equations'),
-	},
-	order: 6,
-});
-
-
-
-
-// ===================================================
 // SUBMENU: ECONOMICS TOOLBOX
 // ===================================================
-
-// Data Sources submenu
-MenuRegistry.appendMenuItem(E_MTSubmenuId, {
-	group: '1_mt',
-	submenu: E_MTDataSourcesSubmenuId,
-	title: localize('mt.dataSources', 'Data Sources'),
-	order: 1,
-});
-
-MenuRegistry.appendMenuItem(E_MTDataSourcesSubmenuId, {
-	group: '1_mtds',
-	command: {
-		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
-		title: localize('mt.dbnomics', 'DBnomics Platform'),
-	},
-	order: 1,
-}); // DBnomics.jl
-
-MenuRegistry.appendMenuItem(E_MTDataSourcesSubmenuId, {
-	group: '2_mtds',
-	command: {
-		id: FRED_ID,
-		title: localize('mt.fred', 'Federal Reserve Economic Data (FRED)'),
-	},
-	order: 2,
-}); // Fred.jl
-
-MenuRegistry.appendMenuItem(E_MTDataSourcesSubmenuId, {
-	group: '2_mtds',
-	command: {
-		id: ECB_ID,
-		title: localize('mt.ecb', 'European Central Bank Data Portal'),
-	},
-	order: 3,
-}); // European Central Bank
-
-// Research and institutional datasets
-
-MenuRegistry.appendMenuItem(E_MTDataSourcesSubmenuId, {
-	group: '2_mtds',
-	command: {
-		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
-		title: localize('mt.ifm', 'International Monetary Fund Datasets'),
-	},
-	order: 4,
-}); // IMFData.jl
-
-MenuRegistry.appendMenuItem(E_MTDataSourcesSubmenuId, {
-	group: '2_mtds',
-	command: {
-		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
-		title: localize('mt.wbd', 'World Bank Indicators'),
-	},
-	order: 5,
-}); // WorldBankData.jl
-
-MenuRegistry.appendMenuItem(E_MTDataSourcesSubmenuId, {
-	group: '2_mtds',
-	command: {
-		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
-		title: localize('mt.french', 'Kenneth French Data Library'),
-	},
-	order: 6,
-}); // FamaFrenchData.jl
 
 // Models
 MenuRegistry.appendMenuItem(E_MTSubmenuId, {
