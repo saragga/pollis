@@ -9,11 +9,15 @@ viewType = "pollis.lrm"
 defaultModel = "dd"
 
 [[packages]]
-name = "PerformanceAnalytics.jl"
-github = "https://github.com/eohne/PerformanceAnalytics.jl"
+name = "Distributions.jl"
+github = "https://github.com/JuliaStats/Distributions.jl"
+
+[[packages]]
+name = "StatsBase.jl"
+github = "https://github.com/JuliaStats/StatsBase.jl"
 
 [requires]
-packages = ["Plots.jl", "Distributions.jl", "StatsBase.jl"]
+packages = ["HypothesisTests.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""
@@ -186,7 +190,7 @@ purpose = "Average loss in the worst cases; coherent and tail-sensitive"
 id = "returns"
 label = "Returns"
 tooltip = "Variable name holding your returns vector (e.g. daily or monthly log-returns as a Float64 vector)."
-default = "returns"
+default = "0.0004 .+ 0.01 .* randn(1000)"
 
 [[inputs]]
 id = "window"
@@ -274,31 +278,40 @@ return s;
 [[codeBranches]]
 model = "dd"
 code = '''
-using PerformanceAnalytics
+using Statistics
 
-dd_series  = drawdowns({{returns}})  # full drawdown series
-max_dd     = maxDrawdown({{returns}})  # maximum drawdown
-avg_dd     = averageDrawdown({{returns}})  # average drawdown
-calmar     = calmarRatio({{returns}})  # annualised return / max drawdown
-sterling   = sterlingRatio({{returns}})  # excess return / average drawdown
-roll_dd    = rollDrawdown({{returns}}; window = {{window}})  # rolling max drawdown over window
+r   = {{returns}}  # simple returns, one per period (bound once so every action uses the same series)
+ppy = 252  # periods per year: 252 daily, 52 weekly, 12 monthly
+wealth = cumprod(1 .+ r)  # value of 1 unit invested
+dd     = wealth ./ max.(1, accumulate(max, wealth)) .- 1  # drawdown from the running peak (0 at a new high)
+max_dd = -minimum(dd)  # maximum drawdown
+avg_dd = -mean(dd[dd .< 0])  # average depth over the periods spent in drawdown
+ann    = wealth[end]^(ppy / length(r)) - 1  # annualised (geometric) return
+calmar   = ann / max_dd  # annualised return / max drawdown
+sterling = ann / (avg_dd + 0.10)  # annualised return / (average drawdown + 10%), the classic Sterling form
+mdd(x) = (w = cumprod(1 .+ x); -minimum(w ./ max.(1, accumulate(max, w)) .- 1))  # max drawdown inside one window
+roll_dd = [mdd(r[t-{{window}}+1:t]) for t in {{window}}:length(r)]  # rolling max drawdown over {{window}} periods
 
 println("Max Drawdown:   ", round(max_dd,   digits = 4))
 println("Avg Drawdown:   ", round(avg_dd,   digits = 4))
 println("Calmar Ratio:   ", round(calmar,   digits = 4))
 println("Sterling Ratio: ", round(sterling, digits = 4))
+println("Worst rolling {{window}}-period drawdown: ", round(maximum(roll_dd), digits = 4))
 '''
 
 [[codeBranches]]
 model = "dr"
 code = '''
-using PerformanceAnalytics
+using Statistics
 
-semi_dev   = semiDeviation({{returns}})  # std dev of negative returns
-down_dev   = downsideDeviation({{returns}}; mar = {{mar}})  # downside deviation relative to MAR
-sortino    = sortinoRatio({{returns}}; mar = {{mar}})  # excess return / downside deviation
-omega      = omegaRatio({{returns}}; mar = {{mar}})  # probability-weighted gain/loss ratio
-gain_loss  = gainLossRatio({{returns}}; mar = {{mar}})  # average gain / average loss
+r   = {{returns}}  # simple returns, one per period (bound once so every action uses the same series)
+ppy = 252  # periods per year: 252 daily, 52 weekly, 12 monthly
+mar = {{mar}}  # minimum acceptable return per period
+semi_dev  = sqrt(mean(min.(r .- mean(r), 0) .^ 2))  # semi-deviation: shortfalls below the mean
+down_dev  = sqrt(mean(min.(r .- mar, 0) .^ 2))  # downside deviation: shortfalls below the MAR
+sortino   = (mean(r) - mar) / down_dev * sqrt(ppy)  # annualised excess return over downside deviation
+omega     = sum(max.(r .- mar, 0)) / sum(max.(mar .- r, 0))  # gains above MAR / losses below MAR
+gain_loss = mean(r[r .> mar] .- mar) / mean(mar .- r[r .< mar])  # average gain / average loss, relative to MAR
 
 println("Semi-Deviation:  ", round(semi_dev,  digits = 4))
 println("Downside Dev:    ", round(down_dev,  digits = 4))
@@ -310,11 +323,19 @@ println("Gain/Loss Ratio: ", round(gain_loss, digits = 4))
 [[codeBranches]]
 model = "vr"
 code = '''
-using PerformanceAnalytics
+using Statistics, StatsBase, Distributions
 
-var_hist = valueAtRisk({{returns}}; method = :historical,     alpha = {{alpha}})  # historical simulation VaR
-var_norm = valueAtRisk({{returns}}; method = :normal,         alpha = {{alpha}})  # parametric normal VaR
-var_cf   = valueAtRisk({{returns}}; method = :cornish_fisher, alpha = {{alpha}})  # Cornish-Fisher expansion VaR
+r   = {{returns}}  # simple returns, one per period (bound once so every action uses the same series)
+ppy = 252  # periods per year: 252 daily, 52 weekly, 12 monthly
+a = {{alpha}}  # tail probability: 0.05 gives the 95% VaR
+mu, sd = mean(r), std(r)
+S, K = skewness(r), kurtosis(r)  # sample skewness and excess kurtosis
+cf(z) = z + (z^2 - 1) * S / 6 + (z^3 - 3z) * K / 24 - (2z^3 - 5z) * S^2 / 36  # Cornish-Fisher adjusted normal quantile
+z = quantile(Normal(), a)
+
+var_hist = -quantile(r, a)  # historical simulation VaR (reported as a positive loss)
+var_norm = -(mu + sd * z)  # parametric normal VaR
+var_cf   = -(mu + sd * cf(z))  # Cornish-Fisher VaR: corrects the normal quantile for skewness and fat tails
 
 println("VaR (Historical):     ", round(var_hist, digits = 4))
 println("VaR (Normal):         ", round(var_norm, digits = 4))
@@ -324,11 +345,19 @@ println("VaR (Cornish-Fisher): ", round(var_cf,   digits = 4))
 [[codeBranches]]
 model = "es"
 code = '''
-using PerformanceAnalytics
+using Statistics, StatsBase, Distributions
 
-es_hist = expectedShortfall({{returns}}; method = :historical,     alpha = {{alpha}})  # historical Expected Shortfall
-es_norm = expectedShortfall({{returns}}; method = :normal,         alpha = {{alpha}})  # parametric normal Expected Shortfall
-es_cf   = expectedShortfall({{returns}}; method = :cornish_fisher, alpha = {{alpha}})  # Cornish-Fisher expansion Expected Shortfall
+r   = {{returns}}  # simple returns, one per period (bound once so every action uses the same series)
+ppy = 252  # periods per year: 252 daily, 52 weekly, 12 monthly
+a = {{alpha}}  # tail probability: 0.05 gives the average loss in the worst 5% of periods
+mu, sd = mean(r), std(r)
+S, K = skewness(r), kurtosis(r)  # sample skewness and excess kurtosis
+cf(z) = z + (z^2 - 1) * S / 6 + (z^3 - 3z) * K / 24 - (2z^3 - 5z) * S^2 / 36  # Cornish-Fisher adjusted normal quantile
+u = a .* ((1:1000) .- 0.5) ./ 1000  # grid of tail probabilities in (0, a)
+
+es_hist = -mean(r[r .<= quantile(r, a)])  # historical ES: mean of the returns at or below the VaR cut-off
+es_norm = -(mu - sd * pdf(Normal(), quantile(Normal(), a)) / a)  # parametric normal ES
+es_cf   = -(mu + sd * mean(cf.(quantile.(Normal(), u))))  # Cornish-Fisher ES: average of the adjusted quantiles below a
 
 println("ES (Historical):     ", round(es_hist, digits = 4))
 println("ES (Normal):         ", round(es_norm, digits = 4))
@@ -346,8 +375,8 @@ desc = "Growth of one unit invested, with its running peak"
 code = '''
 using Plots
 
-wealth = cumprod(1 .+ {{returns}})  # value of 1 unit invested
-peak   = accumulate(max, wealth)  # running maximum
+wealth = cumprod(1 .+ r)  # value of 1 unit invested
+peak   = max.(1, accumulate(max, wealth))  # running maximum, starting from the initial unit
 plot(wealth, label = "Wealth", xlabel = "Period", ylabel = "Value")
 plot!(peak, linestyle = :dash, label = "Running peak")  # gaps below the peak are drawdowns
 '''
@@ -359,9 +388,10 @@ desc = "Return histogram with the historical VaR cut-off"
 code = '''
 using Plots, Statistics
 
-q = quantile({{returns}}, 0.05)  # 5% quantile of returns = -VaR
-histogram({{returns}}; bins = 50, normalize = :pdf, label = "Returns", xlabel = "Return", ylabel = "Density")
-vline!([q], linestyle = :dash, linewidth = 2, label = "5% quantile")  # losses left of the line are the tail
+q = quantile(r, {{alpha}})  # alpha-quantile of returns = -VaR
+histogram(r; bins = 50, normalize = :pdf, label = "Returns", xlabel = "Return", ylabel = "Density")
+vline!([q], linestyle = :dash, linewidth = 2, label = "VaR cut-off")  # losses left of the line are the tail
+{{?model=es}}vline!([mean(r[r .<= q])], linewidth = 2, label = "ES (mean of the tail)")
 '''
 
 [[actionGroups]]
@@ -373,17 +403,17 @@ id = "return-dist"
 label = "Return Distribution"
 desc = "Plot a histogram of returns to inspect skewness, fat tails, and normality"
 code = '''
-using PerformanceAnalytics, Plots, Statistics, StatsBase
+using Plots, Statistics, StatsBase
 
-histogram({{returns}};  # return distribution
+histogram(r;  # return distribution
     bins   = 50, normalize = :pdf,
     xlabel = "Return", ylabel = "Density",
     title  = "Return Distribution", legend = false)
 
-println("Mean:     ", round(mean({{returns}}), digits = 6))  # sample mean
-println("Std Dev:  ", round(std({{returns}}),  digits = 6))  # sample standard deviation
-println("Skewness: ", round(skewness({{returns}}), digits = 4))  # negative = left tail
-println("Kurtosis: ", round(kurtosis({{returns}}), digits = 4))  # excess kurtosis > 0 = fat tails
+println("Mean:     ", round(mean(r), digits = 6))  # sample mean
+println("Std Dev:  ", round(std(r),  digits = 6))  # sample standard deviation
+println("Skewness: ", round(skewness(r), digits = 4))  # negative = left tail
+println("Kurtosis: ", round(kurtosis(r), digits = 4))  # excess kurtosis > 0 = fat tails
 '''
 
 [[actionGroups.actions]]
@@ -391,16 +421,17 @@ id = "drawdown-chart"
 label = "Drawdown Chart"
 desc = "Plot the full drawdown series to identify recovery periods and prolonged losses"
 code = '''
-using PerformanceAnalytics, Plots
+using Plots
 
-dd_series = drawdowns({{returns}})  # drawdown at each point in time
+wealth    = cumprod(1 .+ r)
+dd_series = wealth ./ max.(1, accumulate(max, wealth)) .- 1  # drawdown at each point in time
 
 plot(dd_series;  # drawdown chart
     xlabel = "Period", ylabel = "Drawdown",
     title  = "Drawdown Series", legend = false,
     color  = :red, fill = 0, fillalpha = 0.3)
 
-println("Max Drawdown: ", round(minimum(dd_series), digits = 4))
+println("Max Drawdown: ", round(-minimum(dd_series), digits = 4))
 '''
 
 [[actionGroups.actions]]
@@ -410,7 +441,6 @@ desc = "Count breaches of out-of-sample rolling VaR forecasts and test whether t
 code = '''
 using Statistics, HypothesisTests
 
-r = {{returns}}
 w = 250  # estimation window: each VaR uses only the w periods before the one it is tested on
 fc = [-quantile(r[t-w:t-1], {{alpha}}) for t in (w + 1):length(r)]  # out-of-sample VaR forecasts
 hits = r[(w + 1):end] .< -fc  # breaches (in-sample VaR would breach at rate alpha by construction)
@@ -419,7 +449,7 @@ violations, n = sum(hits), length(hits)
 println("Expected violations: ",  round({{alpha}} * n, digits = 1), " of ", n)
 println("Observed violations: ",  violations)
 println("Violation rate:      ",  round(violations / n, digits = 4))
-println("Coverage p-value:    ",  round(pvalue(BinomialTest(violations, n, {{alpha}})), digits = 4))  # exact binomial test of unconditional coverage (Kupiec's LR test is its large-sample version)
+println("Coverage p-value:    ",  round(pvalue(BinomialTest(violations, n, {{alpha}})), digits = 4))  # exact binomial test of unconditional coverage (the Kupiec LR test is its large-sample version)
 '''
 
 [[actionGroups]]
@@ -429,27 +459,34 @@ label = "Predict"
 [[actionGroups.actions]]
 id = "rolling-var"
 label = "Rolling VaR Forecast"
-desc = "One-step-ahead historical VaR from a moving window"
+desc = "One-step-ahead historical VaR (and ES) from a moving window"
 code = '''
 using Statistics
 
 w = 250  # estimation window
-fc = [-quantile({{returns}}[t-w:t-1], {{alpha}}) for t in (w + 1):length({{returns}})]  # VaR forecast for period t
-println("Latest VaR forecast: ", round(last(fc), digits = 4))
+fc = [-quantile(r[t-w:t-1], {{alpha}}) for t in (w + 1):(length(r) + 1)]  # VaR forecast for period t; the last one is for the next, unseen period
+println("Next-period VaR forecast: ", round(last(fc), digits = 4))
+{{?model=es}}fes = [-mean(filter(<=(-v), r[t-w:t-1])) for (t, v) in zip((w + 1):(length(r) + 1), fc)]  # ES forecast: mean of the window tail
+{{?model=es}}println("Next-period ES forecast:  ", round(last(fes), digits = 4))
 '''
 
 [[actionGroups.actions]]
 id = "horizon-var"
 label = "Multi-Period VaR"
-desc = "Scale the one-period normal VaR to a longer horizon"
+desc = "Scale the one-period normal VaR to a longer horizon, and check it against overlapping h-period returns"
 code = '''
 using Distributions, Statistics
 
 h  = 10  # horizon in periods
-mu = mean({{returns}})
-sd = std({{returns}})
-var_h = -(h * mu + sqrt(h) * sd * quantile(Normal(), {{alpha}}))  # square-root-of-time rule
-println(h, "-period VaR: ", round(var_h, digits = 4))
+mu, sd = mean(r), std(r)
+z  = quantile(Normal(), {{alpha}})
+var_h = -(h * mu + sqrt(h) * sd * z)  # square-root-of-time rule: valid only for iid returns (no autocorrelation, no volatility clustering)
+println(h, "-period VaR (sqrt-of-time): ", round(var_h, digits = 4))
+{{?model=es}}println(h, "-period ES (sqrt-of-time):  ", round(-(h * mu - sqrt(h) * sd * pdf(Normal(), z) / {{alpha}}), digits = 4))
+
+rh = [sum(r[t:t+h-1]) for t in 1:(length(r) - h + 1)]  # overlapping h-period returns (log-return additivity; close for small returns)
+println(h, "-period VaR (historical):   ", round(-quantile(rh, {{alpha}}), digits = 4))  # no iid assumption, but overlapping windows are dependent
+println("Lag-1 autocorrelation: ", round(cor(r[1:end-1], r[2:end]), digits = 3), "  (far from 0 = the sqrt-of-time rule is off)")
 '''
 
 [[actionGroups]]
@@ -459,15 +496,16 @@ label = "Compare"
 [[actionGroups.actions]]
 id = "var-methods"
 label = "VaR Methods"
-desc = "Historical against normal VaR at several confidence levels"
+desc = "Historical against normal VaR (or ES) at several confidence levels"
 code = '''
 using Distributions, Statistics
 
-mu, sd = mean({{returns}}), std({{returns}})
+mu, sd = mean(r), std(r)
 for a in (0.10, 0.05, 0.01)
-    hist = -quantile({{returns}}, a)  # historical VaR
-    norm = -(mu + sd * quantile(Normal(), a))  # parametric normal VaR
-    println("alpha = ", a, ":  historical ", round(hist, digits = 4), "  normal ", round(norm, digits = 4))
+	hist = -quantile(r, a)  # historical VaR
+	norm = -(mu + sd * quantile(Normal(), a))  # parametric normal VaR
+	println("alpha = ", a, ":  VaR historical ", round(hist, digits = 4), "  normal ", round(norm, digits = 4))
+{{?model=es}}	println("            ES  historical ", round(-mean(r[r .<= -hist]), digits = 4), "  normal ", round(-(mu - sd * pdf(Normal(), quantile(Normal(), a)) / a), digits = 4))
 end
 '''
 
@@ -478,8 +516,8 @@ desc = "How far the average tail loss lies beyond VaR"
 code = '''
 using Statistics
 
-q    = quantile({{returns}}, {{alpha}})  # -VaR
-tail = {{returns}}[{{returns}} .<= q]  # returns in the tail
+q    = quantile(r, {{alpha}})  # -VaR
+tail = r[r .<= q]  # returns in the tail
 println("VaR: ", round(-q, digits = 4))
 println("ES:  ", round(-mean(tail), digits = 4))  # ES is always at least VaR
 println("ES / VaR: ", round(mean(tail) / q, digits = 3))  # about 1.25 for normal returns at 5%
@@ -494,12 +532,15 @@ id = "risk-adjusted"
 label = "Risk-Adjusted Performance"
 desc = "Compute Sharpe, Sortino and Calmar ratios together for a full risk-adjusted view"
 code = '''
-using PerformanceAnalytics
+using Statistics
 
-sharpe  = sharpeRatio({{returns}})  # Sharpe ratio (excess return / total vol)
-sortino = sortinoRatio({{returns}}; mar = {{mar}})  # Sortino ratio (excess return / downside vol)
-calmar  = calmarRatio({{returns}})  # Calmar ratio (annualised return / max drawdown)
-omega   = omegaRatio({{returns}}; mar = {{mar}})  # Omega ratio (weighted gains / weighted losses)
+mar     = {{mar}}  # minimum acceptable return per period (also used as the risk-free rate here)
+wealth  = cumprod(1 .+ r)
+max_dd  = -minimum(wealth ./ max.(1, accumulate(max, wealth)) .- 1)
+sharpe  = (mean(r) - mar) / std(r) * sqrt(ppy)  # annualised Sharpe ratio (excess return / total volatility)
+sortino = (mean(r) - mar) / sqrt(mean(min.(r .- mar, 0) .^ 2)) * sqrt(ppy)  # annualised Sortino ratio (excess return / downside deviation)
+calmar  = (wealth[end]^(ppy / length(r)) - 1) / max_dd  # annualised return / max drawdown
+omega   = sum(max.(r .- mar, 0)) / sum(max.(mar .- r, 0))  # gains above MAR / losses below MAR
 
 println("Sharpe:  ", round(sharpe,  digits = 4))
 println("Sortino: ", round(sortino, digits = 4))
@@ -510,17 +551,18 @@ println("Omega:   ", round(omega,   digits = 4))
 [[actionGroups.actions]]
 id = "es-decomposition"
 label = "CVaR Decomposition"
-desc = "Decompose Expected Shortfall into its tail loss contributions"
+desc = "Split a portfolio Expected Shortfall into the contribution of each asset"
 code = '''
-using PerformanceAnalytics, Statistics
+using Statistics
 
-es_hist   = expectedShortfall({{returns}}; method = :historical, alpha = {{alpha}})  # historical Expected Shortfall
-threshold = quantile({{returns}}, {{alpha}})  # return threshold at alpha
-tail_obs  = {{returns}}[{{returns}} .< threshold]  # returns in the tail
-n_tail    = length(tail_obs)  # number of tail observations
-
-println("Expected Shortfall: ", round(es_hist,  digits = 4))
-println("Tail threshold:     ", round(threshold, digits = 4))
-println("Tail observations:  ", n_tail)
-println("Avg tail loss:      ", round(mean(tail_obs), digits = 4))
+R   = [r (0.5 .* r .+ 0.01 .* randn(length(r))) (0.0002 .+ 0.005 .* randn(length(r)))]  # replace with a T x N matrix of asset returns
+wts = [0.5, 0.3, 0.2]  # replace with the portfolio weights (one per column of R)
+rp  = R * wts  # portfolio returns
+tail = rp .<= quantile(rp, {{alpha}})  # periods in the portfolio tail
+es_p = -mean(rp[tail])  # portfolio Expected Shortfall
+contrib = -wts .* vec(mean(R[tail, :], dims = 1))  # Euler component ES: weight x mean asset return in the portfolio tail
+println("Portfolio ES: ", round(es_p, digits = 4), "  (sum of contributions ", round(sum(contrib), digits = 4), ")")
+for (i, c) in enumerate(contrib)
+	println("asset ", i, ": ", round(c, digits = 4), "  (", round(100 * c / es_p, digits = 1), "%)")
+end
 '''

@@ -319,7 +319,8 @@ optimize!(model)
 
 # re-solve with a new right-hand side (used by the Parametric Sweep)
 resolve(v) = (set_normalized_rhs(con, v); optimize!(model); objective_value(model))
-grid = normalized_rhs(con) .* range(0.25, 2, length=15)
+rhs0 = normalized_rhs(con)  # original right-hand side, restored after the sweep
+grid = rhs0 .* range(0.25, 2, length=15)
 param_name = "constraint right-hand side"
 X_opt = value.(X)
 (status = termination_status(model), objective = objective_value(model), eigenvalues_C = eigvals(Symmetric(C)))
@@ -439,6 +440,7 @@ code = '''
 using Plots
 
 vals = resolve.(grid)
+{{?model=sdp}} resolve(rhs0)  # restore the original right-hand side and solution
 plot(grid, vals, marker=:circle, xlabel=param_name, ylabel="value", legend=false)
 {{?model=sdprelax}} hline!([objective_value(model)], linestyle=:dash, label="SDP bound")
 '''
@@ -454,12 +456,14 @@ desc = "Clarabel, COSMO, SCS and Hypatia on the same problem: status, objective 
 code = '''
 using Clarabel, COSMO, SCS, Hypatia
 
-map(["Clarabel" => Clarabel.Optimizer, "COSMO" => COSMO.Optimizer, "SCS" => SCS.Optimizer, "Hypatia" => Hypatia.Optimizer]) do (name, opt)
+res = map(["Clarabel" => Clarabel.Optimizer, "COSMO" => COSMO.Optimizer, "SCS" => SCS.Optimizer, "Hypatia" => Hypatia.Optimizer]) do (name, opt)
     set_optimizer(model, opt)
     set_silent(model)
     t = @elapsed optimize!(model)
     (solver = name, status = termination_status(model), objective = objective_value(model), seconds = t)
 end
+set_optimizer(model, {{solver}}.Optimizer); set_silent(model); optimize!(model)  # back on the chosen solver for later actions
+res
 '''
 
 [[actionGroups.actions]]

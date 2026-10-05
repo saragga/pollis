@@ -1,0 +1,377 @@
+# Bayesian Linear Stochastic Discount Factor Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/blsdf.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Bayesian Linear Stochastic Discount Factor"
+viewType = "pollis.blsdf"
+defaultModel = "sdf"
+
+[[packages]]
+name = "BayesianFactorZoo.jl"
+github = "https://github.com/eohne/BayesianFactorZoo.jl"
+
+[requires]
+packages = ["BayesianFactorZoo.jl", "Plots.jl", "StatsBase.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "BayesianSDF Basics"
+file = "blsdf/tutorial-01-sdf.ipynb"
+bundled = true
+description = "Estimating the stochastic discount factor with BayesianSDF() and interpreting posterior risk prices"
+
+[[notebookSections.notebooks]]
+name = "Spike-and-Slab Factor Selection"
+file = "blsdf/tutorial-02-spike-slab.ipynb"
+bundled = true
+description = "Automatic factor selection via continuous_ss_sdf() and posterior inclusion probabilities"
+
+[[notebookSections.notebooks]]
+name = "Traded Factors Extension"
+file = "blsdf/tutorial-03-traded.ipynb"
+bundled = true
+description = "continuous_ss_sdf_2(): spike-and-slab SDF with tradable factors as additional test assets"
+
+[[notebookSections.notebooks]]
+name = "Factor Zoo Application"
+file = "blsdf/tutorial-04-factor-zoo.ipynb"
+bundled = true
+description = "Applying Bayesian SDF model selection to a large cross-section of candidate factors"
+
+[[wikis]]
+name = "Overview"
+file = "blsdf/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Factsheet"
+file = "blsdf/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "blsdf/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "blsdf/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "blsdf/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "blsdf/decision-guide.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Original Papers (from packages)"
+
+[[references]]
+title = "Bayesian Solutions for the Factor Zoo: We Just Ran Two Quadrillion Models"
+authors = "Bryzgalova, Huang & Julliard"
+year = 2023
+journal = "Journal of Finance"
+doi = "10.1111/jofi.13197"
+openAccess = false
+
+[[models]]
+id = "sdf"
+label = "Bayesian SDF"
+
+[[models]]
+id = "css"
+label = "Spike-and-Slab"
+
+[[models]]
+id = "css2"
+label = "Spike-and-Slab (Traded)"
+
+[[bullets]]
+text = "BayesianSDF"
+detail = "full posterior inference on SDF loadings b with a Gaussian prior; yields risk prices lambda = Sigmaf b and maximum Sharpe ratio"
+
+[[bullets]]
+text = "continuous_ss_sdf"
+detail = "spike-and-slab prior for automatic factor selection; each loading switches between a spike (near-zero) and a slab (active) component"
+
+[[bullets]]
+text = "continuous_ss_sdf_2"
+detail = "extends spike-and-slab by treating a subset of tradable factors as additional test assets, imposing their return moments as extra constraints"
+
+[[inputs]]
+id = "data"
+label = "Data"
+tooltip = "simulated: 600 months of five factors (only factors 1 and 2 earn a premium) and 25 test assets, in percent. Otherwise a tuple (f, R) of a T×K factor matrix and a T×N test-asset matrix of excess returns."
+default = "simulated"
+
+[[inputs]]
+id = "prior"
+label = "Prior"
+tooltip = "Flat: uninformative prior on the risk prices. Normal: shrinks the risk prices of weak factors towards zero, with scale psi0."
+kind = "select"
+default = "Normal"
+models = ["sdf"]
+
+[[inputs.options]]
+value = "Normal"
+label = "Normal"
+
+[[inputs.options]]
+value = "Flat"
+label = "Flat"
+
+[[inputs]]
+id = "psi0"
+label = "psi0"
+tooltip = "Scale of the Normal prior on the risk prices; larger values give a more diffuse prior. Used only with the Normal prior. Default 5."
+default = "5.0"
+models = ["sdf"]
+
+[[inputs]]
+id = "psi0-ss"
+label = "psi0"
+tooltip = "Slab scale. It maps into the prior belief about the Sharpe ratio the SDF can achieve (see psi_to_priorSR). Default 1."
+default = "1.0"
+models = ["css", "css2"]
+
+[[inputs]]
+id = "r"
+label = "Spike Ratio (r)"
+tooltip = "Variance of the spike relative to the slab. Close to zero, so that excluded factors are shrunk hard towards a zero risk price. Default 0.001."
+default = "0.001"
+models = ["css", "css2"]
+
+[[inputs]]
+id = "aw"
+label = "Inclusion Prior (aw)"
+tooltip = "First parameter of the Beta(aw, bw) prior on the probability that a factor is included. aw = bw = 1 is uniform; a larger bw favours sparse models."
+default = "1.0"
+models = ["css", "css2"]
+
+[[inputs]]
+id = "bw"
+label = "Inclusion Prior (bw)"
+tooltip = "Second parameter of the Beta(aw, bw) prior on the inclusion probability. Default 1."
+default = "1.0"
+models = ["css", "css2"]
+
+[[inputs]]
+id = "t-factors"
+label = "Tradable factor indices (t_factors)"
+tooltip = "Column indices (1-based) of the factors in f that are traded portfolios. They are also used as test assets, which adds their pricing as extra moment conditions."
+default = "[1, 2]"
+models = ["css2"]
+
+[[inputs]]
+id = "intercept"
+label = "Intercept"
+tooltip = "true adds a common pricing error (zero-beta rate) to the cross-sectional equation; false imposes exact factor pricing."
+default = "false"
+
+[[inputs]]
+id = "sim-length"
+label = "MCMC draws"
+tooltip = "Number of MCMC draws. Increase to 50_000 or more for publication-quality inference."
+default = "10_000"
+
+[[inputs]]
+id = "burnin"
+label = "Burn-in"
+tooltip = "Number of initial draws discarded before the posterior is summarised. The package keeps every draw; the panel drops these."
+default = "1_000"
+
+[[codeBranches]]
+model = "sdf"
+code = '''
+using BayesianFactorZoo, Statistics, Random
+
+{{?data=simulated}} Random.seed!(1); nT, nf, nR = 600, 5, 25
+{{?data=simulated}} f = [0.5 0.3 0.0 0.0 0.0] .+ 3 .* randn(nT, nf)  # monthly factor excess returns (%); only factors 1 and 2 earn a premium
+{{?data=simulated}} R = f * randn(nf, nR) .+ 2 .* randn(nT, nR)  # test assets priced through their factor betas
+{{?data!=simulated}} f, R = {{data}}  # T×K factors and T×N test assets
+K = size(f, 2)
+fnames = "f" .* string.(1:K)  # factor names
+
+result = BayesianSDF(f, R, {{sim-length}}; intercept={{intercept}}, prior="{{prior}}", psi0={{psi0}}, seed=1)  # Bayesian linear SDF
+keep = ({{burnin}} + 1):{{sim-length}}  # draws kept after burn-in
+lam = result.lambda_path[keep, end-K+1:end]  # risk prices (Sharpe-ratio units), one column per factor
+println("Risk prices (posterior mean): ", fnames .=> round.(vec(mean(lam, dims=1)), digits=3))
+println("Cross-sectional R2 (posterior mean): ", round(mean(result.R2_path[keep]), digits=3))
+'''
+
+[[codeBranches]]
+model = "css"
+code = '''
+using BayesianFactorZoo, Statistics, Random
+
+{{?data=simulated}} Random.seed!(1); nT, nf, nR = 600, 5, 25
+{{?data=simulated}} f = [0.5 0.3 0.0 0.0 0.0] .+ 3 .* randn(nT, nf)  # monthly factor excess returns (%); only factors 1 and 2 earn a premium
+{{?data=simulated}} R = f * randn(nf, nR) .+ 2 .* randn(nT, nR)  # test assets priced through their factor betas
+{{?data!=simulated}} f, R = {{data}}  # T×K factors and T×N test assets
+K = size(f, 2)
+fnames = "f" .* string.(1:K)  # factor names
+
+result = continuous_ss_sdf(f, R, {{sim-length}}; psi0={{psi0-ss}}, r={{r}}, aw={{aw}}, bw={{bw}}, intercept={{intercept}}, seed=1)  # spike-and-slab SDF
+keep = ({{burnin}} + 1):{{sim-length}}  # draws kept after burn-in
+lam = result.lambda_path[keep, end-K+1:end]  # risk prices (Sharpe-ratio units), one column per factor
+println("Risk prices (posterior mean): ", fnames .=> round.(vec(mean(lam, dims=1)), digits=3))
+pip = vec(mean(result.gamma_path[keep, :], dims=1))  # posterior inclusion probabilities
+println("Inclusion probabilities: ", fnames .=> round.(pip, digits=3))
+'''
+
+[[codeBranches]]
+model = "css2"
+code = '''
+using BayesianFactorZoo, Statistics, Random
+
+{{?data=simulated}} Random.seed!(1); nT, nf, nR = 600, 5, 25
+{{?data=simulated}} f = [0.5 0.3 0.0 0.0 0.0] .+ 3 .* randn(nT, nf)  # monthly factor excess returns (%); only factors 1 and 2 earn a premium
+{{?data=simulated}} R = f * randn(nf, nR) .+ 2 .* randn(nT, nR)  # test assets priced through their factor betas
+{{?data!=simulated}} f, R = {{data}}  # T×K factors and T×N test assets
+K = size(f, 2)
+fnames = "f" .* string.(1:K)  # factor names
+tf = {{t-factors}}  # tradable factor columns
+result = continuous_ss_sdf_v2(f[:, setdiff(1:K, tf)], f[:, tf], R, {{sim-length}}; psi0={{psi0-ss}}, r={{r}}, aw={{aw}}, bw={{bw}}, intercept={{intercept}}, seed=1)  # tradable factors also priced as test assets
+f = f[:, [setdiff(1:K, tf); tf]]  # the package orders non-traded factors first
+fnames = fnames[[setdiff(1:K, tf); tf]]
+keep = ({{burnin}} + 1):{{sim-length}}  # draws kept after burn-in
+lam = result.lambda_path[keep, end-K+1:end]  # risk prices (Sharpe-ratio units), one column per factor
+println("Risk prices (posterior mean): ", fnames .=> round.(vec(mean(lam, dims=1)), digits=3))
+pip = vec(mean(result.gamma_path[keep, :], dims=1))  # posterior inclusion probabilities
+println("Inclusion probabilities: ", fnames .=> round.(pip, digits=3))
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "posteriors"
+label = "Risk Price Posteriors"
+desc = "Posterior histogram of each factor's risk price: mass piled at zero means the factor is not priced"
+code = '''
+using Plots
+histogram(lam, bins=60, alpha=0.4, normalize=:pdf, label=permutedims(fnames), xlabel="risk price (Sharpe-ratio units)")
+vline!([0], color=:black, label="")
+'''
+
+[[actionGroups.actions]]
+id = "relevance"
+label = "Factor Relevance"
+desc = "Spike-and-slab: posterior inclusion probability of each factor. Bayesian SDF: the posterior of the cross-sectional R2"
+code = '''
+using Plots
+{{?model=css|css2}} bar(fnames, pip, legend=false, ylim=(0, 1), ylabel="posterior inclusion probability"); hline!([0.5], ls=:dash, label="")
+{{?model=sdf}} histogram(result.R2_path[keep], bins=60, legend=false, xlabel="cross-sectional R2", title="Posterior of R2")
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "traces"
+label = "Trace Plots"
+desc = "The kept MCMC draws of each risk price: a stable band without drift means the chain has mixed"
+code = '''
+using Plots
+plot(lam, layout=(K, 1), legend=false, title=permutedims(fnames), size=(800, 140 * K))
+'''
+
+[[actionGroups.actions]]
+id = "mixing"
+label = "Effective Sample Size"
+desc = "Lag-1 autocorrelation of each risk price chain and the implied effective number of independent draws"
+code = '''
+using StatsBase
+ac = [autocor(lam[:, k], [1])[1] for k in 1:K]
+[(factor = fnames[k], lag1_autocor = round(ac[k], digits=3), effective_draws = round(Int, size(lam, 1) * (1 - ac[k]) / (1 + ac[k]))) for k in 1:K]
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "fitted"
+label = "Fitted Sharpe Ratios"
+desc = "Each test asset's Sharpe ratio against the one the posterior-mean SDF predicts from its correlations with the factors"
+code = '''
+using Plots
+lm = vec(mean(result.lambda_path[keep, :], dims=1))
+C = cor(R, f)  # N×K correlations of assets with factors
+fitted = {{intercept}} ? lm[1] .+ C * lm[2:end] : C * lm
+actual = vec(mean(R, dims=1) ./ std(R, dims=1))
+scatter(fitted, actual, legend=false, xlabel="fitted Sharpe ratio", ylabel="actual Sharpe ratio")
+plot!(identity, extrema([fitted; actual])..., ls=:dash)
+'''
+
+[[actionGroups.actions]]
+id = "sharpe"
+label = "SDF Sharpe Ratio"
+desc = "Posterior of the maximum Sharpe ratio the factors can deliver, sqrt(lambda' Corr(f) lambda), monthly and annualised"
+code = '''
+Cf = cor(f)
+SR = [sqrt(max(transpose(lam[i, :]) * Cf * lam[i, :], 0)) for i in axes(lam, 1)]
+{{?model=css|css2}} println("Sharpe ratio of the model-averaged SDF: ", std(result.bma_sdf) / mean(result.bma_sdf))
+(monthly_mean = mean(SR), interval = (quantile(SR, 0.05), quantile(SR, 0.95)), annualised_mean = sqrt(12) * mean(SR))
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "two-pass"
+label = "Against Two-Pass Regression"
+desc = "Frequentist Fama-MacBeth t-statistics next to the posterior probability that each risk price is positive"
+code = '''
+tp = TwoPassRegression(f, R)
+tstats = tp.t_stat[end-K+1:end]
+[(factor = fnames[k], fama_macbeth_t = round(tstats[k], digits=2), posterior_prob_positive = round(mean(lam[:, k] .> 0), digits=3)) for k in 1:K]
+'''
+
+[[actionGroups.actions]]
+id = "other-prior"
+label = "Against the Other Prior"
+desc = "Refits with the other kind of prior (spike-and-slab for the Bayesian SDF, flat Bayesian SDF for spike-and-slab) and compares the mean risk prices"
+code = '''
+{{?model=sdf}} other = continuous_ss_sdf(f, R, {{sim-length}}; intercept={{intercept}}, seed=1)
+{{?model=css|css2}} other = BayesianSDF(f, R, {{sim-length}}; intercept={{intercept}}, seed=1)
+lo = other.lambda_path[keep, end-K+1:end]
+[(factor = fnames[k], this_model = round(mean(lam[:, k]), digits=3), other_prior = round(mean(lo[:, k]), digits=3)) for k in 1:K]
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "table"
+label = "Risk Price Table"
+desc = "Posterior mean, 90% credible interval and probability of a positive price for each factor, with inclusion probabilities for spike-and-slab"
+code = '''
+{{?model=sdf}} [(factor = fnames[k], mean = round(mean(lam[:, k]), digits=3), interval = round.((quantile(lam[:, k], 0.05), quantile(lam[:, k], 0.95)), digits=3), prob_positive = round(mean(lam[:, k] .> 0), digits=3)) for k in 1:K]
+{{?model=css|css2}} [(factor = fnames[k], mean = round(mean(lam[:, k]), digits=3), interval = round.((quantile(lam[:, k], 0.05), quantile(lam[:, k], 0.95)), digits=3), inclusion_prob = round(pip[k], digits=3)) for k in 1:K]
+'''
+
+[[actionGroups.actions]]
+id = "priced"
+label = "Which Factors Are Priced"
+desc = "Plain-language verdict: a 90% interval that excludes zero (Bayesian SDF) or an inclusion probability above 0.5 (spike-and-slab)"
+code = '''
+{{?model=sdf}} priced = [fnames[k] for k in 1:K if quantile(lam[:, k], 0.05) > 0 || quantile(lam[:, k], 0.95) < 0]
+{{?model=css|css2}} priced = fnames[pip .> 0.5]
+{{?model=css|css2}} println("Prior Sharpe ratio implied by psi0: ", psi_to_priorSR(R, f; psi0={{psi0-ss}}, aw={{aw}}, bw={{bw}}))
+isempty(priced) ? "No factor is clearly priced." : string("Priced factors: ", join(priced, ", "))
+'''

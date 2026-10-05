@@ -12,8 +12,20 @@ defaultModel = "main"
 name = "Pigeons.jl"
 github = "https://github.com/Julia-Tempering/Pigeons.jl"
 
+[[packages]]
+name = "MCMCDiagnosticTools.jl"
+github = "https://github.com/TuringLang/MCMCDiagnosticTools.jl"
+
+[[packages]]
+name = "Distributions.jl"
+github = "https://github.com/JuliaStats/Distributions.jl"
+
+[[packages]]
+name = "LogExpFunctions.jl"
+github = "https://github.com/JuliaStats/LogExpFunctions.jl"
+
 [requires]
-packages = ["Pigeons.jl"]
+packages = ["Pigeons.jl", "MCMCDiagnosticTools.jl", "Distributions.jl", "LogExpFunctions.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""
@@ -135,65 +147,102 @@ journal = "Journal of the Physical Society of Japan"
 doi = "10.1143/JPSJ.65.1604"
 openAccess = false
 
-[[bullets]]
-text = "Parallel tempering - runs K chains at annealed temperatures from prior to target, enabling global mixing"
-detail = ""
+[[references]]
+title = "Slice sampling"
+authors = "Neal, Radford M."
+year = 2003
+journal = "The Annals of Statistics"
+doi = "10.1214/aos/1056562461"
+openAccess = true
+
+[[references]]
+title = "Rank-normalization, folding, and localization: an improved R-hat for assessing convergence of MCMC"
+authors = "Vehtari, Aki; Gelman, Andrew; Simpson, Daniel; Carpenter, Bob; Burkner, Paul-Christian"
+year = 2021
+journal = "Bayesian Analysis"
+doi = "10.1214/20-BA1221"
+openAccess = true
 
 [[bullets]]
-text = "Designed for multimodal and high-dimensional posteriors that defeat standard single-chain MCMC"
-detail = ""
+text = "Question"
+detail = "when does a single MCMC chain fail on a multimodal target, and how does parallel tempering fix it? The panel samples the same target with one slice-sampler chain and with Pigeons PT, and compares them"
 
 [[bullets]]
-text = "Swap proposals between adjacent chains carry probability mass across the temperature ladder"
-detail = ""
+text = "Parallel tempering"
+detail = "chains on a path from a reference (beta = 0, sampled exactly) to the target (beta = 1); swaps between neighbours carry fresh reference draws to the target, so it can jump between modes"
+
+[[bullets]]
+text = "Diagnostics"
+detail = "the global communication barrier Lambda (Pigeons suggests about 2 Lambda chains), the swap acceptance profile, round trips and tempered restarts, and ESS from MCMCDiagnosticTools"
 
 [[inputs]]
 id = "log-p"
-label = "Log-potential log p(x)"
-tooltip = "Julia expression for the log-density of the target (up to a constant). Use x[1], x[2], ... to index vector components. The default is an equal mixture of two unit Gaussians centred at (3, 3) and (-3, -3): a single MCMC chain rarely crosses between them, which is what parallel tempering is for. A single Gaussian such as -0.5 * sum(x .^ 2) needs no tempering."
-default = "log(exp(-0.5 * sum((x .- 3) .^ 2)) + exp(-0.5 * sum((x .+ 3) .^ 2)))"
+label = "Log-potential log p(x)"
+tooltip = "Julia expression for the log-density of the target (up to a constant). Use x[1], x[2], ... to index vector components; logaddexp is available. The default is an equal mixture of two unit Gaussians centred at (3, ..., 3) and (-3, ..., -3): a single chain rarely crosses between them, which is what parallel tempering is for. A single Gaussian such as -0.5 * sum(x .^ 2) needs no tempering."
+default = "logaddexp(-0.5 * sum((x .- 3) .^ 2), -0.5 * sum((x .+ 3) .^ 2))"
 
 [[inputs]]
 id = "d"
 label = "Dimension d"
-tooltip = "Number of dimensions of the target distribution. The initial state is drawn from a d-dimensional standard Gaussian."
+tooltip = "Number of dimensions of the target distribution. Every chain starts from a d-dimensional standard Gaussian draw."
 default = "2"
+
+[[inputs]]
+id = "ref-sd"
+label = "Reference SD"
+tooltip = "Standard deviation of the Gaussian reference N(0, s^2 I) at beta = 0. Pigeons cannot build a reference for a custom target, so one must be given. It should cover every mode of the target: with modes at +-3, s = 5 does."
+default = "5.0"
 
 [[inputs]]
 id = "n-rounds"
 label = "Rounds"
-tooltip = "Number of PT rounds. Each round doubles the number of samples. More rounds give better mixing and lower variance estimates. Typical range: 8 to 14."
+tooltip = "Number of PT rounds. Round r runs 2^r scans and the schedule is re-tuned after each round. The samples and diagnostics come from the last round only (2^n_rounds draws). Typical range: 8 to 14."
 default = "10"
 
 [[inputs]]
 id = "n-chains"
 label = "Chains"
-tooltip = "Number of parallel chains (temperature ladder rungs). More chains improve swap acceptance and help with complex posteriors. Typical range: 4 to 20."
+tooltip = "Number of PT chains (at least 2). Pigeons suggests about 2 Lambda chains, where Lambda is the global communication barrier that the main run prints. A single chain (no tempering) is always run alongside for comparison."
 default = "10"
+
+[[inputs]]
+id = "seed"
+label = "Seed"
+tooltip = "Master random seed passed to pigeons(). Runs with the same seed and inputs are identical."
+default = "1"
 
 [[codeBranches]]
 model = "main"
 code = '''
-using Pigeons
+using Pigeons, Distributions, LinearAlgebra, LogExpFunctions, Statistics
 
-struct Target  # callable target struct
+struct Target  # a custom target is a callable log-potential: Pigeons evaluates t(x)
     d::Int  # number of dimensions
 end
+(t::Target)(x) = {{log-p}}  # log-density up to a constant
+Pigeons.initialization(t::Target, rng, i) = randn(rng, t.d)  # starting state of chain i
 
-function Pigeons.log_potential(target::Target, x)  # log-density of target
-    return {{log-p}}  # user-supplied expression
-end
+d = {{d}}
+reference = DistributionLogPotential(MvNormal(zeros(d), Diagonal(fill({{ref-sd}}^2, d))))  # beta = 0, sampled exactly; must cover every mode
 
-Pigeons.initialization(target::Target, rng, i) = randn(rng, target.d)  # initial state per chain
-
-pt = pigeons(  # run parallel tempering
-    target   = Target({{d}}),
+run_pt(n_chains; target = Target(d), reference = reference, show_report = false) = pigeons(;
+    target, reference, n_chains, show_report,
     n_rounds = {{n-rounds}},
-    n_chains = {{n-chains}},
-)
+    seed     = {{seed}},
+    record   = [traces, round_trip, index_process; record_default()])  # traces is needed for the samples
 
-samples = get_sample(pt)  # posterior draws from cold chain
-println("n_samples: ", length(samples))  # number of samples
+mc = run_pt(1)  # n_chains = 1: one slice-sampler chain on the target, no tempering
+pt = run_pt({{n-chains}}; show_report = true)  # non-reversible PT; the report prints Lambda, round trips and log Z per round
+
+draws(r) = sample_array(r)[:, 1:d, 1]  # last round only; the dropped column d + 1 is the log-density
+Xmc, Xpt = draws(mc), draws(pt)
+upper(X) = mean(sum(X; dims = 2) .> 0)  # share with x[1] + ... + x[d] > 0: the (3, ..., 3) mode for the default target
+Lambda = Pigeons.global_barrier(pt)  # sum of the swap rejection rates along the path
+
+println("Draws per run:   ", size(Xpt, 1), " (last round)")
+println("Share sum(x) > 0: single chain ", round(upper(Xmc); digits = 3), "   PT ", round(upper(Xpt); digits = 3), "   (0.5 for the default target)")
+println("PT round trips:  ", n_round_trips(pt), "   tempered restarts ", n_tempered_restarts(pt), "   (last round)")
+println("Barrier Lambda:  ", round(Lambda; digits = 2), "   suggested n_chains about ", ceil(Int, 2 * Lambda))
 '''
 
 [[actionGroups]]
@@ -203,37 +252,41 @@ label = "Visualise"
 [[actionGroups.actions]]
 id = "trace-plot"
 label = "Trace Plot"
-desc = "Plot samples over index to assess mixing"
+desc = "Trace of x[1] for the single chain and for PT: the single chain stays in one mode, PT jumps between them"
 code = '''
-using Pigeons, Plots
+using Plots
 
-struct Target; d::Int; end
-Pigeons.log_potential(t::Target, x) = {{log-p}}
-Pigeons.initialization(t::Target, rng, i) = randn(rng, t.d)
-
-pt = pigeons(target = Target({{d}}), n_rounds = {{n-rounds}}, n_chains = {{n-chains}})
-samples = get_sample(pt)  # posterior draws
-
-x1 = [s[1] for s in samples]  # first dimension
-plot(x1, xlabel = "Sample", ylabel = "x[1]", title = "Trace Plot", lw = 0.5)  # trace
+p1 = plot(Xmc[:, 1]; label = false, title = "Single chain", ylabel = "x[1]", lw = 0.5)
+p2 = plot(Xpt[:, 1]; label = false, title = "PT, {{n-chains}} chains", ylabel = "x[1]", xlabel = "Draw (last round)", lw = 0.5)
+plot(p1, p2; layout = (2, 1), link = :y)
 '''
 
 [[actionGroups.actions]]
 id = "marginal-hist"
-label = "Marginal Histogram"
-desc = "Histogram of each marginal dimension"
+label = "Joint Samples"
+desc = "Scatter of x[1] against x[2] (or a histogram of x[1] when d = 1) for both runs"
 code = '''
-using Pigeons, Plots
+using Plots
 
-struct Target; d::Int; end
-Pigeons.log_potential(t::Target, x) = {{log-p}}
-Pigeons.initialization(t::Target, rng, i) = randn(rng, t.d)
+if d == 1
+    histogram(Xmc[:, 1]; bins = 60, normalize = :pdf, alpha = 0.5, label = "Single chain", xlabel = "x[1]", ylabel = "Density")
+    histogram!(Xpt[:, 1]; bins = 60, normalize = :pdf, alpha = 0.5, label = "PT")
+else
+    p1 = scatter(Xmc[:, 1], Xmc[:, 2]; ms = 1, msw = 0, alpha = 0.4, label = false, title = "Single chain", xlabel = "x[1]", ylabel = "x[2]")
+    p2 = scatter(Xpt[:, 1], Xpt[:, 2]; ms = 1, msw = 0, alpha = 0.4, label = false, title = "PT", xlabel = "x[1]")
+    plot(p1, p2; layout = (1, 2), link = :both)
+end
+'''
 
-pt      = pigeons(target = Target({{d}}), n_rounds = {{n-rounds}}, n_chains = {{n-chains}})
-samples = get_sample(pt)
+[[actionGroups.actions]]
+id = "index-process"
+label = "Index Process"
+desc = "Which chain each replica occupies over the last round; a round trip is a full path from the reference (chain 1) to the target and back"
+code = '''
+using Plots
 
-x1 = [s[1] for s in samples]  # first marginal
-histogram(x1, bins = 50, normalize = :pdf, xlabel = "x[1]", ylabel = "Density", title = "Marginal Histogram")  # normalised histogram
+println("Round trips: ", n_round_trips(pt), "   tempered restarts: ", n_tempered_restarts(pt))
+plot(pt.reduced_recorders.index_process; title = "Index process (Pigeons recipe)")
 '''
 
 [[actionGroups]]
@@ -242,43 +295,34 @@ label = "Diagnose"
 
 [[actionGroups.actions]]
 id = "swap-rates"
-label = "Swap Acceptance"
-desc = "PT swap acceptance rates between adjacent chains"
+label = "Swap Acceptance and Barrier"
+desc = "Swap acceptance per neighbouring pair and the local communication barrier; Lambda, its integral, sets the number of chains"
 code = '''
-using Pigeons
+using Plots
 
-struct Target; d::Int; end
-Pigeons.log_potential(t::Target, x) = {{log-p}}
-Pigeons.initialization(t::Target, rng, i) = randn(rng, t.d)
-
-pt = pigeons(  # swap_acceptance_pr logged automatically
-    target   = Target({{d}}),
-    n_rounds = {{n-rounds}},
-    n_chains = {{n-chains}},
-    record   = [Pigeons.swap_acceptance_pr, Pigeons.round_trip],
-)
-
-println("Round trips: ", Pigeons.n_round_trips(pt))  # full traversals of temperature ladder
+prs   = Pigeons.value(pt.reduced_recorders.swap_acceptance_pr)  # (i, i + 1) => mean acceptance in the last round
+alpha = [Pigeons.value(prs[(i, i + 1)]) for i in 1:({{n-chains}} - 1)]
+println("Swap acceptance: min ", round(minimum(alpha); digits = 3), "   mean ", round(mean(alpha); digits = 3))
+println("Lambda = ", round(Lambda; digits = 2), ": about ", ceil(Int, 2 * Lambda), " chains (2 Lambda) is near optimal; acceptance near 0 for some pair means too few chains")
+p1 = bar(1:length(alpha), alpha; ylims = (0, 1), label = false, xlabel = "Pair (i, i + 1)", ylabel = "Swap acceptance")
+p2 = plot(pt.shared.tempering.communication_barriers.localbarrier; title = "Local barrier")  # Pigeons recipe
+plot(p1, p2; layout = (1, 2))
 '''
 
 [[actionGroups.actions]]
 id = "ess"
 label = "Effective Sample Size"
-desc = "ESS per dimension via StatsBase.jl"
+desc = "Bulk ESS per dimension for both runs (MCMCDiagnosticTools); a chain stuck in one mode can still report a large ESS"
 code = '''
-using Pigeons, StatsBase
+using MCMCDiagnosticTools
 
-struct Target; d::Int; end
-Pigeons.log_potential(t::Target, x) = {{log-p}}
-Pigeons.initialization(t::Target, rng, i) = randn(rng, t.d)
-
-pt      = pigeons(target = Target({{d}}), n_rounds = {{n-rounds}}, n_chains = {{n-chains}})
-samples = get_sample(pt)
-
-for i in 1:{{d}}  # ESS per dimension
-    xi  = [s[i] for s in samples]
-    println("ESS[", i, "] = ", Int(round(ess(xi))))  # effective sample size
+ess_of(X) = ess(reshape(X, size(X, 1), 1, size(X, 2)))  # draws x chains x parameters
+e_mc, e_pt = ess_of(Xmc), ess_of(Xpt)
+for i in 1:d
+    println("ESS[", i, "]: single chain ", round(Int, e_mc[i]), "   PT ", round(Int, e_pt[i]), "   of ", size(Xpt, 1), " draws")
 end
+println("Share sum(x) > 0: single chain ", round(upper(Xmc); digits = 3), "   PT ", round(upper(Xpt); digits = 3))
+println("ESS measures autocorrelation within the region a chain visited; it cannot see a mode the chain never reached.")
 '''
 
 [[actionGroups]]
@@ -288,42 +332,25 @@ label = "Predict"
 [[actionGroups.actions]]
 id = "posterior-mean"
 label = "Posterior Mean"
-desc = "Sample mean and variance per dimension"
+desc = "Mean and variance per dimension from both runs (default target: mean 0, variance 10)"
 code = '''
-using Pigeons, Statistics
-
-struct Target; d::Int; end
-Pigeons.log_potential(t::Target, x) = {{log-p}}
-Pigeons.initialization(t::Target, rng, i) = randn(rng, t.d)
-
-pt      = pigeons(target = Target({{d}}), n_rounds = {{n-rounds}}, n_chains = {{n-chains}})
-samples = get_sample(pt)
-
-means = [mean([s[i] for s in samples]) for i in 1:{{d}}]  # posterior mean
-vars  = [var([s[i] for s in samples]) for i in 1:{{d}}]  # posterior variance
-println("Means:     ", means)  # per-dimension means
-println("Variances: ", vars)  # per-dimension variances
+for (name, X) in (("Single chain", Xmc), ("PT", Xpt))
+    println(rpad(name, 14), "mean ", round.(vec(mean(X; dims = 1)); digits = 3), "   variance ", round.(vec(var(X; dims = 1)); digits = 3))
+end
+println("Default target: mean 0 and variance 1 + 3^2 = 10 in every dimension. A chain in one mode gives a mean near +-3 and a variance near 1.")
 '''
 
 [[actionGroups.actions]]
 id = "credible-intervals"
 label = "Credible Intervals"
-desc = "95% credible intervals per dimension"
+desc = "Equal-tailed 95% intervals per dimension from both runs"
 code = '''
-using Pigeons, Statistics
-
-struct Target; d::Int; end
-Pigeons.log_potential(t::Target, x) = {{log-p}}
-Pigeons.initialization(t::Target, rng, i) = randn(rng, t.d)
-
-pt      = pigeons(target = Target({{d}}), n_rounds = {{n-rounds}}, n_chains = {{n-chains}})
-samples = get_sample(pt)
-
-for i in 1:{{d}}  # 95% credible interval per dimension
-    xi       = [s[i] for s in samples]
-    lo, hi   = quantile(xi, [0.025, 0.975])
-    println("CI[", i, "]: [", round(lo, digits=4), ", ", round(hi, digits=4), "]")  # print interval
+for i in 1:d
+    lo_mc, hi_mc = quantile(Xmc[:, i], [0.025, 0.975])
+    lo_pt, hi_pt = quantile(Xpt[:, i], [0.025, 0.975])
+    println("x[", i, "]: single chain [", round(lo_mc; digits = 2), ", ", round(hi_mc; digits = 2), "]   PT [", round(lo_pt; digits = 2), ", ", round(hi_pt; digits = 2), "]")
 end
+println("For a bimodal target the equal-tailed interval spans both modes, including the low-density region between them.")
 '''
 
 [[actionGroups]]
@@ -333,40 +360,41 @@ label = "Compare"
 [[actionGroups.actions]]
 id = "n-chains-sweep"
 label = "Chain Count Sweep"
-desc = "Compare round-trip rates for different n_chains"
+desc = "Rerun PT with 2 to 32 chains: round trips rise until n_chains is about 2 Lambda, then level off"
 code = '''
-using Pigeons, Printf
-
-struct Target; d::Int; end
-Pigeons.log_potential(t::Target, x) = {{log-p}}
-Pigeons.initialization(t::Target, rng, i) = randn(rng, t.d)
-
-for nc in [4, 8, 16]  # sweep number of chains
-    pt = pigeons(target = Target({{d}}), n_rounds = {{n-rounds}}, n_chains = nc,
-              record = [Pigeons.round_trip])
-    rt = Pigeons.n_round_trips(pt)  # round trips completed
-    @printf("n_chains=%-4d  round_trips=%d
-", nc, rt)  # print row
+for nc in [2, 4, 8, 16, 32]
+    r = run_pt(nc)
+    println("n_chains = ", rpad(nc, 4),
+        "Lambda ", rpad(round(Pigeons.global_barrier(r); digits = 2), 7),
+        "round trips ", rpad(n_round_trips(r), 6),
+        "restarts ", rpad(n_tempered_restarts(r), 6),
+        "share sum(x) > 0 ", round(upper(draws(r)); digits = 3))
 end
 '''
 
 [[actionGroups.actions]]
-id = "rounds-sweep"
-label = "Rounds Sweep"
-desc = "Compare ESS vs number of rounds"
+id = "separation-sweep"
+label = "Mode Separation Sweep"
+desc = "Built-in mixture with modes at +-(m, ..., m): as m grows the single chain sticks, Lambda grows, and PT needs more chains"
 code = '''
-using Pigeons, StatsBase, Printf
+struct Mixture  # equal mixture of unit Gaussians at (m, ..., m) and (-m, ..., -m)
+    d::Int
+    m::Float64
+end
+(t::Mixture)(x) = logaddexp(-0.5 * sum((x .- t.m) .^ 2), -0.5 * sum((x .+ t.m) .^ 2))
+Pigeons.initialization(t::Mixture, rng, i) = randn(rng, t.d)
 
-struct Target; d::Int; end
-Pigeons.log_potential(t::Target, x) = {{log-p}}
-Pigeons.initialization(t::Target, rng, i) = randn(rng, t.d)
-
-for nr in [8, 10, 12]  # sweep number of rounds
-    pt      = pigeons(target = Target({{d}}), n_rounds = nr, n_chains = {{n-chains}})
-    samples = get_sample(pt)
-    x1      = [s[1] for s in samples]
-    @printf("n_rounds=%-4d  n=%d  ESS=%.0f
-", nr, length(x1), ess(x1))  # print row
+for m in [1.0, 2.0, 3.0, 4.0, 6.0]
+    ref = DistributionLogPotential(MvNormal(zeros(d), Diagonal(fill((m + 2)^2, d))))  # wide enough to cover both modes
+    r1  = run_pt(1; target = Mixture(d, m), reference = ref)
+    rp  = run_pt({{n-chains}}; target = Mixture(d, m), reference = ref)
+    L   = Pigeons.global_barrier(rp)
+    println("m = ", rpad(m, 5),
+        "single chain share ", rpad(round(upper(draws(r1)); digits = 3), 7),
+        "PT share ", rpad(round(upper(draws(rp)); digits = 3), 7),
+        "Lambda ", rpad(round(L; digits = 2), 7),
+        "suggested n_chains ", ceil(Int, 2 * L),
+        "   round trips ", n_round_trips(rp))
 end
 '''
 
@@ -377,38 +405,27 @@ label = "Interpret"
 [[actionGroups.actions]]
 id = "log-z"
 label = "Normalising Constant"
-desc = "Stepping-stone estimate of log Z"
+desc = "Stepping-stone estimate of log Z from the PT run (default target: log 2 + (d / 2) log(2 pi))"
 code = '''
-using Pigeons
-
-struct Target; d::Int; end
-Pigeons.log_potential(t::Target, x) = {{log-p}}
-Pigeons.initialization(t::Target, rng, i) = randn(rng, t.d)
-
-pt = pigeons(target = Target({{d}}), n_rounds = {{n-rounds}}, n_chains = {{n-chains}})
-
-log_Z = Pigeons.stepping_stone(pt)  # stepping-stone estimate
-println("log Z: ", log_Z)  # log normalising constant
-println("Z:     ", exp(log_Z))  # normalising constant
+logZ = stepping_stone(pt)  # log(Z_target / Z_reference); the reference is a normalised Gaussian, so this is log Z
+println("log Z (stepping stone):        ", round(logZ; digits = 4))
+println("Exact for the default target:  ", round(log(2) + d / 2 * log(2 * pi); digits = 4))
+println("A single chain gives no estimate of Z: it needs the path from reference to target.")
 '''
 
 [[actionGroups.actions]]
 id = "summary-stats"
-label = "Summary Statistics"
-desc = "Sample count, means, and round-trip rate"
+label = "Single Chain vs PT"
+desc = "What the two runs say about the target, and whether PT had enough chains"
 code = '''
-using Pigeons, Statistics
-
-struct Target; d::Int; end
-Pigeons.log_potential(t::Target, x) = {{log-p}}
-Pigeons.initialization(t::Target, rng, i) = randn(rng, t.d)
-
-pt      = pigeons(target = Target({{d}}), n_rounds = {{n-rounds}}, n_chains = {{n-chains}},
-              record = [Pigeons.round_trip])
-samples = get_sample(pt)
-
-println("Samples:      ", length(samples))  # number of posterior draws
-println("Dimension:    ", {{d}})  # target dimension
-println("Means:        ", [mean([s[i] for s in samples]) for i in 1:{{d}}])  # posterior mean
-println("Round trips:  ", Pigeons.n_round_trips(pt))  # PT efficiency
+s_mc, s_pt = upper(Xmc), upper(Xpt)
+println("Share sum(x) > 0: single chain ", round(s_mc; digits = 3), "   PT ", round(s_pt; digits = 3), "   (0.5 for the default target)")
+if abs(s_mc - 0.5) > 0.2 && abs(s_pt - 0.5) < 0.1
+    println("The single chain stayed (mostly) in one mode; PT visited both in proportion. Single-chain summaries describe one mode, not the target.")
+elseif abs(s_pt - 0.5) >= 0.1
+    println("PT did not balance the modes either: add rounds, add chains (Lambda = ", round(Lambda; digits = 2), "), or widen the reference.")
+else
+    println("Both runs agree on this split; for this target a single chain may be enough.")
+end
+println("Round trips in the last round: ", n_round_trips(pt), ". With none, PT has not mixed across the path and its samples are not to be trusted.")
 '''

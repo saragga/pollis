@@ -13,7 +13,7 @@ name = "MultilevelEstimators.jl"
 github = "https://github.com/PieterjanRobbe/MultilevelEstimators.jl"
 
 [requires]
-packages = ["MultilevelEstimators.jl"]
+packages = ["MultilevelEstimators.jl", "SpecialFunctions.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""
@@ -98,11 +98,11 @@ doi = "10.1137/141000671"
 openAccess = false
 
 [[references]]
-title = "MultilevelEstimators.jl: A Framework for Multilevel Monte Carlo in Julia"
+title = "MultilevelEstimators.jl: A Julia Toolbox for Multilevel Monte Carlo Methods"
 authors = "Robbe, Pieterjan"
-year = 2019
-journal = "arXiv preprint"
-doi = "10.48550/arXiv.1910.07711"
+year = 2018
+journal = "GitHub"
+url = "https://github.com/PieterjanRobbe/MultilevelEstimators.jl"
 openAccess = true
 
 [[references]]
@@ -161,78 +161,226 @@ label = "MLMC"
 id = "mlqmc"
 label = "MLQMC"
 
+
 [[bullets]]
 text = "MLMC"
-detail = "telescoping sum over levels; combines cheap coarse and accurate fine estimates; achieves optimal complexity"
+detail = "telescoping sum over levels: many cheap coarse samples plus a few expensive fine corrections, each correction computed from the same random input on two levels"
 
 [[bullets]]
 text = "MLQMC"
-detail = "replaces random samples with quasi-random lattice rules; improves convergence from O(N-1/2) to O(N-1) per level"
+detail = "replaces the random samples on each level with randomly shifted rank-1 lattice points; for smooth problems the error per level falls faster than N^(-1/2)"
+
+[[bullets]]
+text = "Test problems"
+detail = "a random integral (midpoint rule) and a GBM call option (Euler-Maruyama), both with exact answers so the achieved error can be checked"
+
+[[decisionRows]]
+task = "MLMC"
+context = "Level hierarchy, random inputs"
+purpose = "Cheaper than plain Monte Carlo at the same RMSE whenever the variance of the level corrections decays"
+
+[[decisionRows]]
+task = "MLQMC"
+context = "Smooth integrand, moderate dimension"
+purpose = "Fewer points per level than MLMC when lattice rules beat random sampling"
 
 [[inputs]]
-id = "body"
-label = "Sample function body"
-tooltip = "Julia expression for the level-l estimand. Receives l (level index vector) and samples (random inputs). Should return the telescoping difference Q_l - Q_{l-1}, or Q_0 when l[1] == 0. Example: sin(2^(-l[1]) * samples[1])"
-default = "sin(2^(-l[1]) * samples[1])"
+id = "problem"
+label = "Problem"
+tooltip = "Random integral: Q = integral of exp(X t) over [0, 1] with X ~ N(0, 1), level l uses the midpoint rule with 2^l points (exact mean 1.194958). GBM call: discounted European call payoff, level l uses Euler-Maruyama with 2^l time steps (exact mean = Black-Scholes price)."
+kind = "select"
+default = "integral"
+
+[[inputs.options]]
+value = "integral"
+label = "Random Integral"
+
+[[inputs.options]]
+value = "gbm"
+label = "GBM Call Option"
 
 [[inputs]]
-id = "d"
-label = "Dimension (d)"
-tooltip = "Number of random input dimensions passed to the sample function as the samples vector."
+id = "s0"
+label = "Spot (S0)"
+tooltip = "Initial asset price."
+default = "100.0"
+when = "problem=gbm"
+
+[[inputs]]
+id = "strike"
+label = "Strike (K)"
+tooltip = "Strike price of the European call."
+default = "100.0"
+when = "problem=gbm"
+
+[[inputs]]
+id = "rate"
+label = "Rate (r)"
+tooltip = "Continuously compounded risk-free rate."
+default = "0.05"
+when = "problem=gbm"
+
+[[inputs]]
+id = "vol"
+label = "Volatility"
+tooltip = "Annualised volatility of the asset."
+default = "0.2"
+when = "problem=gbm"
+
+[[inputs]]
+id = "maturity"
+label = "Maturity (T)"
+tooltip = "Time to maturity in years."
+default = "1.0"
+when = "problem=gbm"
+
+[[inputs]]
+id = "reltol"
+label = "Relative Tolerance"
+tooltip = "Target RMSE as a fraction of the exact answer. The estimator adds levels and samples until its estimated RMSE (variance plus squared bias) is below this tolerance."
+default = "0.005"
+
+[[inputs]]
+id = "maxlevel"
+label = "Max Level"
+tooltip = "Finest level the estimator may add. Level l uses 2^l grid points or time steps. If the estimator stops here, the bias may exceed the tolerance."
+default = "10"
+
+[[inputs]]
+id = "nshifts"
+label = "n Shifts"
+tooltip = "Number of independent random shifts of the lattice rule. The spread across shifts gives the error estimate; 10 to 30 is the package's recommendation."
+default = "10"
+models = ["mlqmc"]
+
+[[inputs]]
+id = "seed"
+label = "Seed"
+tooltip = "Seed for the global random number generator, which MultilevelEstimators.jl uses for samples and lattice shifts."
 default = "1"
-
-[[inputs]]
-id = "levels"
-label = "Levels"
-tooltip = "Maximum number of levels. The algorithm selects the optimal number automatically up to this limit."
-default = "6"
-
-[[inputs]]
-id = "mse"
-label = "Target MSE"
-tooltip = "Mean square error tolerance epsilon^2. The estimator allocates samples across levels to meet this target."
-default = "1e-3"
 
 [[codeBranches]]
 model = "mlmc"
 code = '''
-using MultilevelEstimators
+using MultilevelEstimators, SpecialFunctions, Random
 
-function sample_fn(l, samples)
-    return {{body}}  # level-l estimand: Q_l - Q_{l-1} (or Q_0 at l=0)
-end
+Random.seed!({{seed}})  # MultilevelEstimators draws from the global random number generator
 
-estimator = Estimator(MLMC(), GaussianSampler({{d}}), sample_fn;  # MLMC with Gaussian random inputs
-    NumberOfLevels = {{levels}},  # maximum level
-    MSE          = {{mse}},  # target mean square error
-)
+{{?problem=integral}}# Q = integral of exp(X t) over [0, 1] with X ~ N(0, 1); level l uses the midpoint rule with 2^l points
+{{?problem=integral}}exact = sqrt(pi / 2) * erfi(1 / sqrt(2))  # E[Q] = integral of exp(t^2 / 2) over [0, 1] = 1.194958...
+{{?problem=integral}}midpoint(x, n) = sum(exp(x * (k - 0.5) / n) for k in 1:n) / n
+{{?problem=integral}}function sample_fn(level::Level, x::Vector{<:Real})
+{{?problem=integral}}    n  = 2^level[1]
+{{?problem=integral}}    Qf = midpoint(x[1], n)  # fine approximation Q_l
+{{?problem=integral}}    level == Level(0) && return Qf, Qf
+{{?problem=integral}}    Qf - midpoint(x[1], div(n, 2)), Qf  # (Q_l - Q_(l-1), Q_l) from the same random input
+{{?problem=integral}}end
+{{?problem=integral}}distributions = [Normal()]
 
-run(estimator)  # adaptive sample allocation across levels
+{{?problem=gbm}}S0, K, r, vol, T = {{s0}}, {{strike}}, {{rate}}, {{vol}}, {{maturity}}
+{{?problem=gbm}}# Q = discounted European call payoff; level l uses Euler-Maruyama with 2^l time steps
+{{?problem=gbm}}Phi(z) = erfc(-z / sqrt(2)) / 2  # standard normal cdf
+{{?problem=gbm}}d1 = (log(S0 / K) + (r + vol^2 / 2) * T) / (vol * sqrt(T))
+{{?problem=gbm}}exact = S0 * Phi(d1) - K * exp(-r * T) * Phi(d1 - vol * sqrt(T))  # Black-Scholes price
+{{?problem=gbm}}function euler_call(dW, h)
+{{?problem=gbm}}    S = S0
+{{?problem=gbm}}    for w in dW
+{{?problem=gbm}}        S += r * S * h + vol * S * w
+{{?problem=gbm}}    end
+{{?problem=gbm}}    exp(-r * T) * max(S - K, 0.0)
+{{?problem=gbm}}end
+{{?problem=gbm}}function sample_fn(level::Level, x::Vector{<:Real})
+{{?problem=gbm}}    n  = 2^level[1]
+{{?problem=gbm}}    h  = T / n
+{{?problem=gbm}}    dW = sqrt(h) .* x[1:n]  # Brownian increments on the fine grid
+{{?problem=gbm}}    Pf = euler_call(dW, h)  # fine payoff Q_l
+{{?problem=gbm}}    level == Level(0) && return Pf, Pf
+{{?problem=gbm}}    dWc = dW[1:2:end] .+ dW[2:2:end]  # the same Brownian path on the coarse grid
+{{?problem=gbm}}    Pf - euler_call(dWc, 2h), Pf  # (Q_l - Q_(l-1), Q_l)
+{{?problem=gbm}}end
+{{?problem=gbm}}distributions = [Normal() for _ in 1:2^{{maxlevel}}]
 
-println("mean:     ", mean(estimator))  # multilevel estimate
-println("variance: ", var(estimator))  # variance of the estimator
-println("mse:      ", mse(estimator))  # achieved mean square error
+cost(level) = 2.0^level[1]  # cost model: grid points or time steps of one fine sample
+method = MC()  # independent random samples on each level
+estimator = Estimator(ML(), method, sample_fn, distributions;
+    max_index_set_param = {{maxlevel}},  # finest level allowed
+{{?problem=gbm}}    nb_of_uncertainties = level -> 2^level[1],  # level l uses 2^l normals
+    cost_model = cost,
+    save = false,  # no .jld2 history files in the working directory
+    verbose = false)
+h = run(estimator, {{reltol}} * abs(exact))  # stops when the estimated RMSE is below the tolerance
+
+L     = maximum(l[1] for l in h[:current_index_set])  # finest level used
+evals = h[:nb_of_samples][1:L+1]  # samples per level
+work  = sum(evals[l+1] * cost(Level(l)) for l in 0:L)
+println("Estimate:    ", round(h[:mean]; sigdigits = 7), "   exact ", round(exact; sigdigits = 7))
+println("Error:       ", round(abs(h[:mean] - exact); sigdigits = 3), "   estimated RMSE ", round(h[:rmse]; sigdigits = 3), "   tolerance ", round(h[:tol]; sigdigits = 3))
+println("Levels:      0 to ", L, L == {{maxlevel}} ? "   (stopped at Max Level: the bias may exceed the tolerance)" : "")
+println("Samples:     ", evals)
+println("Total cost:  ", round(Int, work), " fine-grid units")
 '''
 
 [[codeBranches]]
 model = "mlqmc"
 code = '''
-using MultilevelEstimators
+using MultilevelEstimators, SpecialFunctions, Random
 
-function sample_fn(l, samples)
-    return {{body}}  # level-l estimand: Q_l - Q_{l-1} (or Q_0 at l=0)
-end
+Random.seed!({{seed}})  # MultilevelEstimators draws from the global random number generator
 
-estimator = Estimator(MLQMC(), LatticeRule32({{d}}), sample_fn;  # MLQMC with lattice rule quasi-random inputs
-    NumberOfLevels = {{levels}},  # maximum level
-    MSE          = {{mse}},  # target mean square error
-)
+{{?problem=integral}}# Q = integral of exp(X t) over [0, 1] with X ~ N(0, 1); level l uses the midpoint rule with 2^l points
+{{?problem=integral}}exact = sqrt(pi / 2) * erfi(1 / sqrt(2))  # E[Q] = integral of exp(t^2 / 2) over [0, 1] = 1.194958...
+{{?problem=integral}}midpoint(x, n) = sum(exp(x * (k - 0.5) / n) for k in 1:n) / n
+{{?problem=integral}}function sample_fn(level::Level, x::Vector{<:Real})
+{{?problem=integral}}    n  = 2^level[1]
+{{?problem=integral}}    Qf = midpoint(x[1], n)  # fine approximation Q_l
+{{?problem=integral}}    level == Level(0) && return Qf, Qf
+{{?problem=integral}}    Qf - midpoint(x[1], div(n, 2)), Qf  # (Q_l - Q_(l-1), Q_l) from the same random input
+{{?problem=integral}}end
+{{?problem=integral}}distributions = [Normal()]
 
-run(estimator)  # adaptive sample allocation across levels
+{{?problem=gbm}}S0, K, r, vol, T = {{s0}}, {{strike}}, {{rate}}, {{vol}}, {{maturity}}
+{{?problem=gbm}}# Q = discounted European call payoff; level l uses Euler-Maruyama with 2^l time steps
+{{?problem=gbm}}Phi(z) = erfc(-z / sqrt(2)) / 2  # standard normal cdf
+{{?problem=gbm}}d1 = (log(S0 / K) + (r + vol^2 / 2) * T) / (vol * sqrt(T))
+{{?problem=gbm}}exact = S0 * Phi(d1) - K * exp(-r * T) * Phi(d1 - vol * sqrt(T))  # Black-Scholes price
+{{?problem=gbm}}function euler_call(dW, h)
+{{?problem=gbm}}    S = S0
+{{?problem=gbm}}    for w in dW
+{{?problem=gbm}}        S += r * S * h + vol * S * w
+{{?problem=gbm}}    end
+{{?problem=gbm}}    exp(-r * T) * max(S - K, 0.0)
+{{?problem=gbm}}end
+{{?problem=gbm}}function sample_fn(level::Level, x::Vector{<:Real})
+{{?problem=gbm}}    n  = 2^level[1]
+{{?problem=gbm}}    h  = T / n
+{{?problem=gbm}}    dW = sqrt(h) .* x[1:n]  # Brownian increments on the fine grid
+{{?problem=gbm}}    Pf = euler_call(dW, h)  # fine payoff Q_l
+{{?problem=gbm}}    level == Level(0) && return Pf, Pf
+{{?problem=gbm}}    dWc = dW[1:2:end] .+ dW[2:2:end]  # the same Brownian path on the coarse grid
+{{?problem=gbm}}    Pf - euler_call(dWc, 2h), Pf  # (Q_l - Q_(l-1), Q_l)
+{{?problem=gbm}}end
+{{?problem=gbm}}distributions = [Normal() for _ in 1:2^{{maxlevel}}]
 
-println("mean:     ", mean(estimator))  # multilevel estimate
-println("variance: ", var(estimator))  # variance of the estimator
-println("mse:      ", mse(estimator))  # achieved mean square error
+cost(level) = 2.0^level[1]  # cost model: grid points or time steps of one fine sample
+method = QMC()  # randomly shifted rank-1 lattice rule on each level
+estimator = Estimator(ML(), method, sample_fn, distributions;
+    max_index_set_param = {{maxlevel}},  # finest level allowed
+{{?problem=gbm}}    nb_of_uncertainties = level -> 2^level[1],  # level l uses 2^l normals
+    nb_of_shifts = level -> {{nshifts}},  # independent random shifts
+    cost_model = cost,
+    save = false,  # no .jld2 history files in the working directory
+    verbose = false)
+h = run(estimator, {{reltol}} * abs(exact))  # stops when the estimated RMSE is below the tolerance
+
+L     = maximum(l[1] for l in h[:current_index_set])  # finest level used
+evals = h[:nb_of_samples][1:L+1]  # samples per level
+evals = evals .* {{nshifts}}  # QMC counts points per shift
+work  = sum(evals[l+1] * cost(Level(l)) for l in 0:L)
+println("Estimate:    ", round(h[:mean]; sigdigits = 7), "   exact ", round(exact; sigdigits = 7))
+println("Error:       ", round(abs(h[:mean] - exact); sigdigits = 3), "   estimated RMSE ", round(h[:rmse]; sigdigits = 3), "   tolerance ", round(h[:tol]; sigdigits = 3))
+println("Levels:      0 to ", L, L == {{maxlevel}} ? "   (stopped at Max Level: the bias may exceed the tolerance)" : "")
+println("Samples:     ", evals)
+println("Total cost:  ", round(Int, work), " fine-grid units")
 '''
 
 [[actionGroups]]
@@ -241,47 +389,72 @@ label = "Visualise"
 
 [[actionGroups.actions]]
 id = "level-contributions"
-label = "Level Contributions"
-desc = "Variance and cost breakdown per level"
+label = "Level Decay Plot"
+desc = "Plot log2 of Var[Q_l], Var[Q_l - Q_(l-1)] and |E[Q_l - Q_(l-1)]| against level: the corrections must shrink for MLMC to pay off"
 code = '''
-using Plots, MultilevelEstimators
+using Plots
 
-lvls  = nb_of_levels(estimator)  # number of levels used
-vl    = [varest(estimator, [l]) for l in 0:lvls-1]  # variance per level
-cl    = [cost(estimator, [l]) for l in 0:lvls-1]  # cost per level
-
-bar(0:lvls-1, vl, yscale=:log10, xlabel="level", ylabel="variance", legend=false)  # variance should decay geometrically
+ls = 0:L
+plot(ls, log2.([h[:V][Level(l)] for l in ls]); marker = :circle, label = "Var[Q_l]", xlabel = "Level l", ylabel = "log2")
+plot!(1:L, log2.([h[:dV][Level(l)] for l in 1:L]); marker = :square, label = "Var[Q_l - Q_(l-1)]")
+plot!(1:L, log2.(abs.([h[:dE][Level(l)] for l in 1:L])); marker = :diamond, label = "|E[Q_l - Q_(l-1)]|")
 '''
 
 [[actionGroups.actions]]
 id = "sample-allocation"
 label = "Sample Allocation"
-desc = "Optimal number of samples per level"
+desc = "Samples per level and each level's share of the total cost"
 code = '''
-using Plots, MultilevelEstimators
+using Plots
 
-lvls = nb_of_levels(estimator)  # number of levels used
-nl   = [nb_of_samples(estimator, [l]) for l in 0:lvls-1]  # samples per level
-
-bar(0:lvls-1, nl, yscale=:log10, xlabel="level", ylabel="N_l", legend=false)  # coarse levels need more samples
+ls    = 0:L
+share = [evals[l+1] * cost(Level(l)) for l in ls] ./ work
+p1 = bar(ls, evals; yscale = :log10, xlabel = "Level l", ylabel = "Samples", label = false)
+p2 = bar(ls, share; xlabel = "Level l", ylabel = "Share of total cost", label = false)
+plot(p1, p2; layout = (1, 2))
 '''
 
 [[actionGroups.actions]]
 id = "convergence-plot"
-label = "Convergence Plot"
-desc = "RMSE vs total cost across MSE targets"
+label = "Cost vs Tolerance"
+desc = "Rerun the multilevel and single-level estimators at four tolerances and plot cost against tolerance"
 code = '''
-using Plots, MultilevelEstimators
-
-mse_targets = [1e-1, 1e-2, 1e-3, 1e-4]  # decreasing MSE targets
-costs = Float64[]  # total cost at each target
-rmses = Float64[]  # achieved RMSE
-for eps2 in mse_targets
-    run(estimator; MSE = eps2)  # re-run at each target
-    push!(costs, total_work(estimator))  # cumulative cost
-    push!(rmses, sqrt(mse(estimator)))  # root MSE
+using Plots
+# Helpers to rerun the estimator with another tolerance, Max Level or index set
+{{?model=mlmc}}shifts = 1
+{{?model=mlqmc}}shifts = {{nshifts}}  # QMC counts points per shift
+finest(hh) = maximum(l[1] for l in hh[:current_index_set])
+total_cost(hh) = shifts * sum(hh[:nb_of_samples][l+1] * cost(Level(l)) for l in 0:finest(hh))
+function ml_run(tol; maxlevel = {{maxlevel}})
+    est = Estimator(ML(), method, sample_fn, distributions;
+        max_index_set_param = maxlevel,
+        min_index_set_param = min(2, maxlevel),  # the package default 2 must not exceed the maximum
+{{?problem=gbm}}        nb_of_uncertainties = level -> 2^level[1],
+{{?model=mlqmc}}        nb_of_shifts = level -> {{nshifts}},
+        cost_model = cost, save = false, verbose = false)
+    run(est, tol)
 end
-plot(costs, rmses, xscale=:log10, yscale=:log10, xlabel="cost", ylabel="RMSE", legend=false)  # slope should match complexity theorem
+function sl_run(Lf, tol)
+    fine(level, x) = (Q = sample_fn(Level(Lf), x)[2]; (Q, Q))  # every sample on level Lf only
+    est = Estimator(SL(), method, fine, distributions;
+{{?problem=gbm}}        nb_of_uncertainties = level -> 2^Lf,
+{{?model=mlqmc}}        nb_of_shifts = level -> {{nshifts}},
+        cost_model = level -> cost(Level(Lf)), save = false, verbose = false)
+    run(est, tol)
+end
+sl_cost_at(Lf, tol) = shifts * sl_run(Lf, tol)[:nb_of_samples][1] * cost(Level(Lf))
+
+Random.seed!({{seed}})
+tols    = {{reltol}} * abs(exact) .* [8, 4, 2, 1]
+ml_cost = Float64[]
+sl_cost = Float64[]
+for tol in tols
+    hm = ml_run(tol)
+    push!(ml_cost, total_cost(hm))
+    push!(sl_cost, sl_cost_at(finest(hm), tol))  # single level on the same finest level
+end
+plot(tols, [ml_cost sl_cost]; xscale = :log10, yscale = :log10, marker = :circle, label = ["Multilevel" "Single level"], xlabel = "Tolerance (RMSE)", ylabel = "Cost (fine-grid units)")
+plot!(tols, ml_cost[end] .* (tols[end] ./ tols) .^ 2; linestyle = :dash, label = "slope tol^-2")
 '''
 
 [[actionGroups]]
@@ -291,46 +464,49 @@ label = "Diagnose"
 [[actionGroups.actions]]
 id = "variance-decay"
 label = "Variance Decay"
-desc = "Estimate rate beta: Var[Y_l] ~ 2^(-beta * l)"
+desc = "Variance of the level corrections and the package's estimate of its decay rate beta"
 code = '''
-using MultilevelEstimators, Statistics
-
-lvls = nb_of_levels(estimator)  # number of levels
-vl   = [varest(estimator, [l]) for l in 0:lvls-1]  # variance per level
-ls   = collect(0:lvls-1)  # level indices
-
-beta_hat = -cov(ls[2:end], log2.(vl[2:end])) / var(ls[2:end])  # OLS slope on log2 scale
-println("beta (variance decay rate): ", round(beta_hat; digits=2))  # should be > 0 for efficiency
+{{?problem=integral}}theory = (alpha = 2, beta = 4, gamma = 1)  # midpoint rule: bias O(h^2); the correction is O(h^2) for every X, so its variance is O(h^4)
+{{?problem=gbm}}theory = (alpha = 1, beta = 1, gamma = 1)  # Euler-Maruyama: weak order 1, strong order 1/2, Lipschitz payoff
+beta = first(h[Symbol("\u03b2")])  # package estimate (History key beta)
+println("Level  Var[Q_l - Q_(l-1)]   ratio to previous level")
+for l in 1:L
+    v = h[:dV][Level(l)]
+    println(rpad(l, 7), rpad(round(v; sigdigits = 4), 21), l > 1 ? round(h[:dV][Level(l-1)] / v; sigdigits = 3) : "")
+end
+println("beta estimate: ", round(beta; sigdigits = 3), "   theory: ", theory.beta, "   (each level divides the variance by about 2^beta)")
 '''
 
 [[actionGroups.actions]]
 id = "cost-growth"
-label = "Cost Growth"
-desc = "Estimate rate gamma: Cost[Y_l] ~ 2^(gamma * l)"
+label = "Cost per Level"
+desc = "The cost model 2^l against the measured run time per sample"
 code = '''
-using MultilevelEstimators, Statistics
+using Plots
 
-lvls = nb_of_levels(estimator)  # number of levels
-cl   = [cost(estimator, [l]) for l in 0:lvls-1]  # cost per sample at each level
-ls   = collect(0:lvls-1)  # level indices
-
-gamma_hat = cov(ls, log2.(cl)) / var(ls)  # OLS slope on log2 scale
-println("gamma (cost growth rate): ", round(gamma_hat; digits=2))  # typically 1 for 1-D problems
+ls = 0:L
+tl = [h[:T][Level(l)] for l in ls]  # measured seconds per sample
+plot(ls, log2.(cost.(Level.(ls))); marker = :circle, label = "cost model 2^l", xlabel = "Level l", ylabel = "log2 (relative to level 0)")
+plot!(ls, log2.(tl ./ tl[1]); marker = :square, label = "measured time per sample")
+# gamma is estimated from the cost model, so it is 1 by construction. On coarse levels the
+# measured time is dominated by the package's per-sample overhead (pmap), not by the 2^l work.
 '''
 
 [[actionGroups.actions]]
 id = "weak-convergence"
-label = "Weak Convergence"
-desc = "Estimate rate alpha: |E[Y_l]| ~ 2^(-alpha * l)"
+label = "Mean Decay"
+desc = "Mean of the level corrections and the package's estimate of its decay rate alpha, which drives the bias"
 code = '''
-using MultilevelEstimators, Statistics
-
-lvls = nb_of_levels(estimator)  # number of levels
-ml   = [abs(mean(estimator, [l])) for l in 1:lvls-1]  # absolute level means (skip l=0)
-ls   = collect(1:lvls-1)  # level indices
-
-alpha_hat = -cov(ls, log2.(ml)) / var(ls)  # OLS slope on log2 scale
-println("alpha (weak convergence rate): ", round(alpha_hat; digits=2))  # larger alpha = faster bias decay
+{{?problem=integral}}theory = (alpha = 2, beta = 4, gamma = 1)  # midpoint rule: bias O(h^2); the correction is O(h^2) for every X, so its variance is O(h^4)
+{{?problem=gbm}}theory = (alpha = 1, beta = 1, gamma = 1)  # Euler-Maruyama: weak order 1, strong order 1/2, Lipschitz payoff
+alpha = first(h[Symbol("\u03b1")])  # package estimate (History key alpha)
+println("Level  |E[Q_l - Q_(l-1)]|   ratio to previous level")
+for l in 1:L
+    m = abs(h[:dE][Level(l)])
+    println(rpad(l, 7), rpad(round(m; sigdigits = 4), 21), l > 1 ? round(abs(h[:dE][Level(l-1)]) / m; sigdigits = 3) : "")
+end
+println("alpha estimate: ", round(alpha; sigdigits = 3), "   theory: ", theory.alpha)
+println("Bias estimate |E[Q - Q_L]|: ", round(h[:bias]; sigdigits = 3), "   actual |E[Q_L] - exact| is unknown, but |estimate - exact| = ", round(abs(h[:mean] - exact); sigdigits = 3))
 '''
 
 [[actionGroups]]
@@ -339,46 +515,50 @@ label = "Predict"
 
 [[actionGroups.actions]]
 id = "mean-ci"
-label = "Mean with CI"
-desc = "Point estimate and 95% confidence interval"
+label = "Confidence Interval"
+desc = "95% interval from the estimator variance, with the bias estimate reported separately, checked against the exact value"
 code = '''
-using MultilevelEstimators
-
-mu    = mean(estimator)  # multilevel mean estimate
-sigma = sqrt(var(estimator))  # standard deviation of estimator
-
-println("Estimate: ", mu)  # point estimate
-println("95% CI:   [", mu - 1.96*sigma, ", ", mu + 1.96*sigma, "]")  # approximate CI
+se = sqrt(h[:varest])  # standard error of the multilevel estimate
+lo, hi = h[:mean] - 1.96 * se, h[:mean] + 1.96 * se
+println("Estimate:       ", round(h[:mean]; sigdigits = 7))
+println("95% interval:   [", round(lo; sigdigits = 7), ", ", round(hi; sigdigits = 7), "]   (sampling error only)")
+println("Bias estimate:  ", round(h[:bias]; sigdigits = 3), "   (not included in the interval)")
+println("Exact value ", round(exact; sigdigits = 7), lo <= exact <= hi ? " lies inside the interval" : " lies outside the interval")
 '''
 
 [[actionGroups.actions]]
 id = "cost-forecast"
 label = "Cost Forecast"
-desc = "Predict total work to meet a tighter MSE target"
+desc = "Forecast the cost of a 10x smaller tolerance from the measured rates and the MLMC complexity theorem"
 code = '''
-using MultilevelEstimators
-
-eps2_target = {{mse}} / 10  # 10x tighter MSE target
-w_now       = total_work(estimator)  # current total cost
-
-println("Current cost:     ", w_now)  # work already done
-println("Projected cost:   ~", w_now * 10)  # rough estimate for MLMC complexity
-println("(Run again with MSE = eps2_target for exact value)")  # 
+alpha = first(h[Symbol("\u03b1")])
+beta  = first(h[Symbol("\u03b2")])
+gamma = first(h[Symbol("\u03b3")])
+tol   = h[:tol]
+# Giles (2015), Theorem 1, assuming alpha >= min(beta, gamma) / 2; rates within 0.25 are treated as equal
+if beta > gamma + 0.25
+    regime, factor = "beta > gamma: cost grows like tol^-2", 10.0^2
+elseif abs(beta - gamma) <= 0.25
+    regime, factor = "beta = gamma: cost grows like tol^-2 log(tol)^2", 10.0^2 * (log(tol / 10) / log(tol))^2
+else
+    regime, factor = "beta < gamma: cost grows like tol^-(2 + (gamma - beta) / alpha)", 10.0^(2 + (gamma - beta) / alpha)
+end
+println("Measured rates: alpha = ", round(alpha; sigdigits = 3), ", beta = ", round(beta; sigdigits = 3), ", gamma = ", round(gamma; sigdigits = 3))
+println("Regime: ", regime)
+println("A 10x smaller tolerance should cost about ", round(factor; sigdigits = 2), " times the current ", round(Int, work), " units")
 '''
 
 [[actionGroups.actions]]
 id = "optimal-levels"
-label = "Optimal Levels"
-desc = "Number of levels selected by the adaptive algorithm"
+label = "Levels Used"
+desc = "Why the estimator stopped at its finest level: the level corrections against the bias part of the tolerance"
 code = '''
-using MultilevelEstimators
-
-L        = nb_of_levels(estimator)  # levels actually used
-nl       = [nb_of_samples(estimator, [l]) for l in 0:L-1]  # samples per level
-
-for l in 0:L-1
-    println("Level ", l, ": N_l = ", nl[l+1])  # sample allocation per level
+println("Level  |E[Q_l - Q_(l-1)]|   samples")
+for l in 0:L
+    println(rpad(l, 7), rpad(round(abs(h[:dE][Level(l)]); sigdigits = 4), 21), evals[l+1])
 end
+println("Stopped at L = ", L, ": bias estimate ", round(h[:bias]; sigdigits = 3), ", MSE ", round(h[:mse]; sigdigits = 3), " <= tol^2 = ", round(h[:tol]^2; sigdigits = 3))
+L == {{maxlevel}} && println("L reached Max Level, so the bias may still exceed its share of the tolerance: raise Max Level.")
 '''
 
 [[actionGroups]]
@@ -387,49 +567,86 @@ label = "Compare"
 
 [[actionGroups.actions]]
 id = "mlmc-vs-mc"
-label = "MLMC vs MC"
-desc = "Cost comparison at the same MSE target"
+label = "Multilevel vs Single Level"
+desc = "Run the single-level estimator on the same finest level and tolerance, and compare costs and errors"
 code = '''
-using MultilevelEstimators
+# Helpers to rerun the estimator with another tolerance, Max Level or index set
+{{?model=mlmc}}shifts = 1
+{{?model=mlqmc}}shifts = {{nshifts}}  # QMC counts points per shift
+finest(hh) = maximum(l[1] for l in hh[:current_index_set])
+total_cost(hh) = shifts * sum(hh[:nb_of_samples][l+1] * cost(Level(l)) for l in 0:finest(hh))
+function ml_run(tol; maxlevel = {{maxlevel}})
+    est = Estimator(ML(), method, sample_fn, distributions;
+        max_index_set_param = maxlevel,
+        min_index_set_param = min(2, maxlevel),  # the package default 2 must not exceed the maximum
+{{?problem=gbm}}        nb_of_uncertainties = level -> 2^level[1],
+{{?model=mlqmc}}        nb_of_shifts = level -> {{nshifts}},
+        cost_model = cost, save = false, verbose = false)
+    run(est, tol)
+end
+function sl_run(Lf, tol)
+    fine(level, x) = (Q = sample_fn(Level(Lf), x)[2]; (Q, Q))  # every sample on level Lf only
+    est = Estimator(SL(), method, fine, distributions;
+{{?problem=gbm}}        nb_of_uncertainties = level -> 2^Lf,
+{{?model=mlqmc}}        nb_of_shifts = level -> {{nshifts}},
+        cost_model = level -> cost(Level(Lf)), save = false, verbose = false)
+    run(est, tol)
+end
+sl_cost_at(Lf, tol) = shifts * sl_run(Lf, tol)[:nb_of_samples][1] * cost(Level(Lf))
 
-est_mc = Estimator(MC(), GaussianSampler({{d}}), sample_fn; MSE = {{mse}})  # standard MC estimator
-run(est_mc)  # run MC
-
-w_mc   = total_work(est_mc)  # cost of standard MC
-w_mlmc = total_work(estimator)  # cost of MLMC
-
-println("MC cost:   ", w_mc)  # standard MC total work
-println("MLMC cost: ", w_mlmc)  # multilevel MC total work
-println("Speedup:   ", w_mc / w_mlmc)  # MLMC cost savings factor
+Random.seed!({{seed}})
+hs     = sl_run(L, h[:tol])
+c_sl   = hs[:nb_of_samples][1] * cost(Level(L)) * shifts
+println("Single level on level ", L, ": cost ", round(Int, c_sl), "   error ", round(abs(hs[:mean] - exact); sigdigits = 3))
+println("Multilevel, levels 0 to ", L, ": cost ", round(Int, work), "   error ", round(abs(h[:mean] - exact); sigdigits = 3))
+println("Multilevel is ", round(c_sl / work; sigdigits = 3), " times cheaper at the same tolerance ", round(h[:tol]; sigdigits = 3))
 '''
 
 [[actionGroups.actions]]
 id = "mse-decomposition"
 label = "MSE Decomposition"
-desc = "Split achieved MSE into bias^2 and variance"
+desc = "The package's split of the MSE into estimator variance and squared bias, against the actual squared error"
 code = '''
-using MultilevelEstimators
-
-total_mse = mse(estimator)  # total achieved MSE
-var_part  = var(estimator)  # statistical variance component
-bias2     = total_mse - var_part  # bias^2 component
-
-println("MSE:      ", total_mse)  # should be <= target
-println("Variance: ", var_part)  # statistical error
-println("Bias^2:   ", bias2)  # discretisation error
+println("Estimator variance:      ", round(h[:varest]; sigdigits = 3))
+println("Squared bias estimate:   ", round(h[:bias]^2; sigdigits = 3))
+println("MSE = variance + bias^2: ", round(h[:mse]; sigdigits = 3), "   (tolerance^2 = ", round(h[:tol]^2; sigdigits = 3), ")")
+println("Actual squared error:    ", round((h[:mean] - exact)^2; sigdigits = 3), "   (a single draw: compare orders of magnitude)")
 '''
 
 [[actionGroups.actions]]
 id = "level-sweep"
-label = "Level Sweep"
-desc = "Mean and variance estimates as max levels increases"
+label = "Max Level Sweep"
+desc = "Rerun with Max Level capped at 1, 2, ... to show the bias left when the hierarchy is cut short"
 code = '''
-using MultilevelEstimators
+# Helpers to rerun the estimator with another tolerance, Max Level or index set
+{{?model=mlmc}}shifts = 1
+{{?model=mlqmc}}shifts = {{nshifts}}  # QMC counts points per shift
+finest(hh) = maximum(l[1] for l in hh[:current_index_set])
+total_cost(hh) = shifts * sum(hh[:nb_of_samples][l+1] * cost(Level(l)) for l in 0:finest(hh))
+function ml_run(tol; maxlevel = {{maxlevel}})
+    est = Estimator(ML(), method, sample_fn, distributions;
+        max_index_set_param = maxlevel,
+        min_index_set_param = min(2, maxlevel),  # the package default 2 must not exceed the maximum
+{{?problem=gbm}}        nb_of_uncertainties = level -> 2^level[1],
+{{?model=mlqmc}}        nb_of_shifts = level -> {{nshifts}},
+        cost_model = cost, save = false, verbose = false)
+    run(est, tol)
+end
+function sl_run(Lf, tol)
+    fine(level, x) = (Q = sample_fn(Level(Lf), x)[2]; (Q, Q))  # every sample on level Lf only
+    est = Estimator(SL(), method, fine, distributions;
+{{?problem=gbm}}        nb_of_uncertainties = level -> 2^Lf,
+{{?model=mlqmc}}        nb_of_shifts = level -> {{nshifts}},
+        cost_model = level -> cost(Level(Lf)), save = false, verbose = false)
+    run(est, tol)
+end
+sl_cost_at(Lf, tol) = shifts * sl_run(Lf, tol)[:nb_of_samples][1] * cost(Level(Lf))
 
-for L in 2:8
-    est = Estimator(MLMC(), GaussianSampler({{d}}), sample_fn; NumberOfLevels = L, MSE = {{mse}})  # vary max levels
-    run(est)  # run
-    println("L=", L, "  mean=", round(mean(est); digits=6), "  cost=", total_work(est))  # print summary
+println("Max level  levels used  cost         estimated RMSE  actual error")
+for m in 1:min(L + 2, {{maxlevel}})
+    Random.seed!({{seed}})
+    hm = ml_run(h[:tol]; maxlevel = m)
+    println(rpad(m, 11), rpad(finest(hm), 13), rpad(round(Int, total_cost(hm)), 13), rpad(round(hm[:rmse]; sigdigits = 3), 16), round(abs(hm[:mean] - exact); sigdigits = 3))
 end
 '''
 
@@ -439,57 +656,71 @@ label = "Interpret"
 
 [[actionGroups.actions]]
 id = "full-summary"
-label = "Summary"
-desc = "Mean, variance, MSE and total cost"
+label = "Level Table"
+desc = "Per-level samples, mean and variance of the corrections, cost per sample and share of total cost"
 code = '''
-using MultilevelEstimators
-
-println("=== MLMC Summary ===")  # 
-println("Levels:    ", nb_of_levels(estimator))  # levels selected
-println("Mean:      ", mean(estimator))  # multilevel estimate
-println("Variance:  ", var(estimator))  # variance of estimator
-println("MSE:       ", mse(estimator))  # achieved MSE
-println("Total cost:", total_work(estimator))  # total computational work
+println("Level  samples    E[dQ]          Var[dQ]        cost/sample  cost share")
+for l in 0:L
+    dq = Level(l)
+    println(rpad(l, 7), rpad(evals[l+1], 11), rpad(round(h[:dE][dq]; sigdigits = 4), 15), rpad(round(h[:dV][dq]; sigdigits = 4), 15),
+        rpad(cost(dq), 13), round(evals[l+1] * cost(dq) / work; digits = 3))
+end
+println("dQ = Q_l - Q_(l-1), and Q_0 on level 0. Estimate = sum of E[dQ] = ", round(h[:mean]; sigdigits = 7))
 '''
 
 [[actionGroups.actions]]
 id = "rate-summary"
-label = "Rate Parameters"
-desc = "Estimated alpha, beta, gamma convergence rates"
+label = "Rates"
+desc = "The package's estimates of alpha, beta and gamma against the theoretical rates for the chosen problem"
 code = '''
-using MultilevelEstimators, Statistics
-
-lvls  = nb_of_levels(estimator)  # levels used
-ls    = collect(0:lvls-1)  # level indices
-ml    = [abs(mean(estimator, [l])) for l in 0:lvls-1]  # level means
-vl    = [varest(estimator, [l]) for l in 0:lvls-1]  # level variances
-cl    = [cost(estimator, [l]) for l in 0:lvls-1]  # level costs
-
-alpha = -cov(ls[2:end], log2.(ml[2:end])) / var(ls[2:end])  # weak convergence
-beta  = -cov(ls[2:end], log2.(vl[2:end])) / var(ls[2:end])  # variance decay
-gamma =  cov(ls, log2.(cl))        / var(ls)  # cost growth
-
-println("alpha = ", round(alpha; digits=2), "  (weak convergence)")  # bias decays at 2^(-alpha)
-println("beta  = ", round(beta;  digits=2), "  (variance decay)")  # var decays at 2^(-beta)
-println("gamma = ", round(gamma; digits=2), "  (cost growth)")  # cost grows at 2^(gamma)
+{{?problem=integral}}theory = (alpha = 2, beta = 4, gamma = 1)  # midpoint rule: bias O(h^2); the correction is O(h^2) for every X, so its variance is O(h^4)
+{{?problem=gbm}}theory = (alpha = 1, beta = 1, gamma = 1)  # Euler-Maruyama: weak order 1, strong order 1/2, Lipschitz payoff
+for (name, key) in (("alpha (mean decay)", "\u03b1"), ("beta (variance decay)", "\u03b2"), ("gamma (cost growth)", "\u03b3"))
+    println(rpad(name, 24), round(first(h[Symbol(key)]); sigdigits = 3))
+end
+println("Theory: alpha = ", theory.alpha, ", beta = ", theory.beta, ", gamma = ", theory.gamma)
+println("gamma comes from the cost model 2^l. Rates need at least three levels to be reliable.")
 '''
 
 [[actionGroups.actions]]
 id = "complexity-check"
 label = "Complexity Check"
-desc = "Verify complexity theorem condition beta > gamma"
+desc = "Check the MLMC complexity theorem: tol^2 x cost across tolerances for the multilevel and single-level estimators"
 code = '''
-using MultilevelEstimators, Statistics
+# Helpers to rerun the estimator with another tolerance, Max Level or index set
+{{?model=mlmc}}shifts = 1
+{{?model=mlqmc}}shifts = {{nshifts}}  # QMC counts points per shift
+finest(hh) = maximum(l[1] for l in hh[:current_index_set])
+total_cost(hh) = shifts * sum(hh[:nb_of_samples][l+1] * cost(Level(l)) for l in 0:finest(hh))
+function ml_run(tol; maxlevel = {{maxlevel}})
+    est = Estimator(ML(), method, sample_fn, distributions;
+        max_index_set_param = maxlevel,
+        min_index_set_param = min(2, maxlevel),  # the package default 2 must not exceed the maximum
+{{?problem=gbm}}        nb_of_uncertainties = level -> 2^level[1],
+{{?model=mlqmc}}        nb_of_shifts = level -> {{nshifts}},
+        cost_model = cost, save = false, verbose = false)
+    run(est, tol)
+end
+function sl_run(Lf, tol)
+    fine(level, x) = (Q = sample_fn(Level(Lf), x)[2]; (Q, Q))  # every sample on level Lf only
+    est = Estimator(SL(), method, fine, distributions;
+{{?problem=gbm}}        nb_of_uncertainties = level -> 2^Lf,
+{{?model=mlqmc}}        nb_of_shifts = level -> {{nshifts}},
+        cost_model = level -> cost(Level(Lf)), save = false, verbose = false)
+    run(est, tol)
+end
+sl_cost_at(Lf, tol) = shifts * sl_run(Lf, tol)[:nb_of_samples][1] * cost(Level(Lf))
 
-lvls  = nb_of_levels(estimator)  # levels used
-ls    = collect(0:lvls-1)  # level indices
-vl    = [varest(estimator, [l]) for l in 0:lvls-1]  # level variances
-cl    = [cost(estimator, [l]) for l in 0:lvls-1]  # level costs
-
-beta  = -cov(ls[2:end], log2.(vl[2:end])) / var(ls[2:end])  # variance rate
-gamma =  cov(ls, log2.(cl))        / var(ls)  # cost rate
-
-println("beta  = ", round(beta;  digits=2))  # need beta > gamma for MLMC speedup
-println("gamma = ", round(gamma; digits=2))  # complexity theorem condition
-println(beta > gamma ? "MLMC is efficient (beta > gamma)" : "Consider finer levels or problem reformulation")  # verdict
+{{?problem=integral}}theory = (alpha = 2, beta = 4, gamma = 1)  # midpoint rule: bias O(h^2); the correction is O(h^2) for every X, so its variance is O(h^4)
+{{?problem=gbm}}theory = (alpha = 1, beta = 1, gamma = 1)  # Euler-Maruyama: weak order 1, strong order 1/2, Lipschitz payoff
+Random.seed!({{seed}})
+println("tolerance   L   tol^2 x cost (multilevel)   tol^2 x cost (single level)")
+for tol in {{reltol}} * abs(exact) .* [8, 4, 2, 1]
+    hm = ml_run(tol)
+    Lf = finest(hm)
+    println(rpad(round(tol; sigdigits = 3), 12), rpad(Lf, 4), rpad(round(tol^2 * total_cost(hm); sigdigits = 3), 28), round(tol^2 * sl_cost_at(Lf, tol); sigdigits = 3))
+end
+println(theory.beta > theory.gamma ? "Theory (beta > gamma): the multilevel column stays roughly constant." :
+    "Theory (beta = gamma): the multilevel column grows like log(tol)^2.")
+println("The single-level column grows like tol^(-gamma / alpha), because finer levels are needed as tol shrinks.")
 '''

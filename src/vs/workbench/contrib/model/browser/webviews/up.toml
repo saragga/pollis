@@ -17,7 +17,7 @@ name = "Distributions.jl"
 github = "https://github.com/JuliaStats/Distributions.jl"
 
 [requires]
-packages = ["MonteCarloMeasurements.jl", "Distributions.jl"]
+packages = ["MonteCarloMeasurements.jl", "Distributions.jl", "Measurements.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""
@@ -97,14 +97,14 @@ detail = "mean, standard deviation, and confidence intervals (CI) of the propaga
 [[inputs]]
 id = "variables"
 label = "Uncertain Variables"
-tooltip = "One variable per line: name = Particles(n, Distribution(parameters)). Distributions: Normal, Uniform, LogNormal, Exponential, Beta, Gamma, Weibull, TDist, ..."
+tooltip = "One independent input per line: name = Particles(n, Distribution(parameters)). Distributions: Normal, Uniform, LogNormal, Exponential, Beta, Gamma, Weibull, TDist, ... Write derived quantities (z = x * y) into the expression, not here."
 kind = "textarea"
 default = "x = Particles(n, Normal(0.0, 1.0))\ny = Particles(n, Uniform(0.0, 1.0))"
 
 [[inputs]]
 id = "expression"
 label = "Expression"
-tooltip = "Julia expression of the uncertain variables, e.g. x^2 * sin(y) or a call to your own function. Every particle is pushed through it."
+tooltip = "Julia expression of the uncertain variables, e.g. x^2 * sin(y). Every particle is pushed through it. Constants and your own functions are fine if the variables are passed as arguments, f(x, y): the comparison, scatter and sensitivity actions treat each variable named in the expression as an input, and miss variables a function reads as globals."
 default = "x + y"
 
 [[inputs]]
@@ -176,7 +176,14 @@ n = {{n-particles}}  # number of particles
 result = {{expression}}  # propagated output
 
 here = @__MODULE__
-ins = [s => getfield(here, s) for s in names(here; all=true) if s !== :result && isdefined(here, s) && getfield(here, s) isa Particles]  # the uncertain inputs
+used = Set{Symbol}()  # every name the expression mentions
+function collect_names!(used, ex)
+    ex isa Symbol && push!(used, ex)
+    ex isa Expr && foreach(a -> collect_names!(used, a), ex.args)
+    return used
+end
+collect_names!(used, :({{expression}}))
+ins = [s => getfield(here, s) for s in sort!(collect(used)) if isdefined(here, s) && getfield(here, s) isa Particles]  # the uncertain inputs the expression uses
 fexpr = eval(Expr(:->, Expr(:tuple, first.(ins)...), :({{expression}})))  # the expression as a function of the inputs
 tail = (100 - {{ci-level}}) / 200  # tail probability on each side
 

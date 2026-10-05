@@ -130,7 +130,8 @@ export function isValidJuliaIdentifier(name: string): boolean {
 
 /** Whether a connection is an in-memory DuckDB database, whose data is lost when it is closed. */
 export function isInMemoryConnection(profile: IDatabaseConnectionProfile): boolean {
-	return profile.driver === 'duckdb' && !stringValue(profile, 'path');
+	const path = stringValue(profile, 'path');
+	return profile.driver === 'duckdb' && (!path || path === ':memory:');
 }
 
 /** A short description of where a connection points, e.g. `:memory:` or `user@host:5432/db`. */

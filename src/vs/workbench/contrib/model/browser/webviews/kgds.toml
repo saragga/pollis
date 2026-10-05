@@ -3,7 +3,7 @@
 # Run: npm run gulp compile-toml
 #
 # Approach: Kaggle exposes a REST API at www.kaggle.com/api/v1. The dataset
-# catalogue (datasets/list) is public — browse, search, and filter need no
+# catalogue (datasets/list) is public: browse, search, and filter need no
 # credentials. Listing a dataset's files and downloading it require a free Kaggle
 # API token (username + key). Datasets are mostly CSV/SQLite, so the Julia stack is
 # HTTP.jl + JSON3.jl to talk to the API, ZipFile.jl to unpack a download, and
@@ -19,7 +19,7 @@ illustrationText = "Search the Kaggle catalogue, then pull datasets into Julia: 
 
 # Per-pane intro/footnote notes (optional, keyed by pane: keyPoints / decision / explore).
 [notes.decision]
-footnote = "Browse and Dataset Info use the public Kaggle REST API directly (HTTP.jl + JSON3.jl) — no credentials needed. List Files, Download, and Load require a free Kaggle API token (click \"Set credentials\"); the download is a .zip read with ZipFile.jl and the CSVs with CSV.jl + Tables.jl."
+footnote = "Browse and Dataset Info use the public Kaggle REST API directly (HTTP.jl + JSON3.jl): no credentials needed. List Files, Download, and Load require a free Kaggle API token (click \"Set credentials\"); the download is a .zip read with ZipFile.jl and the CSVs with CSV.jl + Tables.jl."
 
 [notes.explore]
 intro = "A query joins your selections with <strong>OR</strong> inside a category and <strong>AND</strong> across categories, matched by Kaggle's full-text search. For example, picking <em>Classification</em> under Task plus <em>Medicine</em> plus <em>Finance</em> under Domain builds: <code>(Classification) AND (Medicine OR Finance)</code>"
@@ -306,7 +306,7 @@ detail = "hundreds of thousands of public datasets across every domain, each ver
 
 [[bullets]]
 text = "Mostly tabular"
-detail = "most datasets are CSV or SQLite — ready to read straight into Julia with CSV.jl and the Tables.jl interface"
+detail = "most datasets are CSV or SQLite, ready to read straight into Julia with CSV.jl and the Tables.jl interface"
 
 [[bullets]]
 text = "Rich metadata"
@@ -398,7 +398,7 @@ model = "browse"
 code = """
 using HTTP, JSON3
 
-# The Kaggle dataset catalogue is public — no credentials needed to browse.
+# The Kaggle dataset catalogue is public: no credentials needed to browse.
 get_json(url) = JSON3.read(HTTP.get(url).body)
 
 # Most-voted datasets; sortBy is one of hottest, votes, updated, published
@@ -414,11 +414,13 @@ model = "info"
 code = """
 using HTTP, JSON3
 
-# Public metadata via the list endpoint, searched by slug (no credentials needed)
+# Public metadata via the list endpoint: a free-text search, then the exact slug (no credentials needed)
 get_json(url) = JSON3.read(HTTP.get(url).body)
 
-res = get_json("https://www.kaggle.com/api/v1/datasets/list?search=iris&pageSize=5")
-d = first(res)
+slug = "uciml/iris"  # owner/dataset
+res = get_json("https://www.kaggle.com/api/v1/datasets/list?search=iris&pageSize=20")
+i = findfirst(x -> x.ref == slug, res)
+d = isnothing(i) ? first(res) : res[i]  # the exact slug when listed, else the top search hit
 
 println("ref:       ", d.ref)
 println("title:     ", d.title)

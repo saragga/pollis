@@ -13,7 +13,7 @@ name = "NonNegLeastSquares.jl"
 github = "https://github.com/JuliaLinearAlgebra/NonNegLeastSquares.jl"
 
 [requires]
-packages = ["NonNegLeastSquares.jl"]
+packages = ["NonNegLeastSquares.jl", "StatsPlots.jl"]
 
 [[notebookSections]]
 label = ""

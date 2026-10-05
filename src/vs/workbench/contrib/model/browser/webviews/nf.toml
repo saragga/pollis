@@ -304,7 +304,7 @@ num_layers  = {{num-layers}}  # conditioner network depth
 {{?target=copula}} U = mapslices(pit, {{xvar}}; dims=2)  # u_i = F_i(x_i), one row per variable
 {{?target=copula}} data = Float32.(quantile.(Normal(), U))  # probit scale: the flow now fits the copula
 
-d1 = input_dim ÷ 2
+d1 = div(input_dim, 2)
 d2 = input_dim - d1  # split dimensions for coupling
 
 make_net(n_in, n_out) = Chain(
@@ -389,7 +389,7 @@ end
 Flux.@layer MAFStep trainable=(made,)
 
 function (m::MAFStep)(x)
-    x = x[m.perm, :]  # reverse the variable order on alternate steps
+    x = x[m.perm, :]  # reversing the incoming z flips the autoregressive order at every step
     D = size(x, 1)
     h = m.made(x)
     mu, alpha = h[1:D, :], h[D+1:end, :]  # conditional shift and log-scale
@@ -397,7 +397,7 @@ function (m::MAFStep)(x)
     z, -vec(sum(alpha; dims=1))  # log|det J| = -sum of alpha_i
 end
 
-model = Tuple(MAFStep(made(input_dim), isodd(i) ? collect(1:input_dim) : collect(input_dim:-1:1))
+model = Tuple(MAFStep(made(input_dim), i == 1 ? collect(1:input_dim) : collect(input_dim:-1:1))
               for i in 1:num_flows)
 
 function logdensity(model, x)  # log p(x) by the change of variables formula
@@ -435,7 +435,7 @@ B           = 5f0  # splines act on [-B, B], identity outside
 {{?target=copula}} U = mapslices(pit, {{xvar}}; dims=2)  # u_i = F_i(x_i), one row per variable
 {{?target=copula}} data = Float32.(quantile.(Normal(), U))  # probit scale: the flow now fits the copula
 
-d1 = input_dim ÷ 2
+d1 = div(input_dim, 2)
 d2 = input_dim - d1  # split dimensions for coupling
 
 make_net(n_in, n_out) = Chain(
@@ -457,7 +457,7 @@ function (sc::SplineCoupling)(x)
     d = size(xb, 1)
     out = map(1:size(x, 2)) do j
         p = reshape(P[:, j], d, 3K - 1)
-        rqs = RationalQuadraticSpline(p[:, 1:K], p[:, K+1:2K], p[:, 2K+1:end], B)  # one spline per dimension
+        rqs = Bijectors.RationalQuadraticSpline(p[:, 1:K], p[:, K+1:2K], p[:, 2K+1:end], B)  # one spline per dimension
         with_logabsdet_jacobian(rqs, xb[:, j])
     end
     yb = reduce(hcat, first.(out))
@@ -572,7 +572,7 @@ label = "Compare"
 [[actionGroups.actions]]
 id = "gaussian-baseline"
 label = "vs Multivariate Gaussian"
-desc = "Mean log-likelihood of the flow against a maximum-likelihood Gaussian fitted to the same data"
+desc = "Mean log-likelihood of the flow against a maximum-likelihood Gaussian fitted to the same data (in-sample for both: the flow has far more parameters, so check the held-out likelihood too)"
 code = '''
 using Distributions
 

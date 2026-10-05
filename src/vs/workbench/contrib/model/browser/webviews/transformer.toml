@@ -764,7 +764,7 @@ plot(history, xlabel="epoch", ylabel="loss", legend=false)
 [[actionGroups.actions]]
 id = "attention-entropy"
 label = "Attention Entropy per Head"
-desc = "Normalised entropy of each head's attention in every block; values near 0 mean a head attends to a single position"
+desc = "Normalised entropy of each head attention in every block (per query, by the log of the positions it can see); values near 0 mean a head attends to a single position. No padding mask is used, so sequences must share one length"
 code = '''
 using Plots, Statistics
 
@@ -774,7 +774,10 @@ h = inputs(model, collect(selectdim(data[1], ndims(data[1]), 1:min(size(data[1],
 E = zeros(num_heads, length(model.blocks))
 for (l, b) in enumerate(model.blocks)
     _, A = b.attn(b.ln1(h); mask)
-    E[:, l] = vec(mean(-sum(A .* log.(A .+ 1f-9); dims=1); dims=(2, 4))) ./ log(size(A, 1))
+    Hq = dropdims(-sum(A .* log.(A .+ 1f-9); dims=1); dims=1)  # entropy per query x head x batch
+{{?model=decoder}}    Hq = Hq[2:end, :, :] ./ log.(2:size(A, 2))  # causal: query t can only spread over t keys (t = 1 has no choice)
+{{?model!=decoder}}    Hq = Hq ./ log(size(A, 1))
+    E[:, l] = vec(mean(Hq; dims=(1, 3)))
     h = b(h; mask)
 end
 heatmap(E, xlabel="block", ylabel="head", clims=(0, 1), title="normalised attention entropy")

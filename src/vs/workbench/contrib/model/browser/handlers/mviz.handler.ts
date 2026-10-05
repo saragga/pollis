@@ -59,7 +59,7 @@ export function registerMvizWebviewHandlers(
 		for (const t of Object.keys(lastCode)) { void postColorized(lastCode[t], t); }
 	}));
 	const mvizData = metadata.mviz;
-	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, mvizData.packages.map(p => p.name), fileService, pathService, commandService, notificationService, workspaceContextService);
+	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, mvizData.packages, [], fileService, pathService, commandService, notificationService, workspaceContextService);
 	createExampleCodeWiring(webviewInput.webview, disposables, 'mviz', fileService, pathService, notificationService);
 	createCustomCopyWiring(webviewInput.webview, disposables, mvizData.wikis, mvizData.notebooks, fileService, pathService, editorService, commandService, notificationService);
 	createReferenceWiring(webviewInput.webview, disposables, 'mviz', mvizData.references, fileService, pathService, commandService, notificationService);

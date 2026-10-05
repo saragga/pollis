@@ -274,7 +274,7 @@ function search(; alg=ALG, budget=budget, lb=lb, ub=ub, seed=1)
         push!(pts, copy(x)); push!(vals, v)
         v
     end
-    fx, x, ret = optimize(opt, (lb .+ ub) ./ 2)
+    fx, x, ret = optimize(opt, (lb .+ ub) ./ 2)  # NLopt needs a start point; AGS, DIRECT-L and StoGO ignore it and search the whole box
     (x = x, fx = fx, ret = ret, points = pts, values = vals)
 end
 
@@ -313,7 +313,7 @@ function search(; alg=ALG, budget=budget, lb=lb, ub=ub, seed=1)
         push!(pts, copy(x)); push!(vals, v)
         v
     end
-    fx, x, ret = optimize(opt, (lb .+ ub) ./ 2)
+    fx, x, ret = optimize(opt, (lb .+ ub) ./ 2)  # NLopt needs a start point; AGS, DIRECT-L and StoGO ignore it and search the whole box
     (x = x, fx = fx, ret = ret, points = pts, values = vals)
 end
 
@@ -352,7 +352,7 @@ function search(; alg=ALG, budget=budget, lb=lb, ub=ub, seed=1)
         push!(pts, copy(x)); push!(vals, v)
         v
     end
-    fx, x, ret = optimize(opt, (lb .+ ub) ./ 2)
+    fx, x, ret = optimize(opt, (lb .+ ub) ./ 2)  # NLopt needs a start point; AGS, DIRECT-L and StoGO ignore it and search the whole box
     (x = x, fx = fx, ret = ret, points = pts, values = vals)
 end
 
@@ -447,12 +447,13 @@ label = "Compare"
 [[actionGroups.actions]]
 id = "compare-methods"
 label = "Compare Methods"
-desc = "AGS, MLSL, StoGO-R, DIRECT-L and CRS2 at the same budget, averaged over 3 seeds"
+desc = "AGS, MLSL, StoGO-R, DIRECT-L and CRS2 at the same budget, averaged over 3 seeds; each method is run once on a tiny budget first, so the times exclude compilation"
 code = '''
 using Statistics
 
 algs = ["AGS" => :GN_AGS, "MLSL" => :G_MLSL_LDS, "StoGO-R" => :GD_STOGO_RAND, "DIRECT-L" => :GN_DIRECT_L, "CRS2" => :GN_CRS2_LM]
 map(algs) do (name, a)
+    search(alg=a, budget=20)  # warm-up: compile before timing
     sec = @elapsed runs = [search(alg=a, seed=s) for s in 1:3]
     (method = name, mean_best = mean(getfield.(runs, :fx)), worst_best = maximum(getfield.(runs, :fx)), seconds_per_run = sec / 3)
 end

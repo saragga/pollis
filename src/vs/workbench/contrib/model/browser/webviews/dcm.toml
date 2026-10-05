@@ -18,7 +18,7 @@ description = "An 18-video course by Jamie Mair on writing fast Julia code"
 url = "https://www.youtube.com/playlist?list=PLUAq6xQKFgGr39PiyrPk_C9dhBKvWcjUA"
 
 [requires]
-packages = ["Metaheuristics", " Plots"]
+packages = ["Metaheuristics.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""
@@ -177,8 +177,8 @@ text = "CCMO"
 detail = "coevolutionary constrained MOO; helper and main populations for constraint handling"
 
 [[bullets]]
-text = "Borg MOEA"
-detail = "auto-adaptive many-objective framework with epsilon-dominance archiving"
+text = "Epsilon-Dominance Archive"
+detail = "NSGA-II feeding an epsilon-box archive, the core of the Borg MOEA (without its operator adaptation and restarts)"
 
 [[decisionRows]]
 task = "MOEA/D"
@@ -465,7 +465,8 @@ id = "compare-algorithms"
 label = "Compare Algorithms"
 desc = "MOEA/D, CCMO and plain NSGA-II on the same problem, budget and seed: front size, hypervolume (common reference point), feasibility and run time"
 code = '''
-runs = [(name, @timed optimize(f, bounds, make())) for (name, make) in [("MOEA/D", () -> MOEAD_DE(gen_ref_dirs(nobj, 99); options=opts(1))), ("CCMO", () -> CCMO(NSGA2(N={{N}}); options=opts(1))), ("NSGA-II", () -> NSGA2(N={{N}}, options=opts(1)))]]
+pN = 1; while binomial(pN + nobj, nobj - 1) <= {{N}}; pN += 1; end  # MOEA/D partitions giving at most N weight vectors, as for the other algorithms
+runs = [(name, @timed optimize(f, bounds, make())) for (name, make) in [("MOEA/D", () -> MOEAD_DE(gen_ref_dirs(nobj, pN); options=opts(1))), ("CCMO", () -> CCMO(NSGA2(N={{N}}); options=opts(1))), ("NSGA-II", () -> NSGA2(N={{N}}, options=opts(1)))]]
 fronts = [pareto_front(r.value) for (_, r) in runs]
 common = (Fall = reduce(vcat, fronts); nadir(Fall) .+ 0.1 .* (nadir(Fall) .- ideal(Fall)))
 [(algorithm = name, front_size = size(F, 1), hypervolume = hv(F, common), feasible_share = count(s -> s.is_feasible, r.value.population) / length(r.value.population), seconds = round(r.time, digits=2))
@@ -477,7 +478,8 @@ id = "igd-comparison"
 label = "IGD Comparison"
 desc = "Inverted generational distance of each algorithm's front (and this model's) to a reference front, the non-dominated union of all of them (lower is closer and better spread)"
 code = '''
-fronts = [[(name, pareto_front(optimize(f, bounds, make()))) for (name, make) in [("MOEA/D", () -> MOEAD_DE(gen_ref_dirs(nobj, 99); options=opts(1))), ("CCMO", () -> CCMO(NSGA2(N={{N}}); options=opts(1))), ("NSGA-II", () -> NSGA2(N={{N}}, options=opts(1)))]]; [("This model", front)]]
+pN = 1; while binomial(pN + nobj, nobj - 1) <= {{N}}; pN += 1; end  # MOEA/D partitions giving at most N weight vectors, as for the other algorithms
+fronts = [[(name, pareto_front(optimize(f, bounds, make()))) for (name, make) in [("MOEA/D", () -> MOEAD_DE(gen_ref_dirs(nobj, pN); options=opts(1))), ("CCMO", () -> CCMO(NSGA2(N={{N}}); options=opts(1))), ("NSGA-II", () -> NSGA2(N={{N}}, options=opts(1)))]]; [("This model", front)]]
 U = reduce(vcat, last.(fronts))
 nd = [i for i in axes(U, 1) if !any(all(U[j, :] .<= U[i, :]) && any(U[j, :] .< U[i, :]) for j in axes(U, 1))]
 reference = U[nd, :]

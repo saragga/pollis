@@ -13,7 +13,7 @@ name = "Optim.jl"
 github = "https://github.com/JuliaNLSolvers/Optim.jl"
 
 [requires]
-packages = ["Optim.jl", "Plots.jl"]
+packages = ["Optim.jl", "ADTypes.jl", "Plots.jl", "FiniteDiff.jl", "ForwardDiff.jl"]
 
 [[notebookSections]]
 label = ""
@@ -355,18 +355,19 @@ x_opt = Optim.minimizer(result)
 [[codeBranches]]
 model = "gr"
 code = '''
-using Optim, LinearAlgebra
+using Optim, ADTypes, LinearAlgebra
 
 f(x) = {{f}}
 x0 = {{x0}}  # initial guess
 opts = Optim.Options(store_trace=true, extended_trace=true)  # keep the path for the plots
 lb, ub = {{lb}}, {{ub}}
+ad = {{autodiff}} === :forward ? AutoForwardDiff() : AutoFiniteDiff()  # derivative backend (ADTypes)
 bounded = any(isfinite, lb) || any(isfinite, ub)
 
 algo = {{gralgo}}()
 solve(x0, algo=algo) = bounded ?
-    optimize(f, lb, ub, x0, Fminbox(algo), opts; autodiff={{autodiff}}) :  # box-constrained
-    optimize(f, x0, algo, opts; autodiff={{autodiff}})
+    optimize(f, lb, ub, x0, Fminbox(algo), opts; autodiff=ad) :  # box-constrained
+    optimize(f, x0, algo, opts; autodiff=ad)
 
 result = solve(x0)
 x_opt = Optim.minimizer(result)
@@ -376,17 +377,18 @@ x_opt = Optim.minimizer(result)
 [[codeBranches]]
 model = "hr"
 code = '''
-using Optim, LinearAlgebra
+using Optim, ADTypes, LinearAlgebra
 
 f(x) = {{f}}
 x0 = {{x0}}  # initial guess
 opts = Optim.Options(store_trace=true, extended_trace=true)  # keep the path for the plots
 lb, ub = {{lb}}, {{ub}}
+ad = {{autodiff}} === :forward ? AutoForwardDiff() : AutoFiniteDiff()  # derivative backend (ADTypes)
 
 algo = {{hralgo}}()
 solve(x0, algo=algo) = algo isa IPNewton ?
-    optimize(TwiceDifferentiable(f, x0; autodiff={{autodiff}}), TwiceDifferentiableConstraints(lb, ub), x0, algo, opts) :  # box-constrained
-    optimize(f, x0, algo, opts; autodiff={{autodiff}})
+    optimize(TwiceDifferentiable(f, x0; autodiff=ad), TwiceDifferentiableConstraints(lb, ub), x0, algo, opts) :  # box-constrained
+    optimize(f, x0, algo, opts; autodiff=ad)
 
 result = solve(x0)
 x_opt = Optim.minimizer(result)
@@ -415,7 +417,7 @@ desc = "The optimisation path on the contours of f (2D problems; other variables
 code = '''
 using Plots
 
-path = Optim.x_trace(result)
+path = result.method isa NelderMead ? Optim.centroid_trace(result) : Optim.x_trace(result)  # Nelder-Mead tracks a simplex: follow its centroid
 P = reduce(hcat, path)
 pad = max(1, 0.25 * maximum(abs, P))
 xs = range(minimum(P[1, :]) - pad, maximum(P[1, :]) + pad, length=120)
@@ -495,10 +497,12 @@ id = "compare-algorithms"
 label = "Compare Algorithms"
 desc = "Nelder-Mead, gradient descent, conjugate gradient, BFGS, L-BFGS and Newton from the same start: minimum, iterations, calls and time"
 code = '''
+using ADTypes
+
 algos = ["NelderMead" => NelderMead(), "GradientDescent" => GradientDescent(), "ConjugateGradient" => ConjugateGradient(),
          "BFGS" => BFGS(), "LBFGS" => LBFGS(), "Newton" => Newton()]
 map(algos) do (name, a)
-    t = @elapsed r = a isa NelderMead ? optimize(f, x0, a) : optimize(f, x0, a; autodiff=:forward)
+    t = @elapsed r = a isa NelderMead ? optimize(f, x0, a) : optimize(f, x0, a; autodiff=AutoForwardDiff())
     (algorithm = name, minimum = Optim.minimum(r), iterations = Optim.iterations(r), f_calls = Optim.f_calls(r), converged = Optim.converged(r), seconds = t)
 end
 '''
@@ -508,9 +512,11 @@ id = "autodiff-compare"
 label = "Autodiff vs Finite Differences"
 desc = "BFGS with forward-mode automatic differentiation against finite differences: accuracy, calls and time"
 code = '''
-map([:forward, :finite]) do ad
+using ADTypes
+
+map(["forward" => AutoForwardDiff(), "finite" => AutoFiniteDiff()]) do (name, ad)
     t = @elapsed r = optimize(f, x0, BFGS(); autodiff=ad)
-    (derivatives = ad, minimum = Optim.minimum(r), iterations = Optim.iterations(r), f_calls = Optim.f_calls(r), g_calls = Optim.g_calls(r), seconds = t)
+    (derivatives = name, minimum = Optim.minimum(r), iterations = Optim.iterations(r), f_calls = Optim.f_calls(r), g_calls = Optim.g_calls(r), seconds = t)
 end
 '''
 

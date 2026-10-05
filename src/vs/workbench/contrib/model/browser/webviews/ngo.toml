@@ -781,7 +781,8 @@ code = '''
 base = objective(sol)
 map(sol_edges(sol)) do (i, j)
     s2 = solve(remove_edge(W, i, j))
-    (removed = (i, j), objective = objective(s2), change = objective(s2) - base)
+    r = (removed = (i, j), objective = objective(s2), change = objective(s2) - base)
+    hasproperty(s2, :spanning) ? merge(r, (spans_all_vertices = s2.spanning,)) : r  # spanning tree: removing a bridge leaves a forest, whose lower weight is not an improvement
 end
 '''
 

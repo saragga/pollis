@@ -6,9 +6,10 @@ The Save Table tab stores a **Julia table** in the database, for any Tables.jl s
 ```julia
 using DuckDB, DBInterface, Tables
 
-DuckDB.register_table(pollis, Tables.columntable(tbl), "julia_data")   # a view of the Julia columns
-DBInterface.execute(pollis, "CREATE OR REPLACE TABLE results AS SELECT * FROM julia_data")
-DuckDB.unregister_table(pollis, "julia_data")
+mydb = DBInterface.connect(DuckDB.DB, "mydata.duckdb")   # a database of your own, created if new
+DuckDB.register_table(mydb, Tables.columntable(tbl), "julia_data")   # a view of the Julia columns
+DBInterface.execute(mydb, "CREATE OR REPLACE TABLE results AS SELECT * FROM julia_data")
+DuckDB.unregister_table(mydb, "julia_data")
 ```
 `register_table` lets SQL read the Julia columns in place, **without copying** them; `CREATE TABLE ... AS SELECT` then copies them into the database file. Unregister the view afterwards, since it refers to Julia memory that is not saved.
 

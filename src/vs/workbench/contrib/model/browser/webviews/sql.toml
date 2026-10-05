@@ -215,8 +215,23 @@ purpose = "Hand a query result to other tools as a file"
 [[inputs]]
 id = "con"
 label = "Connection"
-tooltip = "Variable holding the DuckDB connection. The Databases view connects the built-in Pollis database as pollis. If the variable does not exist yet, the code connects it to the built-in database."
+tooltip = "Variable holding the DuckDB connection. The Databases view connects the built-in Pollis database, which holds the PollisDatasets, as pollis. If the variable does not exist yet, the code connects it to the built-in database."
 default = "pollis"
+models = ["query", "export"]
+
+[[inputs]]
+id = "owncon"
+label = "Connection"
+tooltip = "Variable to hold the connection to your own database. Your tables go there: the built-in Pollis database is kept for the PollisDatasets."
+default = "mydb"
+models = ["import", "save"]
+
+[[inputs]]
+id = "database"
+label = "Database"
+tooltip = "Your own DuckDB database file, relative to the Julia working directory or absolute. It is created if it does not exist yet."
+default = "mydata.duckdb"
+models = ["import", "save"]
 
 [[inputs]]
 id = "file"
@@ -377,13 +392,14 @@ isdefined(Main, :PollisDB) && PollisDB.install()  # DuckDB is built into Pollis
 using DuckDB, DBInterface, Tables
 
 if !isdefined(Main, :{{con}})  # connect once, to the built-in database, as the Databases view does
-	{{con}} = DBInterface.connect(DuckDB.DB, joinpath(homedir(), ".pollis", "pollis.duckdb"))
-	isdefined(Main, :PollisDB) && PollisDB.register("pollis", {{con}}; name = "Pollis")
+	{{con}} = DBInterface.connect(DuckDB.DB, ":memory:")
+	isdefined(Main, :PollisDB) && PollisDB.register("pollis", {{con}}; name = "PollisDatasets")  # loads the PollisDatasets
 end
 
 sql = raw"""
 {{sql}}
 """
+connection = {{con}}  # the connection, for the Next Steps
 relation = "(" * rstrip(strip(sql), ';') * ")"  # the query as a subquery, for the Next Steps
 tbl = Tables.columntable(DBInterface.execute({{con}}, sql))  # named tuple of column vectors
 println(length(first(tbl)), " rows x ", length(tbl), " columns")
@@ -396,17 +412,25 @@ code = '''
 isdefined(Main, :PollisDB) && PollisDB.install()  # DuckDB is built into Pollis
 using DuckDB, DBInterface, Tables
 
-if !isdefined(Main, :{{con}})  # connect once, to the built-in database, as the Databases view does
-	{{con}} = DBInterface.connect(DuckDB.DB, joinpath(homedir(), ".pollis", "pollis.duckdb"))
-	isdefined(Main, :PollisDB) && PollisDB.register("pollis", {{con}}; name = "Pollis")
+# Your tables go in a database of your own: the built-in Pollis database is kept for the PollisDatasets.
+# An existing SQLite or PostgreSQL database works too: ATTACH it, e.g. "ATTACH 'shop.sqlite' AS shop (TYPE sqlite)",
+# and write to shop.{{table}}.
+if isdefined(Main, :{{owncon}})  # running it again: close the earlier connection first
+	isdefined(Main, :PollisDB) ? PollisDB.disconnect({{owncon}}) : DBInterface.close!({{owncon}})
 end
 
-{{?mode=replace}}DBInterface.execute({{con}}, "CREATE OR REPLACE TABLE {{table}} AS SELECT * FROM {{reader}}('{{file}}')")
-{{?mode=append}}DBInterface.execute({{con}}, "INSERT INTO {{table}} SELECT * FROM {{reader}}('{{file}}')")
-isdefined(Main, :PollisDB) && PollisDB.refresh()  # show the table in the Databases view
+{{owncon}} = DBInterface.connect(DuckDB.DB, "{{database}}")  # creates the file if it does not exist
+{{?mode=replace}}DBInterface.execute({{owncon}}, "CREATE OR REPLACE TABLE {{table}} AS SELECT * FROM {{reader}}('{{file}}')")
+{{?mode=append}}DBInterface.execute({{owncon}}, "INSERT INTO {{table}} SELECT * FROM {{reader}}('{{file}}')")
+DBInterface.close!({{owncon}})  # the table is saved in {{database}}
+
+# Later, in this session or another: open the database again, to add a second table or query it
+{{owncon}} = DBInterface.connect(DuckDB.DB, "{{database}}")
+isdefined(Main, :PollisDB) && PollisDB.show({{owncon}}; name = "{{database}}")  # browse it in the Databases view
+connection = {{owncon}}  # the connection, for the Next Steps
 relation = "{{table}}"
-n = first(Tables.columntable(DBInterface.execute({{con}}, "SELECT count(*) AS n FROM $relation")).n)
-tbl = Tables.columntable(DBInterface.execute({{con}}, "SELECT * FROM $relation LIMIT 1000"))  # a sample, for the Next Steps
+n = first(Tables.columntable(DBInterface.execute(connection, "SELECT count(*) AS n FROM $relation")).n)
+tbl = Tables.columntable(DBInterface.execute(connection, "SELECT * FROM $relation LIMIT 1000"))  # a sample, for the Next Steps
 println("Table {{table}}: ", n, " rows x ", length(tbl), " columns")
 println(Tables.schema(tbl))
 '''
@@ -417,19 +441,27 @@ code = '''
 isdefined(Main, :PollisDB) && PollisDB.install()  # DuckDB is built into Pollis
 using DuckDB, DBInterface, Tables
 
-if !isdefined(Main, :{{con}})  # connect once, to the built-in database, as the Databases view does
-	{{con}} = DBInterface.connect(DuckDB.DB, joinpath(homedir(), ".pollis", "pollis.duckdb"))
-	isdefined(Main, :PollisDB) && PollisDB.register("pollis", {{con}}; name = "Pollis")
+# Your tables go in a database of your own: the built-in Pollis database is kept for the PollisDatasets.
+# An existing SQLite or PostgreSQL database works too: ATTACH it, e.g. "ATTACH 'shop.sqlite' AS shop (TYPE sqlite)",
+# and write to shop.{{table}}.
+if isdefined(Main, :{{owncon}})  # running it again: close the earlier connection first
+	isdefined(Main, :PollisDB) ? PollisDB.disconnect({{owncon}}) : DBInterface.close!({{owncon}})
 end
 
-DuckDB.register_table({{con}}, Tables.columntable({{data}}), "julia_data")  # a view of the Julia columns, not a copy
-{{?mode=replace}}DBInterface.execute({{con}}, "CREATE OR REPLACE TABLE {{table}} AS SELECT * FROM julia_data")
-{{?mode=append}}DBInterface.execute({{con}}, "INSERT INTO {{table}} SELECT * FROM julia_data")
-DuckDB.unregister_table({{con}}, "julia_data")
-isdefined(Main, :PollisDB) && PollisDB.refresh()  # show the table in the Databases view
+{{owncon}} = DBInterface.connect(DuckDB.DB, "{{database}}")  # creates the file if it does not exist
+DuckDB.register_table({{owncon}}, Tables.columntable({{data}}), "julia_data")  # a view of the Julia columns, not a copy
+{{?mode=replace}}DBInterface.execute({{owncon}}, "CREATE OR REPLACE TABLE {{table}} AS SELECT * FROM julia_data")
+{{?mode=append}}DBInterface.execute({{owncon}}, "INSERT INTO {{table}} SELECT * FROM julia_data")
+DuckDB.unregister_table({{owncon}}, "julia_data")
+DBInterface.close!({{owncon}})  # the table is saved in {{database}}
+
+# Later, in this session or another: open the database again, to add a second table or query it
+{{owncon}} = DBInterface.connect(DuckDB.DB, "{{database}}")
+isdefined(Main, :PollisDB) && PollisDB.show({{owncon}}; name = "{{database}}")  # browse it in the Databases view
+connection = {{owncon}}  # the connection, for the Next Steps
 relation = "{{table}}"
-n = first(Tables.columntable(DBInterface.execute({{con}}, "SELECT count(*) AS n FROM $relation")).n)
-tbl = Tables.columntable(DBInterface.execute({{con}}, "SELECT * FROM $relation LIMIT 1000"))  # a sample, for the Next Steps
+n = first(Tables.columntable(DBInterface.execute(connection, "SELECT count(*) AS n FROM $relation")).n)
+tbl = Tables.columntable(DBInterface.execute(connection, "SELECT * FROM $relation LIMIT 1000"))  # a sample, for the Next Steps
 println("Table {{table}}: ", n, " rows x ", length(tbl), " columns")
 '''
 
@@ -440,14 +472,15 @@ isdefined(Main, :PollisDB) && PollisDB.install()  # DuckDB is built into Pollis
 using DuckDB, DBInterface, Tables
 
 if !isdefined(Main, :{{con}})  # connect once, to the built-in database, as the Databases view does
-	{{con}} = DBInterface.connect(DuckDB.DB, joinpath(homedir(), ".pollis", "pollis.duckdb"))
-	isdefined(Main, :PollisDB) && PollisDB.register("pollis", {{con}}; name = "Pollis")
+	{{con}} = DBInterface.connect(DuckDB.DB, ":memory:")
+	isdefined(Main, :PollisDB) && PollisDB.register("pollis", {{con}}; name = "PollisDatasets")  # loads the PollisDatasets
 end
 
 sql = raw"""
 {{sql}}
 """
 DBInterface.execute({{con}}, "COPY (" * rstrip(strip(sql), ';') * ") TO '{{out}}' (FORMAT {{format}})")
+connection = {{con}}  # the connection, for the Next Steps
 relation = "'{{out}}'"  # DuckDB reads the file back, for the Next Steps
 tbl = Tables.columntable(DBInterface.execute({{con}}, "SELECT * FROM $relation LIMIT 1000"))
 println("Wrote {{out}} (", filesize("{{out}}"), " bytes, ", length(tbl), " columns)")
@@ -491,7 +524,7 @@ id = "query-plan"
 label = "Query Plan"
 desc = "EXPLAIN ANALYZE: the steps DuckDB runs, with the rows and time of each"
 code = '''
-plan = Tables.columntable(DBInterface.execute({{con}}, "EXPLAIN ANALYZE SELECT * FROM $relation"))
+plan = Tables.columntable(DBInterface.execute(connection, "EXPLAIN ANALYZE SELECT * FROM $relation"))
 println(last(plan)[1])  # read bottom-up: scans first, then filters, joins and aggregates
 '''
 
@@ -500,10 +533,10 @@ id = "missing-values"
 label = "Missing Values"
 desc = "NULL count and share per column, counted in the database over every row"
 code = '''
-cols = Tables.columntable(DBInterface.execute({{con}}, "SELECT * FROM $relation LIMIT 0"))
-counts = Tables.columntable(DBInterface.execute({{con}}, "SELECT count(*) AS n, " *
+cols = Tables.columntable(DBInterface.execute(connection, "SELECT * FROM $relation LIMIT 0"))
+counts = Tables.columntable(DBInterface.execute(connection, "SELECT count(*) AS __rows__, " *
 	join(("count(*) - count(\"$c\") AS \"$c\"" for c in keys(cols)), ", ") * " FROM $relation"))
-n = first(counts.n)
+n = first(counts.__rows__)  # unusual alias, so it cannot collide with a column name
 for c in keys(cols)
 	k = first(counts[c])
 	println(rpad(c, 16), lpad(k, 8), " missing  (", round(100 * k / max(n, 1), digits=1), "%)")
@@ -521,14 +554,14 @@ desc = "Time the mean of the first numeric column in DuckDB against fetching the
 code = '''
 using Statistics
 
-full = Tables.columntable(DBInterface.execute({{con}}, "SELECT * FROM $relation"))
+full = Tables.columntable(DBInterface.execute(connection, "SELECT * FROM $relation"))
 numeric = [c for c in keys(full) if nonmissingtype(eltype(full[c])) <: Real]
 if isempty(numeric)
 	println("No numeric columns to average")
 else
 	col = first(numeric)
-	in_sql() = first(Tables.columntable(DBInterface.execute({{con}}, "SELECT avg(\"$col\") AS m FROM $relation")).m)
-	in_julia() = mean(skipmissing(Tables.columntable(DBInterface.execute({{con}}, "SELECT * FROM $relation"))[col]))
+	in_sql() = first(Tables.columntable(DBInterface.execute(connection, "SELECT avg(\"$col\") AS m FROM $relation")).m)
+	in_julia() = mean(skipmissing(Tables.columntable(DBInterface.execute(connection, "SELECT * FROM $relation"))[col]))
 	in_sql(); in_julia()  # first calls compile
 	println("Mean of ", col, " (", length(full[col]), " rows)")
 	println("  DuckDB:            ", round(1000 * @elapsed(in_sql()), digits=2), " ms")
@@ -546,7 +579,7 @@ id = "column-summary"
 label = "Column Summary"
 desc = "DuckDB SUMMARIZE: type, range, distinct values, mean and missing share of every column"
 code = '''
-s = Tables.columntable(DBInterface.execute({{con}}, "SUMMARIZE SELECT * FROM $relation"))
+s = Tables.columntable(DBInterface.execute(connection, "SUMMARIZE SELECT * FROM $relation"))
 for i in eachindex(s.column_name)
 	println(rpad(s.column_name[i], 16), rpad(s.column_type[i], 12),
 		"min = ", coalesce(s.min[i], "-"), "  max = ", coalesce(s.max[i], "-"),
@@ -567,7 +600,7 @@ code = '''
 using XLSX
 
 out = "result.xlsx"
-XLSX.writetable(out, Tables.columntable(DBInterface.execute({{con}}, "SELECT * FROM $relation")); overwrite=true)
+XLSX.writetable(out, Tables.columntable(DBInterface.execute(connection, "SELECT * FROM $relation")); overwrite=true)
 println("Wrote ", out)
 '''
 
@@ -577,6 +610,6 @@ label = "Save as CSV"
 desc = "Let DuckDB write every row to result.csv, without passing it through Julia"
 code = '''
 out = "result.csv"
-DBInterface.execute({{con}}, "COPY (SELECT * FROM $relation) TO '$out' (FORMAT csv, HEADER)")
+DBInterface.execute(connection, "COPY (SELECT * FROM $relation) TO '$out' (FORMAT csv, HEADER)")
 println("Wrote ", out, " (", filesize(out), " bytes)")
 '''

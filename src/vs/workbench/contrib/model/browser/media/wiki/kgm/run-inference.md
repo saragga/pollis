@@ -165,4 +165,4 @@ logits    = Array(out_gpu["output"])     # bring results back to CPU
 ```
 
 ## See Also
-- [Download & Load](download-load.md) · [Flux.jl](flux-jl.md) · [ONNX.jl](onnx-jl.md)
+- [Download & Load](download-load.md) · [Flux.jl](flux-jl.md) · [ONNXRunTime.jl](onnxruntime-jl.md)

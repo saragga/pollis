@@ -1,0 +1,35 @@
+{
+  "name": "pollis-toolbox-analytics",
+  "displayName": "Analytics Toolbox",
+  "description": "The Pollis Analytics Toolbox: symbolic math, nonlinear systems, numerical differentiation and integration, and ordinary and partial differential equations.",
+  "version": "1.0.1",
+  "publisher": "pollis",
+  "license": "AGPL-3.0-or-later",
+  "icon": "icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/saragga/pollis"
+  },
+  "engines": {
+    "vscode": "*"
+  },
+  "categories": ["Other"],
+  "contributes": {
+    "pollisToolboxes": [
+      {
+        "id": "analytics",
+        "title": "Analytics Toolbox",
+        "group": "1_toolboxes",
+        "order": 1,
+        "panels": [
+          { "id": "symb", "command": "chiara.toolboxes.symb", "title": "Symbolic Math", "group": "1_at", "order": 1, "data": "panels/symb.toml", "defaultModel": "alg", "decisionFirstColumn": "Task" },
+          { "id": "nlin", "command": "chiara.toolboxes.nlin", "title": "Nonlinear Systems", "group": "1_at", "order": 2, "data": "panels/nlin.toml", "defaultModel": "scalar", "decisionFirstColumn": "Task" },
+          { "id": "diff", "command": "chiara.toolboxes.diff", "title": "Differentiation", "menuTitle": "Numerical Differentiation", "group": "2_at", "order": 1, "data": "panels/diff.toml", "defaultModel": "deriv", "decisionFirstColumn": "Task" },
+          { "id": "integ", "command": "chiara.toolboxes.integ", "title": "Integration", "menuTitle": "Numerical Integration", "group": "2_at", "order": 2, "data": "panels/integ.toml", "defaultModel": "def", "decisionFirstColumn": "Task" },
+          { "id": "odes", "command": "chiara.toolboxes.ode", "title": "Ordinary Differential Equations", "group": "3_at", "order": 1, "data": "panels/odes.toml", "defaultModel": "scalar", "decisionFirstColumn": "Task" },
+          { "id": "pdes", "command": "chiara.toolboxes.pde", "title": "Partial Differential Equations", "group": "3_at", "order": 2, "data": "panels/pdes.toml", "defaultModel": "heat", "decisionFirstColumn": "Task" }
+        ]
+      }
+    ]
+  }
+}

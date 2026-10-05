@@ -13,7 +13,7 @@ name = "CovarianceEstimation.jl"
 github = "https://github.com/mateuszbaran/CovarianceEstimation.jl"
 
 [requires]
-packages = ["CovarianceEstimation.jl"]
+packages = ["CovarianceEstimation.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""
@@ -275,13 +275,19 @@ top = sortperm(abs.(w), rev=true)[1:min(5, end)]
 [[actionGroups.actions]]
 id = "out-of-sample"
 label = "Out-of-Sample Risk"
-desc = "Estimates on the first half of the data, then measures the realized volatility of each minimum-variance portfolio on the second half"
+desc = "Over 50 random half-splits: estimate on one half, then measure the realized volatility of each minimum-variance portfolio on the other half (mean and spread across splits)"
 code = '''
-using Statistics
-minvar(C) = (w = pinv(C) * ones(size(C, 1)); w ./ sum(w))
-h = div(size(X, 1), 2)
-Xa, Xb = X[1:h, :], X[h+1:end, :]
-(shrunk = std(Xb * minvar(cov(est, Xa))), sample = std(Xb * minvar(cov(SimpleCovariance(), Xa))), equal_weight = std(Xb * fill(1 / size(X, 2), size(X, 2))))
+using Statistics, Random
+minvar(C) = (w = pinv(C) * ones(size(C, 1)); w ./ sum(w))  # pinv: when the half has fewer rows than assets the sample covariance is singular, and pinv gives the minimum-norm weights
+T, N = size(X); h = div(T, 2)
+h <= N && println("Each half has ", h, " rows for ", N, " assets: the sample covariance is singular there, the shrunk ones are not.")
+Random.seed!(1)
+vols = map(1:50) do _
+    idx = randperm(T); a, b = idx[1:h], idx[h+1:end]  # random split: assumes exchangeable rows, as in the simulated data (for a time series, prefer a rolling window)
+    [std(X[b, :] * minvar(cov(est, X[a, :]))), std(X[b, :] * minvar(cov(SimpleCovariance(), X[a, :]))), std(X[b, :] * fill(1 / N, N))]
+end
+V = permutedims(reduce(hcat, vols))  # splits x (shrunk, sample, equal weight)
+[(portfolio = k, mean_volatility = round(mean(V[:, j]), sigdigits=4), sd_across_splits = round(std(V[:, j]), sigdigits=2)) for (j, k) in enumerate(["shrunk", "sample", "equal weight"])]
 '''
 
 [[actionGroups]]

@@ -402,7 +402,7 @@ scatter!([sol.x[1]], [sol.x[2]], ms=6, label="optimum", xlabel="x1", ylabel="x2"
 [[actionGroups.actions]]
 id = "ambiguity-set"
 label = "Uncertainty Set"
-desc = "Samples of resource use xi with the boundary xi'x* = b of the optimal decision. Chance-constrained: the (1 - epsilon) ellipsoid the constraint protects. DRO: the epsilon tail of samples whose CVaR, plus the Wasserstein margin, must stay within capacity"
+desc = "Samples of resource use xi with the boundary xi'x* = b of the optimal decision. Chance-constrained: the ellipsoid of radius z(1 - epsilon) whose worst case gives the constraint (its own probability content is lower than 1 - epsilon, about 0.74 in 2D at epsilon 0.05). DRO: the epsilon tail of samples whose CVaR, plus the Wasserstein margin, must stay within capacity"
 code = '''
 using Plots
 x = sol.x
@@ -412,7 +412,7 @@ plot!(a1, (b .- a1 .* x[1]) ./ x[2], lw=2, label="xi'x* = b (violation above)")
 {{?model=cc}}mu, L = vec(mean(xi, dims=2)), cholesky(Symmetric(cov(xi, dims=2))).U
 {{?model=cc}}z = quantile(Normal(), 1 - epsilon)
 {{?model=cc}}E = [mu .+ z .* (transpose(L) * [cos(t), sin(t)]) for t in range(0, 2pi, length=200)]  # support function mu'x + z ||L x||
-{{?model=cc}}plot!(first.(E), last.(E), lw=2, label="protected ellipsoid", title="Chance constraint", aspect_ratio=1)
+{{?model=cc}}plot!(first.(E), last.(E), lw=2, label="ellipsoid of radius z(1 - epsilon)", title="Chance constraint", aspect_ratio=1)
 {{?model=dro}}k = ceil(Int, epsilon * n)
 {{?model=dro}}tail = sortperm(transpose(xi) * x, rev=true)[1:k]  # samples in the CVaR tail
 {{?model=dro}}scatter!(xi[1, tail], xi[2, tail], ms=5, label="epsilon tail", title="DRO (theta = " * string(theta) * ")", aspect_ratio=1)

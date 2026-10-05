@@ -428,7 +428,7 @@ id = "profiles"
 label = "Cluster Profiles"
 desc = "Per-cluster feature means and standard deviations to characterise what each cluster represents"
 code = '''
-ids   = sort(unique(labels))  # 0 = DBSCAN noise
+ids   = sort(unique(labels))  # cluster labels from the dendrogram cut
 means = [mean(X[labels .== c, j]) for c in ids, j in 1:size(X, 2)]  # clusters x features
 sds   = [std(X[labels .== c, j]) for c in ids, j in 1:size(X, 2)]
 (clusters = ids, means = means, sds = sds)

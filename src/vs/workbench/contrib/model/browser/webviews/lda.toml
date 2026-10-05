@@ -9,15 +9,11 @@ viewType = "pollis.lda"
 defaultModel = "lda"
 
 [[packages]]
-name = "TopicModels.jl"
-github = "https://github.com/slycoder/TopicModels.jl"
-
-[[packages]]
 name = "TextAnalysis.jl"
 github = "https://github.com/JuliaText/TextAnalysis.jl"
 
 [requires]
-packages = ["TopicModels.jl", "TextAnalysis.jl"]
+packages = ["TextAnalysis.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""
@@ -26,13 +22,7 @@ label = ""
 name = "LDA"
 file = "lda/tutorial-01-lda.ipynb"
 bundled = true
-description = "Latent Dirichlet Allocation topic modelling using TopicModels.jl"
-
-[[notebookSections.notebooks]]
-name = "Focused LDA"
-file = "lda/tutorial-02-flda.ipynb"
-bundled = true
-description = "Focused LDA topic modelling with background word separation using TopicModels.jl"
+description = "Latent Dirichlet Allocation topic modelling using TextAnalysis.jl"
 
 [[wikis]]
 name = "Factsheet"
@@ -73,11 +63,6 @@ name = "LDA"
 file = "lda/lda.md"
 bundled = true
 
-[[wikis]]
-name = "Focused LDA"
-file = "lda/flda.md"
-bundled = true
-
 [[references]]
 separator = true
 label = "Software"
@@ -89,14 +74,6 @@ year = 2017
 journal = "SIAM Review"
 doi = "10.1137/141000671"
 openAccess = false
-
-[[references]]
-title = "TopicModels.jl"
-authors = "Zeng, Jonathan"
-year = 2015
-journal = "GitHub"
-url = "https://github.com/slycoder/TopicModels.jl"
-openAccess = true
 
 [[references]]
 title = "TextAnalysis.jl: Julia NLP Toolkit"
@@ -139,37 +116,49 @@ url = "https://jmlr.org/papers/v3/blei03a.html"
 openAccess = true
 
 [[references]]
-title = "The IBP Compound Dirichlet Process and its Application to Focused Topic Analysis"
-authors = "Williamson, Sinead; Wang, Chong; Heller, Katherine A.; Blei, David M."
-year = 2010
-journal = "ICML"
-url = "https://icml.cc/Conferences/2010/papers/279.pdf"
+title = "Finding Scientific Topics"
+authors = "Griffiths, Thomas L.; Steyvers, Mark"
+year = 2004
+journal = "Proceedings of the National Academy of Sciences"
+doi = "10.1073/pnas.0307752101"
+openAccess = true
+
+[[references]]
+title = "Evaluation Methods for Topic Models"
+authors = "Wallach, Hanna M.; Murray, Iain; Salakhutdinov, Ruslan; Mimno, David"
+year = 2009
+journal = "Proceedings of the 26th International Conference on Machine Learning"
+doi = "10.1145/1553374.1553515"
+openAccess = false
+
+[[references]]
+title = "Optimizing Semantic Coherence in Topic Models"
+authors = "Mimno, David; Wallach, Hanna M.; Talley, Edmund; Leenders, Miriam; McCallum, Andrew"
+year = 2011
+journal = "Proceedings of the 2011 Conference on Empirical Methods in Natural Language Processing"
+url = "https://aclanthology.org/D11-1024/"
 openAccess = true
 
 [[models]]
 id = "lda"
 label = "LDA"
 
-[[models]]
-id = "flda"
-label = "Focused LDA"
-
 [[bullets]]
 text = "LDA"
 detail = "probabilistic generative model; documents as mixtures of topics, topics as distributions over words (Dirichlet priors)"
 
 [[bullets]]
-text = "Focused LDA"
-detail = "structured variant; each word token is either topic-specific or drawn from a background distribution"
+text = "Collapsed Gibbs sampling"
+detail = "resamples the topic of every token given all the others; phi and theta are read from the last sweep"
 
 [[bullets]]
-text = "TopicModels.jl"
-detail = "Julia implementation of LDA, Focused LDA, CTM and related topic models"
+text = "TextAnalysis.jl"
+detail = "corpus cleaning, document-term matrix and lda(dtm, k, iterations, ...); see the LSA panel for the SVD alternative"
 
 [[inputs]]
 id = "corpus"
 label = "Corpus"
-tooltip = "Array of text documents, e.g. docs = [\"first doc\", \"second doc\"]"
+tooltip = "Vector of text documents, e.g. corpus = [\"first doc\", \"second doc\"]"
 default = "corpus"
 
 [[inputs]]
@@ -180,40 +169,96 @@ default = "10"
 
 [[inputs]]
 id = "iters"
-label = "Iterations"
-tooltip = "Number of training iterations for the variational EM algorithm"
+label = "Gibbs Sweeps"
+tooltip = "Number of collapsed Gibbs sampling sweeps over all tokens"
 default = "1000"
+
+[[inputs]]
+id = "alpha"
+label = "Document-Topic Prior (alpha)"
+tooltip = "Symmetric Dirichlet prior on each document mixture of topics; below 1 favours few topics per document"
+default = "0.1"
+
+[[inputs]]
+id = "beta"
+label = "Topic-Word Prior (beta)"
+tooltip = "Symmetric Dirichlet prior on each topic distribution over words; below 1 favours few words per topic"
+default = "0.01"
+
+[[inputs]]
+id = "holdout"
+label = "Held-Out Share"
+tooltip = "Share of each document tokens held out for the document-completion perplexity"
+default = "0.1"
+
+[[inputs]]
+id = "seed"
+label = "Seed"
+tooltip = "Seed of the global random number generator, which lda uses"
+default = "1"
+
+[[inputs]]
+id = "topic"
+label = "Topic to Inspect"
+tooltip = "Topic index used by the Top Documents action"
+default = "1"
+
+[[inputs]]
+id = "new-doc"
+label = "New Document"
+tooltip = "A Julia string with the text of a document to place in the topics"
+default = "\"replace with the text of a new document\""
 
 [[codeBranches]]
 model = "lda"
 code = '''
-using TopicModels, TextAnalysis
+using TextAnalysis, SparseArrays, LinearAlgebra, Random  # corpus, DTM and lda; sparse counts; dot; seeding
 
-crps  = Corpus([StringDocument(d) for d in {{corpus}}])  # build corpus from documents
-prepare!(crps, strip_punctuation | strip_case)  # clean text
-update_lexicon!(crps)  # build vocabulary
-dtm   = DocumentTermMatrix(crps)  # document-term matrix
+crps = Corpus([StringDocument(d) for d in {{corpus}}])  # one document per string
+prepare!(crps, strip_punctuation | strip_case | strip_numbers | strip_stopwords)  # clean text and drop stop words
+update_lexicon!(crps)  # build the vocabulary
+dtm   = DocumentTermMatrix(crps)  # dtm.dtm: N x V sparse counts; dtm.terms: the V terms
+terms = dtm.terms
+N, V  = size(dtm.dtm)
 
-model = LDA(dtm.dtm, {{k}})  # initialise LDA with {{k}} topics
-train!(model, iter={{iters}})  # variational EM training
+k, iters = {{k}}, {{iters}}  # topics, Gibbs sweeps
+a, b     = {{alpha}}, {{beta}}  # Dirichlet priors: document-topic a, topic-word b
+# lda smooths the topic-word counts with its 4th argument and the document-topic counts with its 5th
+# (the reverse of its docstring), so b goes 4th and a goes 5th
+fit_lda(m, kk) = (Random.seed!({{seed}}); lda(m, kk, iters, b, a; showprogress = false))  # lda samples with the global RNG
+phi, theta = fit_lda(dtm, k)  # phi: k x V p(word | topic); theta: k x N p(topic | document); counts of the last sweep
 
-topicdist(model)  # topic-word distributions (k x V)
-'''
+top_words(P, t, n = 10) = terms[sortperm(Vector(P[t, :]), rev = true)[1:n]]  # n most probable words of topic t
 
-[[codeBranches]]
-model = "flda"
-code = '''
-using TopicModels, TextAnalysis
+occurs = dtm.dtm .> 0  # N x V: does document d contain term w
+function umass(ws)  # UMass coherence of a ranked word list (Mimno et al. 2011): near 0 is coherent, very negative is not
+    ix = [dtm.column_indices[w] for w in ws]
+    D(i, j) = sum(occurs[:, i] .& occurs[:, j])  # documents containing both terms
+    sum(log((D(ix[m], ix[l]) + 1) / D(ix[l], ix[l])) for m in 2:length(ix) for l in 1:m-1)
+end
 
-crps  = Corpus([StringDocument(d) for d in {{corpus}}])  # build corpus from documents
-prepare!(crps, strip_punctuation | strip_case)  # clean text
-update_lexicon!(crps)  # build vocabulary
-dtm   = DocumentTermMatrix(crps)  # document-term matrix
+# Document completion (Wallach et al. 2009): hold out a share of each document tokens, fit on the rest,
+# and score the held-out tokens with the posterior-mean estimates; an add-one unigram model is the baseline to beat
+function heldout_perplexity(kk; share = {{holdout}})
+    Random.seed!({{seed}})
+    d, w, c = findnz(dtm.dtm)
+    h = [count(<(share), rand(ci)) for ci in c]  # held-out tokens in each (document, term) cell
+    train = DocumentTermMatrix(dropzeros(sparse(d, w, c .- h, N, V)), terms)
+    P, T = fit_lda(train, kk)
+    nd  = vec(sum(train.dtm, dims = 2))  # training tokens per document
+    ndk = replace(T, NaN => 0.0) .* transpose(nd)  # topic counts per document (theta is NaN for a document with no training tokens)
+    nk  = vec(sum(ndk, dims = 2))  # tokens per topic
+    phi_s   = (P .* nk .+ b) ./ (nk .+ V * b)  # posterior mean p(word | topic)
+    theta_s = (ndk .+ a) ./ (transpose(nd) .+ kk * a)  # posterior mean p(topic | document)
+    uni = (vec(sum(train.dtm, dims = 1)) .+ 1) ./ (sum(nd) + V)  # add-one unigram baseline
+    ll_lda = sum(hi * log(dot(theta_s[:, di], phi_s[:, wi])) for (di, wi, hi) in zip(d, w, h) if hi > 0)
+    ll_uni = sum(hi * log(uni[wi]) for (wi, hi) in zip(w, h) if hi > 0)
+    (lda = exp(-ll_lda / sum(h)), unigram = exp(-ll_uni / sum(h)), phi = P)
+end
 
-model = fLDA(dtm.dtm, {{k}})  # focused LDA with {{k}} topics
-train!(model, iter={{iters}})  # variational EM training
-
-topicdist(model)  # topic-word distributions (k x V)
+for t in 1:k
+    println("Topic $t: ", join(top_words(phi, t), ", "))
+end
 '''
 
 [[actionGroups]]
@@ -223,37 +268,24 @@ label = "Visualise"
 [[actionGroups.actions]]
 id = "topic-words"
 label = "Top Words per Topic"
-desc = "Highest-probability words for each discovered topic"
+desc = "Highest-probability words of the first six topics"
 code = '''
-using TopicModels, TextAnalysis
+using Plots  # plotting
 
-crps  = Corpus([StringDocument(d) for d in {{corpus}}])
-prepare!(crps, strip_punctuation | strip_case)
-update_lexicon!(crps)
-dtm   = DocumentTermMatrix(crps)
-
-model = LDA(dtm.dtm, {{k}})  # initialise LDA
-train!(model, iter={{iters}})  # train model
-
-showtopics(model, 10)  # print top 10 words per topic
+n = 10  # words per topic
+plots = [bar(top_words(phi, t, n), sort(Vector(phi[t, :]), rev = true)[1:n], orientation = :h, yflip = true,
+             legend = false, title = "Topic $t", xlabel = "p(word | topic)") for t in 1:min(k, 6)]
+plot(plots..., layout = length(plots), size = (900, 600))
 '''
 
 [[actionGroups.actions]]
 id = "doc-topic-dist"
 label = "Document-Topic Distribution"
-desc = "Topic mixture proportions for each document"
+desc = "Heatmap of each document mixture of topics (theta)"
 code = '''
-using TopicModels, TextAnalysis
+using Plots  # plotting
 
-crps  = Corpus([StringDocument(d) for d in {{corpus}}])
-prepare!(crps, strip_punctuation | strip_case)
-update_lexicon!(crps)
-dtm   = DocumentTermMatrix(crps)
-
-model = LDA(dtm.dtm, {{k}})  # initialise LDA
-train!(model, iter={{iters}})  # train model
-
-topicdist(model)  # document-topic matrix (N x k)
+heatmap(theta, xlabel = "document", ylabel = "topic", colorbar_title = "p(topic | document)", yflip = true)  # columns sum to 1
 '''
 
 [[actionGroups]]
@@ -262,38 +294,23 @@ label = "Diagnose"
 
 [[actionGroups.actions]]
 id = "perplexity"
-label = "Perplexity"
-desc = "Perplexity on held-out documents; lower is better"
+label = "Held-Out Perplexity"
+desc = "Document-completion perplexity against a unigram baseline; lower is better"
 code = '''
-using TopicModels, TextAnalysis
-
-crps  = Corpus([StringDocument(d) for d in {{corpus}}])
-prepare!(crps, strip_punctuation | strip_case)
-update_lexicon!(crps)
-dtm   = DocumentTermMatrix(crps)
-
-model = LDA(dtm.dtm, {{k}})  # initialise LDA
-train!(model, iter={{iters}})  # train model
-
-perplexity(model)  # perplexity on held-out data
+r = heldout_perplexity(k)  # refits on the training tokens
+println("Held-out perplexity at k = $k: LDA ", round(r.lda; digits = 1), "   unigram baseline ", round(r.unigram; digits = 1), "   (vocabulary size $V)")
+println(r.lda < r.unigram ? "The topics predict unseen tokens better than word frequencies alone." : "LDA does not beat the unigram model: try fewer topics, more sweeps or a larger corpus.")
 '''
 
 [[actionGroups.actions]]
 id = "topic-coherence"
 label = "Topic Coherence"
-desc = "Average PMI of top word pairs within each topic"
+desc = "UMass coherence of the top 10 words of each topic, from document co-occurrence"
 code = '''
-using TopicModels, TextAnalysis
+using Plots, Statistics  # plotting, mean
 
-crps  = Corpus([StringDocument(d) for d in {{corpus}}])
-prepare!(crps, strip_punctuation | strip_case)
-update_lexicon!(crps)
-dtm   = DocumentTermMatrix(crps)
-
-model = LDA(dtm.dtm, {{k}})  # initialise LDA
-train!(model, iter={{iters}})  # train model
-
-coherence(model)  # average PMI coherence per topic
+coh = [umass(top_words(phi, t)) for t in 1:k]  # near 0 = top words co-occur in the same documents
+bar(1:k, coh, legend = false, xlabel = "topic", ylabel = "UMass coherence (top 10 words)", title = "mean $(round(mean(coh); digits = 2))")
 '''
 
 [[actionGroups]]
@@ -303,37 +320,32 @@ label = "Predict"
 [[actionGroups.actions]]
 id = "infer-topics"
 label = "Infer Topics"
-desc = "Topic distribution for a new document"
+desc = "Topic mixture of a new document, by refitting with the document appended"
 code = '''
-using TopicModels, TextAnalysis
+using TextAnalysis  # corpus, DTM and lda
 
-crps  = Corpus([StringDocument(d) for d in {{corpus}}])
-prepare!(crps, strip_punctuation | strip_case)
-update_lexicon!(crps)
-dtm   = DocumentTermMatrix(crps)
-
-model = LDA(dtm.dtm, {{k}})  # initialise LDA
-train!(model, iter={{iters}})  # train model
-
-infer(model, new_doc_dtm)  # topic distribution for a new document
+# lda has no fold-in for unseen documents, so refit with the new document appended (same seed);
+# the topics are re-estimated, so they are labelled by their own top words
+crps2 = Corpus([StringDocument(d) for d in [{{corpus}}; {{new-doc}}]])
+prepare!(crps2, strip_punctuation | strip_case | strip_numbers | strip_stopwords)
+update_lexicon!(crps2)
+dtm2 = DocumentTermMatrix(crps2)
+phi2, theta2 = fit_lda(dtm2, k)
+for t in sortperm(theta2[:, end], rev = true)[1:min(3, k)]  # the three heaviest topics of the new document
+    println("Topic $t (", round(theta2[t, end]; digits = 2), "): ", join(dtm2.terms[sortperm(Vector(phi2[t, :]), rev = true)[1:8]], ", "))
+end
 '''
 
 [[actionGroups.actions]]
 id = "top-docs"
 label = "Top Documents"
-desc = "Documents most representative of a given topic"
+desc = "Documents with the largest share of the chosen topic"
 code = '''
-using TopicModels, TextAnalysis
-
-crps  = Corpus([StringDocument(d) for d in {{corpus}}])
-prepare!(crps, strip_punctuation | strip_case)
-update_lexicon!(crps)
-dtm   = DocumentTermMatrix(crps)
-
-model = LDA(dtm.dtm, {{k}})  # initialise LDA
-train!(model, iter={{iters}})  # train model
-
-sortperm(topicdist(model)[:, topic_id], rev=true)  # document indices ranked by topic weight
+t = {{topic}}  # topic to inspect
+println("Topic $t: ", join(top_words(phi, t), ", "))
+for d in sortperm(replace(theta[t, :], NaN => 0.0), rev = true)[1:min(5, N)]  # documents ranked by p(topic | document)
+    println(round(theta[t, d]; digits = 2), "  document $d: ", first({{corpus}}[d], 80))
+end
 '''
 
 [[actionGroups]]
@@ -343,41 +355,35 @@ label = "Compare"
 [[actionGroups.actions]]
 id = "compare-k"
 label = "Compare k Topics"
-desc = "Perplexity across different numbers of topics"
+desc = "Held-out perplexity and coherence across numbers of topics"
 code = '''
-using TopicModels, TextAnalysis
+using Plots, Statistics  # plotting, mean
 
-crps  = Corpus([StringDocument(d) for d in {{corpus}}])
-prepare!(crps, strip_punctuation | strip_case)
-update_lexicon!(crps)
-dtm   = DocumentTermMatrix(crps)
-
-for k in [5, 10, 20, 50]  # sweep over number of topics
-    model = LDA(dtm.dtm, k)
-    train!(model, iter={{iters}})  # train each model
-    println("k=", k, " perplexity=", perplexity(model))  # report perplexity
+ks  = [2, 5, 10, 20]  # numbers of topics to compare
+res = [heldout_perplexity(kk) for kk in ks]  # same split and seed for every k
+for (kk, r) in zip(ks, res)
+    println("k = $kk: held-out perplexity ", round(r.lda; digits = 1), "   mean UMass ", round(mean(umass(top_words(r.phi, t)) for t in 1:kk); digits = 2))
 end
+plot(ks, [r.lda for r in res], marker = :o, label = "LDA", xlabel = "topics k", ylabel = "held-out perplexity")
+hline!([res[1].unigram], ls = :dash, label = "unigram baseline")  # choose k where the curve flattens and coherence holds
 '''
 
 [[actionGroups.actions]]
-id = "lda-vs-flda"
-label = "LDA vs Focused LDA"
-desc = "Topic quality and background word separation"
+id = "lda-vs-lsa"
+label = "LDA vs LSA"
+desc = "Coherence of LDA topics against LSA dimensions on the same corpus"
 code = '''
-using TopicModels, TextAnalysis
+using TextAnalysis, Statistics  # lsa, mean
 
-crps  = Corpus([StringDocument(d) for d in {{corpus}}])
-prepare!(crps, strip_punctuation | strip_case)
-update_lexicon!(crps)
-dtm   = DocumentTermMatrix(crps)
-
-lda_model  = LDA(dtm.dtm, {{k}})  # standard LDA
-flda_model = fLDA(dtm.dtm, {{k}})  # focused LDA
-train!(lda_model,  iter={{iters}})  # train LDA
-train!(flda_model, iter={{iters}})  # train fLDA
-
-println("LDA perplexity:  ", perplexity(lda_model))  # compare perplexity
-println("fLDA perplexity: ", perplexity(flda_model))  # lower is better
+F  = lsa(dtm)  # SVD of the N x V tf-idf matrix, as in the LSA panel
+kl = min(k, length(F.S))
+lsa_words = map(1:kl) do t
+    v = F.Vt[t, :] .* sign(F.Vt[t, argmax(abs.(F.Vt[t, :]))])  # SVD signs are arbitrary: orient each dimension by its largest loading
+    terms[sortperm(v, rev = true)[1:10]]
+end
+c_lda = [umass(top_words(phi, t)) for t in 1:k]
+c_lsa = umass.(lsa_words)
+println("Mean UMass coherence (top 10 words): LDA ", round(mean(c_lda); digits = 2), "   LSA ", round(mean(c_lsa); digits = 2))
 '''
 
 [[actionGroups]]
@@ -387,35 +393,21 @@ label = "Interpret"
 [[actionGroups.actions]]
 id = "topic-labels"
 label = "Topic Labels"
-desc = "Top-5 words as a label for each topic"
+desc = "Top 5 words as a label for each topic"
 code = '''
-using TopicModels, TextAnalysis
-
-crps  = Corpus([StringDocument(d) for d in {{corpus}}])
-prepare!(crps, strip_punctuation | strip_case)
-update_lexicon!(crps)
-dtm   = DocumentTermMatrix(crps)
-
-model = LDA(dtm.dtm, {{k}})  # initialise LDA
-train!(model, iter={{iters}})  # train model
-
-showtopics(model, 5)  # top-5 words per topic as labels
+for t in 1:k
+    println("Topic $t: ", join(top_words(phi, t, 5), " / "))  # read these and name the topic yourself
+end
 '''
 
 [[actionGroups.actions]]
 id = "topic-prevalence"
 label = "Topic Prevalence"
-desc = "Average topic weight across the corpus"
+desc = "Share of corpus tokens assigned to each topic"
 code = '''
-using TopicModels, TextAnalysis
+using Plots  # plotting
 
-crps  = Corpus([StringDocument(d) for d in {{corpus}}])
-prepare!(crps, strip_punctuation | strip_case)
-update_lexicon!(crps)
-dtm   = DocumentTermMatrix(crps)
-
-model = LDA(dtm.dtm, {{k}})  # initialise LDA
-train!(model, iter={{iters}})  # train model
-
-mean(topicdist(model), dims=1)  # average topic weight across documents
+nd    = vec(sum(dtm.dtm, dims = 2))  # tokens per document
+share = replace(theta, NaN => 0.0) * nd ./ sum(nd)  # token-weighted topic shares, summing to 1
+bar(1:k, share, legend = false, xlabel = "topic", ylabel = "share of tokens")
 '''

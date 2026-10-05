@@ -306,7 +306,7 @@ label = "Visualise"
 [[actionGroups.actions]]
 id = "fan-chart"
 label = "Fan Chart"
-desc = "Plot mean path with shaded confidence bands from path statistics"
+desc = "Mean path with two bands: mean +/- 2 sd of the paths (where individual paths lie) and mean +/- 2 standard errors (the Monte Carlo uncertainty of the mean itself)"
 code = '''
 using StochasticDiffEq, Statistics, Plots  # fan chart: mean +/- 1 and 2 standard deviations
 
@@ -315,7 +315,8 @@ ens = solve(EnsembleProblem(SDEProblem(f,g,{{X0}},(0.0,{{T}}))), SRIW1(), Ensemb
 t  = range(0.0,{{T}},length=200)  # time grid
 mu = [mean(s(ti) for s in ens) for ti in t]  # mean path
 sd = [std(s(ti) for s in ens)  for ti in t]  # std path
-plot(t, mu, ribbon=2 .* sd, fillalpha=0.2, label="mean +/- 2 std")  # fan chart
+plot(t, mu, ribbon=2 .* sd, fillalpha=0.15, label="paths: mean +/- 2 sd")  # spread of individual paths, not a confidence band
+plot!(t, mu, ribbon=2 .* sd ./ sqrt({{N}}), fillalpha=0.5, label="mean +/- 2 standard errors")  # confidence band for E[X(t)]
 '''
 
 [[actionGroups]]
@@ -325,15 +326,29 @@ label = "Diagnose"
 [[actionGroups.actions]]
 id = "convergence-n"
 label = "Convergence in N"
-desc = "Check that E[X(T)] stabilises as the ensemble size increases"
+desc = "E[X(T)] and sd[X(T)] with their Monte Carlo standard errors as the ensemble grows; for an Ornstein-Uhlenbeck process (linear drift, constant diffusion) also the exact moments and the z-score of the estimate"
 code = '''
 using StochasticDiffEq, Statistics  # verify E[X(T)] converges with ensemble size
 
 f(X,p,t)={{f}}; g(X,p,t)={{g}}  # drift and diffusion
 prob = SDEProblem(f, g, {{X0}}, (0.0, {{T}}))  # base problem
+T, x0 = {{T}}, {{X0}}
+
+# exact moments when the drift is -theta X and the diffusion a constant sigma (detected numerically)
+theta = f(0.0, nothing, 0.0) - f(1.0, nothing, 0.0)
+sigma = g(0.0, nothing, 0.0)
+is_ou = f(0.0, nothing, 0.0) == 0 && isapprox(f(2.0, nothing, 0.0), -2theta) && g(1.0, nothing, 0.0) == sigma && theta > 0
+exact_mean = is_ou ? x0 * exp(-theta * T) : NaN
+exact_sd   = is_ou ? abs(sigma) * sqrt((1 - exp(-2theta * T)) / (2theta)) : NaN
+is_ou && println("Exact OU moments: E[X(T)] = ", round(exact_mean, sigdigits=4), ", sd[X(T)] = ", round(exact_sd, sigdigits=4))
+
 for N in [50, 100, 250, 500, 1000]  # sweep ensemble sizes
     ens = solve(EnsembleProblem(prob), SRIW1(), EnsembleThreads(), trajectories=N)
-    println("N=", N, "  E[X(T)]=", mean(s.u[end] for s in ens))
+    xT = [s.u[end] for s in ens]
+    m, sd = mean(xT), std(xT)
+    se = sd / sqrt(N)  # Monte Carlo standard error of the mean
+    print("N=", N, "  E[X(T)]=", round(m, sigdigits=4), " (se ", round(se, sigdigits=2), ")  sd[X(T)]=", round(sd, sigdigits=4), " (se ", round(sd / sqrt(2 * (N - 1)), sigdigits=2), ")")
+    println(is_ou ? "  z vs exact mean = " * string(round((m - exact_mean) / se, digits=2)) : "")  # |z| above about 2 repeatedly signals bias (step size or solver)
 end
 '''
 

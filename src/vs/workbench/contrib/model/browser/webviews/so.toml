@@ -17,7 +17,7 @@ name = "NLopt.jl"
 github = "https://github.com/JuliaOpt/NLopt.jl"
 
 [requires]
-packages = ["Optim.jl", "NLopt.jl", "Plots.jl"]
+packages = ["Optim.jl", "ADTypes.jl", "NLopt.jl", "Plots.jl", "FiniteDiff.jl", "ForwardDiff.jl"]
 
 [[notebookSections]]
 label = ""
@@ -315,15 +315,16 @@ return '<path d="M10,62 L20,48 L26,52 L32,40 L36,43 L42,32" fill="none" stroke="
 [[codeBranches]]
 model = "newton"
 code = '''
-using Optim, ForwardDiff, LinearAlgebra
+using Optim, ADTypes, ForwardDiff, LinearAlgebra
 
 f(x) = {{f}}
 x0 = {{x0}}  # initial guess
+ad = {{autodiff}} === :forward ? AutoForwardDiff() : AutoFiniteDiff()  # derivative backend (ADTypes)
 n  = length(x0)
 opts = Optim.Options(store_trace=true, extended_trace=true)  # keep the iterates for the plots
 
 pack(r) = (x = Optim.minimizer(r), f = Optim.minimum(r), path = Optim.x_trace(r), iterations = Optim.iterations(r), converged = Optim.converged(r))
-solve(x0) = pack(optimize(f, x0, Newton(), opts; autodiff={{autodiff}}))
+solve(x0) = pack(optimize(f, x0, Newton(), opts; autodiff=ad))
 
 sol = solve(x0)
 x_opt = sol.x
@@ -333,15 +334,16 @@ x_opt = sol.x
 [[codeBranches]]
 model = "ntr"
 code = '''
-using Optim, ForwardDiff, LinearAlgebra
+using Optim, ADTypes, ForwardDiff, LinearAlgebra
 
 f(x) = {{f}}
 x0 = {{x0}}  # initial guess
+ad = {{autodiff}} === :forward ? AutoForwardDiff() : AutoFiniteDiff()  # derivative backend (ADTypes)
 n  = length(x0)
 opts = Optim.Options(store_trace=true, extended_trace=true)  # keep the iterates for the plots
 
 pack(r) = (x = Optim.minimizer(r), f = Optim.minimum(r), path = Optim.x_trace(r), iterations = Optim.iterations(r), converged = Optim.converged(r))
-solve(x0) = pack(optimize(f, x0, NewtonTrustRegion(), opts; autodiff={{autodiff}}))
+solve(x0) = pack(optimize(f, x0, NewtonTrustRegion(), opts; autodiff=ad))
 
 sol = solve(x0)
 x_opt = sol.x
@@ -351,16 +353,17 @@ x_opt = sol.x
 [[codeBranches]]
 model = "ipnewton"
 code = '''
-using Optim, ForwardDiff, LinearAlgebra
+using Optim, ADTypes, ForwardDiff, LinearAlgebra
 
 f(x) = {{f}}
 x0 = {{x0}}  # initial guess
+ad = {{autodiff}} === :forward ? AutoForwardDiff() : AutoFiniteDiff()  # derivative backend (ADTypes)
 n  = length(x0)
 opts = Optim.Options(store_trace=true, extended_trace=true)  # keep the iterates for the plots
 
 pack(r) = (x = Optim.minimizer(r), f = Optim.minimum(r), path = Optim.x_trace(r), iterations = Optim.iterations(r), converged = Optim.converged(r))
 lb, ub = {{lb}}, {{ub}}  # box bounds; x0 must lie strictly inside
-solve(x0) = pack(optimize(TwiceDifferentiable(f, x0; autodiff={{autodiff}}), TwiceDifferentiableConstraints(lb, ub), x0, IPNewton(), opts))
+solve(x0) = pack(optimize(TwiceDifferentiable(f, x0; autodiff=ad), TwiceDifferentiableConstraints(lb, ub), x0, IPNewton(), opts))
 
 sol = solve(x0)
 x_opt = sol.x
@@ -370,7 +373,7 @@ x_opt = sol.x
 [[codeBranches]]
 model = "tn"
 code = '''
-using Optim, ForwardDiff, LinearAlgebra
+using Optim, ADTypes, ForwardDiff, LinearAlgebra
 
 f(x) = {{f}}
 x0 = {{x0}}  # initial guess
@@ -393,12 +396,12 @@ function solve(x0)
     opt.maxeval = 2000
     opt.ftol_rel = 1e-12
     minf, minx, ret = NLopt.optimize(opt, copy(x0))
-    (x = minx, f = minf, path = path, iterations = calls[], converged = ret in (:SUCCESS, :FTOL_REACHED, :XTOL_REACHED))
+    (x = minx, f = minf, path = path, iterations = calls[], converged = ret in (:SUCCESS, :FTOL_REACHED, :XTOL_REACHED))  # NLopt reports no iteration count: "iterations" holds function evaluations
 end
 
 sol = solve(x0)
 x_opt = sol.x
-(minimizer = x_opt, minimum = sol.f, iterations = sol.iterations, converged = sol.converged)
+(minimizer = x_opt, minimum = sol.f, function_evaluations = sol.iterations, converged = sol.converged)
 '''
 
 [[actionGroups]]
@@ -439,7 +442,7 @@ label = "Diagnose"
 [[actionGroups.actions]]
 id = "convergence-check"
 label = "Convergence Check"
-desc = "Convergence flag, iterations, gradient norm at the solution, and the observed convergence order from the last iterates (about 2 = quadratic)"
+desc = "Convergence flag, iterations, gradient norm at the solution, and the observed convergence order from the last iterates (about 2 = quadratic; for truncated Newton the path holds improving evaluations, not iterates, and the count is function evaluations)"
 code = '''
 e = [norm(p - x_opt) for p in sol.path]
 e = e[e .> 1e-12]
@@ -520,11 +523,11 @@ function tn_run(x0)
     (minimum = minf, iterations = missing, f_calls = k[], converged = ret in (:SUCCESS, :FTOL_REACHED, :XTOL_REACHED))
 end
 optim_row(r) = (minimum = Optim.minimum(r), iterations = Optim.iterations(r), f_calls = Optim.f_calls(r), converged = Optim.converged(r))
-runs = ["Newton" => () -> optim_row(optimize(f, x0, Newton(); autodiff=:forward)),
-        "NewtonTrustRegion" => () -> optim_row(optimize(f, x0, NewtonTrustRegion(); autodiff=:forward)),
-        "IPNewton" => () -> optim_row(optimize(TwiceDifferentiable(f, x0; autodiff=:forward), TwiceDifferentiableConstraints(fill(-Inf, n), fill(Inf, n)), x0, IPNewton())),
+runs = ["Newton" => () -> optim_row(optimize(f, x0, Newton(); autodiff=AutoForwardDiff())),
+        "NewtonTrustRegion" => () -> optim_row(optimize(f, x0, NewtonTrustRegion(); autodiff=AutoForwardDiff())),
+        "IPNewton" => () -> optim_row(optimize(TwiceDifferentiable(f, x0; autodiff=AutoForwardDiff()), TwiceDifferentiableConstraints(fill(-Inf, n), fill(Inf, n)), x0, IPNewton())),
         "TruncatedNewton" => () -> tn_run(x0),
-        "BFGS" => () -> optim_row(optimize(f, x0, BFGS(); autodiff=:forward))]
+        "BFGS" => () -> optim_row(optimize(f, x0, BFGS(); autodiff=AutoForwardDiff()))]
 map(runs) do (name, run)
     t = @elapsed r = run()
     (method = name, r..., seconds = t)
@@ -542,7 +545,7 @@ Random.seed!(1)
 starts = [x0 .+ 2 .* randn(n) for _ in 1:20]
 ok(r) = Optim.converged(r) && norm(ForwardDiff.gradient(f, Optim.minimizer(r))) < 1e-6
 map(["Newton" => Newton(), "NewtonTrustRegion" => NewtonTrustRegion()]) do (name, a)
-    rs = [optimize(f, s, a; autodiff=:forward) for s in starts]
+    rs = [optimize(f, s, a; autodiff=AutoForwardDiff()) for s in starts]
     (method = name, success_rate = count(ok, rs) / length(rs), median_iterations = sort(Optim.iterations.(rs))[div(end, 2) + 1])
 end
 '''

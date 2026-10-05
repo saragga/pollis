@@ -473,14 +473,14 @@ label = "Predict"
 [[actionGroups.actions]]
 id = "mc-return"
 label = "Monte Carlo Return"
-desc = "Average discounted return over 500 simulated episodes, against the value function's prediction"
+desc = "Average discounted return over 500 simulated episodes, against the value function prediction (for the POMDP the QMDP value is an upper bound, as it assumes full observability after one step, so a gap is expected)"
 code = '''
 using Statistics, Random
 Random.seed!(2)
 {{?model=mdp}}rets = [simulate(RolloutSimulator(max_steps=200), m, policy) for k in 1:500]
 {{?model=mdp}}predicted = V(0)
 {{?model=pomdp}}rets = [simulate(RolloutSimulator(max_steps=200), m, policy, DiscreteUpdater(m)) for k in 1:500]
-{{?model=pomdp}}predicted = V(0.5)
+{{?model=pomdp}}predicted = V(0.5)  # QMDP value: an upper bound on the achievable return
 {{?model=smdp}}rets = [rollout(act, S, 400).discounted_return for k in 1:500]
 {{?model=smdp}}predicted = V(S)
 (mean_return = mean(rets), standard_error = std(rets) / sqrt(length(rets)), value_function_prediction = predicted)

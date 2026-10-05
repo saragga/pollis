@@ -18,7 +18,7 @@ import { Event } from '../../../../../base/common/event.js';
 import { VSBuffer } from '../../../../../base/common/buffer.js';
 import { INotebookKernelService, INotebookTextModelLike } from '../../../notebook/common/notebookKernelService.js';
 import { INotebookEditorModelResolverService } from '../../../notebook/common/notebookEditorModelResolverService.js';
-import { IFileService } from '../../../../../platform/files/common/files.js';
+import { FileSystemProviderCapabilities, IFileService } from '../../../../../platform/files/common/files.js';
 import { IPathService } from '../../../../services/path/common/pathService.js';
 import { customCopyOverlayUri, customCopyUri, CustomCopyKind } from '../common/customCopyFileSystem.js';
 import { ISecretStorageService } from '../../../../../platform/secrets/common/secrets.js';
@@ -88,22 +88,6 @@ export interface IJuliaEnvStatus {
 
 /** Julia standard libraries: always loadable (through `@stdlib` on the load path), so never missing. */
 const JULIA_STDLIBS = new Set(['Base64', 'Dates', 'DelimitedFiles', 'Distributed', 'Downloads', 'InteractiveUtils', 'LinearAlgebra', 'Logging', 'Markdown', 'Mmap', 'Pkg', 'Printf', 'Random', 'Serialization', 'SHA', 'Sockets', 'SparseArrays', 'Statistics', 'TOML', 'Test', 'Unicode', 'UUIDs']);
-
-/** Packages used by the panels that are not in the General registry, so `Pkg.add` needs their repository URL. */
-const UNREGISTERED_PACKAGE_URLS = new Map<string, string>([
-	['Brokerage', 'https://github.com/aaron-wheeler/Brokerage.jl'],
-	['EDGAR', 'https://github.com/Trumpingtons/EDGAR.jl'],
-	['HARE', 'https://github.com/Trumpingtons/HARE.jl'],
-	['LSurvival', 'https://github.com/alexpkeil1/LSurvival.jl'],
-	['MultilevelEstimators', 'https://github.com/PieterjanRobbe/MultilevelEstimators.jl'],
-	['PerformanceAnalytics', 'https://github.com/eohne/PerformanceAnalytics.jl'],
-	['QuadDIRECT', 'https://github.com/timholy/QuadDIRECT.jl'],
-	['RangeVol', 'https://github.com/Trumpingtons/RangeVol.jl'],
-	['TopicModels', 'https://github.com/slycoder/TopicModels.jl'],
-	['TotalViewITCH', 'https://github.com/cswaney/TotalViewITCH.jl'],
-	['TradingAgents', 'https://github.com/aaron-wheeler/TradingAgents.jl'],
-	['VLLimitOrderBook', 'https://github.com/Renruize12306/VLLimitOrderBook.jl'],
-]);
 
 /** Strip a trailing ".jl" to recover the importable Julia package name. */
 function juliaPackageName(displayName: string): string {
@@ -220,15 +204,15 @@ export async function sendToJuliaRepl(code: string, commandService: ICommandServ
 	return true;
 }
 
-/** Install the given packages (display names accepted) via `Pkg.add` in the Julia REPL. */
-export async function installJuliaPackages(packageNames: string[], commandService: ICommandService): Promise<void> {
-	if (!packageNames.length) { return; }
-	const list = packageNames.map(n => {
-		const name = juliaPackageName(n);
-		const url = UNREGISTERED_PACKAGE_URLS.get(name);
-		return url ? `Pkg.PackageSpec(url="${url}")` : `Pkg.PackageSpec(name="${name}")`;
-	}).join(', ');
-	await sendToJuliaRepl(`import Pkg; Pkg.add([${list}])`, commandService);
+/**
+ * Install the given packages (display names accepted) via `Pkg.add` in the Julia REPL. A fork is added
+ * from its Powered-by repository link; otherwise Julia checks the reachable registries: a registered
+ * package is added by name, an unregistered one from its link.
+ */
+export async function installJuliaPackages(packages: ReadonlyArray<{ readonly name: string; readonly github?: string; readonly fork?: boolean }>, commandService: ICommandService): Promise<void> {
+	if (!packages.length) { return; }
+	const list = packages.map(p => `("${juliaPackageName(p.name)}", "${p.github ?? ''}", ${p.fork ? 'true' : 'false'})`).join(', ');
+	await sendToJuliaRepl(`import Pkg; regs = Pkg.Registry.reachable_registries(); Pkg.add([!f && any(r -> !isempty(Pkg.Registry.uuids_from_name(r, n)), regs) ? Pkg.PackageSpec(name=n) : Pkg.PackageSpec(url=u) for (n, u, f) in [${list}]])`, commandService);
 }
 
 /** Reusable wiring for the Powered-by package install-status indicator (see WEBVIEW_GUIDE.md §23). */
@@ -252,13 +236,15 @@ export interface IPackageStatusWiring {
 export function createPackageStatusWiring(
 	webview: { postMessage(message: unknown): void },
 	disposables: DisposableStore,
-	packageDisplayNames: string[],
+	packages: readonly IModelPackage[],
+	requires: readonly string[],
 	fileService: IFileService,
 	pathService: IPathService,
 	commandService: ICommandService,
 	notificationService: INotificationService,
 	workspaceContextService: IWorkspaceContextService,
 ): IPackageStatusWiring {
+	const packageDisplayNames = [...new Set([...packages.map(p => p.name), ...requires])];
 	const postStatus = async (): Promise<boolean> => {
 		const { statuses, env } = await checkJuliaPackagesInstalled(packageDisplayNames, fileService, pathService, workspaceContextService);
 		webview.postMessage({ command: 'packageStatus', statuses, env });
@@ -271,22 +257,27 @@ export function createPackageStatusWiring(
 			if (!allInstalled) { scheduleRecheck(attempt + 1); }
 		}, 5000));
 	};
-	const missingNames = async (): Promise<string[]> => {
+	const missingPackages = async (): Promise<Array<{ name: string; github?: string; fork?: boolean }>> => {
 		const { statuses } = await checkJuliaPackagesInstalled(packageDisplayNames, fileService, pathService, workspaceContextService);
-		return statuses.filter(s => !s.installed).map(s => s.name);
+		// A fork may already be present from the registry, so it is always (re)added from its link when anything is installed
+		const anyMissing = statuses.some(s => !s.installed);
+		return statuses.filter(s => !s.installed || (anyMissing && packages.some(p => p.name === s.name && p.fork))).map(s => {
+			const pkg = packages.find(p => p.name === s.name);
+			return { name: s.name, github: pkg?.github, fork: pkg?.fork };
+		});
 	};
 	const handleInstall = async (): Promise<void> => {
-		await installJuliaPackages(await missingNames(), commandService);
+		await installJuliaPackages(await missingPackages(), commandService);
 		scheduleRecheck(0);
 	};
 	const nudgeIfMissing = async (target: string | undefined): Promise<void> => {
 		// Only the targets that actually execute code need the packages present.
 		if (target !== 'juliaRepl' && target !== 'notebook') { return; }
-		const missing = await missingNames();
+		const missing = await missingPackages();
 		if (!missing.length) { return; }
 		notificationService.prompt(
 			Severity.Info,
-			localize('pollis.installMissing', "Install missing: {0}", missing.join(', ')),
+			localize('pollis.installMissing', "Install missing: {0}", missing.map(p => p.name).join(', ')),
 			[{ label: localize('pollis.install', "Install"), run: () => { void installJuliaPackages(missing, commandService).then(() => scheduleRecheck(0)); } }],
 		);
 	};
@@ -404,6 +395,8 @@ interface IExampleCodeMessage {
 	readonly model?: string;
 	readonly step?: string;
 	readonly code?: string;
+	/** The name of a tab the user added (`saveAddedTab` / `removeAddedTab`). */
+	readonly name?: string;
 }
 
 /**
@@ -412,7 +405,8 @@ interface IExampleCodeMessage {
  * tabs) and `~/.pollis/examples/<panelId>/next-steps/<id>.jl` (Next Steps examples), outside the
  * application, so they survive updates, work in compiled builds and can be copied between
  * machines (e.g. a teacher handing out a set of examples). An example without a file shows the
- * generated default.
+ * generated default. Tabs the user adds to the main box are `~/.pollis/examples/<panelId>/added/<name>.jl`,
+ * shown in the order they were created; removing one moves its file to the Trash.
  */
 export function createExampleCodeWiring(
 	webview: { postMessage(message: unknown): void; readonly onMessage: Event<{ readonly message: IExampleCodeMessage }> },
@@ -424,7 +418,23 @@ export function createExampleCodeWiring(
 ): void {
 	const folder = URI.joinPath(pathService.userHome({ preferLocal: true }), '.pollis', 'examples', panelId);
 	const stepsFolder = URI.joinPath(folder, 'next-steps');
+	const addedFolder = URI.joinPath(folder, 'added');
 	const isExampleId = (id: string) => /^[\w-]+$/.test(id);
+	// The same rule as the webview's name box: also a safe file name on every platform
+	const isAddedName = (name: string) => /^[A-Za-z0-9][\w .()-]{0,39}$/.test(name) && !/[ .]$/.test(name);
+	const readAddedTabs = async (): Promise<{ name: string; code: string }[]> => {
+		if (!await fileService.exists(addedFolder)) {
+			return [];
+		}
+		const stat = await fileService.resolve(addedFolder, { resolveMetadata: true });
+		const files = (stat.children ?? []).filter(c => !c.isDirectory && c.name.endsWith('.jl') && isAddedName(c.name.replace(/\.jl$/, '')));
+		files.sort((a, b) => a.ctime - b.ctime);
+		const tabs: { name: string; code: string }[] = [];
+		for (const file of files) {
+			tabs.push({ name: file.name.replace(/\.jl$/, ''), code: (await fileService.readFile(file.resource)).value.toString().replace(/\s+$/, '') });
+		}
+		return tabs;
+	};
 	const readExamples = async (dir: URI): Promise<{ [id: string]: string }> => {
 		const examples: { [id: string]: string } = {};
 		if (await fileService.exists(dir)) {
@@ -439,10 +449,27 @@ export function createExampleCodeWiring(
 		return examples;
 	};
 	const postExamples = async (): Promise<void> => {
-		webview.postMessage({ command: 'customExamples', examples: await readExamples(folder), steps: await readExamples(stepsFolder) });
+		webview.postMessage({ command: 'customExamples', examples: await readExamples(folder), steps: await readExamples(stepsFolder), added: await readAddedTabs() });
 	};
 	disposables.add(webview.onMessage(async e => {
 		const msg = e.message;
+		if (msg.command === 'saveAddedTab' || msg.command === 'removeAddedTab') {
+			if (typeof msg.name !== 'string' || !isAddedName(msg.name)) {
+				return;
+			}
+			const file = URI.joinPath(addedFolder, `${msg.name}.jl`);
+			try {
+				if (msg.command === 'saveAddedTab' && typeof msg.code === 'string') {
+					await fileService.writeFile(file, VSBuffer.fromString(msg.code ? msg.code + '\n' : ''));
+				} else if (msg.command === 'removeAddedTab' && await fileService.exists(file)) {
+					await fileService.del(file, { useTrash: fileService.hasCapability(file, FileSystemProviderCapabilities.Trash) });
+				}
+			} catch (error) {
+				notificationService.error(localize('pollis.exampleCode.addedTabFailed', "Could not update the tab in {0}: {1}", file.fsPath, String(error)));
+			}
+			await postExamples();
+			return;
+		}
 		if (msg.command !== 'saveExample' && msg.command !== 'restoreExample') {
 			return;
 		}
@@ -455,7 +482,7 @@ export function createExampleCodeWiring(
 			if (msg.command === 'saveExample' && typeof msg.code === 'string') {
 				await fileService.writeFile(file, VSBuffer.fromString(msg.code + '\n'));
 			} else if (msg.command === 'restoreExample' && await fileService.exists(file)) {
-				await fileService.del(file);
+				await fileService.del(file, { useTrash: fileService.hasCapability(file, FileSystemProviderCapabilities.Trash) });
 			}
 		} catch (error) {
 			notificationService.error(localize('pollis.exampleCode.saveFailed', "Could not update the example in {0}: {1}", file.fsPath, String(error)));

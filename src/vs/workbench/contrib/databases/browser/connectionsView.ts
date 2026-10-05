@@ -170,8 +170,8 @@ class ItemRenderer implements ITreeRenderer<DatabaseItem, void, IItemTemplate> {
 				}
 				if (profile?.builtin) {
 					hover = session
-						? localize('connection.builtin.hover.connected', "{0} (DuckDB)\nThe database built into Pollis, kept in {1}.\nConnected in the Julia REPL as {2}. Click to browse its tables.", name, describeConnection(profile), profile.variable)
-						: localize('connection.builtin.hover', "{0} (DuckDB)\nThe database built into Pollis, kept in {1}.\nNot connected. Click to connect in the Julia REPL as {2}; the first time, DuckDB is installed.", name, describeConnection(profile), profile.variable);
+						? localize('connection.builtin.hover.connected', "{0} (DuckDB)\nThe database built into Pollis: the PollisDatasets, loaded in memory.\nConnected in the Julia REPL as {1}. Click to browse its tables.", name, profile.variable)
+						: localize('connection.builtin.hover', "{0} (DuckDB)\nThe database built into Pollis: the PollisDatasets, loaded in memory.\nNot connected. Click to connect in the Julia REPL as {1}.", name, profile.variable);
 				} else if (profile) {
 					const driver = getDatabaseDriver(profile.driver).label;
 					hover = session
@@ -180,7 +180,7 @@ class ItemRenderer implements ITreeRenderer<DatabaseItem, void, IItemTemplate> {
 				} else if (session) {
 					hover = localize('connection.hover.shown', "{0} ({1})\nShown with PollisDB.show in the Julia REPL. Click to browse its tables.", name, engineLabel(session.engine));
 				}
-				if (inMemory && hover) {
+				if (inMemory && hover && !profile?.builtin) {
 					hover = localize('connection.hover.inMemory', "{0}\nIn-memory: its data is lost when you disconnect or the Julia REPL restarts.", hover);
 				}
 				break;
@@ -194,11 +194,13 @@ class ItemRenderer implements ITreeRenderer<DatabaseItem, void, IItemTemplate> {
 				icon = item.table.kind === 'view' ? Codicon.eye : Codicon.table;
 				name = item.table.name;
 				description = localize('table.columns', "{0} columns", item.table.columns.length);
+				hover = item.table.comment;
 				break;
 			case 'column':
 				icon = Codicon.symbolField;
 				name = item.column.name;
 				description = item.column.type;
+				hover = item.column.comment;
 				break;
 			case 'message':
 				icon = Codicon.info;

@@ -8,6 +8,9 @@ title = "Generalized Linear Models"
 viewType = "pollis.glm"
 defaultModel = "Bernoulli"
 
+[requires]
+packages = ["Distributions.jl", "Plots.jl", "StatsBase.jl"]
+
 [[packages]]
 name = "GLM.jl"
 github = "https://github.com/JuliaStats/GLM.jl"
@@ -15,6 +18,10 @@ github = "https://github.com/JuliaStats/GLM.jl"
 [[packages]]
 name = "CovarianceMatrices.jl"
 github = "https://github.com/gragusa/CovarianceMatrices.jl"
+
+[[packages]]
+name = "PollisDatasets.jl"
+github = "https://github.com/Trumpingtons/PollisDatasets.jl"
 
 [[notebookSections]]
 label = ""
@@ -141,12 +148,64 @@ doi = "10.2307/1913610"
 openAccess = false
 
 [[references]]
-title = "Consistent Covariance Matrix Estimation with Spatially Dependent Panel Data"
-authors = "Driscoll, John C.; Kraay, Aart C."
-year = 1998
-journal = "Review of Economics and Statistics"
-doi = "10.1162/003465398557825"
+separator = true
+label = "Data Sources"
+
+[[references]]
+title = "Regression Towards Mediocrity in Hereditary Stature"
+authors = "Galton, Francis"
+year = 1886
+journal = "Journal of the Anthropological Institute of Great Britain and Ireland"
+doi = "10.2307/2841583"
 openAccess = false
+
+[[references]]
+title = "The Sensitivity of an Empirical Model of Married Women's Hours of Work to Economic and Statistical Assumptions"
+authors = "Mroz, Thomas A."
+year = 1987
+journal = "Econometrica"
+doi = "10.2307/1911029"
+openAccess = false
+
+[[references]]
+title = "Risk Analysis of the Space Shuttle: Pre-Challenger Prediction of Failure"
+authors = "Dalal, Siddhartha R.; Fowlkes, Edward B.; Hoadley, Bruce"
+year = 1989
+journal = "Journal of the American Statistical Association"
+doi = "10.1080/01621459.1989.10478858"
+openAccess = false
+
+[[references]]
+title = "The Origins of Sex Differences in Science"
+authors = "Long, J. Scott"
+year = 1990
+journal = "Social Forces"
+doi = "10.2307/2579146"
+openAccess = false
+
+[[references]]
+title = "Prospective Evaluation of Prognostic Variables from Patient-Completed Questionnaires"
+authors = "Loprinzi, Charles L.; et al."
+year = 1994
+journal = "Journal of Clinical Oncology"
+doi = "10.1200/JCO.1994.12.3.601"
+openAccess = false
+
+[[references]]
+title = "Using Geographic Variation in College Proximity to Estimate the Return to Schooling"
+authors = "Card, David"
+year = 1995
+journal = "Aspects of Labour Market Behaviour, University of Toronto Press"
+url = "https://www.nber.org/papers/w4483"
+openAccess = true
+
+[[references]]
+title = "titanic3: Titanic Passenger Data"
+authors = "Harrell, Frank E.; Cason, Thomas"
+year = 2002
+journal = "Vanderbilt University Department of Biostatistics (from Encyclopedia Titanica)"
+url = "https://hbiostat.org/data/"
+openAccess = true
 
 # Model toggles: one per response family (ids are the GLM.jl distribution names)
 
@@ -196,7 +255,7 @@ detail = "Gamma and Inverse Gaussian for strictly positive skewed responses"
 
 [[bullets]]
 text = "Robust Inference"
-detail = "Heteroskedasticity-Consistent (HC0&#8211;HC3), Heteroskedasticity and Autocorrelation Consistent (HAC), Clustered, and Driscoll-Kraay covariance matrix estimators via CovarianceMatrices.jl"
+detail = "Heteroskedasticity-Consistent (HC0&#8211;HC3), Heteroskedasticity and Autocorrelation Consistent (HAC) and Clustered covariance matrix estimators via CovarianceMatrices.jl"
 
 [[decisionRows]]
 task = "Bernoulli"
@@ -239,23 +298,10 @@ context = "Continuous"
 purpose = "Linear model with a non-identity link, or a baseline for the other families"
 
 [[inputs]]
-id = "formula"
-label = "Formula"
-tooltip = "Julia formula using the @formula macro. The response goes left of ~, predictors right. Use + for additive effects, * for interactions (includes main effects), : for interaction only. Examples: y ~ x1 + x2; y ~ x1 * x2 (= x1 + x2 + x1:x2); y ~ log(x)"
-default = "y ~ x1 + x2"
-
-[[inputs]]
-id = "data"
-label = "Data"
-tooltip = "Table containing all variables referenced in the formula: any Tables.jl source, e.g. a named tuple of vectors or a CSV.File. Column names must match the formula symbols exactly."
-default = "data"
-
-[[inputs]]
 id = "link"
 label = "Link"
-tooltip = "Link function connecting the linear predictor to the mean. The default for each family is marked; override it only when theory requires a different link."
+tooltip = "Link function connecting the linear predictor to the mean. The default for each family is marked; override it only when theory requires a different link. For Gamma, the default InverseLink can predict negative means, so LogLink is the usual choice in practice. For NegBin, LogLink is the default here, as in R glm.nb: the canonical NegativeBinomialLink often fails to converge."
 kind = "select"
-newRow = true
 
 [[inputs.options]]
 value = ""
@@ -268,8 +314,8 @@ label = "LogLink (default)"
 models = ["Poisson", "Geometric"]
 
 [[inputs.options]]
-value = ""
-label = "NegativeBinomialLink (default)"
+value = "LogLink"
+label = "LogLink (as in R glm.nb)"
 models = ["NegativeBinomial"]
 
 [[inputs.options]]
@@ -305,7 +351,12 @@ models = ["Bernoulli", "Binomial"]
 [[inputs.options]]
 value = "LogLink"
 label = "LogLink"
-models = ["Binomial", "NegativeBinomial", "Gamma", "InverseGaussian", "Normal"]
+models = ["Binomial", "Gamma", "InverseGaussian", "Normal"]
+
+[[inputs.options]]
+value = "NegativeBinomialLink"
+label = "NegativeBinomialLink (canonical)"
+models = ["NegativeBinomial"]
 
 [[inputs.options]]
 value = "IdentityLink"
@@ -325,7 +376,7 @@ models = ["Geometric", "Normal"]
 [[inputs]]
 id = "inference"
 label = "Inference"
-tooltip = "Standard errors: model-based (Standard), heteroskedasticity-consistent (HC0-HC3), heteroskedasticity and autocorrelation consistent (HAC), clustered, or Driscoll-Kraay (cross-sectional and serial dependence in panels) via CovarianceMatrices.jl"
+tooltip = "Standard errors: model-based (Standard), heteroskedasticity-consistent (HC0-HC3), heteroskedasticity and autocorrelation consistent (HAC), or clustered via CovarianceMatrices.jl"
 kind = "select"
 
 [[inputs.options]]
@@ -351,149 +402,93 @@ label = "HC3"
 [[inputs.options]]
 value = "HAC"
 label = "HAC"
+models = ["Poisson", "Normal"]
 
 [[inputs.options]]
 value = "clustered"
 label = "Clustered"
-
-[[inputs.options]]
-value = "driscoll-kraay"
-label = "Driscoll-Kraay"
+models = ["Normal"]
 
 [[inputs]]
 id = "cluster"
 label = "Cluster Variable"
-tooltip = "Column of the data table that identifies the clusters (e.g. firm or school)"
-default = "cluster_id"
+tooltip = "Column of the example data that identifies the clusters"
+kind = "select"
 when = "inference=clustered"
 
-[[inputs]]
-id = "dktime"
-label = "Time Variable"
-tooltip = "Column of the data table with the time period of each observation"
-default = "year"
-when = "inference=driscoll-kraay"
+[[inputs.options]]
+value = "family"
+label = "family"
+models = ["Normal"]
 
-[[inputs]]
-id = "dkentity"
-label = "Entity Variable"
-tooltip = "Column of the data table that identifies the panel entity of each observation"
-default = "firm"
-when = "inference=driscoll-kraay"
-
-[miniCharts]
-# SVG drawing functions for each family's mini-chart icon (40 x 86 box)
-
-[miniCharts.Bernoulli]
-# Two bars at 0 and 1
-svg = '''
-var s = '<line x1="4" y1="74" x2="36" y2="74" stroke="currentColor" stroke-width="1"/>';
-s += '<rect x="9" y="46" width="8" height="28" fill="currentColor" opacity="0.45"/>';
-s += '<rect x="23" y="28" width="8" height="46" fill="currentColor" opacity="0.45"/>';
-return s;
-'''
-
-[miniCharts.Binomial]
-# Symmetric bars
-svg = '''
-var s = '<line x1="4" y1="74" x2="36" y2="74" stroke="currentColor" stroke-width="1"/>';
-var h = [8, 26, 42, 26, 8];
-for (var i = 0; i < h.length; i++) {
-	s += '<rect x="' + (6 + i * 6) + '" y="' + (74 - h[i]) + '" width="5" height="' + h[i] + '" fill="currentColor" opacity="0.45"/>';
-}
-return s;
-'''
-
-[miniCharts.Poisson]
-# Right-skewed count bars
-svg = '''
-var s = '<line x1="4" y1="74" x2="36" y2="74" stroke="currentColor" stroke-width="1"/>';
-var h = [18, 38, 40, 28, 14, 6];
-for (var i = 0; i < h.length; i++) {
-	s += '<rect x="' + (5 + i * 5) + '" y="' + (74 - h[i]) + '" width="4" height="' + h[i] + '" fill="currentColor" opacity="0.45"/>';
-}
-return s;
-'''
-
-[miniCharts.NegativeBinomial]
-# Count bars with a long tail
-svg = '''
-var s = '<line x1="4" y1="74" x2="36" y2="74" stroke="currentColor" stroke-width="1"/>';
-var h = [30, 34, 26, 18, 12, 8, 5, 3];
-for (var i = 0; i < h.length; i++) {
-	s += '<rect x="' + (5 + i * 4) + '" y="' + (74 - h[i]) + '" width="3" height="' + h[i] + '" fill="currentColor" opacity="0.45"/>';
-}
-return s;
-'''
-
-[miniCharts.Geometric]
-# Decreasing bars
-svg = '''
-var s = '<line x1="4" y1="74" x2="36" y2="74" stroke="currentColor" stroke-width="1"/>';
-var h = [44, 30, 20, 13, 9, 6];
-for (var i = 0; i < h.length; i++) {
-	s += '<rect x="' + (5 + i * 5) + '" y="' + (74 - h[i]) + '" width="4" height="' + h[i] + '" fill="currentColor" opacity="0.45"/>';
-}
-return s;
-'''
-
-[miniCharts.Gamma]
-# Right-skewed density, shape 2
-svg = '''
-var s = '<line x1="4" y1="74" x2="36" y2="74" stroke="currentColor" stroke-width="1"/>';
-var d = '';
-for (var i = 0; i <= 30; i++) {
-	var x = i / 30 * 6;
-	d += (i ? 'L' : 'M') + (5 + i) + ',' + (74 - x * Math.exp(-x) * 120).toFixed(1);
-}
-s += '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.5"/>';
-return s;
-'''
-
-[miniCharts.InverseGaussian]
-# Sharply peaked, heavy right tail (mean 1, shape 3)
-svg = '''
-var s = '<line x1="4" y1="74" x2="36" y2="74" stroke="currentColor" stroke-width="1"/>';
-var d = '';
-for (var i = 0; i <= 30; i++) {
-	var x = 0.02 + i / 30 * 3;
-	var f = Math.sqrt(3 / (2 * Math.PI * x * x * x)) * Math.exp(-3 * (x - 1) * (x - 1) / (2 * x));
-	d += (i ? 'L' : 'M') + (5 + i) + ',' + (74 - f * 45).toFixed(1);
-}
-s += '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.5"/>';
-return s;
-'''
-
-[miniCharts.Normal]
-# Bell curve
-svg = '''
-var s = '<line x1="4" y1="74" x2="36" y2="74" stroke="currentColor" stroke-width="1"/>';
-var d = '';
-for (var i = 0; i <= 30; i++) {
-	var z = -3 + i / 5;
-	d += (i ? 'L' : 'M') + (5 + i) + ',' + (74 - Math.exp(-z * z / 2) * 45).toFixed(1);
-}
-s += '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.5"/>';
-return s;
-'''
-
-# One code branch for every family: {{model}} is the family name
+# One code branch for every family: {{model}} is the family name; each family fits its own example data set
 
 [[codeBranches]]
 model = "*"
 code = '''
-{{?inference=standard}}using GLM  # generalized linear models
-{{?inference!=standard}}using GLM, CovarianceMatrices, Tables  # GLM + robust standard errors
+{{?inference=standard}}using GLM, StatsBase, PollisDatasets  # generalized linear models; StatsBase exports aic; curated example datasets
+{{?inference!=standard}}using GLM, StatsBase, PollisDatasets, CovarianceMatrices, Distributions, LinearAlgebra  # GLM + robust standard errors; normal p-values
+{{?inference=HAC}}using Random  # reproducible simulated data
 
-{{?link=}}model = glm(@formula({{formula}}), {{data}}, {{model}}())  # {{model}} family with its default link
-{{?link!=}}model = glm(@formula({{formula}}), {{data}}, {{model}}(), {{link}}())  # {{model}} family with {{link}}
+{{?model=Bernoulli}}# Example data: Mroz (1987), whether each of 753 married women was in the labour force in 1975. Replace it with your own table.
+{{?model=Bernoulli}}data = dataset("mroz");  # datasetinfo("mroz") describes the columns
+{{?model=Bernoulli}}f = @formula(inlf ~ nwifeinc + educ + exper + expersq + age + kidslt6 + kidsge6);  # participation model of Wooldridge, Example 17.1
+{{?model=Binomial}}# Example data: Dalal et al. (1989), O-rings with thermal distress out of 6 on the 23 shuttle flights before Challenger. Replace it with your own table.
+{{?model=Binomial}}c = dataset("challenger");  # datasetinfo("challenger") describes the columns
+{{?model=Binomial}}data = (share = c.n_failures ./ 6, temperature = float.(c.temperature), n = fill(6.0, length(c.flight)));  # share of the 6 O-rings and number of trials
+{{?model=Binomial}}f = @formula(share ~ temperature);  # Challenger launched at 31 degrees F, far below every earlier flight
+{{?model=Poisson}}{{?inference!=HAC}}# Example data: McCullagh and Nelder (1989), damage incidents of cargo ships by type, year of construction and period of operation. Replace it with your own table.
+{{?model=Poisson}}{{?inference!=HAC}}s = dataset("ships");  # datasetinfo("ships") describes the columns
+{{?model=Poisson}}{{?inference!=HAC}}keep = s.service .> 0;  # drop the 6 cells with no months of service
+{{?model=Poisson}}{{?inference!=HAC}}data = (incidents = s.incidents[keep], type = s.type[keep], built = string.(s.year[keep]), period = string.(s.period[keep]), exposure = float.(s.service[keep]));  # years as categories; exposure: aggregate months of service
+{{?model=Poisson}}{{?inference!=HAC}}f = @formula(incidents ~ type + built + period);  # a rate of incidents per month of service
+{{?model=NegativeBinomial}}# Example data: Long (1990), articles published by 915 biochemistry PhD students; the counts are overdispersed. Replace it with your own table.
+{{?model=NegativeBinomial}}data = dataset("biochemists");  # datasetinfo("biochemists") describes the columns
+{{?model=NegativeBinomial}}f = @formula(art ~ fem + mar + kid5 + phd + ment);  # gender, marriage, young children, department prestige, mentor's output
+{{?model=Geometric}}# Example data: siblings and spouses aboard for the Titanic passengers of known age, a count piled up at zero. Replace it with your own table.
+{{?model=Geometric}}t = dataset("titanic");  # datasetinfo("titanic") describes the columns
+{{?model=Geometric}}known = .!ismissing.(t.age);  # keep the passengers whose age is recorded
+{{?model=Geometric}}data = (sibsp = t.sibsp[known], age = float.(t.age[known]), pclass = t.pclass[known]);
+{{?model=Geometric}}f = @formula(sibsp ~ age + pclass);  # children travel with their siblings
+{{?model=Gamma}}# Example data: Card (1995), hourly wages of 3,010 young men in 1976, positive and right-skewed. Replace it with your own table.
+{{?model=Gamma}}data = dataset("card");  # datasetinfo("card") describes the columns
+{{?model=Gamma}}f = @formula(wage ~ educ + exper + expersq + black + south + smsa);  # a wage equation on the mean wage
+{{?model=InverseGaussian}}# Example data: survival times of the 165 patients with advanced lung cancer whose death was observed, a first-passage time. Replace it with your own table.
+{{?model=InverseGaussian}}l = dataset("lung");  # datasetinfo("lung") describes the columns
+{{?model=InverseGaussian}}died = l.status .== 2;  # 2 = died, 1 = censored: keep the observed deaths
+{{?model=InverseGaussian}}data = (time = float.(l.time[died]), age = float.(l.age[died]), sex = l.sex[died]);  # days from diagnosis to death
+{{?model=InverseGaussian}}f = @formula(time ~ age + sex);  # sex: 1 = male, 2 = female
+{{?model=Normal}}{{?inference!=HAC}}# Example data: Galton (1886), adult heights of 934 children and their parents. Replace it with your own table.
+{{?model=Normal}}{{?inference!=HAC}}data = dataset("galton");  # one row per child; datasetinfo("galton") describes the columns
+{{?model=Normal}}{{?inference!=HAC}}f = @formula(child_height ~ midparent_height + gender);  # regression towards the mean
+{{?inference=HAC}}# Simulated data: 300 months in which the predictor and the disturbance are both autocorrelated, so the standard errors need HAC. Replace it with your own time series.
+{{?inference=HAC}}Random.seed!(1)
+{{?inference=HAC}}T = 300
+{{?inference=HAC}}x = zeros(T); u = zeros(T)
+{{?inference=HAC}}for t in 2:T
+{{?inference=HAC}}    x[t] = 0.7 * x[t-1] + randn()  # AR(1) predictor
+{{?inference=HAC}}    u[t] = 0.6 * u[t-1] + 0.4 * randn()  # AR(1) disturbance
+{{?inference=HAC}}end
+{{?model=Normal}}{{?inference=HAC}}data = (month = 1:T, x = x, y = 1 .+ 0.5 .* x .+ u);  # true intercept 1, true slope 0.5
+{{?model=Poisson}}{{?inference=HAC}}exposure = 50 .+ 10 .* rand(T);  # e.g. thousands of people at risk each month
+{{?model=Poisson}}{{?inference=HAC}}data = (month = 1:T, x = x, exposure = exposure, y = rand.(Poisson.(exposure .* exp.(-3 .+ 0.3 .* x .+ u .- 0.4^2 / (1 - 0.6^2) / 2))));  # true intercept -3, true slope 0.3; u is centred so the rate is exact
+{{?inference=HAC}}f = @formula(y ~ x);  # the estimates should land near the true values
 
-{{?inference=HC0|HC1|HC2|HC3}}V = vcov(model, {{inference}}())  # robust variance-covariance matrix
-{{?inference=HAC}}V = vcov(model, HAC(BartlettKernel(), NeweyWest()))  # robust variance-covariance matrix
-{{?inference=clustered}}V = vcov(model, CRHC0(Tables.getcolumn({{data}}, :{{cluster}})))  # cluster-robust variance-covariance matrix
-{{?inference=driscoll-kraay}}V = vcov(DriscollKraay(Bartlett(5), tis=Tables.getcolumn({{data}}, :{{dktime}}), iis=Tables.getcolumn({{data}}, :{{dkentity}})), model)  # Driscoll-Kraay variance-covariance matrix
-{{?inference!=standard}}println(coeftable(model, V))  # coefficients with robust SEs
-{{?inference=standard}}println(coeftable(model))  # coefficient table
+{{?link=}}link = ()  # the default link of the {{model}} family
+{{?link!=}}link = ({{link}}(),)  # {{link}} instead of the default link
+{{?model=Bernoulli|Geometric|Gamma|InverseGaussian|Normal}}model = glm(f, data, {{model}}(), link...)  # {{model}} family
+{{?model=Poisson}}model = glm(f, data, Poisson(), link...; offset = log.(data.exposure))  # the log-exposure offset turns counts into rates
+{{?model=Binomial}}model = glm(f, data, Binomial(), link...; wts = data.n)  # weights: the 6 O-rings of each flight
+{{?model=NegativeBinomial}}model = negbin(f, data, link...)  # estimates theta by maximum likelihood; NegativeBinomial() would fix theta = 1
+{{?model=NegativeBinomial}}println("theta: ", round(model.model.rr.d.r; digits=3))  # variance = mu + mu^2 / theta
+
+{{?inference=HC0|HC1|HC2|HC3}}V = vcov({{inference}}(), model)  # heteroskedasticity-robust variance-covariance matrix
+{{?inference=HAC}}V = vcov(Bartlett{NeweyWest}(), model)  # Newey-West HAC, data-driven bandwidth; rows must be in time order
+{{?inference=clustered}}V = vcov(CR1(data.{{cluster}}), model)  # cluster-robust variance-covariance matrix, clustered by {{cluster}}
+{{?inference!=standard}}se = sqrt.(diag(V))  # robust standard errors
+{{?inference!=standard}}z  = coef(model) ./ se
+{{?inference!=standard}}display(CoefTable(hcat(coef(model), se, z, 2 .* ccdf.(Normal(), abs.(z))), ["Coef.", "Std. Error", "z", "Pr(>|z|)"], coefnames(model), 4, 3))  # coefficients with robust SEs
+{{?inference=standard}}display(coeftable(model))  # coefficient table
 
 println("Deviance: ", deviance(model))  # model deviance
 println("AIC:      ", aic(model))  # Akaike information criterion
@@ -543,7 +538,8 @@ using GLM, Plots
 
 mu = predict(model)  # fitted mean
 y  = response(model)  # observed response
-rp = (y .- mu) ./ sqrt.(GLM.glmvar.(Ref({{model}}()), mu))  # Pearson residuals
+rp = (y .- mu) ./ sqrt.(GLM.glmvar.(Ref(model.model.rr.d), mu))  # Pearson residuals under the fitted family
+{{?model=Binomial}}rp = rp .* sqrt.(data.n)  # shares: scale by the number of trials in each group
 scatter(mu, rp, xlabel="Fitted mean", ylabel="Pearson residual", label=false, alpha=0.5)
 hline!([0], linestyle=:dash, label=false)  # residuals should scatter evenly around zero
 '''
@@ -551,29 +547,20 @@ hline!([0], linestyle=:dash, label=false)  # residuals should scatter evenly aro
 [[actionGroups.actions]]
 id = "overdispersion"
 label = "Overdispersion Check"
-desc = "Pearson dispersion ratio for Poisson and Binomial families"
+desc = "Pearson dispersion ratio for count families (Poisson, Binomial counts, NegBin, Geometric); not applicable to 0/1 data or to families with a free dispersion"
 code = '''
 using GLM
 
-mu  = predict(model)  # fitted mean
-rp  = (response(model) .- mu) ./ sqrt.(GLM.glmvar.(Ref({{model}}()), mu))  # Pearson residuals
-phi = sum(abs2, rp) / dof_residual(model)  # dispersion ratio (about 1 if the family fits)
-println("Dispersion ratio: ", round(phi; digits=3))
-println(phi > 1.5 ? "Overdispersed: consider NegativeBinomial or robust SEs" : "No strong overdispersion")
-'''
-
-[[actionGroups.actions]]
-id = "leverage"
-label = "Leverage"
-desc = "Hat-matrix leverage to flag influential observations"
-code = '''
-using GLM
-
-h = leverage(model)  # diagonal of the hat matrix
-p = length(coef(model))  # number of parameters
-n = nobs(model)  # number of observations
-high = findall(h .> 2p / n)  # rule of thumb: leverage above 2p/n
-println("High-leverage observations: ", high)
+{{?model=Bernoulli}}println("Not applicable: 0/1 data cannot be overdispersed; check the link and the predictors instead")
+{{?model=Gamma|InverseGaussian|Normal}}println("Not applicable: the {{model}} family estimates its dispersion freely; see dispersion(model.model, true)")
+{{?model=Poisson|Binomial|NegativeBinomial|Geometric}}mu  = predict(model)  # fitted mean
+{{?model=Poisson|Binomial|NegativeBinomial|Geometric}}rp  = (response(model) .- mu) ./ sqrt.(GLM.glmvar.(Ref(model.model.rr.d), mu))  # Pearson residuals under the fitted family
+{{?model=Binomial}}rp  = rp .* sqrt.(data.n)  # shares: scale by the number of trials in each group
+{{?model=Poisson|Binomial|NegativeBinomial|Geometric}}phi = sum(abs2, rp) / (length(mu) - length(coef(model)))  # dispersion ratio: rows minus coefficients (about 1 if the family fits)
+{{?model=Poisson|Binomial|NegativeBinomial|Geometric}}println("Dispersion ratio: ", round(phi; digits=3))
+{{?model=Poisson|Geometric}}println(phi > 1.5 ? "Overdispersed: consider NegBin (negbin estimates theta) or robust SEs" : "No strong overdispersion")
+{{?model=Binomial}}println(phi > 1.5 ? "Overdispersed: consider robust SEs or a quasi-binomial correction (scale the SEs by sqrt(phi))" : "No strong overdispersion")
+{{?model=NegativeBinomial}}println(phi > 1.5 ? "Still overdispersed after estimating theta: check for zero inflation or missing predictors" : "No strong overdispersion")
 '''
 
 [[actionGroups]]
@@ -585,10 +572,11 @@ id = "predict-mean"
 label = "Predicted Mean"
 desc = "Fitted mean for new observations"
 code = '''
-using GLM, Tables
+using GLM
 
-newdata = map(c -> c[1:5], Tables.columntable({{data}}))  # first 5 rows; replace with new observations
-mu = predict(model, newdata)  # predicted mean on the response scale
+newdata = map(c -> c[1:5], data)  # first 5 rows of the example data; replace with new observations
+{{?model!=Poisson}}mu = predict(model, newdata)  # predicted mean on the response scale
+{{?model=Poisson}}mu = predict(model, newdata; offset = log.(newdata.exposure))  # predicted count for each row's exposure
 println(mu)
 '''
 
@@ -597,10 +585,11 @@ id = "predict-ci"
 label = "Confidence Band"
 desc = "Predicted mean with a 95% confidence interval"
 code = '''
-using GLM, Tables
+using GLM
 
-newdata = map(c -> c[1:5], Tables.columntable({{data}}))  # first 5 rows; replace with new observations
-pred = predict(model, newdata; interval=:confidence, level=0.95)  # prediction, lower, upper
+newdata = map(c -> c[1:5], data)  # first 5 rows of the example data; replace with new observations
+{{?model!=Poisson}}pred = predict(model, newdata; interval=:confidence, level=0.95)  # prediction, lower, upper
+{{?model=Poisson}}pred = predict(model, newdata; offset = log.(newdata.exposure), interval=:confidence, level=0.95)  # prediction, lower, upper
 println(pred)
 '''
 
@@ -615,7 +604,11 @@ desc = "Test the model against an intercept-only model"
 code = '''
 using GLM
 
-model0 = glm(@formula(y ~ 1), {{data}}, {{model}}())  # intercept-only model (use your response)
+f0 = FormulaTerm(f.lhs, ConstantTerm(1))  # intercept-only model: the same response, no predictors
+{{?model=Bernoulli|Geometric|Gamma|InverseGaussian|Normal}}model0 = glm(f0, data, {{model}}(), link...)  # with the same link
+{{?model=Poisson}}model0 = glm(f0, data, Poisson(), link...; offset = log.(data.exposure))  # with the same link and offset
+{{?model=Binomial}}model0 = glm(f0, data, Binomial(), link...; wts = data.n)  # with the same link and weights
+{{?model=NegativeBinomial}}model0 = negbin(f0, data, link...)  # with the same link and its own theta
 println(lrtest(model0, model))  # likelihood ratio test of the nested models
 '''
 
@@ -624,7 +617,7 @@ id = "info-criteria"
 label = "Information Criteria"
 desc = "AIC, AICc, BIC and log-likelihood for model comparison"
 code = '''
-using GLM
+using GLM, StatsBase
 
 println("Log-likelihood: ", loglikelihood(model))
 println("AIC:  ", aic(model))  # lower is better
@@ -648,7 +641,7 @@ link_name = "{{link}}"  # the link chosen above
 ratio_scale = link_name in ("LogitLink", "LogLink")  # only then is exp(coef) an odds ratio (logit) or a rate ratio (log)
 ratio = ratio_scale ? exp.(coef(model)) : coef(model)
 ci    = ratio_scale ? exp.(confint(model)) : confint(model)  # 95% confidence interval on the same scale
-println(ratio_scale ? (link_name == "LogitLink" ? "Odds ratios" : "Rate ratios") : "Coefficients on the $(link_name) scale", " with 95% confidence intervals")
+println(ratio_scale ? (link_name == "LogitLink" ? "Odds ratios" : "Mean ratios (rate ratios for counts)") : "Coefficients on the $(link_name) scale", " with 95% confidence intervals")
 for (name, r, lo, hi) in zip(coefnames(model), ratio, ci[:, 1], ci[:, 2])
     println(rpad(name, 16), round(r; digits=3), "  [", round(lo; digits=3), ", ", round(hi; digits=3), "]")
 end
@@ -657,15 +650,22 @@ end
 [[actionGroups.actions]]
 id = "marginal"
 label = "Marginal Effects"
-desc = "Average marginal effect of one predictor on the mean"
+desc = "Average marginal effect of one continuous predictor on the mean; not for Poisson, whose example has only categorical predictors (see the rate ratios)"
+models = ["Bernoulli", "Binomial", "NegativeBinomial", "Geometric", "Gamma", "InverseGaussian", "Normal"]
 code = '''
-using GLM, Statistics, Tables
+using GLM, Statistics
 
+{{?model=Bernoulli|Gamma}}x = :educ  # the predictor of interest: years of schooling
+{{?model=Binomial}}x = :temperature  # the predictor of interest
+{{?model=NegativeBinomial}}x = :ment  # the predictor of interest: the mentor's articles
+{{?model=Geometric}}x = :age  # the predictor of interest
+{{?model=InverseGaussian}}x = :age  # the predictor of interest
+{{?model=Normal}}{{?inference!=HAC}}x = :midparent_height  # the predictor of interest
+{{?model=Normal}}{{?inference=HAC}}x = :x  # the simulated predictor
 h  = 1e-4  # small step for the numerical derivative
-d1 = Tables.columntable({{data}})
-d1 = merge(d1, (x1 = d1.x1 .+ h,))  # x1: the predictor of interest
-ame = mean((predict(model, d1) .- predict(model, {{data}})) ./ h)  # average marginal effect
-println("AME of x1: ", round(ame; digits=4))
+d1 = merge(data, NamedTuple{(x,)}((getproperty(data, x) .+ h,)))  # x shifted by h
+ame = mean((predict(model, d1) .- predict(model, data)) ./ h)  # average marginal effect
+println("AME of ", x, ": ", round(ame; digits=4))
 '''
 
 [[actionGroups.actions]]

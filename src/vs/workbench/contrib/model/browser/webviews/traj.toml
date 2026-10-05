@@ -22,7 +22,7 @@ name = "Altro.jl"
 github = "https://github.com/RoboticExplorationLab/Altro.jl"
 
 [requires]
-packages = ["ForwardDiff.jl", "JuMP.jl", "Ipopt.jl", "NLsolve.jl", "Plots.jl"]
+packages = ["ForwardDiff.jl", "JuMP.jl", "Ipopt.jl", "NLsolve.jl", "ADTypes.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""
@@ -204,7 +204,7 @@ purpose = "Transcribe states and controls at every node into one large NLP (here
 [[decisionRows]]
 task = "Indirect Methods"
 context = "Smooth unconstrained problems where high accuracy is wanted and a good costate guess exists"
-purpose = "Pontryagin's principle: shoot on the initial costate until the terminal transversality condition holds"
+purpose = "Pontryagin's principle: multiple shooting on the state and costate until continuity and the terminal transversality condition hold"
 
 [[decisionRows]]
 task = "Differential Dynamic Programming"
@@ -409,7 +409,7 @@ function tvlqr(X, U)
     K
 end
 
-using NLsolve
+using NLsolve, ADTypes
 
 # Pontryagin: the other methods sum stage(x, u) once per interval, i.e. integrate stage / dt over time,
 # so H = stage / dt + lambda' f; with control-affine dynamics, dH/du = 0 gives u = -dt R^-1 f_u' lambda
@@ -420,13 +420,32 @@ function canonical(z)  # state and costate equations
     u = ustar(x, lam)
     vcat(f(x, u), -ForwardDiff.gradient(y -> ham(y, u, lam), x))
 end
-shoot(lam0; x0=x0) = (Z = [vcat(x0, lam0)]; for _ in 1:N-1; push!(Z, rk4step(canonical, Z[end])); end; Z)
+shoot(z, steps) = (Z = [z]; for _ in 1:steps; push!(Z, rk4step(canonical, Z[end])); end; Z)
+
+# Multiple shooting: a single shot from lambda0 integrates the costate over the whole swing-up,
+# so tiny changes in lambda0 move the end point wildly and Newton rarely converges from zero.
+# Splitting the horizon into segments, with the state and costate at each interior node as
+# extra unknowns joined by continuity conditions, keeps every shot short and well conditioned
+segments = 5
+nodes = round.(Int, range(1, N, length=segments + 1))  # knot indices where the segments meet
 
 function plan(x0; lam0=zeros(n))
-    # transversality: lambda(tf) = gradient of the terminal cost
-    residual(l) = (z = shoot(l; x0=x0)[end]; z[n+1:end] - Qf * (z[1:n] - xf))
-    sol = nlsolve(residual, lam0; autodiff=:forward, iterations={{maxiter}})
-    Z = shoot(sol.zero; x0=x0)
+    # unknowns: lambda at t = 0, then (x, lambda) at each interior node
+    starts(v) = [vcat(x0, v[1:n]), (v[n+2n*(j-2)+1:n+2n*(j-1)] for j in 2:segments)...]
+    guess = vcat(lam0, (vcat(x0 + (xf - x0) * (nodes[j] - 1) / (N - 1), zeros(n)) for j in 2:segments)...)  # straight-line states, zero costates
+    function residual(v)
+        zs = starts(v)
+        ends = [shoot(zs[j], nodes[j+1] - nodes[j])[end] for j in 1:segments]
+        zT = ends[end]
+        # continuity of state and costate at the nodes, then transversality: lambda(tf) = gradient of the terminal cost
+        vcat((ends[j] - zs[j+1] for j in 1:segments-1)..., zT[n+1:end] - Qf * (zT[1:n] - xf))
+    end
+    sol = nlsolve(residual, guess; autodiff=AutoForwardDiff(), iterations={{maxiter}})
+    zs = starts(sol.zero)
+    Z = [zs[1]]
+    for j in 1:segments
+        append!(Z, shoot(zs[j], nodes[j+1] - nodes[j])[2:end])
+    end
     (X = [z[1:n] for z in Z], U = [ustar(z[1:n], z[n+1:end]) for z in Z[1:N-1]], sol = sol)
 end
 
@@ -665,7 +684,7 @@ label = "Solver Convergence"
 desc = "How the solver converged: NLP status, costate shooting residual, or the cost per iLQR sweep"
 code = '''
 {{?model=direct}} (status = termination_status(result.model), objective = objective_value(result.model), seconds = solve_time(result.model))
-{{?model=indirect}} (converged = converged(result.sol), shooting_residual = result.sol.residual_norm, newton_iterations = result.sol.iterations)
+{{?model=indirect}} (converged = converged(result.sol), segments = segments, shooting_residual = result.sol.residual_norm, newton_iterations = result.sol.iterations)
 {{?model=ddp}} using Plots; plot(result.history .- minimum(result.history) .+ eps(), yscale=:log10, marker=:circle, xlabel="iteration", ylabel="cost - best", legend=false)
 {{?model=altro}} (inner_iterations_last = length(result.history) - 1, outer_iterations = length(result.violation), constraint_violation = result.violation)
 '''

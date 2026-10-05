@@ -8,6 +8,9 @@ title = "Bayesian Optimisation"
 viewType = "pollis.bopt"
 defaultModel = "ei"
 
+[requires]
+packages = ["Optim.jl", "Plots.jl"]
+
 [[packages]]
 name = "BayesianOptimization.jl"
 github = "https://github.com/jbrea/BayesianOptimization.jl"
@@ -232,7 +235,7 @@ default = "2"
 id = "obj"
 label = "Objective Body"
 tooltip = "Julia expression for f(x). The variable x is a Vector{Float64} of length n. Example: sum(x .^ 2)"
-default = "sum(x .^ 2)"
+default = "sum(x .^ 4 .- 16 .* x .^ 2 .+ 5 .* x) / 2"
 
 [[inputs]]
 id = "lb"
@@ -331,21 +334,23 @@ function obj(x::Vector{Float64})
     {{obj}}  # objective function body
 end
 
+# The default objective is Styblinski-Tang: 2^n local minima, global minimum -39.17 n at x_i = -2.9035.
+# BO pays off when each evaluation is expensive, so the budget counts evaluations, not seconds
 n  = {{n}}  # problem dimension
 lb = {{lb}}  # lower bound (uniform across variables)
 ub = {{ub}}  # upper bound (uniform across variables)
 
 gp  = ElasticGPE(n, mean = MeanConst(0.0),
          kernel = SEArd(zeros(n), 1.0), logNoise = -2.0)  # Gaussian process surrogate
+mopt = MAPGPOptimizer(every = 10, noisebounds = [-4, 3], kernbounds = [[fill(-1.0, n); 0.0], [fill(4.0, n); 10.0]], maxeval = 40)  # refit the GP hyperparameters (MAP) every 10 evaluations
 
 {{?model=ei}}acq = ExpectedImprovement()  # expected improvement: balances exploration and exploitation
 {{?model=pi}}acq = ProbabilityOfImprovement()  # probability of improvement: exploitation-heavy, greedy toward current best
-{{?model=ucb}}acq = UpperConfidenceBound(beta = 2.0)  # upper confidence bound: exploration via GP uncertainty (beta = 2.0)
-{{?model=ts}}acq = ThompsonSamplingSimple(nsamples = 100)  # Thompson sampling: optimises a random draw from the GP posterior
+{{?model=ucb}}acq = UpperConfidenceBound(NoBetaScaling(), 2.0)  # upper confidence bound: exploration via GP uncertainty (beta = 2.0)
+{{?model=ts}}acq = ThompsonSamplingSimple()  # simple Thompson sampling: an independent posterior draw at each candidate point
 opt = BOpt(
     obj, gp, acq,
-    OptimizeElasticGP(),
-    RandomSearchAcquisitionOptimizer(500),
+    mopt,
     fill(lb, n), fill(ub, n), maxiterations = {{budget}}, sense = Min)  # BO configuration
 
 result = boptimize!(opt)  # run Bayesian optimisation loop
@@ -380,13 +385,13 @@ end
 
 gp  = ElasticGPE(n, mean = MeanConst(0.0),
          kernel = SEArd(zeros(n), 1.0), logNoise = -2.0)  # GP surrogate
+mopt = MAPGPOptimizer(every = 10, noisebounds = [-4, 3], kernbounds = [[fill(-1.0, n); 0.0], [fill(4.0, n); 10.0]], maxeval = 40)  # refit the GP hyperparameters (MAP) every 10 evaluations
 opt = BOpt(
 {{?model=ei}}    obj_tracked, gp, ExpectedImprovement(),
 {{?model=pi}}    obj_tracked, gp, ProbabilityOfImprovement(),
-{{?model=ucb}}    obj_tracked, gp, UpperConfidenceBound(beta = 2.0),
-{{?model=ts}}    obj_tracked, gp, ThompsonSamplingSimple(nsamples = 100),
-    OptimizeElasticGP(),
-    RandomSearchAcquisitionOptimizer(500),
+{{?model=ucb}}    obj_tracked, gp, UpperConfidenceBound(NoBetaScaling(), 2.0),
+{{?model=ts}}    obj_tracked, gp, ThompsonSamplingSimple(),
+    mopt,
     fill(lb, n), fill(ub, n), maxiterations = {{budget}}, sense = Min)  # BO configuration
 boptimize!(opt)
 
@@ -420,13 +425,13 @@ end
 
 gp  = ElasticGPE(n, mean = MeanConst(0.0),
          kernel = SEArd(zeros(n), 1.0), logNoise = -2.0)  # GP surrogate
+mopt = MAPGPOptimizer(every = 10, noisebounds = [-4, 3], kernbounds = [[fill(-1.0, n); 0.0], [fill(4.0, n); 10.0]], maxeval = 40)  # refit the GP hyperparameters (MAP) every 10 evaluations
 opt = BOpt(
 {{?model=ei}}    obj_tracked, gp, ExpectedImprovement(),
 {{?model=pi}}    obj_tracked, gp, ProbabilityOfImprovement(),
-{{?model=ucb}}    obj_tracked, gp, UpperConfidenceBound(beta = 2.0),
-{{?model=ts}}    obj_tracked, gp, ThompsonSamplingSimple(nsamples = 100),
-    OptimizeElasticGP(),
-    RandomSearchAcquisitionOptimizer(500),
+{{?model=ucb}}    obj_tracked, gp, UpperConfidenceBound(NoBetaScaling(), 2.0),
+{{?model=ts}}    obj_tracked, gp, ThompsonSamplingSimple(),
+    mopt,
     fill(lb, n), fill(ub, n), maxiterations = {{budget}}, sense = Min)  # BO configuration
 boptimize!(opt)
 
@@ -461,19 +466,20 @@ end
 
 gp  = ElasticGPE(n, mean = MeanConst(0.0),
          kernel = SEArd(zeros(n), 1.0), logNoise = -2.0)  # GP surrogate
+mopt = MAPGPOptimizer(every = 10, noisebounds = [-4, 3], kernbounds = [[fill(-1.0, n); 0.0], [fill(4.0, n); 10.0]], maxeval = 40)  # refit the GP hyperparameters (MAP) every 10 evaluations
 opt = BOpt(
 {{?model=ei}}    obj_tracked, gp, ExpectedImprovement(),
 {{?model=pi}}    obj_tracked, gp, ProbabilityOfImprovement(),
-{{?model=ucb}}    obj_tracked, gp, UpperConfidenceBound(beta = 2.0),
-{{?model=ts}}    obj_tracked, gp, ThompsonSamplingSimple(nsamples = 100),
-    OptimizeElasticGP(),
-    RandomSearchAcquisitionOptimizer(500),
+{{?model=ucb}}    obj_tracked, gp, UpperConfidenceBound(NoBetaScaling(), 2.0),
+{{?model=ts}}    obj_tracked, gp, ThompsonSamplingSimple(),
+    mopt,
     fill(lb, 1), fill(ub, 1), maxiterations = {{budget}}, sense = Min)  # BO configuration
 boptimize!(opt)
 
 grid = range(lb, ub, length = 300)  # 1D evaluation grid
-X_grid = reshape(collect(grid), 1, :)  # 1 x 300 matrix for predict_y
-mu, s2 = predict_y(opt.model, X_grid)  # GP posterior mean and variance
+X_grid = reshape(collect(grid), 1, :)  # 1 x 300 matrix for predict_f
+mu, s2 = predict_f(opt.model, X_grid)  # posterior of the latent function, without observation noise
+mu = -mu  # with sense = Min the GP models -f(x)
 
 plot(grid, mu, ribbon = 2 .* sqrt.(s2),
        xlabel = "x", ylabel = "f(x)",
@@ -503,22 +509,23 @@ ub = {{ub}}  # upper bound
 
 gp  = ElasticGPE(n, mean = MeanConst(0.0),
          kernel = SEArd(zeros(n), 1.0), logNoise = -2.0)  # Gaussian process surrogate
+mopt = MAPGPOptimizer(every = 10, noisebounds = [-4, 3], kernbounds = [[fill(-1.0, n); 0.0], [fill(4.0, n); 10.0]], maxeval = 40)  # refit the GP hyperparameters (MAP) every 10 evaluations
 
 {{?model=ei}}acq = ExpectedImprovement()  # expected improvement: balances exploration and exploitation
 {{?model=pi}}acq = ProbabilityOfImprovement()  # probability of improvement: exploitation-heavy, greedy toward current best
-{{?model=ucb}}acq = UpperConfidenceBound(beta = 2.0)  # upper confidence bound: exploration via GP uncertainty (beta = 2.0)
-{{?model=ts}}acq = ThompsonSamplingSimple(nsamples = 100)  # Thompson sampling: optimises a random draw from the GP posterior
+{{?model=ucb}}acq = UpperConfidenceBound(NoBetaScaling(), 2.0)  # upper confidence bound: exploration via GP uncertainty (beta = 2.0)
+{{?model=ts}}acq = ThompsonSamplingSimple()  # simple Thompson sampling: an independent posterior draw at each candidate point
 opt = BOpt(
     obj, gp, acq,
-    OptimizeElasticGP(),
-    RandomSearchAcquisitionOptimizer(500),
+    mopt,
     fill(lb, n), fill(ub, n), maxiterations = {{budget}}, sense = Min)  # BO configuration
 
 result = boptimize!(opt)  # run BO
 
 println("=== GP Kernel Hyperparameters ===")  # 
-println("Log length scales: ", opt.model.kernel.ll)  # one value per dimension
-println("Length scales:     ", exp.(opt.model.kernel.ll))  # exponentiated for interpretability
+kp = GaussianProcesses.get_params(opt.model.kernel)  # log length scales, then the log signal std
+println("Log length scales: ", kp[1:n])  # one value per dimension
+println("Length scales:     ", exp.(kp[1:n]))  # exponentiated for interpretability
 println("Log noise:         ", opt.model.logNoise.value)  # measurement noise (log scale)
 println("Noise std:         ", exp(opt.model.logNoise.value))  # logNoise is the log of the noise standard deviation
 println("Observed minimum:  ", result.observed_optimum)  # best objective found
@@ -529,7 +536,7 @@ id = "vs-random"
 label = "Sample Efficiency"
 desc = "Compare BO and random search over same budget"
 code = '''
-using BayesianOptimization, GaussianProcesses
+using BayesianOptimization, GaussianProcesses, Random, Statistics
 
 function obj(x::Vector{Float64})
     {{obj}}  # objective function body
@@ -537,24 +544,30 @@ end
 
 n  = {{n}}; lb = {{lb}}; ub = {{ub}}  # dimension and bounds
 
-# Random search baseline  # 
-best_rand = minimum(obj(lb .+ rand(n) .* (ub - lb)) for _ in 1:{{budget}})  # uniform random samples
+seeds = 1:10  # both methods are random: compare them over 10 seeds, not one run
+best_rand = map(seeds) do s
+    Random.seed!(s)
+    minimum(obj(lb .+ rand(n) .* (ub - lb)) for _ in 1:{{budget}})  # random search: uniform samples
+end
 
-# Bayesian optimisation  # 
-gp  = ElasticGPE(n, mean = MeanConst(0.0),
-         kernel = SEArd(zeros(n), 1.0), logNoise = -2.0)  # GP surrogate
-{{?model=ei}}acq = ExpectedImprovement()  # expected improvement: balances exploration and exploitation
-{{?model=pi}}acq = ProbabilityOfImprovement()  # probability of improvement: exploitation-heavy, greedy toward current best
-{{?model=ucb}}acq = UpperConfidenceBound(beta = 2.0)  # upper confidence bound: exploration via GP uncertainty (beta = 2.0)
-{{?model=ts}}acq = ThompsonSamplingSimple(nsamples = 100)  # Thompson sampling: optimises a random draw from the GP posterior
-opt = BOpt(
-    obj, gp, acq, OptimizeElasticGP(),
-    RandomSearchAcquisitionOptimizer(500),
-    fill(lb, n), fill(ub, n), maxiterations = {{budget}}, sense = Min)  # BO configuration
-best_bo = boptimize!(opt).observed_optimum  # run BO
+best_bo = map(seeds) do s
+    Random.seed!(s)
+    gp  = ElasticGPE(n, mean = MeanConst(0.0),
+             kernel = SEArd(zeros(n), 1.0), logNoise = -2.0)  # GP surrogate
+    mopt = MAPGPOptimizer(every = 10, noisebounds = [-4, 3], kernbounds = [[fill(-1.0, n); 0.0], [fill(4.0, n); 10.0]], maxeval = 40)  # refit the GP hyperparameters (MAP) every 10 evaluations
+{{?model=ei}}    acq = ExpectedImprovement()  # expected improvement: balances exploration and exploitation
+{{?model=pi}}    acq = ProbabilityOfImprovement()  # probability of improvement: exploitation-heavy, greedy toward current best
+{{?model=ucb}}    acq = UpperConfidenceBound(NoBetaScaling(), 2.0)  # upper confidence bound: exploration via GP uncertainty (beta = 2.0)
+{{?model=ts}}    acq = ThompsonSamplingSimple()  # simple Thompson sampling: an independent posterior draw at each candidate point
+    opt = BOpt(
+        obj, gp, acq, mopt,
+        fill(lb, n), fill(ub, n), maxiterations = {{budget}}, sense = Min, verbosity = Silent)  # BO configuration
+    boptimize!(opt).observed_optimum  # run BO
+end
 
-println("Random search best: ", best_rand)  # random baseline
-println("BO best:            ", best_bo)  # Bayesian optimisation result
+println("Random search best, median of 10 seeds: ", median(best_rand), "  (range ", extrema(best_rand), ")")  # random baseline
+println("BO best, median of 10 seeds:            ", median(best_bo), "  (range ", extrema(best_bo), ")")  # Bayesian optimisation result
+println("BO better in ", count(best_bo .< best_rand), " of 10 seeds")  # paired comparison: same seed for both
 '''
 
 [[actionGroups.actions]]
@@ -573,13 +586,13 @@ n  = {{n}}; lb = {{lb}}; ub = {{ub}}  # dimension and bounds
 bests = map(1:10) do _  # repeat BO 10 times
     gp  = ElasticGPE(n, mean = MeanConst(0.0),
              kernel = SEArd(zeros(n), 1.0), logNoise = -2.0)  # fresh GP each run
+    mopt = MAPGPOptimizer(every = 10, noisebounds = [-4, 3], kernbounds = [[fill(-1.0, n); 0.0], [fill(4.0, n); 10.0]], maxeval = 40)  # refit the GP hyperparameters (MAP) every 10 evaluations
 {{?model=ei}}    acq = ExpectedImprovement()  # expected improvement: balances exploration and exploitation
 {{?model=pi}}    acq = ProbabilityOfImprovement()  # probability of improvement: exploitation-heavy, greedy toward current best
-{{?model=ucb}}    acq = UpperConfidenceBound(beta = 2.0)  # upper confidence bound: exploration via GP uncertainty (beta = 2.0)
-{{?model=ts}}    acq = ThompsonSamplingSimple(nsamples = 100)  # Thompson sampling: optimises a random draw from the GP posterior
+{{?model=ucb}}    acq = UpperConfidenceBound(NoBetaScaling(), 2.0)  # upper confidence bound: exploration via GP uncertainty (beta = 2.0)
+{{?model=ts}}    acq = ThompsonSamplingSimple()  # simple Thompson sampling: an independent posterior draw at each candidate point
     opt = BOpt(
-        obj, gp, acq, OptimizeElasticGP(),
-        RandomSearchAcquisitionOptimizer(500),
+        obj, gp, acq, mopt,
         fill(lb, n), fill(ub, n), maxiterations = {{budget}}, sense = Min)  # BO configuration
     boptimize!(opt).observed_optimum  # return best from this run
 end
@@ -612,15 +625,15 @@ ub = {{ub}}  # upper bound
 
 gp  = ElasticGPE(n, mean = MeanConst(0.0),
          kernel = SEArd(zeros(n), 1.0), logNoise = -2.0)  # Gaussian process surrogate
+mopt = MAPGPOptimizer(every = 10, noisebounds = [-4, 3], kernbounds = [[fill(-1.0, n); 0.0], [fill(4.0, n); 10.0]], maxeval = 40)  # refit the GP hyperparameters (MAP) every 10 evaluations
 
 {{?model=ei}}acq = ExpectedImprovement()  # expected improvement: balances exploration and exploitation
 {{?model=pi}}acq = ProbabilityOfImprovement()  # probability of improvement: exploitation-heavy, greedy toward current best
-{{?model=ucb}}acq = UpperConfidenceBound(beta = 2.0)  # upper confidence bound: exploration via GP uncertainty (beta = 2.0)
-{{?model=ts}}acq = ThompsonSamplingSimple(nsamples = 100)  # Thompson sampling: optimises a random draw from the GP posterior
+{{?model=ucb}}acq = UpperConfidenceBound(NoBetaScaling(), 2.0)  # upper confidence bound: exploration via GP uncertainty (beta = 2.0)
+{{?model=ts}}acq = ThompsonSamplingSimple()  # simple Thompson sampling: an independent posterior draw at each candidate point
 opt = BOpt(
     obj, gp, acq,
-    OptimizeElasticGP(),
-    RandomSearchAcquisitionOptimizer(500),
+    mopt,
     fill(lb, n), fill(ub, n), maxiterations = {{budget}}, sense = Min)  # BO configuration
 
 result = boptimize!(opt)  # run Bayesian optimisation loop
@@ -647,15 +660,15 @@ n  = {{n}}; lb = {{lb}}; ub = {{ub}}  # dimension and bounds
 
 gp  = ElasticGPE(n, mean = MeanConst(0.0),
          kernel = SEArd(zeros(n), 1.0), logNoise = -2.0)  # Gaussian process surrogate
+mopt = MAPGPOptimizer(every = 10, noisebounds = [-4, 3], kernbounds = [[fill(-1.0, n); 0.0], [fill(4.0, n); 10.0]], maxeval = 40)  # refit the GP hyperparameters (MAP) every 10 evaluations
 
 {{?model=ei}}acq = ExpectedImprovement()  # expected improvement: balances exploration and exploitation
 {{?model=pi}}acq = ProbabilityOfImprovement()  # probability of improvement: exploitation-heavy, greedy toward current best
-{{?model=ucb}}acq = UpperConfidenceBound(beta = 2.0)  # upper confidence bound: exploration via GP uncertainty (beta = 2.0)
-{{?model=ts}}acq = ThompsonSamplingSimple(nsamples = 100)  # Thompson sampling: optimises a random draw from the GP posterior
+{{?model=ucb}}acq = UpperConfidenceBound(NoBetaScaling(), 2.0)  # upper confidence bound: exploration via GP uncertainty (beta = 2.0)
+{{?model=ts}}acq = ThompsonSamplingSimple()  # simple Thompson sampling: an independent posterior draw at each candidate point
 opt = BOpt(
     obj, gp, acq,
-    OptimizeElasticGP(),
-    RandomSearchAcquisitionOptimizer(500),
+    mopt,
     fill(lb, n), fill(ub, n), maxiterations = {{budget}}, sense = Min)  # BO configuration
 
 r_bo    = boptimize!(opt)  # global BO search
@@ -686,13 +699,13 @@ best_val = Inf; best_x = zeros(n)  # track global best
 for _ in 1:n_starts
     gp  = ElasticGPE(n, mean = MeanConst(0.0),
              kernel = SEArd(zeros(n), 1.0), logNoise = -2.0)  # fresh GP each start
+    mopt = MAPGPOptimizer(every = 10, noisebounds = [-4, 3], kernbounds = [[fill(-1.0, n); 0.0], [fill(4.0, n); 10.0]], maxeval = 40)  # refit the GP hyperparameters (MAP) every 10 evaluations
 {{?model=ei}}    acq = ExpectedImprovement()  # expected improvement: balances exploration and exploitation
 {{?model=pi}}    acq = ProbabilityOfImprovement()  # probability of improvement: exploitation-heavy, greedy toward current best
-{{?model=ucb}}    acq = UpperConfidenceBound(beta = 2.0)  # upper confidence bound: exploration via GP uncertainty (beta = 2.0)
-{{?model=ts}}    acq = ThompsonSamplingSimple(nsamples = 100)  # Thompson sampling: optimises a random draw from the GP posterior
+{{?model=ucb}}    acq = UpperConfidenceBound(NoBetaScaling(), 2.0)  # upper confidence bound: exploration via GP uncertainty (beta = 2.0)
+{{?model=ts}}    acq = ThompsonSamplingSimple()  # simple Thompson sampling: an independent posterior draw at each candidate point
     opt = BOpt(
-        obj, gp, acq, OptimizeElasticGP(),
-        RandomSearchAcquisitionOptimizer(500),
+        obj, gp, acq, mopt,
         fill(lb, n), fill(ub, n), maxiterations = {{budget}}, sense = Min)  # BO configuration
     result = boptimize!(opt)  # run this start
     if result.observed_optimum < best_val
@@ -714,7 +727,7 @@ id = "acq-comparison"
 label = "Acquisition Comparison"
 desc = "Run EI, PI, UCB and TS on the same problem"
 code = '''
-using BayesianOptimization, GaussianProcesses
+using BayesianOptimization, GaussianProcesses, Random, Statistics
 
 function obj(x::Vector{Float64})
     {{obj}}  # objective function body
@@ -722,19 +735,24 @@ end
 
 n  = {{n}}; lb = {{lb}}; ub = {{ub}}  # dimension and bounds
 
-for (name, acq) in [
-    ("EI",  ExpectedImprovement()),
-    ("PI",  ProbabilityOfImprovement()),
-    ("UCB", UpperConfidenceBound(beta = 2.0)),
-    ("TS",  ThompsonSamplingSimple(nsamples = 100))]  # four acquisition functions
-    gp  = ElasticGPE(n, mean = MeanConst(0.0),
-             kernel = SEArd(zeros(n), 1.0), logNoise = -2.0)  # fresh GP per acquisition
-    opt = BOpt(
-        obj, gp, acq, OptimizeElasticGP(),
-        RandomSearchAcquisitionOptimizer(500),
-        fill(lb, n), fill(ub, n), maxiterations = {{budget}}, sense = Min)  # BO configuration
-    result = boptimize!(opt)  # run BO
-    println(name, ": best f = ", result.observed_optimum)  # compare results
+makers = [  # four acquisition functions; a fresh one per run, since EI and PI store the incumbent
+    ("EI",  () -> ExpectedImprovement()),
+    ("PI",  () -> ProbabilityOfImprovement()),
+    ("UCB", () -> UpperConfidenceBound(NoBetaScaling(), 2.0)),
+    ("TS",  () -> ThompsonSamplingSimple())]
+
+for (name, make) in makers
+    bests = map(1:10) do s  # 10 seeds: a single run per acquisition can be pure luck
+        Random.seed!(s)  # the same seeds for every acquisition
+        gp  = ElasticGPE(n, mean = MeanConst(0.0),
+                 kernel = SEArd(zeros(n), 1.0), logNoise = -2.0)  # fresh GP per run
+        mopt = MAPGPOptimizer(every = 10, noisebounds = [-4, 3], kernbounds = [[fill(-1.0, n); 0.0], [fill(4.0, n); 10.0]], maxeval = 40)  # refit the GP hyperparameters (MAP) every 10 evaluations
+        opt = BOpt(
+            obj, gp, make(), mopt,
+            fill(lb, n), fill(ub, n), maxiterations = {{budget}}, sense = Min, verbosity = Silent)  # BO configuration
+        boptimize!(opt).observed_optimum  # run BO
+    end
+    println(rpad(name, 4), "median best f = ", round(median(bests); sigdigits = 5), "  range ", round.(extrema(bests); sigdigits = 5))  # compare medians
 end
 '''
 
@@ -743,28 +761,31 @@ id = "budget-sensitivity"
 label = "Budget Sensitivity"
 desc = "Vary evaluation budget, track best found value"
 code = '''
-using BayesianOptimization, GaussianProcesses
+using BayesianOptimization, GaussianProcesses, Random, Statistics
 
 function obj(x::Vector{Float64})
     {{obj}}  # objective function body
 end
 
 n  = {{n}}; lb = {{lb}}; ub = {{ub}}  # dimension and bounds
-budgets = [10, 20, 50, 100, 200]  # evaluation budgets to compare
+budgets = [10, 20, 50, 100, 200]  # evaluation budgets to compare (at least 5 n: the initial design)
 
 for T in budgets
-    gp  = ElasticGPE(n, mean = MeanConst(0.0),
-             kernel = SEArd(zeros(n), 1.0), logNoise = -2.0)  # fresh GP per budget
-{{?model=ei}}    acq = ExpectedImprovement()  # expected improvement: balances exploration and exploitation
-{{?model=pi}}    acq = ProbabilityOfImprovement()  # probability of improvement: exploitation-heavy, greedy toward current best
-{{?model=ucb}}    acq = UpperConfidenceBound(beta = 2.0)  # upper confidence bound: exploration via GP uncertainty (beta = 2.0)
-{{?model=ts}}    acq = ThompsonSamplingSimple(nsamples = 100)  # Thompson sampling: optimises a random draw from the GP posterior
-    opt = BOpt(
-        obj, gp, acq, OptimizeElasticGP(),
-        RandomSearchAcquisitionOptimizer(500),
-        fill(lb, n), fill(ub, n), maxiterations = T, sense = Min)  # vary budget
-    result = boptimize!(opt)  # run BO
-    println("T = ", lpad(T, 3), "  best f = ", result.observed_optimum)  # report
+    bests = map(1:10) do s  # 10 seeds per budget
+        Random.seed!(s)
+        gp  = ElasticGPE(n, mean = MeanConst(0.0),
+                 kernel = SEArd(zeros(n), 1.0), logNoise = -2.0)  # fresh GP per run
+        mopt = MAPGPOptimizer(every = 10, noisebounds = [-4, 3], kernbounds = [[fill(-1.0, n); 0.0], [fill(4.0, n); 10.0]], maxeval = 40)  # refit the GP hyperparameters (MAP) every 10 evaluations
+{{?model=ei}}        acq = ExpectedImprovement()  # expected improvement: balances exploration and exploitation
+{{?model=pi}}        acq = ProbabilityOfImprovement()  # probability of improvement: exploitation-heavy, greedy toward current best
+{{?model=ucb}}        acq = UpperConfidenceBound(NoBetaScaling(), 2.0)  # upper confidence bound: exploration via GP uncertainty (beta = 2.0)
+{{?model=ts}}        acq = ThompsonSamplingSimple()  # simple Thompson sampling: an independent posterior draw at each candidate point
+        opt = BOpt(
+            obj, gp, acq, mopt,
+            fill(lb, n), fill(ub, n), maxiterations = T, sense = Min, verbosity = Silent)  # vary budget
+        boptimize!(opt).observed_optimum  # run BO
+    end
+    println("T = ", lpad(T, 3), "  median best f = ", round(median(bests); sigdigits = 5), "  range ", round.(extrema(bests); sigdigits = 5))  # report
 end
 '''
 
@@ -784,15 +805,15 @@ n  = {{n}}; lb = {{lb}}; ub = {{ub}}  # dimension and bounds
 
 gp  = ElasticGPE(n, mean = MeanConst(0.0),
          kernel = SEArd(zeros(n), 1.0), logNoise = -2.0)  # Gaussian process surrogate
+mopt = MAPGPOptimizer(every = 10, noisebounds = [-4, 3], kernbounds = [[fill(-1.0, n); 0.0], [fill(4.0, n); 10.0]], maxeval = 40)  # refit the GP hyperparameters (MAP) every 10 evaluations
 
 {{?model=ei}}acq = ExpectedImprovement()  # expected improvement: balances exploration and exploitation
 {{?model=pi}}acq = ProbabilityOfImprovement()  # probability of improvement: exploitation-heavy, greedy toward current best
-{{?model=ucb}}acq = UpperConfidenceBound(beta = 2.0)  # upper confidence bound: exploration via GP uncertainty (beta = 2.0)
-{{?model=ts}}acq = ThompsonSamplingSimple(nsamples = 100)  # Thompson sampling: optimises a random draw from the GP posterior
+{{?model=ucb}}acq = UpperConfidenceBound(NoBetaScaling(), 2.0)  # upper confidence bound: exploration via GP uncertainty (beta = 2.0)
+{{?model=ts}}acq = ThompsonSamplingSimple()  # simple Thompson sampling: an independent posterior draw at each candidate point
 opt = BOpt(
     obj, gp, acq,
-    OptimizeElasticGP(),
-    RandomSearchAcquisitionOptimizer(500),
+    mopt,
     fill(lb, n), fill(ub, n), maxiterations = {{budget}}, sense = Min)  # BO configuration
 r_bo   = boptimize!(opt)  # global BO search
 
@@ -825,15 +846,15 @@ ub = {{ub}}  # upper bound
 
 gp  = ElasticGPE(n, mean = MeanConst(0.0),
          kernel = SEArd(zeros(n), 1.0), logNoise = -2.0)  # Gaussian process surrogate
+mopt = MAPGPOptimizer(every = 10, noisebounds = [-4, 3], kernbounds = [[fill(-1.0, n); 0.0], [fill(4.0, n); 10.0]], maxeval = 40)  # refit the GP hyperparameters (MAP) every 10 evaluations
 
 {{?model=ei}}acq = ExpectedImprovement()  # expected improvement: balances exploration and exploitation
 {{?model=pi}}acq = ProbabilityOfImprovement()  # probability of improvement: exploitation-heavy, greedy toward current best
-{{?model=ucb}}acq = UpperConfidenceBound(beta = 2.0)  # upper confidence bound: exploration via GP uncertainty (beta = 2.0)
-{{?model=ts}}acq = ThompsonSamplingSimple(nsamples = 100)  # Thompson sampling: optimises a random draw from the GP posterior
+{{?model=ucb}}acq = UpperConfidenceBound(NoBetaScaling(), 2.0)  # upper confidence bound: exploration via GP uncertainty (beta = 2.0)
+{{?model=ts}}acq = ThompsonSamplingSimple()  # simple Thompson sampling: an independent posterior draw at each candidate point
 opt = BOpt(
     obj, gp, acq,
-    OptimizeElasticGP(),
-    RandomSearchAcquisitionOptimizer(500),
+    mopt,
     fill(lb, n), fill(ub, n), maxiterations = {{budget}}, sense = Min)  # BO configuration
 
 result = boptimize!(opt)  # run BO
@@ -867,21 +888,21 @@ ub = {{ub}}  # upper bound
 
 gp  = ElasticGPE(n, mean = MeanConst(0.0),
          kernel = SEArd(zeros(n), 1.0), logNoise = -2.0)  # Gaussian process surrogate
+mopt = MAPGPOptimizer(every = 10, noisebounds = [-4, 3], kernbounds = [[fill(-1.0, n); 0.0], [fill(4.0, n); 10.0]], maxeval = 40)  # refit the GP hyperparameters (MAP) every 10 evaluations
 
 {{?model=ei}}acq = ExpectedImprovement()  # expected improvement: balances exploration and exploitation
 {{?model=pi}}acq = ProbabilityOfImprovement()  # probability of improvement: exploitation-heavy, greedy toward current best
-{{?model=ucb}}acq = UpperConfidenceBound(beta = 2.0)  # upper confidence bound: exploration via GP uncertainty (beta = 2.0)
-{{?model=ts}}acq = ThompsonSamplingSimple(nsamples = 100)  # Thompson sampling: optimises a random draw from the GP posterior
+{{?model=ucb}}acq = UpperConfidenceBound(NoBetaScaling(), 2.0)  # upper confidence bound: exploration via GP uncertainty (beta = 2.0)
+{{?model=ts}}acq = ThompsonSamplingSimple()  # simple Thompson sampling: an independent posterior draw at each candidate point
 opt = BOpt(
     obj, gp, acq,
-    OptimizeElasticGP(),
-    RandomSearchAcquisitionOptimizer(500),
+    mopt,
     fill(lb, n), fill(ub, n), maxiterations = {{budget}}, sense = Min)  # BO configuration
 
 boptimize!(opt)
 
 println("=== SEArd Kernel Interpretation ===")  # 
-println("Length scales: ", exp.(opt.model.kernel.ll))  # one per dimension
+println("Length scales: ", exp.(GaussianProcesses.get_params(opt.model.kernel)[1:n]))  # one per dimension
 println("  short length scale -> function varies rapidly in that dimension")  # 
 println("  long  length scale -> that dimension has little influence")  # 
 
@@ -895,27 +916,37 @@ id = "acq-guide"
 label = "Acquisition Guide"
 desc = "When to choose EI, PI, UCB or TS"
 code = '''
-{{?model=ei}}acq_name = "ExpectedImprovement"  # currently selected acquisition function
-{{?model=pi}}acq_name = "ProbabilityOfImprovement"  # currently selected acquisition function
-{{?model=ucb}}acq_name = "UpperConfidenceBound"  # currently selected acquisition function
-{{?model=ts}}acq_name = "ThompsonSamplingSimple"  # currently selected acquisition function
+using BayesianOptimization, GaussianProcesses, LinearAlgebra
 
-if acq_name == "ExpectedImprovement"
-    println("EI: standard first choice for black-box optimisation")  # 
-    println("    balances exploration and exploitation without tuning")  # 
-    println("    works well with < 100 evaluations")  # 
-elseif acq_name == "ProbabilityOfImprovement"
-    println("PI: greedy toward current best; exploitation-heavy")  # 
-    println("    may stall if initial observations are noisy")  # 
-    println("    prefer EI unless you know the region of interest")  # 
-elseif acq_name == "UpperConfidenceBound"
-    println("UCB: explicit exploration via beta parameter")  # 
-    println("    beta > 1  -> more exploration; beta < 1 -> exploitation")  # 
-    println("    good when you want to tune the trade-off manually")  # 
-else
-    println("TS: samples random GP posterior function and optimises it")  # 
-    println("    naturally diverse; suited for parallel batch queries")  # 
-    println("    slower per iteration due to posterior sampling")  # 
+function obj(x::Vector{Float64})
+    {{obj}}  # objective function body
 end
+
+n  = {{n}}; lb = {{lb}}; ub = {{ub}}  # dimension and bounds
+
+gp  = ElasticGPE(n, mean = MeanConst(0.0),
+         kernel = SEArd(zeros(n), 1.0), logNoise = -2.0)  # Gaussian process surrogate
+mopt = MAPGPOptimizer(every = 10, noisebounds = [-4, 3], kernbounds = [[fill(-1.0, n); 0.0], [fill(4.0, n); 10.0]], maxeval = 40)  # refit the GP hyperparameters (MAP) every 10 evaluations
+{{?model=ei}}acq = ExpectedImprovement()  # expected improvement: balances exploration and exploitation
+{{?model=pi}}acq = ProbabilityOfImprovement()  # probability of improvement: exploitation-heavy, greedy toward current best
+{{?model=ucb}}acq = UpperConfidenceBound(NoBetaScaling(), 2.0)  # upper confidence bound: exploration via GP uncertainty (beta = 2.0)
+{{?model=ts}}acq = ThompsonSamplingSimple()  # simple Thompson sampling: an independent posterior draw at each candidate point
+opt = BOpt(
+    obj, gp, acq, mopt,
+    fill(lb, n), fill(ub, n), maxiterations = {{budget}}, sense = Min)  # BO configuration
+result = boptimize!(opt)  # run BO
+
+# Where would each acquisition sample next, given the same fitted GP?
+C = lb .+ rand(n, 2000) .* (ub - lb)  # random candidate points, one per column
+mu, s2 = predict_f(opt.model, C)  # posterior of -f at the candidates (the GP models -f when sense = Min)
+for (name, a) in [("EI", ExpectedImprovement()), ("PI", ProbabilityOfImprovement()),
+                  ("UCB", UpperConfidenceBound(NoBetaScaling(), 2.0)), ("TS", ThompsonSamplingSimple())]
+    BayesianOptimization.setparams!(a, opt.model)  # EI and PI: set the incumbent
+    k = argmax(vec(BayesianOptimization.acquisitionfunction(a, opt.model)(C)))  # best candidate for this acquisition
+    println(rpad(name, 4), "next x = ", round.(C[:, k]; digits = 2),
+            "  posterior sd = ", round(sqrt(s2[k]); sigdigits = 3),
+            "  distance to incumbent = ", round(norm(C[:, k] .- result.observed_optimizer); digits = 2))
+end
+println("Large sd or distance: the acquisition explores. Small: it exploits near the incumbent (PI most of all)")
 '''
 

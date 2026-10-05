@@ -423,12 +423,12 @@ desc = "How stable the flagged set is as k changes"
 code = '''
 using OutlierDetection, OutlierDetectionNeighbors, Statistics, Plots
 
-{{?model=knn}}Detector = KNNDetector
-{{?model=lof}}Detector = LOFDetector
-{{?model=cof}}Detector = COFDetector
-{{?model=abod}}Detector = ABODDetector
+{{?model=knn}}Detector = k -> KNNDetector(k=k, reduction=:{{reduction}})  # the chosen settings, only k varies
+{{?model=lof}}Detector = k -> LOFDetector(k=k)
+{{?model=cof}}Detector = k -> COFDetector(k=k)
+{{?model=abod}}Detector = k -> ABODDetector(k=k, enhanced={{enhanced}})
 function flagged_set(k)
-	_, s = OutlierDetection.fit(Detector(k=k), permutedims({{data}}); verbosity=0)
+	_, s = OutlierDetection.fit(Detector(k), permutedims({{data}}); verbosity=0)
 	Set(findall(s .> quantile(s, 1 - {{contam}})))
 end
 
@@ -477,7 +477,11 @@ desc = "Which points KNN, LOF, COF and ABOD agree on"
 code = '''
 using OutlierDetection, OutlierDetectionNeighbors, Statistics
 
-detectors = [KNNDetector(k={{k}}), LOFDetector(k={{k}}), COFDetector(k={{k}}), ABODDetector(k={{k}})]
+{{?model=knn}}knn = KNNDetector(k={{k}}, reduction=:{{reduction}})  # the chosen settings for the current detector
+{{?model!=knn}}knn = KNNDetector(k={{k}})
+{{?model=abod}}abod = ABODDetector(k={{k}}, enhanced={{enhanced}})
+{{?model!=abod}}abod = ABODDetector(k={{k}})
+detectors = [knn, LOFDetector(k={{k}}), COFDetector(k={{k}}), abod]
 labels    = ["KNN", "LOF", "COF", "ABOD"]
 flags = reduce(hcat, map(detectors) do d
 	_, s = OutlierDetection.fit(d, permutedims({{data}}); verbosity=0)
@@ -495,7 +499,11 @@ desc = "Spearman correlation between the four detectors' scores"
 code = '''
 using OutlierDetection, OutlierDetectionNeighbors, StatsBase
 
-detectors = [KNNDetector(k={{k}}), LOFDetector(k={{k}}), COFDetector(k={{k}}), ABODDetector(k={{k}})]
+{{?model=knn}}knn = KNNDetector(k={{k}}, reduction=:{{reduction}})  # the chosen settings for the current detector
+{{?model!=knn}}knn = KNNDetector(k={{k}})
+{{?model=abod}}abod = ABODDetector(k={{k}}, enhanced={{enhanced}})
+{{?model!=abod}}abod = ABODDetector(k={{k}})
+detectors = [knn, LOFDetector(k={{k}}), COFDetector(k={{k}}), abod]
 S = reduce(hcat, [OutlierDetection.fit(d, permutedims({{data}}); verbosity=0)[2] for d in detectors])
 display(corspearman(S))  # rows and columns: KNN, LOF, COF, ABOD
 '''

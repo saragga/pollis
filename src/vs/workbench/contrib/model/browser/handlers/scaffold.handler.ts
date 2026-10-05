@@ -31,7 +31,7 @@ type ScaffoldWebviewMessage =
 	| { command: 'openNotebook'; target: string }
 	| { command: 'openWiki'; target: string }
 	| { command: 'openUrl'; url: string }
-	| { command: 'runCode'; target: 'newFile' | 'terminal' | 'juliaRepl' | 'notebook' | 'pluto'; code: string }
+	| { command: 'runCode'; target: 'newFile' | 'juliaRepl' | 'notebook' | 'pluto'; code: string }
 	| { command: 'colorize'; code: string; target?: string }
 	| { command: 'installPackages' };
 
@@ -69,7 +69,7 @@ export function registerScaffoldWebviewHandlers(
 	disposables.add(themeService.onDidColorThemeChange(() => {
 		for (const t of Object.keys(lastCode)) { void postColorized(lastCode[t], t); }
 	}));
-	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, [...data.packages.map(p => p.name), ...(data.requires ?? [])], fileService, pathService, commandService, notificationService, workspaceContextService);
+	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, data.packages, data.requires ?? [], fileService, pathService, commandService, notificationService, workspaceContextService);
 	createExampleCodeWiring(webviewInput.webview, disposables, panelId, fileService, pathService, notificationService);
 	createCustomCopyWiring(webviewInput.webview, disposables, data.wikis, data.notebooks, fileService, pathService, editorService, commandService, notificationService);
 	createReferenceWiring(webviewInput.webview, disposables, panelId, data.references, fileService, pathService, commandService, notificationService);

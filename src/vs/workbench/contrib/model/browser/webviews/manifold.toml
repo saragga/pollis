@@ -215,6 +215,11 @@ Xt = permutedims(X)  # ManifoldLearning.jl expects features x samples
 embed(k) = permutedims(predict(fit(Isomap, Xt; k=k, maxoutdim=d)))  # geodesic distances on the k-NN graph, then classical MDS
 grid = [5, 8, 10, 15, 20, 30]  # neighbourhood sizes compared by the Choosing action
 Y = embed(k)  # n x d embedding
+geodesic() = let D = pairwise(Euclidean(), X, dims=1), n = size(D, 1), W = fill(Inf, n, n)  # shortest paths on the k-NN graph: the distances Isomap preserves
+    for i in 1:n, j in partialsortperm(D[i, :], 1:k+1); W[i, j] = W[j, i] = D[i, j]; end
+    for m in 1:n, i in 1:n, j in 1:n; W[i, j] = min(W[i, j], W[i, m] + W[m, j]); end  # Floyd-Warshall
+    W
+end
 
 function trustworthiness(Y, m=10)  # share of embedding neighbours that were also near in X (1 = perfect)
     n  = size(X, 1)
@@ -350,13 +355,14 @@ plot(ms, [trustworthiness(Y, m) for m in ms], marker=:circle, xlabel="neighbours
 [[actionGroups.actions]]
 id = "residual-variance"
 label = "Residual Variance"
-desc = "1 - r^2 between original and embedding distances: how much global distance structure is lost (0 = none)"
+desc = "1 - r^2 between original and embedding distances (for ISOmap the geodesic graph distances it preserves): how much global distance structure is lost (0 = none)"
 code = '''
 using Plots
 
-Dx = pairwise(Euclidean(), X, dims=1)
+{{?model!=isomap}} Dx = pairwise(Euclidean(), X, dims=1)
+{{?model=isomap}} Dx = geodesic()  # Tenenbaum residual variance uses geodesic distances
 Dy = pairwise(Euclidean(), Y, dims=1)
-upper = [(i, j) for j in axes(Dx, 2) for i in 1:j-1]
+upper = [(i, j) for j in axes(Dx, 2) for i in 1:j-1 if isfinite(Dx[i, j])]  # pairs in disconnected graph components dropped
 a, b = [Dx[i, j] for (i, j) in upper], [Dy[i, j] for (i, j) in upper]
 scatter(a, b, markersize=1, alpha=0.2, xlabel="original distance", ylabel="embedding distance", legend=false)  # Shepard diagram
 1 - cor(a, b)^2
@@ -408,8 +414,10 @@ using LinearAlgebra
 
 Xc  = X .- mean(X, dims=1)
 Ypca = Xc * svd(Xc).V[:, 1:d]
-Dx  = vec(pairwise(Euclidean(), X, dims=1))
-resvar(Z) = 1 - cor(Dx, vec(pairwise(Euclidean(), Z, dims=1)))^2
+{{?model!=isomap}} Dx  = vec(pairwise(Euclidean(), X, dims=1))
+{{?model=isomap}} Dx  = vec(geodesic())  # geodesic distances for ISOmap, so a correct unrolling is not penalised
+ok  = isfinite.(Dx)  # pairs in disconnected graph components dropped
+resvar(Z) = 1 - cor(Dx[ok], vec(pairwise(Euclidean(), Z, dims=1))[ok])^2
 (manifold = (trust = trustworthiness(Y), resvar = resvar(Y)), pca = (trust = trustworthiness(Ypca), resvar = resvar(Ypca)))
 '''
 

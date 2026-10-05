@@ -16,8 +16,16 @@ github = "https://github.com/sebapersson/PEtab.jl"
 name = "StructuralIdentifiability.jl"
 github = "https://github.com/SciML/StructuralIdentifiability.jl"
 
+[[packages]]
+name = "LikelihoodProfiler.jl"
+github = "https://github.com/insysbio/LikelihoodProfiler.jl"
+
+[[packages]]
+name = "AdvancedHMC.jl"
+github = "https://github.com/TuringLang/AdvancedHMC.jl"
+
 [requires]
-packages = ["PEtab.jl", "StructuralIdentifiability.jl"]
+packages = ["PEtab.jl", "StructuralIdentifiability.jl", "LikelihoodProfiler.jl", "AdvancedHMC.jl", "Catalyst.jl", "OrdinaryDiffEqRosenbrock.jl", "Distributions.jl", "Fides.jl", "Optim.jl", "OptimizationLBFGSB.jl", "SciMLSensitivity.jl", "Bijectors.jl", "LogDensityProblems.jl", "LogDensityProblemsAD.jl", "MCMCChains.jl", "StatsPlots.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""
@@ -26,25 +34,25 @@ label = ""
 name = "Basic Estimation"
 file = "ode/tutorial-01-basic-estimation.ipynb"
 bundled = true
-description = "Set up a PEtab problem and run single-start optimisation"
+description = "Build a PEtab problem in Julia and fit it from one start with Fides"
 
 [[notebookSections.notebooks]]
 name = "Multi-Start"
 file = "ode/tutorial-02-multistart.ipynb"
 bundled = true
-description = "Run multi-start optimisation to find a global optimum"
+description = "Run calibrate_multistart and read the waterfall plot"
 
 [[notebookSections.notebooks]]
 name = "Profile Likelihood"
 file = "ode/tutorial-03-profile-likelihood.ipynb"
 bundled = true
-description = "Compute profile likelihoods to quantify parameter uncertainty"
+description = "Profile each parameter with LikelihoodProfiler.jl and read off confidence intervals"
 
 [[notebookSections.notebooks]]
 name = "Identifiability"
 file = "ode/tutorial-04-identifiability.ipynb"
 bundled = true
-description = "Assess structural and practical identifiability of parameters"
+description = "Structural identifiability with StructuralIdentifiability.jl against practical identifiability from profiles"
 
 [[wikis]]
 name = "Factsheet"
@@ -144,27 +152,19 @@ doi = "10.1002/9780470316757"
 openAccess = false
 
 [[references]]
-title = "Dynamic Modelling and Parameter Estimation in Systems Biology"
-authors = "Raue, Andreas; Kreutz, Clemens; Maiwald, Thomas; Bachmann, Julie; Schilling, Marcel; Timmer, Jens"
-year = 2009
-journal = "Bioinformatics"
-doi = "10.1093/bioinformatics/btp358"
-openAccess = false
-
-[[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
 title = "PEtab: Interoperable Specification of Parameter Estimation Problems in Systems Biology"
-authors = "Schmiester, Leonard; Schaelte, Yannik; Bergmann, Frank T.; Camba, Tacio; Dudkin, Erika; Egert, Janine; Frhlich, Fabian; Fuhrmann, Lara; Hauber, Adrian L.; Kemmer, Svenja; Lakrisenko, Polina; Loos, Carolin; Merkt, Simon; Muller, Wolfgang; Pathirana, Dilan; Raue, Andreas; Sahle, Sven; Schaber, Jorg; Stapor, Paul; Ulrich, Elba; Villaverde, Alejandro F.; Weindl, Daniel; Wierling, Christoph; Stelling, Joerg; Timmer, Jens; Hasenauer, Jan; Theis, Fabian"
+authors = "Schmiester, Leonard; Schaelte, Yannik; Bergmann, Frank T.; Camba, Tacio; Dudkin, Erika; Egert, Janine; Frohlich, Fabian; Fuhrmann, Lara; Hauber, Adrian L.; Kemmer, Svenja; Lakrisenko, Polina; Loos, Carolin; Merkt, Simon; Muller, Wolfgang; Pathirana, Dilan; Raue, Andreas; Sahle, Sven; Schaber, Jorg; Stapor, Paul; Ulrich, Elba; Villaverde, Alejandro F.; Weindl, Daniel; Wierling, Christoph; Stelling, Joerg; Timmer, Jens; Hasenauer, Jan; Theis, Fabian"
 year = 2021
 journal = "PLOS Computational Biology"
 doi = "10.1371/journal.pcbi.1008646"
 openAccess = true
 
 [[references]]
-title = "Structural and Practical Identifiability Analysis of Partially Observed Dynamical Models"
+title = "Structural and Practical Identifiability Analysis of Partially Observed Dynamical Models by Exploiting the Profile Likelihood"
 authors = "Raue, Andreas; Kreutz, Clemens; Maiwald, Thomas; Bachmann, Julie; Schilling, Marcel; Klingmuller, Ursula; Timmer, Jens"
 year = 2009
 journal = "Bioinformatics"
@@ -172,11 +172,27 @@ doi = "10.1093/bioinformatics/btp358"
 openAccess = false
 
 [[references]]
-title = "A Benchmark Study of Numerical Approaches for Fitting and Estimating Parameters of Biochemical Systems"
+title = "Lessons Learned from Quantitative Dynamical Modeling in Systems Biology"
 authors = "Raue, Andreas; Schilling, Marcel; Bachmann, Julie; Matteson, Andrew; Schelker, Max; Kaschek, Daniel; Hug, Sabine; Kreutz, Clemens; Harms, Brian D.; Theis, Fabian J.; Klingmuller, Ursula; Timmer, Jens"
 year = 2013
 journal = "PLOS ONE"
-doi = "10.1371/journal.pone.0075114"
+doi = "10.1371/journal.pone.0074335"
+openAccess = true
+
+[[references]]
+title = "Benchmarking Optimization Methods for Parameter Estimation in Large Kinetic Models"
+authors = "Villaverde, Alejandro F.; Frohlich, Fabian; Weindl, Daniel; Hasenauer, Jan; Banga, Julio R."
+year = 2019
+journal = "Bioinformatics"
+doi = "10.1093/bioinformatics/bty736"
+openAccess = true
+
+[[references]]
+title = "Fides: Reliable Trust-Region Optimization for Parameter Estimation of Ordinary Differential Equation Models"
+authors = "Frohlich, Fabian; Sorger, Peter K."
+year = 2022
+journal = "PLOS Computational Biology"
+doi = "10.1371/journal.pcbi.1010322"
 openAccess = true
 
 [[models]]
@@ -202,107 +218,124 @@ label = "Bayesian Inference"
 [[decisionRows]]
 task = "Structural Identifiability"
 context = "Recoverability check"
-purpose = "Verify parameters are theoretically recoverable from the model structure before fitting any data"
+purpose = "Check that the parameters can be recovered from perfect, noise-free data on the chosen outputs, before fitting anything"
 
 [[decisionRows]]
 task = "Single-Start"
 context = "Point estimate"
-purpose = "Good starting point available; quick objective evaluation; model exploration"
+purpose = "One local fit from one start; fast, but may stop in a local minimum"
 
 [[decisionRows]]
 task = "Multi-Start"
 context = "Robust point estimate"
-purpose = "Multiple local minima suspected; no prior on parameters; robustness required"
+purpose = "Many local fits from Latin-hypercube starts; the waterfall plot shows whether the best minimum is found repeatedly"
 
 [[decisionRows]]
 task = "Profile Likelihood"
 context = "CIs + identifiability"
-purpose = "Identifiability analysis; asymmetric CIs; reporting uncertainty for publication"
+purpose = "Practical identifiability and likelihood-based confidence intervals, which may be asymmetric or open-ended"
 
 [[decisionRows]]
 task = "Bayesian Inference"
 context = "Full posterior"
-purpose = "Full posterior distribution needed; parameter uncertainty quantification; prior knowledge available"
-
-[[inputs]]
-id = "struct-model"
-label = "ODE model"
-tooltip = "A ModelingToolkit ODESystem or StructuralIdentifiability @ODEmodel variable. The model must declare state variables, parameters, and the right-hand side equations."
-default = "ode_model"
-models = ["struct"]
+purpose = "Posterior distribution with priors, sampled by NUTS or HMC; credible intervals and parameter correlations"
 
 [[inputs]]
 id = "struct-observed"
-label = "Observed outputs"
-tooltip = "List of measured quantities as ModelingToolkit equations mapping output names to state variables, e.g. [y ~ x1, z ~ x2]. Only observed states affect identifiability."
-default = "[y ~ x1]"
+label = "Observed Outputs"
+tooltip = "Which quantities are measured. The estimation models measure both S + E and P."
+kind = "select"
+default = "both"
 models = ["struct"]
+
+[[inputs.options]]
+value = "both"
+label = "S + E and P"
+
+[[inputs.options]]
+value = "p"
+label = "P Only"
+
+[[inputs.options]]
+value = "se"
+label = "S + E Only"
 
 [[inputs]]
 id = "path"
-label = "PEtab YAML path"
-tooltip = "Path to the PEtab problem YAML file, or a Julia variable holding the PEtabModel object. The YAML file references measurement, condition, parameter, and observable tables."
-default = "petab_problem.yaml"
-models = ["single", "multi", "profile"]
+label = "PEtab YAML (Optional)"
+tooltip = "Path to a problem in the PEtab standard format (YAML plus SBML model and tables). Leave empty to use the Michaelis-Menten problem built in the code. Prediction and true-value comparisons apply to the built-in problem only."
+default = ""
+models = ["single", "multi", "profile", "bayes"]
+
+[[inputs]]
+id = "seed"
+label = "Seed"
+tooltip = "Random seed for the simulated measurements, the start points and the sampler."
+default = "1"
+models = ["single", "multi", "profile", "bayes"]
 
 [[inputs]]
 id = "optimizer"
 label = "Optimizer"
-tooltip = "Local optimizer passed to calibrate_model. LBFGS is fast for smooth problems; IPNewton handles box constraints; Fides is purpose-built for parameter estimation in systems biology."
+tooltip = "Local optimizer passed to calibrate. Fides with the exact Hessian is PEtab.jl's recommendation for small models; Fides.BFGS() approximates the Hessian; Optim's IPNewton and LBFGS are alternatives."
 kind = "select"
-default = "Optim.LBFGS()"
+default = "Fides.CustomHessian()"
 models = ["single", "multi", "profile"]
 
 [[inputs.options]]
-value = "Optim.LBFGS()"
-label = "Optim.LBFGS()"
+value = "Fides.CustomHessian()"
+label = "Fides (Exact Hessian)"
+
+[[inputs.options]]
+value = "Fides.BFGS()"
+label = "Fides (BFGS)"
 
 [[inputs.options]]
 value = "Optim.IPNewton()"
-label = "Optim.IPNewton()"
+label = "Optim IPNewton"
 
 [[inputs.options]]
-value = "Fides(verbose=false)"
-label = "Fides(verbose=false)"
+value = "Optim.LBFGS()"
+label = "Optim LBFGS"
 
 [[inputs]]
 id = "gradient"
-label = "Gradient method"
-tooltip = "Method used to compute gradients of the objective. ForwardDiff is reliable for small models; adjoint methods scale better for large ODE systems."
+label = "Gradient Method"
+tooltip = "How PEtab.jl computes the gradient of the negative log-likelihood. ForwardDiff is usually fastest for small models; adjoint sensitivities scale best to large models and need SciMLSensitivity."
 kind = "select"
-default = ":ForwardDiff"
-models = ["single", "multi", "profile"]
+default = "ForwardDiff"
+models = ["single", "multi", "profile", "bayes"]
 
 [[inputs.options]]
-value = ":ForwardDiff"
-label = ":ForwardDiff"
+value = "ForwardDiff"
+label = "ForwardDiff"
 
 [[inputs.options]]
-value = ":adjoint"
-label = ":adjoint"
+value = "ForwardEquations"
+label = "Forward Sensitivities"
 
 [[inputs.options]]
-value = ":ForwardEquations"
-label = ":ForwardEquations"
+value = "Adjoint"
+label = "Adjoint"
 
 [[inputs]]
 id = "nstarts"
-label = "n starts"
-tooltip = "Number of independent optimisation runs from different Latin hypercube starting points. More starts improve robustness at the cost of computation time."
+label = "n Starts"
+tooltip = "Number of local optimisations from Latin-hypercube starting points within the parameter bounds."
 default = "50"
-models = ["multi"]
+models = ["multi", "profile"]
 
 [[inputs]]
-id = "bayes-path"
-label = "PEtab YAML path"
-tooltip = "Path to the PEtab problem YAML file, or a Julia variable holding the PEtabModel object."
-default = "petab_problem.yaml"
-models = ["bayes"]
+id = "conf"
+label = "Confidence Level"
+tooltip = "Level of the profile-likelihood confidence intervals. The threshold on the negative log-likelihood is half the chi-square(1) quantile."
+default = "0.95"
+models = ["profile"]
 
 [[inputs]]
 id = "sampler"
 label = "Sampler"
-tooltip = "MCMC sampler used for posterior sampling. NUTS (No-U-Turn Sampler) adapts step size automatically and is recommended for most problems. HMC requires manual step size tuning."
+tooltip = "AdvancedHMC sampler. NUTS adapts its path length and step size; HMC uses a fixed step size of 0.05 and 10 leapfrog steps."
 kind = "select"
 default = "NUTS"
 models = ["bayes"]
@@ -317,97 +350,280 @@ label = "HMC"
 
 [[inputs]]
 id = "target-acceptance"
-label = "Target acceptance"
-tooltip = "Target acceptance probability for the NUTS dual-averaging step-size adaptation. Values between 0.6 and 0.9 are typical; higher values give smaller steps and better mixing at higher cost."
+label = "Target Acceptance"
+tooltip = "Target acceptance rate for the NUTS step-size adaptation. 0.8 is Stan's default; higher values take smaller steps."
 default = "0.8"
 when = "sampler=NUTS"
 models = ["bayes"]
 
 [[inputs]]
 id = "nsamples"
-label = "n samples"
-tooltip = "Number of MCMC samples drawn per chain after warm-up. More samples give better posterior estimates at higher computational cost."
+label = "n Samples"
+tooltip = "Draws kept per chain, after 500 adaptation draws that are discarded."
 default = "1000"
 models = ["bayes"]
 
 [[inputs]]
 id = "nchains"
-label = "n chains"
-tooltip = "Number of independent MCMC chains run in parallel. Multiple chains allow convergence diagnostics (R-hat). Four chains is a common default."
+label = "n Chains"
+tooltip = "Number of chains, each started from a draw from the prior. Several chains are needed for R-hat."
 default = "4"
 models = ["bayes"]
 
 [[codeBranches]]
 model = "struct"
 code = '''
-using StructuralIdentifiability  # symbolic identifiability analysis
+using StructuralIdentifiability
 
-result = assess_identifiability({{struct-model}}; measured_quantities={{struct-observed}})  # classify each parameter
+# Michaelis-Menten kinetics, S + E <-> SE -> P + E, with c3 = 3 substituted because it is known in the estimation models
+ode = @ODEmodel(
+    S'(t) = -c1 * S(t) * E(t) + c2 * SE(t),
+    E'(t) = -c1 * S(t) * E(t) + (c2 + 3) * SE(t),
+    SE'(t) = c1 * S(t) * E(t) - (c2 + 3) * SE(t),
+    P'(t) = 3 * SE(t),
+{{?struct-observed=both|se}}    y1(t) = S(t) + E(t),
+{{?struct-observed=both|p}}    y2(t) = P(t),
+)
 
-for (param, status) in result  # iterate over all parameters
-    println(param, " => ", status)
-end  # :globally / :locally / :nonidentifiable
+# E, SE and P start at known values (50, 0, 0); only S(0) = S0 is unknown, as in the estimation models
+known = [E, SE, P]
+for (f, status) in assess_identifiability(ode; known_ic = known)  # :globally, :locally or :nonidentifiable
+    println(f, " => ", status)
+end
+println("Identifiable combinations: ", find_identifiable_functions(ode; known_ic = known))
 '''
 
 [[codeBranches]]
 model = "single"
 code = '''
-using PEtab, OrdinaryDiffEq, Optim  # PEtab + ODE solver + optimizer
+using PEtab, Catalyst, OrdinaryDiffEqRosenbrock, Fides, Optim, Random
+{{?gradient=Adjoint}}using SciMLSensitivity  # must be loaded before the problem is built
+using PEtab: DataFrame  # PEtab takes the measurement table as a DataFrame
 
-petab_model = PEtabModel({{path}})  # load PEtab problem from YAML
-prob = PEtabODEProblem(petab_model; gradient_method={{gradient}})  # build objective with gradient
+rng = Xoshiro({{seed}})
 
-result = calibrate_model(prob, {{optimizer}}; save_trace=true)  # single-start local optimisation
+# Michaelis-Menten kinetics, S + E <-> SE -> P + E (the PEtab.jl tutorial model); c3 = 3 is known
+rn = @reaction_network begin
+    @parameters S0 c3=3.0
+    @species begin
+        S(t) = S0
+        E(t) = 50.0
+        SE(t) = 0.0
+        P(t) = 0.0
+    end
+    @observables begin
+        obs1 ~ S + E
+        obs2 ~ P
+    end
+    c1, S + E --> SE
+    c2, SE --> S + E
+    c3, SE --> P + E
+end
 
-println(result)  # display estimated parameters and objective
-println("Cost: ", result.xmin)  # best objective value found
+# Simulated data at the true values; noise sd 3 on S + E (known) and sigma = 1 on P (estimated)
+x_true = (c1 = 1.0, c2 = 10.0, S0 = 100.0, sigma = 1.0)
+oprob = ODEProblem(rn, [:E => 50.0, :SE => 0.0, :P => 0.0], (0.0, 10.0), [:c1 => x_true.c1, :c2 => x_true.c2, :S0 => x_true.S0])
+sol = solve(oprob, Rodas5P(); saveat = 0:0.5:10.0)
+measurements = vcat(
+    DataFrame(obs_id = "obs_SE", time = sol.t, measurement = sol[:S] .+ sol[:E] .+ 3.0 .* randn(rng, length(sol.t))),
+    DataFrame(obs_id = "obs_P", time = sol.t, measurement = sol[:P] .+ x_true.sigma .* randn(rng, length(sol.t))),
+)
+observables = [PEtabObservable(:obs_SE, :obs1, 3.0), PEtabObservable(:obs_P, :obs2, :sigma)]
+pest = [PEtabParameter(:c1), PEtabParameter(:c2), PEtabParameter(:S0), PEtabParameter(:sigma)]  # bounds [1e-3, 1e3], log10 scale
+
+yaml = "{{path}}"  # a PEtab standard-format problem replaces the built-in one
+model = isempty(yaml) ? PEtabModel(rn, observables, measurements, pest) : PEtabModel(yaml)
+petab_prob = PEtabODEProblem(model; gradient_method = :{{gradient}})
+
+pname(k) = replace(string(k), r"^log(10|2)?_" => "")  # parameter name without its scale prefix
+linear(k, v) = startswith(string(k), "log10_") ? exp10(v) : startswith(string(k), "log2_") ? exp2(v) : startswith(string(k), "log_") ? exp(v) : v
+
+x0 = get_startguesses(rng, petab_prob, 1)  # one random start within the bounds
+res = calibrate(petab_prob, x0, {{optimizer}})
+
+println("Negative log-likelihood ", round(res.fmin; digits = 3), " after ", res.niterations, " iterations (converged: ", res.converged, ")")
+for k in keys(res.xmin)
+    println(pname(k), " = ", round(linear(k, res.xmin[k]); sigdigits = 4))
+end
 '''
 
 [[codeBranches]]
 model = "multi"
 code = '''
-using PEtab, OrdinaryDiffEq, Optim  # PEtab + ODE solver + optimizer
+using PEtab, Catalyst, OrdinaryDiffEqRosenbrock, Fides, Optim, Random
+{{?gradient=Adjoint}}using SciMLSensitivity  # must be loaded before the problem is built
+using PEtab: DataFrame  # PEtab takes the measurement table as a DataFrame
 
-petab_model = PEtabModel({{path}})  # load PEtab problem from YAML
-prob = PEtabODEProblem(petab_model; gradient_method={{gradient}})  # build objective with gradient
+rng = Xoshiro({{seed}})
 
-results = calibrate_model_multistart(prob, {{optimizer}}, {{nstarts}})  # multi-start: LHS sampling + {{nstarts}} local runs
+# Michaelis-Menten kinetics, S + E <-> SE -> P + E (the PEtab.jl tutorial model); c3 = 3 is known
+rn = @reaction_network begin
+    @parameters S0 c3=3.0
+    @species begin
+        S(t) = S0
+        E(t) = 50.0
+        SE(t) = 0.0
+        P(t) = 0.0
+    end
+    @observables begin
+        obs1 ~ S + E
+        obs2 ~ P
+    end
+    c1, S + E --> SE
+    c2, SE --> S + E
+    c3, SE --> P + E
+end
 
-best = get_best(results)  # extract run with lowest objective
-println(best)  # best parameter estimates
-waterfall_plot(results)  # waterfall plot of all start objectives
+# Simulated data at the true values; noise sd 3 on S + E (known) and sigma = 1 on P (estimated)
+x_true = (c1 = 1.0, c2 = 10.0, S0 = 100.0, sigma = 1.0)
+oprob = ODEProblem(rn, [:E => 50.0, :SE => 0.0, :P => 0.0], (0.0, 10.0), [:c1 => x_true.c1, :c2 => x_true.c2, :S0 => x_true.S0])
+sol = solve(oprob, Rodas5P(); saveat = 0:0.5:10.0)
+measurements = vcat(
+    DataFrame(obs_id = "obs_SE", time = sol.t, measurement = sol[:S] .+ sol[:E] .+ 3.0 .* randn(rng, length(sol.t))),
+    DataFrame(obs_id = "obs_P", time = sol.t, measurement = sol[:P] .+ x_true.sigma .* randn(rng, length(sol.t))),
+)
+observables = [PEtabObservable(:obs_SE, :obs1, 3.0), PEtabObservable(:obs_P, :obs2, :sigma)]
+pest = [PEtabParameter(:c1), PEtabParameter(:c2), PEtabParameter(:S0), PEtabParameter(:sigma)]  # bounds [1e-3, 1e3], log10 scale
+
+yaml = "{{path}}"  # a PEtab standard-format problem replaces the built-in one
+model = isempty(yaml) ? PEtabModel(rn, observables, measurements, pest) : PEtabModel(yaml)
+petab_prob = PEtabODEProblem(model; gradient_method = :{{gradient}})
+
+pname(k) = replace(string(k), r"^log(10|2)?_" => "")  # parameter name without its scale prefix
+linear(k, v) = startswith(string(k), "log10_") ? exp10(v) : startswith(string(k), "log2_") ? exp2(v) : startswith(string(k), "log_") ? exp(v) : v
+
+res = calibrate_multistart(rng, petab_prob, {{optimizer}}, {{nstarts}})  # Latin-hypercube starts
+
+fmins = [r.fmin for r in res.runs]
+println("Best negative log-likelihood ", round(res.fmin; digits = 3), "; reached (within 0.1) by ", count(<=(res.fmin + 0.1), fmins), " of {{nstarts}} starts")
+for k in keys(res.xmin)
+    println(pname(k), " = ", round(linear(k, res.xmin[k]); sigdigits = 4))
+end
 '''
 
 [[codeBranches]]
 model = "profile"
 code = '''
-using PEtab, OrdinaryDiffEq, Optim  # PEtab + ODE solver + optimizer
+using PEtab, Catalyst, OrdinaryDiffEqRosenbrock, Fides, Optim, Random
+using LikelihoodProfiler, OptimizationLBFGSB
+{{?gradient=Adjoint}}using SciMLSensitivity  # must be loaded before the problem is built
+using PEtab: DataFrame  # PEtab takes the measurement table as a DataFrame
 
-petab_model = PEtabModel({{path}})  # load PEtab problem from YAML
-prob = PEtabODEProblem(petab_model; gradient_method={{gradient}})  # build objective with gradient
+rng = Xoshiro({{seed}})
 
-result = calibrate_model_multistart(prob, {{optimizer}}, {{nstarts}})  # first: calibrate to find best fit
+# Michaelis-Menten kinetics, S + E <-> SE -> P + E (the PEtab.jl tutorial model); c3 = 3 is known
+rn = @reaction_network begin
+    @parameters S0 c3=3.0
+    @species begin
+        S(t) = S0
+        E(t) = 50.0
+        SE(t) = 0.0
+        P(t) = 0.0
+    end
+    @observables begin
+        obs1 ~ S + E
+        obs2 ~ P
+    end
+    c1, S + E --> SE
+    c2, SE --> S + E
+    c3, SE --> P + E
+end
 
-profiles = compute_profile_likelihood(prob, result)  # profile each parameter individually
+# Simulated data at the true values; noise sd 3 on S + E (known) and sigma = 1 on P (estimated)
+x_true = (c1 = 1.0, c2 = 10.0, S0 = 100.0, sigma = 1.0)
+oprob = ODEProblem(rn, [:E => 50.0, :SE => 0.0, :P => 0.0], (0.0, 10.0), [:c1 => x_true.c1, :c2 => x_true.c2, :S0 => x_true.S0])
+sol = solve(oprob, Rodas5P(); saveat = 0:0.5:10.0)
+measurements = vcat(
+    DataFrame(obs_id = "obs_SE", time = sol.t, measurement = sol[:S] .+ sol[:E] .+ 3.0 .* randn(rng, length(sol.t))),
+    DataFrame(obs_id = "obs_P", time = sol.t, measurement = sol[:P] .+ x_true.sigma .* randn(rng, length(sol.t))),
+)
+observables = [PEtabObservable(:obs_SE, :obs1, 3.0), PEtabObservable(:obs_P, :obs2, :sigma)]
+pest = [PEtabParameter(:c1), PEtabParameter(:c2), PEtabParameter(:S0), PEtabParameter(:sigma)]  # bounds [1e-3, 1e3], log10 scale
 
-plot_profiles(profiles)  # plot profile likelihood curves
-get_confidence_intervals(profiles, 0.95)  # 95% confidence intervals from profile
+yaml = "{{path}}"  # a PEtab standard-format problem replaces the built-in one
+model = isempty(yaml) ? PEtabModel(rn, observables, measurements, pest) : PEtabModel(yaml)
+petab_prob = PEtabODEProblem(model; gradient_method = :{{gradient}})
+
+pname(k) = replace(string(k), r"^log(10|2)?_" => "")  # parameter name without its scale prefix
+linear(k, v) = startswith(string(k), "log10_") ? exp10(v) : startswith(string(k), "log2_") ? exp2(v) : startswith(string(k), "log_") ? exp(v) : v
+
+res = calibrate_multistart(rng, petab_prob, {{optimizer}}, {{nstarts}})  # profile from the best fit
+
+# The objective is the negative log-likelihood, so the threshold is half the chi-square(1) quantile
+pl_prob = ProfileLikelihoodProblem(res, petab_prob; threshold = chi2_quantile({{conf}}, 1) / 2)
+profiler = OptimizationProfiler(optimizer = OptimizationLBFGSB.LBFGSB(), stepper = FixedStep(; initial_step = 5e-3))
+pl_sol = LikelihoodProfiler.solve(pl_prob, profiler)
+
+for (k, pc) in zip(profile_labels(pl_sol), pl_sol.profiles)
+    ci, rc = endpoints(pc), retcodes(pc)  # an open side (nothing) means the profile never crossed the threshold
+    lo = isnothing(ci.left) ? "open" : round(linear(k, ci.left); sigdigits = 4)
+    hi = isnothing(ci.right) ? "open" : round(linear(k, ci.right); sigdigits = 4)
+    println(pname(k), ": {{conf}} CI [", lo, ", ", hi, "], left ", rc.left, ", right ", rc.right)
+end
 '''
 
 [[codeBranches]]
 model = "bayes"
 code = '''
-using PEtab, OrdinaryDiffEq, Turing, MCMCChains  # PEtab + Turing sampler
+using PEtab, Catalyst, OrdinaryDiffEqRosenbrock, Distributions, Random
+using AdvancedHMC, Bijectors, LogDensityProblems, LogDensityProblemsAD, MCMCChains
+{{?gradient=Adjoint}}using SciMLSensitivity  # must be loaded before the problem is built
+using PEtab: DataFrame  # PEtab takes the measurement table as a DataFrame
 
-petab_model = PEtabModel({{bayes-path}})  # load PEtab problem from YAML
-prob = PEtabODEProblem(petab_model)  # build ODE problem
-bayes_prob = PEtabBayesianProblem(prob)  # wrap as Turing model for posterior sampling
+rng = Xoshiro({{seed}})
 
-{{?sampler=NUTS}} chain = sample(bayes_prob, NUTS({{target-acceptance}}), MCMCThreads(), {{nsamples}}, {{nchains}})  # run {{nchains}} parallel chains with {{nsamples}} samples each
-{{?sampler=HMC}} chain = sample(bayes_prob, HMC(0.05, 10), MCMCThreads(), {{nsamples}}, {{nchains}})  # run {{nchains}} parallel chains with {{nsamples}} samples each
+# Michaelis-Menten kinetics, S + E <-> SE -> P + E (the PEtab.jl tutorial model); c3 = 3 is known
+rn = @reaction_network begin
+    @parameters S0 c3=3.0
+    @species begin
+        S(t) = S0
+        E(t) = 50.0
+        SE(t) = 0.0
+        P(t) = 0.0
+    end
+    @observables begin
+        obs1 ~ S + E
+        obs2 ~ P
+    end
+    c1, S + E --> SE
+    c2, SE --> S + E
+    c3, SE --> P + E
+end
 
-println(summarystats(chain))  # posterior means, std, R-hat convergence
-plot(chain)  # trace and density plots for all parameters
+# Simulated data at the true values; noise sd 3 on S + E (known) and sigma = 1 on P (estimated)
+x_true = (c1 = 1.0, c2 = 10.0, S0 = 100.0, sigma = 1.0)
+oprob = ODEProblem(rn, [:E => 50.0, :SE => 0.0, :P => 0.0], (0.0, 10.0), [:c1 => x_true.c1, :c2 => x_true.c2, :S0 => x_true.S0])
+sol = solve(oprob, Rodas5P(); saveat = 0:0.5:10.0)
+measurements = vcat(
+    DataFrame(obs_id = "obs_SE", time = sol.t, measurement = sol[:S] .+ sol[:E] .+ 3.0 .* randn(rng, length(sol.t))),
+    DataFrame(obs_id = "obs_P", time = sol.t, measurement = sol[:P] .+ x_true.sigma .* randn(rng, length(sol.t))),
+)
+observables = [PEtabObservable(:obs_SE, :obs1, 3.0), PEtabObservable(:obs_P, :obs2, :sigma)]
+# Priors act on the linear scale: weak log-normal priors on the rates and the noise, a prior median of 90 for S0
+pest = [
+    PEtabParameter(:c1; prior = LogNormal(0.0, 2.0)),
+    PEtabParameter(:c2; prior = LogNormal(0.0, 2.0)),
+    PEtabParameter(:S0; prior = LogNormal(4.5, 0.5)),
+    PEtabParameter(:sigma; prior = LogNormal(0.0, 1.0)),
+]
+
+yaml = "{{path}}"  # a PEtab standard-format problem (priors from its parameter table) replaces the built-in one
+model = isempty(yaml) ? PEtabModel(rn, observables, measurements, pest) : PEtabModel(yaml)
+petab_prob = PEtabODEProblem(model; gradient_method = :{{gradient}})
+target = PEtabLogDensity(petab_prob)  # log-posterior on an unconstrained scale
+pname(k) = replace(string(k), r"^log(10|2)?_" => "")  # parameter name without its scale prefix
+
+{{?sampler=NUTS}}sampler = NUTS({{target-acceptance}})
+{{?sampler=HMC}}sampler = HMC(0.05, 10)  # step size 0.05, 10 leapfrog steps
+chains = map(1:{{nchains}}) do _
+    x0 = get_startguesses(rng, petab_prob, 1)  # start drawn from the prior
+    x_inf = target.inference_info.bijectors(to_prior_scale(x0, target))  # the sampler starts on the inference scale
+    draws = sample(rng, target, sampler, {{nsamples}}; n_adapts = 500, discard_initial = 500, initial_params = x_inf, progress = false)
+    to_chains(draws, target)  # back on the prior (linear) scale
+end
+chain = chainscat(chains...)
+
+println(summarystats(chain))  # posterior mean, sd, effective sample size and R-hat
 '''
 
 [[actionGroups]]
@@ -417,44 +633,45 @@ label = "Visualise"
 [[actionGroups.actions]]
 id = "obs-vs-sim"
 label = "Observed vs. Simulated"
-desc = "Overlay calibrated model trajectories on experimental measurements"
+desc = "Measurements against the fitted observables (first simulation condition)"
 code = '''
-using PEtab, OrdinaryDiffEq, Optim, Plots  # PEtab + plotting
+using Plots, Statistics
 
-petab_model = PEtabModel({{path}})  # load problem
-prob = PEtabODEProblem(petab_model; gradient_method={{gradient}})  # build objective
-results = calibrate_model_multistart(prob, {{optimizer}}, {{nstarts}})  # calibrate
-
-plot_fits(prob, get_best(results))  # observed vs. simulated for each observable
+{{?model=single|multi|profile}}plot(res, petab_prob; linewidth = 2.0)  # PEtab's model-fit recipe at the best parameters
+{{?model=bayes}}x_med = [median(chain[Symbol(pname(k))]) for k in keys(petab_prob.xnominal_transformed)]  # posterior medians, linear scale
+{{?model=bayes}}x_fit = copy(petab_prob.xnominal_transformed)
+{{?model=bayes}}for (i, k) in enumerate(keys(x_fit))
+{{?model=bayes}}    x_fit[k] = startswith(string(k), "log10_") ? log10(x_med[i]) : startswith(string(k), "log2_") ? log2(x_med[i]) : startswith(string(k), "log_") ? log(x_med[i]) : x_med[i]
+{{?model=bayes}}end
+{{?model=bayes}}plot(x_fit, petab_prob; linewidth = 2.0)  # fit at the posterior medians
+{{?model=struct}}println("Structural identifiability uses no data: choose an estimation model to compare the fit with the measurements")
 '''
 
 [[actionGroups.actions]]
 id = "waterfall"
 label = "Waterfall Plot"
-desc = "Sorted final objective values across all multi-start runs"
+desc = "Sorted final objective values of all starts"
 code = '''
-using PEtab, OrdinaryDiffEq, Optim, Plots  # PEtab + plotting
+using Plots
 
-petab_model = PEtabModel({{path}})  # load problem
-prob = PEtabODEProblem(petab_model; gradient_method={{gradient}})  # build objective
-results = calibrate_model_multistart(prob, {{optimizer}}, {{nstarts}})  # calibrate
-
-waterfall_plot(results)  # flat plateau = global minimum found; slope = local minima
+{{?model=multi|profile}}plot(res; plot_type = :waterfall)  # a long flat first step: the best minimum is found repeatedly
+{{?model=multi|profile}}fmins = sort(filter(isfinite, [r.fmin for r in res.runs]))
+{{?model=multi|profile}}println(count(<=(fmins[1] + 0.1), fmins), " of ", length(fmins), " finished starts within 0.1 of the best; ", length(res.runs) - length(fmins), " failed")
+{{?model=single}}println("A waterfall needs many starts: use the Multi-Start model")
+{{?model=bayes}}plot(chain)  # for the sampler, look at the trace plots instead: chains should overlap
+{{?model=struct}}println("No optimisation in the structural model: use the Multi-Start model")
 '''
 
 [[actionGroups.actions]]
 id = "profile-plot"
 label = "Profile Likelihood"
-desc = "Profile likelihood curves with confidence thresholds"
+desc = "Profile of each parameter against the confidence threshold"
 code = '''
-using PEtab, OrdinaryDiffEq, Optim, Plots  # PEtab + plotting
+using Plots
 
-petab_model = PEtabModel({{path}})  # load problem
-prob = PEtabODEProblem(petab_model; gradient_method={{gradient}})  # build objective
-result = calibrate_model_multistart(prob, {{optimizer}}, {{nstarts}})  # calibrate
-
-profiles = compute_profile_likelihood(prob, result)  # compute profiles
-plot_profiles(profiles)  # flat curves indicate non-identifiable parameters
+{{?model=profile}}plot(pl_sol)  # a profile that stays below the threshold on one side is practically non-identifiable there
+{{?model=single|multi|bayes}}println("Profiles are computed by the Profile Likelihood model")
+{{?model=struct}}println("Structural identifiability is exact and needs no profiles; the Profile Likelihood model gives the practical counterpart")
 '''
 
 [[actionGroups]]
@@ -464,31 +681,36 @@ label = "Diagnose"
 [[actionGroups.actions]]
 id = "residuals"
 label = "Residual Analysis"
-desc = "Weighted residuals between model predictions and measurements"
+desc = "Standardised residuals (measurement - simulation) / sigma at the best fit"
 code = '''
-using PEtab, OrdinaryDiffEq, Optim, Plots  # PEtab + plotting
+using Plots, Statistics
 
-petab_model = PEtabModel({{path}})  # load problem
-prob = PEtabODEProblem(petab_model; gradient_method={{gradient}})  # build objective
-result = calibrate_model(prob, {{optimizer}}; save_trace=true)  # calibrate
-
-res = get_residuals(prob, result)  # weighted residuals (obs - sim) / sigma
-scatter(res; xlabel="Measurement", ylabel="Weighted residual")  # should be N(0,1) if model is correct
+{{?model=single|multi|profile}}r = petab_prob.residuals(res.xmin)  # standardised by the noise sigma of each observable
+{{?model=single|multi|profile}}println("Standardised residuals: mean ", round(mean(r); digits = 3), ", sd ", round(std(r); digits = 3))
+{{?model=single|multi|profile}}println("Mean near 0 and sd near 1 if the model and its noise model fit; for an estimated sigma, sd near 1 holds by construction")
+{{?model=single|multi|profile}}plot(res, petab_prob; plot_type = :standardized_residuals)
+{{?model=bayes}}println("Residuals belong to a point estimate: use the Multi-Start model, or Observed vs. Simulated for the posterior-median fit")
+{{?model=struct}}println("The structural model has no data and no residuals: use an estimation model")
 '''
 
 [[actionGroups.actions]]
 id = "identifiability"
 label = "Identifiability"
-desc = "Detect structurally or practically non-identifiable parameters"
+desc = "Practical identifiability: Fisher information, profiles or posterior correlation"
 code = '''
-using PEtab, OrdinaryDiffEq, Optim  # PEtab
+using LinearAlgebra, Statistics
 
-petab_model = PEtabModel({{path}})  # load problem
-prob = PEtabODEProblem(petab_model; gradient_method={{gradient}})  # build objective
-result = calibrate_model_multistart(prob, {{optimizer}}, {{nstarts}})  # calibrate
-
-profiles = compute_profile_likelihood(prob, result)  # compute all profiles
-println(get_identifiability(profiles))  # identifiable / non-identifiable per parameter
+{{?model=single|multi}}F = petab_prob.FIM(res.xmin)  # empirical Fisher information at the best fit (log10 scale)
+{{?model=single|multi}}ev = eigen(Symmetric(F))
+{{?model=single|multi}}println("FIM eigenvalues ", round.(ev.values; sigdigits = 3), ", condition number ", round(ev.values[end] / ev.values[1]; sigdigits = 3))
+{{?model=single|multi}}println("Least informed direction ", collect(zip(pname.(keys(res.xmin)), round.(ev.vectors[:, 1]; digits = 2))))
+{{?model=profile}}for (k, rc) in zip(profile_labels(pl_sol), retcodes(pl_sol))
+{{?model=profile}}    println(pname(k), ": ", rc.left == :Identifiable && rc.right == :Identifiable ? "identifiable" : "not identifiable on at least one side", " (", rc.left, ", ", rc.right, ")")
+{{?model=profile}}end
+{{?model=bayes}}pnames = names(chain, :parameters)
+{{?model=bayes}}C = cor(Array(chain[pnames]))  # strong posterior correlation flags combinations the data pin down only jointly
+{{?model=bayes}}foreach(i -> println(rpad(string(pnames[i]), 8), round.(C[i, :]; digits = 2)), eachindex(pnames))
+{{?model=struct}}println("The main code already gives structural identifiability; change Observed Outputs and rerun to see how the outputs decide it. Practical identifiability needs data: use the Profile Likelihood model")
 '''
 
 [[actionGroups]]
@@ -498,34 +720,38 @@ label = "Predict"
 [[actionGroups.actions]]
 id = "simulate"
 label = "Simulate Model"
-desc = "Solve the ODE forward using calibrated parameter estimates"
+desc = "All state trajectories at the fitted parameters"
 code = '''
-using PEtab, OrdinaryDiffEq, Optim, Plots  # PEtab + plotting
+using Plots
 
-petab_model = PEtabModel({{path}})  # load problem
-prob = PEtabODEProblem(petab_model; gradient_method={{gradient}})  # build objective
-result = calibrate_model_multistart(prob, {{optimizer}}, {{nstarts}})  # calibrate
-
-best = get_best(result)  # best parameter set
-sol  = get_odesol(prob, best.xmin)  # solve ODE with calibrated parameters
-plot(sol)  # plot all state trajectories
+{{?model=single|multi|profile}}sol_fit = get_odesol(res, petab_prob)  # solved with the problem's own ODE solver
+{{?model=single|multi|profile}}plot(sol_fit; xlabel = "Time", ylabel = "Amount")
+{{?model=bayes}}println("Use Observed vs. Simulated for the posterior-median fit, or New Condition for posterior predictions")
+{{?model=struct}}println("The structural model has no parameter values: use an estimation model")
 '''
 
 [[actionGroups.actions]]
 id = "new-condition"
 label = "New Condition"
-desc = "Predict system behaviour under a new experimental condition"
+desc = "Product formation with half the enzyme (E(0) = 25), predicted from the fit"
 code = '''
-using PEtab, OrdinaryDiffEq, Optim, Plots  # PEtab + plotting
+using Plots, OrdinaryDiffEqRosenbrock, Statistics
 
-petab_model = PEtabModel({{path}})  # load problem
-prob = PEtabODEProblem(petab_model; gradient_method={{gradient}})  # build objective
-result = calibrate_model_multistart(prob, {{optimizer}}, {{nstarts}})  # calibrate
-
-best   = get_best(result)  # best parameter set
-u0_new = [1.0, 0.0, 0.0]  # new initial conditions
-sol    = get_odesol(prob, best.xmin; u0=u0_new)  # simulate under new condition
-plot(sol)  # predicted trajectory
+{{?model!=struct}}isempty(yaml) || error("New Condition halves E(0) of the built-in Michaelis-Menten problem; adapt it to the species of your own model")
+{{?model=single|multi|profile}}oprob_fit, cbs = get_odeproblem(res, petab_prob)  # the fitted problem for the measured condition
+{{?model=single|multi|profile}}sol_fit = solve(oprob_fit, Rodas5P(); callback = cbs, saveat = 0:0.1:10.0)
+{{?model=single|multi|profile}}sol_new = solve(remake(oprob_fit; u0 = [:E => 25.0]), Rodas5P(); callback = cbs, saveat = 0:0.1:10.0)
+{{?model=single|multi|profile}}plot(sol_fit.t, sol_fit[:P]; label = "E(0) = 50 (measured)", xlabel = "Time", ylabel = "P")
+{{?model=single|multi|profile}}plot!(sol_new.t, sol_new[:P]; label = "E(0) = 25 (predicted)", linestyle = :dash)
+{{?model=bayes}}draws = Array(chain[[:c1, :c2, :S0]])[rand(rng, 1:size(chain, 1) * size(chain, 3), 200), :]  # 200 posterior draws
+{{?model=bayes}}P_new = map(eachrow(draws)) do d
+{{?model=bayes}}    s = solve(ODEProblem(rn, [:E => 25.0, :SE => 0.0, :P => 0.0], (0.0, 10.0), [:c1 => d[1], :c2 => d[2], :S0 => d[3]]), Rodas5P(); saveat = 0:0.1:10.0)
+{{?model=bayes}}    s[:P]
+{{?model=bayes}}end
+{{?model=bayes}}Pm = reduce(hcat, P_new)
+{{?model=bayes}}q = mapslices(row -> quantile(row, [0.05, 0.5, 0.95]), Pm; dims = 2)
+{{?model=bayes}}plot(0:0.1:10.0, q[:, 2]; ribbon = (q[:, 2] .- q[:, 1], q[:, 3] .- q[:, 2]), label = "E(0) = 25, median and 90% band", xlabel = "Time", ylabel = "P")
+{{?model=struct}}println("Prediction needs fitted parameters: use an estimation model")
 '''
 
 [[actionGroups]]
@@ -535,34 +761,40 @@ label = "Compare"
 [[actionGroups.actions]]
 id = "compare-optimizers"
 label = "Compare Optimizers"
-desc = "Run LBFGS and Fides on the same problem and compare convergence"
+desc = "Fides, Optim IPNewton and Optim LBFGS from the same starts"
 code = '''
-using PEtab, OrdinaryDiffEq, Optim, Fides  # PEtab + optimizers
+using Statistics
 
-petab_model = PEtabModel({{path}})  # load problem
-prob = PEtabODEProblem(petab_model; gradient_method={{gradient}})  # build objective
-
-r_lbfgs = calibrate_model_multistart(prob, Optim.LBFGS(), {{nstarts}})  # LBFGS
-r_fides = calibrate_model_multistart(prob, Fides(verbose=false), {{nstarts}})  # Fides
-
-println("LBFGS best: ", get_best(r_lbfgs).xmin)  # LBFGS minimum
-println("Fides best: ", get_best(r_fides).xmin)  # Fides minimum
+{{?model=single}}nstarts = 20
+{{?model=multi|profile}}nstarts = {{nstarts}}
+{{?model=single|multi|profile}}runs = map(["Fides (Exact Hessian)" => Fides.CustomHessian(), "Fides (BFGS)" => Fides.BFGS(), "Optim IPNewton" => Optim.IPNewton(), "Optim LBFGS" => Optim.LBFGS()]) do (name, alg)
+{{?model=single|multi|profile}}    name => calibrate_multistart(Xoshiro({{seed}}), petab_prob, alg, nstarts)  # same seed, so the same starts for every optimiser
+{{?model=single|multi|profile}}end
+{{?model=single|multi|profile}}fbest = minimum(last(r).fmin for r in runs)
+{{?model=single|multi|profile}}for (name, ms) in runs
+{{?model=single|multi|profile}}    hits = count(r -> r.fmin <= fbest + 0.1, ms.runs)
+{{?model=single|multi|profile}}    println(rpad(name, 24), "best ", round(ms.fmin; digits = 3), ", reach best ", hits, "/", nstarts, ", median time ", round(median(r.runtime for r in ms.runs); sigdigits = 3), " s")
+{{?model=single|multi|profile}}end
+{{?model=bayes}}println("The sampler targets the posterior, not a minimum: use the Multi-Start model to compare optimisers")
+{{?model=struct}}println("The structural model does no optimisation: use an estimation model")
 '''
 
 [[actionGroups.actions]]
 id = "compare-gradient"
 label = "Compare Gradients"
-desc = "Compare ForwardDiff vs. adjoint gradient accuracy and timing"
+desc = "ForwardDiff, forward sensitivities and adjoint gradients: agreement and time"
 code = '''
-using PEtab, OrdinaryDiffEq, Optim, BenchmarkTools  # PEtab + benchmarks
+using SciMLSensitivity, Random  # needed for the adjoint gradient
 
-petab_model = PEtabModel({{path}})  # load problem
-prob_fd  = PEtabODEProblem(petab_model; gradient_method=:ForwardDiff)  # ForwardDiff gradients
-prob_adj = PEtabODEProblem(petab_model; gradient_method=:adjoint)  # adjoint gradients
-
-x0 = get_startguess(prob_fd)  # sample starting point
-@btime prob_fd.grad($x0)  # ForwardDiff gradient time
-@btime prob_adj.grad($x0)  # adjoint gradient time
+{{?model!=struct}}x = get_startguesses(Xoshiro(1), petab_prob, 1)  # a point away from the optimum, where the gradient is not near zero
+{{?model!=struct}}probs = [m => PEtabODEProblem(model; gradient_method = m) for m in (:ForwardDiff, :ForwardEquations, :Adjoint)]
+{{?model!=struct}}g_ref = last(probs[1]).grad(x)
+{{?model!=struct}}for (m, p) in probs
+{{?model!=struct}}    g = p.grad(x)  # first call compiles
+{{?model!=struct}}    t = minimum(@elapsed(p.grad(x)) for _ in 1:5)
+{{?model!=struct}}    println(rpad(string(m), 18), "max relative difference from ForwardDiff ", round(maximum(abs.(g .- g_ref) ./ max.(abs.(g_ref), 1e-8)); sigdigits = 2), ", time ", round(1e3 * t; sigdigits = 3), " ms")
+{{?model!=struct}}end
+{{?model=struct}}println("The structural model has no likelihood to differentiate: use an estimation model")
 '''
 
 [[actionGroups]]
@@ -572,31 +804,36 @@ label = "Interpret"
 [[actionGroups.actions]]
 id = "ci-profile"
 label = "Confidence Intervals"
-desc = "95% profile-likelihood confidence intervals for all parameters"
+desc = "Profile-likelihood, Wald (Fisher information) or posterior intervals"
 code = '''
-using PEtab, OrdinaryDiffEq, Optim  # PEtab
+using LinearAlgebra, Statistics
 
-petab_model = PEtabModel({{path}})  # load problem
-prob = PEtabODEProblem(petab_model; gradient_method={{gradient}})  # build objective
-result = calibrate_model_multistart(prob, {{optimizer}}, {{nstarts}})  # calibrate
-
-profiles = compute_profile_likelihood(prob, result)  # compute profiles
-ci = get_confidence_intervals(profiles, 0.95)  # 95% CIs via chi2 threshold
-println(ci)  # lower and upper bound per parameter
+{{?model=profile}}for (k, pc) in zip(profile_labels(pl_sol), pl_sol.profiles)
+{{?model=profile}}    ci = endpoints(pc)  # on the estimation scale; linear() maps back
+{{?model=profile}}    println(pname(k), " profile CI: [", isnothing(ci.left) ? "open" : round(linear(k, ci.left); sigdigits = 4), ", ", isnothing(ci.right) ? "open" : round(linear(k, ci.right); sigdigits = 4), "]")
+{{?model=profile}}end
+{{?model=single|multi}}se = sqrt.(diag(inv(petab_prob.FIM(res.xmin))))  # Wald standard errors on the log10 scale
+{{?model=single|multi}}for (i, k) in enumerate(keys(res.xmin))
+{{?model=single|multi}}    println(pname(k), " Wald 95% CI: [", round(linear(k, res.xmin[k] - 1.96 * se[i]); sigdigits = 4), ", ", round(linear(k, res.xmin[k] + 1.96 * se[i]); sigdigits = 4), "] (symmetric on the log scale; compare the Profile Likelihood model)")
+{{?model=single|multi}}end
+{{?model=bayes}}println(quantile(chain; q = [0.025, 0.5, 0.975]))  # 95% equal-tailed credible intervals
+{{?model=struct}}println("Intervals need data: use the Profile Likelihood model")
 '''
 
 [[actionGroups.actions]]
 id = "parameter-values"
 label = "Parameter Values"
-desc = "Best-fit parameter estimates with names from the PEtab problem"
+desc = "Estimates on the linear scale against the values that simulated the data"
 code = '''
-using PEtab, OrdinaryDiffEq, Optim  # PEtab
+using Statistics
 
-petab_model = PEtabModel({{path}})  # load problem
-prob = PEtabODEProblem(petab_model; gradient_method={{gradient}})  # build objective
-result = calibrate_model_multistart(prob, {{optimizer}}, {{nstarts}})  # calibrate
-
-best   = get_best(result)  # best run
-params = get_parameter_dict(prob, best.xmin)  # named parameter dict
-println(params)  # estimated value for each parameter
+{{?model!=struct}}truth = isempty(yaml) ? x_true : (;)  # true values exist only for the built-in problem
+{{?model=single|multi|profile}}for k in keys(res.xmin)
+{{?model=single|multi|profile}}    p = Symbol(pname(k))
+{{?model=single|multi|profile}}    println(rpad(string(p), 8), "estimate ", round(linear(k, res.xmin[k]); sigdigits = 4), haskey(truth, p) ? string(", true ", truth[p]) : "")
+{{?model=single|multi|profile}}end
+{{?model=bayes}}for p in names(chain, :parameters)
+{{?model=bayes}}    println(rpad(string(p), 8), "posterior mean ", round(mean(chain[p]); sigdigits = 4), ", sd ", round(std(chain[p]); sigdigits = 3), haskey(truth, p) ? string(", true ", truth[p]) : "")
+{{?model=bayes}}end
+{{?model=struct}}println("The structural model estimates nothing: use an estimation model")
 '''

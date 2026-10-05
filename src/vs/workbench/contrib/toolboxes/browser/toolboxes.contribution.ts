@@ -5,33 +5,18 @@
 
 import { localize } from '../../../../../vs/nls.js';
 import { MenuRegistry, MenuId } from '../../../../platform/actions/common/actions.js';
-import { ContextKeyExpr } from '../../../../platform/contextkey/common/contextkey.js';
-import { ECO_BFMB_ID, ECO_BLSDF_ID, ARMA_ARIMA_WEBVIEW_ID, ARMA_VAR_WEBVIEW_ID } from '../../model/browser/model.contribution.js';
-import { EXPL_COMMAND_ID, RDYN_ID, RCTL_ID, MCAT_ID, RZOO_ID, FRED_ID, ECB_ID } from '../../explore/browser/explore.contribution.js';
+import './toolboxExtensions.js';
 
-const SYMB_ID = 'chiara.toolboxes.symb';
-const NLIN_ID = 'chiara.toolboxes.nlin';
-const DIFF_ID = 'chiara.toolboxes.diff';
-const INTEG_ID = 'chiara.toolboxes.integ';
-const ODE_ID = 'chiara.toolboxes.ode';
-const PDE_ID = 'chiara.toolboxes.pde';
-const SDE_ID = 'chiara.simulate.sde';
+// The Analytics, Economics and Econometrics Toolboxes come from their extensions (toolboxes/pollis-toolbox-*, not built in:
+// installed from the Toolboxes section of the Extensions pane), see toolboxExtensions.ts;
+// Game Theory is in the Optimise menu
 
-// Define a new submenu ID for "Analytics Toolbox"
-const E_ATSubmenuId = new MenuId('menubarE_ATSubmenu');
-
-// Define a new submenu ID for "Economics Toolbox"
-const E_MTSubmenuId = new MenuId('menubarE_MTSubmenu');
-const E_MTDataSourcesSubmenuId = new MenuId('menubarE_MTDataSourcesSubmenu');
-
-// Define a new submenu ID for "Econometrics Toolbox"
-const E_ETSubmenuId = new MenuId('menubarE_ETSubmenu');
-
+// Epidemiology Toolbox hidden for now: uncomment its three blocks to restore it.
+/*
 // Define a new submenu ID for "Epidemiology Toolbox"
 const E_CMTSubmenuId = new MenuId('menubarE_CMTSubmenu');
+*/
 
-// Define a new submenu ID for "Robotics Toolbox"
-const E_RTSubmenuId = new MenuId('menubarE_RTSubmenu');
 
 // ------------------- TOOLBOXES ------------------------
 
@@ -47,30 +32,7 @@ MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
 	order: 9.5
 });
 
-// Analytics Toolbox
-MenuRegistry.appendMenuItem(MenuId.MenubarToolboxesMenu, {
-	group: '1_toolboxes',
-	submenu: E_ATSubmenuId,
-	title: localize('showStatistics.at', 'Analytics Toolbox'),
-	order: 1,
-});
-
-// Economics Toolbox
-MenuRegistry.appendMenuItem(MenuId.MenubarToolboxesMenu, {
-	group: '2_toolboxes',
-	submenu: E_MTSubmenuId,
-	title: localize('showStatistics.mt', 'Economics Toolbox'),
-	order: 1,
-});
-
-// Econometrics Toolbox
-MenuRegistry.appendMenuItem(MenuId.MenubarToolboxesMenu, {
-	group: '2_toolboxes',
-	submenu: E_ETSubmenuId,
-	title: localize('showStatistics.et', 'Econometrics Toolbox'),
-	order: 2,
-});
-
+/*
 // Epidemiology Toolbox
 MenuRegistry.appendMenuItem(MenuId.MenubarToolboxesMenu, {
 	group: '3_toolboxes',
@@ -78,252 +40,14 @@ MenuRegistry.appendMenuItem(MenuId.MenubarToolboxesMenu, {
 	title: localize('showStatistics.ept', 'Epidemiology Toolbox'),
 	order: 1,
 });
-
-
-// Robotics Toolbox
-MenuRegistry.appendMenuItem(MenuId.MenubarToolboxesMenu, {
-	group: '4_toolboxes',
-	submenu: E_RTSubmenuId,
-	title: localize('showStatistics.robot', 'Robotics Toolbox'),
-	order: 1,
-});
-
-
-// ===================================================
-// SUBMENU: ANALYTICS TOOLBOX
-// ===================================================
-MenuRegistry.appendMenuItem(E_ATSubmenuId, {
-	group: '1_at',
-	command: {
-		id: SYMB_ID,
-		title: localize('at.symb', 'Symbolic Math'),
-	},
-	order: 1,
-});
-
-MenuRegistry.appendMenuItem(E_ATSubmenuId, {
-	group: '1_at',
-	command: {
-		id: NLIN_ID,
-		title: localize('at.roots', 'Nonlinear Systems'),
-	},
-	order: 2,
-});
-
-MenuRegistry.appendMenuItem(E_ATSubmenuId, {
-	group: '2_at',
-	command: {
-		id: DIFF_ID,
-		title: localize('at.diff', 'Numerical Differentiation'),
-	},
-	order: 1,
-});
-
-MenuRegistry.appendMenuItem(E_ATSubmenuId, {
-	group: '2_at',
-	command: {
-		id: INTEG_ID,
-		title: localize('at.integ', 'Numerical Integration'),
-	},
-	order: 2,
-});
-
-MenuRegistry.appendMenuItem(E_ATSubmenuId, {
-	group: '3_at',
-	command: {
-		id: ODE_ID,
-		title: localize('at.ode', 'Ordinary Differential Equations'),
-	},
-	order: 1,
-});
-
-MenuRegistry.appendMenuItem(E_ATSubmenuId, {
-	group: '3_at',
-	command: {
-		id: PDE_ID,
-		title: localize('at.pde', 'Partial Differential Equations'),
-	},
-	order: 2,
-});
-
-MenuRegistry.appendMenuItem(E_ATSubmenuId, {
-	group: '3_at',
-	command: {
-		id: SDE_ID,
-		title: localize('at.sde', 'Stochastic Differential Equations'),
-	},
-	order: 6,
-});
+*/
 
 
 
 
-// ===================================================
-// SUBMENU: ECONOMICS TOOLBOX
-// ===================================================
-
-// Data Sources submenu
-MenuRegistry.appendMenuItem(E_MTSubmenuId, {
-	group: '1_mt',
-	submenu: E_MTDataSourcesSubmenuId,
-	title: localize('mt.dataSources', 'Data Sources'),
-	order: 1,
-});
-
-MenuRegistry.appendMenuItem(E_MTDataSourcesSubmenuId, {
-	group: '1_mtds',
-	command: {
-		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
-		title: localize('mt.dbnomics', 'DBnomics Platform'),
-	},
-	order: 1,
-}); // DBnomics.jl
-
-MenuRegistry.appendMenuItem(E_MTDataSourcesSubmenuId, {
-	group: '2_mtds',
-	command: {
-		id: FRED_ID,
-		title: localize('mt.fred', 'Federal Reserve Economic Data (FRED)'),
-	},
-	order: 2,
-}); // Fred.jl
-
-MenuRegistry.appendMenuItem(E_MTDataSourcesSubmenuId, {
-	group: '2_mtds',
-	command: {
-		id: ECB_ID,
-		title: localize('mt.ecb', 'European Central Bank Data Portal'),
-	},
-	order: 3,
-}); // European Central Bank
-
-// Research and institutional datasets
-
-MenuRegistry.appendMenuItem(E_MTDataSourcesSubmenuId, {
-	group: '2_mtds',
-	command: {
-		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
-		title: localize('mt.ifm', 'International Monetary Fund Datasets'),
-	},
-	order: 4,
-}); // IMFData.jl
-
-MenuRegistry.appendMenuItem(E_MTDataSourcesSubmenuId, {
-	group: '2_mtds',
-	command: {
-		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
-		title: localize('mt.wbd', 'World Bank Indicators'),
-	},
-	order: 5,
-}); // WorldBankData.jl
-
-MenuRegistry.appendMenuItem(E_MTDataSourcesSubmenuId, {
-	group: '2_mtds',
-	command: {
-		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
-		title: localize('mt.french', 'Kenneth French Data Library'),
-	},
-	order: 6,
-}); // FamaFrenchData.jl
-
-// Models
-MenuRegistry.appendMenuItem(E_MTSubmenuId, {
-	group: '4_mt',
-	command: { id: 'chiara.statistics.macro.hpf', title: localize('macro.hpf', 'Business Cycle Filters') },
-	order: 1,
-}); // TrendDecomposition.jl
-
-MenuRegistry.appendMenuItem(E_MTSubmenuId, {
-	group: '4_mt',
-	command: { id: 'chiara.statistics.macro.dtsvm', title: localize('macro.dtsvm', 'Stochastic Volatility Macroeconomic Models') },
-	order: 2,
-}); // MacroEconometricModels.jl
-
-MenuRegistry.appendMenuItem(E_MTSubmenuId, {
-	group: '4_mt',
-	command: { id: 'chiara.statistics.macro.dsge', title: localize('macro.dsge', 'Dynamic Stochastic General Equilibrium (DSGE)') },
-	order: 3,
-}); // DSGE.jl, EconPDEs.jl, JuliaPerturbation.jl
-
-MenuRegistry.appendMenuItem(E_MTSubmenuId, {
-	group: '4_mt',
-	command: { id: 'chiara.statistics.macro.ham', title: localize('macro.ham', 'Heterogeneous-Agent Models') },
-	order: 4,
-}); // EconPDEs.jl
-
-MenuRegistry.appendMenuItem(E_MTSubmenuId, {
-	group: '4_mt',
-	command: { id: 'chiara.statistics.macro.ctmf', title: localize('macro.ctmf', 'Continuous-Time Macro-Finance') },
-	order: 5,
-}); // EconPDEs.jl
-
-MenuRegistry.appendMenuItem(E_MTSubmenuId, {
-	group: '5_mt',
-	command: { id: 'chiara.statistics.macro.gt', title: localize('macro.gt', 'Game Theory') },
-	order: 1,
-}); // GameTheory.jl, StrategicGames.jl, BaryPlots.jl
 
 
-// ===================================================
-// SUBMENU: ECONOMETRICS TOOLBOX
-// ===================================================
-
-MenuRegistry.appendMenuItem(E_ETSubmenuId, {
-	group: '1_et',
-	command: { id: ARMA_ARIMA_WEBVIEW_ID, title: localize('et.arimax', 'ARIMAX Models') },
-	order: 1,
-});
-
-MenuRegistry.appendMenuItem(E_ETSubmenuId, {
-	group: '1_et',
-	command: { id: ARMA_VAR_WEBVIEW_ID, title: localize('et.var', 'VAR/VECM Systems') },
-	order: 2,
-});
-
-MenuRegistry.appendMenuItem(E_ETSubmenuId, {
-	group: '1_et',
-	command: { id: 'chiara.statistics.vcm', title: localize('et.garch', 'GARCH-Type Models') },
-	order: 3,
-});
-
-MenuRegistry.appendMenuItem(E_ETSubmenuId, {
-	group: '1_et',
-	command: { id: 'chiara.statistics.rsm', title: localize('showStatistics.rsm', 'Regime Switching Models') },
-	order: 4,
-}); // MarSwitching.jl, HiddenMarkovModels.jl
-
-MenuRegistry.appendMenuItem(E_ETSubmenuId, {
-	group: '2_et',
-	command: { id: 'chiara.statistics.atsf', title: localize('et.atsf', 'Advanced Time-Series Forecasting') },
-	order: 1,
-}); // Durbyn.jl
-
-MenuRegistry.appendMenuItem(E_ETSubmenuId, {
-	group: '2_et',
-	command: { id: 'chiara.statistics.nntsf', title: localize('showStatistics.nntsf', 'Neural Network Time-Series Forecasting') },
-	order: 2,
-}); // Flux.jl + FluxArchitectures.jl
-
-MenuRegistry.appendMenuItem(E_ETSubmenuId, {
-	group: '2_et',
-	command: { id: 'chiara.statistics.autotsf', title: localize('et.autotsf', 'Automatic Time-Series Forecasting') },
-	order: 3,
-}); // Durbyn.jl
-
-MenuRegistry.appendMenuItem(E_ETSubmenuId, {
-	group: '3_et',
-	command: { id: ECO_BLSDF_ID, title: localize('eco.blsdf', 'Bayesian Linear Stochastic Discount Factor') },
-	order: 1,
-}); // BayesianFactorZoo.jl
-
-MenuRegistry.appendMenuItem(E_ETSubmenuId, {
-	group: '3_et',
-	command: { id: ECO_BFMB_ID, title: localize('ft.bfmb', 'Fama-MacBeth Regression') },
-	order: 2,
-}); // BayesianFactorZoo.jl
-
-
-
+/*
 // ===================================================
 // SUBMENU: Epidemiology
 // ===================================================
@@ -345,44 +69,4 @@ MenuRegistry.appendMenuItem(E_CMTSubmenuId, {
 	command: { id: 'chiara.simulate.epi-ude', title: localize('ect.epi-ude', 'Universal Differential Equations for Epidemiology') },
 	order: 3,
 }); // DiffEqFlux.jl, Lux.jl
-
-
-// ===================================================
-// SUBMENU: ROBOTICS TOOLBOX
-// ===================================================
-
-MenuRegistry.appendMenuItem(E_RTSubmenuId, {
-	group: '1_rt',
-	command: {
-		id: RDYN_ID,
-		title: localize('showRobotics.rdyn', 'Robot Dynamics'),
-	},
-	order: 1,
-}); // Rotation Representations, FK, FD, ID; Rotations.jl, RobotDynamics.jl, RigidBodyDynamics.jl
-
-MenuRegistry.appendMenuItem(E_RTSubmenuId, {
-	group: '1_rt',
-	command: {
-		id: RCTL_ID,
-		title: localize('showRobotics.rctl', 'Robot Control'),
-	},
-	order: 2,
-}); // IK, PD Joint Control, Computed Torque, Impedance; RobotDynamics.jl, RigidBodyDynamics.jl
-
-MenuRegistry.appendMenuItem(E_RTSubmenuId, {
-	group: '2_rt',
-	command: {
-		id: MCAT_ID,
-		title: localize('showRobotics.mcat', 'MeshCat 3D Visualisation'),
-	},
-	order: 1,
-}); // MeshCat.jl, CoordinateTransformations.jl, MeshCatMechanisms.jl
-
-MenuRegistry.appendMenuItem(E_RTSubmenuId, {
-	group: '2_rt',
-	command: {
-		id: RZOO_ID,
-		title: localize('showRobotics.rzoo', 'Robot Model Library'),
-	},
-	order: 2,
-}); // RobotZoo.jl, RobotDynamics.jl
+*/

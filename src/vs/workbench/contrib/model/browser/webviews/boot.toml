@@ -1,0 +1,688 @@
+# Bootstrap Resampling Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/boot.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Bootstrap Resampling"
+viewType = "pollis.boot"
+defaultModel = "nonparam"
+
+[[packages]]
+name = "Bootstrap.jl"
+github = "https://github.com/juliangehring/Bootstrap.jl"
+
+[requires]
+packages = ["Bootstrap.jl", "Distributions.jl", "StatsBase.jl", "Plots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Nonparametric Bootstrap"
+file = "boot/tutorial-01-nonparametric.ipynb"
+bundled = true
+description = "Resample the data with replacement: standard error, bias and the bootstrap distribution of a statistic"
+
+[[notebookSections.notebooks]]
+name = "Confidence Intervals"
+file = "boot/tutorial-02-intervals.ipynb"
+bundled = true
+description = "Percentile, basic, normal, BCa and studentised intervals, and when they disagree"
+
+[[notebookSections.notebooks]]
+name = "Parametric Bootstrap"
+file = "boot/tutorial-03-parametric.ipynb"
+bundled = true
+description = "Fit a distribution and resample from the fitted model instead of the data"
+
+[[notebookSections.notebooks]]
+name = "Time Series"
+file = "boot/tutorial-04-time-series.ipynb"
+bundled = true
+description = "Why resampling observations fails for dependent data, and the maximum entropy bootstrap"
+
+[[notebookSections.notebooks]]
+name = "Coverage Study"
+file = "boot/tutorial-05-coverage.ipynb"
+bundled = true
+description = "Check by simulation how often each interval contains the true value"
+
+[[wikis]]
+name = "Factsheet"
+file = "boot/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "boot/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "boot/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "boot/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "boot/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "boot/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Methods"
+
+[[wikis]]
+name = "Resampling Schemes"
+file = "boot/resampling-schemes.md"
+bundled = true
+
+[[wikis]]
+name = "Confidence Intervals"
+file = "boot/confidence-intervals.md"
+bundled = true
+
+[[wikis]]
+name = "Maximum Entropy Bootstrap"
+file = "boot/maximum-entropy.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "Bootstrap.jl: Statistical Bootstrapping in Julia"
+authors = "Gehring, Julian; contributors"
+year = 2023
+journal = "GitHub"
+url = "https://github.com/juliangehring/Bootstrap.jl"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "An Introduction to the Bootstrap"
+authors = "Efron, Bradley; Tibshirani, Robert J."
+year = 1993
+journal = "Chapman and Hall"
+doi = "10.1201/9780429246593"
+openAccess = false
+
+[[references]]
+title = "Bootstrap Methods and their Application"
+authors = "Davison, Anthony C.; Hinkley, David V."
+year = 1997
+journal = "Cambridge University Press"
+doi = "10.1017/CBO9780511802843"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Bootstrap Methods: Another Look at the Jackknife"
+authors = "Efron, Bradley"
+year = 1979
+journal = "The Annals of Statistics"
+doi = "10.1214/aos/1176344552"
+openAccess = true
+
+[[references]]
+title = "Better Bootstrap Confidence Intervals"
+authors = "Efron, Bradley"
+year = 1987
+journal = "Journal of the American Statistical Association"
+doi = "10.1080/01621459.1987.10478410"
+openAccess = false
+
+[[references]]
+title = "Bootstrap Confidence Intervals"
+authors = "DiCiccio, Thomas J.; Efron, Bradley"
+year = 1996
+journal = "Statistical Science"
+doi = "10.1214/ss/1032280214"
+openAccess = true
+
+[[references]]
+title = "Efficient Bootstrap Simulation"
+authors = "Davison, Anthony C.; Hinkley, David V.; Schechtman, Edna"
+year = 1986
+journal = "Biometrika"
+doi = "10.1093/biomet/73.3.555"
+openAccess = false
+
+[[references]]
+title = "Antithetic Resampling for the Bootstrap"
+authors = "Hall, Peter"
+year = 1989
+journal = "Biometrika"
+doi = "10.1093/biomet/76.4.713"
+openAccess = false
+
+[[references]]
+title = "Maximum Entropy Bootstrap for Time Series: The meboot R Package"
+authors = "Vinod, Hrishikesh D.; Lopez-de-Lacalle, Javier"
+year = 2009
+journal = "Journal of Statistical Software"
+doi = "10.18637/jss.v029.i05"
+openAccess = true
+
+[[models]]
+id = "nonparam"
+label = "Nonparametric"
+
+[[models]]
+id = "param"
+label = "Parametric"
+
+[[models]]
+id = "ts"
+label = "Time Series"
+
+[[bullets]]
+text = "Nonparametric"
+detail = "resample the observations with replacement; basic, balanced and antithetic schemes via Bootstrap.jl"
+
+[[bullets]]
+text = "Parametric"
+detail = "fit a distribution to the data and draw new samples from the fitted model"
+
+[[bullets]]
+text = "Time Series"
+detail = "maximum entropy bootstrap: replicates keep the shape and dependence of a series, which resampling single observations destroys"
+
+[[bullets]]
+text = "Intervals"
+detail = "percentile, basic, normal, BCa and studentised confidence intervals, with a simulation of their coverage"
+
+[[decisionRows]]
+task = "Nonparametric"
+context = "Independent observations and no trusted model for their distribution: a median, a ratio, a correlation, a trimmed mean"
+purpose = "The empirical distribution stands in for the population; works for almost any statistic but needs a reasonable sample size"
+
+[[decisionRows]]
+task = "Parametric"
+context = "A distributional model you are willing to assume, or samples too small for the empirical distribution to be a good stand-in"
+purpose = "Resampling from the fitted model is more accurate when the model is right and misleading when it is wrong"
+
+[[decisionRows]]
+task = "Time Series"
+context = "Observations that depend on their past: returns, macro series, sensor readings"
+purpose = "Resampling single observations breaks the dependence and understates the uncertainty; the maximum entropy bootstrap keeps it"
+
+[[inputs]]
+id = "xdata"
+label = "Data"
+tooltip = "A vector of independent observations. The default mouse is the treated group of the mouse survival data in Efron and Tibshirani (1993), defined in the code."
+default = "mouse"
+models = ["nonparam", "param"]
+
+[[inputs]]
+id = "ydata"
+label = "Series"
+tooltip = "A vector holding a time series in time order. The default series is an AR(1) series simulated in the code with coefficient phi."
+default = "series"
+models = ["ts"]
+
+[[inputs]]
+id = "statistic"
+label = "Statistic"
+tooltip = "The statistic to bootstrap."
+default = "mean"
+kind = "select"
+models = ["nonparam", "param"]
+
+[[inputs.options]]
+value = "mean"
+label = "Mean"
+
+[[inputs.options]]
+value = "median"
+label = "Median"
+
+[[inputs.options]]
+value = "std"
+label = "Standard Deviation"
+
+[[inputs.options]]
+value = "iqr"
+label = "Interquartile Range"
+
+[[inputs]]
+id = "tstat"
+label = "Statistic"
+tooltip = "The statistic to bootstrap."
+default = "mean"
+kind = "select"
+models = ["ts"]
+
+[[inputs.options]]
+value = "mean"
+label = "Mean"
+
+[[inputs.options]]
+value = "std"
+label = "Standard Deviation"
+
+[[inputs.options]]
+value = "v -> autocor(v, [1])[1]"
+label = "Lag-1 Autocorrelation"
+
+[[inputs]]
+id = "scheme"
+label = "Resampling Scheme"
+tooltip = "Basic draws each resample independently; balanced makes every observation appear equally often over all resamples; antithetic pairs each resample with its mirror image in the sorted data, which helps for monotone statistics such as the mean."
+default = "BasicSampling"
+kind = "select"
+models = ["nonparam"]
+
+[[inputs.options]]
+value = "BasicSampling"
+label = "Basic"
+
+[[inputs.options]]
+value = "BalancedSampling"
+label = "Balanced"
+
+[[inputs.options]]
+value = "AntitheticSampling"
+label = "Antithetic"
+
+[[inputs]]
+id = "dist"
+label = "Fitted Distribution"
+tooltip = "The distribution fitted to the data by maximum likelihood; new samples are drawn from the fit."
+default = "LogNormal"
+kind = "select"
+models = ["param"]
+
+[[inputs.options]]
+value = "Normal"
+label = "Normal"
+
+[[inputs.options]]
+value = "LogNormal"
+label = "Log-Normal"
+
+[[inputs.options]]
+value = "Gamma"
+label = "Gamma"
+
+[[inputs.options]]
+value = "Exponential"
+label = "Exponential"
+
+[[inputs]]
+id = "phi"
+label = "AR Coefficient (phi)"
+tooltip = "Coefficient of the AR(1) process used to simulate the built-in series and the series in the Coverage action. Between -1 and 1."
+default = "0.6"
+models = ["ts"]
+
+[[inputs]]
+id = "truth"
+label = "Population"
+tooltip = "The population that the Coverage and Width vs Sample Size actions draw samples from, as a Distributions.jl distribution. A skewed population shows the differences between intervals."
+default = "LogNormal(4, 0.8)"
+models = ["nonparam", "param"]
+
+[[inputs]]
+id = "nboot"
+label = "Replicates"
+tooltip = "Number of bootstrap replicates. 2000 or more for interval endpoints; 200 is enough for a standard error."
+default = "2000"
+
+[[inputs]]
+id = "inner"
+label = "Inner Replicates"
+tooltip = "Replicates of the nested bootstrap inside each replicate, which gives the standard error used by the studentised interval. The run time grows with replicates times inner replicates."
+default = "25"
+
+[[inputs]]
+id = "level"
+label = "Confidence Level"
+tooltip = "Coverage probability of the intervals."
+default = "0.95"
+
+[[inputs]]
+id = "reps"
+label = "Coverage Samples"
+tooltip = "Number of simulated samples in the Coverage action. Each sample runs the full nested bootstrap, so keep it small at first."
+default = "100"
+
+[[inputs]]
+id = "seed"
+label = "Seed"
+tooltip = "Random seed for the resampling and the simulated data."
+default = "1"
+
+[[codeBranches]]
+model = "nonparam"
+code = '''
+using Bootstrap, Distributions, Statistics, StatsBase, Random  # resampling and intervals; models; summaries; seeds
+
+Random.seed!({{seed}})
+mouse = [94.0, 197, 16, 38, 99, 141, 23]  # Efron and Tibshirani (1993), Table 2.1: survival days of the 7 treated mice
+x     = Float64.({{xdata}})
+stat  = {{statistic}}
+truth_sample(n) = rand({{truth}}, n)  # population for the Coverage and Width vs Sample Size actions
+
+# Nonparametric resampling with the chosen scheme; the nested standard error uses basic resampling
+resample(f, v, m) = bootstrap(f, v, {{scheme}}(m))
+inner_resample(f, v, m) = bootstrap(f, v, BasicSampling(m))
+like_data(n) = sample(x, n)  # new data that look like x: draws from its empirical distribution
+alternatives = [("Basic", (f, v, m) -> bootstrap(f, v, BasicSampling(m))),
+                ("Balanced", (f, v, m) -> bootstrap(f, v, BalancedSampling(m))),
+                ("Antithetic", (f, v, m) -> bootstrap(f, v, AntitheticSampling(m)))]
+
+# Each replicate returns the statistic and its standard error from a nested bootstrap, for the studentised interval
+with_se(v) = (stat(v), stderror(inner_resample(stat, v, {{inner}}))[1])
+bs = resample(with_se, x, {{nboot}})
+
+# The five Bootstrap.jl intervals for the first output (the statistic); each is (estimate, lower, upper)
+function intervals(b; conf = {{level}})
+    return [("Percentile", confint(b, PercentileConfInt(conf), 1)),
+            ("Basic", confint(b, BasicConfInt(conf), 1)),
+            ("Normal", confint(b, NormalConfInt(conf), 1)),
+            ("BCa", confint(b, BCaConfInt(conf), 1)),
+            ("Studentised", confint(b, straps(b, 2), StudentConfInt(conf), 1))]
+end
+
+println("n = ", length(x), ", replicates = ", nrun(bs))
+println("estimate = ", round(original(bs, 1); digits = 3), ", bias = ", round(bias(bs, 1); digits = 3), ", standard error = ", round(stderror(bs, 1); digits = 3))
+println(rpad("Interval", 13), rpad("lower", 11), rpad("upper", 11), "width")
+for (name, (t0, lo, hi)) in intervals(bs)
+    println(rpad(name, 13), rpad(round(lo; digits = 3), 11), rpad(round(hi; digits = 3), 11), round(hi - lo; digits = 3))
+end
+'''
+
+[[codeBranches]]
+model = "param"
+code = '''
+using Bootstrap, Distributions, Statistics, StatsBase, Random  # resampling and intervals; models; summaries; seeds
+
+Random.seed!({{seed}})
+mouse = [94.0, 197, 16, 38, 99, 141, 23]  # Efron and Tibshirani (1993), Table 2.1: survival days of the 7 treated mice
+x     = Float64.({{xdata}})
+stat  = {{statistic}}
+truth_sample(n) = rand({{truth}}, n)  # population for the Coverage and Width vs Sample Size actions
+
+# Parametric resampling: fit {{dist}} to each sample by maximum likelihood and draw from the fit
+resample(f, v, m) = bootstrap(f, v, Model({{dist}}), BasicSampling(m))
+inner_resample(f, v, m) = resample(f, v, m)
+like_data(n) = rand(fit({{dist}}, x), n)  # new data that look like x: draws from the fitted model
+alternatives = [("Parametric {{dist}}", resample),
+                ("Nonparametric", (f, v, m) -> bootstrap(f, v, BasicSampling(m)))]
+
+# Each replicate returns the statistic and its standard error from a nested bootstrap, for the studentised interval
+with_se(v) = (stat(v), stderror(inner_resample(stat, v, {{inner}}))[1])
+bs = resample(with_se, x, {{nboot}})
+
+# The five Bootstrap.jl intervals for the first output (the statistic); each is (estimate, lower, upper)
+function intervals(b; conf = {{level}})
+    return [("Percentile", confint(b, PercentileConfInt(conf), 1)),
+            ("Basic", confint(b, BasicConfInt(conf), 1)),
+            ("Normal", confint(b, NormalConfInt(conf), 1)),
+            ("BCa", confint(b, BCaConfInt(conf), 1)),
+            ("Studentised", confint(b, straps(b, 2), StudentConfInt(conf), 1))]
+end
+
+println("n = ", length(x), ", replicates = ", nrun(bs))
+println("estimate = ", round(original(bs, 1); digits = 3), ", bias = ", round(bias(bs, 1); digits = 3), ", standard error = ", round(stderror(bs, 1); digits = 3))
+println(rpad("Interval", 13), rpad("lower", 11), rpad("upper", 11), "width")
+for (name, (t0, lo, hi)) in intervals(bs)
+    println(rpad(name, 13), rpad(round(lo; digits = 3), 11), rpad(round(hi; digits = 3), 11), round(hi - lo; digits = 3))
+end
+'''
+
+[[codeBranches]]
+model = "ts"
+code = '''
+using Bootstrap, Distributions, Statistics, StatsBase, Random  # resampling and intervals; models; summaries; seeds
+
+Random.seed!({{seed}})
+
+# AR(1) series y[t] = phi y[t-1] + e[t], started from its stationary distribution
+function ar1(n, phi, sigma)
+    y = zeros(n)
+    y[1] = sigma / sqrt(1 - phi^2) * randn()
+    for t in 2:n
+        y[t] = phi * y[t - 1] + sigma * randn()
+    end
+    return y
+end
+series = ar1(120, {{phi}}, 1.0)  # built-in series
+x      = Float64.({{ydata}})
+stat   = {{tstat}}
+truth_sample(n) = ar1(n, {{phi}}, 1.0)  # population for the Coverage action
+
+# Maximum entropy bootstrap: each replicate keeps the time order and shape of the series
+resample(f, v, m) = bootstrap(f, v, MaximumEntropySampling(m))
+inner_resample(f, v, m) = resample(f, v, m)
+phi_hat = autocor(x, [1])[1]
+like_data(n) = mean(x) .+ ar1(n, phi_hat, std(x) * sqrt(1 - phi_hat^2))  # longer series from an AR(1) fitted to x
+alternatives = [("Maximum entropy", resample),
+                ("Basic (ignores dependence)", (f, v, m) -> bootstrap(f, v, BasicSampling(m)))]
+
+# Each replicate returns the statistic and its standard error from a nested bootstrap, for the studentised interval
+with_se(v) = (stat(v), stderror(inner_resample(stat, v, {{inner}}))[1])
+bs = resample(with_se, x, {{nboot}})
+
+# The five Bootstrap.jl intervals for the first output (the statistic); each is (estimate, lower, upper)
+function intervals(b; conf = {{level}})
+    return [("Percentile", confint(b, PercentileConfInt(conf), 1)),
+            ("Basic", confint(b, BasicConfInt(conf), 1)),
+            ("Normal", confint(b, NormalConfInt(conf), 1)),
+            ("BCa", confint(b, BCaConfInt(conf), 1)),
+            ("Studentised", confint(b, straps(b, 2), StudentConfInt(conf), 1))]
+end
+
+println("n = ", length(x), ", replicates = ", nrun(bs))
+println("estimate = ", round(original(bs, 1); digits = 3), ", bias = ", round(bias(bs, 1); digits = 3), ", standard error = ", round(stderror(bs, 1); digits = 3))
+println(rpad("Interval", 13), rpad("lower", 11), rpad("upper", 11), "width")
+for (name, (t0, lo, hi)) in intervals(bs)
+    println(rpad(name, 13), rpad(round(lo; digits = 3), 11), rpad(round(hi; digits = 3), 11), round(hi - lo; digits = 3))
+end
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "replicate-histogram"
+label = "Replicate Histogram"
+desc = "Histogram of the bootstrap replicates with the estimate and the percentile and BCa intervals"
+code = '''
+using Plots
+
+iv = Dict(intervals(bs))
+histogram(straps(bs, 1); bins = 40, normalize = :pdf, alpha = 0.6, label = "replicates", xlabel = "statistic")
+vline!([original(bs, 1)]; lw = 2, color = :black, label = "estimate")
+vline!(collect(iv["Percentile"][2:3]); color = :blue, ls = :dash, label = "percentile")
+vline!(collect(iv["BCa"][2:3]); color = :red, ls = :dot, label = "BCa")
+'''
+
+[[actionGroups.actions]]
+id = "interval-plot"
+label = "Interval Plot"
+desc = "The five confidence intervals side by side, with the estimate"
+code = '''
+using Plots
+
+iv = intervals(bs)
+p = plot(; yticks = (1:length(iv), first.(iv)), xlabel = "statistic", legend = false,
+    title = string(round(100 * {{level}}; digits = 1), " percent intervals"))
+for (k, (name, (t0, lo, hi))) in enumerate(iv)
+    plot!(p, [lo, hi], [k, k]; lw = 4)
+end
+vline!(p, [original(bs, 1)]; color = :black, ls = :dash)
+p
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "replicate-shape"
+label = "Replicate Shape"
+desc = "Normal quantile plot of the replicates, with skewness and excess kurtosis; the normal and basic intervals assume a symmetric, roughly normal shape"
+code = '''
+using Plots
+
+t1 = straps(bs, 1)
+z  = sort((t1 .- mean(t1)) ./ std(t1))
+q  = quantile.(Normal(), ((1:length(z)) .- 0.5) ./ length(z))
+println("skewness = ", round(skewness(t1); digits = 3), ", excess kurtosis = ", round(kurtosis(t1); digits = 3))
+println("distinct replicate values: ", length(unique(t1)), " of ", length(t1))
+scatter(q, z; ms = 2, label = "replicates", xlabel = "normal quantile", ylabel = "standardised replicate")
+plot!(q, q; color = :black, label = "normal")
+'''
+
+[[actionGroups.actions]]
+id = "jackknife-influence"
+label = "Jackknife Influence"
+desc = "Leave-one-out values of the statistic and the influence of each observation; large influences drive the BCa acceleration"
+code = '''
+using Plots
+
+loo = Bootstrap.jack_knife_estimate(x, stat)  # statistic with observation i left out
+infl = (length(x) - 1) .* (mean(loo) .- loo)  # jackknife influence values
+for i in sortperm(abs.(infl); rev = true)[1:min(5, length(x))]
+    println("obs ", i, ": value = ", round(x[i]; digits = 3), ", leave-one-out = ", round(loo[i]; digits = 3), ", influence = ", round(infl[i]; digits = 3))
+end
+bar(infl; legend = false, xlabel = "observation", ylabel = "influence")
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "width-vs-n"
+label = "Width vs Sample Size"
+desc = "Interval widths for new data like yours with 1, 2 and 4 times as many observations"
+code = '''
+n0 = length(x)
+println(rpad("n", 6), join(rpad.(first.(intervals(bs)), 13)))
+for n in (n0, 2n0, 4n0)
+    v = n == n0 ? x : like_data(n)
+    w = [hi - lo for (name, (t0, lo, hi)) in intervals(resample(with_se, v, {{nboot}}))]
+    println(rpad(n, 6), join(rpad.(round.(w; digits = 3), 13)))
+end
+'''
+
+[[actionGroups.actions]]
+id = "required-replicates"
+label = "Required Replicates"
+desc = "Monte Carlo spread of the standard error and percentile endpoints over 10 repeats, for 200, 1000 and 5000 replicates"
+code = '''
+for B in (200, 1000, 5000)
+    runs = [resample(stat, x, B) for _ in 1:10]
+    se = [stderror(r, 1) for r in runs]
+    ci = [confint(r, PercentileConfInt({{level}}), 1) for r in runs]
+    println("B = ", rpad(B, 6), "SE ", round(mean(se); digits = 3), " +- ", round(std(se); digits = 4),
+        ",  lower ", round(mean(getindex.(ci, 2)); digits = 3), " +- ", round(std(getindex.(ci, 2)); digits = 4),
+        ",  upper ", round(mean(getindex.(ci, 3)); digits = 3), " +- ", round(std(getindex.(ci, 3)); digits = 4))
+end
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "coverage"
+label = "Interval Coverage"
+desc = "Simulate samples of the same size from a known population and count how often each interval contains the true value"
+code = '''
+truth_value = stat(truth_sample(10^6))  # value of the statistic in the population, from one very large sample
+ci_names = first.(intervals(bs))
+hits, widths = zeros(length(ci_names)), zeros(length(ci_names))
+for r in 1:{{reps}}
+    for (k, (name, (t0, lo, hi))) in enumerate(intervals(resample(with_se, truth_sample(length(x)), {{nboot}})))
+        hits[k] += lo <= truth_value <= hi
+        widths[k] += hi - lo
+    end
+end
+println("true value = ", round(truth_value; digits = 3), ", nominal coverage = ", {{level}}, ", samples = ", {{reps}})
+for k in eachindex(ci_names)
+    println(rpad(ci_names[k], 13), "coverage = ", rpad(round(hits[k] / {{reps}}; digits = 3), 7), "mean width = ", round(widths[k] / {{reps}}; digits = 3))
+end
+'''
+
+[[actionGroups.actions]]
+id = "schemes"
+label = "Compare Schemes"
+desc = "Standard error, bias and percentile interval under each resampling scheme, with their spread over 10 repeats"
+code = '''
+for (name, rs) in alternatives
+    runs = [rs(stat, x, {{nboot}}) for _ in 1:10]
+    se = [stderror(r, 1) for r in runs]
+    b  = [bias(r, 1) for r in runs]
+    ci = confint(runs[1], PercentileConfInt({{level}}), 1)
+    println(rpad(name, 28), "SE ", round(mean(se); digits = 3), " +- ", round(std(se); digits = 4),
+        ",  bias ", round(mean(b); digits = 3), " +- ", round(std(b); digits = 4),
+        ",  percentile [", round(ci[2]; digits = 3), ", ", round(ci[3]; digits = 3), "]")
+end
+{{?model=nonparam}}if Bootstrap.nrun_exact(length(x)) <= 10^5
+{{?model=nonparam}}    ex = bootstrap(stat, x, ExactSampling())
+{{?model=nonparam}}    println(rpad("Exact (unweighted)", 28), "SE ", round(stderror(ex, 1); digits = 3), " over ", nrun(ex), " distinct resamples; Bootstrap.jl weights them equally, not by their multinomial probability, so this SE is biased")
+{{?model=nonparam}}end
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "interval-choice"
+label = "Interval Choice"
+desc = "Bias correction z0, acceleration a and skewness of the replicates: the quantities that make the BCa interval differ from the percentile interval"
+code = '''
+t0, t1 = original(bs, 1), straps(bs, 1)
+z0  = quantile(Normal(), mean(t1 .< t0))  # median bias of the replicates, in normal units
+loo = Bootstrap.jack_knife_estimate(x, stat)
+d   = mean(loo) .- loo
+a   = sum(d .^ 3) / (6 * sum(d .^ 2)^1.5)  # acceleration: skewness of the jackknife influence values
+iv  = Dict(intervals(bs))
+println("share of replicates below the estimate = ", round(mean(t1 .< t0); digits = 3), ", z0 = ", round(z0; digits = 3))
+println("acceleration a = ", round(a; digits = 4), ", skewness of replicates = ", round(skewness(t1); digits = 3))
+println("percentile [", round(iv["Percentile"][2]; digits = 3), ", ", round(iv["Percentile"][3]; digits = 3), "]  vs  BCa [", round(iv["BCa"][2]; digits = 3), ", ", round(iv["BCa"][3]; digits = 3), "]")
+println("With z0 and a near zero the intervals agree; otherwise BCa or the studentised interval corrects for bias and skewness that the percentile and normal intervals ignore.")
+'''
+
+[[actionGroups.actions]]
+id = "bias-correction"
+label = "Bias Correction"
+desc = "Bootstrap bias relative to the standard error, and the bias-corrected estimate"
+code = '''
+b, se = bias(bs, 1), stderror(bs, 1)
+println("estimate = ", round(original(bs, 1); digits = 3), ", bias = ", round(b; digits = 3), ", standard error = ", round(se; digits = 3))
+println("bias / SE = ", round(b / se; digits = 3), ", bias-corrected estimate = ", round(original(bs, 1) - b; digits = 3))
+println(abs(b / se) < 0.25 ? "Bias is under a quarter of the standard error: Efron and Tibshirani (1993, section 10.6) suggest leaving the estimate uncorrected." :
+    "Bias is a quarter of the standard error or more: the statistic may need correcting, or a different statistic; the correction itself adds variance.")
+'''

@@ -13,7 +13,7 @@ name = "DataSplits.jl"
 github = "https://github.com/davide-grheco/DataSplits.jl"
 
 [requires]
-packages = ["DataSplits.jl"]
+packages = ["DataSplits.jl", "StatsPlots.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""
@@ -363,28 +363,48 @@ default = "42"
 [[codeBranches]]
 model = "main"
 code = '''
-using DataSplits  # resampling strategies
+using DataSplits, Random, LinearAlgebra, Statistics  # resampling strategies
 
-X = rand({{n}}, 4)  # n x p feature matrix
-y = rand({{n}})  # response vector
+# Demo data with real structure; DataSplits follows the Julia ML convention: columns are samples
+Random.seed!({{seed}})
+n = {{n}}
+X = randn(4, n)  # 4 features x n samples
+groups = div.(0:n-1, 5) .+ 1  # 5 rows per entity (e.g. repeated measurements of one patient)
+t = collect(1:n)  # time stamps, rows in chronological order
+y = transpose(X) * [1.0, -0.5, 0.25, 0.0] .+ 0.5 .* randn(maximum(groups))[groups] .+ 0.3 .* randn(n)  # signal + entity effect + noise
 
-{{?strategy=NestedCV}} inner = KFold({{k}})  # inner loop: hyperparameter tuning
-{{?strategy=NestedCV}} outer = KFold({{k}})  # outer loop: performance evaluation
-{{?strategy=NestedCV}} cv = NestedCV(inner, outer)  # nested cross-validation
-{{?strategy=LeaveOneOut}} cv = LeaveOneOut()  # n folds, each with one test sample
-{{?strategy=LeavePOut}} cv = LeavePOut(p=2)  # leave-p-out: C(n,p) test sets
-{{?strategy=TimeSplit}} cv = TimeSplit(train_ratio=0.8)  # single chronological split
-{{?strategy=BlockedCV}} cv = BlockedCV({{k}})  # blocked CV respecting temporal order
-{{?strategy=PurgedKFold}} cv = PurgedKFold({{k}}, embargo=0.01)  # purged + embargo gap for financial series
-{{?strategy=TimeSeriesSplit}} cv = TimeSeriesSplit({{k}})  # expanding-window time-series CV
-{{?strategy=KennardStoneSplit|LazyKennardStoneSplit|SPXYSplit|MDKSSplit|OptiSimSplit|LazyOptiSimSplit|MinDissimilaritySplit|MaxDissimilaritySplit}} cv = {{strategy}}(train_ratio=0.8)  # distance-based; no random seed needed
-{{?strategy=RandomSplit|ShuffleSplit|BootstrapSplit|StratifiedShuffleSplit|GroupShuffleSplit}} cv = {{strategy}}(rng=MersenneTwister({{seed}}))  # random split, seed {{seed}}
-{{?strategy=KFold|StratifiedKFold|GroupKFold|RepeatedKFold}} cv = {{strategy}}({{k}}, rng=MersenneTwister({{seed}}))  # {{k}} folds, seed {{seed}}
+# Replace with your own model: fit on the training columns, return the test RMSE
+function my_model_eval(Xtr, ytr, Xte, yte)
+    b = [ones(size(Xtr, 2)) transpose(Xtr)] \ ytr  # least squares with intercept
+    sqrt(mean(abs2, yte .- [ones(size(Xte, 2)) transpose(Xte)] * b))
+end
 
-for (train_idx, test_idx) in splits(cv, X, y)  # iterate folds
-    X_train, X_test = X[train_idx, :], X[test_idx, :]
-    y_train, y_test = y[train_idx],    y[test_idx]
-    println("train: ", length(train_idx), "  test: ", length(test_idx))  # fold sizes
+{{?strategy=NestedCV}}cv = NestedCV(KFold({{k}}; shuffle=true), KFold({{k}}; shuffle=true))  # outer folds for evaluation, inner folds for tuning
+{{?strategy=KFold}}cv = KFold({{k}}; shuffle=true)  # {{k}} shuffled folds
+{{?strategy=StratifiedKFold}}cv = StratifiedKFold({{k}}; shuffle=true)  # folds balanced on y (binned when continuous)
+{{?strategy=GroupKFold}}cv = GroupKFold({{k}})  # no entity appears in both train and test
+{{?strategy=RepeatedKFold}}cv = RepeatedKFold({{k}}; n_repeats=3)  # 3 x {{k}} folds
+{{?strategy=LeaveOneOut}}cv = LeaveOneOut()  # n folds, each with one test sample
+{{?strategy=LeavePOut}}cv = LeavePOut(2)  # every pair as a test set: n(n-1)/2 folds
+{{?strategy=TimeSplit}}cv = TimeSplit()  # single chronological split: oldest rows train
+{{?strategy=BlockedCV}}cv = BlockedCV({{k}})  # contiguous time blocks
+{{?strategy=PurgedKFold}}cv = PurgedKFold({{k}}; purge=2, embargo=2)  # purge and embargo 2 time steps around each test block
+{{?strategy=TimeSeriesSplit}}cv = TimeSeriesSplit({{k}})  # expanding window: always train on the past
+{{?strategy=KennardStoneSplit|LazyKennardStoneSplit|SPXYSplit|MDKSSplit|OptiSimSplit|LazyOptiSimSplit}}cv = {{strategy}}()  # distance-based selection
+{{?strategy=MinDissimilaritySplit}}cv = MinimumDissimilaritySplit()  # distance-based selection
+{{?strategy=MaxDissimilaritySplit}}cv = MaximumDissimilaritySplit()  # distance-based selection
+{{?strategy=RandomSplit|GroupShuffleSplit}}cv = {{strategy}}()  # one random train/test split
+{{?strategy=ShuffleSplit|BootstrapSplit|StratifiedShuffleSplit}}cv = {{strategy}}({{k}})  # {{k}} independent resamples
+
+# Pass only the auxiliary vectors this strategy consumes (extra ones are rejected), and cohort sizes only where they apply
+slots = (target = y, time = t, groups = groups)
+kw = (; (s => slots[s] for s in consumes(cv) if haskey(slots, s))...)
+sizes = cv isa AbstractCVStrategy && !(cv isa AbstractResamplingCVStrategy) ? (;) : (train = 0.8, test = 0.2)  # 80/20 train/test
+cvs = partition(X, cv; rng=MersenneTwister({{seed}}), kw..., sizes...)
+fold_pairs = rowpairs(cvs)  # vector of (train indices, test indices)
+
+for (tr, te) in fold_pairs
+    println("train: ", length(tr), "  test: ", length(te))  # fold sizes
 end
 '''
 
@@ -397,33 +417,23 @@ id = "fold-sizes"
 label = "Fold Sizes"
 desc = "Bar chart of train and test sizes across folds"
 code = '''
-using DataSplits, Plots  # resampling + Plots
+using StatsPlots  # groupedbar
 
-X = rand({{n}}, 4); y = rand({{n}})  # dummy data
-cv = {{strategy}}({{k}}, rng=MersenneTwister({{seed}}))  # strategy
-
-train_sz, test_sz = Int[], Int[]
-for (tr, te) in splits(cv, X, y)  # iterate folds
-    push!(train_sz, length(tr)); push!(test_sz, length(te))
-end
-
+train_sz = [length(tr) for (tr, te) in fold_pairs]
+test_sz  = [length(te) for (tr, te) in fold_pairs]
 groupedbar([train_sz test_sz]; label=["Train" "Test"], xlabel="Fold", ylabel="n")  # grouped bar chart
 '''
 
 [[actionGroups.actions]]
 id = "feature-coverage"
 label = "Feature Coverage"
-desc = "Scatter of train vs test samples in 2D to inspect space coverage"
+desc = "Scatter of train vs test samples on the first two features to inspect space coverage"
 code = '''
-using DataSplits, Plots  # resampling + Plots
+using Plots
 
-X = rand({{n}}, 2)  # 2-D feature matrix for visualisation
-y = rand({{n}})  # response
-cv = {{strategy}}({{k}}, rng=MersenneTwister({{seed}}))  # strategy
-
-tr, te = first(splits(cv, X, y))  # first fold only
-scatter(X[tr,1], X[tr,2]; label="Train", alpha=0.6)
-scatter!(X[te,1], X[te,2]; label="Test", alpha=0.9, marker=:diamond)  # overlay test set
+tr, te = first(fold_pairs)  # first fold only
+scatter(X[1, tr], X[2, tr]; label="Train", alpha=0.6, xlabel="Feature 1", ylabel="Feature 2")
+scatter!(X[1, te], X[2, te]; label="Test", alpha=0.9, marker=:diamond)  # overlay test set
 '''
 
 [[actionGroups]]
@@ -433,32 +443,39 @@ label = "Diagnose"
 [[actionGroups.actions]]
 id = "class-balance"
 label = "Class Balance"
-desc = "Check class proportions in each fold to detect imbalance"
+desc = "Share of high-y rows (above the median) in each training and test fold, to detect imbalance"
 code = '''
-using DataSplits, StatsBase  # resampling + StatsBase
+using Statistics
 
-y = rand(["A","B"], {{n}})  # binary labels
-cv = {{strategy}}({{k}}, rng=MersenneTwister({{seed}}))  # strategy
-
-for (i, (tr, _)) in enumerate(splits(cv, y, y))  # iterate folds
-    println("Fold $i: ", countmap(y[tr]))
+high = y .> median(y)  # binary label for the check
+for (i, (tr, te)) in enumerate(fold_pairs)
+    println("Fold $i: train share high = ", round(mean(high[tr]), digits=2), "  test share high = ", round(mean(high[te]), digits=2))
 end
 '''
 
 [[actionGroups.actions]]
 id = "leakage-check"
 label = "Leakage Check"
-desc = "Verify train and test index sets are disjoint in every fold"
+desc = "Checks the leaks disjoint indices do not catch: entities shared across train and test, training on the future, and preprocessing (feature selection) fitted on all rows"
 code = '''
-using DataSplits  # resampling
+using Random, Statistics
 
-X = rand({{n}}, 4); y = rand({{n}})  # dummy data
-cv = {{strategy}}({{k}}, rng=MersenneTwister({{seed}}))  # strategy
+# 1. Repeated entities: a group seen in training makes the test rows easier than truly new entities
+shared = [length(intersect(Set(groups[tr]), Set(groups[te]))) for (tr, te) in fold_pairs]
+println("Entities in both train and test per fold: ", shared, "  (use GroupKFold or GroupShuffleSplit if > 0)")
 
-for (i, (tr, te)) in enumerate(splits(cv, X, y))  # each fold
-    @assert isempty(intersect(tr, te)) "Fold $i: data leakage!"  # should never fire
-end
-println("No leakage detected.")  # all folds clean
+# 2. Temporal order: share of test rows that are older than the newest training row
+future = [mean(t[te] .< maximum(t[tr])) for (tr, te) in fold_pairs]
+println("Share of test rows predating the training data: ", round.(future, digits=2), "  (use TimeSeriesSplit, BlockedCV or PurgedKFold if the data are a time series)")
+
+# 3. Preprocessing on all rows: select the 5 features most correlated with y on pure noise (no real signal)
+Random.seed!({{seed}})
+Xn, yn = randn(200, n), randn(n)  # 200 noise features x n samples
+top(rows) = partialsortperm(vec(abs.(cor(transpose(Xn[:, rows]), yn[rows]))), 1:5; rev=true)
+sel_all = top(1:n)  # WRONG: selection sees the test rows
+leaky  = mean(my_model_eval(Xn[sel_all, tr], yn[tr], Xn[sel_all, te], yn[te]) for (tr, te) in fold_pairs)
+honest = mean(my_model_eval(Xn[top(tr), tr], yn[tr], Xn[top(tr), te], yn[te]) for (tr, te) in fold_pairs)  # selection inside each fold
+println("Noise data, CV RMSE with selection on all rows: ", round(leaky, digits=3), "  inside folds: ", round(honest, digits=3), "  (std of y = ", round(std(yn), digits=3), ")")
 '''
 
 [[actionGroups]]
@@ -468,20 +485,15 @@ label = "Predict"
 [[actionGroups.actions]]
 id = "cv-score"
 label = "CV Score"
-desc = "Compute mean and std of a metric across all folds"
+desc = "Mean and spread of the test RMSE across folds; the naive standard error is optimistic because folds share training data"
 code = '''
-using DataSplits, Statistics  # resampling + Statistics
+using Statistics
 
-X = rand({{n}}, 4); y = rand({{n}})  # dummy data
-cv = {{strategy}}({{k}}, rng=MersenneTwister({{seed}}))  # strategy
-
-scores = Float64[]
-for (tr, te) in splits(cv, X, y)  # iterate folds
-    score = my_model_eval(X[tr,:], y[tr], X[te,:], y[te])  # user-defined metric function
-    push!(scores, score)
-end
-
-println("CV mean: ", mean(scores), "  std: ", std(scores))  # summary statistics
+scores = [my_model_eval(X[:, tr], y[tr], X[:, te], y[te]) for (tr, te) in fold_pairs]
+K = length(scores)
+# Folds overlap in their training sets, so the fold scores are positively correlated:
+# std / sqrt(K) understates the uncertainty of the CV estimate (Bengio and Grandvalet 2004); nested CV (Bates, Hastie and Tibshirani 2023) gives valid intervals
+(cv_mean = mean(scores), fold_std = std(scores), naive_se = std(scores) / sqrt(K), folds = K)
 '''
 
 [[actionGroups]]
@@ -491,20 +503,15 @@ label = "Compare"
 [[actionGroups.actions]]
 id = "compare-strategies"
 label = "Compare Strategies"
-desc = "Run the same model under two strategies and compare score distributions"
+desc = "The same model under k-fold and ShuffleSplit (k resamples, 80% train / 20% test) and their score distributions"
 code = '''
-using DataSplits, Statistics  # resampling + Statistics
+using DataSplits, Random, Statistics
 
-X = rand({{n}}, 4); y = rand({{n}})  # dummy data
-cv_a = KFold({{k}}, rng=MersenneTwister({{seed}}))  # strategy A: k-fold
-cv_b = ShuffleSplit(rng=MersenneTwister({{seed}}))  # strategy B: shuffle split
-
-function cv_scores(cv)
-    [my_model_eval(X[tr,:], y[tr], X[te,:], y[te]) for (tr, te) in splits(cv, X, y)]
-end
-
-println("KFold:        mean=", mean(cv_scores(cv_a)))  # A results
-println("ShuffleSplit: mean=", mean(cv_scores(cv_b)))  # B results
+cv_scores(pairs) = [my_model_eval(X[:, tr], y[tr], X[:, te], y[te]) for (tr, te) in pairs]
+s_a = cv_scores(rowpairs(partition(X, KFold({{k}}; shuffle=true); rng=MersenneTwister({{seed}}))))
+s_b = cv_scores(rowpairs(partition(X, ShuffleSplit({{k}}); train=0.8, test=0.2, rng=MersenneTwister({{seed}}))))
+[(strategy = "KFold({{k}})", mean = mean(s_a), std = std(s_a)),
+ (strategy = "ShuffleSplit({{k}}), 80/20", mean = mean(s_b), std = std(s_b))]
 '''
 
 [[actionGroups]]
@@ -514,18 +521,11 @@ label = "Interpret"
 [[actionGroups.actions]]
 id = "optimism"
 label = "Optimism Bias"
-desc = "Estimate training-set optimism: in-sample minus out-of-sample score"
+desc = "Estimate training-set optimism: out-of-sample minus in-sample RMSE"
 code = '''
-using DataSplits, Statistics  # resampling + Statistics
+using Statistics
 
-X = rand({{n}}, 4); y = rand({{n}})  # dummy data
-cv = {{strategy}}({{k}}, rng=MersenneTwister({{seed}}))  # strategy
-
-in_s, out_s = Float64[], Float64[]
-for (tr, te) in splits(cv, X, y)  # each fold
-    push!(in_s,  my_model_eval(X[tr,:], y[tr], X[tr,:], y[tr]))
-    push!(out_s, my_model_eval(X[tr,:], y[tr], X[te,:], y[te]))
-end
-
-println("Optimism: ", mean(in_s) - mean(out_s))  # positive = overfitting
+in_s  = [my_model_eval(X[:, tr], y[tr], X[:, tr], y[tr]) for (tr, te) in fold_pairs]  # training RMSE
+out_s = [my_model_eval(X[:, tr], y[tr], X[:, te], y[te]) for (tr, te) in fold_pairs]  # test RMSE
+println("Optimism (test minus training RMSE): ", mean(out_s) - mean(in_s))  # positive = overfitting
 '''

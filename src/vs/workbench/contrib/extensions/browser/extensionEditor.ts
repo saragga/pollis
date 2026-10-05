@@ -1130,7 +1130,7 @@ class AdditionalDetailsWidget extends Disposable {
 			resources.push([extension.publisherDisplayName, ThemeIcon.fromId(Codicon.linkExternal.id), extension.publisherUrl]);
 		}
 		if (extension.url) {
-			resources.push([localize('Marketplace', "Marketplace"), ThemeIcon.fromId(Codicon.linkExternal.id), URI.parse(extension.url)]);
+			resources.push([localize('Marketplace', "Open VSX"), ThemeIcon.fromId(Codicon.linkExternal.id), URI.parse(extension.url)]);
 		}
 		if (resources.length || extension.publisherSponsorLink) {
 			const extensionResourcesContainer = append(container, $('.resources-container.additional-details-element'));
@@ -1245,7 +1245,7 @@ class AdditionalDetailsWidget extends Disposable {
 	private renderMarketplaceInfo(container: HTMLElement, extension: IExtension): void {
 		const gallery = extension.gallery;
 		const moreInfoContainer = append(container, $('.more-info-container.additional-details-element'));
-		append(moreInfoContainer, $('.additional-details-title', undefined, localize('Marketplace Info', "Marketplace")));
+		append(moreInfoContainer, $('.additional-details-title', undefined, localize('Marketplace Info', "Open VSX")));
 		const moreInfo = append(moreInfoContainer, $('.more-info'));
 		if (gallery) {
 			if (!extension.local) {

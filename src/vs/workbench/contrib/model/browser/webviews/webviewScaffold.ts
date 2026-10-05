@@ -107,6 +107,8 @@ export interface WebviewParts {
 	 * in scaffoldParts.ts). Code lines built with `codeLine()` read them through `{{id}}` placeholders.
 	 */
 	readonly inputsHtml?: string;
+	/** The `tabs` inputs, shown as a row of tabs just above the code box. */
+	readonly subtabsHtml?: string;
 	/** Optional CSS rule for this webview's (legacy) hidden param rows. Default: none. */
 	readonly hiddenRowCss?: string;
 	/** Start the illustration pane collapsed (e.g. webviews with no gallery yet). Default: open. */
@@ -223,6 +225,19 @@ export function buildWebviewHtml(parts: WebviewParts): string {
 		.model-toggle { display: flex; flex-wrap: wrap; gap: 0; margin: 0; border: none; background: var(--vscode-editorGroupHeader-tabsBackground, transparent); overflow: visible; }
 		.toggle-btn { background: var(--vscode-tab-inactiveBackground); border: none; border-right: 1px solid var(--vscode-tab-border); border-top: 1px solid transparent; color: var(--vscode-tab-inactiveForeground); font-size: 13px; font-family: var(--vscode-font-family); cursor: pointer; padding: 0 16px; height: 35px; line-height: 33px; transition: background 0.1s; white-space: nowrap; margin-bottom: -1px; position: relative; }
 		.toggle-btn.active { background: var(--vscode-textCodeBlock-background); color: var(--vscode-tab-activeForeground); border-top: 1px solid var(--vscode-tab-activeBorderTop, transparent); z-index: 1; }
+		/* Tabs the user added: an x to remove them on hover, and a + at the end of the strip to add one */
+		.toggle-btn.added-tab { padding-right: 30px; font-style: italic; }
+		.toggle-btn .tab-remove { position: absolute; right: 8px; top: 50%; width: 16px; height: 16px; margin-top: -8px; line-height: 16px; text-align: center; border-radius: 3px; font-style: normal; visibility: hidden; }
+		.toggle-btn.added-tab:hover .tab-remove, .toggle-btn.added-tab.active .tab-remove, .toggle-btn.confirm-remove .tab-remove { visibility: visible; }
+		.toggle-btn .tab-remove:hover { background: var(--vscode-toolbar-hoverBackground); }
+		.toggle-btn.confirm-remove { color: var(--vscode-errorForeground); }
+		.toggle-btn.add-tab { padding: 0 12px; font-size: 16px; color: var(--vscode-descriptionForeground); }
+		.toggle-btn.add-tab:disabled { opacity: 0.4; cursor: default; }
+		.tab-name-input { align-self: center; margin: 0 6px; width: 160px; height: 24px; padding: 0 6px; font-size: 13px; font-family: var(--vscode-font-family); background: var(--vscode-input-background); color: var(--vscode-input-foreground); border: 1px solid var(--vscode-focusBorder); border-radius: 2px; outline: none; }
+		.tab-name-input.invalid { border-color: var(--vscode-inputValidation-errorBorder, var(--vscode-errorForeground)); }
+		#sec-code.added-tab .scaffold-inputs, #sec-code.added-tab .scaffold-subtabs { display: none; }
+		.code-added-tag { display: none; margin-left: 4px; font-size: 11px; font-weight: 500; line-height: 16px; color: var(--vscode-textLink-foreground); border: 1px solid var(--vscode-textLink-foreground); border-radius: 10px; padding: 0 8px; }
+		#sec-code.added-tab .code-added-tag { display: inline-block; }
 		.toggle-btn:not(.active):hover { background: var(--vscode-tab-hoverBackground, var(--vscode-list-hoverBackground)); color: var(--vscode-tab-hoverForeground, var(--vscode-tab-activeForeground)); }
 		.illus-section { margin: 0 0 20px 0; }
 		.illus-toggle { display: flex; align-items: center; gap: 6px; background: transparent; border: none; color: var(--vscode-foreground); font-size: 15px; font-weight: 500; font-family: var(--vscode-font-family); cursor: pointer; padding: 4px 0; user-select: none; }
@@ -277,8 +292,29 @@ export function buildWebviewHtml(parts: WebviewParts): string {
 		.code-edit-wrap { position: relative; display: none; }
 		#sec-code.editing .code-edit-wrap, #right-panel.editing .code-edit-wrap { display: block; }
 		#sec-code.editing #code-preview, #right-panel.editing #panel-code { display: none; }
-		#sec-code.editing .model-toggle, #sec-code.editing .scaffold-inputs { pointer-events: none; opacity: 0.5; }
+		#sec-code.editing .model-toggle, #sec-code.editing .scaffold-inputs, #sec-code.editing .scaffold-subtabs { pointer-events: none; opacity: 0.5; }
+		/* Second-level tabs just above the code box (an input of kind tabs) */
+		.scaffold-subtabs { display: flex; gap: 4px; margin: 0 0 8px; border-bottom: 1px solid var(--vscode-widget-border); }
+		.subtab-btn { background: transparent; border: none; border-bottom: 2px solid transparent; margin-bottom: -1px; color: var(--vscode-descriptionForeground); font-size: 12px; font-family: var(--vscode-font-family); cursor: pointer; padding: 6px 12px; }
+		.subtab-btn:hover { color: var(--vscode-foreground); }
+		.subtab-btn.active { color: var(--vscode-foreground); border-bottom-color: var(--vscode-focusBorder); }
+		.subtab-btn[hidden] { display: none; }
 		.scaffold-inputs .form-row[hidden], .scaffold-input[hidden] { display: none; }
+		/* The inputs sit in a card that continues the active tab, a little apart from the code below */
+		.scaffold-inputs { background: var(--vscode-textCodeBlock-background); border: 1px solid var(--vscode-widget-border); border-radius: 0 6px 6px 6px; padding: 16px 20px 4px; margin-bottom: 12px; }
+		.scaffold-inputs:not(:has(.form-row:not([hidden]))) { display: none; }
+		.scaffold-inputs .form-row { gap: 24px; margin-bottom: 14px; }
+		.scaffold-inputs .form-label { margin-bottom: 8px; }
+		/* The dropdown arrow sits as far from the right edge as the text from the left */
+		.scaffold-inputs select.form-input { appearance: none; padding-right: 34px; }
+		.scaffold-inputs .scaffold-input:has(select) { position: relative; }
+		/* The compact list the input dropdowns open, styled like the workbench menus */
+		.scaffold-dropdown { position: fixed; z-index: 1000; overflow-y: auto; padding: 4px; box-sizing: border-box; background: var(--vscode-menu-background, var(--vscode-dropdown-background)); color: var(--vscode-menu-foreground, var(--vscode-dropdown-foreground)); border: 1px solid var(--vscode-menu-border, var(--vscode-widget-border)); border-radius: 6px; box-shadow: 0 2px 8px var(--vscode-widget-shadow); font-size: 13px; }
+		.scaffold-dropdown[hidden] { display: none; }
+		.scaffold-dropdown .dropdown-item { padding: 3px 10px 3px 24px; border-radius: 4px; cursor: pointer; white-space: nowrap; line-height: 18px; position: relative; }
+		.scaffold-dropdown .dropdown-item.selected::before { content: ''; position: absolute; left: 6px; top: 50%; width: 12px; height: 12px; margin-top: -6px; background-color: currentColor; -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M14.431 3.323l-8.47 10-.79-.036-3.35-4.77.818-.574 2.978 4.24 8.051-9.506.764.646z'/%3E%3C/svg%3E") center / 12px 12px no-repeat; }
+		.scaffold-dropdown .dropdown-item.focused { background: var(--vscode-menu-selectionBackground, var(--vscode-list-activeSelectionBackground)); color: var(--vscode-menu-selectionForeground, var(--vscode-list-activeSelectionForeground)); }
+		.scaffold-inputs .scaffold-input:has(select)::after { content: ''; position: absolute; right: 9px; bottom: 10px; width: 16px; height: 16px; pointer-events: none; background-color: var(--vscode-input-foreground); -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M7.976 10.072l-4.054-4.014-.92.92 4.49 4.45.978.01 4.525-4.46-.918-.92-4.101 4.014z'/%3E%3C/svg%3E") center / 16px 16px no-repeat; }
 		.code-edit { display: block; width: 100%; min-height: 120px; background: var(--vscode-input-background); color: var(--vscode-input-foreground); border: 1px solid var(--vscode-focusBorder); outline: 1px solid var(--vscode-focusBorder); border-radius: 0 0 6px 6px; padding: 20px; padding-right: 80px; font-family: 'Consolas', 'Monaco', 'Courier New', monospace; font-size: 12px; line-height: 1.6; white-space: pre; overflow: auto; resize: vertical; tab-size: 4; }
 		.code-edit-label { position: absolute; top: 8px; right: 12px; font-size: 11px; color: var(--vscode-textLink-foreground); pointer-events: none; }
 		.code-custom-tag { display: none; margin-left: 4px; font-size: 11px; font-weight: 500; line-height: 16px; color: var(--vscode-editorWarning-foreground); border: 1px solid var(--vscode-editorWarning-foreground); border-radius: 10px; padding: 0 8px; }
@@ -414,12 +450,13 @@ ${parts.omitIllustration ? '' : `
 `}
 
 		<div class="section" id="sec-code">
-			<button class="section-toggle"><span class="illus-chevron"><svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M7.976 10.072l-4.054-4.014-.92.92 4.49 4.45.978.01 4.525-4.46-.918-.92-4.101 4.014z"/></svg></span>Example Code<span class="code-custom-tag" title="Your saved version of this example. Restore Default brings back the original.">Customised</span></button>
+			<button class="section-toggle"><span class="illus-chevron"><svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M7.976 10.072l-4.054-4.014-.92.92 4.49 4.45.978.01 4.525-4.46-.918-.92-4.101 4.014z"/></svg></span>Example Code<span class="code-custom-tag" title="Your saved version of this example. Restore Default brings back the original.">Customised</span><span class="code-added-tag" title="A tab you added. Its x removes it. The settings of the built-in tabs are hidden here; they come back when you open one.">Added</span></button>
 			<div class="section-body">
 		<div class="model-toggle" id="model-group">
 ${parts.togglesJs}
+			<button class="toggle-btn add-tab" id="btn-add-tab" title="Add a tab of your own">+</button>
 		</div>
-${parts.inputsHtml ? `\t\t<div class="scaffold-inputs" id="scaffold-inputs">\n${parts.inputsHtml}\n\t\t</div>\n` : ''}
+${parts.inputsHtml ? `\t\t<div class="scaffold-inputs" id="scaffold-inputs">\n${parts.inputsHtml}\n\t\t</div>\n` : ''}${parts.subtabsHtml ? `${parts.subtabsHtml}\n` : ''}
 		<div class="code-preview-wrapper">
 			<div class="code-preview" id="code-preview"></div>
 			<div class="code-edit-wrap">
@@ -429,7 +466,7 @@ ${parts.inputsHtml ? `\t\t<div class="scaffold-inputs" id="scaffold-inputs">\n${
 			<div class="code-btn-bar code-btn-bar-bottom code-btn-bar-split" id="main-btn-bar">
 				<span class="code-btn-group">
 					<button class="code-action-btn" id="btn-edit-code" title="Edit this example and keep your version">Edit</button>
-					<button class="code-action-btn" id="btn-restore-code" title="Discard your version and bring back the original example" hidden>Restore Default</button>
+					<button class="code-action-btn" id="btn-restore-code" title="Move your version to the Trash and bring back the original example" hidden>Restore Default</button>
 					<button class="code-action-btn primary" id="btn-save-code" hidden>Save</button>
 					<button class="code-action-btn" id="btn-cancel-code" hidden>Cancel</button>${parts.interactiveLabelHtml ? '\n\t\t\t\t\t' + parts.interactiveLabelHtml : ''}
 				</span>
@@ -525,8 +562,9 @@ ${parts.headScriptJs ?? ''}
 		// One line of declarative code: an optional {{?id=a|b}} / {{?id!=a|b}} guard, then {{id}} placeholders.
 		function holds(id, op, values) { return (values.split('|').indexOf(inputRaw(id)) >= 0) !== (op === '!='); }
 		function codeLine(s) {
-			var m = /^[{][{][?]([\\w-]+)(!?=)([^}]*)[}][}] ?/.exec(s);
-			if (m) {
+			// Guards stack: every leading {{?id=a|b}} must hold.
+			var m;
+			while ((m = /^[{][{][?]([\\w-]+)(!?=)([^}]*)[}][}] ?/.exec(s))) {
 				if (!holds(m[1], m[2], m[3])) { return ''; }
 				s = s.slice(m[0].length);
 			}
@@ -535,9 +573,22 @@ ${parts.headScriptJs ?? ''}
 			return s.replace(/[{][{]([\\w-]+)[}][}]/g, function(_, id) { return inputRaw(id); }).split('\\n').map(function(l) { return l ? line(esc(l)) : blank(); }).join('');
 		}
 		function availableFor(el) { return !el.dataset.models || el.dataset.models.split(' ').indexOf(currentModel) >= 0; }
+		// A \`when\` condition may join several conditions with &, all of which must hold.
 		function whenHolds(el) {
-			var m = el.dataset.when && /^([\\w-]+)(!?=)(.*)$/.exec(el.dataset.when);
-			return !m || holds(m[1], m[2], m[3]);
+			return !el.dataset.when || el.dataset.when.split('&').every(function(c) {
+				var m = /^([\\w-]+)(!?=)(.*)$/.exec(c);
+				return !m || holds(m[1], m[2], m[3]);
+			});
+		}
+		// A Next Steps action is listed only for its models and while its \`when\` condition holds; a condition on an input the model hides does not apply.
+		function actionShown(a) {
+			// A tab the user added gets only the actions whose code does not depend on the tab
+			if (isAddedTab(currentModel) && (a.models || a.perModel)) { return false; }
+			if (a.models && a.models.indexOf(currentModel) < 0) { return false; }
+			var m = a.when && /^([\\w-]+)(!?=)(.*)$/.exec(a.when);
+			var input = m && document.getElementById('in-' + m[1]);
+			var group = input && input.closest('.scaffold-input');
+			return !m || (group && group.hidden) || holds(m[1], m[2], m[3]);
 		}
 		// Show the inputs (and select choices) of the current model and input values; a hidden choice falls back to the first available one.
 		function applyInputsForModel() {
@@ -555,6 +606,14 @@ ${parts.headScriptJs ?? ''}
 			// Visibility last, so conditions see each select's fallback choice
 			document.querySelectorAll('.scaffold-input').forEach(function(g) { g.hidden = !availableFor(g) || !whenHolds(g); });
 			document.querySelectorAll('.scaffold-inputs .form-row').forEach(function(r) { r.hidden = !r.querySelector('.scaffold-input:not([hidden])'); });
+			// Second-level tabs mirror their hidden select: the available choices, and the chosen one
+			document.querySelectorAll('.scaffold-subtabs').forEach(function(strip) {
+				var select = strip.querySelector('select');
+				strip.querySelectorAll('.subtab-btn').forEach(function(b, i) {
+					b.hidden = select.options[i].hidden;
+					b.classList.toggle('active', b.dataset.value === select.value);
+				});
+			});
 		}
 
 		// ── Mini chart SVG builders (all coordinates within a 54 × 86 box) ──
@@ -565,7 +624,7 @@ ${parts.headScriptJs ?? ''}
 		function renderIllustration() {
 			var body = document.getElementById('illus-body');
 			if (!body) { return; }
-${parts.illustrationOverrideJs ?? ''}			var activeIdx = MODELS.indexOf(currentModel);
+${parts.illustrationOverrideJs ?? ''}			var activeIdx = MODELS.indexOf(currentModel);   // -1 in a tab the user added: every chart dimmed
 
 			var vbX = CHART_STARTS[0] - 20;
 			var vbW = (CHART_STARTS[CHART_STARTS.length - 1] + CHART_W + 20) - vbX;
@@ -601,7 +660,7 @@ ${parts.illustrationOverrideJs ?? ''}			var activeIdx = MODELS.indexOf(currentMo
 			// Caption
 			content += '<text x="160" y="168" text-anchor="middle" font-size="9" fill="currentColor" '
 				+ 'font-family="sans-serif" font-style="italic">'
-				+ esc(MINI_LABELS[activeIdx]) + ' selected &#8212; click another tab to compare chart shapes'
+				+ (activeIdx < 0 ? 'Your own example &#8212; click a tab to compare chart shapes' : esc(MINI_LABELS[activeIdx]) + ' selected &#8212; click another tab to compare chart shapes')
 				+ '</text>';
 
 			body.innerHTML = svgOpen + content + '</svg>';
@@ -609,13 +668,25 @@ ${parts.illustrationOverrideJs ?? ''}			var activeIdx = MODELS.indexOf(currentMo
 
 		// ── Code preview ─────────────────────────────────────────────────────
 		function updateCodePreview() {
+			var box = document.getElementById('code-preview');
+			if (isAddedTab(currentModel)) {
+				// A tab the user added shows their code, or a nudge while it is still empty.
+				var own = addedTabs[currentModel.slice(1)] || '';
+				currentDefaultCode = '';
+				currentPlainCode = own;
+				// While the tab is empty, the nudge is shown as Julia comments, coloured like every other comment.
+				var shown = own || addedTabHint();
+				box.innerHTML = shown.split('\\n').map(function(l) { return l ? line(esc(l)) : blank(); }).join('');
+				vscode.postMessage({ command: 'colorize', code: shown });
+				updateCustomState();
+				return;
+			}
 			var c = '';
 
 			${parts.codeBranchesJs}
 
 			// Build with the local builder, then re-render the box via the core tokenizer
 			// (the user's theme), keeping the plain source for Copy / Send and colourising.
-			var box = document.getElementById('code-preview');
 			currentPlainCode = null;            // so extractCode reads the freshly-built DOM
 			box.innerHTML = c;
 			currentDefaultCode = extractCode();
@@ -639,10 +710,128 @@ ${parts.illustrationOverrideJs ?? ''}			var activeIdx = MODELS.indexOf(currentMo
 		var restoreTimer = null;
 		var SEND_BUTTONS = ['btn-copy', 'btn-julia-repl', 'btn-new-file', 'btn-notebook', 'btn-pluto'];
 
+		// ── Tabs the user added ──────────────────────────────────────────────
+		// Kept in ~/.pollis/examples/<panel>/added/<name>.jl; as a model id a tab is '+' followed by its name.
+		var addedTabs = {};            // name -> saved source
+		var addedOrder = [];           // names, in the order they were created
+		var removeTimer = null;
+		var ADDED_TAB_HINT = '# Your own example: press Edit and write any Julia code you like.\\n'
+			+ '# Try the method on your own data, change the settings of another tab,\\n'
+			+ '# or explore an idea of your own. It is saved with the panel, ready for next time.';
+		// Panels with settings hide them in an added tab, so the nudge says where they went.
+		function addedTabHint() {
+			return ADDED_TAB_HINT + (document.querySelector('#sec-code .scaffold-input')
+				? '\\n\\n# The settings of the built-in tabs are hidden here; they come back when you open one.' : '');
+		}
+		if (!document.querySelector('#sec-code .scaffold-input')) {
+			document.querySelector('.code-added-tag').title = 'A tab you added. Its x removes it.';
+		}
+		function isAddedTab(model) { return typeof model === 'string' && model.charAt(0) === '+'; }
+
+		function renderAddedTabs() {
+			var group = document.getElementById('model-group');
+			group.querySelectorAll('.added-tab').forEach(function(b) { b.remove(); });
+			var plus = document.getElementById('btn-add-tab');
+			addedOrder.forEach(function(name) {
+				var b = document.createElement('button');
+				b.className = 'toggle-btn added-tab' + (currentModel === '+' + name ? ' active' : '');
+				b.dataset.model = '+' + name;
+				b.title = 'A tab you added';
+				var label = document.createElement('span');
+				label.className = 'tab-name';
+				label.textContent = name;
+				b.appendChild(label);
+				var x = document.createElement('span');
+				x.className = 'tab-remove';
+				x.title = 'Remove this tab';
+				x.textContent = '\\u00d7';
+				b.appendChild(x);
+				group.insertBefore(b, plus);
+			});
+		}
+
+		function resetRemoveConfirm() {
+			if (removeTimer) { clearTimeout(removeTimer); removeTimer = null; }
+			document.querySelectorAll('#model-group .confirm-remove').forEach(function(b) {
+				b.classList.remove('confirm-remove');
+				b.style.minWidth = '';
+				b.querySelector('.tab-name').textContent = b.dataset.model.slice(1);
+				b.querySelector('.tab-remove').title = 'Remove this tab';
+			});
+		}
+
+		// Two-step removal, like Restore Default: the first click on the x turns the tab name into Delete, a second within 4 seconds removes.
+		function removeAddedTab(btn) {
+			if (!btn.classList.contains('confirm-remove')) {
+				resetRemoveConfirm();
+				btn.style.minWidth = btn.offsetWidth + 'px';
+				btn.classList.add('confirm-remove');
+				btn.querySelector('.tab-name').textContent = 'Delete';
+				btn.querySelector('.tab-remove').title = 'Click again to move this tab to the Trash';
+				removeTimer = setTimeout(resetRemoveConfirm, 4000);
+				return;
+			}
+			resetRemoveConfirm();
+			var name = btn.dataset.model.slice(1);
+			delete addedTabs[name];
+			addedOrder = addedOrder.filter(function(n) { return n !== name; });
+			vscode.postMessage({ command: 'removeAddedTab', name: name });
+			if (currentModel === btn.dataset.model) { setModel(lastBuiltInModel); }
+			renderAddedTabs();
+		}
+
+		// The + turns into a name box: Enter adds the tab and opens it for editing, Escape or leaving the box cancels.
+		function startAddTab() {
+			var plus = document.getElementById('btn-add-tab');
+			var input = document.createElement('input');
+			input.className = 'tab-name-input';
+			input.placeholder = 'Name of the new tab';
+			input.maxLength = 40;
+			input.setAttribute('aria-label', 'Name of the new tab');
+			plus.hidden = true;
+			plus.parentNode.insertBefore(input, plus);
+			var done = false;
+			function finish() {
+				if (done) { return; }
+				done = true;
+				input.remove();
+				plus.hidden = false;
+			}
+			function problem(name) {
+				if (!name) { return 'Type a name for the tab'; }
+				if (!/^[A-Za-z0-9][\\w .()-]{0,39}$/.test(name) || /[ .]$/.test(name)) { return 'Use letters, digits, spaces and . ( ) - _ (starting with a letter or digit)'; }
+				var taken = MODELS.map(function(m, i) { return MINI_LABELS[i] || m; }).concat(addedOrder).some(function(n) { return String(n).toLowerCase() === name.toLowerCase(); });
+				return taken ? 'There is already a tab with this name' : '';
+			}
+			input.addEventListener('input', function() { input.classList.remove('invalid'); input.title = ''; });
+			input.addEventListener('keydown', function(e) {
+				if (e.key === 'Escape') { e.preventDefault(); finish(); return; }
+				if (e.key !== 'Enter') { return; }
+				e.preventDefault();
+				var name = input.value.trim();
+				var why = problem(name);
+				if (why) { input.classList.add('invalid'); input.title = why; return; }
+				finish();
+				addedTabs[name] = '';
+				addedOrder.push(name);
+				vscode.postMessage({ command: 'saveAddedTab', name: name, code: '' });
+				renderAddedTabs();
+				setModel('+' + name);
+				setEditingCode(true);
+			});
+			input.addEventListener('blur', finish);
+			input.focus();
+		}
+
 		function updateCustomState() {
 			var isCustom = typeof customExamples[currentModel] === 'string';
+			var isAdded = isAddedTab(currentModel);
 			document.getElementById('sec-code').classList.toggle('customised', isCustom);
+			document.getElementById('sec-code').classList.toggle('added-tab', isAdded);
 			document.getElementById('btn-restore-code').hidden = editingCode || !isCustom;
+			document.getElementById('btn-add-tab').disabled = editingCode;
+			// Nothing to send from an empty tab
+			SEND_BUTTONS.forEach(function(id) { document.getElementById(id).disabled = editingCode || (isAdded && !currentPlainCode); });
 			document.querySelectorAll('#model-group .toggle-btn').forEach(function(b) {
 				b.classList.toggle('has-custom', typeof customExamples[b.dataset.model] === 'string');
 			});
@@ -660,10 +849,11 @@ ${parts.illustrationOverrideJs ?? ''}			var activeIdx = MODELS.indexOf(currentMo
 			document.getElementById('btn-edit-code').hidden = on;
 			document.getElementById('btn-save-code').hidden = !on;
 			document.getElementById('btn-cancel-code').hidden = !on;
-			SEND_BUTTONS.forEach(function(id) { document.getElementById(id).disabled = on; });
 			updateCustomState();
 			if (on) {
-				openCodeEdit(document.getElementById('code-edit'), currentPlainCode || '');
+				var ta = document.getElementById('code-edit');
+				ta.placeholder = isAddedTab(currentModel) ? addedTabHint().replace('\\n\\n', '\\n').replace(/^# /gm, '').replace('press Edit and write', 'write') : '';
+				openCodeEdit(ta, currentPlainCode || '');
 			}
 		}
 
@@ -693,8 +883,11 @@ ${parts.illustrationOverrideJs ?? ''}			var activeIdx = MODELS.indexOf(currentMo
 		document.getElementById('btn-cancel-code').addEventListener('click', function() { setEditingCode(false); });
 		document.getElementById('btn-save-code').addEventListener('click', function() {
 			var code = document.getElementById('code-edit').value.replace(/\\s+$/, '');
+			if (isAddedTab(currentModel)) {
+				addedTabs[currentModel.slice(1)] = code;
+				vscode.postMessage({ command: 'saveAddedTab', name: currentModel.slice(1), code: code });
 			// Saving the original (or nothing) is the same as restoring the default.
-			if (!code || code === currentDefaultCode.replace(/\\s+$/, '')) {
+			} else if (!code || code === currentDefaultCode.replace(/\\s+$/, '')) {
 				delete customExamples[currentModel];
 				vscode.postMessage({ command: 'restoreExample', model: currentModel });
 			} else {
@@ -718,31 +911,133 @@ ${parts.illustrationOverrideJs ?? ''}			var activeIdx = MODELS.indexOf(currentMo
 		});
 		wireCodeEdit(document.getElementById('code-edit'));
 
+		var lastBuiltInModel = '${parts.defaultModel}';
 		function setModel(model) {
-			if (!MODELS.includes(model) || editingCode) { return; }
+			if ((!MODELS.includes(model) && !(isAddedTab(model) && typeof addedTabs[model.slice(1)] === 'string')) || editingCode) { return; }
 			resetRestoreButton();
+			resetRemoveConfirm();
 			currentModel = model;
+			if (!isAddedTab(model)) { lastBuiltInModel = model; }
 			applyInputsForModel();
 ${parts.setModelExtraJs ?? ''}			document.querySelectorAll('#model-group .toggle-btn').forEach(function(b) {
 				b.classList.toggle('active', b.dataset.model === model);
 			});
 			renderIllustration();
 			updateCodePreview();
+			refreshActionList();
 		}
 
 		document.getElementById('model-group').addEventListener('click', function(e) {
 			var btn = e.target.closest('[data-model]');
+			if (btn && (e.target.closest('.tab-remove') || btn.classList.contains('confirm-remove'))) { removeAddedTab(btn); return; }
 			if (btn) { setModel(btn.dataset.model); }
+			else if (e.target.closest('#btn-add-tab')) { startAddTab(); }
 		});
 
 		// Typing in an input refreshes the example and the open Next Steps example.
 		function onInputsChanged() {
 			applyInputsForModel();
 			if (!editingCode) { updateCodePreview(); }
-			if (panelAction && !panelEditing && document.getElementById('panel-code')) { renderRightCode(panelAction, panelNav.actions, panelNav.title); }
+			if (panelAction && !panelEditing && document.getElementById('panel-code') && actionShown(panelAction)) { renderRightCode(panelAction, panelNav.actions, panelNav.title); }
+			refreshActionList();
 		}
 		var inputsBox = document.getElementById('scaffold-inputs');
 		if (inputsBox) { inputsBox.addEventListener('input', onInputsChanged); }   // fires for text inputs and selects
+		document.querySelectorAll('.scaffold-subtabs').forEach(function(strip) {
+			strip.addEventListener('click', function(e) {
+				var btn = e.target.closest('.subtab-btn');
+				if (btn) { strip.querySelector('select').value = btn.dataset.value; onInputsChanged(); }
+			});
+		});
+
+		// The input dropdowns open a compact list of their own instead of the roomy native menu; the select keeps the value.
+		var dropdown = document.createElement('div');
+		dropdown.className = 'scaffold-dropdown';
+		dropdown.setAttribute('role', 'listbox');
+		dropdown.hidden = true;
+		document.body.appendChild(dropdown);
+		var dropdownSelect = null;
+		function closeDropdown(refocus) {
+			if (!dropdownSelect) { return; }
+			dropdown.hidden = true;
+			if (refocus) { dropdownSelect.focus(); }
+			dropdownSelect = null;
+		}
+		function highlightDropdownItem(item) {
+			dropdown.querySelectorAll('.dropdown-item').forEach(function(i) { i.classList.toggle('focused', i === item); });
+			if (item) { item.scrollIntoView({ block: 'nearest' }); }
+		}
+		function chooseDropdownItem(item) {
+			var select = dropdownSelect;
+			closeDropdown(true);
+			if (select && select.value !== item.dataset.value) {
+				select.value = item.dataset.value;
+				select.dispatchEvent(new Event('input', { bubbles: true }));
+				select.dispatchEvent(new Event('change', { bubbles: true }));
+			}
+		}
+		function openDropdown(select) {
+			dropdownSelect = select;
+			dropdown.textContent = '';
+			Array.prototype.forEach.call(select.options, function(o) {
+				if (o.hidden) { return; }
+				var item = document.createElement('div');
+				item.className = 'dropdown-item' + (o.selected ? ' selected' : '');
+				item.setAttribute('role', 'option');
+				item.dataset.value = o.value;
+				item.textContent = o.textContent;
+				dropdown.appendChild(item);
+			});
+			var r = select.getBoundingClientRect();
+			dropdown.style.left = r.left + 'px';
+			dropdown.style.minWidth = r.width + 'px';
+			dropdown.hidden = false;
+			// Below the field, or above it when there is more room there
+			var below = window.innerHeight - r.bottom - 8, above = r.top - 8;
+			var up = below < dropdown.offsetHeight && above > below;
+			dropdown.style.maxHeight = Math.max(up ? above : below, 120) + 'px';
+			dropdown.style.top = (up ? r.top - Math.min(dropdown.offsetHeight, above) - 2 : r.bottom + 2) + 'px';
+			highlightDropdownItem(dropdown.querySelector('.selected'));
+		}
+		document.querySelectorAll('.scaffold-inputs select.form-input').forEach(function(select) {
+			select.addEventListener('mousedown', function(e) {
+				e.preventDefault();
+				select.focus();
+				if (dropdownSelect === select) { closeDropdown(false); } else { openDropdown(select); }
+			});
+			select.addEventListener('keydown', function(e) {
+				var open = dropdownSelect === select;
+				if (!open) {
+					if (e.key === 'Enter' || e.key === ' ' || (e.altKey && e.key === 'ArrowDown')) { e.preventDefault(); openDropdown(select); }
+					return;
+				}
+				var items = Array.prototype.slice.call(dropdown.querySelectorAll('.dropdown-item'));
+				var i = items.indexOf(dropdown.querySelector('.focused'));
+				if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+					e.preventDefault();
+					highlightDropdownItem(items[Math.max(0, Math.min(items.length - 1, i + (e.key === 'ArrowDown' ? 1 : -1)))]);
+				} else if (e.key === 'Enter' || e.key === ' ') {
+					e.preventDefault();
+					if (items[i]) { chooseDropdownItem(items[i]); }
+				} else if (e.key === 'Escape' || e.key === 'Tab') {
+					if (e.key === 'Escape') { e.preventDefault(); }
+					closeDropdown(e.key === 'Escape');
+				}
+			});
+			select.addEventListener('blur', function() { closeDropdown(false); });
+		});
+		// Choose on mousedown, before the select loses focus and closes the list
+		dropdown.addEventListener('mousedown', function(e) {
+			e.preventDefault();
+			var item = e.target.closest('.dropdown-item');
+			if (item) { chooseDropdownItem(item); }
+		});
+		dropdown.addEventListener('mousemove', function(e) {
+			var item = e.target.closest('.dropdown-item');
+			if (item && !item.classList.contains('focused')) { highlightDropdownItem(item); }
+		});
+		window.addEventListener('resize', function() { closeDropdown(false); });
+		document.addEventListener('scroll', function(e) { if (e.target !== dropdown) { closeDropdown(false); } }, true);
 
 		document.querySelector('.subtitle').addEventListener('click', function(e) {
 			var link = e.target.closest('.plot-link');
@@ -759,9 +1054,16 @@ ${parts.setModelExtraJs ?? ''}			document.querySelectorAll('#model-group .toggle
 			currentPanelId = null;
 		}
 
+		// Re-list the open Next Steps group after a model or input change; an example no longer listed falls back to the list.
+		function refreshActionList() {
+			if (!listNav || panelEditing || currentPanelId !== listNav.panelId) { return; }
+			if (!panelAction || !actionShown(panelAction)) { renderRightList(listNav.actions, listNav.title); }
+		}
+
 		function renderRightList(actions, title) {
 			panelAction = null;
-			var cards = actions.map(function(a) {
+			listNav = { actions: actions, title: title, panelId: currentPanelId };
+			var cards = actions.filter(actionShown).map(function(a) {
 				return '<button class="action-card' + (typeof customSteps[a.id] === 'string' ? ' has-custom' : '') + '" data-id="' + a.id + '">'
 					+ '<span class="action-label">' + esc(a.label) + '</span>'
 					+ '<span class="action-desc">' + esc(a.desc) + '</span>'
@@ -799,7 +1101,7 @@ ${parts.setModelExtraJs ?? ''}			document.querySelectorAll('#model-group .toggle
 				+ '<div class="code-btn-bar code-btn-bar-bottom code-btn-bar-split" id="panel-btn-bar">'
 				+ '<span class="code-btn-group">'
 				+ '<button class="code-action-btn" id="btn-panel-edit" title="Edit this example and keep your version">Edit</button>'
-				+ '<button class="code-action-btn" id="btn-panel-restore" title="Discard your version and bring back the original example" hidden>Restore Default</button>'
+				+ '<button class="code-action-btn" id="btn-panel-restore" title="Move your version to the Trash and bring back the original example" hidden>Restore Default</button>'
 				+ '<button class="code-action-btn primary" id="btn-panel-save" hidden>Save</button>'
 				+ '<button class="code-action-btn" id="btn-panel-cancel" hidden>Cancel</button>'
 				+ '</span>'
@@ -877,6 +1179,7 @@ ${parts.setModelExtraJs ?? ''}			document.querySelectorAll('#model-group .toggle
 		var customSteps = {};          // action id -> saved source, sent by the host
 		var panelAction = null;        // the Next Steps example open in the panel, if any
 		var panelNav = null;           // the list it was opened from ({ actions, title }), for re-rendering
+		var listNav = null;            // the Next Steps list last shown ({ actions, title, panelId }), re-filtered on model/input changes
 		var panelDefaultCode = '';     // its generated source
 		var panelEditing = false;
 		var panelRestoreTimer = null;
@@ -1701,6 +2004,13 @@ ${parts.nextStepsWiringJs ?? `		document.getElementById('btn-viz').addEventListe
 			}
 			if (msg.command === 'customExamples') {
 				customExamples = msg.examples || {};
+				if (msg.added) {
+					addedTabs = {};
+					addedOrder = msg.added.map(function(t) { addedTabs[t.name] = t.code; return t.name; });
+					renderAddedTabs();
+					// The tab was removed outside the panel
+					if (isAddedTab(currentModel) && typeof addedTabs[currentModel.slice(1)] !== 'string' && !editingCode) { setModel(lastBuiltInModel); }
+				}
 				if (editingCode) { updateCustomState(); } else { updateCodePreview(); }
 				customSteps = msg.steps || {};
 				rightPanel.querySelectorAll('.action-card[data-id]').forEach(function(c) {

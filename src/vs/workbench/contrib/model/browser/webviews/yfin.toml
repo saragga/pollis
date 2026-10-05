@@ -347,7 +347,7 @@ desc = "Overlay closing price with a trading-volume panel"
 code = """
 using YFinance, TimeSeries, Plots
 
-ta = get_prices(TimeArray, "MSFT"; range="6mo", interval="1d")
+ta = get_prices(TimeArray, "MSFT"; range="6mo", interval="1d", autoadjust=false)  # raw prices and shares traded (autoadjust rescales volume too)
 
 p1 = plot(ta[:close];  label="Close", lw=2)
 p2 = bar(timestamp(ta), values(ta[:vol]); label="Volume", alpha=0.5)

@@ -407,7 +407,7 @@ function search(; budget=budget, seed=1, lb=lb, ub=ub)
     fc, pts, vals = recorder()
     r = bboptimize(fc; SearchRange=collect(zip(lb, ub)), NumDimensions=length(lb), Method=:xnes,
                    MaxFuncEvals=budget, TraceMode=:silent, RandomizeRngSeed=false, RngSeed=seed)
-    result(best_candidate(r), best_fitness(r), pts, vals; status = stop_reason(r))
+    result(best_candidate(r), best_fitness(r), pts, vals; status = BlackBoxOptim.stop_reason(r))
 end
 
 res = search()
@@ -439,7 +439,7 @@ function search(; budget=budget, seed=1, lb=lb, ub=ub)
     fc, pts, vals = recorder()
     r = bboptimize(fc; SearchRange=collect(zip(lb, ub)), NumDimensions=length(lb), Method=:dxnes,
                    MaxFuncEvals=budget, TraceMode=:silent, RandomizeRngSeed=false, RngSeed=seed)
-    result(best_candidate(r), best_fitness(r), pts, vals; status = stop_reason(r))
+    result(best_candidate(r), best_fitness(r), pts, vals; status = BlackBoxOptim.stop_reason(r))
 end
 
 res = search()

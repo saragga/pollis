@@ -13,7 +13,7 @@ name = "QuasiMonteCarlo.jl"
 github = "https://github.com/SciML/QuasiMonteCarlo.jl"
 
 [requires]
-packages = ["QuasiMonteCarlo.jl"]
+packages = ["QuasiMonteCarlo.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""
@@ -334,7 +334,8 @@ code = '''
 using QuasiMonteCarlo, Statistics, Plots
 f(x) = prod(2 .* x)  # integrates to exactly 1 over the unit cube
 d = length(lb)
-{{?model=faure}} ns = nextprime(d) .^ (2:6)
+{{?model=faure}} b = first(p for p in max(d, 2):2d + 2 if all(p % k != 0 for k in 2:isqrt(p)))  # smallest prime >= d: the Faure base
+{{?model=faure}} ns = b .^ (2:6)
 {{?model!=faure}} ns = 2 .^ (4:13)
 err(x) = abs(mean(f(c) for c in eachcol(x)) - 1) + eps()
 qe = [err(QuasiMonteCarlo.sample(m, d, alg)) for m in ns]
@@ -382,7 +383,7 @@ label = "Is n a Good Sample Size?"
 desc = "Sobol and other base-2 nets are balanced only at powers of 2, Faure at powers of its prime base: the nearest good sizes for this dimension"
 code = '''
 d = length(lb)
-b = nextprime(d)
+{{?model=faure}} b = first(p for p in max(d, 2):2d + 2 if all(p % k != 0 for k in 2:isqrt(p)))  # smallest prime >= d: the Faure base
 {{?model=sobol}} (n = n, balanced = ispow2(n), nearest_good = (prevpow(2, n), nextpow(2, n)))
 {{?model=faure}} (n = n, base = b, balanced = n % prevpow(b, n) == 0, nearest_good = (prevpow(b, n), nextpow(b, n)))
 {{?model!=sobol|faure}} (n = n, balanced = true, note = "any n works for this method; powers of 2 still help when comparing with Sobol")
@@ -396,7 +397,8 @@ code = '''
 using QuasiMonteCarlo, Statistics
 f(x) = prod(2 .* x)  # integrates to exactly 1 over the unit cube
 d = length(lb)
-{{?model=faure}} ns = nextprime(d) .^ (2:6)
+{{?model=faure}} b = first(p for p in max(d, 2):2d + 2 if all(p % k != 0 for k in 2:isqrt(p)))  # smallest prime >= d: the Faure base
+{{?model=faure}} ns = b .^ (2:6)
 {{?model!=faure}} ns = 2 .^ (4:13)
 err(x) = abs(mean(f(c) for c in eachcol(x)) - 1) + eps()
 slope(e) = (X = [ones(length(ns)) log.(ns)]; (X \ log.(e))[2])

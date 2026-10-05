@@ -21,7 +21,7 @@ name = "Distributions.jl"
 github = "https://github.com/JuliaStats/Distributions.jl"
 
 [requires]
-packages = ["StatsBase.jl", "KernelDensity.jl", "Distributions.jl", "Extremes.jl"]
+packages = ["StatsBase.jl", "KernelDensity.jl", "Distributions.jl", "Extremes.jl", "Bootstrap.jl", "HypothesisTests.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""
@@ -68,6 +68,42 @@ name = "Decision Guide"
 file = "de/decision-guide.md"
 bundled = true
 
+[[references]]
+separator = true
+label = "Data Sources"
+
+[[references]]
+title = "A Look at Some Data on the Old Faithful Geyser"
+authors = "Azzalini, A.; Bowman, A. W."
+year = 1990
+journal = "Applied Statistics"
+doi = "10.2307/2347385"
+openAccess = false
+
+[[references]]
+title = "Risk Analysis of the Space Shuttle: Pre-Challenger Prediction of Failure"
+authors = "Dalal, Siddhartha R.; Fowlkes, Edward B.; Hoadley, Bruce"
+year = 1989
+journal = "Journal of the American Statistical Association"
+doi = "10.1080/01621459.1989.10478858"
+openAccess = false
+
+[[references]]
+title = "The Origins of Sex Differences in Science"
+authors = "Long, J. Scott"
+year = 1990
+journal = "Social Forces"
+doi = "10.2307/2579146"
+openAccess = false
+
+[[references]]
+title = "titanic3: Titanic Passenger Data"
+authors = "Harrell, Frank E.; Cason, Thomas"
+year = 2002
+journal = "Vanderbilt University Department of Biostatistics (from Encyclopedia Titanica)"
+url = "https://hbiostat.org/data/"
+openAccess = true
+
 [[models]]
 id = "histogram"
 label = "Histogram"
@@ -93,88 +129,8 @@ text = "Parametric"
 detail = "fit a parametric distribution to data (Distributions.jl)"
 
 [[inputs]]
-id = "hist-dim"
-label = "Dimensions"
-tooltip = ""
-kind = "select"
-default = "uni"
-models = ["histogram"]
-
-[[inputs.options]]
-value = "uni"
-label = "Univariate"
-
-[[inputs.options]]
-value = "multi"
-label = "Multivariate"
-
-[[inputs]]
-id = "data-hist"
-label = "Data"
-tooltip = ""
-default = "randn(100)"
-models = ["histogram"]
-when = "hist-dim=uni"
-
-[[inputs]]
-id = "data-hist2"
-label = "Data"
-tooltip = ""
-default = "(randn(100), randn(100))"
-models = ["histogram"]
-when = "hist-dim=multi"
-
-[[inputs]]
-id = "hist-mode"
-label = "Specification"
-tooltip = ""
-kind = "select"
-default = "nbins"
-models = ["histogram"]
-
-[[inputs.options]]
-value = "nbins"
-label = "Bins"
-
-[[inputs.options]]
-value = "edges"
-label = "Edges"
-
-[[inputs]]
-id = "nbins"
-label = "Bins (n)"
-tooltip = "Number of bins; a tuple such as (10, 10) for multivariate data."
-default = "10"
-models = ["histogram"]
-when = "hist-mode=nbins"
-
-[[inputs]]
-id = "edges"
-label = "Edges"
-tooltip = "Bin edges; a tuple of edge vectors such as ([0.0, 0.5, 1.0], [0.0, 0.5, 1.0]) for multivariate data."
-default = "[0.0, 0.5, 1.0, 1.5, 2.0]"
-models = ["histogram"]
-when = "hist-mode=edges"
-
-[[inputs]]
-id = "closed"
-label = "Bin Intervals"
-tooltip = ""
-kind = "select"
-default = ":right"
-models = ["histogram"]
-
-[[inputs.options]]
-value = ":right"
-label = "(a,b]"
-
-[[inputs.options]]
-value = ":left"
-label = "[a,b)"
-
-[[inputs]]
 id = "hist-norm"
-label = "Normalize"
+label = "Normalise"
 tooltip = ""
 kind = "select"
 default = "none"
@@ -197,36 +153,90 @@ value = "probability"
 label = "Probability"
 
 [[inputs]]
-id = "kde-dim"
-label = "Dimensions"
+id = "hist-mode"
+label = "Specification"
 tooltip = ""
 kind = "select"
+default = "nbins"
+models = ["histogram"]
+
+[[inputs.options]]
+value = "nbins"
+label = "Bins"
+
+[[inputs.options]]
+value = "edges"
+label = "Edges"
+
+[[inputs]]
+id = "nbins"
+label = "Bins (n)"
+tooltip = "Number of bins; a tuple such as (10, 10) sets each dimension apart for bidimensional data."
+default = "10"
+models = ["histogram"]
+when = "hist-mode=nbins"
+
+[[inputs]]
+id = "edges"
+label = "Edges"
+tooltip = "Bin edges, as a range or a vector such as [1.5, 2.5, 3.5, 4.5, 5.5]."
+default = "1.5:0.5:5.5"
+models = ["histogram"]
+when = "hist-mode=edges&hist-dim=uni"
+
+[[inputs]]
+id = "edges2"
+label = "Edges"
+tooltip = "Bin edges, used in both dimensions; a tuple such as (-3:1:3, -2:0.5:2) sets each dimension apart."
+default = "-3:0.5:3"
+models = ["histogram"]
+when = "hist-mode=edges&hist-dim=multi"
+
+[[inputs]]
+id = "closed"
+label = "Bin Intervals"
+tooltip = ""
+kind = "select"
+default = ":right"
+models = ["histogram"]
+
+[[inputs.options]]
+value = ":right"
+label = "(a,b]"
+
+[[inputs.options]]
+value = ":left"
+label = "[a,b)"
+
+[[inputs]]
+id = "hist-dim"
+label = "Dimensions"
+kind = "tabs"
+default = "uni"
+models = ["histogram"]
+
+[[inputs.options]]
+value = "uni"
+label = "Unidimensional"
+
+[[inputs.options]]
+value = "multi"
+label = "Bidimensional"
+
+[[inputs]]
+id = "kde-dim"
+label = "Dimensions"
+kind = "tabs"
 default = "uni"
 models = ["kde"]
 
 [[inputs.options]]
 value = "uni"
-label = "Univariate"
+label = "Unidimensional"
 
 [[inputs.options]]
 value = "bi"
-label = "Bivariate"
-
-[[inputs]]
-id = "data-kde"
-label = "Data"
-tooltip = ""
-default = "randn(100)"
-models = ["kde"]
-when = "kde-dim=uni"
-
-[[inputs]]
-id = "data-kde2"
-label = "Data"
-tooltip = ""
-default = "(randn(100), randn(100))"
-models = ["kde"]
-when = "kde-dim=bi"
+label = "Bidimensional"
 
 [[inputs]]
 id = "kernel"
@@ -266,18 +276,17 @@ models = ["kde"]
 [[inputs]]
 id = "param-dim"
 label = "Dimensions"
-tooltip = ""
-kind = "select"
+kind = "tabs"
 default = "uni"
 models = ["parametric"]
 
 [[inputs.options]]
 value = "uni"
-label = "Univariate"
+label = "Unidimensional"
 
 [[inputs.options]]
 value = "multi"
-label = "Multivariate"
+label = "Bidimensional"
 
 [[inputs]]
 id = "dist"
@@ -397,32 +406,21 @@ value = "MvNormal"
 label = "MvNormal"
 when = "param-dim=multi"
 
-[[inputs]]
-id = "data-param"
-label = "Data"
-tooltip = ""
-default = "randn(100)"
-models = ["parametric"]
-when = "param-dim=uni"
-
-[[inputs]]
-id = "data-param2"
-label = "Data"
-tooltip = ""
-default = "randn(2, 100)"
-models = ["parametric"]
-when = "param-dim=multi"
-
 [[codeBranches]]
 model = "histogram"
 code = '''
-{{?hist-norm=none}} using StatsBase, Random
-{{?hist-norm!=none}} using StatsBase, Random, LinearAlgebra
+{{?hist-dim=uni}} using StatsBase, PollisDatasets
+{{?hist-dim=multi}} using StatsBase
+{{?hist-norm!=none}} using LinearAlgebra
 
-{{?hist-dim=uni}} data = {{data-hist}}
-{{?hist-dim=multi}} data = {{data-hist2}}
+{{?hist-dim=uni}} # Example data: Old Faithful geyser eruption durations in minutes, with two clear peaks. Replace it with your own vector.
+{{?hist-dim=uni}} data = dataset("faithful").eruptions
+{{?hist-dim=multi}} data = (randn(100), randn(100))  # two standard normal samples; change the number of draws
 {{?hist-mode=nbins}} h = fit(Histogram, data; nbins={{nbins}}, closed={{closed}})
-{{?hist-mode=edges}} h = fit(Histogram, data, {{edges}}; closed={{closed}})
+{{?hist-dim=uni}}{{?hist-mode=edges}} edges = {{edges}}
+{{?hist-dim=multi}}{{?hist-mode=edges}} edges = {{edges2}}
+{{?hist-dim=multi}}{{?hist-mode=edges}} edges isa Tuple || (edges = ntuple(_ -> edges, length(data)))  # one edge vector: the same edges in every dimension
+{{?hist-mode=edges}} h = fit(Histogram, data, edges; closed={{closed}})
 {{?hist-dim=uni}} println("Bin edges: ", h.edges[1])
 {{?hist-dim=multi}} println("Bin edges: ", h.edges)
 {{?hist-norm!=none}} h = normalize(h, mode=:{{hist-norm}})
@@ -432,10 +430,12 @@ println("Counts:    ", h.weights)
 [[codeBranches]]
 model = "kde"
 code = '''
-using KernelDensity, Distributions, Random
+{{?kde-dim=uni}} using KernelDensity, Distributions, PollisDatasets
+{{?kde-dim=bi}} using KernelDensity, Distributions
 
-{{?kde-dim=uni}} data = {{data-kde}}
-{{?kde-dim=bi}} data = {{data-kde2}}
+{{?kde-dim=uni}} # Example data: Old Faithful geyser eruption durations in minutes, with two clear peaks. Replace it with your own vector.
+{{?kde-dim=uni}} data = dataset("faithful").eruptions
+{{?kde-dim=bi}} data = (randn(100), randn(100))  # two standard normal samples; change the number of draws
 bw = {{bandwidth}}
 k = kde(data; kernel={{kernel}}, bandwidth=bw)
 println("Bandwidth: ", bw)
@@ -446,15 +446,28 @@ println("x range:   ", (minimum(k.x), maximum(k.x)))
 [[codeBranches]]
 model = "parametric"
 code = '''
-using Distributions, Random
+{{?dist=Beta|DiscreteUniform|Dirichlet|Multinomial|MvNormal}} using Distributions
+{{?dist!=Beta|DiscreteUniform|Dirichlet|Multinomial|MvNormal}} using Distributions, PollisDatasets
 {{?dist=GeneralizedExtremeValue|GeneralizedPareto}} using Extremes  # adds fit for the GEV and GP distributions
 
-{{?param-dim=uni}} data = {{data-param}}
-{{?dist=GeneralizedPareto}} data = data[data .> 0]  # GP models exceedances over a threshold (here 0)
-{{?param-dim=multi}} data = {{data-param2}}
+{{?dist=Exponential|Gamma|GeneralizedExtremeValue|GeneralizedPareto|InverseGaussian|Laplace|LogNormal|Normal|Pareto|Rayleigh|Uniform|Weibull}} # Example data: Old Faithful geyser eruption durations in minutes. Replace it with your own vector.
+{{?dist=Exponential|Gamma|GeneralizedExtremeValue|GeneralizedPareto|InverseGaussian|Laplace|LogNormal|Normal|Pareto|Rayleigh|Uniform|Weibull}} data = dataset("faithful").eruptions
+{{?dist=GeneralizedPareto}} data = data[data .> 3] .- 3  # GP models exceedances over a threshold (here 3 minutes)
+{{?dist=Bernoulli}} # Example data: Harrell and Cason, whether each of the 1309 Titanic passengers survived (1) or not (0). Replace it with your own vector.
+{{?dist=Bernoulli}} data = dataset("titanic").survived
+{{?dist=Categorical}} # Example data: Harrell and Cason, the class (1, 2 or 3) of each of the 1309 Titanic passengers. Replace it with your own vector.
+{{?dist=Categorical}} data = dataset("titanic").pclass
+{{?dist=Binomial}} # Example data: Dalal et al. (1989), O-rings with thermal distress out of 6 on the 23 shuttle flights before Challenger. Replace it with your own vector.
+{{?dist=Binomial}} data = dataset("challenger").n_failures
+{{?dist=Poisson|Geometric}} # Example data: Long (1990), articles published by 915 biochemistry PhD students in their last three years. Replace it with your own vector.
+{{?dist=Poisson|Geometric}} data = dataset("biochemists").art
+{{?dist=Beta}} data = rand(Beta(2, 5), 100)  # simulated proportions: the fit should recover about (2, 5); change the parameters or the number of draws
+{{?dist=DiscreteUniform}} data = rand(1:6, 100)  # simulated die rolls: the fit should recover about (1, 6); change the number of draws
+{{?dist=MvNormal}} data = randn(2, 100)  # two standard normal samples, one draw per column; change the number of draws
+{{?dist=Dirichlet}} data = rand(Dirichlet([2.0, 5.0]), 100)  # simulated shares, one draw per column: the fit should recover about [2, 5]
+{{?dist=Multinomial}} data = rand(Multinomial(10, [0.3, 0.7]), 100)  # simulated counts out of 10, one draw per column: the fit should recover about p = [0.3, 0.7]
 {{?dist!=Binomial}} d = fit({{dist}}, data)
-{{?dist=Binomial}} n = maximum(data)  # number of trials; replace with the known value
-{{?dist=Binomial}} d = fit(Binomial, n, data)
+{{?dist=Binomial}} d = fit(Binomial, 6, data)  # 6 trials: the O-rings on each flight
 
 println("Parameters: ", params(d))
 println("Mean:       ", mean(d))
@@ -528,9 +541,30 @@ x = data isa Tuple ? data[1] : data isa AbstractMatrix ? data[1, :] : data  # th
 '''
 
 [[actionGroups.actions]]
+id = "bootstrap-params"
+label = "Bootstrap Parameter Intervals"
+desc = "Nonparametric and parametric bootstrap (Bootstrap.jl) of the fitted parameters: standard errors and 95% percentile intervals; the Bootstrap Resampling panel in the Simulate menu compares interval methods, resampling schemes and their coverage"
+code = '''
+using Bootstrap, Distributions, Random
+{{?model!=parametric}} error("This action covers the parameters of a fitted distribution")
+{{?param-dim=multi}} error("This action covers univariate fits")
+{{?dist=Binomial}} error("Binomial fits need the known number of trials: not covered here")
+Random.seed!(1)  # Bootstrap.jl draws with the global RNG
+D = typeof(d).name.wrapper  # the fitted family
+pars(v) = Tuple(Float64.(params(fit(D, v))))  # refit and return every parameter
+for (nm, bs) in [("Nonparametric", bootstrap(pars, data, BasicSampling(1000))), ("Parametric", bootstrap(pars, data, Model(D), BasicSampling(1000)))]
+    println(nm, nm == "Parametric" ? " bootstrap (draws from the fitted distribution):" : " bootstrap (resamples the data):")
+    for i in 1:nvar(bs)
+        _, lo, hi = confint(bs, PercentileConfInt(0.95), i)
+        println("  parameter $i: estimate = ", round(original(bs, i), digits=4), ", SE = ", round(stderror(bs, i), digits=4), ", 95% interval = [", round(lo, digits=4), ", ", round(hi, digits=4), "]")
+    end
+end
+'''
+
+[[actionGroups.actions]]
 id = "fit-check"
 label = "Goodness of Fit and Tuning Rules"
-desc = "Sturges, Scott and Freedman-Diaconis bin counts, the Silverman against the least-squares cross-validated bandwidth, or a Kolmogorov-Smirnov test of the fitted distribution"
+desc = "Sturges, Scott and Freedman-Diaconis bin counts, the Silverman against the least-squares cross-validated bandwidth, or a Kolmogorov-Smirnov test of the fitted distribution (its parameters come from the same data, so the p-value is too large: a Lilliefors-type correction or a parametric bootstrap is needed for an exact test)"
 code = '''
 using StatsBase
 x = data isa Tuple ? data[1] : data isa AbstractMatrix ? data[1, :] : data  # the first margin

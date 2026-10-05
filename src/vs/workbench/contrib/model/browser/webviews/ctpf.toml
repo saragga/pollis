@@ -9,15 +9,11 @@ viewType = "pollis.ctpf"
 defaultModel = "main"
 
 [[packages]]
-name = "TopicModels.jl"
-github = "https://github.com/slycoder/TopicModels.jl"
-
-[[packages]]
-name = "TextAnalysis.jl"
-github = "https://github.com/JuliaText/TextAnalysis.jl"
+name = "TopicModelsVB.jl"
+github = "https://github.com/ericproffitt/TopicModelsVB.jl"
 
 [requires]
-packages = ["TopicModels.jl", "TextAnalysis.jl"]
+packages = ["TopicModelsVB.jl"]
 
 [[notebookSections]]
 label = ""
@@ -26,7 +22,7 @@ label = ""
 name = "CTPF"
 file = "ctpf/tutorial-01-ctpf.ipynb"
 bundled = true
-description = "Collaborative Topic Poisson Factorisation: joint document modelling and recommendation using TopicModels.jl"
+description = "Collaborative Topic Poisson Factorisation: joint document modelling and recommendation using TopicModelsVB.jl"
 
 [[wikis]]
 name = "Factsheet"
@@ -90,19 +86,11 @@ doi = "10.1137/141000671"
 openAccess = false
 
 [[references]]
-title = "TopicModels.jl"
-authors = "Zeng, Jonathan"
-year = 2015
+title = "TopicModelsVB.jl: Variational Bayesian Topic Modeling in Julia"
+authors = "Proffitt, Eric"
+year = 2016
 journal = "GitHub"
-url = "https://github.com/slycoder/TopicModels.jl"
-openAccess = true
-
-[[references]]
-title = "TextAnalysis.jl: Julia NLP Toolkit"
-authors = "JuliaText Contributors"
-year = 2023
-journal = "GitHub"
-url = "https://github.com/JuliaText/TextAnalysis.jl"
+url = "https://github.com/ericproffitt/TopicModelsVB.jl"
 openAccess = true
 
 [[references]]
@@ -154,8 +142,8 @@ text = "k topics"
 detail = "number of latent topics shared between the document model and the recommendation model"
 
 [[bullets]]
-text = "TopicModels.jl"
-detail = "Julia implementation of CTPF, LDA, CTM and related probabilistic topic models"
+text = "TopicModelsVB.jl"
+detail = "variational Bayes implementation of CTPF, LDA, fLDA, CTM and Focused CTM"
 
 [[inputs]]
 id = "corpus"
@@ -184,17 +172,24 @@ default = "1000"
 [[codeBranches]]
 model = "main"
 code = '''
-using TopicModels, TextAnalysis  # 
+using TopicModelsVB
 
-crps   = Corpus([StringDocument(d) for d in {{corpus}}])  # build corpus from document array
-prepare!(crps, strip_punctuation | strip_case)  # normalise text
-update_lexicon!(crps)  # build vocabulary
-dtm    = DocumentTermMatrix(crps)  # document-term matrix
+R     = {{ratings}}  # users x documents, positive integer ratings, 0 = unrated
+docs  = {{corpus}}
+words = [split(lowercase(replace(d, r"[^A-Za-z ]" => " "))) for d in docs]
+vocab = sort(unique(reduce(vcat, words)))
+key   = Dict(w => i for (i, w) in enumerate(vocab))
+function mkdoc(ws, r)  # bag of words plus the readers (users) of the document and their ratings
+    t = [key[w] for w in ws]; u = unique(t)
+    Document(terms=u, counts=[count(==(i), t) for i in u], readers=findall(!iszero, r), ratings=Int.(r[findall(!iszero, r)]))
+end
+corp = Corpus([mkdoc(words[d], R[:, d]) for d in eachindex(docs)], vocab=vocab, users=string.(1:size(R, 1)))
+# no fixcorp!: it can re-key users and drop documents, breaking the alignment with R
 
-model  = CTPF(dtm.dtm, {{ratings}}, {{k}})  # joint topic + Poisson model
-train!(model, iter={{iters}})  # variational EM training
+model = CTPF(corp, {{k}})  # topics shared by the text (Poisson words) and the ratings (Poisson preferences)
+train!(model, iter={{iters}})  # coordinate-ascent variational inference
 
-topicdist(model)  # topic-word distributions (k x V)
+showtopics(model, 10)  # top 10 words per topic
 '''
 
 [[actionGroups]]
@@ -204,18 +199,25 @@ label = "Visualise"
 [[actionGroups.actions]]
 id = "topic-words"
 label = "Top Words per Topic"
-desc = "Highest-probability words for each latent topic"
+desc = "Highest-weight words for each latent topic"
 code = '''
-using TopicModels, TextAnalysis
+using TopicModelsVB
 
-crps  = Corpus([StringDocument(d) for d in {{corpus}}])
-prepare!(crps, strip_punctuation | strip_case)
-update_lexicon!(crps)
-dtm   = DocumentTermMatrix(crps)
-model = CTPF(dtm.dtm, {{ratings}}, {{k}})
-train!(model)  # train with default iterations
+R     = {{ratings}}  # users x documents, positive integer ratings, 0 = unrated
+docs  = {{corpus}}
+words = [split(lowercase(replace(d, r"[^A-Za-z ]" => " "))) for d in docs]
+vocab = sort(unique(reduce(vcat, words)))
+key   = Dict(w => i for (i, w) in enumerate(vocab))
+function mkdoc(ws, r)  # bag of words plus the readers (users) of the document and their ratings
+    t = [key[w] for w in ws]; u = unique(t)
+    Document(terms=u, counts=[count(==(i), t) for i in u], readers=findall(!iszero, r), ratings=Int.(r[findall(!iszero, r)]))
+end
+corp = Corpus([mkdoc(words[d], R[:, d]) for d in eachindex(docs)], vocab=vocab, users=string.(1:size(R, 1)))
+# no fixcorp!: it can re-key users and drop documents, breaking the alignment with R
+model = CTPF(corp, {{k}})
+train!(model, iter={{iters}}, printelbo=false)
 
-showtopics(model, n=10)  # top 10 words per topic
+showtopics(model, 10)  # top 10 words per topic
 '''
 
 [[actionGroups.actions]]
@@ -223,16 +225,27 @@ id = "user-topic-dist"
 label = "User-Topic Distribution"
 desc = "Latent topic preferences inferred per user"
 code = '''
-using TopicModels, TextAnalysis
+using TopicModelsVB
 
-crps  = Corpus([StringDocument(d) for d in {{corpus}}])
-prepare!(crps, strip_punctuation | strip_case)
-update_lexicon!(crps)
-dtm   = DocumentTermMatrix(crps)
-model = CTPF(dtm.dtm, {{ratings}}, {{k}})
-train!(model)
+R     = {{ratings}}  # users x documents, positive integer ratings, 0 = unrated
+docs  = {{corpus}}
+words = [split(lowercase(replace(d, r"[^A-Za-z ]" => " "))) for d in docs]
+vocab = sort(unique(reduce(vcat, words)))
+key   = Dict(w => i for (i, w) in enumerate(vocab))
+function mkdoc(ws, r)  # bag of words plus the readers (users) of the document and their ratings
+    t = [key[w] for w in ws]; u = unique(t)
+    Document(terms=u, counts=[count(==(i), t) for i in u], readers=findall(!iszero, r), ratings=Int.(r[findall(!iszero, r)]))
+end
+corp = Corpus([mkdoc(words[d], R[:, d]) for d in eachindex(docs)], vocab=vocab, users=string.(1:size(R, 1)))
+# no fixcorp!: it can re-key users and drop documents, breaking the alignment with R
+model = CTPF(corp, {{k}})
+train!(model, iter={{iters}}, printelbo=false)
 
-model.theta  # user-topic matrix (users x k)
+eta  = model.he ./ model.vav  # E[eta]: user preferences, k x users (Gopalan et al. 2014)
+pref = eta ./ sum(eta, dims=1)  # each user as a mix of topics
+for u in 1:size(pref, 2)
+    println("user ", u, ": top topics ", sortperm(pref[:, u], rev=true)[1:min(3, end)])
+end
 '''
 
 [[actionGroups]]
@@ -242,35 +255,83 @@ label = "Diagnose"
 [[actionGroups.actions]]
 id = "perplexity"
 label = "Perplexity"
-desc = "Perplexity on the training documents (in-sample: nothing is held out, so it favours larger models)"
+desc = "Held-out perplexity of the text: fit on half of each document, score the other half"
 code = '''
-using TopicModels, TextAnalysis
+using TopicModelsVB
 
-crps  = Corpus([StringDocument(d) for d in {{corpus}}])
-prepare!(crps, strip_punctuation | strip_case)
-update_lexicon!(crps)
-dtm   = DocumentTermMatrix(crps)
-model = CTPF(dtm.dtm, {{ratings}}, {{k}})
-train!(model)
+R     = {{ratings}}  # users x documents, positive integer ratings, 0 = unrated
+docs  = {{corpus}}
+words = [split(lowercase(replace(d, r"[^A-Za-z ]" => " "))) for d in docs]
+vocab = sort(unique(reduce(vcat, words)))
+key   = Dict(w => i for (i, w) in enumerate(vocab))
+function mkdoc(ws, r)  # bag of words plus the readers (users) of the document and their ratings
+    t = [key[w] for w in ws]; u = unique(t)
+    Document(terms=u, counts=[count(==(i), t) for i in u], readers=findall(!iszero, r), ratings=Int.(r[findall(!iszero, r)]))
+end
+corp = Corpus([mkdoc(words[d], R[:, d]) for d in eachindex(docs)], vocab=vocab, users=string.(1:size(R, 1)))
+# no fixcorp!: it can re-key users and drop documents, breaking the alignment with R
 
-perplexity(model)  # in-sample perplexity (lower is better); refit without some documents to measure held-out perplexity
+# document completion: fit on the odd-position words, score the even-position words
+corp = Corpus([mkdoc(words[d][1:2:end], R[:, d]) for d in eachindex(docs)], vocab=vocab, users=string.(1:size(R, 1)))
+held = [[key[w] for w in ws[2:2:end]] for ws in words]
+seen = Set(t for doc in corp.docs for t in doc.terms)  # words never fitted have no topic weight, so are not scored
+
+function heldout_perplexity(pword)  # pword(d) = word distribution of document d
+    ll, n = 0.0, 0
+    for d in eachindex(held)
+        t = filter(in(seen), held[d]); isempty(t) && continue
+        ll += sum(log.(pword(d)[t])); n += length(t)
+    end
+    exp(-ll / n)  # lower is better
+end
+ctpf_pword(m) = d -> (q = transpose(m.alef ./ m.bet) * (m.gimel[d] ./ m.dalet); q ./ sum(q))  # E[beta] times E[theta_d], normalised
+
+model = CTPF(corp, {{k}})
+train!(model, iter={{iters}}, printelbo=false)
+heldout_perplexity(ctpf_pword(model))  # held-out word perplexity
 '''
 
 [[actionGroups.actions]]
 id = "recommendation-recall"
 label = "Recommendation Recall"
-desc = "Top-10 recommendations for one user. Recall at k needs user-item pairs held out before training, which this action does not do"
+desc = "Hold out one reader per document, train, and report the mean percentile rank of the held-out user among the users recommended for that document"
 code = '''
-using TopicModels, TextAnalysis
+using TopicModelsVB, Random, Statistics
 
-crps  = Corpus([StringDocument(d) for d in {{corpus}}])
-prepare!(crps, strip_punctuation | strip_case)
-update_lexicon!(crps)
-dtm   = DocumentTermMatrix(crps)
-model = CTPF(dtm.dtm, {{ratings}}, {{k}})
-train!(model)
+R     = {{ratings}}  # users x documents, positive integer ratings, 0 = unrated
+docs  = {{corpus}}
+words = [split(lowercase(replace(d, r"[^A-Za-z ]" => " "))) for d in docs]
+vocab = sort(unique(reduce(vcat, words)))
+key   = Dict(w => i for (i, w) in enumerate(vocab))
+function mkdoc(ws, r)  # bag of words plus the readers (users) of the document and their ratings
+    t = [key[w] for w in ws]; u = unique(t)
+    Document(terms=u, counts=[count(==(i), t) for i in u], readers=findall(!iszero, r), ratings=Int.(r[findall(!iszero, r)]))
+end
+corp = Corpus([mkdoc(words[d], R[:, d]) for d in eachindex(docs)], vocab=vocab, users=string.(1:size(R, 1)))
+# no fixcorp!: it can re-key users and drop documents, breaking the alignment with R
 
-recommend(model, user_id, n={{k}})  # top-N item indices for given user
+# hold out one reader of each document with at least one (README method), then rank that user among the recommendations
+Random.seed!(1)
+test = Dict{Int, Int}()
+for (d, doc) in enumerate(corp.docs)
+    isempty(doc.readers) && continue
+    i = rand(1:length(doc.readers))
+    test[d] = doc.readers[i]
+    deleteat!(doc.readers, i); deleteat!(doc.ratings, i)
+end
+
+function percentile_rank(model)  # 1 = held-out user ranked first for its document, 0.5 = random
+    ranks = Float64[]
+    for (d, u) in test
+        nr = model.drecs[d]; length(nr) < 2 && continue
+        push!(ranks, (length(nr) - findfirst(==(u), nr)) / (length(nr) - 1))
+    end
+    mean(ranks)
+end
+
+model = CTPF(corp, {{k}})
+train!(model, iter={{iters}}, printelbo=false)
+percentile_rank(model)  # mean percentile rank of the held-out users
 '''
 
 [[actionGroups]]
@@ -282,33 +343,56 @@ id = "recommend"
 label = "Recommend Items"
 desc = "Top-N document recommendations for a given user"
 code = '''
-using TopicModels, TextAnalysis
+using TopicModelsVB
 
-crps  = Corpus([StringDocument(d) for d in {{corpus}}])
-prepare!(crps, strip_punctuation | strip_case)
-update_lexicon!(crps)
-dtm   = DocumentTermMatrix(crps)
-model = CTPF(dtm.dtm, {{ratings}}, {{k}})
-train!(model)
+R     = {{ratings}}  # users x documents, positive integer ratings, 0 = unrated
+docs  = {{corpus}}
+words = [split(lowercase(replace(d, r"[^A-Za-z ]" => " "))) for d in docs]
+vocab = sort(unique(reduce(vcat, words)))
+key   = Dict(w => i for (i, w) in enumerate(vocab))
+function mkdoc(ws, r)  # bag of words plus the readers (users) of the document and their ratings
+    t = [key[w] for w in ws]; u = unique(t)
+    Document(terms=u, counts=[count(==(i), t) for i in u], readers=findall(!iszero, r), ratings=Int.(r[findall(!iszero, r)]))
+end
+corp = Corpus([mkdoc(words[d], R[:, d]) for d in eachindex(docs)], vocab=vocab, users=string.(1:size(R, 1)))
+# no fixcorp!: it can re-key users and drop documents, breaking the alignment with R
+model = CTPF(corp, {{k}})
+train!(model, iter={{iters}}, printelbo=false)
 
-recommend(model, user_id, n=10)  # top-10 document indices for user
+user_id = 1
+model.urecs[user_id][1:min(10, end)]  # top-10 unread documents for the user, best first
+showurecs(model, user_id, 10)  # the same list with document titles
 '''
 
 [[actionGroups.actions]]
 id = "infer-topics"
 label = "Infer Topics"
-desc = "Topic distribution for a new document"
+desc = "Topic mix of a new, unrated document and the users to recommend it to (cold start)"
 code = '''
-using TopicModels, TextAnalysis
+using TopicModelsVB
 
-crps  = Corpus([StringDocument(d) for d in {{corpus}}])
-prepare!(crps, strip_punctuation | strip_case)
-update_lexicon!(crps)
-dtm   = DocumentTermMatrix(crps)
-model = CTPF(dtm.dtm, {{ratings}}, {{k}})
-train!(model)
+R     = {{ratings}}  # users x documents, positive integer ratings, 0 = unrated
+docs  = {{corpus}}
+words = [split(lowercase(replace(d, r"[^A-Za-z ]" => " "))) for d in docs]
+vocab = sort(unique(reduce(vcat, words)))
+key   = Dict(w => i for (i, w) in enumerate(vocab))
+function mkdoc(ws, r)  # bag of words plus the readers (users) of the document and their ratings
+    t = [key[w] for w in ws]; u = unique(t)
+    Document(terms=u, counts=[count(==(i), t) for i in u], readers=findall(!iszero, r), ratings=Int.(r[findall(!iszero, r)]))
+end
+corp = Corpus([mkdoc(words[d], R[:, d]) for d in eachindex(docs)], vocab=vocab, users=string.(1:size(R, 1)))
+# no fixcorp!: it can re-key users and drop documents, breaking the alignment with R
 
-topicdist(model, new_doc_bow)  # topic distribution for a new document
+# CTPF has no predict: add the new document without readers and refit
+new_doc = "text of a new unrated document"
+new_ws  = filter(w -> haskey(key, w), split(lowercase(replace(new_doc, r"[^A-Za-z ]" => " "))))  # words outside the vocabulary are dropped
+push!(corp.docs, mkdoc(new_ws, zeros(Int, size(R, 1))))
+model = CTPF(corp, {{k}})
+train!(model, iter={{iters}}, printelbo=false)
+
+d = length(corp.docs)
+topicdist(model, d)  # topic mix of the new document
+model.drecs[d][1:min(10, end)]  # users to recommend it to, best first
 '''
 
 [[actionGroups]]
@@ -318,41 +402,104 @@ label = "Compare"
 [[actionGroups.actions]]
 id = "compare-k"
 label = "Compare k Topics"
-desc = "Perplexity and recall across different topic counts"
+desc = "Held-out recommendation rank and held-out word perplexity across topic counts"
 code = '''
-using TopicModels, TextAnalysis
+using TopicModelsVB, Random, Statistics
 
-crps  = Corpus([StringDocument(d) for d in {{corpus}}])
-prepare!(crps, strip_punctuation | strip_case)
-update_lexicon!(crps)
-dtm   = DocumentTermMatrix(crps)
+R     = {{ratings}}  # users x documents, positive integer ratings, 0 = unrated
+docs  = {{corpus}}
+words = [split(lowercase(replace(d, r"[^A-Za-z ]" => " "))) for d in docs]
+vocab = sort(unique(reduce(vcat, words)))
+key   = Dict(w => i for (i, w) in enumerate(vocab))
+function mkdoc(ws, r)  # bag of words plus the readers (users) of the document and their ratings
+    t = [key[w] for w in ws]; u = unique(t)
+    Document(terms=u, counts=[count(==(i), t) for i in u], readers=findall(!iszero, r), ratings=Int.(r[findall(!iszero, r)]))
+end
+corp = Corpus([mkdoc(words[d], R[:, d]) for d in eachindex(docs)], vocab=vocab, users=string.(1:size(R, 1)))
+# no fixcorp!: it can re-key users and drop documents, breaking the alignment with R
+
+# document completion: fit on the odd-position words, score the even-position words
+corp = Corpus([mkdoc(words[d][1:2:end], R[:, d]) for d in eachindex(docs)], vocab=vocab, users=string.(1:size(R, 1)))
+held = [[key[w] for w in ws[2:2:end]] for ws in words]
+seen = Set(t for doc in corp.docs for t in doc.terms)  # words never fitted have no topic weight, so are not scored
+
+function heldout_perplexity(pword)  # pword(d) = word distribution of document d
+    ll, n = 0.0, 0
+    for d in eachindex(held)
+        t = filter(in(seen), held[d]); isempty(t) && continue
+        ll += sum(log.(pword(d)[t])); n += length(t)
+    end
+    exp(-ll / n)  # lower is better
+end
+ctpf_pword(m) = d -> (q = transpose(m.alef ./ m.bet) * (m.gimel[d] ./ m.dalet); q ./ sum(q))  # E[beta] times E[theta_d], normalised
+
+# hold out one reader of each document with at least one (README method), then rank that user among the recommendations
+Random.seed!(1)
+test = Dict{Int, Int}()
+for (d, doc) in enumerate(corp.docs)
+    isempty(doc.readers) && continue
+    i = rand(1:length(doc.readers))
+    test[d] = doc.readers[i]
+    deleteat!(doc.readers, i); deleteat!(doc.ratings, i)
+end
+
+function percentile_rank(model)  # 1 = held-out user ranked first for its document, 0.5 = random
+    ranks = Float64[]
+    for (d, u) in test
+        nr = model.drecs[d]; length(nr) < 2 && continue
+        push!(ranks, (length(nr) - findfirst(==(u), nr)) / (length(nr) - 1))
+    end
+    mean(ranks)
+end
 
 for k in [5, 10, 20, 50]  # sweep over topic counts
-    model = CTPF(dtm.dtm, {{ratings}}, k)
-    train!(model)
-    println("k=", k, " perplexity=", perplexity(model))  # log perplexity per k
+    model = CTPF(corp, k)
+    train!(model, iter={{iters}}, printelbo=false)
+    println("k=", k, " rank=", round(percentile_rank(model), digits=3), " perplexity=", round(heldout_perplexity(ctpf_pword(model)), digits=1))
 end
 '''
 
 [[actionGroups.actions]]
 id = "ctpf-vs-lda"
 label = "CTPF vs LDA"
-desc = "Topic quality with and without user-rating signal"
+desc = "Topic quality with and without the rating signal, on the same held-out words (in-sample likelihoods are not comparable: CTPF also models the ratings)"
 code = '''
-using TopicModels, TextAnalysis
+using TopicModelsVB
 
-crps  = Corpus([StringDocument(d) for d in {{corpus}}])
-prepare!(crps, strip_punctuation | strip_case)
-update_lexicon!(crps)
-dtm   = DocumentTermMatrix(crps)
+R     = {{ratings}}  # users x documents, positive integer ratings, 0 = unrated
+docs  = {{corpus}}
+words = [split(lowercase(replace(d, r"[^A-Za-z ]" => " "))) for d in docs]
+vocab = sort(unique(reduce(vcat, words)))
+key   = Dict(w => i for (i, w) in enumerate(vocab))
+function mkdoc(ws, r)  # bag of words plus the readers (users) of the document and their ratings
+    t = [key[w] for w in ws]; u = unique(t)
+    Document(terms=u, counts=[count(==(i), t) for i in u], readers=findall(!iszero, r), ratings=Int.(r[findall(!iszero, r)]))
+end
+corp = Corpus([mkdoc(words[d], R[:, d]) for d in eachindex(docs)], vocab=vocab, users=string.(1:size(R, 1)))
+# no fixcorp!: it can re-key users and drop documents, breaking the alignment with R
 
-lda  = LDA(dtm.dtm, {{k}})  # text-only topic model
-ctpf = CTPF(dtm.dtm, {{ratings}}, {{k}})  # joint model with ratings
-train!(lda)
-train!(ctpf)
+# document completion: fit on the odd-position words, score the even-position words
+corp = Corpus([mkdoc(words[d][1:2:end], R[:, d]) for d in eachindex(docs)], vocab=vocab, users=string.(1:size(R, 1)))
+held = [[key[w] for w in ws[2:2:end]] for ws in words]
+seen = Set(t for doc in corp.docs for t in doc.terms)  # words never fitted have no topic weight, so are not scored
 
-println("LDA perplexity:  ", perplexity(lda))  # text-only baseline
-println("CTPF perplexity: ", perplexity(ctpf))  # joint model
+function heldout_perplexity(pword)  # pword(d) = word distribution of document d
+    ll, n = 0.0, 0
+    for d in eachindex(held)
+        t = filter(in(seen), held[d]); isempty(t) && continue
+        ll += sum(log.(pword(d)[t])); n += length(t)
+    end
+    exp(-ll / n)  # lower is better
+end
+ctpf_pword(m) = d -> (q = transpose(m.alef ./ m.bet) * (m.gimel[d] ./ m.dalet); q ./ sum(q))  # E[beta] times E[theta_d], normalised
+
+lda  = LDA(corp, {{k}})  # text only: ignores the readers
+ctpf = CTPF(corp, {{k}})  # text plus ratings
+train!(lda, iter={{iters}}, printelbo=false)
+train!(ctpf, iter={{iters}}, printelbo=false)
+
+println("LDA held-out perplexity:  ", heldout_perplexity(d -> transpose(lda.beta) * topicdist(lda, d)))
+println("CTPF held-out perplexity: ", heldout_perplexity(ctpf_pword(ctpf)))
 '''
 
 [[actionGroups]]
@@ -364,31 +511,49 @@ id = "topic-labels"
 label = "Topic Labels"
 desc = "Top-5 words as a label for each topic"
 code = '''
-using TopicModels, TextAnalysis
+using TopicModelsVB
 
-crps  = Corpus([StringDocument(d) for d in {{corpus}}])
-prepare!(crps, strip_punctuation | strip_case)
-update_lexicon!(crps)
-dtm   = DocumentTermMatrix(crps)
-model = CTPF(dtm.dtm, {{ratings}}, {{k}})
-train!(model)
+R     = {{ratings}}  # users x documents, positive integer ratings, 0 = unrated
+docs  = {{corpus}}
+words = [split(lowercase(replace(d, r"[^A-Za-z ]" => " "))) for d in docs]
+vocab = sort(unique(reduce(vcat, words)))
+key   = Dict(w => i for (i, w) in enumerate(vocab))
+function mkdoc(ws, r)  # bag of words plus the readers (users) of the document and their ratings
+    t = [key[w] for w in ws]; u = unique(t)
+    Document(terms=u, counts=[count(==(i), t) for i in u], readers=findall(!iszero, r), ratings=Int.(r[findall(!iszero, r)]))
+end
+corp = Corpus([mkdoc(words[d], R[:, d]) for d in eachindex(docs)], vocab=vocab, users=string.(1:size(R, 1)))
+# no fixcorp!: it can re-key users and drop documents, breaking the alignment with R
+model = CTPF(corp, {{k}})
+train!(model, iter={{iters}}, printelbo=false)
 
-showtopics(model, n=5)  # top-5 words per topic as label
+showtopics(model, 5)  # top-5 words per topic as label
 '''
 
 [[actionGroups.actions]]
 id = "item-topics"
 label = "Item-Topic Mix"
-desc = "Latent topic composition of each document"
+desc = "Latent topic composition of each document, and how far the readers shift it"
 code = '''
-using TopicModels, TextAnalysis
+using TopicModelsVB
 
-crps  = Corpus([StringDocument(d) for d in {{corpus}}])
-prepare!(crps, strip_punctuation | strip_case)
-update_lexicon!(crps)
-dtm   = DocumentTermMatrix(crps)
-model = CTPF(dtm.dtm, {{ratings}}, {{k}})
-train!(model)
+R     = {{ratings}}  # users x documents, positive integer ratings, 0 = unrated
+docs  = {{corpus}}
+words = [split(lowercase(replace(d, r"[^A-Za-z ]" => " "))) for d in docs]
+vocab = sort(unique(reduce(vcat, words)))
+key   = Dict(w => i for (i, w) in enumerate(vocab))
+function mkdoc(ws, r)  # bag of words plus the readers (users) of the document and their ratings
+    t = [key[w] for w in ws]; u = unique(t)
+    Document(terms=u, counts=[count(==(i), t) for i in u], readers=findall(!iszero, r), ratings=Int.(r[findall(!iszero, r)]))
+end
+corp = Corpus([mkdoc(words[d], R[:, d]) for d in eachindex(docs)], vocab=vocab, users=string.(1:size(R, 1)))
+# no fixcorp!: it can re-key users and drop documents, breaking the alignment with R
+model = CTPF(corp, {{k}})
+train!(model, iter={{iters}}, printelbo=false)
 
-model.phi  # item-topic matrix (items x k)
+for d in 1:length(corp.docs)
+    theta = model.gimel[d] ./ model.dalet  # E[theta_d]: topic intensities from the text
+    eps   = model.zayin[d] ./ model.het  # E[epsilon_d]: offsets learned from the readers
+    println("doc ", d, ": topic mix ", round.(theta ./ sum(theta), digits=2), "  reader offset ", round(sum(eps) / sum(theta), digits=2))
+end
 '''

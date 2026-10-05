@@ -13,7 +13,7 @@ name = "Extremes.jl"
 github = "https://github.com/jojal5/Extremes.jl"
 
 [requires]
-packages = ["Extremes.jl"]
+packages = ["Extremes.jl", "Distributions.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""
@@ -113,34 +113,34 @@ detail = ""
 [[inputs]]
 id = "evtd-data"
 label = "Data series"
-tooltip = ""
+tooltip = "Vector of losses as positive numbers (larger = worse), defined before running, e.g. losses = -returns. For the GEV fit it must hold block maxima, such as monthly maximum losses."
 default = "losses"
 
 [[inputs]]
 id = "evtd-n-thresholds"
 label = "Grid points"
-tooltip = ""
+tooltip = "Number of thresholds at which the mean excess is computed."
 default = "100"
 models = ["me"]
 
 [[inputs]]
 id = "evtd-max-pct"
 label = "Upper pct"
-tooltip = ""
+tooltip = "Highest threshold as a quantile of the data (0.95 = 95th percentile); above it too few exceedances remain."
 default = "0.95"
 models = ["me"]
 
 [[inputs]]
 id = "evtd-min-obs"
 label = "Min obs"
-tooltip = ""
+tooltip = "Thresholds with fewer exceedances than this are skipped, since their mean excess is too noisy."
 default = "10"
 models = ["me"]
 
 [[inputs]]
 id = "evtd-dist-select"
 label = "Distribution"
-tooltip = ""
+tooltip = "GEV: for block maxima. GP: for the excesses over the threshold below."
 kind = "select"
 default = "gev"
 models = ["qq"]
@@ -156,7 +156,7 @@ label = "GP"
 [[inputs]]
 id = "evtd-qq-method"
 label = "Estimation method"
-tooltip = ""
+tooltip = "Maximum likelihood, probability-weighted moments (robust in small samples), or Bayesian MCMC (point estimates are posterior means)."
 kind = "select"
 default = "mle"
 models = ["qq"]
@@ -205,51 +205,47 @@ println("Mean excess at Q90: ", round(mean({{evtd-data}}[{{evtd-data}} .> u90] .
 model = "hill"
 code = '''
 using Statistics, Plots
-
-xs      = sort({{evtd-data}}; rev = true)  # descending order statistics
-n       = length(xs)  # sample size
+xs      = sort(filter(>(0), {{evtd-data}}); rev = true)  # Hill takes logs of ratios: losses must be positive (the negative ones, gains, are dropped)
+n       = length(xs)  # number of positive losses
 k_vals  = 2:min(n-1, 200)  # order statistic indices (up to 200)
-hill_k  = [mean(log.(xs[1:k] ./ xs[k+1])) for k in k_vals]  # Hill estimator for each k
-
+hill_k  = [mean(log.(xs[1:k] ./ xs[k+1])) for k in k_vals]  # Hill estimate of xi = 1 / alpha (alpha = tail index) from the k largest losses
 plot(k_vals, hill_k;
-    xlabel = "k (order statistic)", ylabel = "Hill Estimate",
-    title  = "Hill Plot", legend = false)
-
-println("Hill(k=10):  ", round(mean(log.(xs[1:10]  ./ xs[11])),  digits = 4))
-println("Hill(k=50):  ", round(mean(log.(xs[1:50]  ./ xs[51])),  digits = 4))
-println("Hill(k=100): ", round(mean(log.(xs[1:100] ./ xs[101])), digits = 4))
+    xlabel = "k (order statistic)", ylabel = "Hill estimate of xi",
+    title  = "Hill Plot", legend = false)  # look for a flat stretch: too small k is noisy, too large k is biased
+for k in filter(<(n), [10, 50, 100])
+    h = mean(log.(xs[1:k] ./ xs[k+1]))
+    println("Hill(k=", k, "): xi = ", round(h, digits = 4), ", tail index alpha = 1/xi = ", round(1 / h, digits = 2))
+end
 '''
 
 [[codeBranches]]
 model = "qq"
 code = '''
 using Extremes, Distributions, Statistics, Plots
-
-{{?evtd-dist-select=gev}} fm                        = gevfit({{evtd-data}}; method = :{{evtd-qq-method}})  # fit Generalized Extreme Value: the data must be block maxima (e.g. monthly maximum losses), since the GEV describes maxima, not every loss
-{{?evtd-dist-select=gev}} mu_hat, sigma_hat, xi_hat = params(fm)  # extract parameters
-{{?evtd-dist-select=gev}} d_gev                     = GeneralizedExtremeValue(mu_hat, sigma_hat, xi_hat)  # GEV distribution
-{{?evtd-dist-select=gev}} n                         = length({{evtd-data}})  # sample size
-{{?evtd-dist-select=gev}} p_vals                    = [(i - 0.5)/n for i in 1:n]  # plotting positions
-{{?evtd-dist-select=gev}} empirical                 = sort({{evtd-data}})  # sorted data
-{{?evtd-dist-select=gev}} theoretical               = quantile.(Ref(d_gev), p_vals)  # theoretical quantiles
-{{?evtd-dist-select=gp}} exceedances               = {{evtd-data}}[{{evtd-data}} .> {{evtd-threshold-qq}}] .- {{evtd-threshold-qq}}  # excesses above threshold
-{{?evtd-dist-select=gp}} fm_gp                     = gpfit(exceedances; method = :{{evtd-qq-method}})  # fit Generalized Pareto
-{{?evtd-dist-select=gp}} sigma_hat, xi_hat         = params(fm_gp)  # extract parameters
-{{?evtd-dist-select=gp}} d_gp                      = GeneralizedPareto({{evtd-threshold-qq}}, sigma_hat, xi_hat)  # GP distribution
-{{?evtd-dist-select=gp}} n                         = length(exceedances)  # number of exceedances
-{{?evtd-dist-select=gp}} p_vals                    = [(i - 0.5)/n for i in 1:n]  # plotting positions
-{{?evtd-dist-select=gp}} empirical                 = sort(exceedances)  # sorted exceedances
-{{?evtd-dist-select=gp}} theoretical               = quantile.(Ref(d_gp), p_vals)  # theoretical quantiles
-
+# losses as positive numbers (for returns, use losses = -returns)
+point(v) = mean(v)  # MLE and PWM: one value; Bayesian: the posterior mean over the draws
+{{?evtd-dist-select=gev}} y = {{evtd-data}}  # must be block maxima (e.g. monthly maximum losses): the GEV describes maxima, not every loss
+{{?evtd-dist-select=gp}} u = {{evtd-threshold-qq}}  # threshold
+{{?evtd-dist-select=gp}} y = {{evtd-data}}[{{evtd-data}} .> u] .- u  # excesses over the threshold
+{{?evtd-qq-method=mle}} fm = {{evtd-dist-select}}fit(y)  # maximum likelihood
+{{?evtd-qq-method=pwm}} fm = {{evtd-dist-select}}fitpwm(y)  # probability-weighted moments
+{{?evtd-qq-method=bayes}} fm = {{evtd-dist-select}}fitbayes(y)  # Bayesian (MCMC)
+{{?evtd-dist-select=gev}} mu_hat, sigma_hat, xi_hat = point(location(fm)), point(scale(fm)), point(shape(fm))
+{{?evtd-dist-select=gev}} d = GeneralizedExtremeValue(mu_hat, sigma_hat, xi_hat)  # fitted GEV
+{{?evtd-dist-select=gp}} sigma_hat, xi_hat = point(scale(fm)), point(shape(fm))
+{{?evtd-dist-select=gp}} d = GeneralizedPareto(0.0, sigma_hat, xi_hat)  # fitted GP for the excesses (location 0, since u was subtracted)
+n           = length(y)
+p_vals      = [(i - 0.5) / n for i in 1:n]  # plotting positions
+empirical   = sort(y)  # sorted data
+theoretical = quantile.(Ref(d), p_vals)  # fitted quantiles
 scatter(theoretical, empirical;
-    xlabel = "Theoretical quantiles", ylabel = "Empirical quantiles",
+    xlabel = "Fitted quantiles", ylabel = "Empirical quantiles",
 {{?evtd-dist-select=gev}}     title  = "QQ Plot (GEV)", legend = false)
-{{?evtd-dist-select=gp}}     title  = "QQ Plot (GP)", legend = false)
-plot!(theoretical, theoretical; color = :red, label = "45° line")
-
-sse = sum((empirical .- theoretical).^2)  # sum of squared deviations
-{{?evtd-dist-select=gev}} println("SSE (GEV fit): ", round(sse, digits = 4))
-{{?evtd-dist-select=gp}} println("SSE (GP fit): ", round(sse, digits = 4))
+{{?evtd-dist-select=gp}}     title  = "QQ Plot (GP excesses)", legend = false)
+plot!(theoretical, theoretical; color = :red, label = "45-degree line")
+println("Shape xi = ", round(xi_hat, digits = 3), ", scale sigma = ", round(sigma_hat, digits = 3))
+println("QQ correlation: ", round(cor(empirical, theoretical), digits = 4))  # near 1 = straight QQ plot; a scale-free summary, not a formal test
+println("QQ RMSE / sd of the data: ", round(sqrt(mean((empirical .- theoretical) .^ 2)) / std(y), digits = 3))  # deviation in units of the data spread
 '''
 
 [[actionGroups]]
@@ -273,15 +269,15 @@ scatter(u_vals, me_vals;
 [[actionGroups.actions]]
 id = "hill_estimator_plot"
 label = "Hill Estimator Plot"
-desc = "Plot the Hill tail index estimates across order statistics"
+desc = "Hill estimates of the shape xi = 1 / alpha across the number k of largest losses; needs positive losses and a heavy (Pareto-type) tail"
 code = '''
 using Statistics, Plots
-xs     = sort({{evtd-data}}; rev = true)  # descending order statistics
-n      = length(xs)  # sample size
+xs     = sort(filter(>(0), {{evtd-data}}); rev = true)  # positive losses only: Hill takes logs of ratios
+n      = length(xs)
 k_vals = 2:min(n-1, 200)  # consider first 200 order statistics
-hill_k = [mean(log.(xs[1:k] ./ xs[k+1])) for k in k_vals]  # Hill estimates
+hill_k = [mean(log.(xs[1:k] ./ xs[k+1])) for k in k_vals]  # Hill estimates of xi = 1 / alpha
 plot(k_vals, hill_k;
-    xlabel = "k (order statistic)", ylabel = "Hill Estimate",
+    xlabel = "k (order statistic)", ylabel = "Hill estimate of xi",
     title  = "Hill Plot", legend = false)
 '''
 
@@ -292,16 +288,18 @@ label = "Interpret"
 [[actionGroups.actions]]
 id = "threshold_stability"
 label = "Threshold Stability"
-desc = "Assess stability of GP shape parameter across candidate thresholds"
+desc = "GP fits at five thresholds: above a valid threshold the shape xi and the modified scale sigma - xi u stay roughly constant (sigma itself changes with u by design)"
 code = '''
-using Extremes, Statistics
+using Extremes, Distributions, Statistics
+# losses as positive numbers; if the GP fits above u, it fits above every higher threshold with the same xi
+# and with sigma(v) = sigma(u) + xi (v - u): so xi and the modified scale sigma - xi u should be stable, sigma itself should not
 candidates = quantile.(Ref({{evtd-data}}), [0.7, 0.75, 0.8, 0.85, 0.9])  # candidate thresholds
 for u in candidates
     exc = {{evtd-data}}[{{evtd-data}} .> u] .- u  # exceedances above u
     if length(exc) > 10  # require minimum exceedances
-        fm               = gpfit(exc; method = :mle)  # fit GP
-        sigma_hat, xi_hat = params(fm)  # extract parameters
-        println("u=", round(u,digits=2), "  xi_hat=", round(xi_hat,digits=3), "  sigma_hat=", round(sigma_hat,digits=3), "  n=", length(exc))
+        fm        = gpfit(exc)  # maximum likelihood GP fit
+        sigma_hat = scale(fm)[1]; xi_hat = shape(fm)[1]
+        println("u=", round(u, digits=2), "  xi_hat=", round(xi_hat, digits=3), "  modified scale sigma - xi u=", round(sigma_hat - xi_hat * u, digits=3), "  n=", length(exc))
     end
 end
 '''

@@ -18,7 +18,7 @@ description = "An 18-video course by Jamie Mair on writing fast Julia code"
 url = "https://www.youtube.com/playlist?list=PLUAq6xQKFgGr39PiyrPk_C9dhBKvWcjUA"
 
 [requires]
-packages = ["Metaheuristics.jl", "Optim.jl", "Plots.jl"]
+packages = ["Metaheuristics.jl", "Optim.jl", "ADTypes.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""
@@ -368,7 +368,7 @@ end
 
 function search(; iters=budget, N=NP, seed=1, lb=lb, ub=ub, f=f)
     fr, vals = recorder(f)
-    alg = PSO(N=N, options=Options(iterations=iters, seed=seed))  # particle swarm optimisation
+    alg = PSO(N=N, options=Options(iterations=iters, f_calls_limit=1e12, seed=seed))  # explicit cap: otherwise PSO and ABC stop at 10000 n evaluations  # particle swarm optimisation
     r = Metaheuristics.optimize(fr, [transpose(lb); transpose(ub)], alg)
     (x = minimizer(r), fx = minimum(r), trace = accumulate(min, vals), evals = length(vals), pop = positions(r))
 end
@@ -442,7 +442,7 @@ end
 
 function search(; iters=budget, N=NP, seed=1, lb=lb, ub=ub, f=f)
     fr, vals = recorder(f)
-    alg = ABC(N=N, options=Options(iterations=iters, seed=seed))  # artificial bee colony
+    alg = ABC(N=N, options=Options(iterations=iters, f_calls_limit=1e12, seed=seed))  # explicit cap: otherwise PSO and ABC stop at 10000 n evaluations  # artificial bee colony
     r = Metaheuristics.optimize(fr, [transpose(lb); transpose(ub)], alg)
     (x = minimizer(r), fx = minimum(r), trace = accumulate(min, vals), evals = length(vals), pop = positions(r))
 end
@@ -472,7 +472,7 @@ end
 
 function search(; iters=budget, N=NP, seed=1, lb=lb, ub=ub, f=f)
     fr, vals = recorder(f)
-    alg = WOA(N=N, options=Options(iterations=iters, seed=seed))  # whale optimisation algorithm
+    alg = WOA(N=N, options=Options(iterations=iters, f_calls_limit=1e12, seed=seed))  # explicit cap: otherwise PSO and ABC stop at 10000 n evaluations  # whale optimisation algorithm
     r = Metaheuristics.optimize(fr, [transpose(lb); transpose(ub)], alg)
     (x = minimizer(r), fx = minimum(r), trace = accumulate(min, vals), evals = length(vals), pop = positions(r))
 end
@@ -502,7 +502,7 @@ end
 
 function search(; iters=budget, N=NP, seed=1, lb=lb, ub=ub, f=f)
     fr, vals = recorder(f)
-    alg = CGSA(N=N, options=Options(iterations=iters, seed=seed))  # chaotic gravitational search algorithm
+    alg = CGSA(N=N, options=Options(iterations=iters, f_calls_limit=1e12, seed=seed))  # explicit cap: otherwise PSO and ABC stop at 10000 n evaluations  # chaotic gravitational search algorithm
     r = Metaheuristics.optimize(fr, [transpose(lb); transpose(ub)], alg)
     (x = minimizer(r), fx = minimum(r), trace = accumulate(min, vals), evals = length(vals), pop = positions(r))
 end
@@ -615,10 +615,10 @@ id = "local-refine"
 label = "Local Refinement"
 desc = "Polish the swarm's best point with box-constrained L-BFGS (Optim.jl, ForwardDiff gradients)"
 code = '''
-using Optim
+using Optim, ADTypes
 
 x_start = clamp.(x_best, lb .+ 1e-9 .* (ub .- lb), ub .- 1e-9 .* (ub .- lb))  # strictly inside the box
-r = Optim.optimize(f, lb, ub, x_start, Fminbox(LBFGS()); autodiff=:forward)
+r = Optim.optimize(f, lb, ub, x_start, Fminbox(LBFGS()); autodiff=AutoForwardDiff())
 (swarm_value = f_best, refined_value = Optim.minimum(r), improvement = f_best - Optim.minimum(r),
  moved = norm(Optim.minimizer(r) - x_best), refined_point = round.(Optim.minimizer(r), sigdigits=6))
 '''
@@ -632,9 +632,9 @@ id = "vs-gradient"
 label = "vs Gradient-Based"
 desc = "The swarm against L-BFGS from the box midpoint and from 10 random starts (Optim.jl)"
 code = '''
-using Optim
+using Optim, ADTypes
 
-lbfgs(x0) = Optim.minimum(Optim.optimize(f, lb, ub, x0, Fminbox(LBFGS()); autodiff=:forward))
+lbfgs(x0) = Optim.minimum(Optim.optimize(f, lb, ub, x0, Fminbox(LBFGS()); autodiff=AutoForwardDiff()))
 Random.seed!(1)
 starts = [lb .+ (0.05 .+ 0.9 .* rand(length(lb))) .* (ub .- lb) for _ in 1:10]
 (swarm = f_best, lbfgs_from_midpoint = lbfgs((lb .+ ub) ./ 2 .+ 1e-3 .* (ub .- lb)), lbfgs_best_of_10 = minimum(lbfgs.(starts)))

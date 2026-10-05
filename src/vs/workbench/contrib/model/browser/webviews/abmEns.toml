@@ -18,7 +18,7 @@ description = "Step-by-step introduction to building agent-based models with Age
 url = "https://www.youtube.com/watch?v=QL-bDjzS1pg"
 
 [requires]
-packages = ["Agents.jl"]
+packages = ["Agents.jl", "GLMakie.jl", "GlobalSensitivity.jl", "Tables.jl"]
 
 [[notebookSections]]
 label = ""
@@ -181,31 +181,86 @@ default = "50"
 [[codeBranches]]
 model = "ensemble"
 code = '''
-using Agents, Statistics
+using Agents, Random, Statistics, Tables
 
-models = [{{init}}(seed=i) for i in 1:{{R}}]  # {{R}} independent replications
-adata  = [(:mood, mean)]  # aggregate observable per step
+# Example model to replicate: Schelling segregation on a grid. A resident is happy when at least
+# a share threshold of its neighbours belong to its group; unhappy residents move to a random empty cell
+@agent struct Resident(GridAgent{2})
+    group::Int          # 1 or 2
+    mood::Bool = false  # true when happy at the current cell
+end
 
-data, _ = ensemblerun!(models, {{T}}; adata=adata)  # run all replications
+function schelling_step!(agent, model)
+    nbs = collect(nearby_agents(agent, model))  # the 8 surrounding cells
+    share = isempty(nbs) ? 1.0 : count(nb -> nb.group == agent.group, nbs) / length(nbs)
+    agent.mood = share >= model.threshold
+    agent.mood || move_agent_single!(agent, model)
+    return
+end
 
-final = filter(r -> r.step == {{T}}, data)  # last-step rows only
-println("Mean across replications: ", mean(final.mean_mood))  # ensemble average
-println("Std  across replications: ", std(final.mean_mood))  # stochastic variability
+function initialize_model(; threshold = 0.4, density = 0.7, seed = 1, side = 20)
+    space = GridSpaceSingle((side, side); periodic = false)  # at most one resident per cell
+    model = StandardABM(Resident, space; agent_step! = schelling_step!, properties = Dict(:threshold => threshold),
+        rng = Xoshiro(seed), scheduler = Schedulers.Randomly(), container = Vector)
+    n = round(Int, density * side^2)
+    for i in 1:n
+        add_agent_single!(model; group = i <= n / 2 ? 1 : 2)  # two equal groups on random empty cells
+    end
+    return model
+end
+
+models = [{{init}}(seed = i) for i in 1:{{R}}]  # {{R}} independent replications, one seed each
+adata  = [(:mood, mean)]  # share of happy residents, column mean_mood (0 at step 0: nobody has been checked yet)
+
+adf, _ = ensemblerun!(models, {{T}}; adata)  # run all replications
+data = Tables.columntable(adf)  # plain columns: time, mean_mood, ensemble
+
+final = data.mean_mood[data.time .== {{T}}]  # last-step value of each replication
+println("Mean across replications: ", round(mean(final); digits = 4))  # ensemble average
+println("Std  across replications: ", round(std(final); digits = 4))  # stochastic variability
 '''
 
 [[codeBranches]]
 model = "paramscan"
 code = '''
-using Agents, Statistics
+using Agents, Random, Statistics, Tables
 
-params = Dict(:threshold => [0.2, 0.4, 0.6, 0.8],  # first parameter
-              :density   => [0.5, 0.7, 0.9])
-adata  = [(:mood, mean)]  # observable to collect
+# Example model to scan: Schelling segregation on a grid. A resident is happy when at least
+# a share threshold of its neighbours belong to its group; unhappy residents move to a random empty cell
+@agent struct Resident(GridAgent{2})
+    group::Int          # 1 or 2
+    mood::Bool = false  # true when happy at the current cell
+end
 
-data, _ = paramscan(params, {{init}}; n={{T}}, adata=adata)  # full factorial scan
+function schelling_step!(agent, model)
+    nbs = collect(nearby_agents(agent, model))  # the 8 surrounding cells
+    share = isempty(nbs) ? 1.0 : count(nb -> nb.group == agent.group, nbs) / length(nbs)
+    agent.mood = share >= model.threshold
+    agent.mood || move_agent_single!(agent, model)
+    return
+end
 
-println("Parameter combinations: ", nrow(unique(data[:, [:threshold, :density]])))  # check grid size
-println("Final mean mood range:  ", extrema(filter(r->r.step=={{T}}, data).mean_mood))  # outcome range
+function initialize_model(; threshold = 0.4, density = 0.7, seed = 1, side = 20)
+    space = GridSpaceSingle((side, side); periodic = false)  # at most one resident per cell
+    model = StandardABM(Resident, space; agent_step! = schelling_step!, properties = Dict(:threshold => threshold),
+        rng = Xoshiro(seed), scheduler = Schedulers.Randomly(), container = Vector)
+    n = round(Int, density * side^2)
+    for i in 1:n
+        add_agent_single!(model; group = i <= n / 2 ? 1 : 2)  # two equal groups on random empty cells
+    end
+    return model
+end
+
+params = Dict(:threshold => [0.2, 0.4, 0.6, 0.8],  # paramscan scans only Vector values;
+              :density   => [0.5, 0.7, 0.9])      # a range would be passed as one constant
+adata  = [(:mood, mean)]  # share of happy residents, column mean_mood
+
+adf, _ = paramscan(params, {{init}}; n = {{T}}, adata)  # full factorial scan
+data = Tables.columntable(adf)  # plain columns: time, mean_mood, threshold, density
+
+at_end = data.time .== {{T}}  # last-step rows
+println("Parameter combinations: ", length(unique(zip(data.threshold, data.density))))  # check grid size
+println("Final share happy range: ", extrema(data.mean_mood[at_end]))  # outcome range
 '''
 
 [[actionGroups]]
@@ -217,19 +272,20 @@ id = "ensemble-trajectories"
 label = "Ensemble Trajectories"
 desc = "Plot the mean observable across steps with a band of plus or minus one standard deviation across replications (the spread of single runs, not a confidence interval for the mean)"
 code = '''
-using Agents, GLMakie, Statistics
+using Agents, GLMakie, Statistics, Tables
 
-models = [{{init}}(seed=i) for i in 1:{{R}}]  # replications
-data, _ = ensemblerun!(models, {{T}}; adata=[(:mood,mean)])  # run ensemble
+models = [{{init}}(seed = i) for i in 1:{{R}}]  # replications
+adf, _ = ensemblerun!(models, {{T}}; adata = [(:mood, mean)])  # run ensemble
+data = Tables.columntable(adf)  # plain columns: time, mean_mood, ensemble
 
-gdf = groupby(data, :step)  # group by time step
-mu  = combine(gdf, :mean_mood => mean => :mu)  # mean across runs
-sig = combine(gdf, :mean_mood => std => :sig)  # std dev across runs
+steps = sort(unique(data.time))  # time steps
+mu  = [mean(data.mean_mood[data.time .== t]) for t in steps]  # mean across runs
+sig = [std(data.mean_mood[data.time .== t]) for t in steps]  # std dev across runs
 
 fig = Figure()  # create figure
-ax  = Axis(fig[1,1], xlabel="Step", ylabel="Mean mood")  # axes
-band!(ax, mu.step, mu.mu .- sig.sig, mu.mu .+ sig.sig, color=(:blue,0.2))  # +/- 1 sd across runs; a 95% CI for the mean would be +/- 1.96 sd / sqrt(R)
-lines!(ax, mu.step, mu.mu, color=:blue)  # ensemble mean
+ax  = Axis(fig[1, 1], xlabel = "Step", ylabel = "Share happy")  # axes
+band!(ax, steps, mu .- sig, mu .+ sig, color = (:blue, 0.2))  # +/- 1 sd across runs; a 95% CI for the mean would be +/- 1.96 sd / sqrt(R)
+lines!(ax, steps, mu, color = :blue)  # ensemble mean
 display(fig)  # show
 '''
 
@@ -238,17 +294,21 @@ id = "paramscan-heatmap"
 label = "Parameter Heatmap"
 desc = "Visualise the equilibrium outcome across two swept parameters as a 2-D heatmap"
 code = '''
-using Agents, GLMakie
+using Agents, GLMakie, Tables
 
-params = Dict(:threshold => 0.0:0.1:1.0, :density => 0.0:0.1:1.0)  # parameter grid
-data, _ = paramscan(params, {{init}}; n={{T}}, adata=[(:mood,mean)])  # scan
+params = Dict(:threshold => collect(0.1:0.1:0.9),  # Vectors, so paramscan scans them
+              :density   => collect(0.1:0.1:0.9))  # 0 is an empty grid; 1 leaves no empty cell to move to
+adf, _ = paramscan(params, {{init}}; n = {{T}}, adata = [(:mood, mean)])  # scan
+data = Tables.columntable(adf)  # plain columns: time, mean_mood, threshold, density
 
-final = filter(r -> r.step == {{T}}, data)  # equilibrium rows
-ts = sort(unique(final.threshold))  # x-axis values
-ds = sort(unique(final.density))  # y-axis values
-Z  = [first(filter(r->r.threshold==t && r.density==d, final).mean_mood) for t in ts, d in ds]  # outcome matrix
+at_end = data.time .== {{T}}  # equilibrium rows
+ts = sort(unique(data.threshold))  # x-axis values
+ds = sort(unique(data.density))  # y-axis values
+Z  = [only(data.mean_mood[at_end .& (data.threshold .== t) .& (data.density .== d)]) for t in ts, d in ds]  # outcome matrix
 
-heatmap(ts, ds, Z, axis=(xlabel="threshold", ylabel="density", title="Equilibrium mood"))  # heatmap
+fig, ax, hm = heatmap(ts, ds, Z, axis = (xlabel = "threshold", ylabel = "density", title = "Share happy at step {{T}}"))  # heatmap
+Colorbar(fig[1, 2], hm)  # colour scale
+display(fig)  # show
 '''
 
 [[actionGroups]]
@@ -260,17 +320,18 @@ id = "variance-across-runs"
 label = "Variance Across Runs"
 desc = "Compute the standard deviation of the final-step outcome across replications to quantify stochastic noise"
 code = '''
-using Agents, Statistics
+using Agents, Statistics, Tables
 
-models = [{{init}}(seed=i) for i in 1:{{R}}]  # replications
-data, _ = ensemblerun!(models, {{T}}; adata=[(:mood,mean)])  # run
+models = [{{init}}(seed = i) for i in 1:{{R}}]  # replications
+adf, _ = ensemblerun!(models, {{T}}; adata = [(:mood, mean)])  # run
+data = Tables.columntable(adf)  # plain columns: time, mean_mood, ensemble
 
-final = filter(r -> r.step == {{T}}, data).mean_mood  # final-step values
+final = data.mean_mood[data.time .== {{T}}]  # final-step values
 
 println("N replications: ", {{R}})  # sample size
-println("Mean:  ", round(mean(final); digits=4))  # ensemble mean
-println("Std:   ", round(std(final); digits=4))  # stochastic noise
-println("SE:    ", round(std(final)/sqrt({{R}}); digits=4))  # standard error
+println("Mean:  ", round(mean(final); digits = 4))  # ensemble mean
+println("Std:   ", round(std(final); digits = 4))  # stochastic noise
+println("SE:    ", round(std(final) / sqrt({{R}}); digits = 4))  # standard error
 '''
 
 [[actionGroups.actions]]
@@ -278,16 +339,17 @@ id = "burn-in"
 label = "Burn-in Detection"
 desc = "Plot ensemble mean over time and identify when trajectories stabilise to set an appropriate burn-in period"
 code = '''
-using Agents, GLMakie, Statistics
+using Agents, GLMakie, Statistics, Tables
 
-models = [{{init}}(seed=i) for i in 1:{{R}}]  # replications
-data, _ = ensemblerun!(models, {{T}}; adata=[(:mood,mean)])  # run
+models = [{{init}}(seed = i) for i in 1:{{R}}]  # replications
+adf, _ = ensemblerun!(models, {{T}}; adata = [(:mood, mean)])  # run
+data = Tables.columntable(adf)  # plain columns: time, mean_mood, ensemble
 
-gdf = groupby(data, :step)  # group by step
-mu  = combine(gdf, :mean_mood => mean => :mu)  # mean trajectory
+steps = sort(unique(data.time))  # time steps
+mu = [mean(data.mean_mood[data.time .== t]) for t in steps]  # mean trajectory
 
-fig, ax, _ = lines(mu.step, mu.mu, axis=(xlabel="Step", ylabel="Mean mood"))  # plot trajectory
-vlines!(ax, [10], color=:red, linestyle=:dash)  # mark candidate burn-in
+fig, ax, _ = lines(steps, mu, axis = (xlabel = "Step", ylabel = "Share happy"))  # plot trajectory
+vlines!(ax, [10], color = :red, linestyle = :dash)  # mark candidate burn-in
 display(fig)  # inspect
 '''
 
@@ -300,14 +362,14 @@ id = "larger-ensemble"
 label = "Larger Ensemble"
 desc = "Increase the number of replications to reduce the standard error of the ensemble mean"
 code = '''
-using Agents, Statistics
+using Agents, Statistics, Tables
 
 Rs = [10, 20, 50, 100]  # replication counts to test
 for R in Rs
-    models = [{{init}}(seed=i) for i in 1:R]
-    data, _ = ensemblerun!(models, {{T}}; adata=[(:mood,mean)])
-    final  = filter(r->r.step=={{T}}, data).mean_mood
-    println("R=", R, "  SE=", round(std(final)/sqrt(R); digits=4))
+    runs = [{{init}}(seed = i) for i in 1:R]
+    cols = Tables.columntable(first(ensemblerun!(runs, {{T}}; adata = [(:mood, mean)])))
+    last_step = cols.mean_mood[cols.time .== {{T}}]
+    println("R=", R, "  SE=", round(std(last_step) / sqrt(R); digits = 4))
 end
 '''
 
@@ -316,15 +378,15 @@ id = "finer-grid"
 label = "Finer Parameter Grid"
 desc = "Increase the resolution of the paramscan grid to locate phase boundaries more precisely"
 code = '''
-using Agents, Statistics
+using Agents, Statistics, Tables
 
-coarse = Dict(:threshold => 0.0:0.2:1.0)  # coarse scan
-fine   = Dict(:threshold => 0.0:0.05:1.0)  # fine scan
+coarse = Dict(:threshold => collect(0.0:0.2:1.0))  # coarse scan (a Vector, so paramscan scans it)
+fine   = Dict(:threshold => collect(0.0:0.05:1.0))  # fine scan
 
-for (label, params) in [("coarse", coarse), ("fine", fine)]
-    data, _ = paramscan(params, {{init}}; n={{T}}, adata=[(:mood,mean)])
-    final  = filter(r->r.step=={{T}}, data)
-    println(label, "  grid points: ", nrow(final), "  range: ", extrema(final.mean_mood))
+for (label, grid) in [("coarse", coarse), ("fine", fine)]
+    cols = Tables.columntable(first(paramscan(grid, {{init}}; n = {{T}}, adata = [(:mood, mean)])))
+    last_step = cols.mean_mood[cols.time .== {{T}}]
+    println(label, "  grid points: ", length(last_step), "  range: ", extrema(last_step))
 end
 '''
 
@@ -337,16 +399,17 @@ id = "ensemble-vs-single"
 label = "Ensemble vs Single Run"
 desc = "Show how much a single run can deviate from the ensemble mean due to stochastic noise"
 code = '''
-using Agents, Statistics, GLMakie
+using Agents, Statistics, Tables, GLMakie
 
-single_data, _ = run!({{init}}(seed=1), {{T}}; adata=[(:mood,mean)])  # single run
+single = Tables.columntable(first(run!({{init}}(seed = 1), {{T}}; adata = [(:mood, mean)])))  # single run
 
-models = [{{init}}(seed=i) for i in 1:{{R}}]  # ensemble
-ens_data, _ = ensemblerun!(models, {{T}}; adata=[(:mood,mean)])  # run ensemble
-ens_mu  = combine(groupby(ens_data, :step), :mean_mood => mean => :mu)  # ensemble mean
+models = [{{init}}(seed = i) for i in 1:{{R}}]  # ensemble
+ens = Tables.columntable(first(ensemblerun!(models, {{T}}; adata = [(:mood, mean)])))  # run ensemble
+steps  = sort(unique(ens.time))
+ens_mu = [mean(ens.mean_mood[ens.time .== t]) for t in steps]  # ensemble mean
 
-fig, ax, _ = lines(ens_mu.step, ens_mu.mu, label="Ensemble mean")  # ensemble trajectory
-lines!(ax, single_data.step, single_data.mean_mood, label="Single run", linestyle=:dash)  # single trajectory
+fig, ax, _ = lines(steps, ens_mu, label = "Ensemble mean")  # ensemble trajectory
+lines!(ax, single.time, single.mean_mood, label = "Single run", linestyle = :dash)  # single trajectory
 axislegend(ax)  # show legend
 display(fig)  # compare
 '''
@@ -356,17 +419,16 @@ id = "oa-vs-factorial"
 label = "OAT vs Factorial"
 desc = "Output variance under one-at-a-time (OAT) designs and the full factorial design; a factorial variance well above the sum of the OAT variances hints at interaction, which OAT cannot see"
 code = '''
-using Agents, Statistics
+using Agents, Statistics, Tables
 
-baseline = Dict(:threshold => [0.5], :density => [0.7])  # baseline
-oa_thr   = Dict(:threshold => 0.1:0.2:0.9, :density => [0.7])  # OAT: vary threshold
-oa_den   = Dict(:threshold => [0.5], :density => 0.1:0.2:0.9)  # OAT: vary density
-full     = Dict(:threshold => 0.1:0.2:0.9, :density => 0.1:0.2:0.9)  # full factorial
+oa_thr = Dict(:threshold => collect(0.1:0.2:0.9), :density => [0.7])  # OAT: vary threshold
+oa_den = Dict(:threshold => [0.5], :density => collect(0.1:0.2:0.9))  # OAT: vary density
+full   = Dict(:threshold => collect(0.1:0.2:0.9), :density => collect(0.1:0.2:0.9))  # full factorial
 
-for (label, params) in [("OAT-thr", oa_thr), ("OAT-den", oa_den), ("Full", full)]
-    data, _ = paramscan(params, {{init}}; n={{T}}, adata=[(:mood,mean)])
-    final  = filter(r->r.step=={{T}}, data)
-    println(label, "  output variance: ", round(var(final.mean_mood); digits=4))  # variance of the outcome over the design, not a share explained
+for (label, design) in [("OAT-thr", oa_thr), ("OAT-den", oa_den), ("Full", full)]
+    cols = Tables.columntable(first(paramscan(design, {{init}}; n = {{T}}, adata = [(:mood, mean)])))
+    last_step = cols.mean_mood[cols.time .== {{T}}]
+    println(label, "  output variance: ", round(var(last_step); digits = 4))  # variance of the outcome over the design, not a share explained
 end
 '''
 
@@ -377,23 +439,26 @@ label = "Interpret"
 [[actionGroups.actions]]
 id = "sobol-sensitivity"
 label = "Sobol Sensitivity"
-desc = "Compute first-order and total Sobol indices to rank which parameters drive output variance"
+desc = "Compute first-order and total Sobol indices to rank which parameters drive output variance, averaging several seeds per sample point"
 code = '''
-using Agents, GlobalSensitivity, QuasiMonteCarlo
+using Agents, GlobalSensitivity, Statistics, Tables
 
-f = function(p)  # wrapper: p = [threshold, density]
-    model = {{init}}(threshold=p[1], density=p[2])
-    data, _ = run!(model, {{T}}; adata=[(:mood,mean)])
-    return [last(data.mean_mood)]
+K = 5  # seeds per sample point
+function happy_at_end(p)  # p = [threshold, density]
+    vals = map(1:K) do s  # the same seeds at every point (common random numbers), so the points differ only in the parameters
+        cols = Tables.columntable(first(run!({{init}}(threshold = p[1], density = p[2], seed = s), {{T}}; adata = [(:mood, mean)])))
+        last(cols.mean_mood)
+    end
+    return mean(vals)  # averaging over K runs shrinks the run-to-run noise that would otherwise count as parameter importance
 end
 
-lb = [0.0, 0.0]; ub = [1.0, 1.0]  # parameter bounds
-res = gsa(f, Sobol(), SobolSample(), lb, ub; samples=512)  # global sensitivity
+bounds = [(0.1, 0.9), (0.3, 0.9)]  # threshold, density
+res = gsa(happy_at_end, Sobol(), bounds; samples = 256)  # Sobol design: 256 x (2 + 2) points, K runs each
 
-println("S1 threshold: ", res.S1[1])  # first-order index
-println("S1 density:   ", res.S1[2])  # first-order index
-println("ST threshold: ", res.ST[1])  # total-effect index
-println("ST density:   ", res.ST[2])  # total-effect index
+println("S1 threshold: ", round(res.S1[1]; digits = 3))  # first-order index
+println("S1 density:   ", round(res.S1[2]; digits = 3))  # first-order index
+println("ST threshold: ", round(res.ST[1]; digits = 3))  # total-effect index
+println("ST density:   ", round(res.ST[2]; digits = 3))  # total-effect index
 '''
 
 [[actionGroups.actions]]
@@ -403,11 +468,11 @@ desc = "Equilibrium mean mood for each parameter combination, with its spread ac
 code = '''
 using Agents, Statistics, Tables
 
-params = Dict(:threshold => [0.2, 0.5, 0.8], :density => [0.5, 0.7], :seed => 1:{{R}})  # parameter grid, {{R}} seeds per combination
-data, _ = paramscan(params, {{init}}; n={{T}}, adata=[(:mood,mean)])  # scan
-cols = Tables.columntable(data)  # read the result as plain columns
+params = Dict(:threshold => [0.2, 0.5, 0.8], :density => [0.5, 0.7], :seed => collect(1:{{R}}))  # parameter grid, {{R}} seeds per combination
+adf, _ = paramscan(params, {{init}}; n = {{T}}, adata = [(:mood, mean)])  # scan
+cols = Tables.columntable(adf)  # read the result as plain columns
 
-at_end = cols.step .== {{T}}  # equilibrium rows
+at_end = cols.time .== {{T}}  # equilibrium rows
 summary = map(sort(unique(zip(cols.threshold[at_end], cols.density[at_end])))) do (th, d)  # one row per parameter combination
     m = cols.mean_mood[at_end .& (cols.threshold .== th) .& (cols.density .== d)]
     (threshold = th, density = d, eq_mean = mean(m), eq_std = std(m), runs = length(m))  # spread across seeds

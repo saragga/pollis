@@ -297,7 +297,7 @@ model = "nuts"
 code = '''
 using Turing, MCMCChains  # probabilistic programming and chain diagnostics
 
-@model function {{nuts-model}}({{nuts-data}})  # define probabilistic model — replace priors and likelihood as needed
+@model function {{nuts-model}}({{nuts-data}})  # define probabilistic model: replace priors and likelihood as needed
     mu    ~ Normal(0, 1)
     sigma ~ Exponential(1)
     {{nuts-data}} .~ Normal(mu, sigma)  # .~ broadcasts the scalar distribution element-wise over the vector; plain ~ would require a multivariate distribution
@@ -305,7 +305,7 @@ end
 
 model = {{nuts-model}}({{nuts-data}})  # instantiate model with observed data
 
-chain = sample(model, NUTS({{nuts-adapt}}, {{nuts-accept}}), MCMCThreads(), {{nuts-n}}, {{nuts-chains}})  # NUTS: {{nuts-adapt}} adaptation steps, target acceptance {{nuts-accept}}, {{nuts-chains}} parallel chains
+chain = sample(model, NUTS({{nuts-adapt}}, {{nuts-accept}}), MCMCThreads(), {{nuts-n}}, {{nuts-chains}}; chain_type=MCMCChains.Chains)  # NUTS: {{nuts-adapt}} adaptation steps, target acceptance {{nuts-accept}}, {{nuts-chains}} parallel chains
 summarystats(chain)  # mean, std, and R-hat convergence diagnostic per parameter
 '''
 
@@ -314,7 +314,7 @@ model = "hmc"
 code = '''
 using Turing, MCMCChains  # probabilistic programming and chain diagnostics
 
-@model function {{hmc-model}}({{hmc-data}})  # define probabilistic model — replace priors and likelihood as needed
+@model function {{hmc-model}}({{hmc-data}})  # define probabilistic model: replace priors and likelihood as needed
     mu    ~ Normal(0, 1)
     sigma ~ Exponential(1)
     {{hmc-data}} .~ Normal(mu, sigma)  # .~ broadcasts the scalar distribution element-wise over the vector; plain ~ would require a multivariate distribution
@@ -322,7 +322,7 @@ end
 
 model = {{hmc-model}}({{hmc-data}})  # instantiate model with observed data
 
-chain = sample(model, HMC({{hmc-eps}}, {{hmc-L}}), MCMCThreads(), {{hmc-n}}, {{hmc-chains}})  # HMC: step size {{hmc-eps}}, {{hmc-L}} leapfrog steps, {{hmc-chains}} parallel chains
+chain = sample(model, HMC({{hmc-eps}}, {{hmc-L}}), MCMCThreads(), {{hmc-n}}, {{hmc-chains}}; chain_type=MCMCChains.Chains)  # HMC: step size {{hmc-eps}}, {{hmc-L}} leapfrog steps, {{hmc-chains}} parallel chains
 summarystats(chain)  # mean, std, and R-hat convergence diagnostic per parameter
 '''
 
@@ -331,7 +331,7 @@ model = "mh"
 code = '''
 using Turing, MCMCChains  # probabilistic programming and chain diagnostics
 
-@model function {{mh-model}}({{mh-data}})  # define probabilistic model — replace priors and likelihood as needed
+@model function {{mh-model}}({{mh-data}})  # define probabilistic model: replace priors and likelihood as needed
     mu    ~ Normal(0, 1)
     sigma ~ Exponential(1)
     {{mh-data}} .~ Normal(mu, sigma)  # .~ broadcasts the scalar distribution element-wise over the vector; plain ~ would require a multivariate distribution
@@ -339,7 +339,7 @@ end
 
 model = {{mh-model}}({{mh-data}})  # instantiate model with observed data
 
-chain = sample(model, MH(), MCMCThreads(), {{mh-n}}, {{mh-chains}})  # Metropolis-Hastings: gradient-free, {{mh-chains}} parallel chains
+chain = sample(model, MH(), MCMCThreads(), {{mh-n}}, {{mh-chains}}; chain_type=MCMCChains.Chains)  # Metropolis-Hastings: gradient-free, {{mh-chains}} parallel chains
 summarystats(chain)  # mean, std, and R-hat convergence diagnostic per parameter
 '''
 
@@ -374,11 +374,11 @@ label = "Diagnose"
 [[actionGroups.actions]]
 id = "rhat"
 label = "R-hat"
-desc = "Gelman-Rubin convergence diagnostic — values near 1.0 indicate convergence"
+desc = "Rank-normalised split R-hat (the modern Gelman-Rubin diagnostic): values near 1.0 indicate convergence"
 code = '''
 using MCMCChains  # chain diagnostics
 
-summarystats(chain)  # R-hat in the last column — values above 1.01 indicate poor convergence
+summarystats(chain)  # see the rhat column: values above 1.01 indicate poor convergence
 '''
 
 [[actionGroups.actions]]
@@ -398,7 +398,7 @@ desc = "Within-chain autocorrelation — slow decay indicates poor mixing"
 code = '''
 using StatsPlots  # statistics and plotting
 
-autocorplot(chain)  # autocorrelation per parameter and chain — should decay quickly
+autocorplot(chain)  # autocorrelation per parameter and chain: should decay quickly
 '''
 
 [[actionGroups]]
@@ -410,9 +410,9 @@ id = "prior-pred"
 label = "Prior Predictive"
 desc = "Sample from the prior without conditioning on data"
 code = '''
-using Turing  # probabilistic programming
+using Turing, MCMCChains  # probabilistic programming and chain diagnostics
 
-prior_chain = sample(model, Prior(), 1000)  # draw 1000 samples from the prior predictive distribution
+prior_chain = sample(model, Prior(), 1000; chain_type=MCMCChains.Chains)  # draw 1000 samples from the prior predictive distribution
 summarystats(prior_chain)  # inspect prior parameter ranges
 '''
 
@@ -423,8 +423,10 @@ desc = "Generate new observations from the fitted posterior"
 code = '''
 using Turing  # probabilistic programming
 
-model_pred   = model | get_params(chain)  # condition model on posterior samples
-pred_chain   = predict(model_pred, chain)  # generate posterior predictive samples
+{{?model=nuts}} model_pred = {{nuts-model}}(similar({{nuts-data}}, Missing))  # same model with the data left unobserved
+{{?model=hmc}} model_pred = {{hmc-model}}(similar({{hmc-data}}, Missing))  # same model with the data left unobserved
+{{?model=mh}} model_pred = {{mh-model}}(similar({{mh-data}}, Missing))  # same model with the data left unobserved
+pred_chain = predict(model_pred, chain)  # draw new observations for each posterior sample
 summarystats(pred_chain)  # inspect predicted observation distribution
 '''
 
@@ -439,8 +441,8 @@ desc = "Run NUTS and Metropolis-Hastings on the same model and compare ESS"
 code = '''
 using Turing, MCMCChains  # probabilistic programming and chain diagnostics
 
-chain_nuts = sample(model, NUTS(500, 0.65), 1000)  # No-U-Turn Sampler
-chain_mh   = sample(model, MH(), 2000)  # Metropolis-Hastings
+chain_nuts = sample(model, NUTS(500, 0.65), 1000; chain_type=MCMCChains.Chains)  # No-U-Turn Sampler
+chain_mh   = sample(model, MH(), 2000; chain_type=MCMCChains.Chains)  # Metropolis-Hastings
 
 println("NUTS ESS: ", ess_rhat(chain_nuts))  # compare effective sample size
 println("MH ESS:   ", ess_rhat(chain_mh))  # compare effective sample size
@@ -459,7 +461,7 @@ for sigma_prior in [0.5, 1.0, 2.0, 5.0]  # sweep prior standard deviation
         sigma ~ Exponential(1)
         y .~ Normal(mu, sigma)
     end
-    c = sample(model_v(y), NUTS(), 500)  # sample with current prior
+    c = sample(model_v(y), NUTS(), 500; chain_type=MCMCChains.Chains)  # sample with current prior
     println("sigma_prior=", sigma_prior, " -> mu mean=", mean(c[:mu]))  # compare posterior means
 end
 '''
@@ -475,7 +477,7 @@ desc = "Mean, std, and quantiles per parameter across all chains"
 code = '''
 using MCMCChains  # chain diagnostics
 
-summarystats(chain)  # mean, std, naive SE, MCE, and quantiles
+summarystats(chain)  # mean, std, MCSE, ESS and R-hat
 quantile(chain)  # credible intervals: 2.5%, 25%, 50%, 75%, 97.5%
 '''
 

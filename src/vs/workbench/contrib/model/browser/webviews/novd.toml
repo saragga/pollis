@@ -319,7 +319,7 @@ mu     = vec(mean({{train}}, dims=1))  # training mean vector
 SigInv = inv(cov({{train}}))  # inverse training covariance
 scores = [dot(x .- mu, SigInv * (x .- mu)) for x in eachrow({{test}})]  # squared Mahalanobis distance
 
-threshold = quantile(Chisq(size({{train}}, 2)), 1 - {{alpha}})  # chi-square with p degrees of freedom
+threshold = quantile(Chisq(size({{train}}, 2)), 1 - {{alpha}})  # chi-square with p degrees of freedom (exact only for the true mean and covariance; plug-in estimates make it approximate for small training sets)
 is_novel  = scores .> threshold
 println("Novel points: ", sum(is_novel), " of ", length(is_novel))
 '''
@@ -455,7 +455,7 @@ label = "Interpret"
 [[actionGroups.actions]]
 id = "explain-novelty"
 label = "Explain Novelty"
-desc = "Which features make a test point novel, or how large the detected shift is"
+desc = "Which features make a test point novel, or how large the detected shift is (CUSUM: measured from the estimated change point, the last time the alarming statistic was zero)"
 code = '''
 using Statistics
 
@@ -465,7 +465,9 @@ using Statistics
 {{?model=ocsvm|gauss}}for j in sortperm(abs.(z), rev=true)
 {{?model=ocsvm|gauss}}	println("feature ", j, "  z = ", round(z[j], digits=2))
 {{?model=ocsvm|gauss}}end
-{{?model=cusum}}t0 = isempty(alarms) ? length({{series}}) + 1 : alarms[1]
+{{?model=cusum}}S = isempty(alarms) || S_up[alarms[1]] > h ? S_up : S_down  # the side that raised the alarm
+{{?model=cusum}}t0 = isempty(alarms) ? length({{series}}) + 1 : something(findlast(==(0.0), S[1:alarms[1]]), 0) + 1  # change-point estimate: just after the last zero of that CUSUM
+{{?model=cusum}}isempty(alarms) || println("Estimated change point: ", t0, " (alarm at ", alarms[1], ")")
 {{?model=cusum}}before, after = {{baseline}}, {{series}}[t0:end]
 {{?model=cusum}}if !isempty(after)
 {{?model=cusum}}	println("Mean: ", round(mean(before), digits=3), " -> ", round(mean(after), digits=3))

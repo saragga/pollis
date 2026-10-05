@@ -162,4 +162,4 @@ end
 | Inspect raw ONNX graph topology | ONNX.jl |
 
 ## See Also
-- [Flux.jl](flux-jl.md) · [ONNX.jl](onnx-jl.md) · [Choosing a Model](choosing-a-model.md)
+- [Flux.jl](flux-jl.md) · [ONNXRunTime.jl](onnxruntime-jl.md) · [Choosing a Model](choosing-a-model.md)

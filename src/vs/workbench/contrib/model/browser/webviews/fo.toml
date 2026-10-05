@@ -13,7 +13,7 @@ name = "Optim.jl"
 github = "https://github.com/JuliaNLSolvers/Optim.jl"
 
 [requires]
-packages = ["Optim.jl", "LineSearches.jl", "Plots.jl"]
+packages = ["Optim.jl", "ADTypes.jl", "LineSearches.jl", "Plots.jl", "FiniteDiff.jl", "ForwardDiff.jl"]
 
 [[notebookSections]]
 label = ""
@@ -250,7 +250,7 @@ return s + '<path d="M10,56 L16,38 L30,46" fill="none" stroke="currentColor" str
 [[codeBranches]]
 model = "gd"
 code = '''
-using Optim, LineSearches, ForwardDiff, LinearAlgebra
+using Optim, ADTypes, LineSearches, ForwardDiff, LinearAlgebra
 
 f(x) = {{f}}
 x0 = {{x0}}  # initial guess
@@ -268,7 +268,7 @@ path  = Optim.x_trace(result)
 [[codeBranches]]
 model = "cg"
 code = '''
-using Optim, LineSearches, ForwardDiff, LinearAlgebra
+using Optim, ADTypes, LineSearches, ForwardDiff, LinearAlgebra
 
 f(x) = {{f}}
 x0 = {{x0}}  # initial guess
@@ -384,7 +384,7 @@ code = '''
 methods = ["GradientDescent" => GradientDescent(), "Momentum" => MomentumGradientDescent(),
            "Accelerated" => AcceleratedGradientDescent(), "ConjugateGradient" => ConjugateGradient(), "BFGS" => BFGS()]
 map(methods) do (name, m)
-    t = @elapsed r = optimize(f, x0, m, Optim.Options(iterations={{maxiter}}); autodiff=:forward)
+    t = @elapsed r = optimize(f, x0, m, Optim.Options(iterations={{maxiter}}); autodiff=AutoForwardDiff())
     (method = name, minimum = Optim.minimum(r), iterations = Optim.iterations(r), g_calls = Optim.g_calls(r), converged = Optim.converged(r), seconds = t)
 end
 '''
@@ -397,7 +397,7 @@ code = '''
 {{?model=gd}} make(l) = GradientDescent(linesearch=l)
 {{?model=cg}} make(l) = ConjugateGradient(linesearch=l)
 map([HagerZhang(), BackTracking(), MoreThuente(), StrongWolfe()]) do l
-    r = optimize(f, x0, make(l), Optim.Options(iterations={{maxiter}}); autodiff=:forward)
+    r = optimize(f, x0, make(l), Optim.Options(iterations={{maxiter}}); autodiff=AutoForwardDiff())
     (linesearch = nameof(typeof(l)), minimum = Optim.minimum(r), iterations = Optim.iterations(r), f_calls = Optim.f_calls(r), g_calls = Optim.g_calls(r), converged = Optim.converged(r))
 end
 '''

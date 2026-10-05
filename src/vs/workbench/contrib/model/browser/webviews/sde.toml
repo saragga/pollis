@@ -17,7 +17,7 @@ name = "DifferentialEquations.jl"
 github = "https://github.com/SciML/DifferentialEquations.jl"
 
 [requires]
-packages = ["Plots.jl", "DiffEqDevTools.jl", "StatsBase.jl"]
+packages = ["Plots.jl", "DiffEqDevTools.jl", "StatsBase.jl", "DiffEqNoiseProcess.jl", "Distributions.jl"]
 
 [[notebookSections]]
 label = ""
@@ -323,9 +323,8 @@ desc = "Plot a single simulated SDE path against time"
 code = '''
 using StochasticDiffEq, Plots  # simulate and plot one SDE trajectory
 
-f(X, p, t) = {{f}}; g(X, p, t) = 0.3  # drift and diffusion
-sol = solve(SDEProblem(f, g, {{X0}}, (0.0, {{T}})), EM(), dt=0.01)  # solve
-plot(sol, xlabel="t", ylabel="X(t)", label="SDE path")  # plot the trajectory
+sol1 = solve(prob, {{solver}}(), dt={{dt}})  # the panel problem (f, g, X0, T) with the selected solver; dt is the initial step for adaptive solvers
+plot(sol1, xlabel="t", ylabel="X(t)", label="SDE path")  # plot the trajectory
 '''
 
 [[actionGroups.actions]]
@@ -335,10 +334,8 @@ desc = "Plot multiple trajectories to visualise path-to-path variability"
 code = '''
 using StochasticDiffEq, Plots  # simulate an ensemble and plot all paths
 
-f(X, p, t) = {{f}}; g(X, p, t) = 0.3  # drift and diffusion
-prob = SDEProblem(f, g, {{X0}}, (0.0, {{T}}))  # base problem
-ens  = EnsembleProblem(prob)  # ensemble wrapper
-sim  = solve(ens, EM(), EnsembleThreads(), dt=0.01, trajectories=50)  # 50 parallel paths
+ens = EnsembleProblem(prob)  # ensemble wrapper around the panel problem
+sim = solve(ens, {{solver}}(), EnsembleThreads(), dt={{dt}}, trajectories=50)  # 50 parallel paths with the selected solver
 plot(sim, alpha=0.3, legend=false)  # overlay all trajectories
 '''
 
@@ -349,14 +346,19 @@ label = "Diagnose"
 [[actionGroups.actions]]
 id = "convergence"
 label = "Strong Convergence"
-desc = "Check strong convergence order by comparing against a finer reference solution"
+desc = "Estimate the strong order of Euler-Maruyama on geometric Brownian motion, whose exact solution is known; EM has strong order 1/2 for multiplicative noise and 1 for additive noise"
 code = '''
-using StochasticDiffEq, DiffEqDevTools  # convergence analysis for SDE solvers
+using StochasticDiffEq, DiffEqDevTools, Statistics  # convergence analysis against an analytical solution
 
-f(X, p, t) = -0.5 * X; g(X, p, t) = 0.3  # Ornstein-Uhlenbeck drift and diffusion
-prob = SDEProblem(f, g, 1.0, (0.0, 1.0))  # short horizon for convergence test
-dts  = (1/2) .^ (9:-1:4)  # decreasing step sizes
-errs = analyticalsolution_vs_numerical(prob, EM(), dts)  # compare EM to analytical OU solution
+a, b = 1.01, 0.87  # GBM test problem dX = a X dt + b X dW (fixed, so the exact solution is available)
+gbm_exact(u0, p, t, W) = u0 * exp((a - b^2 / 2) * t + b * W)  # exact Ito solution driven by the same Brownian path W
+ff = SDEFunction((X, p, t) -> a * X, (X, p, t) -> b * X; analytic=gbm_exact)
+prob_c = SDEProblem(ff, 1.0, (0.0, 1.0))
+dts = (1 / 2) .^ (9:-1:4)  # decreasing step sizes
+sim = test_convergence(dts, prob_c, EM(), trajectories=1000)  # strong error at the final time, averaged over paths
+errs = sim.errors[:final]
+order = cov(log.(dts), log.(errs)) / var(log.(dts))  # least-squares slope of log error on log dt
+(dts = dts, strong_errors = errs, estimated_order = order, expected = 0.5)  # for additive noise (constant g) EM coincides with Milstein: strong order 1
 '''
 
 [[actionGroups]]
@@ -366,16 +368,26 @@ label = "Predict"
 [[actionGroups.actions]]
 id = "mean-variance"
 label = "Mean and Variance"
-desc = "Estimate E[X(t)] and Var[X(t)] at each time point from an ensemble"
+desc = "Estimate E[X(t)] and Var[X(t)] from an ensemble and compare them with the closed forms for linear drift a X and linear diffusion"
 code = '''
-using StochasticDiffEq, Statistics  # estimate mean and variance from ensemble
+using StochasticDiffEq, Statistics, Plots  # ensemble moments against closed forms
 
-f(X, p, t) = {{f}}; g(X, p, t) = 0.3  # drift and diffusion
-prob = SDEProblem(f, g, {{X0}}, (0.0, {{T}}))  # base SDE problem
-ens  = solve(EnsembleProblem(prob), EM(), EnsembleThreads(), dt=0.01, trajectories=1000)  # 1000 paths
+ens  = solve(EnsembleProblem(prob), {{solver}}(), EnsembleThreads(), dt={{dt}}, trajectories=1000)  # 1000 paths of the panel problem
 t_grid = 0:0.1:{{T}}  # evaluation time grid
-means  = [mean(s(t) for s in ens) for t in t_grid]  # E[X(t)]
-vars   = [var(s(t)  for s in ens) for t in t_grid]  # Var[X(t)]
+means  = [mean(s(t) for s in ens) for t in t_grid]  # Monte Carlo E[X(t)]
+vars   = [var(s(t) for s in ens) for t in t_grid]  # Monte Carlo Var[X(t)]
+
+# Closed forms assume f = a X (scalar X0); a and b are read off f and g at X = 1, so they are only valid for linear f and g
+a  = f(1.0, nothing, 0.0)
+X0 = {{X0}}
+{{?model=add}}s2 = g(1.0, nothing, 0.0)^2  # constant noise: Ornstein-Uhlenbeck type
+{{?model=add}}m_exact = X0 .* exp.(a .* t_grid); v_exact = s2 .* (exp.(2a .* t_grid) .- 1) ./ (2a)
+{{?model=mul}}b = g(1.0, nothing, 0.0)  # g = b X: geometric Brownian motion (Ito)
+{{?model=mul}}m_exact = X0 .* exp.(a .* t_grid); v_exact = X0^2 .* exp.(2a .* t_grid) .* (exp.(b^2 .* t_grid) .- 1)
+{{?model=strat}}b = g(1.0, nothing, 0.0)  # g = b X in Stratonovich form = Ito drift (a + b^2/2) X
+{{?model=strat}}m_exact = X0 .* exp.((a + b^2 / 2) .* t_grid); v_exact = X0^2 .* exp.((2a + b^2) .* t_grid) .* (exp.(b^2 .* t_grid) .- 1)
+plot(t_grid, means, label="ensemble mean"); plot!(t_grid, m_exact, ls=:dash, label="exact mean")
+plot!(t_grid, vars, label="ensemble variance"); plot!(t_grid, v_exact, ls=:dash, label="exact variance", xlabel="t")
 '''
 
 [[actionGroups]]
@@ -385,16 +397,14 @@ label = "Compare"
 [[actionGroups.actions]]
 id = "ito-vs-strat"
 label = "Ito vs Stratonovich"
-desc = "Compare solutions under both interpretations for the same f and g"
+desc = "Solve the same f and g as Ito (Euler-Maruyama) and as Stratonovich (Euler-Heun) on one shared Brownian path; they coincide when g is constant"
 code = '''
-using StochasticDiffEq, Plots  # compare Ito and Stratonovich solutions
+using StochasticDiffEq, DiffEqNoiseProcess, Plots  # compare Ito and Stratonovich solutions
 
-f(X, p, t) = {{f}}; g(X, p, t) = 0.2 * X  # same f and g for both
-W = WienerProcess(0.0, 0.0)  # shared noise path for fair comparison
-p_ito   = SDEProblem(f, g, {{X0}}, (0.0, {{T}}); noise=W)  # Ito problem
-p_strat = SDEProblem(f, g, {{X0}}, (0.0, {{T}}); noise=W)  # Stratonovich problem
-sol_ito   = solve(p_ito,   SRIW1())  # Ito solution
-sol_strat = solve(p_strat, EulerHeun(), dt=0.01)  # Stratonovich solution
+# The interpretation is set by the solver, not by SDEProblem: EM is Ito, EulerHeun is Stratonovich
+sol_ito   = solve(SDEProblem(f, g, {{X0}}, (0.0, {{T}})), EM(), dt={{dt}})  # Ito solution, records its Brownian path
+p_strat   = SDEProblem(f, g, {{X0}}, (0.0, {{T}}); noise=NoiseWrapper(sol_ito.W))  # replay the same path
+sol_strat = solve(p_strat, EulerHeun(), dt={{dt}})  # Stratonovich solution (Ito drift + 0.5 g dg/dX)
 plot(sol_ito, label="Ito"); plot!(sol_strat, label="Stratonovich")  # overlay both solutions
 '''
 
@@ -405,12 +415,16 @@ label = "Interpret"
 [[actionGroups.actions]]
 id = "stationary"
 label = "Stationary Distribution"
-desc = "Estimate the long-run stationary distribution from a long trajectory"
+desc = "Estimate the long-run stationary distribution from a long trajectory after discarding the transient"
 code = '''
-using StochasticDiffEq, StatsBase, Plots  # estimate stationary distribution
+using StochasticDiffEq, StatsBase, LinearAlgebra, Distributions, Plots  # estimate stationary distribution
 
-f(X, p, t) = {{f}}; g(X, p, t) = 0.3  # Ornstein-Uhlenbeck (drift -theta X, diffusion sigma): stationary Normal(0, variance sigma^2 / (2 theta)), 0.09 for theta = 0.5 and sigma = 0.3
-sol = solve(SDEProblem(f, g, {{X0}}, (0.0, 1000.0)), EM(), dt=0.01)  # long trajectory
-h   = fit(Histogram, sol.u, nbins=50)  # histogram of visited states
-plot(h, normalize=:pdf, xlabel="X", ylabel="density")  # empirical stationary distribution
+T_long, burn = 1000.0, 100.0  # long horizon and burn-in discarded as transient
+sol_l = solve(remake(prob; tspan=(0.0, T_long)), {{solver}}(), dt={{dt}})
+xs  = sol_l.(burn:0.1:T_long)  # states on an even time grid after the burn-in (adaptive steps are uneven)
+h   = normalize(fit(Histogram, xs, nbins=50), mode=:pdf)  # histogram normalised to a density
+plot(h, xlabel="X", ylabel="density", label="empirical", alpha=0.6)
+{{?model=add}}a = f(1.0, nothing, 0.0); s2 = g(1.0, nothing, 0.0)^2  # f = a X with a < 0 and constant g: Ornstein-Uhlenbeck
+{{?model=add}}a < 0 && plot!(x -> pdf(Normal(0, sqrt(s2 / (-2a))), x), extrema(xs)..., lw=2, label="Normal(0, sigma^2 / (2 theta))")
+{{?model=mul|strat}}# for g = b X the process decays to 0 or explodes; a nondegenerate stationary law needs a mean-reverting drift with a constant term
 '''

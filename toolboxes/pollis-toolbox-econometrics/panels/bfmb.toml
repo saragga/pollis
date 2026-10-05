@@ -1,0 +1,490 @@
+# Fama-MacBeth Regression Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/bfmb.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Fama-MacBeth Regression"
+viewType = "pollis.bfmb"
+defaultModel = "bayesian"
+
+[[packages]]
+name = "BayesianFactorZoo.jl"
+github = "https://github.com/eohne/BayesianFactorZoo.jl"
+
+[[packages]]
+name = "FamaFrenchData.jl"
+github = "https://github.com/tbeason/FamaFrenchData.jl"
+
+[[packages]]
+name = "Distributions.jl"
+github = "https://github.com/JuliaStats/Distributions.jl"
+
+[requires]
+packages = ["BayesianFactorZoo.jl", "Distributions.jl", "Plots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "BayesianFM Basics"
+file = "bfmb/tutorial-01-basics.ipynb"
+bundled = true
+description = "Introduction to Bayesian Fama-MacBeth regression with BayesianFM()"
+
+[[notebookSections.notebooks]]
+name = "Prior Sensitivity"
+file = "bfmb/tutorial-02-priors.ipynb"
+bundled = true
+description = "Effect of psi0 and d on posterior risk price estimates"
+
+[[notebookSections.notebooks]]
+name = "Model Comparison"
+file = "bfmb/tutorial-03-model-comparison.ipynb"
+bundled = true
+description = "Bayesian factor selection and model comparison across candidate factors"
+
+[[notebookSections.notebooks]]
+name = "Factor Zoo Application"
+file = "bfmb/tutorial-04-factor-zoo.ipynb"
+bundled = true
+description = "Running two-quadrillion-model Bayesian factor selection on real data"
+
+[[notebookSections.notebooks]]
+name = "Classical FM Basics"
+file = "bfmb/tutorial-05-classical.ipynb"
+bundled = true
+description = "Classical two-pass Fama-MacBeth regression with TwoPassRegression()"
+
+[[notebookSections.notebooks]]
+name = "Newey-West Standard Errors"
+file = "bfmb/tutorial-06-newey-west.ipynb"
+bundled = true
+description = "HAC-robust inference for cross-sectional risk price estimates"
+
+[[wikis]]
+name = "Overview"
+file = "bfmb/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Factsheet"
+file = "bfmb/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "bfmb/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "bfmb/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "bfmb/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "bfmb/decision-guide.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Original Papers (from packages)"
+
+[[references]]
+title = "Bayesian Solutions for the Factor Zoo: We Just Ran Two Quadrillion Models"
+authors = "Bryzgalova, Huang & Julliard"
+year = 2023
+journal = "Journal of Finance"
+doi = "10.1111/jofi.13197"
+openAccess = false
+
+[[references]]
+title = "Risk, Return, and Equilibrium: Empirical Tests"
+authors = "Fama & MacBeth"
+year = 1973
+journal = "Journal of Political Economy"
+doi = "10.1086/260061"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Weak and Useless Factors"
+
+[[references]]
+title = "Two-Pass Tests of Asset Pricing Models with Useless Factors"
+authors = "Kan, Raymond; Zhang, Chu"
+year = 1999
+journal = "Journal of Finance"
+doi = "10.1111/0022-1082.00103"
+openAccess = false
+
+[[references]]
+title = "On the Estimation of Beta-Pricing Models"
+authors = "Shanken, Jay"
+year = 1992
+journal = "Review of Financial Studies"
+doi = "10.1093/rfs/5.1.1"
+openAccess = false
+
+[[models]]
+id = "bayesian"
+label = "Bayesian"
+
+[[models]]
+id = "classical"
+label = "Classical"
+
+[[bullets]]
+text = "Bayesian"
+detail = "BayesianFM() from BayesianFactorZoo.jl (Bryzgalova, Huang and Julliard 2023): flat priors on the means and covariances of factors and test assets; every posterior draw re-runs the cross-sectional regression, so beta uncertainty is built in and a useless factor gets a wide posterior instead of a spuriously tight estimate"
+
+[[bullets]]
+text = "Classical"
+detail = "TwoPassRegression() from BayesianFactorZoo.jl: time-series betas, then cross-sectional OLS and GLS risk premia with Shanken (1992) errors-in-variables corrected t-statistics"
+
+[[decisionRows]]
+task = "Bayesian"
+context = "Candidate factors that may be weak or useless, short samples"
+purpose = "Posterior of risk premia that stays honest about weak identification"
+
+[[decisionRows]]
+task = "Classical"
+context = "A few well-established factors with strong betas, long samples"
+purpose = "Two-pass OLS/GLS risk premia with Shanken-corrected t-statistics"
+
+[[inputs]]
+id = "f"
+label = "Factor Returns (f)"
+tooltip = "T x K matrix of factor excess returns: rows are months, columns are factors, in percent. With the defaults f and R, the code simulates 600 months of three factors (Market, Value and a useless factor) and 25 test portfolios; leave both at their defaults to use the example."
+default = "f"
+
+[[inputs]]
+id = "R"
+label = "Test Asset Returns (R)"
+tooltip = "T x N matrix of test-asset excess returns, in percent, with the same rows as f (for example 25 size/value portfolios). N must exceed K + 1."
+default = "R"
+
+[[inputs]]
+id = "sim-length"
+label = "Posterior Draws"
+tooltip = "Number of posterior draws. BayesianFM draws independently from the posterior (it is not a Markov chain), so no burn-in is needed; 10,000 draws give Monte Carlo errors well below the posterior spread."
+default = "10_000"
+models = ["bayesian"]
+
+[[inputs]]
+id = "estimator"
+label = "Cross-Sectional Estimator"
+tooltip = "OLS weights all test assets equally. GLS weights them by the inverse residual covariance, which is more efficient but leans on assets that are cheap to price. Both models compute both; this selects the one reported."
+kind = "select"
+default = "ols"
+
+[[inputs.options]]
+value = "ols"
+label = "OLS"
+
+[[inputs.options]]
+value = "gls"
+label = "GLS"
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.bayesian]
+# Posterior density of a risk price with its credible band
+svg = '''
+var s = '<line x1="4" y1="70" x2="50" y2="70" stroke="currentColor" stroke-width="1"/>';
+var d = '';
+for (var i = 0; i <= 40; i++) {
+	var z = (i - 20) / 7;
+	d += (i ? 'L' : 'M') + (7 + i) + ',' + (70 - Math.exp(-z * z / 2) * 44).toFixed(1);
+}
+s += '<rect x="15" y="26" width="24" height="44" fill="currentColor" opacity="0.15"/>';
+s += '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.5"/>';
+s += '<line x1="27" y1="24" x2="27" y2="70" stroke="currentColor" stroke-width="1" stroke-dasharray="2,2"/>';
+return s;
+'''
+
+[miniCharts.classical]
+# Average returns against betas with the cross-sectional regression line
+svg = '''
+var s = '<line x1="6" y1="76" x2="50" y2="76" stroke="currentColor" stroke-width="1"/><line x1="6" y1="14" x2="6" y2="76" stroke="currentColor" stroke-width="1"/>';
+var x = [12, 16, 20, 25, 29, 33, 38, 43];
+var y = [64, 58, 60, 50, 46, 42, 36, 30];
+for (var i = 0; i < x.length; i++) { s += '<circle cx="' + x[i] + '" cy="' + y[i] + '" r="2" fill="currentColor" opacity="0.7"/>'; }
+s += '<line x1="9" y1="68" x2="47" y2="26" stroke="currentColor" stroke-width="1.5"/>';
+return s;
+'''
+
+[[codeBranches]]
+model = "bayesian"
+code = '''
+using BayesianFactorZoo, Statistics, Random
+
+{{?f=f}}# Simulated example: 600 months of three factors and 25 test portfolios, monthly excess returns in percent.
+{{?f=f}}# Market (premium 0.6) and Value (premium 0.3) price the portfolios exactly. The third factor is useless: pure
+{{?f=f}}# noise that no portfolio loads on, so its risk premium is not identified (Kan and Zhang 1999).
+{{?f=f}}Random.seed!(1)
+{{?f=f}}nT, nR = 600, 25
+{{?f=f}}f = hcat(0.6 .+ 4.5 .* randn(nT), 0.3 .+ 3.0 .* randn(nT), 3.0 .* randn(nT))  # Market, Value, Useless
+{{?f=f}}B = hcat(repeat(range(0.8, 1.2, length = 5), inner = 5), repeat(range(-0.5, 1.0, length = 5), outer = 5))  # 25 x 2 true loadings
+{{?f=f}}R = f[:, 1:2] * transpose(B) .+ 2.0 .* randn(nT, nR)  # E[R] = B * [0.6, 0.3]: zero intercept, zero loading on Useless
+{{?f=f}}fnames = ["Market", "Value", "Useless"]
+{{?f!=f}}fnames = ["f" * string(j) for j in 1:size({{f}}, 2)]
+
+F, Rm = Float64.({{f}}), Float64.({{R}})  # BayesianFactorZoo needs Matrix{Float64}
+K = size(F, 2)
+labels = ["Intercept"; fnames]
+tp = TwoPassRegression(F, Rm)  # two-pass fit: its betas (tp.beta, N x K) are reused by the actions
+
+result = BayesianFM(F, Rm, {{sim-length}}; seed = 1)  # flat priors; independent posterior draws (no Markov chain, no burn-in)
+{{?estimator=ols}}lam, r2 = result.lambda_ols_path, result.R2_ols_path  # draws x (1 + K); column 1 is the common intercept lambda_c
+{{?estimator=gls}}lam, r2 = result.lambda_gls_path, result.R2_gls_path  # draws x (1 + K); column 1 is the common intercept lambda_c
+lam_point = vec(mean(lam, dims = 1))  # posterior means
+
+println(rpad("", 10), lpad("Mean", 9), lpad("SD", 8), "   95% credible interval")
+for j in 1:K+1
+    lo, hi = quantile(lam[:, j], [0.025, 0.975])
+    println(rpad(labels[j], 10), lpad(round(lam_point[j], digits = 3), 9), lpad(round(std(lam[:, j]), digits = 3), 8),
+            "   [", round(lo, digits = 3), ", ", round(hi, digits = 3), "]")
+end
+println("Adjusted cross-sectional R2 (posterior median): ", round(median(r2), digits = 3))
+{{?f=f}}println("True values (simulation): intercept 0, Market 0.6, Value 0.3; the Useless factor has no premium to find.")
+println("Units: percent per month. A wide interval around zero flags a weak or useless factor, not a precisely zero premium.")
+'''
+
+[[codeBranches]]
+model = "classical"
+code = '''
+using BayesianFactorZoo, Statistics, Random, LinearAlgebra
+
+{{?f=f}}# Simulated example: 600 months of three factors and 25 test portfolios, monthly excess returns in percent.
+{{?f=f}}# Market (premium 0.6) and Value (premium 0.3) price the portfolios exactly. The third factor is useless: pure
+{{?f=f}}# noise that no portfolio loads on, so its risk premium is not identified (Kan and Zhang 1999).
+{{?f=f}}Random.seed!(1)
+{{?f=f}}nT, nR = 600, 25
+{{?f=f}}f = hcat(0.6 .+ 4.5 .* randn(nT), 0.3 .+ 3.0 .* randn(nT), 3.0 .* randn(nT))  # Market, Value, Useless
+{{?f=f}}B = hcat(repeat(range(0.8, 1.2, length = 5), inner = 5), repeat(range(-0.5, 1.0, length = 5), outer = 5))  # 25 x 2 true loadings
+{{?f=f}}R = f[:, 1:2] * transpose(B) .+ 2.0 .* randn(nT, nR)  # E[R] = B * [0.6, 0.3]: zero intercept, zero loading on Useless
+{{?f=f}}fnames = ["Market", "Value", "Useless"]
+{{?f!=f}}fnames = ["f" * string(j) for j in 1:size({{f}}, 2)]
+
+F, Rm = Float64.({{f}}), Float64.({{R}})  # BayesianFactorZoo needs Matrix{Float64}
+K = size(F, 2)
+labels = ["Intercept"; fnames]
+tp = TwoPassRegression(F, Rm)  # time-series betas, then cross-sectional OLS and GLS
+
+{{?estimator=ols}}lam_hat, t_hat, cov_hat, r2_hat = tp.lambda, tp.t_stat, tp.cov_lambda, tp.R2_adj
+{{?estimator=gls}}lam_hat, t_hat, cov_hat, r2_hat = tp.lambda_gls, tp.t_stat_gls, tp.cov_lambda_gls, tp.R2_adj_GLS
+se_hat = sqrt.(diag(cov_hat))  # Shanken (1992) errors-in-variables corrected standard errors
+lam_point = lam_hat
+
+println(rpad("", 10), lpad("Estimate", 10), lpad("SE", 8), lpad("t", 8))
+for j in 1:K+1
+    println(rpad(labels[j], 10), lpad(round(lam_hat[j], digits = 3), 10), lpad(round(se_hat[j], digits = 3), 8), lpad(round(t_hat[j], digits = 2), 8))
+end
+println("Adjusted cross-sectional R2: ", round(r2_hat, digits = 3))
+{{?f=f}}println("True values (simulation): intercept 0, Market 0.6, Value 0.3; the Useless factor has no premium to find.")
+println("Units: percent per month. The t-statistics treat the betas as well estimated; for a weak or useless factor they can")
+println("look significant when nothing is priced (Kan and Zhang 1999). Run Diagnose > Weak Factor Check.")
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "posterior-density"
+label = "Risk Premium Uncertainty"
+desc = "Posterior density of each factor's risk premium (Bayesian), or the estimate with its 95% Shanken interval (Classical)"
+code = '''
+using Plots
+
+{{?model=bayesian}}panels = map(1:K) do j
+{{?model=bayesian}}    histogram(lam[:, j + 1]; bins = 60, normalize = :pdf, label = "", title = fnames[j], xlabel = "% per month")
+{{?model=bayesian}}    vline!([0]; color = :black, ls = :dot, label = "")
+{{?model=bayesian}}end
+{{?model=bayesian}}plot(panels...; layout = (1, K), size = (300 * K, 300), plot_title = "Posterior of the Risk Premia")
+{{?model=classical}}scatter(fnames, lam_hat[2:end]; yerror = 1.96 .* se_hat[2:end], label = "Estimate and 95% interval (Shanken)",
+{{?model=classical}}        ylabel = "Risk premium (% per month)", title = "Two-Pass Risk Premia")
+{{?model=classical}}hline!([0]; color = :black, ls = :dot, label = "")
+'''
+
+[[actionGroups.actions]]
+id = "pricing-plot"
+label = "Pricing Plot"
+desc = "Realised average returns of the test assets against the returns the model implies"
+code = '''
+using Plots, Statistics
+
+C = hcat(ones(size(Rm, 2)), tp.beta)  # [1, betas] for each test asset
+fitted = C * lam_point  # model-implied mean excess return (% per month)
+avg = vec(mean(Rm, dims = 1))  # realised mean excess return
+scatter(fitted, avg; xlabel = "Model-implied mean (% per month)", ylabel = "Realised mean (% per month)",
+        label = "Test assets", title = "Pricing Plot")
+plot!(identity, extrema([fitted; avg])...; ls = :dash, label = "Perfect pricing")
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "weak-factors"
+label = "Weak Factor Check"
+desc = "Wald test that all test-asset loadings on each factor are zero: a factor nobody loads on has no identifiable risk premium"
+code = '''
+using LinearAlgebra, Distributions
+
+N = size(Rm, 2)
+for j in 1:K
+    idx = [(i - 1) * (K + 1) + j + 1 for i in 1:N]  # asset i's loading on factor j inside tp.cov_beta
+    b = tp.beta[:, j]
+    W = dot(b, tp.cov_beta[idx, idx] \ b)  # Wald statistic for H0: all N loadings on factor j are zero
+    p = ccdf(Chisq(N), W)
+    println(rpad(fnames[j], 10), "Wald = ", lpad(round(W, digits = 1), 8), "   p-value = ", round(p, digits = 4),
+            p < 0.05 ? "   loadings detected" : "   NO detectable loadings: weak or useless factor")
+end
+println("The test assumes serially uncorrelated, homoskedastic residuals.")
+println("For a weak or useless factor, two-pass t-statistics are unreliable (Kan and Zhang 1999); BayesianFM gives it a wide posterior.")
+{{?model=bayesian}}mcse = vec(std(lam, dims = 1)) ./ sqrt(size(lam, 1))  # draws are independent, so Monte Carlo error = SD / sqrt(draws)
+{{?model=bayesian}}println("Monte Carlo error of the posterior means: ", labels .=> round.(mcse, sigdigits = 2))
+'''
+
+[[actionGroups.actions]]
+id = "pricing-errors"
+label = "Pricing Errors"
+desc = "Pricing error (alpha) of each test asset, with Shanken-corrected two-pass t-statistics"
+code = '''
+using Statistics
+
+C = hcat(ones(size(Rm, 2)), tp.beta)
+alpha = vec(mean(Rm, dims = 1)) .- C * lam_point  # pricing error around the fitted line (% per month)
+println(rpad("Asset", 7), lpad("Alpha", 9), lpad("t (two-pass OLS)", 18))
+for i in eachindex(alpha)
+    println(rpad(i, 7), lpad(round(alpha[i], digits = 3), 9), lpad(round(tp.t_alpha[i], digits = 2), 18))
+end
+println("Mean absolute pricing error: ", round(mean(abs.(alpha)), digits = 3), " % per month")
+println("Assets with |t| > 1.96: ", count(>(1.96), abs.(tp.t_alpha)), " of ", length(alpha), "   (about 5% expected by chance)")
+println("The common intercept (", round(lam_point[1], digits = 3), ") is a pricing error shared by all assets; it should be near zero for excess returns.")
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "expected-returns"
+label = "Implied Expected Returns"
+desc = "Risk premium of each test asset implied by its betas and the estimated factor premia, next to its realised mean"
+code = '''
+using Statistics
+
+er = tp.beta * lam_point[2:end]  # beta_i' lambda (% per month); excludes the common intercept
+avg = vec(mean(Rm, dims = 1))
+println(rpad("Asset", 7), lpad("Implied", 9), lpad("Realised", 10), lpad("Implied, annual", 17))
+for i in eachindex(er)
+    println(rpad(i, 7), lpad(round(er[i], digits = 3), 9), lpad(round(avg[i], digits = 3), 10), lpad(round(12 * er[i], digits = 2), 17))
+end
+'''
+
+[[actionGroups.actions]]
+id = "posterior-predictive"
+label = "Expected Return Bands"
+desc = "Implied expected return of each asset with a 90% band from the risk-premium uncertainty, given the estimated betas"
+code = '''
+using Statistics, LinearAlgebra
+
+{{?model=bayesian}}draws = tp.beta * transpose(lam[:, 2:end])  # N x draws implied premia
+{{?model=bayesian}}mid = vec(mean(draws, dims = 2))
+{{?model=bayesian}}lo = [quantile(draws[i, :], 0.05) for i in axes(draws, 1)]
+{{?model=bayesian}}hi = [quantile(draws[i, :], 0.95) for i in axes(draws, 1)]
+{{?model=classical}}mid = tp.beta * lam_hat[2:end]
+{{?model=classical}}sd_er = [sqrt(dot(b, cov_hat[2:end, 2:end] * b)) for b in eachrow(tp.beta)]  # delta method
+{{?model=classical}}lo, hi = mid .- 1.645 .* sd_er, mid .+ 1.645 .* sd_er
+for i in eachindex(mid)
+    println("Asset ", rpad(i, 4), lpad(round(mid[i], digits = 3), 8), "   [", round(lo[i], digits = 3), ", ", round(hi[i], digits = 3), "]  % per month")
+end
+println("The bands hold the betas fixed at their estimates, so they understate the total uncertainty.")
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "bayes-vs-classical"
+label = "Bayesian vs Classical"
+desc = "Two-pass estimates and t-statistics next to the Bayesian posterior means and 95% credible intervals"
+code = '''
+using BayesianFactorZoo, Statistics
+
+{{?model=classical}}result = BayesianFM(F, Rm, 10_000; seed = 1)  # Bayesian fit for the comparison
+{{?estimator=ols}}bl, cl, ct = result.lambda_ols_path, tp.lambda, tp.t_stat
+{{?estimator=gls}}bl, cl, ct = result.lambda_gls_path, tp.lambda_gls, tp.t_stat_gls
+println(rpad("", 10), lpad("Two-pass", 10), lpad("t", 7), lpad("Bayes mean", 12), "   95% credible interval")
+for j in 1:K+1
+    lo, hi = quantile(bl[:, j], [0.025, 0.975])
+    println(rpad(labels[j], 10), lpad(round(cl[j], digits = 3), 10), lpad(round(ct[j], digits = 2), 7),
+            lpad(round(mean(bl[:, j]), digits = 3), 12), "   [", round(lo, digits = 3), ", ", round(hi, digits = 3), "]")
+end
+{{?f=f}}println("True values (simulation): intercept 0, Market 0.6, Value 0.3, Useless none.")
+println("BayesianFM uses flat priors, so it does not shrink. For a strong factor both methods agree. For a useless factor the")
+println("two-pass estimate can look precise, while the posterior stays wide around zero (Bryzgalova, Huang and Julliard 2023).")
+'''
+
+[[actionGroups.actions]]
+id = "ols-vs-gls"
+label = "OLS vs GLS"
+desc = "Two-pass risk premia, t-statistics and adjusted R2 under both cross-sectional weighting schemes"
+code = '''
+println(rpad("", 10), lpad("OLS", 9), lpad("t", 7), lpad("GLS", 9), lpad("t", 7))
+for j in 1:K+1
+    println(rpad(labels[j], 10), lpad(round(tp.lambda[j], digits = 3), 9), lpad(round(tp.t_stat[j], digits = 2), 7),
+            lpad(round(tp.lambda_gls[j], digits = 3), 9), lpad(round(tp.t_stat_gls[j], digits = 2), 7))
+end
+println("Adjusted R2, OLS / GLS: ", round(tp.R2_adj, digits = 3), " / ", round(tp.R2_adj_GLS, digits = 3))
+println("Under correct specification both estimate the same premia; a large gap suggests misspecification.")
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "credible-intervals"
+label = "Interval Estimates"
+desc = "95% credible (Bayesian) or confidence (Classical) interval of each annualised risk premium, and whether it excludes zero"
+code = '''
+using Statistics
+
+for j in 2:K+1
+{{?model=bayesian}}    lo, hi = quantile(lam[:, j], [0.025, 0.975])  # 95% credible interval
+{{?model=classical}}    lo, hi = lam_hat[j] - 1.96 * se_hat[j], lam_hat[j] + 1.96 * se_hat[j]  # 95% confidence interval (Shanken)
+    println(rpad(labels[j], 10), "[", round(12 * lo, digits = 2), ", ", round(12 * hi, digits = 2), "] % per year",
+            (lo > 0 || hi < 0) ? "   excludes zero: priced" : "   includes zero: no evidence of a premium")
+end
+{{?model=bayesian}}println("Reading: given the data and flat priors, the premium lies in the interval with 95% probability.")
+{{?model=classical}}println("Reading: 95% of intervals built this way cover the true premium; it is not a probability statement about this interval.")
+'''
+
+[[actionGroups.actions]]
+id = "significance"
+label = "Risk Premium Significance"
+desc = "Which factors carry a risk premium: posterior probability of a positive premium (Bayesian) or the two-sided p-value (Classical)"
+code = '''
+using Distributions
+
+for j in 2:K+1
+{{?model=bayesian}}    p_pos = mean(lam[:, j] .> 0)  # posterior probability of a positive premium
+{{?model=bayesian}}    println(rpad(labels[j], 10), "Pr(premium > 0) = ", round(p_pos, digits = 3), p_pos > 0.975 || p_pos < 0.025 ? "   clear sign" : "   sign uncertain")
+{{?model=classical}}    p = 2 * ccdf(Normal(), abs(t_hat[j]))  # two-sided p-value of the Shanken-corrected t-statistic
+{{?model=classical}}    println(rpad(labels[j], 10), "t = ", lpad(round(t_hat[j], digits = 2), 6), "   p = ", round(p, digits = 4), p < 0.05 ? "   significant" : "   not significant")
+end
+{{?model=classical}}println("Check Weak Factor Check first: for a factor without detectable loadings these t-statistics are not reliable.")
+'''

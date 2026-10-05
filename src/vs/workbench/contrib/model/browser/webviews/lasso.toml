@@ -13,7 +13,7 @@ name = "Lasso.jl"
 github = "https://github.com/JuliaStats/Lasso.jl"
 
 [requires]
-packages = ["Lasso.jl"]
+packages = ["Lasso.jl", "Bootstrap.jl", "GLM.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""
@@ -171,9 +171,8 @@ model = "lasso"
 code = '''
 using Lasso
 
-lambda_kw = Symbol(Char(0x3bb))  # Lasso.jl names the penalty keyword with the Greek letter lambda
 {{?lambda=}} model = fit(LassoModel, @formula({{formula}}), {{data}})
-{{?lambda!=}} model = fit(LassoModel, @formula({{formula}}), {{data}}; lambda_kw => [{{lambda}}])
+{{?lambda!=}} model = fit(LassoModel, @formula({{formula}}), {{data}}; λ = [{{lambda}}])
 println(coef(model))
 '''
 
@@ -182,9 +181,8 @@ model = "enet"
 code = '''
 using Lasso
 
-alpha_kw, lambda_kw = Symbol(Char(0x3b1)), Symbol(Char(0x3bb))  # Lasso.jl names these keywords with Greek letters
-{{?lambda=}} model = fit(LassoModel, @formula({{formula}}), {{data}}; alpha_kw => {{alpha}})
-{{?lambda!=}} model = fit(LassoModel, @formula({{formula}}), {{data}}; alpha_kw => {{alpha}}, lambda_kw => [{{lambda}}])
+{{?lambda=}} model = fit(LassoModel, @formula({{formula}}), {{data}}; α = {{alpha}})
+{{?lambda!=}} model = fit(LassoModel, @formula({{formula}}), {{data}}; α = {{alpha}}, λ = [{{lambda}}])
 println(coef(model))
 '''
 
@@ -225,7 +223,7 @@ using Lasso, Plots
 {{?model=plsr}} error("These steps cover Lasso and Elastic Net")
 X, y = modelmatrix(model), response(model)
 {{?model=lasso}} kw = ()
-{{?model=enet}} kw = (Symbol(Char(0x3b1)) => {{alpha}},)  # Lasso.jl names the mixing keyword with a Greek letter
+{{?model=enet}} kw = (α = {{alpha}},)
 path = fit(LassoPath, X, y; kw...)
 B = Matrix(path.coefs); nm = permutedims(string.(vcat(coefnames(model))))
 plot(vec(sum(abs, B, dims=1)), transpose(B), lw=1.5, label=nm, xlabel="L1 norm of coefficients", ylabel="Coefficient", title="Regularisation path")
@@ -267,13 +265,34 @@ using Lasso, Random
 {{?model=plsr}} error("These steps cover Lasso and Elastic Net")
 X, y = modelmatrix(model), response(model); nm = string.(vcat(coefnames(model)))
 {{?model=lasso}} kw = ()
-{{?model=enet}} kw = (Symbol(Char(0x3b1)) => {{alpha}},)
+{{?model=enet}} kw = (α = {{alpha}},)
 rng = MersenneTwister(1); hits = zeros(size(X, 2))
 for _ in 1:100
     i = rand(rng, 1:length(y), length(y))
     hits .+= coef(fit(LassoModel, X[i, :], y[i]; kw...))[end-size(X, 2)+1:end] .!= 0
 end
 foreach(j -> println(rpad(nm[j], 20), " selected in ", Int(hits[j]), "% of resamples"), sortperm(hits, rev=true))
+'''
+
+[[actionGroups.actions]]
+id = "bootstrap-coefs"
+label = "Bootstrap Coefficient Intervals"
+desc = "Pairs bootstrap (Bootstrap.jl) of the refitted coefficients: 95% percentile intervals and how often each coefficient is exactly zero; the Bootstrap Resampling panel in the Simulate menu compares interval methods, resampling schemes and their coverage"
+code = '''
+using Lasso, Bootstrap, Statistics, Random
+{{?model=plsr}} error("These steps cover Lasso and Elastic Net")
+Random.seed!(1)  # Bootstrap.jl draws with the global RNG
+X, y = modelmatrix(model), response(model); nm = string.(vcat(coefnames(model)))
+{{?model=lasso}} kw = ()
+{{?model=enet}} kw = (α = {{alpha}},)
+p = size(X, 2)
+refit(M) = Tuple(coef(fit(LassoModel, M[:, 2:end], M[:, 1]; kw...))[end-p+1:end])  # refit as in Selection Stability
+bs = bootstrap(refit, hcat(y, X), BasicSampling(500))  # resample (y, x) rows together
+for j in 1:p
+    _, lo, hi = confint(bs, PercentileConfInt(0.95), j)
+    println(rpad(nm[j], 20), " estimate ", rpad(round(original(bs, j), digits=4), 10), " 95% [", round(lo, digits=4), ", ", round(hi, digits=4), "]   zero in ", round(100 * mean(straps(bs, j) .== 0), digits=1), "% of resamples")
+end
+println("Bootstrap intervals for lasso coefficients are unreliable near zero (Chatterjee and Lahiri, 2011): read them together with the selection frequencies")
 '''
 
 [[actionGroups]]
@@ -289,7 +308,7 @@ using Lasso, Random, Statistics
 {{?model=plsr}} error("These steps cover Lasso and Elastic Net")
 X, y = modelmatrix(model), response(model); n = length(y)
 {{?model=lasso}} kw = ()
-{{?model=enet}} kw = (Symbol(Char(0x3b1)) => {{alpha}},)
+{{?model=enet}} kw = (α = {{alpha}},)
 fold = shuffle(MersenneTwister(1), repeat(1:5, cld(n, 5))[1:n])
 e_pen, e_ols = Float64[], Float64[]
 for k in 1:5
@@ -326,13 +345,13 @@ using Lasso
 {{?model=plsr}} error("These steps cover Lasso and Elastic Net")
 X, y = modelmatrix(model), response(model); nm = string.(vcat(coefnames(model)))
 {{?model=lasso}} kw = ()
-{{?model=enet}} kw = (Symbol(Char(0x3b1)) => {{alpha}},)
+{{?model=enet}} kw = (α = {{alpha}},)
 path = fit(LassoPath, X, y; kw...)
 sel = ["AICc" => MinAICc(), "BIC" => MinBIC(), "CV min" => MinCVmse(path, 10), "CV 1-SE" => MinCV1se(path, 10)]
 B = [s.first => coef(path, s.second)[end-length(nm)+1:end] for s in sel]
 println(rpad("", 20), join(rpad.(first.(B), 10)))
 foreach(j -> println(rpad(nm[j], 20), join(rpad.([round(b.second[j], digits=3) for b in B], 10))), eachindex(nm))
-println(rpad("non-zero", 20), join(rpad.([count(!=(0), b.second) for b in B], 10)))
+println(rpad("non-zero slopes", 20), join(rpad.([count(!=(0), b.second[nm .!= "(Intercept)"]) for b in B], 10)))  # intercept not counted
 '''
 
 [[actionGroups.actions]]
@@ -370,10 +389,10 @@ println(count(==(0), b), " of ", length(b), " predictors removed by the penalty"
 [[actionGroups.actions]]
 id = "fit-summary"
 label = "Fit Summary"
-desc = "Pseudo R-squared (1 - deviance / null deviance) and the number of non-zero coefficients in the selected model"
+desc = "Pseudo R-squared (1 - deviance / null deviance) and the number of non-zero coefficients (intercept excluded) in the selected model"
 code = '''
 using Lasso
 {{?model=plsr}} error("These steps cover Lasso and Elastic Net")
 println("R-squared: ", round(1 - deviance(model) / nulldeviance(model), digits=4))
-println("Non-zero coefficients: ", count(!=(0), coef(model)), "   observations: ", nobs(model))
+println("Non-zero coefficients: ", count(!=(0), coef(model)[coefnames(model) .!= "(Intercept)"]), " (excluding the intercept)   observations: ", nobs(model))
 '''

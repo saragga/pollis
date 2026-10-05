@@ -788,7 +788,7 @@ label = "Compare"
 [[actionGroups.actions]]
 id = "method-comparison"
 label = "Method Comparison"
-desc = "The PRIMA solvers and NLopt's PRAXIS, Sbplx and Nelder-Mead on the objective with the same start and budget (constraints other than bounds are left out)"
+desc = "The PRIMA solvers and the NLopt PRAXIS, Sbplx and Nelder-Mead on the objective with the same start and budget (constraints other than bounds are left out)"
 code = '''
 using PRIMA, NLopt
 
@@ -803,7 +803,8 @@ end
 methods = ["NEWUOA" => () -> run_prima(newuoa), "UOBYQA" => () -> run_prima(uobyqa), "BOBYQA (box)" => () -> run_prima(bobyqa; xl=lb, xu=ub),
            "PRAXIS" => () -> run_nlopt(:LN_PRAXIS), "Sbplx" => () -> run_nlopt(:LN_SBPLX), "Nelder-Mead" => () -> run_nlopt(:LN_NELDERMEAD)]
 map(methods) do (name, run)
-    sec = @elapsed r = run()
+    run()  # warm-up: the first call includes compilation
+    sec = @elapsed r = run()  # time of a compiled run
     (method = name, minimum = r.fx, evaluations = r.evals, seconds = sec)
 end
 '''
@@ -811,7 +812,7 @@ end
 [[actionGroups.actions]]
 id = "nlopt-comparison"
 label = "NLopt vs PRIMA"
-desc = "NLopt's original COBYLA against PRIMA's modernised COBYLA on the same constrained problem"
+desc = "The original NLopt COBYLA against the modernised PRIMA COBYLA on the same constrained problem"
 code = '''
 using PRIMA, NLopt
 
@@ -869,13 +870,26 @@ code = '''
 [[actionGroups.actions]]
 id = "scaling-check"
 label = "Scaling Check"
-desc = "Finite-difference Hessian at the minimiser: eigenvalues and condition number show how badly scaled the problem is"
+desc = "Finite-difference reduced Hessian of the Lagrangian at the minimiser: eigenvalues and condition number on the directions the active constraints leave free"
 code = '''
-d, h = length(x_best), 1e-4
+using LinearAlgebra
+
+d, h, tol = length(x_best), 1e-4, 1e-6
 E = Matrix(1.0I, d, d)
-H = [(f(x_best + h * (E[:, i] + E[:, j])) - f(x_best + h * (E[:, i] - E[:, j])) - f(x_best - h * (E[:, i] - E[:, j])) + f(x_best - h * (E[:, i] + E[:, j]))) / (4h^2) for i in 1:d, j in 1:d]
-ev = eigvals(Symmetric(H))
-(hessian_eigenvalues = round.(ev, sigdigits=4), condition_number = maximum(abs, ev) / max(minimum(abs, ev), eps()),
+fdgrad(g) = [(g(x_best + h * E[:, i]) - g(x_best - h * E[:, i])) / (2h) for i in 1:d]
+fdhess(g) = [(g(x_best + h * (E[:, i] + E[:, j])) - g(x_best + h * (E[:, i] - E[:, j])) - g(x_best - h * (E[:, i] - E[:, j])) + g(x_best - h * (E[:, i] + E[:, j]))) / (4h^2) for i in 1:d, j in 1:d]
+J  = zeros(0, d)  # gradients of the active constraints, one per row
+HL = fdhess(f)  # Hessian of the Lagrangian: objective curvature, plus constraint curvature below
+{{?model=bobyqa|cobyla|lincoa|sbplx}}J = [J; -E[x_best .- lb .< tol, :]; E[ub .- x_best .< tol, :]]  # active lower and upper bounds
+{{?model=lincoa}}J = [J; A[A * x_best .- b .> -tol, :]]  # active linear constraints
+{{?model=cobyla}}act = findall(c(x_best) .> -tol)  # active nonlinear constraints
+{{?model=cobyla}}J = [J; reduce(vcat, [transpose(fdgrad(x -> c(x)[k])) for k in act]; init=zeros(0, d))]
+lambda = isempty(J) ? Float64[] : -(transpose(J) \ fdgrad(f))  # multipliers from grad f + transpose(J) * lambda = 0 (should be >= 0)
+{{?model=cobyla}}HL += sum((lambda[end-length(act)+k] * fdhess(x -> c(x)[act[k]]) for k in eachindex(act)); init=zeros(d, d))  # bounds and linear constraints add no curvature
+Z  = isempty(J) ? E : nullspace(J)  # directions that keep the active constraints satisfied
+ev = eigvals(Symmetric(transpose(Z) * HL * Z))  # reduced Hessian: the curvature that matters at a constrained minimum
+cond_number = isempty(ev) ? NaN : maximum(abs, ev) / max(minimum(abs, ev), eps())
+(active_constraints = size(J, 1), multipliers = round.(lambda, sigdigits=4), reduced_hessian_eigenvalues = round.(ev, sigdigits=4), condition_number = cond_number,
  variable_magnitudes = round.(abs.(x_best), sigdigits=3), box_sides = ub .- lb,
- advice = maximum(abs, ev) / max(minimum(abs, ev), eps()) > 1e4 ? "ill-conditioned: rescale the variables so curvatures are similar" : "reasonably scaled")
+ advice = isempty(ev) ? "vertex: the active constraints pin down the solution" : any(ev .< 0) ? "a negative eigenvalue: not a local minimum on the free directions" : cond_number > 1e4 ? "ill-conditioned: rescale the variables so curvatures are similar" : "reasonably scaled")
 '''

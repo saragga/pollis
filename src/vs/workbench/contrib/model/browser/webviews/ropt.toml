@@ -499,7 +499,7 @@ b = {{b}}  # capacities
 rho = {{rho}}  # coefficient a_ij may deviate by up to rho |a_ij|
 Ahat = rho .* abs.(A)  # maximal deviations
 nc, n = size(A)
-set, par = :poly, (gamma = {{gamma}},)  # polytope W u <= h (here ||u||_1 <= Gamma)
+set, par = :poly, (gamma = {{gamma}},)  # polytope W u <= h (here ||u||_1 <= Gamma, without ||u||_inf <= 1: for Gamma > 1 one coefficient may move Gamma times its range, beyond any Monte Carlo draw)
 
 # Worst-case increase of a_i'x over the set, for deviations d = ahat_i .* x (x >= 0)
 function protect(set, d; gamma=1.0, omega=1.0)

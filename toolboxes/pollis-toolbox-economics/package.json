@@ -1,0 +1,34 @@
+{
+  "name": "pollis-toolbox-economics",
+  "displayName": "Economics Toolbox",
+  "description": "The Pollis Economics Toolbox: business cycle filters, stochastic volatility macroeconomic models, DSGE models, heterogeneous-agent models and continuous-time macro-finance.",
+  "version": "1.0.1",
+  "publisher": "pollis",
+  "license": "AGPL-3.0-or-later",
+  "icon": "icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/saragga/pollis"
+  },
+  "engines": {
+    "vscode": "*"
+  },
+  "categories": ["Other"],
+  "contributes": {
+    "pollisToolboxes": [
+      {
+        "id": "economics",
+        "title": "Economics Toolbox",
+        "group": "2_toolboxes",
+        "order": 1,
+        "panels": [
+          { "id": "bcf", "command": "chiara.statistics.macro.hpf", "title": "Business Cycle Filters", "group": "4_mt", "order": 1, "data": "panels/bcf.toml", "defaultModel": "hp", "decisionFirstColumn": "Model" },
+          { "id": "dtsv", "command": "chiara.statistics.macro.dtsvm", "title": "Discrete-Time Stochastic Volatility Models", "menuTitle": "Stochastic Volatility Macroeconomic Models", "group": "4_mt", "order": 2, "data": "panels/dtsv.toml", "defaultModel": "basic", "decisionFirstColumn": "Model" },
+          { "id": "dsge", "command": "chiara.statistics.macro.dsge", "title": "DSGE Models", "menuTitle": "Dynamic Stochastic General Equilibrium (DSGE)", "group": "4_mt", "order": 3, "data": "panels/dsge.toml", "defaultModel": "mom", "decisionFirstColumn": "Mode" },
+          { "id": "ham", "command": "chiara.statistics.macro.ham", "title": "Heterogeneous-Agent Models", "group": "4_mt", "order": 4, "data": "panels/ham.toml", "defaultModel": "main", "decisionFirstColumn": "Model" },
+          { "id": "ctmf", "command": "chiara.statistics.macro.ctmf", "title": "Continuous-Time Macro-Finance", "group": "4_mt", "order": 5, "data": "panels/ctmf.toml", "defaultModel": "main", "decisionFirstColumn": "Model" }
+        ]
+      }
+    ]
+  }
+}

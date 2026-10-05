@@ -13,7 +13,7 @@ name = "RuleMiner.jl"
 github = "https://github.com/JaredSchwartz/RuleMiner.jl"
 
 [requires]
-packages = ["Tables.jl", "Plots.jl"]
+packages = ["Tables.jl", "Plots.jl", "HypothesisTests.jl"]
 
 [[notebookSections]]
 label = ""
@@ -34,7 +34,7 @@ description = "FP-Close and FP-Maximal — compact representations of the freque
 name = "Association Rule Mining"
 file = "rulebased/tutorial-03-rules.ipynb"
 bundled = true
-description = "Rule generation and filtering by confidence, lift, conviction, and leverage"
+description = "Rule generation and filtering by support, confidence and lift"
 
 [[wikis]]
 name = "Overview"
@@ -134,20 +134,20 @@ label = "Association Rules"
 
 [[bullets]]
 text = "Frequent itemset mining"
-detail = "Apriori, ECLAT, FP-Growth"
+detail = "ECLAT, FP-Growth"
 
 [[bullets]]
 text = "Closed and maximal itemsets"
-detail = "FP-Close, FP-Maximal"
+detail = "FP-Close, FP-Max"
 
 [[bullets]]
 text = "Association rule generation"
-detail = "confidence, lift, conviction, leverage"
+detail = "Apriori; support, confidence, coverage, lift"
 
 [[decisionRows]]
 task = "Apriori"
-context = "Small to medium transaction sets"
-purpose = "Level-wise candidate generation; simple and memory-light"
+context = "Rule mining on small to medium transaction sets"
+purpose = "Level-wise candidate generation; RuleMiner uses it to mine the association rules"
 
 [[decisionRows]]
 task = "ECLAT"
@@ -167,26 +167,22 @@ purpose = "Lossless (closed) or most compact (maximal) summary of the itemsets"
 [[decisionRows]]
 task = "Association Rules"
 context = "Cross-selling, co-occurrence patterns"
-purpose = "If-then rules scored by confidence, lift, conviction and leverage"
+purpose = "If-then rules scored by support, confidence, coverage and lift"
 
 [[inputs]]
 id = "df"
-label = "DataFrame"
-tooltip = "Table in long format with one row per (transaction, item) pair, with columns :Transaction and :Item."
+label = "Transactions Table"
+tooltip = "Any Tables.jl source in long format, one row per (transaction, item) pair, with columns Transaction and Item (e.g. a NamedTuple of columns or a CSV.File)."
 default = "df"
 
 [[inputs]]
 id = "algorithm"
 label = "Algorithm"
-tooltip = "Apriori, ECLAT and FP-Growth return all frequent itemsets. FP-Close returns only closed itemsets (no superset with the same support); FP-Maximal returns only maximal itemsets (no frequent superset)."
+tooltip = "ECLAT and FP-Growth return all frequent itemsets. FP-Close returns only closed itemsets (no superset with the same support); FP-Max returns only maximal itemsets (no frequent superset). Apriori is used by the Association Rules model."
 kind = "select"
-default = "apriori"
+default = "fpgrowth"
 models = ["itemset"]
 newRow = true
-
-[[inputs.options]]
-value = "apriori"
-label = "Apriori"
 
 [[inputs.options]]
 value = "eclat"
@@ -201,8 +197,8 @@ value = "fpclose"
 label = "FP-Close (closed)"
 
 [[inputs.options]]
-value = "fpmaximal"
-label = "FP-Maximal (maximal)"
+value = "fpmax"
+label = "FP-Max (maximal)"
 
 [[inputs]]
 id = "support"
@@ -255,7 +251,15 @@ model = "itemset"
 code = '''
 using RuleMiner
 
-txns = Txns({{df}}, index_col=:Transaction, item_col=:Item)  # transactions from a table with one row per (transaction, item) pair
+using SparseArrays, Tables
+
+t = Tables.columntable({{df}})  # long format: one row per (transaction, item) pair
+ids, items = string.(t.Transaction), string.(t.Item)
+linekeys, colkeys = unique(ids), sort(unique(items))
+row = Dict(k => i for (i, k) in enumerate(linekeys))
+col = Dict(k => j for (j, k) in enumerate(colkeys))
+matrix = sparse(UInt32[row[i] for i in ids], UInt32[col[x] for x in items], fill(true, length(ids)), length(linekeys), length(colkeys), |)
+txns = Txns(matrix, colkeys, linekeys)  # sparse transactions x items incidence matrix
 
 itemsets = {{algorithm}}(txns, {{support}})  # one row per frequent itemset: columns Itemset, Support, N, Length
 '''
@@ -265,9 +269,17 @@ model = "rules"
 code = '''
 using RuleMiner
 
-txns = Txns({{df}}, index_col=:Transaction, item_col=:Item)  # transactions from a table with one row per (transaction, item) pair
+using SparseArrays, Tables
 
-rules = arules(txns, {{support}}, {{confidence}})  # min_support, min_confidence
+t = Tables.columntable({{df}})  # long format: one row per (transaction, item) pair
+ids, items = string.(t.Transaction), string.(t.Item)
+linekeys, colkeys = unique(ids), sort(unique(items))
+row = Dict(k => i for (i, k) in enumerate(linekeys))
+col = Dict(k => j for (j, k) in enumerate(colkeys))
+matrix = sparse(UInt32[row[i] for i in ids], UInt32[col[x] for x in items], fill(true, length(ids)), length(linekeys), length(colkeys), |)
+txns = Txns(matrix, colkeys, linekeys)  # sparse transactions x items incidence matrix
+
+rules = apriori(txns, {{support}}, {{confidence}})  # Apriori rule mining: min_support, min_confidence
 # one row per rule: columns LHS (antecedent), RHS (consequent), Support, Confidence, Coverage, Lift, N, Length
 '''
 
@@ -297,7 +309,7 @@ desc = "Every rule as a point, coloured by lift, to spot strong and surprising r
 code = '''
 using Tables, Plots
 
-r = Tables.columntable(arules(txns, {{support}}, {{confidence}}))
+r = Tables.columntable(apriori(txns, {{support}}, {{confidence}}))
 scatter(r.Support, r.Confidence, zcolor=r.Lift, xlabel="support", ylabel="confidence", colorbar_title="lift", legend=false)
 '''
 
@@ -324,7 +336,7 @@ desc = "Share of rules with lift <= 1, which are no better than independence"
 code = '''
 using Tables
 
-r = Tables.columntable(arules(txns, {{support}}, {{confidence}}))
+r = Tables.columntable(apriori(txns, {{support}}, {{confidence}}))
 count(<=(1), r.Lift) / length(r.Lift)
 '''
 
@@ -339,7 +351,7 @@ desc = "Items suggested for a basket by the matching rules, ranked by confidence
 code = '''
 using Tables
 
-r = Tables.columntable(arules(txns, {{support}}, {{confidence}}))
+r = Tables.columntable(apriori(txns, {{support}}, {{confidence}}))
 basket = ["bread", "milk"]  # items already in the basket
 hits = [i for i in eachindex(r.LHS) if issubset(r.LHS[i], basket) && !(r.RHS[i] in basket)]
 unique(r.RHS[hits[sortperm(r.Confidence[hits], rev=true)]])
@@ -352,11 +364,11 @@ label = "Compare"
 [[actionGroups.actions]]
 id = "algorithm-timing"
 label = "Algorithm Timing"
-desc = "Run time and itemset count of Apriori, ECLAT and FP-Growth on your data"
+desc = "Run time and itemset count of ECLAT and FP-Growth on your data"
 code = '''
 using Tables
 
-for f in (apriori, eclat, fpgrowth)
+for f in (eclat, fpgrowth)
 	t = @elapsed out = f(txns, {{support}})
 	println(rpad(string(f), 10), round(t, digits=3), " s  ", length(Tables.columntable(out).Support), " itemsets")
 end
@@ -370,7 +382,7 @@ code = '''
 using Tables
 
 n(x) = length(Tables.columntable(x).Support)
-(all = n(fpgrowth(txns, {{support}})), closed = n(fpclose(txns, {{support}})), maximal = n(fpmaximal(txns, {{support}})))
+(all = n(fpgrowth(txns, {{support}})), closed = n(fpclose(txns, {{support}})), maximal = n(fpmax(txns, {{support}})))
 '''
 
 [[actionGroups]]
@@ -380,12 +392,17 @@ label = "Interpret"
 [[actionGroups.actions]]
 id = "top-lift"
 label = "Strongest Rules"
-desc = "The ten rules with the highest lift, read as if-then statements"
+desc = "The ten rules with the highest lift, read as if-then statements, with their support, count and a one-sided Fisher exact p-value: a high lift on a handful of baskets is often chance"
 code = '''
-using Tables
+using Tables, HypothesisTests
 
-r = Tables.columntable(arules(txns, {{support}}, {{confidence}}))
+r = Tables.columntable(apriori(txns, {{support}}, {{confidence}}))
+n = txns.n_transactions
 for i in sortperm(r.Lift, rev=true)[1:min(10, end)]
-	println(join(r.LHS[i], " + "), " => ", r.RHS[i], "   conf ", round(r.Confidence[i], digits=2), "  lift ", round(r.Lift[i], digits=2))
+	a = r.N[i]  # baskets with LHS and RHS
+	n_lhs = round(Int, r.Coverage[i] * n)  # baskets with LHS
+	n_rhs = round(Int, r.Confidence[i] / r.Lift[i] * n)  # baskets with RHS
+	p = pvalue(FisherExactTest(a, n_lhs - a, n_rhs - a, n - n_lhs - n_rhs + a); tail=:right)  # H0: LHS and RHS independent
+	println(join(r.LHS[i], " + "), " => ", r.RHS[i], "   supp ", round(r.Support[i], digits=3), "  n ", a, "  conf ", round(r.Confidence[i], digits=2), "  lift ", round(r.Lift[i], digits=2), "  p ", round(p, sigdigits=2))
 end
 '''

@@ -17,7 +17,7 @@ name = "Graphs.jl"
 github = "https://juliagraphs.org/Graphs.jl/stable/"
 
 [requires]
-packages = ["NetworkDynamics.jl", "Graphs.jl"]
+packages = ["NetworkDynamics.jl", "Graphs.jl", "GLMakie.jl", "OrdinaryDiffEq.jl"]
 
 [[notebookSections]]
 label = ""

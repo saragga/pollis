@@ -1,0 +1,492 @@
+# Business Cycle Filters Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/bcf.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Business Cycle Filters"
+viewType = "pollis.bcf"
+defaultModel = "hp"
+
+[[packages]]
+name = "MacroEconometricModels.jl"
+github = "https://github.com/FriedmanJP/MacroEconometricModels.jl"
+
+[requires]
+packages = ["MacroEconometricModels.jl", "FFTW.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Quick Start"
+file = "bcf/tutorial-01-quickstart.ipynb"
+bundled = true
+description = "Apply business cycle filters to macroeconomic time series"
+
+[[notebookSections.notebooks]]
+name = "HP Filter"
+file = "bcf/tutorial-02-hp.ipynb"
+bundled = true
+description = "Hodrick-Prescott filter: parameter selection and trend extraction"
+
+[[notebookSections.notebooks]]
+name = "Hamilton Filter"
+file = "bcf/tutorial-03-hamilton.ipynb"
+bundled = true
+description = "Hamilton regression filter and comparison with HP"
+
+[[notebookSections.notebooks]]
+name = "Beveridge-Nelson"
+file = "bcf/tutorial-04-bn.ipynb"
+bundled = true
+description = "Beveridge-Nelson decomposition via ARIMA psi-weights"
+
+[[notebookSections.notebooks]]
+name = "Baxter-King"
+file = "bcf/tutorial-05-bk.ipynb"
+bundled = true
+description = "Baxter-King band-pass filter: frequency-band isolation"
+
+[[notebookSections.notebooks]]
+name = "Boosted HP"
+file = "bcf/tutorial-06-bhp.ipynb"
+bundled = true
+description = "Boosted HP filter (Phillips & Shi 2021): iterated detrending"
+
+[[wikis]]
+name = "Overview"
+file = "bcf/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Factsheet"
+file = "bcf/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "bcf/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "bcf/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "bcf/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "bcf/decision-guide.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Original Papers (from packages)"
+
+[[references]]
+title = "A new approach to the economic analysis of nonstationary time series and the business cycle"
+authors = "Hodrick, R. J., & Prescott, E. C."
+year = 1997
+journal = ""
+url = "https://doi.org/10.2307/2953682"
+openAccess = false
+
+[[references]]
+title = "Why you should never use the Hodrick-Prescott filter"
+authors = "Hamilton, J. D."
+year = 2018
+journal = ""
+url = "https://doi.org/10.1162/rest_a_00706"
+openAccess = false
+
+[[references]]
+title = "A new approach to decomposition of economic time series into permanent and transitory components"
+authors = "Beveridge, S., & Nelson, C. R."
+year = 1981
+journal = ""
+url = "https://doi.org/10.1016/0304-3932(81)90040-4"
+openAccess = false
+
+[[references]]
+title = "Measuring business cycles: Approximate band-pass filters for economic time series"
+authors = "Baxter, M., & King, R. G."
+year = 1999
+journal = ""
+url = "https://doi.org/10.1162/003465399558454"
+openAccess = false
+
+[[references]]
+title = "Boosting the Hodrick-Prescott filter"
+authors = "Phillips, P. C. B., & Shi, Z."
+year = 2021
+journal = ""
+url = "https://doi.org/10.1093/restud/rdab028"
+openAccess = false
+
+[[models]]
+id = "hp"
+label = "Hodrick-Prescott"
+
+[[models]]
+id = "ham"
+label = "Hamilton"
+
+[[models]]
+id = "bn"
+label = "Beveridge-Nelson"
+
+[[models]]
+id = "bk"
+label = "Baxter-King"
+
+[[models]]
+id = "bhp"
+label = "Boosted HP"
+
+[[bullets]]
+text = "Hodrick-Prescott"
+detail = "penalty-based trend filter; extracts smooth trend by penalising curvature of growth rate changes"
+
+[[bullets]]
+text = "Hamilton"
+detail = "regression-based filter; avoids spurious cycles induced by HP via an h-step-ahead forecasting regression"
+
+[[bullets]]
+text = "Beveridge-Nelson"
+detail = "ARIMA-based decomposition; permanent component defined as long-run forecast, cycle is transitory"
+
+[[bullets]]
+text = "Baxter-King"
+detail = "ideal band-pass approximation; isolates business-cycle frequencies by zeroing out trend and irregular components"
+
+[[bullets]]
+text = "Boosted HP"
+detail = "iterated HP filter (Phillips & Shi 2021); boosting removes residual unit-root components left by standard HP"
+
+[[inputs]]
+id = "y"
+label = "Time Series"
+tooltip = "A univariate time series vector y (T × 1). Pass a Julia Vector{Float64} or a column of a DataFrame."
+default = "y"
+
+[[inputs]]
+id = "hp-lambda"
+label = "lambda"
+tooltip = ""
+default = "1600"
+models = ["hp"]
+
+[[inputs]]
+id = "ham-h"
+label = "h"
+tooltip = ""
+default = "8"
+models = ["ham"]
+
+[[inputs]]
+id = "ham-p"
+label = "p"
+tooltip = ""
+default = "4"
+models = ["ham"]
+
+[[inputs]]
+id = "bn-p"
+label = "AR order"
+tooltip = "Autoregressive order p of the ARIMA(p,1,q) model fitted to the differenced series."
+default = "2"
+models = ["bn"]
+
+[[inputs]]
+id = "bn-q"
+label = "MA order"
+tooltip = "Moving-average order q of the ARIMA(p,1,q) model. Set to 0 for a pure AR specification."
+default = "0"
+models = ["bn"]
+
+[[inputs]]
+id = "bk-pl"
+label = "p₁ (low)"
+tooltip = ""
+default = "6"
+models = ["bk"]
+
+[[inputs]]
+id = "bk-ph"
+label = "p₂ (high)"
+tooltip = ""
+default = "32"
+models = ["bk"]
+
+[[inputs]]
+id = "bk-K"
+label = "K"
+tooltip = ""
+default = "12"
+models = ["bk"]
+
+[[inputs]]
+id = "bhp-lambda"
+label = "lambda"
+tooltip = "Smoothing parameter lambda passed to each HP iteration. Same convention as standard HP: 1600 (quarterly), 14400 (monthly), 100 (annual)."
+default = "1600"
+models = ["bhp"]
+
+[[inputs]]
+id = "bhp-maxiter"
+label = "Max iter"
+tooltip = "Upper bound on the boosting iterations; with the Fixed stopping rule, the exact number of iterations."
+default = "100"
+models = ["bhp"]
+
+[[inputs]]
+id = "bhp-stopping"
+label = "Stopping Rule"
+tooltip = "When boosting stops: BIC stops when the Phillips-Shi information criterion rises; ADF stops once an ADF test rejects a unit root in the cycle at the 5% level; Fixed runs exactly Max iter iterations."
+kind = "select"
+models = ["bhp"]
+
+[[inputs.options]]
+value = "BIC"
+label = "BIC"
+
+[[inputs.options]]
+value = "ADF"
+label = "ADF"
+
+[[inputs.options]]
+value = "fixed"
+label = "Fixed"
+
+[[codeBranches]]
+model = "hp"
+code = '''
+using MacroEconometricModels, Random, Statistics
+
+if !@isdefined({{y}})  # no series loaded: simulate a quarterly series in 100 x log units
+    global {{y}} = dgp_trend_cycle(MersenneTwister(1); drift=0.5, period=20.0, sigma_trend=0.6, sigma_cycle=0.8, T=200).y
+end
+y_obs = Float64.({{y}})  # 100 x log of a quarterly real series (for example real GDP), so the cycle is in percent deviations from trend
+
+run_filter(v) = hp_filter(v, lambda={{hp-lambda}})  # Hodrick-Prescott filter, reused by the actions
+res = run_filter(y_obs)
+tau = trend(res)  # trend component
+c   = cycle(res)  # cyclical component, percent deviation from trend
+idx = 1:length(y_obs)  # dates covered by the cycle (all of them for HP)
+
+println("Trend length: ", length(tau))
+println("Cycle std:    ", round(std(c), digits=3), " percent")
+'''
+
+[[codeBranches]]
+model = "ham"
+code = '''
+using MacroEconometricModels, Random, Statistics
+
+if !@isdefined({{y}})  # no series loaded: simulate a quarterly series in 100 x log units
+    global {{y}} = dgp_trend_cycle(MersenneTwister(1); drift=0.5, period=20.0, sigma_trend=0.6, sigma_cycle=0.8, T=200).y
+end
+y_obs = Float64.({{y}})  # 100 x log of a quarterly real series (for example real GDP), so the cycle is in percent deviations from trend
+
+run_filter(v) = hamilton_filter(v, h={{ham-h}}, p={{ham-p}})  # Hamilton regression filter, reused by the actions
+res = run_filter(y_obs)
+tau = trend(res)  # fitted values of y(t+h) on y(t), ..., y(t-p+1)
+c   = cycle(res)  # regression residuals, percent deviation from trend
+idx = res.valid_range  # dates covered: the first h + p - 1 = {{ham-h}} + {{ham-p}} - 1 observations are lost
+
+println("Trend length: ", length(tau), " of ", length(y_obs), " observations")
+println("Cycle std:    ", round(std(c), digits=3), " percent")
+'''
+
+[[codeBranches]]
+model = "bn"
+code = '''
+using MacroEconometricModels, Random, Statistics
+
+if !@isdefined({{y}})  # no series loaded: simulate a quarterly series in 100 x log units
+    global {{y}} = dgp_trend_cycle(MersenneTwister(1); drift=0.5, period=20.0, sigma_trend=0.6, sigma_cycle=0.8, T=200).y
+end
+y_obs = Float64.({{y}})  # 100 x log of a quarterly real series (for example real GDP), so the cycle is in percent deviations from trend
+
+run_filter(v) = beveridge_nelson(v, p={{bn-p}}, q={{bn-q}})  # Beveridge-Nelson decomposition via ARIMA({{bn-p}},1,{{bn-q}}) psi-weights, reused by the actions
+res = run_filter(y_obs)
+tau = trend(res)  # permanent component (random walk with drift)
+c   = cycle(res)  # transitory component
+idx = 1:length(y_obs)  # dates covered by the cycle (all of them for BN)
+
+println("Trend length: ", length(tau))
+println("Cycle std:    ", round(std(c), digits=3), " percent")
+println("Long-run multiplier psi(1): ", round(res.long_run_multiplier, digits=3))
+'''
+
+[[codeBranches]]
+model = "bk"
+code = '''
+using MacroEconometricModels, Random, Statistics
+
+if !@isdefined({{y}})  # no series loaded: simulate a quarterly series in 100 x log units
+    global {{y}} = dgp_trend_cycle(MersenneTwister(1); drift=0.5, period=20.0, sigma_trend=0.6, sigma_cycle=0.8, T=200).y
+end
+y_obs = Float64.({{y}})  # 100 x log of a quarterly real series (for example real GDP), so the cycle is in percent deviations from trend
+
+run_filter(v) = baxter_king(v, pl={{bk-pl}}, pu={{bk-ph}}, K={{bk-K}})  # Baxter-King band-pass filter [{{bk-pl}}, {{bk-ph}}] quarters, K={{bk-K}} leads and lags, reused by the actions
+res = run_filter(y_obs)
+tau = trend(res)  # y - cycle on the valid range
+c   = cycle(res)  # band-pass component, percent deviation from trend
+idx = res.valid_range  # dates covered: K = {{bk-K}} observations are lost at each end
+
+println("Trend length: ", length(tau), " of ", length(y_obs), " observations")
+println("Cycle std:    ", round(std(c), digits=3), " percent")
+'''
+
+[[codeBranches]]
+model = "bhp"
+code = '''
+using MacroEconometricModels, Random, Statistics
+
+if !@isdefined({{y}})  # no series loaded: simulate a quarterly series in 100 x log units
+    global {{y}} = dgp_trend_cycle(MersenneTwister(1); drift=0.5, period=20.0, sigma_trend=0.6, sigma_cycle=0.8, T=200).y
+end
+y_obs = Float64.({{y}})  # 100 x log of a quarterly real series (for example real GDP), so the cycle is in percent deviations from trend
+
+# stopping rule: :BIC stops when the Phillips-Shi BIC rises, :ADF when an ADF test rejects a unit root in the cycle, :fixed after max_iter
+run_filter(v) = boosted_hp(v, lambda={{bhp-lambda}}, stopping=:{{bhp-stopping}}, max_iter={{bhp-maxiter}})  # Boosted HP filter (Phillips and Shi 2021), reused by the actions
+res = run_filter(y_obs)
+tau = trend(res)  # trend after boosting
+c   = cycle(res)  # cyclical component, percent deviation from trend
+idx = 1:length(y_obs)  # dates covered by the cycle (all of them for boosted HP)
+
+println("Trend length: ", length(tau))
+println("Cycle std:    ", round(std(c), digits=3), " percent")
+println("Boosting iterations: ", res.iterations, " (stopping rule ", res.stopping, ")")
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "spectrum"
+label = "Power Spectrum"
+desc = "Periodogram of the cyclical component with frequencies converted to periods in quarters, the dominant period and the share of power at business-cycle periods of 6 to 32 quarters"
+code = '''
+using FFTW, Statistics
+
+cd_     = c .- mean(c)  # demeaned cycle of the selected filter
+n       = length(cd_)
+m       = div(n, 2)
+power   = abs2.(fft(cd_))[2:m+1] ./ n  # one-sided periodogram, zero frequency dropped
+periods = n ./ (1:m)  # period of each Fourier frequency, in quarters
+band    = 6 .<= periods .<= 32  # business-cycle band
+
+println("Dominant period:        ", round(periods[argmax(power)], digits=1), " quarters")
+println("Power at 6-32 quarters: ", round(sum(power[band]) / sum(power), digits=3), " of the total")
+println("Power above 32 quarters: ", round(sum(power[periods .> 32]) / sum(power), digits=3))
+println("Power below 6 quarters:  ", round(sum(power[periods .< 6]) / sum(power), digits=3))
+'''
+
+[[actionGroups.actions]]
+id = "variance_ratio"
+label = "Variance Ratio"
+desc = "Variance of the trend and of the cycle relative to the variance of the series, with the covariance term that makes the shares add to one"
+code = '''
+using Statistics
+
+yv        = y_obs[idx]  # the series on the dates the selected filter covers
+var_total = var(yv)  # total variance of the series
+cov_share = 2 * cov(tau, c) / var_total  # trend and cycle are not orthogonal in general
+
+println("Trend share: ", var(tau) / var_total)  # var(trend) / var(y)
+println("Cycle share: ", var(c) / var_total)  # var(cycle) / var(y)
+println("Covariance:  ", cov_share)  # the three add to one; the shares are variance explained only when this is near zero
+'''
+
+[[actionGroups.actions]]
+id = "endpoints"
+label = "End-Point Sensitivity"
+desc = "Re-run the selected filter dropping the last 4 observations and measure how much the trend is revised on the dates both runs cover"
+code = '''
+T_obs    = length(y_obs)
+res_trim = run_filter(y_obs[1:T_obs-4])  # same filter, sample minus the last 4 quarters
+idx_trim = hasproperty(res_trim, :valid_range) ? res_trim.valid_range : (1:T_obs-4)
+common   = intersect(idx, idx_trim)  # dates covered by both runs
+rev      = tau[common .- first(idx) .+ 1] .- trend(res_trim)[common .- first(idx_trim) .+ 1]  # trend revision on each common date
+
+println("Max trend revision:          ", maximum(abs.(rev)))
+println("Revision at last common date: ", rev[end])
+# Two-sided filters (HP, boosted HP) revise most near the end; Baxter-King drops K end points instead,
+# and Hamilton revises only through the re-estimated regression coefficients
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "turning_points"
+label = "Turning Points"
+desc = "Identify local peaks and troughs in the cyclical component of the selected filter using a rolling window"
+code = '''
+n       = length(c)  # length of the cycle of the selected filter
+w       = 2  # window half-width for peak and trough detection
+peaks   = [idx[i] for i in (w+1):(n-w) if all(c[i] .>= c[i-w:i+w])]  # local maxima, as positions in the original series
+troughs = [idx[i] for i in (w+1):(n-w) if all(c[i] .<= c[i-w:i+w])]  # local minima, as positions in the original series
+
+println("Peaks:   ", peaks)
+println("Troughs: ", troughs)
+'''
+
+[[actionGroups.actions]]
+id = "cross_correlation"
+label = "Cross-Correlation with GDP"
+desc = "Lead and lag correlations of the extracted cycle with the cycle of a reference series (for example 100 x log real GDP) filtered the same way"
+code = '''
+using Statistics
+
+@isdefined(gdp) || error("Define gdp, the reference series, in the same units and on the same dates as the input series")
+ref_res = run_filter(Float64.(gdp))  # reference series filtered with the selected filter
+ref_idx = hasproperty(ref_res, :valid_range) ? ref_res.valid_range : (1:length(gdp))
+common  = intersect(idx, ref_idx)  # dates covered by both cycles
+a       = c[common .- first(idx) .+ 1]
+b       = cycle(ref_res)[common .- first(ref_idx) .+ 1]
+
+lags  = -8:8  # leads and lags, in quarters
+xcorr = [cor(a[max(1,1-l):min(end,end-l)], b[max(1,1+l):min(end,end+l)]) for l in lags]  # cor(cycle at t, reference at t + l)
+for (l, r) in zip(lags, xcorr)
+    println(lpad(l, 3), "  ", round(r, digits=3))
+end
+println("Peak at lag ", lags[argmax(abs.(xcorr))], " (positive: the cycle leads the reference)")
+'''
+
+[[actionGroups.actions]]
+id = "filter_comparison"
+label = "Filter Comparison"
+desc = "Apply all five filters to the same series, align the cycles on the dates every filter covers, and compare them; also shows the HP cycle of a pure random walk (Hamilton 2018)"
+code = '''
+using MacroEconometricModels, Random, Statistics
+
+T_obs   = length(y_obs)
+results = ["HP" => hp_filter(y_obs, lambda={{hp-lambda}}),
+           "Hamilton" => hamilton_filter(y_obs, h={{ham-h}}, p={{ham-p}}),
+           "BN" => beveridge_nelson(y_obs, p={{bn-p}}, q={{bn-q}}),
+           "BK" => baxter_king(y_obs, pl={{bk-pl}}, pu={{bk-ph}}, K={{bk-K}}),
+           "BHP" => boosted_hp(y_obs, lambda={{bhp-lambda}}, stopping=:{{bhp-stopping}}, max_iter={{bhp-maxiter}})]
+span(r)  = hasproperty(r, :valid_range) ? r.valid_range : (1:T_obs)  # dates each cycle covers
+common   = reduce(intersect, [span(r) for (_, r) in results])  # Hamilton loses h + p - 1 at the start, BK loses K at each end
+aligned  = [label => cycle(r)[common .- first(span(r)) .+ 1] for (label, r) in results]
+hp_cyc   = last(aligned[1])
+
+println("Common sample: ", first(common), " to ", last(common), " (", length(common), " quarters)")
+for (label, cc) in aligned
+    println(rpad(label, 9), " std = ", round(std(cc), digits=3), "  cor with HP = ", round(cor(cc, hp_cyc), digits=3))
+end
+
+# Hamilton (2018): HP applied to a pure random walk, which has no cycle, still produces a sizeable spurious cycle
+rw = cumsum(0.8 .* randn(MersenneTwister(2), T_obs))
+println("HP cycle std of a pure random walk: ", round(std(cycle(hp_filter(rw, lambda={{hp-lambda}}))), digits=3))
+'''

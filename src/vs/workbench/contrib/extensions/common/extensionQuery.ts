@@ -29,6 +29,8 @@ export class Query {
 		}
 
 		commands.push(...['tag', 'ext', 'id', 'outdated', 'recentlyUpdated', 'restartRequired']);
+		// Pollis: the Toolboxes section alone (pollisToolboxesView.ts)
+		commands.push('toolboxes');
 		const sortCommands = [];
 		if (galleryManifest?.capabilities.extensionQuery?.sorting?.some(c => c.name === SortBy.InstallCount)) {
 			sortCommands.push('installs');

@@ -18,7 +18,7 @@ description = "Overview of Julia for academic and scientific computing"
 url = "https://www.youtube.com/watch?v=wPFPT-Ech2c"
 
 [requires]
-packages = ["Attractors.jl"]
+packages = ["Attractors.jl", "DynamicalSystems.jl", "FractalDimensions.jl", "GLMakie.jl"]
 
 [[notebookSections]]
 label = ""
@@ -202,12 +202,19 @@ model = "attract"
 code = '''
 using DynamicalSystems, Attractors
 
+function lorenz!(du, u, p, t)  # Lorenz system (sigma, rho, beta), in place
+    du[1] = p[1] * (u[2] - u[1])
+    du[2] = u[1] * (p[2] - u[3]) - u[2]
+    du[3] = u[1] * u[2] - p[3] * u[3]
+    return nothing
+end
+
 ds = CoupledODEs(lorenz!, {{u0}}, {{p}})  # define system
 grid = (range(-30, 30; length={{N}}), range(-30, 30; length={{N}}), range(0, 60; length={{N}}))  # state-space search grid
-mapper = AttractorsViaRecurrences(ds, grid)  # recurrence-based attractor mapper
+mapper = BasinMapRecurrences(ds, grid; consecutive_recurrences = 1000, attractor_locate_steps = 1000)  # recurrence-based attractor mapper
 
-sampler, _ = statespace_sampler(grid, 1)  # random initial conditions in the grid box
-basins_fractions(mapper, sampler; N=200)  # map them first: the mapper only knows the attractors it has met
+ics = RandomICsSampler(200, grid, 1)  # 200 random initial conditions in the grid box
+basins_fractions(mapper, ics)  # map them first: the mapper only knows the attractors it has met
 attractors = extract_attractors(mapper)  # find all coexisting attractors
 println("Number of attractors found: ", length(attractors))  # count distinct attractors
 '''
@@ -217,12 +224,19 @@ model = "basins"
 code = '''
 using DynamicalSystems, Attractors
 
+function lorenz!(du, u, p, t)  # Lorenz system (sigma, rho, beta), in place
+    du[1] = p[1] * (u[2] - u[1])
+    du[2] = u[1] * (p[2] - u[3]) - u[2]
+    du[3] = u[1] * u[2] - p[3] * u[3]
+    return nothing
+end
+
 ds = CoupledODEs(lorenz!, {{u0}}, {{p}})  # define system
 grid = (range(-30, 30; length={{N}}), range(-30, 30; length={{N}}), range(0, 60; length={{N}}))  # search grid
-mapper = AttractorsViaRecurrences(ds, grid)  # recurrence mapper
+mapper = BasinMapRecurrences(ds, grid; consecutive_recurrences = 1000, attractor_locate_steps = 1000)  # recurrence mapper
 
 basins, attractors = basins_of_attraction(mapper, grid)  # classify every grid point
-fracs = basin_fractions(basins)  # fraction of grid in each basin
+fracs = basins_fractions(basins)  # fraction of grid in each basin
 println("Basin fractions: ", fracs)  # relative size of each basin
 '''
 
@@ -231,16 +245,25 @@ model = "bifur"
 code = '''
 using DynamicalSystems, Attractors
 
+function lorenz!(du, u, p, t)  # Lorenz system (sigma, rho, beta), in place
+    du[1] = p[1] * (u[2] - u[1])
+    du[2] = u[1] * (p[2] - u[3]) - u[2]
+    du[3] = u[1] * u[2] - p[3] * u[3]
+    return nothing
+end
+
 ds = CoupledODEs(lorenz!, {{u0}}, {{p}})  # define system
 grid = (range(-30, 30; length={{N}}), range(-30, 30; length={{N}}), range(0, 60; length={{N}}))  # search grid
-mapper = AttractorsViaRecurrences(ds, grid)  # mapper
+mapper = BasinMapRecurrences(ds, grid; consecutive_recurrences = 1000, attractor_locate_steps = 1000)  # mapper
 
 prange = range(20.0, 35.0; length=30)  # parameter sweep range for rho
 pidx   = 2  # index of rho in parameter tuple
-sampler, _ = statespace_sampler(Random.MersenneTwister(1234); min_bounds={{u0}} .- 5, max_bounds={{u0}} .+ 5)  # random IC sampler
+pcurve = [Dict(pidx => rho) for rho in prange]  # one parameter setting per step
+ics = RandomICsSampler(100, HRectangle({{u0}} .- 5, {{u0}} .+ 5), 1234)  # 100 random initial conditions near u0
 
-cont_alg = AttractorSeedContinuation(mapper)  # seed-based continuation
-fracs_cont, attractors_cont = global_continuation(cont_alg, prange, pidx, sampler)  # trace attractors vs parameter
+cont_alg = AttractorSeedContinueMatch(mapper)  # seed-based continuation
+gco = global_continuation(cont_alg, pcurve, ics)  # trace attractors vs parameter
+fracs_cont, attractors_cont = gco.fractions, gco.attractors
 '''
 
 [[actionGroups]]
@@ -256,7 +279,7 @@ using DynamicalSystems, Attractors, GLMakie
 
 ds = CoupledODEs(lorenz!, {{u0}}, {{p}})
 grid = (range(-30, 30; length={{N}}), range(-30, 30; length={{N}}), range(25, 25; length=1))  # 2D slice at z=25
-mapper = AttractorsViaRecurrences(ds, grid)  # mapper
+mapper = BasinMapRecurrences(ds, grid; consecutive_recurrences = 1000, attractor_locate_steps = 1000)  # mapper
 basins, attractors = basins_of_attraction(mapper, grid)  # classify grid
 
 heatmap(basins[:, :, 1])  # colour map of basins in x-y plane
@@ -271,9 +294,9 @@ using DynamicalSystems, Attractors, GLMakie
 
 ds = CoupledODEs(lorenz!, {{u0}}, {{p}})
 grid = (range(-30, 30; length={{N}}), range(-30, 30; length={{N}}), range(0, 60; length={{N}}))  # search grid
-mapper = AttractorsViaRecurrences(ds, grid)  # mapper
-sampler, _ = statespace_sampler(grid, 1)  # random initial conditions in the grid box
-basins_fractions(mapper, sampler; N=200)  # map them first: the mapper only knows the attractors it has met
+mapper = BasinMapRecurrences(ds, grid; consecutive_recurrences = 1000, attractor_locate_steps = 1000)  # mapper
+ics = RandomICsSampler(200, grid, 1)  # 200 random initial conditions in the grid box
+basins_fractions(mapper, ics)  # map them first: the mapper only knows the attractors it has met
 attractors = extract_attractors(mapper)  # find attractors
 
 for (k, A) in attractors
@@ -290,10 +313,10 @@ using DynamicalSystems, Attractors, GLMakie
 
 ds = CoupledODEs(lorenz!, {{u0}}, {{p}})
 grid = (range(-30, 30; length={{N}}), range(-30, 30; length={{N}}), range(0, 60; length={{N}}))  # grid
-mapper = AttractorsViaRecurrences(ds, grid)  # mapper
+mapper = BasinMapRecurrences(ds, grid; consecutive_recurrences = 1000, attractor_locate_steps = 1000)  # mapper
 prange = range(20.0, 35.0; length=20)  # parameter range
-sampler, _ = statespace_sampler(Random.MersenneTwister(1))  # IC sampler
-fracs_cont, _ = global_continuation(AttractorSeedContinuation(mapper), prange, 2, sampler)  # continuation
+ics = RandomICsSampler(100, grid, 1)  # 100 random initial conditions in the grid box
+fracs_cont = global_continuation(AttractorSeedContinueMatch(mapper), [Dict(2 => rho) for rho in prange], ics).fractions  # continuation
 
 plot_basins_curves(fracs_cont, prange)  # basin fraction vs parameter
 '''
@@ -311,9 +334,9 @@ using DynamicalSystems, Attractors
 
 ds = CoupledODEs(lorenz!, {{u0}}, {{p}})
 grid = (range(-30, 30; length={{N}}), range(-30, 30; length={{N}}), range(0, 60; length={{N}}))  # grid
-basins, attractors = basins_of_attraction(AttractorsViaRecurrences(ds, grid), grid)  # classify
+basins, attractors = basins_of_attraction(BasinMapRecurrences(ds, grid; consecutive_recurrences = 1000, attractor_locate_steps = 1000), grid)  # classify
 
-fracs = basin_fractions(basins)  # relative basin sizes
+fracs = basins_fractions(basins)  # relative basin sizes
 for (k, f) in fracs
     println("Attractor ", k, ": ", round(f*100; digits=1), "%")  # print each fraction
 end
@@ -328,7 +351,7 @@ using DynamicalSystems, Attractors
 
 ds = CoupledODEs(lorenz!, {{u0}}, {{p}})
 grid = (range(-30, 30; length={{N}}), range(-30, 30; length={{N}}), range(0, 60; length={{N}}))  # grid
-mapper = AttractorsViaRecurrences(ds, grid)  # mapper
+mapper = BasinMapRecurrences(ds, grid; consecutive_recurrences = 1000, attractor_locate_steps = 1000)  # mapper
 
 label1 = mapper({{u0}})  # label for reference IC
 label2 = mapper({{u0}} .+ 1e-6)  # label for slightly perturbed IC
@@ -352,8 +375,8 @@ p_after  = (10.0, 24.0, 8/3)  # parameters past a bifurcation
 for p_i in [p_before, p_after]
     ds = CoupledODEs(lorenz!, {{u0}}, p_i)
     grid = (range(-30, 30; length={{N}}), range(-30, 30; length={{N}}), range(0, 60; length={{N}}))  # grid
-    mapper = AttractorsViaRecurrences(ds, grid)
-    basins_fractions(mapper, statespace_sampler(grid, 1)[1]; N=200)  # map initial conditions first: the mapper only knows the attractors it has met
+    mapper = BasinMapRecurrences(ds, grid; consecutive_recurrences = 1000, attractor_locate_steps = 1000)
+    basins_fractions(mapper, RandomICsSampler(200, grid, 1))  # map initial conditions first: the mapper only knows the attractors it has met
     att = extract_attractors(mapper)  # attractors found
     println("p=", p_i, " -> ", length(att), " attractor(s)")  # count attractors
 end
@@ -371,8 +394,8 @@ prange = range(10.0, 30.0; length=40)  # sweep rho over [10, 30]
 for rho in prange
     ds = CoupledODEs(lorenz!, {{u0}}, (10.0, rho, 8/3))
     grid = (range(-30, 30; length={{N}}), range(-30, 30; length={{N}}), range(0, 60; length={{N}}))  # grid
-    mapper = AttractorsViaRecurrences(ds, grid)
-    basins_fractions(mapper, statespace_sampler(grid, 1)[1]; N=200)  # map initial conditions first: the mapper only knows the attractors it has met
+    mapper = BasinMapRecurrences(ds, grid; consecutive_recurrences = 1000, attractor_locate_steps = 1000)
+    basins_fractions(mapper, RandomICsSampler(200, grid, 1))  # map initial conditions first: the mapper only knows the attractors it has met
     att = extract_attractors(mapper)  # attractors found
     println("rho=", rho, ": ", length(att), " attractor(s)")  # detect transition
 end
@@ -392,12 +415,12 @@ using DynamicalSystems, Attractors
 ds = CoupledODEs(lorenz!, {{u0}}, {{p}})
 grid = (range(-30, 30; length={{N}}), range(-30, 30; length={{N}}), range(0, 60; length={{N}}))  # grid
 
-sampler, _ = statespace_sampler(grid, 1)  # random initial conditions in the grid box
-m_rec  = AttractorsViaRecurrences(ds, grid)  # recurrence mapper
-fr_rec = basins_fractions(m_rec, sampler; N=500)  # finds the attractors as it maps
+ics = RandomICsSampler(500, grid, 1)  # 500 random initial conditions in the grid box
+m_rec  = BasinMapRecurrences(ds, grid; consecutive_recurrences = 1000, attractor_locate_steps = 1000)  # recurrence mapper
+fr_rec = basins_fractions(m_rec, ics)  # finds the attractors as it maps
 att_r  = extract_attractors(m_rec)  # attractors via recurrence
-m_prox = AttractorsViaProximity(ds, att_r)  # proximity mapper: needs the attractors to be known already
-fr_prox = basins_fractions(m_prox, sampler; N=500)
+m_prox = BasinMapProximity(ds, att_r)  # proximity mapper: needs the attractors to be known already
+fr_prox = basins_fractions(m_prox, ics)
 
 println("Recurrence: ", length(att_r), " attractor(s), basin fractions ", fr_rec)
 println("Proximity:  basin fractions ", fr_prox)  # should agree with recurrence up to sampling noise
@@ -412,8 +435,8 @@ using DynamicalSystems, Attractors
 
 ds = CoupledODEs(lorenz!, {{u0}}, {{p}})
 grid = (range(-30, 30; length={{N}}), range(-30, 30; length={{N}}), range(0, 60; length={{N}}))  # grid
-mapper = AttractorsViaRecurrences(ds, grid)
-basins_fractions(mapper, statespace_sampler(grid, 1)[1]; N=200)  # map initial conditions first: the mapper only knows the attractors it has met
+mapper = BasinMapRecurrences(ds, grid; consecutive_recurrences = 1000, attractor_locate_steps = 1000)
+basins_fractions(mapper, RandomICsSampler(200, grid, 1))  # map initial conditions first: the mapper only knows the attractors it has met
 att = extract_attractors(mapper)  # attractors found
 
 println(length(att) == 1 ? "Monostable" : "Multistable ($(length(att)) attractors)")  # stability diagnosis
@@ -432,7 +455,7 @@ using DynamicalSystems, Attractors
 
 ds = CoupledODEs(lorenz!, {{u0}}, {{p}})
 grid = (range(-30, 30; length={{N}}), range(-30, 30; length={{N}}), range(0, 60; length={{N}}))  # grid
-basins, _ = basins_of_attraction(AttractorsViaRecurrences(ds, grid), grid)  # classify
+basins, _ = basins_of_attraction(BasinMapRecurrences(ds, grid; consecutive_recurrences = 1000, attractor_locate_steps = 1000), grid)  # classify
 
 Sb, Sbb = basin_entropy(basins)  # basin entropy and boundary basin entropy (Daza et al. 2016)
 println("Basin entropy Sb: ", Sb, "  boundary basin entropy Sbb: ", Sbb)  # Sb = 0: a single basin
@@ -450,6 +473,6 @@ ds = CoupledODEs(lorenz!, {{u0}}, {{p}})
 tr, _ = trajectory(ds, 200.0; Dt=0.01)  # long orbit on attractor
 
 eps_vals = exp10.(range(-2, 1; length=20))  # length scales
-D2 = correlationdim(tr, eps_vals)  # correlation dimension
+D2 = grassberger_proccacia_dim(tr, eps_vals)  # correlation dimension
 println("Correlation dimension: ", D2)  # Lorenz attractor ~ 2.05
 '''

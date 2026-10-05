@@ -58,7 +58,7 @@ export function registerEcbWebviewHandlers(
 		for (const t of Object.keys(lastCode)) { void postColorized(lastCode[t], t); }
 	}));
 	const ecbData = metadata.ecb;
-	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, ecbData.packages.map(p => p.name), fileService, pathService, commandService, notificationService, workspaceContextService);
+	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, ecbData.packages, [], fileService, pathService, commandService, notificationService, workspaceContextService);
 	createExampleCodeWiring(webviewInput.webview, disposables, 'ecb', fileService, pathService, notificationService);
 	createCustomCopyWiring(webviewInput.webview, disposables, ecbData.wikis, ecbData.notebooks, fileService, pathService, editorService, commandService, notificationService);
 	createReferenceWiring(webviewInput.webview, disposables, 'ecb', ecbData.references, fileService, pathService, commandService, notificationService);

@@ -1,3 +1,0 @@
-# ROUGE-S
-
-Coming soon.

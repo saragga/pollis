@@ -168,55 +168,55 @@ label = "Expectation Propagation"
 
 [[bullets]]
 text = "Belief Propagation (BP)"
-detail = "exact sum-product message passing; works for conjugate Gaussian models; closed-form updates at every factor node"
+detail = "sum-product message passing; exact in one sweep when the factor graph is a tree of conjugate factors (here a Gaussian mean with known variance); loopy or non-conjugate graphs need initialization or approximations"
 
 [[bullets]]
 text = "Variational Message Passing (VMP)"
-detail = "approximate mean-field factorization via MeanField() constraints; tracks convergence through the free energy"
+detail = "mean-field factorization via @constraints plus @initialization; the free energy (minus the ELBO) decreases each iteration, but the posterior variances are understated"
 
 [[bullets]]
 text = "Expectation Propagation (EP)"
-detail = "approximate message passing that projects non-Gaussian messages onto the exponential family; more accurate than VMP for non-conjugate factors"
+detail = "moment matching: project the tilted distribution onto a Gaussian and divide out the cavity; in RxInfer this is how the Probit node handles binary outcomes"
 
 [[inputs]]
 id = "bp-model"
 label = "Model Name"
 tooltip = "Name of the @model function to define."
-default = "my_model"
+default = "gaussian_mean"
 models = ["bp"]
 
 [[inputs]]
 id = "bp-data"
 label = "Data Variable"
-tooltip = "Name of the observed data vector passed to the model."
+tooltip = "Name of the vector of observations. The code fills it with 30 synthetic draws; replace that line with your own data."
 default = "y"
 models = ["bp"]
 
 [[inputs]]
-id = "bp-iter"
-label = "Iterations"
-tooltip = "Number of message-passing iterations."
-default = "10"
+id = "bp-var"
+label = "Known Variance"
+tooltip = "Observation variance, treated as known. With the variance fixed, the factor graph is a tree of conjugate Gaussian factors, so one sweep of belief propagation gives the exact posterior of the mean."
+default = "1.0"
 models = ["bp"]
 
 [[inputs]]
 id = "vmp-model"
 label = "Model Name"
 tooltip = "Name of the @model function to define."
-default = "my_model"
+default = "gaussian_mean_precision"
 models = ["vmp"]
 
 [[inputs]]
 id = "vmp-data"
 label = "Data Variable"
-tooltip = "Name of the observed data vector passed to the model."
+tooltip = "Name of the vector of observations. The code fills it with 20 synthetic draws; replace that line with your own data."
 default = "y"
 models = ["vmp"]
 
 [[inputs]]
 id = "vmp-iter"
 label = "Iterations"
-tooltip = "Number of message-passing iterations."
+tooltip = "Number of variational message-passing iterations. Each one updates q(mu) and q(tau) in turn and cannot increase the free energy."
 default = "50"
 models = ["vmp"]
 
@@ -224,88 +224,115 @@ models = ["vmp"]
 id = "ep-model"
 label = "Model Name"
 tooltip = "Name of the @model function to define."
-default = "my_model"
+default = "probit_trend"
 models = ["ep"]
 
 [[inputs]]
 id = "ep-data"
 label = "Data Variable"
-tooltip = "Name of the observed data vector passed to the model."
+tooltip = "Name of the vector of binary (0/1) outcomes. The code fills it with 100 synthetic outcomes; replace that line with your own data."
 default = "y"
 models = ["ep"]
 
 [[inputs]]
 id = "ep-iter"
 label = "Iterations"
-tooltip = "Number of message-passing iterations."
-default = "30"
+tooltip = "Number of message-passing iterations. The Probit messages depend on the incoming message, so they need a few passes to settle."
+default = "20"
 models = ["ep"]
 
 [[codeBranches]]
 model = "bp"
 code = '''
-using RxInfer  # reactive Bayesian inference via factor graph message passing
+using RxInfer, Distributions, LinearAlgebra, Random  # GraphPPL @model syntax, factor graphs and message passing
+Random.seed!(42)
+s2 = {{bp-var}}  # known observation variance
+{{bp-data}} = 1.5 .+ sqrt(s2) .* randn(30)  # synthetic data; replace with your observations
 
-@model function {{bp-model}}({{bp-data}})  # GraphPPL @model macro — distributions use keyword arguments unlike Turing.jl
-    mu    ~ Normal(mean = 0.0, variance = 1.0)
-    sigma ~ Gamma(shape = 1.0, rate = 1.0)  # despite the name, sigma is the variance of y below, not its standard deviation
-    {{bp-data}} .~ Normal(mean = mu, variance = sigma)  # .~ broadcasts the scalar distribution element-wise over the vector
+@model function {{bp-model}}(y, s2)  # distributions inside @model take keyword arguments
+    mu ~ Normal(mean = 0.0, variance = 10.0)  # prior on the unknown mean
+    y .~ Normal(mean = mu, variance = s2)  # known variance: a tree of conjugate factors, so BP is exact
 end
 
-result = infer(  # sum-product belief propagation: exact only when every factor is conjugate; an unknown mean and variance together are not, so check against the VMP toggle
-    model      = {{bp-model}}({{bp-data}} = {{bp-data}}_data),
-    returnvars = (mu = KeepLast(), sigma = KeepLast()),
-    iterations = {{bp-iter}}
+result = infer(
+    model       = {{bp-model}}(s2 = s2),
+    data        = (y = {{bp-data}},),
+    returnvars  = (mu = KeepLast(),),
+    iterations  = 1,  # one sweep suffices on a tree
+    free_energy = true  # on a tree the Bethe free energy equals minus the log evidence
 )
+q_mu = result.posteriors[:mu]  # posterior marginal of mu
 
-println(result.posteriors[:mu])  # posterior marginal of mu after BP message passing
+n = length({{bp-data}})
+v_exact = 1 / (1 / 10.0 + n / s2)  # closed-form conjugate posterior variance
+m_exact = v_exact * sum({{bp-data}}) / s2  # and mean
+println("BP:    mean ", mean(q_mu), "  var ", var(q_mu))
+println("Exact: mean ", m_exact, "  var ", v_exact)
 '''
 
 [[codeBranches]]
 model = "vmp"
 code = '''
-using RxInfer  # reactive Bayesian inference via factor graph message passing
+using RxInfer, Distributions, Random  # GraphPPL @model syntax, factor graphs and message passing
+Random.seed!(42)
+{{vmp-data}} = 1.5 .+ 0.8 .* randn(20)  # synthetic data; replace with your observations
 
-@model function {{vmp-model}}({{vmp-data}})  # GraphPPL @model macro — distributions use keyword arguments unlike Turing.jl
-    mu    ~ Normal(mean = 0.0, variance = 1.0)
-    sigma ~ Gamma(shape = 1.0, rate = 1.0)  # despite the name, sigma is the variance of y below, not its standard deviation
-    {{vmp-data}} .~ Normal(mean = mu, variance = sigma)  # .~ broadcasts the scalar distribution element-wise over the vector
+@model function {{vmp-model}}(y)  # distributions inside @model take keyword arguments
+    mu  ~ Normal(mean = 0.0, precision = 0.1)  # prior on the mean
+    tau ~ Gamma(shape = 1.0, rate = 1.0)  # Gamma prior on the precision: conjugate given mu
+    y .~ Normal(mean = mu, precision = tau)  # mu and tau both unknown: the graph has a loop
 end
 
-result = infer(  # Variational Message Passing with mean-field factorization
-    model       = {{vmp-model}}({{vmp-data}} = {{vmp-data}}_data),
-    constraints = MeanField(),
-    free_energy = true,  # track ELBO convergence across iterations
-    returnvars  = (mu = KeepLast(), sigma = KeepLast()),
-    iterations  = {{vmp-iter}}
-)
+constraints = @constraints begin
+    q(mu, tau) = q(mu)q(tau)  # mean-field: drop the posterior dependence between mu and tau
+end
+init = @initialization begin  # VMP on a loopy graph needs starting marginals
+    q(mu)  = vague(NormalMeanPrecision)
+    q(tau) = vague(GammaShapeRate)
+end
 
-println(result.free_energy)  # free energy (minus the ELBO) should decrease and level off as VMP converges
+result = infer(
+    model          = {{vmp-model}}(),
+    data           = (y = {{vmp-data}},),
+    constraints    = constraints,
+    initialization = init,
+    returnvars     = (mu = KeepEach(), tau = KeepEach()),  # keep every iteration for the convergence plots
+    iterations     = {{vmp-iter}},
+    free_energy    = true  # free energy = minus the ELBO; it should decrease and level off
+)
+q_mu, q_tau = last(result.posteriors[:mu]), last(result.posteriors[:tau])  # final marginals
+println("q(mu):  mean ", mean(q_mu), "  var ", var(q_mu))
+println("q(tau): mean ", mean(q_tau), "  (implied sd ", 1 / sqrt(mean(q_tau)), ")")
+println("Free energy: ", last(result.free_energy))
 '''
 
 [[codeBranches]]
 model = "ep"
 code = '''
-using RxInfer  # reactive Bayesian inference via factor graph message passing
+using RxInfer, Distributions, Random  # GraphPPL @model syntax, factor graphs and message passing
+Random.seed!(42)
+T = 100
+x_true = cumsum(0.15 .* randn(T))  # hidden trend (a random walk)
+{{ep-data}} = Float64.(rand(T) .< cdf.(Normal(), x_true))  # synthetic 0/1 outcomes; replace with your own
 
-@model function {{ep-model}}({{ep-data}})  # GraphPPL @model macro — distributions use keyword arguments unlike Turing.jl
-    mu    ~ Normal(mean = 0.0, variance = 1.0)
-    sigma ~ Gamma(shape = 1.0, rate = 1.0)  # despite the name, sigma is the variance of y below, not its standard deviation
-    {{ep-data}} .~ Normal(mean = mu, variance = sigma)  # .~ broadcasts the scalar distribution element-wise over the vector
+@model function {{ep-model}}(y)  # distributions inside @model take keyword arguments
+    x[1] ~ Normal(mean = 0.0, precision = 1.0)
+    for k in 2:(length(y) + 1)
+        x[k] ~ Normal(mean = x[k - 1], precision = 1 / 0.15^2)  # random-walk prior on the trend
+        y[k - 1] ~ Probit(x[k])  # P(y = 1) = Phi(x): not conjugate to the Gaussian prior
+    end
 end
 
-@constraints function ep_constraints()  # declare EP approximation for the likelihood factor
-    q(mu, {{ep-data}}) :: ExpectationPropagation()
-end
-
-result = infer(  # EP projects non-Gaussian messages onto the exponential family
-    model       = {{ep-model}}({{ep-data}} = {{ep-data}}_data),
-    constraints = ep_constraints(),
-    returnvars  = (mu = KeepLast(), sigma = KeepLast()),
-    iterations  = {{ep-iter}}
+result = infer(  # the Probit node sends EP messages: moment matching of the tilted distribution, cavity divided out
+    model       = {{ep-model}}(),
+    data        = (y = {{ep-data}},),
+    returnvars  = (x = KeepLast(),),
+    iterations  = {{ep-iter}},
+    free_energy = true
 )
-
-println(result.posteriors[:mu])  # posterior marginal of mu after EP message passing
+q_x = result.posteriors[:x][2:end]  # posterior marginals of the trend at t = 1..T
+println("Free energy: ", last(result.free_energy))
+println("Final trend: mean ", mean(q_x[end]), "  sd ", std(q_x[end]))
 '''
 
 [[actionGroups]]
@@ -315,25 +342,32 @@ label = "Visualise"
 [[actionGroups.actions]]
 id = "posterior-mean"
 label = "Posterior Mean"
-desc = "Plot the posterior mean of each parameter across iterations"
+desc = "BP: the posterior of mu after one sweep. VMP: posterior means of mu and tau at each iteration. EP: the posterior trend with a 95% band against the hidden trend and the 0/1 data"
 code = '''
-using Plots  # plotting library
-
-plot(mean.(result.posteriors[:mu]), label="mu")  # posterior mean of mu per iteration
-plot!(mean.(result.posteriors[:sigma]), label="sigma")  # posterior mean of sigma per iteration
+using Plots
+{{?model=bp}}println("BP on a tree is exact after one sweep, so there is no iteration path; posterior mean of mu: ", mean(q_mu))
+{{?model=vmp}}plot(mean.(result.posteriors[:mu]), label="E[mu]", xlabel="iteration")  # one value per VMP iteration (KeepEach)
+{{?model=vmp}}plot!(mean.(result.posteriors[:tau]), label="E[tau]")
+{{?model=ep}}m, s = mean.(q_x), std.(q_x)
+{{?model=ep}}plot(m, ribbon=1.96 .* s, label="posterior trend", xlabel="t")
+{{?model=ep}}plot!(x_true, label="hidden trend", linestyle=:dash)
+{{?model=ep}}scatter!(2 .* {{ep-data}} .- 1, markersize=2, label="y (as -1 / +1)")
 '''
 
 [[actionGroups.actions]]
 id = "posterior-dist"
 label = "Posterior Distribution"
-desc = "Plot the final posterior marginal distribution of each parameter"
+desc = "Densities of the final posterior marginals (EP: the trend at the last time point)"
 code = '''
-using Plots, Distributions  # plotting and distributions
-
-mu_post    = result.posteriors[:mu]  # final posterior marginal of mu
-sigma_post = result.posteriors[:sigma]  # final posterior marginal of sigma
-plot(mu_post,    label="p(mu | y)")  # plot posterior of mu
-plot(sigma_post, label="p(sigma | y)")  # plot posterior of sigma
+using Plots
+{{?model=bp}}g = range(mean(q_mu) - 4std(q_mu), mean(q_mu) + 4std(q_mu), length=200)
+{{?model=bp}}plot(g, pdf.(Ref(q_mu), g), label="p(mu | y), BP", xlabel="mu")
+{{?model=bp}}plot!(g, pdf.(Normal(m_exact, sqrt(v_exact)), g), linestyle=:dash, label="closed form")  # the two curves coincide
+{{?model=vmp}}g1 = range(mean(q_mu) - 4std(q_mu), mean(q_mu) + 4std(q_mu), length=200)
+{{?model=vmp}}g2 = range(1e-3, mean(q_tau) + 4std(q_tau), length=200)
+{{?model=vmp}}plot(plot(g1, pdf.(Ref(q_mu), g1), label="q(mu)", xlabel="mu"), plot(g2, pdf.(Ref(q_tau), g2), label="q(tau)", xlabel="tau"))
+{{?model=ep}}g = range(mean(q_x[end]) - 4std(q_x[end]), mean(q_x[end]) + 4std(q_x[end]), length=200)
+{{?model=ep}}plot(g, pdf.(Ref(q_x[end]), g), label="q(x_T)", xlabel="x_T")
 '''
 
 [[actionGroups]]
@@ -343,23 +377,27 @@ label = "Diagnose"
 [[actionGroups.actions]]
 id = "free-energy"
 label = "Free Energy"
-desc = "Track variational free energy to assess VMP convergence"
+desc = "BP: the Bethe free energy against the exact minus log evidence (equal on a tree). VMP and EP: free energy per iteration, which should decrease and level off"
 code = '''
-using Plots  # plotting library
-
-result_fe = infer(model = model, constraints = MeanField(), free_energy = true, iterations = 50)  # run VMP with free energy tracking
-plot(result_fe.free_energy, xlabel="iteration", ylabel="Free Energy", label="")  # free energy = minus the ELBO: it should decrease and level off, an upper bound on minus the log evidence
+using Plots
+{{?model=bp}}Sigma = s2 * I + 10.0 * ones(n, n)  # marginal covariance of y after integrating out mu
+{{?model=bp}}println("Bethe free energy:     ", last(result.free_energy))
+{{?model=bp}}println("Exact -log p(y):       ", -logpdf(MvNormal(zeros(n), Sigma), {{bp-data}}))
+{{?model=vmp}}plot(result.free_energy, xlabel="iteration", ylabel="free energy", label="")  # upper bound on -log p(y); the gap is the KL from q to the exact posterior
+{{?model=ep}}plot(result.free_energy, xlabel="iteration", ylabel="free energy", label="")  # EP is not guaranteed to decrease it monotonically
 '''
 
 [[actionGroups.actions]]
 id = "convergence"
 label = "Convergence Check"
-desc = "Compare posterior means across iterations to check for convergence"
+desc = "Change in the posterior between the last two iterations"
 code = '''
-using Plots  # plotting library
-
-mu_means = mean.(result.posteriors[:mu])  # posterior mean of mu at each iteration
-plot(mu_means, xlabel="iteration", ylabel="E[mu]", label="mu")  # should stabilize when converged
+{{?model=bp}}println("BP on a tree converges in one sweep; nothing to check")
+{{?model=vmp}}d_mu = abs.(diff(mean.(result.posteriors[:mu])))  # change in E[mu] per iteration
+{{?model=vmp}}println("Last change in E[mu]: ", last(d_mu), "  converged: ", last(d_mu) < 1e-6)
+{{?model=vmp}}println("Free energy non-increasing: ", all(<=(1e-8), diff(result.free_energy)))
+{{?model=ep}}fe = result.free_energy
+{{?model=ep}}println("Last change in free energy: ", fe[end] - fe[end - 1], "  converged: ", abs(fe[end] - fe[end - 1]) < 1e-6)
 '''
 
 [[actionGroups]]
@@ -369,26 +407,31 @@ label = "Predict"
 [[actionGroups.actions]]
 id = "prior-pred"
 label = "Prior Predictive"
-desc = "Generate samples from the model prior to data conditioning"
+desc = "Data simulated from the priors, against the observed data: are the priors plausible?"
 code = '''
-using RxInfer  # reactive Bayesian inference
-
-prior_result = infer(model = my_model(), returnvars = (mu = KeepLast(), sigma = KeepLast()))  # run without data to get prior marginals
-println(prior_result.posteriors[:mu])  # prior distribution of mu
+using Plots
+{{?model=bp}}y_prior = [rand(Normal(rand(Normal(0, sqrt(10.0))), sqrt(s2))) for _ in 1:2000]  # draw mu, then y
+{{?model=vmp}}y_prior = [rand(Normal(rand(Normal(0, sqrt(10.0))), 1 / sqrt(rand(Gamma(1.0, 1.0))))) for _ in 1:2000]  # draw mu and tau, then y
+{{?model=bp}}histogram(y_prior, normalize=true, alpha=0.5, label="prior predictive")
+{{?model=bp}}histogram!({{bp-data}}, normalize=true, alpha=0.5, label="observed")
+{{?model=vmp}}histogram(filter(v -> abs(v) < 50, y_prior), normalize=true, alpha=0.5, label="prior predictive (|y| < 50)")  # heavy tails from small tau
+{{?model=vmp}}histogram!({{vmp-data}}, normalize=true, alpha=0.5, label="observed")
+{{?model=ep}}paths = [cumsum(0.15 .* randn(T)) .+ randn() for _ in 1:20]  # trends drawn from the prior
+{{?model=ep}}plot(paths, label=false, alpha=0.4, xlabel="t", ylabel="x")
+{{?model=ep}}plot!(x_true, linewidth=2, label="hidden trend")
 '''
 
 [[actionGroups.actions]]
 id = "post-pred"
 label = "Posterior Predictive"
-desc = "Generate new observations from the posterior predictive distribution"
+desc = "BP: the exact predictive of a new observation. VMP: simulated from the mean-field posterior. EP: the probability that the next outcome is 1"
 code = '''
-using RxInfer, Random  # inference and RNG
-
-mu_post    = result.posteriors[:mu]  # final posterior marginal of mu
-sigma_post = result.posteriors[:sigma]  # final posterior marginal of sigma
-mu_sample    = rand(mu_post)  # draw a sample from posterior of mu
-sigma_sample = rand(sigma_post)  # draw a sample from posterior of sigma
-y_pred = rand(Normal(mean = mu_sample, variance = sigma_sample), 100)  # generate 100 posterior predictive observations
+{{?model=bp}}pred = Normal(mean(q_mu), sqrt(var(q_mu) + s2))  # exact: posterior variance plus noise variance
+{{?model=bp}}println("Predictive for a new y: mean ", mean(pred), "  95% interval ", quantile.(pred, [0.025, 0.975]))
+{{?model=vmp}}y_pred = [rand(Normal(rand(q_mu), 1 / sqrt(rand(q_tau)))) for _ in 1:5000]  # draw mu and tau independently (mean-field)
+{{?model=vmp}}println("Predictive for a new y: mean ", mean(y_pred), "  95% interval ", quantile(y_pred, [0.025, 0.975]))
+{{?model=ep}}m, v = mean(q_x[end]), var(q_x[end]) + 0.15^2  # trend one step ahead
+{{?model=ep}}println("P(next y = 1) = ", cdf(Normal(), m / sqrt(1 + v)))  # probit predictive: integrates Phi over the Gaussian
 '''
 
 [[actionGroups]]
@@ -397,29 +440,39 @@ label = "Compare"
 
 [[actionGroups.actions]]
 id = "compare-algorithms"
-label = "Compare Algorithms"
-desc = "Run BP and VMP on the same model and compare posterior means"
+label = "Approximate vs Exact"
+desc = "How far is message passing from the exact posterior? BP: matches the closed form. VMP: the exact posterior on a grid shows that mean-field understates the variance of mu. EP: the final trend against an importance-sampling estimate"
 code = '''
-using RxInfer  # reactive Bayesian inference
-
-res_bp  = infer(model = my_model(y = y_data), iterations = 10)  # Belief Propagation
-res_vmp = infer(model = my_model(y = y_data), constraints = MeanField(), iterations = 50)  # Variational Message Passing
-
-println("BP  mu: ", mean(res_bp.posteriors[:mu]))  # compare posterior mean of mu
-println("VMP mu: ", mean(res_vmp.posteriors[:mu]))  # compare posterior mean of mu
+{{?model=bp}}println("Mean error: ", abs(mean(q_mu) - m_exact), "  variance ratio BP / exact: ", var(q_mu) / v_exact)  # 0 and 1 up to rounding
+{{?model=vmp}}mus  = range(mean(q_mu) - 6std(q_mu), mean(q_mu) + 6std(q_mu), length=400)
+{{?model=vmp}}taus = range(1e-3, mean(q_tau) + 8std(q_tau), length=400)
+{{?model=vmp}}logp = [logpdf(Normal(0, sqrt(10.0)), m) + logpdf(Gamma(1.0, 1.0), t) + sum(logpdf.(Normal(m, 1 / sqrt(t)), {{vmp-data}})) for m in mus, t in taus]
+{{?model=vmp}}w = exp.(logp .- maximum(logp)); w ./= sum(w)  # exact joint posterior on the grid
+{{?model=vmp}}pm = vec(sum(w, dims=2))  # exact marginal of mu
+{{?model=vmp}}m_ex = sum(pm .* mus); v_ex = sum(pm .* (mus .- m_ex) .^ 2)
+{{?model=vmp}}println("E[mu]:   VMP ", mean(q_mu), "  exact ", m_ex)
+{{?model=vmp}}println("Var[mu]: VMP ", var(q_mu), "  exact ", v_ex, "  ratio ", var(q_mu) / v_ex)  # below 1: mean-field is overconfident
+{{?model=ep}}xs = [cumsum(0.15 .* randn(T)) .+ randn() for _ in 1:20000]  # paths from the prior
+{{?model=ep}}lw = [sum(yk == 1 ? logcdf(Normal(), xk) : logccdf(Normal(), xk) for (yk, xk) in zip({{ep-data}}, p)) for p in xs]  # log likelihood weights
+{{?model=ep}}w = exp.(lw .- maximum(lw)); w ./= sum(w)
+{{?model=ep}}m_is = sum(w .* last.(xs)); v_is = sum(w .* (last.(xs) .- m_is) .^ 2)
+{{?model=ep}}println("x_T: EP mean ", mean(q_x[end]), " var ", var(q_x[end]), "  |  IS mean ", m_is, " var ", v_is, "  (effective sample size ", round(1 / sum(abs2, w)), ")")
 '''
 
 [[actionGroups.actions]]
 id = "iter-sensitivity"
 label = "Iteration Sensitivity"
-desc = "Vary the number of message-passing iterations and compare posteriors"
+desc = "Rerun with 1, 2, 5, 10 and 20 iterations and compare the final free energy and posterior mean"
 code = '''
-using RxInfer  # reactive Bayesian inference
-
-for n_iter in [5, 10, 25, 50]  # sweep iteration count
-    res = infer(model = my_model(y = y_data), iterations = n_iter)  # run with current iteration count
-    println("iter=", n_iter, " -> mu mean=", mean(res.posteriors[:mu]))  # print posterior mean at each count
-end
+{{?model=bp}}println("BP on a tree is exact after one sweep; more iterations change nothing")
+{{?model=vmp}}for k in (1, 2, 5, 10, 20)
+{{?model=vmp}}    r = infer(model = {{vmp-model}}(), data = (y = {{vmp-data}},), constraints = constraints, initialization = init, returnvars = (mu = KeepLast(),), iterations = k, free_energy = true)
+{{?model=vmp}}    println("iterations = ", k, "  E[mu] = ", mean(r.posteriors[:mu]), "  free energy = ", last(r.free_energy))
+{{?model=vmp}}end
+{{?model=ep}}for k in (1, 2, 5, 10, 20)
+{{?model=ep}}    r = infer(model = {{ep-model}}(), data = (y = {{ep-data}},), returnvars = (x = KeepLast(),), iterations = k, free_energy = true)
+{{?model=ep}}    println("iterations = ", k, "  E[x_T] = ", mean(r.posteriors[:x][end]), "  free energy = ", last(r.free_energy))
+{{?model=ep}}end
 '''
 
 [[actionGroups]]
@@ -429,23 +482,23 @@ label = "Interpret"
 [[actionGroups.actions]]
 id = "posterior-summary"
 label = "Posterior Summary"
-desc = "Print mean and variance of the final posterior marginals"
+desc = "Mean and standard deviation of the final posterior marginals"
 code = '''
-mu_post    = result.posteriors[:mu]  # final posterior of mu
-sigma_post = result.posteriors[:sigma]  # final posterior of sigma
-
-println("mu    mean=", mean(mu_post),    " var=", var(mu_post))  # posterior summary for mu
-println("sigma mean=", mean(sigma_post), " var=", var(sigma_post))  # posterior summary for sigma
+{{?model=bp}}println("mu:  mean ", mean(q_mu), "  sd ", std(q_mu))
+{{?model=vmp}}println("mu:  mean ", mean(q_mu), "  sd ", std(q_mu))
+{{?model=vmp}}println("tau: mean ", mean(q_tau), "  sd ", std(q_tau), "  (observation sd about ", 1 / sqrt(mean(q_tau)), ")")
+{{?model=ep}}println("trend at t = 1, T/2, T: ", [round(mean(q_x[t]); digits=3) for t in (1, div(T, 2), T)])
+{{?model=ep}}println("posterior sd at the same points: ", [round(std(q_x[t]); digits=3) for t in (1, div(T, 2), T)])
 '''
 
 [[actionGroups.actions]]
 id = "credible-interval"
 label = "Credible Interval"
-desc = "Compute 95% credible intervals from the posterior marginals"
+desc = "95% credible intervals from the posterior marginals (EP: the share of time points where the trend is credibly above or below 0)"
 code = '''
-using Distributions  # distributions library
-
-mu_post = result.posteriors[:mu]  # final posterior of mu
-ci_lo, ci_hi = quantile(mu_post, [0.025, 0.975])  # 95% credible interval for mu
-println("mu 95% CI: [", ci_lo, ", ", ci_hi, "]")  # print credible interval
+{{?model=bp}}println("mu 95% interval: ", quantile.(convert(Normal, q_mu), [0.025, 0.975]))
+{{?model=vmp}}println("mu 95% interval:  ", quantile.(convert(Normal, q_mu), [0.025, 0.975]), "  (too narrow: mean-field)")
+{{?model=vmp}}println("tau 95% interval: ", quantile.(Gamma(shape(q_tau), scale(q_tau)), [0.025, 0.975]))
+{{?model=ep}}lo = mean.(q_x) .- 1.96 .* std.(q_x); hi = mean.(q_x) .+ 1.96 .* std.(q_x)
+{{?model=ep}}println("Credibly above 0: ", round(mean(lo .> 0); digits=2), "  credibly below 0: ", round(mean(hi .< 0); digits=2))
 '''

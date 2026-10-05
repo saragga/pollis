@@ -125,7 +125,7 @@ detail = "the euro reference rates against the US dollar, sterling, the yen, and
 
 [[bullets]]
 text = "Key Interest Rates"
-detail = "the main refinancing, deposit facility, and marginal lending rates, plus the €STR"
+detail = "the main refinancing, deposit facility, and marginal lending rates, plus the ESTR"
 
 [[bullets]]
 text = "HICP Inflation"
@@ -147,7 +147,7 @@ purpose = "Chart a euro reference rate such as USD/EUR over time"
 [[decisionRows]]
 task = "Key Interest Rates"
 context = "Policy"
-purpose = "Follow the deposit facility rate or the €STR"
+purpose = "Follow the deposit facility rate or the ESTR"
 
 [[decisionRows]]
 task = "HICP Inflation"
@@ -353,7 +353,7 @@ println(last(Tables.getcolumn(mro, :OBS_VALUE), 3))
 
 [[actionGroups.actions]]
 id = "ecb-rt-estr"
-label = "€STR"
+label = "ESTR"
 desc = "The euro short-term rate, the ECB's overnight benchmark"
 code = """
 using HTTP, CSV, Tables
@@ -378,7 +378,7 @@ using HTTP, CSV, Tables
 
 base = "https://data-api.ecb.europa.eu/service/data"
 # Overall and core (excl. energy and food) HICP, annual rate of change
-all  = CSV.File(HTTP.get("$base/ICP/M.U2.N.000000.4.ANR?startPeriod=2015-01&format=csvdata").body)
+headline = CSV.File(HTTP.get("$base/ICP/M.U2.N.000000.4.ANR?startPeriod=2015-01&format=csvdata").body)
 core = CSV.File(HTTP.get("$base/ICP/M.U2.N.XEF000.4.ANR?startPeriod=2015-01&format=csvdata").body)
 println(last(Tables.getcolumn(core, :OBS_VALUE), 12))
 """

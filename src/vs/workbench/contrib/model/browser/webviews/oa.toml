@@ -18,7 +18,7 @@ description = "Overview of Julia for academic and scientific computing"
 url = "https://www.youtube.com/watch?v=wPFPT-Ech2c"
 
 [requires]
-packages = ["OnlineStats.jl"]
+packages = ["OnlineStats.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""
@@ -183,7 +183,7 @@ detail = "single-pass mean, variance, extrema and moments; updates in O(1) per o
 
 [[bullets]]
 text = "Quantile Estimation"
-detail = "approximate streaming quantiles via the P² algorithm; no sorting or full data retention required"
+detail = "approximate streaming quantiles via the P2 algorithm; no sorting or full data retention required"
 
 [[bullets]]
 text = "Online Histogram"
@@ -191,7 +191,7 @@ detail = "adaptive histogram that refines bin boundaries as data arrives; memory
 
 [[bullets]]
 text = "Online Linear Regression"
-detail = "recursive least-squares; updates beta and standard errors incrementally as each observation is processed"
+detail = "exact least squares from sufficient statistics; updates beta and standard errors incrementally as each observation is processed"
 
 [[inputs]]
 id = "data"
@@ -203,7 +203,7 @@ default = "data"
 id = "X"
 models = ["linreg"]
 label = "Covariate matrix (X)"
-tooltip = "Design matrix (T × k) paired row-by-row with the response vector. Include a column of ones for the intercept."
+tooltip = "Design matrix (T x k) paired row-by-row with the response vector. Include a column of ones for the intercept."
 default = "X"
 
 [[codeBranches]]
@@ -238,11 +238,11 @@ model = "hist"
 code = '''
 using OnlineStats
 
-o = Hist(20)  # adaptive histogram with up to 20 bins
+o = KHist(20)  # adaptive histogram with up to 20 bins
 fit!(o, {{data}})  # update histogram as data arrives
 
 println(value(o))  # bin edges and counts
-println(pdf(o, 0.0))  # density estimate at a given point
+println(OnlineStats.pdf(o, 0.0))  # density estimate at a given point
 '''
 
 [[codeBranches]]
@@ -254,7 +254,7 @@ o = LinReg(size({{X}}, 2))  # online regression: k = number of predictors
 fit!(o, zip(eachrow({{X}}), {{data}}))  # stream (x_t, y_t) pairs row by row
 
 beta = coef(o)  # current coefficient estimates
-println("Coefficients: ", beta)  # print recursive least-squares estimates
+println("Coefficients: ", beta)  # exact OLS from the running sufficient statistics
 '''
 
 [[actionGroups]]
@@ -280,7 +280,7 @@ desc = "Visualise the adaptive histogram density built from the data stream"
 code = '''
 using OnlineStats, Plots
 
-o = Hist(30)  # adaptive histogram with 30 bins
+o = KHist(30)  # adaptive histogram with up to 30 bins
 fit!(o, {{data}})  # single-pass update
 plot(o)  # plot density estimate
 '''
@@ -344,8 +344,9 @@ using OnlineStats
 
 o = LinReg(size({{X}}, 2))  # online linear regression
 fit!(o, zip(eachrow({{X}}), {{data}}))  # stream training data
+coef(o)  # solve for the coefficients (predict uses the last solved values)
 
-x_new = [1.0, 2.0]  # new covariate vector (including intercept term)
+x_new = [1.0, 2.0]  # new covariate vector, one entry per column of X (no intercept is added automatically)
 println("Prediction: ", predict(o, x_new))  # out-of-sample prediction
 '''
 
@@ -360,7 +361,7 @@ o = LinReg(size({{X}}, 2))  # online model
 preds = Float64[]  # store rolling predictions
 
 for (x_t, y_t) in zip(eachrow({{X}}), {{data}})
-    push!(preds, predict(o, x_t))  # predict before update
+    push!(preds, nobs(o) > length(x_t) ? (coef(o); predict(o, x_t)) : NaN)  # predict before update, once there are more rows than coefficients
     fit!(o, (x_t, y_t))  # then update with true label
 end
 '''
@@ -389,17 +390,17 @@ id = "windowed-vs-global"
 label = "Windowed vs Global"
 desc = "Compare a fixed-window moving average against the global running mean"
 code = '''
-using OnlineStats, Plots
+using OnlineStats, Statistics, Plots
 
 global_mean   = Mean()  # cumulative mean (all history)
-windowed_mean = WindowMean(50)  # mean over last 50 observations
+windowed_mean = MovingWindow(50, Float64)  # last 50 observations
 
 gm = Float64[]  # store global means
 wm = Float64[]  # store windowed means
 
 for x in {{data}}
     fit!(global_mean, x); fit!(windowed_mean, x)
-    push!(gm, value(global_mean)); push!(wm, value(windowed_mean))
+    push!(gm, value(global_mean)); push!(wm, mean(value(windowed_mean)))
 end
 plot([gm wm], label=["Global" "Window=50"])  # compare both estimates over time
 '''
@@ -415,26 +416,26 @@ desc = "Full descriptive summary: mean, variance, skewness, kurtosis and extrema
 code = '''
 using OnlineStats
 
-o = Series(Mean(), Variance(), Skewness(), Kurtosis(), Extrema())  # full summary in one pass
+o = Series(Mean(), Variance(), Moments(), Extrema())  # full summary in one pass
 fit!(o, {{data}})  # single-pass computation
 
 println("Mean:     ", value(o[1]))  # first moment
 println("Variance: ", value(o[2]))  # second central moment
-println("Skewness: ", value(o[3]))  # third standardised moment
-println("Kurtosis: ", value(o[4]))  # fourth standardised moment
-println("Extrema:  ", value(o[5]))  # min and max
+println("Skewness: ", skewness(o[3]))  # third standardised moment
+println("Kurtosis: ", kurtosis(o[3]))  # excess kurtosis (0 for a normal)
+println("Extrema:  ", value(o[4]))  # min and max
 '''
 
 [[actionGroups.actions]]
 id = "regression-coefs"
 label = "Regression Coefficients"
-desc = "Extract and display the recursive least-squares coefficient estimates"
+desc = "Extract and display the coefficient estimates (exact OLS from the running sufficient statistics)"
 code = '''
 using OnlineStats
 
 o = LinReg(size({{X}}, 2))  # online regression
 fit!(o, zip(eachrow({{X}}), {{data}}))  # stream data
 
-println("Coefficients: ", coef(o))  # recursive least-squares estimates
+println("Coefficients: ", coef(o))  # exact OLS from the running sufficient statistics
 println("Observations: ", nobs(o))  # number of observations processed
 '''

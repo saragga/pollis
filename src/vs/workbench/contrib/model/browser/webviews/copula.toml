@@ -13,7 +13,7 @@ name = "Copulas.jl"
 github = "https://github.com/lrnv/Copulas.jl"
 
 [requires]
-packages = ["Copulas.jl"]
+packages = ["Copulas.jl", "Distributions.jl", "HypothesisTests.jl", "Plots.jl", "StatsBase.jl"]
 
 [[notebookSections]]
 label = ""
@@ -190,11 +190,11 @@ value = "HuslerReissCopula"
 label = "Hüsler–Reiss"
 
 [[inputs.options]]
-value = "TEVCopula"
+value = "tEVCopula"
 label = "tEV"
 
 [[inputs.options]]
-value = "MarshallOlkinCopula"
+value = "MOCopula"
 label = "Marshall–Olkin"
 
 [[inputs.options]]
@@ -222,7 +222,7 @@ value = "MCopula"
 label = "M — Upper Fréchet"
 
 [[inputs.options]]
-value = "IndependenceCopula"
+value = "IndependentCopula"
 label = "Pi — Independence"
 
 [[inputs.options]]
@@ -275,45 +275,10 @@ value = ":ecdf"
 label = "Pseudo-Observations"
 
 [[inputs]]
-id = "nu"
-label = "Deg. of Freedom (nu)"
-tooltip = "Degrees of freedom nu > 0. For Student-t: lower values give heavier tails; as nu → ∞ it converges to Gaussian. For tEV: same parameter governs the extreme-value tail; lower nu increases tail dependence."
-default = "4"
-when = "family=TCopula|TEVCopula"
-
-[[inputs]]
 id = "data"
 label = "Data"
 tooltip = ""
 default = "data"
-
-[[inputs]]
-id = "delta"
-label = "delta (shape)"
-tooltip = "Second shape parameter delta for the BB1 copula (Joe–Clayton nesting). delta ≥ 1 controls the lower tail dependence strength independently of theta. BB1 nests Clayton (theta → 0) and Gumbel (delta = 1) as special cases."
-default = "2.0"
-when = "family=BB1Copula"
-
-[[inputs]]
-id = "lambda1"
-label = "lambda1"
-tooltip = ""
-default = "1.0"
-when = "family=MarshallOlkinCopula"
-
-[[inputs]]
-id = "lambda2"
-label = "lambda2"
-tooltip = ""
-default = "1.0"
-when = "family=MarshallOlkinCopula"
-
-[[inputs]]
-id = "lambda12"
-label = "lambda12"
-tooltip = ""
-default = "0.5"
-when = "family=MarshallOlkinCopula"
 
 [[codeBranches]]
 model = "main"
@@ -372,10 +337,12 @@ using Copulas, Distributions, HypothesisTests, StatsBase
 {{?family=EmpiricalCopula|BetaCopula|BernsteinCopula|CheckerboardCopula|EmpiricalEVCopula}} error("An empirical copula fits the data by construction: choose a parametric family")
 R = rosenblatt(sklar, {{data}})  # d x n, should be iid Uniform(0, 1)
 for i in axes(R, 1)
-    println("Coordinate $i: KS uniform p = ", round(pvalue(ExactOneSampleKSTest(R[i, :], Uniform())), digits=4))
+    println("Coordinate $i: KS uniform p = ", round(HypothesisTests.pvalue(ExactOneSampleKSTest(R[i, :], Uniform())), digits=4))  # qualified: Copulas also exports pvalue
 end
 println("Kendall correlation between coordinates (should be near 0):")
 display(round.(corkendall(transpose(R)), digits=3))
+println("The KS p-values above treat the fitted parameters as known, so they are conservative (too large)")
+println("Parametric bootstrap GOF (refits the model on each replicate): p = ", round(Copulas.pvalue(GOFCopulaTest(D; N=200)), digits=4))
 '''
 
 [[actionGroups.actions]]
@@ -446,8 +413,10 @@ desc = "Likelihood ratio test of the fitted copula against the independence copu
 code = '''
 using Distributions, StatsBase
 {{?family=EmpiricalCopula|BetaCopula|BernsteinCopula|CheckerboardCopula|EmpiricalEVCopula}} error("Choose a parametric family for a likelihood ratio test")
-LR = 2 * (D.ll - D.method_details.null_ll)  # fitted vs independence log-likelihood
-println("LR = ", round(LR, digits=3), "  df = ", dof(D), "  p = ", round(ccdf(Chisq(dof(D)), LR), digits=5))
+LR = 2 * (loglikelihood(D) - nullloglikelihood(D))  # fitted copula vs independence, same fitted margins
+df = dof(copula)  # copula parameters only: the margins are the same under both hypotheses
+println("LR = ", round(LR, digits=3), "  df = ", df, "  p = ", round(ccdf(Chisq(df), LR), digits=5))
+println("With two-stage (IFM) or rank-based margins the chi-square reference is approximate")
 '''
 
 [[actionGroups]]

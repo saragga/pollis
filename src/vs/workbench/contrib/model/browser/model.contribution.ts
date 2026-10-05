@@ -16,7 +16,6 @@ import { IQuickInputService } from '../../../../platform/quickinput/common/quick
 
 import { NLLS_PANEL } from './commands/nlls.command.js';
 import { LM_PANEL } from './commands/lm.command.js';
-import { MM_PANEL } from './commands/mm.command.js';
 import { GLM_PANEL } from './commands/glm.command.js';
 import { openScaffoldWebview } from './commands/scaffold.command.js';
 import { LMM_PANEL } from './commands/lmm.command.js';
@@ -32,22 +31,10 @@ import { UP_PANEL } from './commands/up.command.js';
 import { DF_PANEL } from './commands/df.command.js';
 import { RQR_PANEL } from './commands/rqr.command.js';
 import { SSM_PANEL } from './commands/ssm.command.js';
-import { VCM_PANEL } from './commands/vcm.command.js';
-import { RSM_PANEL } from './commands/rsm.command.js';
-import { AUTOTSF_PANEL } from './commands/autotsf.command.js';
-import { SYMB_PANEL } from './commands/symb.command.js';
-import { NLIN_PANEL } from './commands/nlin.command.js';
-import { DIFF_PANEL } from './commands/diff.command.js';
-import { INTEG_PANEL } from './commands/integ.command.js';
-import { ODES_PANEL } from './commands/odes.command.js';
-import { PDES_PANEL } from './commands/pdes.command.js';
 import { TTE_PANEL } from './commands/tte.command.js';
 import { CTSV_PANEL } from './commands/ctsv.command.js';
-import { ARIMA_PANEL } from './commands/arima.command.js';
-import { VAR_PANEL } from './commands/var.command.js';
 import { NSCR_PANEL } from './commands/nscr.command.js';
 import { TSF_PANEL } from './commands/tsf.command.js';
-import { NNTSF_PANEL } from './commands/nntsf.command.js';
 import { DT_PANEL } from './commands/dt.command.js';
 import { KNN_PANEL } from './commands/knn.command.js';
 import { RNN_PANEL } from './commands/rnn.command.js';
@@ -68,10 +55,8 @@ import { CPS_PANEL } from './commands/cps.command.js';
 import { PPL_PANEL } from './commands/ppl.command.js';
 import { RXINFER_PANEL } from './commands/rxinfer.command.js';
 import { RULEBASED_PANEL } from './commands/rulebased.command.js';
-import { BFMB_PANEL } from './commands/bfmb.command.js';
 import { HFCME_PANEL } from './commands/hfcme.command.js';
 import { RCME_PANEL } from './commands/rcme.command.js';
-import { BLSDF_PANEL } from './commands/blsdf.command.js';
 import { ENSEMBLE_PANEL } from './commands/ensemble.command.js';
 import { CLP_PANEL } from './commands/clp.command.js';
 import { CLH_PANEL } from './commands/clh.command.js';
@@ -89,14 +74,9 @@ import { ADLP_PANEL } from './commands/adlp.command.js';
 import { SBI_PANEL } from './commands/sbi.command.js';
 import { EXP_PANEL } from './commands/exp.command.js';
 import { MMN_PANEL } from './commands/mmn.command.js';
-import { BCF_PANEL } from './commands/bcf.command.js';
-import { DTSV_PANEL } from './commands/dtsv.command.js';
-import { DSGE_PANEL } from './commands/dsge.command.js';
 import { NNLS_PANEL } from './commands/nnls.command.js';
 import { TSLS_PANEL } from './commands/tsls.command.js';
 import { GMM_PANEL } from './commands/gmm.command.js';
-import { HAM_PANEL } from './commands/ham.command.js';
-import { CTMF_PANEL } from './commands/ctmf.command.js';
 import { LRM_PANEL } from './commands/lrm.command.js';
 import { GEV_PANEL } from './commands/gev.command.js';
 import { GP_PANEL } from './commands/gp.command.js';
@@ -143,7 +123,6 @@ import { PTP_PANEL } from './commands/ptp.command.js';
 import { SREG_PANEL } from './commands/sreg.command.js';
 import { SI_PANEL } from './commands/si.command.js';
 import { ODE_PANEL } from './commands/ode.command.js';
-import { ATSF_PANEL } from './commands/atsf.command.js';
 import { LP_PANEL } from './commands/lp.command.js';
 import { QP_PANEL } from './commands/qp.command.js';
 import { MPNLP_PANEL } from './commands/mpnlp.command.js';
@@ -212,8 +191,6 @@ CommandsRegistry.registerCommand('chiara.statistics.qrng', accessor => openScaff
 
 CommandsRegistry.registerCommand('chiara.statistics.nlls', accessor => openScaffoldWebview(accessor, NLLS_PANEL));
 
-CommandsRegistry.registerCommand('chiara.statistics.pdme', accessor => openScaffoldWebview(accessor, MM_PANEL));
-
 CommandsRegistry.registerCommand('chiara.statistics.lmm', accessor => openScaffoldWebview(accessor, LMM_PANEL));
 
 CommandsRegistry.registerCommand('chiara.statistics.glmm', accessor => openScaffoldWebview(accessor, GLMM_PANEL));
@@ -274,18 +251,6 @@ const SSM_OPEN = (accessor: ServicesAccessor, initialFilter?: string) => openSca
 
 CommandsRegistry.registerCommand('chiara.statistics.ssm', accessor => SSM_OPEN(accessor));
 
-const VCM_OPEN = (accessor: ServicesAccessor, initialModel?: string) => openScaffoldWebview(accessor, VCM_PANEL, initialModel);
-
-CommandsRegistry.registerCommand('chiara.statistics.vcm', accessor => VCM_OPEN(accessor));
-
-CommandsRegistry.registerCommand('chiara.statistics.rsm', accessor => openScaffoldWebview(accessor, RSM_PANEL));
-CommandsRegistry.registerCommand('chiara.statistics.autotsf', accessor => openScaffoldWebview(accessor, AUTOTSF_PANEL));
-CommandsRegistry.registerCommand('chiara.toolboxes.symb', accessor => openScaffoldWebview(accessor, SYMB_PANEL));
-CommandsRegistry.registerCommand('chiara.toolboxes.nlin', accessor => openScaffoldWebview(accessor, NLIN_PANEL));
-CommandsRegistry.registerCommand('chiara.toolboxes.diff', accessor => openScaffoldWebview(accessor, DIFF_PANEL));
-CommandsRegistry.registerCommand('chiara.toolboxes.integ', accessor => openScaffoldWebview(accessor, INTEG_PANEL));
-CommandsRegistry.registerCommand('chiara.toolboxes.ode', accessor => openScaffoldWebview(accessor, ODES_PANEL));
-CommandsRegistry.registerCommand('chiara.toolboxes.pde', accessor => openScaffoldWebview(accessor, PDES_PANEL));
 CommandsRegistry.registerCommand('chiara.statistics.tvm.dtsv', () => { });
 
 const CTSV_OPEN = (accessor: ServicesAccessor) => openScaffoldWebview(accessor, CTSV_PANEL);
@@ -299,34 +264,18 @@ CommandsRegistry.registerCommand('chiara.statistics.tvm.ksc', () => { });
 CommandsRegistry.registerCommand('chiara.statistics.vm', () => { });
 CommandsRegistry.registerCommand('chiara.statistics.eco.hfcme', accessor => openScaffoldWebview(accessor, HFCME_PANEL));
 CommandsRegistry.registerCommand('chiara.statistics.eco.rcme', accessor => openScaffoldWebview(accessor, RCME_PANEL));
-CommandsRegistry.registerCommand('chiara.statistics.eco.bfmb', accessor => openScaffoldWebview(accessor, BFMB_PANEL));
-CommandsRegistry.registerCommand('chiara.statistics.eco.blsdf', accessor => openScaffoldWebview(accessor, BLSDF_PANEL));
 
 CommandsRegistry.registerCommand('chiara.statistics.eco.mmn', accessor => openScaffoldWebview(accessor, MMN_PANEL));
 
-CommandsRegistry.registerCommand('chiara.statistics.macro.hpf', accessor => openScaffoldWebview(accessor, BCF_PANEL));
-
-CommandsRegistry.registerCommand('chiara.statistics.macro.dtsvm', accessor => openScaffoldWebview(accessor, DTSV_PANEL));
-
-CommandsRegistry.registerCommand('chiara.statistics.macro.dsge', accessor => openScaffoldWebview(accessor, DSGE_PANEL));
-CommandsRegistry.registerCommand('chiara.statistics.macro.ham', accessor => openScaffoldWebview(accessor, HAM_PANEL));
 CommandsRegistry.registerCommand('chiara.statistics.rmt.lrm', accessor => openScaffoldWebview(accessor, LRM_PANEL));
 CommandsRegistry.registerCommand('chiara.statistics.ev.gev', accessor => openScaffoldWebview(accessor, GEV_PANEL));
 CommandsRegistry.registerCommand('chiara.statistics.ev.gp', accessor => openScaffoldWebview(accessor, GP_PANEL));
 CommandsRegistry.registerCommand('chiara.statistics.ev.riskMeasures', accessor => openScaffoldWebview(accessor, EVTRISK_PANEL));
 CommandsRegistry.registerCommand('chiara.statistics.ev.diagnostics', accessor => openScaffoldWebview(accessor, EVTDIAG_PANEL));
-CommandsRegistry.registerCommand('chiara.statistics.macro.ctmf', accessor => openScaffoldWebview(accessor, CTMF_PANEL));
 CommandsRegistry.registerCommand('chiara.statistics.macro.gt', accessor => openScaffoldWebview(accessor, GT_PANEL));
 
 CommandsRegistry.registerCommand('chiara.statistics.ml.logpdf', accessor => openScaffoldWebview(accessor, ADLP_PANEL));
 
-const ARIMA_OPEN = (accessor: ServicesAccessor) => openScaffoldWebview(accessor, ARIMA_PANEL);
-
-CommandsRegistry.registerCommand('chiara.statistics.arma.arima', accessor => ARIMA_OPEN(accessor));
-
-const VAR_OPEN = (accessor: ServicesAccessor) => openScaffoldWebview(accessor, VAR_PANEL);
-
-CommandsRegistry.registerCommand('chiara.statistics.arma.varModels', accessor => VAR_OPEN(accessor));
 //CommandsRegistry.registerCommand('chiara.statistics.tvm.heston', accessor => CTSV_OPEN(accessor, 'heston'));
 //CommandsRegistry.registerCommand('chiara.statistics.tvm.sabr',   accessor => CTSV_OPEN(accessor, 'sabr'));
 //CommandsRegistry.registerCommand('chiara.statistics.tvm.bates',  accessor => CTSV_OPEN(accessor, 'bates'));
@@ -346,14 +295,6 @@ CommandsRegistry.registerCommand('chiara.statistics.nscr', accessor => NSCR_OPEN
 const TSF_OPEN = (accessor: ServicesAccessor, initialMethod?: string) => openScaffoldWebview(accessor, TSF_PANEL, initialMethod);
 
 CommandsRegistry.registerCommand('chiara.statistics.tsf', accessor => TSF_OPEN(accessor));
-
-const NNTSF_OPEN = (accessor: ServicesAccessor, initialMethod?: string) => openScaffoldWebview(accessor, NNTSF_PANEL, initialMethod);
-
-CommandsRegistry.registerCommand('chiara.statistics.nntsf', accessor => NNTSF_OPEN(accessor));
-
-const ATSF_OPEN = (accessor: ServicesAccessor, initialMethod?: string) => openScaffoldWebview(accessor, ATSF_PANEL, initialMethod);
-
-CommandsRegistry.registerCommand('chiara.statistics.atsf', accessor => ATSF_OPEN(accessor));
 
 CommandsRegistry.registerCommand('chiara.statistics.si', accessor => openScaffoldWebview(accessor, SI_PANEL));
 
@@ -644,7 +585,6 @@ export const RQR_QUANTILE_L1L2_ID = 'chiara.statistics.rqr.ql1l2';
 
 
 // Panel Data and Mixed-Effects
-// export const PDME_MEPD_COMMAND_ID = 'chiara.statistics.pdme';
 export const LMM_COMMAND_ID = 'chiara.statistics.lmm';
 export const GLMM_COMMAND_ID = 'chiara.statistics.glmm';
 
@@ -666,9 +606,6 @@ export const BRM_MOVING_BLOCK_ID = 'chiara.statistics.brm.movingBlock';
 export const BRM_STATIONARY_BLOCK_ID = 'chiara.statistics.brm.stationaryBlock';
 export const BRM_BLOCK_JACKKNIFE_ID = 'chiara.statistics.brm.blockJackknife';
 export const BRM_ARTIFICIAL_JACKKNIFE_ID = 'chiara.statistics.brm.artificialJackknife';
-
-// Advanced Time-Series Forecasting
-export const ATSF_COMMAND_ID = 'chiara.statistics.atsf';
 
 // Time-Series Smoothing and Decomposition
 export const TSSD_ROLLING_ID = 'chiara.statistics.tssd.rolling';
@@ -695,8 +632,6 @@ export const ARMA_VECM_ID = 'chiara.statistics.arma.vecm';
 export const ARMA_IRF_ID = 'chiara.statistics.arma.irf';
 export const ARMA_TCA_ID = 'chiara.statistics.arma.tca';
 export const ARMA_COINTEGRATION_ID = 'chiara.statistics.arma.cointegration';
-export const ARMA_ARIMA_WEBVIEW_ID = 'chiara.statistics.arma.arima';
-export const ARMA_VAR_WEBVIEW_ID = 'chiara.statistics.arma.varModels';
 
 // Regime Switching
 export const RS_DYNAMIC_MODELS_ID = 'chiara.statistics.rs.dynamicModels';
@@ -729,8 +664,6 @@ export const ECO_OA_ID = 'chiara.statistics.eco.oa';
 export const ECO_CTSVM_ID = 'chiara.statistics.eco.ctsvm';
 export const ECO_HFCME_ID = 'chiara.statistics.eco.hfcme';
 export const ECO_RCME_ID = 'chiara.statistics.eco.rcme';
-export const ECO_BLSDF_ID = 'chiara.statistics.eco.blsdf';
-export const ECO_BFMB_ID = 'chiara.statistics.eco.bfmb';
 export const ECO_MMN_ID = 'chiara.statistics.eco.mmn';
 export const ECO_IVS_ID = 'chiara.statistics.eco.ivs';
 export const TVM_TAYLOR_ID = 'chiara.statistics.tvm.taylor';
@@ -888,7 +821,6 @@ export const NLP_LANG_MODEL_ID = 'chiara.statistics.nlp.languageModel';
 // Natural Language Processing — Topic & Semantic Models
 export const NLP_LSA_ID = 'chiara.statistics.nlp.lsa';
 export const NLP_LDA_ID = 'chiara.statistics.nlp.lda';
-export const NLP_FLDA_ID = 'chiara.statistics.nlp.flda';
 export const NLP_CTM_ID = 'chiara.statistics.nlp.ctm';
 export const NLP_FCTM_ID = 'chiara.statistics.nlp.fctm';
 export const NLP_CTPF_ID = 'chiara.statistics.nlp.ctpf';
@@ -1217,7 +1149,7 @@ MenuRegistry.appendMenuItem(MWMSubmenuId, {
 
 MenuRegistry.appendMenuItem(DistSubmenuId, {
 	group: '1_dist',
-	command: { id: 'chiara.statistics.de', title: localize('showStatistics.de', 'Distribution Estimation') },
+	command: { id: 'chiara.statistics.de', title: localize('showStatistics.de', 'Density Estimation') },
 	order: 1,
 });
 
@@ -2208,7 +2140,6 @@ CommandsRegistry.registerCommand(NLP_COOCCURRENCE_ID, accessor => openScaffoldWe
 CommandsRegistry.registerCommand(NLP_LANG_MODEL_ID, accessor => openScaffoldWebview(accessor, SLM_PANEL));
 CommandsRegistry.registerCommand(NLP_LSA_ID, accessor => openScaffoldWebview(accessor, LSA_PANEL));
 CommandsRegistry.registerCommand(NLP_LDA_ID, accessor => openScaffoldWebview(accessor, LDA_PANEL, 'lda'));
-CommandsRegistry.registerCommand(NLP_FLDA_ID, accessor => openScaffoldWebview(accessor, LDA_PANEL, 'flda'));
 CommandsRegistry.registerCommand(NLP_CTM_ID, accessor => openScaffoldWebview(accessor, CTM_PANEL, 'ctm'));
 CommandsRegistry.registerCommand(NLP_FCTM_ID, accessor => openScaffoldWebview(accessor, CTM_PANEL, 'fctm'));
 CommandsRegistry.registerCommand(NLP_CTPF_ID, accessor => openScaffoldWebview(accessor, CTPF_PANEL));
@@ -2297,7 +2228,7 @@ MenuRegistry.appendMenuItem(TopicModelsSubmenuId, {
 	group: '2_tm',
 	command: { id: NLP_LDA_ID, title: localize('nlp.lda', 'Latent Dirichlet Allocation') },
 	order: 1,
-}); // TopicModels.jl
+}); // TextAnalysis.jl
 
 MenuRegistry.appendMenuItem(TopicModelsSubmenuId, {
 	group: '2_tm',

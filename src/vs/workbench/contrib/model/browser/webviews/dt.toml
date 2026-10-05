@@ -17,7 +17,7 @@ name = "ModalDecisionTrees.jl"
 github = "https://github.com/aclai-lab/ModalDecisionTrees.jl"
 
 [requires]
-packages = ["Plots.jl", "CounterfactualExplanations.jl"]
+packages = ["Plots.jl", "CounterfactualExplanations.jl", "MLJ.jl"]
 
 [[notebookSections]]
 label = ""
@@ -190,13 +190,17 @@ y_hat_test  = predict(model, {{xtest}})  # test predictions
 [[codeBranches]]
 model = "modal"
 code = '''
-using ModalDecisionTrees
+using MLJ, ModalDecisionTrees
 
+# X: a table with one row per instance; a column may hold a whole series per instance (a Vector), which the modal splits reason over
+y     = coerce({{yvar}}, Multiclass)  # class labels
 model = ModalDecisionTree(; max_depth={{maxdepth}}, min_samples_leaf={{minleaf}})  # modal decision tree
-fit!(model, {{xvar}}, {{yvar}})  # modal tree training
+mach  = machine(model, {{xvar}}, y)
+fit!(mach)  # modal tree training
 
-y_hat_train = predict(model, {{xvar}})  # training predictions
-y_hat_test  = predict(model, {{xtest}})  # test predictions
+report(mach).printmodel()  # learned modal rules
+y_hat_train = predict_mode(mach, {{xvar}})  # training predictions
+y_hat_test  = predict_mode(mach, {{xtest}})  # test predictions
 '''
 
 [[actionGroups]]
@@ -208,22 +212,25 @@ id = "tree-structure"
 label = "Tree Structure"
 desc = "Print the fitted splits and leaves down to a chosen depth"
 code = '''
-print_tree(model, 3)  # show the first three levels
-depth(model), get_n_leaves(model)  # overall size of the tree
+{{?model=dt}} print_tree(model, 3)  # show the first three levels
+{{?model=dt}} depth(model), length(model)  # depth and number of leaves
+{{?model=modal}} report(mach).printmodel(3)  # show the first three levels of the modal rules
 '''
 
 [[actionGroups.actions]]
 id = "depth-curve"
 label = "Depth vs Accuracy"
-desc = "Plot train and test accuracy as max_depth grows to see where overfitting starts"
+desc = "Plot training and 5-fold cross-validated accuracy as max_depth grows to see where overfitting starts"
 code = '''
-using Plots
+using Plots, Statistics
 
 depths = 1:12
-acc(m, X, y) = sum(predict(m, X) .== y) / length(y)
-fits = [fit!(DecisionTreeClassifier(max_depth=d), {{xvar}}, {{yvar}}) for d in depths]
-plot(depths, [acc(m, {{xvar}}, {{yvar}}) for m in fits], label="train", marker=:circle)
-plot!(depths, [acc(m, {{xtest}}, y_test) for m in fits], label="test", marker=:circle, xlabel="max_depth", ylabel="accuracy")
+{{?model=dt}} train_acc(d) = mean(predict(fit!(DecisionTreeClassifier(max_depth=d), {{xvar}}, {{yvar}}), {{xvar}}) .== {{yvar}})
+{{?model=dt}} cv_acc(d) = mean(nfoldCV_tree({{yvar}}, {{xvar}}, 5, 1.0, d; verbose=false))  # averaged over 5 folds, not one split
+{{?model=modal}} train_acc(d) = mean(predict_mode(fit!(machine(ModalDecisionTree(max_depth=d), {{xvar}}, y), verbosity=0), {{xvar}}) .== y)
+{{?model=modal}} cv_acc(d) = evaluate(ModalDecisionTree(max_depth=d), {{xvar}}, y; resampling=CV(nfolds=5, shuffle=true), measure=accuracy, verbosity=0).measurement[1]
+plot(depths, train_acc.(depths), label="train", marker=:circle)
+plot!(depths, cv_acc.(depths), label="5-fold CV", marker=:circle, xlabel="max_depth", ylabel="accuracy")
 '''
 
 [[actionGroups]]
@@ -235,8 +242,10 @@ id = "confusion"
 label = "Confusion Matrix"
 desc = "Cross-tabulate predicted against true classes on the test set"
 code = '''
-cm = confusion_matrix(y_test, y_hat_test)  # y_test: held-out labels
-cm.accuracy, cm.kappa
+{{?model=dt}} cm = confusion_matrix(y_test, y_hat_test)  # y_test: held-out labels
+{{?model=dt}} cm.accuracy, cm.kappa
+{{?model=modal}} cm = MLJ.confusion_matrix(y_hat_test, coerce(y_test, Multiclass))  # y_test: held-out labels
+{{?model=modal}} cm, accuracy(y_hat_test, coerce(y_test, Multiclass))
 '''
 
 [[actionGroups.actions]]
@@ -246,8 +255,8 @@ desc = "k-fold cross-validated accuracy (classification) or R^2 (regression)"
 code = '''
 using Statistics
 
-{{?task=classification}} scores = nfoldCV_tree({{yvar}}, {{xvar}}, 5; max_depth={{maxdepth}}, min_samples_leaf={{minleaf}})
-{{?task=regression}} scores = nfoldCV_tree(float.({{yvar}}), {{xvar}}, 5; max_depth={{maxdepth}}, min_samples_leaf={{minleaf}})
+{{?model=dt}} scores = nfoldCV_tree({{yvar}}, {{xvar}}, 5, 1.0, {{maxdepth}}, {{minleaf}}; verbose=false)  # accuracy for class labels, R^2 for a Float target (use float.(y) for an integer-valued regression target)
+{{?model=modal}} scores = evaluate(model, {{xvar}}, y; resampling=CV(nfolds=5, shuffle=true), measure=accuracy, verbosity=0).per_fold[1]
 mean(scores), std(scores)
 '''
 
@@ -260,7 +269,8 @@ id = "proba"
 label = "Class Probabilities"
 desc = "Leaf class frequencies for each test sample instead of a hard label"
 code = '''
-P = predict_proba(model, {{xtest}})  # one row per sample, one column per class
+{{?model=dt}} P = predict_proba(model, {{xtest}})  # one row per sample, one column per class
+{{?model=modal}} P = pdf(predict(mach, {{xtest}}), levels(y))  # one row per sample, one column per class
 '''
 
 [[actionGroups]]
@@ -272,11 +282,13 @@ id = "forest"
 label = "Tree vs Random Forest"
 desc = "Compare the single tree with a bagged ensemble of trees on the test set"
 code = '''
-forest = RandomForestClassifier(n_trees=200, max_depth={{maxdepth}})
-fit!(forest, {{xvar}}, {{yvar}})
+using Statistics
 
-acc(m) = sum(predict(m, {{xtest}}) .== y_test) / length(y_test)
-(tree = acc(model), forest = acc(forest))
+{{?model=dt}} forest = RandomForestClassifier(n_trees=200, max_depth={{maxdepth}})
+{{?model=dt}} fit!(forest, {{xvar}}, {{yvar}})
+{{?model=dt}} (tree = mean(predict(model, {{xtest}}) .== y_test), forest = mean(predict(forest, {{xtest}}) .== y_test))
+{{?model=modal}} forest = fit!(machine(ModalRandomForest(; ntrees=200, max_depth={{maxdepth}}), {{xvar}}, y))
+{{?model=modal}} (tree = mean(y_hat_test .== y_test), forest = mean(predict_mode(forest, {{xtest}}) .== y_test))
 '''
 
 [[actionGroups]]
@@ -286,24 +298,32 @@ label = "Interpret"
 [[actionGroups.actions]]
 id = "importance"
 label = "Feature Importance"
-desc = "Mean decrease in impurity contributed by each feature across all splits"
+desc = "Impurity importance, which favours continuous and many-valued features, beside permutation importance on the test set"
 code = '''
 using Plots
 
-imp = impurity_importance(model)
-bar(imp, xlabel="feature", ylabel="importance", legend=false)
+{{?model=dt}} imp  = impurity_importance(model; normalize=true)  # mean decrease in impurity, on the training data
+{{?model=dt}} perm = permutation_importance(model, copy({{xtest}}), y_test; n_iter=10)  # accuracy (or R^2) drop when each feature is shuffled; copy: it shuffles columns in place
+{{?model=dt}} println("impurity: ", round.(imp, digits=3))
+{{?model=dt}} bar(perm.mean, yerror=perm.std, xlabel="feature", ylabel="permutation importance", legend=false)
+{{?model=modal}} imp = feature_importances(mach)  # how often each variable is used in a split (the only importance ModalDecisionTrees reports)
+{{?model=modal}} bar(string.(first.(imp)), last.(imp), xlabel="feature", ylabel="split share", legend=false)
 '''
 
 [[actionGroups.actions]]
 id = "counterfactual"
 label = "Counterfactual Explanations"
-desc = "Find minimal feature changes that flip the prediction: algorithmic recourse (CounterfactualExplanations.jl)"
+desc = "Find minimal feature changes that flip the prediction: algorithmic recourse (CounterfactualExplanations.jl, Feature Tweak generator for trees)"
 code = '''
-using CounterfactualExplanations
+{{?model=dt}} using CounterfactualExplanations, DecisionTree  # loading DecisionTree activates the tree extension
+{{?model=dt}} using CounterfactualExplanations.Models: fit_model, predict_label
 
-data = CounterfactualData({{xvar}}, {{yvar}})  # wrap training data and labels
-generator = GenericGenerator()  # generic recourse generator
-
-ce = generate_counterfactual(x, target, data, model, generator)  # x: sample to explain, target: desired class
-counterfactual(ce)  # minimally altered input that flips the prediction
+{{?model=dt}} data = CounterfactualData(Float32.(transpose({{xvar}})), {{yvar}})  # CounterfactualExplanations wants features x samples
+{{?model=dt}} M = fit_model(data, :DecisionTree; max_depth={{maxdepth}}, min_samples_leaf={{minleaf}})  # the same tree, fitted through the package
+{{?model=dt}} x = Float32.(transpose({{xtest}}[1:1, :]))  # sample to explain, as a column
+{{?model=dt}} factual = predict_label(M, data, x)[1]
+{{?model=dt}} target = first(filter(!=(factual), data.y_levels))  # any other class
+{{?model=dt}} ce = generate_counterfactual(x, target, data, M, FeatureTweakGenerator())  # a tree is not differentiable: Feature Tweak searches its split thresholds instead of gradients
+{{?model=dt}} counterfactual(ce)  # minimally altered input that flips the prediction
+{{?model=modal}} # No counterfactual generator in CounterfactualExplanations.jl supports modal decision trees
 '''

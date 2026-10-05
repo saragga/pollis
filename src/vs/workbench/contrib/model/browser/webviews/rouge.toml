@@ -12,8 +12,20 @@ defaultModel = "rouge1"
 name = "TextAnalysis.jl"
 github = "https://github.com/JuliaText/TextAnalysis.jl"
 
+[[packages]]
+name = "HypothesisTests.jl"
+github = "https://github.com/JuliaStats/HypothesisTests.jl"
+
+[[packages]]
+name = "Bootstrap.jl"
+github = "https://github.com/juliangehring/Bootstrap.jl"
+
+[[packages]]
+name = "Plots.jl"
+github = "https://github.com/JuliaPlots/Plots.jl"
+
 [requires]
-packages = ["TextAnalysis.jl"]
+packages = ["TextAnalysis.jl", "HypothesisTests.jl", "Bootstrap.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""
@@ -22,7 +34,7 @@ label = ""
 name = "ROUGE Evaluation"
 file = "rouge/tutorial-01-rouge.ipynb"
 bundled = true
-description = "Evaluate summaries with ROUGE-1, ROUGE-2, ROUGE-L, and ROUGE-S using TextAnalysis.jl"
+description = "Score summaries with ROUGE-1, ROUGE-2, ROUGE-L and ROUGE-Lsum using TextAnalysis.jl, and test whether one system beats another"
 
 [[wikis]]
 name = "Factsheet"
@@ -69,8 +81,8 @@ file = "rouge/rouge-l.md"
 bundled = true
 
 [[wikis]]
-name = "ROUGE-S"
-file = "rouge/rouge-s.md"
+name = "ROUGE-Lsum"
+file = "rouge/rouge-lsum.md"
 bundled = true
 
 [[references]]
@@ -94,6 +106,22 @@ url = "https://github.com/JuliaText/TextAnalysis.jl"
 openAccess = true
 
 [[references]]
+title = "HypothesisTests.jl: Hypothesis Tests for Julia"
+authors = "JuliaStats Contributors"
+year = 2024
+journal = "GitHub"
+url = "https://github.com/JuliaStats/HypothesisTests.jl"
+openAccess = true
+
+[[references]]
+title = "Bootstrap.jl: Statistical Bootstrapping"
+authors = "Gehring, Julian and contributors"
+year = 2023
+journal = "GitHub"
+url = "https://github.com/juliangehring/Bootstrap.jl"
+openAccess = true
+
+[[references]]
 separator = true
 label = "Textbooks"
 
@@ -106,6 +134,14 @@ url = "https://web.stanford.edu/~jurafsky/slp3/"
 openAccess = true
 
 [[references]]
+title = "An Introduction to the Bootstrap"
+authors = "Efron, Bradley; Tibshirani, Robert J."
+year = 1993
+journal = "Chapman and Hall/CRC"
+doi = "10.1201/9780429246593"
+openAccess = false
+
+[[references]]
 separator = true
 label = "Original Papers"
 
@@ -116,6 +152,22 @@ year = 2004
 journal = "ACL Workshop on Text Summarization Branches Out"
 url = "https://aclanthology.org/W04-1013"
 openAccess = true
+
+[[references]]
+title = "Statistical Significance Tests for Machine Translation Evaluation"
+authors = "Koehn, Philipp"
+year = 2004
+journal = "Proceedings of EMNLP 2004"
+url = "https://aclanthology.org/W04-3250"
+openAccess = true
+
+[[references]]
+title = "Individual Comparisons by Ranking Methods"
+authors = "Wilcoxon, Frank"
+year = 1945
+journal = "Biometrics Bulletin"
+doi = "10.2307/3001968"
+openAccess = false
 
 [[models]]
 id = "rouge1"
@@ -130,81 +182,167 @@ id = "rougel"
 label = "ROUGE-L"
 
 [[models]]
-id = "rouges"
-label = "ROUGE-S"
+id = "rougelsum"
+label = "ROUGE-Lsum"
 
 [[bullets]]
-text = "Measures overlap between system output and reference text"
-detail = "returns precision, recall, and F1 per document"
+text = "ROUGE-N"
+detail = "recall: share of reference n-grams found in the candidate; precision: share of candidate n-grams found in a reference (rouge_n)"
 
 [[bullets]]
-text = "ROUGE-N counts shared n-grams; ROUGE-L uses longest common subsequence; ROUGE-S uses skip-bigrams"
-detail = ""
+text = "ROUGE-L and ROUGE-Lsum"
+detail = "longest common subsequence over the whole text (rouge_l_sentence), or sentence by sentence with the union LCS (rouge_l_summary)"
 
 [[bullets]]
-text = "Standard evaluation metric for summarisation and machine translation"
-detail = ""
+text = "Is system A better than B?"
+detail = "paired over documents: t-test and Wilcoxon signed-rank (HypothesisTests) and a paired bootstrap interval (Bootstrap.jl) for the F difference"
 
 [[inputs]]
 id = "candidates"
-label = "Candidates (system output)"
-tooltip = ""
+label = "Candidates (System A)"
+tooltip = "A vector of strings: the summary written by the system for each document. Example: summaries = [\"the bank raised rates\", ...]."
 default = "summaries"
 
 [[inputs]]
 id = "references"
-label = "References (gold standard)"
-tooltip = ""
+label = "References"
+tooltip = "One entry per document, in the same order: a reference string, or a vector of strings when there are several references. Example: gold = [[\"ref 1a\", \"ref 1b\"], [\"ref 2\"]]."
 default = "gold"
 
 [[inputs]]
+id = "multi-ref"
+label = "Several References"
+tooltip = "How the scores against several references of one document are combined: the best-matching reference (highest F, the TextAnalysis argmax) or their average."
+kind = "select"
+default = "best"
+
+[[inputs.options]]
+value = "best"
+label = "Best Match"
+
+[[inputs.options]]
+value = "average"
+label = "Average"
+
+[[inputs]]
 id = "beta"
-label = "beta (F-measure weight)"
-tooltip = "beta controls the weight of recall vs precision in F_beta. Default beta=1 gives equal weight (F1). beta>1 favours recall; beta<1 favours precision."
-default = "1.0"
+label = "F Weight (beta)"
+tooltip = "Integer weight of recall against precision in the ROUGE-L F score: 1 weighs them equally (as rouge_score does); larger values favour recall. rouge_n always reports F1."
+default = "1"
+models = ["rougel", "rougelsum"]
+
+[[inputs]]
+id = "candidates-b"
+label = "Candidates (System B)"
+tooltip = "Summaries of a second system for the same documents, in the same order; used by Compare Systems."
+default = "summaries_b"
+
+[[inputs]]
+id = "nboot"
+label = "Bootstrap Resamples"
+tooltip = "Number of paired bootstrap resamples of the documents used by Compare Systems."
+default = "10000"
+
+[[inputs]]
+id = "seed"
+label = "Seed"
+tooltip = "Seed of the global random number generator, which the bootstrap uses."
+default = "1"
+
+[[inputs]]
+id = "new-candidate"
+label = "New Candidate"
+tooltip = "A Julia string with a summary to score, used by Evaluate New Candidate."
+default = "\"replace with a new summary\""
+
+[[inputs]]
+id = "new-references"
+label = "New References"
+tooltip = "A reference string, or a vector of strings, for the new candidate."
+default = "[\"replace with a reference summary\"]"
 
 [[codeBranches]]
 model = "rouge1"
 code = '''
-using TextAnalysis
+using TextAnalysis, Statistics  # rouge_n, rouge_l_sentence, rouge_l_summary, Score, average; mean, median
 
-scores = rouge_n({{candidates}}, {{references}}, 1; beta={{beta}})  # ROUGE-1 unigram scores
+# TextAnalysis matches tokens case-sensitively, so both sides are lowercased
+as_refs(r) = r isa AbstractString ? [lowercase(r)] : lowercase.(r)  # one or several references per document
+cands = lowercase.({{candidates}})  # one summary per document
+refs  = as_refs.({{references}})
+length(cands) == length(refs) || error("Candidates and references need one entry per document.")
 
-scores[1]  # NamedTuple: (precision=..., recall=..., f1=...)
-mean(x -> x.f1, scores)  # mean F1 across corpus
+metric(r, c) = rouge_n(r, c, 1)  # unigram overlap; F is F1
+{{?multi-ref=best}} pick(s) = argmax(s)  # the reference with the highest F (TextAnalysis argmax over Scores)
+{{?multi-ref=average}} pick(s) = average(s)  # the mean over the references
+score_docs(cs) = [pick(metric(r, c)) for (r, c) in zip(refs, cs)]  # one Score per document
+
+scores  = score_docs(cands)
+P, R, F = getfield.(scores, :precision), getfield.(scores, :recall), getfield.(scores, :fmeasure)
+println("Macro average over ", length(scores), " documents: ", average(scores))
 '''
 
 [[codeBranches]]
 model = "rouge2"
 code = '''
-using TextAnalysis
+using TextAnalysis, Statistics  # rouge_n, rouge_l_sentence, rouge_l_summary, Score, average; mean, median
 
-scores = rouge_n({{candidates}}, {{references}}, 2; beta={{beta}})  # ROUGE-2 bigram scores
+# TextAnalysis matches tokens case-sensitively, so both sides are lowercased
+as_refs(r) = r isa AbstractString ? [lowercase(r)] : lowercase.(r)  # one or several references per document
+cands = lowercase.({{candidates}})  # one summary per document
+refs  = as_refs.({{references}})
+length(cands) == length(refs) || error("Candidates and references need one entry per document.")
 
-scores[1]  # NamedTuple: (precision=..., recall=..., f1=...)
-mean(x -> x.f1, scores)  # mean F1 across corpus
+metric(r, c) = rouge_n(r, c, 2)  # bigram overlap; F is F1
+{{?multi-ref=best}} pick(s) = argmax(s)  # the reference with the highest F (TextAnalysis argmax over Scores)
+{{?multi-ref=average}} pick(s) = average(s)  # the mean over the references
+score_docs(cs) = [pick(metric(r, c)) for (r, c) in zip(refs, cs)]  # one Score per document
+
+scores  = score_docs(cands)
+P, R, F = getfield.(scores, :precision), getfield.(scores, :recall), getfield.(scores, :fmeasure)
+println("Macro average over ", length(scores), " documents: ", average(scores))
 '''
 
 [[codeBranches]]
 model = "rougel"
 code = '''
-using TextAnalysis
+using TextAnalysis, Statistics  # rouge_n, rouge_l_sentence, rouge_l_summary, Score, average; mean, median
 
-scores = rouge_l({{candidates}}, {{references}}; beta={{beta}})  # ROUGE-L LCS scores
+# TextAnalysis matches tokens case-sensitively, so both sides are lowercased
+as_refs(r) = r isa AbstractString ? [lowercase(r)] : lowercase.(r)  # one or several references per document
+cands = lowercase.({{candidates}})  # one summary per document
+refs  = as_refs.({{references}})
+length(cands) == length(refs) || error("Candidates and references need one entry per document.")
 
-scores[1]  # NamedTuple: (precision=..., recall=..., f1=...)
-mean(x -> x.f1, scores)  # mean F1 across corpus
+metric(r, c) = rouge_l_sentence(r, c, {{beta}})  # LCS of the whole texts, each read as one sequence
+{{?multi-ref=best}} pick(s) = argmax(s)  # the reference with the highest F (TextAnalysis argmax over Scores)
+{{?multi-ref=average}} pick(s) = average(s)  # the mean over the references
+score_docs(cs) = [pick(metric(r, c)) for (r, c) in zip(refs, cs)]  # one Score per document
+
+scores  = score_docs(cands)
+P, R, F = getfield.(scores, :precision), getfield.(scores, :recall), getfield.(scores, :fmeasure)
+println("Macro average over ", length(scores), " documents: ", average(scores))
 '''
 
 [[codeBranches]]
-model = "rouges"
+model = "rougelsum"
 code = '''
-using TextAnalysis
+using TextAnalysis, Statistics  # rouge_n, rouge_l_sentence, rouge_l_summary, Score, average; mean, median
 
-scores = rouge_s({{candidates}}, {{references}}; beta={{beta}})  # ROUGE-S skip-bigram scores
+# TextAnalysis matches tokens case-sensitively, so both sides are lowercased
+as_refs(r) = r isa AbstractString ? [lowercase(r)] : lowercase.(r)  # one or several references per document
+cands = lowercase.({{candidates}})  # one summary per document
+refs  = as_refs.({{references}})
+length(cands) == length(refs) || error("Candidates and references need one entry per document.")
 
-scores[1]  # NamedTuple: (precision=..., recall=..., f1=...)
-mean(x -> x.f1, scores)  # mean F1 across corpus
+metric(r, c) = rouge_l_summary(r, c, {{beta}})  # union LCS sentence by sentence; needs sentence punctuation
+{{?multi-ref=best}} pick(s) = argmax(s)  # the reference with the highest F (TextAnalysis argmax over Scores)
+{{?multi-ref=average}} pick(s) = average(s)  # the mean over the references
+score_docs(cs) = [pick(metric(r, c)) for (r, c) in zip(refs, cs)]  # one Score per document
+
+scores  = score_docs(cands)
+P, R, F = getfield.(scores, :precision), getfield.(scores, :recall), getfield.(scores, :fmeasure)
+println("Macro average over ", length(scores), " documents: ", average(scores))
 '''
 
 [[actionGroups]]
@@ -214,28 +352,24 @@ label = "Visualise"
 [[actionGroups.actions]]
 id = "score-distribution"
 label = "Score Distribution"
-desc = "Histogram of F1 scores across the corpus"
+desc = "Histogram of the F score per document"
 code = '''
-using TextAnalysis, Plots
+using Plots  # plotting
 
-scores = rouge_n({{candidates}}, {{references}}, 1; beta={{beta}})  # compute ROUGE-1 scores
-f1s    = map(x -> x.f1, scores)  # extract F1 per document
-
-histogram(f1s, xlabel="F1 Score", ylabel="Count", title="ROUGE F1 Distribution", legend=false)  # plot F1 histogram
+histogram(F, bins = 20, xlabel = "F per document", ylabel = "documents", legend = false)
+vline!([mean(F)], ls = :dash)  # the macro average
 '''
 
 [[actionGroups.actions]]
 id = "precision-recall-plot"
 label = "Precision-Recall Plot"
-desc = "Scatter plot of precision vs recall per document"
+desc = "Precision against recall per document, coloured by candidate length"
 code = '''
-using TextAnalysis, Plots
+using Plots  # plotting
 
-scores = rouge_n({{candidates}}, {{references}}, 1; beta={{beta}})  # compute ROUGE-1 scores
-ps     = map(x -> x.precision, scores)  # precision per document
-rs     = map(x -> x.recall, scores)  # recall per document
-
-scatter(ps, rs, xlabel="Precision", ylabel="Recall", title="Precision vs Recall", legend=false)  # scatter plot
+words = length.(split.(cands))  # candidate length in words
+scatter(R, P, marker_z = words, colorbar_title = "candidate words", xlabel = "recall", ylabel = "precision", legend = false)
+plot!([0, 1], [0, 1], ls = :dash, color = :gray)  # longer candidates move right (recall) and down (precision)
 '''
 
 [[actionGroups]]
@@ -245,32 +379,27 @@ label = "Diagnose"
 [[actionGroups.actions]]
 id = "score-summary"
 label = "Score Summary"
-desc = "Mean, median, min, max of precision, recall, and F1"
+desc = "Mean, median, min and max of precision, recall and F"
 code = '''
-using TextAnalysis, Statistics
-
-scores = rouge_n({{candidates}}, {{references}}, 1; beta={{beta}})  # compute ROUGE-1 scores
-
-for field in (:precision, :recall, :f1)
-    vals = map(x -> getfield(x, field), scores)
-    println(field, "  mean=", round(mean(vals), digits=4), "  median=", round(median(vals), digits=4), "  min=", round(minimum(vals), digits=4), "  max=", round(maximum(vals), digits=4))
+for (name, v) in (("precision", P), ("recall", R), ("F", F))
+    println(rpad(name, 10), "mean ", round(mean(v); digits = 3), "   median ", round(median(v); digits = 3),
+            "   min ", round(minimum(v); digits = 3), "   max ", round(maximum(v); digits = 3))
 end
+{{?model=rouge1|rouge2}} over = findall(>(1), R)  # rouge_n counts a repeated candidate n-gram every time (no clipping)
+{{?model=rouge1|rouge2}} isempty(over) || println("Recall above 1 in documents ", over, ": the candidate repeats n-grams of the reference")
 '''
 
 [[actionGroups.actions]]
 id = "low-score-docs"
 label = "Low-Score Documents"
-desc = "Identify candidates with the lowest F1 scores"
+desc = "The five lowest-scoring candidates next to their best reference, to read by hand"
 code = '''
-using TextAnalysis
-
-scores = rouge_n({{candidates}}, {{references}}, 1; beta={{beta}})  # compute ROUGE-1 scores
-f1s    = map(x -> x.f1, scores)  # F1 per document
-idx    = sortperm(f1s)  # indices sorted by F1 ascending
-
-println("Bottom 5 documents by F1:")  # show worst candidates
-for i in idx[1:min(5, length(idx))]
-    println("Doc ", i, "  F1=", round(f1s[i], digits=4))
+# a low score can be a faithful paraphrase; a high score can still state a wrong fact
+for i in sortperm(F)[1:min(5, length(F))]
+    best = refs[i][argmax(getfield.(metric(refs[i], cands[i]), :fmeasure))]
+    println("Doc $i  F ", round(F[i]; digits = 3))
+    println("   candidate: ", first(cands[i], 150))
+    println("   reference: ", first(best, 150))
 end
 '''
 
@@ -281,29 +410,24 @@ label = "Predict"
 [[actionGroups.actions]]
 id = "eval-new-candidate"
 label = "Evaluate New Candidate"
-desc = "Score a single new candidate against a reference"
+desc = "Score one new summary against its references with the current metric"
 code = '''
-using TextAnalysis
-
-candidate = ["The cat sat on the mat."]  # single system output
-reference = ["The cat is sitting on the mat."]  # single gold reference
-
-score = rouge_n(candidate, reference, 1; beta={{beta}})[1]  # evaluate single document
-println("Precision: ", score.precision, "  Recall: ", score.recall, "  F1: ", score.f1)  # print result
+s = pick(metric(as_refs({{new-references}}), lowercase({{new-candidate}})))
+println("precision ", round(s.precision; digits = 3), "   recall ", round(s.recall; digits = 3), "   F ", round(s.fmeasure; digits = 3))
 '''
 
 [[actionGroups.actions]]
-id = "batch-evaluation"
-label = "Batch Evaluation"
-desc = "Evaluate multiple candidate sets in a loop"
+id = "paraphrase-vs-wrong-fact"
+label = "Paraphrase vs Wrong Fact"
+desc = "How the current metric scores a faithful paraphrase against a fluent copy with one wrong fact"
 code = '''
-using TextAnalysis, Statistics
-
-systems = [system_a, system_b, system_c]  # list of candidate sets
-
-for (i, cands) in enumerate(systems)
-    scores = rouge_n(cands, {{references}}, 1; beta={{beta}})
-    println("System ", i, "  mean F1=", round(mean(x -> x.f1, scores), digits=4))
+ref = ["the central bank raised interest rates by half a point to fight inflation."]
+probes = ("faithful paraphrase" => "the central bank lifted borrowing costs by 0.5 percentage points to curb rising prices.",
+          "one wrong fact"      => "the central bank cut interest rates by half a point to fight inflation.",
+          "exact copy"          => ref[1])
+for (name, c) in probes
+    s = pick(metric(ref, c))
+    println(rpad(name, 22), "F ", round(s.fmeasure; digits = 3))  # ROUGE rewards shared words, not meaning
 end
 '''
 
@@ -314,34 +438,40 @@ label = "Compare"
 [[actionGroups.actions]]
 id = "compare-metrics"
 label = "Compare Metrics"
-desc = "Side-by-side ROUGE-1, ROUGE-2, ROUGE-L, ROUGE-S scores"
+desc = "ROUGE-1, ROUGE-2, ROUGE-L and ROUGE-Lsum side by side for System A"
 code = '''
-using TextAnalysis, Statistics
-
-r1 = rouge_n({{candidates}}, {{references}}, 1; beta={{beta}})  # ROUGE-1
-r2 = rouge_n({{candidates}}, {{references}}, 2; beta={{beta}})  # ROUGE-2
-rl = rouge_l({{candidates}}, {{references}}; beta={{beta}})  # ROUGE-L
-rs = rouge_s({{candidates}}, {{references}}; beta={{beta}})  # ROUGE-S
-
-for (name, scores) in [("ROUGE-1", r1), ("ROUGE-2", r2), ("ROUGE-L", rl), ("ROUGE-S", rs)]
-    println(name, "  F1=", round(mean(x -> x.f1, scores), digits=4))
+metrics = ("ROUGE-1"    => (r, c) -> rouge_n(r, c, 1),
+           "ROUGE-2"    => (r, c) -> rouge_n(r, c, 2),
+           "ROUGE-L"    => (r, c) -> rouge_l_sentence(r, c, 1),
+           "ROUGE-Lsum" => (r, c) -> rouge_l_summary(r, c, 1))  # F1 throughout
+for (name, m) in metrics
+    s = average([pick(m(r, c)) for (r, c) in zip(refs, cands)])  # macro average
+    println(rpad(name, 12), "P ", round(s.precision; digits = 3), "   R ", round(s.recall; digits = 3), "   F ", round(s.fmeasure; digits = 3))
 end
 '''
 
 [[actionGroups.actions]]
 id = "compare-systems"
 label = "Compare Systems"
-desc = "Rank multiple summarisation systems by F1"
+desc = "Is System A better than System B? Paired t-test, Wilcoxon signed-rank and paired bootstrap over documents; the Bootstrap Resampling panel in the Simulate menu compares interval methods, resampling schemes and their coverage"
 code = '''
-using TextAnalysis, Statistics
+using HypothesisTests, Bootstrap, Random  # paired tests; bootstrap resampling; seeding
 
-systems = Dict("System A" => system_a, "System B" => system_b)  # named candidate sets
+cands_b = lowercase.({{candidates-b}})
+length(cands_b) == length(cands) || error("System B needs one summary per document, in the same order.")
+FA, FB = F, getfield.(score_docs(cands_b), :fmeasure)
+d = FA .- FB  # paired by document
 
-results = [(name, mean(x -> x.f1, rouge_n(cands, {{references}}, 1; beta={{beta}}))) for (name, cands) in systems]  # compute mean F1 per system
-sort!(results, by=x -> x[2], rev=true)  # rank by F1 descending
-for (name, f1) in results
-    println(name, "  mean F1=", round(f1, digits=4))
-end
+t = OneSampleTTest(FA, FB)  # paired t-test on the F differences
+lo, hi = confint(t)
+println("Mean F difference A - B: ", round(mean(d); digits = 4), "   95% CI (t) [", round(lo; digits = 4), ", ", round(hi; digits = 4), "]   p ", round(pvalue(t); digits = 4))
+println("Wilcoxon signed-rank p: ", round(pvalue(SignedRankTest(FA, FB)); digits = 4))
+
+Random.seed!({{seed}})  # Bootstrap draws with the global RNG
+bs = bootstrap(mean, d, BasicSampling({{nboot}}))  # resample documents, keeping each pair together
+_, blo, bhi = only(confint(bs, PercentileConfInt(0.95)))
+println("Paired bootstrap 95% CI: [", round(blo; digits = 4), ", ", round(bhi; digits = 4), "]")
+println("A scores higher on ", count(>(0), d), " of ", length(d), " documents, lower on ", count(<(0), d))
 '''
 
 [[actionGroups]]
@@ -351,30 +481,22 @@ label = "Interpret"
 [[actionGroups.actions]]
 id = "per-document-scores"
 label = "Per-Document Scores"
-desc = "Table of precision, recall, F1 for each document"
+desc = "Precision, recall and F for each document"
 code = '''
-using TextAnalysis
-
-scores = rouge_n({{candidates}}, {{references}}, 1; beta={{beta}})  # compute ROUGE-1 scores
-
-println("Doc  Precision  Recall  F1")  # header
-for (i, s) in enumerate(scores)
-    println(i, "    ", round(s.precision, digits=4), "    ", round(s.recall, digits=4), "    ", round(s.f1, digits=4))
+println(rpad("Doc", 6), rpad("Precision", 12), rpad("Recall", 12), "F")
+for i in eachindex(scores)
+    println(rpad(i, 6), rpad(round(P[i]; digits = 3), 12), rpad(round(R[i]; digits = 3), 12), round(F[i]; digits = 3))
 end
 '''
 
 [[actionGroups.actions]]
 id = "aggregate-scores"
 label = "Aggregate Scores"
-desc = "Corpus-level micro and macro averages"
+desc = "Macro average (each document counts equally) and length-weighted average (long documents count more)"
 code = '''
-using TextAnalysis, Statistics
-
-scores = rouge_n({{candidates}}, {{references}}, 1; beta={{beta}})  # compute ROUGE-1 scores
-
-macro_p  = mean(x -> x.precision, scores)  # macro-average precision
-macro_r  = mean(x -> x.recall, scores)  # macro-average recall
-macro_f1 = mean(x -> x.f1, scores)  # macro-average F1
-
-println("Macro  P=", round(macro_p, digits=4), "  R=", round(macro_r, digits=4), "  F1=", round(macro_f1, digits=4))  # print corpus-level averages
+lc = length.(split.(cands))  # candidate words: the precision denominator
+lr = [mean(length.(split.(r))) for r in refs]  # reference words (mean over references): the recall denominator
+Pw, Rw = sum(P .* lc) / sum(lc), sum(R .* lr) / sum(lr)
+println("Macro:           ", average(scores))
+println("Length-weighted: precision ", round(Pw; digits = 4), "   recall ", round(Rw; digits = 4), "   F1 ", round(2 * Pw * Rw / (Pw + Rw); digits = 4))
 '''

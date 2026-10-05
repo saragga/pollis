@@ -112,7 +112,7 @@ const vscodeResourceIncludes = [
 	// Pollis: Sessions resources omitted; the Agents window is not shipped.
 
 	// Extensions
-	'out-build/vs/workbench/contrib/extensions/browser/media/{theme-icon.png,language-icon.svg}',
+	'out-build/vs/workbench/contrib/extensions/browser/media/{theme-icon.png,language-icon.svg,pollis-toolbox-icon.png}',
 	'out-build/vs/workbench/services/extensionManagement/common/media/*.{svg,png}',
 
 	// Webview

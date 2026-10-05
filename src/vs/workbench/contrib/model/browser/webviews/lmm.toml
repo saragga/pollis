@@ -17,7 +17,7 @@ name = "FixedEffectModels.jl"
 github = "https://github.com/FixedEffects/FixedEffectModels.jl"
 
 [requires]
-packages = ["MixedModels.jl", "FixedEffectModels.jl"]
+packages = ["MixedModels.jl", "FixedEffectModels.jl", "Distributions.jl", "GLM.jl", "HypothesisTests.jl", "Plots.jl", "RegressionTables.jl", "Tables.jl"]
 
 [[notebookSections]]
 label = ""
@@ -107,7 +107,7 @@ detail = "instrumental variables with within-entity fixed effects absorption"
 [[inputs]]
 id = "formula"
 label = "Formula"
-tooltip = "MixedModels formula: random effects in parentheses.\n(1|group) — random intercept\n(0+x|group) — random slope only\n(1+x|group) — random intercept + slope\n(1|g1) + (1|g2) — crossed random effects\n(1|g1/g2) — nested random effects\n\nFixedEffectModels formula: absorb fixed effects with fe().\nfe(id) — entity fixed effects\nfe(id) + fe(t) — two-way (entity + time) FE\n(x_end ~ z_iv) — IV endogenous regressor"
+tooltip = "Mixed-Effects: fixed effects only (response ~ predictors); random effects go in the Random Effects input.\n\nFixedEffectModels formula: absorb fixed effects with fe().\nfe(id) — entity fixed effects\nfe(id) + fe(t) — two-way (entity + time) FE\n(x_end ~ z_iv) — IV endogenous regressor"
 default = "y ~ x1 + x2"
 models = ["lmm", "panel-fe", "twoway-fe"]
 
@@ -127,8 +127,15 @@ default = "df"
 [[inputs]]
 id = "group"
 label = "Group"
-tooltip = ""
+tooltip = "Grouping factor named in the plots and the variance share (for Mixed-Effects, the factor of the first random-effects term)."
 default = "group"
+
+[[inputs]]
+id = "re"
+label = "Random Effects"
+tooltip = "Random-effects terms of the MixedModels formula, each in parentheses.\n(1|group) - random intercept\n(1+x|group) - random intercept + slope\n(0+x|group) - random slope only\n(1|g1) + (1|g2) - crossed random effects\n(1|g1/g2) - nested random effects\n\nThe Group input names the factor the caterpillar plot and ICC refer to: list its term first."
+default = "(1|group)"
+models = ["lmm"]
 
 [[inputs]]
 id = "time-var"
@@ -167,7 +174,7 @@ model = "lmm"
 code = '''
 using MixedModels  # linear mixed-effects models
 
-model = fit(MixedModel, @formula({{formula}} + (1|{{group}})), {{data}})  # random intercept per {{group}}
+model = fit(MixedModel, @formula({{formula}} + {{re}}), {{data}})  # random effects: {{re}}
 
 println(model)  # model summary
 println(VarCorr(model))  # variance components
@@ -184,8 +191,8 @@ using FixedEffectModels  # high-dimensional fixed effects
 {{?inference=clustered}} model = reg({{data}}, @formula({{formula}} + fe({{group}})), Vcov.cluster(:{{group}}))  # entity FE: {{group}}
 {{?inference=twoway-clustered}} model = reg({{data}}, @formula({{formula}} + fe({{group}})), Vcov.cluster(:{{group}}, :{{time-var}}))  # entity FE: {{group}}
 
-println(coeftable(model))  # coefficient table
-println("R²: ", r2(model))  # goodness of fit
+display(coeftable(model))  # coefficient table
+println("R2: ", r2(model))  # goodness of fit
 '''
 
 [[codeBranches]]
@@ -198,8 +205,8 @@ using FixedEffectModels  # two-way fixed effects
 {{?inference=clustered}} model = reg({{data}}, @formula({{formula}} + fe({{group}}) + fe({{time-var}})), Vcov.cluster(:{{group}}))  # entity + time FE: {{group}}, {{time-var}}
 {{?inference=twoway-clustered}} model = reg({{data}}, @formula({{formula}} + fe({{group}}) + fe({{time-var}})), Vcov.cluster(:{{group}}, :{{time-var}}))  # entity + time FE: {{group}}, {{time-var}}
 
-println(coeftable(model))  # coefficient table
-println("R²: ", r2(model))  # goodness of fit
+display(coeftable(model))  # coefficient table
+println("R2: ", r2(model))  # goodness of fit
 '''
 
 [[codeBranches]]
@@ -212,7 +219,7 @@ using FixedEffectModels  # IV / 2SLS with fixed effects
 {{?inference=clustered}} model = reg({{data}}, @formula({{formula-iv}} + fe({{group}})), Vcov.cluster(:{{group}}))  # IV/2SLS: (x_end ~ z_iv) notation
 {{?inference=twoway-clustered}} model = reg({{data}}, @formula({{formula-iv}} + fe({{group}})), Vcov.cluster(:{{group}}, :{{time-var}}))  # IV/2SLS: (x_end ~ z_iv) notation
 
-println(coeftable(model))  # coefficient table
+display(coeftable(model))  # coefficient table
 println("First-stage F: ", model.F_kp)  # instrument strength (Kleibergen-Paap)
 '''
 
@@ -279,6 +286,19 @@ code = '''
 {{?model=iv}} println("First-stage F (Kleibergen-Paap): ", model.F_kp, "  p = ", model.p_kp, "  (F < 10 suggests weak instruments)")
 '''
 
+[[actionGroups.actions]]
+id = "qq-ranef"
+label = "Random-Effects Q-Q Plot"
+desc = "Normal Q-Q plot of the random intercepts of the first random-effects term: the model assumes they are normally distributed"
+models = ["lmm"]
+code = '''
+using Plots, Distributions, Statistics
+b = sort(vec(ranef(model)[1][1, :]))  # first coefficient of the first random-effects term
+q = quantile.(Normal(), ((1:length(b)) .- 0.5) ./ length(b))
+scatter(q, b, ms=3, label=false, xlabel="Normal quantiles", ylabel="Random-effect quantiles", title="Random-effects Q-Q plot")
+plot!(q, mean(b) .+ std(b) .* q, c=:red, ls=:dash, label=false)
+'''
+
 [[actionGroups]]
 id = "predict"
 label = "Predict"
@@ -308,7 +328,7 @@ using Random, Statistics, Tables
 Random.seed!(1)
 rows = Tables.rowtable({{data}}); idx = shuffle(1:length(rows)); cut = round(Int, 0.8 * length(rows))
 train, test = rows[idx[1:cut]], rows[idx[cut+1:end]]
-{{?model=lmm}} mt = fit(MixedModel, @formula({{formula}} + (1|{{group}})), train)
+{{?model=lmm}} mt = fit(MixedModel, @formula({{formula}} + {{re}}), train)
 {{?model=lmm}} p = predict(mt, test; new_re_levels=:population)  # new groups get the population prediction
 {{?model!=lmm}} mt = reg(train, model.formula, save=:fe)
 {{?model!=lmm}} p = predict(mt, test)  # missing for groups not seen in training
@@ -329,6 +349,7 @@ code = '''
 {{?model=lmm}} using GLM
 {{?model=lmm}} ols = lm(@formula({{formula}}), {{data}})  # same fixed effects, no grouping
 {{?model=lmm}} display(MixedModels.likelihoodratiotest(ols, model))
+{{?model=lmm}} println("Note: the random-intercept variance is tested on its boundary (0), so the chi-square p-value is conservative: roughly halve it")
 {{?model=panel-fe|twoway-fe}} pooled = reg({{data}}, @formula({{formula}}))
 {{?model=iv}} pooled = reg({{data}}, @formula({{formula-iv}}))
 {{?model!=lmm}} using RegressionTables
@@ -378,4 +399,15 @@ using Plots
 n, b, se = coefnames(model), coef(model), stderror(model)
 scatter(b, 1:length(b), xerror=1.96 .* se, yticks=(1:length(b), n), ms=4, label=false, xlabel="Estimate", title="Coefficients with 95% CI")
 vline!([0], c=:red, ls=:dash, label=false)
+'''
+
+[[actionGroups.actions]]
+id = "bootstrap"
+label = "Parametric Bootstrap"
+desc = "Bootstrap confidence intervals for all parameters, variance components included (MixedModels parametric bootstrap); the Bootstrap Resampling panel in the Simulate menu compares interval methods, resampling schemes and their coverage"
+models = ["lmm"]
+code = '''
+using MixedModels, Random
+boot = parametricbootstrap(MersenneTwister(42), 1000, model)  # 1000 simulated refits
+println(confint(boot))  # shortest 95% coverage intervals
 '''

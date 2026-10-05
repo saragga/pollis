@@ -20,8 +20,12 @@ github = "https://github.com/dm13450/HawkesProcesses.jl"
 name = "NetworkHawkesProcesses.jl"
 github = "https://github.com/cswaney/NetworkHawkesProcesses.jl"
 
+[[packages]]
+name = "KernelDensity.jl"
+github = "https://github.com/JuliaStats/KernelDensity.jl"
+
 [requires]
-packages = ["PointProcesses.jl", "HawkesProcesses.jl", "NetworkHawkesProcesses.jl"]
+packages = ["PointProcesses.jl", "HawkesProcesses.jl", "NetworkHawkesProcesses.jl", "KernelDensity.jl", "Distributions.jl", "QuadGK.jl", "HypothesisTests.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""
@@ -226,6 +230,59 @@ journal = "Annals of the Institute of Statistical Mathematics"
 doi = "10.1023/A:1003403601725"
 openAccess = false
 
+
+[[references]]
+separator = true
+label = "Estimation and Diagnostics"
+
+[[references]]
+title = "Confidence Intervals for the Poisson Distribution"
+authors = "Garwood, Frank"
+year = 1936
+journal = "Biometrika"
+doi = "10.1093/biomet/28.3-4.437"
+openAccess = false
+
+[[references]]
+title = "A Kernel Method for Smoothing Point Process Data"
+authors = "Diggle, Peter J."
+year = 1985
+journal = "Journal of the Royal Statistical Society, Series C (Applied Statistics)"
+doi = "10.2307/2347366"
+openAccess = false
+
+[[references]]
+title = "Log Gaussian Cox Processes"
+authors = "Moller, Jesper; Syversveen, Anne Randi; Waagepetersen, Rasmus Plenge"
+year = 1998
+journal = "Scandinavian Journal of Statistics"
+doi = "10.1111/1467-9469.00115"
+openAccess = false
+
+[[references]]
+title = "Bayesian Inference for Hawkes Processes"
+authors = "Rasmussen, Jakob Gulddahl"
+year = 2013
+journal = "Methodology and Computing in Applied Probability"
+doi = "10.1007/s11009-011-9272-5"
+openAccess = false
+
+[[references]]
+title = "Discovering Latent Network Structure in Point Process Data"
+authors = "Linderman, Scott W.; Adams, Ryan P."
+year = 2014
+journal = "Proceedings of the 31st International Conference on Machine Learning (PMLR 32)"
+url = "https://proceedings.mlr.press/v32/linderman14.html"
+openAccess = true
+
+[[references]]
+title = "The Time-Rescaling Theorem and Its Application to Neural Spike Train Data Analysis"
+authors = "Brown, Emery N.; Barbieri, Riccardo; Ventura, Valerie; Kass, Robert E.; Frank, Loren M."
+year = 2002
+journal = "Neural Computation"
+doi = "10.1162/08997660252741149"
+openAccess = false
+
 [[models]]
 id = "poisson"
 label = "Poisson"
@@ -248,49 +305,63 @@ label = "Network Hawkes"
 
 [[bullets]]
 text = "Homogeneous Poisson"
-detail = "constant rate lambda; inter-event times are iid Exp(lambda)"
+detail = "constant rate lambda; fit(MultivariatePoissonProcess{Float64}, history) from PointProcesses.jl gives the MLE N/T, with an exact (Garwood) interval"
 
 [[bullets]]
 text = "Inhomogeneous Poisson"
-detail = "time-varying rate lambda(t); simulated via thinning (Lewis-Shedler)"
+detail = "time-varying rate lambda(t), estimated without a parametric form by a KernelDensity.jl kernel estimate with Diggle's edge correction"
 
 [[bullets]]
 text = "Cox"
-detail = "doubly stochastic Poisson; log-intensity is a Gaussian process: log lambda(t) ~ GP"
+detail = "doubly stochastic Poisson: log lambda(t) is a Gaussian process; NetworkHawkesProcesses.jl samples the posterior path by elliptical slice sampling, alongside a self-excitation weight that should stay near 0 for Cox data"
 
 [[bullets]]
 text = "Hawkes"
-detail = "self-exciting; lambda*(t) = mu + alpha ∑ti<t exp(−beta(t−ti)); branching ratio alpha/beta < 1"
+detail = "self-exciting: lambda(t) = mu + alpha sum over t_i < t of exp(-beta(t - t_i)); HawkesProcesses.jl samples (mu, kappa = alpha/beta, beta) by Gibbs sampling with latent parents; kappa < 1 for stationarity"
 
 [[bullets]]
 text = "Network Hawkes"
-detail = "multivariate Hawkes with directed network weight matrix W"
+detail = "multivariate Hawkes on a directed network: node m excites node n only if the link A[m, n] = 1; NetworkHawkesProcesses.jl samples the links, weights W, decays and baselines by Gibbs sampling"
+
+[[inputs]]
+id = "lambda"
+label = "Rate (lambda)"
+tooltip = "True event rate of the simulated example (events per unit time). It is used only to simulate the default data; the code then estimates lambda from the events."
+default = "0.5"
+models = ["poisson"]
+
+[[inputs]]
+id = "bw"
+label = "Bandwidth (h)"
+tooltip = "Standard deviation of the Gaussian smoothing kernel, in time units. Small values follow the events closely and are noisy; large values smooth away real changes in the rate. The simulated example has a rate cycle of length T/2."
+default = "5"
+models = ["inhomogeneous"]
 
 [[inputs]]
 id = "mu0"
-label = "Log baseline (mu0)"
-tooltip = "GP prior mean for the log-intensity: E[f(t)] = mu0. The intensity is lambda(t) = exp(f(t))."
+label = "Log Baseline (mu0)"
+tooltip = "Offset of the log-intensity of the simulated example: lambda(t) = exp(mu0 + y(t)) with y a zero-mean Gaussian process. The fit centres its prior at the log of the observed average rate instead."
 default = "0.0"
 models = ["cox"]
 
 [[inputs]]
 id = "gp-var"
-label = "GP variance (sigma2)"
-tooltip = "Signal variance of the GP kernel. Controls the amplitude of intensity fluctuations."
+label = "GP Variance (sigma2)"
+tooltip = "Variance of the Gaussian process y(t), used both to simulate the example and as the prior for the fit. Larger values allow larger swings in the log-intensity."
 default = "1.0"
 models = ["cox"]
 
 [[inputs]]
 id = "gp-ls"
-label = "Length scale (l)"
-tooltip = "Kernel length scale. Larger values give smoother intensity functions over time."
+label = "Length Scale (l)"
+tooltip = "Length scale of the Gaussian process kernel, in time units, used both to simulate the example and as the prior for the fit. Larger values give smoother intensity paths."
 default = "10.0"
 models = ["cox"]
 
 [[inputs]]
 id = "kernel"
 label = "Kernel"
-tooltip = ""
+tooltip = "Covariance kernel of the Gaussian process. Squared exponential gives smooth paths; Ornstein-Uhlenbeck (Matern 1/2) gives rough, continuous paths."
 kind = "select"
 default = "se"
 models = ["cox"]
@@ -300,156 +371,243 @@ value = "se"
 label = "Squared Exp."
 
 [[inputs.options]]
-value = "matern32"
-label = "Matern 3/2"
-
-[[inputs.options]]
-value = "matern52"
-label = "Matern 5/2"
+value = "ou"
+label = "Ornstein-Uhlenbeck"
 
 [[inputs]]
 id = "mu"
 label = "Baseline (mu)"
-tooltip = "Exogenous (immigrant) event rate. Contribution to intensity independent of past events."
+tooltip = "True immigrant rate of the simulated example: the part of the intensity that does not depend on past events."
 default = "0.3"
 models = ["hawkes"]
 
 [[inputs]]
 id = "alpha"
 label = "Excitation (alpha)"
-tooltip = "Jump size added to intensity at each event. alpha/beta is the branching ratio and must be less than 1 for stationarity."
+tooltip = "True jump in intensity after each event in the simulated example. The branching ratio kappa = alpha/beta (expected direct offspring per event) must be below 1."
 default = "0.5"
 models = ["hawkes"]
 
 [[inputs]]
 id = "beta"
 label = "Decay (beta)"
-tooltip = "Exponential decay rate. Excitation from a past event decays as alpha * exp(-beta * (t - t_i)). Branching ratio = alpha/beta must be less than 1."
+tooltip = "True decay rate of the simulated example: the excitation from an event at t_i is alpha * exp(-beta * (t - t_i)). The branching ratio alpha/beta must be below 1."
 default = "1.0"
 models = ["hawkes"]
 
 [[inputs]]
 id = "N"
 label = "Nodes (N)"
-tooltip = "Number of event streams. Each node has its own conditional intensity driven by all nodes via the weight matrix W."
+tooltip = "Number of event streams. In the simulated example each directed link is present with probability 0.5 and has weight 0.6/N, so the process is stable."
 default = "3"
 models = ["network"]
 
 [[inputs]]
 id = "net-mu"
 label = "Baseline (mu)"
-tooltip = "Exogenous rate per node. Endogenous interactions are captured by the weight matrix W."
+tooltip = "True immigrant rate of every node in the simulated example."
 default = "0.3"
 models = ["network"]
 
 [[inputs]]
 id = "net-beta"
 label = "Decay (beta)"
-tooltip = "Exponential decay rate shared across all node pairs. Influence decays as W[n,m] * beta * exp(-beta * (t - t_i))."
+tooltip = "True decay rate of every link in the simulated example: an event on node m adds W[m, n] * beta * exp(-beta * (t - t_i)) to node n when the link exists."
 default = "1.0"
 models = ["network"]
 
 [[inputs]]
+id = "its"
+label = "Gibbs Iterations"
+tooltip = "Number of Gibbs sweeps. The first quarter is discarded as burn-in. Increase it if the summaries change when you rerun with another seed."
+default = "2000"
+models = ["cox", "hawkes", "network"]
+
+[[inputs]]
 id = "T"
 label = "Time Horizon (T)"
-tooltip = "Observation window [0, T]. Events outside this interval are not counted."
+tooltip = "Observation window [0, T]. The events must lie in it, and the likelihood counts the quiet time after the last event."
 default = "100"
 
 [[inputs]]
 id = "data"
-label = "Data"
-tooltip = "Variable name for the event times array. Used throughout the generated code snippets."
+label = "Event Times"
+tooltip = "Vector of event times in [0, T]. With the default name events, the code simulates an example from the model with the values above; rename it to use your own data."
 default = "events"
+
+[[inputs]]
+id = "nodes"
+label = "Event Nodes"
+tooltip = "Vector giving the node (1 to N) of each event, in the same order as the event times. Simulated with the example when the event times keep the default name."
+default = "nodes"
+models = ["network"]
 
 [[codeBranches]]
 model = "poisson"
 code = '''
-using PointProcesses
+using Random, Distributions, PointProcesses
 
-T = {{T}}  # observation window [0, T]
+Random.seed!(1)
+T = Float64({{T}})  # observation window [0, T]
+{{?data=events}}events = sort(event_times(rand(MultivariatePoissonProcess([Float64({{lambda}})]), 0.0, T)))  # simulated example; rand returns the times unsorted
 
-n          = length({{data}})  # observed event count
-lambda_hat = n / T  # MLE: closed-form N/T
-ci_half    = 1.96 * sqrt(lambda_hat / T)  # 95% Wald CI half-width
+t_obs = sort(Float64.({{data}}))
+h = History(; times = t_obs, marks = ones(Int, length(t_obs)), tmin = 0.0, tmax = T)  # a single mark: a univariate process
+process = fit(MultivariatePoissonProcess{Float64}, h)  # MLE: N / T
 
-println("Event count: ", n)  # observed N
-println("lambda MLE:  ", lambda_hat)  # point estimate
-println("95% CI:      [", lambda_hat - ci_half, ", ", lambda_hat + ci_half, "]")  # confidence interval
+n = nb_events(h)
+lambda_hat = ground_intensity(process)
+ci = (quantile(Chisq(2n), 0.025) / (2T), quantile(Chisq(2n + 2), 0.975) / (2T))  # exact (Garwood) 95% interval
+
+println("Events:       ", n)
+println("lambda MLE:   ", round(lambda_hat, digits = 4))
+println("95% interval: ", round.(ci, digits = 4))
+{{?data=events}}println("True lambda:  ", {{lambda}})
+
+lam(t) = ground_intensity(process)  # fitted intensity at t (constant)
+Lam(a, b) = integrated_ground_intensity(process, h, a, b)  # fitted compensator on [a, b)
+{{?data=events}}lam_true(t) = {{lambda}}
 '''
 
 [[codeBranches]]
 model = "inhomogeneous"
 code = '''
-using PointProcesses, KernelDensity
+using Random, Distributions, KernelDensity, QuadGK, PointProcesses
 
-T = {{T}}  # observation window [0, T]
-n = length({{data}})  # observed event count
+Random.seed!(1)
+T = Float64({{T}})  # observation window [0, T]
+{{?data=events}}lam_true(t) = 1 + 0.8 * sin(4pi * t / T)  # true intensity: two cycles between 0.2 and 1.8
+{{?data=events}}candidates = sort(event_times(rand(MultivariatePoissonProcess([1.8]), 0.0, T)))  # homogeneous Poisson at the bound 1.8
+{{?data=events}}events = filter(t -> rand() < lam_true(t) / 1.8, candidates)  # Lewis-Shedler thinning
 
-kde_fit    = kde({{data}}; bandwidth = T / 20)  # kernel density estimate
-ts         = range(0, T, length = 200)  # evaluation grid
-lambda_est = n .* pdf(kde_fit, collect(ts))  # estimated intensity at each t
+t_obs = sort(Float64.({{data}}))
+n = length(t_obs)
+bw = {{bw}}  # kernel standard deviation
+dens = InterpKDE(kde(t_obs; bandwidth = bw))  # Gaussian kernel density of the event times
 
-println("Event count: ", n)  # observed N
-println("Mean rate:   ", n / T)  # average intensity
-println("Peak rate:   ", maximum(lambda_est))  # maximum intensity
+edge(t) = cdf(Normal(t, bw), T) - cdf(Normal(t, bw), 0)  # share of the kernel at t that falls inside [0, T]
+lam(t) = n * pdf(dens, t) / edge(t)  # Diggle (1985) edge-corrected intensity: no dip at 0 and T
+Lam(a, b) = quadgk(lam, a, b)[1]  # fitted compensator on [a, b]
+
+println("Events: ", n, "   average rate: ", round(n / T, digits = 4))
+for t in range(0, T, length = 9)
+    println("t = ", rpad(round(t, digits = 1), 8), "lambda_hat = ", rpad(round(lam(t), digits = 3), 8), @isdefined(lam_true) ? "true = $(round(lam_true(t), digits = 3))" : "")
+end
 '''
 
 [[codeBranches]]
 model = "cox"
 code = '''
-using PointProcesses, GaussianProcesses
+using Random, Statistics, Distributions, QuadGK
+import NetworkHawkesProcesses as NHP
 
-T   = {{T}}  # observation window [0, T]
-mu0 = {{mu0}}  # GP prior mean for log-intensity
+Random.seed!(1)
+T = Float64({{T}})  # observation window [0, T]
+G = 50  # grid intervals for the latent Gaussian process
+{{?kernel=se}}gp = NHP.GaussianProcess(NHP.SquaredExponentialKernel(sqrt({{gp-var}}), {{gp-ls}}))  # (sigma, length scale)
+{{?kernel=ou}}gp = NHP.GaussianProcess(NHP.OrnsteinUhlenbeckKernel(sqrt({{gp-var}}), {{gp-ls}}))  # (sigma, length scale)
+{{?data=events}}truth = NHP.LogGaussianCoxProcess(gp, {{mu0}}, T, G, 1)  # one draw of lambda(t) = exp(mu0 + y(t)) on G + 1 grid points
+{{?data=events}}events = sort(rand(truth, 1, T))  # Poisson events given the drawn intensity
+{{?data=events}}lam_true(t) = NHP.intensity(truth, 1, t)
 
-{{?kernel=se}} kernel = SEIso(log({{gp-ls}}), log({{gp-var}}) / 2)  # squared-exponential kernel: GaussianProcesses takes log(l), then log(sigma)
-{{?kernel=matern32}} kernel = Mat32Iso(log({{gp-ls}}), log({{gp-var}}) / 2)  # Matern 3/2 kernel: GaussianProcesses takes log(l), then log(sigma)
-{{?kernel=matern52}} kernel = Mat52Iso(log({{gp-ls}}), log({{gp-var}}) / 2)  # Matern 5/2 kernel: GaussianProcesses takes log(l), then log(sigma)
-cox    = CoxProcess(kernel; mu = {{mu0}})  # log-Gaussian Cox process
+t_obs = sort(Float64.({{data}}))
+data = (t_obs, ones(Int, length(t_obs)), T)  # (times, node of each event, duration)
+m_hat = log(length(t_obs) / T)  # prior centre of log lambda: the observed average rate
 
-result = fit(cox, {{data}}, T)  # Laplace approximation to GP posterior
-println("Log posterior mean: ", result.mu_post)  # fitted log-intensity mean
-println("Log posterior std:  ", result.sigma_post)  # posterior uncertainty
+# Cox baseline plus a self-excitation weight W: for Cox data, W's posterior should sit near 0
+process = NHP.ContinuousStandardHawkesProcess(NHP.LogGaussianCoxProcess(gp, m_hat, T, G, 1), NHP.ExponentialImpulseResponse(ones(1, 1)), NHP.DenseWeightModel(fill(0.1, 1, 1)))
+its = {{its}}
+res = NHP.mcmc!(process, data; nsteps = its)  # Gibbs: parents, GP path (elliptical slice), decay, weight
+draws = res.samples[(div(its, 4) + 1):end]  # drop the first quarter as burn-in
+
+x_grid = collect(range(0.0, T, length = G + 1))
+lam_draws = reduce(hcat, [s[1:(G + 1)] for s in draws])  # baseline intensity on the grid, one column per draw
+lam_mean = vec(mean(lam_draws; dims = 2))
+lam_lo = [quantile(r, 0.025) for r in eachrow(lam_draws)]
+lam_hi = [quantile(r, 0.975) for r in eachrow(lam_draws)]
+W_draws = [s[G + 3] for s in draws]
+
+println("Events: ", length(t_obs))
+println("Self-excitation W: mean ", round(mean(W_draws), digits = 3), ", 95% interval ", round.(quantile(W_draws, [0.025, 0.975]), digits = 3))
+{{?data=events}}println("Correlation of the posterior mean with the true intensity on the grid: ", round(cor(lam_mean, lam_true.(x_grid)), digits = 3))
+
+NHP.params!(process, mean(draws))  # posterior-mean plug-in
+lam(t) = only(NHP.intensity(process, data, t))  # fitted conditional intensity at t
+Lam(a, b) = quadgk(lam, a, filter(s -> a < s < b, t_obs)..., b)[1]  # fitted compensator, split at the jumps
 '''
 
 [[codeBranches]]
 model = "hawkes"
 code = '''
-using HawkesProcesses
+using Random, Statistics, Distributions
+import HawkesProcesses as HP
 
-mu    = {{mu}}  # baseline (immigrant) rate
-alpha = {{alpha}}  # excitation: jump size at each event
-beta  = {{beta}}  # decay rate; alpha/beta = branching ratio (must be < 1)
-T     = {{T}}  # time horizon
+Random.seed!(1)
+T = Float64({{T}})  # observation window [0, T]
+{{?data=events}}events = HP.simulate({{mu}}, {{alpha}} / {{beta}}, Exponential(1 / {{beta}}), T)  # simulated example: (mu, kappa, kernel)
 
-process = HawkesProcess(mu, alpha, beta)  # exponential kernel Hawkes process
-result  = fit(process, {{data}})  # fit by MLE given observed events
+t_obs = sort(Float64.({{data}}))  # event times must be distinct
+its = {{its}}
+mu_draws, kappa_draws, beta_draws = HP.fit(t_obs, T, its)  # Gibbs sampler with latent parents
+keep = (div(its, 4) + 1):its  # drop the first quarter as burn-in
+mu_draws, kappa_draws, beta_draws = mu_draws[keep], kappa_draws[keep], beta_draws[keep]
+alpha_draws = kappa_draws .* beta_draws  # HawkesProcesses writes alpha * exp(-beta s) as kappa * beta * exp(-beta s)
 
-println("mu    = ", result.mu)  # fitted baseline
-println("alpha = ", result.alpha)  # fitted excitation
-println("beta  = ", result.beta)  # fitted decay
-println("rho   = ", result.alpha / result.beta)  # branching ratio < 1
+println("Events: ", length(t_obs))
+for (name, d) in [("mu", mu_draws), ("alpha", alpha_draws), ("beta", beta_draws), ("kappa = alpha/beta", kappa_draws)]
+    println(rpad(name, 20), "mean ", rpad(round(mean(d), digits = 3), 8), "95% interval ", round.(quantile(d, [0.025, 0.975]), digits = 3))
+end
+{{?data=events}}println("True values: mu = ", {{mu}}, ", alpha = ", {{alpha}}, ", beta = ", {{beta}}, ", kappa = ", {{alpha}} / {{beta}})
+
+mu_hat, kappa_hat, beta_hat = mean(mu_draws), mean(kappa_draws), mean(beta_draws)  # posterior-mean plug-in
+kern = Exponential(1 / beta_hat)
+lam(t) = HP.intensity(t, t_obs, mu_hat, kappa_hat, s -> pdf(kern, s))  # fitted conditional intensity at t
+Lam(a, b) = HP.compensator(b, t_obs, mu_hat, kappa_hat, kern) - HP.compensator(a, t_obs, mu_hat, kappa_hat, kern)  # fitted compensator on [a, b]
+{{?data=events}}lam_true(t) = HP.intensity(t, t_obs, {{mu}}, {{alpha}} / {{beta}}, s -> pdf(Exponential(1 / {{beta}}), s))
 '''
 
 [[codeBranches]]
 model = "network"
 code = '''
-using NetworkHawkesProcesses
+using Random, Statistics, LinearAlgebra, Distributions, QuadGK
+import NetworkHawkesProcesses as NHP
 
-N    = {{N}}  # number of nodes
-mu   = {{net-mu}}  # baseline rate per node
-beta = {{net-beta}}  # exponential decay rate
-T    = {{T}}  # time horizon
+Random.seed!(1)
+N = {{N}}  # number of nodes
+T = Float64({{T}})  # observation window [0, T]
+{{?data=events}}links = Float64.(rand(Bernoulli(0.5), N, N))  # true links: links[m, n] = 1 means node m excites node n
+{{?data=events}}truth = NHP.ContinuousNetworkHawkesProcess(NHP.HomogeneousProcess(fill({{net-mu}}, N)), NHP.ExponentialImpulseResponse(fill({{net-beta}}, N, N)), NHP.DenseWeightModel(fill(0.6 / N, N, N)), links, NHP.BernoulliNetworkModel(0.5, N))
+{{?data=events}}events, nodes, _ = rand(truth, T)  # simulated example: event times and the node of each
 
-W = rand({{N}}, {{N}}) .* 0.3  # random weight matrix; spectral radius < 1
+t_obs = Float64.({{data}})
+node_obs = Int.({{nodes}})
+data = (t_obs, node_obs, T)  # (times, node of each event, duration)
+node_times = [t_obs[node_obs .== n] for n in 1:N]
 
-process = NetworkHawkesProcess(mu .* ones({{N}}), W, beta)  # multivariate Hawkes process
-result  = fit(process, {{data}})  # fit by MLE given observed events dict
+# Neutral start: equal baselines, unit decays, small weights, all links present
+process = NHP.ContinuousNetworkHawkesProcess(NHP.HomogeneousProcess(fill(length(t_obs) / (N * T), N)), NHP.ExponentialImpulseResponse(ones(N, N)), NHP.DenseWeightModel(fill(0.1, N, N)), ones(N, N), NHP.BernoulliNetworkModel(0.5, N))
+its = {{its}}
+res = NHP.mcmc!(process, data; nsteps = its)  # Gibbs: parents, baselines, weights, decays, links, link probability
+draws = res.samples[(div(its, 4) + 1):end]  # drop the first quarter as burn-in
 
-for n in 1:{{N}}
-    println("Node ", n, " mu = ", result.mu[n])  # fitted baseline per node
-end
-println("W = ", result.W)  # fitted weight matrix
+# Each draw is [link probability; baselines (N); W (N x N); decays (N x N); links A (N x N)]
+mu_draws = [s[2:(N + 1)] for s in draws]
+W_draws = [reshape(s[(N + 2):(N + 1 + N^2)], N, N) for s in draws]
+theta_draws = [reshape(s[(N + 2 + N^2):(N + 1 + 2N^2)], N, N) for s in draws]
+A_draws = [reshape(s[(N + 2 + 2N^2):end], N, N) for s in draws]
+P_link = mean(A_draws)  # posterior probability of each link
+AW_hat = mean(A_draws .* W_draws)  # posterior mean effective weights
+
+println("Events per node: ", length.(node_times))
+println("Baselines mu: ", round.(mean(mu_draws), digits = 3))
+println("Posterior link probabilities P(A[m, n] = 1), row m = source:")
+display(round.(P_link, digits = 2))
+{{?data=events}}println("True links:")
+{{?data=events}}display(links)
+
+fitted = NHP.ContinuousStandardHawkesProcess(NHP.HomogeneousProcess(mean(mu_draws)), NHP.ExponentialImpulseResponse(mean(theta_draws)), NHP.DenseWeightModel(AW_hat))  # posterior-mean plug-in
+lam(t) = NHP.intensity(fitted, data, t)  # vector of the N fitted intensities at t
+Lam(a, b) = quadgk(lam, a, filter(s -> a < s < b, t_obs)..., b)[1]  # fitted compensators on [a, b], split at the jumps
 '''
 
 [[actionGroups]]
@@ -463,33 +621,34 @@ desc = "Plot event times on a horizontal axis"
 code = '''
 using Plots
 
-scatter({{data}}, zeros(length({{data}})),  # tick marks at event times
-    xlabel="t", yticks=[], marker=:vline,
-    markersize=10, legend=false, xlims=(0, {{T}}))
+{{?model!=network}}scatter(t_obs, zeros(length(t_obs)); marker = :vline, markersize = 10, yticks = [], xlabel = "t", legend = false, xlims = (0, T))  # one tick per event
+{{?model=network}}scatter(t_obs, node_obs; marker = :vline, markersize = 10, xlabel = "t", ylabel = "node", yticks = 1:N, legend = false, xlims = (0, T))  # one row per node
 '''
 
 [[actionGroups.actions]]
 id = "intensity-plot"
 label = "Intensity Function"
-desc = "Plot conditional intensity lambda*(t) over time"
+desc = "Plot the fitted intensity lambda(t) over [0, T]"
 code = '''
 using Plots
 
-ts = range(0, {{T}}, length=500)  # fine time grid
-plot(ts, intensity.(Ref(process), ts, Ref({{data}})),  # lambda*(t) at each grid point
-    xlabel="t", ylabel="lambda*(t)", legend=false)
+ts = collect(range(0, T, length = 1000))  # Hawkes intensities jump at each event
+{{?model!=network}}plot(ts, lam.(ts); xlabel = "t", ylabel = "lambda(t)", label = "fitted")
+{{?model=cox}}plot!(x_grid, lam_lo; fillrange = lam_hi, fillalpha = 0.2, linewidth = 0, label = "95% band (baseline)")
+{{?model!=network}}@isdefined(lam_true) && plot!(ts, lam_true.(ts); linestyle = :dash, label = "true")
+{{?model=network}}plot(ts, transpose(reduce(hcat, lam.(ts))); xlabel = "t", ylabel = "lambda_n(t)", label = permutedims(["node $n" for n in 1:N]))
 '''
 
 [[actionGroups.actions]]
 id = "inter-event-hist"
 label = "Inter-Event Times"
-desc = "Histogram of waiting times between events"
+desc = "Histogram of waiting times against the Poisson benchmark"
 code = '''
-using Plots
+using Plots, Distributions
 
-diffs = diff({{data}})  # inter-event durations
-histogram(diffs, normalize=:pdf,  # empirical density
-    xlabel="inter-event time", ylabel="density")
+gaps = diff(t_obs)  # inter-event times (all nodes pooled for Network Hawkes)
+histogram(gaps; normalize = :pdf, xlabel = "inter-event time", ylabel = "density", label = "observed")
+plot!(s -> pdf(Exponential(T / length(t_obs)), s), 0, maximum(gaps); linewidth = 2, label = "Poisson at the same rate")  # clustering shows as excess short gaps
 '''
 
 [[actionGroups]]
@@ -499,40 +658,46 @@ label = "Diagnose"
 [[actionGroups.actions]]
 id = "time-rescaling"
 label = "Time-Rescaling Test"
-desc = "Transform to unit Poisson via compensator; KS test"
+desc = "Rescale gaps by the fitted compensator; KS test against Exp(1)"
 code = '''
 using HypothesisTests, Distributions
 
-Lambda = cumulative_intensity(process, {{data}})  # compensator at each event
-U      = 1 .- exp.(-diff([0; Lambda]))  # transform to Uniform(0,1)
+{{?model!=network}}tau = [Lam(a, b) for (a, b) in zip([0.0; t_obs[1:(end - 1)]], t_obs)]  # compensator between events: iid Exp(1) under the model
+{{?model=network}}tau = reduce(vcat, [[Lam(a, b)[n] for (a, b) in zip([0.0; tn[1:(end - 1)]], tn)] for (n, tn) in enumerate(node_times)])  # per node, pooled
+z = 1 .- exp.(-tau)  # Uniform(0, 1) under the model
 
-println(KSTest(U, Uniform()))  # KS test: p > 0.05 => good fit
+println(ExactOneSampleKSTest(z, Uniform()))
+println("The model was fitted to these events, so the test rejects less often than its nominal level: treat a large p-value as weak evidence of fit")
 '''
 
 [[actionGroups.actions]]
 id = "qq-plot"
 label = "Q-Q Plot"
-desc = "Transformed inter-event times vs Exp(1)"
+desc = "Rescaled inter-event times against Exp(1) quantiles"
 code = '''
-using Plots, Distributions, StatsBase
+using Plots, Distributions
 
-Lambda_i  = cumulative_intensity(process, {{data}})  # compensator increments
-residuals = diff([0; Lambda_i])  # iid Exp(1) under correct model
+{{?model!=network}}tau = [Lam(a, b) for (a, b) in zip([0.0; t_obs[1:(end - 1)]], t_obs)]  # iid Exp(1) under the model
+{{?model=network}}tau = reduce(vcat, [[Lam(a, b)[n] for (a, b) in zip([0.0; tn[1:(end - 1)]], tn)] for (n, tn) in enumerate(node_times)])  # per node, pooled
+m = length(tau)
+q = quantile.(Exponential(1), ((1:m) .- 0.5) ./ m)  # theoretical quantiles
 
-qqplot(Exponential(1), residuals,  # deviations indicate misspecification
-    xlabel="Exp(1) quantiles", ylabel="Empirical quantiles")
+scatter(q, sort(tau); xlabel = "Exp(1) quantiles", ylabel = "rescaled gaps", legend = false)
+plot!(identity, 0, maximum(q); linestyle = :dash)  # points above the line at the right: unexplained clustering
 '''
 
 [[actionGroups.actions]]
 id = "branching-ratio"
 label = "Branching Ratio"
-desc = "alpha/beta stationarity check (Hawkes)"
+desc = "Posterior stationarity check: kappa < 1, or spectral radius < 1"
 code = '''
-{{?model=hawkes}}mu, alpha, beta = result.mu, result.alpha, result.beta  # fitted parameters
-{{?model!=hawkes}}mu = {{mu}}; alpha = {{alpha}}; beta = {{beta}}  # input values: this check is for the Hawkes model
-rho   = alpha / beta  # branching ratio
-println("rho = ", rho)  # must be < 1 for stationarity
-println("Mean intensity = ", mu / (1 - rho))  # stationary mean
+{{?model=hawkes}}println("kappa = alpha/beta: mean ", round(mean(kappa_draws), digits = 3), ", 95% interval ", round.(quantile(kappa_draws, [0.025, 0.975]), digits = 3))
+{{?model=hawkes}}println("Posterior P(kappa < 1), stationary: ", mean(kappa_draws .< 1))
+{{?model=network}}radius = [maximum(abs.(eigvals(A .* W))) for (A, W) in zip(A_draws, W_draws)]  # spectral radius of the effective weights
+{{?model=network}}println("Spectral radius: mean ", round(mean(radius), digits = 3), ", 95% interval ", round.(quantile(radius, [0.025, 0.975]), digits = 3))
+{{?model=network}}println("Posterior P(radius < 1), stationary: ", mean(radius .< 1))
+{{?model=cox}}println("Self-excitation W: mean ", round(mean(W_draws), digits = 3), ", 95% interval ", round.(quantile(W_draws, [0.025, 0.975]), digits = 3), "; near 0 means the Cox intensity alone explains the clustering")
+{{?model=poisson|inhomogeneous}}println("This model has no self-excitation: its branching ratio is 0. Fit the Hawkes model to estimate one.")
 '''
 
 [[actionGroups]]
@@ -542,39 +707,47 @@ label = "Predict"
 [[actionGroups.actions]]
 id = "next-event"
 label = "Next Event Time"
-desc = "Sample the next arrival given observed history"
+desc = "Distribution of the wait to the next event after T"
 code = '''
-using HawkesProcesses
+using QuadGK, Plots
 
-t_next = next_event(process, {{data}}, {{T}})  # next event after T given history
-println("Next event at t = ", t_next)  # expected next arrival
+{{?model=inhomogeneous|cox}}println("No forecast: this fit describes lambda(t) only on [0, T]")
+{{?model=poisson|hawkes|network}}s_grid = collect(range(0, 10T / length(t_obs), length = 200))  # waits up to 10 mean gaps
+{{?model=poisson|hawkes}}F = [1 - exp(-quadgk(lam, T, T + s)[1]) for s in s_grid]  # P(next event by T + s); no new event before it, so the history is fixed
+{{?model=network}}F = [1 - exp(-sum(quadgk(lam, T, T + s)[1])) for s in s_grid]  # next event on any node
+{{?model=poisson|hawkes|network}}println("Median wait to the next event: ", round(s_grid[findfirst(F .>= 0.5)], digits = 3))
+{{?model=poisson|hawkes|network}}plot(s_grid, F; xlabel = "s", ylabel = "P(next event by T + s)", legend = false)
 '''
 
 [[actionGroups.actions]]
 id = "future-events"
 label = "Future Events"
-desc = "Forward-simulate in [T, T+h] given history"
+desc = "Simulate one path in (T, T + h] given the history"
 code = '''
-using HawkesProcesses
+using Plots
 
-h      = 50  # forecast horizon
-future = simulate(process, {{T}} + h; history = {{data}})  # condition on observed events
-new_ev = filter(t -> t > {{T}}, future)  # retain only future events
-
-println("Predicted events in [T, T+h]: ", length(new_ev))  # forecast count
+h_fc = 50  # forecast horizon
+{{?model=inhomogeneous|cox|network}}println("No conditional simulator: forward simulation is available for the Poisson and Hawkes models")
+{{?model=poisson}}future = sort(event_times(rand(process, T, T + h_fc)))  # Poisson: the history does not matter
+{{?model=hawkes}}future = HP.simulate_forward(t_obs, h_fc, T, mu_hat, kappa_hat, kern)  # immigrants, offspring of the history, and their offspring
+{{?model=poisson|hawkes}}println("Simulated events in (T, T + h]: ", length(future))
+{{?model=poisson|hawkes}}scatter(future, zeros(length(future)); marker = :vline, markersize = 10, yticks = [], xlabel = "t", xlims = (T, T + h_fc), legend = false)
 '''
 
 [[actionGroups.actions]]
 id = "expected-count"
 label = "Expected Count"
-desc = "E[N(T, T+h) | H_T] via intensity integral"
+desc = "Posterior predictive count of events in (T, T + h]"
 code = '''
-using QuadGK
+using Statistics, Distributions
 
-h = 50  # forecast horizon
-mu_fc, _ = quadgk(t -> intensity(process, t, {{data}}), {{T}}, {{T}} + h)  # integrate conditional intensity
-
-println("E[N(T, T+h) | H_T] = ", mu_fc)  # expected count in forecast window
+h_fc = 50  # forecast horizon
+{{?model=inhomogeneous|cox|network}}println("No conditional simulator: forward simulation is available for the Poisson and Hawkes models")
+{{?model=poisson}}counts = [rand(Poisson(rand(Gamma(n + 1, 1 / T)) * h_fc)) for _ in 1:4000]  # rate from its posterior (flat prior), then events
+{{?model=hawkes}}i_draw = rand(eachindex(mu_draws), 1000)  # one posterior draw per simulated path
+{{?model=hawkes}}counts = [length(HP.simulate_forward(t_obs, h_fc, T, mu_draws[i], kappa_draws[i], Exponential(1 / beta_draws[i]))) for i in i_draw]
+{{?model=poisson|hawkes}}println("E[N(T, T + h) | history] = ", round(mean(counts), digits = 2), " (Monte Carlo error ", round(std(counts) / sqrt(length(counts)), digits = 2), ")")
+{{?model=poisson|hawkes}}println("90% predictive interval: ", quantile(counts, [0.05, 0.95]))
 '''
 
 [[actionGroups]]
@@ -584,29 +757,36 @@ label = "Compare"
 [[actionGroups.actions]]
 id = "log-likelihood"
 label = "Log-Likelihood"
-desc = "Evaluate log L = sum log lambda*(t_i) - integral lambda*(t) dt"
+desc = "log L = sum log lambda(t_i) - integral of lambda over [0, T] at the fit"
 code = '''
-using HawkesProcesses
-
-ll = loglikelihood(process, {{data}})  # point-process log-likelihood
-println("Log-likelihood: ", ll)  # higher is better
+{{?model=poisson}}ll = logdensityof(process, h)  # at the MLE
+{{?model=inhomogeneous}}ll = sum(log.(lam.(t_obs))) - Lam(0.0, T)  # in-sample: smaller bandwidths always raise it
+{{?model=cox}}ll = NHP.loglikelihood(process, data)  # at the posterior mean
+{{?model=hawkes}}ll = HP.likelihood(t_obs, mu_hat, kappa_hat, kern, T)  # at the posterior mean
+{{?model=network}}ll = NHP.loglikelihood(fitted, data)  # at the posterior mean
+println("Log-likelihood: ", round(ll, digits = 3), "   per event: ", round(ll / length(t_obs), digits = 4))
 '''
 
 [[actionGroups.actions]]
 id = "aic-bic"
-label = "AIC / BIC"
-desc = "Information criteria for model selection"
+label = "Poisson vs Hawkes"
+desc = "AIC and BIC of the Poisson and Hawkes MLEs on the same events"
 code = '''
-using HawkesProcesses
+using PointProcesses
+import NetworkHawkesProcesses as NHP
 
-ll = loglikelihood(process, {{data}})  # log-likelihood at MLE
-k  = 3  # parameters: mu, alpha, beta
-n  = length({{data}})  # observed event count
+n_ev = length(t_obs)  # all nodes pooled for Network Hawkes
+hist = History(; times = sort(t_obs), marks = ones(Int, n_ev), tmin = 0.0, tmax = Float64(T))
+ll_pois = logdensityof(fit(MultivariatePoissonProcess{Float64}, hist), hist)  # 1 parameter
 
-AIC = -2ll + 2k  # Akaike; lower is preferred
-BIC = -2ll + k * log(n)  # Bayesian; lower is preferred
+hawk = NHP.ContinuousStandardHawkesProcess(NHP.HomogeneousProcess([n_ev / T]), NHP.ExponentialImpulseResponse(ones(1, 1)), NHP.DenseWeightModel(fill(0.5, 1, 1)))
+ml = NHP.mle!(hawk, (sort(t_obs), ones(Int, n_ev), Float64(T)); guess = [n_ev / (2T), 1.0, 0.5])  # 3 parameters: mu, beta, branching ratio
+ll_hawk = ml.maximum  # NetworkHawkesProcesses counts each event's full offspring mass, ignoring truncation at T
 
-println("AIC = ", AIC, "  BIC = ", BIC)  # compare across models
+for (name, ll, k) in [("Poisson", ll_pois, 1), ("Hawkes", ll_hawk, 3)]
+    println(rpad(name, 10), "logL ", rpad(round(ll, digits = 2), 10), "AIC ", rpad(round(-2ll + 2k, digits = 2), 10), "BIC ", round(-2ll + k * log(n_ev), digits = 2))
+end
+println("Lower is better. No chi-square LR test: under Poisson the branching ratio sits on its boundary (0) and beta is not identified")
 '''
 
 [[actionGroups]]
@@ -616,41 +796,41 @@ label = "Interpret"
 [[actionGroups.actions]]
 id = "branching-interpret"
 label = "Branching Structure"
-desc = "Decompose events into immigrants and offspring"
+desc = "Share of immigrant events and mean cluster size"
 code = '''
-{{?model=hawkes}}mu, alpha, beta = result.mu, result.alpha, result.beta  # fitted parameters
-{{?model!=hawkes}}mu = {{mu}}; alpha = {{alpha}}; beta = {{beta}}  # input values: this decomposition is for the Hawkes model
-rho      = alpha / beta  # branching ratio = avg offspring per event
-mean_lam = mu / (1 - rho)  # stationary mean intensity
-imm_frac = mu / mean_lam  # fraction of exogenous events
+using LinearAlgebra, Statistics
 
-println("Branching ratio:     ", rho)  # rho < 1 required
-println("Immigrant fraction:  ", imm_frac)  # share of exogenous events
-println("Endogenous fraction: ", 1 - imm_frac)  # share of self-excited events
+{{?model=hawkes}}println("Direct offspring per event, kappa: ", round(mean(kappa_draws), digits = 3))
+{{?model=hawkes}}println("Immigrant share 1 - kappa: ", round(mean(1 .- kappa_draws), digits = 3), ", 95% interval ", round.(quantile(1 .- kappa_draws, [0.025, 0.975]), digits = 3))
+{{?model=hawkes}}println("Mean cluster size 1/(1 - kappa): ", round(mean(1 ./ (1 .- kappa_draws)), digits = 3))
+{{?model=network}}rates = (I - transpose(AW_hat)) \ mean(mu_draws)  # stationary rates: Lambda = mu + transpose(AW) * Lambda
+{{?model=network}}println("Stationary event rate per node: ", round.(rates, digits = 3))
+{{?model=network}}println("Immigrant share per node: ", round.(mean(mu_draws) ./ rates, digits = 3))
+{{?model=cox}}println("Share of events triggered by earlier events, about W: ", round(mean(W_draws), digits = 3), "; the rest come from the Cox intensity")
+{{?model=poisson|inhomogeneous}}println("Every event is an immigrant in this model: no event triggers another")
 '''
 
 [[actionGroups.actions]]
 id = "network-heatmap"
 label = "Network Connectivity"
-desc = "Heatmap of the weight matrix W"
+desc = "Posterior link probabilities and effective weights"
 code = '''
 using Plots
 
-W_fit = weight_matrix(result)  # N x N excitation weights
-heatmap(W_fit, color=:Blues,  # row n, col m: excitation from m to n
-    xlabel="Source node", ylabel="Target node",
-    title="Network weight matrix W")
+{{?model!=network}}println("Network Connectivity needs the Network Hawkes model: the other models have one event stream")
+{{?model=network}}p1 = heatmap(P_link; clims = (0, 1), yflip = true, xlabel = "target node", ylabel = "source node", title = "P(link)")
+{{?model=network}}p2 = heatmap(AW_hat; yflip = true, xlabel = "target node", ylabel = "source node", title = "effective weight A.*W")
+{{?model=network}}plot(p1, p2; layout = (1, 2), size = (900, 380))
 '''
 
 [[actionGroups.actions]]
 id = "effective-intensity"
 label = "Effective Intensity"
-desc = "Conditional intensity value at each event time"
+desc = "Fitted intensity just before each event"
 code = '''
 using Plots
 
-lam_i = [intensity(process, t, filter(s -> s < t, {{data}})) for t in {{data}}]  # lambda*(t_i) at each event
-
-scatter({{data}}, lam_i,  # intensity at event times
-    xlabel="t", ylabel="lambda*(t_i)", legend=false)
+{{?model!=network}}lam_i = lam.(t_obs)  # uses only the events strictly before t_i
+{{?model=network}}lam_i = [lam(t)[n] for (t, n) in zip(t_obs, node_obs)]  # intensity of the node that fired
+scatter(t_obs, lam_i; xlabel = "t", ylabel = "lambda(t_i)", legend = false)  # high values: events inside bursts
 '''

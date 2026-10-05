@@ -1,0 +1,587 @@
+# Neural Network Time-Series Forecasting Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/nntsf.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Neural Network Time-Series Forecasting"
+viewType = "pollis.nntsf"
+defaultModel = "lstnet"
+
+[[packages]]
+name = "FluxArchitectures.jl"
+github = "https://github.com/sdobber/FluxArchitectures.jl"
+
+[[packages]]
+name = "Flux.jl"
+github = "https://github.com/FluxML/Flux.jl"
+
+[requires]
+packages = ["FluxArchitectures.jl", "Flux.jl", "BSON.jl", "Plots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "LSTnet"
+file = "nntsf/tutorial-01-lstnet.ipynb"
+bundled = true
+description = "CNN + recurrent-skip GRU + autoregressive term"
+
+[[notebookSections.notebooks]]
+name = "DA-RNN"
+file = "nntsf/tutorial-02-darnn.ipynb"
+bundled = true
+description = "Input-attention encoder + temporal-attention decoder"
+
+[[notebookSections.notebooks]]
+name = "TPA-LSTM"
+file = "nntsf/tutorial-03-tpa-lstm.ipynb"
+bundled = true
+description = "LSTM with temporal pattern attention"
+
+[[notebookSections.notebooks]]
+name = "DSANet"
+file = "nntsf/tutorial-04-dsanet.ipynb"
+bundled = true
+description = "Global and local self-attention, no recurrence"
+
+[[wikis]]
+name = "Factsheet"
+file = "nntsf/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "nntsf/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "nntsf/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "nntsf/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "nntsf/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "nntsf/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Architectures"
+
+[[wikis]]
+name = "LSTnet"
+file = "nntsf/lstnet.md"
+bundled = true
+
+[[wikis]]
+name = "DA-RNN"
+file = "nntsf/darnn.md"
+bundled = true
+
+[[wikis]]
+name = "TPA-LSTM"
+file = "nntsf/tpa-lstm.md"
+bundled = true
+
+[[wikis]]
+name = "DSANet"
+file = "nntsf/dsanet.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Fashionable Modelling with Flux"
+authors = "Innes, Mike; Saba, Elliot; Fischer, Keno; Gandhi, Dhairya; Rudilosso, Marco Concetto; Joy, Neethu Mariya; Karmali, Tejan; Pal, Avik; Shah, Viral"
+year = 2018
+journal = "arXiv"
+doi = "10.48550/arXiv.1811.01457"
+openAccess = true
+
+[[references]]
+title = "Flux: Elegant Machine Learning with Julia"
+authors = "Innes, Mike"
+year = 2018
+journal = "Journal of Open Source Software"
+doi = "10.21105/joss.00602"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+title = "Deep Learning"
+authors = "Goodfellow, Ian; Bengio, Yoshua; Courville, Aaron"
+year = 2016
+journal = "MIT Press"
+url = "https://www.deeplearningbook.org"
+openAccess = true
+
+[[references]]
+title = "Forecasting: Principles and Practice"
+authors = "Hyndman, Rob J.; Athanasopoulos, George"
+year = 2021
+journal = "OTexts"
+url = "https://otexts.com/fpp3/"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Modeling Long- and Short-Term Temporal Patterns with Deep Neural Networks (LSTNet)"
+authors = "Lai, Guokun; Chang, Wei-Cheng; Yang, Yiming; Liu, Hanxiao"
+year = 2018
+journal = "SIGIR"
+doi = "10.1145/3209978.3210006"
+openAccess = false
+
+[[references]]
+title = "A Dual-Stage Attention-Based Recurrent Neural Network for Time Series Prediction (DA-RNN)"
+authors = "Qin, Yao; Song, Dongjin; Chen, Haifeng; Cheng, Wei; Jiang, Guofei; Cottrell, Garrison W."
+year = 2017
+journal = "IJCAI"
+doi = "10.24963/ijcai.2017/366"
+openAccess = true
+
+[[references]]
+title = "Temporal Pattern Attention for Multivariate Time Series Forecasting (TPA-LSTM)"
+authors = "Shih, Shun-Yao; Sun, Fan-Keng; Lee, Hung-yi"
+year = 2019
+journal = "Machine Learning"
+doi = "10.1007/s10994-019-05815-0"
+openAccess = true
+
+[[references]]
+title = "DSANet: Dual Self-Attention Network for Multivariate Time Series Forecasting"
+authors = "Huang, Siteng; Wang, Donglin; Wu, Xuehan; Tang, Ao"
+year = 2019
+journal = "CIKM"
+doi = "10.1145/3357384.3358132"
+openAccess = false
+
+[[models]]
+id = "lstnet"
+label = "LSTnet"
+
+[[models]]
+id = "darnn"
+label = "DA-RNN"
+
+[[models]]
+id = "tpalstm"
+label = "TPA-LSTM"
+
+[[models]]
+id = "dsanet"
+label = "DSANet"
+
+[[decisionRows]]
+task = "LSTnet"
+context = "CNN + GRU + skip + AR"
+purpose = "Series mixing short-term local patterns with long seasonal cycles"
+
+[[decisionRows]]
+task = "DA-RNN"
+context = "Dual-stage attention (input + temporal)"
+purpose = "You want attention over both driving series and time steps"
+
+[[decisionRows]]
+task = "TPA-LSTM"
+context = "LSTM + temporal pattern attention"
+purpose = "Many variables with different periodicities to weight"
+
+[[decisionRows]]
+task = "DSANet"
+context = "Global + local self-attention"
+purpose = "Many correlated series; prefer parallelism with no recurrence"
+
+[[inputs]]
+id = "lstnet-pool"
+label = "pool length"
+tooltip = ""
+default = "10"
+models = ["lstnet"]
+
+[[inputs]]
+id = "lstnet-conv"
+label = "conv filters"
+tooltip = ""
+default = "2"
+models = ["lstnet"]
+
+[[inputs]]
+id = "lstnet-recur"
+label = "recur size"
+tooltip = ""
+default = "3"
+models = ["lstnet"]
+
+[[inputs]]
+id = "lstnet-skip"
+label = "skip length"
+tooltip = ""
+default = "120"
+models = ["lstnet"]
+
+[[inputs]]
+id = "lstnet-epochs"
+label = "epochs"
+tooltip = ""
+default = "20"
+models = ["lstnet"]
+
+[[inputs]]
+id = "darnn-pool"
+label = "pool length"
+tooltip = ""
+default = "10"
+models = ["darnn"]
+
+[[inputs]]
+id = "darnn-encoder"
+label = "encoder size"
+tooltip = ""
+default = "10"
+models = ["darnn"]
+
+[[inputs]]
+id = "darnn-decoder"
+label = "decoder size"
+tooltip = ""
+default = "10"
+models = ["darnn"]
+
+[[inputs]]
+id = "darnn-epochs"
+label = "epochs"
+tooltip = ""
+default = "20"
+models = ["darnn"]
+
+[[inputs]]
+id = "tpalstm-pool"
+label = "pool length"
+tooltip = ""
+default = "10"
+models = ["tpalstm"]
+
+[[inputs]]
+id = "tpalstm-hidden"
+label = "hidden size"
+tooltip = ""
+default = "10"
+models = ["tpalstm"]
+
+[[inputs]]
+id = "tpalstm-layers"
+label = "layers"
+tooltip = ""
+default = "1"
+models = ["tpalstm"]
+
+[[inputs]]
+id = "tpalstm-filters"
+label = "filters"
+tooltip = ""
+default = "32"
+models = ["tpalstm"]
+
+[[inputs]]
+id = "tpalstm-epochs"
+label = "epochs"
+tooltip = ""
+default = "20"
+models = ["tpalstm"]
+
+[[inputs]]
+id = "dsanet-pool"
+label = "pool length"
+tooltip = ""
+default = "10"
+models = ["dsanet"]
+
+[[inputs]]
+id = "dsanet-local"
+label = "local length"
+tooltip = ""
+default = "3"
+models = ["dsanet"]
+
+[[inputs]]
+id = "dsanet-kernels"
+label = "kernels"
+tooltip = ""
+default = "3"
+models = ["dsanet"]
+
+[[inputs]]
+id = "dsanet-dmodel"
+label = "d-model"
+tooltip = ""
+default = "4"
+models = ["dsanet"]
+
+[[inputs]]
+id = "dsanet-epochs"
+label = "epochs"
+tooltip = ""
+default = "20"
+models = ["dsanet"]
+
+[[codeBranches]]
+model = "lstnet"
+code = '''
+using FluxArchitectures  # Flux plus the four architectures (FluxArchitectures pins Flux 0.13)
+
+poollength = {{lstnet-pool}}  # past steps per input window
+h = 6  # forecast horizon: steps after the last value in each window
+horizon = poollength - 1 + h  # get_data counts the horizon from the window start, so a smaller value would put the label inside the window
+input, target = get_data(:exchange_rate, poollength, 1000, horizon)  # features x poollength x 1 x windows; label = series 1, h steps after the window
+n = 1000 - horizon  # circshift wraps the last labels around to the start: drop them
+ntrain = 700  # chronological split: train on the first windows, test on later ones
+xtr, ytr = input[:, :, :, 1:ntrain], target[1:ntrain]
+xte, yte = input[:, :, :, ntrain+1:n], target[ntrain+1:n]  # every test label lies after every training label
+inputsize = size(input, 1)  # number of input series (series 1 is the target)
+
+model = LSTnet(inputsize, {{lstnet-conv}}, {{lstnet-recur}}, poollength, {{lstnet-skip}})  # CNN + GRU + skip-GRU + autoregressive
+loss(x, y) = (Flux.ChainRulesCore.ignore_derivatives(() -> Flux.reset!(model)); Flux.mse(model(x), transpose(y)))  # reset recurrent state each pass
+predict(x) = (Flux.reset!(model); vec(model(x)))  # forecasts for a block of windows
+opt = Flux.Adam(0.007)  # optimiser
+Flux.train!(loss, Flux.params(model), Iterators.repeated((xtr, ytr), {{lstnet-epochs}}), opt)  # implicit params: the training API of Flux 0.13, which FluxArchitectures requires
+println("train MSE ", round(loss(xtr, ytr), digits=4), "  test MSE ", round(Flux.mse(predict(xte), yte), digits=4))  # out-of-sample error is the one that matters
+'''
+
+[[codeBranches]]
+model = "darnn"
+code = '''
+using FluxArchitectures  # Flux plus the four architectures (FluxArchitectures pins Flux 0.13)
+
+poollength = {{darnn-pool}}  # past steps per input window
+h = 6  # forecast horizon: steps after the last value in each window
+horizon = poollength - 1 + h  # get_data counts the horizon from the window start, so a smaller value would put the label inside the window
+input, target = get_data(:exchange_rate, poollength, 1000, horizon)  # features x poollength x 1 x windows; label = series 1, h steps after the window
+n = 1000 - horizon  # circshift wraps the last labels around to the start: drop them
+ntrain = 700  # chronological split: train on the first windows, test on later ones
+xtr, ytr = input[:, :, :, 1:ntrain], target[1:ntrain]
+xte, yte = input[:, :, :, ntrain+1:n], target[ntrain+1:n]  # every test label lies after every training label
+inputsize = size(input, 1)  # number of input series (series 1 is the target)
+
+model = DARNN(inputsize, {{darnn-encoder}}, {{darnn-decoder}}, poollength, 1)  # dual-stage attention RNN; 1 = index of the target series
+loss(x, y) = (Flux.ChainRulesCore.ignore_derivatives(() -> Flux.reset!(model)); Flux.mse(model(x), transpose(y)))  # reset recurrent state each pass
+predict(x) = (Flux.reset!(model); vec(model(x)))  # forecasts for a block of windows
+opt = Flux.Adam(0.007)  # optimiser
+Flux.train!(loss, Flux.params(model), Iterators.repeated((xtr, ytr), {{darnn-epochs}}), opt)  # implicit params: the training API of Flux 0.13, which FluxArchitectures requires
+println("train MSE ", round(loss(xtr, ytr), digits=4), "  test MSE ", round(Flux.mse(predict(xte), yte), digits=4))  # out-of-sample error is the one that matters
+'''
+
+[[codeBranches]]
+model = "tpalstm"
+code = '''
+using FluxArchitectures  # Flux plus the four architectures (FluxArchitectures pins Flux 0.13)
+
+poollength = {{tpalstm-pool}}  # past steps per input window
+h = 6  # forecast horizon: steps after the last value in each window
+horizon = poollength - 1 + h  # get_data counts the horizon from the window start, so a smaller value would put the label inside the window
+input, target = get_data(:exchange_rate, poollength, 1000, horizon)  # features x poollength x 1 x windows; label = series 1, h steps after the window
+n = 1000 - horizon  # circshift wraps the last labels around to the start: drop them
+ntrain = 700  # chronological split: train on the first windows, test on later ones
+xtr, ytr = input[:, :, :, 1:ntrain], target[1:ntrain]
+xte, yte = input[:, :, :, ntrain+1:n], target[ntrain+1:n]  # every test label lies after every training label
+inputsize = size(input, 1)  # number of input series (series 1 is the target)
+
+model = TPALSTM(inputsize, {{tpalstm-hidden}}, poollength, {{tpalstm-layers}}, {{tpalstm-filters}}, 1)  # LSTM + temporal pattern attention (filter size 1)
+loss(x, y) = (Flux.ChainRulesCore.ignore_derivatives(() -> Flux.reset!(model)); Flux.mse(model(x), transpose(y)))  # reset recurrent state each pass
+predict(x) = (Flux.reset!(model); vec(model(x)))  # forecasts for a block of windows
+opt = Flux.Adam(0.007)  # optimiser
+Flux.train!(loss, Flux.params(model), Iterators.repeated((xtr, ytr), {{tpalstm-epochs}}), opt)  # implicit params: the training API of Flux 0.13, which FluxArchitectures requires
+println("train MSE ", round(loss(xtr, ytr), digits=4), "  test MSE ", round(Flux.mse(predict(xte), yte), digits=4))  # out-of-sample error is the one that matters
+'''
+
+[[codeBranches]]
+model = "dsanet"
+code = '''
+using FluxArchitectures  # Flux plus the four architectures (FluxArchitectures pins Flux 0.13)
+
+poollength = {{dsanet-pool}}  # past steps per input window
+h = 6  # forecast horizon: steps after the last value in each window
+horizon = poollength - 1 + h  # get_data counts the horizon from the window start, so a smaller value would put the label inside the window
+input, target = get_data(:exchange_rate, poollength, 1000, horizon)  # features x poollength x 1 x windows; label = series 1, h steps after the window
+n = 1000 - horizon  # circshift wraps the last labels around to the start: drop them
+ntrain = 700  # chronological split: train on the first windows, test on later ones
+xtr, ytr = input[:, :, :, 1:ntrain], target[1:ntrain]
+xte, yte = input[:, :, :, ntrain+1:n], target[ntrain+1:n]  # every test label lies after every training label
+inputsize = size(input, 1)  # number of input series (series 1 is the target)
+
+model = DSANet(inputsize, poollength, {{dsanet-local}}, {{dsanet-kernels}}, {{dsanet-dmodel}}, 1, 1, 1, 1)  # global + local self-attention: d_hid 1, 1 layer, 1 head, 1 output series
+loss(x, y) = (Flux.ChainRulesCore.ignore_derivatives(() -> Flux.reset!(model)); Flux.mse(model(x), transpose(y)))  # reset recurrent state each pass
+predict(x) = (Flux.reset!(model); vec(model(x)))  # forecasts for a block of windows
+opt = Flux.Adam(0.007)  # optimiser
+Flux.train!(loss, Flux.params(model), Iterators.repeated((xtr, ytr), {{dsanet-epochs}}), opt)  # implicit params: the training API of Flux 0.13, which FluxArchitectures requires
+println("train MSE ", round(loss(xtr, ytr), digits=4), "  test MSE ", round(Flux.mse(predict(xte), yte), digits=4))  # out-of-sample error is the one that matters
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "pred-vs-target"
+label = "Prediction vs Target"
+desc = "Overlay the in-sample fit and the out-of-sample forecasts on the target series"
+code = '''
+using Plots  # plotting
+
+plot(1:n, target[1:n]; label="target", color=:black)  # series 1, h steps after each window
+plot!(1:ntrain, predict(xtr); label="fit (train)", lw=2)  # in-sample
+plot!(ntrain+1:n, predict(xte); label="forecast (test)", lw=2)  # out-of-sample
+vline!([ntrain + 0.5]; label="", ls=:dash, color=:gray)  # train/test split
+'''
+
+[[actionGroups.actions]]
+id = "loss-curve"
+label = "Training Loss Curve"
+desc = "Continue training and plot train and test loss per epoch"
+code = '''
+using Plots  # plotting
+
+trn, tst = Float64[], Float64[]  # loss per epoch
+for epoch in 1:50  # 50 more full-batch epochs on the model above
+    Flux.train!(loss, Flux.params(model), [(xtr, ytr)], opt)
+    push!(trn, loss(xtr, ytr)); push!(tst, Flux.mse(predict(xte), yte))
+end
+plot([trn tst]; label=["train" "test"], xlabel="epoch", ylabel="MSE")  # a rising test curve means overfitting
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "residuals"
+label = "Residual Plot"
+desc = "Plot out-of-sample forecast residuals and their distribution"
+code = '''
+using Plots  # plotting
+
+res = predict(xte) .- yte  # test-set forecast errors
+p1 = plot(res; title="Test residuals", legend=false)  # h-step errors from overlapping windows are autocorrelated up to lag h - 1 even for an optimal forecast: look for trends and level shifts, not white noise
+p2 = histogram(res; title="Residual distribution", legend=false)  # check for skew or heavy tails
+plot(p1, p2, layout=(2, 1))  # show both
+'''
+
+[[actionGroups.actions]]
+id = "grad-norm"
+label = "Gradient Norms"
+desc = "Inspect per-parameter gradient magnitudes for vanishing or exploding gradients"
+code = '''
+gs = gradient(() -> loss(xtr, ytr), Flux.params(model))  # one backward pass (implicit params, Flux 0.13)
+for p in Flux.params(model)  # each parameter array
+    g = gs[p]
+    println(rpad(string(size(p)), 14), g === nothing ? "no gradient" : sqrt(sum(abs2, g)))  # L2 norm of the gradient
+end
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "forecast"
+label = "Forecast Horizon"
+desc = "Forecast series 1 h steps after the most recent window, beyond every label used"
+code = '''
+xnew = input[:, :, :, end:end]  # most recent window: its target time lies after all training and test labels
+println("forecast of series 1 (normalised), ", h, " steps after the last window: ", only(predict(xnew)))
+'''
+
+[[actionGroups.actions]]
+id = "save-model"
+label = "Save Model"
+desc = "Serialise the trained model with BSON for later reuse"
+code = '''
+using BSON  # serialisation
+
+BSON.@save "model.bson" model  # write weights to disk
+BSON.@load "model.bson" model  # reload later
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "naive-baseline"
+label = "Naive Baseline"
+desc = "Compare the test MSE against a last-value (random walk) forecast"
+code = '''
+mse_model = Flux.mse(predict(xte), yte)  # out-of-sample model error
+naive = vec(xte[1, end, 1, :])  # last observed value of series 1 in each window
+mse_naive = Flux.mse(naive, yte)  # random-walk forecast error, hard to beat for exchange rates
+println("naive: ", round(mse_naive, digits=4), "  model: ", round(mse_model, digits=4), "  ratio: ", round(mse_model / mse_naive, digits=3))  # ratio below 1 means the model adds value
+'''
+
+[[actionGroups.actions]]
+id = "swap-arch"
+label = "Swap Architecture"
+desc = "Train all four architectures with the same loop and split and compare test MSE"
+code = '''
+model0 = model  # keep the panel model
+archs = ["LSTnet" => () -> LSTnet(inputsize, 2, 3, poollength, 120),  # CNN + GRU + skip + AR
+         "DA-RNN" => () -> DARNN(inputsize, 10, 10, poollength, 1),  # dual-stage attention
+         "TPA-LSTM" => () -> TPALSTM(inputsize, 10, poollength, 1, 32, 1),  # temporal pattern attention
+         "DSANet" => () -> DSANet(inputsize, poollength, 3, 3, 4, 1, 1, 1, 1)]  # dual self-attention
+for (name, build) in archs
+    global model = build()  # loss and predict use the global model
+    Flux.train!(loss, Flux.params(model), Iterators.repeated((xtr, ytr), 20), Flux.Adam(0.007))
+    println(rpad(name, 10), " test MSE ", round(Flux.mse(predict(xte), yte), digits=4))
+end
+model = model0  # restore the panel model
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "param-count"
+label = "Parameter Count"
+desc = "Count the trainable parameters in the model"
+code = '''
+n_par = sum(length, Flux.params(model))  # total trainable scalars
+println("trainable parameters: ", n_par, "  training windows: ", ntrain)  # capacity relative to the data
+'''
+
+[[actionGroups.actions]]
+id = "attention-note"
+label = "Attention Weights"
+desc = "Permutation importance of each input series and time step: what the attention layers learned to weigh"
+code = '''
+using Random  # shuffle
+
+base = Flux.mse(predict(xte), yte)  # test MSE with intact inputs
+for j in 1:inputsize  # input attention: which driving series matter
+    xp = copy(xte); xp[j, :, 1, :] = xp[j, :, 1, shuffle(1:size(xp, 4))]  # break series j across windows
+    println("series ", j, ": MSE increase ", round(Flux.mse(predict(xp), yte) - base, digits=4))
+end
+for k in 1:poollength  # temporal attention: which lags matter
+    xp = copy(xte); xp[:, k, 1, :] = xp[:, k, 1, shuffle(1:size(xp, 4))]  # break time step k across windows
+    println("step ", k, " of ", poollength, ": MSE increase ", round(Flux.mse(predict(xp), yte) - base, digits=4))
+end
+'''

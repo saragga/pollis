@@ -78,7 +78,7 @@ export function registerKgdsWebviewHandlers(
 		for (const t of Object.keys(lastCode)) { void postColorized(lastCode[t], t); }
 	}));
 	const kgdsData = metadata.kgds;
-	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, kgdsData.packages.map(p => p.name), fileService, pathService, commandService, notificationService, workspaceContextService);
+	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, kgdsData.packages, [], fileService, pathService, commandService, notificationService, workspaceContextService);
 	createExampleCodeWiring(webviewInput.webview, disposables, 'kgds', fileService, pathService, notificationService);
 	createCustomCopyWiring(webviewInput.webview, disposables, kgdsData.wikis, kgdsData.notebooks, fileService, pathService, editorService, commandService, notificationService);
 	createReferenceWiring(webviewInput.webview, disposables, 'kgds', kgdsData.references, fileService, pathService, commandService, notificationService);

@@ -1,6 +1,6 @@
 # LLM Text Analysis Webview Configuration
 # This is the declarative source for the webview. The build script generates:
-# - src/vs/workbench/contrib/model/browser/webviews/llm-ta.data.ts
+# - src/vs/workbench/contrib/model/browser/webviews/llmTa.data.ts
 # Run: npm run gulp compile-toml
 
 [meta]
@@ -12,8 +12,16 @@ defaultModel = "tag"
 name = "LLMTextAnalysis.jl"
 github = "https://github.com/svilupp/LLMTextAnalysis.jl"
 
+[[packages]]
+name = "PromptingTools.jl"
+github = "https://github.com/svilupp/PromptingTools.jl"
+
+[[packages]]
+name = "StatisticalMeasures.jl"
+github = "https://github.com/JuliaAI/StatisticalMeasures.jl"
+
 [requires]
-packages = ["LLMTextAnalysis.jl"]
+packages = ["LLMTextAnalysis.jl", "PromptingTools.jl", "StatisticalMeasures.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""
@@ -22,25 +30,25 @@ label = ""
 name = "Document Tagging"
 file = "llm-ta/tutorial-01-tagging.ipynb"
 bundled = true
-description = "Tag a corpus with predefined labels using LLMs — build_index + aitag with GPT-4o-mini"
+description = "Tag a corpus with predefined labels: one LLM call per document, local (Ollama) or hosted"
 
 [[notebookSections.notebooks]]
 name = "Document Classification"
 file = "llm-ta/tutorial-02-classification.ipynb"
 bundled = true
-description = "Classify documents into mutually exclusive categories using aiclassify"
+description = "Classify documents into mutually exclusive categories with an LLM and check them against hand labels"
 
 [[notebookSections.notebooks]]
-name = "Corpus Summarisation"
-file = "llm-ta/tutorial-03-summarisation.ipynb"
+name = "Topic Discovery"
+file = "llm-ta/tutorial-03-topics.ipynb"
 bundled = true
-description = "Summarise a document corpus with aisummarize — extract key themes and insights"
+description = "Cluster a corpus into topics and have an LLM label and summarise each one with build_clusters!"
 
 [[notebookSections.notebooks]]
 name = "Semantic Q&A"
 file = "llm-ta/tutorial-04-qa.ipynb"
 bundled = true
-description = "Answer questions about a document corpus using retrieval-augmented generation (aiask)"
+description = "Answer questions about a document corpus using retrieval-augmented generation (RAGTools airag)"
 
 [[wikis]]
 name = "Factsheet"
@@ -87,8 +95,8 @@ file = "llm-ta/classification.md"
 bundled = true
 
 [[wikis]]
-name = "Summarisation"
-file = "llm-ta/summarisation.md"
+name = "Topics"
+file = "llm-ta/topics.md"
 bundled = true
 
 [[wikis]]
@@ -107,6 +115,22 @@ year = 2017
 journal = "SIAM Review"
 doi = "10.1137/141000671"
 openAccess = false
+
+[[references]]
+title = "LLMTextAnalysis.jl"
+authors = "Simecek, Jan"
+year = 2025
+journal = "GitHub"
+url = "https://github.com/svilupp/LLMTextAnalysis.jl"
+openAccess = true
+
+[[references]]
+title = "PromptingTools.jl"
+authors = "Simecek, Jan"
+year = 2025
+journal = "GitHub"
+url = "https://github.com/svilupp/PromptingTools.jl"
+openAccess = true
 
 [[references]]
 separator = true
@@ -148,6 +172,22 @@ journal = "NeurIPS"
 url = "https://arxiv.org/abs/2005.11401"
 openAccess = true
 
+[[references]]
+title = "A Coefficient of Agreement for Nominal Scales"
+authors = "Cohen, Jacob"
+year = 1960
+journal = "Educational and Psychological Measurement"
+doi = "10.1177/001316446002000104"
+openAccess = false
+
+[[references]]
+title = "UMAP: Uniform Manifold Approximation and Projection for Dimension Reduction"
+authors = "McInnes, Leland; Healy, John; Melville, James"
+year = 2018
+journal = "arXiv"
+url = "https://arxiv.org/abs/1802.03426"
+openAccess = true
+
 [[models]]
 id = "tag"
 label = "Tag"
@@ -157,8 +197,8 @@ id = "classify"
 label = "Classify"
 
 [[models]]
-id = "summarise"
-label = "Summarise"
+id = "topics"
+label = "Topics"
 
 [[models]]
 id = "qa"
@@ -166,93 +206,450 @@ label = "Q&A"
 
 [[bullets]]
 text = "Tag"
-detail = "assign predefined labels to each document using an LLM; returns per-document tag vectors"
+detail = "any number of predefined tags per document; one LLM call per document, with the reply checked against the tag list"
 
 [[bullets]]
 text = "Classify"
-detail = "assign each document to one mutually exclusive category; returns category labels"
+detail = "exactly one category per document; a reply that matches no category is counted as unclassified"
 
 [[bullets]]
-text = "Summarise"
-detail = "extract key themes and a concise summary from a document corpus"
+text = "Topics"
+detail = "hierarchical clustering of document embeddings, cut at k; the LLM labels and summarises each cluster (build_clusters!)"
 
 [[bullets]]
 text = "Q&A"
-detail = "answer natural-language questions about the corpus using retrieval-augmented generation"
+detail = "retrieval-augmented generation: the most similar chunks are passed to the LLM as context (RAGTools airag)"
+
+[[bullets]]
+text = "Providers"
+detail = "chat from Ollama (local open models such as Gemma, no key), Anthropic, Google, OpenAI or Mistral; embeddings from Ollama, Google, OpenAI or Mistral"
+
+[[bullets]]
+text = "Evaluation"
+detail = "accuracy and Cohen kappa against a hand-labelled sample and between two models (StatisticalMeasures.jl), plus token counts"
 
 [[inputs]]
 id = "texts"
-label = "texts"
-tooltip = "A vector of strings (one per document) or a vector of file paths. Each element is treated as one document in the index. Example: texts = readlines(\"corpus.txt\") or texts = [\"doc1...\", \"doc2...\"]."
+label = "Documents"
+tooltip = "A vector of strings, one per document. Example: texts = readlines(\"corpus.txt\") or texts = [\"doc1...\", \"doc2...\"]."
 default = "texts"
 
 [[inputs]]
-id = "llmmodel"
-label = "model"
-tooltip = "LLM model name passed to PromptingTools.jl. Examples: \"gpt-4o-mini\" (default, fast and cheap), \"gpt-4o\" (more capable), \"claude-3-5-haiku-20241022\", or any Ollama model name for local inference."
-default = "gpt-4o-mini"
+id = "chat-provider"
+label = "Chat Provider"
+tooltip = "Who runs the chat model that tags, classifies, names topics and answers. Ollama runs open models such as Gemma, Llama or Qwen on this machine with no key (install Ollama and pull the model). The others need an API key: ANTHROPIC_API_KEY, GOOGLE_API_KEY, OPENAI_API_KEY or MISTRAL_API_KEY. The key is read from the environment when PromptingTools loads, so set it before starting Julia."
+kind = "select"
+default = "ollama"
+
+[[inputs.options]]
+value = "ollama"
+label = "Ollama (local)"
+
+[[inputs.options]]
+value = "anthropic"
+label = "Anthropic (Claude)"
+
+[[inputs.options]]
+value = "google"
+label = "Google (Gemini)"
+
+[[inputs.options]]
+value = "openai"
+label = "OpenAI"
+
+[[inputs.options]]
+value = "mistral"
+label = "Mistral"
+
+[[inputs]]
+id = "chat-ollama"
+label = "Chat Model"
+tooltip = "Any model pulled into Ollama, as listed by ollama list. Examples: gemma3:4b, gemma4:12b, llama3.1, qwen2.5:7b. Larger models label more reliably but run slower."
+default = ""
+when = "chat-provider=ollama"
+
+[[inputs]]
+id = "chat-anthropic"
+label = "Chat Model"
+tooltip = "Any Claude model name. Example: claude-haiku-4-5 (fast) or claude-sonnet-4-5."
+default = ""
+when = "chat-provider=anthropic"
+
+[[inputs]]
+id = "chat-google"
+label = "Chat Model"
+tooltip = "Any Gemini model name. Example: gemini-2.5-flash. To run Gemma, choose Ollama."
+default = ""
+when = "chat-provider=google"
+
+[[inputs]]
+id = "chat-openai"
+label = "Chat Model"
+tooltip = "Any non-reasoning OpenAI chat model (reasoning models reject temperature 0). Example: gpt-4o-mini or gpt-4.1."
+default = ""
+when = "chat-provider=openai"
+
+[[inputs]]
+id = "chat-mistral"
+label = "Chat Model"
+tooltip = "Any Mistral chat model name. Example: mistral-small-latest."
+default = ""
+when = "chat-provider=mistral"
+
+[[inputs]]
+id = "embed-provider"
+label = "Embedding Provider"
+tooltip = "Who embeds the documents for Topics, Q&A, the document map and the embedding classifier. Anthropic has no embedding models, so Claude users pair it with another provider here. The key is read from the environment when PromptingTools loads, so set it before starting Julia."
+kind = "select"
+default = "ollama"
+
+[[inputs.options]]
+value = "ollama"
+label = "Ollama (local)"
+
+[[inputs.options]]
+value = "google"
+label = "Google (Gemini)"
+
+[[inputs.options]]
+value = "openai"
+label = "OpenAI"
+
+[[inputs.options]]
+value = "mistral"
+label = "Mistral"
+
+[[inputs]]
+id = "embed-ollama"
+label = "Embedding Model"
+tooltip = "Any embedding model pulled into Ollama. Examples: embeddinggemma, nomic-embed-text, mxbai-embed-large."
+default = ""
+when = "embed-provider=ollama"
+
+[[inputs]]
+id = "embed-google"
+label = "Embedding Model"
+tooltip = "A Gemini embedding model. Example: gemini-embedding-001."
+default = ""
+when = "embed-provider=google"
+
+[[inputs]]
+id = "embed-openai"
+label = "Embedding Model"
+tooltip = "An OpenAI embedding model. Example: text-embedding-3-small or text-embedding-3-large."
+default = ""
+when = "embed-provider=openai"
+
+[[inputs]]
+id = "embed-mistral"
+label = "Embedding Model"
+tooltip = "A Mistral embedding model. Example: mistral-embed."
+default = ""
+when = "embed-provider=mistral"
+
+[[inputs]]
+id = "chat-provider2"
+label = "Second Chat Provider"
+tooltip = "Provider of the second model, used only by Compare Models. It may differ from the first, e.g. a local Gemma against Claude."
+kind = "select"
+default = "ollama"
+
+[[inputs.options]]
+value = "ollama"
+label = "Ollama (local)"
+
+[[inputs.options]]
+value = "anthropic"
+label = "Anthropic (Claude)"
+
+[[inputs.options]]
+value = "google"
+label = "Google (Gemini)"
+
+[[inputs.options]]
+value = "openai"
+label = "OpenAI"
+
+[[inputs.options]]
+value = "mistral"
+label = "Mistral"
+
+[[inputs]]
+id = "chat2-ollama"
+label = "Second Chat Model"
+tooltip = "Model compared with the first one by Compare Models: any model in ollama list, e.g. gemma4:12b or qwen2.5:14b."
+default = ""
+when = "chat-provider2=ollama"
+
+[[inputs]]
+id = "chat2-anthropic"
+label = "Second Chat Model"
+tooltip = "Model compared with the first one by Compare Models: e.g. claude-sonnet-4-5."
+default = ""
+when = "chat-provider2=anthropic"
+
+[[inputs]]
+id = "chat2-google"
+label = "Second Chat Model"
+tooltip = "Model compared with the first one by Compare Models: e.g. gemini-2.5-pro."
+default = ""
+when = "chat-provider2=google"
+
+[[inputs]]
+id = "chat2-openai"
+label = "Second Chat Model"
+tooltip = "Model compared with the first one by Compare Models: a non-reasoning model, e.g. gpt-4o."
+default = ""
+when = "chat-provider2=openai"
+
+[[inputs]]
+id = "chat2-mistral"
+label = "Second Chat Model"
+tooltip = "Model compared with the first one by Compare Models: e.g. mistral-large-latest."
+default = ""
+when = "chat-provider2=mistral"
 
 [[inputs]]
 id = "tags"
-label = "tags"
-tooltip = "A vector of tag strings to apply. The LLM decides which tags apply to each document. Example: tags = [\"finance\", \"technology\", \"health\", \"politics\"]."
+label = "Tags"
+tooltip = "A vector of tag strings, without commas or semicolons. Any number of tags may apply to a document. Example: tags = [\"finance\", \"technology\", \"health\", \"politics\"]."
 default = "tags"
 models = ["tag"]
 
 [[inputs]]
 id = "categories"
-label = "categories"
-tooltip = "A vector of mutually exclusive category strings. The LLM assigns exactly one category per document. Example: categories = [\"positive\", \"negative\", \"neutral\"]."
+label = "Categories"
+tooltip = "A vector of mutually exclusive category strings. Each document gets exactly one. Example: categories = [\"positive\", \"negative\", \"neutral\"]."
 default = "categories"
 models = ["classify"]
 
 [[inputs]]
+id = "k"
+label = "Topics (k)"
+tooltip = "Number of topics: where the hierarchical clustering of the document embeddings is cut."
+default = "5"
+models = ["topics"]
+
+[[inputs]]
 id = "question"
-label = "question"
-tooltip = "A natural-language question about the corpus. Relevant document chunks are retrieved and passed to the LLM as context. Example: \"What are the main risks mentioned across these reports?\"."
+label = "Question"
+tooltip = "A natural-language question about the corpus, as a Julia string. The most similar chunks are passed to the LLM as context. Example: \"What are the main risks mentioned across these reports?\"."
 default = "question"
 models = ["qa"]
+
+[[inputs]]
+id = "top-n"
+label = "Context Chunks"
+tooltip = "Number of retrieved chunks passed to the LLM as context."
+default = "5"
+models = ["qa"]
+
+[[inputs]]
+id = "gold-ids"
+label = "Hand-Labelled Documents"
+tooltip = "Indices of the documents you labelled by hand, for accuracy and Cohen kappa. Example: [1, 4, 7, 12]."
+default = "Int[]"
+models = ["tag", "classify"]
+
+[[inputs]]
+id = "gold-labels"
+label = "Hand Labels"
+tooltip = "Your labels for those documents, in the same order. Classify: one category each, e.g. [\"positive\", \"neutral\"]. Tag: the tags that apply to each, e.g. [[\"finance\"], [\"health\", \"politics\"]]."
+default = "[]"
+models = ["tag", "classify"]
+
+[[inputs]]
+id = "new-text"
+label = "New Text"
+tooltip = "A Julia string used by Apply to New Text: a document to tag, classify or place in a topic, or a follow-up question in Q&A mode."
+default = "\"replace with a new document or question\""
 
 [[codeBranches]]
 model = "tag"
 code = '''
-using LLMTextAnalysis
+using PromptingTools  # aigenerate, aiembed and the model registry
+PT = PromptingTools
 
-index = build_index({{texts}})  # build semantic index from documents
+# Register each model name with its provider, so any current model works (the built-in model list of PromptingTools is older)
+use_model(name, schema) = (haskey(PT.MODEL_REGISTRY, name) && PT.MODEL_REGISTRY[name].schema isa typeof(schema)) || PT.register_model!(; name, schema)
+# Temperature 0 for repeatable answers; Ollama takes it inside options
+fixed_temperature(model) = PT.MODEL_REGISTRY[model].schema isa PT.AbstractOllamaSchema ? (; options = (; temperature = 0)) : (; temperature = 0)
 
-results = aitag(index, {{tags}}; model="{{llmmodel}}")  # assign matching tags to each document
+{{?chat-provider=ollama}} llm = "{{chat-ollama}}"; use_model(llm, PT.OllamaSchema())  # local, no key; the model must be pulled first (ollama pull)
+{{?chat-provider=anthropic}} llm = "{{chat-anthropic}}"; use_model(llm, PT.AnthropicSchema())  # needs ANTHROPIC_API_KEY
+{{?chat-provider=google}} llm = "{{chat-google}}"; use_model(llm, PT.GoogleOpenAISchema())  # needs GOOGLE_API_KEY
+{{?chat-provider=openai}} llm = "{{chat-openai}}"; use_model(llm, PT.OpenAISchema())  # needs OPENAI_API_KEY
+{{?chat-provider=mistral}} llm = "{{chat-mistral}}"; use_model(llm, PT.MistralOpenAISchema())  # needs MISTRAL_API_KEY
+{{?embed-provider=ollama}} emb_model = "{{embed-ollama}}"; use_model(emb_model, PT.OllamaSchema())  # local, no key; the model must be pulled first (ollama pull)
+{{?embed-provider=google}} emb_model = "{{embed-google}}"; use_model(emb_model, PT.GoogleOpenAISchema())  # needs GOOGLE_API_KEY
+{{?embed-provider=openai}} emb_model = "{{embed-openai}}"; use_model(emb_model, PT.OpenAISchema())  # needs OPENAI_API_KEY
+{{?embed-provider=mistral}} emb_model = "{{embed-mistral}}"; use_model(emb_model, PT.MistralOpenAISchema())  # needs MISTRAL_API_KEY
+isempty(llm) && error("Enter a chat model in the panel.")
+emb = (; model = emb_model)  # passed to every embedding call
+tokens(msgs) = sum(m -> sum(m.tokens), msgs)  # prompt + reply tokens, comparable across providers
 
-find_tags(index, {{tags}}[1])  # retrieve documents matching the first tag
+using StatisticalMeasures  # confusion matrices, accuracy, Cohen kappa
+
+docs     = {{texts}}  # one string per document
+tag_list = {{tags}}  # candidate tags; any number may apply to a document
+
+# One call per document; the reply is checked against the tag list, so a model that breaks the format cannot invent tags
+tag_prompt(d) = "Tags: " * join(tag_list, "; ") * "\n\nDocument: " * d *
+    "\n\nReply with the tags that apply to the document, exactly as written above and separated by semicolons, or with none. Reply with nothing else."
+clean(s) = lowercase(strip(s, collect(" .\"*`")))  # drop spaces, quotes and markdown around an item
+function parse_tags(reply)  # (Bool per tag, reply items that match no tag)
+    items = filter(!isempty, clean.(split(reply, r"[;,\n]")))
+    ([clean(t) in items for t in tag_list], filter(i -> i != "none" && !(i in clean.(tag_list)), items))
+end
+tag_reply(d; model = llm) = aigenerate(tag_prompt(d); model, api_kwargs = fixed_temperature(model), verbose = false)
+run_tags(model) = asyncmap(d -> tag_reply(d; model), docs; ntasks = 10)
+tag_matrix(msgs) = permutedims(reduce(hcat, [parse_tags(m.content)[1] for m in msgs]))  # N x T Bool
+
+msgs   = run_tags(llm)
+tagmat = tag_matrix(msgs)
+confusion(a, b) = ConfusionMatrix(levels = ["false", "true"])(string.(a), string.(b))  # fixed levels, so a tag never used still works
+
+for i in eachindex(docs)
+    println("Doc $i: ", join(tag_list[tagmat[i, :]], ", "))
+end
+println("LLM tokens: ", tokens(msgs), " (", round(Int, tokens(msgs) / length(docs)), " per document)")
 '''
 
 [[codeBranches]]
 model = "classify"
 code = '''
-using LLMTextAnalysis
+using PromptingTools  # aigenerate, aiembed and the model registry
+PT = PromptingTools
 
-index = build_index({{texts}})  # build semantic index from documents
+# Register each model name with its provider, so any current model works (the built-in model list of PromptingTools is older)
+use_model(name, schema) = (haskey(PT.MODEL_REGISTRY, name) && PT.MODEL_REGISTRY[name].schema isa typeof(schema)) || PT.register_model!(; name, schema)
+# Temperature 0 for repeatable answers; Ollama takes it inside options
+fixed_temperature(model) = PT.MODEL_REGISTRY[model].schema isa PT.AbstractOllamaSchema ? (; options = (; temperature = 0)) : (; temperature = 0)
 
-labels = aiclassify(index, {{categories}}; model="{{llmmodel}}")  # classify each document into one category
+{{?chat-provider=ollama}} llm = "{{chat-ollama}}"; use_model(llm, PT.OllamaSchema())  # local, no key; the model must be pulled first (ollama pull)
+{{?chat-provider=anthropic}} llm = "{{chat-anthropic}}"; use_model(llm, PT.AnthropicSchema())  # needs ANTHROPIC_API_KEY
+{{?chat-provider=google}} llm = "{{chat-google}}"; use_model(llm, PT.GoogleOpenAISchema())  # needs GOOGLE_API_KEY
+{{?chat-provider=openai}} llm = "{{chat-openai}}"; use_model(llm, PT.OpenAISchema())  # needs OPENAI_API_KEY
+{{?chat-provider=mistral}} llm = "{{chat-mistral}}"; use_model(llm, PT.MistralOpenAISchema())  # needs MISTRAL_API_KEY
+{{?embed-provider=ollama}} emb_model = "{{embed-ollama}}"; use_model(emb_model, PT.OllamaSchema())  # local, no key; the model must be pulled first (ollama pull)
+{{?embed-provider=google}} emb_model = "{{embed-google}}"; use_model(emb_model, PT.GoogleOpenAISchema())  # needs GOOGLE_API_KEY
+{{?embed-provider=openai}} emb_model = "{{embed-openai}}"; use_model(emb_model, PT.OpenAISchema())  # needs OPENAI_API_KEY
+{{?embed-provider=mistral}} emb_model = "{{embed-mistral}}"; use_model(emb_model, PT.MistralOpenAISchema())  # needs MISTRAL_API_KEY
+isempty(llm) && error("Enter a chat model in the panel.")
+emb = (; model = emb_model)  # passed to every embedding call
+tokens(msgs) = sum(m -> sum(m.tokens), msgs)  # prompt + reply tokens, comparable across providers
+
+using StatisticalMeasures  # confusion matrices, accuracy, Cohen kappa
+
+docs = {{texts}}  # one string per document
+cats = {{categories}}  # mutually exclusive categories
+
+# One call per document; a reply that matches no category exactly (ignoring case) becomes "unclassified"
+cat_prompt(d) = "Categories: " * join(cats, "; ") * "\n\nDocument: " * d *
+    "\n\nReply with the one category that fits the document best, exactly as written above. Reply with nothing else."
+clean(s) = lowercase(strip(s, collect(" .\"*`\n")))  # drop spaces, quotes and markdown around the reply
+match_cat(reply) = (i = findfirst(c -> clean(c) == clean(reply), cats); isnothing(i) ? "unclassified" : cats[i])
+classify(d; model = llm) = aigenerate(cat_prompt(d); model, api_kwargs = fixed_temperature(model), verbose = false)
+run_labels(model) = asyncmap(d -> classify(d; model), docs; ntasks = 10)
+
+msgs   = run_labels(llm)
+labels = [match_cat(m.content) for m in msgs]
+cat_levels = [cats; "unclassified"]
+confusion(a, b) = ConfusionMatrix(levels = cat_levels)(a, b)  # fixed levels, so an unused category still works
+
+for (i, l) in enumerate(labels)
+    println("Doc $i: ", l)
+end
+println("LLM tokens: ", tokens(msgs), " (", round(Int, tokens(msgs) / length(docs)), " per document)")
 '''
 
 [[codeBranches]]
-model = "summarise"
+model = "topics"
 code = '''
-using LLMTextAnalysis
+using PromptingTools  # aigenerate, aiembed and the model registry
+PT = PromptingTools
 
-index = build_index({{texts}})  # build semantic index from documents
+# Register each model name with its provider, so any current model works (the built-in model list of PromptingTools is older)
+use_model(name, schema) = (haskey(PT.MODEL_REGISTRY, name) && PT.MODEL_REGISTRY[name].schema isa typeof(schema)) || PT.register_model!(; name, schema)
+# Temperature 0 for repeatable answers; Ollama takes it inside options
+fixed_temperature(model) = PT.MODEL_REGISTRY[model].schema isa PT.AbstractOllamaSchema ? (; options = (; temperature = 0)) : (; temperature = 0)
 
-summary = aisummarize(index; model="{{llmmodel}}")  # generate a corpus-level summary
+{{?chat-provider=ollama}} llm = "{{chat-ollama}}"; use_model(llm, PT.OllamaSchema())  # local, no key; the model must be pulled first (ollama pull)
+{{?chat-provider=anthropic}} llm = "{{chat-anthropic}}"; use_model(llm, PT.AnthropicSchema())  # needs ANTHROPIC_API_KEY
+{{?chat-provider=google}} llm = "{{chat-google}}"; use_model(llm, PT.GoogleOpenAISchema())  # needs GOOGLE_API_KEY
+{{?chat-provider=openai}} llm = "{{chat-openai}}"; use_model(llm, PT.OpenAISchema())  # needs OPENAI_API_KEY
+{{?chat-provider=mistral}} llm = "{{chat-mistral}}"; use_model(llm, PT.MistralOpenAISchema())  # needs MISTRAL_API_KEY
+{{?embed-provider=ollama}} emb_model = "{{embed-ollama}}"; use_model(emb_model, PT.OllamaSchema())  # local, no key; the model must be pulled first (ollama pull)
+{{?embed-provider=google}} emb_model = "{{embed-google}}"; use_model(emb_model, PT.GoogleOpenAISchema())  # needs GOOGLE_API_KEY
+{{?embed-provider=openai}} emb_model = "{{embed-openai}}"; use_model(emb_model, PT.OpenAISchema())  # needs OPENAI_API_KEY
+{{?embed-provider=mistral}} emb_model = "{{embed-mistral}}"; use_model(emb_model, PT.MistralOpenAISchema())  # needs MISTRAL_API_KEY
+isempty(llm) && error("Enter a chat model in the panel.")
+isempty(emb_model) && error("Enter an embedding model in the panel.")
+emb = (; model = emb_model)  # passed to every embedding call
+tokens(msgs) = sum(m -> sum(m.tokens), msgs)  # prompt + reply tokens, comparable across providers
+
+using LLMTextAnalysis  # build_index, build_clusters!
+
+docs = {{texts}}  # one string per document
+k    = {{k}}  # number of topics
+
+index = build_index(docs; aiembed_kwargs = emb)  # embeddings, cosine distances and keywords of every document
+# complete-linkage clustering cut at k; the chat model names and summarises each cluster
+build_clusters!(index; k, add_label = true, add_summary = true, labeler_kwargs = (; model = llm, api_kwargs = fixed_temperature(llm)))
+topics = index.topic_levels[k]
+assign = zeros(Int, length(docs))  # topic of each document
+for t in topics
+    assign[t.docs_idx] .= t.topic_idx
+end
+
+for t in topics
+    println(t.topic_idx, ". ", t.label, " (", length(t.docs_idx), " documents)")
+    println("   ", t.summary)
+end
 '''
 
 [[codeBranches]]
 model = "qa"
 code = '''
-using LLMTextAnalysis
+using PromptingTools  # aigenerate, aiembed and the model registry
+PT = PromptingTools
 
-index = build_index({{texts}})  # build semantic index from documents
+# Register each model name with its provider, so any current model works (the built-in model list of PromptingTools is older)
+use_model(name, schema) = (haskey(PT.MODEL_REGISTRY, name) && PT.MODEL_REGISTRY[name].schema isa typeof(schema)) || PT.register_model!(; name, schema)
+# Temperature 0 for repeatable answers; Ollama takes it inside options
+fixed_temperature(model) = PT.MODEL_REGISTRY[model].schema isa PT.AbstractOllamaSchema ? (; options = (; temperature = 0)) : (; temperature = 0)
 
-answer = aiask(index, {{question}}; model="{{llmmodel}}")  # answer the question using retrieved context
+{{?chat-provider=ollama}} llm = "{{chat-ollama}}"; use_model(llm, PT.OllamaSchema())  # local, no key; the model must be pulled first (ollama pull)
+{{?chat-provider=anthropic}} llm = "{{chat-anthropic}}"; use_model(llm, PT.AnthropicSchema())  # needs ANTHROPIC_API_KEY
+{{?chat-provider=google}} llm = "{{chat-google}}"; use_model(llm, PT.GoogleOpenAISchema())  # needs GOOGLE_API_KEY
+{{?chat-provider=openai}} llm = "{{chat-openai}}"; use_model(llm, PT.OpenAISchema())  # needs OPENAI_API_KEY
+{{?chat-provider=mistral}} llm = "{{chat-mistral}}"; use_model(llm, PT.MistralOpenAISchema())  # needs MISTRAL_API_KEY
+{{?embed-provider=ollama}} emb_model = "{{embed-ollama}}"; use_model(emb_model, PT.OllamaSchema())  # local, no key; the model must be pulled first (ollama pull)
+{{?embed-provider=google}} emb_model = "{{embed-google}}"; use_model(emb_model, PT.GoogleOpenAISchema())  # needs GOOGLE_API_KEY
+{{?embed-provider=openai}} emb_model = "{{embed-openai}}"; use_model(emb_model, PT.OpenAISchema())  # needs OPENAI_API_KEY
+{{?embed-provider=mistral}} emb_model = "{{embed-mistral}}"; use_model(emb_model, PT.MistralOpenAISchema())  # needs MISTRAL_API_KEY
+isempty(llm) && error("Enter a chat model in the panel.")
+isempty(emb_model) && error("Enter an embedding model in the panel.")
+emb = (; model = emb_model)  # passed to every embedding call
+tokens(msgs) = sum(m -> sum(m.tokens), msgs)  # prompt + reply tokens, comparable across providers
+
+using LinearAlgebra, SparseArrays, Unicode  # these load RAGTools
+RT = PromptingTools.Experimental.RAGTools
+
+docs  = {{texts}}  # one string per document
+top_n = {{top-n}}  # chunks passed to the LLM as context
+
+rag_index = RT.build_index(docs; chunker_kwargs = (; sources = ["document $i" for i in eachindex(docs)]), embedder_kwargs = emb)  # chunk and embed
+function ask(q; model = llm)
+    r = RT.airag(rag_index; question = q, return_all = true, verbose = false,
+                 retriever_kwargs = (; top_n, embedder_kwargs = emb),
+                 generator_kwargs = (; answerer_kwargs = (; model, api_kwargs = fixed_temperature(model))))
+    (r, sum(r.conversations[:answer][end].tokens))
+end
+
+result, ntokens = ask({{question}})
+println(result.final_answer)
+println("\nSources: ", join(unique(result.sources), ", "), "   LLM tokens: ", ntokens)
 '''
 
 [[actionGroups]]
@@ -260,31 +657,34 @@ id = "visualise"
 label = "Visualise"
 
 [[actionGroups.actions]]
-id = "tag-frequency"
-label = "Tag Frequency"
-desc = "Bar chart of tag counts across the corpus"
+id = "label-counts"
+label = "Label Counts"
+desc = "Documents per tag, category or topic; retrieval scores in Q&A mode"
 code = '''
-using LLMTextAnalysis, Plots
+using Plots  # plotting
 
-index   = build_index({{texts}})  # build semantic index
-results = aitag(index, {{tags}}; model="{{llmmodel}}")  # tag each document
-
-counts = map(t -> sum(find_tags(index, t) .!= 0), {{tags}})  # count documents per tag
-bar({{tags}}, counts, xlabel="Tag", ylabel="Count", title="Tag Frequency", legend=false)  # plot tag distribution
+{{?model=tag}} bar(tag_list, vec(sum(tagmat, dims = 1)), legend = false, ylabel = "documents", title = "Documents per Tag", xrotation = 30)
+{{?model=classify}} bar(cat_levels, [count(==(l), labels) for l in cat_levels], legend = false, ylabel = "documents", title = "Documents per Category", xrotation = 30)
+{{?model=topics}} bar([t.label for t in topics], [length(t.docs_idx) for t in topics], legend = false, ylabel = "documents", title = "Documents per Topic", xrotation = 30)
+{{?model=qa}} plot(result.emb_candidates.scores, marker = :o, legend = false, xlabel = "chunk rank", ylabel = "similarity to the question", title = "Retrieval Scores")
+{{?model=qa}} vline!([top_n + 0.5], ls = :dash)  # chunks left of the line were passed to the LLM
 '''
 
 [[actionGroups.actions]]
-id = "result-heatmap"
-label = "Result Heatmap"
-desc = "Heatmap of tag presence across documents"
+id = "doc-map"
+label = "Document Map"
+desc = "Tag matrix, or a 2-D UMAP map of the document embeddings coloured by category or topic"
 code = '''
-using LLMTextAnalysis, Plots
+using LLMTextAnalysis, Plots  # loading Plots enables the LLMTextAnalysis plot recipe
 
-index   = build_index({{texts}})  # build semantic index
-results = aitag(index, {{tags}}; model="{{llmmodel}}")  # tag each document
-
-mat = hcat([map(r -> in(t, r), results) for t in {{tags}}]...)  # build tag-document matrix
-heatmap({{tags}}, 1:length({{texts}}), mat, title="Tag Presence", xlabel="Tag", ylabel="Document")  # visualise tag coverage
+{{?model=tag}} heatmap(tag_list, 1:length(docs), Int.(tagmat), yflip = true, ylabel = "document", title = "Tag Assignments", colorbar = false)
+{{?model=classify}} isempty(emb_model) && error("Enter an embedding model in the panel.")
+{{?model=classify}} index = build_index(docs; aiembed_kwargs = emb)  # embeddings for the map; the labels themselves came from the chat model
+{{?model=classify}} present = unique(labels)
+{{?model=classify}} build_clusters!(index, [findfirst(==(l), present) for l in labels]; topic_level = "LLM categories", labels = present)
+{{?model=classify}} plot(index; topic_level = "LLM categories", title = "Documents by LLM Category")
+{{?model=topics}} plot(index; k, title = "Topics")  # UMAP needs more documents than its neighbourhood size
+{{?model=qa}} println("Document Map does not apply to Q&A mode: the RAG index stores chunks, not documents.")
 '''
 
 [[actionGroups]]
@@ -292,34 +692,43 @@ id = "diagnose"
 label = "Diagnose"
 
 [[actionGroups.actions]]
-id = "index-stats"
-label = "Index Statistics"
-desc = "Size, chunk count and embedding model of the index"
+id = "hand-labels"
+label = "Accuracy vs Hand Labels"
+desc = "Accuracy, confusion matrix and Cohen kappa against the documents you labelled"
 code = '''
-using LLMTextAnalysis
-
-index = build_index({{texts}})  # build semantic index
-
-println("Documents : ", length({{texts}}))  # number of source documents
-println("Chunks    : ", length(index.chunks))  # number of embedded chunks
-println("Embedding : ", index.embedder)  # embedding model used
+ids  = {{gold-ids}}  # documents you labelled by hand
+gold = {{gold-labels}}  # your labels, in the same order
+{{?model=tag|classify}} isempty(ids) && error("Label a sample by hand first: set Hand-Labelled Documents and Hand Labels.")
+{{?model=tag}} G = [t in g for g in gold, t in tag_list]  # hand tag matrix
+{{?model=tag}} for (j, t) in enumerate(tag_list)
+{{?model=tag}}     c = confusion(tagmat[ids, j], G[:, j])
+{{?model=tag}}     println(rpad(t, 20), "accuracy ", round(accuracy(c); digits = 2), "   Cohen kappa ", round(kappa(c); digits = 2))
+{{?model=tag}} end
+{{?model=classify}} c = confusion(labels[ids], gold)  # rows: LLM, columns: hand labels
+{{?model=classify}} println("accuracy ", round(accuracy(c); digits = 2), "   Cohen kappa ", round(kappa(c); digits = 2))
+{{?model=classify}} c
+{{?model=topics|qa}} println("Hand-label evaluation applies to the Tag and Classify modes.")
 '''
 
 [[actionGroups.actions]]
-id = "tag-coverage"
-label = "Tag Coverage"
-desc = "Fraction of documents matched by each tag"
+id = "evidence"
+label = "Evidence"
+desc = "Replies that broke the format, topic keywords and central documents, or the retrieved context"
 code = '''
-using LLMTextAnalysis
-
-index   = build_index({{texts}})  # build semantic index
-results = aitag(index, {{tags}}; model="{{llmmodel}}")  # tag documents
-
-n = length({{texts}})  # total document count
-for t in {{tags}}
-    matched = sum(find_tags(index, t) .!= 0)
-    println(t, ": ", round(matched/n*100, digits=1), "%")
-end
+{{?model=tag}} off = [(i, parse_tags(m.content)[2]) for (i, m) in enumerate(msgs)]
+{{?model=tag}} off = filter(x -> !isempty(x[2]), off)  # replies with items that match no tag
+{{?model=tag}} println(length(off), " of ", length(msgs), " replies contained items that match no tag (ignored)")
+{{?model=tag}} foreach(x -> println("  doc ", x[1], ": ", join(x[2], "; ")), first(off, 10))
+{{?model=classify}} off = findall(==("unclassified"), labels)
+{{?model=classify}} println(length(off), " of ", length(docs), " replies matched no category")
+{{?model=classify}} foreach(i -> println("  doc ", i, ": ", first(msgs[i].content, 80)), first(off, 10))
+{{?model=topics}} for t in topics
+{{?model=topics}}     println(t.topic_idx, ". ", t.label, ": keywords ", join(index.keywords_vocab[t.keywords_idx], ", "))
+{{?model=topics}}     println("   central document: ", first(docs[t.docs_idx[t.center_doc_idx]], 120))
+{{?model=topics}} end
+{{?model=qa}} for (s, c) in zip(result.sources, result.context)  # what the answer was allowed to use
+{{?model=qa}}     println("[", s, "] ", first(c, 200))
+{{?model=qa}} end
 '''
 
 [[actionGroups]]
@@ -327,36 +736,41 @@ id = "predict"
 label = "Predict"
 
 [[actionGroups.actions]]
-id = "semantic-search"
-label = "Semantic Search"
-desc = "Retrieve the most relevant document chunks for a query"
+id = "new-text"
+label = "Apply to New Text"
+desc = "Tag, classify or place a new document in a topic; ask a follow-up question in Q&A mode"
 code = '''
-using LLMTextAnalysis
-
-index = build_index({{texts}})  # build semantic index
-
-hits = find_closest(index, {{question}}; top_k=5)  # retrieve 5 most relevant chunks
-for h in hits
-    println(h.score, "  ", h.content[1:min(120, length(h.content))])
-end
+new = {{new-text}}
+{{?model=tag}} println("Tags: ", join(tag_list[parse_tags(tag_reply(new).content)[1]], ", "))
+{{?model=classify}} println("Category: ", match_cat(classify(new).content))
+{{?model=topics}} # an embedding classifier trained on the topic assignments places the text without re-clustering
+{{?model=topics}} cls = train_classifier(index, ["$(t.topic_idx). $(t.label)" for t in topics]; docs_ids = collect(eachindex(docs)), docs_labels = assign, aiembed_kwargs = emb)
+{{?model=topics}} println("Topic: ", only(score(build_index([new]; verbose = false, aiembed_kwargs = emb), cls; return_labels = true, check_index = false)))
+{{?model=qa}} r, n = ask(new)  # the new text is asked as a question
+{{?model=qa}} println(r.final_answer, "\nSources: ", join(unique(r.sources), ", "))
 '''
 
 [[actionGroups.actions]]
-id = "batch-qa"
-label = "Batch Q&A"
-desc = "Answer multiple questions in one pass over the index"
+id = "embedding-labels"
+label = "Embedding Classifier"
+desc = "Label every document from embeddings alone (train_classifier or train_concept) and measure agreement with the chat model"
 code = '''
-using LLMTextAnalysis
+using LLMTextAnalysis  # build_index, train_classifier, train_concept, score
 
-index     = build_index({{texts}})  # build semantic index once
-questions = ["What is the main topic?", "What are key conclusions?"]  # list of questions
-
-answers = map(q -> aiask(index, q; model="{{llmmodel}}"), questions)
-for (q, a) in zip(questions, answers)
-    println("Q: ", q, "
-A: ", a, "
-")
-end
+{{?model=tag|classify}} isempty(emb_model) && error("Enter an embedding model in the panel.")
+{{?model=tag|classify}} index = build_index(docs; aiembed_kwargs = emb)  # embeddings of every document
+{{?model=classify}} ids, gold = {{gold-ids}}, {{gold-labels}}
+{{?model=classify}} # trained on your hand labels when given (every category needed), else on LLM-written examples of each category
+{{?model=classify}} cls = isempty(ids) ? train_classifier(index, cats; num_samples = 5, aigenerate_kwargs = (; model = llm), aiembed_kwargs = emb) :
+{{?model=classify}}       train_classifier(index, cats; docs_ids = ids, docs_labels = [findfirst(==(g), cats) for g in gold], aiembed_kwargs = emb)
+{{?model=classify}} emb_labels = score(index, cls; return_labels = true)  # one category per document, no further LLM calls
+{{?model=classify}} println("Agreement with the chat model: Cohen kappa ", round(kappa(confusion(emb_labels, labels)); digits = 2))
+{{?model=tag}} # one concept per tag: the LLM rewrites sample documents through the tag and a logistic model learns that direction
+{{?model=tag}} S = reduce(hcat, [score(index, train_concept(index, t; num_samples = min(20, length(docs)), aigenerate_kwargs = (; model = llm), aiembed_kwargs = emb)) for t in tag_list])
+{{?model=tag}} for (j, t) in enumerate(tag_list)
+{{?model=tag}}     println(rpad(t, 20), "agreement with the chat model: Cohen kappa ", round(kappa(confusion(S[:, j] .> 0.5, tagmat[:, j])); digits = 2))
+{{?model=tag}} end
+{{?model=topics|qa}} println("The embedding classifier applies to the Tag and Classify modes.")
 '''
 
 [[actionGroups]]
@@ -366,17 +780,33 @@ label = "Compare"
 [[actionGroups.actions]]
 id = "compare-models"
 label = "Compare Models"
-desc = "Run same analysis with two different LLMs and compare output"
+desc = "Run the same analysis with the second model, from any provider, and measure agreement (Cohen kappa)"
 code = '''
-using LLMTextAnalysis, Statistics
-
-index    = build_index({{texts}})  # build index once
-
-res_mini = aitag(index, {{tags}}; model="gpt-4o-mini")  # fast, cheap model
-res_full = aitag(index, {{tags}}; model="gpt-4o")  # more capable model
-
-agreement = mean(res_mini .== res_full)  # fraction of matching outputs
-println("Agreement: ", round(agreement * 100, digits=1), "%")  # print agreement rate
+{{?chat-provider2=ollama}} llm2 = "{{chat2-ollama}}"; use_model(llm2, PT.OllamaSchema())  # local, no key; the model must be pulled first (ollama pull)
+{{?chat-provider2=anthropic}} llm2 = "{{chat2-anthropic}}"; use_model(llm2, PT.AnthropicSchema())  # needs ANTHROPIC_API_KEY
+{{?chat-provider2=google}} llm2 = "{{chat2-google}}"; use_model(llm2, PT.GoogleOpenAISchema())  # needs GOOGLE_API_KEY
+{{?chat-provider2=openai}} llm2 = "{{chat2-openai}}"; use_model(llm2, PT.OpenAISchema())  # needs OPENAI_API_KEY
+{{?chat-provider2=mistral}} llm2 = "{{chat2-mistral}}"; use_model(llm2, PT.MistralOpenAISchema())  # needs MISTRAL_API_KEY
+isempty(llm2) && error("Enter a second chat model in the panel.")
+{{?model=tag}} msgs2   = run_tags(llm2)
+{{?model=tag}} tagmat2 = tag_matrix(msgs2)
+{{?model=tag}} for (j, t) in enumerate(tag_list)
+{{?model=tag}}     println(rpad(t, 20), "Cohen kappa ", round(kappa(confusion(tagmat2[:, j], tagmat[:, j])); digits = 2))
+{{?model=tag}} end
+{{?model=tag}} println("LLM tokens: $llm ", tokens(msgs), "   $llm2 ", tokens(msgs2))
+{{?model=classify}} msgs2   = run_labels(llm2)
+{{?model=classify}} labels2 = [match_cat(m.content) for m in msgs2]
+{{?model=classify}} c = confusion(labels2, labels)  # rows: second model, columns: first model
+{{?model=classify}} println("Cohen kappa between $llm and $llm2: ", round(kappa(c); digits = 2), "   LLM tokens: ", tokens(msgs), " vs ", tokens(msgs2))
+{{?model=classify}} c
+{{?model=topics}} saved = index.topic_levels[k]  # same clusters, relabelled by the second model
+{{?model=topics}} build_clusters!(index; k, add_label = true, add_summary = false, labeler_kwargs = (; model = llm2, api_kwargs = fixed_temperature(llm2)))
+{{?model=topics}} for (a, b) in zip(saved, index.topic_levels[k])
+{{?model=topics}}     println(a.topic_idx, ". ", a.label, "   |   ", b.label)
+{{?model=topics}} end
+{{?model=topics}} index.topic_levels[k] = saved  # restore the labels and summaries of the first model
+{{?model=qa}} r2, ntokens2 = ask({{question}}; model = llm2)
+{{?model=qa}} println(llm, ":\n", result.final_answer, "\n\n", llm2, ":\n", r2.final_answer)
 '''
 
 [[actionGroups]]
@@ -384,34 +814,42 @@ id = "interpret"
 label = "Interpret"
 
 [[actionGroups.actions]]
-id = "view-tags"
-label = "View Tag Results"
-desc = "Print tag assignments for each document"
+id = "view-results"
+label = "View Results"
+desc = "Result for every document, or the answer with its sources in Q&A mode"
 code = '''
-using LLMTextAnalysis
-
-index   = build_index({{texts}})  # build semantic index
-results = aitag(index, {{tags}}; model="{{llmmodel}}")  # tag documents
-
-for (i, tags_i) in enumerate(results)
-    println("Doc ", i, ": ", tags_i)
-end
+{{?model=tag}} for i in eachindex(docs)
+{{?model=tag}}     println("Doc $i [", join(tag_list[tagmat[i, :]], ", "), "]: ", first(docs[i], 100))
+{{?model=tag}} end
+{{?model=classify}} for i in eachindex(docs)
+{{?model=classify}}     println("Doc $i [", labels[i], "]: ", first(docs[i], 100))
+{{?model=classify}} end
+{{?model=topics}} topic_label = Dict(t.topic_idx => t.label for t in topics)
+{{?model=topics}} for i in eachindex(docs)
+{{?model=topics}}     println("Doc $i [", topic_label[assign[i]], "]: ", first(docs[i], 100))
+{{?model=topics}} end
+{{?model=qa}} println(result.final_answer)
+{{?model=qa}} println("\nSources: ", join(unique(result.sources), ", "))
 '''
 
 [[actionGroups.actions]]
-id = "top-docs-per-tag"
-label = "Top Docs per Tag"
-desc = "Show the most representative document for each tag"
+id = "representative-docs"
+label = "Representative Documents"
+desc = "Example documents for each tag, category or topic; the retrieved chunks in Q&A mode"
 code = '''
-using LLMTextAnalysis
-
-index   = build_index({{texts}})  # build semantic index
-
-for t in {{tags}}
-    hits = find_tags(index, t)
-    isempty(hits) && continue
-    println("
-[", t, "]
-", hits[1].content[1:min(200, length(hits[1].content))])
-end
+{{?model=tag}} for (j, t) in enumerate(tag_list)
+{{?model=tag}}     println("[", t, "] ", count(tagmat[:, j]), " documents")
+{{?model=tag}}     foreach(i -> println("   ", first(docs[i], 120)), first(findall(tagmat[:, j]), 3))
+{{?model=tag}} end
+{{?model=classify}} for l in cat_levels
+{{?model=classify}}     println("[", l, "] ", count(==(l), labels), " documents")
+{{?model=classify}}     foreach(i -> println("   ", first(docs[i], 120)), first(findall(==(l), labels), 3))
+{{?model=classify}} end
+{{?model=topics}} for t in topics  # samples_doc_idx are positions within docs_idx
+{{?model=topics}}     println(t.topic_idx, ". ", t.label)
+{{?model=topics}}     foreach(s -> println("   ", first(docs[t.docs_idx[s]], 120)), t.samples_doc_idx)
+{{?model=topics}} end
+{{?model=qa}} for (s, c) in zip(result.sources, result.context)  # the chunks the answer drew on
+{{?model=qa}}     println("[", s, "] ", first(c, 200))
+{{?model=qa}} end
 '''

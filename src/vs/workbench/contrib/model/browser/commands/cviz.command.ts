@@ -103,7 +103,7 @@ export const CVIZ_NOTEBOOK_SECTIONS: IModelNotebookSection[] = [
 			{ name: 'Histogram',          file: 'cviz/tutorial-02-histogram.ipynb',     bundled: true, description: 'Explore distributions with histograms, density overlays, and bin selection' },
 			{ name: 'Box and Violin',     file: 'cviz/tutorial-03-box-violin.ipynb',    bundled: true, description: 'Compare groups with box plots and violin plots; notches, overlays, and jitter' },
 			{ name: 'Customisation',      file: 'cviz/tutorial-04-customisation.ipynb', bundled: true, description: 'Themes, colours, annotations, layouts, and saving publication-quality figures' },
-			{ name: 'Pie Chart',          file: 'cviz/tutorial-05-pie.ipynb',           bundled: true, description: 'Show part-to-whole shares as a donut pie with CairoMakie.jl' },
+			{ name: 'Pie Chart',          file: 'cviz/tutorial-05-pie.ipynb',           bundled: true, description: 'Show part-to-whole shares as a pie chart with StatsPlots.jl' },
 			{ name: 'Line Plot',          file: 'cviz/tutorial-06-line.ipynb',          bundled: true, description: 'Draw a fitted regression line over observations with StatsPlots.jl' },
 		],
 	},

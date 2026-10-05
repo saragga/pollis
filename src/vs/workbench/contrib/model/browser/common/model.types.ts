@@ -24,6 +24,8 @@ export interface IModelVideo {
 export interface IModelPackage {
 	readonly name: string;
 	readonly github: string;
+	/** A fork of a registered package: install from `github` instead of the registry. */
+	readonly fork?: boolean;
 	readonly papers: IModelPaper[];
 	readonly videos?: IModelVideo[];
 	readonly license?: string;
@@ -143,6 +145,10 @@ export interface IModelAction {
 	readonly label: string;
 	readonly desc: string;
 	readonly code: string;
+	/** List the action only for these model toggles. Default: all. */
+	readonly models?: string[];
+	/** List the action only while an input matches, as `id=a|b` or `id!=a|b`. */
+	readonly when?: string;
 }
 
 /** A Next Steps action group shown in the right panel. */
@@ -173,15 +179,15 @@ export interface IModelInput {
 	readonly id: string;
 	readonly label: string;
 	readonly tooltip?: string;
-	/** Default: `text`. A `textarea` holds several lines, e.g. a SQL query; a code line that uses it becomes one line per line of the value. */
-	readonly kind?: 'text' | 'select' | 'textarea';
+	/** Default: `text`. A `textarea` holds several lines, e.g. a SQL query; a code line that uses it becomes one line per line of the value. `tabs` is a select shown as a row of tabs just above the code box. */
+	readonly kind?: 'text' | 'select' | 'textarea' | 'tabs';
 	/** Placeholder and fallback value of a text input, the initial content of a textarea, or the initially selected choice of a select. */
 	readonly default?: string;
 	/** The choices of a select input; `default`, else the first one available for the model, is chosen initially. */
 	readonly options?: IModelInputOption[];
 	/** Show the input only for these model toggles. Default: all. */
 	readonly models?: string[];
-	/** Show the input only while another input matches, as `id=a|b` or `id!=a|b`. */
+	/** Show the input only while another input matches, as `id=a|b` or `id!=a|b`; join several conditions with `&`. */
 	readonly when?: string;
 	/** Start a new form row with this input. */
 	readonly newRow?: boolean;

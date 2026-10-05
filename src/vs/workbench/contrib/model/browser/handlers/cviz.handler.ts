@@ -48,7 +48,7 @@ export function registerCvizWebviewHandlers(
 ): DisposableStore {
 	const disposables = new DisposableStore();
 	const cvizData = metadata.cviz;
-	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, cvizData.packages.map(p => p.name), fileService, pathService, commandService, notificationService, workspaceContextService);
+	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, cvizData.packages, [], fileService, pathService, commandService, notificationService, workspaceContextService);
 	createExampleCodeWiring(webviewInput.webview, disposables, 'cviz', fileService, pathService, notificationService);
 	createCustomCopyWiring(webviewInput.webview, disposables, cvizData.wikis, cvizData.notebooks, fileService, pathService, editorService, commandService, notificationService);
 	createReferenceWiring(webviewInput.webview, disposables, 'cviz', cvizData.references, fileService, pathService, commandService, notificationService);

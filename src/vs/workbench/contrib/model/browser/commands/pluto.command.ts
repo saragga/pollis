@@ -20,26 +20,35 @@ import { sendToJuliaRepl } from '../handlers/model.handler.js';
 let plutoBase: string | undefined;
 let plutoSecret: string | undefined;
 
-/** Wrap the code-box contents in a minimal one-cell Pluto notebook. */
+/** Wrap the code-box contents in a minimal Pluto notebook: a packages cell, then the code cell. */
 function buildPlutoNotebook(code: string): string {
-	const cellId = generateUuid();
-	// Pluto's on-disk format: header, then `# ╔═╡ <uuid>` before each cell's source,
-	// then a `# ╔═╡ Cell order:` section listing cells (╠═ = visible code cell).
+	// Macros in a cell are expanded before the cell runs, so `@formula` in the same cell as
+	// `using GLM` is undefined. Hoist the top-level `using`/`import` lines into their own cell.
+	const lines = code.split('\n');
+	const isImport = (line: string) => /^(using|import)\s/.test(line);
+	const imports = lines.filter(isImport);
+	const body = lines.filter(line => !isImport(line)).join('\n').trim();
+	const cells: string[] = [];
+	if (imports.length > 0) {
+		cells.push(imports.length === 1 ? imports[0] : `begin\n${imports.join('\n')}\nend`);
+	}
 	// Pluto allows only one expression per cell, so wrap the (multi-statement) snippet in
 	// a `begin … end` block — exactly what Pluto suggests for pasted multi-line code.
+	if (body) {
+		cells.push(`begin\n${body}\nend`);
+	}
+	const cellIds = cells.map(() => generateUuid());
+	// Pluto's on-disk format: header, then `# ╔═╡ <uuid>` before each cell's source,
+	// then a `# ╔═╡ Cell order:` section listing cells (╠═ = visible code cell).
 	return `### A Pluto.jl notebook ###
 # v0.20.4
 
 using Markdown
 using InteractiveUtils
 
-# ╔═╡ ${cellId}
-begin
-${code}
-end
-
+${cells.map((cell, i) => `# ╔═╡ ${cellIds[i]}\n${cell}\n`).join('\n')}
 # ╔═╡ Cell order:
-# ╠═${cellId}
+${cellIds.map(id => `# ╠═${id}`).join('\n')}
 `;
 }
 

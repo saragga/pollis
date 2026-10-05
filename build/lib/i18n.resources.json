@@ -267,6 +267,10 @@
 			"project": "vscode-workbench"
 		},
 		{
+			"name": "vs/workbench/contrib/pollisViews",
+			"project": "vscode-workbench"
+		},
+		{
 			"name": "vs/workbench/contrib/optimise",
 			"project": "vscode-workbench"
 		},

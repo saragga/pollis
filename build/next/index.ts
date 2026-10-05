@@ -277,7 +277,7 @@ const desktopResourcePatterns = [
 	'vs/workbench/contrib/welcomeGettingStarted/common/media/**/*.svg',
 	'vs/workbench/contrib/welcomeGettingStarted/common/media/**/*.png',
 	'vs/workbench/contrib/welcomeOnboarding/browser/media/*.svg',
-	'vs/workbench/contrib/extensions/browser/media/{theme-icon.png,language-icon.svg}',
+	'vs/workbench/contrib/extensions/browser/media/{theme-icon.png,language-icon.svg,pollis-toolbox-icon.png}',
 	'vs/workbench/services/extensionManagement/common/media/*.svg',
 	'vs/workbench/services/extensionManagement/common/media/*.png',
 	'vs/workbench/browser/parts/editor/media/*.png',

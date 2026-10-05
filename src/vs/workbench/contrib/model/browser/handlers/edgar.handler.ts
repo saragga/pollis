@@ -68,7 +68,7 @@ export function registerEdgarWebviewHandlers(
 		for (const t of Object.keys(lastCode)) { void postColorized(lastCode[t], t); }
 	}));
 	const edgarData = metadata.edgar;
-	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, edgarData.packages.map(p => p.name), fileService, pathService, commandService, notificationService, workspaceContextService);
+	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, edgarData.packages, [], fileService, pathService, commandService, notificationService, workspaceContextService);
 	createExampleCodeWiring(webviewInput.webview, disposables, 'edgar', fileService, pathService, notificationService);
 	createCustomCopyWiring(webviewInput.webview, disposables, edgarData.wikis, edgarData.notebooks, fileService, pathService, editorService, commandService, notificationService);
 	createReferenceWiring(webviewInput.webview, disposables, 'edgar', edgarData.references, fileService, pathService, commandService, notificationService);

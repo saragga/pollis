@@ -29,7 +29,7 @@ name = "SCIP.jl"
 github = "https://github.com/scipopt/SCIP.jl"
 
 [requires]
-packages = ["JuMP.jl", "Clarabel.jl", "SCIP.jl", "Plots.jl"]
+packages = ["JuMP.jl", "Clarabel.jl", "SCIP.jl", "Plots.jl", "Juniper.jl"]
 
 [[notebookSections]]
 label = ""

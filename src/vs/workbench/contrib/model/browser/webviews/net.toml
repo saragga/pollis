@@ -17,7 +17,7 @@ name = "MetaGraphsNext.jl"
 github = "https://github.com/JuliaGraphs/MetaGraphsNext.jl"
 
 [requires]
-packages = ["Graphs.jl", "MetaGraphsNext.jl"]
+packages = ["Graphs.jl", "MetaGraphsNext.jl", "GLMakie.jl", "StatsBase.jl"]
 
 [[notebookSections]]
 label = ""

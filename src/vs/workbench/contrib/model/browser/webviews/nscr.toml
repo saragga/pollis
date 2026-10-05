@@ -21,7 +21,7 @@ name = "Tables.jl"
 github = "https://github.com/JuliaData/Tables.jl"
 
 [requires]
-packages = ["NetSurvival.jl", "RateTables.jl", "Tables.jl"]
+packages = ["NetSurvival.jl", "RateTables.jl", "Tables.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""
@@ -165,18 +165,17 @@ D    = Bool.(tbl.{{event}})  # true = death observed, false = censored
 age  = Float64.(tbl.age)  # age at diagnosis, days
 date = Float64.(tbl.year)  # date of diagnosis, days since year 0
 covs = stack([tbl[k] for k in RateTables.predictors(rt)])  # rate-table covariates (e.g. sex), one column each
-field(x, c...) = getfield(x, Symbol(c...))  # the estimators use Unicode field names
 
 est = {{method}}(T, D, age, date, covs, rt)  # {{method}} excess hazard
 grid = est.grid  # time grid, days
-Se   = field(est, 'S', Char(0x2091))  # net survival
-dLe  = field(est, Char(0x2202), Char(0x39b), Char(0x2091))  # excess hazard increments
-dLp  = field(est, Char(0x2202), Char(0x39b), Char(0x209a))  # population (expected) hazard increments
-dLo  = field(est, Char(0x2202), Char(0x39b), Char(0x2092))  # overall (observed) hazard increments
+Se   = est.Sₑ  # net survival
+dLe  = est.∂Λₑ  # excess hazard increments
+dLp  = est.∂Λₚ  # population (expected) hazard increments
+dLo  = est.∂Λₒ  # overall (observed) hazard increments
 at(t) = max(searchsortedlast(grid, t), 1)  # grid index at t days
 
 cm = CrudeMortality(est)  # Cronin-Feuer crude probabilities of death
-Mo, Me, Mp = field(cm, 'M', Char(0x2092)), field(cm, 'M', Char(0x2091)), field(cm, 'M', Char(0x209a))  # all causes, disease, other causes
+Mo, Me, Mp = cm.Mₒ, cm.Mₑ, cm.Mₚ  # all causes, disease, other causes
 (at_5_years = (all_causes = Mo[at(1826)], disease = Me[at(1826)], other_causes = Mp[at(1826)]),)
 '''
 
@@ -192,14 +191,13 @@ D    = Bool.(tbl.{{event}})  # true = death observed, false = censored
 age  = Float64.(tbl.age)  # age at diagnosis, days
 date = Float64.(tbl.year)  # date of diagnosis, days since year 0
 covs = stack([tbl[k] for k in RateTables.predictors(rt)])  # rate-table covariates (e.g. sex), one column each
-field(x, c...) = getfield(x, Symbol(c...))  # the estimators use Unicode field names
 
 est = {{method}}(T, D, age, date, covs, rt)  # {{method}} net survival estimator
 grid = est.grid  # time grid, days
-Se   = field(est, 'S', Char(0x2091))  # net survival
-dLe  = field(est, Char(0x2202), Char(0x39b), Char(0x2091))  # excess hazard increments
-dLp  = field(est, Char(0x2202), Char(0x39b), Char(0x209a))  # population (expected) hazard increments
-dLo  = field(est, Char(0x2202), Char(0x39b), Char(0x2092))  # overall (observed) hazard increments
+Se   = est.Sₑ  # net survival
+dLe  = est.∂Λₑ  # excess hazard increments
+dLp  = est.∂Λₚ  # population (expected) hazard increments
+dLo  = est.∂Λₒ  # overall (observed) hazard increments
 at(t) = max(searchsortedlast(grid, t), 1)  # grid index at t days
 
 ci = confint(est; level=0.05)  # 95% pointwise intervals
@@ -218,7 +216,6 @@ D    = Bool.(tbl.{{event}})  # true = death observed, false = censored
 age  = Float64.(tbl.age)  # age at diagnosis, days
 date = Float64.(tbl.year)  # date of diagnosis, days since year 0
 covs = stack([tbl[k] for k in RateTables.predictors(rt)])  # rate-table covariates (e.g. sex), one column each
-field(x, c...) = getfield(x, Symbol(c...))  # the estimators use Unicode field names
 
 g    = tbl.{{group}}
 levs = unique(g)  # groups compared
@@ -227,10 +224,10 @@ test = GraffeoTest(T, D, age, date, covs, ones(Int, length(T)), grp, rt)  # Graf
 est  = PoharPerme(T, D, age, date, covs, rt)  # pooled net survival
 ests = [PoharPerme(T[grp .== k], D[grp .== k], age[grp .== k], date[grp .== k], covs[grp .== k, :], rt) for k in eachindex(levs)]  # per group
 grid = est.grid  # time grid, days
-Se   = field(est, 'S', Char(0x2091))  # net survival
-dLe  = field(est, Char(0x2202), Char(0x39b), Char(0x2091))  # excess hazard increments
-dLp  = field(est, Char(0x2202), Char(0x39b), Char(0x209a))  # population (expected) hazard increments
-dLo  = field(est, Char(0x2202), Char(0x39b), Char(0x2092))  # overall (observed) hazard increments
+Se   = est.Sₑ  # net survival
+dLe  = est.∂Λₑ  # excess hazard increments
+dLp  = est.∂Λₚ  # population (expected) hazard increments
+dLo  = est.∂Λₒ  # overall (observed) hazard increments
 at(t) = max(searchsortedlast(grid, t), 1)  # grid index at t days
 
 (statistic = test.stat, df = test.df, pvalue = test.pval)
@@ -248,16 +245,17 @@ code = '''
 using Plots
 {{?model=cif}} plot(grid ./ 365.241, [Me Mp Mo], label=["disease" "other causes" "all causes"], xlabel="years since diagnosis", ylabel="probability of death")
 {{?model=ns}} plot(grid ./ 365.241, Se, ribbon=(Se .- first.(ci), last.(ci) .- Se), fillalpha=0.2, label="net survival", xlabel="years since diagnosis", ylim=(0, 1))
-{{?model=lr}} fig = plot(xlabel="years since diagnosis", ylabel="net survival", ylim=(0, 1)); foreach(k -> plot!(fig, ests[k].grid ./ 365.241, field(ests[k], 'S', Char(0x2091)), label=string(levs[k])), eachindex(ests)); fig
+{{?model=lr}} fig = plot(xlabel="years since diagnosis", ylabel="net survival", ylim=(0, 1)); foreach(k -> plot!(fig, ests[k].grid ./ 365.241, ests[k].Sₑ, label=string(levs[k])), eachindex(ests)); fig
 '''
 
 [[actionGroups.actions]]
 id = "hazards"
 label = "Excess and Expected Hazards"
-desc = "Cumulative excess hazard of the disease next to the cumulative hazard expected from the population table"
+desc = "Cumulative excess hazard of the disease next to the cumulative hazard expected from the population table and the observed all-cause (Nelson-Aalen) hazard"
 code = '''
 using Plots
-plot(grid ./ 365.241, [cumsum(dLe) cumsum(dLp) cumsum(dLo)], label=["excess (disease)" "expected (population)" "observed (all causes)"], xlabel="years since diagnosis", ylabel="cumulative hazard")
+e2 = EdererII(T, D, age, date, covs, rt)  # unweighted at-risk sums: Nelson-Aalen observed hazard, Ederer II expected hazard (same grid as est)
+plot(grid ./ 365.241, [cumsum(dLe) cumsum(e2.∂Λₚ) cumsum(e2.∂Λₒ)], label=["excess (disease)" "expected (population)" "observed (all causes)"], xlabel="years since diagnosis", ylabel="cumulative hazard")
 '''
 
 [[actionGroups]]
@@ -300,10 +298,11 @@ yrs = filter(y -> 365.241 * y <= maximum(grid), [1, 3, 5, 10])
 [[actionGroups.actions]]
 id = "relative"
 label = "Observed, Expected and Relative Survival"
-desc = "Observed (all-cause) survival, the survival expected from the rate table, and their ratio, the relative survival"
+desc = "Observed (all-cause, Kaplan-Meier) survival, the survival expected from the rate table (Ederer II), their ratio, the relative survival, and the net survival of the chosen estimator"
 code = '''
-So = cumprod(1 .- dLo)  # observed survival
-Sp = exp.(-cumsum(dLp))  # expected survival of a comparable population group
+e2 = EdererII(T, D, age, date, covs, rt)  # unweighted at-risk sums (Pohar-Perme increments are inverse-probability weighted)
+So = cumprod(1 .- e2.∂Λₒ)  # observed survival: Kaplan-Meier
+Sp = cumprod(1 .- e2.∂Λₚ)  # expected survival of the patients still at risk (Ederer II)
 yrs = filter(y -> 365.241 * y <= maximum(grid), [1, 3, 5, 10])
 [(years = y, observed = round(So[at(365.241y)], digits=3), expected = round(Sp[at(365.241y)], digits=3), relative = round(So[at(365.241y)] / Sp[at(365.241y)], digits=3), net = round(Se[at(365.241y)], digits=3)) for y in yrs]
 '''
@@ -351,6 +350,6 @@ label = "Deaths Attributable to the Disease"
 desc = "Share of all deaths that the disease accounts for, at 1, 5 and 10 years"
 code = '''
 cm2 = CrudeMortality(est)
-Mo2, Me2 = field(cm2, 'M', Char(0x2092)), field(cm2, 'M', Char(0x2091))
+Mo2, Me2 = cm2.Mₒ, cm2.Mₑ
 [(years = y, died = round(Mo2[at(365.241y)], digits=3), from_disease = round(Me2[at(365.241y)], digits=3), share_from_disease = round(Me2[at(365.241y)] / Mo2[at(365.241y)], digits=3)) for y in filter(y -> 365.241 * y <= maximum(grid), [1, 5, 10])]
 '''

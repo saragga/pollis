@@ -2,8 +2,8 @@
 # Declarative source. The build script generates hfm.data.ts.
 # Run: npm run gulp compile-toml
 #
-# Approach: models are loaded in Julia with Transformers.jl (HuggingFace submodule),
-# exported ONNX models run with ONNX.jl. The Explore pane queries the public Hub REST
+# Approach: models are loaded and run in Julia with Transformers.jl (HuggingFace submodule);
+# the ONNX comparison runs the ONNX export in Python onnxruntime. The Explore pane queries the public Hub REST
 # API (huggingface.co/api/models) live. A personal access token (shared with the
 # Hugging Face Datasets webview) is only required for gated or private models; it is
 # injected into the REPL session as ENV["HUGGING_FACE_HUB_TOKEN"] and never written
@@ -309,13 +309,9 @@ github = "https://github.com/chengchingwen/Transformers.jl"
 name = "HuggingFaceHub.jl"
 github = "https://github.com/cjdoris/HuggingFaceHub.jl"
 
-[[packages]]
-name = "ONNX.jl"
-github = "https://github.com/FluxML/ONNX.jl"
-
 # Further packages the examples use: checked by the install indicator, not listed on the Powered-by line
 [requires]
-packages = ["BenchmarkTools.jl", "Images.jl", "Plots.jl", "UMAP.jl", "WAV.jl"]
+packages = ["BenchmarkTools.jl", "DelimitedFiles.jl", "Flux.jl", "Images.jl", "NNlib.jl", "Plots.jl", "UMAP.jl"]
 
 [[notebookSections]]
 label = "Getting Started"
@@ -389,12 +385,6 @@ name = "Transformers.jl"
 file = "hfm/transformers-jl.md"
 bundled = true
 description = "Architecture reference, inference patterns, GPU, and fine-tuning"
-
-[[wikis]]
-name = "ONNX.jl"
-file = "hfm/onnx-jl.md"
-bundled = true
-description = "Export HF models to ONNX and run inference in Julia without Python"
 
 [[references]]
 separator = true
@@ -478,7 +468,7 @@ label = "Embedding"
 
 [[bullets]]
 text = "Multimodal"
-detail = "models that combine vision and language (CLIP, LLaVA, BLIP-2)"
+detail = "models that combine vision and language; the example matches an image against captions with CLIP"
 
 [[bullets]]
 text = "Natural Language Processing (NLP)"
@@ -606,82 +596,152 @@ return s;
 
 [[codeBranches]]
 model = "multimodal"
-code = """
-using Transformers, Transformers.HuggingFace
-using Images
+code = '''
+using Transformers, Transformers.TextEncoders, Transformers.HuggingFace, Images, NNlib
 
-proc  = HuggingFace.load_processor("openai/clip-vit-base-patch32")  # load CLIP processor
-model = HuggingFace.load_model(HuggingFace.CLIPModel, "openai/clip-vit-base-patch32")  # load CLIP model
+textenc = HuggingFace.load_tokenizer("openai/clip-vit-base-patch32")  # CLIP BPE tokenizer
+clip    = HuggingFace.load_model("openai/clip-vit-base-patch32")  # task :model: text and vision towers with projections
 
-img   = load("photo.jpg") |> proc  # preprocess image
-txt   = proc("a cat sitting on a mat")  # tokenise text query
-out   = model(img.pixel_values, txt.input_ids, txt.attention_mask)  # joint vision–language forward pass
-sim   = out.logits_per_image  # image–text similarity logits
-"""
+# CLIP preprocessing: resize the short side to 224, centre crop 224 x 224, scale to [0, 1], normalise per channel
+function clip_pixels(path)
+    img  = RGB.(load(path))
+    h, w = size(img)
+    s    = 224 / min(h, w)
+    img  = imresize(img, (max(224, round(Int, h * s)), max(224, round(Int, w * s))))
+    h, w = size(img)
+    top, left = div(h - 224, 2), div(w - 224, 2)
+    x  = Float32.(channelview(img[top+1:top+224, left+1:left+224]))  # 3 x H x W
+    mu = Float32[0.48145466, 0.4578275, 0.40821073]
+    sd = Float32[0.26862954, 0.26130258, 0.27577711]
+    x  = (x .- mu) ./ sd
+    return reshape(permutedims(x, (3, 2, 1)), 224, 224, 3, 1)  # W x H x C x N, the layout of the converted weights
+end
+
+if !@isdefined(image_path)  # demo image: two cats on a sofa (COCO val2017)
+    global image_path = download("http://images.cocodataset.org/val2017/000000039769.jpg")
+end
+captions = ["a photo of two cats", "a photo of a dog", "a photo of a remote control", "a city skyline at night"]
+
+out    = clip((; text_input = encode(textenc, captions), vision_input = (; pixel = clip_pixels(image_path))))
+logits = out.logits.text  # images x captions, scaled cosine similarities
+probs  = softmax(vec(logits[1, :]))  # image-text matching probabilities over the captions
+for (c, p) in zip(captions, probs)
+    println(rpad(c, 32), round(p, digits = 3))
+end
+'''
 
 [[codeBranches]]
 model = "nlp"
-code = """
-using Transformers, Transformers.HuggingFace
+code = '''
+using Transformers, Transformers.TextEncoders, Transformers.HuggingFace
 
-tkr   = HuggingFace.load_tokenizer("meta-llama/Llama-3.2-3B-Instruct")  # load tokenizer
-model = HuggingFace.load_model(HuggingFace.GPTModel, "meta-llama/Llama-3.2-3B-Instruct")  # load language model
+textenc = HuggingFace.load_tokenizer("gpt2")  # GPT-2 BPE tokenizer (ungated, unlike Llama checkpoints)
+gpt2    = HuggingFace.load_model("gpt2", :lmheadmodel)  # causal language model with its output head
 
-prompt = tkr("The capital of France is")  # tokenise prompt
-out    = generate(model, prompt.token; max_new_tokens=32)  # autoregressive generation
-text   = tkr.decode(out[1])  # decode generated token ids
-"""
+function greedy_generate(prompt; max_new_tokens = 32)  # Transformers.jl has no generate(): decode one token at a time
+    encoded = encode(textenc, prompt).token
+    ids     = encoded.onehots
+    ends_id = lookup(textenc.vocab, textenc.endsym)
+    for _ in 1:max_new_tokens
+        logits = gpt2((; token = encoded)).logit[:, end, 1]  # next-token scores at the last position
+        new_id = argmax(logits)  # greedy: most likely token
+        push!(ids, new_id)
+        new_id == ends_id && break
+    end
+    return decode_text(textenc, encoded)
+end
+
+println(greedy_generate("The capital of France is"))
+'''
 
 [[codeBranches]]
 model = "vision"
-code = """
-using Transformers, Transformers.HuggingFace
-using Images
+code = '''
+using Transformers, Transformers.TextEncoders, Transformers.HuggingFace, Images, NNlib
 
-proc   = HuggingFace.load_processor("google/vit-base-patch16-224")  # load image processor
-model  = HuggingFace.load_model(HuggingFace.ViTModel, "google/vit-base-patch16-224")  # load ViT model
+# Transformers.jl 0.3 implements no ViT; the CLIP vision tower classifies images zero-shot against text labels
+textenc = HuggingFace.load_tokenizer("openai/clip-vit-base-patch32")
+clip    = HuggingFace.load_model("openai/clip-vit-base-patch32")
 
-img    = load("image.jpg") |> proc  # load and preprocess image
-logits = model(img.pixel_values).logits  # forward pass; shape: (num_classes,)
-pred   = argmax(logits)  # predicted class index
-"""
+function clip_pixels(path)  # resize the short side to 224, centre crop, normalise with the CLIP channel statistics
+    img  = RGB.(load(path))
+    h, w = size(img)
+    s    = 224 / min(h, w)
+    img  = imresize(img, (max(224, round(Int, h * s)), max(224, round(Int, w * s))))
+    h, w = size(img)
+    top, left = div(h - 224, 2), div(w - 224, 2)
+    x  = Float32.(channelview(img[top+1:top+224, left+1:left+224]))
+    mu = Float32[0.48145466, 0.4578275, 0.40821073]
+    sd = Float32[0.26862954, 0.26130258, 0.27577711]
+    return reshape(permutedims((x .- mu) ./ sd, (3, 2, 1)), 224, 224, 3, 1)  # W x H x C x N
+end
+
+if !@isdefined(image_path)  # demo image (COCO val2017)
+    global image_path = download("http://images.cocodataset.org/val2017/000000039769.jpg")
+end
+labels  = ["cat", "dog", "bird", "car", "airplane", "horse"]
+prompts = ["a photo of a $(l)" for l in labels]  # prompt template used in the CLIP paper
+
+out   = clip((; text_input = encode(textenc, prompts), vision_input = (; pixel = clip_pixels(image_path))))
+probs = softmax(vec(out.logits.text[1, :]))
+pred  = labels[argmax(probs)]  # predicted class
+println("Predicted: ", pred, " (p = ", round(maximum(probs), digits = 3), ")")
+'''
 
 [[codeBranches]]
 model = "audio"
-code = """
-using Transformers, Transformers.HuggingFace
-using WAV
+code = '''
+import HuggingFaceHub as HF
 
-proc   = HuggingFace.load_processor("openai/whisper-large-v3")  # load audio processor
-model  = HuggingFace.load_model(HuggingFace.WhisperModel, "openai/whisper-large-v3")  # load Whisper model
+# Transformers.jl 0.3 implements no audio architectures (no Whisper, no wav2vec 2.0), so Julia cannot run these checkpoints natively;
+# browse the Hub for speech-recognition models and inspect their files and library
+top = HF.search(HF.Model; filter = "automatic-speech-recognition", sort = "downloads", direction = -1, limit = 10)
+for m in top
+    println(rpad(m.id, 48), m.pipeline_tag)
+end
 
-wave, sr = wavread("audio.wav")  # load 16 kHz mono waveform
-inputs   = proc(wave)  # extract log-mel spectrogram
-out      = generate(model, inputs.input_features)  # decode with greedy search
-text     = proc.decode(out[1])  # decoded transcript
-"""
+whisper = HF.info(HF.Model, "openai/whisper-large-v3")  # full metadata: library, files, tags
+println("Library: ", whisper.library_name)
+println("Files:   ", join(whisper.files, ", "))
+'''
 
 [[codeBranches]]
 model = "embedding"
-code = """
-using Transformers, Transformers.HuggingFace
+code = '''
+using Transformers, Transformers.TextEncoders, Transformers.HuggingFace, Statistics
 
-tkr   = HuggingFace.load_tokenizer("sentence-transformers/all-MiniLM-L6-v2")  # load tokenizer
-model = HuggingFace.load_model(HuggingFace.TextEncoderModel, "sentence-transformers/all-MiniLM-L6-v2")  # load embedding model
+textenc = HuggingFace.load_tokenizer("sentence-transformers/all-MiniLM-L6-v2")
+minilm  = HuggingFace.load_model("sentence-transformers/all-MiniLM-L6-v2")  # task :model
 
-enc   = tkr("Hello, world!")  # tokenise input text
-emb   = model(enc.token, enc.segment, enc.attention_mask).hidden_state[:, 1, :]  # CLS token embedding
-"""
+function embed_texts(texts)  # all-MiniLM-L6-v2 was trained with mean pooling, so average the real tokens, not the CLS vector
+    sample = encode(textenc, texts)  # a vector of strings is one padded batch
+    h      = minilm(sample).hidden_state  # hidden x tokens x batch
+    lens   = sample.attention_mask.len  # real tokens per sentence, padding excluded
+    return hcat([vec(mean(h[:, 1:lens[b], b], dims = 2)) for b in 1:size(h, 3)]...)
+end
 
-# Tabular, RL and Graph ML share the generic loading example.
+emb = embed_texts(["Hello, world!"])  # 384 x 1 sentence embedding
+println("Embedding dimension: ", size(emb, 1))
+'''
+
+# Tabular, RL and Graph ML: Transformers.jl has no architectures for these tasks, so each toggle searches the Hub for its own task.
 [[codeBranches]]
 model = "*"
-code = """
-using Transformers, Transformers.HuggingFace
+code = '''
+import HuggingFaceHub as HF
 
-tkr   = HuggingFace.load_tokenizer("sentence-transformers/all-MiniLM-L6-v2")  # load tokenizer
-model = HuggingFace.load_model(HuggingFace.TextEncoderModel, "sentence-transformers/all-MiniLM-L6-v2")  # load model from HF Hub
-"""
+{{?model=tabular}}task = "tabular-classification"  # mostly scikit-learn and AutoML models
+{{?model=rl}}task = "reinforcement-learning"  # mostly Stable-Baselines3 and Sample Factory policies
+{{?model=graphml}}task = "graph-ml"  # graph neural networks
+top = HF.search(HF.Model; filter = task, sort = "downloads", direction = -1, limit = 10)  # most downloaded models for the task
+for m in top
+    println(rpad(m.id, 56), something(m.pipeline_tag, ""))
+end
+
+best = HF.info(top[1])  # full metadata of the most downloaded one
+println("Library: ", best.library_name)
+println("Files:   ", join(best.files, ", "))
+'''
 
 [[actionGroups]]
 id = "visualise"
@@ -690,18 +750,34 @@ label = "Visualise"
 [[actionGroups.actions]]
 id = "embedding-scatter"
 label = "Embedding Scatter"
-desc = "Project model embeddings to 2D with UMAP for visual inspection"
-code = """
-using Transformers, UMAP, Plots
-using Transformers.HuggingFace
+desc = "Project mean-pooled MiniLM sentence embeddings to 2D with UMAP for visual inspection; UMAP needs more points than neighbours, so use a corpus of a dozen documents or more"
+code = '''
+using Transformers, Transformers.TextEncoders, Transformers.HuggingFace, Statistics, UMAP, Plots
 
-tkr  = HuggingFace.load_tokenizer("sentence-transformers/all-MiniLM-L6-v2")  # load tokenizer
-model = HuggingFace.load_model(HuggingFace.TextEncoderModel, "sentence-transformers/all-MiniLM-L6-v2")  # load embedding model
+textenc = HuggingFace.load_tokenizer("sentence-transformers/all-MiniLM-L6-v2")
+minilm  = HuggingFace.load_model("sentence-transformers/all-MiniLM-L6-v2")
+function minilm_embed(texts)  # mean pooling over the real tokens
+    sample = encode(textenc, texts)
+    h      = minilm(sample).hidden_state
+    lens   = sample.attention_mask.len
+    return hcat([vec(mean(h[:, 1:lens[b], b], dims = 2)) for b in 1:size(h, 3)]...)
+end
 
-embs = hcat([vec(model(tkr(d).token, tkr(d).segment, tkr(d).attention_mask).hidden_state[:, 1, :]) for d in docs]...)  # embed all documents
-proj = umap(embs, 2)  # reduce to 2D with UMAP
-scatter(proj[1, :], proj[2, :], xlabel="UMAP 1", ylabel="UMAP 2")  # scatter plot of embeddings
-"""
+if !@isdefined(docs)  # demo corpus: three topics; replace with your own vector of strings
+    global docs = ["The central bank raised interest rates to curb inflation.", "Monetary policy was tightened to bring prices under control.",
+                   "Inflation fell after the rate hikes.", "Bond yields rose as markets priced further tightening.",
+                   "The striker scored twice in the second half.", "The team won the league after a late goal.",
+                   "The goalkeeper saved a penalty in extra time.", "The coach praised the defence after the match.",
+                   "Fresh basil and tomatoes make a simple pasta sauce.", "Simmer the sauce and season it with salt and pepper.",
+                   "The recipe needs olive oil, garlic and parmesan.", "Knead the dough and let it rest for an hour."]
+end
+
+embs = minilm_embed(docs)  # 384 x n_docs
+res  = UMAP.fit(embs, 2; n_neighbors = min(15, length(docs) - 1))  # UMAP 0.3 API
+P    = res.embedding isa AbstractMatrix ? res.embedding : reduce(hcat, res.embedding)  # 2 x n_docs
+scatter(P[1, :], P[2, :], series_annotations = Plots.text.(1:length(docs), 8, :bottom), legend = false,
+        xlabel = "UMAP 1", ylabel = "UMAP 2")
+'''
 
 [[actionGroups]]
 id = "diagnose"
@@ -710,14 +786,14 @@ label = "Diagnose"
 [[actionGroups.actions]]
 id = "model-summary"
 label = "Model Summary"
-desc = "Print parameter counts and layer structure of a loaded model"
-code = """
-using Transformers.HuggingFace
+desc = "Print the layer structure and parameter count of a loaded model"
+code = '''
+using Transformers, Transformers.HuggingFace, Flux
 
-model = HuggingFace.load_model(HuggingFace.BertModel, "bert-base-uncased")  # load any HF model
-println(model)  # inspect layer hierarchy
-sum(length, Flux.params(model))  # total parameter count
-"""
+model = HuggingFace.load_model("bert-base-uncased")  # any supported HF checkpoint, task :model
+println(model)  # layer hierarchy
+println("Parameters: ", sum(length, Flux.params(model)))  # about 110 million for bert-base
+'''
 
 [[actionGroups]]
 id = "predict"
@@ -726,20 +802,29 @@ label = "Predict"
 [[actionGroups.actions]]
 id = "batch-inference"
 label = "Batch Inference"
-desc = "Run inference over a list of inputs in mini-batches"
-code = """
-using Transformers, Transformers.HuggingFace
+desc = "Embed a list of texts in padded mini-batches: each batch is one forward pass, with mean pooling over the real tokens"
+code = '''
+using Transformers, Transformers.TextEncoders, Transformers.HuggingFace, Statistics
 
-tkr    = HuggingFace.load_tokenizer("sentence-transformers/all-MiniLM-L6-v2")  # load tokenizer
-model  = HuggingFace.load_model(HuggingFace.TextEncoderModel, "sentence-transformers/all-MiniLM-L6-v2")  # load model
+textenc = HuggingFace.load_tokenizer("sentence-transformers/all-MiniLM-L6-v2")
+minilm  = HuggingFace.load_model("sentence-transformers/all-MiniLM-L6-v2")
 
-batch  = 16  # mini-batch size
-for i in 1:batch:length(texts)
-    chunk = texts[i:min(i+batch-1, end)]  # current mini-batch
-    enc   = tkr.(chunk)  # tokenise batch
-    out   = model.(enc)  # forward pass over batch
+if !@isdefined(texts)  # demo input; replace with your own vector of strings
+    global texts = ["Sentence number $(i) about topic $(mod(i, 4))." for i in 1:50]
 end
-"""
+
+batch = 16  # mini-batch size
+embs  = Matrix{Float32}[]
+for i in 1:batch:length(texts)
+    chunk  = texts[i:min(i + batch - 1, end)]  # current mini-batch
+    sample = encode(textenc, chunk)  # one padded batch: token is vocab x max_len x batch
+    h      = minilm(sample).hidden_state  # a single forward pass for the whole batch
+    lens   = sample.attention_mask.len
+    push!(embs, hcat([vec(mean(h[:, 1:lens[b], b], dims = 2)) for b in 1:size(h, 3)]...))
+end
+E = reduce(hcat, embs)  # 384 x length(texts)
+println("Embedded ", size(E, 2), " texts in ", length(embs), " batches")
+'''
 
 [[actionGroups]]
 id = "compare"
@@ -748,54 +833,66 @@ label = "Compare"
 [[actionGroups.actions]]
 id = "compare-models"
 label = "Compare Models"
-desc = "Benchmark two HF models on the same input"
-code = """
-using Transformers, Transformers.HuggingFace
+desc = "Load two HF encoders and compare their hidden size, depth and token count on the same input"
+code = '''
+using Transformers, Transformers.TextEncoders, Transformers.HuggingFace
 
-ids   = ["bert-base-uncased", "sentence-transformers/all-MiniLM-L6-v2"]  # models to compare
+ids = ["bert-base-uncased", "sentence-transformers/all-MiniLM-L6-v2"]  # models to compare
 
 for id in ids
-    tkr   = HuggingFace.load_tokenizer(id)  # tokenizer for model
-    model = HuggingFace.load_model(HuggingFace.BertModel, id)  # load model
-    enc   = tkr("benchmark text")  # tokenise input
-    out   = model(enc.token, enc.segment, enc.attention_mask)  # forward pass
-    println(id, " hidden_size: ", size(out.hidden_state, 1))  # print hidden dimension
+    cfg    = HuggingFace.load_config(id)
+    tkr    = HuggingFace.load_tokenizer(id)
+    model  = HuggingFace.load_model(id)  # task :model
+    sample = encode(tkr, ["benchmark text"])
+    out    = model(sample)
+    println(rpad(id, 42), "hidden size ", size(out.hidden_state, 1), ", layers ", cfg[:num_hidden_layers], ", tokens ", size(out.hidden_state, 2))
 end
-"""
+'''
 
 [[actionGroups.actions]]
 id = "julia-onnx-vs-python"
-label = "Julia (ONNX) vs Python"
-desc = "Run the same HF ONNX model in Julia and Python; compare outputs and latency"
-code = """
-# ── Julia side (ONNX.jl) ──────────────────────────────────────
-using ONNX, BenchmarkTools
+label = "Julia (Transformers.jl) vs Python (ONNX Runtime)"
+desc = "Run all-MiniLM-L6-v2 natively in Julia and as an ONNX export in Python onnxruntime on the same sentence; compare the mean-pooled outputs and the median latency after warm-up"
+code = '''
+using Transformers, Transformers.TextEncoders, Transformers.HuggingFace, BenchmarkTools, Statistics, DelimitedFiles
 
-model  = ONNX.load("minilm.onnx")  # load exported ONNX model
-input  = rand(Float32, 1, 128)  # dummy token-id input (batch=1, seq=128)
-out_jl = model(input)  # forward pass
-emb_jl = out_jl["last_hidden_state"][:, 1, :]  # CLS token embedding
+# ONNX.jl 0.3 implements about 40 operators and lacks Softmax, Erf, ReduceMean, Div and Sqrt, so it cannot execute a BERT-family graph;
+# the Julia side runs the same checkpoint natively in Transformers.jl, the Python side runs its ONNX export in onnxruntime
+name       = "sentence-transformers/all-MiniLM-L6-v2"
+textenc    = HuggingFace.load_tokenizer(name)
+minilm     = HuggingFace.load_model(name)
+bench_text = "Julia and Python run the same sentence encoder."
 
-t_jl   = @benchmark model(input)  # benchmark
-println("Julia  median: ", median(t_jl).time ÷ 1_000_000, " ms")  # report latency
+sample = encode(textenc, [bench_text])  # real token ids from the same WordPiece vocabulary as Python
+emb_jl = vec(mean(minilm(sample).hidden_state, dims = 2))  # mean pooling; one sentence, so no padding
+writedlm("hfm_emb_julia.txt", emb_jl)  # read by the Python side for the output comparison
 
-# ── Python side (run in terminal) ─────────────────────────────
-# pip install optimum[onnxruntime] transformers sentence-transformers
+t_jl = @benchmark minilm($sample)  # BenchmarkTools warms up before sampling
+println("Tokens:       ", size(sample.token, 2))
+println("Julia median: ", round(median(t_jl).time / 1e6, digits = 2), " ms over ", length(t_jl.times), " runs")
+
+# Python side: run in a terminal from the same folder, after the Julia side
+# pip install "optimum[onnxruntime]" transformers numpy
 # python3 - <<EOF
+# import timeit, numpy as np
 # from optimum.onnxruntime import ORTModelForFeatureExtraction
 # from transformers import AutoTokenizer
-# import time, numpy as np
-# model = ORTModelForFeatureExtraction.from_pretrained(
-#     "sentence-transformers/all-MiniLM-L6-v2", export=True)
-# tkr   = AutoTokenizer.from_pretrained(
-#     "sentence-transformers/all-MiniLM-L6-v2")
-# enc   = tkr("benchmark text", return_tensors="pt")
-# t0    = time.perf_counter()
-# out   = model(**enc)
-# print(f"Python median: {(time.perf_counter()-t0)*1000:.1f} ms")
-# print(f"Embedding shape: {out.last_hidden_state.shape}")
+# name  = "sentence-transformers/all-MiniLM-L6-v2"
+# model = ORTModelForFeatureExtraction.from_pretrained(name, export=True)
+# tkr   = AutoTokenizer.from_pretrained(name)
+# enc   = tkr("Julia and Python run the same sentence encoder.", return_tensors="np")
+# run   = lambda: model(**enc)
+# run()  # warm-up
+# times = timeit.repeat(run, number=1, repeat=100)
+# emb   = np.asarray(run().last_hidden_state)[0].mean(axis=0)
+# emb_jl = np.loadtxt("hfm_emb_julia.txt")
+# ntok  = enc["input_ids"].shape[1]
+# print(f"Tokens:        {ntok}")
+# print(f"Python median: {1000 * np.median(times):.2f} ms over {len(times)} runs")
+# print(f"Max abs diff:  {np.abs(emb - emb_jl).max():.2e}")
+# print(f"Cosine:        {emb @ emb_jl / (np.linalg.norm(emb) * np.linalg.norm(emb_jl)):.6f}")
 # EOF
-"""
+'''
 
 [[actionGroups]]
 id = "interpret"
@@ -804,15 +901,18 @@ label = "Interpret"
 [[actionGroups.actions]]
 id = "attention-weights"
 label = "Attention Weights"
-desc = "Visualise last-layer attention for a single input"
-code = """
-using Transformers, Transformers.HuggingFace, Plots
+desc = "Visualise last-layer attention of BERT, head 1, for a single input"
+code = '''
+using Transformers, Transformers.TextEncoders, Transformers.HuggingFace, Plots
 
-tkr   = HuggingFace.load_tokenizer("bert-base-uncased")  # load tokenizer
-model = HuggingFace.load_model(HuggingFace.BertModel, "bert-base-uncased")  # load BERT
+textenc = HuggingFace.load_tokenizer("bert-base-uncased")
+cfg     = HuggingFace.HGFConfig(HuggingFace.load_config("bert-base-uncased"); output_attentions = true)
+bert_a  = HuggingFace.load_model("bert-base-uncased", :model; config = cfg)  # attention scores returned per layer
 
-enc   = tkr("Transformers changed NLP")  # tokenise text
-out   = model(enc.token, enc.segment, enc.attention_mask; output_attentions=true)  # forward with attention
-attn  = out.attentions[end][:, :, 1, 1]  # last-layer attention, head 1
-heatmap(attn, title="Attention")  # plot attention heatmap
-"""
+sample = encode(textenc, ["Transformers changed NLP"])
+out    = bert_a(sample)
+attn   = out.outputs[end].attention_score[:, :, 1, 1]  # last layer, head 1, sentence 1; rows are keys, columns are queries
+tokens = vec(decode(textenc, sample.token))
+heatmap(transpose(attn), xticks = (1:length(tokens), tokens), yticks = (1:length(tokens), tokens), xrotation = 45, yflip = true,
+        xlabel = "Key", ylabel = "Query", title = "Attention")
+'''

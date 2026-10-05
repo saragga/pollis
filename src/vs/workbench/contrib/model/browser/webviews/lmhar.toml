@@ -13,7 +13,7 @@ name = "HARE.jl"
 github = "https://github.com/Trumpingtons/HARE.jl"
 
 [requires]
-packages = ["HARE.jl"]
+packages = ["HARE.jl", "GLM.jl", "HypothesisTests.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""
@@ -82,16 +82,16 @@ label = "Joint"
 
 [[bullets]]
 text = "Sequential"
-detail = "alternates between AR(1) correction (Prais-Winsten) and heteroskedasticity correction (Harvey FGLS); two-step or iterated (HARE.jl)"
+detail = "corrects for AR(1) first (Prais-Winsten) and then for heteroskedasticity (Harvey FGLS on the transformed residuals); two-step or iterated (HARE.jl)"
 
 [[bullets]]
 text = "Joint"
-detail = "simultaneously estimates beta, rho, and variance parameters alpha via MLE; accepts optional separate variance regressors Z (HARE.jl)"
+detail = "estimates rho and the log-variance parameters gamma jointly by maximum likelihood with beta concentrated out, then beta by GLS; two-step or iterated (HARE.jl)"
 
 [[inputs]]
 id = "X"
 label = "Covariate matrix (X)"
-tooltip = "Design matrix of mean-equation regressors (T × k). Include a column of ones for the intercept if needed."
+tooltip = "Design matrix of mean-equation regressors (T × k), without a column of ones: HARE.jl adds the intercept."
 default = "X"
 
 [[inputs]]
@@ -127,12 +127,11 @@ model = "sequential"
 code = '''
 using HARE
 
-result = {{method}}_sequential({{X}}, {{y}})  # sequential two-step: AR(1) correction then heteroskedasticity correction
+result = {{method}}_sequential({{X}}, {{y}}, Z={{Z}})  # sequential FGLS: AR(1) correction first, then the heteroskedasticity correction
 
-println(coeftable(result))  # coefficient table with corrected standard errors
-println(coef(result))  # point estimates of beta
+display(coeftable(result))  # coefficient table with corrected standard errors
 println(result.rho)  # estimated AR(1) coefficient rho
-println(result.alpha)  # estimated variance parameters alpha
+println(result.gamma)  # log-variance parameters gamma: log(sigma_t^2) = gamma_0 + z_t' gamma
 '''
 
 [[codeBranches]]
@@ -140,12 +139,11 @@ model = "joint"
 code = '''
 using HARE
 
-result = {{method}}_joint({{X}}, {{y}}, Z={{Z}})  # joint two-step: simultaneous MLE for beta, rho, and variance params
+result = {{method}}_joint({{X}}, {{y}}, Z={{Z}})  # joint: rho and gamma by maximum likelihood with beta concentrated out, then GLS for beta (Iterated alternates the two until convergence)
 
-println(coeftable(result))  # coefficient table with corrected standard errors
-println(coef(result))  # point estimates of beta
+display(coeftable(result))  # coefficient table with corrected standard errors
 println(result.rho)  # estimated AR(1) coefficient rho
-println(result.alpha)  # estimated variance parameters alpha
+println(result.gamma)  # log-variance parameters gamma: log(sigma_t^2) = gamma_0 + z_t' gamma
 '''
 
 [[actionGroups]]
@@ -196,17 +194,17 @@ label = "Interpret"
 
 [[actionGroups.actions]]
 id = "rho-alpha"
-label = "Estimated rho and alpha"
-desc = "Extract the estimated AR(1) coefficient rho and variance parameters alpha from the result"
+label = "Estimated rho and gamma"
+desc = "Extract the estimated AR(1) coefficient rho and the log-variance parameters gamma from the result"
 code = '''
 using HARE
 
-{{?model=sequential}} result = {{method}}_sequential({{X}}, {{y}})
+{{?model=sequential}} result = {{method}}_sequential({{X}}, {{y}}, Z={{Z}})
 {{?model=joint}} result = {{method}}_joint({{X}}, {{y}}, Z={{Z}})
 
 println("rho = ", result.rho)  # AR(1) coefficient
-println("alpha = ", result.alpha)  # variance parameters
-println("sigma2 = ", result.sigma2)  # baseline error variance
+println("gamma = ", result.gamma)  # log-variance parameters, intercept first
+println("baseline variance = ", exp(result.gamma[1]))  # sigma_t^2 when every variance regressor is zero
 '''
 
 [[actionGroups.actions]]
@@ -217,23 +215,28 @@ code = '''
 using HARE, GLM
 
 ols_fit  = lm(hcat(ones(length({{y}})), {{X}}), {{y}})  # OLS baseline with the intercept HARE adds
-{{?model=sequential}} fgls_fit = {{method}}_sequential({{X}}, {{y}})  # FGLS corrected
+{{?model=sequential}} fgls_fit = {{method}}_sequential({{X}}, {{y}}, Z={{Z}})  # FGLS corrected
 {{?model=joint}} fgls_fit = {{method}}_joint({{X}}, {{y}}, Z={{Z}})  # FGLS corrected
 
-println("OLS:  ", coeftable(ols_fit))  # OLS coefficients
-println("FGLS: ", coeftable(fgls_fit))  # corrected coefficients
+println("OLS:")
+display(coeftable(ols_fit))  # OLS coefficients
+println("FGLS:")
+display(coeftable(fgls_fit))  # corrected coefficients
 '''
 
 [[actionGroups.actions]]
 id = "predict"
 label = "Predictions"
-desc = "Generate in-sample fitted values and out-of-sample predictions from the FGLS model"
+desc = "In-sample fitted values and a one-step forecast that adds rho times the last regression error"
 code = '''
 using HARE
 
-{{?model=sequential}} result = {{method}}_sequential({{X}}, {{y}})
+{{?model=sequential}} result = {{method}}_sequential({{X}}, {{y}}, Z={{Z}})
 {{?model=joint}} result = {{method}}_joint({{X}}, {{y}}, Z={{Z}})
 
-y_hat = fitted(result)  # in-sample fitted values
-y_new = predict(result, X_new)  # out-of-sample predictions
+y_hat = fitted(result)  # in-sample fitted values x_t' beta
+X_new = {{X}}[end:end, :]  # regressors for the next period: replace with the known x_(T+1)
+mean_part = predict(result, hcat(ones(size(X_new, 1)), X_new))  # x' beta; coef includes the intercept
+y_next = mean_part[1] + result.rho * residuals(result)[end]  # one-step forecast adds rho times the last regression error
+println("x' beta = ", round(mean_part[1], digits=4), ", one-step forecast = ", round(y_next, digits=4))
 '''

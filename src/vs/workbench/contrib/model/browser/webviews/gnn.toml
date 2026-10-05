@@ -354,11 +354,26 @@ conv(n_in, n_out) = GCNConv(n_in => n_out, relu)  # symmetric-normalised neighbo
 {{?graph-type=hetero}}     Dense(hidden_channels => out_channels),
 {{?graph-type=hetero}} )
 
-loss(model, g, x, y) = Flux.mse(forward(model, g, x), y)  # node-level MSE
+# Transductive split: every node takes part in message passing, but only the training labels
+# enter the loss; the validation nodes pick the epoch and the test nodes are scored once
+using Random
+n_nodes = size({{yvar}}, 2)
+perm = randperm(Xoshiro(1), n_nodes)
+n_train, n_val = round(Int, 0.6 * n_nodes), round(Int, 0.2 * n_nodes)
+train_idx, val_idx, test_idx = perm[1:n_train], perm[n_train+1:n_train+n_val], perm[n_train+n_val+1:end]
+
+loss(model, g, x, y; idx=train_idx) = Flux.mse(forward(model, g, x)[:, idx], y[:, idx])  # node-level MSE on the chosen nodes
 opt_state = Flux.setup(Adam(1f-3), model)
+best_val, best_model = Inf, deepcopy(model)
 for epoch in 1:200
-    Flux.train!(loss, model, [({{gvar}}, {{xvar}}, {{yvar}})], opt_state)  # full-batch training on the whole graph
+    Flux.train!(loss, model, [({{gvar}}, {{xvar}}, {{yvar}})], opt_state)  # full batch: the whole graph is propagated, the loss sees the training nodes only
+    v = loss(model, {{gvar}}, {{xvar}}, {{yvar}}; idx=val_idx)
+    if v < best_val  # keep the epoch with the lowest validation MSE
+        global best_val, best_model = v, deepcopy(model)
+    end
 end
+model = best_model
+(train = loss(model, {{gvar}}, {{xvar}}, {{yvar}}), validation = best_val, test = loss(model, {{gvar}}, {{xvar}}, {{yvar}}; idx=test_idx))
 '''
 
 [[codeBranches]]
@@ -401,11 +416,26 @@ conv(n_in, n_out) = GATConv(n_in => div(n_out, num_heads), elu; heads=num_heads,
 {{?graph-type=hetero}}     Dense(hidden_channels => out_channels),
 {{?graph-type=hetero}} )
 
-loss(model, g, x, y) = Flux.mse(forward(model, g, x), y)  # node-level MSE
+# Transductive split: every node takes part in message passing, but only the training labels
+# enter the loss; the validation nodes pick the epoch and the test nodes are scored once
+using Random
+n_nodes = size({{yvar}}, 2)
+perm = randperm(Xoshiro(1), n_nodes)
+n_train, n_val = round(Int, 0.6 * n_nodes), round(Int, 0.2 * n_nodes)
+train_idx, val_idx, test_idx = perm[1:n_train], perm[n_train+1:n_train+n_val], perm[n_train+n_val+1:end]
+
+loss(model, g, x, y; idx=train_idx) = Flux.mse(forward(model, g, x)[:, idx], y[:, idx])  # node-level MSE on the chosen nodes
 opt_state = Flux.setup(Adam(1f-3), model)
+best_val, best_model = Inf, deepcopy(model)
 for epoch in 1:200
-    Flux.train!(loss, model, [({{gvar}}, {{xvar}}, {{yvar}})], opt_state)  # full-batch training on the whole graph
+    Flux.train!(loss, model, [({{gvar}}, {{xvar}}, {{yvar}})], opt_state)  # full batch: the whole graph is propagated, the loss sees the training nodes only
+    v = loss(model, {{gvar}}, {{xvar}}, {{yvar}}; idx=val_idx)
+    if v < best_val  # keep the epoch with the lowest validation MSE
+        global best_val, best_model = v, deepcopy(model)
+    end
 end
+model = best_model
+(train = loss(model, {{gvar}}, {{xvar}}, {{yvar}}), validation = best_val, test = loss(model, {{gvar}}, {{xvar}}, {{yvar}}; idx=test_idx))
 '''
 
 [[codeBranches]]
@@ -447,11 +477,26 @@ conv(n_in, n_out) = SAGEConv(n_in => n_out, relu; aggr={{aggr}})  # W [h_self; A
 {{?graph-type=hetero}}     Dense(hidden_channels => out_channels),
 {{?graph-type=hetero}} )
 
-loss(model, g, x, y) = Flux.mse(forward(model, g, x), y)  # node-level MSE
+# Transductive split: every node takes part in message passing, but only the training labels
+# enter the loss; the validation nodes pick the epoch and the test nodes are scored once
+using Random
+n_nodes = size({{yvar}}, 2)
+perm = randperm(Xoshiro(1), n_nodes)
+n_train, n_val = round(Int, 0.6 * n_nodes), round(Int, 0.2 * n_nodes)
+train_idx, val_idx, test_idx = perm[1:n_train], perm[n_train+1:n_train+n_val], perm[n_train+n_val+1:end]
+
+loss(model, g, x, y; idx=train_idx) = Flux.mse(forward(model, g, x)[:, idx], y[:, idx])  # node-level MSE on the chosen nodes
 opt_state = Flux.setup(Adam(1f-3), model)
+best_val, best_model = Inf, deepcopy(model)
 for epoch in 1:200
-    Flux.train!(loss, model, [({{gvar}}, {{xvar}}, {{yvar}})], opt_state)  # full-batch training on the whole graph
+    Flux.train!(loss, model, [({{gvar}}, {{xvar}}, {{yvar}})], opt_state)  # full batch: the whole graph is propagated, the loss sees the training nodes only
+    v = loss(model, {{gvar}}, {{xvar}}, {{yvar}}; idx=val_idx)
+    if v < best_val  # keep the epoch with the lowest validation MSE
+        global best_val, best_model = v, deepcopy(model)
+    end
 end
+model = best_model
+(train = loss(model, {{gvar}}, {{xvar}}, {{yvar}}), validation = best_val, test = loss(model, {{gvar}}, {{xvar}}, {{yvar}}; idx=test_idx))
 '''
 
 [[codeBranches]]
@@ -469,11 +514,26 @@ model = (evolve = EvolveGCNO(in_channels => hidden_channels), readout = Dense(hi
 embed(model, snapshots, xs) = model.evolve(TemporalSnapshotsGNNGraph(snapshots), xs)[end]  # embeddings after the final snapshot
 forward(model, snapshots, xs) = model.readout(embed(model, snapshots, xs))
 
-loss(model, g, x, y) = Flux.mse(forward(model, g, x), y)  # node-level MSE
+# Transductive split: every node takes part in message passing, but only the training labels
+# enter the loss; the validation nodes pick the epoch and the test nodes are scored once
+using Random
+n_nodes = size({{yvar}}, 2)
+perm = randperm(Xoshiro(1), n_nodes)
+n_train, n_val = round(Int, 0.6 * n_nodes), round(Int, 0.2 * n_nodes)
+train_idx, val_idx, test_idx = perm[1:n_train], perm[n_train+1:n_train+n_val], perm[n_train+n_val+1:end]
+
+loss(model, g, x, y; idx=train_idx) = Flux.mse(forward(model, g, x)[:, idx], y[:, idx])  # node-level MSE on the chosen nodes
 opt_state = Flux.setup(Adam(1f-3), model)
+best_val, best_model = Inf, deepcopy(model)
 for epoch in 1:200
     Flux.train!(loss, model, [({{gvar}}, {{xvar}}, {{yvar}})], opt_state)  # {{gvar}}: vector of snapshots, {{xvar}}: one feature matrix per snapshot
+    v = loss(model, {{gvar}}, {{xvar}}, {{yvar}}; idx=val_idx)
+    if v < best_val  # keep the epoch with the lowest validation MSE
+        global best_val, best_model = v, deepcopy(model)
+    end
 end
+model = best_model
+(train = loss(model, {{gvar}}, {{xvar}}, {{yvar}}), validation = best_val, test = loss(model, {{gvar}}, {{xvar}}, {{yvar}}; idx=test_idx))
 '''
 
 [[actionGroups]]
@@ -483,13 +543,14 @@ label = "Visualise"
 [[actionGroups.actions]]
 id = "fit-plot"
 label = "Predictions vs Targets"
-desc = "Scatter every node's prediction against its target; points should hug the diagonal"
+desc = "Scatter each held-out test node's prediction against its target; points should hug the diagonal"
 code = '''
 using Plots
 
-y_hat = forward(model, {{gvar}}, {{xvar}})
-scatter(vec({{yvar}}), vec(y_hat), xlabel="target", ylabel="prediction", alpha=0.5, legend=false)
-plot!(identity, extrema(vec({{yvar}}))..., linestyle=:dash)
+y_hat = forward(model, {{gvar}}, {{xvar}})[:, test_idx]
+y_test = {{yvar}}[:, test_idx]
+scatter(vec(y_test), vec(y_hat), xlabel="target", ylabel="prediction", title="test nodes", alpha=0.5, legend=false)
+plot!(identity, extrema(vec(y_test))..., linestyle=:dash)
 '''
 
 [[actionGroups.actions]]
@@ -511,16 +572,19 @@ label = "Diagnose"
 [[actionGroups.actions]]
 id = "training-curve"
 label = "Training Curve"
-desc = "Keep training while recording the MSE after every epoch, then plot it"
+desc = "Train a copy of the network further, recording the training and validation MSE after every epoch; a rising validation curve means over-fitting"
 code = '''
 using Plots
 
-history = Float32[]
+m = deepcopy(model)  # leave the selected model untouched
+m_state = Flux.setup(Adam(1f-3), m)
+train_hist, val_hist = Float32[], Float32[]
 for epoch in 1:200
-    Flux.train!(loss, model, [({{gvar}}, {{xvar}}, {{yvar}})], opt_state)
-    push!(history, loss(model, {{gvar}}, {{xvar}}, {{yvar}}))
+    Flux.train!(loss, m, [({{gvar}}, {{xvar}}, {{yvar}})], m_state)
+    push!(train_hist, loss(m, {{gvar}}, {{xvar}}, {{yvar}}))
+    push!(val_hist, loss(m, {{gvar}}, {{xvar}}, {{yvar}}; idx=val_idx))
 end
-plot(history, xlabel="epoch", ylabel="MSE", yscale=:log10, legend=false)
+plot([train_hist val_hist], label=["train" "validation"], xlabel="epoch", ylabel="MSE", yscale=:log10)
 '''
 
 [[actionGroups.actions]]
@@ -554,16 +618,22 @@ label = "Compare"
 [[actionGroups.actions]]
 id = "mlp-baseline"
 label = "vs Graph-Free MLP"
-desc = "Train an MLP on the node features alone: the gap shows how much the graph structure adds"
+desc = "Train an MLP on the node features alone, on the same training nodes and with the same validation epoch choice: the test-MSE gap shows how much the graph structure adds"
 code = '''
 {{?model!=temporal}} Xn = {{xvar}}
 {{?model=temporal}} Xn = {{xvar}}[end]  # features of the final snapshot
+mlp_loss(m, idx) = Flux.mse(m(Xn[:, idx]), {{yvar}}[:, idx])
 mlp = Chain(Dense(size(Xn, 1) => hidden_channels, relu), Dense(hidden_channels => out_channels))
 mlp_state = Flux.setup(Adam(1f-3), mlp)
+best_mlp_val, best_mlp = Inf, deepcopy(mlp)
 for epoch in 1:200
-    Flux.train!((m, x, y) -> Flux.mse(m(x), y), mlp, [(Xn, {{yvar}})], mlp_state)
+    Flux.train!((m, x, y) -> Flux.mse(m(x), y), mlp, [(Xn[:, train_idx], {{yvar}}[:, train_idx])], mlp_state)
+    v = mlp_loss(mlp, val_idx)
+    if v < best_mlp_val
+        global best_mlp_val, best_mlp = v, deepcopy(mlp)
+    end
 end
-(gnn = loss(model, {{gvar}}, {{xvar}}, {{yvar}}), mlp = Flux.mse(mlp(Xn), {{yvar}}))
+(gnn_test = loss(model, {{gvar}}, {{xvar}}, {{yvar}}; idx=test_idx), mlp_test = mlp_loss(best_mlp, test_idx))  # out-of-sample comparison
 '''
 
 [[actionGroups]]

@@ -423,12 +423,12 @@ end
 [[actionGroups.actions]]
 id = "alternative-controller"
 label = "Alternative Controller"
-desc = "Linear MPC against the unconstrained analytic ExplicitMPC; nonlinear MPC against a linear MPC built on the model linearised at the operating point"
+desc = "Linear MPC against the unconstrained analytic ExplicitMPC; nonlinear MPC against a linear MPC built on the model linearised at x = 0, u = 0 (the start state; far from the setpoint this linear model can be poor)"
 code = '''
 using Plots
 
 {{?model=linmpc}} alt = ExplicitMPC(model; Hp, Hc, Mwt={{Mwt}}, Nwt={{Nwt}}); altname = "ExplicitMPC (no constraints)"
-{{?model=nonlinmpc}} alt = LinMPC(linearize(model); Hp, Hc, Mwt={{Mwt}}, Nwt={{Nwt}}); setconstraint!(alt; umin={{umin}}, umax={{umax}}); altname = "LinMPC on linearised model"
+{{?model=nonlinmpc}} alt = LinMPC(linearize(model); Hp, Hc, Mwt={{Mwt}}, Nwt={{Nwt}}); setconstraint!(alt; umin={{umin}}, umax={{umax}}); altname = "LinMPC on linearised model"  # linearize defaults to x = 0, u = 0; pass x=..., u=... for a setpoint equilibrium
 ra = sim!(alt, {{Nsim}}, ry; plant=deepcopy(model))
 p = plot(res.T_data, res.Y_data', label="MPC", xlabel="time", ylabel="output")
 plot!(p, ra.T_data, ra.Y_data', label=altname)

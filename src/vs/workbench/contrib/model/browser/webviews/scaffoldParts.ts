@@ -82,7 +82,13 @@ function buildCodeBranchesJs(data: IScaffoldPanelData): string {
 
 function buildActionsJs(data: IScaffoldPanelData): string {
 	return (data.actionGroups ?? []).map(g => {
-		const actions = g.actions.map(a => `\t\t\t{ id: '${jsEscape(a.id)}', label: '${jsEscape(a.label)}', desc: '${jsEscape(a.desc)}', code: function() { return ${codeLinesJs(a.code)}; } }`).join(',\n');
+		const actions = g.actions.map(a => {
+			const models = a.models?.length ? `, models: [${a.models.map(m => `'${jsEscape(m)}'`).join(', ')}]` : '';
+			const when = a.when ? `, when: '${jsEscape(a.when)}'` : '';
+			// Code that depends on the tab is not offered in a tab the user added
+			const perModel = /\{\{\??!?model\b/.test(a.code) ? ', perModel: true' : '';
+			return `\t\t\t{ id: '${jsEscape(a.id)}', label: '${jsEscape(a.label)}', desc: '${jsEscape(a.desc)}'${models}${when}${perModel}, code: function() { return ${codeLinesJs(a.code)}; } }`;
+		}).join(',\n');
 		return `\t\tvar ${actionsVar(g.id)} = [\n${actions}\n\t\t];`;
 	}).join('\n');
 }
@@ -120,13 +126,27 @@ function buildInputHtml(input: IModelInput): string {
 
 function buildInputsHtml(data: IScaffoldPanelData): string {
 	const rows: IModelInput[][] = [];
-	for (const input of data.inputs ?? []) {
+	for (const input of (data.inputs ?? []).filter(i => i.kind !== 'tabs')) {
 		if (!rows.length || input.newRow) {
 			rows.push([]);
 		}
 		rows[rows.length - 1].push(input);
 	}
 	return rows.map(r => `\t\t<div class="form-row">\n${r.map(buildInputHtml).join('\n')}\n\t\t</div>`).join('\n');
+}
+
+/** The `tabs` inputs: a hidden select (read like any other) driven by a row of tabs above the code box. */
+function buildSubtabsHtml(data: IScaffoldPanelData): string {
+	return (data.inputs ?? []).filter(i => i.kind === 'tabs').map(input => {
+		const options = (input.options ?? []).map(o => `\t\t\t\t<option value="${htmlEsc(o.value)}"${modelsAttr(o.models, o.when)}${o.value === input.default ? ' selected' : ''}>${htmlEsc(o.label)}</option>`).join('\n');
+		const buttons = (input.options ?? []).map(o => `\t\t\t\t<button class="subtab-btn" data-value="${htmlEsc(o.value)}">${htmlEsc(o.label)}</button>`).join('\n');
+		return `\t\t<div class="scaffold-input scaffold-subtabs"${modelsAttr(input.models, input.when)} aria-label="${htmlEsc(input.label)}">
+			<select id="in-${input.id}" hidden>
+${options}
+			</select>
+${buttons}
+		</div>`;
+	}).join('\n');
 }
 
 /**
@@ -145,6 +165,7 @@ export function buildScaffoldHtml(panelId: string, data: IScaffoldPanelData, opt
 		codeBranchesJs: buildCodeBranchesJs(data),
 		actionsJs: buildActionsJs(data),
 		inputsHtml: buildInputsHtml(data),
+		subtabsHtml: buildSubtabsHtml(data),
 		...buildNextSteps(panelId, data),
 		omitIllustration: !data.miniCharts?.length && !options.illustrationOverrideJs,
 		...options,

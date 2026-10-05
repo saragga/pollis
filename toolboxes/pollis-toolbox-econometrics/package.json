@@ -1,0 +1,38 @@
+{
+  "name": "pollis-toolbox-econometrics",
+  "displayName": "Econometrics Toolbox",
+  "description": "The Pollis Econometrics Toolbox: ARIMAX models, VAR/VECM systems, GARCH-type and regime switching models, time-series forecasting, and Bayesian asset-pricing factor models.",
+  "version": "1.0.1",
+  "publisher": "pollis",
+  "license": "AGPL-3.0-or-later",
+  "icon": "icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/saragga/pollis"
+  },
+  "engines": {
+    "vscode": "*"
+  },
+  "categories": ["Other"],
+  "contributes": {
+    "pollisToolboxes": [
+      {
+        "id": "econometrics",
+        "title": "Econometrics Toolbox",
+        "group": "2_toolboxes",
+        "order": 2,
+        "panels": [
+          { "id": "arima", "command": "chiara.statistics.arma.arima", "title": "ARIMA Models", "menuTitle": "ARIMAX Models", "group": "1_et", "order": 1, "data": "panels/arima.toml", "defaultModel": "arima", "decisionFirstColumn": "Model" },
+          { "id": "var", "command": "chiara.statistics.arma.varModels", "title": "VAR Models", "menuTitle": "VAR/VECM Systems", "group": "1_et", "order": 2, "data": "panels/var.toml", "defaultModel": "var", "decisionFirstColumn": "Model" },
+          { "id": "vcm", "command": "chiara.statistics.vcm", "title": "GARCH-Type Models", "group": "1_et", "order": 3, "data": "panels/vcm.toml", "defaultModel": "garch", "decisionFirstColumn": "Model" },
+          { "id": "rsm", "command": "chiara.statistics.rsm", "title": "Regime Switching Models", "group": "1_et", "order": 4, "data": "panels/rsm.toml", "defaultModel": "msm", "decisionFirstColumn": "Model" },
+          { "id": "atsf", "command": "chiara.statistics.atsf", "title": "Advanced Time-Series Forecasting", "group": "2_et", "order": 1, "data": "panels/atsf.toml", "defaultModel": "bats", "decisionFirstColumn": "Model" },
+          { "id": "nntsf", "command": "chiara.statistics.nntsf", "title": "Neural Network Time-Series Forecasting", "group": "2_et", "order": 2, "data": "panels/nntsf.toml", "defaultModel": "lstnet", "decisionFirstColumn": "Model" },
+          { "id": "autotsf", "command": "chiara.statistics.autotsf", "title": "Automatic Time-Series Forecasting", "group": "2_et", "order": 3, "data": "panels/autotsf.toml", "defaultModel": "arima", "decisionFirstColumn": "Model" },
+          { "id": "blsdf", "command": "chiara.statistics.eco.blsdf", "title": "Bayesian Linear Stochastic Discount Factor", "group": "3_et", "order": 1, "data": "panels/blsdf.toml", "defaultModel": "sdf", "decisionFirstColumn": "Model" },
+          { "id": "bfmb", "command": "chiara.statistics.eco.bfmb", "title": "Fama-MacBeth Regression", "group": "3_et", "order": 2, "data": "panels/bfmb.toml", "defaultModel": "bayesian", "decisionFirstColumn": "Approach" }
+        ]
+      }
+    ]
+  }
+}

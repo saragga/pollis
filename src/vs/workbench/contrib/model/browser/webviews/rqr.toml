@@ -13,7 +13,7 @@ name = "RobustModels.jl"
 github = "https://github.com/getzze/RobustModels.jl"
 
 [requires]
-packages = ["RobustModels.jl"]
+packages = ["RobustModels.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""
@@ -188,7 +188,7 @@ model = "robust"
 code = '''
 using RobustModels
 {{?penalty=none}} model = rlm(@formula({{formula}}), {{data}}, {{estimator}})  # fit robust model
-{{?penalty=l2}} model = rlm(@formula({{formula}}), {{data}}, {{estimator}}; Symbol("ridge", Char(0x3bb)) => {{lambda}})  # robust ridge; the keyword name ends in the Greek letter lambda
+{{?penalty=l2}} model = rlm(@formula({{formula}}), {{data}}, {{estimator}}; ridgeλ = {{lambda}})  # robust ridge
 println(coef(model))
 println(stderror(model))
 '''
@@ -239,15 +239,19 @@ label = "Diagnose"
 [[actionGroups.actions]]
 id = "weights"
 label = "Outlier and Weight Check"
-desc = "Robust: the final IRLS weight of each observation (low weight = treated as an outlier). Quantile: the share of residuals below zero, which should match tau"
+desc = "Robust: the final IRLS weight of each observation (low weight = treated as an outlier). Quantile: refits on a random 70% of rows and checks that the share of held-out observations below the fitted quantile is close to tau (in sample it matches tau by construction)"
 code = '''
-using RobustModels, Plots, Statistics
+using RobustModels, Plots, Statistics, Random
 {{?model=robust}} w = workingweights(model)
 {{?model=robust}} println(count(<(0.5), w), " of ", length(w), " observations have weight below 0.5 (downweighted as outliers)")
 {{?model=robust}} scatter(w, ms=2, msw=0, label=false, xlabel="Observation", ylabel="Weight", ylims=(0, 1.05), title="Robust weights")
-{{?model=quantile}} r = residuals(model)
-{{?model=quantile}} println("Share below the fitted quantile: ", round(mean(r .< 0), digits=3), "  (target tau = {{tau}})")
-{{?model=quantile}} histogram(r, bins=40, label=false, xlabel="Residual", title="Residual distribution")
+{{?model=quantile}} X, y = modelmatrix(model), response(model); n = length(y)
+{{?model=quantile}} idx = randperm(MersenneTwister(1), n); tr, te = idx[1:round(Int, 0.7n)], idx[round(Int, 0.7n)+1:end]  # random 70/30 split
+{{?model=quantile}} mtr = quantreg(X[tr, :], y[tr]; quantile={{tau}})  # refit on the training rows only
+{{?model=quantile}} r = y[te] .- X[te, :] * coef(mtr)  # held-out residuals
+{{?model=quantile}} println("Held-out share below the fitted quantile: ", round(mean(r .< 0), digits=3), "  (target tau = {{tau}}, ", length(te), " held-out rows)")
+{{?model=quantile}} histogram(r, bins=40, label=false, xlabel="Held-out residual", title="Held-out residual distribution")
+{{?model=quantile}} vline!([0], c=:red, ls=:dash, label=false)
 '''
 
 [[actionGroups.actions]]
@@ -281,14 +285,16 @@ plot!(identity, extrema(vcat(y, f))..., c=:red, ls=:dash, label=false)
 [[actionGroups.actions]]
 id = "interval"
 label = "90% Prediction Band"
-desc = "Fits the 5% and 95% conditional quantiles to form a distribution-free 90% prediction band, and reports its in-sample coverage"
+desc = "Fits the 5% and 95% conditional quantiles on a random 70% of rows to form a distribution-free 90% prediction band, and reports its coverage on the 30% held out (in-sample coverage is 90% by construction)"
 code = '''
-using RobustModels, Plots, Statistics
-lo = fitted(quantreg(@formula({{formula}}), {{data}}; quantile=0.05))
-hi = fitted(quantreg(@formula({{formula}}), {{data}}; quantile=0.95))
-y, f = response(model), fitted(model); o = sortperm(f)
-println("In-sample coverage: ", round(mean(lo .<= y .<= hi), digits=3), "  (target 0.90)")
-scatter(f, y, ms=2, msw=0, alpha=0.5, label="observed", xlabel="Fitted", ylabel="Response", title="90% quantile prediction band")
+using RobustModels, Plots, Statistics, Random
+X, y = modelmatrix(model), response(model); n = length(y)
+idx = randperm(MersenneTwister(1), n); tr, te = idx[1:round(Int, 0.7n)], idx[round(Int, 0.7n)+1:end]  # random 70/30 split
+lo = predict(quantreg(X[tr, :], y[tr]; quantile=0.05), X[te, :])  # band fitted on training rows
+hi = predict(quantreg(X[tr, :], y[tr]; quantile=0.95), X[te, :])
+yt, f = y[te], X[te, :] * coef(model); o = sortperm(f)
+println("Held-out coverage: ", round(mean(lo .<= yt .<= hi), digits=3), "  (target 0.90, ", length(te), " held-out rows)")
+scatter(f, yt, ms=2, msw=0, alpha=0.5, label="held-out observed", xlabel="Fitted", ylabel="Response", title="90% quantile prediction band (held out)")
 plot!(f[o], [lo[o] hi[o]], c=:red, lw=1.5, label=["5%" "95%"])
 '''
 
@@ -326,11 +332,16 @@ label = "Interpret"
 [[actionGroups.actions]]
 id = "coefficients"
 label = "Coefficients With 95% CI"
-desc = "Estimates with Wald 95% intervals: robust slopes read like OLS slopes; a quantile slope is the change in the tau-th conditional quantile per unit increase"
+desc = "Robust: Wald 95% intervals from the asymptotic M-estimator standard errors (homoskedastic errors assumed); slopes read like OLS slopes. Quantile: 95% percentile intervals from a 200-draw pairs bootstrap, which unlike the package standard errors (iid kernel sparsity estimate) stays valid under heteroskedasticity; a quantile slope is the change in the tau-th conditional quantile per unit increase"
 code = '''
-using RobustModels
-b, se = coef(model), stderror(model)
-foreach((n, a, s) -> println(rpad(n, 20), round(a, digits=4), "   95% CI [", round(a - 1.96s, digits=4), ", ", round(a + 1.96s, digits=4), "]"), coefnames(model), b, se)
+using RobustModels, Statistics, Random
+b = coef(model)
+{{?model=robust}} se = stderror(model)
+{{?model=robust}} lo, hi = b .- 1.96 .* se, b .+ 1.96 .* se  # Wald intervals
+{{?model=quantile}} X, y = modelmatrix(model), response(model); n = length(y); rng = MersenneTwister(1)
+{{?model=quantile}} B = reduce(hcat, [begin i = rand(rng, 1:n, n); coef(quantreg(X[i, :], y[i]; quantile={{tau}})) end for _ in 1:200])  # pairs bootstrap: resample rows, refit
+{{?model=quantile}} lo, hi = [quantile(r, 0.025) for r in eachrow(B)], [quantile(r, 0.975) for r in eachrow(B)]  # percentile intervals
+foreach((n, a, l, h) -> println(rpad(n, 20), round(a, digits=4), "   95% CI [", round(l, digits=4), ", ", round(h, digits=4), "]"), coefnames(model), b, lo, hi)
 '''
 
 [[actionGroups.actions]]

@@ -1,3 +1,0 @@
-# STOGO
-
-Coming soon!

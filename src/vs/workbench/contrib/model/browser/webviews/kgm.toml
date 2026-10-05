@@ -2,8 +2,9 @@
 # Declarative source. The build script generates kgm.data.ts.
 # Run: npm run gulp compile-toml
 #
-# Approach: model weights are downloaded from Kaggle Models and run in Julia with
-# ONNX.jl (exported models) or Flux.jl. The Explore pane queries the Kaggle Models API
+# Approach: the examples run small public ONNX exports (Hugging Face, ONNX model zoo) in
+# Julia with ONNXRunTime.jl, as for an ONNX export downloaded from Kaggle Models; tokenizers
+# come from HuggingFaceTokenizers.jl. The Explore pane queries the Kaggle Models API
 # live. The Kaggle API key is stored in Secret Storage and only injected into the REPL
 # session, never written to a file.
 
@@ -213,16 +214,16 @@ value = "timm"
 label = "Ultralytics"
 value = "ultralytics"
 [[packages]]
-name = "Flux.jl"
-github = "https://github.com/FluxML/Flux.jl"
+name = "ONNXRunTime.jl"
+github = "https://github.com/jw3126/ONNXRunTime.jl"
 
 [[packages]]
-name = "ONNX.jl"
-github = "https://github.com/FluxML/ONNX.jl"
+name = "HuggingFaceTokenizers.jl"
+github = "https://github.com/MurrellGroup/HuggingFaceTokenizers.jl"
 
 # Further packages the examples use: checked by the install indicator, not listed on the Powered-by line
 [requires]
-packages = ["BenchmarkTools.jl", "CSV.jl", "Images.jl", "Plots.jl", "Tables.jl", "WAV.jl"]
+packages = ["BenchmarkTools.jl", "DSP.jl", "FFTW.jl", "Images.jl", "Plots.jl", "WAV.jl"]
 
 [[notebookSections]]
 label = "Getting Started"
@@ -298,10 +299,10 @@ bundled = true
 description = "Neural network library: layers, training, GPU support"
 
 [[wikis]]
-name = "ONNX.jl"
-file = "kgm/onnx-jl.md"
+name = "ONNXRunTime.jl"
+file = "kgm/onnxruntime-jl.md"
 bundled = true
-description = "Load ONNX model files exported from PyTorch or TensorFlow"
+description = "Run ONNX models exported from PyTorch or TensorFlow with ONNX Runtime"
 
 [[references]]
 separator = true
@@ -358,14 +359,6 @@ label = "Vision"
 [[models]]
 id = "audio"
 label = "Audio"
-
-[[models]]
-id = "tabular"
-label = "Tabular"
-
-[[models]]
-id = "rl"
-label = "RL"
 
 [[bullets]]
 text = "Multimodal"
@@ -449,104 +442,189 @@ s += '<text x="27" y="52" text-anchor="middle" font-size="7" fill="currentColor"
 return s;
 '''
 
-[miniCharts.tabular]
-svg = '''
-var s = '<rect x="4" y="8" width="46" height="68" rx="2" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.4"/>';
-s += '<text x="27" y="52" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Tabular</text>';
-return s;
-'''
-
-[miniCharts.rl]
-svg = '''
-var s = '<rect x="4" y="8" width="46" height="68" rx="2" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.4"/>';
-s += '<text x="27" y="52" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">RL</text>';
-return s;
-'''
-
 [[codeBranches]]
 model = "multimodal"
 code = """
-using ONNX, Images
+import ONNXRunTime as ORT
+using HuggingFaceTokenizers, Images
 
-model = ONNX.load("clip-vit-base.onnx")  # load CLIP model from Kaggle weights
+getfile(url, file) = isfile(file) ? file : download(url, file)  # download once, then reuse
+softmax(v) = (e = exp.(v .- maximum(v)); e ./ sum(e))
 
-img   = load("photo.jpg")  # load image
-img_t = preprocess(img)  # resize to 224x224, normalise
-txt_t = tokenize("a cat on a mat")  # tokenise text query
-out   = model(img_t, txt_t)  # joint vision–language forward pass
-sim   = out["logits_per_image"]  # image–text similarity logits
+# zero-shot image classification with CLIP: the image is scored against each text label
+repo  = "Xenova/clip-vit-base-patch32"  # ONNX export of openai/clip-vit-base-patch32
+model = ORT.load_inference(getfile("https://huggingface.co/$repo/resolve/main/onnx/model.onnx", "clip-vit-base-patch32.onnx"))
+tok   = from_pretrained(Tokenizer, repo)  # the CLIP BPE tokenizer
+
+function clip_pixels(file)  # image -> (1, 3, 224, 224) Float32, the ONNX (batch, C, H, W) layout
+    img  = RGB.(load(file))
+    h, w = size(img)
+    s    = 224 / min(h, w)  # shortest edge to 224 (CLIP resizes bicubic, imresize is bilinear)
+    img  = imresize(img, (max(224, round(Int, s * h)), max(224, round(Int, s * w))))
+    i, j = div(size(img, 1) - 224, 2), div(size(img, 2) - 224, 2)  # centre crop
+    x    = Float32.(channelview(img[i+1:i+224, j+1:j+224]))  # (C, H, W) in [0, 1]
+    x    = (x .- Float32[0.48145466, 0.4578275, 0.40821073]) ./ Float32[0.26862954, 0.26130258, 0.27577711]  # CLIP normalisation
+    reshape(x, 1, size(x)...)
+end
+
+function clip_text(labels)  # token ids and attention mask, (n_labels, seq), padded with the end token
+    enc  = [encode(tok, s).ids for s in labels]  # start and end tokens are added by the tokenizer
+    L    = maximum(length, enc)
+    ids  = fill(49407, length(enc), L)
+    mask = zeros(Int, length(enc), L)
+    for (k, e) in enumerate(enc)
+        ids[k, 1:length(e)] .= e
+        mask[k, 1:length(e)] .= 1
+    end
+    ids, mask
+end
+
+labels    = ["a photo of a cat", "a photo of a dog", "a photo of a car"]
+ids, mask = clip_text(labels)
+feeds     = Dict("input_ids" => ids, "pixel_values" => clip_pixels("image.jpg"), "attention_mask" => mask)  # replace with your image
+feeds     = filter(p -> p.first in ORT.input_names(model), feeds)  # feed only the inputs this export declares
+sim       = model(feeds, ["logits_per_image"])["logits_per_image"]  # (n_images, n_labels) scaled cosine similarities
+probs     = softmax(vec(sim))  # probability of each label for the image
+collect(zip(labels, round.(probs, digits = 3)))
 """
 
 [[codeBranches]]
 model = "nlp"
 code = """
-using ONNX
+import ONNXRunTime as ORT
+using HuggingFaceTokenizers
 
-model = ONNX.load("gemma-2b-it.onnx")  # load NLP model from Kaggle weights
+getfile(url, file) = isfile(file) ? file : download(url, file)  # download once, then reuse
+softmax(v) = (e = exp.(v .- maximum(v)); e ./ sum(e))
 
-ids   = tokenize("Summarise this article:")  # tokenise prompt
-out   = model(ids)  # autoregressive forward pass
-text  = decode(out["logits"])  # decode output token ids
+# sentiment classification with DistilBERT fine-tuned on SST-2
+repo   = "Xenova/distilbert-base-uncased-finetuned-sst-2-english"  # ONNX export of the Hugging Face model
+model  = ORT.load_inference(getfile("https://huggingface.co/$repo/resolve/main/onnx/model.onnx", "distilbert-sst2.onnx"))
+tok    = from_pretrained(Tokenizer, repo)  # the WordPiece tokenizer
+labels = ["NEGATIVE", "POSITIVE"]
+
+function classify(texts)  # (n_texts, 2) class probabilities, one forward pass
+    enc  = [encode(tok, t).ids for t in texts]  # [CLS] and [SEP] are added by the tokenizer
+    L    = maximum(length, enc)
+    ids  = zeros(Int, length(enc), L)  # padded with [PAD] = 0
+    mask = zeros(Int, length(enc), L)  # 1 for real tokens, 0 for padding
+    for (k, e) in enumerate(enc)
+        ids[k, 1:length(e)] .= e
+        mask[k, 1:length(e)] .= 1
+    end
+    logits = model(Dict("input_ids" => ids, "attention_mask" => mask))["logits"]  # (n_texts, 2)
+    mapslices(softmax, logits, dims = 2)
+end
+
+text  = "The film was a delight from start to finish."
+probs = vec(classify([text]))
+collect(zip(labels, round.(probs, digits = 3)))
 """
 
 [[codeBranches]]
 model = "vision"
 code = """
-using ONNX, Images
+import ONNXRunTime as ORT
+using Images
 
-model = ONNX.load("resnet50.onnx")  # load ResNet from Kaggle weights
+getfile(url, file) = isfile(file) ? file : download(url, file)  # download once, then reuse
+softmax(v) = (e = exp.(v .- maximum(v)); e ./ sum(e))
 
-img    = load("image.jpg")  # load image
-img_t  = preprocess(img)  # resize and normalise to (3, 224, 224)
-logits = model(img_t)["output"]  # forward pass; shape: (1000,)
-pred   = argmax(logits)  # predicted ImageNet class index
+# ImageNet classification with ResNet-18 from the ONNX model zoo
+model  = ORT.load_inference(getfile("https://github.com/onnx/models/raw/main/validated/vision/classification/resnet/model/resnet18-v1-7.onnx", "resnet18.onnx"))
+inname = ORT.input_names(model)[1]  # the image input
+include(getfile("https://raw.githubusercontent.com/FluxML/ONNX.jl/master/examples/imagenet_classes.jl", "imagenet_classes.jl"))  # IMAGENET_CLASSES, 0-based
+
+function preprocess(file)  # image -> (1, 3, 224, 224) Float32, the ONNX (batch, C, H, W) layout
+    x = Float32.(channelview(RGB.(imresize(load(file), (224, 224)))))  # (C, H, W) in [0, 1]
+    x = (x .- Float32[0.485, 0.456, 0.406]) ./ Float32[0.229, 0.224, 0.225]  # ImageNet normalisation
+    reshape(x, 1, size(x)...)
+end
+
+logits = vec(first(values(model(Dict(inname => preprocess("image.jpg"))))))  # 1000 ImageNet logits; replace with your image
+probs  = softmax(logits)
+pred   = argmax(probs)  # predicted class (1-based)
+IMAGENET_CLASSES[pred - 1], round(probs[pred], digits = 3)
 """
 
 [[codeBranches]]
 model = "audio"
 code = """
-using ONNX, WAV
+import ONNXRunTime as ORT
+using HuggingFaceTokenizers, WAV, DSP, FFTW, Statistics
 
-model = ONNX.load("whisper-small.onnx")  # load Whisper from Kaggle weights
+getfile(url, file) = isfile(file) ? file : download(url, file)  # download once, then reuse
 
-wave, sr = wavread("audio.wav")  # load 16 kHz mono waveform
-feats    = log_mel_spectrogram(wave)  # extract log-mel features
-out      = model(feats)  # run encoder–decoder forward pass
-text     = decode(out["token_ids"])  # decoded transcript
-"""
+# speech recognition with Whisper tiny (English-only), exported as an encoder and a decoder graph;
+# the log-mel front end is written out below (same steps as whisper.audio.log_mel_spectrogram)
 
-[[codeBranches]]
-model = "tabular"
-code = """
-using ONNX, CSV, Tables
+function load_audio(file; sr = 16000)
+    y, fs = wavread(file)  # samples x channels, values in [-1, 1]
+    x = vec(mean(y, dims = 2))  # mix down to mono
+    fs == sr || (x = resample(x, sr / fs))  # Whisper expects 16 kHz
+    n = 30 * sr  # one 30 s window: trim or pad with silence
+    length(x) >= n ? x[1:n] : vcat(x, zeros(n - length(x)))
+end
 
-model = ONNX.load("tabular-classifier.onnx")  # load tabular model from Kaggle weights
+function mel_filters(; sr = 16000, n_fft = 400, n_mels = 80)  # Slaney mel filterbank, as librosa.filters.mel
+    f_sp, logstep = 200 / 3, log(6.4) / 27
+    hz2mel(f) = f < 1000 ? f / f_sp : 15 + log(f / 1000) / logstep
+    mel2hz(m) = m < 15 ? f_sp * m : 1000 * exp(logstep * (m - 15))
+    freqs = range(0, sr / 2, length = div(n_fft, 2) + 1)
+    pts = mel2hz.(range(hz2mel(0), hz2mel(sr / 2), length = n_mels + 2))
+    W = zeros(n_mels, length(freqs))
+    for i in 1:n_mels, (j, f) in enumerate(freqs)
+        rise = (f - pts[i]) / (pts[i+1] - pts[i])
+        fall = (pts[i+2] - f) / (pts[i+2] - pts[i+1])
+        W[i, j] = max(0, min(rise, fall)) * 2 / (pts[i+2] - pts[i])  # triangle, normalised to equal area
+    end
+    W
+end
 
-tbl   = CSV.File("data.csv")  # load tabular data
-X     = Tables.matrix(tbl)[:, 1:end-1]  # feature matrix, shape (n_samples, n_features)
-probs = model(transpose(X))  # class probabilities, shape (n_classes, n_samples)
-pred  = argmax.(eachcol(probs))  # predicted class for each sample
-"""
+function log_mel(x; n_fft = 400, hop = 160)
+    h = div(n_fft, 2)
+    xp = vcat(x[h+1:-1:2], x, x[end-1:-1:end-h])  # reflect padding, so frames are centred
+    win = [0.5 - 0.5 * cos(2pi * k / n_fft) for k in 0:n_fft-1]  # periodic Hann window
+    nframes = div(length(x), hop)  # 3000 frames for 30 s (the extra final frame is dropped)
+    P = reduce(hcat, [abs2.(rfft(win .* xp[t*hop+1:t*hop+n_fft])) for t in 0:nframes-1])  # power spectrum, (201, frames)
+    S = log10.(max.(mel_filters(n_fft = n_fft) * P, 1e-10))  # log-mel, (80, frames)
+    S = max.(S, maximum(S) - 8)  # keep an 80 dB dynamic range
+    (S .+ 4) ./ 4  # Whisper scaling
+end
 
-[[codeBranches]]
-model = "rl"
-code = """
-using ONNX
+repo    = "Xenova/whisper-tiny.en"  # ONNX export of openai/whisper-tiny.en
+encoder = ORT.load_inference(getfile("https://huggingface.co/$repo/resolve/main/onnx/encoder_model.onnx", "whisper-tiny-en-encoder.onnx"))
+decoder = ORT.load_inference(getfile("https://huggingface.co/$repo/resolve/main/onnx/decoder_model.onnx", "whisper-tiny-en-decoder.onnx"))
+tok     = from_pretrained(Tokenizer, repo)  # the Whisper BPE tokenizer
 
-policy = ONNX.load("ppo-cartpole.onnx")  # load RL policy from Kaggle weights
+function transcribe(file; maxlen = 200)
+    S      = log_mel(load_audio(file))  # (80 mels, 3000 frames)
+    mel    = reshape(Float32.(S), 1, size(S)...)  # (batch, mels, frames), the ONNX layout
+    hidden = encoder(Dict("input_features" => mel))["last_hidden_state"]  # audio embedding, (1, 1500, 384)
+    ids    = [50257, 50362]  # start-of-transcript and no-timestamps tokens of the English-only model
+    for step in 1:maxlen  # greedy decoding, one token per pass (no KV cache: the whole prefix is rerun)
+        logits = decoder(Dict("input_ids" => reshape(ids, 1, :), "encoder_hidden_states" => hidden))["logits"]  # (batch, seq, vocab)
+        scores = logits[1, end, :]
+        step == 1 && (scores[[221, 50257]] .= -Inf32)  # never start with a blank or end of text (tokens 220 and 50256)
+        next = argmax(scores) - 1  # most likely next token (0-based)
+        next == 50256 && break  # end of text
+        push!(ids, next)
+    end
+    decode(tok, ids; skip_special_tokens = true)
+end
 
-obs    = Float32.([0.02, -0.01, 0.03, -0.02])  # CartPole observation vector
-out    = policy(obs)  # forward pass through policy network
-action = argmax(out["action_probs"])  # greedy action selection
+transcribe("speech.wav")  # replace with your audio file
 """
 
 [[codeBranches]]
 model = "*"
 code = """
-using ONNX
+import ONNXRunTime as ORT
 
-model = ONNX.load("model.onnx")  # load any Kaggle ONNX model
-out   = model(input)  # run forward pass
+model = ORT.load_inference("model.onnx")  # any ONNX export, e.g. downloaded from Kaggle Models
+println(ORT.input_names(model), " -> ", ORT.output_names(model))  # what the graph expects and returns
+x     = rand(Float32, 1, 3, 224, 224)  # an input of the shape the graph expects, in the ONNX layout
+out   = model(Dict(ORT.input_names(model)[1] => x))  # outputs by name
 """
 
 [[actionGroups]]
@@ -556,16 +634,29 @@ label = "Visualise"
 [[actionGroups.actions]]
 id = "prediction-probs"
 label = "Prediction Probabilities"
-desc = "Plot the top-5 class probabilities from the model output"
+desc = "Plot the label or class probabilities from the model output"
+models = ["multimodal", "nlp", "vision"]
 code = """
-using ONNX, Plots, Images
+using Plots
 
-model  = ONNX.load("resnet50.onnx")  # load vision model
-img_t  = preprocess(load("image.jpg"))  # preprocess image
-logits = model(img_t)["output"]  # forward pass
-probs  = exp.(logits .- maximum(logits)); probs ./= sum(probs)  # softmax: the network outputs logits, not probabilities
-top5   = sortperm(probs, rev=true)[1:5]  # top-5 class indices
-bar(IMAGENET_LABELS[top5], probs[top5], title="Top-5 predictions", ylabel="probability")  # plot probabilities
+# run the model code first: it defines probs
+{{?model=multimodal}}bar(labels, probs, title = "CLIP zero-shot label probabilities", ylabel = "probability", legend = false)
+{{?model=nlp}}bar(labels, probs, title = "Sentiment probabilities", ylabel = "probability", legend = false)
+{{?model=vision}}top5 = sortperm(probs, rev = true)[1:5]  # top-5 class indices
+{{?model=vision}}bar([IMAGENET_CLASSES[i - 1] for i in top5], probs[top5], title = "Top-5 predictions", ylabel = "probability", xrotation = 30, legend = false)
+"""
+
+[[actionGroups.actions]]
+id = "log-mel"
+label = "Log-Mel Spectrogram"
+desc = "Plot the 80-band log-mel features the Whisper encoder receives"
+models = ["audio"]
+code = """
+using Plots
+
+# run the model code first: it defines load_audio and log_mel
+S = log_mel(load_audio("speech.wav"))  # (80 mels, 3000 frames), 10 ms per frame
+heatmap((0:size(S, 2) - 1) .* 0.01, 1:size(S, 1), S, xlabel = "time (s)", ylabel = "mel band", title = "Whisper log-mel input")
 """
 
 [[actionGroups]]
@@ -575,14 +666,17 @@ label = "Diagnose"
 [[actionGroups.actions]]
 id = "model-info"
 label = "Model Info"
-desc = "Inspect ONNX model inputs, outputs, and operator graph"
+desc = "Inspect the input and output names of the loaded ONNX sessions"
 code = """
-using ONNX
+import ONNXRunTime as ORT
 
-model = ONNX.load("model.onnx")  # load model
-println("Inputs:  ", ONNX.input_names(model))  # list input names
-println("Outputs: ", ONNX.output_names(model))  # list output names
-println("Nodes:   ", length(model.graph.node))  # operator count
+# run the model code first: it loads the session(s)
+{{?model=multimodal|nlp|vision}}sessions = ["model" => model]
+{{?model=audio}}sessions = ["encoder" => encoder, "decoder" => decoder]
+for (name, s) in sessions
+    println(name, " inputs:  ", ORT.input_names(s))  # every input must be fed, by name
+    println(name, " outputs: ", ORT.output_names(s))  # pass a subset as the second argument to compute only those
+end
 """
 
 [[actionGroups]]
@@ -592,16 +686,22 @@ label = "Predict"
 [[actionGroups.actions]]
 id = "batch-inference"
 label = "Batch Inference"
-desc = "Run inference over a list of inputs in mini-batches"
+desc = "Run the model on several inputs at once"
 code = """
-using ONNX
-
-model = ONNX.load("model.onnx")  # load model once
-batch = 16  # mini-batch size
-for i in 1:batch:length(inputs)
-    chunk = inputs[i:min(i+batch-1, end)]  # current mini-batch
-    outs  = model(stack(chunk))  # one forward pass on the stacked batch (model.(x) would apply it to every array element)
-end
+# run the model code first: it defines the model and its helpers
+{{?model=multimodal}}files  = ["image1.jpg", "image2.jpg", "image3.jpg"]  # replace with your images
+{{?model=multimodal}}pixels = reduce(vcat, clip_pixels.(files))  # (n_images, 3, 224, 224): one batch
+{{?model=multimodal}}feeds  = filter(p -> p.first in ORT.input_names(model), Dict("input_ids" => ids, "pixel_values" => pixels, "attention_mask" => mask))
+{{?model=multimodal}}sim    = model(feeds, ["logits_per_image"])["logits_per_image"]  # (n_images, n_labels)
+{{?model=multimodal}}[(f, labels[argmax(r)]) for (f, r) in zip(files, eachrow(sim))]  # best label for each image
+{{?model=nlp}}texts = ["A gripping, beautifully shot film.", "Two hours I will never get back.", "It was fine, nothing special."]
+{{?model=nlp}}P     = classify(texts)  # (n_texts, 2): padded and masked, one forward pass
+{{?model=nlp}}[(t, labels[argmax(r)], round(maximum(r), digits = 3)) for (t, r) in zip(texts, eachrow(P))]
+{{?model=vision}}files  = ["image1.jpg", "image2.jpg", "image3.jpg"]  # replace with your images
+{{?model=vision}}logits = first(values(model(Dict(inname => reduce(vcat, preprocess.(files))))))  # (n_images, 1000): one batch
+{{?model=vision}}[(f, IMAGENET_CLASSES[argmax(r) - 1]) for (f, r) in zip(files, eachrow(logits))]
+{{?model=audio}}files = ["speech1.wav", "speech2.wav"]  # replace with your audio files
+{{?model=audio}}[(f, transcribe(f)) for f in files]  # the decoder loop runs once per file
 """
 
 [[actionGroups]]
@@ -611,47 +711,56 @@ label = "Compare"
 [[actionGroups.actions]]
 id = "compare-models"
 label = "Compare Models"
-desc = "Benchmark two Kaggle ONNX models on the same input"
+desc = "Benchmark ResNet-18 against ResNet-50 on the same image: top-1 label and median latency"
+models = ["vision"]
 code = """
-using ONNX, BenchmarkTools
+using BenchmarkTools, Statistics
 
-files = ["model-a.onnx", "model-b.onnx"]  # models to compare
+# run the model code first; ResNet-50 is the larger ONNX model zoo sibling of ResNet-18
+zoo        = "https://github.com/onnx/models/raw/main/validated/vision/classification/resnet/model/"
+candidates = [("ResNet-18", "resnet18.onnx", zoo * "resnet18-v1-7.onnx"), ("ResNet-50", "resnet50.onnx", zoo * "resnet50-v1-7.onnx")]
+x = preprocess("image.jpg")  # the same input for both
 
-for f in files
-    m   = ONNX.load(f)  # load model
-    t   = @benchmark m(input)  # benchmark forward pass
-    println(f, " median: ", median(t).time, " ns")  # report median time
+for (name, file, url) in candidates
+    m     = ORT.load_inference(getfile(url, file))
+    iname = ORT.input_names(m)[1]
+    p     = softmax(vec(first(values(m(Dict(iname => x))))))
+    t     = @benchmark $m(Dict($iname => $x))  # warm-up included: median over many runs
+    println(rpad(name, 11), IMAGENET_CLASSES[argmax(p) - 1], " (", round(maximum(p), digits = 3), "), median ", round(median(t).time / 1e6, digits = 1), " ms")
 end
 """
 
 [[actionGroups.actions]]
 id = "julia-onnx-vs-python"
 label = "Julia (ONNX) vs Python"
-desc = "Run the same Kaggle ONNX model in Julia and Python; compare outputs and latency"
+desc = "Run the same ONNX model through ONNX Runtime from Julia and from Python on the same input; compare outputs and median latency"
+models = ["vision"]
 code = """
-# ── Julia side (ONNX.jl) ──────────────────────────────────────
-using ONNX, BenchmarkTools
+# Julia side (ONNXRunTime.jl); run the model code first
+using BenchmarkTools, Statistics
 
-model  = ONNX.load("resnet50.onnx")  # load Kaggle ONNX model (e.g. keras/resnet)
-input  = rand(Float32, 224, 224, 3, 1)  # random image input (H, W, C, batch)
-out_jl = model(input)  # forward pass
-pred_jl = argmax(out_jl["logits"][:, 1])  # top-1 class index
+x = preprocess("image.jpg")  # (1, 3, 224, 224), the ONNX layout
+write("input.bin", permutedims(x, (4, 3, 2, 1)))  # reversed dims in column-major order are numpy row-major (1, 3, 224, 224)
 
-t_jl   = @benchmark model(input)  # benchmark
-println("Julia  median: ", median(t_jl).time ÷ 1_000_000, " ms")  # report latency
+out_jl = vec(first(values(model(Dict(inname => x)))))  # forward pass
+t_jl   = @benchmark $model(Dict($inname => $x))  # warm-up included: median over many runs
+println("Julia  median: ", round(median(t_jl).time / 1e6, digits=1), " ms, top-1 ", argmax(out_jl) - 1)
 
-# ── Python side (run in terminal) ─────────────────────────────
+# Python side (run in a terminal), on the same input and also with warm-up and a median:
 # pip install onnxruntime numpy
 # python3 - <<EOF
 # import onnxruntime as ort, numpy as np, time
-# sess  = ort.InferenceSession("resnet50.onnx")
-# inp   = {sess.get_inputs()[0].name:
-#          np.random.rand(1, 3, 224, 224).astype(np.float32)}
-# t0    = time.perf_counter()
-# out   = sess.run(None, inp)
-# print(f"Python median: {(time.perf_counter()-t0)*1000:.1f} ms")
-# print(f"Top-1 class:   {out[0].argmax()}")
+# sess = ort.InferenceSession("resnet18.onnx")
+# feed = {sess.get_inputs()[0].name: np.fromfile("input.bin", dtype=np.float32).reshape(1, 3, 224, 224)}
+# out = sess.run(None, feed)  # warm-up
+# ts = []
+# for _ in range(50):
+#     t0 = time.perf_counter(); out = sess.run(None, feed); ts.append(time.perf_counter() - t0)
+# print("Python median:", round(np.median(ts) * 1000, 1), "ms, top-1", out[0].argmax())
+# out[0].astype(np.float32).tofile("out_py.bin")
 # EOF
+# then compare the outputs in Julia (both sides call the same ONNX Runtime, so expect rounding-level differences):
+# maximum(abs.(out_jl .- read!("out_py.bin", similar(out_jl))))
 """
 
 [[actionGroups]]
@@ -659,13 +768,27 @@ id = "interpret"
 label = "Interpret"
 
 [[actionGroups.actions]]
-id = "intermediate-activations"
-label = "Intermediate Activations"
-desc = "Extract and plot activations from an intermediate ONNX node"
+id = "occlusion"
+label = "Occlusion Sensitivity"
+desc = "Occlude image patches or drop tokens and plot the fall in the predicted class probability"
+models = ["nlp", "vision"]
 code = """
-using ONNX, Plots
+using Plots
 
-model = ONNX.load("resnet50.onnx")  # load model
-acts  = ONNX.run(model, input; intermediate="layer4")  # run with intermediate output
-heatmap(acts[:, :, 1, 1], title="Layer 4 activation map")  # plot first channel
+# run the model code first: hide part of the input and measure how much the predicted class probability falls
+{{?model=vision}}x0, c = preprocess("image.jpg"), pred
+{{?model=vision}}patch, stride = 32, 16
+{{?model=vision}}grid = 1:stride:224 - patch + 1  # patch positions, rows and columns
+{{?model=vision}}heat = zeros(length(grid), length(grid))
+{{?model=vision}}for (a, i) in enumerate(grid), (b, j) in enumerate(grid)
+{{?model=vision}}    x = copy(x0)
+{{?model=vision}}    x[1, :, i:i+patch-1, j:j+patch-1] .= 0  # 0 is the mean colour after normalisation
+{{?model=vision}}    heat[a, b] = probs[c] - softmax(vec(first(values(model(Dict(inname => x))))))[c]
+{{?model=vision}}end
+{{?model=vision}}heatmap(heat, yflip = true, title = "Fall in P(" * IMAGENET_CLASSES[c - 1] * ")", xlabel = "patch column", ylabel = "patch row")
+{{?model=nlp}}enc = encode(tok, text)  # tokens and ids, with [CLS] and [SEP]
+{{?model=nlp}}c   = argmax(probs)  # predicted label
+{{?model=nlp}}pc(ids) = softmax(vec(model(Dict("input_ids" => reshape(ids, 1, :), "attention_mask" => ones(Int, 1, length(ids))))["logits"]))[c]
+{{?model=nlp}}imp = [probs[c] - pc(deleteat!(copy(enc.ids), k)) for k in 2:length(enc.ids) - 1]  # drop one word piece at a time
+{{?model=nlp}}bar(enc.tokens[2:end-1], imp, title = "Fall in P(" * labels[c] * ") without each token", xrotation = 45, legend = false)
 """

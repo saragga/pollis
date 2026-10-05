@@ -210,14 +210,14 @@ X  = {{X}}  # n x p feature matrix, one row per observation
 d  = {{d}}  # embedding dimensions
 Xt = permutedims(X)  # UMAP.jl expects features x samples
 
-fit_umap(nn) = UMAP_(Xt, d; n_neighbors=nn, min_dist={{mindist}})  # fuzzy k-NN graph, then cross-entropy layout
-embed(nn) = permutedims(fit_umap(nn).embedding)  # n x d
+fit_umap(nn) = UMAP.fit(Xt, d; n_neighbors=nn, min_dist={{mindist}})  # fuzzy k-NN graph, then cross-entropy layout
+embed(nn) = permutedims(reduce(hcat, fit_umap(nn).embedding))  # n x d (the embedding is a list of points)
 grid = [5, 10, 15, 30, 50]  # n_neighbors values compared by the sweep action
 par  = {{nn}}
 
 Random.seed!(1)  # the layout starts from a random (spectral + noise) initialisation
 model = fit_umap(par)
-Y = permutedims(model.embedding)  # n x d embedding
+Y = permutedims(reduce(hcat, model.embedding))  # n x d embedding
 
 function trustworthiness(Y, m=10)  # share of embedding neighbours that were also near in X (1 = perfect)
     n  = size(X, 1)
@@ -310,7 +310,7 @@ id = "embed-new"
 label = "Embed New Data"
 desc = "UMAP places new points with its fitted graph; t-SNE has no mapping, so new points are rebuilt from their 10 nearest training points"
 code = '''
-{{?model=umap}} Y_new = permutedims(UMAP.transform(model, permutedims(X_new)))  # X_new: same columns as X; n_new x d
+{{?model=umap}} Y_new = permutedims(reduce(hcat, UMAP.transform(model, permutedims(X_new)).embedding))  # X_new: same columns as X; n_new x d
 {{?model=tsne}} using LinearAlgebra
 {{?model=tsne}} function place(x, m=10)
 {{?model=tsne}}     nb = sortperm(vec(pairwise(Euclidean(), permutedims(x), X, dims=1)))[1:m]

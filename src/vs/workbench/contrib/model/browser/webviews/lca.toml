@@ -260,7 +260,7 @@ mu = mean(X, dims=1)
 {{?scaling=centre}} prep(A) = permutedims(A .- mu)  # centre with the training mean, transpose to p x n
 Xt = prep(X)
 
-fit_model(k) = fit(FactorAnalysis, Xt; maxoutdim=k, method=:cm)  # expectation-maximisation style updates
+fit_model(k) = fit(FactorAnalysis, Xt; maxoutdim=k, method=:cm)  # fast conditional-maximisation algorithm (:em is plain EM)
 M = fit_model(k)
 Y = permutedims(predict(M, Xt))  # n x k factor scores
 W = loadings(M)  # p x k loading matrix

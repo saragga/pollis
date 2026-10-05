@@ -9,6 +9,10 @@ name: Pollis Package
 #
 # Runs on a GitHub-hosted Apple silicon runner (free for public repositories). The app is not
 # signed, so macOS quarantines a downloaded copy: clear it with `xattr -cr Pollis.app`.
+#
+# Workflow artifacts expire. To keep a build, set `release` to a version tag (v0.1.0): the zipped app
+# is attached to that GitHub release, which anyone can download without signing in, and
+# releases/latest/download/Pollis-darwin-arm64.zip always points at the newest one.
 
 on:
   workflow_dispatch:
@@ -21,6 +25,10 @@ on:
         description: Upload the packaged app as a workflow artifact (kept for 3 days)
         type: boolean
         default: false
+      release:
+        description: Attach the app to this GitHub release, created if new (a version tag such as v0.1.0; empty for none)
+        type: string
+        default: ''
 
 concurrency:
   group: pollis-package-${{ github.ref }}
@@ -79,17 +87,54 @@ jobs:
 
       - name: Archive packaged app
         # upload-artifact drops symlinks and permissions, which breaks an .app bundle, and rejects
-        # paths outside the workspace ('..'). ditto keeps both.
-        if: ${{ inputs.upload }}
+        # paths outside the workspace ('..'). ditto keeps both. The zip holds Pollis.app itself, not
+        # the VSCode-darwin-arm64 folder around it.
+        if: ${{ inputs.upload || inputs.release != '' }}
         run: |
           set -e
           mkdir -p .build
-          ditto -c -k --sequesterRsrc --keepParent ../VSCode-darwin-arm64 .build/Pollis-darwin-arm64.zip
+          ditto -c -k --sequesterRsrc --keepParent ../VSCode-darwin-arm64/Pollis.app .build/Pollis-darwin-arm64.zip
 
       - name: Upload packaged app
-        if: ${{ inputs.upload }}
+        if: ${{ inputs.upload || inputs.release != '' }}
         uses: actions/upload-artifact@v7
         with:
           name: Pollis-darwin-arm64
           path: .build/Pollis-darwin-arm64.zip
           retention-days: 3
+
+  release:
+    # A separate job, so that only this short one gets a token that can write to the repository,
+    # never the build with its npm install scripts. Runs only when the build succeeded.
+    name: Attach to release
+    needs: package
+    if: ${{ inputs.release != '' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download packaged app
+        uses: actions/download-artifact@v8
+        with:
+          name: Pollis-darwin-arm64
+
+      - name: Attach to release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ inputs.release }}
+          # Keep in step with pollis-windows.yml and pollis-linux.yml, which may create the release first.
+          NOTES: |
+            An early build of Pollis. The apps are not signed yet.
+
+            - macOS (Apple silicon): unzip, then clear the quarantine flag in Terminal with `xattr -cr Pollis.app`.
+            - Windows (x64): unzip and run Pollis. If SmartScreen warns, choose More info, then Run anyway.
+            - Linux (x64): extract with `tar -xzf Pollis-linux-x64.tar.gz` and run `Pollis-linux-x64/pollis`.
+        run: |
+          set -e
+          # The macOS, Windows and Linux workflows attach to the same release: whichever finishes first creates it.
+          gh release view "$TAG" > /dev/null 2>&1 ||
+            gh release create "$TAG" --target "$GITHUB_SHA" --title "Pollis $TAG" --notes "$NOTES" ||
+            gh release view "$TAG" > /dev/null
+          gh release upload "$TAG" Pollis-darwin-arm64.zip --clobber

@@ -67,6 +67,7 @@ import { KeyCode } from '../../../../base/common/keyCodes.js';
 import { IExtensionGalleryManifest, IExtensionGalleryManifestService, ExtensionGalleryManifestStatus } from '../../../../platform/extensionManagement/common/extensionGalleryManifest.js';
 import { URI } from '../../../../base/common/uri.js';
 import { DEFAULT_ACCOUNT_SIGN_IN_COMMAND } from '../../../services/accounts/browser/defaultAccount.js';
+import { PollisToolboxesView, toolboxesSearchText } from './pollisToolboxesView.js';
 
 export const ExtensionsSortByContext = new RawContextKey<string>('extensionsSortByValue', '');
 export const SearchMarketplaceExtensionsContext = new RawContextKey<boolean>('searchMarketplaceExtensions', false);
@@ -87,6 +88,8 @@ const SearchRestartRequiredExtensionsContext = new RawContextKey<boolean>('searc
 export const RecommendedExtensionsContext = new RawContextKey<boolean>('recommendedExtensions', false);
 const SortByUpdateDateContext = new RawContextKey<boolean>('sortByUpdateDate', false);
 export const ExtensionsSearchValueContext = new RawContextKey<string>('extensionsSearchValue', '');
+/** Pollis: the search shows the Toolboxes section (`@toolboxes`, or a search of the marketplace with text). */
+const SearchPollisToolboxesContext = new RawContextKey<boolean>('searchPollisToolboxes', false);
 
 const REMOTE_CATEGORY: ILocalizedString = localize2({ key: 'remote', comment: ['Remote as in remote machine'] }, "Remote");
 
@@ -130,10 +133,21 @@ export class ExtensionsViewletViewsContribution extends Disposable implements IW
 		/* Other Local Filtered extensions views */
 		viewDescriptors.push(...this.createOtherLocalFilteredExtensionsViewDescriptors());
 
+		/* Pollis: the toolbox extensions published on GitHub, with the default views and above the search results */
+		viewDescriptors.push({
+			id: PollisToolboxesView.ID,
+			name: localize2('pollisToolboxes', "Toolboxes"),
+			ctorDescriptor: new SyncDescriptor(PollisToolboxesView),
+			when: ContextKeyExpr.or(DefaultViewsContext, SearchPollisToolboxesContext),
+			weight: 30,
+			order: 0,
+			canToggleVisibility: true
+		});
+
 
 		viewDescriptors.push({
 			id: 'workbench.views.extensions.marketplaceAccess',
-			name: localize2('marketPlace', "Marketplace"),
+			name: localize2('marketPlace', "Open VSX"),
 			ctorDescriptor: new SyncDescriptor(class extends ViewPane {
 				public override shouldShowWelcome() {
 					return true;
@@ -325,7 +339,7 @@ export class ExtensionsViewletViewsContribution extends Disposable implements IW
 		 */
 		viewDescriptors.push({
 			id: 'workbench.views.extensions.marketplace',
-			name: localize2('marketPlace', "Marketplace"),
+			name: localize2('marketPlace', "Open VSX"),
 			ctorDescriptor: new SyncDescriptor(SearchMarketplaceExtensionsView, [{}]),
 			when: ContextKeyExpr.and(ContextKeyExpr.has('searchMarketplaceExtensions'), CONTEXT_HAS_GALLERY)
 		});
@@ -538,6 +552,7 @@ export class ExtensionsViewPaneContainer extends ViewPaneContainer<IExtensionsVi
 	private readonly searchDeprecatedExtensionsContextKey: IContextKey<boolean>;
 	private readonly searchRestartRequiredExtensionsContextKey: IContextKey<boolean>;
 	private readonly recommendedExtensionsContextKey: IContextKey<boolean>;
+	private readonly searchPollisToolboxesContextKey: IContextKey<boolean>;
 
 	private searchDelayer: Delayer<void>;
 	private root: HTMLElement | undefined;
@@ -595,6 +610,7 @@ export class ExtensionsViewPaneContainer extends ViewPaneContainer<IExtensionsVi
 		this.builtInExtensionsContextKey = BuiltInExtensionsContext.bindTo(contextKeyService);
 		this.searchBuiltInExtensionsContextKey = SearchBuiltInExtensionsContext.bindTo(contextKeyService);
 		this.recommendedExtensionsContextKey = RecommendedExtensionsContext.bindTo(contextKeyService);
+		this.searchPollisToolboxesContextKey = SearchPollisToolboxesContext.bindTo(contextKeyService);
 		this._register(this.paneCompositeService.onDidPaneCompositeOpen(e => { if (e.viewContainerLocation === ViewContainerLocation.Sidebar) { this.onViewletOpen(e.composite); } }, this));
 		this._register(extensionsWorkbenchService.onReset(() => this.refresh()));
 		this.searchViewletState = this.getMemento(StorageScope.WORKSPACE, StorageTarget.MACHINE);
@@ -623,7 +639,7 @@ export class ExtensionsViewPaneContainer extends ViewPaneContainer<IExtensionsVi
 		hide(overlay);
 
 		this.header = append(this.root, $('.header'));
-		const placeholder = localize('searchExtensions', "Search Extensions in Marketplace");
+		const placeholder = localize('searchExtensions', "Search Extensions in Open VSX");
 
 		const searchValue = this.searchViewletState['query.value'] ? this.searchViewletState['query.value'] : '';
 
@@ -856,6 +872,7 @@ export class ExtensionsViewPaneContainer extends ViewPaneContainer<IExtensionsVi
 		const value = this.normalizedQuery();
 		this.contextKeyService.bufferChangeEvents(() => {
 			const isRecommendedExtensionsQuery = ExtensionsListView.isRecommendedExtensionsQuery(value);
+			const isPollisToolboxesQuery = /@toolboxes\b/i.test(value);
 			this.searchHasTextContextKey.set(value.trim() !== '');
 			this.extensionsSearchValueContextKey.set(value);
 			this.installedExtensionsContextKey.set(ExtensionsListView.isInstalledExtensionsQuery(value));
@@ -873,7 +890,8 @@ export class ExtensionsViewPaneContainer extends ViewPaneContainer<IExtensionsVi
 			this.recommendedExtensionsContextKey.set(isRecommendedExtensionsQuery);
 			this.searchMcpServersContextKey.set(!!value && /@mcp\s?.*/i.test(value));
 			this.searchAgentPluginsContextKey.set(!!value && /@agentPlugins\s?.*/i.test(value));
-			this.searchMarketplaceExtensionsContextKey.set(!!value && !ExtensionsListView.isLocalExtensionsQuery(value) && !isRecommendedExtensionsQuery && !this.searchMcpServersContextKey.get() && !this.searchAgentPluginsContextKey.get());
+			this.searchMarketplaceExtensionsContextKey.set(!!value && !ExtensionsListView.isLocalExtensionsQuery(value) && !isRecommendedExtensionsQuery && !this.searchMcpServersContextKey.get() && !this.searchAgentPluginsContextKey.get() && !isPollisToolboxesQuery);
+			this.searchPollisToolboxesContextKey.set(isPollisToolboxesQuery || (!!this.searchMarketplaceExtensionsContextKey.get() && toolboxesSearchText(value) !== ''));
 			this.sortByUpdateDateContextKey.set(ExtensionsListView.isSortUpdateDateQuery(value));
 			this.defaultViewsContextKey.set(!value || ExtensionsListView.isSortInstalledExtensionsQuery(value));
 		});

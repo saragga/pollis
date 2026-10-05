@@ -13,7 +13,7 @@ name = "Optim.jl"
 github = "https://github.com/JuliaNLSolvers/Optim.jl"
 
 [requires]
-packages = ["Optim.jl", "LineSearches.jl", "Plots.jl"]
+packages = ["Optim.jl", "ADTypes.jl", "LineSearches.jl", "Plots.jl", "FiniteDiff.jl", "ForwardDiff.jl"]
 
 [[notebookSections]]
 label = ""
@@ -272,16 +272,17 @@ return s + '<path d="M26,64 Q32,48 46,40" fill="none" stroke="currentColor" stro
 [[codeBranches]]
 model = "bfgs"
 code = '''
-using Optim, LineSearches, ForwardDiff, LinearAlgebra
+using Optim, ADTypes, LineSearches, ForwardDiff, LinearAlgebra
 
 f(x) = {{f}}
 x0 = {{x0}}  # initial guess
+ad = {{autodiff}} === :forward ? AutoForwardDiff() : AutoFiniteDiff()  # derivative backend (ADTypes)
 n  = length(x0)
 ls = LineSearches.{{linesearch}}()  # step-length rule
 opts = Optim.Options(store_trace=true, extended_trace=true)  # keep the iterates for the plots
 method = BFGS(linesearch=ls)  # dense inverse-Hessian update
 
-result = optimize(f, x0, method, opts; autodiff={{autodiff}})
+result = optimize(f, x0, method, opts; autodiff=ad)
 x_opt = Optim.minimizer(result)
 path  = Optim.x_trace(result)
 (minimizer = x_opt, minimum = Optim.minimum(result), iterations = Optim.iterations(result), converged = Optim.converged(result))
@@ -290,16 +291,17 @@ path  = Optim.x_trace(result)
 [[codeBranches]]
 model = "lbfgs"
 code = '''
-using Optim, LineSearches, ForwardDiff, LinearAlgebra
+using Optim, ADTypes, LineSearches, ForwardDiff, LinearAlgebra
 
 f(x) = {{f}}
 x0 = {{x0}}  # initial guess
+ad = {{autodiff}} === :forward ? AutoForwardDiff() : AutoFiniteDiff()  # derivative backend (ADTypes)
 n  = length(x0)
 ls = LineSearches.{{linesearch}}()  # step-length rule
 opts = Optim.Options(store_trace=true, extended_trace=true)  # keep the iterates for the plots
 method = LBFGS(m={{m}}, linesearch=ls)  # last m secant pairs only
 
-result = optimize(f, x0, method, opts; autodiff={{autodiff}})
+result = optimize(f, x0, method, opts; autodiff=ad)
 x_opt = Optim.minimizer(result)
 path  = Optim.x_trace(result)
 (minimizer = x_opt, minimum = Optim.minimum(result), iterations = Optim.iterations(result), converged = Optim.converged(result))
@@ -405,7 +407,7 @@ code = '''
 methods = ["BFGS" => BFGS(), "L-BFGS (m=3)" => LBFGS(m=3), "L-BFGS (m=20)" => LBFGS(m=20),
            "ConjugateGradient" => ConjugateGradient(), "Newton" => Newton()]
 map(methods) do (name, m)
-    t = @elapsed r = optimize(f, x0, m; autodiff=:forward)
+    t = @elapsed r = optimize(f, x0, m; autodiff=AutoForwardDiff())
     (method = name, minimum = Optim.minimum(r), iterations = Optim.iterations(r), g_calls = Optim.g_calls(r), converged = Optim.converged(r), seconds = t)
 end
 '''
@@ -418,7 +420,7 @@ code = '''
 {{?model=bfgs}} make(l) = BFGS(linesearch=l)
 {{?model=lbfgs}} make(l) = LBFGS(m={{m}}, linesearch=l)
 map([HagerZhang(), BackTracking(), MoreThuente(), StrongWolfe()]) do l
-    r = optimize(f, x0, make(l); autodiff=:forward)
+    r = optimize(f, x0, make(l); autodiff=AutoForwardDiff())
     (linesearch = nameof(typeof(l)), minimum = Optim.minimum(r), iterations = Optim.iterations(r), f_calls = Optim.f_calls(r), g_calls = Optim.g_calls(r), converged = Optim.converged(r))
 end
 '''

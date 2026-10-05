@@ -13,7 +13,7 @@ name = "HypothesisTests.jl"
 github = "https://github.com/JuliaStats/HypothesisTests.jl"
 
 [requires]
-packages = ["HypothesisTests.jl"]
+packages = ["HypothesisTests.jl", "Bootstrap.jl", "Distributions.jl", "Plots.jl", "StatsPlots.jl"]
 
 [[notebookSections]]
 label = ""
@@ -449,14 +449,6 @@ models = ["timeseries"]
 when = "test=augmented-dickey-fuller|breusch-godfrey"
 
 [[inputs]]
-id = "e"
-label = "residuals"
-tooltip = ""
-default = "residuals"
-models = ["timeseries"]
-when = "test=durbin-watson"
-
-[[inputs]]
 id = "lags2"
 label = "lags"
 tooltip = ""
@@ -470,7 +462,7 @@ label = "model"
 tooltip = ""
 default = "model"
 models = ["timeseries"]
-when = "test=breusch-godfrey|white-test"
+when = "test=durbin-watson|breusch-godfrey|white-test"
 
 [[inputs]]
 id = "e1"
@@ -537,9 +529,9 @@ using HypothesisTests
 {{?test=chi-squared-test}} result = ChisqTest({{obs}}, {{exp}} ./ sum({{exp}}))  # observed counts vs expected proportions
 {{?test=power-divergence-test}} result = PowerDivergenceTest({{obs}}; lambda={{lam}})
 {{?test=multinomial-lr-test}} result = PowerDivergenceTest({{obs}}; lambda=0.0)
-println("Test statistic: ", teststatistic(result))
+display(result)  # full report, including the test statistic
 println("p-value:        ", pvalue(result))
-{{?test=one-sample-t-test|two-sample-t-test|welch-t-test|one-sample-z-test|two-sample-z-test}} println("95% CI:         ", confint(result, 0.95))
+{{?test=one-sample-t-test|two-sample-t-test|welch-t-test|one-sample-z-test|two-sample-z-test}} println("95% CI:         ", confint(result; level = 0.95))
 '''
 
 [[codeBranches]]
@@ -552,7 +544,7 @@ code = '''
 {{?test=ks-one-sample-test}} result = ExactOneSampleKSTest({{x}}, {{dist}})
 {{?test=ks-two-sample-test}} result = ApproximateTwoSampleKSTest({{x}}, {{y}})
 {{?test=sign-test}} result = SignTest({{x}}, {{mu01}})
-{{?test=wilcoxon-signed-rank}} result = SignedRankTest({{x}}, {{mu01}})
+{{?test=wilcoxon-signed-rank}} result = SignedRankTest({{x}} .- {{mu01}})
 {{?test=mann-whitney-u-test}} result = MannWhitneyUTest({{x}}, {{y}})
 {{?test=kruskal-wallis-test}} result = KruskalWallisTest({{grp1}})
 {{?test=anderson-darling-test}} result = OneSampleADTest({{x}}, {{dist}})
@@ -560,9 +552,9 @@ code = '''
 {{?test=wald-wolfowitz-test}} result = WaldWolfowitzTest({{x}}, {{y}})
 {{?test=shapiro-wilk-test}} result = shapiro_test({{x}})
 {{?test=permutation-test}} result = ExactPermutationTest({{x}}, {{y}}, {{f}})
-println("Test statistic: ", teststatistic(result))
+display(result)  # full report, including the test statistic
 println("p-value:        ", pvalue(result))
-{{?test=binomial-test|fisher-exact-test|sign-test|wilcoxon-signed-rank|mann-whitney-u-test}} println("95% CI:         ", confint(result, 0.95))
+{{?test=binomial-test|fisher-exact-test|sign-test|wilcoxon-signed-rank|mann-whitney-u-test}} println("95% CI:         ", confint(result; level = 0.95))
 '''
 
 [[codeBranches]]
@@ -570,15 +562,15 @@ model = "timeseries"
 code = '''
 using HypothesisTests
 {{?test=augmented-dickey-fuller}} result = ADFTest({{x}}, {{det}}, {{lags1}})
-{{?test=durbin-watson}} result = DurbinWatsonTest({{e}})
+{{?test=durbin-watson}} result = DurbinWatsonTest(modelmatrix({{fitted}}), residuals({{fitted}}))  # regressors and residuals of the fitted model
 {{?test=ljung-box}} result = LjungBoxTest({{x}}, {{lags2}})
 {{?test=box-pierce}} result = BoxPierceTest({{x}}, {{lags2}})
-{{?test=breusch-godfrey}} result = BreuschGodfreyTest({{fitted}}, {{lags1}})
+{{?test=breusch-godfrey}} result = BreuschGodfreyTest(modelmatrix({{fitted}}), residuals({{fitted}}), {{lags1}})  # regressors and residuals of the fitted model
 {{?test=jarque-bera}} result = JarqueBeraTest({{x}})
 {{?test=clark-west}} result = ClarkWestTest({{e1}}, {{e2}}, {{h}})
 {{?test=diebold-mariano}} result = DieboldMarianoTest({{e1}}, {{e2}})
-{{?test=white-test}} result = WhiteTest({{fitted}})
-println("Test statistic: ", teststatistic(result))
+{{?test=white-test}} result = WhiteTest(modelmatrix({{fitted}}), residuals({{fitted}}))  # regressors and residuals of the fitted model
+display(result)  # full report, including the test statistic
 println("p-value:        ", pvalue(result))
 '''
 
@@ -586,10 +578,10 @@ println("p-value:        ", pvalue(result))
 model = "multivariate"
 code = '''
 using HypothesisTests
-{{?test=hotelling-s-t}} result = HotellingT2Test({{X}}, {{mu02}})
+{{?test=hotelling-s-t}} result = OneSampleHotellingT2Test({{X}}, {{mu02}})
 {{?test=equality-of-covariance}} result = BartlettTest({{grp2}})  # two data matrices, observations in rows
 {{?test=correlation-test}} result = CorrelationTest({{x}}, {{y}})
-println("Test statistic: ", teststatistic(result))
+display(result)  # full report, including the test statistic
 println("p-value:        ", pvalue(result))
 {{?test=correlation-test}} println("95% CI:         ", confint(result, 0.95))
 '''
@@ -686,7 +678,7 @@ using HypothesisTests, Random, Plots
 {{?test=one-sample-t-test}} testfun = s -> OneSampleTTest(s[1], {{mu01}})
 {{?test=two-sample-t-test}} testfun = s -> EqualVarianceTTest(s[1], s[2])
 {{?test=welch-t-test}} testfun = s -> UnequalVarianceTTest(s[1], s[2])
-{{?test=one-sample-z-test}} testfun = s -> OneSampleZTest(s[1], {{mu01}})
+{{?test=one-sample-z-test}} testfun = s -> OneSampleZTest(mean(s[1]), {{sig}}, length(s[1]), {{mu01}})  # known sigma, as in the main test
 {{?test=two-sample-z-test}} testfun = s -> EqualVarianceZTest(s[1], s[2])
 {{?test=f-test}} testfun = s -> VarianceFTest(s[1], s[2])
 {{?test=one-way-anova}} testfun = s -> OneWayANOVATest(s...)
@@ -695,7 +687,7 @@ using HypothesisTests, Random, Plots
 {{?test=ks-one-sample-test}} testfun = s -> ExactOneSampleKSTest(s[1], {{dist}})
 {{?test=ks-two-sample-test}} testfun = s -> ApproximateTwoSampleKSTest(s[1], s[2])
 {{?test=sign-test}} testfun = s -> SignTest(s[1], {{mu01}})
-{{?test=wilcoxon-signed-rank}} testfun = s -> SignedRankTest(s[1], {{mu01}})
+{{?test=wilcoxon-signed-rank}} testfun = s -> SignedRankTest(s[1] .- {{mu01}})
 {{?test=mann-whitney-u-test}} testfun = s -> MannWhitneyUTest(s[1], s[2])
 {{?test=kruskal-wallis-test}} testfun = s -> KruskalWallisTest(s...)
 {{?test=anderson-darling-test}} testfun = s -> OneSampleADTest(s[1], {{dist}})
@@ -726,6 +718,25 @@ boot = [effect([rand(rng, s, length(s)) for s in samples]) for _ in 1:5000]
 println("Effect = ", round(effect(samples), digits=4), "   95% bootstrap CI: ", round.(quantile(boot, [0.025, 0.975]), digits=4))
 '''
 
+[[actionGroups.actions]]
+id = "bootstrap-intervals"
+label = "Bootstrap Interval Methods"
+desc = "Percentile, basic, normal and BCa intervals from Bootstrap.jl for a one-sample effect (mean or median minus the null value); the Bootstrap Resampling panel in the Simulate menu compares interval methods, resampling schemes and their coverage"
+code = '''
+using Bootstrap, Statistics, Random
+{{?test!=one-sample-t-test|one-sample-z-test|sign-test|wilcoxon-signed-rank}} error("This action covers one-sample location tests: use Bootstrap Confidence Interval for two or more samples")
+Random.seed!(1)  # Bootstrap.jl draws with the global RNG
+x = Float64.({{x}})
+{{?test=one-sample-t-test|one-sample-z-test}} stat = v -> mean(v) - {{mu01}}  # the effect the test measures
+{{?test=sign-test|wilcoxon-signed-rank}} stat = v -> median(v) - {{mu01}}
+bs = bootstrap(stat, x, BasicSampling(5000))
+println("Effect = ", round(original(bs, 1), digits=4), "   bias = ", round(bias(bs, 1), digits=4), "   SE = ", round(stderror(bs, 1), digits=4))
+for (nm, ci) in [("Percentile", PercentileConfInt(0.95)), ("Basic", BasicConfInt(0.95)), ("Normal", NormalConfInt(0.95)), ("BCa", BCaConfInt(0.95))]
+    _, lo, hi = confint(bs, ci, 1)
+    println(rpad(nm, 12), "[", round(lo, digits=4), ", ", round(hi, digits=4), "]", lo <= 0 <= hi ? "   contains 0" : "   excludes 0")
+end
+'''
+
 [[actionGroups]]
 id = "compare"
 label = "Compare"
@@ -741,7 +752,7 @@ using HypothesisTests
 {{?test=one-way-anova|levene-s-test|brown-forsythe-test|kruskal-wallis-test|fligner-killeen-test}} samples = [{{grp1}}]
 {{?test=chi-squared-test|power-divergence-test|multinomial-lr-test|binomial-test|fisher-exact-test|durbin-watson|breusch-godfrey|clark-west|diebold-mariano|white-test|hotelling-s-t|equality-of-covariance|correlation-test}} error("This action works on raw samples (location, scale and distribution tests): not available for the selected test")
 k = length(samples); x = samples[1]
-tests = k == 1 ? ["one-sample t" => OneSampleTTest(x, {{mu01}}), "Wilcoxon signed-rank" => SignedRankTest(x, {{mu01}}), "sign" => SignTest(x, {{mu01}})] :
+tests = k == 1 ? ["one-sample t" => OneSampleTTest(x, {{mu01}}), "Wilcoxon signed-rank" => SignedRankTest(x .- {{mu01}}), "sign" => SignTest(x, {{mu01}})] :
         k == 2 ? ["pooled t" => EqualVarianceTTest(x, samples[2]), "Welch t" => UnequalVarianceTTest(x, samples[2]), "Mann-Whitney U" => MannWhitneyUTest(x, samples[2]), "two-sample KS" => ApproximateTwoSampleKSTest(x, samples[2])] :
         ["one-way ANOVA" => OneWayANOVATest(samples...), "Kruskal-Wallis" => KruskalWallisTest(samples...)]
 foreach(t -> println(rpad(t.first, 22), " p = ", round(pvalue(t.second), digits=5)), tests)
@@ -763,7 +774,7 @@ if length(samples) == 1
     perm = [abs(mean(x .* rand(rng, (-1, 1), length(x)))) for _ in 1:B]  # random sign flips under H0
 else
     pooled = reduce(vcat, samples); cuts = cumsum([0; length.(samples)])
-    stat = v -> teststatistic(OneWayANOVATest([v[cuts[i]+1:cuts[i+1]] for i in eachindex(samples)]...))  # F (= t^2 for two samples)
+    stat = v -> HypothesisTests.teststatistic(OneWayANOVATest([v[cuts[i]+1:cuts[i+1]] for i in eachindex(samples)]...))  # F (= t^2 for two samples)
     obs = stat(pooled); perm = [stat(shuffle(rng, pooled)) for _ in 1:B]
 end
 println("Permutation p = ", round((count(>=(obs), perm) + 1) / (B + 1), digits=5))

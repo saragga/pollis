@@ -18,7 +18,7 @@ description = "Step-by-step introduction to building agent-based models with Age
 url = "https://www.youtube.com/watch?v=QL-bDjzS1pg"
 
 [requires]
-packages = ["Agents.jl"]
+packages = ["Agents.jl", "GLMakie.jl", "Tables.jl"]
 
 [[notebookSections]]
 label = ""
@@ -126,6 +126,14 @@ separator = true
 label = "Original Papers"
 
 [[references]]
+title = "Dynamic models of segregation"
+authors = "Schelling, Thomas C."
+year = 1971
+journal = "Journal of Mathematical Sociology"
+doi = "10.1080/0022250X.1971.9989794"
+openAccess = false
+
+[[references]]
 title = "Flocks, herds and schools: A distributed behavioral model"
 authors = "Reynolds, Craig W."
 year = 1987
@@ -154,79 +162,206 @@ label = "Interactive Explorer"
 
 [[bullets]]
 text = "Static Plot"
-detail = "produce a snapshot of agent positions and states at a given time step using abmplot from Agents.jl + Makie.jl"
+detail = "snapshots of the Schelling grid at step 0 and step T with abmplot, each titled with the segregation index"
 
 [[bullets]]
 text = "Video Animation"
-detail = "record an MP4 of the model evolving over time using abmvideo, with per-frame agent colour and size encodings"
+detail = "record an MP4 of the grid from step 0 to step T with abmvideo, reporting the segregation index before and after"
 
 [[bullets]]
 text = "Interactive Explorer"
-detail = "launch a live GUI dashboard with sliders and observables using abmexploration to tune parameters in real time"
+detail = "abmexploration dashboard with a threshold slider and live segregation and happiness curves"
 
 [[inputs]]
 id = "T"
-label = "Frames / Steps (T)"
-tooltip = "Number of frames for video animations, or number of steps for the interactive explorer. Each frame records the model state after one agent-step cycle. More frames produce longer videos but increase file size and render time."
+label = "Steps (T)"
+tooltip = "Number of model steps; videos record T + 1 frames, from step 0 to step T. In one step every resident acts once, in random order."
 default = "50"
+
+[[inputs]]
+id = "side"
+label = "Grid Side"
+tooltip = "The grid has side x side cells, with no wraparound at the edges."
+default = "20"
+newRow = true
+
+[[inputs]]
+id = "density"
+label = "Density"
+tooltip = "Share of cells occupied by residents, split equally between the two groups. Fixed when the model is built, so it is not a slider in the interactive explorer."
+default = "0.9"
+
+[[inputs]]
+id = "threshold"
+label = "Threshold"
+tooltip = "Minimum share of neighbours from the same group for a resident to be happy, between 0 and 1. Mild values such as 0.3 already produce strong segregation."
+default = "0.3"
+
+[[inputs]]
+id = "seed"
+label = "Seed"
+tooltip = "Random seed for the initial layout and the model random number generator."
+default = "42"
 
 [[inputs]]
 id = "fps"
 label = "Frame rate (fps)"
-tooltip = "Frames per second for the output MP4. Higher frame rates produce smoother animations. Typical values: 5 fps for slow dynamics, 15-30 fps for faster motion. Only used by abmvideo."
+tooltip = "Frames per second for the output MP4. Typical values: 5 fps for slow dynamics, 15-30 fps for faster motion. Only used for videos."
 default = "10"
+newRow = true
 
 [[inputs]]
 id = "file"
 label = "Output file"
-tooltip = "File name for the recorded video. Must end in .mp4. The file is saved in the current working directory. Only used by abmvideo."
-default = "sim.mp4"
+tooltip = "File name for the recorded video. Must end in .mp4. The file is saved in the current working directory. Only used for videos."
+default = "schelling.mp4"
 
 [[codeBranches]]
 model = "static"
 code = '''
-using Agents, GLMakie
+using Agents, Random, Statistics, Tables, GLMakie  # ABM framework; seeds; means; plain columns; interactive plots
 
-fig, ax, abmobs = abmplot(model)  # snapshot of current model state
+# Schelling segregation: two groups on a grid; each resident wants a minimum share of like neighbours
+@agent struct Resident(GridAgent{2})
+    group::Int  # 1 or 2
+end
 
-display(fig)  # show figure in window
+function same_share(agent, model)  # share of the neighbours (8 surrounding cells) in the same group; NaN when alone
+    nbs = collect(nearby_agents(agent, model))
+    return isempty(nbs) ? NaN : count(nb -> nb.group == agent.group, nbs) / length(nbs)
+end
+is_happy(agent, model) = (s = same_share(agent, model); isnan(s) || s >= model.min_to_be_happy)
 
-fig, ax, abmobs = abmplot(model;  # with colour and size encodings
-    agent_color = a -> a.status == :I ? :red : :blue,
-    agent_size  = 10,
-    axis        = (title = "Agent States",))
-display(fig)  # show styled snapshot
+function schelling_step!(agent, model)  # unhappy residents move to a random empty cell
+    is_happy(agent, model) || move_agent_single!(agent, model)
+    return
+end
+
+segregation(model) = mean(filter(!isnan, [same_share(a, model) for a in allagents(model)]))  # segregation index: mean same-group neighbour share
+share_happy(model) = mean(a -> is_happy(a, model), allagents(model))
+
+function initialize(; side = {{side}}, density = {{density}}, min_to_be_happy = {{threshold}}, seed = {{seed}})
+    space = GridSpaceSingle((side, side); periodic = false)  # at most one resident per cell
+    model = StandardABM(Resident, space; agent_step! = schelling_step!, properties = Dict(:min_to_be_happy => min_to_be_happy),
+        rng = Xoshiro(seed), scheduler = Schedulers.Randomly(), container = Vector)
+    n = round(Int, density * side^2)
+    for i in 1:n
+        add_agent_single!(model; group = i <= n / 2 ? 1 : 2)  # two equal groups on random empty cells
+    end
+    return model
+end
+
+groupcolor(a) = a.group == 1 ? :steelblue : :darkorange
+plotkw = (agent_color = groupcolor, agent_marker = :rect, agent_size = 12)  # one encoding for every view
+label(model) = "segregation " * string(round(segregation(model); digits = 2)) * ", happy " * string(round(share_happy(model); digits = 2))
+
+T = {{T}}  # steps
+model = initialize()
+
+fig = Figure(size = (1000, 520))
+abmplot!(Axis(fig[1, 1]; title = "Step 0: " * label(model), aspect = 1), initialize(); plotkw...)  # same seed: the starting layout
+step!(model, T)
+abmplot!(Axis(fig[1, 2]; title = "Step $T: " * label(model), aspect = 1), model; plotkw...)
+display(fig)
 '''
 
 [[codeBranches]]
 model = "video"
 code = '''
-using Agents, GLMakie
+using Agents, Random, Statistics, Tables, GLMakie  # ABM framework; seeds; means; plain columns; interactive plots
 
-abmvideo("{{file}}", model; frames={{T}}, framerate={{fps}})  # record animation to file
+# Schelling segregation: two groups on a grid; each resident wants a minimum share of like neighbours
+@agent struct Resident(GridAgent{2})
+    group::Int  # 1 or 2
+end
 
-abmvideo("{{file}}", model;  # with encodings
-    frames    = {{T}},
-    framerate = {{fps}},
-    agent_color = a -> a.status == :I ? :red : :blue,
-    agent_size  = 10)
+function same_share(agent, model)  # share of the neighbours (8 surrounding cells) in the same group; NaN when alone
+    nbs = collect(nearby_agents(agent, model))
+    return isempty(nbs) ? NaN : count(nb -> nb.group == agent.group, nbs) / length(nbs)
+end
+is_happy(agent, model) = (s = same_share(agent, model); isnan(s) || s >= model.min_to_be_happy)
 
-println("Saved: ", "{{file}}")  # confirm output
+function schelling_step!(agent, model)  # unhappy residents move to a random empty cell
+    is_happy(agent, model) || move_agent_single!(agent, model)
+    return
+end
+
+segregation(model) = mean(filter(!isnan, [same_share(a, model) for a in allagents(model)]))  # segregation index: mean same-group neighbour share
+share_happy(model) = mean(a -> is_happy(a, model), allagents(model))
+
+function initialize(; side = {{side}}, density = {{density}}, min_to_be_happy = {{threshold}}, seed = {{seed}})
+    space = GridSpaceSingle((side, side); periodic = false)  # at most one resident per cell
+    model = StandardABM(Resident, space; agent_step! = schelling_step!, properties = Dict(:min_to_be_happy => min_to_be_happy),
+        rng = Xoshiro(seed), scheduler = Schedulers.Randomly(), container = Vector)
+    n = round(Int, density * side^2)
+    for i in 1:n
+        add_agent_single!(model; group = i <= n / 2 ? 1 : 2)  # two equal groups on random empty cells
+    end
+    return model
+end
+
+groupcolor(a) = a.group == 1 ? :steelblue : :darkorange
+plotkw = (agent_color = groupcolor, agent_marker = :rect, agent_size = 12)  # one encoding for every view
+label(model) = "segregation " * string(round(segregation(model); digits = 2)) * ", happy " * string(round(share_happy(model); digits = 2))
+
+T = {{T}}  # steps
+model = initialize()
+
+before = label(model)
+abmvideo("{{file}}", model; plotkw..., frames = T + 1, framerate = {{fps}}, title = "Schelling segregation")  # steps the model from 0 to T
+println("Saved ", joinpath(pwd(), "{{file}}"))
+println("Step 0: ", before, "  ->  step ", T, ": ", label(model))
 '''
 
 [[codeBranches]]
 model = "interactive"
 code = '''
-using Agents, GLMakie
+using Agents, Random, Statistics, Tables, GLMakie  # ABM framework; seeds; means; plain columns; interactive plots
 
-params = Dict(:threshold => 0.0:0.05:1.0, :density => 0.1:0.1:1.0)  # sliders for interactive tuning
+# Schelling segregation: two groups on a grid; each resident wants a minimum share of like neighbours
+@agent struct Resident(GridAgent{2})
+    group::Int  # 1 or 2
+end
 
-fig, abmobs = abmexploration(model; params=params)  # launch interactive dashboard
+function same_share(agent, model)  # share of the neighbours (8 surrounding cells) in the same group; NaN when alone
+    nbs = collect(nearby_agents(agent, model))
+    return isempty(nbs) ? NaN : count(nb -> nb.group == agent.group, nbs) / length(nbs)
+end
+is_happy(agent, model) = (s = same_share(agent, model); isnan(s) || s >= model.min_to_be_happy)
 
-display(fig)  # open GUI window
+function schelling_step!(agent, model)  # unhappy residents move to a random empty cell
+    is_happy(agent, model) || move_agent_single!(agent, model)
+    return
+end
 
-on(abmobs.t) do t  # hook: run code after each step
-    println("Step ", t, ": N_infected=", count(a->a.status==:I, allagents(abmobs.model[])))
+segregation(model) = mean(filter(!isnan, [same_share(a, model) for a in allagents(model)]))  # segregation index: mean same-group neighbour share
+share_happy(model) = mean(a -> is_happy(a, model), allagents(model))
+
+function initialize(; side = {{side}}, density = {{density}}, min_to_be_happy = {{threshold}}, seed = {{seed}})
+    space = GridSpaceSingle((side, side); periodic = false)  # at most one resident per cell
+    model = StandardABM(Resident, space; agent_step! = schelling_step!, properties = Dict(:min_to_be_happy => min_to_be_happy),
+        rng = Xoshiro(seed), scheduler = Schedulers.Randomly(), container = Vector)
+    n = round(Int, density * side^2)
+    for i in 1:n
+        add_agent_single!(model; group = i <= n / 2 ? 1 : 2)  # two equal groups on random empty cells
+    end
+    return model
+end
+
+groupcolor(a) = a.group == 1 ? :steelblue : :darkorange
+plotkw = (agent_color = groupcolor, agent_marker = :rect, agent_size = 12)  # one encoding for every view
+label(model) = "segregation " * string(round(segregation(model); digits = 2)) * ", happy " * string(round(share_happy(model); digits = 2))
+
+T = {{T}}  # steps
+model = initialize()
+
+params = Dict(:min_to_be_happy => 0.0:0.05:1.0)  # slider over a model property; density is fixed at initialisation
+mdata = [segregation, share_happy]  # live curves under the grid
+fig, abmobs = abmexploration(model; params, mdata, mlabels = ["Same-group neighbours", "Happy residents"], plotkw...)
+display(fig)
+
+on(abmobs.model) do m  # runs after every step
+    println("Step ", abmtime(m), ": ", label(m))
 end
 '''
 
@@ -237,35 +372,34 @@ label = "Visualise"
 [[actionGroups.actions]]
 id = "multi-panel"
 label = "Multi-Panel Figure"
-desc = "Arrange multiple abmplot snapshots side-by-side to compare states at different time steps"
+desc = "Snapshots at step 0, T/2 and T side by side, each titled with the segregation index and share of happy residents"
 code = '''
-using Agents, GLMakie
-
-fig = Figure(size=(900,300))  # wide figure for panels
-checkpoints = [0, div({{T}},2), {{T}}]  # three time points
-for (i, t) in enumerate(checkpoints)
-    m = deepcopy(model)
-    t > 0 && step!(m, t)
-    abmplot!(fig[1,i], m; axis=(title="t=" * string(t),))
+m = initialize()
+fig = Figure(size = (1200, 440))
+for (i, t) in enumerate([0, div(T, 2), T])
+    step!(m, t - abmtime(m))  # advance to checkpoint t
+    abmplot!(Axis(fig[1, i]; title = "Step $t: " * label(m), aspect = 1), deepcopy(m); plotkw...)  # copy: the plot keeps this frame
 end
-display(fig)  # compare snapshots
+display(fig)
 '''
 
 [[actionGroups.actions]]
 id = "observable-overlay"
 label = "Observable Overlay"
-desc = "Add a time-series chart of an aggregate observable below the spatial plot"
+desc = "The grid at step T with the segregation index and share of happy residents over time plotted underneath"
 code = '''
-using Agents, GLMakie
+m = initialize()
+_, mdf = run!(m, T; mdata = [segregation, share_happy])
+res = Tables.columntable(mdf)  # plain columns: time, segregation, share_happy
 
-adata = [(:mood, mean)]  # aggregate to track
-data, _ = run!(model, {{T}}; adata=adata)  # collect data
-
-fig = Figure(size=(700,600))  # tall figure
-abmplot!(fig[1,1], model)  # spatial snapshot top
-ax = Axis(fig[2,1], xlabel="Step", ylabel="Mean mood")  # chart below
-lines!(ax, data.step, data.mean_mood)  # time series
-display(fig)  # combined view
+fig = Figure(size = (700, 900))
+abmplot!(Axis(fig[1, 1]; title = "Step $T: " * label(m), aspect = 1), m; plotkw...)
+ax = Axis(fig[2, 1]; xlabel = "Step", ylabel = "Share")
+lines!(ax, res.time, res.segregation; label = "Same-group neighbours")
+lines!(ax, res.time, res.share_happy; label = "Happy residents")
+axislegend(ax; position = :rb)
+rowsize!(fig.layout, 2, Relative(0.3))
+display(fig)
 '''
 
 [[actionGroups]]
@@ -275,33 +409,33 @@ label = "Diagnose"
 [[actionGroups.actions]]
 id = "frame-inspection"
 label = "Frame Inspection"
-desc = "Step through frames manually to inspect agent states at specific time points"
+desc = "Step a live plot by hand and print the segregation index at each stop, to match what you see with the number"
 code = '''
-using Agents, GLMakie
-
-fig, ax, abmobs = abmplot(model)  # create observable plot
-
-display(fig)  # show initial state
-step!(abmobs, 10)  # advance 10 steps and update plot
-display(fig)  # inspect at t=10
-step!(abmobs, 10)  # advance another 10
-display(fig)  # inspect at t=20
+fig, ax, abmobs = abmplot(initialize(); plotkw...)  # observable plot: updates in place
+display(fig)
+println("Step 0: ", label(abmobs.model[]))
+for _ in 1:3
+    step!(abmobs, 10)  # advance 10 steps and redraw
+    println("Step ", abmtime(abmobs.model[]), ": ", label(abmobs.model[]))
+    sleep(1)  # time to look at the frame
+end
 '''
 
 [[actionGroups.actions]]
 id = "colour-check"
 label = "Colour Encoding Check"
-desc = "Verify that agent colour and size encodings correctly reflect the underlying state variable"
+desc = "Check that every group present has a colour and every resident is drawn, then mark unhappy residents with a cross"
 code = '''
-using Agents, GLMakie
+palette = Dict(1 => :steelblue, 2 => :darkorange)  # the colours used by groupcolor
+present = sort(unique(a.group for a in allagents(model)))
+uncoloured = setdiff(present, keys(palette))
+println("Groups present: ", present, isempty(uncoloured) ? ", all coloured" : ", no colour for " * string(uncoloured))
+println("Residents: ", nagents(model), " of ", {{side}}^2, " cells (", {{side}}^2 - nagents(model), " empty)")
 
-n_states = length(unique(a.status for a in allagents(model)))  # count distinct states
-println("Distinct agent states: ", n_states)  # should match colour palette size
-
-fig, ax, abmobs = abmplot(model;  # verify encoding visually
-    agent_color = a -> a.status == :I ? :red : a.status == :R ? :green : :blue,
-    agent_size  = 12)
-display(fig)  # check all states appear
+fig, ax, _ = abmplot(model; agent_color = groupcolor, agent_size = 12,
+    agent_marker = a -> is_happy(a, model) ? :rect : :xcross,  # crosses: residents who will move
+    axis = (title = "Crosses are unhappy: " * label(model), aspect = 1))
+display(fig)
 '''
 
 [[actionGroups]]
@@ -310,33 +444,33 @@ label = "Predict"
 
 [[actionGroups.actions]]
 id = "longer-video"
-label = "Longer Video"
-desc = "Record a higher-resolution video with more frames to capture long-run dynamics"
+label = "Video with Observable"
+desc = "Record a video of the grid with the segregation index drawn underneath as the run unfolds"
 code = '''
-using Agents, GLMakie
-
-frame_counts = [50, 200, 500]  # test different durations
-for T in frame_counts
-    fname = "sim_T" * string(T) * ".mp4"
-    abmvideo(fname, deepcopy(model); frames=T, framerate=10)
-    println("Saved ", fname)
+fig, ax, abmobs = abmplot(initialize(); plotkw..., mdata = [segregation], figure = (size = (600, 800),), axis = (aspect = 1,))
+series = lift(df -> (c = Tables.columntable(df); Point2f.(c.time, c.segregation)), abmobs.mdf)  # grows as data are collected
+ax2 = Axis(fig[2, 1]; xlabel = "Step", ylabel = "Same-group neighbours", limits = (0, T, 0, 1))
+lines!(ax2, series)
+rowsize!(fig.layout, 2, Relative(0.25))
+fname = "observable-" * "{{file}}"
+record(fig, fname, 1:T; framerate = {{fps}}) do _
+    step!(abmobs, 1)
 end
+println("Saved ", joinpath(pwd(), fname), "; final ", label(abmobs.model[]))
 '''
 
 [[actionGroups.actions]]
 id = "interactive-scenario"
-label = "Interactive Scenario"
-desc = "Use the abmexploration sliders to set parameters to an extreme scenario and observe dynamics"
+label = "Threshold Scenarios"
+desc = "The grid at step T for thresholds 0.2, 0.4 and 0.7 with the same seed, each titled with its segregation index"
 code = '''
-using Agents, GLMakie
-
-params = Dict(  # slider ranges for exploration
-    :threshold => 0.0:0.05:1.0,
-    :density   => 0.1:0.05:1.0,
-    :infection_rate => 0.01:0.01:0.5)
-
-fig, abmobs = abmexploration(model; params=params)  # launch with extended sliders
-display(fig)  # tune to extreme parameter values
+fig = Figure(size = (1200, 440))
+for (i, th) in enumerate([0.2, 0.4, 0.7])
+    m = initialize(; min_to_be_happy = th)
+    step!(m, T)
+    abmplot!(Axis(fig[1, i]; title = "threshold $th: " * label(m), aspect = 1), m; plotkw...)
+end
+display(fig)
 '''
 
 [[actionGroups]]
@@ -345,39 +479,42 @@ label = "Compare"
 
 [[actionGroups.actions]]
 id = "static-vs-video"
-label = "Static vs Video"
-desc = "Compare a snapshot plot against a video to identify which representation reveals more structure"
+label = "Same Mix, Different Pattern"
+desc = "The layout at step T beside a random reshuffle of the same residents: the group shares and density are identical, only the segregation index tells them apart"
 code = '''
-using Agents, GLMakie
-
-m1 = deepcopy(model)  # copy for static plot
-m2 = deepcopy(model)  # copy for video
-
-step!(m1, {{T}})  # advance to final frame
-fig, _, _ = abmplot(m1)  # static snapshot at t=T
-display(fig)  # show static
-
-abmvideo("{{file}}", m2; frames={{T}}, framerate={{fps}})  # record full trajectory
-println("Video saved: ", "{{file}}")  # confirm video
+m = initialize()
+step!(m, T)
+shuffled = deepcopy(m)
+groups = shuffle(Xoshiro(1), [a.group for a in allagents(shuffled)])  # same residents, groups reassigned at random
+for (a, g) in zip(allagents(shuffled), groups)
+    a.group = g
+end
+share1(x) = mean(a -> a.group == 1, allagents(x))
+fig = Figure(size = (1000, 520))
+abmplot!(Axis(fig[1, 1]; title = "Step $T: group-1 share " * string(round(share1(m); digits = 2)) * ", " * label(m), aspect = 1), m; plotkw...)
+abmplot!(Axis(fig[1, 2]; title = "Reshuffled: group-1 share " * string(round(share1(shuffled); digits = 2)) * ", " * label(shuffled), aspect = 1), shuffled; plotkw...)
+display(fig)
 '''
 
 [[actionGroups.actions]]
 id = "colour-schemes"
 label = "Colour Schemes"
-desc = "Compare different agent colour encodings to find the most informative visual representation"
+desc = "The same final grid coloured by group, by happiness and by each resident's same-group neighbour share"
 code = '''
-using Agents, GLMakie
-
-schemes = [  # three colour mappings to compare
-    (label="Binary",     f=a->(a.status==:I ? :red : :blue)),
-    (label="Tristate",   f=a->(a.status==:I ? :red : a.status==:R ? :green : :blue)),
-    (label="Continuous", f=a->a.mood/10.0))
-
-fig = Figure(size=(900,300))  # side-by-side panels
+m = initialize()
+step!(m, T)
+cg = cgrad(:viridis)
+schemes = [  # three encodings of the same state
+    (label = "Group", f = groupcolor),
+    (label = "Happy (grey) / unhappy (red)", f = a -> is_happy(a, m) ? :lightgray : :crimson),
+    (label = "Same-group share", f = a -> (s = same_share(a, m); isnan(s) ? :black : cg[s])),
+]
+fig = Figure(size = (1200, 440))
 for (i, s) in enumerate(schemes)
-    abmplot!(fig[1,i], deepcopy(model); agent_color=s.f, axis=(title=s.label,))
+    abmplot!(Axis(fig[1, i]; title = s.label, aspect = 1), m; agent_color = s.f, agent_marker = :rect, agent_size = 12)
 end
-display(fig)  # compare encodings
+display(fig)
+println(label(m))
 '''
 
 [[actionGroups]]
@@ -386,35 +523,36 @@ label = "Interpret"
 
 [[actionGroups.actions]]
 id = "spatial-clustering"
-label = "Prevalence Summary"
-desc = "Count infected agents and their share of the population at the final step (a global count: it does not measure spatial clustering)"
+label = "Spatial Clustering"
+desc = "Segregation index at step T against its value under random mixing of the same residents: the excess is the clustering the dynamics created"
 code = '''
-using Agents, Statistics
+m = initialize()
+step!(m, T)
+n = nagents(m)
+n_group = [count(a -> a.group == g, allagents(m)) for g in (1, 2)]
+expected = sum(k * (k - 1) for k in n_group) / (n * (n - 1))  # mean same-group share if neighbours were drawn at random
+observed = segregation(m)
 
-step!(model, {{T}})  # advance model to t=T
-
-agents = collect(allagents(model))  # snapshot of agents
-infected = filter(a -> a.status == :I, agents)  # infected agents
-pct_infected = length(infected) / length(agents)  # global prevalence
-
-println("=== Prevalence Summary ===")  # header
-println("Total agents:   ", length(agents))  # population size
-println("Infected:       ", length(infected))  # infected count
-println("Prevalence:     ", round(pct_infected*100; digits=1), "%")  # percentage
+println("=== Spatial Clustering at step ", T, " ===")
+println("Same-group neighbours, observed:      ", round(observed; digits = 3))
+println("Same-group neighbours, random mixing: ", round(expected; digits = 3))
+println("Excess clustering:                    ", round(observed - expected; digits = 3))
+println("Threshold asked for:                  ", m.min_to_be_happy)
 '''
 
 [[actionGroups.actions]]
 id = "animation-summary"
 label = "Animation Summary"
-desc = "Print a summary of what changed across the recorded frames to interpret the dynamics"
+desc = "What changed over the run: segregation and happiness at the start and end, when most of the change happened, and whether moving stopped"
 code = '''
-using Agents, Statistics
+_, mdf = run!(initialize(), T; mdata = [segregation, share_happy])
+res = Tables.columntable(mdf)  # plain columns: time, segregation, share_happy
+change = res.segregation[end] - res.segregation[1]
+t90 = res.time[findfirst(s -> s - res.segregation[1] >= 0.9 * change, res.segregation)]  # 90% of the total rise
 
-adata = [(:status, x -> count(==(s), x)/length(x)) for s in [:S, :I, :R]]  # fractions per state
-data, _ = run!(model, {{T}}; adata=adata)  # run with collection
-
-println("=== Animation Summary ===")  # header
-println("Steps recorded: ", {{T}})  # duration
-println("Peak infected:  ", round(100*maximum(data[:,3]); digits=1), "%")  # epidemic peak
-println("Final immune:   ", round(100*last(data[:,4]); digits=1), "%")  # recovered fraction
+println("=== Animation Summary ===")
+println("Segregation:  ", round(res.segregation[1]; digits = 2), " -> ", round(res.segregation[end]; digits = 2))
+println("Happy:        ", round(res.share_happy[1]; digits = 2), " -> ", round(res.share_happy[end]; digits = 2))
+println("90% of the change by step ", t90, " of ", T)
+println(res.share_happy[end] == 1 ? "Everyone is happy: nobody moves any more" : "Some residents are still moving at step " * string(T))
 '''

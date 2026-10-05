@@ -5,7 +5,7 @@
 
 import './media/menubarControl.css';
 import { localize, localize2 } from '../../../../nls.js';
-import { IMenuService, MenuId, IMenu, SubmenuItemAction, registerAction2, Action2, MenuItemAction, MenuRegistry } from '../../../../platform/actions/common/actions.js';
+import { IMenuService, MenuId, IMenu, SubmenuItemAction, registerAction2, Action2, MenuItemAction, MenuRegistry, isISubmenuItem } from '../../../../platform/actions/common/actions.js';
 import { MenuBarVisibility, IWindowOpenable, getMenuBarVisibility, MenuSettings, hasNativeMenu } from '../../../../platform/window/common/window.js';
 import { IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
 import { IAction, Action, SubmenuAction, Separator, IActionRunner, ActionRunner, WorkbenchActionExecutedEvent, WorkbenchActionExecutedClassification, toAction } from '../../../../base/common/actions.js';
@@ -91,7 +91,8 @@ MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
 		original: 'Explore',
 		mnemonicTitle: localize({ key: 'mExplore', comment: ['&& denotes a mnemonic'] }, "&&Explore")
 	},
-	order: 4.1
+	// After Run (6), as the native macOS menu bar has it
+	order: 6.5
 });
 
 MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
@@ -194,6 +195,17 @@ export abstract class MenubarControl extends Disposable {
 
 		// Listen for changes on the main menu
 		this._register(this.mainMenu.onDidChange(() => { this.setupMainMenu(); this.doUpdateMenubar(true); }));
+
+		// An empty top-level menu is left out of the main menu, which does not change when that menu
+		// gets its first items or loses its last (the Toolboxes menu, which only toolbox extensions
+		// fill): set the main menu up again then
+		this._register(MenuRegistry.onDidChangeMenu(e => {
+			const changed = MenuRegistry.getMenuItems(MenuId.MenubarMainMenu).some(item => isISubmenuItem(item) && typeof item.title !== 'string' && e.has(item.submenu) && !this.menus[item.title.original] !== (MenuRegistry.getMenuItems(item.submenu).length === 0));
+			if (changed) {
+				this.setupMainMenu();
+				this.doUpdateMenubar(true);
+			}
+		}));
 	}
 
 	protected setupMainMenu(): void {

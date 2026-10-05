@@ -13,7 +13,7 @@ name = "DistributionsAD.jl"
 github = "https://github.com/TuringLang/DistributionsAD.jl"
 
 [requires]
-packages = ["DistributionsAD.jl"]
+packages = ["DistributionsAD.jl", "Distributions.jl", "Enzyme.jl", "ForwardDiff.jl", "GLM.jl", "Optim.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""
@@ -369,9 +369,10 @@ label = "Predict"
 [[actionGroups.actions]]
 id = "predictions"
 label = "Predictions"
-desc = "Distribution: quantiles of the fitted law. Linear: predictions with 95% intervals. Logistic: predicted probabilities, for the first five rows"
+desc = "Distribution: quantiles of the fitted law. Linear: predictions with plug-in 95% intervals (+-1.96 sigma, parameter uncertainty ignored). Logistic: predicted probabilities, for the first five rows"
 code = '''
 {{?model=dist}} [(p = p, quantile = quantile(d_hat, p)) for p in [0.05, 0.25, 0.5, 0.75, 0.95]]
+{{?model=lr|logr}} using LinearAlgebra
 {{?model=lr}} [(row = i, prediction = dot(X[i, :], beta_hat), lower = dot(X[i, :], beta_hat) - 1.96 * sigma_hat, upper = dot(X[i, :], beta_hat) + 1.96 * sigma_hat, observed = y[i]) for i in 1:5]
 {{?model=logr}} [(row = i, probability = sigmoid(dot(X[i, :], beta_hat)), observed = y[i]) for i in 1:5]
 '''
@@ -424,12 +425,12 @@ label = "Interpret"
 [[actionGroups.actions]]
 id = "standard-errors"
 label = "Estimates With Standard Errors"
-desc = "Standard errors from the inverse Hessian of the negative log-likelihood (computed with ForwardDiff), with z-statistics"
+desc = "Standard errors from the inverse Hessian of the negative log-likelihood (computed with ForwardDiff), with z-statistics (not shown for log-scale parameters, where a zero test would mean a scale of 1)"
 code = '''
 using ForwardDiff, LinearAlgebra
 H = ForwardDiff.hessian(negloglik, p_hat)
 se = sqrt.(diag(inv(H)))
-[(parameter = pnames[i], estimate = round(p_hat[i], sigdigits=4), std_error = round(se[i], sigdigits=3), z = round(p_hat[i] / se[i], digits=2)) for i in eachindex(p_hat)]
+[(parameter = pnames[i], estimate = round(p_hat[i], sigdigits=4), std_error = round(se[i], sigdigits=3), z = startswith(pnames[i], "log_") ? missing : round(p_hat[i] / se[i], digits=2)) for i in eachindex(p_hat)]  # z for log-scale parameters would test scale = 1
 '''
 
 [[actionGroups.actions]]

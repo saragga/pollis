@@ -18,7 +18,8 @@ The module loads no database package itself: it looks up DBInterface.jl and Tabl
 packages the connection code has already loaded. DuckDB is built into Pollis: `install()` adds it,
 once, to a Julia environment of Pollis' own (`ENVIRONMENT`), which PollisDB puts on the load path
 so that `using DuckDB` works in any project without touching its Project.toml. The built-in Pollis
-database is the DuckDB file `DATABASE`.
+database is an in-memory DuckDB database that `seed` fills with the PollisDatasets each time it
+connects.
 """
 module PollisDB
 
@@ -34,8 +35,15 @@ const ENVIRONMENT = joinpath(homedir(), ".pollis", "julia", "environments", "v$(
 """The packages built into Pollis: DuckDB and what the connection code loads with it."""
 const PACKAGES = ["DuckDB", "DBInterface", "Tables"]
 
-"""The built-in Pollis database, a DuckDB file."""
-const DATABASE = joinpath(homedir(), ".pollis", "pollis.duckdb")
+
+"""The id of the built-in database's saved profile in the Databases view."""
+const BUILTIN = "pollis"
+
+"""PollisDatasets.jl, whose datasets `seed` loads into the built-in database."""
+const DATASETS = Base.PkgId(UUID("b43d2445-bde6-43fd-b0e7-0c8ab91b08dc"), "PollisDatasets")
+const DATASETS_URL = "https://github.com/Trumpingtons/PollisDatasets.jl"
+"""The commit of PollisDatasets.jl that `install()` last installed into `ENVIRONMENT`."""
+const DATASETS_COMMIT = joinpath(ENVIRONMENT, "PollisDatasets.commit")
 
 """The folder of the snapshots, one `<id>.json` per connection, watched by the Databases view."""
 const SESSIONS = joinpath(homedir(), ".pollis", "databases", "sessions")
@@ -59,7 +67,7 @@ end
 engine(con) = string(nameof(parentmodule(typeof(con))))
 
 const SQL_DUCKDB = """
-    SELECT c.table_schema, c.table_name, t.table_type, c.column_name, c.data_type
+    SELECT c.table_schema, c.table_name, t.table_type, c.column_name, c.data_type, t.table_comment AS table_comment, c.column_comment AS column_comment
     FROM information_schema.columns c
     JOIN information_schema.tables t USING (table_catalog, table_schema, table_name)
     WHERE c.table_catalog = current_database()
@@ -91,6 +99,7 @@ function introspect(con)
     DBInterface, Tables = loaded(DBINTERFACE), loaded(TABLES)
     cols = Tables.columntable(DBInterface.execute(con, introspection_sql(con)))
     text(x) = x === missing ? "" : string(x)
+    commented = hasproperty(cols, :table_comment)  # DuckDB only
     schemas = Dict{String,Any}[]
     for i in eachindex(cols.table_name)
         schema, table = text(cols.table_schema[i]), text(cols.table_name[i])
@@ -101,8 +110,11 @@ function introspect(con)
         if isempty(tables) || tables[end]["name"] != table
             kind = occursin("VIEW", uppercase(text(cols.table_type[i]))) ? "view" : "table"
             push!(tables, Dict{String,Any}("name" => table, "kind" => kind, "columns" => Dict{String,Any}[]))
+            commented && !isempty(text(cols.table_comment[i])) && (tables[end]["comment"] = text(cols.table_comment[i]))
         end
-        push!(tables[end]["columns"], Dict{String,Any}("name" => text(cols.column_name[i]), "type" => text(cols.data_type[i])))
+        column = Dict{String,Any}("name" => text(cols.column_name[i]), "type" => text(cols.data_type[i]))
+        commented && !isempty(text(cols.column_comment[i])) && (column["comment"] = text(cols.column_comment[i]))
+        push!(tables[end]["columns"], column)
     end
     return schemas
 end
@@ -161,9 +173,17 @@ end
 """
     register(id, con; name = "")
 
-Show `con` in the Databases view as the connection of its saved profile `id`.
+Show `con` in the Databases view as the connection of its saved profile `id`. The built-in
+database is seeded with the PollisDatasets first.
 """
 function register(id::AbstractString, con; name::AbstractString = "")
+    if id == BUILTIN
+        try
+            seed(con)
+        catch err
+            @warn "Pollis: could not load the PollisDatasets into the built-in database" exception = err
+        end
+    end
     entry = Entry(con, name)
     CONNECTIONS[id] = entry
     write_snapshot(id, entry)
@@ -202,9 +222,15 @@ end
 
 """
     disconnect(id)
+    disconnect(con)
 
-Close the connection shown as `id` and remove it from the Databases view.
+Close the connection shown as `id`, or the connection `con`, and remove it from the Databases view.
 """
+function disconnect(con)
+    id = findfirst(e -> e.con === con, CONNECTIONS)
+    id === nothing ? loaded(DBINTERFACE).close!(con) : disconnect(id)
+    return nothing
+end
 function disconnect(id::AbstractString)
     entry = pop!(CONNECTIONS, id, nothing)
     entry === nothing && return nothing
@@ -243,21 +269,85 @@ function preview(con, table::AbstractString; limit::Integer = 100)
 end
 
 """
+    seed(con)
+
+Load every dataset of PollisDatasets.jl into the built-in database `con` as a table named after
+its id, with its title, description, source and column descriptions as comments.
+"""
+function seed(con)
+    path = Base.locate_package(DATASETS)
+    path === nothing && return nothing
+    data = joinpath(dirname(dirname(path)), "data")
+    DBInterface = loaded(DBINTERFACE)
+    TOML = Base.require(Base.PkgId(UUID("fa267f1f-6049-4f14-aa54-33bafae1ed76"), "TOML"))
+    entries = TOML.parsefile(joinpath(dirname(data), "datasets.toml"))["datasets"]
+    quoted(x) = "'" * replace(string(x), "'" => "''") * "'"
+    sql(statement) = DBInterface.execute(con, statement)
+    for entry in entries
+        id = entry["id"]
+        file = joinpath(data, id * ".csv")
+        isfile(file) || continue
+        sql("CREATE OR REPLACE TABLE main.\"$id\" AS SELECT * FROM read_csv($(quoted(file)))")
+        sql("COMMENT ON TABLE main.\"$id\" IS " * quoted("$(entry["title"]): $(entry["description"]) Source: $(entry["source"]). Licence: $(entry["licence"])."))
+        for column in entry["columns"]
+            sql("COMMENT ON COLUMN main.\"$id\".\"$(column["name"])\" IS " * quoted(column["description"]))
+        end
+    end
+    return nothing
+end
+
+"""The commit at the head of PollisDatasets.jl's main branch on GitHub, or `nothing` when GitHub cannot be reached."""
+function latest_datasets_commit()
+    try
+        Downloads = Base.require(Base.PkgId(UUID("f43a241f-c20a-4ad4-852c-f6b1247861c6"), "Downloads"))
+        io = IOBuffer()
+        url = replace(DATASETS_URL, "https://github.com/" => "https://api.github.com/repos/") * "/commits/main"
+        response = Base.invokelatest(Downloads.request, url; output = io, headers = ["Accept" => "application/vnd.github.sha"], timeout = 3)
+        return response.status == 200 ? String(take!(io)) : nothing
+    catch
+        return nothing
+    end
+end
+
+"""
     install()
 
-Install the packages built into Pollis that no environment on the load path provides yet into
-`ENVIRONMENT`. Runs once: afterwards it finds them and returns at once. The active project is
-left as it was.
+Install the packages built into Pollis, and the PollisDatasets, that no environment on the load path provides yet into
+`ENVIRONMENT`. The first time, it adds them; afterwards it keeps the PollisDatasets installed there up to
+date with GitHub, so that new datasets reach the built-in database. Pkg runs (and precompiles) only when
+something is missing or GitHub has a newer commit than `DATASETS_COMMIT`; offline, the installed copy is
+kept. The active project is left as it was.
 """
 function install()
     missing_packages = filter(p -> Base.identify_package(p) === nothing, PACKAGES)
-    isempty(missing_packages) && return nothing
-    println("Pollis: installing ", join(missing_packages, ", "), " for the built-in database. This happens only once.")
+    missing_datasets = Base.locate_package(DATASETS) === nothing
+    manifest = joinpath(ENVIRONMENT, "Manifest.toml")
+    # Installed by Pollis, so ours to update; a copy in the user's own environment is left alone.
+    ours = missing_datasets || (isfile(manifest) && occursin(string(DATASETS.uuid), read(manifest, String)))
+    latest = ours ? latest_datasets_commit() : nothing
+    installed = isfile(DATASETS_COMMIT) ? strip(read(DATASETS_COMMIT, String)) : ""
+    outdated = !missing_datasets && latest !== nothing && latest != installed
+    isempty(missing_packages) && !missing_datasets && !outdated && return nothing
+    if !isempty(missing_packages) || missing_datasets
+        println("Pollis: installing ", join([missing_packages; missing_datasets ? [DATASETS.name] : String[]], ", "), " for the built-in database. This happens only once.")
+    end
     Pkg = Base.require(Main, :Pkg)
     active = Base.ACTIVE_PROJECT[]
     try
         Base.invokelatest(Pkg.activate, ENVIRONMENT; io = devnull)
-        Base.invokelatest(Pkg.add, missing_packages)
+        isempty(missing_packages) || Base.invokelatest(Pkg.add, missing_packages)
+        if missing_datasets
+            Base.invokelatest(Pkg.add; url = DATASETS_URL)
+        elseif outdated
+            try
+                # One git fetch, without the registry; Pkg then precompiles the new version.
+                Base.invokelatest(Pkg.update, DATASETS.name; update_registry = false, io = devnull)
+            catch err
+                @debug "Pollis: PollisDatasets not updated" exception = err
+                latest = nothing
+            end
+        end
+        latest === nothing || write(DATASETS_COMMIT, latest)
     finally
         Base.ACTIVE_PROJECT[] = active
     end

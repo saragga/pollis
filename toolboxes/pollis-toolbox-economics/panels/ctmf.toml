@@ -1,0 +1,318 @@
+# Continuous-Time Macro-Finance Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/ctmf.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Continuous-Time Macro-Finance"
+viewType = "pollis.ctmf"
+defaultModel = "main"
+
+[[packages]]
+name = "EconPDEs.jl"
+github = "https://github.com/matthieugomez/EconPDEs.jl"
+
+[requires]
+packages = ["EconPDEs.jl", "Plots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Quick Start"
+file = "ctmf/tutorial-01-quickstart.ipynb"
+bundled = true
+description = "Solve a habit model and plot the price-dividend ratio and risk premium"
+
+[[notebookSections.notebooks]]
+name = "Long-Run Risk"
+file = "ctmf/tutorial-02-lrr.ipynb"
+bundled = true
+description = "Bansal-Yaron long-run risk model: price-dividend ratio and term structure"
+
+[[notebookSections.notebooks]]
+name = "Habit Formation"
+file = "ctmf/tutorial-03-habit.ipynb"
+bundled = true
+description = "Campbell-Cochrane habit model: equity premium and Sharpe ratio"
+
+[[notebookSections.notebooks]]
+name = "Financial Sector"
+file = "ctmf/tutorial-04-finance.ipynb"
+bundled = true
+description = "Brunnermeier-Sannikov macro-finance model with intermediary balance sheets"
+
+[[wikis]]
+name = "Overview"
+file = "ctmf/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Factsheet"
+file = "ctmf/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "ctmf/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "ctmf/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "ctmf/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "ctmf/decision-guide.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Original Papers (from packages)"
+
+[[references]]
+title = "By Force of Habit: A Consumption-Based Explanation of Aggregate Stock Market Behavior"
+authors = "Campbell, J. Y., & Cochrane, J. H."
+year = 1999
+journal = ""
+url = "https://doi.org/10.1086/250059"
+openAccess = false
+
+[[references]]
+title = "Risks for the Long Run: A Potential Resolution of Asset Pricing Puzzles"
+authors = "Bansal, R., & Yaron, A."
+year = 2004
+journal = ""
+url = "https://doi.org/10.1111/j.1540-6261.2004.00670.x"
+openAccess = false
+
+[[references]]
+title = "A Macroeconomic Model with a Financial Sector"
+authors = "Brunnermeier, M. K., & Sannikov, Y."
+year = 2014
+journal = ""
+url = "https://doi.org/10.1257/aer.104.2.379"
+openAccess = false
+
+[[references]]
+title = "An Intertemporal Capital Asset Pricing Model"
+authors = "Merton, R. C."
+year = 1973
+journal = ""
+url = "https://doi.org/10.2307/1913811"
+openAccess = false
+
+[[bullets]]
+text = "Solves asset pricing models via Hamilton-Jacobi-Bellman equations in continuous time using finite difference methods"
+detail = ""
+
+[[bullets]]
+text = "Supports habit formation (Campbell-Cochrane), long-run risk (Bansal-Yaron), disaster risk, and macro-finance models with financial intermediaries"
+detail = ""
+
+[[bullets]]
+text = "Produces price-dividend ratios, risk premia, Sharpe ratios, and term structure implications from structural parameters"
+detail = ""
+
+[[bullets]]
+text = "Epstein-Zin recursive preferences allow risk aversion (gamma) and the elasticity of intertemporal substitution (psi) to be calibrated independently"
+detail = ""
+
+[[inputs]]
+id = "gamma"
+label = "gamma (risk aversion)"
+tooltip = "Coefficient of relative risk aversion in the Epstein-Zin utility. The package example uses 7.5."
+default = "7.5"
+
+[[inputs]]
+id = "psi"
+label = "psi (EIS)"
+tooltip = "Elasticity of intertemporal substitution. Must differ from 1. Long-run risk is priced (and the wealth-consumption ratio rises with expected growth) only when psi > 1."
+default = "1.5"
+
+[[inputs]]
+id = "rho"
+label = "rho (discount rate)"
+tooltip = "Subjective discount rate per year, in continuous time."
+default = "0.024"
+
+[[inputs]]
+id = "mubar"
+label = "mubar (mean growth)"
+tooltip = "Long-run mean of expected consumption growth, per year."
+default = "0.018"
+newRow = true
+
+[[inputs]]
+id = "sigma"
+label = "sigma (consumption volatility)"
+tooltip = "Volatility of consumption growth per year (annual units, continuous time). About 0.027 for US consumption; Bansal and Yaron calibrate 0.0078 per month, which is the same order (0.0078 times sqrt(12) = 0.027)."
+default = "0.027"
+
+[[inputs]]
+id = "kappa"
+label = "kappa (mean reversion)"
+tooltip = "Mean-reversion speed of expected growth per year. 0.252 matches the Bansal-Yaron monthly persistence 0.979 (minus 12 log 0.979)."
+default = "0.252"
+
+[[inputs]]
+id = "nu"
+label = "nu (growth-news volatility)"
+tooltip = "Volatility of expected growth as a multiple of sigma, in annual drift units: d mu = kappa (mubar - mu) dt + nu sigma dW. 0.528 gives a stationary standard deviation of expected growth of about 2% per year, as in Bansal and Yaron."
+default = "0.528"
+
+[[inputs]]
+id = "N"
+label = "N (grid points)"
+tooltip = "Number of grid points for expected growth, spanning the mean plus or minus 3 stationary standard deviations. More points give higher accuracy at greater computational cost."
+default = "100"
+newRow = true
+
+[[codeBranches]]
+model = "main"
+code = '''
+using EconPDEs
+
+# Bansal-Yaron (2004) long-run risk with constant volatility, in continuous time and annual units:
+#   dC/C = mu dt + sigma dZc,   d mu = kappa (mubar - mu) dt + nu sigma dZmu
+# The unknown is the wealth-consumption ratio p(mu) of the consumption claim (two-state version: EconPDEs examples/asset_pricing/bansal_yaron.jl)
+Base.@kwdef struct LongRunRisk
+    mubar::Float64; sigma::Float64; kappa::Float64; nu::Float64
+    rho::Float64; gamma::Float64; psi::Float64
+end
+
+function (m::LongRunRisk)(state::NamedTuple, u::NamedTuple)
+    (; mubar, sigma, kappa, nu, rho, gamma, psi) = m
+    (; mu) = state
+    (; p, pmu_up, pmu_down, pmumu) = u
+    drift = kappa * (mubar - mu)  # drift of expected growth
+    vol   = nu * sigma  # volatility of expected growth
+    pmu   = drift >= 0 ? pmu_up : pmu_down  # upwind on the sign of the drift
+    sigma_p = pmu / p * vol  # volatility of p from growth news
+    mu_p    = pmu / p * drift + 0.5 * pmumu / p * vol^2  # drift of p, divided by p
+    price_c  = gamma * sigma  # market price of short-run consumption risk
+    price_mu = (gamma * psi - 1) / (psi - 1) * sigma_p  # market price of long-run risk (zero under power utility, gamma psi = 1)
+    r = rho + mu / psi - (1 + 1 / psi) / 2 * gamma * sigma^2 - (gamma * psi - 1) / (2 * (psi - 1)) * sigma_p^2  # risk-free rate
+    excess = price_c * sigma + price_mu * sigma_p  # expected excess return on the consumption claim
+    vol_R  = sqrt(sigma^2 + sigma_p^2)  # return volatility
+    pt = -p * (1 / p + mu + mu_p - r - excess)  # zero at the solution: expected return = r + excess
+    return (; pt), (; r, excess, vol_R, sharpe = excess / vol_R, msr = sqrt(price_c^2 + price_mu^2))
+end
+
+m  = LongRunRisk(mubar = {{mubar}}, sigma = {{sigma}}, kappa = {{kappa}}, nu = {{nu}}, rho = {{rho}}, gamma = {{gamma}}, psi = {{psi}})
+sd = m.nu * m.sigma / sqrt(2 * m.kappa)  # stationary sd of expected growth (OU)
+mus = range(m.mubar - 3sd, m.mubar + 3sd; length = {{N}})  # grid over expected growth
+
+result = pdesolve(m, (; mu = mus), (; p = ones({{N}})))
+p = result.solution.p  # wealth-consumption ratio on the grid, in years of consumption
+s = result.saved  # r, excess, vol_R, sharpe and msr on the grid
+w = exp.(-0.5 .* ((mus .- m.mubar) ./ sd) .^ 2); w = w ./ sum(w)  # stationary (normal) density of mu on the grid, for unconditional moments
+
+println("Converged: ", result.converged)
+println("Mean wealth-consumption ratio: ", round(sum(w .* p), digits=1), " years")
+println("Mean excess return on the consumption claim: ", round(100 * sum(w .* s.excess), digits=2), "% a year")
+println("Mean risk-free rate: ", round(100 * sum(w .* s.r), digits=2), "% a year")
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "pd_ratio"
+label = "Wealth-Consumption Ratio"
+desc = "Plot the wealth-consumption ratio against expected growth, with the stationary density of expected growth for scale"
+code = '''
+using Plots
+
+plot(100 .* mus, p; xlabel = "Expected consumption growth (% a year)", ylabel = "Wealth-consumption ratio (years)",
+    title = "Price of the consumption claim", label = "p(mu)")  # rises with mu when psi > 1
+vline!([100 * m.mubar]; linestyle = :dash, color = :gray, label = "mubar")
+plot!(twinx(), 100 .* mus, w; color = :orange, alpha = 0.5, ylabel = "Stationary weight", label = "", yticks = false)
+'''
+
+[[actionGroups.actions]]
+id = "risk_premium"
+label = "Risk Premium"
+desc = "Plot the conditional excess return on the consumption claim, split into short-run and long-run risk"
+code = '''
+using Plots
+
+short_run = fill(m.gamma * m.sigma^2, length(mus))  # price_c * sigma: constant
+long_run  = s.excess .- short_run  # price of growth news times exposure to it
+
+plot(100 .* mus, 100 .* s.excess; xlabel = "Expected consumption growth (% a year)", ylabel = "% a year",
+    title = "Conditional excess return (consumption claim)", label = "Total")
+plot!(100 .* mus, 100 .* short_run; linestyle = :dash, label = "Short-run risk")
+plot!(100 .* mus, 100 .* long_run; linestyle = :dot, label = "Long-run risk")
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "convergence"
+label = "Convergence Check"
+desc = "Check the solver residual and re-solve on a grid twice as fine to see whether the moments change"
+code = '''
+using EconPDEs
+
+println("Converged: ", result.converged, ", residual norm ", result.residual_norm, " (tolerance ", result.tolerance, ")")
+
+mus2 = range(first(mus), last(mus); length = 2 * length(mus))  # twice as fine, same span
+fine = pdesolve(m, (; mu = mus2), (; p = ones(length(mus2))))
+w2 = exp.(-0.5 .* ((mus2 .- m.mubar) ./ sd) .^ 2); w2 = w2 ./ sum(w2)
+println("Mean wealth-consumption ratio, N = ", length(mus), ": ", round(sum(w .* p), digits=3), ", N = ", length(mus2), ": ", round(sum(w2 .* fine.solution.p), digits=3))
+println("Mean excess return (%),        N = ", length(mus), ": ", round(100 * sum(w .* s.excess), digits=4), ", N = ", length(mus2), ": ", round(100 * sum(w2 .* fine.saved.excess), digits=4))
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "sharpe_ratio"
+label = "Sharpe Ratio"
+desc = "Sharpe ratio of the consumption claim and the maximum Sharpe ratio (the market price of risk), against the power-utility benchmark gamma sigma"
+code = '''
+println("Mean Sharpe ratio, consumption claim: ", round(sum(w .* s.sharpe), digits=3))
+println("Maximum Sharpe ratio (market price of risk): ", round(sum(w .* s.msr), digits=3))
+println("Power utility (gamma psi = 1) would give gamma sigma = ", round(m.gamma * m.sigma, digits=3))  # the long-run-risk term is what lifts the Sharpe ratio
+println("The US equity Sharpe ratio is about 0.3-0.4; equity is a levered claim on dividends, so compare with care.")
+'''
+
+[[actionGroups.actions]]
+id = "ap_moments"
+label = "Asset Pricing Moments"
+desc = "Unconditional moments of the consumption claim, weighted by the stationary density of expected growth"
+code = '''
+avg(x) = sum(w .* x)  # stationary-density weights from the main code
+
+println("--- Consumption claim, unconditional moments ---")
+println("Wealth-consumption ratio: ", round(avg(p), digits=1), " years")
+println("Excess return:            ", round(100 * avg(s.excess), digits=2), "% a year")
+println("Return volatility:        ", round(100 * avg(s.vol_R), digits=2), "% a year")
+println("Sharpe ratio:             ", round(avg(s.sharpe), digits=3))
+println("Risk-free rate:           ", round(100 * avg(s.r), digits=2), "% a year")
+println("Bansal and Yaron price equity as a dividend claim levered on growth (leverage about 3), which has a larger premium than the consumption claim.")
+'''
+
+[[actionGroups.actions]]
+id = "state_dynamics"
+label = "State Variable Dynamics"
+desc = "Half-life of shocks to expected growth, its stationary standard deviation nu sigma / sqrt(2 kappa), and its share of consumption-growth variance"
+code = '''
+half_life = log(2) / m.kappa  # years for a shock to expected growth to halve
+
+println("Shock half-life:                    ", round(half_life, digits=2), " years")
+println("Stationary sd of expected growth:   ", round(100 * sd, digits=2), "% a year")
+println("Instantaneous sd of consumption:    ", round(100 * m.sigma, digits=2), "% a year")
+println("Expected growth is small and persistent: its variance is ", round(100 * sd^2 / (sd^2 + m.sigma^2), digits=1), "% of the variance of one-year consumption growth (ignoring time aggregation).")
+'''

@@ -533,12 +533,12 @@ label = "Compare"
 [[actionGroups.actions]]
 id = "linear-baseline"
 label = "vs Linear Baseline"
-desc = "Training MSE of the network against least squares on the flattened input windows"
+desc = "Training MSE of the network against least squares on the flattened input windows (both in-sample; with fewer sequences than features the linear fit can interpolate, MSE near 0)"
 code = '''
 Z = reshape({{xvar}}, :, size({{xvar}}, 3))  # flatten each window into one feature vector
 Z1 = vcat(Z, ones(Float32, 1, size(Z, 2)))  # add an intercept row
 W = {{yvar}} / Z1  # least-squares coefficients
-(network = loss(model, {{xvar}}, {{yvar}}), linear = Flux.mse(W * Z1, {{yvar}}))
+(network = loss(model, {{xvar}}, {{yvar}}), linear = Flux.mse(W * Z1, {{yvar}}), linear_can_interpolate = size(Z1, 1) >= size(Z1, 2))  # in-sample for both
 '''
 
 [[actionGroups]]
