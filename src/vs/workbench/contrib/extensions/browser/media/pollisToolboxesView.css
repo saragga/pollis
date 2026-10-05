@@ -1,0 +1,68 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) 2026 Antonio Saragga Seabra
+ *  Licensed under the GNU Affero General Public License v3.0 or later. See LICENSE.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+/* The Toolboxes section of the Extensions pane: one row per toolbox, its button on the right */
+.pollis-toolboxes {
+	overflow-y: auto;
+	box-sizing: border-box;
+}
+
+.pollis-toolboxes .pollis-toolboxes-message {
+	padding: 6px 20px;
+	color: var(--vscode-descriptionForeground);
+}
+
+.pollis-toolboxes .pollis-toolboxes-message:empty {
+	display: none;
+}
+
+.pollis-toolboxes .pollis-toolbox {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 4px 12px 4px 20px;
+}
+
+.pollis-toolboxes .pollis-toolbox .details {
+	flex: 1;
+	min-width: 0;
+}
+
+.pollis-toolboxes .pollis-toolbox .header {
+	display: flex;
+	align-items: baseline;
+	gap: 6px;
+	overflow: hidden;
+}
+
+.pollis-toolboxes .pollis-toolbox .name {
+	font-weight: bold;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.pollis-toolboxes .pollis-toolbox .version {
+	flex-shrink: 0;
+	font-size: 90%;
+	opacity: 0.7;
+}
+
+.pollis-toolboxes .pollis-toolbox .description {
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	color: var(--vscode-descriptionForeground);
+}
+
+.pollis-toolboxes .pollis-toolbox .action {
+	flex-shrink: 0;
+}
+
+.pollis-toolboxes .pollis-toolbox .action .monaco-button {
+	padding: 2px 8px;
+	width: auto;
+	white-space: nowrap;
+}

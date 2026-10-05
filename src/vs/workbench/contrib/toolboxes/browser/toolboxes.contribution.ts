@@ -7,8 +7,8 @@ import { localize } from '../../../../../vs/nls.js';
 import { MenuRegistry, MenuId } from '../../../../platform/actions/common/actions.js';
 import './toolboxExtensions.js';
 
-// The Analytics Toolbox comes from its extension (extensions/pollis-toolbox-analytics), see toolboxExtensions.ts
-// The Economics and Econometrics Toolboxes come from their extensions (extensions/pollis-toolbox-economics, extensions/pollis-toolbox-econometrics);
+// The Analytics, Economics and Econometrics Toolboxes come from their extensions (toolboxes/pollis-toolbox-*, not built in:
+// installed from the Toolboxes section of the Extensions pane), see toolboxExtensions.ts;
 // Game Theory is in the Optimise menu
 
 // Epidemiology Toolbox hidden for now: uncomment its three blocks to restore it.

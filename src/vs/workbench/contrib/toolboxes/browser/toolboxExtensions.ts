@@ -88,6 +88,9 @@ const toolboxesExtensionPoint = ExtensionsRegistry.registerExtensionPoint<IToolb
  * Adds the toolboxes that extensions contribute to the Toolboxes menu. A toolbox extension has no
  * code: its panels are TOML files read here and opened on the shared scaffold, and its wikis and
  * notebooks (folders `wiki/<panel id>/` and `notebooks/<panel id>/`) are served as if bundled.
+ * The toolbox extensions are not built in (their sources are in toolboxes/ at the repository root):
+ * the user installs them from the Toolboxes section of the Extensions pane, into the user's
+ * extensions folder, and the files are read from wherever the extension is installed.
  */
 class ToolboxExtensionsContribution extends Disposable implements IWorkbenchContribution {
 
