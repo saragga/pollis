@@ -3,14 +3,14 @@
  *  Licensed under the GNU Affero General Public License v3.0 or later. See LICENSE.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-// Write the panel index of the Pollis Extension Agent plugin, build/pollis/panel-index.json.
+// Write the panel index of the Pollis Agents plugin, build/pollis/panel-index.json.
 //
 //   node build/pollis/makePanelIndex.ts            write it
 //   node build/pollis/makePanelIndex.ts --check    exit 1 if it is out of date
 //
 // The plugin lives in its own repository, Trumpingtons/pollis-plugins (the default marketplace of
-// chat.plugins.marketplaces). Its builder (plugins/pollis-extension-agent/scripts/makeToolbox.mjs
-// there) runs without a source checkout: it reads this index from
+// chat.plugins.marketplaces). Its builder (plugins/pollis-agents/scripts/makeToolbox.mjs there)
+// runs without a source checkout: it reads this index from
 // https://raw.githubusercontent.com/saragga/pollis/main/build/pollis/panel-index.json
 // and then only the files a toolbox needs. The index resolves every menu entry the way
 // makeExtension.ts does (panelResolver.ts): per panel, its id, title, the commands that open it

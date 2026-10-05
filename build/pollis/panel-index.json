@@ -2216,8 +2216,22 @@
 			"toml": "src/vs/workbench/contrib/model/browser/webviews/dist.toml",
 			"wikiRoot": "src/vs/workbench/contrib/model/browser/media/wiki",
 			"notebookRoot": "src/vs/workbench/contrib/model/browser/media/notebooks",
-			"wikis": [],
-			"notebooks": [],
+			"wikis": [
+				"dist/assumptions.md",
+				"dist/decision-guide.md",
+				"dist/diagnostics.md",
+				"dist/factsheet.md",
+				"dist/interpretation.md",
+				"dist/overview.md",
+				"dist/pollis-vs-crystalball.md"
+			],
+			"notebooks": [
+				"dist/tutorial-01-univariate.ipynb",
+				"dist/tutorial-01-univariate.jl",
+				"dist/tutorial-02-truncated-censored.ipynb",
+				"dist/tutorial-03-multivariate.ipynb",
+				"dist/tutorial-04-mixture-composite.ipynb"
+			],
 			"packages": [
 				"Distributions.jl"
 			]
@@ -2244,8 +2258,22 @@
 			"toml": "src/vs/workbench/contrib/model/browser/webviews/distSampling.toml",
 			"wikiRoot": "src/vs/workbench/contrib/model/browser/media/wiki",
 			"notebookRoot": "src/vs/workbench/contrib/model/browser/media/notebooks",
-			"wikis": [],
-			"notebooks": [],
+			"wikis": [
+				"dist/assumptions.md",
+				"dist/decision-guide.md",
+				"dist/diagnostics.md",
+				"dist/factsheet.md",
+				"dist/interpretation.md",
+				"dist/overview.md",
+				"dist/pollis-vs-crystalball.md"
+			],
+			"notebooks": [
+				"dist/tutorial-01-univariate.ipynb",
+				"dist/tutorial-01-univariate.jl",
+				"dist/tutorial-02-truncated-censored.ipynb",
+				"dist/tutorial-03-multivariate.ipynb",
+				"dist/tutorial-04-mixture-composite.ipynb"
+			],
 			"packages": [
 				"Distributions.jl"
 			]
