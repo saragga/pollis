@@ -3,13 +3,15 @@
  *  Licensed under the GNU Affero General Public License v3.0 or later. See LICENSE.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-// Write the panel index of the Extension Agent plugin, plugins/pollis-extension-agent/panel-index.json.
+// Write the panel index of the Pollis Extension Agent plugin, build/pollis/panel-index.json.
 //
 //   node build/pollis/makePanelIndex.ts            write it
 //   node build/pollis/makePanelIndex.ts --check    exit 1 if it is out of date
 //
-// The plugin's builder (plugins/pollis-extension-agent/scripts/makeToolbox.mjs) runs without a
-// source checkout: it reads this index from https://raw.githubusercontent.com/saragga/pollis/main/
+// The plugin lives in its own repository, Trumpingtons/pollis-plugins (the default marketplace of
+// chat.plugins.marketplaces). Its builder (plugins/pollis-extension-agent/scripts/makeToolbox.mjs
+// there) runs without a source checkout: it reads this index from
+// https://raw.githubusercontent.com/saragga/pollis/main/build/pollis/panel-index.json
 // and then only the files a toolbox needs. The index resolves every menu entry the way
 // makeExtension.ts does (panelResolver.ts): per panel, its id, title, the commands that open it
 // with their menu titles, its TOML, the wiki and notebook files it ships, and whether it can go in
@@ -23,7 +25,7 @@ import * as path from 'path';
 import { parseToml, type TomlValue } from '../../src/vs/workbench/contrib/model/browser/common/tomlPanelData.ts';
 import { ICON, materialFolders, NOTEBOOKS_DIR, PanelError, Pollis, ROOT, TOOLBOXES_DIR, TOP_LEVEL_MENUS, WIKI_DIR } from './panelResolver.ts';
 
-const OUT_FILE = path.join(ROOT, 'plugins', 'pollis-extension-agent', 'panel-index.json');
+const OUT_FILE = path.join(ROOT, 'build', 'pollis', 'panel-index.json');
 
 /** A command that opens a panel, in the index. */
 interface IndexCommand {
@@ -86,7 +88,8 @@ function packagesOf(toml: TomlValue): string[] {
 /** The material of a panel whose TOML is `tomlFile`, with its wikis and notebooks under the given roots. */
 function material(id: string, tomlFile: string, wikiRoot: string, notebookRoot: string, warnings: string[]): Pick<IndexPanel, 'toml' | 'wikiRoot' | 'notebookRoot' | 'wikis' | 'notebooks' | 'packages'> {
 	const toml = parseToml(fs.readFileSync(tomlFile, 'utf-8'));
-	const folders = materialFolders({ id }, toml, message => warnings.push(message), { wiki: wikiRoot, notebook: notebookRoot });
+	// A toolbox panel may name files of Pollis itself (e.g. vcm names tvm/...), which resolve there
+	const folders = materialFolders({ id }, toml, message => warnings.push(message), { wiki: [wikiRoot, WIKI_DIR], notebook: [notebookRoot, NOTEBOOKS_DIR] });
 	return {
 		toml: relative(tomlFile),
 		wikiRoot: relative(wikiRoot),

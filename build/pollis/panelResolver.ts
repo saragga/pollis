@@ -313,7 +313,7 @@ export class Pollis {
  * The folders of a panel's wikis and notebooks: its id and the folders its TOML names (usually the
  * id, sometimes another name, e.g. `game-theory`). Warns about a named file that does not exist.
  */
-export function materialFolders(panel: Pick<ResolvedPanel, 'id'>, toml: TomlValue, warn: (message: string) => void = message => console.warn(`Warning: ${message}`), roots = { wiki: WIKI_DIR, notebook: NOTEBOOKS_DIR }): { wiki: Set<string>; notebook: Set<string> } {
+export function materialFolders(panel: Pick<ResolvedPanel, 'id'>, toml: TomlValue, warn: (message: string) => void = message => console.warn(`Warning: ${message}`), roots = { wiki: [WIKI_DIR], notebook: [NOTEBOOKS_DIR] }): { wiki: Set<string>; notebook: Set<string> } {
 	const wikis = (toml.wikis as TomlValue[] | undefined) ?? [];
 	const notebooks = ((toml.notebookSections as TomlValue[] | undefined) ?? []).flatMap(section => (section.notebooks as TomlValue[] | undefined) ?? []);
 	const result = { wiki: new Set([panel.id]), notebook: new Set([panel.id]) };
@@ -324,10 +324,37 @@ export function materialFolders(panel: Pick<ResolvedPanel, 'id'>, toml: TomlValu
 				continue;
 			}
 			result[kind].add(file.split('/')[0]);
-			if (!fs.existsSync(path.join(root, file))) {
+			if (!root.some(folder => fs.existsSync(path.join(folder, file)))) {
 				warn(`the panel ${panel.id} names the ${kind} ${file}, which does not exist`);
 			}
 		}
 	}
 	return result;
+}
+
+/**
+ * The TOML of an independent copy of a panel: the `file` entries of its wikis and notebooks that
+ * are in a folder the copy ships move to `<prefix>.<folder>`, so the copy's folders never replace
+ * Pollis' own (wiki and notebook folders are registered by name). Files in other folders keep
+ * resolving where they did. Throws when not every entry of those folders was rewritten.
+ * The plugin's builder (makeToolbox.mjs in Trumpingtons/pollis-plugins) does the same.
+ */
+export function renameMaterialFolders(text: string, toml: TomlValue, shipped: ReadonlySet<string>, prefix: string): string {
+	const entries = [
+		...((toml.wikis as TomlValue[] | undefined) ?? []),
+		...((toml.notebookSections as TomlValue[] | undefined) ?? []).flatMap(section => (section.notebooks as TomlValue[] | undefined) ?? []),
+	].filter(entry => typeof entry.file === 'string' && shipped.has(entry.file.split('/')[0]));
+	let count = 0;
+	const renamed = text.replace(/^(?<before>\s*file\s*=\s*)(?<quote>["'])(?<folder>[^"'/\n]+)\/(?<rest>[^"'\n]*)\k<quote>/gm, (match, ...args) => {
+		const { before, quote, folder, rest } = args[args.length - 1] as Record<string, string>;
+		if (!shipped.has(folder)) {
+			return match;
+		}
+		count++;
+		return `${before}${quote}${prefix}.${folder}/${rest}${quote}`;
+	});
+	if (count !== entries.length) {
+		throw new PanelError(`cannot rename the wiki and notebook files of the panel TOML (${count} of ${entries.length} file entries found)`);
+	}
+	return renamed;
 }

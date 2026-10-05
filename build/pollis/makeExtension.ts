@@ -11,11 +11,15 @@
 // Writes toolboxes/<name>/: package.json (the pollisToolboxes contribution), panels/<id>.toml,
 // wiki/<id>/, notebooks/<id>/, icon.png and a README.md to finish by hand (its "What it covers"
 // column). Then `node build/pollis/packageToolboxes.ts` packages it with the other toolboxes.
+// With mode = "copy" (the default) every panel is an independent copy: panel id <prefix>.<id>,
+// command pollis.<name>.<id>, and its wiki and notebook folders <prefix>.<folder> (the TOML's
+// file entries rewritten), so it has its own editor tab and ~/.pollis folders and never replaces
+// Pollis' wikis and notebooks of the original panel (panelResolver.ts, renameMaterialFolders).
 // Nothing in Pollis itself is changed: with mode = "move" the panels keep their command ids and
 // the script prints what to remove from Pollis, which is done by hand (the Extension Agent skill,
 // .agents/skills/extension-agent, does it after asking).
 // The resolution of menu entries to panels is in panelResolver.ts, shared with makePanelIndex.ts
-// (the panel index of the Extension Agent plugin for users, plugins/pollis-extension-agent).
+// (the panel index of the Pollis Extension Agent plugin for users, in Trumpingtons/pollis-plugins).
 //
 // The spec:
 //   [extension]
@@ -23,7 +27,8 @@
 //   displayName = "Finance Toolbox"
 //   description = "..."
 //   version = "1.0.0"                      optional, default 1.0.0
-//   mode = "copy"                          copy (new command ids, Pollis keeps the panels) or move
+//   mode = "copy"                          copy (independent copies, Pollis keeps the panels) or move
+//   prefix = "finance"                     optional, copy mode: names the copies, default: the name without pollis-toolbox-
 //
 //   [[menu]]                               one or more: where the entries go
 //   id = "finance"
@@ -45,7 +50,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { parseToml, type TomlValue } from '../../src/vs/workbench/contrib/model/browser/common/tomlPanelData.ts';
-import { ICON, materialFolders, NOTEBOOKS_DIR, PanelError, Pollis, ROOT, TOOLBOXES_DIR, WIKI_DIR, type ResolvedPanel, type SpecMenu } from './panelResolver.ts';
+import { ICON, materialFolders, NOTEBOOKS_DIR, PanelError, Pollis, renameMaterialFolders, ROOT, TOOLBOXES_DIR, WIKI_DIR, type ResolvedPanel, type SpecMenu } from './panelResolver.ts';
 
 function fail(message: string): never {
 	console.error(`Error: ${message}`);
@@ -78,6 +83,10 @@ function main(): void {
 	const mode = (extension.mode as string | undefined) ?? 'copy';
 	if (mode !== 'copy' && mode !== 'move') {
 		fail(`mode must be copy or move, not ${mode}`);
+	}
+	const prefix = (extension.prefix as string | undefined) ?? name.replace(/^pollis-toolbox-/, '');
+	if (!/^[a-z0-9][a-z0-9-]*$/.test(prefix)) {
+		fail(`the prefix ${prefix} must be lower case letters, digits and hyphens`);
 	}
 	const folder = path.join(TOOLBOXES_DIR, name);
 	if (fs.existsSync(folder)) {
@@ -114,27 +123,39 @@ function main(): void {
 			const tomlText = fs.readFileSync(panel.toml, 'utf-8');
 			const toml = parseToml(tomlText);
 			const material = materialFolders(panel, toml);
+			// Copy mode: the copy's id and the folders it ships get the prefix; move mode keeps them
+			const shipped = new Set([...[...material.wiki].filter(name => fs.existsSync(path.join(WIKI_DIR, name))), ...[...material.notebook].filter(name => fs.existsSync(path.join(NOTEBOOKS_DIR, name)))]);
+			const target = (name: string) => mode === 'copy' && shipped.has(name) ? `${prefix}.${name}` : name;
+			const id = mode === 'copy' ? `${prefix}.${panel.id}` : panel.id;
+			let panelToml = tomlText;
+			if (mode === 'copy') {
+				try {
+					panelToml = renameMaterialFolders(tomlText, toml, shipped, prefix);
+				} catch (error) {
+					fail(`${panel.id}: ${error instanceof PanelError ? error.message : String(error)}`);
+				}
+			}
 
 			fs.mkdirSync(path.join(folder, 'panels'), { recursive: true });
-			fs.writeFileSync(path.join(folder, 'panels', `${panel.id}.toml`), tomlText);
+			fs.writeFileSync(path.join(folder, 'panels', `${id}.toml`), panelToml);
 			let wikis = 0;
 			let notebooks = 0;
 			for (const name of material.wiki) {
-				wikis += copyFolder(path.join(WIKI_DIR, name), path.join(folder, 'wiki', name));
+				wikis += copyFolder(path.join(WIKI_DIR, name), path.join(folder, 'wiki', target(name)));
 			}
 			for (const name of material.notebook) {
-				notebooks += copyFolder(path.join(NOTEBOOKS_DIR, name), path.join(folder, 'notebooks', name));
+				notebooks += copyFolder(path.join(NOTEBOOKS_DIR, name), path.join(folder, 'notebooks', target(name)));
 			}
-			console.log(`${panel.id}: ${panel.title} (${wikis} wiki files, ${notebooks} notebook files)`);
+			console.log(`${id}: ${panel.title} (${wikis} wiki files, ${notebooks} notebook files)`);
 
 			panels.push({
-				id: panel.id,
+				id,
 				command: mode === 'move' ? panel.command : `pollis.${name}.${panel.id}`,
 				title: panel.title,
 				...(panel.menuTitle ? { menuTitle: panel.menuTitle } : {}),
 				group: item.group ?? '1_panels',
 				order: item.order ?? index + 1,
-				data: `panels/${panel.id}.toml`,
+				data: `panels/${id}.toml`,
 				defaultModel: panel.defaultModel,
 				...(panel.decisionFirstColumn ? { decisionFirstColumn: panel.decisionFirstColumn } : {}),
 			});
