@@ -98,6 +98,9 @@ export class BrowserView extends Disposable implements ICDPTarget {
 			webviewTag: false,
 			session: this.session.electronSession,
 
+			// Chromium's PDF viewer, so a PDF (e.g. an article opened by Compose > New Methods) shows in the view
+			plugins: true,
+
 			// TODO@kycutler: Remove this once https://github.com/electron/electron/issues/42578 is fixed
 			type: 'browserView'
 		};

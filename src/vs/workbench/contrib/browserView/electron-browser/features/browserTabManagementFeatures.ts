@@ -253,6 +253,11 @@ interface IOpenBrowserOptions {
 	 * This is used by Live Preview extension to reuse tabs, especially after reload / restart.
 	 */
 	reuseUrlFilter?: string;
+
+	/**
+	 * If set, a new tab uses an in-memory session that keeps nothing on disk (no cache, cookies or storage), whatever `workbench.browser.dataStorage` says.
+	 */
+	ephemeral?: boolean;
 }
 
 class OpenIntegratedBrowserAction extends Action2 {
@@ -324,7 +329,7 @@ class OpenIntegratedBrowserAction extends Action2 {
 
 		logBrowserOpen(telemetryService, options.url ? 'commandWithUrl' : 'commandWithoutUrl');
 
-		const editorPane = await editorService.openEditor({ resource, options: { viewState: { url: options.url } } }, group);
+		const editorPane = await editorService.openEditor({ resource, options: { viewState: { url: options.url, ephemeral: options.ephemeral } } }, group);
 
 		// Lock the group when opening to the side
 		if (options.openToSide && editorPane?.group) {

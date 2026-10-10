@@ -105,7 +105,8 @@ export class BrowserEditorInput extends EditorInput {
 			// If the model isn't created yet, update the initial data so that the URL is correct when the model is created
 			this._initialData = {
 				id: this._id,
-				url
+				url,
+				ephemeral: this._initialData.ephemeral
 			};
 			this._onDidChangeLabel.fire();
 		}
@@ -114,7 +115,7 @@ export class BrowserEditorInput extends EditorInput {
 	override async resolve(): Promise<IBrowserViewModel> {
 		if (!this._model && !this._modelPromise) {
 			this._modelPromise = (async () => {
-				this._model = await this.browserViewWorkbenchService.getOrCreateBrowserViewModel(this._id);
+				this._model = await this.browserViewWorkbenchService.getOrCreateBrowserViewModel(this._id, this._initialData.ephemeral);
 				this._modelPromise = undefined;
 
 				// Set up cleanup when the model is disposed
@@ -267,7 +268,8 @@ export class BrowserEditorInput extends EditorInput {
 			id: generateUuid(),
 			url: this.url,
 			title: this.title,
-			favicon: this.favicon
+			favicon: this.favicon,
+			ephemeral: this._initialData.ephemeral
 		});
 	}
 
@@ -275,7 +277,8 @@ export class BrowserEditorInput extends EditorInput {
 		const viewState: IBrowserEditorViewState = {
 			url: this.url,
 			title: this.title,
-			favicon: this.favicon
+			favicon: this.favicon,
+			ephemeral: this._initialData.ephemeral
 		};
 		return {
 			resource: this.resource,
@@ -294,7 +297,8 @@ export class BrowserEditorInput extends EditorInput {
 				id: this._id,
 				url: this._model.url,
 				title: this._model.title,
-				favicon: this._model.favicon
+				favicon: this._model.favicon,
+				ephemeral: this._initialData.ephemeral
 			};
 			this._model.dispose();
 			this._model = undefined;
@@ -306,7 +310,8 @@ export class BrowserEditorInput extends EditorInput {
 			id: this._id,
 			url: this.url,
 			title: this.title,
-			favicon: this.favicon
+			favicon: this.favicon,
+			ephemeral: this._initialData.ephemeral
 		};
 	}
 }

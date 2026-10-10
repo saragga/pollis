@@ -40,8 +40,8 @@ export class BrowserViewWorkbenchService extends Disposable implements IBrowserV
 		this._register(this.keybindingService.onDidUpdateKeybindings(() => this.sendKeybindings()));
 	}
 
-	async getOrCreateBrowserViewModel(id: string): Promise<IBrowserViewModel> {
-		return this._getBrowserViewModel(id, true);
+	async getOrCreateBrowserViewModel(id: string, ephemeral?: boolean): Promise<IBrowserViewModel> {
+		return this._getBrowserViewModel(id, true, ephemeral);
 	}
 
 	async getBrowserViewModel(id: string): Promise<IBrowserViewModel> {
@@ -57,7 +57,7 @@ export class BrowserViewWorkbenchService extends Disposable implements IBrowserV
 		return this._browserViewService.clearWorkspaceStorage(workspaceId);
 	}
 
-	private async _getBrowserViewModel(id: string, create: boolean): Promise<IBrowserViewModel> {
+	private async _getBrowserViewModel(id: string, create: boolean, ephemeral?: boolean): Promise<IBrowserViewModel> {
 		let model = this._models.get(id);
 		if (model) {
 			return model;
@@ -68,7 +68,7 @@ export class BrowserViewWorkbenchService extends Disposable implements IBrowserV
 
 		// Initialize the model with current state
 		try {
-			await model.initialize(create);
+			await model.initialize(create, ephemeral);
 		} catch (e) {
 			this._models.delete(id);
 			throw e;

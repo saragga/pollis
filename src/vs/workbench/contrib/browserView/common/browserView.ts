@@ -85,6 +85,8 @@ export interface IBrowserEditorViewState {
 	readonly url?: string;
 	readonly title?: string;
 	readonly favicon?: string;
+	/** Use an in-memory session that keeps nothing on disk, whatever `workbench.browser.dataStorage` says. */
+	readonly ephemeral?: boolean;
 }
 
 export const IBrowserViewWorkbenchService = createDecorator<IBrowserViewWorkbenchService>('browserViewWorkbenchService');
@@ -99,9 +101,10 @@ export interface IBrowserViewWorkbenchService {
 	/**
 	 * Get or create a browser view model for the given ID
 	 * @param id The browser view identifier
+	 * @param ephemeral Whether a new view uses an in-memory session, whatever the data storage setting
 	 * @returns A browser view model that proxies to the main process
 	 */
-	getOrCreateBrowserViewModel(id: string): Promise<IBrowserViewModel>;
+	getOrCreateBrowserViewModel(id: string, ephemeral?: boolean): Promise<IBrowserViewModel>;
 
 	/**
 	 * Get an existing browser view model for the given ID
@@ -192,7 +195,7 @@ export interface IBrowserViewModel extends IDisposable {
 	readonly onDidClose: Event<void>;
 	readonly onWillDispose: Event<void>;
 
-	initialize(create: boolean): Promise<void>;
+	initialize(create: boolean, ephemeral?: boolean): Promise<void>;
 	setInitialURL(url: string, title?: string, favicon?: string): void;
 
 	layout(bounds: IBrowserViewBounds): Promise<void>;
@@ -328,9 +331,10 @@ export class BrowserViewModel extends Disposable implements IBrowserViewModel {
 	/**
 	 * Initialize the model with the current state from the main process.
 	 * @param create Whether to create the browser view if it doesn't already exist.
+	 * @param ephemeral Whether a new view uses an ephemeral session, whatever the data storage setting.
 	 * @throws If the browser view doesn't exist and `create` is false, or if initialization fails
 	 */
-	async initialize(create: boolean): Promise<void> {
+	async initialize(create: boolean, ephemeral?: boolean): Promise<void> {
 		const dataStorageSetting = this.configurationService.getValue<BrowserViewStorageScope>(
 			'workbench.browser.dataStorage'
 		) ?? BrowserViewStorageScope.Global;
@@ -341,8 +345,8 @@ export class BrowserViewModel extends Disposable implements IBrowserViewModel {
 			this.workspaceContextService.getWorkbenchState() !== WorkbenchState.EMPTY &&
 			!this.workspaceTrustManagementService.isWorkspaceTrusted();
 
-		// Always use ephemeral sessions for untrusted workspaces
-		const dataStorage = isWorkspaceUntrusted ? BrowserViewStorageScope.Ephemeral : dataStorageSetting;
+		// Always use ephemeral sessions for untrusted workspaces and when asked to
+		const dataStorage = isWorkspaceUntrusted || ephemeral ? BrowserViewStorageScope.Ephemeral : dataStorageSetting;
 
 		const workspaceId = this.workspaceContextService.getWorkspace().id;
 		const state = create
