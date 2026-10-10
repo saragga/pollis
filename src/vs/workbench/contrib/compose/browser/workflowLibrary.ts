@@ -489,8 +489,8 @@ registerAction2(class extends Action2 {
 	constructor() {
 		super({
 			id: NEW_METHODS_COMMAND_ID,
-			title: localize2('newMethods.open', "New Methods"),
-			category: localize2('compose.category', "Compose"),
+			title: localize2('newMethods.open', "Library"),
+			category: localize2('newMethods.category', "New Methods"),
 			f1: true,
 		});
 	}

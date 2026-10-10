@@ -271,6 +271,10 @@
 			"project": "vscode-workbench"
 		},
 		{
+			"name": "vs/workbench/contrib/pollisWorkspace",
+			"project": "vscode-workbench"
+		},
+		{
 			"name": "vs/workbench/contrib/optimise",
 			"project": "vscode-workbench"
 		},

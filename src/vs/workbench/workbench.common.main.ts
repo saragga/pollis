@@ -273,6 +273,7 @@ import './contrib/simulate/browser/simulate.contribution.js';
 import './contrib/optimise/browser/optimise.contribution.js';
 import './contrib/compose/browser/compose.contribution.js';
 import './contrib/pollisViews/browser/pollisViews.contribution.js';
+import './contrib/pollisWorkspace/browser/pollisWorkspace.contribution.js';
 
 // Markers
 import './contrib/markers/browser/markers.contribution.js';

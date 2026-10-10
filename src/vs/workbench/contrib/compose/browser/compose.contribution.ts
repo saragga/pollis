@@ -10,6 +10,7 @@ import { INotificationService } from '../../../../platform/notification/common/n
 import './toolboxExtensions.js';
 import './toolboxPanelsPage.js';
 import { CHOOSE_AGENT_COMMAND_ID, CREATE_PANEL_COMMAND_ID, CREATE_PANELS_FROM_REQUEST_COMMAND_ID, PACKAGE_TOOLBOX_COMMAND_ID } from './pollisAgents.js';
+import { CREATE_METHOD_COMMAND_ID, PACKAGE_METHOD_COMMAND_ID } from './newMethods.js';
 import { NEW_METHODS_COMMAND_ID, PUBLISHED_BENCHMARKS_COMMAND_ID, SEARCH_WORKFLOW_LIBRARY_COMMAND_ID } from './workflowLibrary.js';
 
 // The Mathematical Foundations, Financial Econometrics and Macroeconomics Toolboxes come from their extensions (toolboxes/pollis-toolbox-*, not built in:
@@ -25,6 +26,7 @@ const E_CMTSubmenuId = new MenuId('menubarE_CMTSubmenu');
 const PollisAgentsMenu = new MenuId('menubarPollisAgentsMenu');
 const PollisSkillsMenu = new MenuId('menubarPollisSkillsMenu');
 const WorkflowsMenu = new MenuId('menubarWorkflowsMenu');
+const NewMethodsMenu = new MenuId('menubarNewMethodsMenu');
 const CorrectnessMenu = new MenuId('menubarCorrectnessMenu');
 const ComparisonsMenu = new MenuId('menubarComparisonsMenu');
 const CompileGaloreMenu = new MenuId('menubarCompileGaloreMenu');
@@ -72,7 +74,8 @@ MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
 
 MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
 	group: '2_compose',
-	command: { id: NEW_METHODS_COMMAND_ID, title: localize('compose.createMethod', "New Methods...") },
+	submenu: NewMethodsMenu,
+	title: localize('pollisNewMethods.menu', "New Methods"),
 	order: 1,
 });
 
@@ -159,7 +162,29 @@ MenuRegistry.appendMenuItem(WorkflowsMenu, {
 
 
 // ==============================================================
-// New Methods, Correctness Tests, Horse Races, Compile Galore
+// SUBMENU: New Methods (newMethods.ts; the Library is in workflowLibrary.ts)
+// ==============================================================
+
+MenuRegistry.appendMenuItem(NewMethodsMenu, {
+	group: '1_methods',
+	command: { id: CREATE_METHOD_COMMAND_ID, title: localize('newMethods.create', "Create Method...") },
+	order: 1,
+});
+
+MenuRegistry.appendMenuItem(NewMethodsMenu, {
+	group: '1_methods',
+	command: { id: PACKAGE_METHOD_COMMAND_ID, title: localize('newMethods.package', "Package and Publish...") },
+	order: 2,
+});
+
+MenuRegistry.appendMenuItem(NewMethodsMenu, {
+	group: '1_methods',
+	command: { id: NEW_METHODS_COMMAND_ID, title: localize('newMethods.library', "Library") },
+	order: 3,
+});
+
+// ==============================================================
+// Correctness Tests, Horse Races, Compile Galore
 MenuRegistry.appendMenuItem(CorrectnessMenu, {
 	group: '0_benchmarks',
 	command: { id: PUBLISHED_BENCHMARKS_COMMAND_ID, title: localize('correctness.publishedBenchmarks', "Published Benchmarks") },
@@ -168,7 +193,7 @@ MenuRegistry.appendMenuItem(CorrectnessMenu, {
 
 // ==============================================================
 
-// Roadmap phase 6. Not built yet: each item says so. New Methods opens its library (workflowLibrary.ts).
+// Roadmap phase 6. Not built yet: each item says so.
 // Correctness Tests: Julia, R and Python check one another.
 // Horse Races > Add a Language... is Bring Your Own Language: Fortran, C and Rust use the same adapters.
 const composeItems = [
