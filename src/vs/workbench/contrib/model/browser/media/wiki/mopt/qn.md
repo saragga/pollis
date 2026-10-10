@@ -1,3 +1,3 @@
 # qn
 
-Coming soon!
+Not written yet.

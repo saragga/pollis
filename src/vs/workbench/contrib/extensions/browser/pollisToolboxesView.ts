@@ -39,6 +39,7 @@ import { IViewPaneOptions, ViewPane } from '../../../browser/parts/views/viewPan
 import { IViewDescriptorService } from '../../../common/views.js';
 import { IHostService } from '../../../services/host/browser/host.js';
 import { ExtensionRuntimeActionType, ExtensionState, IExtension, IExtensionsWorkbenchService } from '../common/extensions.js';
+import { CHOOSE_TOOLBOX_PANELS_COMMAND_ID } from '../../compose/common/toolboxPanels.js';
 
 /**
  * The branch toolboxes-dist of saragga/pollis holds the toolboxes: its toolboxes.json and the .vsix
@@ -60,6 +61,8 @@ interface IToolboxIndexEntry {
 	readonly id: string;
 	readonly name: string;
 	readonly description: string;
+	/** The author, shown below the description as the publisher of other extensions is. */
+	readonly author?: string;
 	readonly version: string;
 	/** The .vsix file name, next to toolboxes.json. */
 	readonly vsix: string;
@@ -76,7 +79,8 @@ interface IToolboxIndex {
 const enum ToolboxAction {
 	Install,
 	Update,
-	Uninstall,
+	/** Installed and up to date: the toolbox is listed in the Installed section only, with its Edit button. */
+	None,
 }
 
 /** The text a search filters the toolboxes with: the search without its `@` filters, lower case. */
@@ -84,10 +88,18 @@ export function toolboxesSearchText(query: string): string {
 	return query.replace(/@\S+/g, ' ').trim().toLowerCase();
 }
 
+/** A toolbox's name as listed in the Toolboxes section, without the trailing "Toolbox" the section already says. */
+function toolboxLabel(name: string): string {
+	return name.replace(/\s+Toolbox$/, '') || name;
+}
+
 /**
  * The Toolboxes section of the Extensions pane: the Pollis toolbox extensions published on the
- * toolboxes-dist branch, each with a button to install, update or uninstall it. A click on a
- * toolbox opens its details: the extension page when it is installed, else its README. A search in
+ * toolboxes-dist branch that are not installed, each with a button to install it, and the installed
+ * ones that have an update, with a button to update them. An installed toolbox is in the Installed
+ * section, with its Edit button (extensionsActions.ts), and is uninstalled from its Manage menu like
+ * any extension. A click on a toolbox opens its details: the extension page when it is installed,
+ * else its README. A search in
  * the Extensions search box shows only the toolboxes whose name or description contains its text;
  * `@toolboxes` shows them all.
  */
@@ -105,7 +117,7 @@ export class PollisToolboxesView extends ViewPane {
 	private loadError: string | undefined;
 	/** The first row's button, which takes the focus. */
 	private firstButton: Button | undefined;
-	/** The ids of the toolboxes being installed, updated or uninstalled from this section. */
+	/** The ids of the toolboxes being installed or updated from this section. */
 	private readonly busy = new Set<string>();
 
 	constructor(
@@ -146,6 +158,11 @@ export class PollisToolboxesView extends ViewPane {
 		this.loadIndex();
 	}
 
+	/** Downloads toolboxes.json again, for the Refresh button of the Extensions pane. */
+	reload(): Promise<void> {
+		return this.loadIndex();
+	}
+
 	/** Downloads toolboxes.json. A failure (offline, say) shows in the section with a Retry link. */
 	private async loadIndex(): Promise<void> {
 		if (this.loading) {
@@ -178,7 +195,7 @@ export class PollisToolboxesView extends ViewPane {
 		if (semver.valid(installed.version) && semver.valid(toolbox.version) && semver.lt(installed.version, toolbox.version)) {
 			return ToolboxAction.Update;
 		}
-		return ToolboxAction.Uninstall;
+		return ToolboxAction.None;
 	}
 
 	private refresh(): void {
@@ -206,11 +223,15 @@ export class PollisToolboxesView extends ViewPane {
 		}
 
 		const text = toolboxesSearchText(this.contextKeyService.getContextKeyValue<string>(SEARCH_VALUE_CONTEXT_KEY) ?? '');
-		const toolboxes = (this.toolboxes ?? []).filter(toolbox => !text || toolbox.name.toLowerCase().includes(text) || (toolbox.description ?? '').toLowerCase().includes(text));
+		// An installed toolbox that is up to date is in the Installed section only
+		const available = (this.toolboxes ?? []).filter(toolbox => this.busy.has(toolbox.id) || this.getAction(toolbox, this.getInstalled(toolbox)) !== ToolboxAction.None);
+		const toolboxes = available.filter(toolbox => !text || toolbox.name.toLowerCase().includes(text) || (toolbox.description ?? '').toLowerCase().includes(text));
 		if (!toolboxes.length) {
-			this.message.textContent = this.toolboxes?.length
+			this.message.textContent = available.length
 				? localize('pollisToolboxes.noMatch', "No toolbox matches the search.")
-				: localize('pollisToolboxes.none', "No toolboxes are published yet.");
+				: this.toolboxes?.length
+					? localize('pollisToolboxes.allInstalled', "Every toolbox is installed: they are in the Installed section.")
+					: localize('pollisToolboxes.none', "No toolboxes are published yet.");
 			return;
 		}
 		for (const toolbox of toolboxes) {
@@ -229,9 +250,10 @@ export class PollisToolboxesView extends ViewPane {
 		dom.append(row, dom.$('img.icon', { src: TOOLBOX_ICON, alt: '' }));
 		const details = dom.append(row, dom.$('.details'));
 		const header = dom.append(details, dom.$('.header'));
-		dom.append(header, dom.$('span.name', undefined, toolbox.name));
+		dom.append(header, dom.$('span.name', undefined, toolboxLabel(toolbox.name)));
 		const description = dom.append(details, dom.$('.description', undefined, toolbox.description ?? ''));
 		description.title = toolbox.description ?? '';
+		dom.append(details, dom.$('.author', undefined, toolbox.author || installed?.publisherDisplayName || toolbox.id.split('.')[0]));
 
 		const actionContainer = dom.append(row, dom.$('.action'));
 		this.rowDisposables.add(dom.addDisposableListener(row, dom.EventType.CLICK, e => {
@@ -246,13 +268,11 @@ export class PollisToolboxesView extends ViewPane {
 			}
 		}));
 
-		const button = this.rowDisposables.add(new Button(actionContainer, { ...defaultButtonStyles, secondary: action === ToolboxAction.Uninstall }));
+		const button = this.rowDisposables.add(new Button(actionContainer, { ...defaultButtonStyles }));
 		this.firstButton ??= button;
-		const busy = this.busy.has(toolbox.id) || installed?.state === ExtensionState.Installing || installed?.state === ExtensionState.Uninstalling;
+		const busy = this.busy.has(toolbox.id) || installed?.state === ExtensionState.Installing;
 		if (busy) {
-			button.label = installed?.state === ExtensionState.Uninstalling
-				? localize('pollisToolboxes.uninstalling', "Uninstalling...")
-				: localize('pollisToolboxes.installing', "Installing...");
+			button.label = localize('pollisToolboxes.installing', "Installing...");
 			button.enabled = false;
 			return;
 		}
@@ -263,17 +283,8 @@ export class PollisToolboxesView extends ViewPane {
 			case ToolboxAction.Update:
 				button.label = localize('pollisToolboxes.update', "Update");
 				break;
-			case ToolboxAction.Uninstall:
-				button.label = localize('pollisToolboxes.uninstall', "Uninstall");
-				break;
 		}
-		this.rowDisposables.add(button.onDidClick(() => {
-			if (action === ToolboxAction.Uninstall && installed) {
-				this.uninstall(toolbox, installed);
-			} else {
-				this.install(toolbox, action === ToolboxAction.Update);
-			}
-		}));
+		this.rowDisposables.add(button.onDidClick(() => this.install(toolbox, action === ToolboxAction.Update)));
 	}
 
 	/**
@@ -315,6 +326,10 @@ export class PollisToolboxesView extends ViewPane {
 				return this.extensionsWorkbenchService.install(vsix, { installGivenVersion: true });
 			});
 			this.promptRuntimeAction(toolbox, extension, update);
+			if (!update) {
+				// Installing changes no menus: the user chooses the panels to add, and where, on this page
+				this.commandService.executeCommand(CHOOSE_TOOLBOX_PANELS_COMMAND_ID, extension.identifier.id);
+			}
 		} catch (error) {
 			if (!isCancellationError(error)) {
 				this.notificationService.error(update
@@ -360,21 +375,6 @@ export class PollisToolboxesView extends ViewPane {
 				break;
 			default:
 				this.notificationService.info(done);
-		}
-	}
-
-	private async uninstall(toolbox: IToolboxIndexEntry, extension: IExtension): Promise<void> {
-		this.busy.add(toolbox.id);
-		this.refresh();
-		try {
-			await this.extensionsWorkbenchService.uninstall(extension);
-		} catch (error) {
-			if (!isCancellationError(error)) {
-				this.notificationService.error(localize('pollisToolboxes.uninstallFailed', "Could not uninstall the {0}: {1}", toolbox.name, toErrorMessage(error)));
-			}
-		} finally {
-			this.busy.delete(toolbox.id);
-			this.refresh();
 		}
 	}
 

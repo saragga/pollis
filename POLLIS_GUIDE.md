@@ -230,7 +230,7 @@ Pollis has a Help menu on every platform, last in the menu bar. It holds:
 On macOS, About Pollis stays in the Pollis application menu (`setMacApplicationMenu`), which otherwise holds only Preferences, Services, Hide/Show and Quit. Welcome, View License and View Third-Party Notices were moved out of it into Help.
 
 - `menubarControl.ts` registers Help into `MenubarMainMenu` (order 11). This drives the custom title bar, and its `original: 'Help'` key is what `menubar.ts` asks for.
-- `menubar.ts` draws Help after Toolboxes in `_updateMenubar()`, with `role: 'help'` (macOS adds its menu search field).
+- `menubar.ts` draws Help after Compose in `_updateMenubar()`, with `role: 'help'` (macOS adds its menu search field).
 - `helpActions.ts` registers About and Welcome with `MenuRegistry.appendMenuItem`, and adds `menu` entries to `ShowLicenseAction` and `ShowThirdPartyNoticesAction`.
 - `windowActions.ts`: the upstream `ShowAboutDialogAction` Help entry (group `z_about`, last) is removed so that About comes first.
 
@@ -304,7 +304,6 @@ src/vs/workbench/contrib/
   explore/    — Data discovery and toolbox webviews (Explore menu)
   simulate/   — Simulation method webviews (Simulate menu)
   optimise/   — Optimisation method webviews (Optimise menu)
-  katex/      — Bundled KaTeX for equation rendering in webviews
 ```
 
 Each contribution follows the four-file architecture documented in:
@@ -345,17 +344,7 @@ Both files use the glob `vs/workbench/browser/media/pollis-*.md` (step 1, in `de
 
 ### 5.5 Bundled third-party libraries in `contrib/`
 
-One third-party JS/CSS library is vendored directly into `src/vs/workbench/contrib/` so that Pollis webviews can load it as a local resource without any npm dependency or network request. It is used exclusively via its `*Helper.ts` file; nothing outside that helper should reference the `dist/` folder directly.
-
-| Library | Location | Helper | Purpose |
-|---|---|---|---|
-| **KaTeX** v0.16 | `contrib/katex/dist/` | `contrib/katex/browser/katexHelper.ts` | Equation rendering (`$…$`, `$$…$$`) in Pollis webviews |
-
-The helper returns webview-safe URIs; callers must add `distRoot` to `localResourceRoots` in the webview content options.
-
-Mermaid used to be vendored the same way (`contrib/mermaid/`) for the Learn More Concept Map. Both have been removed, and Pollis no longer ships Mermaid at all (see §1.5 for the Mermaid chat extension).
-
-**After a rebase:** this folder is entirely Pollis-owned and will not be touched by upstream. However, verify the KaTeX version against the npm packages used by any upstream extension that also bundles it, and upgrade `dist/` if a significant security patch has been released.
+None. Pollis used to vendor KaTeX (`contrib/katex/`) and Mermaid (`contrib/mermaid/`) for its webviews; both have been removed, KaTeX on 2026-10-05 because no panel used it. Pollis no longer ships Mermaid at all (see §1.5 for the Mermaid chat extension). Maths in Markdown, notebooks and chat still uses the KaTeX that VS Code and its built-in extensions bring.
 
 ### 5.6 Forked built-in extensions
 
@@ -661,7 +650,6 @@ When pulling a new upstream VS Code version, work through this list in order:
 - [ ] **`workbench.common.main.ts`** — verify all Pollis contribution imports are intact (§5.2)
 - [ ] **Credential environment injection** — verify the `credentialEnvironment.contribution.js` import in `model/browser/model.contribution.ts`; re-add the `watch-julia` entry to the root `package.json` `watch` script (§5.7)
 - [ ] **App document build pipeline** — re-add `pollis-*.md` glob to both `build/next/index.ts` (`desktopResourcePatterns`) and `build/gulpfile.vscode.ts` (§5.4)
-- [ ] **Bundled libraries** — verify `contrib/katex/dist/` is intact; check for security updates (§5.5)
 - [ ] **Forked extensions** — re-apply all Pollis patches to `extensions/language-julia`: rebranding, telemetry shim, `lmtool.ts`, `extension.ts` removals, `repl.ts` additions, `documentation.ts` rework, `plots.ts` table removal, `workspace.ts`/`notebookFeature.ts` kernel display name, `notebookKernel.ts` credential env merge, `smallcommands.ts` linter removal, and all deleted upstream files (§5.6)
 - [ ] **Notebook blank-on-revisit patch — DROP if base > 2026-04-23** — Pollis reverses the `notebookEditorWidget.ts` hunks of `618c5ea3667`. Upstream fixed this properly by ~Apr 23 2026, so on any newer base **do not re-apply**; instead leave `notebookEditorWidget.ts` pristine and run the two-notebook test to confirm upstream's fix. Only re-apply if rebasing onto a base in the Apr 14–22 2026 window (§6.1)
 - [ ] **CI and headers** — re-apply the Pollis header patterns in `build/hygiene.ts` and `eslint.config.js`; re-delete upstream workflows and Microsoft `.github/` files that reappear, keeping `copilot-instructions.md` (§5.8)

@@ -1,3 +1,3 @@
 # kuramoto
 
-Coming soon!
+Not written yet.

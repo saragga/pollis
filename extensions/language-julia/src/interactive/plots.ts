@@ -4,6 +4,7 @@ import * as path from 'path'
 import * as vscode from 'vscode'
 import { onEvent, registerCommand, setContext } from '../utils'
 import { JuliaKernel } from '../notebook/notebookKernel'
+import { displayTable } from './tables'
 
 const c_juliaPlotPanelActiveContextKey = 'julia.plotpaneFocus'
 const g_plots: Array<string> = new Array<string>()
@@ -867,8 +868,10 @@ export function displayPlot(params: { kind: string; data: string; id?: string; t
         </script>
         </html>`
         addOrUpdatePlot(plotPaneContent, id)
-    } else if (kind === 'application/vnd.dataresource+json' || kind === 'application/vnd.dataresource+lazy') {
-        return // POLLIS: tabular grid viewer removed
+    } else if (kind === 'application/vnd.dataresource+json') {
+        return displayTable(payload, g_context, false, kernel)
+    } else if (kind === 'application/vnd.dataresource+lazy') {
+        return displayTable(payload, g_context, true, kernel)
     } else if (kind === 'application/vnd.julia-vscode.custompane+html') {
         return displayCustom(payload, id, title)
     } else {

@@ -1,3 +1,3 @@
 # Multiplicative
 
-Coming soon!
+Not written yet.

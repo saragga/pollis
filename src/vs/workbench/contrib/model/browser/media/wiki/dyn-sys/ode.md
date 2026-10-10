@@ -1,3 +1,3 @@
 # Continuous ODE Systems
 
-Coming soon.
+Not written yet.

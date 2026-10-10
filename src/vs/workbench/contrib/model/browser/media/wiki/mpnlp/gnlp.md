@@ -1,3 +1,3 @@
 # Global NLP
 
-Coming soon!
+Not written yet.

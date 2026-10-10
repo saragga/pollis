@@ -1,3 +1,3 @@
 # Choosing a Strategy
 
-Coming soon!
+Not written yet.

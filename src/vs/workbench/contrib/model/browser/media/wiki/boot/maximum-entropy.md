@@ -1,3 +1,3 @@
 # Maximum Entropy Bootstrap
 
-Coming soon!
+Not written yet.

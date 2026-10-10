@@ -1,3 +1,3 @@
 # Co-Occurrence Matrix — Interpretation
 
-Coming soon!
+Not written yet.

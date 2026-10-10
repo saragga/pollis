@@ -1,3 +1,3 @@
 # QuadDirect
 
-Coming soon!
+Not written yet.

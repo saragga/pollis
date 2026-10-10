@@ -6,7 +6,7 @@
 import { IOpenerService } from '../../../../../platform/opener/common/opener.js';
 import { ICommandService } from '../../../../../platform/commands/common/commands.js';
 import { IClipboardService } from '../../../../../platform/clipboard/common/clipboardService.js';
-import { INotificationService, Severity } from '../../../../../platform/notification/common/notification.js';
+import { INotificationService } from '../../../../../platform/notification/common/notification.js';
 import { localize } from '../../../../../nls.js';
 import { IEditorService } from '../../../../services/editor/common/editorService.js';
 import { IQuickInputService, IQuickPickSeparator } from '../../../../../platform/quickinput/common/quickInput.js';
@@ -205,14 +205,25 @@ export async function sendToJuliaRepl(code: string, commandService: ICommandServ
 }
 
 /**
- * Install the given packages (display names accepted) via `Pkg.add` in the Julia REPL. A fork is added
- * from its Powered-by repository link; otherwise Julia checks the reachable registries: a registered
- * package is added by name, an unregistered one from its link.
+ * The `Pollis.packages(...)` call (Pollis.jl, defined in every Pollis REPL and notebook kernel) that
+ * installs whichever of the packages the running Julia cannot load, and does nothing when all are
+ * there. Julia itself decides what is missing, so it is exact for whatever environment is active. A
+ * package with a Powered-by link is passed with it, for when no registry has it; forks always come
+ * from their link.
+ */
+function juliaPackageCheck(packages: ReadonlyArray<{ readonly name: string; readonly github?: string; readonly fork?: boolean }>): string {
+	const names = packages.map(p => p.github ? `"${juliaPackageName(p.name)}" => "${p.github}"` : `"${juliaPackageName(p.name)}"`);
+	const forks = packages.filter(p => p.fork).map(p => `"${juliaPackageName(p.name)}"`);
+	return `Pollis.packages(${names.join(', ')}${forks.length ? `; forks = [${forks.join(', ')}]` : ''})`;
+}
+
+/**
+ * Install the given packages (display names accepted) in the Julia REPL with `Pollis.packages`: a
+ * registered package by name, an unregistered one or a fork from its Powered-by link.
  */
 export async function installJuliaPackages(packages: ReadonlyArray<{ readonly name: string; readonly github?: string; readonly fork?: boolean }>, commandService: ICommandService): Promise<void> {
 	if (!packages.length) { return; }
-	const list = packages.map(p => `("${juliaPackageName(p.name)}", "${p.github ?? ''}", ${p.fork ? 'true' : 'false'})`).join(', ');
-	await sendToJuliaRepl(`import Pkg; regs = Pkg.Registry.reachable_registries(); Pkg.add([!f && any(r -> !isempty(Pkg.Registry.uuids_from_name(r, n)), regs) ? Pkg.PackageSpec(name=n) : Pkg.PackageSpec(url=u) for (n, u, f) in [${list}]])`, commandService);
+	await sendToJuliaRepl(juliaPackageCheck(packages), commandService);
 }
 
 /** Reusable wiring for the Powered-by package install-status indicator (see WEBVIEW_GUIDE.md §23). */
@@ -223,14 +234,17 @@ export interface IPackageStatusWiring {
 	scheduleRecheck(attempt?: number): void;
 	/** Handle the webview's `installPackages` message: install the missing packages, then poll to flip the icon green. */
 	handleInstall(): Promise<void>;
-	/** For an executing runCode target (juliaRepl / notebook), nudge with a non-blocking "Install missing" notification. */
-	nudgeIfMissing(target: string | undefined): Promise<void>;
+	/**
+	 * The code to send to a runCode target: for an executing one (juliaRepl / notebook), the code with a
+	 * first line that installs the missing packages (see `juliaPackageCheck`); otherwise the code unchanged.
+	 */
+	withPackageCheck(code: string, target: string | undefined): string;
 }
 
 /**
  * Build the package install-status wiring shared by every TOML/scaffold webview. Each handler calls
  * `postStatus()` once in its open `setTimeout`, routes the `installPackages` message to `handleInstall()`,
- * and calls `nudgeIfMissing(target)` at the end of its `runCode` case. Detection is silent (reads
+ * and sends `withPackageCheck(code, target)` from its `runCode` case. Detection is silent (reads
  * Project.toml — see `checkJuliaPackagesInstalled`); no Julia is run until the user opts in.
  */
 export function createPackageStatusWiring(
@@ -241,7 +255,6 @@ export function createPackageStatusWiring(
 	fileService: IFileService,
 	pathService: IPathService,
 	commandService: ICommandService,
-	notificationService: INotificationService,
 	workspaceContextService: IWorkspaceContextService,
 ): IPackageStatusWiring {
 	const packageDisplayNames = [...new Set([...packages.map(p => p.name), ...requires])];
@@ -250,11 +263,15 @@ export function createPackageStatusWiring(
 		webview.postMessage({ command: 'packageStatus', statuses, env });
 		return statuses.every(s => s.installed);
 	};
+	let rechecking = false;
 	const scheduleRecheck = (attempt: number = 0): void => {
-		if (attempt > 72) { return; } // ~6 minutes at 5s intervals
+		// One poll at a time: each run of the code would otherwise start another.
+		if (attempt === 0 && rechecking) { return; }
+		if (attempt > 72) { rechecking = false; return; } // ~6 minutes at 5s intervals
+		rechecking = true;
 		disposables.add(disposableTimeout(async () => {
 			const allInstalled = await postStatus();
-			if (!allInstalled) { scheduleRecheck(attempt + 1); }
+			if (allInstalled) { rechecking = false; } else { scheduleRecheck(attempt + 1); }
 		}, 5000));
 	};
 	const missingPackages = async (): Promise<Array<{ name: string; github?: string; fork?: boolean }>> => {
@@ -270,18 +287,17 @@ export function createPackageStatusWiring(
 		await installJuliaPackages(await missingPackages(), commandService);
 		scheduleRecheck(0);
 	};
-	const nudgeIfMissing = async (target: string | undefined): Promise<void> => {
+	const withPackageCheck = (code: string, target: string | undefined): string => {
 		// Only the targets that actually execute code need the packages present.
-		if (target !== 'juliaRepl' && target !== 'notebook') { return; }
-		const missing = await missingPackages();
-		if (!missing.length) { return; }
-		notificationService.prompt(
-			Severity.Info,
-			localize('pollis.installMissing', "Install missing: {0}", missing.map(p => p.name).join(', ')),
-			[{ label: localize('pollis.install', "Install"), run: () => { void installJuliaPackages(missing, commandService).then(() => scheduleRecheck(0)); } }],
-		);
+		if ((target !== 'juliaRepl' && target !== 'notebook') || !packageDisplayNames.length) { return code; }
+		// Pkg.add rewrites Project.toml when it finishes, so poll to flip the indicator green.
+		scheduleRecheck(0);
+		return juliaPackageCheck(packageDisplayNames.map(name => {
+			const pkg = packages.find(p => p.name === name);
+			return { name, github: pkg?.github, fork: pkg?.fork };
+		})) + '\n' + code;
 	};
-	return { postStatus, scheduleRecheck, handleInstall, nudgeIfMissing };
+	return { postStatus, scheduleRecheck, handleInstall, withPackageCheck };
 }
 
 /** One credential field of a provider (a provider may need several, e.g. Kaggle username + key). */

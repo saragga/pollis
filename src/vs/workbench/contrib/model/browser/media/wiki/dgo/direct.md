@@ -1,3 +1,3 @@
 # DIRECT & DIRECT-L
 
-Coming soon!
+Not written yet.

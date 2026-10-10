@@ -1,3 +1,3 @@
 # Maximal Itemsets
 
-Coming soon!
+Not written yet.

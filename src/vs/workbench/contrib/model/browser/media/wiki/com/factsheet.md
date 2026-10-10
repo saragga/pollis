@@ -1,3 +1,3 @@
 # Co-Occurrence Matrix — Factsheet
 
-Coming soon!
+Not written yet.

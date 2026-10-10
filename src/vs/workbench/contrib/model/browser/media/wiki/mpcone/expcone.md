@@ -1,3 +1,3 @@
 # Exponential Cone
 
-Coming soon!
+Not written yet.

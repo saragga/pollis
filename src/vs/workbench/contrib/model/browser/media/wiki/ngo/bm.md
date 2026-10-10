@@ -1,3 +1,3 @@
 # Bipartite Matching
 
-Coming soon!
+Not written yet.

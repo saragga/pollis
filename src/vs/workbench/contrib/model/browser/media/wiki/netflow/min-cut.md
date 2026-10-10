@@ -1,3 +1,3 @@
 # min-cut
 
-Coming soon!
+Not written yet.

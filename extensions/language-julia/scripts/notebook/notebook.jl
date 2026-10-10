@@ -2,6 +2,13 @@ println(Base.stderr, "Starting notebook kernel server")
 
 include("../terminalserver/load_vscodeserver.jl")
 
+# Pollis: Pollis.packages and the other functions every Pollis session has.
+try
+    include("../terminalserver/Pollis.jl")
+catch err
+    @debug "Pollis functions not loaded" exception=err
+end
+
 using InteractiveUtils
 
 let

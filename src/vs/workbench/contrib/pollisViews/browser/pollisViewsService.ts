@@ -21,7 +21,7 @@ import { IPathService } from '../../../services/path/common/pathService.js';
 import { IPollisMenuNode, IPollisView, IPollisViewsService, MAX_VIEW_NAME, POLLIS_VIEW_SETTING } from '../common/pollisViews.js';
 
 /** The menus a View can trim with its `show` list, in menu bar order. */
-const POLLIS_MENUS = [MenuId.MenubarExploreMenu, MenuId.MenubarModelMenu, MenuId.MenubarSimulateMenu, MenuId.MenubarOptimiseMenu, MenuId.MenubarToolboxesMenu];
+const POLLIS_MENUS = [MenuId.MenubarExploreMenu, MenuId.MenubarModelMenu, MenuId.MenubarSimulateMenu, MenuId.MenubarOptimiseMenu, MenuId.MenubarComposeMenu];
 
 const BUILTIN_VIEWS: readonly IPollisView[] = [
 	{ name: MAX_VIEW_NAME },

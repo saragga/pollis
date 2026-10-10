@@ -251,7 +251,7 @@
 			"project": "vscode-workbench"
 		},
 		{
-			"name": "vs/workbench/contrib/toolboxes",
+			"name": "vs/workbench/contrib/compose",
 			"project": "vscode-workbench"
 		},
 		{

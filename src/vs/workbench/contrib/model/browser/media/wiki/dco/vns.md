@@ -1,3 +1,3 @@
 # Variable Neighborhood Search (VNS)
 
-Coming soon.
+Not written yet.

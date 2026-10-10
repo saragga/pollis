@@ -1,3 +1,3 @@
 # Vine Copulas
 
-Coming soon!
+Not written yet.

@@ -1,3 +1,3 @@
 # Quadrotor
 
-Coming soon!
+Not written yet.

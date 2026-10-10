@@ -1,3 +1,3 @@
 # Upper Confidence Bound (UCB)
 
-Coming soon.
+Not written yet.

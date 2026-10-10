@@ -1050,7 +1050,7 @@ wikis: [
 ```markdown
 # Wiki Title
 
-Coming soon!
+Not written yet.
 ```
 
 ---
@@ -1169,7 +1169,7 @@ Create stub notebooks as valid JSON `.ipynb` files. **Never use XML-like or text
     {
       "cell_type": "markdown",
       "metadata": {},
-      "source": ["# Tutorial Title\n", "\n", "Coming soon!"]
+      "source": ["# Tutorial Title\n", "\n", "Not written yet."]
     }
   ]
 }
@@ -1534,71 +1534,9 @@ Old webviews (e.g. `clh`, `clp`) use the legacy `columns-grid` layout with a `sh
 
 ---
 
-## 15. KaTeX equations pane
+## 15. (Removed) KaTeX equations pane
 
-Some webviews benefit from a collapsible **Key Equations** pane that renders LaTeX. KaTeX (~592 KB) is bundled under `src/vs/workbench/contrib/katex/dist/` and shared across all menus.
-
-### Step 1 — command file
-```typescript
-import { getKatexUris } from '../../../katex/browser/katexHelper.js';
-
-const katex = getKatexUris();
-const webviewInput = webviewWorkbenchService.openWebview(
-    { ..., contentOptions: { allowScripts: true, localResourceRoots: [katex.distRoot] }, ... },
-    ...
-);
-webviewInput.webview.setHtml(getXxxHtml(katex.js, katex.css));
-```
-
-### Step 2 — template function signature and CSP
-```typescript
-export function getXxxHtml(katexJs: string, katexCss: string): string {
-    return `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta http-equiv="Content-Security-Policy"
-          content="default-src 'none';
-                   style-src 'unsafe-inline' vscode-resource:;
-                   script-src 'unsafe-inline' vscode-resource:;
-                   font-src vscode-resource: data:;">
-    <link rel="stylesheet" href="${katexCss}">
-    ...
-</head>
-<body>
-    ...
-    <script>/* your webview JS */</script>
-    <script src="${katexJs}"></script>   <!-- load KaTeX last -->
-</body>
-</html>`;
-}
-```
-
-### Step 3 — equations pane HTML + CSS + JS
-
-CSS:
-```css
-.eq-section { margin: 20px 0; border: 1px solid var(--vscode-widget-border); border-radius: 6px; overflow: hidden; }
-.eq-toggle { display: flex; align-items: center; justify-content: space-between; width: 100%; background: var(--vscode-textCodeBlock-background); border: none; color: var(--vscode-foreground); font-size: 13px; font-weight: 600; padding: 10px 14px; cursor: pointer; }
-.eq-body { display: none; padding: 16px 20px; background: var(--vscode-editor-background); }
-.eq-body.open { display: block; }
-```
-
-JS (lazy rendering — renders only on first open):
-```javascript
-var katexRendered = false;
-document.getElementById('eq-toggle').addEventListener('click', function() {
-    var body = document.getElementById('eq-body');
-    var isOpen = body.classList.toggle('open');
-    if (isOpen && !katexRendered) {
-        katexRendered = true;
-        katex.render('\\min_x f(x)', document.getElementById('eq-obj'), { throwOnError: false, displayMode: true });
-    }
-});
-```
-
-> **LaTeX escaping:** inside a JS template literal, backslashes must be doubled: `\\min`, `\\frac`. In regular `'...'` strings a single backslash is enough.
-
----
+Pollis no longer bundles KaTeX for webviews: no panel used it, and it was removed on 2026-10-05.
 
 ## 16. Illustration pane (generalised collapsible pane)
 
@@ -1768,7 +1706,7 @@ Inline SVG requires no URI mapping and no CSP changes — SVG markup is embedded
 
 ### Type: bundled image (PNG / GIF)
 
-Bundled media files require `asWebviewUri()` to produce a `vscode-resource:` URI. Follow the KaTeX pattern (§15):
+Bundled media files require `asWebviewUri()` to produce a `vscode-resource:` URI:
 
 **Command file:**
 ```typescript
@@ -1840,7 +1778,7 @@ for p in pathlib.Path('path/to/notebooks').rglob('*.ipynb'):
 
 **Reusable notebook sections:** Define notebook groups as an exported `IModelNotebookSection[]` constant (e.g. `RXINFER_NOTEBOOK_SECTIONS`) in the command file. The metadata `notebooks` field derives from it via `.flatMap(s => s.notebooks)`. This allows other parts of Pollis to import and reuse the same grouped list without duplication.
 
-**Do not bundle stubs.** A "Coming soon!" stub next to real notebooks degrades the experience. Only bundle notebooks with real content; leave the section out entirely until the notebooks are ready.
+**Do not bundle stubs.** A "Not written yet." stub next to real notebooks degrades the experience. Only bundle notebooks with real content; leave the section out entirely until the notebooks are ready.
 
 **Organisation:** The 4-section pattern (e.g. Basic / Advanced / Problem Specific / Experimental) works well up to ~100 notebooks. Beyond that, consider a search/filter in the notebook panel rather than more sections.
 
@@ -1893,7 +1831,7 @@ for path in re.findall(r"file:\s*'([^']+\.(?:ipynb|md))'", cmd):
         print('MISSING:', path)
 ```
 
-**Fix:** author the referenced files (do **not** leave "Coming soon!" stubs in a shipping menu — see §17 *Do not bundle stubs*). The standard wiki set is 6 pages (factsheet, overview, assumptions, diagnostics, interpretation, decision-guide) plus one page per method/plot type; notebooks follow `tutorial-NN-<name>.ipynb` with stripped outputs and the Julia kernelspec.
+**Fix:** author the referenced files (do **not** leave "Not written yet." stubs in a shipping menu — see §17 *Do not bundle stubs*). The standard wiki set is 6 pages (factsheet, overview, assumptions, diagnostics, interpretation, decision-guide) plus one page per method/plot type; notebooks follow `tutorial-NN-<name>.ipynb` with stripped outputs and the Julia kernelspec.
 
 > ⚠️ **The build watch task does NOT copy `.md`/`.ipynb` media into `out/`.** It only compiles `.ts → .js`. A full `gulp` build copies media (via the globs in `build/gulpfile.vscode.ts`, which also feed the packaged app), but during day-to-day development newly added media must be **copied into `out/` manually** or the running dev app still reports file-not-found even though the files exist in `src/`:
 > ```bash
@@ -2025,14 +1963,14 @@ initialModel?: string,
 
 ```typescript
 case 'runCode': {
-    const code = msg.code;
+    const code = pkgStatus.withPackageCheck(msg.code, msg.target);
     if (msg.target === 'newFile') {
         const input: IUntitledTextResourceEditorInput = { resource: undefined, contents: code, languageId: 'julia' };
         await editorService.openEditor(input);
     } else if (msg.target === 'terminal') {
         await commandService.executeCommand('workbench.action.terminal.sendSequence', { text: code + '\n' });
     } else if (msg.target === 'juliaRepl') {
-        // Nothing is sent (and no package nudge) when no REPL could be started, e.g. Julia is not installed.
+        // Nothing is sent when no REPL could be started, e.g. Julia is not installed.
         if (!await sendToJuliaRepl(code, commandService)) { break; }
     } else if (msg.target === 'notebook') {
         const ref = await notebookEditorModelResolverService.resolve({ untitledResource: undefined }, 'jupyter-notebook');
@@ -2402,7 +2340,7 @@ The script parses every panel TOML with `parseToml` and renders, for every model
 
 It changes no TOML and runs no Julia. Panels without a TOML file (`epi-ude` and the galleries) are not covered.
 
-## 23. Package install-status indicator (Powered-by check / Install nudge)
+## 23. Package install-status indicator (Powered-by check / automatic install on run)
 
 A small status indicator on the **"Powered by:"** line shows whether the webview's declared packages are installed in the active Julia environment: a **green check** when all are present, or a clickable **Install** icon when some are missing (which the user may ignore). Reference implementation: `yfin` (Yahoo Finance).
 
@@ -2427,18 +2365,18 @@ There is **no way to spawn a hidden Julia process** from the webview (browser) l
 
 ### 23.3 Handler wiring (per webview that wants it)
 
-In the webview's handler (see `yfin.handler.ts`) the wiring is centralised in `createPackageStatusWiring(webview, disposables, names, fileService, pathService, commandService, notificationService, workspaceContextService)`:
+In the webview's handler (see `yfin.handler.ts`) the wiring is centralised in `createPackageStatusWiring(webview, disposables, names, fileService, pathService, commandService, workspaceContextService)`:
 - Add params `fileService: IFileService`, `pathService: IPathService`, and `workspaceContextService: IWorkspaceContextService` (the last sits **right after `pathService`** in handler, command, and `accessor.get` order).
 - `pkgStatus.postStatus()` calls `checkJuliaPackagesInstalled(…, workspaceContextService)` and posts `{ command: 'packageStatus', statuses, env }`; call it once in the open `setTimeout`.
 - Add a `scheduleRecheck(attempt)` that re-posts status every 5s (cap ~72 attempts ≈ 6 min) until all installed — because `Pkg.add` rewrites `Project.toml` only when it finishes, polling the file flips the icon to green.
 - Add message case `installPackages`: recompute missing, `installJuliaPackages(missing, commandService)`, then `scheduleRecheck(0)`.
-- **Install nudge on executing runCode targets:** at the end of the `runCode` case, for the targets that actually execute code (`juliaRepl`, `notebook` — note there is **no "Send to Terminal"** button in the current scaffold; §18's list is stale, and `pluto` manages its own per-notebook packages so it is excluded), check for missing packages and, if any, show a **non-blocking** `notificationService.prompt(Severity.Info, "Install missing: {0}", [{ label: "Install", run: … }])` — the code still runs (a nudge, not a gate). `Copy`/`Send to Editor` do not execute, so they never warn.
+- **Automatic install on executing runCode targets (2026-10-09, replaced the old "Install missing" nudge):** the `runCode` case sends `pkgStatus.withPackageCheck(msg.code, msg.target)`. For the targets that execute code (`juliaRepl`, `notebook`; `pluto` manages its own per-notebook packages so it is excluded) this puts one line in front of the code: `Pollis.packages("Name" => "<Powered-by link>", …; forks = [...])`. `Pollis.packages` (extensions/language-julia/scripts/terminalserver/Pollis.jl) is defined in every Pollis REPL (terminalserver.jl) and notebook kernel (notebook.jl); Julia itself decides what is missing (`Base.identify_package`), so it is exact for the active environment and costs nothing when all are installed; a package is added by name if a reachable registry has it, from its link otherwise, forks always from their link. The Install button uses the same call. It also starts `scheduleRecheck` so the indicator flips green. `Copy`/`Send to Editor`/`newFile` get the code unchanged. Notebooks and workflows start with the same call as their first code cell (tagged `pollis.packages` in the cell metadata), e.g. `Pollis.packages("ARCHModels", "Plots", "PollisDatasets")`: step 0 of every workflow.
 
 Add `| { command: 'installPackages' }` to the webview's `XxxWebviewMessage`. Thread `IFileService` + `IPathService` + `IWorkspaceContextService` through the command (`openXxxWebview`) and every `CommandsRegistry.registerCommand` (`accessor.get(IFileService)`, `accessor.get(IPathService)`, `accessor.get(IWorkspaceContextService)`). Imports: `IPathService` from `vs/workbench/services/path/common/pathService.js`; `IWorkspaceContextService` from `vs/platform/workspace/common/workspace.js`.
 
 ### 23.4 Checklist additions
 
-- [ ] Handler: params `fileService`, `pathService`, `workspaceContextService` (use `createPackageStatusWiring`); `postStatus()` in open `setTimeout`; `scheduleRecheck`; `installPackages` case; install-nudge in `runCode` for `juliaRepl`/`notebook`.
+- [ ] Handler: params `fileService`, `pathService`, `workspaceContextService` (use `createPackageStatusWiring`); `postStatus()` in open `setTimeout`; `scheduleRecheck`; `installPackages` case; send `pkgStatus.withPackageCheck(msg.code, msg.target)` in `runCode`.
 - [ ] Types: `| { command: 'installPackages' }`.
 - [ ] Command + contribution: thread + `accessor.get(IFileService)` / `accessor.get(IPathService)` / `accessor.get(IWorkspaceContextService)` (workspace right after path).
 - [ ] Keep the check **green** (`charts-green`) — it is a status, not a clickable link.

@@ -1,3 +1,3 @@
 # Average Linkage
 
-Coming soon!
+Not written yet.

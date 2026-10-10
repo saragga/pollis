@@ -1,3 +1,3 @@
 # Apriori
 
-Coming soon!
+Not written yet.

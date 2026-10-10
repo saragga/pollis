@@ -1,3 +1,3 @@
 # Gravitational Search Algorithm (GSA)
 
-Coming soon.
+Not written yet.

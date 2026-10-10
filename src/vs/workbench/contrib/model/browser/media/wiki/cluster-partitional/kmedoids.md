@@ -1,3 +1,3 @@
 # K-Medoids
 
-Coming soon!
+Not written yet.

@@ -1,3 +1,3 @@
 # cg
 
-Coming soon!
+Not written yet.

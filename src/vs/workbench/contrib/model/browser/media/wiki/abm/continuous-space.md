@@ -1,3 +1,3 @@
 # Continuous Space
 
-Coming soon.
+Not written yet.

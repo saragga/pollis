@@ -1,3 +1,3 @@
 # n4sid
 
-Coming soon!
+Not written yet.

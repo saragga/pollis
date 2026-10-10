@@ -1,3 +1,3 @@
 # linmpc
 
-Coming soon!
+Not written yet.

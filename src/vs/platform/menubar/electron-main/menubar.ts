@@ -390,12 +390,12 @@ export class Menubar extends Disposable {
 			// menubar.append(macWindowMenuItem);
 		}
 
-		// Toolboxes
-		if (this.shouldDrawMenu('Toolboxes')) {
-			const toolboxesMenu = new Menu();
-			const toolboxesMenuItem = new MenuItem({ label: this.mnemonicLabel(nls.localize({ key: 'mToolboxes', comment: ['&& denotes a mnemonic'] }, "&&Toolboxes")), submenu: toolboxesMenu });
-			this.setMenuById(toolboxesMenu, 'Toolboxes');
-			menubar.append(toolboxesMenuItem);
+		// Compose
+		if (this.shouldDrawMenu('Compose')) {
+			const composeMenu = new Menu();
+			const composeMenuItem = new MenuItem({ label: this.mnemonicLabel(nls.localize({ key: 'mCompose', comment: ['&& denotes a mnemonic'] }, "&&Compose")), submenu: composeMenu });
+			this.setMenuById(composeMenu, 'Compose');
+			menubar.append(composeMenuItem);
 		}
 
 		// Help

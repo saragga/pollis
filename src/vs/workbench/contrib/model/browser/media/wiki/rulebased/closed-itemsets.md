@@ -1,3 +1,3 @@
 # Closed Itemsets
 
-Coming soon!
+Not written yet.

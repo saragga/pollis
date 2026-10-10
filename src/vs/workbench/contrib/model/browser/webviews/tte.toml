@@ -17,7 +17,7 @@ name = "LSurvival.jl"
 github = "https://github.com/alexpkeil1/LSurvival.jl"
 
 [requires]
-packages = ["Survival.jl", "LSurvival.jl", "Distributions.jl", "Plots.jl"]
+packages = ["Survival.jl", "LSurvival.jl", "StatsBase.jl", "StatsModels.jl", "Distributions.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""
@@ -126,19 +126,19 @@ default = "time"
 id = "event"
 label = "event variable"
 tooltip = "Column name for the event indicator. Use 0 for censored observations and 1 for events. For Aalen-Johansen, integer codes identify competing event types."
-default = "event"
+default = "status"
 
 [[inputs]]
 id = "data"
 label = "data"
 tooltip = "A table with the survival data: any Tables.jl source, e.g. a NamedTuple of columns or a CSV.File."
-default = "df"
+default = "data"
 
 [[inputs]]
 id = "covariates"
 label = "covariates"
 tooltip = "Right-hand side of the survival formula — covariate terms separated by +, e.g. age + treatment. Leave blank for an intercept-only model."
-default = "age + treatment"
+default = "karno + celltype + trt"
 models = ["cox", "aft"]
 
 [[inputs]]
@@ -172,7 +172,10 @@ label = "Generalised Gamma"
 [[codeBranches]]
 model = "km"
 code = '''
-using Survival
+using Survival, PollisDatasets  # curated example datasets
+
+# Example data: Kalbfleisch and Prentice (1980), survival in days of 137 veterans with advanced lung cancer in a trial of two chemotherapies. Replace it with your own table.
+{{data}} = dataset("veteran");  # datasetinfo("veteran") describes the columns; status 1 = died, 0 = censored
 
 km = fit(KaplanMeier, {{data}}.{{time}}, {{data}}.{{event}})  # Kaplan-Meier estimator
 '''
@@ -180,7 +183,10 @@ km = fit(KaplanMeier, {{data}}.{{time}}, {{data}}.{{event}})  # Kaplan-Meier est
 [[codeBranches]]
 model = "na"
 code = '''
-using Survival
+using Survival, PollisDatasets  # curated example datasets
+
+# Example data: Kalbfleisch and Prentice (1980), survival in days of 137 veterans with advanced lung cancer in a trial of two chemotherapies. Replace it with your own table.
+{{data}} = dataset("veteran");  # datasetinfo("veteran") describes the columns; status 1 = died, 0 = censored
 
 na = fit(NelsonAalen, {{data}}.{{time}}, {{data}}.{{event}})  # Nelson-Aalen estimator
 '''
@@ -188,7 +194,10 @@ na = fit(NelsonAalen, {{data}}.{{time}}, {{data}}.{{event}})  # Nelson-Aalen est
 [[codeBranches]]
 model = "aj"
 code = '''
-using LSurvival
+using LSurvival, PollisDatasets  # curated example datasets
+
+# Example data: Kalbfleisch and Prentice (1980), survival in days of 137 veterans with advanced lung cancer in a trial of two chemotherapies. It has one cause, death, so the incidence is 1 minus Kaplan-Meier: replace it with your own table, causes coded 1, 2, ...
+{{data}} = dataset("veteran");  # datasetinfo("veteran") describes the columns; status 1 = died, 0 = censored
 
 aj = aalen_johansen({{data}}.{{time}}, {{data}}.{{event}})  # event coded 0 = censored, 1, 2, ... = cause
 println("Causes: ", aj.R.eventtypes[2:end])
@@ -198,7 +207,10 @@ println("Final cumulative incidence per cause: ", round.(aj.risk[end, :], digits
 [[codeBranches]]
 model = "cox"
 code = '''
-using Survival
+using Survival, StatsBase, StatsModels, PollisDatasets  # StatsBase: coeftable; StatsModels: @formula; curated example datasets
+
+# Example data: Kalbfleisch and Prentice (1980), survival in days of 137 veterans with advanced lung cancer in a trial of two chemotherapies. Replace it with your own table.
+{{data}} = dataset("veteran");  # datasetinfo("veteran") describes the columns; status 1 = died, 0 = censored
 
 model = coxph(@formula(EventTime({{time}}, {{event}}) ~ {{covariates}}), {{data}})  # fit Cox proportional hazards
 coeftable(model)  # estimated coefficients
@@ -207,7 +219,10 @@ coeftable(model)  # estimated coefficients
 [[codeBranches]]
 model = "aft"
 code = '''
-using LSurvival
+using LSurvival, PollisDatasets  # curated example datasets
+
+# Example data: Kalbfleisch and Prentice (1980), survival in days of 137 veterans with advanced lung cancer in a trial of two chemotherapies. Replace it with your own table.
+{{data}} = dataset("veteran");  # datasetinfo("veteran") describes the columns; status 1 = died, 0 = censored
 
 model = survreg(@formula(Surv({{time}}, {{event}}) ~ {{covariates}}), {{data}}, dist=LSurvival.{{dist}}())  # fit AFT model
 coeftable(model)  # estimated coefficients

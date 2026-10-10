@@ -26,6 +26,7 @@ import { IHostService } from '../../../services/host/browser/host.js';
 import { IExtensionService, toExtension, toExtensionDescription } from '../../../services/extensions/common/extensions.js';
 import { URI } from '../../../../base/common/uri.js';
 import { CommandsRegistry, ICommandService } from '../../../../platform/commands/common/commands.js';
+import { CHOOSE_TOOLBOX_PANELS_COMMAND_ID } from '../../compose/common/toolboxPanels.js';
 import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
 import { registerThemingParticipant, IColorTheme, ICssStyleCollector } from '../../../../platform/theme/common/themeService.js';
 import { ThemeIcon } from '../../../../base/common/themables.js';
@@ -945,6 +946,35 @@ export class UninstallAction extends ExtensionAction {
 			if (!isCancellationError(error)) {
 				this.dialogService.error(getErrorMessage(error));
 			}
+		}
+	}
+}
+
+/** Whether an extension is a Pollis toolbox: it contributes `pollisToolboxes`. */
+function isToolbox(extension: IExtension | null): boolean {
+	const contributes = extension?.local?.manifest.contributes;
+	return !!contributes && Object.hasOwn(contributes, 'pollisToolboxes');
+}
+
+/** The Uninstall button of an installed Pollis toolbox in the extensions list. */
+/** The Edit button of an installed Pollis toolbox: the page where the user changes which of its panels are in the menus, and where. */
+export class EditToolboxAction extends ExtensionAction {
+
+	constructor(@ICommandService private readonly commandService: ICommandService) {
+		super('extensions.pollisEditToolbox', localize('editToolboxAction', "Edit"), `${ExtensionAction.LABEL_ACTION_CLASS} edit-toolbox`, false);
+		this.update();
+	}
+
+	update(): void {
+		this.enabled = !!this.extension && this.extension.state === ExtensionState.Installed && isToolbox(this.extension);
+		if (this.extension) {
+			this.tooltip = localize('editToolboxActionTooltip', "Change which panels of the {0} are in the menus, and where", this.extension.displayName);
+		}
+	}
+
+	override async run(): Promise<void> {
+		if (this.extension) {
+			await this.commandService.executeCommand(CHOOSE_TOOLBOX_PANELS_COMMAND_ID, this.extension.identifier.id);
 		}
 	}
 }

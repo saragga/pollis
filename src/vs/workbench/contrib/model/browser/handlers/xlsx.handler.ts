@@ -58,7 +58,7 @@ export function registerXlsxWebviewHandlers(
 		for (const t of Object.keys(lastCode)) { void postColorized(lastCode[t], t); }
 	}));
 	const xlsxData = metadata.xlsx;
-	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, xlsxData.packages, [], fileService, pathService, commandService, notificationService, workspaceContextService);
+	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, xlsxData.packages, [], fileService, pathService, commandService, workspaceContextService);
 	createExampleCodeWiring(webviewInput.webview, disposables, 'xlsx', fileService, pathService, notificationService);
 	createCustomCopyWiring(webviewInput.webview, disposables, xlsxData.wikis, xlsxData.notebooks, fileService, pathService, editorService, commandService, notificationService);
 	createReferenceWiring(webviewInput.webview, disposables, 'xlsx', xlsxData.references, fileService, pathService, commandService, notificationService);
@@ -100,7 +100,7 @@ export function registerXlsxWebviewHandlers(
 				await openWikiByFile(msg.target, xlsxData.wikis, openerService, editorService, commandService);
 				break;
 			case 'runCode': {
-				const code = msg.code;
+				const code = pkgStatus.withPackageCheck(msg.code, msg.target);
 				if (msg.target === 'newFile') {
 					const input: IUntitledTextResourceEditorInput = {
 						resource: undefined,
@@ -132,7 +132,6 @@ export function registerXlsxWebviewHandlers(
 				} else if (msg.target === 'pluto') {
 					await commandService.executeCommand('pollis.action.sendToPluto', code);
 				}
-				await pkgStatus.nudgeIfMissing(msg.target);
 				break;
 			}
 			case 'colorize':

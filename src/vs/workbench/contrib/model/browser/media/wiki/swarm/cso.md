@@ -1,3 +1,3 @@
 # Competitive Swarm Optimiser (CSO)
 
-Coming soon.
+Not written yet.

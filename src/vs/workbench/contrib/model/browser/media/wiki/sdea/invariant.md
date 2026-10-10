@@ -1,3 +1,3 @@
 # Invariant
 
-Coming soon!
+Not written yet.

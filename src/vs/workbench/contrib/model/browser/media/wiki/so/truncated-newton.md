@@ -1,3 +1,3 @@
 # truncated-newton
 
-Content coming soon.
+Not written yet.

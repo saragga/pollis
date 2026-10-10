@@ -1,3 +1,3 @@
 # Quasi-Variational Inequality (QVI)
 
-Coming soon!
+Not written yet.

@@ -78,7 +78,7 @@ export function registerKgdsWebviewHandlers(
 		for (const t of Object.keys(lastCode)) { void postColorized(lastCode[t], t); }
 	}));
 	const kgdsData = metadata.kgds;
-	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, kgdsData.packages, [], fileService, pathService, commandService, notificationService, workspaceContextService);
+	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, kgdsData.packages, [], fileService, pathService, commandService, workspaceContextService);
 	createExampleCodeWiring(webviewInput.webview, disposables, 'kgds', fileService, pathService, notificationService);
 	createCustomCopyWiring(webviewInput.webview, disposables, kgdsData.wikis, kgdsData.notebooks, fileService, pathService, editorService, commandService, notificationService);
 	createReferenceWiring(webviewInput.webview, disposables, 'kgds', kgdsData.references, fileService, pathService, commandService, notificationService);
@@ -122,7 +122,7 @@ export function registerKgdsWebviewHandlers(
 				await openWikiByFile(msg.target, kgdsData.wikis, openerService, editorService, commandService);
 				break;
 			case 'runCode': {
-				const code = msg.code;
+				const code = pkgStatus.withPackageCheck(msg.code, msg.target);
 				if (msg.target === 'newFile') {
 					const input: IUntitledTextResourceEditorInput = {
 						resource: undefined,
@@ -156,8 +156,6 @@ export function registerKgdsWebviewHandlers(
 				} else if (msg.target === 'pluto') {
 					await commandService.executeCommand('pollis.action.sendToPluto', code);
 				}
-				// Executing targets need the packages present; nudge the user if any are missing (non-blocking).
-				await pkgStatus.nudgeIfMissing(msg.target);
 				break;
 			}
 			case 'colorize':

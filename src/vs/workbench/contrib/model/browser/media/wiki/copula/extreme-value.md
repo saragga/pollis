@@ -1,3 +1,3 @@
 # Extreme Value Copulas
 
-Coming soon!
+Not written yet.

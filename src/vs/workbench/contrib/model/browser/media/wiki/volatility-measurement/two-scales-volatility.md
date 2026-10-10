@@ -1,3 +1,3 @@
 # Two Scales Volatility
 
-Coming soon!
+Not written yet.

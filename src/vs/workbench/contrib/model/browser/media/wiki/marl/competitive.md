@@ -1,3 +1,3 @@
 # competitive
 
-Coming soon!
+Not written yet.

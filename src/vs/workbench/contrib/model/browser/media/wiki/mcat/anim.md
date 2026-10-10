@@ -1,3 +1,3 @@
 # Trajectory Animation
 
-Coming soon!
+Not written yet.

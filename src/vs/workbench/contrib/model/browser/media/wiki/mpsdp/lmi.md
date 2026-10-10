@@ -1,3 +1,3 @@
 # LMI Constraints
 
-Coming soon!
+Not written yet.

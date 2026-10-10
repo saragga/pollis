@@ -1,3 +1,3 @@
 # Residual & BatchNorm
 
-Coming soon!
+Not written yet.

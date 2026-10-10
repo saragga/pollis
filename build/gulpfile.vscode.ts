@@ -99,8 +99,8 @@ const vscodeResourceIncludes = [
 	'out-build/vs/workbench/contrib/welcomeGettingStarted/common/media/**/*.{svg,png}',
 	'out-build/vs/workbench/contrib/welcomeOnboarding/browser/media/*.svg',
 
-	// Pollis app documents (Release Notes, License)
-	'out-build/vs/workbench/browser/media/pollis-*.md',
+	// Pollis app documents (Release Notes, License, A Tour of Pollis)
+	'out-build/vs/workbench/browser/media/pollis-*.{md,pdf}',
 
 	// Model webviews
 	'out-build/vs/workbench/contrib/model/browser/webviews/**/*.{html,css,js}',
@@ -108,6 +108,11 @@ const vscodeResourceIncludes = [
 	'out-build/vs/workbench/contrib/model/browser/media/wiki/**/*.md',
 	'out-build/vs/workbench/contrib/model/browser/media/notebooks/**/*.ipynb',
 	'out-build/vs/workbench/contrib/model/browser/media/notebooks/**/*.jl',
+
+	// Compose workflows, new methods and published benchmarks (notebook + step functions)
+	'out-build/vs/workbench/contrib/compose/browser/media/workflows/**/*.{ipynb,jl}',
+	'out-build/vs/workbench/contrib/compose/browser/media/methods/**/*.{ipynb,jl}',
+	'out-build/vs/workbench/contrib/compose/browser/media/correctness/**/*.{ipynb,jl,dat}',
 
 	// Pollis: Sessions resources omitted; the Agents window is not shipped.
 

@@ -1,8 +1,8 @@
-# Econometrics Toolbox
+# Financial Econometrics Toolbox
 
-The Pollis Econometrics Toolbox covers time-series econometrics and empirical asset pricing: ARIMAX models, VAR/VECM systems, GARCH-type and regime switching models, time-series forecasting, and Bayesian asset-pricing factor models.
+The Pollis Financial Econometrics Toolbox covers time-series econometrics and empirical asset pricing: ARIMAX models, VAR/VECM systems, GARCH-type and regime switching models, time-series forecasting, and Bayesian asset-pricing factor models.
 
-Installing it adds the **Econometrics Toolbox** submenu to the **Toolboxes** menu. Each panel has key points, a decision table, example code you can send to the Julia REPL or a notebook, reference wikis and notebook tutorials.
+Installing it adds the **Financial Econometrics** submenu to the **Model** menu. Each panel has key points, a decision table, example code you can send to the Julia REPL or a notebook, reference wikis and notebook tutorials.
 
 ## Panels
 
@@ -24,4 +24,4 @@ Julia. Each panel lists the Julia packages it uses on its Powered by line and of
 
 ## License
 
-AGPL-3.0-or-later.
+AGPL-3.0

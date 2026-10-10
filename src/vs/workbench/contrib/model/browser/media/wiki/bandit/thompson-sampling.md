@@ -1,3 +1,3 @@
 # thompson-sampling
 
-Coming soon!
+Not written yet.

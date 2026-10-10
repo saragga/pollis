@@ -1,3 +1,3 @@
 # CCMO
 
-Coming soon!
+Not written yet.

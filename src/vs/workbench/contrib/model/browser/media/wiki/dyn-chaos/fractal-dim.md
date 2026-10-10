@@ -1,3 +1,3 @@
 # Fractal Dimension
 
-Coming soon.
+Not written yet.

@@ -42,6 +42,12 @@ file = "vcm/tutorial-04-var.ipynb"
 bundled = true
 description = "Measuring Value-at-Risk when returns are not i.i.d."
 
+[[notebookSections.notebooks]]
+name = "Replicate Published Results"
+file = "vcm/tutorial-05-replicate.ipynb"
+bundled = true
+description = "Check GARCH(1,1) against the benchmark of Fiorentini, Calzolari and Panattoni (1996), quoted in Brooks, Burke and Persand (2001, Section 2), and find why ARCHModels differs; based on the workflow Finance: volatility of daily changes"
+
 [[wikis]]
 name = "Overview"
 file = "vcm/overview.md"
@@ -76,6 +82,78 @@ bundled = true
 name = "Comparison of Time-Varying Volatility Models"
 file = "tvm/Time-VaryingVolatilityModels.md"
 bundled = true
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Autoregressive Conditional Heteroscedasticity with Estimates of the Variance of United Kingdom Inflation"
+authors = "Engle, Robert F."
+year = 1982
+journal = "Econometrica"
+doi = "10.2307/1912773"
+openAccess = false
+
+[[references]]
+title = "Generalized Autoregressive Conditional Heteroskedasticity"
+authors = "Bollerslev, Tim"
+year = 1986
+journal = "Journal of Econometrics"
+doi = "10.1016/0304-4076(86)90063-1"
+openAccess = false
+
+[[references]]
+title = "Conditional Heteroskedasticity in Asset Returns: A New Approach"
+authors = "Nelson, Daniel B."
+year = 1991
+journal = "Econometrica"
+doi = "10.2307/2938260"
+openAccess = false
+
+[[references]]
+title = "On the Relation between the Expected Value and the Volatility of the Nominal Excess Return on Stocks"
+authors = "Glosten, Lawrence R.; Jagannathan, Ravi; Runkle, David E."
+year = 1993
+journal = "Journal of Finance"
+doi = "10.1111/j.1540-6261.1993.tb05128.x"
+openAccess = false
+
+[[references]]
+title = "Periodic Autoregressive Conditional Heteroscedasticity"
+authors = "Bollerslev, Tim; Ghysels, Eric"
+year = 1996
+journal = "Journal of Business & Economic Statistics"
+doi = "10.2307/1392425"
+openAccess = false
+
+[[references]]
+title = "Dynamic Conditional Correlation: A Simple Class of Multivariate Generalized Autoregressive Conditional Heteroskedasticity Models"
+authors = "Engle, Robert F."
+year = 2002
+journal = "Journal of Business & Economic Statistics"
+doi = "10.1198/073500102288618487"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Benchmarks"
+
+[[references]]
+title = "Analytic Derivatives and the Computation of GARCH Estimates"
+authors = "Fiorentini, Gabriele; Calzolari, Giorgio; Panattoni, Lorenzo"
+year = 1996
+journal = "Journal of Applied Econometrics"
+doi = "10.1002/(SICI)1099-1255(199607)11:4<399::AID-JAE401>3.0.CO;2-R"
+openAccess = false
+
+[[references]]
+title = "Benchmarks and the Accuracy of GARCH Model Estimation"
+authors = "Brooks, Chris; Burke, Simon P.; Persand, Gita"
+year = 2001
+journal = "International Journal of Forecasting"
+doi = "10.1016/S0169-2070(00)00070-4"
+openAccess = false
 
 [[models]]
 id = "garch"
@@ -346,6 +424,28 @@ using ARCHModels
 {{?model=egarch}} best = selectmodel(EGARCH, {{data}}; dist={{dist}}, maxlags=2)
 {{?model=gjr}} best = selectmodel(TGARCH, {{data}}; dist={{dist}}, maxlags=2)
 (this_fit = typeof(am.spec), this_bic = round(bic(am), digits=2), best = typeof(best.spec), best_bic = round(bic(best), digits=2))
+'''
+
+[[actionGroups.actions]]
+id = "replicate"
+label = "Replicate"
+desc = "Rerun GARCH(1,1) on data with published results: the benchmark of Fiorentini, Calzolari and Panattoni (1996), quoted to 6 significant figures in Brooks, Burke and Persand (2001, Section 2), on the Bollerslev-Ghysels returns"
+models = ["garch"]
+code = '''
+using ARCHModels, Printf
+
+# Benchmark of Fiorentini, Calzolari and Panattoni (1996), quoted to 6 significant figures in Brooks, Burke and Persand (2001, Section 2):
+# GARCH(1, 1), normal errors, constant mean, on the daily DM/pound returns of Bollerslev and Ghysels (1996), 1974 days
+benchmark = fit(GARCH{1, 1}, BG96)  # BG96: the same returns, shipped with ARCHModels
+published = [0.0107613, 0.805974, 0.153134, -0.00619041]  # omega, beta, alpha, mu: the order of coef(benchmark)
+@printf("%-8s%16s%14s%14s\n", "", "Julia", "rounded", "published")
+for (name, e, p) in zip(coefnames(benchmark), coef(benchmark), published)
+	digits = something(findlast(n -> round(e, sigdigits=n) == round(p, sigdigits=n), 1:6), 0)  # significant figures in common
+	@printf("%-8s%16.10f%14s%14s  %s\n", name, e, string(round(e, sigdigits=6)), string(p), digits == 0 ? "DIFFERENT" : "same to $digits significant figures")
+end
+# The gap comes from the start-up: ARCHModels sets the first day's variance to the sample variance, the benchmark
+# starts the recursion from the mean squared residual (Brooks, Burke and Persand 2001, Section 2, equation 4).
+# Learn More > Replicate Published Results: with the benchmark's start-up the same likelihood gives the published values to 5 or 6 significant figures.
 '''
 
 [[actionGroups]]

@@ -1,3 +1,3 @@
 # a2c
 
-Coming soon!
+Not written yet.

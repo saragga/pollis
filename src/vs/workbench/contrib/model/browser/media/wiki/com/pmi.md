@@ -1,3 +1,3 @@
 # PMI (Pointwise Mutual Information)
 
-Coming soon!
+Not written yet.

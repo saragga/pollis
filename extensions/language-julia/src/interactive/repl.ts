@@ -27,6 +27,7 @@ import * as modules from './modules'
 import * as plots from './plots'
 import * as results from './results'
 import { Frame, openFile } from './results'
+import { notifyTypeProgress, Progress, ProgressBars } from './progress'
 import { TaskRunnerTerminal } from '../taskRunnerTerminal'
 import { promise as fastq } from 'fastq'
 import { randomUUID } from 'crypto'
@@ -580,13 +581,6 @@ const notifyTypeOpenFile = new rpc.NotificationType<{ path: string; line: number
 )
 const notifyTypeCheckRevise = new rpc.NotificationType<boolean>('norevise')
 
-interface Progress {
-    id: { value: number }
-    name: string
-    fraction: number
-    done: boolean
-}
-const notifyTypeProgress = new rpc.NotificationType<Progress>('repl/updateProgress')
 
 const g_onInit = new vscode.EventEmitter<{ connection: rpc.MessageConnection; juliaExecutable?: JuliaExecutable }>()
 export const onInit = g_onInit.event
@@ -636,93 +630,8 @@ function startREPLMsgServer(pipename: string, juliaExecutable?: JuliaExecutable)
     return connected
 }
 
-const g_progress_dict = {}
-
-async function updateProgress(progress: Progress) {
-    if (g_progress_dict[progress.id.value]) {
-        const p = g_progress_dict[progress.id.value]
-        const increment = progress.done ? 100 : (progress.fraction - p.last_fraction) * 100
-
-        p.progress.report({
-            increment: increment,
-            message: progressMessage(progress, p.started),
-        })
-        p.last_fraction = progress.fraction
-
-        if (progress.done) {
-            p.resolve()
-            delete g_progress_dict[progress.id.value]
-        }
-    } else {
-        vscode.window.withProgress(
-            {
-                location: vscode.ProgressLocation.Window,
-                title: 'Julia',
-                cancellable: true,
-            },
-            (prog, token) => {
-                return new Promise((resolve) => {
-                    g_progress_dict[progress.id.value] = {
-                        progress: prog,
-                        last_fraction: progress.fraction,
-                        started: new Date(),
-                        resolve: resolve,
-                    }
-                    token.onCancellationRequested(() => {
-                        interrupt()
-                    })
-                    prog.report({
-                        message: progressMessage(progress),
-                    })
-                })
-            }
-        )
-    }
-}
-
-function progressMessage(prog: Progress, started = null) {
-    let message = prog.name
-    const parenthezise = message.trim().length > 0
-    if (isFinite(prog.fraction) && 0 <= prog.fraction && prog.fraction <= 1) {
-        if (parenthezise) {
-            message += ' ('
-        }
-        message += `${(prog.fraction * 100).toFixed(1)}%`
-        if (started !== null) {
-            const elapsed = (new Date().valueOf() - started) / 1000
-            const remaining = (1 / prog.fraction - 1) * elapsed
-            if (isFinite(remaining)) {
-                message += ` - ${formattedTimePeriod(remaining)} remaining`
-            }
-        }
-        if (parenthezise) {
-            message += ')'
-        }
-    }
-    return message
-}
-
-function formattedTimePeriod(t) {
-    const seconds = Math.floor(t % 60)
-    const minutes = Math.floor((t / 60) % 60)
-    const hours = Math.floor(t / 60 / 60)
-    let out = ''
-    if (hours > 0) {
-        out += `${hours}h, `
-    }
-    if (minutes > 0) {
-        out += `${minutes}min, `
-    }
-    out += `${seconds}s`
-    return out
-}
-
-function clearProgress() {
-    for (const id in g_progress_dict) {
-        g_progress_dict[id].resolve()
-        delete g_progress_dict[id]
-    }
-}
+// POLLIS: the progress bars live in progress.ts, shared with the notebook kernel.
+const g_progress = new ProgressBars('Julia', () => interrupt())
 
 interface InlayHintConfig {
     position: number[]
@@ -1418,7 +1327,7 @@ export function activate(
                 connection.onNotification(notifyTypeOpenFile, ({ path, line, preserveFocus }) =>
                     openFile(path, line, undefined, preserveFocus)
                 )
-                connection.onNotification(notifyTypeProgress, updateProgress)
+                connection.onNotification(notifyTypeProgress, (progress: Progress) => g_progress.update(progress))
                 setContext('julia.isEvaluating', false)
                 // POLLIS: the welcome page names the version in its "Julia is ready" announcement.
                 setContext('julia.replVersion', juliaExecutable?.version ?? '')
@@ -1433,13 +1342,13 @@ export function activate(
             results.removeAll()
             clearDiagnostics()
             clearInlayHints()
-            clearProgress()
+            g_progress.clear()
 
             setContext('julia.isEvaluating', false)
             setContext('julia.hasREPL', false)
         }),
         onStartEval(() => {
-            updateProgress({
+            g_progress.update({
                 name: 'Evaluating…',
                 id: { value: -1 },
                 fraction: -1,
@@ -1448,7 +1357,7 @@ export function activate(
             setContext('julia.isEvaluating', true)
         }),
         onFinishEval(() => {
-            clearProgress()
+            g_progress.clear()
             setContext('julia.isEvaluating', false)
         }),
         onEvent(vscode.workspace.onDidChangeConfiguration, async (event) => {

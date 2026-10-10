@@ -39,7 +39,7 @@ export const unicodeFilter = Object.freeze<string[]>([
 	'!LICENSES.chromium.html',
 	'!**/LICENSE',
 
-	'!**/*.{dll,exe,png,bmp,jpg,scpt,cur,ttf,woff,eot,template,ico,icns,opus,wasm}',
+	'!**/*.{dll,exe,png,bmp,jpg,pdf,scpt,cur,ttf,woff,eot,template,ico,icns,opus,wasm}',
 	'!**/test/**',
 	'!**/*.test.ts',
 	'!**/*.{d.ts,json,md}',
@@ -76,6 +76,7 @@ export const unicodeFilter = Object.freeze<string[]>([
 	'!src/vs/workbench/contrib/explore/**',
 	'!src/vs/workbench/contrib/simulate/**',
 	'!src/vs/workbench/contrib/optimise/**',
+	'!src/vs/workbench/contrib/compose/browser/media/**',
 
 	'!src/vs/base/browser/dompurify/**',
 	'!src/vs/workbench/services/keybinding/browser/keyboardLayouts/**',
@@ -152,12 +153,13 @@ export const indentationFilter = Object.freeze<string[]>([
 	'!src/vs/workbench/contrib/explore/**',
 	'!src/vs/workbench/contrib/simulate/**',
 	'!src/vs/workbench/contrib/optimise/**',
+	'!src/vs/workbench/contrib/compose/browser/media/**',
 
 	// except specific file types
 	'!src/vs/*/**/*.d.ts',
 	'!src/typings/**/*.d.ts',
 	'!extensions/**/*.d.ts',
-	'!**/*.{svg,exe,png,bmp,jpg,scpt,bat,cmd,cur,ttf,woff,eot,md,ps1,psm1,template,yaml,yml,d.ts.recipe,ico,icns,plist,opus,admx,adml,wasm}',
+	'!**/*.{svg,exe,png,bmp,jpg,pdf,scpt,bat,cmd,cur,ttf,woff,eot,md,ps1,psm1,template,yaml,yml,d.ts.recipe,ico,icns,plist,opus,admx,adml,wasm}',
 	'!build/{lib,download,linux,darwin}/**/*.js',
 	'!build/**/*.sh',
 	'!build/azure-pipelines/**/*.js',
@@ -191,6 +193,7 @@ export const copyrightFilter = Object.freeze<string[]>([
 	'!**/*.bat',
 	'!**/*.cmd',
 	'!**/*.ico',
+	'!**/*.pdf',
 	'!**/*.opus',
 	'!**/*.mp3',
 	'!**/*.icns',
@@ -235,7 +238,7 @@ export const copyrightFilter = Object.freeze<string[]>([
 	'!src/vs/workbench/contrib/explore/**',
 	'!src/vs/workbench/contrib/simulate/**',
 	'!src/vs/workbench/contrib/optimise/**',
-	'!src/vs/workbench/contrib/katex/**',
+	'!src/vs/workbench/contrib/compose/browser/media/**',
 ]);
 
 export const tsFormattingFilter = Object.freeze<string[]>([
@@ -264,6 +267,7 @@ export const tsFormattingFilter = Object.freeze<string[]>([
 	'!src/vs/workbench/contrib/explore/**',
 	'!src/vs/workbench/contrib/simulate/**',
 	'!src/vs/workbench/contrib/optimise/**',
+	'!src/vs/workbench/contrib/compose/browser/media/**',
 	// extensions/language-julia is a third-party fork with its own code style
 	'!extensions/language-julia/**',
 ]);

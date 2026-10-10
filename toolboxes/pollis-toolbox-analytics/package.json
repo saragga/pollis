@@ -1,10 +1,11 @@
 {
   "name": "pollis-toolbox-analytics",
-  "displayName": "Analytics Toolbox",
-  "description": "The Pollis Analytics Toolbox: symbolic math, nonlinear systems, numerical differentiation and integration, and ordinary and partial differential equations.",
-  "version": "1.0.1",
+  "displayName": "Mathematical Foundations Toolbox",
+  "description": "Pollis Mathematical Foundations Toolbox: symbolic math, nonlinear systems, numerical differentiation and integration, and ordinary and partial differential equations.",
+  "version": "1.0.4",
   "publisher": "pollis",
-  "license": "AGPL-3.0-or-later",
+  "author": "Pollis",
+  "license": "AGPL-3.0",
   "icon": "icon.png",
   "repository": {
     "type": "git",
@@ -18,8 +19,9 @@
     "pollisToolboxes": [
       {
         "id": "analytics",
-        "title": "Analytics Toolbox",
-        "group": "1_toolboxes",
+        "title": "Mathematical Foundations",
+        "menu": "Optimise",
+        "group": "0_toolboxes",
         "order": 1,
         "panels": [
           { "id": "symb", "command": "chiara.toolboxes.symb", "title": "Symbolic Math", "group": "1_at", "order": 1, "data": "panels/symb.toml", "defaultModel": "alg", "decisionFirstColumn": "Task" },

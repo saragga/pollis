@@ -1,3 +1,3 @@
 # de
 
-Coming soon!
+Not written yet.

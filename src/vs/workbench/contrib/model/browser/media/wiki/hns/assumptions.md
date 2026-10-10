@@ -1,3 +1,3 @@
 # assumptions
 
-Coming soon!
+Not written yet.

@@ -58,7 +58,7 @@ export function registerEcbWebviewHandlers(
 		for (const t of Object.keys(lastCode)) { void postColorized(lastCode[t], t); }
 	}));
 	const ecbData = metadata.ecb;
-	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, ecbData.packages, [], fileService, pathService, commandService, notificationService, workspaceContextService);
+	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, ecbData.packages, [], fileService, pathService, commandService, workspaceContextService);
 	createExampleCodeWiring(webviewInput.webview, disposables, 'ecb', fileService, pathService, notificationService);
 	createCustomCopyWiring(webviewInput.webview, disposables, ecbData.wikis, ecbData.notebooks, fileService, pathService, editorService, commandService, notificationService);
 	createReferenceWiring(webviewInput.webview, disposables, 'ecb', ecbData.references, fileService, pathService, commandService, notificationService);
@@ -100,7 +100,7 @@ export function registerEcbWebviewHandlers(
 				await openWikiByFile(msg.target, ecbData.wikis, openerService, editorService, commandService);
 				break;
 			case 'runCode': {
-				const code = msg.code;
+				const code = pkgStatus.withPackageCheck(msg.code, msg.target);
 				if (msg.target === 'newFile') {
 					const input: IUntitledTextResourceEditorInput = {
 						resource: undefined,
@@ -132,8 +132,6 @@ export function registerEcbWebviewHandlers(
 				} else if (msg.target === 'pluto') {
 					await commandService.executeCommand('pollis.action.sendToPluto', code);
 				}
-				// Executing targets need the packages present; nudge the user if any are missing (non-blocking).
-				await pkgStatus.nudgeIfMissing(msg.target);
 				break;
 			}
 			case 'colorize':

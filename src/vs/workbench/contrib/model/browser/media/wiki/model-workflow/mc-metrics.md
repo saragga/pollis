@@ -1,3 +1,3 @@
 # ECE and Brier Score
 
-Coming soon!
+Not written yet.

@@ -1,3 +1,3 @@
 # Histogram
 
-Coming soon.
+Not written yet.

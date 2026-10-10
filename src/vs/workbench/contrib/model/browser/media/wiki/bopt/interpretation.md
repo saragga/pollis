@@ -1,3 +1,3 @@
 # Bayesian Optimisation — Interpretation
 
-Coming soon.
+Not written yet.

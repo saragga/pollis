@@ -1,3 +1,3 @@
 # erdos-renyi
 
-Coming soon!
+Not written yet.

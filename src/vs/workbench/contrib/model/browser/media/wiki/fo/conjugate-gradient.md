@@ -1,3 +1,3 @@
 # conjugate-gradient
 
-Content coming soon.
+Not written yet.

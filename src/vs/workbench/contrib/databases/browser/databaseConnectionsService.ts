@@ -52,14 +52,14 @@ export class DatabaseConnectionsService extends Disposable implements IDatabaseC
 		// Julia runs on this machine, so the snapshots live in the local home folder.
 		const pollisFolder = joinPath(pathService.userHome({ preferLocal: true }), '.pollis');
 		this.sessionsFolder = joinPath(pollisFolder, 'databases', 'sessions');
-		// In memory: PollisDB.seed fills it with the PollisDatasets each time it connects.
+		// A file that PollisDB.build makes from the PollisDatasets CSV files, and that is only read afterwards.
 		this.builtin = {
 			id: BUILTIN_DATABASE_ID,
 			name: 'PollisDatasets',
 			driver: 'duckdb',
 			target: 'global',
 			variable: 'pollis',
-			options: { path: ':memory:', readonly: false },
+			options: { path: joinPath(pollisFolder, 'databases', 'PollisDatasets.duckdb').fsPath, readonly: true },
 			builtin: true,
 		};
 		void this.watchSessions();

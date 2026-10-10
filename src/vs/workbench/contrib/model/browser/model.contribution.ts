@@ -435,7 +435,7 @@ const TopicModelsSubmenuId = new MenuId('menubarTopicModelsSubmenu'); // Topic &
 // COMMAND IDs
 // ============================================
 
-// Model Workflow Management
+// Model Evaluation
 export const MWM_DATA_PARTITION_ID = 'chiara.statistics.mwm.dataPartition';
 export const MWM_TRAIN_TEST_SPLIT_ID = 'chiara.statistics.mwm.trainTestSplit';
 export const MWM_KFOLD_CV_ID = 'chiara.statistics.mwm.kfoldCV';
@@ -856,7 +856,7 @@ MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
 MenuRegistry.appendMenuItem(MenuId.MenubarModelMenu, {
 	group: '0_model_workflow_management',
 	submenu: MWMSubmenuId,
-	title: localize('showStatistics.mwm', 'Model Workflow Management'),
+	title: localize('showStatistics.mwm', 'Model Evaluation'),
 	order: 0,
 });
 

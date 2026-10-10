@@ -1,3 +1,3 @@
 # Marshall&#8211;Olkin Copulas
 
-Coming soon!
+Not written yet.

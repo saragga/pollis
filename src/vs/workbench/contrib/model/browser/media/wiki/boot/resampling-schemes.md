@@ -1,3 +1,3 @@
 # Resampling Schemes
 
-Coming soon!
+Not written yet.

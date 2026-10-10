@@ -1,3 +1,3 @@
 # Stratonovich
 
-Coming soon!
+Not written yet.

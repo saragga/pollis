@@ -1,3 +1,3 @@
 # Metric Guide
 
-Coming soon!
+Not written yet.

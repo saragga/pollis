@@ -1,2 +1,2 @@
 # TSF diagnostics
-Placeholder — content coming soon.
+Not written yet.

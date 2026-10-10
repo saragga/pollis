@@ -1,3 +1,3 @@
 # UMAP
 
-Coming soon!
+Not written yet.

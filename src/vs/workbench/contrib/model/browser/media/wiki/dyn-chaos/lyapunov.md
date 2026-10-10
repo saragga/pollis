@@ -1,3 +1,3 @@
 # Lyapunov Exponents
 
-Coming soon.
+Not written yet.

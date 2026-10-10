@@ -1,3 +1,3 @@
 # arx-armax
 
-Coming soon!
+Not written yet.

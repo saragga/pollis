@@ -1,3 +1,3 @@
 # Assignment
 
-Coming soon!
+Not written yet.

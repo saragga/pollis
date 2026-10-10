@@ -1,3 +1,3 @@
 # Range-Based Volatility Estimation — Interpretation
 
-Coming soon!
+Not written yet.

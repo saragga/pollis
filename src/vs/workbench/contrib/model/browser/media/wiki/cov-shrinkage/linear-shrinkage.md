@@ -1,3 +1,3 @@
 # Linear Shrinkage
 
-Coming soon!
+Not written yet.

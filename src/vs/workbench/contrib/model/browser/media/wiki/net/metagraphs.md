@@ -1,3 +1,3 @@
 # metagraphs
 
-Coming soon!
+Not written yet.

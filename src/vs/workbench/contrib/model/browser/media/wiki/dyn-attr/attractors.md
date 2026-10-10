@@ -1,3 +1,3 @@
 # Attractors
 
-Coming soon.
+Not written yet.

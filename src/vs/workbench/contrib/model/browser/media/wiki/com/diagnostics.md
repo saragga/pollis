@@ -1,3 +1,3 @@
 # Co-Occurrence Matrix — Diagnostics
 
-Coming soon!
+Not written yet.

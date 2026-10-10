@@ -1,3 +1,3 @@
 # Qcqp
 
-Coming soon!
+Not written yet.

@@ -1,3 +1,3 @@
 # Gaussian Mixture Models
 
-Coming soon!
+Not written yet.

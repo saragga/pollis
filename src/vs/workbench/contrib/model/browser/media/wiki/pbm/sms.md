@@ -1,3 +1,3 @@
 # SMS-EMOA
 
-Coming soon!
+Not written yet.

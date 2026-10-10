@@ -58,7 +58,7 @@ export function registerYfinWebviewHandlers(
 		for (const t of Object.keys(lastCode)) { void postColorized(lastCode[t], t); }
 	}));
 	const yfinData = metadata.yfin;
-	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, yfinData.packages, yfinData.requires ?? [], fileService, pathService, commandService, notificationService, workspaceContextService);
+	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, yfinData.packages, yfinData.requires ?? [], fileService, pathService, commandService, workspaceContextService);
 	createExampleCodeWiring(webviewInput.webview, disposables, 'yfin', fileService, pathService, notificationService);
 	createCustomCopyWiring(webviewInput.webview, disposables, yfinData.wikis, yfinData.notebooks, fileService, pathService, editorService, commandService, notificationService);
 	createReferenceWiring(webviewInput.webview, disposables, 'yfin', yfinData.references, fileService, pathService, commandService, notificationService);
@@ -100,7 +100,7 @@ export function registerYfinWebviewHandlers(
 				await openWikiByFile(msg.target, yfinData.wikis, openerService, editorService, commandService);
 				break;
 			case 'runCode': {
-				const code = msg.code;
+				const code = pkgStatus.withPackageCheck(msg.code, msg.target);
 				if (msg.target === 'newFile') {
 					const input: IUntitledTextResourceEditorInput = {
 						resource: undefined,
@@ -132,8 +132,6 @@ export function registerYfinWebviewHandlers(
 				} else if (msg.target === 'pluto') {
 					await commandService.executeCommand('pollis.action.sendToPluto', code);
 				}
-				// Executing targets need the packages present; nudge the user if any are missing (non-blocking).
-				await pkgStatus.nudgeIfMissing(msg.target);
 				break;
 			}
 			case 'colorize':

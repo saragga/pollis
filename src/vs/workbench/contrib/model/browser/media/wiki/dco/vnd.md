@@ -1,3 +1,3 @@
 # Variable Neighborhood Descent (VND)
 
-Coming soon.
+Not written yet.

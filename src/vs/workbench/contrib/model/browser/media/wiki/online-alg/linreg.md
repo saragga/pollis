@@ -1,3 +1,3 @@
 # Linreg
 
-Coming soon.
+Not written yet.

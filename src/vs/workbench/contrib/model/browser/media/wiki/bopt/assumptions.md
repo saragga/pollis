@@ -1,3 +1,3 @@
 # Bayesian Optimisation — Assumptions
 
-Coming soon.
+Not written yet.

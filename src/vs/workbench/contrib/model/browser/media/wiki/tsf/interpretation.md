@@ -1,2 +1,2 @@
 # TSF interpretation
-Placeholder — content coming soon.
+Not written yet.

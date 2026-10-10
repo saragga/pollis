@@ -1,3 +1,3 @@
 # Range-Based Volatility Estimation — Diagnostics
 
-Coming soon!
+Not written yet.

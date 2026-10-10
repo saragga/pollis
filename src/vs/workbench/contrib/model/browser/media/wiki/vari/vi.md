@@ -1,3 +1,3 @@
 # Variational Inequality (VI)
 
-Coming soon!
+Not written yet.

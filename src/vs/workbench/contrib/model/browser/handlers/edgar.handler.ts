@@ -68,7 +68,7 @@ export function registerEdgarWebviewHandlers(
 		for (const t of Object.keys(lastCode)) { void postColorized(lastCode[t], t); }
 	}));
 	const edgarData = metadata.edgar;
-	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, edgarData.packages, [], fileService, pathService, commandService, notificationService, workspaceContextService);
+	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, edgarData.packages, [], fileService, pathService, commandService, workspaceContextService);
 	createExampleCodeWiring(webviewInput.webview, disposables, 'edgar', fileService, pathService, notificationService);
 	createCustomCopyWiring(webviewInput.webview, disposables, edgarData.wikis, edgarData.notebooks, fileService, pathService, editorService, commandService, notificationService);
 	createReferenceWiring(webviewInput.webview, disposables, 'edgar', edgarData.references, fileService, pathService, commandService, notificationService);
@@ -112,7 +112,7 @@ export function registerEdgarWebviewHandlers(
 				await openWikiByFile(msg.target, edgarData.wikis, openerService, editorService, commandService);
 				break;
 			case 'runCode': {
-				const code = msg.code;
+				const code = pkgStatus.withPackageCheck(msg.code, msg.target);
 				if (msg.target === 'newFile') {
 					const input: IUntitledTextResourceEditorInput = {
 						resource: undefined,
@@ -146,8 +146,6 @@ export function registerEdgarWebviewHandlers(
 				} else if (msg.target === 'pluto') {
 					await commandService.executeCommand('pollis.action.sendToPluto', code);
 				}
-				// Executing targets need the packages present; nudge the user if any are missing (non-blocking).
-				await pkgStatus.nudgeIfMissing(msg.target);
 				break;
 			}
 			case 'colorize':

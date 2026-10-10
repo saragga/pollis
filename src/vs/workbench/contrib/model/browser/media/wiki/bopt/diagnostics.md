@@ -1,3 +1,3 @@
 # Bayesian Optimisation — Diagnostics
 
-Coming soon.
+Not written yet.

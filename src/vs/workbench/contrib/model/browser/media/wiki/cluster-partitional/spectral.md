@@ -1,3 +1,3 @@
 # Spectral Clustering
 
-Coming soon!
+Not written yet.

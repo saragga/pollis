@@ -1,3 +1,3 @@
 # Co-Occurrence Matrix — Assumptions
 
-Coming soon!
+Not written yet.

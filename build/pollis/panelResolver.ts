@@ -24,7 +24,7 @@ export const TOOLBOXES_DIR = path.join(ROOT, 'toolboxes');
 
 /** The scaffold options a data-only panel can carry (the extension point's fields). */
 const PORTABLE_OPTIONS = new Set(['title', 'defaultModel', 'decisionFirstColumn']);
-export const TOP_LEVEL_MENUS = new Set(['toolboxes', 'explore', 'model', 'simulate', 'optimise']);
+export const TOP_LEVEL_MENUS = new Set(['explore', 'model', 'simulate', 'optimise']);
 
 /** A menu entry of the spec. */
 export interface SpecItem {

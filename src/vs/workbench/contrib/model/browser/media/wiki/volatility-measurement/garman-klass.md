@@ -1,3 +1,3 @@
 # Garman-Klass
 
-Coming soon!
+Not written yet.

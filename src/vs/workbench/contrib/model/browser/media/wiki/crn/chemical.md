@@ -1,3 +1,3 @@
 # Chemical
 
-Coming soon!
+Not written yet.

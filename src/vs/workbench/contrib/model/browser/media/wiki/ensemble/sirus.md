@@ -1,3 +1,3 @@
 # SIRUS
 
-Coming soon!
+Not written yet.

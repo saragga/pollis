@@ -1,3 +1,3 @@
 # fd
 
-Coming soon!
+Not written yet.

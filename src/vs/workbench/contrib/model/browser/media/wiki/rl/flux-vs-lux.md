@@ -1,3 +1,3 @@
 # Recurrent Layers — Flux vs Lux
 
-Coming soon!
+Not written yet.

@@ -1,3 +1,3 @@
 # Bayesian Optimisation — Factsheet
 
-Coming soon.
+Not written yet.

@@ -1,3 +1,3 @@
 # Recurrence Analysis (RQA)
 
-Coming soon.
+Not written yet.

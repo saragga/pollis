@@ -1,3 +1,3 @@
 # Mixed Complementarity (MCP)
 
-Coming soon!
+Not written yet.

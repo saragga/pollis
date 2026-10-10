@@ -1,3 +1,3 @@
 # Duality
 
-Coming soon!
+Not written yet.

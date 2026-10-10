@@ -59,7 +59,7 @@ export function registerDcmpWebviewHandlers(
 		for (const t of Object.keys(lastCode)) { void postColorized(lastCode[t], t); }
 	}));
 	const dcmpData = metadata.dcmp;
-	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, dcmpData.packages, [], fileService, pathService, commandService, notificationService, workspaceContextService);
+	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, dcmpData.packages, [], fileService, pathService, commandService, workspaceContextService);
 	createExampleCodeWiring(webviewInput.webview, disposables, 'dcmp', fileService, pathService, notificationService);
 	createCustomCopyWiring(webviewInput.webview, disposables, dcmpData.wikis, dcmpData.notebooks, fileService, pathService, editorService, commandService, notificationService);
 	createReferenceWiring(webviewInput.webview, disposables, 'dcmp', dcmpData.references, fileService, pathService, commandService, notificationService);
@@ -105,7 +105,7 @@ export function registerDcmpWebviewHandlers(
 				await openWikiByFile(msg.target, dcmpData.wikis, openerService, editorService, commandService);
 				break;
 			case 'runCode': {
-				const code = msg.code;
+				const code = pkgStatus.withPackageCheck(msg.code, msg.target);
 				if (msg.target === 'newFile') {
 					const input: IUntitledTextResourceEditorInput = {
 						resource: undefined,
@@ -138,7 +138,6 @@ export function registerDcmpWebviewHandlers(
 				} else if (msg.target === 'pluto') {
 					await commandService.executeCommand('pollis.action.sendToPluto', code);
 				}
-				await pkgStatus.nudgeIfMissing(msg.target);
 				break;
 			}
 			case 'openUrl':

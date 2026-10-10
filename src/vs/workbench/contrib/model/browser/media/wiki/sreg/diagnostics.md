@@ -1,3 +1,3 @@
 # diagnostics
 
-Coming soon.
+Not written yet.

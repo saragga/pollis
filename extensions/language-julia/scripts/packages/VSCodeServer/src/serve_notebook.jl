@@ -21,7 +21,10 @@ function notebook_runcell_request(conn, params::NotebookRunCellArguments, token)
 
                 DebugAdapter.debug_code(debug_session, Main, code, params.filename)
             else
-                Base.invokelatest(include_string, args...)
+                # POLLIS: run the cell under VSCodeLogger, so @withprogress shows a progress bar as in the REPL.
+                Logging.with_logger(VSCodeLogger()) do
+                    Base.invokelatest(include_string, args...)
+                end
             end
         catch err
             bt = crop_backtrace(catch_backtrace())

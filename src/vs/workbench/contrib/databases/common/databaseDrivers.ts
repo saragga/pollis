@@ -219,13 +219,15 @@ export function generateConnectionCode(profile: IDatabaseConnectionProfile): str
  * The code that connects `profile` in the Julia REPL and shows it in the Databases view, through
  * the PollisDB module the REPL loads at startup. A connection the REPL already holds is closed
  * first, so a database file is not opened twice. DuckDB is the default engine, so its code first
- * installs the DuckDB.jl package on the user's machine, the first time only (Pollis does not ship it).
+ * installs the DuckDB.jl package on the user's machine, the first time only (Pollis does not ship it),
+ * and the built-in database first makes its file from the PollisDatasets, when they have changed.
  */
 export function generateSessionConnectCode(profile: IDatabaseConnectionProfile, connected: boolean): string {
 	const id = juliaString(profile.id);
 	return [
 		...(connected ? [`PollisDB.disconnect(${id})`] : []),
 		...(profile.driver === 'duckdb' ? ['PollisDB.install()'] : []),
+		...(profile.builtin ? ['PollisDB.build()'] : []),
 		generateConnectionCode(profile),
 		`PollisDB.register(${id}, ${profile.variable}; name = ${juliaString(profile.name)})`,
 	].join('\n');
@@ -249,4 +251,9 @@ export function quoteSqlName(...parts: string[]): string {
 /** The code that prints the first rows of a table of the REPL connection `id`. */
 export function generatePreviewCode(id: string, schema: string, table: string): string {
 	return `PollisDB.preview(${juliaString(id)}, ${juliaString(quoteSqlName(schema, table))})`;
+}
+
+/** The code that opens a table of the REPL connection `id` in the Table Viewer. */
+export function generateBrowseCode(id: string, schema: string, table: string): string {
+	return `PollisDB.browse(${juliaString(id)}, ${juliaString(quoteSqlName(schema, table))}; title = ${juliaString(table)})`;
 }

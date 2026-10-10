@@ -1,3 +1,3 @@
 # Complete Linkage
 
-Coming soon!
+Not written yet.

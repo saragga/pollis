@@ -1,3 +1,3 @@
 # ipnewton
 
-Content coming soon.
+Not written yet.

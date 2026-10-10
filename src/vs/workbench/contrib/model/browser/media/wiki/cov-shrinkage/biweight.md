@@ -1,3 +1,3 @@
 # Biweight
 
-Coming soon!
+Not written yet.

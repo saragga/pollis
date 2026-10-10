@@ -1,3 +1,3 @@
 # lns
 
-Coming soon!
+Not written yet.

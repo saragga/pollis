@@ -1,3 +1,3 @@
 # Training
 
-Coming soon!
+Not written yet.

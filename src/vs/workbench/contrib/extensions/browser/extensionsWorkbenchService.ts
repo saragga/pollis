@@ -211,6 +211,13 @@ export class Extension implements IExtension {
 			return this.local.publisherDisplayName;
 		}
 
+		// Pollis: an extension installed from a VSIX (a toolbox) has no publisher display name; show its author
+		const author = this.getManifestFromLocalOrResource()?.author;
+		const authorName = typeof author === 'string' ? author.replace(/\s*[<(].*$/, '').trim() : author?.name;
+		if (authorName) {
+			return authorName;
+		}
+
 		return this.publisher;
 	}
 

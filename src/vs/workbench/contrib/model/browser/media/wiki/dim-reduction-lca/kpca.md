@@ -1,3 +1,3 @@
 # Kernel PCA
 
-Coming soon!
+Not written yet.

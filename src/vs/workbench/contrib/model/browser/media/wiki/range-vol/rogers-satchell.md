@@ -1,3 +1,3 @@
 # Rogers-Satchell Estimator
 
-Coming soon!
+Not written yet.

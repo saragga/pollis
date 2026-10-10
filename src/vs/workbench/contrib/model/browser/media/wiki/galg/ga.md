@@ -1,3 +1,3 @@
 # Classic GA
 
-Coming soon!
+Not written yet.

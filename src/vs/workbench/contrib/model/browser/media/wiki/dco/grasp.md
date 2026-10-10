@@ -1,3 +1,3 @@
 # GRASP
 
-Coming soon.
+Not written yet.

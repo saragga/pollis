@@ -6,7 +6,6 @@ This Software incorporates the following open-source components. Each remains th
 |---|---|---|
 | Visual Studio Code (Code - OSS) | MIT | https://github.com/microsoft/vscode |
 | Codicons | MIT | https://github.com/microsoft/vscode-codicons |
-| KaTeX | MIT | https://github.com/KaTeX/KaTeX |
 | julia-vscode | MIT | https://github.com/julia-vscode/julia-vscode |
 
 julia-vscode bundles a number of Julia packages (under `scripts/packages/`); each retains its own (predominantly MIT) license as distributed in the upstream project.
@@ -17,7 +16,6 @@ julia-vscode bundles a number of Julia packages (under `scripts/packages/`); eac
 
 - **Visual Studio Code (Code - OSS)** — Copyright (c) Microsoft Corporation.
 - **Codicons** — Copyright (c) Microsoft Corporation.
-- **KaTeX** — Copyright (c) 2013–2020 Khan Academy and other contributors.
 - **julia-vscode** — Copyright (c) 2012–2022 David Anthoff, Zac Nugent, Sebastian Pfitzner and other contributors.
 
 ---

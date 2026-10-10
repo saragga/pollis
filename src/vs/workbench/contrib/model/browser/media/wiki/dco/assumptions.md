@@ -1,3 +1,3 @@
 # DCO Assumptions
 
-Coming soon.
+Not written yet.

@@ -48,7 +48,7 @@ export function registerCvizWebviewHandlers(
 ): DisposableStore {
 	const disposables = new DisposableStore();
 	const cvizData = metadata.cviz;
-	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, cvizData.packages, [], fileService, pathService, commandService, notificationService, workspaceContextService);
+	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, cvizData.packages, [], fileService, pathService, commandService, workspaceContextService);
 	createExampleCodeWiring(webviewInput.webview, disposables, 'cviz', fileService, pathService, notificationService);
 	createCustomCopyWiring(webviewInput.webview, disposables, cvizData.wikis, cvizData.notebooks, fileService, pathService, editorService, commandService, notificationService);
 	createReferenceWiring(webviewInput.webview, disposables, 'cviz', cvizData.references, fileService, pathService, commandService, notificationService);
@@ -109,7 +109,7 @@ export function registerCvizWebviewHandlers(
 				await openWikiByFile(msg.target, cvizData.wikis, openerService, editorService, commandService);
 				break;
 			case 'runCode': {
-				const code = msg.code;
+				const code = pkgStatus.withPackageCheck(msg.code, msg.target);
 				if (msg.target === 'newFile') {
 					const input: IUntitledTextResourceEditorInput = {
 						resource: undefined,
@@ -142,7 +142,6 @@ export function registerCvizWebviewHandlers(
 				} else if (msg.target === 'pluto') {
 					await commandService.executeCommand('pollis.action.sendToPluto', code);
 				}
-				await pkgStatus.nudgeIfMissing(msg.target);
 				break;
 			}
 			case 'openUrl':

@@ -1,8 +1,8 @@
-# Analytics Toolbox
+# Mathematical Foundations Toolbox
 
-The Pollis Analytics Toolbox brings symbolic and numerical mathematics to Pollis: symbolic math, nonlinear systems, numerical differentiation and integration, and ordinary and partial differential equations.
+The Pollis Mathematical Foundations Toolbox brings symbolic and numerical mathematics to Pollis: symbolic math, nonlinear systems, numerical differentiation and integration, and ordinary and partial differential equations.
 
-Installing it adds the **Analytics Toolbox** submenu to the **Toolboxes** menu. Each panel has key points, a decision table, example code you can send to the Julia REPL or a notebook, reference wikis and notebook tutorials.
+Installing it adds the **Mathematical Foundations** submenu at the top of the **Optimise** menu. Each panel has key points, a decision table, example code you can send to the Julia REPL or a notebook, reference wikis and notebook tutorials.
 
 ## Panels
 
@@ -21,4 +21,4 @@ Julia. Each panel lists the Julia packages it uses on its Powered by line and of
 
 ## License
 
-AGPL-3.0-or-later.
+AGPL-3.0

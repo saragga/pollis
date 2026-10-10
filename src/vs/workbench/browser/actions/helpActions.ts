@@ -20,6 +20,7 @@ import { ICommandService } from '../../../platform/commands/common/commands.js';
 import { ContextKeyExpr } from '../../../platform/contextkey/common/contextkey.js';
 import { IsMacNativeContext } from '../../../platform/contextkey/common/contextkeys.js';
 import { IsSessionsWindowContext } from '../../common/contextkeys.js';
+import { BrowserViewCommandId } from '../../../platform/browserView/common/browserView.js';
 
 class KeybindingsReferenceAction extends Action2 {
 
@@ -523,6 +524,26 @@ function registerHelpLink(link: IHelpLink): void {
 		}
 	});
 }
+
+registerAction2(class extends Action2 {
+	constructor() {
+		super({
+			id: 'pollis.action.openTourOfPollis',
+			title: {
+				...localize2('openTourOfPollis', "A Tour of Pollis"),
+				mnemonicTitle: localize({ key: 'miTourOfPollis', comment: ['&& denotes a mnemonic'] }, "A &&Tour of Pollis"),
+			},
+			category: Categories.Help,
+			f1: true,
+			menu: { id: MenubarHelpDocumentationMenu, group: '0_pollis', order: 1 }
+		});
+	}
+
+	run(accessor: ServicesAccessor): void {
+		const uri = FileAccess.asFileUri('vs/workbench/browser/media/pollis-tour.pdf' as AppResourcePath);
+		accessor.get(ICommandService).executeCommand(BrowserViewCommandId.Open, uri.toString(true));
+	}
+});
 
 registerHelpLink({
 	id: 'pollis.action.openCodeOssDocumentation',

@@ -1,3 +1,3 @@
 # Permutation Entropy
 
-Coming soon.
+Not written yet.

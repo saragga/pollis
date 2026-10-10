@@ -1,3 +1,3 @@
 # Cart-Pole
 
-Coming soon!
+Not written yet.

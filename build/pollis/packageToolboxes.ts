@@ -12,7 +12,7 @@
 // index of them all, .build/toolboxes/toolboxes.json, and a copy of each toolbox's README.md,
 // .build/toolboxes/<name>-README.md, which Pollis shows before the toolbox is installed (both
 // READMEs, this one and the one in the .vsix, get the version on the line below their title):
-//   { "toolboxes": [ { "id", "name", "description", "version", "vsix", "readme" } ] }
+//   { "toolboxes": [ { "id", "name", "description", "author", "version", "vsix", "readme" } ] }
 // The .vsix is the zip that vsce writes (extension.vsixmanifest, [Content_Types].xml and the
 // extension's files under extension/), written here so that packaging needs neither vsce nor the
 // network. A toolbox has no code, so nothing is compiled and there are no dependencies.
@@ -45,6 +45,8 @@ interface ToolboxManifest {
 	readonly description?: string;
 	readonly version: string;
 	readonly publisher: string;
+	/** Shown as the publisher in the Toolboxes section and on the installed extension. */
+	readonly author?: string | { readonly name?: string };
 	readonly license?: string;
 	readonly categories?: string[];
 	readonly engines?: { readonly vscode?: string };
@@ -58,6 +60,7 @@ interface ToolboxIndexEntry {
 	readonly id: string;
 	readonly name: string;
 	readonly description: string;
+	readonly author?: string;
 	readonly version: string;
 	readonly vsix: string;
 	/** The toolbox's README.md, published as `<name>-README.md`; absent when it has none. */
@@ -263,10 +266,17 @@ function packageToolbox(folder: string): ToolboxIndexEntry {
 		id: `${manifest.publisher}.${manifest.name}`,
 		name: manifest.displayName ?? manifest.name,
 		description: manifest.description ?? '',
+		author: authorName(manifest.author),
 		version: manifest.version,
 		vsix,
 		readme,
 	};
+}
+
+/** The author's name: a package.json author is "Name <email> (url)" or { "name" }. */
+function authorName(author: ToolboxManifest['author']): string | undefined {
+	const name = typeof author === 'string' ? author.replace(/\s*[<(].*$/, '').trim() : author?.name?.trim();
+	return name || undefined;
 }
 
 function main(): void {

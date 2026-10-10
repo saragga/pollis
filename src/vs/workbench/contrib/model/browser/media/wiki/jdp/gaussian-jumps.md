@@ -1,3 +1,3 @@
 # Gaussian Jumps
 
-Coming soon!
+Not written yet.

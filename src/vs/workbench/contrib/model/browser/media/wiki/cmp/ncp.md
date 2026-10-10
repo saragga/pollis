@@ -1,3 +1,3 @@
 # Nonlinear Complementarity (NCP)
 
-Coming soon!
+Not written yet.

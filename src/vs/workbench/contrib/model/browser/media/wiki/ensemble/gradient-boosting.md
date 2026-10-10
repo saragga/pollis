@@ -1,3 +1,3 @@
 # Gradient Boosting
 
-Coming soon!
+Not written yet.

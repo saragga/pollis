@@ -1,3 +1,3 @@
 # Recurrent Layers — Diagnostics
 
-Coming soon!
+Not written yet.

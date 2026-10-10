@@ -1,3 +1,3 @@
 # Quadratic Variance Model
 
-Coming soon!
+Not written yet.

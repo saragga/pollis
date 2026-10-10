@@ -59,7 +59,7 @@ export function registerSfvizWebviewHandlers(
 		for (const t of Object.keys(lastCode)) { void postColorized(lastCode[t], t); }
 	}));
 	const sfvizData = metadata.sfviz;
-	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, sfvizData.packages, [], fileService, pathService, commandService, notificationService, workspaceContextService);
+	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, sfvizData.packages, [], fileService, pathService, commandService, workspaceContextService);
 	createExampleCodeWiring(webviewInput.webview, disposables, 'sfviz', fileService, pathService, notificationService);
 	createCustomCopyWiring(webviewInput.webview, disposables, sfvizData.wikis, sfvizData.notebooks, fileService, pathService, editorService, commandService, notificationService);
 	createReferenceWiring(webviewInput.webview, disposables, 'sfviz', sfvizData.references, fileService, pathService, commandService, notificationService);
@@ -105,7 +105,7 @@ export function registerSfvizWebviewHandlers(
 				await openWikiByFile(msg.target, sfvizData.wikis, openerService, editorService, commandService);
 				break;
 			case 'runCode': {
-				const code = msg.code;
+				const code = pkgStatus.withPackageCheck(msg.code, msg.target);
 				if (msg.target === 'newFile') {
 					const input: IUntitledTextResourceEditorInput = {
 						resource: undefined,
@@ -138,7 +138,6 @@ export function registerSfvizWebviewHandlers(
 				} else if (msg.target === 'pluto') {
 					await commandService.executeCommand('pollis.action.sendToPluto', code);
 				}
-				await pkgStatus.nudgeIfMissing(msg.target);
 				break;
 			}
 			case 'openUrl':

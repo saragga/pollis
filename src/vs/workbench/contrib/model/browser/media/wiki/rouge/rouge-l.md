@@ -1,3 +1,3 @@
 # ROUGE-L
 
-Coming soon.
+Not written yet.

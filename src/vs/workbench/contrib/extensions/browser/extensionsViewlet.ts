@@ -769,6 +769,12 @@ export class ExtensionsViewPaneContainer extends ViewPaneContainer<IExtensionsVi
 	async refresh(): Promise<void> {
 		await this.updateInstalledExtensionsContexts();
 		this.doSearch(true);
+		// Pollis: download the list of toolboxes again
+		for (const pane of this.panes) {
+			if (pane instanceof PollisToolboxesView) {
+				pane.reload();
+			}
+		}
 		if (this.configurationService.getValue(AutoCheckUpdatesConfigurationKey)) {
 			this.extensionsWorkbenchService.checkForUpdates();
 		}

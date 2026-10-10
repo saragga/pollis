@@ -1,3 +1,3 @@
 # Nonlinear Shrinkage
 
-Coming soon!
+Not written yet.

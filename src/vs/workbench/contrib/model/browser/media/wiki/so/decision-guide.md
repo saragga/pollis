@@ -1,3 +1,3 @@
 # decision-guide
 
-Content coming soon.
+Not written yet.

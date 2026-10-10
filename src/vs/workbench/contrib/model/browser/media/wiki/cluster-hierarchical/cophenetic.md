@@ -1,3 +1,3 @@
 # Cophenetic Correlation
 
-Coming soon!
+Not written yet.

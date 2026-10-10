@@ -1,3 +1,3 @@
 # Dependence Measures
 
-Coming soon!
+Not written yet.

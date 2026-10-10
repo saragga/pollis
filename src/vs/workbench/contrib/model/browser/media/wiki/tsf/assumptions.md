@@ -1,2 +1,2 @@
 # TSF assumptions
-Placeholder — content coming soon.
+Not written yet.

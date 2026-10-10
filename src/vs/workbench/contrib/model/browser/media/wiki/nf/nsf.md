@@ -1,3 +1,3 @@
 # Neural Spline Flows
 
-Coming soon!
+Not written yet.

@@ -59,7 +59,7 @@ export function registerHfmWebviewHandlers(
 ): DisposableStore {
 	const disposables = new DisposableStore();
 	const hfmData = metadata.hfm;
-	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, hfmData.packages, hfmData.requires ?? [], fileService, pathService, commandService, notificationService, workspaceContextService);
+	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, hfmData.packages, hfmData.requires ?? [], fileService, pathService, commandService, workspaceContextService);
 	createExampleCodeWiring(webviewInput.webview, disposables, 'hfm', fileService, pathService, notificationService);
 	createCustomCopyWiring(webviewInput.webview, disposables, hfmData.wikis, hfmData.notebooks, fileService, pathService, editorService, commandService, notificationService);
 	createReferenceWiring(webviewInput.webview, disposables, 'hfm', hfmData.references, fileService, pathService, commandService, notificationService);
@@ -119,7 +119,7 @@ export function registerHfmWebviewHandlers(
 				await openWikiByFile(msg.target, hfmData.wikis, openerService, editorService, commandService);
 				break;
 			case 'runCode': {
-				const code = msg.code;
+				const code = pkgStatus.withPackageCheck(msg.code, msg.target);
 				if (msg.target === 'newFile') {
 					const input: IUntitledTextResourceEditorInput = {
 						resource: undefined,
@@ -152,7 +152,6 @@ export function registerHfmWebviewHandlers(
 				} else if (msg.target === 'pluto') {
 					await commandService.executeCommand('pollis.action.sendToPluto', code);
 				}
-				await pkgStatus.nudgeIfMissing(msg.target);
 				break;
 			}
 			case 'openUrl':

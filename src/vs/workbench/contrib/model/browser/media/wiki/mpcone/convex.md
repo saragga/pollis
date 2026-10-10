@@ -1,3 +1,3 @@
 # Convex Programming
 
-Coming soon!
+Not written yet.

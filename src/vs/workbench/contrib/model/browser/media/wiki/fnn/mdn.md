@@ -1,3 +1,3 @@
 # Mixture Density Network
 
-Coming soon!
+Not written yet.

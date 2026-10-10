@@ -1,3 +1,3 @@
 # Surrogate-Based Optimisation — kriging
 
-Coming soon.
+Not written yet.

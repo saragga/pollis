@@ -1,3 +1,3 @@
 # Artificial Bee Colony (ABC)
 
-Coming soon.
+Not written yet.

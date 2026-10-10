@@ -1,3 +1,3 @@
 # Sequential Method
 
-Coming soon!
+Not written yet.

@@ -1,3 +1,3 @@
 # Gauss-Newton
 
-Coming soon!
+Not written yet.

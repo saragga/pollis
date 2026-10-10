@@ -33,7 +33,7 @@
 //   [[menu]]                               one or more: where the entries go
 //   id = "finance"
 //   title = "Finance Toolbox"              the submenu's title
-//   menu = "Toolboxes"                     Toolboxes, Explore, Model, Simulate, Optimise or a submenu id
+//   menu = "Model"                         Explore, Model, Simulate, Optimise or a submenu id; any other, or none: the end of Explore
 //   inline = false                         true: the entries go straight into that menu, no submenu
 //   group = "2_toolboxes"                  optional, the group and order of the submenu in that menu
 //   order = 4
@@ -106,7 +106,7 @@ function main(): void {
 			fail('every [[menu]] needs an id and a title');
 		}
 		if (menu.menu && !pollis.isMenu(menu.menu)) {
-			fail(`the menu ${menu.menu} does not exist (use Toolboxes, Explore, Model, Simulate, Optimise or a submenu id)`);
+			console.warn(`the menu ${menu.menu} is not Explore, Model, Simulate, Optimise or a submenu id: the toolbox goes at the end of Explore`);
 		}
 		const panels = [];
 		for (const [index, item] of (menu.items ?? []).entries()) {
@@ -170,7 +170,7 @@ function main(): void {
 		toolboxes.push({
 			id: menu.id,
 			title: menu.title,
-			...(menu.menu ? { menu: menu.menu } : {}),
+			...(menu.menu && pollis.isMenu(menu.menu) ? { menu: menu.menu } : {}),
 			...(menu.inline ? { inline: true } : {}),
 			...(menu.group ? { group: menu.group } : {}),
 			...(menu.order !== undefined ? { order: menu.order } : {}),
@@ -184,7 +184,8 @@ function main(): void {
 		description: extension.description ?? '',
 		version: extension.version ?? '1.0.0',
 		publisher: 'pollis',
-		license: 'AGPL-3.0-or-later',
+		author: 'Pollis',
+		license: 'AGPL-3.0',
 		icon: 'icon.png',
 		repository: { type: 'git', url: 'https://github.com/saragga/pollis' },
 		engines: { vscode: '*' },
@@ -195,7 +196,7 @@ function main(): void {
 	fs.copyFileSync(ICON, path.join(folder, 'icon.png'));
 
 	const where = menus.map(menu => {
-		const parent = menu.menu ?? 'Toolboxes';
+		const parent = menu.menu && pollis.isMenu(menu.menu) ? menu.menu : 'Explore';
 		return menu.inline ? `adds its panels to the **${parent}** menu` : `adds the **${menu.title}** submenu to the **${parent}** menu`;
 	}).join(', and ');
 	const readme = [
@@ -217,7 +218,7 @@ function main(): void {
 		'',
 		'## License',
 		'',
-		'AGPL-3.0-or-later.',
+		'AGPL-3.0',
 		'',
 	].join('\n');
 	fs.writeFileSync(path.join(folder, 'README.md'), readme);

@@ -71,7 +71,7 @@ export function registerHfdsWebviewHandlers(
 		for (const t of Object.keys(lastCode)) { void postColorized(lastCode[t], t); }
 	}));
 	const hfdsData = metadata.hfds;
-	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, hfdsData.packages, [], fileService, pathService, commandService, notificationService, workspaceContextService);
+	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, hfdsData.packages, [], fileService, pathService, commandService, workspaceContextService);
 	createExampleCodeWiring(webviewInput.webview, disposables, 'hfds', fileService, pathService, notificationService);
 	createCustomCopyWiring(webviewInput.webview, disposables, hfdsData.wikis, hfdsData.notebooks, fileService, pathService, editorService, commandService, notificationService);
 	createReferenceWiring(webviewInput.webview, disposables, 'hfds', hfdsData.references, fileService, pathService, commandService, notificationService);
@@ -115,7 +115,7 @@ export function registerHfdsWebviewHandlers(
 				await openWikiByFile(msg.target, hfdsData.wikis, openerService, editorService, commandService);
 				break;
 			case 'runCode': {
-				const code = msg.code;
+				const code = pkgStatus.withPackageCheck(msg.code, msg.target);
 				if (msg.target === 'newFile') {
 					const input: IUntitledTextResourceEditorInput = {
 						resource: undefined,
@@ -149,8 +149,6 @@ export function registerHfdsWebviewHandlers(
 				} else if (msg.target === 'pluto') {
 					await commandService.executeCommand('pollis.action.sendToPluto', code);
 				}
-				// Executing targets need the packages present; nudge the user if any are missing (non-blocking).
-				await pkgStatus.nudgeIfMissing(msg.target);
 				break;
 			}
 			case 'colorize':

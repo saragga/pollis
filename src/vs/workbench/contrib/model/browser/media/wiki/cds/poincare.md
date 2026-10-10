@@ -1,3 +1,3 @@
 # Poincaré Sections
 
-Coming soon!
+Not written yet.

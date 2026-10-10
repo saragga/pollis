@@ -1,3 +1,3 @@
 # Generational Distance
 
-Coming soon!
+Not written yet.

@@ -1,3 +1,3 @@
 # Lasserre Hierarchy
 
-Coming soon!
+Not written yet.

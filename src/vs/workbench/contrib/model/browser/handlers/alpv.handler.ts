@@ -65,7 +65,7 @@ export function registerAlpvWebviewHandlers(
 		for (const t of Object.keys(lastCode)) { void postColorized(lastCode[t], t); }
 	}));
 	const alpvData = metadata.alpv;
-	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, alpvData.packages, [], fileService, pathService, commandService, notificationService, workspaceContextService);
+	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, alpvData.packages, [], fileService, pathService, commandService, workspaceContextService);
 	createExampleCodeWiring(webviewInput.webview, disposables, 'alpv', fileService, pathService, notificationService);
 	createCustomCopyWiring(webviewInput.webview, disposables, alpvData.wikis, alpvData.notebooks, fileService, pathService, editorService, commandService, notificationService);
 	createReferenceWiring(webviewInput.webview, disposables, 'alpv', alpvData.references, fileService, pathService, commandService, notificationService);
@@ -109,7 +109,7 @@ export function registerAlpvWebviewHandlers(
 				await openWikiByFile(msg.target, alpvData.wikis, openerService, editorService, commandService);
 				break;
 			case 'runCode': {
-				const code = msg.code;
+				const code = pkgStatus.withPackageCheck(msg.code, msg.target);
 				if (msg.target === 'newFile') {
 					const input: IUntitledTextResourceEditorInput = {
 						resource: undefined,
@@ -143,8 +143,6 @@ export function registerAlpvWebviewHandlers(
 				} else if (msg.target === 'pluto') {
 					await commandService.executeCommand('pollis.action.sendToPluto', code);
 				}
-				// Executing targets need the packages present; nudge the user if any are missing (non-blocking).
-				await pkgStatus.nudgeIfMissing(msg.target);
 				break;
 			}
 			case 'colorize':

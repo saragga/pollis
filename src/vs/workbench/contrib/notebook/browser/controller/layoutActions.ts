@@ -18,7 +18,7 @@ import { NOTEBOOK_ACTIONS_CATEGORY } from './coreActions.js';
 import { getNotebookEditorFromEditorPane } from '../notebookBrowser.js';
 import { INotebookEditorService } from '../services/notebookEditorService.js';
 import { NotebookSetting } from '../../common/notebookCommon.js';
-import { NOTEBOOK_EDITOR_FOCUSED, NOTEBOOK_IS_ACTIVE_EDITOR } from '../../common/notebookContextKeys.js';
+import { NOTEBOOK_IS_ACTIVE_EDITOR } from '../../common/notebookContextKeys.js';
 import { INotebookService } from '../../common/notebookService.js';
 import { IEditorService } from '../../../../services/editor/common/editorService.js';
 import { IPreferencesService } from '../../../../services/preferences/common/preferences.js';
@@ -118,7 +118,7 @@ registerAction2(class ToggleLineNumberFromEditorTitle extends Action2 {
 			id: 'notebook.toggleLineNumbersFromEditorTitle',
 			title: localize2('notebook.toggleLineNumbers', 'Toggle Notebook Line Numbers'),
 			shortTitle: localize2('notebook.toggleLineNumbers.short', 'Line Numbers'),
-			precondition: NOTEBOOK_EDITOR_FOCUSED,
+			precondition: NOTEBOOK_IS_ACTIVE_EDITOR,
 			menu: [
 				{
 					id: MenuId.NotebookEditorLayoutConfigure,

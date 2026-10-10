@@ -1,3 +1,3 @@
 # shade
 
-Coming soon!
+Not written yet.

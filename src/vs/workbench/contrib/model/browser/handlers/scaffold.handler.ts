@@ -69,7 +69,7 @@ export function registerScaffoldWebviewHandlers(
 	disposables.add(themeService.onDidColorThemeChange(() => {
 		for (const t of Object.keys(lastCode)) { void postColorized(lastCode[t], t); }
 	}));
-	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, data.packages, data.requires ?? [], fileService, pathService, commandService, notificationService, workspaceContextService);
+	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, data.packages, data.requires ?? [], fileService, pathService, commandService, workspaceContextService);
 	createExampleCodeWiring(webviewInput.webview, disposables, panelId, fileService, pathService, notificationService);
 	createCustomCopyWiring(webviewInput.webview, disposables, data.wikis, data.notebooks, fileService, pathService, editorService, commandService, notificationService);
 	createReferenceWiring(webviewInput.webview, disposables, panelId, data.references, fileService, pathService, commandService, notificationService);
@@ -114,7 +114,7 @@ export function registerScaffoldWebviewHandlers(
 				await openWikiByFile(msg.target, data.wikis, openerService, editorService, commandService);
 				break;
 			case 'runCode': {
-				const code = msg.code;
+				const code = pkgStatus.withPackageCheck(msg.code, msg.target);
 				if (msg.target === 'newFile') {
 					const input: IUntitledTextResourceEditorInput = {
 						resource: undefined,
@@ -146,8 +146,6 @@ export function registerScaffoldWebviewHandlers(
 				} else if (msg.target === 'pluto') {
 					await commandService.executeCommand('pollis.action.sendToPluto', code);
 				}
-				// Executing targets need the packages present; nudge the user if any are missing (non-blocking).
-				await pkgStatus.nudgeIfMissing(msg.target);
 				break;
 			}
 			case 'colorize':

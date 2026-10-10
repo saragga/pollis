@@ -1,8 +1,8 @@
-# Economics Toolbox
+# Macroeconomics Toolbox
 
-The Pollis Economics Toolbox covers quantitative macroeconomics: business cycle filters, stochastic volatility macroeconomic models, DSGE models, heterogeneous-agent models and continuous-time macro-finance.
+The Pollis Macroeconomics Toolbox covers quantitative macroeconomics: business cycle filters, stochastic volatility macroeconomic models, DSGE models, heterogeneous-agent models and continuous-time macro-finance.
 
-Installing it adds the **Economics Toolbox** submenu to the **Toolboxes** menu. Each panel has key points, a decision table, example code you can send to the Julia REPL or a notebook, reference wikis and notebook tutorials.
+Installing it adds the **Macroeconomic Models** submenu to the end of the **Simulate** menu. Each panel has key points, a decision table, example code you can send to the Julia REPL or a notebook, reference wikis and notebook tutorials.
 
 ## Panels
 
@@ -20,4 +20,4 @@ Julia. Each panel lists the Julia packages it uses on its Powered by line and of
 
 ## License
 
-AGPL-3.0-or-later.
+AGPL-3.0

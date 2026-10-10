@@ -1,3 +1,3 @@
 # scale-free
 
-Coming soon!
+Not written yet.

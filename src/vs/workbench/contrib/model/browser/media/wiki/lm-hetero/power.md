@@ -1,3 +1,3 @@
 # Power Variance Model
 
-Coming soon!
+Not written yet.

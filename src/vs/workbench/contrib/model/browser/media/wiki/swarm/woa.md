@@ -1,3 +1,3 @@
 # Whale Optimisation Algorithm (WOA)
 
-Coming soon.
+Not written yet.

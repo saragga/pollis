@@ -1,3 +1,3 @@
 # Recurrent Layers — Factsheet
 
-Coming soon!
+Not written yet.

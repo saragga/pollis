@@ -1,3 +1,3 @@
 # Hildreth-Lu
 
-Coming soon!
+Not written yet.

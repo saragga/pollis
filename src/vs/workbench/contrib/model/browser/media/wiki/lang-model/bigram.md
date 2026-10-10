@@ -1,3 +1,3 @@
 # Bigram
 
-Coming soon!
+Not written yet.

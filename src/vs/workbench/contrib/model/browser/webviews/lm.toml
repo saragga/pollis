@@ -50,6 +50,12 @@ file = "lm/tutorial-03-model-selection.ipynb"
 bundled = true
 description = "Variable selection and model comparison"
 
+[[notebookSections.notebooks]]
+name = "Replicate Published Results"
+file = "lm/tutorial-04-replicate.ipynb"
+bundled = true
+description = "Check the panel's code against Baltagi (2005, p. 25, Table 2.6) and Petersen's test data; based on the workflow Linear Regression: a production function"
+
 [[wikis]]
 name = "Overview"
 file = "lm/overview.md"
@@ -128,6 +134,33 @@ title = "Why Has Productivity Growth Declined? Productivity and Public Investmen
 authors = "Munnell, Alicia H."
 year = 1990
 journal = "New England Economic Review"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Benchmarks"
+
+[[references]]
+title = "Econometric Analysis of Panel Data"
+authors = "Baltagi, Badi H."
+year = 2005
+journal = "Wiley (3rd ed.)"
+openAccess = false
+
+[[references]]
+title = "Estimating Standard Errors in Finance Panel Data Sets: Comparing Approaches"
+authors = "Petersen, Mitchell A."
+year = 2009
+journal = "Review of Financial Studies"
+doi = "10.1093/rfs/hhn053"
+openAccess = false
+
+[[references]]
+title = "Programming Advice: Test Data with Published OLS, White and Clustered Standard Errors"
+authors = "Petersen, Mitchell A."
+year = 2009
+journal = "Kellogg School of Management"
+url = "https://www.kellogg.northwestern.edu/faculty/petersen/htm/papers/se/test_data.htm"
 openAccess = true
 
 [[references]]
@@ -297,9 +330,10 @@ id = "qq-residuals"
 label = "Residual Q-Q Plot"
 desc = "Compare residuals with a normal distribution"
 code = '''
-using StatsPlots, Distributions
+using StatsPlots, Distributions, Statistics
 
-qqplot(Normal(), residuals(model), xlabel="Normal quantiles", ylabel="Residual quantiles")  # points near the line = normal errors
+r = residuals(model)
+qqplot(Normal(), (r .- mean(r)) ./ std(r), xlabel="Normal quantiles", ylabel="Standardised residual quantiles")  # points near the line = normal errors
 '''
 
 [[actionGroups.actions]]
@@ -446,6 +480,45 @@ se = ["Classical" => classical,
 @printf("%-12s", ""); foreach(p -> @printf("%14s", first(p)), se); println()
 for (i, name) in enumerate(coefnames(model))
 	@printf("%-12s", name); foreach(p -> @printf("%14.4f", last(p)[i]), se); println()
+end
+'''
+
+[[actionGroups.actions]]
+id = "replicate"
+label = "Replicate"
+desc = "Rerun this code on data with published results: Baltagi (2005, p. 25, Table 2.6) and Petersen's test data (Kellogg web page, published tables)"
+models = ["clustered", "dk"]
+code = '''
+using Downloads, LinearAlgebra, Printf
+
+# 1. Baltagi (2005, p. 25, Table 2.6), OLS row: this model on Munnell's data, classical standard errors, published to 3 decimals
+baltagi = Dict("log(pcap)" => (0.155, 0.017), "log(pc)" => (0.309, 0.010), "log(emp)" => (0.594, 0.014), "unemp" => (-0.007, 0.001));
+X  = modelmatrix(model);
+s2 = deviance(model) / dof_residual(model);
+classical = sqrt.(s2 .* diag(inv(transpose(X) * X)));  # Baltagi reports classical standard errors
+@printf("%-12s%12s%10s%11s%12s%10s%11s\n", "Baltagi", "Coef", "rounded", "published", "SE", "rounded", "published")
+for (i, name) in enumerate(coefnames(model))
+	haskey(baltagi, name) || continue  # the intercept is not published
+	b, se = baltagi[name]
+	same = round(coef(model)[i], digits=3) == b && round(classical[i], digits=3) == se
+	@printf("%-12s%12.6f%10.3f%11.3f%12.6f%10.3f%11.3f  %s\n", name, coef(model)[i], coef(model)[i], b, classical[i], classical[i], se, same ? "same to 3 decimals" : "DIFFERENT")
+end
+
+# 2. Petersen's test data (Kellogg web page, tables of OLS, White and clustered standard errors): 5000 firm-years, published estimates for x to 4 decimals
+file = Downloads.download("https://www.kellogg.northwestern.edu/faculty/petersen/htm/papers/se/test_data.txt");
+rows = split.(readlines(file));  # firm, year, x, y
+test = (firmid = parse.(Int, getindex.(rows, 1)), year = parse.(Int, getindex.(rows, 2)), x = parse.(Float64, getindex.(rows, 3)), y = parse.(Float64, getindex.(rows, 4)));
+ols = Regress.ols(test, @formula(y ~ x));  # Regress reports White (HC1) standard errors by default
+k   = findfirst(==("x"), coefnames(ols));
+Xt  = modelmatrix(ols);
+petersen = ["Coefficient"       => (coef(ols)[k], 1.0348),
+	"OLS SE"            => (sqrt(deviance(ols) / dof_residual(ols) * inv(transpose(Xt) * Xt)[k, k]), 0.0286),
+	"White SE"          => (stderror(ols + vcov(HC1()))[k], 0.0284),
+	"Firm-clustered SE" => (stderror(Regress.ols(test, @formula(y ~ x), save_cluster=:firmid) + vcov(CR1(:firmid)))[k], 0.0506),
+	"Year-clustered SE" => (stderror(Regress.ols(test, @formula(y ~ x), save_cluster=:year) + vcov(CR1(:year)))[k], 0.0334)];
+@printf("\n%-20s%12s%10s%11s\n", "Petersen: x", "Julia", "rounded", "published")
+for (label, (value, published)) in petersen
+	@printf("%-20s%12.6f%10.4f%11.4f  %s\n", label, value, value, published, round(value, digits=4) == published ? "same to 4 decimals" : "DIFFERENT")
 end
 '''
 

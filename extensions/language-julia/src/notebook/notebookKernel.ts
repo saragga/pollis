@@ -19,6 +19,7 @@ import { JuliaExecutable } from '../executables'
 import { getCrashReportingPipename, handleNewCrashReportFromException } from '../telemetry'
 import { generatePipeName, getCustomEnvironmentVariables, inferJuliaNumThreads } from '../utils'
 import { JuliaNotebookFeature } from './notebookFeature'
+import { notifyTypeProgress, ProgressBars } from '../interactive/progress'
 import { DebugConfigTreeProvider } from '../debugger/debugConfig'
 
 const notifyTypeDisplay = new NotificationType<{
@@ -40,6 +41,8 @@ const requestTypeRunCell = new RequestType<
 
 export class JuliaKernel {
     private _localDisposables: vscode.Disposable[] = []
+    // POLLIS: progress bars from @withprogress in a cell; cancelling one interrupts this kernel.
+    private readonly _progress = new ProgressBars('Julia Notebook', () => this.interrupt())
 
     private _scheduledExecutionRequests: vscode.NotebookCellExecution[] = []
     private _currentExecutionRequest: vscode.NotebookCellExecution = null
@@ -78,6 +81,7 @@ export class JuliaKernel {
 
     public dispose() {
         this.stop()
+        this._progress.clear()
         this._localDisposables.forEach((d) => d.dispose())
     }
 
@@ -251,6 +255,12 @@ export class JuliaKernel {
                     new StreamMessageReader(socket),
                     new StreamMessageWriter(socket)
                 )
+
+                this._msgConnection.onNotification(notifyTypeProgress, (progress) => {
+                    if (vscode.workspace.getConfiguration('julia').get('useProgressFrontend')) {
+                        this._progress.update(progress)
+                    }
+                })
 
                 this._msgConnection.onNotification(notifyTypeDisplay, ({ items }) => {
                     const execution = this._currentExecutionRequest

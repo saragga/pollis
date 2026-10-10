@@ -1,3 +1,3 @@
 # Polynomial Optimisation
 
-Coming soon!
+Not written yet.

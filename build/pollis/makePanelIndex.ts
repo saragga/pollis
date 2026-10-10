@@ -180,7 +180,7 @@ function main(): void {
 		repository: 'saragga/pollis',
 		icon: relative(ICON),
 		menus: {
-			topLevel: ['Toolboxes', 'Explore', 'Model', 'Simulate', 'Optimise'].filter(menu => TOP_LEVEL_MENUS.has(menu.toLowerCase())),
+			topLevel: ['Explore', 'Model', 'Simulate', 'Optimise'].filter(menu => TOP_LEVEL_MENUS.has(menu.toLowerCase())),
 			submenus: pollis.submenus(),
 		},
 		panels,

@@ -14,12 +14,13 @@ watches. Snapshots are removed on `disconnect` and when Julia exits, so the view
 connections this session holds; those of a Julia that died without exiting are removed when the
 next REPL starts.
 
-The module loads no database package itself: it looks up DBInterface.jl and Tables.jl among the
-packages the connection code has already loaded. DuckDB is built into Pollis: `install()` adds it,
+The module looks up DBInterface.jl and Tables.jl among the packages the connection code has
+already loaded; only `build` loads DuckDB itself. DuckDB is built into Pollis: `install()` adds it,
 once, to a Julia environment of Pollis' own (`ENVIRONMENT`), which PollisDB puts on the load path
 so that `using DuckDB` works in any project without touching its Project.toml. The built-in Pollis
-database is an in-memory DuckDB database that `seed` fills with the PollisDatasets each time it
-connects.
+database is a DuckDB file, `DATASETS_DB`, that `build` makes from the PollisDatasets CSV files and
+remakes only when the package changes. Nothing writes to it otherwise, so the REPL and any other
+program, such as a database extension, open it read-only, side by side.
 """
 module PollisDB
 
@@ -27,6 +28,7 @@ using UUIDs: UUID
 using Dates: now
 
 const DBINTERFACE = Base.PkgId(UUID("a10d1c49-ce27-4219-8d33-6db1a4562965"), "DBInterface")
+const DUCKDB = Base.PkgId(UUID("d2f5444f-75bc-4fdf-ac35-56f514c445e1"), "DuckDB")
 const TABLES = Base.PkgId(UUID("bd369af6-aec1-5ad0-b16a-f7cc5008161c"), "Tables")
 
 """The Julia environment of the packages built into Pollis, one per Julia minor version."""
@@ -39,11 +41,18 @@ const PACKAGES = ["DuckDB", "DBInterface", "Tables"]
 """The id of the built-in database's saved profile in the Databases view."""
 const BUILTIN = "pollis"
 
-"""PollisDatasets.jl, whose datasets `seed` loads into the built-in database."""
+"""PollisDatasets.jl, whose datasets `build` makes the built-in database from."""
 const DATASETS = Base.PkgId(UUID("b43d2445-bde6-43fd-b0e7-0c8ab91b08dc"), "PollisDatasets")
 const DATASETS_URL = "https://github.com/Trumpingtons/PollisDatasets.jl"
 """The commit of PollisDatasets.jl that `install()` last installed into `ENVIRONMENT`."""
 const DATASETS_COMMIT = joinpath(ENVIRONMENT, "PollisDatasets.commit")
+
+"""The built-in database: a DuckDB file of the PollisDatasets, made by `build` and only read afterwards."""
+const DATASETS_DB = joinpath(homedir(), ".pollis", "databases", "PollisDatasets.duckdb")
+"""The version of PollisDatasets.jl that `DATASETS_DB` was made from, as `datasets_stamp` gives it."""
+const DATASETS_STAMP = DATASETS_DB * ".stamp"
+"""The ids and titles of the installed PollisDatasets, read by the welcome page to announce new datasets."""
+const DATASETS_CATALOGUE = joinpath(homedir(), ".pollis", "databases", "PollisDatasets.json")
 
 """The folder of the snapshots, one `<id>.json` per connection, watched by the Databases view."""
 const SESSIONS = joinpath(homedir(), ".pollis", "databases", "sessions")
@@ -173,17 +182,9 @@ end
 """
     register(id, con; name = "")
 
-Show `con` in the Databases view as the connection of its saved profile `id`. The built-in
-database is seeded with the PollisDatasets first.
+Show `con` in the Databases view as the connection of its saved profile `id`.
 """
 function register(id::AbstractString, con; name::AbstractString = "")
-    if id == BUILTIN
-        try
-            seed(con)
-        catch err
-            @warn "Pollis: could not load the PollisDatasets into the built-in database" exception = err
-        end
-    end
     entry = Entry(con, name)
     CONNECTIONS[id] = entry
     write_snapshot(id, entry)
@@ -269,15 +270,82 @@ function preview(con, table::AbstractString; limit::Integer = 100)
 end
 
 """
-    seed(con)
+    browse(id, table; limit = 100_000, title = table)
+    browse(con, table; limit = 100_000, title = table)
 
-Load every dataset of PollisDatasets.jl into the built-in database `con` as a table named after
-its id, with its title, description, source and column descriptions as comments.
+Open the first `limit` rows of `table`, a quoted and possibly schema-qualified name, in the Table
+Viewer of the Julia extension, from the connection shown as `id` or from `con`.
 """
-function seed(con)
+browse(id::AbstractString, table::AbstractString; limit::Integer = 100_000, title::AbstractString = table) = browse(CONNECTIONS[id].con, table; limit, title)
+function browse(con, table::AbstractString; limit::Integer = 100_000, title::AbstractString = table)
+    DBInterface, Tables = loaded(DBINTERFACE), loaded(TABLES)
+    rows = Tables.rowtable(DBInterface.execute(con, "SELECT * FROM $table LIMIT $limit"))
+    Base.invokelatest(Main.VSCodeServer.vscodedisplay, rows, title)
+    return nothing
+end
+
+"""The folder of the PollisDatasets.jl package on the load path, or `nothing`."""
+function datasets_root()
     path = Base.locate_package(DATASETS)
-    path === nothing && return nothing
-    data = joinpath(dirname(dirname(path)), "data")
+    return path === nothing ? nothing : dirname(dirname(path))
+end
+
+"""
+What `DATASETS_DB` is made from: the package folder, which changes with each installed version, and
+the latest change to its catalogue and CSV files, which covers a package under development.
+"""
+function datasets_stamp(root::AbstractString)
+    files = [joinpath(root, "datasets.toml"); readdir(joinpath(root, "data"); join = true)]
+    return string(root, "\n", maximum(mtime, files))
+end
+
+"""
+    build()
+
+Make the built-in database `DATASETS_DB` from the PollisDatasets CSV files when it is missing or
+PollisDatasets.jl has changed since it was made. The file is written under a temporary name and then
+moved into place, so a connection never sees it half-made, and one still open on the previous file
+keeps reading that one.
+"""
+function build()
+    root = datasets_root()
+    root === nothing && return nothing
+    stamp = datasets_stamp(root)
+    isfile(DATASETS_DB) && isfile(DATASETS_STAMP) && read(DATASETS_STAMP, String) == stamp && return nothing
+    println("Pollis: building the PollisDatasets database. This happens only when PollisDatasets.jl changes.")
+    DuckDB = get(() -> Base.require(DUCKDB), Base.loaded_modules, DUCKDB)
+    get(() -> Base.require(DBINTERFACE), Base.loaded_modules, DBINTERFACE)
+    mkpath(dirname(DATASETS_DB))
+    tmp = "$DATASETS_DB.$(getpid()).tmp"
+    rm(tmp; force = true)
+    try
+        Base.invokelatest() do
+            con = loaded(DBINTERFACE).connect(DuckDB.DB, tmp)
+            try
+                seed(con, root)
+                loaded(DBINTERFACE).execute(con, "CHECKPOINT")
+            finally
+                loaded(DBINTERFACE).close!(con)
+            end
+        end
+        mv(tmp, DATASETS_DB; force = true)
+        write(DATASETS_STAMP, stamp)
+    catch err
+        rm(tmp; force = true)
+        isfile(DATASETS_DB) || rethrow()
+        @warn "Pollis: could not rebuild the PollisDatasets database; the previous one is kept" exception = err
+    end
+    return nothing
+end
+
+"""
+    seed(con, root)
+
+Load every dataset of the PollisDatasets.jl package in folder `root` into `con` as a table named
+after its id, with its title, description, source and column descriptions as comments.
+"""
+function seed(con, root::AbstractString)
+    data = joinpath(root, "data")
     DBInterface = loaded(DBINTERFACE)
     TOML = Base.require(Base.PkgId(UUID("fa267f1f-6049-4f14-aa54-33bafae1ed76"), "TOML"))
     entries = TOML.parsefile(joinpath(dirname(data), "datasets.toml"))["datasets"]
@@ -351,6 +419,29 @@ function install()
     finally
         Base.ACTIVE_PROJECT[] = active
     end
+    return nothing
+end
+
+"""
+    catalogue()
+
+Write `DATASETS_CATALOGUE`, the id and title of every dataset of the installed PollisDatasets.jl, as
+JSON, when it has changed. The welcome page compares it with the ids the user has seen and announces
+the new ones.
+"""
+function catalogue()
+    root = datasets_root()
+    root === nothing && return nothing
+    TOML = Base.require(Base.PkgId(UUID("fa267f1f-6049-4f14-aa54-33bafae1ed76"), "TOML"))
+    entries = Base.invokelatest(TOML.parsefile, joinpath(root, "datasets.toml"))["datasets"]
+    quoted(x) = "\"" * escape_string(string(x)) * "\""
+    items = ["{\"id\":$(quoted(e["id"])),\"title\":$(quoted(e["title"]))}" for e in entries]
+    json = "{\"datasets\":[" * join(items, ",") * "]}\n"
+    isfile(DATASETS_CATALOGUE) && read(DATASETS_CATALOGUE, String) == json && return nothing
+    mkpath(dirname(DATASETS_CATALOGUE))
+    tmp = "$DATASETS_CATALOGUE.$(getpid()).tmp"
+    write(tmp, json)
+    mv(tmp, DATASETS_CATALOGUE; force = true)
     return nothing
 end
 

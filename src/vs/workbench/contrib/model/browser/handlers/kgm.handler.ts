@@ -66,7 +66,7 @@ export function registerKgmWebviewHandlers(
 ): DisposableStore {
 	const disposables = new DisposableStore();
 	const kgmData = metadata.kgm;
-	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, kgmData.packages, kgmData.requires ?? [], fileService, pathService, commandService, notificationService, workspaceContextService);
+	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, kgmData.packages, kgmData.requires ?? [], fileService, pathService, commandService, workspaceContextService);
 	createExampleCodeWiring(webviewInput.webview, disposables, 'kgm', fileService, pathService, notificationService);
 	createCustomCopyWiring(webviewInput.webview, disposables, kgmData.wikis, kgmData.notebooks, fileService, pathService, editorService, commandService, notificationService);
 	createReferenceWiring(webviewInput.webview, disposables, 'kgm', kgmData.references, fileService, pathService, commandService, notificationService);
@@ -126,7 +126,7 @@ export function registerKgmWebviewHandlers(
 				await openWikiByFile(msg.target, kgmData.wikis, openerService, editorService, commandService);
 				break;
 			case 'runCode': {
-				const code = msg.code;
+				const code = pkgStatus.withPackageCheck(msg.code, msg.target);
 				if (msg.target === 'newFile') {
 					const input: IUntitledTextResourceEditorInput = {
 						resource: undefined,
@@ -159,7 +159,6 @@ export function registerKgmWebviewHandlers(
 				} else if (msg.target === 'pluto') {
 					await commandService.executeCommand('pollis.action.sendToPluto', code);
 				}
-				await pkgStatus.nudgeIfMissing(msg.target);
 				break;
 			}
 			case 'openUrl':

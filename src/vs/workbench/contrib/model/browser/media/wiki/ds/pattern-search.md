@@ -1,3 +1,3 @@
 # pattern-search
 
-Content coming soon.
+Not written yet.

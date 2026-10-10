@@ -1,3 +1,3 @@
 # Association Rules
 
-Coming soon!
+Not written yet.

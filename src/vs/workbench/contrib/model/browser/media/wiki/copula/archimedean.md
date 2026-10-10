@@ -1,3 +1,3 @@
 # Archimedean Copulas
 
-Coming soon!
+Not written yet.

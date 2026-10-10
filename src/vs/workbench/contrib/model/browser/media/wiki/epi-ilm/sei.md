@@ -1,3 +1,3 @@
 # sei
 
-Coming soon!
+Not written yet.

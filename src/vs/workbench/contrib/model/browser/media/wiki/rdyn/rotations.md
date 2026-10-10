@@ -1,3 +1,3 @@
 # rotations
 
-Coming soon!
+Not written yet.

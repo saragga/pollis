@@ -59,7 +59,7 @@ export function registerMvizWebviewHandlers(
 		for (const t of Object.keys(lastCode)) { void postColorized(lastCode[t], t); }
 	}));
 	const mvizData = metadata.mviz;
-	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, mvizData.packages, [], fileService, pathService, commandService, notificationService, workspaceContextService);
+	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, mvizData.packages, [], fileService, pathService, commandService, workspaceContextService);
 	createExampleCodeWiring(webviewInput.webview, disposables, 'mviz', fileService, pathService, notificationService);
 	createCustomCopyWiring(webviewInput.webview, disposables, mvizData.wikis, mvizData.notebooks, fileService, pathService, editorService, commandService, notificationService);
 	createReferenceWiring(webviewInput.webview, disposables, 'mviz', mvizData.references, fileService, pathService, commandService, notificationService);
@@ -105,7 +105,7 @@ export function registerMvizWebviewHandlers(
 				await openWikiByFile(msg.target, mvizData.wikis, openerService, editorService, commandService);
 				break;
 			case 'runCode': {
-				const code = msg.code;
+				const code = pkgStatus.withPackageCheck(msg.code, msg.target);
 				if (msg.target === 'newFile') {
 					const input: IUntitledTextResourceEditorInput = {
 						resource: undefined,
@@ -138,7 +138,6 @@ export function registerMvizWebviewHandlers(
 				} else if (msg.target === 'pluto') {
 					await commandService.executeCommand('pollis.action.sendToPluto', code);
 				}
-				await pkgStatus.nudgeIfMissing(msg.target);
 				break;
 			}
 			case 'openUrl':

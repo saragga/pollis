@@ -1,3 +1,3 @@
 # gradient-descent
 
-Content coming soon.
+Not written yet.

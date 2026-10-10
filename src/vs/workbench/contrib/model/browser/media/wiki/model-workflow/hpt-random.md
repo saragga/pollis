@@ -1,3 +1,3 @@
 # Random Search
 
-Coming soon!
+Not written yet.

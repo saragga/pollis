@@ -1,3 +1,3 @@
 # linear-regression
 
-Coming soon!
+Not written yet.

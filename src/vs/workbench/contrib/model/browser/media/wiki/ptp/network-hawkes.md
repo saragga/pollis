@@ -1,3 +1,3 @@
 # Network Hawkes
 
-Coming soon!
+Not written yet.

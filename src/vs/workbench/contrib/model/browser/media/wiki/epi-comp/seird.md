@@ -1,3 +1,3 @@
 # seird
 
-Coming soon!
+Not written yet.

@@ -7,6 +7,12 @@ let
 
     include("load_vscodeserver.jl")
 
+    # Pollis: Pollis.packages and the other functions every Pollis session has.
+    try
+        include("Pollis.jl")
+    catch err
+        @debug "Pollis functions not loaded" exception=err
+    end
     # Pollis: the bridge to the Databases view. Loads no packages; never let it block the REPL.
     try
         include("PollisDB.jl")
@@ -18,6 +24,12 @@ let
         isdefined(Main, :PollisDB) && Base.invokelatest(Main.PollisDB.install)
     catch err
         @warn "Pollis: could not install DuckDB and the PollisDatasets" exception=err
+    end
+    # Pollis: the list of datasets the welcome page announces new ones from.
+    try
+        isdefined(Main, :PollisDB) && Base.invokelatest(Main.PollisDB.catalogue)
+    catch err
+        @debug "Pollis: PollisDatasets catalogue not written" exception=err
     end
 
     @debug "vscodeserver loaded" time=round(Int, time()*10)

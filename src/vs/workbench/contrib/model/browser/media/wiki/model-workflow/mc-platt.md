@@ -1,3 +1,3 @@
 # Platt Scaling
 
-Coming soon!
+Not written yet.

@@ -1,3 +1,3 @@
 # SPEA2
 
-Coming soon!
+Not written yet.

@@ -136,7 +136,7 @@ export class MenuId {
 	static readonly MenubarViewMenu = new MenuId('MenubarViewMenu');
 	static readonly MenubarHomeMenu = new MenuId('MenubarHomeMenu');
 	static readonly MenubarExploreMenu = new MenuId('MenubarExploreMenu');
-	static readonly MenubarToolboxesMenu = new MenuId('MenubarToolboxesMenu');
+	static readonly MenubarComposeMenu = new MenuId('MenubarComposeMenu');
 	static readonly MenubarModelMenu = new MenuId('MenubarModelMenu');
 	static readonly MenubarSimulateMenu = new MenuId('MenubarSimulateMenu');
 	static readonly MenubarOptimiseMenu = new MenuId('MenubarOptimiseMenu');

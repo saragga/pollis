@@ -1,3 +1,3 @@
 # Trigram
 
-Coming soon!
+Not written yet.

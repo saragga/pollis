@@ -1,3 +1,3 @@
 # gd
 
-Coming soon!
+Not written yet.

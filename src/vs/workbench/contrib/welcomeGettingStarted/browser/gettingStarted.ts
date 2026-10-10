@@ -123,6 +123,23 @@ const JULIA_INSTALLED_KEY = 'julia.juliaInstalled';
 const JULIA_HAS_REPL_KEY = 'julia.hasREPL';
 const JULIA_REPL_VERSION_KEY = 'julia.replVersion';
 const DISMISSED_ANNOUNCEMENTS_KEY = 'pollis.welcome.dismissedAnnouncements';
+// Pollis: the ids of the PollisDatasets the user has seen; datasets added since are announced.
+const SEEN_DATASETS_KEY = 'pollis.welcome.seenDatasets';
+/**
+ * Pollis: a dataset of PollisDatasets.jl, as listed in the catalogue that PollisDB.catalogue() writes.
+ */
+interface IPollisDataset {
+	readonly id: string;
+	readonly title: string;
+}
+/**
+ * Pollis: splits a localized text at its {0} placeholder and puts `code` there in code style.
+ */
+function withCode(text: string, code: string): (string | HTMLElement)[] {
+	const [before, after] = text.split('{0}');
+	return [before, $('code', {}, code), after ?? ''];
+}
+
 export class GettingStartedPage extends EditorPane {
 
 	public static readonly ID = 'gettingStartedPage';
@@ -168,6 +185,8 @@ export class GettingStartedPage extends EditorPane {
 	private readonly categoriesSlideDisposables: DisposableStore;
 	// Pollis: set when Julia gets installed while this page is open, and set to ready once its REPL starts.
 	private juliaNewlyInstalled: 'installed' | 'ready' | undefined;
+	// Pollis: the datasets of the installed PollisDatasets.jl, or undefined until its catalogue is read.
+	private pollisDatasets: IPollisDataset[] | undefined;
 	private renderAnnouncements = () => { };
 	private showFeaturedWalkthrough = true;
 
@@ -453,6 +472,8 @@ export class GettingStartedPage extends EditorPane {
 			case 'dismissAnnouncement': {
 				if (argument === 'juliaReady') {
 					this.juliaNewlyInstalled = undefined;
+				} else if (argument === 'datasetsAdded') {
+					this.storeSeenDatasets(this.pollisDatasets ?? []);
 				} else {
 					this.storageService.store(DISMISSED_ANNOUNCEMENTS_KEY, JSON.stringify([...this.getDismissedAnnouncements(), argument]), StorageScope.APPLICATION, StorageTarget.USER);
 				}
@@ -1013,6 +1034,7 @@ export class GettingStartedPage extends EditorPane {
 				this.getJuliaInstalled() === false ? this.buildJuliaNotInstalledAlert() : undefined,
 				this.juliaNewlyInstalled === 'ready' ? this.buildJuliaReadyAnnouncement(this.contextService.getContextKeyValue<string>(JULIA_REPL_VERSION_KEY)) : undefined,
 				databaseReady !== undefined && this.getJuliaInstalled() && !dismissed.includes(databaseAnnouncement) ? this.buildDatabaseAnnouncement(databaseReady) : undefined,
+				this.buildDatasetsAnnouncement(),
 			]));
 			this.registerDispatchListeners();
 		};
@@ -1023,6 +1045,25 @@ export class GettingStartedPage extends EditorPane {
 			databaseReady = exists;
 			renderAlerts();
 		}, () => { });
+		// PollisDB.catalogue() lists the installed PollisDatasets each time a Julia REPL starts, after it has
+		// installed or updated them; the datasets not seen before are announced.
+		const databasesFolder = joinPath(this.pathService.userHome({ preferLocal: true }), '.pollis', 'databases');
+		const catalogue = joinPath(databasesFolder, 'PollisDatasets.json');
+		const readCatalogue = async () => {
+			this.pollisDatasets = await this.readPollisDatasets(catalogue);
+			// The first catalogue read is what the user already has: nothing is new.
+			if (this.pollisDatasets && this.storageService.get(SEEN_DATASETS_KEY, StorageScope.APPLICATION) === undefined) {
+				this.storeSeenDatasets(this.pollisDatasets);
+			}
+			renderAlerts();
+		};
+		readCatalogue();
+		const catalogueWatcher = this.categoriesSlideDisposables.add(this.fileService.createWatcher(databasesFolder, { recursive: false, excludes: [] }));
+		this.categoriesSlideDisposables.add(catalogueWatcher.onDidChange(e => {
+			if (e.contains(catalogue)) {
+				readCatalogue();
+			}
+		}));
 		let juliaWasMissing = this.getJuliaInstalled() === false;
 		this.categoriesSlideDisposables.add(this.contextService.onDidChangeContext(e => {
 			if (e.affectsSome(new Set([JULIA_INSTALLED_KEY]))) {
@@ -1063,6 +1104,67 @@ export class GettingStartedPage extends EditorPane {
 	}
 
 	/**
+	 * Pollis: the datasets listed in the PollisDatasets catalogue `file`, or undefined when it cannot be read.
+	 */
+	private async readPollisDatasets(file: URI): Promise<IPollisDataset[] | undefined> {
+		try {
+			const parsed: { datasets?: Partial<IPollisDataset>[] } = JSON.parse((await this.fileService.readFile(file)).value.toString());
+			return Array.isArray(parsed.datasets)
+				? parsed.datasets.filter((d): d is IPollisDataset => typeof d?.id === 'string' && typeof d.title === 'string')
+				: undefined;
+		} catch {
+			return undefined;
+		}
+	}
+
+	private getSeenDatasets(): string[] {
+		try {
+			const seen = JSON.parse(this.storageService.get(SEEN_DATASETS_KEY, StorageScope.APPLICATION, '[]'));
+			return Array.isArray(seen) ? seen : [];
+		} catch {
+			return [];
+		}
+	}
+
+	/**
+	 * Pollis: records `datasets` as seen, keeping those seen before, so that only datasets added later are announced.
+	 */
+	private storeSeenDatasets(datasets: IPollisDataset[]): void {
+		const seen = new Set([...this.getSeenDatasets(), ...datasets.map(d => d.id)]);
+		this.storageService.store(SEEN_DATASETS_KEY, JSON.stringify([...seen]), StorageScope.APPLICATION, StorageTarget.USER);
+	}
+
+	/**
+	 * Pollis: announcement of the datasets added to PollisDatasets since the user last dismissed it. Pollis updates
+	 * PollisDatasets.jl when a Julia REPL starts, so the datasets are announced once they are installed.
+	 */
+	private buildDatasetsAnnouncement(): HTMLElement | undefined {
+		const seen = new Set(this.getSeenDatasets());
+		const added = (this.pollisDatasets ?? []).filter(d => !seen.has(d.id));
+		if (!added.length) {
+			return undefined;
+		}
+		return $('.pollis-alert.info', { role: 'status' },
+			$('span.pollis-alert-icon.codicon.codicon-table'),
+			$('.pollis-alert-body', {},
+				$('p.pollis-alert-title', {}, added.length === 1
+					? localize('pollis.datasetAdded', "A new dataset in PollisDatasets")
+					: localize('pollis.datasetsAdded', "{0} new datasets in PollisDatasets", added.length)),
+				$('ul.pollis-alert-description.pollis-alert-list', {},
+					...added.map(d => $('li', {}, `${d.title} `, $('code', {}, d.id))),
+				),
+				$('p.pollis-alert-description', {},
+					// {0} is left in the text and replaced by the Julia call in code style
+					...withCode(localize('pollis.datasetsAddedDescription', "Each is a table of the built-in database, and is loaded in Julia with {0}."), 'dataset("id")')),
+				$('.pollis-alert-actions', {},
+					$('button.button-link', { 'x-dispatch': 'openDatabases' }, localize('pollis.openDatabases', "Open Databases")),
+				),
+			),
+			this.buildDismissButton('datasetsAdded'),
+		);
+	}
+
+	/**
 	 * Pollis: announcement shown once the REPL of a Julia installed while the welcome page is open shows in the terminal.
 	 */
 	private buildJuliaReadyAnnouncement(version: string | undefined): HTMLElement {
@@ -1090,9 +1192,10 @@ export class GettingStartedPage extends EditorPane {
 				$('p.pollis-alert-title', {}, ready
 					? localize('pollis.databaseReady', "The built-in database is ready")
 					: localize('pollis.databaseBuiltIn', "A database is built in")),
-				$('p.pollis-alert-description', {}, ready
-					? localize('pollis.databaseReadyDescription', "It holds the PollisDatasets as tables, described column by column. Connect to it from the Databases view to query it as {0} in the Julia REPL.", 'pollis')
-					: localize('pollis.databaseBuiltInDescription', "Pollis comes with a DuckDB database holding the PollisDatasets, so no database server is needed. DuckDB and the datasets are installed the first time the Julia REPL starts.")),
+				$('p.pollis-alert-description', {}, ...(ready
+					// {0} is left in the text and replaced by the connection's name in code style
+					? withCode(localize('pollis.databaseReadyDescription', "It holds the PollisDatasets as tables, described column by column. Connect to it from the Databases view to query it as {0} in the Julia REPL."), 'pollis')
+					: [localize('pollis.databaseBuiltInDescription', "Pollis comes with a DuckDB database holding the PollisDatasets, so no database server is needed. DuckDB and the datasets are installed the first time the Julia REPL starts.")])),
 				$('.pollis-alert-actions', {},
 					$('button.button-link', { 'x-dispatch': 'openDatabases' }, localize('pollis.openDatabases', "Open Databases")),
 				),

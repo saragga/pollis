@@ -1,3 +1,3 @@
 # Diffusion Maps
 
-Coming soon!
+Not written yet.

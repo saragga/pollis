@@ -1,3 +1,3 @@
 # Field Notes
 
-Coming soon!
+Not written yet.

@@ -1,3 +1,3 @@
 # Particle Swarm Optimisation (PSO)
 
-Coming soon.
+Not written yet.

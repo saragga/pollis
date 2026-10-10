@@ -50,7 +50,6 @@ available under the MIT License.
 |---|---|---|
 | Visual Studio Code (Code - OSS) | MIT | https://github.com/microsoft/vscode |
 | Codicons | MIT | https://github.com/microsoft/vscode-codicons |
-| KaTeX | MIT | https://github.com/KaTeX/KaTeX |
 | julia-vscode | MIT | https://github.com/julia-vscode/julia-vscode |
 
 A complete list of third-party notices, including the applicable copyright notices and license

@@ -1,3 +1,3 @@
 # Isotonic Regression
 
-Coming soon!
+Not written yet.

@@ -9,7 +9,7 @@ Turns a spec TOML into a Pollis extension under `toolboxes/<name>/`, packaged in
 
 The mechanical work is done by `build/pollis/makeExtension.ts`; the agent does the parts that need judgment. How a menu entry resolves to its panel (command, panel constant, template, TOML, wikis, notebooks) is in `build/pollis/panelResolver.ts`.
 
-This is the developer version, for the source tree. Pollis users get the same agent as the `package-toolbox` skill of an agent plugin, `pollis-agents`, in its own repository, [Trumpingtons/pollis-plugins](https://github.com/Trumpingtons/pollis-plugins) (the default marketplace in `chat.plugins.marketplaces`, installed from the Agent Plugins section of the Extensions pane). Its builder, `plugins/pollis-agents/scripts/makeToolbox.mjs` there, needs only Node and reads the panels from this repository's `main` through `build/pollis/panel-index.json`. Regenerate that index with `node build/pollis/makePanelIndex.ts` (and commit it) whenever a panel, a command, a menu title, a wiki or notebook file, or a toolbox under `toolboxes/` is added, renamed or removed; `node build/pollis/makePanelIndex.ts --check` tells whether it is up to date. A change to the resolution in `panelResolver.ts` or to the index format needs the matching change to the plugin's builder, in the other repository. The plugin's other skill, `create-panel`, and its validator read Pollis' own panel TOML parser from `build/pollis/pollisToml.mjs`, generated from `tomlPanelData.ts` by `node build/pollis/makePollisToml.ts`: run it again (and commit the result) whenever `tomlPanelData.ts` changes; `--check` tells whether it is up to date.
+This is the developer version, for the source tree. Pollis users get the same agent as the `package-toolbox` skill of an agent plugin, `pollis-agents`, in its own repository, [Trumpingtons/pollis-plugins](https://github.com/Trumpingtons/pollis-plugins) (Pollis starts its skills from **Compose > Pollis Agents**, with the coding agent the user picks: `src/vs/workbench/contrib/compose/browser/pollisAgents.ts` downloads the files the plugin lists in its `files.json` to `~/.pollis/agents/pollis-agents` and starts the agent in a terminal, pointed at the skill's SKILL.md; a file added to the plugin must be added to `files.json` too). Its builder, `plugins/pollis-agents/scripts/makeToolbox.mjs` there, needs only Node and reads the panels from this repository's `main` through `build/pollis/panel-index.json`. Regenerate that index with `node build/pollis/makePanelIndex.ts` (and commit it) whenever a panel, a command, a menu title, a wiki or notebook file, or a toolbox under `toolboxes/` is added, renamed or removed; `node build/pollis/makePanelIndex.ts --check` tells whether it is up to date. A change to the resolution in `panelResolver.ts` or to the index format needs the matching change to the plugin's builder, in the other repository. The plugin's other skill, `create-panel`, and its validator read Pollis' own panel TOML parser from `build/pollis/pollisToml.mjs`, generated from `tomlPanelData.ts` by `node build/pollis/makePollisToml.ts`: run it again (and commit the result) whenever `tomlPanelData.ts` changes; `--check` tells whether it is up to date.
 
 ## The spec
 
@@ -25,7 +25,7 @@ mode = "copy"
 [[menu]]
 id = "finance"
 title = "Finance Toolbox"
-menu = "Toolboxes"
+menu = "Model"
 group = "2_toolboxes"
 order = 4
 
@@ -37,7 +37,7 @@ order = 1
 ```
 
 - **Origin**: each `[[menu.items]]` names a menu entry by its `command` (or the panel by `panel = "<id>"`). If the user names entries by their menu titles, find the command ids in the `*.contribution.ts` files (`appendMenuItem` blocks) and say which you chose.
-- **Destination**: `menu` is Toolboxes (default), Explore, Model, Simulate, Optimise or the id of an existing submenu (`new MenuId('...')`); `inline = true` puts the entries straight into that menu without a submenu. `group` and `order` set the order.
+- **Destination**: `menu` is Explore, Model, Simulate, Optimise or the id of an existing submenu of one of them; any other menu, or none, puts the toolbox at the end of Explore (toolboxes never go in Compose or Help) (`new MenuId('...')`); `inline = true` puts the entries straight into that menu without a submenu. `group` and `order` set the order.
 - **Mode**: `copy` makes independent copies and leaves Pollis unchanged: panel id `<prefix>.<id>`, command `pollis.<name>.<panel id>`, and the wiki and notebook folders the copy ships renamed `<prefix>.<folder>`, with the TOML's `file` entries rewritten (`renameMaterialFolders` in `panelResolver.ts`; `prefix` in `[extension]`, default the name without `pollis-toolbox-`). `move` keeps the ids, the command ids and the folder names, and the panels must then be removed from Pollis.
 
 ## Steps

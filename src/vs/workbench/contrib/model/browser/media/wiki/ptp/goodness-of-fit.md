@@ -1,3 +1,3 @@
 # Goodness Of Fit
 
-Coming soon!
+Not written yet.

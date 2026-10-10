@@ -55,6 +55,7 @@ export const CONNECT_DATABASE_COMMAND_ID = 'pollis.databases.connect';
 export const DISCONNECT_DATABASE_COMMAND_ID = 'pollis.databases.disconnect';
 export const REFRESH_DATABASE_COMMAND_ID = 'pollis.databases.refresh';
 export const PREVIEW_TABLE_COMMAND_ID = 'pollis.databases.previewTable';
+export const BROWSE_TABLE_COMMAND_ID = 'pollis.databases.browseTable';
 
 /** What the menu commands receive: the connection id and, below it, the item's names. */
 export interface IDatabaseItemArg {
@@ -170,8 +171,8 @@ class ItemRenderer implements ITreeRenderer<DatabaseItem, void, IItemTemplate> {
 				}
 				if (profile?.builtin) {
 					hover = session
-						? localize('connection.builtin.hover.connected', "{0} (DuckDB)\nThe database built into Pollis: the PollisDatasets, loaded in memory.\nConnected in the Julia REPL as {1}. Click to browse its tables.", name, profile.variable)
-						: localize('connection.builtin.hover', "{0} (DuckDB)\nThe database built into Pollis: the PollisDatasets, loaded in memory.\nNot connected. Click to connect in the Julia REPL as {1}.", name, profile.variable);
+						? localize('connection.builtin.hover.connected', "{0} (DuckDB)\nThe database built into Pollis: the PollisDatasets, read-only, in {1}.\nConnected in the Julia REPL as {2}. Click to browse its tables.", name, describeConnection(profile), profile.variable)
+						: localize('connection.builtin.hover', "{0} (DuckDB)\nThe database built into Pollis: the PollisDatasets, read-only, in {1}.\nNot connected. Click to connect in the Julia REPL as {2}.", name, describeConnection(profile), profile.variable);
 				} else if (profile) {
 					const driver = getDatabaseDriver(profile.driver).label;
 					hover = session
@@ -326,7 +327,7 @@ export class DatabaseConnectionsView extends ViewPane {
 		}));
 		this._register(this.tree.onMouseDblClick(e => {
 			if (e.element?.kind === 'table') {
-				this.commandService.executeCommand(PREVIEW_TABLE_COMMAND_ID, itemArg(e.element));
+				this.commandService.executeCommand(BROWSE_TABLE_COMMAND_ID, itemArg(e.element));
 			}
 		}));
 		this._register(this.tree.onContextMenu(e => this.onContextMenu(e)));

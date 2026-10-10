@@ -27,7 +27,7 @@ export interface IMenuViewFilter {
 
 const pollisMenus: ReadonlySet<string> = new Set([
 	MenuId.MenubarExploreMenu.id,
-	MenuId.MenubarToolboxesMenu.id,
+	MenuId.MenubarComposeMenu.id,
 	MenuId.MenubarModelMenu.id,
 	MenuId.MenubarSimulateMenu.id,
 	MenuId.MenubarOptimiseMenu.id,

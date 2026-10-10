@@ -1,3 +1,3 @@
 # StoGO & AGS
 
-Coming soon!
+Not written yet.

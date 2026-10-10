@@ -1,3 +1,3 @@
 # SOCP
 
-Coming soon!
+Not written yet.

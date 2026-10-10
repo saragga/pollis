@@ -1,2 +1,2 @@
 # TSF factsheet
-Placeholder — content coming soon.
+Not written yet.

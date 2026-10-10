@@ -1,3 +1,3 @@
 # small-world
 
-Coming soon!
+Not written yet.

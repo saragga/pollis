@@ -1,3 +1,3 @@
 # Elliptical Copulas
 
-Coming soon!
+Not written yet.

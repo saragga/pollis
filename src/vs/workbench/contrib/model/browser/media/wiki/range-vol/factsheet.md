@@ -1,3 +1,3 @@
 # Range-Based Volatility Estimation — Factsheet
 
-Coming soon!
+Not written yet.

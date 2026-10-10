@@ -1,3 +1,3 @@
 # Index Structure
 
-Coming soon!
+Not written yet.

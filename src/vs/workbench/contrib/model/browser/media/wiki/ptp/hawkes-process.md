@@ -1,3 +1,3 @@
 # Hawkes Process
 
-Coming soon!
+Not written yet.

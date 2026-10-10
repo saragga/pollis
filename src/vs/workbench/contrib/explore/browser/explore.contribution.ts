@@ -1226,16 +1226,6 @@ MenuRegistry.appendMenuItem(ADRSubmenuId, {
 //});  // XbrlXML.jl
 // Regulatory filings
 
-// Macroeconomic data sources
-MenuRegistry.appendMenuItem(ADRSubmenuId, {
-	group: '3_ds',
-	command: {
-		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
-		title: localize('mt.dbnomics', 'DBnomics Platform'),
-	},
-	order: 1,
-}); // DBnomics.jl
-
 MenuRegistry.appendMenuItem(ADRSubmenuId, {
 	group: '4_ds',
 	command: {

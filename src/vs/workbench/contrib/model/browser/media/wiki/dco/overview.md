@@ -1,3 +1,3 @@
 # DCO Overview
 
-Coming soon.
+Not written yet.

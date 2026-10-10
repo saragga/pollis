@@ -1,3 +1,3 @@
 # Garman-Klass Estimator
 
-Coming soon!
+Not written yet.

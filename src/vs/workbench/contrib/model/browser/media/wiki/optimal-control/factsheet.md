@@ -1,3 +1,3 @@
 # Linear Optimal Control — Factsheet
 
-Coming soon!
+Not written yet.

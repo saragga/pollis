@@ -1,3 +1,3 @@
 # Single Linkage
 
-Coming soon!
+Not written yet.

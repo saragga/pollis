@@ -4,7 +4,6 @@
 	"icon": "src/vs/workbench/contrib/extensions/browser/media/pollis-toolbox-icon.png",
 	"menus": {
 		"topLevel": [
-			"Toolboxes",
 			"Explore",
 			"Model",
 			"Simulate",
@@ -35,7 +34,13 @@
 			"menubarCLSubmenu",
 			"menubarCONNSubmenu",
 			"menubarCTSVSubmenu",
+			"menubarCollaborationClassroomMenu",
+			"menubarCollaborationGamesMenu",
+			"menubarCollaborationMenu",
+			"menubarComparisonsMenu",
+			"menubarCompileGaloreMenu",
 			"menubarCopulaSubmenu",
+			"menubarCorrectnessMenu",
 			"menubarDASubmenu",
 			"menubarDIYSubmenu",
 			"menubarDTRFSubmenu",
@@ -69,6 +74,8 @@
 			"menubarOCSubmenu",
 			"menubarPMSubmenu",
 			"menubarPPLSubmenu",
+			"menubarPollisAgentsMenu",
+			"menubarPollisSkillsMenu",
 			"menubarRLSubmenu",
 			"menubarRQRSubmenu",
 			"menubarSASubmenu",
@@ -79,6 +86,7 @@
 			"menubarTSSSubmenu",
 			"menubarTopicModelsSubmenu",
 			"menubarVMSubmenu",
+			"menubarWorkflowsMenu",
 			"submenu.filter.commentSort",
 			"typehierarchy/title",
 			"workbench.chat.menu.config",
@@ -4193,7 +4201,8 @@
 			"notebooks": [
 				"lm/tutorial-01-basics.ipynb",
 				"lm/tutorial-02-wls.ipynb",
-				"lm/tutorial-03-model-selection.ipynb"
+				"lm/tutorial-03-model-selection.ipynb",
+				"lm/tutorial-04-replicate.ipynb"
 			],
 			"packages": [
 				"GLM.jl",
@@ -8014,7 +8023,8 @@
 				"vcm/tutorial-01-garch.ipynb",
 				"vcm/tutorial-02-dcc.ipynb",
 				"vcm/tutorial-03-forecast.ipynb",
-				"vcm/tutorial-04-var.ipynb"
+				"vcm/tutorial-04-var.ipynb",
+				"vcm/tutorial-05-replicate.ipynb"
 			],
 			"packages": [
 				"ARCHModels.jl"

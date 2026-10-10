@@ -1,3 +1,3 @@
 # Surrogate-Based Optimisation — assumptions
 
-Coming soon.
+Not written yet.

@@ -42,6 +42,17 @@
 	margin-right: 6px; /* with the row gap, the 14px of the extension list */
 }
 
+/* Shrink and hide the icon as the extension list does when the pane is narrow (<= 250px) or mini (<= 200px) */
+.extensions-viewlet.narrow .pollis-toolboxes .pollis-toolbox .icon {
+	width: 24px;
+	height: 24px;
+	margin-right: 0;
+}
+
+.extensions-viewlet.mini .pollis-toolboxes .pollis-toolbox .icon {
+	display: none;
+}
+
 .pollis-toolboxes .pollis-toolbox .details {
 	flex: 1;
 	min-width: 0;
@@ -68,8 +79,19 @@
 	color: var(--vscode-descriptionForeground);
 }
 
+.pollis-toolboxes .pollis-toolbox .author {
+	font-weight: 600;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	color: var(--vscode-descriptionForeground);
+}
+
 .pollis-toolboxes .pollis-toolbox .action {
 	flex-shrink: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
 }
 
 .pollis-toolboxes .pollis-toolbox .action .monaco-button {

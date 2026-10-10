@@ -1,3 +1,3 @@
 # Recurrent Layers — Assumptions
 
-Coming soon!
+Not written yet.

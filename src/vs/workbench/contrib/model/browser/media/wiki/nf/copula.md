@@ -1,3 +1,3 @@
 # Copula Estimation
 
-Coming soon!
+Not written yet.

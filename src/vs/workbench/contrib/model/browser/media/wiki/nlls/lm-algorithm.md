@@ -1,3 +1,3 @@
 # LM Algorithm
 
-Coming soon!
+Not written yet.

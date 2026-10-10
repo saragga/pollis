@@ -1,3 +1,3 @@
 # Custom Rate
 
-Coming soon!
+Not written yet.

@@ -12,7 +12,7 @@ import { IContextKeyService } from '../../../../platform/contextkey/common/conte
 import { isDark } from '../../../../platform/theme/common/theme.js';
 import { IThemeService } from '../../../../platform/theme/common/themeService.js';
 import { EditorInputCapabilities, GroupIdentifier, IUntypedEditorInput, Verbosity } from '../../../common/editor.js';
-import { EditorInput } from '../../../common/editor/editorInput.js';
+import { EditorInput, IEditorCloseHandler } from '../../../common/editor/editorInput.js';
 import { IOverlayWebview } from '../../webview/browser/webview.js';
 
 export interface WebviewInputInitInfo {
@@ -47,6 +47,9 @@ export class WebviewInput extends EditorInput {
 	private _webview: IOverlayWebview;
 
 	private _hasTransfered = false;
+
+	/** Set by the owner of the webview to ask before the tab closes, e.g. about changes not applied yet. */
+	public override closeHandler: IEditorCloseHandler | undefined = undefined;
 
 	get resource() {
 		return URI.from({

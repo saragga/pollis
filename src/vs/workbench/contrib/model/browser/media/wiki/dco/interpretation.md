@@ -1,3 +1,3 @@
 # DCO Interpretation
 
-Coming soon.
+Not written yet.

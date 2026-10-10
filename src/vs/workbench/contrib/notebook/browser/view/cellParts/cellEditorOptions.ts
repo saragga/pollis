@@ -16,7 +16,7 @@ import { Registry } from '../../../../../../platform/registry/common/platform.js
 import { ActiveEditorContext } from '../../../../../common/contextkeys.js';
 import { INotebookCellToolbarActionContext, INotebookCommandContext, NotebookMultiCellAction, NOTEBOOK_ACTIONS_CATEGORY } from '../../controller/coreActions.js';
 import { IBaseCellEditorOptions, ICellViewModel } from '../../notebookBrowser.js';
-import { NOTEBOOK_CELL_LINE_NUMBERS, NOTEBOOK_EDITOR_FOCUSED } from '../../../common/notebookContextKeys.js';
+import { NOTEBOOK_CELL_LINE_NUMBERS, NOTEBOOK_IS_ACTIVE_EDITOR } from '../../../common/notebookContextKeys.js';
 import { CellContentPart } from '../cellPart.js';
 import { NotebookCellInternalMetadata, NOTEBOOK_EDITOR_ID } from '../../../common/notebookCommon.js';
 import { NotebookOptions } from '../../notebookOptions.js';
@@ -199,7 +199,7 @@ registerAction2(class ToggleLineNumberAction extends Action2 {
 			id: 'notebook.toggleLineNumbers',
 			title: localize2('notebook.toggleLineNumbers', 'Toggle Notebook Line Numbers'),
 			shortTitle: localize2('notebook.toggleLineNumbers.short', 'Line Numbers'),
-			precondition: NOTEBOOK_EDITOR_FOCUSED,
+			precondition: NOTEBOOK_IS_ACTIVE_EDITOR,
 			menu: [
 				{
 					id: MenuId.NotebookToolbar,

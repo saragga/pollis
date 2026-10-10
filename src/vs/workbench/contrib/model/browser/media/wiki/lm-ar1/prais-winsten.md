@@ -1,3 +1,3 @@
 # Prais-Winsten
 
-Coming soon!
+Not written yet.

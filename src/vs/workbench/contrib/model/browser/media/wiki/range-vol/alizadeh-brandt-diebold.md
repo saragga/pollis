@@ -1,3 +1,3 @@
 # Alizadeh-Brandt-Diebold Log-Range Proxy
 
-Coming soon!
+Not written yet.

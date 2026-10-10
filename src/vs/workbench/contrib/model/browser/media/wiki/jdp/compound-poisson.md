@@ -1,3 +1,3 @@
 # Compound Poisson
 
-Coming soon!
+Not written yet.

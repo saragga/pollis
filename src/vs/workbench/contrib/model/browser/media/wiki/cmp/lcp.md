@@ -1,3 +1,3 @@
 # Linear Complementarity (LCP)
 
-Coming soon!
+Not written yet.

@@ -1,3 +1,3 @@
 # stogo r
 
-Coming soon!
+Not written yet.

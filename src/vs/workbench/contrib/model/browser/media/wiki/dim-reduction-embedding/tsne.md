@@ -1,3 +1,3 @@
 # t-SNE
 
-Coming soon!
+Not written yet.

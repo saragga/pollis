@@ -1160,6 +1160,19 @@
 	color: var(--vscode-descriptionForeground);
 }
 
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-alert .pollis-alert-description code {
+	font-family: var(--monaco-monospace-font);
+	color: var(--vscode-textPreformat-foreground);
+	background-color: var(--vscode-textPreformat-background);
+	padding: 1px 4px;
+	border-radius: 3px;
+}
+
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-alert .pollis-alert-list {
+	margin: 0 0 4px;
+	padding-left: 18px;
+}
+
 .monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-alert .pollis-alert-actions {
 	display: flex;
 	gap: 16px;

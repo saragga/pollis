@@ -1,3 +1,3 @@
 # Pendulum
 
-Coming soon!
+Not written yet.

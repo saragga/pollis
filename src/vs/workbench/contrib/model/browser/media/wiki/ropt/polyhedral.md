@@ -1,3 +1,3 @@
 # Polyhedral Uncertainty
 
-Coming soon!
+Not written yet.

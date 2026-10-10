@@ -1,3 +1,3 @@
 # seir
 
-Coming soon!
+Not written yet.

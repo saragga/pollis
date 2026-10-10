@@ -41,7 +41,8 @@ export class JuliaNotebookFeature {
 
     public debugPipenameToKernel: Map<string, JuliaKernel> = new Map<string, JuliaKernel>()
 
-    private initialized: boolean = false
+    // Pending or finished loading of the Julia versions, so that callers can wait for the controllers
+    private initializing: Promise<void> | undefined
 
     constructor(
         private context: vscode.ExtensionContext,
@@ -57,6 +58,10 @@ export class JuliaNotebookFeature {
         )
         onEvent(vscode.window.onDidChangeActiveNotebookEditor, this.init.bind(this), this, this.disposables)
         onEvent(vscode.window.onDidChangeVisibleNotebookEditors, this.init.bind(this), this, this.disposables)
+        // A notebook restored on reload is open before the events above are registered
+        if (vscode.workspace.notebookDocuments.some((notebook) => this.isJuliaNotebook(notebook))) {
+            this.init()
+        }
 
         context.subscriptions.push(
             registerCommand(
@@ -119,12 +124,12 @@ export class JuliaNotebookFeature {
         return this.debugPipenameToKernel.get(pipename)
     }
 
-    private async init() {
-        if (this.initialized) {
-            return
-        }
-        this.initialized = true
+    private init() {
+        this.initializing ??= this.loadControllers()
+        return this.initializing
+    }
 
+    private async loadControllers() {
         console.log('initalizing notebook feature')
         this._outputChannel = vscode.window.createOutputChannel('Julia Notebook Kernels')
 
@@ -135,7 +140,7 @@ export class JuliaNotebookFeature {
             if (err instanceof JuliaNotFoundError) {
                 // No Julia available; skip controller registration. The user has already been
                 // informed by `ExecutableFeature`. We will retry on the next init trigger.
-                this.initialized = false
+                this.initializing = undefined
                 return
             }
             throw err
@@ -180,11 +185,17 @@ export class JuliaNotebookFeature {
 
             this._controllers.set(controller, juliaVersion)
         }
+
+        // Notebooks opened while the versions were loading
+        vscode.workspace.notebookDocuments.forEach((notebook) => this.preferKernel(notebook))
     }
 
-    private onDidOpenNotebookDocument(e: vscode.NotebookDocument) {
-        this.init()
+    private async onDidOpenNotebookDocument(e: vscode.NotebookDocument) {
+        await this.init()
+        this.preferKernel(e)
+    }
 
+    private preferKernel(e: vscode.NotebookDocument) {
         if (!this.isJuliaNotebook(e) || this._controllers.size === 0) {
             return
         }

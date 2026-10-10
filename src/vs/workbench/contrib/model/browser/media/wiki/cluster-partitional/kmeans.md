@@ -1,3 +1,3 @@
 # K-Means
 
-Coming soon!
+Not written yet.

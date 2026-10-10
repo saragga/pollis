@@ -1,3 +1,3 @@
 # Sample Entropy
 
-Coming soon.
+Not written yet.

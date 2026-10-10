@@ -1,3 +1,3 @@
 # DA-RNN
 
-Coming soon!
+Not written yet.

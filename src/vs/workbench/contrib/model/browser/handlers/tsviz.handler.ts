@@ -59,7 +59,7 @@ export function registerTsvizWebviewHandlers(
 		for (const t of Object.keys(lastCode)) { void postColorized(lastCode[t], t); }
 	}));
 	const tsvizData = metadata.tsviz;
-	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, tsvizData.packages, [], fileService, pathService, commandService, notificationService, workspaceContextService);
+	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, tsvizData.packages, [], fileService, pathService, commandService, workspaceContextService);
 	createExampleCodeWiring(webviewInput.webview, disposables, 'tsviz', fileService, pathService, notificationService);
 	createCustomCopyWiring(webviewInput.webview, disposables, tsvizData.wikis, tsvizData.notebooks, fileService, pathService, editorService, commandService, notificationService);
 	createReferenceWiring(webviewInput.webview, disposables, 'tsviz', tsvizData.references, fileService, pathService, commandService, notificationService);
@@ -108,7 +108,7 @@ export function registerTsvizWebviewHandlers(
 				if (msg.url) { await openInBrowser(msg.url, commandService); }
 				break;
 			case 'runCode': {
-				const code = msg.code;
+				const code = pkgStatus.withPackageCheck(msg.code, msg.target);
 				if (msg.target === 'newFile') {
 					const input: IUntitledTextResourceEditorInput = {
 						resource: undefined,
@@ -142,7 +142,6 @@ export function registerTsvizWebviewHandlers(
 				} else if (msg.target === 'pluto') {
 					await commandService.executeCommand('pollis.action.sendToPluto', code);
 				}
-				await pkgStatus.nudgeIfMissing(msg.target);
 				break;
 			}
 			case 'colorize':

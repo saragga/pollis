@@ -300,6 +300,8 @@ export interface IRelaxedExtensionManifest {
 	name: string;
 	displayName?: string;
 	publisher: string;
+	// Pollis: the package.json author, shown as the publisher of an extension installed from a VSIX
+	author?: string | { readonly name?: string };
 	version: string;
 	engines: { readonly vscode: string };
 	description?: string;

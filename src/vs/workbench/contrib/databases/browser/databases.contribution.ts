@@ -20,10 +20,10 @@ import { ViewPaneContainer } from '../../../browser/parts/views/viewPaneContaine
 import { IViewContainersRegistry, IViewsRegistry, ViewContainerLocation, Extensions as ViewExtensions } from '../../../common/views.js';
 import { sendToJuliaRepl } from '../../model/browser/handlers/model.handler.js';
 import { IDatabaseConnectionsService } from '../common/databaseConnections.js';
-import { generateConnectionCode, getDatabaseDriver, generatePreviewCode, generateSessionConnectCode, generateSessionDisconnectCode, generateSessionRefreshCode, IDatabaseConnectionProfile, quoteSqlName } from '../common/databaseDrivers.js';
+import { generateBrowseCode, generateConnectionCode, getDatabaseDriver, generatePreviewCode, generateSessionConnectCode, generateSessionDisconnectCode, generateSessionRefreshCode, IDatabaseConnectionProfile, quoteSqlName } from '../common/databaseDrivers.js';
 import { openConnectionEditor } from './connectionEditor.js';
 import { DatabaseConnectionsService } from './databaseConnectionsService.js';
-import { CONNECT_DATABASE_COMMAND_ID, DatabaseConnectionContextMenu, DatabaseConnectionsView, DatabaseItemConnected, DatabaseItemExpanded, DatabaseItemInlineMenu, DatabaseItemBuiltin, DatabaseItemKind, DatabaseItemSaved, DatabasesNewConnectionMenu, DISCONNECT_DATABASE_COMMAND_ID, IDatabaseItemArg, NEW_CONNECTION_COMMAND_ID, PREVIEW_TABLE_COMMAND_ID, REFRESH_DATABASE_COMMAND_ID } from './connectionsView.js';
+import { CONNECT_DATABASE_COMMAND_ID, DatabaseConnectionContextMenu, DatabaseConnectionsView, DatabaseItemConnected, DatabaseItemExpanded, DatabaseItemInlineMenu, DatabaseItemBuiltin, DatabaseItemKind, DatabaseItemSaved, DatabasesNewConnectionMenu, DISCONNECT_DATABASE_COMMAND_ID, IDatabaseItemArg, BROWSE_TABLE_COMMAND_ID, NEW_CONNECTION_COMMAND_ID, PREVIEW_TABLE_COMMAND_ID, REFRESH_DATABASE_COMMAND_ID } from './connectionsView.js';
 
 registerSingleton(IDatabaseConnectionsService, DatabaseConnectionsService, InstantiationType.Delayed);
 
@@ -207,13 +207,28 @@ registerAction2(class extends Action2 {
 registerAction2(class extends Action2 {
 	constructor() {
 		super({
-			id: PREVIEW_TABLE_COMMAND_ID,
-			title: localize2('databases.preview', "Preview Rows in Julia REPL"),
+			id: BROWSE_TABLE_COMMAND_ID,
+			title: localize2('databases.browse', "Open in Table Viewer"),
 			icon: Codicon.openPreview,
 			menu: [
 				{ id: DatabaseConnectionContextMenu, when: DatabaseItemKind.isEqualTo('table'), group: '1_connect', order: 1 },
 				{ id: DatabaseItemInlineMenu, when: DatabaseItemKind.isEqualTo('table'), group: 'inline', order: 1 },
 			],
+		});
+	}
+	async run(accessor: ServicesAccessor, arg: IDatabaseItemArg): Promise<void> {
+		if (arg?.schema !== undefined && arg.table !== undefined) {
+			await sendToJuliaRepl(generateBrowseCode(arg.id, arg.schema, arg.table), accessor.get(ICommandService));
+		}
+	}
+});
+
+registerAction2(class extends Action2 {
+	constructor() {
+		super({
+			id: PREVIEW_TABLE_COMMAND_ID,
+			title: localize2('databases.preview', "Preview Rows in Julia REPL"),
+			menu: { id: DatabaseConnectionContextMenu, when: DatabaseItemKind.isEqualTo('table'), group: '1_connect', order: 2 },
 		});
 	}
 	async run(accessor: ServicesAccessor, arg: IDatabaseItemArg): Promise<void> {

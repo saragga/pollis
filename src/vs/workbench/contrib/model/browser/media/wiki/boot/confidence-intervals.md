@@ -1,3 +1,3 @@
 # Confidence Intervals
 
-Coming soon!
+Not written yet.

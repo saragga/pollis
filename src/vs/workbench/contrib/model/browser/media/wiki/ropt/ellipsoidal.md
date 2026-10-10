@@ -1,3 +1,3 @@
 # Ellipsoidal Uncertainty
 
-Coming soon!
+Not written yet.
