@@ -1126,6 +1126,39 @@ SOFTWARE.
 
 ---------------------------------------------------------
 
+dmotz/trystero 0.26.0 - MIT
+https://github.com/dmotz/trystero
+
+Compose > Collaboration bundles @trystero-p2p/core, @trystero-p2p/nostr and
+@trystero-p2p/mqtt 0.26.0, together with @noble/secp256k1 3.2.0 (MIT,
+Copyright (c) 2019 Paul Miller) and mqtt 5.16.0 (MIT, Copyright (c) 2015-2016
+MQTT.js contributors), whose browser build contains its own dependencies under
+MIT, ISC or BSD licenses. The full license texts are distributed with the bundles
+in trystero.license.txt. Trystero is licensed under the MIT License:
+
+> Copyright (c) 2021 Dan Motzenbecker
+>
+> Permission is hereby granted, free of charge, to any person obtaining a copy
+> of this software and associated documentation files (the "Software"), to deal
+> in the Software without restriction, including without limitation the rights
+> to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+> copies of the Software, and to permit persons to whom the Software is
+> furnished to do so, subject to the following conditions:
+>
+> The above copyright notice and this permission notice shall be included in all
+> copies or substantial portions of the Software.
+>
+> THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+> IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+> FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+> AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+> LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+> OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+> SOFTWARE.
+---------------------------------------------------------
+
+---------------------------------------------------------
+
 dotnet/csharp-tmLanguage 0.1.0 - MIT
 https://github.com/dotnet/csharp-tmLanguage
 
@@ -1721,6 +1754,35 @@ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+---------------------------------------------------------
+
+---------------------------------------------------------
+
+KermanX/p2p-live-share 0.1.3 - MIT
+https://github.com/KermanX/p2p-live-share
+
+Parts of Compose > Collaboration (the peer-to-peer connection and the chat) are adapted
+from p2p-live-share, which is licensed under the MIT License:
+
+> Copyright 2025 _Kerman
+>
+> Permission is hereby granted, free of charge, to any person obtaining a copy
+> of this software and associated documentation files (the "Software"), to deal
+> in the Software without restriction, including without limitation the rights
+> to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+> copies of the Software, and to permit persons to whom the Software is
+> furnished to do so, subject to the following conditions:
+>
+> The above copyright notice and this permission notice shall be included in all
+> copies or substantial portions of the Software.
+>
+> THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+> IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+> FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+> AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+> LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+> OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+> SOFTWARE.
 ---------------------------------------------------------
 
 ---------------------------------------------------------

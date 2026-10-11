@@ -1,14 +1,18 @@
 # Third-Party Notices
 
-This Software incorporates the following open-source components. Each remains the property of its respective copyright holders and is licensed under the terms reproduced below. These components are not part of the proprietary Software, and their inclusion does not alter the terms applicable to the proprietary portions of the Software.
+Pollis is licensed under the GNU Affero General Public License v3.0 or later, and incorporates the following open-source components. Each remains the property of its respective copyright holders and is licensed under the terms reproduced below, which continue to apply to it within Pollis.
 
 | Component | License | Source |
 |---|---|---|
 | Visual Studio Code (Code - OSS) | MIT | https://github.com/microsoft/vscode |
 | Codicons | MIT | https://github.com/microsoft/vscode-codicons |
 | julia-vscode | MIT | https://github.com/julia-vscode/julia-vscode |
+| p2p-live-share | MIT | https://github.com/KermanX/p2p-live-share |
+| Trystero | MIT | https://github.com/dmotz/trystero |
 
 julia-vscode bundles a number of Julia packages (under `scripts/packages/`); each retains its own (predominantly MIT) license as distributed in the upstream project.
+
+Parts of Compose > Collaboration (the peer-to-peer connection and the chat) are adapted from p2p-live-share. Collaboration also bundles Trystero with @noble/secp256k1 (MIT) and mqtt (MIT, with its own dependencies under MIT, ISC or BSD licenses); their full license texts are distributed with the bundles in `trystero.license.txt`.
 
 ---
 
@@ -17,6 +21,8 @@ julia-vscode bundles a number of Julia packages (under `scripts/packages/`); eac
 - **Visual Studio Code (Code - OSS)** — Copyright (c) Microsoft Corporation.
 - **Codicons** — Copyright (c) Microsoft Corporation.
 - **julia-vscode** — Copyright (c) 2012–2022 David Anthoff, Zac Nugent, Sebastian Pfitzner and other contributors.
+- **p2p-live-share** — Copyright 2025 _Kerman.
+- **Trystero** — Copyright (c) 2021 Dan Motzenbecker.
 
 ---
 
