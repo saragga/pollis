@@ -5,7 +5,10 @@ module Pollis
 const PKG = Base.PkgId(Base.UUID("44cfe95a-1eb2-52ea-b672-e2afdf69b78f"), "Pkg")
 
 """Pollis's own packages that are not in the General registry, so a bare name is enough."""
-const LINKS = Dict("PollisDatasets" => "https://github.com/Trumpingtons/PollisDatasets.jl")
+const LINKS = Dict(
+	"PollisDatasets" => "https://github.com/Trumpingtons/PollisDatasets.jl",
+	"PollisTeX" => "https://github.com/Trumpingtons/PollisTeX.jl",
+)
 
 """
     Pollis.packages(names...; forks = ())

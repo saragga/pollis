@@ -56,6 +56,29 @@ export async function customCopyUri(pathService: IPathService, kind: CustomCopyK
 	return URI.joinPath(await pathService.userHome({ preferLocal: true }), '.pollis', CUSTOM_COPY_KINDS[kind].customFolder, file.replace(/^\/+/, ''));
 }
 
+/** Where the bundled original of an overlay resource lives: a toolbox extension's folder, else the app's. */
+function bundledUri(kind: CustomCopyKind, resource: URI): URI {
+	const [folder, ...rest] = resource.path.replace(/^\/+/, '').split('/');
+	const external = externalFolders[kind].get(folder);
+	if (external) {
+		return URI.joinPath(external, ...rest);
+	}
+	return FileAccess.asFileUri((CUSTOM_COPY_KINDS[kind].bundledBase + resource.path.replace(/^\/+/, '')) as AppResourcePath);
+}
+
+/**
+ * The file an overlay resource (e.g. `pollis-notebook:/glm/glm.ipynb`) reads: the customised copy when it
+ * exists, else the bundled original, else `undefined`.
+ */
+export async function resolveCustomCopy(fileService: IFileService, pathService: IPathService, kind: CustomCopyKind, resource: URI): Promise<URI | undefined> {
+	const custom = await customCopyUri(pathService, kind, resource.path);
+	if (await fileService.exists(custom)) {
+		return custom;
+	}
+	const bundled = bundledUri(kind, resource);
+	return await fileService.exists(bundled) ? bundled : undefined;
+}
+
 /**
  * Serves bundled learning material (Local Wikis, Notebook Tutorials) with the user's customised
  * copies laid over it.
@@ -87,23 +110,9 @@ export class CustomCopyFileSystemProvider extends Disposable implements IFileSys
 		return customCopyUri(this.pathService, this.kind, resource.path);
 	}
 
-	private bundledUri(resource: URI): URI {
-		const [folder, ...rest] = resource.path.replace(/^\/+/, '').split('/');
-		const external = externalFolders[this.kind].get(folder);
-		if (external) {
-			return URI.joinPath(external, ...rest);
-		}
-		return FileAccess.asFileUri((CUSTOM_COPY_KINDS[this.kind].bundledBase + resource.path.replace(/^\/+/, '')) as AppResourcePath);
-	}
-
 	/** The copy when it exists, else the bundled original, else `undefined`. */
-	private async resolve(resource: URI): Promise<URI | undefined> {
-		const custom = await this.customUri(resource);
-		if (await this.fileService.exists(custom)) {
-			return custom;
-		}
-		const bundled = this.bundledUri(resource);
-		return await this.fileService.exists(bundled) ? bundled : undefined;
+	private resolve(resource: URI): Promise<URI | undefined> {
+		return resolveCustomCopy(this.fileService, this.pathService, this.kind, resource);
 	}
 
 	watch(_resource: URI, _opts: IWatchOptions): IDisposable {
@@ -122,7 +131,7 @@ export class CustomCopyFileSystemProvider extends Disposable implements IFileSys
 
 	async readdir(resource: URI): Promise<[string, FileType][]> {
 		const entries = new Map<string, FileType>();
-		for (const folder of [this.bundledUri(resource), await this.customUri(resource)]) {
+		for (const folder of [bundledUri(this.kind, resource), await this.customUri(resource)]) {
 			if (await this.fileService.exists(folder)) {
 				for (const child of (await this.fileService.resolve(folder)).children ?? []) {
 					entries.set(child.name, child.isDirectory ? FileType.Directory : FileType.File);

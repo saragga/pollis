@@ -40,11 +40,11 @@ interface INotebookLibrary {
 	readonly openFailed: (label: string, error: string) => string;
 }
 
-/** Compose > Workflows: famous analyses replicated from their articles. */
+/** Compose > Workflows > Browse Analytical Workflows: famous analyses replicated from their articles. */
 const WORKFLOWS: INotebookLibrary = {
 	base: 'vs/workbench/contrib/compose/browser/media/workflows',
 	userFolder: 'workflows',
-	title: localize('workflowLibrary.title', "Workflow Library"),
+	title: localize('workflowLibrary.title', "Analytical Workflows"),
 	intro: localize('workflowLibrary.intro', "Each workflow replicates a published analysis on its public data, printing every published value beside Julia's. Click a name to open your own copy of the notebook, made in ~/.pollis/workflows the first time."),
 	entry: localize('workflowLibrary.entry', "Workflow"),
 	empty: localize('workflowLibrary.empty', "The workflow library is empty."),
@@ -461,7 +461,7 @@ registerAction2(class extends Action2 {
 	constructor() {
 		super({
 			id: SEARCH_WORKFLOW_LIBRARY_COMMAND_ID,
-			title: localize2('workflowLibrary.open', "Library"),
+			title: localize2('workflowLibrary.open', "Browse Analytical Workflows..."),
 			category: localize2('workflows.category', "Workflows"),
 			f1: true,
 		});
@@ -489,7 +489,7 @@ registerAction2(class extends Action2 {
 	constructor() {
 		super({
 			id: NEW_METHODS_COMMAND_ID,
-			title: localize2('newMethods.open', "Library"),
+			title: localize2('newMethods.open', "Browse Methods"),
 			category: localize2('newMethods.category', "New Methods"),
 			f1: true,
 		});

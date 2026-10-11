@@ -35,6 +35,8 @@ import { defaultCopyFolder, isInsidePollis } from '../../pollisWorkspace/browser
 import { ITerminalService } from '../../terminal/browser/terminal.js';
 import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
+import { AGENT_BADGE_CSS, AGENT_ICON } from './agentBadge.js';
+import { startAgent } from './pollisAgents.js';
 
 // Compose > New Methods > Create Method and Package and Publish (Library is in workflowLibrary.ts).
 // A method is a folder of ~/.pollis/methods with method.toml, its code in src/NAME.jl (module NAME),
@@ -45,12 +47,18 @@ import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWork
 // asks, Save a Copy... keeps a copy outside Pollis (by default in the data folder of a Pollis Workspace) and
 // records its path as `local`; the page then reads the copy, falling back to the link if it is gone. Package and Publish runs media/methods/package.jl, which makes the
 // package NAME.jl in ~/.pollis/packages, its tests the target tables computed from the data downloaded
-// from the links, runs them and, if asked, pushes the package to GitHub when they all pass.
+// from the links, runs them and, if asked, pushes the package to GitHub when they all pass and registers
+// it in the Pollis registry when it also meets the registry rules (a name of at least 5 characters, a usage
+// example, a docstring for every exported name). Two Pollis Agents tasks hand a method to the user's coding
+// agent: Write a Method... (the code that reproduces the targets) and Prepare for Registration... (the rules).
 
 export const CREATE_METHOD_COMMAND_ID = 'pollis.newMethods.create';
 export const PACKAGE_METHOD_COMMAND_ID = 'pollis.newMethods.package';
+export const WRITE_METHOD_COMMAND_ID = 'pollis.newMethods.writeMethod';
+export const PREPARE_REGISTRATION_COMMAND_ID = 'pollis.newMethods.prepareRegistration';
 
 const GITHUB_OWNER_SETTING = 'pollis.newMethods.githubOwner';
+const REGISTRY_SETTING = 'pollis.newMethods.registry';
 const DATASETS_URL = 'https://raw.githubusercontent.com/Trumpingtons/PollisDatasets.jl/main';
 const PACKAGE_SCRIPT = 'vs/workbench/contrib/compose/browser/media/methods/package.jl';
 const INSTRUCTIONS_FILE = 'INSTRUCTIONS.md';
@@ -67,6 +75,12 @@ Registry.as<IConfigurationRegistry>(ConfigurationExtensions.Configuration).regis
 			default: 'Trumpingtons',
 			scope: ConfigurationScope.APPLICATION,
 			markdownDescription: localize('newMethods.githubOwner', "The GitHub user or organization that **Package and Publish** (Compose > New Methods) pushes method packages to."),
+		},
+		[REGISTRY_SETTING]: {
+			type: 'string',
+			default: 'https://github.com/Trumpingtons/PollisRegistry',
+			scope: ConfigurationScope.APPLICATION,
+			markdownDescription: localize('newMethods.registry', "The Julia package registry that **Package and Publish** (Compose > New Methods) registers method packages in, when they meet the Pollis registry rules."),
 		},
 	},
 });
@@ -337,35 +351,70 @@ function validateLink(value: string): string | undefined {
 }
 
 /** Asks for a name, a title and the article's link, makes the method folder and returns it. */
-async function newMethod(quickInputService: IQuickInputService, fileService: IFileService, pathService: IPathService): Promise<URI | undefined> {
+/** Checks a package name for a method: a capital letter, then letters and digits, not used by another method. */
+async function validateName(fileService: IFileService, root: URI, value: string, current?: string): Promise<string | undefined> {
+	if (!/^[A-Z][A-Za-z0-9]*$/.test(value)) {
+		return localize('newMethods.name.invalid', "A capital letter, then letters and digits.");
+	}
+	return value !== current && await fileService.exists(joinPath(root, value)) ? localize('newMethods.name.exists', "There is already a method {0}.", value) : undefined;
+}
+
+/** Makes a new method with a provisional name (Method1, Method2...), to rename later; returns its folder. */
+async function newMethod(fileService: IFileService, pathService: IPathService): Promise<URI> {
+	const root = methodsFolder(pathService);
+	let number = 1;
+	while (await fileService.exists(joinPath(root, `Method${number}`))) {
+		number++;
+	}
+	const name = `Method${number}`;
+	const folder = joinPath(root, name);
+	await fileService.writeFile(joinPath(folder, 'method.toml'), VSBuffer.fromString(methodToml(name, localize('newMethods.newTitle', "New method {0}", number), '')));
+	await fileService.writeFile(joinPath(folder, 'src', `${name}.jl`), VSBuffer.fromString(moduleCode(name)));
+	await fileService.writeFile(joinPath(folder, INSTRUCTIONS_FILE), VSBuffer.fromString(''));
+	await fileService.createFolder(joinPath(folder, 'targets'));
+	return folder;
+}
+
+/**
+ * Asks for a method's package name and title and applies them: method.toml, the module and file in src/ and
+ * the folder. Returns the method's folder, new when the name changed; undefined when the user cancels.
+ */
+async function renameMethod(quickInputService: IQuickInputService, fileService: IFileService, pathService: IPathService, method: IMethod): Promise<URI | undefined> {
 	const root = methodsFolder(pathService);
 	const name = (await quickInputService.input({
-		title: localize('newMethods.name.title', "Create Method"),
-		prompt: localize('newMethods.name.prompt', "The method's package name: a capital letter, then letters and digits, e.g. PanelRandomEffects"),
-		validateInput: async value => {
-			if (!/^[A-Z][A-Za-z0-9]*$/.test(value)) {
-				return localize('newMethods.name.invalid', "A capital letter, then letters and digits.");
-			}
-			return await fileService.exists(joinPath(root, value)) ? localize('newMethods.name.exists', "There is already a method {0}.", value) : undefined;
-		},
+		title: localize('newMethods.rename.title', "Rename Method"),
+		prompt: localize('newMethods.name.prompt', "The method's name, also the name of its Julia module: a capital letter, then letters and digits, e.g. PanelRandomEffects."),
+		value: method.name,
+		validateInput: async value => validateName(fileService, root, value.trim(), method.name),
 	}))?.trim();
 	if (!name) {
 		return undefined;
 	}
 	const title = (await quickInputService.input({
-		title: localize('newMethods.title.title', "Create Method"),
+		title: localize('newMethods.rename.title', "Rename Method"),
 		prompt: localize('newMethods.title.prompt', "The method's title, e.g. Panel random effects"),
-	}))?.trim() || name;
-	const article = (await quickInputService.input({
-		title: localize('newMethods.article.title', "Create Method"),
-		prompt: localize('newMethods.article.prompt', "A link to the article (its PDF or its web page), opened in the integrated browser; no copy is kept. Leave empty to add it later."),
-		validateInput: async value => value.trim() ? validateLink(value) : undefined,
-	}))?.trim() ?? '';
-	const folder = joinPath(root, name);
-	await fileService.writeFile(joinPath(folder, 'method.toml'), VSBuffer.fromString(methodToml(name, title, article)));
-	await fileService.writeFile(joinPath(folder, 'src', `${name}.jl`), VSBuffer.fromString(moduleCode(name)));
-	await fileService.writeFile(joinPath(folder, INSTRUCTIONS_FILE), VSBuffer.fromString(''));
-	await fileService.createFolder(joinPath(folder, 'targets'));
+		value: method.title,
+	}))?.trim();
+	if (title === undefined) {
+		return undefined;
+	}
+	let folder = method.folder;
+	await setTomlValue(fileService, folder, undefined, 'title', tomlString(title || name));
+	if (name !== method.name) {
+		const oldCode = joinPath(folder, 'src', `${method.name}.jl`);
+		const newCode = joinPath(folder, 'src', `${name}.jl`);
+		if (await fileService.exists(oldCode)) {
+			const code = (await fileService.readFile(oldCode)).value.toString();
+			await fileService.writeFile(newCode, VSBuffer.fromString(code.replace(new RegExp(`^module\\s+${method.name}\\b`, 'm'), `module ${name}`)));
+			await fileService.del(oldCode);
+		}
+		await setTomlValue(fileService, folder, undefined, 'name', tomlString(name));
+		const target = joinPath(root, name);
+		if (basename(folder) !== name) {
+			await fileService.move(folder, target);
+			folder = target;
+		}
+	}
 	return folder;
 }
 
@@ -519,7 +568,7 @@ async function addTarget({ quickInputService, fileService, fileDialogService, ed
 }
 
 type MethodMessage =
-	| { readonly command: 'ready' | 'addInput' | 'addTarget' | 'package' | 'openArticle' | 'setArticle' | 'saveArticle' }
+	| { readonly command: 'ready' | 'addInput' | 'addTarget' | 'package' | 'writeMethod' | 'rename' | 'openArticle' | 'setArticle' | 'saveArticle' }
 	| { readonly command: 'saveInput'; readonly name: string }
 	| { readonly command: 'open'; readonly file: string }
 	| { readonly command: 'instructions'; readonly text: string };
@@ -545,6 +594,7 @@ async function openMethodPage(accessor: ServicesAccessor, folder: URI): Promise<
 	const contextService = accessor.get(IWorkspaceContextService);
 	const pathService = accessor.get(IPathService);
 	const environmentService = accessor.get(IEnvironmentService);
+	const instantiationService = accessor.get(IInstantiationService);
 
 	const open = openPages.get(folder.toString());
 	if (open && !open.isDisposed()) {
@@ -639,6 +689,17 @@ async function openMethodPage(accessor: ServicesAccessor, folder: URI): Promise<
 			run(() => addTarget(services, folder));
 		} else if (message.command === 'package') {
 			commandService.executeCommand(PACKAGE_METHOD_COMMAND_ID, folder);
+		} else if (message.command === 'writeMethod') {
+			commandService.executeCommand(WRITE_METHOD_COMMAND_ID, folder);
+		} else if (message.command === 'rename') {
+			run(async () => {
+				const renamed = method && await renameMethod(quickInputService, fileService, pathService, method);
+				if (renamed) {
+					// The page reopens on the method's new folder, with its new title
+					webviewInput.dispose();
+					await instantiationService.invokeFunction(openMethodPage, renamed);
+				}
+			});
 		} else if (message.command === 'openArticle') {
 			run(openArticle);
 		} else if (message.command === 'setArticle') {
@@ -699,11 +760,13 @@ function pageHtml(): string {
 		addTarget: localize('newMethods.page.addTarget', "Add Target Table..."),
 		openArticle: localize('newMethods.page.openArticle', "Open Article"),
 		setArticle: localize('newMethods.page.setArticle', "Set Article Link..."),
+		rename: localize('newMethods.page.rename', "Rename..."),
 		saveCopy: localize('newMethods.page.saveCopy', "Save a Copy..."),
 		copy: localize('newMethods.page.copy', "Copy: {0} (read instead of the link while it exists)"),
 		editToml: localize('newMethods.page.editToml', "Edit method.toml"),
 		openCode: localize('newMethods.page.openCode', "Open Code"),
 		package: localize('newMethods.page.package', "Package and Publish..."),
+		writeMethod: localize('newMethods.page.writeMethod', "Write with My Agent..."),
 		size: localize('newMethods.page.size', "{0} rows, {1} columns"),
 		firstRows: localize('newMethods.page.firstRows', "first {0} shown"),
 		loading: localize('newMethods.page.loading', "Reading..."),
@@ -731,6 +794,7 @@ function pageHtml(): string {
 		.actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px 0; }
 		button.action { font: inherit; color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); border: none; border-radius: 2px; padding: 4px 12px; cursor: pointer; }
 		button.action:hover { background: var(--vscode-button-secondaryHoverBackground); }
+${AGENT_BADGE_CSS}
 		button.primary { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
 		button.primary:hover { background: var(--vscode-button-hoverBackground); }
 		.tabs { display: flex; gap: 20px; border-bottom: 1px solid var(--vscode-widget-border); margin: 16px 0 12px 0; }
@@ -759,10 +823,12 @@ function pageHtml(): string {
 	<p class="small" id="articleCopy" hidden></p>
 	<div class="actions">
 		<button class="action" id="openArticle" data-command="openArticle">${text.openArticle}</button>
+		<button class="action" data-command="rename">${text.rename}</button>
 		<button class="action" data-command="setArticle">${text.setArticle}</button>
 		<button class="action" id="saveArticle" data-command="saveArticle">${text.saveCopy}</button>
 		<button class="action" data-command="open" data-file="method.toml">${text.editToml}</button>
 		<button class="action" id="code" data-command="open">${text.openCode}</button>
+		<button class="action with-agent" data-command="writeMethod">${AGENT_ICON}${text.writeMethod}</button>
 		<button class="action primary" data-command="package">${text.package}</button>
 	</div>
 	<div class="tabs">
@@ -932,6 +998,31 @@ function pageHtml(): string {
 </html>`;
 }
 
+/** Where Package and Publish makes the packages. */
+function packagesFolder(pathService: IPathService): URI {
+	return joinPath(pathService.userHome({ preferLocal: true }), '.pollis', 'packages');
+}
+
+/** The method of a folder, else the one the user picks; undefined when there is none or the user cancels. */
+async function pickMethod(quickInputService: IQuickInputService, fileService: IFileService, pathService: IPathService, notificationService: INotificationService, title: string, folder?: URI): Promise<IMethod | undefined> {
+	const methods = await readMethods(fileService, pathService);
+	const method = folder && methods.find(method => method.folder.toString() === URI.from(folder).toString());
+	if (method) {
+		return method;
+	}
+	if (!methods.length) {
+		notificationService.info(localize('newMethods.noMethodsYet', "There are no methods yet: make one with Compose > New Methods > Create Method."));
+		return undefined;
+	}
+	return (await quickInputService.pick(methods.map(method => ({ label: method.title, description: method.name, value: method })), { title }))?.value;
+}
+
+/** The command that packages a method and runs its tests, for a coding agent to type. */
+function testCommand(configurationService: IConfigurationService, pathService: IPathService, method: IMethod): string {
+	const julia = configurationService.getValue<string>('julia.executablePath') || 'julia';
+	return [julia, FileAccess.asFileUri(PACKAGE_SCRIPT).fsPath, packagesFolder(pathService).fsPath, method.folder.fsPath].map(word => `"${word}"`).join(' ');
+}
+
 /** Shell quoting for a path or word typed into the terminal. */
 function quote(word: string): string {
 	return isWindows ? `'${word.replace(/'/g, `''`)}'` : `'${word.replace(/'/g, `'\\''`)}'`;
@@ -961,7 +1052,7 @@ registerAction2(class extends Action2 {
 			return;
 		}
 		try {
-			const folder = pick.value ?? await newMethod(quickInputService, fileService, pathService);
+			const folder = pick.value ?? await newMethod(fileService, pathService);
 			if (folder) {
 				await instantiationService.invokeFunction(openMethodPage, folder);
 			}
@@ -1012,13 +1103,15 @@ registerAction2(class extends Action2 {
 			return;
 		}
 
-		const action = await quickInputService.pick<IPick<boolean>>([
-			{ label: localize('newMethods.package.test', "Package and Test"), detail: localize('newMethods.package.testDetail', "Makes the packages in ~/.pollis/packages and runs their tests"), value: false },
-			{ label: localize('newMethods.package.publish', "Package, Test and Push to GitHub..."), detail: localize('newMethods.package.publishDetail', "Then pushes each package whose tests all pass to its own public repository"), value: true },
+		const action = await quickInputService.pick<IPick<'push' | 'register' | undefined>>([
+			{ label: localize('newMethods.package.test', "Package and Test"), detail: localize('newMethods.package.testDetail', "Makes the packages in ~/.pollis/packages, runs their tests and checks the Pollis registry rules"), value: undefined },
+			{ label: localize('newMethods.package.publish', "Package, Test and Push to GitHub..."), detail: localize('newMethods.package.publishDetail', "Then pushes each package whose tests all pass to its own public repository"), value: 'push' },
+			{ label: localize('newMethods.package.register', "Package, Test, Push and Register..."), detail: localize('newMethods.package.registerDetail', "Then registers each pushed package that meets the Pollis registry rules: a name of at least 5 characters, a usage example, a docstring for every exported name"), value: 'register' },
 		], { title: localize('newMethods.package.title', "Package and Publish") });
 		if (!action) {
 			return;
 		}
+		const registry = action.value === 'register' ? configurationService.getValue<string>(REGISTRY_SETTING) || 'https://github.com/Trumpingtons/PollisRegistry' : undefined;
 		let owner: string | undefined;
 		if (action.value) {
 			owner = (await quickInputService.input({
@@ -1032,7 +1125,7 @@ registerAction2(class extends Action2 {
 			}
 			const { confirmed } = await dialogService.confirm({
 				message: localize('newMethods.owner.confirm', "Push to GitHub as {0}?", owner),
-				detail: localize('newMethods.owner.confirmDetail', "Each package whose tests all pass goes to its own public repository: {0}.", chosen.map(method => `github.com/${owner}/${method.name}.jl`).join(', ')),
+				detail: (registry ? localize('newMethods.owner.confirmRegister', "Each package whose tests all pass goes to its own public repository: {0}. Those that meet the Pollis registry rules are then registered in {1}.", chosen.map(method => `github.com/${owner}/${method.name}.jl`).join(', '), registry) : localize('newMethods.owner.confirmDetail', "Each package whose tests all pass goes to its own public repository: {0}.", chosen.map(method => `github.com/${owner}/${method.name}.jl`).join(', '))),
 				primaryButton: localize({ key: 'newMethods.owner.push', comment: ['&& denotes a mnemonic'] }, "&&Push"),
 			});
 			if (!confirmed) {
@@ -1041,13 +1134,64 @@ registerAction2(class extends Action2 {
 			await configurationService.updateValue(GITHUB_OWNER_SETTING, owner);
 		}
 
-		const packages = joinPath(pathService.userHome({ preferLocal: true }), '.pollis', 'packages');
+		const packages = packagesFolder(pathService);
 		await fileService.createFolder(packages);
 		const julia = configurationService.getValue<string>('julia.executablePath') || 'julia';
-		const words = [julia, FileAccess.asFileUri(PACKAGE_SCRIPT).fsPath, packages.fsPath, ...chosen.map(method => method.folder.fsPath), ...(owner ? ['--push', owner] : [])];
+		const words = [julia, FileAccess.asFileUri(PACKAGE_SCRIPT).fsPath, packages.fsPath, ...chosen.map(method => method.folder.fsPath), ...(owner ? ['--push', owner] : []), ...(registry ? ['--register', registry] : [])];
 		const instance = await terminalService.createTerminal({ config: { name: localize('newMethods.terminal', "Package and Publish"), cwd: packages } });
 		terminalService.setActiveInstance(instance);
 		await terminalService.revealTerminal(instance);
 		await instance.sendText((isWindows ? '& ' : '') + words.map(quote).join(' '), true);
+	}
+});
+
+registerAction2(class extends Action2 {
+	constructor() {
+		super({
+			id: WRITE_METHOD_COMMAND_ID,
+			title: localize2('newMethods.writeMethod', "Write a Method..."),
+			category: localize2('pollisAgents.category', "Pollis Agents"),
+			f1: true,
+		});
+	}
+	async run(accessor: ServicesAccessor, folder?: URI): Promise<void> {
+		const quickInputService = accessor.get(IQuickInputService);
+		const fileService = accessor.get(IFileService);
+		const pathService = accessor.get(IPathService);
+		const notificationService = accessor.get(INotificationService);
+		const configurationService = accessor.get(IConfigurationService);
+		const instantiationService = accessor.get(IInstantiationService);
+		const method = await pickMethod(quickInputService, fileService, pathService, notificationService, localize('newMethods.writeMethod.pick', "Method to Write"), folder);
+		if (!method) {
+			return;
+		}
+		const article = method.article ?? localize('newMethods.writeMethod.noArticle', "the article cited in method.toml");
+		const prompt = localize('newMethods.writeMethod.prompt', "Write the Julia code of the Pollis method in this folder ({0}). Read method.toml, INSTRUCTIONS.md and the target tables in targets/, the published results the code must reproduce. Read the article ({1}) and the input data from their links, without saving copies of them. Write src/{2}.jl (module {2}) so that the call of each target in method.toml computes its table, to the digits printed; write the calls in method.toml where they are missing. Give every exported function a docstring, and add a usage example to method.toml (usage = \"\"\"...\"\"\"). Test with: {3}", method.folder.fsPath, article, method.name, testCommand(configurationService, pathService, method));
+		await instantiationService.invokeFunction(startAgent, localize('newMethods.writeMethod.terminal', "Write {0}", method.name), prompt, method.folder);
+	}
+});
+
+registerAction2(class extends Action2 {
+	constructor() {
+		super({
+			id: PREPARE_REGISTRATION_COMMAND_ID,
+			title: localize2('newMethods.prepareRegistration', "Prepare for Registration..."),
+			category: localize2('pollisAgents.category', "Pollis Agents"),
+			f1: true,
+		});
+	}
+	async run(accessor: ServicesAccessor, folder?: URI): Promise<void> {
+		const quickInputService = accessor.get(IQuickInputService);
+		const fileService = accessor.get(IFileService);
+		const pathService = accessor.get(IPathService);
+		const notificationService = accessor.get(INotificationService);
+		const configurationService = accessor.get(IConfigurationService);
+		const instantiationService = accessor.get(IInstantiationService);
+		const method = await pickMethod(quickInputService, fileService, pathService, notificationService, localize('newMethods.prepareRegistration.pick', "Method to Prepare for Registration"), folder);
+		if (!method) {
+			return;
+		}
+		const prompt = localize('newMethods.prepareRegistration.prompt', "Make the Pollis method in this folder ({0}) meet the Pollis registry rules, without changing what it computes: a name of at least 5 characters (the name in method.toml, the module and the file in src/ and the folder must all match: ask me before renaming), a usage example in method.toml (usage = \"\"\"...\"\"\", Julia code that calls the method on its data), and a docstring for every exported name of src/{1}.jl. Then check with: {2}. It runs the tests and reports the rules still broken.", method.folder.fsPath, method.name, testCommand(configurationService, pathService, method));
+		await instantiationService.invokeFunction(startAgent, localize('newMethods.prepareRegistration.terminal', "Prepare {0}", method.name), prompt, method.folder);
 	}
 });

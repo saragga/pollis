@@ -6,7 +6,7 @@ import * as rpc from 'vscode-jsonrpc/node'
 export interface Progress {
     id: { value: number }
     name: string
-    fraction: number
+    fraction: number | null // null when the progress has no fraction, only a message
     done: boolean
 }
 export const notifyTypeProgress = new rpc.NotificationType<Progress>('repl/updateProgress')
@@ -33,13 +33,14 @@ export class ProgressBars {
     public update(progress: Progress) {
         const p = this.bars.get(progress.id.value)
         if (p) {
-            const increment = progress.done ? 100 : (progress.fraction - p.last_fraction) * 100
+            const fraction = hasFraction(progress) ? progress.fraction : p.last_fraction
+            const increment = progress.done ? 100 : (fraction - p.last_fraction) * 100
 
             p.progress.report({
                 increment: increment,
                 message: progressMessage(progress, p.started),
             })
-            p.last_fraction = progress.fraction
+            p.last_fraction = fraction
 
             if (progress.done) {
                 p.resolve()
@@ -56,7 +57,7 @@ export class ProgressBars {
                     return new Promise<void>((resolve) => {
                         this.bars.set(progress.id.value, {
                             progress: prog,
-                            last_fraction: progress.fraction,
+                            last_fraction: hasFraction(progress) ? progress.fraction : 0,
                             started: new Date(),
                             resolve: resolve,
                         })
@@ -80,10 +81,14 @@ export class ProgressBars {
     }
 }
 
+function hasFraction(prog: Progress): prog is Progress & { fraction: number } {
+    return typeof prog.fraction === 'number' && isFinite(prog.fraction) && 0 <= prog.fraction && prog.fraction <= 1
+}
+
 function progressMessage(prog: Progress, started: Date | null = null) {
     let message = prog.name
     const parenthezise = message.trim().length > 0
-    if (isFinite(prog.fraction) && 0 <= prog.fraction && prog.fraction <= 1) {
+    if (hasFraction(prog)) {
         if (parenthezise) {
             message += ' ('
         }

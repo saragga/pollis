@@ -1,0 +1,251 @@
+\documentclass[11pt]{article}
+\usepackage{fontspec}
+\usepackage[a4paper, margin=2.5cm]{geometry}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{natbib}
+\usepackage{url}
+\usepackage{xcolor}
+\usepackage[colorlinks, allcolors=blue!50!black]{hyperref}
+
+\input{tables/values.tex}
+
+% Table rows written by make.jl; the primitive \input, so that \bottomrule may follow.
+\makeatletter
+\newcommand{\rows}[1]{\@@input #1 }
+\makeatother
+
+% A replication table: label, Julia in full, Julia rounded as published, published, agreement
+\newenvironment{replication}{%
+  \begin{tabular}{lrrrl}
+  \toprule
+  & \multicolumn{2}{c}{Julia} & & \\
+  \cmidrule(lr){2-3}
+  & full & rounded & Published & Agreement \\
+  \midrule}{%
+  \bottomrule
+  \end{tabular}}
+
+\title{Volatility after Non-Trading Days:\\ A Replication of the Periodic GARCH of \citet{bollerslev1996periodic}}
+\author{}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\noindent Does the volatility of daily Deutsche mark / British pound returns change after a weekend or holiday, and does a shock on such a day last as long as one on an ordinary day? We re-estimate in Julia the six models of Table~2 of \citet{bollerslev1996periodic}, from a constant variance to their periodic GARCH, on the same \nobs{} daily returns. The variance is about \varlarger\% larger after no trading, and a shock that arrives after no trading dies out faster than one on an ordinary day (persistence \persistnontrading{} against \persistord). Of the \nvalues{} published values, \nfull{} are reproduced to the published precision; the rest differ in the last digit, except one misprinted statistic and a few residual moments.
+\end{abstract}
+
+\section{The question}
+
+Foreign exchange markets close at weekends and on holidays, but news keeps arriving. \citet{bollerslev1996periodic} ask whether the conditional variance of returns differs after such non-trading days, and whether a shock observed after no trading feeds into the next day's variance as strongly as an ordinary one. Their answer is a new model, the periodic GARCH (P-GARCH), in which the ARCH coefficient itself depends on the calendar. This report replicates every estimate and statistic of their Table~2 (p.~146): Julia's value is shown in full, rounded to the published digits, beside the published value, with the number of decimals on which they agree.
+
+\section{The data}
+
+The data are the dataset \texttt{bg96} of PollisDatasets.jl \citep{pollisdatasets}: the daily percentage returns $y_t = 100\,[\ln P_t - \ln P_{t-1}]$ of the Deutsche mark / British pound rate from January 1984 to December 1991, as distributed with ARCHModels.jl \citep{archmodels}, together with the paper's non-trading-day dummy $s_t$, equal to~1 on Mondays and other days that follow a day without trading (p.~145). Table~\ref{tab:data} checks the sample against the paper. The first-order autocorrelation is negligible, so the returns are close to unpredictable in the mean; the variance is another matter: \varnontrading{} after non-trading days against \varordinary{} on ordinary days, and, as Figure~\ref{fig:returns} shows, it comes in clusters.
+
+\begin{table}[htbp]
+  \centering
+  \caption{The sample, against \citet[p.~145]{bollerslev1996periodic}.}
+  \label{tab:data}
+  \begin{replication}
+  \rows{tables/data.tex}
+  \end{replication}
+\end{table}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth]{figures/returns.pdf}
+  \caption{Daily DM/\pounds{} returns, January 1984 to December 1991; returns after a non-trading day in red.}
+  \label{fig:returns}
+\end{figure}
+
+\section{The method}
+
+All six columns of Table~2 are special cases of one model (p.~146, equation~14 and the note to Table~2). The mean is
+\begin{equation}
+  y_t = \mu + \mu_1 s_t + \varepsilon_t,
+\end{equation}
+and the conditional variance of $\varepsilon_t$ is
+\begin{equation}
+  \sigma_t^2 = \omega + \omega_1 s_t
+    + (\alpha + \alpha_1 s_t)\bigl(\varepsilon_{t-1}^2 - \omega - \omega_1 s_{t-1}\bigr)
+    + \beta\bigl(\sigma_{t-1}^2 - \omega - \omega_1 s_{t-1}\bigr).
+  \label{eq:pgarch}
+\end{equation}
+Here $\omega + \omega_1 s_t$ is the level to which the variance reverts, $\omega_1$ the extra variance after no trading, entered as an impulse that lasts one day \citep{baillie1989message}, and $\alpha_1$ how much less, or more, a shock on such a day feeds into the next day's variance. With $\alpha_1 \neq 0$ the model is the periodic GARCH. The six columns are:
+\begin{enumerate}
+  \item constant variance: $\mu$, $\omega$;
+  \item non-trading days in mean and variance: $\mu$, $\mu_1$, $\omega$, $\omega_1$;
+  \item non-trading days in the variance: $\mu$, $\omega$, $\omega_1$;
+  \item GARCH(1,1): $\mu$, $\omega$, $\alpha$, $\beta$;
+  \item GARCH(1,1) with the dummy: $\mu$, $\omega$, $\omega_1$, $\alpha$, $\beta$;
+  \item P-GARCH(1,1): $\mu$, $\omega$, $\omega_1$, $\alpha$, $\alpha_1$, $\beta$;
+\end{enumerate}
+with the other parameters set to zero. Column~4 is fitted with ARCHModels.jl, whose intercept $w = \omega(1-\alpha-\beta)$ is converted to the paper's $\omega$, with a delta-method standard error. No Julia package has a dummy in the variance equation, so the other columns are estimated by a short quasi-maximum likelihood routine written for this replication: it maximises the Gaussian log likelihood
+\begin{equation}
+  \log L(\theta) = -\frac12 \sum_{t=1}^{T} \Bigl[\ln 2\pi + \ln\sigma_t^2 + \frac{\varepsilon_t^2}{\sigma_t^2}\Bigr],
+\end{equation}
+with the recursion~\eqref{eq:pgarch} started at the sample variance, by BFGS with exact gradients from ForwardDiff.jl. The standard errors are robust to fat tails: the sandwich $H^{-1} (G^\top G) H^{-1}$ of the Hessian $H$ of $-\log L$ and the outer product of the daily scores $G$, which is what the paper reports.
+
+Below the estimates, Table~2 reports, for the standardised residuals $z_t = \varepsilon_t/\sigma_t$: the information criteria $\text{AIC} = 2\log L - 2k$ and $\text{SIC} = 2\log L - k\ln T$ (larger is better), the skewness $b_3$ and kurtosis $b_4$, the \citet{ljung1978measure} statistics $Q(20)$ and $Q^2(20)$ of $z_t$ and $z_t^2$ for 20 lags, and three loss functions of the variance forecasts:
+\begin{equation}
+  \text{MSE} = \frac1T\sum_t (\varepsilon_t^2 - \sigma_t^2)^2, \qquad
+  \text{HMSE} = \frac1T\sum_t \Bigl(\frac{\varepsilon_t^2}{\sigma_t^2} - 1\Bigr)^2, \qquad
+  \text{LL} = \frac1T\sum_t \Bigl[\ln\frac{\varepsilon_t^2}{\sigma_t^2}\Bigr]^2.
+\end{equation}
+
+\section{Results}
+
+\subsection{A constant variance}
+
+Table~\ref{tab:constant} gives the first three columns. There is no non-trading effect in the mean ($\mu_1$ is small and insignificant), but $\omega_1$ is highly significant: the variance is \varlarger\% larger after a weekend or holiday. The large $Q^2(20)$, about \qtwoconst{} in column~3, is the volatility clustering a constant variance leaves out.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Constant-variance models: Table~2, columns 1--3, of \citet[p.~146]{bollerslev1996periodic}. Standard errors are robust.}
+  \label{tab:constant}
+  \small
+  \begin{subtable}{\textwidth}
+    \centering
+    \caption{Column 1: constant variance.}
+    \begin{replication}
+    \rows{tables/col1.tex}
+    \end{replication}
+  \end{subtable}
+
+  \bigskip
+  \begin{subtable}{\textwidth}
+    \centering
+    \caption{Column 2: non-trading days in the mean and the variance.}
+    \begin{replication}
+    \rows{tables/col2.tex}
+    \end{replication}
+  \end{subtable}
+\end{table}
+
+\begin{table}[htbp]
+  \ContinuedFloat
+  \centering
+  \caption{(continued)}
+  \small
+  \begin{subtable}{\textwidth}
+    \centering
+    \caption{Column 3: non-trading days in the variance.}
+    \begin{replication}
+    \rows{tables/col3.tex}
+    \end{replication}
+  \end{subtable}
+\end{table}
+
+\subsection{GARCH(1,1), with and without the dummy}
+
+Letting the variance follow its own past (Table~\ref{tab:garch}a) brings $Q^2(20)$ down from about 600 to \qtwogarch: GARCH captures the clustering. Adding the non-trading-day dummy (Table~\ref{tab:garch}b) leaves $\omega_1$ significant, and both AIC and SIC prefer the model with it.
+
+\begin{table}[htbp]
+  \centering
+  \caption{GARCH(1,1) models: Table~2, columns 4 and 5, of \citet[p.~146]{bollerslev1996periodic}. Standard errors are robust.}
+  \label{tab:garch}
+  \small
+  \begin{subtable}{\textwidth}
+    \centering
+    \caption{Column 4: GARCH(1,1), fitted with ARCHModels.jl.}
+    \begin{replication}
+    \rows{tables/col4.tex}
+    \end{replication}
+  \end{subtable}
+
+  \bigskip
+  \begin{subtable}{\textwidth}
+    \centering
+    \caption{Column 5: GARCH(1,1) with the non-trading-day dummy.}
+    \begin{replication}
+    \rows{tables/col5.tex}
+    \end{replication}
+  \end{subtable}
+\end{table}
+
+\subsection{Periodic GARCH}
+
+In the P-GARCH(1,1) of Table~\ref{tab:pgarch}, the ARCH coefficient is $\alpha$ on ordinary days and $\alpha + \alpha_1$ after no trading. The estimate of $\alpha_1$ is negative, with a robust $t$-statistic of \talphaone. Table~\ref{tab:persistence} gives what this means for persistence: a shock on an ordinary day persists, $\alpha + \beta = \persistord$, while one after no trading dies out faster, $\alpha + \alpha_1 + \beta = \persistnontrading$. News that arrives while the market is closed says less about tomorrow. Figure~\ref{fig:volatility} compares the conditional volatilities of the two models with the dummy over a stretch of 1989--1990: they differ most on the days after a large shock on a Monday.
+
+\begin{table}[htbp]
+  \centering
+  \caption{P-GARCH(1,1): Table~2, column 6, of \citet[p.~146]{bollerslev1996periodic}. Standard errors are robust.}
+  \label{tab:pgarch}
+  \small
+  \begin{replication}
+  \rows{tables/col6.tex}
+  \end{replication}
+\end{table}
+
+\begin{table}[htbp]
+  \centering
+  \caption{Persistence of a shock in the P-GARCH(1,1), against \citet[p.~146]{bollerslev1996periodic}.}
+  \label{tab:persistence}
+  \begin{replication}
+  \rows{tables/persistence.tex}
+  \end{replication}
+\end{table}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth]{figures/volatility.pdf}
+  \caption{Conditional volatility $\sigma_t$ of GARCH(1,1) with the dummy and of P-GARCH(1,1), trading days 1,400 to 1,600 (1989--1990).}
+  \label{fig:volatility}
+\end{figure}
+
+\subsection{GARCH or periodic GARCH?}
+
+Table~\ref{tab:comparison} collects the fit of the six models. The rule of the notebook keeps the periodic model if $\alpha_1$ is significant at 5\% and both information criteria prefer it to GARCH(1,1) with the dummy. All three hold ($|t| = |\talphaone| > 1.96$; AIC and SIC are both larger), so the rule selects \periodicchoice.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Log likelihood and information criteria (larger is better) of the six models, as estimated in Julia.}
+  \label{tab:comparison}
+  \begin{tabular}{lrrr}
+    \toprule
+    Model & $\log L$ & AIC & SIC \\
+    \midrule
+    \rows{tables/comparison.tex}
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{What differs, and why}
+
+Of the \nvalues{} published values in Tables~\ref{tab:data}--\ref{tab:persistence}, \nfull{} are reproduced to the published precision. The others:
+
+\begin{itemize}
+  \item \textbf{Column 1, $b_4$ and HMSE} (6.62 and 5.62 against 6.63 and 5.63). Both depend on $\mu$ and $\omega$ beyond the three printed decimals: evaluated at the published $\mu = -0.016$ and $\omega = 0.221$ they give the published values (Table~\ref{tab:col1published}).
+  \item \textbf{Column 1, SIC} ($-2{,}637.4$ against $-2{,}652.5$). A misprint: every other column, and column~1's own AIC, satisfy $\text{AIC} = 2\log L - 2k$ and $\text{SIC} = 2\log L - k\ln T$, and no variant gives $-2{,}652.5$.
+  \item \textbf{Columns 1 and 2, the LL loss} (9.71 and 9.67 against 9.67 and 9.87). The mean of $[\ln(\varepsilon_t^2/\sigma_t^2)]^2$ is dominated by the days whose return is closest to the mean, so it moves with the fourth decimal of $\mu$; at the published $\mu$, column~1 gives 9.83 (Table~\ref{tab:col1published}). Column~2's 9.87 is not explained.
+  \item \textbf{Estimates on a rounding boundary.} Column~5's $\alpha$ is 0.1375 and column~6's 0.1785 (published 0.137 and 0.178), and $\alpha + \beta$ is \persistord{} (published 1.000).
+  \item \textbf{One unit in the last digit.} AIC, SIC, $Q^2(20)$, $b_3$ or $b_4$ in columns 2, 3 and 5, and the standard errors of $\omega_1$ in column~5 and of $\alpha$ in column~6. The statistics are computed from the estimates and move with their digits beyond the three printed.
+  \item \textbf{Standard errors in the third decimal} (column~6: $\omega$, 0.171 against 0.169; $\omega_1$, 0.027 against 0.026). These are the directions in which the likelihood is flattest, where the result depends on how the Hessian is computed: numerically in 1996, exactly here. This is likely but not proven.
+  \item \textbf{Columns 4 and 6, $b_3$ and $b_4$} (P-GARCH: $-0.43$ and 5.63 against $-0.46$ and 5.87). Not explained. One Monday, day 1,525 (return $-2.14$), carries most of the sum of $z_t^4$; the published $b_4$ would need its standardised residual near $-6.0$ rather than $-5.5$. Different starting values of the recursion, dropping the first day, and switching $\alpha_1$ with the previous day's dummy instead were tried; none gives the published values.
+\end{itemize}
+
+The robust standard errors of \citet{bollerslev1992qmle} were ruled out along the way: they give about half the published values for $\alpha$ and $\beta$, so the paper's are the sandwich used here.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Column 1's statistics evaluated at the published estimates $\mu = -0.016$, $\omega = 0.221$.}
+  \label{tab:col1published}
+  \begin{replication}
+  \rows{tables/col1published.tex}
+  \end{replication}
+\end{table}
+
+\section{Conclusion}
+
+The replication confirms the findings of \citet{bollerslev1996periodic}: the DM/\pounds{} variance is about \varlarger\% higher after non-trading days, the effect survives in GARCH(1,1), and the periodic GARCH, in which shocks after no trading feed less into the next day's variance, is preferred by both information criteria and a significant $\alpha_1$. Every estimate of Table~2 is reproduced to its published digits or within one unit of the last; the remaining differences are a misprinted SIC, the LL loss of the constant-variance models, and the skewness and kurtosis of the GARCH residuals. The paper's second example, intraday DM/US dollar returns (Table~3), uses data that is not public and is not replicated.
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

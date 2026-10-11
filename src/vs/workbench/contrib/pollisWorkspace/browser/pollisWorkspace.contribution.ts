@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { VSBuffer } from '../../../../base/common/buffer.js';
+import { mnemonicButtonLabel } from '../../../../base/common/labels.js';
 import { basename, extUriBiasedIgnorePathCase, joinPath } from '../../../../base/common/resources.js';
 import { URI } from '../../../../base/common/uri.js';
 import { localize, localize2 } from '../../../../nls.js';
@@ -79,7 +80,7 @@ registerAction2(class extends Action2 {
 
 		const folders = await fileDialogService.showOpenDialog({
 			title: localize('pollisWorkspace.pick', "Choose or Create the Folder of the Pollis Workspace"),
-			openLabel: localize({ key: 'pollisWorkspace.pickLabel', comment: ['&& denotes a mnemonic'] }, "&&Make Pollis Workspace"),
+			openLabel: mnemonicButtonLabel(localize({ key: 'pollisWorkspace.pickLabel', comment: ['&& denotes a mnemonic'] }, "&&Make Pollis Workspace")),
 			canSelectFolders: true,
 			canSelectFiles: false,
 			canSelectMany: false,

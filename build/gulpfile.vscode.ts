@@ -109,10 +109,11 @@ const vscodeResourceIncludes = [
 	'out-build/vs/workbench/contrib/model/browser/media/notebooks/**/*.ipynb',
 	'out-build/vs/workbench/contrib/model/browser/media/notebooks/**/*.jl',
 
-	// Compose workflows, new methods and published benchmarks (notebook + step functions)
-	'out-build/vs/workbench/contrib/compose/browser/media/workflows/**/*.{ipynb,jl}',
+	// Compose workflows (with their LaTeX templates), new methods and published benchmarks (notebook + step functions), and the reports script and instructions
+	'out-build/vs/workbench/contrib/compose/browser/media/workflows/**/*.{ipynb,jl,tex,bib}',
 	'out-build/vs/workbench/contrib/compose/browser/media/methods/**/*.{ipynb,jl}',
 	'out-build/vs/workbench/contrib/compose/browser/media/correctness/**/*.{ipynb,jl,dat}',
+	'out-build/vs/workbench/contrib/compose/browser/media/reports/*.{md,jl}',
 
 	// Pollis: Sessions resources omitted; the Agents window is not shipped.
 

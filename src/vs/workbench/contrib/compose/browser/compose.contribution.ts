@@ -9,8 +9,11 @@ import { CommandsRegistry } from '../../../../platform/commands/common/commands.
 import { INotificationService } from '../../../../platform/notification/common/notification.js';
 import './toolboxExtensions.js';
 import './toolboxPanelsPage.js';
-import { CHOOSE_AGENT_COMMAND_ID, CREATE_PANEL_COMMAND_ID, CREATE_PANELS_FROM_REQUEST_COMMAND_ID, PACKAGE_TOOLBOX_COMMAND_ID } from './pollisAgents.js';
-import { CREATE_METHOD_COMMAND_ID, PACKAGE_METHOD_COMMAND_ID } from './newMethods.js';
+import { BROWSE_SKILLS_COMMAND_ID, CHOOSE_AGENT_COMMAND_ID, CREATE_PANEL_COMMAND_ID, CREATE_PANELS_FROM_REQUEST_COMMAND_ID, INSTALL_SKILLS_COMMAND_ID, PACKAGE_TOOLBOX_COMMAND_ID } from './pollisAgents.js';
+import { CREATE_METHOD_COMMAND_ID, PACKAGE_METHOD_COMMAND_ID, PREPARE_REGISTRATION_COMMAND_ID, WRITE_METHOD_COMMAND_ID } from './newMethods.js';
+import './codingAgentPage.js';
+import { BROWSE_OPERATIONAL_WORKFLOWS_COMMAND_ID } from './operationalWorkflows.js';
+import { EXPORT_NOTEBOOK_LATEX_COMMAND_ID, MAKE_NOTEBOOK_SLIDES_COMMAND_ID, POLISH_REPORT_COMMAND_ID } from './reports.js';
 import { NEW_METHODS_COMMAND_ID, PUBLISHED_BENCHMARKS_COMMAND_ID, SEARCH_WORKFLOW_LIBRARY_COMMAND_ID } from './workflowLibrary.js';
 
 // The Mathematical Foundations, Financial Econometrics and Macroeconomics Toolboxes come from their extensions (toolboxes/pollis-toolbox-*, not built in:
@@ -25,17 +28,21 @@ const E_CMTSubmenuId = new MenuId('menubarE_CMTSubmenu');
 
 const PollisAgentsMenu = new MenuId('menubarPollisAgentsMenu');
 const PollisSkillsMenu = new MenuId('menubarPollisSkillsMenu');
+const OrchestrationMenu = new MenuId('menubarOrchestrationMenu');
+const ReportsMenu = new MenuId('menubarReportsMenu');
 const WorkflowsMenu = new MenuId('menubarWorkflowsMenu');
+const CREATE_OPERATIONAL_WORKFLOW_COMMAND_ID = 'pollis.workflows.createOperational';
 const NewMethodsMenu = new MenuId('menubarNewMethodsMenu');
 const CorrectnessMenu = new MenuId('menubarCorrectnessMenu');
 const ComparisonsMenu = new MenuId('menubarComparisonsMenu');
 const CompileGaloreMenu = new MenuId('menubarCompileGaloreMenu');
 const CollaborationMenu = new MenuId('menubarCollaborationMenu');
+const PracticeMenu = new MenuId('menubarPracticeMenu');
 
 // ------------------- COMPOSE ------------------------
 
-// The Compose menu: Pollis Agents (pollisAgents.ts), Pollis Skills, Workflows, New Methods, Correctness Tests,
-// Horse Races, Compile Galore and Collaboration, which combine panels. The Toolbox Panels page (toolboxPanelsPage.ts) opens from
+// The Compose menu: Pollis Skills, Pollis Agents (pollisAgents.ts), Orchestration, New Methods, Workflows, Reports, Correctness Tests,
+// Horse Races, Compile Galore, Collaboration and Practice, which combine panels. The Toolbox Panels page (toolboxPanelsPage.ts) opens from
 // the Edit button of an installed toolbox in the Extensions pane.
 MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
 	submenu: MenuId.MenubarComposeMenu,
@@ -53,24 +60,26 @@ MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
 
 MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
 	group: '1_compose',
-	submenu: PollisAgentsMenu,
-	title: localize('pollisAgents.menu', "Pollis Agents"),
+	submenu: PollisSkillsMenu,
+	title: localize('pollisSkills.menu', 'Pollis Skills'),
 	order: 1,
 });
 
 MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
 	group: '1_compose',
-	submenu: PollisSkillsMenu,
-	title: localize('pollisSkills.menu', 'Pollis Skills'),
+	submenu: PollisAgentsMenu,
+	title: localize('pollisAgents.menu', "Pollis Agents"),
 	order: 2,
 });
 
 MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
 	group: '1_compose',
-	submenu: WorkflowsMenu,
-	title: localize('pollisWorkflows.menu', 'Workflows'),
+	submenu: OrchestrationMenu,
+	title: localize('pollisOrchestration.menu', "Orchestration"),
 	order: 3,
 });
+
+
 
 MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
 	group: '2_compose',
@@ -81,83 +90,148 @@ MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
 
 MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
 	group: '2_compose',
-	submenu: CorrectnessMenu,
-	title: localize('pollisCorrectness.menu', "Correctness Tests"),
+	submenu: WorkflowsMenu,
+	title: localize('pollisWorkflows.menu', 'Workflows'),
 	order: 2,
 });
 
 MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
 	group: '2_compose',
-	submenu: ComparisonsMenu,
-	title: localize('pollisComparison.menu', 'Profiling'),
+	submenu: ReportsMenu,
+	title: localize('pollisReports.menu', "Reports"),
 	order: 3,
 });
 
 MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
-	group: '2_compose',
-	submenu: CompileGaloreMenu,
-	title: localize('pollisCompileGalore.menu', "Compilation Lab"),
-	order: 4,
+	group: '3_compose',
+	submenu: CorrectnessMenu,
+	title: localize('pollisCorrectness.menu', "Correctness Tests"),
+	order: 1,
 });
 
 MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
 	group: '3_compose',
+	submenu: ComparisonsMenu,
+	title: localize('pollisComparison.menu', 'Profiling'),
+	order: 2,
+});
+
+MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
+	group: '3_compose',
+	submenu: CompileGaloreMenu,
+	title: localize('pollisCompileGalore.menu', "Compilation Lab"),
+	order: 3,
+});
+
+MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
+	group: '4_compose',
 	submenu: CollaborationMenu,
 	title: localize('pollisCollaboration.menu', 'Collaboration'),
 	order: 1,
 });
 
+MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
+	group: '4_compose',
+	submenu: PracticeMenu,
+	title: localize('pollisPractice.menu', "Practice"),
+	order: 2,
+});
+
+// The coding agent every agent feature of Compose uses (Pollis Agents, Orchestration, Reports), last on its own
+MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
+	group: '9_agent',
+	command: { id: CHOOSE_AGENT_COMMAND_ID, title: localize('pollisAgents.chooseAgent', "Choose Coding Agent...") },
+	order: 1,
+});
+
 
 
 // ==============================================================
-// SUBMENU: Pollis Agents (the commands are in pollisAgents.ts)
+// SUBMENU: Pollis Agents, the tasks a coding agent does (the commands are in pollisAgents.ts and newMethods.ts)
 // ==============================================================
 
 
 MenuRegistry.appendMenuItem(PollisAgentsMenu, {
-	group: '1_skills',
+	group: '1_panels',
 	command: { id: CREATE_PANEL_COMMAND_ID, title: localize('pollisAgents.createPanel', "Create a Panel...") },
 	order: 1,
 });
 
 MenuRegistry.appendMenuItem(PollisAgentsMenu, {
-	group: '1_skills',
+	group: '1_panels',
 	command: { id: CREATE_PANELS_FROM_REQUEST_COMMAND_ID, title: localize('pollisAgents.createPanelsFromRequest', "Create Panels from a Request...") },
 	order: 2,
 });
 
 MenuRegistry.appendMenuItem(PollisAgentsMenu, {
-	group: '1_skills',
+	group: '1_panels',
 	command: { id: PACKAGE_TOOLBOX_COMMAND_ID, title: localize('pollisAgents.packageToolbox', "Package a Toolbox...") },
 	order: 3,
 });
 
 MenuRegistry.appendMenuItem(PollisAgentsMenu, {
-	group: '2_agent',
-	command: { id: CHOOSE_AGENT_COMMAND_ID, title: localize('pollisAgents.chooseAgent', "Choose Coding Agent...") },
+	group: '2_methods',
+	command: { id: WRITE_METHOD_COMMAND_ID, title: localize('pollisAgents.writeMethod', "Write a Method...") },
 	order: 1,
 });
 
+MenuRegistry.appendMenuItem(PollisAgentsMenu, {
+	group: '2_methods',
+	command: { id: PREPARE_REGISTRATION_COMMAND_ID, title: localize('pollisAgents.prepareRegistration', "Prepare for Registration...") },
+	order: 2,
+});
+
+
 // ==============================================================
-// SUBMENU: Pollis Skills
+// SUBMENU: Pollis Skills, the library of the skills the tasks use (the commands are in pollisAgents.ts)
 // ==============================================================
+
+MenuRegistry.appendMenuItem(PollisSkillsMenu, {
+	group: '1_skills',
+	command: { id: BROWSE_SKILLS_COMMAND_ID, title: localize('pollisSkills.browse', "Browse Skills...") },
+	order: 1,
+});
+
+MenuRegistry.appendMenuItem(PollisSkillsMenu, {
+	group: '2_install',
+	command: { id: INSTALL_SKILLS_COMMAND_ID, title: localize('pollisSkills.install', "Install in Claude Code...") },
+	order: 1,
+});
 
 
 // ==============================================================
 // SUBMENU: Workflows
 // ==============================================================
 
+// Analytical workflows replicate a published analysis (workflowLibrary.ts); operational ones do a job on
+// the user's own work, such as a notebook made into a report (operationalWorkflows.ts)
 MenuRegistry.appendMenuItem(WorkflowsMenu, {
-	group: '1_workflows',
-	command: { id: 'chiara.statistics.wfl', title: localize('wfl.cw', 'Create Workflow') },
+	group: '1_analytical',
+	command: { id: SEARCH_WORKFLOW_LIBRARY_COMMAND_ID, title: localize('wfl_sl.cw', "Browse Analytical Workflows...") },
 	order: 1,
 });
 
 MenuRegistry.appendMenuItem(WorkflowsMenu, {
-	group: '1_workflows',
-	command: { id: SEARCH_WORKFLOW_LIBRARY_COMMAND_ID, title: localize('wfl_sl.cw', "Library") },
+	group: '1_analytical',
+	command: { id: 'chiara.statistics.wfl', title: localize('wfl.cw', "Create Analytical Workflow...") },
 	order: 2,
 });
+// Not built yet (see internal-reports/workflows-brief.md)
+registerNotYetImplemented('chiara.statistics.wfl', localize('wfl.cw', "Create Analytical Workflow..."));
+
+MenuRegistry.appendMenuItem(WorkflowsMenu, {
+	group: '2_operational',
+	command: { id: BROWSE_OPERATIONAL_WORKFLOWS_COMMAND_ID, title: localize('operationalWorkflows.browse', "Browse Operational Workflows...") },
+	order: 1,
+});
+
+MenuRegistry.appendMenuItem(WorkflowsMenu, {
+	group: '2_operational',
+	command: { id: CREATE_OPERATIONAL_WORKFLOW_COMMAND_ID, title: localize('operationalWorkflows.create', "Create Operational Workflow...") },
+	order: 2,
+});
+// Not built yet
+registerNotYetImplemented(CREATE_OPERATIONAL_WORKFLOW_COMMAND_ID, localize('operationalWorkflows.create', "Create Operational Workflow..."));
 
 
 
@@ -179,7 +253,7 @@ MenuRegistry.appendMenuItem(NewMethodsMenu, {
 
 MenuRegistry.appendMenuItem(NewMethodsMenu, {
 	group: '1_methods',
-	command: { id: NEW_METHODS_COMMAND_ID, title: localize('newMethods.library', "Library") },
+	command: { id: NEW_METHODS_COMMAND_ID, title: localize('newMethods.library', "Browse Methods") },
 	order: 3,
 });
 
@@ -193,10 +267,19 @@ MenuRegistry.appendMenuItem(CorrectnessMenu, {
 
 // ==============================================================
 
-// Roadmap phase 6. Not built yet: each item says so.
+// Not built yet: each item says so.
+// Orchestration: coding agents working together. Writer and Checker: one writes, another checks; Two
+// Independent Transcriptions: two agents type the same table from an article and the differences are shown;
+// Race: several agents do the same task and the results are compared.
+// Roadmap phase 6:
 // Correctness Tests: Julia, R and Python check one another.
+// Roadmap phase 14, Practice: exercises whose answers Julia computes, a new version for each seed. Studying first
+// (practice, a timed exam, the tutor, progress), then writing (by hand or with the agent), exams (made from browsed exercises) and export.
 // Horse Races > Add a Language... is Bring Your Own Language: Fortran, C and Rust use the same adapters.
 const composeItems = [
+	{ menu: OrchestrationMenu, id: 'pollis.orchestration.writerChecker', title: localize('orchestration.writerChecker', "Writer and Checker..."), group: '1_patterns', order: 1 },
+	{ menu: OrchestrationMenu, id: 'pollis.orchestration.twoTranscriptions', title: localize('orchestration.twoTranscriptions', "Two Independent Transcriptions..."), group: '1_patterns', order: 2 },
+	{ menu: OrchestrationMenu, id: 'pollis.orchestration.race', title: localize('orchestration.race', "Race..."), group: '1_patterns', order: 3 },
 	{ menu: CorrectnessMenu, id: 'chiara.statistics.comp_co', title: localize('comp.co', "Check Results Across Languages..."), group: '1_check', order: 1 },
 	{ menu: CorrectnessMenu, id: 'chiara.statistics.comp_fx', title: localize('comp.fx', "Settle a Disagreement..."), group: '1_check', order: 2 },
 	{ menu: ComparisonsMenu, id: 'chiara.statistics.comp_pr', title: localize('comp.pr', "Run a Speed Race..."), group: '1_race', order: 1 },
@@ -206,7 +289,33 @@ const composeItems = [
 	{ menu: CompileGaloreMenu, id: 'chiara.statistics.comp_sl', title: localize('comp.sl', "Compile Julia to a Shared Library..."), group: '1_compiled', order: 2 },
 	{ menu: CompileGaloreMenu, id: 'chiara.statistics.comp_ex', title: localize('comp.ex', "Compile Julia to an Executable..."), group: '1_compiled', order: 3 },
 	{ menu: CompileGaloreMenu, id: 'chiara.statistics.comp_mx', title: localize('comp.mx', "Mix Julia with Compiled Code..."), group: '1_compiled', order: 4 },
+	{ menu: PracticeMenu, id: 'pollis.practice.topic', title: localize('practice.topic', "Practise a Topic..."), group: '1_study', order: 1 },
+	{ menu: PracticeMenu, id: 'pollis.practice.timedExam', title: localize('practice.timedExam', "Take a Timed Exam..."), group: '1_study', order: 2 },
+	{ menu: PracticeMenu, id: 'pollis.practice.tutor', title: localize('practice.tutor', "Ask a Tutor..."), group: '1_study', order: 3 },
+	{ menu: PracticeMenu, id: 'pollis.practice.progress', title: localize('practice.progress', "My Progress..."), group: '1_study', order: 4 },
+	{ menu: PracticeMenu, id: 'pollis.practice.write', title: localize('practice.write', "Write an Exercise..."), group: '2_write', order: 1 },
+	{ menu: PracticeMenu, id: 'pollis.practice.writeWithAgent', title: localize('practice.writeWithAgent', "Write Exercises with My Agent..."), group: '2_write', order: 2 },
+	{ menu: PracticeMenu, id: 'pollis.practice.createExam', title: localize('practice.createExam', "Create an Exam..."), group: '3_teach', order: 1 },
+	{ menu: PracticeMenu, id: 'pollis.practice.browseExams', title: localize('practice.browseExams', "Browse Exams..."), group: '3_teach', order: 2 },
+	{ menu: PracticeMenu, id: 'pollis.practice.export', title: localize('practice.export', "Export to a Learning Platform..."), group: '4_export', order: 1 },
 ];
+
+// Reports: a notebook (a workflow, a notebook tutorial or the user's own) as a LaTeX report or as slides, see reports.ts
+MenuRegistry.appendMenuItem(ReportsMenu, {
+	group: '1_notebook',
+	command: { id: EXPORT_NOTEBOOK_LATEX_COMMAND_ID, title: localize('reports.notebookLatex', "Export Notebook as LaTeX...") },
+	order: 1,
+});
+MenuRegistry.appendMenuItem(ReportsMenu, {
+	group: '1_notebook',
+	command: { id: MAKE_NOTEBOOK_SLIDES_COMMAND_ID, title: localize('reports.notebookSlides', "Make Slides from a Notebook...") },
+	order: 2,
+});
+MenuRegistry.appendMenuItem(ReportsMenu, {
+	group: '2_agent',
+	command: { id: POLISH_REPORT_COMMAND_ID, title: localize('reports.polish', "Polish with Agent...") },
+	order: 1,
+});
 
 /** Registers a command that says its menu item is not built yet. */
 function registerNotYetImplemented(id: string, title: string): void {

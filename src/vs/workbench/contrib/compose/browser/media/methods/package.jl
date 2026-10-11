@@ -1,10 +1,14 @@
 # Compose > New Methods > Package and Publish: turns each method folder into a Julia package whose
 # tests are the method's target tables, computed from its input tables, and runs them. With --push
-# OWNER, a package whose tests all pass is pushed to github.com/OWNER/NAME.jl (GitHub CLI, gh).
+# OWNER, a package whose tests all pass is pushed to github.com/OWNER/NAME.jl (GitHub CLI, gh). With
+# --register URL as well, a pushed package that also meets the Pollis registry rules (a name of at least
+# 5 characters, a usage example, a docstring for every exported name) is registered in the registry at URL
+# (LocalRegistry.jl). The rules are checked, and reported, every time.
 #
-#   julia package.jl PACKAGES_FOLDER METHOD_FOLDER... [--push OWNER]
+#   julia package.jl PACKAGES_FOLDER METHOD_FOLDER... [--push OWNER [--register REGISTRY_URL]]
 #
-# A method folder holds method.toml (name, title, author, description, citation, packages, and a
+# A method folder holds method.toml (name, title, author, description, citation, version, usage (Julia code
+# that shows how to call the method, for the README), packages, and a
 # [targets.NAME] table for each target: source, call, tolerance, and an [inputs.NAME] table for each input:
 # url, source, delim, columns), src/NAME.jl (module NAME) and targets/*.csv. The inputs are only links: the
 # tests download them into memory, writing nothing to disk. A target table's first column holds the row
@@ -15,12 +19,20 @@
 
 using Pkg, TOML, UUIDs
 
-function arguments(args)
-	push = findfirst(==("--push"), args)
-	owner = push === nothing ? nothing : args[push + 1]
-	rest = push === nothing ? args : [args[1:push - 1]; args[push + 2:end]]
-	return rest[1], rest[2:end], owner
+"The value of an option and the arguments without it."
+function option(args, flag)
+	at = findfirst(==(flag), args)
+	at === nothing && return nothing, args
+	return args[at + 1], [args[1:at - 1]; args[at + 2:end]]
 end
+
+function arguments(args)
+	owner, args = option(args, "--push")
+	registry, args = option(args, "--register")
+	return args[1], args[2:end], owner, registry
+end
+
+const MINIMUM_NAME = 5
 
 "The test file: one testset per target, one test per printed value."
 function runtests(name, method)
@@ -101,6 +113,8 @@ function readme(name, method)
 		doi = get(method, "doi", "")
 		push!(lines, "Article: $citation" * (isempty(doi) ? "" : " [doi:$doi](https://doi.org/$doi)"), "")
 	end
+	usage = strip(get(method, "usage", ""))
+	isempty(usage) || push!(lines, "## Usage", "", "```julia", usage, "```", "")
 	push!(lines, "## Tests", "", "The tests compute the published tables below from their data and check every printed value, rounded to the digits printed:", "")
 	for (file, spec) in sort(collect(targets); by = first)
 		push!(lines, "- $(get(spec, "source", file)) (`test/data/targets/$file.csv`)")
@@ -132,7 +146,7 @@ function package(packages, folder)
 	uuid = isfile(project) ? TOML.parsefile(project)["uuid"] : string(uuid4())
 	author = get(method, "author", "")
 	open(project, "w") do io
-		TOML.print(io, Dict("name" => name, "uuid" => uuid, "version" => "0.1.0", "authors" => isempty(author) ? String[] : [author]); sorted = true)
+		TOML.print(io, Dict("name" => name, "uuid" => uuid, "version" => get(method, "version", "0.1.0"), "authors" => isempty(author) ? String[] : [author]); sorted = true)
 	end
 	for sub in ("src", joinpath("test", "data"))
 		rm(joinpath(root, sub); force = true, recursive = true)
@@ -150,7 +164,28 @@ function package(packages, folder)
 	Pkg.activate(joinpath(root, "test"))
 	Pkg.add(["Test", "CSV", "Downloads", "Tables"])
 	Pkg.activate(root)
-	return root, name
+	return root, name, method
+end
+
+"The Pollis registry rules the package breaks; empty when it meets them all."
+function registry_problems(root, name, method)
+	problems = String[]
+	length(name) >= MINIMUM_NAME || push!(problems, "the name $name is shorter than $MINIMUM_NAME characters")
+	isempty(strip(get(method, "usage", ""))) && push!(problems, "no usage example (method.toml: usage = \"\"\"...\"\"\")")
+	code = "using $name; print(join([string(s) for s in names($name) if s != nameof($name) && !Base.Docs.hasdoc($name, s)], ' '))"
+	undocumented = split(read(`$(Base.julia_cmd()) --startup-file=no --project=$root -e $code`, String))
+	isempty(undocumented) || push!(problems, "no docstring for " * join(undocumented, ", "))
+	return problems
+end
+
+"Registers the active package in the registry at a URL, with LocalRegistry.jl."
+function register(root, registry)
+	Pkg.activate(; temp = true)
+	Pkg.add("LocalRegistry")
+	registrar = Base.require(Base.PkgId(UUID("89398ba2-070a-4b16-a995-9893c55d93cf"), "LocalRegistry"))
+	Pkg.activate(root)
+	Base.invokelatest(registrar.register, root; registry, push = true)
+	println("Registered in $registry. To install: using Pkg; Pkg.Registry.add(url = \"$registry\"); Pkg.add(\"$(basename(root)[1:end - 3])\")")
 end
 
 function publish(root, name, owner)
@@ -169,14 +204,24 @@ function publish(root, name, owner)
 end
 
 function main(args)
-	packages, folders, owner = arguments(args)
+	packages, folders, owner, registry = arguments(args)
 	failed = String[]
 	for folder in folders
 		try
-			root, name = package(packages, folder)
+			root, name, method = package(packages, folder)
 			Pkg.test()
 			println("\n$name: all tests pass.")
+			problems = registry_problems(root, name, method)
+			if isempty(problems)
+				println("$name meets the Pollis registry rules.")
+			else
+				println("$name does not meet the Pollis registry rules yet:\n", join("  - " .* problems, "\n"))
+				println("Compose > Pollis Agents > Prepare for Registration... asks your coding agent to fix them.")
+			end
 			owner === nothing || publish(root, name, owner)
+			if registry !== nothing
+				isempty(problems) ? register(root, registry) : println("$name: not registered.")
+			end
 		catch error
 			showerror(stdout, error)
 			println("\n\n$(basename(folder)): not published.")
