@@ -28,7 +28,7 @@ import { ICollaborationService } from './collaborationService.js';
 // the bar, so its Share My Editor is a button in the internal browser's toolbar instead.
 
 /** Whether a session is live. */
-const IN_SESSION = new RawContextKey<boolean>('pollisCollaborationInSession', false);
+export const IN_SESSION = new RawContextKey<boolean>('pollisCollaborationInSession', false);
 
 /** One editor group's bar, shown for its active editor while a session is live. */
 class GroupBar extends Disposable {

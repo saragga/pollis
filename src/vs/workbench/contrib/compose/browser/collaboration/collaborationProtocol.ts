@@ -24,6 +24,9 @@ export const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
 /** The largest editor or notebook shared (Share My Editor), in bytes, as text. */
 export const MAX_SHARE_BYTES = 2 * 1024 * 1024;
 
+/** The largest dataset shared (Share Dataset), in bytes, as CSV text. */
+export const MAX_DATASET_BYTES = 5 * 1024 * 1024;
+
 /** Above this size a transfer shows a progress bar on both sides. */
 export const PROGRESS_THRESHOLD_BYTES = 1024 * 1024;
 
@@ -72,6 +75,15 @@ export interface IEditorSharedPayload {
 	readonly pluto?: boolean;
 }
 
+/** A dataset (Share Dataset): a CSV file, or a Julia table written out as CSV. Plain text only, never a Julia object. */
+export interface IDatasetSharedPayload {
+	readonly id: string;
+	/** The file's name, with its extension; the receiver keeps only its base name. */
+	readonly fileName: string;
+	/** The CSV text, at most MAX_DATASET_BYTES. */
+	readonly content: string;
+}
+
 /** Sent on leaving; from the host it ends the session. */
 export interface IByePayload {
 	readonly reason?: 'left' | 'ended';
@@ -89,6 +101,7 @@ export type Envelope =
 	| IEnvelopeBase<'hello', IHelloPayload>
 	| IEnvelopeBase<'chat', IChatPayload>
 	| IEnvelopeBase<'editorShared', IEditorSharedPayload>
+	| IEnvelopeBase<'datasetShared', IDatasetSharedPayload>
 	| IEnvelopeBase<'bye', IByePayload>;
 
 export type EnvelopeType = Envelope['type'];
@@ -106,7 +119,7 @@ export function isEnvelope(value: unknown): value is Envelope {
 	}
 	const candidate = value as Partial<Envelope>;
 	return candidate.v === PROTOCOL_VERSION
-		&& (candidate.type === 'hello' || candidate.type === 'chat' || candidate.type === 'editorShared' || candidate.type === 'bye')
+		&& (candidate.type === 'hello' || candidate.type === 'chat' || candidate.type === 'editorShared' || candidate.type === 'datasetShared' || candidate.type === 'bye')
 		&& typeof candidate.channel === 'string'
 		&& !!candidate.payload && typeof candidate.payload === 'object';
 }

@@ -203,6 +203,12 @@
                 "icon": "$(trash)"
             },
             {
+                "command": "language-julia.shareTable",
+                "title": "Julia: Share Table in the Collaboration Session",
+                "shortTitle": "Share Dataset",
+                "icon": "$(live-share)"
+            },
+            {
                 "command": "language-julia.save-plot",
                 "title": "Julia: Save Plot",
                 "icon": "$(save)"
@@ -424,6 +430,11 @@
             ],
             "editor/title": [
                 {
+                    "command": "language-julia.shareTable",
+                    "when": "activeWebviewPanelId == 'jlgrid' && pollisCollaborationInSession",
+                    "group": "navigation@-3"
+                },
+                {
                     "command": "language-julia.browse-back-documentation",
                     "when": "juliaDocumentationPaneActive",
                     "group": "navigation@-2"
@@ -640,6 +651,10 @@
                 }
             ],
             "commandPalette": [
+                {
+                    "command": "language-julia.shareTable",
+                    "when": "activeWebviewPanelId == 'jlgrid' && pollisCollaborationInSession"
+                },
                 {
                     "command": "language-julia.restartKernel",
                     "when": "false"

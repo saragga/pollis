@@ -25,12 +25,13 @@ import { ILifecycleService } from '../../../../services/lifecycle/common/lifecyc
 import { WebviewInput } from '../../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../../webviewPanel/browser/webviewWorkbenchService.js';
 import { ChatPageMessage, ChatWorkbenchMessage, chatPageHtml, COLLABORATION_MEDIA, IChatEntry, IPeerConnectionStats, trysteroBundleUrl } from './collaborationChat.js';
-import { COLLABORATION_APP_ID, envelope, Envelope, formatSessionCode, IByePayload, IChatPayload, IEditorSharedPayload, IHelloPayload, isAcceptableImage, isEnvelope, ISessionCode, MAX_IMAGE_BYTES, MAX_PARTICIPANTS, MAX_SHARE_BYTES, newSessionCode, parseSessionCode, ParticipantRole, roomIdOf, SignallingStrategy } from './collaborationProtocol.js';
+import { COLLABORATION_APP_ID, envelope, Envelope, formatSessionCode, IByePayload, IChatPayload, IDatasetSharedPayload, IEditorSharedPayload, IHelloPayload, isAcceptableImage, isEnvelope, ISessionCode, MAX_DATASET_BYTES, MAX_IMAGE_BYTES, MAX_PARTICIPANTS, MAX_RECEIVE_BYTES, MAX_SHARE_BYTES, newSessionCode, parseSessionCode, ParticipantRole, roomIdOf, SignallingStrategy } from './collaborationProtocol.js';
+import { datasetFileName, formatBytes, IReceivedDataset, SharedDatasets, summarizeCsv } from './collaborationDatasets.js';
 import { ISharedSnapshot, shareableKind, SharedEditors } from './collaborationEditors.js';
 import { IWirePacket, ReliableDelivery } from './collaborationTransport.js';
 
 // Compose > Collaboration sessions (internal-reports/collaboration-spec.md): starting, joining and leaving
-// a session, the chat, and Share My Editor (collaborationEditors.ts). The host is the participant who started the session: they admit up to
+// a session, the chat, Share My Editor (collaborationEditors.ts) and Share Dataset (collaborationDatasets.ts). The host is the participant who started the session: they admit up to
 // MAX_PARTICIPANTS, and when they leave the session ends. Nothing is stored after the session.
 
 export const SIGNALLING_SETTING = 'pollis.collaboration.signalling';
@@ -101,6 +102,9 @@ export interface ICollaborationService {
 
 	/** Opens the diff of a shared snapshot and my editor (Compare with Mine). */
 	compareWithMine(resource: URI): Promise<void>;
+
+	/** Shares a dataset with the others, after confirming: a CSV file, or CSV text such as a Julia table written out. */
+	shareDataset(dataset: URI | { readonly fileName: string; readonly content: string }): Promise<void>;
 }
 
 interface IParticipant {
@@ -126,6 +130,8 @@ class Session extends Disposable {
 	private readonly pendingSends = new Map<number, DeferredPromise<void>>();
 	private readonly pendingStats = new Map<number, DeferredPromise<readonly IPeerConnectionStats[]>>();
 	private readonly waitTimer = this._register(new MutableDisposable());
+	/** The datasets the others shared, by id, for their cards' buttons. */
+	private readonly datasets = new Map<string, IReceivedDataset>();
 	private nextRequestId = 1;
 	private selfId: string | undefined;
 	private hostId: string | undefined;
@@ -142,6 +148,7 @@ class Session extends Disposable {
 		private readonly onTestConnection: () => void,
 		private readonly onLeave: () => void,
 		private readonly onEditorShared: (sharer: string, payload: IEditorSharedPayload) => void,
+		private readonly onDatasetAction: (dataset: IReceivedDataset, action: 'preview' | 'save' | 'load') => void,
 	) {
 		super();
 		this.admitted = role === 'host';
@@ -302,6 +309,13 @@ class Session extends Disposable {
 			case 'leaveSession':
 				this.onLeave();
 				break;
+			case 'dataset': {
+				const dataset = this.datasets.get(message.id);
+				if (dataset) {
+					this.onDatasetAction(dataset, message.action);
+				}
+				break;
+			}
 		}
 	}
 
@@ -445,6 +459,9 @@ class Session extends Disposable {
 			case 'editorShared':
 				this.onSharedEditor(peerId, data.payload);
 				break;
+			case 'datasetShared':
+				this.onSharedDataset(peerId, data.payload);
+				break;
 			case 'bye':
 				this.onBye(peerId, data.payload);
 				break;
@@ -485,6 +502,51 @@ class Session extends Disposable {
 		}
 		this.notice(localize('collaboration.youShared', "You shared your {0}.", shared.fileName));
 		this.delivery.send('editorShared', envelope<Envelope & { type: 'editorShared' }>('editorShared', shared) as unknown as IJson, peers);
+	}
+
+	/** A dataset from another participant: checked, and shown as a card; nothing runs until a button is pressed. */
+	private onSharedDataset(peerId: string, shared: IDatasetSharedPayload): void {
+		const participant = this.participants.get(peerId);
+		if (!participant || typeof shared.id !== 'string' || typeof shared.fileName !== 'string' || typeof shared.content !== 'string') {
+			return;
+		}
+		const fileName = datasetFileName(shared.fileName);
+		const bytes = VSBuffer.fromString(shared.content).byteLength;
+		const summary = bytes <= MAX_DATASET_BYTES ? summarizeCsv(shared.content) : undefined;
+		if (!summary) {
+			this.notice(localize('collaboration.datasetRefused', "{0} shared {1}, but it is not a CSV dataset within {2} MB, so it was refused.", participant.name, fileName, MAX_DATASET_BYTES / 1024 / 1024));
+			return;
+		}
+		const id = generateUuid();
+		this.datasets.set(id, { sharer: participant.name, payload: { id, fileName, content: shared.content }, summary });
+		this.post({
+			command: 'show',
+			entry: {
+				kind: 'dataset', name: participant.name, text: '', time: Date.now(),
+				dataset: { id, fileName, rows: summary.rows, columns: summary.header.length, size: formatBytes(bytes), header: summary.header, head: summary.head, formulas: summary.formulas },
+			},
+		});
+	}
+
+	/** Sends a dataset to everyone in the session; the caller has confirmed it. */
+	shareDataset(fileName: string, content: string, rows: number, columns: number): void {
+		if (this.ended) {
+			return;
+		}
+		// The CSV within its cap, and the message carrying it, quotes escaped, within what the others accept
+		const bytes = VSBuffer.fromString(content).byteLength;
+		if (bytes > MAX_DATASET_BYTES || VSBuffer.fromString(JSON.stringify(content)).byteLength > MAX_RECEIVE_BYTES - 64 * 1024) {
+			this.notice(localize('collaboration.datasetTooLargeToSend', "{0} is too large to share ({1}; the limit is {2} MB): send it the usual way.", fileName, formatBytes(bytes), MAX_DATASET_BYTES / 1024 / 1024));
+			return;
+		}
+		const peers = [...this.participants.keys()];
+		if (!peers.length) {
+			this.notice(localize('collaboration.nobodyToShareWith', "Nobody else is in the session yet, so {0} was not shared.", fileName));
+			return;
+		}
+		this.notice(localize('collaboration.youSharedDataset', "You shared {0}: {1} rows × {2} columns.", fileName, rows, columns));
+		const shared: IDatasetSharedPayload = { id: generateUuid(), fileName, content };
+		this.delivery.send('datasetShared', envelope<Envelope & { type: 'datasetShared' }>('datasetShared', shared) as unknown as IJson, peers);
 	}
 
 	private onBye(peerId: string, bye: IByePayload): void {
@@ -536,6 +598,7 @@ export class CollaborationService extends Disposable implements ICollaborationSe
 	private page: WebviewInput | undefined;
 	private readonly pageDisposables = this._register(new DisposableStore());
 	private readonly sharedEditors: SharedEditors;
+	private readonly sharedDatasets: SharedDatasets;
 	readonly onDidChangeShared: Event<void>;
 
 	constructor(
@@ -563,6 +626,7 @@ export class CollaborationService extends Disposable implements ICollaborationSe
 		}));
 		this.sharedEditors = this._register(instantiationService.createInstance(SharedEditors, (text: string) => this.session.value?.notice(text)));
 		this.onDidChangeShared = this.sharedEditors.onDidChange;
+		this.sharedDatasets = instantiationService.createInstance(SharedDatasets, (text: string) => this.session.value?.notice(text));
 	}
 
 	get inSession(): boolean {
@@ -682,6 +746,27 @@ export class CollaborationService extends Disposable implements ICollaborationSe
 		return this.sharedEditors.compareWithMine(resource);
 	}
 
+	async shareDataset(dataset: URI | { readonly fileName: string; readonly content: string }): Promise<void> {
+		const session = this.session.value;
+		if (!session?.isLive) {
+			this.notificationService.info(localize('collaboration.notInSession', "You are not in a session. Start or join one from Compose > Collaboration."));
+			return;
+		}
+		const read = URI.isUri(dataset) ? await this.sharedDatasets.read(dataset) : dataset;
+		if (!read) {
+			return;
+		}
+		const fileName = datasetFileName(read.fileName);
+		const summary = summarizeCsv(read.content);
+		if (!summary) {
+			session.notice(localize('collaboration.datasetInvalid', "{0} is not a CSV dataset (it needs a header row), so it was not shared.", fileName));
+			return;
+		}
+		if (await this.sharedDatasets.confirmShare(fileName, read.content, summary)) {
+			session.shareDataset(fileName, read.content, summary.rows, summary.header.length);
+		}
+	}
+
 	private alreadyInSession(): boolean {
 		if (this.inSession) {
 			this.notificationService.info(localize('collaboration.alreadyInSession', "You are already in a session: leave it first (Compose > Collaboration > Leave Session)."));
@@ -730,6 +815,12 @@ export class CollaborationService extends Disposable implements ICollaborationSe
 			() => this.commandService.executeCommand(TEST_CONNECTION_COMMAND_ID),
 			() => this.leaveSession(),
 			(sharer, shared) => this.sharedEditors.receive(sharer, shared).catch(error => this.notificationService.error(localize('collaboration.cannotShow', "Could not show {0}'s {1}: {2}", sharer, shared.fileName, String(error)))),
+			(dataset, action) => {
+				const done = action === 'preview' ? this.sharedEditors.preview(dataset.sharer, dataset.payload.fileName, dataset.payload.content)
+					: action === 'save' ? this.sharedDatasets.save(dataset)
+						: this.sharedDatasets.load(dataset);
+				done.catch(error => this.notificationService.error(localize('collaboration.datasetActionFailed', "Could not use {0}'s {1}: {2}", dataset.sharer, dataset.payload.fileName, String(error))));
+			},
 		);
 		this.session.value = session;
 		session.onDidEnd(() => this._onDidChangeSession.fire());

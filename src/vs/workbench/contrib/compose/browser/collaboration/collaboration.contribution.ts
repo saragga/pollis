@@ -4,17 +4,20 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { localize, localize2 } from '../../../../../nls.js';
-import { Action2, registerAction2 } from '../../../../../platform/actions/common/actions.js';
+import { URI } from '../../../../../base/common/uri.js';
+import { Action2, MenuId, registerAction2 } from '../../../../../platform/actions/common/actions.js';
+import { ContextKeyExpr } from '../../../../../platform/contextkey/common/contextkey.js';
 import { ConfigurationScope, Extensions as ConfigurationExtensions, IConfigurationRegistry } from '../../../../../platform/configuration/common/configurationRegistry.js';
 import { InstantiationType, registerSingleton } from '../../../../../platform/instantiation/common/extensions.js';
 import { ServicesAccessor } from '../../../../../platform/instantiation/common/instantiation.js';
 import { Registry } from '../../../../../platform/registry/common/platform.js';
+import { ResourceContextKey } from '../../../../common/contextkeys.js';
 import { registerWorkbenchContribution2, WorkbenchPhase } from '../../../../common/contributions.js';
-import { CollaborationEditorBars } from './collaborationEditorBar.js';
+import { CollaborationEditorBars, IN_SESSION } from './collaborationEditorBar.js';
 import { CollaborationService, ICollaborationService, SIGNALLING_SETTING } from './collaborationService.js';
 import './testConnection.js';
 
-// Compose > Collaboration: starting, joining and leaving a session, the chat, Test Connection, and Share My Editor.
+// Compose > Collaboration: starting, joining and leaving a session, the chat, Test Connection, Share My Editor and Share Dataset.
 // The menu items are in compose.contribution.ts; these are the commands behind them.
 
 /** The Collaboration commands built so far; compose.contribution.ts leaves them out of its "Not yet implemented" stubs. */
@@ -70,3 +73,23 @@ registerCollaborationCommand('pollis.collaboration.leaveSession', localize2('col
 registerCollaborationCommand('pollis.collaboration.invitePeople', localize2('collaboration.invitePeopleCommand', "Invite People..."), service => service.copyInvitation());
 registerCollaborationCommand('pollis.collaboration.showParticipants', localize2('collaboration.showParticipantsCommand', "Show Participants"), service => service.showParticipants());
 registerCollaborationCommand('pollis.collaboration.openChat', localize2('collaboration.openChatCommand', "Open Chat"), service => service.openChat());
+
+// Share Dataset: on a CSV file in the Explorer, and called by the Julia table viewer with the table as CSV text
+registerAction2(class extends Action2 {
+	constructor() {
+		super({
+			id: 'pollis.collaboration.shareDataset',
+			title: localize2('collaboration.shareDatasetCommand', "Share Dataset"),
+			category,
+			precondition: IN_SESSION,
+			menu: { id: MenuId.ExplorerContext, group: '7_share', order: 20, when: ContextKeyExpr.and(IN_SESSION, ContextKeyExpr.regex(ResourceContextKey.Extension.key, /^\.csv$/i)) },
+		});
+	}
+	async run(accessor: ServicesAccessor, dataset?: URI | { fileName?: unknown; content?: unknown }): Promise<void> {
+		if (URI.isUri(dataset)) {
+			await accessor.get(ICollaborationService).shareDataset(dataset);
+		} else if (dataset && typeof dataset.fileName === 'string' && typeof dataset.content === 'string') {
+			await accessor.get(ICollaborationService).shareDataset({ fileName: dataset.fileName, content: dataset.content });
+		}
+	}
+});

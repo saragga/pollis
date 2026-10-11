@@ -20,6 +20,78 @@ const clearLazyTable = new rpc.NotificationType<{
     id: string
 }>('repl/clearLazyTable')
 
+// Pollis Collaboration: the open table viewers, so that Share Dataset can write the active one out as CSV.
+// A table travels as plain CSV text, never as a Julia object; the workbench confirms before sending it.
+
+/** The largest dataset a Collaboration session shares, as in the workbench's collaborationProtocol.ts. */
+const MAX_DATASET_BYTES = 5 * 1024 * 1024
+/** The rows a lazy table is fetched in, when shared. */
+const SHARE_BLOCK_ROWS = 5000
+
+interface TableField {
+    name: string
+    title?: string
+}
+
+interface TableSource {
+    name: string
+    fields: TableField[]
+    /** The rows of a table sent whole. */
+    data?: object[]
+    /** The rows of a lazy table, fetched from the REPL as the viewer pages through it. */
+    fetch?: (startRow: number, endRow: number) => Promise<object[]>
+}
+
+const tableSources = new Map<vscode.WebviewPanel, TableSource>()
+
+/** A cell as CSV: missing and nothing left empty, quoted when it holds the delimiter, a quote or a line break. */
+function csvField(value: unknown): string {
+    const text = value === null || value === undefined || value === 'missing' || value === 'nothing' ? '' : String(value)
+    return /[",\r\n]/.test(text) || text !== text.trim() ? `"${text.replace(/"/g, '""')}"` : text
+}
+
+/** Shares the active table viewer's table in the Pollis Collaboration session, as CSV. */
+export async function shareActiveTable() {
+    const source = [...tableSources].find(([panel]) => panel.active)?.[1]
+    if (!source) {
+        vscode.window.showInformationMessage('Open a Julia table (vscodedisplay) to share it.')
+        return
+    }
+    const lines = [source.fields.map((f) => csvField(f.title ?? f.name)).join(',')]
+    let bytes = Buffer.byteLength(lines[0]) + 1
+    const add = (rows: object[]) => {
+        for (const row of rows) {
+            const line = source.fields.map((f) => csvField(row[f.name])).join(',')
+            bytes += Buffer.byteLength(line) + 1
+            lines.push(line)
+        }
+        return bytes <= MAX_DATASET_BYTES
+    }
+    let withinCap = true
+    if (source.data) {
+        withinCap = add(source.data)
+    } else if (source.fetch) {
+        try {
+            for (let start = 0; withinCap; start += SHARE_BLOCK_ROWS) {
+                const rows = await source.fetch(start, start + SHARE_BLOCK_ROWS - 1)
+                withinCap = add(rows.slice(0, SHARE_BLOCK_ROWS))
+                if (rows.length < SHARE_BLOCK_ROWS) {
+                    break
+                }
+            }
+        } catch (err) {
+            vscode.window.showWarningMessage('Could not read the table from Julia. The object might have been deleted, or the Julia process is no longer available.')
+            return
+        }
+    }
+    if (!withinCap) {
+        vscode.window.showInformationMessage(`This table is too large to share in a session (the limit is ${MAX_DATASET_BYTES / 1024 / 1024} MB as CSV): save it as a file and send it the usual way.`)
+        return
+    }
+    const fileName = `${(source.name || 'table').replace(/[\\/:*?"<>|]/g, '_')}.csv`
+    await vscode.commands.executeCommand('pollis.collaboration.shareDataset', { fileName, content: lines.join('\n') + '\n' })
+}
+
 export function displayTable(payload, context, isLazy = false, kernel?: JuliaKernel) {
     const parsedPayload = JSON.parse(payload)
     const title = parsedPayload.name
@@ -36,6 +108,27 @@ export function displayTable(payload, context, isLazy = false, kernel?: JuliaKer
             retainContextWhenHidden: true,
         }
     )
+
+    tableSources.set(panel, {
+        name: title,
+        fields: parsedPayload.schema.fields,
+        data: isLazy ? undefined : parsedPayload.data,
+        fetch: isLazy
+            ? async (startRow, endRow) => {
+                const conn = kernel?._msgConnection || g_connection
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const data: any = await conn.sendRequest(requestTypeGetTableData, {
+                    id: parsedPayload.id,
+                    startRow,
+                    endRow,
+                    filterModel: {},
+                    sortModel: [],
+                })
+                return Array.isArray(data?.rows) ? data.rows : []
+            }
+            : undefined,
+    })
+    onEvent(panel.onDidDispose, () => tableSources.delete(panel))
 
     const uriAgGrid = panel.webview.asWebviewUri(
         vscode.Uri.file(path.join(context.extensionPath, 'libs', 'ag-grid', 'ag-grid.js'))

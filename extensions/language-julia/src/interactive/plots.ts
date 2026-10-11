@@ -4,7 +4,7 @@ import * as path from 'path'
 import * as vscode from 'vscode'
 import { onEvent, registerCommand, setContext } from '../utils'
 import { JuliaKernel } from '../notebook/notebookKernel'
-import { displayTable } from './tables'
+import { displayTable, shareActiveTable } from './tables'
 
 const c_juliaPlotPanelActiveContextKey = 'julia.plotpaneFocus'
 const g_plots: Array<string> = new Array<string>()
@@ -30,6 +30,7 @@ export function activate(context: vscode.ExtensionContext) {
         registerCommand('language-julia.plotpane-last', async () => plotPaneLast()),
         registerCommand('language-julia.plotpane-delete', async () => plotPaneDel()),
         registerCommand('language-julia.plotpane-delete-all', async () => plotPaneDelAll()),
+        registerCommand('language-julia.shareTable', shareActiveTable),
         registerCommand(
             'language-julia.show-plot-navigator',
             async () => await g_plotNavigatorProvider.showPlotNavigator()

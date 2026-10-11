@@ -22,13 +22,26 @@ export function trysteroBundleUrl(strategy: SignallingStrategy): string {
 	return asWebviewUri(FileAccess.asFileUri(`vs/workbench/contrib/compose/browser/media/collaboration/trystero-${strategy}.js`)).toString(true);
 }
 
-/** A line of the chat: a message, or a notice such as "B joined". */
+/** A dataset card: who shared what, its size and first rows; its buttons ask the workbench by id. */
+export interface IChatDataset {
+	readonly id: string;
+	readonly fileName: string;
+	readonly rows: number;
+	readonly columns: number;
+	readonly size: string;
+	readonly header: readonly string[];
+	readonly head: readonly (readonly string[])[];
+	readonly formulas: boolean;
+}
+
+/** A line of the chat: a message, a notice such as "B joined", or a dataset another participant shared. */
 export interface IChatEntry {
-	readonly kind: 'message' | 'notice';
+	readonly kind: 'message' | 'notice' | 'dataset';
 	readonly name?: string;
 	readonly mine?: boolean;
 	readonly text: string;
 	readonly image?: string;
+	readonly dataset?: IChatDataset;
 	readonly time: number;
 }
 
@@ -75,7 +88,8 @@ export type ChatWorkbenchMessage =
 	| { readonly command: 'notice'; readonly text: string }
 	| { readonly command: 'copyInvitation' }
 	| { readonly command: 'testConnection' }
-	| { readonly command: 'leaveSession' };
+	| { readonly command: 'leaveSession' }
+	| { readonly command: 'dataset'; readonly id: string; readonly action: 'preview' | 'save' | 'load' };
 
 /** The chat page: its texts come from here, the session from the workbench's messages. */
 export function chatPageHtml(): string {
@@ -97,6 +111,11 @@ export function chatPageHtml(): string {
 		aMessage: localize('collaborationChat.aMessage', "a message"),
 		imageTooLarge: localize('collaborationChat.imageTooLarge', "This image is too large for the chat, even reduced (the limit is {0} MB): send it the usual way.", MAX_IMAGE_BYTES / 1024 / 1024),
 		notAnImage: localize('collaborationChat.notAnImage', "Only images can go in the chat."),
+		datasetShared: localize('collaborationChat.datasetShared', "Shared {0}: {1} rows × {2} columns, {3}", '{0}', '{1}', '{2}', '{3}'),
+		preview: localize('collaborationChat.preview', "Preview"),
+		saveDataset: localize('collaborationChat.saveDataset', "Save to My Workspace"),
+		loadDataset: localize('collaborationChat.loadDataset', "Load into My Julia Session"),
+		formulas: localize('collaborationChat.formulas', "Some cells start with =, +, - or @: a spreadsheet may read them as formulas, so check them before opening this file in one."),
 		ended: localize('collaborationChat.ended', "The session has ended. Start or join another from Compose > Collaboration."),
 	};
 	const csp = `default-src 'none'; style-src 'unsafe-inline'; img-src data: blob:; connect-src wss: https:; script-src ${webviewGenericCspSource} 'unsafe-inline';`;
@@ -141,6 +160,14 @@ export function chatPageHtml(): string {
 		button.primary { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
 		button.primary:hover { background: var(--vscode-button-hoverBackground); }
 		button:disabled { opacity: 0.5; cursor: default; }
+		.dataset { margin-top: 4px; padding: 6px 8px; border: 1px solid var(--vscode-widget-border); border-radius: 4px; max-width: 720px; }
+		.dataset .summary { font-weight: 600; }
+		.dataset .table { overflow-x: auto; margin: 6px 0; }
+		.dataset table { border-collapse: collapse; font-family: var(--vscode-editor-font-family); font-size: 12px; }
+		.dataset th, .dataset td { border: 1px solid var(--vscode-widget-border); padding: 1px 6px; white-space: nowrap; max-width: 200px; overflow: hidden; text-overflow: ellipsis; text-align: left; }
+		.dataset th { background: var(--vscode-editorWidget-background); }
+		.dataset .warning { color: var(--vscode-editorWarning-foreground); margin: 4px 0; }
+		.dataset .actions { display: flex; flex-wrap: wrap; gap: 6px; }
 		.link { color: var(--vscode-textLink-foreground); background: none; padding: 0; }
 		.link:hover { background: none; text-decoration: underline; }
 	</style>
@@ -284,7 +311,7 @@ export function chatPageHtml(): string {
 		const element = document.createElement('div');
 		element.className = 'entry ' + entry.kind + (entry.mine ? ' mine' : '');
 		const time = new Date(entry.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-		if (entry.kind === 'message') {
+		if (entry.kind === 'message' || entry.kind === 'dataset') {
 			const meta = document.createElement('div');
 			meta.className = 'meta';
 			const name = document.createElement('b');
@@ -312,10 +339,58 @@ export function chatPageHtml(): string {
 			}, { once: true });
 			element.append(image);
 		}
+		if (entry.dataset) {
+			element.append(datasetCard(entry.dataset));
+		}
 		messages.append(element);
 		if (follow) {
 			messages.scrollTop = messages.scrollHeight;
 		}
+	}
+
+	// A dataset card: its texts are set as text, never as HTML, since names and cells come from the sharer
+	function datasetCard(dataset) {
+		const card = document.createElement('div');
+		card.className = 'dataset';
+		const summary = document.createElement('div');
+		summary.className = 'summary';
+		summary.textContent = TEXT.datasetShared.replace('{0}', dataset.fileName).replace('{1}', dataset.rows).replace('{2}', dataset.columns).replace('{3}', dataset.size);
+		const tableArea = document.createElement('div');
+		tableArea.className = 'table';
+		const table = document.createElement('table');
+		const headerRow = table.insertRow();
+		for (const name of dataset.header) {
+			const cell = document.createElement('th');
+			cell.textContent = name;
+			cell.title = name;
+			headerRow.append(cell);
+		}
+		for (const row of dataset.head) {
+			const tableRow = table.insertRow();
+			for (const value of row) {
+				const cell = tableRow.insertCell();
+				cell.textContent = value;
+				cell.title = value;
+			}
+		}
+		tableArea.append(table);
+		card.append(summary, tableArea);
+		if (dataset.formulas) {
+			const warning = document.createElement('div');
+			warning.className = 'warning';
+			warning.textContent = TEXT.formulas;
+			card.append(warning);
+		}
+		const actions = document.createElement('div');
+		actions.className = 'actions';
+		for (const [action, label] of [['preview', TEXT.preview], ['save', TEXT.saveDataset], ['load', TEXT.loadDataset]]) {
+			const button = document.createElement('button');
+			button.textContent = label;
+			button.addEventListener('click', () => vscode.postMessage({ command: 'dataset', id: dataset.id, action }));
+			actions.append(button);
+		}
+		card.append(actions);
+		return card;
 	}
 
 	function showParticipants(participants) {

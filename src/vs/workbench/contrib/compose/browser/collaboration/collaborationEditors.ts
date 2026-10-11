@@ -185,6 +185,23 @@ export class SharedEditors extends Disposable {
 		}
 	}
 
+	/** Shows a dataset another participant shared, read-only, beside my editor (Preview on its card). */
+	async preview(sharer: string, fileName: string, content: string): Promise<void> {
+		const folder = URI.from({ scheme: SHARED_EDITOR_SCHEME, path: `/${safeName(sharer)}` });
+		const datasets = URI.joinPath(folder, 'datasets');
+		for (const dir of [folder, datasets]) {
+			try {
+				await this.provider.stat(dir);
+			} catch {
+				await this.provider.mkdir(dir);
+			}
+		}
+		const resource = URI.joinPath(datasets, safeName(fileName));
+		await this.provider.writeFile(resource, VSBuffer.fromString(content).buffer, { create: true, overwrite: true, unlock: false, atomic: false });
+		const shown = this.editorService.findEditors(resource)[0];
+		await this.editorService.openEditor({ resource, options: { pinned: true, revealIfOpened: true } }, shown ? shown.groupId : this.groupBesideMine());
+	}
+
 	/** Replaces my editor's content with a snapshot, in one step that Undo reverts. */
 	async copyToMine(resource: URI): Promise<void> {
 		const snapshot = this.snapshots.get(resource);
