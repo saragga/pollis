@@ -4,8 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { DeferredPromise, timeout } from '../../../../../base/common/async.js';
+import { VSBuffer } from '../../../../../base/common/buffer.js';
 import { Emitter, Event } from '../../../../../base/common/event.js';
 import { Disposable, DisposableStore, MutableDisposable } from '../../../../../base/common/lifecycle.js';
+import { URI } from '../../../../../base/common/uri.js';
 import { language } from '../../../../../base/common/platform.js';
 import { generateUuid } from '../../../../../base/common/uuid.js';
 import { localize } from '../../../../../nls.js';
@@ -13,19 +15,22 @@ import { IClipboardService } from '../../../../../platform/clipboard/common/clip
 import { ICommandService } from '../../../../../platform/commands/common/commands.js';
 import { IConfigurationService } from '../../../../../platform/configuration/common/configuration.js';
 import { ConfirmResult, IDialogService } from '../../../../../platform/dialogs/common/dialogs.js';
-import { createDecorator } from '../../../../../platform/instantiation/common/instantiation.js';
+import { createDecorator, IInstantiationService } from '../../../../../platform/instantiation/common/instantiation.js';
 import { INotificationService } from '../../../../../platform/notification/common/notification.js';
 import { IQuickInputService, IQuickPickItem } from '../../../../../platform/quickinput/common/quickInput.js';
 import { IStorageService, StorageScope, StorageTarget } from '../../../../../platform/storage/common/storage.js';
-import { GroupDirection, IEditorGroupsService } from '../../../../services/editor/common/editorGroupsService.js';
+import { EditorInput } from '../../../../common/editor/editorInput.js';
+import { GroupDirection, IEditorGroup, IEditorGroupsService } from '../../../../services/editor/common/editorGroupsService.js';
+import { ILifecycleService } from '../../../../services/lifecycle/common/lifecycle.js';
 import { WebviewInput } from '../../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../../webviewPanel/browser/webviewWorkbenchService.js';
 import { ChatPageMessage, ChatWorkbenchMessage, chatPageHtml, COLLABORATION_MEDIA, IChatEntry, IPeerConnectionStats, trysteroBundleUrl } from './collaborationChat.js';
-import { COLLABORATION_APP_ID, envelope, Envelope, formatSessionCode, IByePayload, IChatPayload, IHelloPayload, isAcceptableImage, isEnvelope, ISessionCode, MAX_IMAGE_BYTES, MAX_PARTICIPANTS, newSessionCode, parseSessionCode, ParticipantRole, roomIdOf, SignallingStrategy } from './collaborationProtocol.js';
+import { COLLABORATION_APP_ID, envelope, Envelope, formatSessionCode, IByePayload, IChatPayload, IEditorSharedPayload, IHelloPayload, isAcceptableImage, isEnvelope, ISessionCode, MAX_IMAGE_BYTES, MAX_PARTICIPANTS, MAX_SHARE_BYTES, newSessionCode, parseSessionCode, ParticipantRole, roomIdOf, SignallingStrategy } from './collaborationProtocol.js';
+import { ISharedSnapshot, shareableKind, SharedEditors } from './collaborationEditors.js';
 import { IWirePacket, ReliableDelivery } from './collaborationTransport.js';
 
-// Compose > Collaboration sessions (internal-reports/collaboration-spec.md), step 1: starting, joining and
-// leaving a session, and the chat. The host is the participant who started the session: they admit up to
+// Compose > Collaboration sessions (internal-reports/collaboration-spec.md): starting, joining and leaving
+// a session, the chat, and Share My Editor (collaborationEditors.ts). The host is the participant who started the session: they admit up to
 // MAX_PARTICIPANTS, and when they leave the session ends. Nothing is stored after the session.
 
 export const SIGNALLING_SETTING = 'pollis.collaboration.signalling';
@@ -81,6 +86,21 @@ export interface ICollaborationService {
 
 	/** The connection to each other participant; empty outside a session. */
 	connectionStats(): Promise<readonly IParticipantConnection[]>;
+
+	/** Fires when another participant's snapshot arrives or is replaced. */
+	readonly onDidChangeShared: Event<void>;
+
+	/** The snapshot shown by a shared editor, or undefined for any other. */
+	sharedSnapshot(resource: URI): ISharedSnapshot | undefined;
+
+	/** Shares a snapshot of an editor or a notebook with the others (Share My Editor). */
+	shareEditor(editor: EditorInput): Promise<void>;
+
+	/** Replaces my editor's content with a shared snapshot (Copy to My Editor). */
+	copyToMyEditor(resource: URI): Promise<void>;
+
+	/** Opens the diff of a shared snapshot and my editor (Compare with Mine). */
+	compareWithMine(resource: URI): Promise<void>;
 }
 
 interface IParticipant {
@@ -121,6 +141,7 @@ class Session extends Disposable {
 		private readonly onCopyInvitation: () => void,
 		private readonly onTestConnection: () => void,
 		private readonly onLeave: () => void,
+		private readonly onEditorShared: (sharer: string, payload: IEditorSharedPayload) => void,
 	) {
 		super();
 		this.admitted = role === 'host';
@@ -421,6 +442,9 @@ class Session extends Disposable {
 			case 'chat':
 				this.onChat(peerId, data.payload);
 				break;
+			case 'editorShared':
+				this.onSharedEditor(peerId, data.payload);
+				break;
 			case 'bye':
 				this.onBye(peerId, data.payload);
 				break;
@@ -434,6 +458,33 @@ class Session extends Disposable {
 		}
 		const image = typeof chat.image === 'string' && isAcceptableImage(chat.image) ? chat.image : undefined;
 		this.post({ command: 'show', entry: { kind: 'message', name: participant.name, text: chat.text, image, time: Date.now() } });
+	}
+
+	private onSharedEditor(peerId: string, shared: IEditorSharedPayload): void {
+		const participant = this.participants.get(peerId);
+		if (!participant || typeof shared.fileName !== 'string' || typeof shared.content !== 'string' || (shared.kind !== 'text' && shared.kind !== 'notebook')) {
+			return;
+		}
+		this.notice(localize('collaboration.editorShared', "{0} shared their {1}.", participant.name, shared.fileName));
+		this.onEditorShared(participant.name, { fileName: shared.fileName, kind: shared.kind, content: shared.content, languageId: typeof shared.languageId === 'string' ? shared.languageId : undefined, pluto: shared.pluto === true });
+	}
+
+	/** Sends a snapshot of my editor to everyone in the session. */
+	shareEditor(shared: IEditorSharedPayload): void {
+		if (this.ended) {
+			return;
+		}
+		if (VSBuffer.fromString(shared.content).byteLength > MAX_SHARE_BYTES) {
+			this.notice(localize('collaboration.shareTooLarge', "{0} is too large to share (the limit is {1} MB).", shared.fileName, MAX_SHARE_BYTES / 1024 / 1024));
+			return;
+		}
+		const peers = [...this.participants.keys()];
+		if (!peers.length) {
+			this.notice(localize('collaboration.nobodyToShareWith', "Nobody else is in the session yet, so {0} was not shared.", shared.fileName));
+			return;
+		}
+		this.notice(localize('collaboration.youShared', "You shared your {0}.", shared.fileName));
+		this.delivery.send('editorShared', envelope<Envelope & { type: 'editorShared' }>('editorShared', shared) as unknown as IJson, peers);
 	}
 
 	private onBye(peerId: string, bye: IByePayload): void {
@@ -484,6 +535,8 @@ export class CollaborationService extends Disposable implements ICollaborationSe
 	/** The chat page, open during the session and after it ends, until closed. */
 	private page: WebviewInput | undefined;
 	private readonly pageDisposables = this._register(new DisposableStore());
+	private readonly sharedEditors: SharedEditors;
+	readonly onDidChangeShared: Event<void>;
 
 	constructor(
 		@IWebviewWorkbenchService private readonly webviewWorkbenchService: IWebviewWorkbenchService,
@@ -495,8 +548,21 @@ export class CollaborationService extends Disposable implements ICollaborationSe
 		@INotificationService private readonly notificationService: INotificationService,
 		@IDialogService private readonly dialogService: IDialogService,
 		@ICommandService private readonly commandService: ICommandService,
+		@IInstantiationService instantiationService: IInstantiationService,
+		@ILifecycleService lifecycleService: ILifecycleService,
 	) {
 		super();
+		// The chat page is not restored after a reload, so neither should its group be: closing the page removes it
+		this._register(lifecycleService.onBeforeShutdown(() => {
+			const page = this.page;
+			const group = page?.group === undefined ? undefined : this.editorGroupsService.getGroup(page.group);
+			if (page && group) {
+				page.closeHandler = undefined;
+				group.closeEditor(page);
+			}
+		}));
+		this.sharedEditors = this._register(instantiationService.createInstance(SharedEditors, (text: string) => this.session.value?.notice(text)));
+		this.onDidChangeShared = this.sharedEditors.onDidChange;
 	}
 
 	get inSession(): boolean {
@@ -588,6 +654,34 @@ export class CollaborationService extends Disposable implements ICollaborationSe
 		return this.session.value?.stats() ?? [];
 	}
 
+	sharedSnapshot(resource: URI): ISharedSnapshot | undefined {
+		return this.sharedEditors.snapshot(resource);
+	}
+
+	async shareEditor(editor: EditorInput): Promise<void> {
+		const session = this.session.value;
+		if (!session?.isLive) {
+			this.notificationService.info(localize('collaboration.notInSession', "You are not in a session. Start or join one from Compose > Collaboration."));
+			return;
+		}
+		const shared = await this.sharedEditors.capture(editor);
+		if (!shared) {
+			if (!shareableKind(editor)) {
+				this.notificationService.info(localize('collaboration.cannotShare', "Only a text editor, a notebook or a Pluto notebook can be shared."));
+			}
+			return;
+		}
+		session.shareEditor(shared);
+	}
+
+	copyToMyEditor(resource: URI): Promise<void> {
+		return this.sharedEditors.copyToMine(resource);
+	}
+
+	compareWithMine(resource: URI): Promise<void> {
+		return this.sharedEditors.compareWithMine(resource);
+	}
+
 	private alreadyInSession(): boolean {
 		if (this.inSession) {
 			this.notificationService.info(localize('collaboration.alreadyInSession', "You are already in a session: leave it first (Compose > Collaboration > Leave Session)."));
@@ -635,6 +729,7 @@ export class CollaborationService extends Disposable implements ICollaborationSe
 			() => this.clipboardService.writeText(this.session.value?.invitation ?? ''),
 			() => this.commandService.executeCommand(TEST_CONNECTION_COMMAND_ID),
 			() => this.leaveSession(),
+			(sharer, shared) => this.sharedEditors.receive(sharer, shared).catch(error => this.notificationService.error(localize('collaboration.cannotShow', "Could not show {0}'s {1}: {2}", sharer, shared.fileName, String(error)))),
 		);
 		this.session.value = session;
 		session.onDidEnd(() => this._onDidChangeSession.fire());
@@ -642,13 +737,25 @@ export class CollaborationService extends Disposable implements ICollaborationSe
 		return session;
 	}
 
+	/** Removes the chat page's group, unless it is the only one. */
+	private removePageGroup(group: IEditorGroup): void {
+		if (this.editorGroupsService.getGroup(group.id) && this.editorGroupsService.count > 1) {
+			this.editorGroupsService.removeGroup(group);
+		}
+	}
+
 	/** The chat page, below the editors; one from an earlier session is replaced. */
 	private openPage(): WebviewInput {
 		this.pageDisposables.clear();
+		const previousGroup = this.page?.group === undefined ? undefined : this.editorGroupsService.getGroup(this.page.group);
 		this.page?.dispose();
+		if (previousGroup?.isEmpty) {
+			this.removePageGroup(previousGroup);
+		}
 		const title = localize('collaborationChat.title', "Collaboration Chat");
+		// Always in its own group below the editors, locked so that the editors opened later go above it
 		const activeGroup = this.editorGroupsService.activeGroup;
-		const group = activeGroup.isEmpty ? activeGroup : this.editorGroupsService.addGroup(activeGroup, GroupDirection.DOWN);
+		const group = this.editorGroupsService.addGroup(activeGroup, GroupDirection.DOWN);
 		const page = this.webviewWorkbenchService.openWebview(
 			{
 				title,
@@ -662,6 +769,15 @@ export class CollaborationService extends Disposable implements ICollaborationSe
 			{ group, preserveFocus: false }
 		);
 		page.webview.setHtml(chatPageHtml());
+		group.lock(true);
+		this.pageDisposables.add(group.onDidCloseEditor(() => {
+			// After the editor part, which removes an empty group itself when workbench.editor.closeEmptyGroups is on
+			queueMicrotask(() => {
+				if (group.isEmpty) {
+					this.removePageGroup(group);
+				}
+			});
+		}));
 		// Closing the chat leaves the session, since the connection lives in it
 		page.closeHandler = {
 			showConfirm: () => !!this.session.value?.isLive,

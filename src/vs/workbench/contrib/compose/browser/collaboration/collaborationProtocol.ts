@@ -21,6 +21,9 @@ export const MAX_PARTICIPANTS = 5;
 /** The largest image in the chat, in bytes; larger ones are downscaled, or refused. */
 export const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
 
+/** The largest editor or notebook shared (Share My Editor), in bytes, as text. */
+export const MAX_SHARE_BYTES = 2 * 1024 * 1024;
+
 /** Above this size a transfer shows a progress bar on both sides. */
 export const PROGRESS_THRESHOLD_BYTES = 1024 * 1024;
 
@@ -56,6 +59,19 @@ export interface IChatPayload {
 	readonly image?: string;
 }
 
+/** A snapshot of an editor (Share My Editor): its text, or a notebook without its outputs. Sharing again replaces it. */
+export interface IEditorSharedPayload {
+	/** The file's name, with its extension, so the language or the notebook type follows. */
+	readonly fileName: string;
+	readonly kind: 'text' | 'notebook';
+	/** The text, or the notebook in its own file format, at most MAX_SHARE_BYTES. */
+	readonly content: string;
+	/** For text, the editor's language, which an untitled file's name does not tell. */
+	readonly languageId?: string;
+	/** Whether the text is a Pluto notebook, which Copy and Compare match with a Pluto page of the receiver's. */
+	readonly pluto?: boolean;
+}
+
 /** Sent on leaving; from the host it ends the session. */
 export interface IByePayload {
 	readonly reason?: 'left' | 'ended';
@@ -72,6 +88,7 @@ interface IEnvelopeBase<T extends string, P> {
 export type Envelope =
 	| IEnvelopeBase<'hello', IHelloPayload>
 	| IEnvelopeBase<'chat', IChatPayload>
+	| IEnvelopeBase<'editorShared', IEditorSharedPayload>
 	| IEnvelopeBase<'bye', IByePayload>;
 
 export type EnvelopeType = Envelope['type'];
@@ -89,7 +106,7 @@ export function isEnvelope(value: unknown): value is Envelope {
 	}
 	const candidate = value as Partial<Envelope>;
 	return candidate.v === PROTOCOL_VERSION
-		&& (candidate.type === 'hello' || candidate.type === 'chat' || candidate.type === 'bye')
+		&& (candidate.type === 'hello' || candidate.type === 'chat' || candidate.type === 'editorShared' || candidate.type === 'bye')
 		&& typeof candidate.channel === 'string'
 		&& !!candidate.payload && typeof candidate.payload === 'object';
 }

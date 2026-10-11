@@ -20,6 +20,39 @@ import { sendToJuliaRepl } from '../handlers/model.handler.js';
 let plutoBase: string | undefined;
 let plutoSecret: string | undefined;
 
+/** The open notebooks of the Pluto server, a line each: id, a tab, the notebook's path. */
+const NOTEBOOKS_FILE = 'notebooks.tsv';
+
+/** The notebook id of a Pluto page in the internal browser (http://localhost:PORT/edit?id=…), else undefined. */
+export function plutoNotebookId(url: string | undefined): string | undefined {
+	if (!url) { return undefined; }
+	try {
+		const parsed = new URL(url);
+		const local = parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1';
+		return local && parsed.protocol === 'http:' && parsed.pathname === '/edit' ? parsed.searchParams.get('id') ?? undefined : undefined;
+	} catch {
+		return undefined;
+	}
+}
+
+/** The file of a Pluto page, from the list the Pluto server Pollis started keeps; undefined for another server's. */
+export async function plutoNotebookFile(fileService: IFileService, environmentService: IEnvironmentService, url: string | undefined): Promise<URI | undefined> {
+	const id = plutoNotebookId(url);
+	if (!id) { return undefined; }
+	try {
+		const list = (await fileService.readFile(URI.joinPath(environmentService.cacheHome, 'pollis-pluto', NOTEBOOKS_FILE))).value.toString();
+		for (const line of list.split('\n')) {
+			const tab = line.indexOf('\t');
+			if (tab > 0 && line.slice(0, tab) === id) {
+				return URI.file(line.slice(tab + 1));
+			}
+		}
+	} catch {
+		// no list: Pluto was not started by Pollis, or before this version
+	}
+	return undefined;
+}
+
 /** Wrap the code-box contents in a minimal Pluto notebook: a packages cell, then the code cell. */
 function buildPlutoNotebook(code: string): string {
 	// Macros in a cell are expanded before the cell runs, so `@formula` in the same cell as
@@ -56,9 +89,10 @@ ${cellIds.map(id => `# ╠═${id}`).join('\n')}
  * Julia launcher: ensure Pluto, pick a free port, build a server session so we can read its
  * **secret** (kept on, so no "dangerous setting" warning), advertise port + secret via files,
  * write `readyFile` once the port is listening, then start the server. The readiness probe runs
- * on an `@async` task so it can fire while `Pluto.run` blocks.
+ * on an `@async` task so it can fire while `Pluto.run` blocks; another keeps `notebooksFile` listing
+ * the open notebooks (id, tab, path), and files changed on disk reload, for Compose > Collaboration.
  */
-function buildLauncher(portFile: string, secretFile: string, readyFile: string): string {
+function buildLauncher(portFile: string, secretFile: string, readyFile: string, notebooksFile: string): string {
 	return `import Pkg
 try
 	using Pluto
@@ -74,6 +108,7 @@ _session = Pluto.ServerSession()
 _session.options.server.host = "127.0.0.1"
 _session.options.server.port = _port
 _session.options.server.launch_browser = false
+_session.options.server.auto_reload_from_file = true
 open(raw"${portFile}", "w") do io
 	print(io, _port)
 end
@@ -92,6 +127,20 @@ end
 		catch
 			sleep(0.5)
 		end
+	end
+end
+@async begin
+	_listed = ""
+	while true
+		try
+			_list = join(["$(id)\\t$(nb.path)" for (id, nb) in _session.notebooks], "\\n")
+			if _list != _listed
+				write(raw"${notebooksFile}", _list)
+				_listed = _list
+			end
+		catch
+		end
+		sleep(1)
 	end
 end
 Pluto.run(_session)
@@ -135,11 +184,12 @@ async function ensurePlutoServer(
 	const portFile = URI.joinPath(dir, 'port.txt');
 	const secretFile = URI.joinPath(dir, 'secret.txt');
 	const readyFile = URI.joinPath(dir, 'ready.txt');
-	for (const stale of [portFile, secretFile, readyFile]) {
+	const notebooksFile = URI.joinPath(dir, NOTEBOOKS_FILE);
+	for (const stale of [portFile, secretFile, readyFile, notebooksFile]) {
 		try { await fileService.del(stale); } catch { /* not there */ }
 	}
 	const launcherUri = URI.joinPath(dir, 'launch.jl');
-	await fileService.writeFile(launcherUri, VSBuffer.fromString(buildLauncher(portFile.fsPath, secretFile.fsPath, readyFile.fsPath)));
+	await fileService.writeFile(launcherUri, VSBuffer.fromString(buildLauncher(portFile.fsPath, secretFile.fsPath, readyFile.fsPath, notebooksFile.fsPath)));
 
 	if (!await sendToJuliaRepl(`include(raw"${launcherUri.fsPath}")`, commandService)) { return undefined; }
 

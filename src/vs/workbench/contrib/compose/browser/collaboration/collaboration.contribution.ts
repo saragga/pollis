@@ -9,10 +9,12 @@ import { ConfigurationScope, Extensions as ConfigurationExtensions, IConfigurati
 import { InstantiationType, registerSingleton } from '../../../../../platform/instantiation/common/extensions.js';
 import { ServicesAccessor } from '../../../../../platform/instantiation/common/instantiation.js';
 import { Registry } from '../../../../../platform/registry/common/platform.js';
+import { registerWorkbenchContribution2, WorkbenchPhase } from '../../../../common/contributions.js';
+import { CollaborationEditorBars } from './collaborationEditorBar.js';
 import { CollaborationService, ICollaborationService, SIGNALLING_SETTING } from './collaborationService.js';
 import './testConnection.js';
 
-// Compose > Collaboration, step 1: starting, joining and leaving a session, the chat, and Test Connection.
+// Compose > Collaboration: starting, joining and leaving a session, the chat, Test Connection, and Share My Editor.
 // The menu items are in compose.contribution.ts; these are the commands behind them.
 
 /** The Collaboration commands built so far; compose.contribution.ts leaves them out of its "Not yet implemented" stubs. */
@@ -25,6 +27,8 @@ export const IMPLEMENTED_COLLABORATION_COMMANDS: ReadonlySet<string> = new Set([
 	'pollis.collaboration.openChat',
 	'pollis.collaboration.testConnection',
 ]);
+
+registerWorkbenchContribution2(CollaborationEditorBars.ID, CollaborationEditorBars, WorkbenchPhase.AfterRestored);
 
 registerSingleton(ICollaborationService, CollaborationService, InstantiationType.Delayed);
 

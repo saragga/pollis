@@ -293,6 +293,12 @@ const desktopResourcePatterns = [
 	'vs/workbench/contrib/model/browser/media/notebooks/**/*.ipynb',
 	'vs/workbench/contrib/model/browser/media/notebooks/**/*.jl',
 
+	// Compose - bundled workflows, methods, correctness cases and report templates
+	'vs/workbench/contrib/compose/browser/media/workflows/**/*.{ipynb,jl,tex,bib}',
+	'vs/workbench/contrib/compose/browser/media/methods/**/*.{ipynb,jl}',
+	'vs/workbench/contrib/compose/browser/media/correctness/**/*.{ipynb,jl,dat}',
+	'vs/workbench/contrib/compose/browser/media/reports/*.{md,jl}',
+
 	// Compose > Collaboration - the vendored Trystero bundles and their licences
 	'vs/workbench/contrib/compose/browser/media/collaboration/*.js',
 	'vs/workbench/contrib/compose/browser/media/collaboration/*.txt',
