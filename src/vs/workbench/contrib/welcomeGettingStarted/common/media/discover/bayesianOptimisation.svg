@@ -1,28 +1,28 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="480" height="240" viewBox="0 0 480 240" fill="none">
 <style>
-.truth{animation:truth 9s ease-in-out infinite}
+.truth{animation:truth 9s ease-in-out both}
 @keyframes truth{0%,86%{opacity:1}100%{opacity:0}}
-.s0{animation:s0 9s ease-in-out infinite}
+.s0{animation:s0 9s ease-in-out both}
 @keyframes s0{0%,5%{opacity:0}7%{opacity:1}18%{opacity:1}20%,100%{opacity:0}}
-.s1{animation:s1 9s ease-in-out infinite}
+.s1{animation:s1 9s ease-in-out both}
 @keyframes s1{0%,18%{opacity:0}20%{opacity:1}30%{opacity:1}32%,100%{opacity:0}}
-.s2{animation:s2 9s ease-in-out infinite}
+.s2{animation:s2 9s ease-in-out both}
 @keyframes s2{0%,30%{opacity:0}32%{opacity:1}42%{opacity:1}44%,100%{opacity:0}}
-.s3{animation:s3 9s ease-in-out infinite}
+.s3{animation:s3 9s ease-in-out both}
 @keyframes s3{0%,42%{opacity:0}44%{opacity:1}54%{opacity:1}56%,100%{opacity:0}}
-.s4{animation:s4 9s ease-in-out infinite}
+.s4{animation:s4 9s ease-in-out both}
 @keyframes s4{0%,54%{opacity:0}56%{opacity:1}86%{opacity:1}100%{opacity:0}}
-.p0{animation:p0 9s ease-in-out infinite}
+.p0{animation:p0 9s ease-in-out both}
 @keyframes p0{0%,5%{opacity:0}7%,86%{opacity:1}100%{opacity:0}}
-.p1{animation:p1 9s ease-in-out infinite}
+.p1{animation:p1 9s ease-in-out both}
 @keyframes p1{0%,5%{opacity:0}7%,86%{opacity:1}100%{opacity:0}}
-.p2{animation:p2 9s ease-in-out infinite}
+.p2{animation:p2 9s ease-in-out both}
 @keyframes p2{0%,18%{opacity:0}20%,86%{opacity:1}100%{opacity:0}}
-.p3{animation:p3 9s ease-in-out infinite}
+.p3{animation:p3 9s ease-in-out both}
 @keyframes p3{0%,30%{opacity:0}32%,86%{opacity:1}100%{opacity:0}}
-.p4{animation:p4 9s ease-in-out infinite}
+.p4{animation:p4 9s ease-in-out both}
 @keyframes p4{0%,42%{opacity:0}44%,86%{opacity:1}100%{opacity:0}}
-.p5{animation:p5 9s ease-in-out infinite}
+.p5{animation:p5 9s ease-in-out both}
 @keyframes p5{0%,54%{opacity:0}56%,86%{opacity:1}100%{opacity:0}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important}}
 </style>

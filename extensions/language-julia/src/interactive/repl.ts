@@ -1486,6 +1486,18 @@ export function activate(
                     if (!(err instanceof JuliaNotFoundError)) {
                         throw err
                     }
+                    // POLLIS: without Julia the terminal stays closed; once Julia is installed (from the welcome
+                    // page's Install Julia, say) the REPL starts as it would have on startup.
+                    const juliaFound = g_ExecutableFeature.onDidFindJulia(() => {
+                        juliaFound.dispose()
+                        g_ExecutableFeature
+                            .getExecutable(false)
+                            .then((juliaExecutable) => startREPL(false, true, juliaExecutable))
+                            .catch((err) => {
+                                vscode.window.showErrorMessage(`Julia REPL failed to start: ${err?.message ?? err}`)
+                            })
+                    })
+                    context.subscriptions.push(juliaFound)
                 }
             )
             .catch((err) => {

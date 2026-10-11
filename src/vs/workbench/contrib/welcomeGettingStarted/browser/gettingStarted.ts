@@ -12,7 +12,7 @@ import { getDefaultHoverDelegate } from '../../../../base/browser/ui/hover/hover
 import { renderLabelWithIcons } from '../../../../base/browser/ui/iconLabel/iconLabels.js';
 import { DomScrollableElement } from '../../../../base/browser/ui/scrollbar/scrollableElement.js';
 import { coalesce, equals } from '../../../../base/common/arrays.js';
-import { Delayer, Throttler } from '../../../../base/common/async.js';
+import { Delayer, RunOnceScheduler, Throttler } from '../../../../base/common/async.js';
 import { CancellationToken } from '../../../../base/common/cancellation.js';
 import { Codicon } from '../../../../base/common/codicons.js';
 import { KeyCode } from '../../../../base/common/keyCodes.js';
@@ -133,11 +133,10 @@ interface IPollisDataset {
 	readonly title: string;
 }
 /**
- * Pollis: splits a localized text at its {0} placeholder and puts `code` there in code style.
+ * Pollis: splits a localized text at its {0}, {1}, ... placeholders and puts each of `codes` there in code style.
  */
-function withCode(text: string, code: string): (string | HTMLElement)[] {
-	const [before, after] = text.split('{0}');
-	return [before, $('code', {}, code), after ?? ''];
+function withCode(text: string, ...codes: string[]): (string | HTMLElement)[] {
+	return text.split(/\{(?<index>\d)\}/).map((part, i) => i % 2 ? $('code', {}, codes[Number(part)] ?? '') : part);
 }
 
 export class GettingStartedPage extends EditorPane {
@@ -1157,7 +1156,7 @@ export class GettingStartedPage extends EditorPane {
 					// {0} is left in the text and replaced by the Julia call in code style
 					...withCode(localize('pollis.datasetsAddedDescription', "Each is a table of the built-in database, and is loaded in Julia with {0}."), 'dataset("id")')),
 				$('.pollis-alert-actions', {},
-					$('button.button-link', { 'x-dispatch': 'openDatabases' }, localize('pollis.openDatabases', "Open Databases")),
+					$('button.button-link', { 'x-dispatch': 'openDatabases' }, localize('pollis.openDatabases', "Open Databases View")),
 				),
 			),
 			this.buildDismissButton('datasetsAdded'),
@@ -1193,11 +1192,12 @@ export class GettingStartedPage extends EditorPane {
 					? localize('pollis.databaseReady', "The built-in database is ready")
 					: localize('pollis.databaseBuiltIn', "A database is built in")),
 				$('p.pollis-alert-description', {}, ...(ready
-					// {0} is left in the text and replaced by the connection's name in code style
-					? withCode(localize('pollis.databaseReadyDescription', "It holds the PollisDatasets as tables, described column by column. Connect to it from the Databases view to query it as {0} in the Julia REPL."), 'pollis')
-					: [localize('pollis.databaseBuiltInDescription', "Pollis comes with a DuckDB database holding the PollisDatasets, so no database server is needed. DuckDB and the datasets are installed the first time the Julia REPL starts.")])),
+					// {0} is left in the text and replaced by PollisDatasets, and {1} by the connection's name, in code style
+					? withCode(localize('pollis.databaseReadyDescription', "It holds the {0} as tables, described column by column. Connect to it from the Databases view to query it as {1} in the Julia REPL."), 'PollisDatasets', 'pollis')
+					// {0} is left in the text and replaced by PollisDatasets in code style
+					: withCode(localize('pollis.databaseBuiltInDescription', "Pollis comes with a DuckDB database holding the {0}, so no database server is needed. DuckDB and the datasets are installed the first time the Julia REPL starts."), 'PollisDatasets'))),
 				$('.pollis-alert-actions', {},
-					$('button.button-link', { 'x-dispatch': 'openDatabases' }, localize('pollis.openDatabases', "Open Databases")),
+					$('button.button-link', { 'x-dispatch': 'openDatabases' }, localize('pollis.openDatabases', "Open Databases View")),
 				),
 			),
 			this.buildDismissButton(id),
@@ -1233,9 +1233,9 @@ export class GettingStartedPage extends EditorPane {
 
 	/**
 	 * Pollis: the Discover Pollis section shows one feature at a time: a picture, where it is in the menus, and a
-	 * link that opens it. The arrows and dots change the slide; nothing changes it automatically. Pictures start
-	 * still: the Run button in the top-left corner of the picture plays the animated version (from the start) on this and later
-	 * slides until Stop is pressed.
+	 * link that opens it. The arrows and dots change the slide. Pictures start still: the Run button in the top-left
+	 * corner of the picture plays the animated version (from the start), and once it has played the next slide
+	 * plays, all the slides in turn and again, until Stop is pressed. With reduced motion the slides do not advance.
 	 */
 	private buildDiscoverSection(): HTMLElement {
 		const entries = discoverPollisEntries;
@@ -1253,6 +1253,9 @@ export class GettingStartedPage extends EditorPane {
 
 		let index = 0;
 		let playing = false;
+		let plays = 0;
+		// Once the animated picture has played, Run moves on to the next slide
+		const advance = this.categoriesSlideDisposables.add(new RunOnceScheduler(() => show(index + 1), 9000));
 		const updateRun = () => {
 			const label = playing ? localize('pollis.discoverStop', "Stop Animation") : localize('pollis.discoverRun', "Run Animation");
 			runIcon.className = `codicon ${ThemeIcon.asClassName(playing ? Codicon.debugStop : Codicon.play)}`;
@@ -1264,8 +1267,10 @@ export class GettingStartedPage extends EditorPane {
 		const show = (i: number) => {
 			index = (i + entries.length) % entries.length;
 			const entry = entries[index];
-			const file = playing && entry.animatedMedia ? entry.animatedMedia : entry.media;
-			media.src = FileAccess.asBrowserUri(`vs/workbench/contrib/welcomeGettingStarted/common/media/discover/${file}`).toString(true);
+			const animated = playing && entry.animatedMedia;
+			const uri = FileAccess.asBrowserUri(`vs/workbench/contrib/welcomeGettingStarted/common/media/discover/${animated || entry.media}`);
+			// An animated picture plays once: a query of its own each time makes it play again from the start
+			media.src = (animated ? uri.with({ query: `play=${++plays}` }) : uri).toString(true);
 			media.alt = entry.title;
 			menuPath.textContent = entry.menuPath;
 			title.textContent = entry.title;
@@ -1276,6 +1281,11 @@ export class GettingStartedPage extends EditorPane {
 				dot.setAttribute('aria-current', String(j === index));
 			});
 			updateRun();
+			if (playing && !this.accessibilityService.isMotionReduced()) {
+				advance.schedule((entry.animationSeconds ?? 9) * 1000);
+			} else {
+				advance.cancel();
+			}
 		};
 		show(0);
 

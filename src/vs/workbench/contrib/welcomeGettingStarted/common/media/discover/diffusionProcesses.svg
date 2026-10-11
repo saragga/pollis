@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="480" height="240" viewBox="0 0 480 240" fill="none">
 <style>
-.band{animation:band 9s ease-in-out infinite}
-.path{stroke-dasharray:1;animation:draw 9s ease-in-out infinite}
-.mean{animation:mean 9s ease-in-out infinite}
+.band{animation:band 9s ease-in-out both}
+.path{stroke-dasharray:1;animation:draw 9s ease-in-out both}
+.mean{animation:mean 9s ease-in-out both}
 @keyframes draw{0%{stroke-dashoffset:1;opacity:1}55%{stroke-dashoffset:0;opacity:1}86%{stroke-dashoffset:0;opacity:1}100%{stroke-dashoffset:0;opacity:0}}
 @keyframes band{0%,8%{opacity:0}30%,86%{opacity:1}100%{opacity:0}}
 @keyframes mean{0%,55%{opacity:0}65%,86%{opacity:1}100%{opacity:0}}

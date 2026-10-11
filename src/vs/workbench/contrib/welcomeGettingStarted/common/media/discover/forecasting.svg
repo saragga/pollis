@@ -1,15 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="480" height="240" viewBox="0 0 480 240" fill="none">
 <style>
-.hist{stroke-dasharray:1;animation:hist 9s ease-in-out infinite}
+.hist{stroke-dasharray:1;animation:hist 9s ease-in-out both}
 @keyframes hist{0%,3%{stroke-dashoffset:1;opacity:1}36%,86%{stroke-dashoffset:0;opacity:1}100%{stroke-dashoffset:0;opacity:0}}
-.now{animation:now 9s ease-in-out infinite}
+.now{animation:now 9s ease-in-out both}
 @keyframes now{0%,34%{opacity:0}40%,86%{opacity:1}100%{opacity:0}}
-.mean{transform-origin:322.7px 0;animation:fan 9s ease-out infinite}
-.b0{transform-origin:322.7px 0;animation:b0 9s ease-out infinite}
+.mean{transform-origin:322.7px 0;animation:fan 9s ease-out both}
+.b0{transform-origin:322.7px 0;animation:b0 9s ease-out both}
 @keyframes b0{0%,40%{transform:scaleX(0);opacity:0}42%{opacity:1}56%,86%{transform:scaleX(1);opacity:1}100%{transform:scaleX(1);opacity:0}}
-.b1{transform-origin:322.7px 0;animation:b1 9s ease-out infinite}
+.b1{transform-origin:322.7px 0;animation:b1 9s ease-out both}
 @keyframes b1{0%,46%{transform:scaleX(0);opacity:0}48%{opacity:1}62%,86%{transform:scaleX(1);opacity:1}100%{transform:scaleX(1);opacity:0}}
-.b2{transform-origin:322.7px 0;animation:b2 9s ease-out infinite}
+.b2{transform-origin:322.7px 0;animation:b2 9s ease-out both}
 @keyframes b2{0%,52%{transform:scaleX(0);opacity:0}54%{opacity:1}68%,86%{transform:scaleX(1);opacity:1}100%{transform:scaleX(1);opacity:0}}
 @keyframes fan{0%,38%{transform:scaleX(0);opacity:0}40%{opacity:1}66%,86%{transform:scaleX(1);opacity:1}100%{transform:scaleX(1);opacity:0}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important}}

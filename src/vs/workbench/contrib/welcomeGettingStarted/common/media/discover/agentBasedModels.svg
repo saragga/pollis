@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="480" height="240" viewBox="0 0 480 240" fill="none">
 <style>
-.agent{animation:move 9s ease-in-out infinite}
+.agent{animation:move 9s ease-in-out both}
 @keyframes move{0%,10%{transform:translate(var(--dx),var(--dy));opacity:1}55%,86%{transform:translate(0,0);opacity:1}100%{transform:translate(0,0);opacity:0}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important}}
 </style>

@@ -20,8 +20,10 @@ export interface IDiscoverPollisEntry {
 	readonly command: string;
 	/** Still picture, relative to `vs/workbench/contrib/welcomeGettingStarted/common/media/discover/`. */
 	readonly media: string;
-	/** Animated version of `media`, shown unless reduced motion is on. */
+	/** Animated version of `media`, shown unless reduced motion is on. It plays once. */
 	readonly animatedMedia?: string;
+	/** How long `animatedMedia` plays, in seconds, its latest staggered start included; 9 when left out. */
+	readonly animationSeconds?: number;
 }
 
 export const discoverPollisEntries: readonly IDiscoverPollisEntry[] = [
@@ -34,6 +36,7 @@ export const discoverPollisEntries: readonly IDiscoverPollisEntry[] = [
 		command: 'chiara.explore.dvsf.surface',
 		media: 'visualise.still.svg',
 		animatedMedia: 'visualise.svg',
+		animationSeconds: 11.1,
 	},
 	{
 		id: 'dataLibraries',
@@ -74,6 +77,7 @@ export const discoverPollisEntries: readonly IDiscoverPollisEntry[] = [
 		command: 'chiara.simulate.sde',
 		media: 'diffusionProcesses.still.svg',
 		animatedMedia: 'diffusionProcesses.svg',
+		animationSeconds: 9.7,
 	},
 	{
 		id: 'agentBasedModels',
@@ -84,6 +88,7 @@ export const discoverPollisEntries: readonly IDiscoverPollisEntry[] = [
 		command: 'chiara.simulate.abm',
 		media: 'agentBasedModels.still.svg',
 		animatedMedia: 'agentBasedModels.svg',
+		animationSeconds: 9.8,
 	},
 	{
 		id: 'bayesianOptimisation',

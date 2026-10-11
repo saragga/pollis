@@ -2973,7 +2973,9 @@ class LayoutStateModel extends Disposable {
 					return false;
 			}
 		})();
-		LayoutStateKeys.PANEL_SIZE.defaultValue = (this.stateCache.get(LayoutStateKeys.PANEL_POSITION.name) ?? isHorizontal(LayoutStateKeys.PANEL_POSITION.defaultValue)) ? mainContainerDimension.height / 3 : mainContainerDimension.width / 4;
+		// Pollis: a panel at the bottom first opens at its lowest, so the Julia REPL that starts with Pollis shows its prompt
+		// without covering the welcome page
+		LayoutStateKeys.PANEL_SIZE.defaultValue = (this.stateCache.get(LayoutStateKeys.PANEL_POSITION.name) ?? isHorizontal(LayoutStateKeys.PANEL_POSITION.defaultValue)) ? PanelPart.MINIMUM_HEIGHT : mainContainerDimension.width / 4;
 		LayoutStateKeys.PANEL_POSITION.defaultValue = positionFromString(this.configurationService.getValue(WorkbenchLayoutSettings.PANEL_POSITION) ?? 'bottom');
 
 		// Apply all defaults

@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="480" height="240" viewBox="0 0 480 240" fill="none">
 <style>
-.v{animation-duration:9s;animation-iteration-count:infinite;animation-timing-function:ease-out}
+.v{animation-duration:9s;animation-iteration-count:1;animation-fill-mode:both;animation-timing-function:ease-out}
 .d0{animation-name:d0}
 @keyframes d0{0%,4.0%{opacity:0}7.0%,86%{opacity:1}100%{opacity:0}}
 .d1{animation-name:d1}
@@ -45,11 +45,11 @@
 @keyframes d20{0%,42.1%{opacity:0}45.1%,86%{opacity:1}100%{opacity:0}}
 .d21{animation-name:d21}
 @keyframes d21{0%,44.0%{opacity:0}47.0%,86%{opacity:1}100%{opacity:0}}
-.agent{animation:agent 9s linear infinite}
+.agent{animation:agent 9s linear both}
 @keyframes agent{0%,46%{transform:translate(-308px,84px);opacity:0}50.0%{transform:translate(-308px,84px);opacity:1}51.8%{transform:translate(-280px,84px);opacity:1}53.5%{transform:translate(-252px,84px);opacity:1}55.2%{transform:translate(-224px,84px);opacity:1}57.0%{transform:translate(-196px,84px);opacity:1}58.8%{transform:translate(-168px,84px);opacity:1}60.5%{transform:translate(-140px,84px);opacity:1}62.2%{transform:translate(-140px,56px);opacity:1}64.0%{transform:translate(-140px,28px);opacity:1}65.8%{transform:translate(-140px,0px);opacity:1}67.5%{transform:translate(-112px,0px);opacity:1}69.2%{transform:translate(-84px,0px);opacity:1}71.0%{transform:translate(-56px,0px);opacity:1}72.8%{transform:translate(-56px,-28px);opacity:1}74.5%{transform:translate(-28px,-28px);opacity:1}76.2%{transform:translate(0px,-28px);opacity:1}78.0%{transform:translate(0px,0px);opacity:1}86%{opacity:1}100%{opacity:0}}
-.arrive{transform-origin:394px 78px;animation:arrive 9s ease-out infinite}
+.arrive{transform-origin:394px 78px;animation:arrive 9s ease-out both}
 @keyframes arrive{0%,78%{transform:scale(1);opacity:0}79%{opacity:0.9}88%,100%{transform:scale(2.2);opacity:0}}
-.trail{stroke-dasharray:1;animation:trail 9s linear infinite}
+.trail{stroke-dasharray:1;animation:trail 9s linear both}
 @keyframes trail{0%,50%{stroke-dashoffset:1;opacity:1}78%,86%{stroke-dashoffset:0;opacity:1}100%{stroke-dashoffset:0;opacity:0}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important}}
 </style>

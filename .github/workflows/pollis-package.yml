@@ -8,7 +8,8 @@ name: Pollis Package
 # every push, hence the manual trigger. Unlike pollis-build.yml it needs the real Electron binary.
 #
 # Runs on a GitHub-hosted Apple silicon runner (free for public repositories). The app is not
-# signed, so macOS quarantines a downloaded copy: clear it with `xattr -cr Pollis.app`.
+# signed, so macOS quarantines a downloaded copy: clear it with `xattr -cr Pollis.app` (the release notes
+# give a one-line curl install instead, which is not quarantined).
 #
 # Workflow artifacts expire. To keep a build, set `release` to a version tag (v0.1.0): the zipped app
 # is attached to that GitHub release, which anyone can download without signing in, and
@@ -128,7 +129,13 @@ jobs:
           NOTES: |
             An early build of Pollis. The apps are not signed yet.
 
-            - macOS (Apple silicon): unzip, then clear the quarantine flag in Terminal with `xattr -cr Pollis.app`.
+            - macOS (Apple silicon): open Terminal (press Command-Space, type Terminal, press Return), paste this line and press Return. It installs the newest Pollis in Applications and opens it:
+
+              ```
+              curl -L https://github.com/saragga/pollis/releases/latest/download/Pollis-darwin-arm64.zip -o /tmp/Pollis.zip && ditto -x -k /tmp/Pollis.zip /Applications && open /Applications/Pollis.app
+              ```
+
+              Or by hand: unzip, move Pollis.app to Applications, then clear the quarantine flag in Terminal with `xattr -cr /Applications/Pollis.app`.
             - Windows (x64): unzip and run Pollis. If SmartScreen warns, choose More info, then Run anyway.
             - Linux (x64): extract with `tar -xzf Pollis-linux-x64.tar.gz` and run `Pollis-linux-x64/pollis`.
         run: |

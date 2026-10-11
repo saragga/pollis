@@ -37,9 +37,12 @@ export class PanelPart extends AbstractPaneCompositePart {
 
 	//#region IView
 
+	/** Pollis: the lowest the panel goes, also its height the first time it opens. */
+	static readonly MINIMUM_HEIGHT = 77;
+
 	readonly minimumWidth: number = 300;
 	readonly maximumWidth: number = Number.POSITIVE_INFINITY;
-	readonly minimumHeight: number = 77;
+	readonly minimumHeight: number = PanelPart.MINIMUM_HEIGHT;
 	readonly maximumHeight: number = Number.POSITIVE_INFINITY;
 
 	get preferredHeight(): number | undefined {

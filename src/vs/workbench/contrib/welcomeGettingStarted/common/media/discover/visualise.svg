@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="480" height="240" viewBox="0 0 480 240" fill="none">
 <style>
-.strip{animation:rise 9s ease-out infinite}
-.bar{animation:bar 9s ease-in-out infinite}
+.strip{animation:rise 9s ease-out both}
+.bar{animation:bar 9s ease-in-out both}
 @keyframes rise{0%,4%{transform:scaleY(0);opacity:0}8%{opacity:1}28%,86%{transform:scaleY(1);opacity:1}100%{transform:scaleY(1);opacity:0}}
 @keyframes bar{0%,20%{opacity:0}40%,86%{opacity:1}100%{opacity:0}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important}}
