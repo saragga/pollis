@@ -1,3 +1,0 @@
-# Factsheet
-
-Not written yet.

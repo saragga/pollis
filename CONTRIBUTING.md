@@ -61,14 +61,13 @@ Windows), optionally with `--grep <pattern>`.
 
 ## Changing upstream code
 
-`POLLIS_GUIDE.md` records every intentional deviation from upstream `Code - OSS`, file by file, with
-the reason and how to re-apply it after a rebase. **If you change upstream code, record it there in
-the same pull request.** An unrecorded deviation will be silently lost at the next rebase.
+Every intentional deviation from upstream `Code - OSS` has to be re-applied after a rebase. **If you
+change upstream code, say so in the pull request, file by file, with the reason.** An unrecorded
+deviation will be silently lost at the next rebase.
 
 ## Adding a guided panel
 
-Read [`src/vs/workbench/contrib/WEBVIEW_GUIDE.md`](src/vs/workbench/contrib/WEBVIEW_GUIDE.md) first.
-It is the specification, not a suggestion. In particular, every panel builds its HTML through
+Every panel builds its HTML through
 `buildWebviewHtml()` from `webviewScaffold.ts`, and templates that re-implement that scaffolding will
 be sent back.
 

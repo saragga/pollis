@@ -69,18 +69,11 @@ Type-check without a full build:
 npm run compile-check-ts-native
 ```
 
-`POLLIS_GUIDE.md` records every intentional deviation from upstream, file by file, so that rebasing
-onto a newer `Code - OSS` release stays tractable. If you change upstream code, record it there.
-
 ## Contributing
 
 Pollis is a small project and the codebase is still settling, so please open an issue to discuss
 anything substantial before writing code. Coding conventions are inherited from upstream VS Code and
 are summarised in `CONTRIBUTING.md`.
-
-Panels are documented separately in
-[`src/vs/workbench/contrib/WEBVIEW_GUIDE.md`](src/vs/workbench/contrib/WEBVIEW_GUIDE.md) — read it
-before adding one.
 
 ## Security
 

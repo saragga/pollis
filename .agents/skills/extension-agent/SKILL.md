@@ -5,7 +5,7 @@ description: "Extension Agent: build a Pollis extension (a data-only toolbox) fr
 
 # Extension Agent
 
-Turns a spec TOML into a Pollis extension under `toolboxes/<name>/`, packaged in `.build/toolboxes/` for the Toolboxes section of the Extensions pane. A Pollis extension has no code: a `package.json` with a `pollisToolboxes` contribution, the panels' TOML files, their wikis and notebooks, an icon and a README.
+Turns a spec TOML into a Pollis extension under `toolboxes/<name>/` (`toolboxes/` is a clone of [Trumpingtons/pollis-toolboxes](https://github.com/Trumpingtons/pollis-toolboxes), ignored by Pollis' git), packaged in `.build/toolboxes/` for the Toolboxes section of the Extensions pane. A Pollis extension has no code: a `package.json` with a `pollisToolboxes` contribution, the panels' TOML files, their wikis and notebooks, an icon and a README.
 
 The mechanical work is done by `build/pollis/makeExtension.ts`; the agent does the parts that need judgment. How a menu entry resolves to its panel (command, panel constant, template, TOML, wikis, notebooks) is in `build/pollis/panelResolver.ts`.
 
@@ -53,7 +53,7 @@ order = 1
    - `npm run compile-check-ts-native` when Pollis code changed (move mode);
    - `node build/pollis/packageToolboxes.ts`: the new `.vsix` is written;
    - `unzip -l .build/toolboxes/<name>-<version>.vsix`: package.json, panels/, wiki/, notebooks/, README.md, icon.png.
-6. **Report**: the panels, where they go, anything left out and why, the checks. Publishing is done by the user (force-push to the `toolboxes-dist` branch, steps at the top of `build/pollis/packageToolboxes.ts`); do not push it. Do not commit unless asked.
+6. **Report**: the panels, where they go, anything left out and why, the checks. Publishing is done by the user (force-push to the `dist` branch of Trumpingtons/pollis-toolboxes, steps at the top of `build/pollis/packageToolboxes.ts`); do not push it. Do not commit unless asked.
 
 ## Rules
 

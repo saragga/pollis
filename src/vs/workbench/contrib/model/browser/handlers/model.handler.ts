@@ -226,7 +226,7 @@ export async function installJuliaPackages(packages: ReadonlyArray<{ readonly na
 	await sendToJuliaRepl(juliaPackageCheck(packages), commandService);
 }
 
-/** Reusable wiring for the Powered-by package install-status indicator (see WEBVIEW_GUIDE.md §23). */
+/** Reusable wiring for the Powered-by package install-status indicator. */
 export interface IPackageStatusWiring {
 	/** Post current install status to the webview; resolves true if every package is installed. */
 	postStatus(): Promise<boolean>;
@@ -312,7 +312,7 @@ export interface IApiKeyField {
 	readonly password?: boolean;
 }
 
-/** A provider that requires a free API key / token / credentials (see WEBVIEW_GUIDE.md §24). */
+/** A provider that requires a free API key / token / credentials. */
 export interface IApiKeyProvider {
 	/** Human label, e.g. `Alpha Vantage`, `Hugging Face`, `Kaggle`. */
 	readonly label: string;

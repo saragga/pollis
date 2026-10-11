@@ -46,13 +46,13 @@ interface IToolboxPanelContribution {
 	readonly decisionFirstColumn?: string;
 }
 
-/** A toolbox contributed by an extension: a submenu of Explore, Model, Simulate or Optimise, or of one of their submenus. */
+/** A toolbox contributed by an extension: a submenu of Explore, Model, Simulate, Optimise or Extend, or of one of their submenus. */
 interface IToolboxContribution {
 	readonly id: string;
 	readonly title: string;
 	/**
-	 * The menu the toolbox goes in: a top-level menu (Explore, Model, Simulate or Optimise) or the
-	 * id of an existing submenu of one of them. Any other menu, or none, means the end of Explore.
+	 * The menu the toolbox goes in: a top-level menu (Explore, Model, Simulate, Optimise or Extend) or the
+	 * id of an existing submenu of one of them. Any other menu, or none, means the end of Extend.
 	 */
 	readonly menu?: string;
 	/** Put the panels straight into that menu instead of into a submenu of their own. */
@@ -69,12 +69,13 @@ const TOP_LEVEL_MENUS: Record<string, MenuId> = {
 	model: MenuId.MenubarModelMenu,
 	simulate: MenuId.MenubarSimulateMenu,
 	optimise: MenuId.MenubarOptimiseMenu,
+	extend: MenuId.MenubarExtendMenu,
 };
 
 const toolboxesExtensionPoint = ExtensionsRegistry.registerExtensionPoint<IToolboxContribution[]>({
 	extensionPoint: 'pollisToolboxes',
 	jsonSchema: {
-		description: localize('pollisToolboxes', "Contributes Pollis toolboxes: a submenu of Explore, Model, Simulate or Optimise, or of one of their submenus, with the panels it opens."),
+		description: localize('pollisToolboxes', "Contributes Pollis toolboxes: a submenu of Explore, Model, Simulate, Optimise or Extend, or of one of their submenus, with the panels it opens."),
 		type: 'array',
 		items: {
 			type: 'object',
@@ -82,7 +83,7 @@ const toolboxesExtensionPoint = ExtensionsRegistry.registerExtensionPoint<IToolb
 			properties: {
 				id: { type: 'string', description: localize('pollisToolboxes.id', "The toolbox id.") },
 				title: { type: 'string', description: localize('pollisToolboxes.title', "The toolbox's menu title.") },
-				menu: { type: 'string', description: localize('pollisToolboxes.menu', "The menu the toolbox goes in: Explore, Model, Simulate, Optimise or the id of an existing submenu of one of them. Any other menu, or none, means the end of Explore.") },
+				menu: { type: 'string', description: localize('pollisToolboxes.menu', "The menu the toolbox goes in: Explore, Model, Simulate, Optimise, Extend or the id of an existing submenu of one of them. Any other menu, or none, means the end of Extend.") },
 				inline: { type: 'boolean', description: localize('pollisToolboxes.inline', "Put the panels straight into that menu instead of into a submenu of their own.") },
 				group: { type: 'string', description: localize('pollisToolboxes.group', "The group in that menu.") },
 				order: { type: 'number', description: localize('pollisToolboxes.order', "The order in that group.") },
@@ -113,9 +114,9 @@ const toolboxesExtensionPoint = ExtensionsRegistry.registerExtensionPoint<IToolb
 interface ILoadedToolbox {
 	readonly extensionId: string;
 	readonly toolbox: IToolboxContribution;
-	/** The menu the author puts the toolbox in: the one the toolbox names, else Explore. */
+	/** The menu the author puts the toolbox in: the one the toolbox names, else Extend. */
 	readonly destination: MenuId;
-	/** Whether the destination is the menu the toolbox names; if not, the toolbox goes at the end of Explore. */
+	/** Whether the destination is the menu the toolbox names; if not, the toolbox goes at the end of Extend. */
 	readonly named: boolean;
 	readonly location: URI;
 	readonly panels: readonly { readonly contribution: IToolboxPanelContribution; readonly panel: IScaffoldPanel }[];
@@ -149,8 +150,9 @@ const DEFAULT_PANEL_GROUP = '1_toolbox';
  * panel's TOML names) are served as if bundled.
  * Installing a toolbox does not change the menus: only the panels the user publishes are added,
  * each in the toolbox's own menu or straight into another menu, and the toolbox's menu goes where
- * the author suggests (the menu the toolbox names, the end of Explore by default) or in the menu the user chose.
- * The toolbox extensions are not built in (their sources are in toolboxes/ at the repository root):
+ * the author suggests (the menu the toolbox names, the end of Extend by default) or in the menu the user chose.
+ * The Extend menu is in the menu bar only while something is in it.
+ * The toolbox extensions are not built in (their sources are in Trumpingtons/pollis-toolboxes):
  * the user installs them from the Toolboxes section of the Extensions pane, into the user's
  * extensions folder, and the files are read from wherever the extension is installed.
  */
@@ -221,7 +223,7 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 			const location = extension.description.extensionLocation;
 			for (const toolbox of extension.value) {
 				const named = toolbox.menu ? TOP_LEVEL_MENUS[toolbox.menu.toLowerCase()] ?? (submenus.has(toolbox.menu) ? MenuId.for(toolbox.menu) : undefined) : undefined;
-				const destination = named ?? MenuId.MenubarExploreMenu;
+				const destination = named ?? MenuId.MenubarExtendMenu;
 				const panels: { contribution: IToolboxPanelContribution; panel: IScaffoldPanel }[] = [];
 				for (const contribution of toolbox.panels) {
 					const toml = joinPath(location, contribution.data);
@@ -262,6 +264,11 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 	private register(): void {
 		const published = this.getPublished();
 		const store = new DisposableStore();
+		let extended = false;
+		const append = (menu: MenuId, item: Parameters<typeof MenuRegistry.appendMenuItem>[1]) => {
+			extended ||= menu.id === MenuId.MenubarExtendMenu.id;
+			store.add(MenuRegistry.appendMenuItem(menu, item));
+		};
 		for (const loaded of this.loaded) {
 			const { toolbox, location } = loaded;
 			const entry = published[publishedKey(loaded)];
@@ -270,7 +277,7 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 			this.submenus.set(toolbox.id, submenu);
 			if (placement.menu && loaded.panels.some(({ contribution }) => placement.panels[contribution.id]?.menu === TOOLBOX_MENU)) {
 				const { menu, group, order } = placement.menu;
-				store.add(MenuRegistry.appendMenuItem(MenuId.for(menu), { group, order, submenu, title: toolbox.title }));
+				append(MenuId.for(menu), { group, order, submenu, title: toolbox.title });
 			}
 			for (const { contribution, panel } of loaded.panels) {
 				// The folders the panel's wikis and notebooks are in: its id, or another name (e.g. `game-theory`)
@@ -286,19 +293,30 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 				const command = { id: contribution.command, title: contribution.menuTitle ?? contribution.title };
 				if (place?.menu === TOOLBOX_MENU) {
 					if (placement.menu) {
-						store.add(MenuRegistry.appendMenuItem(submenu, { group: place.group, order: place.order, command }));
+						append(submenu, { group: place.group, order: place.order, command });
 					}
 				} else if (place) {
-					store.add(MenuRegistry.appendMenuItem(MenuId.for(place.menu), { group: place.group, order: place.order, command }));
+					append(MenuId.for(place.menu), { group: place.group, order: place.order, command });
 				}
 			}
+		}
+		if (extended) {
+			store.add(MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
+				submenu: MenuId.MenubarExtendMenu,
+				title: {
+					value: localize('extendMenu', "Extend"),
+					original: 'Extend',
+					mnemonicTitle: localize({ key: 'mExtend', comment: ['&& denotes a mnemonic'] }, "E&&xtend")
+				},
+				order: 9
+			}));
 		}
 		this.registrations.value = store;
 		this._onDidChange.fire();
 	}
 }
 
-/** The submenus of Explore, Model, Simulate and Optimise, at any depth, without the toolboxes' own menus. */
+/** The submenus of Explore, Model, Simulate, Optimise and Extend, at any depth, without the toolboxes' own menus. */
 function placeSubmenus(): Set<string> {
 	const ids = new Set<string>();
 	const walk = (menu: MenuId) => {
@@ -320,7 +338,7 @@ function publishedKey(loaded: ILoadedToolbox): string {
 /**
  * The places the author suggests: the toolbox's menu in the menu the toolbox names, with every
  * panel in it, or every panel straight into that menu when the toolbox is inline, each in the
- * group and order the author gives. A toolbox that names no menu Pollis has goes at the end of Explore.
+ * group and order the author gives. A toolbox that names no menu Pollis has goes at the end of Extend.
  */
 function suggestedPlacement(loaded: ILoadedToolbox): IToolboxPlacement {
 	const { toolbox, destination, named } = loaded;

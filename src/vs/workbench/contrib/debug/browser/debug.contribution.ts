@@ -21,7 +21,7 @@ import { IQuickAccessRegistry, Extensions as QuickAccessExtensions } from '../..
 import { Registry } from '../../../../platform/registry/common/platform.js';
 import { EditorPaneDescriptor, IEditorPaneRegistry } from '../../../browser/editor.js';
 import { ViewPaneContainer } from '../../../browser/parts/views/viewPaneContainer.js';
-import { FocusedViewContext, IsSessionsWindowContext } from '../../../common/contextkeys.js';
+import { FocusedViewContext } from '../../../common/contextkeys.js';
 import { IWorkbenchContributionsRegistry, Extensions as WorkbenchExtensions, WorkbenchPhase, registerWorkbenchContribution2 } from '../../../common/contributions.js';
 import { EditorExtensions } from '../../../common/editor.js';
 import { IViewContainersRegistry, IViewsRegistry, ViewContainer, ViewContainerLocation, Extensions as ViewExtensions } from '../../../common/views.js';
@@ -258,7 +258,10 @@ if (isMacintosh) {
 MenuRegistry.appendMenuItem(MenuId.EditorTitle, { submenu: MenuId.EditorTitleRun, isSplitButton: { togglePrimaryAction: true }, title: nls.localize2('run', "Run or Debug..."), icon: icons.debugRun, group: 'navigation', order: -1 });
 
 // Debug menu
+// Pollis: the Run menu is not in the menu bar (the Julia debugger is too slow to be used); its commands stay
+// in the Run and Debug view, the Command Palette and their keys. Extend (toolboxes) takes its place.
 
+/*
 MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
 	submenu: MenuId.MenubarDebugMenu,
 	title: {
@@ -268,6 +271,7 @@ MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
 	order: 6,
 	when: IsSessionsWindowContext.negate()
 });
+*/
 
 MenuRegistry.appendMenuItem(MenuId.MenubarDebugMenu, {
 	group: '1_debug',

@@ -54,3 +54,11 @@ src/vs/workbench/contrib/model/browser/webviews/*.data.ts
 
 # Internal review reports (not part of Pollis)
 /internal-reports/
+
+# Toolbox sources: a clone of Trumpingtons/pollis-toolboxes
+/toolboxes/
+
+# Developer notes (local only, not published)
+/POLLIS_GUIDE.md
+/TOML_MIGRATION.md
+/src/vs/workbench/contrib/WEBVIEW_GUIDE.md

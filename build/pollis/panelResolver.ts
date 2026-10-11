@@ -20,11 +20,12 @@ export const WEBVIEWS_DIR = path.join(MODEL_DIR, 'webviews');
 export const WIKI_DIR = path.join(MODEL_DIR, 'media', 'wiki');
 export const NOTEBOOKS_DIR = path.join(MODEL_DIR, 'media', 'notebooks');
 export const ICON = path.join(CONTRIB_DIR, 'extensions', 'browser', 'media', 'pollis-toolbox-icon.png');
+/** The toolbox sources: a clone of Trumpingtons/pollis-toolboxes, ignored by Pollis' git. */
 export const TOOLBOXES_DIR = path.join(ROOT, 'toolboxes');
 
 /** The scaffold options a data-only panel can carry (the extension point's fields). */
 const PORTABLE_OPTIONS = new Set(['title', 'defaultModel', 'decisionFirstColumn']);
-export const TOP_LEVEL_MENUS = new Set(['explore', 'model', 'simulate', 'optimise']);
+export const TOP_LEVEL_MENUS = new Set(['explore', 'model', 'simulate', 'optimise', 'extend']);
 
 /** A menu entry of the spec. */
 export interface SpecItem {

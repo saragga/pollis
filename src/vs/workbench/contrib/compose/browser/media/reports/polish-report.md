@@ -24,7 +24,9 @@ Never type a number by hand: every value comes from these files.
 - When the notebook replicates an article, show each published value beside Julia's, rounded to the published
   digits, with the page or table it comes from, and the agreement as "same to N decimals"; never "identical".
   Cite the article from the BibTeX in `notebook.md`, written to `references.bib`, with natbib and
-  `\bibliographystyle{plainnat}`.
+  `\bibliographystyle{plainnat}`. For any other work, cite it from pollis.bib, the Pollis library of references,
+  with `\bibliography{references,pollis}` (see Compile). Cite as Author (year) with every author (`\citet*`), and
+  never invent an entry.
 - Keep the preamble's fonts and `fancyvrb`; the engine is XeTeX (`fontspec`, never `inputenc`).
 - Never use DataFrames.jl.
 
@@ -32,6 +34,13 @@ Never type a number by hand: every value comes from these files.
 
 ```sh
 julia -e 'using PollisTeX; display(compile("report.tex"))'
+```
+
+When the document uses `\bibliography{…,pollis}`, give Tectonic the folder of pollis.bib, which is
+`../../../../model/browser/media/references` from this file's folder (as an absolute path):
+
+```sh
+julia -e 'using PollisTeX; display(compile("report.tex"; searchpath = ["/absolute/path/to/references"]))'
 ```
 
 (`slides.tex` for slides; if PollisTeX is missing, add it first with

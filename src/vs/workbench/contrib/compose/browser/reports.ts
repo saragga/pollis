@@ -56,6 +56,8 @@ export const REPORTS_AGENT_COMMAND_SETTING = 'pollis.reports.agentCommand';
 
 const SCRIPT = 'vs/workbench/contrib/compose/browser/media/reports/reports.jl';
 const INSTRUCTIONS = 'vs/workbench/contrib/compose/browser/media/reports/polish-report.md';
+// The folder of pollis.bib, every reference in Pollis, which Tectonic searches for \bibliography{pollis}
+const LIBRARY = 'vs/workbench/contrib/model/browser/media/references';
 const WORKFLOWS = 'vs/workbench/contrib/compose/browser/media/workflows';
 const REPORTS_FOLDER = 'reports';
 /** How long an export waits for the PDF before it stops watching (a first run may install packages). */
@@ -205,7 +207,7 @@ async function makeReport(accessor: ServicesAccessor, kind: IReportKind): Promis
 	});
 	disposables.add(new RunOnceScheduler(() => disposables.dispose(), EXPORT_TIMEOUT)).schedule();
 
-	const make = `PollisReports.make(${juliaPath(notebook)}, ${juliaPath(folder)}, :${kind.file}${template ? `; template = ${juliaPath(template)}` : ''})`;
+	const make = `PollisReports.make(${juliaPath(notebook)}, ${juliaPath(folder)}, :${kind.file}${template ? `; template = ${juliaPath(template)}` : ''}, library = ${juliaPath(FileAccess.asFileUri(LIBRARY))})`;
 	const code = `Pollis.packages("PollisTeX", "JSON"); isdefined(Main, :PollisReports) || include(${juliaPath(FileAccess.asFileUri(SCRIPT))}); display(${make})`;
 	if (!await sendToJuliaRepl(code, commandService)) {
 		disposables.dispose();
@@ -262,7 +264,9 @@ async function compileLatex(accessor: ServicesAccessor, resource?: URI): Promise
 	});
 	disposables.add(new RunOnceScheduler(() => disposables.dispose(), COMPILE_TIMEOUT)).schedule();
 
-	if (!await sendToJuliaRepl(`Pollis.packages("PollisTeX"); import PollisTeX; display(PollisTeX.compile(${juliaPath(tex)}))`, commandService)) {
+	// A PollisTeX older than its searchpath keyword compiles without pollis.bib
+	const library = `hasmethod(PollisTeX.compile, Tuple{String}, (:searchpath,)) ? (; searchpath = [${juliaPath(FileAccess.asFileUri(LIBRARY))}]) : (;)`;
+	if (!await sendToJuliaRepl(`Pollis.packages("PollisTeX"); import PollisTeX; display(PollisTeX.compile(${juliaPath(tex)}; (${library})...))`, commandService)) {
 		disposables.dispose();
 	}
 }

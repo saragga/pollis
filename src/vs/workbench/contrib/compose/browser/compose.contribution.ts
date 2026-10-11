@@ -17,7 +17,7 @@ import { EXPORT_NOTEBOOK_LATEX_COMMAND_ID, MAKE_NOTEBOOK_SLIDES_COMMAND_ID, POLI
 import { IMPLEMENTED_COLLABORATION_COMMANDS } from './collaboration/collaboration.contribution.js';
 import { NEW_METHODS_COMMAND_ID, PUBLISHED_BENCHMARKS_COMMAND_ID, SEARCH_WORKFLOW_LIBRARY_COMMAND_ID } from './workflowLibrary.js';
 
-// The Mathematical Foundations, Financial Econometrics and Macroeconomics Toolboxes come from their extensions (toolboxes/pollis-toolbox-*, not built in:
+// The Mathematical Core, Financial Econometrics and Macroeconomics Toolboxes come from their extensions (toolboxes/pollis-toolbox-*, not built in:
 // installed from the Toolboxes section of the Extensions pane), see toolboxExtensions.ts;
 // Game Theory is in the Optimise menu
 
@@ -33,6 +33,7 @@ const OrchestrationMenu = new MenuId('menubarOrchestrationMenu');
 const ReportsMenu = new MenuId('menubarReportsMenu');
 const WorkflowsMenu = new MenuId('menubarWorkflowsMenu');
 const CREATE_OPERATIONAL_WORKFLOW_COMMAND_ID = 'pollis.workflows.createOperational';
+const AUTOMATIONS_COMMAND_ID = 'pollis.workflows.automations';
 const NewMethodsMenu = new MenuId('menubarNewMethodsMenu');
 const CorrectnessMenu = new MenuId('menubarCorrectnessMenu');
 const ComparisonsMenu = new MenuId('menubarComparisonsMenu');
@@ -233,6 +234,15 @@ MenuRegistry.appendMenuItem(WorkflowsMenu, {
 });
 // Not built yet
 registerNotYetImplemented(CREATE_OPERATIONAL_WORKFLOW_COMMAND_ID, localize('operationalWorkflows.create', "Create Operational Workflow..."));
+
+// Agent sessions run on a schedule, as in the Automations page of VS Code's Agents window. Not in
+// Code - OSS 1.117.0: it comes with the rebase
+MenuRegistry.appendMenuItem(WorkflowsMenu, {
+	group: '3_automations',
+	command: { id: AUTOMATIONS_COMMAND_ID, title: localize('workflows.automations', "Automations...") },
+	order: 1,
+});
+registerNotYetImplemented(AUTOMATIONS_COMMAND_ID, localize('workflows.automations', "Automations..."));
 
 
 

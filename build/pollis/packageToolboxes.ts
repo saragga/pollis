@@ -20,13 +20,14 @@
 // To publish the toolboxes (bump "version" in a toolbox's package.json when it changes, or the
 // installed copies are not offered the update):
 //   1. node build/pollis/packageToolboxes.ts
-//   2. Replace the files of the branch toolboxes-dist of saragga/pollis (one commit, no history
-//      kept) by every file in .build/toolboxes (each .vsix and README, and toolboxes.json):
+//   2. Replace the files of the branch dist of Trumpingtons/pollis-toolboxes (one commit, no history
+//      kept) by every file in .build/toolboxes (each .vsix and README, and toolboxes.json); from the
+//      toolboxes/ clone:
 //        git worktree add --detach /tmp/toolboxes-dist && cd /tmp/toolboxes-dist
-//        git checkout --orphan toolboxes-dist-new && git rm -rfq . && cp <repo>/.build/toolboxes/* .
-//        git add -A && git commit --no-verify -m "Toolboxes" && git push -f origin HEAD:toolboxes-dist
-//        cd <repo> && git worktree remove /tmp/toolboxes-dist && git branch -D toolboxes-dist-new
-//      Pollis downloads https://raw.githubusercontent.com/saragga/pollis/toolboxes-dist/toolboxes.json
+//        git checkout --orphan dist-new && git rm -rfq . && cp <repo>/.build/toolboxes/* .
+//        git add -A && git commit --no-verify -m "Toolboxes" && git push -f origin HEAD:dist
+//        cd <repo>/toolboxes && git worktree remove /tmp/toolboxes-dist && git branch -D dist-new
+//      Pollis downloads https://raw.githubusercontent.com/Trumpingtons/pollis-toolboxes/dist/toolboxes.json
 //      and the .vsix files next to it (raw.githubusercontent.com allows the cross-origin requests
 //      that GitHub release downloads refuse). raw.githubusercontent.com caches for up to 5 minutes.
 
@@ -35,6 +36,7 @@ import * as path from 'path';
 import * as zlib from 'zlib';
 
 const ROOT = path.join(import.meta.dirname, '..', '..');
+/** The toolbox sources: a clone of Trumpingtons/pollis-toolboxes, ignored by Pollis' git. */
 const TOOLBOXES_DIR = path.join(ROOT, 'toolboxes');
 const OUT_DIR = path.join(ROOT, '.build', 'toolboxes');
 
@@ -290,7 +292,7 @@ function main(): void {
 	const toolboxes = folders.map(folder => packageToolbox(folder));
 	fs.writeFileSync(path.join(OUT_DIR, 'toolboxes.json'), JSON.stringify({ toolboxes }, null, '\t') + '\n', 'utf-8');
 	console.log(`${toolboxes.length} toolboxes written to ${path.relative(ROOT, OUT_DIR)}/ (the .vsix files, the READMEs and toolboxes.json)`);
-	console.log('Publish every file there to the branch toolboxes-dist of saragga/pollis (see the steps at the top of this script).');
+	console.log('Publish every file there to the branch dist of Trumpingtons/pollis-toolboxes (see the steps at the top of this script).');
 }
 
 main();

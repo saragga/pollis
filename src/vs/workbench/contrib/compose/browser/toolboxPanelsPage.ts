@@ -17,7 +17,7 @@ import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWork
 import { CHOOSE_TOOLBOX_PANELS_COMMAND_ID, IToolboxInfo, IToolboxPanelsService, IToolboxPlacement, TOOLBOX_END_GROUP, TOOLBOX_MENU, TOOLBOX_SUBMENU_PREFIX } from '../common/toolboxPanels.js';
 
 // The page of an installed toolbox. Left, the toolbox's menu and its panels, each with a box to
-// tick for the ones the user wants; right, Explore, Model, Simulate and Optimise as a folding tree,
+// tick for the ones the user wants; right, Explore, Model, Simulate, Optimise and Extend as a folding tree,
 // every item in menu order, that previews where they go. The user selects items on the left and
 // clicks a line between two items, or a menu, to put them there, and Publish puts them in the menus.
 
@@ -34,7 +34,7 @@ interface IToolboxChange {
 }
 
 /** The menus a toolbox's menu and panels can go in, in menu bar order. */
-const PLACE_MENUS = [MenuId.MenubarExploreMenu, MenuId.MenubarModelMenu, MenuId.MenubarSimulateMenu, MenuId.MenubarOptimiseMenu];
+const PLACE_MENUS = [MenuId.MenubarExploreMenu, MenuId.MenubarModelMenu, MenuId.MenubarSimulateMenu, MenuId.MenubarOptimiseMenu, MenuId.MenubarExtendMenu];
 
 /** An item of the menus in the page's tree, with the group and order that set its position. */
 interface IPlaceNode {
@@ -54,7 +54,7 @@ function titleOf(title: string | ICommandActionTitle): string {
 }
 
 /**
- * Explore, Model, Simulate and Optimise with every item they show, at any depth, without the
+ * Explore, Model, Simulate, Optimise and Extend with every item they show, at any depth, without the
  * page's own toolboxes, which the page draws where the user puts them.
  */
 function placeTree(contextKeyService: IContextKeyService, toolboxes: readonly IToolboxInfo[]): IPlaceNode[] {
@@ -85,6 +85,8 @@ function placeTree(contextKeyService: IContextKeyService, toolboxes: readonly IT
 		return nodes;
 	};
 	const titles = new Map(MenuRegistry.getMenuItems(MenuId.MenubarMainMenu).map(item => isIMenuItem(item) ? [item.command.id, ''] : [item.submenu.id, titleOf(item.title)]));
+	// Extend is in the menu bar only while a toolbox is in it, so its title may not be there
+	titles.set(MenuId.MenubarExtendMenu.id, titles.get(MenuId.MenubarExtendMenu.id) || localize('toolboxPanels.extend', "Extend"));
 	return PLACE_MENUS.map(menu => ({ id: menu.id, title: titles.get(menu.id) || menu.id, group: undefined, order: undefined, children: build(menu, new Set([menu.id])) }));
 }
 

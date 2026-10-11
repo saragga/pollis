@@ -33,7 +33,7 @@
 //   [[menu]]                               one or more: where the entries go
 //   id = "finance"
 //   title = "Finance Toolbox"              the submenu's title
-//   menu = "Model"                         Explore, Model, Simulate, Optimise or a submenu id; any other, or none: the end of Explore
+//   menu = "Model"                         Explore, Model, Simulate, Optimise, Extend or a submenu id; any other, or none: the end of Extend
 //   inline = false                         true: the entries go straight into that menu, no submenu
 //   group = "2_toolboxes"                  optional, the group and order of the submenu in that menu
 //   order = 4
@@ -106,7 +106,7 @@ function main(): void {
 			fail('every [[menu]] needs an id and a title');
 		}
 		if (menu.menu && !pollis.isMenu(menu.menu)) {
-			console.warn(`the menu ${menu.menu} is not Explore, Model, Simulate, Optimise or a submenu id: the toolbox goes at the end of Explore`);
+			console.warn(`the menu ${menu.menu} is not Explore, Model, Simulate, Optimise, Extend or a submenu id: the toolbox goes at the end of Extend`);
 		}
 		const panels = [];
 		for (const [index, item] of (menu.items ?? []).entries()) {

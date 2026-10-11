@@ -7,7 +7,8 @@
 			"Explore",
 			"Model",
 			"Simulate",
-			"Optimise"
+			"Optimise",
+			"Extend"
 		],
 		"submenus": [
 			"DatabaseConnectionContext",
@@ -71,13 +72,17 @@
 			"menubarNLPSubmenu",
 			"menubarNLSSubmenu",
 			"menubarNNSubmenu",
+			"menubarNewMethodsMenu",
 			"menubarOCSubmenu",
+			"menubarOrchestrationMenu",
 			"menubarPMSubmenu",
 			"menubarPPLSubmenu",
 			"menubarPollisAgentsMenu",
 			"menubarPollisSkillsMenu",
+			"menubarPracticeMenu",
 			"menubarRLSubmenu",
 			"menubarRQRSubmenu",
+			"menubarReportsMenu",
 			"menubarSASubmenu",
 			"menubarSDESubmenu",
 			"menubarSDMSubmenu",
@@ -87,6 +92,7 @@
 			"menubarTopicModelsSubmenu",
 			"menubarVMSubmenu",
 			"menubarWorkflowsMenu",
+			"pollisNotebookExport",
 			"submenu.filter.commentSort",
 			"typehierarchy/title",
 			"workbench.chat.menu.config",
@@ -4113,6 +4119,48 @@
 			],
 			"packages": [
 				"TextAnalysis.jl"
+			]
+		},
+		{
+			"id": "linalg",
+			"title": "Linear Algebra",
+			"source": "toolbox:pollis-toolbox-analytics",
+			"commands": [
+				{
+					"id": "chiara.toolboxes.linalg",
+					"menuTitles": [
+						"Linear Algebra"
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "solve",
+			"decisionFirstColumn": "Task",
+			"toml": "toolboxes/pollis-toolbox-analytics/panels/linalg.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-analytics/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-analytics/notebooks",
+			"wikis": [
+				"linalg/assumptions.md",
+				"linalg/decision-guide.md",
+				"linalg/diagnostics.md",
+				"linalg/eigenvalues.md",
+				"linalg/factorisations.md",
+				"linalg/factsheet.md",
+				"linalg/interpretation.md",
+				"linalg/least-squares.md",
+				"linalg/linear-systems.md",
+				"linalg/overview.md",
+				"linalg/singular-values.md"
+			],
+			"notebooks": [
+				"linalg/tutorial-01-linear-systems.ipynb",
+				"linalg/tutorial-02-factorisations.ipynb",
+				"linalg/tutorial-03-eigenvalues.ipynb",
+				"linalg/tutorial-04-svd.ipynb",
+				"linalg/tutorial-05-least-squares.ipynb"
+			],
+			"packages": [
+				"LinearAlgebra.jl"
 			]
 		},
 		{

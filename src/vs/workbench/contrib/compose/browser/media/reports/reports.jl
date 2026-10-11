@@ -51,12 +51,13 @@ mutable struct Cell
 end
 
 """
-	make(notebook, folder, kind; template = nothing)
+	make(notebook, folder, kind; template = nothing, library = nothing)
 
 Writes `kind.tex` (`:report` or `:slides`) for `notebook` in `folder` and compiles it with PollisTeX. With
-`template`, a folder holding `kind.tex` and its `make.jl`, those are used instead of a draft.
+`template`, a folder holding `kind.tex` and its `make.jl`, those are used instead of a draft. `library` is the folder
+of pollis.bib, so that `\\bibliography{pollis}` finds it.
 """
-function make(notebook::AbstractString, folder::AbstractString, kind::Symbol; template = nothing)
+function make(notebook::AbstractString, folder::AbstractString, kind::Symbol; template = nothing, library = nothing)
 	mkpath(folder)
 	tex = joinpath(folder, "$kind.tex")
 	data = JSON.parsefile(notebook)
@@ -76,7 +77,20 @@ function make(notebook::AbstractString, folder::AbstractString, kind::Symbol; te
 		isfile(tex) || write(tex, kind === :slides ? slides(cells, metadata) : report(cells, metadata))
 	end
 	write(joinpath(folder, "notebook.md"), lean(cells, metadata, notebook))
-	return PollisTeX.compile(tex)
+	return compile(tex, library)
+end
+
+"""
+	compile(tex, library)
+
+Compiles `tex` with PollisTeX, with `library` (the folder of pollis.bib) on Tectonic's search path; a PollisTeX older
+than its `searchpath` keyword compiles without it.
+"""
+function compile(tex::AbstractString, library)
+	if library === nothing || !hasmethod(PollisTeX.compile, Tuple{String}, (:searchpath,))
+		return PollisTeX.compile(tex)
+	end
+	return PollisTeX.compile(tex; searchpath = [library])
 end
 
 source(s) = s isa AbstractVector ? join(s) : string(s)

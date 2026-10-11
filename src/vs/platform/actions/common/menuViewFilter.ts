@@ -31,6 +31,7 @@ const pollisMenus: ReadonlySet<string> = new Set([
 	MenuId.MenubarModelMenu.id,
 	MenuId.MenubarSimulateMenu.id,
 	MenuId.MenubarOptimiseMenu.id,
+	MenuId.MenubarExtendMenu.id,
 ]);
 
 /**

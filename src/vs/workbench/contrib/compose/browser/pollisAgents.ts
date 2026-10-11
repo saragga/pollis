@@ -6,6 +6,7 @@
 import { VSBuffer } from '../../../../base/common/buffer.js';
 import { CancellationToken } from '../../../../base/common/cancellation.js';
 import { toErrorMessage } from '../../../../base/common/errorMessage.js';
+import { DisposableStore } from '../../../../base/common/lifecycle.js';
 import { Schemas } from '../../../../base/common/network.js';
 import { join } from '../../../../base/common/path.js';
 import { IProcessEnvironment, isWindows } from '../../../../base/common/platform.js';
@@ -18,12 +19,11 @@ import { ICommandService } from '../../../../platform/commands/common/commands.j
 import { ConfigurationScope, Extensions as ConfigurationExtensions, IConfigurationRegistry } from '../../../../platform/configuration/common/configurationRegistry.js';
 import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
 import { IDialogService } from '../../../../platform/dialogs/common/dialogs.js';
-import { IFileService } from '../../../../platform/files/common/files.js';
+import { ByteSize, IFileService } from '../../../../platform/files/common/files.js';
 import { IInstantiationService, ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
 import { INotificationService, Severity } from '../../../../platform/notification/common/notification.js';
 import { IOpenerService } from '../../../../platform/opener/common/opener.js';
 import { IProgressService, ProgressLocation } from '../../../../platform/progress/common/progress.js';
-import { IQuickInputService, IQuickPickItem } from '../../../../platform/quickinput/common/quickInput.js';
 import { Registry } from '../../../../platform/registry/common/platform.js';
 import { asJson, IRequestService, isSuccess } from '../../../../platform/request/common/request.js';
 import { IWorkspaceContextService } from '../../../../platform/workspace/common/workspace.js';
@@ -32,6 +32,9 @@ import { IEditorService } from '../../../services/editor/common/editorService.js
 import { IPathService } from '../../../services/path/common/pathService.js';
 import { ITextFileService } from '../../../services/textfile/common/textfiles.js';
 import { ITerminalInstance, ITerminalInstanceService, ITerminalService } from '../../terminal/browser/terminal.js';
+import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
+import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
+import { LIBRARY_PAGE_HELPERS, LIBRARY_PAGE_STYLE } from './workflowLibrary.js';
 
 // Compose > Pollis Agents holds tasks: you go there to get something done (Create a Panel, Package a
 // Toolbox, Write a Method...), and a coding agent of your choice does it in a terminal. Compose > Pollis
@@ -334,14 +337,31 @@ async function runSkill(accessor: ServicesAccessor, skill: IPollisSkill): Promis
 	await instantiationService.invokeFunction(startAgent, skill.title, prompt, requestFile && dirname(requestFile));
 }
 
-/** A skill in the downloaded plugin, as its SKILL.md describes it. */
+/** A skill in the downloaded plugin, as its folder and its SKILL.md describe it. */
 interface ISkillInfo {
-	readonly name: string;
+	/** Its folder in the plugin's `skills/` folder, e.g. `create-panel`. */
+	readonly folder: string;
+	/** The first `# ` heading of its SKILL.md, e.g. `Create a Panel`; else its name. */
+	readonly title: string;
+	/** Its description, without the triggers. */
 	readonly description: string;
-	readonly file: URI;
+	/** The requests that start it, from the `Triggers include '...'` end of its description. */
+	readonly triggers: readonly string[];
+	/** Its files, as paths in its folder, SKILL.md first. */
+	readonly files: readonly string[];
+	readonly size: string;
+	/** Its folder in the downloaded plugin. */
+	readonly location: URI;
 }
 
-/** The skills of the downloaded plugin, from the front matter of their SKILL.md files. */
+/** The Pollis Agents tasks that run a skill, as the skills page lists them. */
+const SKILL_TASKS: readonly { readonly skill: IPollisSkill; readonly command: string }[] = [
+	{ skill: CREATE_PANEL, command: CREATE_PANEL_COMMAND_ID },
+	{ skill: CREATE_PANELS_FROM_REQUEST, command: CREATE_PANELS_FROM_REQUEST_COMMAND_ID },
+	{ skill: PACKAGE_TOOLBOX, command: PACKAGE_TOOLBOX_COMMAND_ID },
+];
+
+/** The skills of the downloaded plugin, from their folders and the front matter and heading of their SKILL.md files. */
 async function readSkills(fileService: IFileService, folder: URI): Promise<ISkillInfo[]> {
 	const skills: ISkillInfo[] = [];
 	const stat = await fileService.resolve(joinPath(folder, 'skills'));
@@ -351,54 +371,248 @@ async function readSkills(fileService: IFileService, folder: URI): Promise<ISkil
 			continue;
 		}
 		const text = (await fileService.readFile(file)).value.toString();
-		const frontMatter = /^---\r?\n(?<body>[\s\S]*?)\r?\n---/.exec(text)?.groups?.body ?? '';
-		const field = (key: string) => new RegExp(`^${key}:\\s*"?(?<value>.*?)"?\\s*$`, 'm').exec(frontMatter)?.groups?.value;
-		skills.push({ name: field('name') ?? child.name, description: field('description') ?? '', file });
+		const parts = /^---\r?\n(?<frontMatter>[\s\S]*?)\r?\n---(?<body>[\s\S]*)$/.exec(text)?.groups;
+		const field = (key: string) => new RegExp(`^${key}:\\s*"?(?<value>.*?)"?\\s*$`, 'm').exec(parts?.frontMatter ?? '')?.groups?.value;
+		const [description, triggers = ''] = (field('description') ?? '').split(/\s*Triggers include\s*/);
+
+		const files: { path: string; size: number }[] = [];
+		const walk = async (resource: URI, prefix: string): Promise<void> => {
+			for (const entry of (await fileService.resolve(resource, { resolveMetadata: true })).children ?? []) {
+				if (entry.isDirectory) {
+					await walk(entry.resource, `${prefix}${entry.name}/`);
+				} else {
+					files.push({ path: prefix + entry.name, size: entry.size });
+				}
+			}
+		};
+		await walk(child.resource, '');
+		files.sort((a, b) => a.path === 'SKILL.md' ? -1 : b.path === 'SKILL.md' ? 1 : a.path.localeCompare(b.path));
+
+		skills.push({
+			folder: child.name,
+			title: /^# (?<title>.+)$/m.exec(parts?.body ?? text)?.groups?.title.trim() ?? field('name') ?? child.name,
+			description,
+			triggers: [...triggers.matchAll(/'(?<trigger>[^']+)'/g)].map(match => match.groups!.trigger),
+			files: files.map(entry => entry.path),
+			size: ByteSize.formatSize(files.reduce((total, entry) => total + entry.size, 0)),
+			location: child.resource,
+		});
 	}
-	return skills.sort((a, b) => a.name.localeCompare(b.name));
+	return skills.sort((a, b) => a.title.localeCompare(b.title));
 }
 
-interface ISkillPickItem extends IQuickPickItem {
-	readonly skill: ISkillInfo;
-}
+type SkillsMessage =
+	| { readonly command: 'ready' }
+	| { readonly command: 'view'; readonly folder: string; readonly path: string }
+	| { readonly command: 'run'; readonly folder: string }
+	| { readonly command: 'task'; readonly id: string }
+	| { readonly command: 'install' };
 
-interface ISkillActionItem extends IQuickPickItem {
-	readonly run: () => Promise<unknown>;
-}
+/** The open skills page, so a second request shows the same page. */
+let skillsPage: WebviewInput | undefined;
 
-/** Lists the skills; for the one picked, shows it or runs it with the chosen coding agent. */
+/**
+ * Opens the skills page, in the look of the Workflows and New Methods libraries: a table of the
+ * skills of the latest plugin, with the Pollis Agents tasks that use each, the requests that start
+ * it and its files. A skill opens in the editor, or runs with the chosen coding agent.
+ */
 async function browseSkills(accessor: ServicesAccessor): Promise<void> {
-	const quickInputService = accessor.get(IQuickInputService);
+	const webviewWorkbenchService = accessor.get(IWebviewWorkbenchService);
 	const fileService = accessor.get(IFileService);
 	const editorService = accessor.get(IEditorService);
+	const commandService = accessor.get(ICommandService);
 	const instantiationService = accessor.get(IInstantiationService);
 	const folder = pluginFolder(accessor.get(IPathService));
 
+	if (skillsPage && !skillsPage.isDisposed()) {
+		webviewWorkbenchService.revealWebview(skillsPage, skillsPage.group ?? -1, false);
+		return;
+	}
 	if (!await instantiationService.invokeFunction(updateSkills)) {
 		return;
 	}
-	const pick = await quickInputService.pick<ISkillPickItem>((await readSkills(fileService, folder)).map(skill => ({
-		label: skill.name,
-		detail: skill.description.replace(/\s*Triggers include.*$/, ''),
-		skill,
-	})), {
-		title: localize('pollisSkills.browse.title', "Pollis Skills"),
-		placeHolder: localize('pollisSkills.browse.placeholder', "A skill is the know-how a coding agent reads to do a task; the Pollis Agents tasks use these"),
-		matchOnDetail: true,
-	});
-	if (!pick) {
-		return;
-	}
-	const skill = pick.skill;
-	const action = await quickInputService.pick<ISkillActionItem>([
-		{ label: localize('pollisSkills.view', "View Skill"), detail: localize('pollisSkills.viewDetail', "Opens its SKILL.md"), run: () => editorService.openEditor({ resource: skill.file }) },
+	const skills = await readSkills(fileService, folder);
+	const title = localize('pollisSkills.browse.title', "Pollis Skills");
+	const webviewInput = skillsPage = webviewWorkbenchService.openWebview(
 		{
-			label: localize('pollisSkills.run', "Run with My Agent"),
-			detail: localize('pollisSkills.runDetail', "Starts your coding agent with this skill, to do its task with you"),
-			run: () => instantiationService.invokeFunction(startAgent, skill.name, localize('pollisSkills.runPrompt', "Read the skill {0} and follow its instructions with me.", skill.file.fsPath)),
+			title,
+			options: { retainContextWhenHidden: true },
+			contentOptions: { allowScripts: true, localResourceRoots: [] },
+			extension: undefined,
 		},
-	], { title: skill.name });
-	await action?.run();
+		'pollis.skillsLibrary',
+		title,
+		undefined,
+		{ group: undefined, preserveFocus: false }
+	);
+	webviewInput.webview.setHtml(skillsPageHtml(title));
+
+	const disposables = new DisposableStore();
+	disposables.add(webviewInput.webview.onDidDispose(() => {
+		if (skillsPage === webviewInput) {
+			skillsPage = undefined;
+		}
+		disposables.dispose();
+	}));
+
+	disposables.add(webviewInput.webview.onMessage((e: { message: SkillsMessage }) => {
+		const message = e.message;
+		const skill = message.command === 'view' || message.command === 'run' ? skills.find(candidate => candidate.folder === message.folder) : undefined;
+		if (message.command === 'ready') {
+			webviewInput.webview.postMessage({
+				command: 'entries',
+				entries: skills.map(({ location, ...rest }) => ({
+					...rest,
+					tasks: SKILL_TASKS.filter(task => task.skill.folder === rest.folder).map(task => ({ id: task.command, title: task.skill.title })),
+				})),
+			});
+		} else if (message.command === 'view' && skill?.files.includes(message.path)) {
+			editorService.openEditor({ resource: joinPath(skill.location, ...message.path.split('/')) });
+		} else if (message.command === 'run' && skill) {
+			instantiationService.invokeFunction(startAgent, skill.title, localize('pollisSkills.runPrompt', "Read the skill {0} and follow its instructions with me.", joinPath(skill.location, 'SKILL.md').fsPath));
+		} else if (message.command === 'task' && SKILL_TASKS.some(task => task.command === message.id)) {
+			commandService.executeCommand(message.id);
+		} else if (message.command === 'install') {
+			commandService.executeCommand(INSTALL_SKILLS_COMMAND_ID);
+		}
+	}));
+}
+
+/** The skills page: its texts come from here, its entries from the `entries` message. */
+function skillsPageHtml(title: string): string {
+	const text = {
+		skill: localize('pollisSkills.skill', "Skill"),
+		tasks: localize('pollisSkills.tasks', "Pollis Agents Tasks"),
+		requests: localize('pollisSkills.requests', "Example Requests"),
+		files: localize('pollisSkills.files', "Files"),
+		size: localize('pollisSkills.size', "Size"),
+		view: localize('pollisSkills.view', "View Skill"),
+		run: localize('pollisSkills.run', "Run with My Agent"),
+		noTask: localize('pollisSkills.noTask', "None: run it with your agent"),
+		moreRequests: localize('pollisSkills.moreRequests', "{0} more"),
+		more: localize('pollisSkills.more', "more"),
+		less: localize('pollisSkills.less', "less"),
+	};
+	const intro = localize('pollisSkills.intro', "A skill is the know-how a coding agent reads to do a task: the Pollis Agents tasks use these, and any coding agent can follow them. This is the latest version of each, downloaded when the page opens. Click a name to read its SKILL.md, or run it with your coding agent.");
+	const install = localize('pollisSkills.installLink', "Install in Claude Code...");
+	return `<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';">
+	<style>
+${LIBRARY_PAGE_STYLE}
+	.name { width: 40%; }
+	.links { margin-top: 6px; }
+	.subtitle-links { margin: -8px 0 16px 0; }
+	.task { display: block; margin: 0 0 4px 0; font-size: 12px; text-align: left; }
+	.request::before { content: '\u201C'; }
+	.request::after { content: '\u201D'; }
+	</style>
+</head>
+<body>
+<div class="container">
+	<h1>${title}</h1>
+	<p class="subtitle">${intro}</p>
+	<div class="links subtitle-links"><button class="link" id="install">${install}</button></div>
+	<table>
+		<thead><tr>
+			<th>${text.skill}</th><th>${text.tasks}</th><th>${text.requests}</th><th>${text.files}</th><th>${text.size}</th>
+		</tr></thead>
+		<tbody id="entries"></tbody>
+	</table>
+</div>
+<script>
+	const vscode = acquireVsCodeApi();
+	const TEXT = ${JSON.stringify(text)};
+	/** A skill with more example requests than this shows the rest on request. */
+	const LISTED = 4;
+	const body = document.getElementById('entries');
+	document.getElementById('install').addEventListener('click', () => vscode.postMessage({ command: 'install' }));
+
+${LIBRARY_PAGE_HELPERS}
+
+	function nameCell(row, skill) {
+		const td = cell(row, 'name');
+		const title = element('div', 'title', skill.title);
+		title.addEventListener('click', () => vscode.postMessage({ command: 'view', folder: skill.folder, path: 'SKILL.md' }));
+		td.appendChild(title);
+		td.appendChild(element('div', 'file', skill.folder + '/SKILL.md'));
+		const description = element('p', 'description clamped', skill.description);
+		td.appendChild(description);
+		// The toggle shows only when the description is longer than its three lines
+		const toggle = link(TEXT.more, () => {
+			const clamped = description.classList.toggle('clamped');
+			toggle.textContent = clamped ? TEXT.more : TEXT.less;
+		});
+		toggle.classList.add('small');
+		td.appendChild(toggle);
+		requestAnimationFrame(() => { toggle.hidden = description.scrollHeight <= description.clientHeight; });
+		const links = element('div', 'links');
+		links.appendChild(link(TEXT.view, () => vscode.postMessage({ command: 'view', folder: skill.folder, path: 'SKILL.md' })));
+		links.appendChild(link(TEXT.run, () => vscode.postMessage({ command: 'run', folder: skill.folder })));
+		td.appendChild(links);
+	}
+
+	function tasksCell(row, skill) {
+		const td = cell(row);
+		if (!skill.tasks.length) {
+			td.appendChild(element('span', 'small', TEXT.noTask));
+		}
+		for (const task of skill.tasks) {
+			const button = link(task.title, () => vscode.postMessage({ command: 'task', id: task.id }));
+			button.classList.add('task');
+			td.appendChild(button);
+		}
+	}
+
+	function requestsCell(row, skill) {
+		const td = cell(row);
+		const chips = skill.triggers.map(trigger => element('span', 'package request', trigger));
+		chips.forEach((chip, index) => { chip.hidden = index >= LISTED; td.appendChild(chip); });
+		if (chips.length > LISTED) {
+			const toggle = link(TEXT.moreRequests.replace('{0}', chips.length - LISTED), () => {
+				const hidden = !chips[LISTED].hidden;
+				chips.slice(LISTED).forEach(chip => { chip.hidden = hidden; });
+				toggle.textContent = hidden ? TEXT.moreRequests.replace('{0}', chips.length - LISTED) : TEXT.less;
+			});
+			toggle.classList.add('small');
+			td.appendChild(toggle);
+		}
+	}
+
+	function filesCell(row, skill) {
+		const td = cell(row, 'nowrap');
+		for (const path of skill.files) {
+			const line = element('div', 'small');
+			line.appendChild(link(path, () => vscode.postMessage({ command: 'view', folder: skill.folder, path })));
+			td.appendChild(line);
+		}
+	}
+
+	function render(skills) {
+		body.textContent = '';
+		for (const skill of skills) {
+			const row = element('tr');
+			nameCell(row, skill);
+			tasksCell(row, skill);
+			requestsCell(row, skill);
+			filesCell(row, skill);
+			cell(row, 'nowrap').textContent = skill.size;
+			body.appendChild(row);
+		}
+	}
+
+	window.addEventListener('message', event => {
+		if (event.data.command === 'entries') {
+			render(event.data.entries);
+		}
+	});
+	vscode.postMessage({ command: 'ready' });
+</script>
+</body>
+</html>`;
 }
 
 /** Installs the Pollis Agents plugin in Claude Code from its marketplace, in a terminal. */

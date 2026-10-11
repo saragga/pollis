@@ -24,6 +24,7 @@ import { parseToml } from '../../src/vs/workbench/contrib/model/browser/common/t
 const ROOT = path.join(import.meta.dirname, '..', '..');
 const WEBVIEWS_DIR = path.join(ROOT, 'src', 'vs', 'workbench', 'contrib', 'model', 'browser', 'webviews');
 const OUT_DIR = path.join(ROOT, '.build', 'code-examples');
+/** The toolbox sources: a clone of Trumpingtons/pollis-toolboxes, ignored by Pollis' git. */
 const TOOLBOXES_DIR = path.join(ROOT, 'toolboxes');
 
 /** Expected totals, from the Pollis Polish Roadmap (task 3.1). */

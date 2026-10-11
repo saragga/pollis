@@ -378,6 +378,14 @@ export class Menubar extends Disposable {
 			menubar.append(optimiseMenuItem);
 		}
 
+		// Extend: only when a toolbox is in it
+		if (this.shouldDrawMenu('Extend')) {
+			const extendMenu = new Menu();
+			const extendMenuItem = new MenuItem({ label: this.mnemonicLabel(nls.localize({ key: 'mExtend', comment: ['&& denotes a mnemonic'] }, "E&&xtend")), submenu: extendMenu });
+			this.setMenuById(extendMenu, 'Extend');
+			menubar.append(extendMenuItem);
+		}
+
 		// Mac: Window
 		let macWindowMenuItem: MenuItem | undefined;
 		if (this.shouldDrawMenu('Window')) {

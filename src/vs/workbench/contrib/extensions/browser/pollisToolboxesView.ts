@@ -42,11 +42,11 @@ import { ExtensionRuntimeActionType, ExtensionState, IExtension, IExtensionsWork
 import { CHOOSE_TOOLBOX_PANELS_COMMAND_ID } from '../../compose/common/toolboxPanels.js';
 
 /**
- * The branch toolboxes-dist of saragga/pollis holds the toolboxes: its toolboxes.json and the .vsix
+ * The branch dist of Trumpingtons/pollis-toolboxes holds the toolboxes: its toolboxes.json and the .vsix
  * files it names (written by build/pollis/packageToolboxes.ts). Served by raw.githubusercontent.com,
  * which allows cross-origin requests; GitHub release downloads do not, so the window cannot fetch them.
  */
-const TOOLBOXES_URL = 'https://raw.githubusercontent.com/saragga/pollis/toolboxes-dist';
+const TOOLBOXES_URL = 'https://raw.githubusercontent.com/Trumpingtons/pollis-toolboxes/dist';
 const TOOLBOXES_INDEX_URL = `${TOOLBOXES_URL}/toolboxes.json`;
 
 /** The icon of every toolbox row: the Pollis icon, also the toolboxes' own icon. */
@@ -95,7 +95,7 @@ function toolboxLabel(name: string): string {
 
 /**
  * The Toolboxes section of the Extensions pane: the Pollis toolbox extensions published on the
- * toolboxes-dist branch that are not installed, each with a button to install it, and the installed
+ * dist branch that are not installed, each with a button to install it, and the installed
  * ones that have an update, with a button to update them. An installed toolbox is in the Installed
  * section, with its Edit button (extensionsActions.ts), and is uninstalled from its Manage menu like
  * any extension. A click on a toolbox opens its details: the extension page when it is installed,
