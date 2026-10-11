@@ -292,6 +292,10 @@ const desktopResourcePatterns = [
 	'vs/workbench/contrib/model/browser/media/wiki/**/*.md',
 	'vs/workbench/contrib/model/browser/media/notebooks/**/*.ipynb',
 	'vs/workbench/contrib/model/browser/media/notebooks/**/*.jl',
+
+	// Compose > Collaboration - the vendored Trystero bundles and their licences
+	'vs/workbench/contrib/compose/browser/media/collaboration/*.js',
+	'vs/workbench/contrib/compose/browser/media/collaboration/*.txt',
 ];
 
 // Resources for server target (minimal - no UI)

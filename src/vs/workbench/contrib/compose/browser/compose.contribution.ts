@@ -14,6 +14,7 @@ import { CREATE_METHOD_COMMAND_ID, PACKAGE_METHOD_COMMAND_ID, PREPARE_REGISTRATI
 import './codingAgentPage.js';
 import { BROWSE_OPERATIONAL_WORKFLOWS_COMMAND_ID } from './operationalWorkflows.js';
 import { EXPORT_NOTEBOOK_LATEX_COMMAND_ID, MAKE_NOTEBOOK_SLIDES_COMMAND_ID, POLISH_REPORT_COMMAND_ID } from './reports.js';
+import { IMPLEMENTED_COLLABORATION_COMMANDS } from './collaboration/collaboration.contribution.js';
 import { NEW_METHODS_COMMAND_ID, PUBLISHED_BENCHMARKS_COMMAND_ID, SEARCH_WORKFLOW_LIBRARY_COMMAND_ID } from './workflowLibrary.js';
 
 // The Mathematical Foundations, Financial Econometrics and Macroeconomics Toolboxes come from their extensions (toolboxes/pollis-toolbox-*, not built in:
@@ -341,8 +342,8 @@ for (const item of composeItems) {
 
 // Live sessions between Pollis users (roadmap phase 5, internal-reports/collaboration-spec.md),
 // and later classrooms and simulation games (phase 13) on the same session layer.
-// Not built yet: each item says so. Share My Editor and Copy to My Editor are not here:
-// they will be buttons below the editors.
+// Built so far (collaboration/): sessions, the chat and Test Connection; each other item says it is not
+// built yet. Share My Editor and Copy to My Editor are not here: they will be buttons below the editors.
 const CollaborationClassroomMenu = new MenuId('menubarCollaborationClassroomMenu');
 const CollaborationGamesMenu = new MenuId('menubarCollaborationGamesMenu');
 
@@ -388,9 +389,11 @@ const collaborationItems = [
 ];
 
 for (const item of collaborationItems) {
-	CommandsRegistry.registerCommand(item.id, accessor => {
-		accessor.get(INotificationService).info(localize('collaboration.notYetImplemented', "{0}: Not yet implemented", item.title.replace(/\.\.\.$/, '')));
-	});
+	if (!IMPLEMENTED_COLLABORATION_COMMANDS.has(item.id)) {
+		CommandsRegistry.registerCommand(item.id, accessor => {
+			accessor.get(INotificationService).info(localize('collaboration.notYetImplemented', "{0}: Not yet implemented", item.title.replace(/\.\.\.$/, '')));
+		});
+	}
 	MenuRegistry.appendMenuItem(item.menu, {
 		group: item.group,
 		command: { id: item.id, title: item.title },

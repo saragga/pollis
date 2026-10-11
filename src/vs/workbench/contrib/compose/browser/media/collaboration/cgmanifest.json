@@ -1,0 +1,49 @@
+{
+	"registrations": [
+		{
+			"component": {
+				"type": "npm",
+				"npm": {
+					"name": "@trystero-p2p/nostr",
+					"version": "0.26.0"
+				}
+			},
+			"license": "MIT",
+			"developmentDependency": false
+		},
+		{
+			"component": {
+				"type": "npm",
+				"npm": {
+					"name": "@trystero-p2p/mqtt",
+					"version": "0.26.0"
+				}
+			},
+			"license": "MIT",
+			"developmentDependency": false
+		},
+		{
+			"component": {
+				"type": "npm",
+				"npm": {
+					"name": "@noble/secp256k1",
+					"version": "3.2.0"
+				}
+			},
+			"license": "MIT",
+			"developmentDependency": false
+		},
+		{
+			"component": {
+				"type": "npm",
+				"npm": {
+					"name": "mqtt",
+					"version": "5.16.0"
+				}
+			},
+			"license": "MIT",
+			"developmentDependency": false
+		}
+	],
+	"version": 1
+}
