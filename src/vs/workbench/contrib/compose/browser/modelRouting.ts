@@ -24,7 +24,7 @@ export type AgentTier = 'light' | 'standard' | 'strong';
 /** A task set to `main` runs the main agent, whatever its tier. */
 export type AgentTierChoice = AgentTier | 'main';
 
-export type AgentTask = 'polish' | 'writeVignette' | 'prepareRegistration' | 'packageToolbox' | 'tablesFromArticle' | 'writeMethod' | 'methodFromNotebook' | 'createPanel' | 'createPanelsFromRequest';
+export type AgentTask = 'polish' | 'writeVignette' | 'prepareRegistration' | 'packageToolbox' | 'tablesFromArticle' | 'writeMethod' | 'createPanel' | 'createPanelsFromRequest';
 
 /** A tier: its name and what it is for. */
 export interface IAgentTierInfo {
@@ -54,7 +54,6 @@ export const AGENT_TASKS: readonly IAgentTaskInfo[] = [
 	{ id: 'packageToolbox', label: localize('modelRouting.packageToolbox', "Package a Toolbox"), menu: localize('modelRouting.newPanels', "New Panels and Toolboxes"), tier: 'standard' },
 	{ id: 'tablesFromArticle', label: localize('modelRouting.tablesFromArticle', "Tables from the Article"), menu: localize('modelRouting.newMethods', "New Methods"), tier: 'strong' },
 	{ id: 'writeMethod', label: localize('modelRouting.writeMethod', "Write a Method"), menu: localize('modelRouting.newMethods', "New Methods"), tier: 'strong' },
-	{ id: 'methodFromNotebook', label: localize('modelRouting.methodFromNotebook', "Method from Notebook"), menu: localize('modelRouting.newMethods', "New Methods"), tier: 'strong' },
 	{ id: 'createPanel', label: localize('modelRouting.createPanel', "Create a Panel"), menu: localize('modelRouting.newPanels', "New Panels and Toolboxes"), tier: 'strong' },
 	{ id: 'createPanelsFromRequest', label: localize('modelRouting.createPanelsFromRequest', "Create Panels from a Request"), menu: localize('modelRouting.newPanels', "New Panels and Toolboxes"), tier: 'strong' },
 ];

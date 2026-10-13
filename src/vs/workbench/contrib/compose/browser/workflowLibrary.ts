@@ -13,7 +13,6 @@ import { URI } from '../../../../base/common/uri.js';
 import { localize, localize2 } from '../../../../nls.js';
 import { Action2, registerAction2 } from '../../../../platform/actions/common/actions.js';
 import { IClipboardService } from '../../../../platform/clipboard/common/clipboardService.js';
-import { ICommandService } from '../../../../platform/commands/common/commands.js';
 import { ByteSize, IFileService } from '../../../../platform/files/common/files.js';
 import { IInstantiationService, ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
 import { INotificationService } from '../../../../platform/notification/common/notification.js';
@@ -24,7 +23,6 @@ import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
 import { LIBRARY_PAGE_HELPERS, LIBRARY_PAGE_STYLE } from './libraryPage.js';
 import { BROWSE_METHODS_COMMAND_ID, deleteUserMethods, openUserMethod, readMethodSummaries, userMethodsFolder } from './newMethods.js';
-import { METHOD_FROM_NOTEBOOK_COMMAND_ID } from './pollisAgents.js';
 
 export const SEARCH_WORKFLOW_LIBRARY_COMMAND_ID = 'chiara.statistics.wfl_sl';
 export const PUBLISHED_BENCHMARKS_COMMAND_ID = 'pollis.correctness.publishedBenchmarks';
@@ -196,7 +194,6 @@ type LibraryMessage =
 	| { readonly command: 'ready' }
 	| { readonly command: 'open'; readonly folder: string }
 	| { readonly command: 'copyBibtex'; readonly folder: string }
-	| { readonly command: 'makeMethod'; readonly folder: string }
 	| { readonly command: 'link'; readonly url: string }
 	| { readonly command: 'openMethod'; readonly id: string }
 	| { readonly command: 'deleteMethod'; readonly id: string }
@@ -220,7 +217,6 @@ async function openLibraryPage(accessor: ServicesAccessor, library: INotebookLib
 	const clipboardService = accessor.get(IClipboardService);
 	const openerService = accessor.get(IOpenerService);
 	const instantiationService = accessor.get(IInstantiationService);
-	const commandService = accessor.get(ICommandService);
 
 	const open = openPages.get(library);
 	if (open && !open.isDisposed()) {
@@ -281,7 +277,7 @@ async function openLibraryPage(accessor: ServicesAccessor, library: INotebookLib
 
 	disposables.add(webviewInput.webview.onMessage((e: { message: LibraryMessage }) => {
 		const message = e.message;
-		const entry = message.command === 'open' || message.command === 'copyBibtex' || message.command === 'makeMethod' ? entries.find(candidate => candidate.folder === message.folder) : undefined;
+		const entry = message.command === 'open' || message.command === 'copyBibtex' ? entries.find(candidate => candidate.folder === message.folder) : undefined;
 		if (message.command === 'ready') {
 			webviewInput.webview.postMessage({ command: 'entries', entries: entries.map(({ location, ...rest }) => rest) });
 			if (library.userMethods) {
@@ -293,8 +289,6 @@ async function openLibraryPage(accessor: ServicesAccessor, library: INotebookLib
 			instantiationService.invokeFunction(deleteUserMethods, message.command === 'deleteEmpty' ? 'empty' : message.id).then(sendMethods, error => notificationService.error(toErrorMessage(error)));
 		} else if (message.command === 'open' && entry) {
 			openEntry(entry);
-		} else if (message.command === 'makeMethod' && entry && library.userMethods) {
-			commandService.executeCommand(METHOD_FROM_NOTEBOOK_COMMAND_ID, joinPath(entry.location, entry.notebook));
 		} else if (message.command === 'copyBibtex' && entry?.article?.bibtex) {
 			clipboardService.writeText(entry.article.bibtex);
 		} else if (message.command === 'link' && /^https:\/\//.test(message.url)) {
@@ -329,7 +323,6 @@ function pageHtml(library: INotebookLibrary): string {
 		tableCount: localize('newMethods.yours.tableCount', "{0} input, {1} target"),
 		delete: localize('newMethods.yours.delete', "Delete"),
 		deleteEmpty: localize('newMethods.yours.deleteEmpty', "Delete Empty Methods ({0})"),
-		makeMethod: library.userMethods ? localize('newMethods.library.makeMethod', "Make a Method") : '',
 	};
 	const userMethods = library.userMethods ? `
 	<h2>${text.inProgress}</h2>
@@ -385,12 +378,6 @@ ${LIBRARY_PAGE_HELPERS}
 		title.addEventListener('click', () => vscode.postMessage({ command: 'open', folder: entry.folder }));
 		td.appendChild(title);
 		td.appendChild(element('div', 'file', entry.notebook));
-		// A library notebook of New Methods can become a method of the user's, to package and publish
-		if (TEXT.makeMethod) {
-			const make = link(TEXT.makeMethod, () => vscode.postMessage({ command: 'makeMethod', folder: entry.folder }));
-			make.classList.add('small');
-			td.appendChild(make);
-		}
 		const description = element('p', 'description clamped', entry.description);
 		td.appendChild(description);
 		// The toggle shows only when the description is longer than its three lines

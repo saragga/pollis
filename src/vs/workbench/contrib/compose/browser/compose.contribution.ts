@@ -12,7 +12,7 @@ import { registerIcon } from '../../../../platform/theme/common/iconRegistry.js'
 import { AGENT_MENU_ICON_ID } from '../../../../platform/menubar/common/menubar.js';
 import './toolboxExtensions.js';
 import './toolboxPanelsPage.js';
-import { BROWSE_SKILLS_COMMAND_ID, CHOOSE_AGENT_COMMAND_ID, CREATE_PANEL_COMMAND_ID, CREATE_PANELS_FROM_REQUEST_COMMAND_ID, METHOD_FROM_NOTEBOOK_COMMAND_ID, PACKAGE_TOOLBOX_COMMAND_ID } from './pollisAgents.js';
+import { BROWSE_SKILLS_COMMAND_ID, CHOOSE_AGENT_COMMAND_ID, CREATE_PANEL_COMMAND_ID, CREATE_PANELS_FROM_REQUEST_COMMAND_ID, PACKAGE_TOOLBOX_COMMAND_ID } from './pollisAgents.js';
 import { BROWSE_METHODS_COMMAND_ID, CREATE_METHOD_COMMAND_ID } from './newMethods.js';
 import './codingAgentPage.js';
 import './modelRoutingPage.js';
@@ -265,12 +265,6 @@ MenuRegistry.appendMenuItem(NewMethodsMenu, {
 	group: '1_write',
 	command: { id: CREATE_METHOD_COMMAND_ID, title: localize('newMethods.createMethods', "Create Methods") },
 	order: 1,
-});
-
-MenuRegistry.appendMenuItem(NewMethodsMenu, {
-	group: '1_write',
-	command: { id: METHOD_FROM_NOTEBOOK_COMMAND_ID, title: localize('newMethods.fromNotebookMenu', "Method from Notebook...") },
-	order: 2,
 });
 
 MenuRegistry.appendMenuItem(NewMethodsMenu, {

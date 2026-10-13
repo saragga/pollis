@@ -35,13 +35,13 @@ import { ITerminalService } from '../../terminal/browser/terminal.js';
 import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
 import { AGENT_BADGE_CSS, AGENT_ICON } from './agentBadge.js';
-import { METHOD_FROM_NOTEBOOK_COMMAND_ID, PREPARE_REGISTRATION_COMMAND_ID, skillFile, startAgent, WRITE_METHOD_COMMAND_ID, WRITE_VIGNETTE_COMMAND_ID } from './pollisAgents.js';
+import { PREPARE_REGISTRATION_COMMAND_ID, skillFile, startAgent, WRITE_METHOD_COMMAND_ID, WRITE_VIGNETTE_COMMAND_ID } from './pollisAgents.js';
 import { AgentTask } from './modelRouting.js';
 
 // Compose > New Methods > Create Methods (Browse Methods, which lists them, is in workflowLibrary.ts).
 // A method is a folder of ~/.pollis/methods with method.toml, its code in src/NAME.jl (module NAME),
 // the published results it must reproduce in targets/*.csv and the user's notes for a coding agent in
-// INSTRUCTIONS.md. Create Methods opens the page of a new method straight away, a draft named NewMethod until the user names it, deleted if its page closes
+// INSTRUCTIONS.md. Create Methods opens the page of a new method with no folder: the first thing typed or added makes it, named after the title, else NewMethod
 // while it is still empty. Each method opens on its own page beside the article, shown in the integrated browser in an in-memory session. The article
 // and the input data are only links in method.toml: the page reads the data into memory to show it, and
 // nothing of either is written to disk, not even a cache. Only when the user asks, Save a Copy... keeps a
@@ -55,10 +55,7 @@ import { AgentTask } from './modelRouting.js';
 // docstring for every exported name). Three tasks hand a method to the user's coding agent, with the skills
 // of the Pollis Agents plugin: Write a Method... (write-method: the code that reproduces the targets), Write
 // a Vignette... (write-vignette: the method's documentation) and Prepare for Registration...
-// (prepare-method: the rules). Their commands, run without a method, open Browse Methods. Method from
-// Notebook... (method-from-notebook) makes a method out of a notebook that already holds a method and its
-// checks against an article, such as those of the library: it makes the method folder, named after the
-// notebook, keeps a copy of the notebook in its notebook/ folder, opens its page and hands it to the agent.
+// (prepare-method: the rules). Their commands, run without a method, open Browse Methods.
 
 export const CREATE_METHOD_COMMAND_ID = 'pollis.newMethods.create';
 export const PACKAGE_METHOD_COMMAND_ID = 'pollis.newMethods.package';
@@ -71,8 +68,6 @@ const DEFAULT_REGISTRY = 'https://github.com/Trumpingtons/PollisRegistry';
 const DATASETS_URL = 'https://raw.githubusercontent.com/Trumpingtons/PollisDatasets.jl/main';
 const PACKAGE_SCRIPT = 'vs/workbench/contrib/compose/browser/media/methods/package.jl';
 const INSTRUCTIONS_FILE = 'INSTRUCTIONS.md';
-/** The folder of a method made from a notebook that holds the notebook's copy. */
-const NOTEBOOK_FOLDER = 'notebook';
 const VIGNETTE_INSTRUCTIONS_FILE = 'VIGNETTE.md';
 /** The rows of an input table the page shows. */
 const PREVIEW_ROWS = 10;
@@ -404,9 +399,6 @@ async function isEmptyMethod(fileService: IFileService, method: IMethod): Promis
 	if (method.article || method.articleLocal || method.inputs.length || method.targets.length || method.instructions.trim() || method.vignetteInstructions.trim() || method.vignette) {
 		return false;
 	}
-	if (await fileService.exists(joinPath(method.folder, NOTEBOOK_FOLDER))) {
-		return false;
-	}
 	const code = joinPath(method.folder, 'src', `${method.name}.jl`);
 	return !await fileService.exists(code) || (await fileService.readFile(code)).value.toString() === moduleCode(method.name);
 }
@@ -673,11 +665,14 @@ type MethodMessage =
 /** The open pages, by method folder, so a second request shows the same page. */
 const openPages = new Map<string, WebviewInput>();
 
-/** A free provisional name for a new method: NewMethod, NewMethod2... */
-async function draftName(fileService: IFileService, root: URI): Promise<string> {
+/** A free provisional name for a new method, after its title when it has one, else NewMethod: NewMethod, NewMethod2... */
+async function draftName(fileService: IFileService, root: URI, title = ''): Promise<string> {
+	const fromTitle = title.split(/[^A-Za-z0-9]+/).map(word => word.charAt(0).toUpperCase() + word.slice(1)).join('');
+	const base = /^[A-Z]/.test(fromTitle) ? fromTitle : 'NewMethod';
+	const taken = new Set(((await fileService.exists(root)) ? (await fileService.resolve(root)).children ?? [] : []).map(child => child.name.toLowerCase()));
 	for (let n = 1; ; n++) {
-		const name = n === 1 ? 'NewMethod' : `NewMethod${n}`;
-		if (!await fileService.exists(joinPath(root, name))) {
+		const name = n === 1 ? base : `${base}${n}`;
+		if (!taken.has(name.toLowerCase())) {
 			return name;
 		}
 	}
@@ -687,11 +682,11 @@ async function draftName(fileService: IFileService, root: URI): Promise<string> 
  * Opens a method: its article in the integrated browser and, beside it, its page, the five steps of making
  * it: Article and Data (the input tables read into memory from their links, and the target tables), Write
  * a Method, Write a Vignette, Prepare for Registration and Package and Publish, updated as the method's
- * files change. `step` is the step to show. With no folder, it opens a new method, a draft with a
- * provisional name until the user gives it a Package Name; a draft still empty when its page closes is
- * deleted.
+ * files change. `step` is the step to show. With no folder, it opens a new method with nothing on disk:
+ * the first thing typed or added makes its folder, named after its title, else NewMethod, a provisional
+ * name until the user gives it a Package Name; a draft still empty when its page closes is deleted.
  */
-async function openMethodPage(accessor: ServicesAccessor, folder?: URI, step?: string): Promise<void> {
+async function openMethodPage(accessor: ServicesAccessor, existing?: URI, step?: string): Promise<void> {
 	const webviewWorkbenchService = accessor.get(IWebviewWorkbenchService);
 	const fileService = accessor.get(IFileService);
 	const editorService = accessor.get(IEditorService);
@@ -706,22 +701,25 @@ async function openMethodPage(accessor: ServicesAccessor, folder?: URI, step?: s
 	const configurationService = accessor.get(IConfigurationService);
 	const instantiationService = accessor.get(IInstantiationService);
 
-	let draft = !folder;
+	let draft = !existing;
+	// Whether the method's folder exists: a new method has none until the first thing is typed or added
+	let created = !!existing;
 	// A draft's title until the user gives it one: its Title field shows the example instead
 	const draftTitle = localize('newMethods.draft.title', "New Method");
-	if (!folder) {
-		const root = methodsFolder(pathService);
-		folder = await newMethod(fileService, pathService, await draftName(fileService, root), draftTitle, '');
-	}
-	const open = openPages.get(folder.toString());
-	if (open && !open.isDisposed()) {
-		webviewWorkbenchService.revealWebview(open, open.group ?? -1, false);
-		if (step) {
-			open.webview.postMessage({ command: 'step', step });
+	const root = methodsFolder(pathService);
+	if (existing) {
+		const open = openPages.get(existing.toString());
+		if (open && !open.isDisposed()) {
+			webviewWorkbenchService.revealWebview(open, open.group ?? -1, false);
+			if (step) {
+				open.webview.postMessage({ command: 'step', step });
+			}
+			return;
 		}
-		return;
 	}
-	let method = await readMethod(fileService, folder);
+	// Until it is made, a new method is only in memory, its folder where it would go
+	let folder = existing ?? joinPath(root, 'NewMethod');
+	let method = created ? await readMethod(fileService, folder) : { folder, name: basename(folder), title: draftTitle, inputs: [], targets: [], instructions: '', vignetteTitle: draftTitle, vignetteInstructions: '' };
 	if (!method) {
 		return;
 	}
@@ -748,14 +746,19 @@ async function openMethodPage(accessor: ServicesAccessor, folder?: URI, step?: s
 		{ group: method.article || method.articleLocal ? SIDE_GROUP : undefined, preserveFocus: false }
 	);
 	webviewInput.webview.setHtml(pageHtml());
-	openPages.set(folder.toString(), webviewInput);
+	if (created) {
+		openPages.set(folder.toString(), webviewInput);
+	}
 
 	const disposables = new DisposableStore();
 	disposables.add(webviewInput.webview.onDidDispose(async () => {
-		openPages.delete(folder.toString());
 		disposables.dispose();
+		if (!created) {
+			return;
+		}
+		openPages.delete(folder.toString());
 		const left = draft ? await readMethod(fileService, folder) : undefined;
-		if (left && await isEmptyMethod(fileService, left)) {
+		if (left && left.title === draftTitle && await isEmptyMethod(fileService, left)) {
 			await fileService.del(folder, { recursive: true });
 		}
 	}));
@@ -791,10 +794,34 @@ async function openMethodPage(accessor: ServicesAccessor, folder?: URI, step?: s
 		method = await readMethod(fileService, folder) ?? method;
 		post();
 	}, 300));
-	for (const location of [folder, joinPath(folder, 'targets'), joinPath(folder, 'inputs'), joinPath(folder, 'vignette')]) {
-		const watcher = disposables.add(fileService.createWatcher(location, { recursive: false, excludes: [] }));
-		disposables.add(watcher.onDidChange(() => reload.schedule()));
+	const watch = () => {
+		for (const location of [folder, joinPath(folder, 'targets'), joinPath(folder, 'inputs'), joinPath(folder, 'vignette')]) {
+			const watcher = disposables.add(fileService.createWatcher(location, { recursive: false, excludes: [] }));
+			disposables.add(watcher.onDidChange(() => reload.schedule()));
+		}
+	};
+	if (created) {
+		watch();
 	}
+	// Makes a new method's folder, once, named `name` or after `title`
+	let creating: Promise<void> | undefined;
+	const create = (title: string, name?: string) => creating ??= (async () => {
+		folder = await newMethod(fileService, pathService, name ?? await draftName(fileService, root, title), title || draftTitle, '');
+		method = await readMethod(fileService, folder) ?? method;
+		created = true;
+		openPages.set(folder.toString(), webviewInput);
+		watch();
+	})();
+	// What a new method's folder is made for: the first thing typed or added (a Package Name makes it itself)
+	const makes = (message: MethodMessage) => {
+		switch (message.command) {
+			case 'setTitle': return !!message.title.trim();
+			case 'instructions': case 'vignetteInstructions': return !!message.text.trim();
+			case 'setVignetteTitle': case 'setArticle': case 'addLink': case 'addDataset': case 'addInput': case 'addTarget': case 'addTargetFiles':
+			case 'writeMethod': case 'writeVignette': case 'prepareRegistration': case 'open': return true;
+			default: return false;
+		}
+	};
 
 	const copyServices: ICopyServices = { fileService, fileDialogService, requestService, progressService, contextService, pathService, environmentService };
 	const run = async (action: () => Promise<void>) => {
@@ -815,8 +842,16 @@ async function openMethodPage(accessor: ServicesAccessor, folder?: URI, step?: s
 	};
 	let datasets: Promise<IDataset[]> | undefined;
 
-	disposables.add(webviewInput.webview.onMessage((e: { message: MethodMessage }) => {
+	disposables.add(webviewInput.webview.onMessage(async (e: { message: MethodMessage }) => {
 		const message = e.message;
+		if (!created && makes(message)) {
+			try {
+				await create(message.command === 'setTitle' ? message.title.trim() : '');
+			} catch (error) {
+				notificationService.error(toErrorMessage(error));
+				return;
+			}
+		}
 		const current = method;
 		if (!current) {
 			return;
@@ -845,9 +880,16 @@ async function openMethodPage(accessor: ServicesAccessor, folder?: URI, step?: s
 		} else if (message.command === 'setName') {
 			submit('name', async () => {
 				const name = message.name.trim();
-				const invalid = await validateName(fileService, methodsFolder(pathService), name, current.name);
+				const invalid = await validateName(fileService, root, name, created ? current.name : undefined);
 				if (invalid) {
 					throw new Error(invalid);
+				}
+				if (!created) {
+					// A new method's folder is made with its Package Name
+					await create(current.title === draftTitle ? '' : current.title, name);
+					draft = false;
+					post();
+					return;
 				}
 				const renamed = await renameMethod(fileService, pathService, current, name, current.title);
 				draft = false;
@@ -993,7 +1035,7 @@ function pageHtml(): string {
 		stepVignette: localize('newMethods.step.vignette', "Write a Vignette"),
 		stepRegister: localize('newMethods.step.register', "Prepare for Registration"),
 		stepPackage: localize('newMethods.step.package', "Package and Publish"),
-		draftHint: localize('newMethods.draft.hint', "A new method: its Package Name is set in {0}. Start with its article and tables in {1}. If you close the page before adding anything, the method is deleted."),
+		draftHint: localize('newMethods.draft.hint', "A new method: its Package Name is set in {0}. Start with its article and tables in {1}. Nothing is saved until you type or add something, and its folder is named after its title until you give it a Package Name."),
 		// 1. Article and Data
 		article: localize('newMethods.page.article', "Article"),
 		inputs: localize('newMethods.page.inputs', "Input Tables"),
@@ -1800,61 +1842,5 @@ registerAction2(class extends Action2 {
 		return runMethodTask(accessor, folder, 'prepareRegistration', 'prepare-method',
 			(skill, method, test) => localize('newMethods.prepareRegistration.prompt', "Read the skill {0} and follow its instructions to prepare the Pollis method in {1} for registration with me. The test command is: {2}", skill, method.folder.fsPath, test),
 			method => localize('newMethods.prepareRegistration.terminal', "Prepare {0}", method.title));
-	}
-});
-
-/**
- * Makes a method from a notebook: a method folder named after the notebook (Cox for cox.ipynb, Cox2 if
- * there is a Cox already), titled with its first heading, the notebook copied into its notebook/ folder.
- * Opens its page and starts the agent on it. Without a notebook, asks for one.
- */
-async function methodFromNotebook(accessor: ServicesAccessor, notebook?: URI): Promise<void> {
-	const fileService = accessor.get(IFileService);
-	const pathService = accessor.get(IPathService);
-	const fileDialogService = accessor.get(IFileDialogService);
-	const instantiationService = accessor.get(IInstantiationService);
-	const notificationService = accessor.get(INotificationService);
-	if (!notebook) {
-		notebook = (await fileDialogService.showOpenDialog({
-			title: localize('newMethods.fromNotebook.pick', "Method from Notebook"),
-			openLabel: localize({ key: 'newMethods.fromNotebook.open', comment: ['&& denotes a mnemonic'] }, "&&Make a Method"),
-			canSelectFiles: true,
-			filters: [{ name: localize('newMethods.fromNotebook.filter', "Jupyter Notebooks"), extensions: ['ipynb'] }],
-		}))?.[0];
-		if (!notebook) {
-			return;
-		}
-	}
-	const source = notebook;
-	try {
-		const content: { cells?: { cell_type: string; source: string | string[] }[] } = JSON.parse((await fileService.readFile(source)).value.toString());
-		const markdown = content.cells?.find(cell => cell.cell_type === 'markdown');
-		const heading = (Array.isArray(markdown?.source) ? markdown.source.join('') : markdown?.source ?? '').split('\n').find(line => /^#\s/.test(line));
-		const words = basename(source).replace(/\.ipynb$/i, '').split(/[^A-Za-z0-9]+/).filter(word => word);
-		let stem = words.map(word => word[0].toUpperCase() + word.slice(1)).join('').replace(/^[^A-Z]+/, '') || 'Method';
-		stem = stem[0].toUpperCase() + stem.slice(1);
-		const root = methodsFolder(pathService);
-		let name = stem;
-		for (let i = 2; await fileService.exists(joinPath(root, name)); i++) {
-			name = `${stem}${i}`;
-		}
-		const folder = await newMethod(fileService, pathService, name, heading?.replace(/^#\s+/, '').trim() || name, '');
-		await fileService.copy(source, joinPath(folder, NOTEBOOK_FOLDER, basename(source)));
-		await instantiationService.invokeFunction(openMethodPage, folder);
-		await instantiationService.invokeFunction(runMethodTask, folder, 'methodFromNotebook', 'method-from-notebook',
-			(skill, method, test) => localize('newMethods.fromNotebook.prompt', "Read the skill {0} and follow its instructions to make the Pollis method in {1} from the notebook {2} with me. The test command is: {3}", skill, method.folder.fsPath, joinPath(folder, NOTEBOOK_FOLDER, basename(source)).fsPath, test),
-			() => localize('newMethods.fromNotebook.terminal', "Method from {0}", basename(source)));
-	} catch (error) {
-		notificationService.error(localize('newMethods.fromNotebook.failed', "Could not make a method from {0}: {1}", basename(source), toErrorMessage(error)));
-	}
-}
-
-registerAction2(class extends Action2 {
-	constructor() {
-		super({ id: METHOD_FROM_NOTEBOOK_COMMAND_ID, title: localize2('newMethods.fromNotebook', "Method from Notebook..."), category, f1: true });
-	}
-	run(accessor: ServicesAccessor, notebook?: unknown): Promise<void> {
-		// Menus pass arguments of their own: only a notebook's URI is taken
-		return methodFromNotebook(accessor, URI.isUri(notebook) ? notebook : undefined);
 	}
 });

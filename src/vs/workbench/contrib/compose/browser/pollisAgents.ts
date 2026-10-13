@@ -60,7 +60,6 @@ export const PACKAGE_TOOLBOX_COMMAND_ID = 'pollis.agents.packageToolbox';
 export const WRITE_METHOD_COMMAND_ID = 'pollis.newMethods.writeMethod';
 export const PREPARE_REGISTRATION_COMMAND_ID = 'pollis.newMethods.prepareRegistration';
 export const WRITE_VIGNETTE_COMMAND_ID = 'pollis.newMethods.writeVignette';
-export const METHOD_FROM_NOTEBOOK_COMMAND_ID = 'pollis.newMethods.fromNotebook';
 export const CHOOSE_AGENT_COMMAND_ID = 'pollis.agents.chooseAgent';
 
 // The commands of Compose > Coding Agents and Agent Skills
@@ -392,7 +391,6 @@ const SKILL_TASKS: readonly { readonly folder: string; readonly title: string; r
 	{ folder: CREATE_PANELS_FROM_REQUEST.folder, title: CREATE_PANELS_FROM_REQUEST.title, command: CREATE_PANELS_FROM_REQUEST_COMMAND_ID },
 	{ folder: PACKAGE_TOOLBOX.folder, title: PACKAGE_TOOLBOX.title, command: PACKAGE_TOOLBOX_COMMAND_ID },
 	{ folder: 'write-method', title: localize('pollisAgents.writeMethod.task', "Write a Method"), command: WRITE_METHOD_COMMAND_ID },
-	{ folder: 'method-from-notebook', title: localize('pollisAgents.methodFromNotebook.task', "Method from Notebook"), command: METHOD_FROM_NOTEBOOK_COMMAND_ID },
 	{ folder: 'write-vignette', title: localize('pollisAgents.writeVignette.task', "Write a Vignette"), command: WRITE_VIGNETTE_COMMAND_ID },
 	{ folder: 'prepare-method', title: localize('pollisAgents.prepareRegistration.task', "Prepare for Registration"), command: PREPARE_REGISTRATION_COMMAND_ID },
 ];
