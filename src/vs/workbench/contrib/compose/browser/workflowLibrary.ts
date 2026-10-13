@@ -60,7 +60,7 @@ const NEW_METHODS: INotebookLibrary = {
 	base: 'vs/workbench/contrib/compose/browser/media/methods',
 	userFolder: 'methods',
 	title: localize('newMethods.title', "New Methods"),
-	intro: localize('newMethods.intro', "Each method is one no Julia package has, written out with its tests: data and the results published for them, printed beside Julia's. Without data and expected results there is no new method. The methods you started and have not published yet come first, In Progress: click a title to go on with it. Then those you published, and the library: click a name to open your own copy of the notebook, made in {0} the first time.", '<code>~/.pollis/methods</code>'),
+	intro: localize('newMethods.intro', "Each method is one no Julia package has, written out with its tests: data and the results published for them, printed beside Julia's. Without data and expected results there is no new method. The methods you started and have not published yet come first, In Progress: click a title to go on with it. Then those you published, and the library: click a name to open the page of your own copy of the method, made in {0} the first time, with its notebook as a worked example.", '<code>~/.pollis/methods</code>'),
 	entry: localize('newMethods.entry', "Method"),
 	empty: localize('newMethods.empty', "There are no new methods yet."),
 	openFailed: (label, error) => localize('newMethods.openFailed', "Could not open the method {0}: {1}", label, error),
@@ -130,6 +130,15 @@ function formatDate(date: string | undefined): string | undefined {
 	return date && new Date(`${date}T00:00:00`).toLocaleDateString(language, { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
+/** The size of the files in a folder and its subfolders. */
+async function folderSize(fileService: IFileService, folder: URI): Promise<number> {
+	let total = 0;
+	for (const child of (await fileService.resolve(folder, { resolveMetadata: true })).children ?? []) {
+		total += child.isDirectory ? await folderSize(fileService, child.resource) : child.size;
+	}
+	return total;
+}
+
 /**
  * Reads a library: each folder with a notebook is an entry, its title the notebook's first `# `
  * heading, its description the paragraph after it, its packages those of its `Pollis.packages`
@@ -181,7 +190,7 @@ async function readLibrary(fileService: IFileService, library: INotebookLibrary)
 			article: metadata.article,
 			packages: packagesOf(content.cells.filter(cell => cell.cell_type === 'code').map(source).join('\n')),
 			datasets: [...datasets.values()],
-			size: ByteSize.formatSize(files.reduce((total, file) => total + (file.isDirectory ? 0 : file.size), 0)),
+			size: ByteSize.formatSize(await folderSize(fileService, folder.resource)),
 			download: download > 0 ? ByteSize.formatSize(download) : undefined,
 			optionalDownload: optionalDownload > 0 ? ByteSize.formatSize(optionalDownload) : undefined,
 			updated: formatDate(metadata.updated),
@@ -263,9 +272,27 @@ async function openLibraryPage(accessor: ServicesAccessor, library: INotebookLib
 		disposables.add(webviewInput.webview.onDidFocus(() => refresh.schedule()));
 	}
 
+	// Copies the files of the library original that the user's copy lacks, keeping those the user has
+	const copyMissing = async (source: URI, target: URI): Promise<void> => {
+		for (const child of (await fileService.resolve(source)).children ?? []) {
+			const destination = joinPath(target, child.name);
+			if (child.isDirectory) {
+				await copyMissing(child.resource, destination);
+			} else if (!await fileService.exists(destination)) {
+				await fileService.copy(child.resource, destination);
+			}
+		}
+	};
+
 	const openEntry = async (entry: ILibraryEntry) => {
 		try {
 			const copy = joinPath(await pathService.userHome({ preferLocal: true }), '.pollis', library.userFolder, entry.folder);
+			if (library.userMethods) {
+				// A library method becomes one of the user's methods: its page opens, with its notebook a link on it
+				await copyMissing(entry.location, copy);
+				await instantiationService.invokeFunction(openUserMethod, copy.toString());
+				return;
+			}
 			if (!await fileService.exists(copy)) {
 				await fileService.copy(entry.location, copy);
 			}

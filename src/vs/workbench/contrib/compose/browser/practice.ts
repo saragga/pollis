@@ -3,10 +3,10 @@
  *  Licensed under the GNU Affero General Public License v3.0 or later. See LICENSE.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-// Compose > Practice: multiple-choice exercises whose data and answers Julia computes, a new version for
-// each seed. Practise a Topic lists the topics on a page and asks the exercises of the one picked one at a
-// time, from the first or from the exercise picked; Write an Exercise starts one
-// from a template and previews it beside the editor on every save. An exercise is a TOML file, described
+// Help > Practice and Compose > Learning Activities: multiple-choice exercises whose data and answers Julia
+// computes, a new version for each seed. Practise a Topic (Help) lists the topics on a page and asks the
+// exercises of the one picked one at a time, from the first or from the exercise picked; Write an Exercise
+// (Compose) starts one from a template and previews it beside the editor on every save. An exercise is a TOML file, described
 // in media/practice/practice.jl, the script that makes the versions; the bundled exercises are in
 // media/practice/exercises/<topic>/ and the user's in ~/.pollis/practice/<topic>/, merged by topic.
 
@@ -474,7 +474,7 @@ function fileName(title: string): string {
 /** The template Write an Exercise starts from: an exercise that works, to change. */
 function exerciseTemplate(title: string): string {
 	return [
-		'# An exercise for Compose > Practice: a question with one correct choice, computed by Julia.',
+		'# An exercise for Help > Practice: a question with one correct choice, computed by Julia.',
 		'# Each {{expression}} is Julia, evaluated after setup. rng is seeded, so each version has its own data;',
 		'# fmt(x, digits) writes x with fixed decimals and list(v) writes values separated by commas.',
 		'# The choices are shuffled; answer is the correct one, counted from 1. Make the wrong choices typical',
@@ -590,7 +590,7 @@ function browseHtml(): string {
 		mine: localize('practice.browse.mine', "Pollis and yours"),
 		onlyMine: localize('practice.browse.onlyMine', "Yours"),
 		practiseAll: localize('practice.browse.practiseAll', "Practise All"),
-		none: localize('practice.noTopics', "There are no exercises yet: write one with Compose > Practice > Write an Exercise."),
+		none: localize('practice.noTopics', "There are no exercises yet: write one with Compose > Learning Activities > Write an Exercise."),
 	};
 	return `<!DOCTYPE html>
 <html lang="en">

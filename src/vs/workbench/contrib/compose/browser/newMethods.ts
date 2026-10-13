@@ -144,6 +144,8 @@ interface IMethod {
 	/** The vignette's LaTeX file and PDF, `vignette/NAME.tex` and `.pdf`, when they exist. */
 	readonly vignette?: string;
 	readonly vignettePdf?: string;
+	/** The notebook that works the method through, `NAME.ipynb`, when it exists: the library methods have one. */
+	readonly notebook?: string;
 }
 
 /** The fields of a line of a delimited file; with `,` or `;`, a field in double quotes may hold the delimiter and doubled quotes. */
@@ -240,6 +242,7 @@ async function readMethod(fileService: IFileService, folder: URI): Promise<IMeth
 		vignetteInstructions: await readText(joinPath(folder, VIGNETTE_INSTRUCTIONS_FILE)),
 		vignette: await existing(`vignette/${name}.tex`),
 		vignettePdf: await existing(`vignette/${name}.pdf`),
+		notebook: await existing(`${name}.ipynb`),
 	};
 }
 
@@ -404,7 +407,7 @@ async function isEmptyMethod(fileService: IFileService, method: IMethod): Promis
 }
 
 /**
- * Gives a method a new package name and title: method.toml, the module and file in src/ and the folder.
+ * Gives a method a new package name and title: method.toml, the module and file in src/, the notebook, the vignette and the folder.
  * Returns the method's folder, new when the name changed.
  */
 async function renameMethod(fileService: IFileService, pathService: IPathService, method: IMethod, name: string, title: string): Promise<URI> {
@@ -418,6 +421,13 @@ async function renameMethod(fileService: IFileService, pathService: IPathService
 			const code = (await fileService.readFile(oldCode)).value.toString();
 			await fileService.writeFile(newCode, VSBuffer.fromString(code.replace(new RegExp(`^module\\s+${method.name}\\b`, 'm'), `module ${name}`)));
 			await fileService.del(oldCode);
+		}
+		// The files named after the package: the notebook and the vignette
+		for (const [from, to] of [[`${method.name}.ipynb`, `${name}.ipynb`], [`vignette/${method.name}.tex`, `vignette/${name}.tex`], [`vignette/${method.name}.pdf`, `vignette/${name}.pdf`]]) {
+			const source = joinPath(folder, ...from.split('/'));
+			if (await fileService.exists(source)) {
+				await fileService.move(source, joinPath(folder, ...to.split('/')));
+			}
 		}
 		await setTomlValue(fileService, folder, undefined, 'name', name);
 		const target = joinPath(root, name);
@@ -980,7 +990,7 @@ async function openMethodPage(accessor: ServicesAccessor, existing?: URI, step?:
 			const file = message.command === 'instructions' ? INSTRUCTIONS_FILE : VIGNETTE_INSTRUCTIONS_FILE;
 			run(() => fileService.writeFile(joinPath(folder, file), VSBuffer.fromString(message.text)).then(() => undefined));
 		} else if (message.command === 'open') {
-			const files = ['method.toml', `src/${current.name}.jl`, current.vignette, ...current.targets.map(target => target.file), ...current.inputs.map(input => input.file)];
+			const files = ['method.toml', `src/${current.name}.jl`, current.vignette, current.notebook, ...current.targets.map(target => target.file), ...current.inputs.map(input => input.file)];
 			if (files.includes(message.file)) {
 				run(async () => { await editorService.openEditor({ resource: joinPath(folder, ...message.file.split('/')) }); });
 			}
@@ -1086,6 +1096,7 @@ function pageHtml(): string {
 		writeMethod: localize('newMethods.page.writeMethod', "Write Method"),
 		editToml: localize('newMethods.page.editToml', "Edit method.toml"),
 		openCode: localize('newMethods.page.openCode', "Open Code"),
+		openNotebook: localize('newMethods.page.openNotebook', "Open Notebook"),
 		// 3. Write a Vignette
 		vignetteTitleHint: localize('newMethods.vignetteTitle.hint', "The title of the vignette, the method's title unless you change it."),
 		vignetteIntro: localize('newMethods.page.vignetteIntro', "Notes for a coding agent on the vignette: its look, its sections, the LaTeX style, the other Pollis vignettes to refer to. Saved in VIGNETTE.md; the vignette is a LaTeX file in the method's vignette folder, with its PDF beside it."),
@@ -1270,6 +1281,7 @@ ${PAGE_STYLE}
 			<button class="action primary with-agent" data-command="writeMethod">${AGENT_ICON}${text.writeMethod}</button>
 			<button class="action" data-command="open" data-file="method.toml">${text.editToml}</button>
 			<button class="action open-code" data-command="open">${text.openCode}</button>
+			<button class="action open-notebook" data-command="open">${text.openNotebook}</button>
 		</div>
 	</section>
 
@@ -1304,6 +1316,7 @@ ${PAGE_STYLE}
 		<div class="actions">
 			<button class="action primary with-agent" data-command="prepareRegistration">${AGENT_ICON}${text.prepareRegistration}</button>
 			<button class="action open-code" data-command="open">${text.openCode}</button>
+			<button class="action open-notebook" data-command="open">${text.openNotebook}</button>
 		</div>
 	</section>
 
@@ -1642,6 +1655,10 @@ ${PAGE_STYLE}
 			refresh('title', message.untitled ? '' : method.title);
 			refresh('instructions', method.instructions);
 			document.querySelectorAll('.open-code').forEach(button => { button.dataset.file = 'src/' + method.name + '.jl'; });
+			document.querySelectorAll('.open-notebook').forEach(button => {
+				button.hidden = !method.notebook;
+				button.dataset.file = method.notebook || '';
+			});
 			// 3. Write a Vignette
 			refresh('vignetteTitle', message.vignetteUntitled ? '' : method.vignetteTitle);
 			refresh('vignetteInstructions', method.vignetteInstructions);

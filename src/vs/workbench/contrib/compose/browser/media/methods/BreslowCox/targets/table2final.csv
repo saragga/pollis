@@ -1,0 +1,21 @@
+label,"final model, 418 patients"
+log bilirubin,0.8707
+log bilirubin se,0.0826
+log bilirubin chi-square,111.03
+"log bilirubin p (empty: printed as < 0.0001)",
+log albumin,-2.533
+log albumin se,0.648
+log albumin chi-square,15.27
+"log albumin p (empty: printed as < 0.0001)",0.0001
+age,0.0394
+age se,0.0077
+age chi-square,26.53
+"age p (empty: printed as < 0.0001)",
+log prothrombin time,2.380
+log prothrombin time se,0.767
+log prothrombin time chi-square,9.64
+"log prothrombin time p (empty: printed as < 0.0001)",0.0019
+edema,0.8592
+edema se,0.2711
+edema chi-square,10.04
+"edema p (empty: printed as < 0.0001)",0.0015

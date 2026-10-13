@@ -56,7 +56,7 @@ function runtests(name, method)
 		"",
 		"\"The published table: its row labels and its values as printed, `nothing` where a cell is empty.\"",
 		"function target(file)",
-		"\ttable = CSV.File(joinpath(DATA, \"targets\", file * \".csv\"); types = String)",
+		"\ttable = CSV.File(joinpath(DATA, \"targets\", file * \".csv\"); types = String, delim = ',')",
 		"\tcolumns = Tables.columnnames(table)",
 		"\trows = [string(coalesce(row[columns[1]], \"\")) for row in table]",
 		"\tvalues = [let cell = row[column]; cell === missing ? nothing : strip(cell) end for row in table, column in columns[2:end]]",

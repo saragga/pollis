@@ -1,0 +1,46 @@
+name = "BreslowCox"
+title = "The Cox model with Breslow's ties, and its predicted survival"
+vignette_title = ""
+author = "Antonio Saragga Seabra"
+description = "The Cox proportional hazards model fitted on Breslow's partial likelihood, as SAS PHGLM did, with Wald and likelihood ratio tests, and Kalbfleisch and Prentice's predicted survival, tested on the Mayo model of primary biliary cirrhosis."
+version = "0.1.0"
+
+citation = "Dickson, E. R., Grambsch, P. M., Fleming, T. R., Fisher, L. D. and Langworthy, A. (1989). Prognosis in primary biliary cirrhosis: model for decision making. Hepatology 10(1), 1-7."
+doi = "10.1002/hep.1840100102"
+article = "https://doi.org/10.1002/hep.1840100102"
+
+packages = ["ForwardDiff", "Distributions", "LinearAlgebra", "Statistics", "Tables"]
+
+usage = """
+using BreslowCox, CSV, Tables
+pbc = Tables.columntable(CSV.File(download("https://raw.githubusercontent.com/Trumpingtons/PollisDatasets.jl/main/data/pbc.csv")))
+X = Float64.(hcat(log.(pbc.bili), log.(pbc.albumin), pbc.age, pbc.edema))
+m = cox(X, Float64.(pbc.time), pbc.status .== 2)  # Breslow's ties
+m.β, m.se, m.p
+S = survival(m)  # S(t, R): the predicted survival at t days of a patient with risk score R
+S(5 * 365.25, X[1, :]' * m.β)
+"""
+
+[inputs.pbc]
+url = "https://raw.githubusercontent.com/Trumpingtons/PollisDatasets.jl/main/data/pbc.csv"
+source = "PollisDatasets: the 418 Mayo patients as Fleming and Harrington (1991) published them"
+
+[targets.table2initial]
+source = "Table 2, initial model, p. 4"
+call = "BreslowCox.table2initial(pbc)"
+tolerance = 0
+
+[targets.table2final]
+source = "Table 2, final model, p. 4 (two prothrombin times estimated more simply than the paper's)"
+call = "BreslowCox.table2final(pbc)"
+tolerance = 2
+
+[targets.likelihoodratio]
+source = "Likelihood ratio chi-square of the initial model, p. 4"
+call = "BreslowCox.likelihoodratio(pbc)"
+tolerance = 0
+
+[targets.table4]
+source = "Table 4, p. 6"
+call = "BreslowCox.table4(pbc)"
+tolerance = 0

@@ -1,0 +1,10 @@
+label,WALHUS,AMEMIYA,SWAR
+log Y/N,0.545,0.170,0.565
+log Y/N se,0.056,0.080,0.061
+log PMG/PGDP,-0.450,-0.233,-0.405
+log PMG/PGDP se,0.039,0.041,0.040
+log Car/N,-0.605,-0.602,-0.609
+log Car/N se,0.025,0.026,0.026
+sigma_mu,0.197,0.423,0.196
+sigma_lambda,0,0.131,0
+sigma_nu,0.115,0.081,0.081

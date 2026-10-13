@@ -1,0 +1,42 @@
+name = "GLMExtras"
+title = "Parametric bootstrap and delta-beta influence for binomial GLMs"
+vignette_title = ""
+author = "Antonio Saragga Seabra"
+description = "A parametric bootstrap and exact case-deletion influence (delta beta) for binomial GLMs fitted with GLM.jl, tested on Dalal, Fowlkes and Hoadley's Challenger O-ring analysis."
+version = "0.1.0"
+
+citation = "Dalal, S. R., Fowlkes, E. B. and Hoadley, B. (1989). Risk analysis of the space shuttle: pre-Challenger prediction of failure. Journal of the American Statistical Association 84(408), 945-957."
+doi = "10.1080/01621459.1989.10478858"
+article = "https://doi.org/10.1080/01621459.1989.10478858"
+
+packages = ["GLM", "Distributions", "Random", "Statistics", "Tables"]
+
+usage = """
+using GLMExtras, GLM, CSV, Tables
+challenger = Tables.columntable(CSV.File(download("https://raw.githubusercontent.com/Trumpingtons/PollisDatasets.jl/main/data/challenger.csv")))
+data = (temperature = Float64.(challenger.temperature), distressed = challenger.n_failures ./ 6)
+six = fill(6.0, length(data.temperature))
+f = @formula(distressed ~ temperature)
+m = glm(f, data, Binomial(); weights=six)
+bootstrap_interval(m, f, data, :distressed, six, (temperature = [30.0, 50.0],); scale=6)  # expected damaged O-rings
+delta, _ = deltabeta(f, data, six, 2)  # the influence of each flight on the temperature coefficient
+"""
+
+[inputs.challenger]
+url = "https://raw.githubusercontent.com/Trumpingtons/PollisDatasets.jl/main/data/challenger.csv"
+source = "PollisDatasets: Table 1 of the paper, the O-ring damage of the 23 flights whose rocket motors were recovered"
+
+[targets.model32]
+source = "Model (3.2), p. 948"
+call = "GLMExtras.model32(challenger)"
+tolerance = 0
+
+[targets.interval30]
+source = "The 90% bootstrap interval at 30 degrees F, p. 950 (about (1, 6))"
+call = "GLMExtras.interval30(challenger)"
+tolerance = 0
+
+[targets.influence]
+source = "Delta beta of the temperature coefficient, p. 950"
+call = "GLMExtras.influence(challenger)"
+tolerance = 0

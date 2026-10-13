@@ -1,0 +1,67 @@
+name = "ErrorComponents"
+title = "WALHUS, AMEMIYA, Swamy-Arora and nested error components"
+vignette_title = ""
+author = "Antonio Saragga Seabra"
+description = "Random-effects panel regressions with the variance components estimated by Wallace-Hussain, Amemiya, Swamy-Arora, Henderson's method III or MIVQUE, one-way, two-way and nested, tested on Baltagi's tables for the Grunfeld, gasoline and public capital data."
+version = "0.1.0"
+
+citation = "Baltagi, B. H., Song, S. H. and Jung, B. C. (2001). The unbalanced nested error component regression model. Journal of Econometrics 101(2), 357-381."
+doi = "10.1016/S0304-4076(00)00089-0"
+article = "https://doi.org/10.1016/S0304-4076(00)00089-0"
+
+packages = ["LinearAlgebra", "Statistics", "Tables"]
+
+usage = """
+using ErrorComponents, CSV, Tables
+g = Tables.columntable(CSV.File(download("https://raw.githubusercontent.com/Trumpingtons/PollisDatasets.jl/main/data/grunfeld.csv")))
+X = [g.value g.capital]
+fit = errorcomponents(g.invest, X, [g.firm, g.year]; structure=:twoway, method=:amemiya)
+fit.coef, fit.se, sqrt.(fit.variances)  # sigma_mu, sigma_lambda, sigma_nu
+"""
+
+[inputs.grunfeld]
+url = "https://raw.githubusercontent.com/Trumpingtons/PollisDatasets.jl/main/data/grunfeld.csv"
+source = "PollisDatasets: Grunfeld's 11 firms, 1935-54 (Baltagi uses 10, without American Steel)"
+
+[inputs.gasoline]
+url = "https://raw.githubusercontent.com/Trumpingtons/PollisDatasets.jl/main/data/gasoline.csv"
+source = "PollisDatasets: Baltagi and Griffin's 18 OECD countries, 1960-78"
+
+[inputs.produc]
+url = "https://raw.githubusercontent.com/Trumpingtons/PollisDatasets.jl/main/data/produc.csv"
+source = "PollisDatasets: Munnell's 48 states, 1970-86, in 9 regions"
+
+[targets.table21]
+source = "Baltagi (2005), Table 2.1, p. 21"
+call = "ErrorComponents.table21(grunfeld)"
+tolerance = 0
+
+[targets.table25]
+source = "Baltagi (2005), Table 2.5, p. 24"
+call = "ErrorComponents.table25(gasoline)"
+tolerance = 0
+
+[targets.table26]
+source = "Baltagi (2005), Table 2.6, p. 25"
+call = "ErrorComponents.table26(produc)"
+tolerance = 0
+
+[targets.table31]
+source = "Baltagi (2005), Table 3.1, p. 43"
+call = "ErrorComponents.table31(grunfeld)"
+tolerance = 0
+
+[targets.table36]
+source = "Baltagi (2005), Table 3.6, p. 46"
+call = "ErrorComponents.table36(gasoline)"
+tolerance = 0
+
+[targets.table37]
+source = "Baltagi (2005), Table 3.7, p. 47"
+call = "ErrorComponents.table37(produc)"
+tolerance = 0
+
+[targets.table94]
+source = "Baltagi (2005), Table 9.4, p. 182 (MV3 not tested: its prior is not given)"
+call = "ErrorComponents.table94(produc)"
+tolerance = 0

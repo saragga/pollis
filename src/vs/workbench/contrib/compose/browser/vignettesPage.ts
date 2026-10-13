@@ -28,7 +28,7 @@ import { BROWSE_METHODS_COMMAND_ID, openUserMethod, readMethodSummaries, userMet
 
 // Help > Documentation > Vignettes: the vignettes of the methods, as R's Help > Vignettes lists those of the
 // installed packages. In Pollis: the vignettes of the methods of the New Methods library, shipped beside their
-// notebooks (media/methods/ID/vignette.pdf). On This Computer: the user's methods with a vignette (vignette/NAME.pdf in the method
+// notebooks (media/methods/NAME/vignette/NAME.pdf). On This Computer: the user's methods with a vignette (vignette/NAME.pdf in the method
 // folder). Published: the list in Vignettes.toml at the root of the Pollis registry, an entry for each
 // registered package with a vignette, which Package and Publish (media/methods/package.jl) adds on
 // registration. A vignette opens in the integrated browser.
@@ -44,12 +44,12 @@ interface ILibraryVignette {
 }
 
 const LIBRARY_VIGNETTES: readonly ILibraryVignette[] = [
-	{ id: 'panelre', topic: localize('vignettes.topic.panel', "Panel Econometrics"), title: 'WALHUS, AMEMIYA, Swamy-Arora and nested error components', citation: 'Baltagi (2005), Econometric Analysis of Panel Data' },
-	{ id: 'pgarch', topic: localize('vignettes.topic.volatility', "Volatility"), title: 'Periodic GARCH: volatility with a calendar dummy', citation: 'Bollerslev and Ghysels (1996), Journal of Business & Economic Statistics' },
-	{ id: 'cox', topic: localize('vignettes.topic.survival', "Survival Analysis"), title: 'The Cox model with Breslow\'s ties, and its predicted survival', citation: 'Dickson, Grambsch, Fleming, Fisher and Langworthy (1989), Hepatology' },
-	{ id: 'glmextras', topic: localize('vignettes.topic.glm', "GLM Inference"), title: 'Parametric bootstrap and delta-beta influence for binomial GLMs', citation: 'Dalal, Fowlkes and Hoadley (1989), Journal of the American Statistical Association' },
-	{ id: 'oob', topic: localize('vignettes.topic.forests', "Random Forests"), title: 'Out-of-bag error and variable importance for random forests', citation: 'Breiman (2001), Machine Learning' },
-	{ id: 'arcfs', topic: localize('vignettes.topic.boosting', "Boosting"), title: 'arc-fs: adaptive resampling with pruned trees', citation: 'Breiman (1998), The Annals of Statistics; Breiman (2001), Machine Learning' },
+	{ id: 'ErrorComponents', topic: localize('vignettes.topic.panel', "Panel Econometrics"), title: 'WALHUS, AMEMIYA, Swamy-Arora and nested error components', citation: 'Baltagi (2005), Econometric Analysis of Panel Data' },
+	{ id: 'PeriodicGARCH', topic: localize('vignettes.topic.volatility', "Volatility"), title: 'Periodic GARCH: volatility with a calendar dummy', citation: 'Bollerslev and Ghysels (1996), Journal of Business & Economic Statistics' },
+	{ id: 'BreslowCox', topic: localize('vignettes.topic.survival', "Survival Analysis"), title: 'The Cox model with Breslow\'s ties, and its predicted survival', citation: 'Dickson, Grambsch, Fleming, Fisher and Langworthy (1989), Hepatology' },
+	{ id: 'GLMExtras', topic: localize('vignettes.topic.glm', "GLM Inference"), title: 'Parametric bootstrap and delta-beta influence for binomial GLMs', citation: 'Dalal, Fowlkes and Hoadley (1989), Journal of the American Statistical Association' },
+	{ id: 'ForestOOB', topic: localize('vignettes.topic.forests', "Random Forests"), title: 'Out-of-bag error and variable importance for random forests', citation: 'Breiman (2001), Machine Learning' },
+	{ id: 'ArcFS', topic: localize('vignettes.topic.boosting', "Boosting"), title: 'arc-fs: adaptive resampling with pruned trees', citation: 'Breiman (1998), The Annals of Statistics; Breiman (2001), Machine Learning' },
 ];
 
 /** A published vignette, a table of Vignettes.toml. */
@@ -189,7 +189,7 @@ async function openVignettesPage(accessor: ServicesAccessor): Promise<void> {
 			sendLocal();
 			sendPublished();
 		} else if (message.command === 'openLibrary' && LIBRARY_VIGNETTES.some(vignette => vignette.id === message.id)) {
-			const uri = FileAccess.asFileUri(`vs/workbench/contrib/compose/browser/media/methods/${message.id}/vignette.pdf` as AppResourcePath);
+			const uri = FileAccess.asFileUri(`vs/workbench/contrib/compose/browser/media/methods/${message.id}/vignette/${message.id}.pdf` as AppResourcePath);
 			commandService.executeCommand(BrowserViewCommandId.Open, uri.toString(true));
 		} else if (message.command === 'browseMethods') {
 			commandService.executeCommand(BROWSE_METHODS_COMMAND_ID);

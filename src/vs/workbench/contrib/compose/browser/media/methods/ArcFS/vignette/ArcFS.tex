@@ -1,0 +1,87 @@
+% Pollis New Methods: arcing classifiers (arc-fs and cost-complexity pruning) — draft 1 (11 October 2026)
+% Compile with: latexmk -pdf nm_arcing.tex && latexmk -c
+\input{newmethods_style}
+
+\begin{document}
+
+\nmhead{Boosting}
+  {arc-fs: adaptive resampling with pruned trees}
+  {The AdaBoost of Breiman's comparisons, tested against his published test errors on 20 data sets.}
+
+\factsheet
+  {\nmcite{breiman2001}{Breiman (2001)}, \emph{Random forests}, Table 2, the AdaBoost column (p.\,11) and Section 6 (p.\,15); \nmcite{breiman1998}{Breiman (1998)},
+   \emph{Arcing classifiers}, Tables 3 and 5. 15 real data sets from PollisDatasets, four simulated as Breiman did, and the
+   zip-code digits of \nmcite{hastie2009}{Hastie, Tibshirani and Friedman (2009)} (downloaded only if the user agrees).}
+  {arc-fs, and CART pruning by cost complexity on a test sample. DecisionTree.jl grows the trees only.}
+  {\browse{arc-fs: adaptive resampling with pruned trees}{arcfs}}
+  {18 of 20 test errors within simulation noise of the published ones.}
+
+\nmsection{The problem}
+arc-fs is the version of AdaBoost of \nmcite{freund1996}{Freund and Schapire (1996)} behind Breiman's comparisons: the ``AdaBoost'' column against
+which random forests were first judged. Each step draws a training set that favours the cases earlier trees got wrong, grows a
+CART tree, prunes it, and the trees vote with weights. No Julia package has arc-fs, and none prunes a CART tree by cost
+complexity on a test sample. Without both, the classic comparison of boosting and forests cannot be rerun in Julia.
+
+\nmsection{The method}
+\nmsub{Cost-complexity pruning}
+CART, \nmcite{breiman1984}{Breiman, Friedman, Olshen and Stone (1984)}, Ch.\,3, repeatedly collapses the weakest link, the node $t$ with the smallest
+$g(t) = (R(t) - R(T_t))/(|T_t| - 1)$, where $R(t)$ counts the cases misclassified at $t$ as a leaf, $R(T_t)$ those
+misclassified by the branch below it and $|T_t|$ its leaves. \fn{prune} keeps, from this sequence, the subtree with fewest
+errors on a second sample, the smallest on ties.
+\nmsub{arc-fs}
+A probability $p(n)$ sits on each training case, equal at the start. At step $k$, draw a training set with these probabilities,
+grow a tree and prune it on a second draw. With $d(n) = 1$ for the cases the tree misclassifies,
+\[ \varepsilon_k = \textstyle\sum p(n)\,d(n), \qquad \beta_k = (1-\varepsilon_k)/\varepsilon_k, \qquad
+   p(n) \leftarrow p(n)\,\beta_k^{d(n)}, \text{ normalised}, \]
+and the trees vote with weights $\log\beta_k$. When $\varepsilon_k$ reaches $\tfrac12$, or is 0, the probabilities are reset
+and the construction restarts; that step's tree does not vote.
+
+\nmsection{What the tests show}
+On each small data set a random 10\% is the test set and 50 trees are combined; 100 runs are averaged. Letters, sat-images and
+zip-code have their own test sets and are one run each, with a binomial standard error. A value is \emph{within noise} when
+the two differ by less than two standard errors of a difference ($\sqrt2$ s.e.).
+\begin{valuetable}{@{}lXl@{}}
+\textbf{Data sets} & \textbf{What is compared} & \textbf{Within noise}\\\midrule
+13 small real sets & average test error of 100 runs & 13 of 13\\
+letters, sat-images, zip-code & one run on their own test sets & 3 of 3\\
+twonorm, threenorm, ringnorm, waveform & average test error of 50 runs & 2 of 4\\
+\midrule
+All & 20 test errors & 18 of 20\\
+\end{valuetable}
+
+\nmsub{Where they differ}
+Twonorm 4.6 vs 4.9 and ringnorm 6.2 vs 6.9: below Breiman by 2.8 and 4.4 standard errors. Among those that agree, breast
+cancer (3.7 vs 3.2) and diabetes (25.3 vs 26.6) came closest to the limit. The notebook's example shows the point of arcing:
+on one split of the breast cancer data, the vote of a few dozen pruned trees halves the error of a single one.
+
+\nmsection{Still open}
+\begin{itemize}
+  \item \textbf{Twonorm and ringnorm.} The random forests of the Out-of-bag notebook are below Breiman on the same two sets.
+    A gap shared by two methods points to how the trees are grown, or to the generators, rather than to arc-fs. Not explained.
+  \item \textbf{Details the papers leave open:} whether a restarting step's tree joins the vote (here it does not), and how
+    CART chose among equally good pruned subtrees (here the smallest).
+  \item \textbf{The data.} Soybean has 683 cases, not 685, and its categorical inputs are split as ordered codes, since
+    DecisionTree.jl has no splits on subsets of categories. Missing values are replaced by medians; Breiman does not say
+    what he did.
+\end{itemize}
+
+\nmsection{Further considerations}
+\begin{itemize}
+  \item \textbf{Pruning on its own.} Cost-complexity pruning is useful well beyond arc-fs: it is how a single CART tree is
+    usually chosen, and it is missing from DecisionTree.jl. It could be offered upstream with these tests.
+  \item \textbf{Categorical splits.} Splits on subsets of categories, which Breiman's CART had, would remove the soybean
+    caveat and are a natural next contribution.
+  \item \textbf{Next.} The arcing paper's arc-x4 and bagging columns, from the same tables, to rerun the whole comparison.
+\end{itemize}
+
+\nmsection{References}
+{\footnotesize
+\nmref{breiman1998}{Breiman, L. (1998). Arcing classifiers. \emph{The Annals of Statistics} 26(3), 801--849. \nmdoi{10.1214/aos/1024691079}}
+\nmref{breiman2001}{Breiman, L. (2001). Random forests. \emph{Machine Learning} 45(1), 5--32. \nmdoi{10.1023/A:1010933404324}}
+\nmref{breiman1984}{Breiman, L., Friedman, J.\,H., Olshen, R.\,A. and Stone, C.\,J. (1984). \emph{Classification and Regression Trees}. Wadsworth.}
+\nmref{freund1996}{Freund, Y. and Schapire, R.\,E. (1996). Experiments with a new boosting algorithm. \emph{Proceedings of the Thirteenth International Conference on Machine Learning}, 148--156.}
+\nmref{hastie2009}{Hastie, T., Tibshirani, R. and Friedman, J. (2009). \emph{The Elements of Statistical Learning}, 2nd ed. Springer: the zip-code data.}
+}
+
+\nmcredit
+\end{document}

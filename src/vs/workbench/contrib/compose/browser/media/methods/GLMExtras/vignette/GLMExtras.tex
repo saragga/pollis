@@ -1,0 +1,82 @@
+% Pollis New Methods: GLM inference (parametric bootstrap and delta-beta influence) — draft 1 (11 October 2026)
+% Compile with: latexmk -pdf nm_glm_inference.tex && latexmk -c
+\input{newmethods_style}
+
+\begin{document}
+
+\nmhead{GLM Inference}
+  {Parametric bootstrap and delta-beta influence for binomial GLMs}
+  {The pre-Challenger risk analysis of Dalal, Fowlkes and Hoadley (1989), reproduced.}
+
+\factsheet
+  {\nmcite{dalal1989}{Dalal, Fowlkes and Hoadley (1989)}, \emph{Journal of the American Statistical Association}: Model (3.2), the bootstrap
+   interval at 30\,\textdegree F (p.\,950, Fig.\,5) and the delta beta of each flight (Fig.\,7). The 23 flights of Table 1, from the
+   \nmcite{commission1986}{Presidential Commission (1986)} (PollisDatasets \fn{challenger}).}
+  {a parametric bootstrap and case-deletion influence statistics for generalized linear models. GLM.jl fits the models only.}
+  {\browse{Parametric bootstrap and delta-beta influence for binomial GLMs}{glmextras}}
+  {every published value: the fit of Model (3.2), the interval at 30\,\textdegree F, (1.27, 5.95) for ``about (1, 6)'', and
+   the delta beta of flight 61-A, 4.22 for ``about four''.}
+
+\nmsection{The problem}
+On the morning of 28 January 1986 the temperature at the launch pad was about 31\,\textdegree F, far below any earlier
+launch. \nmcite{dalal1989}{Dalal, Fowlkes and Hoadley (1989)} asked what the data available before the launch said about O-ring damage at that
+temperature, and how sure one could be. Two tools answer: a \textbf{parametric bootstrap}, for an interval on a prediction
+far outside the data, where asymptotic formulas are least trustworthy; and \textbf{delta beta}, to see whether a single
+flight drives the fit.
+
+\nmsection{The method}
+\nmsub{Parametric bootstrap}
+For a binomial GLM with $n$ trials per case, \fn{parametric} takes the fitted probabilities $\hat p$ as true, draws
+$y^* \sim \mathrm{Binomial}(n, \hat p)/n$ for every case, refits, and repeats $B$ times \nmcite{efron1979}{Efron (1979)}. The spread of any
+refitted quantity, a coefficient or a prediction, estimates its sampling distribution. A sample whose fit fails, as one with
+all successes or none can, is skipped and counted.
+\nmsub{Delta beta}
+Case $i$'s influence on coefficient $j$ is the change when the case is dropped and the model refitted:
+$\delta_i = (\hat\beta_j - \hat\beta_{j(-i)})/S$, with $S$ the standard deviation of the $n$ refitted coefficients (p.\,950).
+Unlike the one-step approximation of \nmcite{pregibon1981}{Pregibon (1981)}, it refits exactly, which matters when a few cases carry the fit.
+
+\nmsection{What the tests show}
+\begin{valuetable}{@{}lXl@{}}
+\textbf{Test} & \textbf{What is compared} & \textbf{Agreement}\\\midrule
+Model (3.2), p.\,948 & coefficients, standard errors, $G^2$ & every printed digit\\
+Fig.\,5, p.\,950 & 90\% interval for damaged O-rings at 30\,\textdegree F & (1.27, 5.95) for ``about (1, 6)''\\
+Fig.\,7, p.\,950 & the most influential flight & 61-A, 4.22 s.d.\ for ``about four''\\
+Fig.\,7, p.\,950 & the next three & flights 2, 11 and 14, as published\\
+\end{valuetable}
+The tests are coarse because the paper's are: it prints the interval and the delta beta to no decimals and shows the rest in
+figures. They confirm that the methods do what the paper did, not their last digits. The bootstrap is random: its interval
+moves in the second decimal with the seed (1,000 samples are drawn).
+
+\nmsection{What the replication adds}
+The paper's ``about (1, 6)'' becomes a number: of six field-joint O-rings, between 1.27 and 5.95 expected damaged at
+30\,\textdegree F. And the influence of flight 61-A can be asked directly: dropped, its damage at a warm 75\,\textdegree F no
+longer softens the fit, the model expects nearly all six O-rings to be damaged, and the interval narrows to the top of the
+scale. The notebook's example shows both intervals.
+
+\nmsection{Still open}
+The paper also bootstraps a model of primary erosion with temperature and pressure (p.\,953). About a third of its samples
+have no maximum likelihood estimate: one coefficient runs off to infinity (separation), and the paper does not say what its
+program did with them. Those intervals are not used as tests; the Logistic Regression workflow shows them.
+
+\nmsection{Further considerations}
+\begin{itemize}
+  \item \textbf{Separation.} The failed samples of the pressure model are a known weakness of maximum likelihood with few
+    events. The penalised likelihood of \nmcite{firth1993}{Firth (1993)} would give every sample a finite estimate; it belongs here only once a published
+    table tests it.
+  \item \textbf{Beyond binomial.} Both functions need only a family's random draw and a refit, so Poisson and gamma GLMs
+    follow; each needs its own published test.
+  \item \textbf{Upstream.} Both are a few lines over GLM.jl and could be offered to it, or to a GLM diagnostics package,
+    with the Challenger values as tests.
+\end{itemize}
+
+\nmsection{References}
+{\footnotesize
+\nmref{dalal1989}{Dalal, S.\,R., Fowlkes, E.\,B. and Hoadley, B. (1989). Risk analysis of the space shuttle: pre-Challenger prediction of failure. \emph{Journal of the American Statistical Association} 84(408), 945--957. \nmdoi{10.1080/01621459.1989.10478858}}
+\nmref{efron1979}{Efron, B. (1979). Bootstrap methods: another look at the jackknife. \emph{The Annals of Statistics} 7(1), 1--26.}
+\nmref{firth1993}{Firth, D. (1993). Bias reduction of maximum likelihood estimates. \emph{Biometrika} 80(1), 27--38.}
+\nmref{pregibon1981}{Pregibon, D. (1981). Logistic regression diagnostics. \emph{The Annals of Statistics} 9(4), 705--724.}
+\nmref{commission1986}{Presidential Commission on the Space Shuttle Challenger Accident (1986). \emph{Report to the President}, Vol.\,1, pp.\,129--131: the data.}
+}
+
+\nmcredit
+\end{document}

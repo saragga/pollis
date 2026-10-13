@@ -295,7 +295,7 @@ const desktopResourcePatterns = [
 
 	// Compose - bundled workflows, methods, correctness cases and report templates
 	'vs/workbench/contrib/compose/browser/media/workflows/**/*.{ipynb,jl,tex,bib}',
-	'vs/workbench/contrib/compose/browser/media/methods/**/*.{ipynb,jl}',
+	'vs/workbench/contrib/compose/browser/media/methods/**/*.{ipynb,jl,toml,csv,md,tex,pdf}',
 	'vs/workbench/contrib/compose/browser/media/correctness/**/*.{ipynb,jl,dat}',
 	'vs/workbench/contrib/compose/browser/media/reports/*.{md,jl}',
 
