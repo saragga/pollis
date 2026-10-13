@@ -1,0 +1,124 @@
+% Pollis New Methods: k-nearest neighbours (propensity score matching) — draft 1 (14 October 2026)
+% Compile with: latexmk -pdf nm_matching.tex && latexmk -c
+\input{newmethods_style}
+
+\begin{document}
+
+\nmhead{K-Nearest Neighbours}
+  {Propensity score matching: Dehejia and Wahba, and its replications}
+  {Can a nonexperimental study find the effect a randomised experiment found? Dehejia and Wahba (1999), Smith and Todd (2005) and Dehejia (2005), reproduced.}
+
+\factsheet
+  {\nmcite{dw1999}{Dehejia and Wahba (1999)}, \emph{Journal of the American Statistical Association}, Tables 1 and 3;
+   \nmcite{st2005}{Smith and Todd (2005)}, \emph{Journal of Econometrics}, Tables 3, 5 and 7; and
+   \nmcite{d2005}{Dehejia (2005)}, its reply, Tables 2--4. The data are LaLonde's NSW men and the PSID and CPS comparison
+   groups from Dehejia's data page (read into memory and not saved). The matches were run again in R with
+   \fn{MatchIt} and \fn{Matching}, and the balance checked with \fn{cobalt}.}
+  {the logit propensity score, common support by the treated range or by Smith and Todd's density trimming,
+   nearest-neighbour matching with replacement, local linear matching, the effect on the treated and the balance of the
+   covariates. Julia has no counterpart of MatchIt, Matching or cobalt.}
+  {\browse{Propensity score matching: Dehejia and Wahba, and its replications}{PropensityMatching}}
+  {123 of 145 printed values to every digit, the other 22 in the last. Smith and Todd's PSID logit to every digit.}
+
+\nmsection{The problem}
+\nmcite{lalonde1986}{LaLonde (1986)} took the National Supported Work experiment, whose randomised controls give the
+effect of the training on the earnings of the men treated, about \$1,794, and asked whether nonexperimental methods could
+find it from survey data instead: the PSID and CPS samples in place of the controls. They could not; the estimates ranged
+widely and depended on the specification. \nmcite{dw1999}{Dehejia and Wahba (1999)} matched each treated man to the
+comparison men with the nearest estimated probability of treatment, the propensity score, and came close to the
+experiment. \nmcite{st2005}{Smith and Todd (2005)} replied that this works only in the subsample Dehejia and Wahba chose,
+and only for some specifications; \nmcite{d2005}{Dehejia (2005)} replied that the specification must be chosen for each
+sample by the balance of the covariates. The three papers together are a test of matching, and of how much an estimate
+depends on choices a paper does not print.
+
+\nmsection{The method}
+The propensity score $p(x) = P(d = 1 \mid x)$ is fitted by a logit (\fn{logit}), with earnings in thousands of dollars.
+Comparison units whose score lies outside the range of the treated are discarded (\fn{commonsupport}), or, as Smith and
+Todd do, the treated whose score density among the comparison units is below the 2 per cent point are dropped
+(\fn{trimmedsupport}, a quartic kernel with Silverman's bandwidth). Each treated unit is matched, with replacement, to the
+$k$ comparison units with the nearest score (\fn{nnmatch}), on $p$ or on the log-odds $\ln(p/(1-p))$ (\fn{logodds}),
+and the effect on the treated is the mean difference in 1978 earnings (\fn{att}). When several comparison units are
+exactly as near, \fn{nnmatch} takes the first in the data; \fn{tierange} gives the smallest and largest effect over every
+way of breaking those ties. \fn{locallinear} is Smith and Todd's local linear matching (their eq.\,11), \fn{matchweights}
+turns matches into weights and \fn{balance} gives the standardised differences of the covariates, as \fn{cobalt} does.
+
+\nmsection{What the tests show}
+\begin{valuetable}{@{}lXl@{}}
+\textbf{Test} & \textbf{What is compared} & \textbf{Agreement}\\\midrule
+DW Table 1 & means of 8 covariates, 10 samples: 77 values & 62 to every digit, 15 in the last\\
+DW Table 3 & col.\,(1), the unadjusted differences: 7 values & 6 to every digit, 1 in the last\\
+ST Table 3 & DW 2002 logits, CPS: 15 coefficients, 15 SEs & 29 to every digit, 1 in the last\\
+ST Table 3 & DW 2002 logit, PSID: 16 coefficients & every one\\
+ST Tables 5, 7 & bias of the mean difference and regression: 6 values & 5 to every digit, 1 in the last\\
+ST Table 5 & CPS local linear matching, bandwidths 1 and 4 & both in the last digit\\
+Dehejia Tables 3, 4 & nearest-neighbour effects: 7 values & 5 to every digit, 2 in the last\\
+\end{valuetable}
+
+The last-digit differences are mostly truncation: Dehejia and Wahba print 14016.8 as 14016 and 33.2252 as 33.22. The
+others, side by side (Julia against the paper):
+\begin{itemize}
+  \item Smith and Todd's CPS intercept: $-39.832651$ vs $-39.8326$.
+  \item Smith and Todd's CPS local linear bias: $-87.0$ vs $-88$ (bandwidth 1) and $-67.94$ vs $-67$ (bandwidth 4).
+  \item Dehejia's ST specifications, nearest neighbour: 1,282.49 vs 1,283 (CPS) and 1,990.47 vs 1,991 (PSID).
+\end{itemize}
+
+\nmsub{Against R}
+With Julia's scores passed in, every match \fn{MatchIt} makes is one of the exactly nearest comparison units, for all 185
+or 297 treated in all 8 cases, and its effects equal Julia's where the tie choices coincide: 1,869.07, 1,990.47 and
+862.72. \fn{Matching} averages over near-ties within an internal tolerance that \fn{distance.tolerance} does not switch
+off, so it gives 1,829.82 against 1,869.07 for PSID/DW; on CPS/Lalonde it gives 1,858.87, Julia's average over ties.
+\fn{cobalt}'s \fn{bal.tab} with Julia's weights gives the same 16 standardised differences to 4 decimals (age $-1.2627$
+before matching and $0.0431$ after, \fn{re75} $-5.4458$ and $-0.1997$).
+
+\nmsection{Three things the papers do not say}
+\nmsub{Ties decide the CPS estimate}
+In Dehejia's CPS/DW specification 22 treated men have two or more comparison men at exactly the same score, in sets of up
+to 9. Taking the first in the data gives 1,762; over every way of breaking the ties the effect runs from 1,055 to 1,964,
+and their average is 1,622. The printed 1,589 is inside that range, but no rule a reader could follow from the paper gives
+it, so it is not among the tests. Smith and Todd's CPS single-neighbour bias, 407, is likewise inside a tie range of 41 to
+828 (Julia's first-of-ties gives 535).
+
+\nmsub{A printed mean difference is the 1975 gap}
+Smith and Todd's Table 7 gives the PSID mean difference as $-17{,}796$ (846). That is the gap in 1975 earnings, the value
+of their own Table 8; the gap in 1978 earnings, the outcome, is $-16{,}999$, as in their Table 5.
+
+\nmsub{A corrected mean}
+Dehejia and Wahba's Table 1 gives 0.18 for the share of Hispanics in PSID-3; the data give 0.117. The other 76 means
+agree, so the value is left untested; it looks like a correction to the data after the table was printed.
+
+\nmsection{Still open}
+\begin{itemize}
+  \item \textbf{Dehejia and Wahba's own matches.} Their Table 3, columns (2)--(8), does not reproduce: PSID-1 gives 560
+    against 1,691. Smith and Todd (footnote 40) note that the sample on which the score is fitted moves these estimates by
+    \$200--300; the Dehejia--Wahba specifications are tested through Smith and Todd's logits and Dehejia (2005) instead.
+  \item \textbf{Smith and Todd's other estimators.} Their PSID single-neighbour bias, 361, is what matching on $p$ gives;
+    on the log-odds they say they use, it is 319. The ten-neighbour and trimmed estimators come within about \$100 (CPS
+    ten neighbours $-76$ vs $-5$, inside a tie range of $-176$ to 14), and the PSID local linear bias does not reproduce
+    ($-160$ and 124 vs $-122$ and 143). The tie rule and the trimming bandwidth are not stated.
+  \item \textbf{Smith and Todd's PSID standard errors} agree only to about three significant figures (intercept 2.0623 vs
+    2.0629), and are not tested.
+  \item \textbf{The Lalonde and ST samples.} Dehejia's cross-specifications on LaLonde's sample need 1974 earnings, which
+    the public files do not have for it, and Smith and Todd's early random assignment sample cannot be rebuilt from them.
+\end{itemize}
+
+\nmsection{Further considerations}
+\begin{itemize}
+  \item \textbf{Report the tie range.} Where a score takes few values, as here, an estimate can depend on the order of the
+    data; \fn{tierange} shows by how much, and is worth reporting beside any nearest-neighbour estimate.
+  \item \textbf{Other matching estimators.} Kernel matching, calipers and Abadie and Imbens's bias-corrected standard errors
+    are in \fn{Matching}; each would need its own published table before it becomes a test here.
+  \item \textbf{Upstream.} Julia has no counterpart of MatchIt or cobalt; the three papers are a ready-made test for one.
+\end{itemize}
+
+\nmsection{References}
+{\footnotesize
+\nmref{dw1999}{Dehejia, R.\,H. and Wahba, S. (1999). Causal effects in nonexperimental studies: reevaluating the evaluation of training programs. \emph{Journal of the American Statistical Association} 94(448), 1053--1062. \nmdoi{10.1080/01621459.1999.10473858}}
+\nmref{dw2002}{Dehejia, R.\,H. and Wahba, S. (2002). Propensity score-matching methods for nonexperimental causal studies. \emph{Review of Economics and Statistics} 84(1), 151--161. \nmdoi{10.1162/003465302317331982}}
+\nmref{st2005}{Smith, J.\,A. and Todd, P.\,E. (2005). Does matching overcome LaLonde's critique of nonexperimental estimators? \emph{Journal of Econometrics} 125(1--2), 305--353. \nmdoi{10.1016/j.jeconom.2004.04.011}}
+\nmref{d2005}{Dehejia, R. (2005). Practical propensity score matching: a reply to Smith and Todd. \emph{Journal of Econometrics} 125(1--2), 355--364.\newline \nmdoi{10.1016/j.jeconom.2004.04.012}}
+\nmref{lalonde1986}{LaLonde, R.\,J. (1986). Evaluating the econometric evaluations of training programs with experimental data. \emph{American Economic Review} 76(4), 604--620.}
+\nmref{data}{Data: Dehejia's NSW, PSID and CPS files, from Dehejia's data page at the NBER, read into memory and not saved, since they are not offered for redistribution with Pollis.}
+}
+
+\nmcredit
+\end{document}

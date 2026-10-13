@@ -111,6 +111,10 @@ interface IMethodInput {
 	readonly delim?: string;
 	/** The column names of a file without a header line. */
 	readonly columns?: readonly string[];
+	/** The line of the first row, when lines before it are not the header (the header is then left out too). */
+	readonly skipto?: number;
+	/** The number of rows to read, when the file goes on after them. */
+	readonly limit?: number;
 	/** The path of a copy the user saved, read instead of the link while it exists. */
 	readonly local?: string;
 }
@@ -144,8 +148,6 @@ interface IMethod {
 	/** The vignette's LaTeX file and PDF, `vignette/NAME.tex` and `.pdf`, when they exist. */
 	readonly vignette?: string;
 	readonly vignettePdf?: string;
-	/** The notebook that works the method through, `NAME.ipynb`, when it exists: the library methods have one. */
-	readonly notebook?: string;
 }
 
 /** The fields of a line of a delimited file; with `,` or `;`, a field in double quotes may hold the delimiter and doubled quotes. */
@@ -164,15 +166,20 @@ function fields(line: string, delim = ','): string[] {
 	return result;
 }
 
-/** The first rows of a delimited text, its header the first line unless the column names are given. */
-function parseTable(content: string, limit: number, delim?: string, columns?: readonly string[]): ITableContent {
-	const lines = content.replace(/\r\n?/g, '\n').split('\n').filter(line => line.trim());
-	const body = columns ? lines : lines.slice(1);
+/** The first rows of a delimited text, its header the first line unless the column names are given; `skipto` and `rows` (an input's `limit`) as in {@link IMethodInput}. */
+function parseTable(content: string, limit: number, delim?: string, columns?: readonly string[], skipto?: number, rows?: number): ITableContent {
+	const all = content.replace(/\r\n?/g, '\n').split('\n');
+	const lines = (skipto ? all.slice(skipto - 1) : all).filter(line => line.trim());
+	const body = (columns || skipto ? lines : lines.slice(1)).slice(0, rows);
 	return {
-		header: columns ?? fields(lines[0] ?? '', delim),
+		header: columns ?? fields(all.find(line => line.trim()) ?? '', delim),
 		rows: body.slice(0, limit).map(line => fields(line, delim)),
 		rowCount: body.length,
 	};
+}
+
+function count(value: unknown): number | undefined {
+	return typeof value === 'number' && Number.isInteger(value) && value > 0 ? value : undefined;
 }
 
 function methodsFolder(pathService: IPathService): URI {
@@ -202,7 +209,7 @@ async function readMethod(fileService: IFileService, folder: URI): Promise<IMeth
 		const file = text(spec.file);
 		if (url || file) {
 			const columns = Array.isArray(spec.columns) ? spec.columns.filter((column): column is string => typeof column === 'string') : undefined;
-			inputs.push({ name, url, file, source: text(spec.source), delim: text(spec.delim), columns: columns?.length ? columns : undefined, local: text(spec.local) });
+			inputs.push({ name, url, file, source: text(spec.source), delim: text(spec.delim), columns: columns?.length ? columns : undefined, skipto: count(spec.skipto), limit: count(spec.limit), local: text(spec.local) });
 		}
 	}
 
@@ -242,7 +249,6 @@ async function readMethod(fileService: IFileService, folder: URI): Promise<IMeth
 		vignetteInstructions: await readText(joinPath(folder, VIGNETTE_INSTRUCTIONS_FILE)),
 		vignette: await existing(`vignette/${name}.tex`),
 		vignettePdf: await existing(`vignette/${name}.pdf`),
-		notebook: await existing(`${name}.ipynb`),
 	};
 }
 
@@ -300,6 +306,8 @@ function methodToml(name: string, title: string, article: string): string {
 		'#   source = "Where the data comes from"',
 		'#   delim = ","                      the default; or ";", "tab", "whitespace"',
 		'#   columns = ["firm", "year"]       only for a file without a header line',
+		'#   skipto = 2                       the line of the first row, when the lines before it are not a header',
+		'#   limit = 100                      the number of rows to read, when the file goes on after them',
 		'',
 		'# One table for each target: where it is published, the Julia call that computes it from the inputs',
 		'# (Tables.jl column tables) and the units of the last printed digit it may be off by. The call returns',
@@ -407,7 +415,7 @@ async function isEmptyMethod(fileService: IFileService, method: IMethod): Promis
 }
 
 /**
- * Gives a method a new package name and title: method.toml, the module and file in src/, the notebook, the vignette and the folder.
+ * Gives a method a new package name and title: method.toml, the module and file in src/, the vignette and the folder.
  * Returns the method's folder, new when the name changed.
  */
 async function renameMethod(fileService: IFileService, pathService: IPathService, method: IMethod, name: string, title: string): Promise<URI> {
@@ -422,8 +430,8 @@ async function renameMethod(fileService: IFileService, pathService: IPathService
 			await fileService.writeFile(newCode, VSBuffer.fromString(code.replace(new RegExp(`^module\\s+${method.name}\\b`, 'm'), `module ${name}`)));
 			await fileService.del(oldCode);
 		}
-		// The files named after the package: the notebook and the vignette
-		for (const [from, to] of [[`${method.name}.ipynb`, `${name}.ipynb`], [`vignette/${method.name}.tex`, `vignette/${name}.tex`], [`vignette/${method.name}.pdf`, `vignette/${name}.pdf`]]) {
+		// The files named after the package: the vignette
+		for (const [from, to] of [[`vignette/${method.name}.tex`, `vignette/${name}.tex`], [`vignette/${method.name}.pdf`, `vignette/${name}.pdf`]]) {
 			const source = joinPath(folder, ...from.split('/'));
 			if (await fileService.exists(source)) {
 				await fileService.move(source, joinPath(folder, ...to.split('/')));
@@ -791,7 +799,7 @@ async function openMethodPage(accessor: ServicesAccessor, existing?: URI, step?:
 				}
 			}
 			content.then(
-				value => webviewInput.webview.postMessage({ command: 'input', name: input.name, table: parseTable(value, PREVIEW_ROWS, input.delim, input.columns) }),
+				value => webviewInput.webview.postMessage({ command: 'input', name: input.name, table: parseTable(value, PREVIEW_ROWS, input.delim, input.columns, input.skipto, input.limit) }),
 				error => webviewInput.webview.postMessage({ command: 'input', name: input.name, error: toErrorMessage(error) })
 			);
 		}
@@ -990,7 +998,7 @@ async function openMethodPage(accessor: ServicesAccessor, existing?: URI, step?:
 			const file = message.command === 'instructions' ? INSTRUCTIONS_FILE : VIGNETTE_INSTRUCTIONS_FILE;
 			run(() => fileService.writeFile(joinPath(folder, file), VSBuffer.fromString(message.text)).then(() => undefined));
 		} else if (message.command === 'open') {
-			const files = ['method.toml', `src/${current.name}.jl`, current.vignette, current.notebook, ...current.targets.map(target => target.file), ...current.inputs.map(input => input.file)];
+			const files = ['method.toml', `src/${current.name}.jl`, current.vignette, ...current.targets.map(target => target.file), ...current.inputs.map(input => input.file)];
 			if (files.includes(message.file)) {
 				run(async () => { await editorService.openEditor({ resource: joinPath(folder, ...message.file.split('/')) }); });
 			}
@@ -1096,7 +1104,6 @@ function pageHtml(): string {
 		writeMethod: localize('newMethods.page.writeMethod', "Write Method"),
 		editToml: localize('newMethods.page.editToml', "Edit method.toml"),
 		openCode: localize('newMethods.page.openCode', "Open Code"),
-		openNotebook: localize('newMethods.page.openNotebook', "Open Notebook"),
 		// 3. Write a Vignette
 		vignetteTitleHint: localize('newMethods.vignetteTitle.hint', "The title of the vignette, the method's title unless you change it."),
 		vignetteIntro: localize('newMethods.page.vignetteIntro', "Notes for a coding agent on the vignette: its look, its sections, the LaTeX style, the other Pollis vignettes to refer to. Saved in VIGNETTE.md; the vignette is a LaTeX file in the method's vignette folder, with its PDF beside it."),
@@ -1281,7 +1288,6 @@ ${PAGE_STYLE}
 			<button class="action primary with-agent" data-command="writeMethod">${AGENT_ICON}${text.writeMethod}</button>
 			<button class="action" data-command="open" data-file="method.toml">${text.editToml}</button>
 			<button class="action open-code" data-command="open">${text.openCode}</button>
-			<button class="action open-notebook" data-command="open">${text.openNotebook}</button>
 		</div>
 	</section>
 
@@ -1316,7 +1322,6 @@ ${PAGE_STYLE}
 		<div class="actions">
 			<button class="action primary with-agent" data-command="prepareRegistration">${AGENT_ICON}${text.prepareRegistration}</button>
 			<button class="action open-code" data-command="open">${text.openCode}</button>
-			<button class="action open-notebook" data-command="open">${text.openNotebook}</button>
 		</div>
 	</section>
 
@@ -1655,10 +1660,6 @@ ${PAGE_STYLE}
 			refresh('title', message.untitled ? '' : method.title);
 			refresh('instructions', method.instructions);
 			document.querySelectorAll('.open-code').forEach(button => { button.dataset.file = 'src/' + method.name + '.jl'; });
-			document.querySelectorAll('.open-notebook').forEach(button => {
-				button.hidden = !method.notebook;
-				button.dataset.file = method.notebook || '';
-			});
 			// 3. Write a Vignette
 			refresh('vignetteTitle', message.vignetteUntitled ? '' : method.vignetteTitle);
 			refresh('vignetteInstructions', method.vignetteInstructions);

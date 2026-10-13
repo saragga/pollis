@@ -50,6 +50,8 @@ const LIBRARY_VIGNETTES: readonly ILibraryVignette[] = [
 	{ id: 'GLMExtras', topic: localize('vignettes.topic.glm', "GLM Inference"), title: 'Parametric bootstrap and delta-beta influence for binomial GLMs', citation: 'Dalal, Fowlkes and Hoadley (1989), Journal of the American Statistical Association' },
 	{ id: 'ForestOOB', topic: localize('vignettes.topic.forests', "Random Forests"), title: 'Out-of-bag error and variable importance for random forests', citation: 'Breiman (2001), Machine Learning' },
 	{ id: 'ArcFS', topic: localize('vignettes.topic.boosting', "Boosting"), title: 'arc-fs: adaptive resampling with pruned trees', citation: 'Breiman (1998), The Annals of Statistics; Breiman (2001), Machine Learning' },
+	{ id: 'ThresholdAR', topic: localize('vignettes.topic.nonlinear', "Nonlinear Dynamics"), title: 'Threshold autoregression: SETAR models and limit cycles', citation: 'Tong and Lim (1980), Journal of the Royal Statistical Society: Series B' },
+	{ id: 'PropensityMatching', topic: localize('vignettes.topic.nearestNeighbours', "K-Nearest Neighbours"), title: 'Propensity score matching: Dehejia and Wahba, and its replications', citation: 'Dehejia and Wahba (1999), Journal of the American Statistical Association; Smith and Todd (2005) and Dehejia (2005), Journal of Econometrics' },
 ];
 
 /** A published vignette, a table of Vignettes.toml. */

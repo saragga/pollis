@@ -1,0 +1,123 @@
+name = "PropensityMatching"
+title = "Propensity score matching: Dehejia and Wahba, and its replications"
+vignette_title = ""
+author = "Antonio Saragga Seabra"
+description = "Propensity score methods for nonexperimental causal studies, as in Dehejia and Wahba (1999) and its replications by Smith and Todd (2005) and Dehejia (2005): the logit propensity score, common support by the treated range or by Smith and Todd's density trimming, nearest-neighbour matching with replacement (with the range over every way of breaking ties), local linear matching, the effect on the treated and the balance of the covariates."
+version = "0.1.0"
+
+citation = "Dehejia, R. H. and Wahba, S. (1999). Causal effects in nonexperimental studies: reevaluating the evaluation of training programs. Journal of the American Statistical Association 94(448), 1053-1062."
+doi = "10.1080/01621459.1999.10473858"
+article = "https://doi.org/10.1080/01621459.1999.10473858"
+
+packages = ["LinearAlgebra", "Statistics", "Tables"]
+
+usage = """
+using PropensityMatching, CSV, Tables, Downloads
+nber(f) = Tables.columntable(CSV.File(take!(Downloads.download("https://users.nber.org/~rdehejia/data/$f.txt", IOBuffer()));
+	header = [:treat, :age, :educ, :black, :hisp, :married, :nodegree, :re74, :re75, :re78], skipto = 1, delim = ' ', ignorerepeated = true, stripwhitespace = true))
+nsw, psid = nber("nswre74_treated"), nber("psid_controls")  # read into memory, not saved
+d = [nsw.treat; psid.treat]
+x(c) = [getproperty(nsw, c); getproperty(psid, c)]
+X = hcat(x(:re74) ./ 1000, x(:re75) ./ 1000, x(:married), x(:black), x(:hisp), x(:educ), x(:age),
+	x(:married) .* (x(:re75) .== 0), x(:nodegree) .* (x(:re74) .== 0))  # Dehejia's (2005) PSID/DW specification
+score = logit(X, d).fitted
+treated, matches = nnmatch(score, d)  # single nearest neighbour, with replacement
+att(x(:re78), treated, matches)  # 1,869 dollars, against the experiment's 1,794
+tierange(x(:re78), score, d)  # what breaking exact ties differently could give
+balance(X, d; weights = matchweights(length(d), treated, matches))
+"""
+
+[inputs.lalondetreated]
+url = "https://users.nber.org/~rdehejia/data/nsw_treated.txt"
+source = "Dehejia's data page (NBER): LaLonde's NSW treated men (297). Fetched, not kept: Dehejia's files are not offered for redistribution with Pollis"
+delim = "whitespace"
+columns = ["treat", "age", "educ", "black", "hisp", "married", "nodegree", "re75", "re78"]
+
+[inputs.lalondecontrols]
+url = "https://users.nber.org/~rdehejia/data/nsw_control.txt"
+source = "Dehejia's data page (NBER): LaLonde's NSW control men (425). Fetched, not kept: Dehejia's files are not offered for redistribution with Pollis"
+delim = "whitespace"
+columns = ["treat", "age", "educ", "black", "hisp", "married", "nodegree", "re75", "re78"]
+
+[inputs.treated]
+url = "https://users.nber.org/~rdehejia/data/nswre74_treated.txt"
+source = "Dehejia's data page (NBER): the NSW treated men with 1974 earnings, Dehejia and Wahba's sample (185). Fetched, not kept: Dehejia's files are not offered for redistribution with Pollis"
+delim = "whitespace"
+columns = ["treat", "age", "educ", "black", "hisp", "married", "nodegree", "re74", "re75", "re78"]
+
+[inputs.controls]
+url = "https://users.nber.org/~rdehejia/data/nswre74_control.txt"
+source = "Dehejia's data page (NBER): the NSW control men with 1974 earnings (260). Fetched, not kept: Dehejia's files are not offered for redistribution with Pollis"
+delim = "whitespace"
+columns = ["treat", "age", "educ", "black", "hisp", "married", "nodegree", "re74", "re75", "re78"]
+
+[inputs.psid]
+url = "https://users.nber.org/~rdehejia/data/psid_controls.txt"
+source = "Dehejia's data page (NBER): the PSID-1 comparison group (2,490). Fetched, not kept: Dehejia's files are not offered for redistribution with Pollis"
+delim = "whitespace"
+columns = ["treat", "age", "educ", "black", "hisp", "married", "nodegree", "re74", "re75", "re78"]
+
+[inputs.psid2]
+url = "https://users.nber.org/~rdehejia/data/psid2_controls.txt"
+source = "Dehejia's data page (NBER): the PSID-2 comparison group (253). Fetched, not kept: Dehejia's files are not offered for redistribution with Pollis"
+delim = "whitespace"
+columns = ["treat", "age", "educ", "black", "hisp", "married", "nodegree", "re74", "re75", "re78"]
+
+[inputs.psid3]
+url = "https://users.nber.org/~rdehejia/data/psid3_controls.txt"
+source = "Dehejia's data page (NBER): the PSID-3 comparison group (128). Fetched, not kept: Dehejia's files are not offered for redistribution with Pollis"
+delim = "whitespace"
+columns = ["treat", "age", "educ", "black", "hisp", "married", "nodegree", "re74", "re75", "re78"]
+
+[inputs.cps]
+url = "https://users.nber.org/~rdehejia/data/cps_controls.txt"
+source = "Dehejia's data page (NBER): the CPS-1 comparison group (15,992). Fetched, not kept: Dehejia's files are not offered for redistribution with Pollis"
+delim = "whitespace"
+columns = ["treat", "age", "educ", "black", "hisp", "married", "nodegree", "re74", "re75", "re78"]
+
+[inputs.cps2]
+url = "https://users.nber.org/~rdehejia/data/cps2_controls.txt"
+source = "Dehejia's data page (NBER): the CPS-2 comparison group (2,369). Fetched, not kept: Dehejia's files are not offered for redistribution with Pollis"
+delim = "whitespace"
+columns = ["treat", "age", "educ", "black", "hisp", "married", "nodegree", "re74", "re75", "re78"]
+
+[inputs.cps3]
+url = "https://users.nber.org/~rdehejia/data/cps3_controls.txt"
+source = "Dehejia's data page (NBER): the CPS-3 comparison group (429). Fetched, not kept: Dehejia's files are not offered for redistribution with Pollis"
+delim = "whitespace"
+columns = ["treat", "age", "educ", "black", "hisp", "married", "nodegree", "re74", "re75", "re78"]
+
+[targets.dw1999table1]
+source = "Dehejia and Wahba (1999), Table 1, the means (p. 1055)"
+call = "PropensityMatching.dw1999table1(lalondetreated, lalondecontrols, treated, controls, psid, psid2, psid3, cps, cps2, cps3)"
+tolerance = 1
+
+[targets.dw1999table3]
+source = "Dehejia and Wahba (1999), Table 3, column (1) (p. 1059)"
+call = "PropensityMatching.dw1999table3(treated, controls, psid, psid2, psid3, cps, cps2, cps3)"
+tolerance = 1
+
+[targets.sttable3cps]
+source = "Smith and Todd (2005), Table 3, DW sample, CPS (p. 327)"
+call = "PropensityMatching.sttable3cps(treated, controls, cps)"
+tolerance = 1
+
+[targets.sttable3psid]
+source = "Smith and Todd (2005), Table 3, DW sample, PSID (p. 327)"
+call = "PropensityMatching.sttable3psid(treated, controls, psid)"
+tolerance = 0
+
+[targets.stbias]
+source = "Smith and Todd (2005), Table 5, column (1), and Table 7, column (3), DW sample"
+call = "PropensityMatching.stbias(treated, controls, cps, psid)"
+tolerance = 1
+
+[targets.stlocallinear]
+source = "Smith and Todd (2005), Table 5, columns (6) and (7), DW sample, CPS"
+call = "PropensityMatching.stlocallinear(treated, controls, cps)"
+tolerance = 1
+
+[targets.dehejia2005]
+source = "Dehejia (2005), Tables 3 and 4"
+call = "PropensityMatching.dehejia2005table(treated, lalondetreated, cps, psid)"
+tolerance = 1

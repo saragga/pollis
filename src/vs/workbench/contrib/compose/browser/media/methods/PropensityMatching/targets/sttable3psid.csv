@@ -1,0 +1,17 @@
+label,"Coefficient"
+"Age",0.2386
+"Age squared",-0.0051
+"Years of schooling",0.9748
+"Years of schooling squared",-0.0525
+"High school dropout",0.7490
+"Married",-2.0301
+"Black",2.6277
+"Hispanic",3.3643
+"Real earnings in 1974",-0.00002
+"Real earnings in 1974 squared",1.64e-09
+"Real earnings in 1975",-0.00025
+"Real earnings in 1975 squared",5.28e-10
+"Zero earnings in 1974",3.2583
+"Zero earnings in 1975",-1.0396
+"Zero earnings in 1974 x Hispanic",-1.4627
+"Intercept",-8.5683

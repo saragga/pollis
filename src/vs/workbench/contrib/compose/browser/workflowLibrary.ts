@@ -8,7 +8,7 @@ import { toErrorMessage } from '../../../../base/common/errorMessage.js';
 import { DisposableStore } from '../../../../base/common/lifecycle.js';
 import { AppResourcePath, FileAccess } from '../../../../base/common/network.js';
 import { language } from '../../../../base/common/platform.js';
-import { joinPath } from '../../../../base/common/resources.js';
+import { basename, joinPath } from '../../../../base/common/resources.js';
 import { URI } from '../../../../base/common/uri.js';
 import { localize, localize2 } from '../../../../nls.js';
 import { Action2, registerAction2 } from '../../../../platform/actions/common/actions.js';
@@ -19,6 +19,7 @@ import { INotificationService } from '../../../../platform/notification/common/n
 import { IOpenerService } from '../../../../platform/opener/common/opener.js';
 import { IEditorService } from '../../../services/editor/common/editorService.js';
 import { IPathService } from '../../../services/path/common/pathService.js';
+import { parseToml, TomlValue } from '../../model/browser/common/tomlPanelData.js';
 import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
 import { LIBRARY_PAGE_HELPERS, LIBRARY_PAGE_STYLE } from './libraryPage.js';
@@ -60,7 +61,7 @@ const NEW_METHODS: INotebookLibrary = {
 	base: 'vs/workbench/contrib/compose/browser/media/methods',
 	userFolder: 'methods',
 	title: localize('newMethods.title', "New Methods"),
-	intro: localize('newMethods.intro', "Each method is one no Julia package has, written out with its tests: data and the results published for them, printed beside Julia's. Without data and expected results there is no new method. The methods you started and have not published yet come first, In Progress: click a title to go on with it. Then those you published, and the library: click a name to open the page of your own copy of the method, made in {0} the first time, with its notebook as a worked example.", '<code>~/.pollis/methods</code>'),
+	intro: localize('newMethods.intro', "Each method is one no Julia package has, written out with its tests: data and the results published for them, printed beside Julia's. Without data and expected results there is no new method. The methods you started and have not published yet come first, In Progress: click a title to go on with it. Then those you published, and the library: click a name to open the page of your own copy of the method, made in {0} the first time.", '<code>~/.pollis/methods</code>'),
 	entry: localize('newMethods.entry', "Method"),
 	empty: localize('newMethods.empty', "There are no new methods yet."),
 	openFailed: (label, error) => localize('newMethods.openFailed', "Could not open the method {0}: {1}", label, error),
@@ -94,8 +95,8 @@ interface ILibraryEntry {
 	readonly folder: string;
 	/** The folder of the library original. */
 	readonly location: URI;
-	/** The notebook's file name, e.g. `garch.ipynb`. */
-	readonly notebook: string;
+	/** The file shown under the title: the notebook, e.g. `garch.ipynb`, or a method's package code, e.g. `src/ThresholdAR.jl`. */
+	readonly file: string;
 	readonly title: string;
 	readonly description: string;
 	readonly article: IWorkflowMetadata['article'];
@@ -140,9 +141,45 @@ async function folderSize(fileService: IFileService, folder: URI): Promise<numbe
 }
 
 /**
+ * Reads a method of the New Methods library from its method.toml: its title, description, article
+ * and packages, and its inputs as datasets, by the source each names before a colon. Undefined
+ * when the folder has no method.toml.
+ */
+async function readMethodEntry(fileService: IFileService, folder: URI): Promise<Omit<ILibraryEntry, 'folder' | 'location' | 'size'> | undefined> {
+	const tomlFile = joinPath(folder, 'method.toml');
+	if (!await fileService.exists(tomlFile)) {
+		return undefined;
+	}
+	const toml = parseToml((await fileService.readFile(tomlFile)).value.toString());
+	const text = (value: unknown) => typeof value === 'string' && value ? value : undefined;
+	const name = text(toml.name) ?? basename(folder);
+	const citation = text(toml.citation);
+	const doi = text(toml.doi);
+	const datasets = new Map<string, { source: string; names: string[] }>();
+	for (const [input, value] of Object.entries(toml.inputs && typeof toml.inputs === 'object' ? toml.inputs : {})) {
+		const source = (text((value as TomlValue).source) ?? '').split(':')[0].trim();
+		let group = datasets.get(source);
+		if (!group) {
+			group = { source, names: [] };
+			datasets.set(source, group);
+		}
+		group.names.push(input);
+	}
+	return {
+		file: `src/${name}.jl`,
+		title: text(toml.title) ?? name,
+		description: text(toml.description) ?? '',
+		article: citation ? { citation, doi, url: text(toml.article) } : undefined,
+		packages: Array.isArray(toml.packages) ? toml.packages.filter((value): value is string => typeof value === 'string') : [],
+		datasets: [...datasets.values()],
+	};
+}
+
+/**
  * Reads a library: each folder with a notebook is an entry, its title the notebook's first `# `
  * heading, its description the paragraph after it, its packages those of its `Pollis.packages`
- * cells, and its article, datasets and date the `pollis.workflow` block of its metadata.
+ * cells, and its article, datasets and date the `pollis.workflow` block of its metadata. The New
+ * Methods library has no notebooks: each folder with a method.toml is an entry, read from it.
  */
 async function readLibrary(fileService: IFileService, library: INotebookLibrary): Promise<ILibraryEntry[]> {
 	const root = FileAccess.asFileUri(library.base);
@@ -152,6 +189,13 @@ async function readLibrary(fileService: IFileService, library: INotebookLibrary)
 	const entries: ILibraryEntry[] = [];
 	for (const folder of (await fileService.resolve(root)).children ?? []) {
 		if (!folder.isDirectory) {
+			continue;
+		}
+		if (library.userMethods) {
+			const method = await readMethodEntry(fileService, folder.resource);
+			if (method) {
+				entries.push({ ...method, folder: folder.name, location: folder.resource, size: ByteSize.formatSize(await folderSize(fileService, folder.resource)) });
+			}
 			continue;
 		}
 		const files = (await fileService.resolve(folder.resource, { resolveMetadata: true })).children ?? [];
@@ -184,7 +228,7 @@ async function readLibrary(fileService: IFileService, library: INotebookLibrary)
 		entries.push({
 			folder: folder.name,
 			location: folder.resource,
-			notebook: notebook.name,
+			file: notebook.name,
 			title: heading?.startsWith('# ') ? heading.slice(2) : folder.name,
 			description: paragraphs[0]?.replace(/\s+/g, ' ') ?? '',
 			article: metadata.article,
@@ -288,7 +332,7 @@ async function openLibraryPage(accessor: ServicesAccessor, library: INotebookLib
 		try {
 			const copy = joinPath(await pathService.userHome({ preferLocal: true }), '.pollis', library.userFolder, entry.folder);
 			if (library.userMethods) {
-				// A library method becomes one of the user's methods: its page opens, with its notebook a link on it
+				// A library method becomes one of the user's methods: its page opens
 				await copyMissing(entry.location, copy);
 				await instantiationService.invokeFunction(openUserMethod, copy.toString());
 				return;
@@ -296,7 +340,7 @@ async function openLibraryPage(accessor: ServicesAccessor, library: INotebookLib
 			if (!await fileService.exists(copy)) {
 				await fileService.copy(entry.location, copy);
 			}
-			await editorService.openEditor({ resource: joinPath(copy, entry.notebook) });
+			await editorService.openEditor({ resource: joinPath(copy, entry.file) });
 		} catch (error) {
 			notificationService.error(library.openFailed(entry.title, toErrorMessage(error)));
 		}
@@ -404,7 +448,7 @@ ${LIBRARY_PAGE_HELPERS}
 		const title = element('div', 'title', entry.title);
 		title.addEventListener('click', () => vscode.postMessage({ command: 'open', folder: entry.folder }));
 		td.appendChild(title);
-		td.appendChild(element('div', 'file', entry.notebook));
+		td.appendChild(element('div', 'file', entry.file));
 		const description = element('p', 'description clamped', entry.description);
 		td.appendChild(description);
 		// The toggle shows only when the description is longer than its three lines

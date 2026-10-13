@@ -1,0 +1,16 @@
+label,"Coefficient","Standard error"
+"Age",2.7441,0.2681
+"Age squared",-0.0779,0.0085
+"Age cubed/1000",0.6769,0.0837
+"Years of schooling",1.2274,0.2249
+"Years of schooling squared",-0.0692,0.0120
+"High school dropout",1.3515,0.2588
+"Married",-1.7307,0.1932
+"Black",3.9988,0.2000
+"Hispanic",2.2457,0.2637
+"Real earnings in 1974",-0.00007,0.00007
+"Real earnings in 1975",-0.00020,0.00003
+"Zero earnings in 1974",1.9368,0.2209
+"Zero earnings in 1975",0.2513,0.1994
+"Schooling x real earnings in 1974",0.00001,6.14e-06
+"Intercept",-39.8326,3.0398
