@@ -1,0 +1,10 @@
+title = "The sample standard deviation"
+panel = "chiara.explore.dstats"
+packages = ["Distributions"]
+setup = '''
+x = round.(rand(rng, Normal(rand(rng, 10:40), rand(rng, 2:6)), 6); digits = 1)
+'''
+question = '''A sample of 6 values: {{list(x)}}. What is the sample standard deviation?'''
+choices = ['{{fmt(std(x), 3)}}', '{{fmt(std(x; corrected = false), 3)}}', '{{fmt(var(x), 3)}}', '{{fmt(mean(abs.(x .- mean(x))), 3)}}']
+answer = 1
+explanation = '''The sample standard deviation is the square root of the sum of squared deviations from the mean ({{fmt(mean(x), 3)}}) divided by n - 1 = 5: {{fmt(std(x), 3)}}. Dividing by n gives {{fmt(std(x; corrected = false), 3)}}, which underestimates the population value; {{fmt(var(x), 3)}} is the variance, before the square root.'''

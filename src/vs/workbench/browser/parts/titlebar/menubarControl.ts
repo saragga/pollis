@@ -38,6 +38,8 @@ import { ICommandService } from '../../../../platform/commands/common/commands.j
 import { ITelemetryService } from '../../../../platform/telemetry/common/telemetry.js';
 import { OpenRecentAction } from '../../actions/windowActions.js';
 import { isICommandActionToggleInfo } from '../../../../platform/action/common/action.js';
+import { ThemeIcon } from '../../../../base/common/themables.js';
+import { AGENT_MENU_ICON_ID } from '../../../../platform/menubar/common/menubar.js';
 import { getFlatContextMenuActions } from '../../../../platform/actions/browser/menuEntryActionViewItem.js';
 import { defaultMenuStyles } from '../../../../platform/theme/browser/defaultStyles.js';
 import { mainWindow } from '../../../../base/browser/window.js';
@@ -672,7 +674,9 @@ export class CustomMenubarControl extends MenubarControl {
 							title = menuItem.item.toggled.mnemonicTitle ?? menuItem.item.toggled.title ?? title;
 						}
 
-						const newAction = store.add(new Action(menuItem.id, mnemonicMenuLabel(title), menuItem.class, menuItem.enabled, () => this.commandService.executeCommand(menuItem.id)));
+						// Pollis: the items a coding agent does carry the sparkle, drawn by the menu
+						const cssClass = ThemeIcon.isThemeIcon(menuItem.item.icon) && menuItem.item.icon.id === AGENT_MENU_ICON_ID ? 'menu-item-agent' : menuItem.class;
+						const newAction = store.add(new Action(menuItem.id, mnemonicMenuLabel(title), cssClass, menuItem.enabled, () => this.commandService.executeCommand(menuItem.id)));
 						newAction.tooltip = menuItem.tooltip;
 						newAction.checked = menuItem.checked;
 						target.push(newAction);

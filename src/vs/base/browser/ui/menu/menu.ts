@@ -1234,6 +1234,18 @@ ${formatRule(Codicon.menuSubmenu)}
 	justify-content: center;
 }
 
+/* Pollis: the two-star sparkle of the items a coding agent does, in the check gutter */
+.monaco-menu .monaco-action-bar.vertical .action-label.menu-item-agent::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 2em;
+	height: 100%;
+	background-color: currentColor;
+	-webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.2' stroke-linejoin='round'%3E%3Cpath d='M7 2.5c.4 2.6 1.4 3.6 4 4-2.6.4-3.6 1.4-4 4-.4-2.6-1.4-3.6-4-4 2.6-.4 3.6-1.4 4-4z'/%3E%3Cpath d='M12.5 10.5c.2 1.1.6 1.5 1.7 1.7-1.1.2-1.5.6-1.7 1.7-.2-1.1-.6-1.5-1.7-1.7 1.1-.2 1.5-.6 1.7-1.7z'/%3E%3C/svg%3E") no-repeat center / 15px 15px;
+}
+
 /* Context Menu */
 
 .context-view.monaco-menu-container {

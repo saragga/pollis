@@ -8,8 +8,10 @@ import { Button } from '../../../../base/browser/ui/button/button.js';
 import { IListVirtualDelegate } from '../../../../base/browser/ui/list/list.js';
 import { TriStateCheckbox } from '../../../../base/browser/ui/toggle/toggle.js';
 import { IObjectTreeElement, ITreeNode, ITreeRenderer } from '../../../../base/browser/ui/tree/tree.js';
+import { RunOnceScheduler } from '../../../../base/common/async.js';
 import { DisposableStore } from '../../../../base/common/lifecycle.js';
 import { localize } from '../../../../nls.js';
+import { MenuRegistry } from '../../../../platform/actions/common/actions.js';
 import { ICommandService } from '../../../../platform/commands/common/commands.js';
 import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
 import { IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
@@ -142,6 +144,13 @@ export class PollisViewsView extends ViewPane {
 	) {
 		super(options, keybindingService, contextMenuService, configurationService, contextKeyService, viewDescriptorService, instantiationService, openerService, themeService, hoverService);
 		this._register(this.viewsService.onDidChange(() => this.refresh(false)));
+		// A published toolbox adds Extend and its submenus while the panel is open: read the menus again
+		const menusChanged = this._register(new RunOnceScheduler(() => this.refresh(true), 300));
+		this._register(MenuRegistry.onDidChangeMenu(() => {
+			if (this.isBodyVisible()) {
+				menusChanged.schedule();
+			}
+		}));
 	}
 
 	protected override renderBody(container: HTMLElement): void {

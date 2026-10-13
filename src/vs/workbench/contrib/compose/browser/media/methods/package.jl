@@ -3,15 +3,18 @@
 # OWNER, a package whose tests all pass is pushed to github.com/OWNER/NAME.jl (GitHub CLI, gh). With
 # --register URL as well, a pushed package that also meets the Pollis registry rules (a name of at least
 # 5 characters, a usage example, a docstring for every exported name) is registered in the registry at URL
-# (LocalRegistry.jl). The rules are checked, and reported, every time.
+# (LocalRegistry.jl). The rules are checked, and reported, every time. A registered package with a vignette
+# (vignette/NAME.pdf) also gets an entry in Vignettes.toml at the registry's root, the list that
+# Help > Documentation > Vignettes shows.
 #
 #   julia package.jl PACKAGES_FOLDER METHOD_FOLDER... [--push OWNER [--register REGISTRY_URL]]
 #
 # A method folder holds method.toml (name, title, author, description, citation, version, usage (Julia code
 # that shows how to call the method, for the README), packages, and a
 # [targets.NAME] table for each target: source, call, tolerance, and an [inputs.NAME] table for each input:
-# url, source, delim, columns), src/NAME.jl (module NAME) and targets/*.csv. The inputs are only links: the
-# tests download them into memory, writing nothing to disk. A target table's first column holds the row
+# url or file, source, delim, columns), src/NAME.jl (module NAME), targets/*.csv and inputs/*.csv. An input is
+# a link, which the tests download into memory, writing nothing to disk, or a file of the method
+# (file = "inputs/NAME.csv", typed in from the article), copied into the package's tests. A target table's first column holds the row
 # labels and its other cells the published values as printed; the call is the Julia expression that
 # computes them from the inputs, each input a variable named after its table and holding a Tables.jl
 # column table. A value passes when the
@@ -43,9 +46,9 @@ function runtests(name, method)
 		"",
 		"const DATA = joinpath(@__DIR__, \"data\")",
 		"",
-		"\"An input table, downloaded from its link into memory.\"",
-		"function input(url; delim = ',', columns = nothing)",
-		"\tbytes = take!(Downloads.download(url, IOBuffer()))",
+		"\"An input table: a file of the tests, or downloaded from its link into memory.\"",
+		"function input(source; delim = ',', columns = nothing)",
+		"\tbytes = startswith(source, r\"https?://\") ? take!(Downloads.download(source, IOBuffer())) : read(joinpath(DATA, source))",
 		"\theader = columns === nothing ? 1 : Symbol.(columns)",
 		"\tfile = delim == \"whitespace\" ? CSV.File(bytes; header, delim = ' ', ignorerepeated = true, stripwhitespace = true) : CSV.File(bytes; header, delim = delim == \"tab\" ? '\\t' : only(delim))",
 		"\treturn Tables.columntable(file)",
@@ -90,13 +93,15 @@ function runtests(name, method)
 			occursin(Regex("\\b$input\\b"), call) || continue
 			options = haskey(link, "delim") ? "; delim = $(repr(link["delim"]))" : ""
 			haskey(link, "columns") && (options *= (isempty(options) ? "; " : ", ") * "columns = $(repr(string.(link["columns"])))")
-			push!(lines, "\t\t$input = input($(repr(link["url"]))$options)")
+			push!(lines, "\t\t$input = input($(repr(haskey(link, "file") ? link["file"] : link["url"]))$options)")
 		end
 		push!(lines, "\t\tcheck($call, $(repr(file)), $(get(spec, "tolerance", 0)))", "\tend")
 	end
 	push!(lines, "end", "")
 	return join(lines, "\n")
 end
+
+vignette_title(method) = let title = get(method, "vignette_title", ""); isempty(title) ? get(method, "title", method["name"]) : title end
 
 function readme(name, method)
 	targets = get(method, "targets", Dict{String, Any}())
@@ -115,16 +120,19 @@ function readme(name, method)
 	end
 	usage = strip(get(method, "usage", ""))
 	isempty(usage) || push!(lines, "## Usage", "", "```julia", usage, "```", "")
+	pdf = joinpath(method["folder"], "vignette", "$name.pdf")
+	isfile(pdf) && push!(lines, "## Vignette", "", "[$(vignette_title(method))](vignette/$name.pdf)", "")
 	push!(lines, "## Tests", "", "The tests compute the published tables below from their data and check every printed value, rounded to the digits printed:", "")
 	for (file, spec) in sort(collect(targets); by = first)
 		push!(lines, "- $(get(spec, "source", file)) (`test/data/targets/$file.csv`)")
 	end
 	inputs = get(method, "inputs", Dict{String, Any}())
 	if !isempty(inputs)
-		push!(lines, "", "The data is downloaded from its links when the tests run:", "")
+		push!(lines, "", "The data, downloaded from its links when the tests run or kept in `test/data/inputs`:", "")
 		for (input, link) in sort(collect(inputs); by = first)
 			source = get(link, "source", "")
-			push!(lines, "- `$input`: <$(link["url"])>" * (isempty(source) ? "" : ", $source"))
+			where = haskey(link, "file") ? "`test/data/$(link["file"])`" : "<$(link["url"])>"
+			push!(lines, "- `$input`: $where" * (isempty(source) ? "" : ", $source"))
 		end
 	end
 	push!(lines, "", "Run them with `using Pkg; Pkg.test(\"$name\")`.", "", "Made with [Pollis](https://pollis.org).", "")
@@ -148,12 +156,20 @@ function package(packages, folder)
 	open(project, "w") do io
 		TOML.print(io, Dict("name" => name, "uuid" => uuid, "version" => get(method, "version", "0.1.0"), "authors" => isempty(author) ? String[] : [author]); sorted = true)
 	end
-	for sub in ("src", joinpath("test", "data"))
+	for sub in ("src", "vignette", joinpath("test", "data"))
 		rm(joinpath(root, sub); force = true, recursive = true)
 	end
 	cp(joinpath(folder, "src"), joinpath(root, "src"))
 	mkpath(joinpath(root, "test", "data"))
 	cp(joinpath(folder, "targets"), joinpath(root, "test", "data", "targets"))
+	isdir(joinpath(folder, "inputs")) && cp(joinpath(folder, "inputs"), joinpath(root, "test", "data", "inputs"))
+	# The vignette: its LaTeX sources and PDF, not LaTeX's working files
+	if isfile(joinpath(folder, "vignette", "$name.pdf"))
+		mkpath(joinpath(root, "vignette"))
+		for file in readdir(joinpath(folder, "vignette"))
+			splitext(file)[2] in (".tex", ".bib", ".pdf") && cp(joinpath(folder, "vignette", file), joinpath(root, "vignette", file))
+		end
+	end
 	write(joinpath(root, "test", "runtests.jl"), runtests(name, method))
 	write(joinpath(root, "README.md"), readme(name, method))
 	write(joinpath(root, ".gitignore"), "Manifest.toml\n")
@@ -188,6 +204,43 @@ function register(root, registry)
 	println("Registered in $registry. To install: using Pkg; Pkg.Registry.add(url = \"$registry\"); Pkg.add(\"$(basename(root)[1:end - 3])\")")
 end
 
+"""
+Adds or updates the package's entry in Vignettes.toml at the root of the registry at a URL, and pushes it:
+the list of published vignettes that Help > Documentation > Vignettes shows.
+"""
+function list_vignette(registry, name, method, owner)
+	mktempdir() do clone
+		run(`git clone --quiet --depth 1 $registry $clone`)
+		file = joinpath(clone, "Vignettes.toml")
+		vignettes = isfile(file) ? TOML.parsefile(file) : Dict{String, Any}()
+		repository = "https://github.com/$owner/$name.jl"
+		# Each value on one line: Pollis reads the file with its own TOML reader, which keeps escapes such as \n
+		vignettes[name] = Dict(k => strip(replace(v, r"\s+" => " ")) for (k, v) in (
+			"title" => vignette_title(method),
+			"method" => get(method, "title", name),
+			"package" => name,
+			"version" => get(method, "version", "0.1.0"),
+			"author" => get(method, "author", ""),
+			"description" => get(method, "description", ""),
+			"citation" => get(method, "citation", ""),
+			"repository" => repository,
+			"pdf" => "$repository/blob/main/vignette/$name.pdf",
+		))
+		open(file, "w") do io
+			println(io, "# The vignettes of the packages in this registry, one table per package, written by Pollis")
+			println(io, "# (Compose > New Methods > Package and Publish) and shown in Help > Documentation > Vignettes.\n")
+			TOML.print(io, vignettes; sorted = true)
+		end
+		cd(clone) do
+			run(`git add Vignettes.toml`)
+			success(`git diff --cached --quiet`) && return
+			run(`git commit --quiet -m "Vignette of $name"`)
+			run(`git push --quiet`)
+		end
+	end
+	println("Listed the vignette of $name in $registry (Vignettes.toml).")
+end
+
 function publish(root, name, owner)
 	cd(root) do
 		isdir(".git") || run(`git init -b main`)
@@ -216,11 +269,16 @@ function main(args)
 				println("$name meets the Pollis registry rules.")
 			else
 				println("$name does not meet the Pollis registry rules yet:\n", join("  - " .* problems, "\n"))
-				println("Compose > Pollis Agents > Prepare for Registration... asks your coding agent to fix them.")
+				println("Prepare for Registration, on the method's page (Compose > New Methods > Browse Methods), asks your coding agent to fix them.")
 			end
 			owner === nothing || publish(root, name, owner)
 			if registry !== nothing
-				isempty(problems) ? register(root, registry) : println("$name: not registered.")
+				if isempty(problems)
+					register(root, registry)
+					isfile(joinpath(root, "vignette", "$name.pdf")) && list_vignette(registry, name, method, owner)
+				else
+					println("$name: not registered.")
+				end
 			end
 		catch error
 			showerror(stdout, error)

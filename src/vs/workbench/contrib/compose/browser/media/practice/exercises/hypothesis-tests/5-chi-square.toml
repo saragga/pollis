@@ -1,0 +1,12 @@
+title = "The chi-square statistic of a 2 x 2 table"
+panel = "chiara.statistics.ht"
+setup = '''
+o = [rand(rng, 15:45) rand(rng, 15:45); rand(rng, 15:45) rand(rng, 15:45)]
+e = sum(o; dims = 2) * sum(o; dims = 1) / sum(o)
+chi2 = sum((o .- e) .^ 2 ./ e)
+yates = sum((abs.(o .- e) .- 0.5) .^ 2 ./ e)
+'''
+question = '''In a survey, {{o[1, 1]}} of the {{o[1, 1] + o[1, 2]}} men and {{o[2, 1]}} of the {{o[2, 1] + o[2, 2]}} women prefer the morning shift; the rest prefer the evening shift. What is the Pearson chi-square statistic for independence of sex and preference (without continuity correction)?'''
+choices = ['{{fmt(chi2, 3)}}', '{{fmt(yates, 3)}}', '{{fmt(sum((o .- e) .^ 2 ./ o), 3)}}', '{{fmt(sum(abs.(o .- e) ./ e), 3)}}']
+answer = 1
+explanation = '''The expected count of each cell is its row total times its column total divided by {{sum(o)}}, here {{fmt(e[1, 1], 2)}} men and {{fmt(e[2, 1], 2)}} women for the morning shift, {{fmt(e[1, 2], 2)}} men and {{fmt(e[2, 2], 2)}} women for the evening shift. The statistic adds (observed - expected)^2 / expected over the four cells: {{fmt(chi2, 3)}}, with 1 degree of freedom. Yates' continuity correction gives {{fmt(yates, 3)}}.'''

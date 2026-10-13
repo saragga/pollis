@@ -25,6 +25,7 @@ import { Registry } from '../../../../platform/registry/common/platform.js';
 import { registerIcon } from '../../../../platform/theme/common/iconRegistry.js';
 import { registerThemingParticipant } from '../../../../platform/theme/common/themeService.js';
 import { IWorkspaceContextService } from '../../../../platform/workspace/common/workspace.js';
+import { IWorkbenchContribution, registerWorkbenchContribution2, WorkbenchPhase } from '../../../common/contributions.js';
 import { ResourceContextKey } from '../../../common/contextkeys.js';
 import { IEditorService } from '../../../services/editor/common/editorService.js';
 import { IPathService } from '../../../services/path/common/pathService.js';
@@ -33,6 +34,7 @@ import { debugIconStartForeground } from '../../debug/browser/debugColors.js';
 import { CUSTOM_COPY_KINDS, resolveCustomCopy } from '../../model/browser/common/customCopyFileSystem.js';
 import { sendToJuliaRepl } from '../../model/browser/handlers/model.handler.js';
 import { findPollisWorkspace, NEW_POLLIS_WORKSPACE_COMMAND_ID } from '../../pollisWorkspace/browser/pollisWorkspace.contribution.js';
+import { AGENT_TIERS_SETTING, tierCommand } from './modelRouting.js';
 import { startAgent } from './pollisAgents.js';
 
 // Compose > Reports: a notebook (a workflow, a notebook tutorial or the user's own) as a LaTeX report or
@@ -44,7 +46,7 @@ import { startAgent } from './pollisAgents.js';
 // again refreshes the numbers and keeps the user's edits. PollisTeX.jl (Tectonic) compiles it; the .tex
 // opens in a tab and the PDF beside it in the integrated browser. Each .tex tab has a Compile LaTeX
 // button, which saves and compiles it again in the Julia REPL. Polish with Agent... hands the .tex to a
-// coding agent (pollis.reports.agentCommand, for a cheaper model, else the chosen agent) that follows
+// coding agent (its tier in Model Routing, Light by default, else the chosen agent) that follows
 // polish-report.md with notebook.md, the notebook as short Markdown, so it neither reads the notebook's
 // JSON nor runs it.
 
@@ -83,7 +85,8 @@ Registry.as<IConfigurationRegistry>(ConfigurationExtensions.Configuration).regis
 			type: 'string',
 			default: '',
 			scope: ConfigurationScope.APPLICATION,
-			markdownDescription: localize('reports.agentCommand', "The command that starts the coding agent of **Compose > Reports > Polish with Agent...**, with `{prompt}` where the first message goes: a cheaper, faster model is enough, for example `claude --model haiku {prompt}`. Empty: the agent of `#pollis.agents.command#`. Use **Compose > Choose Coding Agent...** to change it."),
+			markdownDescription: localize('reports.agentCommand', "The command that started the coding agent of **Compose > Reports > Polish with Agent...**. Pollis moves it to the Light tier of `#pollis.agents.tiers#`."),
+			markdownDeprecationMessage: localize('reports.agentCommandDeprecated', "Polish with Agent now runs on a tier of **Compose > Orchestration > Model Routing**, Light by default."),
 		},
 	},
 });
@@ -220,7 +223,6 @@ async function polishReport(accessor: ServicesAccessor, resource?: URI): Promise
 	const textFileService = accessor.get(ITextFileService);
 	const fileService = accessor.get(IFileService);
 	const notificationService = accessor.get(INotificationService);
-	const configurationService = accessor.get(IConfigurationService);
 	const commandService = accessor.get(ICommandService);
 	const instantiationService = accessor.get(IInstantiationService);
 
@@ -234,7 +236,7 @@ async function polishReport(accessor: ServicesAccessor, resource?: URI): Promise
 	const instructions = FileAccess.asFileUri(INSTRUCTIONS).fsPath;
 	const prompt = localize('reports.polishPrompt', "Read {0} and follow it to polish {1}, in this folder.", instructions, basename(tex));
 	const title = localize('reports.polishTitle', "Polish {0}", basename(tex));
-	const terminal = await instantiationService.invokeFunction(startAgent, title, prompt, folder, configurationService.getValue<string>(REPORTS_AGENT_COMMAND_SETTING));
+	const terminal = await instantiationService.invokeFunction(startAgent, title, prompt, folder, 'polish');
 	if (!terminal) {
 		return;
 	}
@@ -346,3 +348,27 @@ registerAction2(class extends Action2 {
 		return compileLatex(accessor, URI.isUri(resource) ? resource : undefined);
 	}
 });
+
+/**
+ * Moves the agent of Polish with Agent, which Reports had its own setting for, to the Light tier of Model
+ * Routing, Polish's default tier, when Light has no command line yet; then clears the old setting.
+ */
+class ReportsAgentMigration implements IWorkbenchContribution {
+	static readonly ID = 'workbench.contrib.pollisReportsAgentMigration';
+
+	constructor(@IConfigurationService configurationService: IConfigurationService) {
+		const command = configurationService.getValue<string>(REPORTS_AGENT_COMMAND_SETTING)?.trim();
+		if (!command) {
+			return;
+		}
+		(async () => {
+			if (!tierCommand(configurationService, 'light')) {
+				const tiers = configurationService.getValue<Record<string, string>>(AGENT_TIERS_SETTING) ?? {};
+				await configurationService.updateValue(AGENT_TIERS_SETTING, { ...tiers, light: command });
+			}
+			await configurationService.updateValue(REPORTS_AGENT_COMMAND_SETTING, undefined);
+		})();
+	}
+}
+
+registerWorkbenchContribution2(ReportsAgentMigration.ID, ReportsAgentMigration, WorkbenchPhase.Eventually);

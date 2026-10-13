@@ -1,0 +1,12 @@
+title = "The least-squares slope"
+panel = "chiara.statistics.lm"
+packages = ["Distributions"]
+setup = '''
+x = sort(round.(rand(rng, Uniform(1, 12), 6); digits = 1))
+y = round.(rand(rng, 1:5) .+ rand(rng, 0.5:0.25:2.5) .* x .+ rand(rng, Normal(0, 1.5), 6); digits = 1)
+b1 = cov(x, y) / var(x)
+'''
+question = '''Six pairs (x, y): {{join(["(" * string(a) * ", " * string(b) * ")" for (a, b) in zip(x, y)], ", ")}}. What is the least-squares slope of the regression of y on x?'''
+choices = ['{{fmt(b1, 3)}}', '{{fmt(cov(x, y) / var(y), 3)}}', '{{fmt(cor(x, y), 3)}}', '{{fmt(mean(y) - b1 * mean(x), 3)}}']
+answer = 1
+explanation = '''The slope is the covariance of x and y divided by the variance of x: {{fmt(cov(x, y), 3)}} / {{fmt(var(x), 3)}} = {{fmt(b1, 3)}}. Dividing by the variance of y gives the slope of x on y instead; {{fmt(mean(y) - b1 * mean(x), 3)}} is the intercept.'''

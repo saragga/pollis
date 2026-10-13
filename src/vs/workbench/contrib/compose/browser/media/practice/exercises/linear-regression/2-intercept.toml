@@ -1,0 +1,11 @@
+title = "The intercept from the means"
+panel = "chiara.statistics.lm"
+setup = '''
+xbar = round(rand(rng) * 20 + 5; digits = 1)
+ybar = round(rand(rng) * 50 + 20; digits = 1)
+b1 = round(rand(rng, [-1, 1]) * (rand(rng) * 2 + 0.5); digits = 2)
+'''
+question = '''In a simple regression the mean of x is {{xbar}}, the mean of y is {{ybar}} and the least-squares slope is {{b1}}. What is the intercept?'''
+choices = ['{{fmt(ybar - b1 * xbar, 2)}}', '{{fmt(ybar + b1 * xbar, 2)}}', '{{fmt(b1 * xbar - ybar, 2)}}', '{{fmt(ybar - b1, 2)}}']
+answer = 1
+explanation = '''The least-squares line passes through the point of means, so ybar = b0 + b1 xbar and b0 = {{ybar}} - ({{b1}})({{xbar}}) = {{fmt(ybar - b1 * xbar, 2)}}.'''

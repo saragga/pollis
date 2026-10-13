@@ -338,7 +338,7 @@ export function materialFolders(panel: Pick<ResolvedPanel, 'id'>, toml: TomlValu
  * are in a folder the copy ships move to `<prefix>.<folder>`, so the copy's folders never replace
  * Pollis' own (wiki and notebook folders are registered by name). Files in other folders keep
  * resolving where they did. Throws when not every entry of those folders was rewritten.
- * The plugin's builder (makeToolbox.mjs in Trumpingtons/pollis-plugins) does the same.
+ * The plugin's builder (makeToolbox.mjs in Trumpingtons/pollis-skills) does the same.
  */
 export function renameMaterialFolders(text: string, toml: TomlValue, shipped: ReadonlySet<string>, prefix: string): string {
 	const entries = [

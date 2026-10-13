@@ -18,7 +18,6 @@ import { IClipboardService } from '../../../../platform/clipboard/common/clipboa
 import { ICommandService } from '../../../../platform/commands/common/commands.js';
 import { ConfigurationScope, Extensions as ConfigurationExtensions, IConfigurationRegistry } from '../../../../platform/configuration/common/configurationRegistry.js';
 import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { IDialogService } from '../../../../platform/dialogs/common/dialogs.js';
 import { ByteSize, IFileService } from '../../../../platform/files/common/files.js';
 import { IInstantiationService, ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
 import { INotificationService, Severity } from '../../../../platform/notification/common/notification.js';
@@ -34,37 +33,43 @@ import { ITextFileService } from '../../../services/textfile/common/textfiles.js
 import { ITerminalInstance, ITerminalInstanceService, ITerminalService } from '../../terminal/browser/terminal.js';
 import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
-import { LIBRARY_PAGE_HELPERS, LIBRARY_PAGE_STYLE } from './workflowLibrary.js';
+import { LIBRARY_PAGE_HELPERS, LIBRARY_PAGE_STYLE } from './libraryPage.js';
+import { AgentTask, agentCommandFor } from './modelRouting.js';
 
-// Compose > Pollis Agents holds tasks: you go there to get something done (Create a Panel, Package a
-// Toolbox, Write a Method...), and a coding agent of your choice does it in a terminal. Compose > Pollis
-// Skills is the library of the skills those tasks use: read them, run one with your agent, or install
-// them in Claude Code. Create Panels from a Request runs Create a Panel on the request file open in the
+// Compose > New Panels and Toolboxes and Compose > New Methods hold tasks: you go there to get something
+// done (Create a Panel, Package a Toolbox, Write a Method...), and a coding agent of your choice does it in
+// a terminal. Compose > Coding Agents chooses that agent and Compose > Agent Skills holds the library of the skills the tasks
+// use: read them or run one with your agent; the Coding Agents page installs them in an agent. Create Panels from a Request runs Create a Panel on the request file open in the
 // editor, which lists the panels to write, with no questions asked. The skills and their scripts come
-// from the Pollis Agents plugin, Trumpingtons/pollis-plugins (plugins/pollis-agents, its files listed in
+// from the Pollis Agents plugin, Trumpingtons/pollis-skills (plugins/pollis-agents, its files listed in
 // files.json), downloaded to ~/.pollis/agents/pollis-agents each time a skill starts. The agent is
 // started with a first message that points it at the skill's SKILL.md, so any agent that reads files and
-// runs commands can follow it, whether on a cloud model or a local one. Tasks without a skill (those of
-// New Methods) start the agent with their own first message (startAgent).
+// runs commands can follow it, whether on a cloud model or a local one. The New Methods tasks (Write a
+// Method, Write a Vignette, Prepare for Registration, in newMethods.ts, buttons on each
+// method's page) give the agent the method's folder and its test command beside the skill (skillFile).
 
-const PLUGIN_URL = 'https://raw.githubusercontent.com/Trumpingtons/pollis-plugins/main/plugins/pollis-agents';
+const PLUGIN_URL = 'https://raw.githubusercontent.com/Trumpingtons/pollis-skills/main/plugins/pollis-agents';
 
 export const AGENT_COMMAND_SETTING = 'pollis.agents.command';
 export const PROMPT_PLACEHOLDER = '{prompt}';
 
-// The commands of Compose > Pollis Agents (the menu itself is in compose.contribution.ts)
+// The commands of the agent tasks (the menus themselves are in compose.contribution.ts)
 export const CREATE_PANEL_COMMAND_ID = 'pollis.agents.createPanel';
 export const CREATE_PANELS_FROM_REQUEST_COMMAND_ID = 'pollis.agents.createPanelsFromRequest';
 export const PACKAGE_TOOLBOX_COMMAND_ID = 'pollis.agents.packageToolbox';
+export const WRITE_METHOD_COMMAND_ID = 'pollis.newMethods.writeMethod';
+export const PREPARE_REGISTRATION_COMMAND_ID = 'pollis.newMethods.prepareRegistration';
+export const WRITE_VIGNETTE_COMMAND_ID = 'pollis.newMethods.writeVignette';
+export const METHOD_FROM_NOTEBOOK_COMMAND_ID = 'pollis.newMethods.fromNotebook';
 export const CHOOSE_AGENT_COMMAND_ID = 'pollis.agents.chooseAgent';
 
-// The commands of Compose > Pollis Skills
+// The commands of Compose > Coding Agents and Agent Skills
 export const BROWSE_SKILLS_COMMAND_ID = 'pollis.skills.browse';
-export const INSTALL_SKILLS_COMMAND_ID = 'pollis.skills.install';
 
-// The Pollis Agents plugin in its Claude Code marketplace
-const MARKETPLACE = 'Trumpingtons/pollis-plugins';
+// The Pollis Agents plugin in its Claude Code marketplace, and the file that marks a skill folder Pollis installed in another agent
+const MARKETPLACE = 'Trumpingtons/pollis-skills';
 const PLUGIN_ID = 'pollis-agents@pollis';
+const INSTALLED_MARKER = '.pollis-skill';
 
 /** A coding agent Pollis knows how to start with a first message, on a cloud model or a local one. */
 export interface ICodingAgent {
@@ -94,11 +99,14 @@ interface IPollisSkill {
 	readonly prompt: (skillFile: string, requestFile: string) => string;
 	/** Whether the skill works on the request file open in the editor; the agent then starts in the file's folder. */
 	readonly request?: boolean;
+	/** The task, for its tier in Model Routing. */
+	readonly task: AgentTask;
 }
 
 const CREATE_PANEL: IPollisSkill = {
 	folder: 'create-panel',
 	title: localize('pollisAgents.createPanel.terminal', "Create a Panel"),
+	task: 'createPanel',
 	prompt: skillFile => localize('pollisAgents.createPanel.prompt', "Read the skill {0} and follow its instructions to create a new Pollis panel with me.", skillFile),
 };
 
@@ -107,11 +115,13 @@ const CREATE_PANELS_FROM_REQUEST: IPollisSkill = {
 	title: localize('pollisAgents.createPanelsFromRequest.terminal', "Create Panels from a Request"),
 	prompt: (skillFile, requestFile) => localize('pollisAgents.createPanelsFromRequest.prompt', "Read the skill {0} and follow its instructions to create the panels of the request file {1}, without asking me questions.", skillFile, requestFile),
 	request: true,
+	task: 'createPanelsFromRequest',
 };
 
 const PACKAGE_TOOLBOX: IPollisSkill = {
 	folder: 'package-toolbox',
 	title: localize('pollisAgents.packageToolbox.terminal', "Package a Toolbox"),
+	task: 'packageToolbox',
 	prompt: skillFile => localize('pollisAgents.packageToolbox.prompt', "Read the skill {0} and follow its instructions to package a Pollis toolbox with me.", skillFile),
 };
 
@@ -120,7 +130,7 @@ const REQUEST_PATTERN = /^\s*(?:(?:toolbox|panel)\s*\(|\[\[panel\]\])/m;
 
 const REQUEST_TEMPLATE = [
 	'# Pollis panel request: the panels you want, one panel(...) for each. Fill it in, then choose',
-	'# Compose > Pollis Agents > Create Panels from a Request... with this file open.',
+	'# Compose > New Panels and Toolboxes > Create Panels from a Request... with this file open.',
 	'',
 	'# The toolbox the panels go in. name: pollis-toolbox- then lower case letters, digits and hyphens.',
 	'toolbox(name = "pollis-toolbox-mycourse", displayName = "My Course", author = "Your Name")',
@@ -149,7 +159,7 @@ Registry.as<IConfigurationRegistry>(ConfigurationExtensions.Configuration).regis
 			type: 'string',
 			default: '',
 			scope: ConfigurationScope.APPLICATION,
-			markdownDescription: localize('pollisAgents.command', "The command that starts the coding agent for the Compose menu (Pollis Agents, Orchestration, Reports), with `{prompt}` where the first message goes, for example `claude {prompt}` or `opencode --prompt {prompt}`. Without `{prompt}`, the message is copied to the clipboard to paste into the agent. Empty: Pollis opens the Coding Agent page to choose one. Use **Compose > Choose Coding Agent...** to change it."),
+			markdownDescription: localize('pollisAgents.command', "The command that starts the coding agent for the agent tasks of the Compose menu, with `{prompt}` where the first message goes, for example `claude {prompt}` or `opencode --prompt {prompt}`. Without `{prompt}`, the message is copied to the clipboard to paste into the agent. Empty: Pollis opens the Coding Agents page to choose one. Use **Compose > Coding Agents** to change it."),
 		},
 	},
 });
@@ -246,11 +256,12 @@ async function updateSkills(accessor: ServicesAccessor): Promise<boolean> {
 
 /**
  * Starts the chosen coding agent in a terminal with a first message; when none is chosen yet, it opens the
- * Coding Agent page instead. `command` overrides the chosen agent's command line (Reports' cheaper agent). The
- * agent starts in `cwd`, else the first workspace folder, else the home folder. Returns its terminal, or
- * `undefined` when no agent started.
+ * Coding Agents page instead. A `task` runs on the command line of its tier in Model Routing, when the tier
+ * has one and its program is on this computer; otherwise on the main agent, saying so when the program is
+ * missing. The agent starts in `cwd`, else the first workspace folder, else the home folder. Returns its
+ * terminal, or `undefined` when no agent started.
  */
-export async function startAgent(accessor: ServicesAccessor, title: string, prompt: string, cwd?: URI, command?: string): Promise<ITerminalInstance | undefined> {
+export async function startAgent(accessor: ServicesAccessor, title: string, prompt: string, cwd?: URI, task?: AgentTask): Promise<ITerminalInstance | undefined> {
 	const configurationService = accessor.get(IConfigurationService);
 	const notificationService = accessor.get(INotificationService);
 	const fileService = accessor.get(IFileService);
@@ -262,14 +273,25 @@ export async function startAgent(accessor: ServicesAccessor, title: string, prom
 	const pathService = accessor.get(IPathService);
 	const commandService = accessor.get(ICommandService);
 
-	command = command?.trim() || configurationService.getValue<string>(AGENT_COMMAND_SETTING)?.trim();
+	const environment = await terminalEnvironment(terminalInstanceService);
+	let command = configurationService.getValue<string>(AGENT_COMMAND_SETTING)?.trim();
+	let name = title;
+	const routed = task && agentCommandFor(configurationService, task);
+	if (routed) {
+		const routedProgram = commandWords(routed.command)[0];
+		if (await findProgram(routedProgram, environment, fileService)) {
+			command = routed.command;
+			name = localize('pollisAgents.tierTitle', "{0} ({1})", title, routed.tier.label);
+		} else if (command) {
+			notificationService.info(localize('pollisAgents.tierMissing', "{0} tier: '{1}' isn't installed on this computer, so the main coding agent runs {2}.", routed.tier.label, routedProgram, title));
+		}
+	}
 	if (!command) {
 		notificationService.info(localize('pollisAgents.chooseFirst', "Choose the coding agent Pollis starts, then run {0} again.", title));
 		await commandService.executeCommand(CHOOSE_AGENT_COMMAND_ID);
 		return undefined;
 	}
 	const [program, ...args] = commandWords(command);
-	const environment = await terminalEnvironment(terminalInstanceService);
 	const executable = await findProgram(program, environment, fileService);
 	if (!executable) {
 		const agent = CODING_AGENTS.find(agent => commandWords(agent.command)[0] === program);
@@ -286,7 +308,7 @@ export async function startAgent(accessor: ServicesAccessor, title: string, prom
 	const batch = isWindows && /\.(cmd|bat)$/i.test(executable);
 	const instance = await terminalService.createTerminal({
 		config: {
-			name: localize('pollisAgents.terminalName', "Pollis Agents: {0}", title),
+			name: localize('pollisAgents.terminalName', "Pollis Agents: {0}", name),
 			executable: batch ? (environment['ComSpec'] ?? 'cmd.exe') : executable,
 			args: batch ? ['/d', '/c', executable, ...agentArgs] : agentArgs,
 			cwd: cwd ?? workspaceContextService.getWorkspace().folders.find(folder => folder.uri.scheme === Schemas.file)?.uri ?? pathService.userHome({ preferLocal: true }),
@@ -334,7 +356,17 @@ async function runSkill(accessor: ServicesAccessor, skill: IPollisSkill): Promis
 	}
 	const skillFile = joinPath(pluginFolder(pathService), 'skills', skill.folder, 'SKILL.md');
 	const prompt = skill.prompt(skillFile.fsPath, requestFile?.fsPath ?? '');
-	await instantiationService.invokeFunction(startAgent, skill.title, prompt, requestFile && dirname(requestFile));
+	await instantiationService.invokeFunction(startAgent, skill.title, prompt, requestFile && dirname(requestFile), skill.task);
+}
+
+/** The SKILL.md of a skill of the latest plugin, downloaded first; undefined when there is no copy at all. */
+export async function skillFile(accessor: ServicesAccessor, folder: string): Promise<URI | undefined> {
+	const pathService = accessor.get(IPathService);
+	const instantiationService = accessor.get(IInstantiationService);
+	if (!await instantiationService.invokeFunction(updateSkills)) {
+		return undefined;
+	}
+	return joinPath(pluginFolder(pathService), 'skills', folder, 'SKILL.md');
 }
 
 /** A skill in the downloaded plugin, as its folder and its SKILL.md describe it. */
@@ -354,11 +386,15 @@ interface ISkillInfo {
 	readonly location: URI;
 }
 
-/** The Pollis Agents tasks that run a skill, as the skills page lists them. */
-const SKILL_TASKS: readonly { readonly skill: IPollisSkill; readonly command: string }[] = [
-	{ skill: CREATE_PANEL, command: CREATE_PANEL_COMMAND_ID },
-	{ skill: CREATE_PANELS_FROM_REQUEST, command: CREATE_PANELS_FROM_REQUEST_COMMAND_ID },
-	{ skill: PACKAGE_TOOLBOX, command: PACKAGE_TOOLBOX_COMMAND_ID },
+/** The Compose tasks that run a skill, as the skills page lists them. */
+const SKILL_TASKS: readonly { readonly folder: string; readonly title: string; readonly command: string }[] = [
+	{ folder: CREATE_PANEL.folder, title: CREATE_PANEL.title, command: CREATE_PANEL_COMMAND_ID },
+	{ folder: CREATE_PANELS_FROM_REQUEST.folder, title: CREATE_PANELS_FROM_REQUEST.title, command: CREATE_PANELS_FROM_REQUEST_COMMAND_ID },
+	{ folder: PACKAGE_TOOLBOX.folder, title: PACKAGE_TOOLBOX.title, command: PACKAGE_TOOLBOX_COMMAND_ID },
+	{ folder: 'write-method', title: localize('pollisAgents.writeMethod.task', "Write a Method"), command: WRITE_METHOD_COMMAND_ID },
+	{ folder: 'method-from-notebook', title: localize('pollisAgents.methodFromNotebook.task', "Method from Notebook"), command: METHOD_FROM_NOTEBOOK_COMMAND_ID },
+	{ folder: 'write-vignette', title: localize('pollisAgents.writeVignette.task', "Write a Vignette"), command: WRITE_VIGNETTE_COMMAND_ID },
+	{ folder: 'prepare-method', title: localize('pollisAgents.prepareRegistration.task', "Prepare for Registration"), command: PREPARE_REGISTRATION_COMMAND_ID },
 ];
 
 /** The skills of the downloaded plugin, from their folders and the front matter and heading of their SKILL.md files. */
@@ -406,14 +442,14 @@ type SkillsMessage =
 	| { readonly command: 'view'; readonly folder: string; readonly path: string }
 	| { readonly command: 'run'; readonly folder: string }
 	| { readonly command: 'task'; readonly id: string }
-	| { readonly command: 'install' };
+	| { readonly command: 'codingAgent' };
 
 /** The open skills page, so a second request shows the same page. */
 let skillsPage: WebviewInput | undefined;
 
 /**
  * Opens the skills page, in the look of the Workflows and New Methods libraries: a table of the
- * skills of the latest plugin, with the Pollis Agents tasks that use each, the requests that start
+ * skills of the latest plugin, with the Compose tasks that use each, the requests that start
  * it and its files. A skill opens in the editor, or runs with the chosen coding agent.
  */
 async function browseSkills(accessor: ServicesAccessor): Promise<void> {
@@ -432,7 +468,7 @@ async function browseSkills(accessor: ServicesAccessor): Promise<void> {
 		return;
 	}
 	const skills = await readSkills(fileService, folder);
-	const title = localize('pollisSkills.browse.title', "Pollis Skills");
+	const title = localize('pollisSkills.browse.title', "Agent Skills");
 	const webviewInput = skillsPage = webviewWorkbenchService.openWebview(
 		{
 			title,
@@ -463,7 +499,7 @@ async function browseSkills(accessor: ServicesAccessor): Promise<void> {
 				command: 'entries',
 				entries: skills.map(({ location, ...rest }) => ({
 					...rest,
-					tasks: SKILL_TASKS.filter(task => task.skill.folder === rest.folder).map(task => ({ id: task.command, title: task.skill.title })),
+					tasks: SKILL_TASKS.filter(task => task.folder === rest.folder).map(task => ({ id: task.command, title: task.title })),
 				})),
 			});
 		} else if (message.command === 'view' && skill?.files.includes(message.path)) {
@@ -472,8 +508,8 @@ async function browseSkills(accessor: ServicesAccessor): Promise<void> {
 			instantiationService.invokeFunction(startAgent, skill.title, localize('pollisSkills.runPrompt', "Read the skill {0} and follow its instructions with me.", joinPath(skill.location, 'SKILL.md').fsPath));
 		} else if (message.command === 'task' && SKILL_TASKS.some(task => task.command === message.id)) {
 			commandService.executeCommand(message.id);
-		} else if (message.command === 'install') {
-			commandService.executeCommand(INSTALL_SKILLS_COMMAND_ID);
+		} else if (message.command === 'codingAgent') {
+			commandService.executeCommand(CHOOSE_AGENT_COMMAND_ID);
 		}
 	}));
 }
@@ -482,7 +518,7 @@ async function browseSkills(accessor: ServicesAccessor): Promise<void> {
 function skillsPageHtml(title: string): string {
 	const text = {
 		skill: localize('pollisSkills.skill', "Skill"),
-		tasks: localize('pollisSkills.tasks', "Pollis Agents Tasks"),
+		tasks: localize('pollisSkills.tasks', "Tasks"),
 		requests: localize('pollisSkills.requests', "Example Requests"),
 		files: localize('pollisSkills.files', "Files"),
 		size: localize('pollisSkills.size', "Size"),
@@ -493,8 +529,9 @@ function skillsPageHtml(title: string): string {
 		more: localize('pollisSkills.more', "more"),
 		less: localize('pollisSkills.less', "less"),
 	};
-	const intro = localize('pollisSkills.intro', "A skill is the know-how a coding agent reads to do a task: the Pollis Agents tasks use these, and any coding agent can follow them. This is the latest version of each, downloaded when the page opens. Click a name to read its SKILL.md, or run it with your coding agent.");
-	const install = localize('pollisSkills.installLink', "Install in Claude Code...");
+	const intro = localize('pollisSkills.intro', "A skill is the know-how a coding agent reads to do a task: the agent tasks of the Compose menu use these, and any coding agent can follow them. This is the latest version of each, downloaded when the page opens. Click a name to read its {0}, or run it with your coding agent.", '<code>SKILL.md</code>');
+	const installIntro = localize('pollisSkills.installIntro', "To install the skills in your coding agent, so that it uses them in any folder, even outside Pollis:");
+	const installLink = localize('pollisSkills.installLink', "Compose > Coding Agents");
 	return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -505,7 +542,7 @@ function skillsPageHtml(title: string): string {
 ${LIBRARY_PAGE_STYLE}
 	.name { width: 40%; }
 	.links { margin-top: 6px; }
-	.subtitle-links { margin: -8px 0 16px 0; }
+	.install { max-width: 900px; margin: 0 0 20px 0; padding: 12px 16px; line-height: 1.4; border-left: 3px solid var(--vscode-textLink-foreground); background: color-mix(in srgb, var(--vscode-textLink-foreground) 8%, transparent); }
 	.task { display: block; margin: 0 0 4px 0; font-size: 12px; text-align: left; }
 	.request::before { content: '\u201C'; }
 	.request::after { content: '\u201D'; }
@@ -515,7 +552,7 @@ ${LIBRARY_PAGE_STYLE}
 <div class="container">
 	<h1>${title}</h1>
 	<p class="subtitle">${intro}</p>
-	<div class="links subtitle-links"><button class="link" id="install">${install}</button></div>
+	<div class="install">${installIntro} <button class="link" id="codingAgent">${installLink}</button></div>
 	<table>
 		<thead><tr>
 			<th>${text.skill}</th><th>${text.tasks}</th><th>${text.requests}</th><th>${text.files}</th><th>${text.size}</th>
@@ -529,7 +566,7 @@ ${LIBRARY_PAGE_STYLE}
 	/** A skill with more example requests than this shows the rest on request. */
 	const LISTED = 4;
 	const body = document.getElementById('entries');
-	document.getElementById('install').addEventListener('click', () => vscode.postMessage({ command: 'install' }));
+	document.getElementById('codingAgent').addEventListener('click', () => vscode.postMessage({ command: 'codingAgent' }));
 
 ${LIBRARY_PAGE_HELPERS}
 
@@ -615,25 +652,87 @@ ${LIBRARY_PAGE_HELPERS}
 </html>`;
 }
 
-/** Installs the Pollis Agents plugin in Claude Code from its marketplace, in a terminal. */
-async function installSkills(accessor: ServicesAccessor): Promise<void> {
-	const terminalService = accessor.get(ITerminalService);
-	const dialogService = accessor.get(IDialogService);
-	const { confirmed } = await dialogService.confirm({
-		message: localize('pollisSkills.install.confirm', "Install the Pollis skills in Claude Code?"),
-		detail: localize('pollisSkills.install.detail', "Claude Code then uses them in any folder, without going through Pollis. Pollis runs them with any coding agent without installing them. This adds the marketplace {0} and installs the plugin {1}.", MARKETPLACE, PLUGIN_ID),
-		primaryButton: localize({ key: 'pollisSkills.install.button', comment: ['&& denotes a mnemonic'] }, "&&Install"),
-	});
-	if (!confirmed) {
-		return;
-	}
-	const instance = await terminalService.createTerminal({ config: { name: localize('pollisSkills.install.terminal', "Install Pollis Skills") } });
-	terminalService.setActiveInstance(instance);
-	await terminalService.revealTerminal(instance);
-	await instance.sendText(`claude plugin marketplace add ${MARKETPLACE} && claude plugin install ${PLUGIN_ID}`, true);
+/** Where the skills are installed for an agent other than Claude Code: the personal skills folder of Codex, GitHub Copilot CLI and OpenCode. */
+function personalSkillsFolder(pathService: IPathService): URI {
+	return joinPath(pathService.userHome({ preferLocal: true }), '.agents', 'skills');
 }
 
-const category = localize2('pollisAgents.category', "Pollis Agents");
+/**
+ * Whether the skills are installed in the agent: in Claude Code, the Pollis Agents plugin is in its list of
+ * installed plugins; in any other agent, ~/.agents/skills has a skill folder Pollis put there.
+ */
+export async function skillsInstalled(agent: ICodingAgent, fileService: IFileService, pathService: IPathService): Promise<boolean> {
+	try {
+		if (commandWords(agent.command)[0] === 'claude') {
+			const plugins = await fileService.readFile(joinPath(pathService.userHome({ preferLocal: true }), '.claude', 'plugins', 'installed_plugins.json'));
+			return plugins.value.toString().includes(`"${PLUGIN_ID}"`);
+		}
+		const folders = (await fileService.resolve(personalSkillsFolder(pathService))).children ?? [];
+		for (const folder of folders) {
+			if (folder.isDirectory && await fileService.exists(joinPath(folder.resource, INSTALLED_MARKER))) {
+				return true;
+			}
+		}
+	} catch {
+		// No list of plugins, or no skills folder: not installed
+	}
+	return false;
+}
+
+/**
+ * Installs the skills in a coding agent, from the Coding Agents page, so that it uses them in any folder
+ * without going through Pollis: in Claude Code, the Pollis Agents plugin from its marketplace, in a terminal;
+ * in any other agent, the skill folders copied to ~/.agents/skills, the folder Codex, GitHub Copilot CLI and
+ * OpenCode read personal skills from. A folder there that Pollis did not put there (it has no
+ * INSTALLED_MARKER) is left as it is. The skills that run the plugin's scripts look for them in
+ * ~/.pollis/agents/pollis-agents.
+ */
+export async function installSkills(accessor: ServicesAccessor, agent: ICodingAgent): Promise<void> {
+	const terminalService = accessor.get(ITerminalService);
+	const fileService = accessor.get(IFileService);
+	const notificationService = accessor.get(INotificationService);
+	const instantiationService = accessor.get(IInstantiationService);
+	const pathService = accessor.get(IPathService);
+
+	if (commandWords(agent.command)[0] === 'claude') {
+		const instance = await terminalService.createTerminal({ config: { name: localize('pollisSkills.install.terminal', "Install Pollis Skills") } });
+		terminalService.setActiveInstance(instance);
+		await terminalService.revealTerminal(instance);
+		await instance.sendText(`claude plugin marketplace add ${MARKETPLACE} && claude plugin install ${PLUGIN_ID}`, true);
+		return;
+	}
+
+	if (!await instantiationService.invokeFunction(updateSkills)) {
+		return;
+	}
+	const target = personalSkillsFolder(pathService);
+	const source = joinPath(pluginFolder(pathService), 'skills');
+	const installed: string[] = [];
+	const skipped: string[] = [];
+	try {
+		for (const child of (await fileService.resolve(source)).children ?? []) {
+			if (!child.isDirectory) {
+				continue;
+			}
+			const destination = joinPath(target, child.name);
+			if (await fileService.exists(destination) && !await fileService.exists(joinPath(destination, INSTALLED_MARKER))) {
+				skipped.push(child.name);
+				continue;
+			}
+			await fileService.copy(child.resource, destination, true);
+			await fileService.writeFile(joinPath(destination, INSTALLED_MARKER), VSBuffer.fromString(localize('pollisSkills.installed.marker', "Installed by Pollis from {0}; installing again replaces this folder.\n", MARKETPLACE)));
+			installed.push(child.name);
+		}
+	} catch (error) {
+		notificationService.error(localize('pollisSkills.installCopy.error', "Could not install the Pollis skills in {0}: {1}", target.fsPath, toErrorMessage(error)));
+		return;
+	}
+	notificationService.info(skipped.length
+		? localize('pollisSkills.installCopy.doneSkipped', "Installed {0} Pollis skills in {1}. Not installed, because a skill of that name that Pollis did not install is there: {2}.", installed.length, target.fsPath, skipped.join(', '))
+		: localize('pollisSkills.installCopy.done', "Installed {0} Pollis skills in {1}. {2} uses them in any folder.", installed.length, target.fsPath, agent.label));
+}
+
+const category = localize2('pollisNewPanels.category', "New Panels and Toolboxes");
 
 registerAction2(class extends Action2 {
 	constructor() {
@@ -681,26 +780,12 @@ registerAction2(class extends Action2 {
 	constructor() {
 		super({
 			id: BROWSE_SKILLS_COMMAND_ID,
-			title: localize2('pollisSkills.browse', "Browse Skills..."),
-			category: localize2('pollisSkills.category', "Pollis Skills"),
+			title: localize2('pollisSkills.browse', "Agent Skills"),
+			category: localize2('pollisSkills.category', "Compose"),
 			f1: true,
 		});
 	}
 	run(accessor: ServicesAccessor): Promise<void> {
 		return browseSkills(accessor);
-	}
-});
-
-registerAction2(class extends Action2 {
-	constructor() {
-		super({
-			id: INSTALL_SKILLS_COMMAND_ID,
-			title: localize2('pollisSkills.install', "Install in Claude Code..."),
-			category: localize2('pollisSkills.category', "Pollis Skills"),
-			f1: true,
-		});
-	}
-	run(accessor: ServicesAccessor): Promise<void> {
-		return installSkills(accessor);
 	}
 });

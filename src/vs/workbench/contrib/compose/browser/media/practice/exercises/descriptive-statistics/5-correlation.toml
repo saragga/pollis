@@ -1,0 +1,11 @@
+title = "The correlation coefficient"
+panel = "chiara.explore.dstats"
+packages = ["Distributions"]
+setup = '''
+x = round.(rand(rng, Uniform(0, 10), 6); digits = 1)
+y = round.(2 .+ rand(rng, [-1, 1]) * rand(rng, 0.5:0.1:1.5) .* x .+ rand(rng, Normal(0, 2), 6); digits = 1)
+'''
+question = '''Six pairs (x, y): {{join(["(" * string(a) * ", " * string(b) * ")" for (a, b) in zip(x, y)], ", ")}}. What is the Pearson correlation of x and y?'''
+choices = ['{{fmt(cor(x, y), 3)}}', '{{fmt(cov(x, y), 3)}}', '{{fmt(cor(x, y)^2, 3)}}', '{{fmt(-cor(x, y), 3)}}']
+answer = 1
+explanation = '''The correlation is the covariance ({{fmt(cov(x, y), 3)}}) divided by the product of the standard deviations ({{fmt(std(x), 3)}} and {{fmt(std(y), 3)}}): {{fmt(cor(x, y), 3)}}. It is always between -1 and 1; its square, {{fmt(cor(x, y)^2, 3)}}, is the R-squared of a simple regression.'''

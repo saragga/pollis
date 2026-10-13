@@ -1,0 +1,6 @@
+title = "A measure that resists outliers"
+panel = "chiara.explore.dstats"
+question = '''One value in a sample of incomes is recorded with three extra zeros. Which summary changes least?'''
+choices = ['The median', 'The mean', 'The standard deviation', 'The range']
+answer = 1
+explanation = '''The median depends only on the middle of the sorted values, so a single extreme value barely moves it. The mean, the standard deviation and the range all use the extreme value itself, and can change a great deal.'''

@@ -1,0 +1,11 @@
+title = "A prediction from the fitted line"
+panel = "chiara.statistics.lm"
+setup = '''
+b0 = round(rand(rng) * 40 - 10; digits = 1)
+b1 = round(rand(rng) * 4 + 0.5; digits = 2)
+x0 = rand(rng, 3:15)
+'''
+question = '''The fitted line is y = {{b0}} + {{b1}} x. What value of y does it predict for x = {{x0}}?'''
+choices = ['{{fmt(b0 + b1 * x0, 2)}}', '{{fmt(b0 * x0 + b1, 2)}}', '{{fmt(b1 * x0, 2)}}', '{{fmt((x0 - b0) / b1, 2)}}']
+answer = 1
+explanation = '''Substitute x = {{x0}} in the line: {{b0}} + {{b1}} * {{x0}} = {{fmt(b0 + b1 * x0, 2)}}. Leaving out the intercept gives {{fmt(b1 * x0, 2)}}, which is only right when the line goes through the origin.'''

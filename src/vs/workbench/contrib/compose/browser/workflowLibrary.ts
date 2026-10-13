@@ -3,6 +3,7 @@
  *  Licensed under the GNU Affero General Public License v3.0 or later. See LICENSE.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { RunOnceScheduler } from '../../../../base/common/async.js';
 import { toErrorMessage } from '../../../../base/common/errorMessage.js';
 import { DisposableStore } from '../../../../base/common/lifecycle.js';
 import { AppResourcePath, FileAccess } from '../../../../base/common/network.js';
@@ -12,18 +13,21 @@ import { URI } from '../../../../base/common/uri.js';
 import { localize, localize2 } from '../../../../nls.js';
 import { Action2, registerAction2 } from '../../../../platform/actions/common/actions.js';
 import { IClipboardService } from '../../../../platform/clipboard/common/clipboardService.js';
+import { ICommandService } from '../../../../platform/commands/common/commands.js';
 import { ByteSize, IFileService } from '../../../../platform/files/common/files.js';
-import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
+import { IInstantiationService, ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
 import { INotificationService } from '../../../../platform/notification/common/notification.js';
 import { IOpenerService } from '../../../../platform/opener/common/opener.js';
 import { IEditorService } from '../../../services/editor/common/editorService.js';
 import { IPathService } from '../../../services/path/common/pathService.js';
 import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
+import { LIBRARY_PAGE_HELPERS, LIBRARY_PAGE_STYLE } from './libraryPage.js';
+import { BROWSE_METHODS_COMMAND_ID, deleteUserMethods, openUserMethod, readMethodSummaries, userMethodsFolder } from './newMethods.js';
+import { METHOD_FROM_NOTEBOOK_COMMAND_ID } from './pollisAgents.js';
 
 export const SEARCH_WORKFLOW_LIBRARY_COMMAND_ID = 'chiara.statistics.wfl_sl';
 export const PUBLISHED_BENCHMARKS_COMMAND_ID = 'pollis.correctness.publishedBenchmarks';
-export const NEW_METHODS_COMMAND_ID = 'pollis.compose.createMethod';
 
 /** A notebook library shipped with Pollis: one folder per entry, holding its notebook and data files. */
 interface INotebookLibrary {
@@ -38,6 +42,8 @@ interface INotebookLibrary {
 	readonly empty: string;
 	/** The message shown when an entry cannot be opened: `{0}` is its title, `{1}` the error. */
 	readonly openFailed: (label: string, error: string) => string;
+	/** Whether the page also lists the user's own methods, above the library (Browse Methods). */
+	readonly userMethods?: boolean;
 }
 
 /** Compose > Workflows > Browse Analytical Workflows: famous analyses replicated from their articles. */
@@ -45,7 +51,7 @@ const WORKFLOWS: INotebookLibrary = {
 	base: 'vs/workbench/contrib/compose/browser/media/workflows',
 	userFolder: 'workflows',
 	title: localize('workflowLibrary.title', "Analytical Workflows"),
-	intro: localize('workflowLibrary.intro', "Each workflow replicates a published analysis on its public data, printing every published value beside Julia's. Click a name to open your own copy of the notebook, made in ~/.pollis/workflows the first time."),
+	intro: localize('workflowLibrary.intro', "Each workflow replicates a published analysis on its public data, printing every published value beside Julia's. Click a name to open your own copy of the notebook, made in {0} the first time.", '<code>~/.pollis/workflows</code>'),
 	entry: localize('workflowLibrary.entry', "Workflow"),
 	empty: localize('workflowLibrary.empty', "The workflow library is empty."),
 	openFailed: (label, error) => localize('workflowLibrary.openFailed', "Could not open the workflow {0}: {1}", label, error),
@@ -56,10 +62,11 @@ const NEW_METHODS: INotebookLibrary = {
 	base: 'vs/workbench/contrib/compose/browser/media/methods',
 	userFolder: 'methods',
 	title: localize('newMethods.title', "New Methods"),
-	intro: localize('newMethods.intro', "Each method is one no Julia package has, written out with its tests: data and the results published for them, printed beside Julia's. Without data and expected results there is no new method. Click a name to open your own copy of the notebook, made in ~/.pollis/methods the first time."),
+	intro: localize('newMethods.intro', "Each method is one no Julia package has, written out with its tests: data and the results published for them, printed beside Julia's. Without data and expected results there is no new method. The methods you started and have not published yet come first, In Progress: click a title to go on with it. Then those you published, and the library: click a name to open your own copy of the notebook, made in {0} the first time.", '<code>~/.pollis/methods</code>'),
 	entry: localize('newMethods.entry', "Method"),
 	empty: localize('newMethods.empty', "There are no new methods yet."),
 	openFailed: (label, error) => localize('newMethods.openFailed', "Could not open the method {0}: {1}", label, error),
+	userMethods: true,
 };
 
 /** Compose > Correctness Tests: a method's results checked against a published benchmark. */
@@ -67,7 +74,7 @@ const PUBLISHED_BENCHMARKS: INotebookLibrary = {
 	base: 'vs/workbench/contrib/compose/browser/media/correctness',
 	userFolder: 'correctness',
 	title: localize('publishedBenchmarks.title', "Published Benchmarks"),
-	intro: localize('publishedBenchmarks.intro', "Each benchmark checks Julia's results against published or certified values. Click a name to open your own copy of the notebook, made in ~/.pollis/correctness the first time."),
+	intro: localize('publishedBenchmarks.intro', "Each benchmark checks Julia's results against published or certified values. Click a name to open your own copy of the notebook, made in {0} the first time.", '<code>~/.pollis/correctness</code>'),
 	entry: localize('publishedBenchmarks.entry', "Benchmark"),
 	empty: localize('publishedBenchmarks.empty', "There are no published benchmarks yet."),
 	openFailed: (label, error) => localize('publishedBenchmarks.openFailed', "Could not open the benchmark {0}: {1}", label, error),
@@ -189,7 +196,11 @@ type LibraryMessage =
 	| { readonly command: 'ready' }
 	| { readonly command: 'open'; readonly folder: string }
 	| { readonly command: 'copyBibtex'; readonly folder: string }
-	| { readonly command: 'link'; readonly url: string };
+	| { readonly command: 'makeMethod'; readonly folder: string }
+	| { readonly command: 'link'; readonly url: string }
+	| { readonly command: 'openMethod'; readonly id: string }
+	| { readonly command: 'deleteMethod'; readonly id: string }
+	| { readonly command: 'deleteEmpty' };
 
 /** The open pages, by library, so a second request shows the same page. */
 const openPages = new Map<INotebookLibrary, WebviewInput>();
@@ -208,6 +219,8 @@ async function openLibraryPage(accessor: ServicesAccessor, library: INotebookLib
 	const notificationService = accessor.get(INotificationService);
 	const clipboardService = accessor.get(IClipboardService);
 	const openerService = accessor.get(IOpenerService);
+	const instantiationService = accessor.get(IInstantiationService);
+	const commandService = accessor.get(ICommandService);
 
 	const open = openPages.get(library);
 	if (open && !open.isDisposed()) {
@@ -216,7 +229,7 @@ async function openLibraryPage(accessor: ServicesAccessor, library: INotebookLib
 	}
 
 	const entries = await readLibrary(fileService, library);
-	if (entries.length === 0) {
+	if (entries.length === 0 && !library.userMethods) {
 		notificationService.info(library.empty);
 		return;
 	}
@@ -241,6 +254,19 @@ async function openLibraryPage(accessor: ServicesAccessor, library: INotebookLib
 		disposables.dispose();
 	}));
 
+	// The user's methods, sent again when their folder changes or the page gets the focus back
+	const sendMethods = async () => {
+		webviewInput.webview.postMessage({ command: 'methods', methods: await readMethodSummaries(fileService, pathService) });
+	};
+	if (library.userMethods) {
+		const root = userMethodsFolder(pathService);
+		await fileService.createFolder(root);
+		const refresh = disposables.add(new RunOnceScheduler(() => sendMethods(), 300));
+		const watcher = disposables.add(fileService.createWatcher(root, { recursive: false, excludes: [] }));
+		disposables.add(watcher.onDidChange(() => refresh.schedule()));
+		disposables.add(webviewInput.webview.onDidFocus(() => refresh.schedule()));
+	}
+
 	const openEntry = async (entry: ILibraryEntry) => {
 		try {
 			const copy = joinPath(await pathService.userHome({ preferLocal: true }), '.pollis', library.userFolder, entry.folder);
@@ -255,11 +281,20 @@ async function openLibraryPage(accessor: ServicesAccessor, library: INotebookLib
 
 	disposables.add(webviewInput.webview.onMessage((e: { message: LibraryMessage }) => {
 		const message = e.message;
-		const entry = message.command === 'open' || message.command === 'copyBibtex' ? entries.find(candidate => candidate.folder === message.folder) : undefined;
+		const entry = message.command === 'open' || message.command === 'copyBibtex' || message.command === 'makeMethod' ? entries.find(candidate => candidate.folder === message.folder) : undefined;
 		if (message.command === 'ready') {
 			webviewInput.webview.postMessage({ command: 'entries', entries: entries.map(({ location, ...rest }) => rest) });
+			if (library.userMethods) {
+				sendMethods();
+			}
+		} else if (message.command === 'openMethod') {
+			instantiationService.invokeFunction(openUserMethod, message.id);
+		} else if (message.command === 'deleteMethod' || message.command === 'deleteEmpty') {
+			instantiationService.invokeFunction(deleteUserMethods, message.command === 'deleteEmpty' ? 'empty' : message.id).then(sendMethods, error => notificationService.error(toErrorMessage(error)));
 		} else if (message.command === 'open' && entry) {
 			openEntry(entry);
+		} else if (message.command === 'makeMethod' && entry && library.userMethods) {
+			commandService.executeCommand(METHOD_FROM_NOTEBOOK_COMMAND_ID, joinPath(entry.location, entry.notebook));
 		} else if (message.command === 'copyBibtex' && entry?.article?.bibtex) {
 			clipboardService.writeText(entry.article.bibtex);
 		} else if (message.command === 'link' && /^https:\/\//.test(message.url)) {
@@ -267,55 +302,6 @@ async function openLibraryPage(accessor: ServicesAccessor, library: INotebookLib
 		}
 	}));
 }
-
-/** The style of a library page (Workflows, New Methods, Published Benchmarks, Pollis Skills): a title, an intro and a table. */
-export const LIBRARY_PAGE_STYLE = `
-	* { box-sizing: border-box; }
-	body { font-family: var(--vscode-font-family); font-size: 13px; margin: 0; color: var(--vscode-foreground); background-color: var(--vscode-editor-background); }
-	.container { max-width: 1400px; margin: 0 auto; padding: 24px; }
-	h1 { font-size: 32px; font-weight: 300; margin: 0 0 4px 0; line-height: 1.2; }
-	.subtitle { font-size: 14px; color: var(--vscode-descriptionForeground); margin: 0 0 16px 0; line-height: 1.4; max-width: 900px; }
-	table { width: 100%; border-collapse: collapse; }
-	th { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--vscode-descriptionForeground); text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--vscode-widget-border); }
-	td { vertical-align: top; padding: 10px 8px; border-bottom: 1px solid var(--vscode-widget-border); line-height: 1.4; }
-	tr:hover td { background: var(--vscode-list-hoverBackground); }
-	.name { width: 34%; }
-	.title { font-size: 14px; font-weight: 600; color: var(--vscode-textLink-foreground); cursor: pointer; }
-	.title:hover { text-decoration: underline; }
-	.file { font-family: var(--vscode-editor-font-family); font-size: 12px; color: var(--vscode-descriptionForeground); }
-	.description { margin: 4px 0 0 0; color: var(--vscode-descriptionForeground); }
-	.description.clamped { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-	.article { width: 22%; }
-	.citation { margin: 0 0 4px 0; }
-	.small { font-size: 12px; color: var(--vscode-descriptionForeground); }
-	.nowrap { white-space: nowrap; }
-	.link { color: var(--vscode-textLink-foreground); cursor: pointer; background: none; border: none; padding: 0; font: inherit; }
-	.link:hover { text-decoration: underline; }
-	.links { display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; }
-	.package { display: inline-block; font-size: 12px; border: 1px solid var(--vscode-widget-border); border-radius: 2px; padding: 0 4px; margin: 0 4px 4px 0; }
-	.source { margin: 0 0 4px 0; }
-	.source-name { font-weight: 600; }`;
-
-/** The script helpers of a library page: `element`, `link` (a text button) and `cell` (a table cell added to a row). */
-export const LIBRARY_PAGE_HELPERS = `
-function element(tag, className, content) {
-	const node = document.createElement(tag);
-	if (className) { node.className = className; }
-	if (content) { node.textContent = content; }
-	return node;
-}
-
-function link(label, onClick) {
-	const button = element('button', 'link', label);
-	button.addEventListener('click', onClick);
-	return button;
-}
-
-function cell(row, className) {
-	const td = element('td', className);
-	row.appendChild(td);
-	return td;
-}`;
 
 /** The page: its texts come from here, its entries from the `entries` message. */
 function pageHtml(library: INotebookLibrary): string {
@@ -335,7 +321,32 @@ function pageHtml(library: INotebookLibrary): string {
 		optionalDownload: localize('workflowLibrary.optionalDownload', "+ {0} download if asked"),
 		more: localize('workflowLibrary.more', "more"),
 		less: localize('workflowLibrary.less', "less"),
+		inProgress: localize('newMethods.inProgress', "In Progress"),
+		published: localize('newMethods.published', "Published by You"),
+		library: localize('newMethods.library.heading', "Library"),
+		noMethods: localize('newMethods.yours.none', "None: Compose > New Methods > Create Methods starts one."),
+		tables: localize('newMethods.yours.tables', "Tables"),
+		tableCount: localize('newMethods.yours.tableCount', "{0} input, {1} target"),
+		delete: localize('newMethods.yours.delete', "Delete"),
+		deleteEmpty: localize('newMethods.yours.deleteEmpty', "Delete Empty Methods ({0})"),
+		makeMethod: library.userMethods ? localize('newMethods.library.makeMethod', "Make a Method") : '',
 	};
+	const userMethods = library.userMethods ? `
+	<h2>${text.inProgress}</h2>
+	<p class="small" id="noMethods" hidden>${text.noMethods}</p>
+	<table id="methodsTable" hidden>
+		<thead><tr><th>${library.entry}</th><th>${text.article}</th><th>${text.tables}</th><th></th></tr></thead>
+		<tbody id="methods"></tbody>
+	</table>
+	<p><button class="link small" id="deleteEmpty" hidden></button></p>
+	<div id="publishedMethods" hidden>
+		<h2>${text.published}</h2>
+		<table>
+			<thead><tr><th>${library.entry}</th><th>${text.article}</th><th>${text.tables}</th><th></th></tr></thead>
+			<tbody id="published"></tbody>
+		</table>
+	</div>
+	<h2>${text.library}</h2>` : '';
 	return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -344,12 +355,14 @@ function pageHtml(library: INotebookLibrary): string {
 	<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';">
 	<style>
 ${LIBRARY_PAGE_STYLE}
+	h2 { font-size: 16px; font-weight: 600; margin: 20px 0 6px 0; }
 	</style>
 </head>
 <body>
 <div class="container">
 	<h1>${library.title}</h1>
 	<p class="subtitle">${library.intro}</p>
+${userMethods}
 	<table>
 		<thead><tr>
 			<th>${text.entry}</th><th>${text.article}</th><th>${text.packages}</th><th>${text.datasets}</th><th>${text.size}</th><th>${text.updated}</th>
@@ -372,6 +385,12 @@ ${LIBRARY_PAGE_HELPERS}
 		title.addEventListener('click', () => vscode.postMessage({ command: 'open', folder: entry.folder }));
 		td.appendChild(title);
 		td.appendChild(element('div', 'file', entry.notebook));
+		// A library notebook of New Methods can become a method of the user's, to package and publish
+		if (TEXT.makeMethod) {
+			const make = link(TEXT.makeMethod, () => vscode.postMessage({ command: 'makeMethod', folder: entry.folder }));
+			make.classList.add('small');
+			td.appendChild(make);
+		}
 		const description = element('p', 'description clamped', entry.description);
 		td.appendChild(description);
 		// The toggle shows only when the description is longer than its three lines
@@ -454,9 +473,44 @@ ${LIBRARY_PAGE_HELPERS}
 		}
 	}
 
+	// The methods the user started: those in progress first, then those published
+	function renderMethods(methods) {
+		const inProgress = methods.filter(method => method.inProgress);
+		const published = methods.filter(method => !method.inProgress);
+		document.getElementById('noMethods').hidden = inProgress.length > 0;
+		document.getElementById('methodsTable').hidden = inProgress.length === 0;
+		document.getElementById('publishedMethods').hidden = published.length === 0;
+		renderMethodRows(document.getElementById('methods'), inProgress);
+		renderMethodRows(document.getElementById('published'), published);
+		const empty = methods.filter(method => method.empty).length;
+		const deleteEmpty = document.getElementById('deleteEmpty');
+		deleteEmpty.hidden = empty === 0;
+		deleteEmpty.textContent = TEXT.deleteEmpty.replace('{0}', empty);
+	}
+	function renderMethodRows(container, methods) {
+		container.textContent = '';
+		for (const method of methods) {
+			const row = element('tr');
+			const name = cell(row, 'name');
+			const title = element('div', 'title', method.title);
+			title.addEventListener('click', () => vscode.postMessage({ command: 'openMethod', id: method.id }));
+			name.appendChild(title);
+			name.appendChild(element('div', 'file', method.name));
+			cell(row, 'article').appendChild(element('p', 'citation small', method.citation || TEXT.noArticle));
+			cell(row, 'nowrap').textContent = TEXT.tableCount.replace('{0}', method.inputs).replace('{1}', method.targets);
+			cell(row, 'nowrap').appendChild(link(TEXT.delete, () => vscode.postMessage({ command: 'deleteMethod', id: method.id })));
+			container.appendChild(row);
+		}
+	}
+	if (document.getElementById('deleteEmpty')) {
+		document.getElementById('deleteEmpty').addEventListener('click', () => vscode.postMessage({ command: 'deleteEmpty' }));
+	}
+
 	window.addEventListener('message', event => {
 		if (event.data.command === 'entries') {
 			render(event.data.entries);
+		} else if (event.data.command === 'methods') {
+			renderMethods(event.data.methods);
 		}
 	});
 	vscode.postMessage({ command: 'ready' });
@@ -496,7 +550,7 @@ registerAction2(class extends Action2 {
 registerAction2(class extends Action2 {
 	constructor() {
 		super({
-			id: NEW_METHODS_COMMAND_ID,
+			id: BROWSE_METHODS_COMMAND_ID,
 			title: localize2('newMethods.open', "Browse Methods"),
 			category: localize2('newMethods.category', "New Methods"),
 			f1: true,

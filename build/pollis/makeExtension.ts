@@ -19,7 +19,7 @@
 // the script prints what to remove from Pollis, which is done by hand (the Extension Agent skill,
 // .agents/skills/extension-agent, does it after asking).
 // The resolution of menu entries to panels is in panelResolver.ts, shared with makePanelIndex.ts
-// (the panel index of the Pollis Agents plugin for users, in Trumpingtons/pollis-plugins).
+// (the panel index of the Pollis Agents plugin for users, in Trumpingtons/pollis-skills).
 //
 // The spec:
 //   [extension]

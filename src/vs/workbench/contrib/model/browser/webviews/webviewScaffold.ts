@@ -185,6 +185,10 @@ export function buildWebviewHtml(parts: WebviewParts): string {
 		.section-toggle:hover { text-decoration: underline; }
 		.section-toggle .illus-chevron { display: inline-flex; transition: transform 0.15s; flex-shrink: 0; }
 		.section.collapsed .section-toggle .illus-chevron { transform: rotate(-90deg); }
+		/* Next Steps is locked (dimmed, closed, with a ? explaining why) until the Code Example of the tab has been run or sent. */
+		.section.locked .section-toggle { color: var(--vscode-disabledForeground); cursor: default; }
+		.section.locked .section-toggle:hover { text-decoration: none; }
+		.section:not(.locked) .next-lock-tip { display: none; }
 		.section.collapsed .section-body { display: none; }
 		.section-body { padding: 6px 0 0 0; }
 		/* Key Points (.methods-list), Next Steps / Learn More (.column-list) and the Explore intro
@@ -488,7 +492,7 @@ ${parts.inputsHtml ? `\t\t<div class="scaffold-inputs" id="scaffold-inputs">\n${
 		<div class="bottom-layout">
 			<div class="left-strip">
 				<div class="section collapsed" id="sec-next">
-				<button class="section-toggle"><span class="illus-chevron"><svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M7.976 10.072l-4.054-4.014-.92.92 4.49 4.45.978.01 4.525-4.46-.918-.92-4.101 4.014z"/></svg></span>Next Steps</button>
+				<button class="section-toggle"><span class="illus-chevron"><svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M7.976 10.072l-4.054-4.014-.92.92 4.49 4.45.978.01 4.525-4.46-.918-.92-4.101 4.014z"/></svg></span>Next Steps<span class="tooltip-icon next-lock-tip" data-tip="Run the Code Example of this tab first (Julia REPL, or Copy or send it to an editor or notebook): the Next Steps examples use its results.">?</span></button>
 				<div class="section-body">
 				<ul class="column-list">
 ${parts.nextStepsHtml ?? `					<li><button class="list-btn panel-toggle" id="btn-viz">${nextStepIcon('visualise')}Visualise</button></li>
@@ -928,7 +932,25 @@ ${parts.setModelExtraJs ?? ''}			document.querySelectorAll('#model-group .toggle
 			renderIllustration();
 			updateCodePreview();
 			refreshActionList();
+			updateNextStepsLock();
 		}
+
+		// Next Steps stays locked in a tab until its Code Example has been run or sent: the examples use its results.
+		var ranModels = (vscode.getState() || {}).ranModels || {};
+		function updateNextStepsLock() {
+			var locked = !ranModels[currentModel];
+			var section = document.getElementById('sec-next');
+			section.classList.toggle('locked', locked);
+			if (locked) { section.classList.add('collapsed'); }
+		}
+		SEND_BUTTONS.forEach(function(id) {
+			document.getElementById(id).addEventListener('click', function() {
+				ranModels[currentModel] = true;
+				vscode.setState(Object.assign({}, vscode.getState() || {}, { ranModels: ranModels }));
+				updateNextStepsLock();
+			});
+		});
+		updateNextStepsLock();
 
 		document.getElementById('model-group').addEventListener('click', function(e) {
 			var btn = e.target.closest('[data-model]');
@@ -1780,7 +1802,10 @@ ${parts.nextStepsWiringJs ?? `		document.getElementById('btn-viz').addEventListe
 			});
 		}
 		document.querySelectorAll('.section-toggle').forEach(function(t) {
-			t.addEventListener('click', function() { t.closest('.section').classList.toggle('collapsed'); });
+			t.addEventListener('click', function() {
+				var section = t.closest('.section');
+				if (!section.classList.contains('locked')) { section.classList.toggle('collapsed'); }
+			});
 		});
 		document.querySelectorAll('.voice-stub').forEach(function(btn) {
 			btn.addEventListener('click', function() { this.classList.toggle('active'); });

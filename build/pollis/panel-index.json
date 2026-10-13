@@ -73,12 +73,11 @@
 			"menubarNLSSubmenu",
 			"menubarNNSubmenu",
 			"menubarNewMethodsMenu",
+			"menubarNewPanelsMenu",
 			"menubarOCSubmenu",
 			"menubarOrchestrationMenu",
 			"menubarPMSubmenu",
 			"menubarPPLSubmenu",
-			"menubarPollisAgentsMenu",
-			"menubarPollisSkillsMenu",
 			"menubarPracticeMenu",
 			"menubarRLSubmenu",
 			"menubarRQRSubmenu",
@@ -2173,7 +2172,7 @@
 		{
 			"id": "diff",
 			"title": "Differentiation",
-			"source": "toolbox:pollis-toolbox-analytics",
+			"source": "toolbox:pollis-toolbox-mathematical-core",
 			"commands": [
 				{
 					"id": "chiara.toolboxes.diff",
@@ -2185,9 +2184,9 @@
 			"portable": true,
 			"defaultModel": "deriv",
 			"decisionFirstColumn": "Task",
-			"toml": "toolboxes/pollis-toolbox-analytics/panels/diff.toml",
-			"wikiRoot": "toolboxes/pollis-toolbox-analytics/wiki",
-			"notebookRoot": "toolboxes/pollis-toolbox-analytics/notebooks",
+			"toml": "toolboxes/pollis-toolbox-mathematical-core/panels/diff.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-mathematical-core/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-mathematical-core/notebooks",
 			"wikis": [
 				"diff/assumptions.md",
 				"diff/automatic-differentiation.md",
@@ -3864,7 +3863,7 @@
 		{
 			"id": "integ",
 			"title": "Integration",
-			"source": "toolbox:pollis-toolbox-analytics",
+			"source": "toolbox:pollis-toolbox-mathematical-core",
 			"commands": [
 				{
 					"id": "chiara.toolboxes.integ",
@@ -3876,9 +3875,9 @@
 			"portable": true,
 			"defaultModel": "def",
 			"decisionFirstColumn": "Task",
-			"toml": "toolboxes/pollis-toolbox-analytics/panels/integ.toml",
-			"wikiRoot": "toolboxes/pollis-toolbox-analytics/wiki",
-			"notebookRoot": "toolboxes/pollis-toolbox-analytics/notebooks",
+			"toml": "toolboxes/pollis-toolbox-mathematical-core/panels/integ.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-mathematical-core/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-mathematical-core/notebooks",
 			"wikis": [
 				"integ/assumptions.md",
 				"integ/decision-guide.md",
@@ -4124,7 +4123,7 @@
 		{
 			"id": "linalg",
 			"title": "Linear Algebra",
-			"source": "toolbox:pollis-toolbox-analytics",
+			"source": "toolbox:pollis-toolbox-mathematical-core",
 			"commands": [
 				{
 					"id": "chiara.toolboxes.linalg",
@@ -4136,9 +4135,9 @@
 			"portable": true,
 			"defaultModel": "solve",
 			"decisionFirstColumn": "Task",
-			"toml": "toolboxes/pollis-toolbox-analytics/panels/linalg.toml",
-			"wikiRoot": "toolboxes/pollis-toolbox-analytics/wiki",
-			"notebookRoot": "toolboxes/pollis-toolbox-analytics/notebooks",
+			"toml": "toolboxes/pollis-toolbox-mathematical-core/panels/linalg.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-mathematical-core/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-mathematical-core/notebooks",
 			"wikis": [
 				"linalg/assumptions.md",
 				"linalg/decision-guide.md",
@@ -5446,7 +5445,7 @@
 		{
 			"id": "nlin",
 			"title": "Nonlinear Systems",
-			"source": "toolbox:pollis-toolbox-analytics",
+			"source": "toolbox:pollis-toolbox-mathematical-core",
 			"commands": [
 				{
 					"id": "chiara.toolboxes.nlin",
@@ -5458,9 +5457,9 @@
 			"portable": true,
 			"defaultModel": "scalar",
 			"decisionFirstColumn": "Task",
-			"toml": "toolboxes/pollis-toolbox-analytics/panels/nlin.toml",
-			"wikiRoot": "toolboxes/pollis-toolbox-analytics/wiki",
-			"notebookRoot": "toolboxes/pollis-toolbox-analytics/notebooks",
+			"toml": "toolboxes/pollis-toolbox-mathematical-core/panels/nlin.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-mathematical-core/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-mathematical-core/notebooks",
 			"wikis": [
 				"nlin/assumptions.md",
 				"nlin/decision-guide.md",
@@ -5835,7 +5834,7 @@
 		{
 			"id": "odes",
 			"title": "Ordinary Differential Equations",
-			"source": "toolbox:pollis-toolbox-analytics",
+			"source": "toolbox:pollis-toolbox-mathematical-core",
 			"commands": [
 				{
 					"id": "chiara.toolboxes.ode",
@@ -5847,9 +5846,9 @@
 			"portable": true,
 			"defaultModel": "scalar",
 			"decisionFirstColumn": "Task",
-			"toml": "toolboxes/pollis-toolbox-analytics/panels/odes.toml",
-			"wikiRoot": "toolboxes/pollis-toolbox-analytics/wiki",
-			"notebookRoot": "toolboxes/pollis-toolbox-analytics/notebooks",
+			"toml": "toolboxes/pollis-toolbox-mathematical-core/panels/odes.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-mathematical-core/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-mathematical-core/notebooks",
 			"wikis": [
 				"odes/assumptions.md",
 				"odes/decision-guide.md",
@@ -5949,7 +5948,7 @@
 		{
 			"id": "pdes",
 			"title": "Partial Differential Equations",
-			"source": "toolbox:pollis-toolbox-analytics",
+			"source": "toolbox:pollis-toolbox-mathematical-core",
 			"commands": [
 				{
 					"id": "chiara.toolboxes.pde",
@@ -5961,9 +5960,9 @@
 			"portable": true,
 			"defaultModel": "heat",
 			"decisionFirstColumn": "Task",
-			"toml": "toolboxes/pollis-toolbox-analytics/panels/pdes.toml",
-			"wikiRoot": "toolboxes/pollis-toolbox-analytics/wiki",
-			"notebookRoot": "toolboxes/pollis-toolbox-analytics/notebooks",
+			"toml": "toolboxes/pollis-toolbox-mathematical-core/panels/pdes.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-mathematical-core/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-mathematical-core/notebooks",
 			"wikis": [
 				"pdes/assumptions.md",
 				"pdes/decision-guide.md",
@@ -7614,7 +7613,7 @@
 		{
 			"id": "symb",
 			"title": "Symbolic Math",
-			"source": "toolbox:pollis-toolbox-analytics",
+			"source": "toolbox:pollis-toolbox-mathematical-core",
 			"commands": [
 				{
 					"id": "chiara.toolboxes.symb",
@@ -7626,9 +7625,9 @@
 			"portable": true,
 			"defaultModel": "alg",
 			"decisionFirstColumn": "Task",
-			"toml": "toolboxes/pollis-toolbox-analytics/panels/symb.toml",
-			"wikiRoot": "toolboxes/pollis-toolbox-analytics/wiki",
-			"notebookRoot": "toolboxes/pollis-toolbox-analytics/notebooks",
+			"toml": "toolboxes/pollis-toolbox-mathematical-core/panels/symb.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-mathematical-core/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-mathematical-core/notebooks",
 			"wikis": [
 				"symb/assumptions.md",
 				"symb/decision-guide.md",

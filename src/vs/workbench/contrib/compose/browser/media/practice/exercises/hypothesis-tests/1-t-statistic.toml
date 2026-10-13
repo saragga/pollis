@@ -1,0 +1,12 @@
+title = "The one-sample t statistic"
+panel = "chiara.statistics.ht"
+packages = ["Distributions"]
+setup = '''
+m0 = rand(rng, 50:5:100)
+x = round.(rand(rng, Normal(m0 + rand(rng, -4:4), 5), 10); digits = 1)
+t = (mean(x) - m0) / (std(x) / sqrt(10))
+'''
+question = '''A sample of 10 values: {{list(x)}}. The null hypothesis is that the population mean is {{m0}}. What is the one-sample t statistic?'''
+choices = ['{{fmt(t, 3)}}', '{{fmt((mean(x) - m0) / (std(x) / 10), 3)}}', '{{fmt((mean(x) - m0) / std(x), 3)}}', '{{fmt((mean(x) - m0) / (var(x) / sqrt(10)), 3)}}']
+answer = 1
+explanation = '''t = (mean - {{m0}}) / (s / sqrt(n)) = ({{fmt(mean(x), 3)}} - {{m0}}) / ({{fmt(std(x), 3)}} / sqrt(10)) = {{fmt(t, 3)}}. The standard error divides s, the standard deviation (not the variance), by the square root of n, not by n; without it the statistic is a standardised difference, not a test statistic.'''

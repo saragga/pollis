@@ -4,13 +4,14 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { localize } from '../../../../nls.js';
+import { Barrier } from '../../../../base/common/async.js';
 import { Emitter } from '../../../../base/common/event.js';
 import { Disposable, DisposableStore, MutableDisposable } from '../../../../base/common/lifecycle.js';
 import { joinPath, isEqualOrParent } from '../../../../base/common/resources.js';
 import { hasKey } from '../../../../base/common/types.js';
 import { URI } from '../../../../base/common/uri.js';
 import { isISubmenuItem, MenuId, MenuRegistry } from '../../../../platform/actions/common/actions.js';
-import { CommandsRegistry } from '../../../../platform/commands/common/commands.js';
+import { CommandsRegistry, ICommandService } from '../../../../platform/commands/common/commands.js';
 import { ExtensionIdentifier } from '../../../../platform/extensions/common/extensions.js';
 import { IFileService } from '../../../../platform/files/common/files.js';
 import { InstantiationType, registerSingleton } from '../../../../platform/instantiation/common/extensions.js';
@@ -136,6 +137,18 @@ interface IStoredPlacement {
 type PublishedPanels = Record<string, IStoredPlacement | Record<string, string>>;
 
 const PUBLISHED_STORAGE_KEY = 'pollis.toolboxes.published';
+/** The menu items the published toolboxes added when they were last loaded, so that the menus have them from the start. */
+const MENUS_STORAGE_KEY = 'pollis.toolboxes.menus';
+
+/** A menu item a published toolbox added: a panel's command or a toolbox's menu. */
+interface IStoredMenuItem {
+	readonly menu: string;
+	readonly group?: string;
+	readonly order?: number;
+	readonly title: string;
+	readonly command?: string;
+	readonly submenu?: string;
+}
 
 /** The menu group of a toolbox's menu, or of an inline toolbox's panels, that names none. */
 const DEFAULT_GROUP = '9_extensions';
@@ -164,6 +177,10 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 	readonly onDidChange = this._onDidChange.event;
 
 	private readonly registrations = this._register(new MutableDisposable<DisposableStore>());
+	/** Extend in the menu bar, kept apart from the registrations so that swapping them does not take it out and put it back. */
+	private readonly extendMenu = this._register(new MutableDisposable());
+	/** Opens once the toolboxes have been read: until then, the menus show the items stored last time. */
+	private readonly loadedBarrier = new Barrier();
 	/** The toolbox submenus by toolbox id: a menu id can be created only once. */
 	private readonly submenus = new Map<string, MenuId>();
 	/** Counts the loads, so a slower earlier one does not overwrite a later one. */
@@ -176,6 +193,8 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 		@IStorageService private readonly storageService: IStorageService,
 	) {
 		super();
+		// The toolboxes are read a moment after the menu bar is built: show the menus as they were, so the menu bar does not move
+		this.registerStored();
 		toolboxesExtensionPoint.setHandler(extensions => this.load(extensions));
 		// Publishing in another window changes the menus here too
 		this._register(this.storageService.onDidChangeValue(StorageScope.PROFILE, PUBLISHED_STORAGE_KEY, this._store)(() => this.register()));
@@ -254,6 +273,7 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 			return;
 		}
 		this.loaded = loaded;
+		this.loadedBarrier.open();
 		this.register();
 	}
 
@@ -262,12 +282,18 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 	 * menus. The registrations are swapped at once, so the menus never show a half-registered toolbox.
 	 */
 	private register(): void {
+		// Until the toolboxes are read, the stored menu items stay
+		if (!this.loadedBarrier.isOpen()) {
+			return;
+		}
 		const published = this.getPublished();
 		const store = new DisposableStore();
-		let extended = false;
-		const append = (menu: MenuId, item: Parameters<typeof MenuRegistry.appendMenuItem>[1]) => {
-			extended ||= menu.id === MenuId.MenubarExtendMenu.id;
-			store.add(MenuRegistry.appendMenuItem(menu, item));
+		const items: IStoredMenuItem[] = [];
+		const append = (menu: MenuId, item: { group?: string; order?: number; title: string; command?: { id: string; title: string }; submenu?: MenuId }) => {
+			items.push({ menu: menu.id, group: item.group, order: item.order, title: item.title, command: item.command?.id, submenu: item.submenu?.id });
+			store.add(item.submenu
+				? MenuRegistry.appendMenuItem(menu, { group: item.group, order: item.order, title: item.title, submenu: item.submenu })
+				: MenuRegistry.appendMenuItem(menu, { group: item.group, order: item.order, command: item.command! }));
 		};
 		for (const loaded of this.loaded) {
 			const { toolbox, location } = loaded;
@@ -293,15 +319,61 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 				const command = { id: contribution.command, title: contribution.menuTitle ?? contribution.title };
 				if (place?.menu === TOOLBOX_MENU) {
 					if (placement.menu) {
-						append(submenu, { group: place.group, order: place.order, command });
+						append(submenu, { group: place.group, order: place.order, title: command.title, command });
 					}
 				} else if (place) {
-					append(MenuId.for(place.menu), { group: place.group, order: place.order, command });
+					append(MenuId.for(place.menu), { group: place.group, order: place.order, title: command.title, command });
 				}
 			}
 		}
-		if (extended) {
-			store.add(MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
+		this.registrations.value = store;
+		this.setExtendMenu(items.some(item => item.menu === MenuId.MenubarExtendMenu.id));
+		this.storageService.store(MENUS_STORAGE_KEY, JSON.stringify(items), StorageScope.PROFILE, StorageTarget.MACHINE);
+		this._onDidChange.fire();
+	}
+
+	/**
+	 * Adds the menu items stored when the toolboxes were last loaded, with commands that wait for the
+	 * toolboxes to be read and then run the panel's own command. The first load replaces them.
+	 */
+	private registerStored(): void {
+		let items: IStoredMenuItem[];
+		try {
+			const value = JSON.parse(this.storageService.get(MENUS_STORAGE_KEY, StorageScope.PROFILE, '[]'));
+			items = Array.isArray(value) ? value : [];
+		} catch {
+			items = [];
+		}
+		const store = new DisposableStore();
+		const commands = new Set<string>();
+		for (const item of items) {
+			const menu = MenuId.for(item.menu);
+			if (item.submenu?.startsWith(TOOLBOX_SUBMENU_PREFIX)) {
+				const toolboxId = item.submenu.slice(TOOLBOX_SUBMENU_PREFIX.length);
+				const submenu = this.submenus.get(toolboxId) ?? MenuId.for(item.submenu);
+				this.submenus.set(toolboxId, submenu);
+				store.add(MenuRegistry.appendMenuItem(menu, { group: item.group, order: item.order, title: item.title, submenu }));
+			} else if (item.command) {
+				const id = item.command;
+				store.add(MenuRegistry.appendMenuItem(menu, { group: item.group, order: item.order, command: { id, title: item.title } }));
+				if (!commands.has(id)) {
+					commands.add(id);
+					store.add(CommandsRegistry.registerCommand(id, async (accessor, ...args) => {
+						const commandService = accessor.get(ICommandService);
+						await this.loadedBarrier.wait();
+						return commandService.executeCommand(id, ...args);
+					}));
+				}
+			}
+		}
+		this.registrations.value = store;
+		this.setExtendMenu(items.some(item => item.menu === MenuId.MenubarExtendMenu.id));
+	}
+
+	/** Adds Extend to the menu bar or takes it out, only when that changes. */
+	private setExtendMenu(shown: boolean): void {
+		if (shown && !this.extendMenu.value) {
+			this.extendMenu.value = MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
 				submenu: MenuId.MenubarExtendMenu,
 				title: {
 					value: localize('extendMenu', "Extend"),
@@ -309,10 +381,10 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 					mnemonicTitle: localize({ key: 'mExtend', comment: ['&& denotes a mnemonic'] }, "E&&xtend")
 				},
 				order: 9
-			}));
+			});
+		} else if (!shown) {
+			this.extendMenu.clear();
 		}
-		this.registrations.value = store;
-		this._onDidChange.fire();
 	}
 }
 
@@ -355,16 +427,18 @@ function suggestedPlacement(loaded: ILoadedToolbox): IToolboxPlacement {
 	};
 }
 
-/** A published entry, in any format: a menu named as a string keeps the author's place in it, else goes at its end. */
+/** A published entry, in any format: in the menu the author suggests, a place is the author's (group and order from the manifest); in another menu it keeps its stored place, or goes at the end of a menu named as a string. */
 function placementOf(loaded: ILoadedToolbox, entry: IStoredPlacement | Record<string, string>): IToolboxPlacement {
 	const suggested = suggestedPlacement(loaded);
 	const stored: IStoredPlacement = isStoredPlacement(entry) ? entry : { menu: suggested.menu, panels: entry };
+	// In the menu the author suggests, the group and order are always the author's, so that a toolbox update can regroup its panels
 	const placeOf = (value: string | IToolboxPlace, author: IToolboxPlace | undefined, order: number): IToolboxPlace => {
+		const menu = typeof value === 'string' ? value : value.menu;
+		if (author && (menu === 'author' || menu === author.menu)) {
+			return author;
+		}
 		if (typeof value !== 'string') {
 			return value;
-		}
-		if (author && (value === 'author' || value === author.menu)) {
-			return author;
 		}
 		return { menu: value, group: value === TOOLBOX_MENU ? DEFAULT_PANEL_GROUP : TOOLBOX_END_GROUP, order };
 	};
@@ -382,9 +456,9 @@ function isStoredPlacement(entry: IStoredPlacement | Record<string, string>): en
 	return typeof entry.panels === 'object';
 }
 
-registerSingleton(IToolboxPanelsService, ToolboxPanelsService, InstantiationType.Delayed);
+registerSingleton(IToolboxPanelsService, ToolboxPanelsService, InstantiationType.Eager);
 
-/** Creates the service at startup, so the published panels are in the menus from the start. */
+/** Creates the service before the menu bar is built, so Extend is in it from the start and the published panels follow. */
 class ToolboxPanelsContribution implements IWorkbenchContribution {
 
 	static readonly ID = 'workbench.contrib.pollisToolboxPanels';
@@ -392,4 +466,4 @@ class ToolboxPanelsContribution implements IWorkbenchContribution {
 	constructor(@IToolboxPanelsService _toolboxPanelsService: IToolboxPanelsService) { }
 }
 
-registerWorkbenchContribution2(ToolboxPanelsContribution.ID, ToolboxPanelsContribution, WorkbenchPhase.BlockRestore);
+registerWorkbenchContribution2(ToolboxPanelsContribution.ID, ToolboxPanelsContribution, WorkbenchPhase.BlockStartup);

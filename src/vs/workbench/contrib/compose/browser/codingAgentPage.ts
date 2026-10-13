@@ -4,86 +4,58 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { DisposableStore } from '../../../../base/common/lifecycle.js';
-import { isMacintosh } from '../../../../base/common/platform.js';
 import { URI } from '../../../../base/common/uri.js';
 import { localize, localize2 } from '../../../../nls.js';
 import { Action2, registerAction2 } from '../../../../platform/actions/common/actions.js';
 import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
 import { IFileService } from '../../../../platform/files/common/files.js';
-import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
+import { ICommandService } from '../../../../platform/commands/common/commands.js';
+import { IInstantiationService, ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
 import { IOpenerService } from '../../../../platform/opener/common/opener.js';
+import { IHostService } from '../../../services/host/browser/host.js';
+import { IPathService } from '../../../services/path/common/pathService.js';
 import { ITerminalInstanceService } from '../../terminal/browser/terminal.js';
 import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
-import { AGENT_COMMAND_SETTING, CHOOSE_AGENT_COMMAND_ID, CODING_AGENTS, commandWords, findProgram, PROMPT_PLACEHOLDER, terminalEnvironment } from './pollisAgents.js';
-import { REPORTS_AGENT_COMMAND_SETTING } from './reports.js';
+import { AGENT_COMMAND_SETTING, CHOOSE_AGENT_COMMAND_ID, CODING_AGENTS, commandWords, findProgram, installSkills, PROMPT_PLACEHOLDER, skillsInstalled, terminalEnvironment } from './pollisAgents.js';
+import { MODEL_ROUTING_COMMAND_ID } from './modelRouting.js';
+import { LOCAL_MODEL_RUNNERS_COMMAND_ID } from './localModelRunnersPage.js';
 
-// Compose > Choose Coding Agent: a page of the coding agents Pollis knows, all of which run on local and
-// cloud models, in alphabetical order, each marked installed or not found on this computer, with its
-// install page and a button to use it; a field for any other agent's command; the optional cheaper agent of
-// Reports' Polish with Agent; and the local model runners, with how each agent reaches each one. The choice is saved in the settings at once; the page follows changes made
-// in the settings while it is open.
-
-/** A program that serves local models on this computer, and how each agent reaches it, by agent label. */
-interface ILocalRunner {
-	readonly label: string;
-	readonly note: string;
-	readonly url: string;
-	readonly agents: { readonly [agent: string]: string };
-	/** Whether it runs only on macOS, so the page shows it only there. */
-	readonly macOnly?: boolean;
-}
-
-const LOCAL_RUNNERS: readonly ILocalRunner[] = [
-	{
-		label: 'Ollama',
-		note: localize('codingAgent.ollamaNote', "OpenAI and Anthropic APIs, port 11434"),
-		url: 'https://ollama.com',
-		agents: { 'Claude Code': 'ollama launch', 'Codex': 'ollama launch, --oss', 'GitHub Copilot CLI': 'ollama launch', 'OpenCode': 'ollama launch' },
-	},
-	{
-		label: 'LM Studio',
-		note: localize('codingAgent.lmStudioNote', "OpenAI and Anthropic APIs, port 1234; runs MLX models on Apple silicon"),
-		url: 'https://lmstudio.ai',
-		agents: { 'Claude Code': 'ANTHROPIC_BASE_URL', 'Codex': '--oss --local-provider lmstudio', 'GitHub Copilot CLI': 'COPILOT_PROVIDER_BASE_URL', 'OpenCode': 'opencode.json' },
-	},
-	{
-		label: 'llama.cpp',
-		note: localize('codingAgent.llamaCppNote', "llama-server: OpenAI and Anthropic APIs, port 8080"),
-		url: 'https://github.com/ggml-org/llama.cpp',
-		agents: { 'Claude Code': 'ANTHROPIC_BASE_URL', 'Codex': '~/.codex/config.toml', 'GitHub Copilot CLI': 'COPILOT_PROVIDER_BASE_URL', 'OpenCode': 'opencode.json' },
-	},
-	{
-		label: 'Apple MLX',
-		note: localize('codingAgent.mlxNote', "Apple silicon; mlx_lm.server: OpenAI API, port 8080"),
-		url: 'https://github.com/ml-explore/mlx-lm',
-		macOnly: true,
-		agents: { 'Claude Code': localize('codingAgent.throughLmStudio', "Through LM Studio"), 'Codex': '~/.codex/config.toml', 'GitHub Copilot CLI': 'COPILOT_PROVIDER_BASE_URL', 'OpenCode': 'opencode.json' },
-	},
-];
+// Compose > Coding Agents: a page of the coding agents Pollis knows, all of which run on local and
+// cloud models, in alphabetical order, each marked installed on this computer or with a link to its
+// install page, whether it has the Pollis skills, with a link to install them, and a button to use it; a field for any other agent's command; a link to Model Routing,
+// which sends some tasks to other models; and a link to Local Model Runners, the programs that serve the
+// local models. The choice is saved in the settings at once; the page follows changes made in the settings
+// while it is open.
 
 type AgentMessage =
 	| { readonly command: 'ready' }
 	| { readonly command: 'use'; readonly line: string }
-	| { readonly command: 'reports'; readonly line: string }
+	| { readonly command: 'routing' }
+	| { readonly command: 'runners' }
+	| { readonly command: 'installSkills'; readonly agent: string }
 	| { readonly command: 'link'; readonly url: string };
 
 /** The open page, so a second request shows it again. */
 let openPage: WebviewInput | undefined;
 
-/** Opens the Coding Agent page, or shows it again when it is open. */
+/** Opens the Coding Agents page, or shows it again when it is open. */
 async function openCodingAgentPage(accessor: ServicesAccessor): Promise<void> {
 	const webviewWorkbenchService = accessor.get(IWebviewWorkbenchService);
 	const configurationService = accessor.get(IConfigurationService);
 	const fileService = accessor.get(IFileService);
 	const terminalInstanceService = accessor.get(ITerminalInstanceService);
 	const openerService = accessor.get(IOpenerService);
+	const hostService = accessor.get(IHostService);
+	const commandService = accessor.get(ICommandService);
+	const pathService = accessor.get(IPathService);
+	const instantiationService = accessor.get(IInstantiationService);
 
 	if (openPage && !openPage.isDisposed()) {
 		webviewWorkbenchService.revealWebview(openPage, openPage.group ?? -1, false);
 		return;
 	}
-	const title = localize('codingAgent.title', "Coding Agent");
+	const title = localize('codingAgent.title', "Coding Agents");
 	const webviewInput = webviewWorkbenchService.openWebview(
 		{
 			title,
@@ -105,35 +77,54 @@ async function openCodingAgentPage(accessor: ServicesAccessor): Promise<void> {
 		disposables.dispose();
 	}));
 
-	// Which agents are installed is looked up again each time the page loads
+	// Which agents are installed is looked up each time the page loads, is shown again or Pollis gets the
+	// focus back, after an install, and so are the skills of the installed ones. A local command can be used when
+	// its own program is there too (Ollama).
 	const sendState = async () => {
 		const environment = await terminalEnvironment(terminalInstanceService);
-		const agents = await Promise.all(CODING_AGENTS.map(async agent => ({
-			...agent,
-			installed: !!await findProgram(commandWords(agent.command)[0], environment, fileService),
-		})));
+		const found = (command: string) => findProgram(commandWords(command)[0], environment, fileService);
+		const agents = await Promise.all(CODING_AGENTS.map(async agent => {
+			const installed = !!await found(agent.command);
+			const localProgram = agent.localCommand ? commandWords(agent.localCommand)[0] : undefined;
+			const localMissing = localProgram && localProgram !== commandWords(agent.command)[0] && !await found(agent.localCommand!) ? localProgram : undefined;
+			const skills = installed && await skillsInstalled(agent, fileService, pathService);
+			return { ...agent, installed, localMissing, skills };
+		}));
 		webviewInput.webview.postMessage({
 			command: 'state',
 			agents,
-			runners: LOCAL_RUNNERS.filter(runner => !runner.macOnly || isMacintosh),
 			current: configurationService.getValue<string>(AGENT_COMMAND_SETTING)?.trim() ?? '',
-			reports: configurationService.getValue<string>(REPORTS_AGENT_COMMAND_SETTING)?.trim() ?? '',
 		});
 	};
-	disposables.add(configurationService.onDidChangeConfiguration(e => {
-		if (e.affectsConfiguration(AGENT_COMMAND_SETTING) || e.affectsConfiguration(REPORTS_AGENT_COMMAND_SETTING)) {
+	disposables.add(webviewInput.webview.onDidFocus(() => sendState()));
+	disposables.add(hostService.onDidChangeFocus(focused => {
+		if (focused) {
 			sendState();
 		}
 	}));
-	disposables.add(webviewInput.webview.onMessage((e: { message: AgentMessage }) => {
+	disposables.add(configurationService.onDidChangeConfiguration(e => {
+		if (e.affectsConfiguration(AGENT_COMMAND_SETTING)) {
+			sendState();
+		}
+	}));
+	disposables.add(webviewInput.webview.onMessage(async (e: { message: AgentMessage }) => {
 		const message = e.message;
 		if (message.command === 'ready') {
 			sendState();
 		} else if (message.command === 'use' && message.line.trim()) {
 			configurationService.updateValue(AGENT_COMMAND_SETTING, message.line.trim());
-		} else if (message.command === 'reports') {
-			configurationService.updateValue(REPORTS_AGENT_COMMAND_SETTING, message.line.trim());
-		} else if (message.command === 'link' && [...CODING_AGENTS, ...LOCAL_RUNNERS].some(item => item.url === message.url)) {
+		} else if (message.command === 'routing') {
+			commandService.executeCommand(MODEL_ROUTING_COMMAND_ID);
+		} else if (message.command === 'installSkills') {
+			// Claude Code installs its plugin in a terminal: the page shows it when it gets the focus back
+			const agent = CODING_AGENTS.find(agent => agent.label === message.agent);
+			if (agent) {
+				await instantiationService.invokeFunction(installSkills, agent);
+				sendState();
+			}
+		} else if (message.command === 'runners') {
+			commandService.executeCommand(LOCAL_MODEL_RUNNERS_COMMAND_ID);
+		} else if (message.command === 'link' && CODING_AGENTS.some(item => item.url === message.url)) {
 			openerService.open(URI.parse(message.url), { openExternal: true });
 		}
 	}));
@@ -142,31 +133,35 @@ async function openCodingAgentPage(accessor: ServicesAccessor): Promise<void> {
 /** The page: its texts come from here, the agents and the settings from the `state` message. */
 function pageHtml(): string {
 	const text = {
-		title: localize('codingAgent.title', "Coding Agent"),
-		intro: localize('codingAgent.intro', "The coding agent Pollis starts in a terminal for every agent task of the Compose menu: Pollis Agents, Orchestration and Reports. Pollis gives it a first message that points it at the task's instructions, so any agent that reads files and runs commands will do, on a cloud model or on a local one."),
+		title: localize('codingAgent.title', "Coding Agents"),
+		intro: localize('codingAgent.intro', "The coding agent Pollis starts in a terminal for every agent task of the Compose menu: New Panels and Toolboxes, New Methods, Orchestration and Reports. Pollis gives it a first message that points it at the task's instructions, so any agent that reads files and runs commands will do, on a cloud model or on a local one."),
 		agent: localize('codingAgent.agent', "Agent"),
 		command: localize('codingAgent.command', "Command"),
 		status: localize('codingAgent.status', "On This Computer"),
-		installed: localize('codingAgent.installed', "Installed"),
-		notFound: localize('codingAgent.notFound', "Not found"),
-		installPage: localize('codingAgent.installPage', "Install Page"),
+		installed: localize('codingAgent.installed', "Agent Installed"),
+		installAgent: localize('codingAgent.installAgent', "Install Agent"),
 		localSection: localize('codingAgent.localSection', "Local and Cloud Models"),
 		localSectionNote: localize('codingAgent.localSectionNote', "Ollama, LM Studio: free, private, on this computer"),
 		local: localize('codingAgent.local', "Local:"),
 		use: localize('codingAgent.use', "Use"),
 		inUse: localize('codingAgent.inUse', "In Use"),
+		skillsInstalled: localize('codingAgent.skillsInstalled', "Skills Installed"),
+		installSkills: localize('codingAgent.installSkills', "Install Skills"),
+		updateSkills: localize('codingAgent.updateSkills', "Update"),
+		skillsHint: localize('codingAgent.skillsHint', "The Pollis skills, so that the agent uses them in any folder, even outside Pollis"),
+		installFirst: localize('codingAgent.installFirst', "Install the agent first"),
+		installProgramFirst: localize('codingAgent.installProgramFirst', "Install {0} first"),
+		notInstalled: localize('codingAgent.notInstalled', "{0} isn't installed on this computer"),
 		none: localize('codingAgent.none', "No coding agent is chosen yet: pick one below."),
 		currentIs: localize('codingAgent.currentIs', "In use:"),
 		otherTitle: localize('codingAgent.otherTitle', "Other Agent"),
 		otherIntro: localize('codingAgent.otherIntro', "Any other agent's command line, with {0} where the first message goes, for example: aider --message {0}. Without {0}, the message is copied to the clipboard to paste into the agent.", PROMPT_PLACEHOLDER),
-		reportsTitle: localize('codingAgent.reportsTitle', "Agent for Polish with Agent (Reports)"),
-		reportsIntro: localize('codingAgent.reportsIntro', "Polishing a report Pollis has already written is a small task, which a cheaper, faster model does well. Give the command line of that agent, for example: claude --model haiku {0}. Empty: the agent above.", PROMPT_PLACEHOLDER),
-		reportsPlaceholder: localize('codingAgent.reportsPlaceholder', "The agent above"),
+		routingTitle: localize('codingAgent.routingTitle', "Other Models for Some Tasks"),
+		routingIntro: localize('codingAgent.routingIntro', "Small tasks, like Polish with Agent, can run on a cheaper, faster or local model, and hard ones on a stronger one:"),
+		routingLink: localize('codingAgent.routingLink', "Compose > Orchestration > Model Routing"),
 		runnersTitle: localize('codingAgent.runnersTitle', "Local Model Runners"),
-		runnersNote: localize('codingAgent.runnersNote', "They serve the local models; each cell says how the agent reaches the runner"),
-		runner: localize('codingAgent.runner', "Runner"),
-		save: localize('codingAgent.save', "Save"),
-		saved: localize('codingAgent.saved', "Saved"),
+		runnersIntro: localize('codingAgent.runnersIntro', "A local command needs a runner, such as Ollama or LM Studio, which serves the local models. Which runners are installed, and how each agent reaches each one:"),
+		runnersLink: localize('codingAgent.runnersLink', "Compose > Local Reasoning Models > Local Model Runners"),
 	};
 	return `<!DOCTYPE html>
 <html lang="en">
@@ -192,7 +187,7 @@ function pageHtml(): string {
 		.small { font-size: 12px; color: var(--vscode-descriptionForeground); }
 		code, input { font-family: var(--vscode-editor-font-family); font-size: 12px; }
 		.installed { color: var(--vscode-testing-iconPassed); }
-		.missing { color: var(--vscode-descriptionForeground); }
+		.warning { color: var(--vscode-editorWarning-foreground); margin-left: 10px; }
 		.link { color: var(--vscode-textLink-foreground); cursor: pointer; background: none; border: none; padding: 0; font: inherit; }
 		.link:hover { text-decoration: underline; }
 		button.action { font: inherit; padding: 3px 12px; border: none; border-radius: 2px; cursor: pointer; color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
@@ -202,6 +197,7 @@ function pageHtml(): string {
 		input { flex: 1; padding: 4px 6px; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, var(--vscode-widget-border)); border-radius: 2px; }
 		input:focus { outline: 1px solid var(--vscode-focusBorder); }
 		.right { text-align: right; white-space: nowrap; }
+		.uses { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
 		th.agent { width: 30%; } th.command { width: 34%; } th.status { width: 20%; }
 		.section { display: flex; align-items: center; gap: 8px; margin: 24px 0 4px 0; }
 		.section-title { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; }
@@ -211,10 +207,8 @@ function pageHtml(): string {
 		.rule { flex: 1; height: 1px; background: linear-gradient(to right, var(--vscode-textLink-foreground), transparent); }
 		table.local td:first-child { box-shadow: inset 3px 0 0 var(--vscode-textLink-foreground); padding-left: 12px; }
 		table.local tr:not(:hover):not(.chosen) td { background: color-mix(in srgb, var(--vscode-textLink-foreground) 5%, transparent); }
+		.skills { margin-top: 6px; }
 		.variant { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
-		button.secondary { font: inherit; font-size: 12px; padding: 1px 8px; border: none; border-radius: 2px; cursor: pointer; color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); }
-		button.secondary:hover { background: var(--vscode-button-secondaryHoverBackground); }
-		button.secondary:disabled { cursor: default; opacity: 0.6; }
 	</style>
 </head>
 <body>
@@ -233,25 +227,16 @@ function pageHtml(): string {
 	<h2>${text.otherTitle}</h2>
 	<p class="hint">${text.otherIntro}</p>
 	<div class="row"><input id="other" spellcheck="false"><button class="action" id="useOther">${text.use}</button></div>
-	<h2>${text.reportsTitle}</h2>
-	<p class="hint">${text.reportsIntro}</p>
-	<div class="row"><input id="reports" spellcheck="false" placeholder="${text.reportsPlaceholder}"><button class="action" id="saveReports">${text.save}</button></div>
-	<div class="section local">
-		<span class="section-title">${text.runnersTitle}</span><span class="section-note">${text.runnersNote}</span><span class="rule"></span>
-	</div>
-	<table class="local">
-		<thead><tr id="runnersHead"></tr></thead>
-		<tbody id="runners"></tbody>
-	</table>
+	<h2>${text.routingTitle}</h2>
+	<p class="hint">${text.routingIntro} <button class="link" id="routing">${text.routingLink}</button></p>
+	<h2>${text.runnersTitle}</h2>
+	<p class="hint">${text.runnersIntro} <button class="link" id="runners">${text.runnersLink}</button></p>
 </div>
 <script>
 	const vscode = acquireVsCodeApi();
 	const TEXT = ${JSON.stringify(text)};
 	const local = document.getElementById('local');
 	const other = document.getElementById('other');
-	const runnersHead = document.getElementById('runnersHead');
-	const runners = document.getElementById('runners');
-	const reports = document.getElementById('reports');
 
 	function element(tag, className, content) {
 		const node = document.createElement(tag);
@@ -266,6 +251,13 @@ function pageHtml(): string {
 		if (state.current) {
 			current.appendChild(document.createTextNode(TEXT.currentIs + ' '));
 			current.appendChild(element('code', '', state.current));
+			// The agent in use, when it is one of these, may not be on this computer (yet)
+			for (const agent of state.agents) {
+				const missing = !agent.installed ? agent.label : agent.localCommand === state.current ? agent.localMissing : undefined;
+				if ((agent.command === state.current || agent.localCommand === state.current) && missing) {
+					current.appendChild(element('span', 'warning', TEXT.notInstalled.replace('{0}', missing)));
+				}
+			}
 		} else {
 			current.textContent = TEXT.none;
 		}
@@ -280,67 +272,60 @@ function pageHtml(): string {
 			const command = element('td');
 			command.appendChild(element('code', '', agent.command));
 			if (agent.localCommand) {
-				// The local variant: its own command, chosen with its own button
+				// The local variant: its own command, chosen with its own Use button below the other
 				const variant = element('div', 'variant small');
 				variant.appendChild(document.createTextNode(TEXT.local + ' '));
 				variant.appendChild(element('code', '', agent.localCommand));
-				const useLocal = element('button', 'secondary', agent.localCommand === state.current ? TEXT.inUse : TEXT.use);
-				useLocal.disabled = agent.localCommand === state.current;
-				useLocal.addEventListener('click', () => vscode.postMessage({ command: 'use', line: agent.localCommand }));
-				variant.appendChild(useLocal);
 				command.appendChild(variant);
 			}
 			row.appendChild(command);
 			const status = element('td');
-			status.appendChild(element('div', agent.installed ? 'installed' : 'missing', agent.installed ? TEXT.installed : TEXT.notFound));
-			const install = element('button', 'link small', TEXT.installPage);
-			install.addEventListener('click', () => vscode.postMessage({ command: 'link', url: agent.url }));
-			status.appendChild(install);
+			// Installed, or a link to install it
+			if (!agent.installed) {
+				const install = element('button', 'link', TEXT.installAgent);
+				install.addEventListener('click', () => vscode.postMessage({ command: 'link', url: agent.url }));
+				status.appendChild(install);
+			} else {
+				status.appendChild(element('div', 'installed', TEXT.installed));
+				// The Pollis skills: installed, with a link to update them, or a link to install them
+				const skills = element('div', 'skills');
+				skills.title = TEXT.skillsHint;
+				const installSkills = () => vscode.postMessage({ command: 'installSkills', agent: agent.label });
+				if (agent.skills) {
+					skills.appendChild(element('span', 'installed', TEXT.skillsInstalled));
+					skills.appendChild(document.createTextNode(' \u00B7 '));
+					const update = element('button', 'link small', TEXT.updateSkills);
+					update.addEventListener('click', installSkills);
+					skills.appendChild(update);
+				} else {
+					const install = element('button', 'link', TEXT.installSkills);
+					install.addEventListener('click', installSkills);
+					skills.appendChild(install);
+				}
+				status.appendChild(skills);
+			}
 			row.appendChild(status);
 			const action = element('td', 'right');
-			const use = element('button', 'action', agent.command === state.current ? TEXT.inUse : TEXT.use);
-			use.disabled = agent.command === state.current;
-			use.addEventListener('click', () => vscode.postMessage({ command: 'use', line: agent.command }));
-			action.appendChild(use);
+			const uses = element('div', 'uses');
+			for (const line of agent.localCommand ? [agent.command, agent.localCommand] : [agent.command]) {
+				// An agent, or a local program, not on this computer cannot be chosen
+				const unavailable = !agent.installed ? TEXT.installFirst : line === agent.localCommand && agent.localMissing ? TEXT.installProgramFirst.replace('{0}', agent.localMissing) : '';
+				const use = element('button', 'action', line === state.current ? TEXT.inUse : TEXT.use);
+				use.disabled = line === state.current || !!unavailable;
+				if (unavailable && line !== state.current) {
+					use.title = unavailable;
+				}
+				use.addEventListener('click', () => vscode.postMessage({ command: 'use', line }));
+				uses.appendChild(use);
+			}
+			action.appendChild(uses);
 			row.appendChild(action);
 			local.appendChild(row);
-		}
-		// The runners: a row each, a column for each agent
-		runnersHead.textContent = '';
-		runnersHead.appendChild(element('th', '', TEXT.runner));
-		for (const agent of agents) {
-			runnersHead.appendChild(element('th', '', agent.label));
-		}
-		runners.textContent = '';
-		for (const runner of state.runners) {
-			const row = element('tr');
-			const name = element('td');
-			name.appendChild(element('div', 'name', runner.label));
-			name.appendChild(element('div', 'small', runner.note));
-			const page = element('button', 'link small', TEXT.installPage);
-			page.addEventListener('click', () => vscode.postMessage({ command: 'link', url: runner.url }));
-			name.appendChild(page);
-			row.appendChild(name);
-			for (const agent of agents) {
-				const cell = element('td');
-				cell.appendChild(element('code', '', runner.agents[agent.label] || '-'));
-				row.appendChild(cell);
-			}
-			runners.appendChild(row);
 		}
 		// The field shows the command in use when it is none of the listed agents
 		if (document.activeElement !== other) {
 			other.value = state.agents.some(agent => agent.command === state.current || agent.localCommand === state.current) ? '' : state.current;
 		}
-		if (document.activeElement !== reports) {
-			reports.value = state.reports;
-		}
-	}
-
-	function flash(button, label) {
-		const before = button.textContent;
-		button.textContent = label;
-		setTimeout(() => { button.textContent = before; }, 1500);
 	}
 
 	document.getElementById('useOther').addEventListener('click', () => {
@@ -349,12 +334,8 @@ function pageHtml(): string {
 		}
 	});
 	other.addEventListener('keydown', e => { if (e.key === 'Enter') { document.getElementById('useOther').click(); } });
-	const saveReports = document.getElementById('saveReports');
-	saveReports.addEventListener('click', () => {
-		vscode.postMessage({ command: 'reports', line: reports.value });
-		flash(saveReports, TEXT.saved);
-	});
-	reports.addEventListener('keydown', e => { if (e.key === 'Enter') { saveReports.click(); } });
+	document.getElementById('routing').addEventListener('click', () => vscode.postMessage({ command: 'routing' }));
+	document.getElementById('runners').addEventListener('click', () => vscode.postMessage({ command: 'runners' }));
 
 	window.addEventListener('message', event => {
 		if (event.data.command === 'state') {
@@ -371,8 +352,8 @@ registerAction2(class extends Action2 {
 	constructor() {
 		super({
 			id: CHOOSE_AGENT_COMMAND_ID,
-			title: localize2('pollisAgents.chooseAgent', "Choose Coding Agent..."),
-			category: localize2('pollisAgents.category', "Pollis Agents"),
+			title: localize2('pollisAgents.chooseAgent', "Coding Agents"),
+			category: localize2('pollisAgents.category', "Compose"),
 			f1: true,
 		});
 	}

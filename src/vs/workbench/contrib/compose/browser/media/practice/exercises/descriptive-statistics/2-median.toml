@@ -1,0 +1,10 @@
+title = "The median of an even number of values"
+panel = "chiara.explore.dstats"
+setup = '''
+x = shuffle(rng, sort(randperm(rng, 60)[1:8] .+ 10))
+s = sort(x)
+'''
+question = '''Eight students scored {{list(x)}} in a test. What is the median score?'''
+choices = ['{{fmt(median(x), 1)}}', '{{fmt(s[4], 1)}}', '{{fmt(s[5], 1)}}', '{{fmt(mean(x), 1)}}']
+answer = 1
+explanation = '''Sorted, the scores are {{list(s)}}. With an even number of values the median is the mean of the two middle ones, the 4th and the 5th: ({{s[4]}} + {{s[5]}}) / 2 = {{fmt(median(x), 1)}}.'''

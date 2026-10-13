@@ -1041,8 +1041,7 @@ CommandsRegistry.registerCommand(TSVIZ_OHLC_ID, (accessor: ServicesAccessor) => 
 // Define a new submenu ID for "Dataset Repositories"
 const ADRSubmenuId = new MenuId('menubarADRSubmenu');
 
-// Define a new submenu ID for "Model Repositories"
-const AMRSubmenuId = new MenuId('menubarAMRSubmenu');
+// "Access Model Repositories" (Hugging Face and Kaggle Models) moved to Compose > Local Reasoning Models (compose.contribution.ts)
 
 // Define a new submenu ID for "Connectors"
 const CONNSubmenuId = new MenuId('menubarCONNSubmenu');
@@ -1056,13 +1055,6 @@ const ANSubmenuId = new MenuId('menubarANSubmenu');
 // ===================================================
 // TOP-LEVEL EXPLORE MENU STRUCTURE
 // ===================================================
-
-MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
-	group: '1_explore',
-	submenu: AMRSubmenuId,
-	title: localize('showExplore.amr', 'Access Model Repositories'),
-	order: 1,
-});
 
 MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
 	group: '1_explore',
@@ -1140,31 +1132,6 @@ MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
 	command: { id: IDAT_ID, title: localize('eda.interpolation', 'Interpolate Data') },
 	order: 5,
 }); // Interpolations.jl + Dierckx.jl
-
-// ===================================================
-// SUBMENU: ACESSING MODEL REPOSITORTIES
-// ===================================================
-
-MenuRegistry.appendMenuItem(AMRSubmenuId, {
-	group: '1_ds',
-	command: {
-		id: HFM_ID,
-		title: localize('ds.hf', 'Hugging Face Models'),
-	},
-	order: 1,
-}); // HuggingFaceHub.jl
-// //https://huggingface.co/models
-
-
-MenuRegistry.appendMenuItem(AMRSubmenuId, {
-	group: '1_ds',
-	command: {
-		id: KGM_ID,
-		title: localize('ds.km', 'Kaggle Models'),
-	},
-	order: 2,
-}); // https://www.kaggle.com/models
-
 
 // ===================================================
 // SUBMENU: ACESSING LIBRARIES

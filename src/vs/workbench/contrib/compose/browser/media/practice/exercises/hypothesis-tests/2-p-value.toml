@@ -1,0 +1,12 @@
+title = "A two-sided p-value"
+panel = "chiara.statistics.ht"
+packages = ["Distributions"]
+setup = '''
+df = rand(rng, 8:25)
+t = round(rand(rng, [-1, 1]) * rand(rng, Uniform(1.2, 3.2)); digits = 2)
+p = 2 * ccdf(TDist(df), abs(t))
+'''
+question = '''A t test with {{df}} degrees of freedom gives t = {{t}}. What is the two-sided p-value?'''
+choices = ['{{fmt(p, 4)}}', '{{fmt(p / 2, 4)}}', '{{fmt(2 * ccdf(Normal(), abs(t)), 4)}}', '{{fmt(1 - p, 4)}}']
+answer = 1
+explanation = '''The two-sided p-value is the probability, under the null hypothesis, of a t at least as far from 0 as {{abs(t)}} in either direction: 2 P(T > {{abs(t)}}) with T ~ t({{df}}), which is {{fmt(p, 4)}}. Half of it is the one-sided p-value; the normal distribution would give {{fmt(2 * ccdf(Normal(), abs(t)), 4)}}, too small for {{df}} degrees of freedom.'''

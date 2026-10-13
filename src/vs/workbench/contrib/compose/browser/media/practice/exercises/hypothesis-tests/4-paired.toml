@@ -1,0 +1,6 @@
+title = "Choosing a test"
+panel = "chiara.statistics.ht"
+question = '''The blood pressure of the same 15 patients is measured before and after a treatment. Which test asks whether the treatment changes blood pressure on average?'''
+choices = ['A paired t test on the 15 differences', 'A two-sample t test comparing the before and after groups', 'A chi-square test of independence', 'A one-sample t test on the after values only']
+answer = 1
+explanation = '''Each patient is measured twice, so the two samples are not independent. The paired t test works on the differences, one per patient, and removes the variation between patients; the two-sample test ignores the pairing and loses power.'''

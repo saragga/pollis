@@ -48,7 +48,7 @@ const OPERATIONAL_WORKFLOWS: readonly IOperationalWorkflow[] = [
 	{
 		command: POLISH_REPORT_COMMAND_ID,
 		title: localize('operationalWorkflows.polish', "Polish with Agent"),
-		description: localize('operationalWorkflows.polishDescription', "Hands a report or slides that Pollis wrote to your coding agent, to turn the draft into a finished document: sections, tables, captions and citations, from the numbers already computed. A cheaper model can be set for it on the Coding Agent page."),
+		description: localize('operationalWorkflows.polishDescription', "Hands a report or slides that Pollis wrote to your coding agent, to turn the draft into a finished document: sections, tables, captions and citations, from the numbers already computed. A cheaper model can be set for it in Compose > Orchestration > Model Routing."),
 		input: localize('operationalWorkflows.tex', "The .tex in the editor"),
 		output: localize('operationalWorkflows.polishOutput', "The same .tex, rewritten and compiled"),
 		agent: true,

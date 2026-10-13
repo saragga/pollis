@@ -8,7 +8,7 @@
 //   node build/pollis/makePanelIndex.ts            write it
 //   node build/pollis/makePanelIndex.ts --check    exit 1 if it is out of date
 //
-// The plugin lives in its own repository, Trumpingtons/pollis-plugins (the default marketplace of
+// The plugin lives in its own repository, Trumpingtons/pollis-skills (the default marketplace of
 // chat.plugins.marketplaces). Its builder (plugins/pollis-agents/scripts/makeToolbox.mjs there)
 // runs without a source checkout: it reads this index from
 // https://raw.githubusercontent.com/saragga/pollis/main/build/pollis/panel-index.json

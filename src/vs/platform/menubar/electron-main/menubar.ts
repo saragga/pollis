@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { app, BrowserWindow, BaseWindow, KeyboardEvent, Menu, MenuItem, MenuItemConstructorOptions, WebContents } from 'electron';
+import { app, BrowserWindow, BaseWindow, KeyboardEvent, Menu, MenuItem, MenuItemConstructorOptions, nativeImage, NativeImage, WebContents } from 'electron';
 import { WorkbenchActionExecutedClassification, WorkbenchActionExecutedEvent } from '../../../base/common/actions.js';
 import { RunOnceScheduler } from '../../../base/common/async.js';
 import { CancellationToken } from '../../../base/common/cancellation.js';
@@ -549,12 +549,16 @@ export class Menubar extends Disposable {
 
 
 	private setMenu(menu: Menu, items: Array<MenubarMenuItem>) {
+		// Pollis: macOS puts an item's image before its label, so in a menu with an agent item the other
+		// items get a blank image of the same size and every label starts at the same place
+		const iconColumn = isMacintosh && items.some(item => isMenubarMenuItemAction(item) && item.agent);
+		const iconOf = (agent?: boolean) => iconColumn ? (agent ? this.getAgentIcon() : this.getBlankIcon()) : undefined;
 		items.forEach((item: MenubarMenuItem) => {
 			if (isMenubarMenuItemSeparator(item)) {
 				menu.append(__separator__());
 			} else if (isMenubarMenuItemSubmenu(item)) {
 				const submenu = new Menu();
-				const submenuItem = new MenuItem({ label: this.mnemonicLabel(item.label), submenu });
+				const submenuItem = new MenuItem({ label: this.mnemonicLabel(item.label), submenu, icon: iconOf() });
 				this.setMenu(submenu, item.submenu.items);
 				menu.append(submenuItem);
 			} else if (isMenubarMenuItemRecentAction(item)) {
@@ -571,13 +575,13 @@ export class Menubar extends Disposable {
 						if (this.fallbackMenuHandlers[item.id]) {
 							menu.append(new MenuItem(this.likeAction(item.id, { label: this.mnemonicLabel(item.label), click: this.fallbackMenuHandlers[item.id] })));
 						} else {
-							menu.append(this.createMenuItem(item.label, item.id, false, item.checked));
+							menu.append(this.createMenuItem(item.label, item.id, false, item.checked, iconOf(item.agent)));
 						}
 					} else {
-						menu.append(this.createMenuItem(item.label, item.id, item.enabled !== false, !!item.checked));
+						menu.append(this.createMenuItem(item.label, item.id, item.enabled !== false, !!item.checked, iconOf(item.agent)));
 					}
 				} else {
-					menu.append(this.createMenuItem(item.label, item.id, item.enabled !== false, !!item.checked));
+					menu.append(this.createMenuItem(item.label, item.id, item.enabled !== false, !!item.checked, iconOf(item.agent)));
 				}
 			}
 		});
@@ -722,7 +726,7 @@ export class Menubar extends Disposable {
 		}
 	}
 
-	private createMenuItem(labelOpt: string, commandId: string, enabledOpt?: boolean, checkedOpt?: boolean): MenuItem {
+	private createMenuItem(labelOpt: string, commandId: string, enabledOpt?: boolean, checkedOpt?: boolean, icon?: NativeImage): MenuItem {
 		const label = this.mnemonicLabel(labelOpt);
 		const click = (menuItem: MenuItem & IMenuItemWithKeybinding, window: BaseWindow | undefined, event: KeyboardEvent) => {
 			const userSettingsLabel = menuItem ? menuItem.userSettingsLabel : null;
@@ -744,6 +748,10 @@ export class Menubar extends Disposable {
 		if (checked) {
 			options.type = 'checkbox';
 			options.checked = checked;
+		}
+
+		if (icon) {
+			options.icon = icon;
 		}
 
 		if (isMacintosh) {
@@ -777,6 +785,36 @@ export class Menubar extends Disposable {
 		}
 
 		return new MenuItem(this.withKeybinding(commandId, options));
+	}
+
+	private agentIcon: NativeImage | undefined;
+
+	/**
+	 * Pollis: the two-star sparkle of the items a coding agent does, as a template image so that macOS draws
+	 * it in the colour of the menu text. Made from the sparkle of the custom menu (menu.ts) at 16 and 32 pixels.
+	 */
+	private getAgentIcon(): NativeImage {
+		if (!this.agentIcon) {
+			const icon = nativeImage.createEmpty();
+			icon.addRepresentation({ scaleFactor: 1, dataURL: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QA/wD/AP+gvaeTAAAAsklEQVQ4jbXSP2oCURAG8B9EFnIJy9wiwSLkCsbajXeQVHsAd1vPIug9UqiFbRqtYhWLTPFYlnVd4gfD/OOb9zFvuCMGYb2xDOuNPbZ9yRMcccJ7V1KGF1Q4Y4o84ip6WduAAr9h86T+mdSLawqeUcarOT4iXkSvVUGKdAfjrqQ6dpp/4TFN2g5l1VAb4gtPOFxTUL/EETb+lrmO/CaU+MF3+PLWAfAWCl77kOEBs/D/gwvKVyQ6CCwBbAAAAABJRU5ErkJggg==' });
+			icon.addRepresentation({ scaleFactor: 2, dataURL: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABmJLR0QA/wD/AP+gvaeTAAABdUlEQVRYhe2WPU7DQBCFP6WhiUQDjpQOroCEKKAmJAGJcAE4AnAJMDfgFlAiLgBFCgpDSAhIcIBcICGFZ8XYsfNjr20h5UkjjXZn973dmVktLPFPsS5WCBxgIOak3ayUYM0esCq2W4SAHeVvpxWQBO/Ar9hr3uQNRW6slhd5BfgS0i7QF/8TC8U4Cw1FPgTqwKH4RkTdJqEDnAA3BHM+BM5V3AUwUvMdwJW1iW9lDb/Hw7nuEX3KJvARET+QvaZikTYsxcTHjaeCA7SAa/xWM6ca4V+7wSXBFHjAlay1Wpg1/EIzddAEjhR5H9i3SRgFR4noKb9PDm1ocMBksWV+8jA6BHOeCkmq907593PET/07JBHwpPznGbEV/Ge7K74VLPIhOeMvXae2BMB8X7JNgm+IB2zYFBGHLaBN8IHSD1lbYjKDGyL1gLfQmJulgCpwC/wweQPfMlfNUoDBCvCoyB9kLFe0lIDjvMkBysCLWLkIAUvMxBiUkXuhJcCyqwAAAABJRU5ErkJggg==' });
+			icon.setTemplateImage(true);
+			this.agentIcon = icon;
+		}
+		return this.agentIcon;
+	}
+
+	private blankIcon: NativeImage | undefined;
+
+	/** Pollis: a transparent image the size of the sparkle, for the other items of a menu with an agent item. */
+	private getBlankIcon(): NativeImage {
+		if (!this.blankIcon) {
+			const icon = nativeImage.createFromBitmap(Buffer.alloc(16 * 16 * 4), { width: 16, height: 16, scaleFactor: 1 });
+			icon.addRepresentation({ scaleFactor: 2, width: 32, height: 32, buffer: Buffer.alloc(32 * 32 * 4) });
+			icon.setTemplateImage(true);
+			this.blankIcon = icon;
+		}
+		return this.blankIcon;
 	}
 
 	private makeContextAwareClickHandler(click: (menuItem: MenuItem, win: BaseWindow, event: KeyboardEvent) => void, contextSpecificHandlers: IMenuItemClickHandler): (menuItem: MenuItem, win: BaseWindow | undefined, event: KeyboardEvent) => void {

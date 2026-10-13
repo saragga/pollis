@@ -1,0 +1,10 @@
+title = "The mean of a sample"
+panel = "chiara.explore.dstats"
+packages = ["Distributions"]
+setup = '''
+x = round.(rand(rng, Normal(rand(rng, 20:80), 8), 8); digits = 1)
+'''
+question = '''A sample of 8 measurements: {{list(x)}}. What is the sample mean?'''
+choices = ['{{fmt(mean(x), 2)}}', '{{fmt(median(x), 2)}}', '{{fmt(sum(x) / 7, 2)}}', '{{fmt((minimum(x) + maximum(x)) / 2, 2)}}']
+answer = 1
+explanation = '''The mean is the sum of the values divided by their number, n = 8: {{fmt(sum(x), 1)}} / 8 = {{fmt(mean(x), 2)}}. Dividing by n - 1 = 7 belongs to the variance, not the mean; {{fmt(median(x), 2)}} is the median and {{fmt((minimum(x) + maximum(x)) / 2, 2)}} the midrange.'''

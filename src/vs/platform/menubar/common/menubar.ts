@@ -29,7 +29,14 @@ export interface IMenubarMenuItemAction {
 	label: string;
 	checked?: boolean; // Assumed false if missing
 	enabled?: boolean; // Assumed true if missing
+	agent?: boolean; // Pollis: a coding agent does it, drawn with the sparkle. Assumed false if missing
 }
+
+/**
+ * Pollis: the id of the icon that marks the menu items a coding agent does. The menus draw it as a
+ * two-star sparkle, in the check gutter of the custom menu and as a template image in the macOS menu.
+ */
+export const AGENT_MENU_ICON_ID = 'pollis-agent';
 
 export interface IMenubarMenuRecentItemAction {
 	id: string;

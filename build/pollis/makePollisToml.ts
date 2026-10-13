@@ -10,7 +10,7 @@
 //
 // The module is tomlPanelData.ts (parseToml, tomlToPanelData) with its types stripped by Node, so it
 // parses a panel TOML exactly as Pollis does at runtime. The Pollis Agents plugin
-// (Trumpingtons/pollis-plugins) downloads it from
+// (Trumpingtons/pollis-skills) downloads it from
 // https://raw.githubusercontent.com/saragga/pollis/main/build/pollis/pollisToml.mjs
 // so its validator and builder never carry a copy of the parser that could drift from Pollis.
 // Run it again, and commit the result, whenever tomlPanelData.ts changes.

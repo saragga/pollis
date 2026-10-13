@@ -17,7 +17,7 @@ import { ILabelService } from '../../../../platform/label/common/label.js';
 import { IUpdateService } from '../../../../platform/update/common/update.js';
 import { IOpenRecentAction, MenubarControl } from '../../../browser/parts/titlebar/menubarControl.js';
 import { IStorageService } from '../../../../platform/storage/common/storage.js';
-import { IMenubarData, IMenubarMenu, IMenubarKeybinding, IMenubarMenuItemSubmenu, IMenubarMenuItemAction, MenubarMenuItem } from '../../../../platform/menubar/common/menubar.js';
+import { AGENT_MENU_ICON_ID, IMenubarData, IMenubarMenu, IMenubarKeybinding, IMenubarMenuItemSubmenu, IMenubarMenuItemAction, MenubarMenuItem } from '../../../../platform/menubar/common/menubar.js';
 import { IMenubarService } from '../../../../platform/menubar/electron-browser/menubar.js';
 import { INativeHostService } from '../../../../platform/native/common/native.js';
 import { IHostService } from '../../../services/host/browser/host.js';
@@ -25,6 +25,7 @@ import { IPreferencesService } from '../../../services/preferences/common/prefer
 import { ICommandService } from '../../../../platform/commands/common/commands.js';
 import { OpenRecentAction } from '../../../browser/actions/windowActions.js';
 import { isICommandActionToggleInfo } from '../../../../platform/action/common/action.js';
+import { ThemeIcon } from '../../../../base/common/themables.js';
 import { getFlatContextMenuActions } from '../../../../platform/actions/browser/menuEntryActionViewItem.js';
 
 export class NativeMenubarControl extends MenubarControl {
@@ -151,6 +152,10 @@ export class NativeMenubarControl extends MenubarControl {
 
 					if (!menuItem.enabled) {
 						menubarMenuItem.enabled = false;
+					}
+
+					if (ThemeIcon.isThemeIcon(menuItem.item.icon) && menuItem.item.icon.id === AGENT_MENU_ICON_ID) {
+						menubarMenuItem.agent = true;
 					}
 
 					keybindings[menuItem.id] = this.getMenubarKeybinding(menuItem.id);

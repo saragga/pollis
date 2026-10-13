@@ -656,7 +656,7 @@ export class AgentPluginsViewsContribution extends Disposable implements IWorkbe
 				weight: 30,
 				order: 5,
 				canToggleVisibility: true,
-				// Pollis: shown by default, so the Pollis plugins (Trumpingtons/pollis-plugins) can be found
+				// Pollis: shown by default, so the Pollis plugins (Trumpingtons/pollis-skills) can be found
 				hideByDefault: false,
 			},
 			{

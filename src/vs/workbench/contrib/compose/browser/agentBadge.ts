@@ -3,11 +3,12 @@
  *  Licensed under the GNU Affero General Public License v3.0 or later. See LICENSE.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-// The mark Pollis pages put on what a coding agent does, since it costs tokens: a robot's head, alone in a
-// button (class `with-agent`) or in an outlined badge beside a name (class `agent-badge`).
+// The mark Pollis pages put on what a coding agent does, since it costs tokens: a two-star sparkle, alone in a
+// button (class `with-agent`) or in an outlined badge beside a name (class `agent-badge`). The menus draw the
+// same sparkle (menu.ts and electron-main/menubar.ts).
 
-/** The robot's head, drawn in the text colour. */
-export const AGENT_ICON = '<svg class="agent-icon" viewBox="0 0 16 16" aria-hidden="true"><rect x="2.5" y="5" width="11" height="8.5" rx="2"/><path d="M8 5V2.5M6 9v1M10 9v1M1 8.5v2M15 8.5v2"/><circle cx="8" cy="2" r="0.6"/></svg>';
+/** The two-star sparkle, drawn in the text colour. */
+export const AGENT_ICON = '<svg class="agent-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M7 2.5c.4 2.6 1.4 3.6 4 4-2.6.4-3.6 1.4-4 4-.4-2.6-1.4-3.6-4-4 2.6-.4 3.6-1.4 4-4z"/><path d="M12.5 10.5c.2 1.1.6 1.5 1.7 1.7-1.1.2-1.5.6-1.7 1.7-.2-1.1-.6-1.5-1.7-1.7 1.1-.2 1.5-.6 1.7-1.7z"/></svg>';
 
 /** The styles of the icon, the badge and a button that carries the icon. */
 export const AGENT_BADGE_CSS = `

@@ -1,0 +1,15 @@
+title = "Reading a p-value"
+panel = "chiara.statistics.ht"
+setup = '''
+p = round(rand(rng, [rand(rng) * 0.04 + 0.002, rand(rng) * 0.5 + 0.06]); digits = 3)
+reject = p < 0.05
+'''
+question = '''A test of the null hypothesis that a new teaching method makes no difference gives p = {{p}}. At the 5% significance level, what do you conclude?'''
+choices = [
+	'{{reject ? "Reject the null hypothesis: the data show a difference at the 5% level" : "Do not reject the null hypothesis: the data do not show a difference at the 5% level"}}',
+	'{{reject ? "Do not reject the null hypothesis: the data do not show a difference at the 5% level" : "Reject the null hypothesis: the data show a difference at the 5% level"}}',
+	'{{reject ? "The probability that the method makes no difference is " * string(p) : "The method is proven to make no difference"}}',
+	'{{reject ? "The method is proven to make a large difference" : "The probability that the method makes no difference is " * string(p)}}',
+]
+answer = 1
+explanation = '''{{p}} is {{reject ? "below" : "above"}} 0.05, so the null hypothesis is {{reject ? "" : "not "}}rejected. A p-value is the probability of data at least this extreme if the null hypothesis were true: it is not the probability that the null hypothesis is true, and not rejecting it does not prove it.'''

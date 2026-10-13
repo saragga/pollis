@@ -1,0 +1,9 @@
+title = "R-squared from the correlation"
+panel = "chiara.statistics.lm"
+setup = '''
+r = round(rand(rng, [-1, 1]) * (rand(rng) * 0.6 + 0.3); digits = 2)
+'''
+question = '''The correlation between x and y is {{r}}. What share of the variance of y does the simple regression of y on x explain?'''
+choices = ['{{fmt(100 * r^2, 1)}}%', '{{fmt(100 * abs(r), 1)}}%', '{{fmt(100 * sqrt(abs(r)), 1)}}%', '{{fmt(100 * (1 - r^2), 1)}}%']
+answer = 1
+explanation = '''In a simple regression R-squared is the square of the correlation: ({{r}})^2 = {{fmt(r^2, 4)}}, so {{fmt(100 * r^2, 1)}}% of the variance of y is explained and {{fmt(100 * (1 - r^2), 1)}}% is left in the residuals. The sign of the correlation does not matter.'''

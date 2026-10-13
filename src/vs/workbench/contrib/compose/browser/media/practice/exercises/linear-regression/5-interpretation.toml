@@ -1,0 +1,14 @@
+title = "What the slope means"
+panel = "chiara.statistics.lm"
+setup = '''
+b1 = round(rand(rng) * 0.6 + 0.3; digits = 2)
+'''
+question = '''A regression of weight (kg) on height (cm) in a sample of adults has slope {{b1}}. What does the slope say?'''
+choices = [
+	'Adults who are 1 cm taller weigh {{b1}} kg more, on average',
+	'Growing 1 cm taller makes an adult {{b1}} kg heavier',
+	'Height explains {{fmt(100 * b1, 0)}}% of the variation in weight',
+	'Adults who weigh 1 kg more are {{b1}} cm taller, on average',
+]
+answer = 1
+explanation = '''The slope compares the average weight of adults whose heights differ by 1 cm: {{b1}} kg. It describes an association in the sample, not the effect of growing taller, and it is not R-squared. The slope of height on weight is a different number, from the other regression.'''
