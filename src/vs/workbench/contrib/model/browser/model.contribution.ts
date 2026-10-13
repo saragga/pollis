@@ -83,7 +83,6 @@ import { GP_PANEL } from './commands/gp.command.js';
 import { EVTRISK_PANEL } from './commands/evtRisk.command.js';
 import { EVTDIAG_PANEL } from './commands/evtDiag.command.js';
 import { HARE_PANEL } from './commands/hare.command.js';
-import { GT_PANEL } from './commands/gt.command.js';
 import { RVOL_PANEL } from './commands/rvol.command.js';
 import { LMAR_PANEL } from './commands/lmar.command.js';
 import { LMHAR_PANEL } from './commands/lmhar.command.js';
@@ -272,7 +271,6 @@ CommandsRegistry.registerCommand('chiara.statistics.ev.gev', accessor => openSca
 CommandsRegistry.registerCommand('chiara.statistics.ev.gp', accessor => openScaffoldWebview(accessor, GP_PANEL));
 CommandsRegistry.registerCommand('chiara.statistics.ev.riskMeasures', accessor => openScaffoldWebview(accessor, EVTRISK_PANEL));
 CommandsRegistry.registerCommand('chiara.statistics.ev.diagnostics', accessor => openScaffoldWebview(accessor, EVTDIAG_PANEL));
-CommandsRegistry.registerCommand('chiara.statistics.macro.gt', accessor => openScaffoldWebview(accessor, GT_PANEL));
 
 CommandsRegistry.registerCommand('chiara.statistics.ml.logpdf', accessor => openScaffoldWebview(accessor, ADLP_PANEL));
 

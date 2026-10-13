@@ -35,7 +35,6 @@ import { MOPT_PANEL } from '../../model/browser/commands/mopt.command.js';
 import { NGO_PANEL } from '../../model/browser/commands/ngo.command.js';
 import { CMP_PANEL } from '../../model/browser/commands/cmp.command.js';
 import { VARI_PANEL } from '../../model/browser/commands/vari.command.js';
-import { GT_PANEL } from '../../model/browser/commands/gt.command.js';
 import { MPEC_PANEL } from '../../model/browser/commands/mpec.command.js';
 import { BLV_PANEL } from '../../model/browser/commands/blv.command.js';
 import { DP_PANEL } from '../../model/browser/commands/dp.command.js';
@@ -89,7 +88,6 @@ const MOPT_ID = 'chiara.optimise.mopt';
 const NGO_ID = 'chiara.optimise.ngo';
 const CMP_ID = 'chiara.optimise.evp.cmp';
 const VARI_ID = 'chiara.optimise.evp.vari';
-const NASH_ID = 'chiara.optimise.evp.nash';
 const MPEC_ID = 'chiara.optimise.evp.mpec';
 const BLV_ID = 'chiara.optimise.evp.blv';
 const DP_ID = 'chiara.optimise.dp';
@@ -194,8 +192,6 @@ CommandsRegistry.registerCommand(MPEC_ID, accessor => openScaffoldWebview(access
 CommandsRegistry.registerCommand(CMP_ID, accessor => openScaffoldWebview(accessor, CMP_PANEL));
 
 CommandsRegistry.registerCommand(VARI_ID, accessor => openScaffoldWebview(accessor, VARI_PANEL));
-
-CommandsRegistry.registerCommand(NASH_ID, accessor => openScaffoldWebview(accessor, GT_PANEL, 'potential'));
 
 CommandsRegistry.registerCommand(PBM_ID, accessor => openScaffoldWebview(accessor, PBM_PANEL));
 
@@ -370,12 +366,6 @@ MenuRegistry.appendMenuItem(MenuId.MenubarOptimiseMenu, {
 	command: { id: BLV_ID, title: localize('mp.gth', 'Hierarchical Optimisation') },
 	order: 6,
 }); // BilevelJuMP.jl
-
-MenuRegistry.appendMenuItem(MenuId.MenubarOptimiseMenu, {
-	group: '6_optimisation',
-	command: { id: 'chiara.statistics.macro.gt', title: localize('mp.gt', 'Game Theory') },
-	order: 6.5,
-}); // GameTheory.jl, StrategicGames.jl, BaryPlots.jl
 
 MenuRegistry.appendMenuItem(MenuId.MenubarOptimiseMenu, {
 	group: '6_optimisation',

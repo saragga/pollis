@@ -3428,26 +3428,21 @@
 		{
 			"id": "gt",
 			"title": "Game Theory",
-			"source": "pollis",
+			"source": "toolbox:pollis-toolbox-economics",
 			"commands": [
 				{
 					"id": "chiara.statistics.macro.gt",
 					"menuTitles": [
 						"Game Theory"
 					]
-				},
-				{
-					"id": "chiara.optimise.evp.nash",
-					"model": "potential",
-					"menuTitles": []
 				}
 			],
 			"portable": true,
 			"defaultModel": "normal",
 			"decisionFirstColumn": "Game",
-			"toml": "src/vs/workbench/contrib/model/browser/webviews/gt.toml",
-			"wikiRoot": "src/vs/workbench/contrib/model/browser/media/wiki",
-			"notebookRoot": "src/vs/workbench/contrib/model/browser/media/notebooks",
+			"toml": "toolboxes/pollis-toolbox-economics/panels/gt.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-economics/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-economics/notebooks",
 			"wikis": [
 				"game-theory/assumptions.md",
 				"game-theory/decision-guide.md",

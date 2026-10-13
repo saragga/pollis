@@ -25,9 +25,8 @@ import { PRACTISE_TOPIC_COMMAND_ID, WRITE_EXERCISE_COMMAND_ID } from './practice
 import { IMPLEMENTED_COLLABORATION_COMMANDS } from './collaboration/collaboration.contribution.js';
 import { PUBLISHED_BENCHMARKS_COMMAND_ID, SEARCH_WORKFLOW_LIBRARY_COMMAND_ID } from './workflowLibrary.js';
 
-// The Mathematical Core, Financial Econometrics and Macroeconomics Toolboxes come from their extensions (toolboxes/pollis-toolbox-*, not built in:
-// installed from the Toolboxes section of the Extensions pane), see toolboxExtensions.ts;
-// Game Theory is in the Optimise menu
+// The Mathematical Core, Financial Econometrics and Economics Toolboxes come from their extensions (toolboxes/pollis-toolbox-*, not built in:
+// installed from the Toolboxes section of the Extensions pane), see toolboxExtensions.ts
 
 // Epidemiology Toolbox hidden for now: uncomment its three blocks to restore it.
 /*
