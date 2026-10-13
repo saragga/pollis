@@ -64,3 +64,5 @@ runs:
         # Empty rather than '0': these are tested for presence, and the string '0' is truthy.
         ELECTRON_SKIP_BINARY_DOWNLOAD: ${{ inputs.install-binaries == 'true' && '' || '1' }}
         PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: ${{ inputs.install-binaries == 'true' && '' || '1' }}
+        # Raises the GitHub API rate limit for the ripgrep and Electron downloads.
+        GITHUB_TOKEN: ${{ github.token }}
