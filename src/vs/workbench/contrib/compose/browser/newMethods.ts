@@ -1853,7 +1853,8 @@ registerAction2(class extends Action2 {
 	constructor() {
 		super({ id: METHOD_FROM_NOTEBOOK_COMMAND_ID, title: localize2('newMethods.fromNotebook', "Method from Notebook..."), category, f1: true });
 	}
-	run(accessor: ServicesAccessor, notebook?: URI): Promise<void> {
-		return methodFromNotebook(accessor, notebook && URI.from(notebook));
+	run(accessor: ServicesAccessor, notebook?: unknown): Promise<void> {
+		// Menus pass arguments of their own: only a notebook's URI is taken
+		return methodFromNotebook(accessor, URI.isUri(notebook) ? notebook : undefined);
 	}
 });
