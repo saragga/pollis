@@ -1,0 +1,3 @@
+label,"Traffic, horizon 3","Traffic, horizon 6","Traffic, horizon 12","Traffic, horizon 24"
+"LSTNet-Skip, RSE",0.4777,0.4893,0.4950,0.4973
+"LSTNet-Skip, CORR",0.8721,0.8690,0.8614,0.8588

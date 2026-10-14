@@ -12,7 +12,8 @@
 # A method folder holds method.toml (name, title, author, description, citation, version, usage (Julia code
 # that shows how to call the method, for the README), packages, and a
 # [targets.NAME] table for each target: source, call, tolerance, and an [inputs.NAME] table for each input:
-# url or file, source, delim, columns, skipto, limit), src/NAME.jl (module NAME), targets/*.csv and inputs/*.csv. An input is
+# url or file, source, delim, columns, header (false for a file without a header line, its columns then
+# Column1, Column2, ...), skipto, limit), src/NAME.jl (module NAME), targets/*.csv and inputs/*.csv. An input is
 # a link, which the tests download into memory, writing nothing to disk, or a file of the method
 # (file = "inputs/NAME.csv", typed in from the article), copied into the package's tests. A target table's first column holds the row
 # labels and its other cells the published values as printed; the call is the Julia expression that
@@ -48,10 +49,11 @@ function runtests(name, method)
 		"const DATA = joinpath(@__DIR__, \"data\")",
 		"",
 		"\"An input table: a file of the tests, or downloaded from its link into memory.\"",
-		"function input(source; delim = ',', columns = nothing, skipto = nothing, limit = nothing)",
+		"function input(source; delim = ',', columns = nothing, header = true, skipto = nothing, limit = nothing)",
 		"\tbytes = startswith(source, r\"https?://\") ? take!(Downloads.download(source, IOBuffer())) : read(joinpath(DATA, source))",
-		"\theader = columns === nothing ? 1 : Symbol.(columns)",
-		"\trows = (; skipto = something(skipto, columns === nothing ? 2 : 1), limit)",
+		"\tnamed = columns === nothing && header",
+		"\theader = columns !== nothing ? Symbol.(columns) : named ? 1 : false",
+		"\trows = (; skipto = something(skipto, named ? 2 : 1), limit)",
 		"\tfile = delim == \"whitespace\" ? CSV.File(bytes; header, rows..., delim = ' ', ignorerepeated = true, stripwhitespace = true) : CSV.File(bytes; header, rows..., delim = delim == \"tab\" ? '\\t' : only(delim))",
 		"\treturn Tables.columntable(file)",
 		"end",
@@ -96,7 +98,7 @@ function runtests(name, method)
 			occursin(Regex("\\b$input\\b"), call) || continue
 			options = haskey(link, "delim") ? "; delim = $(repr(link["delim"]))" : ""
 			haskey(link, "columns") && (options *= (isempty(options) ? "; " : ", ") * "columns = $(repr(string.(link["columns"])))")
-			for key in ("skipto", "limit")
+			for key in ("header", "skipto", "limit")
 				haskey(link, key) && (options *= (isempty(options) ? "; " : ", ") * "$key = $(link[key])")
 			end
 			push!(lines, "\t\t$input = input($(repr(haskey(link, "file") ? link["file"] : link["url"]))$options)")

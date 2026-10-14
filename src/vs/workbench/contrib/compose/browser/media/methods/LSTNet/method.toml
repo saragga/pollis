@@ -1,0 +1,62 @@
+name = "LSTNet"
+title = "LSTNet: long- and short-term patterns in multivariate time series"
+vignette_title = ""
+author = "Antonio Saragga Seabra"
+description = "Multivariate time series forecasting with LSTNet-Skip (Lai, Chang, Yang and Liu 2018): a convolution, a GRU, a recurrent-skip GRU and an autoregressive highway, translated from the authors' PyTorch code into Lux and tested against it, on any GPU or the CPU; with the evaluation of the article: the 60/20/20 split, the RSE and CORR at horizons 3, 6, 12 and 24."
+version = "0.1.0"
+
+citation = "Lai, G., Chang, W.-C., Yang, Y. and Liu, H. (2018). Modeling long- and short-term temporal patterns with deep neural networks. In SIGIR '18: The 41st International ACM SIGIR Conference on Research and Development in Information Retrieval, 95-104."
+doi = "10.1145/3209978.3210006"
+article = "https://arxiv.org/pdf/1703.07015"
+
+packages = ["Lux", "Optimisers", "Functors", "Enzyme", "Zygote", "MLDataDevices", "LinearAlgebra", "Statistics", "Random", "Tables"]
+
+usage = """
+using LSTNet, CSV, Tables, Downloads
+url = "https://raw.githubusercontent.com/laiguokun/multivariate-time-series-data/master/exchange_rate/exchange_rate.txt.gz"
+exchange = Tables.columntable(CSV.File(take!(Downloads.download(url, IOBuffer())); header = false))  # read into memory, not saved
+s = Split(exchange, 24)  # 60/20/20, each series divided by its largest value, forecasts 24 days ahead
+f = forecast(LSTNetSkip(SETTINGS["exchange"]), s)  # trains on a GPU if one is loaded (using CUDA, Metal, ...)
+evaluate(s, f.test)
+table2(exchange, "exchange")  # LSTNet-Skip's columns of the article's Table 2: RSE and CORR, horizons 3, 6, 12, 24
+"""
+
+[inputs.electricity]
+url = "https://raw.githubusercontent.com/laiguokun/multivariate-time-series-data/master/electricity/electricity.txt.gz"
+header = false
+source = "Hourly electricity consumption of 321 clients, 2012-2014, from the UCI ElectricityLoadDiagrams20112014 data, as Lai et al. prepared it (laiguokun/multivariate-time-series-data). Fetched, not kept: the repository has no licence."
+
+[inputs.exchange]
+url = "https://raw.githubusercontent.com/laiguokun/multivariate-time-series-data/master/exchange_rate/exchange_rate.txt.gz"
+header = false
+source = "Daily exchange rates of Australia, Britain, Canada, Switzerland, China, Japan, New Zealand and Singapore, 1990-2016 (laiguokun/multivariate-time-series-data). Fetched, not kept: the repository has no licence."
+
+[inputs.solar]
+url = "https://raw.githubusercontent.com/laiguokun/multivariate-time-series-data/master/solar-energy/solar_AL.txt.gz"
+header = false
+source = "Solar power of 137 photovoltaic plants in Alabama every 10 minutes in 2006, from NREL (laiguokun/multivariate-time-series-data). Fetched, not kept: the repository has no licence."
+
+[inputs.traffic]
+url = "https://raw.githubusercontent.com/laiguokun/multivariate-time-series-data/master/traffic/traffic.txt.gz"
+header = false
+source = "Hourly occupancy rates of 862 San Francisco Bay Area freeway sensors, 2015-2016, from the California Department of Transportation's PeMS (laiguokun/multivariate-time-series-data). Fetched, not kept: the repository has no licence."
+
+[targets.electricity]
+source = "Table 2 (p. 101), Electricity: RSE and CORR of LSTNet-Skip at horizons 3, 6, 12 and 24"
+call = "table2(electricity, \"electricity\")"
+tolerance = 100
+
+[targets.exchange]
+source = "Table 2 (p. 101), Exchange-Rate: RSE and CORR of LSTNet-Skip at horizons 3, 6, 12 and 24"
+call = "table2(exchange, \"exchange\")"
+tolerance = 100
+
+[targets.solar]
+source = "Table 2 (p. 101), Solar-Energy: RSE and CORR of LSTNet-Skip at horizons 3, 6, 12 and 24"
+call = "table2(solar, \"solar\")"
+tolerance = 100
+
+[targets.traffic]
+source = "Table 2 (p. 101), Traffic: RSE and CORR of LSTNet-Skip at horizons 3, 6, 12 and 24"
+call = "table2(traffic, \"traffic\")"
+tolerance = 100

@@ -1,0 +1,45 @@
+diff -ru original/main.py code/main.py
+--- original/main.py	2026-10-14 12:32:56
++++ code/main.py	2026-10-14 12:32:56
+@@ -29,8 +29,8 @@
+             test = torch.cat((test, Y));
+         
+         scale = data.scale.expand(output.size(0), data.m)
+-        total_loss += evaluateL2(output * scale, Y * scale).data[0]
+-        total_loss_l1 += evaluateL1(output * scale, Y * scale).data[0]
++        total_loss += evaluateL2(output * scale, Y * scale).item()
++        total_loss_l1 += evaluateL1(output * scale, Y * scale).item()
+         n_samples += (output.size(0) * data.m);
+     rse = math.sqrt(total_loss / n_samples)/data.rse
+     rae = (total_loss_l1/n_samples)/data.rae
+@@ -57,7 +57,7 @@
+         loss = criterion(output * scale, Y * scale);
+         loss.backward();
+         grad_norm = optim.step();
+-        total_loss += loss.data[0];
++        total_loss += loss.item();
+         n_samples += (output.size(0) * data.m);
+     return total_loss / n_samples
+     
+@@ -165,6 +165,6 @@
+ 
+ # Load the best saved model.
+ with open(args.save, 'rb') as f:
+-    model = torch.load(f)
++    model = torch.load(f, weights_only=False)
+ test_acc, test_rae, test_corr  = evaluate(Data, Data.test[0], Data.test[1], model, evaluateL2, evaluateL1, args.batch_size);
+ print ("test rse {:5.4f} | test rae {:5.4f} | test corr {:5.4f}".format(test_acc, test_rae, test_corr))
+diff -ru original/models/LSTNet.py code/models/LSTNet.py
+--- original/models/LSTNet.py	2026-10-14 12:32:56
++++ code/models/LSTNet.py	2026-10-14 12:32:56
+@@ -12,8 +12,8 @@
+         self.hidC = args.hidCNN;
+         self.hidS = args.hidSkip;
+         self.Ck = args.CNN_kernel;
+-        self.skip = args.skip;
+-        self.pt = (self.P - self.Ck)/self.skip
++        self.skip = int(args.skip);
++        self.pt = int((self.P - self.Ck)/self.skip)
+         self.hw = args.highway_window
+         self.conv1 = nn.Conv2d(1, self.hidC, kernel_size = (self.Ck, self.m));
+         self.GRU1 = nn.GRU(self.hidC, self.hidR);

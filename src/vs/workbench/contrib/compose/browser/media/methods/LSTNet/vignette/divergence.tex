@@ -1,0 +1,83 @@
+% The box on numerical divergence, \input into LSTNet.tex. The values are from crosstest/authors/replay.json and
+% rounding.json and from the scripts in crosstest/divergence (14 October 2026)
+\begin{pbox}[breakable]{Same code, same data, same random numbers: why the numbers still part}
+Cross-test D gives both codes everything that could make them differ, except the code itself: the artificial data, the
+authors' initial weights, their batch order for all 100 epochs (600 steps), and dropout 0, so no random numbers are
+drawn at all. Both train in float32: the authors' data, scale and weights are float32 (\fn{torch.zeros}, \fn{.float()},
+PyTorch's default), and ours are \fn{Float32} throughout. Still, their numbers part after 10 to 51 epochs:
+
+\begin{valuetable}{@{}lccccc@{}}
+\textbf{Case} & \textbf{Epoch kept} & \textbf{Test RSE} & \textbf{Test CORR} & \textbf{Epoch valid RSE} \\
+ & Julia / authors & Julia / authors & Julia / authors & \textbf{0.1\,\% apart} \\\midrule
+seasonal, $h = 3$  & 100 / 100 & 0.1783 / 0.1800 & 0.9788 / 0.9787 & 14 \\
+seasonal, $h = 12$ & 98 / 92   & 0.1909 / 0.1922 & 0.9755 / 0.9750 & 10 \\
+trend, $h = 3$     & 99 / 99   & 0.1126 / 0.1094 & 0.8123 / 0.8129 & 51 \\
+trend, $h = 12$    & 93 / 79   & 0.1182 / 0.1165 & 0.7517 / 0.7498 & 19 \\
+constant, $h = 3$  & 32 / 38   & 0.4426 / 0.4421 & 0.9616 / 0.9618 & 15 \\
+constant, $h = 12$ & 98 / 67   & 0.4217 / 0.4174 & 0.9696 / 0.9689 & 21 \\
+\end{valuetable}
+
+\nmsub{Not the code: rounding}
+Every arithmetic operation in float32 rounds its result to about 7 significant digits. PyTorch and Julia do the same
+operations in a different order (sums of many terms, the matrix products of BLAS), so each rounds a little differently,
+at every step. After one step the two codes' weights are $2.9\times10^{-8}$ apart (relative distance), after 100 steps
+$5.9\times10^{-7}$, after 230 steps $1.8\times10^{-6}$: a drift, still far below any digit printed.
+
+\nmsub{The switch that amplifies it: ReLU}
+The convolution's outputs pass through a ReLU, which is a switch: an input just above zero passes, one just below gives
+zero, and so does its gradient. When an input lies closer to zero than the gap between the two codes, the codes put it
+on opposite sides, and from then on they compute different gradients. We traced the trend case, $h = 3$, step by step:
+at every step the 3022 pre-activations that PyTorch had within $10^{-4}$ of zero, compared with Julia's.
+
+\begin{valuetable}{@{}lXl@{}}
+\textbf{Step} & \textbf{Event} & \textbf{Weight distance}\\\midrule
+1--230 & rounding only & $2.9\times10^{-8}$ to $1.8\times10^{-6}$\\
+232 & first flip, filter 5: Julia $+2.6\times10^{-6}$, PyTorch $-1.2\times10^{-7}$ (8 positions) & $1.8\times10^{-6}$\\
+249 & flip, filter 5 (5 positions) & $1.8\times10^{-6}$\\
+275 & flip, filter 5: Julia $+1.1\times10^{-5}$, PyTorch $-5.2\times10^{-5}$ (10 positions) & $3.7\times10^{-6}$\\
+280--300 & more flips, at steps 284, 285, 286, 287, 291, \dots & $8.8\times10^{-6}$ to $1.3\times10^{-4}$\\
+400, 600 & & $9.2\times10^{-3}$, $1.6\times10^{-2}$\\
+\end{valuetable}
+
+The positions that flip at one step are one stretch of the data seen by several overlapping windows of the batch (data
+rows 390, 82 and 517 at steps 232, 249 and 275), not a dead filter: filter 5's weights are as large as the others'.
+Why the flip at step 275 starts the growth, and those at 232 and 249 leave the distance where it was, we have not
+established.
+
+\nmsub{The authors' code against itself}
+How much of this is the translation? We ran the authors' code twice with everything the same but every initial weight
+moved by one float32 rounding unit (about $10^{-7}$ relative): up, down, and three times up or down at random. In
+lockstep, on the seasonal case, $h = 3$, the two runs are $8\times10^{-8}$ apart at step 1 and $2.6\times10^{-7}$ at
+step 115; at step 116 an input $5\times10^{-7}$ from zero flips, and the distance is $1.3\times10^{-6}$, then
+$2.1\times10^{-4}$ at step 130, $1.8\times10^{-3}$ at 150 and about $8\times10^{-3}$ at 600. For the trend case the first
+flip comes at step 452; for seasonal, $h = 12$, none comes in 600 steps ($6.1\times10^{-7}$ at the end). Over the five
+nudged runs, the test RSE of the epoch kept is
+
+\begin{valuetable}{@{}lXl@{}}
+\textbf{Case} & \textbf{Test RSE of the authors' code, 5 nudged runs} & \textbf{Epochs kept}\\\midrule
+seasonal, $h = 3$  & 0.1800 to 0.1802 & 84 to 100\\
+seasonal, $h = 12$ & 0.1922 in all five & 92\\
+trend, $h = 3$     & 0.1090 to 0.1108 & 95 to 99\\
+trend, $h = 12$    & 0.1165 in all five & 79\\
+constant, $h = 3$  & 0.4421 to 0.4422 & 32 or 38\\
+constant, $h = 12$ & 0.4172 to 0.4197 & 67 to 85\\
+\end{valuetable}
+
+So one rounding unit, once, moves the authors' own results by up to 1.6\,\% (trend, $h = 3$) and the epoch kept by up to
+18. Julia against PyTorch differ by rounding at every operation, so they part sooner and in every case, by up to
+2.9\,\% (trend, $h = 3$). After parting, neither run gets worse: they settle at different solutions, equally good.
+
+\nmsub{What this means for a replication}
+\begin{itemize}
+  \item \textbf{Test a translation with the same random numbers, step by step.} Only there can it agree to the last
+    digits: here the forecasts to $1.8\times10^{-7}$ (A) and every gradient norm of 3 epochs to $1.1\times10^{-6}$ (B).
+  \item \textbf{Measure the original against itself.} A one-unit nudge of its starting point shows how far rounding alone
+    moves its results; a translation that differs by no more has nothing left to explain.
+  \item \textbf{A single published run carries this spread.} Table~2 reports one run per cell, so its values are uncertain
+    by at least as much, before any change of seed, hardware or library.
+  \item \textbf{The epoch kept is fragile.} Near the end the validation RSE is nearly flat, so the smallest moves from one
+    epoch to another with the least change.
+\end{itemize}
+The traces are reproducible: \fn{crosstest/divergence/lockstep.py} (the authors' code against itself),
+\fn{trace.py} and \fn{trace.jl} (Julia against PyTorch, step by step).
+\end{pbox}

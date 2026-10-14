@@ -1,0 +1,3 @@
+label,"Solar-Energy, horizon 3","Solar-Energy, horizon 6","Solar-Energy, horizon 12","Solar-Energy, horizon 24"
+"LSTNet-Skip, RSE",0.1843,0.2559,0.3254,0.4643
+"LSTNet-Skip, CORR",0.9843,0.9690,0.9467,0.8870
