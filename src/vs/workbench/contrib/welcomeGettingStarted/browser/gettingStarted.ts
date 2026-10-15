@@ -125,6 +125,8 @@ const JULIA_REPL_VERSION_KEY = 'julia.replVersion';
 const DISMISSED_ANNOUNCEMENTS_KEY = 'pollis.welcome.dismissedAnnouncements';
 // Pollis: the ids of the PollisDatasets the user has seen; datasets added since are announced.
 const SEEN_DATASETS_KEY = 'pollis.welcome.seenDatasets';
+// Pollis: the ids in the PollisDatasets catalogue when it was last read; an update announces only what it adds.
+const LISTED_DATASETS_KEY = 'pollis.welcome.listedDatasets';
 /**
  * Pollis: a dataset of PollisDatasets.jl, as listed in the catalogue that PollisDB.catalogue() writes.
  */
@@ -472,7 +474,7 @@ export class GettingStartedPage extends EditorPane {
 				if (argument === 'juliaReady') {
 					this.juliaNewlyInstalled = undefined;
 				} else if (argument === 'datasetsAdded') {
-					this.storeSeenDatasets(this.pollisDatasets ?? []);
+					this.storeSeenDatasets((this.pollisDatasets ?? []).map(d => d.id));
 				} else {
 					this.storageService.store(DISMISSED_ANNOUNCEMENTS_KEY, JSON.stringify([...this.getDismissedAnnouncements(), argument]), StorageScope.APPLICATION, StorageTarget.USER);
 				}
@@ -1052,7 +1054,16 @@ export class GettingStartedPage extends EditorPane {
 			this.pollisDatasets = await this.readPollisDatasets(catalogue);
 			// The first catalogue read is what the user already has: nothing is new.
 			if (this.pollisDatasets && this.storageService.get(SEEN_DATASETS_KEY, StorageScope.APPLICATION) === undefined) {
-				this.storeSeenDatasets(this.pollisDatasets);
+				this.storeSeenDatasets(this.pollisDatasets.map(d => d.id));
+			}
+			// An update that adds datasets replaces the announcement of the previous one: what was listed before
+			// counts as seen, even if its announcement was not dismissed.
+			if (this.pollisDatasets) {
+				const listed = this.getStoredDatasetIds(LISTED_DATASETS_KEY);
+				if (this.pollisDatasets.some(d => !listed.includes(d.id))) {
+					this.storeSeenDatasets(listed);
+					this.storageService.store(LISTED_DATASETS_KEY, JSON.stringify(this.pollisDatasets.map(d => d.id)), StorageScope.APPLICATION, StorageTarget.MACHINE);
+				}
 			}
 			renderAlerts();
 		};
@@ -1116,20 +1127,23 @@ export class GettingStartedPage extends EditorPane {
 		}
 	}
 
-	private getSeenDatasets(): string[] {
+	/**
+	 * Pollis: the dataset ids stored under `key`, or none when there are none or they cannot be read.
+	 */
+	private getStoredDatasetIds(key: string): string[] {
 		try {
-			const seen = JSON.parse(this.storageService.get(SEEN_DATASETS_KEY, StorageScope.APPLICATION, '[]'));
-			return Array.isArray(seen) ? seen : [];
+			const ids = JSON.parse(this.storageService.get(key, StorageScope.APPLICATION, '[]'));
+			return Array.isArray(ids) ? ids : [];
 		} catch {
 			return [];
 		}
 	}
 
 	/**
-	 * Pollis: records `datasets` as seen, keeping those seen before, so that only datasets added later are announced.
+	 * Pollis: records the datasets `ids` as seen, keeping those seen before, so that only datasets added later are announced.
 	 */
-	private storeSeenDatasets(datasets: IPollisDataset[]): void {
-		const seen = new Set([...this.getSeenDatasets(), ...datasets.map(d => d.id)]);
+	private storeSeenDatasets(ids: string[]): void {
+		const seen = new Set([...this.getStoredDatasetIds(SEEN_DATASETS_KEY), ...ids]);
 		this.storageService.store(SEEN_DATASETS_KEY, JSON.stringify([...seen]), StorageScope.APPLICATION, StorageTarget.USER);
 	}
 
@@ -1138,7 +1152,7 @@ export class GettingStartedPage extends EditorPane {
 	 * PollisDatasets.jl when a Julia REPL starts, so the datasets are announced once they are installed.
 	 */
 	private buildDatasetsAnnouncement(): HTMLElement | undefined {
-		const seen = new Set(this.getSeenDatasets());
+		const seen = new Set(this.getStoredDatasetIds(SEEN_DATASETS_KEY));
 		const added = (this.pollisDatasets ?? []).filter(d => !seen.has(d.id));
 		if (!added.length) {
 			return undefined;

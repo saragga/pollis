@@ -54,7 +54,7 @@ const DATASETS_STAMP = DATASETS_DB * ".stamp"
 """The ids and titles of the installed PollisDatasets, read by the welcome page to announce new datasets."""
 const DATASETS_CATALOGUE = joinpath(homedir(), ".pollis", "databases", "PollisDatasets.json")
 
-"""The folder of the snapshots, one `<id>.json` per connection, watched by the Databases view."""
+"""The folder of the snapshots, one `<id>.<window>.json` per connection, watched by the Databases view."""
 const SESSIONS = joinpath(homedir(), ".pollis", "databases", "sessions")
 
 """A connection shown in the Databases view, and the name it is shown with."""
@@ -66,7 +66,9 @@ end
 const CONNECTIONS = Dict{String,Entry}()
 const COUNTER = Ref(0)
 
-snapshot_path(id::AbstractString) = joinpath(SESSIONS, "$id.json")
+# The Pollis window whose REPL this is: each window's Databases view shows only the snapshots of its own REPL.
+const WINDOW = get(ENV, "POLLIS_WINDOW", "")
+snapshot_path(id::AbstractString) = joinpath(SESSIONS, isempty(WINDOW) ? "$id.json" : "$id.$WINDOW.json")
 
 loaded(id::Base.PkgId) = get(Base.loaded_modules, id) do
     error("PollisDB: $(id.name).jl is not loaded; run the connection code first")
@@ -164,7 +166,7 @@ end
 
 """Write the snapshot of connection `id`, or of its introspection error. Written atomically."""
 function write_snapshot(id::AbstractString, entry::Entry)
-    snapshot = Dict{String,Any}("id" => id, "name" => entry.name, "engine" => engine(entry.con), "updated" => string(now()), "pid" => getpid())
+    snapshot = Dict{String,Any}("id" => id, "name" => entry.name, "engine" => engine(entry.con), "updated" => string(now()), "pid" => getpid(), "window" => WINDOW)
     try
         snapshot["schemas"] = introspect(entry.con)
     catch err

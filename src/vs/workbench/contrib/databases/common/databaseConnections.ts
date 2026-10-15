@@ -41,6 +41,8 @@ export interface IDatabaseSession {
 	readonly engine: string;
 	/** When the schemas were last read, as an ISO date-time in the REPL's local time. */
 	readonly updated: string;
+	/** The id of the Pollis window whose REPL opened the connection. */
+	readonly window?: string;
 	readonly schemas: readonly IDatabaseSchema[];
 	/** Why the schemas could not be read, if they could not. */
 	readonly error?: string;

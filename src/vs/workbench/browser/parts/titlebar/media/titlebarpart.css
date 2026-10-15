@@ -72,28 +72,27 @@
 	align-items: center;
 }
 
+/* Pollis: the menus (left) and the buttons (right) first take the width they need and only the leftover is shared, instead of equal shares that left the right side empty while menus went into the overflow menu; when space is short the search box (center) gives way first, and only then do menus go into the overflow menu */
 .monaco-workbench .part.titlebar > .titlebar-container.has-center > .titlebar-left {
 	order: 0;
-	width: 20%;
-	flex-grow: 2;
+	flex: 1 1 auto;
+	min-width: 0;
 	justify-content: flex-start;
 }
 
 .monaco-workbench .part.titlebar > .titlebar-container.has-center > .titlebar-center {
 	order: 1;
-	width: 60%;
+	flex: 0 1000 auto;
 	max-width: fit-content;
 	min-width: 0px;
 	margin: 0 10px;
-	/* flex-shrink: 10; */
 	justify-content: center;
 }
 
 .monaco-workbench .part.titlebar > .titlebar-container.has-center > .titlebar-right {
 	order: 2;
-	width: 20%;
+	flex: 1 0 auto;
 	min-width: min-content;
-	flex-grow: 2;
 	justify-content: flex-end;
 }
 

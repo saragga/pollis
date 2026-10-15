@@ -112,7 +112,6 @@ export class OverlayWebview extends Disposable implements IOverlayWebview {
 			// // Mount them to a high level node to avoid this depending on the active container.
 			const root = this._layoutService.getContainer(this.window);
 			root.appendChild(this._overlayLayout.root);
-			this._overlayLayout.root.style.zIndex = '2541'; // One level above the modals
 		}
 
 		return this._overlayLayout.content;
@@ -187,6 +186,9 @@ export class OverlayWebview extends Disposable implements IOverlayWebview {
 		if (!this._overlayLayout || !this._overlayLayout.content.parentElement) {
 			return;
 		}
+
+		// Pollis: one level above the modals only inside a modal editor, so that webviews elsewhere stay below the custom menus (Windows, Linux)
+		this._overlayLayout.root.style.zIndex = anchorElement.closest('.modal-editor-part') ? '2541' : '';
 
 		this._overlayLayout?.layoutOverAnchorElement(anchorElement, { clippingContainer, fallbackDimension: dimension });
 	}

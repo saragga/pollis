@@ -42,6 +42,9 @@ let g_compiledProvider = null
 export const g_evalQueue = fastq(sendEvalRequest, 1)
 
 let g_terminal: vscode.Terminal = null
+// POLLIS: identifies this window's REPL to PollisDB, which names its connection snapshots with it, so that the
+// Databases view of each window shows only the connections of its own REPL.
+const POLLIS_WINDOW = randomUUID()
 
 export let g_connection: rpc.MessageConnection = undefined
 export let g_replDebugPipename: string | undefined = undefined
@@ -235,6 +238,7 @@ export async function startREPL(
         ...getCustomEnvironmentVariables(),
         JULIA_EDITOR: getEditor(),
         JULIA_VSCODE_REPL: isPersistentSession ? null : '1',
+        POLLIS_WINDOW: POLLIS_WINDOW,
     }
 
     if (nthreads !== undefined && nthreads !== 'auto') {
@@ -1309,6 +1313,7 @@ export function activate(
 ) {
     g_context = context
     g_ExecutableFeature = ExecutableFeature
+    setContext('julia.pollisWindow', POLLIS_WINDOW)
     g_languageClientFeature = languageClientFeature
 
     g_compiledProvider = compiledProvider

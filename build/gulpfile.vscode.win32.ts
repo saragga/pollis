@@ -131,7 +131,8 @@ function buildWin32Setup(arch: string, target: string): task.CallbackTask {
 			definitions['ProxyMutex'] = embedded.win32MutexName;
 		}
 
-		if (quality === 'stable' || quality === 'insider') {
+		// Pollis: no Windows 11 context menu package (see gulpfile.vscode.ts), so the installer has no appx to install
+		if ((quality === 'stable' || quality === 'insider') && (product as { win32ContextMenu?: unknown }).win32ContextMenu) {
 			definitions['AppxPackage'] = `${quality === 'stable' ? 'code' : 'code_insider'}_${arch}.appx`;
 			definitions['AppxPackageDll'] = `${quality === 'stable' ? 'code' : 'code_insider'}_explorer_command_${arch}.dll`;
 			definitions['AppxPackageName'] = `${product.win32AppUserModelId}`;

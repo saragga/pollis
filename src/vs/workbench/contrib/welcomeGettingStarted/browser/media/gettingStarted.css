@@ -901,6 +901,8 @@
 
 .monaco-workbench .part.editor > .content .gettingStartedContainer .button-link:hover {
 	background: transparent;
+	/* Pollis: links underline on hover, as elsewhere in Pollis */
+	text-decoration: underline;
 }
 
 .monaco-workbench .part.editor > .content .gettingStartedContainer .gettingStartedSlide .openAWalkthrough > button,

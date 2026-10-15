@@ -8,6 +8,7 @@ import { Emitter } from '../../../../base/common/event.js';
 import { Disposable, DisposableStore } from '../../../../base/common/lifecycle.js';
 import { joinPath } from '../../../../base/common/resources.js';
 import { URI } from '../../../../base/common/uri.js';
+import { IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
 import { IFileService } from '../../../../platform/files/common/files.js';
 import { ILogService } from '../../../../platform/log/common/log.js';
 import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
@@ -16,6 +17,8 @@ import { IDatabaseConnectionsService, IDatabaseSession } from '../common/databas
 import { BUILTIN_DATABASE_ID, DatabaseConnectionTarget, IDatabaseConnectionProfile } from '../common/databaseDrivers.js';
 
 const STORAGE_KEY = 'pollis.databases.connections';
+// Set by the Julia extension: the id of this window's REPL, which PollisDB writes into its snapshots.
+const JULIA_POLLIS_WINDOW_KEY = 'julia.pollisWindow';
 
 function storageScope(target: DatabaseConnectionTarget): StorageScope.PROFILE | StorageScope.WORKSPACE {
 	return target === 'global' ? StorageScope.PROFILE : StorageScope.WORKSPACE;
@@ -24,7 +27,7 @@ function storageScope(target: DatabaseConnectionTarget): StorageScope.PROFILE | 
 /**
  * Keeps the connection profiles as JSON arrays in profile storage (global) and workspace storage,
  * lists the built-in Pollis database before them, and follows the REPL connections through the snapshots PollisDB writes to
- * ~/.pollis/databases/sessions/<profile id>.json.
+ * ~/.pollis/databases/sessions/<profile id>.<window>.json, keeping only those of this window's REPL.
  */
 export class DatabaseConnectionsService extends Disposable implements IDatabaseConnectionsService {
 
@@ -43,6 +46,7 @@ export class DatabaseConnectionsService extends Disposable implements IDatabaseC
 		@IFileService private readonly fileService: IFileService,
 		@IPathService pathService: IPathService,
 		@ILogService private readonly logService: ILogService,
+		@IContextKeyService private readonly contextKeyService: IContextKeyService,
 	) {
 		super();
 		// Profile storage is shared between windows, so pick up profiles saved in another window.
@@ -110,11 +114,18 @@ export class DatabaseConnectionsService extends Disposable implements IDatabaseC
 			// Already there.
 		}
 		this._register(this.fileService.createWatcher(this.sessionsFolder, { recursive: false, excludes: [] }).onDidChange(() => this.sessionsScheduler.schedule()));
+		this._register(this.contextKeyService.onDidChangeContext(e => {
+			if (e.affectsSome(new Set([JULIA_POLLIS_WINDOW_KEY]))) {
+				this.sessionsScheduler.schedule();
+			}
+		}));
 		await this.readSessions();
 	}
 
 	private async readSessions(): Promise<void> {
 		const sessions = new Map<string, IDatabaseSession>();
+		// Other windows, and other Pollis apps, write their REPLs' snapshots to the same folder.
+		const window = this.contextKeyService.getContextKeyValue<string>(JULIA_POLLIS_WINDOW_KEY);
 		try {
 			const folder = await this.fileService.resolve(this.sessionsFolder);
 			for (const child of folder.children ?? []) {
@@ -123,7 +134,9 @@ export class DatabaseConnectionsService extends Disposable implements IDatabaseC
 				}
 				try {
 					const session: IDatabaseSession = JSON.parse((await this.fileService.readFile(child.resource)).value.toString());
-					sessions.set(session.id, session);
+					if (window && session.window === window) {
+						sessions.set(session.id, session);
+					}
 				} catch (error) {
 					this.logService.warn(`[Databases] Could not read the session snapshot ${child.resource.fsPath}: ${error}`);
 				}
