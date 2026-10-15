@@ -98,13 +98,13 @@ async function newerRelease(requestService: IRequestService, productService: IPr
 	return compareVersions(release.version, productService.pollisVersion ?? '0') > 0 ? release : undefined;
 }
 
-/** Announces a newer release, with buttons to download it and to read its notes. */
+/** Announces a newer release, with buttons to download it and to read its What's New. */
 function announce(notificationService: INotificationService, openerService: IOpenerService, productService: IProductService, release: IRelease): void {
 	notificationService.prompt(Severity.Info,
 		localize('pollisUpdate.available', "Pollis {0} is available (you have {1}). Download it and replace this Pollis with it.", release.version, productService.pollisVersion ?? '?'),
 		[
 			{ label: localize('pollisUpdate.download', "Download"), run: () => openerService.open(URI.parse(`${RELEASES}/latest/download/${assetName()}`), { openExternal: true }) },
-			{ label: localize('pollisUpdate.notes', "Release Notes"), run: () => openerService.open(URI.parse(release.notes), { openExternal: true }) },
+			{ label: localize('pollisUpdate.whatsNew', "What's New"), run: () => openerService.open(URI.parse(release.notes), { openExternal: true }) },
 		]);
 }
 
