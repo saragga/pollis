@@ -88,6 +88,7 @@ import { CrossAppUpdateCoordinator } from '../../platform/update/electron-main/c
 import { MacOSCrossAppSecretSharing } from '../../platform/secrets/electron-main/macOSCrossAppSecretSharing.js';
 import { DarwinUpdateService } from '../../platform/update/electron-main/updateService.darwin.js';
 import { LinuxUpdateService } from '../../platform/update/electron-main/updateService.linux.js';
+import { PollisUpdateService } from '../../platform/update/electron-main/updateService.pollis.js';
 import { SnapUpdateService } from '../../platform/update/electron-main/updateService.snap.js';
 import { Win32UpdateService } from '../../platform/update/electron-main/updateService.win32.js';
 import { IOpenURLOptions, IURLService } from '../../platform/url/common/url.js';
@@ -1054,23 +1055,27 @@ export class CodeApplication extends Disposable {
 	private async initServices(machineId: string, sqmId: string, devDeviceId: string, sharedProcessReady: Promise<MessagePortClient>): Promise<IInstantiationService> {
 		const services = new ServiceCollection();
 
-		// Update
-		switch (process.platform) {
-			case 'win32':
-				services.set(IUpdateService, new SyncDescriptor(Win32UpdateService));
-				break;
+		// Update: Pollis has its own releases on GitHub, on every platform
+		if (this.productService.pollisVersion) {
+			services.set(IUpdateService, new SyncDescriptor(PollisUpdateService));
+		} else {
+			switch (process.platform) {
+				case 'win32':
+					services.set(IUpdateService, new SyncDescriptor(Win32UpdateService));
+					break;
 
-			case 'linux':
-				if (isLinuxSnap) {
-					services.set(IUpdateService, new SyncDescriptor(SnapUpdateService, [process.env['SNAP'], process.env['SNAP_REVISION']]));
-				} else {
-					services.set(IUpdateService, new SyncDescriptor(LinuxUpdateService));
-				}
-				break;
+				case 'linux':
+					if (isLinuxSnap) {
+						services.set(IUpdateService, new SyncDescriptor(SnapUpdateService, [process.env['SNAP'], process.env['SNAP_REVISION']]));
+					} else {
+						services.set(IUpdateService, new SyncDescriptor(LinuxUpdateService));
+					}
+					break;
 
-			case 'darwin':
-				services.set(IUpdateService, new SyncDescriptor(DarwinUpdateService));
-				break;
+				case 'darwin':
+					services.set(IUpdateService, new SyncDescriptor(DarwinUpdateService));
+					break;
+			}
 		}
 
 		// Windows
