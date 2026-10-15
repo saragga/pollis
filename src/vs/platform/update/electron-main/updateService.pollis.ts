@@ -21,9 +21,9 @@ import { AbstractUpdateService } from './abstractUpdateService.js';
  * Updates of Pollis on macOS, Windows and Linux. The update URL in product.json is GitHub's API for the latest
  * release of the Pollis repository; a release whose tag (vX.Y.Z) is newer than this Pollis's pollisVersion is
  * offered for download, which the workbench shows as it shows VS Code's updates (the badge on the Manage
- * gear, Download Update in its menu and in the application menu). The apps are not signed and ship as
- * archives, so Pollis does not install the update itself: Download opens the release's file for this
- * system in the browser, as VS Code does for its Linux archives.
+ * gear, Download Update in its menu and in the application menu). The apps are not signed, so Pollis does not
+ * install the update itself: Download opens the release's file for this system in the browser, the installer
+ * on Windows (run over an installed Pollis, it updates it) and the archive on macOS and Linux.
  */
 export class PollisUpdateService extends AbstractUpdateService {
 
@@ -49,7 +49,7 @@ export class PollisUpdateService extends AbstractUpdateService {
 	/** The release file for this system, as the release workflows name it. */
 	private assetName(): string {
 		switch (process.platform) {
-			case 'win32': return 'Pollis-win32-x64.zip';
+			case 'win32': return 'PollisSetup-x64.exe';
 			case 'linux': return 'Pollis-linux-x64.tar.gz';
 			default: return 'Pollis-darwin-arm64.zip';
 		}
