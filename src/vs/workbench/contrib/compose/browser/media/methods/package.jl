@@ -5,9 +5,10 @@
 # 5 characters, a usage example, a docstring for every exported name) is registered in the registry at URL
 # (LocalRegistry.jl). The rules are checked, and reported, every time. A registered package with a vignette
 # (vignette/NAME.pdf) also gets an entry in Vignettes.toml at the registry's root, the list that
-# Help > Documentation > Vignettes shows.
+# Help > Documentation > Vignettes shows. With --no-tests, the tests are written but not run, to push or
+# register packages already tested and unchanged since.
 #
-#   julia package.jl PACKAGES_FOLDER METHOD_FOLDER... [--push OWNER [--register REGISTRY_URL]]
+#   julia package.jl PACKAGES_FOLDER METHOD_FOLDER... [--no-tests] [--push OWNER [--register REGISTRY_URL]]
 #
 # A method folder holds method.toml (name, title, author, description, citation, version, usage (Julia code
 # that shows how to call the method, for the README), packages, and a
@@ -38,7 +39,9 @@ end
 function arguments(args)
 	owner, args = option(args, "--push")
 	registry, args = option(args, "--register")
-	return args[1], args[2:end], owner, registry
+	skip = "--no-tests" in args
+	args = filter(!=("--no-tests"), args)
+	return args[1], args[2:end], owner, registry, skip
 end
 
 const MINIMUM_NAME = 5
@@ -284,13 +287,17 @@ function publish(root, name, owner)
 end
 
 function main(args)
-	packages, folders, owner, registry = arguments(args)
+	packages, folders, owner, registry, skip = arguments(args)
 	failed = String[]
 	for folder in folders
 		try
 			root, name, method = package(packages, folder)
-			Pkg.test()
-			println("\n$name: all tests pass.")
+			if skip
+				println("\n$name: tests not run (--no-tests).")
+			else
+				Pkg.test()
+				println("\n$name: all tests pass.")
+			end
 			problems = registry_problems(root, name, method)
 			if isempty(problems)
 				println("$name meets the Pollis registry rules.")
