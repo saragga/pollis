@@ -2,15 +2,15 @@ name: Pollis Windows
 
 # Pollis on Windows, on a GitHub-hosted runner. Runs the same fast checks as pollis-build.yml,
 # then the full minified build (`gulp vscode-win32-x64-min`), which assembles the app into
-# ../VSCode-win32-x64.
+# ../VSCode-win32-x64, and the per-user installer (build/win32/code.iss), PollisSetup-x64.exe.
 #
 # The build step runs even when a check fails, so that one run reports both. Manual trigger only:
 # a full build takes hours and nothing is cached yet.
 #
 # Workflow artifacts expire. To keep a build, set `release` to a version tag (v0.1.0): the zipped app
-# is attached to that GitHub release, which anyone can download without signing in, and
-# releases/latest/download/Pollis-win32-x64.zip always points at the newest one. Nothing is
-# attached when a check fails.
+# and the installer are attached to that GitHub release, which anyone can download without signing in,
+# and releases/latest/download/Pollis-win32-x64.zip and PollisSetup-x64.exe always point at the newest
+# ones. Nothing is attached when a check fails.
 
 on:
   workflow_dispatch:
@@ -127,6 +127,16 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Build installer
+        # The per-user installer needs no administrator rights; inno-updater adds the tool it runs on updates.
+        if: ${{ !cancelled() && inputs.package }}
+        shell: pwsh
+        run: |
+          . build/azure-pipelines/win32/exec.ps1
+          $ErrorActionPreference = "Stop"
+          exec { npm run gulp vscode-win32-x64-inno-updater }
+          exec { npm run gulp vscode-win32-x64-user-setup }
+
       - name: Report build output
         if: ${{ !cancelled() && inputs.package }}
         shell: bash
@@ -135,12 +145,16 @@ jobs:
           echo "packaged app:"
           du -sh ../VSCode-win32-x64
           ls -1 ../VSCode-win32-x64
+          echo "installer:"
+          ls -l .build/win32-x64/user-setup
 
       - name: Move packaged app into the workspace
         # upload-artifact rejects paths outside the workspace ('..').
         if: ${{ !cancelled() && inputs.package && (inputs.upload || inputs.release != '') }}
         shell: bash
-        run: mv ../VSCode-win32-x64 .build/VSCode-win32-x64
+        run: |
+          mv ../VSCode-win32-x64 .build/VSCode-win32-x64
+          mv .build/win32-x64/user-setup/VSCodeSetup.exe .build/PollisSetup-x64.exe
 
       - name: Upload packaged app
         if: ${{ !cancelled() && inputs.package && (inputs.upload || inputs.release != '') }}
@@ -148,6 +162,14 @@ jobs:
         with:
           name: Pollis-win32-x64
           path: .build/VSCode-win32-x64
+          retention-days: 3
+
+      - name: Upload installer
+        if: ${{ !cancelled() && inputs.package && (inputs.upload || inputs.release != '') }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: PollisSetup-x64
+          path: .build/PollisSetup-x64.exe
           retention-days: 3
 
   release:
@@ -166,6 +188,11 @@ jobs:
         with:
           name: Pollis-win32-x64
           path: Pollis-win32-x64
+
+      - name: Download installer
+        uses: actions/download-artifact@v8
+        with:
+          name: PollisSetup-x64
 
       - name: Archive packaged app
         run: zip -qr Pollis-win32-x64.zip Pollis-win32-x64
@@ -205,4 +232,4 @@ jobs:
           gh release view "$TAG" > /dev/null 2>&1 ||
             gh release create "$TAG" --target "$GITHUB_SHA" --title "Pollis $TAG" --notes "$NOTES" ||
             gh release view "$TAG" > /dev/null
-          gh release upload "$TAG" Pollis-win32-x64.zip --clobber
+          gh release upload "$TAG" Pollis-win32-x64.zip PollisSetup-x64.exe --clobber

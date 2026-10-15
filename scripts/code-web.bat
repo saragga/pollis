@@ -17,7 +17,7 @@ if not exist "%NODE%" (
 )
 
 :: Launch Server
-call "%NODE%" scripts\texttt-web.js %*
+call "%NODE%" scripts\code-web.js %*
 
 popd
 
