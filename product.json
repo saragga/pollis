@@ -2,7 +2,7 @@
 	"nameShort": "Pollis",
 	"nameLong": "Pollis",
 	"quality": "stable",
-	"pollisVersion": "0.2.3",
+	"pollisVersion": "0.2.4",
 	"startup": {
 		"onlyCreateJuliaRepl": true
 	},
