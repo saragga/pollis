@@ -19,10 +19,6 @@ github = "https://github.com/JuliaStats/GLM.jl"
 name = "CovarianceMatrices.jl"
 github = "https://github.com/gragusa/CovarianceMatrices.jl"
 
-[[packages]]
-name = "PollisDatasets.jl"
-github = "https://github.com/Trumpingtons/PollisDatasets.jl"
-
 [[notebookSections]]
 label = ""
 

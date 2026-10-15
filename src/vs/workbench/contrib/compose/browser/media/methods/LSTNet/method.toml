@@ -9,7 +9,7 @@ citation = "Lai, G., Chang, W.-C., Yang, Y. and Liu, H. (2018). Modeling long- a
 doi = "10.1145/3209978.3210006"
 article = "https://arxiv.org/pdf/1703.07015"
 
-packages = ["Lux", "Optimisers", "Functors", "Enzyme", "Zygote", "MLDataDevices", "LinearAlgebra", "Statistics", "Random", "Tables"]
+packages = ["Lux", "Optimisers", "Functors", "Enzyme", "Zygote", "MLDataDevices", "LinearAlgebra", "Statistics", "Random", "Serialization", "TOML", "Tables"]
 
 usage = """
 using LSTNet, CSV, Tables, Downloads
@@ -20,6 +20,11 @@ f = forecast(LSTNetSkip(SETTINGS["exchange"]), s)  # trains on a GPU if one is l
 evaluate(s, f.test)
 table2(exchange, "exchange")  # LSTNet-Skip's columns of the article's Table 2: RSE and CORR, horizons 3, 6, 12, 24
 """
+
+[tests]
+file = "crosstest/tests.jl"
+copy = ["crosstest/crosstest.jl", "crosstest/artificial", "crosstest/authors/reference.json"]
+packages = ["Lux", "Optimisers", "MLDataDevices", "JSON", "DelimitedFiles", "Random", "Statistics"]
 
 [inputs.electricity]
 url = "https://raw.githubusercontent.com/laiguokun/multivariate-time-series-data/master/electricity/electricity.txt.gz"
@@ -45,18 +50,22 @@ source = "Hourly occupancy rates of 862 San Francisco Bay Area freeway sensors, 
 source = "Table 2 (p. 101), Electricity: RSE and CORR of LSTNet-Skip at horizons 3, 6, 12 and 24"
 call = "table2(electricity, \"electricity\")"
 tolerance = 100
+run = "named"
 
 [targets.exchange]
 source = "Table 2 (p. 101), Exchange-Rate: RSE and CORR of LSTNet-Skip at horizons 3, 6, 12 and 24"
 call = "table2(exchange, \"exchange\")"
 tolerance = 100
+run = "named"
 
 [targets.solar]
 source = "Table 2 (p. 101), Solar-Energy: RSE and CORR of LSTNet-Skip at horizons 3, 6, 12 and 24"
 call = "table2(solar, \"solar\")"
 tolerance = 100
+run = "named"
 
 [targets.traffic]
 source = "Table 2 (p. 101), Traffic: RSE and CORR of LSTNet-Skip at horizons 3, 6, 12 and 24"
 call = "table2(traffic, \"traffic\")"
 tolerance = 100
+run = "named"

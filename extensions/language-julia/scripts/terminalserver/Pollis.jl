@@ -4,6 +4,12 @@ module Pollis
 
 const PKG = Base.PkgId(Base.UUID("44cfe95a-1eb2-52ea-b672-e2afdf69b78f"), "Pkg")
 
+"""The Julia environment of the packages built into Pollis (PollisDatasets, DuckDB), one per Julia minor version: PollisDB installs into it."""
+const ENVIRONMENT = joinpath(homedir(), ".pollis", "julia", "environments", "v$(VERSION.major).$(VERSION.minor)")
+
+# After the user's environments, so that their own versions of these packages come first.
+ENVIRONMENT in LOAD_PATH || push!(LOAD_PATH, ENVIRONMENT)
+
 """Pollis's own packages that are not in the General registry, so a bare name is enough."""
 const LINKS = Dict(
 	"PollisDatasets" => "https://github.com/Trumpingtons/PollisDatasets.jl",

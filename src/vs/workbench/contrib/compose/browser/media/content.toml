@@ -1,0 +1,198 @@
+# The content of Pollis that can be updated between releases, written by scripts/pollis-content.jl: Pollis
+# ships this list, and reads the one in the content repository once a day (pollisContent.ts).
+
+[[benchmarks]]
+added = "2026-10-14"
+files = ["garch.ipynb"]
+id = "garch"
+pollis = "0.2.3"
+sha256 = ["c46a872082fc1bb7d4a1a071fd88aebf707f837a49eb7369e2d8eeeadfa0e0ac"]
+title = "GARCH(1,1): the Fiorentini-Calzolari-Panattoni benchmark"
+updated = "2026-10-14"
+[[benchmarks]]
+added = "2026-10-14"
+files = ["AtmWtAg.dat", "SiRstv.dat", "SmLs01.dat", "SmLs02.dat", "SmLs03.dat", "SmLs04.dat", "SmLs05.dat", "SmLs06.dat", "SmLs07.dat", "SmLs08.dat", "SmLs09.dat", "anova.ipynb"]
+id = "nist-anova"
+pollis = "0.2.3"
+sha256 = ["41d7748bb1f870d8400017c53993eea65862ffd482aae1693be84d93245c303f", "c7dc09da0d6a9f37f80caff0f45fd688e883303120e2d776cfab94efb1b4ef13", "29d9c979d46d845ed72c0fb0ed79083c8313833bbcf72040326640d87e2e40e4", "9c23f2c51935740a123d6882ee41b874b697b3618bdfe2915d1b76370817a080", "eb23c78904a4d0a238a144503a4f7db7eb849be21937ef1e20f1dbff2d264355", "7c8f87a60245f5c7467418a7725855cce71608273964966e5da954c22ad5fa57", "8894da0165059fb0cf2d377d6d087f10c2842b50cf1b47e737cc64ec14253d11", "ae23a4613f8b46098984fa422b7db1ef16270f7f20c2787f128d57f0e2b778df", "42d492d7577ebe456fa9a204789ea8370c844f508aa3242a8e57c1976b133890", "aabc5043423a82786b79fca02b04f8f31f9bcfef25683f15a67edcf359c84d18", "aa610b390c8d947ec258e32df0f43467fcb1820f47c5ce25a993ae1d9c715ae7", "d045344eba238f4db9ce5e5c3f1c7af81e7e73d2d7701539de0571b66b7f44ef"]
+title = "NIST StRD: one-way analysis of variance"
+updated = "2026-10-14"
+[[benchmarks]]
+added = "2026-10-14"
+files = ["Filip.dat", "Longley.dat", "NoInt1.dat", "NoInt2.dat", "Norris.dat", "Pontius.dat", "Wampler1.dat", "Wampler2.dat", "Wampler3.dat", "Wampler4.dat", "Wampler5.dat", "linear.ipynb"]
+id = "nist-linear"
+pollis = "0.2.3"
+sha256 = ["1e8cb9a4644b1c6a8b1038eb46c59543814fa2a8d1ca31cb833040a75bf6a151", "c58ef65a2699826d55f134ddef27d09b9fb6ab4499fdd49a408b4cd5a63dc890", "4fc3255e9f2553e8961aafb23d0fa2b50899e898c43a29d486d80c4a28049913", "d3501d6dd0c86462e6a5279fbffa91741252868cd43ed9b18f6369479cb9823f", "cc3fd14d1c5fa891d5653000c9d7732c30db842cca49fc051abde1c19d67ab7d", "4a48abd813af0d8dc78f8a0762d353d34b73b2fffaa07e266b69fae7b2b0669d", "6e86af8620ba02368f0c61ee4065bf00e63e828a1b4914979747195c41e7a976", "ac45014c4c0d3744d9b92fa918d8f09afade7c2793a89afd5ce796334d9e215b", "f30660a33ca97f89f05aec66ad9d8a9b7b1b352d5c09e2dae7bd85515ed699cb", "db0f095b52778a8252b4ad9dafca7a8cf737be2c3d8e913832e84370dfb9947c", "dd00873dea76a3adb0f7e01be4a9d96f368983cb4be1a89517963a24d3d12afa", "ebfbf71d034e19fa98c634be5e9ed6aeca51859367e8717232bbb83da56a3fae"]
+title = "NIST StRD: linear regression"
+updated = "2026-10-14"
+[[benchmarks]]
+added = "2026-10-14"
+files = ["Bennett5.dat", "BoxBOD.dat", "Chwirut1.dat", "Chwirut2.dat", "DanWood.dat", "ENSO.dat", "Eckerle4.dat", "Gauss1.dat", "Gauss2.dat", "Gauss3.dat", "Hahn1.dat", "Kirby2.dat", "Lanczos1.dat", "Lanczos2.dat", "Lanczos3.dat", "MGH09.dat", "MGH10.dat", "MGH17.dat", "Misra1a.dat", "Misra1b.dat", "Misra1c.dat", "Misra1d.dat", "Nelson.dat", "Rat42.dat", "Rat43.dat", "Roszman1.dat", "Thurber.dat", "nonlinear.ipynb"]
+id = "nist-nonlinear"
+pollis = "0.2.3"
+sha256 = ["f5ac6bc6243acfcaf51e468a23476275d445c8f09e0f5fc5e29d7c48d3f0cf71", "f65e7b0cc5b1c96d95b9884d1729d49c74edc60d2153474c01071269484b83ea", "0fc172bc133da9e5e6ee41a344ee3be35610754bbb42e27351d5e68b37281577", "a325bce0241a4e0d059644b06558095fa06f0765943c559ae0f0b3aeeffe5ffb", "df57252533d8e86489dbe0495b93f76a7c568cd2484442a12d12451721c207fe", "2f36fed8aef6090448463763ff875a70671f314a18c38b52ed4e1f6145449237", "007c2b0674e1b06e040045f7c68566a5e5e5537d8c18e51dfdbe20b308a3a16d", "72a03815fed557971f9036c7b60d31d6d1d0dacbe1590bd07425e4fae88d6101", "e2de89a5b27c729e1f37fd3109fe1134310dfbfaf4d5002255b7a1ca8f8b88ab", "6de1606029ff7874beb45aa719eaf0131d46b9f5b21848a98a14e5aea654640e", "6c5dd6bab7d724111645738aa4b4cbd01dd8e6b95b9de83fb611b46c6d7955f4", "faba286e53f3e791712a14774e0903c01e2ed7a43723cfe0e8efc8b108d85702", "7e8acbd939b38e35a6a18a72ff4a5388b3736abcd9449e6fc9d27eb53a7c5274", "e0f52850dbf9af82fe3f1e5954e1ba7e52c96299bd7a4baef338ed57553a0fed", "f23b494670ef2c5e8f939cbe30c9e91dce15804d6b08ae2004deaf6a3fc237a3", "7652a2f0128f47266fe65d9feeb852b9109d3e59346cf9240163db3fe4276975", "0729895421bd4a158ae88fa3ea1b863e018eb0d8d5b7dbdfc8b60d4237bf50f6", "653ab40ef38078429c9514a472b17f89c469b32a92297964968b79c474cebc7f", "8679e2dd54906496437605a047f5de81677ab056bdc73cfa56374a230be72974", "5072847ca7b7c16ec4fadc547795f77bdcefd62538a74ee5d78c28cb3dcd1f1a", "6f3dc376e491851c9bd4d02c5809d37ff8bc2e494b2c7ee0ae6a835555152571", "d5570b7361c01134ad61b9a5f9d7521c635a5d8faaea06f05abec7677f342470", "8df22b7cbe02eb063d36070f1cc51634234ffc277c2a7ee201beaf0045e3514c", "3fb23ae80405e3890edc263241c6d7da00be51af5fd9fa488c78da0270b1a6f2", "6ae8d8ae1d3a5c449a2498cee6a24dd39fb62030966501414e3440fe620643fd", "0a795a83b4d0e3eece112b47540686d685c7ccb0e5fcd6e93d0174e2696ac830", "dcf20ab4ddd93676ec993bb785675d378d97ebdbae8f37b884e8e68d30949bbc", "0b85deebd51204973e18b7cf7c57bacd5d4a50d2b203862d642985f6c860442a"]
+title = "NIST StRD: nonlinear regression"
+updated = "2026-10-14"
+[[benchmarks]]
+added = "2026-10-14"
+files = ["Lew.dat", "Lottery.dat", "Mavro.dat", "Michelso.dat", "NumAcc1.dat", "NumAcc2.dat", "NumAcc3.dat", "NumAcc4.dat", "PiDigits.dat", "univariate.ipynb"]
+id = "nist-univariate"
+pollis = "0.2.3"
+sha256 = ["53cdc7d066ed1dd726528b4bdd8c51034d37fff6709195de8a0013e5131340e4", "e79813a132cf9901a85970615a83ca0c6b851c24832c78160734c71da6ff6c3a", "dece6cbf88cc99d465df6796d5a0b75ec6ab16ce4f0b0347d27693dff6f0a62d", "99b853f9ad5144a28b13ec94824c52ca62ff38e22070e08e0451a746418a82af", "b47a34d5ffd654ad897b257a490c8f872098c30775d5dc34a05822a8ecb171ab", "2f9bc7f02a4e7925dc59cd72136cfc105e7fbf19fd0ea720a12a077d93e7530a", "5efa118827621953f512057d409a75f1f6c02c664879029b0b4db851f7e2f867", "5080d83a4014ae3db90b3060152d0d523830842dc04dbda3fa7b35ecd0640423", "674cdac1b539dabbab59d0ac6b0c108929d85d3da4e1ae2a32e2962efa3c4d51", "61b2a7f2b922e1c72e8d299669586719d2f5a3ca729e2610c7ab792fae3871a4"]
+title = "NIST StRD: univariate summary statistics"
+updated = "2026-10-14"
+
+[[vignettes]]
+added = "2026-10-14"
+citation = "Breiman, L. (1998). Arcing classifiers. The Annals of Statistics 26(3), 801-849."
+files = ["ArcFS.pdf"]
+id = "ArcFS"
+pollis = "0.2.3"
+sha256 = ["387ef26a80d7cc166beec1e0e6c407e9d6a7cfd41b98533e01192bd7b599b60e"]
+title = "arc-fs: adaptive resampling with pruned trees"
+updated = "2026-10-14"
+[[vignettes]]
+added = "2026-10-14"
+citation = "Dickson, E. R., Grambsch, P. M., Fleming, T. R., Fisher, L. D. and Langworthy, A. (1989). Prognosis in primary biliary cirrhosis: model for decision making. Hepatology 10(1), 1-7."
+files = ["BreslowCox.pdf"]
+id = "BreslowCox"
+pollis = "0.2.3"
+sha256 = ["d9eaa227970e30039731762293673d33d4e9139309a9109f71fded0bd950b18d"]
+title = "The Cox model with Breslow's ties, and its predicted survival"
+updated = "2026-10-14"
+[[vignettes]]
+added = "2026-10-14"
+citation = "Baltagi, B. H., Song, S. H. and Jung, B. C. (2001). The unbalanced nested error component regression model. Journal of Econometrics 101(2), 357-381."
+files = ["ErrorComponents.pdf"]
+id = "ErrorComponents"
+pollis = "0.2.3"
+sha256 = ["2a69b748a3e90aa52f88f10c30beea0f0ad63655dd0dd6de56149ac6358f785b"]
+title = "WALHUS, AMEMIYA, Swamy-Arora and nested error components"
+updated = "2026-10-14"
+[[vignettes]]
+added = "2026-10-14"
+citation = "Breiman, L. (2001). Random forests. Machine Learning 45(1), 5-32."
+files = ["ForestOOB.pdf"]
+id = "ForestOOB"
+pollis = "0.2.3"
+sha256 = ["90ea5e935ff477acce65e0305a462f340fff8cf4fb98be1e9ff50d427f3fb754"]
+title = "Out-of-bag error and variable importance for random forests"
+updated = "2026-10-14"
+[[vignettes]]
+added = "2026-10-14"
+citation = "Dalal, S. R., Fowlkes, E. B. and Hoadley, B. (1989). Risk analysis of the space shuttle: pre-Challenger prediction of failure. Journal of the American Statistical Association 84(408), 945-957."
+files = ["GLMExtras.pdf"]
+id = "GLMExtras"
+pollis = "0.2.3"
+sha256 = ["6b4a2f2b809eacff9e7670ed9a277e998939f8cf3008c73329a9a9c55253d5b9"]
+title = "Parametric bootstrap and delta-beta influence for binomial GLMs"
+updated = "2026-10-14"
+[[vignettes]]
+added = "2026-10-15"
+citation = "Lai, G., Chang, W.-C., Yang, Y. and Liu, H. (2018). Modeling long- and short-term temporal patterns with deep neural networks. In SIGIR '18: The 41st International ACM SIGIR Conference on Research and Development in Information Retrieval, 95-104."
+files = ["LSTNet.pdf"]
+id = "LSTNet"
+pollis = "0.2.3"
+sha256 = ["8239e24f628506bf1c568de39bf55c1f16bffe899d13129c6cf26b92b30fbf1b"]
+title = "LSTNet: long- and short-term patterns in multivariate time series"
+updated = "2026-10-15"
+[[vignettes]]
+added = "2026-10-14"
+citation = "Bollerslev, T. and Ghysels, E. (1996). Periodic autoregressive conditional heteroscedasticity. Journal of Business & Economic Statistics 14(2), 139-151."
+files = ["PeriodicGARCH.pdf"]
+id = "PeriodicGARCH"
+pollis = "0.2.3"
+sha256 = ["3b8d753696f17f0cdd7e439be024423fdd13e46ac26772625d34dcd430c1b1bc"]
+title = "Periodic GARCH: volatility with a calendar dummy"
+updated = "2026-10-14"
+[[vignettes]]
+added = "2026-10-14"
+citation = "Dehejia, R. H. and Wahba, S. (1999). Causal effects in nonexperimental studies: reevaluating the evaluation of training programs. Journal of the American Statistical Association 94(448), 1053-1062."
+files = ["PropensityMatching.pdf"]
+id = "PropensityMatching"
+pollis = "0.2.3"
+sha256 = ["cf64fc2ab472fd5c41f05626fdde4c7ee9664640d9dc1f0d2ba38222a4716c58"]
+title = "Propensity score matching: Dehejia and Wahba, and its replications"
+updated = "2026-10-14"
+[[vignettes]]
+added = "2026-10-14"
+citation = "Tong, H. and Lim, K. S. (1980). Threshold autoregression, limit cycles and cyclical data. Journal of the Royal Statistical Society: Series B 42(3), 245-268."
+files = ["ThresholdAR.pdf"]
+id = "ThresholdAR"
+pollis = "0.2.3"
+sha256 = ["0f4212de4c3fd4fa8d49a2956b99028af22cad5c81d23a5dea92927aa039fa91"]
+title = "Threshold autoregression: SETAR models and limit cycles"
+updated = "2026-10-14"
+
+[[workflows]]
+added = "2026-10-14"
+files = ["DTWclassification.ipynb"]
+id = "DTWclassification"
+pollis = "0.2.3"
+sha256 = ["2a77336df545f69ba2772a873e5fede4ea5f0c8f7d22f52b77365fe9996c8442"]
+title = "Dynamic time warping: the UCR archive baselines"
+updated = "2026-10-14"
+[[workflows]]
+added = "2026-10-15"
+files = ["LSTNet.ipynb"]
+id = "LSTNet"
+pollis = "0.2.3"
+sha256 = ["d280733c664cba940db16cdb5dada52bc7339e2e600e41204e907d81d802635b"]
+title = "LSTNet: long- and short-term patterns in multivariate time series"
+updated = "2026-10-15"
+[[workflows]]
+added = "2026-10-14"
+files = ["forests.ipynb"]
+id = "forests"
+pollis = "0.2.3"
+sha256 = ["0c8b2d06fe02872bc22754b31b495e0eefa5e001586d0f325673c55e722e7757"]
+title = "Random forests: Breiman (2001)"
+updated = "2026-10-14"
+[[workflows]]
+added = "2026-10-14"
+files = ["logistic.ipynb"]
+id = "logistic"
+pollis = "0.2.3"
+sha256 = ["80cd668abc56a060c6dab39138be677a3fb6ecdc5ff5c3dda8c5e94b3475356e"]
+title = "Logistic regression: the Challenger O-rings"
+updated = "2026-10-14"
+[[workflows]]
+added = "2026-10-14"
+files = ["matching.ipynb"]
+id = "matching"
+pollis = "0.2.3"
+sha256 = ["b25fd35efc1141f65341c0618f4d9267cd69ef5881073c80f71168bb1610f56e"]
+title = "Propensity score matching: the NSW experiment and its replications"
+updated = "2026-10-14"
+[[workflows]]
+added = "2026-10-14"
+files = ["nonlinear.ipynb"]
+id = "nonlinear"
+pollis = "0.2.3"
+sha256 = ["bbd5a1f8d826c8a9cbfa998974d561daf88f7242eb9e1e4aa7c9afe32211cc82"]
+title = "Threshold autoregression: the lynx and the sunspot cycles"
+updated = "2026-10-14"
+[[workflows]]
+added = "2026-10-14"
+files = ["panel.ipynb"]
+id = "panel"
+pollis = "0.2.3"
+sha256 = ["84f0a6dea01ac0b96cccfc5a4b85209f0d6976a789a7b3a5123836e63012931f"]
+title = "Panel data: is public capital productive?"
+updated = "2026-10-14"
+[[workflows]]
+added = "2026-10-14"
+files = ["survival.ipynb"]
+id = "survival"
+pollis = "0.2.3"
+sha256 = ["bdd67a88768ee2ef017ad0b2c59de43bd057b987e80a41b6e383a33fbf14063d"]
+title = "Survival: the Mayo model for primary biliary cirrhosis"
+updated = "2026-10-14"
+[[workflows]]
+added = "2026-10-14"
+files = ["latex/make.jl", "latex/references.bib", "latex/report.tex", "volatility.ipynb"]
+id = "volatility"
+pollis = "0.2.3"
+sha256 = ["3db5765344c549362e08d1af27492d091bf66113592d61d2a301244fc89a4532", "0d6efdb14c47c3a84e7d5cd5f105b2547522c824f7736e32533d421954339814", "55a57513832bbe637beb0233ac51f84843a7d61d5db4a534993f892fed3fbf01", "992d1b9441b673b729551f8855ef03a124def0e1227278b5d87175b92622e12f"]
+title = "GARCH: volatility after non-trading days"
+updated = "2026-10-14"

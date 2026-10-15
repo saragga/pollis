@@ -1,0 +1,143 @@
+% Pollis New Methods: LSTNet-Skip, translated from Lai et al.'s code into Lux — draft 1 (15 October 2026)
+% Compile with: latexmk -pdf LSTNet.tex && latexmk -c
+\input{newmethods_style}
+\renewcommand{\nmdate}{15 October 2026}
+
+\begin{document}
+
+\nmhead{Deep learning for time series}
+  {LSTNet: long- and short-term patterns in multivariate time series}
+  {Electricity use repeats every day and every week, and a forecast should know it. Lai et al.\ (2018), translated from
+   their code and tested against it.}
+
+\factsheet
+  {the authors' PyTorch code (\fn{laiguokun/LSTNet}, commit 093c4dc: \fn{models/LSTNet.py}, \fn{main.py}, \fn{utils.py},
+   \fn{Optim.py}), on three artificial datasets, with their weights, batch order and settings; and one cell of
+   \nmcite{lai2018}{Lai et al.\ (2018)}, Table~2 (p.\,101): Exchange-Rate, horizon 3.}
+  {LSTNet-Skip as the authors' code has it. FluxArchitectures.jl has a model called \fn{LSTnet}, but a different one
+   (box below).}
+  {\menupath{Compose \gt Workflows \gt Browse Analytical Workflows}: \emph{LSTNet: long- and short-term patterns in
+   multivariate time series} (\fn{LSTNet.ipynb})}
+  {with the same weights, the forecasts to $1.8\times10^{-7}$; with the same batches, 3 epochs of training steps to
+   $1.1\times10^{-6}$. Trained from scratch, Exchange-Rate at horizon 3: RSE 0.0256 and CORR 0.9706 against the
+   article's 0.0226 and 0.9735.}
+
+\nmsection{The problem}
+Many series are measured side by side: the consumption of hundreds of electricity clients, the occupancy of hundreds of
+road sensors, the output of solar plants. They share patterns on two scales, the hours of a day and the days of a week,
+and they move together. A forecast should use both: the short-term dynamics of the last few hours and the long-term
+pattern of the same hour on earlier days. \nmcite{lai2018}{Lai et al.\ (2018)} built a network for it, LSTNet, and
+compared it with eight methods on four datasets (Table~2). Their code, public, is the reference here.
+
+\nmsection{The method, as the code has it}
+For $m$ series and a window of the last 168 observations of each, the network (\fn{network}) adds two forecasts of all
+$m$ series at once:
+\begin{itemize}
+  \item \textbf{The neural part.} A convolution of 6 steps across all the series, 100 filters (50 for Exchange-Rate),
+    ReLU; a GRU over its 163 outputs; a second GRU, the \emph{recurrent skip}, over the steps 24 apart, one run for each
+    hour of the day, over the last 6 days; the last hidden states of both, joined, mapped to the $m$ forecasts by a
+    dense layer. Dropout 0.2 after the convolution and after each GRU.
+  \item \textbf{The highway.} An autoregression on the last 24 values of each series, with the same weights for every
+    series, for the scale, which the neural part is insensitive to.
+\end{itemize}
+Each series is divided by its largest absolute value; the first 60 per cent of the times train, the next 20 validate
+and the last 20 test (\fn{Split}). Training (\fn{forecast}) minimises the absolute error in the units of the data, with
+Adam (learning rate 0.001), batches of 128 and the gradient's norm clipped at 10, for 100 epochs, and keeps the epoch
+with the smallest validation RSE. \fn{evaluate} gives the article's RSE (root mean squared error over the standard
+deviation of the data) and CORR (the mean correlation of each series' forecasts and values). \fn{SETTINGS} holds each
+dataset's hidden sizes and output function, from the authors' scripts, and \fn{table2} computes a dataset's columns of
+Table~2, saving each finished horizon and, after every epoch, the training, so a stopped run continues.
+
+The network runs on any GPU that Julia's \fn{gpu\_device()} finds (CUDA, AMDGPU, Metal, oneAPI) once its package is
+loaded, with Zygote for the gradients, and otherwise on the CPU, with Enzyme.
+
+\nmsection{The code, not the paper}
+Where the article and the code differ, the translation follows the code:
+\begin{valuetable}{@{}lXX@{}}
+\textbf{Point} & \textbf{The code (and this package)} & \textbf{The article}\\\midrule
+GRU activation & tanh (PyTorch's \fn{nn.GRU}) & ReLU (Section 3.3)\\
+Skip periods & $\lfloor(168-6)/24\rfloor = 6$: the code divides without rounding, 6.75, and fails with its own defaults;
+  the first author's fix (issue \#2 of the repository) takes the whole part & not stated\\
+Loss & absolute error on the rescaled data, always: \fn{--L1Loss False} in \fn{stock.sh} is read as true, since Python's
+  \fn{bool("False")} is true & chosen on the validation set (Section 3.7)\\
+Settings & one script per dataset: hidden sizes, and the output function (identity, or sigmoid for Traffic) & tuned by
+  grid search (Section 4.4)\\
+Horizons & the scripts run one horizon each (24 for Electricity, the default 12 for the others); we vary only
+  \fn{--horizon} & 3, 6, 12, 24\\
+RSE & divided by \fn{torch.std} of all test values times $\sqrt{(r-1)/r}$, $r$ the number of rows & the standard
+  deviation of the test values\\
+CORR & averaged over the series not constant in the test period; the code's float32 check can keep a constant series
+  with correlation 0, which we leave out & the same, without the check\\
+\end{valuetable}
+
+\nmsection{What the tests show}
+The cross-tests run the authors' code (with one-line patches for a current PyTorch, none changing the model) and the
+package on three artificial datasets of 1200 times: 6 seasonal series, 6 series with a trend and scales from 1 to 1000,
+and 5 series with a constant stretch; horizons 3 and 12, so six cases; window 48, kernel 6, skip 12, hidden sizes 16,
+16 and 4. Every case, the largest difference:
+\begin{valuetable}{@{}lXl@{}}
+\textbf{Test} & \textbf{What is compared} & \textbf{Largest difference}\\\midrule
+A & the authors' initial weights: forecasts of the test times; their RSE; their CORR &
+  $1.8\times10^{-7}$; $1.4\times10^{-7}$; $6.6\times10^{-8}$\\
+B & the same weights, their batch order, dropout 0, 3 epochs (18 steps): every gradient norm; every validation RSE;
+  the final weights (relative) & $1.1\times10^{-6}$; $2.5\times10^{-6}$; $8.9\times10^{-5}$\\
+\end{valuetable}
+A and B run in \fn{Pkg.test}, on a GPU if one is loaded, and need no Python. C trains both codes from scratch, 5 seeds
+each, with their own random numbers, so only the spread can be compared. Test RSE, lowest to highest:
+\begin{valuetable}{@{}lXX@{}}
+\textbf{Case} & \textbf{Authors' code} & \textbf{This package}\\\midrule
+seasonal, $h = 3$  & 0.1761 to 0.1860 & 0.1745 to 0.1838\\
+seasonal, $h = 12$ & 0.1906 to 0.2027 & 0.1896 to 0.2015\\
+trend, $h = 3$     & 0.1015 to 0.1092 & 0.1044 to 0.1162\\
+trend, $h = 12$    & 0.1153 to 0.1200 & 0.1166 to 0.1180\\
+constant, $h = 3$  & 0.2911 to 0.3688 & 0.2865 to 0.4606\\
+constant, $h = 12$ & 0.2743 to 0.3034 & 0.2564 to 0.3634\\
+\end{valuetable}
+Every pair of ranges overlaps. The CORRs agree as well, except for the constant series, where the authors' code
+reports 0.77 and the package 0.96 to 0.97: of its 5 series, the constant one is counted with correlation 0, and
+$0.96 \times 4/5 = 0.77$.
+
+D gives both codes everything but the code itself, for all 100 epochs, and still their results part: the box below says
+why, and what it means for any replication of a trained network.
+
+\input{divergence}
+
+\nmsection{Table 2}
+\begin{valuetable}{@{}lccccl@{}}
+\textbf{Exchange-Rate, $h = 3$} & \textbf{RSE} & \textbf{CORR} & \textbf{Epoch kept} & \textbf{Training} & \\\midrule
+This package & 0.0256 & 0.9706 & 97 of 100 & 1729\,s & this Mac's GPU (Metal), seed 54321\\
+Lai et al.\ (2018), p.\,101 & 0.0226 & 0.9735 & & & \\
+\end{valuetable}
+One training from scratch, with the authors' settings for this dataset (\fn{stock.sh}: hidden sizes 50, no output
+function). The RSE is 13 per cent higher, the CORR 0.003 lower. The cross-tests settle that the package computes what
+the authors' code computes; a single run from scratch cannot settle more. The article reports one run per cell, its seed
+is not known (54321 is the code's default; the scripts set none), its hidden sizes were tuned by a grid search the
+scripts do not record, and the box above shows that one rounding unit moves the authors' own result by up to 1.6 per
+cent and the epoch kept by up to 18. PyTorch and Julia draw different numbers from the same seed, so the article's run
+cannot be repeated exactly, in either language.
+
+The other 15 cells were not run: Solar-Energy, Electricity and Traffic have 137, 321 and 862 series, and each cell is
+100 epochs. They are tests of the package (\fn{Pkg.test("LSTNet"; test\_args = ["solar"])}), not run by default, for a
+machine with an NVIDIA GPU; \fn{table2} with a \fn{folder} can be stopped and continued.
+
+\input{fluxarchitectures}
+
+\nmsection{Further considerations}
+\begin{itemize}
+  \item \textbf{LSTNet-Attn and the baselines.} The authors' code has LSTNet-Skip only; the attention variant and the
+    eight methods of Table~2 would be implementations of our own, not translations, and are not included.
+  \item \textbf{The rest of Table 2.} Fifteen cells, on a CUDA machine, and several seeds per cell, would give the spread
+    a single published run hides.
+  \item \textbf{Upstream.} The cross-tests, with the authors' weights in \fn{reference.json}, are a ready-made test for
+    any Julia implementation of LSTNet.
+\end{itemize}
+
+\nmsection{References}
+{\footnotesize
+\nmref{lai2018}{Lai, G., Chang, W.-C., Yang, Y. and Liu, H. (2018). Modeling long- and short-term temporal patterns with deep neural networks. In \emph{SIGIR '18: The 41st International ACM SIGIR Conference on Research and Development in Information Retrieval}, 95--104. \nmdoi{10.1145/3209978.3210006}}
+\nmref{code}{Code: \href{https://github.com/laiguokun/LSTNet}{\color{pblue}github.com/laiguokun/LSTNet}, commit 093c4dc, and issue \#2 on the skip periods (31 July 2018).}
+\nmref{data}{Data: \href{https://github.com/laiguokun/multivariate-time-series-data}{\color{pblue}github.com/laiguokun/multivariate-time-series-data}, read into memory and not saved, since the repository has no licence.}
+}
+
+\nmcredit
+\end{document}

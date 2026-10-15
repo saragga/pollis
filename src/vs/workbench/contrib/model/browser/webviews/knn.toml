@@ -12,8 +12,12 @@ defaultModel = "knn"
 name = "NearestNeighbors.jl"
 github = "https://github.com/KristofferC/NearestNeighbors.jl"
 
+[[packages]]
+name = "DynamicAxisWarping.jl"
+github = "https://github.com/baggepinnen/DynamicAxisWarping.jl"
+
 [requires]
-packages = ["Plots.jl", "StatsBase.jl", "BenchmarkTools.jl", "Distances.jl"]
+packages = ["Plots.jl", "StatsBase.jl", "BenchmarkTools.jl", "Distances.jl", "Tables.jl"]
 
 [[notebookSections]]
 label = ""
@@ -66,6 +70,43 @@ name = "Decision Guide"
 file = "knn/decision-guide.md"
 bundled = true
 
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+title = "Dynamic Programming Algorithm Optimization for Spoken Word Recognition"
+authors = "Sakoe, Hiroaki; Chiba, Seibi"
+year = 1978
+journal = "IEEE Transactions on Acoustics, Speech, and Signal Processing"
+doi = "10.1109/TASSP.1978.1163055"
+openAccess = false
+
+[[references]]
+separator = true
+label = "Benchmarks"
+
+[[references]]
+title = "The UCR Time Series Archive"
+authors = "Dau, Hoang Anh; Bagnall, Anthony; Kamgar, Kaveh; Yeh, Chin-Chia Michael; Zhu, Yan; Gharghabi, Shaghayegh; Ratanamahatana, Chotirat Ann; Keogh, Eamonn"
+year = 2019
+journal = "IEEE/CAA Journal of Automatica Sinica"
+doi = "10.1109/jas.2019.1911747"
+url = "https://arxiv.org/abs/1810.07758"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "DynamicAxisWarping.jl: Dynamic Time Warping and Related Algorithms in Julia"
+authors = "Bagge Carlson, Fredrik"
+year = 2024
+journal = "GitHub"
+url = "https://github.com/baggepinnen/DynamicAxisWarping.jl"
+openAccess = true
+
 [[models]]
 id = "knn"
 label = "kNN Search"
@@ -74,6 +115,10 @@ label = "kNN Search"
 id = "range"
 label = "Range Search"
 
+[[models]]
+id = "dtw"
+label = "DTW Classification"
+
 [[bullets]]
 text = "kNN Search"
 detail = "returns the k closest points in a dataset using an efficient spatial index"
@@ -81,6 +126,10 @@ detail = "returns the k closest points in a dataset using an efficient spatial i
 [[bullets]]
 text = "Range Search"
 detail = "returns all points within a given radius r of the query"
+
+[[bullets]]
+text = "DTW Classification"
+detail = "labels a whole time series with the class of its nearest training series under dynamic time warping, which lets similar shapes match when they are shifted or stretched in time"
 
 [[decisionRows]]
 task = "kNN Search"
@@ -92,17 +141,24 @@ task = "Range Search"
 context = "A meaningful distance threshold exists"
 purpose = "Every point within radius r, e.g. for density or DBSCAN-style clustering"
 
+[[decisionRows]]
+task = "DTW Classification"
+context = "Each item is a time series"
+purpose = "The class of a series, from labelled series whose shapes may be shifted or stretched in time"
+
 [[inputs]]
 id = "data"
 label = "Data matrix"
 tooltip = "d x n matrix of data points: d features, n samples (one point per column)."
 default = "rand(2, 200)"
+models = ["knn", "range"]
 
 [[inputs]]
 id = "query"
 label = "Query point(s)"
 tooltip = "d-element vector for a single query, or d x m matrix for m simultaneous queries."
 default = "[0.5, 0.5]"
+models = ["knn", "range"]
 
 [[inputs]]
 id = "tree-type"
@@ -111,6 +167,7 @@ tooltip = "KDTree is fastest for low-dimensional data (d <= 20) and supports all
 kind = "select"
 default = "KDTree"
 newRow = true
+models = ["knn", "range"]
 
 [[inputs.options]]
 value = "KDTree"
@@ -130,6 +187,7 @@ label = "Metric"
 tooltip = "All listed metrics are Minkowski-family: Euclidean is L2 (p=2), Manhattan is L1 (p=1), Chebyshev is L-infinity (p to infinity), Minkowski allows any p >= 1. All are compatible with KDTree and BallTree."
 kind = "select"
 default = "Euclidean"
+models = ["knn", "range"]
 
 [[inputs.options]]
 value = "Euclidean"
@@ -153,6 +211,7 @@ label = "p"
 tooltip = "Minkowski exponent. p=1 gives Manhattan, p=2 gives Euclidean, p to infinity gives Chebyshev. Any p >= 1 is valid."
 default = "1.5"
 when = "metric=Minkowski"
+models = ["knn", "range"]
 
 [[inputs]]
 id = "k"
@@ -176,6 +235,63 @@ label = "leaf_size"
 tooltip = "Minimum number of points in a leaf node. Smaller values produce finer trees with faster queries at the cost of longer build time. Not used by BruteTree. Default 10."
 default = "10"
 when = "tree-type!=BruteTree"
+models = ["knn", "range"]
+
+[[inputs]]
+id = "dtw-data"
+label = "Dataset"
+tooltip = "Example time series from PollisDatasets, with the UCR archive's own train/test split. ECG200: 200 heartbeats of 96 readings, normal or myocardial infarction. TwoLeadECG: 1162 series of 82 readings, which of two ECG leads. Earthquakes: 461 series of 512 hourly readings, whether a major earthquake followed (slow: a few minutes)."
+kind = "select"
+default = "ecg200"
+models = ["dtw"]
+
+[[inputs.options]]
+value = "ecg200"
+label = "ECG200"
+
+[[inputs.options]]
+value = "twoleadecg"
+label = "TwoLeadECG"
+
+[[inputs.options]]
+value = "earthquakes"
+label = "Earthquakes"
+
+[[inputs]]
+id = "window-mode"
+label = "Warping window"
+tooltip = "How far apart in time two matched values may be. Learned: the window, as a per cent of the length, with the smallest leave-one-out error on the training set, as the UCR archive's baselines do. Fixed: a window you choose. Unconstrained: any value may be matched with any other."
+kind = "select"
+default = "learned"
+models = ["dtw"]
+
+[[inputs.options]]
+value = "learned"
+label = "Learned"
+
+[[inputs.options]]
+value = "fixed"
+label = "Fixed"
+
+[[inputs.options]]
+value = "unconstrained"
+label = "Unconstrained"
+
+[[inputs]]
+id = "max-window"
+label = "Largest window (%)"
+tooltip = "Windows of 0, 1, ..., this many per cent of the length are tried. The UCR archive uses 10. Window 0 is the Euclidean distance."
+default = "10"
+models = ["dtw"]
+when = "window-mode=learned"
+
+[[inputs]]
+id = "window"
+label = "Window (%)"
+tooltip = "Per cent of the series length; a window of w per cent is ceil(length * w / 100) points. 0 gives the Euclidean distance."
+default = "5"
+models = ["dtw"]
+when = "window-mode=fixed"
 
 [miniCharts]
 # SVG drawing functions for each model's mini-chart icon (54 x 86 box)
@@ -213,6 +329,30 @@ s += '<rect x="' + (q[0] - 3) + '" y="' + (q[1] - 3) + '" width="6" height="6" f
 return s;
 '''
 
+[miniCharts.dtw]
+# Two series with the same bump, shifted in time; grey lines join the values that DTW matches
+svg = '''
+var a = [], b = [];
+for (var i = 0; i <= 12; i++) {
+	var x = 3 + i * 4;
+	a.push([x, 30 - 14 * Math.exp(-Math.pow((i - 4) / 1.5, 2))]);
+	b.push([x, 70 - 14 * Math.exp(-Math.pow((i - 7) / 1.5, 2))]);
+}
+var s = '';
+for (var i = 0; i <= 12; i++) {
+	var j = Math.min(12, Math.round(i + 3 * Math.sin(Math.PI * i / 12)));
+	s += '<line x1="' + a[i][0] + '" y1="' + a[i][1] + '" x2="' + b[j][0] + '" y2="' + b[j][1] + '" stroke="currentColor" stroke-width="0.6" opacity="0.4"/>';
+}
+var pa = '', pb = '';
+for (var i = 0; i <= 12; i++) {
+	pa += (i ? ' L' : 'M') + a[i][0] + ' ' + a[i][1];
+	pb += (i ? ' L' : 'M') + b[i][0] + ' ' + b[i][1];
+}
+s += '<path d="' + pa + '" fill="none" stroke="currentColor" stroke-width="1.4"/>';
+s += '<path d="' + pb + '" fill="none" stroke="currentColor" stroke-width="1.4"/>';
+return s;
+'''
+
 [[codeBranches]]
 model = "knn"
 code = '''
@@ -247,6 +387,41 @@ q  = ({{query}} .- mu) ./ sd  # the query on the same scale
 idxs = inrange(tree, q, {{r}})  # all points within radius {{r}}, in standard deviations
 '''
 
+[[codeBranches]]
+model = "dtw"
+code = '''
+using DynamicAxisWarping, Distances, PollisDatasets, Statistics, Tables
+
+# Example data: a dataset of the UCR archive (Dau et al. 2019), one row per series with its split, its class and its readings; datasetinfo("{{dtw-data}}") describes the columns. Replace it with your own series.
+t = columntable(dataset("{{dtw-data}}"));
+X = permutedims(reduce(hcat, [Float64.(t[k]) for k in keys(t)[3:end]]));  # one series per column
+zscore(X) = (X .- mean(X, dims=1)) ./ std(X, dims=1);  # each series to mean 0 and standard deviation 1: DTW then compares shapes, not levels
+train = t.split .== "train";  # the archive's own split
+Xtrain, ytrain = zscore(X[:, train]), t.label[train];
+Xtest, ytest   = zscore(X[:, .!train]), t.label[.!train];
+
+L = size(Xtrain, 1);  # series length
+points(w) = cld(w * L, 100);  # a window of w per cent is ceil(L * w / 100) points, as in the archive's code
+dist(a, b, r) = dtw_cost(a, b, SqEuclidean(), r);  # value i may be matched with values i-r to i+r; r = 0 is the squared Euclidean distance
+nearest(x, r) = argmin([dist(x, view(Xtrain, :, i), r) for i in axes(Xtrain, 2)]);  # 1-NN: the closest training series
+
+{{?window-mode=learned}}function looerror(r)  # leave-one-out error: each training series classified by its nearest other
+{{?window-mode=learned}}	n = size(Xtrain, 2)
+{{?window-mode=learned}}	D = fill(Inf, n, n)  # a series is not its own neighbour
+{{?window-mode=learned}}	for i in 1:n, j in i+1:n
+{{?window-mode=learned}}		D[i, j] = D[j, i] = dist(view(Xtrain, :, i), view(Xtrain, :, j), r)
+{{?window-mode=learned}}	end
+{{?window-mode=learned}}	mean(ytrain[argmin(D[:, i])] != ytrain[i] for i in 1:n)
+{{?window-mode=learned}}end
+{{?window-mode=learned}}ws = 0:{{max-window}};  # candidate windows, per cent of the length
+{{?window-mode=learned}}w  = ws[argmin(looerror.(points.(ws)))];  # the smallest window with the smallest error, from the training set alone
+{{?window-mode=fixed}}w = {{window}};  # per cent of the length
+{{?window-mode=unconstrained}}w = 100;  # any value may be matched with any other
+r = points(w);
+yhat = [ytrain[nearest(x, r)] for x in eachcol(Xtest)];  # the class of the nearest training series
+println("window ", w, "% (", r, " points), test error ", round(mean(yhat .!= ytest), digits=4))
+'''
+
 [[actionGroups]]
 id = "visualise"
 label = "Visualise"
@@ -254,6 +429,7 @@ label = "Visualise"
 [[actionGroups.actions]]
 id = "neighbours-plot"
 label = "Query and Neighbours"
+models = ["knn", "range"]
 desc = "Scatter the first two features with the query and its returned neighbours highlighted"
 code = '''
 using Plots
@@ -263,6 +439,37 @@ scatter!({{data}}[1, idxs], {{data}}[2, idxs], label="neighbours")
 scatter!([{{query}}[1]], [{{query}}[2]], label="query", marker=:star5, markersize=10)
 '''
 
+[[actionGroups.actions]]
+id = "series-by-class"
+label = "Series by Class"
+desc = "The first three training series of each class, normalised"
+models = ["dtw"]
+code = '''
+using Plots
+
+p = plot(xlabel="t", legend=:topright)
+for (k, c) in enumerate(sort(unique(ytrain)))
+	cols = findall(==(c), ytrain)[1:min(3, end)]  # the first three training series of this class
+	plot!(p, Xtrain[:, cols], color=k, label=permutedims(["class $c"; fill("", length(cols) - 1)]), lw=0.8)
+end
+p
+'''
+
+[[actionGroups.actions]]
+id = "warping-path"
+label = "Warping Path"
+desc = "A test series, its nearest training series, and the values DTW matches within the window"
+models = ["dtw"]
+code = '''
+using Plots
+
+x  = Xtest[:, 1];  # the first test series; change the column to see another
+nb = Xtrain[:, nearest(x, r)];  # its nearest training series
+lo, hi = radiuslimits(r, x, nb);  # the window as the first and last value each value may be matched with
+cost, i1, i2 = dtw(x, nb, SqEuclidean(), lo, hi);  # the matching with the smallest sum of squared differences
+matchplot(x, nb, dtw_cost_matrix(x, nb, SqEuclidean(), lo, hi), i1, i2, ds=2, label=["test series" "nearest training series" ""])
+'''
+
 [[actionGroups]]
 id = "diagnose"
 label = "Diagnose"
@@ -270,6 +477,7 @@ label = "Diagnose"
 [[actionGroups.actions]]
 id = "k-distance"
 label = "k-Distance Curve"
+models = ["knn", "range"]
 desc = "Sorted distance of every point to its k-th neighbour; the elbow suggests a good radius r (in standardised units)"
 code = '''
 using Plots
@@ -282,11 +490,36 @@ plot(kdist, xlabel="point (sorted)", ylabel="distance to k-th neighbour", legend
 [[actionGroups.actions]]
 id = "brute-check"
 label = "Exactness Check"
+models = ["knn", "range"]
 desc = "Confirm the tree returns the same neighbours as an exhaustive brute-force search"
 code = '''
 idxs_brute, _ = knn(BruteTree(Z, metric), q, {{k}}, true)
 idxs_tree, _  = knn(tree, q, {{k}}, true)
 idxs_tree == idxs_brute
+'''
+
+[[actionGroups.actions]]
+id = "window-curve"
+label = "Window Curve"
+desc = "Leave-one-out and test error against the window: the best window in training may not be the best in testing, mostly with small training sets (Dau et al. 2019, Fig. 2)"
+models = ["dtw"]
+code = '''
+using Plots
+
+function errors(r)  # leave-one-out error on the training set, and test error, for a window of r points
+	n = size(Xtrain, 2)
+	D = fill(Inf, n, n)  # a series is not its own neighbour
+	for i in 1:n, j in i+1:n
+		D[i, j] = D[j, i] = dist(view(Xtrain, :, i), view(Xtrain, :, j), r)
+	end
+	loo  = mean(ytrain[argmin(D[:, i])] != ytrain[i] for i in 1:n)
+	test = mean(ytrain[nearest(x, r)] != c for (x, c) in zip(eachcol(Xtest), ytest))
+	(loo, test)
+end
+ws = 0:10;  # per cent of the length, as in the archive's code
+e  = errors.(points.(ws));
+plot(ws, first.(e), label="leave-one-out (train)", marker=:circle, xlabel="warping window, per cent", ylabel="error rate")
+plot!(ws, last.(e), label="test", marker=:square)
 '''
 
 [[actionGroups]]
@@ -296,6 +529,7 @@ label = "Predict"
 [[actionGroups.actions]]
 id = "knn-classify"
 label = "kNN Classification"
+models = ["knn", "range"]
 desc = "Choose k by leave-one-out cross-validation, then label new points by a majority vote of their k nearest training labels"
 code = '''
 using StatsBase, Statistics
@@ -315,6 +549,7 @@ y_hat = [mode(labels[i]) for i in nbrs]
 [[actionGroups.actions]]
 id = "knn-regress"
 label = "kNN Regression"
+models = ["knn", "range"]
 desc = "Choose k by leave-one-out cross-validation, then predict a continuous target as the inverse-distance weighted mean of the neighbours"
 code = '''
 using Statistics
@@ -332,6 +567,16 @@ nbrs, d = knn(tree, (X_new .- mu) ./ sd, k_best)  # scaled like the training dat
 y_hat = [idw(i, dj) for (i, dj) in zip(nbrs, d)]
 '''
 
+[[actionGroups.actions]]
+id = "classify-new"
+label = "Classify New Series"
+desc = "The class of new series: the class of their nearest training series under DTW with the chosen window"
+models = ["dtw"]
+code = '''
+X_new = X[:, .!train][:, 1:5];  # replace with your own series, one per column, of length L
+y_new = [ytrain[nearest(x, r)] for x in eachcol(zscore(X_new))]  # normalised like the training series
+'''
+
 [[actionGroups]]
 id = "compare"
 label = "Compare"
@@ -339,6 +584,7 @@ label = "Compare"
 [[actionGroups.actions]]
 id = "tree-speed"
 label = "Tree Types"
+models = ["knn", "range"]
 desc = "Benchmark the query time of KDTree, BallTree and BruteTree on your data"
 code = '''
 using BenchmarkTools
@@ -349,6 +595,22 @@ for T in (KDTree, BallTree, BruteTree)
 end
 '''
 
+[[actionGroups.actions]]
+id = "ed-dtw"
+label = "Euclidean vs DTW"
+desc = "Test error of the Euclidean distance, DTW with the chosen window and unconstrained DTW, beside the default rate of always predicting the largest class"
+models = ["dtw"]
+code = '''
+using Printf
+
+err(r) = mean(ytrain[nearest(x, r)] != c for (x, c) in zip(eachcol(Xtest), ytest));  # test error of 1-NN with a window of r points
+default = 1 - maximum(count(==(c), ytest) for c in unique(ytest)) / length(ytest);  # a classifier is only useful below it
+@printf("Euclidean            %.4f\n", err(0))
+@printf("DTW, window %3d%%     %.4f\n", w, err(r))
+@printf("DTW, unconstrained   %.4f\n", err(L))
+@printf("default rate         %.4f\n", default)
+'''
+
 [[actionGroups]]
 id = "interpret"
 label = "Interpret"
@@ -356,6 +618,7 @@ label = "Interpret"
 [[actionGroups.actions]]
 id = "nearest-examples"
 label = "Nearest Examples"
+models = ["knn", "range"]
 desc = "Show which training points drive a prediction and how far away they are"
 code = '''
 labels = Z[1, :] .+ Z[2, :] .> 0  # replace with the class of each column of the data
@@ -363,4 +626,18 @@ i, d = knn(tree, q, {{k}}, true)
 for (j, dj) in zip(i, d)
 	println("point ", j, "  ", X[:, j], "  label ", labels[j], "  distance ", round(dj, digits=3), " sd")
 end
+'''
+
+[[actionGroups.actions]]
+id = "nearest-series"
+label = "Nearest Training Series"
+desc = "The training series closest to a test series, their classes and DTW distances: the evidence behind its predicted class"
+models = ["dtw"]
+code = '''
+x = Xtest[:, 1];  # the first test series; change the column to see another
+d = [dist(x, view(Xtrain, :, i), r) for i in axes(Xtrain, 2)];
+for i in sortperm(d)[1:5]
+	println("training series ", i, "  class ", ytrain[i], "  DTW distance ", round(d[i], digits=3))
+end
+println("predicted class ", ytrain[argmin(d)], ", true class ", ytest[1])
 '''

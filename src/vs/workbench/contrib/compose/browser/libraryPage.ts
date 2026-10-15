@@ -30,7 +30,8 @@ export const LIBRARY_PAGE_STYLE = `
 	.links { display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; }
 	.package { display: inline-block; font-size: 12px; border: 1px solid var(--vscode-widget-border); border-radius: 2px; padding: 0 4px; margin: 0 4px 4px 0; }
 	.source { margin: 0 0 4px 0; }
-	.source-name { font-weight: 600; }`;
+	.source-name { font-weight: 600; }
+	.badge { display: inline-block; margin-left: 8px; padding: 0 6px; border-radius: 8px; font-size: 11px; font-weight: 600; vertical-align: middle; color: var(--vscode-badge-foreground); background: var(--vscode-badge-background); }`;
 
 /** The script helpers of a library page: `element`, `link` (a text button) and `cell` (a table cell added to a row). */
 export const LIBRARY_PAGE_HELPERS = `

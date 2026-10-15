@@ -8,6 +8,7 @@ import { CancellationToken } from '../../../../base/common/cancellation.js';
 import { toErrorMessage } from '../../../../base/common/errorMessage.js';
 import { DisposableStore } from '../../../../base/common/lifecycle.js';
 import { AppResourcePath, FileAccess } from '../../../../base/common/network.js';
+import { joinPath } from '../../../../base/common/resources.js';
 import { URI } from '../../../../base/common/uri.js';
 import { localize, localize2 } from '../../../../nls.js';
 import { Action2, MenuId, registerAction2 } from '../../../../platform/actions/common/actions.js';
@@ -24,6 +25,7 @@ import { parseToml, TomlValue } from '../../model/browser/common/tomlPanelData.j
 import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
 import { LIBRARY_PAGE_HELPERS, LIBRARY_PAGE_STYLE } from './libraryPage.js';
+import { IPollisContentService } from './pollisContent.js';
 import { BROWSE_METHODS_COMMAND_ID, openUserMethod, readMethodSummaries, userMethodsFolder, vignettesIndex } from './newMethods.js';
 
 // Help > Documentation > Vignettes: the vignettes of the methods, as R's Help > Vignettes lists those of the
@@ -41,6 +43,14 @@ interface ILibraryVignette {
 	readonly topic: string;
 	readonly title: string;
 	readonly citation: string;
+}
+
+/** A vignette of the library as the page shows it: shipped, downloaded since the release (new), or both (updated). */
+interface IShownLibraryVignette extends ILibraryVignette {
+	/** Marked until opened: a vignette downloaded since the release. */
+	readonly status?: 'new' | 'updated';
+	/** The PDF, when downloaded: the shipped one otherwise. */
+	readonly pdf?: URI;
 }
 
 const LIBRARY_VIGNETTES: readonly ILibraryVignette[] = [
@@ -115,6 +125,7 @@ async function openVignettesPage(accessor: ServicesAccessor): Promise<void> {
 	const commandService = accessor.get(ICommandService);
 	const openerService = accessor.get(IOpenerService);
 	const instantiationService = accessor.get(IInstantiationService);
+	const contentService = accessor.get(IPollisContentService);
 
 	if (openPage && !openPage.isDisposed()) {
 		webviewWorkbenchService.revealWebview(openPage, openPage.group ?? -1, false);
@@ -181,18 +192,48 @@ async function openVignettesPage(accessor: ServicesAccessor): Promise<void> {
 		webviewInput.webview.postMessage({ command: 'published', vignettes: published, registry, error });
 	};
 
+	// The vignettes of the library: those shipped, newer ones downloaded since the release, and new ones
+	let library: IShownLibraryVignette[] = [];
+	const sendLibrary = async () => {
+		const downloaded = await contentService.downloaded('vignettes');
+		const unseen = contentService.unseen('vignettes');
+		const shown = (id: string) => downloaded.find(({ entry }) => entry.id === id);
+		library = [
+			...LIBRARY_VIGNETTES.map(vignette => {
+				const newer = shown(vignette.id);
+				return newer ? { ...vignette, status: unseen.has(vignette.id) ? 'updated' as const : undefined, pdf: joinPath(newer.folder, newer.entry.files[0]) } : vignette;
+			}),
+			...downloaded.filter(({ entry }) => !LIBRARY_VIGNETTES.some(vignette => vignette.id === entry.id)).map(({ entry, folder }) => ({
+				id: entry.id,
+				topic: entry.topic ?? localize('vignettes.topic.newMethods', "New Methods"),
+				title: entry.title,
+				citation: entry.citation ?? '',
+				status: unseen.has(entry.id) ? 'new' as const : undefined,
+				pdf: joinPath(folder, entry.files[0]),
+			})),
+		];
+		webviewInput.webview.postMessage({ command: 'library', vignettes: library.map(({ pdf, ...rest }) => rest) });
+	};
+
 	disposables.add(webviewInput.webview.onMessage(async (e: { message: VignettesMessage }) => {
 		const message = e.message;
 		if (message.command === 'ready') {
-			webviewInput.webview.postMessage({ command: 'library', vignettes: LIBRARY_VIGNETTES });
+			sendLibrary();
 			sendLocal();
 			sendPublished();
 		} else if (message.command === 'refresh') {
 			sendLocal();
 			sendPublished();
-		} else if (message.command === 'openLibrary' && LIBRARY_VIGNETTES.some(vignette => vignette.id === message.id)) {
-			const uri = FileAccess.asFileUri(`vs/workbench/contrib/compose/browser/media/methods/${message.id}/vignette/${message.id}.pdf` as AppResourcePath);
-			commandService.executeCommand(BrowserViewCommandId.Open, uri.toString(true));
+		} else if (message.command === 'openLibrary') {
+			const vignette = library.find(candidate => candidate.id === message.id);
+			if (vignette) {
+				const uri = vignette.pdf ?? FileAccess.asFileUri(`vs/workbench/contrib/compose/browser/media/methods/${vignette.id}/vignette/${vignette.id}.pdf` as AppResourcePath);
+				commandService.executeCommand(BrowserViewCommandId.Open, uri.toString(true));
+				if (vignette.status) {
+					contentService.markSeen('vignettes', vignette.id);
+					sendLibrary();
+				}
+			}
 		} else if (message.command === 'browseMethods') {
 			commandService.executeCommand(BROWSE_METHODS_COMMAND_ID);
 		} else if (message.command === 'openLocal' && localPdfs.has(message.id)) {
@@ -232,6 +273,8 @@ function pageHtml(): string {
 		repository: localize('vignettes.repository', "Repository"),
 		refresh: localize('vignettes.refresh', "Refresh"),
 		by: localize('vignettes.by', "by {0}"),
+		new: localize('vignettes.new', "New"),
+		updated: localize('vignettes.updated', "Updated"),
 	};
 	return `<!DOCTYPE html>
 <html lang="en">
@@ -306,6 +349,9 @@ function pageHtml(): string {
 		const row = element('tr');
 		const title = element('div', 'title', vignette.title);
 		title.addEventListener('click', () => vscode.postMessage({ command: 'openLibrary', id: vignette.id }));
+		if (vignette.status) {
+			title.appendChild(element('span', 'badge', vignette.status === 'new' ? TEXT.new : TEXT.updated));
+		}
 		cell(row, 'name').appendChild(title);
 		cell(row, 'article').appendChild(element('p', 'citation small', vignette.citation));
 		cell(row).appendChild(element('div', 'small', vignette.topic));

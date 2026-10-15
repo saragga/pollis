@@ -1137,6 +1137,9 @@
 
 .monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-alert .pollis-alert-body {
 	flex: 1;
+	/* Long lines wrap instead of widening the body, so the close button stays in the card */
+	min-width: 0;
+	overflow-wrap: anywhere;
 }
 
 .monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-alert .pollis-alert-dismiss {
@@ -1146,6 +1149,7 @@
 	background: none;
 	color: var(--vscode-errorForeground);
 	cursor: pointer;
+	flex-shrink: 0;
 }
 
 .monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-alert p {

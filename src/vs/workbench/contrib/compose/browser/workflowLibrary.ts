@@ -23,6 +23,7 @@ import { parseToml, TomlValue } from '../../model/browser/common/tomlPanelData.j
 import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
 import { LIBRARY_PAGE_HELPERS, LIBRARY_PAGE_STYLE } from './libraryPage.js';
+import { ContentKind, IDownloadedEntry, IPollisContentService } from './pollisContent.js';
 import { BROWSE_METHODS_COMMAND_ID, deleteUserMethods, openUserMethod, readMethodSummaries, userMethodsFolder } from './newMethods.js';
 
 export const SEARCH_WORKFLOW_LIBRARY_COMMAND_ID = 'chiara.statistics.wfl_sl';
@@ -43,6 +44,8 @@ interface INotebookLibrary {
 	readonly openFailed: (label: string, error: string) => string;
 	/** Whether the page also lists the user's own methods, above the library (Browse Methods). */
 	readonly userMethods?: boolean;
+	/** The kind of content the library gets between releases (pollisContent.ts). */
+	readonly content?: ContentKind;
 }
 
 /** Compose > Workflows > Browse Analytical Workflows: famous analyses replicated from their articles. */
@@ -54,6 +57,7 @@ const WORKFLOWS: INotebookLibrary = {
 	entry: localize('workflowLibrary.entry', "Workflow"),
 	empty: localize('workflowLibrary.empty', "The workflow library is empty."),
 	openFailed: (label, error) => localize('workflowLibrary.openFailed', "Could not open the workflow {0}: {1}", label, error),
+	content: 'workflows',
 };
 
 /** Compose > New Methods: methods no Julia package has, each tested on data against published results. */
@@ -77,6 +81,7 @@ const PUBLISHED_BENCHMARKS: INotebookLibrary = {
 	entry: localize('publishedBenchmarks.entry', "Benchmark"),
 	empty: localize('publishedBenchmarks.empty', "There are no published benchmarks yet."),
 	openFailed: (label, error) => localize('publishedBenchmarks.openFailed', "Could not open the benchmark {0}: {1}", label, error),
+	content: 'benchmarks',
 };
 
 /** The `pollis.workflow` block of a notebook's metadata. */
@@ -109,6 +114,12 @@ interface ILibraryEntry {
 	readonly download?: string;
 	readonly optionalDownload?: string;
 	readonly updated?: string;
+	/** The notebook's `updated` date, `YYYY-MM-DD`. */
+	readonly updatedDate?: string;
+	/** Marked until opened: an entry downloaded since the release, new or newer than the shipped one. */
+	readonly status?: 'new' | 'updated';
+	/** Whether the user's copy is older than the library's notebook. */
+	readonly copyOutdated?: boolean;
 }
 
 interface INotebook {
@@ -181,13 +192,20 @@ async function readMethodEntry(fileService: IFileService, folder: URI): Promise<
  * cells, and its article, datasets and date the `pollis.workflow` block of its metadata. The New
  * Methods library has no notebooks: each folder with a method.toml is an entry, read from it.
  */
-async function readLibrary(fileService: IFileService, library: INotebookLibrary): Promise<ILibraryEntry[]> {
+async function readLibrary(fileService: IFileService, library: INotebookLibrary, downloaded: readonly IDownloadedEntry[] = [], unseen: ReadonlySet<string> = new Set()): Promise<ILibraryEntry[]> {
 	const root = FileAccess.asFileUri(library.base);
-	if (!await fileService.exists(root)) {
-		return [];
+	// The shipped folders, those downloaded since the release in place of theirs, and the new ones
+	const folders = new Map<string, { name: string; resource: URI; isDirectory: boolean; status?: 'new' | 'updated' }>();
+	if (await fileService.exists(root)) {
+		for (const folder of (await fileService.resolve(root)).children ?? []) {
+			folders.set(folder.name, folder);
+		}
+	}
+	for (const { entry, folder, isNew } of downloaded) {
+		folders.set(entry.id, { name: entry.id, resource: folder, isDirectory: true, status: unseen.has(entry.id) ? (isNew ? 'new' : 'updated') : undefined });
 	}
 	const entries: ILibraryEntry[] = [];
-	for (const folder of (await fileService.resolve(root)).children ?? []) {
+	for (const folder of folders.values()) {
 		if (!folder.isDirectory) {
 			continue;
 		}
@@ -238,6 +256,8 @@ async function readLibrary(fileService: IFileService, library: INotebookLibrary)
 			download: download > 0 ? ByteSize.formatSize(download) : undefined,
 			optionalDownload: optionalDownload > 0 ? ByteSize.formatSize(optionalDownload) : undefined,
 			updated: formatDate(metadata.updated),
+			updatedDate: metadata.updated,
+			status: folder.status,
 		});
 	}
 	return entries.sort((a, b) => a.title.localeCompare(b.title));
@@ -246,6 +266,7 @@ async function readLibrary(fileService: IFileService, library: INotebookLibrary)
 type LibraryMessage =
 	| { readonly command: 'ready' }
 	| { readonly command: 'open'; readonly folder: string }
+	| { readonly command: 'openUpdated'; readonly folder: string }
 	| { readonly command: 'copyBibtex'; readonly folder: string }
 	| { readonly command: 'link'; readonly url: string }
 	| { readonly command: 'openMethod'; readonly id: string }
@@ -270,6 +291,7 @@ async function openLibraryPage(accessor: ServicesAccessor, library: INotebookLib
 	const clipboardService = accessor.get(IClipboardService);
 	const openerService = accessor.get(IOpenerService);
 	const instantiationService = accessor.get(IInstantiationService);
+	const contentService = accessor.get(IPollisContentService);
 
 	const open = openPages.get(library);
 	if (open && !open.isDisposed()) {
@@ -277,7 +299,27 @@ async function openLibraryPage(accessor: ServicesAccessor, library: INotebookLib
 		return;
 	}
 
-	const entries = await readLibrary(fileService, library);
+	const userFolder = joinPath(await pathService.userHome({ preferLocal: true }), '.pollis', library.userFolder);
+	const readEntries = async () => {
+		const read = library.content
+			? await readLibrary(fileService, library, await contentService.downloaded(library.content), contentService.unseen(library.content))
+			: await readLibrary(fileService, library);
+		// A user's copy older than the library's notebook: the page offers the new version beside it
+		return Promise.all(read.map(async entry => {
+			const copy = joinPath(userFolder, entry.folder, entry.file);
+			if (library.userMethods || !entry.updatedDate || !await fileService.exists(copy)) {
+				return entry;
+			}
+			try {
+				const notebook: INotebook = JSON.parse((await fileService.readFile(copy)).value.toString());
+				const copied = notebook.metadata?.pollis?.workflow?.updated;
+				return { ...entry, copyOutdated: !!copied && copied < entry.updatedDate };
+			} catch {
+				return entry;
+			}
+		}));
+	};
+	let entries = await readEntries();
 	if (entries.length === 0 && !library.userMethods) {
 		notificationService.info(library.empty);
 		return;
@@ -328,9 +370,34 @@ async function openLibraryPage(accessor: ServicesAccessor, library: INotebookLib
 		}
 	};
 
+	const sendEntries = () => webviewInput.webview.postMessage({ command: 'entries', entries: entries.map(({ location, ...rest }) => rest) });
+	const seen = async (entry: ILibraryEntry) => {
+		if (library.content && entry.status) {
+			contentService.markSeen(library.content, entry.folder);
+			entries = await readEntries();
+			sendEntries();
+		}
+	};
+
+	// The library's notebook, newer than the user's copy, copied beside it as NAME (DATE).ipynb with the files the copy lacks
+	const openUpdated = async (entry: ILibraryEntry) => {
+		try {
+			const copy = joinPath(userFolder, entry.folder);
+			await copyMissing(entry.location, copy);
+			const updated = joinPath(copy, `${entry.file.replace(/\.ipynb$/, '')} (${entry.updatedDate}).ipynb`);
+			if (!await fileService.exists(updated)) {
+				await fileService.copy(joinPath(entry.location, entry.file), updated);
+			}
+			await editorService.openEditor({ resource: updated });
+			await seen(entry);
+		} catch (error) {
+			notificationService.error(library.openFailed(entry.title, toErrorMessage(error)));
+		}
+	};
+
 	const openEntry = async (entry: ILibraryEntry) => {
 		try {
-			const copy = joinPath(await pathService.userHome({ preferLocal: true }), '.pollis', library.userFolder, entry.folder);
+			const copy = joinPath(userFolder, entry.folder);
 			if (library.userMethods) {
 				// A library method becomes one of the user's methods: its page opens
 				await copyMissing(entry.location, copy);
@@ -341,6 +408,7 @@ async function openLibraryPage(accessor: ServicesAccessor, library: INotebookLib
 				await fileService.copy(entry.location, copy);
 			}
 			await editorService.openEditor({ resource: joinPath(copy, entry.file) });
+			await seen(entry);
 		} catch (error) {
 			notificationService.error(library.openFailed(entry.title, toErrorMessage(error)));
 		}
@@ -348,9 +416,9 @@ async function openLibraryPage(accessor: ServicesAccessor, library: INotebookLib
 
 	disposables.add(webviewInput.webview.onMessage((e: { message: LibraryMessage }) => {
 		const message = e.message;
-		const entry = message.command === 'open' || message.command === 'copyBibtex' ? entries.find(candidate => candidate.folder === message.folder) : undefined;
+		const entry = message.command === 'open' || message.command === 'openUpdated' || message.command === 'copyBibtex' ? entries.find(candidate => candidate.folder === message.folder) : undefined;
 		if (message.command === 'ready') {
-			webviewInput.webview.postMessage({ command: 'entries', entries: entries.map(({ location, ...rest }) => rest) });
+			sendEntries();
 			if (library.userMethods) {
 				sendMethods();
 			}
@@ -360,6 +428,8 @@ async function openLibraryPage(accessor: ServicesAccessor, library: INotebookLib
 			instantiationService.invokeFunction(deleteUserMethods, message.command === 'deleteEmpty' ? 'empty' : message.id).then(sendMethods, error => notificationService.error(toErrorMessage(error)));
 		} else if (message.command === 'open' && entry) {
 			openEntry(entry);
+		} else if (message.command === 'openUpdated' && entry?.copyOutdated) {
+			openUpdated(entry);
 		} else if (message.command === 'copyBibtex' && entry?.article?.bibtex) {
 			clipboardService.writeText(entry.article.bibtex);
 		} else if (message.command === 'link' && /^https:\/\//.test(message.url)) {
@@ -394,6 +464,10 @@ function pageHtml(library: INotebookLibrary): string {
 		tableCount: localize('newMethods.yours.tableCount', "{0} input, {1} target"),
 		delete: localize('newMethods.yours.delete', "Delete"),
 		deleteEmpty: localize('newMethods.yours.deleteEmpty', "Delete Empty Methods ({0})"),
+		new: localize('workflowLibrary.new', "New"),
+		updatedBadge: localize('workflowLibrary.updatedBadge', "Updated"),
+		copyOutdated: localize('workflowLibrary.copyOutdated', "Your copy is older than this version."),
+		openUpdated: localize('workflowLibrary.openUpdated', "Open Updated Version"),
 	};
 	const userMethods = library.userMethods ? `
 	<h2>${text.inProgress}</h2>
@@ -447,8 +521,16 @@ ${LIBRARY_PAGE_HELPERS}
 		const td = cell(row, 'name');
 		const title = element('div', 'title', entry.title);
 		title.addEventListener('click', () => vscode.postMessage({ command: 'open', folder: entry.folder }));
+		if (entry.status) {
+			title.appendChild(element('span', 'badge', entry.status === 'new' ? TEXT.new : TEXT.updatedBadge));
+		}
 		td.appendChild(title);
 		td.appendChild(element('div', 'file', entry.file));
+		if (entry.copyOutdated) {
+			const note = element('div', 'small', TEXT.copyOutdated + ' ');
+			note.appendChild(link(TEXT.openUpdated, () => vscode.postMessage({ command: 'openUpdated', folder: entry.folder })));
+			td.appendChild(note);
+		}
 		const description = element('p', 'description clamped', entry.description);
 		td.appendChild(description);
 		// The toggle shows only when the description is longer than its three lines

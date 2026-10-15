@@ -239,6 +239,8 @@ export const copyrightFilter = Object.freeze<string[]>([
 	'!src/vs/workbench/contrib/simulate/**',
 	'!src/vs/workbench/contrib/optimise/**',
 	'!src/vs/workbench/contrib/compose/browser/media/**',
+	// Julia scripts cannot start with the /* */ header
+	'!scripts/**/*.jl',
 ]);
 
 export const tsFormattingFilter = Object.freeze<string[]>([

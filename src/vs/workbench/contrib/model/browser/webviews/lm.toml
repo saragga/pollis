@@ -25,10 +25,6 @@ name = "CovarianceMatrices.jl"
 github = "https://github.com/Trumpingtons/CovarianceMatrices.jl"
 fork = true
 
-[[packages]]
-name = "PollisDatasets.jl"
-github = "https://github.com/Trumpingtons/PollisDatasets.jl"
-
 [[notebookSections]]
 label = ""
 

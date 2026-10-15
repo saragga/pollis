@@ -20,7 +20,11 @@
 # computes them from the inputs, each input a variable named after its table and holding a Tables.jl
 # column table. A value passes when the
 # result, rounded to the digits printed, equals it, within `tolerance` units of the last printed digit
-# (in scientific notation, as 1.64e-09, the last digit of the mantissa).
+# (in scientific notation, as 1.64e-09, the last digit of the mantissa). A target with run = "named" is
+# tested only when its name is passed to the tests, as Pkg.test("NAME"; test_args = ["TARGET"]), for targets
+# too slow for every run. An optional [tests] table adds hand-written tests: file, a Julia file of the method
+# folder that the tests include; copy, the other files and folders of the method folder it needs, copied into the
+# package's tests at the same paths; packages, the packages it loads beyond the method's and the tests' own.
 
 using Pkg, TOML, UUIDs
 
@@ -88,11 +92,15 @@ function runtests(name, method)
 		"",
 		"@testset \"$name\" begin",
 	]
+	extra = get(method, "tests", Dict{String, Any}())
+	haskey(extra, "file") && push!(lines, "\tinclude($(repr(extra["file"])))")
 	inputs = get(method, "inputs", Dict{String, Any}())
 	for file in sort([splitext(file)[1] for file in readdir(joinpath(method["folder"], "targets")) if endswith(file, ".csv")])
 		spec = get(targets, file, Dict{String, Any}())
 		call = get(spec, "call", "")
 		isempty(call) && error("targets/$file.csv has no call in method.toml ([targets.$file] call = \"...\")")
+		named = get(spec, "run", "") == "named"
+		named && push!(lines, "\tif $(repr(file)) in ARGS")
 		push!(lines, "\t@testset $(repr(get(spec, "source", file))) begin")
 		for (input, link) in sort(collect(inputs); by = first)
 			occursin(Regex("\\b$input\\b"), call) || continue
@@ -104,6 +112,7 @@ function runtests(name, method)
 			push!(lines, "\t\t$input = input($(repr(haskey(link, "file") ? link["file"] : link["url"]))$options)")
 		end
 		push!(lines, "\t\tcheck($call, $(repr(file)), $(get(spec, "tolerance", 0)))", "\tend")
+		named && push!(lines, "\telse", "\t\t@info \"Not tested: $(get(spec, "source", file)). To test it: Pkg.test(\\\"$name\\\"; test_args = [\\\"$file\\\"])\"", "\tend")
 	end
 	push!(lines, "end", "")
 	return join(lines, "\n")
@@ -132,8 +141,11 @@ function readme(name, method)
 	isfile(pdf) && push!(lines, "## Vignette", "", "[$(vignette_title(method))](vignette/$name.pdf)", "")
 	push!(lines, "## Tests", "", "The tests compute the published tables below from their data and check every printed value, rounded to the digits printed:", "")
 	for (file, spec) in sort(collect(targets); by = first)
-		push!(lines, "- $(get(spec, "source", file)) (`test/data/targets/$file.csv`)")
+		named = get(spec, "run", "") == "named"
+		push!(lines, "- $(get(spec, "source", file)) (`test/data/targets/$file.csv`)" * (named ? ", tested only when named: `Pkg.test(\"$name\"; test_args = [\"$file\"])`" : ""))
 	end
+	extra = get(method, "tests", Dict{String, Any}())
+	haskey(extra, "file") && push!(lines, "", "They also run the tests of `test/$(extra["file"])`.")
 	inputs = get(method, "inputs", Dict{String, Any}())
 	if !isempty(inputs)
 		push!(lines, "", "The data, downloaded from its links when the tests run or kept in `test/data/inputs`:", "")
@@ -171,6 +183,13 @@ function package(packages, folder)
 	mkpath(joinpath(root, "test", "data"))
 	cp(joinpath(folder, "targets"), joinpath(root, "test", "data", "targets"))
 	isdir(joinpath(folder, "inputs")) && cp(joinpath(folder, "inputs"), joinpath(root, "test", "data", "inputs"))
+	extra = get(method, "tests", Dict{String, Any}())
+	for path in unique([get(extra, "copy", String[]); haskey(extra, "file") ? [extra["file"]] : String[]])
+		target = joinpath(root, "test", path)
+		path == get(extra, "file", "") || first(splitpath(path)) in ("data", "runtests.jl") && error("method.toml: [tests] copy = \"$path\" would overwrite the generated tests")
+		mkpath(dirname(target))
+		cp(joinpath(folder, path), target; force = true)
+	end
 	# The vignette: its LaTeX sources and PDF, not LaTeX's working files
 	if isfile(joinpath(folder, "vignette", "$name.pdf"))
 		mkpath(joinpath(root, "vignette"))
@@ -186,7 +205,7 @@ function package(packages, folder)
 	dependencies = get(method, "packages", String[])
 	isempty(dependencies) || Pkg.add(dependencies)
 	Pkg.activate(joinpath(root, "test"))
-	Pkg.add(["Test", "CSV", "Downloads", "Tables"])
+	Pkg.add(unique(["Test", "CSV", "Downloads", "Tables", get(extra, "packages", String[])...]))
 	Pkg.activate(root)
 	return root, name, method
 end

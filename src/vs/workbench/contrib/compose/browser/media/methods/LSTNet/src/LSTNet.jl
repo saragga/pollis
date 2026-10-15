@@ -1,6 +1,6 @@
 module LSTNet
 
-using LinearAlgebra, Statistics, Random, Tables
+using LinearAlgebra, Statistics, Random, Serialization, TOML, Tables
 using Lux, Optimisers, Enzyme, Zygote, MLDataDevices
 using Functors: fmap
 
@@ -96,21 +96,50 @@ const SETTINGS = Dict(
 )
 
 """
-	table2(table, dataset; horizons = (3, 6, 12, 24), epochs = 100)
+	table2(table, dataset; horizons = (3, 6, 12, 24), epochs = 100, folder = nothing)
 
 One dataset's LSTNet-Skip columns of Lai et al.'s Table 2: the RSE and CORR (rows) at each horizon (columns).
 `dataset` is "electricity", "traffic", "solar" or "exchange", which picks the [`SETTINGS`](@ref).
+
+With `folder`, each horizon's result is saved there when its training ends (`DATASET-HORIZON.toml`: the RSE, CORR, the
+epoch kept, the seconds, the settings and the versions), and its training after every epoch
+(`DATASET-HORIZON.checkpoint`). Run again with the same folder, `table2` takes the finished horizons from their files
+and continues an unfinished one from its last epoch. A stop (Ctrl-C, or stopping the notebook cell) returns the table so
+far, NaN where a horizon is not finished.
 """
-function table2(table, dataset::AbstractString; horizons = (3, 6, 12, 24), epochs::Integer = 100)
+function table2(table, dataset::AbstractString; horizons = (3, 6, 12, 24), epochs::Integer = 100, folder = nothing)
 	settings = Settings(SETTINGS[dataset]; epochs)
-	columns = map(horizons) do horizon
-		s = Split(table, horizon)
-		start = time()
-		e = evaluate(s, forecast(LSTNetSkip(settings), s).test)
-		@info "$dataset, horizon $horizon: RSE $(round(e.rse; digits = 4)), CORR $(round(e.corr; digits = 4)), $(round(Int, time() - start)) s"
-		[e.rse, e.corr]
+	results = fill(NaN, 2, length(horizons))
+	folder === nothing || mkpath(folder)
+	try
+		for (j, horizon) in enumerate(horizons)
+			cell = folder === nothing ? nothing : joinpath(folder, "$dataset-$horizon")
+			if cell !== nothing && isfile(cell * ".toml")
+				saved = TOML.parsefile(cell * ".toml")
+				saved["epochs"] == epochs || error("$cell.toml has $(saved["epochs"]) epochs, not $epochs: move it away to train again")
+				results[:, j] = [saved["rse"], saved["corr"]]
+				@info "$dataset, horizon $horizon: RSE $(round(saved["rse"]; digits = 4)), CORR $(round(saved["corr"]; digits = 4)) (finished earlier, $cell.toml)"
+				continue
+			end
+			s = Split(table, horizon)
+			f = forecast(LSTNetSkip(settings), s; checkpoint = cell === nothing ? nothing : cell * ".checkpoint")
+			e = evaluate(s, f.test)
+			results[:, j] = [e.rse, e.corr]
+			@info "$dataset, horizon $horizon: RSE $(round(e.rse; digits = 4)), CORR $(round(e.corr; digits = 4)), epoch $(f.epoch), $(round(Int, f.seconds)) s"
+			if cell !== nothing
+				open(cell * ".toml", "w") do io
+					TOML.print(io, Dict("dataset" => dataset, "horizon" => horizon, "rse" => e.rse, "corr" => e.corr, "epoch" => f.epoch,
+						"seconds" => f.seconds, "epochs" => epochs, "settings" => string(settings), "device" => string(gpu_device()),
+						"julia" => string(VERSION), "lstnet" => string(pkgversion(LSTNet))))
+				end
+				rm(cell * ".checkpoint"; force = true)
+			end
+		end
+	catch caught
+		caught isa InterruptException || rethrow()
+		@info "Stopped. " * (folder === nothing ? "" : "Run table2 again with folder = $(repr(folder)) to continue.")
 	end
-	reduce(hcat, columns)
+	results
 end
 
 end

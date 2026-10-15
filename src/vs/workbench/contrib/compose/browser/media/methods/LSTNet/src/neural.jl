@@ -96,7 +96,7 @@ scaled down to norm `clip` when larger, then Adam. Returns the norm before clipp
 function step(ad, loss, data, state, clip)
 	gradients, _, _, state = Training.compute_gradients(ad, loss, data, state)
 	norm = sqrt(sum(g -> sum(abs2, g), Optimisers.trainables(gradients)))
-	norm > clip && (gradients = fmap(g -> g .* Float32(clip / norm), gradients))
+	norm > clip && (gradients = fmap(g -> g === nothing ? g : g .* Float32(clip / norm), gradients))
 	norm, Training.apply_gradients!(state, gradients)
 end
 
@@ -131,23 +131,51 @@ function predict(model, parameters, states, inputs, times)
 	permutedims(Float64.(reduce(hcat, batches)))
 end
 
+"Writes `value` to `file` through a temporary file, so a stop while writing leaves the previous `file` whole."
+function save(file, value)
+	temporary = file * ".partial"
+	serialize(temporary, value)
+	mv(temporary, file; force = true)
+end
+
 """
 Trains `model` on the training times of `s` as `main.py` does: each epoch in batches of `batchsize` in a random order,
-then the validation RSE, keeping the parameters of the epoch with the smallest; returns its forecasts of the test times.
+then the validation RSE, keeping the parameters of the epoch with the smallest; returns its forecasts of the test times,
+the epoch kept and the seconds the training took.
+
+With `checkpoint`, a file, everything the next epoch needs is saved there after every epoch (the parameters, the
+optimiser's state, the random numbers and the best epoch so far), and a training that finds the file continues from
+the epoch after it, so a stop loses at most the epoch under way; with more `epochs` than it was saved with, it trains
+on. On the CPU the continued training gives the same numbers as one never stopped.
 """
-function train(model, s::Split, settings::Settings)
+function train(model, s::Split, settings::Settings; checkpoint = nothing)
 	t = trainer(model, s, settings)
-	state = t.state
+	state, rng = t.state, t.rng
 	fit = targets(s, settings.window)
-	best = (; score = Inf)
-	for epoch in 1:settings.epochs
-		for batch in Iterators.partition(fit[randperm(t.rng, length(fit))], settings.batchsize)
+	best = (; score = Inf, epoch = 0, parameters = nothing)
+	start, seconds = 1, 0.0
+	if checkpoint !== nothing && isfile(checkpoint)
+		saved = deserialize(checkpoint)
+		(Settings(saved.settings; settings.epochs) == settings && saved.horizon == s.horizon && saved.size == size(s.data)) ||
+			error("$checkpoint is the checkpoint of another training: delete it to start this one")
+		state = Training.TrainState(state.cache, state.objective_function, state.allocator_cache, state.model, t.device(saved.parameters),
+			t.device(saved.states), state.optimizer, t.device(saved.optimizer), saved.step)
+		rng, best, start, seconds = saved.rng, saved.best, saved.epoch + 1, saved.seconds
+		@info "Continuing from epoch $(saved.epoch) of $(settings.epochs) ($checkpoint)"
+	end
+	for epoch in start:settings.epochs
+		began = time()
+		for batch in Iterators.partition(fit[randperm(rng, length(fit))], settings.batchsize)
 			_, state = step(t.ad, t.loss, (t.inputs(batch), t.target(batch)), state, settings.clip)
 		end
 		r = score(s, predict(model, state.parameters, state.states, t.inputs, s.valid), s.valid)
 		r < best.score && (best = (; score = r, epoch, parameters = deepcopy(cpu_device()(state.parameters))))
+		seconds += time() - began
+		checkpoint === nothing || save(checkpoint, (; settings, s.horizon, size = size(s.data), epoch, rng, best, seconds,
+			parameters = cpu_device()(state.parameters), states = cpu_device()(state.states),
+			optimizer = cpu_device()(state.optimizer_state), state.step))
 	end
-	(; test = predict(model, t.device(best.parameters), state.states, t.inputs, s.test), best.epoch)
+	(; test = predict(model, t.device(best.parameters), state.states, t.inputs, s.test), best.epoch, seconds)
 end
 
 """
@@ -161,10 +189,11 @@ struct LSTNetSkip
 end
 
 """
-	forecast(method::LSTNetSkip, s::Split)
+	forecast(method::LSTNetSkip, s::Split; checkpoint = nothing)
 
 Trains LSTNet-Skip on the training times of `s` and forecasts the test times. Returns a named tuple whose field `test`
 holds the forecasts, a row for each test time and a column for each series, on the series as divided (see
-[`Split`](@ref)), and whose field `epoch` is the epoch kept.
+[`Split`](@ref)), whose field `epoch` is the epoch kept and whose field `seconds` is the time the training took. With
+`checkpoint`, a file, the training is saved there after every epoch and continues from it when it is run again.
 """
-forecast(method::LSTNetSkip, s::Split) = train(network(method.settings, size(s.data, 2)), s, method.settings)
+forecast(method::LSTNetSkip, s::Split; checkpoint = nothing) = train(network(method.settings, size(s.data, 2)), s, method.settings; checkpoint)
