@@ -17,6 +17,7 @@ import { BROWSE_METHODS_COMMAND_ID, CREATE_METHOD_COMMAND_ID } from './newMethod
 import './codingAgentPage.js';
 import './modelRoutingPage.js';
 import './pollisContent.js';
+import './pollisUpdate.js';
 import './vignettesPage.js';
 import { LOCAL_MODEL_RUNNERS_COMMAND_ID } from './localModelRunnersPage.js';
 import { MODEL_ROUTING_COMMAND_ID } from './modelRouting.js';
