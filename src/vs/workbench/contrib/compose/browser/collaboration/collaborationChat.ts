@@ -1,13 +1,13 @@
 /*---------------------------------------------------------------------------------------------
  *  Copyright (c) 2026 Antonio Saragga Seabra
- *  Licensed under the GNU Affero General Public License v3.0 or later. See LICENSE.txt in the project root for license information.
+ *  Licensed under the GNU Affero General Public License v3.0. See LICENSE.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
 import { FileAccess } from '../../../../../base/common/network.js';
 import { localize } from '../../../../../nls.js';
 import { asWebviewUri, webviewGenericCspSource } from '../../../webview/common/webview.js';
 import { IWirePacket } from './collaborationTransport.js';
-import { MAX_IMAGE_BYTES, MAX_RECEIVE_BYTES, PROGRESS_THRESHOLD_BYTES, SignallingStrategy } from './collaborationProtocol.js';
+import { MAX_FILE_BYTES, MAX_IMAGE_BYTES, MAX_RECEIVE_BYTES, PROGRESS_THRESHOLD_BYTES, SignallingStrategy } from './collaborationProtocol.js';
 
 // The Collaboration chat page. As in p2p-live-share (whose chat it adapts: messages with images pasted or
 // dragged in), the page holds the Trystero room, so the connection lives as long as the chat; the session
@@ -34,14 +34,23 @@ export interface IChatDataset {
 	readonly formulas: boolean;
 }
 
-/** A line of the chat: a message, a notice such as "B joined", or a dataset another participant shared. */
+/** A file card: who shared which file and its size; its buttons, Save As and for a database Attach, ask the workbench by id. */
+export interface IChatFile {
+	readonly id: string;
+	readonly fileName: string;
+	readonly size: string;
+	readonly database: boolean;
+}
+
+/** A line of the chat: a message, a notice such as "B joined", or a dataset or file another participant shared. */
 export interface IChatEntry {
-	readonly kind: 'message' | 'notice' | 'dataset';
+	readonly kind: 'message' | 'notice' | 'dataset' | 'file';
 	readonly name?: string;
 	readonly mine?: boolean;
 	readonly text: string;
 	readonly image?: string;
 	readonly dataset?: IChatDataset;
+	readonly file?: IChatFile;
 	readonly time: number;
 }
 
@@ -89,7 +98,11 @@ export type ChatWorkbenchMessage =
 	| { readonly command: 'copyInvitation' }
 	| { readonly command: 'testConnection' }
 	| { readonly command: 'leaveSession' }
-	| { readonly command: 'dataset'; readonly id: string; readonly action: 'preview' | 'save' | 'load' };
+	| { readonly command: 'dataset'; readonly id: string; readonly action: 'preview' | 'save' | 'load' }
+	| { readonly command: 'pickDataset' }
+	| { readonly command: 'pickDatabase' }
+	| { readonly command: 'sendFile'; readonly fileName: string; readonly content: string }
+	| { readonly command: 'file'; readonly id: string; readonly action: 'save' | 'attach' };
 
 /** The chat page: its texts come from here, the session from the workbench's messages. */
 export function chatPageHtml(): string {
@@ -102,9 +115,20 @@ export function chatPageHtml(): string {
 		copied: localize('collaborationChat.copied', "Copied"),
 		testConnection: localize('collaborationChat.testConnection', "Test Connection"),
 		leave: localize('collaborationChat.leave', "Leave Session"),
-		placeholder: localize('collaborationChat.placeholder', "Write a message; paste or drag in an image. Enter sends, Shift+Enter starts a new line."),
+		placeholder: localize('collaborationChat.placeholder', "Write a message; paste an image, or drag in an image or a file. Enter sends, Shift+Enter starts a new line."),
 		send: localize('collaborationChat.send', "Send"),
-		addImage: localize('collaborationChat.addImage', "Add Image"),
+		add: localize('collaborationChat.add', "Add an Image, a File, a Dataset or a Database"),
+		addImage: localize('collaborationChat.addImage', "Image"),
+		addFile: localize('collaborationChat.addFile', "File"),
+		addDataset: localize('collaborationChat.addDataset', "Dataset"),
+		addDatabase: localize('collaborationChat.addDatabase', "Database"),
+		fileTooLarge: localize('collaborationChat.fileTooLarge', "{0} is too large to share in the chat (the limit is {1} MB): send it the usual way.", '{0}', MAX_FILE_BYTES / 1024 / 1024),
+		fileShared: localize('collaborationChat.fileShared', "Shared {0}, {1}", '{0}', '{1}'),
+		fileNote: localize('collaborationChat.fileNote', "Pollis does not open or run shared files: save it, and open it only if you trust it."),
+		saveFile: localize('collaborationChat.saveFile', "Save As..."),
+		databaseShared: localize('collaborationChat.databaseShared', "Shared the DuckDB database {0}, {1}", '{0}', '{1}'),
+		databaseNote: localize('collaborationChat.databaseNote', "Attach opens it read-only in your Julia session and shows its tables in the Databases view. Views in a database can read files on your computer when queried: attach only databases from people you trust."),
+		attachDatabase: localize('collaborationChat.attachDatabase', "Attach in My Julia Session"),
 		removeImage: localize('collaborationChat.removeImage', "Remove Image"),
 		sending: localize('collaborationChat.sending', "Sending {0} to {1}", '{0}', '{1}'),
 		receiving: localize('collaborationChat.receiving', "Receiving {0} from {1}", '{0}', '{1}'),
@@ -149,12 +173,20 @@ export function chatPageHtml(): string {
 		.bar { margin: 4px 0; font-size: 11px; color: var(--vscode-descriptionForeground); }
 		.bar progress { width: 100%; height: 6px; }
 		footer { border-top: 1px solid var(--vscode-widget-border); padding: 8px 12px; }
+		/* The composer: one rounded box with the attached image, the text, and below it the + (Image, File, Dataset, Database) on the left and the send arrow on the right */
+		.composer { padding: 8px 10px 6px 10px; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, var(--vscode-widget-border)); border-radius: 14px; }
+		.composer:focus-within { border-color: var(--vscode-focusBorder); }
 		#attachment { display: none; align-items: center; gap: 8px; margin-bottom: 6px; }
-		#attachment img { max-height: 64px; border: 1px solid var(--vscode-widget-border); }
-		.composer { display: flex; gap: 8px; align-items: flex-end; }
-		textarea { flex: 1; resize: none; min-height: 36px; max-height: 160px; font: inherit; padding: 6px 8px; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, transparent); border-radius: 2px; }
-		textarea:focus { outline: 1px solid var(--vscode-focusBorder); outline-offset: -1px; }
-		body.dragging footer { outline: 2px dashed var(--vscode-focusBorder); outline-offset: -4px; }
+		#attachment img { max-height: 64px; border: 1px solid var(--vscode-widget-border); border-radius: 6px; }
+		textarea { display: block; width: 100%; resize: none; min-height: 24px; max-height: 160px; font: inherit; padding: 2px 2px; color: inherit; background: transparent; border: none; outline: none; }
+		.tools { display: flex; align-items: center; justify-content: space-between; margin-top: 4px; }
+		button.icon { display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; padding: 0; border-radius: 50%; color: var(--vscode-foreground); background: transparent; }
+		button.icon:hover { background: var(--vscode-toolbar-hoverBackground); }
+		button.icon svg { width: 18px; height: 18px; }
+		button.icon.primary { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
+		button.icon.primary:hover { background: var(--vscode-button-hoverBackground); }
+		button.icon.primary.idle { opacity: 0.4; }
+		body.dragging .composer { outline: 2px dashed var(--vscode-focusBorder); outline-offset: 2px; }
 		button { font: inherit; padding: 4px 12px; border: none; border-radius: 2px; cursor: pointer; color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); white-space: nowrap; }
 		button:hover { background: var(--vscode-button-secondaryHoverBackground); }
 		button.primary { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
@@ -168,6 +200,13 @@ export function chatPageHtml(): string {
 		.dataset th { background: var(--vscode-editorWidget-background); }
 		.dataset .warning { color: var(--vscode-editorWarning-foreground); margin: 4px 0; }
 		.dataset .actions { display: flex; flex-wrap: wrap; gap: 6px; }
+		.file .note { color: var(--vscode-descriptionForeground); margin: 4px 0; }
+		/* The + menu: Image, File, Dataset and Database, above the + */
+		.tools .add { position: relative; }
+		#addMenu { display: none; position: absolute; bottom: 36px; left: 0; z-index: 1; min-width: 140px; padding: 4px 0; color: var(--vscode-menu-foreground); background: var(--vscode-menu-background); border: 1px solid var(--vscode-menu-border, var(--vscode-widget-border)); border-radius: 6px; box-shadow: 0 2px 8px var(--vscode-widget-shadow); }
+		#addMenu.open { display: block; }
+		#addMenu button { display: block; width: 100%; text-align: left; padding: 4px 14px; border-radius: 0; color: inherit; background: none; }
+		#addMenu button:hover, #addMenu button:focus { color: var(--vscode-menu-selectionForeground); background: var(--vscode-menu-selectionBackground); outline: none; }
 		.link { color: var(--vscode-textLink-foreground); background: none; padding: 0; }
 		.link:hover { background: none; text-decoration: underline; }
 	</style>
@@ -183,18 +222,30 @@ export function chatPageHtml(): string {
 	<div id="messages"></div>
 	<div id="progress"></div>
 	<footer>
-		<div id="attachment"><img id="attachmentImage" alt=""><button class="link" id="removeImage">${text.removeImage}</button></div>
 		<div class="composer">
+			<div id="attachment"><img id="attachmentImage" alt=""><button class="link" id="removeImage">${text.removeImage}</button></div>
 			<textarea id="input" rows="1" placeholder="${text.placeholder}"></textarea>
-			<button id="addImage" title="${text.addImage}">${text.addImage}</button>
-			<button class="primary" id="send">${text.send}</button>
+			<div class="tools">
+				<div class="add">
+					<div id="addMenu" role="menu">
+						<button id="addImage" role="menuitem">${text.addImage}</button>
+						<button id="addFile" role="menuitem">${text.addFile}</button>
+						<button id="addDataset" role="menuitem">${text.addDataset}</button>
+						<button id="addDatabase" role="menuitem">${text.addDatabase}</button>
+					</div>
+					<button class="icon" id="add" title="${text.add}" aria-label="${text.add}" aria-haspopup="menu"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M8 2.5v11M2.5 8h11"/></svg></button>
+				</div>
+				<button class="icon primary idle" id="send" title="${text.send}" aria-label="${text.send}"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 13V3M3.5 7.5 8 3l4.5 4.5"/></svg></button>
+			</div>
 			<input type="file" id="file" accept="image/png,image/jpeg,image/gif,image/webp" hidden>
+			<input type="file" id="anyFile" hidden>
 		</div>
 	</footer>
 <script type="module">
 	const vscode = acquireVsCodeApi();
 	const TEXT = ${JSON.stringify(text)};
 	const MAX_IMAGE_BYTES = ${MAX_IMAGE_BYTES};
+	const MAX_FILE_BYTES = ${MAX_FILE_BYTES};
 	const MAX_RECEIVE_BYTES = ${MAX_RECEIVE_BYTES};
 	const PROGRESS_THRESHOLD_BYTES = ${PROGRESS_THRESHOLD_BYTES};
 	const $ = id => document.getElementById(id);
@@ -311,7 +362,7 @@ export function chatPageHtml(): string {
 		const element = document.createElement('div');
 		element.className = 'entry ' + entry.kind + (entry.mine ? ' mine' : '');
 		const time = new Date(entry.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-		if (entry.kind === 'message' || entry.kind === 'dataset') {
+		if (entry.kind !== 'notice') {
 			const meta = document.createElement('div');
 			meta.className = 'meta';
 			const name = document.createElement('b');
@@ -341,6 +392,9 @@ export function chatPageHtml(): string {
 		}
 		if (entry.dataset) {
 			element.append(datasetCard(entry.dataset));
+		}
+		if (entry.file) {
+			element.append(fileCard(entry.file));
 		}
 		messages.append(element);
 		if (follow) {
@@ -393,6 +447,28 @@ export function chatPageHtml(): string {
 		return card;
 	}
 
+	// A file card: name and size as text, Save As, and for a database Attach; the file itself stays with the workbench
+	function fileCard(file) {
+		const card = document.createElement('div');
+		card.className = 'dataset file';
+		const summary = document.createElement('div');
+		summary.className = 'summary';
+		summary.textContent = (file.database ? TEXT.databaseShared : TEXT.fileShared).replace('{0}', file.fileName).replace('{1}', file.size);
+		const note = document.createElement('div');
+		note.className = 'note';
+		note.textContent = file.database ? TEXT.databaseNote : TEXT.fileNote;
+		const actions = document.createElement('div');
+		actions.className = 'actions';
+		for (const [action, label] of file.database ? [['save', TEXT.saveFile], ['attach', TEXT.attachDatabase]] : [['save', TEXT.saveFile]]) {
+			const button = document.createElement('button');
+			button.textContent = label;
+			button.addEventListener('click', () => vscode.postMessage({ command: 'file', id: file.id, action }));
+			actions.append(button);
+		}
+		card.append(summary, note, actions);
+		return card;
+	}
+
 	function showParticipants(participants) {
 		const people = $('people');
 		people.textContent = '';
@@ -419,6 +495,7 @@ export function chatPageHtml(): string {
 		image = dataUrl;
 		$('attachmentImage').src = dataUrl || '';
 		$('attachment').style.display = dataUrl ? 'flex' : 'none';
+		$('send').classList.toggle('idle', !input.value.trim() && !image);
 	}
 
 	const imageBytes = dataUrl => Math.floor((dataUrl.length - dataUrl.indexOf(',') - 1) * 3 / 4);
@@ -459,6 +536,16 @@ export function chatPageHtml(): string {
 		attach(reduced);
 	}
 
+	// Any other file is sent as it is, in base64, within the cap
+	async function shareFile(file) {
+		if (file.size > MAX_FILE_BYTES) {
+			vscode.postMessage({ command: 'notice', text: TEXT.fileTooLarge.replace('{0}', file.name) });
+			return;
+		}
+		const dataUrl = await readAsDataUrl(file);
+		vscode.postMessage({ command: 'sendFile', fileName: file.name, content: dataUrl.slice(dataUrl.indexOf(',') + 1) });
+	}
+
 	function sendChat() {
 		const textValue = input.value.trim();
 		if (ended || (!textValue && !image)) {
@@ -472,7 +559,9 @@ export function chatPageHtml(): string {
 
 	function resize() {
 		input.style.height = 'auto';
-		input.style.height = Math.min(input.scrollHeight + 2, 160) + 'px';
+		input.style.height = Math.min(input.scrollHeight, 160) + 'px';
+		// The send arrow is dimmed while there is nothing to send
+		$('send').classList.toggle('idle', !input.value.trim() && !image);
 	}
 
 	input.addEventListener('input', resize);
@@ -495,17 +584,47 @@ export function chatPageHtml(): string {
 		e.preventDefault();
 		document.body.classList.remove('dragging');
 		const file = e.dataTransfer?.files?.[0];
-		if (file) {
+		if (file && /^image\\/(png|jpeg|gif|webp)$/.test(file.type)) {
 			prepareImage(file);
+		} else if (file) {
+			shareFile(file);
 		}
 	});
 	$('send').addEventListener('click', sendChat);
+	const addMenu = $('addMenu');
+	function closeAddMenu() {
+		addMenu.classList.remove('open');
+	}
+	$('add').addEventListener('click', e => {
+		e.stopPropagation();
+		addMenu.classList.toggle('open');
+		if (addMenu.classList.contains('open')) {
+			$('addImage').focus();
+		}
+	});
+	document.addEventListener('click', closeAddMenu);
+	document.addEventListener('keydown', e => {
+		if (e.key === 'Escape' && addMenu.classList.contains('open')) {
+			closeAddMenu();
+			$('add').focus();
+		}
+	});
 	$('addImage').addEventListener('click', () => $('file').click());
+	$('addFile').addEventListener('click', () => $('anyFile').click());
+	$('addDataset').addEventListener('click', () => vscode.postMessage({ command: 'pickDataset' }));
+	$('addDatabase').addEventListener('click', () => vscode.postMessage({ command: 'pickDatabase' }));
 	$('file').addEventListener('change', () => {
 		const file = $('file').files[0];
 		$('file').value = '';
 		if (file) {
 			prepareImage(file);
+		}
+	});
+	$('anyFile').addEventListener('change', () => {
+		const file = $('anyFile').files[0];
+		$('anyFile').value = '';
+		if (file) {
+			shareFile(file);
 		}
 	});
 	$('removeImage').addEventListener('click', () => attach(undefined));
@@ -539,8 +658,11 @@ export function chatPageHtml(): string {
 				$('code').textContent = message.code;
 				$('status').textContent = message.ended ? TEXT.ended : message.status;
 				ended = message.ended;
-				for (const id of ['send', 'addImage', 'copyInvitation', 'leave']) {
+				for (const id of ['send', 'add', 'copyInvitation', 'leave']) {
 					$(id).disabled = ended;
+				}
+				if (ended) {
+					closeAddMenu();
 				}
 				input.disabled = ended;
 				break;

@@ -31,10 +31,8 @@
 			"menubarAMRSubmenu",
 			"menubarANSubmenu",
 			"menubarBASubmenu",
-			"menubarBRMSubmenu",
 			"menubarCLSubmenu",
 			"menubarCONNSubmenu",
-			"menubarCTSVSubmenu",
 			"menubarCollaborationClassroomMenu",
 			"menubarCollaborationGamesMenu",
 			"menubarCollaborationMenu",
@@ -42,36 +40,24 @@
 			"menubarCompileGaloreMenu",
 			"menubarCopulaSubmenu",
 			"menubarCorrectnessMenu",
-			"menubarDASubmenu",
-			"menubarDIYSubmenu",
-			"menubarDTRFSubmenu",
-			"menubarDTSVSubmenu",
 			"menubarDVSubmenu",
 			"menubarDistSubmenu",
 			"menubarDocRepSubmenu",
 			"menubarECSubmenu",
 			"menubarEVSubmenu",
 			"menubarE_CMTSubmenu",
-			"menubarGAMSubmenu",
 			"menubarGBOSubmenu",
 			"menubarGFOSubmenu",
 			"menubarGOSubmenu",
-			"menubarHMOSubmenu",
 			"menubarHelpPracticeMenu",
-			"menubarKMSubmenu",
 			"menubarLMSubmenu",
-			"menubarMCMSubmenu",
 			"menubarMOOSubmenu",
 			"menubarMPCCPSubmenu",
 			"menubarMPCVPSubmenu",
-			"menubarMPLPSubmenu",
-			"menubarMPQPSubmenu",
 			"menubarMWMSubmenu",
-			"menubarNBSubmenu",
 			"menubarNCMSubmenu",
 			"menubarNDSubmenu",
 			"menubarNLPSubmenu",
-			"menubarNLSSubmenu",
 			"menubarNNSubmenu",
 			"menubarNewMethodsMenu",
 			"menubarNewPanelsMenu",
@@ -81,7 +67,6 @@
 			"menubarPPLSubmenu",
 			"menubarPracticeMenu",
 			"menubarRLSubmenu",
-			"menubarRQRSubmenu",
 			"menubarReportsMenu",
 			"menubarSASubmenu",
 			"menubarSDESubmenu",
@@ -90,7 +75,6 @@
 			"menubarSGMSubmenu",
 			"menubarTSSSubmenu",
 			"menubarTopicModelsSubmenu",
-			"menubarVMSubmenu",
 			"menubarWorkflowsMenu",
 			"pollisNotebookExport",
 			"submenu.filter.commentSort",
@@ -1840,21 +1824,6 @@
 				{
 					"id": "chiara.statistics.irm.sabr",
 					"menuTitles": []
-				},
-				{
-					"id": "chiara.statistics.tvm.heston",
-					"model": "heston",
-					"menuTitles": []
-				},
-				{
-					"id": "chiara.statistics.tvm.sabr",
-					"model": "sabr",
-					"menuTitles": []
-				},
-				{
-					"id": "chiara.statistics.tvm.bates",
-					"model": "bates",
-					"menuTitles": []
 				}
 			],
 			"portable": true,
@@ -2147,23 +2116,20 @@
 			"wikiRoot": "src/vs/workbench/contrib/model/browser/media/wiki",
 			"notebookRoot": "src/vs/workbench/contrib/model/browser/media/notebooks",
 			"wikis": [
+				"dgo/ags.md",
 				"dgo/assumptions.md",
-				"dgo/crs.md",
 				"dgo/decision-guide.md",
 				"dgo/diagnostics.md",
 				"dgo/direct.md",
 				"dgo/factsheet.md",
 				"dgo/interpretation.md",
-				"dgo/isres-esch.md",
-				"dgo/mlsl.md",
 				"dgo/overview.md",
-				"dgo/quaddirect.md",
-				"dgo/stogo-ags.md"
+				"dgo/quaddirect.md"
 			],
 			"notebooks": [
 				"dgo/tutorial-01-direct.ipynb",
-				"dgo/tutorial-02-population.ipynb",
-				"dgo/tutorial-03-quaddirect.ipynb"
+				"dgo/tutorial-03-quaddirect.ipynb",
+				"dgo/tutorial-04-ags.ipynb"
 			],
 			"packages": [
 				"NLopt.jl",
@@ -2499,22 +2465,16 @@
 				{
 					"id": "chiara.statistics.dtrf.dt",
 					"menuTitles": [
-						"Decision Trees",
-						"Decision Tree"
+						"Decision Trees"
 					]
 				},
 				{
 					"id": "chiara.statistics.dtrf.modalDt",
-					"menuTitles": [
-						"Modal Decision Tree"
-					]
+					"menuTitles": []
 				},
 				{
 					"id": "chiara.statistics.dtrf.randomDt",
-					"menuTitles": [
-						"Random Decision Tree",
-						"Differentiable Decision Tree"
-					]
+					"menuTitles": []
 				}
 			],
 			"portable": true,
@@ -2953,6 +2913,20 @@
 			]
 		},
 		{
+			"id": "ffd",
+			"source": "pollis",
+			"commands": [
+				{
+					"id": "chiara.explore.adr.ffd",
+					"menuTitles": [
+						"Kenneth French Data Library"
+					]
+				}
+			],
+			"portable": false,
+			"reason": "the panel ffd has its own code (illusCollapsed, illustrationLabel, illustrationOverrideJs in src/vs/workbench/contrib/model/browser/webviews/ffd.template.ts), so it cannot go in a data-only extension"
+		},
+		{
 			"id": "fnn",
 			"title": "Feedforward Neural Networks",
 			"source": "pollis",
@@ -3179,37 +3153,27 @@
 				{
 					"id": "chiara.statistics.glm.binary",
 					"model": "Bernoulli",
-					"menuTitles": [
-						"Binary"
-					]
+					"menuTitles": []
 				},
 				{
 					"id": "chiara.statistics.glm.count",
 					"model": "Poisson",
-					"menuTitles": [
-						"Count"
-					]
+					"menuTitles": []
 				},
 				{
 					"id": "chiara.statistics.glm.overdispersed",
 					"model": "NegativeBinomial",
-					"menuTitles": [
-						"Overdispersed Count"
-					]
+					"menuTitles": []
 				},
 				{
 					"id": "chiara.statistics.glm.fractional",
 					"model": "Binomial",
-					"menuTitles": [
-						"Fractional"
-					]
+					"menuTitles": []
 				},
 				{
 					"id": "chiara.statistics.glm.positive",
 					"model": "Gamma",
-					"menuTitles": [
-						"Positive Continuous"
-					]
+					"menuTitles": []
 				}
 			],
 			"portable": true,
@@ -3234,8 +3198,7 @@
 			],
 			"packages": [
 				"GLM.jl",
-				"CovarianceMatrices.jl",
-				"PollisDatasets.jl"
+				"CovarianceMatrices.jl"
 			]
 		},
 		{
@@ -3857,6 +3820,20 @@
 			]
 		},
 		{
+			"id": "imf",
+			"source": "pollis",
+			"commands": [
+				{
+					"id": "chiara.explore.adr.imf",
+					"menuTitles": [
+						"International Monetary Fund Datasets"
+					]
+				}
+			],
+			"portable": false,
+			"reason": "the panel imf has its own code (illusCollapsed, illustrationLabel, illustrationOverrideJs in src/vs/workbench/contrib/model/browser/webviews/imf.template.ts), so it cannot go in a data-only extension"
+		},
+		{
 			"id": "integ",
 			"title": "Integration",
 			"source": "toolbox:pollis-toolbox-mathematical-core",
@@ -3998,7 +3975,8 @@
 				"knn/tutorial-03-scalable.ipynb"
 			],
 			"packages": [
-				"NearestNeighbors.jl"
+				"NearestNeighbors.jl",
+				"DynamicAxisWarping.jl"
 			]
 		},
 		{
@@ -4250,8 +4228,7 @@
 			"packages": [
 				"GLM.jl",
 				"Regress.jl",
-				"CovarianceMatrices.jl",
-				"PollisDatasets.jl"
+				"CovarianceMatrices.jl"
 			]
 		},
 		{
@@ -4380,9 +4357,7 @@
 				{
 					"id": "chiara.mp.milp",
 					"model": "milp",
-					"menuTitles": [
-						"Mixed-Integer Linear Programming"
-					]
+					"menuTitles": []
 				}
 			],
 			"portable": true,
@@ -5091,6 +5066,39 @@
 			],
 			"packages": [
 				"Metaheuristics.jl"
+			]
+		},
+		{
+			"id": "mpmicp",
+			"title": "Mixed-Integer Conic Programming",
+			"source": "pollis",
+			"commands": [
+				{
+					"id": "chiara.mp.micp",
+					"menuTitles": [
+						"Mixed-Integer Conic Programming"
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "portfolio",
+			"decisionFirstColumn": "Problem",
+			"toml": "src/vs/workbench/contrib/model/browser/webviews/mpmicp.toml",
+			"wikiRoot": "src/vs/workbench/contrib/model/browser/media/wiki",
+			"notebookRoot": "src/vs/workbench/contrib/model/browser/media/notebooks",
+			"wikis": [
+				"mpmicp/factsheet.md",
+				"mpmicp/overview.md"
+			],
+			"notebooks": [
+				"mpmicp/tutorial-01-cardinality-portfolio.ipynb"
+			],
+			"packages": [
+				"JuMP.jl",
+				"Pajarito.jl",
+				"HiGHS.jl",
+				"Hypatia.jl",
+				"Clarabel.jl"
 			]
 		},
 		{
@@ -6021,24 +6029,23 @@
 		},
 		{
 			"id": "pgo",
-			"title": "Principled Global Search with Local Refinement",
+			"title": "Stochastic Search with Local Refinement",
 			"source": "pollis",
 			"commands": [
 				{
 					"id": "chiara.optimise.go.pg",
 					"menuTitles": [
-						"Principled Stochastic Search with Local Refinement"
+						"Stochastic Search with Local Refinement"
 					]
 				}
 			],
 			"portable": true,
-			"defaultModel": "ags",
+			"defaultModel": "mlsl",
 			"decisionFirstColumn": "Method",
 			"toml": "src/vs/workbench/contrib/model/browser/webviews/pgo.toml",
 			"wikiRoot": "src/vs/workbench/contrib/model/browser/media/wiki",
 			"notebookRoot": "src/vs/workbench/contrib/model/browser/media/notebooks",
 			"wikis": [
-				"pgo/ags.md",
 				"pgo/assumptions.md",
 				"pgo/decision-guide.md",
 				"pgo/diagnostics.md",
@@ -6046,15 +6053,17 @@
 				"pgo/interpretation.md",
 				"pgo/mlsl.md",
 				"pgo/overview.md",
-				"pgo/stogo-r.md"
+				"pgo/stogo-r.md",
+				"pgo/tiktak.md"
 			],
 			"notebooks": [
 				"pgo/tutorial-01-mlsl.ipynb",
 				"pgo/tutorial-02-stogo-r.ipynb",
-				"pgo/tutorial-03-ags.ipynb"
+				"pgo/tutorial-03-tiktak.ipynb"
 			],
 			"packages": [
-				"NLopt.jl"
+				"NLopt.jl",
+				"MultistartOptimization.jl"
 			]
 		},
 		{
@@ -6766,30 +6775,22 @@
 				{
 					"id": "chiara.statistics.rqr.rl0",
 					"model": "robust",
-					"menuTitles": [
-						"Robust Regression (no penalty)"
-					]
+					"menuTitles": []
 				},
 				{
 					"id": "chiara.statistics.rqr.rl1l2",
 					"model": "robust",
-					"menuTitles": [
-						"Robust Regression (L1, L2)"
-					]
+					"menuTitles": []
 				},
 				{
 					"id": "chiara.statistics.rqr.ql0",
 					"model": "quantile",
-					"menuTitles": [
-						"Quantile Regression (no penalty)"
-					]
+					"menuTitles": []
 				},
 				{
 					"id": "chiara.statistics.rqr.ql1l2",
 					"model": "quantile",
-					"menuTitles": [
-						"Quantile Regression (L1, L2)"
-					]
+					"menuTitles": []
 				}
 			],
 			"portable": true,
@@ -7493,9 +7494,7 @@
 			"commands": [
 				{
 					"id": "chiara.statistics.sreg",
-					"menuTitles": [
-						"Symbolic Regression"
-					]
+					"menuTitles": []
 				}
 			],
 			"portable": true,
@@ -8080,12 +8079,7 @@
 			"commands": [
 				{
 					"id": "chiara.statistics.vm",
-					"menuTitles": [
-						"Historical Volatility",
-						"Range-Based Estimators",
-						"HF Realized Volatility",
-						"HF Two Scales Volatility"
-					]
+					"menuTitles": []
 				}
 			],
 			"portable": true,
@@ -8116,6 +8110,20 @@
 			"packages": [
 				"HighFrequencyCovariance.jl"
 			]
+		},
+		{
+			"id": "wbd",
+			"source": "pollis",
+			"commands": [
+				{
+					"id": "chiara.explore.adr.wbd",
+					"menuTitles": [
+						"World Bank Indicators"
+					]
+				}
+			],
+			"portable": false,
+			"reason": "the panel wbd has its own code (illusCollapsed, illustrationLabel, illustrationOverrideJs in src/vs/workbench/contrib/model/browser/webviews/wbd.template.ts), so it cannot go in a data-only extension"
 		},
 		{
 			"id": "xlsx",

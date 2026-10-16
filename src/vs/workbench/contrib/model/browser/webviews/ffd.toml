@@ -1,0 +1,529 @@
+# Kenneth French Data Library Webview Configuration
+# Declarative source. The build script generates ffd.data.ts.
+# Run: npm run gulp compile-toml
+#
+# Approach: FamaFrenchData.jl downloads the zipped CSV files of Kenneth
+# French's Data Library (no API key) and returns, for each file, a vector of
+# tables plus their notes. The tables are Tables.jl-compatible, so the code
+# reads columns with Tables.getcolumn and never loads a data-frame package
+# itself. Returns are in percent; dates are integers such as 192607 (monthly)
+# or 1927 (annual).
+
+[meta]
+title = "Kenneth French Data Library"
+viewType = "pollis.ffd"
+defaultModel = "factors3"
+models = ["factors3", "factors5", "momentum", "portfolios", "industries", "library"]
+illusCollapsed = true
+illustrationText = "Pull Kenneth French's factor and portfolio returns into Julia: the three and five Fama-French factors, momentum, the 25 size and book-to-market portfolios, industry portfolios, and the full list of files in the library."
+
+[[packages]]
+name = "FamaFrenchData.jl"
+github = "https://github.com/tbeason/FamaFrenchData.jl"
+
+[[packages]]
+name = "Tables.jl"
+github = "https://github.com/JuliaData/Tables.jl"
+
+[[packages]]
+name = "Plots.jl"
+github = "https://github.com/JuliaPlots/Plots.jl"
+
+[requires]
+packages = ["FamaFrenchData.jl", "Tables.jl", "Plots.jl"]
+
+[[notebookSections]]
+label = "Kenneth French Data Library"
+
+[[notebookSections.notebooks]]
+name = "First Factors"
+file = "ffd/tutorial-01-first-factors.ipynb"
+bundled = true
+description = "Download the Fama-French factors with readFamaFrench() and read the columns with Tables.jl"
+
+[[wikis]]
+name = "Factsheet"
+file = "ffd/factsheet.md"
+bundled = true
+description = "Quick reference: readFamaFrench(), listFamaFrench(), file names, and the shape of the result"
+
+[[wikis]]
+name = "Overview"
+file = "ffd/overview.md"
+bundled = true
+description = "What the factors and portfolios measure, how they are built, and how the files are organised"
+
+[[references]]
+title = "Kenneth R. French Data Library"
+authors = "French, Kenneth R."
+year = 2026
+journal = "mba.tuck.dartmouth.edu"
+url = "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/data_library.html"
+openAccess = true
+
+[[references]]
+title = "Common Risk Factors in the Returns on Stocks and Bonds"
+authors = "Fama, Eugene F.; French, Kenneth R."
+year = 1993
+journal = "Journal of Financial Economics"
+doi = "10.1016/0304-405X(93)90023-5"
+openAccess = false
+
+[[references]]
+title = "A Five-Factor Asset Pricing Model"
+authors = "Fama, Eugene F.; French, Kenneth R."
+year = 2015
+journal = "Journal of Financial Economics"
+doi = "10.1016/j.jfineco.2014.10.010"
+openAccess = false
+
+[[references]]
+title = "Returns to Buying Winners and Selling Losers: Implications for Stock Market Efficiency"
+authors = "Jegadeesh, Narasimhan; Titman, Sheridan"
+year = 1993
+journal = "Journal of Finance"
+doi = "10.1111/j.1540-6261.1993.tb04702.x"
+openAccess = false
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[bullets]]
+text = "Three Factors"
+detail = "the market, size (SMB), and value (HML) factors, monthly from July 1926"
+
+[[bullets]]
+text = "Five Factors"
+detail = "adds profitability (RMW) and investment (CMA), monthly from July 1963"
+
+[[bullets]]
+text = "Momentum"
+detail = "the winners-minus-losers factor, monthly from January 1927"
+
+[[bullets]]
+text = "Portfolios"
+detail = "the 25 portfolios sorted on size and book-to-market"
+
+[[bullets]]
+text = "Industries"
+detail = "value- and equal-weighted returns of 10 industry portfolios"
+
+[[bullets]]
+text = "Library"
+detail = "the names of all the files, to pass to readFamaFrench()"
+
+[[decisionRows]]
+task = "Three Factors"
+context = "Factors"
+purpose = "Get the market, size, and value factors and the risk-free rate"
+
+[[decisionRows]]
+task = "Five Factors"
+context = "Factors"
+purpose = "Add profitability and investment to the three factors"
+
+[[decisionRows]]
+task = "Momentum"
+context = "Factors"
+purpose = "Study the momentum factor and its crashes"
+
+[[decisionRows]]
+task = "Portfolios"
+context = "Test Assets"
+purpose = "Test an asset pricing model on 25 sorted portfolios"
+
+[[decisionRows]]
+task = "Industries"
+context = "Test Assets"
+purpose = "Compare returns and risk across industries"
+
+[[decisionRows]]
+task = "Library"
+context = "Discovery"
+purpose = "Find the exact name of a file before downloading it"
+
+[miniCharts]
+
+[miniCharts.factors3]
+svg = '''
+var s = '<polyline points="6,56 16,50 26,46 36,38 46,30 52,22" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.6"/>';
+s += '<polyline points="6,56 16,54 26,50 36,48 46,44 52,42" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="3,2" opacity="0.5"/>';
+s += '<polyline points="6,56 16,52 26,52 36,46 46,46 52,40" fill="none" stroke="currentColor" stroke-width="1" opacity="0.35"/>';
+s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">FF3</text>';
+return s;
+'''
+
+[miniCharts.factors5]
+svg = '''
+var s = '';
+var h = [18, 10, 14, 8, 12];
+for (var i = 0; i < 5; i++) { s += '<rect x="' + (8 + i * 8) + '" y="' + (58 - h[i] * 2) + '" width="6" height="' + (h[i] * 2) + '" fill="currentColor" opacity="0.4"/>'; }
+s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">FF5</text>';
+return s;
+'''
+
+[miniCharts.momentum]
+svg = '''
+var s = '<polyline points="6,50 14,44 22,38 30,30 34,56 40,48 46,40 52,32" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.55"/>';
+s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Momentum</text>';
+return s;
+'''
+
+[miniCharts.portfolios]
+svg = '''
+var s = '';
+for (var r = 0; r < 5; r++) { for (var c = 0; c < 5; c++) { s += '<rect x="' + (10 + c * 7) + '" y="' + (20 + r * 7) + '" width="6" height="6" fill="currentColor" opacity="' + (0.15 + 0.03 * (c + 4 - r)) + '"/>'; } }
+s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">5 x 5</text>';
+return s;
+'''
+
+[miniCharts.industries]
+svg = '''
+var s = '';
+var h = [14, 20, 10, 16, 22, 12, 18, 8, 15, 11];
+for (var i = 0; i < 10; i++) { s += '<rect x="' + (6 + i * 4.4) + '" y="' + (58 - h[i]) + '" width="3.4" height="' + h[i] + '" fill="currentColor" opacity="0.4"/>'; }
+s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Industries</text>';
+return s;
+'''
+
+[miniCharts.library]
+svg = '''
+var s = '<rect x="10" y="20" width="8" height="38" fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.5"/>';
+s += '<rect x="20" y="24" width="8" height="34" fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.5"/>';
+s += '<rect x="30" y="18" width="8" height="40" fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.5"/>';
+s += '<line x1="6" y1="58" x2="48" y2="58" stroke="currentColor" stroke-width="1" opacity="0.5"/>';
+s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Library</text>';
+return s;
+'''
+
+[[codeBranches]]
+model = "factors3"
+code = """
+using FamaFrenchData, Tables
+
+# readFamaFrench returns (tables, table notes, file notes); no API key is needed.
+# Table 1 is monthly, table 2 annual; returns are in percent.
+tables, tablenotes, filenotes = readFamaFrench("F-F_Research_Data_Factors")
+monthly = tables[1]
+
+date = Tables.getcolumn(monthly, :Date)          # integers such as 192607
+mktrf = Tables.getcolumn(monthly, Symbol("Mkt-RF"))
+smb = Tables.getcolumn(monthly, :SMB)
+hml = Tables.getcolumn(monthly, :HML)
+rf = Tables.getcolumn(monthly, :RF)
+
+println(first(date), " to ", last(date), ", ", length(date), " months")
+for i in length(date)-5:length(date)
+    println(date[i], "   Mkt-RF ", lpad(mktrf[i], 6), "   SMB ", lpad(smb[i], 6), "   HML ", lpad(hml[i], 6), "   RF ", rf[i])
+end
+"""
+
+[[codeBranches]]
+model = "factors5"
+code = """
+using FamaFrenchData, Tables
+
+# Five factors (2x3 sorts): adds RMW (profitability) and CMA (investment)
+tables, tablenotes, filenotes = readFamaFrench("F-F_Research_Data_5_Factors_2x3")
+monthly = tables[1]
+
+names = [:SMB, :HML, :RMW, :CMA]
+println(first(Tables.getcolumn(monthly, :Date)), " to ", last(Tables.getcolumn(monthly, :Date)))
+for n in [Symbol("Mkt-RF"); names]
+    x = Tables.getcolumn(monthly, n)
+    println(rpad(n, 8), "mean ", lpad(round(sum(x) / length(x); digits = 3), 6), " % per month")
+end
+"""
+
+[[codeBranches]]
+model = "momentum"
+code = """
+using FamaFrenchData, Tables
+
+# Momentum: winners minus losers, sorted on returns from month t-12 to t-2
+tables, tablenotes, filenotes = readFamaFrench("F-F_Momentum_Factor")
+monthly = tables[1]
+
+date = Tables.getcolumn(monthly, :Date)
+mom = Tables.getcolumn(monthly, :Mom)
+println(first(date), " to ", last(date), ", mean ", round(sum(mom) / length(mom); digits = 3), " % per month")
+for i in length(date)-5:length(date)
+    println(date[i], "   Mom ", lpad(mom[i], 6))
+end
+"""
+
+[[codeBranches]]
+model = "portfolios"
+code = """
+using FamaFrenchData, Tables
+
+# 25 portfolios sorted on size (ME, rows) and book-to-market (BM, columns).
+# The file holds several tables; the notes say which is which.
+tables, tablenotes, filenotes = readFamaFrench("25_Portfolios_5x5")
+foreach(((k, n),) -> println(k, "  ", first(n, 60)), enumerate(tablenotes))
+
+vw = tables[1]                                   # value-weighted, monthly
+println()
+println(join(string.(Tables.columnnames(vw)[2:6]), ", "), ", ...")
+"""
+
+[[codeBranches]]
+model = "industries"
+code = """
+using FamaFrenchData, Tables
+
+# Ten industry portfolios; table 1 is value-weighted monthly returns
+tables, tablenotes, filenotes = readFamaFrench("10_Industry_Portfolios")
+vw = tables[1]
+
+for n in Tables.columnnames(vw)[2:end]
+    x = Tables.getcolumn(vw, n)
+    println(rpad(n, 7), "mean ", lpad(round(sum(x) / length(x); digits = 2), 5), " % per month")
+end
+"""
+
+[[codeBranches]]
+model = "library"
+code = """
+using FamaFrenchData
+
+# Every file in the library, by the name readFamaFrench() takes
+files = listFamaFrench()
+println(length(files), " files")
+foreach(println, filter(f -> occursin(r"Industry"i, f), files))
+"""
+
+# Next Steps action groups (task-oriented, matched to the French Data Library tabs)
+[[actionGroups]]
+id = "factors3"
+label = "Three Factors"
+
+[[actionGroups.actions]]
+id = "ffd-ff3-cumulative"
+label = "Cumulative Returns"
+desc = "Growth of one dollar invested in the market, size, and value factors since 1926"
+code = """
+using FamaFrenchData, Tables, Plots, Dates
+
+monthly = first(readFamaFrench("F-F_Research_Data_Factors"))[1]
+date = [Date(div(d, 100), rem(d, 100)) for d in Tables.getcolumn(monthly, :Date)]
+growth(r) = cumprod(1 .+ r ./ 100)
+
+mkt = Tables.getcolumn(monthly, Symbol("Mkt-RF")) .+ Tables.getcolumn(monthly, :RF)
+p = plot(date, growth(mkt), label = "Market", yscale = :log10, ylabel = "value of one dollar (log)", legend = :topleft)
+plot!(p, date, growth(Tables.getcolumn(monthly, :SMB)), label = "SMB")
+plot!(p, date, growth(Tables.getcolumn(monthly, :HML)), label = "HML")
+p
+"""
+
+[[actionGroups.actions]]
+id = "ffd-ff3-sharpe"
+label = "Annualised Statistics"
+desc = "Mean, volatility, and Sharpe ratio of each factor, annualised from monthly returns"
+code = """
+using FamaFrenchData, Tables, Statistics
+
+monthly = first(readFamaFrench("F-F_Research_Data_Factors"))[1]
+for n in [Symbol("Mkt-RF"), :SMB, :HML]
+    x = Tables.getcolumn(monthly, n)
+    m, s = 12 * mean(x), sqrt(12) * std(x)
+    println(rpad(n, 7), "mean ", lpad(round(m; digits = 2), 6), " %   vol ", lpad(round(s; digits = 2), 6),
+            " %   Sharpe ", round(m / s; digits = 2))
+end
+"""
+
+[[actionGroups.actions]]
+id = "ffd-ff3-annual"
+label = "Annual Factors"
+desc = "The last ten years from the annual table in the same file"
+code = """
+using FamaFrenchData, Tables
+
+tables, tablenotes, _ = readFamaFrench("F-F_Research_Data_Factors")
+println(tablenotes[2])
+for r in Iterators.drop(Tables.rows(tables[2]), length(Tables.getcolumn(tables[2], :Date)) - 10)
+    println(r.Date, "   Mkt-RF ", lpad(r[Symbol("Mkt-RF")], 7), "   SMB ", lpad(r.SMB, 7), "   HML ", lpad(r.HML, 7))
+end
+"""
+
+[[actionGroups]]
+id = "factors5"
+label = "Five Factors"
+
+[[actionGroups.actions]]
+id = "ffd-ff5-corr"
+label = "Correlations"
+desc = "Correlation matrix of the five factors"
+code = """
+using FamaFrenchData, Tables, Statistics
+
+monthly = first(readFamaFrench("F-F_Research_Data_5_Factors_2x3"))[1]
+names = [Symbol("Mkt-RF"), :SMB, :HML, :RMW, :CMA]
+C = cor(reduce(hcat, [Tables.getcolumn(monthly, n) for n in names]))
+println(" " ^ 8, join(lpad.(string.(names), 8)))
+for (i, n) in enumerate(names)
+    println(rpad(n, 8), join(lpad.(round.(C[i, :]; digits = 2), 8)))
+end
+"""
+
+[[actionGroups.actions]]
+id = "ffd-ff5-hml"
+label = "Is HML Redundant?"
+desc = "Regress HML on the other four factors, as in Fama and French (2015)"
+code = """
+using FamaFrenchData, Tables, Statistics, LinearAlgebra
+
+monthly = first(readFamaFrench("F-F_Research_Data_5_Factors_2x3"))[1]
+col(n) = Tables.getcolumn(monthly, n)
+y = col(:HML)
+X = [ones(length(y)) col(Symbol("Mkt-RF")) col(:SMB) col(:RMW) col(:CMA)]
+b = X \\ y
+e = y - X * b
+se = sqrt.(sum(abs2, e) / (length(y) - size(X, 2)) .* diag(inv(X' * X)))
+for (n, bi, si) in zip(["intercept", "Mkt-RF", "SMB", "RMW", "CMA"], b, se)
+    println(rpad(n, 10), lpad(round(bi; digits = 3), 7), "   t = ", round(bi / si; digits = 2))
+end
+println("R2 = ", round(1 - var(e) / var(y); digits = 3))
+"""
+
+[[actionGroups]]
+id = "momentum"
+label = "Momentum"
+
+[[actionGroups.actions]]
+id = "ffd-mom-cumulative"
+label = "Cumulative Returns"
+desc = "Growth of one dollar in the momentum factor, on a log scale"
+code = """
+using FamaFrenchData, Tables, Plots, Dates
+
+monthly = first(readFamaFrench("F-F_Momentum_Factor"))[1]
+date = [Date(div(d, 100), rem(d, 100)) for d in Tables.getcolumn(monthly, :Date)]
+plot(date, cumprod(1 .+ Tables.getcolumn(monthly, :Mom) ./ 100), yscale = :log10,
+     ylabel = "value of one dollar (log)", legend = false)
+"""
+
+[[actionGroups.actions]]
+id = "ffd-mom-crashes"
+label = "Momentum Crashes"
+desc = "The ten worst months of the momentum factor"
+code = """
+using FamaFrenchData, Tables
+
+monthly = first(readFamaFrench("F-F_Momentum_Factor"))[1]
+date = Tables.getcolumn(monthly, :Date)
+mom = Tables.getcolumn(monthly, :Mom)
+for i in sortperm(mom)[1:10]
+    println(date[i], "   ", lpad(mom[i], 7), " %")
+end
+"""
+
+[[actionGroups]]
+id = "portfolios"
+label = "Portfolios"
+
+[[actionGroups.actions]]
+id = "ffd-p25-grid"
+label = "Average Returns Grid"
+desc = "Mean monthly return of each of the 25 portfolios since July 1963, size by book-to-market"
+code = """
+using FamaFrenchData, Tables, Statistics
+
+vw = first(readFamaFrench("25_Portfolios_5x5"))[1]
+keep = Tables.getcolumn(vw, :Date) .>= 196307
+names = Tables.columnnames(vw)[2:26]                 # size quintile varies slowest
+m = [mean(Tables.getcolumn(vw, n)[keep]) for n in names]
+grid = permutedims(reshape(m, 5, 5))                 # rows: size, columns: book-to-market
+println("          BM1    BM2    BM3    BM4    BM5")
+for i in 1:5
+    println("ME", i, "   ", join(lpad.(round.(grid[i, :]; digits = 2), 7)))
+end
+"""
+
+[[actionGroups.actions]]
+id = "ffd-p25-capm"
+label = "CAPM Alphas"
+desc = "Join the portfolios to the factors by date and estimate each portfolio's CAPM alpha"
+code = """
+using FamaFrenchData, Tables, Statistics
+
+vw = first(readFamaFrench("25_Portfolios_5x5"))[1]
+ff = first(readFamaFrench("F-F_Research_Data_Factors"))[1]
+start = 196307
+pk = Tables.getcolumn(vw, :Date) .>= start
+fk = Tables.getcolumn(ff, :Date) .>= start
+@assert Tables.getcolumn(vw, :Date)[pk] == Tables.getcolumn(ff, :Date)[fk]
+
+rf = Tables.getcolumn(ff, :RF)[fk]
+X = [ones(count(fk)) Tables.getcolumn(ff, Symbol("Mkt-RF"))[fk]]
+alpha = [first(X \\ (Tables.getcolumn(vw, n)[pk] .- rf)) for n in Tables.columnnames(vw)[2:26]]
+grid = permutedims(reshape(alpha, 5, 5))
+println("CAPM alpha, % per month")
+println("          BM1    BM2    BM3    BM4    BM5")
+for i in 1:5
+    println("ME", i, "   ", join(lpad.(round.(grid[i, :]; digits = 2), 7)))
+end
+"""
+
+[[actionGroups]]
+id = "industries"
+label = "Industries"
+
+[[actionGroups.actions]]
+id = "ffd-ind-riskreturn"
+label = "Risk and Return"
+desc = "Annualised mean against volatility for the ten industries"
+code = """
+using FamaFrenchData, Tables, Plots, Statistics
+
+vw = first(readFamaFrench("10_Industry_Portfolios"))[1]
+names = string.(Tables.columnnames(vw)[2:end])
+x = [Tables.getcolumn(vw, Symbol(n)) for n in names]
+vol = sqrt(12) .* std.(x)
+avg = 12 .* mean.(x)
+scatter(vol, avg, series_annotations = text.(names, 7, :bottom), legend = false,
+        xlabel = "volatility (% per year)", ylabel = "mean return (% per year)")
+"""
+
+[[actionGroups.actions]]
+id = "ffd-ind-heatmap"
+label = "Correlation Heatmap"
+desc = "Correlations between the ten industry returns"
+code = """
+using FamaFrenchData, Tables, Plots, Statistics
+
+vw = first(readFamaFrench("10_Industry_Portfolios"))[1]
+names = string.(Tables.columnnames(vw)[2:end])
+C = cor(reduce(hcat, [Tables.getcolumn(vw, Symbol(n)) for n in names]))
+heatmap(names, names, C, yflip = true, clims = (0, 1), xrotation = 45)
+"""
+
+[[actionGroups]]
+id = "library"
+label = "Library"
+
+[[actionGroups.actions]]
+id = "ffd-lib-daily"
+label = "Daily Files"
+desc = "List the files with daily data"
+code = """
+using FamaFrenchData
+
+foreach(println, filter(f -> endswith(f, "_daily"), listFamaFrench()))
+"""
+
+[[actionGroups.actions]]
+id = "ffd-lib-notes"
+label = "File Notes"
+desc = "Read the notes that describe how a file was built"
+code = """
+using FamaFrenchData
+
+tables, tablenotes, filenotes = readFamaFrench("F-F_Momentum_Factor")
+println(filenotes)
+"""

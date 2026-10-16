@@ -1,0 +1,472 @@
+# IMF Data Webview Configuration
+# Declarative source. The build script generates imf.data.ts.
+# Run: npm run gulp compile-toml
+#
+# Approach: the IMF Data portal exposes a standard SDMX 2.1 REST API at
+# https://api.imf.org/external/sdmx/2.1/ and needs NO API key. It returns a
+# flat CSV table when the request carries the SDMX-CSV Accept header (the
+# format=csv parameter alone is ignored). We read it with HTTP.jl + CSV.jl
+# into a Tables.jl-compatible table. IMFData.jl is not used: it calls the
+# retired dataservices.imf.org service, which no longer resolves.
+
+[meta]
+title = "IMF Data"
+viewType = "pollis.imf"
+defaultModel = "weo"
+models = ["weo", "cpi", "fx", "reserves", "commodities"]
+illusCollapsed = true
+illustrationText = "Pull International Monetary Fund statistics into Julia: World Economic Outlook forecasts, consumer prices, exchange rates, the currency composition of reserves, and primary commodity prices."
+
+[[packages]]
+name = "HTTP.jl"
+github = "https://github.com/JuliaWeb/HTTP.jl"
+
+[[packages]]
+name = "CSV.jl"
+github = "https://github.com/JuliaData/CSV.jl"
+
+[[packages]]
+name = "Tables.jl"
+github = "https://github.com/JuliaData/Tables.jl"
+
+[[packages]]
+name = "Plots.jl"
+github = "https://github.com/JuliaPlots/Plots.jl"
+
+[requires]
+packages = ["HTTP.jl", "CSV.jl", "Tables.jl", "Plots.jl"]
+
+[[notebookSections]]
+label = "IMF Data"
+
+[[notebookSections.notebooks]]
+name = "First Series"
+file = "imf/tutorial-01-first-series.ipynb"
+bundled = true
+description = "Fetch a World Economic Outlook series with the SDMX-CSV Accept header and read it into a table"
+
+[[wikis]]
+name = "Factsheet"
+file = "imf/factsheet.md"
+bundled = true
+description = "Quick reference: the base URL, the dataflow/key structure, the Accept header, and the Julia stack"
+
+[[wikis]]
+name = "Overview"
+file = "imf/overview.md"
+bundled = true
+description = "What the IMF Data portal is, its main datasets, and how series keys are built"
+
+[[references]]
+title = "IMF Data: API Documentation"
+authors = "International Monetary Fund"
+year = 2025
+journal = "data.imf.org"
+url = "https://data.imf.org/en/Resource-Pages/IMF-API"
+openAccess = true
+
+[[references]]
+title = "SDMX 2.1 RESTful Web Services Specification"
+authors = "SDMX Technical Working Group"
+year = 2023
+journal = "sdmx.org"
+url = "https://sdmx.org/?page_id=5008"
+openAccess = true
+
+[[references]]
+title = "World Economic Outlook Database"
+authors = "International Monetary Fund"
+year = 2026
+journal = "imf.org"
+url = "https://www.imf.org/en/Publications/WEO/weo-database"
+openAccess = true
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[bullets]]
+text = "World Economic Outlook"
+detail = "GDP growth, inflation, unemployment, and public debt, with the IMF's forecasts five years ahead"
+
+[[bullets]]
+text = "Consumer Prices"
+detail = "the CPI index and its year-on-year inflation rate, headline and by COICOP division"
+
+[[bullets]]
+text = "Exchange Rates"
+detail = "national currency per US dollar, as period averages or end-of-period rates"
+
+[[bullets]]
+text = "Reserve Currencies"
+detail = "COFER: the shares of the US dollar, the euro, the yen, and others in world foreign exchange reserves"
+
+[[bullets]]
+text = "Commodity Prices"
+detail = "primary commodity prices: crude oil, natural gas, gold, copper, wheat, and the IMF price indices"
+
+[[decisionRows]]
+task = "World Economic Outlook"
+context = "Macro"
+purpose = "Compare GDP growth or inflation across countries, forecasts included"
+
+[[decisionRows]]
+task = "Consumer Prices"
+context = "Prices"
+purpose = "Read a country's monthly CPI inflation, headline or by division"
+
+[[decisionRows]]
+task = "Exchange Rates"
+context = "Currency"
+purpose = "Chart a currency against the US dollar over time"
+
+[[decisionRows]]
+task = "Reserve Currencies"
+context = "Reserves"
+purpose = "Follow the US dollar's share of world reserves"
+
+[[decisionRows]]
+task = "Commodity Prices"
+context = "Commodities"
+purpose = "Track oil, gold, or copper prices in US dollars"
+
+[miniCharts]
+
+[miniCharts.weo]
+svg = '''
+var s = '<polyline points="6,50 16,40 26,44 36,30" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.55"/>';
+s += '<polyline points="36,30 44,26 52,24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3,2" opacity="0.55"/>';
+s += '<line x1="36" y1="16" x2="36" y2="64" stroke="currentColor" stroke-width="0.6" opacity="0.4"/>';
+s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">WEO</text>';
+return s;
+'''
+
+[miniCharts.cpi]
+svg = '''
+var s = '<polyline points="6,50 16,46 26,44 36,34 46,30 52,22" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.55"/>';
+s += '<text x="12" y="20" font-size="13" fill="currentColor" opacity="0.5">%</text>';
+s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">CPI</text>';
+return s;
+'''
+
+[miniCharts.fx]
+svg = '''
+var s = '<text x="12" y="40" font-size="18" fill="currentColor" opacity="0.6">&#165;</text>';
+s += '<path d="M24 32 l10 0 m-3 -3 l3 3 l-3 3" fill="none" stroke="currentColor" stroke-width="1.3" opacity="0.55"/>';
+s += '<text x="36" y="40" font-size="18" fill="currentColor" opacity="0.6">$</text>';
+s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">FX</text>';
+return s;
+'''
+
+[miniCharts.reserves]
+svg = '''
+var s = '<circle cx="27" cy="36" r="16" fill="none" stroke="currentColor" stroke-width="1.4" opacity="0.5"/>';
+s += '<path d="M27 36 L27 20 A16 16 0 1 1 13 44 Z" fill="currentColor" opacity="0.25"/>';
+s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">COFER</text>';
+return s;
+'''
+
+[miniCharts.commodities]
+svg = '''
+var s = '<rect x="14" y="26" width="10" height="30" rx="2" fill="none" stroke="currentColor" stroke-width="1.4" opacity="0.55"/>';
+s += '<rect x="30" y="38" width="12" height="18" rx="2" fill="currentColor" opacity="0.3"/>';
+s += '<line x1="8" y1="56" x2="48" y2="56" stroke="currentColor" stroke-width="0.6" opacity="0.4"/>';
+s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Commodities</text>';
+return s;
+'''
+
+[[codeBranches]]
+model = "weo"
+code = """
+using HTTP, CSV, Tables
+
+# The IMF Data API needs no API key. It returns CSV only when asked for it
+# through the Accept header (format=csv in the URL is ignored).
+base = "https://api.imf.org/external/sdmx/2.1/data"
+csvheader = ["Accept" => "application/vnd.sdmx.data+csv;version=1.0.0"]
+imf(flow, key; query = "") = CSV.File(HTTP.get("$base/$flow/$key?$query", csvheader).body)
+
+# Portugal, real GDP growth (WEO dataflow), annual, forecasts included
+tbl = imf("IMF.RES,WEO", "PRT.NGDP_RPCH.A"; query = "startPeriod=2015")
+
+years  = Tables.getcolumn(tbl, :TIME_PERIOD)
+growth = Tables.getcolumn(tbl, :OBS_VALUE)
+actual = first(Tables.getcolumn(tbl, :LATEST_ACTUAL_ANNUAL_DATA))  # later years are forecasts
+println("Real GDP growth (%), actual data up to $actual:")
+foreach((y, g) -> println(y, "  ", round(g; digits = 2), y > actual ? "  (forecast)" : ""), years, growth)
+"""
+
+[[codeBranches]]
+model = "cpi"
+code = """
+using HTTP, CSV, Tables
+
+base = "https://api.imf.org/external/sdmx/2.1/data"
+csvheader = ["Accept" => "application/vnd.sdmx.data+csv;version=1.0.0"]
+imf(flow, key; query = "") = CSV.File(HTTP.get("$base/$flow/$key?$query", csvheader).body)
+
+# United States, headline CPI (COICOP _T = all items), year-on-year % change, monthly
+# Key: COUNTRY.INDEX_TYPE.COICOP_1999.TYPE_OF_TRANSFORMATION.FREQUENCY
+tbl = imf("IMF.STA,CPI", "USA.CPI._T.YOY_PCH_PA_PT.M"; query = "startPeriod=2020-01")
+
+months = Tables.getcolumn(tbl, :TIME_PERIOD)
+infl   = Tables.getcolumn(tbl, :OBS_VALUE)
+println(last(months, 12))
+println(round.(last(infl, 12); digits = 2))
+"""
+
+[[codeBranches]]
+model = "fx"
+code = """
+using HTTP, CSV, Tables
+
+base = "https://api.imf.org/external/sdmx/2.1/data"
+csvheader = ["Accept" => "application/vnd.sdmx.data+csv;version=1.0.0"]
+imf(flow, key; query = "") = CSV.File(HTTP.get("$base/$flow/$key?$query", csvheader).body)
+
+# Japanese yen per US dollar (XDC_USD), period average (PA_RT), monthly (ER dataflow)
+# Key: COUNTRY.INDICATOR.TYPE_OF_TRANSFORMATION.FREQUENCY
+tbl = imf("IMF.STA,ER", "JPN.XDC_USD.PA_RT.M"; query = "startPeriod=2020-01")
+
+months = Tables.getcolumn(tbl, :TIME_PERIOD)
+rate   = Tables.getcolumn(tbl, :OBS_VALUE)
+println(last(months, 6))
+println(round.(last(rate, 6); digits = 2))
+"""
+
+[[codeBranches]]
+model = "reserves"
+code = """
+using HTTP, CSV, Tables
+
+base = "https://api.imf.org/external/sdmx/2.1/data"
+csvheader = ["Accept" => "application/vnd.sdmx.data+csv;version=1.0.0"]
+imf(flow, key; query = "") = CSV.File(HTTP.get("$base/$flow/$key?$query", csvheader).body)
+
+# COFER: share (SHRO_PT) of the US dollar in allocated world (G001) reserves, quarterly
+# Key: COUNTRY.INDICATOR.FXR_CURRENCY.TYPE_OF_TRANSFORMATION.FREQUENCY
+tbl = imf("IMF.STA,COFER", "G001.AFXRA.CI_USD.SHRO_PT.Q"; query = "startPeriod=2000-Q1")
+
+quarters = Tables.getcolumn(tbl, :TIME_PERIOD)
+share    = Tables.getcolumn(tbl, :OBS_VALUE)
+println("US dollar share of allocated reserves (%):")
+println(first(quarters), "  ", round(first(share); digits = 1))
+println(last(quarters), "  ", round(last(share); digits = 1))
+"""
+
+[[codeBranches]]
+model = "commodities"
+code = """
+using HTTP, CSV, Tables
+
+base = "https://api.imf.org/external/sdmx/2.1/data"
+csvheader = ["Accept" => "application/vnd.sdmx.data+csv;version=1.0.0"]
+imf(flow, key; query = "") = CSV.File(HTTP.get("$base/$flow/$key?$query", csvheader).body)
+
+# Primary commodity prices (PCPS dataflow): Brent crude, US dollars per barrel, monthly
+# Key: COUNTRY.INDICATOR.DATA_TRANSFORMATION.FREQUENCY (G001 = world)
+tbl = imf("IMF.RES,PCPS", "G001.POILBRE.USD.M"; query = "startPeriod=2020-01")
+
+months = Tables.getcolumn(tbl, :TIME_PERIOD)
+brent  = Tables.getcolumn(tbl, :OBS_VALUE)
+println(last(months, 6))
+println(round.(last(brent, 6); digits = 2))
+"""
+
+# Next Steps action groups (task-oriented, matched to the IMF datasets)
+[[actionGroups]]
+id = "weo"
+label = "World Economic Outlook"
+
+[[actionGroups.actions]]
+id = "imf-weo-countries"
+label = "Compare Countries"
+desc = "Real GDP growth for several countries on one chart, forecasts included"
+code = """
+using HTTP, CSV, Tables, Plots
+
+base = "https://api.imf.org/external/sdmx/2.1/data"
+csvheader = ["Accept" => "application/vnd.sdmx.data+csv;version=1.0.0"]
+# Join several countries with + in one key
+tbl = CSV.File(HTTP.get("$base/IMF.RES,WEO/USA+DEU+PRT+CHN.NGDP_RPCH.A?startPeriod=2010", csvheader).body)
+
+country = Tables.getcolumn(tbl, :COUNTRY)
+year    = Tables.getcolumn(tbl, :TIME_PERIOD)
+growth  = Tables.getcolumn(tbl, :OBS_VALUE)
+p = plot(xlabel = "year", ylabel = "real GDP growth (%)")
+for c in unique(country)
+    i = country .== c
+    plot!(p, year[i], growth[i], label = c, marker = :circle)
+end
+p
+"""
+
+[[actionGroups.actions]]
+id = "imf-weo-dashboard"
+label = "Country Dashboard"
+desc = "Growth, inflation, unemployment, and public debt for one country"
+code = """
+using HTTP, CSV, Tables
+
+base = "https://api.imf.org/external/sdmx/2.1/data"
+csvheader = ["Accept" => "application/vnd.sdmx.data+csv;version=1.0.0"]
+key = "PRT.NGDP_RPCH+PCPIPCH+LUR+GGXWDG_NGDP.A"
+tbl = CSV.File(HTTP.get("$base/IMF.RES,WEO/$key?startPeriod=2024&endPeriod=2026", csvheader).body)
+
+for (ind, year, v, name) in zip(Tables.getcolumn(tbl, :INDICATOR), Tables.getcolumn(tbl, :TIME_PERIOD),
+                                Tables.getcolumn(tbl, :OBS_VALUE), Tables.getcolumn(tbl, :SERIES_NAME))
+    println(rpad(ind, 14), year, "  ", rpad(round(v; digits = 2), 8), name)
+end
+"""
+
+[[actionGroups]]
+id = "cpi"
+label = "Consumer Prices"
+
+[[actionGroups.actions]]
+id = "imf-cpi-divisions"
+label = "CPI Divisions"
+desc = "Year-on-year inflation for food (CP01), housing (CP04), and transport (CP07)"
+code = """
+using HTTP, CSV, Tables
+
+base = "https://api.imf.org/external/sdmx/2.1/data"
+csvheader = ["Accept" => "application/vnd.sdmx.data+csv;version=1.0.0"]
+tbl = CSV.File(HTTP.get("$base/IMF.STA,CPI/USA.CPI.CP01+CP04+CP07.YOY_PCH_PA_PT.A?startPeriod=2020", csvheader).body)
+
+for (div, year, v) in zip(Tables.getcolumn(tbl, :COICOP_1999), Tables.getcolumn(tbl, :TIME_PERIOD),
+                          Tables.getcolumn(tbl, :OBS_VALUE))
+    println(div, "  ", year, "  ", round(v; digits = 2))
+end
+"""
+
+[[actionGroups.actions]]
+id = "imf-cpi-plot"
+label = "Inflation Chart"
+desc = "Monthly headline inflation for two countries on one chart"
+code = """
+using HTTP, CSV, Tables, Plots, Dates
+
+base = "https://api.imf.org/external/sdmx/2.1/data"
+csvheader = ["Accept" => "application/vnd.sdmx.data+csv;version=1.0.0"]
+tbl = CSV.File(HTTP.get("$base/IMF.STA,CPI/USA+GBR.CPI._T.YOY_PCH_PA_PT.M?startPeriod=2019-01", csvheader).body)
+
+# Monthly periods look like 2024-M07; turn them into dates so gaps stay visible
+monthdate(s) = Date(replace(s, "-M" => "-"), dateformat"yyyy-mm")
+country = Tables.getcolumn(tbl, :COUNTRY)
+month   = monthdate.(Tables.getcolumn(tbl, :TIME_PERIOD))
+infl    = Tables.getcolumn(tbl, :OBS_VALUE)
+p = plot(xlabel = "month", ylabel = "CPI inflation, y/y (%)")
+for c in unique(country)
+    i = country .== c
+    plot!(p, month[i], infl[i], label = c)
+end
+p
+"""
+
+[[actionGroups]]
+id = "fx"
+label = "Exchange Rates"
+
+[[actionGroups.actions]]
+id = "imf-fx-several"
+label = "Several Currencies"
+desc = "Period-average rates per US dollar for the yen, sterling, and the Swiss franc"
+code = """
+using HTTP, CSV, Tables
+
+base = "https://api.imf.org/external/sdmx/2.1/data"
+csvheader = ["Accept" => "application/vnd.sdmx.data+csv;version=1.0.0"]
+tbl = CSV.File(HTTP.get("$base/IMF.STA,ER/JPN+GBR+CHE.XDC_USD.PA_RT.A?startPeriod=2020", csvheader).body)
+
+for (c, year, v) in zip(Tables.getcolumn(tbl, :COUNTRY), Tables.getcolumn(tbl, :TIME_PERIOD),
+                        Tables.getcolumn(tbl, :OBS_VALUE))
+    println(c, "  ", year, "  ", round(v; digits = 4))
+end
+"""
+
+[[actionGroups.actions]]
+id = "imf-fx-eop"
+label = "End of Period"
+desc = "End-of-period (EOP_RT) against period-average (PA_RT) yen rates"
+code = """
+using HTTP, CSV, Tables
+
+base = "https://api.imf.org/external/sdmx/2.1/data"
+csvheader = ["Accept" => "application/vnd.sdmx.data+csv;version=1.0.0"]
+tbl = CSV.File(HTTP.get("$base/IMF.STA,ER/JPN.XDC_USD.EOP_RT+PA_RT.A?startPeriod=2021", csvheader).body)
+
+for (t, year, v) in zip(Tables.getcolumn(tbl, :TYPE_OF_TRANSFORMATION), Tables.getcolumn(tbl, :TIME_PERIOD),
+                        Tables.getcolumn(tbl, :OBS_VALUE))
+    println(t, "  ", year, "  ", round(v; digits = 2))
+end
+"""
+
+[[actionGroups]]
+id = "reserves"
+label = "Reserve Currencies"
+
+[[actionGroups.actions]]
+id = "imf-res-shares"
+label = "Currency Shares"
+desc = "Shares of the US dollar, the euro, the yen, sterling, and the renminbi over time"
+code = """
+using HTTP, CSV, Tables, Plots
+
+base = "https://api.imf.org/external/sdmx/2.1/data"
+csvheader = ["Accept" => "application/vnd.sdmx.data+csv;version=1.0.0"]
+key = "G001.AFXRA.CI_USD+CI_EUR+CI_JPY+CI_GBP+CI_CNY.SHRO_PT.A"
+tbl = CSV.File(HTTP.get("$base/IMF.STA,COFER/$key?startPeriod=2000", csvheader).body)
+
+ccy   = Tables.getcolumn(tbl, :FXR_CURRENCY)
+year  = Tables.getcolumn(tbl, :TIME_PERIOD)
+share = Tables.getcolumn(tbl, :OBS_VALUE)
+p = plot(xlabel = "year", ylabel = "share of allocated reserves (%)", legend = :right)
+for c in unique(ccy)
+    i = ccy .== c
+    plot!(p, year[i], share[i], label = replace(c, "CI_" => ""))
+end
+p
+"""
+
+[[actionGroups]]
+id = "commodities"
+label = "Commodity Prices"
+
+[[actionGroups.actions]]
+id = "imf-com-basket"
+label = "Commodity Basket"
+desc = "Brent crude, gold, copper, and wheat: the latest monthly prices in US dollars"
+code = """
+using HTTP, CSV, Tables
+
+base = "https://api.imf.org/external/sdmx/2.1/data"
+csvheader = ["Accept" => "application/vnd.sdmx.data+csv;version=1.0.0"]
+tbl = CSV.File(HTTP.get("$base/IMF.RES,PCPS/G001.POILBRE+PGOLD+PCOPP+PWHEAMT.USD.M?lastNObservations=1", csvheader).body)
+
+for (c, month, v) in zip(Tables.getcolumn(tbl, :INDICATOR), Tables.getcolumn(tbl, :TIME_PERIOD),
+                         Tables.getcolumn(tbl, :OBS_VALUE))
+    println(rpad(c, 10), month, "  ", round(v; digits = 2))
+end
+"""
+
+[[actionGroups.actions]]
+id = "imf-com-index"
+label = "Price Index"
+desc = "The IMF all-commodities index excluding fuel (PALLFNF), monthly"
+code = """
+using HTTP, CSV, Tables, Plots, Dates
+
+base = "https://api.imf.org/external/sdmx/2.1/data"
+csvheader = ["Accept" => "application/vnd.sdmx.data+csv;version=1.0.0"]
+tbl = CSV.File(HTTP.get("$base/IMF.RES,PCPS/G001.PALLFNF.INDEX.M?startPeriod=2010-01", csvheader).body)
+
+monthdate(s) = Date(replace(s, "-M" => "-"), dateformat"yyyy-mm")
+month = monthdate.(Tables.getcolumn(tbl, :TIME_PERIOD))
+index = Tables.getcolumn(tbl, :OBS_VALUE)
+plot(month, index, xlabel = "month", ylabel = "index", legend = false)
+"""

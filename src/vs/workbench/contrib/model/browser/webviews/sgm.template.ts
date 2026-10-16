@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------------------------
  *  Copyright (c) 2026 Antonio Saragga Seabra
- *  Licensed under the GNU Affero General Public License v3.0 or later. See LICENSE.txt in the project root for license information.
+ *  Licensed under the GNU Affero General Public License v3.0. See LICENSE.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
 import { SGM_METADATA } from './sgm.data.js';

@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------------------------
  *  Copyright (c) 2026 Antonio Saragga Seabra
- *  Licensed under the GNU Affero General Public License v3.0 or later. See LICENSE.txt in the project root for license information.
+ *  Licensed under the GNU Affero General Public License v3.0. See LICENSE.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
 import { localize } from '../../../../../vs/nls.js';
@@ -10,6 +10,7 @@ import { IClipboardService } from '../../../../platform/clipboard/common/clipboa
 import { INotificationService } from '../../../../platform/notification/common/notification.js';
 import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
+import { TOOLBOX_SUBMENU_PREFIX } from '../../compose/common/toolboxPanels.js';
 import { IOpenerService } from '../../../../platform/opener/common/opener.js';
 import { IEditorService } from '../../../services/editor/common/editorService.js';
 import { IQuickInputService } from '../../../../platform/quickinput/common/quickInput.js';
@@ -127,6 +128,7 @@ import { QP_PANEL } from './commands/qp.command.js';
 import { MPNLP_PANEL } from './commands/mpnlp.command.js';
 import { MPCONE_PANEL } from './commands/mpcone.command.js';
 import { MPSDP_PANEL } from './commands/mpsdp.command.js';
+import { MPMICP_PANEL } from './commands/mpmicp.command.js';
 import { MPSOS_PANEL } from './commands/mpsos.command.js';
 
 // ============================================
@@ -274,9 +276,6 @@ CommandsRegistry.registerCommand('chiara.statistics.ev.diagnostics', accessor =>
 
 CommandsRegistry.registerCommand('chiara.statistics.ml.logpdf', accessor => openScaffoldWebview(accessor, ADLP_PANEL));
 
-//CommandsRegistry.registerCommand('chiara.statistics.tvm.heston', accessor => CTSV_OPEN(accessor, 'heston'));
-//CommandsRegistry.registerCommand('chiara.statistics.tvm.sabr',   accessor => CTSV_OPEN(accessor, 'sabr'));
-//CommandsRegistry.registerCommand('chiara.statistics.tvm.bates',  accessor => CTSV_OPEN(accessor, 'bates'));
 
 const TTE_OPEN = (accessor: ServicesAccessor, initialMethod?: string) => openScaffoldWebview(accessor, TTE_PANEL, initialMethod);
 
@@ -315,6 +314,8 @@ CommandsRegistry.registerCommand('chiara.mp.minlp', accessor => openScaffoldWebv
 CommandsRegistry.registerCommand('chiara.mp.cone', accessor => openScaffoldWebview(accessor, MPCONE_PANEL));
 
 CommandsRegistry.registerCommand('chiara.mp.sdp', accessor => openScaffoldWebview(accessor, MPSDP_PANEL));
+
+CommandsRegistry.registerCommand('chiara.mp.micp', accessor => openScaffoldWebview(accessor, MPMICP_PANEL));
 
 CommandsRegistry.registerCommand('chiara.mp.sos', accessor => openScaffoldWebview(accessor, MPSOS_PANEL));
 
@@ -402,26 +403,14 @@ CommandsRegistry.registerCommand('chiara.statistics.glm.positive', accessor => G
 // SUBMENU IDs
 // ============================================
 
-const RQRSubmenuId = new MenuId('menubarRQRSubmenu');
 const MWMSubmenuId = new MenuId('menubarMWMSubmenu');
 export const EVSubmenuId = new MenuId('menubarEVSubmenu');
-const GAMSubmenuId = new MenuId('menubarGAMSubmenu');
-const BRMSubmenuId = new MenuId('menubarBRMSubmenu');
 const LMSubmenuId = new MenuId('menubarLMSubmenu'); // Linear Models
 const SASubmenuId = new MenuId('menubarSASubmenu');
-const KMSubmenuId = new MenuId('menubarKMSubmenu');
-const NBSubmenuId = new MenuId('menubarNBSubmenu');
-// const DTRFSubmenuId = new MenuId('menubarDTRFSubmenu');
 const NNSubmenuId = new MenuId('menubarNNSubmenu');
 const CLSubmenuId = new MenuId('menubarCLSubmenu');
 const PMSubmenuId = new MenuId('menubarPMSubmenu');
-const DASubmenuId = new MenuId('menubarDASubmenu');
 
-//const VMSubmenuId = new MenuId('menubarVMSubmenu');
-// Financial Instruments Toolbox, Macroeconomic Models, Finance Toolbox, Risk Management — now in Explore menu
-//const DTSVSubmenuId = new MenuId('menubarDTSVSubmenu');
-//const CTSVSubmenuId = new MenuId('menubarCTSVSubmenu');
-// Finance Toolbox, Risk Management Toolbox — now in Explore menu
 const DistSubmenuId = new MenuId('menubarDistSubmenu');   // Distributions
 const CopulaSubmenuId = new MenuId('menubarCopulaSubmenu'); // Copulas
 const BASubmenuId = new MenuId('menubarBASubmenu');     // Bayesian Analysis
@@ -459,15 +448,6 @@ export const QRNG_COMMAND_ID = 'chiara.statistics.qrng';
 export const D_COMMAND_ID = 'chiara.statistics.d';
 export const DF_COMMAND_ID = 'chiara.statistics.df';
 
-// export const D_DISCRETE_ID = 'chiara.statistics.d.discrete';
-// export const D_CONTINUOUS_ID = 'chiara.statistics.d.continuous';
-// export const D_TRUNCATED_ID = 'chiara.statistics.d.truncated';
-// export const D_CENSORED_ID = 'chiara.statistics.d.censored';
-// export const D_MULTIVARIATE_ID = 'chiara.statistics.d.multivariate';
-// export const D_MATRIX_VARIATE_ID = 'chiara.statistics.d.matrixVariate';
-// export const D_MIXTURE_MODELS_ID = 'chiara.statistics.d.mixtureModels';
-// export const D_PRODUCT_ID = 'chiara.statistics.d.product';
-// export const D_CONVOLUTIONS_ID = 'chiara.statistics.d.convolutions';
 
 // Time-Series Simulation
 export const TSS_COMMAND_ID = 'chiara.statistics.tss';
@@ -518,50 +498,12 @@ export const COV_COPULAS_EST_ID = 'chiara.statistics.cov.copulasEst';
 
 // Hypothesis Testing
 export const HT_COMMAND_ID = 'chiara.statistics.ht';
-// export const HT_Z_TEST_ID = 'chiara.statistics.ht.zTest';
-// export const HT_T_TEST_ID = 'chiara.statistics.ht.tTest';
-// export const HT_F_TEST_ID = 'chiara.statistics.ht.fTest';
-// export const HT_ANOVA_ID = 'chiara.statistics.ht.anova';
-// export const HT_LEVENE_ID = 'chiara.statistics.ht.levene';
-// export const HT_BROWN_FORSYTHE_ID = 'chiara.statistics.ht.brownForsythe';
-// export const HT_POWER_DIVERGENCE_ID = 'chiara.statistics.ht.powerDivergence';
-// export const HT_CHI_SQUARED_ID = 'chiara.statistics.ht.chiSquared';
-// export const HT_MULTINOMIAL_LR_ID = 'chiara.statistics.ht.multinomialLR';
-// export const HT_ANDERSON_DARLING_ID = 'chiara.statistics.ht.andersonDarling';
-// export const HT_KS_TEST_ID = 'chiara.statistics.ht.ksTest';
-// export const HT_SHAPIRO_WILK_ID = 'chiara.statistics.ht.shapiroWilk';
-// export const HT_BINOMIAL_ID = 'chiara.statistics.ht.binomial';
-// export const HT_FISHER_EXACT_ID = 'chiara.statistics.ht.fisherExact';
-// export const HT_KRUSKAL_WALLIS_ID = 'chiara.statistics.ht.kruskalWallis';
-// export const HT_MANN_WHITNEY_ID = 'chiara.statistics.ht.mannWhitney';
-// export const HT_WILCOXON_ID = 'chiara.statistics.ht.wilcoxon';
-// export const HT_SIGN_TEST_ID = 'chiara.statistics.ht.signTest';
-// export const HT_PERMUTATION_ID = 'chiara.statistics.ht.permutation';
-// export const HT_WALD_WOLFOWITZ_ID = 'chiara.statistics.ht.waldWolfowitz';
-// export const HT_FLIGNER_KILLEEN_ID = 'chiara.statistics.ht.flignerKilleen';
-// export const HT_DURBIN_WATSON_ID = 'chiara.statistics.ht.durbinWatson';
-// export const HT_BOX_PIERCE_ID = 'chiara.statistics.ht.boxPierce';
-// export const HT_LJUNG_BOX_ID = 'chiara.statistics.ht.ljungBox';
-// export const HT_BREUSCH_GODFREY_ID = 'chiara.statistics.ht.breuschGodfrey';
-// export const HT_ADF_ID = 'chiara.statistics.ht.adf';
-// export const HT_CLARK_WEST_ID = 'chiara.statistics.ht.clarkWest';
-// export const HT_DIEBOLD_MARIANO_ID = 'chiara.statistics.ht.dieboldMariano';
-// export const HT_WHITE_ID = 'chiara.statistics.ht.white';
-// export const HT_JARQUE_BERA_ID = 'chiara.statistics.ht.jarqueBera';
-// export const HT_HOTELLING_T2_ID = 'chiara.statistics.ht.hotellingT2';
-// export const HT_EQUALITY_COV_ID = 'chiara.statistics.ht.equalityCov';
-// export const HT_CORRELATION_ID = 'chiara.statistics.ht.correlation';
 
 // Linear Models
 export const LM_COMMAND_ID = 'chiara.statistics.lm';
 
 // Generalized Linear Models (GLM)
 export const GLM_COMMAND_ID = 'chiara.statistics.glm';
-// export const GLM_BINARY_ID = 'chiara.statistics.glm.binary';
-// export const GLM_COUNT_ID = 'chiara.statistics.glm.count';
-// export const GLM_OVERDISPERSED_ID = 'chiara.statistics.glm.overdispersed';
-// export const GLM_FRACTIONAL_ID = 'chiara.statistics.glm.fractional';
-// export const GLM_POSITIVE_ID = 'chiara.statistics.glm.positive';
 
 // Generalized Additive Models (GAM)
 export const GAM_NORMAL_ID = 'chiara.statistics.gam.normal';
@@ -666,9 +608,6 @@ export const ECO_MMN_ID = 'chiara.statistics.eco.mmn';
 export const ECO_IVS_ID = 'chiara.statistics.eco.ivs';
 export const TVM_TAYLOR_ID = 'chiara.statistics.tvm.taylor';
 export const TVM_KSC_ID = 'chiara.statistics.tvm.ksc';
-//export const TVM_HESTON_ID = 'chiara.statistics.tvm.heston';
-//export const TVM_SABR_ID = 'chiara.statistics.tvm.sabr';
-//export const TVM_BATES_ID = 'chiara.statistics.tvm.bates';
 
 // State-Space Models
 export const SSM_UCM_UNI_ID = 'chiara.statistics.ssm.ucmUni';
@@ -832,7 +771,6 @@ export const NLP_BERT_ID = 'chiara.statistics.nlp.bert';
 export const NLP_COLBERT_ID = 'chiara.statistics.nlp.colbert';
 
 
-
 // ============================================
 // MAIN MENU REGISTRATION
 // ============================================
@@ -912,12 +850,6 @@ MenuRegistry.appendMenuItem(MenuId.MenubarModelMenu, {
 	order: 4,
 });
 
-//MenuRegistry.appendMenuItem(MenuId.MenubarModelMenu, {
-//	group: '2_regression_statistics',
-//	submenu: GAMSubmenuId,
-//	title: localize('showStatistics.gam', 'Generalized Additive Models'),
-//	order: 0.9,
-//});
 
 MenuRegistry.appendMenuItem(MenuId.MenubarModelMenu, {
 	group: '3_regression',
@@ -947,12 +879,6 @@ MenuRegistry.appendMenuItem(MenuId.MenubarModelMenu, {
 	order: 7,
 });
 
-//MenuRegistry.appendMenuItem(MenuId.MenubarModelMenu, {
-//	group: '2_regression_statistics',
-//	submenu: BRMSubmenuId,
-//	title: localize('showStatistics.brm', 'Resampling Methods'),
-//	order: 3,
-//});
 
 MenuRegistry.appendMenuItem(MenuId.MenubarModelMenu, {
 	group: '4_time_series',
@@ -999,32 +925,6 @@ MenuRegistry.appendMenuItem(MenuId.MenubarModelMenu, {
 }); // Survivaljl, SurvivalAnalysis.jl, HazReg.jl, JointSurvivalModels.jl
 
 
-
-
-
-//MenuRegistry.appendMenuItem(MenuId.MenubarModelMenu, {
-//	group: '5_conformal_prediction',
-//	command: {
-//		id: CP_CONFORMAL_ID,
-//		title: localize('showStatistics.cp', 'Conformal Prediction'),
-//	},
-//	order: 10,
-//});
-
-//MenuRegistry.appendMenuItem(MenuId.MenubarModelMenu, {
-//	group: '5_ml_statistics',
-//	submenu: KMSubmenuId,
-//	title: localize('showStatistics.km', 'Kernel Methods'),
-//	order: 11,
-//});
-
-//MenuRegistry.appendMenuItem(MenuId.MenubarModelMenu, {
-//	group: '5_ml_statistics',
-//	submenu: NBSubmenuId,
-//	title: localize('showStatistics.nb', 'Naive Bayes'),
-//	order: 12,
-//});
-
 MenuRegistry.appendMenuItem(MenuId.MenubarModelMenu, {
 	group: '6_bayesian',
 	submenu: BASubmenuId,
@@ -1050,12 +950,6 @@ MenuRegistry.appendMenuItem(MenuId.MenubarModelMenu, {
 	order: 2,
 }); // NearestNeighbors.jl
 
-//MenuRegistry.appendMenuItem(MenuId.MenubarStatisticsMenu, {
-//	group: '5_ml_statistics',
-//	submenu: DASubmenuId,
-//	title: localize('showStatistics.da', 'Discriminant Analysis'),
-//	order: 15,
-//});
 
 MenuRegistry.appendMenuItem(MenuId.MenubarModelMenu, {
 	group: '7_ml',
@@ -1063,11 +957,6 @@ MenuRegistry.appendMenuItem(MenuId.MenubarModelMenu, {
 	order: 3,
 });
 
-//MenuRegistry.appendMenuItem(MenuId.MenubarModelMenu, {
-//	group: '7_ml',
-//	command: { id: 'chiara.statistics.sreg', title: localize('showStatistics.sreg', 'Symbolic Regression') },
-//	order: 4,
-//}); // SymbolicRegression.jl
 
 MenuRegistry.appendMenuItem(MenuId.MenubarModelMenu, {
 	group: '7_ml',
@@ -1231,448 +1120,6 @@ MenuRegistry.appendMenuItem(LMSubmenuId, {
 	order: 1,
 }); // NonNegLeastSquares.jl
 
-// MenuRegistry.appendMenuItem(LMSubmenuId, {
-// 	group: '1_lm',
-// 	command: { id: LM_BOUNDED_LS_ID, title: localize('lm.bls', 'Bounded Least Squares') },
-// 	order: 3,
-// });
-
-// MenuRegistry.appendMenuItem(LMSubmenuId, {
-// 	group: '1_lm',
-// 	command: { id: LM_GENERAL_CONSTRAINTS_ID, title: localize('lm.lsglc', 'Least Squares with General Linear Constraints') },
-// 	order: 4,
-// });
-
-
-// MenuRegistry.appendMenuItem(LMSubmenuId, {
-// 	group: '3_lm',
-// 	command: { id: LM_GEL_ID, title: localize('lm.gel', 'Generalized Empirical Likelihood (GEL)') },
-// 	order: 7,
-// });
-
-// ============================================
-// SUBMENU: GENERALIZED LINEAR MODELS (GLM)
-// ============================================
-
-// MenuRegistry.appendMenuItem(GLMSubmenuId, {
-// 	group: '1_glm',
-// 	command: { id: GLM_BINARY_ID, title: localize('glm.binary', 'Binary') },
-// 	order: 1,
-// });
-
-// MenuRegistry.appendMenuItem(GLMSubmenuId, {
-// 	group: '2_glm',
-// 	command: { id: GLM_CATEGORICAL_ID, title: localize('glm.cat', 'Categorical') },
-// 	order: 2.1,
-// });
-
-// MenuRegistry.appendMenuItem(GLMSubmenuId, {
-// 	group: '2_glm',
-// 	command: { id: GLM_NESTED_CAT_ID, title: localize('glm.ncat', 'Nested Categorical') },
-// 	order: 2.2,
-// });
-
-// MenuRegistry.appendMenuItem(GLMSubmenuId, {
-// 	group: '2_glm',
-// 	command: { id: GLM_MIXED_CAT_ID, title: localize('glm.mcat', 'Mixed Categorical') },
-// 	order: 2.3,
-// });
-
-// MenuRegistry.appendMenuItem(GLMSubmenuId, {
-// 	group: '3_glm',
-// 	command: { id: GLM_ORDINAL_ID, title: localize('glm.ordinal', 'Ordinal') },
-// 	order: 3,
-// });
-
-// MenuRegistry.appendMenuItem(GLMSubmenuId, {
-// 	group: '4_glm',
-// 	command: { id: GLM_COUNT_ID, title: localize('glm.count', 'Count') },
-// 	order: 4,
-// });
-
-// MenuRegistry.appendMenuItem(GLMSubmenuId, {
-// 	group: '4_glm',
-// 	command: { id: GLM_OVERDISPERSED_ID, title: localize('glm.overcount', 'Overdispersed Count') },
-// 	order: 5,
-// });
-
-// MenuRegistry.appendMenuItem(GLMSubmenuId, {
-// 	group: '5_glm',
-// 	command: { id: GLM_FRACTIONAL_ID, title: localize('glm.fractional', 'Fractional') },
-// 	order: 6,
-// });
-
-// MenuRegistry.appendMenuItem(GLMSubmenuId, {
-// 	group: '6_glm',
-// 	command: { id: GLM_POSITIVE_ID, title: localize('glm.positive', 'Positive Continuous') },
-// 	order: 7,
-// });
-
-// ============================================
-// SUBMENU: GENERALIZED ADDITIVE MODELS (GAM)
-// ============================================
-
-MenuRegistry.appendMenuItem(GAMSubmenuId, {
-	group: '1_gam',
-	command: { id: GAM_NORMAL_ID, title: localize('gam.normal', 'Normal') },
-	order: 1,
-});
-
-MenuRegistry.appendMenuItem(GAMSubmenuId, {
-	group: '1_gam',
-	command: { id: GAM_POISSON_ID, title: localize('gam.poisson', 'Poisson') },
-	order: 2,
-});
-
-MenuRegistry.appendMenuItem(GAMSubmenuId, {
-	group: '1_gam',
-	command: { id: GAM_GAMMA_ID, title: localize('gam.gamma', 'Gamma') },
-	order: 3,
-});
-
-// =====================================================
-// SUBMENU: REGULARIZED, ROBUST AND QUANTILE REGRESSION
-// =====================================================
-
-// MenuRegistry.appendMenuItem(RRQSubmenuId, {
-// 	group: '1_rrq',
-// 	command: { id: RRQ_LASSO_ID, title: localize('rrq.lasso', 'Standard Lasso Regression (L1)') },
-// 	order: 1,
-// });
-
-// MenuRegistry.appendMenuItem(RRQSubmenuId, {
-// 	group: '1_rrq',
-// 	command: { id: RRQ_FUSED_LASSO_ID, title: localize('rrq.fused', 'Fused Lasso Regression (fL1)') },
-// 	order: 2,
-// });
-
-// MenuRegistry.appendMenuItem(RRQSubmenuId, {
-// 	group: '1_rrq',
-// 	command: { id: RRQ_GAMMA_LASSO_ID, title: localize('rrq.gamma', 'Gamma Lasso Regression (gL1)') },
-// 	order: 3,
-// });
-
-// MenuRegistry.appendMenuItem(RRQSubmenuId, {
-// 	group: '1_rrq',
-// 	command: { id: RRQ_RIDGE_ID, title: localize('rrq.ridge', 'Ridge Regression (L2)') },
-// 	order: 4,
-// });
-
-// MenuRegistry.appendMenuItem(RRQSubmenuId, {
-// 	group: '1_rrq',
-// 	command: { id: RRQ_ELASTIC_NET_ID, title: localize('rrq.elastic', 'Elastic Net Regression (ENET)') },
-// 	order: 5,
-// });
-
-MenuRegistry.appendMenuItem(RQRSubmenuId, {
-	group: '2_rq',
-	command: { id: RQR_ROBUST_L0_ID, title: localize('rq.rob0', 'Robust Regression (no penalty)') },
-	order: 6,
-}); // RobustModels.jl
-
-MenuRegistry.appendMenuItem(RQRSubmenuId, {
-	group: '2_rq',
-	command: { id: RQR_ROBUST_L1L2_ID, title: localize('rq.rob12', 'Robust Regression (L1, L2)') },
-	order: 7,
-}); // RobustModels.jl
-
-MenuRegistry.appendMenuItem(RQRSubmenuId, {
-	group: '3_rq',
-	command: { id: RQR_QUANTILE_NO_PENALTY_ID, title: localize('qq.quant0', 'Quantile Regression (no penalty)') },
-	order: 8,
-}); // RobustModels.jl
-
-MenuRegistry.appendMenuItem(RQRSubmenuId, {
-	group: '3_rq',
-	command: { id: RQR_QUANTILE_L1L2_ID, title: localize('rq.quant12', 'Quantile Regression (L1, L2)') },
-	order: 9,
-}); // RobustModels.jl
-
-// ============================================
-// SUBMENU: PANEL DATA / MIXED-EFFECTS
-// ============================================
-
-// MenuRegistry.appendMenuItem(MMPDSubmenuId, {
-// 	group: '1_mmpd',
-// 	command: { id: MMPD_LINEAR_MIXED_ID, title: localize('mmpd.lmme', 'Linear Mixed Effects Models') },
-// 	order: 1,
-// });
-
-// MenuRegistry.appendMenuItem(MMPDSubmenuId, {
-// 	group: '1_mmpd',
-// 	command: { id: MMPD_GLM_MIXED_ID, title: localize('mmpd.glmme', 'Generalized Linear Mixed Effects Models') },
-// 	order: 2,
-// });
-
-// MenuRegistry.appendMenuItem(MMPDSubmenuId, {
-// 	group: '1_mmpd',
-// 	command: { id: MMPD_ENDOGENOUS_ID, title: localize('mmpd.memer', 'Mixed Effects Models with Endogenous Regressors') },
-// 	order: 3,
-// });
-
-// ============================================
-// SUBMENU: RESAMPLING METHODS
-// ============================================
-
-MenuRegistry.appendMenuItem(BRMSubmenuId, {
-	group: '1_brm',
-	command: { id: BRM_RANDOM_ID, title: localize('brm.random', 'Random Resampling with Replacement') },
-	order: 1,
-});
-
-MenuRegistry.appendMenuItem(BRMSubmenuId, {
-	group: '1_brm',
-	command: { id: BRM_ANTITHETIC_ID, title: localize('brm.antithetic', 'Antithetic Resampling') },
-	order: 2,
-});
-
-MenuRegistry.appendMenuItem(BRMSubmenuId, {
-	group: '1_brm',
-	command: { id: BRM_BALANCED_ID, title: localize('brm.balanced', 'Balanced Random Resampling') },
-	order: 3,
-});
-
-MenuRegistry.appendMenuItem(BRMSubmenuId, {
-	group: '1_brm',
-	command: { id: BRM_GLM_ID, title: localize('brm.glm', 'Residuals Resampling in GLM') },
-	order: 4,
-});
-
-MenuRegistry.appendMenuItem(BRMSubmenuId, {
-	group: '1_brm',
-	command: { id: BRM_MAX_ENTROPY_ID, title: localize('brm.entropy', 'Maximum Entropy Bootstrap') },
-	order: 5,
-});
-
-MenuRegistry.appendMenuItem(BRMSubmenuId, {
-	group: '2_brm',
-	command: { id: BRM_MOVING_BLOCK_ID, title: localize('brm.movi', 'Moving Block Bootstrap') },
-	order: 6,
-});
-
-MenuRegistry.appendMenuItem(BRMSubmenuId, {
-	group: '2_brm',
-	command: { id: BRM_STATIONARY_BLOCK_ID, title: localize('brm.stati', 'Stationary Block Bootstrap') },
-	order: 7,
-});
-
-MenuRegistry.appendMenuItem(BRMSubmenuId, {
-	group: '2_brm',
-	command: { id: BRM_BLOCK_JACKKNIFE_ID, title: localize('brm.block', 'Block Jackknife') },
-	order: 8,
-});
-
-MenuRegistry.appendMenuItem(BRMSubmenuId, {
-	group: '2_brm',
-	command: { id: BRM_ARTIFICIAL_JACKKNIFE_ID, title: localize('brm.artif', 'Artificial Deleted (d) Jackknife') },
-	order: 9,
-});
-
-// ============================================
-// SUBMENU: TIME-SERIES FORECASTING
-// ============================================
-
-// MenuRegistry.appendMenuItem(TSSDSubmenuId, {
-// 	group: '1_tssd',
-// 	command: { id: TSSD_ROLLING_ID, title: localize('tssd.roll', 'Rolling Functions') },
-// 	order: 4,
-// });
-
-//MenuRegistry.appendMenuItem(TSSDSubmenuId, {
-//	group: '1_tssd',
-//	command: { id: TSSD_LOESS_ID, title: localize('tssd.loess', 'LOESS Regression') },
-//	order: 1,
-//}); // now in Time-Series Forecasting webview
-
-//MenuRegistry.appendMenuItem(TSSDSubmenuId, {
-//	group: '2_tssd',
-//	command: { id: TSSD_ETS_ID, title: localize('tssd.ets', 'ETS Models') },
-//	order: 1,
-//}); // now in Time-Series Forecasting webview
-
-//MenuRegistry.appendMenuItem(TSSDSubmenuId, {
-//	group: '2_tssd',
-//	command: { id: SSM_UCM_UNI_ID, title: localize('ssm.ucmUni', 'Univariate Unobserved Components Model') },
-//	order: 2,
-//}); // moved to State-Space Models webview
-
-//MenuRegistry.appendMenuItem(TSSDSubmenuId, {
-//	group: '2_tssd',
-//	command: { id: SSM_UCM_MULTI_ID, title: localize('ssm.ucmMulti', 'Multivariate Unobserved Components Model') },
-//	order: 3,
-//}); // moved to State-Space Models webview
-
-//MenuRegistry.appendMenuItem(TSSDSubmenuId, {
-//	group: '3_tssd',
-//	command: { id: TSSD_INTERMITTENT_ID, title: localize('tssd.id', 'Intermittent Demand') },
-//	order: 10,
-//}); // now in Time-Series Forecasting webview
-
-
-// ============================================
-// SUBMENU: ARIMA/VAR TYPE MODELS
-// ============================================
-
-//MenuRegistry.appendMenuItem(ARMASubmenuId, {
-//	group: '1_arma',
-//	command: { id: ARMA_ACAC_ID, title: localize('eda.auto', 'Autocorrelation and Partial Autocorrelation') },
-//	order: 1,
-//}); // StatsBase.jl
-
-//MenuRegistry.appendMenuItem(ARMASubmenuId, {
-//	group: '1_arma',
-//	command: { id: ARMA_ARIMA_ID, title: localize('arma.arima', 'ARIMA') },
-//	order: 2,
-//}); // StateSpaceModels.jl
-
-//MenuRegistry.appendMenuItem(ARMASubmenuId, {
-//	group: '1_arma',
-//	command: { id: ARMA_SARIMA_ID, title: localize('arma.sarima', 'Seasonal ARIMA') },
-//	order: 3,
-//}); // StateSpaceModels.jl
-
-// MenuRegistry.appendMenuItem(ARMASubmenuId, {
-//	group: '1_arma',
-//	command: { id: ARMA_ARFIMA_ID, title: localize('arma.arfima', 'Fractionally ARIMA: ARFIMA.jl') },
-//	order: 3,
-// });
-
-// MenuRegistry.appendMenuItem(ARMASubmenuId, {
-//	group: '1_arma',
-//	command: { id: ARMA_ARAR_ID, title: localize('arma.var', 'ARAR/ARARMA Models: Durbyn.jl') },
-//	order: 4,
-//});
-
-//MenuRegistry.appendMenuItem(ARMASubmenuId, {
-//	group: '2_arma',
-//	command: { id: ARMA_CCCC_ID, title: localize('eda.cross', 'Cross-Correlation') },
-//	order: 1,
-//}); // StatsBase.jl
-
-//MenuRegistry.appendMenuItem(ARMASubmenuId, {
-//	group: '2_arma',
-//	command: { id: ARMA_VAR_ID, title: localize('arma.var', 'Vector Autoregression (VAR)') },
-//	order: 2,
-//}); // MacroEconometricModels.jl
-
-//MenuRegistry.appendMenuItem(ARMASubmenuId, {
-//	group: '2_arma',
-//	command: { id: ARMA_SVAR_ID, title: localize('arma.svar', 'Structural VAR') },
-//	order: 5,
-//}); // MacroEconometricModels.jl
-
-//MenuRegistry.appendMenuItem(ARMASubmenuId, {
-//	group: '2_arma',
-//	command: { id: ARMA_FAVAR_ID, title: localize('arma.favar', 'Factor-Augmented VAR') },
-//	order: 7,
-//}); // MacroEconometricModels.jl
-
-//MenuRegistry.appendMenuItem(ARMASubmenuId, {
-//	group: '2_arma',
-//	command: { id: ARMA_VECM_ID, title: localize('arma.vecm', 'Vector Error Correction Model') },
-//	order: 8,
-//}); // MacroEconometricModels.jl
-
-//MenuRegistry.appendMenuItem(ARMASubmenuId, {
-//	group: '3_arma',
-//	command: { id: ARMA_IRF_ID, title: localize('arma.irf', 'Impulse Response Function') },
-//	order: 9,
-//}); // MacroEconometricModels.jl
-
-//MenuRegistry.appendMenuItem(ARMASubmenuId, {
-//	group: '3_arma',
-//	command: { id: ARMA_TCA_ID, title: localize('arma.tca', 'Transmission Channel Analysis') },
-//	order: 10,
-//}); // TransmissionChannelAnalysis.jl
-
-//MenuRegistry.appendMenuItem(ARMASubmenuId, {
-//	group: '4_arma',
-//	command: { id: ARMA_COINTEGRATION_ID, title: localize('arma.cit', 'Cointegration Tests') },
-//	order: 11,
-//}); // MacroEconometricModels.jl
-
-// ============================================
-// SUBMENU: STATE-SPACE MODELS
-// ============================================
-
-//MenuRegistry.appendMenuItem(SSMSubmenuId, {
-//	group: '1_kf',
-//	command: { id: SSM_KF_ID, title: localize('ssm.kf', 'Kalman Filter') },
-//	order: 4,
-//}); // LowLevelParticleFilters.jl
-
-//MenuRegistry.appendMenuItem(SSMSubmenuId, {
-//	group: '1_kf',
-//	command: { id: SSM_SQKF_ID, title: localize('ssm.sqkf', 'Square-Root Kalman Filter (SQKF)') },
-//	order: 5,
-//}); // LowLevelParticleFilters.jl
-
-//MenuRegistry.appendMenuItem(SSMSubmenuId, {
-//	group: '1_kf',
-//	command: { id: SSM_EKF_ID, title: localize('ssm.ekf', 'Extended Kalman Filter') },
-//	order: 6,
-//}); // LowLevelParticleFilters.jl
-
-//MenuRegistry.appendMenuItem(SSMSubmenuId, {
-//	group: '1_kf',
-//	command: { id: SSM_SQEKF_ID, title: localize('ssm.sqekf', 'Square-Root Extended Kalman Filter (EKF)') },
-//	order: 7,
-//}); // LowLevelParticleFilters.jl
-
-//MenuRegistry.appendMenuItem(SSMSubmenuId, {
-//	group: '1_kf',
-//	command: { id: SSM_IEKF_ID, title: localize('ssm.iekf', 'Iterated Extended Kalman Filter (IEKF)') },
-//	order: 8,
-//}); // LowLevelParticleFilters.jl
-
-//MenuRegistry.appendMenuItem(SSMSubmenuId, {
-//	group: '1_kf',
-//	command: { id: SSM_UKF_ID, title: localize('ssm.ukf', 'Unscented Kalman Filter') },
-//	order: 9,
-//}); // LowLevelParticleFilters.jl
-
-//MenuRegistry.appendMenuItem(SSMSubmenuId, {
-//	group: '1_kf',
-//	command: { id: SSM_AUKF_ID, title: localize('ssm.aukf', 'Augmented Unscented Kalman Filter (AUKF)') },
-//	order: 10,
-//}); // LowLevelParticleFilters.jl
-
-//MenuRegistry.appendMenuItem(SSMSubmenuId, {
-//	group: '2_kf',
-//	command: { id: SSM_PF_ID, title: localize('ssm.pf', 'Particle Filter') },
-//	order: 11,
-//}); // LowLevelParticleFilters.jl
-
-//MenuRegistry.appendMenuItem(SSMSubmenuId, {
-//	group: '2_kf',
-//	command: { id: SSM_APF_ID, title: localize('ssm.apf', 'Auxiliary Particle Filter') },
-//	order: 12,
-//});
-
-//MenuRegistry.appendMenuItem(SSMSubmenuId, {
-//	group: '2_kf',
-//	command: { id: SSM_ADPF_ID, title: localize('ssm.adpf', 'Advanced Particle Filter') },
-//	order: 13,
-//});
-
-//MenuRegistry.appendMenuItem(SSMSubmenuId, {
-//	group: '3_kf',
-//	command: { id: SSM_RBPF_ID, title: localize('ssm.rbpf', 'Rao-Blackwellized Particle Filter') },
-//	order: 14,
-//});
-
-//MenuRegistry.appendMenuItem(SSMSubmenuId, {
-//	group: '3_kf',
-//	command: { id: SSM_RBUKF_ID, title: localize('ssm.rbukf', 'Rao-Blackwellized Unscented Kalman Filter') },
-//	order: 15,
-//});
-
-//MenuRegistry.appendMenuItem(SSMSubmenuId, {
-//	group: '4_kf',
-//	command: { id: SSM_IMMF_ID, title: localize('ssm.immf', 'Interacting Multiple Models Filter') },
-//	order: 16,
-//});
-
 
 // ============================================
 // SUBMENU: NONLINEAR DYNAMICS
@@ -1697,70 +1144,6 @@ MenuRegistry.appendMenuItem(NDSubmenuId, {
 }); // DynamicalSystems.jl
 
 // ============================================
-// SUBMENU: VOLATILITY MEASUREMENT
-// ============================================
-
-// MenuRegistry.appendMenuItem(VMSubmenuId, {
-// 	group: '1_ve',
-// 	command: { id: VM_COMMAND_ID, title: localize('ve.hv', 'Historical Volatility') },
-// 	order: 1,
-// });
-
-// MenuRegistry.appendMenuItem(VMSubmenuId, {
-// 	group: '1_ve',
-// 	command: { id: VM_COMMAND_ID, title: localize('ve.rbe', 'Range-Based Estimators') },
-// 	order: 2,
-// });
-
-// MenuRegistry.appendMenuItem(VMSubmenuId, {
-// 	group: '3_ve',
-// 	command: { id: VM_COMMAND_ID, title: localize('ve.rv', 'HF Realized Volatility') },
-// 	order: 3,
-// }); // HighFrequencyCovariance.jl
-
-// MenuRegistry.appendMenuItem(VMSubmenuId, {
-// 	group: '3_ve',
-// 	command: { id: VM_COMMAND_ID, title: localize('ve.tsv', 'HF Two Scales Volatility') },
-// 	order: 4,
-// }); // HighFrequencyCovariance.jl
-
-
-// ============================================
-// SUBMENU: GARCH-Type MODELS (legacy, kept for reference)
-// ============================================
-
-//MenuRegistry.appendMenuItem(VCMSubmenuId, {
-//	group: '1_garch',
-//	command: { id: VCM_ARCH_ID, title: localize('vcm.arch', 'ARCH') },
-//	order: 1,
-//});
-
-//MenuRegistry.appendMenuItem(VCMSubmenuId, {
-//	group: '1_garch',
-//	command: { id: VCM_GARCH_ID, title: localize('vcm.garch', 'GARCH') },
-//	order: 2,
-//});
-
-//MenuRegistry.appendMenuItem(VCMSubmenuId, {
-//	group: '1_garch',
-//	command: { id: VCM_EGARCH_ID, title: localize('vcm.egarch', 'EGARCH') },
-//	order: 3,
-//});
-
-//MenuRegistry.appendMenuItem(VCMSubmenuId, {
-//	group: '1_garch',
-//	command: { id: VCM_GJR_GARCH_ID, title: localize('vcm.tgarch', 'TGARCH') },
-//	order: 4,
-//});
-
-//MenuRegistry.appendMenuItem(VCMSubmenuId, {
-//	group: '2_garch',
-//	command: { id: VCM_DCC_ID, title: localize('vcm.sv', 'Multivariate GARCH (DCC)') },
-//	order: 5,
-//});
-
-
-// ============================================
 // SUBMENU: SURVIVAL ANALYSIS
 // ============================================
 
@@ -1774,184 +1157,6 @@ MenuRegistry.appendMenuItem(SASubmenuId, {
 	group: '1_sa',
 	command: { id: 'chiara.statistics.nscr', title: localize('sa.nscr', 'Net Survival and Competing Risks') },
 	order: 2,
-});
-
-//MenuRegistry.appendMenuItem(SASubmenuId, {
-//	group: '1_sa',
-//	command: { id: SA_KAPLAN_MEIER_ID, title: localize('sa.kms', 'Kaplan-Meier Estimator') },
-//	order: 3,
-//});
-
-//MenuRegistry.appendMenuItem(SASubmenuId, {
-//	group: '1_sa',
-//	command: { id: SA_NELSON_AALEN_ID, title: localize('sa.naca', 'Nelson-Aalen Estimator') },
-//	order: 4,
-//});
-
-//MenuRegistry.appendMenuItem(SASubmenuId, {
-//	group: '1_sa',
-//	command: { id: SA_AALEN_JOHANSEN_ID, title: localize('sa.aaje', 'Aalen-Johansen Estimator') },
-//	order: 5,
-//});
-
-//MenuRegistry.appendMenuItem(SASubmenuId, {
-//	group: '2_sa',
-//	command: { id: SA_COX_PH_ID, title: localize('sa.cphe', 'Cox Proportional Hazards Regression') },
-//	order: 6,
-//});
-
-//MenuRegistry.appendMenuItem(SASubmenuId, {
-//	group: '2_sa',
-//	command: { id: SA_CUMULATIVE_INC_ID, title: localize('sa.cie', 'Cumulative Incidence Estimation') },
-//	order: 8,
-//});
-
-//MenuRegistry.appendMenuItem(SASubmenuId, {
-//	group: '3_sa',
-//	command: { id: SA_NET_SURVIVAL_ID, title: localize('sa.nse', 'Net Survival Estimators') },
-//	order: 9,
-//});
-
-//MenuRegistry.appendMenuItem(SASubmenuId, {
-//	group: '3_sa',
-//	command: { id: SA_GRAFFEO_LR_ID, title: localize('sa.glrt', 'Graff\u00e9o\u00b4s Log-Rank Test') },
-//	order: 10,
-//});
-
-// ============================================
-// SUBMENU: KERNEL METHODS
-// ============================================
-
-MenuRegistry.appendMenuItem(KMSubmenuId, {
-	group: '1_km',
-	command: { id: KM_KERNEL_FUNCTIONS_ID, title: localize('km.kf', 'Kernel Functions (KF)') },
-	order: 1,
-});
-
-MenuRegistry.appendMenuItem(KMSubmenuId, {
-	group: '2_km',
-	command: { id: KM_GP_ID, title: localize('km.gp', 'Gaussian Processes (GP)') },
-	order: 2,
-});
-
-MenuRegistry.appendMenuItem(KMSubmenuId, {
-	group: '3_km',
-	command: { id: KM_SVM_ID, title: localize('km.svm', 'Support Vector Machines (SVM)') },
-	order: 3,
-});
-
-// ============================================
-// SUBMENU: NAIVE BAYES
-// ============================================
-
-MenuRegistry.appendMenuItem(NBSubmenuId, {
-	group: '1_nb',
-	command: { id: NB_GAUSSIAN_ID, title: localize('nb.gc', 'Gaussian NB Classifier') },
-	order: 1,
-});
-
-MenuRegistry.appendMenuItem(NBSubmenuId, {
-	group: '1_nb',
-	command: { id: NB_MULTINOMIAL_ID, title: localize('nb.mc', 'Multinomial NB Classifier') },
-	order: 2,
-});
-
-MenuRegistry.appendMenuItem(NBSubmenuId, {
-	group: '1_nb',
-	command: { id: NB_HYBRID_ID, title: localize('hb.mc', 'Hybrid NB Classifier') },
-	order: 3,
-});
-
-// ============================================
-// SUBMENU: DECISION TREES
-// ============================================
-
-// MenuRegistry.appendMenuItem(DTRFSubmenuId, {
-// 	group: '1_dt',
-// 	command: { id: DTRF_DT_ID, title: localize('dt.dt', 'Decision Tree') },
-// 	order: 1,
-// }); // DecisionTree.jl
-
-// MenuRegistry.appendMenuItem(DTRFSubmenuId, {
-// 	group: '1_dtrf',
-// 	command: { id: DTRF_RANDOM_DT_ID, title: localize('dtrf.rdt', 'Random Decision Tree') },
-// 	order: 2,
-// });
-
-// MenuRegistry.appendMenuItem(DTRFSubmenuId, {
-// 	group: '1_dtrf',
-// 	command: { id: DTRF_RF_ID, title: localize('dtrf.rf', 'Random Forest') },
-// 	order: 4,
-// });
-
-// MenuRegistry.appendMenuItem(DTRFSubmenuId, {
-// 	group: '1_dt',
-// 	command: { id: DTRF_MODAL_DT_ID, title: localize('dt.mdt', 'Modal Decision Tree') },
-// 	order: 2,
-// }); // ModalDecisionTrees.jl
-
-// MenuRegistry.appendMenuItem(DTRFSubmenuId, {
-// 	group: '1_dt',
-// 	command: { id: DTRF_DTBM_ID, title: localize('dt.dtbm', 'Differentiable Decision Tree') },
-// 	order: 3,
-// }); // NeuroTreeModels.jl
-
-
-// ============================================
-// SUBMENU: K-NEAREST NEIGHBOURS
-// ============================================
-
-// MenuRegistry.appendMenuItem(KNNSubmenuId, {
-// 	group: '1_knn',
-// 	command: { id: KNN_EXACT_ID, title: localize('knn.eknn', 'Exact K-Nearest Neighbours') },
-// 	order: 1,
-// });
-
-// MenuRegistry.appendMenuItem(KNNSubmenuId, {
-// 	group: '1_knn',
-// 	command: { id: KNN_APPROXIMATE_ID, title: localize('knn.aknn', 'Approximate K-Nearest Neighbours') },
-// 	order: 2,
-// });
-
-
-// ============================================
-// SUBMENU: DISCRIMINANT ANALYSIS
-// ============================================
-
-MenuRegistry.appendMenuItem(DASubmenuId, {
-	group: '1_da',
-	command: { id: DA_LDA_ID, title: localize('da.lda', 'Linear Discriminant Analysis (LDA)') },
-	order: 1,
-});
-
-MenuRegistry.appendMenuItem(DASubmenuId, {
-	group: '1_da',
-	command: { id: DA_RDA_ID, title: localize('da.rda', 'Regularized Discriminant Analysis') },
-	order: 2,
-});
-
-MenuRegistry.appendMenuItem(DASubmenuId, {
-	group: '1_da',
-	command: { id: DA_MCLDA_ID, title: localize('da.mclda', 'Multi-Class LDA') },
-	order: 3,
-});
-
-MenuRegistry.appendMenuItem(DASubmenuId, {
-	group: '1_da',
-	command: { id: DA_QDA_ID, title: localize('da.qda', 'Quadratic Discriminant Analysis') },
-	order: 4,
-});
-
-MenuRegistry.appendMenuItem(DASubmenuId, {
-	group: '2_da',
-	command: { id: DA_PLSDA_ID, title: localize('da.plsr', 'Partial Least Squares Discriminant Analysis') },
-	order: 5,
-});
-
-MenuRegistry.appendMenuItem(DASubmenuId, {
-	group: '2_da',
-	command: { id: DA_FDA_ID, title: localize('da.fda', 'Factorial Discriminant Analysis') },
-	order: 6,
 });
 
 
@@ -2014,12 +1219,6 @@ MenuRegistry.appendMenuItem(NNSubmenuId, {
 	command: { id: 'chiara.statistics.nn.node', title: localize('nn.node', 'Neural ODEs for System Identification') },
  	order: 2,
 }); // DiffEqFlux.jl
-
-// MenuRegistry.appendMenuItem(NNSubmenuId, {
-//	group: '2_nn_estimation',
-//	command: { id: 'chiara.statistics.nn.pinn', precondition: ContextKeyExpr.false(), title: localize('nn.pinn', 'Physics-Informed Neural Networks') },
-//	order: 3,
-//}); // NeuralPDE.jl
 
 
 // ============================================
@@ -2098,8 +1297,15 @@ MenuRegistry.appendMenuItem(PMSubmenuId, {
 
 // ============================================
 // SUBSUBMENU: EXTREME VALUE AND RARE EVENTS
-// (registered here; parented by E_RMTSubmenuId in explore.contribution.ts)
+// (in the Financial Econometrics Toolbox's menu, so it shows when that toolbox extension is installed)
 // ============================================
+
+MenuRegistry.appendMenuItem(MenuId.for(`${TOOLBOX_SUBMENU_PREFIX}econometrics`), {
+	group: '4_et',
+	submenu: EVSubmenuId,
+	title: localize('showStatistics.ev', 'Extreme Value and Rare Events'),
+	order: 1,
+});
 
 // Group 1 — Distribution Fitting
 MenuRegistry.appendMenuItem(EVSubmenuId, {

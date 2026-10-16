@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Antonio Saragga Seabra
-# Licensed under the GNU Affero General Public License v3.0 or later. See LICENSE.txt in the project root for license information.
+# Licensed under the GNU Affero General Public License v3.0. See LICENSE.txt in the project root for license information.
 
 # Compose > Practice: makes one version of each exercise from a seed. Pollis runs it in a hidden terminal
 # and reads the JSON it writes.

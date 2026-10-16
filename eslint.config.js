@@ -130,7 +130,7 @@ export default tseslint.config(
 					// their own. The year is matched loosely so adding a file in a later year is fine.
 					{ pattern: '^ \\*  (?:Copyright \\(c\\) Microsoft Corporation\\. All rights reserved\\.|Copyright \\(c\\) \\d{4}(?:-\\d{4})? Antonio Saragga Seabra)$' },
 					// Upstream files keep Microsoft's MIT line; files authored for Pollis are AGPL.
-					{ pattern: '^ \\*  (?:Licensed under the MIT License\\. See License\\.txt|Licensed under the GNU Affero General Public License v3\\.0 or later\\. See LICENSE\\.txt) in the project root for license information\\.$' },
+					{ pattern: '^ \\*  (?:Licensed under the MIT License\\. See License\\.txt|Licensed under the GNU Affero General Public License v3\\.0\\. See LICENSE\\.txt) in the project root for license information\\.$' },
 					' *--------------------------------------------------------------------------------------------'
 				]
 			]

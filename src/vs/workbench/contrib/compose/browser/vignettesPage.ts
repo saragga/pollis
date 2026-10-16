@@ -1,13 +1,12 @@
 /*---------------------------------------------------------------------------------------------
  *  Copyright (c) 2026 Antonio Saragga Seabra
- *  Licensed under the GNU Affero General Public License v3.0 or later. See LICENSE.txt in the project root for license information.
+ *  Licensed under the GNU Affero General Public License v3.0. See LICENSE.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
 import { RunOnceScheduler } from '../../../../base/common/async.js';
 import { CancellationToken } from '../../../../base/common/cancellation.js';
 import { toErrorMessage } from '../../../../base/common/errorMessage.js';
 import { DisposableStore } from '../../../../base/common/lifecycle.js';
-import { AppResourcePath, FileAccess } from '../../../../base/common/network.js';
 import { joinPath } from '../../../../base/common/resources.js';
 import { URI } from '../../../../base/common/uri.js';
 import { localize, localize2 } from '../../../../nls.js';
@@ -17,7 +16,7 @@ import { BrowserViewCommandId } from '../../../../platform/browserView/common/br
 import { ICommandService } from '../../../../platform/commands/common/commands.js';
 import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
 import { IFileService } from '../../../../platform/files/common/files.js';
-import { IInstantiationService, ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
+import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
 import { IOpenerService } from '../../../../platform/opener/common/opener.js';
 import { asText, IRequestService, isSuccess } from '../../../../platform/request/common/request.js';
 import { IPathService } from '../../../services/path/common/pathService.js';
@@ -25,47 +24,19 @@ import { parseToml, TomlValue } from '../../model/browser/common/tomlPanelData.j
 import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
 import { LIBRARY_PAGE_HELPERS, LIBRARY_PAGE_STYLE } from './libraryPage.js';
-import { IPollisContentService } from './pollisContent.js';
-import { BROWSE_METHODS_COMMAND_ID, openUserMethod, readMethodSummaries, userMethodsFolder, vignettesIndex } from './newMethods.js';
+import { vignettesIndex } from './newMethods.js';
 
-// Help > Documentation > Vignettes: the vignettes of the methods, as R's Help > Vignettes lists those of the
-// installed packages. In Pollis: the vignettes of the methods of the New Methods library, shipped beside their
-// notebooks (media/methods/NAME/vignette/NAME.pdf). On This Computer: the user's methods with a vignette (vignette/NAME.pdf in the method
-// folder). Published: the list in Vignettes.toml at the root of the Pollis registry, an entry for each
-// registered package with a vignette, which Package and Publish (media/methods/package.jl) adds on
-// registration. A vignette opens in the integrated browser.
+// Help > Documentation > Vignettes: a vignette belongs to its package, as in R. Installed: the vignettes of the
+// Julia packages installed on this computer (~/.julia/packages/NAME/SLUG/vignette/Vignette.toml, which Package and
+// Publish (media/methods/package.jl) writes into every package with a vignette), read without an Internet
+// connection, as the packages' documentation. In the Registry: the list in Vignettes.toml at the root of the Pollis
+// registry, which Package and Publish adds to on registration, to choose which packages to install. A vignette
+// opens in the integrated browser.
 
 export const VIGNETTES_COMMAND_ID = 'pollis.documentation.vignettes';
 
-/** A vignette of a method of the New Methods library, by the method's folder in media/methods. */
-interface ILibraryVignette {
-	readonly id: string;
-	readonly topic: string;
-	readonly title: string;
-	readonly citation: string;
-}
-
-/** A vignette of the library as the page shows it: shipped, downloaded since the release (new), or both (updated). */
-interface IShownLibraryVignette extends ILibraryVignette {
-	/** Marked until opened: a vignette downloaded since the release. */
-	readonly status?: 'new' | 'updated';
-	/** The PDF, when downloaded: the shipped one otherwise. */
-	readonly pdf?: URI;
-}
-
-const LIBRARY_VIGNETTES: readonly ILibraryVignette[] = [
-	{ id: 'ErrorComponents', topic: localize('vignettes.topic.panel', "Panel Econometrics"), title: 'WALHUS, AMEMIYA, Swamy-Arora and nested error components', citation: 'Baltagi (2005), Econometric Analysis of Panel Data' },
-	{ id: 'PeriodicGARCH', topic: localize('vignettes.topic.volatility', "Volatility"), title: 'Periodic GARCH: volatility with a calendar dummy', citation: 'Bollerslev and Ghysels (1996), Journal of Business & Economic Statistics' },
-	{ id: 'BreslowCox', topic: localize('vignettes.topic.survival', "Survival Analysis"), title: 'The Cox model with Breslow\'s ties, and its predicted survival', citation: 'Dickson, Grambsch, Fleming, Fisher and Langworthy (1989), Hepatology' },
-	{ id: 'GLMExtras', topic: localize('vignettes.topic.glm', "GLM Inference"), title: 'Parametric bootstrap and delta-beta influence for binomial GLMs', citation: 'Dalal, Fowlkes and Hoadley (1989), Journal of the American Statistical Association' },
-	{ id: 'ForestOOB', topic: localize('vignettes.topic.forests', "Random Forests"), title: 'Out-of-bag error and variable importance for random forests', citation: 'Breiman (2001), Machine Learning' },
-	{ id: 'ArcFS', topic: localize('vignettes.topic.boosting', "Boosting"), title: 'arc-fs: adaptive resampling with pruned trees', citation: 'Breiman (1998), The Annals of Statistics; Breiman (2001), Machine Learning' },
-	{ id: 'ThresholdAR', topic: localize('vignettes.topic.nonlinear', "Nonlinear Dynamics"), title: 'Threshold autoregression: SETAR models and limit cycles', citation: 'Tong and Lim (1980), Journal of the Royal Statistical Society: Series B' },
-	{ id: 'PropensityMatching', topic: localize('vignettes.topic.nearestNeighbours', "K-Nearest Neighbours"), title: 'Propensity score matching: Dehejia and Wahba, and its replications', citation: 'Dehejia and Wahba (1999), Journal of the American Statistical Association; Smith and Todd (2005) and Dehejia (2005), Journal of Econometrics' },
-];
-
-/** A published vignette, a table of Vignettes.toml. */
-interface IPublishedVignette {
+/** A vignette: a table of Vignettes.toml in the registry, or the vignette/Vignette.toml of an installed package. */
+interface IVignette {
 	readonly package: string;
 	readonly title: string;
 	readonly method: string;
@@ -73,43 +44,101 @@ interface IPublishedVignette {
 	readonly author: string;
 	readonly description: string;
 	readonly citation: string;
+	/** A link to read the article. */
+	readonly article: string;
+	readonly topic: string;
+	readonly license: string;
 	readonly repository: string;
+	/** The PDF: a link on GitHub in the registry, the file's URI for an installed package. */
 	readonly pdf: string;
 }
 
 type VignettesMessage =
-	| { readonly command: 'ready' | 'refresh' | 'browseMethods' }
-	| { readonly command: 'openLibrary'; readonly id: string }
-	| { readonly command: 'openLocal'; readonly id: string }
-	| { readonly command: 'openMethod'; readonly id: string }
-	| { readonly command: 'openPublished'; readonly pdf: string }
-	| { readonly command: 'repository'; readonly url: string };
+	| { readonly command: 'ready' | 'refresh' }
+	| { readonly command: 'open'; readonly pdf: string }
+	| { readonly command: 'link'; readonly url: string };
 
-/** The vignettes listed in a Vignettes.toml, those with a package, a title and links on GitHub. */
-function publishedVignettes(content: string): IPublishedVignette[] {
-	const text = (table: TomlValue, key: string) => typeof table[key] === 'string' ? table[key] as string : '';
-	const vignettes: IPublishedVignette[] = [];
-	for (const [name, value] of Object.entries(parseToml(content))) {
-		if (!value || typeof value !== 'object' || Array.isArray(value)) {
-			continue;
-		}
-		const table = value as TomlValue;
-		const vignette = {
-			package: text(table, 'package') || name,
-			title: text(table, 'title'),
-			method: text(table, 'method'),
-			version: text(table, 'version'),
-			author: text(table, 'author'),
-			description: text(table, 'description'),
-			citation: text(table, 'citation'),
-			repository: text(table, 'repository'),
-			pdf: text(table, 'pdf'),
-		};
-		if (vignette.title && vignette.pdf.startsWith('https://github.com/') && vignette.repository.startsWith('https://github.com/')) {
-			vignettes.push(vignette);
+/** A vignette from a table of a Vignettes.toml; the PDF as written in it. */
+function vignette(name: string, table: TomlValue): IVignette {
+	const text = (key: string) => typeof table[key] === 'string' ? table[key] as string : '';
+	return {
+		package: text('package') || name,
+		title: text('title'),
+		method: text('method'),
+		version: text('version'),
+		author: text('author'),
+		description: text('description'),
+		citation: text('citation'),
+		article: text('article'),
+		topic: text('topic'),
+		license: text('license'),
+		repository: text('repository'),
+		pdf: text('pdf'),
+	};
+}
+
+function isTable(value: unknown): value is TomlValue {
+	return !!value && typeof value === 'object' && !Array.isArray(value);
+}
+
+function byTitle(a: IVignette, b: IVignette): number {
+	return a.title.localeCompare(b.title);
+}
+
+/** The vignettes listed in the registry's Vignettes.toml, those with a package, a title and links on GitHub. */
+function registryVignettes(content: string): IVignette[] {
+	return Object.entries(parseToml(content))
+		.filter((entry): entry is [string, TomlValue] => isTable(entry[1]))
+		.map(([name, table]) => vignette(name, table))
+		.filter(entry => entry.title && entry.pdf.startsWith('https://github.com/') && entry.repository.startsWith('https://github.com/'))
+		.sort(byTitle);
+}
+
+/** Compares versions such as 0.10.1 and 0.9.0 by their numbers. */
+function compareVersions(a: string, b: string): number {
+	const pa = a.split('.').map(Number);
+	const pb = b.split('.').map(Number);
+	for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+		const difference = (pa[i] || 0) - (pb[i] || 0);
+		if (difference) {
+			return difference;
 		}
 	}
-	return vignettes.sort((a, b) => a.title.localeCompare(b.title));
+	return 0;
+}
+
+/**
+ * The vignettes of the packages installed in the Julia depot, ~/.julia/packages/NAME/SLUG: those whose
+ * vignette/Vignette.toml names a PDF beside it. Of a package installed in several versions, the newest.
+ */
+async function installedVignettes(fileService: IFileService, pathService: IPathService): Promise<IVignette[]> {
+	const packages = joinPath(pathService.userHome({ preferLocal: true }), '.julia', 'packages');
+	let names: URI[];
+	try {
+		names = ((await fileService.resolve(packages)).children ?? []).filter(child => child.isDirectory).map(child => child.resource);
+	} catch {
+		return [];
+	}
+	const found = await Promise.all(names.map(async folder => {
+		let versions: URI[];
+		try {
+			versions = ((await fileService.resolve(folder)).children ?? []).filter(child => child.isDirectory).map(child => child.resource);
+		} catch {
+			return undefined;
+		}
+		const entries = await Promise.all(versions.map(async version => {
+			try {
+				const table = parseToml((await fileService.readFile(joinPath(version, 'vignette', 'Vignette.toml'))).value.toString());
+				const entry = vignette('', table);
+				const pdf = joinPath(version, 'vignette', entry.pdf);
+				return entry.title && entry.pdf && !entry.pdf.includes('/') && await fileService.exists(pdf) ? { ...entry, pdf: pdf.toString() } : undefined;
+			} catch {
+				return undefined;
+			}
+		}));
+		return entries.filter((entry): entry is IVignette => !!entry).sort((a, b) => compareVersions(b.version, a.version))[0];
+	}));
+	return found.filter((entry): entry is IVignette => !!entry).sort(byTitle);
 }
 
 /** The open page, so a second request shows it again. */
@@ -124,8 +153,6 @@ async function openVignettesPage(accessor: ServicesAccessor): Promise<void> {
 	const configurationService = accessor.get(IConfigurationService);
 	const commandService = accessor.get(ICommandService);
 	const openerService = accessor.get(IOpenerService);
-	const instantiationService = accessor.get(IInstantiationService);
-	const contentService = accessor.get(IPollisContentService);
 
 	if (openPage && !openPage.isDisposed()) {
 		webviewWorkbenchService.revealWebview(openPage, openPage.group ?? -1, false);
@@ -153,128 +180,79 @@ async function openVignettesPage(accessor: ServicesAccessor): Promise<void> {
 		disposables.dispose();
 	}));
 
-	// The user's vignettes, sent again when a method is added or removed, or the page gets the focus back (a new PDF)
-	let localPdfs = new Set<string>();
-	const sendLocal = async () => {
-		const vignettes = (await readMethodSummaries(fileService, pathService)).filter(method => method.vignettePdf);
-		localPdfs = new Set(vignettes.map(method => method.vignettePdf!));
-		webviewInput.webview.postMessage({ command: 'local', vignettes });
+	// The installed vignettes, read again when the page gets the focus back (a package installed since)
+	let installed: IVignette[] = [];
+	const sendInstalled = async () => {
+		installed = await installedVignettes(fileService, pathService);
+		webviewInput.webview.postMessage({ command: 'installed', vignettes: installed });
 	};
-	const root = userMethodsFolder(pathService);
-	await fileService.createFolder(root);
-	const refresh = disposables.add(new RunOnceScheduler(() => sendLocal(), 300));
-	const watcher = disposables.add(fileService.createWatcher(root, { recursive: false, excludes: [] }));
-	disposables.add(watcher.onDidChange(() => refresh.schedule()));
+	const refresh = disposables.add(new RunOnceScheduler(() => sendInstalled(), 300));
 	disposables.add(webviewInput.webview.onDidFocus(() => refresh.schedule()));
 
-	// The published vignettes, read from the registry when the page opens and on Refresh
-	let published: IPublishedVignette[] = [];
-	const sendPublished = async () => {
-		const { registry, url } = vignettesIndex(configurationService);
+	// The vignettes in the registry, read when the page opens and on Refresh
+	let registry: IVignette[] = [];
+	const sendRegistry = async () => {
+		const { registry: url, url: index } = vignettesIndex(configurationService);
 		let error: string | undefined;
-		published = [];
-		if (!url) {
-			error = localize('vignettes.notGitHub', "The registry {0} is not on GitHub.", registry);
+		registry = [];
+		if (!index) {
+			error = localize('vignettes.notGitHub', "The registry {0} is not on GitHub.", url);
 		} else {
 			try {
-				const context = await requestService.request({ type: 'GET', url, callSite: 'vignettes.index' }, CancellationToken.None);
+				const context = await requestService.request({ type: 'GET', url: index, callSite: 'vignettes.index' }, CancellationToken.None);
 				// No Vignettes.toml yet, or no registry yet: nothing published
 				if (context.res.statusCode !== 404) {
 					if (!isSuccess(context)) {
 						throw new Error(localize('vignettes.status', "The server returned {0}.", context.res.statusCode ?? '?'));
 					}
-					published = publishedVignettes((await asText(context)) ?? '');
+					registry = registryVignettes((await asText(context)) ?? '');
 				}
 			} catch (e) {
 				error = toErrorMessage(e);
 			}
 		}
-		webviewInput.webview.postMessage({ command: 'published', vignettes: published, registry, error });
-	};
-
-	// The vignettes of the library: those shipped, newer ones downloaded since the release, and new ones
-	let library: IShownLibraryVignette[] = [];
-	const sendLibrary = async () => {
-		const downloaded = await contentService.downloaded('vignettes');
-		const unseen = contentService.unseen('vignettes');
-		const shown = (id: string) => downloaded.find(({ entry }) => entry.id === id);
-		library = [
-			...LIBRARY_VIGNETTES.map(vignette => {
-				const newer = shown(vignette.id);
-				return newer ? { ...vignette, status: unseen.has(vignette.id) ? 'updated' as const : undefined, pdf: joinPath(newer.folder, newer.entry.files[0]) } : vignette;
-			}),
-			...downloaded.filter(({ entry }) => !LIBRARY_VIGNETTES.some(vignette => vignette.id === entry.id)).map(({ entry, folder }) => ({
-				id: entry.id,
-				topic: entry.topic ?? localize('vignettes.topic.newMethods', "New Methods"),
-				title: entry.title,
-				citation: entry.citation ?? '',
-				status: unseen.has(entry.id) ? 'new' as const : undefined,
-				pdf: joinPath(folder, entry.files[0]),
-			})),
-		];
-		webviewInput.webview.postMessage({ command: 'library', vignettes: library.map(({ pdf, ...rest }) => rest) });
+		webviewInput.webview.postMessage({ command: 'registry', vignettes: registry, registry: url, error });
 	};
 
 	disposables.add(webviewInput.webview.onMessage(async (e: { message: VignettesMessage }) => {
 		const message = e.message;
-		if (message.command === 'ready') {
-			sendLibrary();
-			sendLocal();
-			sendPublished();
-		} else if (message.command === 'refresh') {
-			sendLocal();
-			sendPublished();
-		} else if (message.command === 'openLibrary') {
-			const vignette = library.find(candidate => candidate.id === message.id);
-			if (vignette) {
-				const uri = vignette.pdf ?? FileAccess.asFileUri(`vs/workbench/contrib/compose/browser/media/methods/${vignette.id}/vignette/${vignette.id}.pdf` as AppResourcePath);
-				commandService.executeCommand(BrowserViewCommandId.Open, uri.toString(true));
-				if (vignette.status) {
-					contentService.markSeen('vignettes', vignette.id);
-					sendLibrary();
-				}
-			}
-		} else if (message.command === 'browseMethods') {
-			commandService.executeCommand(BROWSE_METHODS_COMMAND_ID);
-		} else if (message.command === 'openLocal' && localPdfs.has(message.id)) {
-			commandService.executeCommand(BrowserViewCommandId.Open, URI.parse(message.id).toString(true));
-		} else if (message.command === 'openMethod') {
-			instantiationService.invokeFunction(openUserMethod, message.id);
-		} else if (message.command === 'openPublished' && published.some(vignette => vignette.pdf === message.pdf)) {
-			commandService.executeCommand(BrowserViewCommandId.Open, message.pdf);
-		} else if (message.command === 'repository' && published.some(vignette => vignette.repository === message.url)) {
+		const known = [...installed, ...registry];
+		if (message.command === 'ready' || message.command === 'refresh') {
+			sendInstalled();
+			sendRegistry();
+		} else if (message.command === 'open' && known.some(entry => entry.pdf === message.pdf)) {
+			commandService.executeCommand(BrowserViewCommandId.Open, message.pdf.startsWith('file:') ? URI.parse(message.pdf).toString(true) : message.pdf);
+		} else if (message.command === 'link' && known.some(entry => entry.repository === message.url || entry.article === message.url) && /^https?:\/\//.test(message.url)) {
 			openerService.open(URI.parse(message.url), { openExternal: true });
 		}
 	}));
 }
 
-/** The page: its texts come from here, the vignettes from the `local` and `published` messages. */
+/** The page: its texts come from here, the vignettes from the `installed` and `registry` messages. */
 function pageHtml(): string {
 	const text = {
 		title: localize('vignettes.title', "Vignettes"),
-		intro: localize('vignettes.intro', "A vignette is a method's documentation: the article it follows, how to call it in Julia, and its results printed beside the published ones. Click a title to read it."),
-		library: localize('vignettes.library', "In Pollis"),
-		libraryIntro: localize('vignettes.libraryIntro', "The vignettes of the methods of the New Methods library, each tested against the paper it came from. Their notebooks are in"),
-		libraryLink: localize('vignettes.libraryLink', "Compose > New Methods > Browse Methods"),
-		topic: localize('vignettes.topicHeader', "Topic"),
+		intro: localize('vignettes.intro', "A vignette is a package's documentation: the article its method follows, how to call it in Julia, and its results printed beside the published ones. Click a title to read it."),
 		search: localize('vignettes.search', "Search vignettes"),
-		local: localize('vignettes.local', "On This Computer"),
-		localEmpty: localize('vignettes.localEmpty', "None of your methods has a vignette yet: Write a Vignette, on a method's page (Compose > New Methods > Browse Methods), asks your coding agent for one."),
-		published: localize('vignettes.published', "Published"),
-		publishedIntro: localize('vignettes.publishedIntro', "The vignettes of the method packages in the Pollis registry. Package and Publish adds a method's vignette here when it registers the package."),
-		publishedEmpty: localize('vignettes.publishedEmpty', "No vignettes published yet."),
-		loading: localize('vignettes.loading', "Reading the list of published vignettes..."),
-		failed: localize('vignettes.failed', "Could not read the list of published vignettes:"),
+		allTopics: localize('vignettes.allTopics', "All topics"),
+		installed: localize('vignettes.installed', "Installed"),
+		installedIntro: localize('vignettes.installedIntro', "The vignettes of the Julia packages installed on this computer. They open without an Internet connection."),
+		installedEmpty: localize('vignettes.installedEmpty', "No installed package has a vignette yet. Install a package from the registry below and its vignette appears here."),
+		registry: localize('vignettes.registry', "In the Registry"),
+		registryIntro: localize('vignettes.registryIntro', "The vignettes of the packages in the Pollis registry, to choose which packages to install. Reading this list needs an Internet connection."),
+		registryEmpty: localize('vignettes.registryEmpty', "No vignettes in the registry yet."),
+		loading: localize('vignettes.loading', "Reading the list of vignettes in the registry..."),
+		failed: localize('vignettes.failed', "Could not read the list of vignettes in the registry:"),
 		noMatch: localize('vignettes.noMatch', "No vignette matches."),
 		vignette: localize('vignettes.vignette', "Vignette"),
 		article: localize('vignettes.article', "Article"),
+		topic: localize('vignettes.topicHeader', "Topic"),
 		package: localize('vignettes.package', "Package"),
-		openMethod: localize('vignettes.openMethod', "Open Method"),
 		repository: localize('vignettes.repository', "Repository"),
 		refresh: localize('vignettes.refresh', "Refresh"),
 		by: localize('vignettes.by', "by {0}"),
-		new: localize('vignettes.new', "New"),
-		updated: localize('vignettes.updated', "Updated"),
+		license: localize('vignettes.license', "License: {0}"),
+		isInstalled: localize('vignettes.isInstalled', "Installed"),
 	};
 	return `<!DOCTYPE html>
 <html lang="en">
@@ -285,34 +263,34 @@ function pageHtml(): string {
 	<style>${LIBRARY_PAGE_STYLE}
 	h2 { font-size: 16px; font-weight: 600; margin: 28px 0 4px 0; }
 	.hint { color: var(--vscode-descriptionForeground); margin: 0 0 8px 0; line-height: 1.4; max-width: 900px; }
-	.search { width: 100%; max-width: 420px; margin: 0 0 8px 0; padding: 4px 6px; font: inherit; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, var(--vscode-widget-border)); border-radius: 2px; }
-	.search:focus { outline: 1px solid var(--vscode-focusBorder); outline-offset: -1px; }
+	.filters { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 8px 0; }
+	.search, .topics { padding: 4px 6px; font: inherit; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, var(--vscode-widget-border)); border-radius: 2px; }
+	.search { width: 100%; max-width: 420px; }
+	.search:focus, .topics:focus { outline: 1px solid var(--vscode-focusBorder); outline-offset: -1px; }
+	.topic { width: 12%; }
 	.error { color: var(--vscode-errorForeground); }</style>
 </head>
 <body>
 <div class="container">
 	<h1>${text.title}</h1>
 	<p class="subtitle">${text.intro}</p>
-	<input class="search" id="search" type="search" placeholder="${text.search}" aria-label="${text.search}">
-	<h2>${text.library}</h2>
-	<p class="hint">${text.libraryIntro} <button class="link" id="browseMethods">${text.libraryLink}</button></p>
-	<p class="hint" id="libraryNote" hidden></p>
-	<table id="libraryTable" hidden>
-		<thead><tr><th class="name">${text.vignette}</th><th class="article">${text.article}</th><th>${text.topic}</th></tr></thead>
-		<tbody id="library"></tbody>
+	<div class="filters">
+		<input class="search" id="search" type="search" placeholder="${text.search}" aria-label="${text.search}">
+		<select class="topics" id="topics" aria-label="${text.topic}"><option value="">${text.allTopics}</option></select>
+	</div>
+	<h2>${text.installed}</h2>
+	<p class="hint">${text.installedIntro}</p>
+	<p class="hint" id="installedNote" hidden></p>
+	<table id="installedTable" hidden>
+		<thead><tr><th class="name">${text.vignette}</th><th class="article">${text.article}</th><th class="topic">${text.topic}</th><th>${text.package}</th></tr></thead>
+		<tbody id="installed"></tbody>
 	</table>
-	<h2>${text.local}</h2>
-	<p class="hint" id="localNote"></p>
-	<table id="localTable" hidden>
-		<thead><tr><th class="name">${text.vignette}</th><th class="article">${text.article}</th><th>${text.package}</th></tr></thead>
-		<tbody id="local"></tbody>
-	</table>
-	<h2>${text.published}</h2>
-	<p class="hint">${text.publishedIntro} <button class="link" id="refresh">${text.refresh}</button></p>
-	<p class="hint" id="publishedNote">${text.loading}</p>
-	<table id="publishedTable" hidden>
-		<thead><tr><th class="name">${text.vignette}</th><th class="article">${text.article}</th><th>${text.package}</th></tr></thead>
-		<tbody id="published"></tbody>
+	<h2>${text.registry}</h2>
+	<p class="hint">${text.registryIntro} <button class="link" id="refresh">${text.refresh}</button></p>
+	<p class="hint" id="registryNote">${text.loading}</p>
+	<table id="registryTable" hidden>
+		<thead><tr><th class="name">${text.vignette}</th><th class="article">${text.article}</th><th class="topic">${text.topic}</th><th>${text.package}</th></tr></thead>
+		<tbody id="registry"></tbody>
 	</table>
 </div>
 <script>
@@ -320,23 +298,38 @@ function pageHtml(): string {
 	const TEXT = ${JSON.stringify(text)};
 	${LIBRARY_PAGE_HELPERS}
 
-	let library;
-	let local;
-	let published;
+	let installed;
+	let registry;
 	const search = document.getElementById('search');
+	const topics = document.getElementById('topics');
 
-	function matches(fields) {
+	function matches(vignette) {
 		const query = search.value.trim().toLowerCase();
-		return !query || fields.some(field => (field || '').toLowerCase().includes(query));
+		const fields = [vignette.title, vignette.method, vignette.description, vignette.citation, vignette.topic, vignette.package, vignette.author, vignette.license];
+		return (!topics.value || vignette.topic === topics.value)
+			&& (!query || fields.some(field => (field || '').toLowerCase().includes(query)));
+	}
+
+	// The topics of both lists, keeping the one chosen
+	function fillTopics() {
+		const chosen = topics.value;
+		const all = [...new Set([...(installed || []), ...(registry && registry.vignettes || [])].map(vignette => vignette.topic).filter(topic => topic))].sort();
+		while (topics.options.length > 1) {
+			topics.remove(1);
+		}
+		for (const topic of all) {
+			topics.appendChild(new Option(topic, topic));
+		}
+		topics.value = all.includes(chosen) ? chosen : '';
 	}
 
 	// A table of vignettes, or a note when there are none or none matches
-	function fill(id, vignettes, empty, row) {
-		const shown = vignettes.filter(vignette => matches([vignette.title, vignette.topic, vignette.method, vignette.description, vignette.citation, vignette.package, vignette.author]));
+	function fill(id, vignettes, empty) {
+		const shown = vignettes.filter(matches);
 		const body = document.getElementById(id);
 		body.textContent = '';
 		for (const vignette of shown) {
-			body.appendChild(row(vignette));
+			body.appendChild(row(vignette, id === 'registry'));
 		}
 		document.getElementById(id + 'Table').hidden = !shown.length;
 		const note = document.getElementById(id + 'Note');
@@ -345,42 +338,15 @@ function pageHtml(): string {
 		note.hidden = !!shown.length;
 	}
 
-	function libraryRow(vignette) {
-		const row = element('tr');
-		const title = element('div', 'title', vignette.title);
-		title.addEventListener('click', () => vscode.postMessage({ command: 'openLibrary', id: vignette.id }));
-		if (vignette.status) {
-			title.appendChild(element('span', 'badge', vignette.status === 'new' ? TEXT.new : TEXT.updated));
-		}
-		cell(row, 'name').appendChild(title);
-		cell(row, 'article').appendChild(element('p', 'citation small', vignette.citation));
-		cell(row).appendChild(element('div', 'small', vignette.topic));
-		return row;
-	}
-
-	function localRow(method) {
-		const row = element('tr');
-		const name = cell(row, 'name');
-		const title = element('div', 'title', method.vignetteTitle);
-		title.addEventListener('click', () => vscode.postMessage({ command: 'openLocal', id: method.vignettePdf }));
-		name.appendChild(title);
-		if (method.title !== method.vignetteTitle) {
-			name.appendChild(element('p', 'description', method.title));
-		}
-		cell(row, 'article').appendChild(element('p', 'citation small', method.citation || ''));
-		const packageCell = cell(row);
-		packageCell.appendChild(element('div', 'file', method.name + '.jl'));
-		const links = element('div', 'links');
-		links.appendChild(link(TEXT.openMethod, () => vscode.postMessage({ command: 'openMethod', id: method.id })));
-		packageCell.appendChild(links);
-		return row;
-	}
-
-	function publishedRow(vignette) {
+	// (a) the vignette and its description, (b) the article, (c) the topic, (d) the package, its author, repository and license
+	function row(vignette, inRegistry) {
 		const row = element('tr');
 		const name = cell(row, 'name');
 		const title = element('div', 'title', vignette.title);
-		title.addEventListener('click', () => vscode.postMessage({ command: 'openPublished', pdf: vignette.pdf }));
+		title.addEventListener('click', () => vscode.postMessage({ command: 'open', pdf: vignette.pdf }));
+		if (inRegistry && installed && installed.some(other => other.package === vignette.package)) {
+			title.appendChild(element('span', 'badge', TEXT.isInstalled));
+		}
 		name.appendChild(title);
 		if (vignette.method && vignette.method !== vignette.title) {
 			name.appendChild(element('p', 'description', vignette.method));
@@ -388,42 +354,52 @@ function pageHtml(): string {
 		if (vignette.description) {
 			name.appendChild(element('p', 'description clamped', vignette.description));
 		}
-		cell(row, 'article').appendChild(element('p', 'citation small', vignette.citation));
+		const article = cell(row, 'article');
+		if (vignette.article && vignette.citation) {
+			const citation = element('p', 'citation small');
+			citation.appendChild(link(vignette.citation, () => vscode.postMessage({ command: 'link', url: vignette.article })));
+			article.appendChild(citation);
+		} else {
+			article.appendChild(element('p', 'citation small', vignette.citation));
+		}
+		cell(row, 'topic').appendChild(element('div', 'small', vignette.topic));
 		const packageCell = cell(row);
 		packageCell.appendChild(element('div', 'file', vignette.package + '.jl' + (vignette.version ? ' ' + vignette.version : '')));
 		if (vignette.author) {
 			packageCell.appendChild(element('div', 'small', TEXT.by.replace('{0}', vignette.author)));
 		}
-		const links = element('div', 'links');
-		links.appendChild(link(TEXT.repository, () => vscode.postMessage({ command: 'repository', url: vignette.repository })));
-		packageCell.appendChild(links);
+		if (vignette.license) {
+			packageCell.appendChild(element('div', 'small', TEXT.license.replace('{0}', vignette.license)));
+		}
+		if (vignette.repository) {
+			const links = element('div', 'links');
+			links.appendChild(link(TEXT.repository, () => vscode.postMessage({ command: 'link', url: vignette.repository })));
+			packageCell.appendChild(links);
+		}
 		return row;
 	}
 
 	function render() {
-		if (library) {
-			fill('library', library, '', libraryRow);
+		if (installed) {
+			fill('installed', installed, TEXT.installedEmpty);
 		}
-		if (local) {
-			fill('local', local, TEXT.localEmpty, localRow);
-		}
-		if (published) {
-			if (published.error) {
-				document.getElementById('publishedTable').hidden = true;
-				const note = document.getElementById('publishedNote');
+		if (registry) {
+			if (registry.error) {
+				document.getElementById('registryTable').hidden = true;
+				const note = document.getElementById('registryNote');
 				note.hidden = false;
 				note.className = 'hint error';
-				note.textContent = TEXT.failed + ' ' + published.error;
+				note.textContent = TEXT.failed + ' ' + registry.error;
 			} else {
-				fill('published', published.vignettes, TEXT.publishedEmpty, publishedRow);
+				fill('registry', registry.vignettes, TEXT.registryEmpty);
 			}
 		}
 	}
 
 	search.addEventListener('input', render);
-	document.getElementById('browseMethods').addEventListener('click', () => vscode.postMessage({ command: 'browseMethods' }));
+	topics.addEventListener('change', render);
 	document.getElementById('refresh').addEventListener('click', () => {
-		const note = document.getElementById('publishedNote');
+		const note = document.getElementById('registryNote');
 		note.hidden = false;
 		note.className = 'hint';
 		note.textContent = TEXT.loading;
@@ -431,16 +407,15 @@ function pageHtml(): string {
 	});
 
 	window.addEventListener('message', event => {
-		if (event.data.command === 'library') {
-			library = event.data.vignettes;
-			render();
-		} else if (event.data.command === 'local') {
-			local = event.data.vignettes;
-			render();
-		} else if (event.data.command === 'published') {
-			published = event.data;
-			render();
+		if (event.data.command === 'installed') {
+			installed = event.data.vignettes;
+		} else if (event.data.command === 'registry') {
+			registry = event.data;
+		} else {
+			return;
 		}
+		fillTopics();
+		render();
 	});
 	vscode.postMessage({ command: 'ready' });
 </script>
@@ -458,8 +433,8 @@ registerAction2(class extends Action2 {
 			},
 			category: Categories.Help,
 			f1: true,
-			// Help > Documentation, defined in workbench/browser/actions/helpActions.ts, after A Tour of Pollis
-			menu: { id: MenuId.for('MenubarHelpDocumentationMenu'), group: '0_pollis', order: 2 },
+			// Help > Documentation, defined in workbench/browser/actions/helpActions.ts, after A Tour of Pollis and The Pollis Guide
+			menu: { id: MenuId.for('MenubarHelpDocumentationMenu'), group: '0_pollis', order: 3 },
 		});
 	}
 	run(accessor: ServicesAccessor): Promise<void> {

@@ -1,6 +1,6 @@
 # Third-Party Notices
 
-Pollis is licensed under the GNU Affero General Public License v3.0 or later, and incorporates the following open-source components. Each remains the property of its respective copyright holders and is licensed under the terms reproduced below, which continue to apply to it within Pollis.
+Pollis is licensed under the GNU Affero General Public License v3.0, and incorporates the following open-source components. Each remains the property of its respective copyright holders and is licensed under the terms reproduced below, which continue to apply to it within Pollis.
 
 | Component | License | Source |
 |---|---|---|

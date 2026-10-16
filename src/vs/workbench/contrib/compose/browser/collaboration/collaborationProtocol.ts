@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------------------------
  *  Copyright (c) 2026 Antonio Saragga Seabra
- *  Licensed under the GNU Affero General Public License v3.0 or later. See LICENSE.txt in the project root for license information.
+ *  Licensed under the GNU Affero General Public License v3.0. See LICENSE.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
 import { encodeHex, VSBuffer } from '../../../../../base/common/buffer.js';
@@ -26,6 +26,9 @@ export const MAX_SHARE_BYTES = 2 * 1024 * 1024;
 
 /** The largest dataset shared (Share Dataset), in bytes, as CSV text. */
 export const MAX_DATASET_BYTES = 5 * 1024 * 1024;
+
+/** The largest file or DuckDB database shared in the chat (Add > File, Add > Database), in bytes, before base64. */
+export const MAX_FILE_BYTES = 5 * 1024 * 1024;
 
 /** Above this size a transfer shows a progress bar on both sides. */
 export const PROGRESS_THRESHOLD_BYTES = 1024 * 1024;
@@ -84,6 +87,16 @@ export interface IDatasetSharedPayload {
 	readonly content: string;
 }
 
+/** A file shared in the chat (Add > File), kept as bytes and never opened or run, the receiver can only save it;
+ * or a DuckDB database (Add > Database), which the receiver can also attach, read-only, in their Julia session. */
+export interface IFileSharedPayload {
+	readonly id: string;
+	/** The file's name, with its extension; the receiver keeps only its base name. */
+	readonly fileName: string;
+	/** The bytes in base64, at most MAX_FILE_BYTES once decoded. */
+	readonly content: string;
+}
+
 /** Sent on leaving; from the host it ends the session. */
 export interface IByePayload {
 	readonly reason?: 'left' | 'ended';
@@ -102,6 +115,8 @@ export type Envelope =
 	| IEnvelopeBase<'chat', IChatPayload>
 	| IEnvelopeBase<'editorShared', IEditorSharedPayload>
 	| IEnvelopeBase<'datasetShared', IDatasetSharedPayload>
+	| IEnvelopeBase<'fileShared', IFileSharedPayload>
+	| IEnvelopeBase<'databaseShared', IFileSharedPayload>
 	| IEnvelopeBase<'bye', IByePayload>;
 
 export type EnvelopeType = Envelope['type'];
@@ -119,7 +134,7 @@ export function isEnvelope(value: unknown): value is Envelope {
 	}
 	const candidate = value as Partial<Envelope>;
 	return candidate.v === PROTOCOL_VERSION
-		&& (candidate.type === 'hello' || candidate.type === 'chat' || candidate.type === 'editorShared' || candidate.type === 'datasetShared' || candidate.type === 'bye')
+		&& (candidate.type === 'hello' || candidate.type === 'chat' || candidate.type === 'editorShared' || candidate.type === 'datasetShared' || candidate.type === 'fileShared' || candidate.type === 'databaseShared' || candidate.type === 'bye')
 		&& typeof candidate.channel === 'string'
 		&& !!candidate.payload && typeof candidate.payload === 'object';
 }
@@ -128,6 +143,18 @@ export function isEnvelope(value: unknown): value is Envelope {
 export function isAcceptableImage(dataUrl: string): boolean {
 	const match = /^data:image\/(?:png|jpeg|gif|webp);base64,(?<data>[A-Za-z0-9+/=]+)$/.exec(dataUrl);
 	return !!match?.groups && imageBytes(dataUrl) <= MAX_IMAGE_BYTES;
+}
+
+/** The bytes of a base64 text, or undefined when it is not base64. */
+export function base64Bytes(content: string): number | undefined {
+	return /^[A-Za-z0-9+/]*={0,2}$/.test(content) && content.length % 4 === 0
+		? content.length * 3 / 4 - (content.endsWith('==') ? 2 : content.endsWith('=') ? 1 : 0)
+		: undefined;
+}
+
+/** Whether bytes start as a DuckDB database file does: its magic, DUCK, at offset 8. */
+export function isDuckDbFile(bytes: Uint8Array): boolean {
+	return bytes.length >= 12 && String.fromCharCode(bytes[8], bytes[9], bytes[10], bytes[11]) === 'DUCK';
 }
 
 /** The size of a base64 data URL once decoded, in bytes. */

@@ -14,7 +14,7 @@ export function createNativeAboutDialogDetails(productService: IProductService):
 	const poweredBy = productService.poweredBy;
 	const poweredByLines = [
 		localize('poweredByHeader', "Powered by"),
-		localize('poweredByJulia', "· Analytics: Julia {0}", poweredBy?.julia ?? 'Unknown'),
+		localize('poweredByJulia', "· Analytics: Julia"),
 		localize('poweredByCodeOSS', "· Platform: Code OSS {0}", poweredBy?.codeoss ?? productService.version),
 	].join('\n');
 

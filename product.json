@@ -14,7 +14,7 @@
 	"applicationName": "pollis",
 	"dataFolderName": ".pollis",
 	"win32MutexName": "pollis",
-	"licenseName": "AGPL-3.0-or-later",
+	"licenseName": "AGPL-3.0",
 	"sourceUrl": "https://github.com/saragga/pollis",
 	"reportIssueUrl": "https://github.com/saragga/pollis/issues/new",
 	"extensionsGallery": {
@@ -299,7 +299,6 @@
 	],
 	"date": "2026-05-31T00:00:00.000Z",
 	"poweredBy": {
-		"julia": "1.12.6",
 		"codeoss": "1.117.0"
 	}
 }

@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------------------------
  *  Copyright (c) 2026 Antonio Saragga Seabra
- *  Licensed under the GNU Affero General Public License v3.0 or later. See LICENSE.txt in the project root for license information.
+ *  Licensed under the GNU Affero General Public License v3.0. See LICENSE.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
 import { streamToBuffer, VSBuffer } from '../../../../base/common/buffer.js';
@@ -288,6 +288,10 @@ function methodToml(name: string, title: string, article: string): string {
 		'vignette_title = ""',
 		'author = ""',
 		'description = ""',
+		'# The topic, e.g. "Survival Analysis", and the license: choose one, e.g. MIT, or another whose text is in a',
+		'# LICENSE file here. Without a license nobody may reuse the package, so others cannot build on it.',
+		'topic = ""',
+		'license = ""',
 		'',
 		'# The article whose tables are the targets. article is a link to read it (its PDF or its web page):',
 		'# Pollis opens it in the integrated browser and keeps no copy. Without it, the DOI\'s page opens.',

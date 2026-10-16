@@ -1,11 +1,10 @@
 /*---------------------------------------------------------------------------------------------
  *  Copyright (c) 2026 Antonio Saragga Seabra
- *  Licensed under the GNU Affero General Public License v3.0 or later. See LICENSE.txt in the project root for license information.
+ *  Licensed under the GNU Affero General Public License v3.0. See LICENSE.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
 import { localize } from '../../../../../vs/nls.js';
 import { MenuRegistry, MenuId } from '../../../../platform/actions/common/actions.js';
-import { ContextKeyExpr } from '../../../../platform/contextkey/common/contextkey.js';
 import { CommandsRegistry } from '../../../../platform/commands/common/commands.js';
 import { IDO_PANEL } from '../../model/browser/commands/ido.command.js';
 import { OPTIM_PANEL } from '../../model/browser/commands/optim.command.js';
@@ -55,7 +54,6 @@ import { AZERO_PANEL } from '../../model/browser/commands/azero.command.js';
 import { LQR_PANEL } from '../../model/browser/commands/lqr.command.js';
 import { TRAJ_PANEL } from '../../model/browser/commands/traj.command.js';
 import { MPC_PANEL } from '../../model/browser/commands/mpc.command.js';
-// import { METHODS } from 'http';
 
 const OPTIMISE_COMMAND_ID = 'workbench.action.showOptimise';
 const IDO_ID = 'chiara.optimise.ido';
@@ -220,14 +218,10 @@ const GFOSubmenuId = new MenuId('menubarGFOSubmenu');  // Gradient-Free Optimiza
 const GOSubmenuId = new MenuId('menubarGOSubmenu');   // Global Optimization
 const ECSubmenuId = new MenuId('menubarECSubmenu');   // Evolutionary Computation
 const MOOSubmenuId = new MenuId('menubarMOOSubmenu');  // Multi-Objective Optimization
-const HMOSubmenuId = new MenuId('menubarHMOSubmenu');  // Hybrid and Multistart Methods
 
 // ============================================
 // SUBMENU IDs — MATHEMATICAL PROGRAMMING
 // ============================================
-
-const LPSubmenuId = new MenuId('menubarMPLPSubmenu');   // Linear Programming
-const QPSubmenuId = new MenuId('menubarMPQPSubmenu');   // Quadratic Programming
 
 const CCPSubmenuId = new MenuId('menubarMPCCPSubmenu');  // Conic & Convex Programming
 // NLPSubmenuId removed — Nonlinear Programming now uses a direct command
@@ -240,11 +234,6 @@ const CVPSubmenuId = new MenuId('menubarMPCVPSubmenu');  // Complementarity & Va
 const OCSubmenuId = new MenuId('menubarOCSubmenu');  // Optimal Control
 const SDMSubmenuId = new MenuId('menubarSDMSubmenu');  // Markov Decision Processes
 const RLSubmenuId = new MenuId('menubarRLSubmenu');   // Reinforcement Learning
-
-// ============================================
-// SUBMENU DIY
-// ============================================
-const DIYSubmenuId = new MenuId('menubarDIYSubmenu'); // DIY Estimation Methods
 
 
 MenuRegistry.appendMenuItem(MenuId.MenubarOptimiseMenu, {
@@ -433,17 +422,6 @@ MenuRegistry.appendMenuItem(MenuId.MenubarOptimiseMenu, {
 });
 
 // ============================================
-// GROUP 4: DO-IT-YOURSELF ESTIMATION METHODS
-// ============================================
-
-//MenuRegistry.appendMenuItem(MenuId.MenubarOptimiseMenu, {
-//	group: '9_optimisation',
-//	submenu: DIYSubmenuId,
-//	title: localize('showOptimisation.DIY', 'DO-IT-YOURSELF Estimation Methods'),
-//	order: 1,
-//});
-
-// ============================================
 // SUBMENU: GRADIENT-BASED OPTIMIZATION
 // ============================================
 
@@ -528,7 +506,7 @@ MenuRegistry.appendMenuItem(GOSubmenuId, {
 
 MenuRegistry.appendMenuItem(GOSubmenuId, {
 	group: '1_go',
-	command: { id: PGO_ID, title: localize('go.pg', 'Principled Stochastic Search with Local Refinement') },
+	command: { id: PGO_ID, title: localize('go.pg', 'Stochastic Search with Local Refinement') },
 	order: 2,
 });
 
@@ -537,7 +515,6 @@ MenuRegistry.appendMenuItem(GOSubmenuId, {
 	command: { id: HNS_ID, title: localize('go.hn', 'Stochastic Neighbourhood Search') },
 	order: 3,
 });
-
 
 
 // ============================================
@@ -584,29 +561,6 @@ MenuRegistry.appendMenuItem(MOOSubmenuId, {
 	command: { id: MPM_ID, title: localize('moo.pm', 'Performance Metrics') },
 	order: 3,
 });
-
-// ============================================
-// SUBMENU: HYBRID AND MULTISTART METHODS
-// ============================================
-
-MenuRegistry.appendMenuItem(HMOSubmenuId, {
-	group: '1_hmo',
-	command: { id: OPTIMISE_COMMAND_ID, precondition: ContextKeyExpr.false(), title: localize('hmo.mr', 'Multistart and Restart Methods') },
-	order: 1,
-});
-
-MenuRegistry.appendMenuItem(HMOSubmenuId, {
-	group: '1_hmo',
-	command: { id: OPTIMISE_COMMAND_ID, precondition: ContextKeyExpr.false(), title: localize('hmo.mhe', 'Memetic and Hybrid Evolutionary Methods') },
-	order: 2,
-});
-
-MenuRegistry.appendMenuItem(HMOSubmenuId, {
-	group: '1_hmo',
-	command: { id: OPTIMISE_COMMAND_ID, precondition: ContextKeyExpr.false(), title: localize('hmo.lgh', 'Local-Global Hybridization') },
-	order: 3,
-});
-
 
 // =====================================================
 // SUBMENU: MARKOV DECISION PROCESSES
@@ -666,44 +620,6 @@ MenuRegistry.appendMenuItem(RLSubmenuId, {
 });
 
 // ============================================
-// SUBMENU: LINEAR PROGRAMMING
-// ============================================
-
-MenuRegistry.appendMenuItem(LPSubmenuId, {
-	group: '1_lp',
-	command: { id: 'chiara.mp.lp', title: localize('lp.lp', 'Linear Programming') },
-	order: 1,
-});
-
-MenuRegistry.appendMenuItem(LPSubmenuId, {
-	group: '1_lp',
-	command: { id: 'chiara.mp.milp', title: localize('lp.milp', 'Mixed-Integer Linear Programming') },
-	order: 2,
-});
-
-// ============================================
-// SUBMENU: QUADRATIC PROGRAMMING
-// ============================================
-
-MenuRegistry.appendMenuItem(QPSubmenuId, {
-	group: '1_qp',
-	command: { id: OPTIMISE_COMMAND_ID, precondition: ContextKeyExpr.false(), title: localize('qp.qp', 'Quadratic Programming') },
-	order: 1,
-});
-
-MenuRegistry.appendMenuItem(QPSubmenuId, {
-	group: '1_qp',
-	command: { id: OPTIMISE_COMMAND_ID, precondition: ContextKeyExpr.false(), title: localize('qp.qcqp', 'Quadratically Constrained QP') },
-	order: 2,
-});
-
-MenuRegistry.appendMenuItem(QPSubmenuId, {
-	group: '1_qp',
-	command: { id: OPTIMISE_COMMAND_ID, precondition: ContextKeyExpr.false(), title: localize('qp.miqp', 'Mixed-Integer QP') },
-	order: 3,
-});
-
-// ============================================
 // SUBMENU: CONIC & CONVEX PROGRAMMING
 // ============================================
 
@@ -721,7 +637,7 @@ MenuRegistry.appendMenuItem(CCPSubmenuId, {
 
 MenuRegistry.appendMenuItem(CCPSubmenuId, {
 	group: '1_ccp',
-	command: { id: OPTIMISE_COMMAND_ID, precondition: ContextKeyExpr.false(), title: localize('ccp.mic', 'Mixed-Integer Conic Programming') },
+	command: { id: 'chiara.mp.micp', title: localize('ccp.mic', 'Mixed-Integer Conic Programming') },
 	order: 3,
 });
 
@@ -745,60 +661,6 @@ MenuRegistry.appendMenuItem(CVPSubmenuId, {
 	group: '1_cvp',
 	command: { id: MPEC_ID, title: localize('cvp.mpec', 'Equilibrium Constraints') },
 	order: 3,
-});
-
-// ============================================
-// SUBMENU: GAME THEORY & HIERARCHICAL OPTIMISATION
-// ============================================
-
-
-// ============================================
-// SUBMENU: DIY ESTIMATION METHODS
-// ============================================
-
-MenuRegistry.appendMenuItem(DIYSubmenuId, {
-	group: '8_optimisation',
-	command: {
-		id: 'chiara.diy.mle', precondition: ContextKeyExpr.false(),
-		title: localize('showOptimisation.mle', 'Maximum-Likelihood Estimation'),
-	},
-	order: 1,
-}); // Optim.jl
-
-MenuRegistry.appendMenuItem(DIYSubmenuId, {
-	group: '8_optimisation',
-	command: {
-		id: 'chiara.diy.cmle', precondition: ContextKeyExpr.false(),
-		title: localize('showOptimisation.cml', 'Conditional Maximum-Likelihood'),
-	},
-	order: 2,
-}); // Optim.jl, RaschModels.jl
-
-MenuRegistry.appendMenuItem(DIYSubmenuId, {
-	group: '8_optimisation',
-	command: {
-		id: 'chiara.diy.em', precondition: ContextKeyExpr.false(),
-		title: localize('showOptimisation.em', 'Expectation Maximization (EM) Algorithm'),
-	},
-	order: 3,
-});
-
-MenuRegistry.appendMenuItem(DIYSubmenuId, {
-	group: '8_optimisation',
-	command: {
-		id: 'chiara.diy.gmm', precondition: ContextKeyExpr.false(),
-		title: localize('showOptimisation.gmm', 'Generalized Method of Moments'),
-	},
-	order: 4,
-});
-
-MenuRegistry.appendMenuItem(DIYSubmenuId, {
-	group: '8_optimisation',
-	command: {
-		id: 'chiara.diy.smm', precondition: ContextKeyExpr.false(),
-		title: localize('showOptimisation.smm', 'Simulated Method of Moments'),
-	},
-	order: 5,
 });
 
 // ============================================

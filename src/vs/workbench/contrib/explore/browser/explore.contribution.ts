@@ -1,12 +1,10 @@
 /*---------------------------------------------------------------------------------------------
  *  Copyright (c) 2026 Antonio Saragga Seabra
- *  Licensed under the GNU Affero General Public License v3.0 or later. See LICENSE.txt in the project root for license information.
+ *  Licensed under the GNU Affero General Public License v3.0. See LICENSE.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-// import { METHODS } from 'http';
 import { localize } from '../../../../../vs/nls.js';
 import { MenuRegistry, MenuId } from '../../../../platform/actions/common/actions.js';
-import { ContextKeyExpr } from '../../../../platform/contextkey/common/contextkey.js';
 import { CommandsRegistry, ICommandService } from '../../../../platform/commands/common/commands.js';
 import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
@@ -34,6 +32,9 @@ import { openCpvizWebview } from '../../model/browser/commands/cpviz.command.js'
 import { openGsvizWebview } from '../../model/browser/commands/gsviz.command.js';
 import { openSfvizWebview } from '../../model/browser/commands/sfviz.command.js';
 import { HMD_PANEL } from '../../model/browser/commands/hmd.command.js';
+import { IMF_PANEL } from '../../model/browser/commands/imf.command.js';
+import { WBD_PANEL } from '../../model/browser/commands/wbd.command.js';
+import { FFD_PANEL } from '../../model/browser/commands/ffd.command.js';
 import { IDAT_PANEL } from '../../model/browser/commands/idat.command.js';
 import { CSV_PANEL } from '../../model/browser/commands/csv.command.js';
 import { SQL_PANEL } from '../../model/browser/commands/sql.command.js';
@@ -68,6 +69,9 @@ const YFIN_ID = 'chiara.explore.adr.yfin';
 const ALPV_ID = 'chiara.explore.adr.alpv';
 export const FRED_ID = 'chiara.explore.adr.fred';
 export const ECB_ID = 'chiara.explore.adr.ecb';
+const IMF_ID = 'chiara.explore.adr.imf';
+const WBD_ID = 'chiara.explore.adr.wbd';
+const FFD_ID = 'chiara.explore.adr.ffd';
 const EDGAR_ID = 'chiara.explore.adr.edgar';
 const HFDS_ID = 'chiara.explore.adr.hfds';
 const KGDS_ID = 'chiara.explore.adr.kgds';
@@ -106,7 +110,6 @@ const SFVIZ_VOLUME_ID     = 'chiara.explore.dvsf.volume';
 const SFVIZ_PHASE_ID      = 'chiara.explore.dvsf.phase';
 const SFVIZ_MESH_ID       = 'chiara.explore.dvsf.mesh';
 const SFVIZ_VOXELS_ID     = 'chiara.explore.dvsf.voxels';
-// const WEBAUTO_ID 		  = 'chiara.explore.webauto.playwright';
 
 CommandsRegistry.registerCommand(EXPL_COMMAND_ID, () => {
 	console.log('Explore command executed!');
@@ -333,6 +336,12 @@ CommandsRegistry.registerCommand(EDGAR_ID, (accessor: ServicesAccessor) => {
 });
 
 CommandsRegistry.registerCommand(HMD_ID, (accessor: ServicesAccessor) => openScaffoldWebview(accessor, HMD_PANEL));
+
+CommandsRegistry.registerCommand(IMF_ID, (accessor: ServicesAccessor) => openScaffoldWebview(accessor, IMF_PANEL));
+
+CommandsRegistry.registerCommand(WBD_ID, (accessor: ServicesAccessor) => openScaffoldWebview(accessor, WBD_PANEL));
+
+CommandsRegistry.registerCommand(FFD_ID, (accessor: ServicesAccessor) => openScaffoldWebview(accessor, FFD_PANEL));
 
 CommandsRegistry.registerCommand(NOVD_ID, (accessor: ServicesAccessor) => openScaffoldWebview(accessor, NOVD_PANEL));
 
@@ -1070,29 +1079,6 @@ MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
 	order: 3,
 });
 
-//MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
-//	group: '1_explore',
-//	command: {id: WEBAUTO_ID, title: localize('showExplore.wa', 'Web Automation') },
-//	order: 4,
-//});
-// // Playwright enables reliable web automation for testing, scripting, and AI agents.
-// One API to drive Chromium, Firefox, and WebKit — in your tests, your scripts, and your agent workflows. Available for TypeScript.
-//  Apache-2.0 license
-// VS Code extension brings test running, debugging, and code generation directly into your editor (Apache 2.0 License)
-
-//MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
-//	group: '1_explore',
-//	submenu: RCSubmenuId,
-//	title: localize('showExplore.cc', 'Cloud Computing'),
-//	order: 5,
-//});
-
-//MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
-//	group: '1_explore',
-//	submenu: CSSubmenuId,
-//	title: localize('showExplore.cs', 'Cloud Storage'),
-//	order: 6,
-//});
 
 MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
 	group: '2_explore',
@@ -1173,7 +1159,6 @@ MenuRegistry.appendMenuItem(ADRSubmenuId, {
 }); // AlphaVantage.jl
 
 
-
 MenuRegistry.appendMenuItem(ADRSubmenuId, {
 	group: '2_ds',
 	command: {
@@ -1183,14 +1168,6 @@ MenuRegistry.appendMenuItem(ADRSubmenuId, {
 	order: 3,
 }); // ScrapeSEC.jl
 
-//MenuRegistry.appendMenuItem(ADRSubmenuId, {
-//	group: '2_ds',
-//	command: {
-//		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
-//		title: localize('ft.xbrl', 'Generic iXBRL'),
-//	},
-//	order: 2,
-//});  // XbrlXML.jl
 // Regulatory filings
 
 MenuRegistry.appendMenuItem(ADRSubmenuId, {
@@ -1216,16 +1193,16 @@ MenuRegistry.appendMenuItem(ADRSubmenuId, {
 MenuRegistry.appendMenuItem(ADRSubmenuId, {
 	group: '4_ds',
 	command: {
-		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
+		id: IMF_ID,
 		title: localize('mt.ifm', 'International Monetary Fund Datasets'),
 	},
 	order: 4,
-}); // IMFData.jl
+}); // IMF SDMX API (HTTP.jl + CSV.jl)
 
 MenuRegistry.appendMenuItem(ADRSubmenuId, {
 	group: '4_ds',
 	command: {
-		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
+		id: WBD_ID,
 		title: localize('mt.wbd', 'World Bank Indicators'),
 	},
 	order: 5,
@@ -1234,7 +1211,7 @@ MenuRegistry.appendMenuItem(ADRSubmenuId, {
 MenuRegistry.appendMenuItem(ADRSubmenuId, {
 	group: '4_ds',
 	command: {
-		id: EXPL_COMMAND_ID, precondition: ContextKeyExpr.false(),
+		id: FFD_ID,
 		title: localize('mt.french', 'Kenneth French Data Library'),
 	},
 	order: 6,
@@ -1271,7 +1248,6 @@ MenuRegistry.appendMenuItem(CONNSubmenuId, {
 	},
 	order: 3,
 });  // CSV.jl
-
 
 
 // ===================================================
@@ -1523,6 +1499,4 @@ MenuRegistry.appendMenuItem(ANSubmenuId, {
 	command: { id: ANDE_ID, title: localize('nod.learningBased', 'Learning-Based Anomaly Detection') },
 	order: 2,
 }); // Isolation Forest · AutoEncoder · DeepSAD · ESAD
-
-
 

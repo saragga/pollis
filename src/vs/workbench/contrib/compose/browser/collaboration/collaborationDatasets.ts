@@ -1,9 +1,9 @@
 /*---------------------------------------------------------------------------------------------
  *  Copyright (c) 2026 Antonio Saragga Seabra
- *  Licensed under the GNU Affero General Public License v3.0 or later. See LICENSE.txt in the project root for license information.
+ *  Licensed under the GNU Affero General Public License v3.0. See LICENSE.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { VSBuffer } from '../../../../../base/common/buffer.js';
+import { decodeBase64, encodeBase64, VSBuffer } from '../../../../../base/common/buffer.js';
 import { basename } from '../../../../../base/common/resources.js';
 import { URI } from '../../../../../base/common/uri.js';
 import { localize } from '../../../../../nls.js';
@@ -14,7 +14,7 @@ import { IFileService } from '../../../../../platform/files/common/files.js';
 import { IWorkspaceContextService } from '../../../../../platform/workspace/common/workspace.js';
 import { IPathService } from '../../../../services/path/common/pathService.js';
 import { sendToJuliaRepl } from '../../../model/browser/handlers/model.handler.js';
-import { IDatasetSharedPayload, MAX_DATASET_BYTES } from './collaborationProtocol.js';
+import { IDatasetSharedPayload, IFileSharedPayload, isDuckDbFile, MAX_DATASET_BYTES, MAX_FILE_BYTES } from './collaborationProtocol.js';
 
 // Compose > Collaboration, Share Dataset (internal-reports/collaboration-spec.md, with its safety rules): a
 // participant shares a CSV file, or a Julia table from the table viewer written out as CSV; the others get a
@@ -41,6 +41,16 @@ export interface IReceivedDataset {
 	readonly payload: IDatasetSharedPayload;
 	readonly summary: IDatasetSummary;
 	/** Where the receiver saved it, which loading then uses. */
+	saved?: URI;
+}
+
+/** A file or DuckDB database another participant shared in the chat, kept until the session ends. */
+export interface IReceivedFile {
+	readonly sharer: string;
+	readonly payload: IFileSharedPayload;
+	/** A DuckDB database, which can also be attached read-only in the Julia session; any other file can only be saved. */
+	readonly database: boolean;
+	/** Where the receiver saved it, which attaching then uses. */
 	saved?: URI;
 }
 
@@ -139,12 +149,17 @@ export function summarizeCsv(content: string): IDatasetSummary | undefined {
 
 /** A received file name reduced to a safe base name ending in .csv: no folders, no `..`, no characters files cannot have. */
 export function datasetFileName(fileName: string): string {
-	const base = fileName.split(/[\\/]/).pop() ?? '';
-	const cleaned = base.replace(/[:*?"<>|\u0000-\u001f]/g, '_').replace(/^\.+/, '').trim().slice(0, 100);
+	const cleaned = sharedFileName(fileName);
 	if (!cleaned) {
 		return 'dataset.csv';
 	}
 	return /\.csv$/i.test(cleaned) ? cleaned : `${cleaned}.csv`;
+}
+
+/** The base name of a shared file, without characters a file system refuses or a leading dot; empty when nothing is left. */
+export function sharedFileName(fileName: string): string {
+	const base = fileName.split(/[\\/]/).pop() ?? '';
+	return base.replace(/[:*?"<>|\u0000-\u001f]/g, '_').replace(/^\.+/, '').trim().slice(0, 100);
 }
 
 /** A size in words: kB below a megabyte, else MB. */
@@ -158,7 +173,7 @@ const JULIA_KEYWORDS = new Set(['baremodule', 'begin', 'break', 'catch', 'const'
 
 /** A Julia variable name made from a file name: letters, digits and underscores only. */
 function juliaVariableName(fileName: string): string {
-	const name = fileName.replace(/\.csv$/i, '').replace(/[^A-Za-z0-9_]+/g, '_').replace(/^_+|_+$/g, '').toLowerCase();
+	const name = fileName.replace(/\.[^.]*$/, '').replace(/[^A-Za-z0-9_]+/g, '_').replace(/^_+|_+$/g, '').toLowerCase();
 	if (!name || JULIA_KEYWORDS.has(name)) {
 		return 'shared_data';
 	}
@@ -234,6 +249,90 @@ export class SharedDatasets {
 		await this.fileService.writeFile(target, VSBuffer.fromString(dataset.payload.content));
 		dataset.saved = target;
 		this.notice(localize('collaboration.datasetSaved', "You saved {0}'s {1} as {2}.", dataset.sharer, fileName, target.fsPath));
+	}
+
+	/** Asks for a CSV file to share (Add > Dataset in the chat). */
+	async pick(): Promise<URI | undefined> {
+		const picked = await this.fileDialogService.showOpenDialog({
+			title: localize('collaboration.pickDatasetTitle', "Share Dataset"),
+			defaultUri: this.workspaceContextService.getWorkspace().folders[0]?.uri ?? await this.pathService.userHome(),
+			canSelectFiles: true,
+			canSelectMany: false,
+			filters: [{ name: localize('collaboration.csvFiles', "CSV Files"), extensions: ['csv'] }],
+		});
+		return picked?.[0];
+	}
+
+	/** Saves a file shared in the chat where the receiver chooses; it is written as received, never opened. */
+	async saveFile(file: IReceivedFile): Promise<void> {
+		const fileName = sharedFileName(file.payload.fileName) || 'file';
+		const folder = this.workspaceContextService.getWorkspace().folders[0]?.uri ?? await this.pathService.userHome();
+		const target = await this.fileDialogService.showSaveDialog({
+			title: file.database
+				? localize('collaboration.saveDatabaseTitle', "Save {0}'s Database", file.sharer)
+				: localize('collaboration.saveFileTitle', "Save {0}'s File", file.sharer),
+			defaultUri: URI.joinPath(folder, fileName),
+			filters: file.database ? [{ name: localize('collaboration.duckDbFiles', "DuckDB Databases"), extensions: ['duckdb'] }] : undefined,
+		});
+		if (!target) {
+			return;
+		}
+		await this.fileService.writeFile(target, decodeBase64(file.payload.content));
+		file.saved = target;
+		this.notice(localize('collaboration.fileSaved', "You saved {0}'s {1} as {2}.", file.sharer, fileName, target.fsPath));
+	}
+
+	/** Asks for a DuckDB database to share and reads it, in base64; undefined, with a notice, when it is too large or not DuckDB. */
+	async pickDatabase(): Promise<{ readonly fileName: string; readonly content: string } | undefined> {
+		const picked = await this.fileDialogService.showOpenDialog({
+			title: localize('collaboration.pickDatabaseTitle', "Share Database"),
+			defaultUri: this.workspaceContextService.getWorkspace().folders[0]?.uri ?? await this.pathService.userHome(),
+			canSelectFiles: true,
+			canSelectMany: false,
+			filters: [{ name: localize('collaboration.duckDbFiles', "DuckDB Databases"), extensions: ['duckdb', 'db'] }],
+		});
+		const resource = picked?.[0];
+		if (!resource) {
+			return undefined;
+		}
+		const fileName = basename(resource);
+		const stat = await this.fileService.stat(resource);
+		if (stat.size > MAX_FILE_BYTES) {
+			this.notice(localize('collaboration.databaseTooLarge', "{0} is too large to share in the chat ({1}; the limit is {2} MB): send it the usual way.", fileName, formatBytes(stat.size), MAX_FILE_BYTES / 1024 / 1024));
+			return undefined;
+		}
+		const bytes = (await this.fileService.readFile(resource)).value;
+		if (!isDuckDbFile(bytes.buffer)) {
+			this.notice(localize('collaboration.notDuckDb', "{0} is not a DuckDB database, so it was not shared.", fileName));
+			return undefined;
+		}
+		const { confirmed } = await this.dialogService.confirm({
+			message: localize('collaboration.confirmDatabase', "Share {0} with everyone in the session?", fileName),
+			detail: localize('collaboration.confirmDatabaseDetail', "The whole database, {0}, with all its tables. Every participant gets a copy and keeps it. Anyone with the invitation can join and receive what is shared, so do not share personal or confidential data in a session whose invitation has gone around.", formatBytes(stat.size)),
+			primaryButton: localize({ key: 'collaboration.shareDatabaseButton', comment: ['&& denotes a mnemonic'] }, "&&Share Database"),
+		});
+		return confirmed ? { fileName, content: encodeBase64(bytes) } : undefined;
+	}
+
+	/** Attaches a database, read-only, in the Julia session and shows it in the Databases view: from where it was saved, else from a copy in Pollis's cache. */
+	async attachDatabase(file: IReceivedFile): Promise<void> {
+		const fileName = sharedFileName(file.payload.fileName) || 'database.duckdb';
+		let saved = file.saved;
+		if (!saved || !await this.fileService.exists(saved)) {
+			saved = URI.joinPath(this.environmentService.cacheHome, 'pollis-collaboration', file.payload.id.replace(/[^A-Za-z0-9-]/g, ''), fileName);
+			await this.fileService.writeFile(saved, decodeBase64(file.payload.content));
+		}
+		const variable = juliaVariableName(fileName);
+		const shownAs = localize('collaboration.databaseShownAs', "{0}'s {1}", file.sharer, fileName);
+		const code = [
+			'isdefined(Main, :PollisDB) && PollisDB.install(); using DuckDB, DBInterface',
+			`isdefined(Main, :${variable}) && ${variable} isa DuckDB.DB && (isdefined(Main, :PollisDB) ? PollisDB.disconnect(${variable}) : DBInterface.close!(${variable}))`,
+			`${variable} = DBInterface.connect(DuckDB.DB, ${juliaString(saved.fsPath)}; readonly = true)`,
+			`isdefined(Main, :PollisDB) && PollisDB.show(${variable}; name = ${juliaString(shownAs)}); nothing`,
+		].join('; ');
+		if (await sendToJuliaRepl(code, this.commandService)) {
+			this.notice(localize('collaboration.databaseAttached', "You attached {0}'s {1}, read-only, in your Julia session as {2}: its tables are in the Databases view.", file.sharer, fileName, variable));
+		}
 	}
 
 	/** Loads a dataset into the Julia session: from where it was saved, else from a copy in Pollis's cache. */

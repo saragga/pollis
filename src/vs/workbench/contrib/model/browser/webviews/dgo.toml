@@ -34,6 +34,12 @@ file = "dgo/tutorial-03-quaddirect.ipynb"
 bundled = true
 description = "QuadDIRECT.jl: quadratic interpolation-based global search with fewer evaluations"
 
+[[notebookSections.notebooks]]
+name = "AGS"
+file = "dgo/tutorial-04-ags.ipynb"
+bundled = true
+description = "Adaptive Global Search with NLopt.jl: Lipschitz model-based global optimisation"
+
 [[wikis]]
 name = "Factsheet"
 file = "dgo/factsheet.md"
@@ -76,6 +82,11 @@ bundled = true
 [[wikis]]
 name = "QuadDirect"
 file = "dgo/quaddirect.md"
+bundled = true
+
+[[wikis]]
+name = "AGS"
+file = "dgo/ags.md"
 bundled = true
 
 [[references]]
@@ -130,6 +141,14 @@ journal = "Journal of Global Optimization"
 doi = "10.1023/A:1017930332101"
 openAccess = false
 
+[[references]]
+title = "Lipschitz Global Optimization"
+authors = "Strongin, Roman G.; Sergeyev, Yaroslav D."
+year = 2000
+journal = "Springer"
+doi = "10.1007/978-1-4615-4677-1"
+openAccess = false
+
 [[models]]
 id = "direct"
 label = "DIRECT"
@@ -142,6 +161,10 @@ label = "DIRECT-L"
 id = "quaddirect"
 label = "QuadDirect"
 
+[[models]]
+id = "ags"
+label = "AGS"
+
 [[bullets]]
 text = "DIRECT"
 detail = "recursive hyperrectangle subdivision; provably converges for Lipschitz objectives; no gradient needed"
@@ -153,6 +176,10 @@ detail = "locally biased variant; gives more weight to local search within promi
 [[bullets]]
 text = "QuadDirect"
 detail = "quadratic interpolation within subdivisions (QuadDIRECT.jl); fewer function evaluations than standard DIRECT"
+
+[[bullets]]
+text = "AGS"
+detail = "adaptive global search; Lipschitz-model-based global optimisation with adaptive constant estimation"
 
 [[decisionRows]]
 task = "DIRECT"
@@ -168,6 +195,11 @@ purpose = "Locally biased DIRECT: splits fewer boxes per round, converging faste
 task = "QuadDirect"
 context = "Smooth objectives where local curvature can be exploited"
 purpose = "Coordinate-wise splitting with quadratic models of the objective and local refinement of promising boxes"
+
+[[decisionRows]]
+task = "AGS"
+context = "Low-dimensional (up to about 5 variables) Lipschitz-continuous black-box problems"
+purpose = "Reduce the box to one dimension with a space-filling Peano curve and search it with adaptive Lipschitz estimates; deterministic"
 
 [[inputs]]
 id = "obj"
@@ -221,6 +253,12 @@ var d = 'M8,36';
 for (var x = 8; x <= 46; x++) { var u = (x - 27) / 19; d += ' L' + x + ',' + (62 - 26 * u * u).toFixed(1); }
 return '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.3"/>'
 	+ '<circle cx="12" cy="45.8" r="1.8" fill="currentColor"/><circle cx="27" cy="62" r="1.8" fill="currentColor"/><circle cx="42" cy="45.8" r="1.8" fill="currentColor"/>';
+'''
+
+[miniCharts.ags]
+# A space-filling curve folding the box into one line
+svg = '''
+return '<path d="M10,64 L10,52 L22,52 L22,64 L34,64 L34,52 L46,52 L46,40 L34,40 L34,28 L22,28 L22,40 L10,40 L10,28" fill="none" stroke="currentColor" stroke-width="1.2"/>';
 '''
 
 [[codeBranches]]
@@ -301,6 +339,32 @@ x_best, f_best = res.x, res.fx
 (best_point = x_best, best_value = f_best, evaluations = length(res.values), return_code = res.ret)
 '''
 
+[[codeBranches]]
+model = "ags"
+code = '''
+using LinearAlgebra
+
+f(x) = {{obj}}  # objective
+lb, ub = {{lb}}, {{ub}}  # search box
+n = length(lb)
+maxeval = {{maxeval}}  # evaluation budget
+using NLopt
+
+# every evaluation is recorded so the search can be inspected afterwards
+function search(; maxeval=maxeval, alg=:GN_AGS, lb=lb, ub=ub)
+    pts, vals = Vector{Float64}[], Float64[]
+    opt = Opt(alg, n)
+    opt.lower_bounds, opt.upper_bounds, opt.maxeval = lb, ub, maxeval
+    opt.min_objective = (x, g) -> (v = f(x); push!(pts, copy(x)); push!(vals, v); v)
+    fx, x, ret = optimize(opt, (lb .+ ub) ./ 2)
+    (x = x, fx = fx, ret = ret, points = pts, values = vals)
+end
+
+res = search()
+x_best, f_best = res.x, res.fx
+(best_point = x_best, best_value = f_best, evaluations = length(res.values), return_code = res.ret)
+'''
+
 [[actionGroups]]
 id = "visualise"
 label = "Visualise"
@@ -367,7 +431,7 @@ tol = 1e-6 .* (ub .- lb)
 [[actionGroups.actions]]
 id = "restart-study"
 label = "Box Perturbation Study"
-desc = "DIRECT is deterministic and ignores the start point, so restarts repeat the same run; instead shift and widen the box and check the same minimum is found"
+desc = "These methods are deterministic and ignore the start point, so restarts repeat the same run; instead shift and widen the box and check the same minimum is found"
 code = '''
 map([(0.0, 1.0), (0.05, 1.0), (-0.05, 1.0), (0.0, 1.2), (0.03, 0.9)]) do (shift, scale)
     c = (lb .+ ub) ./ 2 .+ shift .* (ub .- lb); h = scale .* (ub .- lb) ./ 2
@@ -439,7 +503,7 @@ end
 [[actionGroups.actions]]
 id = "nlopt-vs-quad"
 label = "Deterministic vs Stochastic"
-desc = "DIRECT and QuadDIRECT against two stochastic global methods (CRS2, ISRES) at the same budget; the stochastic ones over 5 seeds"
+desc = "DIRECT, AGS and QuadDIRECT against two stochastic global methods (CRS2, ISRES) at the same budget; the stochastic ones over 5 seeds"
 code = '''
 using NLopt, QuadDIRECT, Statistics
 
@@ -451,6 +515,7 @@ function nl(alg; seed=1)
 end
 quad() = (root, xs = analyze(f, [[lb[i], (lb[i] + ub[i]) / 2, ub[i]] for i in 1:n], lb, ub; maxevals=maxeval); value(minimum(root)))
 [(method = "DIRECT", best_value = nl(:GN_DIRECT), spread = 0.0),
+ (method = "AGS", best_value = nl(:GN_AGS), spread = 0.0),
  (method = "QuadDIRECT", best_value = quad(), spread = 0.0),
  (method = "CRS2 (stochastic)", best_value = mean(nl(:GN_CRS2_LM; seed=s) for s in 1:5), spread = std([nl(:GN_CRS2_LM; seed=s) for s in 1:5])),
  (method = "ISRES (stochastic)", best_value = mean(nl(:GN_ISRES; seed=s) for s in 1:5), spread = std([nl(:GN_ISRES; seed=s) for s in 1:5]))]

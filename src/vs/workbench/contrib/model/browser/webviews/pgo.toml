@@ -1,19 +1,23 @@
-# Principled Global Search with Local Refinement Webview Configuration
+# Stochastic Search with Local Refinement Webview Configuration
 # This is the declarative source for the webview. The build script generates:
 # - src/vs/workbench/contrib/model/browser/webviews/pgo.data.ts
 # Run: npm run gulp compile-toml
 
 [meta]
-title = "Principled Global Search with Local Refinement"
+title = "Stochastic Search with Local Refinement"
 viewType = "pollis.pgo"
-defaultModel = "ags"
+defaultModel = "mlsl"
 
 [[packages]]
 name = "NLopt.jl"
 github = "https://github.com/JuliaOpt/NLopt.jl"
 
+[[packages]]
+name = "MultistartOptimization.jl"
+github = "https://github.com/tpapp/MultistartOptimization.jl"
+
 [requires]
-packages = ["NLopt.jl", "ForwardDiff.jl", "Plots.jl"]
+packages = ["NLopt.jl", "MultistartOptimization.jl", "ForwardDiff.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""
@@ -31,10 +35,10 @@ bundled = true
 description = "Randomised stochastic branch-and-bound with NLopt.jl: gradient-based bounding with random branching"
 
 [[notebookSections.notebooks]]
-name = "AGS"
-file = "pgo/tutorial-03-ags.ipynb"
+name = "TikTak"
+file = "pgo/tutorial-03-tiktak.ipynb"
 bundled = true
-description = "Adaptive Global Search with NLopt.jl: Lipschitz model-based global optimisation"
+description = "TikTak multistart with MultistartOptimization.jl: Sobol starting points and local searches drawn towards the best minimum"
 
 [[wikis]]
 name = "Factsheet"
@@ -81,8 +85,8 @@ file = "pgo/stogo-r.md"
 bundled = true
 
 [[wikis]]
-name = "AGS"
-file = "pgo/ags.md"
+name = "TikTak"
+file = "pgo/tiktak.md"
 bundled = true
 
 [[references]]
@@ -129,16 +133,12 @@ journal = "Technical Report"
 openAccess = false
 
 [[references]]
-title = "Lipschitz Global Optimization"
-authors = "Strongin, Roman G.; Sergeyev, Yaroslav D."
-year = 2000
-journal = "Springer"
-doi = "10.1007/978-1-4615-4677-1"
+title = "Benchmarking Global Optimizers"
+authors = "Arnoud, Antoine; Guvenen, Fatih; Kleineberg, Tatjana"
+year = 2019
+journal = "NBER Working Paper 26340"
+doi = "10.3386/w26340"
 openAccess = false
-
-[[models]]
-id = "ags"
-label = "AGS"
 
 [[models]]
 id = "mlsl"
@@ -148,9 +148,9 @@ label = "MLSL"
 id = "stogo-r"
 label = "StoGO-R"
 
-[[bullets]]
-text = "AGS"
-detail = "adaptive global search; Lipschitz-model-based global optimisation with adaptive constant estimation"
+[[models]]
+id = "tiktak"
+label = "TikTak"
 
 [[bullets]]
 text = "MLSL"
@@ -160,10 +160,9 @@ detail = "multi-level single-linkage; multi-start local search with clustering t
 text = "StoGO-R"
 detail = "randomised stochastic branch-and-bound; gradient-based bounding with random branching order"
 
-[[decisionRows]]
-task = "AGS"
-context = "Low-dimensional (up to about 5 variables) Lipschitz-continuous black-box problems"
-purpose = "Reduce the box to one dimension with a space-filling Peano curve and search it with adaptive Lipschitz estimates; deterministic"
+[[bullets]]
+text = "TikTak"
+detail = "multistart from the best Sobol points, each local search started closer to the best minimum found so far; widely used in economics"
 
 [[decisionRows]]
 task = "MLSL"
@@ -174,6 +173,11 @@ purpose = "Multi-level single-linkage: sample low-discrepancy points and start a
 task = "StoGO-R"
 context = "Smooth problems with cheap gradients"
 purpose = "Branch-and-bound over boxes with gradient-based local searches inside each, with randomised box sampling"
+
+[[decisionRows]]
+task = "TikTak"
+context = "Economic models estimated by minimising a loss (for example matching moments), where each local search is affordable"
+purpose = "Evaluate a Sobol sequence, keep the best 10%, and start local searches from points pulled ever closer to the best minimum found; deterministic"
 
 [[inputs]]
 id = "obj"
@@ -203,10 +207,10 @@ default = "2000"
 [[inputs]]
 id = "localopt"
 label = "Local Optimiser"
-tooltip = "Local algorithm MLSL starts from promising sample points. BOBYQA and Nelder-Mead are derivative-free; L-BFGS uses gradients from ForwardDiff."
+tooltip = "Local algorithm MLSL and TikTak start from promising sample points. BOBYQA and Nelder-Mead are derivative-free; L-BFGS uses gradients from ForwardDiff."
 kind = "select"
 default = "LN_BOBYQA"
-models = ["mlsl"]
+models = ["mlsl", "tiktak"]
 
 [[inputs.options]]
 value = "LN_BOBYQA"
@@ -223,12 +227,6 @@ label = "L-BFGS"
 [miniCharts]
 # SVG drawing functions for each model's mini-chart icon (54 x 86 box)
 
-[miniCharts.ags]
-# A space-filling curve folding the box into one line
-svg = '''
-return '<path d="M10,64 L10,52 L22,52 L22,64 L34,64 L34,52 L46,52 L46,40 L34,40 L34,28 L22,28 L22,40 L10,40 L10,28" fill="none" stroke="currentColor" stroke-width="1.2"/>';
-'''
-
 [miniCharts.mlsl]
 # Scattered samples with local descents from a few of them
 svg = '''
@@ -244,43 +242,12 @@ return '<rect x="8" y="28" width="38" height="38" fill="none" stroke="currentCol
 	+ '<path d="M29,64 L32,58 L33,54" fill="none" stroke="currentColor" stroke-width="1.2"/><circle cx="33" cy="54" r="1.8" fill="currentColor"/>';
 '''
 
-[[codeBranches]]
-model = "ags"
-code = '''
-using NLopt, ForwardDiff, LinearAlgebra
-
-f(x) = {{obj}}  # objective
-lb, ub = {{lb}}, {{ub}}  # search box
-n = length(lb)
-budget = {{budget}}  # evaluation budget
-ALG = :GN_AGS  # adaptive global search along a Peano curve
-LOCAL = :LN_BOBYQA  # unused by AGS
-
-# every evaluation is recorded so the search can be inspected afterwards
-function search(; alg=ALG, budget=budget, lb=lb, ub=ub, seed=1)
-    NLopt.srand(seed)  # fixes the random sampling of the stochastic methods
-    pts, vals = Vector{Float64}[], Float64[]
-    opt = Opt(alg, n)
-    opt.lower_bounds, opt.upper_bounds, opt.maxeval = lb, ub, budget
-    if alg == :G_MLSL_LDS
-        loc = Opt(LOCAL, n); loc.xtol_rel = 1e-6
-        opt.local_optimizer = loc
-    end
-    opt.min_objective = function (x, g)
-        v = f(x)
-        if length(g) > 0  # gradient-based algorithms request it
-            g .= ForwardDiff.gradient(f, x)
-        end
-        push!(pts, copy(x)); push!(vals, v)
-        v
-    end
-    fx, x, ret = optimize(opt, (lb .+ ub) ./ 2)  # NLopt needs a start point; AGS, DIRECT-L and StoGO ignore it and search the whole box
-    (x = x, fx = fx, ret = ret, points = pts, values = vals)
-end
-
-res = search()
-x_best, f_best = res.x, res.fx
-(best_point = x_best, best_value = f_best, evaluations = length(res.values), return_code = res.ret)
+[miniCharts.tiktak]
+# Sobol points, the kept ones pulled towards the best point
+svg = '''
+var s = '', p = [[12, 32], [30, 36], [44, 30], [20, 46], [38, 50], [10, 62], [28, 64], [46, 62]];
+p.forEach(function (q) { s += '<circle cx="' + q[0] + '" cy="' + q[1] + '" r="1.4" fill="currentColor" opacity="0.6"/>'; });
+return s + '<path d="M44,30 L34,44" fill="none" stroke="currentColor" stroke-width="1.1"/><path d="M10,62 L27,52" fill="none" stroke="currentColor" stroke-width="1.1"/><path d="M46,62 L33,53" fill="none" stroke="currentColor" stroke-width="1.1"/><circle cx="30" cy="49" r="2.4" fill="currentColor"/>';
 '''
 
 [[codeBranches]]
@@ -361,6 +328,54 @@ x_best, f_best = res.x, res.fx
 (best_point = x_best, best_value = f_best, evaluations = length(res.values), return_code = res.ret)
 '''
 
+[[codeBranches]]
+model = "tiktak"
+code = '''
+using NLopt, MultistartOptimization, ForwardDiff, LinearAlgebra
+
+f(x) = {{obj}}  # objective
+lb, ub = {{lb}}, {{ub}}  # search box
+n = length(lb)
+budget = {{budget}}  # evaluation budget
+ALG = :TIKTAK  # TikTak multistart (MultistartOptimization.jl); other values run that NLopt algorithm
+LOCAL = :{{localopt}}  # local optimiser started from the kept points
+
+# every evaluation is recorded so the search can be inspected afterwards
+function search(; alg=ALG, budget=budget, lb=lb, ub=ub, seed=1)
+    NLopt.srand(seed)  # fixes the random sampling of the stochastic methods; TikTak itself is deterministic
+    pts, vals = Vector{Float64}[], Float64[]
+    obj(x) = (v = f(x); push!(pts, copy(x)); push!(vals, v); v)
+    function obj(x, g)  # NLopt form, used by the local searches
+        if length(g) > 0  # gradient-based algorithms request it
+            g .= ForwardDiff.gradient(f, x)
+        end
+        obj(x)
+    end
+    if alg == :TIKTAK
+        N = max(div(budget, 4), 2)  # a quarter of the budget on Sobol points
+        tiktak = TikTak(N)  # keeps the best 10% as starting points
+        local_evals = div(budget - N, max(tiktak.initial_N - 1, 1))  # the rest split among the local searches
+        local_method = NLopt_local_method(getfield(NLopt, LOCAL); xtol_rel=1e-6, maxeval=max(local_evals, 1))
+        m = multistart_minimization(tiktak, local_method, MinimizationProblem(obj, lb, ub); use_threads=false)
+        ret = hasproperty(m, :ret) ? m.ret : :SUCCESS  # no ret when the best point is a Sobol point
+        return (x = m.location, fx = m.value, ret = ret, points = pts, values = vals)
+    end
+    opt = Opt(alg, n)
+    opt.lower_bounds, opt.upper_bounds, opt.maxeval = lb, ub, budget
+    if alg == :G_MLSL_LDS
+        loc = Opt(LOCAL, n); loc.xtol_rel = 1e-6
+        opt.local_optimizer = loc
+    end
+    opt.min_objective = obj
+    fx, x, ret = optimize(opt, (lb .+ ub) ./ 2)  # NLopt needs a start point; AGS, DIRECT-L and StoGO ignore it and search the whole box
+    (x = x, fx = fx, ret = ret, points = pts, values = vals)
+end
+
+res = search()
+x_best, f_best = res.x, res.fx
+(best_point = x_best, best_value = f_best, evaluations = length(res.values), return_code = res.ret)
+'''
+
 [[actionGroups]]
 id = "visualise"
 label = "Visualise"
@@ -407,7 +422,7 @@ first_hit = findfirst(<=(f_best + 1e-9 * max(1, abs(f_best))), accumulate(min, r
 [[actionGroups.actions]]
 id = "seed-robustness"
 label = "Seed Robustness"
-desc = "Repeat the search with 5 random seeds: AGS is deterministic, while MLSL and StoGO-R vary; a spread of best values means the budget is too small"
+desc = "Repeat the search with 5 random seeds: MLSL and StoGO-R sample at random, so their results vary, while TikTak is deterministic; a spread of best values means the budget is too small"
 code = '''
 using Statistics
 
@@ -447,11 +462,12 @@ label = "Compare"
 [[actionGroups.actions]]
 id = "compare-methods"
 label = "Compare Methods"
-desc = "AGS, MLSL, StoGO-R, DIRECT-L and CRS2 at the same budget, averaged over 3 seeds; each method is run once on a tiny budget first, so the times exclude compilation"
+desc = "MLSL, StoGO-R, AGS, DIRECT-L and CRS2 (and TikTak on its tab) at the same budget, averaged over 3 seeds; each method is run once on a tiny budget first, so the times exclude compilation"
 code = '''
 using Statistics
 
-algs = ["AGS" => :GN_AGS, "MLSL" => :G_MLSL_LDS, "StoGO-R" => :GD_STOGO_RAND, "DIRECT-L" => :GN_DIRECT_L, "CRS2" => :GN_CRS2_LM]
+algs = ["MLSL" => :G_MLSL_LDS, "StoGO-R" => :GD_STOGO_RAND, "AGS" => :GN_AGS, "DIRECT-L" => :GN_DIRECT_L, "CRS2" => :GN_CRS2_LM]
+{{?model=tiktak}}pushfirst!(algs, "TikTak" => :TIKTAK)
 map(algs) do (name, a)
     search(alg=a, budget=20)  # warm-up: compile before timing
     sec = @elapsed runs = [search(alg=a, seed=s) for s in 1:3]
@@ -481,8 +497,8 @@ id = "algorithm-properties"
 label = "Algorithm Properties"
 desc = "What the selected algorithm assumes and guarantees"
 code = '''
-{{?model=ags}} (algorithm = "AGS", deterministic = true, needs_gradient = false, local_refinement = false, guarantee = "converges for Lipschitz-continuous f", practical_dimension = "up to about 5")
 {{?model=mlsl}} (algorithm = "MLSL", deterministic = false, needs_gradient = LOCAL == :LD_LBFGS, local_refinement = true, local_optimizer = LOCAL, guarantee = "finds every local minimum with probability 1 as samples grow", practical_dimension = "up to about 20")
+{{?model=tiktak}} (algorithm = "TikTak", deterministic = true, needs_gradient = LOCAL == :LD_LBFGS, local_refinement = true, local_optimizer = LOCAL, guarantee = "none: a heuristic; see the benchmarks of Arnoud, Guvenen and Kleineberg (2019)")
 {{?model=stogo-r}} (algorithm = "StoGO-R", deterministic = false, needs_gradient = true, local_refinement = true, guarantee = "branch-and-bound with bounds from gradients", practical_dimension = "up to about 10")
 '''
 

@@ -6,11 +6,13 @@
 # (LocalRegistry.jl). The rules are checked, and reported, every time. A registered package with a vignette
 # (vignette/NAME.pdf) also gets an entry in Vignettes.toml at the registry's root, the list that
 # Help > Documentation > Vignettes shows. With --no-tests, the tests are written but not run, to push or
-# register packages already tested and unchanged since.
+# register packages already tested and unchanged since. A package with a vignette also carries
+# vignette/Vignette.toml, its entry, which Help > Documentation > Vignettes reads once the package is installed.
 #
 #   julia package.jl PACKAGES_FOLDER METHOD_FOLDER... [--no-tests] [--push OWNER [--register REGISTRY_URL]]
 #
-# A method folder holds method.toml (name, title, author, description, citation, version, usage (Julia code
+# A method folder holds method.toml (name, title, author, description, topic, license (optional: MIT, written as
+# the package's LICENSE, or another whose text is the method folder's LICENSE; none when empty), citation, version, usage (Julia code
 # that shows how to call the method, for the README), packages, and a
 # [targets.NAME] table for each target: source, call, tolerance, and an [inputs.NAME] table for each input:
 # url or file, source, delim, columns, header (false for a file without a header line, its columns then
@@ -27,7 +29,7 @@
 # folder that the tests include; copy, the other files and folders of the method folder it needs, copied into the
 # package's tests at the same paths; packages, the packages it loads beyond the method's and the tests' own.
 
-using Pkg, TOML, UUIDs
+using Dates, Pkg, TOML, UUIDs
 
 "The value of an option and the arguments without it."
 function option(args, flag)
@@ -121,6 +123,31 @@ function runtests(name, method)
 	return join(lines, "\n")
 end
 
+"The text of the MIT License, for the package's LICENSE."
+mit_license(author) = """
+MIT License
+
+Copyright (c) $(year(today())) $author
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+"""
+
 vignette_title(method) = let title = get(method, "vignette_title", ""); isempty(title) ? get(method, "title", method["name"]) : title end
 
 function readme(name, method)
@@ -142,6 +169,8 @@ function readme(name, method)
 	isempty(usage) || push!(lines, "## Usage", "", "```julia", usage, "```", "")
 	pdf = joinpath(method["folder"], "vignette", "$name.pdf")
 	isfile(pdf) && push!(lines, "## Vignette", "", "[$(vignette_title(method))](vignette/$name.pdf)", "")
+	license = get(method, "license", "")
+	isempty(license) || push!(lines, "## License", "", "$license (see [LICENSE](LICENSE)).", "")
 	push!(lines, "## Tests", "", "The tests compute the published tables below from their data and check every printed value, rounded to the digits printed:", "")
 	for (file, spec) in sort(collect(targets); by = first)
 		named = get(spec, "run", "") == "named"
@@ -162,8 +191,30 @@ function readme(name, method)
 	return join(lines, "\n")
 end
 
+"""
+The entry of a package's vignette: in Vignettes.toml at the root of the registry, with links on GitHub, and in
+the package's vignette/Vignette.toml, with the PDF's file name. Each value on one line: Pollis reads both with
+its own TOML reader, which keeps escapes such as \\n.
+"""
+function vignette_entry(name, method, repository, pdf)
+	return Dict(k => strip(replace(v, r"\s+" => " ")) for (k, v) in (
+		"title" => vignette_title(method),
+		"method" => get(method, "title", name),
+		"package" => name,
+		"version" => get(method, "version", "0.1.0"),
+		"author" => get(method, "author", ""),
+		"description" => get(method, "description", ""),
+		"citation" => get(method, "citation", ""),
+		"article" => let article = get(method, "article", ""), doi = get(method, "doi", ""); isempty(article) && !isempty(doi) ? "https://doi.org/$doi" : article end,
+		"topic" => get(method, "topic", ""),
+		"license" => get(method, "license", ""),
+		"repository" => repository,
+		"pdf" => pdf,
+	))
+end
+
 "Makes or refreshes the package of a method in the packages folder; returns its folder."
-function package(packages, folder)
+function package(packages, folder, owner)
 	method = TOML.parsefile(joinpath(folder, "method.toml"))
 	method["folder"] = folder
 	name = method["name"]
@@ -199,6 +250,26 @@ function package(packages, folder)
 		for file in readdir(joinpath(folder, "vignette"))
 			splitext(file)[2] in (".tex", ".bib", ".pdf") && cp(joinpath(folder, "vignette", file), joinpath(root, "vignette", file))
 		end
+	end
+	# The vignette's entry, for the list of installed vignettes
+	if isfile(joinpath(root, "vignette", "$name.pdf"))
+		open(joinpath(root, "vignette", "Vignette.toml"), "w") do io
+			println(io, "# The vignette of $name.jl, written by Pollis (Compose > New Methods > Package and Publish) and shown in")
+			println(io, "# Help > Documentation > Vignettes once the package is installed.\n")
+			TOML.print(io, vignette_entry(name, method, owner === nothing ? "" : "https://github.com/$owner/$name.jl", "$name.pdf"); sorted = true)
+		end
+	end
+	# The license, when method.toml names one: the MIT License, or another whose text is the method folder's LICENSE
+	license = get(method, "license", "")
+	if isempty(license)
+		rm(joinpath(root, "LICENSE"); force = true)
+		println("$name has no license, so nobody may reuse it: choose one (license in method.toml, e.g. MIT) to let others use, change and share it.")
+	elseif license == "MIT"
+		write(joinpath(root, "LICENSE"), mit_license(author))
+	elseif isfile(joinpath(folder, "LICENSE"))
+		cp(joinpath(folder, "LICENSE"), joinpath(root, "LICENSE"); force = true)
+	else
+		error("method.toml: license = \"$license\" needs its text in $(joinpath(folder, "LICENSE"))")
 	end
 	write(joinpath(root, "test", "runtests.jl"), runtests(name, method))
 	write(joinpath(root, "README.md"), readme(name, method))
@@ -244,18 +315,7 @@ function list_vignette(registry, name, method, owner)
 		file = joinpath(clone, "Vignettes.toml")
 		vignettes = isfile(file) ? TOML.parsefile(file) : Dict{String, Any}()
 		repository = "https://github.com/$owner/$name.jl"
-		# Each value on one line: Pollis reads the file with its own TOML reader, which keeps escapes such as \n
-		vignettes[name] = Dict(k => strip(replace(v, r"\s+" => " ")) for (k, v) in (
-			"title" => vignette_title(method),
-			"method" => get(method, "title", name),
-			"package" => name,
-			"version" => get(method, "version", "0.1.0"),
-			"author" => get(method, "author", ""),
-			"description" => get(method, "description", ""),
-			"citation" => get(method, "citation", ""),
-			"repository" => repository,
-			"pdf" => "$repository/blob/main/vignette/$name.pdf",
-		))
+		vignettes[name] = vignette_entry(name, method, repository, "$repository/blob/main/vignette/$name.pdf")
 		open(file, "w") do io
 			println(io, "# The vignettes of the packages in this registry, one table per package, written by Pollis")
 			println(io, "# (Compose > New Methods > Package and Publish) and shown in Help > Documentation > Vignettes.\n")
@@ -291,7 +351,7 @@ function main(args)
 	failed = String[]
 	for folder in folders
 		try
-			root, name, method = package(packages, folder)
+			root, name, method = package(packages, folder, owner)
 			if skip
 				println("\n$name: tests not run (--no-tests).")
 			else

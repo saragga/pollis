@@ -84,7 +84,7 @@ Please do not report security vulnerabilities through public issues. See
 
 Copyright (c) 2026 Antonio Saragga Seabra
 
-Pollis is licensed under the [GNU Affero General Public License v3.0 or later](LICENSE.txt). You may
+Pollis is licensed under the [GNU Affero General Public License v3.0](LICENSE.txt). You may
 use, study, share and modify it. If you distribute a modified version, or let others use one over a
 network, you must make its source code available under the same licence.
 

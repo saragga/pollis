@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Antonio Saragga Seabra
-# Licensed under the GNU Affero General Public License v3.0 or later. See LICENSE.txt in the project root for license information.
+# Licensed under the GNU Affero General Public License v3.0. See LICENSE.txt in the project root for license information.
 
 # Compose > Reports without a coding agent: a notebook as a LaTeX report (article) or slides (beamer).
 # Pollis includes this file in its Julia REPL and calls PollisReports.make(notebook, folder, kind).

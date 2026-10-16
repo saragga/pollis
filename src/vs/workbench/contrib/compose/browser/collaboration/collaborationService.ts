@@ -1,10 +1,10 @@
 /*---------------------------------------------------------------------------------------------
  *  Copyright (c) 2026 Antonio Saragga Seabra
- *  Licensed under the GNU Affero General Public License v3.0 or later. See LICENSE.txt in the project root for license information.
+ *  Licensed under the GNU Affero General Public License v3.0. See LICENSE.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
 import { DeferredPromise, timeout } from '../../../../../base/common/async.js';
-import { VSBuffer } from '../../../../../base/common/buffer.js';
+import { decodeBase64, VSBuffer } from '../../../../../base/common/buffer.js';
 import { Emitter, Event } from '../../../../../base/common/event.js';
 import { Disposable, DisposableStore, MutableDisposable } from '../../../../../base/common/lifecycle.js';
 import { URI } from '../../../../../base/common/uri.js';
@@ -25,13 +25,13 @@ import { ILifecycleService } from '../../../../services/lifecycle/common/lifecyc
 import { WebviewInput } from '../../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../../webviewPanel/browser/webviewWorkbenchService.js';
 import { ChatPageMessage, ChatWorkbenchMessage, chatPageHtml, COLLABORATION_MEDIA, IChatEntry, IPeerConnectionStats, trysteroBundleUrl } from './collaborationChat.js';
-import { COLLABORATION_APP_ID, envelope, Envelope, formatSessionCode, IByePayload, IChatPayload, IDatasetSharedPayload, IEditorSharedPayload, IHelloPayload, isAcceptableImage, isEnvelope, ISessionCode, MAX_DATASET_BYTES, MAX_IMAGE_BYTES, MAX_PARTICIPANTS, MAX_RECEIVE_BYTES, MAX_SHARE_BYTES, newSessionCode, parseSessionCode, ParticipantRole, roomIdOf, SignallingStrategy } from './collaborationProtocol.js';
-import { datasetFileName, formatBytes, IReceivedDataset, SharedDatasets, summarizeCsv } from './collaborationDatasets.js';
+import { COLLABORATION_APP_ID, envelope, Envelope, formatSessionCode, IByePayload, IChatPayload, base64Bytes, IDatasetSharedPayload, IEditorSharedPayload, IFileSharedPayload, IHelloPayload, isAcceptableImage, isDuckDbFile, isEnvelope, ISessionCode, MAX_DATASET_BYTES, MAX_FILE_BYTES, MAX_IMAGE_BYTES, MAX_PARTICIPANTS, MAX_RECEIVE_BYTES, MAX_SHARE_BYTES, newSessionCode, parseSessionCode, ParticipantRole, roomIdOf, SignallingStrategy } from './collaborationProtocol.js';
+import { datasetFileName, formatBytes, IReceivedDataset, IReceivedFile, SharedDatasets, sharedFileName, summarizeCsv } from './collaborationDatasets.js';
 import { ISharedSnapshot, shareableKind, SharedEditors } from './collaborationEditors.js';
 import { IWirePacket, ReliableDelivery } from './collaborationTransport.js';
 
 // Compose > Collaboration sessions (internal-reports/collaboration-spec.md): starting, joining and leaving
-// a session, the chat, Share My Editor (collaborationEditors.ts) and Share Dataset (collaborationDatasets.ts). The host is the participant who started the session: they admit up to
+// a session, the chat with its images and files, Share My Editor (collaborationEditors.ts) and Share Dataset (collaborationDatasets.ts). The host is the participant who started the session: they admit up to
 // MAX_PARTICIPANTS, and when they leave the session ends. Nothing is stored after the session.
 
 export const SIGNALLING_SETTING = 'pollis.collaboration.signalling';
@@ -132,6 +132,8 @@ class Session extends Disposable {
 	private readonly waitTimer = this._register(new MutableDisposable());
 	/** The datasets the others shared, by id, for their cards' buttons. */
 	private readonly datasets = new Map<string, IReceivedDataset>();
+	/** The files and databases the others shared, by id, for their cards' buttons. */
+	private readonly files = new Map<string, IReceivedFile>();
 	private nextRequestId = 1;
 	private selfId: string | undefined;
 	private hostId: string | undefined;
@@ -149,6 +151,9 @@ class Session extends Disposable {
 		private readonly onLeave: () => void,
 		private readonly onEditorShared: (sharer: string, payload: IEditorSharedPayload) => void,
 		private readonly onDatasetAction: (dataset: IReceivedDataset, action: 'preview' | 'save' | 'load') => void,
+		private readonly onPickDataset: () => void,
+		private readonly onPickDatabase: () => void,
+		private readonly onFileAction: (file: IReceivedFile, action: 'save' | 'attach') => void,
 	) {
 		super();
 		this.admitted = role === 'host';
@@ -316,6 +321,22 @@ class Session extends Disposable {
 				}
 				break;
 			}
+			case 'pickDataset':
+				this.onPickDataset();
+				break;
+			case 'pickDatabase':
+				this.onPickDatabase();
+				break;
+			case 'sendFile':
+				this.shareFile(message.fileName, message.content, false);
+				break;
+			case 'file': {
+				const file = this.files.get(message.id);
+				if (file && (message.action === 'save' || file.database)) {
+					this.onFileAction(file, message.action);
+				}
+				break;
+			}
 		}
 	}
 
@@ -462,6 +483,12 @@ class Session extends Disposable {
 			case 'datasetShared':
 				this.onSharedDataset(peerId, data.payload);
 				break;
+			case 'fileShared':
+				this.onSharedFile(peerId, data.payload, false);
+				break;
+			case 'databaseShared':
+				this.onSharedFile(peerId, data.payload, true);
+				break;
 			case 'bye':
 				this.onBye(peerId, data.payload);
 				break;
@@ -547,6 +574,49 @@ class Session extends Disposable {
 		this.notice(localize('collaboration.youSharedDataset', "You shared {0}: {1} rows × {2} columns.", fileName, rows, columns));
 		const shared: IDatasetSharedPayload = { id: generateUuid(), fileName, content };
 		this.delivery.send('datasetShared', envelope<Envelope & { type: 'datasetShared' }>('datasetShared', shared) as unknown as IJson, peers);
+	}
+
+	/** A file or database from another participant: checked, and shown as a card; a file can only be saved, never opened. */
+	private onSharedFile(peerId: string, shared: IFileSharedPayload, database: boolean): void {
+		const participant = this.participants.get(peerId);
+		if (!participant || typeof shared.id !== 'string' || typeof shared.fileName !== 'string' || typeof shared.content !== 'string') {
+			return;
+		}
+		const fileName = sharedFileName(shared.fileName) || 'file';
+		const bytes = base64Bytes(shared.content);
+		if (bytes === undefined || bytes > MAX_FILE_BYTES || (database && !isDuckDbFile(decodeBase64(shared.content.slice(0, 16)).buffer))) {
+			this.notice(database
+				? localize('collaboration.databaseRefused', "{0} shared {1}, but it is not a DuckDB database within {2} MB, so it was refused.", participant.name, fileName, MAX_FILE_BYTES / 1024 / 1024)
+				: localize('collaboration.fileRefused', "{0} shared {1}, but it is not a file within {2} MB, so it was refused.", participant.name, fileName, MAX_FILE_BYTES / 1024 / 1024));
+			return;
+		}
+		const id = generateUuid();
+		this.files.set(id, { sharer: participant.name, payload: { id, fileName, content: shared.content }, database });
+		this.post({ command: 'show', entry: { kind: 'file', name: participant.name, text: '', time: Date.now(), file: { id, fileName, size: formatBytes(bytes), database } } });
+	}
+
+	/** Sends a file or a database, as base64, to everyone in the session; a database has been confirmed. */
+	shareFile(fileName: string, content: string, database: boolean): void {
+		if (this.ended || typeof fileName !== 'string' || typeof content !== 'string') {
+			return;
+		}
+		const name = sharedFileName(fileName) || 'file';
+		const bytes = base64Bytes(content);
+		if (bytes === undefined || bytes > MAX_FILE_BYTES) {
+			this.notice(localize('collaboration.fileTooLarge', "{0} is too large to share in the chat (the limit is {1} MB): send it the usual way.", name, MAX_FILE_BYTES / 1024 / 1024));
+			return;
+		}
+		const peers = [...this.participants.keys()];
+		if (!peers.length) {
+			this.notice(localize('collaboration.nobodyToShareWith', "Nobody else is in the session yet, so {0} was not shared.", name));
+			return;
+		}
+		this.notice(database
+			? localize('collaboration.youSharedDatabase', "You shared the database {0} ({1}).", name, formatBytes(bytes))
+			: localize('collaboration.youSharedFile', "You shared {0} ({1}).", name, formatBytes(bytes)));
+		const shared: IFileSharedPayload = { id: generateUuid(), fileName: name, content };
+		const type = database ? 'databaseShared' : 'fileShared';
+		this.delivery.send(type, envelope<Envelope & { type: typeof type }>(type, shared) as unknown as IJson, peers);
 	}
 
 	private onBye(peerId: string, bye: IByePayload): void {
@@ -821,6 +891,10 @@ export class CollaborationService extends Disposable implements ICollaborationSe
 						: this.sharedDatasets.load(dataset);
 				done.catch(error => this.notificationService.error(localize('collaboration.datasetActionFailed', "Could not use {0}'s {1}: {2}", dataset.sharer, dataset.payload.fileName, String(error))));
 			},
+			() => this.sharedDatasets.pick().then(picked => picked && this.shareDataset(picked)).catch(error => this.notificationService.error(String(error))),
+			() => this.sharedDatasets.pickDatabase().then(picked => picked && this.session.value?.shareFile(picked.fileName, picked.content, true)).catch(error => this.notificationService.error(String(error))),
+			(file, action) => (action === 'save' ? this.sharedDatasets.saveFile(file) : this.sharedDatasets.attachDatabase(file))
+				.catch(error => this.notificationService.error(localize('collaboration.fileActionFailed', "Could not use {0}'s {1}: {2}", file.sharer, file.payload.fileName, String(error)))),
 		);
 		this.session.value = session;
 		session.onDidEnd(() => this._onDidChangeSession.fire());

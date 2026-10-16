@@ -1,0 +1,400 @@
+# World Bank Indicators Webview Configuration
+# Declarative source. The build script generates wbd.data.ts.
+# Run: npm run gulp compile-toml
+#
+# Approach: WorldBankData.jl wraps the World Bank Indicators API (v2), which
+# needs NO API key. wdi() returns a table with one row per country-year and
+# one column per indicator (dots in the code become underscores). It is
+# Tables.jl-compatible, so the code reads columns with Tables.getcolumn and
+# never loads a data-frame package itself.
+
+[meta]
+title = "World Bank Indicators"
+viewType = "pollis.wbd"
+defaultModel = "indicator"
+models = ["indicator", "compare", "aggregates", "countries", "search"]
+illusCollapsed = true
+illustrationText = "Pull the World Bank's World Development Indicators into Julia: one series, cross-country comparisons, regional and income-group aggregates, country classifications, and indicator search."
+
+[[packages]]
+name = "WorldBankData.jl"
+github = "https://github.com/4gh/WorldBankData.jl"
+
+[[packages]]
+name = "Tables.jl"
+github = "https://github.com/JuliaData/Tables.jl"
+
+[[packages]]
+name = "HTTP.jl"
+github = "https://github.com/JuliaWeb/HTTP.jl"
+
+[[packages]]
+name = "JSON.jl"
+github = "https://github.com/JuliaIO/JSON.jl"
+
+[[packages]]
+name = "Plots.jl"
+github = "https://github.com/JuliaPlots/Plots.jl"
+
+[requires]
+packages = ["WorldBankData.jl", "Tables.jl", "HTTP.jl", "JSON.jl", "Plots.jl"]
+
+[[notebookSections]]
+label = "World Bank Indicators"
+
+[[notebookSections.notebooks]]
+name = "First Indicator"
+file = "wbd/tutorial-01-first-indicator.ipynb"
+bundled = true
+description = "Download GDP per capita with wdi() and read the columns with Tables.jl"
+
+[[wikis]]
+name = "Factsheet"
+file = "wbd/factsheet.md"
+bundled = true
+description = "Quick reference: wdi(), search_wdi(), indicator codes, and the shape of the result"
+
+[[wikis]]
+name = "Overview"
+file = "wbd/overview.md"
+bundled = true
+description = "What the World Development Indicators are, how codes are built, and aggregates versus countries"
+
+[[references]]
+title = "World Development Indicators"
+authors = "World Bank"
+year = 2026
+journal = "databank.worldbank.org"
+url = "https://datacatalog.worldbank.org/dataset/world-development-indicators"
+openAccess = true
+
+[[references]]
+title = "World Bank Indicators API Documentation"
+authors = "World Bank"
+year = 2024
+journal = "datahelpdesk.worldbank.org"
+url = "https://datahelpdesk.worldbank.org/knowledgebase/articles/889392-about-the-indicators-api-documentation"
+openAccess = true
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[bullets]]
+text = "One Indicator"
+detail = "a single series, such as GDP per capita, for one country over time"
+
+[[bullets]]
+text = "Compare Countries"
+detail = "several countries and several indicators in one download"
+
+[[bullets]]
+text = "Aggregates"
+detail = "the World, regions such as the European Union, and income groups"
+
+[[bullets]]
+text = "Country Classifications"
+detail = "each country's region, income group, and lending category"
+
+[[bullets]]
+text = "Search Indicators"
+detail = "find an indicator code by searching names and descriptions"
+
+[[decisionRows]]
+task = "One Indicator"
+context = "Series"
+purpose = "Follow GDP per capita for one country"
+
+[[decisionRows]]
+task = "Compare Countries"
+context = "Panel"
+purpose = "Put several countries and indicators side by side"
+
+[[decisionRows]]
+task = "Aggregates"
+context = "Regions"
+purpose = "Compare the World, the EU, and income groups"
+
+[[decisionRows]]
+task = "Country Classifications"
+context = "Metadata"
+purpose = "Group countries by region or income level"
+
+[[decisionRows]]
+task = "Search Indicators"
+context = "Discovery"
+purpose = "Find the code of an indicator before downloading it"
+
+[miniCharts]
+
+[miniCharts.indicator]
+svg = '''
+var s = '<polyline points="6,54 16,48 26,44 36,36 46,30 52,24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.55"/>';
+s += '<line x1="6" y1="62" x2="52" y2="62" stroke="currentColor" stroke-width="0.6" opacity="0.4"/>';
+s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Series</text>';
+return s;
+'''
+
+[miniCharts.compare]
+svg = '''
+var s = '<polyline points="6,52 18,46 30,40 42,34 52,30" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.55"/>';
+s += '<polyline points="6,58 18,56 30,50 42,48 52,42" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3,2" opacity="0.55"/>';
+s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Countries</text>';
+return s;
+'''
+
+[miniCharts.aggregates]
+svg = '''
+var s = '<circle cx="27" cy="36" r="18" fill="none" stroke="currentColor" stroke-width="1.4" opacity="0.5"/>';
+s += '<ellipse cx="27" cy="36" rx="8" ry="18" fill="none" stroke="currentColor" stroke-width="1" opacity="0.4"/>';
+s += '<line x1="9" y1="36" x2="45" y2="36" stroke="currentColor" stroke-width="1" opacity="0.4"/>';
+s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Aggregates</text>';
+return s;
+'''
+
+[miniCharts.countries]
+svg = '''
+var s = '<rect x="10" y="22" width="34" height="8" rx="1" fill="currentColor" opacity="0.35"/>';
+s += '<rect x="10" y="34" width="26" height="8" rx="1" fill="currentColor" opacity="0.25"/>';
+s += '<rect x="10" y="46" width="18" height="8" rx="1" fill="currentColor" opacity="0.15"/>';
+s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Income</text>';
+return s;
+'''
+
+[miniCharts.search]
+svg = '''
+var s = '<circle cx="24" cy="34" r="11" fill="none" stroke="currentColor" stroke-width="1.6" opacity="0.55"/>';
+s += '<line x1="32" y1="42" x2="44" y2="54" stroke="currentColor" stroke-width="2" opacity="0.55"/>';
+s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Search</text>';
+return s;
+'''
+
+[[codeBranches]]
+model = "indicator"
+code = """
+using WorldBankData, Tables
+
+# GDP per capita, constant 2015 US dollars, for Portugal; no API key is needed
+tbl = wdi("NY.GDP.PCAP.KD", "PT", 2000, 2024)
+
+# One column per indicator: the dots in the code become underscores
+years = Tables.getcolumn(tbl, :year)
+gdppc = Tables.getcolumn(tbl, :NY_GDP_PCAP_KD)
+foreach((y, v) -> println(Int(y), "  ", round(v; digits = 0)), last(years, 10), last(gdppc, 10))
+"""
+
+[[codeBranches]]
+model = "compare"
+code = """
+using WorldBankData, Tables
+
+# Two indicators for three countries in one call (ISO2 or ISO3 codes)
+indicators = ["NY.GDP.PCAP.KD", "SP.DYN.LE00.IN"]   # GDP per capita, life expectancy
+tbl = wdi(indicators, ["PT", "ES", "DE"], 2010, 2023)
+
+for r in Tables.rows(tbl)
+    r.year == 2023 || continue
+    println(rpad(r.country, 10), "  GDP pc ", round(r.NY_GDP_PCAP_KD; digits = 0),
+            "  life exp. ", round(r.SP_DYN_LE00_IN; digits = 1))
+end
+"""
+
+[[codeBranches]]
+model = "aggregates"
+code = """
+using WorldBankData, Tables
+
+# Aggregates have codes too: WLD = World, EUU = European Union,
+# HIC / UMC / LMC / LIC = high, upper-middle, lower-middle, and low income
+groups = ["WLD", "EUU", "HIC", "UMC", "LMC", "LIC"]
+tbl = wdi("SP.DYN.LE00.IN", groups, 2023, 2023)
+
+for (name, v) in zip(Tables.getcolumn(tbl, :country), Tables.getcolumn(tbl, :SP_DYN_LE00_IN))
+    println(rpad(name, 22), round(v; digits = 1))
+end
+"""
+
+[[codeBranches]]
+model = "countries"
+code = """
+using WorldBankData, Tables
+
+# search_wdi("countries", field, regex): fields are name, region, capital,
+# iso2c, iso3c, income, and lending
+low = search_wdi("countries", "income", r"^Low income"i)
+
+println(length(Tables.rows(low)), " low-income economies:")
+for r in Tables.rows(low)
+    println(rpad(r.iso3c, 5), rpad(r.name, 32), r.region)
+end
+"""
+
+[[codeBranches]]
+model = "search"
+code = """
+using HTTP, JSON
+
+# The World Development Indicators are source 2 of the World Bank API (about
+# 1,500 series). Each entry has an id (the code wdi() takes), a name, and a
+# sourceNote (the description). search_wdi() in WorldBankData.jl reads only
+# the first 25,000 of the API's ~29,500 indicators, so some WDI codes are
+# missing from it; this list is complete.
+url = "https://api.worldbank.org/v2/sources/2/indicators?per_page=2000&format=json"
+_, wdilist = JSON.parse(String(HTTP.get(url).body))
+
+for i in wdilist
+    occursin(r"unemployment, total"i, i["name"]) && println(rpad(i["id"], 26), i["name"])
+end
+"""
+
+# Next Steps action groups (task-oriented, matched to the World Bank tabs)
+[[actionGroups]]
+id = "indicator"
+label = "One Indicator"
+
+[[actionGroups.actions]]
+id = "wbd-ind-chart"
+label = "Chart"
+desc = "Plot GDP per capita for one country over time"
+code = """
+using WorldBankData, Tables, Plots
+
+tbl = wdi("NY.GDP.PCAP.KD", "PT", 1990, 2024)
+plot(Tables.getcolumn(tbl, :year), Tables.getcolumn(tbl, :NY_GDP_PCAP_KD),
+     xlabel = "year", ylabel = "GDP per capita (constant 2015 US\\$)", legend = false, marker = :circle)
+"""
+
+[[actionGroups.actions]]
+id = "wbd-ind-growth"
+label = "Growth Rates"
+desc = "Annual growth of GDP per capita, computed from the levels"
+code = """
+using WorldBankData, Tables
+
+tbl = wdi("NY.GDP.PCAP.KD", "PT", 2014, 2024)
+years = Int.(Tables.getcolumn(tbl, :year))
+level = Tables.getcolumn(tbl, :NY_GDP_PCAP_KD)
+growth = 100 .* (level[2:end] ./ level[1:end-1] .- 1)
+foreach((y, g) -> println(y, "  ", round(g; digits = 2), " %"), years[2:end], growth)
+"""
+
+[[actionGroups]]
+id = "compare"
+label = "Compare Countries"
+
+[[actionGroups.actions]]
+id = "wbd-cmp-preston"
+label = "Income and Life Expectancy"
+desc = "Every country in one year: life expectancy against GDP per capita on a log scale"
+code = """
+using WorldBankData, Tables, Plots
+
+# "all" downloads every economy; extra = true adds the region and income columns
+tbl = wdi(["NY.GDP.PCAP.KD", "SP.DYN.LE00.IN"], "all", 2022, 2022; extra = true)
+rows = [r for r in Tables.rows(tbl)
+        if r.region != "Aggregates" && !ismissing(r.NY_GDP_PCAP_KD) && !ismissing(r.SP_DYN_LE00_IN)]
+scatter([r.NY_GDP_PCAP_KD for r in rows], [r.SP_DYN_LE00_IN for r in rows],
+        xscale = :log10, xlabel = "GDP per capita (constant 2015 US\\$, log)",
+        ylabel = "life expectancy (years)", legend = false, markersize = 3)
+"""
+
+[[actionGroups.actions]]
+id = "wbd-cmp-lines"
+label = "Country Lines"
+desc = "Life expectancy for several countries on one chart"
+code = """
+using WorldBankData, Tables, Plots
+
+tbl = wdi("SP.DYN.LE00.IN", ["PT", "BR", "IN", "NG"], 1980, 2023)
+country = Tables.getcolumn(tbl, :country)
+p = plot(xlabel = "year", ylabel = "life expectancy (years)", legend = :bottomright)
+for c in unique(country)
+    i = country .== c
+    plot!(p, Tables.getcolumn(tbl, :year)[i], Tables.getcolumn(tbl, :SP_DYN_LE00_IN)[i], label = c)
+end
+p
+"""
+
+[[actionGroups]]
+id = "aggregates"
+label = "Aggregates"
+
+[[actionGroups.actions]]
+id = "wbd-agg-income"
+label = "Income Groups"
+desc = "Under-five mortality by income group since 1990"
+code = """
+using WorldBankData, Tables, Plots
+
+tbl = wdi("SH.DYN.MORT", ["HIC", "UMC", "LMC", "LIC"], 1990, 2023)
+country = Tables.getcolumn(tbl, :country)
+p = plot(xlabel = "year", ylabel = "under-five deaths per 1,000 live births")
+for c in unique(country)
+    i = country .== c
+    plot!(p, Tables.getcolumn(tbl, :year)[i], Tables.getcolumn(tbl, :SH_DYN_MORT)[i], label = c)
+end
+p
+"""
+
+[[actionGroups]]
+id = "countries"
+label = "Country Classifications"
+
+[[actionGroups.actions]]
+id = "wbd-ctry-region"
+label = "Countries per Region"
+desc = "Count the economies in each region and income group"
+code = """
+using WorldBankData, Tables
+
+all_c = search_wdi("countries", "name", r".")
+rows = [r for r in Tables.rows(all_c) if r.region != "Aggregates"]
+for reg in sort(unique(r.region for r in rows))
+    println(rpad(reg, 52), count(r -> r.region == reg, rows))
+end
+println()
+for inc in sort(unique(r.income for r in rows))
+    println(rpad(inc, 52), count(r -> r.income == inc, rows))
+end
+"""
+
+[[actionGroups]]
+id = "search"
+label = "Search Indicators"
+
+[[actionGroups.actions]]
+id = "wbd-srch-description"
+label = "Search Descriptions"
+desc = "Search the longer descriptions, not only the names"
+code = """
+using HTTP, JSON
+
+url = "https://api.worldbank.org/v2/sources/2/indicators?per_page=2000&format=json"
+_, wdilist = JSON.parse(String(HTTP.get(url).body))
+
+# sourceNote holds the long description of each indicator
+for i in wdilist
+    occursin(r"renewable energy"i, i["sourceNote"]) && println(rpad(i["id"], 26), i["name"])
+end
+"""
+
+[[actionGroups.actions]]
+id = "wbd-srch-then-download"
+label = "Search, Then Download"
+desc = "Find the code of an indicator by name and download it straight away"
+code = """
+using HTTP, JSON, WorldBankData, Tables
+
+url = "https://api.worldbank.org/v2/sources/2/indicators?per_page=2000&format=json"
+_, wdilist = JSON.parse(String(HTTP.get(url).body))
+
+hit = only(filter(i -> occursin(r"^Population, total$"i, i["name"]), wdilist))
+println("Using ", hit["id"], ": ", hit["name"])
+tbl = wdi(hit["id"], ["PT", "ES"], 2020, 2023)
+col = Symbol(replace(hit["id"], "." => "_"))
+foreach(r -> println(r.country, "  ", Int(r.year), "  ", Int(r[col])), Tables.rows(tbl))
+"""

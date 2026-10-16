@@ -1,5 +1,5 @@
-# The content list of Pollis: the vignettes of the New Methods library, the analytical workflows and the published
-# benchmarks, with the dates each was added and last updated, the oldest Pollis version that can use it, and its
+# The content list of Pollis: the analytical workflows and the published benchmarks (vignettes come with their
+# packages), with the dates each was added and last updated, the oldest Pollis version that can use it, and its
 # files with their SHA-256. Writes src/vs/workbench/contrib/compose/browser/media/content.toml, the list Pollis ships,
 # and, with --publish, the same list and the files into a clone of the content repository
 # (github.com/Trumpingtons/pollis-content), whose list Pollis reads once a day (pollisContent.ts): an entry updated
@@ -48,23 +48,6 @@ function notebooks(base, extensions)
 	return entries
 end
 
-"""The vignettes of the New Methods library: METHOD/vignette/METHOD.pdf, with the title and citation of its method.toml."""
-function vignettes()
-	entries = Dict{String, Any}[]
-	for id in sort(readdir(joinpath(MEDIA, "methods")))
-		folder = joinpath(MEDIA, "methods", id, "vignette")
-		isfile(joinpath(folder, "$id.pdf")) || continue
-		method = TOML.parsefile(joinpath(MEDIA, "methods", id, "method.toml"))
-		title = get(method, "vignette_title", "")
-		entry = Dict{String, Any}("id" => id, "title" => isempty(title) ? get(method, "title", id) : title, "folder" => folder, "files" => ["$id.pdf"])
-		for key in ("citation", "topic")
-			isempty(get(method, key, "")) || (entry[key] = strip(replace(method[key], r"\s+" => " ")))
-		end
-		push!(entries, entry)
-	end
-	return entries
-end
-
 function main(args)
 	version = something(findfirst(==("--pollis"), args), 0)
 	publish = something(findfirst(==("--publish"), args), 0)
@@ -74,7 +57,6 @@ function main(args)
 	today = string(Dates.today())
 	list = Dict{String, Any}()
 	for (kind, entries) in (
-		"vignettes" => vignettes(),
 		"workflows" => notebooks(joinpath(MEDIA, "workflows"), ("ipynb", "jl", "tex", "bib")),
 		"benchmarks" => notebooks(joinpath(MEDIA, "correctness"), ("ipynb", "jl", "dat")),
 	)

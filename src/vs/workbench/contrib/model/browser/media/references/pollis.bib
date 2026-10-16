@@ -155,6 +155,15 @@
   pollis-used-in = {cv}
 }
 
+@article{arnoud2019,
+  author  = {Arnoud, Antoine and Guvenen, Fatih and Kleineberg, Tatjana},
+  title   = {Benchmarking Global Optimizers},
+  journal = {NBER Working Paper 26340},
+  year    = {2019},
+  doi     = {10.3386/w26340},
+  pollis-used-in = {pgo}
+}
+
 @article{artzner1999,
   author  = {Artzner, Philippe and Delbaen, Freddy and Eber, Jean-Marc and Heath, David},
   title   = {Coherent Measures of Risk},
@@ -261,13 +270,31 @@
   pollis-used-in = {cmplx}
 }
 
-@article{bank2024,
+@article{bank2024a,
   author  = {{European Central Bank}},
   title   = {ECB Data Portal: API Documentation},
   journal = {data.ecb.europa.eu},
   year    = {2024},
   url     = {https://data.ecb.europa.eu/help/api/overview},
   pollis-used-in = {ecb}
+}
+
+@article{bank2024b,
+  author  = {World Bank},
+  title   = {World Bank Indicators API Documentation},
+  journal = {datahelpdesk.worldbank.org},
+  year    = {2024},
+  url     = {https://datahelpdesk.worldbank.org/knowledgebase/articles/889392-about-the-indicators-api-documentation},
+  pollis-used-in = {wbd}
+}
+
+@article{bank2026,
+  author  = {World Bank},
+  title   = {World Development Indicators},
+  journal = {databank.worldbank.org},
+  year    = {2026},
+  url     = {https://datacatalog.worldbank.org/dataset/world-development-indicators},
+  pollis-used-in = {wbd}
 }
 
 @article{barabasi1999,
@@ -513,6 +540,15 @@
   pollis-used-in = {ropt}
 }
 
+@article{bertsimas2016,
+  author  = {Bertsimas, Dimitris and King, Angela and Mazumder, Rahul},
+  title   = {Best Subset Selection via a Modern Optimization Lens},
+  journal = {The Annals of Statistics},
+  year    = {2016},
+  doi     = {10.1214/15-AOS1388},
+  pollis-used-in = {mpmicp}
+}
+
 @article{besancon2021,
   author  = {Besançon, Mathieu and Papamarkou, Theodore and Anthoff, David and Arslan, Alex and Byrne, Simon and Lin, Dahua and Pearson, John},
   title   = {Distributions.jl: Definition and Modeling of Probability Distributions in the JuliaStats Ecosystem},
@@ -564,7 +600,7 @@
   journal = {SIAM Review},
   year    = {2017},
   doi     = {10.1137/141000671},
-  pollis-used-in = {acm, alpv, ande, attr, azero, bert, blv, bndt, boot, bopt, cam, cca, ccdr, cds, chaos, clbt, cmp, cmplx, com, copt, covShrinkage, csv, ctm, ctpf, cv, dcm, dco, devol, dgo, dist, dmap, dp, ds, dstats, dtm, dynppl, ecb, edgar, es, fo, fom, fred, galg, glm, graphppl, hare, hfds, hfm, hmd, hns, idat, jdp, kgds, kgm, lda, llmTa, lm, lmar, lp, lqr, lrm, lsa, madp, marl, mbm, mcmc, mdp, mlmc, mopt, mpc, mpcone, mpec, mpm, mpnlp, mpsdp, mpsos, ngo, nlls, nod, node, novd, oa, ode, optim, pbm, pgm, pgo, po, ppl, prox, ptp, ptps, ql, qn, qp, rl, ropt, rouge, rvol, rxinfer, sbo, sde, sdea, sgm, si, sid, slm, smc, so, spro, sql, sreg, swarm, traj, tssm, vari}
+  pollis-used-in = {acm, alpv, ande, attr, azero, bert, blv, bndt, boot, bopt, cam, cca, ccdr, cds, chaos, clbt, cmp, cmplx, com, copt, covShrinkage, csv, ctm, ctpf, cv, dcm, dco, devol, dgo, dist, dmap, dp, ds, dstats, dtm, dynppl, ecb, edgar, es, ffd, fo, fom, fred, galg, glm, graphppl, hare, hfds, hfm, hmd, hns, idat, imf, jdp, kgds, kgm, lda, llmTa, lm, lmar, lp, lqr, lrm, lsa, madp, marl, mbm, mcmc, mdp, mlmc, mopt, mpc, mpcone, mpec, mpm, mpmicp, mpnlp, mpsdp, mpsos, ngo, nlls, nod, node, novd, oa, ode, optim, pbm, pgm, pgo, po, ppl, prox, ptp, ptps, ql, qn, qp, rl, ropt, rouge, rvol, rxinfer, sbo, sde, sdea, sgm, si, sid, slm, smc, so, spro, sql, sreg, swarm, traj, tssm, vari, wbd}
 }
 
 @article{biel2022,
@@ -1016,6 +1052,24 @@
   journal = {Springer (2nd ed.)},
   year    = {2007},
   pollis-used-in = {dcm, pbm}
+}
+
+@article{coey2020,
+  author  = {Coey, Chris and Lubin, Miles and Vielma, Juan Pablo},
+  title   = {Outer Approximation with Conic Certificates for Mixed-Integer Convex Problems},
+  journal = {Mathematical Programming Computation},
+  year    = {2020},
+  doi     = {10.1007/s12532-020-00178-3},
+  pollis-used-in = {mpmicp}
+}
+
+@article{coey2022,
+  author  = {Coey, Chris and Kapelevich, Lea and Vielma, Juan Pablo},
+  title   = {Solving Natural Conic Formulations with Hypatia.jl},
+  journal = {INFORMS Journal on Computing},
+  year    = {2022},
+  doi     = {10.1287/ijoc.2022.1202},
+  pollis-used-in = {mpmicp}
 }
 
 @article{coey2023,
@@ -1675,7 +1729,7 @@
   journal = {SIAM Review},
   year    = {2017},
   doi     = {10.1137/15M1020575},
-  pollis-used-in = {ccdr, copt, lp, mpcone, mpnlp, mpsdp, mpsos, qp, ropt, spro}
+  pollis-used-in = {ccdr, copt, lp, mpcone, mpmicp, mpnlp, mpsdp, mpsos, qp, ropt, spro}
 }
 
 @article{durbin2012,
@@ -1823,6 +1877,24 @@
   pollis-used-in = {cmp, mpec, vari}
 }
 
+@article{fama1993,
+  author  = {Fama, Eugene F. and French, Kenneth R.},
+  title   = {Common Risk Factors in the Returns on Stocks and Bonds},
+  journal = {Journal of Financial Economics},
+  year    = {1993},
+  doi     = {10.1016/0304-405X(93)90023-5},
+  pollis-used-in = {ffd}
+}
+
+@article{fama2015,
+  author  = {Fama, Eugene F. and French, Kenneth R.},
+  title   = {A Five-Factor Asset Pricing Model},
+  journal = {Journal of Financial Economics},
+  year    = {2015},
+  doi     = {10.1016/j.jfineco.2014.10.010},
+  pollis-used-in = {ffd}
+}
+
 @article{feo1995,
   author  = {Feo, Thomas A. and Resende, Mauricio G. C.},
   title   = {Greedy Randomized Adaptive Search Procedures},
@@ -1938,6 +2010,15 @@
   pollis-used-in = {dstats}
 }
 
+@article{french2026,
+  author  = {French, Kenneth R.},
+  title   = {Kenneth R. French Data Library},
+  journal = {mba.tuck.dartmouth.edu},
+  year    = {2026},
+  url     = {https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/data_library.html},
+  pollis-used-in = {ffd}
+}
+
 @misc{friedman2001,
   author  = {Friedman, J.H.},
   title   = {Greedy Function Approximation: A Gradient Boosting Machine},
@@ -1962,6 +2043,24 @@
   year    = {2018},
   url     = {https://proceedings.mlr.press/v80/fujimoto18a.html},
   pollis-used-in = {acm}
+}
+
+@article{fund2025,
+  author  = {{International Monetary Fund}},
+  title   = {IMF Data: API Documentation},
+  journal = {data.imf.org},
+  year    = {2025},
+  url     = {https://data.imf.org/en/Resource-Pages/IMF-API},
+  pollis-used-in = {imf}
+}
+
+@article{fund2026,
+  author  = {{International Monetary Fund}},
+  title   = {World Economic Outlook Database},
+  journal = {imf.org},
+  year    = {2026},
+  url     = {https://www.imf.org/en/Publications/WEO/weo-database},
+  pollis-used-in = {imf}
 }
 
 @article{gablonsky2001,
@@ -2256,7 +2355,7 @@
   year    = {2024},
   doi     = {10.48550/arXiv.2405.14674},
   url     = {https://arxiv.org/abs/2212.08260},
-  pollis-used-in = {ccdr, mpcone, mpsdp, mpsos, qp, ropt}
+  pollis-used-in = {ccdr, mpcone, mpmicp, mpsdp, mpsos, qp, ropt}
 }
 
 @article{grassberger1983,
@@ -2318,7 +2417,7 @@
   journal = {sdmx.org},
   year    = {2023},
   url     = {https://sdmx.org/?page_id=5008},
-  pollis-used-in = {ecb}
+  pollis-used-in = {ecb, imf}
 }
 
 @misc{gugushvili2019,
@@ -2650,7 +2749,7 @@
   journal = {Mathematical Programming Computation},
   year    = {2018},
   doi     = {10.1007/s12532-017-0130-5},
-  pollis-used-in = {blv, ccdr, lp, ropt, spro}
+  pollis-used-in = {blv, ccdr, lp, mpmicp, ropt, spro}
 }
 
 @article{huber1964,
@@ -2765,6 +2864,15 @@
   year    = {2024},
   url     = {https://doi.org/10.18637/jss.v109.i06},
   pollis-used-in = {evtDiag, evtRisk, gev, gp}
+}
+
+@article{jegadeesh1993,
+  author  = {Jegadeesh, Narasimhan and Titman, Sheridan},
+  title   = {Returns to Buying Winners and Selling Losers: Implications for Stock Market Efficiency},
+  journal = {Journal of Finance},
+  year    = {1993},
+  doi     = {10.1111/j.1540-6261.1993.tb04702.x},
+  pollis-used-in = {ffd}
 }
 
 @article{johansson2019,
@@ -5371,7 +5479,7 @@
   journal = {Springer},
   year    = {2000},
   doi     = {10.1007/978-1-4615-4677-1},
-  pollis-used-in = {pgo}
+  pollis-used-in = {dgo}
 }
 
 @article{surjanovic2023,

@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------------------------
  *  Copyright (c) 2026 Antonio Saragga Seabra
- *  Licensed under the GNU Affero General Public License v3.0 or later. See LICENSE.txt in the project root for license information.
+ *  Licensed under the GNU Affero General Public License v3.0. See LICENSE.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
 import { localize } from '../../../../nls.js';
@@ -299,7 +299,8 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 			const { toolbox, location } = loaded;
 			const entry = published[publishedKey(loaded)];
 			const placement: IToolboxPlacement = entry ? placementOf(loaded, entry) : { menu: undefined, panels: {} };
-			const submenu = this.submenus.get(toolbox.id) ?? new MenuId(`${TOOLBOX_SUBMENU_PREFIX}${toolbox.id}`);
+			// MenuId.for: a built-in submenu (Extreme Value in Financial Econometrics) may have created the toolbox's menu id already
+			const submenu = this.submenus.get(toolbox.id) ?? MenuId.for(`${TOOLBOX_SUBMENU_PREFIX}${toolbox.id}`);
 			this.submenus.set(toolbox.id, submenu);
 			if (placement.menu && loaded.panels.some(({ contribution }) => placement.panels[contribution.id]?.menu === TOOLBOX_MENU)) {
 				const { menu, group, order } = placement.menu;

@@ -1,0 +1,555 @@
+# Mixed-Integer Conic Programming Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/mpmicp.data.ts
+# Run: npm run gulp compile-toml
+#
+# Approach: Pajarito.jl solves mixed-integer conic problems by outer
+# approximation: a MILP master problem (HiGHS) proposes the integer part, and a
+# continuous conic solver (Hypatia or Clarabel) solves the subproblem with the
+# integers fixed, returning cuts from its conic certificates.
+
+[meta]
+title = "Mixed-Integer Conic Programming"
+viewType = "pollis.mpmicp"
+defaultModel = "portfolio"
+
+[[packages]]
+name = "JuMP.jl"
+github = "https://github.com/jump-dev/JuMP.jl"
+
+[[packages]]
+name = "Pajarito.jl"
+github = "https://github.com/jump-dev/Pajarito.jl"
+
+[[packages]]
+name = "HiGHS.jl"
+github = "https://github.com/jump-dev/HiGHS.jl"
+
+[[packages]]
+name = "Hypatia.jl"
+github = "https://github.com/jump-dev/Hypatia.jl"
+
+[[packages]]
+name = "Clarabel.jl"
+github = "https://github.com/oxfordcontrol/Clarabel.jl"
+
+[requires]
+packages = ["JuMP.jl", "Pajarito.jl", "HiGHS.jl", "Hypatia.jl", "Clarabel.jl", "Plots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Cardinality-Constrained Portfolio"
+file = "mpmicp/tutorial-01-cardinality-portfolio.ipynb"
+bundled = true
+description = "A minimum-risk portfolio holding at most k assets: second-order cone plus binary variables, solved with Pajarito"
+
+[[wikis]]
+name = "Factsheet"
+file = "mpmicp/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "mpmicp/overview.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+title = "Julia: A Fresh Approach to Numerical Computing"
+authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/141000671"
+openAccess = false
+
+[[references]]
+title = "JuMP: A Modeling Language for Mathematical Optimization"
+authors = "Dunning, Iain; Huchette, Joey; Lubin, Miles"
+year = 2017
+journal = "SIAM Review"
+doi = "10.1137/15M1020575"
+openAccess = true
+
+[[references]]
+title = "Outer Approximation with Conic Certificates for Mixed-Integer Convex Problems"
+authors = "Coey, Chris; Lubin, Miles; Vielma, Juan Pablo"
+year = 2020
+journal = "Mathematical Programming Computation"
+doi = "10.1007/s12532-020-00178-3"
+openAccess = false
+
+[[references]]
+title = "Solving Natural Conic Formulations with Hypatia.jl"
+authors = "Coey, Chris; Kapelevich, Lea; Vielma, Juan Pablo"
+year = 2022
+journal = "INFORMS Journal on Computing"
+doi = "10.1287/ijoc.2022.1202"
+openAccess = false
+
+[[references]]
+title = "Clarabel: An Interior-Point Solver for Conic Programs with Quadratic Objectives"
+authors = "Goulart, Paul J.; Chen, Yuwen"
+year = 2024
+journal = "arXiv"
+doi = "10.48550/arXiv.2405.14674"
+openAccess = true
+
+[[references]]
+title = "Parallelizing the Dual Revised Simplex Method"
+authors = "Huangfu, Qi; Hall, J. A. Julian"
+year = 2018
+journal = "Mathematical Programming Computation"
+doi = "10.1007/s12532-017-0130-5"
+openAccess = true
+
+[[references]]
+separator = true
+label = "Applications"
+
+[[references]]
+title = "Best Subset Selection via a Modern Optimization Lens"
+authors = "Bertsimas, Dimitris; King, Angela; Mazumder, Rahul"
+year = 2016
+journal = "The Annals of Statistics"
+doi = "10.1214/15-AOS1388"
+openAccess = false
+
+[[models]]
+id = "portfolio"
+label = "Cardinality Portfolio"
+
+[[models]]
+id = "subset"
+label = "Best Subset Regression"
+
+[[models]]
+id = "logistic"
+label = "Sparse Logistic Regression"
+
+[[models]]
+id = "knapsack"
+label = "Chance-Constrained Knapsack"
+
+[[decisionRows]]
+task = "Cardinality Portfolio"
+context = "Minimum-risk portfolio that may hold at most k assets, with a target expected return"
+purpose = "Second-order cone for the risk, binary variables for which assets are held"
+
+[[decisionRows]]
+task = "Best Subset Regression"
+context = "Least squares with at most k non-zero coefficients"
+purpose = "Second-order cone for the residual norm, big-M binaries for the support"
+
+[[decisionRows]]
+task = "Sparse Logistic Regression"
+context = "Logistic regression with at most k non-zero coefficients"
+purpose = "Exponential cones for the log-loss, big-M binaries for the support"
+
+[[decisionRows]]
+task = "Chance-Constrained Knapsack"
+context = "Choose items of most value whose uncertain total weight fits the capacity with 95% probability"
+purpose = "Second-order cone for the weight's standard deviation, binary variables for the items"
+
+[[inputs]]
+id = "k"
+label = "Cardinality k"
+tooltip = "At most k assets held (portfolio) or k non-zero coefficients (regressions). The Parametric Sweep varies it."
+default = "3"
+models = ["portfolio", "subset", "logistic"]
+
+[[inputs]]
+id = "rmin"
+label = "Target Return"
+tooltip = "Minimum expected return of the portfolio; the assets' expected returns lie between 0.02 and 0.10."
+default = "0.06"
+models = ["portfolio"]
+
+[[inputs]]
+id = "C"
+label = "Capacity C"
+tooltip = "Capacity of the knapsack; the 20 items have mean weights between 1 and 5. The Parametric Sweep varies it."
+default = "15"
+models = ["knapsack"]
+
+[[inputs]]
+id = "solver"
+label = "Conic Solver"
+tooltip = "Continuous conic solver used by Pajarito for its subproblems. Clarabel: interior point, fast and robust on second-order and exponential cones. Hypatia: interior point, supports every cone, but can stall on some subproblems."
+kind = "select"
+default = "Clarabel"
+newRow = true
+
+[[inputs.options]]
+value = "Clarabel"
+label = "Clarabel"
+
+[[inputs.options]]
+value = "Hypatia"
+label = "Hypatia"
+
+[miniCharts]
+# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
+
+[miniCharts.portfolio]
+# Bars with only a few assets held
+svg = '''
+var s = '', h = [0, 22, 0, 0, 14, 0, 9, 0];
+for (var i = 0; i < h.length; i++) { s += '<rect x="' + (7 + i * 5.2) + '" y="' + (58 - Math.max(h[i], 1)) + '" width="4" height="' + Math.max(h[i], 1) + '" fill="currentColor" fill-opacity="' + (h[i] ? 0.6 : 0.2) + '"/>'; }
+return s + '<line x1="6" y1="58" x2="49" y2="58" stroke="currentColor" stroke-width="0.6" opacity="0.5"/>';
+'''
+
+[miniCharts.subset]
+# A fitted line through points
+svg = '''
+var s = '', p = [[10, 52], [16, 48], [22, 46], [28, 40], [34, 38], [40, 31], [46, 28]];
+p.forEach(function (q) { s += '<circle cx="' + q[0] + '" cy="' + q[1] + '" r="1.8" fill="currentColor" opacity="0.6"/>'; });
+return s + '<line x1="8" y1="54" x2="48" y2="26" stroke="currentColor" stroke-width="1.3"/>';
+'''
+
+[miniCharts.logistic]
+# An S-shaped curve
+svg = '''
+var s = '', d = '';
+for (var i = 0; i <= 20; i++) { var x = 8 + i * 2, y = 58 - 30 / (1 + Math.exp(-(i - 10) / 2)); d += (i ? ' L' : 'M') + x + ',' + y.toFixed(1); }
+return s + '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.4"/>';
+'''
+
+[miniCharts.knapsack]
+# Items stacked in a box up to the capacity line
+svg = '''
+var s = '', h = [9, 6, 11, 7], y = 58;
+for (var i = 0; i < h.length; i++) { y -= h[i]; s += '<rect x="16" y="' + y + '" width="22" height="' + (h[i] - 1) + '" fill="currentColor" fill-opacity="0.55"/>'; }
+s += '<path d="M14,22 L14,58 L40,58 L40,22" fill="none" stroke="currentColor" stroke-width="1"/>';
+return s + '<line x1="10" y1="24" x2="44" y2="24" stroke="currentColor" stroke-width="0.8" stroke-dasharray="2,2"/>';
+'''
+
+[[codeBranches]]
+model = "portfolio"
+code = '''
+using JuMP, Pajarito, HiGHS, {{solver}}, LinearAlgebra, Random
+
+Random.seed!(1)
+n = 12  # number of assets
+k = {{k}}  # hold at most k assets
+rmin = {{rmin}}  # target expected return
+F = randn(n, n) ./ 4
+Sigma = F' * F + 0.01I  # covariance of the returns
+mu = 0.02 .+ 0.08 .* rand(n)  # expected returns
+L = cholesky(Symmetric(Sigma)).U  # portfolio risk = norm(L * w)
+
+# Pajarito: outer approximation with a MILP master (HiGHS) and conic subproblems ({{solver}})
+conic = {{solver}}.Optimizer
+pajarito() = optimizer_with_attributes(Pajarito.Optimizer,
+    "oa_solver" => optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true),
+    "conic_solver" => optimizer_with_attributes(conic, MOI.Silent() => true))
+
+model = Model(pajarito())
+set_silent(model)
+@variable(model, w[1:n] >= 0)  # portfolio weights
+@variable(model, z[1:n], Bin)  # z[i] = 1 when asset i is held
+@variable(model, risk)
+@constraint(model, sum(w) == 1)
+@constraint(model, w .<= z)
+card = @constraint(model, sum(z) <= k)
+ret = @constraint(model, dot(mu, w) >= rmin)
+@constraint(model, [risk; L * w] in SecondOrderCone())
+@objective(model, Min, risk)
+optimize!(model)
+
+sol = value.(w); sol_name = "weight"
+ints = z  # the integer variables
+# re-solve with another cardinality (used by the Parametric Sweep)
+resolve(v) = (set_normalized_rhs(card, v); optimize!(model); is_solved_and_feasible(model) ? objective_value(model) : NaN)
+grid = 1:6; param_name = "cardinality k"
+(status = termination_status(model), risk = objective_value(model), expected_return = dot(mu, sol),
+ held = findall(>(0.5), value.(z)), weights = round.(sol[value.(z) .> 0.5]; digits=3))
+'''
+
+[[codeBranches]]
+model = "subset"
+code = '''
+using JuMP, Pajarito, HiGHS, {{solver}}, LinearAlgebra, Random
+
+Random.seed!(1)
+m, p = 60, 10  # observations, candidate predictors
+xtrue = [2; -1.5; 1; zeros(p - 3)]  # only the first three predictors matter
+A = randn(m, p)
+b = A * xtrue + 0.3 * randn(m)
+k = {{k}}  # at most k non-zero coefficients
+M = 10.0  # big-M bound on the size of a coefficient
+
+conic = {{solver}}.Optimizer
+pajarito() = optimizer_with_attributes(Pajarito.Optimizer,
+    "oa_solver" => optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true),
+    "conic_solver" => optimizer_with_attributes(conic, MOI.Silent() => true))
+
+model = Model(pajarito())
+set_silent(model)
+@variable(model, x[1:p])  # coefficients
+@variable(model, z[1:p], Bin)  # z[j] = 1 when predictor j is used
+@variable(model, t)  # residual norm
+@constraint(model, -M .* z .<= x)
+@constraint(model, x .<= M .* z)
+card = @constraint(model, sum(z) <= k)
+@constraint(model, [t; A * x - b] in SecondOrderCone())
+@objective(model, Min, t)
+optimize!(model)
+
+sol = value.(x); sol_name = "coefficient"
+ints = z
+resolve(v) = (set_normalized_rhs(card, v); optimize!(model); objective_value(model))
+grid = 1:p; param_name = "cardinality k"
+(status = termination_status(model), residual_norm = objective_value(model),
+ support = findall(>(0.5), value.(z)), coefficients = round.(sol; digits=3))
+'''
+
+[[codeBranches]]
+model = "logistic"
+code = '''
+using JuMP, Pajarito, HiGHS, {{solver}}, LinearAlgebra, Random
+
+Random.seed!(1)
+m, p = 80, 8  # observations, candidate predictors
+xtrue = [1.5; -2; 1; zeros(p - 3)]  # only the first three predictors matter
+X = randn(m, p)
+y = [rand() < 1 / (1 + exp(-dot(X[i, :], xtrue))) ? 1.0 : -1.0 for i in 1:m]  # labels +1 / -1
+k = {{k}}  # at most k non-zero coefficients
+M = 10.0  # big-M bound on the size of a coefficient
+
+conic = {{solver}}.Optimizer
+pajarito() = optimizer_with_attributes(Pajarito.Optimizer,
+    "oa_solver" => optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true),
+    "conic_solver" => optimizer_with_attributes(conic, MOI.Silent() => true))
+
+model = Model(pajarito())
+set_silent(model)
+@variable(model, x[1:p])
+@variable(model, z[1:p], Bin)
+@variable(model, t[1:m])  # t[i] >= log(1 + exp(-y[i] X[i, :]' x)), the log-loss
+@variable(model, v1[1:m])
+@variable(model, v2[1:m])
+@constraint(model, -M .* z .<= x)
+@constraint(model, x .<= M .* z)
+card = @constraint(model, sum(z) <= k)
+for i in 1:m
+    u = -y[i] * dot(X[i, :], x)
+    @constraint(model, v1[i] + v2[i] <= 1)  # exp(u - t) + exp(-t) <= 1
+    @constraint(model, [u - t[i], 1, v1[i]] in MOI.ExponentialCone())
+    @constraint(model, [-t[i], 1, v2[i]] in MOI.ExponentialCone())
+end
+@objective(model, Min, sum(t))
+optimize!(model)
+
+sol = value.(x); sol_name = "coefficient"
+ints = z
+resolve(v) = (set_normalized_rhs(card, v); optimize!(model); objective_value(model))
+grid = 1:p; param_name = "cardinality k"
+(status = termination_status(model), log_loss = objective_value(model),
+ support = findall(>(0.5), value.(z)), coefficients = round.(sol; digits=3))
+'''
+
+[[codeBranches]]
+model = "knapsack"
+code = '''
+using JuMP, Pajarito, HiGHS, {{solver}}, LinearAlgebra, Random
+
+Random.seed!(1)
+n = 20  # number of items
+a = 1 .+ 4 .* rand(n)  # mean weights
+s = 0.4 .* a .* rand(n)  # standard deviations of the weights (independent, normal)
+v = a .+ 2 .* rand(n)  # values
+C = {{C}}  # capacity
+zq = 1.645  # 95% normal quantile: total weight <= C with probability 0.95
+
+conic = {{solver}}.Optimizer
+pajarito() = optimizer_with_attributes(Pajarito.Optimizer,
+    "oa_solver" => optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true),
+    "conic_solver" => optimizer_with_attributes(conic, MOI.Silent() => true))
+
+model = Model(pajarito())
+set_silent(model)
+@variable(model, x[1:n], Bin)  # x[i] = 1 when item i is packed
+@variable(model, u)  # u >= zq * standard deviation of the total weight
+@constraint(model, [u; zq .* s .* x] in SecondOrderCone())
+card = @constraint(model, dot(a, x) + u <= C)
+@objective(model, Max, dot(v, x))
+optimize!(model)
+
+sol = value.(x); sol_name = "packed"
+ints = x
+resolve(c) = (set_normalized_rhs(card, c); optimize!(model); objective_value(model))
+grid = 5:5:40; param_name = "capacity C"
+(status = termination_status(model), value = objective_value(model), items = findall(>(0.5), sol),
+ mean_weight = round(dot(a, sol); digits=3), weight_95pct = round(dot(a, sol) + zq * norm(s .* sol); digits=3))
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "solution-bars"
+label = "Solution"
+desc = "The optimal weights, coefficients, or packed items; zeros are the variables switched off by the integer part"
+code = '''
+using Plots
+
+bar(sol, xlabel="index", ylabel=sol_name, legend=false, xticks=1:length(sol))
+'''
+
+[[actionGroups.actions]]
+id = "problem-picture"
+label = "Problem Picture"
+desc = "Portfolio: assets by risk and return, held ones highlighted. Regressions: estimated against true coefficients. Knapsack: items by mean weight and value, packed ones highlighted"
+code = '''
+using Plots
+
+{{?model=portfolio}} held = value.(z) .> 0.5
+{{?model=portfolio}} scatter(sqrt.(diag(Sigma)), mu, label="not held", xlabel="volatility", ylabel="expected return", color=:gray)
+{{?model=portfolio}} scatter!(sqrt.(diag(Sigma))[held], mu[held], label="held", color=:red, markersize=6)
+{{?model=portfolio}} hline!([rmin], linestyle=:dash, label="target return")
+{{?model=subset|logistic}} groupedbar = [xtrue sol]
+{{?model=subset|logistic}} bar(1:length(xtrue), groupedbar[:, 1], bar_width=0.4, label="true", xlabel="predictor", ylabel="coefficient", xticks=1:length(xtrue))
+{{?model=subset|logistic}} bar!((1:length(xtrue)) .+ 0.4, groupedbar[:, 2], bar_width=0.4, label="estimated")
+{{?model=knapsack}} packed = sol .> 0.5
+{{?model=knapsack}} scatter(a, v, xerror=zq .* s, label="not packed (bars: 95% weight range)", xlabel="mean weight", ylabel="value", color=:gray)
+{{?model=knapsack}} scatter!(a[packed], v[packed], label="packed", color=:red, markersize=6)
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "feasibility"
+label = "Feasibility Check"
+desc = "Termination and primal status, how far the integer variables are from whole numbers, and any violated constraint"
+code = '''
+(termination = termination_status(model), primal = primal_status(model),
+ integrality = maximum(v -> abs(v - round(v)), value.(ints)),  # about 0
+ violated = primal_feasibility_report(model; atol=1e-6))  # empty Dict = feasible
+'''
+
+[[actionGroups.actions]]
+id = "relaxation-gap"
+label = "Relaxation Gap"
+desc = "Drop the integrality, solve the continuous conic problem, and compare: the gap is what the integer constraints cost"
+code = '''
+mip = objective_value(model)
+undo = relax_integrality(model)
+set_optimizer(model, conic); set_silent(model); optimize!(model)
+relaxed = objective_value(model)
+fractional = count(v -> 1e-6 < abs(v - round(v)), value.(ints))
+set_optimizer(model, pajarito()); set_silent(model); undo(); optimize!(model)  # back to the mixed-integer problem
+(mixed_integer = mip, relaxation = relaxed, relative_gap = abs(mip - relaxed) / (1e-9 + abs(mip)),
+ fractional_in_relaxation = fractional)
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "parametric"
+label = "Parametric Sweep"
+desc = "The optimal value as the cardinality k (or the capacity C) changes"
+code = '''
+using Plots
+
+vals = resolve.(grid)
+{{?model=portfolio|subset|logistic}} resolve(k)  # restore the original problem and solution
+{{?model=knapsack}} resolve(C)
+plot(grid, vals, marker=:circle, xlabel=param_name, ylabel="optimal value", legend=false)
+'''
+
+[[actionGroups.actions]]
+id = "holdout"
+label = "Holdout Error"
+desc = "Fit with each k on the training data and score fresh data from the same model: the error stops falling once k reaches the true support"
+models = ["subset", "logistic"]
+code = '''
+Random.seed!(2)
+{{?model=subset}} Atest = randn(200, p); btest = Atest * xtrue + 0.3 * randn(200)
+{{?model=logistic}} Xtest = randn(200, p); ytest = [rand() < 1 / (1 + exp(-dot(Xtest[i, :], xtrue))) ? 1.0 : -1.0 for i in 1:200]
+{{?model=subset}} score(kk) = (resolve(kk); (k = kk, test_rmse = norm(Atest * value.(x) - btest) / sqrt(200)))
+{{?model=logistic}} score(kk) = (resolve(kk); (k = kk, test_accuracy = sum(sign.(Xtest * value.(x)) .== ytest) / 200))
+res = score.(1:p)
+resolve(k)  # restore the original problem and solution
+res
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "solver-compare"
+label = "Conic Solver Comparison"
+desc = "Pajarito with Hypatia and with Clarabel as the conic subproblem solver: status, objective and time"
+code = '''
+using Hypatia, Clarabel
+
+res = map(["Hypatia" => Hypatia.Optimizer, "Clarabel" => Clarabel.Optimizer]) do (name, opt)
+    global conic = opt
+    set_optimizer(model, pajarito()); set_silent(model)
+    s = @elapsed optimize!(model)
+    (conic_solver = name, status = termination_status(model), objective = objective_value(model), seconds = s)
+end
+global conic = {{solver}}.Optimizer
+set_optimizer(model, pajarito()); set_silent(model); optimize!(model)  # back on the chosen solver
+res
+'''
+
+[[actionGroups.actions]]
+id = "round-heuristic"
+label = "vs Rounding Heuristic"
+desc = "Solve the continuous relaxation, round it to an integer solution, and compare with the exact mixed-integer optimum"
+code = '''
+mip = objective_value(model)
+undo = relax_integrality(model)
+set_optimizer(model, conic); set_silent(model); optimize!(model)
+r = value.(ints)
+set_optimizer(model, pajarito()); set_silent(model); undo()
+{{?model=portfolio|subset|logistic}} keep = partialsortperm(r, 1:k, rev=true)  # the k largest relaxed indicators
+{{?model=portfolio|subset|logistic}} fixed = @constraint(model, ints .== [i in keep ? 1.0 : 0.0 for i in eachindex(r)])
+{{?model=knapsack}} fixed = @constraint(model, ints .== floor.(r .+ 1e-6))  # keep only the items packed whole
+optimize!(model)
+heuristic = is_solved_and_feasible(model) ? objective_value(model) : NaN
+delete.(model, fixed)
+optimize!(model)  # back to the exact solution
+(exact = mip, rounded_relaxation = heuristic, relative_loss = abs(heuristic - mip) / (1e-9 + abs(mip)))
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "support"
+label = "Selected Variables"
+desc = "Which assets, predictors, or items the integer part selects, with their values"
+code = '''
+on = findall(>(0.5), value.(ints))
+{{?model=portfolio}} [(asset = i, weight = round(sol[i]; digits=3), expected_return = round(mu[i]; digits=3), volatility = round(sqrt(Sigma[i, i]); digits=3)) for i in on]
+{{?model=subset|logistic}} [(predictor = j, estimate = round(sol[j]; digits=3), truth = xtrue[j]) for j in on]
+{{?model=knapsack}} [(item = i, value = round(v[i]; digits=3), mean_weight = round(a[i]; digits=3), sd_weight = round(s[i]; digits=3)) for i in on]
+'''
+
+[[actionGroups.actions]]
+id = "price-of-k"
+label = "Price of the Integer Constraint"
+desc = "Portfolio: the risk of earning 1 point more expected return, and the risk with no cardinality limit. Others: the value gained by one more k, or by one more unit of capacity"
+code = '''
+{{?model=portfolio}} base = objective_value(model)
+{{?model=portfolio}} set_normalized_rhs(ret, dot(mu, sol) + 0.01); optimize!(model); tighter = objective_value(model)
+{{?model=portfolio}} set_normalized_rhs(ret, rmin); set_normalized_rhs(card, n); optimize!(model); free = objective_value(model)
+{{?model=portfolio}} set_normalized_rhs(card, k); optimize!(model)  # restore
+{{?model=portfolio}} (risk = base, risk_return_up_1pt = tighter, risk_no_cardinality_limit = free)
+{{?model=subset|logistic}} (value_k = resolve(k), value_k_plus_1 = resolve(k + 1), value_k_again = resolve(k))
+{{?model=knapsack}} (value_C = resolve(C), value_C_plus_1 = resolve(C + 1), value_C_again = resolve(C))
+'''

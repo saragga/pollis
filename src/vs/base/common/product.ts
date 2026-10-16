@@ -249,7 +249,6 @@ export interface IProductConfiguration {
 	readonly embedded?: IEmbeddedProductConfiguration;
 
 	readonly poweredBy?: {
-		readonly julia?: string;
 		readonly codeoss?: string;
 	};
 

@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------------------------
  *  Copyright (c) 2026 Antonio Saragga Seabra
- *  Licensed under the GNU Affero General Public License v3.0 or later. See LICENSE.txt in the project root for license information.
+ *  Licensed under the GNU Affero General Public License v3.0. See LICENSE.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
 import { encodeHex, streamToBuffer, VSBuffer } from '../../../../base/common/buffer.js';
@@ -29,8 +29,8 @@ import { IWorkbenchContribution, registerWorkbenchContribution2, WorkbenchPhase 
 import { IPathService } from '../../../services/path/common/pathService.js';
 import { parseToml, TomlValue } from '../../model/browser/common/tomlPanelData.js';
 
-// New and updated Pollis content between releases: the vignettes of the New Methods library, the analytical
-// workflows and the published benchmarks. The content repository holds content.toml, a list of every entry
+// New and updated Pollis content between releases: the analytical workflows and the published benchmarks.
+// (Vignettes come with their packages: Help > Documentation > Vignettes, vignettesPage.ts.) The content repository holds content.toml, a list of every entry
 // with the dates it was added and last updated, the Pollis version it needs and its files with their SHA-256,
 // and the files, in KIND/ID/. Pollis ships the same list (media/content.toml) as it was at the release:
 // an entry of the repository updated after the shipped one, or not shipped at all, is downloaded into
@@ -38,19 +38,16 @@ import { parseToml, TomlValue } from '../../model/browser/common/tomlPanelData.j
 // written by scripts/pollis-content.jl.
 
 /** A kind of content. */
-export type ContentKind = 'vignettes' | 'workflows' | 'benchmarks';
+export type ContentKind = 'workflows' | 'benchmarks';
 
-const KINDS: readonly ContentKind[] = ['vignettes', 'workflows', 'benchmarks'];
+const KINDS: readonly ContentKind[] = ['workflows', 'benchmarks'];
 
 /** An entry of content.toml. */
 export interface IContentEntry {
 	readonly kind: ContentKind;
-	/** The entry's folder: a method's name for a vignette, a notebook library folder otherwise. */
+	/** The entry's folder: a notebook library folder. */
 	readonly id: string;
 	readonly title: string;
-	/** A vignette's topic and citation, for a vignette that Pollis does not ship. */
-	readonly topic?: string;
-	readonly citation?: string;
 	/** The date the entry was first published, `YYYY-MM-DD`: it never changes. */
 	readonly added: string;
 	/** The date its files last changed, `YYYY-MM-DD`. */
@@ -105,7 +102,7 @@ Registry.as<IConfigurationRegistry>(ConfigurationExtensions.Configuration).regis
 			type: 'boolean',
 			default: true,
 			scope: ConfigurationScope.APPLICATION,
-			markdownDescription: localize('pollisContent.check', "Check once a day for new and updated vignettes, analytical workflows and published benchmarks, published between Pollis releases. The check reads the list in the content repository on GitHub (`#{0}#`).", REPOSITORY_SETTING),
+			markdownDescription: localize('pollisContent.check', "Check once a day for new and updated analytical workflows and published benchmarks, published between Pollis releases. The check reads the list in the content repository on GitHub (`#{0}#`).", REPOSITORY_SETTING),
 		},
 		[REPOSITORY_SETTING]: {
 			type: 'string',
@@ -116,7 +113,7 @@ Registry.as<IConfigurationRegistry>(ConfigurationExtensions.Configuration).regis
 	},
 });
 
-/** The entries of a content.toml: `[[vignettes]]`, `[[workflows]]` and `[[benchmarks]]` tables. */
+/** The entries of a content.toml: `[[workflows]]` and `[[benchmarks]]` tables. */
 function contentList(text: string): IContentEntry[] {
 	const toml = parseToml(text);
 	const entries: IContentEntry[] = [];
@@ -132,8 +129,6 @@ function contentList(text: string): IContentEntry[] {
 				kind,
 				id: string(table, 'id'),
 				title: string(table, 'title'),
-				topic: string(table, 'topic') || undefined,
-				citation: string(table, 'citation') || undefined,
 				added: string(table, 'added'),
 				updated: string(table, 'updated'),
 				pollis: string(table, 'pollis'),
@@ -312,9 +307,8 @@ class PollisContentService extends Disposable implements IPollisContentService {
 
 registerSingleton(IPollisContentService, PollisContentService, InstantiationType.Delayed);
 
-/** The commands that open the page of each kind, registered by vignettesPage.ts and workflowLibrary.ts, which import this file. */
+/** The commands that open the page of each kind, registered by workflowLibrary.ts, which imports this file. */
 const PAGE_COMMANDS: Record<ContentKind, string> = {
-	vignettes: 'pollis.documentation.vignettes',
 	workflows: 'chiara.statistics.wfl_sl',
 	benchmarks: 'pollis.correctness.publishedBenchmarks',
 };
@@ -325,7 +319,6 @@ function announce(notificationService: INotificationService, commandService: ICo
 		? localize('pollisContent.newTitle', "{0} (new)", entry.title)
 		: localize('pollisContent.updatedTitle', "{0} (updated)", entry.title));
 	const labels: Record<ContentKind, string> = {
-		vignettes: localize('pollisContent.showVignettes', "Show Vignettes"),
 		workflows: localize('pollisContent.showWorkflows', "Show Workflows"),
 		benchmarks: localize('pollisContent.showBenchmarks', "Show Benchmarks"),
 	};
@@ -364,7 +357,7 @@ registerAction2(class extends Action2 {
 	constructor() {
 		super({
 			id: 'pollis.content.check',
-			title: localize2('pollisContent.checkNow', "Check for New Vignettes and Workflows"),
+			title: localize2('pollisContent.checkNow', "Check for New Workflows and Benchmarks"),
 			category: Categories.Help,
 			f1: true,
 		});
@@ -378,7 +371,7 @@ registerAction2(class extends Action2 {
 			if (changed.length) {
 				announce(notificationService, commandService, changed);
 			} else {
-				notificationService.info(localize('pollisContent.none', "No new or updated vignettes, workflows or benchmarks."));
+				notificationService.info(localize('pollisContent.none', "No new or updated workflows or benchmarks."));
 			}
 		} catch (error) {
 			notificationService.error(localize('pollisContent.failed', "Could not check for new content: {0}", toErrorMessage(error)));

@@ -545,6 +545,26 @@ registerAction2(class extends Action2 {
 	}
 });
 
+registerAction2(class extends Action2 {
+	constructor() {
+		super({
+			id: 'pollis.action.openPollisGuide',
+			title: {
+				...localize2('openPollisGuide', "The Pollis Guide"),
+				mnemonicTitle: localize({ key: 'miPollisGuide', comment: ['&& denotes a mnemonic'] }, "The Pollis &&Guide"),
+			},
+			category: Categories.Help,
+			f1: true,
+			menu: { id: MenubarHelpDocumentationMenu, group: '0_pollis', order: 2 }
+		});
+	}
+
+	run(accessor: ServicesAccessor): void {
+		const uri = FileAccess.asFileUri('vs/workbench/browser/media/pollis-guide.pdf' as AppResourcePath);
+		accessor.get(ICommandService).executeCommand(BrowserViewCommandId.Open, uri.toString(true));
+	}
+});
+
 registerHelpLink({
 	id: 'pollis.action.openCodeOssDocumentation',
 	title: localize2('openCodeOssDocumentation', "Code - OSS Documentation"),

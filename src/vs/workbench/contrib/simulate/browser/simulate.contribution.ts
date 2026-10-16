@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------------------------
  *  Copyright (c) 2026 Antonio Saragga Seabra
- *  Licensed under the GNU Affero General Public License v3.0 or later. See LICENSE.txt in the project root for license information.
+ *  Licensed under the GNU Affero General Public License v3.0. See LICENSE.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
 import { localize } from '../../../../../vs/nls.js';
@@ -38,10 +38,8 @@ MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
 // ============================================
 
 const SFSubmenuId  = new MenuId('menubarSFSubmenu');   // Sampling Foundations
-// const MCMSubmenuId = new MenuId('menubarMCMSubmenu');  // Monte Carlo Methods
 const PPLSubmenuId  = new MenuId('menubarPPLSubmenu');  // Probabilistic Programming Languages
 const TSSSubmenuId  = new MenuId('menubarTSSSubmenu');  // Time-Series Simulation
-// const NLSSubmenuId = new MenuId('menubarNLSSubmenu');  // Nonlinear Systems
 const SDESubmenuId  = new MenuId('menubarSDESubmenu');  // Stochastic Differential Equations
 const ABSSubmenuId  = new MenuId('menubarABSSubmenu');  // Agent-Based Simulation
 const NCMSubmenuId  = new MenuId('menubarNCMSubmenu');  // Network Models
@@ -56,17 +54,6 @@ MenuRegistry.appendMenuItem(MenuId.MenubarSimulateMenu, {
 	order: 1,
 });
 
-// MenuRegistry.appendMenuItem(MenuId.MenubarSimulateMenu, {
-// 	group: '1_simulation',
-// 	command: { id: 'chiara.simulate.mc.standard', precondition: ContextKeyExpr.false(), title: localize('mc.standard', 'Standard Monte Carlo') },
-// 	order: 1,
-// }); // MonteCarloMeasurements.jl
-
-// MenuRegistry.appendMenuItem(MenuId.MenubarSimulateMenu, {
-// 	group: '1_simulation',
-// 	command: { id: 'chiara.simulate.mc.quasi', precondition: ContextKeyExpr.false(), title: localize('mc.quasi', 'Quasi-Monte Carlo') },
-// 	order: 2,
-// }); // QuasiMonteCarlo.jl
 
 MenuRegistry.appendMenuItem(MenuId.MenubarSimulateMenu, {
 	group: '1_simulation',
@@ -93,19 +80,6 @@ MenuRegistry.appendMenuItem(MenuId.MenubarSimulateMenu, {
 }); // Bootstrap.jl
 
 
-// MenuRegistry.appendMenuItem(MenuId.MenubarSimulateMenu, {
-//	group: '1_simulation',
-//	command: { id: 'chiara.simulate.mc.vr', precondition: ContextKeyExpr.false(), title: localize('mc.vr', 'Variance Reduction') },
-//	order: 5,
-//});
-
-// MenuRegistry.appendMenuItem(MenuId.MenubarSimulateMenu, {
-//	group: '1_simulation',
-//	command: { id: 'chiara.simulate.mc.rare', precondition: ContextKeyExpr.false(), title: localize('mc.rare', 'Rare-Event Simulation') },
-//	order: 2,
-//}); // Gen.jl + SciML
-
-
 MenuRegistry.appendMenuItem(MenuId.MenubarSimulateMenu, {
 	group: '2_simulation',
 	submenu: PPLSubmenuId,
@@ -121,13 +95,6 @@ MenuRegistry.appendMenuItem(MenuId.MenubarSimulateMenu, {
 	},
 	order: 1,
 }); // MonteCarloMeasurements.jl
-
-
-// MenuRegistry.appendMenuItem(MenuId.MenubarSimulateMenu, {
-//	group: '1_timeseries',
-//	command: { id: 'chiara.statistics.timeseries.rsm', precondition: ContextKeyExpr.false(), title: localize('timeseries.rsm', 'Regime-Switching Models') },
-//	order: 4,
-//});
 
 
 MenuRegistry.appendMenuItem(MenuId.MenubarSimulateMenu, {
@@ -216,7 +183,6 @@ MenuRegistry.appendMenuItem(SFSubmenuId, {
 }); // Copulas.jl
 
 
-
 // ============================================
 // SUBMENU: PROBABILISTIC PROGRAMMING LANGUAGES
 // ============================================
@@ -234,41 +200,16 @@ MenuRegistry.appendMenuItem(PPLSubmenuId, {
 }); // GraphPPL.jl — factor graph DSL, backend for RxInfer.jl
 
 
-
 // ============================================
 // SUBMENU: TIME-SERIES SIMULATION
 // ============================================
 
-// MenuRegistry.appendMenuItem(TSSSubmenuId, {
-// 	group: '1_timeseries',
-// 	command: { id: 'chiara.statistics.timeseries.arima', precondition: ContextKeyExpr.false(), title: localize('timeseries.arima', 'ARIMAX Processes') },
-// 	order: 1,
-// }); // ARFIMA.jl
-
-// MenuRegistry.appendMenuItem(TSSSubmenuId, {
-// 	group: '1_timeseries',
-// 	command: { id: 'chiara.statistics.timeseries.var', precondition: ContextKeyExpr.false(), title: localize('timeseries.var', 'VAR/VECM Systems') },
-// 	order: 2,
-// });
-
-// MenuRegistry.appendMenuItem(TSSSubmenuId, {
-// 	group: '1_timeseries',
-// 	command: { id: 'chiara.statistics.timeseries.garch', precondition: ContextKeyExpr.false(), title: localize('timeseries.garch', 'GARCH-Type Models') },
-// 	order: 3,
-// });
-
-// MenuRegistry.appendMenuItem(TSSSubmenuId, {
-//	group: '1_timeseries',
-//	command: { id: 'chiara.statistics.timeseries.rsm', precondition: ContextKeyExpr.false(), title: localize('timeseries.rsm', 'Regime-Switching Models') },
-//	order: 4,
-//});
 
 MenuRegistry.appendMenuItem(TSSSubmenuId, {
 	group: '1_timeseries',
 	command: { id: 'chiara.statistics.timeseries.ssm', title: localize('timeseries.ssm', 'State Space Models') },
 	order: 5,
 }); // StateSpaceModels.jl, DifferentialEquations.jl
-
 
 
 // ============================================
@@ -344,7 +285,6 @@ MenuRegistry.appendMenuItem(NCMSubmenuId, {
 	command: { id: 'chiara.simulate.crn', title: localize('simulate.crn', 'Reaction Network Systems') },
 	order: 1,
 }); // Catalyst.jl
-
 
 
 // ============================================
