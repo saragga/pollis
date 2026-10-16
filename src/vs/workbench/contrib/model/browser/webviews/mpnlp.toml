@@ -196,6 +196,22 @@ label = "Mixed-Integer NLP (MINLP)"
 id = "gnlp"
 label = "Global NLP"
 
+[[bullets]]
+text = "Local Optima"
+detail = "Ipopt's interior-point method finds a point satisfying the KKT conditions; for nonconvex problems it may be only a local optimum"
+
+[[bullets]]
+text = "Discrete Decisions"
+detail = "Mixed-integer NLP adds binary or integer variables, solved by branch and bound with NLP relaxations (Juniper, SCIP)"
+
+[[bullets]]
+text = "Global Optimality"
+detail = "Spatial branch and bound with convex relaxations certifies the global optimum of a nonconvex problem (EAGO, SCIP, Couenne)"
+
+[[bullets]]
+text = "Checking a Solution"
+detail = "Multi-start, KKT conditions, active constraints and their sensitivities"
+
 [[decisionRows]]
 task = "NLP"
 context = "Smooth nonlinear objective and constraints, continuous variables"

@@ -215,6 +215,22 @@ label = "Profile Likelihood"
 id = "bayes"
 label = "Bayesian Inference"
 
+[[bullets]]
+text = "Identifiability First"
+detail = "Structural identifiability checks whether the parameters could be recovered from perfect data on the chosen outputs, before any fitting"
+
+[[bullets]]
+text = "Fitting by Optimisation"
+detail = "Maximum likelihood from one start or many; the waterfall plot shows whether the best fit is found repeatedly"
+
+[[bullets]]
+text = "Uncertainty"
+detail = "Profile likelihoods give confidence intervals, which may be asymmetric or open-ended, and show practical identifiability"
+
+[[bullets]]
+text = "Bayesian Inference"
+detail = "Posterior distributions from priors and the data, sampled with NUTS or HMC"
+
 [[decisionRows]]
 task = "Structural Identifiability"
 context = "Recoverability check"

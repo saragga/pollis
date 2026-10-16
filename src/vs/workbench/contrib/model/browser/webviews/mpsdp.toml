@@ -204,6 +204,22 @@ label = "Semidefinite Programming"
 id = "sdprelax"
 label = "SDP Relaxation"
 
+[[bullets]]
+text = "Matrix Variables"
+detail = "Optimise over a symmetric matrix that must be positive semidefinite, with a linear objective and linear constraints, written in JuMP"
+
+[[bullets]]
+text = "Where It Appears"
+detail = "Eigenvalue bounds, covariance and kernel fitting, and linear matrix inequalities in control"
+
+[[bullets]]
+text = "Relaxations of Hard Problems"
+detail = "Lifting x x' to a matrix gives a bound for combinatorial problems such as max-cut, rounded back to a solution (Goemans-Williamson)"
+
+[[bullets]]
+text = "Certificates"
+detail = "The dual matrix, duality gap, eigenvalues and rank of the solution, from interior-point and first-order solvers"
+
 [[decisionRows]]
 task = "Semidefinite Programming"
 context = "Optimising over a positive semidefinite matrix: eigenvalue bounds, covariance and kernel fitting, control (LMIs)"

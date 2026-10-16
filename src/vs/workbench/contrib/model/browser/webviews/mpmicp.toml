@@ -135,6 +135,22 @@ label = "Sparse Logistic Regression"
 id = "knapsack"
 label = "Chance-Constrained Knapsack"
 
+[[bullets]]
+text = "Cones plus Integers"
+detail = "A convex conic model (second-order, exponential or positive semidefinite cones) in which some variables must also be integer or binary"
+
+[[bullets]]
+text = "Outer Approximation"
+detail = "Pajarito.jl alternates a mixed-integer linear master problem (HiGHS) with continuous conic subproblems (Clarabel or Hypatia), adding cuts until the bounds meet"
+
+[[bullets]]
+text = "Sparsity and Selection"
+detail = "At most k assets, predictors or items, through binary variables linked to the continuous ones"
+
+[[bullets]]
+text = "The Price of Integrality"
+detail = "The relaxation gap and a rounding heuristic show how much the integer constraints matter"
+
 [[decisionRows]]
 task = "Cardinality Portfolio"
 context = "Minimum-risk portfolio that may hold at most k assets, with a target expected return"

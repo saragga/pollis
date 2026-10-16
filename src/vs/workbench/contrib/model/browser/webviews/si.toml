@@ -192,6 +192,22 @@ label = "N4SID"
 id = "oe"
 label = "OE"
 
+[[bullets]]
+text = "Models from Data"
+detail = "Estimate a dynamic model of a system from measured inputs and outputs, with ControlSystemIdentification.jl"
+
+[[bullets]]
+text = "Transfer-Function Families"
+detail = "ARX, ARMAX and output-error models differ in how they describe the noise; ARX is a fast least-squares fit"
+
+[[bullets]]
+text = "State-Space by Subspace Methods"
+detail = "N4SID estimates state-space models directly, including systems with several inputs and outputs"
+
+[[bullets]]
+text = "Validation"
+detail = "Simulated and k-step predicted outputs, fit percentage, residual analysis, Bode and pole-zero plots, and model order selection"
+
 [[decisionRows]]
 task = "ARX"
 context = "A(q)y = B(q)u + e"

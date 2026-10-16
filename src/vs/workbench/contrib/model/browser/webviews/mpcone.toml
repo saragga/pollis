@@ -234,6 +234,22 @@ label = "Exponential Cone"
 id = "powcone"
 label = "Power Cone"
 
+[[bullets]]
+text = "Convex Problems as Cones"
+detail = "JuMP rewrites convex objectives and constraints as cone constraints, which interior-point solvers handle reliably"
+
+[[bullets]]
+text = "Three Cones, Many Models"
+detail = "Second-order cones for norms and risks, exponential cones for logs and entropy, power cones for p-norms and geometric means"
+
+[[bullets]]
+text = "Certified Optima"
+detail = "Duality gives a bound and dual variables, so a solution comes with a certificate of optimality or infeasibility"
+
+[[bullets]]
+text = "Several Solvers"
+detail = "Clarabel, COSMO, SCS and ECOS compared on the same model"
+
 [[decisionRows]]
 task = "Convex"
 context = "Convex objective over linear or convex constraints"

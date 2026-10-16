@@ -285,8 +285,8 @@ const desktopResourcePatterns = [
 
 	// Pollis: Sessions prompts and skills omitted; the Agents window is not shipped.
 
-	// Pollis app documents (Release Notes, License)
-	'vs/workbench/browser/media/pollis-*.md',
+	// Pollis app documents (Release Notes, License, Notice, A Tour of Pollis, The Pollis Guide)
+	'vs/workbench/browser/media/pollis-*.{md,pdf}',
 
 	// Model - bundled wikis and notebooks
 	'vs/workbench/contrib/model/browser/media/wiki/**/*.md',

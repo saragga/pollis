@@ -18,7 +18,7 @@ import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
 import { CHOOSE_AGENT_COMMAND_ID, CODING_AGENTS, findProgram, terminalEnvironment } from './pollisAgents.js';
 
-// Compose > Local Reasoning Models > Local Model Runners: a page of the programs that serve local models on
+// Compose > Local Models > Local Model Runners: a page of the programs that serve local models on
 // this computer, each marked installed or with a link to its install page, and how each coding agent of
 // Compose > Coding Agents reaches each runner. A model downloaded from Hugging Face or Kaggle (the other two
 // entries of the menu) runs only through a runner. Which runners are installed is looked up again when the

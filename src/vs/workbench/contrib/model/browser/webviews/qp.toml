@@ -196,6 +196,22 @@ label = "Quadratic Constraints QP (QCQP)"
 id = "miqp"
 label = "Mixed-Integer QP (MIQP)"
 
+[[bullets]]
+text = "Quadratic Objective"
+detail = "Minimise a quadratic function under linear constraints, as in minimum-variance portfolios, constrained least squares and MPC"
+
+[[bullets]]
+text = "Quadratic Constraints"
+detail = "QCQP adds quadratic limits such as a cap on risk, energy or distance"
+
+[[bullets]]
+text = "Discrete Choices"
+detail = "Mixed-integer QP limits the number of assets or imposes on/off decisions, solved by branch and bound"
+
+[[bullets]]
+text = "Convexity Matters"
+detail = "A positive semidefinite matrix makes the problem convex, so any local optimum is global; dual prices show what each constraint costs"
+
 [[decisionRows]]
 task = "Quadratic Programming (QP)"
 context = "Quadratic objective, linear constraints: minimum-variance portfolios, least squares with constraints, MPC"

@@ -161,7 +161,7 @@ function pageHtml(): string {
 		routingLink: localize('codingAgent.routingLink', "Compose > Orchestration > Model Routing"),
 		runnersTitle: localize('codingAgent.runnersTitle', "Local Model Runners"),
 		runnersIntro: localize('codingAgent.runnersIntro', "A local command needs a runner, such as Ollama or LM Studio, which serves the local models. Which runners are installed, and how each agent reaches each one:"),
-		runnersLink: localize('codingAgent.runnersLink', "Compose > Local Reasoning Models > Local Model Runners"),
+		runnersLink: localize('codingAgent.runnersLink', "Compose > Local Models > Local Model Runners"),
 	};
 	return `<!DOCTYPE html>
 <html lang="en">

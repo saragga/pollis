@@ -565,6 +565,26 @@ registerAction2(class extends Action2 {
 	}
 });
 
+registerAction2(class extends Action2 {
+	constructor() {
+		super({
+			id: 'pollis.action.openPollisAIPlus',
+			title: {
+				...localize2('openPollisAIPlus', "Pollis AI+"),
+				mnemonicTitle: localize({ key: 'miPollisAIPlus', comment: ['&& denotes a mnemonic'] }, "Pollis &&AI+"),
+			},
+			category: Categories.Help,
+			f1: true,
+			menu: { id: MenubarHelpDocumentationMenu, group: '0_pollis', order: 3 }
+		});
+	}
+
+	run(accessor: ServicesAccessor): void {
+		const uri = FileAccess.asFileUri('vs/workbench/browser/media/pollis-ai-brochure.pdf' as AppResourcePath);
+		accessor.get(ICommandService).executeCommand(BrowserViewCommandId.Open, uri.toString(true));
+	}
+});
+
 registerHelpLink({
 	id: 'pollis.action.openCodeOssDocumentation',
 	title: localize2('openCodeOssDocumentation', "Code - OSS Documentation"),

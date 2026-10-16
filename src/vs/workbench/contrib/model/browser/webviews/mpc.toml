@@ -153,6 +153,22 @@ label = "Linear MPC"
 id = "nonlinmpc"
 label = "Nonlinear MPC"
 
+[[bullets]]
+text = "Receding Horizon"
+detail = "At each sampling time, optimise the inputs over a prediction horizon, apply only the first move, then measure and repeat"
+
+[[bullets]]
+text = "Constraints Built In"
+detail = "Limits on inputs, their rate of change and outputs are part of the optimisation, not added afterwards"
+
+[[bullets]]
+text = "Linear and Nonlinear"
+detail = "Linear MPC solves a convex quadratic program at each step; nonlinear MPC solves a nonlinear program with the full model, with the state from a Kalman filter"
+
+[[bullets]]
+text = "Tuning and Robustness"
+detail = "Horizon, weights, disturbance rejection and plant-model mismatch, studied in closed-loop simulations with ModelPredictiveControl.jl"
+
 [[decisionRows]]
 task = "Linear MPC"
 context = "Plants well described by a linear model around the operating point; fast sampling"

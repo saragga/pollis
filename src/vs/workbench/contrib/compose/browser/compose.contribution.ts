@@ -20,6 +20,7 @@ import './pollisContent.js';
 import './pollisUpdate.js';
 import './vignettesPage.js';
 import { LOCAL_MODEL_RUNNERS_COMMAND_ID } from './localModelRunnersPage.js';
+import { MCP_SERVERS_COMMAND_ID } from './mcpServersPage.js';
 import { MODEL_ROUTING_COMMAND_ID } from './modelRouting.js';
 import { BROWSE_OPERATIONAL_WORKFLOWS_COMMAND_ID } from './operationalWorkflows.js';
 import { EXPORT_NOTEBOOK_LATEX_COMMAND_ID, MAKE_NOTEBOOK_SLIDES_COMMAND_ID, POLISH_REPORT_COMMAND_ID } from './reports.js';
@@ -55,7 +56,7 @@ const HelpPracticeMenu = new MenuId('menubarHelpPracticeMenu');
 
 // ------------------- COMPOSE ------------------------
 
-// The Compose menu: Coding Agents and Agent Skills (codingAgentPage.ts, pollisAgents.ts), Orchestration, Local Reasoning Models, New Panels and Toolboxes, New Methods, Workflows, Reports, Learning Activities,
+// The Compose menu: Coding Agents and Agent Skills (codingAgentPage.ts, pollisAgents.ts), MCP Servers (mcpServersPage.ts), Orchestration, Local Models, New Panels and Toolboxes, New Methods, Workflows, Reports, Learning Activities,
 // Correctness Tests, Horse Races, Compile Galore and Collaboration, which combine panels. The Toolbox Panels page (toolboxPanelsPage.ts) opens from
 // the Edit button of an installed toolbox in the Extensions pane.
 MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
@@ -75,7 +76,7 @@ MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
 MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
 	group: '1_compose',
 	submenu: LocalModelsMenu,
-	title: localize('pollisLocalModels.menu', "Local Reasoning Models"),
+	title: localize('pollisLocalModels.menu', "Local Models"),
 	order: 1,
 });
 
@@ -92,11 +93,18 @@ MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
 	order: 3,
 });
 
+// MCP Servers, the data servers the agent can look things up in
+MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
+	group: '1_compose',
+	command: { id: MCP_SERVERS_COMMAND_ID, title: localize('mcpServers.menu', "MCP Servers") },
+	order: 4,
+});
+
 MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
 	group: '1_compose',
 	submenu: OrchestrationMenu,
 	title: localize('pollisOrchestration.menu', "Orchestration"),
-	order: 4,
+	order: 5,
 });
 
 MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
@@ -198,7 +206,7 @@ MenuRegistry.appendMenuItem(NewPanelsMenu, {
 
 
 // ==============================================================
-// SUBMENU: Local Reasoning Models, the models to download (the panels of explore.contribution.ts) and the
+// SUBMENU: Local Models, the models to download (the panels of explore.contribution.ts) and the
 // runners that serve them on this computer (localModelRunnersPage.ts)
 // ==============================================================
 
