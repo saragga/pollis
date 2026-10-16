@@ -216,10 +216,10 @@ jobs:
 
             **Windows (x64)**
 
-            1. Download **[⬇ Pollis for Windows](https://github.com/${{ github.repository }}/releases/download/${{ inputs.release }}/Pollis-win32-x64.zip)** (`Pollis-win32-x64.zip`).
-            2. Unzip it (right-click it in Downloads, Extract All..., Extract).
-            3. Open the folder `Pollis-win32-x64`.
-            4. Open it by double-clicking `Pollis.exe`. If SmartScreen warns, choose More info, then Run anyway.
+            1. Download **[⬇ Pollis for Windows](https://github.com/${{ github.repository }}/releases/download/${{ inputs.release }}/PollisSetup-x64.exe)** (`PollisSetup-x64.exe`).
+            2. Double-click it in Downloads. If SmartScreen warns, choose More info, then Run anyway.
+            3. Click Install. No administrator rights are needed.
+            4. Pollis opens when the installation finishes. Later, open it from the Start menu or the desktop icon.
 
             **Linux (x64)**
 
