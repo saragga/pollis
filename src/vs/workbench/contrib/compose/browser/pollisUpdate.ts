@@ -79,7 +79,8 @@ registerAction2(class extends Action2 {
 			},
 			category: Categories.Help,
 			f1: true,
-			menu: [{ id: MenuId.MenubarHelpMenu, group: '1_welcome', order: 5 }],
+			// Above Search Feature Requests (helpActions.ts), which is in '4_feedback' order 2
+			menu: [{ id: MenuId.MenubarHelpMenu, group: '4_feedback', order: 1 }],
 		});
 	}
 	async run(accessor: ServicesAccessor): Promise<void> {

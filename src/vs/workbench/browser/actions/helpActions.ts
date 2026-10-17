@@ -585,6 +585,26 @@ registerAction2(class extends Action2 {
 	}
 });
 
+registerAction2(class extends Action2 {
+	constructor() {
+		super({
+			id: 'pollis.action.openTourOfPollisAIPlus',
+			title: {
+				...localize2('openTourOfPollisAIPlus', "A Tour of Pollis AI+"),
+				mnemonicTitle: localize({ key: 'miTourOfPollisAIPlus', comment: ['&& denotes a mnemonic'] }, "A Tour of Pollis AI&&+"),
+			},
+			category: Categories.Help,
+			f1: true,
+			menu: { id: MenubarHelpDocumentationMenu, group: '0_pollis', order: 4 }
+		});
+	}
+
+	run(accessor: ServicesAccessor): void {
+		const uri = FileAccess.asFileUri('vs/workbench/browser/media/pollis-ai-tour.pdf' as AppResourcePath);
+		accessor.get(ICommandService).executeCommand(BrowserViewCommandId.Open, uri.toString(true));
+	}
+});
+
 registerHelpLink({
 	id: 'pollis.action.openCodeOssDocumentation',
 	title: localize2('openCodeOssDocumentation', "Code - OSS Documentation"),

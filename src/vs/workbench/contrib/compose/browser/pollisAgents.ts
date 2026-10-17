@@ -36,7 +36,7 @@ import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWork
 import { LIBRARY_PAGE_HELPERS, LIBRARY_PAGE_STYLE } from './libraryPage.js';
 import { AgentTask, agentCommandFor } from './modelRouting.js';
 
-// Compose > New Panels and Toolboxes and Compose > New Methods hold tasks: you go there to get something
+// Compose > New Panels and Toolboxes and Compose > Methods hold tasks: you go there to get something
 // done (Create a Panel, Package a Toolbox, Write a Method...), and a coding agent of your choice does it in
 // a terminal. Compose > Coding Agents chooses that agent and Compose > Agent Skills holds the library of the skills the tasks
 // use: read them or run one with your agent; the Coding Agents page installs them in an agent. Create Panels from a Request runs Create a Panel on the request file open in the
@@ -44,7 +44,7 @@ import { AgentTask, agentCommandFor } from './modelRouting.js';
 // from the Pollis Agents plugin, Trumpingtons/pollis-skills (plugins/pollis-agents, its files listed in
 // files.json), downloaded to ~/.pollis/agents/pollis-agents each time a skill starts. The agent is
 // started with a first message that points it at the skill's SKILL.md, so any agent that reads files and
-// runs commands can follow it, whether on a cloud model or a local one. The New Methods tasks (Write a
+// runs commands can follow it, whether on a cloud model or a local one. The Methods tasks (Write a
 // Method, Write a Vignette, Prepare for Registration, in newMethods.ts, buttons on each
 // method's page) give the agent the method's folder and its test command beside the skill (skillFile).
 
@@ -447,7 +447,7 @@ type SkillsMessage =
 let skillsPage: WebviewInput | undefined;
 
 /**
- * Opens the skills page, in the look of the Workflows and New Methods libraries: a table of the
+ * Opens the skills page, in the look of the Replications and Methods libraries: a table of the
  * skills of the latest plugin, with the Compose tasks that use each, the requests that start
  * it and its files. A skill opens in the editor, or runs with the chosen coding agent.
  */

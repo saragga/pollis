@@ -14,7 +14,7 @@ import { AGENT_BADGE_CSS, AGENT_ICON } from './agentBadge.js';
 import { EXPORT_NOTEBOOK_LATEX_COMMAND_ID, MAKE_NOTEBOOK_SLIDES_COMMAND_ID, POLISH_REPORT_COMMAND_ID } from './reports.js';
 
 // Compose > Workflows > Browse Operational Workflows: the workflows that do a job on the user's own work
-// (a notebook made into a report, say), where an analytical workflow replicates an analysis. Each one is
+// (a notebook made into a report, say), where a replication (Compose > Replication) reproduces an analysis. Each one is
 // a Pollis command; the page says what it does and runs it.
 
 export const BROWSE_OPERATIONAL_WORKFLOWS_COMMAND_ID = 'pollis.workflows.browseOperational';
@@ -106,7 +106,7 @@ function openOperationalWorkflowsPage(accessor: ServicesAccessor): void {
 function pageHtml(): string {
 	const text = {
 		title: localize('operationalWorkflows.title', "Operational Workflows"),
-		intro: localize('operationalWorkflows.intro', "Each workflow does a job on your own work, where an analytical workflow replicates a published analysis. Those marked Agent are done by your coding agent and cost tokens; the others run in Pollis's Julia REPL."),
+		intro: localize('operationalWorkflows.intro', "Each workflow does a job on your own work, where a replication reproduces a published analysis. Those marked Agent are done by your coding agent and cost tokens; the others run in Pollis's Julia REPL."),
 		workflow: localize('operationalWorkflows.workflow', "Workflow"),
 		input: localize('operationalWorkflows.input', "Works On"),
 		output: localize('operationalWorkflows.output', "Gives"),

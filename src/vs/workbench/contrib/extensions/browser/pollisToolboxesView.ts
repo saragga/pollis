@@ -397,16 +397,16 @@ export class PollisToolboxesView extends ViewPane {
 				this.notificationService.prompt(Severity.Info, localize('pollisToolboxes.reload', "{0} Reload the window to use it.", done), [{
 					label: localize('pollisToolboxes.reloadNow', "Reload Now"),
 					run: () => this.hostService.reload(),
-				}]);
+				}], { sticky: true });
 				break;
 			case ExtensionRuntimeActionType.RestartExtensions:
 				this.notificationService.prompt(Severity.Info, localize('pollisToolboxes.restart', "{0} Restart the extensions to use it.", done), [{
 					label: localize('pollisToolboxes.restartExtensions', "Restart Extensions"),
 					run: () => this.extensionsWorkbenchService.updateRunningExtensions(),
-				}]);
+				}], { sticky: true });
 				break;
 			default:
-				this.notificationService.info(done);
+				this.notificationService.notify({ severity: Severity.Info, message: done, sticky: true });
 		}
 	}
 

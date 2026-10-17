@@ -19,6 +19,18 @@
 	box-sizing: border-box;
 }
 
+.monaco-workbench .notifications-list-container .notification-list-item.severity-info {
+	background-color: var(--vscode-notificationsInfo-background);
+}
+
+.monaco-workbench .notifications-list-container .notification-list-item.severity-warning {
+	background-color: var(--vscode-notificationsWarning-background);
+}
+
+.monaco-workbench .notifications-list-container .notification-list-item.severity-error {
+	background-color: var(--vscode-notificationsError-background);
+}
+
 .monaco-workbench .notifications-list-container .notification-offset-helper {
 	opacity: 0;
 	position: absolute;

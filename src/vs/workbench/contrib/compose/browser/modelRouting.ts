@@ -49,11 +49,11 @@ export interface IAgentTaskInfo {
 
 export const AGENT_TASKS: readonly IAgentTaskInfo[] = [
 	{ id: 'polish', label: localize('modelRouting.polish', "Polish with Agent"), menu: localize('modelRouting.reports', "Reports"), tier: 'light' },
-	{ id: 'writeVignette', label: localize('modelRouting.writeVignette', "Write a Vignette"), menu: localize('modelRouting.newMethods', "New Methods"), tier: 'standard' },
-	{ id: 'prepareRegistration', label: localize('modelRouting.prepareRegistration', "Prepare for Registration"), menu: localize('modelRouting.newMethods', "New Methods"), tier: 'standard' },
+	{ id: 'writeVignette', label: localize('modelRouting.writeVignette', "Write a Vignette"), menu: localize('modelRouting.newMethods', "Methods"), tier: 'standard' },
+	{ id: 'prepareRegistration', label: localize('modelRouting.prepareRegistration', "Prepare for Registration"), menu: localize('modelRouting.newMethods', "Methods"), tier: 'standard' },
 	{ id: 'packageToolbox', label: localize('modelRouting.packageToolbox', "Package a Toolbox"), menu: localize('modelRouting.newPanels', "New Panels and Toolboxes"), tier: 'standard' },
-	{ id: 'tablesFromArticle', label: localize('modelRouting.tablesFromArticle', "Tables from the Article"), menu: localize('modelRouting.newMethods', "New Methods"), tier: 'strong' },
-	{ id: 'writeMethod', label: localize('modelRouting.writeMethod', "Write a Method"), menu: localize('modelRouting.newMethods', "New Methods"), tier: 'strong' },
+	{ id: 'tablesFromArticle', label: localize('modelRouting.tablesFromArticle', "Tables from the Article"), menu: localize('modelRouting.newMethods', "Methods"), tier: 'strong' },
+	{ id: 'writeMethod', label: localize('modelRouting.writeMethod', "Write a Method"), menu: localize('modelRouting.newMethods', "Methods"), tier: 'strong' },
 	{ id: 'createPanel', label: localize('modelRouting.createPanel', "Create a Panel"), menu: localize('modelRouting.newPanels', "New Panels and Toolboxes"), tier: 'strong' },
 	{ id: 'createPanelsFromRequest', label: localize('modelRouting.createPanelsFromRequest', "Create Panels from a Request"), menu: localize('modelRouting.newPanels', "New Panels and Toolboxes"), tier: 'strong' },
 ];

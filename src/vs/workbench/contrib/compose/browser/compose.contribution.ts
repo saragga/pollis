@@ -43,9 +43,15 @@ const OrchestrationMenu = new MenuId('menubarOrchestrationMenu');
 // Formerly Explore > Access Model Repositories: the id stays, for the panel index and Pollis Views
 const LocalModelsMenu = new MenuId('menubarAMRSubmenu');
 const ReportsMenu = new MenuId('menubarReportsMenu');
+const ReplicationMenu = new MenuId('menubarReplicationMenu');
+const REPLICATE_ARTICLE_COMMAND_ID = 'pollis.replication.replicateArticle';
 const WorkflowsMenu = new MenuId('menubarWorkflowsMenu');
+const BROWSE_WORKFLOWS_COMMAND_ID = 'pollis.workflows.browse';
+const EXTRACT_WORKFLOW_COMMAND_ID = 'pollis.workflows.extract';
+const COMBINE_WORKFLOWS_COMMAND_ID = 'pollis.workflows.combine';
 const CREATE_OPERATIONAL_WORKFLOW_COMMAND_ID = 'pollis.workflows.createOperational';
 const AUTOMATIONS_COMMAND_ID = 'pollis.workflows.automations';
+// Formerly Compose > New Methods: the id stays, for the panel index and Pollis Views
 const NewMethodsMenu = new MenuId('menubarNewMethodsMenu');
 const CorrectnessMenu = new MenuId('menubarCorrectnessMenu');
 const ComparisonsMenu = new MenuId('menubarComparisonsMenu');
@@ -57,7 +63,7 @@ const HelpPracticeMenu = new MenuId('menubarHelpPracticeMenu');
 
 // ------------------- COMPOSE ------------------------
 
-// The Compose menu: Coding Agents and Agent Skills (codingAgentPage.ts, pollisAgents.ts), MCP Servers (mcpServersPage.ts), Orchestration, Local Models, New Panels and Toolboxes, New Methods, Workflows, Reports, Learning Activities,
+// The Compose menu: Coding Agents and Agent Skills (codingAgentPage.ts, pollisAgents.ts), MCP Servers (mcpServersPage.ts), Orchestration, Local Models, New Panels and Toolboxes, Replication, Methods, Workflows, Reports, Learning Activities,
 // Correctness Tests, Horse Races, Compile Galore and Collaboration, which combine panels. The Toolbox Panels page (toolboxPanelsPage.ts) opens from
 // the Edit button of an installed toolbox in the Extensions pane.
 MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
@@ -117,30 +123,45 @@ MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
 
 MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
 	group: '2_compose',
-	submenu: NewMethodsMenu,
-	title: localize('pollisNewMethods.menu', "New Methods"),
+	submenu: ReplicationMenu,
+	title: localize('pollisReplication.menu', "Replication"),
 	order: 2,
+});
+
+MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
+	group: '2_compose',
+	submenu: NewMethodsMenu,
+	title: localize('pollisMethods.menu', "Methods"),
+	order: 3,
 });
 
 MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
 	group: '2_compose',
 	submenu: WorkflowsMenu,
 	title: localize('pollisWorkflows.menu', 'Workflows'),
-	order: 3,
+	order: 4,
+});
+
+// The page of a method (newMethods.ts), formerly Compose > Methods > Create Methods: kept here while its five steps
+// (Article and Data, Write a Method, Write a Vignette, Prepare for Registration, Package and Publish) move one by one
+MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
+	group: '2_compose',
+	command: { id: CREATE_METHOD_COMMAND_ID, title: localize('compose.underConstruction', "Under Construction...") },
+	order: 5,
 });
 
 MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
 	group: '2_compose',
 	submenu: ReportsMenu,
 	title: localize('pollisReports.menu', "Reports"),
-	order: 4,
+	order: 6,
 });
 
 MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
 	group: '2_compose',
 	submenu: LearningActivitiesMenu,
 	title: localize('pollisLearningActivities.menu', "Learning Activities"),
-	order: 5,
+	order: 7,
 });
 
 // Help > Practice: studying what Compose > Learning Activities makes, after Documentation, Video Tutorials and Notebook Courses
@@ -231,24 +252,52 @@ MenuRegistry.appendMenuItem(LocalModelsMenu, {
 
 
 // ==============================================================
-// SUBMENU: Workflows
+// SUBMENU: Replication
 // ==============================================================
 
-// Analytical workflows replicate a published analysis (workflowLibrary.ts); operational ones do a job on
-// the user's own work, such as a notebook made into a report (operationalWorkflows.ts)
-MenuRegistry.appendMenuItem(WorkflowsMenu, {
-	group: '1_analytical',
-	command: { id: SEARCH_WORKFLOW_LIBRARY_COMMAND_ID, title: localize('wfl_sl.cw', "Browse Analytical Workflows...") },
+// Replications reproduce a published analysis on its public data (workflowLibrary.ts); the command id is
+// the one of the former Compose > Workflows > Browse Analytical Workflows
+MenuRegistry.appendMenuItem(ReplicationMenu, {
+	group: '1_replication',
+	command: { id: SEARCH_WORKFLOW_LIBRARY_COMMAND_ID, title: localize('replication.browse', "Browse Replications...") },
 	order: 1,
 });
 
-MenuRegistry.appendMenuItem(WorkflowsMenu, {
-	group: '1_analytical',
-	command: { id: 'chiara.statistics.wfl', title: localize('wfl.cw', "Create Analytical Workflow...") },
+// The coding agent replicates an article: not built yet
+MenuRegistry.appendMenuItem(ReplicationMenu, {
+	group: '1_replication',
+	command: { id: REPLICATE_ARTICLE_COMMAND_ID, title: localize('replication.replicateArticle', "Replicate a Classical Article...") },
 	order: 2,
 });
-// Not built yet (see internal-reports/workflows-brief.md)
-registerNotYetImplemented('chiara.statistics.wfl', localize('wfl.cw', "Create Analytical Workflow..."));
+registerNotYetImplemented(REPLICATE_ARTICLE_COMMAND_ID, localize('replication.replicateArticle', "Replicate a Classical Article..."));
+
+// ==============================================================
+// SUBMENU: Workflows
+// ==============================================================
+
+// A workflow is a flat set of procedures, each with its inputs, its outputs and what it runs: extracted from
+// a replication or a notebook, and combined with others, the independent ones run side by side. Not built yet.
+// Operational workflows do a job on the user's own work, such as a notebook made into a report (operationalWorkflows.ts)
+MenuRegistry.appendMenuItem(WorkflowsMenu, {
+	group: '1_build',
+	command: { id: BROWSE_WORKFLOWS_COMMAND_ID, title: localize('workflows.browse', "Browse Workflows...") },
+	order: 1,
+});
+registerNotYetImplemented(BROWSE_WORKFLOWS_COMMAND_ID, localize('workflows.browse', "Browse Workflows..."));
+
+MenuRegistry.appendMenuItem(WorkflowsMenu, {
+	group: '1_build',
+	command: { id: EXTRACT_WORKFLOW_COMMAND_ID, title: localize('workflows.extract', "Extract a Workflow...") },
+	order: 2,
+});
+registerNotYetImplemented(EXTRACT_WORKFLOW_COMMAND_ID, localize('workflows.extract', "Extract a Workflow..."));
+
+MenuRegistry.appendMenuItem(WorkflowsMenu, {
+	group: '1_build',
+	command: { id: COMBINE_WORKFLOWS_COMMAND_ID, title: localize('workflows.combine', "Combine Workflows...") },
+	order: 3,
+});
+registerNotYetImplemented(COMBINE_WORKFLOWS_COMMAND_ID, localize('workflows.combine', "Combine Workflows..."));
 
 MenuRegistry.appendMenuItem(WorkflowsMenu, {
 	group: '2_operational',
@@ -276,16 +325,9 @@ registerNotYetImplemented(AUTOMATIONS_COMMAND_ID, localize('workflows.automation
 
 
 // ==============================================================
-// SUBMENU: New Methods (newMethods.ts; Browse Methods is in workflowLibrary.ts). Create Methods opens the page
-// of a new method, where it is written, packaged and published; Browse Methods lists the user's methods, to go
-// on with one, and the library
+// SUBMENU: Methods, formerly New Methods (newMethods.ts; Browse Methods is in workflowLibrary.ts). Browse Methods lists
+// the user's methods, to go on with one, and the library. The page of a new method is Compose > Under Construction...
 // ==============================================================
-
-MenuRegistry.appendMenuItem(NewMethodsMenu, {
-	group: '1_write',
-	command: { id: CREATE_METHOD_COMMAND_ID, title: localize('newMethods.createMethods', "Create Methods") },
-	order: 1,
-});
 
 MenuRegistry.appendMenuItem(NewMethodsMenu, {
 	group: '3_browse',

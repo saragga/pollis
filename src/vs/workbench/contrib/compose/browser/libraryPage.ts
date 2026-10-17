@@ -3,7 +3,7 @@
  *  Licensed under the GNU Affero General Public License v3.0. See LICENSE.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-/** The style of a library page (Workflows, New Methods, Published Benchmarks, Pollis Skills): a title, an intro and a table. */
+/** The style of a library page (Replications, Methods, Published Benchmarks, Pollis Skills): a title, an intro and a table. */
 export const LIBRARY_PAGE_STYLE = `
 	* { box-sizing: border-box; }
 	body { font-family: var(--vscode-font-family); font-size: 13px; margin: 0; color: var(--vscode-foreground); background-color: var(--vscode-editor-background); }

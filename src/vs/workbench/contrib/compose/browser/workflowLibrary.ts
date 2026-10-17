@@ -48,23 +48,23 @@ interface INotebookLibrary {
 	readonly content?: ContentKind;
 }
 
-/** Compose > Workflows > Browse Analytical Workflows: famous analyses replicated from their articles. */
+/** Compose > Replication > Browse Replications: famous analyses replicated from their articles. The folder and content key stay `workflows`, for the copies already made and the content repository. */
 const WORKFLOWS: INotebookLibrary = {
 	base: 'vs/workbench/contrib/compose/browser/media/workflows',
 	userFolder: 'workflows',
-	title: localize('workflowLibrary.title', "Analytical Workflows"),
-	intro: localize('workflowLibrary.intro', "Each workflow replicates a published analysis on its public data, printing every published value beside Julia's. Click a name to open your own copy of the notebook, made in {0} the first time.", '<code>~/.pollis/workflows</code>'),
-	entry: localize('workflowLibrary.entry', "Workflow"),
-	empty: localize('workflowLibrary.empty', "The workflow library is empty."),
-	openFailed: (label, error) => localize('workflowLibrary.openFailed', "Could not open the workflow {0}: {1}", label, error),
+	title: localize('workflowLibrary.title', "Replications"),
+	intro: localize('workflowLibrary.intro', "Each replication reproduces a published analysis on its public data, printing every published value beside Julia's. Click a name to open your own copy of the notebook, made in {0} the first time.", '<code>~/.pollis/workflows</code>'),
+	entry: localize('workflowLibrary.entry', "Replication"),
+	empty: localize('workflowLibrary.empty', "There are no replications yet."),
+	openFailed: (label, error) => localize('workflowLibrary.openFailed', "Could not open the replication {0}: {1}", label, error),
 	content: 'workflows',
 };
 
-/** Compose > New Methods: methods no Julia package has, each tested on data against published results. */
+/** Compose > Methods: methods no Julia package has, each tested on data against published results. */
 const NEW_METHODS: INotebookLibrary = {
 	base: 'vs/workbench/contrib/compose/browser/media/methods',
 	userFolder: 'methods',
-	title: localize('newMethods.title', "New Methods"),
+	title: localize('newMethods.title', "Methods"),
 	intro: localize('newMethods.intro', "Each method is one no Julia package has, written out with its tests: data and the results published for them, printed beside Julia's. Without data and expected results there is no new method. The methods you started and have not published yet come first, In Progress: click a title to go on with it. Then those you published, and the library: click a name to open the page of your own copy of the method, made in {0} the first time.", '<code>~/.pollis/methods</code>'),
 	entry: localize('newMethods.entry', "Method"),
 	empty: localize('newMethods.empty', "There are no new methods yet."),
@@ -152,7 +152,7 @@ async function folderSize(fileService: IFileService, folder: URI): Promise<numbe
 }
 
 /**
- * Reads a method of the New Methods library from its method.toml: its title, description, article
+ * Reads a method of the Methods library from its method.toml: its title, description, article
  * and packages, and its inputs as datasets, by the source each names before a colon. Undefined
  * when the folder has no method.toml.
  */
@@ -459,7 +459,7 @@ function pageHtml(library: INotebookLibrary): string {
 		inProgress: localize('newMethods.inProgress', "In Progress"),
 		published: localize('newMethods.published', "Published by You"),
 		library: localize('newMethods.library.heading', "Library"),
-		noMethods: localize('newMethods.yours.none', "None: Compose > New Methods > Create Methods starts one."),
+		noMethods: localize('newMethods.yours.none', "None: Compose > Under Construction... starts one."),
 		tables: localize('newMethods.yours.tables', "Tables"),
 		tableCount: localize('newMethods.yours.tableCount', "{0} input, {1} target"),
 		delete: localize('newMethods.yours.delete', "Delete"),
@@ -663,8 +663,8 @@ registerAction2(class extends Action2 {
 	constructor() {
 		super({
 			id: SEARCH_WORKFLOW_LIBRARY_COMMAND_ID,
-			title: localize2('workflowLibrary.open', "Browse Analytical Workflows..."),
-			category: localize2('workflows.category', "Workflows"),
+			title: localize2('workflowLibrary.open', "Browse Replications..."),
+			category: localize2('replication.category', "Replication"),
 			f1: true,
 		});
 	}
@@ -692,7 +692,7 @@ registerAction2(class extends Action2 {
 		super({
 			id: BROWSE_METHODS_COMMAND_ID,
 			title: localize2('newMethods.open', "Browse Methods"),
-			category: localize2('newMethods.category', "New Methods"),
+			category: localize2('newMethods.category', "Methods"),
 			f1: true,
 		});
 	}

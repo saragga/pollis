@@ -800,6 +800,27 @@ export const NOTIFICATIONS_WARNING_ICON_FOREGROUND = registerColor('notification
 
 export const NOTIFICATIONS_INFO_ICON_FOREGROUND = registerColor('notificationsInfoIcon.foreground', editorInfoForeground, localize('notificationsInfoIconForeground', "The color used for the icon of info notifications. Notifications slide in from the bottom right of the window."));
 
+export const NOTIFICATIONS_INFO_BACKGROUND = registerColor('notificationsInfo.background', {
+	dark: Color.fromHex('#1E4D2B'),
+	light: Color.fromHex('#DCF2DD'),
+	hcDark: null,
+	hcLight: null
+}, localize('notificationsInfoBackground', "Background color of info notifications. Notifications slide in from the bottom right of the window."));
+
+export const NOTIFICATIONS_WARNING_BACKGROUND = registerColor('notificationsWarning.background', {
+	dark: Color.fromHex('#454545'),
+	light: Color.fromHex('#E4E4E4'),
+	hcDark: null,
+	hcLight: null
+}, localize('notificationsWarningBackground', "Background color of warning notifications. Notifications slide in from the bottom right of the window."));
+
+export const NOTIFICATIONS_ERROR_BACKGROUND = registerColor('notificationsError.background', {
+	dark: Color.fromHex('#5A1D1D'),
+	light: Color.fromHex('#FBE3E4'),
+	hcDark: null,
+	hcLight: null
+}, localize('notificationsErrorBackground', "Background color of error notifications. Notifications slide in from the bottom right of the window."));
+
 export const WINDOW_ACTIVE_BORDER = registerColor('window.activeBorder', {
 	dark: null,
 	light: null,

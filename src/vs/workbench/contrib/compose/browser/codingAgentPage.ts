@@ -134,7 +134,7 @@ async function openCodingAgentPage(accessor: ServicesAccessor): Promise<void> {
 function pageHtml(): string {
 	const text = {
 		title: localize('codingAgent.title', "Coding Agents"),
-		intro: localize('codingAgent.intro', "The coding agent Pollis starts in a terminal for every agent task of the Compose menu: New Panels and Toolboxes, New Methods, Orchestration and Reports. Pollis gives it a first message that points it at the task's instructions, so any agent that reads files and runs commands will do, on a cloud model or on a local one."),
+		intro: localize('codingAgent.intro', "The coding agent Pollis starts in a terminal for every agent task of the Compose menu: New Panels and Toolboxes, Methods, Orchestration and Reports. Pollis gives it a first message that points it at the task's instructions, so any agent that reads files and runs commands will do, on a cloud model or on a local one."),
 		agent: localize('codingAgent.agent', "Agent"),
 		command: localize('codingAgent.command', "Command"),
 		status: localize('codingAgent.status', "On This Computer"),

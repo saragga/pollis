@@ -21,7 +21,7 @@ import { IPathService } from '../../../services/path/common/pathService.js';
 // choose to save, outside Pollis. Pollis itself keeps preferences and machine state (~/.pollis and its user
 // data folder). Exactly what lives in a Pollis Workspace is still being decided
 // (internal-reports/pollis-workspace-spec.md); for now its data/ folder receives the copies of articles and
-// data made with Save a Copy... (Compose > New Methods).
+// data made with Save a Copy... (Compose > Methods).
 
 export const NEW_POLLIS_WORKSPACE_COMMAND_ID = 'pollis.workspace.new';
 
@@ -54,7 +54,7 @@ export function isInsidePollis(resource: URI, pathService: IPathService, environ
 function markerToml(name: string): string {
 	return [
 		'# A Pollis Workspace: your own work, and the copies you choose to save, kept outside Pollis.',
-		`# For now, ${DATA_FOLDER}/ receives the copies of articles and data made with Save a Copy... (Compose > New Methods).`,
+		`# For now, ${DATA_FOLDER}/ receives the copies of articles and data made with Save a Copy... (Compose > Methods).`,
 		'',
 		`name = "${name.replace(/[\\"]/g, '\\$&')}"`,
 		'',

@@ -29,7 +29,7 @@ import { IWorkbenchContribution, registerWorkbenchContribution2, WorkbenchPhase 
 import { IPathService } from '../../../services/path/common/pathService.js';
 import { parseToml, TomlValue } from '../../model/browser/common/tomlPanelData.js';
 
-// New and updated Pollis content between releases: the analytical workflows and the published benchmarks.
+// New and updated Pollis content between releases: the replications and the published benchmarks.
 // (Vignettes come with their packages: Help > Documentation > Vignettes, vignettesPage.ts.) The content repository holds content.toml, a list of every entry
 // with the dates it was added and last updated, the Pollis version it needs and its files with their SHA-256,
 // and the files, in KIND/ID/. Pollis ships the same list (media/content.toml) as it was at the release:
@@ -102,7 +102,7 @@ Registry.as<IConfigurationRegistry>(ConfigurationExtensions.Configuration).regis
 			type: 'boolean',
 			default: true,
 			scope: ConfigurationScope.APPLICATION,
-			markdownDescription: localize('pollisContent.check', "Check once a day for new and updated analytical workflows and published benchmarks, published between Pollis releases. The check reads the list in the content repository on GitHub (`#{0}#`).", REPOSITORY_SETTING),
+			markdownDescription: localize('pollisContent.check', "Check once a day for new and updated replications and published benchmarks, published between Pollis releases. The check reads the list in the content repository on GitHub (`#{0}#`).", REPOSITORY_SETTING),
 		},
 		[REPOSITORY_SETTING]: {
 			type: 'string',
@@ -319,7 +319,7 @@ function announce(notificationService: INotificationService, commandService: ICo
 		? localize('pollisContent.newTitle', "{0} (new)", entry.title)
 		: localize('pollisContent.updatedTitle', "{0} (updated)", entry.title));
 	const labels: Record<ContentKind, string> = {
-		workflows: localize('pollisContent.showWorkflows', "Show Workflows"),
+		workflows: localize('pollisContent.showWorkflows', "Show Replications"),
 		benchmarks: localize('pollisContent.showBenchmarks', "Show Benchmarks"),
 	};
 	const choices: IPromptChoice[] = KINDS.filter(kind => changed.some(({ entry }) => entry.kind === kind))
@@ -357,7 +357,7 @@ registerAction2(class extends Action2 {
 	constructor() {
 		super({
 			id: 'pollis.content.check',
-			title: localize2('pollisContent.checkNow', "Check for New Workflows and Benchmarks"),
+			title: localize2('pollisContent.checkNow', "Check for New Replications and Benchmarks"),
 			category: Categories.Help,
 			f1: true,
 		});
@@ -371,7 +371,7 @@ registerAction2(class extends Action2 {
 			if (changed.length) {
 				announce(notificationService, commandService, changed);
 			} else {
-				notificationService.info(localize('pollisContent.none', "No new or updated workflows or benchmarks."));
+				notificationService.info(localize('pollisContent.none', "No new or updated replications or benchmarks."));
 			}
 		} catch (error) {
 			notificationService.error(localize('pollisContent.failed', "Could not check for new content: {0}", toErrorMessage(error)));

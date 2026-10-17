@@ -38,7 +38,7 @@ import { AGENT_BADGE_CSS, AGENT_ICON } from './agentBadge.js';
 import { PREPARE_REGISTRATION_COMMAND_ID, skillFile, startAgent, WRITE_METHOD_COMMAND_ID, WRITE_VIGNETTE_COMMAND_ID } from './pollisAgents.js';
 import { AgentTask } from './modelRouting.js';
 
-// Compose > New Methods > Create Methods (Browse Methods, which lists them, is in workflowLibrary.ts).
+// Compose > Under Construction..., formerly Compose > Methods > Create Methods (Browse Methods, which lists them, is in workflowLibrary.ts).
 // A method is a folder of ~/.pollis/methods with method.toml, its code in src/NAME.jl (module NAME),
 // the published results it must reproduce in targets/*.csv and the user's notes for a coding agent in
 // INSTRUCTIONS.md. Create Methods opens the page of a new method with no folder: the first thing typed or added makes it, named after the title, else NewMethod
@@ -74,20 +74,20 @@ const PREVIEW_ROWS = 10;
 
 Registry.as<IConfigurationRegistry>(ConfigurationExtensions.Configuration).registerConfiguration({
 	id: 'pollisNewMethods',
-	title: localize('newMethods.configurationTitle', "New Methods"),
+	title: localize('newMethods.configurationTitle', "Methods"),
 	type: 'object',
 	properties: {
 		[GITHUB_OWNER_SETTING]: {
 			type: 'string',
 			default: 'Trumpingtons',
 			scope: ConfigurationScope.APPLICATION,
-			markdownDescription: localize('newMethods.githubOwner', "The GitHub user or organization that **Package and Publish** (Compose > New Methods) pushes method packages to."),
+			markdownDescription: localize('newMethods.githubOwner', "The GitHub user or organization that **Package and Publish** (Compose > Methods) pushes method packages to."),
 		},
 		[REGISTRY_SETTING]: {
 			type: 'string',
 			default: DEFAULT_REGISTRY,
 			scope: ConfigurationScope.APPLICATION,
-			markdownDescription: localize('newMethods.registry', "The Julia package registry that **Package and Publish** (Compose > New Methods) registers method packages in, when they meet the Pollis registry rules. Their vignettes are listed in its `Vignettes.toml`, which Help > Documentation > Vignettes shows."),
+			markdownDescription: localize('newMethods.registry', "The Julia package registry that **Package and Publish** (Compose > Methods) registers method packages in, when they meet the Pollis registry rules. Their vignettes are listed in its `Vignettes.toml`, which Help > Documentation > Vignettes shows."),
 		},
 	},
 });
@@ -275,7 +275,7 @@ function tomlString(value: string): string {
 
 function methodToml(name: string, title: string, article: string): string {
 	return [
-		'# A Pollis method (Compose > New Methods). Create Method shows the article and the tables; Package and',
+		'# A Pollis method (Compose > Methods). Create Method shows the article and the tables; Package and',
 		`# Publish turns this folder into the Julia package ${name}.jl, its tests the target tables.`,
 		'#',
 		'#   targets/*.csv     the published results: the row labels in the first column, the values as printed',
@@ -1811,7 +1811,7 @@ async function runMethodTask(accessor: ServicesAccessor, folder: URI | undefined
 	await instantiationService.invokeFunction(startAgent, terminal(method), prompt(skill.fsPath, method, testCommand(configurationService, pathService, method)), method.folder, task);
 }
 
-const category = localize2('newMethods.category', "New Methods");
+const category = localize2('newMethods.category', "Methods");
 
 registerAction2(class extends Action2 {
 	constructor() {
