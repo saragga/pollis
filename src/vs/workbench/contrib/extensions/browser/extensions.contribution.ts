@@ -129,6 +129,10 @@ export const VIEW_CONTAINER = Registry.as<IViewContainersRegistry>(ViewContainer
 		alwaysUseContainerInfo: true,
 	}, ViewContainerLocation.Sidebar);
 
+// Pollis builds LaTeX with PollisTeX, so LaTeX Workshop (a recommended extension) does not build on every change
+Registry.as<IConfigurationRegistry>(ConfigurationExtensions.Configuration)
+	.registerDefaultConfigurations([{ overrides: { 'latex-workshop.latex.autoBuild.run': 'never' } }]);
+
 Registry.as<IConfigurationRegistry>(ConfigurationExtensions.Configuration)
 	.registerConfiguration({
 		id: 'extensions',

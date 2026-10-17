@@ -142,6 +142,7 @@ export interface IProductConfiguration {
 	readonly extensionKeywords?: IStringDictionary<string[]>;
 	readonly keymapExtensionTips?: readonly string[];
 	readonly webExtensionTips?: readonly string[];
+	readonly pollisExtensionTips?: readonly string[];
 	readonly languageExtensionTips?: readonly string[];
 	readonly trustedExtensionUrlPublicKeys?: IStringDictionary<string[]>;
 	readonly trustedExtensionAuthAccess?: string[] | IStringDictionary<string[]>;

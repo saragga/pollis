@@ -8,7 +8,6 @@ import { joinPath } from '../../../../base/common/resources.js';
 import { URI } from '../../../../base/common/uri.js';
 import { localize } from '../../../../nls.js';
 import { ICommandService } from '../../../../platform/commands/common/commands.js';
-import { IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
 import { IFileService } from '../../../../platform/files/common/files.js';
 import { INotificationHandle, INotificationService, Severity } from '../../../../platform/notification/common/notification.js';
 import { IQuickInputService, IQuickPickItem } from '../../../../platform/quickinput/common/quickInput.js';
@@ -16,14 +15,8 @@ import { IStorageService, StorageScope, StorageTarget } from '../../../../platfo
 import { IWorkbenchContribution } from '../../../common/contributions.js';
 import { IPathService } from '../../../services/path/common/pathService.js';
 
-// Set by the bundled Julia extension (`language-julia`) once it has looked for Julia at startup.
-const JULIA_INSTALLED_KEY = 'julia.juliaInstalled';
-// Set by the Julia extension when the REPL is connected, together with the version of Julia it runs.
-const JULIA_HAS_REPL_KEY = 'julia.hasREPL';
-const JULIA_REPL_VERSION_KEY = 'julia.replVersion';
-// The keys keep the names they had when the announcements were on the welcome page, so what was dismissed there stays dismissed.
-const DISMISSED_ANNOUNCEMENTS_KEY = 'pollis.welcome.dismissedAnnouncements';
-// The ids of the PollisDatasets the user has seen; datasets added since are announced.
+// The ids of the PollisDatasets the user has seen; datasets added since are announced. The keys keep the names
+// they had when the datasets were announced on the welcome page, so what was seen there stays seen.
 const SEEN_DATASETS_KEY = 'pollis.welcome.seenDatasets';
 // The ids in the PollisDatasets catalogue when it was last read; an update announces only what it adds.
 const LISTED_DATASETS_KEY = 'pollis.welcome.listedDatasets';
@@ -38,33 +31,23 @@ interface IPollisDataset {
 }
 
 /**
- * Pollis: one-time announcements, shown as notifications (in the notification centre under the bell):
- * datasets added to PollisDatasets, the built-in database, and a Julia installed while Pollis is open
- * once its REPL is ready. Each is shown until it is closed; the welcome page keeps only the alert
- * that Julia is not installed.
+ * Pollis: announces the datasets added to PollisDatasets as a notification (in the notification centre under the
+ * bell), until it is closed. The other announcements and alerts are on the welcome page.
  */
-export class PollisAnnouncementsContribution extends Disposable implements IWorkbenchContribution {
+export class PollisDatasetsNotificationContribution extends Disposable implements IWorkbenchContribution {
 
-	static readonly ID = 'workbench.contrib.pollisAnnouncements';
+	static readonly ID = 'workbench.contrib.pollisDatasetsNotification';
 
 	private readonly databasesFolder: URI;
 	private readonly catalogue: URI;
-	// PollisDB.install() creates Pollis' Julia environment when it installs DuckDB and the PollisDatasets.
-	private readonly pollisEnvironment: URI;
-
 	private readonly datasetsNotification = this._register(new MutableDisposable());
-	private readonly databaseNotification = this._register(new MutableDisposable());
 	private shownDatasets: string[] = [];
-	private shownDatabaseAnnouncement: string | undefined;
-	private juliaWasMissing: boolean;
-	private juliaNewlyInstalled = false;
 
 	constructor(
 		@INotificationService private readonly notificationService: INotificationService,
 		@IStorageService private readonly storageService: IStorageService,
 		@IFileService private readonly fileService: IFileService,
 		@IPathService private readonly pathService: IPathService,
-		@IContextKeyService private readonly contextKeyService: IContextKeyService,
 		@ICommandService private readonly commandService: ICommandService,
 		@IQuickInputService private readonly quickInputService: IQuickInputService,
 	) {
@@ -72,47 +55,20 @@ export class PollisAnnouncementsContribution extends Disposable implements IWork
 		const home = this.pathService.userHome({ preferLocal: true });
 		this.databasesFolder = joinPath(home, '.pollis', 'databases');
 		this.catalogue = joinPath(this.databasesFolder, 'PollisDatasets.json');
-		this.pollisEnvironment = joinPath(home, '.pollis', 'julia', 'environments');
-		this.juliaWasMissing = this.getJuliaInstalled() === false;
-
 		this.update();
 		// PollisDB.catalogue() lists the installed PollisDatasets each time a Julia REPL starts, after it has
-		// installed or updated them and the database.
+		// installed or updated them.
 		const watcher = this._register(this.fileService.createWatcher(this.databasesFolder, { recursive: false, excludes: [] }));
 		this._register(watcher.onDidChange(e => {
 			if (e.contains(this.catalogue)) {
 				this.update();
 			}
 		}));
-		this._register(this.contextKeyService.onDidChangeContext(e => {
-			if (e.affectsSome(new Set([JULIA_INSTALLED_KEY]))) {
-				if (this.juliaWasMissing && this.getJuliaInstalled()) {
-					this.juliaNewlyInstalled = true;
-				}
-				this.juliaWasMissing = this.getJuliaInstalled() === false;
-				this.update();
-			}
-			// A newly installed Julia is announced once its REPL shows in the terminal.
-			if (e.affectsSome(new Set([JULIA_HAS_REPL_KEY, JULIA_REPL_VERSION_KEY])) && this.juliaNewlyInstalled && this.contextKeyService.getContextKeyValue<boolean>(JULIA_HAS_REPL_KEY)) {
-				this.juliaNewlyInstalled = false;
-				const version = this.contextKeyService.getContextKeyValue<string>(JULIA_REPL_VERSION_KEY);
-				this.notificationService.info(version
-					? localize('pollis.juliaVersionReady', "Julia {0} is ready", version)
-					: localize('pollis.juliaReady', "Julia is ready"));
-			}
-		}));
 	}
 
 	private async update(): Promise<void> {
-		const [datasets, databaseReady] = await Promise.all([
-			this.readCatalogue(),
-			this.fileService.exists(this.pollisEnvironment).catch(() => false),
-		]);
-		if (this._store.isDisposed) {
-			return;
-		}
-		this.announceDatabase(databaseReady);
-		if (datasets) {
+		const datasets = await this.readCatalogue();
+		if (datasets && !this._store.isDisposed) {
 			this.announceDatasets(datasets);
 		}
 	}
@@ -187,27 +143,6 @@ export class PollisAnnouncementsContribution extends Disposable implements IWork
 	}
 
 	/**
-	 * Announces the DuckDB database built into Pollis, once Julia is installed. Before it is set up it says that DuckDB
-	 * is installed the first time the Julia REPL starts; afterwards that it is ready. Each is shown until it is closed.
-	 */
-	private announceDatabase(ready: boolean): void {
-		const id = ready ? 'databaseReady' : 'databaseBuiltIn';
-		if (!this.getJuliaInstalled() || this.getStoredIds(DISMISSED_ANNOUNCEMENTS_KEY).includes(id) || this.shownDatabaseAnnouncement === id) {
-			return;
-		}
-		this.shownDatabaseAnnouncement = id;
-		const message = ready
-			? localize('pollis.databaseReady', "The built-in database is ready. It holds the PollisDatasets as tables, described column by column. Connect to it from the Databases view to query it as pollis in the Julia REPL.")
-			: localize('pollis.databaseBuiltIn', "A database is built in. Pollis comes with a DuckDB database holding the PollisDatasets, so no database server is needed. DuckDB and the datasets are installed the first time the Julia REPL starts.");
-		const handle = this.notificationService.prompt(Severity.Info, message,
-			[{ label: localize('pollis.openDatabases', "Open Databases View"), run: () => this.commandService.executeCommand(DATABASES_VIEW_COMMAND) }],
-			{ sticky: true });
-		this.databaseNotification.value = this.closeWhen(handle, () => {
-			this.storageService.store(DISMISSED_ANNOUNCEMENTS_KEY, JSON.stringify([...this.getStoredIds(DISMISSED_ANNOUNCEMENTS_KEY), id]), StorageScope.APPLICATION, StorageTarget.USER);
-		});
-	}
-
-	/**
 	 * Calls `onClose` when the user closes the notification `handle`; disposing the result closes it without calling `onClose`.
 	 */
 	private closeWhen(handle: INotificationHandle, onClose: () => void): IDisposable {
@@ -222,10 +157,6 @@ export class PollisAnnouncementsContribution extends Disposable implements IWork
 			handle.close();
 			listener.dispose();
 		});
-	}
-
-	private getJuliaInstalled(): boolean | undefined {
-		return this.contextKeyService.getContextKeyValue<boolean>(JULIA_INSTALLED_KEY);
 	}
 
 	/**

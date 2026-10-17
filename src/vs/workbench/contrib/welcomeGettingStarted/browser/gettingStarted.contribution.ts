@@ -32,7 +32,7 @@ import { Categories } from '../../../../platform/action/common/actionCommonCateg
 import { DisposableStore } from '../../../../base/common/lifecycle.js';
 import { AccessibleViewRegistry } from '../../../../platform/accessibility/browser/accessibleViewRegistry.js';
 import { GettingStartedAccessibleView } from './gettingStartedAccessibleView.js';
-import { PollisAnnouncementsContribution } from './pollisAnnouncements.js';
+import { PollisDatasetsNotificationContribution } from './pollisDatasetsNotification.js';
 import { AgentSessionsWelcomePage } from '../../welcomeAgentSessions/browser/agentSessionsWelcome.js';
 import { IChatEntitlementService } from '../../../services/chat/common/chatEntitlementService.js';
 
@@ -342,7 +342,7 @@ configurationRegistry.registerConfiguration({
 registerWorkbenchContribution2(WorkspacePlatformContribution.ID, WorkspacePlatformContribution, WorkbenchPhase.AfterRestored);
 registerWorkbenchContribution2(StartupPageEditorResolverContribution.ID, StartupPageEditorResolverContribution, WorkbenchPhase.BlockRestore);
 registerWorkbenchContribution2(StartupPageRunnerContribution.ID, StartupPageRunnerContribution, WorkbenchPhase.AfterRestored);
-registerWorkbenchContribution2(PollisAnnouncementsContribution.ID, PollisAnnouncementsContribution, WorkbenchPhase.Eventually);
+registerWorkbenchContribution2(PollisDatasetsNotificationContribution.ID, PollisDatasetsNotificationContribution, WorkbenchPhase.Eventually);
 
 AccessibleViewRegistry.register(new GettingStartedAccessibleView());
 

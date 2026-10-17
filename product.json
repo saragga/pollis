@@ -11,6 +11,16 @@
 	"configurationDefaults": {
 		"extensions.verifySignature": false
 	},
+	"pollisExtensionTips": [
+		"anthropic.claude-code",
+		"saoudrizwan.claude-dev",
+		"ms-python.python",
+		"REditorSupport.r",
+		"chuckjonas.duckdb",
+		"james-yu.latex-workshop",
+		"ltex-plus.vscode-ltex-plus",
+		"aviatesk.jetls-client"
+	],
 	"applicationName": "pollis",
 	"dataFolderName": ".pollis",
 	"win32MutexName": "pollis",

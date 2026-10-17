@@ -25,6 +25,7 @@ import { ThemeIcon } from '../../../../base/common/themables.js';
 import { assertReturnsDefined } from '../../../../base/common/types.js';
 import { URI } from '../../../../base/common/uri.js';
 import { generateUuid } from '../../../../base/common/uuid.js';
+import { joinPath } from '../../../../base/common/resources.js';
 import './media/gettingStarted.css';
 import { ILanguageService } from '../../../../editor/common/languages/language.js';
 import { IHoverService } from '../../../../platform/hover/browser/hover.js';
@@ -64,6 +65,7 @@ import { GroupsOrder, IEditorGroup, IEditorGroupsService, preferredSideBySideGro
 import { IExtensionService } from '../../../services/extensions/common/extensions.js';
 import { IHostService } from '../../../services/host/browser/host.js';
 import { IWorkbenchThemeService } from '../../../services/themes/common/workbenchThemeService.js';
+import { IPathService } from '../../../services/path/common/pathService.js';
 import { GettingStartedIndexList } from './gettingStartedList.js';
 import { canShowAgentsBanner, createAgentsBanner } from '../../chat/browser/agentSessions/agentSessionsBanner.js';
 import { AccessibilityVerbositySettingId } from '../../accessibility/browser/accessibilityConfiguration.js';
@@ -117,6 +119,16 @@ const REDUCED_MOTION_KEY = 'workbench.welcomePage.preferReducedMotion';
  * Only an explicit `false` shows the alert, so nothing is shown before the check has run.
  */
 const JULIA_INSTALLED_KEY = 'julia.juliaInstalled';
+// Set by the Julia extension when the REPL is connected, together with the version of Julia it runs.
+const JULIA_HAS_REPL_KEY = 'julia.hasREPL';
+const JULIA_REPL_VERSION_KEY = 'julia.replVersion';
+const DISMISSED_ANNOUNCEMENTS_KEY = 'pollis.welcome.dismissedAnnouncements';
+/**
+ * Pollis: splits a localized text at its {0}, {1}, ... placeholders and puts each of `codes` there in code style.
+ */
+function withCode(text: string, ...codes: string[]): (string | HTMLElement)[] {
+	return text.split(/\{(?<index>\d)\}/).map((part, i) => i % 2 ? $('code', {}, codes[Number(part)] ?? '') : part);
+}
 
 export class GettingStartedPage extends EditorPane {
 
@@ -161,6 +173,9 @@ export class GettingStartedPage extends EditorPane {
 	private detailsRenderer: GettingStartedDetailsRenderer;
 
 	private readonly categoriesSlideDisposables: DisposableStore;
+	// Pollis: set when Julia gets installed while this page is open, and set to ready once its REPL starts.
+	private juliaNewlyInstalled: 'installed' | 'ready' | undefined;
+	private renderAnnouncements = () => { };
 	private showFeaturedWalkthrough = true;
 
 	get editorInput(): GettingStartedInput | undefined {
@@ -192,6 +207,7 @@ export class GettingStartedPage extends EditorPane {
 		@IAccessibilityService private readonly accessibilityService: IAccessibilityService,
 		@IMarkdownRendererService private readonly markdownRendererService: IMarkdownRendererService,
 		@IHoverService private readonly hoverService: IHoverService,
+		@IPathService private readonly pathService: IPathService,
 	) {
 
 		super(GettingStartedPage.ID, group, telemetryService, themeService, storageService);
@@ -435,6 +451,19 @@ export class GettingStartedPage extends EditorPane {
 			}
 			case 'setJuliaPath': {
 				this.commandService.executeCommand('workbench.action.openSettings', 'julia.executablePath');
+				break;
+			}
+			case 'openDatabases': {
+				this.commandService.executeCommand('workbench.view.pollis.databases');
+				break;
+			}
+			case 'dismissAnnouncement': {
+				if (argument === 'juliaReady') {
+					this.juliaNewlyInstalled = undefined;
+				} else {
+					this.storageService.store(DISMISSED_ANNOUNCEMENTS_KEY, JSON.stringify([...this.getDismissedAnnouncements(), argument]), StorageScope.APPLICATION, StorageTarget.USER);
+				}
+				this.renderAnnouncements();
 				break;
 			}
 			case 'openFolder': {
@@ -980,25 +1009,60 @@ export class GettingStartedPage extends EditorPane {
 	}
 
 	private buildAnnouncementsSection(): HTMLElement {
-		// Pollis: the section holds the alert that Julia is not installed, and is hidden when there is none. One-time
-		// announcements (new datasets, the built-in database, Julia ready) are notifications: see pollisAnnouncements.ts.
+		// Pollis: alerts are shown under the heading and updated when the context they depend on changes.
 		const alerts = $('.pollis-alerts', {});
 		const section = $('.announcements-section', {},
 			$('h2.section-header', {}, localize('alertsAndAnnouncements', "Alerts and Announcements")),
 			alerts,
 		);
-		const renderAlerts = () => {
-			const juliaMissing = this.getJuliaInstalled() === false;
-			reset(alerts, ...(juliaMissing ? [this.buildJuliaNotInstalledAlert()] : []));
-			section.style.display = juliaMissing ? '' : 'none';
+		// Whether the built-in database file exists, which PollisDB creates once DuckDB is installed.
+		let databaseReady: boolean | undefined;
+		const renderAlerts = this.renderAnnouncements = () => {
+			const dismissed = this.getDismissedAnnouncements();
+			const databaseAnnouncement = databaseReady ? 'databaseReady' : 'databaseBuiltIn';
+			reset(alerts, ...coalesce([
+				this.getJuliaInstalled() === false ? this.buildJuliaNotInstalledAlert() : undefined,
+				this.juliaNewlyInstalled === 'ready' ? this.buildJuliaReadyAnnouncement(this.contextService.getContextKeyValue<string>(JULIA_REPL_VERSION_KEY)) : undefined,
+				databaseReady !== undefined && this.getJuliaInstalled() && !dismissed.includes(databaseAnnouncement) ? this.buildDatabaseAnnouncement(databaseReady) : undefined,
+			]));
+			// The section is hidden while it has nothing to show.
+			section.style.display = alerts.childElementCount ? '' : 'none';
 			this.registerDispatchListeners();
 		};
 		renderAlerts();
+		// PollisDB.install() creates Pollis' Julia environment when it installs DuckDB and the PollisDatasets.
+		const pollisEnvironment = joinPath(this.pathService.userHome({ preferLocal: true }), '.pollis', 'julia', 'environments');
+		const checkDatabase = () => this.fileService.exists(pollisEnvironment).then(exists => {
+			databaseReady = exists;
+			renderAlerts();
+		}, () => { });
+		checkDatabase();
+		// New PollisDatasets are notifications (see pollisDatasetsNotification.ts). PollisDB.catalogue() rewrites the
+		// catalogue each time a Julia REPL starts, after it has installed DuckDB, so the database is checked again then.
+		const databasesFolder = joinPath(this.pathService.userHome({ preferLocal: true }), '.pollis', 'databases');
+		const catalogue = joinPath(databasesFolder, 'PollisDatasets.json');
+		const catalogueWatcher = this.categoriesSlideDisposables.add(this.fileService.createWatcher(databasesFolder, { recursive: false, excludes: [] }));
+		this.categoriesSlideDisposables.add(catalogueWatcher.onDidChange(e => {
+			if (e.contains(catalogue)) {
+				checkDatabase();
+			}
+		}));
+		let juliaWasMissing = this.getJuliaInstalled() === false;
 		this.categoriesSlideDisposables.add(this.contextService.onDidChangeContext(e => {
 			if (e.affectsSome(new Set([JULIA_INSTALLED_KEY]))) {
+				if (juliaWasMissing && this.getJuliaInstalled()) {
+					this.juliaNewlyInstalled = 'installed';
+				}
+				juliaWasMissing = this.getJuliaInstalled() === false;
+				renderAlerts();
+			}
+			// A newly installed Julia is announced once its REPL shows in the terminal.
+			if (e.affectsSome(new Set([JULIA_HAS_REPL_KEY, JULIA_REPL_VERSION_KEY])) && this.juliaNewlyInstalled && this.contextService.getContextKeyValue<boolean>(JULIA_HAS_REPL_KEY)) {
+				this.juliaNewlyInstalled = 'ready';
 				renderAlerts();
 			}
 		}));
+
 		return section;
 	}
 
@@ -1008,6 +1072,65 @@ export class GettingStartedPage extends EditorPane {
 	 */
 	private getJuliaInstalled(): boolean | undefined {
 		return this.contextService.getContextKeyValue<boolean>(JULIA_INSTALLED_KEY);
+	}
+
+	private getDismissedAnnouncements(): string[] {
+		try {
+			const dismissed = JSON.parse(this.storageService.get(DISMISSED_ANNOUNCEMENTS_KEY, StorageScope.APPLICATION, '[]'));
+			return Array.isArray(dismissed) ? dismissed : [];
+		} catch {
+			return [];
+		}
+	}
+
+	/**
+	 * Pollis: announcement shown once the REPL of a Julia installed while the welcome page is open shows in the terminal.
+	 */
+	private buildJuliaReadyAnnouncement(version: string | undefined): HTMLElement {
+		return $('.pollis-alert.info', { role: 'status' },
+			$('span.pollis-alert-icon.codicon.codicon-check'),
+			$('.pollis-alert-body', {},
+				$('p.pollis-alert-title', {}, version
+					? localize('pollis.juliaVersionReady', "Julia {0} is ready", version)
+					: localize('pollis.juliaReady', "Julia is ready")),
+			),
+			this.buildDismissButton('juliaReady'),
+		);
+	}
+
+	/**
+	 * Pollis: announcement about the DuckDB database built into Pollis. Before it is set up it says that DuckDB is
+	 * installed the first time the database is opened; afterwards it says where the database is kept. Each is
+	 * dismissed separately.
+	 */
+	private buildDatabaseAnnouncement(ready: boolean): HTMLElement {
+		const id = ready ? 'databaseReady' : 'databaseBuiltIn';
+		return $('.pollis-alert.info', { role: 'status' },
+			$('span.pollis-alert-icon.codicon.codicon-database'),
+			$('.pollis-alert-body', {},
+				$('p.pollis-alert-title', {}, ready
+					? localize('pollis.databaseReady', "The built-in database is ready")
+					: localize('pollis.databaseBuiltIn', "A database is built in")),
+				$('p.pollis-alert-description', {}, ...(ready
+					// {0} is left in the text and replaced by PollisDatasets, and {1} by the connection's name, in code style
+					? withCode(localize('pollis.databaseReadyDescription', "It holds the {0} as tables, described column by column. Connect to it from the Databases view to query it as {1} in the Julia REPL."), 'PollisDatasets', 'pollis')
+					// {0} is left in the text and replaced by PollisDatasets in code style
+					: withCode(localize('pollis.databaseBuiltInDescription', "Pollis comes with a DuckDB database holding the {0}, so no database server is needed. DuckDB and the datasets are installed the first time the Julia REPL starts."), 'PollisDatasets'))),
+				$('.pollis-alert-actions', {},
+					$('button.button-link', { 'x-dispatch': 'openDatabases' }, localize('pollis.openDatabases', "Open Databases View")),
+				),
+			),
+			this.buildDismissButton(id),
+		);
+	}
+
+	/**
+	 * Pollis: the close button in the top-right corner of an announcement.
+	 */
+	private buildDismissButton(id: string): HTMLElement {
+		return $('button.pollis-alert-dismiss', { 'x-dispatch': `dismissAnnouncement:${id}`, 'aria-label': localize('pollis.dismiss', "Dismiss") },
+			$('span.codicon.codicon-close'),
+		);
 	}
 
 	/**
