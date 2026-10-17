@@ -78,12 +78,13 @@ export class BrowserDialogHandler extends AbstractDialogHandler {
 		const { button } = await this.doShow(
 			Severity.Info,
 			title,
+			// OK first: the first button is the primary (blue) one, and Enter and Escape both close
 			[
-				localize({ key: 'copy', comment: ['&& denotes a mnemonic'] }, "&&Copy"),
-				localize('ok', "OK")
+				localize('ok', "OK"),
+				localize({ key: 'copy', comment: ['&& denotes a mnemonic'] }, "&&Copy")
 			],
 			details,
-			1,
+			undefined,
 			undefined,
 			undefined,
 			undefined,
@@ -91,7 +92,7 @@ export class BrowserDialogHandler extends AbstractDialogHandler {
 			['about-dialog-wide']
 		);
 
-		if (button === 0) {
+		if (button === 1) {
 			this.clipboardService.writeText(detailsToCopy);
 		}
 	}

@@ -165,13 +165,14 @@ export class ExtensionRecommendationsService extends Disposable implements IExte
 		const recommendations = [
 			...this.configBasedRecommendations.otherRecommendations,
 			...this.exeBasedRecommendations.otherRecommendations,
-			...this.webRecommendations.recommendations,
-			...this.pollisRecommendations.recommendations
+			...this.webRecommendations.recommendations
 		];
 
 		const extensionIds = this.toExtensionIds(recommendations);
 		shuffle(extensionIds, this.sessionSeed);
-		return extensionIds;
+		// Pollis: its own recommendations come first, in the order of product.json, and are not shuffled
+		const pollisExtensionIds = this.toExtensionIds(this.pollisRecommendations.recommendations);
+		return [...pollisExtensionIds, ...extensionIds.filter(id => !pollisExtensionIds.includes(id))];
 	}
 
 	async getImportantRecommendations(): Promise<string[]> {

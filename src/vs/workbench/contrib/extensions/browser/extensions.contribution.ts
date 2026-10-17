@@ -50,7 +50,7 @@ import { Extensions as ConfigurationMigrationExtensions, IConfigurationMigration
 import { IsSessionsWindowContext, ResourceContextKey, WorkbenchStateContext } from '../../../common/contextkeys.js';
 import { IWorkbenchContribution, IWorkbenchContributionsRegistry, registerWorkbenchContribution2, Extensions as WorkbenchExtensions, WorkbenchPhase } from '../../../common/contributions.js';
 import { EditorExtensions } from '../../../common/editor.js';
-import { IViewContainersRegistry, Extensions as ViewContainerExtensions, ViewContainerLocation } from '../../../common/views.js';
+import { IViewContainersRegistry, IViewDescriptorService, Extensions as ViewContainerExtensions, ViewContainerLocation } from '../../../common/views.js';
 import { DEFAULT_ACCOUNT_SIGN_IN_COMMAND } from '../../../services/accounts/browser/defaultAccount.js';
 import { IEditorService } from '../../../services/editor/common/editorService.js';
 import { EnablementState, IExtensionManagementServerService, IPublisherInfo, IWorkbenchExtensionEnablementService, IWorkbenchExtensionManagementService } from '../../../services/extensionManagement/common/extensionManagement.js';
@@ -2047,12 +2047,38 @@ class ExtensionToolsContribution extends Disposable implements IWorkbenchContrib
 	}
 }
 
+/**
+ * Pollis: a new install or an update of Pollis shows the Recommended section of the Extensions view again,
+ * even if it was hidden before. It can still be hidden until the next update.
+ */
+class PollisShowRecommendedAfterUpdate implements IWorkbenchContribution {
+
+	private static readonly VERSION_KEY = 'pollis.extensions.recommendedShownVersion';
+
+	constructor(
+		@IProductService productService: IProductService,
+		@IStorageService storageService: IStorageService,
+		@IViewDescriptorService viewDescriptorService: IViewDescriptorService,
+	) {
+		const version = productService.pollisVersion ?? '';
+		if (storageService.get(PollisShowRecommendedAfterUpdate.VERSION_KEY, StorageScope.APPLICATION) === version) {
+			return;
+		}
+		const container = viewDescriptorService.getViewContainerById(VIEWLET_ID);
+		if (container) {
+			viewDescriptorService.getViewContainerModel(container).setVisible('extensions.recommendedList', true);
+		}
+		storageService.store(PollisShowRecommendedAfterUpdate.VERSION_KEY, version, StorageScope.APPLICATION, StorageTarget.MACHINE);
+	}
+}
+
 const workbenchRegistry = Registry.as<IWorkbenchContributionsRegistry>(WorkbenchExtensions.Workbench);
 workbenchRegistry.registerWorkbenchContribution(ExtensionsContributions, LifecyclePhase.Restored);
 workbenchRegistry.registerWorkbenchContribution(StatusUpdater, LifecyclePhase.Eventually);
 workbenchRegistry.registerWorkbenchContribution(MaliciousExtensionChecker, LifecyclePhase.Eventually);
 workbenchRegistry.registerWorkbenchContribution(KeymapExtensions, LifecyclePhase.Restored);
 workbenchRegistry.registerWorkbenchContribution(ExtensionsViewletViewsContribution, LifecyclePhase.Restored);
+workbenchRegistry.registerWorkbenchContribution(PollisShowRecommendedAfterUpdate, LifecyclePhase.Eventually);
 workbenchRegistry.registerWorkbenchContribution(ExtensionActivationProgress, LifecyclePhase.Eventually);
 workbenchRegistry.registerWorkbenchContribution(ExtensionDependencyChecker, LifecyclePhase.Eventually);
 workbenchRegistry.registerWorkbenchContribution(ExtensionEnablementWorkspaceTrustTransitionParticipant, LifecyclePhase.Restored);

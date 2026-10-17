@@ -83,9 +83,7 @@ export interface ICodingAgent {
 
 export const CODING_AGENTS: readonly ICodingAgent[] = [
 	{ label: 'Claude Code', command: 'claude {prompt}', url: 'https://claude.com/claude-code', localCommand: 'ollama launch claude -- {prompt}' },
-	{ label: 'Cline', command: 'cline -i {prompt}', url: 'https://cline.bot' },
 	{ label: 'Codex', command: 'codex {prompt}', url: 'https://developers.openai.com/codex/cli', localCommand: 'codex --oss {prompt}' },
-	{ label: 'GitHub Copilot CLI', command: 'copilot -i {prompt}', url: 'https://github.com/features/copilot/cli', localCommand: 'ollama launch copilot -- -i {prompt}' },
 	{ label: 'OpenCode', command: 'opencode --prompt {prompt}', url: 'https://opencode.ai', localCommand: 'ollama launch opencode -- --prompt {prompt}' },
 ];
 
@@ -651,7 +649,7 @@ ${LIBRARY_PAGE_HELPERS}
 </html>`;
 }
 
-/** Where the skills are installed for an agent other than Claude Code: the personal skills folder of Cline, Codex, GitHub Copilot CLI and OpenCode. */
+/** Where the skills are installed for an agent other than Claude Code: the personal skills folder of Codex and OpenCode. */
 function personalSkillsFolder(pathService: IPathService): URI {
 	return joinPath(pathService.userHome({ preferLocal: true }), '.agents', 'skills');
 }
@@ -681,8 +679,8 @@ export async function skillsInstalled(agent: ICodingAgent, fileService: IFileSer
 /**
  * Installs the skills in a coding agent, from the Coding Agents page, so that it uses them in any folder
  * without going through Pollis: in Claude Code, the Pollis Agents plugin from its marketplace, in a terminal;
- * in any other agent, the skill folders copied to ~/.agents/skills, the folder Cline, Codex, GitHub Copilot CLI
- * and OpenCode read personal skills from. A folder there that Pollis did not put there (it has no
+ * in any other agent, the skill folders copied to ~/.agents/skills, the folder Codex and OpenCode
+ * read personal skills from. A folder there that Pollis did not put there (it has no
  * INSTALLED_MARKER) is left as it is. The skills that run the plugin's scripts look for them in
  * ~/.pollis/agents/pollis-agents.
  */

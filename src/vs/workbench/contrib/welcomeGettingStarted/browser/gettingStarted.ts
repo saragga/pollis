@@ -123,6 +123,8 @@ const JULIA_INSTALLED_KEY = 'julia.juliaInstalled';
 const JULIA_HAS_REPL_KEY = 'julia.hasREPL';
 const JULIA_REPL_VERSION_KEY = 'julia.replVersion';
 const DISMISSED_ANNOUNCEMENTS_KEY = 'pollis.welcome.dismissedAnnouncements';
+// The Pollis version in which the announcements were dismissed: a new install or an update shows them again.
+const DISMISSED_ANNOUNCEMENTS_VERSION_KEY = 'pollis.welcome.dismissedAnnouncementsVersion';
 /**
  * Pollis: splits a localized text at its {0}, {1}, ... placeholders and puts each of `codes` there in code style.
  */
@@ -462,6 +464,7 @@ export class GettingStartedPage extends EditorPane {
 					this.juliaNewlyInstalled = undefined;
 				} else {
 					this.storageService.store(DISMISSED_ANNOUNCEMENTS_KEY, JSON.stringify([...this.getDismissedAnnouncements(), argument]), StorageScope.APPLICATION, StorageTarget.USER);
+					this.storageService.store(DISMISSED_ANNOUNCEMENTS_VERSION_KEY, this.productService.pollisVersion ?? '', StorageScope.APPLICATION, StorageTarget.USER);
 				}
 				this.renderAnnouncements();
 				break;
@@ -956,16 +959,11 @@ export class GettingStartedPage extends EditorPane {
 		const discoverSection = this.buildDiscoverSection();
 		reset(leftColumn, startList.getDomElement(), announcementsSection);
 
+		// Pollis: the Walkthroughs section is never shown, not even for walkthroughs that extensions contribute;
+		// they can still be opened with Welcome: Open Walkthrough... Upstream's "Overview" section is not shown either.
 		const layoutLists = () => {
-			if (gettingStartedList.itemCount) {
-				this.container.classList.remove('noWalkthroughs');
-				// Pollis: upstream's "Overview" section is only a heading with no content, so it is not shown.
-				reset(rightColumn, discoverSection, gettingStartedList.getDomElement());
-			}
-			else {
-				this.container.classList.add('noWalkthroughs');
-				reset(rightColumn, discoverSection);
-			}
+			this.container.classList.add('noWalkthroughs');
+			reset(rightColumn, discoverSection);
 			setTimeout(() => this.categoriesPageScrollbar?.scanDomNode(), 50);
 		};
 
@@ -1012,7 +1010,7 @@ export class GettingStartedPage extends EditorPane {
 		// Pollis: alerts are shown under the heading and updated when the context they depend on changes.
 		const alerts = $('.pollis-alerts', {});
 		const section = $('.announcements-section', {},
-			$('h2.section-header', {}, localize('alertsAndAnnouncements', "Alerts and Announcements")),
+			$('h2.section-header', {}, localize('alertsAnnouncementsAndRss', "Alerts, Announcements and RSS")),
 			alerts,
 		);
 		// Whether the built-in database file exists, which PollisDB creates once DuckDB is installed.
@@ -1020,13 +1018,13 @@ export class GettingStartedPage extends EditorPane {
 		const renderAlerts = this.renderAnnouncements = () => {
 			const dismissed = this.getDismissedAnnouncements();
 			const databaseAnnouncement = databaseReady ? 'databaseReady' : 'databaseBuiltIn';
+			const juliaVersion = this.contextService.getContextKeyValue<string>(JULIA_REPL_VERSION_KEY);
 			reset(alerts, ...coalesce([
 				this.getJuliaInstalled() === false ? this.buildJuliaNotInstalledAlert() : undefined,
-				this.juliaNewlyInstalled === 'ready' ? this.buildJuliaReadyAnnouncement(this.contextService.getContextKeyValue<string>(JULIA_REPL_VERSION_KEY)) : undefined,
+				this.juliaNewlyInstalled === 'ready' ? this.buildJuliaReadyAnnouncement(juliaVersion) : undefined,
+				this.getJuliaInstalled() && this.juliaNewlyInstalled !== 'ready' && !dismissed.includes('juliaInstalled') ? this.buildJuliaInstalledAnnouncement(juliaVersion) : undefined,
 				databaseReady !== undefined && this.getJuliaInstalled() && !dismissed.includes(databaseAnnouncement) ? this.buildDatabaseAnnouncement(databaseReady) : undefined,
 			]));
-			// The section is hidden while it has nothing to show.
-			section.style.display = alerts.childElementCount ? '' : 'none';
 			this.registerDispatchListeners();
 		};
 		renderAlerts();
@@ -1057,8 +1055,11 @@ export class GettingStartedPage extends EditorPane {
 				renderAlerts();
 			}
 			// A newly installed Julia is announced once its REPL shows in the terminal.
-			if (e.affectsSome(new Set([JULIA_HAS_REPL_KEY, JULIA_REPL_VERSION_KEY])) && this.juliaNewlyInstalled && this.contextService.getContextKeyValue<boolean>(JULIA_HAS_REPL_KEY)) {
-				this.juliaNewlyInstalled = 'ready';
+			if (e.affectsSome(new Set([JULIA_HAS_REPL_KEY, JULIA_REPL_VERSION_KEY]))) {
+				if (this.juliaNewlyInstalled && this.contextService.getContextKeyValue<boolean>(JULIA_HAS_REPL_KEY)) {
+					this.juliaNewlyInstalled = 'ready';
+				}
+				// Julia is installed shows its version once the REPL has started.
 				renderAlerts();
 			}
 		}));
@@ -1075,6 +1076,10 @@ export class GettingStartedPage extends EditorPane {
 	}
 
 	private getDismissedAnnouncements(): string[] {
+		// Announcements dismissed in an earlier Pollis version are shown again after an update.
+		if (this.storageService.get(DISMISSED_ANNOUNCEMENTS_VERSION_KEY, StorageScope.APPLICATION, '') !== (this.productService.pollisVersion ?? '')) {
+			return [];
+		}
 		try {
 			const dismissed = JSON.parse(this.storageService.get(DISMISSED_ANNOUNCEMENTS_KEY, StorageScope.APPLICATION, '[]'));
 			return Array.isArray(dismissed) ? dismissed : [];
@@ -1095,6 +1100,22 @@ export class GettingStartedPage extends EditorPane {
 					: localize('pollis.juliaReady', "Julia is ready")),
 			),
 			this.buildDismissButton('juliaReady'),
+		);
+	}
+
+	/**
+	 * Pollis: announcement that the Julia extension found Julia, shown after each new install or update of Pollis
+	 * until it is dismissed. The version is known once the Julia REPL has started.
+	 */
+	private buildJuliaInstalledAnnouncement(version: string | undefined): HTMLElement {
+		return $('.pollis-alert.info', { role: 'status' },
+			$('span.pollis-alert-icon.codicon.codicon-check'),
+			$('.pollis-alert-body', {},
+				$('p.pollis-alert-title', {}, version
+					? localize('pollis.juliaVersionInstalled', "Julia {0} is installed", version)
+					: localize('pollis.juliaInstalled', "Julia is installed")),
+			),
+			this.buildDismissButton('juliaInstalled'),
 		);
 	}
 

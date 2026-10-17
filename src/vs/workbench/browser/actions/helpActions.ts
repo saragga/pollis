@@ -462,8 +462,9 @@ MenuRegistry.appendMenuItem(MenuId.MenubarHelpMenu, {
 	when: IsMacNativeContext.toNegated()
 });
 
+// Pollis: Welcome in a group of its own, so a separator follows it
 MenuRegistry.appendMenuItem(MenuId.MenubarHelpMenu, {
-	group: '2_welcome',
+	group: '2_0welcome',
 	command: {
 		id: 'workbench.action.openWalkthrough',
 		title: localize({ key: 'miWelcome', comment: ['&& denotes a mnemonic'] }, "&&Welcome")

@@ -967,6 +967,8 @@ export class EditToolboxAction extends ExtensionAction {
 
 	update(): void {
 		this.enabled = !!this.extension && this.extension.state === ExtensionState.Installed && isToolbox(this.extension);
+		// Only toolboxes have an Edit button: on any other extension it is hidden, not shown disabled.
+		this.class = `${ExtensionAction.LABEL_ACTION_CLASS} edit-toolbox${isToolbox(this.extension) ? '' : ' hide'}`;
 		if (this.extension) {
 			this.tooltip = localize('editToolboxActionTooltip', "Change which panels of the {0} are in the menus, and where", this.extension.displayName);
 		}

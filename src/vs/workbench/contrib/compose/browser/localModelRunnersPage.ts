@@ -46,7 +46,7 @@ const LOCAL_RUNNERS: readonly ILocalRunner[] = [
 		url: 'https://ollama.com',
 		program: 'ollama',
 		places: isMacintosh ? ['/Applications/Ollama.app'] : isWindows ? ['~/AppData/Local/Programs/Ollama/ollama'] : [],
-		agents: { 'Claude Code': 'ollama launch', 'Cline': 'cline auth --provider ollama', 'Codex': 'ollama launch, --oss', 'GitHub Copilot CLI': 'ollama launch', 'OpenCode': 'ollama launch' },
+		agents: { 'Claude Code': 'ollama launch', 'Codex': 'ollama launch, --oss', 'OpenCode': 'ollama launch' },
 	},
 	{
 		label: 'LM Studio',
@@ -54,7 +54,7 @@ const LOCAL_RUNNERS: readonly ILocalRunner[] = [
 		url: 'https://lmstudio.ai',
 		program: 'lms',
 		places: ['~/.lmstudio/bin/lms', ...(isMacintosh ? ['/Applications/LM Studio.app'] : [])],
-		agents: { 'Claude Code': 'ANTHROPIC_BASE_URL', 'Cline': 'cline auth --provider lmstudio', 'Codex': '--oss --local-provider lmstudio', 'GitHub Copilot CLI': 'COPILOT_PROVIDER_BASE_URL', 'OpenCode': 'opencode.json' },
+		agents: { 'Claude Code': 'ANTHROPIC_BASE_URL', 'Codex': '--oss --local-provider lmstudio', 'OpenCode': 'opencode.json' },
 	},
 	{
 		label: 'llama.cpp',
@@ -62,7 +62,7 @@ const LOCAL_RUNNERS: readonly ILocalRunner[] = [
 		url: 'https://github.com/ggml-org/llama.cpp',
 		program: 'llama-server',
 		places: [],
-		agents: { 'Claude Code': 'ANTHROPIC_BASE_URL', 'Cline': 'cline auth --provider openai-compatible', 'Codex': '~/.codex/config.toml', 'GitHub Copilot CLI': 'COPILOT_PROVIDER_BASE_URL', 'OpenCode': 'opencode.json' },
+		agents: { 'Claude Code': 'ANTHROPIC_BASE_URL', 'Codex': '~/.codex/config.toml', 'OpenCode': 'opencode.json' },
 	},
 	{
 		label: 'Apple MLX',
@@ -71,7 +71,7 @@ const LOCAL_RUNNERS: readonly ILocalRunner[] = [
 		program: 'mlx_lm.server',
 		places: [],
 		macOnly: true,
-		agents: { 'Claude Code': localize('localRunners.throughLmStudio', "Through LM Studio"), 'Cline': 'cline auth --provider openai-compatible', 'Codex': '~/.codex/config.toml', 'GitHub Copilot CLI': 'COPILOT_PROVIDER_BASE_URL', 'OpenCode': 'opencode.json' },
+		agents: { 'Claude Code': localize('localRunners.throughLmStudio', "Through LM Studio"), 'Codex': '~/.codex/config.toml', 'OpenCode': 'opencode.json' },
 	},
 ];
 

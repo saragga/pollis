@@ -1489,6 +1489,10 @@ export class DefaultRecommendedExtensionsView extends ExtensionsListView {
 		this._register(this.extensionRecommendationsService.onDidChangeRecommendations(() => {
 			this.show('');
 		}));
+		// Pollis: an extension installed from the list leaves it, since the list shows only extensions not installed yet.
+		this._register(Event.debounce(Event.filter(this.extensionsWorkbenchService.onChange, e => e?.state === ExtensionState.Installed), () => undefined, 500)(() => {
+			this.show('');
+		}));
 	}
 
 	override async show(query: string): Promise<IPagedModel<IExtension>> {
