@@ -21,51 +21,16 @@ import { IPathService } from '../../../services/path/common/pathService.js';
 import { ITerminalInstanceService, ITerminalService } from '../../terminal/browser/terminal.js';
 import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
+import { commandLine, IMcpServer, MCP_SERVERS, MCP_SERVERS_COMMAND_ID, shellWord, UV_INSTALL_URL } from '../common/mcpServers.js';
 import { CHOOSE_AGENT_COMMAND_ID, CODING_AGENTS, commandWords, findProgram, terminalEnvironment } from './pollisAgents.js';
 
-// Compose > MCP Servers: a short, curated library of MCP servers for data, which the coding agent of Compose >
-// Coding Agents can use to look things up while it works: search a source, read its notes, fetch its data.
-// Only official servers run by the data provider itself, read only, with a public endpoint and terms, are
-// listed. Pollis adds a server to the user's own agent, for every folder, with the agent's own command or
-// configuration file, in a terminal so that the user sees it; sign-in (OAuth) happens in the agent and the
-// browser, and Pollis holds no token. Whether a server is added is read from each agent's configuration
-// each time the page is shown again or Pollis gets the focus back.
-
-export const MCP_SERVERS_COMMAND_ID = 'pollis.mcpServers';
-
-/** An MCP server of the library. */
-interface IMcpServer {
-	/** The name it is added under in each agent. */
-	readonly name: string;
-	readonly label: string;
-	readonly provider: string;
-	readonly description: string;
-	/** Its endpoint, a remote server over Streamable HTTP. */
-	readonly url: string;
-	readonly tools: readonly string[];
-	readonly signIn: string;
-	/** The provider's page about it, with its terms. */
-	readonly page: string;
-}
-
-const MCP_SERVERS: readonly IMcpServer[] = [
-	{
-		name: 'fred',
-		label: 'FRED',
-		provider: localize('mcpServers.fredProvider', "Federal Reserve Bank of St. Louis"),
-		description: localize('mcpServers.fredDescription', "Economic time series from FRED, free: search them, read their notes and fetch their observations."),
-		url: 'https://mcp.stlouisfed.org',
-		tools: [
-			localize('mcpServers.fredSearch', "Search for series"),
-			localize('mcpServers.fredMetadata', "Metadata and methodology notes"),
-			localize('mcpServers.fredObservations', "Observations, with date ranges and transformations"),
-			localize('mcpServers.fredDownload', "CSV or JSON download links"),
-			localize('mcpServers.fredGraphs', "FRED graphs of up to five series"),
-		],
-		signIn: localize('mcpServers.fredSignIn', "A free FRED MCP Connector account, separate from a FRED account, created when you first sign in. No FRED API key is needed."),
-		page: 'https://fred.stlouisfed.org/help/data/connecting-fred-to-ai-services/FRED-MCP-Connector',
-	},
-];
+// Compose > MCP Servers: a short, curated library of MCP servers (common/mcpServers.ts), which the coding agent
+// of Compose > Coding Agents can use to look things up while it works: search a source, read its notes, fetch
+// its data. Remote servers are run by their provider; local ones run on the user's computer with uvx, and each
+// says who makes it and links to its source or terms. Pollis adds a server to the user's own agent, for every
+// folder, with the agent's own command or configuration file, in a terminal so that the user sees it; sign-in
+// (OAuth) happens in the agent and the browser, and Pollis holds no token. Whether a server is added, and
+// whether uv is installed, is read again each time the page is shown again or Pollis gets the focus back.
 
 /** How Pollis adds a server to an agent, signs in to it and removes it, and where the agent keeps it. */
 interface IMcpAgent {
@@ -75,7 +40,7 @@ interface IMcpAgent {
 	readonly config: readonly string[];
 	/** Whether the server is in the configuration file's text. */
 	readonly has: (text: string, server: IMcpServer) => boolean;
-	/** The command lines; without `add` or `remove`, Pollis edits the configuration file itself. */
+	/** The command lines; without `add` or `remove`, Pollis edits the configuration file itself. Only servers with `signIn` are signed in to. */
 	readonly add?: (server: IMcpServer) => string;
 	readonly signIn: (server: IMcpServer) => string;
 	readonly remove?: (server: IMcpServer) => string;
@@ -87,12 +52,25 @@ function jsonServers(text: string, key: string): Record<string, unknown> {
 	return value && typeof value === 'object' ? value as Record<string, unknown> : {};
 }
 
+/** The environment of a local server as options of an agent's add command. */
+function environmentOptions(server: IMcpServer, option: string): string {
+	return Object.entries(server.env ?? {}).map(([key, value]) => ` ${option} ${shellWord(`${key}=${value}`)}`).join('');
+}
+
+/** The command line of a local server, quoted for the shell. */
+function localCommand(server: IMcpServer): string {
+	return (server.command ?? []).map(shellWord).join(' ');
+}
+
 const MCP_AGENTS: readonly IMcpAgent[] = [
 	{
 		agent: 'Claude Code',
 		config: ['.claude.json'],
 		has: (text, server) => Object.keys(jsonServers(text, 'mcpServers')).includes(server.name),
-		add: server => `claude mcp add --transport http --scope user ${server.name} ${server.url}`,
+		// The name goes before the variadic -e, and the local server's command after --
+		add: server => server.url
+			? `claude mcp add --transport http --scope user ${server.name} ${shellWord(server.url)}`
+			: `claude mcp add --scope user ${server.name}${environmentOptions(server, '-e')} -- ${localCommand(server)}`,
 		signIn: server => `claude mcp login ${server.name}`,
 		remove: server => `claude mcp remove --scope user ${server.name}`,
 	},
@@ -100,7 +78,9 @@ const MCP_AGENTS: readonly IMcpAgent[] = [
 		agent: 'Codex',
 		config: ['.codex', 'config.toml'],
 		has: (text, server) => new RegExp(`^\\s*\\[mcp_servers\\.("?)${server.name}\\1\\]`, 'm').test(text),
-		add: server => `codex mcp add ${server.name} --url ${server.url}`,
+		add: server => server.url
+			? `codex mcp add ${server.name} --url ${shellWord(server.url)}`
+			: `codex mcp add ${server.name}${environmentOptions(server, '--env')} -- ${localCommand(server)}`,
 		signIn: server => `codex mcp login ${server.name}`,
 		remove: server => `codex mcp remove ${server.name}`,
 	},
@@ -118,11 +98,14 @@ type McpMessage =
 	| { readonly command: 'add' | 'signIn' | 'remove'; readonly server: string; readonly agent: string }
 	| { readonly command: 'link'; readonly url: string };
 
+/** The server to scroll to once the page has its servers, when it was opened for one. */
+let revealServer: string | undefined;
+
 /** The open page, so a second request shows it again. */
 let openPage: WebviewInput | undefined;
 
-/** Opens the MCP Servers page, or shows it again when it is open. */
-async function openMcpServersPage(accessor: ServicesAccessor): Promise<void> {
+/** Opens the MCP Servers page, or shows it again when it is open; given a server's name, scrolls to it. */
+async function openMcpServersPage(accessor: ServicesAccessor, server: string | undefined): Promise<void> {
 	const webviewWorkbenchService = accessor.get(IWebviewWorkbenchService);
 	const fileService = accessor.get(IFileService);
 	const terminalInstanceService = accessor.get(ITerminalInstanceService);
@@ -135,8 +118,12 @@ async function openMcpServersPage(accessor: ServicesAccessor): Promise<void> {
 
 	if (openPage && !openPage.isDisposed()) {
 		webviewWorkbenchService.revealWebview(openPage, openPage.group ?? -1, false);
+		if (server) {
+			openPage.webview.postMessage({ command: 'reveal', server });
+		}
 		return;
 	}
+	revealServer = server;
 	const title = localize('mcpServers.title', "MCP Servers");
 	const webviewInput = webviewWorkbenchService.openWebview(
 		{
@@ -168,9 +155,10 @@ async function openMcpServersPage(accessor: ServicesAccessor): Promise<void> {
 		}
 	};
 
-	// For each server, each agent Pollis can add it to: installed or not, and whether the server is added
+	// For each server, each agent Pollis can add it to: installed or not, and whether the server is added; and whether uv is installed
 	const sendState = async () => {
 		const environment = await terminalEnvironment(terminalInstanceService);
+		const uv = !!await findProgram('uvx', environment, fileService);
 		const agents = await Promise.all(MCP_AGENTS.map(async mcpAgent => {
 			const agent = CODING_AGENTS.find(item => item.label === mcpAgent.agent);
 			const installed = !!agent && !!await findProgram(commandWords(agent.command)[0], environment, fileService);
@@ -184,7 +172,9 @@ async function openMcpServersPage(accessor: ServicesAccessor): Promise<void> {
 			return { label: mcpAgent.agent, installed, added };
 		}));
 		const unsupported = CODING_AGENTS.map(agent => agent.label).filter(label => !MCP_AGENTS.some(mcpAgent => mcpAgent.agent === label));
-		webviewInput.webview.postMessage({ command: 'state', servers: MCP_SERVERS, agents, unsupported });
+		const servers = MCP_SERVERS.map(item => ({ ...item, commandLine: item.command ? commandLine(item) : undefined }));
+		webviewInput.webview.postMessage({ command: 'state', servers, agents, unsupported, uv, reveal: revealServer });
+		revealServer = undefined;
 	};
 
 	const runInTerminal = async (name: string, lines: string[]) => {
@@ -194,10 +184,12 @@ async function openMcpServersPage(accessor: ServicesAccessor): Promise<void> {
 		await instance.sendText(lines.join(' && '), true);
 	};
 
-	// OpenCode has no command that adds a remote server, so Pollis writes it in its configuration file, keeping the rest
+	// OpenCode has no command that adds a server, so Pollis writes it in its configuration file, keeping the rest
 	const editOpenCode = async (mcpAgent: IMcpAgent, server: IMcpServer, add: boolean) => {
 		const text = await readConfig(mcpAgent) || '{\n\t"$schema": "https://opencode.ai/config.json"\n}\n';
-		const value = add ? { type: 'remote', url: server.url } : undefined;
+		const value = !add ? undefined : server.url
+			? { type: 'remote', url: server.url }
+			: { type: 'local', command: server.command, ...(server.env ? { environment: server.env } : {}) };
 		const edits = setProperty(text, ['mcp', server.name], value, { tabSize: 2, insertSpaces: false, eol: '\n' });
 		await fileService.writeFile(configFile(mcpAgent), VSBuffer.fromString(applyEdits(text, edits)));
 	};
@@ -214,7 +206,7 @@ async function openMcpServersPage(accessor: ServicesAccessor): Promise<void> {
 			sendState();
 		} else if (message.command === 'codingAgent') {
 			commandService.executeCommand(CHOOSE_AGENT_COMMAND_ID);
-		} else if (message.command === 'link' && MCP_SERVERS.some(server => server.page === message.url)) {
+		} else if (message.command === 'link' && (message.url === UV_INSTALL_URL || MCP_SERVERS.some(server => server.page === message.url))) {
 			openerService.open(URI.parse(message.url), { openExternal: true });
 		} else if (message.command === 'add' || message.command === 'signIn' || message.command === 'remove') {
 			const server = MCP_SERVERS.find(item => item.name === message.server);
@@ -225,14 +217,19 @@ async function openMcpServersPage(accessor: ServicesAccessor): Promise<void> {
 			const terminalName = localize('mcpServers.terminal', "{0} in {1}", server.label, mcpAgent.agent);
 			try {
 				if (message.command === 'add') {
+					const signIn = server.signIn ? [mcpAgent.signIn(server)] : [];
 					if (mcpAgent.add) {
-						await runInTerminal(terminalName, [mcpAgent.add(server), mcpAgent.signIn(server)]);
+						await runInTerminal(terminalName, [mcpAgent.add(server), ...signIn]);
 					} else {
 						await editOpenCode(mcpAgent, server, true);
-						await runInTerminal(terminalName, [mcpAgent.signIn(server)]);
+						if (signIn.length) {
+							await runInTerminal(terminalName, signIn);
+						}
 					}
-				} else if (message.command === 'signIn') {
+				} else if (message.command === 'signIn' && server.signIn) {
 					await runInTerminal(terminalName, [mcpAgent.signIn(server)]);
+				} else if (message.command === 'signIn') {
+					return;
 				} else if (mcpAgent.remove) {
 					await runInTerminal(terminalName, [mcpAgent.remove(server)]);
 				} else {
@@ -250,16 +247,20 @@ async function openMcpServersPage(accessor: ServicesAccessor): Promise<void> {
 function pageHtml(): string {
 	const text = {
 		title: localize('mcpServers.title', "MCP Servers"),
-		intro: localize('mcpServers.intro', "An MCP server lets your coding agent look things up while it works with you: search a data source, read its notes, fetch its data. Add a server to your agent once and it can use it in any folder. You sign in from the agent, in your browser; Pollis keeps no password or token."),
-		rule: localize('mcpServers.rule', "Only official servers run by the data provider itself, read only, with public terms, are listed. The panels still give you the reproducible Julia code."),
+		intro: localize('mcpServers.intro', "An MCP server lets your coding agent look things up while it works with you: search a data source, read its notes, fetch its data. Add a server to your agent once and it can use it in any folder. When a server needs an account, you sign in from the agent, in your browser; Pollis keeps no password or token."),
+		rule: localize('mcpServers.rule', "Remote servers are run by their provider; local servers run on your computer, with uv. Each server says who makes it and links to its source or terms. The panels still give you the reproducible Julia code."),
 		endpoint: localize('mcpServers.endpoint', "Endpoint"),
+		command: localize('mcpServers.command', "Command"),
 		tools: localize('mcpServers.tools', "Tools"),
-		signIn: localize('mcpServers.signInTitle', "Sign-In"),
+		requires: localize('mcpServers.requires', "Requires"),
 		about: localize('mcpServers.about', "About This Server and Its Terms"),
+		uvMissing: localize('mcpServers.uvMissing', "uv is not installed on this computer:"),
+		uvInstall: localize('mcpServers.uvInstall', "Install uv"),
 		agent: localize('mcpServers.agent', "Coding Agent"),
 		status: localize('mcpServers.status', "In This Agent"),
 		added: localize('mcpServers.added', "Added"),
-		add: localize('mcpServers.add', "Add and Sign In"),
+		addSignIn: localize('mcpServers.addSignIn', "Add and Sign In"),
+		add: localize('mcpServers.add', "Add"),
 		signInAgain: localize('mcpServers.signIn', "Sign In"),
 		remove: localize('mcpServers.remove', "Remove"),
 		notInstalled: localize('mcpServers.notInstalled', "Agent not installed"),
@@ -300,6 +301,7 @@ function pageHtml(): string {
 		.link { color: var(--vscode-textLink-foreground); cursor: pointer; background: none; border: none; padding: 0; font: inherit; }
 		.link:hover { text-decoration: underline; }
 		.separator { color: var(--vscode-descriptionForeground); margin: 0 6px; }
+		.warning { margin: 0 0 12px 0; color: var(--vscode-editorWarning-foreground); }
 	</style>
 </head>
 <body>
@@ -312,6 +314,7 @@ function pageHtml(): string {
 <script>
 	const vscode = acquireVsCodeApi();
 	const TEXT = ${JSON.stringify(text)};
+	const UV_INSTALL_URL = ${JSON.stringify(UV_INSTALL_URL)};
 	const servers = document.getElementById('servers');
 
 	function element(tag, className, content) {
@@ -331,13 +334,14 @@ function pageHtml(): string {
 		servers.textContent = '';
 		for (const server of state.servers) {
 			const card = element('div', 'server');
+			card.id = 'server-' + server.name;
 			card.appendChild(element('h2', '', server.label));
 			card.appendChild(element('div', 'provider', server.provider));
 			card.appendChild(element('p', 'description', server.description));
 			const facts = element('dl', 'facts');
-			facts.appendChild(element('dt', '', TEXT.endpoint));
+			facts.appendChild(element('dt', '', server.url ? TEXT.endpoint : TEXT.command));
 			const endpoint = element('dd');
-			endpoint.appendChild(element('code', '', server.url));
+			endpoint.appendChild(element('code', '', server.url || server.commandLine));
 			facts.appendChild(endpoint);
 			facts.appendChild(element('dt', '', TEXT.tools));
 			const tools = element('dd');
@@ -347,9 +351,16 @@ function pageHtml(): string {
 			}
 			tools.appendChild(list);
 			facts.appendChild(tools);
-			facts.appendChild(element('dt', '', TEXT.signIn));
-			facts.appendChild(element('dd', '', server.signIn));
+			facts.appendChild(element('dt', '', TEXT.requires));
+			facts.appendChild(element('dd', '', server.requires));
 			card.appendChild(facts);
+			if (server.command && server.command[0] === 'uvx' && !state.uv) {
+				const warning = element('p', 'warning', TEXT.uvMissing + ' ');
+				const install = element('button', 'link', TEXT.uvInstall);
+				install.addEventListener('click', () => vscode.postMessage({ command: 'link', url: UV_INSTALL_URL }));
+				warning.appendChild(install);
+				card.appendChild(warning);
+			}
 			const about = element('button', 'link', TEXT.about);
 			about.addEventListener('click', () => vscode.postMessage({ command: 'link', url: server.page }));
 			card.appendChild(about);
@@ -369,12 +380,14 @@ function pageHtml(): string {
 					status.appendChild(element('span', 'small', TEXT.notInstalled));
 				} else if (agent.added.includes(server.name)) {
 					status.appendChild(element('span', 'added', TEXT.added));
-					status.appendChild(element('span', 'separator', '\\u00b7'));
-					status.appendChild(action(TEXT.signInAgain, 'signIn', server.name, agent.label));
+					if (server.signIn) {
+						status.appendChild(element('span', 'separator', '\\u00b7'));
+						status.appendChild(action(TEXT.signInAgain, 'signIn', server.name, agent.label));
+					}
 					status.appendChild(element('span', 'separator', '\\u00b7'));
 					status.appendChild(action(TEXT.remove, 'remove', server.name, agent.label));
 				} else {
-					status.appendChild(action(TEXT.add, 'add', server.name, agent.label));
+					status.appendChild(action(server.signIn ? TEXT.addSignIn : TEXT.add, 'add', server.name, agent.label));
 				}
 				row.appendChild(status);
 				body.appendChild(row);
@@ -389,6 +402,16 @@ function pageHtml(): string {
 			card.appendChild(table);
 			servers.appendChild(card);
 		}
+		if (state.reveal) {
+			reveal(state.reveal);
+		}
+	}
+
+	function reveal(name) {
+		const card = document.getElementById('server-' + name);
+		if (card) {
+			card.scrollIntoView({ block: 'start' });
+		}
 	}
 
 	document.getElementById('codingAgent').addEventListener('click', () => vscode.postMessage({ command: 'codingAgent' }));
@@ -396,6 +419,8 @@ function pageHtml(): string {
 	window.addEventListener('message', event => {
 		if (event.data.command === 'state') {
 			render(event.data);
+		} else if (event.data.command === 'reveal') {
+			reveal(event.data.server);
 		}
 	});
 	vscode.postMessage({ command: 'ready' });
@@ -413,7 +438,7 @@ registerAction2(class extends Action2 {
 			f1: true,
 		});
 	}
-	run(accessor: ServicesAccessor): Promise<void> {
-		return openMcpServersPage(accessor);
+	run(accessor: ServicesAccessor, server?: unknown): Promise<void> {
+		return openMcpServersPage(accessor, typeof server === 'string' ? server : undefined);
 	}
 });

@@ -3,6 +3,11 @@
  *  Licensed under the GNU Affero General Public License v3.0. See LICENSE.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+/* The section has no header actions, which push the count to the right in the other sections, so the count goes right on its own */
+.pollis-toolboxes-header .count-badge-wrapper {
+	margin-left: auto;
+}
+
 /* The Toolboxes section of the Extensions pane: one row per toolbox, its button on the right */
 .pollis-toolboxes {
 	overflow-y: auto;
@@ -98,4 +103,16 @@
 	padding: 2px 8px;
 	width: auto;
 	white-space: nowrap;
+}
+
+/* The MCP Servers - Recommended section (pollisMcpServersView.ts) shares these rows; its icon is the MCP codicon */
+.pollis-toolboxes .pollis-toolbox .mcp-icon {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 32px;
+}
+
+.extensions-viewlet.narrow .pollis-toolboxes .pollis-toolbox .mcp-icon {
+	font-size: 20px;
 }

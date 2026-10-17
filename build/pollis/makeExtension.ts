@@ -30,13 +30,11 @@
 //   mode = "copy"                          copy (independent copies, Pollis keeps the panels) or move
 //   prefix = "finance"                     optional, copy mode: names the copies, default: the name without pollis-toolbox-
 //
-//   [[menu]]                               one or more: where the entries go
+//   [[menu]]                               one or more: a submenu at the end of Extend (the user can move it)
 //   id = "finance"
 //   title = "Finance Toolbox"              the submenu's title
-//   menu = "Model"                         Explore, Model, Simulate, Optimise, Extend or a submenu id; any other, or none: the end of Extend
-//   inline = false                         true: the entries go straight into that menu, no submenu
-//   group = "2_toolboxes"                  optional, the group and order of the submenu in that menu
-//   order = 4
+//   inline = false                         true: the entries go straight into Extend, no submenu
+//   order = 4                              optional, the order among the toolboxes at the end of Extend
 //
 //   [[menu.items]]                         the entries, in the order wanted
 //   command = "chiara.statistics.lm"       the origin menu entry's command, or panel = "lm"
@@ -55,6 +53,12 @@ import { ICON, materialFolders, NOTEBOOKS_DIR, PanelError, Pollis, renameMateria
 function fail(message: string): never {
 	console.error(`Error: ${message}`);
 	process.exit(1);
+}
+
+/** A package of a panel TOML's [[packages]] for the README's Powered by column: a link to its web page, when it has one. */
+function packageLink(pkg: TomlValue): string {
+	const url = pkg.github ?? pkg.url ?? pkg.docs;
+	return typeof url === 'string' ? `[${pkg.name}](${url})` : String(pkg.name);
 }
 
 function copyFolder(from: string, to: string): number {
@@ -104,9 +108,6 @@ function main(): void {
 	for (const menu of menus) {
 		if (!menu.id || !menu.title) {
 			fail('every [[menu]] needs an id and a title');
-		}
-		if (menu.menu && !pollis.isMenu(menu.menu)) {
-			console.warn(`the menu ${menu.menu} is not Explore, Model, Simulate, Optimise, Extend or a submenu id: the toolbox goes at the end of Extend`);
 		}
 		const panels = [];
 		for (const [index, item] of (menu.items ?? []).entries()) {
@@ -159,7 +160,7 @@ function main(): void {
 				defaultModel: panel.defaultModel,
 				...(panel.decisionFirstColumn ? { decisionFirstColumn: panel.decisionFirstColumn } : {}),
 			});
-			const powered = ((toml.packages as TomlValue[] | undefined) ?? []).map(pkg => pkg.name as string).join(', ');
+			const powered = ((toml.packages as TomlValue[] | undefined) ?? []).map(packageLink).join(', ');
 			readmeRows.push(`| ${panel.menuTitle ?? panel.title} | TODO | ${powered} |`);
 			const materialPaths = [...[...material.wiki].map(name => path.join(WIKI_DIR, name)), ...[...material.notebook].map(name => path.join(NOTEBOOKS_DIR, name))].filter(fs.existsSync);
 			removals.push(`${panel.id}:`, ...panel.origin.map(where => `  ${where}`), ...materialPaths.map(materialPath => `  ${path.relative(ROOT, materialPath)}/`));
@@ -170,9 +171,7 @@ function main(): void {
 		toolboxes.push({
 			id: menu.id,
 			title: menu.title,
-			...(menu.menu && pollis.isMenu(menu.menu) ? { menu: menu.menu } : {}),
 			...(menu.inline ? { inline: true } : {}),
-			...(menu.group ? { group: menu.group } : {}),
 			...(menu.order !== undefined ? { order: menu.order } : {}),
 			panels,
 		});
@@ -195,16 +194,13 @@ function main(): void {
 	fs.writeFileSync(path.join(folder, 'package.json'), JSON.stringify(manifest, null, 2) + '\n');
 	fs.copyFileSync(ICON, path.join(folder, 'icon.png'));
 
-	const where = menus.map(menu => {
-		const parent = menu.menu && pollis.isMenu(menu.menu) ? menu.menu : 'Explore';
-		return menu.inline ? `adds its panels to the **${parent}** menu` : `adds the **${menu.title}** submenu to the **${parent}** menu`;
-	}).join(', and ');
+	const where = menus.map(menu => menu.inline ? 'adds its panels to the end of the **Extend** menu' : `adds the **${menu.title}** submenu to the end of the **Extend** menu`).join(', and ');
 	const readme = [
 		`# ${extension.displayName}`,
 		'',
 		(extension.description as string | undefined) ?? '',
 		'',
-		`Installing it ${where}. Each panel has key points, a decision table, example code, Next Steps, wikis and notebook tutorials.`,
+		`Installing it ${where}; its **Edit** button in the Installed section of the Extensions pane moves it, or any of its panels, to another menu. Each panel has key points, a decision table, example code, Next Steps, wikis and notebook tutorials.`,
 		'',
 		'## Panels',
 		'',

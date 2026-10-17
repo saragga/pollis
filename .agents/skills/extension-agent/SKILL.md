@@ -1,6 +1,6 @@
 ---
 name: extension-agent
-description: "Extension Agent: build a Pollis extension (a data-only toolbox) from a spec TOML that names Pollis menu entries (the origin) and the menus and order they go in (the destination), from start to end: write the extension, finish its README, package it and, in move mode, remove the panels from Pollis. Triggers include 'package these menu entries as an extension', 'make a toolbox from', 'Extension Agent', 'build an extension from this spec'."
+description: "Extension Agent: build a Pollis extension (a data-only toolbox) from a spec TOML that names Pollis menu entries (the origin) and the order they go in (the destination: a submenu at the end of Extend), from start to end: write the extension, finish its README, package it and, in move mode, remove the panels from Pollis. Triggers include 'package these menu entries as an extension', 'make a toolbox from', 'Extension Agent', 'build an extension from this spec'."
 ---
 
 # Extension Agent
@@ -25,8 +25,6 @@ mode = "copy"
 [[menu]]
 id = "finance"
 title = "Finance Toolbox"
-menu = "Model"
-group = "2_toolboxes"
 order = 4
 
 [[menu.items]]
@@ -37,7 +35,7 @@ order = 1
 ```
 
 - **Origin**: each `[[menu.items]]` names a menu entry by its `command` (or the panel by `panel = "<id>"`). If the user names entries by their menu titles, find the command ids in the `*.contribution.ts` files (`appendMenuItem` blocks) and say which you chose.
-- **Destination**: `menu` is Explore, Model, Simulate, Optimise or the id of an existing submenu of one of them; any other menu, or none, puts the toolbox at the end of Explore (toolboxes never go in Compose or Help) (`new MenuId('...')`); `inline = true` puts the entries straight into that menu without a submenu. `group` and `order` set the order.
+- **Destination**: a toolbox does not choose its menu. Its submenu goes at the end of Extend, and the user can move it, or any of its panels, to another menu with the toolbox's Edit button. `inline = true` puts the entries straight into Extend without a submenu; `order` sets the order among the toolboxes there, and each item's `group` and `order` the order inside the submenu.
 - **Mode**: `copy` makes independent copies and leaves Pollis unchanged: panel id `<prefix>.<id>`, command `pollis.<name>.<panel id>`, and the wiki and notebook folders the copy ships renamed `<prefix>.<folder>`, with the TOML's `file` entries rewritten (`renameMaterialFolders` in `panelResolver.ts`; `prefix` in `[extension]`, default the name without `pollis-toolbox-`). `move` keeps the ids, the command ids and the folder names, and the panels must then be removed from Pollis.
 
 ## Steps

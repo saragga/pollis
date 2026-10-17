@@ -68,6 +68,7 @@ import { IExtensionGalleryManifest, IExtensionGalleryManifestService, ExtensionG
 import { URI } from '../../../../base/common/uri.js';
 import { DEFAULT_ACCOUNT_SIGN_IN_COMMAND } from '../../../services/accounts/browser/defaultAccount.js';
 import { PollisToolboxesView, toolboxesSearchText } from './pollisToolboxesView.js';
+import { PollisMcpServersView } from './pollisMcpServersView.js';
 
 export const ExtensionsSortByContext = new RawContextKey<string>('extensionsSortByValue', '');
 export const SearchMarketplaceExtensionsContext = new RawContextKey<boolean>('searchMarketplaceExtensions', false);
@@ -141,6 +142,17 @@ export class ExtensionsViewletViewsContribution extends Disposable implements IW
 			when: ContextKeyExpr.or(DefaultViewsContext, SearchPollisToolboxesContext),
 			weight: 30,
 			order: 0,
+			canToggleVisibility: true
+		});
+
+		/* Pollis: the MCP servers of Compose > MCP Servers, with the default views, after Recommended */
+		viewDescriptors.push({
+			id: PollisMcpServersView.ID,
+			name: localize2('pollisMcpServers', "MCP Servers - Recommended"),
+			ctorDescriptor: new SyncDescriptor(PollisMcpServersView),
+			when: DefaultViewsContext,
+			weight: 30,
+			order: 4,
 			canToggleVisibility: true
 		});
 

@@ -50,18 +50,18 @@ export interface IToolboxInfo {
 	readonly id: string;
 	readonly title: string;
 	readonly panels: readonly IToolboxPanelInfo[];
-	/** The places the author suggests, with every panel in. */
-	readonly suggested: IToolboxPlacement;
-	/** The places the user published, `undefined` before the user publishes the toolbox. */
-	readonly published: IToolboxPlacement | undefined;
+	/** The default places: the toolbox's menu at the end of Extend, with every panel in. */
+	readonly defaultPlacement: IToolboxPlacement;
+	/** The places the toolbox is in: the ones the user published, else the default ones. */
+	readonly published: IToolboxPlacement;
 }
 
 export const IToolboxPanelsService = createDecorator<IToolboxPanelsService>('toolboxPanelsService');
 
 /**
- * The toolboxes of the installed extensions. Installing a toolbox does not change the menus: the
- * user publishes the panels they choose, in the toolbox's own menu or straight into another menu,
- * and the toolbox's menu where the author suggests or in another menu.
+ * The toolboxes of the installed extensions. Installing a toolbox puts its menu, with every panel,
+ * at the end of Extend; the user can then publish the panels they choose, in the toolbox's own menu
+ * or straight into another menu, and the toolbox's menu at the end of Extend or in another menu.
  */
 export interface IToolboxPanelsService {
 	readonly _serviceBrand: undefined;

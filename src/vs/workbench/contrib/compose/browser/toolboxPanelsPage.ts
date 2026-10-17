@@ -196,7 +196,7 @@ function openToolboxPanelsPage(accessor: ServicesAccessor, extensionId: string):
 /** The page: its texts come from here, its toolboxes and menus from the `state` message. */
 function pageHtml(): string {
 	const text = {
-		intro: localize('toolboxPanels.intro', "Installing a toolbox does not change your menus. Tick the panels you want, choose where each one goes, or display the author's suggestion, and press Publish. You can come back here at any time with the Edit button of the toolbox in the Extensions pane."),
+		intro: localize('toolboxPanels.intro', "Installing a toolbox puts its menu, with every panel in it, at the end of Extend. Tick the panels you want, choose where each one goes, or display the default, and press Publish. You can come back here at any time with the Edit button of the toolbox in the Extensions pane."),
 		toolbox: localize('toolboxPanels.toolbox', "Toolbox"),
 		menus: localize('toolboxPanels.menus', "Your Menus (Preview)"),
 		hint: localize('toolboxPanels.hint', "Click a blue line to put the ticked items there. A ticked toolbox menu moves with its panels inside: untick it to move panels out of it."),
@@ -209,7 +209,7 @@ function pageHtml(): string {
 		empty: localize('toolboxPanels.empty', "empty: it shows once a panel is in it"),
 		selectAll: localize('toolboxPanels.selectAll', "Select All"),
 		selectNone: localize('toolboxPanels.selectNone', "Select None"),
-		suggestion: localize('toolboxPanels.suggestion', "Display Author's Suggestion"),
+		suggestion: localize('toolboxPanels.suggestion', "Display Default"),
 		publish: localize('toolboxPanels.publish', "Publish"),
 		publishTip: localize('toolboxPanels.publishTip', "Press Publish to add the ticked items."),
 		changed: localize('toolboxPanels.changed', "Changes not published yet."),
@@ -334,11 +334,10 @@ function pageHtml(): string {
 	}
 
 	/**
-	 * The page's state of a toolbox: its published places, the author's when asked for, else
-	 * nothing ticked, the toolbox's menu not placed and the panels in it.
+	 * The page's state of a toolbox: the places it is in, or the default ones when asked for.
 	 */
-	function stateOf(toolbox, suggestion) {
-		const placement = suggestion ? toolbox.suggested : toolbox.published;
+	function stateOf(toolbox, useDefault) {
+		const placement = useDefault ? toolbox.defaultPlacement : toolbox.published;
 		const panels = {};
 		toolbox.panels.forEach((panel, index) => {
 			const place = placement?.panels[panel.id];
@@ -656,7 +655,7 @@ function pageHtml(): string {
 			}
 		};
 		for (const node of tree) { drawMenu(node, 0); }
-		// The author's places for every item, all ticked
+		// The default places for every item, all ticked
 		const suggestion = element('div', 'row clickable action');
 		suggestion.style.setProperty('--depth', '0');
 		suggestion.append(element('span', 'leaf'), element('span', 'name', TEXT.suggestion));

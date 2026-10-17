@@ -10,7 +10,7 @@ import { Disposable, DisposableStore, MutableDisposable } from '../../../../base
 import { joinPath, isEqualOrParent } from '../../../../base/common/resources.js';
 import { hasKey } from '../../../../base/common/types.js';
 import { URI } from '../../../../base/common/uri.js';
-import { isISubmenuItem, MenuId, MenuRegistry } from '../../../../platform/actions/common/actions.js';
+import { MenuId, MenuRegistry } from '../../../../platform/actions/common/actions.js';
 import { CommandsRegistry, ICommandService } from '../../../../platform/commands/common/commands.js';
 import { ExtensionIdentifier } from '../../../../platform/extensions/common/extensions.js';
 import { IFileService } from '../../../../platform/files/common/files.js';
@@ -47,36 +47,24 @@ interface IToolboxPanelContribution {
 	readonly decisionFirstColumn?: string;
 }
 
-/** A toolbox contributed by an extension: a submenu of Explore, Model, Simulate, Optimise or Extend, or of one of their submenus. */
+/**
+ * A toolbox contributed by an extension: a submenu at the end of Extend. A toolbox does not choose
+ * its menu: the user can move it, and its panels, to any other menu.
+ */
 interface IToolboxContribution {
 	readonly id: string;
 	readonly title: string;
-	/**
-	 * The menu the toolbox goes in: a top-level menu (Explore, Model, Simulate, Optimise or Extend) or the
-	 * id of an existing submenu of one of them. Any other menu, or none, means the end of Extend.
-	 */
-	readonly menu?: string;
-	/** Put the panels straight into that menu instead of into a submenu of their own. */
+	/** Put the panels straight into Extend instead of into a submenu of their own. */
 	readonly inline?: boolean;
-	/** The group in that menu. Default: `9_extensions`. */
-	readonly group?: string;
+	/** The order among the toolboxes at the end of Extend. */
 	readonly order?: number;
 	readonly panels: IToolboxPanelContribution[];
 }
 
-/** The top-level menus a toolbox can go in, by the name the user sees. */
-const TOP_LEVEL_MENUS: Record<string, MenuId> = {
-	explore: MenuId.MenubarExploreMenu,
-	model: MenuId.MenubarModelMenu,
-	simulate: MenuId.MenubarSimulateMenu,
-	optimise: MenuId.MenubarOptimiseMenu,
-	extend: MenuId.MenubarExtendMenu,
-};
-
 const toolboxesExtensionPoint = ExtensionsRegistry.registerExtensionPoint<IToolboxContribution[]>({
 	extensionPoint: 'pollisToolboxes',
 	jsonSchema: {
-		description: localize('pollisToolboxes', "Contributes Pollis toolboxes: a submenu of Explore, Model, Simulate, Optimise or Extend, or of one of their submenus, with the panels it opens."),
+		description: localize('pollisToolboxes', "Contributes Pollis toolboxes: a submenu at the end of Extend with the panels it opens. The user can move it to another menu."),
 		type: 'array',
 		items: {
 			type: 'object',
@@ -84,10 +72,8 @@ const toolboxesExtensionPoint = ExtensionsRegistry.registerExtensionPoint<IToolb
 			properties: {
 				id: { type: 'string', description: localize('pollisToolboxes.id', "The toolbox id.") },
 				title: { type: 'string', description: localize('pollisToolboxes.title', "The toolbox's menu title.") },
-				menu: { type: 'string', description: localize('pollisToolboxes.menu', "The menu the toolbox goes in: Explore, Model, Simulate, Optimise, Extend or the id of an existing submenu of one of them. Any other menu, or none, means the end of Extend.") },
-				inline: { type: 'boolean', description: localize('pollisToolboxes.inline', "Put the panels straight into that menu instead of into a submenu of their own.") },
-				group: { type: 'string', description: localize('pollisToolboxes.group', "The group in that menu.") },
-				order: { type: 'number', description: localize('pollisToolboxes.order', "The order in that group.") },
+				inline: { type: 'boolean', description: localize('pollisToolboxes.inline', "Put the panels straight into Extend instead of into a submenu of their own.") },
+				order: { type: 'number', description: localize('pollisToolboxes.order', "The order among the toolboxes at the end of Extend.") },
 				panels: {
 					type: 'array',
 					items: {
@@ -115,10 +101,6 @@ const toolboxesExtensionPoint = ExtensionsRegistry.registerExtensionPoint<IToolb
 interface ILoadedToolbox {
 	readonly extensionId: string;
 	readonly toolbox: IToolboxContribution;
-	/** The menu the author puts the toolbox in: the one the toolbox names, else Extend. */
-	readonly destination: MenuId;
-	/** Whether the destination is the menu the toolbox names; if not, the toolbox goes at the end of Extend. */
-	readonly named: boolean;
 	readonly location: URI;
 	readonly panels: readonly { readonly contribution: IToolboxPanelContribution; readonly panel: IScaffoldPanel }[];
 }
@@ -150,9 +132,6 @@ interface IStoredMenuItem {
 	readonly submenu?: string;
 }
 
-/** The menu group of a toolbox's menu, or of an inline toolbox's panels, that names none. */
-const DEFAULT_GROUP = '9_extensions';
-
 /** The group of a panel in its toolbox's own menu that names none. */
 const DEFAULT_PANEL_GROUP = '1_toolbox';
 
@@ -161,9 +140,9 @@ const DEFAULT_PANEL_GROUP = '1_toolbox';
  * files read here and opened on the shared scaffold, and its wikis and notebooks (folders
  * `wiki/<folder>/` and `notebooks/<folder>/`, where the folder is the panel id or the folder the
  * panel's TOML names) are served as if bundled.
- * Installing a toolbox does not change the menus: only the panels the user publishes are added,
- * each in the toolbox's own menu or straight into another menu, and the toolbox's menu goes where
- * the author suggests (the menu the toolbox names, the end of Extend by default) or in the menu the user chose.
+ * Installing a toolbox puts its menu, with every panel in it, at the end of Extend. Once the user
+ * publishes it, only the panels the user chose are added, each in the toolbox's own menu or straight
+ * into another menu, and the toolbox's menu goes at the end of Extend or in the menu the user chose.
  * The Extend menu is in the menu bar only while something is in it.
  * The toolbox extensions are not built in (their sources are in Trumpingtons/pollis-toolboxes):
  * the user installs them from the Toolboxes section of the Extensions pane, into the user's
@@ -211,8 +190,8 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 					id: loaded.toolbox.id,
 					title: loaded.toolbox.title,
 					panels: loaded.panels.map(({ contribution }) => ({ id: contribution.id, command: contribution.command, title: contribution.menuTitle ?? contribution.title })),
-					suggested: suggestedPlacement(loaded),
-					published: entry ? placementOf(loaded, entry) : undefined,
+					defaultPlacement: defaultPlacement(loaded),
+					published: entry ? placementOf(loaded, entry) : defaultPlacement(loaded),
 				};
 			});
 	}
@@ -237,12 +216,9 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 	private async load(extensions: readonly IExtensionPointUser<IToolboxContribution[]>[]): Promise<void> {
 		const generation = ++this.generation;
 		const loaded: ILoadedToolbox[] = [];
-		const submenus = placeSubmenus();
 		for (const extension of extensions) {
 			const location = extension.description.extensionLocation;
 			for (const toolbox of extension.value) {
-				const named = toolbox.menu ? TOP_LEVEL_MENUS[toolbox.menu.toLowerCase()] ?? (submenus.has(toolbox.menu) ? MenuId.for(toolbox.menu) : undefined) : undefined;
-				const destination = named ?? MenuId.MenubarExtendMenu;
 				const panels: { contribution: IToolboxPanelContribution; panel: IScaffoldPanel }[] = [];
 				for (const contribution of toolbox.panels) {
 					const toml = joinPath(location, contribution.data);
@@ -266,7 +242,7 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 						this.logService.error(`Pollis toolbox ${toolbox.id}: cannot read panel ${contribution.id} (${toml.toString()})`, error);
 					}
 				}
-				loaded.push({ extensionId: ExtensionIdentifier.toKey(extension.description.identifier), toolbox, destination, named: !!named, location, panels });
+				loaded.push({ extensionId: ExtensionIdentifier.toKey(extension.description.identifier), toolbox, location, panels });
 			}
 		}
 		if (generation !== this.generation) {
@@ -298,7 +274,8 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 		for (const loaded of this.loaded) {
 			const { toolbox, location } = loaded;
 			const entry = published[publishedKey(loaded)];
-			const placement: IToolboxPlacement = entry ? placementOf(loaded, entry) : { menu: undefined, panels: {} };
+			// Until the user publishes it, a toolbox is in its default places: its menu at the end of Extend, with every panel
+			const placement = entry ? placementOf(loaded, entry) : defaultPlacement(loaded);
 			// MenuId.for: a built-in submenu (Extreme Value in Financial Econometrics) may have created the toolbox's menu id already
 			const submenu = this.submenus.get(toolbox.id) ?? MenuId.for(`${TOOLBOX_SUBMENU_PREFIX}${toolbox.id}`);
 			this.submenus.set(toolbox.id, submenu);
@@ -389,54 +366,39 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 	}
 }
 
-/** The submenus of Explore, Model, Simulate, Optimise and Extend, at any depth, without the toolboxes' own menus. */
-function placeSubmenus(): Set<string> {
-	const ids = new Set<string>();
-	const walk = (menu: MenuId) => {
-		for (const item of MenuRegistry.getMenuItems(menu)) {
-			if (isISubmenuItem(item) && !item.submenu.id.startsWith(TOOLBOX_SUBMENU_PREFIX) && !ids.has(item.submenu.id)) {
-				ids.add(item.submenu.id);
-				walk(item.submenu);
-			}
-		}
-	};
-	Object.values(TOP_LEVEL_MENUS).forEach(walk);
-	return ids;
-}
-
 function publishedKey(loaded: ILoadedToolbox): string {
 	return `${loaded.extensionId}/${loaded.toolbox.id}`;
 }
 
 /**
- * The places the author suggests: the toolbox's menu in the menu the toolbox names, with every
- * panel in it, or every panel straight into that menu when the toolbox is inline, each in the
- * group and order the author gives. A toolbox that names no menu Pollis has goes at the end of Extend.
+ * The default places of a toolbox: its menu at the end of Extend, with every panel in it in the group
+ * and order of the manifest, or every panel straight into Extend when the toolbox is inline.
  */
-function suggestedPlacement(loaded: ILoadedToolbox): IToolboxPlacement {
-	const { toolbox, destination, named } = loaded;
+function defaultPlacement(loaded: ILoadedToolbox): IToolboxPlacement {
+	const { toolbox } = loaded;
+	const extend = MenuId.MenubarExtendMenu.id;
 	const panels: Record<string, IToolboxPlace> = {};
 	loaded.panels.forEach(({ contribution }, index) => {
 		const order = contribution.order ?? index + 1;
 		panels[contribution.id] = toolbox.inline
-			? { menu: destination.id, group: named ? contribution.group ?? DEFAULT_GROUP : TOOLBOX_END_GROUP, order }
+			? { menu: extend, group: TOOLBOX_END_GROUP, order }
 			: { menu: TOOLBOX_MENU, group: contribution.group ?? DEFAULT_PANEL_GROUP, order };
 	});
 	return {
-		menu: toolbox.inline ? undefined : { menu: destination.id, group: named ? toolbox.group ?? DEFAULT_GROUP : TOOLBOX_END_GROUP, order: toolbox.order ?? 0 },
+		menu: toolbox.inline ? undefined : { menu: extend, group: TOOLBOX_END_GROUP, order: toolbox.order ?? 0 },
 		panels,
 	};
 }
 
-/** A published entry, in any format: in the menu the author suggests, a place is the author's (group and order from the manifest); in another menu it keeps its stored place, or goes at the end of a menu named as a string. */
+/** A published entry, in any format: in the default menu, a place is the default one (group and order from the manifest); in another menu it keeps its stored place, or goes at the end of a menu named as a string. */
 function placementOf(loaded: ILoadedToolbox, entry: IStoredPlacement | Record<string, string>): IToolboxPlacement {
-	const suggested = suggestedPlacement(loaded);
-	const stored: IStoredPlacement = isStoredPlacement(entry) ? entry : { menu: suggested.menu, panels: entry };
-	// In the menu the author suggests, the group and order are always the author's, so that a toolbox update can regroup its panels
-	const placeOf = (value: string | IToolboxPlace, author: IToolboxPlace | undefined, order: number): IToolboxPlace => {
+	const defaults = defaultPlacement(loaded);
+	const stored: IStoredPlacement = isStoredPlacement(entry) ? entry : { menu: defaults.menu, panels: entry };
+	// In the default menu, the group and order are always the manifest's, so that a toolbox update can regroup its panels ('author' is the first format's name for it)
+	const placeOf = (value: string | IToolboxPlace, fallback: IToolboxPlace | undefined, order: number): IToolboxPlace => {
 		const menu = typeof value === 'string' ? value : value.menu;
-		if (author && (menu === 'author' || menu === author.menu)) {
-			return author;
+		if (fallback && (menu === 'author' || menu === fallback.menu)) {
+			return fallback;
 		}
 		if (typeof value !== 'string') {
 			return value;
@@ -447,10 +409,10 @@ function placementOf(loaded: ILoadedToolbox, entry: IStoredPlacement | Record<st
 	loaded.panels.forEach(({ contribution }, index) => {
 		const value = stored.panels[contribution.id];
 		if (value !== undefined) {
-			panels[contribution.id] = placeOf(value, suggested.panels[contribution.id], index + 1);
+			panels[contribution.id] = placeOf(value, defaults.panels[contribution.id], index + 1);
 		}
 	});
-	return { menu: stored.menu === undefined ? undefined : placeOf(stored.menu, suggested.menu, loaded.toolbox.order ?? 0), panels };
+	return { menu: stored.menu === undefined ? undefined : placeOf(stored.menu, defaults.menu, loaded.toolbox.order ?? 0), panels };
 }
 
 function isStoredPlacement(entry: IStoredPlacement | Record<string, string>): entry is IStoredPlacement {

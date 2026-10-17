@@ -40,9 +40,7 @@ export interface SpecItem {
 export interface SpecMenu {
 	readonly id: string;
 	readonly title: string;
-	readonly menu?: string;
 	readonly inline?: boolean;
-	readonly group?: string;
 	readonly order?: number;
 	readonly items: SpecItem[];
 }
@@ -216,11 +214,6 @@ export class Pollis {
 	/** The ids of the submenus Pollis defines (`new MenuId('...')`). */
 	submenus(): string[] {
 		return [...new Set(this.sources.flatMap(source => [...source.text.matchAll(/new MenuId\('(?<id>[^']+)'\)/g)].map(match => match.groups!.id)))].sort();
-	}
-
-	/** Whether `id` names a menu of Pollis (a top-level menu or a `new MenuId('...')`). */
-	isMenu(id: string): boolean {
-		return TOP_LEVEL_MENUS.has(id.toLowerCase()) || this.sources.some(source => source.text.includes(`new MenuId('${id}')`));
 	}
 
 	resolve(item: SpecItem): ResolvedPanel {

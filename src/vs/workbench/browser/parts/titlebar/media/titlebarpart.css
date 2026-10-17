@@ -172,8 +172,12 @@
 }
 
 /* Pollis: the back and forward arrows stay visible on the title bar when there is nowhere to go, only dimmed, instead of taking the general disabled colour */
-.monaco-workbench .part.titlebar > .titlebar-container > .titlebar-center > .window-title > .command-center > .monaco-toolbar > .monaco-action-bar > .actions-container > .action-item.disabled > .action-label {
+.monaco-workbench .part.titlebar > .titlebar-container > .titlebar-center > .window-title > .command-center > .monaco-toolbar > .monaco-action-bar > .actions-container > .action-item.disabled > .action-label,
+.monaco-workbench .part.titlebar > .titlebar-container > .titlebar-center > .window-title > .command-center > .monaco-toolbar > .monaco-action-bar > .actions-container > .action-item.disabled > .action-label::before {
 	color: var(--vscode-titleBar-activeForeground);
+}
+
+.monaco-workbench .part.titlebar > .titlebar-container > .titlebar-center > .window-title > .command-center > .monaco-toolbar > .monaco-action-bar > .actions-container > .action-item.disabled > .action-label {
 	opacity: 0.5;
 }
 

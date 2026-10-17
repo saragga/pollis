@@ -6,6 +6,7 @@
 import './media/pollisToolboxesView.css';
 import * as dom from '../../../../base/browser/dom.js';
 import { Button } from '../../../../base/browser/ui/button/button.js';
+import { CountBadge } from '../../../../base/browser/ui/countBadge/countBadge.js';
 import { CancellationToken } from '../../../../base/common/cancellation.js';
 import { toErrorMessage } from '../../../../base/common/errorMessage.js';
 import { isCancellationError } from '../../../../base/common/errors.js';
@@ -33,7 +34,7 @@ import { Link } from '../../../../platform/opener/browser/link.js';
 import { IOpenerService } from '../../../../platform/opener/common/opener.js';
 import { IProgressService, ProgressLocation } from '../../../../platform/progress/common/progress.js';
 import { asJson, IRequestService, isSuccess } from '../../../../platform/request/common/request.js';
-import { defaultButtonStyles } from '../../../../platform/theme/browser/defaultStyles.js';
+import { defaultButtonStyles, defaultCountBadgeStyles } from '../../../../platform/theme/browser/defaultStyles.js';
 import { IThemeService } from '../../../../platform/theme/common/themeService.js';
 import { IViewPaneOptions, ViewPane } from '../../../browser/parts/views/viewPane.js';
 import { IViewDescriptorService } from '../../../common/views.js';
@@ -110,6 +111,8 @@ export class PollisToolboxesView extends ViewPane {
 	private root: HTMLElement | undefined;
 	private message: HTMLElement | undefined;
 	private list: HTMLElement | undefined;
+	/** The number of toolboxes listed, next to the section's title like the Installed and Recommended sections. */
+	private badge: CountBadge | undefined;
 	/** The rows' buttons and links, replaced at each render. */
 	private readonly rowDisposables = this._register(new DisposableStore());
 	private toolboxes: readonly IToolboxIndexEntry[] | undefined;
@@ -148,6 +151,12 @@ export class PollisToolboxesView extends ViewPane {
 				this.refresh();
 			}
 		}));
+	}
+
+	protected override renderHeader(container: HTMLElement): void {
+		container.classList.add('extension-view-header', 'pollis-toolboxes-header');
+		super.renderHeader(container);
+		this.badge = this._register(new CountBadge(dom.append(container, dom.$('.count-badge-wrapper')), {}, defaultCountBadgeStyles));
 	}
 
 	protected override renderBody(container: HTMLElement): void {
@@ -203,14 +212,18 @@ export class PollisToolboxesView extends ViewPane {
 		this.fitToContent();
 	}
 
-	/** Makes the section only as tall as its rows or message, so the sections below it get the rest of the pane. */
+	/**
+	 * Makes the section exactly as tall as its rows or message: every toolbox shows without dragging
+	 * the separator, and the sections below it get the rest of the pane.
+	 */
 	private fitToContent(): void {
 		if (!this.message || !this.list) {
 			return;
 		}
 		const height = this.message.offsetHeight + this.list.offsetHeight;
 		// Nothing to measure while the section is collapsed or not yet laid out
-		if (height > 0 && height !== this.maximumBodySize) {
+		if (height > 0 && (height !== this.maximumBodySize || height !== this.minimumBodySize)) {
+			this.minimumBodySize = height;
 			this.maximumBodySize = height;
 		}
 	}
@@ -221,6 +234,7 @@ export class PollisToolboxesView extends ViewPane {
 		}
 		this.rowDisposables.clear();
 		this.firstButton = undefined;
+		this.badge?.setCount(0);
 		dom.clearNode(this.message);
 		dom.clearNode(this.list);
 
@@ -251,6 +265,7 @@ export class PollisToolboxesView extends ViewPane {
 					: localize('pollisToolboxes.none', "No toolboxes are published yet.");
 			return;
 		}
+		this.badge?.setCount(toolboxes.length);
 		for (const toolbox of toolboxes) {
 			this.renderRow(this.list, toolbox);
 		}
@@ -344,7 +359,7 @@ export class PollisToolboxesView extends ViewPane {
 			});
 			this.promptRuntimeAction(toolbox, extension, update);
 			if (!update) {
-				// Installing changes no menus: the user chooses the panels to add, and where, on this page
+				// The toolbox is now at the end of Extend: on this page the user can choose its panels, and where they go
 				this.commandService.executeCommand(CHOOSE_TOOLBOX_PANELS_COMMAND_ID, extension.identifier.id);
 			}
 		} catch (error) {
