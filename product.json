@@ -14,8 +14,6 @@
 	"pollisExtensionTips": [
 		"anthropic.claude-code",
 		"saoudrizwan.claude-dev",
-		"ms-python.python",
-		"REditorSupport.r",
 		"chuckjonas.duckdb",
 		"james-yu.latex-workshop",
 		"ltex-plus.vscode-ltex-plus",
@@ -268,9 +266,9 @@
 	],
 	"onboardingThemes": [
 		{
-			"id": "dark-2026",
-			"label": "Dark 2026",
-			"themeId": "Dark 2026",
+			"id": "pollis-dark",
+			"label": "Pollis Dark",
+			"themeId": "Pollis Dark",
 			"type": "dark"
 		},
 		{
@@ -286,9 +284,9 @@
 			"type": "dark"
 		},
 		{
-			"id": "light-2026",
-			"label": "Light 2026",
-			"themeId": "Light 2026",
+			"id": "pollis-light",
+			"label": "Pollis Light",
+			"themeId": "Pollis Light",
 			"type": "light"
 		},
 		{

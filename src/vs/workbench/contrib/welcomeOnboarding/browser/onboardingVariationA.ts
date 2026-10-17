@@ -118,7 +118,7 @@ export class OnboardingVariationA extends Disposable implements IOnboardingServi
 
 	private readonly footerFocusableElements: HTMLElement[] = [];
 	private readonly stepFocusableElements: HTMLElement[] = [];
-	private selectedThemeId = 'dark-2026';
+	private selectedThemeId = 'pollis-dark';
 	private selectedKeymapId = 'vscode';
 	private _detectedEditorIds: Set<string> | undefined;
 	private _galleryExtensions: Map<string, IGalleryExtension> | undefined;

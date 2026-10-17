@@ -53,6 +53,7 @@ import { isString } from '../../../../base/common/types.js';
 import { IUriIdentityService } from '../../../../platform/uriIdentity/common/uriIdentity.js';
 import { IHoverService } from '../../../../platform/hover/browser/hover.js';
 import { ExtensionsList } from './extensionsViewer.js';
+import { EXTENSION_LIST_ELEMENT_HEIGHT } from './extensionsList.js';
 
 export const NONE_CATEGORY = 'none';
 
@@ -85,6 +86,8 @@ class ExtensionsViewState extends Disposable implements IExtensionsViewState {
 export interface ExtensionsListViewOptions {
 	server?: IExtensionManagementServer;
 	flexibleHeight?: boolean;
+	/** Pollis: with `flexibleHeight`, the view is no taller than its rows, so it leaves no empty space below them. */
+	fitContent?: boolean;
 	readonly onDidChangeTitle?: Event<string>;
 	hideBadge?: boolean;
 }
@@ -1144,7 +1147,8 @@ export class ExtensionsListView extends AbstractExtensionsListView<IExtension> {
 
 	protected updateSize() {
 		if (this.options.flexibleHeight) {
-			this.maximumBodySize = this.list?.model.length ? Number.POSITIVE_INFINITY : 0;
+			const length = this.list?.model.length ?? 0;
+			this.maximumBodySize = length ? (this.options.fitContent ? length * EXTENSION_LIST_ELEMENT_HEIGHT : Number.POSITIVE_INFINITY) : 0;
 			this.storageService.store(`${this.id}.size`, this.list?.model.length || 0, StorageScope.PROFILE, StorageTarget.MACHINE);
 		}
 	}

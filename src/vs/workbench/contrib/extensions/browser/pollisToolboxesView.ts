@@ -199,6 +199,23 @@ export class PollisToolboxesView extends ViewPane {
 	}
 
 	private refresh(): void {
+		this.renderContent();
+		this.fitToContent();
+	}
+
+	/** Makes the section only as tall as its rows or message, so the sections below it get the rest of the pane. */
+	private fitToContent(): void {
+		if (!this.message || !this.list) {
+			return;
+		}
+		const height = this.message.offsetHeight + this.list.offsetHeight;
+		// Nothing to measure while the section is collapsed or not yet laid out
+		if (height > 0 && height !== this.maximumBodySize) {
+			this.maximumBodySize = height;
+		}
+	}
+
+	private renderContent(): void {
 		if (!this.root || !this.message || !this.list) {
 			return;
 		}

@@ -218,7 +218,7 @@ export class ExtensionsViewletViewsContribution extends Disposable implements IW
 				weight: 100,
 				order: 1,
 				when: ContextKeyExpr.and(DefaultViewsContext),
-				ctorDescriptor: new SyncDescriptor(ServerInstalledExtensionsView, [{ server, flexibleHeight: true, onDidChangeTitle }]),
+				ctorDescriptor: new SyncDescriptor(ServerInstalledExtensionsView, [{ server, flexibleHeight: true, fitContent: true, onDidChangeTitle }]),
 				/* Installed extensions views shall not be allowed to hidden when there are more than one server */
 				canToggleVisibility: servers.length === 1
 			});
@@ -273,7 +273,8 @@ export class ExtensionsViewletViewsContribution extends Disposable implements IW
 			id: 'workbench.views.extensions.popular',
 			name: localize2('popularExtensions', "Popular"),
 			ctorDescriptor: new SyncDescriptor(DefaultPopularExtensionsView, [{ hideBadge: true }]),
-			when: ContextKeyExpr.and(DefaultViewsContext, ContextKeyExpr.not('hasInstalledExtensions'), CONTEXT_HAS_GALLERY),
+			// Pollis: never shown, so a new user sees the Toolboxes, Installed and Recommended sections only
+			when: ContextKeyExpr.false(),
 			weight: 60,
 			order: 2,
 			canToggleVisibility: false

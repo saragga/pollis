@@ -96,6 +96,13 @@
 	justify-content: flex-end;
 }
 
+/* Pollis: on macOS the menus are in the system menu bar, so both sides share the leftover equally and the search box sits in the middle of the window */
+.monaco-workbench.mac .part.titlebar > .titlebar-container.has-center > .titlebar-left,
+.monaco-workbench.mac .part.titlebar > .titlebar-container.has-center > .titlebar-right {
+	flex: 1 1 0%;
+	min-width: min-content;
+}
+
 .monaco-workbench .part.titlebar > .titlebar-container:not(.has-center) > .titlebar-left {
 	flex: 1 1 0%;
 	min-width: 0;
@@ -162,6 +169,12 @@
 
 .monaco-workbench .part.titlebar > .titlebar-container > .titlebar-center > .window-title > .command-center > .monaco-toolbar > .monaco-action-bar > .actions-container > .action-item > .action-label {
 	color: inherit;
+}
+
+/* Pollis: the back and forward arrows stay visible on the title bar when there is nowhere to go, only dimmed, instead of taking the general disabled colour */
+.monaco-workbench .part.titlebar > .titlebar-container > .titlebar-center > .window-title > .command-center > .monaco-toolbar > .monaco-action-bar > .actions-container > .action-item.disabled > .action-label {
+	color: var(--vscode-titleBar-activeForeground);
+	opacity: 0.5;
 }
 
 .monaco-workbench .part.titlebar > .titlebar-container > .titlebar-center > .window-title > .command-center .action-item.command-center-center {

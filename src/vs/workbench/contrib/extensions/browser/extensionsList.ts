@@ -26,7 +26,7 @@ import { HoverPosition } from '../../../../base/browser/ui/hover/hoverWidget.js'
 import { IActionViewItemOptions } from '../../../../base/browser/ui/actionbar/actionViewItems.js';
 import { extensionVerifiedPublisherIconColor, verifiedPublisherIcon } from '../../../services/extensionManagement/common/extensionsIcons.js';
 
-const EXTENSION_LIST_ELEMENT_HEIGHT = 72;
+export const EXTENSION_LIST_ELEMENT_HEIGHT = 72;
 
 export interface ITemplateData {
 	root: HTMLElement;
