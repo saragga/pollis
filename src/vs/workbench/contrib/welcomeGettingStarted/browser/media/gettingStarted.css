@@ -1129,29 +1129,10 @@
 	margin-top: 2px;
 }
 
-.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-alert.info {
-	border-left-color: var(--vscode-editorInfo-foreground);
-}
-
-.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-alert.info .pollis-alert-icon {
-	color: var(--vscode-editorInfo-foreground);
-}
-
 .monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-alert .pollis-alert-body {
 	flex: 1;
-	/* Long lines wrap instead of widening the body, so the close button stays in the card */
 	min-width: 0;
 	overflow-wrap: anywhere;
-}
-
-.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-alert .pollis-alert-dismiss {
-	align-self: flex-start;
-	padding: 0;
-	border: none;
-	background: none;
-	color: var(--vscode-errorForeground);
-	cursor: pointer;
-	flex-shrink: 0;
 }
 
 .monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-alert p {
@@ -1164,19 +1145,6 @@
 
 .monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-alert .pollis-alert-description {
 	color: var(--vscode-descriptionForeground);
-}
-
-.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-alert .pollis-alert-description code {
-	font-family: var(--monaco-monospace-font);
-	color: var(--vscode-textPreformat-foreground);
-	background-color: var(--vscode-textPreformat-background);
-	padding: 1px 4px;
-	border-radius: 3px;
-}
-
-.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-alert .pollis-alert-list {
-	margin: 0 0 4px;
-	padding-left: 18px;
 }
 
 .monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-alert .pollis-alert-actions {
