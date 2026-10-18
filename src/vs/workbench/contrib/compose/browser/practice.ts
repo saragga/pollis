@@ -3,7 +3,7 @@
  *  Licensed under the GNU Affero General Public License v3.0. See LICENSE.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-// Help > Practice and Compose > Learning Activities: multiple-choice exercises whose data and answers Julia
+// Practise a Topic and Write an Exercise, in the Command Palette: multiple-choice exercises whose data and answers Julia
 // computes, a new version for each seed. Practise a Topic (Help) lists the topics on a page and asks the
 // exercises of the one picked one at a time, from the first or from the exercise picked; Write an Exercise
 // (Compose) starts one from a template and previews it beside the editor on every save. An exercise is a TOML file, described
@@ -474,7 +474,7 @@ function fileName(title: string): string {
 /** The template Write an Exercise starts from: an exercise that works, to change. */
 function exerciseTemplate(title: string): string {
 	return [
-		'# An exercise for Help > Practice: a question with one correct choice, computed by Julia.',
+		'# An exercise for Practise a Topic: a question with one correct choice, computed by Julia.',
 		'# Each {{expression}} is Julia, evaluated after setup. rng is seeded, so each version has its own data;',
 		'# fmt(x, digits) writes x with fixed decimals and list(v) writes values separated by commas.',
 		'# The choices are shuffled; answer is the correct one, counted from 1. Make the wrong choices typical',
@@ -590,7 +590,7 @@ function browseHtml(): string {
 		mine: localize('practice.browse.mine', "Pollis and yours"),
 		onlyMine: localize('practice.browse.onlyMine', "Yours"),
 		practiseAll: localize('practice.browse.practiseAll', "Practise All"),
-		none: localize('practice.noTopics', "There are no exercises yet: write one with Compose > Learning Activities > Write an Exercise."),
+		none: localize('practice.noTopics', "There are no exercises yet: write one with Write an Exercise in the Command Palette."),
 	};
 	return `<!DOCTYPE html>
 <html lang="en">

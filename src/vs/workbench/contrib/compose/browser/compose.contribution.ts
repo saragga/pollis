@@ -25,7 +25,8 @@ import { MCP_SERVERS_COMMAND_ID } from '../common/mcpServers.js';
 import { MODEL_ROUTING_COMMAND_ID } from './modelRouting.js';
 import { BROWSE_OPERATIONAL_WORKFLOWS_COMMAND_ID } from './operationalWorkflows.js';
 import { EXPORT_NOTEBOOK_LATEX_COMMAND_ID, MAKE_NOTEBOOK_SLIDES_COMMAND_ID, POLISH_REPORT_COMMAND_ID } from './reports.js';
-import { PRACTISE_TOPIC_COMMAND_ID, WRITE_EXERCISE_COMMAND_ID } from './practice.js';
+// Practise a Topic and Write an Exercise: in the Command Palette only, the menus are now the Learning and Practice toolbox
+import './practice.js';
 import { IMPLEMENTED_COLLABORATION_COMMANDS } from './collaboration/collaboration.contribution.js';
 import { PUBLISHED_BENCHMARKS_COMMAND_ID, SEARCH_WORKFLOW_LIBRARY_COMMAND_ID } from './workflowLibrary.js';
 
@@ -57,13 +58,10 @@ const CorrectnessMenu = new MenuId('menubarCorrectnessMenu');
 const ComparisonsMenu = new MenuId('menubarComparisonsMenu');
 const CompileGaloreMenu = new MenuId('menubarCompileGaloreMenu');
 const CollaborationMenu = new MenuId('menubarCollaborationMenu');
-// Formerly Compose > Practice: the id stays, for the panel index and Pollis Views
-const LearningActivitiesMenu = new MenuId('menubarPracticeMenu');
-const HelpPracticeMenu = new MenuId('menubarHelpPracticeMenu');
 
 // ------------------- COMPOSE ------------------------
 
-// The Compose menu: Coding Agents and Agent Skills (codingAgentPage.ts, pollisAgents.ts), MCP Servers (mcpServersPage.ts), Orchestration, Local Models, New Panels and Toolboxes, Replication, Methods, Workflows, Reports, Learning Activities,
+// The Compose menu: Coding Agents and Agent Skills (codingAgentPage.ts, pollisAgents.ts), MCP Servers (mcpServersPage.ts), Orchestration, Local Models, New Panels and Toolboxes, Replication, Methods, Workflows, Reports,
 // Correctness Tests, Horse Races, Compile Galore and Collaboration, which combine panels. The Toolbox Panels page (toolboxPanelsPage.ts) opens from
 // the Edit button of an installed toolbox in the Extensions pane.
 MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
@@ -155,21 +153,6 @@ MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
 	submenu: ReportsMenu,
 	title: localize('pollisReports.menu', "Reports"),
 	order: 6,
-});
-
-MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
-	group: '2_compose',
-	submenu: LearningActivitiesMenu,
-	title: localize('pollisLearningActivities.menu', "Learning Activities"),
-	order: 7,
-});
-
-// Help > Practice: studying what Compose > Learning Activities makes, after Documentation, Video Tutorials and Notebook Courses
-MenuRegistry.appendMenuItem(MenuId.MenubarHelpMenu, {
-	group: '2_welcome',
-	submenu: HelpPracticeMenu,
-	title: localize({ key: 'miPractice', comment: ['&& denotes a mnemonic'] }, "&&Practice"),
-	order: 5,
 });
 
 MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
@@ -358,9 +341,6 @@ MenuRegistry.appendMenuItem(OrchestrationMenu, {
 // Race: several agents do the same task and the results are compared.
 // Roadmap phase 6:
 // Correctness Tests: Julia, R and Python check one another.
-// Roadmap phase 14, Practice: exercises whose answers Julia computes, a new version for each seed. Studying is in
-// Help > Practice (a topic, a practice test, a timed challenge, the tutor, then progress); making is in Compose > Learning
-// Activities (writing by hand or with the agent, tests made from browsed exercises, and export).
 // Horse Races > Add a Language... is Bring Your Own Language: Fortran, C and Rust use the same adapters.
 const composeItems = [
 	{ menu: OrchestrationMenu, id: 'pollis.orchestration.writerChecker', title: localize('orchestration.writerChecker', "Writer and Checker..."), group: '1_patterns', order: 1, agent: true },
@@ -375,27 +355,7 @@ const composeItems = [
 	{ menu: CompileGaloreMenu, id: 'chiara.statistics.comp_sl', title: localize('comp.sl', "Compile Julia to a Shared Library..."), group: '1_compiled', order: 2 },
 	{ menu: CompileGaloreMenu, id: 'chiara.statistics.comp_ex', title: localize('comp.ex', "Compile Julia to an Executable..."), group: '1_compiled', order: 3 },
 	{ menu: CompileGaloreMenu, id: 'chiara.statistics.comp_mx', title: localize('comp.mx', "Mix Julia with Compiled Code..."), group: '1_compiled', order: 4 },
-	{ menu: HelpPracticeMenu, id: 'pollis.practice.practiceTest', title: localize('practice.practiceTest', "Take a Practice Test..."), group: '1_study', order: 2 },
-	{ menu: HelpPracticeMenu, id: 'pollis.practice.timedChallenge', title: localize('practice.timedChallenge', "Try a Timed Challenge..."), group: '1_study', order: 3 },
-	{ menu: HelpPracticeMenu, id: 'pollis.practice.tutor', title: localize('practice.tutor', "Ask a Tutor..."), group: '1_study', order: 4 },
-	{ menu: HelpPracticeMenu, id: 'pollis.practice.progress', title: localize('practice.progress', "My Progress..."), group: '2_progress', order: 1 },
-	{ menu: LearningActivitiesMenu, id: 'pollis.practice.writeWithAgent', title: localize('practice.writeWithAgent', "Write Exercises with My Agent..."), group: '1_write', order: 2, agent: true },
-	{ menu: LearningActivitiesMenu, id: 'pollis.practice.createTest', title: localize('practice.createTest', "Create a Test..."), group: '2_teach', order: 1 },
-	{ menu: LearningActivitiesMenu, id: 'pollis.practice.browseTests', title: localize('practice.browseTests', "Browse Tests..."), group: '2_teach', order: 2 },
-	{ menu: LearningActivitiesMenu, id: 'pollis.practice.export', title: localize('practice.export', "Export to a Learning Platform..."), group: '3_export', order: 1 },
 ];
-
-// Help > Practice and Compose > Learning Activities: multiple-choice exercises computed by Julia, see practice.ts
-MenuRegistry.appendMenuItem(HelpPracticeMenu, {
-	group: '1_study',
-	command: { id: PRACTISE_TOPIC_COMMAND_ID, title: localize('practice.topic', "Practise a Topic...") },
-	order: 1,
-});
-MenuRegistry.appendMenuItem(LearningActivitiesMenu, {
-	group: '1_write',
-	command: { id: WRITE_EXERCISE_COMMAND_ID, title: localize('practice.write', "Write an Exercise...") },
-	order: 1,
-});
 
 // Reports: a notebook (a workflow, a notebook tutorial or the user's own) as a LaTeX report or as slides, see reports.ts
 MenuRegistry.appendMenuItem(ReportsMenu, {

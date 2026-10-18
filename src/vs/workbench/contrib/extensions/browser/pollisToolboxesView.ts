@@ -44,7 +44,7 @@ import { CHOOSE_TOOLBOX_PANELS_COMMAND_ID } from '../../compose/common/toolboxPa
 
 /**
  * The branch dist of Trumpingtons/pollis-toolboxes holds the toolboxes: its toolboxes.json and the .vsix
- * files it names (written by build/pollis/packageToolboxes.ts). Served by raw.githubusercontent.com,
+ * files it names (written by that repository's publish workflow on every push to main). Served by raw.githubusercontent.com,
  * which allows cross-origin requests; GitHub release downloads do not, so the window cannot fetch them.
  */
 const TOOLBOXES_URL = 'https://raw.githubusercontent.com/Trumpingtons/pollis-toolboxes/dist';

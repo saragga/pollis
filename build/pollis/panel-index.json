@@ -49,7 +49,6 @@
 			"menubarGBOSubmenu",
 			"menubarGFOSubmenu",
 			"menubarGOSubmenu",
-			"menubarHelpPracticeMenu",
 			"menubarLMSubmenu",
 			"menubarMOOSubmenu",
 			"menubarMPCCPSubmenu",
@@ -65,7 +64,6 @@
 			"menubarOrchestrationMenu",
 			"menubarPMSubmenu",
 			"menubarPPLSubmenu",
-			"menubarPracticeMenu",
 			"menubarRLSubmenu",
 			"menubarReplicationMenu",
 			"menubarReportsMenu",
@@ -4093,6 +4091,66 @@
 			],
 			"packages": [
 				"TextAnalysis.jl"
+			]
+		},
+		{
+			"id": "learning-and-practice.exwrite",
+			"title": "Write an Exercise",
+			"source": "toolbox:pollis-toolbox-learning-and-practice",
+			"commands": [
+				{
+					"id": "pollis.pollis-toolbox-learning-and-practice.exwrite",
+					"menuTitles": [
+						"Write an Exercise"
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "computed",
+			"decisionFirstColumn": "Kind",
+			"toml": "toolboxes/pollis-toolbox-learning-and-practice/panels/learning-and-practice.exwrite.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-learning-and-practice/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-learning-and-practice/notebooks",
+			"wikis": [
+				"learning-and-practice.exwrite/overview.md",
+				"learning-and-practice.exwrite/writing-the-choices.md"
+			],
+			"notebooks": [
+				"learning-and-practice.exwrite/tutorial-01-write.ipynb"
+			],
+			"packages": [
+				"Distributions.jl"
+			]
+		},
+		{
+			"id": "learning-and-practice.practice",
+			"title": "Practice",
+			"source": "toolbox:pollis-toolbox-learning-and-practice",
+			"commands": [
+				{
+					"id": "pollis.pollis-toolbox-learning-and-practice.practice",
+					"menuTitles": [
+						"Practice"
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "ds",
+			"decisionFirstColumn": "Topic",
+			"toml": "toolboxes/pollis-toolbox-learning-and-practice/panels/learning-and-practice.practice.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-learning-and-practice/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-learning-and-practice/notebooks",
+			"wikis": [
+				"learning-and-practice.practice/descriptive-statistics.md",
+				"learning-and-practice.practice/hypothesis-tests.md",
+				"learning-and-practice.practice/linear-regression.md",
+				"learning-and-practice.practice/overview.md"
+			],
+			"notebooks": [
+				"learning-and-practice.practice/tutorial-01-session.ipynb"
+			],
+			"packages": [
+				"Distributions.jl"
 			]
 		},
 		{
