@@ -662,9 +662,8 @@ function pageHtml(): string {
 		h1 { font-size: 32px; font-weight: 300; margin: 0 0 4px 0; line-height: 1.2; }
 		.subtitle { font-size: 14px; color: var(--vscode-descriptionForeground); margin: 0 0 16px 0; line-height: 1.4; max-width: 900px; }
 		button.action { font: inherit; color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); border: none; border-radius: 2px; padding: 4px 12px; cursor: pointer; margin-bottom: 8px; }
-		button.action:hover { background: var(--vscode-button-secondaryHoverBackground); }
-		button.action.primary { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
-		button.action.primary:hover { background: var(--vscode-button-hoverBackground); }
+		button.action:hover, button.action:active, button.action.pressed { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
+		.header .actions { display: inline-grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 16px; }
 		.panes { display: flex; gap: 16px; align-items: flex-start; }
 		.feeds { flex: 0 0 50%; border-top: 1px solid var(--vscode-widget-border); }
 		.items { flex: 1; min-width: 0; border-top: 1px solid var(--vscode-widget-border); }
@@ -743,9 +742,11 @@ function pageHtml(): string {
 		<h1>${text.title}</h1>
 		<label class="period">${text.period}<select id="days">${DISPLAY_DAYS.map(days => `<option value="${days}">${text.days[days]}</option>`).join('')}<option value="day">${text.onDay}</option></select></label><span class="dayPicker"><button id="day" class="dayButton" hidden></button><div class="calendar" id="calendar" hidden></div></span>
 		<label class="period">${text.journals}<select id="journals"></select></label>
-		<button class="action primary" id="add">${text.addFeed}</button>
-		<button class="action" id="refresh">${text.refresh}</button>
-		<button class="action" id="exportOpml" title="${text.exportOpmlTooltip}">${text.exportOpml}</button>
+		<span class="actions">
+			<button class="action pressed" id="add">${text.addFeed}</button>
+			<button class="action" id="refresh">${text.refresh}</button>
+			<button class="action" id="exportOpml" title="${text.exportOpmlTooltip}">${text.exportOpml}</button>
+		</span>
 	</div>
 	<p class="subtitle" id="subtitle">${text.intro}</p>
 	<div class="panes">
@@ -1177,6 +1178,13 @@ function pageHtml(): string {
 	calendarElement.addEventListener('click', event => event.stopPropagation());
 	document.addEventListener('click', closeCalendar);
 	document.addEventListener('keydown', event => { if (event.key === 'Escape') { closeCalendar(); } });
+	// The button pressed last stays blue; Add Feed until one is pressed
+	for (const button of document.querySelectorAll('.header button.action')) {
+		button.addEventListener('click', () => {
+			document.querySelectorAll('.header button.action.pressed').forEach(other => other.classList.remove('pressed'));
+			button.classList.add('pressed');
+		});
+	}
 	document.getElementById('add').addEventListener('click', () => vscode.postMessage({ command: 'add' }));
 	document.getElementById('refresh').addEventListener('click', () => vscode.postMessage({ command: 'refresh' }));
 	document.getElementById('exportOpml').addEventListener('click', () => vscode.postMessage({ command: 'exportOpml' }));
