@@ -166,6 +166,11 @@ export class TerminalViewPane extends ViewPane {
 			if (!wasInitialized) {
 				switch (hideOnStartup) {
 					case 'never':
+						// Pollis: the Julia REPL opens in the panel at startup, so no default shell is opened before
+						// it; only when the Julia extension has found that Julia is not installed.
+						if (this._contextKeyService.getContextKeyValue<boolean>('julia.juliaInstalled') !== false) {
+							break;
+						}
 						this._isTerminalBeingCreated = true;
 						this._terminalService.createTerminal({ location: TerminalLocation.Panel }).finally(() => this._isTerminalBeingCreated = false);
 						break;

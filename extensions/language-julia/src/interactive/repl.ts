@@ -29,6 +29,8 @@ import * as results from './results'
 import { Frame, openFile } from './results'
 import { notifyTypeProgress, Progress, ProgressBars } from './progress'
 import { TaskRunnerTerminal } from '../taskRunnerTerminal'
+import { whenDuckDBReady } from '../pollisDuckDB'
+import { precompileInBackground } from '../pollisPrecompile'
 import { promise as fastq } from 'fastq'
 import { randomUUID } from 'crypto'
 import { promisify } from 'node:util'
@@ -188,6 +190,24 @@ function parseSessionArgs(name: string) {
 }
 
 // FIXME: refactor this!
+/** The arguments for Julia of the setting `julia.additionalArgs`. */
+function getAdditionalArgs(): string[] {
+    const config = vscode.workspace.getConfiguration('julia')
+    return ((config.get('additionalArgs') as string[]) || []).map((arg) => parseVSCodeVariables(arg))
+}
+
+/** The environment variables of the REPL that its packages may depend on: those of the settings and the package server. */
+function getPackageEnvironment(): { [key: string]: string } {
+    const env = getCustomEnvironmentVariables()
+    const pkgServer: string = vscode.workspace.getConfiguration('julia').get('packageServer')
+    return pkgServer.length !== 0 ? { ...env, JULIA_PKG_SERVER: pkgServer } : env
+}
+
+// POLLIS: compiles the packages of the REPL's environments that are stale, in the background (pollisPrecompile.ts).
+async function precompileREPLPackages(juliaExecutable: JuliaExecutable) {
+    precompileInBackground(g_context, juliaExecutable, await jlpkgenv.getAbsEnvPath(), getAdditionalArgs(), getPackageEnvironment())
+}
+
 export async function startREPL(
     preserveFocus: boolean,
     showTerminal: boolean = true,
@@ -288,7 +308,7 @@ export async function startREPL(
 
     const juliaIsConnectedPromise = startREPLMsgServer(pipename, juliaExecutable)
 
-    const additionalArgs = ((config.get('additionalArgs') as string[]) || []).map((arg) => parseVSCodeVariables(arg))
+    const additionalArgs = getAdditionalArgs()
     const jlarg1 = ['-i', '--banner=no', `--project=${pkgenvpath}`].concat(additionalArgs)
 
     if (isPersistentSession) {
@@ -584,6 +604,10 @@ const notifyTypeOpenFile = new rpc.NotificationType<{ path: string; line: number
     'repl/openFile'
 )
 const notifyTypeCheckRevise = new rpc.NotificationType<boolean>('norevise')
+// POLLIS: the REPL reports that the packages of the built-in database are missing, or that the PollisDatasets have new data.
+const notifyTypeInstallPollisDB = new rpc.NotificationType<void>('pollis/installdb')
+// POLLIS: the REPL reports that nothing needs installing, so that its packages can be compiled in the background.
+const notifyTypePrecompile = new rpc.NotificationType<void>('pollis/precompile')
 
 
 const g_onInit = new vscode.EventEmitter<{ connection: rpc.MessageConnection; juliaExecutable?: JuliaExecutable }>()
@@ -1329,6 +1353,8 @@ export function activate(
                 connection.onNotification(notifyTypeCheckRevise, (hasRevise: boolean) =>
                     checkRevise(hasRevise, juliaExecutable)
                 )
+                connection.onNotification(notifyTypeInstallPollisDB, () => installPollisDB(juliaExecutable))
+                connection.onNotification(notifyTypePrecompile, () => precompileREPLPackages(juliaExecutable))
                 connection.onNotification(notifyTypeOpenFile, ({ path, line, preserveFocus }) =>
                     openFile(path, line, undefined, preserveFocus)
                 )
@@ -1574,6 +1600,46 @@ function checkRevise(hasRevise: boolean, juliaExecutable: JuliaExecutable) {
                 }
             })
     }
+}
+
+// POLLIS: installs DuckDB, DBInterface, Tables and the PollisDatasets for the built-in database, as Revise is
+// installed: in a terminal of its own, so that the REPL never waits for Pkg. Without asking, since Pollis needs
+// them; the terminal is shown without taking the focus, and closes when the install succeeds.
+let g_installingPollisDB = false
+async function installPollisDB(juliaExecutable: JuliaExecutable) {
+    if (g_installingPollisDB) {
+        return
+    }
+    g_installingPollisDB = true
+    // The install loads the DuckDB engine and Lance from ~/.pollis/duckdb/.
+    await whenDuckDBReady()
+    const script = path.join(g_context.extensionPath, 'scripts', 'terminalserver', 'install_pollisdb.jl')
+    const task = new TaskRunnerTerminal('Install DuckDB and the PollisDatasets', juliaExecutable.command, [
+        ...juliaExecutable.args,
+        '--startup-file=no',
+        '--history-file=no',
+        script,
+    ], {
+        echoMessage: false,
+        env: getCustomEnvironmentVariables(),
+        onExitMessage(exitCode) {
+            if (exitCode === 0) {
+                return
+            }
+
+            return `\n\rPollis could not install the packages of the built-in database (exit code ${exitCode}); it tries again when the REPL restarts. Press any key to close the terminal.\n\r`
+        },
+    })
+    task.show(true)
+
+    onEvent(task.onDidExitProcess, (exitCode) => {
+        g_installingPollisDB = false
+        if (exitCode === 0) {
+            task.dispose()
+            // The install has compiled its own packages; the other environments of the REPL may still be stale.
+            precompileREPLPackages(juliaExecutable)
+        }
+    })
 }
 
 export function deactivate() {

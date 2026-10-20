@@ -14,7 +14,7 @@ import { ILogService } from '../../../../platform/log/common/log.js';
 import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
 import { IPathService } from '../../../services/path/common/pathService.js';
 import { IDatabaseConnectionsService, IDatabaseSession } from '../common/databaseConnections.js';
-import { BUILTIN_DATABASE_ID, DatabaseConnectionTarget, IDatabaseConnectionProfile } from '../common/databaseDrivers.js';
+import { BUILTIN_DATABASE_ID, DatabaseConnectionTarget, IDatabaseConnectionProfile, JOURNALS_DATABASE_ID, RSS_DATABASE_ID } from '../common/databaseDrivers.js';
 
 const STORAGE_KEY = 'pollis.databases.connections';
 // Set by the Julia extension: the id of this window's REPL, which PollisDB writes into its snapshots.
@@ -37,7 +37,7 @@ export class DatabaseConnectionsService extends Disposable implements IDatabaseC
 	readonly onDidChangeConnections = this._onDidChangeConnections.event;
 
 	private readonly sessionsFolder: URI;
-	private readonly builtin: IDatabaseConnectionProfile;
+	private readonly builtins: readonly IDatabaseConnectionProfile[];
 	private sessions = new Map<string, IDatabaseSession>();
 	private readonly sessionsScheduler = this._register(new RunOnceScheduler(() => this.readSessions(), 100));
 
@@ -57,7 +57,10 @@ export class DatabaseConnectionsService extends Disposable implements IDatabaseC
 		const pollisFolder = joinPath(pathService.userHome({ preferLocal: true }), '.pollis');
 		this.sessionsFolder = joinPath(pollisFolder, 'databases', 'sessions');
 		// A file that PollisDB.build makes from the PollisDatasets CSV files, and that is only read afterwards.
-		this.builtin = {
+		// And PollisRSS: views that PollisDB.build_rss makes over the archive of the RSS feeds, which Pollis adds to.
+		// And PollisJournals: the journals of OpenAlex, which PollisDB.build_journals copies from PollisJournals.jl, and views
+		// over the articles of the email alerts and the journal metrics imported, which Pollis adds to.
+		this.builtins = [{
 			id: BUILTIN_DATABASE_ID,
 			name: 'PollisDatasets',
 			driver: 'duckdb',
@@ -65,13 +68,29 @@ export class DatabaseConnectionsService extends Disposable implements IDatabaseC
 			variable: 'pollis',
 			options: { path: joinPath(pollisFolder, 'databases', 'PollisDatasets.duckdb').fsPath, readonly: true },
 			builtin: true,
-		};
+		}, {
+			id: RSS_DATABASE_ID,
+			name: 'PollisRSS',
+			driver: 'duckdb',
+			target: 'global',
+			variable: 'rss',
+			options: { path: joinPath(pollisFolder, 'databases', 'PollisRSS.duckdb').fsPath, readonly: true },
+			builtin: true,
+		}, {
+			id: JOURNALS_DATABASE_ID,
+			name: 'PollisJournals',
+			driver: 'duckdb',
+			target: 'global',
+			variable: 'journals',
+			options: { path: joinPath(pollisFolder, 'databases', 'PollisJournals.duckdb').fsPath, readonly: true },
+			builtin: true,
+		}];
 		void this.watchSessions();
 	}
 
 	getConnections(): readonly IDatabaseConnectionProfile[] {
 		const byName = (a: IDatabaseConnectionProfile, b: IDatabaseConnectionProfile) => a.name.localeCompare(b.name);
-		return [this.builtin, ...this.read('global').sort(byName), ...this.read('workspace').sort(byName)];
+		return [...this.builtins, ...this.read('global').sort(byName), ...this.read('workspace').sort(byName)];
 	}
 
 	getConnection(id: string): IDatabaseConnectionProfile | undefined {
@@ -79,7 +98,7 @@ export class DatabaseConnectionsService extends Disposable implements IDatabaseC
 	}
 
 	saveConnection(profile: IDatabaseConnectionProfile): void {
-		if (profile.id === BUILTIN_DATABASE_ID) {
+		if (this.isBuiltin(profile.id)) {
 			return;
 		}
 		for (const target of ['global', 'workspace'] as const) {
@@ -90,7 +109,7 @@ export class DatabaseConnectionsService extends Disposable implements IDatabaseC
 	}
 
 	deleteConnection(id: string): void {
-		if (id === BUILTIN_DATABASE_ID) {
+		if (this.isBuiltin(id)) {
 			return;
 		}
 		for (const target of ['global', 'workspace'] as const) {
@@ -148,6 +167,10 @@ export class DatabaseConnectionsService extends Disposable implements IDatabaseC
 		this._onDidChangeConnections.fire();
 	}
 
+	private isBuiltin(id: string): boolean {
+		return this.builtins.some(builtin => builtin.id === id);
+	}
+
 	private read(target: DatabaseConnectionTarget): IDatabaseConnectionProfile[] {
 		const raw = this.storageService.get(STORAGE_KEY, storageScope(target));
 		if (!raw) {
@@ -155,7 +178,7 @@ export class DatabaseConnectionsService extends Disposable implements IDatabaseC
 		}
 		try {
 			const parsed: IDatabaseConnectionProfile[] = JSON.parse(raw);
-			return Array.isArray(parsed) ? parsed.filter(c => c.id !== BUILTIN_DATABASE_ID).map(c => ({ ...c, target })) : [];
+			return Array.isArray(parsed) ? parsed.filter(c => !this.isBuiltin(c.id)).map(c => ({ ...c, target })) : [];
 		} catch {
 			return [];
 		}

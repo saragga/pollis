@@ -23,6 +23,7 @@ import { FileAccess, Schemas, matchesScheme } from '../../../../base/common/netw
 import { OS } from '../../../../base/common/platform.js';
 import { ThemeIcon } from '../../../../base/common/themables.js';
 import { assertReturnsDefined } from '../../../../base/common/types.js';
+import { fromNow } from '../../../../base/common/date.js';
 import { URI } from '../../../../base/common/uri.js';
 import { generateUuid } from '../../../../base/common/uuid.js';
 import { joinPath } from '../../../../base/common/resources.js';
@@ -59,6 +60,9 @@ import { gettingStartedCheckedCodicon, gettingStartedUncheckedCodicon } from './
 import { GettingStartedEditorOptions, GettingStartedInput } from './gettingStartedInput.js';
 import { IResolvedWalkthrough, IResolvedWalkthroughStep, IWalkthroughsService, hiddenEntriesConfigurationKey, parseDescription } from './gettingStartedService.js';
 import { RestoreWalkthroughsConfigurationValue, restoreWalkthroughsConfigurationKey } from './startupPage.js';
+import { IPollisRelease, PollisReleases } from './pollisReleases.js';
+import { IRssFeedsService, IRssItem } from '../../monitor/browser/rssFeedsService.js';
+import { RSS_FEEDS_COMMAND_ID } from '../../monitor/browser/rssFeedsPage.js';
 import { startEntries } from '../common/gettingStartedContent.js';
 import { discoverPollisEntries } from '../common/discoverPollisContent.js';
 import { GroupsOrder, IEditorGroup, IEditorGroupsService, preferredSideBySideGroupDirection } from '../../../services/editor/common/editorGroupsService.js';
@@ -88,16 +92,6 @@ export interface IWelcomePageStartEntry {
 	when: ContextKeyExpression;
 }
 
-const parsedStartEntries: IWelcomePageStartEntry[] = startEntries.map((e, i) => ({
-	command: e.content.command,
-	description: e.description,
-	icon: { type: 'icon', icon: e.icon },
-	id: e.id,
-	order: i,
-	title: e.title,
-	when: ContextKeyExpr.deserialize(e.when) ?? ContextKeyExpr.true()
-}));
-
 type GettingStartedActionClassification = {
 	command: { classification: 'PublicNonPersonalData'; purpose: 'FeatureInsight'; comment: 'The command being executed on the getting started page.' };
 	walkthroughId: { classification: 'PublicNonPersonalData'; purpose: 'FeatureInsight'; comment: 'The walkthrough which the command is in' };
@@ -119,18 +113,11 @@ const REDUCED_MOTION_KEY = 'workbench.welcomePage.preferReducedMotion';
  * Only an explicit `false` shows the alert, so nothing is shown before the check has run.
  */
 const JULIA_INSTALLED_KEY = 'julia.juliaInstalled';
-// Set by the Julia extension when the REPL is connected, together with the version of Julia it runs.
-const JULIA_HAS_REPL_KEY = 'julia.hasREPL';
+// Set by the Julia extension when the REPL is connected: the version of Julia it runs.
 const JULIA_REPL_VERSION_KEY = 'julia.replVersion';
-const DISMISSED_ANNOUNCEMENTS_KEY = 'pollis.welcome.dismissedAnnouncements';
-// The Pollis version in which the announcements were dismissed: a new install or an update shows them again.
-const DISMISSED_ANNOUNCEMENTS_VERSION_KEY = 'pollis.welcome.dismissedAnnouncementsVersion';
-/**
- * Pollis: splits a localized text at its {0}, {1}, ... placeholders and puts each of `codes` there in code style.
- */
-function withCode(text: string, ...codes: string[]): (string | HTMLElement)[] {
-	return text.split(/\{(?<index>\d)\}/).map((part, i) => i % 2 ? $('code', {}, codes[Number(part)] ?? '') : part);
-}
+// Set by the Julia extension while it compiles stale packages in the background, at the start of a session.
+const JULIA_PRECOMPILING_KEY = 'julia.precompiling';
+const DISMISSED_ANNOUNCEMENTS_KEY = 'pollis.welcome.dismissedReleases';
 
 export class GettingStartedPage extends EditorPane {
 
@@ -161,7 +148,6 @@ export class GettingStartedPage extends EditorPane {
 
 	private contextService: IContextKeyService;
 
-	private startList?: GettingStartedIndexList<IWelcomePageStartEntry>;
 	private gettingStartedList?: GettingStartedIndexList<IResolvedWalkthrough>;
 
 	private stepsSlide!: HTMLElement;
@@ -175,8 +161,6 @@ export class GettingStartedPage extends EditorPane {
 	private detailsRenderer: GettingStartedDetailsRenderer;
 
 	private readonly categoriesSlideDisposables: DisposableStore;
-	// Pollis: set when Julia gets installed while this page is open, and set to ready once its REPL starts.
-	private juliaNewlyInstalled: 'installed' | 'ready' | undefined;
 	private renderAnnouncements = () => { };
 	private showFeaturedWalkthrough = true;
 
@@ -210,6 +194,7 @@ export class GettingStartedPage extends EditorPane {
 		@IMarkdownRendererService private readonly markdownRendererService: IMarkdownRendererService,
 		@IHoverService private readonly hoverService: IHoverService,
 		@IPathService private readonly pathService: IPathService,
+		@IRssFeedsService private readonly rssFeedsService: IRssFeedsService,
 	) {
 
 		super(GettingStartedPage.ID, group, telemetryService, themeService, storageService);
@@ -460,12 +445,7 @@ export class GettingStartedPage extends EditorPane {
 				break;
 			}
 			case 'dismissAnnouncement': {
-				if (argument === 'juliaReady') {
-					this.juliaNewlyInstalled = undefined;
-				} else {
-					this.storageService.store(DISMISSED_ANNOUNCEMENTS_KEY, JSON.stringify([...this.getDismissedAnnouncements(), argument]), StorageScope.APPLICATION, StorageTarget.USER);
-					this.storageService.store(DISMISSED_ANNOUNCEMENTS_VERSION_KEY, this.productService.pollisVersion ?? '', StorageScope.APPLICATION, StorageTarget.USER);
-				}
+				this.storageService.store(DISMISSED_ANNOUNCEMENTS_KEY, JSON.stringify([...this.getDismissedAnnouncements(), argument]), StorageScope.APPLICATION, StorageTarget.USER);
 				this.renderAnnouncements();
 				break;
 			}
@@ -522,6 +502,23 @@ export class GettingStartedPage extends EditorPane {
 			}
 			case 'openLink': {
 				this.openerService.open(argument);
+				break;
+			}
+			case 'showRssFeeds': {
+				this.commandService.executeCommand(RSS_FEEDS_COMMAND_ID);
+				break;
+			}
+			case 'openFeedItem':
+			case 'dismissFeedItem': {
+				// The id is encoded, since it is usually an address and the dispatch splits at colons.
+				const id = decodeURIComponent(argument);
+				const item = this.rssFeedsService.getFeeds().flatMap(feed => feed.items).find(item => item.id === id);
+				if (item) {
+					this.rssFeedsService.markRead([item.id]);
+					if (command === 'openFeedItem') {
+						this.openerService.open(URI.parse(item.link), { openExternal: true });
+					}
+				}
 				break;
 			}
 			default: {
@@ -936,8 +933,7 @@ export class GettingStartedPage extends EditorPane {
 		const leftColumn = $('.categories-column.categories-column-left', {},);
 		const rightColumn = $('.categories-column.categories-column-right', {},);
 
-		const startList = this.buildStartList();
-		const announcementsSection = this.buildAnnouncementsSection();
+		const announcementsSections = this.buildAnnouncementsSections();
 		const gettingStartedList = this.buildGettingStartedWalkthroughsList();
 
 		const footerChildren: HTMLElement[] = [];
@@ -955,9 +951,10 @@ export class GettingStartedPage extends EditorPane {
 		}
 		const footer = $('.footer', {}, ...footerChildren);
 
-		// Pollis: Start and Alerts and Announcements share the left column, and Discover Pollis heads the right one.
+		// Pollis: Status, Announcements, and RSS fill the left column, and Discover Pollis heads the right one.
+		// There is no Start section: New and Open are on the title bar (see pollisTitleBarStart.ts).
 		const discoverSection = this.buildDiscoverSection();
-		reset(leftColumn, startList.getDomElement(), announcementsSection);
+		reset(leftColumn, ...announcementsSections);
 
 		// Pollis: the Walkthroughs section is never shown, not even for walkthroughs that extensions contribute;
 		// they can still be opened with Welcome: Open Walkthrough... Upstream's "Overview" section is not shown either.
@@ -1006,65 +1003,89 @@ export class GettingStartedPage extends EditorPane {
 		this.setSlide('categories');
 	}
 
-	private buildAnnouncementsSection(): HTMLElement {
-		// Pollis: alerts are shown under the heading and updated when the context they depend on changes.
-		const alerts = $('.pollis-alerts', {});
-		const section = $('.announcements-section', {},
-			$('h2.section-header', {}, localize('alertsAnnouncementsAndRss', "Alerts, Announcements and RSS")),
-			alerts,
+	/**
+	 * Pollis: three sections, updated when the context they depend on changes: Status (Julia and the built-in
+	 * database), Announcements (releases of Julia and of the packages Pollis relies on) and RSS (the newest
+	 * unread feed items). Each section is shown only while it has something in it.
+	 */
+	private buildAnnouncementsSections(): HTMLElement[] {
+		const statusLine = $('.pollis-alerts', {});
+		const statusSection = $('.announcements-section', {},
+			$('h2.section-header', {}, localize('pollis.status', "Status")),
+			statusLine,
+		);
+		const announcements = $('.pollis-alerts', {});
+		const announcementsSection = $('.announcements-section', {},
+			$('h2.section-header', {}, localize('pollis.announcements', "Announcements")),
+			announcements,
+		);
+		const feedItems = $('.pollis-alerts', {});
+		const feedsSection = $('.announcements-section', {},
+			$('h2.section-header', {}, localize('pollis.rss', "RSS")),
+			feedItems,
 		);
 		// Whether the built-in database file exists, which PollisDB creates once DuckDB is installed.
 		let databaseReady: boolean | undefined;
+		// Releases of Julia and of the packages Pollis relies on, newer than the ones installed.
+		let releases: IPollisRelease[] = [];
 		const renderAlerts = this.renderAnnouncements = () => {
-			const dismissed = this.getDismissedAnnouncements();
-			const databaseAnnouncement = databaseReady ? 'databaseReady' : 'databaseBuiltIn';
 			const juliaVersion = this.contextService.getContextKeyValue<string>(JULIA_REPL_VERSION_KEY);
-			reset(alerts, ...coalesce([
-				this.getJuliaInstalled() === false ? this.buildJuliaNotInstalledAlert() : undefined,
-				this.juliaNewlyInstalled === 'ready' ? this.buildJuliaReadyAnnouncement(juliaVersion) : undefined,
-				this.getJuliaInstalled() && this.juliaNewlyInstalled !== 'ready' && !dismissed.includes('juliaInstalled') ? this.buildJuliaInstalledAnnouncement(juliaVersion) : undefined,
-				databaseReady !== undefined && this.getJuliaInstalled() && !dismissed.includes(databaseAnnouncement) ? this.buildDatabaseAnnouncement(databaseReady) : undefined,
+			const dismissed = this.getDismissedAnnouncements();
+			reset(statusLine, ...coalesce([
+				this.getJuliaInstalled() === false ? this.buildJuliaNotInstalledLine() : undefined,
+				this.getJuliaInstalled() ? this.buildStatusLine(juliaVersion, databaseReady, this.contextService.getContextKeyValue<boolean>(JULIA_PRECOMPILING_KEY) === true) : undefined,
 			]));
+			statusSection.style.display = statusLine.childElementCount ? '' : 'none';
+			const shownReleases = releases.filter(release => !dismissed.includes(release.id));
+			reset(announcements, ...shownReleases.map(release => this.buildReleaseAnnouncement(release)));
+			announcementsSection.style.display = shownReleases.length ? '' : 'none';
+			const newest = this.getNewestFeedItems();
+			reset(feedItems, ...newest.map(({ feed, item }) => this.buildFeedItem(feed, item)));
+			feedsSection.style.display = newest.length ? '' : 'none';
 			this.registerDispatchListeners();
 		};
 		renderAlerts();
-		// PollisDB.install() creates Pollis' Julia environment when it installs DuckDB and the PollisDatasets.
-		const pollisEnvironment = joinPath(this.pathService.userHome({ preferLocal: true }), '.pollis', 'julia', 'environments');
-		const checkDatabase = () => this.fileService.exists(pollisEnvironment).then(exists => {
-			databaseReady = exists;
+		// The installed packages depend on the version of Julia, known once its REPL has started.
+		const pollisReleases = this.instantiationService.createInstance(PollisReleases);
+		const checkReleases = async () => {
+			const juliaVersion = this.contextService.getContextKeyValue<string>(JULIA_REPL_VERSION_KEY);
+			const found = await pollisReleases.getReleases(juliaVersion);
+			if (juliaVersion === this.contextService.getContextKeyValue<string>(JULIA_REPL_VERSION_KEY)) {
+				releases = found;
+				renderAlerts();
+			}
+		};
+		checkReleases();
+		this.categoriesSlideDisposables.add(this.rssFeedsService.onDidChange(() => renderAlerts()));
+		// install_pollisdb.jl makes the three built-in databases together, PollisDatasets, PollisRSS (empty until
+		// feeds are read) and PollisJournals, once it has installed DuckDB, the PollisDatasets and the PollisJournals:
+		// they are ready when the three files exist.
+		const databasesFolder = joinPath(this.pathService.userHome({ preferLocal: true }), '.pollis', 'databases');
+		const databases = [joinPath(databasesFolder, 'PollisDatasets.duckdb'), joinPath(databasesFolder, 'PollisRSS.duckdb'), joinPath(databasesFolder, 'PollisJournals.duckdb')];
+		const checkDatabase = () => Promise.all(databases.map(database => this.fileService.exists(database))).then(exist => {
+			databaseReady = exist.every(Boolean);
 			renderAlerts();
 		}, () => { });
 		checkDatabase();
-		// New PollisDatasets are notifications (see pollisDatasetsNotification.ts). PollisDB.catalogue() rewrites the
-		// catalogue each time a Julia REPL starts, after it has installed DuckDB, so the database is checked again then.
-		const databasesFolder = joinPath(this.pathService.userHome({ preferLocal: true }), '.pollis', 'databases');
-		const catalogue = joinPath(databasesFolder, 'PollisDatasets.json');
-		const catalogueWatcher = this.categoriesSlideDisposables.add(this.fileService.createWatcher(databasesFolder, { recursive: false, excludes: [] }));
-		this.categoriesSlideDisposables.add(catalogueWatcher.onDidChange(e => {
-			if (e.contains(catalogue)) {
+		// New PollisDatasets are notifications (see pollisDatasetsNotification.ts); here the folder is watched for the
+		// databases being made, or remade.
+		const databasesWatcher = this.categoriesSlideDisposables.add(this.fileService.createWatcher(databasesFolder, { recursive: false, excludes: [] }));
+		this.categoriesSlideDisposables.add(databasesWatcher.onDidChange(e => {
+			if (databases.some(database => e.contains(database))) {
 				checkDatabase();
 			}
 		}));
-		let juliaWasMissing = this.getJuliaInstalled() === false;
+		// The status line shows the version of Julia once its REPL has started.
 		this.categoriesSlideDisposables.add(this.contextService.onDidChangeContext(e => {
-			if (e.affectsSome(new Set([JULIA_INSTALLED_KEY]))) {
-				if (juliaWasMissing && this.getJuliaInstalled()) {
-					this.juliaNewlyInstalled = 'installed';
-				}
-				juliaWasMissing = this.getJuliaInstalled() === false;
+			if (e.affectsSome(new Set([JULIA_INSTALLED_KEY, JULIA_REPL_VERSION_KEY, JULIA_PRECOMPILING_KEY]))) {
 				renderAlerts();
 			}
-			// A newly installed Julia is announced once its REPL shows in the terminal.
-			if (e.affectsSome(new Set([JULIA_HAS_REPL_KEY, JULIA_REPL_VERSION_KEY]))) {
-				if (this.juliaNewlyInstalled && this.contextService.getContextKeyValue<boolean>(JULIA_HAS_REPL_KEY)) {
-					this.juliaNewlyInstalled = 'ready';
-				}
-				// Julia is installed shows its version once the REPL has started.
-				renderAlerts();
+			if (e.affectsSome(new Set([JULIA_REPL_VERSION_KEY]))) {
+				checkReleases();
 			}
 		}));
 
-		return section;
+		return [statusSection, announcementsSection, feedsSection];
 	}
 
 	/**
@@ -1076,10 +1097,7 @@ export class GettingStartedPage extends EditorPane {
 	}
 
 	private getDismissedAnnouncements(): string[] {
-		// Announcements dismissed in an earlier Pollis version are shown again after an update.
-		if (this.storageService.get(DISMISSED_ANNOUNCEMENTS_VERSION_KEY, StorageScope.APPLICATION, '') !== (this.productService.pollisVersion ?? '')) {
-			return [];
-		}
+		// An announcement is identified by the version it announces, so a dismissed one stays dismissed.
 		try {
 			const dismissed = JSON.parse(this.storageService.get(DISMISSED_ANNOUNCEMENTS_KEY, StorageScope.APPLICATION, '[]'));
 			return Array.isArray(dismissed) ? dismissed : [];
@@ -1089,86 +1107,93 @@ export class GettingStartedPage extends EditorPane {
 	}
 
 	/**
-	 * Pollis: announcement shown once the REPL of a Julia installed while the welcome page is open shows in the terminal.
+	 * Pollis: the status line shown while nothing needs attention: the Julia found (with its version once its REPL
+	 * has started) and whether the built-in databases, PollisDatasets, PollisRSS and PollisJournals, are ready, or that packages are
+	 * being compiled in the background after an update. It replaces the announcements that said so.
 	 */
-	private buildJuliaReadyAnnouncement(version: string | undefined): HTMLElement {
-		return $('.pollis-alert.info', { role: 'status' },
-			$('span.pollis-alert-icon.codicon.codicon-check'),
-			$('.pollis-alert-body', {},
-				$('p.pollis-alert-title', {}, version
-					? localize('pollis.juliaVersionReady', "Julia {0} is ready", version)
-					: localize('pollis.juliaReady', "Julia is ready")),
-			),
-			this.buildDismissButton('juliaReady'),
+	private buildStatusLine(juliaVersion: string | undefined, databaseReady: boolean | undefined, precompiling: boolean): HTMLElement {
+		const julia = juliaVersion ? localize('pollis.statusJuliaVersion', "Julia {0}", juliaVersion) : localize('pollis.statusJulia', "Julia");
+		if (precompiling && databaseReady !== false) {
+			return $('.pollis-status', { role: 'status' },
+				$('span.pollis-status-icon.codicon.codicon-sync.codicon-modifier-spin'),
+				$('span', {}, localize('pollis.statusPrecompiling', "{0}: preparing packages in the background after an update", julia)),
+			);
+		}
+		const allSet = databaseReady === true;
+		const text = allSet
+			? localize('pollis.statusAllSet', "All set: {0}, PollisDatasets, PollisRSS and PollisJournals ready", julia)
+			: databaseReady === false
+				? localize('pollis.statusDatabasePending', "{0} found; PollisDatasets, PollisRSS and PollisJournals are set up the first time the Julia REPL starts", julia)
+				: localize('pollis.statusJuliaFound', "{0} found", julia);
+		return $('.pollis-status', { role: 'status' },
+			$(`span.pollis-status-icon.codicon.${allSet ? 'codicon-pass-filled' : 'codicon-info'}`),
+			$('span', {}, text),
 		);
 	}
 
 	/**
-	 * Pollis: announcement that the Julia extension found Julia, shown after each new install or update of Pollis
-	 * until it is dismissed. The version is known once the Julia REPL has started.
+	 * Pollis: the newest unread item of each RSS feed shown here, the three newest of them; the feeds
+	 * are on Explore > Monitor > RSS Feeds.
 	 */
-	private buildJuliaInstalledAnnouncement(version: string | undefined): HTMLElement {
-		return $('.pollis-alert.info', { role: 'status' },
-			$('span.pollis-alert-icon.codicon.codicon-check'),
-			$('.pollis-alert-body', {},
-				$('p.pollis-alert-title', {}, version
-					? localize('pollis.juliaVersionInstalled', "Julia {0} is installed", version)
-					: localize('pollis.juliaInstalled', "Julia is installed")),
-			),
-			this.buildDismissButton('juliaInstalled'),
-		);
+	private getNewestFeedItems(): { feed: string; item: IRssItem }[] {
+		const newest: { feed: string; item: IRssItem }[] = [];
+		for (const feed of this.rssFeedsService.getFeeds().filter(feed => this.rssFeedsService.isFeedOnWelcomePage(feed.url))) {
+			const item = this.rssFeedsService.getShownItems(feed).find(item => !this.rssFeedsService.isRead(item.id));
+			if (item) {
+				newest.push({ feed: feed.title, item });
+			}
+		}
+		return newest.sort((a, b) => b.item.date - a.item.date).slice(0, 3);
 	}
 
 	/**
-	 * Pollis: announcement about the DuckDB database built into Pollis. Before it is set up it says that DuckDB is
-	 * installed the first time the database is opened; afterwards it says where the database is kept. Each is
-	 * dismissed separately.
+	 * Pollis: an unread item of an RSS feed; opening or dismissing it marks it read.
 	 */
-	private buildDatabaseAnnouncement(ready: boolean): HTMLElement {
-		const id = ready ? 'databaseReady' : 'databaseBuiltIn';
+	private buildFeedItem(feed: string, item: IRssItem): HTMLElement {
+		const id = encodeURIComponent(item.id);
 		return $('.pollis-alert.info', { role: 'status' },
-			$('span.pollis-alert-icon.codicon.codicon-database'),
+			// A video or an audio item (a podcast, a radio programme) shows a camera or a microphone, else the RSS icon
+			$(`span.pollis-alert-icon.codicon.${item.mediaType === 'video' ? 'codicon-device-camera-video' : item.mediaType === 'audio' ? 'codicon-mic' : 'codicon-rss'}`),
 			$('.pollis-alert-body', {},
-				$('p.pollis-alert-title', {}, ready
-					? localize('pollis.databaseReady', "The built-in database is ready")
-					: localize('pollis.databaseBuiltIn', "A database is built in")),
-				$('p.pollis-alert-description', {}, ...(ready
-					// {0} is left in the text and replaced by PollisDatasets, and {1} by the connection's name, in code style
-					? withCode(localize('pollis.databaseReadyDescription', "It holds the {0} as tables, described column by column. Connect to it from the Databases view to query it as {1} in the Julia REPL."), 'PollisDatasets', 'pollis')
-					// {0} is left in the text and replaced by PollisDatasets in code style
-					: withCode(localize('pollis.databaseBuiltInDescription', "Pollis comes with a DuckDB database holding the {0}, so no database server is needed. DuckDB and the datasets are installed the first time the Julia REPL starts."), 'PollisDatasets'))),
+				$('p.pollis-alert-title', {}, item.title),
+				$('p.pollis-alert-description', {}, item.date ? localize('pollis.feedItemDate', "{0}, {1}", feed, fromNow(item.date, true)) : feed),
 				$('.pollis-alert-actions', {},
-					$('button.button-link', { 'x-dispatch': 'openDatabases' }, localize('pollis.openDatabases', "Open Databases View")),
+					$('button.button-link', { 'x-dispatch': `openFeedItem:${id}` }, localize('pollis.openFeedItem', "Open")),
+					$('button.button-link', { 'x-dispatch': 'showRssFeeds' }, localize('pollis.allFeedItems', "All Feeds")),
 				),
 			),
-			this.buildDismissButton(id),
+			$('button.pollis-alert-dismiss', { 'x-dispatch': `dismissFeedItem:${id}`, 'aria-label': localize('pollis.dismissFeedItem', "Mark Read") }, $('span.codicon.codicon-close')),
 		);
 	}
 
 	/**
-	 * Pollis: the close button in the top-right corner of an announcement.
+	 * Pollis: announces a release of Julia or of a package Pollis relies on, newer than the one installed, until it is dismissed.
 	 */
-	private buildDismissButton(id: string): HTMLElement {
-		return $('button.pollis-alert-dismiss', { 'x-dispatch': `dismissAnnouncement:${id}`, 'aria-label': localize('pollis.dismiss', "Dismiss") },
-			$('span.codicon.codicon-close'),
+	private buildReleaseAnnouncement(release: IPollisRelease): HTMLElement {
+		return $('.pollis-alert.info', { role: 'status' },
+			$('span.pollis-alert-icon.codicon.codicon-broadcast'),
+			$('.pollis-alert-body', {},
+				$('p.pollis-alert-title', {}, localize('pollis.released', "{0} {1} released", release.name, release.version)),
+				$('p.pollis-alert-description', {}, localize('pollis.releaseInstalled', "You have {0}.", release.installed)),
+				$('.pollis-alert-actions', {},
+					$('button.button-link', { 'x-dispatch': `openLink:${release.url}` }, localize('pollis.releaseNotes', "Release Notes")),
+				),
+			),
+			// The icon is a span inside the button: a button's own font would replace the icon font.
+			$('button.pollis-alert-dismiss', { 'x-dispatch': `dismissAnnouncement:${release.id}`, 'aria-label': localize('pollis.dismissRelease', "Dismiss") }, $('span.codicon.codicon-close')),
 		);
 	}
 
 	/**
-	 * Pollis: alert shown while Julia is not installed. Most panels generate Julia code, and the Julia REPL,
+	 * Pollis: the status line while Julia is not installed. Most panels generate Julia code, and the Julia REPL,
 	 * notebooks and Pluto need Julia to run it.
 	 */
-	private buildJuliaNotInstalledAlert(): HTMLElement {
-		return $('.pollis-alert', { role: 'alert' },
-			$('span.pollis-alert-icon.codicon.codicon-warning'),
-			$('.pollis-alert-body', {},
-				$('p.pollis-alert-title', {}, localize('pollis.juliaNotInstalled', "Julia is not installed")),
-				$('p.pollis-alert-description', {}, localize('pollis.juliaNotInstalledDescription', "Most Pollis panels generate Julia code. The Julia REPL, notebooks and Pluto need Julia to run it.")),
-				$('.pollis-alert-actions', {},
-					$('button.button-link', { 'x-dispatch': 'installJulia' }, localize('pollis.installJulia', "Install Julia")),
-					$('button.button-link', { 'x-dispatch': 'setJuliaPath' }, localize('pollis.setJuliaPath', "Set Julia Path")),
-				),
-			),
+	private buildJuliaNotInstalledLine(): HTMLElement {
+		return $('.pollis-status.warning', { role: 'alert' },
+			$('span.pollis-status-icon.codicon.codicon-warning'),
+			$('span', {}, localize('pollis.juliaNotInstalledLine', "Julia is not installed: the Julia REPL, notebooks and Pluto need it")),
+			$('button.button-link', { 'x-dispatch': 'installJulia' }, localize('pollis.installJulia', "Install Julia")),
+			$('button.button-link', { 'x-dispatch': 'setJuliaPath' }, localize('pollis.setJuliaPath', "Set Julia Path")),
 		);
 	}
 
@@ -1253,34 +1278,6 @@ export class GettingStartedPage extends EditorPane {
 				),
 			),
 		);
-	}
-
-	private buildStartList(): GettingStartedIndexList<IWelcomePageStartEntry> {
-		const renderStartEntry = (entry: IWelcomePageStartEntry): HTMLElement =>
-			$('li',
-				{}, $('button.button-link',
-					{
-						'x-dispatch': 'selectStartEntry:' + entry.id,
-						title: entry.description + ' ' + this.getKeybindingLabel(entry.command),
-					},
-					this.iconWidgetFor(entry),
-					$('span', {}, entry.title)));
-
-		if (this.startList) { this.startList.dispose(); }
-
-		const startList = this.startList = new GettingStartedIndexList(
-			{
-				title: localize('start', "Start"),
-				klass: 'start-container',
-				limit: 10,
-				renderElement: renderStartEntry,
-				rankElement: e => -e.order,
-				contextService: this.contextService
-			});
-
-		startList.setEntries(parsedStartEntries);
-		startList.onDidChange(() => this.registerDispatchListeners());
-		return startList;
 	}
 
 	private buildGettingStartedWalkthroughsList(): GettingStartedIndexList<IResolvedWalkthrough> {
@@ -1376,7 +1373,6 @@ export class GettingStartedPage extends EditorPane {
 		this.categoriesPageScrollbar?.scanDomNode();
 		this.detailsPageScrollbar?.scanDomNode();
 
-		this.startList?.layout(size);
 		this.gettingStartedList?.layout(size);
 
 		if (this.editorInput?.selectedStep && this.currentMediaType) {
@@ -1770,15 +1766,6 @@ export class GettingStartedPage extends EditorPane {
 
 		const renderedContents = this.detailsPageDisposables.add(this.markdownRendererService.render({ value: text, isTrusted: true }));
 		parent.append(renderedContents.element);
-	}
-
-	private getKeybindingLabel(command: string) {
-		command = command.replace(/^command:/, '');
-		const label = this.keybindingService.lookupKeybinding(command)?.getLabel();
-		if (!label) { return ''; }
-		else {
-			return `(${label})`;
-		}
 	}
 
 	private getKeyBinding(command: string) {

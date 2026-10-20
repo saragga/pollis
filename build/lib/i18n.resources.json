@@ -267,6 +267,10 @@
 			"project": "vscode-workbench"
 		},
 		{
+			"name": "vs/workbench/contrib/monitor",
+			"project": "vscode-workbench"
+		},
+		{
 			"name": "vs/workbench/contrib/pollisViews",
 			"project": "vscode-workbench"
 		},

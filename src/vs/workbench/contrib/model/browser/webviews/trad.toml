@@ -10,8 +10,8 @@ defaultModel = "agents"
 
 [[packages]]
 name = "LimitOrderBook.jl"
-# Fork with fixes (default branch fix-sell-cross); upstream PR p-casgrain/LimitOrderBook.jl#9
-github = "https://github.com/Trumpingtons/LimitOrderBook.jl"
+# Fixes merged upstream in pull request #9
+github = "https://github.com/p-casgrain/LimitOrderBook.jl"
 
 [[packages]]
 name = "TradingAgents.jl"

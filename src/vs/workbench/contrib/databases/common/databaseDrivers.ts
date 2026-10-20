@@ -31,6 +31,12 @@ export interface IDatabaseConnectionProfile {
 /** The id of the built-in Pollis database, a DuckDB file in ~/.pollis. */
 export const BUILTIN_DATABASE_ID = 'pollis';
 
+/** The id of the PollisRSS database, views over the archive of the RSS feeds in ~/.pollis/rss, also built in. */
+export const RSS_DATABASE_ID = 'pollisrss';
+
+/** The id of the PollisJournals database, the journals of OpenAlex and the metrics imported, also built in. */
+export const JOURNALS_DATABASE_ID = 'pollisjournals';
+
 /** One input of a driver's connection form. */
 export interface IDatabaseDriverField {
 	readonly id: string;
@@ -220,14 +226,15 @@ export function generateConnectionCode(profile: IDatabaseConnectionProfile): str
  * the PollisDB module the REPL loads at startup. A connection the REPL already holds is closed
  * first, so a database file is not opened twice. DuckDB is the default engine, so its code first
  * installs the DuckDB.jl package on the user's machine, the first time only (Pollis does not ship it),
- * and the built-in database first makes its file from the PollisDatasets, when they have changed.
+ * and the built-in database first makes its file from the PollisDatasets, when they have changed (PollisRSS, its views
+ * over the archive of the RSS feeds, when missing; PollisJournals, from the journals of PollisJournals.jl).
  */
 export function generateSessionConnectCode(profile: IDatabaseConnectionProfile, connected: boolean): string {
 	const id = juliaString(profile.id);
 	return [
 		...(connected ? [`PollisDB.disconnect(${id})`] : []),
 		...(profile.driver === 'duckdb' ? ['PollisDB.install()'] : []),
-		...(profile.builtin ? ['PollisDB.build()'] : []),
+		...(profile.builtin ? [profile.id === RSS_DATABASE_ID ? 'PollisDB.build_rss()' : profile.id === JOURNALS_DATABASE_ID ? 'PollisDB.build_journals()' : 'PollisDB.build()'] : []),
 		generateConnectionCode(profile),
 		`PollisDB.register(${id}, ${profile.variable}; name = ${juliaString(profile.name)})`,
 	].join('\n');

@@ -27,6 +27,7 @@ export const workbenchDesktop = [
 	createModuleDescription('vs/platform/agentHost/node/agentHostMain'),
 	createModuleDescription('vs/platform/agentHost/node/diffWorkerMain'),
 	createModuleDescription('vs/workbench/api/node/extensionHostProcess'),
+	createModuleDescription('vs/workbench/contrib/databases/node/duckdbShellMain'), // Pollis: the duckdb> terminal
 	createModuleDescription('vs/workbench/workbench.desktop.main'),
 	// Pollis: 'vs/sessions/sessions.desktop.main' omitted; the Agents window is not shipped.
 ];

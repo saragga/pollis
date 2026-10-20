@@ -15,6 +15,7 @@ import { LanguageClientFeature } from './languageClient'
 import { JuliaNotebookFeature } from './notebook/notebookFeature'
 import * as openpackagedirectory from './openpackagedirectory'
 import * as packagepath from './packagepath'
+import * as pollisDuckDB from './pollisDuckDB'
 import * as smallcommands from './smallcommands'
 import * as telemetry from './telemetry'
 import { setContext } from './utils'
@@ -48,6 +49,9 @@ export async function activate(context: vscode.ExtensionContext) {
         const globalDiagnosticOutputFeature = new JuliaGlobalDiagnosticOutputFeature()
         context.subscriptions.push(globalDiagnosticOutputFeature)
         console.debug(`[julia activation] JuliaGlobalDiagnosticOutputFeature: ${(performance.now() - t).toFixed(1)}ms`)
+
+        // POLLIS: before any Julia starts, so that each one finds Pollis' DuckDB engine.
+        pollisDuckDB.activate(context)
 
         t = performance.now()
         const executableFeature = new ExecutableFeature(context)

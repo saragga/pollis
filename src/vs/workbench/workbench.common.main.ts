@@ -267,6 +267,7 @@ import './contrib/debug/browser/debugViewlet.js';
 
 // Explore, Model, Simulate, Optimise and Compose
 import './contrib/explore/browser/explore.contribution.js';
+import './contrib/monitor/browser/monitor.contribution.js';
 import './contrib/model/browser/model.contribution.js';
 import './contrib/databases/browser/databases.contribution.js';
 import './contrib/simulate/browser/simulate.contribution.js';

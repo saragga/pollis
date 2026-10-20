@@ -429,7 +429,7 @@ export class NotificationTemplateRenderer extends Disposable {
 		});
 		this.template.icon.classList.add(...ThemeIcon.asClassNameArray(this.toSeverityIcon(notification.severity)));
 
-		// background by severity: info green, warning grey, error red
+		// accent by severity (bar, icon and tint): info green, warning grey, error red
 		this.template.container.classList.toggle('severity-info', notification.severity === Severity.Info);
 		this.template.container.classList.toggle('severity-warning', notification.severity === Severity.Warning);
 		this.template.container.classList.toggle('severity-error', notification.severity === Severity.Error);

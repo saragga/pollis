@@ -800,26 +800,26 @@ export const NOTIFICATIONS_WARNING_ICON_FOREGROUND = registerColor('notification
 
 export const NOTIFICATIONS_INFO_ICON_FOREGROUND = registerColor('notificationsInfoIcon.foreground', editorInfoForeground, localize('notificationsInfoIconForeground', "The color used for the icon of info notifications. Notifications slide in from the bottom right of the window."));
 
-export const NOTIFICATIONS_INFO_BACKGROUND = registerColor('notificationsInfo.background', {
-	dark: Color.fromHex('#1E4D2B'),
-	light: Color.fromHex('#DCF2DD'),
-	hcDark: null,
-	hcLight: null
-}, localize('notificationsInfoBackground', "Background color of info notifications. Notifications slide in from the bottom right of the window."));
+export const NOTIFICATIONS_INFO_ACCENT = registerColor('notificationsInfo.accent', {
+	dark: Color.fromHex('#3FB950'),
+	light: Color.fromHex('#1A7F37'),
+	hcDark: NOTIFICATIONS_INFO_ICON_FOREGROUND,
+	hcLight: NOTIFICATIONS_INFO_ICON_FOREGROUND
+}, localize('notificationsInfoAccent', "Accent color of info notifications: the bar at the left edge, the icon and a faint tint. Notifications slide in from the bottom right of the window."));
 
-export const NOTIFICATIONS_WARNING_BACKGROUND = registerColor('notificationsWarning.background', {
-	dark: Color.fromHex('#454545'),
-	light: Color.fromHex('#E4E4E4'),
-	hcDark: null,
-	hcLight: null
-}, localize('notificationsWarningBackground', "Background color of warning notifications. Notifications slide in from the bottom right of the window."));
+export const NOTIFICATIONS_WARNING_ACCENT = registerColor('notificationsWarning.accent', {
+	dark: Color.fromHex('#9D9D9D'),
+	light: Color.fromHex('#6E6E6E'),
+	hcDark: NOTIFICATIONS_WARNING_ICON_FOREGROUND,
+	hcLight: NOTIFICATIONS_WARNING_ICON_FOREGROUND
+}, localize('notificationsWarningAccent', "Accent color of warning notifications: the bar at the left edge, the icon and a faint tint. Notifications slide in from the bottom right of the window."));
 
-export const NOTIFICATIONS_ERROR_BACKGROUND = registerColor('notificationsError.background', {
-	dark: Color.fromHex('#5A1D1D'),
-	light: Color.fromHex('#FBE3E4'),
-	hcDark: null,
-	hcLight: null
-}, localize('notificationsErrorBackground', "Background color of error notifications. Notifications slide in from the bottom right of the window."));
+export const NOTIFICATIONS_ERROR_ACCENT = registerColor('notificationsError.accent', {
+	dark: Color.fromHex('#F14C4C'),
+	light: Color.fromHex('#C72E2E'),
+	hcDark: NOTIFICATIONS_ERROR_ICON_FOREGROUND,
+	hcLight: NOTIFICATIONS_ERROR_ICON_FOREGROUND
+}, localize('notificationsErrorAccent', "Accent color of error notifications: the bar at the left edge, the icon and a faint tint. Notifications slide in from the bottom right of the window."));
 
 export const WINDOW_ACTIVE_BORDER = registerColor('window.activeBorder', {
 	dark: null,

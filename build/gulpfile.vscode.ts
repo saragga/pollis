@@ -32,6 +32,7 @@ import { compileBuildWithoutManglingTask, compileBuildWithManglingTask } from '.
 import { compileNonNativeExtensionsBuildTask, compileNativeExtensionsBuildTask, compileAllExtensionsBuildTask, compileExtensionMediaBuildTask, cleanExtensionsBuildTask } from './gulpfile.extensions.ts';
 import { copyCodiconsTask } from './lib/compilation.ts';
 import { getCopilotExcludeFilter, copyCopilotNativeDeps } from './lib/copilot.ts';
+import { lanceStream, thinDuckDB } from './pollis/duckdb.ts';
 import type { EmbeddedProductInfo } from './lib/embeddedType.ts';
 import { useEsbuildTranspile } from './buildConfig.ts';
 import { promisify } from 'util';
@@ -464,6 +465,7 @@ function packageTask(platform: string, arch: string, sourceFolderName: string, d
 			.pipe(util.cleanNodeModules(path.join(import.meta.dirname, '.moduleignore')))
 			.pipe(util.cleanNodeModules(path.join(import.meta.dirname, `.moduleignore.${process.platform}`)))
 			.pipe(filter(getCopilotExcludeFilter(platform, arch)))
+			.pipe(thinDuckDB(platform, arch))
 			.pipe(jsFilter)
 			.pipe(util.rewriteSourceMappingURL(sourceMappingURLBase))
 			.pipe(jsFilter.restore)
@@ -477,6 +479,7 @@ function packageTask(platform: string, arch: string, sourceFolderName: string, d
 				'**/node-pty/lib/shared/conout.js',
 				'**/*.wasm',
 				'**/@vscode/vsce-sign/bin/*',
+				'**/@duckdb/node-bindings-*/*', // duckdb.node loads libduckdb from its own folder
 			], [
 				'**/*.mk',
 				'!node_modules/vsda/**' // stay compatible with extensions that depend on us shipping `vsda` into ASAR
@@ -491,7 +494,8 @@ function packageTask(platform: string, arch: string, sourceFolderName: string, d
 			api,
 			telemetry,
 			sources,
-			deps
+			deps,
+			lanceStream(platform, arch)
 		];
 		if (packageSubJsonStream) {
 			mergeStreams.push(packageSubJsonStream);
@@ -859,3 +863,6 @@ gulp.task('vscode-translations-import', function () {
 });
 
 // #endregion
+
+// Pollis: the Lance extension of DuckDB for a development build, in .build/duckdb/ (build/pollis/duckdb.ts)
+gulp.task(task.define('fetch-duckdb-lance', () => lanceStream(process.platform, process.arch).pipe(vfs.dest('.build'))));

@@ -19,12 +19,6 @@ let
     catch err
         @debug "PollisDB not loaded" exception=err
     end
-    # Pollis: DuckDB and the PollisDatasets are built in; installed the first time a REPL starts, the PollisDatasets updated at every start.
-    try
-        isdefined(Main, :PollisDB) && Base.invokelatest(Main.PollisDB.install)
-    catch err
-        @warn "Pollis: could not install DuckDB and the PollisDatasets" exception=err
-    end
     # Pollis: the list of datasets the welcome page announces new ones from.
     try
         isdefined(Main, :PollisDB) && Base.invokelatest(Main.PollisDB.catalogue)
@@ -77,6 +71,21 @@ let
     @debug "serve done" time=round(Int, time()*10)
     if !has_revise
         VSCodeServer.JSONRPC.send_notification(VSCodeServer.conn_endpoint[], "norevise", has_revise)
+    end
+    # Pollis: DuckDB, DBInterface, Tables and the PollisDatasets are built in. When one is missing, or the
+    # PollisDatasets have new data on GitHub, the extension installs them in a terminal of its own, as it
+    # installs Revise (install_pollisdb.jl), so the REPL never waits for Pkg. Asked in the background: it
+    # looks at GitHub, for up to 3 seconds.
+    # Otherwise, the packages of the REPL's environments that are stale are compiled in the background (after the
+    # install, when there is one).
+    @async try
+        if isdefined(Main, :PollisDB) && Base.invokelatest(Main.PollisDB.needs_install)
+            VSCodeServer.JSONRPC.send_notification(VSCodeServer.conn_endpoint[], "pollis/installdb", nothing)
+        else
+            VSCodeServer.JSONRPC.send_notification(VSCodeServer.conn_endpoint[], "pollis/precompile", nothing)
+        end
+    catch err
+        @debug "Pollis: could not check the packages of the built-in database" exception=err
     end
     @debug "all done" time=round(Int, time()*10)
 end

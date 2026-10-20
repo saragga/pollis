@@ -30,7 +30,7 @@ import { IViewPaneOptions, ViewPane } from '../../../browser/parts/views/viewPan
 import { IViewDescriptorService } from '../../../common/views.js';
 import { IDatabaseColumn, IDatabaseConnectionsService, IDatabaseSchema, IDatabaseSession, IDatabaseTable } from '../common/databaseConnections.js';
 import './media/connectionsView.css';
-import { describeConnection, getDatabaseDriver, IDatabaseConnectionProfile, isInMemoryConnection } from '../common/databaseDrivers.js';
+import { describeConnection, getDatabaseDriver, IDatabaseConnectionProfile, isInMemoryConnection, JOURNALS_DATABASE_ID, RSS_DATABASE_ID } from '../common/databaseDrivers.js';
 
 /** The context menu of an item in the Connections view. Its commands receive an {@link IDatabaseItemArg}. */
 export const DatabaseConnectionContextMenu = new MenuId('DatabaseConnectionContext');
@@ -47,6 +47,8 @@ export const DatabaseItemConnected = new RawContextKey<boolean>('pollisDatabaseC
 export const DatabaseItemSaved = new RawContextKey<boolean>('pollisDatabaseSaved', false);
 /** Whether the connection of the item is the built-in Pollis database, which cannot be edited or deleted. */
 export const DatabaseItemBuiltin = new RawContextKey<boolean>('pollisDatabaseBuiltin', false);
+/** The id of the item's connection, which shows the commands of one built-in database on it alone. */
+export const DatabaseItemId = new RawContextKey<string>('pollisDatabaseId', undefined);
 /** Whether the tables of the item's connection are shown below it. */
 export const DatabaseItemExpanded = new RawContextKey<boolean>('pollisDatabaseExpanded', false);
 
@@ -163,13 +165,20 @@ class ItemRenderer implements ITreeRenderer<DatabaseItem, void, IItemTemplate> {
 				const { profile, session } = item;
 				const inMemory = !!profile && isInMemoryConnection(profile);
 				icon = inMemory ? Codicon.zap : Codicon.database;
-				// The list shows only the names; the hover tells the engine, the location and the connection.
-				if (profile?.builtin) {
-					description = localize('connection.builtin', "built-in");
-				} else if (inMemory) {
+				// The list shows only the names; the hover tells the engine, the location and the connection
+				// (and, for PollisDatasets, that the database is built into Pollis).
+				if (inMemory) {
 					description = localize('connection.inMemory', "in-memory");
 				}
-				if (profile?.builtin) {
+				if (profile?.builtin && profile.id === RSS_DATABASE_ID) {
+					hover = session
+						? localize('connection.rss.hover.connected', "{0} (DuckDB)\nBuilt into Pollis: every item of the RSS feeds received, read-only, in {1}.\nConnected in the Julia REPL as {2}. Click to browse its views.", name, describeConnection(profile), profile.variable)
+						: localize('connection.rss.hover', "{0} (DuckDB)\nBuilt into Pollis: every item of the RSS feeds received, read-only, in {1}.\nNot connected. Click to connect in the Julia REPL as {2}.", name, describeConnection(profile), profile.variable);
+				} else if (profile?.builtin && profile.id === JOURNALS_DATABASE_ID) {
+					hover = session
+						? localize('connection.journals.hover.connected', "{0} (DuckDB)\nBuilt into Pollis: the journals of OpenAlex, the articles of your email alerts and the journal metrics you imported, read-only, in {1}.\nConnected in the Julia REPL as {2}. Click to browse its tables.", name, describeConnection(profile), profile.variable)
+						: localize('connection.journals.hover', "{0} (DuckDB)\nBuilt into Pollis: the journals of OpenAlex, the articles of your email alerts and the journal metrics you imported, read-only, in {1}.\nNot connected. Click to connect in the Julia REPL as {2}.", name, describeConnection(profile), profile.variable);
+				} else if (profile?.builtin) {
 					hover = session
 						? localize('connection.builtin.hover.connected', "{0} (DuckDB)\nThe database built into Pollis: the PollisDatasets, read-only, in {1}.\nConnected in the Julia REPL as {2}. Click to browse its tables.", name, describeConnection(profile), profile.variable)
 						: localize('connection.builtin.hover', "{0} (DuckDB)\nThe database built into Pollis: the PollisDatasets, read-only, in {1}.\nNot connected. Click to connect in the Julia REPL as {2}.", name, describeConnection(profile), profile.variable);
@@ -434,6 +443,7 @@ export class DatabaseConnectionsView extends ViewPane {
 			[DatabaseItemSaved.key, !!this.databaseConnectionsService.getConnection(item.id)],
 			[DatabaseItemBuiltin.key, !!this.databaseConnectionsService.getConnection(item.id)?.builtin],
 			[DatabaseItemExpanded.key, this.expanded.has(item.id)],
+			[DatabaseItemId.key, item.id],
 		];
 	}
 

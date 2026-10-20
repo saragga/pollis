@@ -219,10 +219,10 @@
 	text-overflow: ellipsis;
 }
 
-/* Compact mode: left-aligned label, no icon, full width */
+/* Compact mode: full width; Pollis: the magnifying glass and the label are centred, as in Positron */
 .monaco-workbench .part.titlebar > .titlebar-container > .titlebar-center > .window-title > .command-center .action-item.command-center-center .action-item.command-center-quick-pick.compact-mode {
-	margin: auto auto auto 0;
-	padding-left: 8px;
+	margin: auto;
+	justify-content: center;
 	flex: 1;
 }
 
@@ -514,4 +514,56 @@
 	padding: 0 2px;
 	border-radius: 16px;
 	text-align: center;
+}
+
+/* Pollis: the New and Open buttons at the left of the title bar, after the macOS window buttons (pollisTitleBarStart.ts) */
+.monaco-workbench .part.titlebar > .titlebar-container > .titlebar-left > .pollis-titlebar-start {
+	display: flex;
+	align-items: center;
+	gap: 2px;
+	padding: 0 6px;
+	-webkit-app-region: no-drag;
+}
+
+.monaco-workbench.mac:not(.web):not(.fullscreen) .part.titlebar > .titlebar-container > .titlebar-left > .pollis-titlebar-start {
+	margin-left: 70px;
+}
+
+.monaco-workbench .part.titlebar > .titlebar-container > .titlebar-left > .pollis-titlebar-start > .pollis-titlebar-start-button {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	height: 22px;
+	padding: 0 4px;
+	border-radius: var(--vscode-cornerRadius-medium);
+	color: var(--vscode-titleBar-activeForeground);
+	cursor: pointer;
+	white-space: nowrap;
+}
+
+.monaco-workbench .part.titlebar.inactive > .titlebar-container > .titlebar-left > .pollis-titlebar-start > .pollis-titlebar-start-button {
+	color: var(--vscode-titleBar-inactiveForeground);
+}
+
+.monaco-workbench .part.titlebar > .titlebar-container > .titlebar-left > .pollis-titlebar-start > .pollis-titlebar-start-button:hover {
+	background-color: var(--vscode-toolbar-hoverBackground);
+}
+
+.monaco-workbench .part.titlebar > .titlebar-container > .titlebar-left > .pollis-titlebar-start > .pollis-titlebar-start-button:focus-visible {
+	outline: 1px solid var(--vscode-focusBorder);
+	outline-offset: -1px;
+}
+
+.monaco-workbench .part.titlebar > .titlebar-container > .titlebar-left > .pollis-titlebar-start > .pollis-titlebar-start-button > .codicon {
+	font-size: 14px;
+	color: inherit;
+}
+
+.monaco-workbench .part.titlebar > .titlebar-container > .titlebar-left > .pollis-titlebar-start > .pollis-titlebar-start-button > .codicon.chevron {
+	font-size: 12px;
+	opacity: 0.8;
+}
+
+.monaco-workbench .part.titlebar > .titlebar-container > .titlebar-left > .pollis-titlebar-start > .pollis-titlebar-start-button > .label {
+	font-size: 12px;
 }

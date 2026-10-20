@@ -10,6 +10,7 @@ import { IHoverDelegate } from '../../../../base/browser/ui/hover/hoverDelegate.
 import { renderIcon } from '../../../../base/browser/ui/iconLabel/iconLabels.js';
 import { IAction, SubmenuAction } from '../../../../base/common/actions.js';
 import { Codicon } from '../../../../base/common/codicons.js';
+import { ThemeIcon } from '../../../../base/common/themables.js';
 import { Emitter, Event } from '../../../../base/common/event.js';
 import { DisposableStore } from '../../../../base/common/lifecycle.js';
 import { autorun } from '../../../../base/common/observable.js';
@@ -186,11 +187,11 @@ class CommandCenterCenterViewItem extends BaseActionViewItem {
 							const labelElement = document.createElement('span');
 							labelElement.classList.add('search-label');
 							labelElement.textContent = label;
-							if (isCompactMode) {
-								reset(container, labelElement);
-							} else {
-								reset(container, searchIcon, labelElement);
+							// Pollis: the magnifying glass shows in compact mode too, and the label is centred (see titlebarpart.css)
+							if (!searchIcon.classList.contains('codicon')) {
+								searchIcon.classList.add(...ThemeIcon.asClassNameArray(Codicon.search));
 							}
+							reset(container, searchIcon, labelElement);
 
 							const hover = this._store.add(that._hoverService.setupManagedHover(that._hoverDelegate, container, this.getTooltip()));
 
@@ -254,13 +255,11 @@ class CommandCenterCenterViewItem extends BaseActionViewItem {
 
 	protected override getTooltip() {
 
-		// tooltip: full windowTitle
+		// Pollis: the tooltip is just "Search" and the shortcut; the folder and window title are already in the window
 		const kb = this._keybindingService.lookupKeybinding(this.action.id)?.getLabel();
-		const title = kb
-			? localize('title', "Search {0} ({1}) \u2014 {2}", this._windowTitle.workspaceName, kb, this._windowTitle.value)
-			: localize('title2', "Search {0} \u2014 {1}", this._windowTitle.workspaceName, this._windowTitle.value);
-
-		return title;
+		return kb
+			? localize('pollis.searchTooltip', "Search ({0})", kb)
+			: localize('pollis.searchTooltip2', "Search");
 	}
 }
 

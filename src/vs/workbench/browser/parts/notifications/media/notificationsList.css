@@ -19,16 +19,26 @@
 	box-sizing: border-box;
 }
 
+/* Pollis: severity shown by a bar at the left edge, the icon colour and a faint tint (info green, warning grey, error red) */
 .monaco-workbench .notifications-list-container .notification-list-item.severity-info {
-	background-color: var(--vscode-notificationsInfo-background);
+	--pollis-notification-accent: var(--vscode-notificationsInfo-accent);
 }
 
 .monaco-workbench .notifications-list-container .notification-list-item.severity-warning {
-	background-color: var(--vscode-notificationsWarning-background);
+	--pollis-notification-accent: var(--vscode-notificationsWarning-accent);
 }
 
 .monaco-workbench .notifications-list-container .notification-list-item.severity-error {
-	background-color: var(--vscode-notificationsError-background);
+	--pollis-notification-accent: var(--vscode-notificationsError-accent);
+}
+
+.monaco-workbench .notifications-list-container .notification-list-item:is(.severity-info, .severity-warning, .severity-error) {
+	background-color: color-mix(in srgb, var(--pollis-notification-accent) 10%, transparent);
+	box-shadow: inset 4px 0 0 var(--pollis-notification-accent);
+}
+
+.monaco-workbench .notifications-list-container .notification-list-item:is(.severity-info, .severity-warning, .severity-error) .notification-list-item-icon.codicon {
+	color: var(--pollis-notification-accent) !important;
 }
 
 .monaco-workbench .notifications-list-container .notification-offset-helper {

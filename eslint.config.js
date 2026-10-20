@@ -1501,6 +1501,7 @@ export default tseslint.config(
 					// - electron-main
 					'when': 'hasNode',
 					'allow': [
+						'@duckdb/node-api',
 						'@github/copilot-sdk',
 						'@microsoft/dev-tunnels-contracts',
 						'@microsoft/dev-tunnels-management',

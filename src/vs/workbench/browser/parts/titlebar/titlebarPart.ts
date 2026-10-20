@@ -31,6 +31,7 @@ import { IContextKey, IContextKeyService } from '../../../../platform/contextkey
 import { IHostService } from '../../../services/host/browser/host.js';
 import { WindowTitle } from './windowTitle.js';
 import { CommandCenterControl } from './commandCenterControl.js';
+import { PollisTitleBarStart } from './pollisTitleBarStart.js';
 import { Categories } from '../../../../platform/action/common/actionCommonCategories.js';
 import { HiddenItemStrategy, MenuWorkbenchToolBar, WorkbenchToolBar } from '../../../../platform/actions/browser/toolbar.js';
 import { ACCOUNTS_ACTIVITY_ID, GLOBAL_ACTIVITY_ID } from '../../../common/activity.js';
@@ -481,6 +482,11 @@ export class BrowserTitlebarPart extends Part implements ITitlebarPart {
 			this.currentMenubarVisibility !== 'compact'
 		) {
 			this.installMenubar();
+		}
+
+		// Pollis: New and Open at the left, after the macOS window buttons (see pollisTitleBarStart.ts)
+		if (!this.isAuxiliary && hasCustomTitlebar(this.configurationService, this.titleBarStyle)) {
+			this._register(this.instantiationService.createInstance(PollisTitleBarStart, this.leftContent, this.hoverDelegate));
 		}
 
 		// Title

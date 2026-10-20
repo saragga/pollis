@@ -50,6 +50,12 @@ available under the MIT License.
 | Visual Studio Code (Code - OSS) | MIT | https://github.com/microsoft/vscode |
 | Codicons | MIT | https://github.com/microsoft/vscode-codicons |
 | julia-vscode | MIT | https://github.com/julia-vscode/julia-vscode |
+| p2p-live-share | MIT | https://github.com/KermanX/p2p-live-share |
+| Trystero | MIT | https://github.com/dmotz/trystero |
+| DuckDB | MIT | https://github.com/duckdb/duckdb |
+| DuckDB Node API | MIT | https://github.com/duckdb/duckdb-node-neo |
+| DuckDB.jl (Pollis fork) | MIT | https://github.com/Trumpingtons/DuckDB.jl |
+| Lance extension for DuckDB | Apache-2.0 | https://github.com/lance-format/lance-duckdb |
 
 A complete list of third-party notices, including the applicable copyright notices and license
 texts, is available in the [Third-Party Notices](pollis-notice.md) file distributed with the

@@ -1179,6 +1179,43 @@
 	gap: 16px;
 }
 
+/* Pollis: the status line shown while nothing needs attention (Julia and the built-in database) */
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-status {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	margin-top: 8px;
+	color: var(--vscode-descriptionForeground);
+}
+
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-status .pollis-status-icon {
+	color: var(--vscode-editorInfo-foreground);
+}
+
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-status .pollis-status-icon.codicon-pass-filled {
+	color: var(--vscode-testing-iconPassed);
+}
+
+/* Pollis: the status line wraps on narrow pages */
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-status {
+	flex-wrap: wrap;
+	column-gap: 8px;
+}
+
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-status.warning .pollis-status-icon {
+	color: var(--vscode-editorWarning-foreground);
+}
+
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-status .button-link {
+	padding: 0;
+	font-size: inherit;
+}
+
+/* Pollis: the space below each section shown (a hidden one adds none, so the first shown lines up with Discover Pollis) */
+.monaco-workbench .part.editor > .content .gettingStartedContainer .announcements-section {
+	margin-bottom: 24px;
+}
+
 /* Pollis: Discover Pollis section */
 .monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-discover-frame > .pollis-discover-run {
 	position: absolute;

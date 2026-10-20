@@ -69,6 +69,10 @@ import { IMeteredConnectionService } from '../../platform/meteredConnection/comm
 import { METERED_CONNECTION_CHANNEL } from '../../platform/meteredConnection/common/meteredConnectionIpc.js';
 import { MeteredConnectionChannel } from '../../platform/meteredConnection/electron-main/meteredConnectionChannel.js';
 import { MeteredConnectionMainService } from '../../platform/meteredConnection/electron-main/meteredConnectionMainService.js';
+import { IRequestService } from '../../platform/request/common/request.js';
+import { RequestChannel } from '../../platform/request/common/requestIpc.js';
+import { ALERTS_MAILBOX_CHANNEL } from '../../platform/alertsMailbox/common/alertsMailbox.js';
+import { AlertsMailboxService } from '../../platform/alertsMailbox/node/alertsMailboxService.js';
 import { IProductService } from '../../platform/product/common/productService.js';
 import { getRemoteAuthority } from '../../platform/remote/common/remoteHosts.js';
 import { SharedProcess } from '../../platform/sharedProcess/electron-main/sharedProcess.js';
@@ -1286,6 +1290,11 @@ export class CodeApplication extends Disposable {
 		const meteredConnectionChannel = new MeteredConnectionChannel(accessor.get(IMeteredConnectionService) as MeteredConnectionMainService);
 		mainProcessElectronServer.registerChannel(METERED_CONNECTION_CHANNEL, meteredConnectionChannel);
 		sharedProcessClient.then(client => client.registerChannel(METERED_CONNECTION_CHANNEL, meteredConnectionChannel));
+
+		// Pollis: web requests for the windows, which CORS does not restrict here (RSS feeds)
+		mainProcessElectronServer.registerChannel('request', new RequestChannel(accessor.get(IRequestService)));
+		// Pollis: the alerts mailbox, read over IMAP for the RSS Feeds
+		mainProcessElectronServer.registerChannel(ALERTS_MAILBOX_CHANNEL, ProxyChannel.fromService(new AlertsMailboxService(), disposables));
 
 		// Process
 		const processChannel = ProxyChannel.fromService(new ProcessMainService(this.logService, accessor.get(IDiagnosticsService), accessor.get(IDiagnosticsMainService)), disposables);

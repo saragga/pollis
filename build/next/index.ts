@@ -104,6 +104,7 @@ const desktopEntryPoints = [
 	'vs/platform/agentHost/node/agentHostMain',
 	'vs/platform/agentHost/node/diffWorkerMain',
 	'vs/workbench/api/node/extensionHostProcess',
+	'vs/workbench/contrib/databases/node/duckdbShellMain', // Pollis: the duckdb> terminal
 ];
 
 const codeEntryPoints = [
