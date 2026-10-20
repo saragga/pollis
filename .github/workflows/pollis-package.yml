@@ -45,7 +45,7 @@ env:
 jobs:
   package:
     name: vscode-min
-    runs-on: macos-latest
+    runs-on: macos-15
     timeout-minutes: 180
 
     steps:
