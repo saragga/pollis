@@ -1166,6 +1166,16 @@
 	color: var(--vscode-descriptionForeground);
 }
 
+/* Pollis: the tag of a journal item, its level and metrics, coloured as on the RSS Feeds page */
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-alert .pollis-journal-tag {
+	margin-left: 8px;
+	padding: 0 6px;
+	white-space: nowrap;
+	border-radius: 9px;
+	border: 1px solid var(--vscode-charts-purple);
+	color: var(--vscode-charts-purple);
+}
+
 .monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-alert .pollis-alert-description code {
 	font-family: var(--monaco-monospace-font);
 	color: var(--vscode-textPreformat-foreground);
@@ -1200,6 +1210,23 @@
 .monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-status {
 	flex-wrap: wrap;
 	column-gap: 8px;
+}
+
+/* Pollis: the status line while nothing needs attention stays on one line; its hover says it in full */
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-status.single-line {
+	flex-wrap: nowrap;
+	min-width: 0;
+}
+
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-status.single-line .pollis-status-icon {
+	flex-shrink: 0;
+}
+
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-status.single-line .pollis-status-text {
+	min-width: 0;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
 }
 
 .monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-status.warning .pollis-status-icon {

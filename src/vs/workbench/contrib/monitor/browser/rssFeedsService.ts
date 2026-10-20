@@ -26,7 +26,7 @@ import { ALERT_SOURCES, AlertSource, IAlertEmail, IAlertsMailbox, IAlertsMailbox
 import { IPathService } from '../../../services/path/common/pathService.js';
 import { ARXIV_TOPIC, DEFAULT_FEEDS, findCatalogueFeed, PUBMED_SEARCH, RENAMED_TOPICS, requestSpacing, youtubeFeedUrl } from './rssCatalogue.js';
 import { findOxfordFeeds } from './oxfordJournals.js';
-import { lookUpArticle } from './articleLookup.js';
+import { FetchText, IArticleRecord, lookUpArticle } from './articleLookup.js';
 
 // Explore > Monitor > RSS Feeds: the feeds the user follows, by topic, read by Pollis itself (RSS 2.0 and Atom, and
 // PubMed searches, YouTube channels and podcasts), with the items kept between sessions and which of them have been
@@ -60,11 +60,13 @@ const EPISODES_KEY = 'pollis.rss.episodes';
 // Set once the items kept before the archive existed have been added to it.
 const ARCHIVED_KEY = 'pollis.rss.archived';
 // Set once the feeds followed have been moved to the topics renamed, and the catalogue's arXiv feeds to their subjects.
-const TOPICS_MOVED_KEY = 'pollis.rss.topicsMoved2';
+const TOPICS_MOVED_KEY = 'pollis.rss.topicsMoved3';
 // The alerts found in the alerts mailbox, with their articles, and where its last reading stopped; its password is a secret.
 const EMAIL_ALERTS_KEY = 'pollis.rss.emailAlerts';
 const ALERTS_MAILBOX_POSITION_KEY = 'pollis.rss.alertsMailboxPosition';
 const ALERTS_MAILBOX_PASSWORD_KEY = 'pollis.rss.alertsMailboxPassword';
+// The ISSN of the journal of each feed of the user's own, found by looking up its first items; null when it is no journal's.
+const JOURNAL_FEEDS_KEY = 'pollis.rss.journalFeeds';
 // The time between the lookups of two articles of the email alerts at Crossref and OpenAlex, and how Pollis introduces
 // itself to them (Crossref's polite pool asks for a contact).
 const ARTICLE_LOOKUP_SPACING = 250;
@@ -190,6 +192,8 @@ export interface IRssItem {
 	readonly media?: string;
 	/** Whether the item is a video (a YouTube video, or a video podcast's episode) or an audio episode. */
 	readonly mediaType?: 'video' | 'audio';
+	/** The ISSNs of the article's journal, when the feed names them (PubMed). */
+	readonly issns?: readonly string[];
 }
 
 export interface IRssFeed {
@@ -300,6 +304,12 @@ export interface IRssFeedsService {
 	downloadEpisode(id: string): Promise<URI | undefined>;
 	/** The file of the episode `id`, when it was downloaded. */
 	getEpisodeFile(id: string): URI | undefined;
+	/**
+	 * The ISSNs of the journal the item `id` of the feed at `url` is from: the catalogue's for its feeds, the one found
+	 * at Crossref and OpenAlex for an email alert's article, or, for a feed of the user's own, the one found for its
+	 * first items. Empty when the item is not known to be a journal's.
+	 */
+	getJournalIssns(url: string, id: string): readonly string[];
 }
 
 /** A library (`L1`) or collection (`C12`) of Zotero, and how deep it is in the tree of collections. */
@@ -338,6 +348,9 @@ export class RssFeedsService extends Disposable implements IRssFeedsService {
 	// The articles of the email alerts, looked up one after another, for the PollisJournals database
 	private readonly articlesFile: URI;
 	private lookingUp: Promise<void> = Promise.resolve();
+	// The ISSN of the journal of each email alert's article found, by item id, and of the user's own feeds, by address
+	private readonly articleIssns = new Map<string, string>();
+	private journalFeeds: Record<string, string | null>;
 
 	constructor(
 		@IRequestService private readonly requestService: IRequestService,
@@ -356,6 +369,8 @@ export class RssFeedsService extends Disposable implements IRssFeedsService {
 		this.zotero = new Set(this.readStorage<string[]>(ZOTERO_KEY, []));
 		this.episodes = this.readStorage<Record<string, string>>(EPISODES_KEY, {});
 		this.alerts = this.readStorage<Record<string, IStoredAlert>>(EMAIL_ALERTS_KEY, {});
+		this.journalFeeds = this.readStorage<Record<string, string | null>>(JOURNAL_FEEDS_KEY, {});
+		this.readArticleIssns();
 
 		// After the constructor, so that a subclass can read the feeds its own way
 		this._register(disposableTimeout(() => {
@@ -764,6 +779,38 @@ export class RssFeedsService extends Disposable implements IRssFeedsService {
 		return this.zotero.has(id);
 	}
 
+	getJournalIssns(url: string, id: string): readonly string[] {
+		if (url.startsWith(EMAIL_ALERT_PREFIX)) {
+			const issn = this.articleIssns.get(id);
+			return issn ? [issn] : [];
+		}
+		if (url.startsWith(PUBMED_SEARCH)) {
+			return this.stored[url]?.items.find(item => item.id === id)?.issns ?? [];
+		}
+		const catalogueFeed = findCatalogueFeed(url);
+		if (catalogueFeed) {
+			return catalogueFeed.feed.issns ?? [];
+		}
+		const issn = this.journalFeeds[url];
+		return issn ? [issn] : [];
+	}
+
+	/** The ISSNs of the journals of the email alerts' articles found before, from ~/.pollis/journals/articles.jsonl. */
+	private async readArticleIssns(): Promise<void> {
+		try {
+			const content = await this.fileService.readFile(this.articlesFile);
+			for (const line of content.value.toString().split('\n')) {
+				const record: Partial<IArticleRecord> | undefined = line ? JSON.parse(line) : undefined;
+				if (record?.id && record.issn_l) {
+					this.articleIssns.set(record.id, record.issn_l);
+				}
+			}
+			this._onDidChange.fire();
+		} catch {
+			// No article looked up yet
+		}
+	}
+
 	getEpisodeFile(id: string): URI | undefined {
 		return this.episodes[id] ? URI.parse(this.episodes[id]) : undefined;
 	}
@@ -925,6 +972,57 @@ export class RssFeedsService extends Disposable implements IRssFeedsService {
 			this.storageService.store(ARCHIVED_KEY, true, StorageScope.APPLICATION, StorageTarget.MACHINE);
 		}
 		this.lookUpArticles([...received].filter(([url]) => url.startsWith(EMAIL_ALERT_PREFIX)).flatMap(([, items]) => items));
+		this.lookUpJournalFeeds();
+	}
+
+	/** Crossref and OpenAlex, with Pollis introduced as they ask; `answered` records that one of them answered. */
+	private scholarlyFetch(answered?: { value: boolean }): FetchText {
+		return async (url: string) => {
+			const context = await this.request({ type: 'GET', url, headers: { 'User-Agent': SCHOLARLY_USER_AGENT }, timeout: 10000, callSite: 'pollis.rss.articles' });
+			const text = isSuccess(context) ? (await asText(context)) ?? undefined : undefined;
+			if (answered && text !== undefined) {
+				answered.value = true;
+			}
+			return text;
+		};
+	}
+
+	/**
+	 * Finds, once, whether each feed of the user's own with items is a journal's, after the lookups under way: its
+	 * first items are looked up at Crossref and OpenAlex until one is found, whose journal's ISSN is kept. A feed is
+	 * marked as no journal's only when the services answered, so that a feed read offline is looked up again.
+	 */
+	private lookUpJournalFeeds(): void {
+		const feeds = this.getFeeds().filter(feed => feed.items.length && this.journalFeeds[feed.url] === undefined && !feed.url.startsWith(EMAIL_ALERT_PREFIX)
+			&& !feed.url.startsWith(PUBMED_SEARCH) && !feed.url.startsWith(youtubeFeedUrl('')) && !findCatalogueFeed(feed.url) && !feed.url.includes('arxiv.org'));
+		if (!feeds.length) {
+			return;
+		}
+		this.lookingUp = this.lookingUp.then(async () => {
+			for (const feed of feeds) {
+				const answered = { value: false };
+				const fetchText = this.scholarlyFetch(answered);
+				let issn: string | null = null;
+				for (const item of feed.items.slice(0, 3)) {
+					await timeout(ARTICLE_LOOKUP_SPACING);
+					try {
+						issn = (await lookUpArticle(item.id, item.title, item.link, fetchText)).issn_l;
+					} catch {
+						// Offline, or a service that failed: the next item
+					}
+					if (issn) {
+						break;
+					}
+				}
+				if (issn || answered.value) {
+					this.journalFeeds[feed.url] = issn;
+					this.storageService.store(JOURNAL_FEEDS_KEY, JSON.stringify(this.journalFeeds), StorageScope.APPLICATION, StorageTarget.MACHINE);
+					if (issn) {
+						this._onDidChange.fire();
+					}
+				}
+			}
+		});
 	}
 
 	/**
@@ -937,10 +1035,7 @@ export class RssFeedsService extends Disposable implements IRssFeedsService {
 		if (!items.length) {
 			return;
 		}
-		const fetchText = async (url: string) => {
-			const context = await this.request({ type: 'GET', url, headers: { 'User-Agent': SCHOLARLY_USER_AGENT }, timeout: 10000, callSite: 'pollis.rss.articles' });
-			return isSuccess(context) ? (await asText(context)) ?? undefined : undefined;
-		};
+		const fetchText = this.scholarlyFetch();
 		this.lookingUp = this.lookingUp.then(async () => {
 			for (const [index, item] of items.entries()) {
 				if (index) {
@@ -948,6 +1043,10 @@ export class RssFeedsService extends Disposable implements IRssFeedsService {
 				}
 				try {
 					const record = await lookUpArticle(item.id, item.title, item.link, fetchText);
+					if (record.issn_l) {
+						this.articleIssns.set(record.id, record.issn_l);
+						this._onDidChange.fire();
+					}
 					await this.fileService.writeFile(this.articlesFile, VSBuffer.fromString(JSON.stringify(record) + '\n'), { append: true });
 				} catch {
 					// Offline, or a service that failed: the next item
@@ -1031,12 +1130,14 @@ export class RssFeedsService extends Disposable implements IRssFeedsService {
 			if (article?.title) {
 				const added = article.history?.find(entry => entry.pubstatus === 'entrez')?.date ?? article.pubdate ?? '';
 				const time = Date.parse(added);
+				const issns = [article.issn, article.essn].filter((issn): issn is string => !!issn);
 				items.push({
 					id: `pubmed:${id}`,
 					title: decodeEntities(article.title.replace(/<[^>]*>/g, '')),
 					link: `https://pubmed.ncbi.nlm.nih.gov/${id}/`,
 					date: isNaN(time) ? 0 : time,
 					summary: article.source || undefined,
+					issns: issns.length ? issns : undefined,
 				});
 			}
 		}
@@ -1066,11 +1167,14 @@ export class RssFeedsService extends Disposable implements IRssFeedsService {
 	}
 }
 
-/** An article of a PubMed esummary: its title, publication date and when it entered PubMed (`entrez`). */
+/** An article of a PubMed esummary: its title, journal, publication date and when it entered PubMed (`entrez`). */
 interface IPubmedSummary {
 	readonly title?: string;
 	/** The journal. */
 	readonly source?: string;
+	/** The journal's print and electronic ISSNs, empty when it has none. */
+	readonly issn?: string;
+	readonly essn?: string;
 	readonly pubdate?: string;
 	readonly history?: readonly { readonly pubstatus?: string; readonly date?: string }[];
 }

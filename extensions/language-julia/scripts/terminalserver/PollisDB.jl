@@ -91,6 +91,12 @@ const JOURNALS_HOME = joinpath(homedir(), ".pollis", "journals")
 const JOURNALS_ARTICLES = joinpath(JOURNALS_HOME, "articles.jsonl")
 """The journal metrics imported (JIF, CiteScore, SJR, SNIP), a JSON Lines file per import, which Pollis writes."""
 const JOURNALS_METRICS = joinpath(JOURNALS_HOME, "metrics")
+"""
+The levels and indicators of the journals, a CSV row per journal that the RSS Feeds page and the welcome page read
+to tag journal items, written by `build_journals`: the journal's ISSNs, space-separated, its latest Norwegian level
+and the year of it, and OpenAlex's 2-year mean citedness, h-index, open access and DOAJ (1 or 0).
+"""
+const JOURNALS_SCORES = joinpath(JOURNALS_HOME, "scores.csv")
 """The PollisJournals database: the journals of OpenAlex and of the Norwegian register as tables, and views over `JOURNALS_HOME`, made by `build_journals`."""
 const JOURNALS_DB = joinpath(homedir(), ".pollis", "databases", "PollisJournals.duckdb")
 """The PollisJournals.jl folder and the SQL that `JOURNALS_DB` was made with."""
@@ -784,6 +790,23 @@ function journals_parquet()
 end
 
 """
+The rows of `JOURNALS_SCORES`: every journal of OpenAlex with an ISSN, and every journal of the Norwegian register,
+joined where the register's ISSN names an OpenAlex journal; the level is the register's latest.
+"""
+const SCORES_SQL = """
+    WITH latest AS (SELECT id, arg_max(level, year) AS level, max(year) AS level_year FROM norwegian_levels GROUP BY id),
+    register AS (SELECT r.journal_id, r.issn, r.eissn, latest.level, latest.level_year FROM norwegian_register r JOIN latest USING (id)),
+    openalex AS (SELECT id, issn, round(mean_citedness_2yr, 2) AS cited, h_index, is_oa::INTEGER AS oa, is_in_doaj::INTEGER AS doaj FROM journals WHERE len(issn) > 0)
+    SELECT array_to_string(list_distinct(list_filter(coalesce(o.issn, []) || [r.issn, r.eissn], x -> x IS NOT NULL)), ' ') AS issns,
+        r.level, r.level_year, o.cited, o.h_index, o.oa, o.doaj
+    FROM openalex o FULL JOIN register r ON r.journal_id = o.id"""
+"""`SCORES_SQL` for an artifact without the Norwegian register."""
+const SCORES_SQL_OPENALEX = """
+    SELECT array_to_string(issn, ' ') AS issns, NULL AS level, NULL AS level_year, round(mean_citedness_2yr, 2) AS cited,
+        h_index, is_oa::INTEGER AS oa, is_in_doaj::INTEGER AS doaj
+    FROM journals WHERE len(issn) > 0"""
+
+"""
     build_journals()
 
 Make the PollisJournals database `JOURNALS_DB` when it is missing, or PollisJournals.jl or the SQL of its
@@ -791,14 +814,14 @@ views has changed since it was made. The artifact of PollisJournals.jl is copied
 OpenAlex into `journals`, `journal_years` and `journal_issns`, and the Norwegian register into
 `norwegian_register` and `norwegian_levels`; the views over `JOURNALS_HOME` read what
 Pollis adds there whenever they are queried, as `build_rss`'s. Written under a temporary name and moved into
-place, as `build` does.
+place, as `build` does, with `JOURNALS_SCORES`, which is remade too when it is missing.
 """
 function build_journals()
     source = journals_parquet()
     source === nothing && return nothing
     statements = journals_sql()
-    stamp = source.root * "\n" * join(statements, ";\n")
-    isfile(JOURNALS_DB) && isfile(JOURNALS_STAMP) && read(JOURNALS_STAMP, String) == stamp && return nothing
+    stamp = source.root * "\n" * join(statements, ";\n") * "\n" * SCORES_SQL
+    isfile(JOURNALS_DB) && isfile(JOURNALS_STAMP) && isfile(JOURNALS_SCORES) && read(JOURNALS_STAMP, String) == stamp && return nothing
     println("Pollis: building the PollisJournals database. This happens only when PollisJournals.jl changes.")
     mkpath(JOURNALS_METRICS)
     isfile(JOURNALS_ARTICLES) || touch(JOURNALS_ARTICLES)
@@ -808,6 +831,7 @@ function build_journals()
     get(() -> Base.require(DBINTERFACE), Base.loaded_modules, DBINTERFACE)
     mkpath(dirname(JOURNALS_DB))
     tmp = "$JOURNALS_DB.$(getpid()).tmp"
+    scores = "$JOURNALS_SCORES.$(getpid()).tmp"
     rm(tmp; force = true)
     try
         Base.invokelatest() do
@@ -839,15 +863,19 @@ function build_journals()
                     execute("COMMENT ON TABLE norwegian_levels IS 'The level of each journal or series of norwegian_register by year: 0 not academic, 1 academic, 2 leading, X under review. Source: HK-dir. Licence: NLOD 2.0'")
                 end
                 foreach(execute, statements)
+                path = replace(scores, "\\" => "/", "'" => "''")
+                execute("COPY ($(isfile(norwegian) ? SCORES_SQL : SCORES_SQL_OPENALEX)) TO '$path' (FORMAT CSV, HEADER true)")
                 execute("CHECKPOINT")
             finally
                 loaded(DBINTERFACE).close!(con)
             end
         end
         mv(tmp, JOURNALS_DB; force = true)
+        mv(scores, JOURNALS_SCORES; force = true)
         write(JOURNALS_STAMP, stamp)
     catch err
         rm(tmp; force = true)
+        rm(scores; force = true)
         isfile(JOURNALS_DB) || rethrow()
         @warn "Pollis: could not rebuild the PollisJournals database; the previous one is kept" exception = err
     end

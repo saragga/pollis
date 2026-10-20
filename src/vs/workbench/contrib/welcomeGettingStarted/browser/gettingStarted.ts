@@ -16,7 +16,7 @@ import { Delayer, RunOnceScheduler, Throttler } from '../../../../base/common/as
 import { CancellationToken } from '../../../../base/common/cancellation.js';
 import { Codicon } from '../../../../base/common/codicons.js';
 import { KeyCode } from '../../../../base/common/keyCodes.js';
-import { DisposableStore, toDisposable } from '../../../../base/common/lifecycle.js';
+import { DisposableStore, MutableDisposable, toDisposable } from '../../../../base/common/lifecycle.js';
 import { ILink, LinkedText } from '../../../../base/common/linkedText.js';
 import { parse } from '../../../../base/common/marshalling.js';
 import { FileAccess, Schemas, matchesScheme } from '../../../../base/common/network.js';
@@ -63,6 +63,7 @@ import { RestoreWalkthroughsConfigurationValue, restoreWalkthroughsConfiguration
 import { IPollisRelease, PollisReleases } from './pollisReleases.js';
 import { IRssFeedsService, IRssItem } from '../../monitor/browser/rssFeedsService.js';
 import { RSS_FEEDS_COMMAND_ID } from '../../monitor/browser/rssFeedsPage.js';
+import { describeJournal, IJournalScoresService } from '../../monitor/browser/journalScores.js';
 import { startEntries } from '../common/gettingStartedContent.js';
 import { discoverPollisEntries } from '../common/discoverPollisContent.js';
 import { GroupsOrder, IEditorGroup, IEditorGroupsService, preferredSideBySideGroupDirection } from '../../../services/editor/common/editorGroupsService.js';
@@ -195,6 +196,7 @@ export class GettingStartedPage extends EditorPane {
 		@IHoverService private readonly hoverService: IHoverService,
 		@IPathService private readonly pathService: IPathService,
 		@IRssFeedsService private readonly rssFeedsService: IRssFeedsService,
+		@IJournalScoresService private readonly journalScoresService: IJournalScoresService,
 	) {
 
 		super(GettingStartedPage.ID, group, telemetryService, themeService, storageService);
@@ -1028,19 +1030,26 @@ export class GettingStartedPage extends EditorPane {
 		let databaseReady: boolean | undefined;
 		// Releases of Julia and of the packages Pollis relies on, newer than the ones installed.
 		let releases: IPollisRelease[] = [];
+		// The hover of the status line, made again with it
+		const statusHover = this.categoriesSlideDisposables.add(new MutableDisposable());
+		// The hovers of the journal tags of the feed items, made again with them
+		const feedHovers = this.categoriesSlideDisposables.add(new MutableDisposable<DisposableStore>());
 		const renderAlerts = this.renderAnnouncements = () => {
 			const juliaVersion = this.contextService.getContextKeyValue<string>(JULIA_REPL_VERSION_KEY);
 			const dismissed = this.getDismissedAnnouncements();
+			const status = this.getJuliaInstalled() ? this.buildStatusLine(juliaVersion, databaseReady, this.contextService.getContextKeyValue<boolean>(JULIA_PRECOMPILING_KEY) === true) : undefined;
+			statusHover.value = status ? this.hoverService.setupManagedHover(getDefaultHoverDelegate('element'), status.element, status.hover) : undefined;
 			reset(statusLine, ...coalesce([
 				this.getJuliaInstalled() === false ? this.buildJuliaNotInstalledLine() : undefined,
-				this.getJuliaInstalled() ? this.buildStatusLine(juliaVersion, databaseReady, this.contextService.getContextKeyValue<boolean>(JULIA_PRECOMPILING_KEY) === true) : undefined,
+				status?.element,
 			]));
 			statusSection.style.display = statusLine.childElementCount ? '' : 'none';
 			const shownReleases = releases.filter(release => !dismissed.includes(release.id));
 			reset(announcements, ...shownReleases.map(release => this.buildReleaseAnnouncement(release)));
 			announcementsSection.style.display = shownReleases.length ? '' : 'none';
 			const newest = this.getNewestFeedItems();
-			reset(feedItems, ...newest.map(({ feed, item }) => this.buildFeedItem(feed, item)));
+			const hovers = feedHovers.value = new DisposableStore();
+			reset(feedItems, ...newest.map(({ feed, url, item }) => this.buildFeedItem(feed, url, item, hovers)));
 			feedsSection.style.display = newest.length ? '' : 'none';
 			this.registerDispatchListeners();
 		};
@@ -1057,6 +1066,7 @@ export class GettingStartedPage extends EditorPane {
 		};
 		checkReleases();
 		this.categoriesSlideDisposables.add(this.rssFeedsService.onDidChange(() => renderAlerts()));
+		this.categoriesSlideDisposables.add(this.journalScoresService.onDidChange(() => renderAlerts()));
 		// install_pollisdb.jl makes the three built-in databases together, PollisDatasets, PollisRSS (empty until
 		// feeds are read) and PollisJournals, once it has installed DuckDB, the PollisDatasets and the PollisJournals:
 		// they are ready when the three files exist.
@@ -1107,56 +1117,75 @@ export class GettingStartedPage extends EditorPane {
 	}
 
 	/**
-	 * Pollis: the status line shown while nothing needs attention: the Julia found (with its version once its REPL
-	 * has started) and whether the built-in databases, PollisDatasets, PollisRSS and PollisJournals, are ready, or that packages are
-	 * being compiled in the background after an update. It replaces the announcements that said so.
+	 * Pollis: the status line shown while nothing needs attention, on one line: the Julia found (with its version
+	 * once its REPL has started) and whether the built-in databases are ready, or that packages are being compiled
+	 * in the background after an update. Its hover says it in full. It replaces the announcements that said so.
 	 */
-	private buildStatusLine(juliaVersion: string | undefined, databaseReady: boolean | undefined, precompiling: boolean): HTMLElement {
+	private buildStatusLine(juliaVersion: string | undefined, databaseReady: boolean | undefined, precompiling: boolean): { element: HTMLElement; hover: string } {
 		const julia = juliaVersion ? localize('pollis.statusJuliaVersion', "Julia {0}", juliaVersion) : localize('pollis.statusJulia', "Julia");
 		if (precompiling && databaseReady !== false) {
-			return $('.pollis-status', { role: 'status' },
-				$('span.pollis-status-icon.codicon.codicon-sync.codicon-modifier-spin'),
-				$('span', {}, localize('pollis.statusPrecompiling', "{0}: preparing packages in the background after an update", julia)),
-			);
+			return {
+				element: $('.pollis-status.single-line', { role: 'status' },
+					$('span.pollis-status-icon.codicon.codicon-sync.codicon-modifier-spin'),
+					$('span.pollis-status-text', {}, localize('pollis.statusPrecompiling', "{0}: preparing packages after an update", julia)),
+				),
+				hover: localize('pollis.statusPrecompilingHover', "{0}: preparing packages in the background after an update. Pollis can be used meanwhile.", julia),
+			};
 		}
 		const allSet = databaseReady === true;
 		const text = allSet
-			? localize('pollis.statusAllSet', "All set: {0}, PollisDatasets, PollisRSS and PollisJournals ready", julia)
+			? localize('pollis.statusAllSet', "All set: {0} and the built-in databases", julia)
 			: databaseReady === false
-				? localize('pollis.statusDatabasePending', "{0} found; PollisDatasets, PollisRSS and PollisJournals are set up the first time the Julia REPL starts", julia)
+				? localize('pollis.statusDatabasePending', "{0} found; databases come with the first REPL", julia)
 				: localize('pollis.statusJuliaFound', "{0} found", julia);
-		return $('.pollis-status', { role: 'status' },
-			$(`span.pollis-status-icon.codicon.${allSet ? 'codicon-pass-filled' : 'codicon-info'}`),
-			$('span', {}, text),
-		);
+		const hover = allSet
+			? localize('pollis.statusAllSetHover', "{0} found, and the built-in databases PollisDatasets, PollisRSS and PollisJournals ready.", julia)
+			: databaseReady === false
+				? localize('pollis.statusDatabasePendingHover', "{0} found. The built-in databases, PollisDatasets, PollisRSS and PollisJournals, are set up the first time the Julia REPL starts.", julia)
+				: text;
+		return {
+			element: $('.pollis-status.single-line', { role: 'status', 'aria-label': hover },
+				$(`span.pollis-status-icon.codicon.${allSet ? 'codicon-pass-filled' : 'codicon-info'}`),
+				$('span.pollis-status-text', {}, text),
+			),
+			hover,
+		};
 	}
 
 	/**
 	 * Pollis: the newest unread item of each RSS feed shown here, the three newest of them; the feeds
 	 * are on Explore > Monitor > RSS Feeds.
 	 */
-	private getNewestFeedItems(): { feed: string; item: IRssItem }[] {
-		const newest: { feed: string; item: IRssItem }[] = [];
+	private getNewestFeedItems(): { feed: string; url: string; item: IRssItem }[] {
+		const newest: { feed: string; url: string; item: IRssItem }[] = [];
 		for (const feed of this.rssFeedsService.getFeeds().filter(feed => this.rssFeedsService.isFeedOnWelcomePage(feed.url))) {
 			const item = this.rssFeedsService.getShownItems(feed).find(item => !this.rssFeedsService.isRead(item.id));
 			if (item) {
-				newest.push({ feed: feed.title, item });
+				newest.push({ feed: feed.title, url: feed.url, item });
 			}
 		}
 		return newest.sort((a, b) => b.item.date - a.item.date).slice(0, 3);
 	}
 
 	/**
-	 * Pollis: an unread item of an RSS feed; opening or dismissing it marks it read.
+	 * Pollis: an unread item of the RSS feed `feed` at `url`; opening or dismissing it marks it read. An item of a
+	 * journal is tagged with the journal's level and metrics, as on the RSS Feeds page, with every value in the tag's
+	 * hover, added to `hovers`.
 	 */
-	private buildFeedItem(feed: string, item: IRssItem): HTMLElement {
+	private buildFeedItem(feed: string, url: string, item: IRssItem, hovers: DisposableStore): HTMLElement {
 		const id = encodeURIComponent(item.id);
+		const scores = this.journalScoresService.getScores(this.rssFeedsService.getJournalIssns(url, item.id));
+		const journal = scores && describeJournal(scores);
+		const tag = journal?.tag ? $('span.pollis-journal-tag', {}, journal.tag) : undefined;
+		if (tag && journal) {
+			hovers.add(this.hoverService.setupManagedHover(getDefaultHoverDelegate('element'), tag, journal.details));
+		}
 		return $('.pollis-alert.info', { role: 'status' },
 			// A video or an audio item (a podcast, a radio programme) shows a camera or a microphone, else the RSS icon
 			$(`span.pollis-alert-icon.codicon.${item.mediaType === 'video' ? 'codicon-device-camera-video' : item.mediaType === 'audio' ? 'codicon-mic' : 'codicon-rss'}`),
 			$('.pollis-alert-body', {},
 				$('p.pollis-alert-title', {}, item.title),
-				$('p.pollis-alert-description', {}, item.date ? localize('pollis.feedItemDate', "{0}, {1}", feed, fromNow(item.date, true)) : feed),
+				$('p.pollis-alert-description', {}, item.date ? localize('pollis.feedItemDate', "{0}, {1}", feed, fromNow(item.date, true)) : feed, ...(tag ? [tag] : [])),
 				$('.pollis-alert-actions', {},
 					$('button.button-link', { 'x-dispatch': `openFeedItem:${id}` }, localize('pollis.openFeedItem', "Open")),
 					$('button.button-link', { 'x-dispatch': 'showRssFeeds' }, localize('pollis.allFeedItems', "All Feeds")),

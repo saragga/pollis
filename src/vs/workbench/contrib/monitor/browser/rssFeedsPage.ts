@@ -18,19 +18,21 @@ import { IOpenerService } from '../../../../platform/opener/common/opener.js';
 import { IQuickInputService, IQuickPickItem, IQuickPickSeparator } from '../../../../platform/quickinput/common/quickInput.js';
 import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
-import { ARXIV_TOPIC, arxivSearchName, arxivSearchUrl, findCatalogueFeed, JULIA_TOPIC, MEDICINE_TOPIC, PUBMED_SEARCH, pubmedSearchName, pubmedSearchUrl, RSS_CATALOGUE, VIDEO_TOPIC } from './rssCatalogue.js';
+import { ARXIV_TOPIC, arxivSearchName, arxivSearchUrl, findCatalogueFeed, JULIA_TOPIC, MEDICINE_TOPIC, PUBMED_SEARCH, pubmedSearchName, pubmedSearchUrl, RSS_CATALOGUE, youtubeFeedUrl } from './rssCatalogue.js';
 import { ALERT_SOURCES, AlertSource } from '../../../../platform/alertsMailbox/common/alertsMailbox.js';
 import { DISPLAY_DAYS, EMAIL_ALERT_PREFIX, IRssFeed, IRssFeedEntry, IRssFeedsService } from './rssFeedsService.js';
+import { describeJournal, IJournalScoresService } from './journalScores.js';
 
 // Explore > Monitor > RSS Feeds: the feeds on the left by topic, with ticks for Subscribed, Here and Welcome Page and
 // their unread and total counts; the items of the topic or feed selected (or of all) on the right, newest first, those
-// of the display period and of the feeds ticked Here.
+// of the display period and of the feeds ticked Here, a journal's tagged with its level and metrics, which Journals filters.
 // Opening an item opens it in the browser and marks it read.
 
 export const RSS_FEEDS_COMMAND_ID = 'pollis.monitor.rssFeeds';
 
 type FeedsMessage =
-	| { readonly command: 'ready' }
+	| { readonly command: 'ready'; readonly journals: JournalFilter }
+	| { readonly command: 'journals'; readonly journals: JournalFilter }
 	| { readonly command: 'open'; readonly id: string }
 	| { readonly command: 'openMedia'; readonly id: string }
 	| { readonly command: 'zotero'; readonly id: string }
@@ -43,6 +45,33 @@ type FeedsMessage =
 	| { readonly command: 'add' }
 	| { readonly command: 'remove'; readonly url: string }
 	| { readonly command: 'refresh' };
+
+/** The choices of Journals: the levels of the Norwegian register, open access, and the quartiles of SJR and SNIP once imported. */
+type JournalFilter = 'all' | 'academic' | 'leading' | 'openAccess' | 'sjrQ1' | 'sjrQ12' | 'snip';
+
+/** What Journals filters an item of a journal by. */
+interface IJournalFacts {
+	readonly level?: string;
+	readonly openAccess: boolean;
+	readonly sjrQuartile?: string;
+	readonly snip?: number;
+}
+
+/** Whether Journals lets an item through: an item not known to be a journal's always passes. */
+function passesJournalFilter(filter: JournalFilter, journal: IJournalFacts | undefined): boolean {
+	if (!journal) {
+		return true;
+	}
+	switch (filter) {
+		case 'academic': return journal.level === '1' || journal.level === '2';
+		case 'leading': return journal.level === '2';
+		case 'openAccess': return journal.openAccess;
+		case 'sjrQ1': return journal.sjrQuartile === 'Q1';
+		case 'sjrQ12': return journal.sjrQuartile === 'Q1' || journal.sjrQuartile === 'Q2';
+		case 'snip': return (journal.snip ?? 0) > 1;
+		default: return true;
+	}
+}
 
 /** The open page, so a second request shows it again. */
 let openPage: WebviewInput | undefined;
@@ -57,6 +86,7 @@ async function openRssFeedsPage(accessor: ServicesAccessor): Promise<void> {
 	const fileDialogService = accessor.get(IFileDialogService);
 	const fileService = accessor.get(IFileService);
 	const notificationService = accessor.get(INotificationService);
+	const journalScoresService = accessor.get(IJournalScoresService);
 
 	if (openPage && !openPage.isDisposed()) {
 		webviewWorkbenchService.revealWebview(openPage, openPage.group ?? -1, false);
@@ -86,7 +116,27 @@ async function openRssFeedsPage(accessor: ServicesAccessor): Promise<void> {
 
 	// The day chosen with On a Day..., as YYYY-MM-DD, for this page only; undefined for the period of Items From
 	let day: string | undefined;
-	const itemsOf = (feed: IRssFeed) => day ? feed.items.filter(item => item.date && localDay(item.date) === day) : rssFeedsService.getItemsInPeriod(feed);
+	// The tag of an item of a journal and what Journals filters it by; undefined for an item not known to be a journal's
+	const journalOf = (url: string, id: string) => {
+		const scores = journalScoresService.getScores(rssFeedsService.getJournalIssns(url, id));
+		if (!scores) {
+			return undefined;
+		}
+		const { tag, details } = describeJournal(scores);
+		return {
+			tag,
+			details,
+			level: scores.level,
+			openAccess: !!(scores.openAccess || scores.doaj),
+			sjrQuartile: scores.metrics.find(value => value.source === 'SCImago')?.sjrQuartile,
+			snip: scores.metrics.find(value => value.source === 'CWTS')?.snip,
+		};
+	};
+	// The choice of Journals, which the page keeps between sessions and sends when it is ready
+	let journals: JournalFilter = 'all';
+	// The items of the period or the day that pass Journals, which the counts count too
+	const itemsOf = (feed: IRssFeed) => (day ? feed.items.filter(item => item.date && localDay(item.date) === day) : rssFeedsService.getItemsInPeriod(feed))
+		.filter(item => passesJournalFilter(journals, journalOf(feed.url, item.id)));
 	const sendState = (refreshing = false) => {
 		const followed = rssFeedsService.getFeeds();
 		// The catalogue's feeds not followed are listed too, unsubscribed (ticking Subscribed follows them), but not those removed
@@ -103,11 +153,14 @@ async function openRssFeedsPage(accessor: ServicesAccessor): Promise<void> {
 			// The days with items kept, marked in the calendar of On a Day...
 			itemDays: [...new Set(followed.flatMap(feed => feed.items).filter(item => item.date).map(item => localDay(item.date!)))],
 			topics: getTopics(feeds.map(feed => feed.topic)),
+			// The choices of Journals that need metrics imported
+			metricsSources: journalScoresService.getMetricsSources(),
 			feeds: feeds.map(feed => ({
 				url: feed.url,
 				title: feed.title,
 				topic: feed.topic,
 				error: !!feed.error,
+				media: feedMedia(feed),
 				followed: urls.has(feed.url),
 				subscribed: urls.has(feed.url) && rssFeedsService.isSubscribed(feed.url),
 				shown: rssFeedsService.isFeedShown(feed.url),
@@ -129,6 +182,7 @@ async function openRssFeedsPage(accessor: ServicesAccessor): Promise<void> {
 					image: item.image,
 					mediaType: item.mediaType,
 					media: !!item.media,
+					journal: journalOf(feed.url, item.id),
 				})),
 			})),
 		});
@@ -175,11 +229,17 @@ async function openRssFeedsPage(accessor: ServicesAccessor): Promise<void> {
 		}
 	};
 	disposables.add(rssFeedsService.onDidChange(() => sendState()));
+	disposables.add(journalScoresService.onDidChange(() => sendState()));
 	disposables.add(webviewInput.webview.onMessage(async (e: { message: FeedsMessage }) => {
 		const message = e.message;
 		switch (message.command) {
 			case 'ready':
+				journals = message.journals;
 				refresh();
+				break;
+			case 'journals':
+				journals = message.journals;
+				sendState();
 				break;
 			case 'open':
 			case 'openMedia': {
@@ -309,6 +369,22 @@ interface ICatalogueItem extends IQuickPickItem {
 }
 
 /** A topic for a new feed: one of the catalogue's or the user's, or a new one; undefined when none is chosen. */
+/**
+ * Whether a feed is of videos or a podcast's: a YouTube channel, a podcast of the catalogue, or a feed of the user's
+ * whose items are all videos or all audio. A news feed with a video now and then, as Bloomberg's, is neither.
+ */
+function feedMedia(feed: IRssFeed): 'video' | 'audio' | undefined {
+	if (feed.url.startsWith(youtubeFeedUrl(''))) {
+		return 'video';
+	}
+	const catalogueFeed = findCatalogueFeed(feed.url);
+	if (catalogueFeed) {
+		return catalogueFeed.feed.media;
+	}
+	const mediaType = feed.items[0]?.mediaType;
+	return mediaType && feed.items.every(item => item.mediaType === mediaType) ? mediaType : undefined;
+}
+
 async function pickTopic(quickInputService: IQuickInputService, rssFeedsService: IRssFeedsService, title: string, first?: string): Promise<string | undefined> {
 	const newTopic = localize('rss.newTopic', "New Topic...");
 	const topics = getTopics([...(first ? [first] : []), ...RSS_CATALOGUE.map(({ topic }) => topic), ...rssFeedsService.getFeeds().map(feed => feed.topic)]);
@@ -494,7 +570,7 @@ async function addFeeds(quickInputService: IQuickInputService, rssFeedsService: 
 				feed = await rssFeedsService.findYouTubeFeed(value);
 				prompt = localize('rss.youtubeNotFound', "No channel found. Open the channel on YouTube and copy its address, or its channel id from About > Share Channel > Copy Channel ID.");
 			}
-			const topic = await pickTopic(quickInputService, rssFeedsService, youtubeTitle, VIDEO_TOPIC);
+			const topic = await pickTopic(quickInputService, rssFeedsService, youtubeTitle);
 			if (topic) {
 				await rssFeedsService.updateFeeds([{ url: feed.url, topic, name: feed.name }], []);
 			}
@@ -544,9 +620,31 @@ function pageHtml(): string {
 		dayNote: localize('rss.dayNote', "Only the latest items of each feed are kept here, and the archive goes back only to the day you started following it: a feed cannot tell what happened before then."),
 		days: Object.fromEntries(DISPLAY_DAYS.map(days => [days, days ? localize('rss.lastDays', "The Last {0} Days", days) : localize('rss.allDays', "All Items Kept")])),
 		watch: localize('rss.watch', "Watch"),
+		video: localize('rss.videoFeed', "Videos"),
+		podcast: localize('rss.podcastFeed', "Podcast"),
 		listen: localize('rss.listen', "Listen"),
 		addToZotero: localize('rss.addToZotero', "Add to Zotero"),
 		exportOpml: localize('rss.exportOpml', "Export as OPML"),
+		journals: localize('rss.journals', "Journals"),
+		journalFilters: {
+			all: localize('rss.journalsAll', "All"),
+			academic: localize('rss.journalsAcademic', "Academic (Level 1 or 2)"),
+			leading: localize('rss.journalsLeading', "Leading (Level 2)"),
+			openAccess: localize('rss.journalsOpenAccess', "Open Access"),
+			sjrQ1: localize('rss.journalsSjrQ1', "SJR Q1"),
+			sjrQ12: localize('rss.journalsSjrQ12', "SJR Q1\u2013Q2"),
+			snip: localize('rss.journalsSnip', "SNIP Above 1"),
+		},
+		journalDescriptions: {
+			all: localize('rss.journalsAllDetail', "Every item, whatever its journal"),
+			academic: localize('rss.journalsAcademicDetail', "The items of the journals the Norwegian register ranks as academic: level 1, or level 2, its leading journals. Items not from a journal stay."),
+			leading: localize('rss.journalsLeadingDetail', "The items of the journals at level 2 of the Norwegian register, the leading journals of their field. Items not from a journal stay."),
+			openAccess: localize('rss.journalsOpenAccessDetail', "The items of the journals whose articles are all open access (OpenAlex), or that are in the Directory of Open Access Journals. Items not from a journal stay."),
+			sjrQ1: localize('rss.journalsSjrQ1Detail', "The items of the journals in the top quarter of SJR (SCImago) in at least one of their categories, in the latest year imported. Items not from a journal stay."),
+			sjrQ12: localize('rss.journalsSjrQ12Detail', "The items of the journals in the top half of SJR (SCImago) in at least one of their categories, in the latest year imported. Items not from a journal stay."),
+			snip: localize('rss.journalsSnipDetail', "The items of the journals cited more than the average of their field: SNIP (CWTS) above 1, in the latest year imported. Items not from a journal stay."),
+		},
+		journalsTooltip: localize('rss.journalsTooltip', "The levels are the Norwegian register's, built into Pollis; the choices of SJR and SNIP appear once their metrics are imported (Databases > PollisJournals > Import Journal Metrics...). The counts follow the choice."),
 		exportOpmlTooltip: localize('rss.exportOpmlTooltip', "Save the feeds you follow as an OPML file, to follow them in Zotero or another feed reader"),
 	};
 	return `<!DOCTYPE html>
@@ -574,8 +672,10 @@ function pageHtml(): string {
 		.feed:hover { background: var(--vscode-list-hoverBackground); }
 		.feed.selected { background: var(--vscode-list-inactiveSelectionBackground); box-shadow: inset 3px 0 0 var(--vscode-textLink-foreground); }
 		.feed .name { flex: 1; min-width: 0; line-height: 1.4; }
+		.feed .name .title { display: flex; align-items: center; gap: 6px; }
+		.feed .name .media { display: inline-flex; flex-shrink: 0; color: var(--vscode-descriptionForeground); }
 		.feed .error { font-size: 11px; color: var(--vscode-errorForeground); }
-		.count { flex: none; width: 64px; white-space: nowrap; font-size: 11px; font-weight: 600; text-align: center; padding: 1px 0; border-radius: 9px; color: var(--vscode-badge-foreground); background: var(--vscode-badge-background); }
+		.count { flex: none; width: 88px; white-space: nowrap; font-size: 11px; font-weight: 600; text-align: center; padding: 1px 0; border-radius: 9px; color: var(--vscode-badge-foreground); background: var(--vscode-badge-background); }
 		.count.zero { color: var(--vscode-descriptionForeground); background: none; font-weight: normal; }
 		.link { color: var(--vscode-textLink-foreground); cursor: pointer; background: none; border: none; padding: 0; font: inherit; font-size: 12px; }
 		.link:hover { text-decoration: underline; }
@@ -595,9 +695,10 @@ function pageHtml(): string {
 		.feed .subscribed, .columns .subscribed { flex: none; width: 72px; display: flex; justify-content: center; }
 		.feed .here, .columns .here { flex: none; width: 40px; display: flex; justify-content: center; }
 		.feed .welcome, .columns .welcome { flex: none; width: 88px; display: flex; justify-content: center; }
-		.feed .tick { width: 14px; height: 14px; margin: 0; padding: 0; border: 1.5px solid var(--vscode-foreground); border-radius: 50%; background: transparent; cursor: pointer; }
-		.feed .tick[aria-checked="true"] { background: var(--vscode-foreground); }
-		.feed .tick[aria-checked="mixed"] { background: linear-gradient(90deg, var(--vscode-foreground) 50%, transparent 50%); }
+		/* The colours of the macOS window buttons: red off, green on, half and half when only some are on */
+		.feed .tick { width: 12px; height: 12px; margin: 0; padding: 0; border: none; border-radius: 50%; background: #FF5F57; cursor: pointer; }
+		.feed .tick[aria-checked="true"] { background: #28C840; }
+		.feed .tick[aria-checked="mixed"] { background: linear-gradient(90deg, #28C840 50%, #FF5F57 50%); }
 		.feed .tick:focus-visible { outline: 1px solid var(--vscode-focusBorder); outline-offset: 2px; }
 		.feed .indent { flex: none; width: 16px; }
 		.feed.inTopic .indent { width: 40px; }
@@ -608,7 +709,7 @@ function pageHtml(): string {
 		.columns .group { flex: none; display: flex; flex-direction: column; gap: 3px; }
 		.columns .groupTitle { text-align: center; padding-bottom: 2px; border-bottom: 1px solid var(--vscode-descriptionForeground); }
 		.columns .groupColumns { display: flex; gap: 8px; }
-		.columns .countColumn { flex: none; width: 64px; text-align: center; white-space: nowrap; }
+		.columns .countColumn { flex: none; width: 88px; text-align: center; white-space: nowrap; }
 		.period { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; font-size: 12px; color: var(--vscode-descriptionForeground); }
 		.dayPicker { position: relative; margin: 0 0 8px -6px; }
 		.dayButton { font: inherit; font-size: 12px; color: var(--vscode-dropdown-foreground); background: var(--vscode-dropdown-background); border: 1px solid var(--vscode-dropdown-border); border-radius: 2px; padding: 2px 6px; cursor: pointer; }
@@ -632,6 +733,7 @@ function pageHtml(): string {
 		.item .summary { font-size: 12px; color: var(--vscode-descriptionForeground); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 		.item .play, .item .zotero, .item .download, .item .unread { margin-left: 8px; }
 		.item .zotero.link, .item .unread { visibility: hidden; }
+		.item .journal { margin-left: 8px; padding: 0 6px; white-space: nowrap; border-radius: 9px; border: 1px solid var(--vscode-charts-purple); color: var(--vscode-charts-purple); }
 		.item:hover .zotero.link, .item:focus .zotero.link, .item:hover .unread, .item:focus .unread { visibility: visible; }
 	</style>
 </head>
@@ -640,6 +742,7 @@ function pageHtml(): string {
 	<div class="header">
 		<h1>${text.title}</h1>
 		<label class="period">${text.period}<select id="days">${DISPLAY_DAYS.map(days => `<option value="${days}">${text.days[days]}</option>`).join('')}<option value="day">${text.onDay}</option></select></label><span class="dayPicker"><button id="day" class="dayButton" hidden></button><div class="calendar" id="calendar" hidden></div></span>
+		<label class="period">${text.journals}<select id="journals"></select></label>
 		<button class="action primary" id="add">${text.addFeed}</button>
 		<button class="action" id="refresh">${text.refresh}</button>
 		<button class="action" id="exportOpml" title="${text.exportOpmlTooltip}">${text.exportOpml}</button>
@@ -663,7 +766,7 @@ function pageHtml(): string {
 	// The page of the items shown, from 0, of PAGE_SIZE items each; back to the first when the choice changes
 	const PAGE_SIZE = 100;
 	let page = 0;
-	let state = { topics: [], feeds: [] };
+	let state = { topics: [], feeds: [], metricsSources: [] };
 	// The topics collapsed, and those opened that start collapsed (no feed subscribed), kept between sessions
 	const collapsed = new Set((vscode.getState() || {}).collapsed || []);
 	const opened = new Set((vscode.getState() || {}).opened || []);
@@ -677,9 +780,41 @@ function pageHtml(): string {
 		}
 		return collapsed.has(topic) || (!opened.has(topic) && !state.feeds.some(feed => feed.topic === topic && feed.subscribed));
 	}
+	// The choice of Journals, kept between sessions too
+	let journalFilter = (vscode.getState() || {}).journalFilter || 'all';
 	function saveCollapsed() {
-		vscode.setState({ collapsed: [...collapsed], opened: [...opened], allCollapsed, openedWhileAllCollapsed: [...openedWhileAllCollapsed] });
+		vscode.setState({ collapsed: [...collapsed], opened: [...opened], allCollapsed, openedWhileAllCollapsed: [...openedWhileAllCollapsed], journalFilter });
 	}
+	const journalsElement = document.getElementById('journals');
+	// The choices of Journals: those of SJR and SNIP only once SCImago's and CWTS's metrics are imported
+	function renderJournalChoices() {
+		const choices = ['all', 'academic', 'leading', 'openAccess']
+			.concat(state.metricsSources.includes('SCImago') ? ['sjrQ1', 'sjrQ12'] : [])
+			.concat(state.metricsSources.includes('CWTS') ? ['snip'] : []);
+		// A choice no longer offered, its metrics deleted, goes back to All
+		if (!choices.includes(journalFilter)) {
+			chooseJournals('all');
+		}
+		journalsElement.textContent = '';
+		for (const choice of choices) {
+			const option = element('option', '', TEXT.journalFilters[choice]);
+			option.value = choice;
+			option.title = TEXT.journalDescriptions[choice];
+			journalsElement.appendChild(option);
+		}
+		journalsElement.value = journalFilter;
+		// The open list of a select shows no hovers on every system: the select itself describes the choice made
+		journalsElement.title = TEXT.journalDescriptions[journalFilter] + '\\n\\n' + TEXT.journalsTooltip;
+	}
+	function chooseJournals(choice) {
+		journalFilter = choice;
+		page = 0;
+		saveCollapsed();
+		vscode.postMessage({ command: 'journals', journals: choice });
+	}
+	journalsElement.addEventListener('change', () => chooseJournals(journalsElement.value));
+	const VIDEO = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-linejoin="round"><rect x="1.5" y="4" width="9" height="8" rx="1.5"/><path d="M10.5 7l4-2.5v7l-4-2.5z"/></svg>';
+	const PODCAST = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-linecap="round"><rect x="5.5" y="1.5" width="5" height="8" rx="2.5"/><path d="M3 7.5a5 5 0 0 0 10 0M8 12.5v2M5.5 14.5h5"/></svg>';
 	const CHEVRON = '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.15 5.65a.5.5 0 0 1 .7 0L8 9.79l4.15-4.14a.5.5 0 0 1 .7.7l-4.5 4.5a.5.5 0 0 1-.7 0l-4.5-4.5a.5.5 0 0 1 0-.7Z"/></svg>';
 
 	function element(tag, className, content) {
@@ -759,7 +894,7 @@ function pageHtml(): string {
 	}
 
 	// A cell of the column 'subscribed', 'here' or 'welcome' with a circle, which leaves the row's selection alone:
-	// full when ticked ('true'), half when only some of a topic's feeds are ('mixed'), empty otherwise; a click ticks all unless all are
+	// green when ticked ('true'), half green and half red when only some of a topic's feeds are ('mixed'), red otherwise; a click ticks all unless all are
 	function tickCell(column, checked, tooltip, onChange) {
 		const cell = element('span', column);
 		const tick = element('button', 'tick');
@@ -797,7 +932,14 @@ function pageHtml(): string {
 			row.appendChild(chevron);
 		}
 		const name = element('div', 'name');
-		name.appendChild(element('div', '', title));
+		const titleElement = name.appendChild(element('div', 'title', title));
+		// A feed of videos or a podcast has its icon after its name
+		if (feed && feed.media) {
+			const media = titleElement.appendChild(element('span', 'media'));
+			media.innerHTML = feed.media === 'video' ? VIDEO : PODCAST;
+			media.title = feed.media === 'video' ? TEXT.video : TEXT.podcast;
+			media.setAttribute('aria-label', media.title);
+		}
 		if (url) {
 			row.title = url;
 		}
@@ -901,6 +1043,10 @@ function pageHtml(): string {
 				const download = element('span', 'link download', item.downloaded ? TEXT.downloaded : TEXT.download);
 				download.addEventListener('click', event => { event.stopPropagation(); vscode.postMessage({ command: 'download', id: item.id }); });
 				meta.appendChild(download);
+			}
+			if (item.journal && item.journal.tag) {
+				const journal = meta.appendChild(element('span', 'journal', item.journal.tag));
+				journal.title = item.journal.details;
 			}
 			if (item.inZotero) {
 				meta.appendChild(element('span', 'zotero', TEXT.inZotero));
@@ -1050,10 +1196,11 @@ function pageHtml(): string {
 			if (!calendarElement.hidden) {
 				renderCalendar();
 			}
+			renderJournalChoices();
 			render();
 		}
 	});
-	vscode.postMessage({ command: 'ready' });
+	vscode.postMessage({ command: 'ready', journals: journalFilter });
 </script>
 </body>
 </html>`;
