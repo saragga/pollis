@@ -749,19 +749,20 @@ function journals_sql()
         FROM read_json('$articles', format = 'newline_delimited', ignore_errors = true, columns = {
             id: 'VARCHAR', title: 'VARCHAR', link: 'VARCHAR', doi: 'VARCHAR', openalex: 'VARCHAR', matched_title: 'VARCHAR',
             journal_id: 'VARCHAR', journal: 'VARCHAR', issn_l: 'VARCHAR', year: 'INTEGER', type: 'VARCHAR',
-            cited_by_count: 'INTEGER', is_oa: 'BOOLEAN', looked_up: 'TIMESTAMP'
+            cited_by_count: 'INTEGER', fwci: 'DOUBLE', citation_percentile: 'DOUBLE', top_1_percent: 'BOOLEAN',
+            top_10_percent: 'BOOLEAN', is_oa: 'BOOLEAN', looked_up: 'TIMESTAMP'
         })
     ) WHERE copy = 1""",
-    "COMMENT ON VIEW articles IS 'The items of the email alerts, with the DOI, journal and citations found for them at Crossref and OpenAlex; id is the item''s id in PollisRSS.items; doi is null when none was found'",
+    "COMMENT ON VIEW articles IS 'The items of the email alerts, with the DOI, journal, citations, field-weighted citation impact (fwci) and citation percentile found for them at Crossref and OpenAlex; id is the item''s id in PollisRSS.items; doi is null when none was found'",
     """
     CREATE OR REPLACE VIEW metrics AS
     SELECT * FROM read_json('$metrics', format = 'newline_delimited', ignore_errors = true, columns = {
         title: 'VARCHAR', category: 'VARCHAR', issn: 'VARCHAR', eissn: 'VARCHAR', year: 'INTEGER', source: 'VARCHAR',
         jif: 'DOUBLE', jif_5year: 'DOUBLE', jif_quartile: 'VARCHAR', jci: 'DOUBLE',
         citescore: 'DOUBLE', citescore_quartile: 'VARCHAR', sjr: 'DOUBLE', sjr_quartile: 'VARCHAR', h_index: 'INTEGER',
-        snip: 'DOUBLE', ipp: 'DOUBLE', imported: 'TIMESTAMP'
+        snip: 'DOUBLE', ipp: 'DOUBLE', abdc_rating: 'VARCHAR', imported: 'TIMESTAMP'
     })""",
-    "COMMENT ON VIEW metrics IS 'The journal metrics imported from JCR, Scopus, SCImago and CWTS files, a row per journal, year and subject category as the file has them'",
+    "COMMENT ON VIEW metrics IS 'The journal metrics imported from JCR, Scopus, SCImago and CWTS files, and the ABDC Journal Quality List''s ratings (A*, A, B, C; category is its Field of Research code), a row per journal, year and subject category as the file has them'",
     """
     CREATE OR REPLACE VIEW journal_metrics AS
     SELECT m.title, m.category, m.issn, m.eissn, coalesce(p.id, e.id) AS journal_id, m.year, m.source,

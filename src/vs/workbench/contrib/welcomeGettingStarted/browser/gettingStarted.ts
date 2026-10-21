@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { $, Dimension, addDisposableListener, append, clearNode, reset } from '../../../../base/browser/dom.js';
+import { $, Dimension, addDisposableListener, append, clearNode, getWindow, reset, scheduleAtNextAnimationFrame } from '../../../../base/browser/dom.js';
 import { renderFormattedText } from '../../../../base/browser/formattedTextRenderer.js';
 import { status } from '../../../../base/browser/ui/aria/aria.js';
 import { StandardKeyboardEvent } from '../../../../base/browser/keyboardEvent.js';
@@ -62,8 +62,12 @@ import { IResolvedWalkthrough, IResolvedWalkthroughStep, IWalkthroughsService, h
 import { RestoreWalkthroughsConfigurationValue, restoreWalkthroughsConfigurationKey } from './startupPage.js';
 import { IPollisRelease, PollisReleases } from './pollisReleases.js';
 import { IRssFeedsService, IRssItem } from '../../monitor/browser/rssFeedsService.js';
-import { RSS_FEEDS_COMMAND_ID } from '../../monitor/browser/rssFeedsPage.js';
+import { ADD_FEED_COMMAND_ID, RSS_FEEDS_COMMAND_ID } from '../../monitor/browser/rssFeedsPage.js';
 import { describeJournal, IJournalScoresService } from '../../monitor/browser/journalScores.js';
+import { JOURNAL_METRICS_COMMAND_ID } from '../../databases/common/databaseDrivers.js';
+import { MarkdownString } from '../../../../base/common/htmlContent.js';
+import { describeCondition, describeFiredAlert, formatValue, IAlert, IAlertsService, IFiredAlert } from '../../monitor/browser/alertsService.js';
+import { ADD_ALERT_COMMAND_ID, openQuotePage, severityIcon, SHOW_ALERTS_COMMAND_ID } from '../../monitor/browser/alertsPage.js';
 import { startEntries } from '../common/gettingStartedContent.js';
 import { discoverPollisEntries } from '../common/discoverPollisContent.js';
 import { GroupsOrder, IEditorGroup, IEditorGroupsService, preferredSideBySideGroupDirection } from '../../../services/editor/common/editorGroupsService.js';
@@ -119,6 +123,8 @@ const JULIA_REPL_VERSION_KEY = 'julia.replVersion';
 // Set by the Julia extension while it compiles stale packages in the background, at the start of a session.
 const JULIA_PRECOMPILING_KEY = 'julia.precompiling';
 const DISMISSED_ANNOUNCEMENTS_KEY = 'pollis.welcome.dismissedReleases';
+// Pollis: the tab of the Alerts and RSS section chosen last
+const MONITOR_TAB_KEY = 'pollis.welcome.monitorTab';
 
 export class GettingStartedPage extends EditorPane {
 
@@ -163,6 +169,8 @@ export class GettingStartedPage extends EditorPane {
 
 	private readonly categoriesSlideDisposables: DisposableStore;
 	private renderAnnouncements = () => { };
+	// Pollis: the Discover Pollis card, whose height the box of the Alerts and RSS tabs takes
+	private discoverCard: HTMLElement | undefined;
 	private showFeaturedWalkthrough = true;
 
 	get editorInput(): GettingStartedInput | undefined {
@@ -197,6 +205,7 @@ export class GettingStartedPage extends EditorPane {
 		@IPathService private readonly pathService: IPathService,
 		@IRssFeedsService private readonly rssFeedsService: IRssFeedsService,
 		@IJournalScoresService private readonly journalScoresService: IJournalScoresService,
+		@IAlertsService private readonly alertsService: IAlertsService,
 	) {
 
 		super(GettingStartedPage.ID, group, telemetryService, themeService, storageService);
@@ -508,6 +517,33 @@ export class GettingStartedPage extends EditorPane {
 			}
 			case 'showRssFeeds': {
 				this.commandService.executeCommand(RSS_FEEDS_COMMAND_ID);
+				break;
+			}
+			case 'showAlerts': {
+				this.commandService.executeCommand(SHOW_ALERTS_COMMAND_ID);
+				break;
+			}
+			case 'addFeed': {
+				this.commandService.executeCommand(ADD_FEED_COMMAND_ID);
+				break;
+			}
+			case 'addAlert': {
+				this.commandService.executeCommand(ADD_ALERT_COMMAND_ID);
+				break;
+			}
+			case 'openAlert': {
+				this.commandService.executeCommand(SHOW_ALERTS_COMMAND_ID, argument);
+				break;
+			}
+			case 'openFiredAlert':
+			case 'dismissFiredAlert': {
+				const fired = this.alertsService.getFired().find(fired => fired.id === argument);
+				if (fired) {
+					this.alertsService.markRead([fired.id]);
+					if (command === 'openFiredAlert') {
+						openQuotePage(this.commandService, fired.symbol);
+					}
+				}
 				break;
 			}
 			case 'openFeedItem':
@@ -1021,11 +1057,69 @@ export class GettingStartedPage extends EditorPane {
 			$('h2.section-header', {}, localize('pollis.announcements', "Announcements")),
 			announcements,
 		);
-		const feedItems = $('.pollis-alerts', {});
+		// Alerts and RSS share a section: a tab each, and one box, as tall as the Discover Pollis card beside it, with a
+		// list that scrolls and a caption under it saying how many items there are
+		const feedItems = $('.pollis-alerts.pollis-scrolling', {});
+		const feedsScrollbar = this.categoriesSlideDisposables.add(new DomScrollableElement(feedItems, { vertical: ScrollbarVisibility.Auto, horizontal: ScrollbarVisibility.Hidden, verticalScrollbarSize: 6, useShadows: false, className: 'pollis-scroll-frame' }));
+		// The caption: what the list shows and arrows that scroll it an item at a time
+		const captionText = $('span.pollis-monitor-caption-text', { 'aria-live': 'polite' });
+		const scrollUp = $<HTMLButtonElement>('button.pollis-discover-arrow', { 'aria-label': localize('pollis.scrollUp', "Scroll Up") }, $('span.codicon.codicon-chevron-up'));
+		const scrollDown = $<HTMLButtonElement>('button.pollis-discover-arrow', { 'aria-label': localize('pollis.scrollDown', "Scroll Down") }, $('span.codicon.codicon-chevron-down'));
+		const scrollArrows = $('.pollis-discover-nav', {}, scrollUp, scrollDown);
+		const alertsTab = $('button.pollis-tab', {});
+		const rssTab = $('button.pollis-tab', {});
+		// A switch between the two tabs, its knob on the side of the one shown
+		const tabSwitch = $('button.pollis-tab-switch', {});
+		const allLink = $('button.button-link', {});
+		// A gear beside All Feeds / All Alerts: Add Feed or Add Alert
+		const settingsButton = $('button.pollis-discover-arrow.pollis-monitor-settings', {}, $('span.codicon.codicon-gear'));
+		const settingsHover = this.categoriesSlideDisposables.add(this.hoverService.setupManagedHover(getDefaultHoverDelegate('element'), settingsButton, ''));
+		// One line, like the Discover Pollis footer: All Feeds / All Alerts and the gear on the left, what is shown and the arrows on the right
+		const monitorCaption = $('.pollis-monitor-caption', {}, $('.pollis-section-links', {}, allLink, settingsButton), $('.pollis-monitor-status', {}, captionText, scrollArrows));
+		const monitorCard = $('.pollis-monitor-card', {}, feedsScrollbar.getDomNode(), monitorCaption);
 		const feedsSection = $('.announcements-section', {},
-			$('h2.section-header', {}, localize('pollis.rss', "RSS")),
-			feedItems,
+			$('.pollis-section-heading', {},
+				$('h2.section-header.pollis-tabs', {}, alertsTab, tabSwitch, rssTab),
+			),
+			monitorCard,
 		);
+		// The tops of the items in the list, from the top of the list
+		const itemTops = () => {
+			const top = feedItems.getBoundingClientRect().top - feedsScrollbar.getScrollPosition().scrollTop;
+			return [...feedItems.children].map(child => child.getBoundingClientRect().top - top);
+		};
+		const maxScrollTop = () => Math.max(0, feedsScrollbar.getScrollDimensions().scrollHeight - feedsScrollbar.getScrollDimensions().height);
+		const updateArrows = () => {
+			const scrollTop = feedsScrollbar.getScrollPosition().scrollTop;
+			scrollArrows.style.display = maxScrollTop() > 0 ? '' : 'none';
+			scrollUp.disabled = scrollTop <= 0;
+			scrollDown.disabled = scrollTop >= maxScrollTop() - 1;
+		};
+		this.categoriesSlideDisposables.add(feedsScrollbar.onScroll(() => updateArrows()));
+		this.categoriesSlideDisposables.add(addDisposableListener(scrollDown, 'click', () => {
+			const scrollTop = feedsScrollbar.getScrollPosition().scrollTop;
+			const next = itemTops().find(top => top > scrollTop + 1);
+			feedsScrollbar.setScrollPosition({ scrollTop: Math.min(next ?? maxScrollTop(), maxScrollTop()) });
+		}));
+		this.categoriesSlideDisposables.add(addDisposableListener(scrollUp, 'click', () => {
+			const scrollTop = feedsScrollbar.getScrollPosition().scrollTop;
+			const previous = itemTops().filter(top => top < scrollTop - 1).pop();
+			feedsScrollbar.setScrollPosition({ scrollTop: previous ?? 0 });
+		}));
+		let monitorTab: 'alerts' | 'rss' = this.storageService.get(MONITOR_TAB_KEY, StorageScope.APPLICATION) === 'alerts' ? 'alerts' : 'rss';
+		const chooseTab = (tab: 'alerts' | 'rss') => {
+			monitorTab = tab;
+			this.storageService.store(MONITOR_TAB_KEY, tab, StorageScope.APPLICATION, StorageTarget.USER);
+			feedItems.scrollTop = 0;
+			renderAlerts();
+		};
+		this.categoriesSlideDisposables.add(addDisposableListener(alertsTab, 'click', () => chooseTab('alerts')));
+		this.categoriesSlideDisposables.add(addDisposableListener(rssTab, 'click', () => chooseTab('rss')));
+		this.categoriesSlideDisposables.add(addDisposableListener(tabSwitch, 'click', () => chooseTab(monitorTab === 'alerts' ? 'rss' : 'alerts')));
+		// A new alert shows at once
+		this.categoriesSlideDisposables.add(this.alertsService.onDidFire(() => chooseTab('alerts')));
+		this.categoriesSlideDisposables.add(this.alertsService.onDidChange(() => renderAlerts()));
+		const feedsLayout = this.categoriesSlideDisposables.add(new MutableDisposable());
 		// Whether the built-in database file exists, which PollisDB creates once DuckDB is installed.
 		let databaseReady: boolean | undefined;
 		// Releases of Julia and of the packages Pollis relies on, newer than the ones installed.
@@ -1034,6 +1128,29 @@ export class GettingStartedPage extends EditorPane {
 		const statusHover = this.categoriesSlideDisposables.add(new MutableDisposable());
 		// The hovers of the journal tags of the feed items, made again with them
 		const feedHovers = this.categoriesSlideDisposables.add(new MutableDisposable<DisposableStore>());
+		// Once laid out, the box ends where the Discover Pollis card ends, or is as tall as it when the columns are
+		// stacked, and the list fills the box above its caption
+		const discoverObserver = new ResizeObserver(() => layoutFeeds());
+		this.categoriesSlideDisposables.add(toDisposable(() => discoverObserver.disconnect()));
+		let observedCard: HTMLElement | undefined;
+		const layoutFeeds = () => {
+			feedsLayout.value = scheduleAtNextAnimationFrame(getWindow(feedItems), () => {
+				const discoverCard = this.discoverCard;
+				if (discoverCard && discoverCard !== observedCard) {
+					observedCard = discoverCard;
+					discoverObserver.observe(discoverCard);
+				}
+				const box = monitorCard.getBoundingClientRect();
+				const discover = discoverCard?.getBoundingClientRect();
+				const height = !discover ? 0 : discover.left >= box.right ? discover.bottom - box.top : discover.height;
+				const cardHeight = Math.max(height, 200);
+				monitorCard.style.height = `${cardHeight}px`;
+				feedItems.style.height = `${cardHeight - monitorCaption.offsetHeight}px`;
+				feedsScrollbar.scanDomNode();
+				updateArrows();
+				this.categoriesPageScrollbar?.scanDomNode();
+			});
+		};
 		const renderAlerts = this.renderAnnouncements = () => {
 			const juliaVersion = this.contextService.getContextKeyValue<string>(JULIA_REPL_VERSION_KEY);
 			const dismissed = this.getDismissedAnnouncements();
@@ -1049,8 +1166,50 @@ export class GettingStartedPage extends EditorPane {
 			announcementsSection.style.display = shownReleases.length ? '' : 'none';
 			const newest = this.getNewestFeedItems();
 			const hovers = feedHovers.value = new DisposableStore();
-			reset(feedItems, ...newest.map(({ feed, url, item }) => this.buildFeedItem(feed, url, item, hovers)));
-			feedsSection.style.display = newest.length ? '' : 'none';
+			// The Alerts tab shows once there is an alert, or one has fired
+			const hasAlerts = this.alertsService.getAlerts().length > 0 || this.alertsService.getFired().length > 0;
+			const firedAlerts = this.alertsService.getFired().filter(fired => !this.alertsService.isRead(fired.id)).slice(0, 20);
+			const tab = hasAlerts ? monitorTab : 'rss';
+			reset(alertsTab, localize('pollis.alerts', "Alerts"));
+			reset(rssTab, localize('pollis.rss', "RSS"));
+			alertsTab.style.display = hasAlerts ? '' : 'none';
+			tabSwitch.style.display = hasAlerts ? '' : 'none';
+			tabSwitch.classList.toggle('right', tab === 'rss');
+			tabSwitch.setAttribute('aria-label', tab === 'alerts' ? localize('pollis.switchToRss', "Show RSS") : localize('pollis.switchToAlerts', "Show Alerts"));
+			alertsTab.classList.toggle('active', tab === 'alerts');
+			rssTab.classList.toggle('active', tab === 'rss');
+			rssTab.classList.toggle('single', !hasAlerts);
+			allLink.textContent = tab === 'alerts' ? localize('pollis.allAlerts', "All Alerts") : localize('pollis.allFeedItems', "All Feeds");
+			allLink.setAttribute('x-dispatch', tab === 'alerts' ? 'showAlerts' : 'showRssFeeds');
+			const settingsLabel = tab === 'alerts' ? localize('pollis.addAlert', "Add Alert") : localize('pollis.addFeed', "Add Feed");
+			settingsButton.setAttribute('x-dispatch', tab === 'alerts' ? 'addAlert' : 'addFeed');
+			settingsButton.setAttribute('aria-label', settingsLabel);
+			settingsHover.update(settingsLabel);
+			// With no new alerts, the alerts Pollis is watching, each with its latest value
+			const watched = this.alertsService.getAlerts().filter(alert => !alert.paused);
+			const unreadAlerts = this.alertsService.getFired().filter(fired => !this.alertsService.isRead(fired.id)).length;
+			const unreadItems = this.getUnreadFeedItemCount();
+			if (tab === 'alerts') {
+				reset(feedItems, ...(firedAlerts.length ? firedAlerts.map(fired => this.buildFiredAlert(fired)) : watched.map(alert => this.buildWatchedAlert(alert))));
+				captionText.textContent = unreadAlerts === 0
+					? localize('pollis.noNewAlerts', "No new alerts; watching {0}", watched.length)
+					: unreadAlerts > firedAlerts.length
+						? localize('pollis.unreadAlertsNewest', "Showing newest {0}/{1} unread alerts", firedAlerts.length, unreadAlerts.toLocaleString())
+						: unreadAlerts === 1
+							? localize('pollis.unreadAlert', "1 unread alert")
+							: localize('pollis.unreadAlerts', "{0} unread alerts", unreadAlerts.toLocaleString());
+			} else {
+				reset(feedItems, ...newest.map(({ feed, url, item }) => this.buildFeedItem(feed, url, item, hovers)));
+				captionText.textContent = unreadItems === 0
+					? localize('pollis.noUnreadItems', "No unread items")
+					: unreadItems > newest.length
+						? localize('pollis.unreadItemsNewest', "Showing newest {0}/{1} unread items", newest.length, unreadItems.toLocaleString())
+						: unreadItems === 1
+							? localize('pollis.unreadItem', "1 unread item")
+							: localize('pollis.unreadItems', "{0} unread items", unreadItems.toLocaleString());
+			}
+			feedsSection.style.display = hasAlerts || newest.length ? '' : 'none';
+			layoutFeeds();
 			this.registerDispatchListeners();
 		};
 		renderAlerts();
@@ -1153,8 +1312,8 @@ export class GettingStartedPage extends EditorPane {
 	}
 
 	/**
-	 * Pollis: the newest unread item of each RSS feed shown here, the three newest of them; the feeds
-	 * are on Explore > Monitor > RSS Feeds.
+	 * Pollis: the newest unread item of each RSS feed shown here, the twenty newest of them; the feeds
+	 * are on Explore > RSS > RSS Feeds.
 	 */
 	private getNewestFeedItems(): { feed: string; url: string; item: IRssItem }[] {
 		const newest: { feed: string; url: string; item: IRssItem }[] = [];
@@ -1164,7 +1323,18 @@ export class GettingStartedPage extends EditorPane {
 				newest.push({ feed: feed.title, url: feed.url, item });
 			}
 		}
-		return newest.sort((a, b) => b.item.date - a.item.date).slice(0, 3);
+		return newest.sort((a, b) => b.item.date - a.item.date).slice(0, 20);
+	}
+
+	/**
+	 * Pollis: the number of unread items of the RSS feeds shown here.
+	 */
+	private getUnreadFeedItemCount(): number {
+		let count = 0;
+		for (const feed of this.rssFeedsService.getFeeds().filter(feed => this.rssFeedsService.isFeedOnWelcomePage(feed.url))) {
+			count += this.rssFeedsService.getShownItems(feed).filter(item => !this.rssFeedsService.isRead(item.id)).length;
+		}
+		return count;
 	}
 
 	/**
@@ -1178,20 +1348,66 @@ export class GettingStartedPage extends EditorPane {
 		const journal = scores && describeJournal(scores);
 		const tag = journal?.tag ? $('span.pollis-journal-tag', {}, journal.tag) : undefined;
 		if (tag && journal) {
-			hovers.add(this.hoverService.setupManagedHover(getDefaultHoverDelegate('element'), tag, journal.details));
+			// The hover ends with a link to the Journal Metrics page, which says what each value means
+			const details = new MarkdownString(undefined, { isTrusted: { enabledCommands: [JOURNAL_METRICS_COMMAND_ID] } }).appendText(journal.details)
+				.appendMarkdown(`\n\n[${localize('pollis.journalMetricsLink', "Journal Metrics...")}](command:${JOURNAL_METRICS_COMMAND_ID})`);
+			hovers.add(this.hoverService.setupManagedHover(getDefaultHoverDelegate('element'), tag, { markdown: details, markdownNotSupportedFallback: journal.details }));
 		}
 		return $('.pollis-alert.info', { role: 'status' },
 			// A video or an audio item (a podcast, a radio programme) shows a camera or a microphone, else the RSS icon
 			$(`span.pollis-alert-icon.codicon.${item.mediaType === 'video' ? 'codicon-device-camera-video' : item.mediaType === 'audio' ? 'codicon-mic' : 'codicon-rss'}`),
 			$('.pollis-alert-body', {},
-				$('p.pollis-alert-title', {}, item.title),
+				// The title opens the item, as a file of Recent does
+				$('p.pollis-alert-title', {}, $('button.pollis-feed-title', { 'x-dispatch': `openFeedItem:${id}` }, item.title)),
 				$('p.pollis-alert-description', {}, item.date ? localize('pollis.feedItemDate', "{0}, {1}", feed, fromNow(item.date, true)) : feed, ...(tag ? [tag] : [])),
-				$('.pollis-alert-actions', {},
-					$('button.button-link', { 'x-dispatch': `openFeedItem:${id}` }, localize('pollis.openFeedItem', "Open")),
-					$('button.button-link', { 'x-dispatch': 'showRssFeeds' }, localize('pollis.allFeedItems', "All Feeds")),
-				),
 			),
 			$('button.pollis-alert-dismiss', { 'x-dispatch': `dismissFeedItem:${id}`, 'aria-label': localize('pollis.dismissFeedItem', "Mark Read") }, $('span.codicon.codicon-close')),
+		);
+	}
+
+	/**
+	 * Pollis: an alert Pollis is watching, with the value it last looked up, how far that is from the alert's value,
+	 * and when it was quoted (the last close while the market is closed); its title opens it on the Alerts page.
+	 */
+	private buildWatchedAlert(alert: IAlert): HTMLElement {
+		const state = this.alertsService.getState(alert.id);
+		const describeValue = (value: number, currency: string | undefined, quoted: number) => {
+			const now = formatValue(value, currency);
+			const when = fromNow(quoted, true);
+			if (alert.condition === 'movesBy' || !alert.threshold || value === alert.threshold) {
+				return localize('pollis.watchedAlertValue', "{0}, quoted {1}", now, when);
+			}
+			const distance = Math.abs(value - alert.threshold) / Math.abs(alert.threshold) * 100;
+			const percent = distance.toLocaleString(undefined, { maximumFractionDigits: distance < 1 ? 2 : 1 });
+			return value < alert.threshold
+				? localize('pollis.watchedAlertBelow', "{0}, {1}% below {2}, quoted {3}", now, percent, formatValue(alert.threshold), when)
+				: localize('pollis.watchedAlertAbove', "{0}, {1}% above {2}, quoted {3}", now, percent, formatValue(alert.threshold), when);
+		};
+		const name = alert.name ? localize('pollis.watchedAlertName', "{0} ({1})", alert.name, alert.symbol) : alert.symbol;
+		return $(`.pollis-alert.${alert.severity}`, {},
+			$(`span.pollis-alert-icon${ThemeIcon.asCSSSelector(severityIcon(alert.severity))}`),
+			$('.pollis-alert-body', {},
+				$('p.pollis-alert-title', {}, $('button.pollis-feed-title', { 'x-dispatch': `openAlert:${alert.id}` }, localize('pollis.watchedAlert', "{0} {1}", name, describeCondition(alert)))),
+				$('p.pollis-alert-description', {}, state?.error
+					? localize('pollis.watchedAlertError', "Could not be looked up")
+					: state?.value !== undefined
+						? describeValue(state.value, state.currency, state.quoted ?? state.checked ?? Date.now())
+						: localize('pollis.watchedAlertWaiting', "Not looked up yet")),
+			),
+		);
+	}
+
+	/** Pollis: an alert that fired and is not read yet; its title shows the symbol at Yahoo Finance. */
+	private buildFiredAlert(fired: IFiredAlert): HTMLElement {
+		return $(`.pollis-alert.${fired.severity}`, { role: 'status' },
+			$(`span.pollis-alert-icon${ThemeIcon.asCSSSelector(severityIcon(fired.severity))}`),
+			$('.pollis-alert-body', {},
+				$('p.pollis-alert-title', {}, $('button.pollis-feed-title', { 'x-dispatch': `openFiredAlert:${fired.id}` }, describeFiredAlert(fired))),
+				$('p.pollis-alert-description', {}, fired.previousValue !== undefined
+					? localize('pollis.firedAlertFrom', "{0}, from {1}, {2}", fired.symbol, formatValue(fired.previousValue), fromNow(fired.time, true))
+					: localize('pollis.firedAlertWhen', "{0}, {1}", fired.symbol, fromNow(fired.time, true))),
+			),
+			$('button.pollis-alert-dismiss', { 'x-dispatch': `dismissFiredAlert:${fired.id}`, 'aria-label': localize('pollis.dismissFiredAlert', "Mark Read") }, $('span.codicon.codicon-close')),
 		);
 	}
 
@@ -1296,16 +1512,17 @@ export class GettingStartedPage extends EditorPane {
 			this.commandService.executeCommand(entries[index].command);
 		}));
 
+		this.discoverCard = $('.pollis-discover-card', {},
+			$('.pollis-discover-frame', {}, media, run),
+			$('.pollis-discover-body', { 'aria-live': 'polite' }, menuPath, title, description),
+			$('.pollis-discover-footer', {},
+				action,
+				$('.pollis-discover-nav', {}, previous, ...dots, next),
+			),
+		);
 		return $('.pollis-discover-section', {},
 			$('h2.section-header', {}, localize('pollis.discoverPollis', "Discover Pollis")),
-			$('.pollis-discover-card', {},
-				$('.pollis-discover-frame', {}, media, run),
-				$('.pollis-discover-body', { 'aria-live': 'polite' }, menuPath, title, description),
-				$('.pollis-discover-footer', {},
-					action,
-					$('.pollis-discover-nav', {}, previous, ...dots, next),
-				),
-			),
+			this.discoverCard,
 		);
 	}
 

@@ -64,6 +64,8 @@ export const CHOOSE_AGENT_COMMAND_ID = 'pollis.agents.chooseAgent';
 
 // The commands of Compose > Coding Agents and Agent Skills
 export const BROWSE_SKILLS_COMMAND_ID = 'pollis.skills.browse';
+/** Starts the coding agent on a skill of the plugin, given its folder and title, from the pages that offer one. */
+export const RUN_SKILL_COMMAND_ID = 'pollis.skills.run';
 
 // The Pollis Agents plugin in its Claude Code marketplace, and the file that marks a skill folder Pollis installed in another agent
 const MARKETPLACE = 'Trumpingtons/pollis-skills';
@@ -770,6 +772,23 @@ registerAction2(class extends Action2 {
 	}
 	run(accessor: ServicesAccessor): Promise<void> {
 		return runSkill(accessor, PACKAGE_TOOLBOX);
+	}
+});
+
+registerAction2(class extends Action2 {
+	constructor() {
+		super({
+			id: RUN_SKILL_COMMAND_ID,
+			title: localize2('pollisSkills.runSkill', "Run an Agent Skill"),
+			f1: false,
+		});
+	}
+	async run(accessor: ServicesAccessor, folder: string, title: string): Promise<void> {
+		const instantiationService = accessor.get(IInstantiationService);
+		const file = await instantiationService.invokeFunction(skillFile, folder);
+		if (file) {
+			await instantiationService.invokeFunction(startAgent, title, localize('pollisSkills.runSkillPrompt', "Read the skill {0} and follow its instructions with me.", file.fsPath));
+		}
 	}
 });
 

@@ -37,6 +37,9 @@ export const RSS_DATABASE_ID = 'pollisrss';
 /** The id of the PollisJournals database, the journals of OpenAlex and the metrics imported, also built in. */
 export const JOURNALS_DATABASE_ID = 'pollisjournals';
 
+/** The command of the Journal Metrics page, the sources of PollisJournals' levels and metrics, to import or remove. */
+export const JOURNAL_METRICS_COMMAND_ID = 'pollis.databases.journalMetrics';
+
 /** One input of a driver's connection form. */
 export interface IDatabaseDriverField {
 	readonly id: string;

@@ -24,11 +24,11 @@ import { ISecretStorageService } from '../../../../platform/secrets/common/secre
 import { decodeEntities } from '../../../../platform/alertsMailbox/common/alertEmails.js';
 import { ALERT_SOURCES, AlertSource, IAlertEmail, IAlertsMailbox, IAlertsMailboxPosition } from '../../../../platform/alertsMailbox/common/alertsMailbox.js';
 import { IPathService } from '../../../services/path/common/pathService.js';
-import { ARXIV_TOPIC, DEFAULT_FEEDS, findCatalogueFeed, PUBMED_SEARCH, RENAMED_TOPICS, requestSpacing, youtubeFeedUrl } from './rssCatalogue.js';
+import { ARXIV_TOPIC, DEFAULT_FEEDS, findCatalogueFeed, MOVED_FEEDS, PUBMED_SEARCH, RENAMED_TOPICS, requestSpacing, youtubeFeedUrl } from './rssCatalogue.js';
 import { findOxfordFeeds } from './oxfordJournals.js';
 import { FetchText, IArticleRecord, lookUpArticle } from './articleLookup.js';
 
-// Explore > Monitor > RSS Feeds: the feeds the user follows, by topic, read by Pollis itself (RSS 2.0 and Atom, and
+// Explore > RSS > RSS Feeds: the feeds the user follows, by topic, read by Pollis itself (RSS 2.0 and Atom, and
 // PubMed searches, YouTube channels and podcasts), with the items kept between sessions and which of them have been
 // read. A feed unsubscribed is no longer read, but its items stay. The welcome page shows the newest unread ones of
 // the feeds shown there. Every item received is also added to
@@ -59,8 +59,9 @@ const ZOTERO_KEY = 'pollis.rss.zotero';
 const EPISODES_KEY = 'pollis.rss.episodes';
 // Set once the items kept before the archive existed have been added to it.
 const ARCHIVED_KEY = 'pollis.rss.archived';
-// Set once the feeds followed have been moved to the topics renamed, and the catalogue's arXiv feeds to their subjects.
-const TOPICS_MOVED_KEY = 'pollis.rss.topicsMoved3';
+// Set once the feeds followed have been moved to the topics renamed, the catalogue's arXiv feeds to their subjects, and
+// the catalogue's feeds moved to their new topics.
+const TOPICS_MOVED_KEY = 'pollis.rss.topicsMoved4';
 // The alerts found in the alerts mailbox, with their articles, and where its last reading stopped; its password is a secret.
 const EMAIL_ALERTS_KEY = 'pollis.rss.emailAlerts';
 const ALERTS_MAILBOX_POSITION_KEY = 'pollis.rss.alertsMailboxPosition';
@@ -102,21 +103,21 @@ Registry.as<IConfigurationRegistry>(ConfigurationExtensions.Configuration).regis
 			},
 			default: DEFAULT_FEEDS,
 			scope: ConfigurationScope.APPLICATION,
-			markdownDescription: localize('rss.feedsSetting', "The RSS and Atom feeds shown in **Explore > Monitor > RSS Feeds** and on the welcome page: an address, or an address with a topic and a name."),
+			markdownDescription: localize('rss.feedsSetting', "The RSS and Atom feeds shown in **Explore > RSS > RSS Feeds** and on the welcome page: an address, or an address with a topic and a name."),
 		},
 		[WELCOME_HIDDEN_FEEDS_SETTING]: {
 			type: 'array',
 			items: { type: 'string' },
 			default: [],
 			scope: ConfigurationScope.APPLICATION,
-			markdownDescription: localize('rss.welcomeHiddenFeedsSetting', "The addresses of the feeds of **Explore > Monitor > RSS Feeds** whose news the welcome page does not show."),
+			markdownDescription: localize('rss.welcomeHiddenFeedsSetting', "The addresses of the feeds of **Explore > RSS > RSS Feeds** whose news the welcome page does not show."),
 		},
 		[UNSUBSCRIBED_FEEDS_SETTING]: {
 			type: 'array',
 			items: { type: 'string' },
 			default: [],
 			scope: ConfigurationScope.APPLICATION,
-			markdownDescription: localize('rss.unsubscribedFeedsSetting', "The addresses of the feeds of **Explore > Monitor > RSS Feeds** that are no longer read. Their items stay, and are still shown."),
+			markdownDescription: localize('rss.unsubscribedFeedsSetting', "The addresses of the feeds of **Explore > RSS > RSS Feeds** that are no longer read. Their items stay, and are still shown."),
 		},
 		[REMOVED_FEEDS_SETTING]: {
 			type: 'array',
@@ -133,14 +134,14 @@ Registry.as<IConfigurationRegistry>(ConfigurationExtensions.Configuration).regis
 			},
 			default: [],
 			scope: ConfigurationScope.APPLICATION,
-			markdownDescription: localize('rss.removedFeedsSetting', "The feeds removed from **Explore > Monitor > RSS Feeds**, which **Add Feed > Undo Remove...** brings back."),
+			markdownDescription: localize('rss.removedFeedsSetting', "The feeds removed from **Explore > RSS > RSS Feeds**, which **Restore** under **Add Feed > Removed Feeds** brings back."),
 		},
 		[HIDDEN_FEEDS_SETTING]: {
 			type: 'array',
 			items: { type: 'string' },
 			default: [],
 			scope: ConfigurationScope.APPLICATION,
-			markdownDescription: localize('rss.hiddenFeedsSetting', "The addresses of the feeds of **Explore > Monitor > RSS Feeds** whose items are not shown, there or on the welcome page. They are still read and archived."),
+			markdownDescription: localize('rss.hiddenFeedsSetting', "The addresses of the feeds of **Explore > RSS > RSS Feeds** whose items are not shown, there or on the welcome page. They are still read and archived."),
 		},
 		[ALERTS_MAILBOX_SETTING]: {
 			type: 'object',
@@ -152,7 +153,7 @@ Registry.as<IConfigurationRegistry>(ConfigurationExtensions.Configuration).regis
 			},
 			default: {},
 			scope: ConfigurationScope.APPLICATION,
-			markdownDescription: localize('rss.alertsMailboxSetting', "The email address the alerts of Google Scholar, JSTOR, HeinOnline and other sources are sent to, which **Explore > Monitor > RSS Feeds** reads, read only, to make a feed of each alert. Set it with **Add Feed > Alerts Mailbox...**, which keeps the password in the system's keychain."),
+			markdownDescription: localize('rss.alertsMailboxSetting', "The email address the alerts of Google Scholar, JSTOR, HeinOnline and other sources are sent to, which **Explore > RSS > RSS Feeds** reads, read only, to make a feed of each alert. Set it with **Add Feed > Set Mailbox...**, which keeps the password in the system's keychain."),
 		},
 		[DISPLAY_DAYS_SETTING]: {
 			type: 'number',
@@ -165,7 +166,7 @@ Registry.as<IConfigurationRegistry>(ConfigurationExtensions.Configuration).regis
 			],
 			default: 30,
 			scope: ConfigurationScope.APPLICATION,
-			markdownDescription: localize('rss.displayDaysSetting', "How far back **Explore > Monitor > RSS Feeds** and the welcome page show items, in days; 0 shows every item kept. Items without a date are always shown."),
+			markdownDescription: localize('rss.displayDaysSetting', "How far back **Explore > RSS > RSS Feeds** and the welcome page show items, in days; 0 shows every item kept. Items without a date are always shown."),
 		},
 	},
 });
@@ -276,6 +277,8 @@ export interface IRssFeedsService {
 	 * the advance articles and the open access articles; else the feeds the page lists. Empty when there are none.
 	 */
 	findFeeds(address: string): Promise<readonly { readonly url: string; readonly name?: string }[]>;
+	/** The items of the feed at `url`, read now but neither followed nor kept, newest first; undefined when it cannot be read. */
+	previewFeed(url: string): Promise<readonly IRssItem[] | undefined>;
 	/** The alerts mailbox, when one is set. */
 	getAlertsMailbox(): IAlertsMailbox | undefined;
 	/** Reads `mailbox` with `password`, and keeps both when it can be read; returns the server's message when not. */
@@ -527,7 +530,7 @@ export class RssFeedsService extends Disposable implements IRssFeedsService {
 		}
 	}
 
-	/** Once: the feeds followed or removed under a topic renamed or split, or a catalogue's arXiv feed under arXiv, get their new topic. */
+	/** Once: the feeds followed or removed under a topic renamed or split, a catalogue's arXiv feed under arXiv, or a catalogue's feed moved, get their new topic. */
 	private async moveTopics(): Promise<void> {
 		if (this.storageService.getBoolean(TOPICS_MOVED_KEY, StorageScope.APPLICATION, false)) {
 			return;
@@ -541,7 +544,7 @@ export class RssFeedsService extends Disposable implements IRssFeedsService {
 			let moved = false;
 			const entries = value.map(value => {
 				const entry = toEntry(value);
-				const topic = entry?.topic && (Object.hasOwn(RENAMED_TOPICS, entry.topic) ? findCatalogueFeed(entry.url)?.topic ?? RENAMED_TOPICS[entry.topic] : entry.topic === ARXIV_TOPIC ? findCatalogueFeed(entry.url)?.topic : undefined);
+				const topic = entry?.topic && (Object.hasOwn(RENAMED_TOPICS, entry.topic) ? findCatalogueFeed(entry.url)?.topic ?? RENAMED_TOPICS[entry.topic] : entry.topic === ARXIV_TOPIC || (Object.hasOwn(MOVED_FEEDS, entry.url) && MOVED_FEEDS[entry.url] === entry.topic) ? findCatalogueFeed(entry.url)?.topic : undefined);
 				if (!topic) {
 					return value;
 				}
@@ -675,6 +678,11 @@ export class RssFeedsService extends Disposable implements IRssFeedsService {
 	/** The alert emails of `mailbox` after `position`: only the desktop can read a mailbox (../electron-browser/rssFeedsService.ts). */
 	protected readAlertsMailbox(_mailbox: IAlertsMailbox, _password: string, _position: IAlertsMailboxPosition | undefined): Promise<{ readonly position: IAlertsMailboxPosition; readonly emails: readonly IAlertEmail[] }> {
 		return Promise.reject(new Error(localize('rss.mailboxDesktopOnly', "Only the desktop app can read a mailbox.")));
+	}
+
+	async previewFeed(url: string): Promise<readonly IRssItem[] | undefined> {
+		const feed = await this.readFeed(url);
+		return feed && [...feed.items].sort((a, b) => b.date - a.date);
 	}
 
 	async findFeeds(address: string): Promise<readonly { readonly url: string; readonly name?: string }[]> {
@@ -926,14 +934,16 @@ export class RssFeedsService extends Disposable implements IRssFeedsService {
 				return;
 			}
 			this.failed.delete(url);
-			const known = new Set(this.stored[url]?.items.map(item => item.id));
-			const fresh = feed.items.filter(item => !known.has(item.id));
+			const stored = new Map(this.stored[url]?.items.map(item => [item.id, item]));
+			// An item without a date takes the time it was first read, so that it is shown with the new ones
+			const dated = feed.items.map(item => item.date ? item : { ...item, date: stored.get(item.id)?.date ?? Date.now() });
+			const fresh = dated.filter(item => !stored.has(item.id));
 			if (fresh.length) {
 				received.set(url, [...(received.get(url) ?? []), ...fresh]);
 			}
 			// A feed lists only its latest items (arXiv lists none at weekends): the items read before are kept.
 			const items = new Map<string, IRssItem>();
-			for (const item of [...feed.items, ...(this.stored[url]?.items ?? [])]) {
+			for (const item of [...dated, ...(this.stored[url]?.items ?? [])]) {
 				if (!items.has(item.id)) {
 					items.set(item.id, item);
 				}
@@ -1275,7 +1285,8 @@ function parseFeed(text: string): IStoredFeed | undefined {
 		if (!link) {
 			return undefined;
 		}
-		const time = Date.parse(date);
+		// A date of only a year or a month (NEP's papers) does not tell when the item came: it takes the time first read
+		const time = /^\s*\d{4}(?:-\d{2})?\s*$/.test(date) ? NaN : Date.parse(date);
 		const picture = tags(xml, 'media:thumbnail')[0]
 			?? tags(xml, 'media:content').find(tag => attribute(tag, 'medium') === 'image' || /^image\//.test(attribute(tag, 'type') ?? ''))
 			?? tags(xml, 'enclosure').find(tag => /^image\//.test(attribute(tag, 'type') ?? ''));
@@ -1298,6 +1309,10 @@ function parseFeed(text: string): IStoredFeed | undefined {
 		};
 	};
 
+	// RSS 1.0 (RDF) may prefix its elements, as <rss:item> (NEP's feeds): read without the prefix, they are RSS's
+	if (/<rdf:RDF[\s>]/.test(text)) {
+		text = text.replace(/<(?<close>\/?)rss:/g, '<$<close>');
+	}
 	// The feed's title is the first one, before its items
 	const head = text.split(atom ? /<entry[\s>]/ : /<item[\s>]/)[0];
 	const items = atom

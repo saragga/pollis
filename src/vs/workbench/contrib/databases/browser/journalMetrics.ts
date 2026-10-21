@@ -4,10 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 // Pollis: the journal metrics the user exports from Journal Citation Reports (JIF, JCI), Scopus (CiteScore), SCImago
-// (SJR) and CWTS (SNIP), read from their CSV or Excel files into a row per journal, year and category: the JSON Lines
-// files of ~/.pollis/journals/metrics, which the metrics view of the PollisJournals database reads. Their licences
-// let the user keep them, not Pollis publish them, so they are imported, never downloaded. The Excel files can be
-// large (CWTS's sheet is over 400 MB unzipped), so they are read as streams, a row at a time.
+// (SJR) and CWTS (SNIP), and the ratings of the ABDC Journal Quality List (A*, A, B, C), read from their CSV or Excel
+// files into a row per journal, year and category: the JSON Lines files of ~/.pollis/journals/metrics, which the
+// metrics view of the PollisJournals database reads. Their licences let the user keep them, not Pollis publish them,
+// so they are imported, never downloaded. The Excel files can be large (CWTS's sheet is over 400 MB unzipped), so
+// they are read as streams, a row at a time.
 
 /** A line of a metrics file: the columns of the metrics view, null where the source has no such metric. */
 export interface IJournalMetricsRow {
@@ -28,12 +29,13 @@ export interface IJournalMetricsRow {
 	readonly h_index: number | null;
 	readonly snip: number | null;
 	readonly ipp: number | null;
+	readonly abdc_rating: string | null;
 	readonly imported: string;
 }
 
-export type JournalMetricsSource = 'JCR' | 'Scopus' | 'SCImago' | 'CWTS';
+export type JournalMetricsSource = 'JCR' | 'Scopus' | 'SCImago' | 'CWTS' | 'ABDC';
 
-type Metric = 'title' | 'issn' | 'eissn' | 'category' | 'year' | 'jif' | 'jif_5year' | 'jif_quartile' | 'jci' | 'citescore' | 'citescore_quartile' | 'sjr' | 'sjr_quartile' | 'h_index' | 'snip' | 'ipp';
+type Metric = 'title' | 'issn' | 'eissn' | 'category' | 'year' | 'jif' | 'jif_5year' | 'jif_quartile' | 'jci' | 'citescore' | 'citescore_quartile' | 'sjr' | 'sjr_quartile' | 'h_index' | 'snip' | 'ipp' | 'abdc_rating';
 
 /** A header, as the columns of each source are found: lower case, single spaces. */
 type HeaderMatch = string | RegExp;
@@ -90,6 +92,18 @@ const SOURCES: Record<JournalMetricsSource, { readonly detect: readonly HeaderMa
 			ipp: ['ipp'],
 		},
 	},
+	// The list's first sheet is its latest edition, "2025 rating"; its subject is a Field of Research code
+	ABDC: {
+		detect: ['journal title', 'for', /^\d{4} rating$/],
+		columns: {
+			title: ['journal title'],
+			issn: ['issn'],
+			eissn: ['issnonline', 'issn online'],
+			category: ['for'],
+			abdc_rating: [/^\d{4} rating$/],
+		},
+		year: /^(?<year>\d{4}) rating$/,
+	},
 };
 
 function normalizeHeader(header: string): string {
@@ -115,7 +129,7 @@ function columnOf(headers: readonly string[], candidates: readonly HeaderMatch[]
 function detectSource(row: readonly string[]): JournalMetricsSource | undefined {
 	const headers = row.map(normalizeHeader);
 	// SCImago and Scopus files both have an SJR column, and CWTS's a title: the most specific first
-	return (['SCImago', 'Scopus', 'JCR', 'CWTS'] as const).find(source => SOURCES[source].detect.every(match => headers.some(header => matches(header, match))));
+	return (['SCImago', 'Scopus', 'JCR', 'CWTS', 'ABDC'] as const).find(source => SOURCES[source].detect.every(match => headers.some(header => matches(header, match))));
 }
 
 /** An ISSN as NNNN-NNNX, from the forms the sources give it in (with or without the hyphen, as a number that lost its zeros). */
@@ -199,13 +213,14 @@ export class JournalMetricsReader {
 			return undefined;
 		}
 		const label = (metric: Metric) => text(metric) ?? null;
+		const category = label('category');
 		return {
 			source: this.source,
 			year: number('year') ?? this.headerYear ?? this.defaultYear ?? null,
 			title,
 			issn,
 			eissn,
-			category: label('category'),
+			category: category && this.source === 'ABDC' ? `FoR ${category}` : category,
 			jif: number('jif'),
 			jif_5year: number('jif_5year'),
 			jif_quartile: label('jif_quartile'),
@@ -217,6 +232,7 @@ export class JournalMetricsReader {
 			h_index: number('h_index'),
 			snip: number('snip'),
 			ipp: number('ipp'),
+			abdc_rating: label('abdc_rating'),
 			imported: this.imported,
 		};
 	}

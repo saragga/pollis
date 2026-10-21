@@ -5,8 +5,9 @@
 
 import { localize } from '../../../../nls.js';
 
-// The feeds Explore > Monitor > RSS Feeds offers, by topic. Every address was read on 19 October 2026. The topic
-// names are stored in the user's settings, so they are not translated.
+// The feeds Explore > RSS > RSS Feeds offers, by topic. Every address was read on 19 October 2026, NBER's,
+// NEP's and Geography's on 21 October 2026. The topic names are stored in the user's settings, so they are not
+// translated.
 
 export const JULIA_TOPIC = 'Julia';
 export const ARXIV_TOPIC = 'arXiv';
@@ -39,6 +40,7 @@ const ART_TOPIC = 'Art';
 const MUSIC_TOPIC = 'Music';
 const THEATRE_TOPIC = 'Theatre and Performing Arts';
 const ARCHITECTURE_TOPIC = 'Architecture and Urbanism';
+const GEOGRAPHY_TOPIC = 'Geography and Spatial Studies';
 const AGRICULTURE_TOPIC = 'Agriculture and Food';
 const VETERINARY_TOPIC = 'Veterinary Science';
 const ZOOLOGY_TOPIC = 'Zoology';
@@ -49,6 +51,16 @@ const BOTANY_TOPIC = 'Botany and Plant Science';
  * podcasts of the catalogue are under their subjects too, and the user's own stay under Videos and Podcasts.
  */
 export const RENAMED_TOPICS: Readonly<Record<string, string>> = { 'Science': SCIENCE_TOPIC, 'Finance Journals': FINANCE_RESEARCH_TOPIC, 'Arts and Music': ART_TOPIC, 'Classics and Religion': RELIGION_TOPIC, 'Architecture': ARCHITECTURE_TOPIC, 'Videos and Podcasts': 'Videos and Podcasts' };
+
+/**
+ * The catalogue's feeds moved to another topic, by address, with the topic they were under: a feed followed or removed
+ * under that topic gets its new one.
+ */
+export const MOVED_FEEDS: Readonly<Record<string, string>> = {
+	'https://www.nber.org/rss/newap.xml': ECONOMICS_TOPIC,
+	'https://www.nber.org/rss/newcf.xml': ECONOMICS_TOPIC,
+	'https://nep.repec.org/rss/nep-cfn.rss.xml': ECONOMICS_TOPIC,
+};
 
 /**
  * A feed of the catalogue: its name, its address and, when it matters, a note shown beside it.
@@ -106,6 +118,7 @@ const youtube = localize('rss.noteYoutube', "YouTube channel");
 const podcast = localize('rss.notePodcast', "Podcast");
 const readersLinks = localize('rss.noteReadersLinks', "Links chosen by its readers");
 const newEntries = localize('rss.noteNewEntries', "New and revised entries");
+const weekly = localize('rss.noteWeekly', "New working papers each week");
 
 export const RSS_CATALOGUE: readonly IRssCatalogueTopic[] = [
 	{
@@ -167,6 +180,9 @@ export const RSS_CATALOGUE: readonly IRssCatalogueTopic[] = [
 			{ name: 'The Review of Asset Pricing Studies', url: 'https://academic.oup.com/rss/site_5506/3367.xml', issns: ['2045-9920', '2045-9939'] },
 			{ name: 'The Review of Corporate Finance Studies', url: 'https://academic.oup.com/rss/site_5507/3368.xml', issns: ['2046-9128', '2046-9136'] },
 			{ name: 'Journal of Financial Econometrics', url: 'https://academic.oup.com/rss/site_5193/3058.xml', issns: ['1479-8409', '1479-8417'] },
+			{ name: 'NBER: Asset Pricing', url: 'https://www.nber.org/rss/newap.xml', note: weekly },
+			{ name: 'NBER: Corporate Finance', url: 'https://www.nber.org/rss/newcf.xml', note: weekly },
+			{ name: 'RePEc NEP: Corporate Finance', url: 'https://nep.repec.org/rss/nep-cfn.rss.xml', note: weekly },
 			{ name: 'arXiv: Quantitative Finance', url: 'https://rss.arxiv.org/rss/q-fin', note: weekdays },
 			{ name: 'arXiv: Quantitative Finance, Statistical Finance', url: 'https://rss.arxiv.org/rss/q-fin.ST', note: weekdays },
 		]
@@ -179,7 +195,128 @@ export const RSS_CATALOGUE: readonly IRssCatalogueTopic[] = [
 			{ name: 'European Central Bank: Blog', url: 'https://www.ecb.europa.eu/rss/blog.html' },
 			{ name: 'Bank of England: News', url: 'https://www.bankofengland.co.uk/rss/news' },
 			{ name: 'Bank for International Settlements: Press Releases', url: 'https://www.bis.org/doclist/all_pressrels.rss' },
-			{ name: 'NBER: New Working Papers', url: 'https://www.nber.org/rss/new.xml' },
+			{ name: 'NBER: New Working Papers', url: 'https://www.nber.org/rss/new.xml', note: weekly },
+			{ name: 'NBER: Aging', url: 'https://www.nber.org/rss/newag.xml', note: weekly },
+			{ name: 'NBER: Children and Families', url: 'https://www.nber.org/rss/newch.xml', note: weekly },
+			{ name: 'NBER: Development Economics', url: 'https://www.nber.org/rss/newdev.xml', note: weekly },
+			{ name: 'NBER: Development of the American Economy', url: 'https://www.nber.org/rss/newdae.xml', note: weekly },
+			{ name: 'NBER: Economic Fluctuations and Growth', url: 'https://www.nber.org/rss/newefg.xml', note: weekly },
+			{ name: 'NBER: Economics of Education', url: 'https://www.nber.org/rss/newed.xml', note: weekly },
+			{ name: 'NBER: Economics of Health', url: 'https://www.nber.org/rss/neweh.xml', note: weekly },
+			{ name: 'NBER: Environment and Energy Economics', url: 'https://www.nber.org/rss/neweee.xml', note: weekly },
+			{ name: 'NBER: Industrial Organization', url: 'https://www.nber.org/rss/newio.xml', note: weekly },
+			{ name: 'NBER: International Finance and Macroeconomics', url: 'https://www.nber.org/rss/newifm.xml', note: weekly },
+			{ name: 'NBER: International Trade and Investment', url: 'https://www.nber.org/rss/newiti.xml', note: weekly },
+			{ name: 'NBER: Labor Studies', url: 'https://www.nber.org/rss/newls.xml', note: weekly },
+			{ name: 'NBER: Law and Economics', url: 'https://www.nber.org/rss/newle.xml', note: weekly },
+			{ name: 'NBER: Monetary Economics', url: 'https://www.nber.org/rss/newme.xml', note: weekly },
+			{ name: 'NBER: Productivity, Innovation, and Entrepreneurship', url: 'https://www.nber.org/rss/newpr.xml', note: weekly },
+			{ name: 'NBER: Public Economics', url: 'https://www.nber.org/rss/newpe.xml', note: weekly },
+			{ name: 'NBER: Technical Working Papers', url: 'https://www.nber.org/rss/newtwp.xml', note: weekly },
+			{ name: 'RePEc NEP: Accounting and Auditing', url: 'https://nep.repec.org/rss/nep-acc.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Africa', url: 'https://nep.repec.org/rss/nep-afr.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Agricultural Economics', url: 'https://nep.repec.org/rss/nep-agr.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Artificial Intelligence', url: 'https://nep.repec.org/rss/nep-ain.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Banking', url: 'https://nep.repec.org/rss/nep-ban.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Big Data', url: 'https://nep.repec.org/rss/nep-big.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Business Economics', url: 'https://nep.repec.org/rss/nep-bec.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Business, Economic and Financial History', url: 'https://nep.repec.org/rss/nep-his.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Central and South America', url: 'https://nep.repec.org/rss/nep-lam.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Central and Western Asia', url: 'https://nep.repec.org/rss/nep-cwa.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Central Banking', url: 'https://nep.repec.org/rss/nep-cba.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: China', url: 'https://nep.repec.org/rss/nep-cna.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Cognitive and Behavioural Economics', url: 'https://nep.repec.org/rss/nep-cbe.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Collective Decision-Making', url: 'https://nep.repec.org/rss/nep-cdm.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Community banking and credit unions', url: 'https://nep.repec.org/rss/nep-cob.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Computational Economics', url: 'https://nep.repec.org/rss/nep-cmp.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Confederation of Independent States', url: 'https://nep.repec.org/rss/nep-cis.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Contract Theory and Applications', url: 'https://nep.repec.org/rss/nep-cta.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Cultural Economics', url: 'https://nep.repec.org/rss/nep-cul.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Demographic Economics', url: 'https://nep.repec.org/rss/nep-dem.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Development', url: 'https://nep.repec.org/rss/nep-dev.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Discrete Choice Models', url: 'https://nep.repec.org/rss/nep-dcm.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Dynamic General Equilibrium', url: 'https://nep.repec.org/rss/nep-dge.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Econometric Time Series', url: 'https://nep.repec.org/rss/nep-ets.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Econometrics', url: 'https://nep.repec.org/rss/nep-ecm.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Economic Design', url: 'https://nep.repec.org/rss/nep-des.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Economic Geography', url: 'https://nep.repec.org/rss/nep-geo.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Economic Growth', url: 'https://nep.repec.org/rss/nep-gro.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Economics of Ageing', url: 'https://nep.repec.org/rss/nep-age.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Economics of Happiness', url: 'https://nep.repec.org/rss/nep-hap.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Economics of Human Migration', url: 'https://nep.repec.org/rss/nep-mig.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Economics of Strategic Management', url: 'https://nep.repec.org/rss/nep-cse.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Education', url: 'https://nep.repec.org/rss/nep-edu.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Efficiency and Productivity', url: 'https://nep.repec.org/rss/nep-eff.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Energy Economics', url: 'https://nep.repec.org/rss/nep-ene.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Entrepreneurship', url: 'https://nep.repec.org/rss/nep-ent.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Environmental Economics', url: 'https://nep.repec.org/rss/nep-env.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: European Economics', url: 'https://nep.repec.org/rss/nep-eec.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Evolutionary Economics', url: 'https://nep.repec.org/rss/nep-evo.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Experimental Economics', url: 'https://nep.repec.org/rss/nep-exp.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Financial Development and Growth', url: 'https://nep.repec.org/rss/nep-fdg.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Financial Literacy and Education', url: 'https://nep.repec.org/rss/nep-fle.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Financial Markets', url: 'https://nep.repec.org/rss/nep-fmk.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Forecasting', url: 'https://nep.repec.org/rss/nep-for.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Game Theory', url: 'https://nep.repec.org/rss/nep-gth.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Gender', url: 'https://nep.repec.org/rss/nep-gen.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: German Papers', url: 'https://nep.repec.org/rss/nep-ger.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Health Economics', url: 'https://nep.repec.org/rss/nep-hea.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Heterodox Microeconomics', url: 'https://nep.repec.org/rss/nep-hme.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: History and Philosophy of Economics', url: 'https://nep.repec.org/rss/nep-hpe.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Housing and Real Estate', url: 'https://nep.repec.org/rss/nep-hre.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Human Capital and Human Resource Management', url: 'https://nep.repec.org/rss/nep-hrm.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Industrial Competition', url: 'https://nep.repec.org/rss/nep-com.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Industrial Organization', url: 'https://nep.repec.org/rss/nep-ind.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Informal and Underground Economics', url: 'https://nep.repec.org/rss/nep-iue.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Information and Communication Technologies', url: 'https://nep.repec.org/rss/nep-ict.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Innovation', url: 'https://nep.repec.org/rss/nep-ino.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Insurance Economics', url: 'https://nep.repec.org/rss/nep-ias.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Intellectual Property Rights', url: 'https://nep.repec.org/rss/nep-ipr.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: International Activities of Firms', url: 'https://nep.repec.org/rss/nep-iaf.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: International Finance', url: 'https://nep.repec.org/rss/nep-ifn.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: International Trade', url: 'https://nep.repec.org/rss/nep-int.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Investment', url: 'https://nep.repec.org/rss/nep-inv.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Islamic Finance', url: 'https://nep.repec.org/rss/nep-isf.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Knowledge Management and Knowledge Economy', url: 'https://nep.repec.org/rss/nep-knm.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Labor Markets - Supply, Demand, and Wages', url: 'https://nep.repec.org/rss/nep-lma.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Labour Economics', url: 'https://nep.repec.org/rss/nep-lab.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Law and Economics', url: 'https://nep.repec.org/rss/nep-law.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Macroeconomics', url: 'https://nep.repec.org/rss/nep-mac.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Market Microstructure', url: 'https://nep.repec.org/rss/nep-mst.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Marketing', url: 'https://nep.repec.org/rss/nep-mkt.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: MENA - Middle East and North Africa', url: 'https://nep.repec.org/rss/nep-ara.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Microeconomic European Issues', url: 'https://nep.repec.org/rss/nep-eur.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Microeconomics', url: 'https://nep.repec.org/rss/nep-mic.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Microfinance', url: 'https://nep.repec.org/rss/nep-mfd.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Mining', url: 'https://nep.repec.org/rss/nep-min.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Minorities Research (Ethnic, LGBTQ+, Disabilities)', url: 'https://nep.repec.org/rss/nep-mid.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Monetary Economics', url: 'https://nep.repec.org/rss/nep-mon.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Network Economics', url: 'https://nep.repec.org/rss/nep-net.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Neuroeconomics', url: 'https://nep.repec.org/rss/nep-neu.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Nudge and Boosting', url: 'https://nep.repec.org/rss/nep-nud.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Open Economy Macroeconomics', url: 'https://nep.repec.org/rss/nep-opm.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Operations Research', url: 'https://nep.repec.org/rss/nep-ore.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Payment Systems and Financial Technology', url: 'https://nep.repec.org/rss/nep-pay.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Positive Political Economics', url: 'https://nep.repec.org/rss/nep-pol.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Post Keynesian Economics', url: 'https://nep.repec.org/rss/nep-pke.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Project, Program and Portfolio Management', url: 'https://nep.repec.org/rss/nep-ppm.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Public Economics', url: 'https://nep.repec.org/rss/nep-pbe.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Public Finance', url: 'https://nep.repec.org/rss/nep-pub.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Regulation', url: 'https://nep.repec.org/rss/nep-reg.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Resource Economics', url: 'https://nep.repec.org/rss/nep-res.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Risk Management', url: 'https://nep.repec.org/rss/nep-rmg.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Small Business Management', url: 'https://nep.repec.org/rss/nep-sbm.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Social Norms and Social Capital', url: 'https://nep.repec.org/rss/nep-soc.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Sociology of Economics', url: 'https://nep.repec.org/rss/nep-sog.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: South East Asia', url: 'https://nep.repec.org/rss/nep-sea.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Sports and Economics', url: 'https://nep.repec.org/rss/nep-spo.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Technology and Industrial Dynamics', url: 'https://nep.repec.org/rss/nep-tid.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Tourism Economics', url: 'https://nep.repec.org/rss/nep-tur.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Transition Economics', url: 'https://nep.repec.org/rss/nep-tra.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Transport Economics', url: 'https://nep.repec.org/rss/nep-tre.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Unemployment, Inequality and Poverty', url: 'https://nep.repec.org/rss/nep-ltv.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Urban Economics and Policy', url: 'https://nep.repec.org/rss/nep-uep.rss.xml', note: weekly },
+			{ name: 'RePEc NEP: Utility Models and Prospect Theory', url: 'https://nep.repec.org/rss/nep-upt.rss.xml', note: weekly },
 			{ name: 'The Quarterly Journal of Economics', url: 'https://academic.oup.com/rss/site_5504/3365.xml', issns: ['0033-5533', '1531-4650'] },
 			{ name: 'The Review of Economic Studies', url: 'https://academic.oup.com/rss/site_5508/3369.xml', issns: ['0034-6527', '1467-937X'] },
 			{ name: 'Journal of the European Economic Association', url: 'https://academic.oup.com/rss/site_5571/3427.xml', issns: ['1542-4766', '1542-4774'] },
@@ -585,6 +722,26 @@ export const RSS_CATALOGUE: readonly IRssCatalogueTopic[] = [
 			{ name: 'Journal of the American Planning Association', url: 'https://www.tandfonline.com/feed/rss/rjpa20', issns: ['0194-4363', '1939-0130'] },
 			{ name: 'Cities', url: 'https://rss.sciencedirect.com/publication/science/02642751', issns: ['0264-2751', '1873-6084'] },
 			{ name: 'Planetizen', url: 'https://www.planetizen.com/frontpage/feed' },
+		]
+	},
+	{
+		topic: GEOGRAPHY_TOPIC, feeds: [
+			{ name: 'Progress in Human Geography', url: 'https://journals.sagepub.com/action/showFeed?ui=0&mi=ehikzz&ai=2b4&jc=phg&type=etoc&feed=rss', issns: ['0309-1325', '1477-0288'] },
+			{ name: 'Transactions of the Institute of British Geographers', url: 'https://onlinelibrary.wiley.com/feed/14755661/most-recent', issns: ['0020-2754', '1475-5661'] },
+			{ name: 'Annals of the American Association of Geographers', url: 'https://www.tandfonline.com/feed/rss/raag21', issns: ['2469-4452', '2469-4460'] },
+			{ name: 'Economic Geography', url: 'https://www.tandfonline.com/feed/rss/recg20', issns: ['0013-0095', '1944-8287'] },
+			{ name: 'Journal of Economic Geography', url: 'https://academic.oup.com/rss/site_5190/3055.xml', issns: ['1468-2702', '1468-2710'] },
+			{ name: 'Political Geography', url: 'https://rss.sciencedirect.com/publication/science/09626298', issns: ['0962-6298'] },
+			{ name: 'Geopolitics', url: 'https://www.tandfonline.com/feed/rss/fgeo20', issns: ['1465-0045', '1557-3028'] },
+			{ name: 'Regional Studies', url: 'https://www.tandfonline.com/feed/rss/cres20', issns: ['0034-3404', '1360-0591'] },
+			{ name: 'Population, Space and Place', url: 'https://onlinelibrary.wiley.com/feed/15448452/most-recent', issns: ['1544-8444', '1544-8452'] },
+			{ name: 'Journal of Transport Geography', url: 'https://rss.sciencedirect.com/publication/science/09666923', issns: ['0966-6923'] },
+			{ name: 'International Journal of Geographical Information Science', url: 'https://www.tandfonline.com/feed/rss/tgis20', issns: ['1365-8816', '1362-3087'] },
+			{ name: 'Cartography and Geographic Information Science', url: 'https://www.tandfonline.com/feed/rss/tcag20', issns: ['1523-0406', '1545-0465'] },
+			{ name: 'Remote Sensing of Environment', url: 'https://rss.sciencedirect.com/publication/science/00344257', issns: ['0034-4257', '1879-0704'] },
+			{ name: 'ISPRS Journal of Photogrammetry and Remote Sensing', url: 'https://rss.sciencedirect.com/publication/science/09242716', issns: ['0924-2716'] },
+			{ name: 'Journal of Historical Geography', url: 'https://rss.sciencedirect.com/publication/science/03057488', issns: ['0305-7488', '1095-8614'] },
+			{ name: 'cultural geographies', url: 'https://journals.sagepub.com/action/showFeed?ui=0&mi=ehikzz&ai=2b4&jc=cgj&type=etoc&feed=rss', issns: ['1474-4740', '1477-0881'] },
 		]
 	},
 	{

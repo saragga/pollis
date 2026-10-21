@@ -10,25 +10,27 @@ import { joinPath } from '../../../../base/common/resources.js';
 import { URI } from '../../../../base/common/uri.js';
 import { localize, localize2 } from '../../../../nls.js';
 import { Action2, registerAction2 } from '../../../../platform/actions/common/actions.js';
+import { ICommandService } from '../../../../platform/commands/common/commands.js';
 import { IDialogService, IFileDialogService } from '../../../../platform/dialogs/common/dialogs.js';
 import { IFileService } from '../../../../platform/files/common/files.js';
 import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
 import { INotificationService, Severity } from '../../../../platform/notification/common/notification.js';
 import { IOpenerService } from '../../../../platform/opener/common/opener.js';
-import { IQuickInputService, IQuickPickItem, IQuickPickSeparator } from '../../../../platform/quickinput/common/quickInput.js';
+import { IQuickInputService } from '../../../../platform/quickinput/common/quickInput.js';
 import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
-import { ARXIV_TOPIC, arxivSearchName, arxivSearchUrl, findCatalogueFeed, JULIA_TOPIC, MEDICINE_TOPIC, PUBMED_SEARCH, pubmedSearchName, pubmedSearchUrl, RSS_CATALOGUE, youtubeFeedUrl } from './rssCatalogue.js';
-import { ALERT_SOURCES, AlertSource } from '../../../../platform/alertsMailbox/common/alertsMailbox.js';
-import { DISPLAY_DAYS, EMAIL_ALERT_PREFIX, IRssFeed, IRssFeedEntry, IRssFeedsService } from './rssFeedsService.js';
+import { JOURNAL_METRICS_COMMAND_ID } from '../../databases/common/databaseDrivers.js';
+import { findCatalogueFeed, JULIA_TOPIC, PUBMED_SEARCH, RSS_CATALOGUE, youtubeFeedUrl } from './rssCatalogue.js';
+import { DISPLAY_DAYS, EMAIL_ALERT_PREFIX, IRssFeed, IRssFeedsService } from './rssFeedsService.js';
 import { describeJournal, IJournalScoresService } from './journalScores.js';
 
-// Explore > Monitor > RSS Feeds: the feeds on the left by topic, with ticks for Subscribed, Here and Welcome Page and
+// Explore > RSS > RSS Feeds: the feeds on the left by topic, with ticks for Subscribed, Here and Welcome Page and
 // their unread and total counts; the items of the topic or feed selected (or of all) on the right, newest first, those
 // of the display period and of the feeds ticked Here, a journal's tagged with its level and metrics, which Journals filters.
 // Opening an item opens it in the browser and marks it read.
 
 export const RSS_FEEDS_COMMAND_ID = 'pollis.monitor.rssFeeds';
+export const ADD_FEED_COMMAND_ID = 'pollis.monitor.addFeed';
 
 type FeedsMessage =
 	| { readonly command: 'ready'; readonly journals: JournalFilter }
@@ -42,7 +44,7 @@ type FeedsMessage =
 	| { readonly command: 'days'; readonly days: number }
 	| { readonly command: 'day'; readonly day: string }
 	| { readonly command: 'markUnread'; readonly id: string }
-	| { readonly command: 'add' }
+	| { readonly command: 'add' | 'journalMetrics' }
 	| { readonly command: 'remove'; readonly url: string }
 	| { readonly command: 'refresh' };
 
@@ -87,6 +89,7 @@ async function openRssFeedsPage(accessor: ServicesAccessor): Promise<void> {
 	const fileService = accessor.get(IFileService);
 	const notificationService = accessor.get(INotificationService);
 	const journalScoresService = accessor.get(IJournalScoresService);
+	const commandService = accessor.get(ICommandService);
 
 	if (openPage && !openPage.isDisposed()) {
 		webviewWorkbenchService.revealWebview(openPage, openPage.group ?? -1, false);
@@ -298,15 +301,18 @@ async function openRssFeedsPage(accessor: ServicesAccessor): Promise<void> {
 				rssFeedsService.markUnread([message.id]);
 				break;
 			case 'add':
-				await addFeeds(quickInputService, rssFeedsService, notificationService);
+				await commandService.executeCommand(ADD_FEED_COMMAND_ID);
+				break;
+			case 'journalMetrics':
+				await commandService.executeCommand(JOURNAL_METRICS_COMMAND_ID);
 				break;
 			case 'remove': {
-				// A feed followed, or one the catalogue offers; Add Feed > Undo Remove... brings it back
+				// A feed followed, or one the catalogue offers; Restore on the Add Feed page brings it back
 				const title = rssFeedsService.getFeeds().find(feed => feed.url === message.url)?.title ?? findCatalogueFeed(message.url)?.feed.name;
 				if (title) {
 					const { confirmed } = await dialogService.confirm({
 						message: localize('rss.removeConfirm', "Remove the feed '{0}'?", title),
-						detail: localize('rss.removeDetail', "Add Feed > Undo Remove... brings it back."),
+						detail: localize('rss.removeDetail', "It moves to Removed Feeds on the Add Feed page, to bring back as it was."),
 						primaryButton: localize({ key: 'rss.removeButton', comment: ['&& denotes a mnemonic'] }, "&&Remove"),
 					});
 					if (confirmed) {
@@ -344,31 +350,10 @@ function toOpml(feeds: readonly IRssFeed[]): string {
 }
 
 /** The `topics`, once each, in alphabetical order but for Julia, first. */
-function getTopics(topics: readonly string[]): string[] {
+export function getTopics(topics: readonly string[]): string[] {
 	return [...new Set(topics)].sort((a, b) => Number(b === JULIA_TOPIC) - Number(a === JULIA_TOPIC) || a.localeCompare(b, undefined, { sensitivity: 'base' }));
 }
 
-interface IAddChoice extends IQuickPickItem {
-	readonly choice: 'emailAlerts' | 'alertsMailbox' | 'arxiv' | 'pubmed' | 'youtube' | 'address' | 'undoRemove';
-}
-
-// The topic of the email alerts' feeds.
-const EMAIL_ALERTS_TOPIC = 'Email Alerts';
-
-// The IMAP servers of the common email providers, by the domain of the address.
-const IMAP_SERVERS: readonly [RegExp, string][] = [
-	[/^(?:gmail|googlemail)\.com$/, 'imap.gmail.com'],
-	[/^(?:icloud|me|mac)\.com$/, 'imap.mail.me.com'],
-	[/^yahoo\./, 'imap.mail.yahoo.com'],
-	[/^fastmail\./, 'imap.fastmail.com'],
-	[/^gmx\./, 'imap.gmx.com'],
-];
-
-interface ICatalogueItem extends IQuickPickItem {
-	readonly entry: IRssFeedEntry;
-}
-
-/** A topic for a new feed: one of the catalogue's or the user's, or a new one; undefined when none is chosen. */
 /**
  * Whether a feed is of videos or a podcast's: a YouTube channel, a podcast of the catalogue, or a feed of the user's
  * whose items are all videos or all audio. A news feed with a video now and then, as Bloomberg's, is neither.
@@ -383,200 +368,6 @@ function feedMedia(feed: IRssFeed): 'video' | 'audio' | undefined {
 	}
 	const mediaType = feed.items[0]?.mediaType;
 	return mediaType && feed.items.every(item => item.mediaType === mediaType) ? mediaType : undefined;
-}
-
-async function pickTopic(quickInputService: IQuickInputService, rssFeedsService: IRssFeedsService, title: string, first?: string): Promise<string | undefined> {
-	const newTopic = localize('rss.newTopic', "New Topic...");
-	const topics = getTopics([...(first ? [first] : []), ...RSS_CATALOGUE.map(({ topic }) => topic), ...rssFeedsService.getFeeds().map(feed => feed.topic)]);
-	if (first) {
-		topics.sort((a, b) => Number(b === first) - Number(a === first));
-	}
-	const picked = await quickInputService.pick([...topics.map(topic => ({ label: topic })), { type: 'separator' }, { label: newTopic }], { title, placeHolder: localize('rss.topicPlaceholder', "The topic to list the feed under") });
-	return picked?.label === newTopic
-		? (await quickInputService.input({ title, prompt: localize('rss.newTopicPrompt', "The name of the new topic") }))?.trim()
-		: picked?.label;
-}
-
-/**
- * Add Feed > Alerts Mailbox...: the address the alerts are sent to, its IMAP server and its password, kept once the
- * mailbox can be read. False when none is set.
- */
-async function setAlertsMailbox(quickInputService: IQuickInputService, rssFeedsService: IRssFeedsService, notificationService: INotificationService): Promise<boolean> {
-	const title = localize('rss.mailboxTitle', "Alerts Mailbox");
-	const current = rssFeedsService.getAlertsMailbox();
-	const user = (await quickInputService.input({
-		title,
-		value: current?.user,
-		placeHolder: 'my.alerts@gmail.com',
-		prompt: localize('rss.mailboxUserPrompt', "The email address the alerts are sent to: best one used only for them, as Pollis makes a feed of every alert that arrives there"),
-		validateInput: async value => /^\S+$/.test(value.trim()) ? undefined : localize('rss.mailboxUserInvalid', "Enter the email address"),
-	}))?.trim();
-	if (!user) {
-		return false;
-	}
-	const domain = user.split('@')[1]?.toLowerCase() ?? '';
-	const guess = current?.user === user ? `${current.server}${current.port === 993 ? '' : `:${current.port}`}` : IMAP_SERVERS.find(([pattern]) => pattern.test(domain))?.[1] ?? (domain ? `imap.${domain}` : '');
-	const server = (await quickInputService.input({
-		title,
-		value: guess,
-		prompt: localize('rss.mailboxServerPrompt', "The IMAP server of the mailbox, as its provider gives it; add :port when it is not 993"),
-		validateInput: async value => /^[\w.-]+(?::\d+)?$/.test(value.trim()) ? undefined : localize('rss.mailboxServerInvalid', "Enter a server, such as imap.gmail.com"),
-	}))?.trim();
-	if (!server) {
-		return false;
-	}
-	const password = await quickInputService.input({
-		title,
-		password: true,
-		prompt: localize('rss.mailboxPasswordPrompt', "The mailbox's password, or an app password where the provider asks for one (Gmail, iCloud, Yahoo). It is kept in the system's keychain."),
-	});
-	if (!password) {
-		return false;
-	}
-	const [host, port] = server.split(':');
-	const error = await rssFeedsService.setAlertsMailbox({ server: host, port: port ? Number(port) : 993, user, folder: current?.folder ?? 'INBOX' }, password);
-	if (error) {
-		notificationService.error(localize('rss.mailboxFailed', "The mailbox could not be read: {0}. Check the address, the server and the password; Gmail, iCloud and Yahoo need an app password, and IMAP turned on.", error));
-		return false;
-	}
-	return true;
-}
-
-/**
- * Add Feed: the alerts in the alerts mailbox, ticked when followed (unticking one stops following it), the mailbox,
- * an arXiv or PubMed search, a YouTube channel, or a feed at another address under a topic of the user's choosing.
- */
-async function addFeeds(quickInputService: IQuickInputService, rssFeedsService: IRssFeedsService, notificationService: INotificationService): Promise<void> {
-	const title = localize('rss.addTitle', "Add Feed");
-	const choice = await quickInputService.pick<IAddChoice>([
-		{ choice: 'emailAlerts', label: localize('rss.addEmailAlerts', "Email Alerts..."), detail: localize('rss.addEmailAlertsDetail', "The alerts of Google Scholar, JSTOR, HeinOnline and other sources sent to your alerts mailbox, which Pollis turns into feeds") },
-		{ choice: 'alertsMailbox', label: localize('rss.addAlertsMailbox', "Alerts Mailbox..."), detail: localize('rss.addAlertsMailboxDetail', "The email address your alerts are sent to, which Pollis reads on this computer") },
-		{ choice: 'arxiv', label: localize('rss.addArxiv', "arXiv Search..."), detail: localize('rss.addArxivDetail', "The newest papers matching a search") },
-		{ choice: 'pubmed', label: localize('rss.addPubmed', "PubMed Search..."), detail: localize('rss.addPubmedDetail', "The articles matching a search, as PubMed adds them") },
-		{ choice: 'youtube', label: localize('rss.addYoutube', "YouTube Channel..."), detail: localize('rss.addYoutubeDetail', "The newest videos of a channel") },
-		{ choice: 'address', label: localize('rss.addAddress', "Other Address..."), detail: localize('rss.addAddressDetail', "A feed, or a journal's or website's page, whose feed is found") },
-		{ type: 'separator' },
-		{ choice: 'undoRemove', label: localize('rss.undoRemove', "Undo Remove..."), detail: localize('rss.undoRemoveDetail', "The feeds removed, to bring back as they were") },
-	], { title });
-	switch (choice?.choice) {
-		case 'undoRemove': {
-			const removed = rssFeedsService.getRemovedFeeds();
-			if (!removed.length) {
-				notificationService.info(localize('rss.noneRemoved', "No feed has been removed."));
-				break;
-			}
-			// The last removed first
-			const picked = await quickInputService.pick([...removed].reverse().map(feed => ({ label: feed.title, description: feed.topic, url: feed.url })), { title, canPickMany: true, matchOnDescription: true, placeHolder: localize('rss.undoRemovePlaceholder', "Tick the feeds to bring back") });
-			if (picked?.length) {
-				await rssFeedsService.restoreFeeds(picked.map(item => item.url));
-			}
-			break;
-		}
-		case 'alertsMailbox':
-			if (await setAlertsMailbox(quickInputService, rssFeedsService, notificationService)) {
-				notificationService.info(localize('rss.mailboxSet', "Pollis now reads the alerts mailbox {0}. Choose Add Feed > Email Alerts... to follow its alerts.", rssFeedsService.getAlertsMailbox()?.user ?? ''));
-			}
-			break;
-		case 'emailAlerts': {
-			if (!rssFeedsService.getAlertsMailbox() && !await setAlertsMailbox(quickInputService, rssFeedsService, notificationService)) {
-				break;
-			}
-			const alerts = await rssFeedsService.getEmailAlerts();
-			if (!alerts) {
-				notificationService.warn(localize('rss.emailAlertsFailed', "The alerts mailbox could not be read. Check the internet connection, or set it again with Add Feed > Alerts Mailbox...."));
-				break;
-			}
-			if (!alerts.length) {
-				notificationService.info(localize('rss.emailAlertsEmpty', "No alert has arrived at {0} yet. Set up alerts at Google Scholar, JSTOR, HeinOnline and other sources to be sent there: the Email Alerts skill in Compose > Agent Skills shows how.", rssFeedsService.getAlertsMailbox()?.user ?? ''));
-				break;
-			}
-			const followed = new Set(rssFeedsService.getFeeds().map(feed => feed.url));
-			const items = (Object.keys(ALERT_SOURCES) as AlertSource[]).flatMap((source): (ICatalogueItem | IQuickPickSeparator)[] => {
-				const ofSource = alerts.filter(alert => alert.source === source);
-				return ofSource.length ? [
-					{ type: 'separator', label: ALERT_SOURCES[source] },
-					...ofSource.map(alert => ({ label: alert.name, picked: followed.has(alert.url), entry: { url: alert.url, topic: EMAIL_ALERTS_TOPIC, name: `${ALERT_SOURCES[source]}: ${alert.name}` } })),
-				] : [];
-			});
-			const picked = await quickInputService.pick(items, { title: localize('rss.emailAlertsTitle', "Email Alerts"), canPickMany: true, placeHolder: localize('rss.emailAlertsPlaceholder', "Tick the alerts to follow") });
-			if (picked) {
-				const urls = new Set(picked.map(item => item.entry.url));
-				await rssFeedsService.updateFeeds(picked.map(item => item.entry).filter(entry => !followed.has(entry.url)), alerts.map(alert => alert.url).filter(url => followed.has(url) && !urls.has(url)));
-			}
-			break;
-		}
-		case 'arxiv': {
-			const query = (await quickInputService.input({
-				title: localize('rss.arxivTitle', "arXiv Search"),
-				placeHolder: 'abs:"survival analysis" AND cat:stat.ME',
-				prompt: localize('rss.arxivPrompt', "Words to search for, or fields: ti: title, au: author, abs: abstract, cat: category; combine them with AND, OR and ANDNOT"),
-			}))?.trim();
-			if (query) {
-				await rssFeedsService.updateFeeds([{ url: arxivSearchUrl(query), topic: ARXIV_TOPIC, name: arxivSearchName(query) }], []);
-			}
-			break;
-		}
-		case 'pubmed': {
-			const term = (await quickInputService.input({
-				title: localize('rss.pubmedTitle', "PubMed Search"),
-				placeHolder: '"Cox proportional hazards"[Title/Abstract]',
-				prompt: localize('rss.pubmedPrompt', "A search as written in PubMed, with field tags such as [Title/Abstract], [Author] or [MeSH Terms]"),
-			}))?.trim();
-			if (term) {
-				await rssFeedsService.updateFeeds([{ url: pubmedSearchUrl(term), topic: MEDICINE_TOPIC, name: pubmedSearchName(term) }], []);
-			}
-			break;
-		}
-		case 'address': {
-			// A feed, a journal's page or another web page: the feeds it leads to are looked up; when none, it is asked again
-			let feeds: readonly { readonly url: string; readonly name?: string }[] = [];
-			let value = '';
-			let prompt = localize('rss.addPrompt', "The address of an RSS or Atom feed, or of a journal's or website's page");
-			while (!feeds.length) {
-				value = (await quickInputService.input({
-					title,
-					value,
-					placeHolder: 'https://onlinelibrary.wiley.com/journal/14680262',
-					prompt,
-					validateInput: async value => /^https?:\/\/\S+$/.test(value.trim()) ? undefined : localize('rss.addInvalid', "Enter an address that starts with https://"),
-				}))?.trim() ?? '';
-				if (!value) {
-					return;
-				}
-				feeds = await rssFeedsService.findFeeds(value);
-				prompt = localize('rss.addNotFound', "No feed found at this address. On the journal's or website's page, look for an RSS link and copy its address (Oxford journals: the RSS icon on the journal's page).");
-			}
-			const feed = feeds.length === 1 ? feeds[0] : (await quickInputService.pick(feeds.map(feed => ({ label: feed.name ?? feed.url, description: feed.name ? feed.url : undefined, feed })), { title, placeHolder: localize('rss.pickFeed', "The page lists several feeds: choose one") }))?.feed;
-			if (!feed) {
-				break;
-			}
-			const topic = await pickTopic(quickInputService, rssFeedsService, title);
-			if (topic) {
-				await rssFeedsService.updateFeeds([{ url: feed.url, topic, name: feed.name }], []);
-			}
-			break;
-		}
-		case 'youtube': {
-			const youtubeTitle = localize('rss.youtubeTitle', "YouTube Channel");
-			// The channel's page is looked up once the address is entered; when no channel is found, it is asked again
-			let feed: { readonly url: string; readonly name?: string } | undefined;
-			let value = '';
-			let prompt = localize('rss.youtubePrompt', "The channel's address, its @handle or its channel id (UC...)");
-			while (!feed) {
-				value = (await quickInputService.input({ title: youtubeTitle, value, placeHolder: 'https://www.youtube.com/@wsj', prompt }))?.trim() ?? '';
-				if (!value) {
-					return;
-				}
-				feed = await rssFeedsService.findYouTubeFeed(value);
-				prompt = localize('rss.youtubeNotFound', "No channel found. Open the channel on YouTube and copy its address, or its channel id from About > Share Channel > Copy Channel ID.");
-			}
-			const topic = await pickTopic(quickInputService, rssFeedsService, youtubeTitle);
-			if (topic) {
-				await rssFeedsService.updateFeeds([{ url: feed.url, topic, name: feed.name }], []);
-			}
-			break;
-		}
-	}
 }
 
 /** The page: its texts come from here, the feeds and their items from the `state` message. */
@@ -609,6 +400,14 @@ function pageHtml(): string {
 		previous: localize('rss.previous', "Previous"),
 		next: localize('rss.next', "Next"),
 		pageOf: localize('rss.pageOf', "Page {0} of {1}"),
+		criteriaItems: localize('rss.criteriaItems', "{0} items"),
+		criteriaItem: localize('rss.criteriaItem', "1 item"),
+		criteriaFeeds: localize('rss.criteriaFeeds', "Feeds: {0}"),
+		criteriaPeriod: localize('rss.criteriaPeriod', "Items From: {0}"),
+		criteriaJournals: localize('rss.criteriaJournals', "Journals: {0}"),
+		criteriaHidden: localize('rss.criteriaHidden', "Not displayed here: {0} feeds"),
+		criteriaHiddenOne: localize('rss.criteriaHiddenOne', "Not displayed here: 1 feed"),
+		criteriaTooltip: localize('rss.criteriaTooltip', "What decides the items listed: the feed or topic chosen on the left, Items From and Journals above, and the feeds whose Here is off"),
 		inZotero: localize('rss.inZotero', "In Zotero"),
 		download: localize('rss.download', "Download Episode"),
 		downloaded: localize('rss.downloadedLink', "Downloaded"),
@@ -626,6 +425,9 @@ function pageHtml(): string {
 		addToZotero: localize('rss.addToZotero', "Add to Zotero"),
 		exportOpml: localize('rss.exportOpml', "Export as OPML"),
 		journals: localize('rss.journals', "Journals"),
+		journalMetrics: localize('rss.journalMetricsInfo', "Click to open the Journal Metrics page: what each value of the journal tags and each choice of Journals means, where they come from, and more metrics to import (SCImago, CWTS, ABDC, Scopus and Journal Citation Reports), which add tags and Journals choices."),
+		moreMetrics: localize('rss.moreMetrics', "More Metrics..."),
+		tagHint: localize('rss.tagHint', "Click the tag for Journal Metrics: what each value means, and more to import."),
 		journalFilters: {
 			all: localize('rss.journalsAll', "All"),
 			academic: localize('rss.journalsAcademic', "Academic (Level 1 or 2)"),
@@ -644,7 +446,7 @@ function pageHtml(): string {
 			sjrQ12: localize('rss.journalsSjrQ12Detail', "The items of the journals in the top half of SJR (SCImago) in at least one of their categories, in the latest year imported. Items not from a journal stay."),
 			snip: localize('rss.journalsSnipDetail', "The items of the journals cited more than the average of their field: SNIP (CWTS) above 1, in the latest year imported. Items not from a journal stay."),
 		},
-		journalsTooltip: localize('rss.journalsTooltip', "The levels are the Norwegian register's, built into Pollis; the choices of SJR and SNIP appear once their metrics are imported (Databases > PollisJournals > Import Journal Metrics...). The counts follow the choice."),
+		journalsTooltip: localize('rss.journalsTooltip', "The levels are the Norwegian register's, built into Pollis; the choices of SJR and SNIP appear once their metrics are imported (on the Journal Metrics page, by the button next to Journals). The counts follow the choice."),
 		exportOpmlTooltip: localize('rss.exportOpmlTooltip', "Save the feeds you follow as an OPML file, to follow them in Zotero or another feed reader"),
 	};
 	return `<!DOCTYPE html>
@@ -686,6 +488,8 @@ function pageHtml(): string {
 		.item.read .itemTitle { font-weight: normal; color: var(--vscode-descriptionForeground); }
 		.item .meta { font-size: 11px; color: var(--vscode-descriptionForeground); }
 		.empty { color: var(--vscode-descriptionForeground); padding: 12px 8px; }
+		.criteria { font-size: 12px; color: var(--vscode-descriptionForeground); padding: 8px; border-bottom: 1px solid var(--vscode-widget-border); line-height: 1.4; }
+		.criteria b { font-weight: 600; color: var(--vscode-foreground); }
 		.pager { display: flex; justify-content: center; align-items: center; gap: 16px; padding: 12px 8px; font-size: 12px; color: var(--vscode-descriptionForeground); }
 		.pager .link:disabled { color: var(--vscode-disabledForeground); cursor: default; text-decoration: none; }
 		.topic { font-weight: 600; }
@@ -709,6 +513,11 @@ function pageHtml(): string {
 		.columns .groupTitle { text-align: center; padding-bottom: 2px; border-bottom: 1px solid var(--vscode-descriptionForeground); }
 		.columns .groupColumns { display: flex; gap: 8px; }
 		.columns .countColumn { flex: none; width: 88px; text-align: center; white-space: nowrap; }
+		.infoButton { display: inline-flex; padding: 2px; margin: 0 0 8px -10px; border: none; border-radius: 4px; background: none; color: var(--vscode-textLink-foreground); cursor: pointer; }
+		.infoButton:hover { background: var(--vscode-toolbar-hoverBackground); }
+		.infoWrap { position: relative; display: inline-flex; }
+		.infoHover { display: none; position: absolute; top: calc(100% - 4px); left: -10px; z-index: 10; width: 340px; padding: 6px 8px; font-size: 12px; line-height: 1.45; white-space: normal; border-radius: 4px; color: var(--vscode-editorHoverWidget-foreground); background: var(--vscode-editorHoverWidget-background); border: 1px solid var(--vscode-editorHoverWidget-border); box-shadow: 0 2px 8px var(--vscode-widget-shadow); }
+		.infoWrap:hover .infoHover, .infoButton:focus-visible + .infoHover { display: block; }
 		.period { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; font-size: 12px; color: var(--vscode-descriptionForeground); }
 		.dayPicker { position: relative; margin: 0 0 8px -6px; }
 		.dayButton { font: inherit; font-size: 12px; color: var(--vscode-dropdown-foreground); background: var(--vscode-dropdown-background); border: 1px solid var(--vscode-dropdown-border); border-radius: 2px; padding: 2px 6px; cursor: pointer; }
@@ -732,7 +541,7 @@ function pageHtml(): string {
 		.item .summary { font-size: 12px; color: var(--vscode-descriptionForeground); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 		.item .play, .item .zotero, .item .download, .item .unread { margin-left: 8px; }
 		.item .zotero.link, .item .unread { visibility: hidden; }
-		.item .journal { margin-left: 8px; padding: 0 6px; white-space: nowrap; border-radius: 9px; border: 1px solid var(--vscode-charts-purple); color: var(--vscode-charts-purple); }
+		.item .journal { cursor: pointer; margin-left: 8px; padding: 0 6px; white-space: nowrap; border-radius: 9px; border: 1px solid var(--vscode-charts-purple); color: var(--vscode-charts-purple); }
 		.item:hover .zotero.link, .item:focus .zotero.link, .item:hover .unread, .item:focus .unread { visibility: visible; }
 	</style>
 </head>
@@ -741,7 +550,7 @@ function pageHtml(): string {
 	<div class="header">
 		<h1>${text.title}</h1>
 		<label class="period">${text.period}<select id="days">${DISPLAY_DAYS.map(days => `<option value="${days}">${text.days[days]}</option>`).join('')}<option value="day">${text.onDay}</option></select></label><span class="dayPicker"><button id="day" class="dayButton" hidden></button><div class="calendar" id="calendar" hidden></div></span>
-		<label class="period">${text.journals}<select id="journals"></select></label>
+		<label class="period">${text.journals}<select id="journals"></select></label><span class="infoWrap"><button class="infoButton" id="journalMetrics" aria-label="${text.journalMetrics}"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 1 1 0 14A7 7 0 0 1 8 1Zm0 1a6 6 0 1 0 0 12A6 6 0 0 0 8 2Zm0 5a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-1 0v-4A.5.5 0 0 1 8 7Zm0-2.25a.75.75 0 1 1 0 1.5.75.75 0 0 1 0-1.5Z"/></svg></button><span class="infoHover" role="tooltip">${text.journalMetrics}</span></span>
 		<span class="actions">
 			<button class="action pressed" id="add">${text.addFeed}</button>
 			<button class="action" id="refresh">${text.refresh}</button>
@@ -803,6 +612,12 @@ function pageHtml(): string {
 			option.title = TEXT.journalDescriptions[choice];
 			journalsElement.appendChild(option);
 		}
+		// The last choice opens the Journal Metrics page, to import the metrics of more filters
+		journalsElement.appendChild(document.createElement('hr'));
+		const more = element('option', '', TEXT.moreMetrics);
+		more.value = 'moreMetrics';
+		more.title = TEXT.journalMetrics;
+		journalsElement.appendChild(more);
 		journalsElement.value = journalFilter;
 		// The open list of a select shows no hovers on every system: the select itself describes the choice made
 		journalsElement.title = TEXT.journalDescriptions[journalFilter] + '\\n\\n' + TEXT.journalsTooltip;
@@ -813,7 +628,14 @@ function pageHtml(): string {
 		saveCollapsed();
 		vscode.postMessage({ command: 'journals', journals: choice });
 	}
-	journalsElement.addEventListener('change', () => chooseJournals(journalsElement.value));
+	journalsElement.addEventListener('change', () => {
+		if (journalsElement.value === 'moreMetrics') {
+			journalsElement.value = journalFilter;
+			vscode.postMessage({ command: 'journalMetrics' });
+			return;
+		}
+		chooseJournals(journalsElement.value);
+	});
 	const VIDEO = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-linejoin="round"><rect x="1.5" y="4" width="9" height="8" rx="1.5"/><path d="M10.5 7l4-2.5v7l-4-2.5z"/></svg>';
 	const PODCAST = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-linecap="round"><rect x="5.5" y="1.5" width="5" height="8" rx="2.5"/><path d="M3 7.5a5 5 0 0 0 10 0M8 12.5v2M5.5 14.5h5"/></svg>';
 	const CHEVRON = '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.15 5.65a.5.5 0 0 1 .7 0L8 9.79l4.15-4.14a.5.5 0 0 1 .7.7l-4.5 4.5a.5.5 0 0 1-.7 0l-4.5-4.5a.5.5 0 0 1 0-.7Z"/></svg>';
@@ -1005,6 +827,7 @@ function pageHtml(): string {
 			.flatMap(feed => feed.items.map(item => ({ ...item, feed: feed.title })))
 			.sort((a, b) => b.date - a.date);
 		itemsElement.textContent = '';
+		itemsElement.appendChild(criteria(shown.length));
 		if (state.day) {
 			itemsElement.appendChild(element('div', 'note', TEXT.dayNote));
 		}
@@ -1047,7 +870,8 @@ function pageHtml(): string {
 			}
 			if (item.journal && item.journal.tag) {
 				const journal = meta.appendChild(element('span', 'journal', item.journal.tag));
-				journal.title = item.journal.details;
+				journal.title = item.journal.details + '\\n\\n' + TEXT.tagHint;
+				journal.addEventListener('click', event => { event.stopPropagation(); vscode.postMessage({ command: 'journalMetrics' }); });
 			}
 			if (item.inZotero) {
 				meta.appendChild(element('span', 'zotero', TEXT.inZotero));
@@ -1069,6 +893,33 @@ function pageHtml(): string {
 		if (pages > 1) {
 			itemsElement.appendChild(pager(pages));
 		}
+	}
+
+	// What decides the items listed, above them: their number, the feeds chosen, Items From, Journals, and the feeds hidden here
+	function criteria(count) {
+		const bar = element('div', 'criteria');
+		bar.title = TEXT.criteriaTooltip;
+		const feed = selected && selected.startsWith('feed:') ? state.feeds.find(candidate => selected === 'feed:' + candidate.url) : undefined;
+		const feeds = feed ? feed.title : selected ? selected.slice('topic:'.length) : TEXT.allFeeds;
+		const period = state.day ? dayElement.textContent : TEXT.days[state.days];
+		const hidden = state.feeds.filter(candidate => isShown(candidate) && candidate.subscribed && !candidate.shown).length;
+		const parts = [
+			count === 1 ? TEXT.criteriaItem : TEXT.criteriaItems.replace('{0}', count.toLocaleString()),
+			TEXT.criteriaFeeds.replace('{0}', feeds),
+			TEXT.criteriaPeriod.replace('{0}', period),
+			TEXT.criteriaJournals.replace('{0}', TEXT.journalFilters[journalFilter]),
+		];
+		if (hidden) {
+			parts.push(hidden === 1 ? TEXT.criteriaHiddenOne : TEXT.criteriaHidden.replace('{0}', String(hidden)));
+		}
+		parts.forEach((part, index) => {
+			if (index) {
+				bar.appendChild(document.createTextNode(' \u00b7 '));
+			}
+			// The first part, the number of items, in bold
+			bar.appendChild(element(index ? 'span' : 'b', '', part));
+		});
+		return bar;
 	}
 
 	// Previous, Page X of Y and Next, above and under the items; a new page is shown from its top
@@ -1186,6 +1037,7 @@ function pageHtml(): string {
 		});
 	}
 	document.getElementById('add').addEventListener('click', () => vscode.postMessage({ command: 'add' }));
+	document.getElementById('journalMetrics').addEventListener('click', () => vscode.postMessage({ command: 'journalMetrics' }));
 	document.getElementById('refresh').addEventListener('click', () => vscode.postMessage({ command: 'refresh' }));
 	document.getElementById('exportOpml').addEventListener('click', () => vscode.postMessage({ command: 'exportOpml' }));
 

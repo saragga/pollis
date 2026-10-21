@@ -5,7 +5,7 @@
 
 // Pollis: the article an item of an email alert announces, found by its title: its DOI from the item's link, else from
 // Crossref's bibliographic search, accepted only when the title Crossref has is the item's; then its journal, year and
-// citations from OpenAlex, by DOI. Both are free and need no key. A line of ~/.pollis/journals/articles.jsonl, which
+// citations, field-weighted citation impact and citation percentile from OpenAlex, by DOI. Both are free and need no key. A line of ~/.pollis/journals/articles.jsonl, which
 // the articles view of the PollisJournals database reads.
 
 /** A line of articles.jsonl: what was found for an item; `doi` is null when nothing was. */
@@ -23,6 +23,12 @@ export interface IArticleRecord {
 	readonly year: number | null;
 	readonly type: string | null;
 	readonly cited_by_count: number | null;
+	/** OpenAlex's field-weighted citation impact: the citations over those expected for the field, year and type (1 is the average). */
+	readonly fwci: number | null;
+	/** The percentile, from 0 to 1, of the citations among the works of the same field, year and type. */
+	readonly citation_percentile: number | null;
+	readonly top_1_percent: boolean | null;
+	readonly top_10_percent: boolean | null;
 	readonly is_oa: boolean | null;
 	readonly looked_up: string;
 }
@@ -43,6 +49,8 @@ interface IOpenAlexWork {
 	readonly publication_year?: number | null;
 	readonly type?: string | null;
 	readonly cited_by_count?: number | null;
+	readonly fwci?: number | null;
+	readonly citation_normalized_percentile?: { readonly value?: number | null; readonly is_in_top_1_percent?: boolean | null; readonly is_in_top_10_percent?: boolean | null } | null;
 	readonly open_access?: { readonly is_oa?: boolean | null };
 	readonly primary_location?: { readonly source?: { readonly id?: string; readonly display_name?: string; readonly issn_l?: string | null } | null } | null;
 }
@@ -105,7 +113,7 @@ async function findAtCrossref(title: string, fetchText: FetchText): Promise<ICro
 
 /** The work OpenAlex has with the DOI `doi`, if any: fetching one work is free. */
 async function findAtOpenAlex(doi: string, fetchText: FetchText): Promise<IOpenAlexWork | undefined> {
-	const work = parse<IOpenAlexWork>(await fetchText(`https://api.openalex.org/works/doi:${encodeURIComponent(doi)}?select=id,title,publication_year,type,cited_by_count,open_access,primary_location`));
+	const work = parse<IOpenAlexWork>(await fetchText(`https://api.openalex.org/works/doi:${encodeURIComponent(doi)}?select=id,title,publication_year,type,cited_by_count,fwci,citation_normalized_percentile,open_access,primary_location`));
 	return work?.id ? work : undefined;
 }
 
@@ -135,6 +143,10 @@ export async function lookUpArticle(id: string, title: string, link: string, fet
 		year: work?.publication_year ?? null,
 		type: work?.type ?? null,
 		cited_by_count: work?.cited_by_count ?? null,
+		fwci: work?.fwci ?? null,
+		citation_percentile: work?.citation_normalized_percentile?.value ?? null,
+		top_1_percent: work?.citation_normalized_percentile?.is_in_top_1_percent ?? null,
+		top_10_percent: work?.citation_normalized_percentile?.is_in_top_10_percent ?? null,
 		is_oa: work?.open_access?.is_oa ?? null,
 		looked_up: new Date().toISOString(),
 	};

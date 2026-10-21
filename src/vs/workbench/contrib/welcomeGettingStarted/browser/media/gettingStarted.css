@@ -1189,6 +1189,188 @@
 	gap: 16px;
 }
 
+/* Pollis: the Alerts / RSS section heading */
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-section-heading {
+	display: flex;
+	align-items: baseline;
+}
+
+/* Pollis: in the caption, All Feeds / All Alerts with a blue gear beside it */
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-section-links {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-section-links .button-link {
+	padding: 0;
+}
+
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-section-links .pollis-monitor-settings {
+	width: 24px;
+	height: 24px;
+	color: var(--vscode-textLink-foreground);
+}
+
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-section-links .pollis-monitor-settings:hover {
+	color: var(--vscode-textLink-activeForeground);
+}
+
+/* The workbench colours every codicon itself, so the gear takes the button's blue explicitly */
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-section-links .pollis-monitor-settings .codicon {
+	color: inherit;
+}
+
+/* Pollis: the Alerts and RSS tabs, in the section heading, with a switch between them; the one chosen in the foreground colour */
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-tabs {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-tab {
+	padding: 0;
+	border: none;
+	background: none;
+	font: inherit;
+	color: var(--vscode-descriptionForeground);
+	cursor: pointer;
+}
+
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-tab:hover,
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-tab.active {
+	color: var(--vscode-foreground);
+}
+
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-tab-switch {
+	position: relative;
+	flex-shrink: 0;
+	width: 46px;
+	height: 24px;
+	padding: 0;
+	border: 1px solid var(--vscode-widget-border);
+	border-radius: 12px;
+	background: var(--vscode-sideBar-background);
+	cursor: pointer;
+}
+
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-tab-switch::after {
+	content: '';
+	position: absolute;
+	top: 2px;
+	left: 2px;
+	width: 20px;
+	height: 18px;
+	border-radius: 9px;
+	background: var(--vscode-focusBorder);
+	transition: left 160ms ease;
+}
+
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-tab-switch.right::after {
+	left: 22px;
+}
+
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-tab-switch:focus-visible {
+	outline: 1px solid var(--vscode-focusBorder);
+	outline-offset: 2px;
+}
+
+.monaco-workbench.monaco-reduce-motion .part.editor > .content .gettingStartedContainer .pollis-tab-switch::after {
+	transition: none;
+}
+
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-tab.single {
+	cursor: default;
+}
+
+/* Pollis: the box of the Alerts and RSS tabs, like the Discover Pollis card: the list, and a caption under it */
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-monitor-card {
+	display: flex;
+	flex-direction: column;
+	margin-top: 8px;
+	border-radius: 6px;
+	background: var(--vscode-sideBar-background);
+}
+
+/* The number of unread items in the caption, in a badge */
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-monitor-status {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	margin-left: auto;
+}
+
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-monitor-card .pollis-discover-arrow:disabled {
+	opacity: 0.4;
+	cursor: default;
+}
+
+/* The items fill the box from its top and across it; the scrollbar is in a gutter beyond the box's right edge */
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-monitor-card .pollis-scroll-frame {
+	margin: 0 -14px 0 0;
+}
+
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-monitor-card .pollis-scrolling {
+	box-sizing: border-box;
+	padding: 0 14px 0 0;
+}
+
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-monitor-caption {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	column-gap: 12px;
+	flex-shrink: 0;
+	min-height: 28px;
+	padding: 4px 12px 4px 16px;
+	line-height: 1.45;
+	color: var(--vscode-descriptionForeground);
+	background: var(--vscode-welcomePage-tileBackground);
+	border-radius: 0 0 6px 6px;
+}
+
+/* Pollis: an alert of severity Error */
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-alert.error {
+	border-left-color: var(--vscode-editorError-foreground);
+}
+
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-alert.error .pollis-alert-icon {
+	color: var(--vscode-editorError-foreground);
+}
+
+/* Pollis: a list that scrolls when its items are more than it shows (the newest feed items) */
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-scrolling {
+	overflow: hidden;
+	/* A gutter for the scrollbar, beside the items rather than over them */
+	padding-right: 12px;
+}
+
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-scroll-frame {
+	/* The space above the first card is outside the scrolling list, so the scrollbar starts where the cards start */
+	margin-top: 8px;
+}
+
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-scrolling > :first-child {
+	margin-top: 0;
+}
+
+/* Pollis: the title of a feed item, which opens it */
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-alert .pollis-feed-title {
+	padding: 0;
+	border: none;
+	background: none;
+	font: inherit;
+	color: inherit;
+	text-align: left;
+	cursor: pointer;
+}
+
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-alert .pollis-feed-title:hover {
+	color: var(--vscode-textLink-activeForeground);
+	text-decoration: underline;
+}
+
 /* Pollis: the status line shown while nothing needs attention (Julia and the built-in database) */
 .monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-status {
 	display: flex;

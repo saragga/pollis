@@ -189,6 +189,7 @@ import './contrib/emergencyAlert/electron-browser/emergencyAlert.contribution.js
 // MCP
 import './contrib/mcp/electron-browser/mcp.contribution.js';
 import './contrib/monitor/electron-browser/rssFeedsService.js';
+import './contrib/monitor/electron-browser/alertsService.js';
 
 // Pollis: the duckdb> terminal
 import './contrib/databases/electron-browser/duckdbShell.contribution.js';

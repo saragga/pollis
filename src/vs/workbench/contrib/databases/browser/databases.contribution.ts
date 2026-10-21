@@ -32,6 +32,7 @@ import { generateBrowseCode, generateConnectionCode, getDatabaseDriver, generate
 import { openConnectionEditor } from './connectionEditor.js';
 import { DatabaseConnectionsService } from './databaseConnectionsService.js';
 import { JournalMetricsReader, readCsv, readXlsx, yearOfFileName } from './journalMetrics.js';
+import './journalMetricsPage.js';
 import { CONNECT_DATABASE_COMMAND_ID, DatabaseConnectionContextMenu, DatabaseConnectionsView, DatabaseItemConnected, DatabaseItemExpanded, DatabaseItemId, DatabaseItemInlineMenu, DatabaseItemBuiltin, DatabaseItemKind, DatabaseItemSaved, DatabasesNewConnectionMenu, DISCONNECT_DATABASE_COMMAND_ID, IDatabaseItemArg, BROWSE_TABLE_COMMAND_ID, NEW_CONNECTION_COMMAND_ID, PREVIEW_TABLE_COMMAND_ID, REFRESH_DATABASE_COMMAND_ID } from './connectionsView.js';
 
 registerSingleton(IDatabaseConnectionsService, DatabaseConnectionsService, InstantiationType.Delayed);
@@ -361,7 +362,7 @@ registerAction2(class extends Action2 {
 			openLabel: localize({ key: 'databases.importJournalMetrics.open', comment: ['&& denotes a mnemonic'] }, "&&Import"),
 			canSelectFiles: true,
 			canSelectMany: false,
-			filters: [{ name: localize('databases.importJournalMetrics.filter', "Journal Citation Reports, Scopus, SCImago or CWTS Export"), extensions: ['csv', 'xlsx'] }],
+			filters: [{ name: localize('databases.importJournalMetrics.filter', "Journal Citation Reports, Scopus, SCImago, CWTS or ABDC Export"), extensions: ['csv', 'xlsx'] }],
 		}) ?? [];
 		if (!file) {
 			return;
@@ -431,7 +432,7 @@ registerAction2(class extends Action2 {
 			}
 			const message = error instanceof Error ? error.message : '';
 			notificationService.error(message === 'header'
-				? localize('databases.importJournalMetrics.unknown', "{0} is not a file Pollis can import: it reads the exports of Journal Citation Reports (JIF), Scopus (CiteScore), SCImago (SJR) and CWTS (SNIP), as CSV or Excel files.", name)
+				? localize('databases.importJournalMetrics.unknown', "{0} is not a file Pollis can import: it reads the exports of Journal Citation Reports (JIF), Scopus (CiteScore), SCImago (SJR) and CWTS (SNIP), and the ABDC Journal Quality List, as CSV or Excel files.", name)
 				: message === 'zip' || message === 'sheet'
 					? localize('databases.importJournalMetrics.notExcel', "{0} could not be read as an Excel file.", name)
 					: localize('databases.importJournalMetrics.failed', "{0} could not be imported: {1}", name, message));

@@ -52,6 +52,9 @@ import { ISecretStorageService } from '../../../../platform/secrets/common/secre
 import { IFileService } from '../../../../platform/files/common/files.js';
 import { IPathService } from '../../../services/path/common/pathService.js';
 import { IWorkspaceContextService } from '../../../../platform/workspace/common/workspace.js';
+import { ADD_FEED_COMMAND_ID, RSS_FEEDS_COMMAND_ID } from '../../monitor/browser/rssFeedsPage.js';
+import { ADD_ALERT_COMMAND_ID, SHOW_ALERTS_COMMAND_ID } from '../../monitor/browser/alertsPage.js';
+import { JOURNAL_METRICS_COMMAND_ID } from '../../databases/common/databaseDrivers.js';
 
 export const EXPL_COMMAND_ID = 'workbench.action.showExplore';
 const DSTATS_ID = 'chiara.explore.dstats';
@@ -1079,42 +1082,89 @@ MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
 	order: 3,
 });
 
+// Explore > RSS and Explore > Alerts: what Pollis watches for the user, after Access Files and Databases.
+const RssSubmenuId = new MenuId('menubarRssSubmenu');
+const AlertsSubmenuId = new MenuId('menubarAlertsSubmenu');
 
 MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
 	group: '2_explore',
+	submenu: RssSubmenuId,
+	title: localize('monitor.rssSubmenu', "RSS"),
+	order: 4,
+});
+
+MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
+	group: '2_explore',
+	submenu: AlertsSubmenuId,
+	title: localize('monitor.alertsSubmenu', "Alerts"),
+	order: 5,
+});
+
+MenuRegistry.appendMenuItem(RssSubmenuId, {
+	group: '1_rss',
+	command: { id: RSS_FEEDS_COMMAND_ID, title: localize('monitor.rssFeeds', "RSS Feeds") },
+	order: 1,
+});
+
+MenuRegistry.appendMenuItem(RssSubmenuId, {
+	group: '1_rss',
+	command: { id: ADD_FEED_COMMAND_ID, title: localize('monitor.addFeed', "Add Feed...") },
+	order: 2,
+});
+
+MenuRegistry.appendMenuItem(RssSubmenuId, {
+	group: '2_journals',
+	command: { id: JOURNAL_METRICS_COMMAND_ID, title: localize('monitor.journalMetrics', "Journal Metrics") },
+	order: 1,
+});
+
+MenuRegistry.appendMenuItem(AlertsSubmenuId, {
+	group: '1_alerts',
+	command: { id: SHOW_ALERTS_COMMAND_ID, title: localize('monitor.alerts', "Alerts") },
+	order: 1,
+});
+
+MenuRegistry.appendMenuItem(AlertsSubmenuId, {
+	group: '1_alerts',
+	command: { id: ADD_ALERT_COMMAND_ID, title: localize('monitor.addAlert', "Add Alert...") },
+	order: 2,
+});
+
+MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
+	group: '3_explore',
 	submenu: DVSubmenuId,
 	title: localize('showExplore.dv', 'Visualise'),
 	order: 1,
 });
 
 MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
-	group: '2_explore',
+	group: '3_explore',
 	command: { id: DSTATS_ID, title: localize('eda.ds', 'Descriptive Statistics') },
 	order: 2,
 }); // StatsBase.jl + FreqTables.jl + Statistics.jl
 
 MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
-	group: '2_explore',
+	group: '3_explore',
 	submenu: ANSubmenuId,
 	title: localize('showExplore.an', 'Detect Anomalies'),
 	order: 3,
 }); // OutlierDetection.jl
 
 MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
-	group: '2_explore',
+	group: '3_explore',
 	command: { id: NOVD_ID, title: localize('showExplore.novd', 'Detect Novelties') },
 	order: 3.5,
 }); // LIBSVM.jl + OnlineStats.jl + ChangePointDetection.jl
 
 MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
-	group: '2_explore',
+	group: '3_explore',
 	command: { id: HMD_ID, title: localize('showExplore.hmd', 'Handle Missing Data') },
 	order: 4,
 }); // Impute.jl
 
 
 MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
-	group: '2_explore',
+	group: '3_explore',
 	command: { id: IDAT_ID, title: localize('eda.interpolation', 'Interpolate Data') },
 	order: 5,
 }); // Interpolations.jl + Dierckx.jl

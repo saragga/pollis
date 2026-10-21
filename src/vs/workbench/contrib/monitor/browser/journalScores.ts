@@ -6,7 +6,7 @@
 // Pollis: the levels and metrics of journals by ISSN, which tag the items of journal feeds on the RSS Feeds page and
 // the welcome page. The open ones are in ~/.pollis/journals/scores.csv, which PollisDB.jl writes when it builds the
 // PollisJournals database: the latest level of the Norwegian register and OpenAlex's indicators. The ones the user
-// imported (SJR, SNIP, CiteScore, the Impact Factor) are in ~/.pollis/journals/metrics/*.jsonl, a file per import; the
+// imported (SJR, SNIP, CiteScore, the Impact Factor, the ABDC rating) are in ~/.pollis/journals/metrics/*.jsonl, a file per import; the
 // latest year of each journal in each file is kept in ~/.pollis/journals/latest, made again when the import is, as
 // CWTS's file, with every year, is too large to read at each start.
 
@@ -24,7 +24,7 @@ import { createDecorator } from '../../../../platform/instantiation/common/insta
 import { IPathService } from '../../../services/path/common/pathService.js';
 
 /** The sources of the metrics the user imports. */
-type MetricsSource = 'JCR' | 'Scopus' | 'SCImago' | 'CWTS';
+export type MetricsSource = 'JCR' | 'Scopus' | 'SCImago' | 'CWTS' | 'ABDC';
 
 /** The latest year a source has of a journal; its quartiles the best of its categories. */
 export interface IJournalMetrics {
@@ -42,6 +42,15 @@ export interface IJournalMetrics {
 	readonly jci?: number;
 	readonly citeScore?: number;
 	readonly citeScoreQuartile?: string;
+	readonly abdcRating?: string;
+}
+
+/** A file of metrics the user imported: its source, the latest year it has, and when. */
+export interface IMetricsImport {
+	readonly file: URI;
+	readonly source: MetricsSource;
+	readonly year: number | undefined;
+	readonly imported: number;
 }
 
 /** What is known of a journal: its Norwegian level (0, 1, 2 or X), OpenAlex's indicators, and the metrics imported. */
@@ -65,6 +74,10 @@ export interface IJournalScoresService {
 	getScores(issns: readonly string[]): IJournalScores | undefined;
 	/** The sources of the metrics imported. */
 	getMetricsSources(): readonly string[];
+	/** The files of metrics imported, by source. */
+	getImports(): readonly IMetricsImport[];
+	/** Deletes an imported file, and what was kept of it. */
+	removeImport(file: URI): Promise<void>;
 }
 
 /** A line of a metrics file, as the import writes it. */
@@ -85,6 +98,7 @@ interface IMetricsLine {
 	readonly h_index: number | null;
 	readonly snip: number | null;
 	readonly ipp: number | null;
+	readonly abdc_rating?: string | null;
 }
 
 /** The open scores of a journal, from a row of scores.csv. */
@@ -115,6 +129,7 @@ function toMetrics(line: IMetricsLine, year: number, kept: IJournalMetrics | und
 		jci: value(line.jci, kept?.jci),
 		citeScore: value(line.citescore, kept?.citeScore),
 		citeScoreQuartile: bestQuartile(kept?.citeScoreQuartile, line.citescore_quartile),
+		abdcRating: line.abdc_rating ?? kept?.abdcRating,
 	};
 }
 
@@ -131,6 +146,7 @@ class JournalScoresService extends Disposable implements IJournalScoresService {
 	private scores = new Map<string, OpenScores>();
 	private metrics = new Map<string, IJournalMetrics[]>();
 	private sources: string[] = [];
+	private imports: IMetricsImport[] = [];
 	private readonly loader = this._register(new RunOnceScheduler(() => this.load(), 1000));
 
 	constructor(
@@ -169,18 +185,39 @@ class JournalScoresService extends Disposable implements IJournalScoresService {
 		return this.sources;
 	}
 
+	getImports(): readonly IMetricsImport[] {
+		return this.imports;
+	}
+
+	async removeImport(file: URI): Promise<void> {
+		await this.fileService.del(file);
+		await this.fileService.del(this.latestFile(file)).catch(() => undefined);
+		await this.load();
+	}
+
+	private latestFile(file: URI): URI {
+		return joinPath(this.latestFolder, basename(file).replace(/\.jsonl$/, '.json'));
+	}
+
 	private async load(): Promise<void> {
 		this.scores = await this.readScores();
 		const metrics = new Map<string, IJournalMetrics[]>();
 		const sources = new Set<string>();
-		let files: URI[] = [];
+		const imports: IMetricsImport[] = [];
+		let files: { resource: URI; mtime?: number }[] = [];
 		try {
-			files = ((await this.fileService.resolve(this.metricsFolder)).children ?? []).filter(child => child.isFile && child.name.endsWith('.jsonl') && !child.name.startsWith('.')).map(child => child.resource);
+			files = ((await this.fileService.resolve(this.metricsFolder, { resolveMetadata: true })).children ?? []).filter(child => child.isFile && child.name.endsWith('.jsonl') && !child.name.startsWith('.'));
 		} catch {
 			// Nothing imported
 		}
-		for (const file of files) {
+		for (const { resource: file, mtime } of files) {
 			const latest = await this.readLatest(file);
+			// The import names its file after the source
+			const source = /^(?<source>JCR|Scopus|SCImago|CWTS|ABDC)-/.exec(basename(file))?.groups?.source as MetricsSource | undefined;
+			if (source) {
+				const year = Object.values(latest).reduce<number | undefined>((max, value) => max === undefined || value.year > max ? value.year : max, undefined);
+				imports.push({ file, source, year, imported: mtime ?? 0 });
+			}
 			for (const [issn, value] of Object.entries(latest)) {
 				sources.add(value.source);
 				const list = metrics.get(issn);
@@ -193,6 +230,7 @@ class JournalScoresService extends Disposable implements IJournalScoresService {
 		}
 		this.metrics = metrics;
 		this.sources = [...sources];
+		this.imports = imports;
 		this._onDidChange.fire();
 	}
 
@@ -221,7 +259,7 @@ class JournalScoresService extends Disposable implements IJournalScoresService {
 
 	/** The latest year of each journal in the metrics file `file`, by ISSN: kept in ~/.pollis/journals/latest, made again when the file is newer. */
 	private async readLatest(file: URI): Promise<Record<string, IJournalMetrics>> {
-		const cache = joinPath(this.latestFolder, basename(file).replace(/\.jsonl$/, '.json'));
+		const cache = this.latestFile(file);
 		try {
 			const [source, kept] = await Promise.all([this.fileService.stat(file), this.fileService.stat(cache)]);
 			if (kept.mtime >= source.mtime) {
@@ -334,6 +372,9 @@ export function describeJournal(scores: IJournalScores): { readonly tag: string;
 		add('CiteScore', value.citeScore, value.citeScoreQuartile);
 		add('SNIP', value.snip);
 		add('IPP', value.ipp);
+		if (value.abdcRating) {
+			parts.push(localize('journal.abdcRating', "rated {0}", value.abdcRating));
+		}
 		if (value.hIndex !== undefined) {
 			parts.push(localize('journal.hIndex', "h-index {0}", value.hIndex));
 		}
