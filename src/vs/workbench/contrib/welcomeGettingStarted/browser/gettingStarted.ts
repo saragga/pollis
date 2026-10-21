@@ -66,7 +66,7 @@ import { ADD_FEED_COMMAND_ID, RSS_FEEDS_COMMAND_ID } from '../../monitor/browser
 import { describeJournal, IJournalScoresService } from '../../monitor/browser/journalScores.js';
 import { JOURNAL_METRICS_COMMAND_ID } from '../../databases/common/databaseDrivers.js';
 import { MarkdownString } from '../../../../base/common/htmlContent.js';
-import { describeCondition, describeFiredAlert, formatValue, IAlert, IAlertsService, IFiredAlert } from '../../monitor/browser/alertsService.js';
+import { describeCondition, describeFiredAlert, describeSubject, formatValue, IAlert, IAlertsService, IFiredAlert } from '../../monitor/browser/alertsService.js';
 import { ADD_ALERT_COMMAND_ID, openQuotePage, severityIcon, SHOW_ALERTS_COMMAND_ID } from '../../monitor/browser/alertsPage.js';
 import { startEntries } from '../common/gettingStartedContent.js';
 import { discoverPollisEntries } from '../common/discoverPollisContent.js';
@@ -541,7 +541,12 @@ export class GettingStartedPage extends EditorPane {
 				if (fired) {
 					this.alertsService.markRead([fired.id]);
 					if (command === 'openFiredAlert') {
-						openQuotePage(this.commandService, fired.symbol);
+						// A filing opens at the SEC; a quote, on Pollis's quote page
+						if (fired.filing) {
+							this.openerService.open(URI.parse(fired.filing.url), { openExternal: true });
+						} else {
+							openQuotePage(this.commandService, fired.symbol);
+						}
 					}
 				}
 				break;
@@ -1383,21 +1388,26 @@ export class GettingStartedPage extends EditorPane {
 				? localize('pollis.watchedAlertBelow', "{0}, {1}% below {2}, quoted {3}", now, percent, formatValue(alert.threshold), when)
 				: localize('pollis.watchedAlertAbove', "{0}, {1}% above {2}, quoted {3}", now, percent, formatValue(alert.threshold), when);
 		};
-		const name = alert.name ? localize('pollis.watchedAlertName', "{0} ({1})", alert.name, alert.symbol) : alert.symbol;
+		// Several companies or an industry are named in words; one company or a symbol, with its symbol
+		const name = alert.ciks?.length || alert.sic || alert.everyone ? describeSubject(alert) : alert.name ? localize('pollis.watchedAlertName', "{0} ({1})", alert.name, alert.symbol) : alert.symbol;
 		return $(`.pollis-alert.${alert.severity}`, {},
 			$(`span.pollis-alert-icon${ThemeIcon.asCSSSelector(severityIcon(alert.severity))}`),
 			$('.pollis-alert-body', {},
 				$('p.pollis-alert-title', {}, $('button.pollis-feed-title', { 'x-dispatch': `openAlert:${alert.id}` }, localize('pollis.watchedAlert', "{0} {1}", name, describeCondition(alert)))),
 				$('p.pollis-alert-description', {}, state?.error
-					? localize('pollis.watchedAlertError', "Could not be looked up")
-					: state?.value !== undefined
-						? describeValue(state.value, state.currency, state.quoted ?? state.checked ?? Date.now())
-						: localize('pollis.watchedAlertWaiting', "Not looked up yet")),
+					? state.noContact ? localize('pollis.watchedAlertNoContact', "Needs your SEC contact") : localize('pollis.watchedAlertError', "Could not be looked up")
+					: state?.filing
+						? state.filing.name
+							? localize('pollis.watchedAlertFilingFrom', "Latest filing: {0} from {1}, filed {2}", state.filing.form, state.filing.name, state.filing.filed)
+							: localize('pollis.watchedAlertFiling', "Latest filing: {0}, filed {1}", state.filing.form, state.filing.filed)
+						: state?.value !== undefined
+							? describeValue(state.value, state.currency, state.quoted ?? state.checked ?? Date.now())
+							: localize('pollis.watchedAlertWaiting', "Not looked up yet")),
 			),
 		);
 	}
 
-	/** Pollis: an alert that fired and is not read yet; its title shows the symbol at Yahoo Finance. */
+	/** Pollis: an alert that fired and is not read yet; its title shows the symbol at Yahoo Finance, or the filing at the SEC. */
 	private buildFiredAlert(fired: IFiredAlert): HTMLElement {
 		return $(`.pollis-alert.${fired.severity}`, { role: 'status' },
 			$(`span.pollis-alert-icon${ThemeIcon.asCSSSelector(severityIcon(fired.severity))}`),

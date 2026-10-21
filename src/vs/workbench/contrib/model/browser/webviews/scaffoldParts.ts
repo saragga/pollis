@@ -117,10 +117,17 @@ function buildInputHtml(input: IModelInput): string {
 		: input.kind === 'select'
 		? `<select id="in-${input.id}" class="form-input">\n${(input.options ?? []).map(o => `\t\t\t\t\t<option value="${htmlEsc(o.value)}"${modelsAttr(o.models, o.when)}${o.value === input.default ? ' selected' : ''}>${htmlEsc(o.label)}</option>`).join('\n')}\n\t\t\t\t</select>`
 		: `<input type="text" id="in-${input.id}" class="form-input" spellcheck="false" placeholder="${htmlEsc(input.default ?? '')}" data-default="${htmlEsc(input.default ?? '')}">`;
+	// A symbol (or company) input with Alert Me... beside it, which opens Add Alert with its value
+	const alertTitle = input.alertMe === 'filings'
+		? 'Open Add Alert with this company: Pollis looks at its filings at the SEC while it is open, and tells you when a new one of the forms you choose is published'
+		: 'Open Add Alert with this symbol: Pollis looks up its quote while it is open, and warns when it crosses a level you set';
+	const fieldWithAction = input.alertMe && !input.kind
+		? `<div class="input-with-action">${field}<button class="input-action-btn alert-me-btn" data-input="${input.id}" title="${alertTitle}">Alert Me...</button></div>`
+		: field;
 	return `\t\t\t<div class="form-group scaffold-input"${modelsAttr(input.models, input.when)}>
 				<label class="form-label form-label-with-tooltip" for="in-${input.id}">${htmlEsc(input.label)}${tooltip}
 				</label>
-				${field}
+				${fieldWithAction}
 			</div>`;
 }
 

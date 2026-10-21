@@ -224,18 +224,26 @@ s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor"
 return s;
 '''
 
+[[inputs]]
+id = "symbol"
+label = "Symbol"
+tooltip = "A Yahoo Finance symbol: a ticker such as AAPL, an index such as ^GSPC, a future such as BZ=F, or a currency pair such as EURUSD=X. Alert Me... opens Add Alert with it."
+default = "AAPL"
+models = ["price", "quote"]
+alertMe = "quote"
+
 [[codeBranches]]
 model = "price"
 code = """
 using YFinance, TimeSeries, Tables
 
 # Daily OHLC bars for the past month (an OrderedDict of column vectors)
-prices = get_prices("AAPL"; range="1mo", interval="1d")
+prices = get_prices("{{symbol}}"; range="1mo", interval="1d")
 println("Ticker:     ", prices["ticker"])
 println("Last close: ", last(prices["close"]))
 
 # Sink straight into a TimeArray for time-indexed analysis
-ta = get_prices(TimeArray, "AAPL"; range="6mo", interval="1d")
+ta = get_prices(TimeArray, "{{symbol}}"; range="6mo", interval="1d")
 
 # A TimeArray implements the Tables.jl interface, so it works
 # anywhere a table is expected (iterate rows, collect columns, ...)
@@ -254,16 +262,16 @@ code = """
 using YFinance
 
 # Full quote summary as a nested JSON object
-summary = get_quoteSummary("AAPL")
+summary = get_quoteSummary("{{symbol}}")
 println("Modules: ", keys(summary))
 
 # Pull a single module rather than the whole summary
-qtype = get_quoteSummary("AAPL"; item="quoteType")
+qtype = get_quoteSummary("{{symbol}}"; item="quoteType")
 println(qtype)
 
 # Convenience helpers built on top of the quote summary
-cal = get_calendar_events("AAPL")
-eps = get_eps("AAPL")
+cal = get_calendar_events("{{symbol}}")
+eps = get_eps("{{symbol}}")
 println("Calendar events: ", cal)
 println("EPS:             ", eps)
 """

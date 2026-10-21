@@ -28,6 +28,7 @@ import { Event } from '../../../../../base/common/event.js';
 import { IUntitledTextResourceEditorInput } from '../../../../common/editor.js';
 import { CellEditType, CellKind } from '../../../notebook/common/notebookCommon.js';
 import { openWikiByFile, openNotebookByFile, openInBrowser, autoSelectJuliaKernel, createPackageStatusWiring, createExampleCodeWiring, createCustomCopyWiring, createReferenceWiring, createVideoWiring, createApiKeyWiring, sendToJuliaRepl } from './model.handler.js';
+import { ADD_ALERT_COMMAND_ID } from '../../../monitor/browser/alertsPage.js';
 import { CREDENTIALS } from '../common/credentials.js';
 import { hasKey } from '../../../../../base/common/types.js';
 
@@ -153,6 +154,9 @@ export function registerAlpvWebviewHandlers(
 				break;
 			case 'installPackages':
 				await pkgStatus.handleInstall();
+				break;
+			case 'addAlert':
+				await commandService.executeCommand(ADD_ALERT_COMMAND_ID, msg.symbol);
 				break;
 			case 'setApiKey':
 				await apiKey.handleSet();

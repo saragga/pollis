@@ -13,13 +13,15 @@ import { Action2, registerAction2 } from '../../../../platform/actions/common/ac
 import { ICommandService } from '../../../../platform/commands/common/commands.js';
 import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
 import { IOpenerService } from '../../../../platform/opener/common/opener.js';
+import { IQuickInputService } from '../../../../platform/quickinput/common/quickInput.js';
 import { IEditorService } from '../../../services/editor/common/editorService.js';
 import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
-import { AlertCondition, AlertSeverity, ChartRange, describeCondition, describeFiredAlert, formatValue, IAlertsService, IFiredAlert } from './alertsService.js';
+import { AlertCondition, AlertSeverity, ChartRange, describeCondition, describeFiredAlert, describeItems, describeSubject, formatValue, FORM_8K_ITEMS, IAlert, IAlertsService, IFiredAlert } from './alertsService.js';
 
 // Explore > Alerts > Add Alert...: a page with a form to add an alert (the symbol, looked up at Yahoo Finance, the
-// condition, the value, how it shows and how often it fires).
+// condition, the value, how it shows and how often it fires), or an alert on SEC filings (the company, looked up at
+// the SEC's EDGAR with its recent filings, and the forms).
 // Explore > Alerts > Alerts: a page with the alerts and their latest values, to pause, resume or remove, and the
 // alerts that fired, newest first.
 // A quote page: the latest value of a symbol, its day and year ranges, its chart with the user's alerts on it drawn
@@ -39,6 +41,9 @@ export async function openQuotePage(commandService: ICommandService, symbol: str
 /** When an alert fired, to the second, and the move that fired it: "21 Oct, 14:32:46: 339.98 \u2192 340.13 USD, 2 hr ago". */
 function describeFiredMove(fired: IFiredAlert): string {
 	const time = new Date(fired.time).toLocaleString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+	if (fired.filing) {
+		return localize('alerts.firedFiling', "{0}: {1}, {2}", time, describeItems(fired.filing.items) || fired.filing.description || fired.filing.form, fromNow(fired.time, true));
+	}
 	const value = formatValue(fired.value, fired.currency);
 	return fired.previousValue !== undefined
 		? localize('alerts.firedMove', "{0}: {1} \u2192 {2}, {3}", time, formatValue(fired.previousValue), value, fromNow(fired.time, true))
@@ -50,11 +55,21 @@ export function severityIcon(severity: AlertSeverity): ThemeIcon {
 	return severity === 'error' ? Codicon.error : severity === 'warning' ? Codicon.warning : Codicon.info;
 }
 
+/** Who an alert on filings is on: one company, several, or every company of an industry. */
+type FilingsScope = 'company' | 'companies' | 'industry' | 'everyone';
+
 type AlertsMessage =
 	| { readonly command: 'ready' }
 	| { readonly command: 'lookUp'; readonly symbol: string }
 	| { readonly command: 'chart'; readonly symbol: string; readonly range: ChartRange }
 	| { readonly command: 'add'; readonly symbol: string; readonly condition: AlertCondition; readonly threshold: number; readonly severity: AlertSeverity; readonly repeat: boolean }
+	| { readonly command: 'lookUpFiler'; readonly company: string }
+	| { readonly command: 'lookUpCompanies'; readonly companies: string }
+	| { readonly command: 'lookUpIndustry'; readonly sic: string }
+	| { readonly command: 'searchFilings'; readonly scope: FilingsScope; readonly company: string; readonly phrase: string; readonly forms: readonly string[]; readonly items: readonly string[] }
+	| { readonly command: 'addFilings'; readonly scope: FilingsScope; readonly company: string; readonly phrase: string; readonly forms: readonly string[]; readonly items: readonly string[]; readonly severity: AlertSeverity; readonly repeat: boolean }
+	| { readonly command: 'setContact' }
+	| { readonly command: 'openUrl'; readonly url: string }
 	| { readonly command: 'pause'; readonly id: string; readonly paused: boolean }
 	| { readonly command: 'remove'; readonly id: string }
 	| { readonly command: 'markRead'; readonly ids: readonly string[] }
@@ -67,10 +82,10 @@ type AlertsMessage =
 type PageKind = 'add' | 'alerts' | 'quote';
 
 /**
- * Where a page opens: the form, with a symbol filled in or not; the top of the alerts; the fired alerts; or the quote
- * of a symbol, or of none yet.
+ * Where a page opens: the form, on quotes or on filings, with a symbol (or company) filled in or not; the top of the
+ * alerts; the fired alerts; or the quote of a symbol, or of none yet.
  */
-type PagePlace = { readonly section: 'add'; readonly symbol?: string } | { readonly section: 'fired' } | { readonly section: 'alerts'; readonly alertId?: string } | { readonly section: 'quote'; readonly symbol?: string };
+type PagePlace = { readonly section: 'add'; readonly symbol?: string; readonly filings?: boolean } | { readonly section: 'fired' } | { readonly section: 'alerts'; readonly alertId?: string } | { readonly section: 'quote'; readonly symbol?: string };
 
 const openPages = new Map<PageKind, { readonly input: WebviewInput; readonly show: (place: PagePlace) => void }>();
 
@@ -81,6 +96,7 @@ function openAlertsPage(accessor: ServicesAccessor, place: PagePlace): void {
 	const editorService = accessor.get(IEditorService);
 	const commandService = accessor.get(ICommandService);
 	const openerService = accessor.get(IOpenerService);
+	const quickInputService = accessor.get(IQuickInputService);
 
 	const kind: PageKind = place.section === 'add' ? 'add' : place.section === 'quote' ? 'quote' : 'alerts';
 	const openPage = openPages.get(kind);
@@ -127,6 +143,29 @@ function openAlertsPage(accessor: ServicesAccessor, place: PagePlace): void {
 			command: 'state',
 			alerts: alertsService.getAlerts().map(alert => {
 				const state = alertsService.getState(alert.id);
+				if (alert.condition === 'newFiling') {
+					// Several companies or an industry: the newest filing that fired, from whom, or none yet
+					const several = !!alert.ciks?.length || !!alert.sic || !!alert.everyone || !!alert.phrase;
+					const looked = fromNow(state?.checked ?? Date.now(), true);
+					return {
+						id: alert.id,
+						symbol: alert.symbol,
+						name: describeSubject(alert),
+						condition: describeCondition(alert),
+						severity: alert.severity,
+						repeat: alert.repeat,
+						paused: !!alert.paused,
+						filings: true,
+						url: alert.sic
+							? `https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&SIC=${encodeURIComponent(alert.sic)}&owner=include&count=100`
+							: alert.ciks?.length || alert.everyone ? undefined : `https://www.sec.gov/edgar/browse/?CIK=${encodeURIComponent(alert.symbol)}`,
+						value: state?.error
+							? state.noContact ? localize('alerts.needsContact', "Needs your SEC contact: set it on the Add Alert page, under SEC Filings") : localize('alerts.notFound', "Could not be looked up")
+							: several && state?.filing?.name ? localize('alerts.latestFilingFrom', "Latest filing: {0} from {1}, filed {2}; looked at {3}", state.filing.form, state.filing.name, state.filing.filed, looked)
+								: several && state?.since ? localize('alerts.noFilingYet', "No filing yet; looked at {0}", looked)
+									: state?.filing ? localize('alerts.latestFiling', "Latest filing: {0}, filed {1}; looked at {2}", state.filing.form, state.filing.filed, looked) : localize('alerts.notYet', "Not looked up yet"),
+					};
+				}
 				return {
 					id: alert.id,
 					symbol: alert.symbol,
@@ -152,6 +191,7 @@ function openAlertsPage(accessor: ServicesAccessor, place: PagePlace): void {
 				when: describeFiredMove(fired),
 				severity: fired.severity,
 				unread: !alertsService.isRead(fired.id),
+				filingUrl: fired.filing?.url,
 			})),
 		});
 	};
@@ -208,6 +248,108 @@ function openAlertsPage(accessor: ServicesAccessor, place: PagePlace): void {
 				webviewInput.webview.postMessage({ command: 'added', text: localize('alerts.added', "Pollis will alert you when {0} {1}. It looks the value up every minute while Pollis is open; the quotes are delayed by up to about 20 minutes, depending on the exchange.", quote.name || quote.symbol, describeCondition(message)) });
 				break;
 			}
+			case 'lookUpFiler': {
+				const contact = await alertsService.getSecContact();
+				const filer = contact ? await alertsService.getFiler(message.company) : undefined;
+				webviewInput.webview.postMessage({
+					command: 'filer',
+					company: message.company,
+					noContact: !contact,
+					filer: filer && { cik: filer.cik, name: filer.name, tickers: filer.tickers, filings: filer.filings.slice(0, 12) },
+				});
+				break;
+			}
+			case 'lookUpCompanies': {
+				const contact = await alertsService.getSecContact();
+				const companies = contact ? await alertsService.getCompanies(message.companies.split(',')) : undefined;
+				webviewInput.webview.postMessage({ command: 'companies', companies: message.companies, noContact: !contact, found: companies?.found, unknown: companies?.unknown });
+				break;
+			}
+			case 'lookUpIndustry': {
+				const contact = await alertsService.getSecContact();
+				const industry = contact ? await alertsService.getIndustry(message.sic) : undefined;
+				webviewInput.webview.postMessage({ command: 'industry', sic: message.sic, noContact: !contact, industry: industry && { sic: industry.sic, name: industry.name, count: industry.ciks.length } });
+				break;
+			}
+			case 'searchFilings': {
+				const contact = await alertsService.getSecContact();
+				const phrase = message.phrase.trim();
+				const result = contact && phrase ? await alertsService.searchFilings({ ...filingsWho(message.scope, message.company), phrase, forms: cleanForms(message.forms), items: cleanItems(message.items) }, SEARCH_PREVIEW_DAYS) : undefined;
+				webviewInput.webview.postMessage({
+					command: 'searched',
+					phrase: message.phrase,
+					noContact: !contact,
+					count: result?.filings.length,
+					more: result?.more,
+					filings: result?.filings.slice(-50).reverse(),
+				});
+				break;
+			}
+			case 'addFilings': {
+				const forms = cleanForms(message.forms);
+				const items = cleanItems(message.items);
+				const phrase = message.phrase.trim() || undefined;
+				const condition = describeCondition({ condition: 'newFiling', threshold: 0, forms, items, phrase });
+				const alert = { condition: 'newFiling' as const, threshold: 0, forms: forms.length ? forms : undefined, items: items.length ? items : undefined, phrase, severity: message.severity, repeat: message.repeat };
+				// With a phrase, EDGAR's full-text search, which goes back as far as needed; without, on several companies or an industry, its latest filings
+				const howOften = phrase
+					? localize('alerts.addedSearch', "It searches the full text of EDGAR's filings every 15 minutes while Pollis is open.")
+					: localize('alerts.addedFeed', "It looks at EDGAR's latest filings every 15 minutes while Pollis is open, which go back about a day.");
+				if (message.scope === 'everyone') {
+					if (!phrase) {
+						break;
+					}
+					await alertsService.addAlert({ ...alert, symbol: 'EDGAR', name: '', everyone: true });
+					webviewInput.webview.postMessage({ command: 'added', text: localize('alerts.addedFilingsEveryone', "Pollis will alert you when any company {0}. {1}", condition, howOften) });
+					break;
+				}
+				if (message.scope === 'companies') {
+					const found = (await alertsService.getCompanies(message.company.split(',')))?.found;
+					if (!found?.length) {
+						break;
+					}
+					const names = found.map(company => company.name).join(', ');
+					await alertsService.addAlert({ ...alert, symbol: found.map(company => company.cik).join(','), name: names, ciks: found.map(company => company.cik) });
+					webviewInput.webview.postMessage({ command: 'added', text: localize('alerts.addedFilingsCompanies', "Pollis will alert you when one of {0} {1}. {2}", names, condition, howOften) });
+					break;
+				}
+				if (message.scope === 'industry') {
+					const industry = await alertsService.getIndustry(message.company);
+					if (!industry) {
+						break;
+					}
+					await alertsService.addAlert({ ...alert, symbol: `SIC ${industry.sic}`, name: industry.name, sic: industry.sic });
+					webviewInput.webview.postMessage({ command: 'added', text: localize('alerts.addedFilingsIndustry', "Pollis will alert you when a company in {0} (SIC {1}) {2}. {3}", industry.name, industry.sic, condition, howOften) });
+					break;
+				}
+				const filer = await alertsService.getFiler(message.company);
+				if (!filer) {
+					break;
+				}
+				await alertsService.addAlert({ ...alert, symbol: filer.cik, name: filer.name });
+				webviewInput.webview.postMessage({ command: 'added', text: localize('alerts.addedFilings', "Pollis will alert you when {0} {1}. {2}", filer.name, condition, phrase ? howOften : localize('alerts.addedCompany', "It looks at the SEC's EDGAR every 15 minutes while Pollis is open.")) });
+				break;
+			}
+			case 'setContact': {
+				const contact = await quickInputService.input({
+					prompt: localize('alerts.contactPrompt', "SEC contact: your name and email (e.g. Jane Doe jane@example.com). The SEC asks for it with every request; the EDGAR panel uses it too."),
+					placeHolder: 'Jane Doe jane@example.com',
+					value: await alertsService.getSecContact(),
+					ignoreFocusLost: true,
+					validateInput: async value => value.includes('@') ? undefined : localize('alerts.contactInvalid', "Your name and an email address"),
+				});
+				if (contact?.trim()) {
+					await alertsService.setSecContact(contact.trim());
+					webviewInput.webview.postMessage({ command: 'contactSet' });
+				}
+				break;
+			}
+			case 'openUrl':
+				// Only the SEC's pages: the filings and the filers at EDGAR
+				if (message.url.startsWith('https://www.sec.gov/')) {
+					await openerService.open(URI.parse(message.url), { openExternal: true });
+				}
+				break;
 			case 'pause':
 				alertsService.setPaused(message.id, message.paused);
 				break;
@@ -233,11 +375,79 @@ function openAlertsPage(accessor: ServicesAccessor, place: PagePlace): void {
 	}));
 }
 
+// How many days back Search on the Add Alert page looks, to show how often an alert with a phrase would fire
+const SEARCH_PREVIEW_DAYS = 30;
+
+/** The forms typed on the Add Alert page, upper case, once each. */
+function cleanForms(forms: readonly string[]): string[] {
+	return [...new Set(forms.map(form => String(form).trim().toUpperCase()).filter(form => form))];
+}
+
+/** The 8-K items ticked on the Add Alert page, those Pollis knows, in their order. */
+function cleanItems(items: readonly string[]): string[] {
+	return FORM_8K_ITEMS.map(([item]) => item).filter(item => items.includes(item));
+}
+
+/** Who an alert on filings is on, from the page's scope and its company, CIKs separated by commas, or SIC code. */
+function filingsWho(scope: FilingsScope, company: string): Pick<IAlert, 'symbol' | 'ciks' | 'sic' | 'everyone'> {
+	switch (scope) {
+		case 'everyone': return { symbol: 'EDGAR', everyone: true };
+		case 'industry': return { symbol: `SIC ${company}`, sic: company };
+		case 'companies': return { symbol: company, ciks: company.split(',').map(cik => cik.trim()).filter(cik => /^\d+$/.test(cik)) };
+		default: return { symbol: company };
+	}
+}
+
 function pageHtml(kind: PageKind): string {
 	const text = {
 		title: localize('alerts.title', "Alerts"),
 		addIntro: localize('alerts.addIntro', "Choose a symbol at Yahoo Finance and when to be alerted. Pollis looks its value up every minute while it is open; the quotes are delayed by up to about 20 minutes, depending on the exchange."),
-		intro: localize('alerts.intro', "Pollis looks up the values of your alerts at Yahoo Finance every minute while it is open, and tells you when one meets its condition. The quotes are delayed by up to about 20 minutes, depending on the exchange."),
+		addIntroFilings: localize('alerts.addIntroFilings', "Choose a company and the forms to be alerted of. Pollis looks at its filings at the SEC's EDGAR every 15 minutes while it is open, and tells you when a new one is published."),
+		intro: localize('alerts.intro', "Pollis looks up the values of your alerts at Yahoo Finance every minute while it is open, and tells you when one meets its condition. The quotes are delayed by up to about 20 minutes, depending on the exchange. Alerts on SEC filings look at EDGAR every 15 minutes."),
+		watch: localize('alerts.watch', "Alert On"),
+		sourceQuote: localize('alerts.sourceQuote', "A Quote"),
+		sourceFilings: localize('alerts.sourceFilings', "SEC Filings"),
+		company: localize('alerts.company', "Company"),
+		companyHint: localize('alerts.companyHint', "A ticker (AAPL) or the SEC's CIK (320193)"),
+		scope: localize('alerts.scope', "For"),
+		scopes: {
+			company: localize('alerts.scopeCompany', "One Company"),
+			companies: localize('alerts.scopeCompanies', "Several Companies"),
+			industry: localize('alerts.scopeIndustry', "An Industry"),
+			everyone: localize('alerts.scopeEveryone', "Every Company"),
+		},
+		everyoneHint: localize('alerts.everyoneHint', "Every company at the SEC: only with Contains, as there are thousands of filings a day"),
+		contains: localize('alerts.contains', "Contains"),
+		containsHint: localize('alerts.containsHint', "Words the filing must contain, in EDGAR's full-text search: an exact phrase in quotes, such as \"going concern\"; OR between alternatives. Optional, except for Every Company."),
+		search: localize('alerts.search', "Search"),
+		searching: localize('alerts.searching', "Searching..."),
+		searchFound: localize('alerts.searchFound', "{0} filings of the last 30 days contain {1}"),
+		searchMore: localize('alerts.searchMore', "More than {0} filings of the last 30 days contain {1}"),
+		searchCaption: localize('alerts.searchCaption', "The newest first, each opening the document that has it: about how often the alert would fire"),
+		searchNone: localize('alerts.searchNone', "No filing of the last 30 days contains it, or the SEC could not be reached."),
+		companies: localize('alerts.companies', "Companies"),
+		companiesHint: localize('alerts.companiesHint', "Tickers or CIKs, separated by commas: AAPL, MSFT, 1018724"),
+		industry: localize('alerts.industry', "Industry"),
+		industryHint: localize('alerts.industryHint', "The SEC's SIC code of the industry, such as 2834 for pharmaceuticals. Every company the SEC files under it, listed or not."),
+		sicCodes: localize('alerts.sicCodes', "SIC Codes"),
+		sicCodesHint: localize('alerts.sicCodesHint', "Opens the SEC's list of SIC codes in your browser"),
+		companiesFound: localize('alerts.companiesFound', "{0} companies: {1}"),
+		companiesUnknown: localize('alerts.companiesUnknown', "Not known to the SEC: {0}"),
+		industryFound: localize('alerts.industryFound', "{0} (SIC {1}): {2} companies"),
+		industryUnknown: localize('alerts.industryUnknown', "The SEC files no company under SIC {0}, or could not be reached."),
+		feedNote: localize('alerts.feedNote', "Pollis looks for them in EDGAR's latest filings, which go back about a day: filings made while Pollis is closed for longer are missed."),
+		forms: localize('alerts.forms', "Forms"),
+		formsHint: localize('alerts.formsHint', "Separated by commas, such as 10-K, 10-Q, 8-K; an amendment (10-K/A) counts as its form. Leave it empty for every filing."),
+		filerUnknown: localize('alerts.filerUnknown', "The SEC does not know {0}, or could not be reached."),
+		noContact: localize('alerts.noContact', "The SEC asks for your name and email with every request, as on the EDGAR panel."),
+		setContact: localize('alerts.setContact', "Set Contact"),
+		recentFilings: localize('alerts.recentFilings', "Recent filings: those of the forms and items chosen in bold"),
+		items: localize('alerts.items', "8-K Items"),
+		itemsHint: localize('alerts.itemsHint', "An 8-K fires only when it reports one of the items ticked; none ticked, every 8-K fires. Most 8-Ks also have 9.01, their exhibits."),
+		formItems: FORM_8K_ITEMS,
+		edgar: localize('alerts.edgar', "EDGAR"),
+		openEdgarHint: localize('alerts.openEdgarHint', "Opens its filings at the SEC's EDGAR in your browser"),
+		openFiling: localize('alerts.openFilingLink', "Open Filing"),
 		addTitle: localize('alerts.addTitle', "Add Alert"),
 		symbol: localize('alerts.symbol', "Symbol"),
 		symbolHint: localize('alerts.symbolHint', "An index (^GSPC), a share (AAPL), a future (BZ=F) or a currency (EURUSD=X)"),
@@ -331,6 +541,7 @@ function pageHtml(kind: PageKind): string {
 		.formGrid > .r1 { grid-row: 1; }
 		.formGrid > .r2 { grid-row: 2; }
 		.formGrid > .r3 { grid-row: 3; }
+		.formGrid > .r4 { grid-row: 4; }
 		.form .formGrid > .added { grid-column: 3 / -1; grid-row: 4; margin-left: 16px; }
 		@container (max-width: 720px) {
 			.formGrid { grid-template-columns: max-content minmax(0, 1fr); }
@@ -407,12 +618,21 @@ function pageHtml(kind: PageKind): string {
 		.list > .addLayout { padding: 12px 0 12px 11px; border-bottom: 1px solid var(--vscode-widget-border); }
 		.list > .addLayout .quoteInfo .name { margin-top: 0; }
 		.entry.expanded { background: var(--vscode-list-inactiveSelectionBackground); }
+		.sourceRow { margin-bottom: 12px; }
+		.sourceRow .field { margin-right: 16px; }
+		.sourceRow .scope { display: inline-flex; align-items: center; margin-left: 16px; padding-left: 16px; border-left: 1px solid var(--vscode-widget-border, transparent); }
+		input#forms { width: 260px; }
+		.items { max-height: 156px; max-width: 360px; overflow-y: auto; padding: 4px 8px; border: 1px solid var(--vscode-widget-border); border-radius: 2px; }
+		.items label { display: block; padding: 1px 0; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+		.filing { display: grid; grid-template-columns: max-content 80px minmax(0, 1fr); gap: 12px; padding: 4px 0; border-bottom: 1px solid var(--vscode-widget-border); font-size: 12px; color: var(--vscode-descriptionForeground); }
+		.filing.match { font-weight: 600; color: var(--vscode-foreground); }
+		.filing .link { text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 	</style>
 </head>
 <body>
 <div class="container">
 	<h1>${kind === 'add' ? text.addTitle : kind === 'quote' ? text.quoteTitle : text.title}</h1>
-	<p class="subtitle">${kind === 'add' ? text.addIntro : kind === 'quote' ? text.quoteIntro : text.intro}</p>
+	<p class="subtitle" id="subtitle">${kind === 'add' ? text.addIntro : kind === 'quote' ? text.quoteIntro : text.intro}</p>
 
 	<div class="addLayout" id="layout"${kind === 'alerts' ? ' hidden' : ''}>
 	<div class="quoteInfo"${kind === 'add' ? ' hidden' : ''}>
@@ -435,18 +655,33 @@ function pageHtml(kind: PageKind): string {
 		</div>
 	</div>
 	<div class="form" id="form"${kind === 'add' ? '' : ' hidden'}>
+		<div class="row sourceRow">
+			<span class="field">${text.watch}</span>
+			<label class="choice"><input type="radio" name="source" value="quote" checked>${text.sourceQuote}</label>
+			<label class="choice"><input type="radio" name="source" value="filings">${text.sourceFilings}</label>
+			<span class="scope" id="scopeRow" hidden>
+				<span class="field">${text.scope}</span>
+				<label class="choice"><input type="radio" name="scope" value="company" checked>${text.scopes.company}</label>
+				<label class="choice"><input type="radio" name="scope" value="companies">${text.scopes.companies}</label>
+				<label class="choice"><input type="radio" name="scope" value="industry">${text.scopes.industry}</label>
+				<label class="choice"><input type="radio" name="scope" value="everyone">${text.scopes.everyone}</label>
+			</span>
+		</div>
 		<div class="formGrid">
-		<label class="field c1 r1" for="symbol">1. ${text.symbol}</label>
+		<label class="field c1 r1" for="symbol" id="symbolLabel">1. ${text.symbol}</label>
 		<div class="c2 r1">
 			<div class="row">
 				<input type="text" id="symbol" spellcheck="false" autocomplete="off">
 				<button class="action" id="lookUp">${text.lookUp}</button>
 				<span class="quote" id="quote"></span>
+				<button class="link" id="setContact" hidden>${text.setContact}</button>
 			</div>
-			<div class="hint">${text.symbolHint}</div>
+			<div class="hint"><span id="symbolHint">${text.symbolHint}</span> <button class="link" id="sicCodes" title="${text.sicCodesHint}" hidden>${text.sicCodes}</button></div>
+			<div class="hint" id="feedNote" hidden>${text.feedNote}</div>
 		</div>
-		<label class="field c1 r2" for="condition">2. ${text.condition}</label>
+		<label class="field c1 r2" for="condition" id="conditionLabel">2. ${text.condition}</label>
 		<div class="c2 r2">
+			<input type="text" id="forms" spellcheck="false" autocomplete="off" value="10-K, 10-Q, 8-K" hidden>
 			<select id="condition">
 				<option value="crossesAbove">${text.conditions.crossesAbove}</option>
 				<option value="crossesBelow">${text.conditions.crossesBelow}</option>
@@ -457,7 +692,20 @@ function pageHtml(kind: PageKind): string {
 			<div class="hint" id="conditionHint"></div>
 		</div>
 		<label class="field c1 r3" for="threshold" id="thresholdLabel">3. ${text.value}</label>
-		<div class="c2 r3"><input type="number" id="threshold" step="any"></div>
+		<div class="c2 r3" id="thresholdCell"><input type="number" id="threshold" step="any"></div>
+		<label class="field c1 r3" id="itemsLabel" hidden>${text.items}</label>
+		<div class="c2 r3" id="itemsCell" hidden>
+			<div class="items" id="items"></div>
+			<div class="hint">${text.itemsHint}</div>
+		</div>
+		<label class="field c1 r4" for="contains" id="containsLabel" hidden>3. ${text.contains}</label>
+		<div class="c2 r4" id="containsCell" hidden>
+			<div class="row">
+				<input type="text" id="contains" spellcheck="false" autocomplete="off">
+				<button class="action" id="search">${text.search}</button>
+			</div>
+			<div class="hint">${text.containsHint}</div>
+		</div>
 		<span class="field c3 r1">4. ${text.severity}</span>
 		<div class="c4 r1">
 			<label class="choice"><input type="radio" name="severity" value="info" checked>${text.severities.info}</label>
@@ -481,6 +729,13 @@ function pageHtml(kind: PageKind): string {
 			<span class="ranges" id="ranges"></span>
 		</div>
 		<svg id="chart" xmlns="http://www.w3.org/2000/svg"></svg>
+	</div>
+	<div class="chartPane" id="filingsPane" hidden>
+		<div class="chartHeader">
+			<span class="chartLabel"><span class="chartTitle" id="filerTitle"></span><span class="chartCaption" id="filerCaption"></span></span>
+		</div>
+		<div class="chartCaption" id="filingsCaption">${text.recentFilings}</div>
+		<div id="filingsList"></div>
 	</div>
 	</div>
 
@@ -508,6 +763,36 @@ function pageHtml(kind: PageKind): string {
 	let quote;
 	let lookedUp = '';
 	let state = { alerts: [], fired: [] };
+	// Add Alert on a quote or on a company's SEC filings, and the company looked up last, with its recent filings
+	let source = 'quote';
+	let filer;
+	// For filings: on one company, several, or an industry; and the companies or the industry looked up last
+	let scope = 'company';
+	let group;
+	// What Search found for the phrase: the filings of the last 30 days that contain it
+	let searched;
+	const containsElement = document.getElementById('contains');
+	function phrase() {
+		return containsElement.value.trim();
+	}
+	const formsElement = document.getElementById('forms');
+	const itemsElement = document.getElementById('items');
+	for (const [item, name] of TEXT.formItems) {
+		const label = document.createElement('label');
+		const box = document.createElement('input');
+		box.type = 'checkbox';
+		box.value = item;
+		label.title = item + ' ' + name;
+		label.append(box, ' ' + item + ' ' + name);
+		itemsElement.appendChild(label);
+	}
+	// The 8-K items, in place of the value, on filings whose forms take in 8-Ks
+	function showItems() {
+		const shown = filings() && hasEightK();
+		document.getElementById('itemsLabel').hidden = !shown;
+		document.getElementById('itemsCell').hidden = !shown;
+	}
+	const setContactElement = document.getElementById('setContact');
 
 	function element(tag, className, text) {
 		const result = document.createElement(tag);
@@ -530,10 +815,155 @@ function pageHtml(kind: PageKind): string {
 		}
 		lookedUp = symbol;
 		quote = undefined;
+		filer = undefined;
+		group = undefined;
+		setContactElement.hidden = true;
 		quoteElement.className = 'quote';
 		quoteElement.textContent = TEXT.lookingUp;
 		updateForm();
-		vscode.postMessage({ command: 'lookUp', symbol });
+		vscode.postMessage(!filings() ? { command: 'lookUp', symbol }
+			: scope === 'companies' ? { command: 'lookUpCompanies', companies: symbol }
+				: scope === 'industry' ? { command: 'lookUpIndustry', sic: symbol }
+					: { command: 'lookUpFiler', company: symbol });
+	}
+	function filings() {
+		return source === 'filings';
+	}
+	function chosenForms() {
+		return formsElement.value.split(',').map(form => form.trim().toUpperCase()).filter(form => form);
+	}
+	// The 8-K items ticked, when the forms take in 8-Ks
+	function hasEightK() {
+		const forms = chosenForms();
+		return !forms.length || forms.includes('8-K') || forms.includes('8-K/A');
+	}
+	function chosenItems() {
+		return hasEightK() ? [...itemsElement.querySelectorAll('input:checked')].map(input => input.value) : [];
+	}
+	// The same test as the alert's: one of the forms, an amendment counting as its form, and for an 8-K one of the items
+	function matchesFiling(filing, forms, items) {
+		const form = filing.form.replace(/\\/A$/, '');
+		return (!forms.length || forms.some(wanted => filing.form === wanted || form === wanted))
+			&& (!items.length || form !== '8-K' || items.some(item => (filing.items || []).includes(item)));
+	}
+	function itemNames(items) {
+		const names = new Map(TEXT.formItems);
+		const shown = (items || []).filter(item => item !== '9.01' || items.length === 1).map(item => names.get(item) || item);
+		return shown.join('; ');
+	}
+	// The form for a quote or for filings: the labels and hints of its fields, and the fields it has
+	function setSource(value) {
+		source = value;
+		document.querySelector('input[name="source"][value="' + value + '"]').checked = true;
+		symbolElement.value = '';
+		lookedUp = '';
+		quote = undefined;
+		filer = undefined;
+		quoteElement.className = 'quote';
+		quoteElement.textContent = '';
+		setContactElement.hidden = true;
+		addedElement.hidden = true;
+		document.getElementById('subtitle').textContent = filings() ? TEXT.addIntroFilings : TEXT.addIntro;
+		document.getElementById('scopeRow').hidden = !filings();
+		setScope('company');
+		const conditionLabel = document.getElementById('conditionLabel');
+		conditionLabel.textContent = '2. ' + (filings() ? TEXT.forms : TEXT.condition);
+		conditionLabel.htmlFor = filings() ? 'forms' : 'condition';
+		formsElement.hidden = !filings();
+		conditionElement.hidden = filings();
+		document.getElementById('thresholdLabel').hidden = filings();
+		document.getElementById('thresholdCell').hidden = filings();
+		showItems();
+		fillThreshold();
+		updateForm();
+	}
+	// On filings, one company, several or an industry: the label and hint of the field, and the look-up cleared
+	function setScope(value) {
+		scope = value;
+		document.querySelector('input[name="scope"][value="' + value + '"]').checked = true;
+		symbolElement.value = '';
+		lookedUp = '';
+		filer = undefined;
+		group = undefined;
+		quoteElement.className = 'quote';
+		quoteElement.textContent = '';
+		setContactElement.hidden = true;
+		addedElement.hidden = true;
+		const label = !filings() ? TEXT.symbol : scope === 'companies' ? TEXT.companies : scope === 'industry' ? TEXT.industry : TEXT.company;
+		const hint = !filings() ? TEXT.symbolHint : scope === 'companies' ? TEXT.companiesHint : scope === 'industry' ? TEXT.industryHint : TEXT.companyHint;
+		document.getElementById('symbolLabel').textContent = '1. ' + label;
+		document.getElementById('symbolHint').textContent = hint;
+		document.getElementById('sicCodes').hidden = !filings() || scope !== 'industry';
+		// Every company has nothing to look up
+		symbolElement.disabled = filings() && scope === 'everyone';
+		document.getElementById('lookUp').disabled = filings() && scope === 'everyone';
+		if (filings() && scope === 'everyone') {
+			document.getElementById('symbolLabel').textContent = '1. ' + TEXT.scopes.everyone;
+			document.getElementById('symbolHint').textContent = TEXT.everyoneHint;
+		}
+		document.getElementById('containsLabel').hidden = !filings();
+		document.getElementById('containsCell').hidden = !filings();
+		searched = undefined;
+		updateForm();
+	}
+	// The company's recent filings, those of the forms chosen in bold, each opening at the SEC
+	function renderFilings() {
+		const pane = document.getElementById('filingsPane');
+		// What Search found, once it answers, in place of the company's recent filings
+		const found = searched && !searched.pending;
+		pane.hidden = !filings() || (!filer && !found);
+		if (pane.hidden) {
+			return;
+		}
+		if (found) {
+			renderSearched();
+			return;
+		}
+		document.getElementById('filingsCaption').textContent = TEXT.recentFilings;
+		document.getElementById('filerTitle').textContent = filer.name + ' (CIK ' + filer.cik + ')';
+		document.getElementById('filerCaption').textContent = filer.tickers.join(', ');
+		const forms = chosenForms();
+		const items = chosenItems();
+		const list = document.getElementById('filingsList');
+		list.replaceChildren();
+		for (const filing of filer.filings) {
+			const row = element('div', 'filing' + (matchesFiling(filing, forms, items) ? ' match' : ''));
+			const open = element('button', 'link', itemNames(filing.items) || filing.description || filing.form);
+			open.title = filing.url;
+			open.addEventListener('click', () => vscode.postMessage({ command: 'openUrl', url: filing.url }));
+			row.append(element('span', '', filing.filed), element('span', '', filing.form), open);
+			list.appendChild(row);
+		}
+	}
+	// The filings Search found, newest first, each opening the document that has the phrase
+	function renderSearched() {
+		document.getElementById('filerTitle').textContent = searched.count === undefined ? TEXT.searchNone
+			: format(searched.more ? TEXT.searchMore : TEXT.searchFound, searched.count.toLocaleString(), searched.phrase);
+		document.getElementById('filerCaption').textContent = '';
+		document.getElementById('filingsCaption').textContent = searched.count ? TEXT.searchCaption : '';
+		const list = document.getElementById('filingsList');
+		list.replaceChildren();
+		for (const filing of searched.filings || []) {
+			const row = element('div', 'filing match');
+			const open = element('button', 'link', filing.name + ': ' + (itemNames(filing.items) || filing.description || filing.form));
+			open.title = filing.url;
+			open.addEventListener('click', () => vscode.postMessage({ command: 'openUrl', url: filing.url }));
+			row.append(element('span', '', filing.filed), element('span', '', filing.form), open);
+			list.appendChild(row);
+		}
+	}
+	// Who the alert is on, for the host: the company's CIK, the companies' CIKs, the SIC code, or no one for every company
+	function who() {
+		return scope === 'company' ? (filer ? filer.cik : '') : scope === 'everyone' ? '' : (group ? group.key : '');
+	}
+	function search() {
+		if (!phrase() || (scope !== 'everyone' && !who())) {
+			return;
+		}
+		searched = { phrase: phrase(), pending: true };
+		quoteElement.className = 'quote';
+		quoteElement.textContent = TEXT.searching;
+		vscode.postMessage({ command: 'searchFilings', scope, company: who(), phrase: phrase(), forms: chosenForms(), items: chosenItems() });
 	}
 	function percent() {
 		return conditionElement.value === 'movesBy';
@@ -604,7 +1034,7 @@ function pageHtml(kind: PageKind): string {
 				return [];
 			}
 			const chosenId = expanded && (expanded.alertId || expanded.id);
-			const alerts = state.alerts.filter(alert => alert.symbol === quote.symbol && (!alert.paused || alert.id === chosenId));
+			const alerts = state.alerts.filter(alert => !alert.filings && alert.symbol === quote.symbol && (!alert.paused || alert.id === chosenId));
 			const lines = alerts.flatMap(alert => linesOf(alert.conditionKind, alert.threshold, alert.severity).map(line => ({ ...line, chosen: alert.id === chosenId })));
 			// A fired alert whose alert was removed since
 			if (expanded && expanded.fired && !alerts.some(alert => alert.id === expanded.alertId)) {
@@ -698,6 +1128,14 @@ function pageHtml(kind: PageKind): string {
 
 	function updateForm() {
 		drawChart();
+		renderFilings();
+		if (filings()) {
+			document.getElementById('conditionHint').textContent = TEXT.formsHint;
+			addElement.disabled = scope === 'everyone' ? !phrase() : scope === 'company' ? !filer : !group;
+			document.getElementById('feedNote').hidden = scope === 'company' || scope === 'everyone' || !!phrase();
+			document.getElementById('search').disabled = !phrase() || (scope !== 'everyone' && !who());
+			return;
+		}
 		document.getElementById('conditionHint').textContent = TEXT.conditionHints[conditionElement.value];
 		document.getElementById('thresholdLabel').textContent = '3. ' + (percent() ? TEXT.percent : TEXT.value);
 		const threshold = Number(thresholdElement.value);
@@ -713,12 +1151,39 @@ function pageHtml(kind: PageKind): string {
 		addedElement.hidden = true;
 		if (symbolElement.value.trim().toUpperCase() !== lookedUp) {
 			quote = undefined;
+			filer = undefined;
+			group = undefined;
+			searched = undefined;
 			quoteElement.textContent = '';
 			updateForm();
 		}
 	});
 	symbolElement.addEventListener('change', lookUp);
 	document.getElementById('lookUp').addEventListener('click', lookUp);
+	for (const radio of document.querySelectorAll('input[name="source"]')) {
+		radio.addEventListener('change', () => setSource(radio.value));
+	}
+	for (const radio of document.querySelectorAll('input[name="scope"]')) {
+		radio.addEventListener('change', () => setScope(radio.value));
+	}
+	document.getElementById('sicCodes').addEventListener('click', () => vscode.postMessage({ command: 'openUrl', url: 'https://www.sec.gov/search-filings/standard-industrial-classification-sic-code-list' }));
+	// A change to what is searched for clears what Search found
+	function clearSearched() {
+		if (searched) {
+			searched = undefined;
+			quoteElement.textContent = '';
+		}
+	}
+	formsElement.addEventListener('input', () => { clearSearched(); showItems(); renderFilings(); });
+	itemsElement.addEventListener('change', () => { clearSearched(); renderFilings(); });
+	containsElement.addEventListener('input', () => { clearSearched(); addedElement.hidden = true; updateForm(); });
+	containsElement.addEventListener('keydown', event => {
+		if (event.key === 'Enter') {
+			search();
+		}
+	});
+	document.getElementById('search').addEventListener('click', search);
+	setContactElement.addEventListener('click', () => vscode.postMessage({ command: 'setContact' }));
 	conditionElement.addEventListener('change', () => { fillThreshold(); updateForm(); });
 	thresholdElement.addEventListener('input', updateForm);
 	for (const radio of document.querySelectorAll('input[name="severity"]')) {
@@ -726,6 +1191,20 @@ function pageHtml(kind: PageKind): string {
 	}
 	addElement.addEventListener('click', () => {
 		if (addElement.disabled) {
+			return;
+		}
+		if (filings()) {
+			vscode.postMessage({
+				command: 'addFilings',
+				scope,
+				company: who(),
+				phrase: phrase(),
+				forms: chosenForms(),
+				items: chosenItems(),
+				severity: document.querySelector('input[name="severity"]:checked').value,
+				repeat: document.querySelector('input[name="repeat"]:checked').value === 'true',
+			});
+			addElement.disabled = true;
 			return;
 		}
 		vscode.postMessage({
@@ -849,13 +1328,18 @@ function pageHtml(kind: PageKind): string {
 			textElement.appendChild(element('div', 'meta', alert.value + ' \\u00b7 ' + (alert.repeat ? TEXT.everyTime : TEXT.once) + (alert.paused ? ' \\u00b7 ' + TEXT.paused : '')));
 			row.appendChild(textElement);
 			const actions = element('div', 'actions');
-			const open = element('button', 'link', alert.symbol);
-			open.title = TEXT.openQuote;
-			open.addEventListener('click', () => toggle({ id: alert.id, symbol: alert.symbol }));
+			// A quote opens under the alert; filings, at the SEC
+			const open = element('button', 'link', alert.filings ? TEXT.edgar : alert.symbol);
+			open.title = alert.filings ? TEXT.openEdgarHint : TEXT.openQuote;
+			open.addEventListener('click', () => alert.filings ? vscode.postMessage({ command: 'openUrl', url: alert.url }) : toggle({ id: alert.id, symbol: alert.symbol }));
 			const pause = element('button', 'link', alert.paused ? TEXT.resume : TEXT.pause);
 			pause.addEventListener('click', () => vscode.postMessage({ command: 'pause', id: alert.id, paused: !alert.paused }));
 			const remove = element('button', 'link', TEXT.remove);
 			remove.addEventListener('click', () => vscode.postMessage({ command: 'remove', id: alert.id }));
+			// Several companies have no one page at the SEC
+			if (alert.filings && !alert.url) {
+				open.hidden = true;
+			}
 			actions.append(open, pause, remove);
 			row.appendChild(actions);
 			alertsElement.appendChild(row);
@@ -874,11 +1358,15 @@ function pageHtml(kind: PageKind): string {
 			textElement.appendChild(element('div', 'meta', fired.when));
 			row.appendChild(textElement);
 			const actions = element('div', 'actions');
-			const open = element('button', 'link', fired.symbol);
-			open.title = TEXT.openQuote;
+			const open = element('button', 'link', fired.filingUrl ? TEXT.openFiling : fired.symbol);
+			open.title = fired.filingUrl ? fired.filingUrl : TEXT.openQuote;
 			open.addEventListener('click', () => {
 				if (fired.unread) {
 					vscode.postMessage({ command: 'markRead', ids: [fired.id] });
+				}
+				if (fired.filingUrl) {
+					vscode.postMessage({ command: 'openUrl', url: fired.filingUrl });
+					return;
 				}
 				toggle({ id: fired.id, symbol: fired.symbol, alertId: fired.alertId, fired });
 			});
@@ -903,7 +1391,7 @@ function pageHtml(kind: PageKind): string {
 			return;
 		}
 		openingAlert = undefined;
-		if (!expanded || expanded.id !== alert.id) {
+		if (!alert.filings && (!expanded || expanded.id !== alert.id)) {
 			toggle({ id: alert.id, symbol: alert.symbol });
 		}
 		document.querySelector('.entry[data-key="' + alert.id + '"]').scrollIntoView({ block: 'nearest' });
@@ -944,6 +1432,47 @@ function pageHtml(kind: PageKind): string {
 			if (quote) {
 				requestChart();
 			}
+		} else if (message.command === 'filer') {
+			if (message.company !== lookedUp || !filings()) {
+				return;
+			}
+			filer = message.filer;
+			quoteElement.className = filer ? 'quote' : 'quote error';
+			quoteElement.textContent = filer ? '' : message.noContact ? TEXT.noContact : format(TEXT.filerUnknown, message.company);
+			setContactElement.hidden = !message.noContact;
+			if (!filer) {
+				lookedUp = '';
+			}
+			updateForm();
+		} else if (message.command === 'companies' || message.command === 'industry') {
+			const key = message.command === 'companies' ? message.companies : message.sic;
+			if (key !== lookedUp || !filings() || scope !== (message.command === 'companies' ? 'companies' : 'industry')) {
+				return;
+			}
+			const found = message.command === 'companies' ? message.found && message.found.length && message.found : message.industry;
+			group = found ? { key: message.command === 'companies' ? message.found.map(company => company.cik).join(',') : message.industry.sic } : undefined;
+			quoteElement.className = group ? 'quote' : 'quote error';
+			quoteElement.textContent = message.noContact ? TEXT.noContact
+				: message.command === 'industry'
+					? group ? format(TEXT.industryFound, message.industry.name, message.industry.sic, message.industry.count.toLocaleString()) : format(TEXT.industryUnknown, message.sic)
+					: [group ? format(TEXT.companiesFound, message.found.length, message.found.map(company => company.name).join(', ')) : '', message.unknown && message.unknown.length ? format(TEXT.companiesUnknown, message.unknown.join(', ')) : (group ? '' : format(TEXT.filerUnknown, message.companies))].filter(text => text).join('. ');
+			setContactElement.hidden = !message.noContact;
+			if (!group) {
+				lookedUp = '';
+			}
+			updateForm();
+		} else if (message.command === 'searched') {
+			if (!searched || message.phrase.trim() !== searched.phrase) {
+				return;
+			}
+			searched = message;
+			quoteElement.className = message.noContact ? 'quote error' : 'quote';
+			quoteElement.textContent = message.noContact ? TEXT.noContact : '';
+			setContactElement.hidden = !message.noContact;
+			renderFilings();
+		} else if (message.command === 'contactSet') {
+			lookedUp = '';
+			lookUp();
 		} else if (message.command === 'chart') {
 			if (!quote || message.symbol !== quote.symbol || message.range !== chartRange) {
 				return;
@@ -956,11 +1485,21 @@ function pageHtml(kind: PageKind): string {
 			symbolElement.value = '';
 			lookedUp = '';
 			quote = undefined;
+			filer = undefined;
+			group = undefined;
+			searched = undefined;
+			containsElement.value = '';
 			quoteElement.textContent = '';
 			fillThreshold();
 			updateForm();
 		} else if (message.command === 'show') {
 			if (message.section === 'add' || message.section === 'quote') {
+				// Asked for with a symbol, the form is the one of its kind: a quote, or a company's filings
+				if (KIND === 'add' && message.symbol && (message.filings ? 'filings' : 'quote') !== source) {
+					setSource(message.filings ? 'filings' : 'quote');
+				} else if (KIND === 'add' && message.symbol && message.filings && scope !== 'company') {
+					setScope('company');
+				}
 				if (message.symbol) {
 					symbolElement.value = message.symbol;
 					lookUp();
@@ -991,8 +1530,8 @@ registerAction2(class extends Action2 {
 			f1: true,
 		});
 	}
-	run(accessor: ServicesAccessor, symbol?: string): void {
-		openAlertsPage(accessor, { section: 'add', symbol: typeof symbol === 'string' ? symbol.trim().toUpperCase() : undefined });
+	run(accessor: ServicesAccessor, symbol?: string, source?: 'filings'): void {
+		openAlertsPage(accessor, { section: 'add', symbol: typeof symbol === 'string' ? symbol.trim().toUpperCase() : undefined, filings: source === 'filings' });
 	}
 });
 

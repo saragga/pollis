@@ -197,6 +197,14 @@ s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor"
 return s;
 '''
 
+[[inputs]]
+id = "symbol"
+label = "Symbol"
+tooltip = "A stock ticker such as AAPL or IBM. Alert Me... opens Add Alert with it; alerts look the quote up at Yahoo Finance, whose tickers are the same for US stocks (outside the US they differ: TSCO.LON here is TSCO.L there)."
+default = "AAPL"
+models = ["equity", "indicators"]
+alertMe = "quote"
+
 [[codeBranches]]
 model = "equity"
 code = """
@@ -206,14 +214,14 @@ using AlphaVantage
 # Use the "Set API key" link above the page to store yours securely.
 
 # Daily OHLC time series for a stock or ETF
-daily = time_series_daily("AAPL"; outputsize="compact")
+daily = time_series_daily("{{symbol}}"; outputsize="compact")
 println(daily)
 
 # Intraday bars at a chosen interval
-intraday = time_series_intraday("AAPL", "5min")
+intraday = time_series_intraday("{{symbol}}", "5min")
 
 # Latest global quote: price, change, and volume
-last_quote = stock_quote("AAPL")  # quote is a Julia keyword, so it cannot name a variable
+last_quote = stock_quote("{{symbol}}")  # quote is a Julia keyword, so it cannot name a variable
 println(last_quote)
 """
 
@@ -251,11 +259,11 @@ code = """
 using AlphaVantage
 
 # Simple moving average over a daily series (computed by Alpha Vantage)
-sma = SMA("AAPL", "daily", 20, "close")
+sma = SMA("{{symbol}}", "daily", 20, "close")
 println(sma)
 
 # Relative Strength Index
-rsi = RSI("AAPL", "daily", 14, "close")
+rsi = RSI("{{symbol}}", "daily", 14, "close")
 println(rsi)
 """
 

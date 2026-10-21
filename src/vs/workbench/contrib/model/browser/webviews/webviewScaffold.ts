@@ -267,6 +267,10 @@ export function buildWebviewHtml(parts: WebviewParts): string {
 		   (works for dynamically-created icons and inside scrolling/overflow containers). */
 		.tooltip-floating { position: fixed; bottom: auto; left: auto; transform: none; margin: 0; z-index: 10000; pointer-events: none; }
 		.form-input { background-color: var(--vscode-input-background); color: var(--vscode-input-foreground); border: 1px solid var(--vscode-input-border); border-radius: 4px; padding: 8px 10px; font-size: 13px; font-family: 'Consolas', 'Monaco', 'Courier New', monospace; outline: none; width: 100%; }
+		.input-with-action { display: flex; gap: 8px; align-items: stretch; }
+		.input-with-action .form-input { flex: 1; min-width: 0; }
+		.input-action-btn { background: var(--vscode-button-secondaryBackground); color: var(--vscode-button-secondaryForeground); border: none; border-radius: 4px; padding: 0 12px; font-size: 13px; cursor: pointer; white-space: nowrap; }
+		.input-action-btn:hover { background: var(--vscode-button-background); color: var(--vscode-button-foreground); }
 		.form-input:focus { border-color: var(--vscode-focusBorder); outline: 1px solid var(--vscode-focusBorder); }
 		textarea.form-input { resize: none; overflow-x: auto; overflow-y: hidden; white-space: nowrap; height: 37px; line-height: 1.4; }
 		textarea.form-input::-webkit-scrollbar { display: none; }
@@ -1024,6 +1028,10 @@ ${parts.setModelExtraJs ?? ''}			document.querySelectorAll('#model-group .toggle
 			dropdown.style.top = (up ? r.top - Math.min(dropdown.offsetHeight, above) - 2 : r.bottom + 2) + 'px';
 			highlightDropdownItem(dropdown.querySelector('.selected'));
 		}
+		// Alert Me... beside a symbol input: Add Alert opens with the symbol typed, else the default one
+		document.querySelectorAll('.alert-me-btn').forEach(function(button) {
+			button.addEventListener('click', function() { vscode.postMessage({ command: 'addAlert', symbol: inputRaw(button.dataset.input) }); });
+		});
 		document.querySelectorAll('.scaffold-inputs select.form-input').forEach(function(select) {
 			select.addEventListener('mousedown', function(e) {
 				e.preventDefault();

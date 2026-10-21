@@ -11,10 +11,7 @@ export function getEdgarHtml(metadata: IEdgarMetadata): string {
 		title: 'US SEC EDGAR',
 		defaultModel: 'submissions',
 		decisionFirstColumn: 'Task',
-		illusCollapsed: true,
-		illustrationLabel: 'Illustration',
-		illustrationOverrideJs: `			body.innerHTML = '<div style="text-align:center;padding:24px 0;font-size:13px;color:var(--vscode-descriptionForeground);">Pull company filings and financial data from the SEC EDGAR REST APIs into Julia: submission histories, XBRL company facts and concepts, cross-filer frames, and full-text search.</div>';
-			return;`,
+		omitIllustration: true,
 		keyPointsIntro: metadata.edgar.notes?.keyPoints?.intro,
 		keyPointsFootnote: metadata.edgar.notes?.keyPoints?.footnote,
 		decisionIntro: metadata.edgar.notes?.decision?.intro,

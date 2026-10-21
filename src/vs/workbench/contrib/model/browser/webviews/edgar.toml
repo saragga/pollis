@@ -221,6 +221,14 @@ s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor"
 return s;
 '''
 
+[[inputs]]
+id = "cik"
+label = "CIK"
+tooltip = "The company's Central Index Key at the SEC, such as 320193 for Apple Inc. Alert Me... opens Add Alert to be told when it files a new 10-K, 10-Q or 8-K."
+default = "320193"
+models = ["submissions", "facts", "concept"]
+alertMe = "filings"
+
 [[codeBranches]]
 model = "submissions"
 code = """
@@ -230,12 +238,12 @@ using EDGAR
 # Click "Set contact" on the Powered-by line once; Pollis injects it as
 # ENV["SEC_USER_AGENT"], which EDGAR.jl reads automatically on every request.
 
-# Filer profile from the submissions API (Apple Inc. = CIK 320193)
-p = profile(320193)
+# Filer profile from the submissions API
+p = profile({{cik}})
 println(p.name, " - ", p.sicDescription, " (fiscal year ends ", p.fiscalYearEnd, ")")
 
 # One row per filing, newest first, 100 per page (from = 100, 200, ... for older ones)
-rows = filings_by_cik(320193)
+rows = filings_by_cik({{cik}})
 for r in first(rows, 5)
     println(r.filed, "  ", r.form, "  ", r.document)
 end
@@ -248,7 +256,7 @@ using EDGAR
 # Contact is injected by Pollis as ENV["SEC_USER_AGENT"] and read automatically.
 
 # Every XBRL fact a company has reported, in one document
-facts = company_facts("320193")
+facts = company_facts("{{cik}}")
 
 # Concepts live under taxonomies; us-gaap has a hyphen, so index by Symbol
 gaap = facts.facts[Symbol("us-gaap")]
@@ -264,7 +272,7 @@ using EDGAR
 # Contact is injected by Pollis as ENV["SEC_USER_AGENT"] and read automatically.
 
 # One us-gaap concept over time: net income (NetIncomeLoss)
-concept = company_concept("320193", "us-gaap", "NetIncomeLoss")
+concept = company_concept("{{cik}}", "us-gaap", "NetIncomeLoss")
 
 # Values are grouped by unit (here USD). The raw entries mix quarters and years and
 # repeat each period as a comparative in later filings. The frame field marks the one

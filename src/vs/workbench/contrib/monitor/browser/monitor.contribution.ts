@@ -15,6 +15,8 @@ import './addFeedPage.js';
 import './rssFeedsService.js';
 import { SHOW_FIRED_ALERTS_COMMAND_ID } from './alertsPage.js';
 import { IAlertsService } from './alertsService.js';
+import { IEventStudiesService } from './eventStudiesService.js';
+import './eventStudiesPage.js';
 
 /** A bell in the status bar with the number of fired alerts not read yet, shown while there are any; it lists them. */
 class AlertsStatusBar extends Disposable implements IWorkbenchContribution {
@@ -77,3 +79,13 @@ class RssCatalogueNotice implements IWorkbenchContribution {
 }
 
 registerWorkbenchContribution2(RssCatalogueNotice.ID, RssCatalogueNotice, WorkbenchPhase.Eventually);
+
+/** Starts the event studies, which record the filings their alerts fire and capture the prices around them. */
+class EventStudiesStarter implements IWorkbenchContribution {
+
+	static readonly ID = 'workbench.contrib.pollisEventStudies';
+
+	constructor(@IEventStudiesService _eventStudiesService: IEventStudiesService) { }
+}
+
+registerWorkbenchContribution2(EventStudiesStarter.ID, EventStudiesStarter, WorkbenchPhase.Eventually);

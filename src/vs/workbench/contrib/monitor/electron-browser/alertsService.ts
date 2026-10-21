@@ -9,13 +9,15 @@ import { IFileService } from '../../../../platform/files/common/files.js';
 import { InstantiationType, registerSingleton } from '../../../../platform/instantiation/common/extensions.js';
 import { IMainProcessService } from '../../../../platform/ipc/common/mainProcessService.js';
 import { INotificationService } from '../../../../platform/notification/common/notification.js';
+import { IOpenerService } from '../../../../platform/opener/common/opener.js';
 import { IRequestService } from '../../../../platform/request/common/request.js';
 import { RequestChannelClient } from '../../../../platform/request/common/requestIpc.js';
+import { ISecretStorageService } from '../../../../platform/secrets/common/secrets.js';
 import { IStorageService } from '../../../../platform/storage/common/storage.js';
 import { IPathService } from '../../../services/path/common/pathService.js';
 import { AlertsService, IAlertsService } from '../browser/alertsService.js';
 
-/** Pollis: looks up the alerts' quotes from the main process, which CORS does not restrict and which may name its User-Agent. */
+/** Pollis: looks up the alerts' quotes and filings from the main process, which CORS does not restrict and which may name its User-Agent. */
 class NativeAlertsService extends AlertsService {
 
 	private readonly mainRequestService: IRequestService;
@@ -26,9 +28,11 @@ class NativeAlertsService extends AlertsService {
 		@IFileService fileService: IFileService,
 		@IPathService pathService: IPathService,
 		@INotificationService notificationService: INotificationService,
+		@ISecretStorageService secretStorageService: ISecretStorageService,
+		@IOpenerService openerService: IOpenerService,
 		@IMainProcessService mainProcessService: IMainProcessService,
 	) {
-		super(requestService, storageService, fileService, pathService, notificationService);
+		super(requestService, storageService, fileService, pathService, notificationService, secretStorageService, openerService);
 		this.mainRequestService = new RequestChannelClient(mainProcessService.getChannel('request'));
 	}
 

@@ -17,5 +17,6 @@ export type AlpvWebviewMessage =
 	| { command: 'colorize'; code: string; target?: string }
 	| { command: 'openReference'; id: string }
 	| { command: 'installPackages' }
+	| { command: 'addAlert'; symbol: string }
 	| { command: 'setApiKey' }
 	| { command: 'clearApiKey' };

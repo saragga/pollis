@@ -17,33 +17,55 @@ import { IFileService } from '../../../../platform/files/common/files.js';
 import { InstantiationType, registerSingleton } from '../../../../platform/instantiation/common/extensions.js';
 import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
 import { INotificationService, Severity } from '../../../../platform/notification/common/notification.js';
-import { asJson, IRequestService, isSuccess } from '../../../../platform/request/common/request.js';
+import { IOpenerService } from '../../../../platform/opener/common/opener.js';
+import { asJson, asText, IRequestService, isSuccess } from '../../../../platform/request/common/request.js';
+import { ISecretStorageService } from '../../../../platform/secrets/common/secrets.js';
 import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
 import { IPathService } from '../../../services/path/common/pathService.js';
+import { CREDENTIALS } from '../../model/browser/common/credentials.js';
 
 /**
  * What an alert watches for: the value above or below the threshold (once, until it is back on the other side), the
- * value crossing it from one check to the next, or the value moving by more than the threshold, in per cent, since
- * the previous close.
+ * value crossing it from one check to the next, the value moving by more than the threshold, in per cent, since
+ * the previous close, or a filer publishing a new filing at the SEC's EDGAR.
  */
-export type AlertCondition = 'above' | 'below' | 'crossesAbove' | 'crossesBelow' | 'movesBy';
+export type AlertCondition = 'above' | 'below' | 'crossesAbove' | 'crossesBelow' | 'movesBy' | 'newFiling';
 
 export type AlertSeverity = 'info' | 'warning' | 'error';
 
 /** An alert as ~/.pollis/alerts/alerts.json keeps it, which the user may also edit by hand. */
 export interface IAlert {
 	readonly id: string;
-	/** A Yahoo Finance symbol: ^GSPC, AAPL, BZ=F, EURUSD=X. */
+	/**
+	 * A Yahoo Finance symbol: ^GSPC, AAPL, BZ=F, EURUSD=X; for newFiling, the filer's CIK at the SEC: 320193, or, on
+	 * several companies, their CIKs separated by commas, or, on an industry, SIC and its code: SIC 2834.
+	 */
 	readonly symbol: string;
-	/** The name Yahoo Finance gives the symbol, when the alert was added. */
+	/** The name Yahoo Finance, or the SEC, gives the symbol, when the alert was added. */
 	readonly name?: string;
 	readonly condition: AlertCondition;
+	/** The value of the condition; 0 for newFiling. */
 	readonly threshold: number;
+	/** For newFiling: the forms it fires on, an amendment (10-K/A) counting as its form; every form when absent or empty. */
+	readonly forms?: readonly string[];
+	/** For newFiling: several companies, by CIK, in place of one; looked for in EDGAR's latest filings. */
+	readonly ciks?: readonly string[];
+	/** For newFiling: an industry, by SIC code, in place of a company: every company the SEC files under it; looked for in EDGAR's latest filings. */
+	readonly sic?: string;
+	/** For newFiling: every company at the SEC, in place of a company; only with a phrase, as there are thousands of filings a day. */
+	readonly everyone?: boolean;
+	/**
+	 * For newFiling: what the filing must contain, in EDGAR's full-text search, such as "going concern" in quotes for
+	 * the exact phrase; an alert with a phrase is looked up by that search, whoever it is on.
+	 */
+	readonly phrase?: string;
+	/** For newFiling: the 8-K items an 8-K must have one of to fire, such as 2.02; every 8-K when absent or empty. */
+	readonly items?: readonly string[];
 	readonly severity: AlertSeverity;
 	/** Whether the alert fires again once the value is back on the other side, else it is paused once it fires. */
 	readonly repeat: boolean;
 	readonly paused?: boolean;
-	/** How often the value is looked up, in minutes; 1 when not given. */
+	/** How often the value is looked up, in minutes; when not given, 1, or 15 for newFiling. */
 	readonly minutes?: number;
 }
 
@@ -56,14 +78,61 @@ export interface IFiredAlert {
 	readonly condition: AlertCondition;
 	readonly threshold: number;
 	readonly severity: AlertSeverity;
+	/** The value that fired it; 0 for newFiling, which has the filing instead. */
 	readonly value: number;
 	/** The value of the look-up before, from which the value got past the threshold; absent on the first look-up. */
 	readonly previousValue?: number;
 	readonly currency?: string;
 	/** For movesBy: the move since the previous close, in per cent. */
 	readonly change?: number;
+	/** For newFiling: the new filing. */
+	readonly filing?: IFiling;
 	/** When it fired, in milliseconds since 1970. */
 	readonly time: number;
+}
+
+/** A filing at the SEC's EDGAR. */
+export interface IFiling {
+	readonly form: string;
+	/** The day it was filed: 2026-10-20. */
+	readonly filed: string;
+	/** When EDGAR accepted it, to the second, in UTC: 2026-10-20T02:32:55.000Z. */
+	readonly accepted?: string;
+	readonly accession: string;
+	readonly description?: string;
+	/** For an 8-K: the items it reports, such as 2.02 and 9.01. */
+	readonly items?: readonly string[];
+	/** The filing's main document, or its index when it has none. */
+	readonly url: string;
+}
+
+/** A filing EDGAR's full-text search found, with its filer; its url is the document that has the phrase. */
+export interface ISearchedFiling extends IFiling {
+	readonly cik: string;
+	readonly name: string;
+}
+
+/** A company at the SEC's EDGAR. */
+export interface ICompany {
+	/** Without the leading zeros: 320193. */
+	readonly cik: string;
+	readonly name: string;
+}
+
+/** An industry at the SEC: a SIC code, its name, and the companies the SEC files under it. */
+export interface IIndustry {
+	readonly sic: string;
+	readonly name: string;
+	readonly ciks: readonly string[];
+}
+
+/** A filer at the SEC's EDGAR and its recent filings, newest first. */
+export interface IFiler {
+	/** Without the leading zeros: 320193. */
+	readonly cik: string;
+	readonly name: string;
+	readonly tickers: readonly string[];
+	readonly filings: readonly IFiling[];
 }
 
 /** What the last look-up of an alert's symbol found. */
@@ -78,6 +147,14 @@ export interface IAlertState {
 	readonly armed: boolean;
 	/** Set when the symbol could not be looked up. */
 	readonly error?: boolean;
+	/** For newFiling: set when it could not be looked up for want of the user's SEC contact. */
+	readonly noContact?: boolean;
+	/** For newFiling: the newest filing found, which the next look-up's new filings come after; on several companies or an industry, the newest that fired, and its filer. */
+	readonly filing?: Pick<IFiling, 'form' | 'filed' | 'accession'> & { readonly name?: string };
+	/** For newFiling on several companies or an industry: when the newest of EDGAR's latest filings looked at was accepted, in milliseconds since 1970. */
+	readonly since?: number;
+	/** For newFiling with a phrase: the accessions the last search found, which do not fire again. */
+	readonly seen?: readonly string[];
 }
 
 /** A Yahoo Finance quote: the latest price of the regular session, and the previous close. */
@@ -111,6 +188,28 @@ export interface IChart {
 	readonly previousClose?: number;
 }
 
+/** Which session of its market a minute bar is in. */
+export type MarketSession = 'pre' | 'regular' | 'post';
+
+/** A minute of a symbol's trading at Yahoo Finance. */
+export interface IMinuteBar {
+	/** The minute's start, in milliseconds since 1970. */
+	readonly time: number;
+	readonly session: MarketSession;
+	readonly open: number;
+	readonly high: number;
+	readonly low: number;
+	readonly close: number;
+	readonly volume: number;
+}
+
+/** The minute bars of a symbol over a span, oldest first, and the regular sessions of its market in that span. */
+export interface IMinuteBars {
+	readonly bars: readonly IMinuteBar[];
+	/** The regular sessions, as [start, end] in milliseconds since 1970, oldest first. */
+	readonly sessions: readonly (readonly [start: number, end: number])[];
+}
+
 export interface IAlertsService {
 	readonly _serviceBrand: undefined;
 	/** Fires when the alerts, their states or the fired alerts change. */
@@ -130,6 +229,29 @@ export interface IAlertsService {
 	getQuote(symbol: string): Promise<IQuote | undefined>;
 	/** The values of `symbol` over `range`, or undefined when Yahoo Finance does not know it or cannot be reached. */
 	getChart(symbol: string, range: ChartRange): Promise<IChart | undefined>;
+	/**
+	 * The minute bars of `symbol` from `start` to `end`, in milliseconds since 1970, before and after the regular
+	 * session too; undefined when Yahoo Finance does not know it or cannot be reached. It keeps them for 30 days.
+	 */
+	getMinuteBars(symbol: string, start: number, end: number): Promise<IMinuteBars | undefined>;
+	/** The user's contact for the SEC, which asks for a name and an email with every request; the EDGAR panel's too. */
+	getSecContact(): Promise<string | undefined>;
+	setSecContact(contact: string): Promise<void>;
+	/**
+	 * The filer of `company`, a ticker (AAPL) or a CIK (320193), with its recent filings; undefined when the SEC does
+	 * not know it, cannot be reached, or there is no SEC contact.
+	 */
+	getFiler(company: string): Promise<IFiler | undefined>;
+	/** The companies of `companies`, tickers or CIKs, and those the SEC does not know; undefined when it cannot be reached or there is no SEC contact. */
+	getCompanies(companies: readonly string[]): Promise<{ readonly found: readonly ICompany[]; readonly unknown: readonly string[] } | undefined>;
+	/** The industry of the SIC code `sic`; undefined when the SEC files no company under it, cannot be reached, or there is no SEC contact. */
+	getIndustry(sic: string): Promise<IIndustry | undefined>;
+	/**
+	 * The filings of the last `days` days that EDGAR's full-text search finds for an alert's phrase, forms, items and
+	 * companies, oldest first, and whether there were more than it reads; undefined when the SEC cannot be reached or
+	 * there is no SEC contact.
+	 */
+	searchFilings(alert: Pick<IAlert, 'symbol' | 'phrase' | 'forms' | 'items' | 'ciks' | 'sic' | 'everyone'>, days: number): Promise<{ readonly filings: readonly ISearchedFiling[]; readonly more: boolean } | undefined>;
 	readonly alertsFile: URI;
 }
 
@@ -145,6 +267,18 @@ const TICK_MILLISECONDS = 60_000;
 const QUIET_MILLISECONDS = 15 * 60_000;
 const QUOTE_DELAY_MILLISECONDS = 20 * 60_000;
 const MAX_FIRED = 500;
+// Yahoo Finance gives minute bars for at most seven days a request
+const MINUTE_BARS_SPAN_MILLISECONDS = 7 * 24 * 60 * 60_000;
+// How long the companies of an industry are kept before they are fetched again
+const INDUSTRY_MILLISECONDS = 24 * 60 * 60_000;
+// The most companies of an industry fetched, and the most of EDGAR's latest filings read at a look-up, 100 a page
+const MAX_INDUSTRY_COMPANIES = 5000;
+const MAX_LATEST_FILINGS = 5000;
+// The most documents of EDGAR's full-text search read at a look-up, 100 a page; and how many days it looks back at least
+const MAX_SEARCHED = 1000;
+// The companies a full-text search names at most
+const SEARCH_CIKS = 100;
+const SEARCH_DAYS = 3;
 
 /** The message of a fired alert: what crossed what. */
 export function describeFiredAlert(fired: IFiredAlert): string {
@@ -157,11 +291,17 @@ export function describeFiredAlert(fired: IFiredAlert): string {
 		case 'crossesAbove': return localize('alerts.firedCrossesAbove', "{0} crossed above {1}: {2}", name, threshold, value);
 		case 'crossesBelow': return localize('alerts.firedCrossesBelow', "{0} crossed below {1}: {2}", name, threshold, value);
 		case 'movesBy': return localize('alerts.firedMovesBy', "{0} moved {1}% since the previous close: {2}", name, formatChange(fired.change ?? 0), value);
+		case 'newFiling': {
+			const items = describeItems(fired.filing?.items);
+			return items
+				? localize('alerts.firedNewFilingItems', "New {0} from {1}, filed {2}: {3}", fired.filing?.form ?? '', name, fired.filing?.filed ?? '', items)
+				: localize('alerts.firedNewFiling', "New {0} from {1}, filed {2}", fired.filing?.form ?? '', name, fired.filing?.filed ?? '');
+		}
 	}
 }
 
-/** The condition of an alert in words: "above 8000", "moves by 2%". */
-export function describeCondition(alert: Pick<IAlert, 'condition' | 'threshold'>): string {
+/** The condition of an alert in words: "above 8000", "moves by 2%", "files a new 10-K / 10-Q". */
+export function describeCondition(alert: Pick<IAlert, 'condition' | 'threshold' | 'forms' | 'items' | 'phrase'>): string {
 	const threshold = formatValue(alert.threshold);
 	switch (alert.condition) {
 		case 'above': return localize('alerts.conditionAbove', "above {0}", threshold);
@@ -169,7 +309,87 @@ export function describeCondition(alert: Pick<IAlert, 'condition' | 'threshold'>
 		case 'crossesAbove': return localize('alerts.conditionCrossesAbove', "crosses above {0}", threshold);
 		case 'crossesBelow': return localize('alerts.conditionCrossesBelow', "crosses below {0}", threshold);
 		case 'movesBy': return localize('alerts.conditionMovesBy', "moves by {0}% since the previous close", threshold);
+		case 'newFiling': {
+			const forms = alert.forms?.length ? alert.forms.join(' / ') : undefined;
+			const items = alert.items?.length ? alert.items.join(' / ') : undefined;
+			const condition = forms
+				? items ? localize('alerts.conditionNewFilingItems', "files a new {0}, an 8-K only with item {1}", forms, items) : localize('alerts.conditionNewFiling', "files a new {0}", forms)
+				: items ? localize('alerts.conditionAnyFilingItems', "files anything new at the SEC, an 8-K only with item {0}", items) : localize('alerts.conditionAnyFiling', "files anything new at the SEC");
+			return alert.phrase ? localize('alerts.conditionContains', "{0}, containing {1}", condition, alert.phrase) : condition;
+		}
 	}
+}
+
+/** The items of an 8-K, by number, with their short names. */
+export const FORM_8K_ITEMS: readonly (readonly [item: string, name: string])[] = [
+	['1.01', localize('alerts.item101', "Material Agreement")],
+	['1.02', localize('alerts.item102', "End of a Material Agreement")],
+	['1.03', localize('alerts.item103', "Bankruptcy or Receivership")],
+	['1.04', localize('alerts.item104', "Mine Safety")],
+	['1.05', localize('alerts.item105', "Cybersecurity Incident")],
+	['2.01', localize('alerts.item201', "Acquisition or Disposal of Assets")],
+	['2.02', localize('alerts.item202', "Results of Operations")],
+	['2.03', localize('alerts.item203', "New Financial Obligation")],
+	['2.04', localize('alerts.item204', "Financial Obligation Accelerated")],
+	['2.05', localize('alerts.item205', "Exit or Disposal Costs")],
+	['2.06', localize('alerts.item206', "Material Impairment")],
+	['3.01', localize('alerts.item301', "Delisting Notice")],
+	['3.02', localize('alerts.item302', "Unregistered Sale of Equity")],
+	['3.03', localize('alerts.item303', "Holders' Rights Changed")],
+	['4.01', localize('alerts.item401', "Change of Auditor")],
+	['4.02', localize('alerts.item402', "Past Financial Statements Not to Be Relied On")],
+	['5.01', localize('alerts.item501', "Change in Control")],
+	['5.02', localize('alerts.item502', "Directors or Officers Changed")],
+	['5.03', localize('alerts.item503', "Articles, Bylaws or Fiscal Year Changed")],
+	['5.04', localize('alerts.item504', "Benefit Plan Trading Suspended")],
+	['5.05', localize('alerts.item505', "Code of Ethics Changed")],
+	['5.06', localize('alerts.item506', "Shell Company Status Changed")],
+	['5.07', localize('alerts.item507', "Shareholder Vote")],
+	['5.08', localize('alerts.item508', "Shareholder Director Nominations")],
+	['6.01', localize('alerts.item601', "Asset-Backed: Informational Material")],
+	['6.02', localize('alerts.item602', "Asset-Backed: Servicer or Trustee Changed")],
+	['6.03', localize('alerts.item603', "Asset-Backed: Credit Enhancement Changed")],
+	['6.04', localize('alerts.item604', "Asset-Backed: Distribution Missed")],
+	['6.05', localize('alerts.item605', "Asset-Backed: Securities Act Update")],
+	['7.01', localize('alerts.item701', "Regulation FD Disclosure")],
+	['8.01', localize('alerts.item801', "Other Events")],
+	['9.01', localize('alerts.item901', "Financial Statements and Exhibits")],
+];
+
+/** The names of an 8-K's items, "Results of Operations; Directors or Officers Changed", leaving out the exhibits (9.01) beside others. */
+export function describeItems(items: readonly string[] | undefined): string | undefined {
+	const names = new Map(FORM_8K_ITEMS);
+	const shown = items?.filter(item => item !== '9.01' || items.length === 1).map(item => names.get(item) ?? item);
+	return shown?.length ? shown.join('; ') : undefined;
+}
+
+/** Whether an alert on filings is on several companies or an industry, looked for in EDGAR's latest filings, rather than on one company. */
+function isFeedAlert(alert: IAlert): boolean {
+	return alert.condition === 'newFiling' && !alert.phrase && (!!alert.ciks?.length || !!alert.sic);
+}
+
+/** Whether an alert on filings has a phrase, and is looked for in EDGAR's full-text search. */
+function isSearchAlert(alert: IAlert): boolean {
+	return alert.condition === 'newFiling' && !!alert.phrase;
+}
+
+/** Who an alert is on: its name, or, on filings, "One of Apple, Microsoft" or "A company in Pharmaceutical Preparations (SIC 2834)". */
+export function describeSubject(alert: Pick<IAlert, 'name' | 'symbol' | 'ciks' | 'sic' | 'everyone'>): string {
+	if (alert.everyone) {
+		return localize('alerts.subjectEveryone', "Any company");
+	}
+	const name = alert.name || alert.symbol;
+	if (alert.sic) {
+		return localize('alerts.subjectIndustry', "A company in {0} (SIC {1})", name, alert.sic);
+	}
+	return alert.ciks?.length ? localize('alerts.subjectCompanies', "One of {0}", name) : name;
+}
+
+/** Whether a filing is one an alert fires on: of one of its forms, an amendment counting as its form, and, for an 8-K, with one of its items. */
+function matchesFiling(filing: IFiling, alert: Pick<IAlert, 'forms' | 'items'>): boolean {
+	const form = filing.form.replace(/\/A$/, '');
+	return (!alert.forms?.length || alert.forms.some(wanted => filing.form === wanted || form === wanted))
+		&& (!alert.items?.length || form !== '8-K' || alert.items.some(item => filing.items?.includes(item)));
 }
 
 /** A value with the digits that suit its size, and its currency when known. */
@@ -186,7 +406,15 @@ function formatChange(change: number): string {
 /** The Yahoo Finance chart answer: the metadata, and the times and closes of a chart. */
 interface IYahooChartResult {
 	readonly timestamp?: readonly number[];
-	readonly indicators?: { readonly quote?: readonly { readonly close?: readonly (number | null)[] }[] };
+	readonly indicators?: {
+		readonly quote?: readonly {
+			readonly open?: readonly (number | null)[];
+			readonly high?: readonly (number | null)[];
+			readonly low?: readonly (number | null)[];
+			readonly close?: readonly (number | null)[];
+			readonly volume?: readonly (number | null)[];
+		}[];
+	};
 	readonly meta?: {
 		readonly symbol?: string;
 		readonly shortName?: string;
@@ -203,6 +431,8 @@ interface IYahooChartResult {
 		readonly fiftyTwoWeekLow?: number;
 		readonly regularMarketVolume?: number;
 		readonly fullExchangeName?: string;
+		/** With minute bars, the sessions of each day of the span. */
+		readonly tradingPeriods?: Partial<Record<MarketSession, readonly (readonly { readonly start?: number; readonly end?: number }[])[]>>;
 	};
 }
 
@@ -210,11 +440,97 @@ interface IYahooChart {
 	readonly chart?: { readonly result?: readonly IYahooChartResult[] };
 }
 
+/** The SEC's submissions of a filer: its name, tickers, and its latest filings (up to 1000) in columns, newest first. */
+interface ISecSubmissions {
+	readonly name?: string;
+	readonly tickers?: readonly string[];
+	readonly sicDescription?: string;
+	readonly filings?: {
+		readonly recent?: {
+			readonly accessionNumber?: readonly string[];
+			readonly filingDate?: readonly string[];
+			readonly acceptanceDateTime?: readonly string[];
+			readonly form?: readonly string[];
+			readonly primaryDocument?: readonly string[];
+			readonly primaryDocDescription?: readonly string[];
+			/** For an 8-K: its items, separated by commas: "2.02,9.01". */
+			readonly items?: readonly string[];
+		};
+	};
+}
+
+/** The SEC's tickers: an object of { cik_str, ticker, title } by number. */
+type ISecTickers = Record<string, { readonly cik_str?: number; readonly ticker?: string; readonly title?: string }>;
+
+/** A page of EDGAR's full-text search: one hit a document, its id the accession and the document's name. */
+interface ISecSearch {
+	readonly hits?: {
+		readonly total?: { readonly value?: number };
+		readonly hits?: readonly {
+			readonly _id?: string;
+			readonly _source?: {
+				readonly ciks?: readonly string[];
+				readonly display_names?: readonly string[];
+				readonly form?: string;
+				readonly root_forms?: readonly string[];
+				readonly file_date?: string;
+				readonly file_description?: string;
+				readonly items?: readonly string[];
+				readonly sics?: readonly string[];
+			};
+		}[];
+	};
+}
+
+/** The CIK of each ticker, and the name of each CIK with a ticker. */
+interface ISecNames {
+	readonly ciks: Map<string, string>;
+	readonly names: Map<string, string>;
+}
+
+/** A filing of EDGAR's latest filings, with its filer, and when it was accepted in milliseconds since 1970. */
+interface ILatestFiling extends IFiling {
+	readonly cik: string;
+	readonly name: string;
+	readonly time: number;
+}
+
+/**
+ * An entry of EDGAR's latest filings: its title "8-K - GROUP 1 AUTOMOTIVE INC (0001031203) (Filer)", the form, the
+ * accession, the index page, when it was accepted (Eastern time, with its offset) and a summary with the day filed and,
+ * for an 8-K, its items ("Item 2.01: ..."). Read with regular expressions, as DOMParser may not parse a string here.
+ */
+function parseLatestFiling(entry: string): ILatestFiling | undefined {
+	const decode = (text: string) => text.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, '\'').replace(/&amp;/g, '&');
+	const title = /^(?<form>.+?) - (?<name>.+) \((?<cik>\d+)\) \([^)]*\)$/.exec(decode(/<title>(?<title>[^<]*)<\/title>/.exec(entry)?.groups?.title ?? '').trim())?.groups;
+	const form = /<category[^>]*\sterm="(?<form>[^"]*)"/.exec(entry)?.groups?.form;
+	const accession = /accession-number=(?<accession>[\d-]+)/.exec(entry)?.groups?.accession;
+	const url = /<link[^>]*\shref="(?<url>https:\/\/www\.sec\.gov\/[^"]*)"/.exec(entry)?.groups?.url;
+	const time = Date.parse(/<updated>(?<updated>[^<]*)<\/updated>/.exec(entry)?.groups?.updated ?? '');
+	if (!title || !accession || !url || !Number.isFinite(time)) {
+		return undefined;
+	}
+	const summary = decode(/<summary[^>]*>(?<summary>[\s\S]*?)<\/summary>/.exec(entry)?.groups?.summary ?? '');
+	const items = Array.from(summary.matchAll(/Item (?<item>\d+\.\d+):/g), match => match.groups?.item ?? '').filter(item => item);
+	return {
+		cik: String(Number(title.cik)),
+		name: title.name,
+		form: decode(form ?? title.form),
+		filed: /Filed:<\/b> (?<filed>\d{4}-\d{2}-\d{2})/.exec(summary)?.groups?.filed ?? new Date(time).toISOString().slice(0, 10),
+		accepted: new Date(time).toISOString(),
+		accession,
+		items: items.length ? items : undefined,
+		url: decode(url),
+		time,
+	};
+}
+
 // The interval of the values of each span of a chart
 const CHART_INTERVALS: Record<ChartRange, string> = { '1d': '5m', '5d': '15m', '1mo': '60m', '6mo': '1d' };
 
 /**
- * Pollis: the alerts the user sets on market data, looked up at Yahoo Finance while Pollis is open. One window looks
+ * Pollis: the alerts the user sets on market data, looked up at Yahoo Finance, and on filings, looked up at the SEC's
+ * EDGAR, while Pollis is open. One window looks
  * them up and notifies; every window shows them, from the files in ~/.pollis/alerts.
  */
 export class AlertsService extends Disposable implements IAlertsService {
@@ -235,6 +551,10 @@ export class AlertsService extends Disposable implements IAlertsService {
 	private read: Set<string>;
 	// When each symbol is next looked up, while its market is closed
 	private readonly quietUntil = new Map<string, number>();
+	// The CIK of each ticker at the SEC, and the name of each CIK, fetched once
+	private tickers: Promise<ISecNames | undefined> | undefined;
+	// The companies of each industry, by SIC code, fetched once a day
+	private readonly industries = new Map<string, { readonly fetched: number; readonly industry: Promise<IIndustry | undefined> }>();
 	private checking = false;
 	private loaded: Promise<void>;
 
@@ -244,6 +564,8 @@ export class AlertsService extends Disposable implements IAlertsService {
 		@IFileService private readonly fileService: IFileService,
 		@IPathService pathService: IPathService,
 		@INotificationService private readonly notificationService: INotificationService,
+		@ISecretStorageService private readonly secretStorageService: ISecretStorageService,
+		@IOpenerService private readonly openerService: IOpenerService,
 	) {
 		super();
 		const folder = joinPath(pathService.userHome({ preferLocal: true }), '.pollis', 'alerts');
@@ -328,7 +650,7 @@ export class AlertsService extends Disposable implements IAlertsService {
 	}
 
 	async getQuote(symbol: string): Promise<IQuote | undefined> {
-		const meta = (await this.fetchChart(symbol, '1d', '1d'))?.meta;
+		const meta = (await this.fetchChart(symbol, 'interval=1d&range=1d'))?.meta;
 		if (typeof meta?.regularMarketPrice !== 'number' || typeof meta.regularMarketTime !== 'number') {
 			return undefined;
 		}
@@ -352,7 +674,7 @@ export class AlertsService extends Disposable implements IAlertsService {
 	}
 
 	async getChart(symbol: string, range: ChartRange): Promise<IChart | undefined> {
-		const result = await this.fetchChart(symbol, CHART_INTERVALS[range], range);
+		const result = await this.fetchChart(symbol, `interval=${CHART_INTERVALS[range]}&range=${range}`);
 		const closes = result?.indicators?.quote?.[0]?.close;
 		if (!result?.timestamp || !closes) {
 			return undefined;
@@ -370,12 +692,301 @@ export class AlertsService extends Disposable implements IAlertsService {
 		return { times, values, previousClose: result.meta?.chartPreviousClose ?? result.meta?.previousClose };
 	}
 
-	/** The Yahoo Finance chart of `symbol`, or undefined when it does not know it or cannot be reached. */
-	private async fetchChart(symbol: string, interval: string, range: string): Promise<IYahooChartResult | undefined> {
+	async getMinuteBars(symbol: string, start: number, end: number): Promise<IMinuteBars | undefined> {
+		const bars = new Map<number, IMinuteBar>();
+		const sessions = new Map<number, number>();
+		for (let from = start; from < end; from += MINUTE_BARS_SPAN_MILLISECONDS) {
+			const to = Math.min(end, from + MINUTE_BARS_SPAN_MILLISECONDS);
+			const result = await this.fetchChart(symbol, `interval=1m&period1=${Math.floor(from / 1000)}&period2=${Math.ceil(to / 1000)}&includePrePost=true`);
+			if (!result) {
+				return undefined;
+			}
+			const periods = result.meta?.tradingPeriods;
+			const spansOf = (session: MarketSession) => (periods?.[session] ?? []).flat()
+				.filter(period => typeof period.start === 'number' && typeof period.end === 'number')
+				.map(period => [period.start! * 1000, period.end! * 1000] as const);
+			spansOf('regular').forEach(([open, close]) => sessions.set(open, close));
+			const pre = spansOf('pre');
+			const post = spansOf('post');
+			const quote = result.indicators?.quote?.[0];
+			(result.timestamp ?? []).forEach((second, index) => {
+				const time = second * 1000;
+				const open = quote?.open?.[index];
+				const high = quote?.high?.[index];
+				const low = quote?.low?.[index];
+				const close = quote?.close?.[index];
+				// Yahoo Finance leaves a minute without trades as null
+				if (time < from || time >= to || typeof open !== 'number' || typeof high !== 'number' || typeof low !== 'number' || typeof close !== 'number') {
+					return;
+				}
+				const within = (spans: readonly (readonly [number, number])[]) => spans.some(([first, last]) => time >= first && time < last);
+				const session: MarketSession = within(pre) ? 'pre' : within(post) ? 'post' : 'regular';
+				bars.set(time, { time, session, open, high, low, close, volume: quote?.volume?.[index] ?? 0 });
+			});
+		}
+		return {
+			bars: [...bars.values()].sort((a, b) => a.time - b.time),
+			sessions: [...sessions].sort((a, b) => a[0] - b[0]),
+		};
+	}
+
+	getSecContact(): Promise<string | undefined> {
+		return this.secretStorageService.get(CREDENTIALS.secUserAgent.secretKey);
+	}
+
+	async setSecContact(contact: string): Promise<void> {
+		await this.secretStorageService.set(CREDENTIALS.secUserAgent.secretKey, contact);
+		this.check();
+	}
+
+	async getFiler(company: string): Promise<IFiler | undefined> {
+		const contact = await this.getSecContact();
+		const wanted = company.trim().toUpperCase();
+		if (!contact || !wanted) {
+			return undefined;
+		}
+		const cik = /^\d+$/.test(wanted) ? String(Number(wanted)) : (await this.getTickers(contact))?.ciks.get(wanted);
+		if (!cik) {
+			return undefined;
+		}
+		const submissions = await this.fetchSec<ISecSubmissions>(`https://data.sec.gov/submissions/CIK${cik.padStart(10, '0')}.json`, contact);
+		const recent = submissions?.filings?.recent;
+		if (!submissions?.name || !recent?.accessionNumber) {
+			return undefined;
+		}
+		const filings = recent.accessionNumber.map((accession, index): IFiling => {
+			const folder = `https://www.sec.gov/Archives/edgar/data/${cik}/${accession.replace(/-/g, '')}`;
+			const document = recent.primaryDocument?.[index];
+			const items = recent.items?.[index]?.split(',').map(item => item.trim()).filter(item => item);
+			return {
+				form: recent.form?.[index] ?? '',
+				filed: recent.filingDate?.[index] ?? '',
+				accepted: recent.acceptanceDateTime?.[index] || undefined,
+				accession,
+				description: recent.primaryDocDescription?.[index] || undefined,
+				items: items?.length ? items : undefined,
+				url: document ? `${folder}/${document}` : `${folder}/${accession}-index.htm`,
+			};
+		});
+		return { cik, name: submissions.name, tickers: submissions.tickers ?? [], filings };
+	}
+
+	async getCompanies(companies: readonly string[]): Promise<{ readonly found: readonly ICompany[]; readonly unknown: readonly string[] } | undefined> {
+		const contact = await this.getSecContact();
+		const names = contact && await this.getTickers(contact);
+		if (!contact || !names) {
+			return undefined;
+		}
+		const found = new Map<string, ICompany>();
+		const unknown: string[] = [];
+		for (const company of companies.map(company => company.trim().toUpperCase()).filter(company => company)) {
+			const cik = /^\d+$/.test(company) ? String(Number(company)) : names.ciks.get(company);
+			// A CIK without a ticker, such as a company no longer listed, is looked up on its own
+			const name = cik && (names.names.get(cik) ?? (await this.getFiler(cik))?.name);
+			if (cik && name) {
+				found.set(cik, { cik, name });
+			} else {
+				unknown.push(company);
+			}
+		}
+		return { found: [...found.values()], unknown };
+	}
+
+	async getIndustry(sic: string): Promise<IIndustry | undefined> {
+		const contact = await this.getSecContact();
+		const code = sic.trim();
+		if (!contact || !/^\d{3,4}$/.test(code)) {
+			return undefined;
+		}
+		const cached = this.industries.get(code);
+		if (cached && Date.now() - cached.fetched < INDUSTRY_MILLISECONDS) {
+			return cached.industry;
+		}
+		const industry = this.fetchIndustry(code, contact).then(result => {
+			// A failure is tried again next time
+			if (!result) {
+				this.industries.delete(code);
+			}
+			return result;
+		});
+		this.industries.set(code, { fetched: Date.now(), industry });
+		return industry;
+	}
+
+	/** The companies the SEC files under `sic`, 100 a page, and the industry's name, from the first company's submissions. */
+	private async fetchIndustry(sic: string, contact: string): Promise<IIndustry | undefined> {
+		const ciks: string[] = [];
+		for (let start = 0; start < MAX_INDUSTRY_COMPANIES; start += 100) {
+			const page = await this.fetchSecText(`https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&SIC=${sic}&owner=include&count=100&start=${start}&output=atom`, contact);
+			if (page === undefined) {
+				return undefined;
+			}
+			const found = Array.from(page.matchAll(/<cik>(?<cik>\d+)<\/cik>/g), match => String(Number(match.groups?.cik)));
+			ciks.push(...found);
+			if (found.length < 100) {
+				break;
+			}
+		}
+		if (!ciks.length) {
+			return undefined;
+		}
+		const submissions = await this.fetchSec<ISecSubmissions>(`https://data.sec.gov/submissions/CIK${ciks[0].padStart(10, '0')}.json`, contact);
+		return { sic, name: submissions?.sicDescription || `SIC ${sic}`, ciks: [...new Set(ciks)] };
+	}
+
+	async searchFilings(alert: Pick<IAlert, 'symbol' | 'phrase' | 'forms' | 'items' | 'ciks' | 'sic' | 'everyone'>, days: number): Promise<{ readonly filings: readonly ISearchedFiling[]; readonly more: boolean } | undefined> {
+		const contact = await this.getSecContact();
+		if (!contact) {
+			return undefined;
+		}
+		const since = Date.now() - days * 24 * 60 * 60_000;
+		if (!alert.sic || alert.everyone) {
+			return this.fetchSearch(alert, since, contact);
+		}
+		// An industry's companies, a hundred a search, as the search cannot look for a SIC code
+		const ciks = (await this.getIndustry(alert.sic))?.ciks;
+		if (!ciks) {
+			return undefined;
+		}
+		const filings: ISearchedFiling[] = [];
+		let more = false;
+		for (let start = 0; start < ciks.length; start += SEARCH_CIKS) {
+			const found = await this.fetchSearch({ ...alert, sic: undefined, ciks: ciks.slice(start, start + SEARCH_CIKS) }, since, contact);
+			if (!found) {
+				return start ? { filings: filings.sort((a, b) => a.filed.localeCompare(b.filed)), more: true } : undefined;
+			}
+			filings.push(...found.filings);
+			more ||= found.more;
+		}
+		return { filings: filings.sort((a, b) => a.filed.localeCompare(b.filed)), more };
+	}
+
+	/**
+	 * EDGAR's full-text search for an alert's phrase since the day of `since`: the documents that have it, 100 a page,
+	 * one filing each, of the alert's companies (by CIK at the SEC, by SIC here, as the search cannot), forms and items.
+	 */
+	private async fetchSearch(alert: Pick<IAlert, 'symbol' | 'phrase' | 'forms' | 'items' | 'ciks' | 'sic' | 'everyone'>, since: number, contact: string): Promise<{ readonly filings: ISearchedFiling[]; readonly more: boolean } | undefined> {
+		const day = (time: number) => new Date(time).toISOString().slice(0, 10);
+		const ciks = alert.everyone || alert.sic ? [] : alert.ciks?.length ? alert.ciks : [alert.symbol];
+		const query = [
+			`q=${encodeURIComponent(alert.phrase ?? '')}`,
+			alert.forms?.length ? `forms=${encodeURIComponent(alert.forms.join(','))}` : '',
+			ciks.length ? `ciks=${ciks.map(cik => cik.padStart(10, '0')).join(',')}` : '',
+			// A day either side, as the SEC's days are New York's
+			`dateRange=custom&startdt=${day(since - 24 * 60 * 60_000)}&enddt=${day(Date.now() + 24 * 60 * 60_000)}`,
+		].filter(part => part).join('&');
+		const filings = new Map<string, ISearchedFiling>();
+		let total = 0;
+		let read = 0;
+		for (let from = 0; from < MAX_SEARCHED; from += 100) {
+			const page = await this.fetchSec<ISecSearch>(`https://efts.sec.gov/LATEST/search-index?${query}&from=${from}`, contact);
+			if (!page?.hits) {
+				return from ? { filings: [...filings.values()], more: true } : undefined;
+			}
+			total = page.hits.total?.value ?? 0;
+			for (const hit of page.hits.hits ?? []) {
+				read++;
+				const source = hit._source;
+				const [accession, document] = (hit._id ?? '').split(':');
+				const cik = source?.ciks?.[0] && String(Number(source.ciks[0]));
+				if (!source || !cik || !accession || filings.has(accession) || (alert.sic && !source.sics?.includes(alert.sic))) {
+					continue;
+				}
+				const filing: ISearchedFiling = {
+					cik,
+					name: (source.display_names?.[0] ?? '').replace(/\s+\(.*$/, '') || cik,
+					form: source.form ?? source.root_forms?.[0] ?? '',
+					filed: source.file_date ?? '',
+					accession,
+					description: source.file_description,
+					items: source.items?.length ? source.items : undefined,
+					url: `https://www.sec.gov/Archives/edgar/data/${cik}/${accession.replace(/-/g, '')}/${document || `${accession}-index.htm`}`,
+				};
+				if (matchesFiling(filing, alert)) {
+					filings.set(accession, filing);
+				}
+			}
+			if (read >= total || !page.hits.hits?.length) {
+				break;
+			}
+		}
+		return { filings: [...filings.values()].sort((a, b) => a.filed.localeCompare(b.filed)), more: read < total };
+	}
+
+	/**
+	 * EDGAR's latest filings of every company, newest first, back to the first accepted at or before `since` (only the
+	 * newest page when it is undefined), or as far as the feed goes; undefined when it cannot be reached.
+	 */
+	private async getLatestFilings(contact: string, since: number | undefined): Promise<ILatestFiling[] | undefined> {
+		const filings: ILatestFiling[] = [];
+		for (let start = 0; start < MAX_LATEST_FILINGS; start += 100) {
+			const page = await this.fetchSecText(`https://www.sec.gov/cgi-bin/browse-edgar?action=getcurrent&owner=include&count=100&start=${start}&output=atom`, contact);
+			if (page === undefined) {
+				return start ? filings : undefined;
+			}
+			const entries = Array.from(page.matchAll(/<entry>[\s\S]*?<\/entry>/g), match => parseLatestFiling(match[0]));
+			for (const entry of entries) {
+				if (entry) {
+					filings.push(entry);
+				}
+			}
+			const oldest = filings[filings.length - 1]?.time;
+			if (entries.length < 100 || since === undefined || oldest === undefined || oldest <= since) {
+				break;
+			}
+		}
+		return filings;
+	}
+
+	/** The CIK of each ticker at the SEC, and the name of each CIK, or undefined when it cannot be reached; a failure is tried again next time. */
+	private getTickers(contact: string): Promise<ISecNames | undefined> {
+		if (!this.tickers) {
+			this.tickers = this.fetchSec<ISecTickers>('https://www.sec.gov/files/company_tickers.json', contact).then(tickers => {
+				if (!tickers) {
+					this.tickers = undefined;
+					return undefined;
+				}
+				const result: ISecNames = { ciks: new Map(), names: new Map() };
+				for (const entry of Object.values(tickers)) {
+					if (entry.ticker && entry.cik_str) {
+						result.ciks.set(entry.ticker.toUpperCase(), String(entry.cik_str));
+						if (entry.title && !result.names.has(String(entry.cik_str))) {
+							result.names.set(String(entry.cik_str), entry.title);
+						}
+					}
+				}
+				return result;
+			});
+		}
+		return this.tickers;
+	}
+
+	/** A JSON document of the SEC, which answers only requests naming the user in their User-Agent. */
+	private async fetchSec<T>(url: string, contact: string): Promise<T | undefined> {
+		try {
+			const context = await this.request({ type: 'GET', url, headers: { 'User-Agent': contact }, callSite: 'pollis.alerts.sec' });
+			return isSuccess(context) ? await asJson<T>(context) ?? undefined : undefined;
+		} catch {
+			return undefined;
+		}
+	}
+
+	/** A page of the SEC's, such as an Atom feed of EDGAR, which answers only requests naming the user in their User-Agent. */
+	private async fetchSecText(url: string, contact: string): Promise<string | undefined> {
+		try {
+			const context = await this.request({ type: 'GET', url, headers: { 'User-Agent': contact }, callSite: 'pollis.alerts.sec' });
+			return isSuccess(context) ? await asText(context) ?? undefined : undefined;
+		} catch {
+			return undefined;
+		}
+	}
+
+	/** The Yahoo Finance chart of `symbol` for `query`, its interval and span, or undefined when it does not know it or cannot be reached. */
+	private async fetchChart(symbol: string, query: string): Promise<IYahooChartResult | undefined> {
 		try {
 			const context = await this.request({
 				type: 'GET',
-				url: `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=${interval}&range=${range}`,
+				url: `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?${query}`,
 				// Yahoo Finance answers only a browser's requests
 				headers: { 'User-Agent': 'Mozilla/5.0' },
 				callSite: 'pollis.alerts.quote',
@@ -402,9 +1013,42 @@ export class AlertsService extends Disposable implements IAlertsService {
 		try {
 			const now = Date.now();
 			const states = this.readStorage<Record<string, IAlertState>>(STATE_KEY, {});
-			const due = this.alerts.filter(alert => !alert.paused && now - (states[alert.id]?.checked ?? 0) >= (alert.minutes ?? 1) * 60_000 - 5_000
-				&& now >= (this.quietUntil.get(alert.symbol) ?? 0));
-			const symbols = [...new Set(due.map(alert => alert.symbol))];
+			const due = this.alerts.filter(alert => !alert.paused && now - (states[alert.id]?.checked ?? 0) >= (alert.minutes ?? (alert.condition === 'newFiling' ? 15 : 1)) * 60_000 - 5_000
+				&& (alert.condition === 'newFiling' || now >= (this.quietUntil.get(alert.symbol) ?? 0)));
+			const filingsDue = due.filter(alert => alert.condition === 'newFiling');
+			const contact = filingsDue.length ? await this.getSecContact() : undefined;
+			const filers = new Map<string, IFiler | undefined>();
+			const searchSeen = new Map<string, string[] | undefined>();
+			for (const cik of new Set(filingsDue.filter(alert => !isFeedAlert(alert) && !isSearchAlert(alert)).map(alert => alert.symbol))) {
+				filers.set(cik, contact ? await this.getFiler(cik) : undefined);
+			}
+			// Several companies and industries share one read of EDGAR's latest filings, back to the oldest filing they wait after
+			const feedDue = filingsDue.filter(isFeedAlert);
+			// Alerts with a phrase each search, back to their last look-up and some days more for filings the search indexed late
+			const searched = new Map<string, ISearchedFiling[] | undefined>();
+			for (const alert of filingsDue.filter(isSearchAlert)) {
+				const since = Math.max(Math.min(states[alert.id]?.checked ?? now, now - SEARCH_DAYS * 24 * 60 * 60_000), now - 30 * 24 * 60 * 60_000);
+				const result = contact ? await this.fetchSearch(alert, since, contact) : undefined;
+				const seen = new Set(states[alert.id]?.seen);
+				// Only those filed since the day before the last look-up: the search reads its hits by relevance, at most a thousand
+				const after = new Date((states[alert.id]?.checked ?? now) - 24 * 60 * 60_000).toISOString().slice(0, 10);
+				const fresh = states[alert.id]?.seen ? result?.filings.filter(filing => !seen.has(filing.accession) && filing.filed >= after) : [];
+				// The second EDGAR accepted each new filing, from its filer's submissions
+				const accepted: ISearchedFiling[] = [];
+				for (const filing of fresh ?? []) {
+					const found = (await this.getFiler(filing.cik))?.filings.find(other => other.accession === filing.accession);
+					accepted.push(found?.accepted ? { ...filing, accepted: found.accepted } : filing);
+				}
+				searched.set(alert.id, result && accepted);
+				searchSeen.set(alert.id, result?.filings.map(filing => filing.accession));
+			}
+			const companies = new Map<string, ReadonlySet<string> | undefined>();
+			for (const alert of feedDue) {
+				companies.set(alert.id, alert.sic ? await this.getIndustry(alert.sic).then(industry => industry && new Set(industry.ciks)) : new Set(alert.ciks));
+			}
+			const since = feedDue.map(alert => states[alert.id]?.since).filter((time): time is number => time !== undefined);
+			const latest = contact && feedDue.length ? await this.getLatestFilings(contact, since.length ? Math.min(...since) : undefined) : undefined;
+			const symbols = [...new Set(due.filter(alert => alert.condition !== 'newFiling').map(alert => alert.symbol))];
 			const quotes = new Map<string, IQuote | undefined>();
 			for (const symbol of symbols) {
 				const quote = await this.getQuote(symbol);
@@ -421,8 +1065,75 @@ export class AlertsService extends Disposable implements IAlertsService {
 			const once: string[] = [];
 			this.updateState(states => {
 				for (const alert of due) {
-					const quote = quotes.get(alert.symbol);
 					const previous = states[alert.id];
+					if (alert.condition === 'newFiling' && isSearchAlert(alert)) {
+						const fresh = searched.get(alert.id);
+						const seen = searchSeen.get(alert.id);
+						if (!fresh || !seen) {
+							states[alert.id] = { ...previous, armed: true, checked: now, error: true, noContact: !contact || undefined };
+							continue;
+						}
+						for (const { cik, name, ...filing } of alert.repeat ? fresh : fresh.slice(0, 1)) {
+							fired.push({ id: generateUuid(), alertId: alert.id, symbol: cik, name, condition: alert.condition, threshold: alert.threshold, severity: alert.severity, value: 0, filing, time: now });
+						}
+						if (fresh.length && !alert.repeat) {
+							once.push(alert.id);
+						}
+						const last = fresh[fresh.length - 1];
+						states[alert.id] = {
+							checked: now,
+							armed: true,
+							seen,
+							since: now,
+							filing: last ? { form: last.form, filed: last.filed, accession: last.accession, name: last.name } : previous?.filing,
+						};
+						continue;
+					}
+					if (alert.condition === 'newFiling' && isFeedAlert(alert)) {
+						const ciks = companies.get(alert.id);
+						if (!latest || !ciks) {
+							states[alert.id] = { ...previous, armed: true, checked: now, error: true, noContact: !contact || undefined };
+							continue;
+						}
+						// The filings accepted after the newest looked at before, of its companies, oldest first; none on the first look-up
+						const after = previous?.since ?? Infinity;
+						const seen = new Set<string>();
+						const fresh = latest.filter(filing => filing.time > after && ciks.has(filing.cik) && matchesFiling(filing, alert) && !seen.has(filing.accession) && seen.add(filing.accession)).reverse();
+						for (const { cik, name, time: _time, ...filing } of alert.repeat ? fresh : fresh.slice(0, 1)) {
+							fired.push({ id: generateUuid(), alertId: alert.id, symbol: cik, name, condition: alert.condition, threshold: alert.threshold, severity: alert.severity, value: 0, filing, time: now });
+						}
+						if (fresh.length && !alert.repeat) {
+							once.push(alert.id);
+						}
+						const last = fresh[fresh.length - 1];
+						states[alert.id] = {
+							checked: now,
+							armed: true,
+							since: Math.max(latest[0]?.time ?? 0, previous?.since ?? 0) || now,
+							filing: last ? { form: last.form, filed: last.filed, accession: last.accession, name: last.name } : previous?.filing,
+						};
+						continue;
+					}
+					if (alert.condition === 'newFiling') {
+						const filer = filers.get(alert.symbol);
+						if (!filer) {
+							states[alert.id] = { ...previous, armed: true, checked: now, error: true, noContact: !contact || undefined };
+							continue;
+						}
+						// The filings after the newest one found before, oldest first; none on the first look-up
+						const known = previous?.filing ? filer.filings.findIndex(filing => filing.accession === previous.filing?.accession) : 0;
+						const fresh = filer.filings.slice(0, Math.max(known, 0)).filter(filing => matchesFiling(filing, alert)).reverse();
+						for (const filing of alert.repeat ? fresh : fresh.slice(0, 1)) {
+							fired.push({ id: generateUuid(), alertId: alert.id, symbol: alert.symbol, name: alert.name || filer.name, condition: alert.condition, threshold: alert.threshold, severity: alert.severity, value: 0, filing, time: now });
+						}
+						if (fresh.length && !alert.repeat) {
+							once.push(alert.id);
+						}
+						const newest = filer.filings[0];
+						states[alert.id] = { checked: now, armed: true, filing: newest && { form: newest.form, filed: newest.filed, accession: newest.accession } };
+						continue;
+					}
+					const quote = quotes.get(alert.symbol);
 					if (!quote) {
 						states[alert.id] = { ...previous, armed: previous?.armed ?? true, checked: now, error: true };
 						continue;
@@ -487,12 +1198,16 @@ export class AlertsService extends Disposable implements IAlertsService {
 				const beyond = Math.abs(change) >= alert.threshold;
 				return { fires: beyond, beyond, change };
 			}
+			case 'newFiling':
+				return { fires: false, beyond: false };
 		}
 	}
 
 	private notify(fired: IFiredAlert): void {
 		const severity = fired.severity === 'error' ? Severity.Error : fired.severity === 'warning' ? Severity.Warning : Severity.Info;
+		const filing = fired.filing;
 		this.notificationService.prompt(severity, describeFiredAlert(fired), [
+			...(filing ? [{ label: localize('alerts.openFiling', "Open Filing"), run: () => { this.markRead([fired.id]); this.openerService.open(URI.parse(filing.url), { openExternal: true }); } }] : []),
 			{ label: localize('alerts.markRead', "Mark Read"), run: () => this.markRead([fired.id]) },
 			{ label: localize('alerts.pause', "Pause Alert"), run: () => { this.markRead([fired.id]); this.setPaused(fired.alertId, true); } },
 		], { sticky: true });

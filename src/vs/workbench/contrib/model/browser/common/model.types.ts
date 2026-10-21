@@ -191,6 +191,11 @@ export interface IModelInput {
 	readonly when?: string;
 	/** Start a new form row with this input. */
 	readonly newRow?: boolean;
+	/**
+	 * A text input with an Alert Me... button beside it, which opens Add Alert with its value filled in: a Yahoo Finance
+	 * symbol for an alert on its quote, or a company's CIK for an alert on its SEC filings.
+	 */
+	readonly alertMe?: 'quote' | 'filings';
 }
 
 /** The declarative content of a panel built on the shared scaffold (generated from its TOML). */

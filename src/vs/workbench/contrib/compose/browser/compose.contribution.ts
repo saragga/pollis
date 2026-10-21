@@ -29,6 +29,7 @@ import { EXPORT_NOTEBOOK_LATEX_COMMAND_ID, MAKE_NOTEBOOK_SLIDES_COMMAND_ID, POLI
 import './practice.js';
 import { IMPLEMENTED_COLLABORATION_COMMANDS } from './collaboration/collaboration.contribution.js';
 import { PUBLISHED_BENCHMARKS_COMMAND_ID, SEARCH_WORKFLOW_LIBRARY_COMMAND_ID } from './workflowLibrary.js';
+import { SHOW_EVENT_STUDIES_COMMAND_ID } from '../../monitor/browser/eventStudiesPage.js';
 
 // The Mathematical Core, Financial Econometrics and Economics Toolboxes come from their extensions (toolboxes/pollis-toolbox-*, not built in:
 // installed from the Toolboxes section of the Extensions pane), see toolboxExtensions.ts
@@ -281,6 +282,13 @@ MenuRegistry.appendMenuItem(WorkflowsMenu, {
 	order: 3,
 });
 registerNotYetImplemented(COMBINE_WORKFLOWS_COMMAND_ID, localize('workflows.combine', "Combine Workflows..."));
+
+// Event studies of the filings an alert on SEC filings fires, with the minute prices around each (eventStudiesPage.ts)
+MenuRegistry.appendMenuItem(WorkflowsMenu, {
+	group: '2_eventStudies',
+	command: { id: SHOW_EVENT_STUDIES_COMMAND_ID, title: localize('workflows.eventStudies', "Event Studies...") },
+	order: 1,
+});
 
 MenuRegistry.appendMenuItem(WorkflowsMenu, {
 	group: '2_operational',
