@@ -9,6 +9,7 @@
 // and abnormal volume, and writes them to results/. The page draws the same CAARs as the prices come in.
 
 const PACKAGE_URL = 'https://github.com/Trumpingtons/PollisEventStudies.jl';
+const REGISTRY_URL = 'https://github.com/Trumpingtons/PollisRegistry';
 
 /** The notebook of the event study in `folder` (its path on disk), as the JSON of a Jupyter notebook in Julia. */
 export function eventStudyNotebook(folder: string): string {
@@ -26,7 +27,11 @@ The filings an alert on SEC filings fired are the events. Pollis captures the mi
 `),
 		code(String.raw`
 import Pkg
-Base.find_package("PollisEventStudies") === nothing && Pkg.add(url = "${PACKAGE_URL}")
+# From the Pollis registry, added when it is not there
+if Base.find_package("PollisEventStudies") === nothing
+	any(registry -> registry.name == "PollisRegistry", Pkg.Registry.reachable_registries()) || Pkg.Registry.add(url = "${REGISTRY_URL}")
+	Pkg.add("PollisEventStudies")
+end
 using PollisEventStudies
 
 const STUDY = isfile(joinpath(pwd(), "study.toml")) ? pwd() : raw"${folder}"
