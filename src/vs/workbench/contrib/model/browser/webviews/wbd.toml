@@ -173,18 +173,36 @@ s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor"
 return s;
 '''
 
+[[inputs]]
+id = "indicator"
+label = "Indicator"
+tooltip = "A World Development Indicators code, such as NY.GDP.PCAP.KD (GDP per capita) or SP.DYN.LE00.IN (life expectancy). Alert Me... opens Add Alert with it and the country: Pollis tells you when a new value is published."
+default = "NY.GDP.PCAP.KD"
+models = ["indicator"]
+alertMe = "worldBank"
+alertValue = "{{country}}/{{indicator}}"
+
+[[inputs]]
+id = "country"
+label = "Country"
+tooltip = "An ISO2 or ISO3 country code, such as PT or PRT, or an aggregate, such as WLD (the world) or EUU (the European Union)."
+default = "PT"
+models = ["indicator"]
+
+
 [[codeBranches]]
 model = "indicator"
 code = """
 using WorldBankData, Tables
 
-# GDP per capita, constant 2015 US dollars, for Portugal; no API key is needed
-tbl = wdi("NY.GDP.PCAP.KD", "PT", 2000, 2024)
+# The indicator and country above: GDP per capita, constant 2015 US dollars, for Portugal, by default;
+# no API key is needed
+tbl = wdi("{{indicator}}", "{{country}}", 2000, 2024)
 
 # One column per indicator: the dots in the code become underscores
-years = Tables.getcolumn(tbl, :year)
-gdppc = Tables.getcolumn(tbl, :NY_GDP_PCAP_KD)
-foreach((y, v) -> println(Int(y), "  ", round(v; digits = 0)), last(years, 10), last(gdppc, 10))
+years  = Tables.getcolumn(tbl, :year)
+values = Tables.getcolumn(tbl, Symbol(replace("{{indicator}}", "." => "_")))
+foreach((y, v) -> println(Int(y), "  ", round(v; digits = 2)), last(years, 10), last(values, 10))
 """
 
 [[codeBranches]]

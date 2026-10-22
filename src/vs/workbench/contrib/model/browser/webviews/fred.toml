@@ -198,6 +198,47 @@ s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor"
 return s;
 '''
 
+[[inputs]]
+id = "growthSeries"
+label = "Series"
+tooltip = "A FRED series ID, such as GDPC1 (real GDP) or INDPRO (industrial production). Alert Me... opens Add Alert with it: Pollis tells you when a new value is published."
+default = "GDPC1"
+models = ["growth"]
+alertMe = "fred"
+
+[[inputs]]
+id = "inflationSeries"
+label = "Series"
+tooltip = "A FRED series ID, such as CPIAUCSL (the CPI) or PCEPILFE (core PCE prices). Alert Me... opens Add Alert with it: Pollis tells you when a new value is published."
+default = "CPIAUCSL"
+models = ["inflation"]
+alertMe = "fred"
+
+[[inputs]]
+id = "laborSeries"
+label = "Series"
+tooltip = "A FRED series ID, such as UNRATE (the unemployment rate) or PAYEMS (nonfarm payrolls). Alert Me... opens Add Alert with it: Pollis tells you when a new value is published."
+default = "UNRATE"
+models = ["labor"]
+alertMe = "fred"
+
+[[inputs]]
+id = "ratesSeries"
+label = "Series"
+tooltip = "A FRED series ID, such as FEDFUNDS (the federal funds rate) or T10Y2Y (the 10-year minus 2-year spread). Alert Me... opens Add Alert with it: Pollis tells you when a new value is published."
+default = "FEDFUNDS"
+models = ["rates"]
+alertMe = "fred"
+
+[[inputs]]
+id = "moneySeries"
+label = "Series"
+tooltip = "A FRED series ID, such as M2SL (the M2 money stock) or DEXUSEU (dollars per euro). Alert Me... opens Add Alert with it: Pollis tells you when a new value is published."
+default = "M2SL"
+models = ["money"]
+alertMe = "fred"
+
+
 [[codeBranches]]
 model = "growth"
 code = """
@@ -207,9 +248,10 @@ using FredData
 # Use the "Set API key" link above the page to store yours securely.
 f = Fred()
 
-# Real Gross Domestic Product (GDPC1), quarterly, chained 2017 dollars
-gdp = get_data(f, "GDPC1")
-println(gdp.data)
+# The series above: real GDP (GDPC1), quarterly, chained 2017 dollars, by default
+series = get_data(f, "{{growthSeries}}")
+println(series.title, ": ", series.units)
+println(series.data)
 
 # Industrial Production index (INDPRO), monthly
 indpro = get_data(f, "INDPRO")
@@ -223,9 +265,9 @@ using FredData
 
 f = Fred()
 
-# Consumer Price Index, all items (CPIAUCSL), as a year-over-year percent change
-cpi = get_data(f, "CPIAUCSL"; units="pc1")
-println(cpi.data)
+# The series above as a year-over-year percent change: the CPI, all items (CPIAUCSL), by default
+series = get_data(f, "{{inflationSeries}}"; units="pc1")
+println(series.data)
 
 # Core PCE price index (PCEPILFE), the Fed's preferred inflation gauge
 core_pce = get_data(f, "PCEPILFE"; units="pc1")
@@ -239,9 +281,9 @@ using FredData
 
 f = Fred()
 
-# Civilian unemployment rate (UNRATE), monthly, percent
-unrate = get_data(f, "UNRATE")
-println(unrate.data)
+# The series above: the civilian unemployment rate (UNRATE), monthly, percent, by default
+series = get_data(f, "{{laborSeries}}")
+println(series.data)
 
 # Total nonfarm payroll employment (PAYEMS), monthly change in thousands
 payrolls = get_data(f, "PAYEMS"; units="chg")
@@ -255,9 +297,9 @@ using FredData
 
 f = Fred()
 
-# Effective federal funds rate (FEDFUNDS), monthly
-funds = get_data(f, "FEDFUNDS")
-println(funds.data)
+# The series above: the effective federal funds rate (FEDFUNDS), monthly, by default
+series = get_data(f, "{{ratesSeries}}")
+println(series.data)
 
 # 10-year minus 2-year treasury spread (T10Y2Y): the classic yield-curve gauge
 spread = get_data(f, "T10Y2Y")
@@ -271,9 +313,9 @@ using FredData
 
 f = Fred()
 
-# M2 money stock (M2SL), monthly, billions of dollars
-m2 = get_data(f, "M2SL")
-println(m2.data)
+# The series above: the M2 money stock (M2SL), monthly, billions of dollars, by default
+series = get_data(f, "{{moneySeries}}")
+println(series.data)
 
 # U.S. / Euro foreign-exchange rate (DEXUSEU), daily
 fx = get_data(f, "DEXUSEU")

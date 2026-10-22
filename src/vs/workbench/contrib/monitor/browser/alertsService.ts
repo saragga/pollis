@@ -24,14 +24,17 @@ import { ISecretStorageService } from '../../../../platform/secrets/common/secre
 import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
 import { IPathService } from '../../../services/path/common/pathService.js';
 import { CREDENTIALS } from '../../model/browser/common/credentials.js';
+import { EconomicSource, fetchEconomicSeries, IEconomicSeries, seriesPage } from './economicSeries.js';
 import { OPEN_LINK_COMMAND_ID } from './openLink.js';
 
 /**
  * What an alert watches for: the value above or below the threshold (once, until it is back on the other side), the
  * value crossing it from one check to the next, the value moving by more than the threshold, in per cent, since
- * the previous close, or a filer publishing a new filing at the SEC's EDGAR.
+ * the previous close, or a filer publishing a new filing at the SEC's EDGAR. An economic series fires when it publishes
+ * a new value (newValue), or on its new value only: above or below the threshold, crossing it from the value before,
+ * or changing from the value before by more than the threshold (changesBy).
  */
-export type AlertCondition = 'above' | 'below' | 'crossesAbove' | 'crossesBelow' | 'movesBy' | 'newFiling';
+export type AlertCondition = 'above' | 'below' | 'crossesAbove' | 'crossesBelow' | 'movesBy' | 'newFiling' | 'newValue' | 'changesBy';
 
 export type AlertSeverity = 'info' | 'warning' | 'error';
 
@@ -40,9 +43,12 @@ export interface IAlert {
 	readonly id: string;
 	/**
 	 * A Yahoo Finance symbol: ^GSPC, AAPL, BZ=F, EURUSD=X; for newFiling, the filer's CIK at the SEC: 320193, or, on
-	 * several companies, their CIKs separated by commas, or, on an industry, SIC and its code: SIC 2834.
+	 * several companies, their CIKs separated by commas, or, on an industry, SIC and its code: SIC 2834; for an
+	 * economic series, the series as its source writes it: CPIAUCSL, EXR/D.USD.EUR.SP00.A, IMF.STA,CPI/USA.CPI._T.YOY_PCH_PA_PT.M, PRT/NY.GDP.PCAP.KD.
 	 */
 	readonly symbol: string;
+	/** For an economic series: where it is published; absent for a Yahoo Finance symbol or the SEC. */
+	readonly source?: EconomicSource;
 	/** The name Yahoo Finance, or the SEC, gives the symbol, when the alert was added. */
 	readonly name?: string;
 	readonly condition: AlertCondition;
@@ -69,7 +75,7 @@ export interface IAlert {
 	/** Whether the alert fires again once the value is back on the other side, else it is paused once it fires. */
 	readonly repeat: boolean;
 	readonly paused?: boolean;
-	/** How often the value is looked up, in minutes; when not given, 1, or 15 for newFiling. */
+	/** How often the value is looked up, in minutes; when not given, 1, or 15 for newFiling, or 60 for an economic series. */
 	readonly minutes?: number;
 }
 
@@ -91,6 +97,9 @@ export interface IFiredAlert {
 	readonly change?: number;
 	/** For newFiling: the new filing. */
 	readonly filing?: IFiling;
+	/** For an economic series: where it is published, and the period of the new value. */
+	readonly source?: EconomicSource;
+	readonly period?: string;
 	/** When it fired, in milliseconds since 1970. */
 	readonly time: number;
 }
@@ -159,6 +168,10 @@ export interface IAlertState {
 	readonly since?: number;
 	/** For newFiling with a phrase: the accessions the last search found, which do not fire again. */
 	readonly seen?: readonly string[];
+	/** For an economic series: the period of its latest value, after which a value is new. */
+	readonly period?: string;
+	/** For a FRED series: set when it could not be looked up for want of the user's FRED key. */
+	readonly noKey?: boolean;
 }
 
 /** A Yahoo Finance quote: the latest price of the regular session, and the previous close. */
@@ -275,6 +288,13 @@ export interface IAlertsService {
 	 * there is no SEC contact.
 	 */
 	searchFilings(alert: Pick<IAlert, 'symbol' | 'phrase' | 'forms' | 'items' | 'ciks' | 'sic' | 'everyone'>, days: number): Promise<{ readonly filings: readonly ISearchedFiling[]; readonly more: boolean } | undefined>;
+	/**
+	 * The economic series `id` of `source` with its latest `count` observations; undefined when the source does not
+	 * know it or cannot be reached, and 'noKey' for FRED without the user's FRED key.
+	 */
+	getSeries(source: EconomicSource, id: string, count: number): Promise<IEconomicSeries | 'noKey' | undefined>;
+	/** Keeps the user's FRED key in the keychain, the FRED panel's too. */
+	setFredKey(key: string): Promise<void>;
 	readonly alertsFile: URI;
 }
 
@@ -308,12 +328,19 @@ export function describeFiredAlert(fired: IFiredAlert): string {
 	const name = fired.name || fired.symbol;
 	const value = formatValue(fired.value, fired.currency);
 	const threshold = formatValue(fired.threshold);
+	if (fired.period !== undefined) {
+		return fired.condition === 'newValue'
+			? localize('alerts.firedNewValue', "New value of {0} for {1}: {2}", name, fired.period, value)
+			: localize('alerts.firedNewValueCondition', "New value of {0} for {1}: {2}, {3}", name, fired.period, value, describeCondition(fired));
+	}
 	switch (fired.condition) {
 		case 'above': return localize('alerts.firedAbove', "{0} is above {1}: {2}", name, threshold, value);
 		case 'below': return localize('alerts.firedBelow', "{0} is below {1}: {2}", name, threshold, value);
 		case 'crossesAbove': return localize('alerts.firedCrossesAbove', "{0} crossed above {1}: {2}", name, threshold, value);
 		case 'crossesBelow': return localize('alerts.firedCrossesBelow', "{0} crossed below {1}: {2}", name, threshold, value);
 		case 'movesBy': return localize('alerts.firedMovesBy', "{0} moved {1}% since the previous close: {2}", name, formatChange(fired.change ?? 0), value);
+		case 'newValue': return localize('alerts.firedNewValueOnly', "New value of {0}: {1}", name, value);
+		case 'changesBy': return localize('alerts.firedChangesBy', "{0} changed by {1} from the value before: {2}", name, formatChange(fired.change ?? 0), value);
 		case 'newFiling': {
 			const items = describeItems(fired.filing?.items);
 			return items
@@ -332,6 +359,8 @@ export function describeCondition(alert: Pick<IAlert, 'condition' | 'threshold' 
 		case 'crossesAbove': return localize('alerts.conditionCrossesAbove', "crosses above {0}", threshold);
 		case 'crossesBelow': return localize('alerts.conditionCrossesBelow', "crosses below {0}", threshold);
 		case 'movesBy': return localize('alerts.conditionMovesBy', "moves by {0}% since the previous close", threshold);
+		case 'newValue': return localize('alerts.conditionNewValue', "publishes a new value");
+		case 'changesBy': return localize('alerts.conditionChangesBy', "changes by {0} or more from the value before", threshold);
 		case 'newFiling': {
 			const forms = alert.forms?.length ? alert.forms.join(' / ') : undefined;
 			const items = alert.items?.length ? alert.items.join(' / ') : undefined;
@@ -759,6 +788,15 @@ export class AlertsService extends Disposable implements IAlertsService {
 		return { times, values, previousClose: result.meta?.chartPreviousClose ?? result.meta?.previousClose };
 	}
 
+	async getSeries(source: EconomicSource, id: string, count: number): Promise<IEconomicSeries | 'noKey' | undefined> {
+		const fredKey = source === 'fred' ? await this.secretStorageService.get(CREDENTIALS.fred.secretKey) : undefined;
+		return fetchEconomicSeries(options => this.request(options), source, id, count, fredKey);
+	}
+
+	async setFredKey(key: string): Promise<void> {
+		await this.secretStorageService.set(CREDENTIALS.fred.secretKey, key);
+	}
+
 	async getMinuteBars(symbol: string, start: number, end: number, minutes: 1 | 5 = 1): Promise<IMinuteBars | undefined> {
 		const bars = new Map<number, IMinuteBar>();
 		const sessions = new Map<number, number>();
@@ -1108,8 +1146,8 @@ export class AlertsService extends Disposable implements IAlertsService {
 		try {
 			const now = Date.now();
 			const states = this.readStorage<Record<string, IAlertState>>(STATE_KEY, {});
-			const due = this.alerts.filter(alert => !alert.paused && now - (states[alert.id]?.checked ?? 0) >= (alert.minutes ?? (alert.condition === 'newFiling' ? 15 : 1)) * 60_000 - 5_000
-				&& (alert.condition === 'newFiling' || now >= (this.quietUntil.get(alert.symbol) ?? 0)));
+			const due = this.alerts.filter(alert => !alert.paused && now - (states[alert.id]?.checked ?? 0) >= (alert.minutes ?? (alert.source ? 60 : alert.condition === 'newFiling' ? 15 : 1)) * 60_000 - 5_000
+				&& (alert.condition === 'newFiling' || alert.source || now >= (this.quietUntil.get(alert.symbol) ?? 0)));
 			const filingsDue = due.filter(alert => alert.condition === 'newFiling');
 			const contact = filingsDue.length ? await this.getSecContact() : undefined;
 			const filers = new Map<string, IFiler | undefined>();
@@ -1143,7 +1181,14 @@ export class AlertsService extends Disposable implements IAlertsService {
 			}
 			const since = feedDue.map(alert => states[alert.id]?.since).filter((time): time is number => time !== undefined);
 			const latest = contact && feedDue.length ? await this.getLatestFilings(contact, since.length ? Math.min(...since) : undefined) : undefined;
-			const symbols = [...new Set(due.filter(alert => alert.condition !== 'newFiling').map(alert => alert.symbol))];
+			// Each economic series once, with the value before its latest
+			const series = new Map<string, IEconomicSeries | 'noKey' | undefined>();
+			for (const { source, symbol } of due) {
+				if (source && !series.has(`${source}:${symbol}`)) {
+					series.set(`${source}:${symbol}`, await this.getSeries(source, symbol, 2));
+				}
+			}
+			const symbols = [...new Set(due.filter(alert => alert.condition !== 'newFiling' && !alert.source).map(alert => alert.symbol))];
 			const quotes = new Map<string, IQuote | undefined>();
 			for (const symbol of symbols) {
 				const quote = await this.getQuote(symbol);
@@ -1228,6 +1273,28 @@ export class AlertsService extends Disposable implements IAlertsService {
 						states[alert.id] = { checked: now, armed: true, filing: newest && { form: newest.form, filed: newest.filed, accession: newest.accession } };
 						continue;
 					}
+					if (alert.source) {
+						const found = series.get(`${alert.source}:${alert.symbol}`);
+						const latest = typeof found === 'object' ? found.observations[found.observations.length - 1] : undefined;
+						if (typeof found !== 'object' || !latest) {
+							states[alert.id] = { ...previous, armed: true, checked: now, error: true, noKey: found === 'noKey' || undefined };
+							continue;
+						}
+						// A value is new when its period comes after the latest one before; none is on the first look-up, and a revised value is not
+						if (previous?.period !== undefined && latest.period > previous.period) {
+							const before = found.observations.length > 1 ? found.observations[found.observations.length - 2].value : previous.value;
+							const fires = this.evaluateNew(alert, latest.value, before);
+							if (fires) {
+								const change = before !== undefined ? latest.value - before : undefined;
+								fired.push({ id: generateUuid(), alertId: alert.id, symbol: alert.symbol, name: alert.name || found.title, condition: alert.condition, threshold: alert.threshold, severity: alert.severity, value: latest.value, previousValue: before, change, source: alert.source, period: latest.period, time: now });
+								if (!alert.repeat) {
+									once.push(alert.id);
+								}
+							}
+						}
+						states[alert.id] = { value: latest.value, period: latest.period, checked: now, armed: true };
+						continue;
+					}
 					const quote = quotes.get(alert.symbol);
 					if (!quote) {
 						states[alert.id] = { ...previous, armed: previous?.armed ?? true, checked: now, error: true };
@@ -1294,15 +1361,32 @@ export class AlertsService extends Disposable implements IAlertsService {
 				return { fires: beyond, beyond, change };
 			}
 			case 'newFiling':
+			case 'newValue':
+			case 'changesBy':
 				return { fires: false, beyond: false };
+		}
+	}
+
+	/** Whether the new value `value` of an economic series meets the condition of `alert`, `before` being the value before it. */
+	private evaluateNew(alert: IAlert, value: number, before: number | undefined): boolean {
+		switch (alert.condition) {
+			case 'newValue': return true;
+			case 'above': return value > alert.threshold;
+			case 'below': return value < alert.threshold;
+			case 'crossesAbove': return before !== undefined && before <= alert.threshold && value > alert.threshold;
+			case 'crossesBelow': return before !== undefined && before >= alert.threshold && value < alert.threshold;
+			case 'changesBy': return before !== undefined && Math.abs(value - before) >= alert.threshold;
+			default: return false;
 		}
 	}
 
 	private notify(fired: IFiredAlert): void {
 		const severity = fired.severity === 'error' ? Severity.Error : fired.severity === 'warning' ? Severity.Warning : Severity.Info;
 		const filing = fired.filing;
+		const page = fired.source && seriesPage(fired.source, fired.symbol);
 		this.notificationService.prompt(severity, describeFiredAlert(fired), [
 			...(filing ? [{ label: localize('alerts.openFiling', "Open Filing"), run: () => { this.markRead([fired.id]); this.commandService.executeCommand(OPEN_LINK_COMMAND_ID, filing.url); } }] : []),
+			...(page ? [{ label: localize('alerts.openSeries', "Open Series"), run: () => { this.markRead([fired.id]); this.commandService.executeCommand(OPEN_LINK_COMMAND_ID, page); } }] : []),
 			{ label: localize('alerts.markRead', "Mark Read"), run: () => this.markRead([fired.id]) },
 			{ label: localize('alerts.pause', "Pause Alert"), run: () => { this.markRead([fired.id]); this.setPaused(fired.alertId, true); } },
 		], { sticky: true });

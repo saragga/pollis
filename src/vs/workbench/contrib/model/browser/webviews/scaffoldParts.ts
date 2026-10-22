@@ -120,9 +120,12 @@ function buildInputHtml(input: IModelInput): string {
 	// A symbol (or company) input with Alert Me... beside it, which opens Add Alert with its value
 	const alertTitle = input.alertMe === 'filings'
 		? 'Open Add Alert with this company: Pollis looks at its filings at the SEC while it is open, and tells you when a new one of the forms you choose is published'
-		: 'Open Add Alert with this symbol: Pollis looks up its quote while it is open, and warns when it crosses a level you set';
+		: input.alertMe === 'quote'
+		? 'Open Add Alert with this symbol: Pollis looks up its quote while it is open, and warns when it crosses a level you set'
+		: 'Open Add Alert with this series: Pollis looks it up every hour while it is open, and tells you when a new value is published';
+	const alertValue = input.alertValue ? ` data-value="${htmlEsc(input.alertValue)}"` : '';
 	const fieldWithAction = input.alertMe && !input.kind
-		? `<div class="input-with-action">${field}<button class="input-action-btn alert-me-btn" data-input="${input.id}" title="${alertTitle}">Alert Me...</button></div>`
+		? `<div class="input-with-action">${field}<button class="input-action-btn alert-me-btn" data-input="${input.id}" data-alert="${input.alertMe}"${alertValue} title="${alertTitle}">Alert Me...</button></div>`
 		: field;
 	return `\t\t\t<div class="form-group scaffold-input"${modelsAttr(input.models, input.when)}>
 				<label class="form-label form-label-with-tooltip" for="in-${input.id}">${htmlEsc(input.label)}${tooltip}

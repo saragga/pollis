@@ -17,6 +17,7 @@ import { IStorageService, StorageScope, StorageTarget } from '../../../../platfo
 import { IPathService } from '../../../services/path/common/pathService.js';
 import { parseToml, TomlValue } from '../../model/browser/common/tomlPanelData.js';
 import { describeSubject, IAlertsService, IFiler, IFiredAlert, IMinuteBar } from './alertsService.js';
+import { parseCsv, writeCsv } from './csv.js';
 import { eventStudyNotebook, fomcStudyNotebook } from './eventStudyNotebook.js';
 import { FIVE_MINUTE_KEPT_MILLISECONDS, FOMC_FEED, FOMC_RELEASES, FomcRelease, fomcRelease, instrumentScale, instrumentSymbol, instrumentUnit } from './fomcReleases.js';
 import { ICoverageItem, IMediaCoverageService } from './mediaCoverageService.js';
@@ -896,47 +897,6 @@ function writeStudy(study: IEventStudy): string {
 			`name = ${text(period.name)}`, `before = ${period.before}`, `after = ${period.after}`, `next_open = ${period.nextOpen}`);
 	}
 	return lines.join('\n') + '\n';
-}
-
-function parseCsv(content: string): string[][] {
-	const rows: string[][] = [];
-	let row: string[] = [];
-	let field = '';
-	let quoted = false;
-	for (let index = 0; index < content.length; index++) {
-		const char = content[index];
-		if (quoted) {
-			if (char === '"' && content[index + 1] === '"') {
-				field += '"';
-				index++;
-			} else if (char === '"') {
-				quoted = false;
-			} else {
-				field += char;
-			}
-		} else if (char === '"') {
-			quoted = true;
-		} else if (char === ',') {
-			row.push(field);
-			field = '';
-		} else if (char === '\n') {
-			row.push(field.replace(/\r$/, ''));
-			rows.push(row);
-			row = [];
-			field = '';
-		} else {
-			field += char;
-		}
-	}
-	if (field || row.length) {
-		row.push(field);
-		rows.push(row);
-	}
-	return rows;
-}
-
-function writeCsv(rows: readonly (readonly string[])[]): string {
-	return rows.map(row => row.map(field => /[",\n]/.test(field) ? `"${field.replace(/"/g, '""')}"` : field).join(',')).join('\n') + '\n';
 }
 
 registerSingleton(IEventStudiesService, EventStudiesService, InstantiationType.Delayed);

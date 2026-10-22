@@ -17,12 +17,14 @@ import { IEditorService } from '../../../services/editor/common/editorService.js
 import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
 import { AlertCondition, AlertSeverity, ChartRange, describeCondition, describeFiredAlert, describeItems, describeSubject, formatValue, FORM_8K_ITEMS, IAlert, IAlertsService, IFiredAlert } from './alertsService.js';
+import { ECONOMIC_SOURCES, EconomicSource, seriesExample, seriesPage, SERIES_PAGES, sourceName } from './economicSeries.js';
 import { IEventStudiesService, SHOW_EVENT_STUDIES_COMMAND_ID } from './eventStudiesService.js';
 import { OPEN_LINK_COMMAND_ID } from './openLink.js';
 
 // Explore > Alerts > Add Alert...: a page with a form to add an alert (the symbol, looked up at Yahoo Finance, the
 // condition, the value, how it shows and how often it fires), or an alert on SEC filings (the company, looked up at
-// the SEC's EDGAR with its recent filings, and the forms).
+// the SEC's EDGAR with its recent filings, and the forms), or an alert on an economic series (the series, looked up at
+// FRED, the ECB, the IMF or the World Bank with its latest values, and the condition on its new value).
 // Explore > Alerts > Alerts: a page with the alerts and their latest values, to pause, resume or remove, and the
 // alerts that fired, newest first.
 // A quote page: the latest value of a symbol, its day and year ranges, its chart with the user's alerts on it drawn
@@ -69,6 +71,9 @@ type AlertsMessage =
 	| { readonly command: 'lookUpIndustry'; readonly sic: string }
 	| { readonly command: 'searchFilings'; readonly scope: FilingsScope; readonly company: string; readonly phrase: string; readonly forms: readonly string[]; readonly items: readonly string[] }
 	| { readonly command: 'addFilings'; readonly scope: FilingsScope; readonly company: string; readonly phrase: string; readonly forms: readonly string[]; readonly items: readonly string[]; readonly severity: AlertSeverity; readonly repeat: boolean; readonly eventStudy: boolean }
+	| { readonly command: 'lookUpSeries'; readonly source: EconomicSource; readonly id: string }
+	| { readonly command: 'addSeries'; readonly source: EconomicSource; readonly id: string; readonly condition: AlertCondition; readonly threshold: number; readonly severity: AlertSeverity; readonly repeat: boolean }
+	| { readonly command: 'setFredKey' }
 	| { readonly command: 'setContact' }
 	| { readonly command: 'openUrl'; readonly url: string }
 	| { readonly command: 'pause'; readonly id: string; readonly paused: boolean }
@@ -87,10 +92,10 @@ type AlertsMessage =
 type PageKind = 'add' | 'alerts' | 'quote';
 
 /**
- * Where a page opens: the form, on quotes or on filings, with a symbol (or company) filled in or not; the top of the
- * alerts; the fired alerts; or the quote of a symbol, or of none yet.
+ * Where a page opens: the form, on quotes, on filings or on an economic series of a source, with a symbol (or company,
+ * or series) filled in or not; the top of the alerts; the fired alerts; or the quote of a symbol, or of none yet.
  */
-type PagePlace = { readonly section: 'add'; readonly symbol?: string; readonly filings?: boolean } | { readonly section: 'fired' } | { readonly section: 'alerts'; readonly alertId?: string } | { readonly section: 'quote'; readonly symbol?: string };
+type PagePlace = { readonly section: 'add'; readonly symbol?: string; readonly filings?: boolean; readonly economic?: EconomicSource } | { readonly section: 'fired' } | { readonly section: 'alerts'; readonly alertId?: string } | { readonly section: 'quote'; readonly symbol?: string };
 
 const openPages = new Map<PageKind, { readonly input: WebviewInput; readonly show: (place: PagePlace) => void }>();
 
@@ -173,6 +178,23 @@ function openAlertsPage(accessor: ServicesAccessor, place: PagePlace): void {
 									: state?.filing ? localize('alerts.latestFiling', "Latest filing: {0}, filed {1}; looked at {2}", state.filing.form, state.filing.filed, looked) : localize('alerts.notYet', "Not looked up yet"),
 					};
 				}
+				if (alert.source) {
+					// The latest value and its period, or what keeps it from being looked up
+					return {
+						id: alert.id,
+						symbol: alert.symbol,
+						name: alert.name || alert.symbol,
+						condition: describeCondition(alert),
+						severity: alert.severity,
+						repeat: alert.repeat,
+						paused: !!alert.paused,
+						economic: sourceName(alert.source),
+						url: seriesPage(alert.source, alert.symbol),
+						value: state?.error
+							? state.noKey ? localize('alerts.needsFredKey', "Needs your FRED key: set it on the Add Alert page, under Economic Data") : localize('alerts.notFound', "Could not be looked up")
+							: state?.value !== undefined && state.period !== undefined ? localize('alerts.seriesValue', "{0} for {1}; looked at {2}", formatValue(state.value), state.period, fromNow(state.checked ?? Date.now(), true)) : localize('alerts.notYet', "Not looked up yet"),
+					};
+				}
 				return {
 					id: alert.id,
 					symbol: alert.symbol,
@@ -199,6 +221,9 @@ function openAlertsPage(accessor: ServicesAccessor, place: PagePlace): void {
 				severity: fired.severity,
 				unread: !alertsService.isRead(fired.id),
 				filingUrl: fired.filing?.url,
+				// An economic series: its source, and its page there
+				economic: fired.source && sourceName(fired.source),
+				seriesUrl: fired.source && seriesPage(fired.source, fired.symbol),
 				// A filing's alert: the study of its filings, or one to start while the alert is there
 				study: fired.filing && studyOf(fired.alertId),
 				canStudy: !!fired.filing && alertsService.getAlerts().some(alert => alert.id === fired.alertId),
@@ -342,6 +367,33 @@ function openAlertsPage(accessor: ServicesAccessor, place: PagePlace): void {
 				webviewInput.webview.postMessage({ command: 'added', text: localize('alerts.addedFilings', "Pollis will alert you when {0} {1}. {2}", filer.name, condition, phrase ? howOften : localize('alerts.addedCompany', "It looks at the SEC's EDGAR every 15 minutes while Pollis is open.")) });
 				break;
 			}
+			case 'lookUpSeries': {
+				const series = ECONOMIC_SOURCES.includes(message.source) ? await alertsService.getSeries(message.source, message.id, SERIES_PREVIEW_COUNT) : undefined;
+				webviewInput.webview.postMessage({ command: 'series', source: message.source, id: message.id, noKey: series === 'noKey', series: typeof series === 'object' ? series : undefined });
+				break;
+			}
+			case 'addSeries': {
+				const series = ECONOMIC_SOURCES.includes(message.source) ? await alertsService.getSeries(message.source, message.id, 1) : undefined;
+				const threshold = message.condition === 'newValue' ? 0 : message.threshold;
+				if (typeof series !== 'object' || !Number.isFinite(threshold)) {
+					break;
+				}
+				await alertsService.addAlert({ symbol: series.id, source: message.source, name: series.title, condition: message.condition, threshold, severity: message.severity, repeat: message.repeat });
+				webviewInput.webview.postMessage({ command: 'added', text: localize('alerts.addedSeries', "Pollis will alert you when {0} {1}. It looks the series up at {2} every hour while Pollis is open.", series.title, message.condition === 'newValue' ? describeCondition(message) : localize('alerts.addedSeriesCondition', "has a new value {0}", describeCondition({ condition: message.condition, threshold })), sourceName(message.source)) });
+				break;
+			}
+			case 'setFredKey': {
+				const key = await quickInputService.input({
+					prompt: localize('alerts.fredKeyPrompt', "Your FRED API key, free from the St. Louis Fed. It is kept in your keychain; the FRED panel uses it too."),
+					password: true,
+					ignoreFocusLost: true,
+				});
+				if (key?.trim()) {
+					await alertsService.setFredKey(key.trim());
+					webviewInput.webview.postMessage({ command: 'contactSet' });
+				}
+				break;
+			}
 			case 'setContact': {
 				const contact = await quickInputService.input({
 					prompt: localize('alerts.contactPrompt', "SEC contact: your name and email (e.g. Jane Doe jane@example.com). The SEC asks for it with every request; the EDGAR panel uses it too."),
@@ -357,8 +409,8 @@ function openAlertsPage(accessor: ServicesAccessor, place: PagePlace): void {
 				break;
 			}
 			case 'openUrl':
-				// Only the SEC's pages: the filings and the filers at EDGAR
-				if (message.url.startsWith('https://www.sec.gov/')) {
+				// Only the SEC's pages, the filings and the filers at EDGAR, and the pages of the economic series
+				if (message.url.startsWith('https://www.sec.gov/') || SERIES_PAGES.some(page => message.url.startsWith(page))) {
 					await commandService.executeCommand(OPEN_LINK_COMMAND_ID, message.url);
 				}
 				break;
@@ -439,6 +491,8 @@ function openAlertsPage(accessor: ServicesAccessor, place: PagePlace): void {
 
 // How many days back Search on the Add Alert page looks, to show how often an alert with a phrase would fire
 const SEARCH_PREVIEW_DAYS = 30;
+// How many of an economic series' latest values Look Up charts
+const SERIES_PREVIEW_COUNT = 120;
 
 /** The forms typed on the Add Alert page, upper case, once each. */
 function cleanForms(forms: readonly string[]): string[] {
@@ -469,6 +523,23 @@ function pageHtml(kind: PageKind): string {
 		watch: localize('alerts.watch', "Alert On"),
 		sourceQuote: localize('alerts.sourceQuote', "A Quote"),
 		sourceFilings: localize('alerts.sourceFilings', "SEC Filings"),
+		sourceEconomic: localize('alerts.sourceEconomic', "Economic Data"),
+		addIntroEconomic: localize('alerts.addIntroEconomic', "Choose a series at FRED, the ECB, the IMF or the World Bank and when to be alerted. Pollis looks it up every hour while it is open, and tells you when it publishes a new value, or a new value that meets your condition."),
+		economicFrom: localize('alerts.economicFrom', "From"),
+		economicSources: Object.fromEntries(ECONOMIC_SOURCES.map(source => [source, sourceName(source)])),
+		series: localize('alerts.series', "Series"),
+		seriesHints: {
+			fred: localize('alerts.seriesHintFred', "A FRED series ID, such as {0}, UNRATE, GDPC1 or FEDFUNDS", seriesExample('fred')),
+			ecb: localize('alerts.seriesHintEcb', "A dataset and series key of the ECB Data Portal, such as {0}", seriesExample('ecb')),
+			imf: localize('alerts.seriesHintImf', "An IMF dataflow and series key, such as {0}", seriesExample('imf')),
+			worldBank: localize('alerts.seriesHintWorldBank', "A country and a World Bank indicator, such as {0}", seriesExample('worldBank')),
+		},
+		seriesUnknown: localize('alerts.seriesUnknown', "{0} does not know {1}, or could not be reached."),
+		seriesLatest: localize('alerts.seriesLatest', "Latest: {0} for {1}"),
+		noFredKey: localize('alerts.noFredKey', "FRED asks for a free API key, as on the FRED panel."),
+		setFredKey: localize('alerts.setFredKey', "Set FRED Key"),
+		openSeriesHint: localize('alerts.openSeriesHint', "Opens the series at its source"),
+		change: localize('alerts.change', "Change"),
 		company: localize('alerts.company', "Company"),
 		companyHint: localize('alerts.companyHint', "A ticker (AAPL) or the SEC's CIK (320193)"),
 		scope: localize('alerts.scope', "For"),
@@ -539,6 +610,16 @@ function pageHtml(kind: PageKind): string {
 			above: localize('alerts.above', "Is Above"),
 			below: localize('alerts.below', "Is Below"),
 			movesBy: localize('alerts.movesBy', "Moves By"),
+			newValue: localize('alerts.newValue', "Publishes a New Value"),
+			changesBy: localize('alerts.changesBy', "Changes By"),
+		},
+		economicHints: {
+			newValue: localize('alerts.newValueDescription', "When the source publishes a value for a new period."),
+			crossesAbove: localize('alerts.seriesCrossesAboveDescription', "When a new value is above it and the value before was not."),
+			crossesBelow: localize('alerts.seriesCrossesBelowDescription', "When a new value is below it and the value before was not."),
+			above: localize('alerts.seriesAboveDescription', "When a new value is above it."),
+			below: localize('alerts.seriesBelowDescription', "When a new value is below it."),
+			changesBy: localize('alerts.changesByDescription', "When a new value is up or down from the value before by the change or more."),
 		},
 		conditionHints: {
 			crossesAbove: localize('alerts.crossesAboveDescription', "When it goes from below the value to above it."),
@@ -629,6 +710,7 @@ function pageHtml(kind: PageKind): string {
 		.ranges { display: flex; gap: 4px; }
 		.ranges button { font: inherit; font-size: 11px; color: var(--vscode-foreground); background: none; border: 1px solid transparent; border-radius: 2px; padding: 1px 6px; cursor: pointer; }
 		.ranges button:hover { background: var(--vscode-toolbar-hoverBackground); }
+		input#symbol.series { width: 340px; }
 		.ranges button.chosen { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
 		#chart { display: block; width: 100%; height: 240px; }
 		#chart .series { fill: none; stroke: var(--vscode-textLink-foreground); stroke-width: 1.5; }
@@ -734,6 +816,11 @@ function pageHtml(kind: PageKind): string {
 			<span class="field">${text.watch}</span>
 			<label class="choice"><input type="radio" name="source" value="quote" checked>${text.sourceQuote}</label>
 			<label class="choice"><input type="radio" name="source" value="filings">${text.sourceFilings}</label>
+			<label class="choice"><input type="radio" name="source" value="economic">${text.sourceEconomic}</label>
+			<span class="scope" id="economicRow" hidden>
+				<span class="field">${text.economicFrom}</span>
+				${ECONOMIC_SOURCES.map((source, index) => `<label class="choice"><input type="radio" name="economic" value="${source}"${index === 0 ? ' checked' : ''}>${text.economicSources[source]}</label>`).join('')}
+			</span>
 			<span class="scope" id="scopeRow" hidden>
 				<span class="field">${text.scope}</span>
 				<label class="choice"><input type="radio" name="scope" value="company" checked>${text.scopes.company}</label>
@@ -750,6 +837,7 @@ function pageHtml(kind: PageKind): string {
 				<button class="action" id="lookUp">${text.lookUp}</button>
 				<span class="quote" id="quote"></span>
 				<button class="link" id="setContact" hidden>${text.setContact}</button>
+				<button class="link" id="setFredKey" hidden>${text.setFredKey}</button>
 			</div>
 			<div class="hint"><span id="symbolHint">${text.symbolHint}</span> <button class="link" id="sicCodes" title="${text.sicCodesHint}" hidden>${text.sicCodes}</button></div>
 			<div class="hint" id="feedNote" hidden>${text.feedNote}</div>
@@ -763,6 +851,8 @@ function pageHtml(kind: PageKind): string {
 				<option value="above">${text.conditions.above}</option>
 				<option value="below">${text.conditions.below}</option>
 				<option value="movesBy">${text.conditions.movesBy}</option>
+				<option value="newValue" hidden>${text.conditions.newValue}</option>
+				<option value="changesBy" hidden>${text.conditions.changesBy}</option>
 			</select>
 			<div class="hint" id="conditionHint"></div>
 		</div>
@@ -843,8 +933,11 @@ function pageHtml(kind: PageKind): string {
 	let quote;
 	let lookedUp = '';
 	let state = { alerts: [], fired: [] };
-	// Add Alert on a quote or on a company's SEC filings, and the company looked up last, with its recent filings
+	// Add Alert on a quote, on a company's SEC filings or on an economic series, and the company looked up last, with its recent filings
 	let source = 'quote';
+	// For an economic series: where it is published
+	let economicSource = 'fred';
+	const setFredKeyElement = document.getElementById('setFredKey');
 	let filer;
 	// For filings: on one company, several, or an industry; and the companies or the industry looked up last
 	let scope = 'company';
@@ -898,16 +991,21 @@ function pageHtml(kind: PageKind): string {
 		filer = undefined;
 		group = undefined;
 		setContactElement.hidden = true;
+		setFredKeyElement.hidden = true;
 		quoteElement.className = 'quote';
 		quoteElement.textContent = TEXT.lookingUp;
 		updateForm();
-		vscode.postMessage(!filings() ? { command: 'lookUp', symbol }
+		vscode.postMessage(economic() ? { command: 'lookUpSeries', source: economicSource, id: symbol }
+			: !filings() ? { command: 'lookUp', symbol }
 			: scope === 'companies' ? { command: 'lookUpCompanies', companies: symbol }
 				: scope === 'industry' ? { command: 'lookUpIndustry', sic: symbol }
 					: { command: 'lookUpFiler', company: symbol });
 	}
 	function filings() {
 		return source === 'filings';
+	}
+	function economic() {
+		return source === 'economic';
 	}
 	function chosenForms() {
 		return formsElement.value.split(',').map(form => form.trim().toUpperCase()).filter(form => form);
@@ -942,9 +1040,18 @@ function pageHtml(kind: PageKind): string {
 		quoteElement.className = 'quote';
 		quoteElement.textContent = '';
 		setContactElement.hidden = true;
+		setFredKeyElement.hidden = true;
 		addedElement.hidden = true;
-		document.getElementById('subtitle').textContent = filings() ? TEXT.addIntroFilings : TEXT.addIntro;
+		document.getElementById('subtitle').textContent = filings() ? TEXT.addIntroFilings : economic() ? TEXT.addIntroEconomic : TEXT.addIntro;
 		document.getElementById('scopeRow').hidden = !filings();
+		document.getElementById('economicRow').hidden = !economic();
+		document.getElementById('ranges').hidden = economic();
+		symbolElement.classList.toggle('series', economic());
+		// A quote moves by a percentage since the previous close; a series publishes new values, which change from the one before
+		for (const option of conditionElement.options) {
+			option.hidden = economic() ? option.value === 'movesBy' : option.value === 'newValue' || option.value === 'changesBy';
+		}
+		conditionElement.value = economic() ? 'newValue' : 'crossesAbove';
 		setScope('company');
 		const conditionLabel = document.getElementById('conditionLabel');
 		conditionLabel.textContent = '2. ' + (filings() ? TEXT.forms : TEXT.condition);
@@ -971,8 +1078,8 @@ function pageHtml(kind: PageKind): string {
 		quoteElement.textContent = '';
 		setContactElement.hidden = true;
 		addedElement.hidden = true;
-		const label = !filings() ? TEXT.symbol : scope === 'companies' ? TEXT.companies : scope === 'industry' ? TEXT.industry : TEXT.company;
-		const hint = !filings() ? TEXT.symbolHint : scope === 'companies' ? TEXT.companiesHint : scope === 'industry' ? TEXT.industryHint : TEXT.companyHint;
+		const label = economic() ? TEXT.series : !filings() ? TEXT.symbol : scope === 'companies' ? TEXT.companies : scope === 'industry' ? TEXT.industry : TEXT.company;
+		const hint = economic() ? TEXT.seriesHints[economicSource] : !filings() ? TEXT.symbolHint : scope === 'companies' ? TEXT.companiesHint : scope === 'industry' ? TEXT.industryHint : TEXT.companyHint;
 		document.getElementById('symbolLabel').textContent = '1. ' + label;
 		document.getElementById('symbolHint').textContent = hint;
 		document.getElementById('sicCodes').hidden = !filings() || scope !== 'industry';
@@ -1050,10 +1157,11 @@ function pageHtml(kind: PageKind): string {
 	function percent() {
 		return conditionElement.value === 'movesBy';
 	}
-	// The value starts at the current price, or at 2 per cent for Moves By
+	// The value starts at the current price, or at 2 per cent for Moves By, or at the latest change for Changes By
 	function fillThreshold() {
-		thresholdElement.value = percent() ? '2' : quote ? String(quote.value) : '';
-		thresholdElement.min = percent() ? '0' : '';
+		const changesBy = conditionElement.value === 'changesBy';
+		thresholdElement.value = percent() ? '2' : changesBy ? String(quote && quote.lastChange ? Number(Math.abs(quote.lastChange).toPrecision(2)) : 1) : quote ? String(quote.value) : '';
+		thresholdElement.min = percent() || changesBy ? '0' : '';
 	}
 	// The chart of the symbol looked up, with the previous close and the alert's value drawn across it
 	const SVG = 'http://www.w3.org/2000/svg';
@@ -1102,6 +1210,13 @@ function pageHtml(kind: PageKind): string {
 		if (!Number.isFinite(threshold)) {
 			return [];
 		}
+		if (condition === 'newValue') {
+			return [];
+		}
+		// A series' next value fires when it is the change away from the latest
+		if (condition === 'changesBy') {
+			return quote && threshold > 0 ? [{ value: quote.value + threshold, label: '+' + formatNumber(threshold), severity }, { value: quote.value - threshold, label: '\u2212' + formatNumber(threshold), severity }] : [];
+		}
 		if (condition !== 'movesBy') {
 			return [{ value: threshold, label: formatNumber(threshold), severity }];
 		}
@@ -1116,7 +1231,7 @@ function pageHtml(kind: PageKind): string {
 				return [];
 			}
 			const chosenId = expanded && (expanded.alertId || expanded.id);
-			const alerts = state.alerts.filter(alert => !alert.filings && alert.symbol === quote.symbol && (!alert.paused || alert.id === chosenId));
+			const alerts = state.alerts.filter(alert => !alert.filings && !alert.economic && alert.symbol === quote.symbol && (!alert.paused || alert.id === chosenId));
 			const lines = alerts.flatMap(alert => linesOf(alert.conditionKind, alert.threshold, alert.severity).map(line => ({ ...line, chosen: alert.id === chosenId })));
 			// A fired alert whose alert was removed since
 			if (expanded && expanded.fired && !alerts.some(alert => alert.id === expanded.alertId)) {
@@ -1157,7 +1272,6 @@ function pageHtml(kind: PageKind): string {
 		const pad = (max - min) * 0.06 || Math.abs(max) * 0.01 || 1;
 		min -= pad;
 		max += pad;
-		const first = chart.times[0], last = chart.times[chart.times.length - 1];
 		// The x of a value by its position, so that nights and weekends take no room
 		const x = index => left + (width - left - right) * index / (chart.values.length - 1);
 		const y = value => top + (height - top - bottom) * (max - value) / (max - min);
@@ -1165,8 +1279,10 @@ function pageHtml(kind: PageKind): string {
 			chartElement.appendChild(svg('line', { class: 'grid', x1: left, x2: width - right, y1: y(value), y2: y(value) }));
 			chartElement.appendChild(svg('text', { x: left - 6, y: y(value) + 3, 'text-anchor': 'end' }, formatNumber(value)));
 		}
-		chartElement.appendChild(svg('text', { x: left, y: height - 4 }, formatTime(first)));
-		chartElement.appendChild(svg('text', { x: width - right, y: height - 4, 'text-anchor': 'end' }, formatTime(last)));
+		// A series has its periods for times
+		const timeLabel = index => chart.labels ? chart.labels[index] : formatTime(chart.times[index]);
+		chartElement.appendChild(svg('text', { x: left, y: height - 4 }, timeLabel(0)));
+		chartElement.appendChild(svg('text', { x: width - right, y: height - 4, 'text-anchor': 'end' }, timeLabel(chart.values.length - 1)));
 		const points = chart.values.map((value, index) => x(index).toFixed(1) + ',' + y(value).toFixed(1));
 		chartElement.appendChild(svg('path', { class: 'area', d: 'M' + x(0) + ',' + y(min) + ' L' + points.join(' L') + ' L' + x(chart.values.length - 1) + ',' + y(min) + ' Z' }));
 		chartElement.appendChild(svg('polyline', { class: 'series', points: points.join(' ') }));
@@ -1191,7 +1307,7 @@ function pageHtml(kind: PageKind): string {
 		}
 		const cursor = svg('line', { class: 'cursor', y1: top, y2: height - bottom, visibility: 'hidden' });
 		chartElement.appendChild(cursor);
-		const caption = index => formatTime(chart.times[index]) + ': ' + formatNumber(chart.values[index]);
+		const caption = index => timeLabel(index) + ': ' + formatNumber(chart.values[index]);
 		chartCaption.textContent = caption(lastIndex);
 		chartElement.onmousemove = event => {
 			const box = chartElement.getBoundingClientRect();
@@ -1218,10 +1334,15 @@ function pageHtml(kind: PageKind): string {
 			document.getElementById('search').disabled = !phrase() || (scope !== 'everyone' && !who());
 			return;
 		}
-		document.getElementById('conditionHint').textContent = TEXT.conditionHints[conditionElement.value];
-		document.getElementById('thresholdLabel').textContent = '3. ' + (percent() ? TEXT.percent : TEXT.value);
+		// Publishes a New Value has no value to choose
+		const newValue = economic() && conditionElement.value === 'newValue';
+		const changesBy = economic() && conditionElement.value === 'changesBy';
+		document.getElementById('conditionHint').textContent = (economic() ? TEXT.economicHints : TEXT.conditionHints)[conditionElement.value];
+		document.getElementById('thresholdLabel').textContent = '3. ' + (percent() ? TEXT.percent : changesBy ? TEXT.change : TEXT.value);
+		document.getElementById('thresholdLabel').hidden = newValue;
+		document.getElementById('thresholdCell').hidden = newValue;
 		const threshold = Number(thresholdElement.value);
-		addElement.disabled = !quote || thresholdElement.value.trim() === '' || !Number.isFinite(threshold) || (percent() && threshold <= 0);
+		addElement.disabled = !quote || (!newValue && (thresholdElement.value.trim() === '' || !Number.isFinite(threshold) || ((percent() || changesBy) && threshold <= 0)));
 	}
 
 	symbolElement.addEventListener('keydown', event => {
@@ -1248,6 +1369,15 @@ function pageHtml(kind: PageKind): string {
 	for (const radio of document.querySelectorAll('input[name="scope"]')) {
 		radio.addEventListener('change', () => setScope(radio.value));
 	}
+	for (const radio of document.querySelectorAll('input[name="economic"]')) {
+		radio.addEventListener('change', () => setEconomicSource(radio.value));
+	}
+	// The source of an economic series: the hint of the field, and the look-up cleared
+	function setEconomicSource(value) {
+		economicSource = value;
+		document.querySelector('input[name="economic"][value="' + value + '"]').checked = true;
+		setScope('company');
+	}
 	document.getElementById('sicCodes').addEventListener('click', () => vscode.postMessage({ command: 'openUrl', url: 'https://www.sec.gov/search-filings/standard-industrial-classification-sic-code-list' }));
 	// A change to what is searched for clears what Search found
 	function clearSearched() {
@@ -1266,6 +1396,7 @@ function pageHtml(kind: PageKind): string {
 	});
 	document.getElementById('search').addEventListener('click', search);
 	setContactElement.addEventListener('click', () => vscode.postMessage({ command: 'setContact' }));
+	setFredKeyElement.addEventListener('click', () => vscode.postMessage({ command: 'setFredKey' }));
 	conditionElement.addEventListener('change', () => { fillThreshold(); updateForm(); });
 	thresholdElement.addEventListener('input', updateForm);
 	for (const radio of document.querySelectorAll('input[name="severity"]')) {
@@ -1286,6 +1417,19 @@ function pageHtml(kind: PageKind): string {
 				severity: document.querySelector('input[name="severity"]:checked').value,
 				repeat: document.querySelector('input[name="repeat"]:checked').value === 'true',
 				eventStudy: document.getElementById('eventStudy').checked,
+			});
+			addElement.disabled = true;
+			return;
+		}
+		if (economic()) {
+			vscode.postMessage({
+				command: 'addSeries',
+				source: economicSource,
+				id: quote.symbol,
+				condition: conditionElement.value,
+				threshold: Number(thresholdElement.value),
+				severity: document.querySelector('input[name="severity"]:checked').value,
+				repeat: document.querySelector('input[name="repeat"]:checked').value === 'true',
 			});
 			addElement.disabled = true;
 			return;
@@ -1412,10 +1556,10 @@ function pageHtml(kind: PageKind): string {
 			textElement.appendChild(element('div', 'meta', alert.value + ' \\u00b7 ' + (alert.repeat ? TEXT.everyTime : TEXT.once) + (alert.paused ? ' \\u00b7 ' + TEXT.paused : '')));
 			row.appendChild(textElement);
 			const actions = element('div', 'actions');
-			// A quote opens under the alert; filings, at the SEC
-			const open = element('button', 'link', alert.filings ? TEXT.edgar : alert.symbol);
-			open.title = alert.filings ? TEXT.openEdgarHint : TEXT.openQuote;
-			open.addEventListener('click', () => alert.filings ? vscode.postMessage({ command: 'openUrl', url: alert.url }) : toggle({ id: alert.id, symbol: alert.symbol }));
+			// A quote opens under the alert; filings, at the SEC; a series, at its source
+			const open = element('button', 'link', alert.filings ? TEXT.edgar : alert.economic || alert.symbol);
+			open.title = alert.filings ? TEXT.openEdgarHint : alert.economic ? TEXT.openSeriesHint : TEXT.openQuote;
+			open.addEventListener('click', () => alert.filings || alert.economic ? vscode.postMessage({ command: 'openUrl', url: alert.url }) : toggle({ id: alert.id, symbol: alert.symbol }));
 			const pause = element('button', 'link', alert.paused ? TEXT.resume : TEXT.pause);
 			pause.addEventListener('click', () => vscode.postMessage({ command: 'pause', id: alert.id, paused: !alert.paused }));
 			const remove = element('button', 'link', TEXT.remove);
@@ -1431,8 +1575,8 @@ function pageHtml(kind: PageKind): string {
 				auto.append(checkbox, TEXT.autoStudyRow);
 				actions.appendChild(auto);
 			}
-			// Several companies have no one page at the SEC
-			if (alert.filings && !alert.url) {
+			// Several companies have no one page at the SEC, and the IMF's series none to link to
+			if ((alert.filings || alert.economic) && !alert.url) {
 				open.hidden = true;
 			}
 			actions.append(open, pause, remove);
@@ -1453,14 +1597,15 @@ function pageHtml(kind: PageKind): string {
 			textElement.appendChild(element('div', 'meta', fired.when));
 			row.appendChild(textElement);
 			const actions = element('div', 'actions');
-			const open = element('button', 'link', fired.filingUrl ? TEXT.openFiling : fired.symbol);
-			open.title = fired.filingUrl ? fired.filingUrl : TEXT.openQuote;
+			const open = element('button', 'link', fired.filingUrl ? TEXT.openFiling : fired.economic || fired.symbol);
+			open.title = fired.filingUrl ? fired.filingUrl : fired.economic ? TEXT.openSeriesHint : TEXT.openQuote;
+			open.hidden = !!fired.economic && !fired.seriesUrl;
 			open.addEventListener('click', () => {
 				if (fired.unread) {
 					vscode.postMessage({ command: 'markRead', ids: [fired.id] });
 				}
-				if (fired.filingUrl) {
-					vscode.postMessage({ command: 'openUrl', url: fired.filingUrl });
+				if (fired.filingUrl || fired.economic) {
+					vscode.postMessage({ command: 'openUrl', url: fired.filingUrl || fired.seriesUrl });
 					return;
 				}
 				toggle({ id: fired.id, symbol: fired.symbol, alertId: fired.alertId, fired });
@@ -1499,7 +1644,7 @@ function pageHtml(kind: PageKind): string {
 			return;
 		}
 		openingAlert = undefined;
-		if (!alert.filings && (!expanded || expanded.id !== alert.id)) {
+		if (!alert.filings && !alert.economic && (!expanded || expanded.id !== alert.id)) {
 			toggle({ id: alert.id, symbol: alert.symbol });
 		}
 		document.querySelector('.entry[data-key="' + alert.id + '"]').scrollIntoView({ block: 'nearest' });
@@ -1540,6 +1685,31 @@ function pageHtml(kind: PageKind): string {
 			if (quote) {
 				requestChart();
 			}
+		} else if (message.command === 'series') {
+			if (message.id !== lookedUp || !economic() || message.source !== economicSource) {
+				return;
+			}
+			const series = message.series;
+			const observations = series ? series.observations : [];
+			const latest = observations[observations.length - 1];
+			// The series as a quote, its latest value and the change from the one before, and its values as the chart
+			quote = latest ? {
+				symbol: series.id,
+				name: series.title,
+				value: latest.value,
+				lastChange: observations.length > 1 ? latest.value - observations[observations.length - 2].value : undefined,
+			} : undefined;
+			quoteElement.className = quote ? 'quote' : 'quote error';
+			quoteElement.textContent = quote
+				? [format(TEXT.seriesLatest, formatNumber(latest.value), latest.period), series.frequency, series.units].filter(text => text).join(' \u00b7 ')
+				: message.noKey ? TEXT.noFredKey : format(TEXT.seriesUnknown, TEXT.economicSources[message.source], message.id);
+			setFredKeyElement.hidden = !message.noKey;
+			if (!quote) {
+				lookedUp = '';
+			}
+			chart = quote ? { times: observations.map((observation, index) => index), labels: observations.map(observation => observation.period), values: observations.map(observation => observation.value) } : undefined;
+			fillThreshold();
+			updateForm();
 		} else if (message.command === 'filer') {
 			if (message.company !== lookedUp || !filings()) {
 				return;
@@ -1585,6 +1755,9 @@ function pageHtml(kind: PageKind): string {
 			if (!quote || message.symbol !== quote.symbol || message.range !== chartRange) {
 				return;
 			}
+			if (economic()) {
+				return;
+			}
 			chart = message.chart || { times: [], values: [] };
 			drawChart();
 		} else if (message.command === 'added') {
@@ -1602,9 +1775,13 @@ function pageHtml(kind: PageKind): string {
 			updateForm();
 		} else if (message.command === 'show') {
 			if (message.section === 'add' || message.section === 'quote') {
-				// Asked for with a symbol, the form is the one of its kind: a quote, or a company's filings
-				if (KIND === 'add' && message.symbol && (message.filings ? 'filings' : 'quote') !== source) {
-					setSource(message.filings ? 'filings' : 'quote');
+				// Asked for with a symbol, the form is the one of its kind: a quote, a company's filings, or a series of a source
+				const kindOf = message.economic ? 'economic' : message.filings ? 'filings' : 'quote';
+				if (KIND === 'add' && message.symbol && kindOf !== source) {
+					setSource(kindOf);
+				}
+				if (KIND === 'add' && message.symbol && message.economic && message.economic !== economicSource) {
+					setEconomicSource(message.economic);
 				} else if (KIND === 'add' && message.symbol && message.filings && scope !== 'company') {
 					setScope('company');
 				}
@@ -1638,8 +1815,9 @@ registerAction2(class extends Action2 {
 			f1: true,
 		});
 	}
-	run(accessor: ServicesAccessor, symbol?: string, source?: 'filings'): void {
-		openAlertsPage(accessor, { section: 'add', symbol: typeof symbol === 'string' ? symbol.trim().toUpperCase() : undefined, filings: source === 'filings' });
+	run(accessor: ServicesAccessor, symbol?: string, source?: 'filings' | EconomicSource): void {
+		const economic = ECONOMIC_SOURCES.find(economic => economic === source);
+		openAlertsPage(accessor, { section: 'add', symbol: typeof symbol === 'string' ? symbol.trim().toUpperCase() : undefined, filings: source === 'filings', economic });
 	}
 });
 

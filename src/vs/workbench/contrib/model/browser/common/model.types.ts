@@ -193,9 +193,12 @@ export interface IModelInput {
 	readonly newRow?: boolean;
 	/**
 	 * A text input with an Alert Me... button beside it, which opens Add Alert with its value filled in: a Yahoo Finance
-	 * symbol for an alert on its quote, or a company's CIK for an alert on its SEC filings.
+	 * symbol for an alert on its quote, a company's CIK for an alert on its SEC filings, or a series of FRED, the ECB,
+	 * the IMF or the World Bank for an alert on its new values.
 	 */
-	readonly alertMe?: 'quote' | 'filings';
+	readonly alertMe?: 'quote' | 'filings' | 'fred' | 'ecb' | 'imf' | 'worldBank';
+	/** What Alert Me... opens Add Alert with when it is more than the input's value, with `{{id}}` placeholders: `{{country}}/{{indicator}}`. */
+	readonly alertValue?: string;
 }
 
 /** The declarative content of a panel built on the shared scaffold (generated from its TOML). */

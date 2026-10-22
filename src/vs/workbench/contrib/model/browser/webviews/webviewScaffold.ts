@@ -1028,9 +1028,15 @@ ${parts.setModelExtraJs ?? ''}			document.querySelectorAll('#model-group .toggle
 			dropdown.style.top = (up ? r.top - Math.min(dropdown.offsetHeight, above) - 2 : r.bottom + 2) + 'px';
 			highlightDropdownItem(dropdown.querySelector('.selected'));
 		}
-		// Alert Me... beside a symbol input: Add Alert opens with the symbol typed, else the default one
+		// Alert Me... beside a symbol or series input: Add Alert opens with the value typed, else the default one,
+		// or with its data-value filled in from the inputs (a World Bank country and indicator)
 		document.querySelectorAll('.alert-me-btn').forEach(function(button) {
-			button.addEventListener('click', function() { vscode.postMessage({ command: 'addAlert', symbol: inputRaw(button.dataset.input) }); });
+			button.addEventListener('click', function() {
+				var symbol = button.dataset.value
+					? button.dataset.value.replace(/[{][{]([\\w-]+)[}][}]/g, function(_, id) { return inputRaw(id); })
+					: inputRaw(button.dataset.input);
+				vscode.postMessage({ command: 'addAlert', symbol: symbol, kind: button.dataset.alert });
+			});
 		});
 		document.querySelectorAll('.scaffold-inputs select.form-input').forEach(function(select) {
 			select.addEventListener('mousedown', function(e) {

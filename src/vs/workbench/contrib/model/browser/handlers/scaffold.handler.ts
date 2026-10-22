@@ -25,6 +25,7 @@ import { IUntitledTextResourceEditorInput } from '../../../../common/editor.js';
 import { CellEditType, CellKind } from '../../../notebook/common/notebookCommon.js';
 import { openWikiByFile, openNotebookByFile, openInBrowser, autoSelectJuliaKernel, createPackageStatusWiring, createExampleCodeWiring, createCustomCopyWiring, createReferenceWiring, createVideoWiring, sendToJuliaRepl } from './model.handler.js';
 import { hasKey } from '../../../../../base/common/types.js';
+import { ADD_ALERT_COMMAND_ID } from '../../../monitor/browser/alertsPage.js';
 
 /** Messages a scaffold panel sends that are not handled by the shared wirings of model.handler.ts. */
 type ScaffoldWebviewMessage =
@@ -33,7 +34,8 @@ type ScaffoldWebviewMessage =
 	| { command: 'openUrl'; url: string }
 	| { command: 'runCode'; target: 'newFile' | 'juliaRepl' | 'notebook' | 'pluto'; code: string }
 	| { command: 'colorize'; code: string; target?: string }
-	| { command: 'installPackages' };
+	| { command: 'installPackages' }
+	| { command: 'addAlert'; symbol: string; kind: 'quote' | 'filings' | 'fred' | 'ecb' | 'imf' | 'worldBank' };
 
 /**
  * Handle the messages of a panel built on the shared scaffold (see scaffoldParts.ts): Learn More,
@@ -156,6 +158,9 @@ export function registerScaffoldWebviewHandlers(
 				break;
 			case 'installPackages':
 				await pkgStatus.handleInstall();
+				break;
+			case 'addAlert':
+				await commandService.executeCommand(ADD_ALERT_COMMAND_ID, msg.symbol, msg.kind === 'quote' ? undefined : msg.kind);
 				break;
 		}
 	}));

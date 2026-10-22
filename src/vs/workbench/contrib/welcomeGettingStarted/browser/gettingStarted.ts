@@ -68,6 +68,7 @@ import { JOURNAL_METRICS_COMMAND_ID } from '../../databases/common/databaseDrive
 import { MarkdownString } from '../../../../base/common/htmlContent.js';
 import { describeCondition, describeFiredAlert, describeSubject, formatValue, IAlert, IAlertsService, IFiredAlert } from '../../monitor/browser/alertsService.js';
 import { ADD_ALERT_COMMAND_ID, openQuotePage, severityIcon, SHOW_ALERTS_COMMAND_ID } from '../../monitor/browser/alertsPage.js';
+import { seriesPage } from '../../monitor/browser/economicSeries.js';
 import { OPEN_LINK_COMMAND_ID } from '../../monitor/browser/openLink.js';
 import { startEntries } from '../common/gettingStartedContent.js';
 import { discoverPollisEntries } from '../common/discoverPollisContent.js';
@@ -542,9 +543,12 @@ export class GettingStartedPage extends EditorPane {
 				if (fired) {
 					this.alertsService.markRead([fired.id]);
 					if (command === 'openFiredAlert') {
-						// A filing opens at the SEC; a quote, on Pollis's quote page
+						// A filing opens at the SEC; a series, at its source, or among the alerts when it has no page; a quote, on Pollis's quote page
+						const page = fired.source && seriesPage(fired.source, fired.symbol);
 						if (fired.filing) {
 							this.commandService.executeCommand(OPEN_LINK_COMMAND_ID, fired.filing.url);
+						} else if (fired.source) {
+							this.commandService.executeCommand(page ? OPEN_LINK_COMMAND_ID : SHOW_ALERTS_COMMAND_ID, page || fired.alertId);
 						} else {
 							openQuotePage(this.commandService, fired.symbol);
 						}
@@ -1396,14 +1400,16 @@ export class GettingStartedPage extends EditorPane {
 			$('.pollis-alert-body', {},
 				$('p.pollis-alert-title', {}, $('button.pollis-feed-title', { 'x-dispatch': `openAlert:${alert.id}` }, localize('pollis.watchedAlert', "{0} {1}", name, describeCondition(alert)))),
 				$('p.pollis-alert-description', {}, state?.error
-					? state.noContact ? localize('pollis.watchedAlertNoContact', "Needs your SEC contact") : localize('pollis.watchedAlertError', "Could not be looked up")
-					: state?.filing
-						? state.filing.name
-							? localize('pollis.watchedAlertFilingFrom', "Latest filing: {0} from {1}, filed {2}", state.filing.form, state.filing.name, state.filing.filed)
-							: localize('pollis.watchedAlertFiling', "Latest filing: {0}, filed {1}", state.filing.form, state.filing.filed)
-						: state?.value !== undefined
-							? describeValue(state.value, state.currency, state.quoted ?? state.checked ?? Date.now())
-							: localize('pollis.watchedAlertWaiting', "Not looked up yet")),
+					? state.noContact ? localize('pollis.watchedAlertNoContact', "Needs your SEC contact") : state.noKey ? localize('pollis.watchedAlertNoKey', "Needs your FRED key") : localize('pollis.watchedAlertError', "Could not be looked up")
+					: alert.source && state?.value !== undefined && state.period !== undefined
+						? localize('pollis.watchedAlertSeries', "{0} for {1}, looked at {2}", formatValue(state.value), state.period, fromNow(state.checked ?? Date.now(), true))
+						: state?.filing
+							? state.filing.name
+								? localize('pollis.watchedAlertFilingFrom', "Latest filing: {0} from {1}, filed {2}", state.filing.form, state.filing.name, state.filing.filed)
+								: localize('pollis.watchedAlertFiling', "Latest filing: {0}, filed {1}", state.filing.form, state.filing.filed)
+							: state?.value !== undefined
+								? describeValue(state.value, state.currency, state.quoted ?? state.checked ?? Date.now())
+								: localize('pollis.watchedAlertWaiting', "Not looked up yet")),
 			),
 		);
 	}

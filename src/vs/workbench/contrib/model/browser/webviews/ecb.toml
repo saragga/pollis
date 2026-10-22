@@ -209,6 +209,47 @@ s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor"
 return s;
 '''
 
+[[inputs]]
+id = "exchangeSeries"
+label = "Series"
+tooltip = "An ECB series: its dataflow and key, such as EXR/D.USD.EUR.SP00.A (US dollars per euro). Alert Me... opens Add Alert with it: Pollis tells you when a new value is published."
+default = "EXR/D.USD.EUR.SP00.A"
+models = ["exchange"]
+alertMe = "ecb"
+
+[[inputs]]
+id = "ratesSeries"
+label = "Series"
+tooltip = "An ECB series: its dataflow and key, such as FM/B.U2.EUR.4F.KR.DFR.LEV (the deposit facility rate). Alert Me... opens Add Alert with it: Pollis tells you when a new value is published."
+default = "FM/B.U2.EUR.4F.KR.DFR.LEV"
+models = ["rates"]
+alertMe = "ecb"
+
+[[inputs]]
+id = "inflationSeries"
+label = "Series"
+tooltip = "An ECB series: its dataflow and key, such as HICP/M.U2.N.000000.4D0.ANR (euro area inflation). Alert Me... opens Add Alert with it: Pollis tells you when a new value is published."
+default = "HICP/M.U2.N.000000.4D0.ANR"
+models = ["inflation"]
+alertMe = "ecb"
+
+[[inputs]]
+id = "moneySeries"
+label = "Series"
+tooltip = "An ECB series: its dataflow and key, such as BSI/M.U2.Y.V.M30.X.I.U2.2300.Z01.A (M3 growth). Alert Me... opens Add Alert with it: Pollis tells you when a new value is published."
+default = "BSI/M.U2.Y.V.M30.X.I.U2.2300.Z01.A"
+models = ["money"]
+alertMe = "ecb"
+
+[[inputs]]
+id = "yieldsSeries"
+label = "Series"
+tooltip = "An ECB series: its dataflow and key, such as YC/B.U2.EUR.4F.G_N_A.SV_C_YM.SR_10Y (the 10-year AAA yield). Alert Me... opens Add Alert with it: Pollis tells you when a new value is published."
+default = "YC/B.U2.EUR.4F.G_N_A.SV_C_YM.SR_10Y"
+models = ["yields"]
+alertMe = "ecb"
+
+
 [[codeBranches]]
 model = "exchange"
 code = """
@@ -217,8 +258,8 @@ using HTTP, CSV, Tables
 # The ECB Data Portal needs no API key. format=csvdata returns a flat table.
 base = "https://data-api.ecb.europa.eu/service/data"
 
-# US dollar / euro reference rate (EXR dataflow), daily
-url = "$base/EXR/D.USD.EUR.SP00.A?startPeriod=2015-01-01&format=csvdata"
+# The series above: the US dollar / euro reference rate (EXR dataflow), daily, by default
+url = "$base/{{exchangeSeries}}?startPeriod=2015-01-01&format=csvdata"
 tbl = CSV.File(HTTP.get(url).body)
 
 # tbl is Tables.jl-compatible: pull only the columns you need
@@ -240,14 +281,14 @@ using HTTP, CSV, Tables
 base = "https://data-api.ecb.europa.eu/service/data"
 
 # Key ECB interest rates (FM dataflow), daily on business days
-fetch(key) = CSV.File(HTTP.get("$base/FM/$key?format=csvdata").body)
+fetch(series) = CSV.File(HTTP.get("$base/$series?format=csvdata").body)
 
-mro = fetch("B.U2.EUR.4F.KR.MRR_FR.LEV")   # main refinancing operations
-dfr = fetch("B.U2.EUR.4F.KR.DFR.LEV")      # deposit facility
-mlf = fetch("B.U2.EUR.4F.KR.MLFR.LEV")     # marginal lending facility
+rate = fetch("{{ratesSeries}}")                # the series above: the deposit facility rate by default
+mro  = fetch("FM/B.U2.EUR.4F.KR.MRR_FR.LEV")   # main refinancing operations
+mlf  = fetch("FM/B.U2.EUR.4F.KR.MLFR.LEV")     # marginal lending facility
 
-println("Deposit facility rate, latest 5 business days:")
-println(last(Tables.getcolumn(dfr, :OBS_VALUE), 5))
+println("Latest 5 business days:")
+println(last(Tables.getcolumn(rate, :OBS_VALUE), 5))
 """
 
 [[codeBranches]]
@@ -257,8 +298,8 @@ using HTTP, CSV, Tables
 
 base = "https://data-api.ecb.europa.eu/service/data"
 
-# HICP, euro area, annual rate of change (ICP dataflow), monthly
-url = "$base/ICP/M.U2.N.000000.4.ANR?startPeriod=2010-01&format=csvdata"
+# The series above: the HICP, euro area, annual rate of change (HICP dataflow), monthly, by default
+url = "$base/{{inflationSeries}}?startPeriod=2010-01&format=csvdata"
 hicp = CSV.File(HTTP.get(url).body)
 
 dates = Tables.getcolumn(hicp, :TIME_PERIOD)
@@ -274,11 +315,11 @@ using HTTP, CSV, Tables
 
 base = "https://data-api.ecb.europa.eu/service/data"
 
-# Monetary aggregate M3, annual growth rate (BSI dataflow), monthly
-url = "$base/BSI/M.U2.Y.V.M30.X.I.U2.2300.Z01.A?startPeriod=2010-01&format=csvdata"
+# The series above: the M3 annual growth rate (BSI dataflow), monthly, by default
+url = "$base/{{moneySeries}}?startPeriod=2010-01&format=csvdata"
 m3 = CSV.File(HTTP.get(url).body)
 
-println("M3 annual growth, latest 12 months (%):")
+println("Latest 12 months:")
 println(last(Tables.getcolumn(m3, :OBS_VALUE), 12))
 """
 
@@ -289,11 +330,11 @@ using HTTP, CSV, Tables
 
 base = "https://data-api.ecb.europa.eu/service/data"
 
-# AAA euro area government bond yield curve (YC dataflow), 10-year spot, daily
-url = "$base/YC/B.U2.EUR.4F.G_N_A.SV_C_YM.SR_10Y?startPeriod=2020-01-01&format=csvdata"
+# The series above: the 10-year spot yield of the AAA euro area government bond curve (YC dataflow), daily, by default
+url = "$base/{{yieldsSeries}}?startPeriod=2020-01-01&format=csvdata"
 y10 = CSV.File(HTTP.get(url).body)
 
-println("10-year AAA spot yield, latest 5 (% p.a.):")
+println("Latest 5 (% p.a.):")
 println(last(Tables.getcolumn(y10, :OBS_VALUE), 5))
 """
 

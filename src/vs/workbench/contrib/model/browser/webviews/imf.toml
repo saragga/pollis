@@ -179,6 +179,47 @@ s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor"
 return s;
 '''
 
+[[inputs]]
+id = "weoSeries"
+label = "Series"
+tooltip = "An IMF series: its dataflow and key, such as IMF.RES,WEO/PRT.NGDP_RPCH.A (Portugal's real GDP growth). Alert Me... opens Add Alert with it: Pollis tells you when a new value is published."
+default = "IMF.RES,WEO/PRT.NGDP_RPCH.A"
+models = ["weo"]
+alertMe = "imf"
+
+[[inputs]]
+id = "cpiSeries"
+label = "Series"
+tooltip = "An IMF series: its dataflow and key, such as IMF.STA,CPI/USA.CPI._T.YOY_PCH_PA_PT.M (US inflation). Alert Me... opens Add Alert with it: Pollis tells you when a new value is published."
+default = "IMF.STA,CPI/USA.CPI._T.YOY_PCH_PA_PT.M"
+models = ["cpi"]
+alertMe = "imf"
+
+[[inputs]]
+id = "fxSeries"
+label = "Series"
+tooltip = "An IMF series: its dataflow and key, such as IMF.STA,ER/JPN.XDC_USD.PA_RT.M (yen per US dollar). Alert Me... opens Add Alert with it: Pollis tells you when a new value is published."
+default = "IMF.STA,ER/JPN.XDC_USD.PA_RT.M"
+models = ["fx"]
+alertMe = "imf"
+
+[[inputs]]
+id = "reservesSeries"
+label = "Series"
+tooltip = "An IMF series: its dataflow and key, such as IMF.STA,COFER/G001.AFXRA.CI_USD.SHRO_PT.Q (the US dollar share of reserves). Alert Me... opens Add Alert with it: Pollis tells you when a new value is published."
+default = "IMF.STA,COFER/G001.AFXRA.CI_USD.SHRO_PT.Q"
+models = ["reserves"]
+alertMe = "imf"
+
+[[inputs]]
+id = "commoditiesSeries"
+label = "Series"
+tooltip = "An IMF series: its dataflow and key, such as IMF.RES,PCPS/G001.POILBRE.USD.M (the Brent crude price). Alert Me... opens Add Alert with it: Pollis tells you when a new value is published."
+default = "IMF.RES,PCPS/G001.POILBRE.USD.M"
+models = ["commodities"]
+alertMe = "imf"
+
+
 [[codeBranches]]
 model = "weo"
 code = """
@@ -188,10 +229,10 @@ using HTTP, CSV, Tables
 # through the Accept header (format=csv in the URL is ignored).
 base = "https://api.imf.org/external/sdmx/2.1/data"
 csvheader = ["Accept" => "application/vnd.sdmx.data+csv;version=1.0.0"]
-imf(flow, key; query = "") = CSV.File(HTTP.get("$base/$flow/$key?$query", csvheader).body)
+imf(series; query = "") = CSV.File(HTTP.get("$base/$series?$query", csvheader).body)
 
-# Portugal, real GDP growth (WEO dataflow), annual, forecasts included
-tbl = imf("IMF.RES,WEO", "PRT.NGDP_RPCH.A"; query = "startPeriod=2015")
+# The series above: Portugal, real GDP growth (WEO dataflow), annual, forecasts included, by default
+tbl = imf("{{weoSeries}}"; query = "startPeriod=2015")
 
 years  = Tables.getcolumn(tbl, :TIME_PERIOD)
 growth = Tables.getcolumn(tbl, :OBS_VALUE)
@@ -207,11 +248,11 @@ using HTTP, CSV, Tables
 
 base = "https://api.imf.org/external/sdmx/2.1/data"
 csvheader = ["Accept" => "application/vnd.sdmx.data+csv;version=1.0.0"]
-imf(flow, key; query = "") = CSV.File(HTTP.get("$base/$flow/$key?$query", csvheader).body)
+imf(series; query = "") = CSV.File(HTTP.get("$base/$series?$query", csvheader).body)
 
-# United States, headline CPI (COICOP _T = all items), year-on-year % change, monthly
+# The series above: United States, headline CPI (COICOP _T = all items), year-on-year % change, monthly, by default
 # Key: COUNTRY.INDEX_TYPE.COICOP_1999.TYPE_OF_TRANSFORMATION.FREQUENCY
-tbl = imf("IMF.STA,CPI", "USA.CPI._T.YOY_PCH_PA_PT.M"; query = "startPeriod=2020-01")
+tbl = imf("{{cpiSeries}}"; query = "startPeriod=2020-01")
 
 months = Tables.getcolumn(tbl, :TIME_PERIOD)
 infl   = Tables.getcolumn(tbl, :OBS_VALUE)
@@ -226,11 +267,11 @@ using HTTP, CSV, Tables
 
 base = "https://api.imf.org/external/sdmx/2.1/data"
 csvheader = ["Accept" => "application/vnd.sdmx.data+csv;version=1.0.0"]
-imf(flow, key; query = "") = CSV.File(HTTP.get("$base/$flow/$key?$query", csvheader).body)
+imf(series; query = "") = CSV.File(HTTP.get("$base/$series?$query", csvheader).body)
 
-# Japanese yen per US dollar (XDC_USD), period average (PA_RT), monthly (ER dataflow)
+# The series above: Japanese yen per US dollar (XDC_USD), period average (PA_RT), monthly (ER dataflow), by default
 # Key: COUNTRY.INDICATOR.TYPE_OF_TRANSFORMATION.FREQUENCY
-tbl = imf("IMF.STA,ER", "JPN.XDC_USD.PA_RT.M"; query = "startPeriod=2020-01")
+tbl = imf("{{fxSeries}}"; query = "startPeriod=2020-01")
 
 months = Tables.getcolumn(tbl, :TIME_PERIOD)
 rate   = Tables.getcolumn(tbl, :OBS_VALUE)
@@ -245,11 +286,11 @@ using HTTP, CSV, Tables
 
 base = "https://api.imf.org/external/sdmx/2.1/data"
 csvheader = ["Accept" => "application/vnd.sdmx.data+csv;version=1.0.0"]
-imf(flow, key; query = "") = CSV.File(HTTP.get("$base/$flow/$key?$query", csvheader).body)
+imf(series; query = "") = CSV.File(HTTP.get("$base/$series?$query", csvheader).body)
 
-# COFER: share (SHRO_PT) of the US dollar in allocated world (G001) reserves, quarterly
+# The series above: the share (SHRO_PT) of the US dollar in allocated world (G001) reserves, quarterly (COFER dataflow), by default
 # Key: COUNTRY.INDICATOR.FXR_CURRENCY.TYPE_OF_TRANSFORMATION.FREQUENCY
-tbl = imf("IMF.STA,COFER", "G001.AFXRA.CI_USD.SHRO_PT.Q"; query = "startPeriod=2000-Q1")
+tbl = imf("{{reservesSeries}}"; query = "startPeriod=2000-Q1")
 
 quarters = Tables.getcolumn(tbl, :TIME_PERIOD)
 share    = Tables.getcolumn(tbl, :OBS_VALUE)
@@ -265,11 +306,11 @@ using HTTP, CSV, Tables
 
 base = "https://api.imf.org/external/sdmx/2.1/data"
 csvheader = ["Accept" => "application/vnd.sdmx.data+csv;version=1.0.0"]
-imf(flow, key; query = "") = CSV.File(HTTP.get("$base/$flow/$key?$query", csvheader).body)
+imf(series; query = "") = CSV.File(HTTP.get("$base/$series?$query", csvheader).body)
 
-# Primary commodity prices (PCPS dataflow): Brent crude, US dollars per barrel, monthly
+# The series above: Brent crude, US dollars per barrel, monthly (PCPS dataflow, primary commodity prices), by default
 # Key: COUNTRY.INDICATOR.DATA_TRANSFORMATION.FREQUENCY (G001 = world)
-tbl = imf("IMF.RES,PCPS", "G001.POILBRE.USD.M"; query = "startPeriod=2020-01")
+tbl = imf("{{commoditiesSeries}}"; query = "startPeriod=2020-01")
 
 months = Tables.getcolumn(tbl, :TIME_PERIOD)
 brent  = Tables.getcolumn(tbl, :OBS_VALUE)

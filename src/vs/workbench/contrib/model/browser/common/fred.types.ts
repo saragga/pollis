@@ -18,4 +18,5 @@ export type FredWebviewMessage =
 	| { command: 'openReference'; id: string }
 	| { command: 'installPackages' }
 	| { command: 'setApiKey' }
-	| { command: 'clearApiKey' };
+	| { command: 'clearApiKey' }
+	| { command: 'addAlert'; symbol: string };

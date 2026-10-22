@@ -16,4 +16,5 @@ export type EcbWebviewMessage =
 	| { command: 'runCode'; target: 'newFile' | 'juliaRepl' | 'notebook' | 'pluto'; code: string }
 	| { command: 'colorize'; code: string; target?: string }
 	| { command: 'openReference'; id: string }
-	| { command: 'installPackages' };
+	| { command: 'installPackages' }
+	| { command: 'addAlert'; symbol: string };
