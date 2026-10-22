@@ -16,7 +16,7 @@ import { IQuickInputService } from '../../../../platform/quickinput/common/quick
 import { IEditorService } from '../../../services/editor/common/editorService.js';
 import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
-import { AlertCondition, AlertSeverity, ChartRange, describeCondition, describeFiredAlert, describeItems, describeSubject, formatValue, FORM_8K_ITEMS, IAlert, IAlertsService, IFiredAlert } from './alertsService.js';
+import { AlertCondition, AlertSeverity, ChartRange, describeCondition, describeFiredAlert, describeItems, describeSubject, formatValue, FORM_8K_ITEMS, IAlert, IAlertsService, IFiredAlert, isStatistical } from './alertsService.js';
 import { ECONOMIC_SOURCES, EconomicSource, seriesExample, seriesPage, SERIES_PAGES, sourceName } from './economicSeries.js';
 import { IEventStudiesService, SHOW_EVENT_STUDIES_COMMAND_ID } from './eventStudiesService.js';
 import { OPEN_LINK_COMMAND_ID } from './openLink.js';
@@ -65,14 +65,16 @@ type AlertsMessage =
 	| { readonly command: 'ready' }
 	| { readonly command: 'lookUp'; readonly symbol: string }
 	| { readonly command: 'chart'; readonly symbol: string; readonly range: ChartRange }
-	| { readonly command: 'add'; readonly symbol: string; readonly condition: AlertCondition; readonly threshold: number; readonly severity: AlertSeverity; readonly repeat: boolean }
+	| { readonly command: 'add'; readonly symbol: string; readonly condition: AlertCondition; readonly threshold: number; readonly halfLife?: number; readonly severity: AlertSeverity; readonly repeat: boolean }
+	| { readonly command: 'backtest'; readonly key: string; readonly symbol: string; readonly source?: EconomicSource; readonly condition: AlertCondition; readonly threshold: number; readonly halfLife?: number }
+	| { readonly command: 'openNotebook'; readonly symbol: string; readonly name?: string; readonly source?: EconomicSource; readonly condition: AlertCondition; readonly threshold: number; readonly halfLife?: number }
 	| { readonly command: 'lookUpFiler'; readonly company: string }
 	| { readonly command: 'lookUpCompanies'; readonly companies: string }
 	| { readonly command: 'lookUpIndustry'; readonly sic: string }
 	| { readonly command: 'searchFilings'; readonly scope: FilingsScope; readonly company: string; readonly phrase: string; readonly forms: readonly string[]; readonly items: readonly string[] }
 	| { readonly command: 'addFilings'; readonly scope: FilingsScope; readonly company: string; readonly phrase: string; readonly forms: readonly string[]; readonly items: readonly string[]; readonly severity: AlertSeverity; readonly repeat: boolean; readonly eventStudy: boolean }
 	| { readonly command: 'lookUpSeries'; readonly source: EconomicSource; readonly id: string }
-	| { readonly command: 'addSeries'; readonly source: EconomicSource; readonly id: string; readonly condition: AlertCondition; readonly threshold: number; readonly severity: AlertSeverity; readonly repeat: boolean }
+	| { readonly command: 'addSeries'; readonly source: EconomicSource; readonly id: string; readonly condition: AlertCondition; readonly threshold: number; readonly halfLife?: number; readonly severity: AlertSeverity; readonly repeat: boolean }
 	| { readonly command: 'setFredKey' }
 	| { readonly command: 'setContact' }
 	| { readonly command: 'openUrl'; readonly url: string }
@@ -190,8 +192,8 @@ function openAlertsPage(accessor: ServicesAccessor, place: PagePlace): void {
 						paused: !!alert.paused,
 						economic: sourceName(alert.source),
 						url: seriesPage(alert.source, alert.symbol),
-						value: state?.error
-							? state.noKey ? localize('alerts.needsFredKey', "Needs your FRED key: set it on the Add Alert page, under Economic Data") : localize('alerts.notFound', "Could not be looked up")
+						value: state?.installing ? localize('alerts.installingStatistics', "Julia is installing OnlineStats.jl, which computes the condition") : state?.error
+							? state.noKey ? localize('alerts.needsFredKey', "Needs your FRED key: set it on the Add Alert page, under Economic Data") : state.noJulia ? localize('alerts.needsJulia', "Needs Julia, which computes the condition with OnlineStats.jl") : localize('alerts.notFound', "Could not be looked up")
 							: state?.value !== undefined && state.period !== undefined ? localize('alerts.seriesValue', "{0} for {1}; looked at {2}", formatValue(state.value), state.period, fromNow(state.checked ?? Date.now(), true)) : localize('alerts.notYet', "Not looked up yet"),
 					};
 				}
@@ -205,7 +207,7 @@ function openAlertsPage(accessor: ServicesAccessor, place: PagePlace): void {
 					severity: alert.severity,
 					repeat: alert.repeat,
 					paused: !!alert.paused,
-					value: state?.error ? localize('alerts.notFound', "Could not be looked up") : state?.value !== undefined ? localize('alerts.valueAt', "{0}, {1}", formatValue(state.value, state.currency), fromNow(state.quoted ?? state.checked ?? Date.now(), true)) : localize('alerts.notYet', "Not looked up yet"),
+					value: state?.installing ? localize('alerts.installingStatistics', "Julia is installing OnlineStats.jl, which computes the condition") : state?.error ? state.noJulia ? localize('alerts.needsJulia', "Needs Julia, which computes the condition with OnlineStats.jl") : localize('alerts.notFound', "Could not be looked up") : state?.value !== undefined ? localize('alerts.valueAt', "{0}, {1}", formatValue(state.value, state.currency), fromNow(state.quoted ?? state.checked ?? Date.now(), true)) : localize('alerts.notYet', "Not looked up yet"),
 				};
 			}),
 			fired: alertsService.getFired().slice(0, 100).map(fired => ({
@@ -271,6 +273,18 @@ function openAlertsPage(accessor: ServicesAccessor, place: PagePlace): void {
 				}
 				break;
 			}
+			case 'backtest': {
+				const result = await alertsService.backtest({ symbol: message.symbol, source: message.source, condition: message.condition, threshold: message.threshold, halfLife: message.halfLife });
+				webviewInput.webview.postMessage({ command: 'backtest', key: message.key, result: typeof result === 'object' ? result : undefined, problem: typeof result === 'string' ? result : undefined });
+				break;
+			}
+			case 'openNotebook': {
+				const notebook = await alertsService.writeNotebook({ symbol: message.symbol, name: message.name, source: message.source, condition: message.condition, threshold: message.threshold, halfLife: message.halfLife });
+				if (typeof notebook === 'object') {
+					await editorService.openEditor({ resource: notebook });
+				}
+				break;
+			}
 			case 'chart': {
 				const chart = await alertsService.getChart(message.symbol, message.range);
 				webviewInput.webview.postMessage({ command: 'chart', symbol: message.symbol, range: message.range, chart });
@@ -281,7 +295,7 @@ function openAlertsPage(accessor: ServicesAccessor, place: PagePlace): void {
 				if (!quote || !Number.isFinite(message.threshold)) {
 					break;
 				}
-				await alertsService.addAlert({ symbol: quote.symbol, name: quote.name, condition: message.condition, threshold: message.threshold, severity: message.severity, repeat: message.repeat });
+				await alertsService.addAlert({ symbol: quote.symbol, name: quote.name, condition: message.condition, threshold: message.threshold, halfLife: message.halfLife, severity: message.severity, repeat: message.repeat });
 				webviewInput.webview.postMessage({ command: 'added', text: localize('alerts.added', "Pollis will alert you when {0} {1}. It looks the value up every minute while Pollis is open; the quotes are delayed by up to about 20 minutes, depending on the exchange.", quote.name || quote.symbol, describeCondition(message)) });
 				break;
 			}
@@ -378,8 +392,8 @@ function openAlertsPage(accessor: ServicesAccessor, place: PagePlace): void {
 				if (typeof series !== 'object' || !Number.isFinite(threshold)) {
 					break;
 				}
-				await alertsService.addAlert({ symbol: series.id, source: message.source, name: series.title, condition: message.condition, threshold, severity: message.severity, repeat: message.repeat });
-				webviewInput.webview.postMessage({ command: 'added', text: localize('alerts.addedSeries', "Pollis will alert you when {0} {1}. It looks the series up at {2} every hour while Pollis is open.", series.title, message.condition === 'newValue' ? describeCondition(message) : localize('alerts.addedSeriesCondition', "has a new value {0}", describeCondition({ condition: message.condition, threshold })), sourceName(message.source)) });
+				await alertsService.addAlert({ symbol: series.id, source: message.source, name: series.title, condition: message.condition, threshold, halfLife: message.halfLife, severity: message.severity, repeat: message.repeat });
+				webviewInput.webview.postMessage({ command: 'added', text: localize('alerts.addedSeries', "Pollis will alert you when {0} {1}. It looks the series up at {2} every hour while Pollis is open.", series.title, message.condition === 'newValue' || isStatistical(message.condition) ? describeCondition(message) : localize('alerts.addedSeriesCondition', "has a new value {0}", describeCondition({ condition: message.condition, threshold })), sourceName(message.source)) });
 				break;
 			}
 			case 'setFredKey': {
@@ -612,6 +626,10 @@ function pageHtml(kind: PageKind): string {
 			movesBy: localize('alerts.movesBy', "Moves By"),
 			newValue: localize('alerts.newValue', "Publishes a New Value"),
 			changesBy: localize('alerts.changesBy', "Changes By"),
+			unusualMove: localize('alerts.unusualMove', "Moves Unusually"),
+			leavesBand: localize('alerts.leavesBand', "Leaves Its Band"),
+			beyondQuantile: localize('alerts.beyondQuantile', "Moves Beyond a Quantile"),
+			newExtreme: localize('alerts.newExtreme', "Makes a New High or Low"),
 		},
 		economicHints: {
 			newValue: localize('alerts.newValueDescription', "When the source publishes a value for a new period."),
@@ -620,6 +638,10 @@ function pageHtml(kind: PageKind): string {
 			above: localize('alerts.seriesAboveDescription', "When a new value is above it."),
 			below: localize('alerts.seriesBelowDescription', "When a new value is below it."),
 			changesBy: localize('alerts.changesByDescription', "When a new value is up or down from the value before by the change or more."),
+			unusualMove: localize('alerts.seriesUnusualMoveDescription', "When a new value's change is larger than this many standard deviations of the changes before it. Computed by OnlineStats.jl in Julia."),
+			leavesBand: localize('alerts.seriesLeavesBandDescription', "When a new value leaves the band of this many standard deviations around the mean: once, until a value is back within. Computed by OnlineStats.jl in Julia."),
+			beyondQuantile: localize('alerts.seriesBeyondQuantileDescription', "When a new value's change is beyond this quantile of the changes before it: above 50 a rise, below 50 a fall. Computed by OnlineStats.jl in Julia."),
+			newExtreme: localize('alerts.seriesNewExtremeDescription', "When a new value is above the highest or below the lowest of this many values before it. Computed by OnlineStats.jl in Julia."),
 		},
 		conditionHints: {
 			crossesAbove: localize('alerts.crossesAboveDescription', "When it goes from below the value to above it."),
@@ -627,9 +649,31 @@ function pageHtml(kind: PageKind): string {
 			above: localize('alerts.aboveDescription', "While it is above the value: once, until it is back below."),
 			below: localize('alerts.belowDescription', "While it is below the value: once, until it is back above."),
 			movesBy: localize('alerts.movesByDescription', "When it moves up or down by more than a percentage since the previous close."),
+			unusualMove: localize('alerts.unusualMoveDescription', "When its move since the minute before is larger than this many standard deviations of the moves before it. Computed by OnlineStats.jl in Julia."),
+			leavesBand: localize('alerts.leavesBandDescription', "When it leaves the band of this many standard deviations around its mean: once, until it is back within. Computed by OnlineStats.jl in Julia."),
+			beyondQuantile: localize('alerts.beyondQuantileDescription', "When its move since the minute before is beyond this quantile of the moves before it: above 50 a rise, below 50 a fall. Computed by OnlineStats.jl in Julia."),
+			newExtreme: localize('alerts.newExtremeDescription', "When it goes above the highest or below the lowest of this many minutes before it. Computed by OnlineStats.jl in Julia."),
 		},
 		value: localize('alerts.value', "Value"),
 		percent: localize('alerts.percent', "Move, in Per Cent"),
+		deviations: localize('alerts.deviations', "Standard Deviations"),
+		quantile: localize('alerts.quantile', "Quantile, in Per Cent"),
+		window: localize('alerts.window', "Values Before It"),
+		halfLife: localize('alerts.halfLife', "Half-Life, in Values"),
+		halfLifeHint: localize('alerts.halfLifeDescription', "After how many values a value weighs half as much in the mean and the standard deviation."),
+		computing: localize('alerts.computing', "Computing what it would have done, with OnlineStats.jl..."),
+		openNotebook: localize('alerts.openNotebook', "Open Notebook"),
+		openNotebookHint: localize('alerts.openNotebookHint', "Computes it in a Julia notebook with OnlineStats.jl, over the same values, to check it and try other settings"),
+		backtestMinutes: localize('alerts.backtestMinutes', "Each minute of the regular sessions of the last five days."),
+		neverFired: localize('alerts.neverFired', "It would not have fired over these values."),
+		firedOnce: localize('alerts.firedOnce', "It would have fired once over these values."),
+		firedTimes: localize('alerts.firedTimes', "It would have fired {0} times over these values."),
+		backtestProblems: {
+			noJulia: localize('alerts.backtestNoJulia', "Julia is needed to compute this condition, with OnlineStats.jl."),
+			installing: localize('alerts.backtestInstalling', "Julia is installing OnlineStats.jl, the first time it is needed. Try again in a minute."),
+			noKey: localize('alerts.backtestNoKey', "Needs your FRED key."),
+			failed: localize('alerts.backtestFailed', "What it would have done could not be computed."),
+		},
 		severity: localize('alerts.severity', "Shows As"),
 		severities: {
 			info: localize('alerts.info', "Information"),
@@ -729,6 +773,8 @@ function pageHtml(kind: PageKind): string {
 		#chart text.thresholdLabel { fill: var(--vscode-foreground); }
 		#chart .cursor { stroke: var(--vscode-descriptionForeground); stroke-width: 1; }
 		#chart .dot { fill: var(--vscode-textLink-foreground); }
+		#chart .band { fill: none; stroke: var(--vscode-charts-orange); stroke-width: 1; stroke-dasharray: 4 3; }
+		#chart .wouldFire { fill: var(--vscode-charts-red); stroke: var(--vscode-editor-background); stroke-width: 1; }
 		.chartHeader .chartLabel { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; min-width: 0; }
 		.chartCaption { font-size: 11px; color: var(--vscode-descriptionForeground); }
 		.form label.field { color: var(--vscode-foreground); }
@@ -853,6 +899,10 @@ function pageHtml(kind: PageKind): string {
 				<option value="movesBy">${text.conditions.movesBy}</option>
 				<option value="newValue" hidden>${text.conditions.newValue}</option>
 				<option value="changesBy" hidden>${text.conditions.changesBy}</option>
+				<option value="unusualMove">${text.conditions.unusualMove}</option>
+				<option value="leavesBand">${text.conditions.leavesBand}</option>
+				<option value="beyondQuantile">${text.conditions.beyondQuantile}</option>
+				<option value="newExtreme">${text.conditions.newExtreme}</option>
 			</select>
 			<div class="hint" id="conditionHint"></div>
 		</div>
@@ -870,6 +920,11 @@ function pageHtml(kind: PageKind): string {
 				<button class="action" id="search">${text.search}</button>
 			</div>
 			<div class="hint">${text.containsHint}</div>
+		</div>
+		<label class="field c1 r4" for="halfLife" id="halfLifeLabel" hidden>${text.halfLife}</label>
+		<div class="c2 r4" id="halfLifeCell" hidden>
+			<input type="number" id="halfLife" step="any" min="1" value="60">
+			<div class="hint">${text.halfLifeHint}</div>
 		</div>
 		<span class="field c3 r1">4. ${text.severity}</span>
 		<div class="c4 r1">
@@ -899,6 +954,7 @@ function pageHtml(kind: PageKind): string {
 			<span class="ranges" id="ranges"></span>
 		</div>
 		<svg id="chart" xmlns="http://www.w3.org/2000/svg"></svg>
+		<div class="chartCaption" id="backtestNote" hidden><span id="backtestText"></span> <button class="link" id="openNotebook" title="${text.openNotebookHint}" hidden>${text.openNotebook}</button></div>
 	</div>
 	<div class="chartPane" id="filingsPane" hidden>
 		<div class="chartHeader">
@@ -1157,8 +1213,52 @@ function pageHtml(kind: PageKind): string {
 	function percent() {
 		return conditionElement.value === 'movesBy';
 	}
+	// The conditions computed by OnlineStats.jl, from the values the alert looks at
+	const STATISTICAL = ['unusualMove', 'leavesBand', 'beyondQuantile', 'newExtreme'];
+	function statistical() {
+		return !filings() && STATISTICAL.includes(conditionElement.value);
+	}
+	function usesDeviations() {
+		return !filings() && (conditionElement.value === 'unusualMove' || conditionElement.value === 'leavesBand');
+	}
+	const halfLifeElement = document.getElementById('halfLife');
+	// What the statistical condition of the form would have done over the values it would look at, asked for once the form rests
+	let backtest;
+	let backtestTimer;
+	function requestBacktest() {
+		const valid = statistical() && quote && !addElement.disabled;
+		const key = valid ? JSON.stringify([economic() ? economicSource : '', quote.symbol, conditionElement.value, Number(thresholdElement.value), usesDeviations() ? Number(halfLifeElement.value) : 0]) : undefined;
+		if ((backtest && backtest.key) === key) {
+			return;
+		}
+		clearTimeout(backtestTimer);
+		backtest = key ? { key } : undefined;
+		drawChart();
+		if (!key) {
+			return;
+		}
+		const request = {
+			command: 'backtest',
+			key,
+			symbol: quote.symbol,
+			source: economic() ? economicSource : undefined,
+			condition: conditionElement.value,
+			threshold: Number(thresholdElement.value),
+			halfLife: usesDeviations() ? Number(halfLifeElement.value) : undefined,
+		};
+		backtest.request = request;
+		backtestTimer = setTimeout(() => vscode.postMessage(request), 400);
+	}
+	document.getElementById('openNotebook').addEventListener('click', () => backtest && quote && vscode.postMessage({ ...backtest.request, command: 'openNotebook', name: quote.name }));
 	// The value starts at the current price, or at 2 per cent for Moves By, or at the latest change for Changes By
 	function fillThreshold() {
+		if (statistical()) {
+			const condition = conditionElement.value;
+			// A day's minutes of a quote, two years of a monthly series
+			thresholdElement.value = condition === 'unusualMove' ? '3' : condition === 'leavesBand' ? '2' : condition === 'beyondQuantile' ? '99' : economic() ? '24' : '390';
+			thresholdElement.min = '0';
+			return;
+		}
 		const changesBy = conditionElement.value === 'changesBy';
 		thresholdElement.value = percent() ? '2' : changesBy ? String(quote && quote.lastChange ? Number(Math.abs(quote.lastChange).toPrecision(2)) : 1) : quote ? String(quote.value) : '';
 		thresholdElement.min = percent() || changesBy ? '0' : '';
@@ -1199,10 +1299,10 @@ function pageHtml(kind: PageKind): string {
 		const digits = Math.abs(value) >= 100 ? 2 : Math.abs(value) >= 1 ? 4 : 6;
 		return value.toLocaleString(undefined, { maximumFractionDigits: digits });
 	}
-	function formatTime(time) {
+	function formatTime(time, range = chartRange) {
 		const date = new Date(time);
-		return chartRange === '1d' ? date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
-			: chartRange === '6mo' ? date.toLocaleDateString(undefined, { day: 'numeric', month: 'short' })
+		return range === '1d' ? date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
+			: range === '6mo' ? date.toLocaleDateString(undefined, { day: 'numeric', month: 'short' })
 			: date.toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) + ' ' + date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
 	}
 	// The values an alert fires at: its value, or the previous close moved up and down by its percentage
@@ -1210,7 +1310,8 @@ function pageHtml(kind: PageKind): string {
 		if (!Number.isFinite(threshold)) {
 			return [];
 		}
-		if (condition === 'newValue') {
+		// A statistical condition has a band of its own, drawn from what it would have done
+		if (condition === 'newValue' || STATISTICAL.includes(condition)) {
 			return [];
 		}
 		// A series' next value fires when it is the change away from the latest
@@ -1247,15 +1348,29 @@ function pageHtml(kind: PageKind): string {
 	function drawChart() {
 		chartPane.hidden = !quote;
 		chartElement.replaceChildren();
+		const backtestNote = document.getElementById('backtestNote');
+		backtestNote.hidden = !backtest;
+		document.getElementById('ranges').hidden = economic() || !!backtest;
 		if (!quote) {
 			chart = undefined;
 			return;
 		}
 		document.getElementById('chartTitle').textContent = quote.name + ' (' + quote.symbol + ')';
-		if (!chart) {
+		// A statistical condition: the values it would look at, with its band and where it would have fired
+		const result = backtest && backtest.result;
+		const view = backtest ? result && { times: result.times || result.values.map((_, index) => index), labels: result.periods, values: result.values, lower: result.lower, upper: result.upper, fired: result.fired } : chart;
+		if (backtest) {
+			const count = result ? result.fired.length : 0;
+			document.getElementById('openNotebook').hidden = !result;
+			document.getElementById('backtestText').textContent = !backtest.done ? TEXT.computing
+				: !result ? TEXT.backtestProblems[backtest.problem] || TEXT.backtestProblems.failed
+				: [result.times ? TEXT.backtestMinutes : '', count === 0 ? TEXT.neverFired : count === 1 ? TEXT.firedOnce : format(TEXT.firedTimes, count)].filter(text => text).join(' ');
+			chartCaption.textContent = '';
+		}
+		if (!view) {
 			return;
 		}
-		if (chart.values.length < 2) {
+		if (view.values.length < 2) {
 			chartCaption.textContent = TEXT.noChart;
 			return;
 		}
@@ -1264,27 +1379,28 @@ function pageHtml(kind: PageKind): string {
 		const left = 56, right = 44, top = 8, bottom = 20;
 		const lines = thresholdLines();
 		// The 1 day chart starts at the previous close, so the previous close is shown with it only
-		const previous = chartRange === '1d' ? chart.previousClose : undefined;
+		const previous = !backtest && chartRange === '1d' ? view.previousClose : undefined;
 		// When a fired alert of the panel fired, at the value it fired at, if the chart reaches back that far
-		const fired = expanded && expanded.fired && expanded.fired.time >= chart.times[0] ? expanded.fired : undefined;
-		const all = chart.values.concat(lines.map(line => line.value), previous !== undefined ? [previous] : [], fired ? [fired.value] : []);
+		const fired = !backtest && expanded && expanded.fired && expanded.fired.time >= view.times[0] ? expanded.fired : undefined;
+		const band = (view.lower || []).concat(view.upper || []).filter(value => value !== null && value !== undefined);
+		const all = view.values.concat(lines.map(line => line.value), previous !== undefined ? [previous] : [], fired ? [fired.value] : [], band);
 		let min = Math.min(...all), max = Math.max(...all);
 		const pad = (max - min) * 0.06 || Math.abs(max) * 0.01 || 1;
 		min -= pad;
 		max += pad;
 		// The x of a value by its position, so that nights and weekends take no room
-		const x = index => left + (width - left - right) * index / (chart.values.length - 1);
+		const x = index => left + (width - left - right) * index / (view.values.length - 1);
 		const y = value => top + (height - top - bottom) * (max - value) / (max - min);
 		for (const value of [max - pad, (min + max) / 2, min + pad]) {
 			chartElement.appendChild(svg('line', { class: 'grid', x1: left, x2: width - right, y1: y(value), y2: y(value) }));
 			chartElement.appendChild(svg('text', { x: left - 6, y: y(value) + 3, 'text-anchor': 'end' }, formatNumber(value)));
 		}
 		// A series has its periods for times
-		const timeLabel = index => chart.labels ? chart.labels[index] : formatTime(chart.times[index]);
+		const timeLabel = index => view.labels ? view.labels[index] : formatTime(view.times[index], backtest ? '5d' : chartRange);
 		chartElement.appendChild(svg('text', { x: left, y: height - 4 }, timeLabel(0)));
-		chartElement.appendChild(svg('text', { x: width - right, y: height - 4, 'text-anchor': 'end' }, timeLabel(chart.values.length - 1)));
-		const points = chart.values.map((value, index) => x(index).toFixed(1) + ',' + y(value).toFixed(1));
-		chartElement.appendChild(svg('path', { class: 'area', d: 'M' + x(0) + ',' + y(min) + ' L' + points.join(' L') + ' L' + x(chart.values.length - 1) + ',' + y(min) + ' Z' }));
+		chartElement.appendChild(svg('text', { x: width - right, y: height - 4, 'text-anchor': 'end' }, timeLabel(view.values.length - 1)));
+		const points = view.values.map((value, index) => x(index).toFixed(1) + ',' + y(value).toFixed(1));
+		chartElement.appendChild(svg('path', { class: 'area', d: 'M' + x(0) + ',' + y(min) + ' L' + points.join(' L') + ' L' + x(view.values.length - 1) + ',' + y(min) + ' Z' }));
 		chartElement.appendChild(svg('polyline', { class: 'series', points: points.join(' ') }));
 		if (previous !== undefined) {
 			chartElement.appendChild(svg('line', { class: 'previous', x1: left, x2: width - right, y1: y(previous), y2: y(previous) }));
@@ -1294,11 +1410,22 @@ function pageHtml(kind: PageKind): string {
 			chartElement.appendChild(svg('line', { class: 'threshold ' + line.severity + (line.chosen ? ' chosen' : ''), x1: left, x2: width - right, y1: y(line.value), y2: y(line.value) }));
 			chartElement.appendChild(svg('text', { class: 'thresholdLabel', x: width - right + 4, y: y(line.value) + 3 }, line.label));
 		}
-		const lastIndex = chart.values.length - 1;
-		chartElement.appendChild(svg('circle', { class: 'dot', cx: x(lastIndex), cy: y(chart.values[lastIndex]), r: 3 }));
+		// The band, broken where there were not values enough yet, and the values it would have fired on
+		for (const side of [view.lower, view.upper]) {
+			const known = index => side[index] !== null && side[index] !== undefined;
+			const path = (side || []).map((value, index) => known(index) ? (index > 0 && known(index - 1) ? 'L' : 'M') + x(index).toFixed(1) + ',' + y(value).toFixed(1) : '').join(' ').trim();
+			if (path) {
+				chartElement.appendChild(svg('path', { class: 'band', d: path }));
+			}
+		}
+		for (const index of view.fired || []) {
+			chartElement.appendChild(svg('circle', { class: 'wouldFire', cx: x(index), cy: y(view.values[index]), r: 3 }));
+		}
+		const lastIndex = view.values.length - 1;
+		chartElement.appendChild(svg('circle', { class: 'dot', cx: x(lastIndex), cy: y(view.values[lastIndex]), r: 3 }));
 		if (fired) {
 			let index = 0;
-			while (index < lastIndex && chart.times[index + 1] <= fired.time) {
+			while (index < lastIndex && view.times[index + 1] <= fired.time) {
 				index++;
 			}
 			chartElement.appendChild(svg('circle', { class: 'firedDot ' + fired.severity, cx: x(index), cy: y(fired.value), r: 4.5 }));
@@ -1307,7 +1434,7 @@ function pageHtml(kind: PageKind): string {
 		}
 		const cursor = svg('line', { class: 'cursor', y1: top, y2: height - bottom, visibility: 'hidden' });
 		chartElement.appendChild(cursor);
-		const caption = index => timeLabel(index) + ': ' + formatNumber(chart.values[index]);
+		const caption = index => timeLabel(index) + ': ' + formatNumber(view.values[index]);
 		chartCaption.textContent = caption(lastIndex);
 		chartElement.onmousemove = event => {
 			const box = chartElement.getBoundingClientRect();
@@ -1327,6 +1454,8 @@ function pageHtml(kind: PageKind): string {
 	function updateForm() {
 		drawChart();
 		renderFilings();
+		document.getElementById('halfLifeLabel').hidden = !usesDeviations();
+		document.getElementById('halfLifeCell').hidden = !usesDeviations();
 		if (filings()) {
 			document.getElementById('conditionHint').textContent = TEXT.formsHint;
 			addElement.disabled = scope === 'everyone' ? !phrase() : scope === 'company' ? !filer : !group;
@@ -1338,11 +1467,18 @@ function pageHtml(kind: PageKind): string {
 		const newValue = economic() && conditionElement.value === 'newValue';
 		const changesBy = economic() && conditionElement.value === 'changesBy';
 		document.getElementById('conditionHint').textContent = (economic() ? TEXT.economicHints : TEXT.conditionHints)[conditionElement.value];
-		document.getElementById('thresholdLabel').textContent = '3. ' + (percent() ? TEXT.percent : changesBy ? TEXT.change : TEXT.value);
+		const condition = conditionElement.value;
+		const statisticalLabel = usesDeviations() ? TEXT.deviations : condition === 'beyondQuantile' ? TEXT.quantile : TEXT.window;
+		document.getElementById('thresholdLabel').textContent = '3. ' + (statistical() ? statisticalLabel : percent() ? TEXT.percent : changesBy ? TEXT.change : TEXT.value);
 		document.getElementById('thresholdLabel').hidden = newValue;
 		document.getElementById('thresholdCell').hidden = newValue;
 		const threshold = Number(thresholdElement.value);
-		addElement.disabled = !quote || (!newValue && (thresholdElement.value.trim() === '' || !Number.isFinite(threshold) || ((percent() || changesBy) && threshold <= 0)));
+		const halfLife = Number(halfLifeElement.value);
+		// A quantile strictly between 0 and 100 and not the median, a high or low of two values at least, a half-life of one at least
+		const statisticalInvalid = statistical() && (threshold <= 0 || (condition === 'beyondQuantile' && (threshold >= 100 || threshold === 50)) || (condition === 'newExtreme' && threshold < 2)
+			|| (usesDeviations() && (!Number.isFinite(halfLife) || halfLife < 1)));
+		addElement.disabled = !quote || (!newValue && (thresholdElement.value.trim() === '' || !Number.isFinite(threshold) || ((percent() || changesBy) && threshold <= 0) || statisticalInvalid));
+		requestBacktest();
 	}
 
 	symbolElement.addEventListener('keydown', event => {
@@ -1399,6 +1535,7 @@ function pageHtml(kind: PageKind): string {
 	setFredKeyElement.addEventListener('click', () => vscode.postMessage({ command: 'setFredKey' }));
 	conditionElement.addEventListener('change', () => { fillThreshold(); updateForm(); });
 	thresholdElement.addEventListener('input', updateForm);
+	halfLifeElement.addEventListener('input', updateForm);
 	for (const radio of document.querySelectorAll('input[name="severity"]')) {
 		radio.addEventListener('change', updateForm);
 	}
@@ -1428,6 +1565,7 @@ function pageHtml(kind: PageKind): string {
 				id: quote.symbol,
 				condition: conditionElement.value,
 				threshold: Number(thresholdElement.value),
+				halfLife: usesDeviations() ? Number(halfLifeElement.value) : undefined,
 				severity: document.querySelector('input[name="severity"]:checked').value,
 				repeat: document.querySelector('input[name="repeat"]:checked').value === 'true',
 			});
@@ -1439,6 +1577,7 @@ function pageHtml(kind: PageKind): string {
 			symbol: quote.symbol,
 			condition: conditionElement.value,
 			threshold: Number(thresholdElement.value),
+			halfLife: usesDeviations() ? Number(halfLifeElement.value) : undefined,
 			severity: document.querySelector('input[name="severity"]:checked').value,
 			repeat: document.querySelector('input[name="repeat"]:checked').value === 'true',
 		});
@@ -1684,6 +1823,11 @@ function pageHtml(kind: PageKind): string {
 			renderQuote();
 			if (quote) {
 				requestChart();
+			}
+		} else if (message.command === 'backtest') {
+			if (backtest && backtest.key === message.key) {
+				backtest = { ...backtest, result: message.result, problem: message.problem, done: true };
+				drawChart();
 			}
 		} else if (message.command === 'series') {
 			if (message.id !== lookedUp || !economic() || message.source !== economicSource) {

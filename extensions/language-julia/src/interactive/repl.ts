@@ -197,7 +197,7 @@ function getAdditionalArgs(): string[] {
 }
 
 /** The environment variables of the REPL that its packages may depend on: those of the settings and the package server. */
-function getPackageEnvironment(): { [key: string]: string } {
+export function getPackageEnvironment(): { [key: string]: string } {
     const env = getCustomEnvironmentVariables()
     const pkgServer: string = vscode.workspace.getConfiguration('julia').get('packageServer')
     return pkgServer.length !== 0 ? { ...env, JULIA_PKG_SERVER: pkgServer } : env

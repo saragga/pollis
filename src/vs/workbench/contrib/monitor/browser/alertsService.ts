@@ -24,6 +24,8 @@ import { ISecretStorageService } from '../../../../platform/secrets/common/secre
 import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
 import { IPathService } from '../../../services/path/common/pathService.js';
 import { CREDENTIALS } from '../../model/browser/common/credentials.js';
+import { alertNotebook } from './alertNotebook.js';
+import { writeCsv } from './csv.js';
 import { EconomicSource, fetchEconomicSeries, IEconomicSeries, seriesPage } from './economicSeries.js';
 import { OPEN_LINK_COMMAND_ID } from './openLink.js';
 
@@ -32,9 +34,25 @@ import { OPEN_LINK_COMMAND_ID } from './openLink.js';
  * value crossing it from one check to the next, the value moving by more than the threshold, in per cent, since
  * the previous close, or a filer publishing a new filing at the SEC's EDGAR. An economic series fires when it publishes
  * a new value (newValue), or on its new value only: above or below the threshold, crossing it from the value before,
- * or changing from the value before by more than the threshold (changesBy).
+ * or changing from the value before by more than the threshold (changesBy). The statistical conditions, on a quote or
+ * a series, are computed by OnlineStats.jl from the values the alert has looked at (see `STATISTICAL_CONDITIONS`).
  */
-export type AlertCondition = 'above' | 'below' | 'crossesAbove' | 'crossesBelow' | 'movesBy' | 'newFiling' | 'newValue' | 'changesBy';
+export type AlertCondition = 'above' | 'below' | 'crossesAbove' | 'crossesBelow' | 'movesBy' | 'newFiling' | 'newValue' | 'changesBy' | StatisticalCondition;
+
+/**
+ * A move larger than the threshold's number of standard deviations of the moves (unusualMove), the value leaving the
+ * band of the threshold's number of standard deviations around its mean (leavesBand), a move beyond the quantile of
+ * the moves of the threshold, in per cent, below 50 a fall and above it a rise (beyondQuantile), or the value above
+ * the highest or below the lowest of the threshold's number of values before it (newExtreme). A move is a log return
+ * for a quote, a change for a series; the mean and the standard deviation weigh the values by their age.
+ */
+export type StatisticalCondition = 'unusualMove' | 'leavesBand' | 'beyondQuantile' | 'newExtreme';
+
+export const STATISTICAL_CONDITIONS: readonly StatisticalCondition[] = ['unusualMove', 'leavesBand', 'beyondQuantile', 'newExtreme'];
+
+export function isStatistical(condition: AlertCondition): condition is StatisticalCondition {
+	return (STATISTICAL_CONDITIONS as readonly AlertCondition[]).includes(condition);
+}
 
 export type AlertSeverity = 'info' | 'warning' | 'error';
 
@@ -77,6 +95,8 @@ export interface IAlert {
 	readonly paused?: boolean;
 	/** How often the value is looked up, in minutes; when not given, 1, or 15 for newFiling, or 60 for an economic series. */
 	readonly minutes?: number;
+	/** For unusualMove and leavesBand: after how many values a value weighs half as much; 60 when not given. */
+	readonly halfLife?: number;
 }
 
 /** An alert that fired, a line of ~/.pollis/alerts/history.jsonl. */
@@ -100,6 +120,9 @@ export interface IFiredAlert {
 	/** For an economic series: where it is published, and the period of the new value. */
 	readonly source?: EconomicSource;
 	readonly period?: string;
+	/** For a statistical condition: the band the value was outside of; a quantile has one side only. */
+	readonly lower?: number;
+	readonly upper?: number;
 	/** When it fired, in milliseconds since 1970. */
 	readonly time: number;
 }
@@ -172,6 +195,10 @@ export interface IAlertState {
 	readonly period?: string;
 	/** For a FRED series: set when it could not be looked up for want of the user's FRED key. */
 	readonly noKey?: boolean;
+	/** For a statistical condition: set when it could not be computed for want of Julia. */
+	readonly noJulia?: boolean;
+	/** For a statistical condition: set while Julia installs OnlineStats.jl, the first time. */
+	readonly installing?: boolean;
 }
 
 /** A Yahoo Finance quote: the latest price of the regular session, and the previous close. */
@@ -229,6 +256,23 @@ export interface IMinuteBar {
 	readonly close: number;
 	readonly volume: number;
 }
+
+/** What a statistical condition would have done over the values an alert on it looks at, the latest of them last. */
+export interface IBacktest {
+	/** For a quote: when each value was quoted, in milliseconds since 1970. */
+	readonly times?: readonly number[];
+	/** For a series: the period of each value. */
+	readonly periods?: readonly string[];
+	readonly values: readonly number[];
+	/** The band each value was checked against, undefined before there were values enough. */
+	readonly lower: readonly (number | null)[];
+	readonly upper: readonly (number | null)[];
+	/** The positions of the values it would have fired on. */
+	readonly fired: readonly number[];
+}
+
+/** Why a statistical condition could not be computed: no Julia, Julia installing OnlineStats.jl, or Julia failing. */
+export type StatisticsProblem = 'noJulia' | 'installing' | 'failed';
 
 /** The minute bars of a symbol over a span, oldest first, and the regular sessions of its market in that span. */
 export interface IMinuteBars {
@@ -295,6 +339,17 @@ export interface IAlertsService {
 	getSeries(source: EconomicSource, id: string, count: number): Promise<IEconomicSeries | 'noKey' | undefined>;
 	/** Keeps the user's FRED key in the keychain, the FRED panel's too. */
 	setFredKey(key: string): Promise<void>;
+	/**
+	 * What a statistical condition would have done over the values an alert on it would look at: a quote's of the
+	 * regular sessions of the last days, a series' latest; undefined when they cannot be looked up.
+	 */
+	backtest(alert: Pick<IAlert, 'symbol' | 'source' | 'condition' | 'threshold' | 'halfLife' | 'minutes'>): Promise<IBacktest | StatisticsProblem | 'noKey' | undefined>;
+	/**
+	 * Writes to a folder of ~/.pollis/alerts/notebooks the settings of a statistical condition (alert.toml), the values
+	 * an alert on it would look at (values.csv), and, when it is not there, the alert.ipynb that computes with
+	 * OnlineStats.jl what it would have done; the notebook, or undefined when the values cannot be looked up.
+	 */
+	writeNotebook(alert: Pick<IAlert, 'symbol' | 'name' | 'source' | 'condition' | 'threshold' | 'halfLife' | 'minutes'>): Promise<URI | 'noKey' | undefined>;
 	readonly alertsFile: URI;
 }
 
@@ -322,6 +377,41 @@ const MAX_SEARCHED = 1000;
 // The companies a full-text search names at most
 const SEARCH_CIKS = 100;
 const SEARCH_DAYS = 3;
+// The command of Pollis' Julia extension that asks OnlineStats.jl, in a Julia process of its own (pollisAlertStats.ts)
+const ALERT_STATISTICS_COMMAND_ID = 'language-julia.pollisAlertStatistics';
+const DEFAULT_HALF_LIFE = 60;
+// The values a statistical alert starts from, and a backtest goes over: a quote's minutes of the last days, a series' latest
+const STATISTICS_QUOTE_DAYS = 5;
+const STATISTICS_SERIES_COUNT = 120;
+
+/** What OnlineStats.jl answers for a new value of an alert: whether it fires, and the band it was checked against. */
+interface IStatisticsUpdate {
+	readonly needsHistory?: boolean;
+	readonly fires?: boolean;
+	readonly lower?: number | null;
+	readonly upper?: number | null;
+}
+
+/** What OnlineStats.jl answers for a backtest; see `IBacktest`. */
+interface IStatisticsBacktest {
+	readonly lower?: readonly (number | null)[];
+	readonly upper?: readonly (number | null)[];
+	readonly fired?: readonly number[];
+}
+
+/** What alert_stats.jl computes for a statistical alert: its condition, how a move is measured, and its parameters. */
+function statisticsSpec(alert: Pick<IAlert, 'source' | 'condition' | 'threshold' | 'halfLife'>) {
+	return {
+		condition: alert.condition,
+		transform: alert.source ? 'change' : 'logReturn',
+		k: alert.threshold,
+		halfLife: alert.halfLife ?? DEFAULT_HALF_LIFE,
+		p: alert.threshold / 100,
+		window: Math.max(2, Math.round(alert.threshold)),
+		// A quantile of fewer moves is too rough to fire on
+		minObs: alert.condition === 'beyondQuantile' ? 50 : 20,
+	};
+}
 
 /** The message of a fired alert: what crossed what. */
 export function describeFiredAlert(fired: IFiredAlert): string {
@@ -341,6 +431,14 @@ export function describeFiredAlert(fired: IFiredAlert): string {
 		case 'movesBy': return localize('alerts.firedMovesBy', "{0} moved {1}% since the previous close: {2}", name, formatChange(fired.change ?? 0), value);
 		case 'newValue': return localize('alerts.firedNewValueOnly', "New value of {0}: {1}", name, value);
 		case 'changesBy': return localize('alerts.firedChangesBy', "{0} changed by {1} from the value before: {2}", name, formatChange(fired.change ?? 0), value);
+		case 'unusualMove': return localize('alerts.firedUnusualMove', "{0} moved by more than {1} standard deviations: {2}", name, threshold, value);
+		case 'leavesBand': return localize('alerts.firedLeavesBand', "{0} left its band of {1} standard deviations: {2}", name, threshold, value);
+		case 'beyondQuantile': return fired.threshold < 50
+			? localize('alerts.firedFallsBeyond', "{0} fell beyond its {1}% quantile: {2}", name, threshold, value)
+			: localize('alerts.firedRisesBeyond', "{0} rose beyond its {1}% quantile: {2}", name, threshold, value);
+		case 'newExtreme': return fired.upper !== undefined && fired.value > fired.upper
+			? localize('alerts.firedNewHigh', "{0} is above the highest of its last {1} values: {2}", name, threshold, value)
+			: localize('alerts.firedNewLow', "{0} is below the lowest of its last {1} values: {2}", name, threshold, value);
 		case 'newFiling': {
 			const items = describeItems(fired.filing?.items);
 			return items
@@ -361,6 +459,12 @@ export function describeCondition(alert: Pick<IAlert, 'condition' | 'threshold' 
 		case 'movesBy': return localize('alerts.conditionMovesBy', "moves by {0}% since the previous close", threshold);
 		case 'newValue': return localize('alerts.conditionNewValue', "publishes a new value");
 		case 'changesBy': return localize('alerts.conditionChangesBy', "changes by {0} or more from the value before", threshold);
+		case 'unusualMove': return localize('alerts.conditionUnusualMove', "moves by more than {0} standard deviations", threshold);
+		case 'leavesBand': return localize('alerts.conditionLeavesBand', "leaves its band of {0} standard deviations", threshold);
+		case 'beyondQuantile': return alert.threshold < 50
+			? localize('alerts.conditionFallsBeyond', "falls beyond its {0}% quantile", threshold)
+			: localize('alerts.conditionRisesBeyond', "rises beyond its {0}% quantile", threshold);
+		case 'newExtreme': return localize('alerts.conditionNewExtreme', "goes above the highest or below the lowest of its last {0} values", threshold);
 		case 'newFiling': {
 			const forms = alert.forms?.length ? alert.forms.join(' / ') : undefined;
 			const items = alert.items?.length ? alert.items.join(' / ') : undefined;
@@ -622,6 +726,7 @@ export class AlertsService extends Disposable implements IAlertsService {
 
 	readonly alertsFile: URI;
 	private readonly historyFile: URI;
+	private readonly notebooksFolder: URI;
 	private readonly owner = generateUuid();
 	private alerts: IAlert[] = [];
 	private fired: IFiredAlert[] = [];
@@ -648,6 +753,7 @@ export class AlertsService extends Disposable implements IAlertsService {
 		const folder = joinPath(pathService.userHome({ preferLocal: true }), '.pollis', 'alerts');
 		this.alertsFile = joinPath(folder, 'alerts.json');
 		this.historyFile = joinPath(folder, 'history.jsonl');
+		this.notebooksFolder = joinPath(folder, 'notebooks');
 		this.read = new Set(this.readStorage<string[]>(READ_KEY, []));
 		this.loaded = Promise.all([this.readAlerts(), this.readHistory(false)]).then(() => this._onDidChange.fire());
 
@@ -795,6 +901,70 @@ export class AlertsService extends Disposable implements IAlertsService {
 
 	async setFredKey(key: string): Promise<void> {
 		await this.secretStorageService.set(CREDENTIALS.fred.secretKey, key);
+	}
+
+	async backtest(alert: Pick<IAlert, 'symbol' | 'source' | 'condition' | 'threshold' | 'halfLife' | 'minutes'>): Promise<IBacktest | StatisticsProblem | 'noKey' | undefined> {
+		const observed = await this.observations(alert, Date.now());
+		if (typeof observed !== 'object') {
+			return observed;
+		}
+		const answer = await this.statistics<IStatisticsBacktest>({ op: 'backtest', spec: statisticsSpec(alert), values: observed.values });
+		return typeof answer === 'object' ? { ...observed, lower: answer.lower ?? [], upper: answer.upper ?? [], fired: answer.fired ?? [] } : answer;
+	}
+
+	async writeNotebook(alert: Pick<IAlert, 'symbol' | 'name' | 'source' | 'condition' | 'threshold' | 'halfLife' | 'minutes'>): Promise<URI | 'noKey' | undefined> {
+		const observed = await this.observations(alert, Date.now());
+		if (typeof observed !== 'object') {
+			return observed;
+		}
+		const folder = joinPath(this.notebooksFolder, `${alert.source ?? 'yahoo'}-${alert.symbol}-${alert.condition}`.replace(/[^A-Za-z0-9._-]+/g, '_'));
+		const spec = statisticsSpec(alert);
+		// TOML's basic strings are written as JSON's
+		const settings = Object.entries({ name: alert.name || alert.symbol, symbol: alert.symbol, source: alert.source ?? 'yahoo', ...spec })
+			.map(([key, value]) => `${key} = ${typeof value === 'string' ? JSON.stringify(value) : value}`);
+		const rows = observed.values.map((value, index) => [observed.times ? new Date(observed.times[index]).toISOString() : observed.periods?.[index] ?? '', String(value)]);
+		await this.fileService.writeFile(joinPath(folder, 'alert.toml'), VSBuffer.fromString(settings.join('\n') + '\n'));
+		await this.fileService.writeFile(joinPath(folder, 'values.csv'), VSBuffer.fromString(writeCsv([[observed.times ? 'time' : 'period', 'value'], ...rows])));
+		const notebook = joinPath(folder, 'alert.ipynb');
+		if (!await this.fileService.exists(notebook)) {
+			await this.fileService.writeFile(notebook, VSBuffer.fromString(alertNotebook(folder.fsPath)));
+		}
+		return notebook;
+	}
+
+	/**
+	 * The values a statistical alert looks at: a quote's, the close of each minute of the regular sessions of the last
+	 * days that ended by `until`, one every `minutes` as the alert looks it up; a series' latest values.
+	 */
+	private async observations(alert: Pick<IAlert, 'symbol' | 'source' | 'condition' | 'threshold' | 'minutes'>, until: number): Promise<Omit<IBacktest, 'lower' | 'upper' | 'fired'> | 'noKey' | undefined> {
+		if (alert.source) {
+			// A high or low of more values than that needs them all
+			const count = Math.max(STATISTICS_SERIES_COUNT, alert.condition === 'newExtreme' ? Math.round(alert.threshold) + 1 : 0);
+			const series = await this.getSeries(alert.source, alert.symbol, count);
+			return typeof series === 'object' ? { periods: series.observations.map(observation => observation.period), values: series.observations.map(observation => observation.value) } : series;
+		}
+		const minuteBars = await this.getMinuteBars(alert.symbol, until - STATISTICS_QUOTE_DAYS * 24 * 60 * 60_000, until);
+		if (!minuteBars) {
+			return undefined;
+		}
+		const bars = minuteBars.bars.filter(bar => bar.session === 'regular' && bar.time + 60_000 <= until);
+		const every = Math.max(1, Math.round(alert.minutes ?? 1));
+		const chosen = bars.filter((_, index) => (bars.length - 1 - index) % every === 0);
+		return { times: chosen.map(bar => bar.time + 60_000), values: chosen.map(bar => bar.close) };
+	}
+
+	/** The answer of OnlineStats.jl, through Pollis' Julia extension, or why there is none. */
+	private async statistics<T>(request: object): Promise<T | StatisticsProblem> {
+		try {
+			const answer = await this.commandService.executeCommand<T & { readonly error?: string }>(ALERT_STATISTICS_COMMAND_ID, request);
+			if (!answer) {
+				return 'failed';
+			}
+			return answer.error === 'noJulia' || answer.error === 'installing' ? answer.error : answer.error ? 'failed' : answer;
+		} catch {
+			// The Julia extension is disabled, or not activated yet
+			return 'failed';
+		}
 	}
 
 	async getMinuteBars(symbol: string, start: number, end: number, minutes: 1 | 5 = 1): Promise<IMinuteBars | undefined> {
@@ -1201,6 +1371,51 @@ export class AlertsService extends Disposable implements IAlertsService {
 					this.quietUntil.delete(symbol);
 				}
 			}
+			// A statistical alert takes in each new value, with the values before it when Julia has not seen the alert yet
+			const statistics = new Map<string, IStatisticsUpdate | StatisticsProblem | undefined>();
+			for (const alert of due.filter(alert => isStatistical(alert.condition))) {
+				const previous = states[alert.id];
+				let value: number;
+				let history: () => Promise<number[] | undefined>;
+				if (alert.source) {
+					const found = series.get(`${alert.source}:${alert.symbol}`);
+					const latest = typeof found === 'object' ? found.observations[found.observations.length - 1] : undefined;
+					if (!latest || previous?.period === undefined || latest.period <= previous.period) {
+						continue;
+					}
+					value = latest.value;
+					history = async () => {
+						const observed = await this.observations(alert, now);
+						return typeof observed === 'object' ? observed.values.filter((_, index) => (observed.periods?.[index] ?? '') < latest.period) : undefined;
+					};
+				} else {
+					const quote = quotes.get(alert.symbol);
+					if (!quote || previous?.quoted === undefined || quote.time <= previous.quoted) {
+						continue;
+					}
+					value = quote.value;
+					history = async () => {
+						const observed = await this.observations(alert, quote.time);
+						return typeof observed === 'object' ? [...observed.values] : undefined;
+					};
+				}
+				const spec = statisticsSpec(alert);
+				let answer: IStatisticsUpdate | StatisticsProblem | undefined = await this.statistics<IStatisticsUpdate>({ op: 'update', key: alert.id, spec, value });
+				if (typeof answer === 'object' && answer.needsHistory) {
+					const before = await history();
+					answer = before ? await this.statistics<IStatisticsUpdate>({ op: 'update', key: alert.id, spec, value, history: before }) : undefined;
+				}
+				statistics.set(alert.id, answer);
+			}
+			// A value a statistical alert could not take in is taken in at the next look-up: its period or quote time is kept
+			const unanswered = (previous: IAlertState | undefined, problem: StatisticsProblem | undefined): IAlertState => ({
+				...previous,
+				armed: previous?.armed ?? true,
+				checked: now,
+				error: problem !== 'installing' || undefined,
+				noJulia: problem === 'noJulia' || undefined,
+				installing: problem === 'installing' || undefined,
+			});
 			const fired: IFiredAlert[] = [];
 			const once: string[] = [];
 			this.updateState(states => {
@@ -1282,11 +1497,17 @@ export class AlertsService extends Disposable implements IAlertsService {
 						}
 						// A value is new when its period comes after the latest one before; none is on the first look-up, and a revised value is not
 						if (previous?.period !== undefined && latest.period > previous.period) {
+							const computed = statistics.get(alert.id);
+							if (isStatistical(alert.condition) && typeof computed !== 'object') {
+								states[alert.id] = unanswered(previous, computed);
+								continue;
+							}
+							const answer = typeof computed === 'object' ? computed : undefined;
 							const before = found.observations.length > 1 ? found.observations[found.observations.length - 2].value : previous.value;
-							const fires = this.evaluateNew(alert, latest.value, before);
+							const fires = answer ? !!answer.fires : this.evaluateNew(alert, latest.value, before);
 							if (fires) {
 								const change = before !== undefined ? latest.value - before : undefined;
-								fired.push({ id: generateUuid(), alertId: alert.id, symbol: alert.symbol, name: alert.name || found.title, condition: alert.condition, threshold: alert.threshold, severity: alert.severity, value: latest.value, previousValue: before, change, source: alert.source, period: latest.period, time: now });
+								fired.push({ id: generateUuid(), alertId: alert.id, symbol: alert.symbol, name: alert.name || found.title, condition: alert.condition, threshold: alert.threshold, severity: alert.severity, value: latest.value, previousValue: before, change, source: alert.source, period: latest.period, lower: answer?.lower ?? undefined, upper: answer?.upper ?? undefined, time: now });
 								if (!alert.repeat) {
 									once.push(alert.id);
 								}
@@ -1298,6 +1519,25 @@ export class AlertsService extends Disposable implements IAlertsService {
 					const quote = quotes.get(alert.symbol);
 					if (!quote) {
 						states[alert.id] = { ...previous, armed: previous?.armed ?? true, checked: now, error: true };
+						continue;
+					}
+					if (isStatistical(alert.condition)) {
+						const computed = statistics.get(alert.id);
+						if (statistics.has(alert.id) && typeof computed !== 'object') {
+							states[alert.id] = unanswered(previous, computed);
+							continue;
+						}
+						const answer = typeof computed === 'object' ? computed : undefined;
+						// Fires again once a value is back within
+						const armed = previous?.armed ?? true;
+						const fires = !!answer?.fires;
+						if (fires && armed) {
+							fired.push({ id: generateUuid(), alertId: alert.id, symbol: alert.symbol, name: alert.name || quote.name, condition: alert.condition, threshold: alert.threshold, severity: alert.severity, value: quote.value, previousValue: previous?.value, currency: quote.currency, lower: answer?.lower ?? undefined, upper: answer?.upper ?? undefined, time: now });
+							if (!alert.repeat) {
+								once.push(alert.id);
+							}
+						}
+						states[alert.id] = { value: quote.value, currency: quote.currency, quoted: quote.time, checked: now, armed: answer ? !fires : armed };
 						continue;
 					}
 					const { fires, beyond, change } = this.evaluate(alert, quote, previous);
@@ -1360,9 +1600,7 @@ export class AlertsService extends Disposable implements IAlertsService {
 				const beyond = Math.abs(change) >= alert.threshold;
 				return { fires: beyond, beyond, change };
 			}
-			case 'newFiling':
-			case 'newValue':
-			case 'changesBy':
+			default:
 				return { fires: false, beyond: false };
 		}
 	}

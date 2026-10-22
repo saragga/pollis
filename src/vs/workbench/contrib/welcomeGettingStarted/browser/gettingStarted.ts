@@ -66,7 +66,7 @@ import { ADD_FEED_COMMAND_ID, RSS_FEEDS_COMMAND_ID } from '../../monitor/browser
 import { describeJournal, IJournalScoresService } from '../../monitor/browser/journalScores.js';
 import { JOURNAL_METRICS_COMMAND_ID } from '../../databases/common/databaseDrivers.js';
 import { MarkdownString } from '../../../../base/common/htmlContent.js';
-import { describeCondition, describeFiredAlert, describeSubject, formatValue, IAlert, IAlertsService, IFiredAlert } from '../../monitor/browser/alertsService.js';
+import { describeCondition, describeFiredAlert, describeSubject, formatValue, IAlert, IAlertsService, IFiredAlert, isStatistical } from '../../monitor/browser/alertsService.js';
 import { ADD_ALERT_COMMAND_ID, openQuotePage, severityIcon, SHOW_ALERTS_COMMAND_ID } from '../../monitor/browser/alertsPage.js';
 import { seriesPage } from '../../monitor/browser/economicSeries.js';
 import { OPEN_LINK_COMMAND_ID } from '../../monitor/browser/openLink.js';
@@ -1384,7 +1384,7 @@ export class GettingStartedPage extends EditorPane {
 		const describeValue = (value: number, currency: string | undefined, quoted: number) => {
 			const now = formatValue(value, currency);
 			const when = fromNow(quoted, true);
-			if (alert.condition === 'movesBy' || !alert.threshold || value === alert.threshold) {
+			if (alert.condition === 'movesBy' || isStatistical(alert.condition) || !alert.threshold || value === alert.threshold) {
 				return localize('pollis.watchedAlertValue', "{0}, quoted {1}", now, when);
 			}
 			const distance = Math.abs(value - alert.threshold) / Math.abs(alert.threshold) * 100;
@@ -1399,8 +1399,8 @@ export class GettingStartedPage extends EditorPane {
 			$(`span.pollis-alert-icon${ThemeIcon.asCSSSelector(severityIcon(alert.severity))}`),
 			$('.pollis-alert-body', {},
 				$('p.pollis-alert-title', {}, $('button.pollis-feed-title', { 'x-dispatch': `openAlert:${alert.id}` }, localize('pollis.watchedAlert', "{0} {1}", name, describeCondition(alert)))),
-				$('p.pollis-alert-description', {}, state?.error
-					? state.noContact ? localize('pollis.watchedAlertNoContact', "Needs your SEC contact") : state.noKey ? localize('pollis.watchedAlertNoKey', "Needs your FRED key") : localize('pollis.watchedAlertError', "Could not be looked up")
+				$('p.pollis-alert-description', {}, state?.installing ? localize('pollis.watchedAlertInstalling', "Installing OnlineStats.jl") : state?.error
+					? state.noContact ? localize('pollis.watchedAlertNoContact', "Needs your SEC contact") : state.noKey ? localize('pollis.watchedAlertNoKey', "Needs your FRED key") : state.noJulia ? localize('pollis.watchedAlertNoJulia', "Needs Julia") : localize('pollis.watchedAlertError', "Could not be looked up")
 					: alert.source && state?.value !== undefined && state.period !== undefined
 						? localize('pollis.watchedAlertSeries', "{0} for {1}, looked at {2}", formatValue(state.value), state.period, fromNow(state.checked ?? Date.now(), true))
 						: state?.filing

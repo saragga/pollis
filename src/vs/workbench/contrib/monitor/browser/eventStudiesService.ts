@@ -70,6 +70,8 @@ export interface IEventStudy {
 	/** For the market model: the trading days before the event its alpha and beta are estimated on. */
 	readonly estimationDays: number;
 	readonly periods: readonly IEventPeriod[];
+	/** What PollisEventStudies.jl groups the filings by: form, item, session or ticker; empty for no groups. */
+	readonly groupBy?: string;
 	/** When the study was made, in milliseconds since 1970: the alerts fired from then on are its events. */
 	readonly created: number;
 	/** Whether the filings its alert would have fired in the 30 days before it was made are among its events. */
@@ -850,6 +852,7 @@ function readStudy(folder: string, toml: TomlValue): IEventStudy | undefined {
 		eventTime: toml.event_time === 'accepted' || source === 'fomc' ? 'accepted' : 'firstPublic',
 		estimationDays: minutes(toml.estimation_days, DEFAULT_ESTIMATION_DAYS) || DEFAULT_ESTIMATION_DAYS,
 		periods: periods.length ? periods : [DEFAULT_EVENT_PERIOD],
+		groupBy: text(toml.group_by) || undefined,
 		created: isNaN(created) ? 0 : created,
 		backfilled: toml.backfilled === true,
 		backfillCapped: toml.backfill_capped === true || undefined,
@@ -887,6 +890,8 @@ function writeStudy(study: IEventStudy): string {
 		`# firstPublic (the earlier of the newswire release and EDGAR's acceptance) or accepted`,
 		`event_time = ${text(study.eventTime)}`,
 		`estimation_days = ${study.estimationDays}`,
+		`# The filings are also studied in groups by form, item (each 8-K item), session (during the regular session or outside it) or ticker; "" for no groups`,
+		`group_by = ${text(study.groupBy ?? '')}`,
 		`created = ${text(new Date(study.created).toISOString())}`,
 		`# Whether the filings of the 30 days before it was made are among its events; false looks for them again`,
 		`backfilled = ${study.backfilled}`,

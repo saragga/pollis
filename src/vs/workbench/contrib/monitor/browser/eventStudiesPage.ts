@@ -33,6 +33,8 @@ const MINUTE = 60_000;
 const SETTLE_MILLISECONDS = 2 * MINUTE;
 // The fewest minute returns the market model's alpha and beta are estimated on
 const MIN_ESTIMATION_RETURNS = 30;
+// What PollisEventStudies.jl can group the filings by
+const GROUP_BY = ['form', 'item', 'session', 'ticker'];
 // The hour and the day in New York, where the market is
 const newYorkHour = safeIntl.DateTimeFormat('en-US', { timeZone: 'America/New_York', hour: 'numeric', hourCycle: 'h23' });
 const newYorkDay = safeIntl.DateTimeFormat('en-CA', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit' });
@@ -40,7 +42,7 @@ const newYorkDay = safeIntl.DateTimeFormat('en-CA', { timeZone: 'America/New_Yor
 type EventStudiesMessage =
 	| { readonly command: 'ready' }
 	| { readonly command: 'select'; readonly folder: string }
-	| { readonly command: 'create'; readonly title: string; readonly source: EventSource; readonly alert: string; readonly releases: readonly FomcRelease[]; readonly instruments: readonly string[]; readonly benchmark: string; readonly model: EventModel; readonly eventTime: EventTime; readonly estimationDays: number; readonly periods: readonly IEventPeriod[] }
+	| { readonly command: 'create'; readonly title: string; readonly source: EventSource; readonly alert: string; readonly releases: readonly FomcRelease[]; readonly instruments: readonly string[]; readonly benchmark: string; readonly model: EventModel; readonly eventTime: EventTime; readonly estimationDays: number; readonly periods: readonly IEventPeriod[]; readonly groupBy: string }
 	| { readonly command: 'addAlert' }
 	| { readonly command: 'openUrl'; readonly url: string }
 	| { readonly command: 'mediaCoverage'; readonly folder: string; readonly accession: string }
@@ -285,6 +287,7 @@ function openEventStudiesPage(accessor: ServicesAccessor, folder: string | undef
 					eventTime: message.eventTime === 'accepted' || fomc ? 'accepted' : 'firstPublic',
 					estimationDays: Math.min(20, Math.max(1, Math.round(message.estimationDays) || 5)),
 					periods: periods.length ? periods.map(period => fomc ? { ...period, nextOpen: false } : period) : [fomc ? FOMC_PERIOD : DEFAULT_EVENT_PERIOD],
+					groupBy: !fomc && GROUP_BY.includes(message.groupBy) ? message.groupBy : undefined,
 				});
 				select(study.folder);
 				webviewInput.webview.postMessage({ command: 'created', folder: study.folder });
@@ -633,6 +636,13 @@ function pageHtml(): string {
 		marketModel: localize('eventStudies.marketModelChoice', "Market Model"),
 		modelHint: localize('eventStudies.modelHint', "Market-adjusted takes the benchmark's return out. The market model takes out alpha plus beta times the benchmark's return, estimated on the minute returns of the regular sessions of the days before the period."),
 		estimationDays: localize('eventStudies.estimationDays', "Estimation Days"),
+		groupBy: localize('eventStudies.groupBy', "Group By"),
+		groupByNone: localize('eventStudies.groupByNone', "No Groups"),
+		groupByForm: localize('eventStudies.groupByForm', "Form"),
+		groupByItem: localize('eventStudies.groupByItem', "8-K Item"),
+		groupBySession: localize('eventStudies.groupBySession', "Session"),
+		groupByTicker: localize('eventStudies.groupByTicker', "Ticker"),
+		groupByHint: localize('eventStudies.groupByHint', "Optional. The notebook's report also studies the filings in groups, each with its own CAAR and tests: by form, by 8-K item (a filing with several is in the group of each), by session (during the regular session or outside it) or by ticker."),
 		eventTime: localize('eventStudies.eventTime', "Event Time"),
 		firstPublic: localize('eventStudies.firstPublicChoice', "First Public"),
 		acceptedChoice: localize('eventStudies.acceptedChoice', "EDGAR Acceptance"),
@@ -799,7 +809,7 @@ function pageHtml(): string {
 			<span>${text.periods}</span>
 			<div>
 				<div class="periods" id="periods"></div>
-				<div class="row" style="margin-top: 6px;"><button class="action" id="addPeriod">${text.addPeriod}</button></div>
+				<div class="row" style="margin-top: 6px;"><button class="action primary" id="addPeriod">${text.addPeriod}</button></div>
 				<div class="hint">${text.periodsHint}</div>
 			</div>
 			<label for="benchmark" class="filingsOnly">${text.benchmark}</label>
@@ -812,6 +822,17 @@ function pageHtml(): string {
 					<label class="choice" id="estimationRow" hidden>${text.estimationDays} <input type="number" id="estimationDays" min="1" max="20" value="5"></label>
 				</div>
 				<div class="hint">${text.modelHint}</div>
+			</div>
+			<label for="groupBy" class="filingsOnly">${text.groupBy}</label>
+			<div class="filingsOnly">
+				<select id="groupBy">
+					<option value="">${text.groupByNone}</option>
+					<option value="form">${text.groupByForm}</option>
+					<option value="item">${text.groupByItem}</option>
+					<option value="session">${text.groupBySession}</option>
+					<option value="ticker">${text.groupByTicker}</option>
+				</select>
+				<div class="hint">${text.groupByHint}</div>
 			</div>
 			<span></span>
 			<div><button class="action primary" id="create" disabled>${text.create}</button></div>
@@ -1309,6 +1330,7 @@ function pageHtml(): string {
 			eventTime: document.querySelector('input[name="eventTime"]:checked').value,
 			estimationDays: Number(document.getElementById('estimationDays').value),
 			periods,
+			groupBy: document.getElementById('groupBy').value,
 		});
 	});
 	document.getElementById('period').addEventListener('change', event => { periodIndex = Number(event.target.value); renderStudy(); });

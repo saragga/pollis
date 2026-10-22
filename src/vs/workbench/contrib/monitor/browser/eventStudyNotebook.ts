@@ -5,8 +5,10 @@
 
 // The study.ipynb of an event study: Julia that runs PollisEventStudies.jl on the study's folder (study.toml,
 // events.csv and prices/), which computes, for each period, the average and cumulative average abnormal returns a
-// minute at a time with their cross-sectional t, the Boehmer, Musumeci and Poulsen (1991) test on standardized CARs,
-// and abnormal volume, and writes them to results/. The page draws the same CAARs as the prices come in.
+// minute at a time with their cross-sectional t, the Boehmer, Musumeci and Poulsen (1991) test on standardized CARs
+// with Kolari and Pynnonen's (2010) adjustment for cross-correlation, their (2011) generalized rank test, and abnormal
+// volume, each with its p-value, for all the filings and for each group of them, and writes them to results/. The page
+// draws the same CAARs as the prices come in.
 
 const PACKAGE_URL = 'https://github.com/Trumpingtons/PollisEventStudies.jl';
 const REGISTRY_URL = 'https://github.com/Trumpingtons/PollisRegistry';
@@ -19,15 +21,23 @@ export function eventStudyNotebook(folder: string): string {
 
 The filings an alert on SEC filings fired are the events. Pollis captures the minute prices of each filer's stock and of the benchmark around them, from Yahoo Finance, into this folder:
 
-- **study.toml**: the benchmark, the model of normal returns, the event time and the periods, in minutes before and after it;
+- **study.toml**: the benchmark, the model of normal returns, the event time, the periods, in minutes before and after it, and what the filings are grouped by;
 - **events.csv**: the filings, with the time EDGAR accepted each and the time of the company's newswire release, as Google News or PR Newswire's own feeds list it (UTC); the event's time (event_time): the earlier of the two, its first public time, or EDGAR's acceptance alone, as study.toml says; whether it came during the regular session and the next open after it;
 - **prices/**: a file per filing, with the minute bars of the stock and of the benchmark;
 - **news/**: a file per filing, with the articles Google News lists from a day before EDGAR accepted it to a day after.
 
-[PollisEventStudies.jl](${PACKAGE_URL}) computes, for each period, the average abnormal return (AAR) and the cumulative average abnormal return (CAAR) a minute at a time with their cross-sectional t, from the event's time and, for an event outside the regular session, from the next open; and at the end of the period the CAR's t, the Boehmer, Musumeci and Poulsen (1991) test on standardized CARs, and abnormal volume. It writes them to **results/**. Events still capturing prices count up to the last complete minute: run all again as they come in.
+[PollisEventStudies.jl](${PACKAGE_URL}) computes, for each period, the average abnormal return (AAR) and the cumulative average abnormal return (CAAR) a minute at a time with their cross-sectional t, from the event's time and, for an event outside the regular session, from the next open. At the end of the period (for an event outside the session, the period's minutes after the next open, where the market first trades on it), each with its two-sided p-value:
+
+- the CAR's cross-sectional t;
+- the Boehmer, Musumeci and Poulsen (1991) test on standardized CARs;
+- the same adjusted for the correlation of the events' abnormal returns (Kolari and Pynn&ouml;nen 2010), for events whose periods overlap;
+- the generalized rank test (Kolari and Pynn&ouml;nen 2011), robust to returns far from normal;
+- abnormal volume.
+
+With **group_by** in study.toml (form, item, session or ticker), the same for each group of filings. It writes them to **results/**. Events still capturing prices count up to the last complete minute: run all again as they come in.
 `),
 		code(String.raw`
-${install('0.2.0')}
+${install('0.3.1')}
 
 const STUDY = isfile(joinpath(pwd(), "study.toml")) ? pwd() : raw"${folder}"
 results = run_study(STUDY)
@@ -41,10 +51,18 @@ At the end of each period: the CAR in per cent, the standardized CAR (by the res
 results[1].events
 `),
 		markdown(String.raw`
+## Groups
+
+Each group of filings, with its tests at the end of the first period. Another grouping, without changing study.toml: run_study(STUDY; group_by = "item"), or a function of the event that gives a group's name, such as group_by = event -> event.form == "8-K" ? "8-K" : "Other".
+`),
+		code(String.raw`
+[(group.name, group.tests) for group in results[1].groups]
+`),
+		markdown(String.raw`
 ## Notes
 
-- **Market-adjusted**: the normal return is the benchmark's. **Market model**: alpha plus beta times the benchmark's return, estimated on the minute returns of the regular sessions of the trading days before the period, not across the night.
-- The Boehmer, Musumeci and Poulsen test needs the estimation days, which Pollis captures for the market model only.
+- **Market-adjusted**: the normal return is the benchmark's. **Market model**: alpha plus beta times the benchmark's return, estimated on the minute returns of the regular sessions of the trading days before the period, not across the night. A stock that does not trade every minute is measured from one trade to the next.
+- The standardized tests (Boehmer, Musumeci and Poulsen, its adjustment and the generalized rank test) need the estimation days, which Pollis captures for the market model only.
 - Yahoo Finance keeps minute prices for 30 days: the events are the filings of the 30 days before the study was made and those after, captured while Pollis was open.
 - The benchmark trades only in the regular session: after the close, the stock's moves are its own.
 `),
@@ -130,10 +148,10 @@ function source(text: string): string[] {
 	return lines.map((line, index) => index < lines.length - 1 ? `${line}\n` : line);
 }
 
-function markdown(text: string) {
+export function markdown(text: string) {
 	return { cell_type: 'markdown', metadata: {}, source: source(text) };
 }
 
-function code(text: string) {
+export function code(text: string) {
 	return { cell_type: 'code', execution_count: null, metadata: {}, outputs: [], source: source(text) };
 }
