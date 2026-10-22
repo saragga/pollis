@@ -8,14 +8,12 @@ import { parse } from '../../../../base/common/json.js';
 import { applyEdits, setProperty } from '../../../../base/common/jsonEdit.js';
 import { DisposableStore } from '../../../../base/common/lifecycle.js';
 import { joinPath } from '../../../../base/common/resources.js';
-import { URI } from '../../../../base/common/uri.js';
 import { localize, localize2 } from '../../../../nls.js';
 import { Action2, registerAction2 } from '../../../../platform/actions/common/actions.js';
 import { ICommandService } from '../../../../platform/commands/common/commands.js';
 import { IFileService } from '../../../../platform/files/common/files.js';
 import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
 import { INotificationService } from '../../../../platform/notification/common/notification.js';
-import { IOpenerService } from '../../../../platform/opener/common/opener.js';
 import { IHostService } from '../../../services/host/browser/host.js';
 import { IPathService } from '../../../services/path/common/pathService.js';
 import { ITerminalInstanceService, ITerminalService } from '../../terminal/browser/terminal.js';
@@ -23,6 +21,7 @@ import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
 import { commandLine, IMcpServer, MCP_SERVERS, MCP_SERVERS_COMMAND_ID, shellWord, UV_INSTALL_URL } from '../common/mcpServers.js';
 import { CHOOSE_AGENT_COMMAND_ID, CODING_AGENTS, commandWords, findProgram, terminalEnvironment } from './pollisAgents.js';
+import { OPEN_LINK_COMMAND_ID } from '../../monitor/browser/openLink.js';
 
 // Compose > MCP Servers: a short, curated library of MCP servers (common/mcpServers.ts), which the coding agent
 // of Compose > Coding Agents can use to look things up while it works: search a source, read its notes, fetch
@@ -110,7 +109,6 @@ async function openMcpServersPage(accessor: ServicesAccessor, server: string | u
 	const fileService = accessor.get(IFileService);
 	const terminalInstanceService = accessor.get(ITerminalInstanceService);
 	const terminalService = accessor.get(ITerminalService);
-	const openerService = accessor.get(IOpenerService);
 	const hostService = accessor.get(IHostService);
 	const commandService = accessor.get(ICommandService);
 	const pathService = accessor.get(IPathService);
@@ -207,7 +205,7 @@ async function openMcpServersPage(accessor: ServicesAccessor, server: string | u
 		} else if (message.command === 'codingAgent') {
 			commandService.executeCommand(CHOOSE_AGENT_COMMAND_ID);
 		} else if (message.command === 'link' && (message.url === UV_INSTALL_URL || MCP_SERVERS.some(server => server.page === message.url))) {
-			openerService.open(URI.parse(message.url), { openExternal: true });
+			commandService.executeCommand(OPEN_LINK_COMMAND_ID, message.url);
 		} else if (message.command === 'add' || message.command === 'signIn' || message.command === 'remove') {
 			const server = MCP_SERVERS.find(item => item.name === message.server);
 			const mcpAgent = MCP_AGENTS.find(item => item.agent === message.agent);

@@ -17,6 +17,8 @@ import { SHOW_FIRED_ALERTS_COMMAND_ID } from './alertsPage.js';
 import { IAlertsService } from './alertsService.js';
 import { IEventStudiesService } from './eventStudiesService.js';
 import './eventStudiesPage.js';
+import './mediaCoveragePage.js';
+import './mediaCoverageService.js';
 
 /** A bell in the status bar with the number of fired alerts not read yet, shown while there are any; it lists them. */
 class AlertsStatusBar extends Disposable implements IWorkbenchContribution {

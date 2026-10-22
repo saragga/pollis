@@ -3,17 +3,17 @@
  *  Licensed under the GNU Affero General Public License v3.0. See LICENSE.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { URI } from '../../../../base/common/uri.js';
 import { localize, localize2 } from '../../../../nls.js';
 import { Action2, MenuId, registerAction2 } from '../../../../platform/actions/common/actions.js';
 import { Categories } from '../../../../platform/action/common/actionCommonCategories.js';
 import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
 import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
 import { INotificationService, NotificationPriority, Severity } from '../../../../platform/notification/common/notification.js';
-import { IOpenerService } from '../../../../platform/opener/common/opener.js';
+import { ICommandService } from '../../../../platform/commands/common/commands.js';
 import { IProductService } from '../../../../platform/product/common/productService.js';
 import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
 import { IWorkbenchContribution, registerWorkbenchContribution2, WorkbenchPhase } from '../../../common/contributions.js';
+import { OPEN_LINK_COMMAND_ID } from '../../monitor/browser/openLink.js';
 
 // What's New in Pollis: the What's New section of each release is in its notes on GitHub. After an update, the
 // first start of the new version offers to open them (unless update.showReleaseNotes is off), and Help > What's
@@ -37,8 +37,8 @@ function compareVersions(a: string, b: string): number {
 }
 
 /** The release notes of this version on GitHub, which start with its What's New. */
-function whatsNewUri(productService: IProductService): URI {
-	return URI.parse(productService.pollisVersion ? `${RELEASES}/tag/v${productService.pollisVersion}` : `${RELEASES}/latest`);
+function whatsNewUrl(productService: IProductService): string {
+	return productService.pollisVersion ? `${RELEASES}/tag/v${productService.pollisVersion}` : `${RELEASES}/latest`;
 }
 
 /** At the first start of a newer version, the offer to read what is new in it. */
@@ -50,7 +50,7 @@ class PollisWhatsNew implements IWorkbenchContribution {
 		@IConfigurationService configurationService: IConfigurationService,
 		@IStorageService storageService: IStorageService,
 		@INotificationService notificationService: INotificationService,
-		@IOpenerService openerService: IOpenerService,
+		@ICommandService commandService: ICommandService,
 	) {
 		const version = productService.pollisVersion;
 		if (!version) {
@@ -61,7 +61,7 @@ class PollisWhatsNew implements IWorkbenchContribution {
 		if (last && compareVersions(version, last) > 0 && configurationService.getValue<boolean>('update.showReleaseNotes') !== false) {
 			notificationService.prompt(Severity.Info,
 				localize('pollisWhatsNew.welcome', "Welcome to Pollis {0}! Would you like to read what is new in it?", version),
-				[{ label: localize('pollisWhatsNew.open', "What's New"), run: () => openerService.open(whatsNewUri(productService), { openExternal: true }) }],
+				[{ label: localize('pollisWhatsNew.open', "What's New"), run: () => commandService.executeCommand(OPEN_LINK_COMMAND_ID, whatsNewUrl(productService)) }],
 				{ priority: NotificationPriority.OPTIONAL });
 		}
 	}
@@ -84,6 +84,6 @@ registerAction2(class extends Action2 {
 		});
 	}
 	async run(accessor: ServicesAccessor): Promise<void> {
-		await accessor.get(IOpenerService).open(whatsNewUri(accessor.get(IProductService)), { openExternal: true });
+		await accessor.get(ICommandService).executeCommand(OPEN_LINK_COMMAND_ID, whatsNewUrl(accessor.get(IProductService)));
 	}
 });

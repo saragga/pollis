@@ -29,7 +29,7 @@ import { EXPORT_NOTEBOOK_LATEX_COMMAND_ID, MAKE_NOTEBOOK_SLIDES_COMMAND_ID, POLI
 import './practice.js';
 import { IMPLEMENTED_COLLABORATION_COMMANDS } from './collaboration/collaboration.contribution.js';
 import { PUBLISHED_BENCHMARKS_COMMAND_ID, SEARCH_WORKFLOW_LIBRARY_COMMAND_ID } from './workflowLibrary.js';
-import { SHOW_EVENT_STUDIES_COMMAND_ID } from '../../monitor/browser/eventStudiesPage.js';
+import { SHOW_EVENT_STUDIES_COMMAND_ID } from '../../monitor/browser/eventStudiesService.js';
 
 // The Mathematical Core, Financial Econometrics and Economics Toolboxes come from their extensions (toolboxes/pollis-toolbox-*, not built in:
 // installed from the Toolboxes section of the Extensions pane), see toolboxExtensions.ts

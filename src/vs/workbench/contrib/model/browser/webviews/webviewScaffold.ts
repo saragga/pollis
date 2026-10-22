@@ -269,8 +269,8 @@ export function buildWebviewHtml(parts: WebviewParts): string {
 		.form-input { background-color: var(--vscode-input-background); color: var(--vscode-input-foreground); border: 1px solid var(--vscode-input-border); border-radius: 4px; padding: 8px 10px; font-size: 13px; font-family: 'Consolas', 'Monaco', 'Courier New', monospace; outline: none; width: 100%; }
 		.input-with-action { display: flex; gap: 8px; align-items: stretch; }
 		.input-with-action .form-input { flex: 1; min-width: 0; }
-		.input-action-btn { background: var(--vscode-button-secondaryBackground); color: var(--vscode-button-secondaryForeground); border: none; border-radius: 4px; padding: 0 12px; font-size: 13px; cursor: pointer; white-space: nowrap; }
-		.input-action-btn:hover { background: var(--vscode-button-background); color: var(--vscode-button-foreground); }
+		.input-action-btn { background: var(--vscode-button-background); color: var(--vscode-button-foreground); border: none; border-radius: 4px; padding: 0 12px; font-size: 13px; cursor: pointer; white-space: nowrap; }
+		.input-action-btn:hover { background: var(--vscode-button-hoverBackground); }
 		.form-input:focus { border-color: var(--vscode-focusBorder); outline: 1px solid var(--vscode-focusBorder); }
 		textarea.form-input { resize: none; overflow-x: auto; overflow-y: hidden; white-space: nowrap; height: 37px; line-height: 1.4; }
 		textarea.form-input::-webkit-scrollbar { display: none; }

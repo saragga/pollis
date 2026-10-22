@@ -23,6 +23,7 @@ import { JOURNAL_METRICS_COMMAND_ID } from '../../databases/common/databaseDrive
 import { findCatalogueFeed, JULIA_TOPIC, PUBMED_SEARCH, RSS_CATALOGUE, youtubeFeedUrl } from './rssCatalogue.js';
 import { DISPLAY_DAYS, EMAIL_ALERT_PREFIX, IRssFeed, IRssFeedsService } from './rssFeedsService.js';
 import { describeJournal, IJournalScoresService } from './journalScores.js';
+import { OPEN_LINK_COMMAND_ID } from './openLink.js';
 
 // Explore > RSS > RSS Feeds: the feeds on the left by topic, with ticks for Subscribed, Here and Welcome Page and
 // their unread and total counts; the items of the topic or feed selected (or of all) on the right, newest first, those
@@ -250,7 +251,7 @@ async function openRssFeedsPage(accessor: ServicesAccessor): Promise<void> {
 				const link = message.command === 'openMedia' ? item?.media : item?.link;
 				if (item && link) {
 					rssFeedsService.markRead([item.id]);
-					openerService.open(URI.parse(link), { openExternal: true });
+					commandService.executeCommand(OPEN_LINK_COMMAND_ID, link);
 				}
 				break;
 			}

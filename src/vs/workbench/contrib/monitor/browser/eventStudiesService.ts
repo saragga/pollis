@@ -16,13 +16,17 @@ import { createDecorator } from '../../../../platform/instantiation/common/insta
 import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
 import { IPathService } from '../../../services/path/common/pathService.js';
 import { parseToml, TomlValue } from '../../model/browser/common/tomlPanelData.js';
-import { IAlertsService, IFiler, IMinuteBar } from './alertsService.js';
-import { eventStudyNotebook } from './eventStudyNotebook.js';
+import { describeSubject, IAlertsService, IFiler, IFiredAlert, IMinuteBar } from './alertsService.js';
+import { eventStudyNotebook, fomcStudyNotebook } from './eventStudyNotebook.js';
+import { FIVE_MINUTE_KEPT_MILLISECONDS, FOMC_FEED, FOMC_RELEASES, FomcRelease, fomcRelease, instrumentScale, instrumentSymbol, instrumentUnit } from './fomcReleases.js';
+import { ICoverageItem, IMediaCoverageService } from './mediaCoverageService.js';
+import { IPrNewswireService } from './prNewswireService.js';
+import { IRssFeedsService, IRssItem } from './rssFeedsService.js';
 
 /**
- * A period around an event that a study looks at: from `before` minutes before EDGAR accepted the filing to `after`
- * minutes after it, and, with `nextOpen`, a filing accepted outside the regular session also from the next open to
- * `after` minutes after it.
+ * A period around an event that a study looks at: from `before` minutes before the event's time to `after` minutes
+ * after it, and, with `nextOpen`, an event outside the regular session also from the next open to `after` minutes
+ * after it.
  */
 export interface IEventPeriod {
 	readonly name: string;
@@ -37,16 +41,31 @@ export interface IEventPeriod {
  */
 export type EventModel = 'marketAdjusted' | 'marketModel';
 
+/**
+ * What a study takes as an event's time: the first public time, the earlier of the company's newswire release and
+ * EDGAR's acceptance, as results are often on the wires before the 8-K; or EDGAR's acceptance alone.
+ */
+export type EventTime = 'firstPublic' | 'accepted';
+
+/** What a study's events are: the filings of an alert on SEC filings, or the FOMC's releases. */
+export type EventSource = 'filings' | 'fomc';
+
 /** An event study as ~/.pollis/event-studies/<folder>/study.toml keeps it, which the user may also edit by hand. */
 export interface IEventStudy {
 	/** The study's folder in ~/.pollis/event-studies. */
 	readonly folder: string;
 	readonly title: string;
-	/** The id of the newFiling alert whose filings are the events. */
+	readonly source: EventSource;
+	/** For filings: the id of the newFiling alert whose filings are the events. */
 	readonly alert: string;
+	/** For FOMC releases: the releases that are events. */
+	readonly releases: readonly FomcRelease[];
+	/** For FOMC releases: the instruments whose moves the study measures, by their codes (FF1, SFR2, ^TNX). */
+	readonly instruments: readonly string[];
 	/** A Yahoo Finance symbol: ^GSPC. */
 	readonly benchmark: string;
 	readonly model: EventModel;
+	readonly eventTime: EventTime;
 	/** For the market model: the trading days before the event its alpha and beta are estimated on. */
 	readonly estimationDays: number;
 	readonly periods: readonly IEventPeriod[];
@@ -75,14 +94,32 @@ export interface IStudyEvent {
 	readonly form: string;
 	readonly items?: readonly string[];
 	readonly filed: string;
-	/** When EDGAR accepted it, in milliseconds since 1970: the event's time. */
+	/** When EDGAR accepted it, in milliseconds since 1970. */
 	readonly accepted?: number;
-	/** Whether EDGAR accepted it during the regular session of the stock's market; known from the first prices. */
+	/** Whether the event's time is during the regular session of the stock's market; known from the first prices. */
 	readonly duringSession?: boolean;
-	/** For a filing accepted outside the regular session: the next open, in milliseconds since 1970. */
+	/** For an event outside the regular session: the next open, in milliseconds since 1970. */
 	readonly nextOpen?: number;
 	readonly status: EventStatus;
 	readonly url: string;
+	/** When the company's newswire release went out, in milliseconds since 1970, as Google News lists it. */
+	readonly released?: number;
+	/** The newswire, its title and its address. */
+	readonly releaseWire?: string;
+	readonly releaseTitle?: string;
+	readonly releaseUrl?: string;
+	/** When the news around the event was last looked for, in milliseconds since 1970. */
+	readonly newsChecked?: number;
+	/** The minutes each of its bars spans: 5 for an FOMC release older than the 30 days of minute bars. */
+	readonly barMinutes?: number;
+}
+
+/** An event's time, in milliseconds since 1970, as its study takes it; undefined while EDGAR's acceptance is not known. */
+export function eventTime(study: IEventStudy, event: IStudyEvent): number | undefined {
+	if (event.accepted === undefined) {
+		return undefined;
+	}
+	return study.eventTime === 'firstPublic' && event.released !== undefined ? Math.min(event.released, event.accepted) : event.accepted;
 }
 
 export interface IEventStudiesService {
@@ -99,11 +136,16 @@ export interface IEventStudiesService {
 	createStudy(study: Omit<IEventStudy, 'folder' | 'created' | 'backfilled' | 'backfillCapped'>): Promise<IEventStudy>;
 	/** The minute bars of an event's prices file, the stock's and the benchmark's, by symbol. */
 	getPrices(folder: string, accession: string): Promise<ReadonlyMap<string, readonly IMinuteBar[]>>;
+	/** The articles of an event's news file, from a day before EDGAR accepted it to a day after, oldest first. */
+	getNews(folder: string, accession: string): Promise<readonly ICoverageItem[]>;
 	/** A study's study.ipynb, written when it is not there; the user's own changes to it are kept. */
 	getNotebook(folder: string): Promise<URI>;
 }
 
 export const IEventStudiesService = createDecorator<IEventStudiesService>('pollisEventStudiesService');
+
+/** Opens the Event Studies page: on the study in a folder, or with an alert chosen for a new study. */
+export const SHOW_EVENT_STUDIES_COMMAND_ID = 'pollis.eventStudies.show';
 
 /** The period a study has unless it says otherwise: half an hour before to two hours after, and the next open. */
 export const DEFAULT_EVENT_PERIOD: IEventPeriod = { name: 'Default', before: 30, after: 120, nextOpen: true };
@@ -125,9 +167,18 @@ const NEXT_OPEN_MILLISECONDS = 5 * DAY;
 // The bars of the last minutes are fetched again, as Yahoo Finance completes a minute after it ends
 const REFETCH_MILLISECONDS = 5 * MINUTE;
 const SETTLE_MILLISECONDS = 3 * MINUTE;
+// The news is looked for every quarter of an hour until three hours after EDGAR accepted the filing, and once for an older one
+const NEWS_EVERY_MILLISECONDS = 15 * MINUTE;
+const NEWS_UNTIL_MILLISECONDS = 180 * MINUTE;
+// The events whose news is looked for in a pass of work, as each is two searches of Google News
+const NEWS_PER_PASS = 10;
+// How often the Federal Reserve's feed is read for new FOMC releases
+const FOMC_FEED_EVERY_MILLISECONDS = 5 * MINUTE;
 
-const EVENTS_HEADER = ['accession', 'cik', 'name', 'ticker', 'form', 'items', 'filed', 'accepted', 'during_session', 'next_open', 'status', 'url'];
+const EVENTS_HEADER = ['accession', 'cik', 'name', 'ticker', 'form', 'items', 'filed', 'accepted', 'during_session', 'next_open', 'status', 'url', 'event_time', 'released', 'release_wire', 'release_title', 'release_url', 'news_checked', 'bar_minutes'];
+const INSTRUMENTS_HEADER = ['accession', 'event_time', 'instrument', 'symbol', 'unit', 'scale', 'bar_minutes'];
 const PRICES_HEADER = ['time', 'session', 'symbol', 'open', 'high', 'low', 'close', 'volume'];
+const NEWS_HEADER = ['time', 'outlet', 'title', 'url'];
 
 export class EventStudiesService extends Disposable implements IEventStudiesService {
 
@@ -136,6 +187,10 @@ export class EventStudiesService extends Disposable implements IEventStudiesServ
 	private readonly _onDidChange = this._register(new Emitter<void>());
 	// Whether a study's prices were written in this pass of work
 	private pricesWritten = false;
+	// The events whose news may still be looked for in this pass of work
+	private newsLeft = 0;
+	// The event time each study had in the last pass of work, as a study.toml edited by hand may change it
+	private readonly eventTimes = new Map<string, EventTime>();
 	readonly onDidChange = this._onDidChange.event;
 
 	readonly studiesFolder: URI;
@@ -146,10 +201,17 @@ export class EventStudiesService extends Disposable implements IEventStudiesServ
 	private readonly watchers = this._register(new DisposableMap<string>());
 	private readonly reload: RunOnceScheduler;
 	private working = false;
+	// When the Federal Reserve's feed was last read
+	private fomcRead = 0;
+	// The alerts a study is being made for, as it starts when they fire
+	private readonly starting = new Set<string>();
 	private loaded: Promise<void>;
 
 	constructor(
 		@IAlertsService private readonly alertsService: IAlertsService,
+		@IMediaCoverageService private readonly mediaCoverageService: IMediaCoverageService,
+		@IPrNewswireService private readonly prNewswireService: IPrNewswireService,
+		@IRssFeedsService private readonly rssFeedsService: IRssFeedsService,
 		@IStorageService private readonly storageService: IStorageService,
 		@IFileService private readonly fileService: IFileService,
 		@IPathService pathService: IPathService,
@@ -172,6 +234,7 @@ export class EventStudiesService extends Disposable implements IEventStudiesServ
 			if (fired.some(alert => alert.filing && this.studies.some(study => study.alert === alert.alertId))) {
 				soon.schedule();
 			}
+			this.startStudies(fired);
 		}));
 
 		const timer = this._register(new IntervalTimer());
@@ -198,9 +261,10 @@ export class EventStudiesService extends Disposable implements IEventStudiesServ
 		const created: IEventStudy = { ...study, folder, created: Date.now(), backfilled: false };
 		await this.fileService.writeFile(joinPath(this.studiesFolder, folder, 'study.toml'), VSBuffer.fromString(writeStudy(created)));
 		await this.writeEvents(folder, []);
-		await this.getNotebook(folder);
 		this.studies = [...this.studies, created];
+		this.prNewswireService.setWanted('eventStudies', this.studies.some(other => other.source === 'filings'));
 		this.events.set(folder, []);
+		await this.getNotebook(folder);
 		this._onDidChange.fire();
 		// Watches the new folder, and the studies' folder when it was made just now
 		this.reload.schedule();
@@ -208,10 +272,32 @@ export class EventStudiesService extends Disposable implements IEventStudiesServ
 		return created;
 	}
 
+	/**
+	 * Makes a study, with the benchmark, model and period a study has unless it says otherwise, for each alert that
+	 * fired a filing, starts one when it fires and has none yet; in the window that captures the prices, so once.
+	 */
+	private async startStudies(fired: readonly IFiredAlert[]): Promise<void> {
+		await this.loaded;
+		for (const alertId of new Set(fired.filter(alert => alert.filing).map(alert => alert.alertId))) {
+			const alert = this.alertsService.getAlerts().find(alert => alert.id === alertId);
+			if (!alert?.eventStudy || this.starting.has(alertId) || this.studies.some(study => study.alert === alertId) || !this.holdLease()) {
+				continue;
+			}
+			this.starting.add(alertId);
+			try {
+				await this.createStudy({ title: describeSubject(alert), source: 'filings', alert: alertId, releases: [], instruments: [], benchmark: DEFAULT_BENCHMARK, model: 'marketAdjusted', eventTime: 'firstPublic', estimationDays: DEFAULT_ESTIMATION_DAYS, periods: [DEFAULT_EVENT_PERIOD] });
+			} finally {
+				this.starting.delete(alertId);
+			}
+		}
+	}
+
 	async getNotebook(folder: string): Promise<URI> {
 		const notebook = joinPath(this.studiesFolder, folder, 'study.ipynb');
 		if (!await this.fileService.exists(notebook)) {
-			await this.fileService.writeFile(notebook, VSBuffer.fromString(eventStudyNotebook(joinPath(this.studiesFolder, folder).fsPath)));
+			const path = joinPath(this.studiesFolder, folder).fsPath;
+			const fomc = this.studies.find(study => study.folder === folder)?.source === 'fomc';
+			await this.fileService.writeFile(notebook, VSBuffer.fromString(fomc ? fomcStudyNotebook(path) : eventStudyNotebook(path)));
 		}
 		return notebook;
 	}
@@ -223,6 +309,16 @@ export class EventStudiesService extends Disposable implements IEventStudiesServ
 			bySymbol.set(symbol, [...bars.values()].sort((a, b) => a.time - b.time));
 		}
 		return bySymbol;
+	}
+
+	async getNews(folder: string, accession: string): Promise<readonly ICoverageItem[]> {
+		try {
+			const rows = parseCsv((await this.fileService.readFile(this.newsFile(folder, accession))).value.toString());
+			return rows.slice(1).map(([time, outlet, title, url]) => ({ source: 'googleNews' as const, time: Date.parse(time), outlet, title, url })).filter(item => !isNaN(item.time));
+		} catch {
+			// No news looked for yet
+			return [];
+		}
 	}
 
 	/** Records the filings the studies' alerts fired and captures the prices around them, in the window that holds the lease. */
@@ -243,20 +339,44 @@ export class EventStudiesService extends Disposable implements IEventStudiesServ
 				}
 				return filer;
 			};
+			this.newsLeft = NEWS_PER_PASS;
+			// The Federal Reserve's feed, read once in this pass for all the studies of FOMC releases, when it is due
+			let feed: Promise<readonly IRssItem[] | undefined> | undefined;
+			const getFeed = () => {
+				if (!feed) {
+					this.fomcRead = Date.now();
+					feed = this.rssFeedsService.previewFeed(FOMC_FEED);
+				}
+				return feed;
+			};
 			for (let study of this.studies) {
 				let events = this.getEvents(study.folder);
-				if (!study.backfilled) {
-					const backfill = await this.backfill(study, events);
-					if (backfill) {
-						study = backfill.study;
-						events = backfill.events;
-					}
+				// A study whose event time changed takes its sessions again from the prices, which span both times
+				const previous = this.eventTimes.get(study.folder);
+				this.eventTimes.set(study.folder, study.eventTime);
+				if (previous && previous !== study.eventTime) {
+					events = events.map((event): IStudyEvent => event.status === 'complete' || event.status === 'capturing' ? { ...event, duringSession: undefined, nextOpen: undefined, status: 'capturing' } : event);
 				}
-				events = this.recordFired(study, events);
+				if (study.source === 'fomc') {
+					if (!study.backfilled || Date.now() - this.fomcRead >= FOMC_FEED_EVERY_MILLISECONDS || feed) {
+						const recorded = await this.recordReleases(study, events, await getFeed());
+						study = recorded.study;
+						events = recorded.events;
+					}
+				} else {
+					if (!study.backfilled) {
+						const backfill = await this.backfill(study, events);
+						if (backfill) {
+							study = backfill.study;
+							events = backfill.events;
+						}
+					}
+					events = this.recordFired(study, events);
+				}
 				const updated: IStudyEvent[] = [];
 				for (const event of events) {
 					// A backfill's first pass is long: the lease is renewed as it goes, and the rest left to the next
-					updated.push(this.holdLease() ? await this.capture(study, event, getFiler) : event);
+					updated.push(!this.holdLease() ? event : study.source === 'fomc' ? await this.captureRelease(study, event) : await this.capture(study, event, getFiler));
 				}
 				if (updated.some((event, index) => event !== events[index]) || updated.length !== this.getEvents(study.folder).length) {
 					this.events.set(study.folder, updated);
@@ -312,13 +432,17 @@ export class EventStudiesService extends Disposable implements IEventStudiesServ
 		return { study, events: backfilled };
 	}
 
-	/** The study's events, with the filings its alert fired since the study was made that are not among them yet. */
+	/**
+	 * The study's events, with the filings its alert fired that are not among them yet: since the 30 days before the
+	 * study was made, as the backfill's, so that the filing a study is started from is among them before EDGAR's
+	 * full-text search has it.
+	 */
 	private recordFired(study: IEventStudy, events: readonly IStudyEvent[]): readonly IStudyEvent[] {
 		const known = new Set(events.map(event => event.accession));
 		const fresh: IStudyEvent[] = [];
 		for (const fired of [...this.alertsService.getFired()].reverse()) {
 			const filing = fired.filing;
-			if (fired.alertId !== study.alert || !filing || fired.time < study.created || known.has(filing.accession)) {
+			if (fired.alertId !== study.alert || !filing || fired.time < study.created - BACKFILL_DAYS * DAY || known.has(filing.accession)) {
 				continue;
 			}
 			known.add(filing.accession);
@@ -337,6 +461,100 @@ export class EventStudiesService extends Disposable implements IEventStudiesServ
 			});
 		}
 		return fresh.length ? [...events, ...fresh] : events;
+	}
+
+	/**
+	 * The study and its events with the FOMC releases of the Federal Reserve's feed that are not among them yet, from
+	 * the 59 days before the study was made, as long as Yahoo Finance keeps five-minute bars: the releases that came
+	 * out at the same time (the statement and the Summary of Economic Projections) are one event.
+	 */
+	private async recordReleases(study: IEventStudy, events: readonly IStudyEvent[], items: readonly IRssItem[] | undefined): Promise<{ readonly study: IEventStudy; readonly events: readonly IStudyEvent[] }> {
+		if (!items) {
+			// The Federal Reserve cannot be reached: read again in five minutes
+			return { study, events };
+		}
+		const created = study.created || Date.now();
+		const known = new Set(events.map(event => event.accession));
+		const byTime = new Map<number, IRssItem[]>();
+		for (const item of items) {
+			if (item.date && item.date >= created - FIVE_MINUTE_KEPT_MILLISECONDS) {
+				byTime.set(item.date, [...byTime.get(item.date) ?? [], item]);
+			}
+		}
+		const fresh: IStudyEvent[] = [];
+		for (const [time, released] of byTime) {
+			const kinds = FOMC_RELEASES.filter(kind => released.some(item => fomcRelease(item.title) === kind));
+			const accession = `fomc-${new Date(time).toISOString().slice(0, 16).replace(/[-:]/g, '')}`;
+			if (known.has(accession) || !kinds.some(kind => study.releases.includes(kind))) {
+				continue;
+			}
+			// The statement names the event when it is among them
+			const first = released.find(item => fomcRelease(item.title) === kinds[0]) ?? released[0];
+			fresh.push({
+				accession,
+				cik: '',
+				name: first.title,
+				form: kinds.join(' '),
+				filed: new Date(time).toISOString().slice(0, 10),
+				accepted: time,
+				status: 'capturing',
+				url: first.link,
+			});
+		}
+		if (study.backfilled && !fresh.length) {
+			return { study, events };
+		}
+		const recorded = [...events, ...fresh].sort((a, b) => (a.accepted ?? 0) - (b.accepted ?? 0));
+		if (!study.backfilled) {
+			study = { ...study, created, backfilled: true };
+			await this.fileService.writeFile(joinPath(this.studiesFolder, study.folder, 'study.toml'), VSBuffer.fromString(writeStudy(study)));
+			this.studies = this.studies.map(other => other.folder === study.folder ? study : other);
+		}
+		return { study, events: recorded };
+	}
+
+	/**
+	 * An FOMC release once the bars of the study's instruments over its periods are fetched: minute bars for a release of
+	 * the last 30 days, five-minute bars for an older one; an expired contract has none. The same event when nothing changed.
+	 */
+	private async captureRelease(study: IEventStudy, event: IStudyEvent): Promise<IStudyEvent> {
+		const now = Date.now();
+		const time = event.accepted;
+		if (event.status !== 'capturing' || time === undefined) {
+			return event;
+		}
+		const prices = await this.readPrices(study.folder, event.accession);
+		const stored = [...prices.values()].some(bars => bars.size);
+		if (now - time > FIVE_MINUTE_KEPT_MILLISECONDS) {
+			return { ...event, status: stored ? 'complete' : 'tooOld' };
+		}
+		const minutes = event.barMinutes === 5 || now - time > KEPT_MILLISECONDS ? 5 : 1;
+		const start = time - Math.max(0, ...study.periods.map(period => period.before)) * MINUTE;
+		const end = time + Math.max(0, ...study.periods.map(period => period.after)) * MINUTE;
+		const last = stored ? Math.max(...[...prices.values()].flatMap(bars => [...bars.keys()])) : undefined;
+		const from = last !== undefined ? Math.max(start, last - REFETCH_MILLISECONDS) : start;
+		const to = Math.min(now, end + SETTLE_MILLISECONDS);
+		if (from < to) {
+			let reached = false;
+			for (const symbol of new Set(study.instruments.map(code => instrumentSymbol(code, time)))) {
+				// A contract that expired is gone from Yahoo Finance
+				const bars = await this.alertsService.getMinuteBars(symbol, from, to, minutes);
+				if (bars) {
+					reached = true;
+					merge(prices, symbol, bars.bars);
+				}
+			}
+			if (!reached) {
+				// Yahoo Finance cannot be reached: tried again at the next tick
+				return event;
+			}
+			await this.writePrices(study.folder, event.accession, prices);
+			this.pricesWritten = true;
+		}
+		const barMinutes = minutes === 5 ? 5 : undefined;
+		const done = now >= end + SETTLE_MILLISECONDS;
+		const status: EventStatus = !done ? 'capturing' : [...prices.values()].some(bars => bars.size) ? 'complete' : 'noBars';
+		return status === event.status && barMinutes === event.barMinutes ? event : { ...event, status, barMinutes };
 	}
 
 	/** The event once its ticker and acceptance are known and the prices due are fetched; the same event when nothing changed. */
@@ -359,24 +577,31 @@ export class EventStudiesService extends Disposable implements IEventStudiesServ
 			}
 			event = { ...event, accepted, ticker, url, status: !ticker ? 'noTicker' : now - accepted > KEPT_MILLISECONDS ? 'tooOld' : 'capturing' };
 		}
-		if (event.status !== 'capturing' || !event.ticker || event.accepted === undefined) {
+		if (event.ticker && (event.status === 'capturing' || event.status === 'complete')) {
+			event = await this.checkNews(study, event, now);
+		}
+		const time = eventTime(study, event);
+		if (event.status !== 'capturing' || !event.ticker || event.accepted === undefined || time === undefined) {
 			return event;
 		}
 
 		const accepted = event.accepted;
+		// The prices span both the release and the acceptance, so that a study may take either as the event's time
+		const earliest = Math.min(time, accepted);
 		const before = Math.max(0, ...study.periods.map(period => period.before)) * MINUTE;
 		// The market model's estimation days, with the weekends and a holiday among them
 		const estimation = study.model === 'marketModel' ? Math.ceil(study.estimationDays * 7 / 5 + 2) * DAY : 0;
-		const start = Math.max(accepted - Math.max(before, estimation), now - KEPT_MILLISECONDS);
+		const start = Math.max(earliest - Math.max(before, estimation), now - KEPT_MILLISECONDS);
 		const prices = await this.readPrices(study.folder, event.accession);
 		const stored = prices.get(event.ticker);
 		const last = stored?.size ? Math.max(...stored.keys()) : undefined;
-		const from = last !== undefined ? Math.max(start, last - REFETCH_MILLISECONDS) : start;
+		// From the start while the sessions are not known: the first fetch, or once the event's time moved
+		const from = last !== undefined && event.duringSession !== undefined ? Math.max(start, last - REFETCH_MILLISECONDS) : start;
 
 		const after = Math.max(0, ...study.periods.map(period => period.after)) * MINUTE;
 		const afterOpen = Math.max(0, ...study.periods.filter(period => period.nextOpen).map(period => period.after)) * MINUTE;
 		// Up to the end of the periods, or, while the next open is not known, as long as it is waited for
-		const latest = Math.max(accepted + after, event.nextOpen !== undefined ? event.nextOpen + afterOpen : event.duringSession || !afterOpen ? 0 : accepted + NEXT_OPEN_MILLISECONDS + afterOpen);
+		const latest = Math.max(time + after, accepted + after, event.nextOpen !== undefined ? event.nextOpen + afterOpen : event.duringSession || !afterOpen ? 0 : time + NEXT_OPEN_MILLISECONDS + afterOpen);
 		const to = Math.min(now, latest + SETTLE_MILLISECONDS);
 		if (from >= to) {
 			// Its span is past, and either captured or beyond the 30 days
@@ -393,16 +618,48 @@ export class EventStudiesService extends Disposable implements IEventStudiesServ
 		await this.writePrices(study.folder, event.accession, prices);
 		this.pricesWritten = true;
 
-		// The first fetch starts before the filing, so its sessions say whether it came in during the regular session
-		const duringSession = event.duringSession ?? stock.sessions.some(([open, close]) => accepted >= open && accepted < close);
+		// A fetch from the start begins before the event, so its sessions say whether the event came during the regular session
+		const duringSession = event.duringSession ?? stock.sessions.some(([open, close]) => time >= open && time < close);
 		const wantsNextOpen = !duringSession && study.periods.some(period => period.nextOpen);
-		const nextOpen = event.nextOpen ?? (wantsNextOpen ? stock.sessions.find(([open]) => open > accepted)?.[0] : undefined);
+		const nextOpen = event.nextOpen ?? (wantsNextOpen ? stock.sessions.find(([open]) => open > time)?.[0] : undefined);
 		// While the next open is not known yet, the capture goes on, up to a long weekend
-		const waitsForOpen = wantsNextOpen && nextOpen === undefined && now - accepted < NEXT_OPEN_MILLISECONDS;
-		const end = Math.max(accepted + after, nextOpen !== undefined ? nextOpen + afterOpen : 0);
-		const done = !waitsForOpen && now >= end + SETTLE_MILLISECONDS;
+		const waitsForOpen = wantsNextOpen && nextOpen === undefined && now - time < NEXT_OPEN_MILLISECONDS;
+		// So does it while the news may still move the event's time
+		const waitsForNews = now < accepted + NEWS_UNTIL_MILLISECONDS;
+		const end = Math.max(time + after, accepted + after, nextOpen !== undefined ? nextOpen + afterOpen : 0);
+		const done = !waitsForOpen && !waitsForNews && now >= end + SETTLE_MILLISECONDS;
 		const status: EventStatus = !done ? 'capturing' : prices.get(event.ticker)?.size ? 'complete' : 'noBars';
 		return status === event.status && nextOpen === event.nextOpen && duringSession === event.duringSession ? event : { ...event, duringSession, nextOpen, status };
+	}
+
+	/**
+	 * The event with the news around it looked for when it is due: its newswire release, and its articles written to
+	 * its news file. A release that moves the event's first public time sets its sessions to be taken again, and a
+	 * complete event to be captured again from its new start.
+	 */
+	private async checkNews(study: IEventStudy, event: IStudyEvent, now: number): Promise<IStudyEvent> {
+		const accepted = event.accepted;
+		if (accepted === undefined || this.newsLeft <= 0) {
+			return event;
+		}
+		const due = event.newsChecked === undefined || (event.newsChecked < accepted + NEWS_UNTIL_MILLISECONDS && now - event.newsChecked >= NEWS_EVERY_MILLISECONDS);
+		if (!due) {
+			return event;
+		}
+		this.newsLeft--;
+		const coverage = await this.mediaCoverageService.getEventCoverage(event.name, accepted, event.ticker);
+		if (!coverage) {
+			// Google News cannot be reached: looked for again in a quarter of an hour
+			return { ...event, newsChecked: now };
+		}
+		if (coverage.items.length) {
+			const rows = coverage.items.map(item => [new Date(item.time).toISOString(), item.outlet, item.title, item.url]);
+			await this.fileService.writeFile(this.newsFile(study.folder, event.accession), VSBuffer.fromString(writeCsv([NEWS_HEADER, ...rows])));
+		}
+		const release = coverage.release;
+		const checked: IStudyEvent = { ...event, newsChecked: now, released: release?.time, releaseWire: release?.outlet, releaseTitle: release?.title, releaseUrl: release?.url };
+		const moved = Math.min(checked.released ?? accepted, accepted) !== Math.min(event.released ?? accepted, accepted);
+		return moved ? { ...checked, duringSession: undefined, nextOpen: undefined, status: 'capturing' } : checked;
 	}
 
 	/** Takes or renews the lease when no other window holds it; whether this window holds it. */
@@ -444,6 +701,8 @@ export class EventStudiesService extends Disposable implements IEventStudiesServ
 			}
 		}
 		this.studies = studies;
+		// The events of a study of filings take the time of the company's release, which PR Newswire's feeds give
+		this.prNewswireService.setWanted('eventStudies', studies.some(study => study.source === 'filings'));
 		for (const folder of [...this.watchers.keys()]) {
 			if (!studies.some(study => study.folder === folder)) {
 				this.watchers.deleteAndDispose(folder);
@@ -474,6 +733,12 @@ export class EventStudiesService extends Disposable implements IEventStudiesServ
 				nextOpen: row.next_open ? Date.parse(row.next_open) : undefined,
 				status: (['waiting', 'capturing', 'complete', 'noTicker', 'noBars', 'tooOld'] as const).find(status => status === row.status) ?? 'waiting',
 				url: row.url,
+				released: row.released ? Date.parse(row.released) : undefined,
+				releaseWire: row.release_wire || undefined,
+				releaseTitle: row.release_title || undefined,
+				releaseUrl: row.release_url || undefined,
+				newsChecked: row.news_checked ? Date.parse(row.news_checked) : undefined,
+				barMinutes: Number(row.bar_minutes) || undefined,
 			}));
 		} catch {
 			return [];
@@ -481,14 +746,27 @@ export class EventStudiesService extends Disposable implements IEventStudiesServ
 	}
 
 	private async writeEvents(folder: string, events: readonly IStudyEvent[]): Promise<void> {
+		const study = this.studies.find(study => study.folder === folder);
+		const iso = (time: number | undefined) => time !== undefined ? new Date(time).toISOString() : '';
 		const rows = events.map(event => [
 			event.accession, event.cik, event.name, event.ticker ?? '', event.form, event.items?.join(' ') ?? '', event.filed,
 			event.accepted !== undefined ? new Date(event.accepted).toISOString() : '',
 			event.duringSession !== undefined ? String(event.duringSession) : '',
 			event.nextOpen !== undefined ? new Date(event.nextOpen).toISOString() : '',
 			event.status, event.url,
+			// The time the study takes, for PollisEventStudies.jl; read back from accepted and released
+			iso(study ? eventTime(study, event) : event.accepted),
+			iso(event.released), event.releaseWire ?? '', event.releaseTitle ?? '', event.releaseUrl ?? '', iso(event.newsChecked),
+			event.barMinutes !== undefined ? String(event.barMinutes) : '',
 		]);
 		await this.fileService.writeFile(joinPath(this.studiesFolder, folder, 'events.csv'), VSBuffer.fromString(writeCsv([EVENTS_HEADER, ...rows])));
+		if (study?.source === 'fomc') {
+			// Which contract each instrument is at each release, its unit and FF1's scale, for the notebook
+			const instruments = events.filter(event => event.accepted !== undefined).flatMap(event => study.instruments.map(code => [
+				event.accession, iso(event.accepted), code, instrumentSymbol(code, event.accepted!), instrumentUnit(code), String(instrumentScale(code, event.accepted!)), String(event.barMinutes ?? 1),
+			]));
+			await this.fileService.writeFile(joinPath(this.studiesFolder, folder, 'instruments.csv'), VSBuffer.fromString(writeCsv([INSTRUMENTS_HEADER, ...instruments])));
+		}
 	}
 
 	/** An event's prices file: the minute bars of each symbol, by their time. */
@@ -525,6 +803,10 @@ export class EventStudiesService extends Disposable implements IEventStudiesServ
 	private pricesFile(folder: string, accession: string): URI {
 		return joinPath(this.studiesFolder, folder, 'prices', `${accession}.csv`);
 	}
+
+	private newsFile(folder: string, accession: string): URI {
+		return joinPath(this.studiesFolder, folder, 'news', `${accession}.csv`);
+	}
 }
 
 function merge(prices: Map<string, Map<number, IMinuteBar>>, symbol: string, bars: readonly IMinuteBar[]): void {
@@ -543,9 +825,11 @@ function readStudy(folder: string, toml: TomlValue): IEventStudy | undefined {
 	const text = (value: unknown) => typeof value === 'string' ? value.trim() : '';
 	const minutes = (value: unknown, fallback: number) => typeof value === 'number' && value >= 0 ? value : fallback;
 	const alert = text(toml.alert);
-	if (!alert) {
+	const source: EventSource = toml.source === 'fomc' ? 'fomc' : 'filings';
+	if (!alert && source === 'filings') {
 		return undefined;
 	}
+	const texts = (value: unknown) => Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : [];
 	const periods = (Array.isArray(toml.periods) ? toml.periods as TomlValue[] : []).map((period, index): IEventPeriod => ({
 		name: text(period.name) || `Period ${index + 1}`,
 		before: minutes(period.before, DEFAULT_EVENT_PERIOD.before),
@@ -556,9 +840,13 @@ function readStudy(folder: string, toml: TomlValue): IEventStudy | undefined {
 	return {
 		folder,
 		title: text(toml.title) || folder,
+		source,
 		alert,
+		releases: FOMC_RELEASES.filter(release => texts(toml.releases).includes(release)),
+		instruments: texts(toml.instruments),
 		benchmark: text(toml.benchmark) || DEFAULT_BENCHMARK,
 		model: toml.model === 'marketModel' ? 'marketModel' : 'marketAdjusted',
+		eventTime: toml.event_time === 'accepted' || source === 'fomc' ? 'accepted' : 'firstPublic',
 		estimationDays: minutes(toml.estimation_days, DEFAULT_ESTIMATION_DAYS) || DEFAULT_ESTIMATION_DAYS,
 		periods: periods.length ? periods : [DEFAULT_EVENT_PERIOD],
 		created: isNaN(created) ? 0 : created,
@@ -570,6 +858,24 @@ function readStudy(folder: string, toml: TomlValue): IEventStudy | undefined {
 /** A study's study.toml. */
 function writeStudy(study: IEventStudy): string {
 	const text = (value: string) => JSON.stringify(value);
+	if (study.source === 'fomc') {
+		const lines = [
+			`title = ${text(study.title)}`,
+			`# The FOMC's releases, from the Federal Reserve's Monetary Policy Press Releases feed`,
+			`source = "fomc"`,
+			`# statement, projections (the Summary of Economic Projections), minutes, other`,
+			`releases = [${study.releases.map(text).join(', ')}]`,
+			`# FF1 to FF4, SR1, SFR1 to SFR5, ZT, ^FVX, ^TNX, TIP, ^GSPC, ES`,
+			`instruments = [${study.instruments.map(text).join(', ')}]`,
+			`created = ${text(new Date(study.created).toISOString())}`,
+			`# Whether the releases of the 59 days before it was made are among its events`,
+			`backfilled = ${study.backfilled}`,
+		];
+		for (const period of study.periods) {
+			lines.push('', '# Minutes before and after the release', '[[periods]]', `name = ${text(period.name)}`, `before = ${period.before}`, `after = ${period.after}`);
+		}
+		return lines.join('\n') + '\n';
+	}
 	const lines = [
 		`title = ${text(study.title)}`,
 		`# The id of the alert in ~/.pollis/alerts/alerts.json whose filings are the events`,
@@ -577,6 +883,8 @@ function writeStudy(study: IEventStudy): string {
 		`benchmark = ${text(study.benchmark)}`,
 		`# marketAdjusted or marketModel`,
 		`model = ${text(study.model)}`,
+		`# firstPublic (the earlier of the newswire release and EDGAR's acceptance) or accepted`,
+		`event_time = ${text(study.eventTime)}`,
 		`estimation_days = ${study.estimationDays}`,
 		`created = ${text(new Date(study.created).toISOString())}`,
 		`# Whether the filings of the 30 days before it was made are among its events; false looks for them again`,

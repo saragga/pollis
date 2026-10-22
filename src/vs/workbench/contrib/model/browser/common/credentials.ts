@@ -29,6 +29,8 @@ export const CREDENTIALS = {
 	huggingFace: { secretKey: 'pollis.apiKey.huggingface', envVar: 'HUGGING_FACE_HUB_TOKEN' },
 	kaggleUsername: { secretKey: 'pollis.apiKey.kaggle.username', envVar: 'KAGGLE_USERNAME' },
 	kaggleKey: { secretKey: 'pollis.apiKey.kaggle.key', envVar: 'KAGGLE_KEY' },
+	newYorkTimes: { secretKey: 'pollis.apiKey.nytimes', envVar: 'NYT_API_KEY' },
+	guardian: { secretKey: 'pollis.apiKey.guardian', envVar: 'GUARDIAN_API_KEY' },
 } satisfies Record<string, IPollisCredentialField>;
 
 /** Every credential field, for the startup environment injector. */

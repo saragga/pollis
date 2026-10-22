@@ -190,6 +190,7 @@ export const RSS_CATALOGUE: readonly IRssCatalogueTopic[] = [
 	{
 		topic: ECONOMICS_TOPIC, feeds: [
 			{ name: 'Federal Reserve: Press Releases', url: 'https://www.federalreserve.gov/feeds/press_all.xml' },
+			{ name: 'Federal Reserve: Monetary Policy Press Releases', url: 'https://www.federalreserve.gov/feeds/press_monetary.xml' },
 			{ name: 'Federal Reserve Bank of New York: Liberty Street Economics', url: 'https://libertystreeteconomics.newyorkfed.org/feed/' },
 			{ name: 'European Central Bank: Press Releases', url: 'https://www.ecb.europa.eu/rss/press.html' },
 			{ name: 'European Central Bank: Blog', url: 'https://www.ecb.europa.eu/rss/blog.html' },

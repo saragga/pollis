@@ -16,7 +16,7 @@ import { IClipboardService } from '../../../../platform/clipboard/common/clipboa
 import { ByteSize, IFileService } from '../../../../platform/files/common/files.js';
 import { IInstantiationService, ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
 import { INotificationService } from '../../../../platform/notification/common/notification.js';
-import { IOpenerService } from '../../../../platform/opener/common/opener.js';
+import { ICommandService } from '../../../../platform/commands/common/commands.js';
 import { IEditorService } from '../../../services/editor/common/editorService.js';
 import { IPathService } from '../../../services/path/common/pathService.js';
 import { parseToml, TomlValue } from '../../model/browser/common/tomlPanelData.js';
@@ -25,6 +25,7 @@ import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWork
 import { LIBRARY_PAGE_HELPERS, LIBRARY_PAGE_STYLE } from './libraryPage.js';
 import { ContentKind, IDownloadedEntry, IPollisContentService } from './pollisContent.js';
 import { BROWSE_METHODS_COMMAND_ID, deleteUserMethods, openUserMethod, readMethodSummaries, userMethodsFolder } from './newMethods.js';
+import { OPEN_LINK_COMMAND_ID } from '../../monitor/browser/openLink.js';
 
 export const SEARCH_WORKFLOW_LIBRARY_COMMAND_ID = 'chiara.statistics.wfl_sl';
 export const PUBLISHED_BENCHMARKS_COMMAND_ID = 'pollis.correctness.publishedBenchmarks';
@@ -289,7 +290,7 @@ async function openLibraryPage(accessor: ServicesAccessor, library: INotebookLib
 	const pathService = accessor.get(IPathService);
 	const notificationService = accessor.get(INotificationService);
 	const clipboardService = accessor.get(IClipboardService);
-	const openerService = accessor.get(IOpenerService);
+	const commandService = accessor.get(ICommandService);
 	const instantiationService = accessor.get(IInstantiationService);
 	const contentService = accessor.get(IPollisContentService);
 
@@ -433,7 +434,7 @@ async function openLibraryPage(accessor: ServicesAccessor, library: INotebookLib
 		} else if (message.command === 'copyBibtex' && entry?.article?.bibtex) {
 			clipboardService.writeText(entry.article.bibtex);
 		} else if (message.command === 'link' && /^https:\/\//.test(message.url)) {
-			openerService.open(URI.parse(message.url), { openExternal: true });
+			commandService.executeCommand(OPEN_LINK_COMMAND_ID, message.url);
 		}
 	}));
 }

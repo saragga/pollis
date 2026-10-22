@@ -54,6 +54,7 @@ import { IPathService } from '../../../services/path/common/pathService.js';
 import { IWorkspaceContextService } from '../../../../platform/workspace/common/workspace.js';
 import { ADD_FEED_COMMAND_ID, RSS_FEEDS_COMMAND_ID } from '../../monitor/browser/rssFeedsPage.js';
 import { ADD_ALERT_COMMAND_ID, SHOW_ALERTS_COMMAND_ID } from '../../monitor/browser/alertsPage.js';
+import { SHOW_MEDIA_COVERAGE_COMMAND_ID } from '../../monitor/browser/mediaCoveragePage.js';
 import { JOURNAL_METRICS_COMMAND_ID } from '../../databases/common/databaseDrivers.js';
 
 export const EXPL_COMMAND_ID = 'workbench.action.showExplore';
@@ -1098,6 +1099,13 @@ MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
 	submenu: AlertsSubmenuId,
 	title: localize('monitor.alertsSubmenu', "Alerts"),
 	order: 5,
+});
+
+// Explore > Media Coverage: what the news and social media said, after RSS and Alerts
+MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
+	group: '2_explore',
+	command: { id: SHOW_MEDIA_COVERAGE_COMMAND_ID, title: localize('monitor.mediaCoverage', "Media Coverage") },
+	order: 6,
 });
 
 MenuRegistry.appendMenuItem(RssSubmenuId, {

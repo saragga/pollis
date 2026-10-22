@@ -5,18 +5,17 @@
 
 import { DisposableStore } from '../../../../base/common/lifecycle.js';
 import { isMacintosh, isWindows } from '../../../../base/common/platform.js';
-import { URI } from '../../../../base/common/uri.js';
 import { localize, localize2 } from '../../../../nls.js';
 import { Action2, registerAction2 } from '../../../../platform/actions/common/actions.js';
 import { ICommandService } from '../../../../platform/commands/common/commands.js';
 import { IFileService } from '../../../../platform/files/common/files.js';
 import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
-import { IOpenerService } from '../../../../platform/opener/common/opener.js';
 import { IHostService } from '../../../services/host/browser/host.js';
 import { ITerminalInstanceService } from '../../terminal/browser/terminal.js';
 import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
 import { CHOOSE_AGENT_COMMAND_ID, CODING_AGENTS, findProgram, terminalEnvironment } from './pollisAgents.js';
+import { OPEN_LINK_COMMAND_ID } from '../../monitor/browser/openLink.js';
 
 // Compose > Local Models > Local Model Runners: a page of the programs that serve local models on
 // this computer, each marked installed or with a link to its install page, and how each coding agent of
@@ -88,7 +87,6 @@ async function openLocalModelRunnersPage(accessor: ServicesAccessor): Promise<vo
 	const webviewWorkbenchService = accessor.get(IWebviewWorkbenchService);
 	const fileService = accessor.get(IFileService);
 	const terminalInstanceService = accessor.get(ITerminalInstanceService);
-	const openerService = accessor.get(IOpenerService);
 	const hostService = accessor.get(IHostService);
 	const commandService = accessor.get(ICommandService);
 
@@ -151,7 +149,7 @@ async function openLocalModelRunnersPage(accessor: ServicesAccessor): Promise<vo
 		} else if (message.command === 'codingAgent') {
 			commandService.executeCommand(CHOOSE_AGENT_COMMAND_ID);
 		} else if (message.command === 'link' && LOCAL_RUNNERS.some(runner => runner.url === message.url)) {
-			openerService.open(URI.parse(message.url), { openExternal: true });
+			commandService.executeCommand(OPEN_LINK_COMMAND_ID, message.url);
 		}
 	}));
 }

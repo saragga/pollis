@@ -7,17 +7,18 @@ import { Codicon } from '../../../../base/common/codicons.js';
 import { fromNow } from '../../../../base/common/date.js';
 import { DisposableStore } from '../../../../base/common/lifecycle.js';
 import { ThemeIcon } from '../../../../base/common/themables.js';
-import { URI } from '../../../../base/common/uri.js';
 import { localize, localize2 } from '../../../../nls.js';
 import { Action2, registerAction2 } from '../../../../platform/actions/common/actions.js';
 import { ICommandService } from '../../../../platform/commands/common/commands.js';
+import { IDialogService } from '../../../../platform/dialogs/common/dialogs.js';
 import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
-import { IOpenerService } from '../../../../platform/opener/common/opener.js';
 import { IQuickInputService } from '../../../../platform/quickinput/common/quickInput.js';
 import { IEditorService } from '../../../services/editor/common/editorService.js';
 import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
 import { AlertCondition, AlertSeverity, ChartRange, describeCondition, describeFiredAlert, describeItems, describeSubject, formatValue, FORM_8K_ITEMS, IAlert, IAlertsService, IFiredAlert } from './alertsService.js';
+import { IEventStudiesService, SHOW_EVENT_STUDIES_COMMAND_ID } from './eventStudiesService.js';
+import { OPEN_LINK_COMMAND_ID } from './openLink.js';
 
 // Explore > Alerts > Add Alert...: a page with a form to add an alert (the symbol, looked up at Yahoo Finance, the
 // condition, the value, how it shows and how often it fires), or an alert on SEC filings (the company, looked up at
@@ -67,12 +68,16 @@ type AlertsMessage =
 	| { readonly command: 'lookUpCompanies'; readonly companies: string }
 	| { readonly command: 'lookUpIndustry'; readonly sic: string }
 	| { readonly command: 'searchFilings'; readonly scope: FilingsScope; readonly company: string; readonly phrase: string; readonly forms: readonly string[]; readonly items: readonly string[] }
-	| { readonly command: 'addFilings'; readonly scope: FilingsScope; readonly company: string; readonly phrase: string; readonly forms: readonly string[]; readonly items: readonly string[]; readonly severity: AlertSeverity; readonly repeat: boolean }
+	| { readonly command: 'addFilings'; readonly scope: FilingsScope; readonly company: string; readonly phrase: string; readonly forms: readonly string[]; readonly items: readonly string[]; readonly severity: AlertSeverity; readonly repeat: boolean; readonly eventStudy: boolean }
 	| { readonly command: 'setContact' }
 	| { readonly command: 'openUrl'; readonly url: string }
 	| { readonly command: 'pause'; readonly id: string; readonly paused: boolean }
 	| { readonly command: 'remove'; readonly id: string }
+	| { readonly command: 'setEventStudy'; readonly id: string; readonly eventStudy: boolean }
+	| { readonly command: 'eventStudy'; readonly alertId: string; readonly folder?: string }
 	| { readonly command: 'markRead'; readonly ids: readonly string[] }
+	| { readonly command: 'dismiss'; readonly id: string }
+	| { readonly command: 'clearFired' }
 	| { readonly command: 'openFile' }
 	| { readonly command: 'showAlerts' }
 	| { readonly command: 'addFor'; readonly symbol: string }
@@ -93,10 +98,11 @@ const openPages = new Map<PageKind, { readonly input: WebviewInput; readonly sho
 function openAlertsPage(accessor: ServicesAccessor, place: PagePlace): void {
 	const webviewWorkbenchService = accessor.get(IWebviewWorkbenchService);
 	const alertsService = accessor.get(IAlertsService);
+	const eventStudiesService = accessor.get(IEventStudiesService);
 	const editorService = accessor.get(IEditorService);
 	const commandService = accessor.get(ICommandService);
-	const openerService = accessor.get(IOpenerService);
 	const quickInputService = accessor.get(IQuickInputService);
+	const dialogService = accessor.get(IDialogService);
 
 	const kind: PageKind = place.section === 'add' ? 'add' : place.section === 'quote' ? 'quote' : 'alerts';
 	const openPage = openPages.get(kind);
@@ -156,6 +162,7 @@ function openAlertsPage(accessor: ServicesAccessor, place: PagePlace): void {
 						repeat: alert.repeat,
 						paused: !!alert.paused,
 						filings: true,
+						eventStudy: !!alert.eventStudy,
 						url: alert.sic
 							? `https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&SIC=${encodeURIComponent(alert.sic)}&owner=include&count=100`
 							: alert.ciks?.length || alert.everyone ? undefined : `https://www.sec.gov/edgar/browse/?CIK=${encodeURIComponent(alert.symbol)}`,
@@ -192,10 +199,15 @@ function openAlertsPage(accessor: ServicesAccessor, place: PagePlace): void {
 				severity: fired.severity,
 				unread: !alertsService.isRead(fired.id),
 				filingUrl: fired.filing?.url,
+				// A filing's alert: the study of its filings, or one to start while the alert is there
+				study: fired.filing && studyOf(fired.alertId),
+				canStudy: !!fired.filing && alertsService.getAlerts().some(alert => alert.id === fired.alertId),
 			})),
 		});
 	};
+	const studyOf = (alertId: string) => eventStudiesService.getStudies().find(study => study.alert === alertId)?.folder;
 	disposables.add(alertsService.onDidChange(() => sendState()));
+	disposables.add(eventStudiesService.onDidChange(() => sendState()));
 
 	disposables.add(webviewInput.webview.onMessage(async (e: { message: AlertsMessage }) => {
 		const message = e.message;
@@ -290,7 +302,7 @@ function openAlertsPage(accessor: ServicesAccessor, place: PagePlace): void {
 				const items = cleanItems(message.items);
 				const phrase = message.phrase.trim() || undefined;
 				const condition = describeCondition({ condition: 'newFiling', threshold: 0, forms, items, phrase });
-				const alert = { condition: 'newFiling' as const, threshold: 0, forms: forms.length ? forms : undefined, items: items.length ? items : undefined, phrase, severity: message.severity, repeat: message.repeat };
+				const alert = { condition: 'newFiling' as const, threshold: 0, forms: forms.length ? forms : undefined, items: items.length ? items : undefined, phrase, eventStudy: message.eventStudy || undefined, severity: message.severity, repeat: message.repeat };
 				// With a phrase, EDGAR's full-text search, which goes back as far as needed; without, on several companies or an industry, its latest filings
 				const howOften = phrase
 					? localize('alerts.addedSearch', "It searches the full text of EDGAR's filings every 15 minutes while Pollis is open.")
@@ -347,18 +359,68 @@ function openAlertsPage(accessor: ServicesAccessor, place: PagePlace): void {
 			case 'openUrl':
 				// Only the SEC's pages: the filings and the filers at EDGAR
 				if (message.url.startsWith('https://www.sec.gov/')) {
-					await openerService.open(URI.parse(message.url), { openExternal: true });
+					await commandService.executeCommand(OPEN_LINK_COMMAND_ID, message.url);
 				}
 				break;
 			case 'pause':
 				alertsService.setPaused(message.id, message.paused);
 				break;
-			case 'remove':
-				alertsService.removeAlert(message.id);
+			case 'setEventStudy':
+				alertsService.setEventStudy(message.id, message.eventStudy);
 				break;
+			case 'eventStudy': {
+				// Its study, or the Event Studies page with the alert chosen for a new one
+				const folder = studyOf(message.alertId);
+				await commandService.executeCommand(SHOW_EVENT_STUDIES_COMMAND_ID, folder, folder ? undefined : message.alertId);
+				break;
+			}
+			case 'remove': {
+				// Its fired alerts go with it, or stay in Fired Alerts
+				const alert = alertsService.getAlerts().find(alert => alert.id === message.id);
+				const fired = alertsService.getFired().filter(fired => fired.alertId === message.id).map(fired => fired.id);
+				if (!alert) {
+					break;
+				}
+				if (!fired.length) {
+					await alertsService.removeAlert(alert.id);
+					break;
+				}
+				const { result } = await dialogService.prompt<'withFired' | 'alertOnly' | undefined>({
+					type: 'warning',
+					message: localize('alerts.removeMessage', "Remove the alert on {0}?", describeSubject(alert)),
+					detail: localize('alerts.removeDetail', "It has fired {0} times. Its fired alerts can go with it or stay in Fired Alerts.", fired.length),
+					buttons: [
+						{ label: localize({ key: 'alerts.removeWithFired', comment: ['&& denotes a mnemonic'] }, "Remove Alert &&and Fired Alerts"), run: () => 'withFired' },
+						{ label: localize({ key: 'alerts.removeAlertOnly', comment: ['&& denotes a mnemonic'] }, "Remove Alert &&Only"), run: () => 'alertOnly' },
+					],
+					cancelButton: { run: () => undefined },
+				});
+				if (result) {
+					await alertsService.removeAlert(alert.id);
+					if (result === 'withFired') {
+						await alertsService.removeFired(fired);
+					}
+				}
+				break;
+			}
 			case 'markRead':
 				alertsService.markRead(message.ids);
 				break;
+			case 'dismiss':
+				await alertsService.removeFired([message.id]);
+				break;
+			case 'clearFired': {
+				const count = alertsService.getFired().length;
+				const { confirmed } = await dialogService.confirm({
+					message: localize('alerts.clearConfirm', "Clear all {0} fired alerts?", count),
+					detail: localize('alerts.clearDetail', "They are taken out of Fired Alerts and cannot be brought back. Your alerts stay as they are."),
+					primaryButton: localize({ key: 'alerts.clearButton', comment: ['&& denotes a mnemonic'] }, "&&Clear"),
+				});
+				if (confirmed) {
+					await alertsService.clearFired();
+				}
+				break;
+			}
 			case 'openFile':
 				await editorService.openEditor({ resource: alertsService.alertsFile });
 				break;
@@ -369,7 +431,7 @@ function openAlertsPage(accessor: ServicesAccessor, place: PagePlace): void {
 				await commandService.executeCommand(ADD_ALERT_COMMAND_ID, message.symbol);
 				break;
 			case 'openYahoo':
-				await openerService.open(URI.parse(`https://finance.yahoo.com/quote/${encodeURIComponent(message.symbol)}`), { openExternal: true });
+				await commandService.executeCommand(OPEN_LINK_COMMAND_ID, `https://finance.yahoo.com/quote/${encodeURIComponent(message.symbol)}`);
 				break;
 		}
 	}));
@@ -448,6 +510,13 @@ function pageHtml(kind: PageKind): string {
 		edgar: localize('alerts.edgar', "EDGAR"),
 		openEdgarHint: localize('alerts.openEdgarHint', "Opens its filings at the SEC's EDGAR in your browser"),
 		openFiling: localize('alerts.openFilingLink', "Open Filing"),
+		startStudy: localize('alerts.startStudy', "Start Event Study"),
+		startStudyHint: localize('alerts.startStudyHint', "Opens Event Studies with this alert chosen for a new study of its filings"),
+		openStudy: localize('alerts.openStudy', "Open Event Study"),
+		eventStudy: localize('alerts.eventStudy', "Event Study"),
+		autoStudy: localize('alerts.autoStudy', "Start One When It Fires"),
+		autoStudyRow: localize('alerts.autoStudyRow', "Auto Event Study"),
+		autoStudyHint: localize('alerts.autoStudyHint', "When it fires and has no event study yet, one starts: benchmark ^GSPC, market-adjusted, 30 minutes before to 2 hours after the filing and the next open. The filings of the 30 days before are among its events."),
 		addTitle: localize('alerts.addTitle', "Add Alert"),
 		symbol: localize('alerts.symbol', "Symbol"),
 		symbolHint: localize('alerts.symbolHint', "An index (^GSPC), a share (AAPL), a future (BZ=F) or a currency (EURUSD=X)"),
@@ -514,6 +583,10 @@ function pageHtml(kind: PageKind): string {
 		fired: localize('alerts.firedTitle', "Fired Alerts"),
 		markAllRead: localize('alerts.markAllRead', "Mark All Read"),
 		markRead: localize('alerts.markRead', "Mark Read"),
+		dismiss: localize('alerts.dismiss', "Dismiss"),
+		dismissHint: localize('alerts.dismissHint', "Takes it out of Fired Alerts"),
+		clearFired: localize('alerts.clearFired', "Clear"),
+		clearFiredHint: localize('alerts.clearFiredHint', "Takes every fired alert out of Fired Alerts"),
 		noneFired: localize('alerts.noneFired', "No alert has fired yet."),
 	};
 	return `<!DOCTYPE html>
@@ -542,7 +615,8 @@ function pageHtml(kind: PageKind): string {
 		.formGrid > .r2 { grid-row: 2; }
 		.formGrid > .r3 { grid-row: 3; }
 		.formGrid > .r4 { grid-row: 4; }
-		.form .formGrid > .added { grid-column: 3 / -1; grid-row: 4; margin-left: 16px; }
+		.formGrid > .r5 { grid-row: 5; }
+		.form .formGrid > .added { grid-column: 3 / -1; grid-row: 5; margin-left: 16px; }
 		@container (max-width: 720px) {
 			.formGrid { grid-template-columns: max-content minmax(0, 1fr); }
 			.form .formGrid > * { grid-row: auto; grid-column: auto; margin-left: 0; }
@@ -602,6 +676,7 @@ function pageHtml(kind: PageKind): string {
 		.entry .meta { font-size: 11px; color: var(--vscode-descriptionForeground); }
 		.entry.paused .name, .entry.read .name { font-weight: normal; color: var(--vscode-descriptionForeground); }
 		.entry .actions { display: flex; gap: 12px; }
+		.headerActions { display: flex; gap: 12px; }
 		.empty { color: var(--vscode-descriptionForeground); padding: 12px 8px; }
 		.quoteInfo { flex: 0 1 340px; min-width: 0; padding: 16px; border-radius: 4px; background: var(--vscode-welcomePage-tileBackground, var(--vscode-editorWidget-background)); }
 		.quoteInfo .row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
@@ -718,8 +793,13 @@ function pageHtml(kind: PageKind): string {
 			<label class="choice" title="${text.onceHint}"><input type="radio" name="repeat" value="false">${text.once}</label>
 			<div class="hint" id="repeatHint"></div>
 		</div>
-		<span class="c3 r3"></span>
-		<div class="c4 r3"><button class="action primary" id="add" disabled>${text.add}</button></div>
+		<span class="field c3 r3" id="eventStudyLabel" hidden>6. ${text.eventStudy}</span>
+		<div class="c4 r3" id="eventStudyCell" hidden>
+			<label class="choice" title="${text.autoStudyHint}"><input type="checkbox" id="eventStudy">${text.autoStudy}</label>
+			<div class="hint">${text.autoStudyHint}</div>
+		</div>
+		<span class="c3 r4"></span>
+		<div class="c4 r4"><button class="action primary" id="add" disabled>${text.add}</button></div>
 		<div class="added" id="added" hidden><span id="addedText"></span> <button class="link" id="seeAlerts">${text.seeAlerts}</button></div>
 		</div>
 	</div>
@@ -743,7 +823,7 @@ function pageHtml(kind: PageKind): string {
 	<div class="sectionHeader" id="alertsSection"><h2>${text.yourAlerts}</h2><button class="link" id="openFile">${text.openFile}</button></div>
 	<div class="list" id="alerts"></div>
 
-	<div class="sectionHeader" id="firedSection"><h2>${text.fired}</h2><button class="link" id="markAllRead" hidden>${text.markAllRead}</button></div>
+	<div class="sectionHeader" id="firedSection"><h2>${text.fired}</h2><span class="headerActions"><button class="link" id="markAllRead" hidden>${text.markAllRead}</button><button class="link" id="clearFired" title="${text.clearFiredHint}" hidden>${text.clearFired}</button></span></div>
 	<div class="list" id="fired"></div>
 	</div>
 </div>
@@ -873,6 +953,8 @@ function pageHtml(kind: PageKind): string {
 		conditionElement.hidden = filings();
 		document.getElementById('thresholdLabel').hidden = filings();
 		document.getElementById('thresholdCell').hidden = filings();
+		document.getElementById('eventStudyLabel').hidden = !filings();
+		document.getElementById('eventStudyCell').hidden = !filings();
 		showItems();
 		fillThreshold();
 		updateForm();
@@ -1203,6 +1285,7 @@ function pageHtml(kind: PageKind): string {
 				items: chosenItems(),
 				severity: document.querySelector('input[name="severity"]:checked').value,
 				repeat: document.querySelector('input[name="repeat"]:checked').value === 'true',
+				eventStudy: document.getElementById('eventStudy').checked,
 			});
 			addElement.disabled = true;
 			return;
@@ -1220,6 +1303,7 @@ function pageHtml(kind: PageKind): string {
 	document.getElementById('seeAlerts').addEventListener('click', () => vscode.postMessage({ command: 'showAlerts' }));
 	document.getElementById('openFile').addEventListener('click', () => vscode.postMessage({ command: 'openFile' }));
 	document.getElementById('markAllRead').addEventListener('click', () => vscode.postMessage({ command: 'markRead', ids: state.fired.filter(fired => fired.unread).map(fired => fired.id) }));
+	document.getElementById('clearFired').addEventListener('click', () => vscode.postMessage({ command: 'clearFired' }));
 
 	// The quote page: the value, its change since the previous close, and the day's and the year's ranges
 	function renderQuote() {
@@ -1336,6 +1420,17 @@ function pageHtml(kind: PageKind): string {
 			pause.addEventListener('click', () => vscode.postMessage({ command: 'pause', id: alert.id, paused: !alert.paused }));
 			const remove = element('button', 'link', TEXT.remove);
 			remove.addEventListener('click', () => vscode.postMessage({ command: 'remove', id: alert.id }));
+			// On filings: whether an event study starts when it fires
+			if (alert.filings) {
+				const auto = element('label', 'choice');
+				auto.title = TEXT.autoStudyHint;
+				const checkbox = element('input');
+				checkbox.type = 'checkbox';
+				checkbox.checked = alert.eventStudy;
+				checkbox.addEventListener('change', () => vscode.postMessage({ command: 'setEventStudy', id: alert.id, eventStudy: checkbox.checked }));
+				auto.append(checkbox, TEXT.autoStudyRow);
+				actions.appendChild(auto);
+			}
 			// Several companies have no one page at the SEC
 			if (alert.filings && !alert.url) {
 				open.hidden = true;
@@ -1371,15 +1466,28 @@ function pageHtml(kind: PageKind): string {
 				toggle({ id: fired.id, symbol: fired.symbol, alertId: fired.alertId, fired });
 			});
 			actions.appendChild(open);
+			if (fired.study || fired.canStudy) {
+				const study = element('button', 'link', fired.study ? TEXT.openStudy : TEXT.startStudy);
+				if (!fired.study) {
+					study.title = TEXT.startStudyHint;
+				}
+				study.addEventListener('click', () => vscode.postMessage({ command: 'eventStudy', alertId: fired.alertId, folder: fired.study }));
+				actions.appendChild(study);
+			}
 			if (fired.unread) {
 				const read = element('button', 'link', TEXT.markRead);
 				read.addEventListener('click', () => vscode.postMessage({ command: 'markRead', ids: [fired.id] }));
 				actions.appendChild(read);
 			}
+			const dismiss = element('button', 'link', TEXT.dismiss);
+			dismiss.title = TEXT.dismissHint;
+			dismiss.addEventListener('click', () => vscode.postMessage({ command: 'dismiss', id: fired.id }));
+			actions.appendChild(dismiss);
 			row.appendChild(actions);
 			firedElement.appendChild(row);
 		}
 		document.getElementById('markAllRead').hidden = !state.fired.some(fired => fired.unread);
+		document.getElementById('clearFired').hidden = !state.fired.length;
 		placePanel();
 	}
 

@@ -6,6 +6,7 @@
 import { IntervalTimer, RunOnceScheduler } from '../../../../base/common/async.js';
 import { VSBuffer } from '../../../../base/common/buffer.js';
 import { CancellationToken } from '../../../../base/common/cancellation.js';
+import { safeIntl } from '../../../../base/common/date.js';
 import { Emitter, Event } from '../../../../base/common/event.js';
 import { Disposable } from '../../../../base/common/lifecycle.js';
 import { joinPath } from '../../../../base/common/resources.js';
@@ -13,16 +14,17 @@ import { generateUuid } from '../../../../base/common/uuid.js';
 import { URI } from '../../../../base/common/uri.js';
 import { IRequestContext, IRequestOptions } from '../../../../base/parts/request/common/request.js';
 import { localize } from '../../../../nls.js';
+import { ICommandService } from '../../../../platform/commands/common/commands.js';
 import { IFileService } from '../../../../platform/files/common/files.js';
 import { InstantiationType, registerSingleton } from '../../../../platform/instantiation/common/extensions.js';
 import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
 import { INotificationService, Severity } from '../../../../platform/notification/common/notification.js';
-import { IOpenerService } from '../../../../platform/opener/common/opener.js';
 import { asJson, asText, IRequestService, isSuccess } from '../../../../platform/request/common/request.js';
 import { ISecretStorageService } from '../../../../platform/secrets/common/secrets.js';
 import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
 import { IPathService } from '../../../services/path/common/pathService.js';
 import { CREDENTIALS } from '../../model/browser/common/credentials.js';
+import { OPEN_LINK_COMMAND_ID } from './openLink.js';
 
 /**
  * What an alert watches for: the value above or below the threshold (once, until it is back on the other side), the
@@ -61,6 +63,8 @@ export interface IAlert {
 	readonly phrase?: string;
 	/** For newFiling: the 8-K items an 8-K must have one of to fire, such as 2.02; every 8-K when absent or empty. */
 	readonly items?: readonly string[];
+	/** For newFiling: whether an event study of its filings starts when it fires and has none yet. */
+	readonly eventStudy?: boolean;
 	readonly severity: AlertSeverity;
 	/** Whether the alert fires again once the value is back on the other side, else it is paused once it fires. */
 	readonly repeat: boolean;
@@ -177,6 +181,16 @@ export interface IQuote {
 	readonly exchange?: string;
 }
 
+/** A symbol Yahoo Finance suggests for a search: a company's name or a ticker. */
+export interface ISymbolMatch {
+	readonly symbol: string;
+	readonly name: string;
+	/** The exchange's name, such as NASDAQ. */
+	readonly exchange?: string;
+	/** EQUITY, ETF, INDEX, FUTURE and so on. */
+	readonly type?: string;
+}
+
 /** The span of a chart: a day, five days, a month or six months. */
 export type ChartRange = '1d' | '5d' | '1mo' | '6mo';
 
@@ -222,18 +236,27 @@ export interface IAlertsService {
 	getFired(): readonly IFiredAlert[];
 	isRead(firedId: string): boolean;
 	markRead(firedIds: readonly string[]): void;
+	/** Takes the fired alerts `firedIds` out of the history. */
+	removeFired(firedIds: readonly string[]): Promise<void>;
+	/** Empties the history of fired alerts. */
+	clearFired(): Promise<void>;
 	addAlert(alert: Omit<IAlert, 'id'>): Promise<void>;
 	setPaused(alertId: string, paused: boolean): Promise<void>;
+	/** For newFiling: whether an event study of its filings starts when it fires and has none yet. */
+	setEventStudy(alertId: string, eventStudy: boolean): Promise<void>;
 	removeAlert(alertId: string): Promise<void>;
 	/** The quote of `symbol`, or undefined when Yahoo Finance does not know it or cannot be reached. */
 	getQuote(symbol: string): Promise<IQuote | undefined>;
+	/** The symbols Yahoo Finance suggests for `text`, best first, or undefined when it cannot be reached. */
+	searchSymbols(text: string): Promise<readonly ISymbolMatch[] | undefined>;
 	/** The values of `symbol` over `range`, or undefined when Yahoo Finance does not know it or cannot be reached. */
 	getChart(symbol: string, range: ChartRange): Promise<IChart | undefined>;
 	/**
-	 * The minute bars of `symbol` from `start` to `end`, in milliseconds since 1970, before and after the regular
-	 * session too; undefined when Yahoo Finance does not know it or cannot be reached. It keeps them for 30 days.
+	 * The bars of `symbol` from `start` to `end`, in milliseconds since 1970, a minute each or `minutes` minutes each,
+	 * before and after the regular session too; undefined when Yahoo Finance does not know it or cannot be reached. It
+	 * keeps minute bars for 30 days and five-minute bars for 60.
 	 */
-	getMinuteBars(symbol: string, start: number, end: number): Promise<IMinuteBars | undefined>;
+	getMinuteBars(symbol: string, start: number, end: number, minutes?: 1 | 5): Promise<IMinuteBars | undefined>;
 	/** The user's contact for the SEC, which asks for a name and an email with every request; the EDGAR panel's too. */
 	getSecContact(): Promise<string | undefined>;
 	setSecContact(contact: string): Promise<void>;
@@ -495,6 +518,31 @@ interface ILatestFiling extends IFiling {
 	readonly time: number;
 }
 
+// New York's offset from UTC at a time: GMT-4 in summer, GMT-5 in winter
+const newYorkOffset = safeIntl.DateTimeFormat('en-US', { timeZone: 'America/New_York', timeZoneName: 'shortOffset' });
+
+/** How many hours New York is behind UTC at `time`. */
+function newYorkHoursBehind(time: number): number {
+	const name = newYorkOffset.value.formatToParts(time).find(part => part.type === 'timeZoneName')?.value;
+	const hours = /^GMT-(?<hours>\d+)$/.exec(name ?? '')?.groups?.hours;
+	return hours ? Number(hours) : 5;
+}
+
+/**
+ * When EDGAR accepted a filing, in UTC, from its submissions' acceptanceDateTime, which adds New York's offset twice:
+ * a filing accepted at 18:32:55 in New York (22:32:55 UTC) comes as 2026-10-20T02:32:55.000Z. EDGAR's filing pages
+ * and its feeds have the time right.
+ */
+function submissionsAccepted(value: string | undefined): string | undefined {
+	const time = value ? Date.parse(value) : NaN;
+	if (isNaN(time)) {
+		return undefined;
+	}
+	// Four hours earlier, unless that is in winter
+	const summer = time - 4 * 60 * 60_000;
+	return new Date(newYorkHoursBehind(summer) === 4 ? summer : time - 5 * 60 * 60_000).toISOString();
+}
+
 /**
  * An entry of EDGAR's latest filings: its title "8-K - GROUP 1 AUTOMOTIVE INC (0001031203) (Filer)", the form, the
  * accession, the index page, when it was accepted (Eastern time, with its offset) and a summary with the day filed and,
@@ -565,7 +613,7 @@ export class AlertsService extends Disposable implements IAlertsService {
 		@IPathService pathService: IPathService,
 		@INotificationService private readonly notificationService: INotificationService,
 		@ISecretStorageService private readonly secretStorageService: ISecretStorageService,
-		@IOpenerService private readonly openerService: IOpenerService,
+		@ICommandService private readonly commandService: ICommandService,
 	) {
 		super();
 		const folder = joinPath(pathService.userHome({ preferLocal: true }), '.pollis', 'alerts');
@@ -624,6 +672,19 @@ export class AlertsService extends Disposable implements IAlertsService {
 		this._onDidChange.fire();
 	}
 
+	async removeFired(firedIds: readonly string[]): Promise<void> {
+		await this.loaded;
+		// Another window may have added to the history since it was read
+		await this.readHistory(true);
+		const removed = new Set(firedIds);
+		await this.writeHistory(this.fired.filter(fired => !removed.has(fired.id)));
+	}
+
+	async clearFired(): Promise<void> {
+		await this.loaded;
+		await this.writeHistory([]);
+	}
+
 	async addAlert(alert: Omit<IAlert, 'id'>): Promise<void> {
 		await this.loaded;
 		this.alerts = [...this.alerts, { id: generateUuid(), ...alert }];
@@ -640,6 +701,12 @@ export class AlertsService extends Disposable implements IAlertsService {
 		}
 		await this.writeAlerts();
 		this.check();
+	}
+
+	async setEventStudy(alertId: string, eventStudy: boolean): Promise<void> {
+		await this.loaded;
+		this.alerts = this.alerts.map(alert => alert.id === alertId ? { ...alert, eventStudy: eventStudy || undefined } : alert);
+		await this.writeAlerts();
 	}
 
 	async removeAlert(alertId: string): Promise<void> {
@@ -692,12 +759,14 @@ export class AlertsService extends Disposable implements IAlertsService {
 		return { times, values, previousClose: result.meta?.chartPreviousClose ?? result.meta?.previousClose };
 	}
 
-	async getMinuteBars(symbol: string, start: number, end: number): Promise<IMinuteBars | undefined> {
+	async getMinuteBars(symbol: string, start: number, end: number, minutes: 1 | 5 = 1): Promise<IMinuteBars | undefined> {
 		const bars = new Map<number, IMinuteBar>();
 		const sessions = new Map<number, number>();
-		for (let from = start; from < end; from += MINUTE_BARS_SPAN_MILLISECONDS) {
-			const to = Math.min(end, from + MINUTE_BARS_SPAN_MILLISECONDS);
-			const result = await this.fetchChart(symbol, `interval=1m&period1=${Math.floor(from / 1000)}&period2=${Math.ceil(to / 1000)}&includePrePost=true`);
+		// Five-minute bars come in longer spans: Yahoo Finance gives up to 60 days of them a request
+		const span = minutes === 1 ? MINUTE_BARS_SPAN_MILLISECONDS : 8 * MINUTE_BARS_SPAN_MILLISECONDS;
+		for (let from = start; from < end; from += span) {
+			const to = Math.min(end, from + span);
+			const result = await this.fetchChart(symbol, `interval=${minutes}m&period1=${Math.floor(from / 1000)}&period2=${Math.ceil(to / 1000)}&includePrePost=true`);
 			if (!result) {
 				return undefined;
 			}
@@ -761,7 +830,7 @@ export class AlertsService extends Disposable implements IAlertsService {
 			return {
 				form: recent.form?.[index] ?? '',
 				filed: recent.filingDate?.[index] ?? '',
-				accepted: recent.acceptanceDateTime?.[index] || undefined,
+				accepted: submissionsAccepted(recent.acceptanceDateTime?.[index]),
 				accession,
 				description: recent.primaryDocDescription?.[index] || undefined,
 				items: items?.length ? items : undefined,
@@ -976,6 +1045,32 @@ export class AlertsService extends Disposable implements IAlertsService {
 		try {
 			const context = await this.request({ type: 'GET', url, headers: { 'User-Agent': contact }, callSite: 'pollis.alerts.sec' });
 			return isSuccess(context) ? await asText(context) ?? undefined : undefined;
+		} catch {
+			return undefined;
+		}
+	}
+
+	async searchSymbols(text: string): Promise<readonly ISymbolMatch[] | undefined> {
+		try {
+			const context = await this.request({
+				type: 'GET',
+				url: `https://query1.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(text)}&quotesCount=8&newsCount=0&listsCount=0`,
+				// Yahoo Finance answers only a browser's requests
+				headers: { 'User-Agent': 'Mozilla/5.0' },
+				callSite: 'pollis.alerts.search',
+			});
+			if (!isSuccess(context)) {
+				return undefined;
+			}
+			const answer = await asJson<{ readonly quotes?: readonly { readonly symbol?: string; readonly shortname?: string; readonly longname?: string; readonly exchDisp?: string; readonly quoteType?: string }[] }>(context);
+			const matches: ISymbolMatch[] = [];
+			for (const quote of answer?.quotes ?? []) {
+				const name = quote.longname?.trim() || quote.shortname?.trim();
+				if (quote.symbol && name) {
+					matches.push({ symbol: quote.symbol, name, exchange: quote.exchDisp, type: quote.quoteType });
+				}
+			}
+			return matches;
 		} catch {
 			return undefined;
 		}
@@ -1207,7 +1302,7 @@ export class AlertsService extends Disposable implements IAlertsService {
 		const severity = fired.severity === 'error' ? Severity.Error : fired.severity === 'warning' ? Severity.Warning : Severity.Info;
 		const filing = fired.filing;
 		this.notificationService.prompt(severity, describeFiredAlert(fired), [
-			...(filing ? [{ label: localize('alerts.openFiling', "Open Filing"), run: () => { this.markRead([fired.id]); this.openerService.open(URI.parse(filing.url), { openExternal: true }); } }] : []),
+			...(filing ? [{ label: localize('alerts.openFiling', "Open Filing"), run: () => { this.markRead([fired.id]); this.commandService.executeCommand(OPEN_LINK_COMMAND_ID, filing.url); } }] : []),
 			{ label: localize('alerts.markRead', "Mark Read"), run: () => this.markRead([fired.id]) },
 			{ label: localize('alerts.pause', "Pause Alert"), run: () => { this.markRead([fired.id]); this.setPaused(fired.alertId, true); } },
 		], { sticky: true });
@@ -1263,11 +1358,16 @@ export class AlertsService extends Disposable implements IAlertsService {
 	}
 
 	private async appendHistory(fired: readonly IFiredAlert[]): Promise<void> {
-		this.fired = [...[...fired].reverse(), ...this.fired].slice(0, MAX_FIRED);
-		const lines = [...this.fired].reverse().map(alert => JSON.stringify(alert)).join('\n') + '\n';
+		await this.writeHistory([...[...fired].reverse(), ...this.fired].slice(0, MAX_FIRED));
+		this._onDidFire.fire(fired);
+	}
+
+	/** Writes `fired`, newest first, as the history, oldest first. */
+	private async writeHistory(fired: IFiredAlert[]): Promise<void> {
+		this.fired = fired;
+		const lines = [...fired].reverse().map(alert => JSON.stringify(alert) + '\n').join('');
 		await this.fileService.writeFile(this.historyFile, VSBuffer.fromString(lines));
 		this._onDidChange.fire();
-		this._onDidFire.fire(fired);
 	}
 
 	private readStorage<T>(key: string, fallback: T): T {

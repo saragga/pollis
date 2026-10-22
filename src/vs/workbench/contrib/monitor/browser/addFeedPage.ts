@@ -6,19 +6,18 @@
 import { fromNow } from '../../../../base/common/date.js';
 import { DisposableStore } from '../../../../base/common/lifecycle.js';
 import { escape } from '../../../../base/common/strings.js';
-import { URI } from '../../../../base/common/uri.js';
 import { localize, localize2 } from '../../../../nls.js';
 import { Action2, registerAction2 } from '../../../../platform/actions/common/actions.js';
 import { ICommandService } from '../../../../platform/commands/common/commands.js';
 import { IDialogService } from '../../../../platform/dialogs/common/dialogs.js';
 import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
-import { IOpenerService } from '../../../../platform/opener/common/opener.js';
 import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
 import { ALERT_SOURCES, AlertSource } from '../../../../platform/alertsMailbox/common/alertsMailbox.js';
 import { ARXIV_TOPIC, arxivSearchName, arxivSearchUrl, findCatalogueFeed, MEDICINE_TOPIC, pubmedSearchName, pubmedSearchUrl, RSS_CATALOGUE } from './rssCatalogue.js';
 import { ADD_FEED_COMMAND_ID, getTopics, RSS_FEEDS_COMMAND_ID } from './rssFeedsPage.js';
 import { IRssFeedEntry, IRssFeedsService, IRssItem, OTHER_TOPIC } from './rssFeedsService.js';
+import { OPEN_LINK_COMMAND_ID } from './openLink.js';
 
 // Add Feed: a feed from a PubMed or arXiv search, its newest results previewed before it is added; a feed at an
 // address (a journal's or website's page, or a YouTube channel); the alerts of the alerts mailbox; and the feeds the
@@ -49,7 +48,6 @@ async function openAddFeedPage(accessor: ServicesAccessor): Promise<void> {
 	const webviewWorkbenchService = accessor.get(IWebviewWorkbenchService);
 	const rssFeedsService = accessor.get(IRssFeedsService);
 	const dialogService = accessor.get(IDialogService);
-	const openerService = accessor.get(IOpenerService);
 	const commandService = accessor.get(ICommandService);
 
 	if (openPage && !openPage.isDisposed()) {
@@ -193,7 +191,7 @@ async function openAddFeedPage(accessor: ServicesAccessor): Promise<void> {
 				break;
 			case 'openLink':
 				if (/^https:\/\//.test(message.url)) {
-					await openerService.open(URI.parse(message.url), { openExternal: true });
+					await commandService.executeCommand(OPEN_LINK_COMMAND_ID, message.url);
 				}
 				break;
 			case 'openHelp':

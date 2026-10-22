@@ -242,10 +242,11 @@ using EDGAR
 p = profile({{cik}})
 println(p.name, " - ", p.sicDescription, " (fiscal year ends ", p.fiscalYearEnd, ")")
 
-# One row per filing, newest first, 100 per page (from = 100, 200, ... for older ones)
+# One row per filing, newest first, 100 per page (from = 100, 200, ... for older ones);
+# acceptanceDateTime is when EDGAR accepted it, in UTC, to the second
 rows = filings_by_cik({{cik}})
 for r in first(rows, 5)
-    println(r.filed, "  ", r.form, "  ", r.document)
+    println(r.filed, "  ", r.acceptanceDateTime, "  ", r.form, "  ", r.document)
 end
 """
 

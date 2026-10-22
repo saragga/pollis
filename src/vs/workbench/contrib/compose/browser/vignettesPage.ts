@@ -17,7 +17,6 @@ import { ICommandService } from '../../../../platform/commands/common/commands.j
 import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
 import { IFileService } from '../../../../platform/files/common/files.js';
 import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
-import { IOpenerService } from '../../../../platform/opener/common/opener.js';
 import { asText, IRequestService, isSuccess } from '../../../../platform/request/common/request.js';
 import { IPathService } from '../../../services/path/common/pathService.js';
 import { parseToml, TomlValue } from '../../model/browser/common/tomlPanelData.js';
@@ -25,6 +24,7 @@ import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
 import { LIBRARY_PAGE_HELPERS, LIBRARY_PAGE_STYLE } from './libraryPage.js';
 import { vignettesIndex } from './newMethods.js';
+import { OPEN_LINK_COMMAND_ID } from '../../monitor/browser/openLink.js';
 
 // Help > Documentation > Vignettes: a vignette belongs to its package, as in R. Installed: the vignettes of the
 // Julia packages installed on this computer (~/.julia/packages/NAME/SLUG/vignette/Vignette.toml, which Package and
@@ -152,7 +152,6 @@ async function openVignettesPage(accessor: ServicesAccessor): Promise<void> {
 	const requestService = accessor.get(IRequestService);
 	const configurationService = accessor.get(IConfigurationService);
 	const commandService = accessor.get(ICommandService);
-	const openerService = accessor.get(IOpenerService);
 
 	if (openPage && !openPage.isDisposed()) {
 		webviewWorkbenchService.revealWebview(openPage, openPage.group ?? -1, false);
@@ -223,7 +222,7 @@ async function openVignettesPage(accessor: ServicesAccessor): Promise<void> {
 		} else if (message.command === 'open' && known.some(entry => entry.pdf === message.pdf)) {
 			commandService.executeCommand(BrowserViewCommandId.Open, message.pdf.startsWith('file:') ? URI.parse(message.pdf).toString(true) : message.pdf);
 		} else if (message.command === 'link' && known.some(entry => entry.repository === message.url || entry.article === message.url) && /^https?:\/\//.test(message.url)) {
-			openerService.open(URI.parse(message.url), { openExternal: true });
+			commandService.executeCommand(OPEN_LINK_COMMAND_ID, message.url);
 		}
 	}));
 }

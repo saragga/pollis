@@ -68,6 +68,7 @@ import { JOURNAL_METRICS_COMMAND_ID } from '../../databases/common/databaseDrive
 import { MarkdownString } from '../../../../base/common/htmlContent.js';
 import { describeCondition, describeFiredAlert, describeSubject, formatValue, IAlert, IAlertsService, IFiredAlert } from '../../monitor/browser/alertsService.js';
 import { ADD_ALERT_COMMAND_ID, openQuotePage, severityIcon, SHOW_ALERTS_COMMAND_ID } from '../../monitor/browser/alertsPage.js';
+import { OPEN_LINK_COMMAND_ID } from '../../monitor/browser/openLink.js';
 import { startEntries } from '../common/gettingStartedContent.js';
 import { discoverPollisEntries } from '../common/discoverPollisContent.js';
 import { GroupsOrder, IEditorGroup, IEditorGroupsService, preferredSideBySideGroupDirection } from '../../../services/editor/common/editorGroupsService.js';
@@ -543,7 +544,7 @@ export class GettingStartedPage extends EditorPane {
 					if (command === 'openFiredAlert') {
 						// A filing opens at the SEC; a quote, on Pollis's quote page
 						if (fired.filing) {
-							this.openerService.open(URI.parse(fired.filing.url), { openExternal: true });
+							this.commandService.executeCommand(OPEN_LINK_COMMAND_ID, fired.filing.url);
 						} else {
 							openQuotePage(this.commandService, fired.symbol);
 						}
@@ -559,7 +560,7 @@ export class GettingStartedPage extends EditorPane {
 				if (item) {
 					this.rssFeedsService.markRead([item.id]);
 					if (command === 'openFeedItem') {
-						this.openerService.open(URI.parse(item.link), { openExternal: true });
+						this.commandService.executeCommand(OPEN_LINK_COMMAND_ID, item.link);
 					}
 				}
 				break;

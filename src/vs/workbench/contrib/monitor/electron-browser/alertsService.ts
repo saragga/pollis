@@ -4,12 +4,12 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { CancellationToken } from '../../../../base/common/cancellation.js';
+import { ICommandService } from '../../../../platform/commands/common/commands.js';
 import { IRequestContext, IRequestOptions } from '../../../../base/parts/request/common/request.js';
 import { IFileService } from '../../../../platform/files/common/files.js';
 import { InstantiationType, registerSingleton } from '../../../../platform/instantiation/common/extensions.js';
 import { IMainProcessService } from '../../../../platform/ipc/common/mainProcessService.js';
 import { INotificationService } from '../../../../platform/notification/common/notification.js';
-import { IOpenerService } from '../../../../platform/opener/common/opener.js';
 import { IRequestService } from '../../../../platform/request/common/request.js';
 import { RequestChannelClient } from '../../../../platform/request/common/requestIpc.js';
 import { ISecretStorageService } from '../../../../platform/secrets/common/secrets.js';
@@ -29,10 +29,10 @@ class NativeAlertsService extends AlertsService {
 		@IPathService pathService: IPathService,
 		@INotificationService notificationService: INotificationService,
 		@ISecretStorageService secretStorageService: ISecretStorageService,
-		@IOpenerService openerService: IOpenerService,
+		@ICommandService commandService: ICommandService,
 		@IMainProcessService mainProcessService: IMainProcessService,
 	) {
-		super(requestService, storageService, fileService, pathService, notificationService, secretStorageService, openerService);
+		super(requestService, storageService, fileService, pathService, notificationService, secretStorageService, commandService);
 		this.mainRequestService = new RequestChannelClient(mainProcessService.getChannel('request'));
 	}
 
