@@ -125,6 +125,65 @@ results[1].moves
 	}, undefined, 1);
 }
 
+/**
+ * The notebook of a panel event study in `folder`: Julia that runs PollisEventStudies.jl on its table with the
+ * estimators of its study.toml, loading MixedModels.jl for the stepped wedge, and writes the results to results/.
+ */
+export function panelStudyNotebook(folder: string): string {
+	const cells = [
+		markdown(String.raw`
+# Panel Event Study
+
+Units observed over time, first treated at different times: states adopting a policy, firms a rule, clinics a new treatment one group after another. The study's folder holds:
+
+- **study.toml**: the table (data), its columns (unit, time, outcome, and cohort, the time each unit is first treated, or treatment, not 0 from then on), the event times estimated (leads and lags) and the estimators, with the keywords of Callaway and Sant'Anna in [callaway_santanna] and of the stepped wedge in [stepped_wedge];
+- **panel.csv**: the table, copied here when the study was made.
+
+[PollisEventStudies.jl](${PACKAGE_URL}) runs the estimators study.toml names:
+
+- **panel_event_study**: the effects by event time by two-way fixed effects and by Sun and Abraham's (2021) interaction-weighted estimator, which stays right when the effects differ between cohorts, with standard errors clustered by unit and the test of pre-trends;
+- **callaway_santanna**: Callaway and Sant'Anna's (2021) effect of each cohort at each time against the units not yet or never treated, and its averages by event time, by cohort, by calendar time and overall;
+- **stepped_wedge**: the mixed model of Hussey and Hughes (2007), with the units as clusters and their correlation, and the effects by exposure time of Kenny et al. (2022), fitted by MixedModels.jl.
+
+It writes them to **results/**, which the Event Studies page draws. After an edit of study.toml, run all again.
+`),
+		code(String.raw`
+${install('0.4.0')}
+import TOML
+
+const STUDY = isfile(joinpath(pwd(), "study.toml")) ? pwd() : raw"${folder}"
+# The stepped wedge's mixed model is fitted by MixedModels.jl, added when the study asks for it
+if "stepped_wedge" in get(TOML.parsefile(joinpath(STUDY, "study.toml")), "estimators", String[])
+	any(info -> info.name == "MixedModels", values(Pkg.dependencies())) || Pkg.add("MixedModels")
+	@eval using MixedModels
+end
+results = run_study(STUDY)
+`),
+		markdown(String.raw`
+## Each estimator
+
+A result per estimator, in the order of estimators in study.toml: **effects** by event time (for the stepped wedge, **by_exposure**, by exposure time, 1 being the first time treated), and for Callaway and Sant'Anna its **overall** averages.
+`),
+		code(String.raw`
+[r isa PollisEventStudies.SteppedWedgeResult ? r.by_exposure : r.effects for r in results]
+`),
+		markdown(String.raw`
+## Notes
+
+- Times are whole numbers: years, or quarters or months numbered in order.
+- Event time 0 is the first time a unit is treated; the stepped wedge counts exposure time from 1 at that time.
+- Two-way fixed effects mixes cohorts with weights that may be negative when the effects change over time: Sun and Abraham, and Callaway and Sant'Anna, do not.
+- The stepped wedge needs a treatment column, 0 or 1, and treats each unit as a cluster: with individuals observed more than once, name their column individual in [stepped_wedge].
+`),
+	];
+	return JSON.stringify({
+		cells,
+		metadata: { kernelspec: { display_name: 'Julia', language: 'julia', name: 'julia' }, language_info: { name: 'julia' } },
+		nbformat: 4,
+		nbformat_minor: 4,
+	}, undefined, 1);
+}
+
 /** Julia that loads PollisEventStudies.jl, adding it from the Pollis registry, and updating it when older than `minimum`. */
 function install(minimum: string): string {
 	return String.raw`import Pkg
