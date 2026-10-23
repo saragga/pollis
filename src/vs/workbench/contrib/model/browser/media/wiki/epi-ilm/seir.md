@@ -1,3 +1,0 @@
-# seir
-
-Not written yet.

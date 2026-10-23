@@ -19,7 +19,7 @@
 	box-sizing: border-box;
 }
 
-/* Pollis: severity shown by a bar at the left edge, the icon colour and a faint tint (info green, warning grey, error red) */
+/* Pollis: severity shown by a bar at the left edge and the icon colour (info green, warning grey, error red), on the standard background */
 .monaco-workbench .notifications-list-container .notification-list-item.severity-info {
 	--pollis-notification-accent: var(--vscode-notificationsInfo-accent);
 }
@@ -33,7 +33,6 @@
 }
 
 .monaco-workbench .notifications-list-container .notification-list-item:is(.severity-info, .severity-warning, .severity-error) {
-	background-color: color-mix(in srgb, var(--pollis-notification-accent) 10%, transparent);
 	box-shadow: inset 4px 0 0 var(--pollis-notification-accent);
 }
 
@@ -145,6 +144,12 @@
 
 .monaco-workbench .notifications-list-container .notification-list-item .notification-list-item-buttons-container .monaco-button {
 	outline-offset: 2px !important;
+}
+
+/* Pollis: a secondary button turns blue on hover, as the primary one is (its colours are inline styles, hence !important) */
+.monaco-workbench .notifications-list-container .notification-list-item .notification-list-item-buttons-container .monaco-button.secondary:hover {
+	background-color: var(--vscode-button-background) !important;
+	color: var(--vscode-button-foreground) !important;
 }
 
 .monaco-workbench .notifications-list-container .notification-list-item .notification-list-item-buttons-container .monaco-text-button {

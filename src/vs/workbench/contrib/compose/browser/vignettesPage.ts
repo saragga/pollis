@@ -25,6 +25,7 @@ import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWork
 import { LIBRARY_PAGE_HELPERS, LIBRARY_PAGE_STYLE } from './libraryPage.js';
 import { vignettesIndex } from './newMethods.js';
 import { OPEN_LINK_COMMAND_ID } from '../../monitor/browser/openLink.js';
+import { voiceButtonsCss, voiceButtonsHtml, voiceButtonsScript } from '../../model/browser/webviews/webviewScaffold.js';
 
 // Help > Documentation > Vignettes: a vignette belongs to its package, as in R. Installed: the vignettes of the
 // Julia packages installed on this computer (~/.julia/packages/NAME/SLUG/vignette/Vignette.toml, which Package and
@@ -260,6 +261,7 @@ function pageHtml(): string {
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';">
 	<style>${LIBRARY_PAGE_STYLE}
+		${voiceButtonsCss}
 	h2 { font-size: 16px; font-weight: 600; margin: 28px 0 4px 0; }
 	.hint { color: var(--vscode-descriptionForeground); margin: 0 0 8px 0; line-height: 1.4; max-width: 900px; }
 	.filters { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 8px 0; }
@@ -271,7 +273,10 @@ function pageHtml(): string {
 </head>
 <body>
 <div class="container">
-	<h1>${text.title}</h1>
+	<div class="title-row">
+		<h1>${text.title}</h1>
+		${voiceButtonsHtml}
+	</div>
 	<p class="subtitle">${text.intro}</p>
 	<div class="filters">
 		<input class="search" id="search" type="search" placeholder="${text.search}" aria-label="${text.search}">
@@ -294,6 +299,7 @@ function pageHtml(): string {
 </div>
 <script>
 	const vscode = acquireVsCodeApi();
+	${voiceButtonsScript}
 	const TEXT = ${JSON.stringify(text)};
 	${LIBRARY_PAGE_HELPERS}
 

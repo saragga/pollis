@@ -3,7 +3,7 @@
  *  Licensed under the GNU Affero General Public License v3.0. See LICENSE.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IntervalTimer } from '../../../../base/common/async.js';
+import { IntervalTimer, RunOnceScheduler } from '../../../../base/common/async.js';
 import { safeIntl } from '../../../../base/common/date.js';
 import { DisposableStore } from '../../../../base/common/lifecycle.js';
 import { basename, joinPath } from '../../../../base/common/resources.js';
@@ -17,12 +17,13 @@ import { ServicesAccessor } from '../../../../platform/instantiation/common/inst
 import { IEditorService } from '../../../services/editor/common/editorService.js';
 import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
+import { voiceButtonsCss, voiceButtonsHtml, voiceButtonsScript } from '../../model/browser/webviews/webviewScaffold.js';
 import { ADD_ALERT_COMMAND_ID } from './alertsPage.js';
 import { OPEN_LINK_COMMAND_ID } from './openLink.js';
-import { describeCondition, describeSubject, IMinuteBar, IAlertsService } from './alertsService.js';
+import { describeCondition, describeSubject, IAlertsService } from './alertsService.js';
 import { parseCsv } from './csv.js';
-import { DEFAULT_BENCHMARK, DEFAULT_EVENT_PERIOD, EventModel, EventSource, EventStatus, EventTime, eventTime, IEventPeriod, IEventStudiesService, IEventStudy, IPanelResults, IPanelSettings, IStudyEvent, PANEL_ESTIMATORS, PanelEstimator, SHOW_EVENT_STUDIES_COMMAND_ID } from './eventStudiesService.js';
-import { DEFAULT_FOMC_INSTRUMENTS, describeInstrument, describeRelease, FOMC_INSTRUMENTS, FOMC_PERIOD, FOMC_RELEASES, FomcRelease, instrumentMove, instrumentScale, instrumentSymbol, instrumentUnit } from './fomcReleases.js';
+import { DEFAULT_BENCHMARK, DEFAULT_EVENT_PERIOD, EventModel, EventSource, EventStatus, EventTime, eventTime, IEventPeriod, IEventStudiesService, IEventStudy, IPanelSettings, IStudyEvent, PANEL_ESTIMATORS, PanelEstimator, SHOW_EVENT_STUDIES_COMMAND_ID } from './eventStudiesService.js';
+import { DEFAULT_FOMC_INSTRUMENTS, describeInstrument, describeRelease, FOMC_INSTRUMENTS, FOMC_PERIOD, FOMC_RELEASES, FomcRelease, instrumentUnit } from './fomcReleases.js';
 import { ICoverageItem, IMediaCoverageRequest, newsName } from './mediaCoverageService.js';
 import { SHOW_MEDIA_COVERAGE_COMMAND_ID } from './mediaCoveragePage.js';
 
@@ -32,18 +33,19 @@ import { SHOW_MEDIA_COVERAGE_COMMAND_ID } from './mediaCoveragePage.js';
 // with its 95% band, drawn as the prices come in, the articles about them under it, and its events with their
 // newswire release and EDGAR's acceptance; for FOMC releases, each instrument's average move and its move at each. Or
 // a panel event study of a table of units over time (its columns and estimators), and its results: the effects by
-// event time of each estimator with their 95% intervals, and its tests and estimates.
+// event time of each estimator with their 95% intervals, and its tests and estimates. The results of a study of filings
+// or of FOMC releases are PollisEventStudies.jl's, computed in a hidden Julia process of the Julia extension
+// (event_studies.jl) from the study's folder; the page only draws them.
 
 const MINUTE = 60_000;
-// A minute's bar is complete a little after it ends
-const SETTLE_MILLISECONDS = 2 * MINUTE;
-// The fewest minute returns the market model's alpha and beta are estimated on
-const MIN_ESTIMATION_RETURNS = 30;
+// The command of the Julia extension that answers with PollisEventStudies.jl's results
+const EVENT_STUDIES_COMMAND_ID = 'language-julia.pollisEventStudies';
+// How long to wait before asking again while Julia installs PollisEventStudies.jl
+const INSTALLING_RETRY_MILLISECONDS = 15_000;
 // What PollisEventStudies.jl can group the filings by
 const GROUP_BY = ['form', 'item', 'session', 'ticker'];
-// The hour and the day in New York, where the market is
+// The hour in New York, where the market is
 const newYorkHour = safeIntl.DateTimeFormat('en-US', { timeZone: 'America/New_York', hour: 'numeric', hourCycle: 'h23' });
-const newYorkDay = safeIntl.DateTimeFormat('en-CA', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit' });
 
 type EventStudiesMessage =
 	| { readonly command: 'ready' }
@@ -74,6 +76,7 @@ interface IPanelForm {
 	readonly lags: number;
 	readonly control: string;
 	readonly method: string;
+	readonly distribution: string;
 	readonly effect: string;
 	readonly estimand: string;
 	/** For a TATE, [first, last] or none for all; for a PTE, [one]. */
@@ -87,7 +90,12 @@ interface IPanelForm {
 interface IPanelSeries {
 	readonly key: string;
 	readonly name: string;
-	readonly points: readonly { readonly x: number; readonly effect: number; readonly low: number | null; readonly high: number | null }[];
+	/** A reference point is the event time the estimator leaves out: its effect is 0 by construction. */
+	readonly points: readonly { readonly x: number; readonly effect: number; readonly low: number | null; readonly high: number | null; readonly reference?: boolean }[];
+	/** Its test of pre-trends, as the table shows it under Before Treatment; none when the estimator has no such test. */
+	readonly pretrends?: string;
+	/** Its averages of the effects after treatment, each a row at the end of the table. */
+	readonly averages: readonly { readonly label: string; readonly effect: number; readonly low: number | null; readonly high: number | null }[];
 }
 
 /** The cumulative abnormal returns of a study's events over a window, a value a minute, and their average with its 95% band. */
@@ -100,6 +108,75 @@ interface IWindowCurves {
 	readonly lower: readonly (number | null)[];
 	readonly upper: readonly (number | null)[];
 	readonly counts: readonly number[];
+}
+
+/** PollisEventStudies.jl's AAR and CAAR a minute at a time, with the CAAR's 95% band (`averages` in Julia). */
+interface IJuliaAverages {
+	readonly minute: readonly number[];
+	readonly events: readonly number[];
+	readonly caar: readonly (number | null)[];
+	readonly caar_lower: readonly (number | null)[];
+	readonly caar_upper: readonly (number | null)[];
+}
+
+/** PollisEventStudies.jl's results over a period of a study of filings (`analyse` in Julia); null where a value is missing. */
+interface IJuliaFilingsPeriod {
+	/** The events used, a column a value. */
+	readonly events: {
+		readonly accession: readonly string[];
+		readonly abnormal_volume: readonly (number | null)[];
+		readonly abnormal_volatility: readonly (number | null)[];
+		readonly beta: readonly (number | null)[];
+	};
+	/** Each event used's CAR a minute at a time from the event, and from the next open (null for one not followed from it). */
+	readonly curves: readonly (readonly (number | null)[])[];
+	readonly open_curves: readonly ((readonly (number | null)[]) | null)[];
+	readonly from_filing: IJuliaAverages | null;
+	readonly from_open: IJuliaAverages | null;
+	/** The tests at the end of the period, by name: car, car_t, car_p, car_events, bmp... */
+	readonly tests: Readonly<Record<string, number | null>>;
+	/** Each event with a ticker and a time: `used`, or why it was left out, and what an event used lacks, separated by spaces. */
+	readonly outcomes: { readonly accession: readonly string[]; readonly outcome: readonly string[]; readonly notes: readonly string[] };
+}
+
+/** PollisEventStudies.jl's results over a period of a study of FOMC releases, by instrument. */
+interface IJuliaFomcPeriod {
+	readonly moves: { readonly accession: readonly string[] };
+	readonly paths: Readonly<Record<string, { readonly minute: readonly number[]; readonly events: readonly number[]; readonly mean: readonly (number | null)[]; readonly lower: readonly (number | null)[]; readonly upper: readonly (number | null)[] }>>;
+	readonly curves: Readonly<Record<string, readonly ((readonly (number | null)[]) | null)[]>>;
+}
+
+/** A panel study's results by PollisEventStudies.jl: each table its results file would hold, by the file's name, a column at a time. */
+type IJuliaTables = Readonly<Record<string, Readonly<Record<string, readonly (string | number | boolean | null)[]>>>>;
+
+/** What event_studies.jl answers: the results of each period, or of each estimator of a panel study, or why there are none. */
+interface IJuliaAnswer {
+	readonly error?: string;
+	readonly periods?: readonly (IJuliaFilingsPeriod & IJuliaFomcPeriod)[];
+	readonly tables?: IJuliaTables;
+}
+
+/** PollisEventStudies.jl's results for a study, or why there are none, shown in their place. */
+interface IAnalysed {
+	readonly periods?: IJuliaAnswer['periods'];
+	readonly tables?: IJuliaTables;
+	readonly problem?: string;
+}
+
+/** A panel study's results, each table's rows by the name of its results file, with each value as text. */
+interface IPanelResults {
+	readonly tables: ReadonlyMap<string, readonly Readonly<Record<string, string>>[]>;
+}
+
+/** An event's results over a period, as its row shows them. */
+interface IEventRow {
+	/** Why it was left out of the period, or its notes on what it lacks. */
+	readonly leftOut?: string;
+	readonly notes: readonly string[];
+	readonly marketAdjusted: boolean;
+	readonly beta: number | null;
+	readonly abnormalVolume: number | null;
+	readonly abnormalVolatility: number | null;
 }
 
 let openPage: { readonly input: WebviewInput; readonly select: (folder: string | undefined, alertId?: string) => void } | undefined;
@@ -183,6 +260,42 @@ function openEventStudiesPage(accessor: ServicesAccessor, folder: string | undef
 		});
 	};
 
+	// Asked again while Julia installs PollisEventStudies.jl
+	const retry = disposables.add(new RunOnceScheduler(() => sendStudy(), INSTALLING_RETRY_MILLISECONDS));
+	// The study whose results the page has, to say the first time that they are being computed
+	let shown: string | undefined;
+
+	/** PollisEventStudies.jl's results for the study, or why there are none, shown in their place. */
+	const analyse = async (study: IEventStudy): Promise<IAnalysed> => {
+		let answer: IJuliaAnswer | undefined;
+		try {
+			answer = await commandService.executeCommand<IJuliaAnswer>(EVENT_STUDIES_COMMAND_ID, { op: 'analyse', folder: joinPath(eventStudiesService.studiesFolder, study.folder).fsPath });
+		} catch {
+			// The Julia extension is disabled, or not activated yet
+		}
+		if (answer?.periods || answer?.tables) {
+			return { periods: answer.periods, tables: answer.tables };
+		}
+		if (answer?.error === 'installing') {
+			retry.schedule();
+			return { problem: localize('eventStudies.installing', "Julia is installing PollisEventStudies.jl, which computes the study, the first time it is needed: the results come in a minute or two") };
+		}
+		if (answer?.error === 'noJulia') {
+			return { problem: localize('eventStudies.needsJulia', "Needs Julia, which computes the study with PollisEventStudies.jl") };
+		}
+		return { problem: answer?.error && answer.error !== 'failed' ? localize('eventStudies.juliaError', "PollisEventStudies.jl could not compute the study: {0}", answer.error) : localize('eventStudies.juliaFailed', "PollisEventStudies.jl could not compute the study: Julia stopped") };
+	};
+
+	/** Posts the study, with PollisEventStudies.jl's results; the first time, with a word that they are being computed. */
+	const postAnalysed = async (study: IEventStudy, post: (analysed: IAnalysed) => void) => {
+		if (shown !== study.folder) {
+			post({ problem: localize('eventStudies.computing', "PollisEventStudies.jl is computing the study...") });
+		}
+		const analysed = await analyse(study);
+		shown = analysed.periods || analysed.tables ? study.folder : undefined;
+		post(analysed);
+	};
+
 	const sendStudy = () => {
 		sending = sending.then(async () => {
 			const study = eventStudiesService.getStudies().find(study => study.folder === selected);
@@ -198,9 +311,7 @@ function openEventStudiesPage(accessor: ServicesAccessor, folder: string | undef
 				await sendReleases(study, events);
 				return;
 			}
-			const prices = await Promise.all(events.map(event => event.ticker ? eventStudiesService.getPrices(study.folder, event.accession) : Promise.resolve(new Map<string, readonly IMinuteBar[]>())));
 			const news = await Promise.all(events.map(event => eventStudiesService.getNews(study.folder, event.accession)));
-			const now = Date.now();
 			const times = events.map(event => eventTime(study, event));
 			const opens = events.map(event => !event.duringSession ? event.nextOpen : undefined);
 			// The other of the two times, as minutes from the event's: EDGAR's acceptance after the release, or the release before the acceptance
@@ -209,24 +320,12 @@ function openEventStudiesPage(accessor: ServicesAccessor, folder: string | undef
 				const time = times[index];
 				return other !== undefined && time !== undefined ? Math.round((other - time) / MINUTE) : undefined;
 			});
-			const curves = study.periods.map(period => {
-				const perEvent = events.map((event, index) => eventCurves(study, period, event, prices[index], now));
-				return {
-					name: period.name,
-					nextOpen: period.nextOpen,
-					filing: averageCurves(perEvent.map(curves => curves.filing), period.before, period.after, -period.before),
-					open: period.nextOpen ? averageCurves(perEvent.map(curves => curves.open), 0, period.after, 0) : undefined,
-					betas: perEvent.map(curves => curves.beta ?? null),
-					others: [...new Set(others.filter((minute): minute is number => minute !== undefined && minute !== 0 && minute >= -period.before && minute <= period.after))],
-					filingArticles: articleCounts(times, news, -period.before, period.after),
-					openArticles: period.nextOpen ? articleCounts(opens, news, 0, period.after) : undefined,
-				};
-			});
 			const when = (time: number) => new Date(time).toLocaleString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', second: '2-digit' });
-			webviewInput.webview.postMessage({
+			await postAnalysed(study, analysed => webviewInput.webview.postMessage({
 				command: 'study',
 				folder: study.folder,
 				title: study.title,
+				problem: analysed.problem ?? '',
 				info: localize('eventStudies.info', "Benchmark {0}; {1}; {2}; made {3}", study.benchmark, describeModel(study), describeEventTime(study.eventTime), new Date(study.created).toLocaleString(undefined, { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })),
 				capped: !!study.backfillCapped,
 				backfilled: study.backfilled,
@@ -248,28 +347,37 @@ function openEventStudiesPage(accessor: ServicesAccessor, folder: string | undef
 					url: event.url,
 					accession: event.accession,
 				})),
-				curves,
-			});
+				// Julia's periods are the study's, in the same order
+				curves: study.periods.map((period, index) => {
+					const result = analysed.periods?.[index];
+					return {
+						name: period.name,
+						...result ? filingsResults(result, events) : { rows: [] },
+						others: [...new Set(others.filter((minute): minute is number => minute !== undefined && minute !== 0 && minute >= -period.before && minute <= period.after))],
+						filingArticles: articleCounts(times, news, -period.before, period.after),
+						openArticles: period.nextOpen ? articleCounts(opens, news, 0, period.after) : undefined,
+					};
+				}),
+			}));
 		});
 	};
 
 	const sendReleases = async (study: IEventStudy, events: readonly IStudyEvent[]) => {
-		const prices = await Promise.all(events.map(event => eventStudiesService.getPrices(study.folder, event.accession)));
-		const now = Date.now();
 		const when = (time: number | undefined) => time !== undefined ? new Date(time).toLocaleString(undefined, { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
-		webviewInput.webview.postMessage({
+		await postAnalysed(study, analysed => webviewInput.webview.postMessage({
 			command: 'study',
 			folder: study.folder,
 			title: study.title,
+			problem: analysed.problem ?? '',
 			fomc: true,
 			info: localize('eventStudies.fomcInfo', "{0}; made {1}", describeReleases(study), when(study.created)),
 			capped: false,
 			backfilled: study.backfilled,
 			instruments: study.instruments.map(code => ({ code, label: describeInstrument(code), unit: instrumentUnit(code) })),
-			curves: study.periods.map(period => ({
-				name: period.name,
-				instruments: study.instruments.map(code => averageCurves(events.map((event, index) => releaseCurve(period, code, event, prices[index], now)), period.before, period.after, -period.before)),
-			})),
+			curves: study.periods.map((period, index) => {
+				const result = analysed.periods?.[index];
+				return { name: period.name, instruments: study.instruments.map(code => result ? releaseResults(result, code, events) : undefined) };
+			}),
 			events: events.map(event => ({
 				time: when(event.accepted),
 				title: event.name,
@@ -280,23 +388,29 @@ function openEventStudiesPage(accessor: ServicesAccessor, folder: string | undef
 				url: event.url,
 				accession: event.accession,
 			})),
-		});
+		}));
 	};
 
 	const sendPanel = async (study: IEventStudy, panel: IPanelSettings) => {
-		const results = await eventStudiesService.getPanelResults(study.folder);
 		const when = (time: number) => new Date(time).toLocaleString(undefined, { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-		webviewInput.webview.postMessage({
-			command: 'study',
-			folder: study.folder,
-			title: study.title,
-			panel: true,
-			info: localize('eventStudies.panelInfo', "{0}; {1}; made {2}", describePanel(panel), panel.estimators.map(describeEstimator).join(', '), when(study.created)),
-			capped: false,
-			backfilled: true,
-			written: results ? localize('eventStudies.resultsWritten', "Results written {0} by the notebook", when(results.written)) : '',
-			series: results ? panelSeries(results) : [],
-			lines: results ? panelLines(results) : [],
+		await postAnalysed(study, analysed => {
+			const results = analysed.tables ? panelResults(analysed.tables) : undefined;
+			webviewInput.webview.postMessage({
+				command: 'study',
+				folder: study.folder,
+				title: study.title,
+				panel: true,
+				problem: analysed.problem ?? '',
+				info: localize('eventStudies.panelInfo', "{0}; {1}; made {2}", describePanel(panel), panel.estimators.map(describeEstimator).join(', '), when(study.created)),
+				capped: false,
+				backfilled: true,
+				outcome: panel.outcome,
+				// Without a distribution in study.toml, the package's default, the normal
+				distribution: panel.distribution ?? 'normal',
+				degrees: results ? panelDegrees(results) : null,
+				series: results ? panelSeries(results) : [],
+				lines: results ? panelLines(results) : [],
+			});
 		});
 	};
 
@@ -351,7 +465,7 @@ function openEventStudiesPage(accessor: ServicesAccessor, folder: string | undef
 				}
 				const sample = await readSample(fileService, files[0]);
 				chosenData = sample ? files[0] : undefined;
-				webviewInput.webview.postMessage({ command: 'data', name: basename(files[0]), ...sample ?? { columns: [], preview: [], binary: [] } });
+				webviewInput.webview.postMessage({ command: 'data', name: basename(files[0]), ...sample ?? { columns: [], preview: [] } });
 				break;
 			}
 			case 'create': {
@@ -427,7 +541,7 @@ function openEventStudiesPage(accessor: ServicesAccessor, folder: string | undef
 }
 
 /** The start of a panel's table: its columns, its first rows, and the columns whose values there are all 0 or 1; undefined when it is not a table. */
-async function readSample(fileService: IFileService, file: URI): Promise<{ readonly columns: readonly string[]; readonly preview: readonly (readonly string[])[]; readonly binary: readonly string[] } | undefined> {
+async function readSample(fileService: IFileService, file: URI): Promise<{ readonly columns: readonly string[]; readonly preview: readonly (readonly string[])[] } | undefined> {
 	let content: string;
 	try {
 		const read = await fileService.readFile(file, { length: DATA_SAMPLE_BYTES });
@@ -444,8 +558,7 @@ async function readSample(fileService: IFileService, file: URI): Promise<{ reado
 		return undefined;
 	}
 	const columns = header.map(column => column.trim());
-	const binary = columns.filter((_, index) => rows.every(row => ['0', '1', 'true', 'false'].includes((row[index] ?? '').trim())));
-	return { columns, preview: rows.slice(0, PREVIEW_ROWS), binary };
+	return { columns, preview: rows.slice(0, PREVIEW_ROWS) };
 }
 
 /** A panel study's settings from the form; undefined when a column is missing, or the stepped wedge has no treatment column. */
@@ -474,6 +587,7 @@ function panelSettings(form: IPanelForm): IPanelSettings | undefined {
 		lags: leads ? count(form.lags, 5) : undefined,
 		control: estimators.includes('callaway_santanna') && ['never', 'notyet', 'last', 'auto'].includes(form.control) ? form.control : undefined,
 		method: estimators.includes('callaway_santanna') && ['dr', 'ipw', 'reg'].includes(form.method) ? form.method : undefined,
+		distribution: estimators.includes('callaway_santanna') && ['normal', 't'].includes(form.distribution) ? form.distribution : undefined,
 		steppedWedge: wedge ? {
 			effect: form.effect === 'ETI' || form.effect === 'TEH' ? form.effect : 'IT',
 			estimand: pte ? 'PTE' : 'TATE',
@@ -514,21 +628,67 @@ function figure(value: string | undefined): string {
 }
 
 /** Each estimator's effects by event time from a panel study's results; the stepped wedge's exposure time e is event time e - 1. */
+/** PollisEventStudies.jl's tables of a panel study as rows, each value as its results file would have it; '' where missing. */
+function panelResults(tables: IJuliaTables): IPanelResults {
+	return {
+		tables: new Map(Object.entries(tables).map(([name, columns]) => {
+			const names = Object.keys(columns);
+			const count = names.length ? columns[names[0]].length : 0;
+			return [name, Array.from({ length: count }, (_, row) => Object.fromEntries(names.map(column => [column, String(columns[column][row] ?? '')])))];
+		})),
+	};
+}
+
+/** A test of pre-trends for the table: its statistic and p-value, with two decimals. */
+function describePretrends(row: Readonly<Record<string, string>>): string {
+	const statistic = resultNumber(row.statistic);
+	const p = resultNumber(row.p);
+	if (statistic === null || p === null) {
+		return localize('eventStudies.pretrendsNotTested', "Pre-trends not tested");
+	}
+	const degrees = row.test === 'F' ? `F(${row.df1}, ${row.df2})` : `chi2(${row.df1})`;
+	return p < 0.01
+		? localize('eventStudies.pretrendsSmallP', "Pre-trends: {0} = {1}, p < 0.01", degrees, statistic.toFixed(2))
+		: localize('eventStudies.pretrendsTest', "Pre-trends: {0} = {1}, p = {2}", degrees, statistic.toFixed(2), p.toFixed(2));
+}
+
 function panelSeries(results: IPanelResults): IPanelSeries[] {
 	const series: IPanelSeries[] = [];
-	const add = (key: string, name: string, rows: readonly Readonly<Record<string, string>>[] | undefined, x: (row: Readonly<Record<string, string>>) => number | null, column: (row: Readonly<Record<string, string>>, field: string) => string | undefined) => {
-		const points = (rows ?? []).flatMap(row => {
+	// Each estimator's test of pre-trends and averages after treatment, by its key
+	const pretrends = new Map<string, string>();
+	for (const row of results.tables.get('panel-pretrends.csv') ?? []) {
+		pretrends.set(row.estimator === 'Sun and Abraham' ? 'sa' : 'twfe', describePretrends(row));
+	}
+	for (const row of results.tables.get('cs-pretrends.csv') ?? []) {
+		pretrends.set('cs', describePretrends(row));
+	}
+	const aggregations: Record<string, string> = {
+		'event time': localize('eventStudies.averageEvent', "Average over event times"),
+		'simple': localize('eventStudies.averageSimple', "Simple average"),
+		'cohort': localize('eventStudies.averageCohort', "Average over cohorts"),
+		'calendar': localize('eventStudies.averageCalendar', "Average over calendar times"),
+	};
+	const averages: IPanelSeries['averages'][number][] = (results.tables.get('cs-overall.csv') ?? []).flatMap(row => {
+		const effect = resultNumber(row.effect);
+		return effect === null ? [] : [{ label: aggregations[row.aggregation] ?? row.aggregation, effect, low: resultNumber(row.low), high: resultNumber(row.high) }];
+	});
+	const add = (key: string, name: string, rows: readonly Readonly<Record<string, string>>[] | undefined, x: (row: Readonly<Record<string, string>>) => number | null, column: (row: Readonly<Record<string, string>>, field: string) => string | undefined, reference?: number) => {
+		const points: IPanelSeries['points'][number][] = (rows ?? []).flatMap(row => {
 			const at = x(row);
 			const effect = resultNumber(column(row, 'effect'));
 			return at === null || effect === null ? [] : [{ x: at, effect, low: resultNumber(column(row, 'low')), high: resultNumber(column(row, 'high')) }];
 		});
+		if (points.length && reference !== undefined && !points.some(point => point.x === reference)) {
+			points.push({ x: reference, effect: 0, low: null, high: null, reference: true });
+		}
 		if (points.length) {
-			series.push({ key, name, points });
+			series.push({ key, name, points, pretrends: pretrends.get(key), averages: key === 'cs' ? averages : [] });
 		}
 	};
+	// Two-way fixed effects and Sun and Abraham leave out event time -1, the reference period: its effect is 0
 	const panel = results.tables.get('panel-effects.csv');
-	add('twfe', localize('eventStudies.seriesTwfe', "Two-Way Fixed Effects"), panel, row => resultNumber(row.event_time), (row, field) => row[`twfe_${field}`]);
-	add('sa', localize('eventStudies.seriesSa', "Sun and Abraham"), panel, row => resultNumber(row.event_time), (row, field) => row[`sa_${field}`]);
+	add('twfe', localize('eventStudies.seriesTwfe', "Two-Way Fixed Effects"), panel, row => resultNumber(row.event_time), (row, field) => row[`twfe_${field}`], -1);
+	add('sa', localize('eventStudies.seriesSa', "Sun and Abraham"), panel, row => resultNumber(row.event_time), (row, field) => row[`sa_${field}`], -1);
 	add('cs', localize('eventStudies.seriesCs', "Callaway and Sant'Anna"), results.tables.get('cs-effects.csv'), row => resultNumber(row.event_time), (row, field) => row[field]);
 	// The stepped wedge has a standard error by exposure time: its interval is the effect plus or minus 1.96 of it
 	add('sw', localize('eventStudies.seriesSw', "Stepped Wedge"), results.tables.get('sw-effects.csv'), row => {
@@ -545,31 +705,15 @@ function panelSeries(results: IPanelResults): IPanelSeries[] {
 	return series;
 }
 
-/** The sentences under a panel study's chart: the tests of pre-trends, Callaway and Sant'Anna's averages, the stepped wedge's estimate. */
+/** The degrees of freedom of the intervals from Student's t, the clusters less one, as the tests of pre-trends give them; null when there is no such test. */
+function panelDegrees(results: IPanelResults): number | null {
+	const row = [...results.tables.get('panel-pretrends.csv') ?? [], ...results.tables.get('cs-pretrends.csv') ?? []].find(row => row.test === 'F');
+	return row ? resultNumber(row.df2) : null;
+}
+
+/** The sentences under a panel study's chart: the stepped wedge's estimate (the tests of pre-trends and the averages are in the table). */
 function panelLines(results: IPanelResults): string[] {
 	const lines: string[] = [];
-	const test = (name: string, row: Readonly<Record<string, string>>) => {
-		if (resultNumber(row.statistic) === null) {
-			return localize('eventStudies.pretrendsUntested', "Pre-trends, {0}: not tested", name);
-		}
-		const degrees = row.test === 'F' ? `F(${row.df1}, ${row.df2})` : `chi2(${row.df1})`;
-		return localize('eventStudies.pretrends', "Pre-trends, {0}: {1} = {2}, p = {3}", name, degrees, figure(row.statistic), figure(row.p));
-	};
-	for (const row of results.tables.get('panel-pretrends.csv') ?? []) {
-		lines.push(test(row.estimator === 'Sun and Abraham' ? localize('eventStudies.seriesSa', "Sun and Abraham") : localize('eventStudies.seriesTwfe', "Two-Way Fixed Effects"), row));
-	}
-	for (const row of results.tables.get('cs-pretrends.csv') ?? []) {
-		lines.push(test(localize('eventStudies.seriesCs', "Callaway and Sant'Anna"), row));
-	}
-	const aggregations: Record<string, string> = {
-		'simple': localize('eventStudies.overallSimple', "simple average"),
-		'event time': localize('eventStudies.overallEvent', "average over event times"),
-		'cohort': localize('eventStudies.overallCohort', "average over cohorts"),
-		'calendar': localize('eventStudies.overallCalendar', "average over calendar times"),
-	};
-	for (const row of results.tables.get('cs-overall.csv') ?? []) {
-		lines.push(localize('eventStudies.overall', "Callaway and Sant'Anna, {0}: {1}, se {2}, 95% interval {3} to {4}", aggregations[row.aggregation] ?? row.aggregation, figure(row.effect), figure(row.se), figure(row.low), figure(row.high)));
-	}
 	for (const row of results.tables.get('sw-estimate.csv') ?? []) {
 		const [first, last] = (row.exposure ?? '').split(':');
 		const exposure = last !== undefined
@@ -638,53 +782,6 @@ function describeSession(event: IStudyEvent, time: number | undefined): string {
 	return hour < 12 ? localize('eventStudies.beforeOpen', "Before the open") : localize('eventStudies.afterClose', "After the close");
 }
 
-/** The closes of a symbol's bars, by when each bar ends (a minute after it starts, or `span`), to look up the last price at any time. */
-class Prices {
-	private readonly times: number[];
-	private readonly closes: number[];
-
-	constructor(bars: readonly IMinuteBar[] | undefined, span = MINUTE) {
-		this.times = (bars ?? []).map(bar => bar.time + span);
-		this.closes = (bars ?? []).map(bar => bar.close);
-	}
-
-	get size(): number {
-		return this.times.length;
-	}
-
-	/** The last price at or before `time`; undefined before the first bar. */
-	at(time: number): number | undefined {
-		const index = this.lastAtOrBefore(time);
-		return index >= 0 ? this.closes[index] : undefined;
-	}
-
-	/** How many minutes end after `from` and at or before `to`. */
-	count(from: number, to: number): number {
-		return Math.max(0, this.lastAtOrBefore(to) - this.lastAtOrBefore(from));
-	}
-
-	/** The minutes' ends before `time`, oldest first. */
-	before(time: number): readonly number[] {
-		return this.times.slice(0, this.lastAtOrBefore(time - 1) + 1);
-	}
-
-	private lastAtOrBefore(time: number): number {
-		let low = 0;
-		let high = this.times.length - 1;
-		let found = -1;
-		while (low <= high) {
-			const middle = (low + high) >> 1;
-			if (this.times[middle] <= time) {
-				found = middle;
-				low = middle + 1;
-			} else {
-				high = middle - 1;
-			}
-		}
-		return found;
-	}
-}
-
 /** The articles about the events in each minute from `from` to `to` after each event's time (or next open), all events together. */
 function articleCounts(times: readonly (number | undefined)[], news: readonly (readonly ICoverageItem[])[], from: number, to: number): number[] {
 	const counts = new Array<number>(to - from + 1).fill(0);
@@ -702,164 +799,96 @@ function articleCounts(times: readonly (number | undefined)[], news: readonly (r
 	return counts;
 }
 
+/** Why PollisEventStudies.jl left an event out of a period, or what an event it used lacks, by the outcome's or the note's code. */
+function describeOutcome(code: string): string {
+	switch (code) {
+		case 'no_stock_prices': return localize('eventStudies.noStockPrices', "Left out: no prices for the stock");
+		case 'no_benchmark_prices': return localize('eventStudies.noBenchmarkPrices', "Left out: no prices for the benchmark");
+		case 'no_start_price': return localize('eventStudies.noStartPrice', "Left out: no price at the start of the period");
+		case 'no_car': return localize('eventStudies.noCar', "No price at the end of the period yet: out of the tests at the end");
+		case 'no_scar': return localize('eventStudies.noScar', "Too few estimation minutes to standardize its CAR: out of the BMP, Kolari and Pynnonen and GRANK tests");
+		case 'no_volume': return localize('eventStudies.noVolume', "Too few regular-session minutes before it for abnormal volume");
+		case 'no_volatility': return localize('eventStudies.noVolatility', "Too few regular-session minutes before or after it for abnormal volatility");
+		default: return code;
+	}
+}
+
 /**
- * An event's cumulative abnormal returns over a period, in per cent, from the start of the period (`before` minutes
- * before the event's time): a value a minute from the event's time, and, for an event outside the regular session,
- * from the next open; and, with the market model, its beta.
+ * A period's results as the page draws them: PollisEventStudies.jl's, each event's in the order of the page's events,
+ * which also has the events without a ticker or a time, that Julia does not see.
  */
-function eventCurves(study: IEventStudy, period: IEventPeriod, event: IStudyEvent, bars: ReadonlyMap<string, readonly IMinuteBar[]>, now: number): { readonly filing?: (number | null)[]; readonly open?: (number | null)[]; readonly beta?: number } {
-	const time = eventTime(study, event);
-	if (time === undefined || !event.ticker) {
-		return {};
-	}
-	const stock = new Prices(bars.get(event.ticker));
-	const benchmark = new Prices(bars.get(study.benchmark));
-	const start = time - period.before * MINUTE;
-	const stockStart = stock.at(start);
-	const benchmarkStart = benchmark.at(start);
-	if (!stock.size || !benchmark.size || stockStart === undefined || benchmarkStart === undefined) {
-		return {};
-	}
-	const model = study.model === 'marketModel' ? estimate(stock, benchmark, start, study.estimationDays) : undefined;
-	const known = event.status === 'complete' ? Infinity : now - SETTLE_MILLISECONDS;
-	const car = (time: number): number | null => {
-		const price = stock.at(time);
-		const level = benchmark.at(time);
-		if (time > known || price === undefined || level === undefined) {
-			return null;
-		}
-		const market = Math.log(level / benchmarkStart);
-		const normal = model ? model.alpha * benchmark.count(start, time) + model.beta * market : market;
-		return round((Math.log(price / stockStart) - normal) * 100);
+function filingsResults(result: IJuliaFilingsPeriod, events: readonly IStudyEvent[]) {
+	const used = new Map(result.events.accession.map((accession, index) => [accession, index]));
+	const outcomes = new Map(result.outcomes.accession.map((accession, index) => [accession, index]));
+	const window = (averages: IJuliaAverages | null, curves: readonly ((readonly (number | null)[]) | null)[]): IWindowCurves | undefined => averages ? {
+		minutes: averages.minute,
+		cars: events.map(event => {
+			const index = used.get(event.accession);
+			return index !== undefined ? curves[index] ?? [] : [];
+		}),
+		caar: averages.caar,
+		lower: averages.caar_lower,
+		upper: averages.caar_upper,
+		counts: averages.events,
+	} : undefined;
+	return {
+		filing: window(result.from_filing, result.curves),
+		open: window(result.from_open, result.open_curves),
+		tests: result.tests,
+		rows: events.map((event): IEventRow | null => {
+			const index = outcomes.get(event.accession);
+			// One still capturing may not have its prices yet
+			if (index === undefined || (result.outcomes.outcome[index] !== 'used' && (event.status === 'capturing' || event.status === 'waiting'))) {
+				return null;
+			}
+			const at = used.get(event.accession);
+			if (at === undefined) {
+				return { leftOut: describeOutcome(result.outcomes.outcome[index]), notes: [], marketAdjusted: false, beta: null, abnormalVolume: null, abnormalVolatility: null };
+			}
+			const notes = result.outcomes.notes[index].split(' ').filter(note => note);
+			return {
+				notes: notes.filter(note => note !== 'market_adjusted').map(describeOutcome),
+				marketAdjusted: notes.includes('market_adjusted'),
+				beta: result.events.beta[at],
+				abnormalVolume: result.events.abnormal_volume[at],
+				abnormalVolatility: result.events.abnormal_volatility[at],
+			};
+		}),
 	};
-	const filing: (number | null)[] = [];
-	for (let minute = -period.before; minute <= period.after; minute++) {
-		filing.push(car(time + minute * MINUTE));
-	}
-	let open: (number | null)[] | undefined;
-	if (period.nextOpen && !event.duringSession && event.nextOpen !== undefined) {
-		open = [];
-		for (let minute = 0; minute <= period.after; minute++) {
-			open.push(car(event.nextOpen + minute * MINUTE));
-		}
-	}
-	return { filing, open, beta: model ? round(model.beta) : undefined };
 }
 
-/**
- * An instrument's move at an FOMC release over a period, from its start (`before` minutes before the release), a value
- * a minute, in its unit; undefined when it has no prices then, as an expired contract.
- */
-function releaseCurve(period: IEventPeriod, code: string, event: IStudyEvent, bars: ReadonlyMap<string, readonly IMinuteBar[]>, now: number): (number | null)[] | undefined {
-	const time = event.accepted;
-	if (time === undefined) {
+/** An instrument's results over a period of a study of FOMC releases, each release's in the order of the page's events. */
+function releaseResults(result: IJuliaFomcPeriod, code: string, events: readonly IStudyEvent[]): IWindowCurves | undefined {
+	const path = result.paths[code];
+	if (!path) {
 		return undefined;
 	}
-	const prices = new Prices(bars.get(instrumentSymbol(code, time)), (event.barMinutes ?? 1) * MINUTE);
-	const start = prices.at(time - period.before * MINUTE);
-	if (start === undefined) {
-		return undefined;
-	}
-	const scale = instrumentScale(code, time);
-	const known = event.status === 'complete' ? Infinity : now - SETTLE_MILLISECONDS;
-	const curve: (number | null)[] = [];
-	for (let minute = -period.before; minute <= period.after; minute++) {
-		const at = time + minute * MINUTE;
-		const price = prices.at(at);
-		curve.push(at > known || price === undefined ? null : round(instrumentMove(code, start, price, scale)));
-	}
-	return curve;
-}
-
-/**
- * The market model's alpha (per minute of the benchmark's session) and beta, by least squares on the minute returns of
- * the regular sessions of the `days` trading days before `start`; undefined when there are too few.
- */
-function estimate(stock: Prices, benchmark: Prices, start: number, days: number): { readonly alpha: number; readonly beta: number } | undefined {
-	// The benchmark trades only in the regular session: its minutes are the session's
-	const minutes = benchmark.before(start);
-	const dayOf = (time: number) => newYorkDay.value.format(time);
-	const chosen = new Set([...new Set(minutes.map(dayOf))].slice(-days));
-	const stockReturns: number[] = [];
-	const benchmarkReturns: number[] = [];
-	for (let index = 1; index < minutes.length; index++) {
-		const time = minutes[index];
-		const previous = minutes[index - 1];
-		// Not across the night, and within the days chosen
-		if (time - previous !== MINUTE || !chosen.has(dayOf(time))) {
-			continue;
-		}
-		const price = stock.at(time);
-		const before = stock.at(previous);
-		const level = benchmark.at(time);
-		const levelBefore = benchmark.at(previous);
-		if (price && before && level && levelBefore) {
-			stockReturns.push(Math.log(price / before));
-			benchmarkReturns.push(Math.log(level / levelBefore));
-		}
-	}
-	if (stockReturns.length < MIN_ESTIMATION_RETURNS) {
-		return undefined;
-	}
-	const mean = (values: readonly number[]) => values.reduce((sum, value) => sum + value, 0) / values.length;
-	const stockMean = mean(stockReturns);
-	const benchmarkMean = mean(benchmarkReturns);
-	let covariance = 0;
-	let variance = 0;
-	benchmarkReturns.forEach((value, index) => {
-		covariance += (value - benchmarkMean) * (stockReturns[index] - stockMean);
-		variance += (value - benchmarkMean) ** 2;
-	});
-	if (!variance) {
-		return undefined;
-	}
-	const beta = covariance / variance;
-	return { alpha: stockMean - beta * benchmarkMean, beta };
-}
-
-/** The average of the events' curves a minute at a time, with its 95% band from their cross-section, where there are two or more. */
-function averageCurves(curves: readonly ((number | null)[] | undefined)[], before: number, after: number, first: number): IWindowCurves {
-	const length = before + after + 1;
-	const minutes = Array.from({ length }, (_, index) => first + index);
-	const cars = curves.map(curve => curve ?? []);
-	const caar: (number | null)[] = [];
-	const lower: (number | null)[] = [];
-	const upper: (number | null)[] = [];
-	const counts: number[] = [];
-	for (let index = 0; index < length; index++) {
-		const values = cars.map(curve => curve[index]).filter((value): value is number => typeof value === 'number');
-		counts.push(values.length);
-		if (!values.length) {
-			caar.push(null);
-			lower.push(null);
-			upper.push(null);
-			continue;
-		}
-		const mean = values.reduce((sum, value) => sum + value, 0) / values.length;
-		caar.push(round(mean));
-		if (values.length < 2) {
-			lower.push(null);
-			upper.push(null);
-			continue;
-		}
-		const deviation = Math.sqrt(values.reduce((sum, value) => sum + (value - mean) ** 2, 0) / (values.length - 1));
-		const margin = 1.96 * deviation / Math.sqrt(values.length);
-		lower.push(round(mean - margin));
-		upper.push(round(mean + margin));
-	}
-	return { minutes, cars, caar, lower, upper, counts };
-}
-
-function round(value: number): number {
-	return Math.round(value * 10_000) / 10_000;
+	const order = new Map(result.moves.accession.map((accession, index) => [accession, index]));
+	return {
+		minutes: path.minute,
+		cars: events.map(event => {
+			const index = order.get(event.accession);
+			return index !== undefined ? result.curves[code]?.[index] ?? [] : [];
+		}),
+		caar: path.mean,
+		lower: path.lower,
+		upper: path.upper,
+		counts: path.events,
+	};
 }
 
 function pageHtml(): string {
 	const text = {
 		title: localize('eventStudies.title', "Event Studies"),
-		intro: localize('eventStudies.intro', "How prices move around SEC filings: the filings an alert fires are the events, and Pollis captures the minute prices of the filer's stock and of a benchmark around each, while it is open, and the news about it from Google News and PR Newswire's feeds, where the company's newswire release often comes before the 8-K. A new study starts with the filings the alert would have fired in the last 30 days, as Yahoo Finance keeps minute prices for 30 days."),
-		introFomc: localize('eventStudies.introFomc', "Or how rates, yields and stocks move around the FOMC's releases: its statements, the Summary of Economic Projections and its minutes, from the Federal Reserve's feed, measured by federal funds and SOFR futures, Treasury yields, TIPS and the S&P 500."),
-		introPanel: localize('eventStudies.introPanel', "Or, as a panel event study, how an outcome moves when units are treated at different times, from a table of units over time. In econometrics: states adopting a policy, firms a rule or countries a reform, estimated by two-way fixed effects, Sun and Abraham (2021) and Callaway and Sant'Anna (2021). In clinical research: a stepped-wedge trial, where clinics or hospitals cross from control to treatment one group after another, estimated by the mixed model of Hussey and Hughes (2007), with the effects by exposure time of Kenny et al. (2022)."),
+		intro: [
+			localize('eventStudies.intro.filings', "SEC filings: how prices move around them. The filings an alert fires are the events, and Pollis captures the minute prices of the filer's stock and of a benchmark around each, while it is open."),
+			localize('eventStudies.intro.news', "The news about each filing, from Google News and PR Newswire's feeds, where the company's newswire release often comes before the 8-K."),
+			localize('eventStudies.intro.days', "A new study starts with the filings the alert would have fired in the last 30 days, as Yahoo Finance keeps minute prices for 30 days."),
+			localize('eventStudies.intro.fomc', "FOMC releases: how rates, yields and stocks move around its statements, the Summary of Economic Projections and its minutes, from the Federal Reserve's feed, measured by federal funds and SOFR futures, Treasury yields, TIPS and the S&P 500."),
+			localize('eventStudies.intro.panel', "Panel event studies: how an outcome moves when units are treated at different times, from a table of units over time."),
+			localize('eventStudies.intro.econometrics', "In econometrics: states adopting a policy, firms a rule or countries a reform, estimated by two-way fixed effects, Sun and Abraham (2021) and Callaway and Sant'Anna (2021)."),
+			localize('eventStudies.intro.clinical', "In clinical research: a stepped-wedge trial, where clinics or hospitals cross from control to treatment one group after another, estimated by the mixed model of Hussey and Hughes (2007), with the effects by exposure time of Kenny et al. (2022)."),
+		],
 		kind: localize('eventStudies.kind', "Kind"),
 		marketKind: localize('eventStudies.marketKind', "Market Event Study"),
 		panelKind: localize('eventStudies.panelKind', "Panel Event Study"),
@@ -867,6 +896,7 @@ function pageHtml(): string {
 		data: localize('eventStudies.data', "Table"),
 		chooseData: localize('eventStudies.chooseData', "Choose File..."),
 		noData: localize('eventStudies.noData', "No table chosen."),
+		chooseColumn: localize('eventStudies.chooseColumn', "Choose a column"),
 		badData: localize('eventStudies.badData', "Not a table: a CSV file with a header row and three columns or more."),
 		dataHint: localize('eventStudies.dataHint', "A CSV file of units over time, a row per unit and time (or per individual, unit and time), copied into the study's folder as panel.csv. Times are whole numbers: years, or quarters or months numbered in order."),
 		columns: localize('eventStudies.columns', "Columns"),
@@ -897,7 +927,10 @@ function pageHtml(): string {
 		methodDr: localize('eventStudies.methodDr', "Doubly Robust"),
 		methodIpw: localize('eventStudies.methodIpw', "Inverse Probability Weighting"),
 		methodReg: localize('eventStudies.methodReg', "Outcome Regression"),
-		callawayHint: localize('eventStudies.callawayHint', "The control units: never treated, also those not yet treated, or those treated last; Auto takes the never treated when there are any. The estimator of each 2x2 comparison."),
+		distribution: localize('eventStudies.distribution', "Intervals"),
+		distributionNormal: localize('eventStudies.distributionNormal', "Normal"),
+		distributionT: localize('eventStudies.distributionT', "Student's t"),
+		callawayHint: localize('eventStudies.callawayHint', "The control units: never treated, also those not yet treated, or those treated last; Auto takes the never treated when there are any. The estimator of each 2x2 comparison. The 95% intervals from the normal distribution, as the authors' R package did, or from Student's t with the clusters less one degrees of freedom, wider with few clusters."),
 		wedge: localize('eventStudies.wedge', "Stepped Wedge"),
 		effect: localize('eventStudies.effect', "Effect"),
 		effectIt: localize('eventStudies.effectIt', "Immediate Treatment (IT)"),
@@ -918,8 +951,20 @@ function pageHtml(): string {
 		wedgeHint: localize('eventStudies.wedgeHint', "IT is one effect from the first time treated; ETI an effect for each exposure time (1 is the first time treated), averaged by TATE over the exposure times From to To (all when empty) or taken by PTE at one; TEH the same with the effects varying around their mean. A binomial outcome is 0 or 1, or successes out of the trials column. Individual, when each is observed more than once."),
 		wedgeNeedsTreatment: localize('eventStudies.wedgeNeedsTreatment', "The stepped wedge needs a treatment indicator."),
 		panelCaption: localize('eventStudies.panelCaption', "Effects by event time with their 95% intervals; 0 is the first time treated (the stepped wedge's exposure time 1)"),
+		panelCaptionReference: localize('eventStudies.panelCaptionReference', "Effects by event time with their 95% intervals; 0 is the first time treated (the stepped wedge's exposure time 1); hollow marks are reference periods, fixed at 0"),
 		eventTimeAxis: localize('eventStudies.eventTimeAxis', "Event time"),
-		noResults: localize('eventStudies.noResults', "No results yet: open the notebook and run it. PollisEventStudies.jl writes them to the study's results folder, and they appear here."),
+		referencePeriod: localize('eventStudies.referencePeriod', "0 (reference)"),
+		effectsCaption: localize('eventStudies.effectsCaption', "Effect on {0}: each estimate with its 95% interval below it; in bold and in colour where the interval excludes 0"),
+		beforeTreatment: localize('eventStudies.beforeTreatment', "Before treatment"),
+		afterTreatment: localize('eventStudies.afterTreatment', "After treatment"),
+		averagesAfter: localize('eventStudies.averagesAfter', "Averages after treatment"),
+		intervalsCsNormal: localize('eventStudies.intervalsCsNormal', "Callaway and Sant'Anna's 95% intervals are from the normal distribution, as in did, the R package of the method's authors."),
+		intervalsCsT: localize('eventStudies.intervalsCsT', "Callaway and Sant'Anna's 95% intervals are from Student's t with {0} degrees of freedom, the clusters less one."),
+		intervalsCsTClusters: localize('eventStudies.intervalsCsTClusters', "Callaway and Sant'Anna's 95% intervals are from Student's t with the clusters less one degrees of freedom."),
+		intervalsPanelT: localize('eventStudies.intervalsPanelT', "Two-way fixed effects' and Sun and Abraham's 95% intervals are from Student's t with {0} degrees of freedom, the clusters less one."),
+		intervalsPanelTClusters: localize('eventStudies.intervalsPanelTClusters', "Two-way fixed effects' and Sun and Abraham's 95% intervals are from Student's t with the clusters less one degrees of freedom."),
+		marketAdjustedWhy: localize('eventStudies.marketAdjustedWhy', "Too few minutes before the period to fit the market model: the event is market-adjusted"),
+		noResults: localize('eventStudies.noResults', "No results: none of the study's estimators gave effects by event time."),
 		filingsSource: localize('eventStudies.filingsSource', "SEC Filings"),
 		fomcSource: localize('eventStudies.fomcSource', "FOMC Releases"),
 		fomcTitle: localize('eventStudies.fomcTitle', "FOMC Releases"),
@@ -1004,6 +1049,25 @@ function pageHtml(): string {
 		newsHint: localize('eventStudies.newsHint', "Media Coverage of the day before to the day after"),
 		car: localize('eventStudies.car', "CAR"),
 		beta: localize('eventStudies.beta', "Beta"),
+		abnormalVolume: localize('eventStudies.abnormalVolume', "Abnormal Volume"),
+		abnormalVolumeHint: localize('eventStudies.abnormalVolumeHint', "The mean log(1 + volume) of the regular-session minutes of the period less that of the minutes before it"),
+		abnormalVolatility: localize('eventStudies.abnormalVolatility', "Abnormal Volatility"),
+		abnormalVolatilityHint: localize('eventStudies.abnormalVolatilityHint', "The log of the ratio of the abnormal returns' root mean square in the regular-session minutes of the period to that before it"),
+		testsCaption: localize('eventStudies.testsCaption', "Tests at the end of the period, from the event, by PollisEventStudies.jl"),
+		test: localize('eventStudies.test', "Test"),
+		mean: localize('eventStudies.mean', "Mean"),
+		statistic: localize('eventStudies.statistic', "Statistic"),
+		pValue: localize('eventStudies.pValue', "p"),
+		testEvents: localize('eventStudies.testEvents', "Events"),
+		carTest: localize('eventStudies.carTest', "CAR %, t test"),
+		bmpTest: localize('eventStudies.bmpTest', "Standardized CAR, Boehmer, Musumeci and Poulsen t"),
+		kolariTest: localize('eventStudies.kolariTest', "Kolari and Pynnonen's adjusted BMP t"),
+		grankTest: localize('eventStudies.grankTest', "Generalized rank (GRANK) t"),
+		signTest: localize('eventStudies.signTest', "Generalized sign (Cowan) z"),
+		positiveOf: localize('eventStudies.positiveOf', "{0} of {1} positive"),
+		wilcoxonTest: localize('eventStudies.wilcoxonTest', "Wilcoxon signed-rank V"),
+		volumeTest: localize('eventStudies.volumeTest', "Abnormal volume, t test"),
+		volatilityTest: localize('eventStudies.volatilityTest', "Abnormal volatility, t test"),
 	};
 	return `<!DOCTYPE html>
 <html lang="en">
@@ -1017,7 +1081,12 @@ function pageHtml(): string {
 		.container { max-width: 1100px; margin: 0 auto; padding: 24px; }
 		h1 { font-size: 32px; font-weight: 300; margin: 0 0 4px 0; line-height: 1.2; }
 		h2 { font-size: 18px; font-weight: 400; margin: 0; }
+		${voiceButtonsCss}
 		.subtitle { font-size: 14px; color: var(--vscode-descriptionForeground); margin: 0 0 24px 0; line-height: 1.4; max-width: 900px; }
+		.methods-list { list-style: none; padding-left: 22px; margin: 5px 0; }
+		.methods-list li { margin: 2px 0; padding-left: 20px; position: relative; }
+		.methods-list li::before { content: ''; position: absolute; left: 0; top: calc(0.5lh - 4px); width: 8px; height: 8px; border-radius: 50%; background-color: var(--vscode-textLink-foreground); }
+		.subtitle.methods-list { margin: 0 0 24px 0; }
 		[hidden] { display: none !important; }
 		.sectionHeader { display: flex; align-items: baseline; gap: 16px; margin: 24px 0 8px 0; }
 		.sectionHeader h2 { flex: 1; }
@@ -1079,6 +1148,7 @@ function pageHtml(): string {
 		th { text-align: left; font-weight: normal; color: var(--vscode-descriptionForeground); padding: 4px 8px; border-bottom: 1px solid var(--vscode-widget-border); }
 		td { padding: 4px 8px; border-bottom: 1px solid var(--vscode-widget-border); }
 		td.number, th.number { text-align: right; font-variant-numeric: tabular-nums; }
+		td.note { font-size: 12px; color: var(--vscode-descriptionForeground); }
 		tr.capturing td { color: var(--vscode-descriptionForeground); }
 		#panelChart { display: block; width: 100%; height: 300px; }
 		#panelChart .grid { stroke: var(--vscode-widget-border); stroke-width: 1; }
@@ -1087,6 +1157,7 @@ function pageHtml(): string {
 		#panelChart text { font-size: 10px; fill: var(--vscode-descriptionForeground); }
 		#panelChart .line { fill: none; stroke-width: 1; opacity: 0.6; }
 		#panelChart .whisker { stroke-width: 1.5; }
+		#panelChart circle.reference { fill: var(--vscode-editor-background); stroke-width: 1.5; }
 		.twfe { stroke: var(--vscode-charts-blue); fill: var(--vscode-charts-blue); }
 		.sa { stroke: var(--vscode-charts-orange); fill: var(--vscode-charts-orange); }
 		.cs { stroke: var(--vscode-charts-green); fill: var(--vscode-charts-green); }
@@ -1096,14 +1167,31 @@ function pageHtml(): string {
 		.preview { margin-top: 6px; font-size: 11px; }
 		.preview td, .preview th { padding: 2px 6px; white-space: nowrap; }
 		.lines div { font-size: 12px; margin-top: 4px; }
+		.effectsCaption { font-size: 12px; color: var(--vscode-descriptionForeground); margin-bottom: 4px; }
+		.effects th svg { vertical-align: middle; margin-right: 4px; }
+		.effects td.number { white-space: nowrap; }
+		.effects .interval { font-size: 11px; color: var(--vscode-descriptionForeground); }
+		.effects td.reference { color: var(--vscode-descriptionForeground); }
+		.effects td.significant .estimate { font-weight: 600; }
+		.effects td.significant.twfe { color: var(--vscode-charts-blue); }
+		.effects td.significant.sa { color: var(--vscode-charts-orange); }
+		.effects td.significant.cs { color: var(--vscode-charts-green); }
+		.effects td.significant.sw { color: var(--vscode-charts-purple); }
+		.effects tr.band td { font-size: 11px; color: var(--vscode-descriptionForeground); padding-top: 10px; }
+		.effects tr.band td:first-child { font-weight: 600; color: var(--vscode-foreground); }
+		.effectsNotes { font-size: 11px; color: var(--vscode-descriptionForeground); margin-top: 6px; }
+		.effects tr.start td { border-top: 2px solid var(--vscode-descriptionForeground); }
 		.up { color: var(--vscode-charts-green); }
 		.down { color: var(--vscode-charts-red); }
 	</style>
 </head>
 <body>
 <div class="container">
-	<h1>${text.title}</h1>
-	<p class="subtitle">${text.intro} ${text.introFomc} ${text.introPanel}</p>
+	<div class="title-row">
+		<h1>${text.title}</h1>
+		${voiceButtonsHtml}
+	</div>
+	<ul class="subtitle methods-list">${text.intro.map(point => `<li>${point}</li>`).join('')}</ul>
 
 	<div class="sectionHeader"><h2>${text.newStudy}</h2></div>
 	<div class="pane">
@@ -1201,6 +1289,10 @@ function pageHtml(): string {
 						<option value="ipw">${text.methodIpw}</option>
 						<option value="reg">${text.methodReg}</option>
 					</select></label>
+					<label class="choice">${text.distribution} <select id="distribution">
+						<option value="normal">${text.distributionNormal}</option>
+						<option value="t">${text.distributionT}</option>
+					</select></label>
 				</div>
 				<div class="hint">${text.callawayHint}</div>
 			</div>
@@ -1270,7 +1362,7 @@ function pageHtml(): string {
 		<div class="info" id="studyInfo"></div>
 		<div id="panelView" hidden>
 			<div class="pane">
-				<div class="chartHeader"><span class="chartCaption">${text.panelCaption}</span><span class="chartCaption" id="written"></span></div>
+				<div class="chartHeader"><span class="chartCaption" id="panelCaption">${text.panelCaption}</span></div>
 				<svg id="panelChart" xmlns="http://www.w3.org/2000/svg"></svg>
 				<div class="legend" id="legend"></div>
 				<div class="lines" id="lines"></div>
@@ -1285,6 +1377,7 @@ function pageHtml(): string {
 			</div>
 			<svg id="chart" xmlns="http://www.w3.org/2000/svg"></svg>
 			<div class="summary" id="summary"></div>
+			<div class="tableScroll" id="tests"></div>
 		</div>
 		<div class="sectionHeader"><h2>${text.events}</h2></div>
 		<div id="events"></div>
@@ -1294,6 +1387,7 @@ function pageHtml(): string {
 <script>
 	const vscode = acquireVsCodeApi();
 	const TEXT = ${JSON.stringify(text)};
+	${voiceButtonsScript}
 	const DEFAULT_PERIOD = ${JSON.stringify(DEFAULT_EVENT_PERIOD)};
 	const FOMC_PERIOD = ${JSON.stringify(FOMC_PERIOD)};
 	let state = { studies: [], alerts: [] };
@@ -1395,27 +1489,16 @@ function pageHtml(): string {
 		const preview = document.getElementById('dataPreview');
 		preview.textContent = '';
 		const columns = data ? data.columns : [];
-		// The columns guessed from their names, the treatment from the columns of 0 and 1
-		const guess = (patterns, fallback) => columns.find(column => patterns.some(pattern => pattern.test(column))) ?? fallback;
-		const guesses = {
-			panelUnit: guess([/^(id|unit|cluster|state|county|country|firm|company|clinic|hospital|site)$/i, /id$/i], ''),
-			panelTime: guess([/^(time|t|year|period|date|quarter|month|week|step)$/i], ''),
-			panelOutcome: guess([/^(y|outcome|lemp|response)$/i], ''),
-			panelTreated: '',
-		};
-		const cohort = document.querySelector('input[name="treatedBy"]:checked').value === 'cohort';
-		guesses.panelTreated = cohort
-			? guess([/^(g|cohort|first_?treat(ed)?|gname|first)$/i], '')
-			: (data ? data.binary.find(column => !Object.values(guesses).includes(column)) : undefined) ?? guess([/^(d|treat(ed|ment)?|trt|x)$/i], '');
+		// The user chooses each column: what a column means cannot be read from its name
 		document.querySelectorAll('select.column').forEach(select => {
 			const previous = select.value;
 			select.textContent = '';
 			for (const column of ['', ...columns]) {
-				const option = element('option', undefined, column || (select.classList.contains('optional') ? TEXT.none : ''));
+				const option = element('option', undefined, column || (select.classList.contains('optional') ? TEXT.none : TEXT.chooseColumn));
 				option.value = column;
 				select.appendChild(option);
 			}
-			select.value = columns.includes(previous) ? previous : guesses[select.id] ?? '';
+			select.value = columns.includes(previous) ? previous : '';
 		});
 		if (data && data.columns.length) {
 			const table = element('table');
@@ -1448,6 +1531,7 @@ function pageHtml(): string {
 			lags: number('lags'),
 			control: value('control'),
 			method: value('method'),
+			distribution: value('distribution'),
 			effect: value('effect'),
 			estimand: pte ? 'PTE' : 'TATE',
 			exposure: (pte ? [number('exposureAt')] : [number('exposureFrom'), number('exposureTo')]).filter(Number.isFinite),
@@ -1598,11 +1682,44 @@ function pageHtml(): string {
 			views.appendChild(button);
 		}
 		drawChart();
+		renderTests();
 		renderEvents();
 	}
 
+	/** The tests at the end of the period from the event, PollisEventStudies.jl's. */
+	function renderTests() {
+		const container = document.getElementById('tests');
+		container.textContent = '';
+		const tests = !study.fomc && view !== 'open' ? study.curves[periodIndex].tests : undefined;
+		if (!tests || !tests.car_events) {
+			return;
+		}
+		const number = (value, digits) => typeof value === 'number' ? value.toFixed(digits) : '';
+		const p = value => typeof value === 'number' ? (value < 0.001 ? '<0.001' : value.toFixed(3)) : '';
+		const rows = [
+			[TEXT.carTest, typeof tests.car === 'number' ? percent(tests.car) : '', number(tests.car_t, 2), p(tests.car_p), tests.car_events],
+			[TEXT.bmpTest, number(tests.bmp, 3), number(tests.bmp_t, 2), p(tests.bmp_p), tests.bmp_events],
+			[TEXT.kolariTest, '', number(tests.bmp_kp_t, 2), p(tests.bmp_kp_p), tests.bmp_events],
+			[TEXT.grankTest, '', number(tests.grank_t, 2), p(tests.grank_p), tests.gsign_events],
+			[TEXT.signTest, typeof tests.gsign_positive === 'number' ? format(TEXT.positiveOf, tests.gsign_positive, tests.gsign_events) : '', number(tests.gsign_z, 2), p(tests.gsign_p), tests.gsign_events],
+			[TEXT.wilcoxonTest, '', number(tests.wilcoxon_v, 0), p(tests.wilcoxon_p), tests.car_events],
+			[TEXT.volumeTest, number(tests.abnormal_volume, 3), number(tests.abnormal_volume_t, 2), p(tests.abnormal_volume_p), tests.abnormal_volume_events],
+			[TEXT.volatilityTest, number(tests.abnormal_volatility, 3), number(tests.abnormal_volatility_t, 2), p(tests.abnormal_volatility_p), tests.abnormal_volatility_events],
+		];
+		container.appendChild(element('div', 'chartCaption', TEXT.testsCaption));
+		const table = element('table');
+		const head = element('tr');
+		[TEXT.test, TEXT.mean, TEXT.statistic, TEXT.pValue, TEXT.testEvents].forEach((label, index) => head.appendChild(element('th', index ? 'number' : '', label)));
+		table.appendChild(head);
+		for (const cells of rows) {
+			const row = element('tr');
+			cells.forEach((cell, index) => row.appendChild(element('td', index ? 'number' : '', String(cell ?? ''))));
+			table.appendChild(row);
+		}
+		container.appendChild(table);
+	}
+
 	function renderPanel() {
-		document.getElementById('written').textContent = study.written;
 		const legend = document.getElementById('legend');
 		legend.textContent = '';
 		for (const series of study.series) {
@@ -1616,30 +1733,92 @@ function pageHtml(): string {
 		const lines = document.getElementById('lines');
 		lines.textContent = '';
 		study.lines.forEach(line => lines.appendChild(element('div', undefined, line)));
+		const hasReference = study.series.some(series => series.points.some(point => point.reference));
+		document.getElementById('panelCaption').textContent = hasReference ? TEXT.panelCaptionReference : TEXT.panelCaption;
 		drawPanelChart();
-		// The effects as a table: a row per event time, a column per estimator
+		// The effects as a table: a row per event time, a column per estimator, before and after treatment, then the averages
 		const container = document.getElementById('panelTable');
 		container.textContent = '';
 		if (!study.series.length) {
 			return;
 		}
-		const times = [...new Set(study.series.flatMap(series => series.points.map(point => point.x)))].sort((a, b) => a - b);
-		const table = element('table');
+		// The same decimals throughout, from the largest figure in the table
+		const values = study.series.flatMap(series => series.points.concat(series.averages).flatMap(point => [point.effect, point.low, point.high])).filter(value => value !== null && isFinite(value));
+		const largest = Math.max(...values.map(Math.abs), 1e-12);
+		const decimals = Math.min(6, Math.max(2, 2 - Math.floor(Math.log10(largest))));
+		// No minus sign on a figure that rounds to 0
+		const fixed = value => Number(value.toFixed(decimals)) === 0 ? (0).toFixed(decimals) : value.toFixed(decimals);
+		const estimateCell = (series, point) => {
+			if (!point) {
+				return element('td', 'number');
+			}
+			if (point.reference) {
+				return element('td', 'number reference', TEXT.referencePeriod);
+			}
+			const hasInterval = point.low !== null && point.high !== null;
+			const significant = hasInterval && (point.low > 0 || point.high < 0);
+			const cell = element('td', 'number' + (significant ? ' significant ' + series.key : ''));
+			cell.appendChild(element('div', 'estimate', fixed(point.effect)));
+			if (hasInterval) {
+				cell.appendChild(element('div', 'interval', '[' + fixed(point.low) + ', ' + fixed(point.high) + ']'));
+			}
+			return cell;
+		};
+		const band = (label, texts, start) => {
+			const row = element('tr', 'band' + (start ? ' start' : ''));
+			row.appendChild(element('td', undefined, label));
+			texts.forEach(text => row.appendChild(element('td', 'number', text || '')));
+			return row;
+		};
+		const caption = element('div', 'effectsCaption', format(TEXT.effectsCaption, study.outcome || ''));
+		const table = element('table', 'effects');
 		const head = element('tr');
 		head.appendChild(element('th', undefined, TEXT.eventTimeAxis));
-		study.series.forEach(series => head.appendChild(element('th', undefined, series.name)));
+		for (const series of study.series) {
+			const th = element('th', 'number');
+			const mark = svg('svg', { width: 14, height: 10 });
+			mark.appendChild(svg('circle', { cx: 7, cy: 5, r: 3.5, class: series.key }));
+			th.appendChild(mark);
+			th.appendChild(document.createTextNode(series.name));
+			head.appendChild(th);
+		}
 		table.appendChild(head);
-		for (const time of times) {
+		const times = [...new Set(study.series.flatMap(series => series.points.map(point => point.x)))].sort((a, b) => a - b);
+		const timeRow = time => {
 			const row = element('tr');
 			row.appendChild(element('td', undefined, String(time)));
-			for (const series of study.series) {
-				const point = series.points.find(point => point.x === time);
-				const interval = point && point.low !== null && point.high !== null ? ' [' + figure(point.low) + ', ' + figure(point.high) + ']' : '';
-				row.appendChild(element('td', undefined, point ? figure(point.effect) + interval : ''));
-			}
-			table.appendChild(row);
+			study.series.forEach(series => row.appendChild(estimateCell(series, series.points.find(point => point.x === time))));
+			return row;
+		};
+		const before = times.filter(time => time < 0);
+		if (before.length) {
+			table.appendChild(band(TEXT.beforeTreatment, study.series.map(series => series.pretrends)));
+			before.forEach(time => table.appendChild(timeRow(time)));
 		}
+		table.appendChild(band(TEXT.afterTreatment, study.series.map(() => ''), true));
+		times.filter(time => time >= 0).forEach(time => table.appendChild(timeRow(time)));
+		const labels = [...new Set(study.series.flatMap(series => series.averages.map(average => average.label)))];
+		if (labels.length) {
+			table.appendChild(band(TEXT.averagesAfter, study.series.map(() => ''), true));
+			for (const label of labels) {
+				const row = element('tr');
+				row.appendChild(element('td', undefined, label));
+				study.series.forEach(series => row.appendChild(estimateCell(series, series.averages.find(average => average.label === label))));
+				table.appendChild(row);
+			}
+		}
+		// How the intervals were computed, for each estimator whose distribution is known
+		const notes = element('div', 'effectsNotes');
+		const keys = study.series.map(series => series.key);
+		if (keys.includes('twfe') || keys.includes('sa')) {
+			notes.appendChild(element('div', undefined, study.degrees ? format(TEXT.intervalsPanelT, study.degrees) : TEXT.intervalsPanelTClusters));
+		}
+		if (keys.includes('cs')) {
+			notes.appendChild(element('div', undefined, study.distribution === 'normal' ? TEXT.intervalsCsNormal : study.degrees ? format(TEXT.intervalsCsT, study.degrees) : TEXT.intervalsCsTClusters));
+		}
+		container.appendChild(caption);
 		container.appendChild(table);
+		container.appendChild(notes);
 	}
 
 	function figure(value) {
@@ -1653,7 +1832,7 @@ function pageHtml(): string {
 		const height = chart.clientHeight || 300;
 		chart.setAttribute('viewBox', '0 0 ' + width + ' ' + height);
 		if (!study.series.length) {
-			chart.appendChild(svg('text', { x: width / 2, y: height / 2, 'text-anchor': 'middle' }, TEXT.noResults));
+			chart.appendChild(svg('text', { x: width / 2, y: height / 2, 'text-anchor': 'middle' }, study.problem || TEXT.noResults));
 			return;
 		}
 		const left = 56, right = 16, top = 12, bottom = 32;
@@ -1691,8 +1870,9 @@ function pageHtml(): string {
 				if (point.low !== null && point.high !== null) {
 					chart.appendChild(svg('line', { x1: at, x2: at, y1: y(point.low), y2: y(point.high), class: 'whisker ' + series.key }));
 				}
-				const dot = svg('circle', { cx: at, cy: y(point.effect), r: 3.5, class: series.key });
-				dot.appendChild(svg('title', {}, series.name + ', ' + point.x + ': ' + figure(point.effect) + (point.low !== null && point.high !== null ? ' [' + figure(point.low) + ', ' + figure(point.high) + ']' : '')));
+				// The reference period hollow: set to 0, not estimated
+				const dot = svg('circle', { cx: at, cy: y(point.effect), r: 3.5, class: series.key + (point.reference ? ' reference' : '') });
+				dot.appendChild(svg('title', {}, series.name + ', ' + point.x + ': ' + (point.reference ? TEXT.referencePeriod : figure(point.effect)) + (point.low !== null && point.high !== null ? ' [' + figure(point.low) + ', ' + figure(point.high) + ']' : '')));
 				chart.appendChild(dot);
 			}
 		});
@@ -1713,7 +1893,7 @@ function pageHtml(): string {
 		chart.setAttribute('viewBox', '0 0 ' + width + ' ' + height);
 		const values = curves ? [...curves.cars.flat(), ...curves.lower, ...curves.upper, ...curves.caar].filter(value => typeof value === 'number') : [];
 		if (!values.length) {
-			chart.appendChild(svg('text', { x: width / 2, y: height / 2, 'text-anchor': 'middle' }, TEXT.chartEmpty));
+			chart.appendChild(svg('text', { x: width / 2, y: height / 2, 'text-anchor': 'middle' }, study.problem || TEXT.chartEmpty));
 			return;
 		}
 		const periodCurves = study.curves[periodIndex];
@@ -1898,11 +2078,16 @@ function pageHtml(): string {
 			return;
 		}
 		const curves = curvesShown();
-		const betas = study.curves[periodIndex].betas;
+		// PollisEventStudies.jl's results for each event, null for one it has none for (yet)
+		const rows = study.curves[periodIndex].rows;
 		const table = element('table');
 		const head = element('tr');
-		for (const [label, number] of [[TEXT.released], [TEXT.accepted], [TEXT.lead], [TEXT.company], [TEXT.form], [TEXT.session], [TEXT.status], [TEXT.car + ' %', true], ...(study.marketModel ? [[TEXT.beta, true]] : [])]) {
-			head.appendChild(element('th', number ? 'number' : '', label));
+		for (const [label, number, hint] of [[TEXT.released], [TEXT.accepted], [TEXT.lead], [TEXT.company], [TEXT.form], [TEXT.session], [TEXT.status], [TEXT.car + ' %', true], ...(study.marketModel ? [[TEXT.beta, true]] : []), [TEXT.abnormalVolume, true, TEXT.abnormalVolumeHint], [TEXT.abnormalVolatility, true, TEXT.abnormalVolatilityHint]]) {
+			const cell = element('th', number ? 'number' : '', label);
+			if (hint) {
+				cell.title = hint;
+			}
+			head.appendChild(cell);
 		}
 		table.appendChild(head);
 		// The newest first
@@ -1927,10 +2112,31 @@ function pageHtml(): string {
 			row.appendChild(element('td', '', event.form));
 			row.appendChild(element('td', '', event.session));
 			row.appendChild(element('td', '', event.status));
+			const results = rows[index];
 			const last = curves && curves.cars[index] ? lastValue(curves.cars[index]) : undefined;
-			row.appendChild(element('td', 'number' + (last ? (last.value >= 0 ? ' up' : ' down') : ''), last ? percent(last.value) : ''));
+			if (results && results.leftOut) {
+				// Left out: why, across its CAR and the columns after it
+				const note = element('td', 'note', results.leftOut);
+				note.colSpan = study.marketModel ? 4 : 3;
+				row.appendChild(note);
+				table.appendChild(row);
+				return;
+			}
+			const car = element('td', 'number' + (last ? (last.value >= 0 ? ' up' : ' down') : ''), last ? percent(last.value) : '');
+			if (results && results.notes.length) {
+				car.title = results.notes.join('. ');
+			}
+			row.appendChild(car);
 			if (study.marketModel) {
-				row.appendChild(element('td', 'number', typeof betas[index] === 'number' ? betas[index].toFixed(2) : ''));
+				const marketAdjusted = !!results && results.marketAdjusted;
+				const beta = element('td', marketAdjusted ? 'number note' : 'number', results && typeof results.beta === 'number' ? results.beta.toFixed(2) : marketAdjusted ? TEXT.marketAdjusted : '');
+				if (marketAdjusted) {
+					beta.title = TEXT.marketAdjustedWhy;
+				}
+				row.appendChild(beta);
+			}
+			for (const value of results ? [results.abnormalVolume, results.abnormalVolatility] : [null, null]) {
+				row.appendChild(element('td', 'number' + (typeof value === 'number' ? (value >= 0 ? ' up' : ' down') : ''), typeof value === 'number' ? signed(value, 3) : ''));
 			}
 			table.appendChild(row);
 		});
@@ -1940,10 +2146,10 @@ function pageHtml(): string {
 	document.querySelectorAll('input[name="model"]').forEach(input => input.addEventListener('change', updateForm));
 	document.querySelectorAll('input[name="kind"], input[name="estimator"], input[name="estimand"], select.column, #effect, #family, #exposureAt').forEach(input => input.addEventListener('change', updateForm));
 	document.getElementById('exposureAt').addEventListener('input', updateForm);
-	// A treatment indicator or a first-treated column: guess the column again
+	// A treatment indicator or a first-treated column: the column is chosen again
 	document.querySelectorAll('input[name="treatedBy"]').forEach(input => input.addEventListener('change', () => {
 		document.getElementById('panelTreated').value = '';
-		renderData();
+		updateForm();
 	}));
 	document.getElementById('chooseData').addEventListener('click', () => vscode.postMessage({ command: 'chooseData' }));
 	document.querySelectorAll('input[name="release"], input[name="instrument"]').forEach(input => input.addEventListener('change', updateForm));
@@ -2033,7 +2239,13 @@ function pageHtml(): string {
 				updateForm();
 			}
 		} else if (message.command === 'created') {
-			titleElement.value = '';
+			// The next study starts from the form's defaults, not the last study's choices
+			const form = createElement.closest('.formGrid');
+			form.querySelectorAll('input').forEach(input => {
+				input.checked = input.defaultChecked;
+				input.value = input.defaultValue;
+			});
+			form.querySelectorAll('option').forEach(option => option.selected = option.defaultSelected);
 			data = undefined;
 			renderData();
 			periods = [Object.assign({}, source() === 'fomc' ? FOMC_PERIOD : DEFAULT_PERIOD)];

@@ -8,7 +8,7 @@
 // minute at a time with their cross-sectional t, the Boehmer, Musumeci and Poulsen (1991) test on standardized CARs
 // with Kolari and Pynnonen's (2010) adjustment for cross-correlation, their (2011) generalized rank test, and abnormal
 // volume, each with its p-value, for all the filings and for each group of them, and writes them to results/. The page
-// draws the same CAARs as the prices come in.
+// shows the same results, which it gets from PollisEventStudies.jl itself, as the prices come in.
 
 const PACKAGE_URL = 'https://github.com/Trumpingtons/PollisEventStudies.jl';
 const REGISTRY_URL = 'https://github.com/Trumpingtons/PollisRegistry';
@@ -32,12 +32,15 @@ The filings an alert on SEC filings fired are the events. Pollis captures the mi
 - the Boehmer, Musumeci and Poulsen (1991) test on standardized CARs;
 - the same adjusted for the correlation of the events' abnormal returns (Kolari and Pynn&ouml;nen 2010), for events whose periods overlap;
 - the generalized rank test (Kolari and Pynn&ouml;nen 2011), robust to returns far from normal;
-- abnormal volume.
+- Cowan's (1992) generalized sign test, on how many CARs are positive against the share of positive abnormal returns on the estimation days;
+- the Wilcoxon signed-rank test on the CARs (HypothesisTests.jl);
+- abnormal volume;
+- abnormal volatility.
 
 With **group_by** in study.toml (form, item, session or ticker), the same for each group of filings. It writes them to **results/**. Events still capturing prices count up to the last complete minute: run all again as they come in.
 `),
 		code(String.raw`
-${install('0.3.1')}
+${install('0.5.1')}
 
 const STUDY = isfile(joinpath(pwd(), "study.toml")) ? pwd() : raw"${folder}"
 results = run_study(STUDY)
@@ -45,7 +48,7 @@ results = run_study(STUDY)
 		markdown(String.raw`
 ## Each event
 
-At the end of each period: the CAR in per cent, the standardized CAR (by the residual standard deviation of the estimation days and the square root of the minutes it spans), abnormal volume (the mean log(1 + volume) of the regular-session minutes after the filing, or after the next open, less that of those before the filing) and, with the market model, beta.
+At the end of each period: the CAR in per cent, the standardized CAR (by the residual standard deviation of the estimation days and the square root of the minutes it spans), abnormal volume (the mean log(1 + volume) of the regular-session minutes after the filing, or after the next open, less that of those before the filing), abnormal volatility (the log of the realized volatility of the minute abnormal returns of the regular-session minutes after the filing, or after the next open, over that of as many regular-session minutes before it) and, with the market model, beta.
 `),
 		code(String.raw`
 results[1].events
@@ -62,7 +65,7 @@ Each group of filings, with its tests at the end of the first period. Another gr
 ## Notes
 
 - **Market-adjusted**: the normal return is the benchmark's. **Market model**: alpha plus beta times the benchmark's return, estimated on the minute returns of the regular sessions of the trading days before the period, not across the night. A stock that does not trade every minute is measured from one trade to the next.
-- The standardized tests (Boehmer, Musumeci and Poulsen, its adjustment and the generalized rank test) need the estimation days, which Pollis captures for the market model only.
+- The standardized tests (Boehmer, Musumeci and Poulsen, its adjustment, the generalized rank test and the generalized sign test) need the estimation days, which Pollis captures for the market model only.
 - Yahoo Finance keeps minute prices for 30 days: the events are the filings of the 30 days before the study was made and those after, captured while Pollis was open.
 - The benchmark trades only in the regular session: after the close, the stock's moves are its own.
 `),
@@ -95,7 +98,7 @@ The FOMC's releases, from the Federal Reserve's Monetary Policy Press Releases f
 [PollisEventStudies.jl](${PACKAGE_URL}) computes each instrument's move from the start of the period to its end at each release, the mean move with its cross-sectional t, and the mean move a minute at a time, and writes them to **results/**. Moves are in basis points of the implied rate (100 less the price) for federal funds (FF1 to FF4) and SOFR futures (SR1, SFR1 to SFR5), of the yield for the 5- and 10-year yields (^FVX, ^TNX), and in per cent for prices (ZT, TIP, ^GSPC, ES). FF1 is scaled by D / (D - d), D the days of the month and d the release's day, as the contract settles on the month's average rate (Kuttner 2001); in the month's last week FF2 stands in for it, unscaled.
 `),
 		code(String.raw`
-${install('0.3.0')}
+${install('0.5.1')}
 
 const STUDY = isfile(joinpath(pwd(), "study.toml")) ? pwd() : raw"${folder}"
 results = run_study(STUDY)
@@ -145,10 +148,10 @@ Units observed over time, first treated at different times: states adopting a po
 - **callaway_santanna**: Callaway and Sant'Anna's (2021) effect of each cohort at each time against the units not yet or never treated, and its averages by event time, by cohort, by calendar time and overall;
 - **stepped_wedge**: the mixed model of Hussey and Hughes (2007), with the units as clusters and their correlation, and the effects by exposure time of Kenny et al. (2022), fitted by MixedModels.jl.
 
-It writes them to **results/**, which the Event Studies page draws. After an edit of study.toml, run all again.
+It writes them to **results/**. The Event Studies page shows the same results, which it gets from PollisEventStudies.jl itself. After an edit of study.toml, run all again.
 `),
 		code(String.raw`
-${install('0.4.0')}
+${install('0.5.1')}
 import TOML
 
 const STUDY = isfile(joinpath(pwd(), "study.toml")) ? pwd() : raw"${folder}"

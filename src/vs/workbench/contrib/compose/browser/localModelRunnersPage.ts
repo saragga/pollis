@@ -16,6 +16,7 @@ import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
 import { CHOOSE_AGENT_COMMAND_ID, CODING_AGENTS, findProgram, terminalEnvironment } from './pollisAgents.js';
 import { OPEN_LINK_COMMAND_ID } from '../../monitor/browser/openLink.js';
+import { voiceButtonsCss, voiceButtonsHtml, voiceButtonsScript } from '../../model/browser/webviews/webviewScaffold.js';
 
 // Compose > Local Models > Local Model Runners: a page of the programs that serve local models on
 // this computer, each marked installed or with a link to its install page, and how each coding agent of
@@ -175,6 +176,7 @@ function pageHtml(): string {
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';">
 	<style>
+		${voiceButtonsCss}
 		* { box-sizing: border-box; }
 		body { font-family: var(--vscode-font-family); font-size: 13px; margin: 0; color: var(--vscode-foreground); background-color: var(--vscode-editor-background); }
 		.container { max-width: 1100px; margin: 0 auto; padding: 24px; }
@@ -199,7 +201,10 @@ function pageHtml(): string {
 </head>
 <body>
 <div class="container">
-	<h1>${text.title}</h1>
+	<div class="title-row">
+		<h1>${text.title}</h1>
+		${voiceButtonsHtml}
+	</div>
 	<p class="subtitle">${text.intro}</p>
 	<table class="local">
 		<thead><tr><th class="runner">${text.runner}</th><th class="program">${text.program}</th><th>${text.status}</th></tr></thead>
@@ -214,6 +219,7 @@ function pageHtml(): string {
 </div>
 <script>
 	const vscode = acquireVsCodeApi();
+	${voiceButtonsScript}
 	const TEXT = ${JSON.stringify(text)};
 	const runners = document.getElementById('runners');
 	const agentsHead = document.getElementById('agentsHead');

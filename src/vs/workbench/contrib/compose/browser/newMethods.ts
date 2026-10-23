@@ -37,6 +37,7 @@ import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWork
 import { AGENT_BADGE_CSS, AGENT_ICON } from './agentBadge.js';
 import { PREPARE_REGISTRATION_COMMAND_ID, skillFile, startAgent, WRITE_METHOD_COMMAND_ID, WRITE_VIGNETTE_COMMAND_ID } from './pollisAgents.js';
 import { AgentTask } from './modelRouting.js';
+import { voiceButtonsCss, voiceButtonsHtml, voiceButtonsScript } from '../../model/browser/webviews/webviewScaffold.js';
 
 // Compose > Under Construction..., formerly Compose > Methods > Create Methods (Browse Methods, which lists them, is in workflowLibrary.ts).
 // A method is a folder of ~/.pollis/methods with method.toml, its code in src/NAME.jl (module NAME),
@@ -1150,6 +1151,7 @@ function pageHtml(): string {
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';">
 	<style>
+		${voiceButtonsCss}
 ${PAGE_STYLE}
 		.tabs { display: flex; flex-wrap: wrap; gap: 20px; border-bottom: 1px solid var(--vscode-widget-border); margin: 16px 0 12px 0; }
 		.subtabs { gap: 16px; margin: 0 0 12px 0; }
@@ -1186,7 +1188,10 @@ ${PAGE_STYLE}
 </head>
 <body>
 <div class="container">
-	<h1 id="heading" contenteditable="plaintext-only" spellcheck="false" title="${text.headingHint}"></h1>
+	<div class="title-row">
+		<h1 id="heading" contenteditable="plaintext-only" spellcheck="false" title="${text.headingHint}"></h1>
+		${voiceButtonsHtml}
+	</div>
 	<p class="small notice" id="draftHint" hidden></p>
 	<div class="tabs" id="steps">
 		<button class="tab selected" data-step="article"><span class="step-number">&#9312;</span>${text.stepArticle}</button>
@@ -1345,6 +1350,7 @@ ${PAGE_STYLE}
 </div>
 <script>
 	const vscode = acquireVsCodeApi();
+	${voiceButtonsScript}
 	const TEXT = ${JSON.stringify(text)};
 	const DATASETS_URL = ${JSON.stringify(DATASETS_URL)};
 	const inputBoxes = new Map();

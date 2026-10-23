@@ -35,6 +35,7 @@ import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
 import { LIBRARY_PAGE_HELPERS, LIBRARY_PAGE_STYLE } from './libraryPage.js';
 import { AgentTask, agentCommandFor } from './modelRouting.js';
+import { voiceButtonsCss, voiceButtonsHtml, voiceButtonsScript } from '../../model/browser/webviews/webviewScaffold.js';
 
 // Compose > New Panels and Toolboxes and Compose > Methods hold tasks: you go there to get something
 // done (Create a Panel, Package a Toolbox, Write a Method...), and a coding agent of your choice does it in
@@ -538,6 +539,7 @@ function skillsPageHtml(title: string): string {
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';">
 	<style>
+		${voiceButtonsCss}
 ${LIBRARY_PAGE_STYLE}
 	.name { width: 40%; }
 	.links { margin-top: 6px; }
@@ -549,7 +551,10 @@ ${LIBRARY_PAGE_STYLE}
 </head>
 <body>
 <div class="container">
-	<h1>${title}</h1>
+	<div class="title-row">
+		<h1>${title}</h1>
+		${voiceButtonsHtml}
+	</div>
 	<p class="subtitle">${intro}</p>
 	<div class="install">${installIntro} <button class="link" id="codingAgent">${installLink}</button></div>
 	<table>
@@ -561,6 +566,7 @@ ${LIBRARY_PAGE_STYLE}
 </div>
 <script>
 	const vscode = acquireVsCodeApi();
+	${voiceButtonsScript}
 	const TEXT = ${JSON.stringify(text)};
 	/** A skill with more example requests than this shows the rest on request. */
 	const LISTED = 4;

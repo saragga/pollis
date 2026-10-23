@@ -34,12 +34,6 @@ import { SHOW_EVENT_STUDIES_COMMAND_ID } from '../../monitor/browser/eventStudie
 // The Mathematical Core, Financial Econometrics and Economics Toolboxes come from their extensions (toolboxes/pollis-toolbox-*, not built in:
 // installed from the Toolboxes section of the Extensions pane), see toolboxExtensions.ts
 
-// Epidemiology Toolbox hidden for now: uncomment its three blocks to restore it.
-/*
-// Define a new submenu ID for "Epidemiology Toolbox"
-const E_CMTSubmenuId = new MenuId('menubarE_CMTSubmenu');
-*/
-
 const NewPanelsMenu = new MenuId('menubarNewPanelsMenu');
 const OrchestrationMenu = new MenuId('menubarOrchestrationMenu');
 // Formerly Explore > Access Model Repositories: the id stays, for the panel index and Pollis Views
@@ -464,39 +458,3 @@ for (const item of collaborationItems) {
 		order: item.order,
 	});
 }
-
-
-
-/*
-// Epidemiology Toolbox
-MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
-	group: '3_toolboxes',
-	submenu: E_CMTSubmenuId,
-	title: localize('showStatistics.ept', 'Epidemiology Toolbox'),
-	order: 1,
-});
-*/
-
-/*
-// ===================================================
-// SUBMENU: Epidemiology
-// ===================================================
-
-MenuRegistry.appendMenuItem(E_CMTSubmenuId, {
-	group: '1_ect',
-	command: { id: 'chiara.statistics.cest', title: localize('ect.cest', 'Epidemiological Inference') },
-	order: 1,
-}); // Pathogen.jl, Rt-without-renewal
-
-MenuRegistry.appendMenuItem(E_CMTSubmenuId, {
-	group: '2_ect',
-	command: { id: 'chiara.simulate.epi-comp', title: localize('ect.epi-comp', 'Compartmental Models') },
-	order: 2,
-}); // DifferentialEquations.jl
-
-MenuRegistry.appendMenuItem(E_CMTSubmenuId, {
-	group: '2_ect',
-	command: { id: 'chiara.simulate.epi-ude', title: localize('ect.epi-ude', 'Universal Differential Equations for Epidemiology') },
-	order: 3,
-}); // DiffEqFlux.jl, Lux.jl
-*/

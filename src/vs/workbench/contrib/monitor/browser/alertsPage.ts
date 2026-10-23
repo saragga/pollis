@@ -20,6 +20,7 @@ import { AlertCondition, AlertSeverity, ChartRange, describeCondition, describeF
 import { ECONOMIC_SOURCES, EconomicSource, seriesExample, seriesPage, SERIES_PAGES, sourceName } from './economicSeries.js';
 import { IEventStudiesService, SHOW_EVENT_STUDIES_COMMAND_ID } from './eventStudiesService.js';
 import { OPEN_LINK_COMMAND_ID } from './openLink.js';
+import { voiceButtonsCss, voiceButtonsHtml, voiceButtonsScript } from '../../model/browser/webviews/webviewScaffold.js';
 
 // Explore > Alerts > Add Alert...: a page with a form to add an alert (the symbol, looked up at Yahoo Finance, the
 // condition, the value, how it shows and how often it fires), or an alert on SEC filings (the company, looked up at
@@ -721,6 +722,7 @@ function pageHtml(kind: PageKind): string {
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';">
 	<style>
+		${voiceButtonsCss}
 		* { box-sizing: border-box; }
 		body { font-family: var(--vscode-font-family); font-size: 13px; margin: 0; color: var(--vscode-foreground); background-color: var(--vscode-editor-background); }
 		.container { max-width: 1100px; margin: 0 auto; padding: 24px; }
@@ -834,7 +836,10 @@ function pageHtml(kind: PageKind): string {
 </head>
 <body>
 <div class="container">
-	<h1>${kind === 'add' ? text.addTitle : kind === 'quote' ? text.quoteTitle : text.title}</h1>
+	<div class="title-row">
+		<h1>${kind === 'add' ? text.addTitle : kind === 'quote' ? text.quoteTitle : text.title}</h1>
+		${voiceButtonsHtml}
+	</div>
 	<p class="subtitle" id="subtitle">${kind === 'add' ? text.addIntro : kind === 'quote' ? text.quoteIntro : text.intro}</p>
 
 	<div class="addLayout" id="layout"${kind === 'alerts' ? ' hidden' : ''}>
@@ -975,6 +980,7 @@ function pageHtml(kind: PageKind): string {
 </div>
 <script>
 	const vscode = acquireVsCodeApi();
+	${voiceButtonsScript}
 	const TEXT = ${JSON.stringify(text)};
 	const KIND = ${JSON.stringify(kind)};
 	const symbolElement = document.getElementById(KIND === 'add' ? 'symbol' : 'quoteSymbol');

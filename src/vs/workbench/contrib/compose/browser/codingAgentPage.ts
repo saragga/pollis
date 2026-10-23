@@ -19,6 +19,7 @@ import { AGENT_COMMAND_SETTING, CHOOSE_AGENT_COMMAND_ID, CODING_AGENTS, commandW
 import { MODEL_ROUTING_COMMAND_ID } from './modelRouting.js';
 import { LOCAL_MODEL_RUNNERS_COMMAND_ID } from './localModelRunnersPage.js';
 import { OPEN_LINK_COMMAND_ID } from '../../monitor/browser/openLink.js';
+import { voiceButtonsCss, voiceButtonsHtml, voiceButtonsScript } from '../../model/browser/webviews/webviewScaffold.js';
 
 // Compose > Coding Agents: a page of the coding agents Pollis knows, all of which run on local and
 // cloud models, in alphabetical order, each marked installed on this computer or with a link to its
@@ -168,6 +169,7 @@ function pageHtml(): string {
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';">
 	<style>
+		${voiceButtonsCss}
 		* { box-sizing: border-box; }
 		body { font-family: var(--vscode-font-family); font-size: 13px; margin: 0; color: var(--vscode-foreground); background-color: var(--vscode-editor-background); }
 		.container { max-width: 1100px; margin: 0 auto; padding: 24px; }
@@ -211,7 +213,10 @@ function pageHtml(): string {
 </head>
 <body>
 <div class="container">
-	<h1>${text.title}</h1>
+	<div class="title-row">
+		<h1>${text.title}</h1>
+		${voiceButtonsHtml}
+	</div>
 	<p class="subtitle">${text.intro}</p>
 	<p class="current" id="current"></p>
 	<div class="section local">
@@ -232,6 +237,7 @@ function pageHtml(): string {
 </div>
 <script>
 	const vscode = acquireVsCodeApi();
+	${voiceButtonsScript}
 	const TEXT = ${JSON.stringify(text)};
 	const local = document.getElementById('local');
 	const other = document.getElementById('other');

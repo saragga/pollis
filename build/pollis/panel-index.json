@@ -30,6 +30,7 @@
 			"menubarADRSubmenu",
 			"menubarAMRSubmenu",
 			"menubarANSubmenu",
+			"menubarAlertsSubmenu",
 			"menubarBASubmenu",
 			"menubarCLSubmenu",
 			"menubarCONNSubmenu",
@@ -45,7 +46,6 @@
 			"menubarDocRepSubmenu",
 			"menubarECSubmenu",
 			"menubarEVSubmenu",
-			"menubarE_CMTSubmenu",
 			"menubarGBOSubmenu",
 			"menubarGFOSubmenu",
 			"menubarGOSubmenu",
@@ -67,6 +67,7 @@
 			"menubarRLSubmenu",
 			"menubarReplicationMenu",
 			"menubarReportsMenu",
+			"menubarRssSubmenu",
 			"menubarSASubmenu",
 			"menubarSDESubmenu",
 			"menubarSDMSubmenu",
@@ -986,7 +987,7 @@
 		{
 			"id": "cest",
 			"title": "Contagion Models",
-			"source": "pollis",
+			"source": "toolbox:pollis-toolbox-epidemiology",
 			"commands": [
 				{
 					"id": "chiara.statistics.cest",
@@ -998,9 +999,9 @@
 			"portable": true,
 			"defaultModel": "rt",
 			"decisionFirstColumn": "Model",
-			"toml": "src/vs/workbench/contrib/model/browser/webviews/cest.toml",
-			"wikiRoot": "src/vs/workbench/contrib/model/browser/media/wiki",
-			"notebookRoot": "src/vs/workbench/contrib/model/browser/media/notebooks",
+			"toml": "toolboxes/pollis-toolbox-epidemiology/panels/cest.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-epidemiology/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-epidemiology/notebooks",
 			"wikis": [
 				"cest/assumptions.md",
 				"cest/decision-guide.md",
@@ -2638,7 +2639,7 @@
 				}
 			],
 			"portable": false,
-			"reason": "the panel edgar has its own code (illusCollapsed, illustrationLabel, illustrationOverrideJs, keyPointsIntro, keyPointsFootnote, decisionIntro, decisionFootnote in src/vs/workbench/contrib/model/browser/webviews/edgar.template.ts), so it cannot go in a data-only extension"
+			"reason": "the panel edgar has its own code (omitIllustration, keyPointsIntro, keyPointsFootnote, decisionIntro, decisionFootnote in src/vs/workbench/contrib/model/browser/webviews/edgar.template.ts), so it cannot go in a data-only extension"
 		},
 		{
 			"id": "embedding",
@@ -2723,7 +2724,7 @@
 		{
 			"id": "epiComp",
 			"title": "Compartmental Models",
-			"source": "pollis",
+			"source": "toolbox:pollis-toolbox-epidemiology",
 			"commands": [
 				{
 					"id": "chiara.simulate.epi-comp",
@@ -2735,9 +2736,9 @@
 			"portable": true,
 			"defaultModel": "sir",
 			"decisionFirstColumn": "Model",
-			"toml": "src/vs/workbench/contrib/model/browser/webviews/epiComp.toml",
-			"wikiRoot": "src/vs/workbench/contrib/model/browser/media/wiki",
-			"notebookRoot": "src/vs/workbench/contrib/model/browser/media/notebooks",
+			"toml": "toolboxes/pollis-toolbox-epidemiology/panels/epiComp.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-epidemiology/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-epidemiology/notebooks",
 			"wikis": [
 				"epi-comp/assumptions.md",
 				"epi-comp/decision-guide.md",
@@ -2760,6 +2761,40 @@
 			],
 			"packages": [
 				"DifferentialEquations.jl"
+			]
+		},
+		{
+			"id": "epiUde",
+			"title": "Machine Learning for Epidemics",
+			"source": "toolbox:pollis-toolbox-epidemiology",
+			"commands": [
+				{
+					"id": "chiara.simulate.epi-ude",
+					"menuTitles": [
+						"Universal Differential Equations for Epidemiology"
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "node",
+			"decisionFirstColumn": "Model",
+			"toml": "toolboxes/pollis-toolbox-epidemiology/panels/epiUde.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-epidemiology/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-epidemiology/notebooks",
+			"wikis": [],
+			"notebooks": [
+				"epi-ude/tutorial-01-neural-ode.ipynb",
+				"epi-ude/tutorial-02-ude.ipynb",
+				"epi-ude/tutorial-03-7compartment.ipynb",
+				"epi-ude/tutorial-04-bayesian-neural-ode.ipynb",
+				"epi-ude/tutorial-05-symbolic-recovery.ipynb",
+				"epi-ude/tutorial-06-qsir-italy.ipynb"
+			],
+			"packages": [
+				"Lux.jl",
+				"SciMLSensitivity.jl",
+				"AdvancedHMC.jl",
+				"DataDrivenDiffEq.jl"
 			]
 		},
 		{

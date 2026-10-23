@@ -1,3 +1,0 @@
-# seird
-
-Not written yet.

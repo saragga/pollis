@@ -15,6 +15,7 @@ import { IQuickInputService } from '../../../../platform/quickinput/common/quick
 import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
 import { CHOOSE_TOOLBOX_PANELS_COMMAND_ID, IToolboxInfo, IToolboxPanelsService, IToolboxPlacement, TOOLBOX_END_GROUP, TOOLBOX_MENU, TOOLBOX_SUBMENU_PREFIX } from '../common/toolboxPanels.js';
+import { voiceButtonsCss, voiceButtonsHtml, voiceButtonsScript } from '../../model/browser/webviews/webviewScaffold.js';
 
 // The page of an installed toolbox. Left, the toolbox's menu and its panels, each with a box to
 // tick for the ones the user wants; right, Explore, Model, Simulate, Optimise and Extend as a folding tree,
@@ -223,6 +224,7 @@ function pageHtml(): string {
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';">
 	<style>
+		${voiceButtonsCss}
 		* { box-sizing: border-box; }
 		body { font-family: var(--vscode-font-family); font-size: 13px; margin: 0; color: var(--vscode-foreground); background-color: var(--vscode-editor-background); }
 		.container { max-width: 1000px; margin: 0 auto; padding: 24px; }
@@ -271,12 +273,16 @@ function pageHtml(): string {
 </head>
 <body>
 <div class="container">
-	<h1 id="title"></h1>
+	<div class="title-row">
+		<h1 id="title"></h1>
+		${voiceButtonsHtml}
+	</div>
 	<p class="subtitle">${text.intro}</p>
 	<div id="toolboxes"></div>
 </div>
 <script>
 	const vscode = acquireVsCodeApi();
+	${voiceButtonsScript}
 	const TEXT = ${JSON.stringify(text)};
 	const TOOLBOX_MENU = ${JSON.stringify(TOOLBOX_MENU)};
 	const END_GROUP = ${JSON.stringify(TOOLBOX_END_GROUP)};

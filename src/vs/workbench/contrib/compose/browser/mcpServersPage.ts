@@ -22,6 +22,7 @@ import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWork
 import { commandLine, IMcpServer, MCP_SERVERS, MCP_SERVERS_COMMAND_ID, shellWord, UV_INSTALL_URL } from '../common/mcpServers.js';
 import { CHOOSE_AGENT_COMMAND_ID, CODING_AGENTS, commandWords, findProgram, terminalEnvironment } from './pollisAgents.js';
 import { OPEN_LINK_COMMAND_ID } from '../../monitor/browser/openLink.js';
+import { voiceButtonsCss, voiceButtonsHtml, voiceButtonsScript } from '../../model/browser/webviews/webviewScaffold.js';
 
 // Compose > MCP Servers: a short, curated library of MCP servers (common/mcpServers.ts), which the coding agent
 // of Compose > Coding Agents can use to look things up while it works: search a source, read its notes, fetch
@@ -273,6 +274,7 @@ function pageHtml(): string {
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';">
 	<style>
+		${voiceButtonsCss}
 		* { box-sizing: border-box; }
 		body { font-family: var(--vscode-font-family); font-size: 13px; margin: 0; color: var(--vscode-foreground); background-color: var(--vscode-editor-background); }
 		.container { max-width: 1100px; margin: 0 auto; padding: 24px; }
@@ -304,13 +306,17 @@ function pageHtml(): string {
 </head>
 <body>
 <div class="container">
-	<h1>${text.title}</h1>
+	<div class="title-row">
+		<h1>${text.title}</h1>
+		${voiceButtonsHtml}
+	</div>
 	<p class="subtitle">${text.intro}</p>
 	<p class="hint">${text.rule} ${text.agentsHint} <button class="link" id="codingAgent">${text.agentsLink}</button></p>
 	<div id="servers"></div>
 </div>
 <script>
 	const vscode = acquireVsCodeApi();
+	${voiceButtonsScript}
 	const TEXT = ${JSON.stringify(text)};
 	const UV_INSTALL_URL = ${JSON.stringify(UV_INSTALL_URL)};
 	const servers = document.getElementById('servers');

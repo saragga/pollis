@@ -96,13 +96,9 @@ export interface IPanelSettings {
 	/** Callaway and Sant'Anna's control units (never, notyet, last or auto) and estimator (dr, ipw or reg). */
 	readonly control?: string;
 	readonly method?: string;
+	/** Callaway and Sant'Anna's 95% intervals: normal, as R's did, or t, Student's t with the clusters less one degrees of freedom (the package's default when none is given). */
+	readonly distribution?: string;
 	readonly steppedWedge?: ISteppedWedgeSettings;
-}
-
-/** The results/ of a panel study as PollisEventStudies.jl wrote them: each file's rows, by its name, and when it was written. */
-export interface IPanelResults {
-	readonly written: number;
-	readonly tables: ReadonlyMap<string, readonly Readonly<Record<string, string>>[]>;
 }
 
 /** An event study as ~/.pollis/event-studies/<folder>/study.toml keeps it, which the user may also edit by hand. */
@@ -193,14 +189,10 @@ export interface IEventStudiesService {
 	 * are its first events, and those it fires from now on the next. A panel study's table, `data`, is copied into it.
 	 */
 	createStudy(study: Omit<IEventStudy, 'folder' | 'created' | 'backfilled' | 'backfillCapped'>, data?: URI): Promise<IEventStudy>;
-	/** The minute bars of an event's prices file, the stock's and the benchmark's, by symbol. */
-	getPrices(folder: string, accession: string): Promise<ReadonlyMap<string, readonly IMinuteBar[]>>;
 	/** The articles of an event's news file, from a day before EDGAR accepted it to a day after, oldest first. */
 	getNews(folder: string, accession: string): Promise<readonly ICoverageItem[]>;
 	/** A study's study.ipynb, written when it is not there; the user's own changes to it are kept. */
 	getNotebook(folder: string): Promise<URI>;
-	/** A panel study's results/, which its notebook writes; undefined before it has run. */
-	getPanelResults(folder: string): Promise<IPanelResults | undefined>;
 }
 
 export const IEventStudiesService = createDecorator<IEventStudiesService>('pollisEventStudiesService');
@@ -240,8 +232,6 @@ const EVENTS_HEADER = ['accession', 'cik', 'name', 'ticker', 'form', 'items', 'f
 const INSTRUMENTS_HEADER = ['accession', 'event_time', 'instrument', 'symbol', 'unit', 'scale', 'bar_minutes'];
 const PRICES_HEADER = ['time', 'session', 'symbol', 'open', 'high', 'low', 'close', 'volume'];
 const NEWS_HEADER = ['time', 'outlet', 'title', 'url'];
-// The files of a panel study's results/ that the page reads
-const PANEL_RESULTS = ['panel-effects.csv', 'panel-pretrends.csv', 'cs-effects.csv', 'cs-overall.csv', 'cs-pretrends.csv', 'sw-effects.csv', 'sw-estimate.csv'];
 
 export class EventStudiesService extends Disposable implements IEventStudiesService {
 
@@ -325,8 +315,6 @@ export class EventStudiesService extends Disposable implements IEventStudiesServ
 		const created: IEventStudy = { ...study, folder, created: Date.now(), backfilled: study.source === 'panel' };
 		if (data && study.panel) {
 			await this.fileService.copy(data, joinPath(this.studiesFolder, folder, study.panel.data));
-			// Made now, so that it is watched before the notebook writes into it
-			await this.fileService.createFolder(joinPath(this.studiesFolder, folder, 'results'));
 		}
 		await this.fileService.writeFile(joinPath(this.studiesFolder, folder, 'study.toml'), VSBuffer.fromString(writeStudy(created)));
 		if (study.source !== 'panel') {
@@ -371,32 +359,6 @@ export class EventStudiesService extends Disposable implements IEventStudiesServ
 			await this.fileService.writeFile(notebook, VSBuffer.fromString(source === 'fomc' ? fomcStudyNotebook(path) : source === 'panel' ? panelStudyNotebook(path) : eventStudyNotebook(path)));
 		}
 		return notebook;
-	}
-
-	async getPanelResults(folder: string): Promise<IPanelResults | undefined> {
-		const tables = new Map<string, Record<string, string>[]>();
-		let written = 0;
-		for (const name of PANEL_RESULTS) {
-			const file = joinPath(this.studiesFolder, folder, 'results', name);
-			try {
-				const content = await this.fileService.readFile(file);
-				const [header, ...rows] = parseCsv(content.value.toString());
-				tables.set(name, rows.filter(row => row.some(field => field !== '')).map(row => Object.fromEntries(header.map((column, index) => [column, row[index] ?? '']))));
-				written = Math.max(written, content.mtime);
-			} catch {
-				// Not written by the study's estimators
-			}
-		}
-		return tables.size ? { written, tables } : undefined;
-	}
-
-	async getPrices(folder: string, accession: string): Promise<ReadonlyMap<string, readonly IMinuteBar[]>> {
-		const prices = await this.readPrices(folder, accession);
-		const bySymbol = new Map<string, IMinuteBar[]>();
-		for (const [symbol, bars] of prices) {
-			bySymbol.set(symbol, [...bars.values()].sort((a, b) => a.time - b.time));
-		}
-		return bySymbol;
 	}
 
 	async getNews(folder: string, accession: string): Promise<readonly ICoverageItem[]> {
@@ -801,12 +763,9 @@ export class EventStudiesService extends Disposable implements IEventStudiesServ
 		}
 		for (const study of studies) {
 			if (!this.watchers.has(study.folder)) {
-				// A panel study's results/ too, which its notebook writes
 				const store = new DisposableStore();
-				for (const folder of study.source === 'panel' ? [study.folder, `${study.folder}/results`] : [study.folder]) {
-					const watcher = store.add(this.fileService.createWatcher(joinPath(this.studiesFolder, folder), { recursive: false, excludes: [] }));
-					store.add(watcher.onDidChange(() => this.reload.schedule()));
-				}
+				const watcher = store.add(this.fileService.createWatcher(joinPath(this.studiesFolder, study.folder), { recursive: false, excludes: [] }));
+				store.add(watcher.onDidChange(() => this.reload.schedule()));
 				this.watchers.set(study.folder, store);
 			}
 		}
@@ -988,6 +947,7 @@ function readPanel(toml: TomlValue): IPanelSettings {
 		lags: whole(toml.lags),
 		control: optional(callaway.control ?? toml.control),
 		method: optional(callaway.method ?? toml.method),
+		distribution: optional(callaway.distribution),
 		steppedWedge,
 	};
 }
@@ -999,7 +959,7 @@ function writeStudy(study: IEventStudy): string {
 		const panel = study.panel;
 		const lines = [
 			`title = ${text(study.title)}`,
-			`# A panel event study, run by PollisEventStudies.jl from study.ipynb, which writes results/`,
+			`# A panel event study, computed by PollisEventStudies.jl for the Event Studies page; study.ipynb does the same and writes results/`,
 			`source = "panel"`,
 			`# The table of units over time, in this folder`,
 			`data = ${text(panel.data)}`,
@@ -1016,9 +976,10 @@ function writeStudy(study: IEventStudy): string {
 			`estimators = [${panel.estimators.map(text).join(', ')}]`,
 			`created = ${text(new Date(study.created).toISOString())}`,
 		];
-		if (panel.estimators.includes('callaway_santanna') && (panel.control || panel.method)) {
-			lines.push('', '# control: never, notyet, last or auto; method: dr (doubly robust), ipw or reg', '[callaway_santanna]',
-				...(panel.control ? [`control = ${text(panel.control)}`] : []), ...(panel.method ? [`method = ${text(panel.method)}`] : []));
+		if (panel.estimators.includes('callaway_santanna') && (panel.control || panel.method || panel.distribution)) {
+			lines.push('', '# control: never, notyet, last or auto; method: dr (doubly robust), ipw or reg; distribution of the 95% intervals: normal or t', '[callaway_santanna]',
+				...(panel.control ? [`control = ${text(panel.control)}`] : []), ...(panel.method ? [`method = ${text(panel.method)}`] : []),
+				...(panel.distribution ? [`distribution = ${text(panel.distribution)}`] : []));
 		}
 		const wedge = panel.steppedWedge;
 		if (panel.estimators.includes('stepped_wedge') && wedge) {

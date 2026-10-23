@@ -12,6 +12,7 @@ import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
 import { AGENT_BADGE_CSS, AGENT_ICON } from './agentBadge.js';
 import { EXPORT_NOTEBOOK_LATEX_COMMAND_ID, MAKE_NOTEBOOK_SLIDES_COMMAND_ID, POLISH_REPORT_COMMAND_ID } from './reports.js';
+import { voiceButtonsCss, voiceButtonsHtml, voiceButtonsScript } from '../../model/browser/webviews/webviewScaffold.js';
 
 // Compose > Workflows > Browse Operational Workflows: the workflows that do a job on the user's own work
 // (a notebook made into a report, say), where a replication (Compose > Replication) reproduces an analysis. Each one is
@@ -120,6 +121,7 @@ function pageHtml(): string {
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';">
 	<style>
+		${voiceButtonsCss}
 		* { box-sizing: border-box; }
 		body { font-family: var(--vscode-font-family); font-size: 13px; margin: 0; color: var(--vscode-foreground); background-color: var(--vscode-editor-background); }
 		.container { max-width: 1400px; margin: 0 auto; padding: 24px; }
@@ -141,7 +143,10 @@ ${AGENT_BADGE_CSS}
 </head>
 <body>
 <div class="container">
-	<h1>${text.title}</h1>
+	<div class="title-row">
+		<h1>${text.title}</h1>
+		${voiceButtonsHtml}
+	</div>
 	<p class="subtitle">${text.intro}</p>
 	<table>
 		<thead><tr><th>${text.workflow}</th><th>${text.input}</th><th>${text.output}</th><th></th></tr></thead>
@@ -150,6 +155,7 @@ ${AGENT_BADGE_CSS}
 </div>
 <script>
 	const vscode = acquireVsCodeApi();
+	${voiceButtonsScript}
 	const TEXT = ${JSON.stringify(text)};
 	const body = document.getElementById('workflows');
 	const AGENT_ICON = ${JSON.stringify(AGENT_ICON)};

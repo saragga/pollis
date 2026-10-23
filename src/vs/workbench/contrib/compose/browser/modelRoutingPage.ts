@@ -16,6 +16,7 @@ import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
 import { AGENT_TASK_TIERS_SETTING, AGENT_TASKS, AGENT_TIERS, AGENT_TIERS_SETTING, AgentTask, AgentTierChoice, MODEL_ROUTING_COMMAND_ID, taskTier, tierCommand } from './modelRouting.js';
 import { AGENT_COMMAND_SETTING, CHOOSE_AGENT_COMMAND_ID, CODING_AGENTS, commandWords, findProgram, PROMPT_PLACEHOLDER, terminalEnvironment } from './pollisAgents.js';
+import { voiceButtonsCss, voiceButtonsHtml, voiceButtonsScript } from '../../model/browser/webviews/webviewScaffold.js';
 
 // Compose > Orchestration > Model Routing: a page with the command line of each tier, Light, Standard and
 // Strong, each marked installed on this computer or not (its tasks then run on the main agent), and a
@@ -157,6 +158,7 @@ function pageHtml(): string {
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';">
 	<style>
+		${voiceButtonsCss}
 		* { box-sizing: border-box; }
 		body { font-family: var(--vscode-font-family); font-size: 13px; margin: 0; color: var(--vscode-foreground); background-color: var(--vscode-editor-background); }
 		.container { max-width: 1100px; margin: 0 auto; padding: 24px; }
@@ -193,7 +195,10 @@ function pageHtml(): string {
 </head>
 <body>
 <div class="container">
-	<h1>${text.title}</h1>
+	<div class="title-row">
+		<h1>${text.title}</h1>
+		${voiceButtonsHtml}
+	</div>
 	<p class="subtitle">${text.intro}</p>
 	<p id="main"></p>
 	<h2>${text.tiersTitle}</h2>
@@ -211,6 +216,7 @@ function pageHtml(): string {
 </div>
 <script>
 	const vscode = acquireVsCodeApi();
+	${voiceButtonsScript}
 	const TEXT = ${JSON.stringify(text)};
 	const tiersBody = document.getElementById('tiers');
 	const tasksBody = document.getElementById('tasks');

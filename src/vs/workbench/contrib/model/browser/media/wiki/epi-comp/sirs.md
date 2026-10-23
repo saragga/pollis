@@ -1,3 +1,0 @@
-# sirs
-
-Not written yet.

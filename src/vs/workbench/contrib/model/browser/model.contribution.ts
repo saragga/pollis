@@ -5,15 +5,9 @@
 
 import { localize } from '../../../../../vs/nls.js';
 import { MenuRegistry, MenuId } from '../../../../platform/actions/common/actions.js';
-import { CommandsRegistry, ICommandService } from '../../../../platform/commands/common/commands.js';
-import { IClipboardService } from '../../../../platform/clipboard/common/clipboardService.js';
-import { INotificationService } from '../../../../platform/notification/common/notification.js';
+import { CommandsRegistry } from '../../../../platform/commands/common/commands.js';
 import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
-import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
 import { TOOLBOX_SUBMENU_PREFIX } from '../../compose/common/toolboxPanels.js';
-import { IOpenerService } from '../../../../platform/opener/common/opener.js';
-import { IEditorService } from '../../../services/editor/common/editorService.js';
-import { IQuickInputService } from '../../../../platform/quickinput/common/quickInput.js';
 
 import { NLLS_PANEL } from './commands/nlls.command.js';
 import { LM_PANEL } from './commands/lm.command.js';
@@ -102,10 +96,7 @@ import { TRAD_PANEL } from './commands/trad.command.js';
 import { NET_PANEL } from './commands/net.command.js';
 import { NETDYN_PANEL } from './commands/netdyn.command.js';
 import { NETFLOW_PANEL } from './commands/netflow.command.js';
-import { EPICOMP_PANEL } from './commands/epiComp.command.js';
-import { openEpiUdeWebview } from './commands/epi-ude.command.js';
 import { CRN_PANEL } from './commands/crn.command.js';
-import { CEST_PANEL } from './commands/cest.command.js';
 import { CCA_PANEL } from './commands/cca.command.js';
 import { COVSHRINKAGE_PANEL } from './commands/covShrinkage.command.js';
 import { LLMTA_PANEL } from './commands/llmTa.command.js';
@@ -217,18 +208,7 @@ CommandsRegistry.registerCommand('chiara.simulate.abm-ta', accessor => openScaff
 CommandsRegistry.registerCommand('chiara.simulate.net', accessor => openScaffoldWebview(accessor, NET_PANEL));
 CommandsRegistry.registerCommand('chiara.simulate.netdyn', accessor => openScaffoldWebview(accessor, NETDYN_PANEL));
 CommandsRegistry.registerCommand('chiara.simulate.netflow', accessor => openScaffoldWebview(accessor, NETFLOW_PANEL));
-CommandsRegistry.registerCommand('chiara.simulate.epi-comp', accessor => openScaffoldWebview(accessor, EPICOMP_PANEL));
-CommandsRegistry.registerCommand('chiara.simulate.epi-ude', (accessor: ServicesAccessor) => openEpiUdeWebview(
-	accessor.get(IWebviewWorkbenchService),
-	accessor.get(IOpenerService),
-	accessor.get(IEditorService),
-	accessor.get(IQuickInputService),
-	accessor.get(ICommandService),
-	accessor.get(IClipboardService),
-	accessor.get(INotificationService),
-));
 CommandsRegistry.registerCommand('chiara.simulate.crn', accessor => openScaffoldWebview(accessor, CRN_PANEL));
-CommandsRegistry.registerCommand('chiara.statistics.cest', accessor => openScaffoldWebview(accessor, CEST_PANEL));
 CommandsRegistry.registerCommand('chiara.statistics.lm.heteroar1', accessor => openScaffoldWebview(accessor, LMHAR_PANEL));
 CommandsRegistry.registerCommand('chiara.statistics.lm.nnls', accessor => openScaffoldWebview(accessor, NNLS_PANEL));
 CommandsRegistry.registerCommand('chiara.statistics.lm.tsls', accessor => openScaffoldWebview(accessor, TSLS_PANEL));

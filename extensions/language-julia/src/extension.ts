@@ -15,8 +15,8 @@ import { LanguageClientFeature } from './languageClient'
 import { JuliaNotebookFeature } from './notebook/notebookFeature'
 import * as openpackagedirectory from './openpackagedirectory'
 import * as packagepath from './packagepath'
-import * as pollisAlertStats from './pollisAlertStats'
 import * as pollisDuckDB from './pollisDuckDB'
+import * as pollisHiddenJulia from './pollisHiddenJulia'
 import * as smallcommands from './smallcommands'
 import * as telemetry from './telemetry'
 import { setContext } from './utils'
@@ -103,8 +103,8 @@ export async function activate(context: vscode.ExtensionContext) {
         packagepath.activate(context, executableFeature)
         console.debug(`[julia activation] packagepath.activate: ${(performance.now() - t).toFixed(1)}ms`)
 
-        // POLLIS: OnlineStats.jl for the alerts on statistical conditions.
-        pollisAlertStats.activate(context, executableFeature)
+        // POLLIS: OnlineStats.jl for the alerts on statistical conditions, PollisEventStudies.jl for the event studies.
+        pollisHiddenJulia.activate(context, executableFeature)
 
         t = performance.now()
         openpackagedirectory.activate(context)

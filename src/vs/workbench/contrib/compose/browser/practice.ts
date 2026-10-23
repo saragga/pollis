@@ -35,6 +35,7 @@ import { ITerminalService } from '../../terminal/browser/terminal.js';
 import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
 import { LIBRARY_PAGE_HELPERS, LIBRARY_PAGE_STYLE } from './libraryPage.js';
+import { voiceButtonsCss, voiceButtonsHtml, voiceButtonsScript } from '../../model/browser/webviews/webviewScaffold.js';
 
 export const PRACTISE_TOPIC_COMMAND_ID = 'pollis.practice.topic';
 export const WRITE_EXERCISE_COMMAND_ID = 'pollis.practice.write';
@@ -599,6 +600,7 @@ function browseHtml(): string {
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';">
 	<style>
+		${voiceButtonsCss}
 ${LIBRARY_PAGE_STYLE}
 	.topic { width: 34%; }
 	.exercise { display: block; text-align: left; margin: 0 0 4px 0; }
@@ -608,7 +610,10 @@ ${LIBRARY_PAGE_STYLE}
 </head>
 <body>
 <div class="container">
-	<h1>${localize('practice.browse.title', "Practise a Topic")}</h1>
+	<div class="title-row">
+		<h1>${localize('practice.browse.title', "Practise a Topic")}</h1>
+		${voiceButtonsHtml}
+	</div>
 	<p class="subtitle">${localize('practice.browse.intro', "Multiple-choice exercises whose data and answers Julia computes, with new data every time. Pick a topic to practise its exercises in order, or an exercise to start from it; you can skip an exercise and come back to it. The exercises you write with Write an Exercise are kept in ~/.pollis/practice and listed here with Pollis' own.")}</p>
 	<table>
 		<thead><tr><th>${text.topic}</th><th>${text.exercises}</th><th>${text.source}</th></tr></thead>
@@ -618,6 +623,7 @@ ${LIBRARY_PAGE_STYLE}
 </div>
 <script>
 	const vscode = acquireVsCodeApi();
+	${voiceButtonsScript}
 	const TEXT = ${JSON.stringify(text)};
 	const body = document.getElementById('topics');
 
@@ -694,6 +700,7 @@ function pageHtml(): string {
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';">
 	<style>
+		${voiceButtonsCss}
 		* { box-sizing: border-box; }
 		body { font-family: var(--vscode-font-family); font-size: 13px; margin: 0; color: var(--vscode-foreground); background-color: var(--vscode-editor-background); }
 		.container { padding: 20px; max-width: 780px; }
@@ -726,12 +733,16 @@ function pageHtml(): string {
 <body>
 <div class="container">
 	<p class="subtitle" id="subtitle"></p>
-	<h1 id="title"></h1>
+	<div class="title-row">
+		<h1 id="title"></h1>
+		${voiceButtonsHtml}
+	</div>
 	<div id="body"></div>
 	<p class="small" id="busy" hidden>${text.making}</p>
 </div>
 <script>
 	const vscode = acquireVsCodeApi();
+	${voiceButtonsScript}
 	const TEXT = ${JSON.stringify(text)};
 	const LETTERS = 'ABCDEFGHIJ';
 	let selected = undefined;

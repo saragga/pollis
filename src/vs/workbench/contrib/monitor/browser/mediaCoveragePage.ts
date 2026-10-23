@@ -16,6 +16,7 @@ import { describeRelease, FOMC_FEED, fomcRelease } from './fomcReleases.js';
 import { COVERAGE_SOURCES, CoverageMarks, CoverageSource, IMediaCoverageRequest, IMediaCoverageService, KEY_PAGES, KEYED_SOURCES, KeyedSource } from './mediaCoverageService.js';
 import { OPEN_LINK_COMMAND_ID } from './openLink.js';
 import { IRssFeedsService } from './rssFeedsService.js';
+import { voiceButtonsCss, voiceButtonsHtml, voiceButtonsScript } from '../../model/browser/webviews/webviewScaffold.js';
 
 // Explore > Media Coverage: words over any period: how many news articles there were, by hour, day or week, with the
 // FOMC's releases, a ticker's SEC filings or a time of the user's marked; and the articles, newest first, which open in
@@ -265,6 +266,7 @@ function pageHtml(): string {
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';">
 	<style>
+		${voiceButtonsCss}
 		* { box-sizing: border-box; }
 		body { font-family: var(--vscode-font-family); font-size: 13px; margin: 0; color: var(--vscode-foreground); background-color: var(--vscode-editor-background); }
 		.container { max-width: 1100px; margin: 0 auto; padding: 24px; }
@@ -317,7 +319,10 @@ function pageHtml(): string {
 </head>
 <body>
 <div class="container">
-	<h1>${text.title}</h1>
+	<div class="title-row">
+		<h1>${text.title}</h1>
+		${voiceButtonsHtml}
+	</div>
 	<p class="subtitle">${text.intro}</p>
 
 	<div class="pane">
@@ -380,6 +385,7 @@ function pageHtml(): string {
 </div>
 <script>
 	const vscode = acquireVsCodeApi();
+	${voiceButtonsScript}
 	const TEXT = ${JSON.stringify(text)};
 	const SVG = 'http://www.w3.org/2000/svg';
 	const wordsElement = document.getElementById('words');

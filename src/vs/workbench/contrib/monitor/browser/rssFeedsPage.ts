@@ -24,6 +24,7 @@ import { findCatalogueFeed, JULIA_TOPIC, PUBMED_SEARCH, RSS_CATALOGUE, youtubeFe
 import { DISPLAY_DAYS, EMAIL_ALERT_PREFIX, IRssFeed, IRssFeedsService } from './rssFeedsService.js';
 import { describeJournal, IJournalScoresService } from './journalScores.js';
 import { OPEN_LINK_COMMAND_ID } from './openLink.js';
+import { voiceButtonsCss, voiceButtonsHtml, voiceButtonsScript } from '../../model/browser/webviews/webviewScaffold.js';
 
 // Explore > RSS > RSS Feeds: the feeds on the left by topic, with ticks for Subscribed, Here and Welcome Page and
 // their unread and total counts; the items of the topic or feed selected (or of all) on the right, newest first, those
@@ -457,6 +458,7 @@ function pageHtml(): string {
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src https: data:; style-src 'unsafe-inline'; script-src 'unsafe-inline';">
 	<style>
+		${voiceButtonsCss}
 		* { box-sizing: border-box; }
 		body { font-family: var(--vscode-font-family); font-size: 13px; margin: 0; color: var(--vscode-foreground); background-color: var(--vscode-editor-background); }
 		.container { max-width: 1100px; margin: 0 auto; padding: 24px; }
@@ -557,6 +559,7 @@ function pageHtml(): string {
 			<button class="action" id="refresh">${text.refresh}</button>
 			<button class="action" id="exportOpml" title="${text.exportOpmlTooltip}">${text.exportOpml}</button>
 		</span>
+		${voiceButtonsHtml}
 	</div>
 	<p class="subtitle" id="subtitle">${text.intro}</p>
 	<div class="panes">
@@ -568,6 +571,7 @@ function pageHtml(): string {
 </div>
 <script>
 	const vscode = acquireVsCodeApi();
+	${voiceButtonsScript}
 	const TEXT = ${JSON.stringify(text)};
 	const feedsElement = document.getElementById('feeds');
 	const itemsElement = document.getElementById('items');

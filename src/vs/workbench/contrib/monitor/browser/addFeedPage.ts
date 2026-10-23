@@ -18,6 +18,7 @@ import { ARXIV_TOPIC, arxivSearchName, arxivSearchUrl, findCatalogueFeed, MEDICI
 import { ADD_FEED_COMMAND_ID, getTopics, RSS_FEEDS_COMMAND_ID } from './rssFeedsPage.js';
 import { IRssFeedEntry, IRssFeedsService, IRssItem, OTHER_TOPIC } from './rssFeedsService.js';
 import { OPEN_LINK_COMMAND_ID } from './openLink.js';
+import { voiceButtonsCss, voiceButtonsHtml, voiceButtonsScript } from '../../model/browser/webviews/webviewScaffold.js';
 
 // Add Feed: a feed from a PubMed or arXiv search, its newest results previewed before it is added; a feed at an
 // address (a journal's or website's page, or a YouTube channel); the alerts of the alerts mailbox; and the feeds the
@@ -308,6 +309,7 @@ function pageHtml(): string {
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';">
 	<style>
+		${voiceButtonsCss}
 		* { box-sizing: border-box; }
 		body { font-family: var(--vscode-font-family); font-size: 13px; margin: 0; color: var(--vscode-foreground); background-color: var(--vscode-editor-background); }
 		.container { max-width: 900px; margin: 0 auto; padding: 24px; }
@@ -380,6 +382,7 @@ function pageHtml(): string {
 	<div class="header">
 		<h1>${text.title}</h1>
 		<button class="link" id="showFeeds">${text.showFeeds}</button>
+		${voiceButtonsHtml}
 	</div>
 	<p class="subtitle">${text.intro}</p>
 
@@ -454,6 +457,7 @@ function pageHtml(): string {
 </div>
 <script>
 	const vscode = acquireVsCodeApi();
+	${voiceButtonsScript}
 	const TEXT = ${JSON.stringify(text)};
 	const EXAMPLES = ${JSON.stringify(examples)};
 	const SYNTAX_LINKS = ${JSON.stringify(syntaxLinks)};

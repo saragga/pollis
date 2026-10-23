@@ -26,6 +26,7 @@ import { LIBRARY_PAGE_HELPERS, LIBRARY_PAGE_STYLE } from './libraryPage.js';
 import { ContentKind, IDownloadedEntry, IPollisContentService } from './pollisContent.js';
 import { BROWSE_METHODS_COMMAND_ID, deleteUserMethods, openUserMethod, readMethodSummaries, userMethodsFolder } from './newMethods.js';
 import { OPEN_LINK_COMMAND_ID } from '../../monitor/browser/openLink.js';
+import { voiceButtonsCss, voiceButtonsHtml, voiceButtonsScript } from '../../model/browser/webviews/webviewScaffold.js';
 
 export const SEARCH_WORKFLOW_LIBRARY_COMMAND_ID = 'chiara.statistics.wfl_sl';
 export const PUBLISHED_BENCHMARKS_COMMAND_ID = 'pollis.correctness.publishedBenchmarks';
@@ -493,13 +494,17 @@ function pageHtml(library: INotebookLibrary): string {
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';">
 	<style>
+		${voiceButtonsCss}
 ${LIBRARY_PAGE_STYLE}
 	h2 { font-size: 16px; font-weight: 600; margin: 20px 0 6px 0; }
 	</style>
 </head>
 <body>
 <div class="container">
-	<h1>${library.title}</h1>
+	<div class="title-row">
+		<h1>${library.title}</h1>
+		${voiceButtonsHtml}
+	</div>
 	<p class="subtitle">${library.intro}</p>
 ${userMethods}
 	<table>
@@ -511,6 +516,7 @@ ${userMethods}
 </div>
 <script>
 	const vscode = acquireVsCodeApi();
+	${voiceButtonsScript}
 	const TEXT = ${JSON.stringify(text)};
 	/** A source with more datasets than this shows their count, and their names on request. */
 	const LISTED = 4;
