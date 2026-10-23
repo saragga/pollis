@@ -92,9 +92,14 @@ function placeTree(contextKeyService: IContextKeyService, toolboxes: readonly IT
 }
 
 function pageTitle(toolboxes: readonly IToolboxInfo[]): string {
-	return toolboxes.length === 1
-		? localize('toolboxPanels.title', "{0} Toolbox Panels", toolboxes[0].title)
-		: localize('toolboxPanels.titleGeneric', "Toolbox Panels");
+	if (toolboxes.length !== 1) {
+		return localize('toolboxPanels.titleGeneric', "Toolbox Panels");
+	}
+	// A toolbox titled "Epidemiology Toolbox" is not "Epidemiology Toolbox Toolbox Panels"
+	const title = toolboxes[0].title;
+	return /\bToolbox$/.test(title)
+		? localize('toolboxPanels.titleOwn', "{0} Panels", title)
+		: localize('toolboxPanels.title', "{0} Toolbox Panels", title);
 }
 
 /** Opens the page of an extension's toolboxes, or shows it if it is already open. */
