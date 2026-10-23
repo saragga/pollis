@@ -1323,7 +1323,8 @@
 	column-gap: 12px;
 	flex-shrink: 0;
 	min-height: 28px;
-	padding: 4px 12px 4px 16px;
+	/* 6px on the right: the down arrow, centred in its 28px button, lines up with the items' close buttons */
+	padding: 4px 6px 4px 16px;
 	line-height: 1.45;
 	color: var(--vscode-descriptionForeground);
 	background: var(--vscode-welcomePage-tileBackground);

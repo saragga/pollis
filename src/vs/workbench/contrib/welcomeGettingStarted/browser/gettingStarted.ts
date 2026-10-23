@@ -1152,8 +1152,10 @@ export class GettingStartedPage extends EditorPane {
 				}
 				const box = monitorCard.getBoundingClientRect();
 				const discover = discoverCard?.getBoundingClientRect();
-				const height = !discover ? 0 : discover.left >= box.right ? discover.bottom - box.top : discover.height;
-				const cardHeight = Math.max(height, 200);
+				const beside = !!discover && discover.left >= box.right;
+				const height = !discover ? 0 : beside ? discover.bottom - box.top : discover.height;
+				// Beside the card, the box ends with it unless that leaves less than a caption and an item
+				const cardHeight = Math.max(height, beside ? 100 : 200);
 				monitorCard.style.height = `${cardHeight}px`;
 				feedItems.style.height = `${cardHeight - monitorCaption.offsetHeight}px`;
 				feedsScrollbar.scanDomNode();
@@ -1213,7 +1215,7 @@ export class GettingStartedPage extends EditorPane {
 				captionText.textContent = unreadItems === 0
 					? localize('pollis.noUnreadItems', "No unread items")
 					: unreadItems > newest.length
-						? localize('pollis.unreadItemsNewest', "Showing newest {0}/{1} unread items", newest.length, unreadItems.toLocaleString())
+						? localize('pollis.unreadItemsNewest', "Newest per feed: {0} of {1} unread", newest.length, unreadItems.toLocaleString())
 						: unreadItems === 1
 							? localize('pollis.unreadItem', "1 unread item")
 							: localize('pollis.unreadItems', "{0} unread items", unreadItems.toLocaleString());
