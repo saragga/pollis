@@ -14,10 +14,13 @@ import { localize } from '../../../../nls.js';
 /** The Federal Reserve's Monetary Policy Press Releases feed. */
 export const FOMC_FEED = 'https://www.federalreserve.gov/feeds/press_monetary.xml';
 
-/** What an FOMC release is: its statement, the Summary of Economic Projections, its minutes, or another announcement. */
-export type FomcRelease = 'statement' | 'projections' | 'minutes' | 'other';
+/**
+ * What an FOMC release is: its statement, the Summary of Economic Projections, its minutes, the minutes of the Board's
+ * discount rate meetings, or another announcement.
+ */
+export type FomcRelease = 'statement' | 'projections' | 'minutes' | 'discountRate' | 'other';
 
-export const FOMC_RELEASES: readonly FomcRelease[] = ['statement', 'projections', 'minutes', 'other'];
+export const FOMC_RELEASES: readonly FomcRelease[] = ['statement', 'projections', 'minutes', 'discountRate', 'other'];
 
 /** The release a feed item's title is. */
 export function fomcRelease(title: string): FomcRelease {
@@ -30,6 +33,9 @@ export function fomcRelease(title: string): FomcRelease {
 	if (/^Minutes of the Federal Open Market Committee/i.test(title)) {
 		return 'minutes';
 	}
+	if (/discount rate meeting/i.test(title)) {
+		return 'discountRate';
+	}
 	return 'other';
 }
 
@@ -38,8 +44,125 @@ export function describeRelease(release: FomcRelease): string {
 		case 'statement': return localize('fomc.statement', "Statement");
 		case 'projections': return localize('fomc.projections', "Summary of Economic Projections");
 		case 'minutes': return localize('fomc.minutes', "Minutes");
+		case 'discountRate': return localize('fomc.discountRate', "Discount Rate Minutes");
 		case 'other': return localize('fomc.other', "Other");
 	}
+}
+
+/** The Federal Reserve's calendar: its meetings, press conferences, testimony and speeches, at their times in New York. */
+export const FED_CALENDAR = 'https://www.federalreserve.gov/json/calendar.json';
+
+/**
+ * What an event of a study of the FOMC is: its statement with the Summary of Economic Projections or without it, at a
+ * scheduled meeting; an announcement after an unscheduled one; or the Chair's press conference after a meeting, testimony
+ * before Congress, or a speech or other public remarks.
+ */
+export type FomcEvent = 'withProjections' | 'withoutProjections' | 'unscheduled' | 'pressConference' | 'testimony' | 'speech';
+
+export const FOMC_EVENTS: readonly FomcEvent[] = ['withProjections', 'withoutProjections', 'unscheduled', 'pressConference', 'testimony', 'speech'];
+
+export function describeFomcEvent(kind: FomcEvent): string {
+	switch (kind) {
+		case 'withProjections': return localize('fomc.withProjections', "FOMC Statement with SEP");
+		case 'withoutProjections': return localize('fomc.withoutProjections', "FOMC Statement without SEP");
+		case 'unscheduled': return localize('fomc.unscheduled', "Unscheduled FOMC Announcement");
+		case 'pressConference': return localize('fomc.pressConference', "Fed Chair FOMC Press Conference");
+		case 'testimony': return localize('fomc.testimony', "Fed Chair Congressional Testimony");
+		case 'speech': return localize('fomc.speech', "Fed Chair Speeches and Public Remarks");
+	}
+}
+
+/**
+ * The events a study made before them takes: its statement (the Summary of Economic Projections or not, or after an
+ * unscheduled meeting) and its projections (with the statement). Its minutes and the feed's other releases are not among them.
+ */
+export function legacyFomcEvents(releases: readonly string[]): FomcEvent[] {
+	return FOMC_EVENTS.filter(kind => releases.includes(kind)
+		|| releases.includes('statement') && (kind === 'withProjections' || kind === 'withoutProjections' || kind === 'unscheduled')
+		|| releases.includes('projections') && kind === 'withProjections');
+}
+
+/** An entry of the Federal Reserve's calendar, as calendar.json gives it. */
+export interface IFedCalendarEntry {
+	readonly title?: string;
+	readonly description?: string;
+	readonly location?: string;
+	/** "10:00 a.m.", in New York. */
+	readonly time?: string;
+	/** "2026-07". */
+	readonly month?: string;
+	/** "14". */
+	readonly days?: string;
+	/** FOMC, Testimony, Speeches, Stat, Beige, ... */
+	readonly type?: string;
+	/** Where it is broadcast: the Federal Reserve's YouTube channel, a committee's page. */
+	readonly live?: string;
+	readonly link?: string;
+}
+
+/** An event of the Federal Reserve's calendar that a study of the FOMC takes, or a scheduled meeting. */
+export interface IFedCalendarEvent {
+	readonly kind: 'meeting' | 'pressConference' | 'testimony' | 'speech';
+	/** In milliseconds since 1970. */
+	readonly time: number;
+	readonly title: string;
+	readonly url: string;
+	/** Where it was broadcast, to watch it. */
+	readonly video?: string;
+}
+
+const FED_CALENDAR_PAGE = 'https://www.federalreserve.gov/newsevents/calendar.htm';
+const FOMC_CALENDAR_PAGE = 'https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm';
+
+/**
+ * The meetings and press conferences of the Federal Reserve's calendar, and the Chair's testimony and speeches: their
+ * titles say who speaks, "Testimony - Chairman Kevin Warsh", "Discussion - Chair Jerome H. Powell", unlike a Vice
+ * Chair's or a Governor's.
+ */
+export function parseFedCalendar(entries: readonly IFedCalendarEntry[], hoursBehind: (time: number) => number): IFedCalendarEvent[] {
+	const decode = (text: string) => text.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/<[^>]*>/g, ' ').replace(/&quot;/g, '"').replace(/&#39;/g, '\'').replace(/&amp;/g, '&').replace(/\s+/g, ' ').trim();
+	const events: IFedCalendarEvent[] = [];
+	for (const entry of entries) {
+		const title = decode(entry.title ?? '');
+		const chair = /-\s*Chair(?:man|woman)?\s/i.test(title);
+		const kind = entry.type === 'FOMC' && /^FOMC Meeting$/i.test(title) ? 'meeting'
+			: entry.type === 'FOMC' && /^FOMC Press Conference$/i.test(title) ? 'pressConference'
+				: entry.type === 'Testimony' && chair ? 'testimony'
+					: entry.type === 'Speeches' && chair ? 'speech'
+						: undefined;
+		const month = /^(?<year>\d{4})-(?<month>\d{2})$/.exec(entry.month ?? '')?.groups;
+		// A meeting's day is its last, when its statement comes out
+		const day = /(?<day>\d{1,2})\s*$/.exec(entry.days ?? '')?.groups?.day;
+		const clock = /^(?<hour>\d{1,2}):(?<minute>\d{2})\s*(?<half>[ap])\.?m\.?$/i.exec((entry.time ?? '').trim())?.groups;
+		if (!kind || !month || !day || !clock) {
+			continue;
+		}
+		const hour = Number(clock.hour) % 12 + (clock.half.toLowerCase() === 'p' ? 12 : 0);
+		const wall = Date.UTC(Number(month.year), Number(month.month) - 1, Number(day), hour, Number(clock.minute));
+		const time = wall + hoursBehind(wall + 5 * 60 * MINUTE) * 60 * MINUTE;
+		const description = decode(entry.description ?? '');
+		events.push({
+			kind,
+			time,
+			title: kind === 'testimony' || kind === 'speech' ? [title, description].filter(text => text).join(': ') : title,
+			// A press conference's link is its broadcast; the FOMC's calendar links its page, with the video and the transcript
+			url: kind === 'pressConference' ? FOMC_CALENDAR_PAGE : entry.link || FED_CALENDAR_PAGE,
+			video: entry.live || (kind === 'pressConference' ? entry.link : undefined) || undefined,
+		});
+	}
+	return events;
+}
+
+/** Whether a statement at `time` is on the day of a scheduled meeting of the calendar's. */
+export function isScheduledMeeting(time: number, calendar: readonly IFedCalendarEvent[]): boolean {
+	const { year, month, day } = newYorkDay(time);
+	return calendar.some(event => {
+		if (event.kind !== 'meeting') {
+			return false;
+		}
+		const meeting = newYorkDay(event.time);
+		return meeting.year === year && meeting.month === month && meeting.day === day;
+	});
 }
 
 /** What a move is measured in: basis points of a rate or a yield, or per cent of a price. */

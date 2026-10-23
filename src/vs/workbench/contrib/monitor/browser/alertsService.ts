@@ -655,7 +655,7 @@ interface ILatestFiling extends IFiling {
 const newYorkOffset = safeIntl.DateTimeFormat('en-US', { timeZone: 'America/New_York', timeZoneName: 'shortOffset' });
 
 /** How many hours New York is behind UTC at `time`. */
-function newYorkHoursBehind(time: number): number {
+export function newYorkHoursBehind(time: number): number {
 	const name = newYorkOffset.value.formatToParts(time).find(part => part.type === 'timeZoneName')?.value;
 	const hours = /^GMT-(?<hours>\d+)$/.exec(name ?? '')?.groups?.hours;
 	return hours ? Number(hours) : 5;

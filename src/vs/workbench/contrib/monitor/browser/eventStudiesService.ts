@@ -10,16 +10,18 @@ import { Disposable, DisposableMap, DisposableStore } from '../../../../base/com
 import { joinPath } from '../../../../base/common/resources.js';
 import { generateUuid } from '../../../../base/common/uuid.js';
 import { URI } from '../../../../base/common/uri.js';
+import { CancellationToken } from '../../../../base/common/cancellation.js';
 import { IFileService } from '../../../../platform/files/common/files.js';
 import { InstantiationType, registerSingleton } from '../../../../platform/instantiation/common/extensions.js';
 import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
+import { asText, IRequestService, isSuccess } from '../../../../platform/request/common/request.js';
 import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
 import { IPathService } from '../../../services/path/common/pathService.js';
 import { parseToml, TomlValue } from '../../model/browser/common/tomlPanelData.js';
-import { describeSubject, IAlertsService, IFiler, IFiredAlert, IMinuteBar } from './alertsService.js';
+import { describeSubject, IAlertsService, IFiler, IFiredAlert, IMinuteBar, newYorkHoursBehind } from './alertsService.js';
 import { parseCsv, writeCsv } from './csv.js';
 import { eventStudyNotebook, fomcStudyNotebook, panelStudyNotebook } from './eventStudyNotebook.js';
-import { FIVE_MINUTE_KEPT_MILLISECONDS, FOMC_FEED, FOMC_RELEASES, FomcRelease, fomcRelease, instrumentScale, instrumentSymbol, instrumentUnit } from './fomcReleases.js';
+import { FED_CALENDAR, FIVE_MINUTE_KEPT_MILLISECONDS, FOMC_FEED, FomcEvent, fomcRelease, IFedCalendarEntry, IFedCalendarEvent, instrumentScale, instrumentSymbol, instrumentUnit, isScheduledMeeting, legacyFomcEvents, parseFedCalendar } from './fomcReleases.js';
 import { ICoverageItem, IMediaCoverageService } from './mediaCoverageService.js';
 import { IPrNewswireService } from './prNewswireService.js';
 import { IRssFeedsService, IRssItem } from './rssFeedsService.js';
@@ -109,8 +111,8 @@ export interface IEventStudy {
 	readonly source: EventSource;
 	/** For filings: the id of the newFiling alert whose filings are the events. */
 	readonly alert: string;
-	/** For FOMC releases: the releases that are events. */
-	readonly releases: readonly FomcRelease[];
+	/** For FOMC releases: the kinds of events it takes. */
+	readonly releases: readonly FomcEvent[];
 	/** For FOMC releases: the instruments whose moves the study measures, by their codes (FF1, SFR2, ^TNX). */
 	readonly instruments: readonly string[];
 	/** A Yahoo Finance symbol: ^GSPC. */
@@ -167,6 +169,8 @@ export interface IStudyEvent {
 	readonly newsChecked?: number;
 	/** The minutes each of its bars spans: 5 for an FOMC release older than the 30 days of minute bars. */
 	readonly barMinutes?: number;
+	/** For the Chair's press conferences, testimony and speeches: where they were broadcast, to watch them. */
+	readonly video?: string;
 }
 
 /** An event's time, in milliseconds since 1970, as its study takes it; undefined while EDGAR's acceptance is not known. */
@@ -228,7 +232,7 @@ const NEWS_PER_PASS = 10;
 // How often the Federal Reserve's feed is read for new FOMC releases
 const FOMC_FEED_EVERY_MILLISECONDS = 5 * MINUTE;
 
-const EVENTS_HEADER = ['accession', 'cik', 'name', 'ticker', 'form', 'items', 'filed', 'accepted', 'during_session', 'next_open', 'status', 'url', 'event_time', 'released', 'release_wire', 'release_title', 'release_url', 'news_checked', 'bar_minutes'];
+const EVENTS_HEADER = ['accession', 'cik', 'name', 'ticker', 'form', 'items', 'filed', 'accepted', 'during_session', 'next_open', 'status', 'url', 'event_time', 'released', 'release_wire', 'release_title', 'release_url', 'news_checked', 'bar_minutes', 'video'];
 const INSTRUMENTS_HEADER = ['accession', 'event_time', 'instrument', 'symbol', 'unit', 'scale', 'bar_minutes'];
 const PRICES_HEADER = ['time', 'session', 'symbol', 'open', 'high', 'low', 'close', 'volume'];
 const NEWS_HEADER = ['time', 'outlet', 'title', 'url'];
@@ -267,6 +271,7 @@ export class EventStudiesService extends Disposable implements IEventStudiesServ
 		@IRssFeedsService private readonly rssFeedsService: IRssFeedsService,
 		@IStorageService private readonly storageService: IStorageService,
 		@IFileService private readonly fileService: IFileService,
+		@IRequestService private readonly requestService: IRequestService,
 		@IPathService pathService: IPathService,
 	) {
 		super();
@@ -399,6 +404,9 @@ export class EventStudiesService extends Disposable implements IEventStudiesServ
 				}
 				return feed;
 			};
+			// And its calendar, for the meetings, the press conferences and the Chair's testimony and speeches
+			let calendar: Promise<readonly IFedCalendarEvent[] | undefined> | undefined;
+			const getCalendar = () => calendar ??= this.readCalendar();
 			for (let study of this.studies) {
 				if (study.source === 'panel') {
 					continue;
@@ -412,7 +420,7 @@ export class EventStudiesService extends Disposable implements IEventStudiesServ
 				}
 				if (study.source === 'fomc') {
 					if (!study.backfilled || Date.now() - this.fomcRead >= FOMC_FEED_EVERY_MILLISECONDS || feed) {
-						const recorded = await this.recordReleases(study, events, await getFeed());
+						const recorded = await this.recordReleases(study, events, await getFeed(), await getCalendar());
 						study = recorded.study;
 						events = recorded.events;
 					}
@@ -516,42 +524,75 @@ export class EventStudiesService extends Disposable implements IEventStudiesServ
 		return fresh.length ? [...events, ...fresh] : events;
 	}
 
+	/** The Federal Reserve's calendar; undefined when it cannot be read. */
+	private async readCalendar(): Promise<readonly IFedCalendarEvent[] | undefined> {
+		try {
+			const context = await this.requestService.request({ type: 'GET', url: FED_CALENDAR, callSite: 'pollis.eventStudies.fedCalendar' }, CancellationToken.None);
+			const text = isSuccess(context) ? await asText(context) : undefined;
+			// It starts with a byte order mark
+			const entries = text ? (JSON.parse(text.replace(/^\uFEFF/, '')) as { readonly events?: readonly IFedCalendarEntry[] }).events : undefined;
+			return entries ? parseFedCalendar(entries, newYorkHoursBehind) : undefined;
+		} catch {
+			return undefined;
+		}
+	}
+
 	/**
-	 * The study and its events with the FOMC releases of the Federal Reserve's feed that are not among them yet, from
-	 * the 59 days before the study was made, as long as Yahoo Finance keeps five-minute bars: the releases that came
-	 * out at the same time (the statement and the Summary of Economic Projections) are one event.
+	 * The study and its events with the events that are not among them yet, from the 59 days before the study was made,
+	 * as long as Yahoo Finance keeps five-minute bars: the statements of the Federal Reserve's feed (the releases that came
+	 * out at the same time, the statement and the Summary of Economic Projections, are one event), a statement on a day
+	 * with no scheduled meeting on the calendar being an unscheduled announcement, and the calendar's press conferences
+	 * and the Chair's testimony and speeches, once their time has come.
 	 */
-	private async recordReleases(study: IEventStudy, events: readonly IStudyEvent[], items: readonly IRssItem[] | undefined): Promise<{ readonly study: IEventStudy; readonly events: readonly IStudyEvent[] }> {
-		if (!items) {
+	private async recordReleases(study: IEventStudy, events: readonly IStudyEvent[], items: readonly IRssItem[] | undefined, calendar: readonly IFedCalendarEvent[] | undefined): Promise<{ readonly study: IEventStudy; readonly events: readonly IStudyEvent[] }> {
+		if (!items || !calendar) {
 			// The Federal Reserve cannot be reached: read again in five minutes
 			return { study, events };
 		}
-		const created = study.created || Date.now();
+		const now = Date.now();
+		const created = study.created || now;
+		const from = created - FIVE_MINUTE_KEPT_MILLISECONDS;
 		const known = new Set(events.map(event => event.accession));
-		const byTime = new Map<number, IRssItem[]>();
+		const released = new Map<number, IRssItem[]>();
 		for (const item of items) {
-			if (item.date && item.date >= created - FIVE_MINUTE_KEPT_MILLISECONDS) {
-				byTime.set(item.date, [...byTime.get(item.date) ?? [], item]);
+			if (item.date && item.date >= from) {
+				released.set(item.date, [...released.get(item.date) ?? [], item]);
+			}
+		}
+		const byTime = new Map<number, { readonly kinds: FomcEvent[]; readonly title: string; readonly url: string; readonly video?: string }>();
+		for (const [time, together] of released) {
+			const statement = together.find(item => fomcRelease(item.title) === 'statement');
+			if (statement) {
+				const kind = !isScheduledMeeting(time, calendar) ? 'unscheduled' : together.some(item => fomcRelease(item.title) === 'projections') ? 'withProjections' : 'withoutProjections';
+				byTime.set(time, { kinds: [kind], title: statement.title, url: statement.link });
+			}
+		}
+		for (const event of calendar) {
+			if (event.kind !== 'meeting' && event.time >= from && event.time <= now) {
+				const same = byTime.get(event.time);
+				if (same) {
+					same.kinds.push(event.kind);
+				} else {
+					byTime.set(event.time, { kinds: [event.kind], title: event.title, url: event.url, video: event.video });
+				}
 			}
 		}
 		const fresh: IStudyEvent[] = [];
-		for (const [time, released] of byTime) {
-			const kinds = FOMC_RELEASES.filter(kind => released.some(item => fomcRelease(item.title) === kind));
+		for (const [time, found] of byTime) {
 			const accession = `fomc-${new Date(time).toISOString().slice(0, 16).replace(/[-:]/g, '')}`;
-			if (known.has(accession) || !kinds.some(kind => study.releases.includes(kind))) {
+			if (known.has(accession) || !found.kinds.some(kind => study.releases.includes(kind))) {
 				continue;
 			}
-			// The statement names the event when it is among them
-			const first = released.find(item => fomcRelease(item.title) === kinds[0]) ?? released[0];
 			fresh.push({
 				accession,
 				cik: '',
-				name: first.title,
-				form: kinds.join(' '),
+				name: found.title,
+				form: found.kinds.join(' '),
 				filed: new Date(time).toISOString().slice(0, 10),
 				accepted: time,
 				status: 'capturing',
-				url: first.link,
+				url: found.url,
+				video: found.video,
 			});
 		}
 		if (study.backfilled && !fresh.length) {
@@ -793,6 +834,7 @@ export class EventStudiesService extends Disposable implements IEventStudiesServ
 				releaseUrl: row.release_url || undefined,
 				newsChecked: row.news_checked ? Date.parse(row.news_checked) : undefined,
 				barMinutes: Number(row.bar_minutes) || undefined,
+				video: row.video || undefined,
 			}));
 		} catch {
 			return [];
@@ -811,7 +853,7 @@ export class EventStudiesService extends Disposable implements IEventStudiesServ
 			// The time the study takes, for PollisEventStudies.jl; read back from accepted and released
 			iso(study ? eventTime(study, event) : event.accepted),
 			iso(event.released), event.releaseWire ?? '', event.releaseTitle ?? '', event.releaseUrl ?? '', iso(event.newsChecked),
-			event.barMinutes !== undefined ? String(event.barMinutes) : '',
+			event.barMinutes !== undefined ? String(event.barMinutes) : '', event.video ?? '',
 		]);
 		await this.fileService.writeFile(joinPath(this.studiesFolder, folder, 'events.csv'), VSBuffer.fromString(writeCsv([EVENTS_HEADER, ...rows])));
 		if (study?.source === 'fomc') {
@@ -899,7 +941,7 @@ function readStudy(folder: string, toml: TomlValue): IEventStudy | undefined {
 		title: text(toml.title) || folder,
 		source,
 		alert,
-		releases: FOMC_RELEASES.filter(release => texts(toml.releases).includes(release)),
+		releases: legacyFomcEvents(texts(toml.releases)),
 		instruments: texts(toml.instruments),
 		benchmark: text(toml.benchmark) || DEFAULT_BENCHMARK,
 		model: toml.model === 'marketModel' ? 'marketModel' : 'marketAdjusted',
@@ -995,9 +1037,9 @@ function writeStudy(study: IEventStudy): string {
 	if (study.source === 'fomc') {
 		const lines = [
 			`title = ${text(study.title)}`,
-			`# The FOMC's releases, from the Federal Reserve's Monetary Policy Press Releases feed`,
+			`# The FOMC's statements, from the Federal Reserve's Monetary Policy Press Releases feed, and the Chair's press conferences, testimony and speeches, from its calendar`,
 			`source = "fomc"`,
-			`# statement, projections (the Summary of Economic Projections), minutes, other`,
+			`# withProjections and withoutProjections (the statement of a scheduled meeting, with the Summary of Economic Projections or without), unscheduled (after an unscheduled meeting), pressConference, testimony, speech (the Chair's)`,
 			`releases = [${study.releases.map(text).join(', ')}]`,
 			`# FF1 to FF4, SR1, SFR1 to SFR5, ZT, ^FVX, ^TNX, TIP, ^GSPC, ES`,
 			`instruments = [${study.instruments.map(text).join(', ')}]`,

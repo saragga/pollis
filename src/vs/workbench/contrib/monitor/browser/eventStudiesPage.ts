@@ -8,6 +8,7 @@ import { safeIntl } from '../../../../base/common/date.js';
 import { DisposableStore } from '../../../../base/common/lifecycle.js';
 import { basename, joinPath } from '../../../../base/common/resources.js';
 import { URI } from '../../../../base/common/uri.js';
+import { generateUuid } from '../../../../base/common/uuid.js';
 import { localize, localize2 } from '../../../../nls.js';
 import { Action2, registerAction2 } from '../../../../platform/actions/common/actions.js';
 import { ICommandService } from '../../../../platform/commands/common/commands.js';
@@ -23,7 +24,7 @@ import { OPEN_LINK_COMMAND_ID } from './openLink.js';
 import { describeCondition, describeSubject, IAlertsService } from './alertsService.js';
 import { parseCsv } from './csv.js';
 import { DEFAULT_BENCHMARK, DEFAULT_EVENT_PERIOD, EventModel, EventSource, EventStatus, EventTime, eventTime, IEventPeriod, IEventStudiesService, IEventStudy, IPanelSettings, IStudyEvent, PANEL_ESTIMATORS, PanelEstimator, SHOW_EVENT_STUDIES_COMMAND_ID } from './eventStudiesService.js';
-import { DEFAULT_FOMC_INSTRUMENTS, describeInstrument, describeRelease, FOMC_INSTRUMENTS, FOMC_PERIOD, FOMC_RELEASES, FomcRelease, instrumentUnit } from './fomcReleases.js';
+import { DEFAULT_FOMC_INSTRUMENTS, describeFomcEvent, describeInstrument, describeRelease, FOMC_EVENTS, FOMC_INSTRUMENTS, FOMC_PERIOD, FOMC_RELEASES, FomcEvent, FomcRelease, instrumentUnit } from './fomcReleases.js';
 import { ICoverageItem, IMediaCoverageRequest, newsName } from './mediaCoverageService.js';
 import { SHOW_MEDIA_COVERAGE_COMMAND_ID } from './mediaCoveragePage.js';
 
@@ -40,6 +41,10 @@ import { SHOW_MEDIA_COVERAGE_COMMAND_ID } from './mediaCoveragePage.js';
 const MINUTE = 60_000;
 // The command of the Julia extension that answers with PollisEventStudies.jl's results
 const EVENT_STUDIES_COMMAND_ID = 'language-julia.pollisEventStudies';
+// The command that gives the fraction of a study computed so far, by its request's token
+const EVENT_STUDIES_PROGRESS_COMMAND_ID = 'language-julia.pollisEventStudiesProgress';
+// How often the page asks how far the study has come
+const PROGRESS_MILLISECONDS = 250;
 // How long to wait before asking again while Julia installs PollisEventStudies.jl
 const INSTALLING_RETRY_MILLISECONDS = 15_000;
 // What PollisEventStudies.jl can group the filings by
@@ -50,7 +55,7 @@ const newYorkHour = safeIntl.DateTimeFormat('en-US', { timeZone: 'America/New_Yo
 type EventStudiesMessage =
 	| { readonly command: 'ready' }
 	| { readonly command: 'select'; readonly folder: string }
-	| { readonly command: 'create'; readonly title: string; readonly source: EventSource; readonly alert: string; readonly releases: readonly FomcRelease[]; readonly instruments: readonly string[]; readonly benchmark: string; readonly model: EventModel; readonly eventTime: EventTime; readonly estimationDays: number; readonly periods: readonly IEventPeriod[]; readonly groupBy: string; readonly panel?: IPanelForm }
+	| { readonly command: 'create'; readonly title: string; readonly source: EventSource; readonly alert: string; readonly releases: readonly FomcEvent[]; readonly instruments: readonly string[]; readonly benchmark: string; readonly model: EventModel; readonly eventTime: EventTime; readonly estimationDays: number; readonly periods: readonly IEventPeriod[]; readonly groupBy: string; readonly panel?: IPanelForm }
 	| { readonly command: 'chooseData' }
 	| { readonly command: 'addAlert' }
 	| { readonly command: 'openUrl'; readonly url: string }
@@ -161,6 +166,10 @@ interface IAnalysed {
 	readonly periods?: IJuliaAnswer['periods'];
 	readonly tables?: IJuliaTables;
 	readonly problem?: string;
+	/** Whether the results are still coming: the problem is then shown under the meter of `progress`, or a spinner without it. */
+	readonly busy?: boolean;
+	/** The fraction of the study computed so far, while it is. */
+	readonly progress?: number;
 }
 
 /** A panel study's results, each table's rows by the name of its results file, with each value as text. */
@@ -264,21 +273,44 @@ function openEventStudiesPage(accessor: ServicesAccessor, folder: string | undef
 	const retry = disposables.add(new RunOnceScheduler(() => sendStudy(), INSTALLING_RETRY_MILLISECONDS));
 	// The study whose results the page has, to say the first time that they are being computed
 	let shown: string | undefined;
+	// How long each study took to compute the last time, by its folder, to tell how far it has come between Julia's steps
+	const durations = new Map<string, number>();
 
-	/** PollisEventStudies.jl's results for the study, or why there are none, shown in their place. */
-	const analyse = async (study: IEventStudy): Promise<IAnalysed> => {
+	/** PollisEventStudies.jl's results for the study, or why there are none, shown in their place; `onProgress` is told the fraction computed as it goes. */
+	const analyse = async (study: IEventStudy, onProgress?: (fraction: number, step: string) => void): Promise<IAnalysed> => {
+		const token = generateUuid();
+		const started = Date.now();
+		// Julia reports after each step; in between, the time the study took the last time, or the pace of the steps so far, tells
+		let reported = 0;
+		let reportedAt = started;
+		let latest: IJuliaProgress | undefined;
+		const progress = disposables.add(new IntervalTimer());
+		if (onProgress) {
+			progress.cancelAndSet(async () => {
+				latest = await commandService.executeCommand<IJuliaProgress | undefined>(EVENT_STUDIES_PROGRESS_COMMAND_ID, token).catch(() => undefined) ?? latest;
+				if (latest && latest.progress > reported) {
+					reported = latest.progress;
+					reportedAt = Date.now();
+				}
+				const expected = durations.get(study.folder) ?? (reported > 0 ? (reportedAt - started) / reported : undefined);
+				onProgress(Math.max(reported, expected ? Math.min(0.99, (Date.now() - started) / expected) : 0), describeStep(latest));
+			}, PROGRESS_MILLISECONDS);
+		}
 		let answer: IJuliaAnswer | undefined;
 		try {
-			answer = await commandService.executeCommand<IJuliaAnswer>(EVENT_STUDIES_COMMAND_ID, { op: 'analyse', folder: joinPath(eventStudiesService.studiesFolder, study.folder).fsPath });
+			answer = await commandService.executeCommand<IJuliaAnswer>(EVENT_STUDIES_COMMAND_ID, { op: 'analyse', folder: joinPath(eventStudiesService.studiesFolder, study.folder).fsPath, token });
 		} catch {
 			// The Julia extension is disabled, or not activated yet
+		} finally {
+			disposables.delete(progress);
 		}
 		if (answer?.periods || answer?.tables) {
+			durations.set(study.folder, Date.now() - started);
 			return { periods: answer.periods, tables: answer.tables };
 		}
 		if (answer?.error === 'installing') {
 			retry.schedule();
-			return { problem: localize('eventStudies.installing', "Julia is installing PollisEventStudies.jl, which computes the study, the first time it is needed: the results come in a minute or two") };
+			return { busy: true, problem: localize('eventStudies.installing', "Julia is installing PollisEventStudies.jl, which computes the study, the first time it is needed: the results come in a minute or two") };
 		}
 		if (answer?.error === 'noJulia') {
 			return { problem: localize('eventStudies.needsJulia', "Needs Julia, which computes the study with PollisEventStudies.jl") };
@@ -288,10 +320,11 @@ function openEventStudiesPage(accessor: ServicesAccessor, folder: string | undef
 
 	/** Posts the study, with PollisEventStudies.jl's results; the first time, with a word that they are being computed. */
 	const postAnalysed = async (study: IEventStudy, post: (analysed: IAnalysed) => void) => {
-		if (shown !== study.folder) {
-			post({ problem: localize('eventStudies.computing', "PollisEventStudies.jl is computing the study...") });
+		const first = shown !== study.folder;
+		if (first) {
+			post({ busy: true, progress: 0, problem: describeStep(undefined) });
 		}
-		const analysed = await analyse(study);
+		const analysed = await analyse(study, first ? (fraction, step) => webviewInput.webview.postMessage({ command: 'progress', folder: study.folder, progress: fraction, step }) : undefined);
 		shown = analysed.periods || analysed.tables ? study.folder : undefined;
 		post(analysed);
 	};
@@ -326,6 +359,8 @@ function openEventStudiesPage(accessor: ServicesAccessor, folder: string | undef
 				folder: study.folder,
 				title: study.title,
 				problem: analysed.problem ?? '',
+				busy: !!analysed.busy,
+				progress: analysed.progress ?? null,
 				info: localize('eventStudies.info', "Benchmark {0}; {1}; {2}; made {3}", study.benchmark, describeModel(study), describeEventTime(study.eventTime), new Date(study.created).toLocaleString(undefined, { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })),
 				capped: !!study.backfillCapped,
 				backfilled: study.backfilled,
@@ -369,6 +404,8 @@ function openEventStudiesPage(accessor: ServicesAccessor, folder: string | undef
 			folder: study.folder,
 			title: study.title,
 			problem: analysed.problem ?? '',
+			busy: !!analysed.busy,
+			progress: analysed.progress ?? null,
 			fomc: true,
 			info: localize('eventStudies.fomcInfo', "{0}; made {1}", describeReleases(study), when(study.created)),
 			capped: false,
@@ -381,18 +418,19 @@ function openEventStudiesPage(accessor: ServicesAccessor, folder: string | undef
 			events: events.map(event => ({
 				time: when(event.accepted),
 				title: event.name,
-				kinds: event.form.split(' ').filter(kind => (FOMC_RELEASES as readonly string[]).includes(kind)).map(kind => describeRelease(kind as FomcRelease)).join(', '),
+				// An event recorded before the kinds of events has the feed's kinds of releases
+				kinds: event.form.split(' ').map(kind => (FOMC_EVENTS as readonly string[]).includes(kind) ? describeFomcEvent(kind as FomcEvent) : (FOMC_RELEASES as readonly string[]).includes(kind) ? describeRelease(kind as FomcRelease) : '').filter(kind => kind).join(', '),
 				bars: event.barMinutes === 5 ? localize('eventStudies.fiveMinutes', "5 min") : localize('eventStudies.oneMinute', "1 min"),
 				status: describeStatus(event.status, study),
 				capturing: event.status === 'capturing' || event.status === 'waiting',
 				url: event.url,
+				video: event.video ?? '',
 				accession: event.accession,
 			})),
 		}));
 	};
 
 	const sendPanel = async (study: IEventStudy, panel: IPanelSettings) => {
-		const when = (time: number) => new Date(time).toLocaleString(undefined, { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 		await postAnalysed(study, analysed => {
 			const results = analysed.tables ? panelResults(analysed.tables) : undefined;
 			webviewInput.webview.postMessage({
@@ -401,7 +439,10 @@ function openEventStudiesPage(accessor: ServicesAccessor, folder: string | undef
 				title: study.title,
 				panel: true,
 				problem: analysed.problem ?? '',
-				info: localize('eventStudies.panelInfo', "{0}; {1}; made {2}", describePanel(panel), panel.estimators.map(describeEstimator).join(', '), when(study.created)),
+				busy: !!analysed.busy,
+				progress: analysed.progress ?? null,
+				// What its card in Your Studies says already
+				info: '',
 				capped: false,
 				backfilled: true,
 				outcome: panel.outcome,
@@ -410,6 +451,7 @@ function openEventStudiesPage(accessor: ServicesAccessor, folder: string | undef
 				degrees: results ? panelDegrees(results) : null,
 				series: results ? panelSeries(results) : [],
 				lines: results ? panelLines(results) : [],
+				sameAverages: results ? panelSameAverages(results) : null,
 			});
 		});
 	};
@@ -491,7 +533,7 @@ function openEventStudiesPage(accessor: ServicesAccessor, folder: string | undef
 					title: message.title.trim() || localize('eventStudies.untitled', "Event Study"),
 					source: fomc ? 'fomc' : 'filings',
 					alert: fomc ? '' : message.alert,
-					releases: fomc ? FOMC_RELEASES.filter(release => message.releases.includes(release)) : [],
+					releases: fomc ? FOMC_EVENTS.filter(kind => message.releases.includes(kind)) : [],
 					instruments: fomc ? FOMC_INSTRUMENTS.map(instrument => instrument.code).filter(code => message.instruments.includes(code)) : [],
 					benchmark: message.benchmark.trim().toUpperCase() || DEFAULT_BENCHMARK,
 					model: message.model === 'marketModel' ? 'marketModel' : 'marketAdjusted',
@@ -508,8 +550,8 @@ function openEventStudiesPage(accessor: ServicesAccessor, folder: string | undef
 				await commandService.executeCommand(ADD_ALERT_COMMAND_ID, undefined, 'filings');
 				break;
 			case 'openUrl':
-				// Only the SEC's pages, the filings at EDGAR, the Federal Reserve's releases, and the newswire releases the studies found
-				if (message.url.startsWith('https://www.sec.gov/') || message.url.startsWith('https://www.federalreserve.gov/') || eventStudiesService.getStudies().some(study => eventStudiesService.getEvents(study.folder).some(event => event.releaseUrl === message.url))) {
+				// Only the SEC's pages, the filings at EDGAR, the Federal Reserve's releases, and the newswire releases and broadcasts the studies found
+				if (message.url.startsWith('https://www.sec.gov/') || message.url.startsWith('https://www.federalreserve.gov/') || eventStudiesService.getStudies().some(study => eventStudiesService.getEvents(study.folder).some(event => event.releaseUrl === message.url || event.video === message.url))) {
 					await commandService.executeCommand(OPEN_LINK_COMMAND_ID, message.url);
 				}
 				break;
@@ -615,6 +657,29 @@ function describeEstimator(estimator: PanelEstimator): string {
 	}
 }
 
+/** How far event_studies.jl has come with a study: the fraction done, and the step it is on, of how many. */
+interface IJuliaProgress {
+	readonly progress: number;
+	readonly done?: number;
+	readonly steps?: number;
+	/** A package it loads, an estimator of a panel study or a period's name; none after the last step. */
+	readonly step?: string | null;
+}
+
+/** What event_studies.jl is doing, under the meter of its progress. */
+function describeStep(progress: IJuliaProgress | undefined): string {
+	const step = progress?.step;
+	if (!step || progress.done === undefined || !progress.steps) {
+		return localize('eventStudies.computing', "PollisEventStudies.jl is computing the study...");
+	}
+	const what = step === 'MixedModels' || step === 'WildBootTests'
+		? localize('eventStudies.loadingPackage', "Julia is loading {0}.jl, which the study needs", step)
+		: (PANEL_ESTIMATORS as readonly string[]).includes(step)
+			? localize('eventStudies.computingEstimator', "PollisEventStudies.jl is computing {0}", describeEstimator(step as PanelEstimator))
+			: localize('eventStudies.computingPeriod', "PollisEventStudies.jl is computing the period {0}", step);
+	return progress.steps > 1 ? localize('eventStudies.step', "{0} (step {1} of {2})...", what, progress.done + 1, progress.steps) : localize('eventStudies.stepOnly', "{0}...", what);
+}
+
 /** A number of a results file, null where it is missing. */
 function resultNumber(value: string | undefined): number | null {
 	const number = value === undefined || value.trim() === '' ? NaN : Number(value);
@@ -711,6 +776,25 @@ function panelDegrees(results: IPanelResults): number | null {
 	return row ? resultNumber(row.df2) : null;
 }
 
+/**
+ * The last event time after treatment when every cohort of Callaway and Sant'Anna is seen at each event time from 0 to
+ * it: its simple average, its average over event times and its average over cohorts then weigh the same cells alike,
+ * and are the same. Null otherwise.
+ */
+function panelSameAverages(results: IPanelResults): number | null {
+	const last = Math.max(...(results.tables.get('cs-effects.csv') ?? []).map(row => resultNumber(row.event_time) ?? -1));
+	const seen = new Map<string, Set<number>>();
+	for (const row of results.tables.get('cs-cells.csv') ?? []) {
+		const eventTime = resultNumber(row.event_time);
+		if (eventTime !== null && eventTime >= 0 && eventTime <= last && resultNumber(row.effect) !== null) {
+			const times = seen.get(row.cohort) ?? new Set<number>();
+			times.add(eventTime);
+			seen.set(row.cohort, times);
+		}
+	}
+	return last >= 0 && seen.size > 0 && [...seen.values()].every(times => times.size === last + 1) ? last : null;
+}
+
 /** The sentences under a panel study's chart: the stepped wedge's estimate (the tests of pre-trends and the averages are in the table). */
 function panelLines(results: IPanelResults): string[] {
 	const lines: string[] = [];
@@ -765,9 +849,9 @@ function describeStatus(status: EventStatus, study: IEventStudy): string {
 	}
 }
 
-/** The FOMC releases a study takes: "FOMC releases: Statement, Minutes". */
+/** The kinds of events a study of the FOMC takes: "Events: FOMC Statement with SEP, Fed Chair FOMC Press Conference". */
 function describeReleases(study: IEventStudy): string {
-	return localize('eventStudies.fomcReleases', "FOMC releases: {0}", study.releases.map(describeRelease).join(', '));
+	return localize('eventStudies.fomcEvents', "Events: {0}", study.releases.map(describeFomcEvent).join(', '));
 }
 
 /** When the event came: during the regular session, before the open or after the close, in New York. */
@@ -880,14 +964,22 @@ function releaseResults(result: IJuliaFomcPeriod, code: string, events: readonly
 function pageHtml(): string {
 	const text = {
 		title: localize('eventStudies.title', "Event Studies"),
+		// Each point its sentences, run together, and the points under it
 		intro: [
-			localize('eventStudies.intro.filings', "SEC filings: how prices move around them. The filings an alert fires are the events, and Pollis captures the minute prices of the filer's stock and of a benchmark around each, while it is open."),
-			localize('eventStudies.intro.news', "The news about each filing, from Google News and PR Newswire's feeds, where the company's newswire release often comes before the 8-K."),
-			localize('eventStudies.intro.days', "A new study starts with the filings the alert would have fired in the last 30 days, as Yahoo Finance keeps minute prices for 30 days."),
-			localize('eventStudies.intro.fomc', "FOMC releases: how rates, yields and stocks move around its statements, the Summary of Economic Projections and its minutes, from the Federal Reserve's feed, measured by federal funds and SOFR futures, Treasury yields, TIPS and the S&P 500."),
-			localize('eventStudies.intro.panel', "Panel event studies: how an outcome moves when units are treated at different times, from a table of units over time."),
-			localize('eventStudies.intro.econometrics', "In econometrics: states adopting a policy, firms a rule or countries a reform, estimated by two-way fixed effects, Sun and Abraham (2021) and Callaway and Sant'Anna (2021)."),
-			localize('eventStudies.intro.clinical', "In clinical research: a stepped-wedge trial, where clinics or hospitals cross from control to treatment one group after another, estimated by the mixed model of Hussey and Hughes (2007), with the effects by exposure time of Kenny et al. (2022)."),
+			{
+				lines: [
+					localize('eventStudies.intro.filings', "SEC filings: how prices move around them. The filings an alert fires are the events, and Pollis captures the minute prices of the filer's stock and of a benchmark around each, while it is open."),
+					localize('eventStudies.intro.news', "The news about each filing, from Google News and PR Newswire's feeds, where the company's newswire release often comes before the 8-K."),
+				],
+			},
+			{ lines: [localize('eventStudies.intro.fomc', "FOMC releases: how rates, yields and stocks move around its statements, with the Summary of Economic Projections or without, its unscheduled announcements, and the Chair's press conferences, testimony and speeches, from the Federal Reserve's feed and calendar, measured by federal funds and SOFR futures, Treasury yields, TIPS and the S&P 500.")] },
+			{
+				lines: [localize('eventStudies.intro.panel', "Panel event studies: how an outcome moves when units are treated at different times, from a table of units over time.")],
+				points: [
+					localize('eventStudies.intro.econometrics', "In econometrics: states adopting a policy, firms a rule or countries a reform, estimated by two-way fixed effects, Sun and Abraham (2021) and Callaway and Sant'Anna (2021)."),
+					localize('eventStudies.intro.clinical', "In clinical research: a stepped-wedge trial, where clinics or hospitals cross from control to treatment one group after another, estimated by the mixed model of Hussey and Hughes (2007), with the effects by exposure time of Kenny et al. (2022)."),
+				],
+			},
 		],
 		kind: localize('eventStudies.kind', "Kind"),
 		marketKind: localize('eventStudies.marketKind', "Market Event Study"),
@@ -951,24 +1043,24 @@ function pageHtml(): string {
 		wedgeHint: localize('eventStudies.wedgeHint', "IT is one effect from the first time treated; ETI an effect for each exposure time (1 is the first time treated), averaged by TATE over the exposure times From to To (all when empty) or taken by PTE at one; TEH the same with the effects varying around their mean. A binomial outcome is 0 or 1, or successes out of the trials column. Individual, when each is observed more than once."),
 		wedgeNeedsTreatment: localize('eventStudies.wedgeNeedsTreatment', "The stepped wedge needs a treatment indicator."),
 		panelCaption: localize('eventStudies.panelCaption', "Effects by event time with their 95% intervals; 0 is the first time treated (the stepped wedge's exposure time 1)"),
-		panelCaptionReference: localize('eventStudies.panelCaptionReference', "Effects by event time with their 95% intervals; 0 is the first time treated (the stepped wedge's exposure time 1); hollow marks are reference periods, fixed at 0"),
 		eventTimeAxis: localize('eventStudies.eventTimeAxis', "Event time"),
 		referencePeriod: localize('eventStudies.referencePeriod', "0 (reference)"),
-		effectsCaption: localize('eventStudies.effectsCaption', "Effect on {0}: each estimate with its 95% interval below it; in bold and in colour where the interval excludes 0"),
+		effectsCaption: localize('eventStudies.effectsCaption', "Effect on outcome column {0}: each estimate with its 95% interval below it; in bold and in colour where the interval excludes 0."),
 		beforeTreatment: localize('eventStudies.beforeTreatment', "Before treatment"),
 		afterTreatment: localize('eventStudies.afterTreatment', "After treatment"),
 		averagesAfter: localize('eventStudies.averagesAfter', "Averages after treatment"),
-		intervalsCsNormal: localize('eventStudies.intervalsCsNormal', "Callaway and Sant'Anna's 95% intervals are from the normal distribution, following the method's authors."),
-		intervalsCsT: localize('eventStudies.intervalsCsT', "Callaway and Sant'Anna's 95% intervals are from Student's t with {0} degrees of freedom, the clusters less one."),
-		intervalsCsTClusters: localize('eventStudies.intervalsCsTClusters', "Callaway and Sant'Anna's 95% intervals are from Student's t with the clusters less one degrees of freedom."),
-		intervalsPanelT: localize('eventStudies.intervalsPanelT', "Two-way fixed effects' and Sun and Abraham's 95% intervals are from Student's t with {0} degrees of freedom, the clusters less one."),
-		intervalsPanelTClusters: localize('eventStudies.intervalsPanelTClusters', "Two-way fixed effects' and Sun and Abraham's 95% intervals are from Student's t with the clusters less one degrees of freedom."),
+		intervalsCsNormal: localize('eventStudies.intervalsCsNormal', "Callaway and Sant'Anna (2021)'s 95% intervals are from the normal distribution, following the authors."),
+		intervalsCsT: localize('eventStudies.intervalsCsT', "Callaway and Sant'Anna (2021)'s 95% intervals are from Student's t with {0} degrees of freedom, the clusters less one."),
+		intervalsCsTClusters: localize('eventStudies.intervalsCsTClusters', "Callaway and Sant'Anna (2021)'s 95% intervals are from Student's t with the clusters less one degrees of freedom."),
+		averagesSame: localize('eventStudies.averagesSame', "The simple average, the average over event times and the average over cohorts are the same here: every cohort is seen at each event time from 0 to {0}."),
+		intervalsPanelT: localize('eventStudies.intervalsPanelT', "Two-way fixed effects' and Sun and Abraham (2021)'s 95% intervals are from Student's t with {0} degrees of freedom, the clusters less one."),
+		intervalsPanelTClusters: localize('eventStudies.intervalsPanelTClusters', "Two-way fixed effects' and Sun and Abraham (2021)'s 95% intervals are from Student's t with the clusters less one degrees of freedom."),
 		marketAdjustedWhy: localize('eventStudies.marketAdjustedWhy', "Too few minutes before the period to fit the market model: the event is market-adjusted"),
 		noResults: localize('eventStudies.noResults', "No results: none of the study's estimators gave effects by event time."),
 		filingsSource: localize('eventStudies.filingsSource', "SEC Filings"),
 		fomcSource: localize('eventStudies.fomcSource', "FOMC Releases"),
 		fomcTitle: localize('eventStudies.fomcTitle', "FOMC Releases"),
-		releasesHint: localize('eventStudies.releasesHint', "The releases of the Federal Reserve's Monetary Policy Press Releases feed that are the events, at the time it gives (2 p.m. in New York for the statement). The statement and the Summary of Economic Projections out at the same time are one event. A new study starts with the releases of the last 59 days: five-minute prices for those older than 30 days. Other is the rest of the feed: mostly the minutes of the Board's discount rate meetings, and now and then another announcement; the events list each release's title."),
+		releasesHint: localize('eventStudies.releasesHint', "The statements are from the Federal Reserve's Monetary Policy Press Releases feed, at the time it gives (2 p.m. in New York): with SEP when the Summary of Economic Projections comes out with it, and unscheduled when the Federal Reserve's calendar has no scheduled meeting that day. The press conferences (from 2:30 p.m. to about 3:30) and the Chair's testimony, speeches and other public remarks are from the calendar, at the time the Chair starts speaking, with the broadcast to watch. A Vice Chair's or a Governor's are not among them. Events at the same time are one event. A new study starts with the events of the last 59 days: five-minute prices for those older than 30 days."),
 		instruments: localize('eventStudies.instruments', "Instruments"),
 		target: localize('eventStudies.target', "Target Rate Surprise"),
 		path: localize('eventStudies.path', "Path and Forward Guidance"),
@@ -979,7 +1071,7 @@ function pageHtml(): string {
 		minutesRelease: localize('eventStudies.minutesRelease', "Minutes from the release"),
 		meanAt: localize('eventStudies.meanAt', "Mean at {0} min: {1} {2} (t = {3}, {4} releases)"),
 		meanAtOne: localize('eventStudies.meanAtOne', "Move at {0} min: {1} {2} (1 release)"),
-		noReleases: localize('eventStudies.noReleases', "No release yet: the FOMC's releases are added as the Federal Reserve's feed lists them."),
+		noReleases: localize('eventStudies.noReleases', "No event yet: the events are added as the Federal Reserve's feed and calendar list them."),
 		releaseTime: localize('eventStudies.releaseTime', "Time"),
 		releaseTitle: localize('eventStudies.releaseTitle', "Release"),
 		kinds: localize('eventStudies.kinds', "Kind"),
@@ -1046,6 +1138,7 @@ function pageHtml(): string {
 		session: localize('eventStudies.session', "When"),
 		status: localize('eventStudies.status', "Prices"),
 		news: localize('eventStudies.news', "News"),
+		video: localize('eventStudies.video', "Video"),
 		newsHint: localize('eventStudies.newsHint', "Media Coverage of the day before to the day after"),
 		car: localize('eventStudies.car', "CAR"),
 		beta: localize('eventStudies.beta', "Beta"),
@@ -1082,6 +1175,12 @@ function pageHtml(): string {
 		h1 { font-size: 32px; font-weight: 300; margin: 0 0 4px 0; line-height: 1.2; }
 		h2 { font-size: 18px; font-weight: 400; margin: 0; }
 		${voiceButtonsCss}
+		.spinner { fill: none; stroke: var(--vscode-progressBar-background); stroke-width: 3; stroke-linecap: round; stroke-dasharray: 56 20; transform-box: fill-box; transform-origin: center; animation: spin 1s linear infinite; }
+		@keyframes spin { to { transform: rotate(360deg); } }
+		.meter-track { fill: none; stroke: var(--vscode-widget-border, var(--vscode-panel-border)); stroke-width: 3; }
+		.meter-arc { fill: none; stroke: var(--vscode-progressBar-background); stroke-width: 3; stroke-linecap: round; transition: stroke-dasharray 0.25s linear; }
+		.meter-text { font-size: 10px; fill: var(--vscode-foreground); }
+		@media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 3s; } }
 		.subtitle { font-size: 14px; color: var(--vscode-descriptionForeground); margin: 0 0 24px 0; line-height: 1.4; max-width: 900px; }
 		.methods-list { list-style: none; padding-left: 22px; margin: 5px 0; }
 		.methods-list li { margin: 2px 0; padding-left: 20px; position: relative; }
@@ -1157,7 +1256,6 @@ function pageHtml(): string {
 		#panelChart text { font-size: 10px; fill: var(--vscode-descriptionForeground); }
 		#panelChart .line { fill: none; stroke-width: 1; opacity: 0.6; }
 		#panelChart .whisker { stroke-width: 1.5; }
-		#panelChart circle.reference { fill: var(--vscode-editor-background); stroke-width: 1.5; }
 		.twfe { stroke: var(--vscode-charts-blue); fill: var(--vscode-charts-blue); }
 		.sa { stroke: var(--vscode-charts-orange); fill: var(--vscode-charts-orange); }
 		.cs { stroke: var(--vscode-charts-green); fill: var(--vscode-charts-green); }
@@ -1168,6 +1266,7 @@ function pageHtml(): string {
 		.preview td, .preview th { padding: 2px 6px; white-space: nowrap; }
 		.lines div { font-size: 12px; margin-top: 4px; }
 		.effectsCaption { font-size: 12px; color: var(--vscode-descriptionForeground); margin-bottom: 4px; }
+		.effectsCaption .columnName { color: var(--vscode-editorWarning-foreground); }
 		.effects th svg { vertical-align: middle; margin-right: 4px; }
 		.effects td.number { white-space: nowrap; }
 		.effects .interval { font-size: 11px; color: var(--vscode-descriptionForeground); }
@@ -1191,7 +1290,7 @@ function pageHtml(): string {
 		<h1>${text.title}</h1>
 		${voiceButtonsHtml}
 	</div>
-	<ul class="subtitle methods-list">${text.intro.map(point => `<li>${point}</li>`).join('')}</ul>
+	<ul class="subtitle methods-list">${text.intro.map(point => `<li>${point.lines.join(' ')}${point.points ? `<ul class="methods-list">${point.points.map(sub => `<li>${sub}</li>`).join('')}</ul>` : ''}</li>`).join('')}</ul>
 
 	<div class="sectionHeader"><h2>${text.newStudy}</h2></div>
 	<div class="pane">
@@ -1217,7 +1316,7 @@ function pageHtml(): string {
 					<div class="hint" id="alertHint">${text.alertHint}</div>
 				</div>
 				<div class="fomcOnly" style="margin-top: 6px;" hidden>
-					<div class="row">${FOMC_RELEASES.map(release => `<label class="choice"><input type="checkbox" name="release" value="${release}"${release !== 'other' ? ' checked' : ''}>${describeRelease(release)}</label>`).join('')}</div>
+					<div class="row">${FOMC_EVENTS.map(kind => `<label class="choice"><input type="checkbox" name="release" value="${kind}"${kind !== 'testimony' && kind !== 'speech' ? ' checked' : ''}>${describeFomcEvent(kind)}</label>`).join('')}</div>
 					<div class="hint">${text.releasesHint}</div>
 				</div>
 			</div>
@@ -1410,6 +1509,29 @@ function pageHtml(): string {
 			node.textContent = text;
 		}
 		return node;
+	}
+
+	// Why the chart is empty, in its middle; while the results are coming, under a meter of how far they have come, or
+	// a spinning ring while that is not known (Julia installing the package)
+	function drawProblem(chart, width, height, text) {
+		chart.appendChild(svg('text', { class: 'problem-text', x: width / 2, y: height / 2 + (study.busy ? 28 : 0), 'text-anchor': 'middle' }, text));
+		const cx = width / 2;
+		const cy = height / 2 - 20;
+		if (study.busy && study.progress !== null) {
+			chart.appendChild(svg('circle', { class: 'meter-track', cx, cy, r: 18 }));
+			chart.appendChild(svg('circle', { class: 'meter-arc', cx, cy, r: 18, pathLength: 100, transform: 'rotate(-90 ' + cx + ' ' + cy + ')' }));
+			chart.appendChild(svg('text', { class: 'meter-text', x: cx, y: cy + 4, 'text-anchor': 'middle' }));
+			showProgress();
+		} else if (study.busy) {
+			chart.appendChild(svg('circle', { class: 'spinner', cx, cy, r: 12 }));
+		}
+	}
+
+	// The study's progress on its meter
+	function showProgress() {
+		const percent = Math.floor(study.progress * 100);
+		document.querySelectorAll('.meter-arc').forEach(arc => arc.setAttribute('stroke-dasharray', percent + ' 100'));
+		document.querySelectorAll('.meter-text').forEach(label => label.textContent = percent + '%');
 	}
 
 	function svg(tag, attributes, text) {
@@ -1641,6 +1763,7 @@ function pageHtml(): string {
 		}
 		document.getElementById('studyTitleView').textContent = study.title;
 		document.getElementById('studyInfo').textContent = study.info + (study.capped ? '. ' + TEXT.capped : '');
+		document.getElementById('studyInfo').hidden = !study.info;
 		document.getElementById('panelView').hidden = !study.panel;
 		document.getElementById('marketView').hidden = !!study.panel;
 		if (study.panel) {
@@ -1733,8 +1856,6 @@ function pageHtml(): string {
 		const lines = document.getElementById('lines');
 		lines.textContent = '';
 		study.lines.forEach(line => lines.appendChild(element('div', undefined, line)));
-		const hasReference = study.series.some(series => series.points.some(point => point.reference));
-		document.getElementById('panelCaption').textContent = hasReference ? TEXT.panelCaptionReference : TEXT.panelCaption;
 		drawPanelChart();
 		// The effects as a table: a row per event time, a column per estimator, before and after treatment, then the averages
 		const container = document.getElementById('panelTable');
@@ -1770,7 +1891,14 @@ function pageHtml(): string {
 			texts.forEach(text => row.appendChild(element('td', 'number', text || '')));
 			return row;
 		};
-		const caption = element('div', 'effectsCaption', format(TEXT.effectsCaption, study.outcome || ''));
+		// The outcome column's name in yellow
+		const caption = element('div', 'effectsCaption');
+		TEXT.effectsCaption.split('{0}').forEach((part, index) => {
+			if (index > 0) {
+				caption.appendChild(element('span', 'columnName', study.outcome || ''));
+			}
+			caption.appendChild(document.createTextNode(part));
+		});
 		const table = element('table', 'effects');
 		const head = element('tr');
 		head.appendChild(element('th', undefined, TEXT.eventTimeAxis));
@@ -1815,6 +1943,9 @@ function pageHtml(): string {
 		}
 		if (keys.includes('cs')) {
 			notes.appendChild(element('div', undefined, study.distribution === 'normal' ? TEXT.intervalsCsNormal : study.degrees ? format(TEXT.intervalsCsT, study.degrees) : TEXT.intervalsCsTClusters));
+			if (study.sameAverages !== null && study.sameAverages !== undefined) {
+				notes.appendChild(element('div', undefined, format(TEXT.averagesSame, study.sameAverages)));
+			}
 		}
 		container.appendChild(caption);
 		container.appendChild(table);
@@ -1832,7 +1963,7 @@ function pageHtml(): string {
 		const height = chart.clientHeight || 300;
 		chart.setAttribute('viewBox', '0 0 ' + width + ' ' + height);
 		if (!study.series.length) {
-			chart.appendChild(svg('text', { x: width / 2, y: height / 2, 'text-anchor': 'middle' }, study.problem || TEXT.noResults));
+			drawProblem(chart, width, height, study.problem || TEXT.noResults);
 			return;
 		}
 		const left = 56, right = 16, top = 12, bottom = 32;
@@ -1863,16 +1994,16 @@ function pageHtml(): string {
 		const spread = Math.min(0.3, 0.12 * (study.series.length - 1));
 		study.series.forEach((series, index) => {
 			const offset = study.series.length > 1 ? -spread / 2 + spread * index / (study.series.length - 1) : 0;
-			const sorted = [...series.points].sort((a, b) => a.x - b.x);
+			// The reference period, 0 by construction, is only in the table
+			const sorted = series.points.filter(point => !point.reference).sort((a, b) => a.x - b.x);
 			chart.appendChild(svg('polyline', { points: sorted.map(point => x(point.x + offset) + ',' + y(point.effect)).join(' '), class: 'line ' + series.key }));
 			for (const point of sorted) {
 				const at = x(point.x + offset);
 				if (point.low !== null && point.high !== null) {
 					chart.appendChild(svg('line', { x1: at, x2: at, y1: y(point.low), y2: y(point.high), class: 'whisker ' + series.key }));
 				}
-				// The reference period hollow: set to 0, not estimated
-				const dot = svg('circle', { cx: at, cy: y(point.effect), r: 3.5, class: series.key + (point.reference ? ' reference' : '') });
-				dot.appendChild(svg('title', {}, series.name + ', ' + point.x + ': ' + (point.reference ? TEXT.referencePeriod : figure(point.effect)) + (point.low !== null && point.high !== null ? ' [' + figure(point.low) + ', ' + figure(point.high) + ']' : '')));
+				const dot = svg('circle', { cx: at, cy: y(point.effect), r: 3.5, class: series.key });
+				dot.appendChild(svg('title', {}, series.name + ', ' + point.x + ': ' + figure(point.effect) + (point.low !== null && point.high !== null ? ' [' + figure(point.low) + ', ' + figure(point.high) + ']' : '')));
 				chart.appendChild(dot);
 			}
 		});
@@ -1893,7 +2024,7 @@ function pageHtml(): string {
 		chart.setAttribute('viewBox', '0 0 ' + width + ' ' + height);
 		const values = curves ? [...curves.cars.flat(), ...curves.lower, ...curves.upper, ...curves.caar].filter(value => typeof value === 'number') : [];
 		if (!values.length) {
-			chart.appendChild(svg('text', { x: width / 2, y: height / 2, 'text-anchor': 'middle' }, study.problem || TEXT.chartEmpty));
+			drawProblem(chart, width, height, study.problem || TEXT.chartEmpty);
 			return;
 		}
 		const periodCurves = study.curves[periodIndex];
@@ -2043,6 +2174,11 @@ function pageHtml(): string {
 			const link = element('button', 'link', event.title);
 			link.addEventListener('click', () => vscode.postMessage({ command: 'openUrl', url: event.url }));
 			title.append(link, ' \u00b7 ', newsLink(event));
+			if (event.video) {
+				const video = element('button', 'link', TEXT.video);
+				video.addEventListener('click', () => vscode.postMessage({ command: 'openUrl', url: event.video }));
+				title.append(' \u00b7 ', video);
+			}
 			row.appendChild(title);
 			row.appendChild(element('td', '', event.kinds));
 			row.appendChild(element('td', '', event.bars));
@@ -2218,6 +2354,13 @@ function pageHtml(): string {
 			}
 			study = message;
 			renderStudy();
+		} else if (message.command === 'progress') {
+			if (study && study.folder === message.folder && study.busy && study.progress !== null) {
+				study.progress = Math.max(study.progress, message.progress);
+				study.problem = message.step;
+				showProgress();
+				document.querySelectorAll('.problem-text').forEach(label => label.textContent = message.step);
+			}
 		} else if (message.command === 'chooseAlert') {
 			// Started from a fired alert: the form with its alert chosen, named after it
 			const alert = state.alerts.find(alert => alert.id === message.alert);
