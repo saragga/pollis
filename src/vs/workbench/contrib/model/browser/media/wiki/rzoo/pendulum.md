@@ -1,3 +1,0 @@
-# Pendulum
-
-Not written yet.

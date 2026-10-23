@@ -1,3 +1,0 @@
-# ct
-
-Not written yet.

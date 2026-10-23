@@ -1,3 +1,0 @@
-# diagnostics
-
-Not written yet.

@@ -1,3 +1,0 @@
-# Quadrotor
-
-Not written yet.
