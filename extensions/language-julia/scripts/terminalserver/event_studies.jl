@@ -10,7 +10,9 @@
 #       would hold, by the file's name, a column at a time. MixedModels.jl, for the stepped wedge, and WildBootTests.jl,
 #       for the wild bootstrap, are added to the environment the first time a study asks for them
 # Missing values, and values that are not finite, are null. While it installs the packages it writes
-# {"status": "installing"}, then {"status": "ready"}.
+# {"status": "installing"}, then {"status": "ready"}. While it computes, it writes {"id", "progress", "done", "steps",
+# "step"}, the fraction done and the step it starts (none after the last): each period of a study of filings or of FOMC
+# releases, by its name, or, for a panel study, the loading of a package, by its name, and each estimator.
 import Pkg
 
 # The oldest PollisEventStudies with what the page shows: the CAAR's band, the curves from the next open and the
@@ -56,21 +58,53 @@ function load(name)
     Core.eval(Main, :(using $(Symbol(name))))
 end
 
-function answer(request)
+# Tells the page how far the request `id` has come, and the step it starts
+function report(id, done, steps, step = nothing)
+    println(JSON3.write(Dict(:id => id, :progress => done / steps, :done => done, :steps => steps, :step => step)))
+    flush(stdout)
+end
+
+# The study with only `values` as its `field` (its periods, or its estimators), to compute it a step at a time
+part(study, field, values) = typeof(study)((name == field ? values : getfield(study, name) for name in fieldnames(typeof(study)))...)
+
+# The study's results a step at a time, reporting after each
+function stepwise(f, id, study, field)
+    values = getfield(study, field)
+    results = Any[]
+    for (k, value) in enumerate(values)
+        report(id, k - 1, length(values), value isa PollisEventStudies.Period ? value.name : string(value))
+        append!(results, f(part(study, field, [value])))
+    end
+    report(id, length(values), length(values))
+    results
+end
+
+function answer(request, id)
     op = String(request.op)
     if op == "analyse"
         study = read_study(String(request.folder))
         if study isa PollisEventStudies.FomcStudy
             periods = [Dict{Symbol, Any}(:period => plain(result.period), :moves => plain(result.moves),
-                :summary => plain(result.summary), :paths => plain(result.paths), :curves => plain(result.curves)) for result in analyse(study)]
+                :summary => plain(result.summary), :paths => plain(result.paths), :curves => plain(result.curves))
+                for result in stepwise(analyse, id, study, :periods)]
             return Dict{Symbol, Any}(:source => "fomc", :periods => periods)
         elseif study isa PollisEventStudies.Study
-            return Dict{Symbol, Any}(:source => "filings", :periods => plain(analyse(study)))
+            return Dict{Symbol, Any}(:source => "filings", :periods => plain(stepwise(analyse, id, study, :periods)))
         end
-        "stepped_wedge" in study.estimators && load("MixedModels")
-        get(study.options, :wild, false) === true && load("WildBootTests")
+        needed = [name for (name, wanted) in (("MixedModels", "stepped_wedge" in study.estimators),
+            ("WildBootTests", get(study.options, :wild, false) === true)) if wanted && !isdefined(Main, Symbol(name))]
+        steps = length(needed) + length(study.estimators)
+        for (k, name) in enumerate(needed)
+            report(id, k - 1, steps, name)
+            load(name)
+        end
         # Each estimator's results through invokelatest, the packages just loaded being newer than this function
-        results = Base.invokelatest(analyse, study)
+        results = Any[]
+        for (k, estimator) in enumerate(study.estimators)
+            report(id, length(needed) + k - 1, steps, estimator)
+            append!(results, Base.invokelatest(analyse, part(study, :estimators, [estimator])))
+        end
+        report(id, steps, steps)
         tables = Dict{String, Any}(name => plain(PollisEventStudies.Tables.columntable(table))
             for result in results for (name, table) in Base.invokelatest(PollisEventStudies.result_tables, result))
         return Dict{Symbol, Any}(:source => "panel", :tables => tables)
@@ -85,7 +119,7 @@ while !eof(stdin)
     reply = try
         request = JSON3.read(line)
         id = get(request, :id, nothing)
-        answer(request)
+        answer(request, id)
     catch err
         Dict{Symbol, Any}(:error => sprint(showerror, err))
     end
