@@ -2,7 +2,7 @@
 	"nameShort": "Pollis",
 	"nameLong": "Pollis",
 	"quality": "stable",
-	"pollisVersion": "0.2.8",
+	"pollisVersion": "0.2.10",
 	"updateUrl": "https://api.github.com/repos/saragga/pollis/releases/latest",
 	"startup": {
 		"onlyCreateJuliaRepl": true
