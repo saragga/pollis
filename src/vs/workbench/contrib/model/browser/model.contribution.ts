@@ -27,7 +27,7 @@ import { DF_PANEL } from './commands/df.command.js';
 import { RQR_PANEL } from './commands/rqr.command.js';
 import { SSM_PANEL } from './commands/ssm.command.js';
 import { TTE_PANEL } from './commands/tte.command.js';
-import { CTSV_PANEL } from './commands/ctsv.command.js';
+// Finance panels, deferred for a future Finance Toolbox: import { CTSV_PANEL } from './commands/ctsv.command.js';
 import { NSCR_PANEL } from './commands/nscr.command.js';
 import { TSF_PANEL } from './commands/tsf.command.js';
 import { DT_PANEL } from './commands/dt.command.js';
@@ -50,8 +50,8 @@ import { CPS_PANEL } from './commands/cps.command.js';
 import { PPL_PANEL } from './commands/ppl.command.js';
 import { RXINFER_PANEL } from './commands/rxinfer.command.js';
 import { RULEBASED_PANEL } from './commands/rulebased.command.js';
-import { HFCME_PANEL } from './commands/hfcme.command.js';
-import { RCME_PANEL } from './commands/rcme.command.js';
+// Finance panels, deferred for a future Finance Toolbox: import { HFCME_PANEL } from './commands/hfcme.command.js';
+// Finance panels, deferred for a future Finance Toolbox: import { RCME_PANEL } from './commands/rcme.command.js';
 import { ENSEMBLE_PANEL } from './commands/ensemble.command.js';
 import { CLP_PANEL } from './commands/clp.command.js';
 import { CLH_PANEL } from './commands/clh.command.js';
@@ -59,7 +59,7 @@ import { MANIFOLD_PANEL } from './commands/manifold.command.js';
 import { EMBEDDING_PANEL } from './commands/embedding.command.js';
 import { AUTOENCODER_PANEL } from './commands/autoencoder.command.js';
 import { LCA_PANEL } from './commands/lca.command.js';
-import { VM_PANEL } from './commands/vm.command.js';
+// Finance panels, deferred for a future Finance Toolbox: import { VM_PANEL } from './commands/vm.command.js';
 import { RP_PANEL } from './commands/rp.command.js';
 import { HPT_PANEL } from './commands/hpt.command.js';
 import { MC_PANEL } from './commands/mc.command.js';
@@ -68,20 +68,20 @@ import { CLF_PANEL } from './commands/clf.command.js';
 import { ADLP_PANEL } from './commands/adlp.command.js';
 import { SBI_PANEL } from './commands/sbi.command.js';
 import { EXP_PANEL } from './commands/exp.command.js';
-import { MMN_PANEL } from './commands/mmn.command.js';
+// Finance panels, deferred for a future Finance Toolbox: import { MMN_PANEL } from './commands/mmn.command.js';
 import { NNLS_PANEL } from './commands/nnls.command.js';
 import { TSLS_PANEL } from './commands/tsls.command.js';
 import { GMM_PANEL } from './commands/gmm.command.js';
-import { LRM_PANEL } from './commands/lrm.command.js';
+// Finance panels, deferred for a future Finance Toolbox: import { LRM_PANEL } from './commands/lrm.command.js';
 import { GEV_PANEL } from './commands/gev.command.js';
 import { GP_PANEL } from './commands/gp.command.js';
 import { EVTRISK_PANEL } from './commands/evtRisk.command.js';
 import { EVTDIAG_PANEL } from './commands/evtDiag.command.js';
 import { HARE_PANEL } from './commands/hare.command.js';
-import { RVOL_PANEL } from './commands/rvol.command.js';
+// Finance panels, deferred for a future Finance Toolbox: import { RVOL_PANEL } from './commands/rvol.command.js';
 import { LMAR_PANEL } from './commands/lmar.command.js';
 import { LMHAR_PANEL } from './commands/lmhar.command.js';
-import { PO_PANEL } from './commands/po.command.js';
+// Finance panels, deferred for a future Finance Toolbox: import { PO_PANEL } from './commands/po.command.js';
 import { OA_PANEL } from './commands/oa.command.js';
 import { CDS_PANEL } from './commands/cds.command.js';
 import { DMAP_PANEL } from './commands/dmap.command.js';
@@ -92,7 +92,7 @@ import { CMPLX_PANEL } from './commands/cmplx.command.js';
 import { ABM_PANEL } from './commands/abm.command.js';
 import { ABMENS_PANEL } from './commands/abmEns.command.js';
 import { ABMVIZ_PANEL } from './commands/abmViz.command.js';
-import { TRAD_PANEL } from './commands/trad.command.js';
+// Finance panels, deferred for a future Finance Toolbox: import { TRAD_PANEL } from './commands/trad.command.js';
 import { NET_PANEL } from './commands/net.command.js';
 import { NETDYN_PANEL } from './commands/netdyn.command.js';
 import { NETFLOW_PANEL } from './commands/netflow.command.js';
@@ -191,10 +191,10 @@ CommandsRegistry.registerCommand('chiara.statistics.lm', accessor => openScaffol
 CommandsRegistry.registerCommand('chiara.statistics.lm.ols', accessor => openScaffoldWebview(accessor, LM_PANEL, 'ols'));
 CommandsRegistry.registerCommand('chiara.statistics.lm.hac', accessor => openScaffoldWebview(accessor, LM_PANEL, 'ols'));
 CommandsRegistry.registerCommand('chiara.statistics.lm.wls', accessor => openScaffoldWebview(accessor, LM_PANEL, 'wls'));
-CommandsRegistry.registerCommand('chiara.statistics.rbv', accessor => openScaffoldWebview(accessor, RVOL_PANEL));
+// Finance panel, deferred: CommandsRegistry.registerCommand('chiara.statistics.rbv', accessor => openScaffoldWebview(accessor, RVOL_PANEL));
 CommandsRegistry.registerCommand('chiara.statistics.lm.hetero', accessor => openScaffoldWebview(accessor, HARE_PANEL));
 CommandsRegistry.registerCommand('chiara.statistics.lm.ar1', accessor => openScaffoldWebview(accessor, LMAR_PANEL));
-CommandsRegistry.registerCommand('chiara.statistics.eco.po', accessor => openScaffoldWebview(accessor, PO_PANEL));
+// Finance panel, deferred: CommandsRegistry.registerCommand('chiara.statistics.eco.po', accessor => openScaffoldWebview(accessor, PO_PANEL));
 CommandsRegistry.registerCommand('chiara.statistics.eco.oa', accessor => openScaffoldWebview(accessor, OA_PANEL));
 CommandsRegistry.registerCommand('chiara.statistics.nonlin.cds', accessor => openScaffoldWebview(accessor, CDS_PANEL));
 CommandsRegistry.registerCommand('chiara.statistics.nonlin.dmap', accessor => openScaffoldWebview(accessor, DMAP_PANEL));
@@ -204,7 +204,7 @@ CommandsRegistry.registerCommand('chiara.statistics.nonlin.cmplx', accessor => o
 CommandsRegistry.registerCommand('chiara.simulate.abm', accessor => openScaffoldWebview(accessor, ABM_PANEL));
 CommandsRegistry.registerCommand('chiara.simulate.abm-ens', accessor => openScaffoldWebview(accessor, ABMENS_PANEL));
 CommandsRegistry.registerCommand('chiara.simulate.abm-viz', accessor => openScaffoldWebview(accessor, ABMVIZ_PANEL));
-CommandsRegistry.registerCommand('chiara.simulate.abm-ta', accessor => openScaffoldWebview(accessor, TRAD_PANEL));
+// Finance panel, deferred: CommandsRegistry.registerCommand('chiara.simulate.abm-ta', accessor => openScaffoldWebview(accessor, TRAD_PANEL));
 CommandsRegistry.registerCommand('chiara.simulate.net', accessor => openScaffoldWebview(accessor, NET_PANEL));
 CommandsRegistry.registerCommand('chiara.simulate.netdyn', accessor => openScaffoldWebview(accessor, NETDYN_PANEL));
 CommandsRegistry.registerCommand('chiara.simulate.netflow', accessor => openScaffoldWebview(accessor, NETFLOW_PANEL));
@@ -234,21 +234,21 @@ CommandsRegistry.registerCommand('chiara.statistics.ssm', accessor => SSM_OPEN(a
 
 CommandsRegistry.registerCommand('chiara.statistics.tvm.dtsv', () => { });
 
-const CTSV_OPEN = (accessor: ServicesAccessor) => openScaffoldWebview(accessor, CTSV_PANEL);
+// Finance panel, deferred: const CTSV_OPEN = (accessor: ServicesAccessor) => openScaffoldWebview(accessor, CTSV_PANEL);
 
-CommandsRegistry.registerCommand('chiara.statistics.tvm.ctsv', accessor => CTSV_OPEN(accessor));
-CommandsRegistry.registerCommand('chiara.statistics.dm.heston', accessor => CTSV_OPEN(accessor));
-CommandsRegistry.registerCommand('chiara.statistics.jdm.bates', accessor => CTSV_OPEN(accessor));
-CommandsRegistry.registerCommand('chiara.statistics.irm.sabr', accessor => CTSV_OPEN(accessor));
+// Finance panel, deferred: CommandsRegistry.registerCommand('chiara.statistics.tvm.ctsv', accessor => CTSV_OPEN(accessor));
+// Finance panel, deferred: CommandsRegistry.registerCommand('chiara.statistics.dm.heston', accessor => CTSV_OPEN(accessor));
+// Finance panel, deferred: CommandsRegistry.registerCommand('chiara.statistics.jdm.bates', accessor => CTSV_OPEN(accessor));
+// Finance panel, deferred: CommandsRegistry.registerCommand('chiara.statistics.irm.sabr', accessor => CTSV_OPEN(accessor));
 CommandsRegistry.registerCommand('chiara.statistics.tvm.taylor', () => { });
 CommandsRegistry.registerCommand('chiara.statistics.tvm.ksc', () => { });
 CommandsRegistry.registerCommand('chiara.statistics.vm', () => { });
-CommandsRegistry.registerCommand('chiara.statistics.eco.hfcme', accessor => openScaffoldWebview(accessor, HFCME_PANEL));
-CommandsRegistry.registerCommand('chiara.statistics.eco.rcme', accessor => openScaffoldWebview(accessor, RCME_PANEL));
+// Finance panel, deferred: CommandsRegistry.registerCommand('chiara.statistics.eco.hfcme', accessor => openScaffoldWebview(accessor, HFCME_PANEL));
+// Finance panel, deferred: CommandsRegistry.registerCommand('chiara.statistics.eco.rcme', accessor => openScaffoldWebview(accessor, RCME_PANEL));
 
-CommandsRegistry.registerCommand('chiara.statistics.eco.mmn', accessor => openScaffoldWebview(accessor, MMN_PANEL));
+// Finance panel, deferred: CommandsRegistry.registerCommand('chiara.statistics.eco.mmn', accessor => openScaffoldWebview(accessor, MMN_PANEL));
 
-CommandsRegistry.registerCommand('chiara.statistics.rmt.lrm', accessor => openScaffoldWebview(accessor, LRM_PANEL));
+// Finance panel, deferred: CommandsRegistry.registerCommand('chiara.statistics.rmt.lrm', accessor => openScaffoldWebview(accessor, LRM_PANEL));
 CommandsRegistry.registerCommand('chiara.statistics.ev.gev', accessor => openScaffoldWebview(accessor, GEV_PANEL));
 CommandsRegistry.registerCommand('chiara.statistics.ev.gp', accessor => openScaffoldWebview(accessor, GP_PANEL));
 CommandsRegistry.registerCommand('chiara.statistics.ev.riskMeasures', accessor => openScaffoldWebview(accessor, EVTRISK_PANEL));
@@ -323,7 +323,7 @@ CommandsRegistry.registerCommand('chiara.statistics.pm.cca', accessor => openSca
 
 CommandsRegistry.registerCommand('chiara.statistics.pm.covShrinkage', accessor => openScaffoldWebview(accessor, COVSHRINKAGE_PANEL));
 
-CommandsRegistry.registerCommand('chiara.statistics.vm', accessor => openScaffoldWebview(accessor, VM_PANEL));
+// Finance panel, deferred: CommandsRegistry.registerCommand('chiara.statistics.vm', accessor => openScaffoldWebview(accessor, VM_PANEL));
 
 CommandsRegistry.registerCommand('chiara.statistics.mwm.regressionPerf', accessor => openScaffoldWebview(accessor, RP_PANEL));
 
