@@ -7,7 +7,8 @@ topic = "GLM Inference"
 license = "MIT"
 version = "0.2.0"
 
-citation = "Dalal, S. R., Fowlkes, E. B. and Hoadley, B. (1989). Risk analysis of the space shuttle: pre-Challenger prediction of failure. Journal of the American Statistical Association 84(408), 945-957."
+key = "DFH1989a"
+citation = "Dalal, S. R., Fowlkes, E. B. and Hoadley, B. (1989). Risk Analysis of the Space Shuttle: Pre-Challenger Prediction of Failure. Journal of the American Statistical Association 84(408), 945-957."
 doi = "10.1080/01621459.1989.10478858"
 article = "https://doi.org/10.1080/01621459.1989.10478858"
 

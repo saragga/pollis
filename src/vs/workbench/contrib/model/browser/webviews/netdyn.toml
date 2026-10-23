@@ -83,49 +83,27 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "NetworkDynamics.jl: Composing and Simulating Complex Networks in Julia"
-authors = "Lindner, Michael; Lincoln, Lucas; Drauschke, Franziska; Koulen, Julia M.; Wurfel, Hans; Plietzsch, Anton; Hellmann, Frank"
-year = 2021
-journal = "Chaos"
-doi = "10.1063/5.0051387"
-openAccess = true
+key = "LLDKW...2021a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Networks: An Introduction"
-authors = "Newman, Mark E. J."
-year = 2010
-journal = "Oxford University Press"
-openAccess = false
+key = "New2010a"
 
 [[references]]
-title = "Dynamical Processes on Complex Networks"
-authors = "Barrat, Alain; Barthelemy, Marc; Vespignani, Alessandro"
-year = 2008
-journal = "Cambridge University Press"
-openAccess = false
+key = "BBV2008a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "Chemical Oscillations, Waves, and Turbulence"
-authors = "Kuramoto, Yoshiki"
-year = 1984
-journal = "Springer"
-openAccess = false
+key = "Kur1984a"
 
 [[references]]
-title = "Cascade-based Attacks on Complex Networks"
-authors = "Motter, Adilson E.; Lai, Ying-Cheng"
-year = 2002
-journal = "Physical Review E"
-doi = "10.1103/PhysRevE.66.065102"
-openAccess = false
+key = "ML2002a"
 
 [[models]]
 id = "kuramoto"

@@ -103,92 +103,39 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "JuMP: A Modeling Language for Mathematical Optimization"
-authors = "Dunning, Iain; Huchette, Joey; Lubin, Miles"
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/15M1020575"
-openAccess = true
+key = "DHL2017a"
 
 [[references]]
-title = "StochasticPrograms.jl: A Progressive Hedging Library for Two-Stage Stochastic Programming in Julia"
-authors = "Biel, Martin; Johansson, Mikael"
-year = 2022
-journal = "Journal of Statistical Software"
-doi = "10.18637/jss.v095.i05"
-openAccess = true
+key = "DK2021b"
 
 [[references]]
-title = "SDDP.jl: A Julia Package for Stochastic Dual Dynamic Programming"
-authors = "Dowson, Oscar; Kapelevich, Lea"
-year = 2021
-journal = "INFORMS Journal on Computing"
-doi = "10.1287/ijoc.2022.1253"
-openAccess = true
-
-[[references]]
-title = "HiGHS: Serial and Parallel Solution of Linear Programming"
-authors = "Huangfu, Qi; Hall, J.A.J."
-year = 2018
-journal = "Mathematical Programming Computation"
-doi = "10.1007/s12532-017-0130-5"
-openAccess = true
+key = "HH2018a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Introduction to Stochastic Programming"
-authors = "Birge, John R.; Louveaux, Francois"
-year = 2011
-journal = "Springer (2nd ed.)"
-doi = "10.1007/978-1-4614-0237-4"
-openAccess = false
+key = "BL2011a"
 
 [[references]]
-title = "Lectures on Stochastic Programming: Modeling and Theory"
-authors = "Shapiro, Alexander; Dentcheva, Darinka; Ruszczynski, Andrzej"
-year = 2021
-journal = "SIAM (3rd ed.)"
-doi = "10.1137/1.9780898718751"
-openAccess = false
+key = "SDR2021a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "Linear Programming under Uncertainty"
-authors = "Dantzig, George B."
-year = 1955
-journal = "Management Science"
-doi = "10.1287/mnsc.1.3-4.197"
-openAccess = false
+key = "Dan1955a"
 
 [[references]]
-title = "Multi-stage Stochastic Optimization Applied to Energy Planning"
-authors = "Pereira, Mario V.F.; Pinto, Leontina M.V.G."
-year = 1991
-journal = "Mathematical Programming"
-doi = "10.1007/BF01582895"
-openAccess = false
+key = "PP1991a"
 
 [[references]]
-title = "The Optimal Decision Policy for Multi-stage Stochastic Programming"
-authors = "Rockafellar, R. Tyrrell; Wets, Roger J-B."
-year = 1991
-journal = "Mathematics of Operations Research"
-doi = "10.1287/moor.16.1.119"
-openAccess = false
+key = "RW1991a"
 
 [[models]]
 id = "ts"

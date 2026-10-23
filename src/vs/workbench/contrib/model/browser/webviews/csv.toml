@@ -105,40 +105,20 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "CSV.jl: Utility library for working with CSV and other delimited files"
-authors = "Quinn, Jacob"
-year = 2023
-journal = "GitHub"
-url = "https://github.com/JuliaData/CSV.jl"
-openAccess = true
+key = "Qui2023a"
 
 [[references]]
-title = "Tables.jl: An interface for tables in Julia"
-authors = "Quinn, Jacob"
-year = 2023
-journal = "GitHub"
-url = "https://github.com/JuliaData/Tables.jl"
-openAccess = true
+key = "Qui2023c"
 
 [[references]]
 separator = true
 label = "Standards"
 
 [[references]]
-title = "Common Format and MIME Type for Comma-Separated Values (CSV) Files"
-authors = "Shafranovich, Yakov"
-year = 2005
-journal = "IETF RFC 4180"
-url = "https://www.rfc-editor.org/rfc/rfc4180"
-openAccess = true
+key = "Sha2005a"
 
 [[models]]
 id = "read"

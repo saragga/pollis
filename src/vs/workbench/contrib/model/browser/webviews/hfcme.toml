@@ -77,20 +77,10 @@ separator = true
 label = "Original Papers (from packages)"
 
 [[references]]
-title = "Multivariate Realised Kernels: Consistent Positive Semi-Definite Estimators of the Covariation of Equity Prices with Noise and Non-Synchronous Trading"
-authors = "Barndorff-Nielsen, Hansen, Lunde & Shephard"
-year = 2011
-journal = "Journal of Econometrics"
-doi = "10.1016/j.jeconom.2011.02.007"
-openAccess = false
+key = "BHLS2011a"
 
 [[references]]
-title = "Estimating Covariation: Epps Effect, Microstructure Noise"
-authors = "Zhang"
-year = 2011
-journal = "Journal of Econometrics"
-doi = "10.1016/j.jeconom.2010.07.006"
-openAccess = false
+key = "Zha2011a"
 
 [[models]]
 id = "rc"

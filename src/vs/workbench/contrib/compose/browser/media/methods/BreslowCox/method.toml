@@ -7,7 +7,8 @@ topic = "Survival Analysis"
 license = "MIT"
 version = "0.2.0"
 
-citation = "Dickson, E. R., Grambsch, P. M., Fleming, T. R., Fisher, L. D. and Langworthy, A. (1989). Prognosis in primary biliary cirrhosis: model for decision making. Hepatology 10(1), 1-7."
+key = "DGFFL1989a"
+citation = "Dickson, E. R., Grambsch, P. M., Fleming, T. R., Fisher, L. D. and Langworthy, A. (1989). Prognosis in Primary Biliary Cirrhosis: Model for Decision Making. Hepatology 10(1), 1-7."
 doi = "10.1002/hep.1840100102"
 article = "https://doi.org/10.1002/hep.1840100102"
 

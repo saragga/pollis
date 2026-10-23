@@ -83,12 +83,7 @@ separator = true
 label = "Original Papers (from packages)"
 
 [[references]]
-title = "PLS-regression: a basic tool of chemometrics"
-authors = "Wold, S., Sjöström, M. & Eriksson, L."
-year = 2001
-journal = ""
-url = "https://doi.org/10.1016/S0169-7439(01)00155-1"
-openAccess = false
+key = "WSE2001a"
 
 [[models]]
 id = "lasso"

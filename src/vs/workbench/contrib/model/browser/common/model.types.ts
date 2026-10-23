@@ -4,10 +4,15 @@
  *--------------------------------------------------------------------------------------------*/
 
 export interface IModelPaper {
+	/** The work's key in the references database (media/references/references.duckdb), e.g. `FF1993a`. */
+	readonly key?: string;
 	readonly title: string;
 	readonly authors: string;
 	readonly year: number;
+	/** The venue: a journal, a conference's proceedings or book, a publisher or an institution. */
 	readonly journal?: string;
+	/** The BibTeX entry type, as the references database states it. */
+	readonly type?: 'article' | 'book' | 'inproceedings' | 'incollection' | 'techreport' | 'phdthesis' | 'misc' | 'video' | 'audio' | 'speech';
 	readonly doi?: string;
 	readonly url?: string;
 	readonly googleScholar?: string;

@@ -73,36 +73,16 @@ separator = true
 label = "Data Sources"
 
 [[references]]
-title = "A Look at Some Data on the Old Faithful Geyser"
-authors = "Azzalini, A.; Bowman, A. W."
-year = 1990
-journal = "Applied Statistics"
-doi = "10.2307/2347385"
-openAccess = false
+key = "AB1990a"
 
 [[references]]
-title = "Risk Analysis of the Space Shuttle: Pre-Challenger Prediction of Failure"
-authors = "Dalal, Siddhartha R.; Fowlkes, Edward B.; Hoadley, Bruce"
-year = 1989
-journal = "Journal of the American Statistical Association"
-doi = "10.1080/01621459.1989.10478858"
-openAccess = false
+key = "DFH1989a"
 
 [[references]]
-title = "The Origins of Sex Differences in Science"
-authors = "Long, J. Scott"
-year = 1990
-journal = "Social Forces"
-doi = "10.2307/2579146"
-openAccess = false
+key = "Lon1990a"
 
 [[references]]
-title = "titanic3: Titanic Passenger Data"
-authors = "Harrell, Frank E.; Cason, Thomas"
-year = 2002
-journal = "Vanderbilt University Department of Biostatistics (from Encyclopedia Titanica)"
-url = "https://hbiostat.org/data/"
-openAccess = true
+key = "HC2002a"
 
 [[models]]
 id = "histogram"

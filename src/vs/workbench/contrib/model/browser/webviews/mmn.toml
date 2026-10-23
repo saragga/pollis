@@ -77,20 +77,10 @@ separator = true
 label = "Original Papers (from packages)"
 
 [[references]]
-title = "Nonparametric Bayesian volatility estimation"
-authors = "Gugushvili, S., van der Meulen, F., Schauer, M., & Spreij, P."
-year = 2019
-journal = ""
-url = "https://arxiv.org/abs/1801.09956"
-openAccess = true
+key = "GMSS2019a"
 
 [[references]]
-title = "Fast and scalable non-parametric Bayesian inference for Poisson point processes"
-authors = "Gugushvili, S., van der Meulen, F., Schauer, M., & Spreij, P."
-year = 2023
-journal = ""
-url = "https://doi.org/10.48550/arXiv.1804.03616"
-openAccess = true
+key = "GMSS2023a"
 
 [[bullets]]
 text = "Bayesian nonparametric volatility estimation from noisy high-frequency price observations"

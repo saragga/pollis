@@ -71,20 +71,10 @@ separator = true
 label = "Original Papers (from packages)"
 
 [[references]]
-title = "Extremes.jl: Extreme Value Analysis in Julia"
-authors = "Jalbert, J., Farmer, M., Gobeil, G., & Roy, P."
-year = 2024
-journal = ""
-url = "https://doi.org/10.18637/jss.v109.i06"
-openAccess = true
+key = "JFGR2024a"
 
 [[references]]
-title = "An Introduction to Statistical Modeling of Extreme Values"
-authors = "Coles, S."
-year = 2001
-journal = ""
-url = "https://doi.org/10.1007/978-1-4471-3675-0"
-openAccess = false
+key = "Col2001a"
 
 [[models]]
 id = "fit"

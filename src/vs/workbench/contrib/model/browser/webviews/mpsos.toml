@@ -105,92 +105,42 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "JuMP: A Modeling Language for Mathematical Optimization"
-authors = "Dunning, Iain; Huchette, Joey; Lubin, Miles"
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/15M1020575"
-openAccess = true
+key = "DHL2017a"
 
 [[references]]
-title = "SumOfSquares.jl: Polynomial Sum-of-Squares Optimization in Julia"
-authors = "Legat, Benoit; Weisser, Tillmann; Lofberg, Johan; Parrilo, Pablo A."
-year = 2023
-journal = "GitHub"
-url = "https://github.com/jump-dev/SumOfSquares.jl"
-openAccess = true
+key = "LWLP2023a"
 
 [[references]]
-title = "Clarabel: An Interior-Point Solver for Conic Programs with Quadratic Objectives"
-authors = "Goulart, Paul J.; Chen, Yuwen"
-year = 2024
-journal = "arXiv"
-doi = "10.48550/arXiv.2405.14674"
-openAccess = true
+key = "GC2024a"
 
 [[references]]
-title = "COSMO: A Conic Operator Splitting Method for Convex Conic Problems"
-authors = "Garstka, Michael; Cannon, Mark; Goulart, Paul"
-year = 2021
-journal = "Journal of Optimization Theory and Applications"
-doi = "10.1007/s10957-021-01896-7"
-openAccess = true
+key = "GCG2021a"
 
 [[references]]
-title = "Conic Optimization via Operator Splitting and Homogeneous Self-Dual Embedding"
-authors = "O'Donoghue, Brendan; Chu, Eric; Parikh, Neal; Boyd, Stephen"
-year = 2016
-journal = "Journal of Optimization Theory and Applications"
-doi = "10.1007/s10957-016-0892-3"
-openAccess = false
+key = "OCPB2016a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Semidefinite Optimization and Convex Algebraic Geometry"
-authors = "Blekherman, Grigoriy; Parrilo, Pablo A.; Thomas, Rekha R. (Eds.)"
-year = 2012
-journal = "SIAM"
-doi = "10.1137/1.9781611972290"
-openAccess = false
+key = "BPT2012a"
 
 [[references]]
-title = "An Introduction to Polynomial and Semi-Algebraic Optimization"
-authors = "Lasserre, Jean B."
-year = 2015
-journal = "Cambridge University Press"
-doi = "10.1017/CBO9781107447226"
-openAccess = false
+key = "Las2015a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "Semidefinite Programming Relaxations for Semialgebraic Problems"
-authors = "Parrilo, Pablo A."
-year = 2003
-journal = "Mathematical Programming"
-doi = "10.1007/s10107-003-0387-5"
-openAccess = false
+key = "Par2003a"
 
 [[references]]
-title = "Global Optimization with Polynomials and the Problem of Moments"
-authors = "Lasserre, Jean B."
-year = 2001
-journal = "SIAM Journal on Optimization"
-doi = "10.1137/S1052623400366802"
-openAccess = false
+key = "Las2001a"
 
 [[models]]
 id = "sos"

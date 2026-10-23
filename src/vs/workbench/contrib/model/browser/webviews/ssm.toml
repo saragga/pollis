@@ -89,70 +89,32 @@ separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Optimal State Estimation: Kalman, H-infinity, and Nonlinear Approaches"
-authors = "Simon, Dan"
-year = 2006
-journal = "Wiley-Interscience"
-doi = "10.1002/0470045345"
-openAccess = false
+key = "Sim2006a"
 
 [[references]]
-title = "Probabilistic Robotics"
-authors = "Thrun, Sebastian; Burgard, Wolfram; Fox, Dieter"
-year = 2005
-journal = "MIT Press"
-openAccess = false
+key = "TBF2005a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "A New Approach to Linear Filtering and Prediction Problems"
-authors = "Kalman, Rudolf E."
-year = 1960
-journal = "Journal of Basic Engineering"
-doi = "10.1115/1.3662552"
-openAccess = false
+key = "Kal1960a"
 
 [[references]]
-title = "A New Extension of the Kalman Filter to Nonlinear Systems"
-authors = "Julier, Simon J.; Uhlmann, Jeffrey K."
-year = 1997
-journal = "Proc. SPIE 3068, Signal Processing, Sensor Fusion, and Target Recognition VI"
-doi = "10.1117/12.280797"
-openAccess = false
+key = "JU1997a"
 
 [[references]]
-title = "The Unscented Kalman Filter for Nonlinear Estimation"
-authors = "Wan, Eric A.; Van Der Merwe, Rudolph"
-year = 2000
-journal = "Proceedings of the IEEE Adaptive Systems for Signal Processing, Communications, and Control Symposium"
-doi = "10.1109/ASSPCC.2000.882463"
-openAccess = false
+key = "WM2000a"
 
 [[references]]
-title = "Novel Approach to Nonlinear/Non-Gaussian Bayesian State Estimation"
-authors = "Gordon, Neil J.; Salmond, David J.; Smith, Adrian F. M."
-year = 1993
-journal = "IEE Proceedings F: Radar and Signal Processing"
-doi = "10.1049/ip-f-2.1993.0015"
-openAccess = false
+key = "GSS1993a"
 
 [[references]]
-title = "Rao-Blackwellised Particle Filtering for Dynamic Bayesian Networks"
-authors = "Doucet, Arnaud; de Freitas, Joao F. G.; Murphy, Kevin P.; Russell, Stuart J."
-year = 2000
-journal = "Proceedings of the 16th Conference on Uncertainty in Artificial Intelligence"
-openAccess = false
+key = "DFMR2000a"
 
 [[references]]
-title = "Marginalized Particle Filters for Mixed Linear/Nonlinear State-Space Models"
-authors = "Schon, Thomas; Gustafsson, Fredrik; Nordlund, Per-Johan"
-year = 2005
-journal = "IEEE Transactions on Signal Processing"
-doi = "10.1109/TSP.2005.849151"
-openAccess = false
+key = "SGN2005a"
 
 [[models]]
 id = "kf"

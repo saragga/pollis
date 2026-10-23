@@ -58,36 +58,16 @@ bundled = true
 description = "What the IMF Data portal is, its main datasets, and how series keys are built"
 
 [[references]]
-title = "IMF Data: API Documentation"
-authors = "International Monetary Fund"
-year = 2025
-journal = "data.imf.org"
-url = "https://data.imf.org/en/Resource-Pages/IMF-API"
-openAccess = true
+key = "IMF2025a"
 
 [[references]]
-title = "SDMX 2.1 RESTful Web Services Specification"
-authors = "SDMX Technical Working Group"
-year = 2023
-journal = "sdmx.org"
-url = "https://sdmx.org/?page_id=5008"
-openAccess = true
+key = "SDMXTWG2023a"
 
 [[references]]
-title = "World Economic Outlook Database"
-authors = "International Monetary Fund"
-year = 2026
-journal = "imf.org"
-url = "https://www.imf.org/en/Publications/WEO/weo-database"
-openAccess = true
+key = "IMF2026a"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[bullets]]
 text = "World Economic Outlook"

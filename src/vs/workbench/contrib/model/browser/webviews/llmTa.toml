@@ -109,84 +109,39 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "LLMTextAnalysis.jl"
-authors = "Simecek, Jan"
-year = 2025
-journal = "GitHub"
-url = "https://github.com/svilupp/LLMTextAnalysis.jl"
-openAccess = true
+key = "Sim2025a"
 
 [[references]]
-title = "PromptingTools.jl"
-authors = "Simecek, Jan"
-year = 2025
-journal = "GitHub"
-url = "https://github.com/svilupp/PromptingTools.jl"
-openAccess = true
+key = "Sim2025b"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Speech and Language Processing"
-authors = "Jurafsky, Daniel; Martin, James H."
-year = 2024
-journal = "Pearson (3rd ed., draft)"
-url = "https://web.stanford.edu/~jurafsky/slp3/"
-openAccess = true
+key = "JM2024a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "Attention Is All You Need"
-authors = "Vaswani, Ashish; Shazeer, Noam; Parmar, Niki; Uszkoreit, Jakob; Jones, Llion; Gomez, Aidan N.; Kaiser, Lukasz; Polosukhin, Illia"
-year = 2017
-journal = "NeurIPS"
-url = "https://arxiv.org/abs/1706.03762"
-openAccess = true
+key = "VSPUJ...2017a"
 
 [[references]]
-title = "Language Models are Few-Shot Learners"
-authors = "Brown, Tom B.; Mann, Benjamin; Ryder, Nick; Subbiah, Melanie; Kaplan, Jared; Dhariwal, Prafulla; Neelakantan, Arvind; Shyam, Pranav; Sastry, Girish; Askell, Amanda; Agarwal, Sandhini; Herbert-Voss, Ariel; Krueger, Gretchen; Henighan, Tom; Child, Rewon; Ramesh, Aditya; Ziegler, Daniel M.; Wu, Jeffrey; Winter, Clemens; Hesse, Christopher; Chen, Mark; Sigler, Eric; Litwin, Mateusz; Gray, Scott; Chess, Benjamin; Clark, Jack; Berner, Christopher; McCandlish, Sam; Radford, Alec; Sutskever, Ilya; Amodei, Dario"
-year = 2020
-journal = "NeurIPS"
-url = "https://arxiv.org/abs/2005.14165"
-openAccess = true
+key = "BMRSK...2020a"
 
 [[references]]
-title = "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks"
-authors = "Lewis, Patrick; Perez, Ethan; Piktus, Aleksandra; Petroni, Fabio; Karpukhin, Vladimir; Goyal, Naman; Kuttler, Heinrich; Lewis, Mike; Yih, Wen-tau; Rocktaschel, Tim; Riedel, Sebastian; Kiela, Douwe"
-year = 2020
-journal = "NeurIPS"
-url = "https://arxiv.org/abs/2005.11401"
-openAccess = true
+key = "LPPPK...2020a"
 
 [[references]]
-title = "A Coefficient of Agreement for Nominal Scales"
-authors = "Cohen, Jacob"
-year = 1960
-journal = "Educational and Psychological Measurement"
-doi = "10.1177/001316446002000104"
-openAccess = false
+key = "Coh1960a"
 
 [[references]]
-title = "UMAP: Uniform Manifold Approximation and Projection for Dimension Reduction"
-authors = "McInnes, Leland; Healy, John; Melville, James"
-year = 2018
-journal = "arXiv"
-url = "https://arxiv.org/abs/1802.03426"
-openAccess = true
+key = "MHM2018a"
 
 [[models]]
 id = "tag"

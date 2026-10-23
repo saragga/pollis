@@ -119,64 +119,33 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "DataSplits.jl: Resampling Strategies for Machine Learning"
-authors = "Grheco, Davide"
-year = 2024
-journal = "GitHub"
-openAccess = true
+key = "Grh2024a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "The Elements of Statistical Learning"
-authors = "Hastie, Trevor; Tibshirani, Robert; Friedman, Jerome"
-year = 2009
-journal = "Springer (2nd ed.)"
-openAccess = true
+key = "HTF2009a"
 
 [[references]]
-title = "Pattern Recognition and Machine Learning"
-authors = "Bishop, Christopher M."
-year = 2006
-journal = "Springer"
-openAccess = false
+key = "Bis2006a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "A Study of Cross-Validation and Bootstrap for Accuracy Estimation and Model Selection"
-authors = "Kohavi, Ron"
-year = 1995
-journal = "IJCAI"
-openAccess = true
+key = "Koh1995a"
 
 [[references]]
-title = "Sample Selection via Kennard-Stone Algorithm"
-authors = "Kennard, R. W.; Stone, L. A."
-year = 1969
-journal = "Technometrics"
-doi = "10.1080/00401706.1969.10490666"
-openAccess = false
+key = "KS1969a"
 
 [[references]]
-title = "Combinatorial Framework for Leave-One-Out Cross-Validation"
-authors = "Arlot, Sylvain; Celisse, Alain"
-year = 2010
-journal = "Statistics Surveys"
-doi = "10.1214/09-SS054"
-openAccess = true
+key = "AC2010a"
 
 [[bullets]]
 text = "Cross-validation strategies"

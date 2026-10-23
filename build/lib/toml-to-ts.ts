@@ -6,6 +6,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { parseToml, tomlToPanelData } from '../../src/vs/workbench/contrib/model/browser/common/tomlPanelData.ts';
+import { expandReferenceKeys, type IReference } from './pollis-bib.ts';
 
 function toTypeScriptLiteral(value: unknown, indent: string = ''): string {
 	if (value === null || value === undefined) {
@@ -59,9 +60,11 @@ function toTypeScriptLiteral(value: unknown, indent: string = ''): string {
 	return String(value);
 }
 
-export function generateTypeScriptFromToml(tomlPath: string, acronym: string): string {
+/** The panel's data module, with its reference keys expanded from the references database. */
+export function generateTypeScriptFromToml(tomlPath: string, acronym: string, references: ReadonlyMap<string, IReference>): string {
 	const content = fs.readFileSync(tomlPath, 'utf-8');
 	const data = parseToml(content);
+	expandReferenceKeys(data, references, path.basename(tomlPath));
 
 	const acronymUpper = acronym.toUpperCase();
 	const interfaceName = `I${acronym.charAt(0).toUpperCase()}${acronym.slice(1)}Metadata`;
@@ -87,7 +90,7 @@ export const ${acronymUpper}_METADATA: ${interfaceName} = {
 	return ts;
 }
 
-export function transformTomlFiles(tomlDir: string, outDir: string): void {
+export function transformTomlFiles(tomlDir: string, outDir: string, references: ReadonlyMap<string, IReference>): void {
 	const files = fs.readdirSync(tomlDir).filter(f => f.endsWith('.toml'));
 
 	for (const file of files) {
@@ -97,7 +100,7 @@ export function transformTomlFiles(tomlDir: string, outDir: string): void {
 
 		console.log(`Transforming ${file} → ${path.relative(tomlDir, outPath)}`);
 
-		const ts = generateTypeScriptFromToml(tomlPath, acronym);
+		const ts = generateTypeScriptFromToml(tomlPath, acronym, references);
 		fs.writeFileSync(outPath, ts, 'utf-8');
 	}
 }

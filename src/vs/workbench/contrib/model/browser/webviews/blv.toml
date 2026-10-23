@@ -72,68 +72,23 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "BilevelJuMP.jl: Modeling Bilevel Optimization Problems in Julia"
-authors = "Dias Garcia, Joaquim; Bodin, Guillaume; Street, Alexandre"
-year = 2022
-journal = "INFORMS Journal on Computing"
-doi = "10.1287/ijoc.2022.1181"
-openAccess = true
+key = "GBS2024a"
 
 [[references]]
-title = "HiGHS: Serial and Parallel Solution of Linear Programming"
-authors = "Huangfu, Qi; Hall, J.A.J."
-year = 2018
-journal = "Mathematical Programming Computation"
-doi = "10.1007/s12532-017-0130-5"
-openAccess = true
+key = "HH2018a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Bilevel Programming Problems: Theory, Algorithms and Applications to Energy Networks"
-authors = "Dempe, Stephan; Kalashnikov, Vyacheslav; Perez-Valdes, Gerardo A.; Kalashnykova, Nataliya"
-year = 2015
-journal = "Springer"
-doi = "10.1007/978-3-662-45827-3"
-openAccess = false
+key = "DKPK2015a"
 
 [[references]]
-title = "Introduction to Bilevel Programming"
-authors = "Dempe, Stephan"
-year = 2002
-journal = "Kluwer Academic Publishers"
-doi = "10.1007/b101970"
-openAccess = false
-
-[[references]]
-separator = true
-label = "Original Papers"
-
-[[references]]
-title = "A New Algorithm for the Bilevel Programming Problem"
-authors = "Bard, Jonathan F.; Falk, James E."
-year = 1982
-journal = "Management Science"
-doi = "10.1287/mnsc.28.6.683"
-openAccess = false
-
-[[references]]
-title = "On the Computation of Stackelberg-Nash Equilibria"
-authors = "Sherali, Hanif D."
-year = 1984
-journal = "Operations Research"
-doi = "10.1287/opre.32.2.322"
-openAccess = false
+key = "Dem2002a"
 
 [[bullets]]
 text = "Bilevel Optimisation has a strategic hierarchy: a leader chooses their strategy knowing that rational followers will respond by solving their own optimisation problem. The leader anticipates this response and optimises accordingly."

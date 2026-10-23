@@ -107,28 +107,13 @@ separator = true
 label = "Original Papers (from packages)"
 
 [[references]]
-title = "An Introduction to Copulas"
-authors = "Nelsen, R.B."
-year = 2006
-journal = ""
-url = "https://link.springer.com/book/10.1007/0-387-28678-0"
-openAccess = false
+key = "Nel2006a"
 
 [[references]]
-title = "Modeling Dependence with Copulas and Applications to Risk Management"
-authors = "Embrechts, P., McNeil, A. & Straumann, D."
-year = 2002
-journal = ""
-url = "https://people.math.ethz.ch/~embrecht/ftp/copchapter.pdf"
-openAccess = true
+key = "EMS2002a"
 
 [[references]]
-title = "Everything You Always Wanted to Know about Copula Modeling but Were Afraid to Ask"
-authors = "Genest, C. & Favre, A.-C."
-year = 2007
-journal = ""
-url = "https://doi.org/10.1061/(ASCE)1084-0699(2007)12:4(347)"
-openAccess = false
+key = "GF2007a"
 
 [[bullets]]
 text = "Construction of multivariate distributions through specification of copulas and marginals via Sklar’s theorem"

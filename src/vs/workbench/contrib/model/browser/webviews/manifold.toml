@@ -66,28 +66,13 @@ separator = true
 label = "Original Papers (from packages)"
 
 [[references]]
-title = "A Global Geometric Framework for Nonlinear Dimensionality Reduction"
-authors = "Tenenbaum, J.B., de Silva, V. & Langford, J.C."
-year = 2000
-journal = ""
-url = "https://science.sciencemag.org/content/290/5500/2319"
-openAccess = false
+key = "TSL2000a"
 
 [[references]]
-title = "Nonlinear Dimensionality Reduction by Locally Linear Embedding"
-authors = "Roweis, S.T. & Saul, L.K."
-year = 2000
-journal = ""
-url = "https://science.sciencemag.org/content/290/5500/2323"
-openAccess = false
+key = "RS2000a"
 
 [[references]]
-title = "Diffusion Maps"
-authors = "Coifman, R.R. & Lafon, S."
-year = 2006
-journal = ""
-url = "https://doi.org/10.1016/j.acha.2006.04.006"
-openAccess = false
+key = "CL2006a"
 
 [[models]]
 id = "isomap"

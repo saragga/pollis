@@ -105,75 +105,36 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "Manopt.jl: Optimization on Manifolds in Julia"
-authors = "Bergmann, Ronny"
-year = 2022
-journal = "Journal of Open Source Software"
-doi = "10.21105/joss.03866"
-openAccess = true
+key = "Ber2022a"
 
 [[references]]
-title = "Manifolds.jl: An Extensible Julia Framework for Data Analysis on Manifolds"
-authors = "Axen, Seth D.; Baran, Mateusz; Bergmann, Ronny; Rzecki, Krzysztof"
-year = 2023
-journal = "ACM Transactions on Mathematical Software"
-doi = "10.1145/3618296"
-openAccess = true
+key = "ABBR2023a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Optimization Algorithms on Matrix Manifolds"
-authors = "Absil, Pierre-Antoine; Mahony, Robert; Sepulchre, Rodolphe"
-year = 2008
-journal = "Princeton University Press"
-openAccess = false
+key = "AMS2008a"
 
 [[references]]
-title = "An Introduction to Optimization on Smooth Manifolds"
-authors = "Boumal, Nicolas"
-year = 2023
-journal = "Cambridge University Press"
-url = "https://www.nicolasboumal.net/book"
-openAccess = true
+key = "Bou2023b"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "Trust-Region Methods on Riemannian Manifolds"
-authors = "Absil, Pierre-Antoine; Baker, Christopher G.; Gallivan, Kyle A."
-year = 2007
-journal = "Foundations of Computational Mathematics"
-doi = "10.1007/s10208-005-0179-9"
-openAccess = false
+key = "ABG2007a"
 
 [[references]]
-title = "Riemannian Conjugate Gradient Methods: General Framework and Specific Algorithms with Convergence Analyses"
-authors = "Sato, Hiroyuki"
-year = 2022
-journal = "SIAM Journal on Optimization"
-doi = "10.1137/20M1324713"
-openAccess = false
+key = "Sat2022a"
 
 [[references]]
-title = "A Riemannian BFGS Method without Differentiated Retraction for Nonconvex Optimization Problems"
-authors = "Huang, Wen; Absil, Pierre-Antoine; Gallivan, Kyle A."
-year = 2018
-journal = "SIAM Journal on Optimization"
-doi = "10.1137/17M1127582"
-openAccess = false
+key = "HAG2018a"
 
 [[models]]
 id = "gd"

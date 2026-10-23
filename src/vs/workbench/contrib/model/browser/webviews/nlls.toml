@@ -94,52 +94,27 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Numerical Optimization"
-authors = "Nocedal, Jorge; Wright, Stephen J."
-year = 2006
-journal = "Springer (2nd ed.)"
-doi = "10.1007/978-0-387-40065-5"
-openAccess = false
+key = "NW2006a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "A Method for the Solution of Certain Non-Linear Problems in Least Squares"
-authors = "Levenberg, Kenneth"
-year = 1944
-journal = "Quarterly of Applied Mathematics"
-doi = "10.1090/qam/10666"
-openAccess = false
+key = "Lev1944a"
 
 [[references]]
-title = "An Algorithm for Least-Squares Estimation of Nonlinear Parameters"
-authors = "Marquardt, Donald W."
-year = 1963
-journal = "SIAM Journal on Applied Mathematics"
-doi = "10.1137/0111030"
-openAccess = false
+key = "Mar1963a"
 
 [[references]]
-title = "A New Algorithm for Unconstrained Optimization"
-authors = "Powell, Michael J. D."
-year = 1970
-journal = "Nonlinear Programming (Academic Press)"
-doi = "10.1016/B978-0-12-597050-1.50009-6"
-openAccess = false
+key = "Pow1970a"
 
 [[models]]
 id = "lm"

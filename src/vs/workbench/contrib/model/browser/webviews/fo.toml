@@ -91,59 +91,30 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "Optim: A mathematical optimization package for Julia"
-authors = "Mogensen, Patrick Kofod; Riseth, Asbjorn Nilsen"
-year = 2018
-journal = "Journal of Open Source Software"
-doi = "10.21105/joss.00615"
-openAccess = true
+key = "MR2018a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Numerical Optimization"
-authors = "Nocedal, Jorge; Wright, Stephen J."
-year = 2006
-journal = "Springer (2nd ed.)"
-doi = "10.1007/978-0-387-40065-5"
-openAccess = false
+key = "NW2006a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "Function Minimization by Conjugate Gradients"
-authors = "Fletcher, Roger; Reeves, Colin M."
-year = 1964
-journal = "Computer Journal"
-doi = "10.1093/comjnl/7.2.149"
-openAccess = false
+key = "FR1964a"
 
 [[references]]
-title = "Note sur la convergence de methodes de directions conjuguees"
-authors = "Polak, Elijah; Ribiere, Gerard"
-year = 1969
-journal = "Revue Francaise Informatique Recherche Operationnelle"
-openAccess = false
+key = "PR1969a"
 
 [[references]]
-title = "A New Conjugate Gradient Method with Guaranteed Descent and an Efficient Line Search"
-authors = "Hager, William W.; Zhang, Hongchao"
-year = 2005
-journal = "SIAM Journal on Optimization"
-doi = "10.1137/030601880"
-openAccess = false
+key = "HZ2005a"
 
 [[models]]
 id = "gd"

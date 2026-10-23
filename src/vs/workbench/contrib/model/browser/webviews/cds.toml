@@ -85,51 +85,27 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "DynamicalSystems.jl: A Julia software library for chaos and nonlinear dynamics"
-authors = "Datseris, George"
-year = 2018
-journal = "Journal of Open Source Software"
-doi = "10.21105/joss.00598"
-openAccess = true
+key = "Dat2018a"
 
 [[references]]
-title = "DifferentialEquations.jl: A Performant and Feature-Rich Ecosystem for Solving Differential Equations in Julia"
-authors = "Rackauckas, Christopher; Nie, Qing"
-year = 2017
-journal = "Journal of Open Research Software"
-doi = "10.5334/jors.151"
-openAccess = true
+key = "RN2017a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Nonlinear Dynamics and Chaos"
-authors = "Strogatz, Steven H."
-year = 2015
-journal = "Westview Press (2nd ed.)"
-openAccess = false
+key = "Str2015a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "Deterministic Nonperiodic Flow"
-authors = "Lorenz, Edward N."
-year = 1963
-journal = "Journal of the Atmospheric Sciences"
-doi = "10.1175/1520-0469(1963)020<0130:DNF>2.0.CO;2"
-openAccess = false
+key = "Lor1963a"
 
 [[bullets]]
 text = "CoupledODEs"

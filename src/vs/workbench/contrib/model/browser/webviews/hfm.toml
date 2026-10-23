@@ -391,48 +391,23 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "Transformers.jl: Transformers in Julia"
-authors = "Cheng, Ching-Wen"
-year = 2023
-journal = "GitHub"
-url = "https://github.com/chengchingwen/Transformers.jl"
-openAccess = true
+key = "Che2023a"
 
 [[references]]
-title = "HuggingFaceHub.jl: Julia Interface to the Hugging Face Hub"
-authors = "JuliaML contributors"
-year = 2024
-journal = "GitHub"
-url = "https://github.com/cjdoris/HuggingFaceHub.jl"
-openAccess = true
+key = "JMLC2024a"
 
 [[references]]
 separator = true
 label = "Foundational Papers"
 
 [[references]]
-title = "Attention Is All You Need"
-authors = "Vaswani, Ashish; Shazeer, Noam; Parmar, Niki; Uszkoreit, Jakob; Jones, Llion; Gomez, Aidan N.; Kaiser, Lukasz; Polosukhin, Illia"
-year = 2017
-journal = "NeurIPS"
-url = "https://arxiv.org/abs/1706.03762"
-openAccess = true
+key = "VSPUJ...2017a"
 
 [[references]]
-title = "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding"
-authors = "Devlin, Jacob; Chang, Ming-Wei; Lee, Kenton; Toutanova, Kristina"
-year = 2019
-journal = "NAACL-HLT"
-url = "https://arxiv.org/abs/1810.04805"
-openAccess = true
+key = "DCLT2019a"
 
 [[models]]
 id = "multimodal"

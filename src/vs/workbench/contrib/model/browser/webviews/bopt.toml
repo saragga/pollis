@@ -110,68 +110,33 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Bayesian Optimization"
-authors = "Garnett, Roman"
-year = 2023
-journal = "Cambridge University Press"
-url = "https://bayesoptbook.com"
-openAccess = true
+key = "Gar2023a"
 
 [[references]]
-title = "Gaussian Processes for Machine Learning"
-authors = "Rasmussen, Carl Edward; Williams, Christopher K.I."
-year = 2006
-journal = "MIT Press"
-url = "https://gaussianprocess.org/gpml/"
-openAccess = true
+key = "RW2006a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "Efficient Global Optimization of Expensive Black-Box Functions"
-authors = "Jones, Donald R.; Schonlau, Matthias; Welch, William J."
-year = 1998
-journal = "Journal of Global Optimization"
-doi = "10.1023/A:1008306431147"
-openAccess = false
+key = "JSW1998a"
 
 [[references]]
-title = "Gaussian Process Optimization in the Bandit Setting: No Regret and Experimental Design"
-authors = "Srinivas, Niranjan; Krause, Andreas; Kakade, Sham M.; Seeger, Matthias W."
-year = 2010
-journal = "International Conference on Machine Learning (ICML)"
-url = "https://arxiv.org/abs/0912.3995"
-openAccess = true
+key = "SKKS2010a"
 
 [[references]]
-title = "Practical Bayesian Optimization of Machine Learning Algorithms"
-authors = "Snoek, Jasper; Larochelle, Hugo; Adams, Ryan P."
-year = 2012
-journal = "Advances in Neural Information Processing Systems (NeurIPS)"
-url = "https://arxiv.org/abs/1206.2944"
-openAccess = true
+key = "SLA2012a"
 
 [[references]]
-title = "Taking the Human Out of the Loop: A Review of Bayesian Optimization"
-authors = "Shahriari, Bobak; Swersky, Kevin; Wang, Ziyu; Adams, Ryan P.; de Freitas, Nando"
-year = 2016
-journal = "Proceedings of the IEEE"
-doi = "10.1109/JPROC.2015.2494218"
-openAccess = false
+key = "SSWAF2016a"
 
 [[models]]
 id = "ei"

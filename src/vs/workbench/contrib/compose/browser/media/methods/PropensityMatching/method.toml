@@ -7,7 +7,8 @@ topic = "K-Nearest Neighbours"
 license = "MIT"
 version = "0.2.0"
 
-citation = "Dehejia, R. H. and Wahba, S. (1999). Causal effects in nonexperimental studies: reevaluating the evaluation of training programs. Journal of the American Statistical Association 94(448), 1053-1062."
+key = "DW1999a"
+citation = "Dehejia, R. H. and Wahba, S. (1999). Causal Effects in Nonexperimental Studies: Reevaluating the Evaluation of Training Programs. Journal of the American Statistical Association 94(448), 1053-1062."
 doi = "10.1080/01621459.1999.10473858"
 article = "https://doi.org/10.1080/01621459.1999.10473858"
 

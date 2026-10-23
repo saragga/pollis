@@ -81,127 +81,58 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "GLM.jl: Generalized Linear Models in Julia"
-authors = "JuliaStats Contributors"
-year = 2024
-journal = "GitHub"
-url = "https://github.com/JuliaStats/GLM.jl"
-openAccess = true
+key = "JSC2024a"
 
 [[references]]
-title = "CovarianceMatrices.jl: Robust Covariance Matrix Estimators"
-authors = "Ragusa, Giuseppe"
-year = 2024
-journal = "GitHub"
-url = "https://github.com/gragusa/CovarianceMatrices.jl"
-openAccess = true
+key = "Rag2024a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Generalized Linear Models"
-authors = "McCullagh, Peter; Nelder, John A."
-year = 1989
-journal = "Chapman and Hall (2nd ed.)"
-openAccess = false
+key = "MN1989a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "Generalized Linear Models"
-authors = "Nelder, John A.; Wedderburn, Robert W. M."
-year = 1972
-journal = "Journal of the Royal Statistical Society: Series A"
-doi = "10.2307/2344614"
-openAccess = false
+key = "NW1972a"
 
 [[references]]
-title = "A Heteroskedasticity-Consistent Covariance Matrix Estimator and a Direct Test for Heteroskedasticity"
-authors = "White, Halbert"
-year = 1980
-journal = "Econometrica"
-doi = "10.2307/1912934"
-openAccess = false
+key = "Whi1980a"
 
 [[references]]
-title = "A Simple, Positive Semi-Definite, Heteroskedasticity and Autocorrelation Consistent Covariance Matrix"
-authors = "Newey, Whitney K.; West, Kenneth D."
-year = 1987
-journal = "Econometrica"
-doi = "10.2307/1913610"
-openAccess = false
+key = "NW1987a"
 
 [[references]]
 separator = true
 label = "Data Sources"
 
 [[references]]
-title = "Regression Towards Mediocrity in Hereditary Stature"
-authors = "Galton, Francis"
-year = 1886
-journal = "Journal of the Anthropological Institute of Great Britain and Ireland"
-doi = "10.2307/2841583"
-openAccess = false
+key = "Gal1886a"
 
 [[references]]
-title = "The Sensitivity of an Empirical Model of Married Women's Hours of Work to Economic and Statistical Assumptions"
-authors = "Mroz, Thomas A."
-year = 1987
-journal = "Econometrica"
-doi = "10.2307/1911029"
-openAccess = false
+key = "Mro1987a"
 
 [[references]]
-title = "Risk Analysis of the Space Shuttle: Pre-Challenger Prediction of Failure"
-authors = "Dalal, Siddhartha R.; Fowlkes, Edward B.; Hoadley, Bruce"
-year = 1989
-journal = "Journal of the American Statistical Association"
-doi = "10.1080/01621459.1989.10478858"
-openAccess = false
+key = "DFH1989a"
 
 [[references]]
-title = "The Origins of Sex Differences in Science"
-authors = "Long, J. Scott"
-year = 1990
-journal = "Social Forces"
-doi = "10.2307/2579146"
-openAccess = false
+key = "Lon1990a"
 
 [[references]]
-title = "Prospective Evaluation of Prognostic Variables from Patient-Completed Questionnaires"
-authors = "Loprinzi, Charles L.; et al."
-year = 1994
-journal = "Journal of Clinical Oncology"
-doi = "10.1200/JCO.1994.12.3.601"
-openAccess = false
+key = "LLWKN...1994a"
 
 [[references]]
-title = "Using Geographic Variation in College Proximity to Estimate the Return to Schooling"
-authors = "Card, David"
-year = 1995
-journal = "Aspects of Labour Market Behaviour, University of Toronto Press"
-url = "https://www.nber.org/papers/w4483"
-openAccess = true
+key = "Car1995a"
 
 [[references]]
-title = "titanic3: Titanic Passenger Data"
-authors = "Harrell, Frank E.; Cason, Thomas"
-year = 2002
-journal = "Vanderbilt University Department of Biostatistics (from Encyclopedia Titanica)"
-url = "https://hbiostat.org/data/"
-openAccess = true
+key = "HC2002a"
 
 # Model toggles: one per response family (ids are the GLM.jl distribution names)
 

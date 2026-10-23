@@ -76,28 +76,13 @@ bundled = true
 description = "Understanding workbook structure: sheets, cells, ranges, and named regions"
 
 [[references]]
-title = "XLSX.jl: Read and write Excel files in pure Julia"
-authors = "Noris, Felipe; contributors"
-year = 2024
-journal = "GitHub"
-url = "https://github.com/felipenoris/XLSX.jl"
-openAccess = true
+key = "Tav2024a"
 
 [[references]]
-title = "Tables.jl: An Interface for Tabular Data"
-authors = "Quinn, Jacob; contributors"
-year = 2023
-journal = "GitHub"
-url = "https://github.com/JuliaData/Tables.jl"
-openAccess = true
+key = "Qui...2023a"
 
 [[references]]
-title = "Office Open XML File Formats — Part 1: Fundamentals and Markup Language Reference"
-authors = "Ecma International"
-year = 2016
-journal = "ECMA-376 5th Edition"
-url = "https://www.ecma-international.org/publications-and-standards/standards/ecma-376/"
-openAccess = true
+key = "EI2016a"
 
 [[bullets]]
 text = "Read"

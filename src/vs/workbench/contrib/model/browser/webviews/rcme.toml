@@ -77,28 +77,13 @@ separator = true
 label = "Original Papers (from packages)"
 
 [[references]]
-title = "A Well-Conditioned Estimator for Large-Dimensional Covariance Matrices"
-authors = "Ledoit & Wolf"
-year = 2004
-journal = "Journal of Multivariate Analysis"
-doi = "10.1016/S0047-259X(03)00096-4"
-openAccess = false
+key = "LW2004a"
 
 [[references]]
-title = "Shrinkage Algorithms for MMSE Covariance Estimation"
-authors = "Chen, Wiesel, Eldar & Hero"
-year = 2010
-journal = "IEEE Transactions on Signal Processing"
-doi = "10.1109/TSP.2010.2053029"
-openAccess = false
+key = "CWEH2010a"
 
 [[references]]
-title = "Analytical Nonlinear Shrinkage of Large-Dimensional Covariance Matrices"
-authors = "Ledoit & Wolf"
-year = 2020
-journal = "Annals of Statistics"
-doi = "10.1214/19-AOS1921"
-openAccess = false
+key = "LW2020a"
 
 [[models]]
 id = "lw"

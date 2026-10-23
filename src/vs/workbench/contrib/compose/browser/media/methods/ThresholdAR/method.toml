@@ -7,7 +7,8 @@ topic = "Nonlinear Dynamics"
 license = "MIT"
 version = "0.2.0"
 
-citation = "Tong, H. and Lim, K. S. (1980). Threshold autoregression, limit cycles and cyclical data. Journal of the Royal Statistical Society: Series B 42(3), 245-268."
+key = "TL1980a"
+citation = "Tong, H. and Lim, K. S. (1980). Threshold Autoregression, Limit Cycles and Cyclical Data. Journal of the Royal Statistical Society: Series B (Methodological) 42(3), 245-268."
 doi = "10.1111/j.2517-6161.1980.tb01126.x"
 article = "https://doi.org/10.1111/j.2517-6161.1980.tb01126.x"
 

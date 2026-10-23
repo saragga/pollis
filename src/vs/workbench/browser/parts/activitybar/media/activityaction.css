@@ -117,12 +117,17 @@
 	right: 0;
 }
 
+/* View containers: sized to their icons, so the secondary side bar shortcuts follow right after them */
+.monaco-workbench .activitybar > .content > .composite-bar > .monaco-action-bar {
+	height: auto;
+}
+
 /* Secondary side bar shortcuts: a separator above them */
 .monaco-workbench .activitybar > .content .auxiliarybar-shortcuts:not(.empty)::before {
 	content: "";
 	display: block;
 	height: 0;
-	margin: 4px 12px;
+	margin: 0 12px;
 	border-top: 1px solid var(--vscode-activityBar-inactiveForeground);
 	opacity: 0.4;
 }

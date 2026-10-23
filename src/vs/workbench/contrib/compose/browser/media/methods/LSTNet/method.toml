@@ -7,7 +7,8 @@ topic = "Time Series Forecasting"
 license = "MIT"
 version = "0.2.0"
 
-citation = "Lai, G., Chang, W.-C., Yang, Y. and Liu, H. (2018). Modeling long- and short-term temporal patterns with deep neural networks. In SIGIR '18: The 41st International ACM SIGIR Conference on Research and Development in Information Retrieval, 95-104."
+key = "LCYL2018a"
+citation = "Lai, G., Chang, W.-C., Yang, Y. and Liu, H. (2018). Modeling Long- and Short-Term Temporal Patterns with Deep Neural Networks. In SIGIR '18: The 41st International ACM SIGIR Conference on Research and Development in Information Retrieval, 95-104."
 doi = "10.1145/3209978.3210006"
 article = "https://arxiv.org/pdf/1703.07015"
 

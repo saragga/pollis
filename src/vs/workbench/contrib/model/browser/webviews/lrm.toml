@@ -81,56 +81,26 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "PerformanceAnalytics.jl: Performance and Risk Analysis of Returns"
-authors = "Oehne, Elias"
-year = 2024
-journal = "GitHub"
-url = "https://github.com/eohne/PerformanceAnalytics.jl"
-openAccess = true
+key = "Oeh2024a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "Portfolio Selection"
-authors = "Markowitz, Harry"
-year = 1952
-journal = "Journal of Finance"
-doi = "10.2307/2975974"
-openAccess = false
+key = "Mar1952a"
 
 [[references]]
-title = "Performance Measurement in a Downside Risk Framework"
-authors = "Sortino, Frank A.; Price, Lee N."
-year = 1994
-journal = "Journal of Investing"
-doi = "10.3905/joi.3.3.59"
-openAccess = false
+key = "SP1994a"
 
 [[references]]
-title = "Coherent Measures of Risk"
-authors = "Artzner, Philippe; Delbaen, Freddy; Eber, Jean-Marc; Heath, David"
-year = 1999
-journal = "Mathematical Finance"
-doi = "10.1111/1467-9965.00068"
-openAccess = false
+key = "ADEH1999a"
 
 [[references]]
-title = "Expected Shortfall: A Natural Coherent Alternative to Value at Risk"
-authors = "Acerbi, Carlo; Tasche, Dirk"
-year = 2002
-journal = "Economic Notes"
-doi = "10.1111/1468-0300.00091"
-openAccess = false
+key = "AT2002a"
 
 # Model toggles: one per family of loss risk measures
 

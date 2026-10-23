@@ -106,52 +106,27 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Econometric Analysis"
-authors = "Greene, William H."
-year = 2018
-journal = "Pearson (8th ed.)"
-url = "https://www.pearson.com/en-us/subject-catalog/p/econometric-analysis/P200000006119"
-openAccess = false
+key = "Gre2018a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "Estimating Regression Models with Multiplicative Heteroscedasticity"
-authors = "Harvey, Andrew C."
-year = 1976
-journal = "Econometrica"
-doi = "10.2307/1913974"
-openAccess = false
+key = "Har1976a"
 
 [[references]]
-title = "A New Test for Heteroskedasticity"
-authors = "Glejser, Herbert"
-year = 1969
-journal = "Journal of the American Statistical Association"
-doi = "10.1080/01621459.1969.10500975"
-openAccess = false
+key = "Gle1969a"
 
 [[references]]
-title = "A Heteroskedasticity-Consistent Covariance Matrix Estimator and a Direct Test for Heteroskedasticity"
-authors = "White, Halbert"
-year = 1980
-journal = "Econometrica"
-doi = "10.2307/1912934"
-openAccess = false
+key = "Whi1980a"
 
 [[models]]
 id = "exponential"

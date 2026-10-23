@@ -90,60 +90,30 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "ReinforcementLearning.jl: A Reinforcement Learning Package for the Julia Programming Language"
-authors = "Tian, Jun; others"
-year = 2020
-journal = "GitHub"
-url = "https://github.com/JuliaReinforcementLearning/ReinforcementLearning.jl"
-openAccess = true
+key = "Tia...2020a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Reinforcement Learning: An Introduction"
-authors = "Sutton, Richard S.; Barto, Andrew G."
-year = 2018
-journal = "MIT Press"
-url = "http://incompleteideas.net/book/the-book-2nd.html"
-openAccess = true
+key = "SB2018a"
 
 [[references]]
-title = "Algorithms for Reinforcement Learning"
-authors = "Szepesvari, Csaba"
-year = 2010
-journal = "Morgan and Claypool"
-url = "https://sites.ualberta.ca/~szepesva/papers/RLAlgsInMDPs.pdf"
-openAccess = true
+key = "Sze2010a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "On the Likelihood that One Unknown Probability Exceeds Another"
-authors = "Thompson, William R."
-year = 1933
-journal = "Biometrika"
-doi = "10.1093/biomet/25.3-4.285"
-openAccess = false
+key = "Tho1933a"
 
 [[references]]
-title = "Finite-time Analysis of the Multiarmed Bandit Problem"
-authors = "Auer, Peter; Cesa-Bianchi, Nicolo; Fischer, Paul"
-year = 2002
-journal = "Machine Learning"
-doi = "10.1023/A:1013689704352"
-openAccess = false
+key = "ACF2002a"
 
 [[models]]
 id = "egreedy"

@@ -95,66 +95,33 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "Metaheuristics: A Julia Package for Single- and Multi-Objective Optimization"
-authors = "Mejia-de-Dios, Jesus-Adolfo; Mezura-Montes, Efren"
-year = 2022
-journal = "Journal of Open Source Software"
-doi = "10.21105/joss.04723"
-openAccess = true
+key = "MM2022a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Multi-Objective Optimization Using Evolutionary Algorithms"
-authors = "Deb, Kalyanmoy"
-year = 2001
-journal = "Wiley"
-openAccess = false
+key = "Deb2001a"
 
 [[references]]
-title = "Evolutionary Algorithms for Solving Multi-Objective Problems"
-authors = "Coello Coello, Carlos A.; Lamont, Gary B.; Van Veldhuizen, David A."
-year = 2007
-journal = "Springer (2nd ed.)"
-openAccess = false
+key = "CLV2007a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "MOEA/D: A Multiobjective Evolutionary Algorithm Based on Decomposition"
-authors = "Zhang, Qingfu; Li, Hui"
-year = 2007
-journal = "IEEE Transactions on Evolutionary Computation"
-doi = "10.1109/TEVC.2007.892759"
-openAccess = false
+key = "ZL2007a"
 
 [[references]]
-title = "A Coevolutionary Framework for Constrained Multiobjective Optimization Problems"
-authors = "Tian, Ye; Zhang, Tao; Xiao, Jianhua; Zhang, Xingyi; Jin, Yaochu"
-year = 2021
-journal = "IEEE Transactions on Evolutionary Computation"
-doi = "10.1109/TEVC.2020.3004012"
-openAccess = false
+key = "TZXZJ2021a"
 
 [[references]]
-title = "Borg: An Auto-Adaptive Many-Objective Evolutionary Computing Framework"
-authors = "Hadka, David; Reed, Patrick"
-year = 2013
-journal = "Evolutionary Computation"
-doi = "10.1162/EVCO_a_00075"
-openAccess = false
+key = "HR2013a"
 
 [[models]]
 id = "moead"

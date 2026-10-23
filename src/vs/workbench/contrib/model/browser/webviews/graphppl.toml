@@ -94,65 +94,33 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "RxInfer: A Julia Package for Reactive Real-Time Bayesian Inference"
-authors = "Bagaev, Dmitry; de Vries, Bert"
-year = 2023
-journal = "Journal of Open Source Software"
-doi = "10.21105/joss.05161"
-openAccess = true
+key = "BV2023c"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Pattern Recognition and Machine Learning"
-authors = "Bishop, Christopher M."
-year = 2006
-journal = "Springer"
-openAccess = false
+key = "Bis2006a"
 
 [[references]]
-title = "Probabilistic Graphical Models: Principles and Techniques"
-authors = "Koller, Daphne; Friedman, Nir"
-year = 2009
-journal = "MIT Press"
-openAccess = false
+key = "KF2009a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "Reverend Bayes on Inference Engines: A Distributed Hierarchical Approach"
-authors = "Pearl, Judea"
-year = 1982
-journal = "Proceedings of the National Conference on Artificial Intelligence (AAAI)"
-openAccess = false
+key = "Pea1982a"
 
 [[references]]
-title = "Expectation Propagation for Approximate Bayesian Inference"
-authors = "Minka, Thomas P."
-year = 2001
-journal = "Proceedings of the 17th Conference in Uncertainty in Artificial Intelligence (UAI)"
-url = "https://dl.acm.org/doi/10.5555/2074022.2074101"
-openAccess = false
+key = "Min2001b"
 
 [[references]]
-title = "A Family of Algorithms for Approximate Bayesian Inference"
-authors = "Minka, Thomas P."
-year = 2001
-journal = "PhD Thesis, MIT"
-url = "https://tminka.github.io/papers/ep/minka-thesis.pdf"
-openAccess = true
+key = "Min2001a"
 
 [[models]]
 id = "bp"

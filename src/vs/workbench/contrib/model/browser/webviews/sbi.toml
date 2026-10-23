@@ -86,20 +86,10 @@ separator = true
 label = "Original Papers (from packages)"
 
 [[references]]
-title = "Neural Bayes Estimators for Irregular Spatial Data Using Graph Neural Networks"
-authors = "Sainsbury-Dale, M., Zammit-Mangion, A. & Huser, R."
-year = 2025
-journal = ""
-url = "https://doi.org/10.1080/10618600.2024.2433671"
-openAccess = true
+key = "SZH2025a"
 
 [[references]]
-title = "Likelihood-Free Parameter Estimation with Neural Bayes Estimators"
-authors = "Sainsbury-Dale, M., Zammit-Mangion, A. & Huser, R."
-year = 2024
-journal = ""
-url = "https://doi.org/10.1080/00031305.2023.2249522"
-openAccess = true
+key = "SZH2024a"
 
 [[models]]
 id = "point"

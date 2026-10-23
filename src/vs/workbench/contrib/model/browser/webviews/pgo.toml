@@ -94,51 +94,20 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
-
-[[references]]
-separator = true
-label = "Textbooks"
-
-[[references]]
-title = "Introduction to Global Optimization"
-authors = "Neumaier, Arnold"
-year = 2004
-journal = "Cambridge University Press"
-doi = "10.1017/CBO9780511569029"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "Stochastic Global Optimization Methods Part I: Clustering Methods"
-authors = "Rinnooy Kan, A. H. G.; Timmer, G. T."
-year = 1987
-journal = "Mathematical Programming"
-doi = "10.1007/BF02592071"
-openAccess = false
+key = "KT1987a"
 
 [[references]]
-title = "An Adaptive Approach to Stochastic Global Optimization"
-authors = "Madsen, Kaj; Zertchaninov, Serguei"
-year = 1998
-journal = "Technical Report"
-openAccess = false
+key = "MZ1998a"
 
 [[references]]
-title = "Benchmarking Global Optimizers"
-authors = "Arnoud, Antoine; Guvenen, Fatih; Kleineberg, Tatjana"
-year = 2019
-journal = "NBER Working Paper 26340"
-doi = "10.3386/w26340"
-openAccess = false
+key = "AGK2019a"
 
 [[models]]
 id = "mlsl"

@@ -94,52 +94,20 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "DifferentialEquations.jl: A Performant and Feature-Rich Ecosystem for Solving Differential Equations in Julia"
-authors = "Rackauckas, Christopher; Nie, Qing"
-year = 2017
-journal = "Journal of Open Research Software"
-doi = "10.5334/jors.151"
-openAccess = true
+key = "RN2017a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Stochastic Differential Equations: An Introduction with Applications"
-authors = "Øksendal, Bernt"
-year = 2003
-journal = "Springer (6th ed.)"
-doi = "10.1007/978-3-642-14394-6"
-openAccess = false
+key = "Oks2003a"
 
 [[references]]
-title = "An Introduction to Stochastic Differential Equations"
-authors = "Evans, Lawrence C."
-year = 2013
-journal = "American Mathematical Society"
-url = "https://math.berkeley.edu/~evans/SDE.course.pdf"
-openAccess = true
-
-[[references]]
-separator = true
-label = "Original Papers"
-
-[[references]]
-title = "Adaptive Stepsize Based on Control Theory for Stochastic Differential Equations"
-authors = "Burrage, Kevin; Burrage, Pamela; Higham, Desmond; Kloeden, Peter; Platen, Eckhard"
-year = 2004
-journal = "Numerical Algorithms"
-doi = "10.1023/B:NUMA.0000027736.85078.be"
-openAccess = false
+key = "Eva2013a"
 
 [[models]]
 id = "add"

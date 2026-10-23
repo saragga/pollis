@@ -77,28 +77,13 @@ separator = true
 label = "Original Papers (from packages)"
 
 [[references]]
-title = "Extremes.jl: Extreme Value Analysis in Julia"
-authors = "Jalbert, J., Farmer, M., Gobeil, G., & Roy, P."
-year = 2024
-journal = ""
-url = "https://doi.org/10.18637/jss.v109.i06"
-openAccess = true
+key = "JFGR2024a"
 
 [[references]]
-title = "Modelling Extremal Events for Insurance and Finance"
-authors = "Embrechts, P., Klüppelberg, C., & Mikosch, T."
-year = 1997
-journal = ""
-url = "https://doi.org/10.1007/978-3-642-33483-2"
-openAccess = false
+key = "EKM1997a"
 
 [[references]]
-title = "Estimation of Tail-Related Risk Measures for Heteroscedastic Financial Time Series"
-authors = "McNeil, A. J., & Frey, R."
-year = 2000
-journal = ""
-url = "https://doi.org/10.1016/S0927-5398(00)00012-8"
-openAccess = false
+key = "MF2000a"
 
 [[models]]
 id = "rl"

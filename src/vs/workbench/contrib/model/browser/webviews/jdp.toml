@@ -94,60 +94,30 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "JumpProcesses.jl: A Julia Package for Stochastic Jump Processes"
-authors = "Rackauckas, Christopher; Nie, Qing; et al."
-year = 2022
-journal = "GitHub"
-url = "https://github.com/SciML/JumpProcesses.jl"
-openAccess = true
+key = "ZIRIN...2024a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Financial Modelling with Jump Processes"
-authors = "Cont, Rama; Tankov, Peter"
-year = 2004
-journal = "Chapman and Hall / CRC"
-doi = "10.1201/9780203485217"
-openAccess = false
+key = "CT2004a"
 
 [[references]]
-title = "Stochastic Calculus for Finance II: Continuous-Time Models"
-authors = "Shreve, Steven E."
-year = 2004
-journal = "Springer"
-doi = "10.1007/978-1-4757-4296-1"
-openAccess = false
+key = "Shr2004a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "Option Pricing When Underlying Stock Returns Are Discontinuous"
-authors = "Merton, Robert C."
-year = 1976
-journal = "Journal of Financial Economics"
-doi = "10.1016/0304-405X(76)90022-2"
-openAccess = false
+key = "Mer1976a"
 
 [[references]]
-title = "A Jump-Diffusion Model for Option Pricing"
-authors = "Kou, Steven G."
-year = 2002
-journal = "Management Science"
-doi = "10.1287/mnsc.48.8.1086.166"
-openAccess = false
+key = "Kou2002a"
 
 [[models]]
 id = "cpj"

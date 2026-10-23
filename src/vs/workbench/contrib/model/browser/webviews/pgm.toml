@@ -95,60 +95,30 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "ReinforcementLearning.jl: A Reinforcement Learning Package for the Julia Programming Language"
-authors = "Tian, Jun; others"
-year = 2020
-journal = "GitHub"
-url = "https://github.com/JuliaReinforcementLearning/ReinforcementLearning.jl"
-openAccess = true
+key = "Tia...2020a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Reinforcement Learning: An Introduction"
-authors = "Sutton, Richard S.; Barto, Andrew G."
-year = 2018
-journal = "MIT Press"
-url = "http://incompleteideas.net/book/the-book-2nd.html"
-openAccess = true
+key = "SB2018a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "Policy Gradient Methods for Reinforcement Learning with Function Approximation"
-authors = "Sutton, Richard S.; McAllester, David; Singh, Satinder; Mansour, Yishay"
-year = 2000
-journal = "NeurIPS"
-url = "https://proceedings.neurips.cc/paper/1999/hash/464d828b85b0bed98e80ade0a5c43b0f-Abstract.html"
-openAccess = true
+key = "SMSM2000a"
 
 [[references]]
-title = "Proximal Policy Optimization Algorithms"
-authors = "Schulman, John; Wolski, Filip; Dhariwal, Prafulla; Radford, Alec; Klimov, Oleg"
-year = 2017
-journal = "arXiv"
-url = "https://arxiv.org/abs/1707.06347"
-openAccess = true
+key = "SWDRK2017a"
 
 [[references]]
-title = "Trust Region Policy Optimization"
-authors = "Schulman, John; Levine, Sergey; Abbeel, Pieter; Jordan, Michael; Moritz, Philipp"
-year = 2015
-journal = "ICML"
-url = "https://proceedings.mlr.press/v37/schulman15.html"
-openAccess = true
+key = "SLAJM2015a"
 
 [[models]]
 id = "reinforce"

@@ -101,28 +101,13 @@ separator = true
 label = "Original Papers (from packages)"
 
 [[references]]
-title = "Fast Algorithms for Mining Association Rules"
-authors = "Agrawal, R. & Srikant, R."
-year = 1994
-journal = ""
-url = "https://www.vldb.org/conf/1994/P487.PDF"
-openAccess = true
+key = "AS1994a"
 
 [[references]]
-title = "New Algorithms for Fast Discovery of Association Rules"
-authors = "Zaki, M.J., Parthasarathy, S., Ogihara, M. & Li, W."
-year = 1997
-journal = ""
-url = "https://www.cs.rpi.edu/~zaki/PaperDir/KDD97.pdf"
-openAccess = true
+key = "ZPOL1997a"
 
 [[references]]
-title = "Mining Frequent Patterns without Candidate Generation"
-authors = "Han, J., Pei, J. & Yin, Y."
-year = 2000
-journal = ""
-url = "https://dl.acm.org/doi/10.1145/342009.335372"
-openAccess = false
+key = "HPY2000a"
 
 [[models]]
 id = "itemset"

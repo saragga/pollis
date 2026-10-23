@@ -101,66 +101,30 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Catalyst.jl: A Systems Biology Toolbox for Julia"
-authors = "Loman, Torkel E.; Ma, Yingbo; Ilin, Vasily; Gowda, Shashi; Korsbo, Niklas; Yewale, Nikhil; Rackauckas, Christopher; Isaacson, Samuel A."
-year = 2023
-journal = "PLOS Computational Biology"
-doi = "10.1371/journal.pcbi.1011530"
-openAccess = true
+key = "LMIGK...2023a"
 
 [[references]]
-title = "DifferentialEquations.jl: A Performant and Feature-Rich Ecosystem for Solving Differential Equations in Julia"
-authors = "Rackauckas, Christopher; Nie, Qing"
-year = 2017
-journal = "Journal of Open Research Software"
-doi = "10.5334/jors.151"
-openAccess = true
+key = "RN2017a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "An Introduction to Systems Biology: Design Principles of Biological Circuits"
-authors = "Alon, Uri"
-year = 2006
-journal = "Chapman and Hall / CRC"
-openAccess = false
+key = "Alo2006a"
 
 [[references]]
-title = "Mathematical Biology I: An Introduction"
-authors = "Murray, James D."
-year = 2002
-journal = "Springer (3rd ed.)"
-openAccess = false
+key = "Mur2002a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "A Synthetic Oscillatory Network of Transcriptional Regulators"
-authors = "Elowitz, Michael B.; Leibler, Stanislas"
-year = 2000
-journal = "Nature"
-doi = "10.1038/35002125"
-openAccess = false
+key = "EL2000a"
 
 [[references]]
-title = "Fluctuations and Irreversibility: An Experimental Demonstration of a Second-Law-Like Theorem Using Small Colloidal Systems"
-authors = "Lotka, Alfred J."
-year = 1925
-journal = "Proceedings of the National Academy of Sciences"
-doi = "10.1073/pnas.6.7.410"
-openAccess = true
-
-[[references]]
-title = "Stochastic Simulation of Chemical Kinetics"
-authors = "Gillespie, Daniel T."
-year = 2007
-journal = "Annual Review of Physical Chemistry"
-doi = "10.1146/annurev.physchem.58.032806.104637"
-openAccess = false
+key = "Gil2007a"
 
 [[models]]
 id = "chemical"

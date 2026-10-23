@@ -77,12 +77,7 @@ separator = true
 label = "Original Papers (from packages)"
 
 [[references]]
-title = "A unifying modeling abstraction for infinite-dimensional optimization"
-authors = "Pulsipher, J. A., Zhang, W., Hongisto, T. J., & Zavala, V. M."
-year = 2022
-journal = ""
-url = "https://par.nsf.gov/servlets/purl/10388096"
-openAccess = false
+key = "PZHZ2022a"
 
 [[models]]
 id = "ocp"

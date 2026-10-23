@@ -108,67 +108,33 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "POMDPs.jl: A Framework for Sequential Decision Making under Uncertainty"
-authors = "Egorov, Maxim; Sunberg, Zachary N.; Balaban, Edward; Wheeler, Tim A.; Gupta, Jayesh K.; Kochenderfer, Mykel J."
-year = 2017
-journal = "Journal of Machine Learning Research"
-url = "https://jmlr.org/papers/v18/16-300.html"
-openAccess = true
+key = "ESBWG...2017a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Markov Decision Processes: Discrete Stochastic Dynamic Programming"
-authors = "Puterman, Martin L."
-year = 2005
-journal = "Wiley (2nd ed.)"
-doi = "10.1002/9780470316887"
-openAccess = false
+key = "Put2005a"
 
 [[references]]
-title = "Decision Making Under Uncertainty: Theory and Application"
-authors = "Kochenderfer, Mykel J."
-year = 2015
-journal = "MIT Press"
-url = "https://mitpress.mit.edu/9780262029254/"
-openAccess = false
+key = "Koc2015a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "Planning and Acting in Partially Observable Stochastic Domains"
-authors = "Kaelbling, Leslie Pack; Littman, Michael L.; Cassandra, Anthony R."
-year = 1998
-journal = "Artificial Intelligence"
-doi = "10.1016/S0004-3702(98)00023-X"
-openAccess = false
+key = "KLC1998a"
 
 [[references]]
-title = "Point-Based Value Iteration: An Anytime Algorithm for POMDPs"
-authors = "Pineau, Joelle; Gordon, Geoff; Thrun, Sebastian"
-year = 2003
-journal = "IJCAI"
-url = "https://www.ijcai.org/Proceedings/03/Papers/147.pdf"
-openAccess = true
+key = "PGT2003a"
 
 [[references]]
-title = "Markov Decision Processes in Continuous Time"
-authors = "Puterman, Martin L."
-year = 1994
-journal = "Wiley"
-openAccess = false
+key = "Put1994a"
 
 [[models]]
 id = "mdp"

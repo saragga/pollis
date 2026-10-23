@@ -7,6 +7,7 @@ topic = "Panel Econometrics"
 license = "MIT"
 version = "0.2.0"
 
+key = "BSJ2001a"
 citation = "Baltagi, B. H., Song, S. H. and Jung, B. C. (2001). The unbalanced nested error component regression model. Journal of Econometrics 101(2), 357-381."
 doi = "10.1016/S0304-4076(00)00089-0"
 article = "https://doi.org/10.1016/S0304-4076(00)00089-0"

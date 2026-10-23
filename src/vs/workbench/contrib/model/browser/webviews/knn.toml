@@ -75,37 +75,21 @@ separator = true
 label = "Original Papers"
 
 [[references]]
-title = "Dynamic Programming Algorithm Optimization for Spoken Word Recognition"
-authors = "Sakoe, Hiroaki; Chiba, Seibi"
-year = 1978
-journal = "IEEE Transactions on Acoustics, Speech, and Signal Processing"
-doi = "10.1109/TASSP.1978.1163055"
-openAccess = false
+key = "SC1978a"
 
 [[references]]
 separator = true
 label = "Benchmarks"
 
 [[references]]
-title = "The UCR Time Series Archive"
-authors = "Dau, Hoang Anh; Bagnall, Anthony; Kamgar, Kaveh; Yeh, Chin-Chia Michael; Zhu, Yan; Gharghabi, Shaghayegh; Ratanamahatana, Chotirat Ann; Keogh, Eamonn"
-year = 2019
-journal = "IEEE/CAA Journal of Automatica Sinica"
-doi = "10.1109/jas.2019.1911747"
-url = "https://arxiv.org/abs/1810.07758"
-openAccess = true
+key = "DBKYZ...2019a"
 
 [[references]]
 separator = true
 label = "Software"
 
 [[references]]
-title = "DynamicAxisWarping.jl: Dynamic Time Warping and Related Algorithms in Julia"
-authors = "Bagge Carlson, Fredrik"
-year = 2024
-journal = "GitHub"
-url = "https://github.com/baggepinnen/DynamicAxisWarping.jl"
-openAccess = true
+key = "Car2024a"
 
 [[models]]
 id = "knn"

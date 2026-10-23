@@ -101,44 +101,21 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Econometric Analysis"
-authors = "Greene, William H."
-year = 2018
-journal = "Pearson (8th ed.)"
-url = "https://www.pearson.com/en-us/subject-catalog/p/econometric-analysis/P200000006119"
-openAccess = false
+key = "Gre2018a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "Estimation of the First-Order Moving Average Model with Positive Residual Autocorrelation"
-authors = "Beach, Charles M.; MacKinnon, James G."
-year = 1978
-journal = "Econometrica"
-doi = "10.2307/1911252"
-openAccess = false
-
-[[references]]
-title = "Trend Estimators and Serial Correlation"
-authors = "Prais, Sigbert J.; Winsten, Christopher B."
-year = 1954
-journal = "Cowles Commission Discussion Paper"
-url = "https://cowles.yale.edu/sites/default/files/files/pub/d00/d0383.pdf"
-openAccess = true
+key = "PW1954a"
 
 [[models]]
 id = "pw2step"

@@ -100,75 +100,36 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "StateSpaceModels.jl: A Julia Package for Time-Series Analysis in a State-Space Framework"
-authors = "Guilherme Bodin; Raphael Saavedra; Thuener Silva; Alexandre Street"
-year = 2021
-journal = "Journal of Open Source Software"
-doi = "10.21105/joss.02429"
-openAccess = true
+key = "BSSS2019a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Time Series Analysis by State Space Methods"
-authors = "Durbin, James; Koopman, Siem Jan"
-year = 2012
-journal = "Oxford University Press (2nd ed.)"
-doi = "10.1093/acprof:oso/9780199641178.001.0001"
-openAccess = false
+key = "DK2012a"
 
 [[references]]
-title = "Forecasting, Structural Time Series Models and the Kalman Filter"
-authors = "Harvey, Andrew C."
-year = 1990
-journal = "Cambridge University Press"
-openAccess = false
+key = "Har1990a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "The Unscented Kalman Filter for Nonlinear Estimation"
-authors = "Wan, Eric A.; Van Der Merwe, Rudolph"
-year = 2000
-journal = "Proceedings of the IEEE Adaptive Systems for Signal Processing, Communications, and Control Symposium"
-doi = "10.1109/ASSPCC.2000.882463"
-openAccess = false
+key = "WM2000a"
 
 [[references]]
-title = "Novel Approach to Nonlinear/Non-Gaussian Bayesian State Estimation"
-authors = "Gordon, Neil J.; Salmond, David J.; Smith, Adrian F. M."
-year = 1993
-journal = "IEE Proceedings F: Radar and Signal Processing"
-doi = "10.1049/ip-f-2.1993.0015"
-openAccess = false
+key = "GSS1993a"
 
 [[references]]
-title = "A New Approach to Linear Filtering and Prediction Problems"
-authors = "Kalman, Rudolf E."
-year = 1960
-journal = "Journal of Basic Engineering"
-doi = "10.1115/1.3662552"
-openAccess = false
+key = "Kal1960a"
 
 [[references]]
-title = "Maximum Likelihood Estimation of Misspecified Models"
-authors = "White, Halbert"
-year = 1982
-journal = "Econometrica"
-doi = "10.2307/1912526"
-openAccess = false
+key = "Whi1982a"
 
 [[models]]
 id = "lg"

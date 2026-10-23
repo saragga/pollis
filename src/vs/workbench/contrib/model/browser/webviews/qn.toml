@@ -91,80 +91,40 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "Optim: A mathematical optimization package for Julia"
-authors = "Mogensen, Patrick Kofod; Riseth, Asbjorn Nilsen"
-year = 2018
-journal = "Journal of Open Source Software"
-doi = "10.21105/joss.00615"
-openAccess = true
+key = "MR2018a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Numerical Optimization"
-authors = "Nocedal, Jorge; Wright, Stephen J."
-year = 2006
-journal = "Springer (2nd ed.)"
-doi = "10.1007/978-0-387-40065-5"
-openAccess = false
+key = "NW2006a"
 
 [[references]]
 separator = true
 label = "BFGS (Original Papers)"
 
 [[references]]
-title = "The Convergence of a Class of Double-rank Minimization Algorithms"
-authors = "Broyden, Charles G."
-year = 1970
-journal = "Journal of the Institute of Mathematics and Its Applications"
-doi = "10.1093/imamat/6.1.76"
-openAccess = false
+key = "Bro1970a"
 
 [[references]]
-title = "A New Approach to Variable Metric Algorithms"
-authors = "Fletcher, Roger"
-year = 1970
-journal = "Computer Journal"
-doi = "10.1093/comjnl/13.3.317"
-openAccess = false
+key = "Fle1970a"
 
 [[references]]
-title = "A Family of Variable Metric Methods Derived by Variational Means"
-authors = "Goldfarb, Donald"
-year = 1970
-journal = "Mathematics of Computation"
-doi = "10.2307/2004514"
-openAccess = false
+key = "Gol1970a"
 
 [[references]]
-title = "Conditioning of Quasi-Newton Methods for Function Minimization"
-authors = "Shanno, David F."
-year = 1970
-journal = "Mathematics of Computation"
-doi = "10.2307/2004873"
-openAccess = false
+key = "Sha1970a"
 
 [[references]]
 separator = true
 label = "L-BFGS (Original Paper)"
 
 [[references]]
-title = "On the Limited Memory BFGS Method for Large Scale Optimization"
-authors = "Liu, Dong C.; Nocedal, Jorge"
-year = 1989
-journal = "Mathematical Programming"
-doi = "10.1007/BF01589116"
-openAccess = false
+key = "LN1989a"
 
 [[models]]
 id = "bfgs"

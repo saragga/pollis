@@ -106,67 +106,24 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
-
-[[references]]
-title = "ControlSystems.jl — A Julia Package for Control Systems Design"
-authors = "Johansson, Kalle; Öberg, Fredrik"
-year = 2019
-journal = "Journal of Open Source Software"
-doi = "10.21105/joss.01391"
-openAccess = true
+key = "BEKS2017a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Optimal Control: An Introduction"
-authors = "Kirk, Donald E."
-year = 2012
-journal = "Dover Publications"
-url = "https://doverpublications.com/"
-openAccess = false
+key = "Kir2012a"
 
 [[references]]
-title = "Linear Control Systems Analysis and Design"
-authors = "D'Azzo, John J.; Houpis, Constantine H.; Sheldon, Stuart N."
-year = 2003
-journal = "CRC Press (5th ed.)"
-openAccess = false
+key = "DHS2003a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "The Linear Quadratic Regulator Problem for Finite Horizon"
-authors = "Kalman, Rudolf E."
-year = 1960
-journal = "SIAM Journal on Control"
-doi = "10.1137/0108033"
-openAccess = false
-
-[[references]]
-title = "A New Approach to Linear Filtering and Prediction Problems"
-authors = "Kalman, Rudolf E."
-year = 1960
-journal = "Journal of Basic Engineering"
-doi = "10.1115/1.3662552"
-openAccess = false
-
-[[references]]
-title = "The Separation Principle for Linear Quadratic Gaussian Problem"
-authors = "Wonham, W. Murray"
-year = 1968
-journal = "Journal of Electronics and Control"
-doi = "10.1080/00207216808937376"
-openAccess = false
+key = "Kal1960a"
 
 [[models]]
 id = "sf"

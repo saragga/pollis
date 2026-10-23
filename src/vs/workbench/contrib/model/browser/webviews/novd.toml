@@ -102,67 +102,33 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "LIBSVM.jl: Julia bindings for LIBSVM"
-authors = "JuliaML Contributors"
-year = 2023
-journal = "GitHub"
-url = "https://github.com/JuliaML/LIBSVM.jl"
-openAccess = true
+key = "JMLC2023a"
 
 [[references]]
-title = "OnlineStats.jl: Single-Pass Algorithms for Statistics"
-authors = "Day, Josh"
-year = 2023
-journal = "GitHub"
-url = "https://github.com/joshday/OnlineStats.jl"
-openAccess = true
+key = "Day2023a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Anomaly Detection: A Survey"
-authors = "Chandola, Varun; Banerjee, Arindam; Kumar, Vipin"
-year = 2009
-journal = "ACM Computing Surveys"
-doi = "10.1145/1541880.1541882"
-openAccess = false
+key = "CBK2009a"
 
 [[references]]
-title = "Statistical Methods for Quality Improvement"
-authors = "Ryan, Thomas P."
-year = 2011
-journal = "Wiley (3rd ed.)"
-openAccess = false
+key = "Rya2011a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "Estimating the Support of a High-Dimensional Distribution"
-authors = "Scholkopf, Bernhard; Platt, John C.; Shawe-Taylor, John; Smola, Alex J.; Williamson, Robert C."
-year = 2001
-journal = "Neural Computation"
-doi = "10.1162/089976601750264965"
-openAccess = false
+key = "SPSSW2001a"
 
 [[references]]
-title = "Continuous Inspection Schemes"
-authors = "Page, Ewan S."
-year = 1954
-journal = "Biometrika"
-doi = "10.2307/2333009"
-openAccess = false
+key = "Pag1954a"
 
 [[models]]
 id = "ocsvm"

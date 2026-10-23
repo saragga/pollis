@@ -99,28 +99,13 @@ bundled = true
 description = "Fetch raw filing documents in bulk with ScrapeSEC.jl, the complement to the JSON APIs"
 
 [[references]]
-title = "EDGAR Application Programming Interfaces"
-authors = "U.S. Securities and Exchange Commission"
-year = 2024
-journal = "sec.gov"
-url = "https://www.sec.gov/search-filings/edgar-application-programming-interfaces"
-openAccess = true
+key = "SEC2024a"
 
 [[references]]
-title = "Financial Statement and Notes Data Sets (XBRL)"
-authors = "U.S. Securities and Exchange Commission"
-year = 2024
-journal = "sec.gov"
-url = "https://www.sec.gov/dera/data/financial-statement-data-sets"
-openAccess = true
+key = "SEC2024b"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[bullets]]
 text = "Submissions"

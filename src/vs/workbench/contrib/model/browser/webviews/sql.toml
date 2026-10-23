@@ -109,56 +109,26 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "DuckDB: an Embeddable Analytical Database"
-authors = "Raasveldt, Mark; Mühleisen, Hannes"
-year = 2019
-journal = "Proceedings of the 2019 International Conference on Management of Data (SIGMOD)"
-doi = "10.1145/3299869.3320212"
-openAccess = false
+key = "RM2019a"
 
 [[references]]
-title = "DBInterface.jl: Database interface definitions for Julia"
-authors = "Quinn, Jacob"
-year = 2023
-journal = "GitHub"
-url = "https://github.com/JuliaDatabases/DBInterface.jl"
-openAccess = true
+key = "Qui2023b"
 
 [[references]]
-title = "Tables.jl: An interface for tables in Julia"
-authors = "Quinn, Jacob"
-year = 2023
-journal = "GitHub"
-url = "https://github.com/JuliaData/Tables.jl"
-openAccess = true
+key = "Qui2023c"
 
 [[references]]
 separator = true
 label = "Foundations"
 
 [[references]]
-title = "A Relational Model of Data for Large Shared Data Banks"
-authors = "Codd, Edgar F."
-year = 1970
-journal = "Communications of the ACM"
-doi = "10.1145/362384.362685"
-openAccess = false
+key = "Cod1970a"
 
 [[references]]
-title = "Column-Stores vs. Row-Stores: How Different Are They Really?"
-authors = "Abadi, Daniel J.; Madden, Samuel R.; Hachem, Nabil"
-year = 2008
-journal = "Proceedings of the 2008 ACM SIGMOD International Conference on Management of Data"
-doi = "10.1145/1376616.1376712"
-openAccess = false
+key = "AMH2008a"
 
 [[models]]
 id = "query"

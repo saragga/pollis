@@ -111,88 +111,43 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "Optim: A mathematical optimization package for Julia"
-authors = "Mogensen, Patrick Kofod; Riseth, Asbjorn Nilsen"
-year = 2018
-journal = "Journal of Open Source Software"
-doi = "10.21105/joss.00615"
-openAccess = true
+key = "MR2018a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Numerical Optimization"
-authors = "Nocedal, Jorge; Wright, Stephen J."
-year = 2006
-journal = "Springer (2nd ed.)"
-doi = "10.1007/978-0-387-40065-5"
-openAccess = false
+key = "NW2006a"
 
 [[references]]
-title = "Introduction to Derivative-Free Optimization"
-authors = "Conn, Andrew R.; Scheinberg, Katya; Vicente, Luis N."
-year = 2009
-journal = "SIAM"
-doi = "10.1137/1.9780898718768"
-openAccess = false
+key = "CSV2009a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "A Simplex Method for Function Minimization"
-authors = "Nelder, John A.; Mead, Roger"
-year = 1965
-journal = "The Computer Journal"
-doi = "10.1093/comjnl/7.4.308"
-openAccess = false
+key = "NM1965a"
 
 [[references]]
-title = "Optimization by Direct Search: New Perspectives on Some Classical and Modern Methods"
-authors = "Kolda, Tamara G.; Lewis, Robert M.; Torczon, Virginia"
-year = 2003
-journal = "SIAM Review"
-doi = "10.1137/S003614450242889"
-openAccess = false
+key = "KLT2003a"
 
 [[references]]
-title = "Mesh Adaptive Direct Search Algorithms for Constrained Optimization"
-authors = "Audet, Charles; Dennis, John E."
-year = 2006
-journal = "SIAM Journal on Optimization"
-doi = "10.1137/040603371"
-openAccess = false
+key = "AD2006a"
 
 [[references]]
-title = "Generating Set Search Methods"
-authors = "Kolda, Tamara G.; Lewis, Robert M.; Torczon, Virginia"
-year = 2006
-journal = "SIAM Review"
-doi = "10.1137/S003614450242889"
-openAccess = false
+key = "KLT2003a"
 
 [[references]]
 separator = true
 label = "Original Papers (from packages)"
 
 [[references]]
-title = "Optim: A mathematical optimization package for Julia"
-authors = "Mogensen, Patrick Kofod; Riseth, Asbjorn Nilsen"
-year = 2018
-journal = "Journal of Open Source Software"
-doi = "10.21105/joss.00615"
-openAccess = true
+key = "MR2018a"
 
 [[models]]
 id = "nm"

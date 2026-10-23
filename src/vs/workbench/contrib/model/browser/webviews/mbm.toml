@@ -138,103 +138,48 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "The NLopt Nonlinear-Optimisation Package"
-authors = "Johnson, Steven G."
-year = 2007
-journal = "GitHub"
-openAccess = true
+key = "Joh2007b"
 
 [[references]]
-title = "PRIMA: Reference Implementations for Powell's Methods with Modernization and Amelioration"
-authors = "Zhang, Zaikun"
-year = 2023
-journal = "GitHub"
-openAccess = true
+key = "Zha2023a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Introduction to Derivative-Free Optimization"
-authors = "Conn, Andrew R.; Scheinberg, Katya; Vicente, Luís N."
-year = 2009
-journal = "SIAM"
-doi = "10.1137/1.9780898718768"
-openAccess = false
+key = "CSV2009a"
 
 [[references]]
-title = "Numerical Optimization"
-authors = "Nocedal, Jorge; Wright, Stephen J."
-year = 2006
-journal = "Springer"
-doi = "10.1007/978-0-387-40065-5"
-openAccess = false
+key = "NW2006a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "A Direct Search Optimisation Method That Models the Objective and Constraint Functions by Linear Interpolation"
-authors = "Powell, Michael J.D."
-year = 1994
-journal = "Advances in Optimization and Numerical Analysis"
-doi = "10.1007/978-94-015-8330-5_4"
-openAccess = false
+key = "Pow1994a"
 
 [[references]]
-title = "The BOBYQA Algorithm for Bound Constrained Optimisation Without Derivatives"
-authors = "Powell, Michael J.D."
-year = 2009
-journal = "Report DAMTP 2009/NA06, University of Cambridge"
-openAccess = true
+key = "Pow2009a"
 
 [[references]]
-title = "The NEWUOA Software for Unconstrained Optimisation Without Derivatives"
-authors = "Powell, Michael J.D."
-year = 2006
-journal = "Large-Scale Nonlinear Optimization, Springer"
-doi = "10.1007/0-387-30065-1_16"
-openAccess = false
+key = "Pow2006a"
 
 [[references]]
-title = "UOBYQA: Unconstrained Optimisation by Quadratic Approximation"
-authors = "Powell, Michael J.D."
-year = 2002
-journal = "Mathematical Programming"
-doi = "10.1007/s101070100290"
-openAccess = false
+key = "Pow2002a"
 
 [[references]]
-title = "On Fast Trust Region Methods for Quadratic Models with Linear Constraints"
-authors = "Powell, Michael J.D."
-year = 2015
-journal = "Mathematical Programming Computation"
-doi = "10.1007/s12532-015-0084-4"
-openAccess = false
+key = "Pow2015a"
 
 [[references]]
-title = "Algorithms for Minimization without Derivatives"
-authors = "Brent, Richard P."
-year = 1973
-journal = "Prentice-Hall"
-openAccess = false
+key = "Bre1973a"
 
 [[references]]
-title = "Functional Stability Analysis of Numerical Algorithms"
-authors = "Rowan, Tom H."
-year = 1990
-journal = "PhD Thesis, University of Texas at Austin"
-openAccess = false
+key = "Row1990a"
 
 [[models]]
 id = "cobyla"

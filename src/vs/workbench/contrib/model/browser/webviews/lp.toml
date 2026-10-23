@@ -102,68 +102,33 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "JuMP: A Modeling Language for Mathematical Optimization"
-authors = "Dunning, Iain; Huchette, Joey; Lubin, Miles"
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/15M1020575"
-openAccess = true
+key = "DHL2017a"
 
 [[references]]
-title = "HiGHS: High Performance Software for Linear Optimization"
-authors = "Huangfu, Qi; Hall, J. A. Julian"
-year = 2018
-journal = "Mathematical Programming Computation"
-doi = "10.1007/s12532-017-0130-5"
-openAccess = false
+key = "HH2018a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Linear and Nonlinear Programming"
-authors = "Luenberger, David G.; Ye, Yinyu"
-year = 2016
-journal = "Springer (4th ed.)"
-doi = "10.1007/978-3-319-18842-3"
-openAccess = false
+key = "LY2016a"
 
 [[references]]
-title = "Introduction to Linear Optimization"
-authors = "Bertsimas, Dimitris; Tsitsiklis, John N."
-year = 1997
-journal = "Athena Scientific"
-url = "http://www.athenasc.com/linoptbook.html"
-openAccess = false
+key = "BT1997a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "Maximization of a Linear Function of Variables Subject to Linear Inequalities"
-authors = "Dantzig, George B."
-year = 1951
-journal = "Activity Analysis of Production and Allocation (Koopmans ed.)"
-url = "https://cowles.yale.edu/research/cfm-13-activity-analysis-production-and-allocation"
-openAccess = true
+key = "Dan1951a"
 
 [[references]]
-title = "An Automatic Method for Solving Discrete Programming Problems"
-authors = "Land, Ailsa H.; Doig, Alison G."
-year = 1960
-journal = "Econometrica"
-doi = "10.2307/1910129"
-openAccess = false
+key = "LD1960a"
 
 [[models]]
 id = "lp"

@@ -94,67 +94,33 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "Turing: A Language for Flexible Probabilistic Inference"
-authors = "Ge, Hong; Xu, Kai; Ghahramani, Zoubin"
-year = 2018
-journal = "Proceedings of the 21st International Conference on Artificial Intelligence and Statistics (AISTATS)"
-url = "http://proceedings.mlr.press/v84/ge18b.html"
-openAccess = true
+key = "GXG2018a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Probabilistic Programming and Bayesian Methods for Hackers"
-authors = "Davidson-Pilon, Cameron"
-year = 2015
-journal = "Addison-Wesley"
-url = "https://github.com/CamDavidsonPilon/Probabilistic-Programming-and-Bayesian-Methods-for-Hackers"
-openAccess = true
+key = "Dav2015a"
 
 [[references]]
-title = "Bayesian Data Analysis"
-authors = "Gelman, Andrew; Carlin, John B.; Stern, Hal S.; Dunson, David B.; Vehtari, Aki; Rubin, Donald B."
-year = 2013
-journal = "CRC Press (3rd ed.)"
-openAccess = false
+key = "GCSDV...2013a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "The No-U-Turn Sampler: Adaptively Setting Path Lengths in Hamiltonian Monte Carlo"
-authors = "Hoffman, Matthew D.; Gelman, Andrew"
-year = 2014
-journal = "Journal of Machine Learning Research"
-url = "https://jmlr.org/papers/v15/hoffman14a.html"
-openAccess = true
+key = "HG2014a"
 
 [[references]]
-title = "Hybrid Monte Carlo"
-authors = "Duane, Simon; Kennedy, Anthony D.; Pendleton, Brian J.; Roweth, Duncan"
-year = 1987
-journal = "Physics Letters B"
-doi = "10.1016/0370-2693(87)91197-X"
-openAccess = false
+key = "DKPR1987a"
 
 [[references]]
-title = "Equation of State Calculations by Fast Computing Machines"
-authors = "Metropolis, Nicholas; Rosenbluth, Arianna W.; Rosenbluth, Marshall N.; Teller, Augusta H.; Teller, Edward"
-year = 1953
-journal = "Journal of Chemical Physics"
-doi = "10.1063/1.1699114"
-openAccess = false
+key = "MRRTT1953a"
 
 [[models]]
 id = "nuts"

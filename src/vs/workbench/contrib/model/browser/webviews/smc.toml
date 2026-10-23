@@ -97,76 +97,36 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "An Introduction to Sequential Monte Carlo"
-authors = "Chopin, Nicolas; Papaspiliopoulos, Omiros"
-year = 2020
-journal = "Springer"
-doi = "10.1007/978-3-030-47845-2"
-openAccess = false
+key = "CP2020a"
 
 [[references]]
-title = "Sequential Monte Carlo Methods in Practice"
-authors = "Doucet, Arnaud; de Freitas, Nando; Gordon, Neil J."
-year = 2001
-journal = "Springer"
-doi = "10.1007/978-1-4757-3437-9"
-openAccess = false
+key = "DFG2001a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "Novel Approach to Nonlinear/Non-Gaussian Bayesian State Estimation"
-authors = "Gordon, Neil J.; Salmond, David J.; Smith, Adrian F. M."
-year = 1993
-journal = "IEE Proceedings F (Radar and Signal Processing)"
-doi = "10.1049/ip-f-2.1993.0015"
-openAccess = false
+key = "GSS1993a"
 
 [[references]]
-title = "Monte Carlo Filter and Smoother for Non-Gaussian Nonlinear State Space Models"
-authors = "Kitagawa, Genshiro"
-year = 1996
-journal = "Journal of Computational and Graphical Statistics"
-doi = "10.1080/10618600.1996.10474692"
-openAccess = false
+key = "Kit1996a"
 
 [[references]]
-title = "Monte Carlo Smoothing for Nonlinear Time Series"
-authors = "Godsill, Simon J.; Doucet, Arnaud; West, Mike"
-year = 2004
-journal = "Journal of the American Statistical Association"
-doi = "10.1198/016214504000000151"
-openAccess = false
+key = "GDW2004a"
 
 [[references]]
-title = "A New Approach to Linear Filtering and Prediction Problems"
-authors = "Kalman, Rudolph E."
-year = 1960
-journal = "Journal of Basic Engineering"
-doi = "10.1115/1.3662552"
-openAccess = false
+key = "Kal1960a"
 
 [[references]]
-title = "Sequential Monte Carlo Samplers"
-authors = "Del Moral, Pierre; Doucet, Arnaud; Jasra, Ajay"
-year = 2006
-journal = "Journal of the Royal Statistical Society: Series B"
-doi = "10.1111/j.1467-9868.2006.00553.x"
-openAccess = false
+key = "MDJ2006a"
 
 [[models]]
 id = "filter"

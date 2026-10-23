@@ -76,28 +76,13 @@ separator = true
 label = "Original Papers (from packages)"
 
 [[references]]
-title = "Automatic Differentiation in Machine Learning: a Survey"
-authors = "Baydin, A.G., Pearlmutter, B.A., Radul, A.A. & Siskind, J.M."
-year = 2018
-journal = ""
-url = "https://jmlr.org/papers/v18/17-468.html"
-openAccess = true
+key = "BPRS2018a"
 
 [[references]]
-title = "Instead of Rewriting Foreign Code for Machine Learning, Automatically Synthesize Fast Gradients"
-authors = "Moses, W.S. & Churavy, V."
-year = 2020
-journal = ""
-url = "https://arxiv.org/abs/2010.01709"
-openAccess = true
+key = "MC2020a"
 
 [[references]]
-title = "Forward-Mode Automatic Differentiation in Julia"
-authors = "Revels, J., Lubin, M. & Papamarkou, T."
-year = 2016
-journal = ""
-url = "https://arxiv.org/abs/1607.07892"
-openAccess = true
+key = "RLP2016a"
 
 [[models]]
 id = "dist"

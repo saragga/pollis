@@ -106,76 +106,36 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "Interpolations.jl: Fast, Flexible Interpolations"
-authors = "Holy, Tim; others"
-year = 2024
-journal = "GitHub"
-url = "https://github.com/JuliaMath/Interpolations.jl"
-openAccess = true
+key = "KHA2024a"
 
 [[references]]
-title = "Dierckx.jl: Spline Fitting for Julia"
-authors = "Barbary, Kyle"
-year = 2018
-journal = "GitHub"
-url = "https://github.com/kbarbary/Dierckx.jl"
-openAccess = true
+key = "Bar2018a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "A Practical Guide to Splines"
-authors = "de Boor, Carl"
-year = 2001
-journal = "Springer (revised ed.)"
-doi = "10.1007/978-1-4612-6333-3"
-openAccess = false
+key = "Boo2001a"
 
 [[references]]
-title = "Numerical Methods for Scientists and Engineers"
-authors = "Hamming, Richard W."
-year = 1987
-journal = "Dover (2nd ed.)"
-url = "https://store.doverpublications.com/0486652416.html"
-openAccess = false
+key = "Ham1987a"
 
 [[references]]
-title = "Numerical Analysis"
-authors = "Burden, Richard L.; Faires, J. Douglas; Burden, Annette M."
-year = 2015
-journal = "Cengage (10th ed.)"
-url = "https://www.cengage.com/c/numerical-analysis-10e-burden"
-openAccess = false
+key = "BFB2015a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "On Calculating with B-Splines"
-authors = "de Boor, Carl"
-year = 1972
-journal = "Journal of Approximation Theory"
-doi = "10.1016/0021-9045(72)90080-9"
-openAccess = false
+key = "Boo1972a"
 
 [[references]]
-title = "An Algorithm for Smoothing, Differentiation and Integration of Experimental Data Using Spline Functions"
-authors = "Dierckx, Paul"
-year = 1975
-journal = "Journal of Computational and Applied Mathematics"
-doi = "10.1016/0771-050X(75)90034-0"
-openAccess = false
+key = "Die1975a"
 
 [[models]]
 id = "linear"

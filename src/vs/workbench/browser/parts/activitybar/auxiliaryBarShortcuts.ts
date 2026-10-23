@@ -70,7 +70,7 @@ class AuxiliaryBarShortcutViewItem extends CompositeBarActionViewItem {
 export class AuxiliaryBarShortcuts extends Disposable {
 
 	/** Height of the separator above the shortcuts, including its margins (see activityaction.css). */
-	private static readonly SEPARATOR_HEIGHT = 9;
+	private static readonly SEPARATOR_HEIGHT = 1;
 
 	private static readonly HIDDEN_SHORTCUTS_KEY = 'workbench.activity.hiddenAuxiliaryBarShortcuts';
 

@@ -117,82 +117,39 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "Metaheuristics: A Julia Package for Single- and Multi-Objective Optimization"
-authors = "Mejía-de-Dios, Jesús-Adolfo; Mezura-Montes, Efrén"
-year = 2022
-journal = "SoftwareX"
-doi = "10.1016/j.softx.2022.101049"
-openAccess = true
+key = "MM2022a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Swarm Intelligence"
-authors = "Kennedy, James; Eberhart, Russell C.; Shi, Yuhui"
-year = 2001
-journal = "Morgan Kaufmann"
-openAccess = false
+key = "KES2001a"
 
 [[references]]
-title = "Fundamentals of Computational Swarm Intelligence"
-authors = "Engelbrecht, Andries P."
-year = 2005
-journal = "Wiley"
-openAccess = false
+key = "Eng2005a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "Particle Swarm Optimization"
-authors = "Kennedy, James; Eberhart, Russell C."
-year = 1995
-journal = "ICNN'95 — International Conference on Neural Networks"
-doi = "10.1109/ICNN.1995.488968"
-openAccess = false
+key = "KE1995a"
 
 [[references]]
-title = "A Competitive Swarm Optimizer for Large Scale Optimization"
-authors = "Cheng, Ran; Jin, Yaochu"
-year = 2015
-journal = "IEEE Transactions on Cybernetics"
-doi = "10.1109/TCYB.2014.2322602"
-openAccess = false
+key = "CJ2015a"
 
 [[references]]
-title = "A Powerful and Efficient Algorithm for Numerical Function Optimization: Artificial Bee Colony (ABC) Algorithm"
-authors = "Karaboga, Dervis; Basturk, Bahriye"
-year = 2007
-journal = "Journal of Global Optimization"
-doi = "10.1007/s10898-007-9149-x"
-openAccess = false
+key = "KB2007a"
 
 [[references]]
-title = "The Whale Optimization Algorithm"
-authors = "Mirjalili, Seyedali; Lewis, Andrew"
-year = 2016
-journal = "Advances in Engineering Software"
-doi = "10.1016/j.advengsoft.2016.01.008"
-openAccess = false
+key = "ML2016a"
 
 [[references]]
-title = "GSA: A Gravitational Search Algorithm"
-authors = "Rashedi, Esmat; Nezamabadi-pour, Hossein; Saryazdi, Saeid"
-year = 2009
-journal = "Information Sciences"
-doi = "10.1016/j.ins.2009.03.004"
-openAccess = false
+key = "RNS2009a"
 
 [[models]]
 id = "pso"

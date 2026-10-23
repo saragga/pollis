@@ -95,50 +95,24 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Agents.jl: A performant and feature-full agent based modelling software of minimal code complexity"
-authors = "Datseris, George; Vahdati, Ali R.; DuBois, Timothy C."
-year = 2022
-journal = "SIMULATION"
-doi = "10.1177/00375497211068820"
-openAccess = true
+key = "DVD2022a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "An Introduction to Agent-Based Modeling"
-authors = "Wilensky, Uri; Rand, William"
-year = 2015
-journal = "MIT Press"
-openAccess = false
+key = "WR2015a"
 
 [[references]]
-title = "Complex Adaptive Systems: An Introduction to Computational Models of Social Life"
-authors = "Miller, John H.; Page, Scott E."
-year = 2007
-journal = "Princeton University Press"
-openAccess = false
+key = "MP2007a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "Sensitivity analysis of agent-based models: A new protocol"
-authors = "Saltelli, Andrea; Ratto, Marco; Andres, Terry; Campolongo, Francesca"
-year = 2008
-journal = "Environmental Modelling & Software"
-doi = "10.1016/j.envsoft.2008.01.006"
-openAccess = false
-
-[[references]]
-title = "Global sensitivity analysis of agent-based models"
-authors = "Ten Broeke, Guus; van Voorn, George; Ligtenberg, Arend"
-year = 2016
-journal = "Journal of Artificial Societies and Social Simulation"
-doi = "10.18564/jasss.2857"
-openAccess = true
+key = "BVL2016a"
 
 [[models]]
 id = "ensemble"

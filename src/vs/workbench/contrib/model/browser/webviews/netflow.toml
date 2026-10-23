@@ -94,56 +94,30 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Graphs.jl: a General-Purpose Graph Library for the Julia Programming Language"
-authors = "Bromberger, Seth; Fairbanks, James; contributors"
-year = 2017
-journal = "JuliaCon Proceedings"
-openAccess = true
+key = "FBSHE...2021a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Network Flows: Theory, Algorithms, and Applications"
-authors = "Ahuja, Ravindra K.; Magnanti, Thomas L.; Orlin, James B."
-year = 1993
-journal = "Prentice Hall"
-openAccess = false
+key = "AMO1993a"
 
 [[references]]
-title = "Introduction to Algorithms"
-authors = "Cormen, Thomas H.; Leiserson, Charles E.; Rivest, Ronald L.; Stein, Clifford"
-year = 2022
-journal = "MIT Press (4th ed.)"
-openAccess = false
+key = "CLRS2022a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "Maximal Flow Through a Network"
-authors = "Ford, Lester R.; Fulkerson, Delbert R."
-year = 1956
-journal = "Canadian Journal of Mathematics"
-doi = "10.4153/CJM-1956-045-5"
-openAccess = false
+key = "FF1956a"
 
 [[references]]
-title = "Algorithm for Solution of a Problem of Maximum Flow in Networks with Power Estimation"
-authors = "Dinic, Efim A."
-year = 1970
-journal = "Soviet Mathematics Doklady"
-openAccess = false
+key = "Din1970a"
 
 [[references]]
-title = "A Simple Min-Cut Algorithm"
-authors = "Stoer, Mechthild; Wagner, Frank"
-year = 1997
-journal = "Journal of the ACM"
-doi = "10.1145/263867.263872"
-openAccess = false
+key = "SW1997a"
 
 [[models]]
 id = "maxflow"

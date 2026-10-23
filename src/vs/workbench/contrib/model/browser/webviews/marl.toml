@@ -84,60 +84,30 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "ReinforcementLearning.jl: A Reinforcement Learning Package for the Julia Programming Language"
-authors = "Tian, Jun; others"
-year = 2020
-journal = "GitHub"
-url = "https://github.com/JuliaReinforcementLearning/ReinforcementLearning.jl"
-openAccess = true
+key = "Tia...2020a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Multiagent Systems: Algorithmic, Game-Theoretic, and Logical Foundations"
-authors = "Shoham, Yoav; Leyton-Brown, Kevin"
-year = 2009
-journal = "Cambridge University Press"
-url = "https://www.masfoundations.org/"
-openAccess = true
+key = "SL2009b"
 
 [[references]]
-title = "An Introduction to MultiAgent Systems"
-authors = "Wooldridge, Michael"
-year = 2009
-journal = "Wiley (2nd ed.)"
-url = "https://www.wiley.com/en-us/An+Introduction+to+MultiAgent+Systems%2C+2nd+Edition-p-9780470519462"
-openAccess = false
+key = "Woo2009a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "Multi-Agent Actor-Critic for Mixed Cooperative-Competitive Environments"
-authors = "Lowe, Ryan; Wu, Yi; Tamar, Aviv; Harb, Jean; Abbeel, Pieter; Mordatch, Igor"
-year = 2017
-journal = "NeurIPS"
-url = "https://proceedings.neurips.cc/paper/2017/hash/68a9750337a418a86fe06c1991a1d64c-Abstract.html"
-openAccess = true
+key = "LWTHA...2017a"
 
 [[references]]
-title = "Counterfactual Multi-Agent Policy Gradients"
-authors = "Foerster, Jakob; Farquhar, Gregory; Afouras, Triantafyllos; Nardelli, Nantas; Whiteson, Shimon"
-year = 2018
-journal = "AAAI"
-url = "https://ojs.aaai.org/index.php/AAAI/article/view/11794"
-openAccess = true
+key = "FFANW2018a"
 
 [[models]]
 id = "cooperative"

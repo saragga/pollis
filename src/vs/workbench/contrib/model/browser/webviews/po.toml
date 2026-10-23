@@ -110,88 +110,43 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Portfolio Selection: Efficient Diversification of Investments"
-authors = "Markowitz, Harry M."
-year = 1991
-journal = "Wiley (2nd ed.)"
-url = "https://www.wiley.com/en-us/Portfolio+Selection%3A+Efficient+Diversification+of+Investments%2C+2nd+Edition-p-9781557861085"
-openAccess = false
+key = "Mar1991a"
 
 [[references]]
-title = "Introduction to Risk Parity and Budgeting"
-authors = "Roncalli, Thierry"
-year = 2013
-journal = "CRC Press"
-url = "https://www.crcpress.com/Introduction-to-Risk-Parity-and-Budgeting/Roncalli/p/book/9781482207156"
-openAccess = false
+key = "Ron2013a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "Portfolio Selection"
-authors = "Markowitz, Harry M."
-year = 1952
-journal = "Journal of Finance"
-doi = "10.2307/2975974"
-openAccess = false
+key = "Mar1952a"
 
 [[references]]
-title = "Optimization of Conditional Value-at-Risk"
-authors = "Rockafellar, R. Tyrrell; Uryasev, Stanislav"
-year = 2000
-journal = "Journal of Risk"
-doi = "10.21314/JOR.2000.038"
-openAccess = false
+key = "RU2000a"
 
 [[references]]
-title = "Building Diversified Portfolios that Outperform Out of Sample"
-authors = "Lopez de Prado, Marcos"
-year = 2016
-journal = "Journal of Portfolio Management"
-doi = "10.3905/jpm.2016.42.4.059"
-openAccess = false
+key = "Pra2016a"
 
 [[references]]
-title = "Global Portfolio Optimization"
-authors = "Black, Fischer; Litterman, Robert"
-year = 1992
-journal = "Financial Analysts Journal"
-doi = "10.2469/faj.v48.n5.28"
-openAccess = false
+key = "BL1992a"
 
 [[references]]
 separator = true
 label = "Out-of-Sample Evaluation"
 
 [[references]]
-title = "Optimal Versus Naive Diversification: How Inefficient Is the 1/N Portfolio Strategy?"
-authors = "DeMiguel, Victor; Garlappi, Lorenzo; Uppal, Raman"
-year = 2009
-journal = "Review of Financial Studies"
-doi = "10.1093/rfs/hhm075"
-openAccess = false
+key = "DGU2009a"
 
 [[references]]
-title = "The Statistics of Sharpe Ratios"
-authors = "Lo, Andrew W."
-year = 2002
-journal = "Financial Analysts Journal"
-doi = "10.2469/faj.v58.n4.2453"
-openAccess = false
+key = "Lo2002a"
 
 [[models]]
 id = "mv"

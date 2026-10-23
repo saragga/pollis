@@ -106,28 +106,13 @@ separator = true
 label = "Original Papers (from packages)"
 
 [[references]]
-title = "Density Estimation Using Real-valued Non-Volume Preserving (Real NVP) Transformations"
-authors = "Dinh, L. et al."
-year = 2017
-journal = ""
-url = "https://arxiv.org/abs/1605.08803"
-openAccess = true
+key = "DSB2017a"
 
 [[references]]
-title = "Masked Autoregressive Flow for Density Estimation"
-authors = "Papamakarios, G. et al."
-year = 2017
-journal = ""
-url = "https://arxiv.org/abs/1705.07057"
-openAccess = true
+key = "PPM2017a"
 
 [[references]]
-title = "Neural Spline Flows"
-authors = "Durkan, C. et al."
-year = 2019
-journal = ""
-url = "https://arxiv.org/abs/1906.04032"
-openAccess = true
+key = "DBMP2019a"
 
 [[models]]
 id = "realnvp"

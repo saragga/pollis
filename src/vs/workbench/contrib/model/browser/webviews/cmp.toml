@@ -94,67 +94,33 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "Complementarity.jl: Modeling and Solving Complementarity Problems in Julia"
-authors = "Chung, Changhyun"
-year = 2023
-journal = "GitHub"
-url = "https://github.com/chkwon/Complementarity.jl"
-openAccess = true
+key = "Chu2023a"
 
 [[references]]
-title = "PATH Solver: A Non-Monotone Stabilisation Scheme for the Solution of Nonlinear Complementarity Problems"
-authors = "Dirkse, Steven P.; Ferris, Michael C."
-year = 1995
-journal = "Mathematical Programming"
-doi = "10.1007/BF02592958"
-openAccess = false
+key = "DF1995a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Finite-Dimensional Variational Inequalities and Complementarity Problems"
-authors = "Facchinei, Francisco; Pang, Jong-Shi"
-year = 2003
-journal = "Springer (Vol. I & II)"
-openAccess = false
+key = "FP2003a"
 
 [[references]]
-title = "Complementarity Problems"
-authors = "Isac, George"
-year = 1992
-journal = "Springer Lecture Notes in Mathematics"
-doi = "10.1007/BFb0084653"
-openAccess = false
+key = "Isa1992a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "The Linear Complementarity Problem"
-authors = "Cottle, Richard W.; Pang, Jong-Shi; Stone, Richard E."
-year = 1992
-journal = "SIAM Classics in Applied Mathematics"
-doi = "10.1137/1.9780898719000"
-openAccess = false
+key = "CPS1992a"
 
 [[references]]
-title = "Engineering and Economic Applications of Complementarity Problems"
-authors = "Ferris, Michael C.; Pang, Jong-Shi"
-year = 1997
-journal = "SIAM Review"
-doi = "10.1137/S0036144595285963"
-openAccess = false
+key = "FP1997a"
 
 [[models]]
 id = "lcp"

@@ -91,59 +91,27 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
-
-[[references]]
-title = "ModelPredictiveControl.jl: A Unified Predictive Control Toolbox for Julia"
-authors = "Desbiens, Francis; Ozorio Cassol, Guilherme"
-year = 2024
-journal = "Journal of Open Source Software"
-doi = "10.21105/joss.06171"
-openAccess = true
+key = "BEKS2017a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Model Predictive Control: Theory, Computation, and Design"
-authors = "Rawlings, James B.; Mayne, David Q.; Diehl, Moritz M."
-year = 2017
-journal = "Nob Hill Publishing (2nd ed.)"
-url = "https://sites.engineering.ucsb.edu/~jbraw/mpc/"
-openAccess = true
+key = "RMD2017a"
 
 [[references]]
-title = "Predictive Control with Constraints"
-authors = "Maciejowski, Jan M."
-year = 2002
-journal = "Pearson Education"
-openAccess = false
+key = "Mac2002a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "Receding Horizon Control of Nonlinear Systems"
-authors = "Mayne, David Q.; Michalska, H."
-year = 1990
-journal = "IEEE Transactions on Automatic Control"
-doi = "10.1109/9.57020"
-openAccess = false
+key = "MM1990a"
 
 [[references]]
-title = "Constrained Model Predictive Control: Stability and Optimality"
-authors = "Mayne, David Q.; Rawlings, James B.; Rao, Christopher V.; Scokaert, Pierre O. M."
-year = 2000
-journal = "Automatica"
-doi = "10.1016/S0005-1098(99)00214-9"
-openAccess = false
+key = "MRRS2000a"
 
 [[models]]
 id = "linmpc"

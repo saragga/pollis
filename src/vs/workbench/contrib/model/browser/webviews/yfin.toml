@@ -91,28 +91,13 @@ bundled = true
 description = "When to use simple vs log returns: cross-sectional vs temporal aggregation"
 
 [[references]]
-title = "YFinance.jl: A Julia interface to Yahoo Finance"
-authors = "Ohne, Eric; contributors"
-year = 2024
-journal = "GitHub"
-url = "https://github.com/eohne/YFinance.jl"
-openAccess = true
+key = "Ohn...2024a"
 
 [[references]]
-title = "Tables.jl: An Interface for Tabular Data"
-authors = "Quinn, Jacob; contributors"
-year = 2023
-journal = "GitHub"
-url = "https://github.com/JuliaData/Tables.jl"
-openAccess = true
+key = "Qui...2023a"
 
 [[references]]
-title = "TimeSeries.jl: Time series toolkit for Julia"
-authors = "JuliaStats contributors"
-year = 2024
-journal = "GitHub"
-url = "https://github.com/JuliaStats/TimeSeries.jl"
-openAccess = true
+key = "JSC2024c"
 
 [[bullets]]
 text = "Prices"

@@ -59,20 +59,10 @@ separator = true
 label = "Original Papers (from packages)"
 
 [[references]]
-title = "Visualizing Data using t-SNE"
-authors = "van der Maaten, L. & Hinton, G."
-year = 2008
-journal = ""
-url = "https://jmlr.org/papers/v9/vandermaaten08a.html"
-openAccess = true
+key = "MH2008a"
 
 [[references]]
-title = "UMAP: Uniform Manifold Approximation and Projection for Dimension Reduction"
-authors = "McInnes, L., Healy, J. & Melville, J."
-year = 2018
-journal = ""
-url = "https://arxiv.org/abs/1802.03426"
-openAccess = true
+key = "MHM2018a"
 
 [[models]]
 id = "tsne"

@@ -110,59 +110,17 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
-
-[[references]]
-title = "TrajectoryOptimization.jl: A Julia Package for Motion Planning"
-authors = "Jackson, Brian E.; Fong, Ethan; Howell, Taylor A.; Maric, Filip"
-year = 2021
-journal = "Journal of Open Source Software"
-doi = "10.21105/joss.03153"
-openAccess = true
+key = "BEKS2017a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Optimal Control: An Introduction"
-authors = "Kirk, Donald E."
-year = 2012
-journal = "Dover Publications"
-url = "https://doverpublications.com/"
-openAccess = false
+key = "Kir2012a"
 
 [[references]]
-title = "Nonlinear Dynamics and Chaos"
-authors = "Strogatz, Steven H."
-year = 2015
-journal = "Westview Press (2nd ed.)"
-openAccess = false
-
-[[references]]
-separator = true
-label = "Original Papers"
-
-[[references]]
-title = "Differential Dynamic Programming and Newton's Method for Discrete Optimal Control Problems"
-authors = "Jacobson, David H.; Mayne, David Q."
-year = 1970
-journal = "Journal of Mathematical Analysis and Applications"
-doi = "10.1016/0022-247X(70)90272-X"
-openAccess = false
-
-[[references]]
-title = "A Differential Dynamic Programming Framework for Optimal Control of Smooth Rigid Body Systems"
-authors = "Tassa, Yuval; Erez, Tom; Todorov, Emanuel"
-year = 2012
-journal = "IEEE Transactions on Automatic Control"
-doi = "10.1109/TAC.2012.2195830"
-openAccess = false
+key = "Str2015a"
 
 [[models]]
 id = "direct"

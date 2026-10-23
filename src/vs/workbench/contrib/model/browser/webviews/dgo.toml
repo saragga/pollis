@@ -94,60 +94,27 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Introduction to Global Optimization"
-authors = "Neumaier, Arnold"
-year = 2004
-journal = "Cambridge University Press"
-doi = "10.1017/CBO9780511569029"
-openAccess = false
-
-[[references]]
-title = "Deterministic Global Optimization"
-authors = "Floudas, Christodoulos A."
-year = 2000
-journal = "Springer"
-doi = "10.1007/978-1-4757-4949-6"
-openAccess = false
+key = "Flo2000a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "Lipschitzian Optimization Without the Lipschitz Constant"
-authors = "Jones, Donald R.; Perttunen, Cary D.; Stuckman, Bruce E."
-year = 1993
-journal = "Journal of Optimization Theory and Applications"
-doi = "10.1007/BF00941892"
-openAccess = false
+key = "JPS1993a"
 
 [[references]]
-title = "A Locally-Biased Form of the DIRECT Algorithm"
-authors = "Gablonsky, Joerg M.; Kelley, Carl T."
-year = 2001
-journal = "Journal of Global Optimization"
-doi = "10.1023/A:1017930332101"
-openAccess = false
+key = "GK2001a"
 
 [[references]]
-title = "Lipschitz Global Optimization"
-authors = "Strongin, Roman G.; Sergeyev, Yaroslav D."
-year = 2000
-journal = "Springer"
-doi = "10.1007/978-1-4615-4677-1"
-openAccess = false
+key = "SS2000b"
 
 [[models]]
 id = "direct"

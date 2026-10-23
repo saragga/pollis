@@ -309,40 +309,20 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "Flux.jl: Relax! High-Level Machine Learning on Julia"
-authors = "Innes, Mike"
-year = 2018
-journal = "Journal of Open Source Software"
-doi = "10.21105/joss.00602"
-openAccess = true
+key = "Inn2018a"
 
 [[references]]
 separator = true
 label = "Foundational Papers"
 
 [[references]]
-title = "Deep Residual Learning for Image Recognition"
-authors = "He, Kaiming; Zhang, Xiangyu; Ren, Shaoqing; Sun, Jian"
-year = 2016
-journal = "CVPR"
-url = "https://arxiv.org/abs/1512.03385"
-openAccess = true
+key = "HZRS2016a"
 
 [[references]]
-title = "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding"
-authors = "Devlin, Jacob; Chang, Ming-Wei; Lee, Kenton; Toutanova, Kristina"
-year = 2019
-journal = "NAACL-HLT"
-url = "https://arxiv.org/abs/1810.04805"
-openAccess = true
+key = "DCLT2019a"
 
 [[models]]
 id = "multimodal"

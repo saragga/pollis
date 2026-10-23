@@ -117,82 +117,39 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Agents.jl: A performant and feature-full agent based modelling software of minimal code complexity"
-authors = "Datseris, George; Vahdati, Ali R.; DuBois, Timothy C."
-year = 2022
-journal = "SIMULATION"
-doi = "10.1177/00375497211068820"
-openAccess = true
+key = "DVD2022a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "An Introduction to Agent-Based Modeling: Modeling Natural, Social, and Engineered Complex Systems"
-authors = "Wilensky, Uri; Rand, William"
-year = 2015
-journal = "MIT Press"
-openAccess = false
+key = "WR2015b"
 
 [[references]]
-title = "Growing Artificial Societies: Social Science from the Bottom Up"
-authors = "Epstein, Joshua M.; Axtell, Robert"
-year = 1996
-journal = "MIT Press"
-openAccess = false
+key = "EA1996a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "Dynamic models of segregation"
-authors = "Schelling, Thomas C."
-year = 1971
-journal = "Journal of Mathematical Sociology"
-doi = "10.1080/0022250X.1971.9989794"
-openAccess = false
+key = "Sch1971a"
 
 [[references]]
-title = "Flocks, herds and schools: A distributed behavioral model"
-authors = "Reynolds, Craig W."
-year = 1987
-journal = "ACM SIGGRAPH Computer Graphics"
-doi = "10.1145/37401.37406"
-openAccess = false
+key = "Rey1987a"
 
 [[references]]
-title = "Artificial life: Organization, adaptation and complexity from the bottom up"
-authors = "Bedau, Mark A."
-year = 2003
-journal = "Trends in Cognitive Sciences"
-doi = "10.1016/S1364-6613(03)00144-6"
-openAccess = false
+key = "Bed2003a"
 
 [[references]]
-title = "Novel type of phase transition in a system of self-driven particles"
-authors = "Vicsek, Tamas; Czirok, Andras; Ben-Jacob, Eshel; Cohen, Inon; Shochet, Ofer"
-year = 1995
-journal = "Physical Review Letters"
-doi = "10.1103/PhysRevLett.75.1226"
-openAccess = false
+key = "VCBCS1995a"
 
 [[references]]
-title = "Epidemic spreading in scale-free networks"
-authors = "Pastor-Satorras, Romualdo; Vespignani, Alessandro"
-year = 2001
-journal = "Physical Review Letters"
-doi = "10.1103/PhysRevLett.86.3200"
-openAccess = false
+key = "PV2001a"
 
 [[references]]
-title = "Spread of epidemic disease on networks"
-authors = "Newman, M. E. J."
-year = 2002
-journal = "Physical Review E"
-doi = "10.1103/PhysRevE.66.016128"
-openAccess = false
+key = "New2002a"
 
 [[models]]
 id = "grid"

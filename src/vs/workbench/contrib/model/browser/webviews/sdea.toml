@@ -94,51 +94,20 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "DifferentialEquations.jl: A Performant and Feature-Rich Ecosystem for Solving Differential Equations in Julia"
-authors = "Rackauckas, Christopher; Nie, Qing"
-year = 2017
-journal = "Journal of Open Research Software"
-doi = "10.5334/jors.151"
-openAccess = true
+key = "RN2017a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Stochastic Differential Equations: An Introduction with Applications"
-authors = "Øksendal, Bernt"
-year = 2003
-journal = "Springer (6th ed.)"
-doi = "10.1007/978-3-642-14394-6"
-openAccess = false
+key = "Oks2003a"
 
 [[references]]
-title = "A First Passage Time Primer for Stochastic Differential Equations"
-authors = "Tuckwell, Henry C."
-year = 1988
-journal = "Cambridge University Press"
-openAccess = false
-
-[[references]]
-separator = true
-label = "Original Papers"
-
-[[references]]
-title = "Parallel Methods for Stochastic Differential Equations and Statistical Simulation"
-authors = "Rackauckas, Christopher; et al."
-year = 2020
-journal = "arXiv"
-url = "https://arxiv.org/abs/2012.12720"
-openAccess = true
+key = "Tuc1988a"
 
 [[models]]
 id = "paths"

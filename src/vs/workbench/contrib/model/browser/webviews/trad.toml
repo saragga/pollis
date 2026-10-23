@@ -108,82 +108,39 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Scalable Agent-Based Modeling for Complex Financial Market Simulations"
-authors = "Wheeler, Aaron; Varner, Jeffrey D."
-year = 2023
-journal = "arXiv"
-url = "https://arxiv.org/abs/2312.14903"
-openAccess = true
+key = "WV2023a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Algorithmic and High-Frequency Trading"
-authors = "Cartea, Alvaro; Jaimungal, Sebastian; Penalva, Jose"
-year = 2015
-journal = "Cambridge University Press"
-openAccess = false
+key = "CJP2015a"
 
 [[references]]
-title = "Trades, Quotes and Prices: Financial Markets Under the Microscope"
-authors = "Bouchaud, Jean-Philippe; Bonart, Julius; Donier, Jonathan; Gould, Martin"
-year = 2018
-journal = "Cambridge University Press"
-openAccess = false
+key = "BBDG2018a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "A Simulation Analysis of the Microstructure of Double Auction Markets"
-authors = "Chiarella, Carl; Iori, Giulia"
-year = 2002
-journal = "Quantitative Finance"
-doi = "10.1088/1469-7688/2/5/303"
-openAccess = false
+key = "CI2002a"
 
 [[references]]
-title = "Statistical Theory of the Continuous Double Auction"
-authors = "Smith, Eric; Farmer, J. Doyne; Gillemot, Laszlo; Krishnamurthy, Supriya"
-year = 2003
-journal = "Quantitative Finance"
-doi = "10.1088/1469-7688/3/6/307"
-openAccess = false
+key = "SFGK2003a"
 
 [[references]]
-title = "Fluctuations and Response in Financial Markets: The Subtle Nature of Random Price Changes"
-authors = "Bouchaud, Jean-Philippe; Gefen, Yuval; Potters, Marc; Wyart, Matthieu"
-year = 2004
-journal = "Quantitative Finance"
-doi = "10.1080/14697680400000022"
-openAccess = false
+key = "BGPW2004a"
 
 [[references]]
-title = "Stock Market Prices Do Not Follow Random Walks: Evidence from a Simple Specification Test"
-authors = "Lo, Andrew W.; MacKinlay, A. Craig"
-year = 1988
-journal = "Review of Financial Studies"
-doi = "10.1093/rfs/1.1.41"
-openAccess = false
+key = "LM1988a"
 
 [[references]]
-title = "Allocative Efficiency of Markets with Zero-Intelligence Traders: Market as a Partial Substitute for Individual Rationality"
-authors = "Gode, Dhananjay K.; Sunder, Shyam"
-year = 1993
-journal = "Journal of Political Economy"
-doi = "10.1086/261868"
-openAccess = false
+key = "GS1993a"
 
 [[references]]
-title = "Empirical Properties of Asset Returns: Stylized Facts and Statistical Issues"
-authors = "Cont, Rama"
-year = 2001
-journal = "Quantitative Finance"
-doi = "10.1080/713665670"
-openAccess = false
+key = "Con2001a"
 
 [[models]]
 id = "agents"

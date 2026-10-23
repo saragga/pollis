@@ -109,92 +109,39 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "JuMP: A Modeling Language for Mathematical Optimization"
-authors = "Dunning, Iain; Huchette, Joey; Lubin, Miles"
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/15M1020575"
-openAccess = true
+key = "DHL2017a"
 
 [[references]]
-title = "Clarabel: An Interior-Point Solver for Conic Programs with Quadratic Objectives"
-authors = "Goulart, Paul J.; Chen, Yuwen"
-year = 2024
-journal = "arXiv"
-doi = "10.48550/arXiv.2405.14674"
-openAccess = true
+key = "GC2024a"
 
 [[references]]
-title = "COSMO: A Conic Operator Splitting Method for Convex Conic Problems"
-authors = "Garstka, Michael; Cannon, Mark; Goulart, Paul"
-year = 2021
-journal = "Journal of Optimization Theory and Applications"
-doi = "10.1007/s10957-021-01896-7"
-openAccess = true
+key = "GCG2021a"
 
 [[references]]
-title = "Conic Optimization via Operator Splitting and Homogeneous Self-Dual Embedding"
-authors = "O'Donoghue, Brendan; Chu, Eric; Parikh, Neal; Boyd, Stephen"
-year = 2016
-journal = "Journal of Optimization Theory and Applications"
-doi = "10.1007/s10957-016-0892-3"
-openAccess = false
-
-[[references]]
-title = "Hypatia.jl: Conic Interior Point Solver"
-authors = "Coey, Chris; Kapelevich, Lea; Vielma, Juan Pablo"
-year = 2023
-journal = "INFORMS Journal on Computing"
-doi = "10.1287/ijoc.2022.1291"
-openAccess = true
+key = "OCPB2016a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Convex Optimization"
-authors = "Boyd, Stephen; Vandenberghe, Lieven"
-year = 2004
-journal = "Cambridge University Press"
-url = "https://web.stanford.edu/~boyd/cvxbook/"
-openAccess = true
+key = "BV2004a"
 
 [[references]]
-title = "Semidefinite Programming"
-authors = "Vandenberghe, Lieven; Boyd, Stephen"
-year = 1996
-journal = "SIAM Review"
-doi = "10.1137/1038016"
-openAccess = false
+key = "VB1996a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "Improved Approximation Algorithms for Maximum Cut and Satisfiability Problems Using Semidefinite Programming"
-authors = "Goemans, Michel X.; Williamson, David P."
-year = 1995
-journal = "Journal of the ACM"
-doi = "10.1145/227683.227684"
-openAccess = false
+key = "GW1995a"
 
 [[references]]
-title = "Interior-Point Polynomial Algorithms in Convex Programming"
-authors = "Nesterov, Yurii; Nemirovskii, Arkadii"
-year = 1994
-journal = "SIAM"
-doi = "10.1137/1.9781611970791"
-openAccess = false
+key = "NN1994a"
 
 [[models]]
 id = "sdp"

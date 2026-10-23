@@ -129,60 +129,30 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "JuMP: A Modeling Language for Mathematical Optimization"
-authors = "Dunning, Iain; Huchette, Joey; Lubin, Miles"
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/15M1020575"
-openAccess = true
+key = "DHL2017a"
 
 [[references]]
-title = "On the Implementation of an Interior-Point Filter Line-Search Algorithm for Large-Scale Nonlinear Programming"
-authors = "Wachter, Andreas; Biegler, Lorenz T."
-year = 2006
-journal = "Mathematical Programming"
-doi = "10.1007/s10107-004-0559-y"
-openAccess = false
+key = "WB2006a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Numerical Optimization"
-authors = "Nocedal, Jorge; Wright, Stephen J."
-year = 2006
-journal = "Springer (2nd ed.)"
-doi = "10.1007/978-0-387-40065-5"
-openAccess = false
+key = "NW2006a"
 
 [[references]]
-title = "Nonlinear Programming"
-authors = "Bazaraa, Mokhtar S.; Sherali, Hanif D.; Shetty, C. M."
-year = 2006
-journal = "Wiley (3rd ed.)"
-doi = "10.1002/0471787779"
-openAccess = false
+key = "BSS2006a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "Nonlinear Programming"
-authors = "Kuhn, Harold W.; Tucker, Albert W."
-year = 1951
-journal = "Proceedings of the Second Berkeley Symposium"
-url = "https://projecteuclid.org/euclid.bsmsp/1200500249"
-openAccess = true
+key = "KT1951a"
 
 [[models]]
 id = "nlp"

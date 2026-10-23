@@ -108,73 +108,30 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "ControlSystems.jl: A Control Toolbox for Julia"
-authors = "Bagge Carlson, Fredrik; Fält, Mattias; Heimerson, Albin; Troeng, Olof"
-year = 2021
-journal = "GitHub"
-openAccess = true
+key = "CFHT2021a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "System Identification: Theory for the User"
-authors = "Ljung, Lennart"
-year = 1999
-journal = "Prentice Hall (2nd ed.)"
-openAccess = false
+key = "Lju1999a"
 
 [[references]]
-title = "Identification of Linear Systems"
-authors = "Soderstrom, Torsten; Stoica, Petre"
-year = 1989
-journal = "Prentice Hall"
-openAccess = false
+key = "SS1989a"
 
 [[references]]
-title = "Subspace Methods for System Identification"
-authors = "Katayama, Tohru"
-year = 2005
-journal = "Springer"
-doi = "10.1007/1-84628-158-X"
-openAccess = false
+key = "Kat2005a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "A New Algorithm for Optimal Filtering of Noisy Observations"
-authors = "Van Overschee, Peter; De Moor, Bart"
-year = 1994
-journal = "Automatica"
-doi = "10.1016/0005-1098(94)90230-5"
-openAccess = false
-
-[[references]]
-title = "N4SID: Subspace Algorithms for the Identification of Combined Deterministic-Stochastic Systems"
-authors = "Van Overschee, Peter; De Moor, Bart"
-year = 1994
-journal = "Automatica"
-doi = "10.1016/0005-1098(94)90231-3"
-openAccess = false
-
-[[references]]
-title = "Frequency-Domain System Identification Using Non-Parametric Noise Models"
-authors = "Pintelon, Rik; Schoukens, Johan"
-year = 2012
-journal = "IEEE Transactions on Automatic Control"
-doi = "10.1109/TAC.2012.2199974"
-openAccess = false
+key = "OM1994b"
 
 [[models]]
 id = "arx"

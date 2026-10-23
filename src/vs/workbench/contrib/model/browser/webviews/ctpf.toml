@@ -78,60 +78,30 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "TopicModelsVB.jl: Variational Bayesian Topic Modeling in Julia"
-authors = "Proffitt, Eric"
-year = 2016
-journal = "GitHub"
-url = "https://github.com/ericproffitt/TopicModelsVB.jl"
-openAccess = true
+key = "Pro2016a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Speech and Language Processing"
-authors = "Jurafsky, Daniel; Martin, James H."
-year = 2024
-journal = "Pearson (3rd ed., draft)"
-url = "https://web.stanford.edu/~jurafsky/slp3/"
-openAccess = true
+key = "JM2024a"
 
 [[references]]
-title = "Probabilistic Topic Models"
-authors = "Blei, David M."
-year = 2012
-journal = "Communications of the ACM"
-doi = "10.1145/2133806.2133826"
-openAccess = false
+key = "Ble2012a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "Collaborative Topic Modeling for Recommending Scientific Articles"
-authors = "Wang, Chong; Blei, David M."
-year = 2011
-journal = "ACM SIGKDD"
-doi = "10.1145/2020408.2020480"
-openAccess = false
+key = "WB2011a"
 
 [[references]]
-title = "Scalable Recommendation with Hierarchical Poisson Factorization"
-authors = "Gopalan, Prem; Hofman, Jake M.; Blei, David M."
-year = 2014
-journal = "UAI"
-url = "https://auai.org/uai2015/proceedings/papers/208.pdf"
-openAccess = true
+key = "GHB2014a"
 
 [[bullets]]
 text = "CTPF"

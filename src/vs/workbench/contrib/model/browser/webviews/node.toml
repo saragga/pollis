@@ -90,66 +90,33 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "DiffEqFlux.jl: A Julia Library for Neural Differential Equations"
-authors = "Rackauckas, Christopher; Ma, Yingbo; Martensen, Julius; Warner, Collin; Zubov, Kirill; Supekar, Rohit; Skinner, Dominic; Ramadhan, Ali; Edelman, Alan"
-year = 2019
-journal = "arXiv"
-doi = "10.48550/arXiv.1902.02376"
-openAccess = true
+key = "RMMWZ...2019a"
 
 [[references]]
-title = "Universal Differential Equations for Scientific Machine Learning"
-authors = "Rackauckas, Christopher; Ma, Yingbo; Dixit, Vaibhav; Guo, Xingjian; Innes, Mike; Revels, Jarrett; Nyberg, Joakim; Ivaturi, Vijay"
-year = 2020
-journal = "arXiv"
-doi = "10.48550/arXiv.2001.04385"
-openAccess = true
+key = "RMDGI...2020a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Deep Learning"
-authors = "Goodfellow, Ian; Bengio, Yoshua; Courville, Aaron"
-year = 2016
-journal = "MIT Press"
-openAccess = false
+key = "GBC2016a"
 
 [[references]]
-title = "Nonlinear Dynamics and Chaos"
-authors = "Strogatz, Steven H."
-year = 2015
-journal = "Westview Press (2nd ed.)"
-openAccess = false
+key = "Str2015a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "Neural Ordinary Differential Equations"
-authors = "Chen, Ricky T. Q.; Rubanova, Yulia; Bettencourt, Jesse; Duvenaud, David"
-year = 2018
-journal = "NeurIPS"
-doi = "10.48550/arXiv.1806.07366"
-openAccess = true
+key = "CRBD2018a"
 
 [[references]]
-title = "Latent ODEs for Irregularly-Sampled Time Series"
-authors = "Rubanova, Yulia; Chen, Ricky T. Q.; Duvenaud, David"
-year = 2019
-journal = "NeurIPS"
-doi = "10.48550/arXiv.1907.03907"
-openAccess = true
+key = "RCD2019a"
 
 [[models]]
 id = "node"

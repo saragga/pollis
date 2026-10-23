@@ -116,97 +116,45 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "ProximalAlgorithms.jl: Proximal algorithms for nonsmooth optimisation in Julia"
-authors = "Themelis, Andreas; Stella, Lorenzo; Patrinos, Panagiotis"
-year = 2020
-journal = "GitHub"
-openAccess = true
+key = "TSP2020a"
 
 [[references]]
-title = "ProximalOperators.jl: Proximal operators for nonsmooth optimisation"
-authors = "Stella, Lorenzo; Themelis, Andreas; Patrinos, Panagiotis"
-year = 2017
-journal = "GitHub"
-openAccess = true
+key = "STP2017a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Proximal Algorithms"
-authors = "Parikh, Neal; Boyd, Stephen"
-year = 2014
-journal = "Foundations and Trends in Optimization"
-doi = "10.1561/2400000003"
-openAccess = true
+key = "PB2014a"
 
 [[references]]
-title = "Convex Analysis and Minimization Algorithms I"
-authors = "Hiriart-Urruty, Jean-Baptiste; Lemaréchal, Claude"
-year = 1993
-journal = "Springer"
-doi = "10.1007/978-3-662-02796-7"
-openAccess = false
+key = "HL1993a"
 
 [[references]]
-title = "First-Order Methods in Optimization"
-authors = "Beck, Amir"
-year = 2017
-journal = "SIAM"
-doi = "10.1137/1.9781611974997"
-openAccess = false
+key = "Bec2017a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "Minimization of Nonsmooth Functionals"
-authors = "Polyak, Boris T."
-year = 1969
-journal = "USSR Computational Mathematics and Mathematical Physics"
-doi = "10.1016/0041-5553(69)90061-5"
-openAccess = false
+key = "Pol1969a"
 
 [[references]]
-title = "An Extension of the Method of Subgradients"
-authors = "Lemaréchal, Claude"
-year = 1975
-journal = "Symposia Mathematica"
-openAccess = false
+key = "Lem1975a"
 
 [[references]]
-title = "A First-Order Primal-Dual Algorithm for Convex Problems with Applications to Imaging"
-authors = "Chambolle, Antonin; Pock, Thomas"
-year = 2011
-journal = "Journal of Mathematical Imaging and Vision"
-doi = "10.1007/s10851-010-0251-1"
-openAccess = false
+key = "CP2011a"
 
 [[references]]
-title = "Splitting Algorithms for the Sum of Two Nonlinear Operators"
-authors = "Lions, Pierre-Louis; Mercier, Bertrand"
-year = 1979
-journal = "SIAM Journal on Numerical Analysis"
-doi = "10.1137/0716071"
-openAccess = false
+key = "LM1979a"
 
 [[references]]
-title = "Monotone Operators and the Proximal Point Algorithm"
-authors = "Rockafellar, R. Tyrrell"
-year = 1976
-journal = "SIAM Journal on Control and Optimization"
-doi = "10.1137/0314056"
-openAccess = false
+key = "Roc1976a"
 
 [[models]]
 id = "sg"

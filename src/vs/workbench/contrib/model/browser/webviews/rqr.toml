@@ -77,19 +77,10 @@ separator = true
 label = "Original Papers (from packages)"
 
 [[references]]
-title = "Robust Estimation of a Location Parameter"
-authors = "Huber, P.J."
-year = 1964
-journal = "The Annals of Mathematical Statistics"
-doi = "10.1214/aoms/1177703732"
-openAccess = true
+key = "Hub1964a"
 
 [[references]]
-title = "Robust Statistics: Theory and Methods (with R)"
-authors = "Maronna, R.A.; Martin, R.D.; Yohai, V.J.; Salibián-Barrera, M."
-year = 2019
-journal = "Wiley Series in Probability and Statistics"
-openAccess = false
+key = "MMYS2019a"
 
 [[models]]
 id = "robust"

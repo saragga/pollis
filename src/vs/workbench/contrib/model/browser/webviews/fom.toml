@@ -142,83 +142,39 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "Optim: A mathematical optimization package for Julia"
-authors = "Mogensen, Patrick Kofod; Riseth, Asbjorn Nilsen"
-year = 2018
-journal = "Journal of Open Source Software"
-doi = "10.21105/joss.00615"
-openAccess = true
+key = "MR2018a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Numerical Optimization"
-authors = "Nocedal, Jorge; Wright, Stephen J."
-year = 2006
-journal = "Springer (2nd ed.)"
-doi = "10.1007/978-0-387-40065-5"
-openAccess = false
+key = "NW2006a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "Function minimisation by conjugate gradients"
-authors = "Fletcher, R.; Reeves, C. M."
-year = 1964
-journal = "The Computer Journal"
-doi = "10.1093/comjnl/7.2.149"
-openAccess = false
+key = "FR1964a"
 
 [[references]]
-title = "Adam: A Method for Stochastic Optimization"
-authors = "Kingma, Diederik P.; Ba, Jimmy Lei"
-year = 2015
-journal = "International Conference on Learning Representations"
-doi = "10.48550/arXiv.1412.6980"
-openAccess = true
+key = "KB2015a"
 
 [[references]]
-title = "Some methods of speeding up the convergence of iteration methods"
-authors = "Polyak, Boris T."
-year = 1964
-journal = "USSR Computational Mathematics and Mathematical Physics"
-doi = "10.1016/0041-5553(64)90137-5"
-openAccess = false
+key = "Pol1964a"
 
 [[references]]
-title = "A method of solving a convex programming problem with convergence rate O(1/k^2)"
-authors = "Nesterov, Yurii"
-year = 1983
-journal = "Soviet Mathematics Doklady"
-openAccess = false
+key = "Nes1983a"
 
 [[references]]
-title = "Lecture 6.5 - RMSProp: Divide the gradient by a running average of its recent magnitude"
-authors = "Hinton, Geoffrey"
-year = 2012
-journal = "COURSERA: Neural Networks for Machine Learning (unpublished)"
-url = "https://www.cs.toronto.edu/~tijmen/csc321/slides/lecture_slides_lec6.pdf"
-openAccess = true
+key = "Hin2012a"
 
 [[references]]
-title = "Decoupled Weight Decay Regularization"
-authors = "Loshchilov, Ilya; Hutter, Frank"
-year = 2019
-journal = "International Conference on Learning Representations"
-doi = "10.48550/arXiv.1711.05101"
-openAccess = true
+key = "LH2019a"
 
 [[models]]
 id = "sgd"

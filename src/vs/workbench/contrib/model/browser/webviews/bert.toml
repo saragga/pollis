@@ -89,68 +89,33 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "Transformers.jl: Transformers in Julia"
-authors = "Cheng, Ching-Wen"
-year = 2023
-journal = "GitHub"
-url = "https://github.com/chengchingwen/Transformers.jl"
-openAccess = true
+key = "Che2023a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Speech and Language Processing"
-authors = "Jurafsky, Daniel; Martin, James H."
-year = 2024
-journal = "Pearson (3rd ed., draft)"
-url = "https://web.stanford.edu/~jurafsky/slp3/"
-openAccess = true
+key = "JM2024a"
 
 [[references]]
-title = "Deep Learning"
-authors = "Goodfellow, Ian; Bengio, Yoshua; Courville, Aaron"
-year = 2016
-journal = "MIT Press"
-url = "https://www.deeplearningbook.org/"
-openAccess = true
+key = "GBC2016a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding"
-authors = "Devlin, Jacob; Chang, Ming-Wei; Lee, Kenton; Toutanova, Kristina"
-year = 2019
-journal = "NAACL-HLT"
-url = "https://arxiv.org/abs/1810.04805"
-openAccess = true
+key = "DCLT2019a"
 
 [[references]]
-title = "Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks"
-authors = "Reimers, Nils; Gurevych, Iryna"
-year = 2019
-journal = "EMNLP"
-url = "https://arxiv.org/abs/1908.10084"
-openAccess = true
+key = "RG2019a"
 
 [[references]]
-title = "Attention Is All You Need"
-authors = "Vaswani, Ashish; Shazeer, Noam; Parmar, Niki; Uszkoreit, Jakob; Jones, Llion; Gomez, Aidan N.; Kaiser, Lukasz; Polosukhin, Illia"
-year = 2017
-journal = "NeurIPS"
-url = "https://arxiv.org/abs/1706.03762"
-openAccess = true
+key = "VSPUJ...2017a"
 
 [[models]]
 id = "embed"

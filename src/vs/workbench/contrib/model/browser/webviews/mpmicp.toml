@@ -60,64 +60,29 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "JuMP: A Modeling Language for Mathematical Optimization"
-authors = "Dunning, Iain; Huchette, Joey; Lubin, Miles"
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/15M1020575"
-openAccess = true
+key = "DHL2017a"
 
 [[references]]
-title = "Outer Approximation with Conic Certificates for Mixed-Integer Convex Problems"
-authors = "Coey, Chris; Lubin, Miles; Vielma, Juan Pablo"
-year = 2020
-journal = "Mathematical Programming Computation"
-doi = "10.1007/s12532-020-00178-3"
-openAccess = false
+key = "CLV2020a"
 
 [[references]]
-title = "Solving Natural Conic Formulations with Hypatia.jl"
-authors = "Coey, Chris; Kapelevich, Lea; Vielma, Juan Pablo"
-year = 2022
-journal = "INFORMS Journal on Computing"
-doi = "10.1287/ijoc.2022.1202"
-openAccess = false
+key = "CKV2022a"
 
 [[references]]
-title = "Clarabel: An Interior-Point Solver for Conic Programs with Quadratic Objectives"
-authors = "Goulart, Paul J.; Chen, Yuwen"
-year = 2024
-journal = "arXiv"
-doi = "10.48550/arXiv.2405.14674"
-openAccess = true
+key = "GC2024a"
 
 [[references]]
-title = "Parallelizing the Dual Revised Simplex Method"
-authors = "Huangfu, Qi; Hall, J. A. Julian"
-year = 2018
-journal = "Mathematical Programming Computation"
-doi = "10.1007/s12532-017-0130-5"
-openAccess = true
+key = "HH2018a"
 
 [[references]]
 separator = true
 label = "Applications"
 
 [[references]]
-title = "Best Subset Selection via a Modern Optimization Lens"
-authors = "Bertsimas, Dimitris; King, Angela; Mazumder, Rahul"
-year = 2016
-journal = "The Annals of Statistics"
-doi = "10.1214/15-AOS1388"
-openAccess = false
+key = "BKM2016a"
 
 [[models]]
 id = "portfolio"

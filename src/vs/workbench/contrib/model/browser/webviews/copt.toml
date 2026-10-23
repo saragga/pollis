@@ -128,105 +128,48 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "NLopt: A free/open-source library for nonlinear optimization"
-authors = "Johnson, Steven G."
-year = 2007
-journal = "GitHub"
-openAccess = true
+key = "Joh2007a"
 
 [[references]]
-title = "JuMP: A Modeling Language for Mathematical Optimization"
-authors = "Dunning, Iain; Huchette, Joey; Lubin, Miles"
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/15M1020575"
-openAccess = true
+key = "DHL2017a"
 
 [[references]]
-title = "FrankWolfe.jl: A High-Performance and Flexible Toolbox for Frank-Wolfe Algorithms and Conditional Gradients"
-authors = "Besançon, Mathieu; Carderera, Alejandro; Pokutta, Sebastian"
-year = 2022
-journal = "INFORMS Journal on Computing"
-doi = "10.1287/ijoc.2022.1191"
-openAccess = true
+key = "BCP2022a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Numerical Optimization"
-authors = "Nocedal, Jorge; Wright, Stephen J."
-year = 2006
-journal = "Springer (2nd ed.)"
-doi = "10.1007/978-0-387-40065-5"
-openAccess = false
+key = "NW2006a"
 
 [[references]]
-title = "Convex Optimization"
-authors = "Boyd, Stephen; Vandenberghe, Lieven"
-year = 2004
-journal = "Cambridge University Press"
-openAccess = true
+key = "BV2004a"
 
 [[references]]
-title = "Practical Methods of Optimization"
-authors = "Fletcher, Roger"
-year = 2000
-journal = "Wiley (2nd ed.)"
-doi = "10.1002/9781118723203"
-openAccess = false
+key = "Fle2000a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "A Software Package for Sequential Quadratic Programming"
-authors = "Kraft, Dieter"
-year = 1988
-journal = "DFVLR Technical Report FB 88-28"
-openAccess = false
+key = "Kra1988a"
 
 [[references]]
-title = "The Method of Moving Asymptotes — A New Method for Structural Optimization"
-authors = "Svanberg, Krister"
-year = 1987
-journal = "International Journal for Numerical Methods in Engineering"
-doi = "10.1002/nme.1620240207"
-openAccess = false
+key = "Sva1987a"
 
 [[references]]
-title = "On the Implementation of an Interior-Point Filter Line-Search Algorithm for Large-Scale Nonlinear Programming"
-authors = "Wächter, Andreas; Biegler, Lorenz T."
-year = 2006
-journal = "Mathematical Programming"
-doi = "10.1007/s10107-004-0559-y"
-openAccess = false
+key = "WB2006a"
 
 [[references]]
-title = "An Algorithm for Quadratic Programming"
-authors = "Frank, Marguerite; Wolfe, Philip"
-year = 1956
-journal = "Naval Research Logistics Quarterly"
-doi = "10.1002/nav.3800030109"
-openAccess = false
+key = "FW1956a"
 
 [[references]]
-title = "The Gradient Projection Method for Nonlinear Programming. Part I. Linear Constraints"
-authors = "Rosen, J. B."
-year = 1960
-journal = "Journal of the Society for Industrial and Applied Mathematics"
-doi = "10.1137/0108011"
-openAccess = false
+key = "Ros1960a"
 
 [[models]]
 id = "slsqp"

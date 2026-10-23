@@ -364,76 +364,33 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "RxInfer: A Julia package for reactive real-time Bayesian inference"
-authors = "Bagaev, Dmitry; de Vries, Bert"
-year = 2023
-journal = "Journal of Open Source Software"
-doi = "10.21105/joss.05161"
-openAccess = true
+key = "BV2023c"
 
 [[references]]
-title = "ReactiveMP.jl: A Julia package for reactive message passing-based Bayesian inference"
-authors = "Bagaev, Dmitry; de Vries, Bert"
-year = 2023
-journal = "Software Impacts"
-doi = "10.1016/j.simpa.2023.100558"
-openAccess = true
+key = "BV2022a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Pattern Recognition and Machine Learning"
-authors = "Bishop, Christopher M."
-year = 2006
-journal = "Springer"
-url = "https://www.springer.com/book/9780387310732"
-openAccess = false
+key = "Bis2006a"
 
 [[references]]
-title = "Probabilistic Graphical Models: Principles and Techniques"
-authors = "Koller, Daphne; Friedman, Nir"
-year = 2009
-journal = "MIT Press"
-url = "https://mitpress.mit.edu/9780262013192/probabilistic-graphical-models/"
-openAccess = false
+key = "KF2009a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "A Factor Graph Approach to Signal Modeling, System Identification and Filtering"
-authors = "Loeliger, Hans-Andrea; Dauwels, Justin; Hu, Junli; Korl, Sascha; Ping, Li; Kschischang, Frank R."
-year = 2007
-journal = "Proceedings of the IEEE"
-doi = "10.1109/JPROC.2007.906491"
-openAccess = false
+key = "BKM2017a"
 
 [[references]]
-title = "Variational Inference: A Review for Statisticians"
-authors = "Blei, David M.; Kucukelbir, Alp; McAuliffe, Jon D."
-year = 2017
-journal = "Journal of the American Statistical Association"
-doi = "10.1080/01621459.2017.1285773"
-openAccess = false
-
-[[references]]
-title = "Reactive Message Passing for Scalable Bayesian Inference"
-authors = "Bagaev, Dmitry; de Vries, Bert"
-year = 2023
-journal = "Entropy"
-doi = "10.3390/e25040529"
-openAccess = true
+key = "BV2023a"
 
 [[models]]
 id = "gaussian"

@@ -66,28 +66,13 @@ separator = true
 label = "Original Papers (from packages)"
 
 [[references]]
-title = "Analysis of a Complex of Statistical Variables into Principal Components"
-authors = "Hotelling, H."
-year = 1933
-journal = ""
-url = "https://doi.org/10.1037/h0071325"
-openAccess = false
+key = "Hot1933a"
 
 [[references]]
-title = "Kernel Principal Component Analysis"
-authors = "Schölkopf, B., Smola, A. & Müller, K.-R."
-year = 1998
-journal = ""
-url = "https://doi.org/10.1162/089976698300017467"
-openAccess = false
+key = "SSM1998a"
 
 [[references]]
-title = "EM Algorithms for ML Factor Analysis"
-authors = "Rubin, D.B. & Thayer, D.T."
-year = 1982
-journal = ""
-url = "https://doi.org/10.1007/BF02294360"
-openAccess = false
+key = "RT1982a"
 
 [[models]]
 id = "pca"

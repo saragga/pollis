@@ -68,36 +68,21 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "An Introduction to Multivariate Statistical Analysis"
-authors = "Anderson, T. W."
-year = 2003
-journal = "Wiley (3rd ed.)"
-url = "https://www.wiley.com/en-us/An+Introduction+to+Multivariate+Statistical+Analysis%2C+3rd+Edition-p-9780471360919"
-openAccess = false
+key = "And2003a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "Relations Between Two Sets of Variates"
-authors = "Hotelling, Harold"
-year = 1936
-journal = "Biometrika"
-doi = "10.1093/biomet/28.3-4.321"
-openAccess = false
+key = "Hot1936a"
 
 [[bullets]]
 text = "Finds linear combinations of X and Y that are maximally correlated"

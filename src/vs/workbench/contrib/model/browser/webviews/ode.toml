@@ -108,92 +108,42 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "Differential Elimination for Dynamical Models via Projections with Applications to Structural Identifiability"
-authors = "Dong, Ruiwen; Goodbrake, Christian; Harrington, Heather A.; Pogudin, Gleb"
-year = 2023
-journal = "SIAM Journal on Applied Algebra and Geometry"
-doi = "10.1137/22M1469067"
-openAccess = true
+key = "DGHP2023a"
 
 [[references]]
-title = "PEtab.jl: Advancing the Efficiency and Utility of Dynamic Modelling"
-authors = "Persson, Sebastian; Frohlich, Fabian; Grein, Stephan; Loman, Torkel; Ognissanti, Damiano; Hasselgren, Viktor; Hasenauer, Jan; Cvijovic, Marija"
-year = 2025
-journal = "Bioinformatics"
-doi = "10.1093/bioinformatics/btaf497"
-openAccess = true
+key = "PFGLO...2025a"
 
 [[references]]
-title = "ModelingToolkit: A Composable Graph Transformation System for Equation-Based Modeling"
-authors = "Ma, Yingbo; Gowda, Shashi; Anantharaman, Ranjan; Laughman, Chris; Shah, Viral; Rackauckas, Christopher"
-year = 2021
-journal = "arXiv preprint"
-doi = "10.48550/arXiv.2103.05244"
-openAccess = true
+key = "MGALS...2021a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Nonlinear Regression Analysis and Its Applications"
-authors = "Bates, Douglas M.; Watts, Donald G."
-year = 1988
-journal = "Wiley"
-doi = "10.1002/9780470316757"
-openAccess = false
+key = "BW1988a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "PEtab: Interoperable Specification of Parameter Estimation Problems in Systems Biology"
-authors = "Schmiester, Leonard; Schaelte, Yannik; Bergmann, Frank T.; Camba, Tacio; Dudkin, Erika; Egert, Janine; Frohlich, Fabian; Fuhrmann, Lara; Hauber, Adrian L.; Kemmer, Svenja; Lakrisenko, Polina; Loos, Carolin; Merkt, Simon; Muller, Wolfgang; Pathirana, Dilan; Raue, Andreas; Sahle, Sven; Schaber, Jorg; Stapor, Paul; Ulrich, Elba; Villaverde, Alejandro F.; Weindl, Daniel; Wierling, Christoph; Stelling, Joerg; Timmer, Jens; Hasenauer, Jan; Theis, Fabian"
-year = 2021
-journal = "PLOS Computational Biology"
-doi = "10.1371/journal.pcbi.1008646"
-openAccess = true
+key = "SSBCD...2021a"
 
 [[references]]
-title = "Structural and Practical Identifiability Analysis of Partially Observed Dynamical Models by Exploiting the Profile Likelihood"
-authors = "Raue, Andreas; Kreutz, Clemens; Maiwald, Thomas; Bachmann, Julie; Schilling, Marcel; Klingmuller, Ursula; Timmer, Jens"
-year = 2009
-journal = "Bioinformatics"
-doi = "10.1093/bioinformatics/btp358"
-openAccess = false
+key = "RKMBS...2009a"
 
 [[references]]
-title = "Lessons Learned from Quantitative Dynamical Modeling in Systems Biology"
-authors = "Raue, Andreas; Schilling, Marcel; Bachmann, Julie; Matteson, Andrew; Schelker, Max; Kaschek, Daniel; Hug, Sabine; Kreutz, Clemens; Harms, Brian D.; Theis, Fabian J.; Klingmuller, Ursula; Timmer, Jens"
-year = 2013
-journal = "PLOS ONE"
-doi = "10.1371/journal.pone.0074335"
-openAccess = true
+key = "RSBMS...2013a"
 
 [[references]]
-title = "Benchmarking Optimization Methods for Parameter Estimation in Large Kinetic Models"
-authors = "Villaverde, Alejandro F.; Frohlich, Fabian; Weindl, Daniel; Hasenauer, Jan; Banga, Julio R."
-year = 2019
-journal = "Bioinformatics"
-doi = "10.1093/bioinformatics/bty736"
-openAccess = true
+key = "VFWHB2019a"
 
 [[references]]
-title = "Fides: Reliable Trust-Region Optimization for Parameter Estimation of Ordinary Differential Equation Models"
-authors = "Frohlich, Fabian; Sorger, Peter K."
-year = 2022
-journal = "PLOS Computational Biology"
-doi = "10.1371/journal.pcbi.1010322"
-openAccess = true
+key = "FS2022a"
 
 [[models]]
 id = "struct"

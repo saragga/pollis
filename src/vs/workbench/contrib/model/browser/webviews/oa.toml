@@ -106,60 +106,27 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "OnlineStats.jl: A Julia package for statistics on data streams"
-authors = "Day, Josh"
-year = 2020
-journal = "Journal of Open Source Software"
-doi = "10.21105/joss.01816"
-openAccess = true
+key = "Day2020a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Mining of Massive Datasets"
-authors = "Leskovec, Jure; Rajaraman, Anand; Ullman, Jeffrey D."
-year = 2020
-journal = "Cambridge University Press (3rd ed.)"
-url = "http://www.mmds.org"
-openAccess = true
+key = "LRU2020a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "Note on a Method for Calculating Corrected Sums of Squares and Products"
-authors = "Welford, B. P."
-year = 1962
-journal = "Technometrics"
-doi = "10.1080/00401706.1962.10490022"
-openAccess = false
+key = "Wel1962a"
 
 [[references]]
-title = "Sequential Estimation of Quantiles with Applications to A/B Testing and Best-Arm Identification"
-authors = "Waudby-Smith, Ian; Ramdas, Aaditya"
-year = 2023
-journal = "Bernoulli"
-doi = "10.3150/22-BEJ1518"
-openAccess = true
-
-[[references]]
-title = "Recursive Least Squares Estimation: Theory and Applications"
-authors = "Plackett, Robin L."
-year = 1950
-journal = "Biometrika"
-doi = "10.1093/biomet/37.1-2.149"
-openAccess = false
+key = "Pla1950a"
 
 [[models]]
 id = "desc"

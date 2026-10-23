@@ -71,20 +71,10 @@ separator = true
 label = "Original Papers (from packages)"
 
 [[references]]
-title = "Extremes.jl: Extreme Value Analysis in Julia"
-authors = "Jalbert, J., Farmer, M., Gobeil, G., & Roy, P."
-year = 2024
-journal = ""
-url = "https://doi.org/10.18637/jss.v109.i06"
-openAccess = true
+key = "JFGR2024a"
 
 [[references]]
-title = "Statistics of Extremes"
-authors = "Beirlant, J., Goegebeur, Y., Segers, J., & Teugels, J."
-year = 2004
-journal = ""
-url = "https://doi.org/10.1002/0470012382"
-openAccess = false
+key = "BGST2004a"
 
 [[models]]
 id = "me"

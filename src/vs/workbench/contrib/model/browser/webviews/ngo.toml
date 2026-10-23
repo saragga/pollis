@@ -143,74 +143,36 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Introduction to Algorithms"
-authors = "Cormen, Thomas H.; Leiserson, Charles E.; Rivest, Ronald L.; Stein, Clifford"
-year = 2022
-journal = "MIT Press (4th ed.)"
-openAccess = false
+key = "CLRS2022a"
 
 [[references]]
-title = "Network Flows: Theory, Algorithms, and Applications"
-authors = "Ahuja, Ravindra K.; Magnanti, Thomas L.; Orlin, James B."
-year = 1993
-journal = "Prentice Hall"
-openAccess = false
+key = "AMO1993a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "A Note on Two Problems in Connexion with Graphs"
-authors = "Dijkstra, Edsger W."
-year = 1959
-journal = "Numerische Mathematik"
-doi = "10.1007/BF01386390"
-openAccess = false
+key = "Dij1959a"
 
 [[references]]
-title = "An Exact Algorithm for the Robust Shortest Path Problem with Interval Data"
-authors = "Montemanni, Roberto; Gambardella, Luca M."
-year = 2004
-journal = "Computers & Operations Research"
-doi = "10.1016/S0305-0548(03)00085-3"
-openAccess = false
+key = "MG2004a"
 
 [[references]]
-title = "Maximal Flow Through a Network"
-authors = "Ford, Lester R.; Fulkerson, Delbert R."
-year = 1956
-journal = "Canadian Journal of Mathematics"
-doi = "10.4153/CJM-1956-045-5"
-openAccess = false
+key = "FF1956a"
 
 [[references]]
-title = "On the Shortest Spanning Subtree of a Graph and the Traveling Salesman Problem"
-authors = "Kruskal, Joseph B."
-year = 1956
-journal = "Proceedings of the American Mathematical Society"
-doi = "10.1090/S0002-9939-1956-0078686-7"
-openAccess = false
+key = "Kru1956a"
 
 [[references]]
-title = "The Hungarian Method for the Assignment Problem"
-authors = "Kuhn, Harold W."
-year = 1955
-journal = "Naval Research Logistics Quarterly"
-doi = "10.1002/nav.3800020109"
-openAccess = false
+key = "Kuh1955a"
 
 [[models]]
 id = "sp"

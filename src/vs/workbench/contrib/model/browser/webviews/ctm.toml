@@ -79,60 +79,30 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "TopicModelsVB.jl: Variational Bayesian Topic Modeling in Julia"
-authors = "Proffitt, Eric"
-year = 2016
-journal = "GitHub"
-url = "https://github.com/ericproffitt/TopicModelsVB.jl"
-openAccess = true
+key = "Pro2016a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Speech and Language Processing"
-authors = "Jurafsky, Daniel; Martin, James H."
-year = 2024
-journal = "Pearson (3rd ed., draft)"
-url = "https://web.stanford.edu/~jurafsky/slp3/"
-openAccess = true
+key = "JM2024a"
 
 [[references]]
-title = "Pattern Recognition and Machine Learning"
-authors = "Bishop, Christopher M."
-year = 2006
-journal = "Springer"
-doi = "10.1007/978-0-387-45528-0"
-openAccess = false
+key = "Bis2006a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "Correlated Topic Models"
-authors = "Blei, David M.; Lafferty, John D."
-year = 2006
-journal = "Advances in Neural Information Processing Systems"
-url = "https://proceedings.neurips.cc/paper/2005/hash/9e82757e9a1c12cb710ad680db11f6f1-Abstract.html"
-openAccess = true
+key = "BL2006a"
 
 [[references]]
-title = "Latent Dirichlet Allocation"
-authors = "Blei, David M.; Ng, Andrew Y.; Jordan, Michael I."
-year = 2003
-journal = "Journal of Machine Learning Research"
-url = "https://jmlr.org/papers/v3/blei03a.html"
-openAccess = true
+key = "BNJ2003a"
 
 [[models]]
 id = "ctm"

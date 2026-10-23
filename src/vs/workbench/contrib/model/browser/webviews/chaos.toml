@@ -95,66 +95,33 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "DynamicalSystems.jl: A Julia software library for chaos and nonlinear dynamics"
-authors = "Datseris, George"
-year = 2018
-journal = "Journal of Open Source Software"
-doi = "10.21105/joss.00598"
-openAccess = true
+key = "Dat2018a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Nonlinear Time Series Analysis"
-authors = "Kantz, Holger; Schreiber, Thomas"
-year = 2004
-journal = "Cambridge University Press (2nd ed.)"
-openAccess = false
+key = "KS2004a"
 
 [[references]]
-title = "Chaos: Making a New Science"
-authors = "Gleick, James"
-year = 1987
-journal = "Viking Penguin"
-openAccess = false
+key = "Gle1987a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "Lyapunov Characteristic Exponents for smooth dynamical systems and for Hamiltonian systems; a method for computing all of them"
-authors = "Benettin, Giancarlo; Galgani, Luigi; Giorgilli, Antonio; Strelcyn, Jean-Marie"
-year = 1980
-journal = "Meccanica"
-doi = "10.1007/BF02128236"
-openAccess = false
+key = "BGGS1980a"
 
 [[references]]
-title = "Characterization of Strange Attractors"
-authors = "Grassberger, Peter; Procaccia, Itamar"
-year = 1983
-journal = "Physical Review Letters"
-doi = "10.1103/PhysRevLett.50.346"
-openAccess = false
+key = "GP1983a"
 
 [[references]]
-title = "Recurrence Plots of Dynamical Systems"
-authors = "Eckmann, Jean-Pierre; Kamphorst, S. Oliffson; Ruelle, David"
-year = 1987
-journal = "Europhysics Letters"
-doi = "10.1209/0295-5075/4/9/004"
-openAccess = false
+key = "EKR1987a"
 
 [[models]]
 id = "lyap"

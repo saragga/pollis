@@ -103,68 +103,33 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "OutlierDetection.jl: A Modular Outlier Detection Ecosystem for the Julia Programming Language"
-authors = "Muhr, David; Affenzeller, Michael"
-year = 2022
-journal = "GitHub"
-url = "https://github.com/OutlierDetectionJL/OutlierDetection.jl"
-openAccess = true
+key = "MA2022a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Outlier Analysis"
-authors = "Aggarwal, Charu C."
-year = 2017
-journal = "Springer (2nd ed.)"
-doi = "10.1007/978-3-319-47578-3"
-openAccess = false
+key = "Agg2017a"
 
 [[references]]
-title = "Anomaly Detection: A Survey"
-authors = "Chandola, Varun; Banerjee, Arindam; Kumar, Vipin"
-year = 2009
-journal = "ACM Computing Surveys"
-doi = "10.1145/1541880.1541882"
-openAccess = false
+key = "CBK2009a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "LOF: Identifying Density-Based Local Outliers"
-authors = "Breunig, Markus M.; Kriegel, Hans-Peter; Ng, Raymond T.; Sander, Jörg"
-year = 2000
-journal = "ACM SIGMOD"
-doi = "10.1145/342009.335388"
-openAccess = false
+key = "BKNS2000a"
 
 [[references]]
-title = "Enhancing Effectiveness of Outlier Detections for Low Density Patterns"
-authors = "Tang, Jian; Chen, Zhixiang; Fu, Ada Wai-chee; Cheung, David W."
-year = 2002
-journal = "PAKDD"
-doi = "10.1007/3-540-47887-6_53"
-openAccess = false
+key = "TCFC2002a"
 
 [[references]]
-title = "Angle-Based Outlier Detection in High-Dimensional Data"
-authors = "Kriegel, Hans-Peter; Schubert, Matthias; Zimek, Arthur"
-year = 2008
-journal = "ACM SIGKDD"
-doi = "10.1145/1401890.1401946"
-openAccess = false
+key = "KSZ2008a"
 
 [[models]]
 id = "knn"

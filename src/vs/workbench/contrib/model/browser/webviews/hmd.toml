@@ -109,68 +109,33 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "Impute.jl: Flexible Missing Data Imputation in Julia"
-authors = "Greenham, Rory"
-year = 2022
-journal = "GitHub"
-url = "https://github.com/invenia/Impute.jl"
-openAccess = true
+key = "Gre2022a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Statistical Analysis with Missing Data"
-authors = "Little, Roderick J. A.; Rubin, Donald B."
-year = 2019
-journal = "Wiley (3rd ed.)"
-doi = "10.1002/9781119482260"
-openAccess = false
+key = "LR2019a"
 
 [[references]]
-title = "Flexible Imputation of Missing Data"
-authors = "van Buuren, Stef"
-year = 2018
-journal = "CRC Press (2nd ed.)"
-url = "https://stefvanbuuren.name/fimd/"
-openAccess = true
+key = "Buu2018a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "A Test of Missing Completely at Random for Multivariate Data with Missing Values"
-authors = "Little, Roderick J. A."
-year = 1988
-journal = "Journal of the American Statistical Association"
-doi = "10.1080/01621459.1988.10478722"
-openAccess = false
+key = "Lit1988a"
 
 [[references]]
-title = "Inference and Missing Data"
-authors = "Rubin, Donald B."
-year = 1976
-journal = "Biometrika"
-doi = "10.1093/biomet/63.3.581"
-openAccess = false
+key = "Rub1976a"
 
 [[references]]
-title = "Spectral Regularization Algorithms for Learning Large Incomplete Matrices"
-authors = "Mazumder, Rahul; Hastie, Trevor; Tibshirani, Robert"
-year = 2010
-journal = "Journal of Machine Learning Research"
-url = "https://www.jmlr.org/papers/v11/mazumder10a.html"
-openAccess = true
+key = "MHT2010a"
 
 [[models]]
 id = "drop"

@@ -88,32 +88,17 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "Distributions.jl: Definition and Modeling of Probability Distributions in the JuliaStats Ecosystem"
-authors = "Besançon, Mathieu; Papamarkou, Theodore; Anthoff, David; Arslan, Alex; Byrne, Simon; Lin, Dahua; Pearson, John"
-year = 2021
-journal = "Journal of Statistical Software"
-doi = "10.18637/jss.v098.i16"
-openAccess = true
+key = "BPAAB...2021a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Statistical Distributions"
-authors = "Forbes, Catherine; Evans, Merran; Hastings, Nicholas; Peacock, Brian"
-year = 2011
-journal = "Wiley (4th edition)"
-doi = "10.1002/9780470627242"
-openAccess = false
+key = "FEHP2011a"
 
 [[models]]
 id = "discrete"

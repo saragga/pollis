@@ -87,105 +87,53 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "GLM.jl: Generalized Linear Models in Julia"
-authors = "JuliaStats Contributors"
-year = 2024
-journal = "GitHub"
-url = "https://github.com/JuliaStats/GLM.jl"
-openAccess = true
+key = "JSC2024a"
 
 [[references]]
-title = "CovarianceMatrices.jl: Robust Covariance Matrix Estimators"
-authors = "Ragusa, Giuseppe"
-year = 2024
-journal = "GitHub"
-url = "https://github.com/gragusa/CovarianceMatrices.jl"
-openAccess = true
+key = "Rag2024a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Introductory Econometrics: A Modern Approach"
-authors = "Wooldridge, Jeffrey M."
-year = 2019
-journal = "Cengage (7th ed.)"
-openAccess = false
+key = "Woo2019a"
 
 [[references]]
 separator = true
 label = "Data"
 
 [[references]]
-title = "Why Has Productivity Growth Declined? Productivity and Public Investment"
-authors = "Munnell, Alicia H."
-year = 1990
-journal = "New England Economic Review"
-openAccess = true
+key = "Mun1990b"
 
 [[references]]
 separator = true
 label = "Benchmarks"
 
 [[references]]
-title = "Econometric Analysis of Panel Data"
-authors = "Baltagi, Badi H."
-year = 2005
-journal = "Wiley (3rd ed.)"
-openAccess = false
+key = "Bal2005a"
 
 [[references]]
-title = "Estimating Standard Errors in Finance Panel Data Sets: Comparing Approaches"
-authors = "Petersen, Mitchell A."
-year = 2009
-journal = "Review of Financial Studies"
-doi = "10.1093/rfs/hhn053"
-openAccess = false
+key = "Pet2009a"
 
 [[references]]
-title = "Programming Advice: Test Data with Published OLS, White and Clustered Standard Errors"
-authors = "Petersen, Mitchell A."
-year = 2009
-journal = "Kellogg School of Management"
-url = "https://www.kellogg.northwestern.edu/faculty/petersen/htm/papers/se/test_data.htm"
-openAccess = true
+key = "Pet2009b"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "A Heteroskedasticity-Consistent Covariance Matrix Estimator and a Direct Test for Heteroskedasticity"
-authors = "White, Halbert"
-year = 1980
-journal = "Econometrica"
-doi = "10.2307/1912934"
-openAccess = false
+key = "Whi1980a"
 
 [[references]]
-title = "A Simple, Positive Semi-Definite, Heteroskedasticity and Autocorrelation Consistent Covariance Matrix"
-authors = "Newey, Whitney K.; West, Kenneth D."
-year = 1987
-journal = "Econometrica"
-doi = "10.2307/1913610"
-openAccess = false
+key = "NW1987a"
 
 [[references]]
-title = "Consistent Covariance Matrix Estimation with Spatially Dependent Panel Data"
-authors = "Driscoll, John C.; Kraay, Aart C."
-year = 1998
-journal = "Review of Economics and Statistics"
-doi = "10.1162/003465398557825"
-openAccess = false
+key = "DK1998a"
 
 [[models]]
 id = "standard"

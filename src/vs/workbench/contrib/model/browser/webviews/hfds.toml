@@ -361,28 +361,13 @@ bundled = true
 description = "Package reference: load_dataset, DatasetDict, with_format, and the PythonCall backend"
 
 [[references]]
-title = "Datasets: A Community Library for Natural Language Processing"
-authors = "Lhoest, Quentin; Villanova del Moral, Albert; Jernite, Yacine; Thakur, Abhishek; von Platen, Patrick; Patil, Suraj; Chaumond, Julien; Drame, Mariama; Plu, Julien; Tunstall, Lewis; et al."
-year = 2021
-journal = "EMNLP (System Demonstrations)"
-url = "https://aclanthology.org/2021.emnlp-demo.21/"
-openAccess = true
+key = "LMJTP...2021a"
 
 [[references]]
-title = "HuggingFaceDatasets.jl: Julia Interface to the Hugging Face Datasets Library"
-authors = "Lucibello, Carlo; contributors"
-year = 2024
-journal = "GitHub"
-url = "https://github.com/CarloLucibello/HuggingFaceDatasets.jl"
-openAccess = true
+key = "Luc...2024a"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[bullets]]
 text = "Every modality"

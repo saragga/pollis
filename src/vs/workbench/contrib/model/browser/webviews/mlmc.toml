@@ -90,68 +90,33 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "MultilevelEstimators.jl: A Julia Toolbox for Multilevel Monte Carlo Methods"
-authors = "Robbe, Pieterjan"
-year = 2018
-journal = "GitHub"
-url = "https://github.com/PieterjanRobbe/MultilevelEstimators.jl"
-openAccess = true
+key = "Rob2018a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Multilevel Monte Carlo Methods"
-authors = "Giles, Michael B."
-year = 2015
-journal = "Acta Numerica"
-doi = "10.1017/S096249291500001X"
-openAccess = false
+key = "Gil2015a"
 
 [[references]]
-title = "Monte Carlo Statistical Methods"
-authors = "Robert, Christian P.; Casella, George"
-year = 2004
-journal = "Springer (2nd ed.)"
-doi = "10.1007/978-1-4757-4145-2"
-openAccess = false
+key = "RC2004a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "Multilevel Monte Carlo Path Simulation"
-authors = "Giles, Michael B."
-year = 2008
-journal = "Operations Research"
-doi = "10.1287/opre.1070.0496"
-openAccess = false
+key = "Gil2008a"
 
 [[references]]
-title = "Monte Carlo Complexity of Global Solution of Integral Equations"
-authors = "Heinrich, Stefan"
-year = 1998
-journal = "Journal of Complexity"
-doi = "10.1006/jcom.1998.0471"
-openAccess = false
+key = "Hei1998a"
 
 [[references]]
-title = "Multilevel Quasi-Monte Carlo Methods for Lognormal Diffusion Problems"
-authors = "Kuo, Frances Y.; Scheichl, Robert; Schwab, Christoph; Sloan, Ian H.; Ullmann, Elisabeth"
-year = 2017
-journal = "Mathematics of Computation"
-doi = "10.1090/mcom/3207"
-openAccess = false
+key = "KSSSU2017a"
 
 [[models]]
 id = "mlmc"

@@ -99,92 +99,42 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "JuMP: A Modeling Language for Mathematical Optimization"
-authors = "Dunning, Iain; Huchette, Joey; Lubin, Miles"
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/15M1020575"
-openAccess = true
+key = "DHL2017a"
 
 [[references]]
-title = "Clarabel: An Interior-Point Solver for Conic Programs with Quadratic Objectives"
-authors = "Goulart, Paul J.; Chen, Yuwen"
-year = 2024
-journal = "arXiv"
-doi = "10.48550/arXiv.2405.14674"
-openAccess = true
+key = "GC2024a"
 
 [[references]]
-title = "HiGHS: Serial and Parallel Solution of Linear Programming"
-authors = "Huangfu, Qi; Hall, J.A.J."
-year = 2018
-journal = "Mathematical Programming Computation"
-doi = "10.1007/s12532-017-0130-5"
-openAccess = true
+key = "HH2018a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Robust Optimization"
-authors = "Ben-Tal, Aharon; El Ghaoui, Laurent; Nemirovski, Arkadi"
-year = 2009
-journal = "Princeton University Press"
-doi = "10.1515/9781400831050"
-openAccess = false
+key = "BGN2009a"
 
 [[references]]
-title = "Lectures on Stochastic Programming: Modeling and Theory"
-authors = "Shapiro, Alexander; Dentcheva, Darinka; Ruszczynski, Andrzej"
-year = 2021
-journal = "SIAM (3rd ed.)"
-doi = "10.1137/1.9780898718751"
-openAccess = false
+key = "SDR2021a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "Distributionally Robust Optimization under Moment Uncertainty with Application to Data-Driven Problems"
-authors = "Delage, Erick; Ye, Yinyu"
-year = 2010
-journal = "Operations Research"
-doi = "10.1287/opre.1090.0741"
-openAccess = false
+key = "DY2010a"
 
 [[references]]
-title = "Data-Driven Distributionally Robust Optimization Using the Wasserstein Metric"
-authors = "Mohajerin Esfahani, Peyman; Kuhn, Daniel"
-year = 2018
-journal = "Mathematical Programming"
-doi = "10.1007/s10107-017-1172-1"
-openAccess = true
+key = "EK2018a"
 
 [[references]]
-title = "Chance Constrained Programming"
-authors = "Charnes, Abraham; Cooper, William W."
-year = 1959
-journal = "Management Science"
-doi = "10.1287/mnsc.6.1.73"
-openAccess = false
+key = "CC1959a"
 
 [[references]]
-title = "A Sample Approximation Approach for Optimization with Probabilistic Constraints"
-authors = "Luedtke, James; Ahmed, Shabbir"
-year = 2008
-journal = "SIAM Journal on Optimization"
-doi = "10.1137/070702928"
-openAccess = false
+key = "LA2008a"
 
 [[models]]
 id = "cc"

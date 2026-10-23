@@ -101,52 +101,27 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Random Matrix Theory and Wireless Communications"
-authors = "Tulino, Antonia M.; Verdu, Sergio"
-year = 2004
-journal = "Foundations and Trends in Communications and Information Theory"
-doi = "10.1561/0100000001"
-openAccess = false
+key = "TV2004a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "Honey, I Shrunk the Sample Covariance Matrix"
-authors = "Ledoit, Olivier; Wolf, Michael"
-year = 2004
-journal = "Journal of Portfolio Management"
-doi = "10.3905/jpm.2004.110"
-openAccess = false
+key = "LW2004b"
 
 [[references]]
-title = "Shrinkage Algorithms for MMSE Covariance Estimation"
-authors = "Chen, Yilun; Wiesel, Ami; Eldar, Yonina C.; Hero, Alfred O."
-year = 2010
-journal = "IEEE Transactions on Signal Processing"
-doi = "10.1109/TSP.2010.2053029"
-openAccess = false
+key = "CWEH2010a"
 
 [[references]]
-title = "Analytical Nonlinear Shrinkage of Large-Dimensional Covariance Matrices"
-authors = "Ledoit, Olivier; Wolf, Michael"
-year = 2020
-journal = "Annals of Statistics"
-doi = "10.1214/19-AOS1921"
-openAccess = true
+key = "LW2020a"
 
 [[models]]
 id = "linear"

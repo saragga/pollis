@@ -109,91 +109,42 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "JuMP: A Modeling Language for Mathematical Optimization"
-authors = "Dunning, Iain; Huchette, Joey; Lubin, Miles"
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/15M1020575"
-openAccess = true
+key = "DHL2017a"
 
 [[references]]
-title = "HiGHS: Serial and Parallel Solution of Linear Programming"
-authors = "Huangfu, Qi; Hall, J.A.J."
-year = 2018
-journal = "Mathematical Programming Computation"
-doi = "10.1007/s12532-017-0130-5"
-openAccess = true
+key = "HH2018a"
 
 [[references]]
-title = "Clarabel: An Interior-Point Solver for Conic Programs with Quadratic Objectives"
-authors = "Goulart, Paul J.; Chen, Yuwen"
-year = 2024
-journal = "arXiv"
-doi = "10.48550/arXiv.2405.14674"
-openAccess = true
+key = "GC2024a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Robust Optimization"
-authors = "Ben-Tal, Aharon; El Ghaoui, Laurent; Nemirovski, Arkadi"
-year = 2009
-journal = "Princeton University Press"
-doi = "10.1515/9781400831050"
-openAccess = false
+key = "BGN2009a"
 
 [[references]]
-title = "Introduction to Linear Optimization"
-authors = "Bertsimas, Dimitris; Tsitsiklis, John N."
-year = 1997
-journal = "Athena Scientific"
-openAccess = false
+key = "BT1997a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "Convex Programming with Set-Inclusive Constraints and Applications to Inexact Linear Programming"
-authors = "Soyster, Allen L."
-year = 1973
-journal = "Operations Research"
-doi = "10.1287/opre.21.5.1154"
-openAccess = false
+key = "Soy1973a"
 
 [[references]]
-title = "Robust Convex Optimization"
-authors = "Ben-Tal, Aharon; Nemirovski, Arkadi"
-year = 1998
-journal = "Mathematics of Operations Research"
-doi = "10.1287/moor.23.4.769"
-openAccess = false
+key = "BN1998a"
 
 [[references]]
-title = "The Price of Robustness"
-authors = "Bertsimas, Dimitris; Sim, Melvyn"
-year = 2004
-journal = "Operations Research"
-doi = "10.1287/opre.1030.0065"
-openAccess = false
+key = "BS2004b"
 
 [[references]]
-title = "Robust Discrete Optimization and Network Flows"
-authors = "Bertsimas, Dimitris; Sim, Melvyn"
-year = 2003
-journal = "Mathematical Programming"
-doi = "10.1007/s10107-003-0396-4"
-openAccess = false
+key = "BS2003a"
 
 [[models]]
 id = "box"

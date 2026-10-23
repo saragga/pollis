@@ -71,28 +71,13 @@ separator = true
 label = "Original Papers (from packages)"
 
 [[references]]
-title = "Solving Least Squares Problems"
-authors = "Lawson, C. L., & Hanson, R. J."
-year = 1987
-journal = ""
-url = "https://doi.org/10.1137/1.9781611971217"
-openAccess = false
+key = "LH1987a"
 
 [[references]]
-title = "A fast non-negativity-constrained least squares algorithm"
-authors = "Bro, R., & De Jong, S."
-year = 1997
-journal = ""
-url = "https://doi.org/10.1002/(SICI)1099-128X(199709/10)11:5<393::AID-CEM483>3.0.CO;2-L"
-openAccess = false
+key = "BJ1997a"
 
 [[references]]
-title = "Toward faster nonnegative matrix factorization: A new algorithm and comparisons"
-authors = "Kim, D., & Park, H."
-year = 2008
-journal = ""
-url = "https://doi.org/10.1109/ICDM.2008.149"
-openAccess = false
+key = "KP2008a"
 
 [[bullets]]
 text = "Solves the constrained least squares problem: minimise ||Ax − b||² subject to x ≥ 0"

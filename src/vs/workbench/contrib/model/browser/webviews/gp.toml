@@ -71,20 +71,10 @@ separator = true
 label = "Original Papers (from packages)"
 
 [[references]]
-title = "Extremes.jl: Extreme Value Analysis in Julia"
-authors = "Jalbert, J., Farmer, M., Gobeil, G., & Roy, P."
-year = 2024
-journal = ""
-url = "https://doi.org/10.18637/jss.v109.i06"
-openAccess = true
+key = "JFGR2024a"
 
 [[references]]
-title = "Statistical Inference Using Extreme Order Statistics"
-authors = "Pickands, J."
-year = 1975
-journal = ""
-url = "https://doi.org/10.1214/aos/1176343003"
-openAccess = false
+key = "Pic1975a"
 
 [[models]]
 id = "fit"

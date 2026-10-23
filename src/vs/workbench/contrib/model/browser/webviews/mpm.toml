@@ -112,67 +112,27 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "Metaheuristics: A Julia Package for Single- and Multi-Objective Optimization"
-authors = "Mejia-de-Dios, Jesus-Adolfo; Mezura-Montes, Efren"
-year = 2022
-journal = "Journal of Open Source Software"
-doi = "10.21105/joss.04723"
-openAccess = true
+key = "MM2022a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Multi-Objective Optimization Using Evolutionary Algorithms"
-authors = "Deb, Kalyanmoy"
-year = 2001
-journal = "Wiley"
-openAccess = false
+key = "Deb2001a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "Performance Assessment of Multiobjective Optimizers: An Analysis and Review"
-authors = "Zitzler, Eckart; Thiele, Lothar; Laumanns, Marco; Fonseca, Carlos M.; da Fonseca, Viviane Grunert"
-year = 2003
-journal = "IEEE Transactions on Evolutionary Computation"
-doi = "10.1109/TEVC.2003.810758"
-openAccess = false
+key = "ZTLFF2003a"
 
 [[references]]
-title = "Multiobjective Evolutionary Algorithms: A Comparative Case Study and the Strength Pareto Approach"
-authors = "Zitzler, Eckart; Thiele, Lothar"
-year = 1999
-journal = "IEEE Transactions on Evolutionary Computation"
-doi = "10.1109/4235.797969"
-openAccess = false
-
-[[references]]
-title = "Measuring the Hypervolume Exactly for Multi-Objective Minimization Problems"
-authors = "Beume, Nicola; Fonseca, Carlos M.; Lopez-Ibanez, Manuel; Paquete, Luis; Vahrenhold, Jan"
-year = 2009
-journal = "Evolutionary Computation"
-doi = "10.1162/evco.2009.17.1.17104"
-openAccess = false
-
-[[references]]
-title = "Generational Distance Revisited"
-authors = "Ishibuchi, Hisao; Masuda, Hiroyuki; Tanigaki, Yuki; Nojima, Yusuke"
-year = 2015
-journal = "GECCO Companion Proceedings"
-doi = "10.1145/2739482.2764899"
-openAccess = false
+key = "ZT1999a"
 
 [[models]]
 id = "hv"

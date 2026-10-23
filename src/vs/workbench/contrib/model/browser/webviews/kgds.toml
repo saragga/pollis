@@ -285,20 +285,10 @@ bundled = true
 description = "Pick a dataset by usability, size, file type, and licence"
 
 [[references]]
-title = "Kaggle: Your Machine Learning and Data Science Community"
-authors = "Kaggle"
-year = 2024
-journal = "kaggle.com"
-url = "https://www.kaggle.com/docs/api"
-openAccess = true
+key = "Kag2024a"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[bullets]]
 text = "Community datasets"

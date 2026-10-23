@@ -53,12 +53,24 @@ function bibKey(paper: IModelPaper): string {
 	return `${lastName}${paper.year}`;
 }
 
+/** The BibTeX field of the venue, by entry type. */
+function venueField(type: string): string {
+	switch (type) {
+		case 'article': return 'journal';
+		case 'inproceedings': case 'incollection': return 'booktitle';
+		case 'techreport': return 'institution';
+		case 'misc': return 'howpublished';
+		default: return 'publisher';
+	}
+}
+
 function generateBibTeX(paper: IModelPaper): string {
-	const lines = [`@article{${bibKey(paper)},`];
-	lines.push(`  author  = {${paper.authors}},`);
+	const type = paper.type ?? 'article';
+	const lines = [`@${type}{${paper.key ?? bibKey(paper)},`];
+	lines.push(`  author  = {${paper.authors.replace(/;\s*/g, ' and ')}},`);
 	lines.push(`  title   = {${paper.title}},`);
 	lines.push(`  year    = {${paper.year}},`);
-	if (paper.journal) { lines.push(`  journal = {${paper.journal}},`); }
+	if (paper.journal) { lines.push(`  ${venueField(type).padEnd(7)} = {${paper.journal}},`); }
 	if (paper.doi)     { lines.push(`  doi     = {${paper.doi}},`); }
 	if (paper.url)     { lines.push(`  url     = {${paper.url}},`); }
 	lines.push(`}`);

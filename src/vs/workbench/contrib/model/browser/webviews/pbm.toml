@@ -106,73 +106,36 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "Metaheuristics: A Julia Package for Single- and Multi-Objective Optimization"
-authors = "Mejia-de-Dios, Jesus-Adolfo; Mezura-Montes, Efren"
-year = 2022
-journal = "Journal of Open Source Software"
-doi = "10.21105/joss.04723"
-openAccess = true
+key = "MM2022a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Multi-Objective Optimization Using Evolutionary Algorithms"
-authors = "Deb, Kalyanmoy"
-year = 2001
-journal = "Wiley"
-openAccess = false
+key = "Deb2001a"
 
 [[references]]
-title = "Evolutionary Algorithms for Solving Multi-Objective Problems"
-authors = "Coello Coello, Carlos A.; Lamont, Gary B.; Van Veldhuizen, David A."
-year = 2007
-journal = "Springer (2nd ed.)"
-openAccess = false
+key = "CLV2007a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "A Fast and Elitist Multiobjective Genetic Algorithm: NSGA-II"
-authors = "Deb, Kalyanmoy; Pratap, Amrit; Agarwal, Sameer; Meyarivan, T."
-year = 2002
-journal = "IEEE Transactions on Evolutionary Computation"
-doi = "10.1109/4235.996017"
-openAccess = false
+key = "DPAM2002a"
 
 [[references]]
-title = "An Evolutionary Many-Objective Optimization Algorithm Using Reference-Point-Based Nondominated Sorting Approach, Part I: Solving Problems with Box Constraints"
-authors = "Deb, Kalyanmoy; Jain, Himanshu"
-year = 2014
-journal = "IEEE Transactions on Evolutionary Computation"
-doi = "10.1109/TEVC.2013.2281535"
-openAccess = false
+key = "DJ2014a"
 
 [[references]]
-title = "SPEA2: Improving the Strength Pareto Evolutionary Algorithm"
-authors = "Zitzler, Eckart; Laumanns, Marco; Thiele, Lothar"
-year = 2001
-journal = "TIK-Report 103, ETH Zurich"
-openAccess = false
+key = "ZLT2001a"
 
 [[references]]
-title = "SMS-EMOA: Multiobjective Selection Based on Dominated Hypervolume"
-authors = "Beume, Nicola; Naujoks, Boris; Emmerich, Michael"
-year = 2007
-journal = "European Journal of Operational Research"
-doi = "10.1016/j.ejor.2006.08.008"
-openAccess = false
+key = "BNE2007a"
 
 [[models]]
 id = "nsga2"

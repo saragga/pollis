@@ -95,58 +95,30 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Agents.jl: A performant and feature-full agent based modelling software of minimal code complexity"
-authors = "Datseris, George; Vahdati, Ali R.; DuBois, Timothy C."
-year = 2022
-journal = "SIMULATION"
-doi = "10.1177/00375497211068820"
-openAccess = true
+key = "DVD2022a"
 
 [[references]]
-title = "Makie.jl: Flexible high-performance data visualization for Julia"
-authors = "Danisch, Simon; Krumbiegel, Julius"
-year = 2021
-journal = "Journal of Open Source Software"
-doi = "10.21105/joss.03349"
-openAccess = true
+key = "DK2021a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "An Introduction to Agent-Based Modeling"
-authors = "Wilensky, Uri; Rand, William"
-year = 2015
-journal = "MIT Press"
-openAccess = false
+key = "WR2015a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "Dynamic models of segregation"
-authors = "Schelling, Thomas C."
-year = 1971
-journal = "Journal of Mathematical Sociology"
-doi = "10.1080/0022250X.1971.9989794"
-openAccess = false
+key = "Sch1971a"
 
 [[references]]
-title = "Flocks, herds and schools: A distributed behavioral model"
-authors = "Reynolds, Craig W."
-year = 1987
-journal = "ACM SIGGRAPH Computer Graphics"
-doi = "10.1145/37401.37406"
-openAccess = false
+key = "Rey1987a"
 
 [[references]]
-title = "Interactive data visualization for the web"
-authors = "Murray, Scott"
-year = 2017
-journal = "O'Reilly Media (2nd ed.)"
-openAccess = false
+key = "Mur2017a"
 
 [[models]]
 id = "static"

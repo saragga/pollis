@@ -3,136 +3,260 @@
  *  Licensed under the GNU Affero General Public License v3.0. See LICENSE.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+// The Pollis references. One DuckDB database, media/references/references.duckdb, holds every work
+// referenced in Pollis (table `references`) and the citation counts observed for them (table
+// `counts`). The panel TOMLs, the Compose notebooks and the methods refer to a work by its key only;
+// everything else is built from the database: the panels' references, pollis.bib, the notebooks'
+// and methods' citations, and references.json, the database as text so that each change shows in a
+// diff.
+
 import * as fs from 'fs';
 import * as path from 'path';
+import { DuckDBInstance } from '@duckdb/node-api';
 import { parseToml } from '../../src/vs/workbench/contrib/model/browser/common/tomlPanelData.ts';
 
-/** One place a work is referenced: its fields as written there. */
-interface IOccurrence {
-	/** Where it comes from, e.g. `panel dcm` or `notebook workflows/panel`. */
+/** One work: a row of the `references` table. */
+export interface IReference {
+	readonly key: string;
+	readonly type: string;
+	readonly title: string;
+	/** `Last, First`, in the order of the work; an organisation's name whole. */
+	readonly authors: string[] | null;
+	readonly author_kind: 'persons' | 'organisation' | 'unknown';
+	/** False when some authors could not be found. */
+	readonly authors_complete: boolean;
+	readonly year: number;
+	readonly released: string | null;
+	readonly journal: string | null;
+	readonly booktitle: string | null;
+	readonly editors: string[] | null;
+	readonly publisher: string | null;
+	readonly address: string | null;
+	readonly edition: string | null;
+	readonly volume: string | null;
+	readonly number: string | null;
+	readonly pages: string | null;
+	readonly institution: string | null;
+	readonly report_number: string | null;
+	readonly isbn: string | null;
+	readonly issn: string | null;
+	readonly doi: string | null;
+	readonly arxiv: string | null;
+	readonly openalex: string | null;
+	readonly url: string | null;
+	readonly oa_url: string | null;
+	readonly abstract: string | null;
+	readonly abstract_source: string | null;
+	readonly keywords: string[] | null;
+	readonly keywords_source: string | null;
+	readonly legacy_key: string | null;
+	readonly source: string | null;
+	readonly retrieved: string | null;
+	readonly checked: boolean;
+	readonly open_access: boolean;
+}
+
+/** One citation count: a row of the `counts` table. */
+interface ICount {
+	readonly key: string;
+	readonly count: number;
 	readonly source: string;
-	/** The panel id or the notebook folder, listed in the entry's `pollis-used-in` field. */
-	readonly usedIn: string;
-	readonly fields: Map<string, string>;
-	/** Authors as a list of `Last, First`. */
-	readonly authors: string[];
+	readonly date: string;
 }
 
-/** One work of the library, merged from all its occurrences. */
-interface IWork {
-	readonly occurrences: IOccurrence[];
+/** The references database, read whole. */
+export interface IReferencesDatabase {
+	readonly references: ReadonlyMap<string, IReference>;
+	readonly counts: readonly ICount[];
 }
 
-/** The generated library: the BibTeX source and the conflicts found while merging. */
+/** The generated library: pollis.bib, references.json and the problems found in the sources. */
 export interface IPollisBib {
 	readonly bibtex: string;
+	readonly dump: string;
 	readonly works: number;
 	readonly occurrences: number;
-	readonly conflicts: string[];
+	/** Keys in the sources that the database does not have. */
+	readonly unknownKeys: string[];
 }
 
-/** Fields compared across occurrences of one work; a disagreement is reported as a conflict. */
-const COMPARED_FIELDS = ['year', 'journal', 'author'];
+/** The folder of the database, pollis.bib and references.json, from the repository's root. */
+export const REFERENCES_FOLDER = 'src/vs/workbench/contrib/model/browser/media/references';
 
-/** Field order in the generated entries. */
-const FIELD_ORDER = ['author', 'title', 'journal', 'volume', 'number', 'pages', 'year', 'doi', 'url'];
-
-/** Text as fields are compared: lower case, without braces, accents, punctuation or repeated spaces. */
-function normalise(text: string): string {
-	return text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[{}]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+export async function readReferencesDatabase(repoRoot: string): Promise<IReferencesDatabase> {
+	const instance = await DuckDBInstance.create(path.join(repoRoot, REFERENCES_FOLDER, 'references.duckdb'), { access_mode: 'READ_ONLY' });
+	const connection = await instance.connect();
+	try {
+		const references = (await connection.runAndReadAll('SELECT * FROM "references" ORDER BY key')).getRowObjectsJson() as unknown as IReference[];
+		const counts = (await connection.runAndReadAll('SELECT * FROM counts ORDER BY key, source, date')).getRowObjectsJson() as unknown as ICount[];
+		return { references: new Map(references.map(reference => [reference.key, reference])), counts };
+	} finally {
+		connection.closeSync();
+		instance.closeSync();
+	}
 }
 
-function normaliseDoi(doi: string): string {
-	return doi.trim().replace(/^https?:\/\/(dx\.)?doi\.org\//i, '').toLowerCase();
+/** The database as text: each work and each count on its own lines, empty fields left out. */
+function referencesDump(database: IReferencesDatabase): string {
+	const references = [...database.references.values()].map(reference => Object.fromEntries(Object.entries(reference).filter(([, value]) => value !== null)));
+	return JSON.stringify({ references, counts: database.counts }, null, '\t') + '\n';
+}
+
+/** The venue as one line shows it: the journal, the proceedings or book, the publisher or the institution. */
+function venue(reference: IReference): string | undefined {
+	return reference.journal ?? reference.booktitle ?? reference.publisher ?? reference.institution ?? undefined;
+}
+
+/** The authors as a panel lists them: `Last, First; Last, First`, with `et al.` when some were not found. */
+function authorsLine(reference: IReference): string {
+	const authors = (reference.authors ?? []).join('; ');
+	return reference.authors_complete ? authors : `${authors} et al.`.trim();
+}
+
+/** A person's initials: `Rolland E.` → `R. E.`, `Jean-Pierre` → `J.-P.`. */
+function initials(given: string): string {
+	return given.split(/\s+/).filter(name => name).map(name => name.split('-').map(part => `${part.replace(/\.$/, '').charAt(0)}.`).join('-')).join(' ');
 }
 
 /**
- * Split a TOML `authors` string into `Last, First` names. Three styles occur: `Bezanson, Jeff; Edelman, Alan`,
- * `Lawson, C. L., & Hanson, R. J.` and `Guilherme Bodin and Raphael Saavedra`. An organisation, such as
- * `European Central Bank`, is braced so that BibTeX keeps it whole.
+ * The citation the methods and Compose notebooks show, e.g. `Fama, E. F. and French, K. R. (1993).
+ * Common risk factors in the returns on stocks and bonds. Journal of Financial Economics 33(1), 3-56.`
  */
-function splitAuthors(authors: string): string[] {
-	// `et al.` is BibTeX's `and others`
-	const etAl = /,?\s+et al\.?$/.test(authors.trim());
-	const names = splitNames(authors.trim().replace(/,?\s+et al\.?$/, ''));
-	return etAl ? [...names, 'others'] : names;
-}
-
-function splitNames(text: string): string[] {
-	if (text.includes(';') || / and /.test(text) || (!text.includes(',') && text.includes('&'))) {
-		return text.split(/;| and | & /).map(name => name.trim()).filter(name => name);
-	}
-	if (!text.includes(',') && text.split(/\s+/).length > 2) {
-		return [`{${text}}`];
-	}
-	const parts = text.replace(/,?\s*&\s*/g, ', ').split(/\s*,\s*/).filter(part => part);
-	const isInitials = (part: string) => /^(\p{Lu}[\p{Ll}]?\.?[\s-]*)+$/u.test(part);
-	if (parts.length >= 2 && parts.length % 2 === 0 && parts.every((part, index) => index % 2 === 0 || isInitials(part))) {
-		const names: string[] = [];
-		for (let i = 0; i < parts.length; i += 2) {
-			names.push(`${parts[i]}, ${parts[i + 1]}`);
+function citation(reference: IReference): string {
+	const names = (reference.authors ?? []).map(name => {
+		if (reference.author_kind !== 'persons' || !name.includes(',')) {
+			return name;
 		}
-		return names;
+		const [last, given] = name.split(/,\s*(.*)/s);
+		return given ? `${last}, ${initials(given)}` : last;
+	});
+	if (!reference.authors_complete) {
+		names.push('others');
 	}
-	return [text];
+	const authors = names.length > 1 ? `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}` : names[0] ?? '';
+	const title = /[.?!]$/.test(reference.title) ? reference.title : `${reference.title}.`;
+	const pages = reference.pages?.replace(/--/g, '-');
+	let where: string | undefined;
+	if (reference.type === 'article') {
+		const issue = reference.volume ? `${reference.volume}${reference.number ? `(${reference.number})` : ''}` : undefined;
+		where = [[reference.journal, issue].filter(part => part).join(' '), issue ? undefined : reference.number].filter(part => part).join(', ');
+	} else if (reference.type === 'inproceedings' || reference.type === 'incollection') {
+		where = reference.booktitle ? `In ${reference.booktitle}` : undefined;
+	} else {
+		where = venue(reference);
+	}
+	const rest = [where, pages].filter(part => part).join(', ');
+	return `${authors ? `${authors} ` : ''}(${reference.year === 0 ? 'n.d.' : reference.year}). ${title}${rest ? ` ${rest}.` : ''}`;
 }
 
-/** Parse the fields of one BibTeX entry, e.g. a workflow notebook's `article.bibtex`. */
-function parseBibtexEntry(source: string): Map<string, string> {
-	const fields = new Map<string, string>();
-	const body = source.slice(source.indexOf(',') + 1);
-	const fieldPattern = /(?<name>[a-zA-Z-]+)\s*=\s*/g;
-	let match: RegExpExecArray | null;
-	while ((match = fieldPattern.exec(body))) {
-		let index = fieldPattern.lastIndex;
-		let value = '';
-		if (body[index] === '{') {
-			let depth = 0;
-			const start = index;
-			for (; index < body.length; index++) {
-				if (body[index] === '{') { depth++; }
-				if (body[index] === '}' && --depth === 0) { break; }
-			}
-			value = body.slice(start + 1, index);
-		} else {
-			const end = body.slice(index).search(/[,}\n]/);
-			value = body.slice(index, end < 0 ? undefined : index + end).replace(/^"|"$/g, '');
+/** Escape the characters BibTeX treats specially in a field value. */
+function escapeValue(field: string, value: string): string {
+	return field === 'url' || field === 'doi' ? value : value.replace(/(?<!\\)([&%#_])/g, '\\$1');
+}
+
+/** The BibTeX entry of a work, with `pollis-used-in` naming where Pollis references it, if given. */
+function bibtexEntry(reference: IReference, usedIn?: readonly string[]): string {
+	const names = (reference.authors ?? []).map(name => reference.author_kind === 'organisation' ? `{${name}}` : name);
+	if (!reference.authors_complete) {
+		names.push('others');
+	}
+	const fields: [string, string | null | undefined][] = [
+		['author', names.join(' and ')],
+		['editor', reference.editors?.join(' and ')],
+		['title', reference.title],
+		[reference.type === 'misc' ? 'howpublished' : 'journal', reference.journal],
+		['booktitle', reference.booktitle],
+		['edition', reference.edition],
+		['publisher', reference.publisher],
+		['address', reference.address],
+		['institution', reference.institution],
+		['number', reference.type === 'techreport' ? reference.report_number : reference.number],
+		['volume', reference.volume],
+		['pages', reference.pages],
+		['year', reference.year === 0 ? undefined : String(reference.year)],
+		['isbn', reference.isbn],
+		['doi', reference.doi],
+		['eprint', reference.arxiv],
+		['url', reference.url],
+	];
+	if (reference.arxiv) {
+		fields.push(['archiveprefix', 'arXiv']);
+	}
+	if (usedIn?.length) {
+		fields.push(['pollis-used-in', usedIn.join(', ')]);
+	}
+	const lines = fields.filter(([, value]) => value).map(([name, value]) => `  ${name.padEnd(7)} = {${escapeValue(name, value!)}}`);
+	return `@${reference.type}{${reference.key},\n${lines.join(',\n')}\n}`;
+}
+
+/** A panel reference's fields (IModelPaper) for a work. */
+function paperFields(reference: IReference): Record<string, unknown> {
+	return {
+		key: reference.key,
+		type: reference.type,
+		title: reference.title,
+		authors: authorsLine(reference),
+		year: reference.year,
+		journal: venue(reference),
+		doi: reference.doi ?? undefined,
+		url: reference.url ?? undefined,
+		openAccess: reference.open_access,
+	};
+}
+
+/**
+ * Replace each `key = "..."` reference of a parsed panel TOML with the work's fields from the
+ * database. A key the database does not have is an error.
+ */
+export function expandReferenceKeys(data: Record<string, unknown>, references: ReadonlyMap<string, IReference>, file: string): void {
+	if (!Array.isArray(data.references)) {
+		return;
+	}
+	data.references = data.references.map((entry: Record<string, unknown>) => {
+		if (typeof entry.key !== 'string') {
+			return entry;
 		}
-		fields.set(match.groups!.name.toLowerCase(), value.replace(/\s+/g, ' ').trim());
-		fieldPattern.lastIndex = index + 1;
-	}
-	return fields;
+		const reference = references.get(entry.key);
+		if (!reference) {
+			throw new Error(`${file}: the reference key ${entry.key} is not in ${REFERENCES_FOLDER}/references.duckdb`);
+		}
+		return paperFields(reference);
+	});
 }
 
-/** The references of every panel TOML. */
-function panelOccurrences(webviewsDir: string): IOccurrence[] {
-	const occurrences: IOccurrence[] = [];
+/** Where each key is used: the panels, Compose notebooks and methods that reference it. */
+function keyOccurrences(repoRoot: string): { key: string; usedIn: string }[] {
+	const occurrences: { key: string; usedIn: string }[] = [];
+	const webviewsDir = path.join(repoRoot, 'src/vs/workbench/contrib/model/browser/webviews');
 	for (const file of fs.readdirSync(webviewsDir).filter(f => f.endsWith('.toml')).sort()) {
-		const panel = file.replace(/\.toml$/, '');
 		const data = parseToml(fs.readFileSync(path.join(webviewsDir, file), 'utf-8')) as { references?: Record<string, unknown>[] };
 		for (const reference of data.references ?? []) {
-			if (reference.separator || typeof reference.title !== 'string') {
-				continue;
+			if (typeof reference.key === 'string') {
+				occurrences.push({ key: reference.key, usedIn: file.replace(/\.toml$/, '') });
 			}
-			const fields = new Map<string, string>([['title', reference.title], ['year', String(reference.year ?? '')]]);
-			for (const name of ['journal', 'doi', 'url']) {
-				if (typeof reference[name] === 'string' && reference[name]) {
-					fields.set(name, reference[name] as string);
-				}
-			}
-			const authors = splitAuthors(String(reference.authors ?? ''));
-			fields.set('author', authors.join(' and '));
-			occurrences.push({ source: `panel ${panel}`, usedIn: panel, fields, authors });
+		}
+	}
+	for (const notebook of composeNotebooks(repoRoot)) {
+		const key = JSON.parse(fs.readFileSync(notebook.file, 'utf-8')).metadata?.pollis?.workflow?.article?.key;
+		if (typeof key === 'string') {
+			occurrences.push({ key, usedIn: notebook.usedIn });
+		}
+	}
+	for (const method of shippedMethods(repoRoot)) {
+		const key = (parseToml(fs.readFileSync(method.file, 'utf-8')) as { key?: string }).key;
+		if (typeof key === 'string') {
+			occurrences.push({ key, usedIn: method.usedIn });
 		}
 	}
 	return occurrences;
 }
 
-/** The articles of the Compose notebooks (workflows, benchmarks, methods), from their `pollis.workflow` metadata. */
-function notebookOccurrences(composeMediaDir: string): IOccurrence[] {
-	const occurrences: IOccurrence[] = [];
-	for (const library of fs.readdirSync(composeMediaDir).sort()) {
-		const libraryDir = path.join(composeMediaDir, library);
+/** The Compose notebooks (workflows, benchmarks): media/<library>/<folder>/*.ipynb. */
+function composeNotebooks(repoRoot: string): { file: string; usedIn: string }[] {
+	const mediaDir = path.join(repoRoot, 'src/vs/workbench/contrib/compose/browser/media');
+	const notebooks: { file: string; usedIn: string }[] = [];
+	for (const library of fs.readdirSync(mediaDir).sort()) {
+		const libraryDir = path.join(mediaDir, library);
 		if (!fs.statSync(libraryDir).isDirectory()) {
 			continue;
 		}
@@ -141,159 +265,103 @@ function notebookOccurrences(composeMediaDir: string): IOccurrence[] {
 			if (!fs.statSync(folderDir).isDirectory()) {
 				continue;
 			}
-			for (const notebook of fs.readdirSync(folderDir).filter(f => f.endsWith('.ipynb'))) {
-				const metadata = JSON.parse(fs.readFileSync(path.join(folderDir, notebook), 'utf-8')).metadata;
-				const bibtex: string | undefined = metadata?.pollis?.workflow?.article?.bibtex;
-				if (!bibtex) {
-					continue;
-				}
-				const fields = parseBibtexEntry(bibtex);
-				const authors = (fields.get('author') ?? '').split(/\s+and\s+/).map(name => name.trim()).filter(name => name);
-				occurrences.push({ source: `notebook ${library}/${folder}`, usedIn: `${library}/${folder}`, fields, authors });
+			for (const notebook of fs.readdirSync(folderDir).filter(f => f.endsWith('.ipynb')).sort()) {
+				notebooks.push({ file: path.join(folderDir, notebook), usedIn: `${library}/${folder}` });
 			}
 		}
 	}
-	return occurrences;
+	return notebooks;
 }
 
-/** The first author's last name, as names are compared. */
-function firstLastName(occurrence: IOccurrence): string {
-	const first = occurrence.authors[0] ?? '';
-	const lastName = normalise(first.includes(',') ? first.split(',')[0] : first.split(/\s+/).pop() ?? first);
-	// A name with an umlaut is also written with ae, oe or ue (Waechter, Schuetze)
-	return lastName.replace(/([aou])e/g, '$1');
+/** The methods shipped with Pollis: media/methods/<name>/method.toml. */
+function shippedMethods(repoRoot: string): { file: string; usedIn: string }[] {
+	const methodsDir = path.join(repoRoot, 'src/vs/workbench/contrib/compose/browser/media/methods');
+	return fs.readdirSync(methodsDir).sort()
+		.map(folder => ({ file: path.join(methodsDir, folder, 'method.toml'), usedIn: `methods/${folder}` }))
+		.filter(method => fs.existsSync(method.file));
+}
+
+/** A TOML basic string. */
+function tomlString(value: string): string {
+	return `"${value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
 }
 
 /**
- * Group occurrences into works: the same DOI or the same title, and the same first author. Two works
- * that share a DOI but not their first author are kept apart and reported: one of the DOIs is wrong.
+ * Bring the copies of a work in the Compose notebooks (`metadata.pollis.workflow.article`: citation,
+ * doi, url and bibtex) and the shipped methods (`citation` and `doi`) up to date with the database,
+ * so that Pollis reads them as before. Returns the files changed.
  */
-function mergeWorks(occurrences: IOccurrence[], conflicts: string[]): IWork[] {
-	const works: IOccurrence[][] = [];
-	const byDoi = new Map<string, IOccurrence[]>();
-	const byTitle = new Map<string, IOccurrence[]>();
-	for (const occurrence of occurrences) {
-		const doi = occurrence.fields.get('doi');
-		const title = normalise(occurrence.fields.get('title') ?? '');
-		const sameAuthor = (candidate: IOccurrence[] | undefined) => candidate?.some(o => firstLastName(o) === firstLastName(occurrence)) ? candidate : undefined;
-		const doiWork = doi ? byDoi.get(normaliseDoi(doi)) : undefined;
-		if (doiWork && !sameAuthor(doiWork)) {
-			conflicts.push(`doi ${doi}: "${occurrence.fields.get('title')}" (${occurrence.source}) and "${doiWork[0].fields.get('title')}" (${doiWork[0].source}) are different works`);
-		}
-		const work = sameAuthor(doiWork) ?? sameAuthor(byTitle.get(title));
-		if (work) {
-			work.push(occurrence);
-		} else {
-			works.push([occurrence]);
-		}
-		const target = work ?? works[works.length - 1];
-		if (doi && !byDoi.has(normaliseDoi(doi))) {
-			byDoi.set(normaliseDoi(doi), target);
-		}
-		if (!byTitle.has(title)) {
-			byTitle.set(title, target);
-		}
-	}
-	return works.map(group => ({ occurrences: group }));
-}
-
-/** The value most occurrences give a field (the fuller one on a tie), and the other values given. */
-function chooseValue(work: IWork, field: string): { value: string | undefined; others: string[] } {
-	const counts = new Map<string, { value: string; count: number }>();
-	for (const occurrence of work.occurrences) {
-		const value = occurrence.fields.get(field);
-		if (!value) {
+export function refreshReferenceCopies(repoRoot: string, references: ReadonlyMap<string, IReference>): string[] {
+	const changed: string[] = [];
+	for (const notebook of composeNotebooks(repoRoot)) {
+		const text = fs.readFileSync(notebook.file, 'utf-8');
+		const json = JSON.parse(text);
+		const article = json.metadata?.pollis?.workflow?.article;
+		const reference = typeof article?.key === 'string' ? references.get(article.key) : undefined;
+		if (!reference) {
 			continue;
 		}
-		const key = field === 'author' ? occurrence.authors.map(name => normalise(name.split(',')[0])).join('|') : normalise(value);
-		const entry = counts.get(key);
-		if (entry) {
-			entry.count++;
-		} else {
-			counts.set(key, { value, count: 1 });
+		const copy: Record<string, string> = { key: reference.key, citation: citation(reference) };
+		if (reference.doi) {
+			copy.doi = reference.doi;
+		}
+		const url = reference.url ?? (reference.doi ? `https://doi.org/${reference.doi}` : undefined);
+		if (url) {
+			copy.url = url;
+		}
+		copy.bibtex = bibtexEntry(reference);
+		json.metadata.pollis.workflow.article = copy;
+		const indent = /^\{\n(?<indent>\s+)"/.exec(text)?.groups?.indent ?? ' ';
+		const updated = JSON.stringify(json, null, indent) + (text.endsWith('\n') ? '\n' : '');
+		if (updated !== text) {
+			fs.writeFileSync(notebook.file, updated, 'utf-8');
+			changed.push(notebook.file);
 		}
 	}
-	const ranked = [...counts.values()].sort((a, b) => b.count - a.count || b.value.length - a.value.length);
-	return { value: ranked[0]?.value, others: ranked.slice(1).map(entry => entry.value) };
-}
-
-/** A readable key: first author's last name and year, e.g. `breiman2001`. */
-function baseKey(work: IWork): string {
-	const first = work.occurrences.map(o => o.authors[0]).find(name => name) ?? 'anonymous';
-	const lastName = first.includes(',') ? first.split(',')[0] : first.split(/\s+/).pop() ?? first;
-	const year = chooseValue(work, 'year').value ?? '';
-	return normalise(lastName).replace(/ /g, '') + year;
-}
-
-/** Escape the characters BibTeX treats specially in a field value. */
-function escapeValue(field: string, value: string): string {
-	return field === 'url' || field === 'doi' ? value : value.replace(/(?<!\\)([&%#_])/g, '\\$1');
+	for (const method of shippedMethods(repoRoot)) {
+		const text = fs.readFileSync(method.file, 'utf-8');
+		const key = (parseToml(text) as { key?: string }).key;
+		const reference = key ? references.get(key) : undefined;
+		if (!reference) {
+			continue;
+		}
+		let updated = text.replace(/^citation = .*$/m, `citation = ${tomlString(citation(reference))}`);
+		if (reference.doi) {
+			updated = /^doi = /m.test(updated)
+				? updated.replace(/^doi = .*$/m, `doi = ${tomlString(reference.doi)}`)
+				: updated.replace(/^(citation = .*)$/m, `$1\ndoi = ${tomlString(reference.doi)}`);
+		}
+		if (updated !== text) {
+			fs.writeFileSync(method.file, updated, 'utf-8');
+			changed.push(method.file);
+		}
+	}
+	return changed;
 }
 
 /**
- * Generate the Pollis BibTeX library from every panel TOML and every Compose notebook's article. Each
- * work appears once, keyed by first author and year (`a`, `b` when needed), with `pollis-used-in` naming
- * the panels and notebooks that reference it. Values that disagree between occurrences are reported.
+ * Generate the Pollis BibTeX library, one entry for each work of the database, with `pollis-used-in`
+ * naming the panels, notebooks and methods that reference it, and references.json.
  */
-export function generatePollisBib(repoRoot: string): IPollisBib {
-	const contribDir = path.join(repoRoot, 'src/vs/workbench/contrib');
-	const occurrences = [
-		...panelOccurrences(path.join(contribDir, 'model/browser/webviews')),
-		...notebookOccurrences(path.join(contribDir, 'compose/browser/media')),
-	];
-	const conflicts: string[] = [];
-	const works = mergeWorks(occurrences, conflicts);
-
-	const byKey = new Map<string, IWork[]>();
-	for (const work of works) {
-		const key = baseKey(work);
-		byKey.set(key, [...(byKey.get(key) ?? []), work]);
+export function generatePollisBib(repoRoot: string, database: IReferencesDatabase): IPollisBib {
+	const occurrences = keyOccurrences(repoRoot);
+	const usedIn = new Map<string, Set<string>>();
+	for (const occurrence of occurrences) {
+		usedIn.set(occurrence.key, (usedIn.get(occurrence.key) ?? new Set()).add(occurrence.usedIn));
 	}
-
-	const entries: { key: string; text: string }[] = [];
-	for (const [key, group] of byKey) {
-		group.sort((a, b) => normalise(chooseValue(a, 'title').value ?? '').localeCompare(normalise(chooseValue(b, 'title').value ?? '')));
-		group.forEach((work, index) => {
-			const workKey = group.length > 1 ? key + String.fromCharCode(97 + index) : key;
-			const fields = new Map<string, string>();
-			for (const field of FIELD_ORDER) {
-				const { value, others } = chooseValue(work, field);
-				if (value) {
-					fields.set(field, value);
-				}
-				if (others.length && COMPARED_FIELDS.includes(field)) {
-					const sources = (v: string) => work.occurrences.filter(o => o.fields.get(field) === v).map(o => o.source).join(', ');
-					conflicts.push(`${workKey} ${field}: "${value}" (${sources(value!)}) vs ${others.map(v => `"${v}" (${sources(v)})`).join(' vs ')}`);
-				}
-			}
-			// Among the occurrences that agree on the last names, the fullest author list (names rather than initials)
-			const lastNames = (authors: string[]) => authors.map(name => normalise(name.split(',')[0])).join('|');
-			const chosen = work.occurrences.find(o => o.fields.get('author') === fields.get('author'));
-			const fullest = chosen && work.occurrences
-				.filter(o => lastNames(o.authors) === lastNames(chosen.authors))
-				.sort((a, b) => b.fields.get('author')!.length - a.fields.get('author')!.length)[0];
-			if (fullest) {
-				fields.set('author', fullest.fields.get('author')!);
-			}
-			const usedIn = [...new Set(work.occurrences.map(o => o.usedIn))].sort();
-			const type = fields.has('journal') ? 'article' : 'misc';
-			const lines = [...fields].map(([name, value]) => `  ${name.padEnd(7)} = {${escapeValue(name, value)}},`);
-			lines.push(`  pollis-used-in = {${usedIn.join(', ')}}`);
-			entries.push({ key: workKey, text: `@${type}{${workKey},\n${lines.join('\n')}\n}` });
-		});
-	}
-	entries.sort((a, b) => a.key.localeCompare(b.key));
-
+	const unknownKeys = [...usedIn.keys()].filter(key => !database.references.has(key)).sort();
+	const entries = [...database.references.values()].map(reference => bibtexEntry(reference, [...usedIn.get(reference.key) ?? []].sort()));
 	const header = [
-		'% The Pollis library: every work referenced in Pollis, cited or not, one entry each.',
-		'% Generated by the compile-toml build task from the panel TOMLs and the Compose notebooks; do not edit.',
-		'% Correct a reference where it is written, and this file follows. `pollis-used-in` names the panels',
-		'% and notebooks that reference the work; BibTeX tools ignore it.',
+		'% The Pollis library: every work referenced in Pollis, one entry each.',
+		'% Generated by the compile-toml build task from references.duckdb; do not edit. Correct a work in the',
+		'% database, and this file follows. `pollis-used-in` names the panels, notebooks and methods that',
+		'% reference the work; BibTeX tools ignore it.',
 	].join('\n');
 	return {
-		bibtex: `${header}\n\n${entries.map(entry => entry.text).join('\n\n')}\n`,
+		bibtex: `${header}\n\n${entries.join('\n\n')}\n`,
+		dump: referencesDump(database),
 		works: entries.length,
 		occurrences: occurrences.length,
-		conflicts,
+		unknownKeys,
 	};
 }

@@ -77,61 +77,30 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "TextAnalysis.jl: Julia NLP Toolkit"
-authors = "JuliaText Contributors"
-year = 2023
-journal = "GitHub"
-url = "https://github.com/JuliaText/TextAnalysis.jl"
-openAccess = true
+key = "JTC2023a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Speech and Language Processing"
-authors = "Jurafsky, Daniel; Martin, James H."
-year = 2024
-journal = "Pearson (3rd ed., draft)"
-url = "https://web.stanford.edu/~jurafsky/slp3/"
-openAccess = true
+key = "JM2024a"
 
 [[references]]
-title = "Introduction to Information Retrieval"
-authors = "Manning, Christopher D.; Raghavan, Prabhakar; Schutze, Hinrich"
-year = 2008
-journal = "Cambridge University Press"
-doi = "10.1017/CBO9780511809071"
-url = "https://nlp.stanford.edu/IR-book/"
-openAccess = true
+key = "MRS2008a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "Indexing by Latent Semantic Analysis"
-authors = "Deerwester, Scott; Dumais, Susan T.; Furnas, George W.; Landauer, Thomas K.; Harshman, Richard"
-year = 1990
-journal = "Journal of the American Society for Information Science"
-doi = "10.1002/(SICI)1097-4571(199009)41:6<391::AID-ASI1>3.0.CO;2-9"
-openAccess = false
+key = "DDFLH1990a"
 
 [[references]]
-title = "Latent Semantic Analysis"
-authors = "Dumais, Susan T."
-year = 2004
-journal = "Annual Review of Information Science and Technology"
-doi = "10.1002/aris.1440380105"
-openAccess = false
+key = "Dum2004a"
 
 [[bullets]]
 text = "LSA"

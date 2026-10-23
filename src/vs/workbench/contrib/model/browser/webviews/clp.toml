@@ -128,36 +128,16 @@ separator = true
 label = "Original Papers (from packages)"
 
 [[references]]
-title = "A Density-Based Algorithm for Discovering Clusters in Large Spatial Databases with Noise"
-authors = "Ester, M., Kriegel, H.P., Sander, J. & Xu, X."
-year = 1996
-journal = ""
-url = "https://www.dbs.ifi.lmu.de/Publikationen/Papers/KDD-96.final.frame.pdf"
-openAccess = true
+key = "EKSX1996a"
 
 [[references]]
-title = "BetaML: The Beta Machine Learning Toolkit, a Self-Contained Repository of Machine Learning Algorithms in Julia"
-authors = "Lobianco, A."
-year = 2021
-journal = ""
-url = "https://doi.org/10.21105/joss.02849"
-openAccess = true
+key = "Lob2021a"
 
 [[references]]
-title = "A Unified Approach to Interpreting Model Predictions"
-authors = "Lundberg, S.M. & Lee, S.I."
-year = 2017
-journal = ""
-url = "https://arxiv.org/abs/1705.07874"
-openAccess = true
+key = "LL2017a"
 
 [[references]]
-title = "Explaining Black-Box Models through Counterfactuals"
-authors = "Altmeyer, P., van der Blom, I., Daxberger, E. & Martens, D."
-year = 2023
-journal = ""
-url = "https://arxiv.org/abs/2212.07466"
-openAccess = true
+key = "ABDM2023a"
 
 [[models]]
 id = "km"

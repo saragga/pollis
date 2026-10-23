@@ -72,67 +72,33 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "Complementarity.jl: Modeling and Solving Complementarity Problems in Julia"
-authors = "Chung, Changhyun"
-year = 2023
-journal = "GitHub"
-url = "https://github.com/chkwon/Complementarity.jl"
-openAccess = true
+key = "Chu2023a"
 
 [[references]]
-title = "PATH Solver: A Non-Monotone Stabilisation Scheme for the Solution of Nonlinear Complementarity Problems"
-authors = "Dirkse, Steven P.; Ferris, Michael C."
-year = 1995
-journal = "Mathematical Programming"
-doi = "10.1007/BF02592958"
-openAccess = false
+key = "DF1995a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Mathematical Programs with Equilibrium Constraints"
-authors = "Luo, Zhi-Quan; Pang, Jong-Shi; Ralph, Daniel"
-year = 1996
-journal = "Cambridge University Press"
-doi = "10.1017/CBO9780511983658"
-openAccess = false
+key = "LPR1996a"
 
 [[references]]
-title = "Finite-Dimensional Variational Inequalities and Complementarity Problems"
-authors = "Facchinei, Francisco; Pang, Jong-Shi"
-year = 2003
-journal = "Springer (Vol. I & II)"
-openAccess = false
+key = "FP2003a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "Engineering and Economic Applications of Complementarity Problems"
-authors = "Ferris, Michael C.; Pang, Jong-Shi"
-year = 1997
-journal = "SIAM Review"
-doi = "10.1137/S0036144595285963"
-openAccess = false
+key = "FP1997a"
 
 [[references]]
-title = "Mathematical Programs with Complementarity Constraints: Stationarity, Optimality, and Sensitivity"
-authors = "Scheel, Holger; Scholtes, Stefan"
-year = 2000
-journal = "Mathematics of Operations Research"
-doi = "10.1287/moor.25.1.1.15213"
-openAccess = false
+key = "SS2000a"
 
 [[bullets]]
 text = "A Mathematical Programming with Equilibrium Constraints (MPEC) is the problem of a single decision-maker who minimises an objective subject to both standard constraints and an equilibrium condition"

@@ -92,76 +92,36 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "Pigeons.jl: Distributed Sampling from Intractable Distributions"
-authors = "Surjanovic, Nikola; Biron-Lattes, Miguel; Tiede, Paul; Syed, Saifuddin; Campbell, Trevor; Bouchard-Cote, Alexandre"
-year = 2023
-journal = "arXiv preprint"
-doi = "10.48550/arXiv.2308.09769"
-openAccess = true
+key = "SBTSC...2023a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Monte Carlo Statistical Methods"
-authors = "Robert, Christian P.; Casella, George"
-year = 2004
-journal = "Springer (2nd ed.)"
-doi = "10.1007/978-1-4757-4145-2"
-openAccess = false
+key = "RC2004a"
 
 [[references]]
-title = "Handbook of Markov Chain Monte Carlo"
-authors = "Brooks, Steve; Gelman, Andrew; Jones, Galin; Meng, Xiao-Li"
-year = 2011
-journal = "Chapman & Hall/CRC"
-doi = "10.1201/b10905"
-openAccess = false
+key = "BGJM2011a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "Non-reversible parallel tempering: a scalable highly parallel MCMC scheme"
-authors = "Syed, Saifuddin; Bouchard-Cote, Alexandre; Deligiannidis, George; Doucet, Arnaud"
-year = 2022
-journal = "Journal of the Royal Statistical Society: Series B"
-doi = "10.1111/rssb.12464"
-openAccess = true
+key = "SBDD2022a"
 
 [[references]]
-title = "Exchange Monte Carlo method and application to spin glass simulations"
-authors = "Hukushima, Koji; Nemoto, Koji"
-year = 1996
-journal = "Journal of the Physical Society of Japan"
-doi = "10.1143/JPSJ.65.1604"
-openAccess = false
+key = "HN1996a"
 
 [[references]]
-title = "Slice sampling"
-authors = "Neal, Radford M."
-year = 2003
-journal = "The Annals of Statistics"
-doi = "10.1214/aos/1056562461"
-openAccess = true
+key = "Nea2003a"
 
 [[references]]
-title = "Rank-normalization, folding, and localization: an improved R-hat for assessing convergence of MCMC"
-authors = "Vehtari, Aki; Gelman, Andrew; Simpson, Daniel; Carpenter, Bob; Burkner, Paul-Christian"
-year = 2021
-journal = "Bayesian Analysis"
-doi = "10.1214/20-BA1221"
-openAccess = true
+key = "VGSCB2021a"
 
 [[bullets]]
 text = "Question"

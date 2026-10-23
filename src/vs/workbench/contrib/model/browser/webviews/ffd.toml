@@ -54,44 +54,19 @@ bundled = true
 description = "What the factors and portfolios measure, how they are built, and how the files are organised"
 
 [[references]]
-title = "Kenneth R. French Data Library"
-authors = "French, Kenneth R."
-year = 2026
-journal = "mba.tuck.dartmouth.edu"
-url = "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/data_library.html"
-openAccess = true
+key = "Fre2026a"
 
 [[references]]
-title = "Common Risk Factors in the Returns on Stocks and Bonds"
-authors = "Fama, Eugene F.; French, Kenneth R."
-year = 1993
-journal = "Journal of Financial Economics"
-doi = "10.1016/0304-405X(93)90023-5"
-openAccess = false
+key = "FF1993a"
 
 [[references]]
-title = "A Five-Factor Asset Pricing Model"
-authors = "Fama, Eugene F.; French, Kenneth R."
-year = 2015
-journal = "Journal of Financial Economics"
-doi = "10.1016/j.jfineco.2014.10.010"
-openAccess = false
+key = "FF2015a"
 
 [[references]]
-title = "Returns to Buying Winners and Selling Losers: Implications for Stock Market Efficiency"
-authors = "Jegadeesh, Narasimhan; Titman, Sheridan"
-year = 1993
-journal = "Journal of Finance"
-doi = "10.1111/j.1540-6261.1993.tb04702.x"
-openAccess = false
+key = "JT1993a"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[bullets]]
 text = "Three Factors"

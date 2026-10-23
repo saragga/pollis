@@ -90,41 +90,24 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Engineering Design via Surrogate Modelling: A Practical Guide"
-authors = "Forrester, Alexander I.J.; Sobester, Andras; Keane, Andy J."
-year = 2008
-journal = "Wiley"
-openAccess = false
+key = "FSK2008a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "Design and Analysis of Computer Experiments"
-authors = "Sacks, Jerome; Welch, William J.; Mitchell, Toby J.; Wynn, Henry P."
-year = 1989
-journal = "Statistical Science"
-openAccess = false
+key = "SWMW1989a"
 
 [[references]]
-title = "A Taxonomy of Global Optimization Methods Based on Response Surfaces"
-authors = "Jones, Donald R."
-year = 2001
-journal = "Journal of Global Optimization"
-openAccess = false
+key = "Jon2001a"
 
 [[models]]
 id = "rsm"

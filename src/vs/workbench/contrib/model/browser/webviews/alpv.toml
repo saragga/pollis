@@ -78,28 +78,13 @@ bundled = true
 description = "Understanding the returned series, quotes, indicators, and macro data"
 
 [[references]]
-title = "AlphaVantage.jl: A Julia wrapper for the Alpha Vantage API"
-authors = "Valentiner, Ellis; contributors"
-year = 2024
-journal = "GitHub"
-url = "https://github.com/ellisvalentiner/AlphaVantage.jl"
-openAccess = true
+key = "Val...2024a"
 
 [[references]]
-title = "Alpha Vantage API Documentation"
-authors = "Alpha Vantage Inc."
-year = 2024
-journal = "alphavantage.co"
-url = "https://www.alphavantage.co/documentation/"
-openAccess = true
+key = "AV2024a"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[bullets]]
 text = "Equities"

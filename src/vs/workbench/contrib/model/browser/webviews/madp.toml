@@ -95,84 +95,39 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "POMDPs.jl: A Framework for Sequential Decision Making under Uncertainty"
-authors = "Egorov, Maxim; Sunberg, Zachary N.; Balaban, Edward; Wheeler, Tim A.; Gupta, Jayesh K.; Kochenderfer, Mykel J."
-year = 2017
-journal = "Journal of Machine Learning Research"
-url = "https://jmlr.org/papers/v18/16-300.html"
-openAccess = true
+key = "ESBWG...2017a"
 
 [[references]]
-title = "GameTheory.jl: Normal-Form Game Solvers in Julia"
-authors = "QuantEcon Development Team"
-year = 2023
-journal = "GitHub"
-url = "https://github.com/QuantEcon/GameTheory.jl"
-openAccess = true
+key = "QEDT2023a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "A Concise Introduction to Decentralized POMDPs"
-authors = "Oliehoek, Frans A.; Amato, Christopher"
-year = 2016
-journal = "Springer"
-doi = "10.1007/978-3-319-28929-8"
-openAccess = false
+key = "OA2016a"
 
 [[references]]
-title = "Multiagent Systems: Algorithmic, Game-Theoretic, and Logical Foundations"
-authors = "Shoham, Yoav; Leyton-Brown, Kevin"
-year = 2009
-journal = "Cambridge University Press"
-url = "https://www.masfoundations.org"
-openAccess = true
+key = "SL2009b"
 
 [[references]]
-title = "Decision Making Under Uncertainty: Theory and Application"
-authors = "Kochenderfer, Mykel J."
-year = 2015
-journal = "MIT Press"
-url = "https://mitpress.mit.edu/9780262029254/"
-openAccess = false
+key = "Koc2015a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "Stochastic Games"
-authors = "Shapley, Lloyd S."
-year = 1953
-journal = "Proceedings of the National Academy of Sciences"
-doi = "10.1073/pnas.39.10.1095"
-openAccess = true
+key = "Sha1953a"
 
 [[references]]
-title = "The Complexity of Decentralized Control of Markov Decision Processes"
-authors = "Bernstein, Daniel S.; Givan, Robert; Immerman, Neil; Zilberstein, Shlomo"
-year = 2002
-journal = "Mathematics of Operations Research"
-doi = "10.1287/moor.27.4.819.297"
-openAccess = false
+key = "BGIZ2002a"
 
 [[references]]
-title = "Optimal and Approximate Q-value Functions for Decentralized POMDPs"
-authors = "Oliehoek, Frans A.; Spaan, Matthijs T.J.; Vlassis, Nikos"
-year = 2008
-journal = "Journal of Artificial Intelligence Research"
-doi = "10.1613/jair.2432"
-openAccess = true
+key = "OSV2008a"
 
 [[models]]
 id = "dec"

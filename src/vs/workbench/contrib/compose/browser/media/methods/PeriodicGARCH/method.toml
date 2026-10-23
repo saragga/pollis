@@ -7,7 +7,8 @@ topic = "Volatility"
 license = "MIT"
 version = "0.2.0"
 
-citation = "Bollerslev, T. and Ghysels, E. (1996). Periodic autoregressive conditional heteroscedasticity. Journal of Business & Economic Statistics 14(2), 139-151."
+key = "BG1996a"
+citation = "Bollerslev, T. and Ghysels, E. (1996). Periodic Autoregressive Conditional Heteroscedasticity. Journal of Business & Economic Statistics 14(2), 139-151."
 doi = "10.1080/07350015.1996.10524640"
 article = "https://doi.org/10.1080/07350015.1996.10524640"
 

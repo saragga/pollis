@@ -111,76 +111,36 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "Optim: A mathematical optimization package for Julia"
-authors = "Mogensen, Patrick Kofod; Riseth, Asbjorn Nilsen"
-year = 2018
-journal = "Journal of Open Source Software"
-doi = "10.21105/joss.00615"
-openAccess = true
+key = "MR2018a"
 
 [[references]]
-title = "The NLopt nonlinear-optimization package"
-authors = "Johnson, Steven G."
-year = 2007
-journal = "NLopt Documentation"
-url = "https://nlopt.readthedocs.io/en/latest/"
-openAccess = true
+key = "Joh2007c"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Numerical Optimization"
-authors = "Nocedal, Jorge; Wright, Stephen J."
-year = 2006
-journal = "Springer (2nd ed.)"
-doi = "10.1007/978-0-387-40065-5"
-openAccess = false
+key = "NW2006a"
 
 [[references]]
-title = "Trust Region Methods"
-authors = "Conn, Andrew R.; Gould, Nicholas I. M.; Toint, Philippe L."
-year = 2000
-journal = "SIAM"
-doi = "10.1137/1.9780898719857"
-openAccess = false
+key = "CGT2000a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "On the Implementation of an Interior-Point Filter Line-Search Algorithm for Large-Scale Nonlinear Programming"
-authors = "Waechter, Andreas; Biegler, Lorenz T."
-year = 2006
-journal = "Mathematical Programming"
-doi = "10.1007/s10107-004-0559-y"
-openAccess = false
+key = "WB2006a"
 
 [[references]]
-title = "Computing a Trust Region Step"
-authors = "More, Jorge J.; Sorensen, Danny C."
-year = 1983
-journal = "SIAM Journal on Scientific and Statistical Computing"
-doi = "10.1137/0904038"
-openAccess = false
+key = "MS1983a"
 
 [[references]]
-title = "A Survey of Truncated-Newton Methods"
-authors = "Nash, Stephen G."
-year = 2000
-journal = "Journal of Computational and Applied Mathematics"
-doi = "10.1016/S0377-0427(00)00426-X"
-openAccess = false
+key = "Nas2000a"
 
 [[models]]
 id = "newton"

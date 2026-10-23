@@ -90,51 +90,27 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "Interpretable Machine Learning for Science with PySR and SymbolicRegression.jl"
-authors = "Cranmer, Miles"
-year = 2023
-journal = "arXiv"
-doi = "10.48550/arXiv.2305.01582"
-openAccess = true
+key = "Cra2023a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Genetic Programming: On the Programming of Computers by Means of Natural Selection"
-authors = "Koza, John R."
-year = 1992
-journal = "MIT Press"
-openAccess = false
+key = "Koz1992a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "Distilling Free-Form Natural Laws from Experimental Data"
-authors = "Schmidt, Michael; Lipson, Hod"
-year = 2009
-journal = "Science"
-doi = "10.1126/science.1165893"
-openAccess = false
+key = "SL2009a"
 
 [[references]]
-title = "Discovering Symbolic Models from Deep Learning with Inductive Biases"
-authors = "Cranmer, Miles; Sanchez-Gonzalez, Alvaro; Battaglia, Peter; Xu, Rui; Cranmer, Kyle; Spergel, David; Ho, Shirley"
-year = 2020
-journal = "NeurIPS"
-doi = "10.48550/arXiv.2006.11287"
-openAccess = true
+key = "CSBXC...2020a"
 
 [[bullets]]
 text = "Evolutionary Search"

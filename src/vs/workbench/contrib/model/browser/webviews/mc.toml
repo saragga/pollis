@@ -76,12 +76,7 @@ separator = true
 label = "Original Papers (from packages)"
 
 [[references]]
-title = "Calibration tests beyond classification"
-authors = "Widmann, D., Lindsten, F. & Zachariah, D."
-year = 2022
-journal = ""
-url = "https://arxiv.org/abs/2210.00983"
-openAccess = true
+key = "WLZ2022a"
 
 [[models]]
 id = "platt"

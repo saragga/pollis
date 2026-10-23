@@ -105,56 +105,30 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Graphs.jl: a General-Purpose Graph Library for the Julia Programming Language"
-authors = "Bromberger, Seth; Fairbanks, James; contributors"
-year = 2017
-journal = "JuliaCon Proceedings"
-openAccess = true
+key = "FBSHE...2021a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Networks: An Introduction"
-authors = "Newman, Mark E. J."
-year = 2010
-journal = "Oxford University Press"
-openAccess = false
+key = "New2010a"
 
 [[references]]
-title = "Network Science"
-authors = "Barabasi, Albert-Laszlo"
-year = 2016
-journal = "Cambridge University Press"
-openAccess = true
+key = "Bar2016a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "On the Evolution of Random Graphs"
-authors = "Erdos, Paul; Renyi, Alfred"
-year = 1960
-journal = "Publications of the Mathematical Institute of the Hungarian Academy of Sciences"
-openAccess = false
+key = "ER1960a"
 
 [[references]]
-title = "Emergence of Scaling in Random Networks"
-authors = "Barabasi, Albert-Laszlo; Albert, Reka"
-year = 1999
-journal = "Science"
-doi = "10.1126/science.286.5439.509"
-openAccess = false
+key = "BA1999a"
 
 [[references]]
-title = "Collective Dynamics of Small-World Networks"
-authors = "Watts, Duncan J.; Strogatz, Steven H."
-year = 1998
-journal = "Nature"
-doi = "10.1038/30918"
-openAccess = false
+key = "WS1998a"
 
 [[models]]
 id = "erdos"

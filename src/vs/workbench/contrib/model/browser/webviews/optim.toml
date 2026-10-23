@@ -84,80 +84,40 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "Optim: A mathematical optimization package for Julia"
-authors = "Mogensen, Patrick Kofod; Riseth, Asbjorn Nilsen"
-year = 2018
-journal = "Journal of Open Source Software"
-doi = "10.21105/joss.00615"
-openAccess = true
+key = "MR2018a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Numerical Optimization"
-authors = "Nocedal, Jorge; Wright, Stephen J."
-year = 2006
-journal = "Springer (2nd ed.)"
-doi = "10.1007/978-0-387-40065-5"
-openAccess = false
+key = "NW2006a"
 
 [[references]]
-title = "Convex Optimization"
-authors = "Boyd, Stephen; Vandenberghe, Lieven"
-year = 2004
-journal = "Cambridge University Press"
-url = "https://web.stanford.edu/~boyd/cvxbook/"
-openAccess = true
+key = "BV2004a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "A Simplex Method for Function Minimization"
-authors = "Nelder, John A.; Mead, Roger"
-year = 1965
-journal = "The Computer Journal"
-doi = "10.1093/comjnl/7.4.308"
-openAccess = false
+key = "NM1965a"
 
 [[references]]
-title = "The Convergence of a Class of Double-Rank Minimization Algorithms"
-authors = "Fletcher, Roger"
-year = 1970
-journal = "IMA Journal of Applied Mathematics"
-doi = "10.1093/imamat/6.1.76"
-openAccess = false
+key = "Fle1970b"
 
 [[references]]
-title = "On the Implementation of an Interior-Point Filter Line-Search Algorithm for Large-Scale Nonlinear Programming"
-authors = "Waechter, Andreas; Biegler, Lorenz T."
-year = 2006
-journal = "Mathematical Programming"
-doi = "10.1007/s10107-004-0559-y"
-openAccess = false
+key = "WB2006a"
 
 [[references]]
 separator = true
 label = "Original Papers (from packages)"
 
 [[references]]
-title = "Optim: A mathematical optimization package for Julia"
-authors = "Mogensen, Patrick Kofod; Riseth, Asbjorn Nilsen"
-year = 2018
-journal = "Journal of Open Source Software"
-doi = "10.21105/joss.00615"
-openAccess = true
+key = "MR2018a"
 
 [[models]]
 id = "gf"

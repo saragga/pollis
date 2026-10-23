@@ -98,68 +98,33 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "Turing: A Language for Flexible Probabilistic Inference"
-authors = "Ge, Hong; Xu, Kai; Ghahramani, Zoubin"
-year = 2018
-journal = "Proceedings of Machine Learning Research"
-doi = "10.48550/arXiv.1907.07111"
-openAccess = true
+key = "GXG2018a"
 
 [[references]]
-title = "AdvancedHMC.jl: A Robust, Modular and Efficient Implementation of Advanced HMC Algorithms"
-authors = "Xu, Kai; Ge, Hong; Tebbutt, Will; Tarek, Mohamed; Trapp, Martin; Ghahramani, Zoubin"
-year = 2020
-journal = "Proceedings of The 3rd Symposium on Advances in Approximate Bayesian Inference"
-doi = "10.48550/arXiv.1907.07114"
-openAccess = true
+key = "XGTTT...2020a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Monte Carlo Statistical Methods"
-authors = "Robert, Christian P.; Casella, George"
-year = 2004
-journal = "Springer (2nd ed.)"
-doi = "10.1007/978-1-4757-4145-2"
-openAccess = false
+key = "RC2004a"
 
 [[references]]
-title = "Handbook of Markov Chain Monte Carlo"
-authors = "Brooks, Steve; Gelman, Andrew; Jones, Galin; Meng, Xiao-Li"
-year = 2011
-journal = "Chapman & Hall/CRC"
-doi = "10.1201/b10905"
-openAccess = false
+key = "BGJM2011a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "MCMC Using Hamiltonian Dynamics"
-authors = "Neal, Radford M."
-year = 2011
-journal = "Handbook of Markov Chain Monte Carlo"
-doi = "10.1201/b10905"
-openAccess = true
+key = "Nea2011a"
 
 [[references]]
-title = "The No-U-Turn Sampler: Adaptively Setting Path Lengths in Hamiltonian Monte Carlo"
-authors = "Hoffman, Matthew D.; Gelman, Andrew"
-year = 2014
-journal = "Journal of Machine Learning Research"
-doi = "10.48550/arXiv.1111.4246"
-openAccess = true
+key = "HG2014a"
 
 [[models]]
 id = "nuts"

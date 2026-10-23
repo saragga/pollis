@@ -102,66 +102,30 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "StatsBase.jl: Basic Statistics for Julia"
-authors = "JuliaStats Contributors"
-year = 2023
-journal = "GitHub"
-url = "https://github.com/JuliaStats/StatsBase.jl"
-openAccess = true
+key = "JSC2023a"
 
 [[references]]
-title = "FreqTables.jl: Frequency Tables in Julia"
-authors = "Milan Bouchet-Valat"
-year = 2023
-journal = "GitHub"
-url = "https://github.com/nalimilan/FreqTables.jl"
-openAccess = true
+key = "Bou2023a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Statistics"
-authors = "Freedman, David; Pisani, Robert; Purves, Roger"
-year = 2007
-journal = "W. W. Norton (4th ed.)"
-openAccess = false
+key = "FPP2007a"
 
 [[references]]
-title = "The Art of Statistics: Learning from Data"
-authors = "Spiegelhalter, David"
-year = 2019
-journal = "Pelican Books"
-openAccess = false
+key = "Spi2019a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "Note on Regression and Inheritance in the Case of Two Parents"
-authors = "Galton, Francis"
-year = 1889
-journal = "Proceedings of the Royal Society of London"
-doi = "10.1098/rspl.1888.0082"
-openAccess = true
-
-[[references]]
-title = "The Proof and Measurement of Association between Two Things"
-authors = "Spearman, Charles"
-year = 1904
-journal = "American Journal of Psychology"
-doi = "10.2307/1412159"
-openAccess = false
+key = "Spe1904a"
 
 [[models]]
 id = "summ"

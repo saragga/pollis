@@ -94,60 +94,30 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "TextAnalysis.jl: Julia NLP Toolkit"
-authors = "JuliaText Contributors"
-year = 2023
-journal = "GitHub"
-url = "https://github.com/JuliaText/TextAnalysis.jl"
-openAccess = true
+key = "JTC2023a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Speech and Language Processing"
-authors = "Jurafsky, Daniel; Martin, James H."
-year = 2024
-journal = "Pearson (3rd ed., draft)"
-url = "https://web.stanford.edu/~jurafsky/slp3/"
-openAccess = true
+key = "JM2024a"
 
 [[references]]
-title = "Foundations of Statistical Natural Language Processing"
-authors = "Manning, Christopher D.; Schutze, Hinrich"
-year = 1999
-journal = "MIT Press"
-doi = "10.7551/mitpress/3112.001.0001"
-openAccess = false
+key = "MS1999a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "Estimation of Probabilities from Sparse Data for the Language Model Component of a Speech Recognizer"
-authors = "Katz, Slava M."
-year = 1987
-journal = "IEEE Transactions on Acoustics Speech and Signal Processing"
-doi = "10.1109/TASSP.1987.1165125"
-openAccess = false
+key = "Kat1987a"
 
 [[references]]
-title = "A Bit of Progress in Language Modeling"
-authors = "Goodman, Joshua T."
-year = 2001
-journal = "Computer Speech and Language"
-doi = "10.1006/csla.2001.0174"
-openAccess = false
+key = "Goo2001a"
 
 [[models]]
 id = "unigram"

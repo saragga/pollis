@@ -93,85 +93,39 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "ColBERT.jl: Efficient, Late-Interaction Retrieval Systems in Julia"
-authors = "Chaudhary, Siddhant; contributors"
-year = 2024
-journal = "GitHub"
-url = "https://github.com/JuliaGenAI/ColBERT.jl"
-openAccess = true
+key = "Cha...2024a"
 
 [[references]]
-title = "RAGTools.jl: Retrieval-Augmented Generation Tools in Julia"
-authors = "Simsa, Jan; contributors"
-year = 2025
-journal = "GitHub"
-url = "https://github.com/JuliaGenAI/RAGTools.jl"
-openAccess = true
+key = "Sim...2025a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Introduction to Information Retrieval"
-authors = "Manning, Christopher D.; Raghavan, Prabhakar; Schutze, Hinrich"
-year = 2008
-journal = "Cambridge University Press"
-doi = "10.1017/CBO9780511809071"
-url = "https://nlp.stanford.edu/IR-book/"
-openAccess = true
+key = "MRS2008a"
 
 [[references]]
-title = "Speech and Language Processing"
-authors = "Jurafsky, Daniel; Martin, James H."
-year = 2024
-journal = "Pearson (3rd ed., draft)"
-url = "https://web.stanford.edu/~jurafsky/slp3/"
-openAccess = true
+key = "JM2024a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "ColBERT: Efficient and Effective Passage Search via Contextualized Late Interaction over BERT"
-authors = "Khattab, Omar; Zaharia, Matei"
-year = 2020
-journal = "SIGIR"
-url = "https://arxiv.org/abs/2004.12832"
-openAccess = true
+key = "KZ2020a"
 
 [[references]]
-title = "ColBERTv2: Effective and Efficient Retrieval via Lightweight Late Interaction"
-authors = "Santhanam, Keshav; Khattab, Omar; Saad-Falcon, Jon; Potts, Christopher; Zaharia, Matei"
-year = 2022
-journal = "NAACL"
-url = "https://arxiv.org/abs/2112.01488"
-openAccess = true
+key = "SKSPZ2022a"
 
 [[references]]
-title = "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding"
-authors = "Devlin, Jacob; Chang, Ming-Wei; Lee, Kenton; Toutanova, Kristina"
-year = 2019
-journal = "NAACL-HLT"
-url = "https://arxiv.org/abs/1810.04805"
-openAccess = true
+key = "DCLT2019a"
 
 [[references]]
-title = "The Probabilistic Relevance Framework: BM25 and Beyond"
-authors = "Robertson, Stephen; Zaragoza, Hugo"
-year = 2009
-journal = "Foundations and Trends in Information Retrieval"
-doi = "10.1561/1500000019"
-openAccess = false
+key = "RZ2009a"
 
 [[bullets]]
 text = "Late Interaction"

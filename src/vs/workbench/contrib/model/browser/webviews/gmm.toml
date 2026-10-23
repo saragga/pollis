@@ -85,52 +85,22 @@ separator = true
 label = "Original Papers (from packages)"
 
 [[references]]
-title = "Large Sample Properties of Generalized Method of Moments Estimators"
-authors = "Hansen, L. P."
-year = 1982
-journal = ""
-url = "https://doi.org/10.2307/1912775"
-openAccess = false
+key = "Han1982a"
 
 [[references]]
-title = "A Simple, Positive Semi-Definite, Heteroskedasticity and Autocorrelation Consistent Covariance Matrix"
-authors = "Newey, W. K., & West, K. D."
-year = 1987
-journal = ""
-url = "https://doi.org/10.2307/1913610"
-openAccess = false
+key = "NW1987a"
 
 [[references]]
-title = "Finite-Sample Properties of Some Alternative GMM Estimators"
-authors = "Hansen, L. P., Heaton, J., & Yaron, A."
-year = 1996
-journal = ""
-url = "https://doi.org/10.1080/07350015.1996.10524656"
-openAccess = false
+key = "HHY1996a"
 
 [[references]]
-title = "Generalized Instrumental Variables Estimation of Nonlinear Rational Expectations Models"
-authors = "Hansen, L. P., & Singleton, K. J."
-year = 1982
-journal = ""
-url = "https://doi.org/10.2307/1911873"
-openAccess = false
+key = "HS1982a"
 
 [[references]]
-title = "A Finite Sample Correction for the Variance of Linear Efficient Two-Step GMM Estimators"
-authors = "Windmeijer, F."
-year = 2005
-journal = ""
-url = "https://doi.org/10.1016/j.jeconom.2004.02.005"
-openAccess = false
+key = "Win2005a"
 
 [[references]]
-title = "The Bayesian Bootstrap"
-authors = "Rubin, D. B."
-year = 1981
-journal = ""
-url = "https://doi.org/10.1214/aos/1176345338"
-openAccess = false
+key = "Rub1981a"
 
 [[bullets]]
 text = "Estimates parameters by matching sample moment conditions to their theoretical counterparts, without requiring full distributional assumptions"

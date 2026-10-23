@@ -159,76 +159,36 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "An Introduction to the Theory of Point Processes, Vol. I: Elementary Theory and Methods"
-authors = "Daley, Daryl J.; Vere-Jones, David"
-year = 2003
-journal = "Springer (2nd ed.)"
-url = "https://link.springer.com/book/9780387955414"
-openAccess = false
+key = "DV2003a"
 
 [[references]]
-title = "An Introduction to the Theory of Point Processes, Vol. II: General Theory and Structure"
-authors = "Daley, Daryl J.; Vere-Jones, David"
-year = 2008
-journal = "Springer (2nd ed.)"
-url = "https://link.springer.com/book/9780387213378"
-openAccess = false
+key = "DV2008a"
 
 [[references]]
-title = "Stochastic Processes"
-authors = "Ross, Sheldon M."
-year = 2014
-journal = "Wiley (3rd ed.)"
-url = "https://www.wiley.com/en-us/Stochastic+Processes%2C+3rd+Edition-p-9780471120629"
-openAccess = false
+key = "Ros2014a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "Spectra of Some Self-Exciting and Mutually Exciting Point Processes"
-authors = "Hawkes, Alan G."
-year = 1971
-journal = "Biometrika"
-doi = "10.1093/biomet/58.1.83"
-openAccess = false
+key = "Haw1971a"
 
 [[references]]
-title = "Some Statistical Methods Connected with Series of Events"
-authors = "Cox, David R."
-year = 1955
-journal = "Journal of the Royal Statistical Society, Series B"
-doi = "10.1111/j.2517-6161.1955.tb00188.x"
-openAccess = false
+key = "Cox1955a"
 
 [[references]]
-title = "On Lewis Simulation Method for Point Processes"
-authors = "Ogata, Yosihiko"
-year = 1981
-journal = "IEEE Transactions on Information Theory"
-doi = "10.1109/TIT.1981.1056305"
-openAccess = false
+key = "Oga1981a"
 
 [[references]]
-title = "Space-Time Point-Process Models for Earthquake Occurrences"
-authors = "Ogata, Yosihiko"
-year = 1998
-journal = "Annals of the Institute of Statistical Mathematics"
-doi = "10.1023/A:1003403601725"
-openAccess = false
+key = "Oga1998a"
 
 
 [[references]]
@@ -236,52 +196,22 @@ separator = true
 label = "Estimation and Diagnostics"
 
 [[references]]
-title = "Confidence Intervals for the Poisson Distribution"
-authors = "Garwood, Frank"
-year = 1936
-journal = "Biometrika"
-doi = "10.1093/biomet/28.3-4.437"
-openAccess = false
+key = "Gar1936a"
 
 [[references]]
-title = "A Kernel Method for Smoothing Point Process Data"
-authors = "Diggle, Peter J."
-year = 1985
-journal = "Journal of the Royal Statistical Society, Series C (Applied Statistics)"
-doi = "10.2307/2347366"
-openAccess = false
+key = "Dig1985a"
 
 [[references]]
-title = "Log Gaussian Cox Processes"
-authors = "Moller, Jesper; Syversveen, Anne Randi; Waagepetersen, Rasmus Plenge"
-year = 1998
-journal = "Scandinavian Journal of Statistics"
-doi = "10.1111/1467-9469.00115"
-openAccess = false
+key = "MSW1998a"
 
 [[references]]
-title = "Bayesian Inference for Hawkes Processes"
-authors = "Rasmussen, Jakob Gulddahl"
-year = 2013
-journal = "Methodology and Computing in Applied Probability"
-doi = "10.1007/s11009-011-9272-5"
-openAccess = false
+key = "Ras2013a"
 
 [[references]]
-title = "Discovering Latent Network Structure in Point Process Data"
-authors = "Linderman, Scott W.; Adams, Ryan P."
-year = 2014
-journal = "Proceedings of the 31st International Conference on Machine Learning (PMLR 32)"
-url = "https://proceedings.mlr.press/v32/linderman14.html"
-openAccess = true
+key = "LA2014a"
 
 [[references]]
-title = "The Time-Rescaling Theorem and Its Application to Neural Spike Train Data Analysis"
-authors = "Brown, Emery N.; Barbieri, Riccardo; Ventura, Valerie; Kass, Robert E.; Frank, Loren M."
-year = 2002
-journal = "Neural Computation"
-doi = "10.1162/08997660252741149"
-openAccess = false
+key = "BBVKF2002a"
 
 [[models]]
 id = "poisson"

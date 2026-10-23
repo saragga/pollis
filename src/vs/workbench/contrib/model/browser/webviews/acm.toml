@@ -95,60 +95,30 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "ReinforcementLearning.jl: A Reinforcement Learning Package for the Julia Programming Language"
-authors = "Tian, Jun; others"
-year = 2020
-journal = "GitHub"
-url = "https://github.com/JuliaReinforcementLearning/ReinforcementLearning.jl"
-openAccess = true
+key = "Tia...2020a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Reinforcement Learning: An Introduction"
-authors = "Sutton, Richard S.; Barto, Andrew G."
-year = 2018
-journal = "MIT Press"
-url = "http://incompleteideas.net/book/the-book-2nd.html"
-openAccess = true
+key = "SB2018a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "Asynchronous Methods for Deep Reinforcement Learning"
-authors = "Mnih, Volodymyr; et al."
-year = 2016
-journal = "ICML"
-url = "https://proceedings.mlr.press/v48/mniha16.html"
-openAccess = true
+key = "MBMGL...2016a"
 
 [[references]]
-title = "Soft Actor-Critic: Off-Policy Maximum Entropy Deep Reinforcement Learning with a Stochastic Actor"
-authors = "Haarnoja, Tuomas; Zhou, Aurick; Abbeel, Pieter; Levine, Sergey"
-year = 2018
-journal = "ICML"
-url = "https://proceedings.mlr.press/v80/haarnoja18b.html"
-openAccess = true
+key = "HZAL2018a"
 
 [[references]]
-title = "Addressing Function Approximation Error in Actor-Critic Methods"
-authors = "Fujimoto, Scott; van Hoof, Herke; Meger, David"
-year = 2018
-journal = "ICML"
-url = "https://proceedings.mlr.press/v80/fujimoto18a.html"
-openAccess = true
+key = "FHM2018a"
 
 [[models]]
 id = "a2c"

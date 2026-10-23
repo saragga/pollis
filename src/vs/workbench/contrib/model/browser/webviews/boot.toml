@@ -102,92 +102,42 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "Bootstrap.jl: Statistical Bootstrapping in Julia"
-authors = "Gehring, Julian; contributors"
-year = 2023
-journal = "GitHub"
-url = "https://github.com/juliangehring/Bootstrap.jl"
-openAccess = true
+key = "Geh...2023b"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "An Introduction to the Bootstrap"
-authors = "Efron, Bradley; Tibshirani, Robert J."
-year = 1993
-journal = "Chapman and Hall"
-doi = "10.1201/9780429246593"
-openAccess = false
+key = "ET1993a"
 
 [[references]]
-title = "Bootstrap Methods and their Application"
-authors = "Davison, Anthony C.; Hinkley, David V."
-year = 1997
-journal = "Cambridge University Press"
-doi = "10.1017/CBO9780511802843"
-openAccess = false
+key = "DH1997a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "Bootstrap Methods: Another Look at the Jackknife"
-authors = "Efron, Bradley"
-year = 1979
-journal = "The Annals of Statistics"
-doi = "10.1214/aos/1176344552"
-openAccess = true
+key = "Efr1979a"
 
 [[references]]
-title = "Better Bootstrap Confidence Intervals"
-authors = "Efron, Bradley"
-year = 1987
-journal = "Journal of the American Statistical Association"
-doi = "10.1080/01621459.1987.10478410"
-openAccess = false
+key = "Efr1987a"
 
 [[references]]
-title = "Bootstrap Confidence Intervals"
-authors = "DiCiccio, Thomas J.; Efron, Bradley"
-year = 1996
-journal = "Statistical Science"
-doi = "10.1214/ss/1032280214"
-openAccess = true
+key = "DE1996a"
 
 [[references]]
-title = "Efficient Bootstrap Simulation"
-authors = "Davison, Anthony C.; Hinkley, David V.; Schechtman, Edna"
-year = 1986
-journal = "Biometrika"
-doi = "10.1093/biomet/73.3.555"
-openAccess = false
+key = "DHS1986a"
 
 [[references]]
-title = "Antithetic Resampling for the Bootstrap"
-authors = "Hall, Peter"
-year = 1989
-journal = "Biometrika"
-doi = "10.1093/biomet/76.4.713"
-openAccess = false
+key = "Hal1989a"
 
 [[references]]
-title = "Maximum Entropy Bootstrap for Time Series: The meboot R Package"
-authors = "Vinod, Hrishikesh D.; Lopez-de-Lacalle, Javier"
-year = 2009
-journal = "Journal of Statistical Software"
-doi = "10.18637/jss.v029.i05"
-openAccess = true
+key = "VL2009a"
 
 [[models]]
 id = "nonparam"

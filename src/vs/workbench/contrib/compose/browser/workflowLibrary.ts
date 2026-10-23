@@ -67,7 +67,7 @@ const NEW_METHODS: INotebookLibrary = {
 	base: 'vs/workbench/contrib/compose/browser/media/methods',
 	userFolder: 'methods',
 	title: localize('newMethods.title', "Methods"),
-	intro: localize('newMethods.intro', "Each method is one no Julia package has, written out with its tests: data and the results published for them, printed beside Julia's. Without data and expected results there is no new method. The methods you started and have not published yet come first, In Progress: click a title to go on with it. Then those you published, and the library: click a name to open the page of your own copy of the method, made in {0} the first time.", '<code>~/.pollis/methods</code>'),
+	intro: localize('newMethods.intro', "Each method is one no Julia package has, written out with its tests: data and the results published for them, printed beside Julia's. Without data and expected results there is no new method. The methods you started and have not published yet come first, In Progress: click a title to go on with it. Then those you published, and the library: click a name to open the page of your own copy of the method, made in {0} the first time.", '<code class="pollisPath">~/.pollis/methods</code>'),
 	entry: localize('newMethods.entry', "Method"),
 	empty: localize('newMethods.empty', "There are no new methods yet."),
 	openFailed: (label, error) => localize('newMethods.openFailed', "Could not open the method {0}: {1}", label, error),
@@ -497,6 +497,9 @@ function pageHtml(library: INotebookLibrary): string {
 		${voiceButtonsCss}
 ${LIBRARY_PAGE_STYLE}
 	h2 { font-size: 16px; font-weight: 600; margin: 20px 0 6px 0; }
+	${library.userMethods ? `/* The methods' package files, in the yellow of their folder in the intro */
+	.file { color: #e8a33d; }
+	body.vscode-light .file { color: #a8650d; }` : ''}
 	</style>
 </head>
 <body>

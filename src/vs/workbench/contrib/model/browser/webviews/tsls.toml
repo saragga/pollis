@@ -85,68 +85,28 @@ separator = true
 label = "Original Papers (from packages)"
 
 [[references]]
-title = "A Generalized Classical Method of Linear Estimation of Coefficients in a Structural Equation"
-authors = "Basmann, R. L."
-year = 1957
-journal = ""
-url = "https://doi.org/10.2307/1907743"
-openAccess = false
+key = "Bas1957a"
 
 [[references]]
-title = "The Estimation of Economic Relationships Using Instrumental Variables"
-authors = "Sargan, J. D."
-year = 1958
-journal = ""
-url = "https://doi.org/10.2307/1907619"
-openAccess = false
+key = "Sar1958a"
 
 [[references]]
-title = "Instrumental Variables and the Search for Identification: From Supply and Demand to Natural Experiments"
-authors = "Angrist, J. D., & Krueger, A. B."
-year = 2001
-journal = ""
-url = "https://doi.org/10.1257/jep.15.4.69"
-openAccess = true
+key = "AK2001a"
 
 [[references]]
-title = "A Survey of Weak Instruments and Weak Identification in Generalized Method of Moments"
-authors = "Stock, J. H., Wright, J. H., & Yogo, M."
-year = 2002
-journal = ""
-url = "https://doi.org/10.1198/073500102288618658"
-openAccess = false
+key = "SWY2002a"
 
 [[references]]
-title = "Estimation of the Parameters of a Single Equation in a Complete System of Stochastic Equations"
-authors = "Anderson, T. W., & Rubin, H."
-year = 1949
-journal = ""
-url = "https://doi.org/10.1214/aoms/1177730090"
-openAccess = true
+key = "AR1949a"
 
 [[references]]
-title = "Specification Tests in Econometrics"
-authors = "Hausman, J. A."
-year = 1978
-journal = ""
-url = "https://doi.org/10.2307/1913827"
-openAccess = false
+key = "Hau1978a"
 
 [[references]]
-title = "Instrumental Variables Regression with Weak Instruments"
-authors = "Staiger, D., & Stock, J. H."
-year = 1997
-journal = ""
-url = "https://doi.org/10.2307/2171753"
-openAccess = false
+key = "SS1997a"
 
 [[references]]
-title = "Generalized Reduced Rank Tests Using the Singular Value Decomposition"
-authors = "Kleibergen, F., & Paap, R."
-year = 2006
-journal = ""
-url = "https://doi.org/10.1016/j.jeconom.2005.02.011"
-openAccess = false
+key = "KP2006a"
 
 [[bullets]]
 text = "Estimates structural parameters in linear models with endogenous regressors using excluded instrumental variables"

@@ -106,58 +106,30 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "Flux: Elegant Machine Learning with Julia"
-authors = "Innes, Mike; Saba, Elliot; Fischer, Keno; Gandhi, Dhairya; Rudilosso, Marco Concetto; Joy, Neethu Mariam; Karmali, Tejan; Pal, Avik; Shah, Viral"
-year = 2018
-journal = "Journal of Open Source Software"
-doi = "10.21105/joss.00602"
-openAccess = true
+key = "Inn2018a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Deep Learning"
-authors = "Goodfellow, Ian; Bengio, Yoshua; Courville, Aaron"
-year = 2016
-journal = "MIT Press"
-openAccess = false
+key = "GBC2016a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "A Stochastic Approximation Method"
-authors = "Robbins, Herbert; Monro, Sutton"
-year = 1951
-journal = "Annals of Mathematical Statistics"
-doi = "10.1214/aoms/1177729586"
-openAccess = false
+key = "RM1951a"
 
 [[references]]
-title = "Adaptive Subgradient Methods for Online Learning and Stochastic Optimization"
-authors = "Duchi, John; Hazan, Elad; Singer, Yoram"
-year = 2011
-journal = "Journal of Machine Learning Research"
-openAccess = true
+key = "DHS2011a"
 
 [[references]]
-title = "Adam: A Method for Stochastic Optimization"
-authors = "Kingma, Diederik P.; Ba, Jimmy Lei"
-year = 2015
-journal = "International Conference on Learning Representations"
-doi = "10.48550/arXiv.1412.6980"
-openAccess = true
+key = "KB2015a"
 
 [[models]]
 id = "sgd"

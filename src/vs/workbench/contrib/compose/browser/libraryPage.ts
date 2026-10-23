@@ -24,6 +24,8 @@ export const LIBRARY_PAGE_STYLE = `
 	.citation { margin: 0 0 4px 0; }
 	.small { font-size: 12px; color: var(--vscode-descriptionForeground); }
 	code { font-family: var(--vscode-editor-font-family); color: var(--vscode-textPreformat-foreground); background: var(--vscode-textPreformat-background); border-radius: 3px; padding: 0 3px; }
+	code.pollisPath { color: #e8a33d; }
+	body.vscode-light code.pollisPath { color: #a8650d; }
 	.nowrap { white-space: nowrap; }
 	.link { color: var(--vscode-textLink-foreground); cursor: pointer; background: none; border: none; padding: 0; font: inherit; }
 	.link:hover { text-decoration: underline; }

@@ -101,68 +101,33 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "OutlierDetectionNetworks.jl: Neural Outlier Detection in Julia"
-authors = "Muhr, David"
-year = 2023
-journal = "GitHub"
-url = "https://github.com/OutlierDetectionJL/OutlierDetectionNetworks.jl"
-openAccess = true
+key = "Muh2023a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Outlier Analysis"
-authors = "Aggarwal, Charu C."
-year = 2017
-journal = "Springer (2nd ed.)"
-doi = "10.1007/978-3-319-47578-3"
-openAccess = false
+key = "Agg2017a"
 
 [[references]]
-title = "Deep Learning"
-authors = "Goodfellow, Ian; Bengio, Yoshua; Courville, Aaron"
-year = 2016
-journal = "MIT Press"
-url = "https://www.deeplearningbook.org/"
-openAccess = true
+key = "GBC2016a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "Deep One-Class Classification"
-authors = "Ruff, Lukas; Vandermeulen, Robert A.; Goernitz, Nico; Deecke, Lucas; Siddiqui, Shoaib Ahmed; Binder, Alexander; Mueller, Emmanuel; Kloft, Marius"
-year = 2018
-journal = "ICML"
-url = "https://arxiv.org/abs/1801.05365"
-openAccess = true
+key = "RVGDS...2018a"
 
 [[references]]
-title = "Deep SAD: A Method for Deep Semi-Supervised Anomaly Detection"
-authors = "Ruff, Lukas; Vandermeulen, Robert A.; Franks, Billy Joe; Mueller, Emmanuel; Kloft, Marius"
-year = 2020
-journal = "ICLR"
-url = "https://arxiv.org/abs/1906.02694"
-openAccess = true
+key = "RVFMK2020a"
 
 [[references]]
-title = "ESAD: End-to-End Deep Semi-Supervised Anomaly Detection"
-authors = "Huang, Chaoqin; Ye, Fei; Zhang, Ya; Wang, Yan-Feng; Tian, Qi"
-year = 2021
-journal = "arXiv"
-url = "https://arxiv.org/abs/2012.04905"
-openAccess = true
+key = "HYZWT2021a"
 
 [[models]]
 id = "ae"

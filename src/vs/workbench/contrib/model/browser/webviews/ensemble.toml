@@ -129,52 +129,22 @@ separator = true
 label = "Original Papers (from packages)"
 
 [[references]]
-title = "Random Forests"
-authors = "Breiman, L."
-year = 2001
-journal = ""
-url = "https://link.springer.com/article/10.1023/A:1010933404324"
-openAccess = false
+key = "Bre2001a"
 
 [[references]]
-title = "Greedy Function Approximation: A Gradient Boosting Machine"
-authors = "Friedman, J.H."
-year = 2001
-journal = ""
-url = "https://projecteuclid.org/journals/annals-of-statistics/volume-29/issue-5/Greedy-function-approximation-A-gradient-boosting-machine/10.1214/aos/1013203451.full"
-openAccess = false
+key = "Fri2001a"
 
 [[references]]
-title = "XGBoost: A Scalable Tree Boosting System"
-authors = "Chen, T. & Guestrin, C."
-year = 2016
-journal = ""
-url = "https://arxiv.org/abs/1603.02754"
-openAccess = true
+key = "CG2016a"
 
 [[references]]
-title = "SIRUS: Stable and Interpretable RUle Sets for Classification"
-authors = "Bénard, C., Biau, G., Da Veiga, S. & Scornet, E."
-year = 2021
-journal = ""
-url = "https://projecteuclid.org/journals/electronic-journal-of-statistics/volume-15/issue-1/SIRUS--Stable-and-Interpretable-RUle-Sets-for-classification/10.1214/20-EJS1792.full"
-openAccess = true
+key = "BBVS2021a"
 
 [[references]]
-title = "A Unified Approach to Interpreting Model Predictions"
-authors = "Lundberg, S.M. & Lee, S.I."
-year = 2017
-journal = ""
-url = "https://arxiv.org/abs/1705.07874"
-openAccess = true
+key = "LL2017a"
 
 [[references]]
-title = "Explaining Black-Box Models through Counterfactuals"
-authors = "Altmeyer, P., van der Blom, I., Daxberger, E. & Martens, D."
-year = 2023
-journal = ""
-url = "https://arxiv.org/abs/2212.07466"
-openAccess = true
+key = "ABDM2023a"
 
 [[models]]
 id = "rf"

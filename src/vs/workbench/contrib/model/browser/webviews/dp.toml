@@ -89,73 +89,36 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "Quantitative Economics with Julia"
-authors = "Sargent, Thomas J.; Stachurski, John"
-year = 2024
-journal = "QuantEcon"
-url = "https://julia.quantecon.org"
-openAccess = true
+key = "SS2024a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Dynamic Programming and Optimal Control, Vol. 1"
-authors = "Bertsekas, Dimitri P."
-year = 2017
-journal = "Athena Scientific (4th ed.)"
-openAccess = false
+key = "Ber2017a"
 
 [[references]]
-title = "Dynamic Programming and Optimal Control, Vol. 2"
-authors = "Bertsekas, Dimitri P."
-year = 2012
-journal = "Athena Scientific (4th ed.)"
-openAccess = false
+key = "Ber2012a"
 
 [[references]]
-title = "Markov Decision Processes: Discrete Stochastic Dynamic Programming"
-authors = "Puterman, Martin L."
-year = 2005
-journal = "Wiley (2nd ed.)"
-doi = "10.1002/9780470316887"
-openAccess = false
+key = "Put2005a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "The Theory of Dynamic Programming"
-authors = "Bellman, Richard"
-year = 1954
-journal = "Proceedings of the National Academy of Sciences"
-doi = "10.1073/pnas.40.8.716"
-openAccess = true
+key = "Bel1954a"
 
 [[references]]
-title = "Stochastic Games"
-authors = "Shapley, Lloyd S."
-year = 1953
-journal = "Proceedings of the National Academy of Sciences"
-doi = "10.1073/pnas.39.10.1095"
-openAccess = true
+key = "Sha1953a"
 
 [[references]]
-title = "On the Solution of a Linear Programming Problem"
-authors = "Howard, Ronald A."
-year = 1960
-journal = "MIT Press"
-openAccess = false
+key = "How1960a"
 
 [[models]]
 id = "det"

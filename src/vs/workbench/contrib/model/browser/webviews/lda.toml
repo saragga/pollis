@@ -68,76 +68,36 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "TextAnalysis.jl: Julia NLP Toolkit"
-authors = "JuliaText Contributors"
-year = 2023
-journal = "GitHub"
-url = "https://github.com/JuliaText/TextAnalysis.jl"
-openAccess = true
+key = "JTC2023a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Speech and Language Processing"
-authors = "Jurafsky, Daniel; Martin, James H."
-year = 2024
-journal = "Pearson (3rd ed., draft)"
-url = "https://web.stanford.edu/~jurafsky/slp3/"
-openAccess = true
+key = "JM2024a"
 
 [[references]]
-title = "Pattern Recognition and Machine Learning"
-authors = "Bishop, Christopher M."
-year = 2006
-journal = "Springer"
-doi = "10.1007/978-0-387-45528-0"
-openAccess = false
+key = "Bis2006a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "Latent Dirichlet Allocation"
-authors = "Blei, David M.; Ng, Andrew Y.; Jordan, Michael I."
-year = 2003
-journal = "Journal of Machine Learning Research"
-url = "https://jmlr.org/papers/v3/blei03a.html"
-openAccess = true
+key = "BNJ2003a"
 
 [[references]]
-title = "Finding Scientific Topics"
-authors = "Griffiths, Thomas L.; Steyvers, Mark"
-year = 2004
-journal = "Proceedings of the National Academy of Sciences"
-doi = "10.1073/pnas.0307752101"
-openAccess = true
+key = "GS2004a"
 
 [[references]]
-title = "Evaluation Methods for Topic Models"
-authors = "Wallach, Hanna M.; Murray, Iain; Salakhutdinov, Ruslan; Mimno, David"
-year = 2009
-journal = "Proceedings of the 26th International Conference on Machine Learning"
-doi = "10.1145/1553374.1553515"
-openAccess = false
+key = "WMSM2009a"
 
 [[references]]
-title = "Optimizing Semantic Coherence in Topic Models"
-authors = "Mimno, David; Wallach, Hanna M.; Talley, Edmund; Leenders, Miriam; McCallum, Andrew"
-year = 2011
-journal = "Proceedings of the 2011 Conference on Empirical Methods in Natural Language Processing"
-url = "https://aclanthology.org/D11-1024/"
-openAccess = true
+key = "MWTLM2011a"
 
 [[models]]
 id = "lda"

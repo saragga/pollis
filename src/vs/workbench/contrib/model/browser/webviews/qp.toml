@@ -121,68 +121,33 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "JuMP: A Modeling Language for Mathematical Optimization"
-authors = "Dunning, Iain; Huchette, Joey; Lubin, Miles"
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/15M1020575"
-openAccess = true
+key = "DHL2017a"
 
 [[references]]
-title = "OSQP: An Operator Splitting Solver for Quadratic Programs"
-authors = "Stellato, Bartolomeo; Banjac, Goran; Goulart, Paul; Bemporad, Alberto; Boyd, Stephen"
-year = 2020
-journal = "Mathematical Programming Computation"
-doi = "10.1007/s12532-020-00179-2"
-openAccess = true
+key = "SBGBB2020a"
 
 [[references]]
-title = "Clarabel: An Interior-Point Solver for Conic Programs with Quadratic Objectives"
-authors = "Goulart, Paul J.; Chen, Yuwen"
-year = 2024
-journal = "Mathematical Programming Computation"
-url = "https://arxiv.org/abs/2212.08260"
-openAccess = true
+key = "GC2024a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Numerical Optimization"
-authors = "Nocedal, Jorge; Wright, Stephen J."
-year = 2006
-journal = "Springer (2nd ed.)"
-doi = "10.1007/978-0-387-40065-5"
-openAccess = false
+key = "NW2006a"
 
 [[references]]
-title = "Convex Optimization"
-authors = "Boyd, Stephen; Vandenberghe, Lieven"
-year = 2004
-journal = "Cambridge University Press"
-url = "https://web.stanford.edu/~boyd/cvxbook/"
-openAccess = true
+key = "BV2004a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "Portfolio Selection"
-authors = "Markowitz, Harry"
-year = 1952
-journal = "Journal of Finance"
-doi = "10.2307/2975974"
-openAccess = false
+key = "Mar1952a"
 
 [[models]]
 id = "qp"

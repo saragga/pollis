@@ -99,66 +99,30 @@ separator = true
 label = "Software"
 
 [[references]]
-title = "Julia: A Fresh Approach to Numerical Computing"
-authors = "Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B."
-year = 2017
-journal = "SIAM Review"
-doi = "10.1137/141000671"
-openAccess = false
+key = "BEKS2017a"
 
 [[references]]
-title = "DynamicalSystems.jl: A Julia software library for chaos and nonlinear dynamics"
-authors = "Datseris, George"
-year = 2018
-journal = "Journal of Open Source Software"
-doi = "10.21105/joss.00598"
-openAccess = true
+key = "Dat2018a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-title = "Nonlinear Time Series Analysis"
-authors = "Kantz, Holger; Schreiber, Thomas"
-year = 2004
-journal = "Cambridge University Press (2nd ed.)"
-openAccess = false
+key = "KS2004a"
 
 [[references]]
-title = "Elements of Information Theory"
-authors = "Cover, Thomas M.; Thomas, Joy A."
-year = 2006
-journal = "Wiley-Interscience (2nd ed.)"
-openAccess = false
+key = "CT2006a"
 
 [[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
-title = "Permutation Entropy: A Natural Complexity Measure for Time Series"
-authors = "Bandt, Christoph; Pompe, Bernd"
-year = 2002
-journal = "Physical Review Letters"
-doi = "10.1103/PhysRevLett.88.174102"
-openAccess = false
+key = "BP2002a"
 
 [[references]]
-title = "Physiological time-series analysis using approximate entropy and sample entropy"
-authors = "Richman, Joshua S.; Moorman, J. Randall"
-year = 2000
-journal = "American Journal of Physiology"
-doi = "10.1152/ajpheart.2000.278.6.H2039"
-openAccess = false
-
-[[references]]
-title = "Surrogate data for hypothesis testing of physical systems"
-authors = "Schreiber, Thomas; Schmitz, Andreas"
-year = 2000
-journal = "Physica D: Nonlinear Phenomena"
-doi = "10.1016/S0167-2789(99)00233-9"
-openAccess = false
+key = "RM2000a"
 
 [[models]]
 id = "perm"
