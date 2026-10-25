@@ -40,12 +40,12 @@ import { CSV_PANEL } from '../../model/browser/commands/csv.command.js';
 import { SQL_PANEL } from '../../model/browser/commands/sql.command.js';
 import { openHfmWebview } from '../../model/browser/commands/hfm.command.js';
 import { openKgmWebview } from '../../model/browser/commands/kgm.command.js';
-import { openXlsxWebview } from '../../model/browser/commands/xlsx.command.js';
-import { openYfinWebview } from '../../model/browser/commands/yfin.command.js';
-import { openAlpvWebview } from '../../model/browser/commands/alpv.command.js';
-import { openFredWebview } from '../../model/browser/commands/fred.command.js';
-import { openEcbWebview } from '../../model/browser/commands/ecb.command.js';
-import { openEdgarWebview } from '../../model/browser/commands/edgar.command.js';
+import { XLSX_PANEL } from '../../model/browser/commands/xlsx.command.js';
+import { YFIN_PANEL } from '../../model/browser/commands/yfin.command.js';
+import { ALPV_PANEL } from '../../model/browser/commands/alpv.command.js';
+import { FRED_PANEL } from '../../model/browser/commands/fred.command.js';
+import { ECB_PANEL } from '../../model/browser/commands/ecb.command.js';
+import { EDGAR_PANEL } from '../../model/browser/commands/edgar.command.js';
 import { openHfdsWebview } from '../../model/browser/commands/hfds.command.js';
 import { openKgdsWebview } from '../../model/browser/commands/kgds.command.js';
 import { ISecretStorageService } from '../../../../platform/secrets/common/secrets.js';
@@ -175,64 +175,11 @@ CommandsRegistry.registerCommand(KGM_ID, (accessor: ServicesAccessor) => {
 CommandsRegistry.registerCommand(SQL_ID, (accessor: ServicesAccessor) => openScaffoldWebview(accessor, SQL_PANEL));
 CommandsRegistry.registerCommand(CSV_ID, (accessor: ServicesAccessor) => openScaffoldWebview(accessor, CSV_PANEL));
 
-CommandsRegistry.registerCommand(XLSX_ID, (accessor: ServicesAccessor) => {
-	openXlsxWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-		accessor.get(INotebookEditorModelResolverService),
-		accessor.get(INotebookKernelService),
-		accessor.get(ILanguageService),
-		accessor.get(IThemeService),
-		accessor.get(IFileService),
-		accessor.get(IPathService),
-		accessor.get(IWorkspaceContextService),
-	);
-});
+CommandsRegistry.registerCommand(XLSX_ID, (accessor: ServicesAccessor) => openScaffoldWebview(accessor, XLSX_PANEL));
 
-CommandsRegistry.registerCommand(YFIN_ID, (accessor: ServicesAccessor) => {
-	openYfinWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-		accessor.get(INotebookEditorModelResolverService),
-		accessor.get(INotebookKernelService),
-		accessor.get(ILanguageService),
-		accessor.get(IThemeService),
-		accessor.get(IFileService),
-		accessor.get(IPathService),
-		accessor.get(IWorkspaceContextService),
-	);
-});
+CommandsRegistry.registerCommand(YFIN_ID, (accessor: ServicesAccessor) => openScaffoldWebview(accessor, YFIN_PANEL));
 
-CommandsRegistry.registerCommand(ALPV_ID, (accessor: ServicesAccessor) => {
-	openAlpvWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-		accessor.get(INotebookEditorModelResolverService),
-		accessor.get(INotebookKernelService),
-		accessor.get(ILanguageService),
-		accessor.get(IThemeService),
-		accessor.get(IFileService),
-		accessor.get(IPathService),
-		accessor.get(IWorkspaceContextService),
-		accessor.get(ISecretStorageService),
-		accessor.get(IWebviewService),
-	);
-});
+CommandsRegistry.registerCommand(ALPV_ID, (accessor: ServicesAccessor) => openScaffoldWebview(accessor, ALPV_PANEL));
 
 CommandsRegistry.registerCommand(HFDS_ID, (accessor: ServicesAccessor) => {
 	openHfdsWebview(
@@ -278,66 +225,11 @@ CommandsRegistry.registerCommand(KGDS_ID, (accessor: ServicesAccessor) => {
 	);
 });
 
-CommandsRegistry.registerCommand(FRED_ID, (accessor: ServicesAccessor) => {
-	openFredWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-		accessor.get(INotebookEditorModelResolverService),
-		accessor.get(INotebookKernelService),
-		accessor.get(ILanguageService),
-		accessor.get(IThemeService),
-		accessor.get(IFileService),
-		accessor.get(IPathService),
-		accessor.get(IWorkspaceContextService),
-		accessor.get(ISecretStorageService),
-		accessor.get(IWebviewService),
-	);
-});
+CommandsRegistry.registerCommand(FRED_ID, (accessor: ServicesAccessor) => openScaffoldWebview(accessor, FRED_PANEL));
 
-CommandsRegistry.registerCommand(ECB_ID, (accessor: ServicesAccessor) => {
-	openEcbWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-		accessor.get(INotebookEditorModelResolverService),
-		accessor.get(INotebookKernelService),
-		accessor.get(ILanguageService),
-		accessor.get(IThemeService),
-		accessor.get(IFileService),
-		accessor.get(IPathService),
-		accessor.get(IWorkspaceContextService),
-	);
-});
+CommandsRegistry.registerCommand(ECB_ID, (accessor: ServicesAccessor) => openScaffoldWebview(accessor, ECB_PANEL));
 
-CommandsRegistry.registerCommand(EDGAR_ID, (accessor: ServicesAccessor) => {
-	openEdgarWebview(
-		accessor.get(IWebviewWorkbenchService),
-		accessor.get(IOpenerService),
-		accessor.get(IEditorService),
-		accessor.get(IQuickInputService),
-		accessor.get(ICommandService),
-		accessor.get(IClipboardService),
-		accessor.get(INotificationService),
-		accessor.get(INotebookEditorModelResolverService),
-		accessor.get(INotebookKernelService),
-		accessor.get(ILanguageService),
-		accessor.get(IThemeService),
-		accessor.get(IFileService),
-		accessor.get(IPathService),
-		accessor.get(IWorkspaceContextService),
-		accessor.get(ISecretStorageService),
-		accessor.get(IWebviewService),
-	);
-});
+CommandsRegistry.registerCommand(EDGAR_ID, (accessor: ServicesAccessor) => openScaffoldWebview(accessor, EDGAR_PANEL));
 
 CommandsRegistry.registerCommand(HMD_ID, (accessor: ServicesAccessor) => openScaffoldWebview(accessor, HMD_PANEL));
 

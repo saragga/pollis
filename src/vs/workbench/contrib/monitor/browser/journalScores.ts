@@ -341,7 +341,7 @@ export function describeJournal(scores: IJournalScores): { readonly tag: string;
 		details.push(localize('journal.levelDetail', "Norwegian register {0}: level {1}, {2}", scores.levelYear ?? '', scores.level, levelMeaning(scores.level)));
 	}
 	if (scores.cited !== undefined) {
-		tag.push(localize('journal.citedTag', "Cited {0}", formatNumber(scores.cited, 1)));
+		tag.push(localize('journal.citedTag', "2-Year Citedness {0}", formatNumber(scores.cited, 1)));
 		const openAlex = [localize('journal.cited', "2-year mean citedness {0}", formatNumber(scores.cited))];
 		if (scores.hIndex !== undefined) {
 			openAlex.push(localize('journal.hIndex', "h-index {0}", scores.hIndex));

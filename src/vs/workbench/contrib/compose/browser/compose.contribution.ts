@@ -30,6 +30,10 @@ import './practice.js';
 import { IMPLEMENTED_COLLABORATION_COMMANDS } from './collaboration/collaboration.contribution.js';
 import { PUBLISHED_BENCHMARKS_COMMAND_ID, SEARCH_WORKFLOW_LIBRARY_COMMAND_ID } from './workflowLibrary.js';
 import { SHOW_EVENT_STUDIES_COMMAND_ID } from '../../monitor/browser/eventStudiesService.js';
+import { IMPORT_REFERENCES_COMMAND_ID, LITERATURE_RADAR_COMMAND_ID } from './literatureRadarPage.js';
+import { BROWSE_REFERENCES_COMMAND_ID } from './browseReferencesPage.js';
+import { SNOWBALL_SEARCH_COMMAND_ID } from '../common/snowballSearch.js';
+import './snowballSearchPage.js';
 
 // The Mathematical Core, Financial Econometrics and Economics Toolboxes come from their extensions (toolboxes/pollis-toolbox-*, not built in:
 // installed from the Toolboxes section of the Extensions pane), see toolboxExtensions.ts
@@ -53,10 +57,11 @@ const CorrectnessMenu = new MenuId('menubarCorrectnessMenu');
 const ComparisonsMenu = new MenuId('menubarComparisonsMenu');
 const CompileGaloreMenu = new MenuId('menubarCompileGaloreMenu');
 const CollaborationMenu = new MenuId('menubarCollaborationMenu');
+const LiteratureMenu = new MenuId('menubarLiteratureMenu');
 
 // ------------------- COMPOSE ------------------------
 
-// The Compose menu: Coding Agents and Agent Skills (codingAgentPage.ts, pollisAgents.ts), MCP Servers (mcpServersPage.ts), Orchestration, Local Models, New Panels and Toolboxes, Replication, Methods, Workflows, Reports,
+// The Compose menu: Coding Agents and Agent Skills (codingAgentPage.ts, pollisAgents.ts), MCP Servers (mcpServersPage.ts), Orchestration, Local Models, New Panels and Toolboxes, Literature (Discover Literature, Import References, Browse References), Replication, Methods, Workflows, Reports,
 // Correctness Tests, Horse Races, Compile Galore and Collaboration, which combine panels. The Toolbox Panels page (toolboxPanelsPage.ts) opens from
 // the Edit button of an installed toolbox in the Extensions pane.
 MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
@@ -112,6 +117,41 @@ MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
 	submenu: NewPanelsMenu,
 	title: localize('pollisNewPanels.menu', "New Panels and Toolboxes"),
 	order: 1,
+});
+
+MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
+	group: '2_compose',
+	submenu: LiteratureMenu,
+	title: localize('compose.literature', "Literature Radar"),
+	order: 1.5,
+});
+
+// The articles that stand out on a topic, searched in OpenAlex and Semantic Scholar (literatureRadarPage.ts)
+MenuRegistry.appendMenuItem(LiteratureMenu, {
+	group: '1_literature',
+	command: { id: LITERATURE_RADAR_COMMAND_ID, title: localize('compose.discoverLiterature', "Discover Literature...") },
+	order: 1,
+});
+
+// References the user brings, from BibTeX, RIS, CSL-JSON or a list of DOIs, looked up in OpenAlex and Semantic Scholar or not (literatureRadarPage.ts)
+MenuRegistry.appendMenuItem(LiteratureMenu, {
+	group: '1_literature',
+	command: { id: IMPORT_REFERENCES_COMMAND_ID, title: localize('compose.importReferences', "Import References...") },
+	order: 1.5,
+});
+
+// Every work in PollisReferences, where the user removes their own, undoes a correction or shows a work in a panel (browseReferencesPage.ts)
+MenuRegistry.appendMenuItem(LiteratureMenu, {
+	group: '1_literature',
+	command: { id: BROWSE_REFERENCES_COMMAND_ID, title: localize('compose.browseReferences', "Browse References...") },
+	order: 2,
+});
+
+// From a few seeds, the works their citations lead to, ranked in one pool, and the record of the steps (snowballSearchPage.ts)
+MenuRegistry.appendMenuItem(LiteratureMenu, {
+	group: '1_literature',
+	command: { id: SNOWBALL_SEARCH_COMMAND_ID, title: localize('compose.snowballSearchMap', "Snowball Search Map") },
+	order: 3,
 });
 
 MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {

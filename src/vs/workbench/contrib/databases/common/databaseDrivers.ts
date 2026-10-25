@@ -37,6 +37,9 @@ export const RSS_DATABASE_ID = 'pollisrss';
 /** The id of the PollisJournals database, the journals of OpenAlex and the metrics imported, also built in. */
 export const JOURNALS_DATABASE_ID = 'pollisjournals';
 
+/** The id of the PollisReferences database, the references of Pollis and those the user added, also built in. */
+export const REFERENCES_DATABASE_ID = 'pollisreferences';
+
 /** The command of the Journal Metrics page, the sources of PollisJournals' levels and metrics, to import or remove. */
 export const JOURNAL_METRICS_COMMAND_ID = 'pollis.databases.journalMetrics';
 
@@ -230,14 +233,15 @@ export function generateConnectionCode(profile: IDatabaseConnectionProfile): str
  * first, so a database file is not opened twice. DuckDB is the default engine, so its code first
  * installs the DuckDB.jl package on the user's machine, the first time only (Pollis does not ship it),
  * and the built-in database first makes its file from the PollisDatasets, when they have changed (PollisRSS, its views
- * over the archive of the RSS feeds, when missing; PollisJournals, from the journals of PollisJournals.jl).
+ * over the archive of the RSS feeds, when missing; PollisJournals, from the journals of PollisJournals.jl; PollisReferences,
+ * from the references of Pollis).
  */
 export function generateSessionConnectCode(profile: IDatabaseConnectionProfile, connected: boolean): string {
 	const id = juliaString(profile.id);
 	return [
 		...(connected ? [`PollisDB.disconnect(${id})`] : []),
 		...(profile.driver === 'duckdb' ? ['PollisDB.install()'] : []),
-		...(profile.builtin ? [profile.id === RSS_DATABASE_ID ? 'PollisDB.build_rss()' : profile.id === JOURNALS_DATABASE_ID ? 'PollisDB.build_journals()' : 'PollisDB.build()'] : []),
+		...(profile.builtin ? [profile.id === RSS_DATABASE_ID ? 'PollisDB.build_rss()' : profile.id === JOURNALS_DATABASE_ID ? 'PollisDB.build_journals()' : profile.id === REFERENCES_DATABASE_ID ? 'PollisDB.build_references()' : 'PollisDB.build()'] : []),
 		generateConnectionCode(profile),
 		`PollisDB.register(${id}, ${profile.variable}; name = ${juliaString(profile.name)})`,
 	].join('\n');

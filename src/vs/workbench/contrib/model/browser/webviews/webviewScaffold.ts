@@ -1374,8 +1374,8 @@ ${parts.setModelExtraJs ?? ''}			document.querySelectorAll('#model-group .toggle
 		}
 
 		// ── Explore References ───────────────────────────────────────────────
-		// The bundled references (which the user can correct or remove) plus the ones the user added,
-		// all kept in ~/.pollis/references/<panel>.bib; see createReferenceWiring. Each has an id, title,
+		// The panel's references (which the user can correct or hide) plus the ones the user added to it,
+		// read from References (~/.pollis/references); see createReferenceWiring. Each has an id, title,
 		// authors, year, openAccess, kind ('bundled' | 'customised' | 'added'), removed, url and bibtex.
 		var references = [];
 		var selectedRefId = null;
@@ -1477,9 +1477,9 @@ ${parts.setModelExtraJs ?? ''}			document.querySelectorAll('#model-group .toggle
 			} else {
 				html += (ref.url ? '<button class="action-btn" id="btn-open-ref">Open in Browser</button>' : '')
 					+ '<button class="action-btn" id="btn-copy-bibtex">Copy BibTeX to Clipboard</button>'
-					+ '<button class="action-btn secondary" id="btn-edit-ref" title="Correct this reference (its BibTeX)">Edit</button>'
+					+ '<button class="action-btn secondary" id="btn-edit-ref" title="Correct this reference (its BibTeX), wherever it is cited">Edit</button>'
 					+ (ref.kind === 'customised' ? '<button class="action-btn secondary" id="btn-restore-ref" title="Discard your correction and bring back the original reference">Restore Default</button>' : '')
-					+ '<button class="action-btn secondary" id="btn-remove-ref" title="' + (ref.kind === 'added' ? 'Delete this reference from your references file' : 'Hide this reference; Show Removed brings it back') + '">Remove</button>';
+					+ '<button class="action-btn secondary" id="btn-remove-ref" title="' + (ref.kind === 'added' ? 'Take this reference off this panel; it stays in your references' : 'Hide this reference; Show Removed brings it back') + '">Remove</button>';
 			}
 			details.innerHTML = html;
 			if (ref.removed) {

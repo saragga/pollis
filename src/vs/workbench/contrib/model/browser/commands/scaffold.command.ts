@@ -17,7 +17,11 @@ import { IFileService } from '../../../../../platform/files/common/files.js';
 import { IPathService } from '../../../../services/path/common/pathService.js';
 import { IWorkspaceContextService } from '../../../../../platform/workspace/common/workspace.js';
 import { IScaffoldPanelData } from '../common/model.types.js';
+import { IQuickInputService } from '../../../../../platform/quickinput/common/quickInput.js';
+import { ISecretStorageService } from '../../../../../platform/secrets/common/secrets.js';
+import { IWebviewService } from '../../../webview/browser/webview.js';
 import { registerScaffoldWebviewHandlers } from '../handlers/scaffold.handler.js';
+import { IApiKeyProvider } from '../handlers/model.handler.js';
 
 /** A panel built on the shared scaffold. */
 export interface IScaffoldPanel {
@@ -27,6 +31,8 @@ export interface IScaffoldPanel {
 	readonly title: string;
 	readonly data: IScaffoldPanelData;
 	readonly html: () => string;
+	/** Credentials the panel's code needs (an API key, a contact): kept in Secret Storage and set as environment variables in the Julia REPL. */
+	readonly apiKey?: IApiKeyProvider;
 }
 
 /** Open a scaffold panel, optionally on a given model toggle. */
@@ -62,5 +68,9 @@ export function openScaffoldWebview(accessor: ServicesAccessor, panel: IScaffold
 		accessor.get(IFileService),
 		accessor.get(IPathService),
 		accessor.get(IWorkspaceContextService),
+		accessor.get(IQuickInputService),
+		accessor.get(ISecretStorageService),
+		accessor.get(IWebviewService),
+		panel.apiKey,
 	);
 }

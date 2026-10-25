@@ -3,10 +3,22 @@
  *  Licensed under the GNU Affero General Public License v3.0. See LICENSE.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-// Pollis: the article an item of an email alert announces, found by its title: its DOI from the item's link, else from
-// Crossref's bibliographic search, accepted only when the title Crossref has is the item's; then its journal, year and
-// citations, field-weighted citation impact and citation percentile from OpenAlex, by DOI. Both are free and need no key. A line of ~/.pollis/journals/articles.jsonl, which
-// the articles view of the PollisJournals database reads.
+// Pollis: the article an item of an email alert announces, or one saved from Literature Radar, found by its title: its DOI
+// from the item's link, else from Crossref's bibliographic search, accepted only when the title Crossref has is the item's;
+// then its journal, year and citations, field-weighted citation impact and citation percentile from OpenAlex, by DOI. Both
+// are free and need no key. A line of ~/.pollis/journals/articles.jsonl, which the articles view of the PollisJournals
+// database reads.
+
+import { joinPath } from '../../../../base/common/resources.js';
+import { URI } from '../../../../base/common/uri.js';
+
+/** Who Pollis is, to Crossref and OpenAlex: their polite pool asks for a contact. */
+export const SCHOLARLY_USER_AGENT = 'Pollis (https://pollis.org; mailto:contact@pollis.org)';
+
+/** ~/.pollis/journals/articles.jsonl, in the home folder `userHome`. */
+export function articlesFileOf(userHome: URI): URI {
+	return joinPath(userHome, '.pollis', 'journals', 'articles.jsonl');
+}
 
 /** A line of articles.jsonl: what was found for an item; `doi` is null when nothing was. */
 export interface IArticleRecord {
@@ -31,6 +43,12 @@ export interface IArticleRecord {
 	readonly top_10_percent: boolean | null;
 	readonly is_oa: boolean | null;
 	readonly looked_up: string;
+	/** Where it came from: 'literature radar' for an article saved from Literature Radar; none for an email alert's. */
+	readonly source?: string;
+	/** For an article saved from Literature Radar, its work, the same for each of its versions: its title and first author, in lower case. */
+	readonly work?: string;
+	/** For an article saved from Literature Radar, which version of its work it is: published, preprint, workingPaper or repository. */
+	readonly version?: string;
 }
 
 /** The text at `url`, or undefined when the request fails. */
@@ -44,6 +62,7 @@ interface ICrossrefWork {
 }
 
 interface IOpenAlexWork {
+	readonly doi?: string | null;
 	readonly id?: string;
 	readonly title?: string | null;
 	readonly publication_year?: number | null;
@@ -111,17 +130,21 @@ async function findAtCrossref(title: string, fetchText: FetchText): Promise<ICro
 	return answer?.message?.items?.find(work => work.DOI && work.title?.[0] && sameTitle(title, work.title[0]));
 }
 
-/** The work OpenAlex has with the DOI `doi`, if any: fetching one work is free. */
-async function findAtOpenAlex(doi: string, fetchText: FetchText): Promise<IOpenAlexWork | undefined> {
-	const work = parse<IOpenAlexWork>(await fetchText(`https://api.openalex.org/works/doi:${encodeURIComponent(doi)}?select=id,title,publication_year,type,cited_by_count,fwci,citation_normalized_percentile,open_access,primary_location`));
+/** The work OpenAlex has with the DOI `doi`, or with its own id `W2008599190`, if any: fetching one work is free. */
+async function findAtOpenAlex(doi: string, fetchText: FetchText, byId = false): Promise<IOpenAlexWork | undefined> {
+	const work = parse<IOpenAlexWork>(await fetchText(`https://api.openalex.org/works/${byId ? doi : `doi:${encodeURIComponent(doi)}`}?select=id,doi,title,publication_year,type,cited_by_count,fwci,citation_normalized_percentile,open_access,primary_location`));
 	return work?.id ? work : undefined;
 }
 
-/** What Crossref and OpenAlex have for the item `id` with `title` and `link`. */
-export async function lookUpArticle(id: string, title: string, link: string, fetchText: FetchText): Promise<IArticleRecord> {
-	const linked = doiOf(link);
+/**
+ * What Crossref and OpenAlex have for the item `id` with `title` and `link`; with `openAlexId`, OpenAlex's record of that
+ * id, which may be one of several versions of the work.
+ */
+export async function lookUpArticle(id: string, title: string, link: string, fetchText: FetchText, openAlexId?: string): Promise<IArticleRecord> {
+	const record = openAlexId ? await findAtOpenAlex(openAlexId, fetchText, true) : undefined;
+	const linked = record?.doi ? doiOf(record.doi) : doiOf(link);
 	let doi = linked;
-	let work = linked ? await findAtOpenAlex(linked, fetchText) : undefined;
+	let work = record ?? (linked ? await findAtOpenAlex(linked, fetchText) : undefined);
 	let crossref: ICrossrefWork | undefined;
 	if (!work) {
 		// The DOI of the link, which OpenAlex does not know, is kept unless Crossref finds the title

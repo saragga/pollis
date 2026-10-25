@@ -31,12 +31,16 @@ export function activate(context: vscode.ExtensionContext) {
     process.env.JULIA_DUCKDB_LIBRARY = DUCKDB_LIBRARY
     context.environmentVariableCollection.replace('JULIA_DUCKDB_LIBRARY', DUCKDB_LIBRARY)
     context.environmentVariableCollection.description = 'The DuckDB engine of Pollis, for DuckDB.jl'
-    g_ready = install(vscode.env.appRoot).catch((err) => {
+    const engine = install(vscode.env.appRoot).catch((err) => {
         console.error('[pollis] DuckDB could not be installed into ~/.pollis/duckdb', err)
     })
+    const references = installReferences(vscode.env.appRoot).catch((err) => {
+        console.error('[pollis] The references of Pollis could not be copied into ~/.pollis/references', err)
+    })
+    g_ready = Promise.all([engine, references]).then(() => undefined)
 }
 
-/** Resolves once ~/.pollis/duckdb/ holds Pollis' engine and Lance (or the copy failed). */
+/** Resolves once ~/.pollis/duckdb/ holds Pollis' engine and Lance, and ~/.pollis/references/ its references (or a copy failed). */
 export function whenDuckDBReady(): Promise<void> {
     return g_ready
 }
@@ -78,4 +82,20 @@ async function install(appRoot: string) {
         await fs.promises.rename(unpacked, target)
     }
     await fs.promises.writeFile(STAMP, stamp)
+}
+
+/** The references that come with Pollis, which PollisDB.build_references() makes the pollis_ tables of PollisReferences from. */
+const POLLIS_REFERENCES = path.join(os.homedir(), '.pollis', 'references', 'pollis.json')
+
+/** Copies the references that come with this Pollis into ~/.pollis/references/pollis.json, when they differ from those there. */
+async function installReferences(appRoot: string) {
+    const shipped = path.join(appRoot, 'out', 'vs', 'workbench', 'contrib', 'model', 'browser', 'media', 'references', 'references.json')
+    const text = await fs.promises.readFile(shipped, 'utf8').catch(() => undefined)
+    if (text === undefined || text === await fs.promises.readFile(POLLIS_REFERENCES, 'utf8').catch(() => '')) {
+        return
+    }
+    await fs.promises.mkdir(path.dirname(POLLIS_REFERENCES), { recursive: true })
+    const copy = `${POLLIS_REFERENCES}.${process.pid}.tmp`
+    await fs.promises.writeFile(copy, text)
+    await fs.promises.rename(copy, POLLIS_REFERENCES)
 }

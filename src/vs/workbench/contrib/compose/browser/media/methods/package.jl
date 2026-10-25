@@ -5,9 +5,9 @@
 # 5 characters, a usage example, a docstring for every exported name) is registered in the registry at URL
 # (LocalRegistry.jl). The rules are checked, and reported, every time. A registered package with a vignette
 # (vignette/NAME.pdf) also gets an entry in Vignettes.toml at the registry's root, the list that
-# Help > Documentation > Vignettes shows. With --no-tests, the tests are written but not run, to push or
+# Help > Documentation > Package Vignettes shows. With --no-tests, the tests are written but not run, to push or
 # register packages already tested and unchanged since. A package with a vignette also carries
-# vignette/Vignette.toml, its entry, which Help > Documentation > Vignettes reads once the package is installed.
+# vignette/Vignette.toml, its entry, which Help > Documentation > Package Vignettes reads once the package is installed.
 #
 #   julia package.jl PACKAGES_FOLDER METHOD_FOLDER... [--no-tests] [--push OWNER [--register REGISTRY_URL]]
 #
@@ -255,7 +255,7 @@ function package(packages, folder, owner)
 	if isfile(joinpath(root, "vignette", "$name.pdf"))
 		open(joinpath(root, "vignette", "Vignette.toml"), "w") do io
 			println(io, "# The vignette of $name.jl, written by Pollis (Compose > New Methods > Package and Publish) and shown in")
-			println(io, "# Help > Documentation > Vignettes once the package is installed.\n")
+			println(io, "# Help > Documentation > Package Vignettes once the package is installed.\n")
 			TOML.print(io, vignette_entry(name, method, owner === nothing ? "" : "https://github.com/$owner/$name.jl", "$name.pdf"); sorted = true)
 		end
 	end
@@ -307,7 +307,7 @@ end
 
 """
 Adds or updates the package's entry in Vignettes.toml at the root of the registry at a URL, and pushes it:
-the list of published vignettes that Help > Documentation > Vignettes shows.
+the list of published vignettes that Help > Documentation > Package Vignettes shows.
 """
 function list_vignette(registry, name, method, owner)
 	mktempdir() do clone
@@ -318,7 +318,7 @@ function list_vignette(registry, name, method, owner)
 		vignettes[name] = vignette_entry(name, method, repository, "$repository/blob/main/vignette/$name.pdf")
 		open(file, "w") do io
 			println(io, "# The vignettes of the packages in this registry, one table per package, written by Pollis")
-			println(io, "# (Compose > New Methods > Package and Publish) and shown in Help > Documentation > Vignettes.\n")
+			println(io, "# (Compose > New Methods > Package and Publish) and shown in Help > Documentation > Package Vignettes.\n")
 			TOML.print(io, vignettes; sorted = true)
 		end
 		cd(clone) do

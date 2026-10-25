@@ -8,13 +8,3 @@ import { IScaffoldPanelData } from './model.types.js';
 export interface IEcbMetadata {
 	readonly ecb: IScaffoldPanelData;
 }
-
-export type EcbWebviewMessage =
-	| { command: 'openNotebook'; target: string }
-	| { command: 'openWiki'; target: string }
-	| { command: 'openUrl'; url: string }
-	| { command: 'runCode'; target: 'newFile' | 'juliaRepl' | 'notebook' | 'pluto'; code: string }
-	| { command: 'colorize'; code: string; target?: string }
-	| { command: 'openReference'; id: string }
-	| { command: 'installPackages' }
-	| { command: 'addAlert'; symbol: string };

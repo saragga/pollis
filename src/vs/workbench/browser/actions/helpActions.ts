@@ -576,7 +576,7 @@ registerAction2(class extends Action2 {
 			},
 			category: Categories.Help,
 			f1: true,
-			menu: { id: MenubarHelpDocumentationMenu, group: '0_pollis', order: 3 }
+			menu: { id: MenubarHelpDocumentationMenu, group: '0_pollis', order: 4 }
 		});
 	}
 
@@ -596,12 +596,32 @@ registerAction2(class extends Action2 {
 			},
 			category: Categories.Help,
 			f1: true,
-			menu: { id: MenubarHelpDocumentationMenu, group: '0_pollis', order: 4 }
+			menu: { id: MenubarHelpDocumentationMenu, group: '0_pollis', order: 3 }
 		});
 	}
 
 	run(accessor: ServicesAccessor): void {
 		const uri = FileAccess.asFileUri('vs/workbench/browser/media/pollis-ai-tour.pdf' as AppResourcePath);
+		accessor.get(ICommandService).executeCommand(BrowserViewCommandId.Open, uri.toString(true));
+	}
+});
+
+registerAction2(class extends Action2 {
+	constructor() {
+		super({
+			id: 'pollis.action.openDrillDownDataPackages',
+			title: {
+				...localize2('openDrillDownDataPackages', "Drill-down: Data Packages"),
+				mnemonicTitle: localize({ key: 'miDrillDownDataPackages', comment: ['&& denotes a mnemonic'] }, "Drill-down: &&Data Packages"),
+			},
+			category: Categories.Help,
+			f1: true,
+			menu: { id: MenubarHelpDocumentationMenu, group: '0_pollis', order: 5 }
+		});
+	}
+
+	run(accessor: ServicesAccessor): void {
+		const uri = FileAccess.asFileUri('vs/workbench/browser/media/pollis-drilldown-data-packages.pdf' as AppResourcePath);
 		accessor.get(ICommandService).executeCommand(BrowserViewCommandId.Open, uri.toString(true));
 	}
 });

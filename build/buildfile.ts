@@ -28,6 +28,7 @@ export const workbenchDesktop = [
 	createModuleDescription('vs/platform/agentHost/node/diffWorkerMain'),
 	createModuleDescription('vs/workbench/api/node/extensionHostProcess'),
 	createModuleDescription('vs/workbench/contrib/databases/node/duckdbShellMain'), // Pollis: the duckdb> terminal
+	createModuleDescription('vs/workbench/contrib/compose/node/snowballDatabaseMain'), // Pollis: the database of the Snowball Search Map
 	createModuleDescription('vs/workbench/workbench.desktop.main'),
 	// Pollis: 'vs/sessions/sessions.desktop.main' omitted; the Agents window is not shipped.
 ];

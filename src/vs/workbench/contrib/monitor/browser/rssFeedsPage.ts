@@ -17,14 +17,16 @@ import { ServicesAccessor } from '../../../../platform/instantiation/common/inst
 import { INotificationService, Severity } from '../../../../platform/notification/common/notification.js';
 import { IOpenerService } from '../../../../platform/opener/common/opener.js';
 import { IQuickInputService } from '../../../../platform/quickinput/common/quickInput.js';
+import { IStorageService } from '../../../../platform/storage/common/storage.js';
 import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
 import { JOURNAL_METRICS_COMMAND_ID } from '../../databases/common/databaseDrivers.js';
-import { findCatalogueFeed, JULIA_TOPIC, PUBMED_SEARCH, RSS_CATALOGUE, youtubeFeedUrl } from './rssCatalogue.js';
+import { findCatalogueFeed, JULIA_TOPIC, PUBMED_SEARCH, rssCatalogueTopics, youtubeFeedUrl } from './rssCatalogue.js';
 import { DISPLAY_DAYS, EMAIL_ALERT_PREFIX, IRssFeed, IRssFeedsService } from './rssFeedsService.js';
 import { describeJournal, IJournalScoresService } from './journalScores.js';
 import { OPEN_LINK_COMMAND_ID } from './openLink.js';
 import { voiceButtonsCss, voiceButtonsHtml, voiceButtonsScript } from '../../model/browser/webviews/webviewScaffold.js';
+import { FEWEST_ROWS, rowsChoiceCss, rowsChoiceScript, storedRows, storeRows } from '../../model/browser/webviews/webviewPager.js';
 
 // Explore > RSS > RSS Feeds: the feeds on the left by topic, with ticks for Subscribed, Here and Welcome Page and
 // their unread and total counts; the items of the topic or feed selected (or of all) on the right, newest first, those
@@ -37,6 +39,7 @@ export const ADD_FEED_COMMAND_ID = 'pollis.monitor.addFeed';
 type FeedsMessage =
 	| { readonly command: 'ready'; readonly journals: JournalFilter }
 	| { readonly command: 'journals'; readonly journals: JournalFilter }
+	| { readonly command: 'rows'; readonly rows: number }
 	| { readonly command: 'open'; readonly id: string }
 	| { readonly command: 'openMedia'; readonly id: string }
 	| { readonly command: 'zotero'; readonly id: string }
@@ -92,6 +95,7 @@ async function openRssFeedsPage(accessor: ServicesAccessor): Promise<void> {
 	const notificationService = accessor.get(INotificationService);
 	const journalScoresService = accessor.get(IJournalScoresService);
 	const commandService = accessor.get(ICommandService);
+	const storageService = accessor.get(IStorageService);
 
 	if (openPage && !openPage.isDisposed()) {
 		webviewWorkbenchService.revealWebview(openPage, openPage.group ?? -1, false);
@@ -110,7 +114,7 @@ async function openRssFeedsPage(accessor: ServicesAccessor): Promise<void> {
 		undefined,
 		{ group: undefined, preserveFocus: false }
 	);
-	webviewInput.webview.setHtml(pageHtml());
+	webviewInput.webview.setHtml(pageHtml(storedRows(storageService, 'rssFeeds', 100)));
 	openPage = webviewInput;
 
 	const disposables = new DisposableStore();
@@ -147,7 +151,7 @@ async function openRssFeedsPage(accessor: ServicesAccessor): Promise<void> {
 		// The catalogue's feeds not followed are listed too, unsubscribed (ticking Subscribed follows them), but not those removed
 		const urls = new Set(followed.map(feed => feed.url));
 		const removed = new Set(rssFeedsService.getRemovedFeeds().map(feed => feed.url));
-		const offered: IRssFeed[] = RSS_CATALOGUE.flatMap(({ topic, feeds }) => feeds.filter(feed => !urls.has(feed.url) && !removed.has(feed.url)).map(feed => ({ url: feed.url, title: feed.name, topic, items: [] })));
+		const offered: IRssFeed[] = rssCatalogueTopics().flatMap(({ topic, feeds }) => feeds.filter(feed => !urls.has(feed.url) && !removed.has(feed.url)).map(feed => ({ url: feed.url, title: feed.name, topic, items: [] })));
 		// Each topic's feeds in alphabetical order, followed or not
 		const feeds = [...followed, ...offered].sort((a, b) => a.title.localeCompare(b.title, undefined, { sensitivity: 'base' }));
 		webviewInput.webview.postMessage({
@@ -245,6 +249,9 @@ async function openRssFeedsPage(accessor: ServicesAccessor): Promise<void> {
 			case 'journals':
 				journals = message.journals;
 				sendState();
+				break;
+			case 'rows':
+				storeRows(storageService, 'rssFeeds', message.rows);
 				break;
 			case 'open':
 			case 'openMedia': {
@@ -373,7 +380,7 @@ function feedMedia(feed: IRssFeed): 'video' | 'audio' | undefined {
 }
 
 /** The page: its texts come from here, the feeds and their items from the `state` message. */
-function pageHtml(): string {
+function pageHtml(rows: number): string {
 	const text = {
 		title: localize('rss.title', "RSS Feeds"),
 		intro: localize('rss.intro', "News from the feeds you follow, by topic, read every hour. Open an item to read it in the browser; the newest unread ones of the feeds you choose are also on the welcome page."),
@@ -459,6 +466,7 @@ function pageHtml(): string {
 	<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src https: data:; style-src 'unsafe-inline'; script-src 'unsafe-inline';">
 	<style>
 		${voiceButtonsCss}
+		${rowsChoiceCss}
 		* { box-sizing: border-box; }
 		body { font-family: var(--vscode-font-family); font-size: 13px; margin: 0; color: var(--vscode-foreground); background-color: var(--vscode-editor-background); }
 		.container { max-width: 1100px; margin: 0 auto; padding: 24px; }
@@ -578,9 +586,10 @@ function pageHtml(): string {
 	const subtitle = document.getElementById('subtitle');
 	// What the right shows: 'feed:' and an address, 'topic:' and a topic, or undefined for all the feeds
 	let selected;
-	// The page of the items shown, from 0, of PAGE_SIZE items each; back to the first when the choice changes
-	const PAGE_SIZE = 100;
+	// The page of the items shown, from 0, of the rows the user chose (0 for all); back to the first when the choice changes
+	let rows = ${rows};
 	let page = 0;
+	${rowsChoiceScript()}
 	let state = { topics: [], feeds: [], metricsSources: [] };
 	// The topics collapsed, and those opened that start collapsed (no feed subscribed), kept between sessions
 	const collapsed = new Set((vscode.getState() || {}).collapsed || []);
@@ -839,13 +848,15 @@ function pageHtml(): string {
 		if (!shown.length) {
 			itemsElement.appendChild(element('div', 'empty', state.feeds.some(feed => isShown(feed) && feed.kept) ? TEXT.noItemsShown : TEXT.noItems));
 		}
-		const pages = Math.ceil(shown.length / PAGE_SIZE);
+		const size = rowsPerPage(rows, shown.length);
+		const pages = Math.ceil(shown.length / size);
 		page = Math.max(0, Math.min(page, pages - 1));
-		// The pager above the items and again under them
-		if (pages > 1) {
+		// The pager above the items and again under them, with the Rows choice while there are more than the fewest rows
+		const paged = shown.length > ${FEWEST_ROWS};
+		if (paged) {
 			itemsElement.appendChild(pager(pages));
 		}
-		for (const item of shown.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)) {
+		for (const item of shown.slice(page * size, (page + 1) * size)) {
 			const row = element('button', 'item' + (item.read ? ' read' : ''));
 			if (item.image) {
 				const thumb = element('img', 'thumb');
@@ -895,7 +906,7 @@ function pageHtml(): string {
 			row.addEventListener('click', () => vscode.postMessage({ command: 'open', id: item.id }));
 			itemsElement.appendChild(row);
 		}
-		if (pages > 1) {
+		if (paged) {
 			itemsElement.appendChild(pager(pages));
 		}
 	}
@@ -943,9 +954,17 @@ function pageHtml(): string {
 			});
 			return button;
 		};
-		bar.appendChild(turn(TEXT.previous, page - 1));
-		bar.appendChild(element('span', '', TEXT.pageOf.replace('{0}', String(page + 1)).replace('{1}', String(pages))));
-		bar.appendChild(turn(TEXT.next, page + 1));
+		if (pages > 1) {
+			bar.appendChild(turn(TEXT.previous, page - 1));
+			bar.appendChild(element('span', '', TEXT.pageOf.replace('{0}', String(page + 1)).replace('{1}', String(pages))));
+			bar.appendChild(turn(TEXT.next, page + 1));
+		}
+		bar.appendChild(rowsChoice(rows, chosen => {
+			page = firstPageAfter(page, rows, chosen);
+			rows = chosen;
+			vscode.postMessage({ command: 'rows', rows });
+			render();
+		}));
 		return bar;
 	}
 

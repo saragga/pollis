@@ -3,17 +3,17 @@
  *  Licensed under the GNU Affero General Public License v3.0. See LICENSE.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-// The Pollis references. One DuckDB database, media/references/references.duckdb, holds every work
-// referenced in Pollis (table `references`) and the citation counts observed for them (table
-// `counts`). The panel TOMLs, the Compose notebooks and the methods refer to a work by its key only;
-// everything else is built from the database: the panels' references, pollis.bib, the notebooks'
-// and methods' citations, and references.json, the database as text so that each change shows in a
-// diff.
+// The Pollis references. One JSON file, data/references.json of the PollisReferences.jl package, holds
+// every work referenced in Pollis (`references`) and the citation counts observed for them (`counts`);
+// Pollis is built with the file as it is at the commit in build/PollisReferences.commit. The panel
+// TOMLs, the Compose notebooks and the methods refer to a work by its key only; everything else is
+// built from the file: the panels' references, pollis.bib, the notebooks' and methods' citations, and
+// references.json, the works and counts with the panels that cite them, which Pollis ships.
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { DuckDBInstance } from '@duckdb/node-api';
 import { parseToml } from '../../src/vs/workbench/contrib/model/browser/common/tomlPanelData.ts';
+import { pinnedPackageFile } from './pollis-packages.ts';
 
 /** One work: a row of the `references` table. */
 export interface IReference {
@@ -64,7 +64,7 @@ interface ICount {
 	readonly date: string;
 }
 
-/** The references database, read whole. */
+/** The references of PollisReferences.jl, read whole. */
 export interface IReferencesDatabase {
 	readonly references: ReadonlyMap<string, IReference>;
 	readonly counts: readonly ICount[];
@@ -76,30 +76,92 @@ export interface IPollisBib {
 	readonly dump: string;
 	readonly works: number;
 	readonly occurrences: number;
-	/** Keys in the sources that the database does not have. */
+	/** Keys in the sources that PollisReferences.jl does not have. */
 	readonly unknownKeys: string[];
 }
 
-/** The folder of the database, pollis.bib and references.json, from the repository's root. */
+/** The folder of pollis.bib and references.json, from the repository's root. */
 export const REFERENCES_FOLDER = 'src/vs/workbench/contrib/model/browser/media/references';
 
+/** The fields of a work in their order, each null until the work's own JSON gives it: the file leaves out those not known. */
+const REFERENCE_FIELDS: readonly (keyof IReference)[] = ['key', 'type', 'title', 'authors', 'author_kind', 'authors_complete', 'year', 'released', 'journal', 'booktitle', 'editors', 'publisher', 'address', 'edition', 'volume', 'number', 'pages', 'institution', 'report_number', 'isbn', 'issn', 'doi', 'arxiv', 'openalex', 'url', 'oa_url', 'abstract', 'abstract_source', 'keywords', 'keywords_source', 'legacy_key', 'source', 'retrieved', 'checked', 'open_access'];
+
 export async function readReferencesDatabase(repoRoot: string): Promise<IReferencesDatabase> {
-	const instance = await DuckDBInstance.create(path.join(repoRoot, REFERENCES_FOLDER, 'references.duckdb'), { access_mode: 'READ_ONLY' });
-	const connection = await instance.connect();
-	try {
-		const references = (await connection.runAndReadAll('SELECT * FROM "references" ORDER BY key')).getRowObjectsJson() as unknown as IReference[];
-		const counts = (await connection.runAndReadAll('SELECT * FROM counts ORDER BY key, source, date')).getRowObjectsJson() as unknown as ICount[];
-		return { references: new Map(references.map(reference => [reference.key, reference])), counts };
-	} finally {
-		connection.closeSync();
-		instance.closeSync();
-	}
+	const file = JSON.parse(await pinnedPackageFile(repoRoot, { name: 'PollisReferences', file: 'references.json', clone: 'POLLIS_REFERENCES' })) as { references: Partial<IReference>[]; counts: ICount[] };
+	const empty = Object.fromEntries(REFERENCE_FIELDS.map(field => [field, null]));
+	const references = file.references.map(reference => ({ ...empty, ...reference }) as IReference).sort((a, b) => a.key < b.key ? -1 : a.key > b.key ? 1 : 0);
+	const order = (a: ICount, b: ICount) => a.key < b.key ? -1 : a.key > b.key ? 1 : a.source < b.source ? -1 : a.source > b.source ? 1 : a.date < b.date ? -1 : a.date > b.date ? 1 : 0;
+	return { references: new Map(references.map(reference => [reference.key, reference])), counts: [...file.counts].sort(order) };
 }
 
-/** The database as text: each work and each count on its own lines, empty fields left out. */
-function referencesDump(database: IReferencesDatabase): string {
+/** A panel and the keys of the works its References cite, in their order. */
+interface IPanelReferences {
+	readonly id: string;
+	readonly title: string;
+	/** What the panel covers, in one line: its models' labels. */
+	readonly description?: string;
+	/** The commands that open the panel, as the contribution files register them. */
+	readonly commands?: readonly string[];
+	readonly keys: readonly string[];
+}
+
+/** The contribution files that register the commands opening the panels. */
+const PANEL_CONTRIBUTIONS = ['model/browser/model.contribution.ts', 'explore/browser/explore.contribution.ts', 'simulate/browser/simulate.contribution.ts', 'optimise/browser/optimise.contribution.ts'];
+
+/**
+ * The commands that open each panel, by panel id: a command registered to open the panel imported from its
+ * `commands/<id>.command.ts` (or to call that file's own opening function), directly or through a function of the
+ * same file that does. A command registered some other way is not found.
+ */
+function panelCommands(repoRoot: string): Map<string, string[]> {
+	const contribDir = path.join(repoRoot, 'src/vs/workbench/contrib');
+	const commands = new Map<string, string[]>();
+	for (const file of PANEL_CONTRIBUTIONS) {
+		const source = fs.readFileSync(path.join(contribDir, file), 'utf-8');
+		const constants = new Map([...source.matchAll(/const (?<name>\w+)\s*=\s*'(?<value>[^']+)'/g)].map(match => [match.groups!.name, match.groups!.value]));
+		const imports = new Map([...source.matchAll(/import \{ (?<name>\w+) \} from '(?<from>[^']+\.command)\.js'/g)].map(match => [match.groups!.name, path.join(contribDir, path.dirname(file), `${match.groups!.from}.ts`)]));
+		const opening = new Map([...source.matchAll(/^const (?<name>\w+) = \([^)]*\) => openScaffoldWebview\(accessor, (?<panel>\w+)/gm)].map(match => [match.groups!.name, match.groups!.panel]));
+		for (const match of source.matchAll(/^CommandsRegistry\.registerCommand\((?:'(?<literal>[^']+)'|(?<constant>\w+)), (?:[^=\n]*=>\s*\{?\s*(?:openScaffoldWebview\(accessor, (?<panel>\w+)|(?<opener>\w+)\(\s*accessor)|(?<passed>\w+)\))/gm)) {
+			const command = match.groups!.literal ?? constants.get(match.groups!.constant!);
+			const opener = match.groups!.opener ?? match.groups!.passed!;
+			const from = imports.get(match.groups!.panel ?? opening.get(opener) ?? opener);
+			// A panel with its own opening function, not the scaffold's, has the id its file is named with
+			const id = from && fs.existsSync(from) ? /^\tid: '(?<id>[^']+)'/m.exec(fs.readFileSync(from, 'utf-8'))?.groups?.id ?? path.basename(from, '.command.ts') : undefined;
+			if (command && id) {
+				commands.set(id, [...commands.get(id) ?? [], command]);
+			}
+		}
+	}
+	return commands;
+}
+
+/** The panels with references, by id: their titles, what they cover, the commands that open them and the keys they cite. */
+function panelReferences(repoRoot: string): IPanelReferences[] {
+	const webviewsDir = path.join(repoRoot, 'src/vs/workbench/contrib/model/browser/webviews');
+	const commands = panelCommands(repoRoot);
+	const panels: IPanelReferences[] = [];
+	for (const file of fs.readdirSync(webviewsDir).filter(f => f.endsWith('.toml')).sort()) {
+		const data = parseToml(fs.readFileSync(path.join(webviewsDir, file), 'utf-8')) as { meta?: { title?: unknown }; models?: Record<string, unknown>[]; references?: Record<string, unknown>[] };
+		const keys = (data.references ?? []).flatMap(reference => typeof reference.key === 'string' ? [reference.key] : []);
+		if (keys.length) {
+			const id = file.replace(/\.toml$/, '');
+			const labels = [...new Set((data.models ?? []).flatMap(model => typeof model.label === 'string' && model.label.trim() ? [model.label.trim()] : []))];
+			panels.push({
+				id,
+				title: typeof data.meta?.title === 'string' ? data.meta.title : id,
+				description: labels.length ? labels.join(' \u00b7 ') : undefined,
+				commands: commands.get(id),
+				keys: [...new Set(keys)],
+			});
+		}
+	}
+	return panels;
+}
+
+/** The references as text: each work and each count on its own lines, empty fields left out; then the panels that cite them. */
+function referencesDump(database: IReferencesDatabase, panels: readonly IPanelReferences[]): string {
 	const references = [...database.references.values()].map(reference => Object.fromEntries(Object.entries(reference).filter(([, value]) => value !== null)));
-	return JSON.stringify({ references, counts: database.counts }, null, '\t') + '\n';
+	return JSON.stringify({ references, counts: database.counts, panels }, null, '\t') + '\n';
 }
 
 /** The venue as one line shows it: the journal, the proceedings or book, the publisher or the institution. */
@@ -205,8 +267,8 @@ function paperFields(reference: IReference): Record<string, unknown> {
 }
 
 /**
- * Replace each `key = "..."` reference of a parsed panel TOML with the work's fields from the
- * database. A key the database does not have is an error.
+ * Replace each `key = "..."` reference of a parsed panel TOML with the work's fields from
+ * PollisReferences.jl. A key it does not have is an error.
  */
 export function expandReferenceKeys(data: Record<string, unknown>, references: ReadonlyMap<string, IReference>, file: string): void {
 	if (!Array.isArray(data.references)) {
@@ -218,7 +280,7 @@ export function expandReferenceKeys(data: Record<string, unknown>, references: R
 		}
 		const reference = references.get(entry.key);
 		if (!reference) {
-			throw new Error(`${file}: the reference key ${entry.key} is not in ${REFERENCES_FOLDER}/references.duckdb`);
+			throw new Error(`${file}: the reference key ${entry.key} is not in PollisReferences.jl`);
 		}
 		return paperFields(reference);
 	});
@@ -288,7 +350,7 @@ function tomlString(value: string): string {
 
 /**
  * Bring the copies of a work in the Compose notebooks (`metadata.pollis.workflow.article`: citation,
- * doi, url and bibtex) and the shipped methods (`citation` and `doi`) up to date with the database,
+ * doi, url and bibtex) and the shipped methods (`citation` and `doi`) up to date with PollisReferences.jl,
  * so that Pollis reads them as before. Returns the files changed.
  */
 export function refreshReferenceCopies(repoRoot: string, references: ReadonlyMap<string, IReference>): string[] {
@@ -340,7 +402,7 @@ export function refreshReferenceCopies(repoRoot: string, references: ReadonlyMap
 }
 
 /**
- * Generate the Pollis BibTeX library, one entry for each work of the database, with `pollis-used-in`
+ * Generate the Pollis BibTeX library, one entry for each work of PollisReferences.jl, with `pollis-used-in`
  * naming the panels, notebooks and methods that reference it, and references.json.
  */
 export function generatePollisBib(repoRoot: string, database: IReferencesDatabase): IPollisBib {
@@ -353,13 +415,13 @@ export function generatePollisBib(repoRoot: string, database: IReferencesDatabas
 	const entries = [...database.references.values()].map(reference => bibtexEntry(reference, [...usedIn.get(reference.key) ?? []].sort()));
 	const header = [
 		'% The Pollis library: every work referenced in Pollis, one entry each.',
-		'% Generated by the compile-toml build task from references.duckdb; do not edit. Correct a work in the',
-		'% database, and this file follows. `pollis-used-in` names the panels, notebooks and methods that',
+		'% Generated by the compile-toml build task from PollisReferences.jl; do not edit. Correct a work in the',
+		'% package, and this file follows. `pollis-used-in` names the panels, notebooks and methods that',
 		'% reference the work; BibTeX tools ignore it.',
 	].join('\n');
 	return {
 		bibtex: `${header}\n\n${entries.join('\n\n')}\n`,
-		dump: referencesDump(database),
+		dump: referencesDump(database, panelReferences(repoRoot)),
 		works: entries.length,
 		occurrences: occurrences.length,
 		unknownKeys,

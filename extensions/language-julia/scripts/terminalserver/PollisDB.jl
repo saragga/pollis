@@ -79,18 +79,31 @@ const RSS_EPISODES = joinpath(homedir(), ".pollis", "rss", "episodes.jsonl")
 const RSS_DB = joinpath(homedir(), ".pollis", "databases", "PollisRSS.duckdb")
 """The SQL that `RSS_DB` was made with."""
 const RSS_STAMP = RSS_DB * ".stamp"
+"""PollisRSS.jl: the feeds Pollis offers in Explore > RSS > RSS Feeds, by topic; the feed list only, never the items."""
+const RSS = Base.PkgId(UUID("a90e8467-7a07-416a-86f1-fcffab5faf31"), "PollisRSS")
+const RSS_URL = "https://github.com/Trumpingtons/PollisRSS.jl"
+"""The commit of PollisRSS.jl installed, from GitHub."""
+const RSS_COMMIT = joinpath(ENVIRONMENT, "PollisRSS.commit")
+"""
+The feeds of the installed PollisRSS.jl, copied by `copy_package_data`: Pollis offers them instead of those it was
+built with, so that a feed added or corrected reaches Pollis without a new Pollis.
+"""
+const RSS_CATALOGUE = joinpath(homedir(), ".pollis", "rss", "catalogue.json")
 
 """PollisJournals.jl, whose artifact, the journals of OpenAlex (CC0) and of the Norwegian register (NLOD 2.0) as Parquet files, `build_journals` makes PollisJournals from."""
 const JOURNALS = Base.PkgId(UUID("ce11f1ff-ffd7-4bd8-a843-f266dced2fa5"), "PollisJournals")
 const JOURNALS_URL = "https://github.com/Trumpingtons/PollisJournals.jl"
 """The commit of PollisJournals.jl that `install()` last installed into `ENVIRONMENT`."""
 const JOURNALS_COMMIT = joinpath(ENVIRONMENT, "PollisJournals.commit")
-"""What Pollis adds to PollisJournals: the articles found for the items of the email alerts, and the metrics imported."""
+"""What Pollis adds to PollisJournals: the metrics imported."""
 const JOURNALS_HOME = joinpath(homedir(), ".pollis", "journals")
-"""The articles of the email alerts' items found at Crossref and OpenAlex, a line of JSON each, which Pollis adds to."""
-const JOURNALS_ARTICLES = joinpath(JOURNALS_HOME, "articles.jsonl")
 """The journal metrics imported (JIF, CiteScore, SJR, SNIP), a JSON Lines file per import, which Pollis writes."""
 const JOURNALS_METRICS = joinpath(JOURNALS_HOME, "metrics")
+"""
+The articles of the email alerts' items and of the works saved from Literature Radar, looked up in Crossref and OpenAlex:
+a JSON Lines file that Pollis appends to, where the last line of an article wins.
+"""
+const JOURNALS_ARTICLES = joinpath(JOURNALS_HOME, "articles.jsonl")
 """
 The levels and indicators of the journals, a CSV row per journal that the RSS Feeds page and the welcome page read
 to tag journal items, written by `build_journals`: the journal's ISSNs, space-separated, its latest Norwegian level
@@ -101,6 +114,28 @@ const JOURNALS_SCORES = joinpath(JOURNALS_HOME, "scores.csv")
 const JOURNALS_DB = joinpath(homedir(), ".pollis", "databases", "PollisJournals.duckdb")
 """The PollisJournals.jl folder and the SQL that `JOURNALS_DB` was made with."""
 const JOURNALS_STAMP = JOURNALS_DB * ".stamp"
+
+"""
+The references of Pollis and of the user: `pollis.json`, those that come with Pollis, which the Julia extension copies
+there from each new Pollis; and what the user adds, a line of JSON each, which Pollis appends to (the last line of a row wins):
+`references.jsonl`, `counts.jsonl`, `versions.jsonl` and `panels.jsonl`.
+"""
+const REFERENCES_HOME = joinpath(homedir(), ".pollis", "references")
+"""PollisReferences.jl: the references of Pollis and their counts, which may be newer than those this Pollis came with."""
+const REFERENCES = Base.PkgId(UUID("16fe3122-f013-44bd-a8ad-a8555e1fbab1"), "PollisReferences")
+const REFERENCES_URL = "https://github.com/Trumpingtons/PollisReferences.jl"
+"""The commit of PollisReferences.jl installed, from GitHub."""
+const REFERENCES_COMMIT = joinpath(ENVIRONMENT, "PollisReferences.commit")
+"""
+The references of the installed PollisReferences.jl, copied by `copy_package_data` beside `pollis.json`: used instead of
+the references of `pollis.json` when they have every key its panels cite, so that a correction reaches Pollis without
+a new Pollis. The References pages of Pollis read it too.
+"""
+const REFERENCES_PACKAGE = joinpath(REFERENCES_HOME, "package.json")
+"""The PollisReferences database: the references of Pollis as tables and the user's as views over `REFERENCES_HOME`, made by `build_references`."""
+const REFERENCES_DB = joinpath(homedir(), ".pollis", "databases", "PollisReferences.duckdb")
+"""The SQL that `REFERENCES_DB` was made with, and the size and time of the `pollis.json` and `REFERENCES_PACKAGE` it was made from."""
+const REFERENCES_STAMP = REFERENCES_DB * ".stamp"
 
 """The folder of the snapshots, one `<id>.<window>.json` per connection, watched by the Databases view."""
 const SESSIONS = joinpath(homedir(), ".pollis", "databases", "sessions")
@@ -338,7 +373,7 @@ end
 const DUCKDB_CONFIG = ["autoinstall_known_extensions" => "false", "autoload_known_extensions" => "false"]
 
 """The built-in databases that `connect` attaches, read-only, under their own names."""
-builtins() = filter(isfile, [DATASETS_DB, RSS_DB, JOURNALS_DB])
+builtins() = filter(isfile, [DATASETS_DB, RSS_DB, JOURNALS_DB, REFERENCES_DB])
 
 """The task loading Lance into each database `connect` opened, by database."""
 const LANCE_TASKS = IdDict{Any,Task}()
@@ -348,7 +383,7 @@ const LANCE_TASKS = IdDict{Any,Task}()
 
 Open the DuckDB database `path` with the engine of Pollis and return it, ready for
 `DBInterface.execute`. The built-in databases are attached read-only as `PollisDatasets`,
-`PollisRSS` and `PollisJournals`; the Lance extension is loaded in the background, on a thread of its own, so the
+`PollisRSS`, `PollisJournals` and `PollisReferences`; the Lance extension is loaded in the background, on a thread of its own, so the
 connection is ready at once (`wait_lance(con)` waits for it). The connection is shown in the Databases
 view as `name`. DuckDB never downloads extensions here: those that Pollis brings are all there is.
 
@@ -735,26 +770,14 @@ function build_rss()
 end
 
 """
-The SQL statements of the PollisJournals views, over what Pollis adds to `JOURNALS_HOME`. `articles` has each item
-of the email alerts once, as last looked up; `metrics` the rows of the metrics imported; `journal_metrics` those
-rows with the OpenAlex journal their ISSN names.
+The SQL statements of the PollisJournals views, over what Pollis adds to `JOURNALS_HOME`: `metrics` the rows of the
+metrics imported; `journal_metrics` those rows with the OpenAlex journal their ISSN names; `articles` the articles
+looked up, the latest line of each.
 """
 function journals_sql()
-    articles = replace(JOURNALS_ARTICLES, "\\" => "/", "'" => "''")
     metrics = replace(joinpath(JOURNALS_METRICS, "*.jsonl"), "\\" => "/", "'" => "''")
+    articles = replace(JOURNALS_ARTICLES, "\\" => "/", "'" => "''")
     return ["""
-    CREATE OR REPLACE VIEW articles AS
-    SELECT * EXCLUDE (copy) FROM (
-        SELECT *, row_number() OVER (PARTITION BY id ORDER BY looked_up DESC) AS copy
-        FROM read_json('$articles', format = 'newline_delimited', ignore_errors = true, columns = {
-            id: 'VARCHAR', title: 'VARCHAR', link: 'VARCHAR', doi: 'VARCHAR', openalex: 'VARCHAR', matched_title: 'VARCHAR',
-            journal_id: 'VARCHAR', journal: 'VARCHAR', issn_l: 'VARCHAR', year: 'INTEGER', type: 'VARCHAR',
-            cited_by_count: 'INTEGER', fwci: 'DOUBLE', citation_percentile: 'DOUBLE', top_1_percent: 'BOOLEAN',
-            top_10_percent: 'BOOLEAN', is_oa: 'BOOLEAN', looked_up: 'TIMESTAMP'
-        })
-    ) WHERE copy = 1""",
-    "COMMENT ON VIEW articles IS 'The items of the email alerts, with the DOI, journal, citations, field-weighted citation impact (fwci) and citation percentile found for them at Crossref and OpenAlex; id is the item''s id in PollisRSS.items; doi is null when none was found'",
-    """
     CREATE OR REPLACE VIEW metrics AS
     SELECT * FROM read_json('$metrics', format = 'newline_delimited', ignore_errors = true, columns = {
         title: 'VARCHAR', category: 'VARCHAR', issn: 'VARCHAR', eissn: 'VARCHAR', year: 'INTEGER', source: 'VARCHAR',
@@ -770,7 +793,20 @@ function journals_sql()
     FROM metrics m
     LEFT JOIN journal_issns p ON p.issn = m.issn
     LEFT JOIN journal_issns e ON e.issn = m.eissn""",
-    "COMMENT ON VIEW journal_metrics IS 'The metrics imported, with the id of the journal in journals that their ISSN names'"]
+    "COMMENT ON VIEW journal_metrics IS 'The metrics imported, with the id of the journal in journals that their ISSN names'",
+    """
+    CREATE OR REPLACE VIEW articles AS
+    SELECT * EXCLUDE (copy, line) FROM (
+        SELECT *, row_number() OVER (PARTITION BY id ORDER BY line DESC) AS copy FROM (
+            SELECT *, row_number() OVER () AS line FROM read_json('$articles', format = 'newline_delimited', ignore_errors = true, columns = {
+                id: 'VARCHAR', title: 'VARCHAR', link: 'VARCHAR', doi: 'VARCHAR', openalex: 'VARCHAR', matched_title: 'VARCHAR',
+                journal_id: 'VARCHAR', journal: 'VARCHAR', issn_l: 'VARCHAR', year: 'INTEGER', type: 'VARCHAR',
+                cited_by_count: 'INTEGER', fwci: 'DOUBLE', citation_percentile: 'DOUBLE', top_1_percent: 'BOOLEAN',
+                top_10_percent: 'BOOLEAN', is_oa: 'BOOLEAN', looked_up: 'TIMESTAMPTZ', source: 'VARCHAR', work: 'VARCHAR',
+                version: 'VARCHAR'
+            }))
+    ) WHERE copy = 1""",
+    "COMMENT ON VIEW articles IS 'The articles of the email alerts'' items and of the works saved from Literature Radar, looked up in Crossref and OpenAlex, the latest lookup of each: doi is empty when none was found; journal_id is the id of the journal in journals; fwci is OpenAlex''s field-weighted citation impact (1 is the average) and citation_percentile, from 0 to 1, the percentile of its citations among the works of the same field, year and type; source is literature radar for a work saved there, with its work and version; looked_up is in UTC'"]
 end
 
 """
@@ -821,13 +857,13 @@ function build_journals()
     source = journals_parquet()
     source === nothing && return nothing
     statements = journals_sql()
-    stamp = source.root * "\n" * join(statements, ";\n") * "\n" * SCORES_SQL
+    stamp = journals_stamp(source)
     isfile(JOURNALS_DB) && isfile(JOURNALS_STAMP) && isfile(JOURNALS_SCORES) && read(JOURNALS_STAMP, String) == stamp && return nothing
     println("Pollis: building the PollisJournals database. This happens only when PollisJournals.jl changes.")
     mkpath(JOURNALS_METRICS)
-    isfile(JOURNALS_ARTICLES) || touch(JOURNALS_ARTICLES)
     # The view needs a file to read before any import
     touch(joinpath(JOURNALS_METRICS, ".placeholder.jsonl"))
+    isfile(JOURNALS_ARTICLES) || touch(JOURNALS_ARTICLES)
     DuckDB = get(() -> Base.require(DUCKDB), Base.loaded_modules, DUCKDB)
     get(() -> Base.require(DBINTERFACE), Base.loaded_modules, DBINTERFACE)
     mkpath(dirname(JOURNALS_DB))
@@ -883,6 +919,225 @@ function build_journals()
     return nothing
 end
 
+"""The columns of a reference, of Pollis or of the user; `pollis_key`, `merged_into`, `saved` and `removed` are the user's only."""
+const REFERENCE_COLUMNS = """
+    key: 'VARCHAR', type: 'VARCHAR', title: 'VARCHAR', authors: 'VARCHAR[]', author_kind: 'VARCHAR', authors_complete: 'BOOLEAN',
+    year: 'INTEGER', released: 'TIMESTAMPTZ', journal: 'VARCHAR', booktitle: 'VARCHAR', editors: 'VARCHAR[]', publisher: 'VARCHAR',
+    address: 'VARCHAR', edition: 'VARCHAR', volume: 'VARCHAR', number: 'VARCHAR', pages: 'VARCHAR', institution: 'VARCHAR',
+    report_number: 'VARCHAR', isbn: 'VARCHAR', issn: 'VARCHAR', doi: 'VARCHAR', arxiv: 'VARCHAR', openalex: 'VARCHAR', url: 'VARCHAR',
+    oa_url: 'VARCHAR', abstract: 'VARCHAR', abstract_source: 'VARCHAR', keywords: 'VARCHAR[]', keywords_source: 'VARCHAR',
+    legacy_key: 'VARCHAR', source: 'VARCHAR', retrieved: 'DATE', checked: 'BOOLEAN', open_access: 'BOOLEAN',
+    pollis_key: 'VARCHAR', merged_into: 'VARCHAR', saved: 'TIMESTAMPTZ', removed: 'BOOLEAN'"""
+"""The columns of a citation count: `record` is the index's id of the version counted (none for those of Pollis)."""
+const COUNT_COLUMNS = "key: 'VARCHAR', count: 'INTEGER', source: 'VARCHAR', date: 'DATE', record: 'VARCHAR'"
+"""The columns of a citation count of the user's: one `removed` when its version was removed from the user's references."""
+const USER_COUNT_COLUMNS = COUNT_COLUMNS * ", removed: 'BOOLEAN'"
+"""The columns of a version of a work: its record in an index (OpenAlex or Semantic Scholar) and what that record says."""
+const VERSION_COLUMNS = """
+    key: 'VARCHAR', record: 'VARCHAR', index: 'VARCHAR', kind: 'VARCHAR', doi: 'VARCHAR', title: 'VARCHAR', venue: 'VARCHAR',
+    year: 'INTEGER', url: 'VARCHAR', added: 'TIMESTAMPTZ', removed: 'BOOLEAN'"""
+"""The columns of a choice of the user about a reference in the References of a panel's Learn More."""
+const PANEL_COLUMNS = "panel: 'VARCHAR', key: 'VARCHAR', shown: 'BOOLEAN', changed: 'TIMESTAMPTZ'"
+
+"""
+The SQL statements of PollisReferences. The references of Pollis, from `pollis.json`, are tables, replaced when Pollis
+brings new ones; the user's are views over the JSON Lines files of `REFERENCES_HOME`, the last line of each row winning,
+so they always show what Pollis has appended. `all_references` has each work once: a user's row whose key is a reference
+of Pollis corrects it, and one with a `pollis_key` (a work the user had before Pollis brought it) gives way to Pollis'.
+"""
+function references_sql(source::AbstractString = joinpath(REFERENCES_HOME, "pollis.json"))
+    file(name) = replace(joinpath(REFERENCES_HOME, name), "\\" => "/", "'" => "''")
+    lines(name, columns) = "read_json('$(file(name))', format = 'newline_delimited', ignore_errors = true, columns = {$columns})"
+    # Each row with its line, so that the last line of a row wins, as the files are appended to
+    numbered(name, columns) = "(SELECT *, row_number() OVER () AS line FROM $(lines(name, columns)))"
+    fields(columns) = join(["\"$(m[:name])\" $(m[:type])" for m in eachmatch(r"(?<name>\w+): '(?<type>[^']+)'", columns)], ", ")
+    pollis = replace(source, "\\" => "/", "'" => "''")
+    return ["""
+    CREATE TABLE pollis_references AS
+    SELECT r.* FROM (SELECT unnest("references") AS r FROM read_json('$pollis', columns = {"references": 'STRUCT($(fields(REFERENCE_COLUMNS)))[]'}))""",
+    "COMMENT ON TABLE pollis_references IS 'The references of Pollis, those of its panels, notebooks and methods, from PollisReferences.jl, or those Pollis came with; replaced when either brings new ones. pollis_key, merged_into, saved and removed are empty: they are the user''s'",
+    """
+    CREATE TABLE pollis_counts AS
+    SELECT c.* FROM (SELECT unnest(counts) AS c FROM read_json('$pollis', columns = {counts: 'STRUCT($(fields(COUNT_COLUMNS)))[]'}))""",
+    "COMMENT ON TABLE pollis_counts IS 'The citation counts of the references of Pollis, from Crossref and OpenAlex, dated when observed'",
+    "CREATE TABLE pollis_versions AS SELECT * FROM $(lines("versions.jsonl", VERSION_COLUMNS)) LIMIT 0",
+    "COMMENT ON TABLE pollis_versions IS 'The versions of the references of Pollis (none yet), as user_versions has them'",
+    """
+    CREATE VIEW user_references AS
+    SELECT * EXCLUDE (copy, line) FROM (
+        SELECT *, row_number() OVER (PARTITION BY key ORDER BY line DESC) AS copy FROM $(numbered("references.jsonl", REFERENCE_COLUMNS))
+    ) WHERE copy = 1 AND NOT coalesce(removed, false)""",
+    "COMMENT ON VIEW user_references IS 'The references the user added, from Literature Radar or the References of a panel, and their corrections of references of Pollis (the same key); pollis_key names the reference of Pollis that a work added before Pollis brought it is; merged_into, the work a duplicate was merged into; saved is in UTC'",
+    """
+    CREATE VIEW user_aliases AS
+    WITH RECURSIVE chain(key, target, depth) AS (
+        SELECT key, merged_into, 1 FROM user_references WHERE merged_into IS NOT NULL
+        UNION ALL
+        SELECT c.key, u.merged_into, c.depth + 1 FROM chain c JOIN user_references u ON u.key = c.target
+        WHERE u.merged_into IS NOT NULL AND c.depth < 32
+    )
+    SELECT key, arg_max(target, depth) AS merged_into FROM chain GROUP BY key""",
+    "COMMENT ON VIEW user_aliases IS 'The keys of the works the user merged into another, each with the key of all_references it now is'",
+    """
+    CREATE VIEW user_counts AS
+    SELECT key, count, source, date, record FROM (
+        SELECT *, row_number() OVER (PARTITION BY key, source, date, record ORDER BY line DESC) AS copy FROM $(numbered("counts.jsonl", USER_COUNT_COLUMNS))
+    ) WHERE copy = 1 AND NOT coalesce(removed, false)""",
+    "COMMENT ON VIEW user_counts IS 'The citation counts observed for the user, of any reference, dated; record is the index''s id of the version counted'",
+    """
+    CREATE VIEW user_versions AS
+    SELECT * EXCLUDE (copy, line) FROM (
+        SELECT *, row_number() OVER (PARTITION BY key, record ORDER BY line DESC) AS copy FROM $(numbered("versions.jsonl", VERSION_COLUMNS))
+    ) WHERE copy = 1 AND NOT coalesce(removed, false)""",
+    "COMMENT ON VIEW user_versions IS 'The versions of the works the user saved from Literature Radar, of any reference: the published article, a preprint, a working paper, as an index (openalex or semantic scholar) records them; added is in UTC'",
+    """
+    CREATE VIEW user_panels AS
+    SELECT * EXCLUDE (copy, line) FROM (
+        SELECT *, row_number() OVER (PARTITION BY panel, key ORDER BY line DESC) AS copy FROM $(numbered("panels.jsonl", PANEL_COLUMNS))
+    ) WHERE copy = 1""",
+    "COMMENT ON VIEW user_panels IS 'The references the user added to (shown) or hid from (not shown) the References of a panel''s Learn More; changed is in UTC'",
+    """
+    CREATE VIEW all_references AS
+    SELECT *, 'pollis' AS origin FROM pollis_references p WHERE NOT EXISTS (SELECT 1 FROM user_references u WHERE u.key = p.key)
+    UNION ALL BY NAME
+    SELECT *, CASE WHEN key IN (SELECT key FROM pollis_references) THEN 'corrected' ELSE 'user' END AS origin
+    FROM user_references WHERE pollis_key IS NULL AND merged_into IS NULL""",
+    "COMMENT ON VIEW all_references IS 'Every reference once: those of Pollis, as the user corrected them, and those the user added that Pollis does not have, but for those merged into another; origin is pollis, corrected or user'",
+    """
+    CREATE VIEW all_counts AS
+    SELECT coalesce(a.merged_into, c.key) AS key, c.count, c.source, c.date, c.record FROM pollis_counts c LEFT JOIN user_aliases a USING (key)
+    UNION ALL
+    SELECT coalesce(a.merged_into, u.pollis_key, c.key) AS key, c.count, c.source, c.date, c.record
+    FROM user_counts c LEFT JOIN user_references u USING (key) LEFT JOIN user_aliases a USING (key)""",
+    "COMMENT ON VIEW all_counts IS 'The citation counts of Pollis and of the user, under the keys of all_references'",
+    """
+    CREATE VIEW all_versions AS
+    SELECT * FROM pollis_versions
+    UNION ALL BY NAME
+    SELECT v.* REPLACE (coalesce(a.merged_into, u.pollis_key, v.key) AS key)
+    FROM user_versions v LEFT JOIN user_references u USING (key) LEFT JOIN user_aliases a USING (key)""",
+    "COMMENT ON VIEW all_versions IS 'The versions of Pollis and of the user, under the keys of all_references'"]
+end
+
+"""What `REFERENCES_STAMP` holds when `REFERENCES_DB` is up to date; `nothing` when there are no references of Pollis yet."""
+function references_stamp()
+    pollis = joinpath(REFERENCES_HOME, "pollis.json")
+    isfile(pollis) || return nothing
+    package = isfile(REFERENCES_PACKAGE) ? "$(filesize(REFERENCES_PACKAGE)) $(mtime(REFERENCES_PACKAGE))" : "none"
+    return "$(filesize(pollis)) $(mtime(pollis)) $package\n" * join(references_sql(), ";\n")
+end
+
+"""
+The file to take the references of Pollis from: `REFERENCES_PACKAGE` when it has every key the panels of `pollis.json`
+cite, else `pollis.json`; asked through `con`, a DuckDB connection.
+"""
+function references_source(con)
+    pollis = joinpath(REFERENCES_HOME, "pollis.json")
+    isfile(REFERENCES_PACKAGE) || return pollis
+    quoted(path) = replace(path, "\\" => "/", "'" => "''")
+    missing_keys = first(loaded(DBINTERFACE).execute(con, """
+        SELECT count(*) AS n FROM (SELECT unnest(p.keys) AS key FROM (SELECT unnest(panels) AS p FROM read_json('$(quoted(pollis))', columns = {panels: 'STRUCT(keys VARCHAR[])[]'})))
+        WHERE key NOT IN (SELECT r.key FROM (SELECT unnest("references") AS r FROM read_json('$(quoted(REFERENCES_PACKAGE))', columns = {"references": 'STRUCT(key VARCHAR)[]'})))""")).n
+    return missing_keys == 0 ? REFERENCES_PACKAGE : pollis
+end
+
+"""The data files of `DATA_PACKAGES` that Pollis reads: the package, its file in `data`, and where it is copied."""
+const PACKAGE_COPIES = [(pkg = REFERENCES, file = "references.json", copy = REFERENCES_PACKAGE), (pkg = RSS, file = "feeds.json", copy = RSS_CATALOGUE)]
+
+"""
+    copy_package_data()
+
+Copy the data files of the installed PollisReferences.jl and PollisRSS.jl (`PACKAGE_COPIES`) where Pollis reads them,
+when they differ from those there.
+"""
+function copy_package_data()
+    for (; pkg, file, copy) in PACKAGE_COPIES
+        source = package_data_file(pkg, file)
+        source === nothing && continue
+        text = read(source, String)
+        isfile(copy) && read(copy, String) == text && continue
+        mkpath(dirname(copy))
+        tmp = "$copy.$(getpid()).tmp"
+        write(tmp, text)
+        mv(tmp, copy; force = true)
+    end
+    return nothing
+end
+
+"""The file `file` of the data folder of the installed package `pkg`; `nothing` when it is not installed."""
+function package_data_file(pkg::Base.PkgId, file::AbstractString)
+    path = Base.locate_package(pkg)
+    path === nothing && return nothing
+    data = joinpath(dirname(dirname(path)), "data", file)
+    return isfile(data) ? data : nothing
+end
+
+"""Whether a data file of `PACKAGE_COPIES` installed is not yet the one copied."""
+function package_data_uncopied()
+    return any(PACKAGE_COPIES) do (; pkg, file, copy)
+        source = package_data_file(pkg, file)
+        source !== nothing && (!isfile(copy) || filesize(copy) != filesize(source) || read(copy, String) != read(source, String))
+    end
+end
+
+"""What `JOURNALS_DB` is made from: the folder of PollisJournals.jl, and the SQL of its views and of `JOURNALS_SCORES`."""
+journals_stamp(source) = source.root * "\n" * join(journals_sql(), ";\n") * "\n" * SCORES_SQL
+
+"""Whether `JOURNALS_DB` is older than the installed PollisJournals.jl or its SQL; `false` when it is not installed."""
+function journals_outdated()
+    source = journals_parquet()
+    source === nothing && return false
+    return !isfile(JOURNALS_STAMP) || read(JOURNALS_STAMP, String) != journals_stamp(source)
+end
+
+"""Whether `REFERENCES_DB` is missing, or older than the references of Pollis or its SQL."""
+function references_outdated()
+    stamp = references_stamp()
+    stamp === nothing && return false
+    return !isfile(REFERENCES_DB) || !isfile(REFERENCES_STAMP) || read(REFERENCES_STAMP, String) != stamp
+end
+
+"""
+    build_references()
+
+Make the PollisReferences database `REFERENCES_DB` when it is missing, or the references of Pollis (`pollis.json`
+in `REFERENCES_HOME`, which the Julia extension copies from each Pollis, and `REFERENCES_PACKAGE`, from PollisReferences.jl,
+taken instead when it has every key the panels cite) or the SQL of `references_sql` have changed since it was made.
+The references of Pollis are replaced; the user's, in the JSON Lines files beside them, are
+never touched: the views read them whenever they are queried. Written under a temporary name and moved into place,
+as `build` does.
+"""
+function build_references()
+    references_outdated() || return nothing
+    stamp = references_stamp()
+    # The views need files to read before the user adds anything
+    foreach(name -> (file = joinpath(REFERENCES_HOME, name); isfile(file) || touch(file)), ["references.jsonl", "counts.jsonl", "versions.jsonl", "panels.jsonl"])
+    DuckDB = get(() -> Base.require(DUCKDB), Base.loaded_modules, DUCKDB)
+    get(() -> Base.require(DBINTERFACE), Base.loaded_modules, DBINTERFACE)
+    mkpath(dirname(REFERENCES_DB))
+    tmp = "$REFERENCES_DB.$(getpid()).tmp"
+    rm(tmp; force = true)
+    try
+        Base.invokelatest() do
+            con = loaded(DBINTERFACE).connect(DuckDB.DB, tmp)
+            try
+                source = references_source(con)
+                foreach(statement -> loaded(DBINTERFACE).execute(con, statement), references_sql(source))
+                loaded(DBINTERFACE).execute(con, "CHECKPOINT")
+            finally
+                loaded(DBINTERFACE).close!(con)
+            end
+        end
+        mv(tmp, REFERENCES_DB; force = true)
+        write(REFERENCES_STAMP, stamp)
+    catch err
+        rm(tmp; force = true)
+        isfile(REFERENCES_DB) || rethrow()
+        @warn "Pollis: could not rebuild the PollisReferences database; the previous one is kept" exception = err
+    end
+    return nothing
+end
+
 """The commit at the head of the main branch of the GitHub repository `url`, or `nothing` when GitHub cannot be reached."""
 function latest_commit(url::AbstractString)
     try
@@ -897,7 +1152,8 @@ function latest_commit(url::AbstractString)
 end
 
 """The packages of Pollis installed from GitHub, the data of the built-in databases, with the file of the commit installed."""
-const DATA_PACKAGES = [(pkg = DATASETS, url = DATASETS_URL, commit = DATASETS_COMMIT), (pkg = JOURNALS, url = JOURNALS_URL, commit = JOURNALS_COMMIT)]
+const DATA_PACKAGES = [(pkg = DATASETS, url = DATASETS_URL, commit = DATASETS_COMMIT), (pkg = JOURNALS, url = JOURNALS_URL, commit = JOURNALS_COMMIT),
+    (pkg = REFERENCES, url = REFERENCES_URL, commit = REFERENCES_COMMIT), (pkg = RSS, url = RSS_URL, commit = RSS_COMMIT)]
 
 """
     pending()
@@ -940,22 +1196,22 @@ end
 """
     needs_install()
 
-Whether `install()` has something to do, or a built-in database, PollisDatasets, PollisRSS or PollisJournals,
-is not made yet. The REPL asks at start, and when it does, Pollis runs `install_pollisdb.jl` in a terminal of
+Whether `install()` has something to do, or a built-in database, PollisDatasets, PollisRSS, PollisJournals or
+PollisReferences, is not made yet, or PollisReferences is older than the references of Pollis. The REPL asks at start, and when it does, Pollis runs `install_pollisdb.jl` in a terminal of
 its own, as it installs Revise, so the REPL never waits for Pkg.
 """
 function needs_install()
     todo = pending()
     return !isempty(todo.missing_packages) || any(d -> d.missing || d.outdated, todo.data) || todo.registry_duckdb ||
-        !isfile(DATASETS_DB) || !isfile(RSS_DB) || !isfile(JOURNALS_DB) || lance_unloaded()
+        !isfile(DATASETS_DB) || !isfile(RSS_DB) || !isfile(JOURNALS_DB) || journals_outdated() || package_data_uncopied() || references_outdated() || lance_unloaded()
 end
 
 """
     install()
 
-Install the packages built into Pollis, and the PollisDatasets and PollisJournals (`DATA_PACKAGES`), that no
-environment on the load path provides yet into `ENVIRONMENT`. The first time, it adds them; afterwards it
-keeps the PollisDatasets and PollisJournals installed there up to date with GitHub, so that new data reaches
+Install the packages built into Pollis, and the PollisDatasets, PollisJournals, PollisReferences and PollisRSS (`DATA_PACKAGES`),
+that no environment on the load path provides yet into `ENVIRONMENT`. The first time, it adds them; afterwards it
+keeps the PollisDatasets, PollisJournals, PollisReferences and PollisRSS installed there up to date with GitHub, so that new data reaches
 the built-in databases. Pkg runs (and precompiles) only when something is missing or GitHub has a newer
 commit than the one installed; offline, the installed copy is kept. The active project is left as it was.
 Run by `install_pollisdb.jl`, outside the REPL.

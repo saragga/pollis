@@ -27,7 +27,7 @@ import { vignettesIndex } from './newMethods.js';
 import { OPEN_LINK_COMMAND_ID } from '../../monitor/browser/openLink.js';
 import { voiceButtonsCss, voiceButtonsHtml, voiceButtonsScript } from '../../model/browser/webviews/webviewScaffold.js';
 
-// Help > Documentation > Vignettes: a vignette belongs to its package, as in R. Installed: the vignettes of the
+// Help > Documentation > Package Vignettes: a vignette belongs to its package, as in R. Installed: the vignettes of the
 // Julia packages installed on this computer (~/.julia/packages/NAME/SLUG/vignette/Vignette.toml, which Package and
 // Publish (media/methods/package.jl) writes into every package with a vignette), read without an Internet
 // connection, as the packages' documentation. In the Registry: the list in Vignettes.toml at the root of the Pollis
@@ -158,7 +158,7 @@ async function openVignettesPage(accessor: ServicesAccessor): Promise<void> {
 		webviewWorkbenchService.revealWebview(openPage, openPage.group ?? -1, false);
 		return;
 	}
-	const title = localize('vignettes.title', "Vignettes");
+	const title = localize('vignettes.title', "Package Vignettes");
 	const webviewInput = webviewWorkbenchService.openWebview(
 		{
 			title,
@@ -231,7 +231,7 @@ async function openVignettesPage(accessor: ServicesAccessor): Promise<void> {
 /** The page: its texts come from here, the vignettes from the `installed` and `registry` messages. */
 function pageHtml(): string {
 	const text = {
-		title: localize('vignettes.title', "Vignettes"),
+		title: localize('vignettes.title', "Package Vignettes"),
 		intro: localize('vignettes.intro', "A vignette is a package's documentation: the article its method follows, how to call it in Julia, and its results printed beside the published ones. Click a title to read it."),
 		search: localize('vignettes.search', "Search vignettes"),
 		allTopics: localize('vignettes.allTopics', "All topics"),
@@ -433,13 +433,13 @@ registerAction2(class extends Action2 {
 		super({
 			id: VIGNETTES_COMMAND_ID,
 			title: {
-				...localize2('vignettes.action', "Vignettes"),
-				mnemonicTitle: localize({ key: 'miVignettes', comment: ['&& denotes a mnemonic'] }, "&&Vignettes"),
+				...localize2('vignettes.action', "Package Vignettes"),
+				mnemonicTitle: localize({ key: 'miVignettes', comment: ['&& denotes a mnemonic'] }, "&&Package Vignettes"),
 			},
 			category: Categories.Help,
 			f1: true,
-			// Help > Documentation, defined in workbench/browser/actions/helpActions.ts, after A Tour of Pollis and The Pollis Guide
-			menu: { id: MenuId.for('MenubarHelpDocumentationMenu'), group: '0_pollis', order: 3 },
+			// Help > Documentation, defined in workbench/browser/actions/helpActions.ts, last, after the Drill-down documents
+			menu: { id: MenuId.for('MenubarHelpDocumentationMenu'), group: '0_pollis', order: 6 },
 		});
 	}
 	run(accessor: ServicesAccessor): Promise<void> {

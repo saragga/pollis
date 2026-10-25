@@ -24,6 +24,8 @@ import { customCopyOverlayUri, customCopyUri, CustomCopyKind } from '../common/c
 import { ISecretStorageService } from '../../../../../platform/secrets/common/secrets.js';
 import { IWebviewService } from '../../../webview/browser/webview.js';
 import { IWorkspaceContextService } from '../../../../../platform/workspace/common/workspace.js';
+import { IReference, ReferenceLibrary, referenceBibTeX, referenceOfBibTeX, referencePaper, referencesFolderOf } from '../common/referenceLibrary.js';
+import { normaliseBibText, parseBibTeX } from '../common/referenceImport.js';
 
 /**
  * Auto-selects the Julia kernel for a notebook so the user does not have to pick from the kernel
@@ -591,181 +593,24 @@ export function createCustomCopyWiring(
 	void postCustomCopies();
 }
 
-/** One entry of a BibTeX file. */
-interface IBibEntry {
-	readonly key: string;
-	/** Field values with braces and quotes removed, keyed by lower-case field name. */
-	readonly fields: { readonly [name: string]: string };
-	/** Where the entry sits in the file, so it can be removed without touching the others. */
-	readonly start: number;
-	readonly end: number;
-}
-
-/** Index of the delimiter closing the `{` or `(` at `open`, skipping nested braces; -1 if unbalanced. */
-function matchingDelimiter(source: string, open: number): number {
-	const close = source[open] === '(' ? ')' : '}';
-	let depth = 0;
-	for (let i = open + 1; i < source.length; i++) {
-		const c = source[i];
-		if (c === '{') {
-			depth++;
-		} else if (c === '}') {
-			if (depth === 0) {
-				return close === '}' ? i : -1;
-			}
-			depth--;
-		} else if (c === close && depth === 0) {
-			return i;
-		}
-	}
-	return -1;
-}
-
-/** Parse the `name = value` fields of a BibTeX entry body; values may be `{...}`, `"..."`, bare words or `#` concatenations. */
-function parseBibFields(body: string): { [name: string]: string } {
-	const fields: { [name: string]: string } = {};
-	let i = 0;
-	while (i < body.length) {
-		const name = /^[\s,]*(?<name>[\w:.-]+)\s*=\s*/.exec(body.slice(i));
-		if (!name?.groups) {
-			break;
-		}
-		i += name[0].length;
-		let value = '';
-		while (i < body.length) {
-			if (body[i] === '{') {
-				const end = matchingDelimiter(body, i);
-				if (end < 0) {
-					return fields;
-				}
-				value += body.slice(i + 1, end);
-				i = end + 1;
-			} else if (body[i] === '"') {
-				let j = i + 1;
-				for (let depth = 0; j < body.length && (body[j] !== '"' || depth > 0); j++) {
-					depth += body[j] === '{' ? 1 : body[j] === '}' ? -1 : 0;
-				}
-				value += body.slice(i + 1, j);
-				i = j + 1;
-			} else {
-				const word = /^[^,#\s]*/.exec(body.slice(i))?.[0] ?? '';
-				value += word;
-				i += word.length;
-			}
-			const concat = /^\s*#\s*/.exec(body.slice(i));
-			if (!concat) {
-				break;
-			}
-			i += concat[0].length;
-		}
-		fields[name.groups.name.toLowerCase()] = value.replace(/[{}]/g, '').replace(/\s+/g, ' ').trim();
-	}
-	return fields;
-}
-
-/** A bundled reference hidden by the user: a `@comment{pollis-hide: <title>}` block. */
-interface IBibHidden {
-	readonly title: string;
-	readonly start: number;
-	readonly end: number;
-}
-
-/** The contents of a references file. */
-interface IBibFile {
-	readonly entries: IBibEntry[];
-	readonly hidden: IBibHidden[];
-}
-
 /**
- * Field of an entry that replaces a bundled reference (the user's corrected version of it), holding
- * that reference's title. BibTeX tools ignore unknown fields, so the file stays valid BibTeX.
+ * Field of an entry of a former `<panel>.bib` file that replaced a bundled reference (the user's corrected version of
+ * it), holding that reference's title.
  */
 const REPLACES_FIELD = 'pollis-replaces';
 
-/** Parse a BibTeX file: its entries and its `pollis-hide` comments, skipping other `@comment`, `@string` and `@preamble` blocks. */
-function parseBibTeX(source: string): IBibFile {
-	const entries: IBibEntry[] = [];
-	const hidden: IBibHidden[] = [];
-	const header = /@\s*(?<type>[A-Za-z]+)\s*[{(]/g;
-	let match: RegExpExecArray | null;
-	while ((match = header.exec(source)) !== null) {
-		const open = header.lastIndex - 1;
-		const end = matchingDelimiter(source, open);
-		if (end < 0) {
-			break;
-		}
-		header.lastIndex = end + 1;
-		const type = match.groups?.type ?? '';
-		const body = source.slice(open + 1, end);
-		if (/^comment$/i.test(type)) {
-			const hide = /^\s*pollis-hide:\s*(?<title>[\s\S]*?)\s*$/.exec(body);
-			if (hide?.groups) {
-				hidden.push({ title: normaliseBibText(hide.groups.title), start: match.index, end: end + 1 });
-			}
-			continue;
-		}
-		if (/^(string|preamble)$/i.test(type)) {
-			continue;
-		}
-		const comma = body.indexOf(',');
-		entries.push({
-			key: (comma < 0 ? body : body.slice(0, comma)).trim(),
-			fields: comma < 0 ? {} : parseBibFields(body.slice(comma + 1)),
-			start: match.index,
-			end: end + 1,
-		});
-	}
-	return { entries, hidden };
-}
-
-/** Text as BibTeX field values are compared: without braces, whitespace collapsed. */
-function normaliseBibText(text: string): string {
-	return text.replace(/[{}]/g, '').replace(/\s+/g, ' ').trim();
-}
-
-/** Replace `source[start, end)` with `text`, keeping a single blank line between blocks. */
-function spliceBib(source: string, start: number, end: number, text: string): string {
-	return (source.slice(0, start) + text + source.slice(end)).replace(/\n{3,}/g, '\n\n').trim();
-}
-
-/** Append a block to a BibTeX source, after a blank line. */
-function appendBib(source: string, text: string): string {
-	const kept = source.trim();
-	return kept ? `${kept}\n\n${text}` : text;
-}
-
-/** An entry's text without its `pollis-replaces` field. */
-function withoutReplaces(text: string): string {
-	return text.replace(new RegExp(`\\n?[ \\t]*${REPLACES_FIELD}\\s*=\\s*\\{[^{}]*\\}\\s*,?`, 'i'), '');
-}
-
-/** An entry's text marked as replacing the bundled reference `title` (the field goes first, after the citation key). */
-function withReplaces(text: string, title: string): string {
-	const plain = withoutReplaces(text);
-	const comma = plain.indexOf(',');
-	return `${plain.slice(0, comma + 1)}\n  ${REPLACES_FIELD} = {${title}},${plain.slice(comma + 1)}`;
-}
-
-/** The source without the `pollis-hide` comments for `title`. */
-function unhideBib(source: string, title: string): string {
-	for (const hide of parseBibTeX(source).hidden.filter(h => h.title === title).reverse()) {
-		source = spliceBib(source, hide.start, hide.end, '');
-	}
-	return source;
-}
-
 /** A reference as shown in the Explore References panel. */
 interface IReferenceItem {
-	/** `bundled:<index>` for a bundled reference (customised or not), `added:<entry index>` for one the user added. */
+	/** `ref:<key>`, the work's key in References. */
 	readonly id: string;
 	readonly title: string;
 	readonly authors: string;
 	readonly year: string;
 	readonly journal?: string;
 	readonly openAccess: boolean;
-	/** `customised`: a bundled reference the user corrected. */
+	/** `bundled`: one of the panel's; `customised`: one of the panel's the user corrected; `added`: one the user added to the panel. */
 	readonly kind: 'bundled' | 'customised' | 'added';
-	/** A bundled reference the user removed (hidden until restored). */
+	/** One of the panel's the user hid (until restored). */
 	readonly removed: boolean;
 	readonly url?: string;
 	readonly bibtex: string;
@@ -782,16 +627,20 @@ interface IReferenceMessage {
 	readonly link?: string;
 }
 
+/** The fields of a work no BibTeX entry has, kept when the user corrects it. */
+const NON_BIBTEX_FIELDS = ['abstract', 'abstract_source', 'keywords', 'keywords_source', 'openalex', 'oa_url', 'open_access', 'released', 'checked', 'legacy_key', 'pollis_key'] as const;
+
+/** The migrations of the panels' former `<panel>.bib` files, by panel, so that two windows do not migrate one twice. */
+const bibMigrations = new Map<string, Promise<void>>();
+
 /**
- * Wire the Explore References panel of a scaffold webview. The bundled references can be corrected
- * (Edit), removed and restored, and the user can add references of their own, by pasting BibTeX or by
- * entering a title, authors, year and link. All of it lives in `~/.pollis/references/<panelId>.bib`,
- * a plain BibTeX file (so a teacher can also edit it by hand or hand it out):
- * - an entry of the user's own is an ordinary entry;
- * - a corrected bundled reference is an entry with a `pollis-replaces = {<original title>}` field;
- * - a removed bundled reference is a `@comment{pollis-hide: <title>}` block.
- * The originals are never changed, so Restore Default always brings one back. The webview gets the
- * list (`references`) now, whenever it changes and whenever the panel opens (`listReferences`).
+ * Wire the Explore References panel of a scaffold webview. Its references are the panel's own and those the user added
+ * to it, read from References (see referenceLibrary.ts): a work Pollis has, as the user may have corrected it, or one
+ * of the user's. Edit corrects a work everywhere it is cited, keeping its key; Restore Default drops the correction.
+ * Add finds the work in References and only adds it to the panel, or else makes it one of the user's, with a key in
+ * Pollis' convention. Remove hides one of the panel's own (Restore brings it back) or takes an added one off the
+ * panel; the work stays in References. What the panel shows is kept in ~/.pollis/references/panels.jsonl. A panel's
+ * former `<panel>.bib` file is read into References once, then renamed `<panel>.bib.migrated`.
  */
 export function createReferenceWiring(
 	webview: { postMessage(message: unknown): void; readonly onMessage: Event<{ readonly message: IReferenceMessage }> },
@@ -803,69 +652,65 @@ export function createReferenceWiring(
 	commandService: ICommandService,
 	notificationService: INotificationService,
 ): void {
-	const file = URI.joinPath(pathService.userHome({ preferLocal: true }), '.pollis', 'references', `${panelId}.bib`);
+	const userHome = pathService.userHome({ preferLocal: true });
+	const library = new ReferenceLibrary(fileService, userHome);
+	const folder = referencesFolderOf(userHome);
 	const papers = references.filter(isReferencePaper);
-	const readSource = async (): Promise<string> => await fileService.exists(file) ? (await fileService.readFile(file)).value.toString() : '';
-	const writeSource = async (source: string): Promise<void> => {
-		if (source.trim()) {
-			await fileService.writeFile(file, VSBuffer.fromString(source.trim() + '\n'));
-		} else if (await fileService.exists(file)) {
-			await fileService.del(file);
-		}
+	const panelKeys = new Set(papers.flatMap(paper => paper.key ? [paper.key] : []));
+
+	const workItem = (work: IReference, kind: IReferenceItem['kind'], removed: boolean): IReferenceItem => {
+		const paper = referencePaper(work);
+		return { id: `ref:${work.key}`, title: paper.title, authors: paper.authors, year: paper.year ? String(paper.year) : '', journal: paper.journal, openAccess: paper.openAccess, kind, removed, url: paperUrl(paper), bibtex: referenceBibTeX(work) };
 	};
-	const entryItem = (source: string, entry: IBibEntry, id: string, kind: IReferenceItem['kind']): IReferenceItem => {
-		const { title = '', author = '', year = '', journal, doi, url } = entry.fields;
-		return {
-			id,
-			title: title || entry.key,
-			authors: author.split(/\s+and\s+/i).join('; '),
-			year,
-			journal: journal || undefined,
-			openAccess: false,
-			kind,
-			removed: false,
-			url: doi ? `https://doi.org/${doi.replace(/^https?:\/\/(dx\.)?doi\.org\//i, '')}` : url || undefined,
-			bibtex: withoutReplaces(source.slice(entry.start, entry.end)),
-		};
-	};
-	const listItems = (source: string): IReferenceItem[] => {
-		const { entries, hidden } = parseBibTeX(source);
-		const items = papers.map((paper, i): IReferenceItem => {
-			const title = normaliseBibText(paper.title);
-			const replacement = entries.find(entry => entry.fields[REPLACES_FIELD] === title);
-			const removed = hidden.some(hide => hide.title === title);
-			return replacement
-				? { ...entryItem(source, replacement, `bundled:${i}`, 'customised'), removed }
-				: { id: `bundled:${i}`, title: paper.title, authors: paper.authors, year: String(paper.year), journal: paper.journal, openAccess: paper.openAccess, kind: 'bundled', removed, url: paperUrl(paper), bibtex: generateBibTeX(paper) };
-		});
-		entries.forEach((entry, i) => {
-			if (!entry.fields[REPLACES_FIELD]) {
-				items.push(entryItem(source, entry, `added:${i}`, 'added'));
+	const listItems = async (): Promise<IReferenceItem[]> => {
+		const [all, choices, aliases] = await Promise.all([library.allReferences(), library.panelChoices(panelId), library.aliases()]);
+		const byKey = new Map(all.map(work => [work.key, work]));
+		// A key merged into another work is that work, listed once
+		const listed = new Set<string>();
+		const items = papers.flatMap((paper): IReferenceItem[] => {
+			const key = paper.key && (aliases.get(paper.key) ?? paper.key);
+			if (key) {
+				if (listed.has(key)) {
+					return [];
+				}
+				listed.add(key);
 			}
+			const work = key ? byKey.get(key) : undefined;
+			const removed = !!key && choices.get(key)?.shown === false;
+			return [work
+				? workItem(work, work.origin === 'corrected' ? 'customised' : 'bundled', removed)
+				: { id: `ref:${paper.key ?? paper.title}`, title: paper.title, authors: paper.authors, year: String(paper.year), journal: paper.journal, openAccess: paper.openAccess, kind: 'bundled', removed, url: paperUrl(paper), bibtex: generateBibTeX(paper) }];
 		});
+		for (const choice of choices.values()) {
+			const work = byKey.get(choice.key);
+			if (choice.shown && work && !listed.has(choice.key)) {
+				items.push(workItem(work, 'added', false));
+			}
+		}
 		return items;
 	};
 	const postReferences = async (): Promise<void> => {
-		let items = listItems('');
+		let items: IReferenceItem[] = [];
 		try {
-			items = listItems(await readSource());
+			await migrateBib();
+			items = await listItems();
 		} catch (error) {
-			notificationService.error(localize('pollis.references.readFailed', "Could not read your references in {0}: {1}", file.fsPath, String(error)));
+			notificationService.error(localize('pollis.references.readFailed', "Could not read your references in {0}: {1}", folder.fsPath, String(error)));
 		}
 		webview.postMessage({ command: 'references', references: items });
 	};
-	/** The bundled paper (and its normalised title) or the user's entry that a message's `id` refers to. */
-	const target = (id: string | undefined, bib: IBibFile): { bundled?: { title: string }; added?: IBibEntry } | undefined => {
-		const match = /^(?<kind>bundled|added):(?<index>\d+)$/.exec(id ?? '')?.groups;
-		if (match?.kind === 'bundled') {
-			const paper = papers[Number(match.index)];
-			return paper ? { bundled: { title: normaliseBibText(paper.title) } } : undefined;
+	const keyOf = (id: string | undefined): string | undefined => id?.startsWith('ref:') ? id.slice('ref:'.length) : undefined;
+
+	/** The work a pasted BibTeX entry, or a reference entered by hand, is; or an error message. */
+	const worksOf = (msg: IReferenceMessage): { works?: Omit<IReference, 'key'>[]; error?: string } => {
+		const bibtex = msg.bibtex ?? '';
+		if (bibtex.trim()) {
+			const pasted = parseBibTeX(bibtex).entries;
+			if (!pasted.length || pasted.some(entry => !entry.fields.title)) {
+				return { error: localize('pollis.references.badBibtex', "Could not read the BibTeX: every entry needs to look like @article{key, title = {...}, ...}.") };
+			}
+			return { works: pasted.map(entry => referenceOfBibTeX('', entry.type, entry.fields, entry.key)) };
 		}
-		const entry = match ? bib.entries[Number(match.index)] : undefined;
-		return entry && !entry.fields[REPLACES_FIELD] ? { added: entry } : undefined;
-	};
-	/** The BibTeX text for a reference entered by hand, or an error message. */
-	const entryFromFields = (msg: IReferenceMessage, existing: IBibEntry[]): { text?: string; error?: string } => {
 		const clean = (s: string | undefined) => normaliseBibText(s ?? '');
 		const title = clean(msg.title);
 		const authors = clean(msg.authors);
@@ -881,79 +726,112 @@ export function createReferenceWiring(
 		if (link && !doi && !/^https?:\/\/\S+$/i.test(link)) {
 			return { error: localize('pollis.references.badLink', "The link must be a web address (https://...) or a DOI (10....).") };
 		}
-		const base = (authors.split(/[,;]/)[0].trim().split(' ').pop() || title.split(' ')[0]).replace(/[^A-Za-z0-9]/g, '') + year;
-		const keys = new Set(existing.map(e => e.key));
-		let key = base || 'ref';
-		for (let n = 0; keys.has(key); n++) {
-			key = base + String.fromCharCode(97 + n % 26) + (n >= 26 ? Math.floor(n / 26) : '');
+		const fields: Record<string, string> = { title, author: authors.split(/\s*;\s*/).filter(name => name).join(' and '), year };
+		if (doi) {
+			fields.doi = doi;
+		} else if (link) {
+			fields.url = link;
 		}
-		const lines = [`@misc{${key},`, `  title  = {${title}},`];
-		if (authors) { lines.push(`  author = {${authors.split(/\s*;\s*/).join(' and ')}},`); }
-		if (year) { lines.push(`  year   = {${year}},`); }
-		if (doi) { lines.push(`  doi    = {${doi}},`); } else if (link) { lines.push(`  url    = {${link}},`); }
-		lines.push('}');
-		return { text: lines.join('\n') };
+		return { works: [referenceOfBibTeX('', 'misc', fields)] };
 	};
-	/** Add a reference (no `id`) or replace the one `id` refers to; returns the id to select, or an error message. */
-	const saveReference = (source: string, msg: IReferenceMessage): { source?: string; id?: string; error?: string } => {
-		const bib = parseBibTeX(source);
-		const edited = msg.id !== undefined ? target(msg.id, bib) : undefined;
-		if (msg.id !== undefined && !edited) {
-			return {};
+	/** Add `work` to the panel: the work References has, or else a new work of the user's; returns its key. */
+	const addWork = async (work: Omit<IReference, 'key'>): Promise<string> => {
+		const found = await library.find({ title: work.title, authors: work.authors ?? [], doi: work.doi, arxiv: work.arxiv });
+		let key = found?.key;
+		if (!key) {
+			key = await library.newKey(work);
+			await library.saveReference({ ...work, key });
 		}
-		let text: string;
-		const bibtex = msg.bibtex ?? '';
-		if (bibtex.trim()) {
-			const pasted = parseBibTeX(bibtex).entries;
-			if (!pasted.length || pasted.some(entry => !entry.fields.title)) {
-				return { error: localize('pollis.references.badBibtex', "Could not read the BibTeX: every entry needs to look like @article{key, title = {...}, ...}.") };
-			}
-			if (edited && pasted.length !== 1) {
-				return { error: localize('pollis.references.editOne', "A reference is replaced by exactly one BibTeX entry.") };
-			}
-			// Only the entries themselves: stray text (or a half-pasted entry) could hide the entries after it.
-			text = pasted.map(entry => withoutReplaces(bibtex.slice(entry.start, entry.end))).join('\n\n');
-		} else {
-			const entry = entryFromFields(msg, bib.entries);
-			if (entry.text === undefined) {
-				return { error: entry.error };
-			}
-			text = entry.text;
+		if (!panelKeys.has(key) || (await library.panelChoices(panelId)).get(key)?.shown === false) {
+			await library.choose(panelId, key, true);
 		}
-		if (edited?.bundled) {
-			const title = edited.bundled.title;
-			const replacement = bib.entries.find(entry => entry.fields[REPLACES_FIELD] === title);
-			const next = replacement ? spliceBib(source, replacement.start, replacement.end, withReplaces(text, title)) : appendBib(source, withReplaces(text, title));
-			return { source: unhideBib(next, title), id: msg.id };   // a corrected reference is shown again
-		}
-		if (edited?.added) {
-			return { source: spliceBib(source, edited.added.start, edited.added.end, text), id: msg.id };
-		}
-		return { source: appendBib(source, text), id: `added:${bib.entries.length}` };
+		return key;
 	};
-	/** Restore Default for a bundled reference: drop the user's correction of it and show it again. */
-	const restoreReference = (source: string, id: string | undefined): string | undefined => {
-		const bib = parseBibTeX(source);
-		const title = target(id, bib)?.bundled?.title;
-		if (title === undefined) {
-			return undefined;
+	/** Correct the work `base` with `work`, keeping its key and what no BibTeX entry has. */
+	const correct = async (base: IReference, work: Omit<IReference, 'key'>): Promise<void> => {
+		const kept = Object.fromEntries(NON_BIBTEX_FIELDS.map(field => [field, base[field]]));
+		// An organisation's name, its braces gone, reads as a person's
+		const organisation = base.author_kind === 'organisation' && work.authors?.length === 1 && normaliseBibText(work.authors[0].split(', ').reverse().join(' ')) === normaliseBibText(base.authors?.[0] ?? '');
+		await library.saveReference({ ...kept, ...work, key: base.key, ...organisation ? { authors: base.authors, author_kind: 'organisation' } : {}, source: 'manual' });
+	};
+	/** Add references (no `id`) or correct the one `id` refers to; returns the id to select, or an error message. */
+	const saveReference = async (msg: IReferenceMessage): Promise<{ id?: string; error?: string }> => {
+		const result = worksOf(msg);
+		if (!result.works) {
+			return { error: result.error };
 		}
-		const replacement = bib.entries.find(entry => entry.fields[REPLACES_FIELD] === title);
-		return unhideBib(replacement ? spliceBib(source, replacement.start, replacement.end, '') : source, title);
+		const key = keyOf(msg.id);
+		if (key === undefined) {
+			let added: string | undefined;
+			for (const work of result.works) {
+				added = await addWork(work);
+			}
+			return { id: `ref:${added}` };
+		}
+		if (result.works.length !== 1) {
+			return { error: localize('pollis.references.editOne', "A reference is replaced by exactly one BibTeX entry.") };
+		}
+		const base = (await library.allReferences()).find(work => work.key === key);
+		if (base) {
+			await correct(base, result.works[0]);
+		}
+		return { id: msg.id };
+	};
+	/** Restore a hidden reference of the panel's; or, Restore Default, drop the user's correction of one. */
+	const restoreReference = async (id: string | undefined): Promise<void> => {
+		const key = keyOf(id);
+		if (key === undefined) {
+			return;
+		}
+		if ((await library.panelChoices(panelId)).get(key)?.shown === false) {
+			await library.choose(panelId, key, true);
+		} else if ((await library.pollis()).references.some(work => work.key === key)) {
+			await library.removeReference(key);
+		}
+	};
+	/** Remove a reference from the panel: hide one of its own, or take off one the user added. */
+	const removeReference = async (id: string | undefined): Promise<void> => {
+		const key = keyOf(id);
+		if (key !== undefined) {
+			await library.choose(panelId, key, false);
+		}
 	};
 
-	/** Remove a reference: delete the user's own entry, or hide a bundled one (dropping any correction of it). */
-	const removeReference = (source: string, id: string | undefined): string | undefined => {
-		const edited = target(id, parseBibTeX(source));
-		if (edited?.added) {
-			return spliceBib(source, edited.added.start, edited.added.end, '');
+	/** Read the panel's former `<panel>.bib`, if any, into References, and rename it `<panel>.bib.migrated`. */
+	const migrateBib = (): Promise<void> => {
+		let migration = bibMigrations.get(panelId);
+		if (!migration) {
+			migration = (async () => {
+				const file = URI.joinPath(folder, `${panelId}.bib`);
+				if (!await fileService.exists(file)) {
+					return;
+				}
+				const { entries, hidden } = parseBibTeX((await fileService.readFile(file)).value.toString());
+				const all = await library.allReferences();
+				const paperOf = (title: string) => papers.find(paper => paper.key && normaliseBibText(paper.title) === title);
+				for (const entry of entries) {
+					const work = referenceOfBibTeX('', entry.type, entry.fields, entry.key);
+					const replaced = entry.fields[REPLACES_FIELD] !== undefined ? paperOf(entry.fields[REPLACES_FIELD]) : undefined;
+					const base = replaced && all.find(reference => reference.key === replaced.key);
+					if (base) {
+						await correct(base, work);
+					} else {
+						await addWork(work);
+					}
+				}
+				for (const hide of hidden) {
+					const paper = paperOf(hide.title);
+					if (paper?.key) {
+						await library.choose(panelId, paper.key, false);
+					}
+				}
+				await fileService.move(file, URI.joinPath(folder, `${panelId}.bib.migrated`), true);
+			})();
+			bibMigrations.set(panelId, migration);
 		}
-		if (!edited?.bundled) {
-			return undefined;
-		}
-		const next = restoreReference(source, id) ?? source;
-		return appendBib(next, `@comment{pollis-hide: ${edited.bundled.title}}`);
+		return migration;
 	};
+
 	disposables.add(webview.onMessage(async e => {
 		const msg = e.message;
 		try {
@@ -962,39 +840,33 @@ export function createReferenceWiring(
 					await postReferences();
 					break;
 				case 'openReference': {
-					const item = listItems(await readSource()).find(r => r.id === msg.id);
+					const item = (await listItems()).find(r => r.id === msg.id);
 					if (item?.url) {
 						await openInBrowser(item.url, commandService);
 					}
 					break;
 				}
 				case 'saveReference': {
-					const result = saveReference(await readSource(), msg);
+					const result = await saveReference(msg);
 					if (result.error) {
 						webview.postMessage({ command: 'referenceSaveFailed', message: result.error });
-					} else if (result.source !== undefined) {
-						await writeSource(result.source);
+					} else if (result.id !== undefined) {
 						await postReferences();
 						webview.postMessage({ command: 'referenceSaved', id: result.id });
 					}
 					break;
 				}
 				case 'removeReference':
-				case 'restoreReference': {
-					const source = await readSource();
-					const next = msg.command === 'removeReference' ? removeReference(source, msg.id) : restoreReference(source, msg.id);
-					if (next !== undefined) {
-						await writeSource(next);
-					}
+				case 'restoreReference':
+					await (msg.command === 'removeReference' ? removeReference(msg.id) : restoreReference(msg.id));
 					await postReferences();
 					break;
-				}
 			}
 		} catch (error) {
 			if (msg.command === 'saveReference') {
-				webview.postMessage({ command: 'referenceSaveFailed', message: localize('pollis.references.writeFailed', "Could not save the reference in {0}: {1}", file.fsPath, String(error)) });
+				webview.postMessage({ command: 'referenceSaveFailed', message: localize('pollis.references.writeFailed', "Could not save the reference in {0}: {1}", folder.fsPath, String(error)) });
 			} else {
-				notificationService.error(localize('pollis.references.updateFailed', "Could not update your references in {0}: {1}", file.fsPath, String(error)));
+				notificationService.error(localize('pollis.references.updateFailed', "Could not update your references in {0}: {1}", folder.fsPath, String(error)));
 			}
 		}
 	}));

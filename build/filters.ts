@@ -211,6 +211,7 @@ export const copyrightFilter = Object.freeze<string[]>([
 	'!**/*.tiff',
 	'!**/*.provisionprofile',
 	'!build/**/*.init',
+	'!build/**/*.commit',
 	'!build/darwin/patch-dmg.py',
 	'!build/linux/libcxx-fetcher.*',
 	'!build/npm/gyp/custom-headers/*.patch',

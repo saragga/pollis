@@ -13,6 +13,9 @@ import { INotificationService } from '../../../../../platform/notification/commo
 import { ICommandService } from '../../../../../platform/commands/common/commands.js';
 import { IWebviewWorkbenchService } from '../../../webviewPanel/browser/webviewWorkbenchService.js';
 import { IScaffoldPanelData } from '../common/model.types.js';
+import { IQuickInputService } from '../../../../../platform/quickinput/common/quickInput.js';
+import { ISecretStorageService } from '../../../../../platform/secrets/common/secrets.js';
+import { IWebviewService } from '../../../webview/browser/webview.js';
 import { INotebookEditorModelResolverService } from '../../../notebook/common/notebookEditorModelResolverService.js';
 import { INotebookKernelService } from '../../../notebook/common/notebookKernelService.js';
 import { ILanguageService } from '../../../../../editor/common/languages/language.js';
@@ -23,7 +26,7 @@ import { generateTokensCSSForColorMap } from '../../../../../editor/common/langu
 import { Event } from '../../../../../base/common/event.js';
 import { IUntitledTextResourceEditorInput } from '../../../../common/editor.js';
 import { CellEditType, CellKind } from '../../../notebook/common/notebookCommon.js';
-import { openWikiByFile, openNotebookByFile, openInBrowser, autoSelectJuliaKernel, createPackageStatusWiring, createExampleCodeWiring, createCustomCopyWiring, createReferenceWiring, createVideoWiring, sendToJuliaRepl } from './model.handler.js';
+import { openWikiByFile, openNotebookByFile, openInBrowser, autoSelectJuliaKernel, createPackageStatusWiring, createExampleCodeWiring, createCustomCopyWiring, createReferenceWiring, createVideoWiring, createApiKeyWiring, IApiKeyProvider, sendToJuliaRepl } from './model.handler.js';
 import { hasKey } from '../../../../../base/common/types.js';
 import { ADD_ALERT_COMMAND_ID } from '../../../monitor/browser/alertsPage.js';
 
@@ -35,12 +38,15 @@ type ScaffoldWebviewMessage =
 	| { command: 'runCode'; target: 'newFile' | 'juliaRepl' | 'notebook' | 'pluto'; code: string }
 	| { command: 'colorize'; code: string; target?: string }
 	| { command: 'installPackages' }
-	| { command: 'addAlert'; symbol: string; kind: 'quote' | 'filings' | 'fred' | 'ecb' | 'imf' | 'worldBank' };
+	| { command: 'addAlert'; symbol: string; kind: 'quote' | 'filings' | 'fred' | 'ecb' | 'imf' | 'worldBank' }
+	| { command: 'setApiKey' }
+	| { command: 'clearApiKey' };
 
 /**
  * Handle the messages of a panel built on the shared scaffold (see scaffoldParts.ts): Learn More,
  * running code, theme colourising, package status, editable examples, wikis, notebooks, references
  * and videos. `panelId` names the panel's folder under ~/.pollis (saved examples, references, videos).
+ * `apiKey`, when given, adds the Powered-by credentials indicator and sets them in the Julia REPL.
  */
 export function registerScaffoldWebviewHandlers(
 	webviewInput: ReturnType<IWebviewWorkbenchService['openWebview']>,
@@ -58,6 +64,10 @@ export function registerScaffoldWebviewHandlers(
 	fileService: IFileService,
 	pathService: IPathService,
 	workspaceContextService: IWorkspaceContextService,
+	quickInputService: IQuickInputService,
+	secretStorageService: ISecretStorageService,
+	webviewService: IWebviewService,
+	apiKeyProvider: IApiKeyProvider | undefined,
 ): DisposableStore {
 	const disposables = new DisposableStore();
 	const lastCode: { [target: string]: string } = {};
@@ -76,6 +86,7 @@ export function registerScaffoldWebviewHandlers(
 	createCustomCopyWiring(webviewInput.webview, disposables, data.wikis, data.notebooks, fileService, pathService, editorService, commandService, notificationService);
 	createReferenceWiring(webviewInput.webview, disposables, panelId, data.references, fileService, pathService, commandService, notificationService);
 	createVideoWiring(webviewInput.webview, disposables, panelId, data.packages, fileService, pathService, commandService, notificationService);
+	const apiKey = apiKeyProvider ? createApiKeyWiring(webviewInput.webview, apiKeyProvider, secretStorageService, quickInputService, webviewService) : undefined;
 
 	setTimeout(() => {
 		const packages = data.packages.map(pkg => ({ name: pkg.name, url: pkg.github }));
@@ -103,6 +114,7 @@ export function registerScaffoldWebviewHandlers(
 			webviewInput.webview.postMessage({ command: 'setModel', model: initialModel });
 		}
 		void pkgStatus.postStatus();
+		void apiKey?.postStatus();
 	}, 0);
 
 	disposables.add(webviewInput.webview.onDidDispose(() => disposables.dispose()));
@@ -125,7 +137,9 @@ export function registerScaffoldWebviewHandlers(
 					};
 					await editorService.openEditor(input);
 				} else if (msg.target === 'juliaRepl') {
-					if (!await sendToJuliaRepl(code, commandService)) { break; }
+					// Inject the credentials as session env vars so they never land in a saved file.
+					const prefix = apiKey ? await apiKey.replPrefix(msg.target) : '';
+					if (!await sendToJuliaRepl(prefix + code, commandService)) { break; }
 				} else if (msg.target === 'notebook') {
 					const ref = await notebookEditorModelResolverService.resolve({ untitledResource: undefined }, 'jupyter-notebook');
 					const notebook = ref.object.notebook;
@@ -161,6 +175,12 @@ export function registerScaffoldWebviewHandlers(
 				break;
 			case 'addAlert':
 				await commandService.executeCommand(ADD_ALERT_COMMAND_ID, msg.symbol, msg.kind === 'quote' ? undefined : msg.kind);
+				break;
+			case 'setApiKey':
+				await apiKey?.handleSet();
+				break;
+			case 'clearApiKey':
+				await apiKey?.handleClear();
 				break;
 		}
 	}));

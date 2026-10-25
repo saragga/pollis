@@ -19,7 +19,7 @@ import { ILogService } from '../../../../platform/log/common/log.js';
 import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
 import { IWorkbenchContribution, registerWorkbenchContribution2, WorkbenchPhase } from '../../../common/contributions.js';
 import { ExtensionsRegistry, IExtensionPointUser } from '../../../services/extensions/common/extensionsRegistry.js';
-import { IModelNotebook, IModelWiki } from '../../model/browser/common/model.types.js';
+import { IModelNotebook, IModelPaper, IModelWiki } from '../../model/browser/common/model.types.js';
 import { IScaffoldPanel, openScaffoldWebview } from '../../model/browser/commands/scaffold.command.js';
 import { registerExternalFolder } from '../../model/browser/common/customCopyFileSystem.js';
 import { parseToml, tomlToPanelData } from '../../model/browser/common/tomlPanelData.js';
@@ -189,7 +189,13 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 					extensionId: loaded.extensionId,
 					id: loaded.toolbox.id,
 					title: loaded.toolbox.title,
-					panels: loaded.panels.map(({ contribution }) => ({ id: contribution.id, command: contribution.command, title: contribution.menuTitle ?? contribution.title })),
+					panels: loaded.panels.map(({ contribution, panel }) => ({
+						id: contribution.id,
+						command: contribution.command,
+						title: contribution.menuTitle ?? contribution.title,
+						description: panel.data.models?.map(model => model.label).join(' \u00b7 ') || undefined,
+						keys: [...new Set(panel.data.references.flatMap(reference => (reference as IModelPaper).key ?? []))],
+					})),
 					defaultPlacement: defaultPlacement(loaded),
 					published: entry ? placementOf(loaded, entry) : defaultPlacement(loaded),
 				};

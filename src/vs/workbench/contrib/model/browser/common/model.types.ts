@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 export interface IModelPaper {
-	/** The work's key in the references database (media/references/references.duckdb), e.g. `FF1993a`. */
+	/** The work's key in PollisReferences.jl, e.g. `FF1993a`. */
 	readonly key?: string;
 	readonly title: string;
 	readonly authors: string;

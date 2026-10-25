@@ -23671,5 +23671,2603 @@
 			"source": "openalex",
 			"date": "2026-10-24"
 		}
+	],
+	"panels": [
+		{
+			"id": "abm",
+			"title": "Agent-Based Models",
+			"description": "Grid Space · Continuous Space · Graph Space",
+			"commands": [
+				"chiara.simulate.abm"
+			],
+			"keys": [
+				"DVD2022a",
+				"WR2015b",
+				"EA1996a",
+				"Sch1971a",
+				"Rey1987a",
+				"Bed2003a",
+				"VCBCS1995a",
+				"PV2001a",
+				"New2002a"
+			]
+		},
+		{
+			"id": "abmEns",
+			"title": "Ensemble & Parameter Scanning",
+			"description": "Ensemble Runs · Parameter Scanning",
+			"commands": [
+				"chiara.simulate.abm-ens"
+			],
+			"keys": [
+				"DVD2022a",
+				"WR2015a",
+				"MP2007a",
+				"BVL2016a"
+			]
+		},
+		{
+			"id": "abmViz",
+			"title": "ABM Visualisation",
+			"description": "Static Plot · Video Animation · Interactive Explorer",
+			"commands": [
+				"chiara.simulate.abm-viz"
+			],
+			"keys": [
+				"DVD2022a",
+				"DK2021a",
+				"WR2015a",
+				"Sch1971a",
+				"Rey1987a",
+				"Mur2017a"
+			]
+		},
+		{
+			"id": "acm",
+			"title": "Actor-Critic Methods",
+			"description": "A2C · SAC · TD3",
+			"commands": [
+				"chiara.statistics.rl.acm"
+			],
+			"keys": [
+				"BEKS2017a",
+				"Tia...2020a",
+				"SB2018a",
+				"MBMGL...2016a",
+				"HZAL2018a",
+				"FHM2018a"
+			]
+		},
+		{
+			"id": "adlp",
+			"title": "AD Log-Likelihood",
+			"description": "Distribution · Linear Regression · Logistic Regression",
+			"commands": [
+				"chiara.statistics.ml.logpdf"
+			],
+			"keys": [
+				"BPRS2018a",
+				"MC2020a",
+				"RLP2016a"
+			]
+		},
+		{
+			"id": "alpv",
+			"title": "Alpha Vantage",
+			"commands": [
+				"chiara.explore.adr.alpv"
+			],
+			"keys": [
+				"Val...2024a",
+				"AV2024a",
+				"BEKS2017a"
+			]
+		},
+		{
+			"id": "ande",
+			"title": "Learning-Based Anomaly Detection",
+			"description": "AutoEncoder · DeepSAD · ESAD",
+			"commands": [
+				"chiara.explore.ande"
+			],
+			"keys": [
+				"BEKS2017a",
+				"Muh2023a",
+				"Agg2017a",
+				"GBC2016a",
+				"RVGDS...2018a",
+				"RVFMK2020a",
+				"HYZWT2021a"
+			]
+		},
+		{
+			"id": "attr",
+			"title": "Attractor & Basin Analysis",
+			"description": "Attractor Finding · Basins of Attraction · Bifurcation",
+			"commands": [
+				"chiara.statistics.nonlin.attr"
+			],
+			"keys": [
+				"BEKS2017a",
+				"Dat2018a",
+				"Str2015a",
+				"Lay2015a",
+				"GOY1985a",
+				"DW2022a",
+				"Kue2015a"
+			]
+		},
+		{
+			"id": "autoencoder",
+			"title": "Autoencoders",
+			"description": "Autoencoder · VAE",
+			"commands": [
+				"chiara.statistics.pm.autoencoder"
+			],
+			"keys": [
+				"KW2013a"
+			]
+		},
+		{
+			"id": "azero",
+			"title": "AlphaZero",
+			"description": "AlphaZero",
+			"commands": [
+				"chiara.statistics.rl.azero"
+			],
+			"keys": [
+				"BEKS2017a",
+				"Lau2021a",
+				"Hag2021a",
+				"Pal2023a",
+				"SB2018a",
+				"SHMGS...2016a",
+				"SSSAH...2017a",
+				"SHSAL...2018a"
+			]
+		},
+		{
+			"id": "bert",
+			"title": "BERT Embeddings",
+			"description": "Embed · Similarity",
+			"commands": [
+				"chiara.statistics.nlp.bert"
+			],
+			"keys": [
+				"BEKS2017a",
+				"Che2023a",
+				"JM2024a",
+				"GBC2016a",
+				"DCLT2019a",
+				"RG2019a",
+				"VSPUJ...2017a"
+			]
+		},
+		{
+			"id": "blv",
+			"title": "Hierarchical Optimisation",
+			"description": "KKT Reformulation · Leader Grid Search",
+			"commands": [
+				"chiara.optimise.evp.blv"
+			],
+			"keys": [
+				"BEKS2017a",
+				"GBS2024a",
+				"HH2018a",
+				"DKPK2015a",
+				"Dem2002a"
+			]
+		},
+		{
+			"id": "bndt",
+			"title": "Bandit Problems",
+			"description": "epsilon-Greedy · UCB · Thompson Sampling",
+			"commands": [
+				"chiara.statistics.rl.bndt"
+			],
+			"keys": [
+				"BEKS2017a",
+				"Tia...2020a",
+				"SB2018a",
+				"Sze2010a",
+				"Tho1933a",
+				"ACF2002a"
+			]
+		},
+		{
+			"id": "boot",
+			"title": "Bootstrap Resampling",
+			"description": "Nonparametric · Parametric · Time Series",
+			"commands": [
+				"chiara.simulate.mc.boot"
+			],
+			"keys": [
+				"BEKS2017a",
+				"Geh...2023b",
+				"ET1993a",
+				"DH1997a",
+				"Efr1979a",
+				"Efr1987a",
+				"DE1996a",
+				"DHS1986a",
+				"Hal1989a",
+				"VL2009a"
+			]
+		},
+		{
+			"id": "bopt",
+			"title": "Bayesian Optimisation",
+			"description": "Expected Improvement · Probability of Improvement · Upper Confidence Bound · Thompson Sampling",
+			"commands": [
+				"chiara.optimise.bopt"
+			],
+			"keys": [
+				"BEKS2017a",
+				"Gar2023a",
+				"RW2006a",
+				"JSW1998a",
+				"SKKS2010a",
+				"SLA2012a",
+				"SSWAF2016a"
+			]
+		},
+		{
+			"id": "cam",
+			"title": "Curvature-Aware Methods",
+			"description": "SOPHIA",
+			"commands": [
+				"chiara.optimise.sgm.cam"
+			],
+			"keys": [
+				"BEKS2017a",
+				"NW2006a",
+				"LZGJL...2023a"
+			]
+		},
+		{
+			"id": "cca",
+			"title": "Canonical Correlation Analysis",
+			"description": "CCA · Regularised CCA · PLS",
+			"commands": [
+				"chiara.statistics.pm.cca"
+			],
+			"keys": [
+				"BEKS2017a",
+				"And2003a",
+				"Hot1936a"
+			]
+		},
+		{
+			"id": "ccdr",
+			"title": "Chance-Constrained and Distributionally Robust Optimisation",
+			"description": "Chance-Constrained · Distributionally Robust",
+			"commands": [
+				"chiara.optimise.ccdr"
+			],
+			"keys": [
+				"BEKS2017a",
+				"DHL2017a",
+				"GC2024a",
+				"HH2018a",
+				"BGN2009a",
+				"SDR2021a",
+				"DY2010a",
+				"EK2018a",
+				"CC1959a",
+				"LA2008a"
+			]
+		},
+		{
+			"id": "cds",
+			"title": "Continuous Dynamical Systems",
+			"commands": [
+				"chiara.statistics.nonlin.cds"
+			],
+			"keys": [
+				"BEKS2017a",
+				"Dat2018a",
+				"RN2017a",
+				"Str2015a",
+				"Lor1963a"
+			]
+		},
+		{
+			"id": "ceval",
+			"title": "Copula Evaluation",
+			"commands": [
+				"chiara.statistics.copula"
+			],
+			"keys": [
+				"Nel2006a",
+				"EMS2002a",
+				"GF2007a"
+			]
+		},
+		{
+			"id": "chaos",
+			"title": "Chaos Characterisation",
+			"description": "Lyapunov Exponents · Fractal Dimension · Recurrence (RQA)",
+			"commands": [
+				"chiara.statistics.nonlin.chaos"
+			],
+			"keys": [
+				"BEKS2017a",
+				"Dat2018a",
+				"KS2004a",
+				"Gle1987a",
+				"BGGS1980a",
+				"GP1983a",
+				"EKR1987a"
+			]
+		},
+		{
+			"id": "clbt",
+			"title": "ColBERT Retrieval",
+			"commands": [
+				"chiara.statistics.nlp.colbert"
+			],
+			"keys": [
+				"BEKS2017a",
+				"Cha...2024a",
+				"Sim...2025a",
+				"MRS2008a",
+				"JM2024a",
+				"KZ2020a",
+				"SKSPZ2022a",
+				"DCLT2019a",
+				"RZ2009a"
+			]
+		},
+		{
+			"id": "clf",
+			"title": "Classification Performance",
+			"description": "Metrics · ROC",
+			"commands": [
+				"chiara.statistics.mwm.classificationPerf",
+				"chiara.statistics.mwm.roc"
+			],
+			"keys": [
+				"BKLSA...2020a"
+			]
+		},
+		{
+			"id": "clp",
+			"title": "Partitional & Density Clustering",
+			"description": "K-Means · K-Medoids · Fuzzy C-Means · DBSCAN · GMM · Spectral",
+			"commands": [
+				"chiara.statistics.cl.partitional"
+			],
+			"keys": [
+				"EKSX1996a",
+				"Lob2021a",
+				"LL2017a",
+				"ABDM2023a"
+			]
+		},
+		{
+			"id": "cmp",
+			"title": "Complementarity Problems",
+			"description": "Linear Complementarity · Nonlinear Complementarity · Mixed Complementarity",
+			"commands": [
+				"chiara.optimise.evp.cmp"
+			],
+			"keys": [
+				"BEKS2017a",
+				"Chu2023a",
+				"DF1995a",
+				"FP2003a",
+				"Isa1992a",
+				"CPS1992a",
+				"FP1997a"
+			]
+		},
+		{
+			"id": "cmplx",
+			"title": "Complexity & Entropy",
+			"description": "Permutation Entropy · Sample Entropy · Surrogate Testing",
+			"commands": [
+				"chiara.statistics.nonlin.cmplx"
+			],
+			"keys": [
+				"BEKS2017a",
+				"Dat2018a",
+				"KS2004a",
+				"CT2006a",
+				"BP2002a",
+				"RM2000a"
+			]
+		},
+		{
+			"id": "com",
+			"title": "Co-Occurrence Matrix",
+			"description": "Raw Counts · PPMI · PMI",
+			"commands": [
+				"chiara.statistics.nlp.cooccurrence"
+			],
+			"keys": [
+				"BEKS2017a",
+				"JTC2023a",
+				"JM2024a",
+				"MS1999a",
+				"CH1990a",
+				"Har1954a",
+				"LGD2015a"
+			]
+		},
+		{
+			"id": "copt",
+			"title": "Constrained Optimisation",
+			"description": "SLSQP · MMA · Interior Point · Frank–Wolfe · Gradient Projection",
+			"commands": [
+				"chiara.optimise.gbo.co"
+			],
+			"keys": [
+				"BEKS2017a",
+				"Joh2007a",
+				"DHL2017a",
+				"BCP2022a",
+				"NW2006a",
+				"BV2004a",
+				"Fle2000a",
+				"Kra1988a",
+				"Sva1987a",
+				"WB2006a",
+				"FW1956a",
+				"Ros1960a"
+			]
+		},
+		{
+			"id": "copula",
+			"title": "Copula Estimation",
+			"commands": [
+				"chiara.statistics.copula.estimation"
+			],
+			"keys": [
+				"Nel2006a",
+				"EMS2002a",
+				"GF2007a"
+			]
+		},
+		{
+			"id": "covShrinkage",
+			"title": "Regularised Covariance Estimation",
+			"description": "Linear · Nonlinear · Woodbury · Biweight",
+			"commands": [
+				"chiara.statistics.pm.covShrinkage"
+			],
+			"keys": [
+				"BEKS2017a",
+				"TV2004a",
+				"LW2004b",
+				"CWEH2010a",
+				"LW2020a"
+			]
+		},
+		{
+			"id": "cps",
+			"title": "Copula Sampling",
+			"commands": [
+				"chiara.statistics.cs"
+			],
+			"keys": [
+				"Nel2006a",
+				"EMS2002a",
+				"GF2007a"
+			]
+		},
+		{
+			"id": "crn",
+			"title": "Interaction Network Models",
+			"description": "Chemical · Genetic · Ecological · Epidemic",
+			"commands": [
+				"chiara.simulate.crn"
+			],
+			"keys": [
+				"LMIGK...2023a",
+				"RN2017a",
+				"Alo2006a",
+				"Mur2002a",
+				"EL2000a",
+				"Gil2007a"
+			]
+		},
+		{
+			"id": "csv",
+			"title": "CSV Files",
+			"description": "Read · Write · Stream Rows · Chunks",
+			"commands": [
+				"chiara.explore.conn.csv"
+			],
+			"keys": [
+				"BEKS2017a",
+				"Qui2023a",
+				"Qui2023c",
+				"Sha2005a"
+			]
+		},
+		{
+			"id": "ctm",
+			"title": "Correlated Topic Model",
+			"description": "CTM · Focused CTM",
+			"commands": [
+				"chiara.statistics.nlp.ctm",
+				"chiara.statistics.nlp.fctm"
+			],
+			"keys": [
+				"BEKS2017a",
+				"Pro2016a",
+				"JM2024a",
+				"Bis2006a",
+				"BL2006a",
+				"BNJ2003a"
+			]
+		},
+		{
+			"id": "ctpf",
+			"title": "Collaborative Topic Poisson Factorisation",
+			"commands": [
+				"chiara.statistics.nlp.ctpf"
+			],
+			"keys": [
+				"BEKS2017a",
+				"Pro2016a",
+				"JM2024a",
+				"Ble2012a",
+				"WB2011a",
+				"GHB2014a"
+			]
+		},
+		{
+			"id": "cv",
+			"title": "Cross-Validation Strategies",
+			"commands": [
+				"chiara.statistics.mwm.dataPartition",
+				"chiara.statistics.mwm.trainTestSplit",
+				"chiara.statistics.mwm.kfoldCV",
+				"chiara.statistics.mwm.stratifiedKfold",
+				"chiara.statistics.mwm.loocv"
+			],
+			"keys": [
+				"BEKS2017a",
+				"Grh2024a",
+				"HTF2009a",
+				"Bis2006a",
+				"Koh1995a",
+				"KS1969a",
+				"AC2010a"
+			]
+		},
+		{
+			"id": "dcm",
+			"title": "Decomposition and Constrained Multi-Objective Optimisation",
+			"description": "MOEA/D · CCMO · Epsilon-Dominance Archive",
+			"commands": [
+				"chiara.optimise.moo.dc"
+			],
+			"keys": [
+				"BEKS2017a",
+				"MM2022a",
+				"Deb2001a",
+				"CLV2007a",
+				"ZL2007a",
+				"TZXZJ2021a",
+				"HR2013a"
+			]
+		},
+		{
+			"id": "dco",
+			"title": "Discrete and Combinatorial Optimisation",
+			"description": "GRASP · VND · VNS",
+			"commands": [
+				"chiara.optimise.dco"
+			],
+			"keys": [
+				"BEKS2017a",
+				"Tal2009a",
+				"GP2019a",
+				"FR1995a",
+				"MH1997a",
+				"HM2001a"
+			]
+		},
+		{
+			"id": "de",
+			"title": "Density Estimation",
+			"description": "Histogram · Kernel Density · Parametric",
+			"commands": [
+				"chiara.statistics.de"
+			],
+			"keys": [
+				"AB1990a",
+				"DFH1989a",
+				"Lon1990a",
+				"HC2002a"
+			]
+		},
+		{
+			"id": "devol",
+			"title": "Differential Evolution",
+			"description": "DE · SHADE · Adaptive DE · epsilonDE",
+			"commands": [
+				"chiara.optimise.ec.devol"
+			],
+			"keys": [
+				"BEKS2017a",
+				"Pol2021a",
+				"PSL2005a",
+				"ES2015a",
+				"SP1997a",
+				"ZS2009a",
+				"TF2013a"
+			]
+		},
+		{
+			"id": "dgo",
+			"title": "Deterministic Global Methods",
+			"description": "DIRECT · DIRECT-L · QuadDirect · AGS",
+			"commands": [
+				"chiara.optimise.go.dg"
+			],
+			"keys": [
+				"BEKS2017a",
+				"Flo2000a",
+				"JPS1993a",
+				"GK2001a",
+				"SS2000b"
+			]
+		},
+		{
+			"id": "dist",
+			"title": "Distribution Functions",
+			"description": "Discrete · Continuous · Truncated · Multivariate · Matrix-Variate · Mixture · Product · Convolutions",
+			"commands": [
+				"chiara.statistics.d"
+			],
+			"keys": [
+				"BEKS2017a",
+				"BPAAB...2021a",
+				"FEHP2011a"
+			]
+		},
+		{
+			"id": "dmap",
+			"title": "Discrete Maps",
+			"commands": [
+				"chiara.statistics.nonlin.dmap"
+			],
+			"keys": [
+				"BEKS2017a",
+				"Dat2018a",
+				"ASY1996a",
+				"Hen1976a"
+			]
+		},
+		{
+			"id": "dp",
+			"title": "Dynamic Programming",
+			"description": "Deterministic · Stochastic",
+			"commands": [
+				"chiara.optimise.dp"
+			],
+			"keys": [
+				"BEKS2017a",
+				"SS2024a",
+				"Ber2017a",
+				"Ber2012a",
+				"Put2005a",
+				"Bel1954a",
+				"Sha1953a",
+				"How1960a"
+			]
+		},
+		{
+			"id": "ds",
+			"title": "Direct Search Methods",
+			"description": "Nelder-Mead · Pattern Search · MADS · GSS",
+			"commands": [
+				"chiara.optimise.ds"
+			],
+			"keys": [
+				"BEKS2017a",
+				"MR2018a",
+				"NW2006a",
+				"CSV2009a",
+				"NM1965a",
+				"KLT2003a",
+				"AD2006a"
+			]
+		},
+		{
+			"id": "dstats",
+			"title": "Descriptive Statistics",
+			"description": "Summary · Frequency · Correlation",
+			"commands": [
+				"chiara.explore.dstats"
+			],
+			"keys": [
+				"BEKS2017a",
+				"JSC2023a",
+				"Bou2023a",
+				"FPP2007a",
+				"Spi2019a",
+				"Spe1904a"
+			]
+		},
+		{
+			"id": "dtm",
+			"title": "Document-Term Matrix & TF-IDF",
+			"description": "DTM · TF-IDF · BM25",
+			"commands": [
+				"chiara.statistics.nlp.dtmTfidf"
+			],
+			"keys": [
+				"BEKS2017a",
+				"JTC2023a",
+				"JM2024a",
+				"MRS2008a",
+				"Jon1972a",
+				"SB1988a"
+			]
+		},
+		{
+			"id": "dynppl",
+			"title": "Probabilistic Programming with Turing.jl",
+			"description": "No-U-Turn Sampler · Hamiltonian Monte Carlo · Metropolis-Hastings",
+			"commands": [
+				"chiara.statistics.ppl.dynppl"
+			],
+			"keys": [
+				"BEKS2017a",
+				"GXG2018a",
+				"Dav2015a",
+				"GCSDV...2013a",
+				"HG2014a",
+				"DKPR1987a",
+				"MRRTT1953a"
+			]
+		},
+		{
+			"id": "ecb",
+			"title": "ECB Data Portal",
+			"commands": [
+				"chiara.explore.adr.ecb"
+			],
+			"keys": [
+				"ECB2024a",
+				"SDMXTWG2023a",
+				"BEKS2017a"
+			]
+		},
+		{
+			"id": "edgar",
+			"title": "US SEC EDGAR",
+			"commands": [
+				"chiara.explore.adr.edgar"
+			],
+			"keys": [
+				"SEC2024a",
+				"SEC2024b",
+				"BEKS2017a"
+			]
+		},
+		{
+			"id": "embedding",
+			"title": "Neighbour Embedding",
+			"description": "t-SNE · UMAP",
+			"commands": [
+				"chiara.statistics.pm.embedding"
+			],
+			"keys": [
+				"MH2008a",
+				"MHM2018a"
+			]
+		},
+		{
+			"id": "ensemble",
+			"title": "Ensemble Learning Methods",
+			"description": "Random Forests · Gradient Boosting · XGBoost · Differentiable DT",
+			"commands": [
+				"chiara.statistics.ensemble.ensembleLearning"
+			],
+			"keys": [
+				"Bre2001a",
+				"Fri2001a",
+				"CG2016a",
+				"BBVS2021a",
+				"LL2017a",
+				"ABDM2023a"
+			]
+		},
+		{
+			"id": "es",
+			"title": "Evolution Strategies",
+			"description": "CMA-ES · xNES · dxNES · GCMAES · ISRES · ESCH",
+			"commands": [
+				"chiara.optimise.ec.es"
+			],
+			"keys": [
+				"BEKS2017a",
+				"Pol2021a",
+				"MR2018a",
+				"ES2015a",
+				"BS2002a",
+				"HO2001a",
+				"GSYWS2010a",
+				"RY2005a"
+			]
+		},
+		{
+			"id": "evtDiag",
+			"title": "Extreme Value Diagnostics",
+			"description": "Mean Excess · Hill Plot · QQ Plot",
+			"commands": [
+				"chiara.statistics.ev.diagnostics"
+			],
+			"keys": [
+				"JFGR2024a",
+				"BGST2004a"
+			]
+		},
+		{
+			"id": "evtRisk",
+			"title": "Extreme Value Risk Measures",
+			"description": "Return Levels · Peaks-Over-Threshold · Tail Risk",
+			"commands": [
+				"chiara.statistics.ev.riskMeasures"
+			],
+			"keys": [
+				"JFGR2024a",
+				"EKM1997a",
+				"MF2000a"
+			]
+		},
+		{
+			"id": "ffd",
+			"title": "Kenneth French Data Library",
+			"commands": [
+				"chiara.explore.adr.ffd"
+			],
+			"keys": [
+				"Fre2026a",
+				"FF1993a",
+				"FF2015a",
+				"JT1993a",
+				"BEKS2017a"
+			]
+		},
+		{
+			"id": "fnn",
+			"title": "Feedforward Neural Networks",
+			"description": "MLP · Autoencoder · VAE",
+			"commands": [
+				"chiara.statistics.nn.fnn"
+			],
+			"keys": [
+				"KW2013a",
+				"HZRS2016a",
+				"Bis1994a"
+			]
+		},
+		{
+			"id": "fo",
+			"title": "First-Order Methods",
+			"description": "Gradient Descent · Conjugate Gradient",
+			"commands": [
+				"chiara.optimise.fo"
+			],
+			"keys": [
+				"BEKS2017a",
+				"MR2018a",
+				"NW2006a",
+				"FR1964a",
+				"PR1969a",
+				"HZ2005a"
+			]
+		},
+		{
+			"id": "fom",
+			"title": "First-Order Methods",
+			"description": "SGD · Adam · AdaMax · AdaGrad · Momentum · Nesterov · RMSProp · AdamW",
+			"commands": [
+				"chiara.optimise.sgm.fom"
+			],
+			"keys": [
+				"BEKS2017a",
+				"MR2018a",
+				"NW2006a",
+				"FR1964a",
+				"KB2015a",
+				"Pol1964a",
+				"Nes1983a",
+				"Hin2012a",
+				"LH2019a"
+			]
+		},
+		{
+			"id": "fred",
+			"title": "Federal Reserve Economic Data",
+			"commands": [
+				"chiara.explore.adr.fred"
+			],
+			"keys": [
+				"Smi...2024a",
+				"FRBSL2024a",
+				"BEKS2017a"
+			]
+		},
+		{
+			"id": "galg",
+			"title": "Genetic Algorithms",
+			"description": "GA · Compact GA · BRKGA · MCCGA",
+			"commands": [
+				"chiara.optimise.ec.galg"
+			],
+			"keys": [
+				"BEKS2017a",
+				"Pol2021a",
+				"ES2015a",
+				"Gol1989a",
+				"HLG1999a",
+				"GR2011a",
+				"Whi1994a"
+			]
+		},
+		{
+			"id": "gev",
+			"title": "Generalized Extreme Value Distribution",
+			"description": "Fit · Evaluate · Sample",
+			"commands": [
+				"chiara.statistics.ev.gev"
+			],
+			"keys": [
+				"JFGR2024a",
+				"Col2001a"
+			]
+		},
+		{
+			"id": "glm",
+			"title": "Generalized Linear Models",
+			"description": "Bernoulli · Binomial · Poisson · NegBin · Geometric · Gamma · InvGauss · Normal",
+			"commands": [
+				"chiara.statistics.glm",
+				"chiara.statistics.glm.binary",
+				"chiara.statistics.glm.count",
+				"chiara.statistics.glm.overdispersed",
+				"chiara.statistics.glm.fractional",
+				"chiara.statistics.glm.positive"
+			],
+			"keys": [
+				"BEKS2017a",
+				"JSC2024a",
+				"Rag2024a",
+				"MN1989a",
+				"NW1972a",
+				"Whi1980a",
+				"NW1987a",
+				"Gal1886a",
+				"Mro1987a",
+				"DFH1989a",
+				"Lon1990a",
+				"LLWKN...1994a",
+				"Car1995a",
+				"HC2002a"
+			]
+		},
+		{
+			"id": "gmm",
+			"title": "Generalized Method of Moments (GMM)",
+			"commands": [
+				"chiara.statistics.lm.gmm"
+			],
+			"keys": [
+				"Han1982a",
+				"NW1987a",
+				"HHY1996a",
+				"HS1982a",
+				"Win2005a",
+				"Rub1981a"
+			]
+		},
+		{
+			"id": "gp",
+			"title": "Generalized Pareto Distribution",
+			"description": "Fit · Evaluate · Sample",
+			"commands": [
+				"chiara.statistics.ev.gp"
+			],
+			"keys": [
+				"JFGR2024a",
+				"Pic1975a"
+			]
+		},
+		{
+			"id": "graphppl",
+			"title": "Probabilistic Programming with RxInfer.jl",
+			"description": "Belief Propagation · Variational Message Passing · Expectation Propagation",
+			"commands": [
+				"chiara.statistics.ppl.graphppl"
+			],
+			"keys": [
+				"BEKS2017a",
+				"BV2023c",
+				"Bis2006a",
+				"KF2009a",
+				"Pea1982a",
+				"Min2001b",
+				"Min2001a"
+			]
+		},
+		{
+			"id": "hare",
+			"title": "Linear Models with Heteroskedasticity",
+			"description": "Exponential · Power · Quadratic · Linear",
+			"commands": [
+				"chiara.statistics.lm.hetero"
+			],
+			"keys": [
+				"BEKS2017a",
+				"Gre2018a",
+				"Har1976a",
+				"Gle1969a",
+				"Whi1980a"
+			]
+		},
+		{
+			"id": "hfcme",
+			"title": "High-Frequency Covariance Matrix Estimation",
+			"description": "Realized · Pre-averaged · Two-Scales · Realized Kernel",
+			"keys": [
+				"BHLS2011a",
+				"Zha2011a"
+			]
+		},
+		{
+			"id": "hfds",
+			"title": "Hugging Face Datasets",
+			"commands": [
+				"chiara.explore.adr.hfds"
+			],
+			"keys": [
+				"LMJTP...2021a",
+				"Luc...2024a",
+				"BEKS2017a"
+			]
+		},
+		{
+			"id": "hfm",
+			"title": "Hugging Face Models",
+			"description": "Multimodal · NLP · Vision · Audio · Tabular · RL · Graph ML · Embedding",
+			"commands": [
+				"chiara.explore.hfm"
+			],
+			"keys": [
+				"BEKS2017a",
+				"Che2023a",
+				"JMLC2024a",
+				"VSPUJ...2017a",
+				"DCLT2019a"
+			]
+		},
+		{
+			"id": "hmd",
+			"title": "Handle Missing Data",
+			"description": "Drop · Substitute · Interpolate · LOCF / NOCB · SVD",
+			"commands": [
+				"chiara.explore.hmd"
+			],
+			"keys": [
+				"BEKS2017a",
+				"Gre2022a",
+				"LR2019a",
+				"Buu2018a",
+				"Lit1988a",
+				"Rub1976a",
+				"MHT2010a"
+			]
+		},
+		{
+			"id": "hns",
+			"title": "Neighbourhood Search",
+			"description": "CRS · ILS · LNS · ALNS · BH · SA",
+			"commands": [
+				"chiara.optimise.go.hn"
+			],
+			"keys": [
+				"BEKS2017a",
+				"MR2018a",
+				"Pri1983a",
+				"LMS2003a",
+				"Sha1998a",
+				"RP2006a",
+				"WD1997a",
+				"KGV1983a"
+			]
+		},
+		{
+			"id": "hpt",
+			"title": "Hyperparameter Tuning",
+			"description": "Grid Search · Random Search · Bayesian",
+			"commands": [
+				"chiara.statistics.mwm.hpt"
+			],
+			"keys": [
+				"BKLSA...2020a"
+			]
+		},
+		{
+			"id": "idat",
+			"title": "Interpolate Data",
+			"description": "Linear · Cubic Spline · B-Spline · Dierckx Spline",
+			"commands": [
+				"chiara.explore.idat"
+			],
+			"keys": [
+				"BEKS2017a",
+				"KHA2024a",
+				"Bar2018a",
+				"Boo2001a",
+				"Ham1987a",
+				"BFB2015a",
+				"Boo1972a",
+				"Die1975a"
+			]
+		},
+		{
+			"id": "ido",
+			"title": "Infinite-Dimensional Optimisation",
+			"description": "Optimal Control",
+			"commands": [
+				"chiara.optimise.ido"
+			],
+			"keys": [
+				"PZHZ2022a"
+			]
+		},
+		{
+			"id": "imf",
+			"title": "IMF Data",
+			"commands": [
+				"chiara.explore.adr.imf"
+			],
+			"keys": [
+				"IMF2025a",
+				"SDMXTWG2023a",
+				"IMF2026a",
+				"BEKS2017a"
+			]
+		},
+		{
+			"id": "jdp",
+			"title": "Jump-Diffusion Processes",
+			"description": "Compound Poisson · Gaussian Jumps · Custom Rate",
+			"commands": [
+				"chiara.simulate.jdp"
+			],
+			"keys": [
+				"BEKS2017a",
+				"ZIRIN...2024a",
+				"CT2004a",
+				"Shr2004a",
+				"Mer1976a",
+				"Kou2002a"
+			]
+		},
+		{
+			"id": "kgds",
+			"title": "Kaggle Datasets",
+			"commands": [
+				"chiara.explore.adr.kgds"
+			],
+			"keys": [
+				"Kag2024a",
+				"BEKS2017a"
+			]
+		},
+		{
+			"id": "kgm",
+			"title": "Kaggle Models",
+			"description": "Multimodal · NLP · Vision · Audio",
+			"commands": [
+				"chiara.explore.kgm"
+			],
+			"keys": [
+				"BEKS2017a",
+				"Inn2018a",
+				"HZRS2016a",
+				"DCLT2019a"
+			]
+		},
+		{
+			"id": "knn",
+			"title": "k-Nearest Neighbours",
+			"description": "kNN Search · Range Search · DTW Classification",
+			"commands": [
+				"chiara.statistics.knn"
+			],
+			"keys": [
+				"SC1978a",
+				"DBKYZ...2019a",
+				"Car2024a"
+			]
+		},
+		{
+			"id": "lasso",
+			"title": "Penalised & Projection Regression",
+			"description": "Lasso · ElasticNet · PLSR",
+			"commands": [
+				"chiara.statistics.rrq",
+				"chiara.statistics.rrq.lasso",
+				"chiara.statistics.rrq.elasticNet"
+			],
+			"keys": [
+				"WSE2001a"
+			]
+		},
+		{
+			"id": "lca",
+			"title": "Latent Component Analysis",
+			"description": "PCA · Kernel PCA · Factor Analysis",
+			"commands": [
+				"chiara.statistics.pm.lca"
+			],
+			"keys": [
+				"Hot1933a",
+				"SSM1998a",
+				"RT1982a"
+			]
+		},
+		{
+			"id": "lda",
+			"title": "Latent Dirichlet Allocation",
+			"description": "LDA",
+			"commands": [
+				"chiara.statistics.nlp.lda"
+			],
+			"keys": [
+				"BEKS2017a",
+				"JTC2023a",
+				"JM2024a",
+				"Bis2006a",
+				"BNJ2003a",
+				"GS2004a",
+				"WMSM2009a",
+				"MWTLM2011a"
+			]
+		},
+		{
+			"id": "llmTa",
+			"title": "LLM Text Analysis",
+			"description": "Tag · Classify · Topics · Q&A",
+			"commands": [
+				"chiara.statistics.nlp.llmTextAnalysis"
+			],
+			"keys": [
+				"BEKS2017a",
+				"Sim2025a",
+				"Sim2025b",
+				"JM2024a",
+				"VSPUJ...2017a",
+				"BMRSK...2020a",
+				"LPPPK...2020a",
+				"Coh1960a",
+				"MHM2018a"
+			]
+		},
+		{
+			"id": "lm",
+			"title": "Linear Regression",
+			"description": "Standard · HC0-HC3 · HAC · Clustered · Driscoll-Kraay",
+			"commands": [
+				"chiara.statistics.lm",
+				"chiara.statistics.lm.ols",
+				"chiara.statistics.lm.hac",
+				"chiara.statistics.lm.wls"
+			],
+			"keys": [
+				"BEKS2017a",
+				"JSC2024a",
+				"Rag2024a",
+				"Woo2019a",
+				"Mun1990b",
+				"Bal2005a",
+				"Pet2009a",
+				"Pet2009b",
+				"Whi1980a",
+				"NW1987a",
+				"DK1998a"
+			]
+		},
+		{
+			"id": "lmar",
+			"title": "Linear Models with Autocorrelation",
+			"description": "Prais-Winsten (2-Step) · Prais-Winsten (Iterated) · Hildreth-Lu · Beach-MacKinnon",
+			"commands": [
+				"chiara.statistics.lm.ar1"
+			],
+			"keys": [
+				"BEKS2017a",
+				"Gre2018a",
+				"PW1954a"
+			]
+		},
+		{
+			"id": "lp",
+			"title": "Linear Programming",
+			"description": "Linear Programming (LP) · Mixed-Integer LP (MILP)",
+			"commands": [
+				"chiara.mp.lp",
+				"chiara.mp.milp"
+			],
+			"keys": [
+				"BEKS2017a",
+				"DHL2017a",
+				"HH2018a",
+				"LY2016a",
+				"BT1997a",
+				"Dan1951a",
+				"LD1960a"
+			]
+		},
+		{
+			"id": "lqr",
+			"title": "Linear Optimal Control",
+			"description": "State-Feedback LQR · Output-Feedback LQG",
+			"commands": [
+				"chiara.optimise.oc.1_classical"
+			],
+			"keys": [
+				"BEKS2017a",
+				"Kir2012a",
+				"DHS2003a",
+				"Kal1960a"
+			]
+		},
+		{
+			"id": "lrm",
+			"title": "Loss Risk Measures",
+			"description": "Drawdown · Downside Risk · Value at Risk · Expected Shortfall",
+			"keys": [
+				"BEKS2017a",
+				"Oeh2024a",
+				"Mar1952a",
+				"SP1994a",
+				"ADEH1999a",
+				"AT2002a"
+			]
+		},
+		{
+			"id": "lsa",
+			"title": "Latent Semantic Analysis",
+			"commands": [
+				"chiara.statistics.nlp.lsa"
+			],
+			"keys": [
+				"BEKS2017a",
+				"JTC2023a",
+				"JM2024a",
+				"MRS2008a",
+				"DDFLH1990a",
+				"Dum2004a"
+			]
+		},
+		{
+			"id": "madp",
+			"title": "Multi-Agent Decision Processes",
+			"description": "Dec-POMDP · Stochastic Games",
+			"commands": [
+				"chiara.optimise.madp"
+			],
+			"keys": [
+				"BEKS2017a",
+				"ESBWG...2017a",
+				"QEDT2023a",
+				"OA2016a",
+				"SL2009b",
+				"Koc2015a",
+				"Sha1953a",
+				"BGIZ2002a",
+				"OSV2008a"
+			]
+		},
+		{
+			"id": "manifold",
+			"title": "Manifold Learning",
+			"description": "ISOmap · LLE · Diffusion Maps",
+			"commands": [
+				"chiara.statistics.pm.manifold"
+			],
+			"keys": [
+				"TSL2000a",
+				"RS2000a",
+				"CL2006a"
+			]
+		},
+		{
+			"id": "marl",
+			"title": "Multi-Agent Reinforcement Learning",
+			"description": "Cooperative · Competitive",
+			"commands": [
+				"chiara.statistics.rl.marl"
+			],
+			"keys": [
+				"BEKS2017a",
+				"Tia...2020a",
+				"SL2009b",
+				"Woo2009a",
+				"LWTHA...2017a",
+				"FFANW2018a"
+			]
+		},
+		{
+			"id": "mbm",
+			"title": "Model-Based Methods",
+			"description": "COBYLA · BOBYQA · NEWUOA · UOBYQA · LINCOA · PRAXIS · Sbplx",
+			"commands": [
+				"chiara.optimise.gfo.mb"
+			],
+			"keys": [
+				"BEKS2017a",
+				"Joh2007b",
+				"Zha2023a",
+				"CSV2009a",
+				"NW2006a",
+				"Pow1994a",
+				"Pow2009a",
+				"Pow2006a",
+				"Pow2002a",
+				"Pow2015a",
+				"Bre1973a",
+				"Row1990a"
+			]
+		},
+		{
+			"id": "mc",
+			"title": "Model Calibration",
+			"description": "Platt Scaling · Isotonic · Temperature",
+			"commands": [
+				"chiara.statistics.mwm.calibration"
+			],
+			"keys": [
+				"WLZ2022a"
+			]
+		},
+		{
+			"id": "mcmc",
+			"title": "Markov Chain Monte Carlo",
+			"description": "NUTS · HMC · Metropolis-Hastings",
+			"commands": [
+				"chiara.simulate.mc.mcmc"
+			],
+			"keys": [
+				"BEKS2017a",
+				"GXG2018a",
+				"XGTTT...2020a",
+				"RC2004a",
+				"BGJM2011a",
+				"Nea2011a",
+				"HG2014a"
+			]
+		},
+		{
+			"id": "mdp",
+			"title": "Single-Agent Decision Processes",
+			"description": "MDP · POMDP · Semi-MDP",
+			"commands": [
+				"chiara.optimise.mdp"
+			],
+			"keys": [
+				"BEKS2017a",
+				"ESBWG...2017a",
+				"Put2005a",
+				"Koc2015a",
+				"KLC1998a",
+				"PGT2003a",
+				"Put1994a"
+			]
+		},
+		{
+			"id": "mlmc",
+			"title": "Multilevel Monte Carlo",
+			"description": "MLMC · MLQMC",
+			"commands": [
+				"chiara.simulate.mc.mlmc"
+			],
+			"keys": [
+				"BEKS2017a",
+				"Rob2018a",
+				"Gil2015a",
+				"RC2004a",
+				"Gil2008a",
+				"Hei1998a",
+				"KSSSU2017a"
+			]
+		},
+		{
+			"id": "mmn",
+			"title": "Market Microstructure Noise",
+			"keys": [
+				"GMSS2019a",
+				"GMSS2023a"
+			]
+		},
+		{
+			"id": "mopt",
+			"title": "Optimization on Riemannian Manifolds",
+			"description": "Gradient Descent · Conjugate Gradient · Quasi-Newton · Trust Regions",
+			"commands": [
+				"chiara.optimise.mopt"
+			],
+			"keys": [
+				"BEKS2017a",
+				"Ber2022a",
+				"ABBR2023a",
+				"AMS2008a",
+				"Bou2023b",
+				"ABG2007a",
+				"Sat2022a",
+				"HAG2018a"
+			]
+		},
+		{
+			"id": "mpc",
+			"title": "Model Predictive Control",
+			"description": "Linear MPC · Nonlinear MPC",
+			"commands": [
+				"chiara.optimise.oc.3_mpc"
+			],
+			"keys": [
+				"BEKS2017a",
+				"RMD2017a",
+				"Mac2002a",
+				"MM1990a",
+				"MRRS2000a"
+			]
+		},
+		{
+			"id": "mpcone",
+			"title": "Convex and Conic Programming",
+			"description": "Convex Programming · Second-Order Cone · Exponential Cone · Power Cone",
+			"commands": [
+				"chiara.mp.cone"
+			],
+			"keys": [
+				"BEKS2017a",
+				"DHL2017a",
+				"GC2024a",
+				"GCG2021a",
+				"DCB2013a",
+				"OCPB2016a",
+				"BV2004a",
+				"BN2001a",
+				"NN1994a",
+				"LVBL1998a"
+			]
+		},
+		{
+			"id": "mpec",
+			"title": "Mathematical Programming with Equilibrium Constraints",
+			"description": "Regularisation · Penalty · Implicit (PATH)",
+			"commands": [
+				"chiara.optimise.evp.mpec"
+			],
+			"keys": [
+				"BEKS2017a",
+				"Chu2023a",
+				"DF1995a",
+				"LPR1996a",
+				"FP2003a",
+				"FP1997a",
+				"SS2000a"
+			]
+		},
+		{
+			"id": "mpm",
+			"title": "Multi-Objective Optimisation Performance Metrics",
+			"description": "Hypervolume · Generational Distance · Inverted Generational Distance · Epsilon-Indicator · Spacing",
+			"commands": [
+				"chiara.optimise.moo.pm"
+			],
+			"keys": [
+				"BEKS2017a",
+				"MM2022a",
+				"Deb2001a",
+				"ZTLFF2003a",
+				"ZT1999a"
+			]
+		},
+		{
+			"id": "mpmicp",
+			"title": "Mixed-Integer Conic Programming",
+			"description": "Cardinality Portfolio · Best Subset Regression · Sparse Logistic Regression · Chance-Constrained Knapsack",
+			"commands": [
+				"chiara.mp.micp"
+			],
+			"keys": [
+				"BEKS2017a",
+				"DHL2017a",
+				"CLV2020a",
+				"CKV2022a",
+				"GC2024a",
+				"HH2018a",
+				"BKM2016a"
+			]
+		},
+		{
+			"id": "mpnlp",
+			"title": "Nonlinear Programming",
+			"description": "Nonlinear Programming (NLP) · Mixed-Integer NLP (MINLP) · Global NLP",
+			"commands": [
+				"chiara.mp.nlp",
+				"chiara.mp.minlp"
+			],
+			"keys": [
+				"BEKS2017a",
+				"DHL2017a",
+				"WB2006a",
+				"NW2006a",
+				"BSS2006a",
+				"KT1951a"
+			]
+		},
+		{
+			"id": "mpsdp",
+			"title": "Semidefinite Programming",
+			"description": "Semidefinite Programming · SDP Relaxation",
+			"commands": [
+				"chiara.mp.sdp"
+			],
+			"keys": [
+				"BEKS2017a",
+				"DHL2017a",
+				"GC2024a",
+				"GCG2021a",
+				"OCPB2016a",
+				"BV2004a",
+				"VB1996a",
+				"GW1995a",
+				"NN1994a"
+			]
+		},
+		{
+			"id": "mpsos",
+			"title": "Polynomial Programming",
+			"description": "Sum of Squares Certification · Polynomial Optimisation",
+			"commands": [
+				"chiara.mp.sos"
+			],
+			"keys": [
+				"BEKS2017a",
+				"DHL2017a",
+				"LWLP2023a",
+				"GC2024a",
+				"GCG2021a",
+				"OCPB2016a",
+				"BPT2012a",
+				"Las2015a",
+				"Par2003a",
+				"Las2001a"
+			]
+		},
+		{
+			"id": "net",
+			"title": "Network Analysis",
+			"description": "Erdos-Renyi · Scale-Free · Small-World · Attributed",
+			"commands": [
+				"chiara.simulate.net"
+			],
+			"keys": [
+				"FBSHE...2021a",
+				"New2010a",
+				"Bar2016a",
+				"ER1960a",
+				"BA1999a",
+				"WS1998a"
+			]
+		},
+		{
+			"id": "netdyn",
+			"title": "Network Dynamics",
+			"description": "Kuramoto · Cascade",
+			"commands": [
+				"chiara.simulate.netdyn"
+			],
+			"keys": [
+				"LLDKW...2021a",
+				"New2010a",
+				"BBV2008a",
+				"Kur1984a",
+				"ML2002a"
+			]
+		},
+		{
+			"id": "netflow",
+			"title": "Network Flows",
+			"description": "Max Flow · Min Cost · Min Cut",
+			"commands": [
+				"chiara.simulate.netflow"
+			],
+			"keys": [
+				"FBSHE...2021a",
+				"AMO1993a",
+				"CLRS2022a",
+				"FF1956a",
+				"Din1970a",
+				"SW1997a"
+			]
+		},
+		{
+			"id": "nf",
+			"title": "Normalising Flows",
+			"description": "RealNVP · MAF · Neural Spline",
+			"commands": [
+				"chiara.statistics.nn.nf"
+			],
+			"keys": [
+				"DSB2017a",
+				"PPM2017a",
+				"DBMP2019a"
+			]
+		},
+		{
+			"id": "ngo",
+			"title": "Network and Graph Optimisation",
+			"description": "Shortest Path · Robust Shortest Path · Network Flow · Spanning Tree · Bipartite Matching · Assignment",
+			"commands": [
+				"chiara.optimise.ngo"
+			],
+			"keys": [
+				"BEKS2017a",
+				"CLRS2022a",
+				"AMO1993a",
+				"Dij1959a",
+				"MG2004a",
+				"FF1956a",
+				"Kru1956a",
+				"Kuh1955a"
+			]
+		},
+		{
+			"id": "nlls",
+			"title": "Nonlinear Least Squares",
+			"description": "Levenberg-Marquardt · Dogleg · Gauss-Newton",
+			"commands": [
+				"chiara.statistics.nlls",
+				"chiara.optimise.nlls"
+			],
+			"keys": [
+				"BEKS2017a",
+				"NW2006a",
+				"Lev1944a",
+				"Mar1963a",
+				"Pow1970a"
+			]
+		},
+		{
+			"id": "nnls",
+			"title": "Non-Negative Least Squares (NNLS)",
+			"commands": [
+				"chiara.statistics.lm.nnls"
+			],
+			"keys": [
+				"LH1987a",
+				"BJ1997a",
+				"KP2008a"
+			]
+		},
+		{
+			"id": "nod",
+			"title": "Proximity-Based Outlier Detection",
+			"description": "KNN · LOF · COF · ABOD",
+			"commands": [
+				"chiara.explore.nod"
+			],
+			"keys": [
+				"BEKS2017a",
+				"MA2022a",
+				"Agg2017a",
+				"CBK2009a",
+				"BKNS2000a",
+				"TCFC2002a",
+				"KSZ2008a"
+			]
+		},
+		{
+			"id": "node",
+			"title": "Neural ODEs for System Identification",
+			"description": "Neural ODE · Augmented · UDE",
+			"commands": [
+				"chiara.statistics.nn.node"
+			],
+			"keys": [
+				"BEKS2017a",
+				"RMMWZ...2019a",
+				"RMDGI...2020a",
+				"GBC2016a",
+				"Str2015a",
+				"CRBD2018a",
+				"RCD2019a"
+			]
+		},
+		{
+			"id": "novd",
+			"title": "Novelty Detection",
+			"description": "OC-SVM · Gaussian · CUSUM",
+			"commands": [
+				"chiara.explore.novd"
+			],
+			"keys": [
+				"BEKS2017a",
+				"JMLC2023a",
+				"Day2023a",
+				"CBK2009a",
+				"Rya2011a",
+				"SPSSW2001a",
+				"Pag1954a"
+			]
+		},
+		{
+			"id": "oa",
+			"title": "Online Algorithms",
+			"description": "Descriptive Stats · Quantile · Histogram · Linear Regression",
+			"commands": [
+				"chiara.statistics.eco.oa"
+			],
+			"keys": [
+				"BEKS2017a",
+				"Day2020a",
+				"LRU2020a",
+				"Wel1962a",
+				"Pla1950a"
+			]
+		},
+		{
+			"id": "ode",
+			"title": "ODE Inference Methods",
+			"description": "Structural Identifiability · Single-Start · Multi-Start · Profile Likelihood · Bayesian Inference",
+			"commands": [
+				"chiara.statistics.ode"
+			],
+			"keys": [
+				"BEKS2017a",
+				"DGHP2023a",
+				"PFGLO...2025a",
+				"MGALS...2021a",
+				"BW1988a",
+				"SSBCD...2021a",
+				"RKMBS...2009a",
+				"RSBMS...2013a",
+				"VFWHB2019a",
+				"FS2022a"
+			]
+		},
+		{
+			"id": "optim",
+			"title": "Local Optimisation",
+			"description": "Gradient Free · Gradient Required · Hessian Required",
+			"commands": [
+				"chiara.optimise.local"
+			],
+			"keys": [
+				"BEKS2017a",
+				"MR2018a",
+				"NW2006a",
+				"BV2004a",
+				"NM1965a",
+				"Fle1970b",
+				"WB2006a"
+			]
+		},
+		{
+			"id": "pbm",
+			"title": "Pareto-Based Multi-Objective Optimisation",
+			"description": "NSGA-II · NSGA-III · SPEA2 · SMS-EMOA",
+			"commands": [
+				"chiara.optimise.moo.pb"
+			],
+			"keys": [
+				"BEKS2017a",
+				"MM2022a",
+				"Deb2001a",
+				"CLV2007a",
+				"DPAM2002a",
+				"DJ2014a",
+				"ZLT2001a",
+				"BNE2007a"
+			]
+		},
+		{
+			"id": "pgm",
+			"title": "Policy Gradient Methods",
+			"description": "REINFORCE · PPO · TRPO",
+			"commands": [
+				"chiara.statistics.rl.pgm"
+			],
+			"keys": [
+				"BEKS2017a",
+				"Tia...2020a",
+				"SB2018a",
+				"SMSM2000a",
+				"SWDRK2017a",
+				"SLAJM2015a"
+			]
+		},
+		{
+			"id": "pgo",
+			"title": "Stochastic Search with Local Refinement",
+			"description": "MLSL · StoGO-R · TikTak",
+			"commands": [
+				"chiara.optimise.go.pg"
+			],
+			"keys": [
+				"BEKS2017a",
+				"KT1987a",
+				"MZ1998a",
+				"AGK2019a"
+			]
+		},
+		{
+			"id": "po",
+			"title": "Portfolio Optimisation",
+			"description": "Mean-Variance · Mean-CVaR · HRP · HERC",
+			"keys": [
+				"BEKS2017a",
+				"Mar1991a",
+				"Ron2013a",
+				"Mar1952a",
+				"RU2000a",
+				"Pra2016a",
+				"BL1992a",
+				"DGU2009a",
+				"Lo2002a"
+			]
+		},
+		{
+			"id": "ppl",
+			"title": "Sampling-Based Bayesian Inference",
+			"description": "Gaussian · Linear Regression · Logistic Regression · Hierarchical",
+			"commands": [
+				"chiara.statistics.ppl",
+				"chiara.statistics.ppl.turing"
+			],
+			"keys": [
+				"BEKS2017a",
+				"GXG2018a",
+				"GCSDV...2013a",
+				"Mce2020a",
+				"HG2014a",
+				"DKPR1987a",
+				"MRRTT1953a"
+			]
+		},
+		{
+			"id": "prox",
+			"title": "Nonsmooth and Proximal Optimisation",
+			"description": "Subgradient · Bundle · Chambolle–Pock · Douglas–Rachford · Proximal Point",
+			"commands": [
+				"chiara.optimise.gbo.np"
+			],
+			"keys": [
+				"BEKS2017a",
+				"TSP2020a",
+				"STP2017a",
+				"PB2014a",
+				"HL1993a",
+				"Bec2017a",
+				"Pol1969a",
+				"Lem1975a",
+				"CP2011a",
+				"LM1979a",
+				"Roc1976a"
+			]
+		},
+		{
+			"id": "ptp",
+			"title": "Point Processes",
+			"description": "Poisson · Inhomogeneous · Cox · Hawkes · Network Hawkes",
+			"commands": [
+				"chiara.statistics.pp"
+			],
+			"keys": [
+				"BEKS2017a",
+				"DV2003a",
+				"DV2008a",
+				"Ros2014a",
+				"Haw1971a",
+				"Cox1955a",
+				"Oga1981a",
+				"Oga1998a",
+				"Gar1936a",
+				"Dig1985a",
+				"MSW1998a",
+				"Ras2013a",
+				"LA2014a",
+				"BBVKF2002a"
+			]
+		},
+		{
+			"id": "ptps",
+			"title": "Point Process Simulation",
+			"description": "Poisson · Inhomogeneous · Cox · Hawkes · Network Hawkes",
+			"commands": [
+				"chiara.simulate.pp"
+			],
+			"keys": [
+				"BEKS2017a",
+				"DV2003a",
+				"Ros2014a",
+				"Oga1981a",
+				"LS1979a",
+				"Haw1971a",
+				"HO1974a",
+				"MSW1998a",
+				"LA2014a",
+				"BBVKF2002a"
+			]
+		},
+		{
+			"id": "ql",
+			"title": "Q-Learning",
+			"description": "Tabular · DQN",
+			"commands": [
+				"chiara.statistics.rl.ql"
+			],
+			"keys": [
+				"BEKS2017a",
+				"Tia...2020a",
+				"SB2018a",
+				"Lap2020a",
+				"WD1992a",
+				"MKSRV...2015a"
+			]
+		},
+		{
+			"id": "qn",
+			"title": "Quasi-Newton Methods",
+			"description": "BFGS · L-BFGS",
+			"commands": [
+				"chiara.optimise.qn"
+			],
+			"keys": [
+				"BEKS2017a",
+				"MR2018a",
+				"NW2006a",
+				"Bro1970a",
+				"Fle1970a",
+				"Gol1970a",
+				"Sha1970a",
+				"LN1989a"
+			]
+		},
+		{
+			"id": "qp",
+			"title": "Quadratic Programming",
+			"description": "Quadratic Programming (QP) · Quadratic Constraints QP (QCQP) · Mixed-Integer QP (MIQP)",
+			"commands": [
+				"chiara.mp.qp",
+				"chiara.mp.qcqp",
+				"chiara.mp.miqp"
+			],
+			"keys": [
+				"BEKS2017a",
+				"DHL2017a",
+				"SBGBB2020a",
+				"GC2024a",
+				"NW2006a",
+				"BV2004a",
+				"Mar1952a"
+			]
+		},
+		{
+			"id": "rcme",
+			"title": "Robust Covariance Matrix Estimation",
+			"description": "Ledoit-Wolf · OAS · Nonlinear",
+			"keys": [
+				"LW2004a",
+				"CWEH2010a",
+				"LW2020a"
+			]
+		},
+		{
+			"id": "rl",
+			"title": "Recurrent Layers",
+			"description": "Flux · Lux",
+			"commands": [
+				"chiara.statistics.nn.rl"
+			],
+			"keys": [
+				"BEKS2017a",
+				"Mar2025a",
+				"HS1997a",
+				"CMGBB...2014a"
+			]
+		},
+		{
+			"id": "ropt",
+			"title": "Uncertainty-Set Robust Optimisation",
+			"description": "Box · Ellipsoidal · Budgeted · Polyhedral",
+			"commands": [
+				"chiara.optimise.ropt"
+			],
+			"keys": [
+				"BEKS2017a",
+				"DHL2017a",
+				"HH2018a",
+				"GC2024a",
+				"BGN2009a",
+				"BT1997a",
+				"Soy1973a",
+				"BN1998a",
+				"BS2004b",
+				"BS2003a"
+			]
+		},
+		{
+			"id": "rouge",
+			"title": "ROUGE Evaluation",
+			"description": "ROUGE-1 · ROUGE-2 · ROUGE-L · ROUGE-Lsum",
+			"commands": [
+				"chiara.statistics.nlp.rouge"
+			],
+			"keys": [
+				"BEKS2017a",
+				"JTC2023a",
+				"JSC2024b",
+				"Geh...2023a",
+				"JM2024a",
+				"ET1993a",
+				"Lin2004a",
+				"Koe2004a",
+				"Wil1945a"
+			]
+		},
+		{
+			"id": "rqr",
+			"title": "Robust and Quantile Regression",
+			"description": "Robust Regression · Quantile Regression",
+			"commands": [
+				"chiara.statistics.rqr",
+				"chiara.statistics.rqr.rl0",
+				"chiara.statistics.rqr.rl1l2",
+				"chiara.statistics.rqr.ql0",
+				"chiara.statistics.rqr.ql1l2"
+			],
+			"keys": [
+				"Hub1964a",
+				"MMYS2019a"
+			]
+		},
+		{
+			"id": "rulebased",
+			"title": "Rule-Based Methods",
+			"description": "Itemset Mining · Association Rules",
+			"commands": [
+				"chiara.statistics.ar.associationRules"
+			],
+			"keys": [
+				"AS1994a",
+				"ZPOL1997a",
+				"HPY2000a"
+			]
+		},
+		{
+			"id": "rvol",
+			"title": "Range-Based Volatility Estimation",
+			"description": "Close-to-Close · Parkinson · Garman-Klass · Rogers-Satchell · GK-Yang-Zhang · Yang-Zhang · Alizadeh-Brandt-Diebold",
+			"keys": [
+				"BEKS2017a",
+				"Hul2022a",
+				"Sin2013a",
+				"Mer1980a",
+				"Par1980a",
+				"GK1980a",
+				"RS1991a",
+				"YZ2000a",
+				"ABD2002a"
+			]
+		},
+		{
+			"id": "rxinfer",
+			"title": "Fast Variational Bayesian Inference",
+			"description": "Gaussian · Linear Regression · Streaming",
+			"commands": [
+				"chiara.statistics.ba.rxinfer"
+			],
+			"keys": [
+				"BEKS2017a",
+				"BV2023c",
+				"BV2022a",
+				"Bis2006a",
+				"KF2009a",
+				"BKM2017a",
+				"BV2023a"
+			]
+		},
+		{
+			"id": "sbi",
+			"title": "Simulation-Based Inference",
+			"description": "Point · Interval · Quantile",
+			"commands": [
+				"chiara.statistics.sbi"
+			],
+			"keys": [
+				"SZH2025a",
+				"SZH2024a"
+			]
+		},
+		{
+			"id": "sbo",
+			"title": "Surrogate-Based Optimisation",
+			"description": "Response Surface Methods · Kriging · Radial Basis Functions",
+			"commands": [
+				"chiara.optimise.sbo"
+			],
+			"keys": [
+				"BEKS2017a",
+				"FSK2008a",
+				"SWMW1989a",
+				"Jon2001a"
+			]
+		},
+		{
+			"id": "sde",
+			"title": "Diffusion Processes",
+			"description": "Additive Noise · Multiplicative Noise · Stratonovich",
+			"commands": [
+				"chiara.simulate.sde"
+			],
+			"keys": [
+				"BEKS2017a",
+				"RN2017a",
+				"Oks2003a",
+				"Eva2013a"
+			]
+		},
+		{
+			"id": "sdea",
+			"title": "SDE Ensemble Analysis",
+			"description": "Path Statistics · First Passage Time · Invariant Distribution",
+			"commands": [
+				"chiara.simulate.sdea"
+			],
+			"keys": [
+				"BEKS2017a",
+				"RN2017a",
+				"Oks2003a",
+				"Tuc1988a"
+			]
+		},
+		{
+			"id": "sgm",
+			"title": "Stochastic Gradient Methods",
+			"description": "SGD · Adam · AdaMax · AdaGrad",
+			"commands": [
+				"chiara.optimise.sgm"
+			],
+			"keys": [
+				"BEKS2017a",
+				"Inn2018a",
+				"GBC2016a",
+				"RM1951a",
+				"DHS2011a",
+				"KB2015a"
+			]
+		},
+		{
+			"id": "si",
+			"title": "System Identification Methods",
+			"description": "ARX · ARMAX · N4SID · OE",
+			"commands": [
+				"chiara.statistics.si"
+			],
+			"keys": [
+				"BEKS2017a",
+				"CFHT2021a",
+				"Lju1999a",
+				"SS1989a",
+				"Kat2005a",
+				"OM1994b"
+			]
+		},
+		{
+			"id": "sid",
+			"title": "Sampling from Intractable Distributions",
+			"commands": [
+				"chiara.statistics.id"
+			],
+			"keys": [
+				"BEKS2017a",
+				"SBTSC...2023a",
+				"RC2004a",
+				"BGJM2011a",
+				"SBDD2022a",
+				"HN1996a",
+				"Nea2003a",
+				"VGSCB2021a"
+			]
+		},
+		{
+			"id": "slm",
+			"title": "Statistical Language Model",
+			"description": "Unigram · Bigram · Trigram",
+			"commands": [
+				"chiara.statistics.nlp.languageModel"
+			],
+			"keys": [
+				"BEKS2017a",
+				"JTC2023a",
+				"JM2024a",
+				"MS1999a",
+				"Kat1987a",
+				"Goo2001a"
+			]
+		},
+		{
+			"id": "smc",
+			"title": "Sequential Monte Carlo",
+			"description": "Particle Filter · Particle Smoother",
+			"commands": [
+				"chiara.simulate.mc.smc"
+			],
+			"keys": [
+				"BEKS2017a",
+				"CP2020a",
+				"DFG2001a",
+				"GSS1993a",
+				"Kit1996a",
+				"GDW2004a",
+				"Kal1960a",
+				"MDJ2006a"
+			]
+		},
+		{
+			"id": "so",
+			"title": "Second Order Methods",
+			"description": "Newton · Newton Trust Region · IPNewton · Truncated Newton",
+			"commands": [
+				"chiara.optimise.so"
+			],
+			"keys": [
+				"BEKS2017a",
+				"MR2018a",
+				"Joh2007c",
+				"NW2006a",
+				"CGT2000a",
+				"WB2006a",
+				"MS1983a",
+				"Nas2000a"
+			]
+		},
+		{
+			"id": "spro",
+			"title": "Stochastic Programming",
+			"description": "Two-Stage · Multistage · SDDP",
+			"commands": [
+				"chiara.optimise.spro"
+			],
+			"keys": [
+				"BEKS2017a",
+				"DHL2017a",
+				"DK2021b",
+				"HH2018a",
+				"BL2011a",
+				"SDR2021a",
+				"Dan1955a",
+				"PP1991a",
+				"RW1991a"
+			]
+		},
+		{
+			"id": "sql",
+			"title": "SQL Databases",
+			"description": "Query · Import File · Save Table · Export",
+			"commands": [
+				"chiara.explore.conn.sql"
+			],
+			"keys": [
+				"BEKS2017a",
+				"RM2019a",
+				"Qui2023b",
+				"Qui2023c",
+				"Cod1970a",
+				"AMH2008a"
+			]
+		},
+		{
+			"id": "sreg",
+			"title": "Symbolic Regression",
+			"commands": [
+				"chiara.statistics.sreg"
+			],
+			"keys": [
+				"BEKS2017a",
+				"Cra2023a",
+				"Koz1992a",
+				"SL2009a",
+				"CSBXC...2020a"
+			]
+		},
+		{
+			"id": "ssm",
+			"title": "State-Space Inference Methods",
+			"description": "Kalman Filter · Extended Kalman Filter · Unscented Kalman Filter · Particle Filter · Rao-Blackwellized Filter",
+			"commands": [
+				"chiara.statistics.ssm"
+			],
+			"keys": [
+				"Sim2006a",
+				"TBF2005a",
+				"Kal1960a",
+				"JU1997a",
+				"WM2000a",
+				"GSS1993a",
+				"DFMR2000a",
+				"SGN2005a"
+			]
+		},
+		{
+			"id": "swarm",
+			"title": "Swarm Intelligence",
+			"description": "PSO · CSO · ABC · WOA · GSA",
+			"commands": [
+				"chiara.optimise.swarm"
+			],
+			"keys": [
+				"BEKS2017a",
+				"MM2022a",
+				"KES2001a",
+				"Eng2005a",
+				"KE1995a",
+				"CJ2015a",
+				"KB2007a",
+				"ML2016a",
+				"RNS2009a"
+			]
+		},
+		{
+			"id": "trad",
+			"title": "Trading Agents",
+			"description": "Trading Agents · Limit Order Book · Market Microstructure",
+			"keys": [
+				"WV2023a",
+				"CJP2015a",
+				"BBDG2018a",
+				"CI2002a",
+				"SFGK2003a",
+				"BGPW2004a",
+				"LM1988a",
+				"GS1993a",
+				"Con2001a"
+			]
+		},
+		{
+			"id": "traj",
+			"title": "Trajectory Optimisation",
+			"description": "Direct Methods · Indirect Methods · Differential Dynamic Programming · ALTRO",
+			"commands": [
+				"chiara.optimise.oc.2_traj"
+			],
+			"keys": [
+				"BEKS2017a",
+				"Kir2012a",
+				"Str2015a"
+			]
+		},
+		{
+			"id": "tsf",
+			"title": "Time-Series Forecasting",
+			"description": "LOESS · Local Level / Trend · Seasonal Model · ETS Framework · ARIMA · Unobserved Components",
+			"commands": [
+				"chiara.statistics.tsf"
+			],
+			"keys": [
+				"BSSS2019a",
+				"HA2021a",
+				"DK2012a",
+				"HKOS2008a",
+				"BJRL2015a"
+			]
+		},
+		{
+			"id": "tsls",
+			"title": "Two-Stage Least Squares (2SLS)",
+			"commands": [
+				"chiara.statistics.lm.tsls"
+			],
+			"keys": [
+				"Bas1957a",
+				"Sar1958a",
+				"AK2001a",
+				"SWY2002a",
+				"AR1949a",
+				"Hau1978a",
+				"SS1997a",
+				"KP2006a"
+			]
+		},
+		{
+			"id": "tssm",
+			"title": "State Space Models",
+			"description": "Linear Gaussian · Nonlinear SSM · Custom SSM",
+			"commands": [
+				"chiara.statistics.timeseries.ssm"
+			],
+			"keys": [
+				"BEKS2017a",
+				"BSSS2019a",
+				"DK2012a",
+				"Har1990a",
+				"WM2000a",
+				"GSS1993a",
+				"Kal1960a",
+				"Whi1982a"
+			]
+		},
+		{
+			"id": "vari",
+			"title": "Variational Inequalities",
+			"description": "Variational Inequality · Quasi-Variational Inequality",
+			"commands": [
+				"chiara.optimise.evp.vari"
+			],
+			"keys": [
+				"BEKS2017a",
+				"Chu2023a",
+				"DF1995a",
+				"FP2003a",
+				"KS1980a",
+				"HS1966a",
+				"DS1969a"
+			]
+		},
+		{
+			"id": "vm",
+			"title": "Volatility Measurement",
+			"description": "Parkinson · Garman-Klass · Rogers-Satchell · Yang-Zhang · Realized Volatility · Two Scales Volatility · Bipower",
+			"keys": [
+				"Par1980a",
+				"GK1980a",
+				"RS1991a",
+				"YZ2000a",
+				"AB1998a",
+				"ZMA2005a",
+				"BS2004a"
+			]
+		},
+		{
+			"id": "wbd",
+			"title": "World Bank Indicators",
+			"commands": [
+				"chiara.explore.adr.wbd"
+			],
+			"keys": [
+				"WB2026a",
+				"WB2024a",
+				"BEKS2017a"
+			]
+		},
+		{
+			"id": "xlsx",
+			"title": "Excel Workbook",
+			"commands": [
+				"chiara.explore.conn.xlsx"
+			],
+			"keys": [
+				"Tav2024a",
+				"Qui...2023a",
+				"EI2016a"
+			]
+		},
+		{
+			"id": "yfin",
+			"title": "Yahoo Finance",
+			"commands": [
+				"chiara.explore.adr.yfin"
+			],
+			"keys": [
+				"Ohn...2024a",
+				"Qui...2023a",
+				"JSC2024c"
+			]
+		}
 	]
 }

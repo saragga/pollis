@@ -14,7 +14,7 @@ import { ILogService } from '../../../../platform/log/common/log.js';
 import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
 import { IPathService } from '../../../services/path/common/pathService.js';
 import { IDatabaseConnectionsService, IDatabaseSession } from '../common/databaseConnections.js';
-import { BUILTIN_DATABASE_ID, DatabaseConnectionTarget, IDatabaseConnectionProfile, JOURNALS_DATABASE_ID, RSS_DATABASE_ID } from '../common/databaseDrivers.js';
+import { BUILTIN_DATABASE_ID, DatabaseConnectionTarget, IDatabaseConnectionProfile, JOURNALS_DATABASE_ID, REFERENCES_DATABASE_ID, RSS_DATABASE_ID } from '../common/databaseDrivers.js';
 
 const STORAGE_KEY = 'pollis.databases.connections';
 // Set by the Julia extension: the id of this window's REPL, which PollisDB writes into its snapshots.
@@ -59,7 +59,9 @@ export class DatabaseConnectionsService extends Disposable implements IDatabaseC
 		// A file that PollisDB.build makes from the PollisDatasets CSV files, and that is only read afterwards.
 		// And PollisRSS: views that PollisDB.build_rss makes over the archive of the RSS feeds, which Pollis adds to.
 		// And PollisJournals: the journals of OpenAlex, which PollisDB.build_journals copies from PollisJournals.jl, and views
-		// over the articles of the email alerts and the journal metrics imported, which Pollis adds to.
+		// over the journal metrics imported, which Pollis adds to.
+		// And PollisReferences: the references of Pollis, which PollisDB.build_references copies, and views over those the
+		// user added, which Pollis adds to.
 		this.builtins = [{
 			id: BUILTIN_DATABASE_ID,
 			name: 'PollisDatasets',
@@ -83,6 +85,14 @@ export class DatabaseConnectionsService extends Disposable implements IDatabaseC
 			target: 'global',
 			variable: 'journals',
 			options: { path: joinPath(pollisFolder, 'databases', 'PollisJournals.duckdb').fsPath, readonly: true },
+			builtin: true,
+		}, {
+			id: REFERENCES_DATABASE_ID,
+			name: 'PollisReferences',
+			driver: 'duckdb',
+			target: 'global',
+			variable: 'references',
+			options: { path: joinPath(pollisFolder, 'databases', 'PollisReferences.duckdb').fsPath, readonly: true },
 			builtin: true,
 		}];
 		void this.watchSessions();

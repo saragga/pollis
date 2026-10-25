@@ -3,79 +3,19 @@
  *  Licensed under the GNU Affero General Public License v3.0. See LICENSE.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IOpenerService } from '../../../../../platform/opener/common/opener.js';
-import { IEditorService } from '../../../../services/editor/common/editorService.js';
-import { IClipboardService } from '../../../../../platform/clipboard/common/clipboardService.js';
-import { INotificationService } from '../../../../../platform/notification/common/notification.js';
-import { ICommandService } from '../../../../../platform/commands/common/commands.js';
-import { IQuickInputService } from '../../../../../platform/quickinput/common/quickInput.js';
-import { IWebviewWorkbenchService } from '../../../webviewPanel/browser/webviewWorkbenchService.js';
-import { INotebookEditorModelResolverService } from '../../../notebook/common/notebookEditorModelResolverService.js';
+import { IScaffoldPanel } from './scaffold.command.js';
+import { CREDENTIALS } from '../common/credentials.js';
 import { EDGAR_METADATA } from '../webviews/edgar.data.js';
-import { INotebookKernelService } from '../../../notebook/common/notebookKernelService.js';
-import { ILanguageService } from '../../../../../editor/common/languages/language.js';
-import { IThemeService } from '../../../../../platform/theme/common/themeService.js';
-import { IFileService } from '../../../../../platform/files/common/files.js';
-import { IPathService } from '../../../../services/path/common/pathService.js';
-import { IWorkspaceContextService } from '../../../../../platform/workspace/common/workspace.js';
-import { ISecretStorageService } from '../../../../../platform/secrets/common/secrets.js';
-import { IWebviewService } from '../../../webview/browser/webview.js';
-import { registerEdgarWebviewHandlers } from '../handlers/edgar.handler.js';
 import { getEdgarHtml } from '../webviews/edgar.template.js';
 
-const EDGAR_VIEW_TYPE = 'pollis.edgar';
-const EDGAR_TITLE = 'US SEC EDGAR';
-
-export function openEdgarWebview(
-	webviewWorkbenchService: IWebviewWorkbenchService,
-	openerService: IOpenerService,
-	editorService: IEditorService,
-	quickInputService: IQuickInputService,
-	commandService: ICommandService,
-	clipboardService: IClipboardService,
-	notificationService: INotificationService,
-	notebookEditorModelResolverService: INotebookEditorModelResolverService,
-	notebookKernelService: INotebookKernelService,
-	languageService: ILanguageService,
-	themeService: IThemeService,
-	fileService: IFileService,
-	pathService: IPathService,
-	workspaceContextService: IWorkspaceContextService,
-	secretStorageService: ISecretStorageService,
-	webviewService: IWebviewService,
-): void {
-	const webviewInput = webviewWorkbenchService.openWebview(
-		{
-			title: EDGAR_TITLE,
-			options: { retainContextWhenHidden: true },
-			contentOptions: { allowScripts: true, localResourceRoots: [] },
-			extension: undefined,
-		},
-		EDGAR_VIEW_TYPE,
-		EDGAR_TITLE,
-		undefined,
-		{ group: undefined, preserveFocus: false }
-	);
-
-	webviewInput.webview.setHtml(getEdgarHtml(EDGAR_METADATA));
-
-	registerEdgarWebviewHandlers(
-		webviewInput,
-		EDGAR_METADATA,
-		openerService,
-		editorService,
-		quickInputService,
-		commandService,
-		clipboardService,
-		notificationService,
-		notebookEditorModelResolverService,
-		notebookKernelService,
-		languageService,
-		themeService,
-		fileService,
-		pathService,
-		workspaceContextService,
-		secretStorageService,
-		webviewService,
-	);
-}
+export const EDGAR_PANEL: IScaffoldPanel = {
+	id: 'edgar',
+	viewType: 'pollis.edgar',
+	title: 'US SEC EDGAR',
+	data: EDGAR_METADATA.edgar,
+	html: () => getEdgarHtml(EDGAR_METADATA),
+	// EDGAR needs no API key, but the SEC requires a User-Agent (your name + contact email) on every
+	// request. We reuse the credential wiring to capture it once (non-masked, noun "contact") and inject
+	// it into the Julia REPL session as ENV["SEC_USER_AGENT"]; generated code reads that env var.
+	apiKey: { label: 'SEC EDGAR', noun: 'contact', fields: [{ ...CREDENTIALS.secUserAgent, prompt: 'SEC contact: your name and email (e.g. Jane Doe jane@example.com)', password: false }] },
+};

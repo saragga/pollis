@@ -3,12 +3,13 @@
  *  Licensed under the GNU Affero General Public License v3.0. See LICENSE.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { disposableTimeout, IntervalTimer, timeout } from '../../../../base/common/async.js';
+import { DeferredPromise, disposableTimeout, IntervalTimer, timeout } from '../../../../base/common/async.js';
 import { VSBuffer } from '../../../../base/common/buffer.js';
 import { CancellationToken } from '../../../../base/common/cancellation.js';
 import { Emitter, Event } from '../../../../base/common/event.js';
 import { Disposable } from '../../../../base/common/lifecycle.js';
 import { joinPath } from '../../../../base/common/resources.js';
+import { isDefined } from '../../../../base/common/types.js';
 import { URI } from '../../../../base/common/uri.js';
 import { localize } from '../../../../nls.js';
 import { ConfigurationScope, Extensions as ConfigurationExtensions, IConfigurationRegistry } from '../../../../platform/configuration/common/configurationRegistry.js';
@@ -24,11 +25,11 @@ import { ISecretStorageService } from '../../../../platform/secrets/common/secre
 import { decodeEntities } from '../../../../platform/alertsMailbox/common/alertEmails.js';
 import { ALERT_SOURCES, AlertSource, IAlertEmail, IAlertsMailbox, IAlertsMailboxPosition } from '../../../../platform/alertsMailbox/common/alertsMailbox.js';
 import { IPathService } from '../../../services/path/common/pathService.js';
-import { ARXIV_TOPIC, DEFAULT_FEEDS, findCatalogueFeed, MOVED_FEEDS, PUBMED_SEARCH, RENAMED_TOPICS, requestSpacing, youtubeFeedUrl } from './rssCatalogue.js';
+import { ARXIV_TOPIC, defaultFeeds, findCatalogueFeed, MOVED_FEEDS, PUBMED_SEARCH, RENAMED_TOPICS, requestSpacing, setRssCatalogue, youtubeFeedUrl } from './rssCatalogue.js';
 import { findOxfordFeeds } from './oxfordJournals.js';
-import { FetchText, IArticleRecord, lookUpArticle } from './articleLookup.js';
+import { articlesFileOf, FetchText, IArticleRecord, lookUpArticle, SCHOLARLY_USER_AGENT } from './articleLookup.js';
 
-// Explore > RSS > RSS Feeds: the feeds the user follows, by topic, read by Pollis itself (RSS 2.0 and Atom, and
+// Explore > RSS > RSS Feeds: the feeds the user follows, by topic, kept in ~/.pollis/rss/feeds.jsonl, read by Pollis itself (RSS 2.0 and Atom, and
 // PubMed searches, YouTube channels and podcasts), with the items kept between sessions and which of them have been
 // read. A feed unsubscribed is no longer read, but its items stay. The welcome page shows the newest unread ones of
 // the feeds shown there. Every item received is also added to
@@ -36,7 +37,8 @@ import { FetchText, IArticleRecord, lookUpArticle } from './articleLookup.js';
 // every item added to Zotero to ~/.pollis/rss/zotero.jsonl, its zotero view. Podcast episodes downloaded go to
 // ~/.pollis/rss/episodes, and are listed in ~/.pollis/rss/episodes.jsonl, its episodes view.
 
-export const RSS_FEEDS_SETTING = 'pollis.rss.feeds';
+// The feeds followed, before they were kept in feeds.jsonl: read once, to write it
+const RSS_FEEDS_SETTING = 'pollis.rss.feeds';
 // The topics hidden on the welcome page, before it was set by feed: read once, to hide their feeds there instead
 const LEGACY_HIDDEN_TOPICS_SETTING = 'pollis.rss.welcomeHiddenTopics';
 const WELCOME_HIDDEN_FEEDS_SETTING = 'pollis.rss.welcomeHiddenFeeds';
@@ -68,10 +70,8 @@ const ALERTS_MAILBOX_POSITION_KEY = 'pollis.rss.alertsMailboxPosition';
 const ALERTS_MAILBOX_PASSWORD_KEY = 'pollis.rss.alertsMailboxPassword';
 // The ISSN of the journal of each feed of the user's own, found by looking up its first items; null when it is no journal's.
 const JOURNAL_FEEDS_KEY = 'pollis.rss.journalFeeds';
-// The time between the lookups of two articles of the email alerts at Crossref and OpenAlex, and how Pollis introduces
-// itself to them (Crossref's polite pool asks for a contact).
+// The time between the lookups of two articles of the email alerts at Crossref and OpenAlex.
 const ARTICLE_LOOKUP_SPACING = 250;
-const SCHOLARLY_USER_AGENT = 'Pollis (https://pollis.org; mailto:contact@pollis.org)';
 // The longest summary kept for an item.
 const MAX_SUMMARY = 400;
 // The server Zotero runs on this computer for its browser connectors, which adds items to the library.
@@ -101,9 +101,10 @@ Registry.as<IConfigurationRegistry>(ConfigurationExtensions.Configuration).regis
 					},
 				],
 			},
-			default: DEFAULT_FEEDS,
+			default: [],
 			scope: ConfigurationScope.APPLICATION,
 			markdownDescription: localize('rss.feedsSetting', "The RSS and Atom feeds shown in **Explore > RSS > RSS Feeds** and on the welcome page: an address, or an address with a topic and a name."),
+			markdownDeprecationMessage: localize('rss.feedsSettingMoved', "The feeds followed are now kept in `~/.pollis/rss/feeds.jsonl`. This setting was read once, to write that file, and is no longer read."),
 		},
 		[WELCOME_HIDDEN_FEEDS_SETTING]: {
 			type: 'array',
@@ -171,7 +172,7 @@ Registry.as<IConfigurationRegistry>(ConfigurationExtensions.Configuration).regis
 	},
 });
 
-/** A feed the user follows, as the setting gives it. */
+/** A feed the user follows, as feeds.jsonl gives it. */
 export interface IRssFeedEntry {
 	readonly url: string;
 	readonly topic?: string;
@@ -199,13 +200,18 @@ export interface IRssItem {
 
 export interface IRssFeed {
 	readonly url: string;
-	/** The name the setting gives, else the catalogue's, else the feed's own title, else its address. */
+	/** The name feeds.jsonl gives, else the catalogue's, else the feed's own title, else its address. */
 	readonly title: string;
 	readonly topic: string;
 	/** Newest first. */
 	readonly items: readonly IRssItem[];
 	/** Set when the feed could not be read the last time it was looked up. */
 	readonly error?: boolean;
+}
+
+/** A line of feeds.jsonl: a feed followed, or, with `removed`, no longer. */
+interface IFeedsLine extends IRssFeedEntry {
+	readonly removed?: true;
 }
 
 /** A feed removed from the page, as it was then; `followed` when it was followed, not only offered by the catalogue. */
@@ -348,6 +354,12 @@ export class RssFeedsService extends Disposable implements IRssFeedsService {
 	private readingMailbox: Promise<boolean> | undefined;
 	private mailboxFailed = false;
 	private readonly archiveFolder: URI;
+	// The feeds followed, by address, in the order they were followed, as feeds.jsonl gives them, once read
+	private readonly entries = new Map<string, IRssFeedEntry>();
+	private readonly feedsFile: URI;
+	private readonly entriesRead = new DeferredPromise<void>();
+	// The catalogue of PollisRSS.jl, which PollisDB copies there
+	private readonly catalogueFile: URI;
 	// The articles of the email alerts, looked up one after another, for the PollisJournals database
 	private readonly articlesFile: URI;
 	private lookingUp: Promise<void> = Promise.resolve();
@@ -365,8 +377,11 @@ export class RssFeedsService extends Disposable implements IRssFeedsService {
 	) {
 		super();
 		// Julia reads the archive on this machine, so it lives in the local home folder
-		this.archiveFolder = joinPath(pathService.userHome({ preferLocal: true }), '.pollis', 'rss', 'items');
-		this.articlesFile = joinPath(pathService.userHome({ preferLocal: true }), '.pollis', 'journals', 'articles.jsonl');
+		const rssFolder = joinPath(pathService.userHome({ preferLocal: true }), '.pollis', 'rss');
+		this.archiveFolder = joinPath(rssFolder, 'items');
+		this.feedsFile = joinPath(rssFolder, 'feeds.jsonl');
+		this.catalogueFile = joinPath(rssFolder, 'catalogue.json');
+		this.articlesFile = articlesFileOf(pathService.userHome({ preferLocal: true }));
 		this.stored = this.readStorage<Record<string, IStoredFeed>>(FEEDS_KEY, {});
 		this.read = new Set(this.readStorage<string[]>(READ_KEY, []));
 		this.zotero = new Set(this.readStorage<string[]>(ZOTERO_KEY, []));
@@ -376,16 +391,18 @@ export class RssFeedsService extends Disposable implements IRssFeedsService {
 		this.readArticleIssns();
 
 		// After the constructor, so that a subclass can read the feeds its own way
-		this._register(disposableTimeout(() => {
+		this._register(disposableTimeout(async () => {
+			await this.moveTopics();
+			await this.readCatalogue();
+			await this.readEntries();
 			this.migrateWelcomeTopics();
-			this.moveTopics();
 			this.refresh();
 		}));
 		const timer = this._register(new IntervalTimer());
 		timer.cancelAndSet(() => this.refresh(), CHECK_INTERVAL);
 		this._register(this.configurationService.onDidChangeConfiguration(e => {
-			if (e.affectsConfiguration(RSS_FEEDS_SETTING) || e.affectsConfiguration(UNSUBSCRIBED_FEEDS_SETTING)) {
-				// Shown at once; a feed followed or subscribed again is then read, after a reading under way, which may not include it
+			if (e.affectsConfiguration(UNSUBSCRIBED_FEEDS_SETTING)) {
+				// Shown at once; a feed subscribed again is then read, after a reading under way, which may not include it
 				this._onDidChange.fire();
 				this.refreshAfterCurrent();
 			} else if (e.affectsConfiguration(WELCOME_HIDDEN_FEEDS_SETTING) || e.affectsConfiguration(HIDDEN_FEEDS_SETTING) || e.affectsConfiguration(DISPLAY_DAYS_SETTING)) {
@@ -441,14 +458,18 @@ export class RssFeedsService extends Disposable implements IRssFeedsService {
 	}
 
 	async updateFeeds(added: readonly IRssFeedEntry[], removed: readonly string[]): Promise<void> {
-		// The setting's own entries are kept as they are written, addresses or objects
-		const value = this.configurationService.getValue<unknown>(RSS_FEEDS_SETTING);
-		const current: unknown[] = Array.isArray(value) ? value : [];
-		const kept = current.filter(entry => !removed.includes(toEntry(entry)?.url ?? ''));
-		const urls = new Set(kept.map(entry => toEntry(entry)?.url));
-		const fresh = added.filter(entry => !urls.has(entry.url));
-		if (fresh.length || kept.length !== current.length) {
-			await this.configurationService.updateValue(RSS_FEEDS_SETTING, [...kept, ...fresh], ConfigurationTarget.USER);
+		await this.entriesRead.p;
+		// A line each, added to feeds.jsonl: the feeds removed, then those not followed yet
+		const lines: IFeedsLine[] = [
+			...removed.filter(url => this.entries.has(url)).map((url): IFeedsLine => ({ url, removed: true })),
+			...added.filter(entry => !this.entries.has(entry.url)).map(({ url, topic, name }) => ({ url, topic, name })),
+		];
+		if (lines.length) {
+			await this.fileService.writeFile(this.feedsFile, VSBuffer.fromString(lines.map(line => JSON.stringify(line) + '\n').join('')), { append: true });
+			lines.forEach(line => this.applyLine(line));
+			// Shown at once; a feed followed is then read, after a reading under way, which may not include it
+			this._onDidChange.fire();
+			this.refreshAfterCurrent();
 		}
 		// A feed added again that was unsubscribed is read again, and one removed before is no longer
 		if (added.some(entry => !this.isSubscribed(entry.url))) {
@@ -458,10 +479,9 @@ export class RssFeedsService extends Disposable implements IRssFeedsService {
 	}
 
 	async removeFeeds(urls: readonly string[]): Promise<void> {
-		const value = this.configurationService.getValue<unknown>(RSS_FEEDS_SETTING);
-		const entries = (Array.isArray(value) ? value : []).map(toEntry);
+		await this.entriesRead.p;
 		const removed = urls.map((url): IRemovedFeed => {
-			const entry = entries.find(entry => entry?.url === url);
+			const entry = this.entries.get(url);
 			const catalogue = findCatalogueFeed(url);
 			return {
 				url,
@@ -904,16 +924,75 @@ export class RssFeedsService extends Disposable implements IRssFeedsService {
 		return Array.isArray(value) ? value.filter((entry): entry is string => typeof entry === 'string') : [];
 	}
 
-	/** The feeds of the setting, each address once. */
+	/** The feeds followed, each address once; none until feeds.jsonl has been read. */
 	private getEntries(): IRssFeedEntry[] {
-		const value = this.configurationService.getValue<unknown>(RSS_FEEDS_SETTING);
-		const entries = new Map<string, IRssFeedEntry>();
-		for (const entry of Array.isArray(value) ? value.map(toEntry) : []) {
-			if (entry && !entries.has(entry.url)) {
-				entries.set(entry.url, entry);
+		return [...this.entries.values()];
+	}
+
+	/** The catalogue of the PollisRSS.jl installed, when there is one; else the catalogue stays the one this Pollis was built with. */
+	private async readCatalogue(): Promise<void> {
+		try {
+			if (setRssCatalogue(JSON.parse((await this.fileService.readFile(this.catalogueFile)).value.toString()))) {
+				this._onDidChange.fire();
+			}
+		} catch {
+			// PollisRSS.jl not installed yet
+		}
+	}
+
+	/**
+	 * Reads feeds.jsonl, written first, once, from the feeds of the setting, or the default feeds when it was never set;
+	 * and again whenever it changes, as another window adds to it.
+	 */
+	private async readEntries(): Promise<void> {
+		if (!await this.fileService.exists(this.feedsFile)) {
+			const value = this.configurationService.inspect<unknown>(RSS_FEEDS_SETTING).userValue;
+			const entries: readonly IRssFeedEntry[] = Array.isArray(value) ? value.map(toEntry).filter(isDefined) : defaultFeeds();
+			await this.fileService.writeFile(this.feedsFile, VSBuffer.fromString(entries.map(({ url, topic, name }) => JSON.stringify({ url, topic, name }) + '\n').join('')));
+		}
+		await this.reloadEntries();
+		this.entriesRead.complete();
+		this._onDidChange.fire();
+		const watcher = this._register(this.fileService.createWatcher(this.feedsFile, { recursive: false, excludes: [] }));
+		this._register(watcher.onDidChange(async () => {
+			const before = JSON.stringify(this.getEntries());
+			await this.reloadEntries();
+			if (JSON.stringify(this.getEntries()) !== before) {
+				this._onDidChange.fire();
+				this.refreshAfterCurrent();
+			}
+		}));
+	}
+
+	/** The feeds of feeds.jsonl, a line at a time, the last line of an address winning. */
+	private async reloadEntries(): Promise<void> {
+		let text: string;
+		try {
+			text = (await this.fileService.readFile(this.feedsFile)).value.toString();
+		} catch {
+			return;
+		}
+		this.entries.clear();
+		for (const line of text.split('\n')) {
+			try {
+				this.applyLine(JSON.parse(line));
+			} catch {
+				// A line cut short, or not JSON
 			}
 		}
-		return [...entries.values()];
+	}
+
+	/** A line of feeds.jsonl: the feed followed, or no longer, keeping its place when it already was. */
+	private applyLine(line: unknown): void {
+		const entry = toEntry(line);
+		if (!entry) {
+			return;
+		}
+		if ((line as Partial<IFeedsLine>).removed === true) {
+			this.entries.delete(entry.url);
+		} else {
+			this.entries.set(entry.url, entry);
+		}
 	}
 
 	private async readAll(): Promise<void> {

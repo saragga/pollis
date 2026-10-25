@@ -8,15 +8,3 @@ import { IScaffoldPanelData } from './model.types.js';
 export interface IFredMetadata {
 	readonly fred: IScaffoldPanelData;
 }
-
-export type FredWebviewMessage =
-	| { command: 'openNotebook'; target: string }
-	| { command: 'openWiki'; target: string }
-	| { command: 'openUrl'; url: string }
-	| { command: 'runCode'; target: 'newFile' | 'juliaRepl' | 'notebook' | 'pluto'; code: string }
-	| { command: 'colorize'; code: string; target?: string }
-	| { command: 'openReference'; id: string }
-	| { command: 'installPackages' }
-	| { command: 'setApiKey' }
-	| { command: 'clearApiKey' }
-	| { command: 'addAlert'; symbol: string };

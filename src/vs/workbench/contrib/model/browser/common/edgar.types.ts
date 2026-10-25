@@ -10,15 +10,3 @@ export interface IEdgarMetadata {
 		readonly notes?: IModelPaneNotes;
 	};
 }
-
-export type EdgarWebviewMessage =
-	| { command: 'openNotebook'; target: string }
-	| { command: 'openWiki'; target: string }
-	| { command: 'openUrl'; url: string }
-	| { command: 'runCode'; target: 'newFile' | 'juliaRepl' | 'notebook' | 'pluto'; code: string }
-	| { command: 'colorize'; code: string; target?: string }
-	| { command: 'openReference'; id: string }
-	| { command: 'installPackages' }
-	| { command: 'addAlert'; symbol: string }
-	| { command: 'setApiKey' }
-	| { command: 'clearApiKey' };

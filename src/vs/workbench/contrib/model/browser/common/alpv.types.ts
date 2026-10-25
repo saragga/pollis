@@ -8,15 +8,3 @@ import { IScaffoldPanelData } from './model.types.js';
 export interface IAlpvMetadata {
 	readonly alpv: IScaffoldPanelData;
 }
-
-export type AlpvWebviewMessage =
-	| { command: 'openNotebook'; target: string }
-	| { command: 'openWiki'; target: string }
-	| { command: 'openUrl'; url: string }
-	| { command: 'runCode'; target: 'newFile' | 'juliaRepl' | 'notebook' | 'pluto'; code: string }
-	| { command: 'colorize'; code: string; target?: string }
-	| { command: 'openReference'; id: string }
-	| { command: 'installPackages' }
-	| { command: 'addAlert'; symbol: string }
-	| { command: 'setApiKey' }
-	| { command: 'clearApiKey' };

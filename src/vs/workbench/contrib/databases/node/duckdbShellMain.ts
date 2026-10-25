@@ -18,7 +18,7 @@ const POLLIS_HOME = join(os.homedir(), '.pollis');
 /** The Lance extension, which the Julia extension of Pollis unpacks here at install. */
 const LANCE = join(POLLIS_HOME, 'duckdb', 'lance.duckdb_extension');
 /** The built-in databases, attached read-only under their own names. */
-const BUILTINS = [join(POLLIS_HOME, 'databases', 'PollisDatasets.duckdb'), join(POLLIS_HOME, 'databases', 'PollisRSS.duckdb'), join(POLLIS_HOME, 'databases', 'PollisJournals.duckdb')];
+const BUILTINS = [join(POLLIS_HOME, 'databases', 'PollisDatasets.duckdb'), join(POLLIS_HOME, 'databases', 'PollisRSS.duckdb'), join(POLLIS_HOME, 'databases', 'PollisJournals.duckdb'), join(POLLIS_HOME, 'databases', 'PollisReferences.duckdb')];
 const HISTORY = join(POLLIS_HOME, 'duckdb', 'shell_history');
 const HISTORY_SIZE = 1000;
 

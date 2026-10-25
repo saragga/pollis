@@ -14,7 +14,7 @@ import { ServicesAccessor } from '../../../../platform/instantiation/common/inst
 import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
 import { ALERT_SOURCES, AlertSource } from '../../../../platform/alertsMailbox/common/alertsMailbox.js';
-import { ARXIV_TOPIC, arxivSearchName, arxivSearchUrl, findCatalogueFeed, MEDICINE_TOPIC, pubmedSearchName, pubmedSearchUrl, RSS_CATALOGUE } from './rssCatalogue.js';
+import { ARXIV_TOPIC, arxivSearchName, arxivSearchUrl, findCatalogueFeed, MEDICINE_TOPIC, pubmedSearchName, pubmedSearchUrl, rssCatalogueTopics } from './rssCatalogue.js';
 import { ADD_FEED_COMMAND_ID, getTopics, RSS_FEEDS_COMMAND_ID } from './rssFeedsPage.js';
 import { IRssFeedEntry, IRssFeedsService, IRssItem, OTHER_TOPIC } from './rssFeedsService.js';
 import { OPEN_LINK_COMMAND_ID } from './openLink.js';
@@ -82,7 +82,7 @@ async function openAddFeedPage(accessor: ServicesAccessor): Promise<void> {
 		const followed = rssFeedsService.getFeeds();
 		webviewInput.webview.postMessage({
 			command: 'state',
-			topics: getTopics([OTHER_TOPIC, ...followed.map(feed => feed.topic), ...RSS_CATALOGUE.map(({ topic }) => topic)]),
+			topics: getTopics([OTHER_TOPIC, ...followed.map(feed => feed.topic), ...rssCatalogueTopics().map(({ topic }) => topic)]),
 			// The feeds the user added, not the catalogue's, which the RSS Feeds page lists and removes
 			added: followed.filter(feed => !findCatalogueFeed(feed.url)).map(feed => ({ url: feed.url, title: feed.title, topic: feed.topic })),
 			removed: [...rssFeedsService.getRemovedFeeds()].reverse().map(feed => ({ url: feed.url, title: feed.title, topic: feed.topic ?? '' })),
