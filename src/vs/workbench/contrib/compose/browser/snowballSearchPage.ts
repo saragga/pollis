@@ -34,9 +34,12 @@ import { IOpenAlexWork, OPENALEX_TYPES, openAlexIdOf, sameWork, titleWords } fro
 // that cite each seed (Cited By) and the works each seed cites (Cites), as OpenAlex lists them, and asks Semantic Scholar
 // how each citation is made: the sentences citing, why (background, method or result), and whether it is influential.
 // Related lists the works Semantic Scholar recommends for a seed, by the likeness of their texts: in the pool, not in Links.
+// The search goes in rounds: works of the pool made seeds, then the lists following them. Each list of citations keeps the
+// pool's top, and a round that brings nothing new into it has saturated the search.
+// Run to Saturation runs the rounds itself, making the best candidates seeds each round; a work excluded stays out of the top.
 
 /** What a step of the map did: made a work a seed, listed the works citing a seed, those it cites or those related to it, or removed a seed. */
-type StepAction = 'seed' | 'cited_by' | 'cites' | 'related' | 'remove';
+type StepAction = 'seed' | 'cited_by' | 'cites' | 'related' | 'remove' | 'exclude' | 'include';
 /** The steps that make a list: the works citing a seed, those it cites, or those related to it. */
 type ListAction = 'cited_by' | 'cites' | 'related';
 /** The lists of citations, followed in OpenAlex. */
@@ -63,6 +66,15 @@ interface ISnowballStep {
 	readonly added?: number;
 	/** For a Related list, the index that gave it: Semantic Scholar, or OpenAlex for a seed Semantic Scholar has no record of. */
 	readonly index?: string;
+	/** For a list of citations, the pool's top once the list was kept, by OpenAlex id: what the next round is compared with. */
+	readonly top?: readonly string[];
+}
+
+/** A round of the search: the seeds made, the lists of citations that followed them, and the pool's top after the last. */
+interface ISnowballRound {
+	readonly seeds: string[];
+	readonly lists: string[];
+	top?: readonly string[];
 }
 
 /** The map now in the page: kept while the window is open, the page closed or not. */
@@ -77,6 +89,9 @@ type SnowballMessage =
 	| { readonly command: 'ready' }
 	| { readonly command: 'citedBy' | 'cites'; readonly seeds: readonly string[]; readonly contexts: boolean }
 	| { readonly command: 'related'; readonly seeds: readonly string[] }
+	| { readonly command: 'saturate'; readonly actions: readonly string[]; readonly best: number; readonly rounds: number; readonly contexts: boolean }
+	| { readonly command: 'stop' }
+	| { readonly command: 'exclude' | 'include'; readonly work: string }
 	| { readonly command: 'contexts'; readonly work: string }
 	| { readonly command: 'layout'; readonly portrait: boolean }
 	| { readonly command: 'seedWork'; readonly work: string }
@@ -90,8 +105,9 @@ type SnowballMessage =
 	| { readonly command: 'new' }
 	| { readonly command: 'openUrl'; readonly url: string };
 
-const ACTIONS: readonly StepAction[] = ['seed', 'cited_by', 'cites', 'related', 'remove'];
+const ACTIONS: readonly StepAction[] = ['seed', 'cited_by', 'cites', 'related', 'remove', 'exclude', 'include'];
 const LIST_ACTIONS: readonly StepAction[] = ['cited_by', 'cites', 'related'];
+const FOLLOWED: readonly CitationAction[] = ['cited_by', 'cites'];
 /** Where seeds come from, besides the pool's lists. */
 const FROM_REFERENCES = 'PollisReferences';
 const FROM_DISCOVER = 'Discover Literature';
@@ -125,6 +141,42 @@ const CONTEXTS_PAGE = 1000;
 const CONTEXTS_PAGES = 10;
 /** The rows of the pool a page shows, and the top whose newcomers tell how close the pool is to saturation. */
 const TOP = 20;
+/** What Run to Saturation does, as the user last set it: the candidates made seeds a round, the rounds at most, and the lists of citations followed. */
+const SATURATE_KEY = 'pollis.snowball.saturate';
+const MOST_ROUNDS = 20;
+
+interface ISaturateSettings {
+	readonly best: number;
+	readonly rounds: number;
+	readonly actions: readonly CitationAction[];
+}
+
+const SATURATE_DEFAULTS: ISaturateSettings = { best: 5, rounds: 6, actions: ['cited_by'] };
+
+/** `value` as a whole number from 1 to `most`, or `fallback` when it is none. */
+function wholeNumber(value: unknown, most: number, fallback: number): number {
+	return typeof value === 'number' && Number.isFinite(value) ? Math.min(most, Math.max(1, Math.floor(value))) : fallback;
+}
+
+/** Run to Saturation's settings, from what was given or stored: each one missing or wrong its default. */
+function saturateSettings(given: { best?: unknown; rounds?: unknown; actions?: unknown } | undefined): ISaturateSettings {
+	const listed: unknown[] = Array.isArray(given?.actions) ? given.actions : [];
+	const actions = FOLLOWED.filter(action => listed.includes(action));
+	return {
+		best: wholeNumber(given?.best, TOP, SATURATE_DEFAULTS.best),
+		rounds: wholeNumber(given?.rounds, MOST_ROUNDS, SATURATE_DEFAULTS.rounds),
+		actions: actions.length ? actions : SATURATE_DEFAULTS.actions,
+	};
+}
+
+/** Run to Saturation's settings as last stored. */
+function storedSaturateSettings(storageService: IStorageService): ISaturateSettings {
+	try {
+		return saturateSettings(JSON.parse(storageService.get(SATURATE_KEY, StorageScope.PROFILE, '{}')));
+	} catch {
+		return SATURATE_DEFAULTS;
+	}
+}
 
 /** The map's tables, in the in-memory database `snowball`; a seed is a work of PollisReferences (key) or an article. */
 const TABLES = `CREATE TABLE IF NOT EXISTS snowball.articles (id VARCHAR PRIMARY KEY, doi VARCHAR, openalex VARCHAR, s2 VARCHAR, title VARCHAR, authors VARCHAR[], year INTEGER, journal VARCHAR, cited INTEGER, link VARCHAR);
@@ -133,6 +185,7 @@ CREATE TABLE IF NOT EXISTS snowball.works (openalex VARCHAR PRIMARY KEY, doi VAR
 CREATE TABLE IF NOT EXISTS snowball.links (work VARCHAR, seed VARCHAR, relation VARCHAR, list VARCHAR, PRIMARY KEY (work, seed, relation));
 CREATE TABLE IF NOT EXISTS snowball.contexts (work VARCHAR, seed VARCHAR, intents VARCHAR[], influential BOOLEAN, contexts VARCHAR[], PRIMARY KEY (work, seed));
 CREATE TABLE IF NOT EXISTS snowball.s2_asked (id VARCHAR PRIMARY KEY, known BOOLEAN);
+CREATE TABLE IF NOT EXISTS snowball.excluded (openalex VARCHAR PRIMARY KEY);
 CREATE OR REPLACE VIEW snowball.seed_works AS
 	SELECT s.id, s.key, s.article, s.removed, coalesce(s.openalex, r.openalex, a.openalex) AS openalex, lower(coalesce(r.doi, a.doi)) AS doi, a.s2,
 		coalesce(r.title, a.title) AS title, coalesce(r.authors, a.authors) AS authors, coalesce(r.year, a.year) AS year, coalesce(r.journal, r.booktitle, a.journal) AS journal,
@@ -142,13 +195,13 @@ CREATE OR REPLACE VIEW snowball.seed_works AS
 	LEFT JOIN snowball.articles a ON a.id = s.article`;
 // contexts: how a work cites a seed, or a seed the work, as Semantic Scholar has it; s2_asked: the seeds whose citing works
 // (by the seed's id) or references (by its id and ' references'), and the works whose references, Semantic Scholar was asked
-// for, and whether it has a record of them
-const TABLE_NAMES = ['articles', 'seeds', 'works', 'links', 'contexts', 's2_asked'];
+// for, and whether it has a record of them; excluded: the works of the pool kept out of its top
+const TABLE_NAMES = ['articles', 'seeds', 'works', 'links', 'contexts', 's2_asked', 'excluded'];
 
 /**
  * The pool ranked: by Links, the active seeds a work is tied to, then by its citations. Each work has its ties to the
  * active seeds as Semantic Scholar tells them (`ties`), and `known`, whether Semantic Scholar was asked for its references
- * and has a record of it.
+ * and has a record of it. A work excluded is ranked after all the others, and so is never in the top.
  */
 const RANKED = `WITH active AS (SELECT id, openalex FROM snowball.seed_works WHERE NOT removed),
 ties AS (
@@ -164,8 +217,10 @@ pool AS (
 	FROM snowball.works w JOIN snowball.links l ON l.work = w.openalex LEFT JOIN active a ON a.id = l.seed
 	GROUP BY w.openalex),
 ranked AS (
-	SELECT pool.*, t.ties, coalesce(t.influential, 0) AS influential, k.known, s.id AS seed, (row_number() OVER (ORDER BY links DESC, cited DESC NULLS LAST, title))::INTEGER AS rank
-	FROM pool LEFT JOIN active s ON s.openalex = pool.openalex LEFT JOIN ties t ON t.work = pool.openalex LEFT JOIN snowball.s2_asked k ON k.id = pool.openalex)`;
+	SELECT pool.*, t.ties, coalesce(t.influential, 0) AS influential, k.known, s.id AS seed, x.openalex IS NOT NULL AS excluded,
+		(row_number() OVER (ORDER BY x.openalex IS NOT NULL, links DESC, cited DESC NULLS LAST, title))::INTEGER AS rank
+	FROM pool LEFT JOIN active s ON s.openalex = pool.openalex LEFT JOIN ties t ON t.work = pool.openalex LEFT JOIN snowball.s2_asked k ON k.id = pool.openalex
+		LEFT JOIN snowball.excluded x ON x.openalex = pool.openalex)`;
 /**
  * The orders the pool may be shown in, by the heading clicked: Links, then the influential citations among them, then
  * Cited; Year; or Cited. Ties keep the rank. `{0}` is DESC or ASC.
@@ -176,8 +231,10 @@ const POOL_ORDERS: Record<string, string> = {
 	cited: 'cited {0} NULLS LAST',
 };
 
-/** Whether a ranked work is shown: all, those of one list, or those the last list added. */
-const SHOWN = `($show = 'all' OR ($show = 'new' AND first_list = $last) OR list_contains(lists, $show))`;
+/** The works of the top neither seeds nor excluded: those Run to Saturation makes seeds, the best first. */
+const CANDIDATE = `(rank <= ${TOP} AND seed IS NULL AND NOT excluded)`;
+/** Whether a ranked work is shown: all, those of one list, those the last list added, or the candidates. */
+const SHOWN = `($show = 'all' OR ($show = 'new' AND first_list = $last) OR ($show = 'candidates' AND ${CANDIDATE}) OR list_contains(lists, $show))`;
 
 let openPage: WebviewInput | undefined;
 /** The open page's handler of the seeds another page gives it. */
@@ -267,9 +324,36 @@ function parseRecord(text: string): { name?: string; steps: ISnowballStep[] } {
 		return [{
 			id: text_(table.id), action, from, at, key: text_(table.key), article: text_(table.article), label: text_(table.label), title: text_(table.title),
 			listed: count(table.listed), found: count(table.found), added: count(table.added), index: text_(table.index),
+			top: Array.isArray(table.top) ? table.top.filter((item): item is string => typeof item === 'string') : undefined,
 		}];
 	});
 	return { name: text_(top.name), steps };
+}
+
+/**
+ * The rounds of `steps`: a round begins with the seeds made after a list of citations, and ends with the lists of
+ * citations following them. Related lists change no work's Links, so they end no round.
+ */
+function roundsOf(steps: readonly ISnowballStep[]): ISnowballRound[] {
+	const rounds: ISnowballRound[] = [];
+	for (const step of steps) {
+		const citations = step.action === 'cited_by' || step.action === 'cites';
+		if (!step.id || step.action !== 'seed' && !citations) {
+			continue;
+		}
+		let round = rounds.at(-1);
+		if (!round || step.action === 'seed' && round.lists.length) {
+			round = { seeds: [], lists: [] };
+			rounds.push(round);
+		}
+		if (citations) {
+			round.lists.push(step.id);
+			round.top = step.top;
+		} else {
+			round.seeds.push(step.id);
+		}
+	}
+	return rounds;
 }
 
 /** The name of a map's files: its name, without the characters a file name cannot have. */
@@ -315,7 +399,7 @@ function openSnowballSearch(accessor: ServicesAccessor, seeds: ISnowballSeeds | 
 		undefined,
 		{ group: undefined, preserveFocus: false }
 	);
-	webviewInput.webview.setHtml(pageHtml(storageService.getBoolean(CONTEXTS_KEY, StorageScope.PROFILE, true), storageService.getBoolean(PORTRAIT_KEY, StorageScope.PROFILE, false)));
+	webviewInput.webview.setHtml(pageHtml(storageService.getBoolean(CONTEXTS_KEY, StorageScope.PROFILE, true), storageService.getBoolean(PORTRAIT_KEY, StorageScope.PROFILE, false), storedSaturateSettings(storageService)));
 	openPage = webviewInput;
 
 	const disposables = new DisposableStore();
@@ -347,7 +431,7 @@ function openSnowballSearch(accessor: ServicesAccessor, seeds: ISnowballSeeds | 
 		await database.run(TABLES);
 		const lists = map.steps.filter(step => LIST_ACTIONS.includes(step.action) && step.id).map(step => step.id!);
 		const last = lists.at(-1) ?? '';
-		if (view.show !== 'all' && view.show !== 'new' && !lists.includes(view.show)) {
+		if (view.show !== 'all' && view.show !== 'new' && view.show !== 'candidates' && !lists.includes(view.show)) {
 			view.show = 'all';
 		}
 		const parameters = { show: view.show, last };
@@ -359,8 +443,25 @@ function openSnowballSearch(accessor: ServicesAccessor, seeds: ISnowballSeeds | 
 		const size = view.rows || Math.max(1, shown);
 		view.page = Math.max(0, Math.min(view.page, Math.ceil(shown / size) - 1));
 		const order = POOL_ORDERS[view.sort].replaceAll('{0}', view.descending ? 'DESC' : 'ASC');
-		const rows = await database.query(`${RANKED} SELECT * FROM ranked WHERE ${SHOWN} ORDER BY ${order}, rank LIMIT ${size} OFFSET ${view.page * size}`, parameters);
-		post({ command: 'state', name: map.name, dirty: map.dirty, steps: map.steps, seeds: await seedRows(), summary, rows, lists, view });
+		const rows = await database.query(`${RANKED} SELECT * FROM ranked WHERE ${SHOWN} ORDER BY excluded, ${order}, rank LIMIT ${size} OFFSET ${view.page * size}`, parameters);
+		post({ command: 'state', name: map.name, dirty: map.dirty, steps: map.steps, seeds: await seedRows(), summary, rows, lists, view, saturation: saturation() });
+	};
+
+	/**
+	 * How close the search is to saturation: the last round that followed its seeds, the works it brought into the pool's
+	 * top that the round before had not (all of the top, in the first round), and the seeds of a round begun since.
+	 * Nothing for a map whose lists kept no top, as those made before rounds were.
+	 */
+	const saturation = () => {
+		const rounds = roundsOf(map.steps);
+		const begun = rounds.at(-1)?.lists.length === 0 ? rounds.pop() : undefined;
+		const round = rounds.at(-1);
+		const previous = rounds.at(-2);
+		if (!round?.top || previous && !previous.top) {
+			return undefined;
+		}
+		const before = previous?.top ?? [];
+		return { round: rounds.length, seeds: round.seeds, lists: round.lists, risen: round.top.filter(work => !before.includes(work)), compared: !!previous, begun: begun?.seeds };
 	};
 
 	/** Makes the works with `keys` in PollisReferences, and the `articles` not there, seeds: those that are not already. */
@@ -437,6 +538,90 @@ function openSnowballSearch(accessor: ServicesAccessor, seeds: ISnowballSeeds | 
 			await database.run(`UPDATE snowball.seeds SET removed = true WHERE id = $id`, { id });
 			step({ action: 'remove', from: id, at: now() });
 			tell('');
+		}
+	};
+
+	/** Keeps a work of the pool, not a seed, out of its top, and so out of the candidates; or, `excluded` false, no longer. */
+	const exclude = async (openAlexId: string, excluded: boolean) => {
+		const [work] = await database.query(`${RANKED} SELECT title, excluded FROM ranked WHERE openalex = $work AND seed IS NULL`, { work: openAlexId });
+		if (!work || work.excluded === excluded) {
+			return;
+		}
+		await database.run(excluded ? `INSERT INTO snowball.excluded VALUES ($work)` : `DELETE FROM snowball.excluded WHERE openalex = $work`, { work: openAlexId });
+		step({ action: excluded ? 'exclude' : 'include', from: openAlexId, at: now(), title: text(work.title) });
+		tell('');
+	};
+
+	/** Whether Run to Saturation is to stop once the round it is in ends. */
+	let stopping = false;
+
+	/**
+	 * Follows each of `ids`, seeds, by each of `actions` it is not followed by yet. Returns whether a list could not be made,
+	 * and how many lists were.
+	 */
+	const followNew = async (ids: readonly string[], actions: readonly CitationAction[], contexts: boolean) => {
+		const lists = map.steps.length;
+		let failed = false;
+		for (const action of actions) {
+			const unfollowed = ids.filter(id => !map.steps.some(step => step.action === action && step.from === id));
+			if (unfollowed.length && await follow(action, unfollowed, contexts)) {
+				failed = true;
+			}
+		}
+		return { failed, lists: map.steps.slice(lists).filter(step => LIST_ACTIONS.includes(step.action)).length };
+	};
+
+	/**
+	 * Runs the search in rounds until it saturates, or `settings.rounds` rounds have run: the seeds not followed yet are
+	 * followed first; then, each round, the `settings.best` candidates are made seeds and followed, and the pool's top
+	 * compared with the round's before. Stops too when a list could not be made, or no candidate is left.
+	 */
+	const saturate = async (settings: ISaturateSettings, contexts: boolean) => {
+		stopping = false;
+		post({ command: 'saturating', running: true });
+		try {
+			const begun = await followNew((await seedRows()).map(seed => String(seed.id)), settings.actions, contexts);
+			if (begun.failed) {
+				return;
+			}
+			let ended = '';
+			for (let run = 0; ; run++) {
+				const verdict = saturation();
+				if (verdict?.compared && !verdict.risen.length) {
+					ended = localize('snowball.saturatedEnd', "Round {0} brought nothing new into the top {1}: the search has saturated.", verdict.round, TOP);
+					break;
+				}
+				if (stopping) {
+					ended = localize('snowball.stoppedEnd', "Stopped, as asked.");
+					break;
+				}
+				if (run >= settings.rounds) {
+					ended = run === 1
+						? localize('snowball.roundsEndOne', "1 round run, and the top {0} still changes: run more rounds, or make seeds yourself.", TOP)
+						: localize('snowball.roundsEnd', "{0} rounds run, and the top {1} still changes: run more rounds, or make seeds yourself.", run, TOP);
+					break;
+				}
+				const candidates = await database.query(`${RANKED} SELECT openalex FROM ranked WHERE ${CANDIDATE} ORDER BY rank LIMIT ${settings.best}`);
+				if (!candidates.length) {
+					ended = localize('snowball.noCandidates', "No work of the top {0} is left to make a seed: each is a seed or excluded.", TOP);
+					break;
+				}
+				const steps = map.steps.length;
+				for (const candidate of candidates) {
+					await seedWork(String(candidate.openalex));
+				}
+				const ids = map.steps.slice(steps).flatMap(step => step.action === 'seed' && step.id ? [step.id] : []);
+				post({ command: 'progress', message: localize('snowball.roundProgress', "Round {0}: following {1}.", roundsOf(map.steps).length, ids.join(', ')) });
+				await postState();
+				const round = await followNew(ids, settings.actions, contexts);
+				await postState();
+				if (round.failed || !round.lists) {
+					return;
+				}
+			}
+			tell(ended);
+		} finally {
+			post({ command: 'saturating', running: false });
 		}
 	};
 
@@ -519,7 +704,9 @@ function openSnowballSearch(accessor: ServicesAccessor, seeds: ISnowballSeeds | 
 		await database.run(`INSERT INTO snowball.works SELECT DISTINCT ON (openalex) openalex, doi, title, authors, year, journal, cited, link, $list FROM (${json}) WHERE openalex NOT IN (SELECT openalex FROM snowball.works)`, parameters);
 		await database.run(`INSERT OR IGNORE INTO snowball.links SELECT DISTINCT openalex, $seed, $relation, $list FROM (${json})`, { ...parameters, seed: id, relation: RELATION[action] });
 		const [added] = await database.query(`SELECT count(*)::INTEGER AS added FROM snowball.works WHERE first_list = $list`, { list });
-		step({ id: list, action, from: id, at: now(), listed: rows.length, found: Math.max(found, rows.length), added: typeof added?.added === 'number' ? added.added : 0, index });
+		// A list of citations keeps the pool's top, which the next round is compared with
+		const top = action === 'related' ? undefined : (await database.query(`${RANKED} SELECT openalex FROM ranked WHERE rank <= ${TOP} AND NOT excluded ORDER BY rank`)).map(work => String(work.openalex));
+		step({ id: list, action, from: id, at: now(), listed: rows.length, found: Math.max(found, rows.length), added: typeof added?.added === 'number' ? added.added : 0, index, top });
 		return { list, rows };
 	};
 
@@ -588,7 +775,9 @@ function openSnowballSearch(accessor: ServicesAccessor, seeds: ISnowballSeeds | 
 				}
 			}
 		}
-		tell(notes.join(' '), notes.length > 0 && !notes.every(note => note.includes('lists the')));
+		const failed = notes.length > 0 && !notes.every(note => note.includes('lists the'));
+		tell(notes.join(' '), failed);
+		return failed;
 	};
 
 	/**
@@ -927,7 +1116,25 @@ function openSnowballSearch(accessor: ServicesAccessor, seeds: ISnowballSeeds | 
 				if (Array.isArray(message.seeds)) {
 					const contexts = message.contexts === true;
 					storageService.store(CONTEXTS_KEY, contexts, StorageScope.PROFILE, StorageTarget.USER);
-					await queue(() => follow(message.command === 'cites' ? 'cites' : 'cited_by', message.seeds.filter(seed => typeof seed === 'string'), contexts));
+					await queue(async () => { await follow(message.command === 'cites' ? 'cites' : 'cited_by', message.seeds.filter(seed => typeof seed === 'string'), contexts); });
+				}
+				break;
+			case 'saturate': {
+				const settings = saturateSettings(message);
+				const contexts = message.contexts === true;
+				storageService.store(SATURATE_KEY, JSON.stringify(settings), StorageScope.PROFILE, StorageTarget.USER);
+				storageService.store(CONTEXTS_KEY, contexts, StorageScope.PROFILE, StorageTarget.USER);
+				await queue(() => saturate(settings, contexts));
+				break;
+			}
+			case 'stop':
+				stopping = true;
+				post({ command: 'progress', message: localize('snowball.stopping', "Stopping once this round ends.") });
+				break;
+			case 'exclude':
+			case 'include':
+				if (typeof message.work === 'string') {
+					await queue(() => exclude(message.work, message.command === 'exclude'));
 				}
 				break;
 			case 'related':
@@ -1030,7 +1237,7 @@ function isArticle(value: unknown): value is ISnowballArticle {
 		&& Array.isArray(article.authors) && typeof article.link === 'string';
 }
 
-function pageHtml(askContexts: boolean, portrait: boolean): string {
+function pageHtml(askContexts: boolean, portrait: boolean, saturate: ISaturateSettings): string {
 	const text = {
 		title: localize('snowball.title', "Snowball Search Map"),
 		intro: localize('snowball.intro', "Start from a few works you know, the seeds, and follow their citations: the works citing them, and those they cite, pour into one pool, ranked by how many seeds each is tied to. Make the best of them seeds and go on, until a step adds little to the top of the pool. Each step is kept in the map's record, which you can save and open again."),
@@ -1068,6 +1275,21 @@ function pageHtml(askContexts: boolean, portrait: boolean): string {
 		relatedAction: localize('snowball.relatedAction', "Related"),
 		relatedHint: localize('snowball.relatedHint', "Lists the works Semantic Scholar recommends for each seed, by the likeness of their titles and abstracts, mostly recent, up to 500; for a seed it has no record of, the ten or so OpenAlex relates to it. They join the pool, but Links does not count them"),
 		askContexts: localize('snowball.askContexts.citations', "Ask Semantic Scholar About the Citations"),
+		saturate: localize('snowball.saturate', "Run to Saturation"),
+		saturateHint: localize('snowball.saturateHint', "Follows the seeds not followed yet, then, round after round, makes the best candidates seeds and follows them, until a round brings nothing new into the top {0}", TOP),
+		stop: localize('snowball.stop', "Stop"),
+		stopHint: localize('snowball.stopHint', "Stops once the round running ends"),
+		bestLabel: localize('snowball.bestLabel', "Seeds a round"),
+		bestHint: localize('snowball.bestHint', "How many of the best candidates each round makes seeds, from 1 to {0}", TOP),
+		roundsLabel: localize('snowball.roundsLabel', "Rounds at most"),
+		roundsHint: localize('snowball.roundsHint', "How many rounds to run at most, from 1 to {0}, if the search has not saturated before", MOST_ROUNDS),
+		followLabel: localize('snowball.followLabel', "Following"),
+		noFollow: localize('snowball.noFollow', "Tick Cited By, Cites, or both, for Run to Saturation to follow the seeds by."),
+		exclude: localize('snowball.exclude', "Exclude"),
+		excludeHint: localize('snowball.excludeHint', "Keeps this work out of the top {0}, and so out of the candidates: for a work not about your question", TOP),
+		excluded: localize('snowball.excluded', "Excluded"),
+		include: localize('snowball.include', "Include"),
+		includeHint: localize('snowball.includeHint', "Ranks this work again with the others"),
 		askContextsHint: localize('snowball.askContextsHint.citations', "Semantic Scholar also tells, for each citation of a list, the sentences citing, why (background, method or result), and whether the citation is influential"),
 		findLabel: localize('snowball.findLabel', "Add Seeds"),
 		findPlaceholder: localize('snowball.findPlaceholder', "Find works in PollisReferences by title, author or key"),
@@ -1081,6 +1303,17 @@ function pageHtml(askContexts: boolean, portrait: boolean): string {
 		show: localize('snowball.show', "Show:"),
 		showAll: localize('snowball.showAll', "All"),
 		showNew: localize('snowball.showNew', "New Since Last Step"),
+		showCandidates: localize('snowball.showCandidates', "Candidates"),
+		candidatesHint: localize('snowball.candidatesHint', "The works of the top {0} neither seeds nor excluded: the best of them are the next round's seeds", TOP),
+		roundFrom: localize('snowball.roundFrom', "Round {0} ({1}, from {2})"),
+		roundOf: localize('snowball.roundOf', "Round {0} ({1})"),
+		firstRound: localize('snowball.firstRound', "{0}: the top {1} is the first. Make the best of its works seeds and follow them with Cited By or Cites."),
+		risenOne: localize('snowball.risenOne', "{0}: 1 work new to the top {1}, marked. Make it a seed if it is good, and follow it."),
+		risenMany: localize('snowball.risenMany', "{0}: {1} works new to the top {2}, marked. Make the best of them seeds and follow them."),
+		saturated: localize('snowball.saturated', "{0}: nothing new in the top {1}. The search has saturated."),
+		begun: localize('snowball.begun', "Round {0} has begun with {1}: follow them with Cited By or Cites."),
+		risenMark: localize('snowball.risenMark', "New in the top {0}", TOP),
+		risenMarkHint: localize('snowball.risenMarkHint', "Not in the top {0} before the last round", TOP),
 		links: localize('snowball.links', "Links"),
 		linksHint: localize('snowball.linksHint', "How many seeds the work is tied to: a filled dot for a citation Semantic Scholar finds influential, a hollow one for the others. \u2248 marks a seed it is only related to, which Links does not count. Click the dots to see how it cites each seed, or is cited by it; click the heading to sort by Links, then by the filled dots"),
 		sortHint: localize('snowball.sortHint', "Click to sort by it"),
@@ -1197,12 +1430,17 @@ function pageHtml(askContexts: boolean, portrait: boolean): string {
 		.seedList .seedId { font-weight: 600; min-width: 28px; cursor: pointer; }
 		.seedList .seedText { flex: 1; min-width: 0; }
 		.muted { color: var(--vscode-descriptionForeground); }
+		tr.excluded > td { opacity: 0.55; }
+		.actionBar > label.number { display: inline-flex; align-items: center; gap: 6px; color: var(--vscode-descriptionForeground); }
+		.actionBar > label.number > input { width: 4em; font: inherit; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, transparent); padding: 2px 4px; }
 		button.removeSeed { font: inherit; font-size: 14px; line-height: 1; color: var(--vscode-descriptionForeground); background: none; border: none; padding: 0 4px; cursor: pointer; }
 		button.removeSeed:hover { color: var(--vscode-foreground); }
 		.finder { margin-top: 20px; }
 		.found { margin-top: 4px; }
 		.found div { padding: 3px 0; font-size: 12px; }
 		.poolLine { color: var(--vscode-descriptionForeground); font-size: 12px; }
+		.verdict { font-size: 12px; margin-top: 4px; line-height: 1.4; }
+		.risen { margin-left: 6px; font-size: 11px; color: var(--vscode-textLink-foreground); white-space: nowrap; }
 		.showRow { display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; margin: 8px 0; }
 		.showRow label { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; }
 		table { width: 100%; border-collapse: collapse; font-size: 12px; }
@@ -1278,6 +1516,14 @@ function pageHtml(askContexts: boolean, portrait: boolean): string {
 		<button class="action" id="related" title="${text.relatedHint}">${text.relatedAction}</button>
 		<label class="tick" title="${text.askContextsHint}"><input type="checkbox" id="askContexts"${askContexts ? ' checked' : ''}>${text.askContexts}</label>
 	</div>
+	<div class="actionBar" id="saturateBar" hidden>
+		<button class="action" id="saturate" title="${text.saturateHint}">${text.saturate}</button>
+		<label class="number" title="${text.bestHint}">${text.bestLabel}<input type="number" id="best" min="1" max="${TOP}" value="${saturate.best}"></label>
+		<label class="number" title="${text.roundsHint}">${text.roundsLabel}<input type="number" id="rounds" min="1" max="${MOST_ROUNDS}" value="${saturate.rounds}"></label>
+		<span class="actionLabel">${text.followLabel}</span>
+		<label class="tick"><input type="checkbox" id="followCitedBy"${saturate.actions.includes('cited_by') ? ' checked' : ''}>${text.citedBy}</label>
+		<label class="tick"><input type="checkbox" id="followCites"${saturate.actions.includes('cites') ? ' checked' : ''}>${text.citesAction}</label>
+	</div>
 	<div class="status" id="status" hidden></div>
 	<div class="finder">
 		<div class="row"><label for="find">${text.findLabel}</label><input type="text" id="find" placeholder="${text.findPlaceholder}" spellcheck="false" autocomplete="off"></div>
@@ -1286,6 +1532,7 @@ function pageHtml(askContexts: boolean, portrait: boolean): string {
 
 	<div class="sectionHeader"><h2>${text.pool}</h2></div>
 	<div class="poolLine" id="poolLine"></div>
+	<div class="verdict" id="verdict" hidden></div>
 	<div class="showRow stickyBand" id="showRow" hidden></div>
 	<div class="pager" id="pagerTop" hidden></div>
 	<table id="poolTable" class="stickyHead" hidden>
@@ -1307,6 +1554,8 @@ function pageHtml(askContexts: boolean, portrait: boolean): string {
 	const chosen = new Set();
 	let portrait = ${portrait};
 	let busy = false;
+	// Whether Run to Saturation is running: its button is then Stop, the one not disabled
+	let running = false;
 	let findTimer;
 	// The works of the pool whose Links are open, and how each cites its seeds, as the host told it
 	const expanded = new Set();
@@ -1499,6 +1748,11 @@ function pageHtml(askContexts: boolean, portrait: boolean): string {
 		document.getElementById('citedBy').disabled = busy;
 		document.getElementById('cites').disabled = busy;
 		document.getElementById('related').disabled = busy;
+		document.getElementById('saturateBar').hidden = !state.seeds.length;
+		const saturate = document.getElementById('saturate');
+		saturate.textContent = running ? TEXT.stop : TEXT.saturate;
+		saturate.title = running ? TEXT.stopHint : TEXT.saturateHint;
+		saturate.disabled = busy && !running;
 	}
 
 	/** The ids of the seeds chosen, in the order of the seeds. */
@@ -1538,12 +1792,17 @@ function pageHtml(askContexts: boolean, portrait: boolean): string {
 		const poolLine = document.getElementById('poolLine');
 		const range = lists.length > 1 ? lists[0] + '\\u2013' + lists[lists.length - 1] : lists[0];
 		poolLine.textContent = summary.total ? format(TEXT.poolLine, summary.total.toLocaleString(), range, (summary.added || 0).toLocaleString(), summary.added_top || 0, TOP) : TEXT.poolEmpty;
+		renderVerdict();
+		const risen = state.saturation && state.saturation.compared ? state.saturation.risen : [];
 		const showRow = document.getElementById('showRow');
 		showRow.textContent = '';
 		showRow.hidden = !summary.total;
 		showRow.append(TEXT.show);
-		for (const [value, label] of [['all', TEXT.showAll], ...lists.map(list => [list, list]), ['new', TEXT.showNew]]) {
+		for (const [value, label] of [['all', TEXT.showAll], ...lists.map(list => [list, list]), ['new', TEXT.showNew], ['candidates', TEXT.showCandidates]]) {
 			const option = document.createElement('label');
+			if (value === 'candidates') {
+				option.title = TEXT.candidatesHint;
+			}
 			const radio = document.createElement('input');
 			radio.type = 'radio';
 			radio.name = 'show';
@@ -1556,6 +1815,9 @@ function pageHtml(askContexts: boolean, portrait: boolean): string {
 		body.textContent = '';
 		for (const row of state.rows) {
 			const tr = document.createElement('tr');
+			if (row.excluded) {
+				tr.className = 'excluded';
+			}
 			const dots = document.createElement('td');
 			dots.className = 'dots';
 			// A filled dot for an influential citation, a hollow one for the others; a seed the work cites and is cited by, one dot;
@@ -1575,6 +1837,13 @@ function pageHtml(askContexts: boolean, portrait: boolean): string {
 			dots.addEventListener('click', () => toggleDetail(row.openalex));
 			const work = document.createElement('td');
 			work.append(linkButton(row.title, () => vscode.postMessage({ command: 'openUrl', url: row.link }), row.link));
+			if (risen.includes(row.openalex) && !row.excluded) {
+				const mark = document.createElement('span');
+				mark.className = 'risen';
+				mark.textContent = '\u2191 ' + TEXT.risenMark;
+				mark.title = TEXT.risenMarkHint;
+				work.append(mark);
+			}
 			const authors = document.createElement('div');
 			authors.className = 'authors';
 			authors.textContent = [authorsText(row.authors), row.journal].filter(Boolean).join(' \\u00b7 ');
@@ -1592,10 +1861,16 @@ function pageHtml(askContexts: boolean, portrait: boolean): string {
 				action.className = 'muted';
 				action.textContent = row.seed;
 				action.title = TEXT.isSeed;
+			} else if (row.excluded) {
+				const include = linkButton(TEXT.include, () => vscode.postMessage({ command: 'include', work: row.openalex }), TEXT.includeHint);
+				include.disabled = busy;
+				action.append(TEXT.excluded + ' \\u00b7 ', include);
 			} else {
 				const seed = linkButton(TEXT.seed, () => vscode.postMessage({ command: 'seedWork', work: row.openalex }), TEXT.seedHint);
 				seed.disabled = busy;
-				action.append(seed);
+				const exclude = linkButton(TEXT.exclude, () => vscode.postMessage({ command: 'exclude', work: row.openalex }), TEXT.excludeHint);
+				exclude.disabled = busy;
+				action.append(seed, ' \\u00b7 ', exclude);
 			}
 			tr.append(dots, work, year, cited, from, action);
 			body.append(tr);
@@ -1619,6 +1894,28 @@ function pageHtml(askContexts: boolean, portrait: boolean): string {
 			}
 			pager.append(rowsChoice(state.view.rows, chosen => setView(state.view.show, firstPageAfter(state.view.page, state.view.rows, chosen), chosen)));
 		}
+	}
+
+	/** The line under the pool telling how close the search is to saturation, after the last round that followed its seeds. */
+	function renderVerdict() {
+		const verdict = document.getElementById('verdict');
+		const saturation = state.saturation;
+		verdict.hidden = !saturation;
+		if (!saturation) {
+			return;
+		}
+		const round = saturation.seeds.length
+			? format(TEXT.roundFrom, saturation.round, saturation.lists.join(', '), saturation.seeds.join(', '))
+			: format(TEXT.roundOf, saturation.round, saturation.lists.join(', '));
+		const count = saturation.risen.length;
+		const lines = [!saturation.compared ? format(TEXT.firstRound, round, TOP)
+			: count === 0 ? format(TEXT.saturated, round, TOP)
+				: count === 1 ? format(TEXT.risenOne, round, TOP)
+					: format(TEXT.risenMany, round, count, TOP)];
+		if (saturation.begun && saturation.begun.length) {
+			lines.push(format(TEXT.begun, saturation.round + 1, saturation.begun.join(', ')));
+		}
+		verdict.textContent = lines.join(' ');
 	}
 
 	function intentsText(intents) {
@@ -1844,6 +2141,18 @@ function pageHtml(askContexts: boolean, portrait: boolean): string {
 		document.getElementById(command).addEventListener('click', () => vscode.postMessage({ command, seeds: chosenIds(), contexts: document.getElementById('askContexts').checked }));
 	}
 	document.getElementById('related').addEventListener('click', () => vscode.postMessage({ command: 'related', seeds: chosenIds() }));
+	document.getElementById('saturate').addEventListener('click', () => {
+		if (running) {
+			vscode.postMessage({ command: 'stop' });
+			return;
+		}
+		const actions = [['followCitedBy', 'cited_by'], ['followCites', 'cites']].filter(([box]) => document.getElementById(box).checked).map(([, action]) => action);
+		if (!actions.length) {
+			setStatus(TEXT.noFollow, true);
+			return;
+		}
+		vscode.postMessage({ command: 'saturate', actions, best: Number(document.getElementById('best').value), rounds: Number(document.getElementById('rounds').value), contexts: document.getElementById('askContexts').checked });
+	});
 	document.getElementById('saveLink').addEventListener('click', () => {
 		const input = document.getElementById('saveName');
 		input.value = state.name || '';
@@ -1912,6 +2221,9 @@ function pageHtml(askContexts: boolean, portrait: boolean): string {
 			}
 			renderSeeds();
 			renderPool();
+		} else if (message.command === 'saturating') {
+			running = message.running;
+			renderSeeds();
 		} else if (message.command === 'progress') {
 			setStatus(message.message, false);
 		} else if (message.command === 'notes') {
