@@ -10,7 +10,7 @@ The LaTeX sources of the documents in Help > Documentation. Edit them here, buil
 | `ai-brochure/pollis_ai_brochure.tex` | `pollis-ai-brochure.pdf` (Pollis AI+) |
 | `workflows/workflow_data_packages.tex` | `pollis-drilldown-data-packages.pdf` (Drill-down: Data Packages) |
 
-`workflows/replication_flowchart.pdf`, built from `replication_flowchart.tex`, is a figure of the Tour and the Guide.
+`workflows/replication_flowchart.pdf`, a figure of the Tour and the Guide, is not kept here either: build it from `replication_flowchart.tex` before them.
 
 ## Package vignettes
 
