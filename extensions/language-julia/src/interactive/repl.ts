@@ -30,6 +30,7 @@ import { Frame, openFile } from './results'
 import { notifyTypeProgress, Progress, ProgressBars } from './progress'
 import { TaskRunnerTerminal } from '../taskRunnerTerminal'
 import { whenDuckDBReady } from '../pollisDuckDB'
+import { compileDocumentsInBackground } from '../pollisDocuments'
 import { precompileInBackground } from '../pollisPrecompile'
 import { promise as fastq } from 'fastq'
 import { randomUUID } from 'crypto'
@@ -203,9 +204,12 @@ export function getPackageEnvironment(): { [key: string]: string } {
     return pkgServer.length !== 0 ? { ...env, JULIA_PKG_SERVER: pkgServer } : env
 }
 
-// POLLIS: compiles the packages of the REPL's environments that are stale, in the background (pollisPrecompile.ts).
+// POLLIS: compiles the packages of the REPL's environments that are stale, in the background (pollisPrecompile.ts),
+// and the documents of Help > Documentation (pollisDocuments.ts): after the built-in database's install, if it runs,
+// so that two installs never run at once.
 async function precompileREPLPackages(juliaExecutable: JuliaExecutable) {
     precompileInBackground(g_context, juliaExecutable, await jlpkgenv.getAbsEnvPath(), getAdditionalArgs(), getPackageEnvironment())
+    compileDocumentsInBackground(g_context, juliaExecutable, getPackageEnvironment())
 }
 
 export async function startREPL(

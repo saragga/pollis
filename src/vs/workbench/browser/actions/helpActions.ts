@@ -21,6 +21,10 @@ import { ContextKeyExpr } from '../../../platform/contextkey/common/contextkey.j
 import { IsMacNativeContext } from '../../../platform/contextkey/common/contextkeys.js';
 import { IsSessionsWindowContext } from '../../common/contextkeys.js';
 import { BrowserViewCommandId } from '../../../platform/browserView/common/browserView.js';
+import { IFileService } from '../../../platform/files/common/files.js';
+import { INotificationService } from '../../../platform/notification/common/notification.js';
+import { joinPath } from '../../../base/common/resources.js';
+import { IPathService } from '../../services/path/common/pathService.js';
 
 class KeybindingsReferenceAction extends Action2 {
 
@@ -526,6 +530,22 @@ function registerHelpLink(link: IHelpLink): void {
 	});
 }
 
+/**
+ * Opens a document of Help > Documentation, `file` in ~/.pollis/documents. Pollis compiles the documents there from
+ * their LaTeX sources, its docs/ folder, when the Julia REPL starts (compile_documents.jl of the Julia extension).
+ */
+async function openDocument(accessor: ServicesAccessor, file: string, title: string): Promise<void> {
+	const commandService = accessor.get(ICommandService);
+	const fileService = accessor.get(IFileService);
+	const notificationService = accessor.get(INotificationService);
+	const uri = joinPath(await accessor.get(IPathService).userHome(), '.pollis', 'documents', file);
+	if (await fileService.exists(uri)) {
+		commandService.executeCommand(BrowserViewCommandId.Open, uri.toString(true));
+	} else {
+		notificationService.info(localize('documentNotCompiled', "{0} is not compiled yet. Pollis compiles its documentation from the LaTeX sources when Julia starts, and the status bar shows how far it has come.", title));
+	}
+}
+
 registerAction2(class extends Action2 {
 	constructor() {
 		super({
@@ -540,9 +560,8 @@ registerAction2(class extends Action2 {
 		});
 	}
 
-	run(accessor: ServicesAccessor): void {
-		const uri = FileAccess.asFileUri('vs/workbench/browser/media/pollis-tour.pdf' as AppResourcePath);
-		accessor.get(ICommandService).executeCommand(BrowserViewCommandId.Open, uri.toString(true));
+	run(accessor: ServicesAccessor): Promise<void> {
+		return openDocument(accessor, 'pollis-tour.pdf', localize('openTourOfPollis', "A Tour of Pollis"));
 	}
 });
 
@@ -560,9 +579,8 @@ registerAction2(class extends Action2 {
 		});
 	}
 
-	run(accessor: ServicesAccessor): void {
-		const uri = FileAccess.asFileUri('vs/workbench/browser/media/pollis-guide.pdf' as AppResourcePath);
-		accessor.get(ICommandService).executeCommand(BrowserViewCommandId.Open, uri.toString(true));
+	run(accessor: ServicesAccessor): Promise<void> {
+		return openDocument(accessor, 'pollis-guide.pdf', localize('openPollisGuide', "The Pollis Guide"));
 	}
 });
 
@@ -580,9 +598,8 @@ registerAction2(class extends Action2 {
 		});
 	}
 
-	run(accessor: ServicesAccessor): void {
-		const uri = FileAccess.asFileUri('vs/workbench/browser/media/pollis-ai-brochure.pdf' as AppResourcePath);
-		accessor.get(ICommandService).executeCommand(BrowserViewCommandId.Open, uri.toString(true));
+	run(accessor: ServicesAccessor): Promise<void> {
+		return openDocument(accessor, 'pollis-ai-brochure.pdf', localize('openPollisAIPlus', "Pollis AI+"));
 	}
 });
 
@@ -600,9 +617,8 @@ registerAction2(class extends Action2 {
 		});
 	}
 
-	run(accessor: ServicesAccessor): void {
-		const uri = FileAccess.asFileUri('vs/workbench/browser/media/pollis-ai-tour.pdf' as AppResourcePath);
-		accessor.get(ICommandService).executeCommand(BrowserViewCommandId.Open, uri.toString(true));
+	run(accessor: ServicesAccessor): Promise<void> {
+		return openDocument(accessor, 'pollis-ai-tour.pdf', localize('openTourOfPollisAIPlus', "A Tour of Pollis AI+"));
 	}
 });
 
@@ -620,9 +636,8 @@ registerAction2(class extends Action2 {
 		});
 	}
 
-	run(accessor: ServicesAccessor): void {
-		const uri = FileAccess.asFileUri('vs/workbench/browser/media/pollis-drilldown-data-packages.pdf' as AppResourcePath);
-		accessor.get(ICommandService).executeCommand(BrowserViewCommandId.Open, uri.toString(true));
+	run(accessor: ServicesAccessor): Promise<void> {
+		return openDocument(accessor, 'pollis-drilldown-data-packages.pdf', localize('openDrillDownDataPackages', "Drill-down: Data Packages"));
 	}
 });
 

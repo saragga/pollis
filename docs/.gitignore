@@ -1,4 +1,4 @@
-# LaTeX build files, and the documents built (their copies live in src/vs/workbench/browser/media)
+# LaTeX build files, and the documents built (Pollis compiles its own on the user's computer)
 *.aux
 *.fdb_latexmk
 *.fls

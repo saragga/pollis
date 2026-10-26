@@ -100,8 +100,8 @@ const vscodeResourceIncludes = [
 	'out-build/vs/workbench/contrib/welcomeGettingStarted/common/media/**/*.{svg,png}',
 	'out-build/vs/workbench/contrib/welcomeOnboarding/browser/media/*.svg',
 
-	// Pollis app documents (Release Notes, License, A Tour of Pollis)
-	'out-build/vs/workbench/browser/media/pollis-*.{md,pdf}',
+	// Pollis app documents (Release Notes, License, Notice); those of Help > Documentation are compiled on the user's computer from docs/
+	'out-build/vs/workbench/browser/media/pollis-*.md',
 
 	// Model webviews
 	'out-build/vs/workbench/contrib/model/browser/webviews/**/*.{html,css,js}',
@@ -452,6 +452,10 @@ function packageTask(platform: string, arch: string, sourceFolderName: string, d
 
 		const telemetry = gulp.src('.build/telemetry/**', { base: '.build/telemetry', dot: true });
 
+		// The LaTeX sources of Help > Documentation, which the Julia extension compiles into ~/.pollis/documents
+		// (compile_documents.jl); not the package vignettes, which their packages carry
+		const documents = gulp.src(['docs/**/*.{tex,png,jpg}', 'docs/**/images/*.pdf', '!docs/vignettes/**'], { base: '.' });
+
 		const jsFilter = util.filter(data => !data.isDirectory() && /\.js$/.test(data.path));
 		const root = path.resolve(path.join(import.meta.dirname, '..'));
 		const productionDependencies = getProductionDependencies(root);
@@ -495,6 +499,7 @@ function packageTask(platform: string, arch: string, sourceFolderName: string, d
 			license,
 			api,
 			telemetry,
+			documents,
 			sources,
 			deps,
 			lanceStream(platform, arch)
