@@ -183,7 +183,9 @@ function pageHtml(): string {
 		select.overridden { color: var(--vscode-textLink-foreground); }
 		input { flex: 1; min-width: 0; }
 		input:focus, select:focus { outline: 1px solid var(--vscode-focusBorder); }
-		button.action { font: inherit; padding: 3px 12px; border: none; border-radius: 2px; cursor: pointer; color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); }
+		button.action { font: inherit; padding: 3px 12px; border: none; box-shadow: inset 0 0 0 1px var(--vscode-button-background); border-radius: 2px; cursor: pointer; color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); font-size: 11px; opacity: 0.7; }
+		/* As the code buttons below a panel's Example Code: dimmed until pointed at, the blue one not */
+		button.action:not(:disabled):hover, button.action.current, button.action.primary { opacity: 1; }
 		button.action:hover { background: var(--vscode-button-secondaryHoverBackground); }
 		button.action.primary { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
 		button.action.primary:hover { background: var(--vscode-button-hoverBackground); }

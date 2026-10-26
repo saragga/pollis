@@ -310,7 +310,9 @@ function pageHtml(): string {
 		.subtitle { font-size: 14px; color: var(--vscode-descriptionForeground); margin: 0 0 12px 0; line-height: 1.4; }
 		.link { color: var(--vscode-textLink-foreground); cursor: pointer; background: none; border: none; padding: 0; font: inherit; }
 		.link:hover { color: var(--vscode-textLink-activeForeground); text-decoration: underline; }
-		button.action { font: inherit; color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); border: none; border-radius: 2px; padding: 4px 12px; cursor: pointer; white-space: nowrap; }
+		button.action { font: inherit; color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); border: none; box-shadow: inset 0 0 0 1px var(--vscode-button-background); border-radius: 2px; padding: 4px 12px; cursor: pointer; white-space: nowrap; font-size: 11px; opacity: 0.7; }
+		/* As the code buttons below a panel's Example Code: dimmed until pointed at, the blue one not */
+		button.action:not(:disabled):hover, button.action.current, button.action.primary { opacity: 1; }
 		button.action:hover, button.action:active, button.action.pressed { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
 		.topActions { display: flex; gap: 8px; margin-bottom: 6px; }
 		.help { font-size: 12px; color: var(--vscode-descriptionForeground); line-height: 1.45; margin: 6px 0 16px 0; }

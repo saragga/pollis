@@ -1202,7 +1202,9 @@ function pageHtml(): string {
 		input#benchmark { width: 120px; text-transform: uppercase; }
 		input[type="number"] { width: 72px; }
 		.choice { display: inline-flex; align-items: center; gap: 4px; margin-right: 16px; cursor: pointer; }
-		button.action { font: inherit; color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); border: none; border-radius: 2px; padding: 4px 12px; cursor: pointer; }
+		button.action { font: inherit; color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); border: none; box-shadow: inset 0 0 0 1px var(--vscode-button-background); border-radius: 2px; padding: 4px 12px; cursor: pointer; font-size: 11px; opacity: 0.7; }
+		/* As the code buttons below a panel's Example Code: dimmed until pointed at, the blue one not */
+		button.action:not(:disabled):hover, button.action.current, button.action.primary { opacity: 1; }
 		button.action:hover { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
 		button.primary { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
 		button.primary:hover { background: var(--vscode-button-hoverBackground); }

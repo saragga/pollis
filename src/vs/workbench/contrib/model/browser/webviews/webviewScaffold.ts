@@ -300,14 +300,16 @@ export function buildWebviewHtml(parts: WebviewParts): string {
 		.hl-keyword { color: var(--vscode-symbolIcon-keywordForeground); }
 		.hl-fn      { color: var(--vscode-textPreformat-foreground); }
 		.hl-type    { color: var(--vscode-symbolIcon-classForeground); }
-		.copy-btn { position: absolute; top: 8px; right: 8px; background: var(--vscode-button-secondaryBackground); color: var(--vscode-button-secondaryForeground); border: none; border-radius: 4px; padding: 4px 10px; font-size: 11px; cursor: pointer; opacity: 0.7; }
+		.copy-btn { position: absolute; top: 8px; right: 8px; background: var(--vscode-button-secondaryBackground); color: var(--vscode-button-secondaryForeground); border: none; box-shadow: inset 0 0 0 1px var(--vscode-button-background); border-radius: 4px; padding: 4px 10px; font-size: 11px; cursor: pointer; opacity: 0.7; }
 		.copy-btn:hover { opacity: 1; }
 		.code-btn-bar { display: flex; justify-content: flex-end; gap: 4px; margin-bottom: 6px; }
 		.code-btn-bar-bottom { margin-bottom: 0; margin-top: 6px; }
-		.code-action-btn { background: var(--vscode-button-secondaryBackground); color: var(--vscode-button-secondaryForeground); border: none; border-radius: 4px; padding: 4px 10px; font-size: 11px; cursor: pointer; opacity: 0.7; white-space: nowrap; }
+		.code-action-btn { background: var(--vscode-button-secondaryBackground); color: var(--vscode-button-secondaryForeground); border: none; box-shadow: inset 0 0 0 1px var(--vscode-button-background); border-radius: 4px; padding: 4px 10px; font-size: 11px; cursor: pointer; opacity: 0.7; white-space: nowrap; }
 		.code-action-btn:hover { opacity: 1; }
+		.code-action-btn:not(:disabled):hover, .code-action-btn:not(:disabled):focus-visible { color: var(--vscode-button-foreground); background: var(--vscode-button-background); opacity: 1; }
 		.code-btn-bar-split { justify-content: space-between; }
-		.code-btn-group { display: flex; align-items: center; gap: 4px; }
+		/* Each group's buttons as wide as its widest one; the two groups may differ */
+		.code-btn-group { display: inline-grid; grid-auto-flow: column; grid-auto-columns: 1fr; align-items: center; gap: 4px; }
 		.code-action-btn:disabled { opacity: 0.35; cursor: default; }
 		.code-action-btn.primary { background: var(--vscode-button-background); color: var(--vscode-button-foreground); opacity: 1; }
 		.code-action-btn.primary:hover { background: var(--vscode-button-hoverBackground); }

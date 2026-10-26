@@ -269,7 +269,10 @@ function pageHtml(): string {
 		.link:hover { text-decoration: underline; }
 		.footer { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 12px 0 0 0; }
 		.status { font-size: 12px; color: var(--vscode-descriptionForeground); }
-		.button { background: var(--vscode-button-background); color: var(--vscode-button-foreground); border: none; border-radius: 2px; padding: 6px 14px; font-family: var(--vscode-font-family); font-size: 13px; cursor: pointer; }
+		.button { background: var(--vscode-button-background); color: var(--vscode-button-foreground); border: none; box-shadow: inset 0 0 0 1px var(--vscode-button-background); border-radius: 2px; padding: 6px 14px; font-family: var(--vscode-font-family); font-size: 11px; cursor: pointer; }
+		/* As the code buttons below a panel's Example Code: dimmed until pointed at, the blue ones not */
+		.button.quiet { opacity: 0.7; }
+		.button.quiet:not(:disabled):hover { opacity: 1; }
 		.button:hover { background: var(--vscode-button-hoverBackground); }
 		.button.quiet { background: var(--vscode-button-secondaryBackground); color: var(--vscode-button-secondaryForeground); }
 		.button.quiet:hover { background: var(--vscode-button-secondaryHoverBackground); }

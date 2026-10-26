@@ -474,7 +474,9 @@ function pageHtml(rows: number): string {
 		.header h1 { flex: 1; }
 		h1 { font-size: 32px; font-weight: 300; margin: 0 0 4px 0; line-height: 1.2; }
 		.subtitle { font-size: 14px; color: var(--vscode-descriptionForeground); margin: 0 0 16px 0; line-height: 1.4; max-width: 900px; }
-		button.action { font: inherit; color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); border: none; border-radius: 2px; padding: 4px 12px; cursor: pointer; margin-bottom: 8px; }
+		button.action { font: inherit; color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); border: none; box-shadow: inset 0 0 0 1px var(--vscode-button-background); border-radius: 2px; padding: 4px 12px; cursor: pointer; margin-bottom: 8px; font-size: 11px; opacity: 0.7; }
+		/* As the code buttons below a panel's Example Code: dimmed until pointed at, the blue one not */
+		button.action:not(:disabled):hover, button.action.current, button.action.primary { opacity: 1; }
 		button.action:hover, button.action:active, button.action.pressed { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
 		.header .actions { display: inline-grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 16px; }
 		.panes { display: flex; gap: 16px; align-items: flex-start; }

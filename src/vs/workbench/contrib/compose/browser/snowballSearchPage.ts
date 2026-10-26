@@ -5,7 +5,6 @@
 
 import { Sequencer } from '../../../../base/common/async.js';
 import { VSBuffer } from '../../../../base/common/buffer.js';
-import { CancellationToken } from '../../../../base/common/cancellation.js';
 import { DisposableStore } from '../../../../base/common/lifecycle.js';
 import { joinPath } from '../../../../base/common/resources.js';
 import { URI } from '../../../../base/common/uri.js';
@@ -16,26 +15,32 @@ import { IFileService } from '../../../../platform/files/common/files.js';
 import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
 import { asJson, IRequestService, isSuccess } from '../../../../platform/request/common/request.js';
 import { ISecretStorageService } from '../../../../platform/secrets/common/secrets.js';
-import { IStorageService } from '../../../../platform/storage/common/storage.js';
+import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
 import { IPathService } from '../../../services/path/common/pathService.js';
 import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
-import { CREDENTIALS } from '../../model/browser/common/credentials.js';
+import { API_PROVIDERS, ProviderRequests } from '../../model/browser/common/apiProviders.js';
 import { voiceButtonsCss, voiceButtonsHtml, voiceButtonsScript } from '../../model/browser/webviews/webviewScaffold.js';
-import { FEWEST_ROWS, isRowsChoice, rowsChoiceCss, rowsChoiceScript, storedRows, storeRows } from '../../model/browser/webviews/webviewPager.js';
+import { FEWEST_ROWS, isRowsChoice, rowsChoiceCss, rowsChoiceScript, stickyHeadCss, stickyHeadScript, storedRows, storeRows } from '../../model/browser/webviews/webviewPager.js';
 import { OPEN_LINK_COMMAND_ID } from '../../monitor/browser/openLink.js';
 import { ISnowballArticle, ISnowballDatabaseService, ISnowballSeeds, SNOWBALL_SEARCH_COMMAND_ID, SnowballRow } from '../common/snowballSearch.js';
-import { IOpenAlexWork, OPENALEX_TYPES, openAlexIdOf } from './literatureRadarPage.js';
+import { IOpenAlexWork, OPENALEX_TYPES, openAlexIdOf, sameWork, titleWords } from './literatureRadarPage.js';
 
 // Compose > Literature Radar > Snowball Search Map: from a few works the user knows, the seeds, the works their citations lead
 // to, poured into one pool ranked by how many seeds each is tied to (Links). The seeds come from PollisReferences, the
 // references Pollis brings and the user's, by their keys; Discover Literature's articles not saved there are kept in the
 // map's in-memory database. Each action is a step of the map's record, a TOML file of [[step]]s in ~/.pollis/literature,
-// the works found in a DuckDB file beside it; the map drawn on the page is drawn from the steps. This first version
-// follows the works that cite each seed (Cited By), as OpenAlex lists them.
+// the works found in a DuckDB file beside it; the map drawn on the page is drawn from the steps. It follows the works
+// that cite each seed (Cited By) and the works each seed cites (Cites), as OpenAlex lists them, and asks Semantic Scholar
+// how each citation is made: the sentences citing, why (background, method or result), and whether it is influential.
+// Related lists the works Semantic Scholar recommends for a seed, by the likeness of their texts: in the pool, not in Links.
 
-/** What a step of the map did: made a work a seed, listed the works citing a seed, or removed a seed. */
-type StepAction = 'seed' | 'cited_by' | 'remove';
+/** What a step of the map did: made a work a seed, listed the works citing a seed, those it cites or those related to it, or removed a seed. */
+type StepAction = 'seed' | 'cited_by' | 'cites' | 'related' | 'remove';
+/** The steps that make a list: the works citing a seed, those it cites, or those related to it. */
+type ListAction = 'cited_by' | 'cites' | 'related';
+/** The lists of citations, followed in OpenAlex. */
+type CitationAction = Exclude<ListAction, 'related'>;
 
 /** A step of the map, as its record keeps it. */
 interface ISnowballStep {
@@ -56,6 +61,8 @@ interface ISnowballStep {
 	readonly listed?: number;
 	readonly found?: number;
 	readonly added?: number;
+	/** For a Related list, the index that gave it: Semantic Scholar, or OpenAlex for a seed Semantic Scholar has no record of. */
+	readonly index?: string;
 }
 
 /** The map now in the page: kept while the window is open, the page closed or not. */
@@ -68,11 +75,14 @@ interface ISnowballMap {
 
 type SnowballMessage =
 	| { readonly command: 'ready' }
-	| { readonly command: 'citedBy'; readonly seeds: readonly string[] }
+	| { readonly command: 'citedBy' | 'cites'; readonly seeds: readonly string[]; readonly contexts: boolean }
+	| { readonly command: 'related'; readonly seeds: readonly string[] }
+	| { readonly command: 'contexts'; readonly work: string }
+	| { readonly command: 'layout'; readonly portrait: boolean }
 	| { readonly command: 'seedWork'; readonly work: string }
 	| { readonly command: 'seedKey'; readonly key: string }
 	| { readonly command: 'remove'; readonly seed: string }
-	| { readonly command: 'view'; readonly show: string; readonly page: number; readonly rows?: number }
+	| { readonly command: 'view'; readonly show: string; readonly page: number; readonly rows?: number; readonly sort?: string; readonly descending?: boolean }
 	| { readonly command: 'find'; readonly text: string }
 	| { readonly command: 'save'; readonly name: string; readonly replace: boolean }
 	| { readonly command: 'maps' }
@@ -80,16 +90,39 @@ type SnowballMessage =
 	| { readonly command: 'new' }
 	| { readonly command: 'openUrl'; readonly url: string };
 
-const ACTIONS: readonly StepAction[] = ['seed', 'cited_by', 'remove'];
+const ACTIONS: readonly StepAction[] = ['seed', 'cited_by', 'cites', 'related', 'remove'];
+const LIST_ACTIONS: readonly StepAction[] = ['cited_by', 'cites', 'related'];
 /** Where seeds come from, besides the pool's lists. */
 const FROM_REFERENCES = 'PollisReferences';
 const FROM_DISCOVER = 'Discover Literature';
-/** The fields of a citing work asked of OpenAlex. */
-const CITED_BY_SELECT = 'id,doi,title,publication_year,cited_by_count,primary_location,authorships';
-// OpenAlex lists at most 200 works a request: the 2,000 most cited works citing a seed are listed, ten requests
-const CITED_BY_PAGE = 200;
-const CITED_BY_LISTED = 2000;
+/** The fields of a listed work asked of OpenAlex. */
+const LIST_SELECT = 'id,doi,title,publication_year,cited_by_count,primary_location,authorships';
+// OpenAlex lists at most 200 works a request: the 2,000 most cited works citing a seed, or that it cites, are listed, ten requests
+const LIST_PAGE = 200;
+const LISTED = 2000;
+/**
+ * How a list of citations follows its seed: the OpenAlex filter listing its works; what Semantic Scholar is asked of the
+ * seed, and which paper of each answer is the work.
+ */
+const FOLLOW: Record<CitationAction, { readonly filter: string; readonly s2: string; readonly paper: 'citingPaper' | 'citedPaper' }> = {
+	cited_by: { filter: 'cites', s2: 'citations', paper: 'citingPaper' },
+	cites: { filter: 'cited_by', s2: 'references', paper: 'citedPaper' },
+};
+/** The relation of a list's links: the work citing the seed (cites), cited by it (cited), or related to it, which Links does not count. */
+const RELATION: Record<ListAction, string> = { cited_by: 'cites', cites: 'cited', related: 'related' };
+// Semantic Scholar recommends at most 500 works for a paper; OpenAlex is asked for them by their DOIs, 50 a request
+const RELATED_LISTED = 500;
+const RELATED_BATCH = 50;
 const CALL_SITE = 'pollis.snowballSearch';
+/** Whether Cited By and Cites also ask Semantic Scholar how the citations are made, as the user last chose. */
+const CONTEXTS_KEY = 'pollis.snowball.askContexts';
+/** Whether the map grows down, each step a row further, rather than to the right, each a column further. */
+const PORTRAIT_KEY = 'pollis.snowball.portrait';
+/** What Semantic Scholar is asked of each citation: the citing (or cited) work's DOI, the sentences, the intents, and whether it is influential. */
+const CONTEXT_FIELDS = 'externalIds,contexts,intents,isInfluential';
+// Semantic Scholar lists at most 1,000 citations a request: up to ten requests a seed, until each work of the list with a DOI is matched
+const CONTEXTS_PAGE = 1000;
+const CONTEXTS_PAGES = 10;
 /** The rows of the pool a page shows, and the top whose newcomers tell how close the pool is to saturation. */
 const TOP = 20;
 
@@ -98,28 +131,51 @@ const TABLES = `CREATE TABLE IF NOT EXISTS snowball.articles (id VARCHAR PRIMARY
 CREATE TABLE IF NOT EXISTS snowball.seeds (id VARCHAR PRIMARY KEY, key VARCHAR, article VARCHAR, openalex VARCHAR, removed BOOLEAN DEFAULT false);
 CREATE TABLE IF NOT EXISTS snowball.works (openalex VARCHAR PRIMARY KEY, doi VARCHAR, title VARCHAR, authors VARCHAR[], year INTEGER, journal VARCHAR, cited INTEGER, link VARCHAR, first_list VARCHAR);
 CREATE TABLE IF NOT EXISTS snowball.links (work VARCHAR, seed VARCHAR, relation VARCHAR, list VARCHAR, PRIMARY KEY (work, seed, relation));
+CREATE TABLE IF NOT EXISTS snowball.contexts (work VARCHAR, seed VARCHAR, intents VARCHAR[], influential BOOLEAN, contexts VARCHAR[], PRIMARY KEY (work, seed));
+CREATE TABLE IF NOT EXISTS snowball.s2_asked (id VARCHAR PRIMARY KEY, known BOOLEAN);
 CREATE OR REPLACE VIEW snowball.seed_works AS
-	SELECT s.id, s.key, s.article, s.removed, coalesce(s.openalex, r.openalex, a.openalex) AS openalex, lower(coalesce(r.doi, a.doi)) AS doi,
+	SELECT s.id, s.key, s.article, s.removed, coalesce(s.openalex, r.openalex, a.openalex) AS openalex, lower(coalesce(r.doi, a.doi)) AS doi, a.s2,
 		coalesce(r.title, a.title) AS title, coalesce(r.authors, a.authors) AS authors, coalesce(r.year, a.year) AS year, coalesce(r.journal, r.booktitle, a.journal) AS journal,
 		coalesce(r.url, a.link) AS link
 	FROM snowball.seeds s
 	LEFT JOIN PollisReferences.all_references r ON r.key = s.key AND NOT coalesce(r.removed, false)
 	LEFT JOIN snowball.articles a ON a.id = s.article`;
-const TABLE_NAMES = ['articles', 'seeds', 'works', 'links'];
+// contexts: how a work cites a seed, or a seed the work, as Semantic Scholar has it; s2_asked: the seeds whose citing works
+// (by the seed's id) or references (by its id and ' references'), and the works whose references, Semantic Scholar was asked
+// for, and whether it has a record of them
+const TABLE_NAMES = ['articles', 'seeds', 'works', 'links', 'contexts', 's2_asked'];
 
-/** The pool ranked: by Links, the active seeds a work is tied to, then by its citations. */
+/**
+ * The pool ranked: by Links, the active seeds a work is tied to, then by its citations. Each work has its ties to the
+ * active seeds as Semantic Scholar tells them (`ties`), and `known`, whether Semantic Scholar was asked for its references
+ * and has a record of it.
+ */
 const RANKED = `WITH active AS (SELECT id, openalex FROM snowball.seed_works WHERE NOT removed),
+ties AS (
+	SELECT c.work, list({seed: c.seed, influential: c.influential, intents: c.intents} ORDER BY c.seed) AS ties,
+		(count(*) FILTER (WHERE c.influential))::INTEGER AS influential
+	FROM snowball.contexts c JOIN active a ON a.id = c.seed GROUP BY c.work),
 pool AS (
 	SELECT w.openalex, any_value(w.doi) AS doi, any_value(w.title) AS title, any_value(w.authors) AS authors, any_value(w.year) AS year,
 		any_value(w.journal) AS journal, any_value(w.cited) AS cited, any_value(w.link) AS link, any_value(w.first_list) AS first_list,
-		count(DISTINCT a.id)::INTEGER AS links,
+		(count(DISTINCT a.id) FILTER (WHERE l.relation <> 'related'))::INTEGER AS links,
 		list(DISTINCT l.relation || ' ' || a.id) FILTER (WHERE a.id IS NOT NULL) AS how,
 		list(DISTINCT l.list) AS lists
 	FROM snowball.works w JOIN snowball.links l ON l.work = w.openalex LEFT JOIN active a ON a.id = l.seed
 	GROUP BY w.openalex),
 ranked AS (
-	SELECT pool.*, s.id AS seed, (row_number() OVER (ORDER BY links DESC, cited DESC NULLS LAST, title))::INTEGER AS rank
-	FROM pool LEFT JOIN active s ON s.openalex = pool.openalex)`;
+	SELECT pool.*, t.ties, coalesce(t.influential, 0) AS influential, k.known, s.id AS seed, (row_number() OVER (ORDER BY links DESC, cited DESC NULLS LAST, title))::INTEGER AS rank
+	FROM pool LEFT JOIN active s ON s.openalex = pool.openalex LEFT JOIN ties t ON t.work = pool.openalex LEFT JOIN snowball.s2_asked k ON k.id = pool.openalex)`;
+/**
+ * The orders the pool may be shown in, by the heading clicked: Links, then the influential citations among them, then
+ * Cited; Year; or Cited. Ties keep the rank. `{0}` is DESC or ASC.
+ */
+const POOL_ORDERS: Record<string, string> = {
+	links: 'links {0}, influential {0}, cited {0} NULLS LAST',
+	year: 'year {0} NULLS LAST',
+	cited: 'cited {0} NULLS LAST',
+};
+
 /** Whether a ranked work is shown: all, those of one list, or those the last list added. */
 const SHOWN = `($show = 'all' OR ($show = 'new' AND first_list = $last) OR list_contains(lists, $show))`;
 
@@ -135,7 +191,7 @@ function lastName(name: string): string {
 
 /** The label of a seed on the map: its first author's last name and its year. */
 function seedLabel(authors: readonly string[] | undefined, year: number | undefined): string {
-	return [authors?.length ? lastName(authors[0]) : '', year ?? ''].filter(part => part !== '').join(' ');
+	return [authors?.length ? lastName(authors[0]) : '', year ? `(${year})` : ''].filter(part => part !== '').join(' ');
 }
 
 /** The next id of a seed (E) or a list (L). */
@@ -210,7 +266,7 @@ function parseRecord(text: string): { name?: string; steps: ISnowballStep[] } {
 		}
 		return [{
 			id: text_(table.id), action, from, at, key: text_(table.key), article: text_(table.article), label: text_(table.label), title: text_(table.title),
-			listed: count(table.listed), found: count(table.found), added: count(table.added),
+			listed: count(table.listed), found: count(table.found), added: count(table.added), index: text_(table.index),
 		}];
 	});
 	return { name: text_(top.name), steps };
@@ -232,8 +288,7 @@ function text(value: unknown): string | undefined {
 
 function openSnowballSearch(accessor: ServicesAccessor, seeds: ISnowballSeeds | undefined): void {
 	const webviewWorkbenchService = accessor.get(IWebviewWorkbenchService);
-	const requestService = accessor.get(IRequestService);
-	const secretStorageService = accessor.get(ISecretStorageService);
+	const providers = new ProviderRequests(accessor.get(IRequestService), accessor.get(ISecretStorageService), CALL_SITE);
 	const commandService = accessor.get(ICommandService);
 	const fileService = accessor.get(IFileService);
 	const database = accessor.get(ISnowballDatabaseService);
@@ -260,7 +315,7 @@ function openSnowballSearch(accessor: ServicesAccessor, seeds: ISnowballSeeds | 
 		undefined,
 		{ group: undefined, preserveFocus: false }
 	);
-	webviewInput.webview.setHtml(pageHtml());
+	webviewInput.webview.setHtml(pageHtml(storageService.getBoolean(CONTEXTS_KEY, StorageScope.PROFILE, true), storageService.getBoolean(PORTRAIT_KEY, StorageScope.PROFILE, false)));
 	openPage = webviewInput;
 
 	const disposables = new DisposableStore();
@@ -273,7 +328,7 @@ function openSnowballSearch(accessor: ServicesAccessor, seeds: ISnowballSeeds | 
 	// The page's actions, one at a time: a list being fetched is finished before the next action reads the pool
 	const sequencer = new Sequencer();
 	// The works shown: all, one list's or the new ones; the page, from 0, of `rows` works each (0 for all)
-	const view = { show: 'all', page: 0, rows: storedRows(storageService, 'snowball', FEWEST_ROWS) };
+	const view = { show: 'all', page: 0, rows: storedRows(storageService, 'snowball', FEWEST_ROWS), sort: 'links', descending: true };
 	// The seeds given before the page was ready
 	let pending: ISnowballSeeds | undefined = seeds;
 	let ready = false;
@@ -285,12 +340,12 @@ function openSnowballSearch(accessor: ServicesAccessor, seeds: ISnowballSeeds | 
 		map.dirty = true;
 	};
 
-	const seedRows = async (): Promise<SnowballRow[]> => database.query(`SELECT id, key, article, openalex, doi, title, authors, year, journal, link FROM snowball.seed_works WHERE NOT removed ORDER BY TRY_CAST(substr(id, 2) AS INTEGER)`);
+	const seedRows = async (): Promise<SnowballRow[]> => database.query(`SELECT id, key, article, openalex, doi, s2, title, authors, year, journal, link FROM snowball.seed_works WHERE NOT removed ORDER BY TRY_CAST(substr(id, 2) AS INTEGER)`);
 
 	/** The page's state: the record, the seeds, and the page of the pool shown. */
 	const postState = async () => {
 		await database.run(TABLES);
-		const lists = map.steps.filter(step => step.action === 'cited_by' && step.id).map(step => step.id!);
+		const lists = map.steps.filter(step => LIST_ACTIONS.includes(step.action) && step.id).map(step => step.id!);
 		const last = lists.at(-1) ?? '';
 		if (view.show !== 'all' && view.show !== 'new' && !lists.includes(view.show)) {
 			view.show = 'all';
@@ -303,7 +358,8 @@ function openSnowballSearch(accessor: ServicesAccessor, seeds: ISnowballSeeds | 
 		const shown = typeof summary?.shown === 'number' ? summary.shown : 0;
 		const size = view.rows || Math.max(1, shown);
 		view.page = Math.max(0, Math.min(view.page, Math.ceil(shown / size) - 1));
-		const rows = await database.query(`${RANKED} SELECT * FROM ranked WHERE ${SHOWN} ORDER BY rank LIMIT ${size} OFFSET ${view.page * size}`, parameters);
+		const order = POOL_ORDERS[view.sort].replaceAll('{0}', view.descending ? 'DESC' : 'ASC');
+		const rows = await database.query(`${RANKED} SELECT * FROM ranked WHERE ${SHOWN} ORDER BY ${order}, rank LIMIT ${size} OFFSET ${view.page * size}`, parameters);
 		post({ command: 'state', name: map.name, dirty: map.dirty, steps: map.steps, seeds: await seedRows(), summary, rows, lists, view });
 	};
 
@@ -384,17 +440,20 @@ function openSnowballSearch(accessor: ServicesAccessor, seeds: ISnowballSeeds | 
 		}
 	};
 
-	/** The OpenAlex record of a seed: the one it has, or else the one of its DOI, kept for the next time. */
-	const openAlexIdOfSeed = async (seed: SnowballRow, key: string | undefined): Promise<string | undefined> => {
+	/**
+	 * The OpenAlex record of a seed: the one it has, or else the one of its DOI, or else, as for a conference paper without
+	 * a DOI, one of the first ten of its title whose title and first author are the same; kept for the next time.
+	 */
+	const openAlexIdOfSeed = async (seed: SnowballRow): Promise<string | undefined> => {
 		const known = text(seed.openalex);
-		const doi = text(seed.doi);
-		if (known || !doi) {
+		if (known) {
 			return known;
 		}
 		try {
-			const context = await requestService.request({ type: 'GET', url: `https://api.openalex.org/works/doi:${encodeURIComponent(doi)}?select=id${key ? `&api_key=${encodeURIComponent(key)}` : ''}`, timeout: 30000, callSite: CALL_SITE }, CancellationToken.None);
-			const work = isSuccess(context) ? await asJson<Pick<IOpenAlexWork, 'id'>>(context) : undefined;
-			const id = work?.id ? openAlexIdOf(work as IOpenAlexWork) : undefined;
+			const doi = text(seed.doi);
+			const context = doi ? await providers.ask(API_PROVIDERS.openAlex, { url: `https://api.openalex.org/works/doi:${encodeURIComponent(doi)}?select=id` }) : undefined;
+			const work = context && isSuccess(context) ? await asJson<Pick<IOpenAlexWork, 'id'>>(context) : undefined;
+			const id = work?.id ? openAlexIdOf(work as IOpenAlexWork) : await openAlexIdOfTitle(seed);
 			if (id) {
 				await database.run(`UPDATE snowball.seeds SET openalex = $openalex WHERE id = $id`, { openalex: id, id: String(seed.id) });
 			}
@@ -404,84 +463,340 @@ function openSnowballSearch(accessor: ServicesAccessor, seeds: ISnowballSeeds | 
 		}
 	};
 
+	/** The OpenAlex record of the seed's title: one of the first ten found whose title and first author are the same. */
+	const openAlexIdOfTitle = async (seed: SnowballRow): Promise<string | undefined> => {
+		const title = text(seed.title);
+		const words = title ? titleWords(title).join(' ') : '';
+		if (!title || !words) {
+			return undefined;
+		}
+		const authors = Array.isArray(seed.authors) ? seed.authors.filter((name): name is string => typeof name === 'string') : [];
+		const url = `https://api.openalex.org/works?filter=${encodeURIComponent(`title.search:${words}`)}&per_page=10&select=id,title,publication_year,authorships`;
+		const context = await providers.ask(API_PROVIDERS.openAlex, { url });
+		const answer = context && isSuccess(context) ? await asJson<{ results?: IOpenAlexWork[] }>(context) : undefined;
+		const year = typeof seed.year === 'number' ? seed.year : undefined;
+		const found = answer?.results?.find(work => work.title && (authors.length
+			? sameWork({ title: work.title, authors: (work.authorships ?? []).map(authorship => authorship.author?.display_name ?? '') }, { title, authors })
+			: titleWords(work.title).join(' ') === words && (!year || !work.publication_year || Math.abs(work.publication_year - year) <= 1)));
+		return found && openAlexIdOf(found);
+	};
+
+	/** OpenAlex's answer at `url`, or what to tell when it gave none: its budget used up, or it could not be reached. */
+	const askOpenAlex = async <T>(url: string): Promise<{ answer?: T; problem?: string }> => {
+		const unreachable = localize('snowball.unreachable', "OpenAlex could not be reached, or is too busy just now: try again.");
+		try {
+			const context = await providers.ask(API_PROVIDERS.openAlex, { url });
+			if (context?.res.statusCode === 429) {
+				return {
+					problem: await providers.key(API_PROVIDERS.openAlex)
+						? localize('snowball.keyBudgetUsed', "Your OpenAlex key has used up its budget for today. It starts again tomorrow.")
+						: localize('snowball.budgetUsed', "The free budget of OpenAlex, shared with everyone on your network, is used up for today. It starts again tomorrow; a free key of your own, set in Discover Literature, has a budget of its own.")
+				};
+			}
+			const answer = context && isSuccess(context) ? await asJson<T>(context) : undefined;
+			return answer ? { answer } : { problem: unreachable };
+		} catch {
+			return { problem: unreachable };
+		}
+	};
+
+	/** Keeps the `works` OpenAlex gave for the seed `id`, of `found` the index has, as a new list of `action`, a step of the map; returns the list and its rows. */
+	const keepList = async (action: ListAction, id: string, works: readonly IOpenAlexWork[], found: number, index?: string) => {
+		const list = nextId('L');
+		const rows = works.slice(0, LISTED).filter(work => work.title).map(work => {
+			const doi = work.doi?.replace(/^https:\/\/doi\.org\//, '').toLowerCase() || null;
+			const openalex = openAlexIdOf(work);
+			return {
+				openalex, doi, title: work.title, year: work.publication_year ?? null, cited: work.cited_by_count ?? 0,
+				authors: (work.authorships ?? []).map(authorship => authorship.author?.display_name).filter((name): name is string => !!name),
+				journal: work.primary_location?.source?.display_name ?? null,
+				link: doi ? `https://doi.org/${doi}` : `https://openalex.org/${openalex}`,
+			};
+		});
+		// DuckDB refuses a parameter the statement does not use: each is given its own
+		const parameters = { rows: JSON.stringify(rows), list };
+		const json = `SELECT * FROM (SELECT unnest(from_json($rows, '[{"openalex":"VARCHAR","doi":"VARCHAR","title":"VARCHAR","authors":["VARCHAR"],"year":"INTEGER","journal":"VARCHAR","cited":"INTEGER","link":"VARCHAR"}]'), recursive := true))`;
+		await database.run(`INSERT INTO snowball.works SELECT DISTINCT ON (openalex) openalex, doi, title, authors, year, journal, cited, link, $list FROM (${json}) WHERE openalex NOT IN (SELECT openalex FROM snowball.works)`, parameters);
+		await database.run(`INSERT OR IGNORE INTO snowball.links SELECT DISTINCT openalex, $seed, $relation, $list FROM (${json})`, { ...parameters, seed: id, relation: RELATION[action] });
+		const [added] = await database.query(`SELECT count(*)::INTEGER AS added FROM snowball.works WHERE first_list = $list`, { list });
+		step({ id: list, action, from: id, at: now(), listed: rows.length, found: Math.max(found, rows.length), added: typeof added?.added === 'number' ? added.added : 0, index });
+		return { list, rows };
+	};
+
 	/**
-	 * Lists the works citing each of the seeds with `ids`, or of all seeds, as OpenAlex has them, the most cited first:
-	 * a list of the map for each seed not followed so already.
+	 * Lists the works citing each of the seeds with `ids`, or of all seeds (Cited By), or the works each cites (Cites), as
+	 * OpenAlex has them, the most cited first: a list of the map for each seed not followed so already. With `contexts`,
+	 * Semantic Scholar is asked too how the citations are made.
 	 */
-	const citedBy = async (ids: readonly string[]) => {
+	const follow = async (action: CitationAction, ids: readonly string[], contexts: boolean) => {
+		const cites = action === 'cites';
 		await database.run(TABLES);
 		const seeds = (await seedRows()).filter(seed => !ids.length || ids.includes(String(seed.id)));
-		const key = await secretStorageService.get(CREDENTIALS.openAlex.secretKey);
 		const notes: string[] = [];
 		for (const seed of seeds) {
 			const id = String(seed.id);
-			const done = map.steps.find(step => step.action === 'cited_by' && step.from === id);
+			const done = map.steps.find(step => step.action === action && step.from === id);
 			if (done) {
-				notes.push(localize('snowball.alreadyCitedBy', "The works citing {0} are {1} already.", id, done.id));
+				notes.push(cites
+					? localize('snowball.alreadyCites', "The works {0} cites are {1} already.", id, done.id)
+					: localize('snowball.alreadyCitedBy', "The works citing {0} are {1} already.", id, done.id));
 				continue;
 			}
-			const openAlexId = await openAlexIdOfSeed(seed, key);
+			const openAlexId = await openAlexIdOfSeed(seed);
 			if (!openAlexId) {
-				notes.push(localize('snowball.noOpenAlexRecord', "OpenAlex has no record of {0} that Pollis could find: its works citing it are not listed.", id));
+				notes.push(cites
+					? localize('snowball.noOpenAlexRecordCites', "OpenAlex has no record of {0} that Pollis could find: the works it cites are not listed.", id)
+					: localize('snowball.noOpenAlexRecord', "OpenAlex has no record of {0} that Pollis could find: its works citing it are not listed.", id));
 				continue;
 			}
 			const works: IOpenAlexWork[] = [];
 			let found = 0;
 			let cursor: string | undefined = '*';
 			let problem: string | undefined;
-			while (cursor && works.length < CITED_BY_LISTED) {
-				post({ command: 'progress', message: localize('snowball.asking', "Asking OpenAlex for the works citing {0}: {1} listed so far.", id, works.length.toLocaleString()) });
-				const filter = `cites:${openAlexId},type:${OPENALEX_TYPES}`;
-				const url = `https://api.openalex.org/works?filter=${encodeURIComponent(filter)}&sort=cited_by_count:desc&per_page=${CITED_BY_PAGE}&cursor=${encodeURIComponent(cursor)}&select=${CITED_BY_SELECT}${key ? `&api_key=${encodeURIComponent(key)}` : ''}`;
-				try {
-					const context = await requestService.request({ type: 'GET', url, timeout: 30000, callSite: CALL_SITE }, CancellationToken.None);
-					if (context.res.statusCode === 429) {
-						problem = key
-							? localize('snowball.keyBudgetUsed', "Your OpenAlex key has used up its budget for today. It starts again tomorrow.")
-							: localize('snowball.budgetUsed', "The free budget of OpenAlex, shared with everyone on your network, is used up for today. It starts again tomorrow; a free key of your own, set in Discover Literature, has a budget of its own.");
-						break;
-					}
-					const answer = isSuccess(context) ? await asJson<{ meta?: { count?: number; next_cursor?: string | null }; results?: IOpenAlexWork[] }>(context) : undefined;
-					if (!answer?.results) {
-						problem = localize('snowball.unreachable', "OpenAlex could not be reached, or is too busy just now: try again.");
-						break;
-					}
-					found = answer.meta?.count ?? found;
-					works.push(...answer.results);
-					cursor = answer.results.length ? answer.meta?.next_cursor ?? undefined : undefined;
-				} catch {
-					problem = localize('snowball.unreachable', "OpenAlex could not be reached, or is too busy just now: try again.");
+			while (cursor && works.length < LISTED) {
+				post({
+					command: 'progress', message: cites
+						? localize('snowball.askingCites', "Asking OpenAlex for the works {0} cites: {1} listed so far.", id, works.length.toLocaleString())
+						: localize('snowball.asking', "Asking OpenAlex for the works citing {0}: {1} listed so far.", id, works.length.toLocaleString())
+				});
+				const filter = `${FOLLOW[action].filter}:${openAlexId},type:${OPENALEX_TYPES}`;
+				type Page = { meta?: { count?: number; next_cursor?: string | null }; results?: IOpenAlexWork[] };
+				const asked: { answer?: Page; problem?: string } = await askOpenAlex<Page>(`https://api.openalex.org/works?filter=${encodeURIComponent(filter)}&sort=cited_by_count:desc&per_page=${LIST_PAGE}&cursor=${encodeURIComponent(cursor)}&select=${LIST_SELECT}`);
+				if (!asked.answer?.results) {
+					problem = asked.problem ?? localize('snowball.unreachable', "OpenAlex could not be reached, or is too busy just now: try again.");
 					break;
 				}
+				found = asked.answer.meta?.count ?? found;
+				works.push(...asked.answer.results);
+				cursor = asked.answer.results.length ? asked.answer.meta?.next_cursor ?? undefined : undefined;
 			}
 			if (problem) {
 				// A list half fetched is not kept: the step is taken again whole
 				notes.push(problem);
 				break;
 			}
-			const list = nextId('L');
-			const rows = works.slice(0, CITED_BY_LISTED).filter(work => work.title).map(work => {
-				const doi = work.doi?.replace(/^https:\/\/doi\.org\//, '').toLowerCase() || null;
-				const openalex = openAlexIdOf(work);
-				return {
-					openalex, doi, title: work.title, year: work.publication_year ?? null, cited: work.cited_by_count ?? 0,
-					authors: (work.authorships ?? []).map(authorship => authorship.author?.display_name).filter((name): name is string => !!name),
-					journal: work.primary_location?.source?.display_name ?? null,
-					link: doi ? `https://doi.org/${doi}` : `https://openalex.org/${openalex}`,
-				};
-			});
-			// DuckDB refuses a parameter the statement does not use: each is given its own
-			const parameters = { rows: JSON.stringify(rows), list };
-			const json = `SELECT * FROM (SELECT unnest(from_json($rows, '[{"openalex":"VARCHAR","doi":"VARCHAR","title":"VARCHAR","authors":["VARCHAR"],"year":"INTEGER","journal":"VARCHAR","cited":"INTEGER","link":"VARCHAR"}]'), recursive := true))`;
-			await database.run(`INSERT INTO snowball.works SELECT DISTINCT ON (openalex) openalex, doi, title, authors, year, journal, cited, link, $list FROM (${json}) WHERE openalex NOT IN (SELECT openalex FROM snowball.works)`, parameters);
-			await database.run(`INSERT OR IGNORE INTO snowball.links SELECT DISTINCT openalex, $seed, 'cites', $list FROM (${json})`, { ...parameters, seed: id });
-			const [added] = await database.query(`SELECT count(*)::INTEGER AS added FROM snowball.works WHERE first_list = $list`, { list });
-			step({ id: list, action: 'cited_by', from: id, at: now(), listed: rows.length, found: Math.max(found, rows.length), added: typeof added?.added === 'number' ? added.added : 0 });
+			const { list, rows } = await keepList(action, id, works, found);
 			if (found > rows.length) {
-				notes.push(localize('snowball.mostCited', "{0} is cited by {1} works; {2} lists the {3} most cited.", id, found.toLocaleString(), list, rows.length.toLocaleString()));
+				notes.push(cites
+					? localize('snowball.mostCitedCites', "{0} cites {1} works; {2} lists the {3} most cited.", id, found.toLocaleString(), list, rows.length.toLocaleString())
+					: localize('snowball.mostCited', "{0} is cited by {1} works; {2} lists the {3} most cited.", id, found.toLocaleString(), list, rows.length.toLocaleString()));
+			}
+			if (contexts) {
+				const problem = await listContexts(action, seed, list, rows);
+				if (problem) {
+					notes.push(problem);
+				}
 			}
 		}
 		tell(notes.join(' '), notes.length > 0 && !notes.every(note => note.includes('lists the')));
+	};
+
+	/**
+	 * Lists the works Semantic Scholar recommends for each of the seeds with `ids`, or of all seeds, by the likeness of their
+	 * titles and abstracts, up to 500, as OpenAlex has them by their DOIs; for a seed Semantic Scholar has no record of, or
+	 * no recommendation for, the ten or so works OpenAlex relates to it. A list of the map for each seed not followed so
+	 * already, whose works join the pool but are not counted in Links.
+	 */
+	const related = async (ids: readonly string[]) => {
+		await database.run(TABLES);
+		const seeds = (await seedRows()).filter(seed => !ids.length || ids.includes(String(seed.id)));
+		const notes: string[] = [];
+		let failed = false;
+		for (const seed of seeds) {
+			const id = String(seed.id);
+			const done = map.steps.find(step => step.action === 'related' && step.from === id);
+			if (done) {
+				notes.push(localize('snowball.alreadyRelated', "The works related to {0} are {1} already.", id, done.id));
+				continue;
+			}
+			// The OpenAlex filters listing the works, each up to RELATED_BATCH of them
+			let filters: string[] = [];
+			let found = 0;
+			let index = 'Semantic Scholar';
+			const record = text(seed.s2) ?? (text(seed.doi) ? `DOI:${text(seed.doi)}` : undefined);
+			if (record) {
+				post({ command: 'progress', message: localize('snowball.askingRelated', "Asking Semantic Scholar for the works related to {0}.", id) });
+				let answer: { recommendedPapers?: NonNullable<ISemanticScholarCitation['citedPaper']>[] } | undefined | null;
+				try {
+					const context = await providers.ask(API_PROVIDERS.semanticScholar, { url: `https://api.semanticscholar.org/recommendations/v1/papers/forpaper/${encodeURIComponent(record)}?limit=${RELATED_LISTED}&fields=externalIds`, attempts: 4 });
+					answer = context?.res.statusCode === 404 ? null : context && isSuccess(context) ? await asJson<{ recommendedPapers?: NonNullable<ISemanticScholarCitation['citedPaper']>[] }>(context) : undefined;
+				} catch {
+					answer = undefined;
+				}
+				if (answer === undefined) {
+					notes.push(localize('snowball.relatedUnreachable', "Semantic Scholar could not be reached, or is too busy just now, so the works related to {0} are not listed: try again.", id));
+					failed = true;
+					break;
+				}
+				const papers = answer?.recommendedPapers ?? [];
+				const dois = [...new Set(papers.map(paper => paper.externalIds?.DOI?.toLowerCase()).filter((doi): doi is string => !!doi && !/[,|]/.test(doi)))];
+				found = papers.length;
+				for (let start = 0; start < dois.length; start += RELATED_BATCH) {
+					filters.push(`doi:${dois.slice(start, start + RELATED_BATCH).join('|')}`);
+				}
+			}
+			if (!filters.length) {
+				// Semantic Scholar has no record of the seed, or nothing to recommend: OpenAlex's related works
+				index = 'OpenAlex';
+				const openAlexId = await openAlexIdOfSeed(seed);
+				if (!openAlexId) {
+					notes.push(localize('snowball.noRecordRelated', "Neither Semantic Scholar nor OpenAlex has a record of {0} that Pollis could find: the works related to it are not listed.", id));
+					continue;
+				}
+				const asked = await askOpenAlex<{ related_works?: string[] }>(`https://api.openalex.org/works/${encodeURIComponent(openAlexId)}?select=related_works`);
+				if (!asked.answer) {
+					notes.push(asked.problem!);
+					failed = true;
+					break;
+				}
+				const relatedIds = (asked.answer.related_works ?? []).map(work => work.replace(/^https:\/\/openalex\.org\//, ''));
+				found = relatedIds.length;
+				filters = relatedIds.length ? [`openalex:${relatedIds.join('|')}`] : [];
+			}
+			const works: IOpenAlexWork[] = [];
+			let problem: string | undefined;
+			for (const filter of filters) {
+				post({ command: 'progress', message: localize('snowball.askingRelatedWorks', "Asking OpenAlex for the works related to {0}: {1} listed so far.", id, works.length.toLocaleString()) });
+				const asked = await askOpenAlex<{ results?: IOpenAlexWork[] }>(`https://api.openalex.org/works?filter=${encodeURIComponent(`${filter},type:${OPENALEX_TYPES}`)}&per_page=${RELATED_BATCH}&select=${LIST_SELECT}`);
+				if (!asked.answer?.results) {
+					problem = asked.problem ?? localize('snowball.unreachable', "OpenAlex could not be reached, or is too busy just now: try again.");
+					break;
+				}
+				works.push(...asked.answer.results);
+			}
+			if (problem) {
+				notes.push(problem);
+				failed = true;
+				break;
+			}
+			works.sort((a, b) => (b.cited_by_count ?? 0) - (a.cited_by_count ?? 0));
+			const { list, rows } = await keepList('related', id, works, found, index);
+			notes.push(index === 'OpenAlex'
+				? localize('snowball.relatedOpenAlex', "Semantic Scholar recommends nothing for {0}: {1} lists the {2} works OpenAlex relates to it.", id, list, rows.length.toLocaleString())
+				: localize('snowball.relatedListed', "Semantic Scholar recommends {1} works for {0}; {2} lists the {3} of them OpenAlex has by their DOIs.", id, found.toLocaleString(), list, rows.length.toLocaleString()));
+		}
+		tell(notes.join(' '), failed);
+	};
+
+	/** Keeps how a work cites a seed, for each of the `citations` Semantic Scholar listed that `match` ties to a work of the pool and a seed; returns how many. */
+	const keepContexts = async (citations: readonly ISemanticScholarCitation[], match: (citation: ISemanticScholarCitation) => { work: string; seed: string } | undefined) => {
+		const rows = citations.flatMap(citation => {
+			const tie = match(citation);
+			return tie ? [{ ...tie, intents: citation.intents ?? [], influential: !!citation.isInfluential, contexts: citation.contexts ?? [] }] : [];
+		});
+		if (rows.length) {
+			await database.run(`INSERT OR REPLACE INTO snowball.contexts SELECT work, seed, intents, influential, contexts FROM (SELECT unnest(from_json($rows, '[{"work":"VARCHAR","seed":"VARCHAR","intents":["VARCHAR"],"influential":"BOOLEAN","contexts":["VARCHAR"]}]'), recursive := true))`, { rows: JSON.stringify(rows) });
+		}
+		return rows.length;
+	};
+
+	/**
+	 * Asks Semantic Scholar how the works of `list` cite `seed`, its citations a thousand to a request (Cited By), or how
+	 * `seed` cites them, its references (Cites), until each work of the list with a DOI is matched, or ten requests; a work
+	 * is matched by its DOI. Returns what to tell when it could not be asked.
+	 */
+	const listContexts = async (action: CitationAction, seed: SnowballRow, list: string, works: readonly { openalex: string; doi: string | null }[]): Promise<string | undefined> => {
+		const cites = action === 'cites';
+		const id = String(seed.id);
+		const asked = cites ? `${id} references` : id;
+		const record = text(seed.s2) ?? (text(seed.doi) ? `DOI:${text(seed.doi)}` : undefined);
+		if (!record) {
+			return cites
+				? localize('snowball.contextsNoDoiCites', "Semantic Scholar was not asked how {0} cites the works: it has no DOI.", id)
+				: localize('snowball.contextsNoDoi', "Semantic Scholar was not asked how the works cite {0}: it has no DOI.", id);
+		}
+		const byDoi = new Map(works.flatMap(work => work.doi ? [[work.doi, work.openalex] as const] : []));
+		const matched = new Set<string>();
+		for (let page = 0; page < CONTEXTS_PAGES && matched.size < byDoi.size; page++) {
+			post({
+				command: 'progress', message: cites
+					? localize('snowball.askingContextsCites', "Asking Semantic Scholar how {1} cites the works of {0}: {2} of {3} matched so far.", list, id, matched.size.toLocaleString(), byDoi.size.toLocaleString())
+					: localize('snowball.askingContexts', "Asking Semantic Scholar how the works of {0} cite {1}: {2} of {3} matched so far.", list, id, matched.size.toLocaleString(), byDoi.size.toLocaleString())
+			});
+			let answer: { next?: number; data?: ISemanticScholarCitation[] } | undefined | null;
+			try {
+				const context = await providers.ask(API_PROVIDERS.semanticScholar, { url: `https://api.semanticscholar.org/graph/v1/paper/${encodeURIComponent(record)}/${FOLLOW[action].s2}?fields=${CONTEXT_FIELDS}&offset=${page * CONTEXTS_PAGE}&limit=${CONTEXTS_PAGE}`, attempts: 4 });
+				if (context?.res.statusCode === 404) {
+					await database.run(`INSERT OR REPLACE INTO snowball.s2_asked VALUES ($id, false)`, { id: asked });
+					return cites
+						? localize('snowball.contextsUnknownCites', "Semantic Scholar has no record of {0}: how it cites the works is not known.", id)
+						: localize('snowball.contextsUnknown', "Semantic Scholar has no record of {0}: how the works cite it is not known.", id);
+				}
+				answer = context && isSuccess(context) ? await asJson<{ next?: number; data?: ISemanticScholarCitation[] }>(context) : undefined;
+			} catch {
+				answer = undefined;
+			}
+			if (!answer) {
+				return cites
+					? localize('snowball.contextsUnreachableCites', "Semantic Scholar could not be reached, or was too busy, so {0} lacks how {1} cites its works: click a work's Links to ask again.", list, id)
+					: localize('snowball.contextsUnreachable', "Semantic Scholar could not be reached, or was too busy, so {0} lacks how its works cite {1}: click a work's Links to ask again.", list, id);
+			}
+			await keepContexts(answer.data ?? [], citation => {
+				const doi = citation[FOLLOW[action].paper]?.externalIds?.DOI?.toLowerCase();
+				const work = doi ? byDoi.get(doi) : undefined;
+				if (!work) {
+					return undefined;
+				}
+				matched.add(work);
+				return { work, seed: id };
+			});
+			if (typeof answer.next !== 'number') {
+				break;
+			}
+		}
+		await database.run(`INSERT OR REPLACE INTO snowball.s2_asked VALUES ($id, true)`, { id: asked });
+		return undefined;
+	};
+
+	/**
+	 * How the work `openAlexId` of the pool cites each active seed it is tied to, or is cited by it; when Semantic Scholar
+	 * did not say how it cites one of them, and was not asked for its references yet, they are asked for, by its DOI; when
+	 * it did not say how a seed cites it, and was not asked for the seed's references yet, those are asked for.
+	 */
+	const contextsOf = async (openAlexId: string) => {
+		await database.run(TABLES);
+		const tiesOf = () => database.query(`SELECT a.id AS seed, l.relation, l.list, c.intents, c.influential, c.contexts
+			FROM snowball.links l JOIN snowball.seed_works a ON a.id = l.seed AND NOT a.removed LEFT JOIN snowball.contexts c ON c.work = l.work AND c.seed = a.id
+			WHERE l.work = $work ORDER BY TRY_CAST(substr(a.id, 2) AS INTEGER), l.relation = 'related', l.relation DESC`, { work: openAlexId });
+		const [work] = await database.query(`SELECT w.doi, k.known FROM snowball.works w LEFT JOIN snowball.s2_asked k ON k.id = w.openalex WHERE w.openalex = $work`, { work: openAlexId });
+		let ties = await tiesOf();
+		let known = typeof work?.known === 'boolean' ? work.known : undefined;
+		let problem: string | undefined;
+		const doi = text(work?.doi);
+		if (doi && known === undefined && ties.some(tie => tie.relation === RELATION.cited_by && tie.intents === null)) {
+			try {
+				const context = await providers.ask(API_PROVIDERS.semanticScholar, { url: `https://api.semanticscholar.org/graph/v1/paper/DOI:${encodeURIComponent(doi)}/references?fields=${CONTEXT_FIELDS}&limit=${CONTEXTS_PAGE}`, attempts: 4 });
+				const answer = context?.res.statusCode === 404 ? null : context && isSuccess(context) ? await asJson<{ data?: ISemanticScholarCitation[] }>(context) : undefined;
+				if (answer === undefined) {
+					problem = localize('snowball.contextsBusy', "Semantic Scholar could not be reached, or is too busy just now: try again.");
+				} else {
+					known = answer !== null;
+					const seeds = await seedRows();
+					await keepContexts(answer?.data ?? [], citation => {
+						const cited = citation.citedPaper;
+						const doi = cited?.externalIds?.DOI?.toLowerCase();
+						const seed = seeds.find(seed => cited?.paperId && seed.s2 === cited.paperId || doi && seed.doi === doi);
+						return seed ? { work: openAlexId, seed: String(seed.id) } : undefined;
+					});
+					await database.run(`INSERT OR REPLACE INTO snowball.s2_asked VALUES ($id, $known)`, { id: openAlexId, known });
+					ties = await tiesOf();
+				}
+			} catch {
+				problem = localize('snowball.contextsBusy', "Semantic Scholar could not be reached, or is too busy just now: try again.");
+			}
+		}
+		for (const tie of ties.filter(tie => tie.relation === RELATION.cites && tie.intents === null)) {
+			const id = String(tie.seed);
+			const [asked] = await database.query(`SELECT 1 FROM snowball.s2_asked WHERE id = $id`, { id: `${id} references` });
+			const seed = (await seedRows()).find(seed => seed.id === id);
+			if (asked || !seed || problem) {
+				continue;
+			}
+			const works = await database.query(`SELECT w.openalex, w.doi FROM snowball.links l JOIN snowball.works w ON w.openalex = l.work WHERE l.seed = $seed AND l.relation = $relation`, { seed: id, relation: RELATION.cites });
+			problem = await listContexts('cites', seed, String(tie.list), works.map(work => ({ openalex: String(work.openalex), doi: text(work.doi) ?? null })));
+			ties = await tiesOf();
+		}
+		post({ command: 'contexts', work: openAlexId, ties, known: doi ? known : false, problem });
 	};
 
 	/** The works of PollisReferences whose title, authors or key hold every word of `words`. */
@@ -562,8 +877,10 @@ function openSnowballSearch(accessor: ServicesAccessor, seeds: ISnowballSeeds | 
 		map.steps = steps;
 		const results = resultsFile(record);
 		if (await fileService.exists(results)) {
-			await database.run(`DETACH DATABASE IF EXISTS results; ATTACH ${sqlString(results.fsPath)} AS results (READ_ONLY);
-				${TABLE_NAMES.map(table => `INSERT INTO snowball.${table} SELECT * FROM results.${table};`).join('\n')}
+			await database.run(`DETACH DATABASE IF EXISTS results; ATTACH ${sqlString(results.fsPath)} AS results (READ_ONLY)`);
+			// A map saved before a table was added lacks it
+			const saved = new Set((await database.query(`SELECT table_name FROM duckdb_tables() WHERE database_name = 'results'`)).map(row => row.table_name));
+			await database.run(`${TABLE_NAMES.filter(table => saved.has(table)).map(table => `INSERT INTO snowball.${table} SELECT * FROM results.${table};`).join('\n')}
 				DETACH results`);
 			tell('');
 		} else {
@@ -606,8 +923,32 @@ function openSnowballSearch(accessor: ServicesAccessor, seeds: ISnowballSeeds | 
 				break;
 			}
 			case 'citedBy':
+			case 'cites':
 				if (Array.isArray(message.seeds)) {
-					await queue(() => citedBy(message.seeds.filter(seed => typeof seed === 'string')));
+					const contexts = message.contexts === true;
+					storageService.store(CONTEXTS_KEY, contexts, StorageScope.PROFILE, StorageTarget.USER);
+					await queue(() => follow(message.command === 'cites' ? 'cites' : 'cited_by', message.seeds.filter(seed => typeof seed === 'string'), contexts));
+				}
+				break;
+			case 'related':
+				if (Array.isArray(message.seeds)) {
+					await queue(() => related(message.seeds.filter(seed => typeof seed === 'string')));
+				}
+				break;
+			case 'layout':
+				storageService.store(PORTRAIT_KEY, message.portrait === true, StorageScope.PROFILE, StorageTarget.USER);
+				break;
+			case 'contexts':
+				if (typeof message.work === 'string') {
+					// The pool is shown again only when Semantic Scholar was asked, its ties then known
+					await sequencer.queue(async () => {
+						try {
+							await contextsOf(message.work);
+							await postState();
+						} catch (error) {
+							post({ command: 'contexts', work: message.work, ties: [], problem: error instanceof Error ? error.message : String(error) });
+						}
+					});
 				}
 				break;
 			case 'seedWork':
@@ -629,6 +970,10 @@ function openSnowballSearch(accessor: ServicesAccessor, seeds: ISnowballSeeds | 
 				if (typeof message.show === 'string' && typeof message.page === 'number') {
 					view.show = message.show;
 					view.page = Math.max(0, Math.floor(message.page));
+					if (typeof message.sort === 'string' && Object.hasOwn(POOL_ORDERS, message.sort)) {
+						view.sort = message.sort;
+						view.descending = message.descending !== false;
+					}
 					if (isRowsChoice(message.rows) && message.rows !== view.rows) {
 						view.rows = message.rows;
 						storeRows(storageService, 'snowball', message.rows);
@@ -669,6 +1014,15 @@ function openSnowballSearch(accessor: ServicesAccessor, seeds: ISnowballSeeds | 
 	}));
 }
 
+/** A citation as Semantic Scholar lists it: of a work's citing works (`citingPaper`), or of its references (`citedPaper`). */
+interface ISemanticScholarCitation {
+	readonly contexts?: string[];
+	readonly intents?: string[];
+	readonly isInfluential?: boolean;
+	readonly citingPaper?: { readonly paperId?: string; readonly externalIds?: { readonly DOI?: string } | null };
+	readonly citedPaper?: { readonly paperId?: string; readonly externalIds?: { readonly DOI?: string } | null };
+}
+
 /** Whether `value`, from another page, is an article to keep. */
 function isArticle(value: unknown): value is ISnowballArticle {
 	const article = value as ISnowballArticle;
@@ -676,28 +1030,45 @@ function isArticle(value: unknown): value is ISnowballArticle {
 		&& Array.isArray(article.authors) && typeof article.link === 'string';
 }
 
-function pageHtml(): string {
+function pageHtml(askContexts: boolean, portrait: boolean): string {
 	const text = {
 		title: localize('snowball.title', "Snowball Search Map"),
-		intro: localize('snowball.intro', "Start from a few works you know, the seeds, and follow their citations: the works citing them pour into one pool, ranked by how many seeds each is tied to. Make the best of them seeds and go on, until a step adds little to the top of the pool. Each step is kept in the map's record, which you can save and open again."),
+		intro: localize('snowball.intro', "Start from a few works you know, the seeds, and follow their citations: the works citing them, and those they cite, pour into one pool, ranked by how many seeds each is tied to. Make the best of them seeds and go on, until a step adds little to the top of the pool. Each step is kept in the map's record, which you can save and open again."),
 		untitled: localize('snowball.untitled', "Untitled Map"),
 		notSaved: localize('snowball.notSaved', "not saved"),
 		save: localize('snowball.save', "Save..."),
 		open: localize('snowball.open', "Open..."),
 		newSearch: localize('snowball.newSearch', "New Search"),
 		mapEmpty: localize('snowball.mapEmpty', "The map draws itself as you go: add a seed below."),
-		legendList: localize('snowball.legendList', "a list of works: click it to see it in the pool"),
-		legendSeed: localize('snowball.legendSeed', "a seed: click it to act on it alone"),
+		layout: localize('snowball.layout', "Layout:"),
+		landscape: localize('snowball.landscape', "Landscape"),
+		landscapeHint: localize('snowball.landscapeHint', "The map grows to the right: shorter, but wide maps need scrolling"),
+		portrait: localize('snowball.portrait', "Portrait"),
+		portraitHint: localize('snowball.portraitHint', "The map grows down: taller, but more of it is seen at once"),
+		legendSource: localize('snowball.legendSource', "where seeds came from"),
+		legendSeed: localize('snowball.legendSeed', "a seed, filled when chosen: click it to choose it or not"),
+		legendList: localize('snowball.legendList', "a list of works citing a seed, cited by it or related to it, and how many: click it to see it in the pool"),
+		chosenNote: localize('snowball.chosenNote', "Chosen: {0}. Cited By, Cites and Related follow these seeds alone. Click a seed to choose it or not, or {1} to follow all seeds."),
+		chooseAll: localize('snowball.chooseAll', "All Seeds"),
 		selectEdge: localize('snowball.selectEdge', "Select"),
 		citedByEdge: localize('snowball.citedByEdge', "Cited by"),
+		citesEdge: localize('snowball.citesEdge', "Cites"),
+		relatedEdge: localize('snowball.relatedEdge', "Related"),
+		relatedHead: localize('snowball.relatedHead', "Related to"),
 		removed: localize('snowball.removed', "removed"),
 		seeds: localize('snowball.seeds', "Seeds ({0})"),
 		noSeeds: localize('snowball.noSeeds', "No seeds yet. Find works in your references below, or tick articles in Discover Literature and choose Snowball Search..."),
 		removeSeed: localize('snowball.removeSeed', "Remove this seed: its lists stay on the map, and Links is counted again"),
 		forAll: localize('snowball.forAll', "For all seeds:"),
-		forOne: localize('snowball.forOne', "For {0} alone:"),
+		forChosen: localize('snowball.forChosen', "For {0} alone:"),
 		citedBy: localize('snowball.citedBy', "Cited By"),
 		citedByHint: localize('snowball.citedByHint', "Lists the works citing each seed, the 2,000 most cited, as OpenAlex has them: a list on the map for each seed not followed so already"),
+		citesAction: localize('snowball.citesAction', "Cites"),
+		citesHint: localize('snowball.citesHint', "Lists the works each seed cites, as OpenAlex has them: a list on the map for each seed not followed so already"),
+		relatedAction: localize('snowball.relatedAction', "Related"),
+		relatedHint: localize('snowball.relatedHint', "Lists the works Semantic Scholar recommends for each seed, by the likeness of their titles and abstracts, mostly recent, up to 500; for a seed it has no record of, the ten or so OpenAlex relates to it. They join the pool, but Links does not count them"),
+		askContexts: localize('snowball.askContexts.citations', "Ask Semantic Scholar About the Citations"),
+		askContextsHint: localize('snowball.askContextsHint.citations', "Semantic Scholar also tells, for each citation of a list, the sentences citing, why (background, method or result), and whether the citation is influential"),
 		findLabel: localize('snowball.findLabel', "Add Seeds"),
 		findPlaceholder: localize('snowball.findPlaceholder', "Find works in PollisReferences by title, author or key"),
 		noneFound: localize('snowball.noneFound', "No work in PollisReferences matches."),
@@ -705,20 +1076,32 @@ function pageHtml(): string {
 		seedHint: localize('snowball.seedHint', "Make this work a seed"),
 		isSeed: localize('snowball.isSeed', "Already a seed"),
 		pool: localize('snowball.pool', "Pool"),
-		poolEmpty: localize('snowball.poolEmpty', "Empty: Cited By fills it."),
+		poolEmpty: localize('snowball.poolEmpty', "Empty: Cited By, Cites and Related fill it."),
 		poolLine: localize('snowball.poolLine', "{0} works from {1} · the last step added {2}, {3} of them in the top {4}"),
 		show: localize('snowball.show', "Show:"),
 		showAll: localize('snowball.showAll', "All"),
 		showNew: localize('snowball.showNew', "New Since Last Step"),
 		links: localize('snowball.links', "Links"),
-		linksHint: localize('snowball.linksHint', "How many seeds the work is tied to"),
+		linksHint: localize('snowball.linksHint', "How many seeds the work is tied to: a filled dot for a citation Semantic Scholar finds influential, a hollow one for the others. \u2248 marks a seed it is only related to, which Links does not count. Click the dots to see how it cites each seed, or is cited by it; click the heading to sort by Links, then by the filled dots"),
+		sortHint: localize('snowball.sortHint', "Click to sort by it"),
+		background: localize('snowball.background', "Background"),
+		method: localize('snowball.method', "Method"),
+		result: localize('snowball.result', "Result"),
+		influential: localize('snowball.influential', "Influential"),
+		noRecord: localize('snowball.noRecord', "No Semantic Scholar record"),
+		noContext: localize('snowball.noContext', "Semantic Scholar does not say how it cites this seed."),
+		noContextCited: localize('snowball.noContextCited', "Semantic Scholar does not say how this seed cites it."),
+		noSentences: localize('snowball.noSentences', "Semantic Scholar gives no sentence citing it."),
+		askingContexts: localize('snowball.askingContexts.page', "Asking Semantic Scholar how it cites the seeds..."),
 		work: localize('snowball.work', "Work"),
 		year: localize('snowball.year', "Year"),
 		cited: localize('snowball.cited', "Cited"),
-		citedHint: localize('snowball.citedHint', "Times cited, as OpenAlex counts them"),
+		citedHint: localize('snowball.citedHint', "Times cited, as OpenAlex counts them: click to sort by it"),
 		from: localize('snowball.from', "From"),
 		fromHint: localize('snowball.fromHint', "The lists the work is in"),
 		cites: localize('snowball.cites', "cites {0}"),
+		citedBySeed: localize('snowball.citedBySeed', "cited by {0}"),
+		relatedTo: localize('snowball.relatedTo', "related to {0}"),
 		inLists: localize('snowball.inLists', "in {0}"),
 		previous: localize('snowball.previous', "Previous"),
 		next: localize('snowball.next', "Next"),
@@ -748,6 +1131,7 @@ function pageHtml(): string {
 	<style>
 		${voiceButtonsCss}
 		${rowsChoiceCss}
+		${stickyHeadCss}
 		* { box-sizing: border-box; }
 		body { font-family: var(--vscode-font-family); font-size: 13px; margin: 0; color: var(--vscode-foreground); background-color: var(--vscode-editor-background); }
 		.container { max-width: 1200px; margin: 0 auto; padding: 24px; }
@@ -764,10 +1148,13 @@ function pageHtml(): string {
 		.row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 		input[type="text"] { font: inherit; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, var(--vscode-widget-border)); border-radius: 2px; padding: 4px 6px; width: 480px; max-width: 100%; }
 		input:focus { outline: 1px solid var(--vscode-focusBorder); outline-offset: -1px; }
-		button.action { font: inherit; color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); border: none; border-radius: 2px; padding: 4px 12px; cursor: pointer; }
+		button.action { font: inherit; color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); border: 1px solid var(--vscode-button-background); border-radius: 2px; padding: 5px 16px; min-width: 96px; cursor: pointer; font-size: 11px; opacity: 0.7; }
+		/* As the code buttons below a panel's Example Code: dimmed until pointed at, the blue one not */
+		button.action:not(:disabled):hover, button.action.current, button.action.primary { opacity: 1; }
 		button.action:hover { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
 		button:disabled, button:disabled:hover { opacity: 0.5; cursor: default; }
-		.actionBar { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px; margin: 8px 0; }
+		.actionBar { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 12px; margin: 16px 0; }
+		.actionBar > .tick { margin-left: 12px; }
 		/* One action blue: the first at first, then the last enabled one the pointer was on */
 		.actionBar > button.action.current { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
 		.actionLabel { color: var(--vscode-descriptionForeground); }
@@ -783,17 +1170,27 @@ function pageHtml(): string {
 		svg .node rect { fill: var(--vscode-editor-background); stroke: var(--vscode-widget-border); stroke-width: 1; }
 		svg .node.seed rect { stroke: var(--vscode-textLink-foreground); }
 		svg .node.source { cursor: default; }
-		svg .node.source rect { fill: none; stroke-dasharray: 3 3; }
+		svg .node.source rect { fill: none; stroke: var(--vscode-descriptionForeground); stroke-dasharray: 3 3; }
 		svg .node.removed rect { stroke-dasharray: 4 3; stroke: var(--vscode-disabledForeground); }
 		svg .node.removed text { fill: var(--vscode-disabledForeground); }
 		svg .node.chosen rect { stroke: var(--vscode-focusBorder); stroke-width: 2; }
+		svg .node.seed.chosen rect { stroke: var(--vscode-focusBorder); stroke-width: 2; fill: var(--vscode-list-activeSelectionBackground, var(--vscode-editor-background)); }
+		svg .node.seed.chosen text { fill: var(--vscode-list-activeSelectionForeground, var(--vscode-foreground)); font-weight: 600; }
+		.shape { display: inline-block; vertical-align: middle; width: 24px; height: 12px; margin-right: 4px; box-sizing: border-box; font-size: 9px; line-height: 10px; text-align: center; }
+		.shape.source { border: 1px dashed var(--vscode-descriptionForeground); }
+		.shape.seed { border: 1px solid var(--vscode-textLink-foreground); border-radius: 6px; }
+		.shape.list { border: 1px solid var(--vscode-widget-border, var(--vscode-descriptionForeground)); background: var(--vscode-editor-background); color: var(--vscode-foreground); }
+		.chosenNote { font-size: 12px; margin: 6px 8px 0 8px; }
 		svg .node text { fill: var(--vscode-foreground); font-size: 12px; }
 		svg .node.source text { fill: var(--vscode-descriptionForeground); }
 		svg .edge { fill: none; stroke: var(--vscode-descriptionForeground); stroke-width: 1; }
 		svg .edge.removed { stroke-dasharray: 4 3; }
 		svg .arrow { fill: var(--vscode-descriptionForeground); }
 		svg .edgeLabel { fill: var(--vscode-descriptionForeground); font-size: 10px; paint-order: stroke; stroke: var(--vscode-welcomePage-tileBackground, var(--vscode-editorWidget-background)); stroke-width: 4px; }
-		.legend { font-size: 11px; color: var(--vscode-descriptionForeground); margin: 4px 8px 0 8px; }
+		.legend { font-size: 11px; color: var(--vscode-descriptionForeground); margin: 4px 8px 0 8px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 16px; }
+		.legend[hidden] { display: none; }
+		.layoutChoice .link { font-size: 11px; }
+		.layoutChoice .link.chosen { color: var(--vscode-foreground); font-weight: 600; cursor: default; text-decoration: none; }
 		.seedList { margin: 0; padding: 0; list-style: none; }
 		.seedList li { display: flex; align-items: baseline; gap: 8px; padding: 4px 8px; border-bottom: 1px solid var(--vscode-widget-border); }
 		.seedList li.chosen { box-shadow: inset 2px 0 0 var(--vscode-focusBorder); }
@@ -802,7 +1199,7 @@ function pageHtml(): string {
 		.muted { color: var(--vscode-descriptionForeground); }
 		button.removeSeed { font: inherit; font-size: 14px; line-height: 1; color: var(--vscode-descriptionForeground); background: none; border: none; padding: 0 4px; cursor: pointer; }
 		button.removeSeed:hover { color: var(--vscode-foreground); }
-		.finder { margin-top: 12px; }
+		.finder { margin-top: 20px; }
 		.found { margin-top: 4px; }
 		.found div { padding: 3px 0; font-size: 12px; }
 		.poolLine { color: var(--vscode-descriptionForeground); font-size: 12px; }
@@ -811,9 +1208,18 @@ function pageHtml(): string {
 		table { width: 100%; border-collapse: collapse; font-size: 12px; }
 		th { text-align: left; font-weight: normal; color: var(--vscode-descriptionForeground); padding: 4px 8px; border-bottom: 1px solid var(--vscode-widget-border); white-space: nowrap; }
 		th.number, td.number { text-align: right; }
+		th.sortable { cursor: pointer; }
+		th.sortable:hover { color: var(--vscode-foreground); }
 		td { padding: 6px 8px; border-bottom: 1px solid var(--vscode-widget-border); vertical-align: top; }
 		td.number { white-space: nowrap; font-variant-numeric: tabular-nums; }
-		td.dots { white-space: nowrap; color: var(--vscode-textLink-foreground); letter-spacing: 1px; cursor: default; }
+		td.dots { white-space: nowrap; color: var(--vscode-textLink-foreground); letter-spacing: 1px; cursor: pointer; }
+		tr.detail td { padding: 4px 8px 10px 32px; background: var(--vscode-welcomePage-tileBackground, var(--vscode-editorWidget-background)); }
+		.tie { margin: 6px 0; }
+		.tieHead { display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; }
+		.tieHead .seedId { font-weight: 600; }
+		.tieHead .influential { color: var(--vscode-textLink-foreground); }
+		.context { margin: 4px 0 0 12px; padding-left: 8px; border-left: 2px solid var(--vscode-widget-border); color: var(--vscode-descriptionForeground); line-height: 1.4; }
+		.tick { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; color: var(--vscode-descriptionForeground); }
 		.authors { color: var(--vscode-descriptionForeground); margin-top: 2px; }
 		.pager { display: flex; justify-content: center; align-items: center; gap: 16px; padding: 12px 8px; font-size: 12px; color: var(--vscode-descriptionForeground); }
 		.pager .link { font-size: 12px; }
@@ -859,7 +1265,8 @@ function pageHtml(): string {
 	</div>
 
 	<div class="mapBox" id="mapBox"></div>
-	<div class="legend" id="legend" hidden>[&equiv;] ${text.legendList} · ( ) ${text.legendSeed}</div>
+	<div class="chosenNote" id="chosenNote" hidden></div>
+	<div class="legend" id="legend" hidden><span><span class="shape source">&equiv;</span>${text.legendSource} · <span class="shape seed"></span>${text.legendSeed} · <span class="shape list">&equiv;</span>${text.legendList}</span><span class="layoutChoice">${text.layout} <button class="link" id="landscape" title="${text.landscapeHint}">${text.landscape}</button> · <button class="link" id="portrait" title="${text.portraitHint}">${text.portrait}</button></span></div>
 
 	<div class="sectionHeader"><h2 id="seedsTitle"></h2></div>
 	<ul class="seedList" id="seedList"></ul>
@@ -867,6 +1274,9 @@ function pageHtml(): string {
 	<div class="actionBar" id="seedBar" hidden>
 		<span class="actionLabel" id="forLabel"></span>
 		<button class="action current" id="citedBy" title="${text.citedByHint}">${text.citedBy}</button>
+		<button class="action" id="cites" title="${text.citesHint}">${text.citesAction}</button>
+		<button class="action" id="related" title="${text.relatedHint}">${text.relatedAction}</button>
+		<label class="tick" title="${text.askContextsHint}"><input type="checkbox" id="askContexts"${askContexts ? ' checked' : ''}>${text.askContexts}</label>
 	</div>
 	<div class="status" id="status" hidden></div>
 	<div class="finder">
@@ -876,10 +1286,10 @@ function pageHtml(): string {
 
 	<div class="sectionHeader"><h2>${text.pool}</h2></div>
 	<div class="poolLine" id="poolLine"></div>
-	<div class="showRow" id="showRow" hidden></div>
+	<div class="showRow stickyBand" id="showRow" hidden></div>
 	<div class="pager" id="pagerTop" hidden></div>
-	<table id="poolTable" hidden>
-		<thead><tr><th title="${text.linksHint}">${text.links}</th><th>${text.work}</th><th class="number">${text.year}</th><th class="number" title="${text.citedHint}">${text.cited}</th><th title="${text.fromHint}">${text.from}</th><th></th></tr></thead>
+	<table id="poolTable" class="stickyHead" hidden>
+		<thead><tr><th class="sortable" data-sort="links" title="${text.linksHint}">${text.links}</th><th>${text.work}</th><th class="number sortable" data-sort="year" title="${text.sortHint}">${text.year}</th><th class="number sortable" data-sort="cited" title="${text.citedHint}">${text.cited}</th><th title="${text.fromHint}">${text.from}</th><th></th></tr></thead>
 		<tbody id="poolRows"></tbody>
 	</table>
 	<div class="pager" id="pager" hidden></div>
@@ -889,12 +1299,19 @@ function pageHtml(): string {
 	${voiceButtonsScript}
 	const TEXT = ${JSON.stringify(text)};
 	${rowsChoiceScript()}
+	${stickyHeadScript()}
 	const TOP = ${TOP};
-	let state = { steps: [], seeds: [], rows: [], lists: [], summary: {}, view: { show: 'all', page: 0, rows: ${FEWEST_ROWS} } };
-	// The seed the actions are for, when one is chosen on the map
-	let chosen;
+	let state = { steps: [], seeds: [], rows: [], lists: [], summary: {}, view: { show: 'all', page: 0, rows: ${FEWEST_ROWS}, sort: 'links', descending: true } };
+	stickBand(document.getElementById('showRow'), document.getElementById('poolTable'));
+	// The seeds Cited By follows, when some are chosen on the map; all of them when none is
+	const chosen = new Set();
+	let portrait = ${portrait};
 	let busy = false;
 	let findTimer;
+	// The works of the pool whose Links are open, and how each cites its seeds, as the host told it
+	const expanded = new Set();
+	const details = new Map();
+	const INTENTS = { background: TEXT.background, methodology: TEXT.method, result: TEXT.result };
 
 	function format(template, ...values) {
 		return template.replace(/\\{(\\d+)\\}/g, (match, index) => values[index] !== undefined ? String(values[index]) : match);
@@ -939,16 +1356,16 @@ function pageHtml(): string {
 			nodes.set(node.id, node);
 			return node;
 		};
-		const nodeOf = id => nodes.get(id) || add({ id, kind: 'source', label: id, depth: 0 });
+		const nodeOf = id => nodes.get(id) || add({ id, kind: 'source', label: '\\u2261 ' + id, depth: 0 });
 		for (const step of state.steps) {
 			if (step.action === 'seed' && step.id) {
 				const parents = (Array.isArray(step.from) ? step.from : [step.from]).map(nodeOf);
 				const node = add({ id: step.id, kind: 'seed', label: step.id + (step.label ? ' ' + step.label : ''), title: step.title, depth: Math.max(0, ...parents.map(parent => parent.depth)) + 1 });
 				parents.forEach(parent => edges.push({ from: parent, to: node, label: TEXT.selectEdge }));
-			} else if (step.action === 'cited_by' && step.id) {
+			} else if ((step.action === 'cited_by' || step.action === 'cites' || step.action === 'related') && step.id) {
 				const seed = nodeOf(step.from);
 				const node = add({ id: step.id, kind: 'list', label: '\\u2261 ' + step.id + '  ' + (step.listed || 0).toLocaleString(), depth: seed.depth + 1 });
-				edges.push({ from: seed, to: node, label: TEXT.citedByEdge });
+				edges.push({ from: seed, to: node, label: step.action === 'related' ? TEXT.relatedEdge : step.action === 'cites' ? TEXT.citesEdge : TEXT.citedByEdge });
 			} else if (step.action === 'remove') {
 				const seed = nodes.get(step.from);
 				if (seed) {
@@ -971,16 +1388,17 @@ function pageHtml(): string {
 			box.append(empty);
 			return;
 		}
-		const COLUMN = 250, WIDTH = 170, HEIGHT = 28, ROW = 44, MARGIN = 8;
-		const rows = new Map();
+		// In landscape each step is a column further, the nodes of a step one under another; in portrait a row further, side by side
+		const COLUMN = 250, WIDTH = 170, HEIGHT = 28, ROW = 44, LEVEL = 72, SIDE = 190, MARGIN = 8;
+		const places = new Map();
 		for (const node of nodes) {
-			node.row = rows.get(node.depth) || 0;
-			rows.set(node.depth, node.row + 1);
-			node.x = MARGIN + node.depth * COLUMN;
-			node.y = MARGIN + node.row * ROW;
+			node.place = places.get(node.depth) || 0;
+			places.set(node.depth, node.place + 1);
+			node.x = MARGIN + (portrait ? node.place * SIDE : node.depth * COLUMN);
+			node.y = MARGIN + (portrait ? node.depth * LEVEL : node.place * ROW);
 		}
 		const width = MARGIN * 2 + Math.max(...nodes.map(node => node.x)) + WIDTH;
-		const height = MARGIN * 2 + Math.max(...rows.values()) * ROW - (ROW - HEIGHT);
+		const height = MARGIN * 2 + Math.max(...nodes.map(node => node.y)) + HEIGHT;
 		const svg = svgElement('svg', { width, height, viewBox: '0 0 ' + width + ' ' + height, role: 'img' });
 		const marker = svgElement('marker', { id: 'arrow', viewBox: '0 0 8 8', refX: 8, refY: 4, markerWidth: 8, markerHeight: 8, orient: 'auto' });
 		marker.append(svgElement('path', { d: 'M0,0 L8,4 L0,8 z', class: 'arrow' }));
@@ -988,17 +1406,25 @@ function pageHtml(): string {
 		defs.append(marker);
 		svg.append(defs);
 		for (const edge of edges) {
-			const x1 = edge.from.x + WIDTH, y1 = edge.from.y + HEIGHT / 2, x2 = edge.to.x, y2 = edge.to.y + HEIGHT / 2, middle = (x1 + x2) / 2;
 			const removed = edge.from.removed || edge.to.removed;
-			svg.append(svgElement('path', { d: 'M' + x1 + ',' + y1 + ' C' + middle + ',' + y1 + ' ' + middle + ',' + y2 + ' ' + x2 + ',' + y2, class: 'edge' + (removed ? ' removed' : ''), 'marker-end': 'url(#arrow)' }));
-			const label = svgElement('text', { x: middle, y: (y1 + y2) / 2 - 4, 'text-anchor': 'middle', class: 'edgeLabel' });
+			let d, label;
+			if (portrait) {
+				const x1 = edge.from.x + WIDTH / 2, y1 = edge.from.y + HEIGHT, x2 = edge.to.x + WIDTH / 2, y2 = edge.to.y, middle = (y1 + y2) / 2;
+				d = 'M' + x1 + ',' + y1 + ' C' + x1 + ',' + middle + ' ' + x2 + ',' + middle + ' ' + x2 + ',' + y2;
+				label = svgElement('text', { x: (x1 + x2) / 2 + 4, y: middle + 3, 'text-anchor': 'start', class: 'edgeLabel' });
+			} else {
+				const x1 = edge.from.x + WIDTH, y1 = edge.from.y + HEIGHT / 2, x2 = edge.to.x, y2 = edge.to.y + HEIGHT / 2, middle = (x1 + x2) / 2;
+				d = 'M' + x1 + ',' + y1 + ' C' + middle + ',' + y1 + ' ' + middle + ',' + y2 + ' ' + x2 + ',' + y2;
+				label = svgElement('text', { x: middle, y: (y1 + y2) / 2 - 4, 'text-anchor': 'middle', class: 'edgeLabel' });
+			}
+			svg.append(svgElement('path', { d, class: 'edge' + (removed ? ' removed' : ''), 'marker-end': 'url(#arrow)' }));
 			label.textContent = edge.label;
 			svg.append(label);
 		}
 		for (const node of nodes) {
-			const isChosen = node.kind === 'seed' && node.id === chosen || node.kind === 'list' && node.id === state.view.show;
+			const isChosen = node.kind === 'seed' && chosen.has(node.id) || node.kind === 'list' && node.id === state.view.show;
 			const group = svgElement('g', { class: 'node ' + node.kind + (node.removed ? ' removed' : '') + (isChosen ? ' chosen' : ''), transform: 'translate(' + node.x + ',' + node.y + ')' });
-			group.append(svgElement('rect', { width: WIDTH, height: HEIGHT, rx: node.kind === 'list' ? 2 : HEIGHT / 2 }));
+			group.append(svgElement('rect', { width: WIDTH, height: HEIGHT, rx: node.kind === 'seed' ? HEIGHT / 2 : 2 }));
 			const label = svgElement('text', { x: WIDTH / 2, y: HEIGHT / 2 + 4, 'text-anchor': 'middle' });
 			label.textContent = node.label.length > 24 ? node.label.slice(0, 23) + '\\u2026' : node.label;
 			group.append(label);
@@ -1015,25 +1441,32 @@ function pageHtml(): string {
 		box.append(svg);
 	}
 
+	/** Chooses the seed of id, or, chosen already, no longer; with no id, none. */
 	function choose(id) {
-		chosen = chosen === id ? undefined : id;
+		if (id === undefined) {
+			chosen.clear();
+		} else if (!chosen.delete(id)) {
+			chosen.add(id);
+		}
 		render();
 	}
 
-	function setView(show, page, rows = state.view.rows) {
-		vscode.postMessage({ command: 'view', show, page, rows });
+	function setView(show, page, rows = state.view.rows, sort = state.view.sort, descending = state.view.descending) {
+		vscode.postMessage({ command: 'view', show, page, rows, sort, descending });
 	}
 
 	function renderSeeds() {
 		const list = document.getElementById('seedList');
 		list.textContent = '';
-		if (chosen && !state.seeds.some(seed => seed.id === chosen)) {
-			chosen = undefined;
+		for (const id of chosen) {
+			if (!state.seeds.some(seed => seed.id === id)) {
+				chosen.delete(id);
+			}
 		}
 		document.getElementById('seedsTitle').textContent = format(TEXT.seeds, state.seeds.length);
 		for (const seed of state.seeds) {
 			const item = document.createElement('li');
-			if (seed.id === chosen) {
+			if (chosen.has(seed.id)) {
 				item.className = 'chosen';
 			}
 			const id = document.createElement('span');
@@ -1042,7 +1475,7 @@ function pageHtml(): string {
 			id.addEventListener('click', () => choose(seed.id));
 			const body = document.createElement('span');
 			body.className = 'seedText';
-			const who = [authorsText(seed.authors), seed.year].filter(Boolean).join(' ');
+			const who = [authorsText(seed.authors), seed.year ? '(' + seed.year + ')' : ''].filter(Boolean).join(' ');
 			body.append(who ? who + ' \\u00b7 ' : '');
 			body.append(seed.link ? linkButton(seed.title || seed.key || seed.article, () => vscode.postMessage({ command: 'openUrl', url: seed.link }), seed.link) : (seed.title || seed.key || seed.article));
 			const source = document.createElement('span');
@@ -1061,11 +1494,45 @@ function pageHtml(): string {
 		}
 		document.getElementById('noSeeds').hidden = state.seeds.length > 0;
 		document.getElementById('seedBar').hidden = !state.seeds.length;
-		document.getElementById('forLabel').textContent = chosen ? format(TEXT.forOne, chosen) : TEXT.forAll;
+		document.getElementById('forLabel').textContent = chosen.size ? format(TEXT.forChosen, chosenIds().join(', ')) : TEXT.forAll;
+		renderChosenNote();
 		document.getElementById('citedBy').disabled = busy;
+		document.getElementById('cites').disabled = busy;
+		document.getElementById('related').disabled = busy;
+	}
+
+	/** The ids of the seeds chosen, in the order of the seeds. */
+	function chosenIds() {
+		return state.seeds.map(seed => seed.id).filter(id => chosen.has(id));
+	}
+
+	/** Says which seeds are chosen, and how to follow all seeds again. */
+	function renderChosenNote() {
+		const note = document.getElementById('chosenNote');
+		note.textContent = '';
+		note.hidden = !chosen.size;
+		if (!chosen.size) {
+			return;
+		}
+		const [before, after] = format(TEXT.chosenNote, chosenIds().join(', '), '\u0000').split('\u0000');
+		const all = document.createElement('button');
+		all.className = 'link';
+		all.textContent = TEXT.chooseAll;
+		all.addEventListener('click', () => choose());
+		note.append(before, all, after ?? '');
+	}
+
+	/** Marks the heading the pool is sorted by with its arrow. */
+	function renderSortHeadings() {
+		for (const th of document.querySelectorAll('#poolTable th.sortable')) {
+			th.dataset.label ??= th.textContent;
+			const sorted = th.dataset.sort === state.view.sort;
+			th.textContent = th.dataset.label + (sorted ? (state.view.descending ? ' \u2193' : ' \u2191') : '');
+		}
 	}
 
 	function renderPool() {
+		renderSortHeadings();
 		const summary = state.summary || {};
 		const lists = state.lists;
 		const poolLine = document.getElementById('poolLine');
@@ -1091,8 +1558,21 @@ function pageHtml(): string {
 			const tr = document.createElement('tr');
 			const dots = document.createElement('td');
 			dots.className = 'dots';
-			dots.textContent = '\\u25cf'.repeat(row.links);
-			dots.title = [...(row.how || []).map(how => format(TEXT.cites, how.split(' ')[1])).sort(), format(TEXT.inLists, sortLists(row.lists).join(', '))].join(' \\u00b7 ');
+			// A filled dot for an influential citation, a hollow one for the others; a seed the work cites and is cited by, one dot;
+			// after them, a seed it is only related to
+			const relations = (row.how || []).map(how => how.split(' '));
+			const citations = relations.filter(relation => relation[0] !== 'related');
+			const tied = sortLists([...new Set(citations.map(relation => relation[1]))]);
+			const relatedTo = sortLists(relations.filter(relation => relation[0] === 'related' && !tied.includes(relation[1])).map(relation => relation[1]));
+			const tieOf = seed => (row.ties || []).find(tie => tie.seed === seed);
+			dots.textContent = tied.map(seed => tieOf(seed)?.influential ? '\\u25cf' : '\\u25cb').join('') + (tied.length && relatedTo.length ? ' ' : '') + relatedTo.map(() => '\\u2248').join('');
+			const how = tied.flatMap(seed => citations.filter(relation => relation[1] === seed).sort().reverse().map(([relation]) => {
+				const tie = tieOf(seed);
+				const intents = tie ? intentsText(tie.intents) : '';
+				return format(relation === 'cited' ? TEXT.citedBySeed : TEXT.cites, seed) + (intents ? ': ' + intents : '') + (tie?.influential ? ' (' + TEXT.influential + ')' : '');
+			})).concat(relatedTo.map(seed => format(TEXT.relatedTo, seed)));
+			dots.title = [...how, format(TEXT.inLists, sortLists(row.lists).join(', ')), ...(noRecord(row) ? [TEXT.noRecord] : [])].join('\\n');
+			dots.addEventListener('click', () => toggleDetail(row.openalex));
 			const work = document.createElement('td');
 			work.append(linkButton(row.title, () => vscode.postMessage({ command: 'openUrl', url: row.link }), row.link));
 			const authors = document.createElement('div');
@@ -1119,6 +1599,9 @@ function pageHtml(): string {
 			}
 			tr.append(dots, work, year, cited, from, action);
 			body.append(tr);
+			if (expanded.has(row.openalex)) {
+				body.append(detailRow(row));
+			}
 		}
 		document.getElementById('poolTable').hidden = !state.rows.length;
 		// The same pager above the table and below it, with the Rows choice while there are more than the fewest rows
@@ -1136,6 +1619,106 @@ function pageHtml(): string {
 			}
 			pager.append(rowsChoice(state.view.rows, chosen => setView(state.view.show, firstPageAfter(state.view.page, state.view.rows, chosen), chosen)));
 		}
+	}
+
+	function intentsText(intents) {
+		return (intents || []).map(intent => INTENTS[intent] || intent).join(', ');
+	}
+
+	/** Whether Semantic Scholar has no record of the work, as far as the map knows: asked for it, or no DOI to ask by. */
+	function noRecord(row) {
+		return row.known === false || !row.doi && !(row.ties || []).length;
+	}
+
+	function toggleDetail(work) {
+		if (expanded.delete(work)) {
+			renderPool();
+			return;
+		}
+		expanded.add(work);
+		if (!details.has(work)) {
+			vscode.postMessage({ command: 'contexts', work });
+		}
+		renderPool();
+	}
+
+	/** The row under a work whose Links are open: for each seed, why the work cites it, whether influentially, and the sentences. */
+	function detailRow(row) {
+		const tr = document.createElement('tr');
+		tr.className = 'detail';
+		const cell = document.createElement('td');
+		cell.colSpan = 6;
+		tr.append(cell);
+		const detail = details.get(row.openalex);
+		if (!detail) {
+			cell.className = 'muted';
+			cell.textContent = TEXT.askingContexts;
+			return tr;
+		}
+		const note = message => {
+			const line = document.createElement('div');
+			line.className = 'muted';
+			line.textContent = message;
+			cell.append(line);
+		};
+		if (detail.problem) {
+			note(detail.problem);
+		}
+		if (detail.known === false) {
+			note(TEXT.noRecord);
+		}
+		for (const tie of detail.ties || []) {
+			const block = document.createElement('div');
+			block.className = 'tie';
+			const head = document.createElement('div');
+			head.className = 'tieHead';
+			const relation = document.createElement('span');
+			relation.textContent = tie.relation === 'related' ? TEXT.relatedHead : tie.relation === 'cited' ? TEXT.citedByEdge : TEXT.citesEdge;
+			const id = document.createElement('span');
+			id.className = 'seedId';
+			id.textContent = tie.seed;
+			const seed = state.seeds.find(seed => seed.id === tie.seed);
+			const label = document.createElement('span');
+			label.className = 'muted';
+			label.textContent = seed ? [authorsText(seed.authors), seed.year].filter(Boolean).join(' ') : '';
+			head.append(relation, id, label);
+			if (tie.intents) {
+				const intents = document.createElement('span');
+				intents.textContent = intentsText(tie.intents);
+				head.append(intents);
+			}
+			if (tie.influential) {
+				const mark = document.createElement('span');
+				mark.className = 'influential';
+				mark.textContent = '\\u25cf ' + TEXT.influential;
+				head.append(mark);
+			}
+			block.append(head);
+			const sentences = tie.contexts || [];
+			if (tie.relation === 'related') {
+				// A recommendation, not a citation: no sentences to show
+			} else if (tie.intents === null) {
+				if (tie.relation === 'cited' || detail.known !== false) {
+					const line = document.createElement('div');
+					line.className = 'context';
+					line.textContent = tie.relation === 'cited' ? TEXT.noContextCited : TEXT.noContext;
+					block.append(line);
+				}
+			} else if (!sentences.length) {
+				const line = document.createElement('div');
+				line.className = 'context';
+				line.textContent = TEXT.noSentences;
+				block.append(line);
+			}
+			for (const sentence of sentences) {
+				const line = document.createElement('div');
+				line.className = 'context';
+				line.textContent = '\\u201c' + sentence + '\\u201d';
+				block.append(line);
+			}
+			cell.append(block);
+		}
+		return tr;
 	}
 
 	function sortLists(lists) {
@@ -1235,7 +1818,32 @@ function pageHtml(): string {
 			}
 		});
 	}
-	document.getElementById('citedBy').addEventListener('click', () => vscode.postMessage({ command: 'citedBy', seeds: chosen ? [chosen] : [] }));
+	function showLayout() {
+		document.getElementById('landscape').classList.toggle('chosen', !portrait);
+		document.getElementById('portrait').classList.toggle('chosen', portrait);
+	}
+	for (const [id, value] of [['landscape', false], ['portrait', true]]) {
+		document.getElementById(id).addEventListener('click', () => {
+			if (portrait !== value) {
+				portrait = value;
+				vscode.postMessage({ command: 'layout', portrait });
+				showLayout();
+				renderMap();
+			}
+		});
+	}
+	showLayout();
+	// A heading sorts the pool by it, the largest first; clicked again, the smallest first
+	for (const th of document.querySelectorAll('#poolTable th.sortable')) {
+		th.addEventListener('click', () => {
+			const sort = th.dataset.sort;
+			setView(state.view.show, 0, state.view.rows, sort, sort === state.view.sort ? !state.view.descending : true);
+		});
+	}
+	for (const command of ['citedBy', 'cites']) {
+		document.getElementById(command).addEventListener('click', () => vscode.postMessage({ command, seeds: chosenIds(), contexts: document.getElementById('askContexts').checked }));
+	}
+	document.getElementById('related').addEventListener('click', () => vscode.postMessage({ command: 'related', seeds: chosenIds() }));
 	document.getElementById('saveLink').addEventListener('click', () => {
 		const input = document.getElementById('saveName');
 		input.value = state.name || '';
@@ -1261,13 +1869,13 @@ function pageHtml(): string {
 		if (state.dirty && state.steps.length) {
 			showPane('discardPane');
 		} else {
-			chosen = undefined;
+			chosen.clear();
 			vscode.postMessage({ command: 'new' });
 		}
 	});
 	document.getElementById('discard').addEventListener('click', () => {
 		showPane();
-		chosen = undefined;
+		chosen.clear();
 		vscode.postMessage({ command: 'new' });
 	});
 	document.getElementById('cancelDiscard').addEventListener('click', () => showPane());
@@ -1280,6 +1888,16 @@ function pageHtml(): string {
 		const message = event.data;
 		if (message.command === 'state') {
 			state = message;
+			// How a work cites its seeds is asked again when its seeds changed since
+			for (const row of state.rows) {
+				const detail = details.get(row.openalex);
+				if (detail && (detail.ties || []).length !== row.links) {
+					details.delete(row.openalex);
+					if (expanded.has(row.openalex)) {
+						vscode.postMessage({ command: 'contexts', work: row.openalex });
+					}
+				}
+			}
 			render();
 			const find = document.getElementById('find');
 			if (find.value.trim()) {
@@ -1298,6 +1916,9 @@ function pageHtml(): string {
 			setStatus(message.message, false);
 		} else if (message.command === 'notes') {
 			setStatus(message.message, message.error);
+		} else if (message.command === 'contexts') {
+			details.set(message.work, message);
+			renderPool();
 		} else if (message.command === 'found') {
 			renderFound(message.rows);
 		} else if (message.command === 'maps') {

@@ -717,7 +717,9 @@ function pageHtml(): string {
 		.choice.correct { border-color: var(--vscode-testing-iconPassed); background: var(--vscode-diffEditor-insertedTextBackground); }
 		.choice.wrong { border-color: var(--vscode-errorForeground); background: var(--vscode-diffEditor-removedTextBackground); }
 		.actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0; }
-		button.action { font: inherit; color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); border: none; border-radius: 2px; padding: 4px 12px; cursor: pointer; }
+		button.action { font: inherit; color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); border: none; box-shadow: inset 0 0 0 1px var(--vscode-button-background); border-radius: 2px; padding: 4px 12px; cursor: pointer; font-size: 11px; opacity: 0.7; }
+		/* As the code buttons below a panel's Example Code: dimmed until pointed at, the blue one not */
+		button.action:not(:disabled):hover, button.action.current, button.action.primary { opacity: 1; }
 		button.action:hover:not(:disabled) { background: var(--vscode-button-secondaryHoverBackground); }
 		button.primary { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
 		button.primary:hover:not(:disabled) { background: var(--vscode-button-hoverBackground); }

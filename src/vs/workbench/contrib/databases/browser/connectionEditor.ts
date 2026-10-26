@@ -182,7 +182,9 @@ function connectionEditorHtml(): string {
 		pre { margin: 6px 0 0; padding: 10px 12px; background: var(--vscode-textCodeBlock-background); border-radius: 3px; font-family: var(--vscode-editor-font-family); font-size: var(--vscode-editor-font-size); white-space: pre; overflow-x: auto; tab-size: 4; }
 		.problems { color: var(--vscode-errorForeground); margin: 10px 0 0; padding-left: 18px; }
 		.buttons { display: flex; gap: 8px; margin-top: 16px; }
-		button.action { font-family: inherit; font-size: 13px; padding: 4px 12px; border: 1px solid var(--vscode-button-border, transparent); border-radius: 2px; cursor: pointer; color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); }
+		button.action { font-family: inherit; font-size: 11px; padding: 4px 12px; border: 1px solid var(--vscode-button-background); border-radius: 2px; cursor: pointer; color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); opacity: 0.7; }
+		/* As the code buttons below a panel's Example Code: dimmed until pointed at, the blue one not */
+		button.action:not(:disabled):hover, button.action.current, button.action.primary { opacity: 1; }
 		button.action:hover { background: var(--vscode-button-secondaryHoverBackground); }
 		button.primary { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
 		button.primary:hover { background: var(--vscode-button-hoverBackground); }

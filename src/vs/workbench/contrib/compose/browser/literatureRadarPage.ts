@@ -3,7 +3,6 @@
  *  Licensed under the GNU Affero General Public License v3.0. See LICENSE.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken } from '../../../../base/common/cancellation.js';
 import { timeout } from '../../../../base/common/async.js';
 import { hasKey } from '../../../../base/common/types.js';
 import { stringHash } from '../../../../base/common/hash.js';
@@ -27,11 +26,11 @@ import { IStorageService, StorageScope, StorageTarget } from '../../../../platfo
 import { IPathService } from '../../../services/path/common/pathService.js';
 import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
-import { CREDENTIALS } from '../../model/browser/common/credentials.js';
+import { API_PROVIDERS, ProviderRequests } from '../../model/browser/common/apiProviders.js';
 import { readReferences, ReferenceFormat } from '../../model/browser/common/referenceImport.js';
 import { findReference, ICitationCount, IReference, IReferenceVersion, nameAsReference, ReferenceLibrary, referenceBibTeX } from '../../model/browser/common/referenceLibrary.js';
 import { voiceButtonsCss, voiceButtonsHtml, voiceButtonsScript } from '../../model/browser/webviews/webviewScaffold.js';
-import { FEWEST_ROWS, rowsChoiceCss, rowsChoiceScript, storedRows, storeRows } from '../../model/browser/webviews/webviewPager.js';
+import { FEWEST_ROWS, rowsChoiceCss, rowsChoiceScript, stickyHeadCss, storedRows, storeRows } from '../../model/browser/webviews/webviewPager.js';
 import { describeJournal, IJournalScoresService } from '../../monitor/browser/journalScores.js';
 import { OPEN_LINK_COMMAND_ID } from '../../monitor/browser/openLink.js';
 import { ISnowballArticle, SNOWBALL_SEARCH_COMMAND_ID } from '../common/snowballSearch.js';
@@ -267,11 +266,8 @@ const TREE_KEY = 'pollis.replication.discover.tree';
 export const OPENALEX_TYPES = 'article|review|conference-paper|preprint|report|book|book-chapter';
 /** The kinds of paper Semantic Scholar lists that are left out; a paper with no kind, as many classics, is kept. */
 const SEMANTIC_SCHOLAR_LEFT_OUT = new Set(['Editorial', 'LettersAndComments', 'News']);
-/** Where each index gives its free key, and the user's key in the keychain. */
-const KEYS: Record<KeyIndex, { readonly page: string; readonly secretKey: string }> = {
-	openAlex: { page: 'https://openalex.org/settings/api', secretKey: CREDENTIALS.openAlex.secretKey },
-	semanticScholar: { page: 'https://www.semanticscholar.org/product/api#api-key-form', secretKey: CREDENTIALS.semanticScholar.secretKey },
-};
+/** Each index: where it gives its free key, the user's key in the keychain, and how it is asked. */
+const KEYS: Record<KeyIndex, typeof API_PROVIDERS[KeyIndex]> = API_PROVIDERS;
 // OpenAlex lists at most 200 works a request, each request costing the same; Semantic Scholar's first 200 likewise
 const LISTED = 200;
 const CALL_SITE = 'pollis.literatureRadar';
@@ -369,7 +365,7 @@ function semanticScholarArticle(paper: ISemanticScholarPaper): IFoundArticle {
 }
 
 /** The words of `text`, in lower case and without accents. */
-function titleWords(text: string): string[] {
+export function titleWords(text: string): string[] {
 	return text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').match(/[\p{L}\p{N}]+/gu) ?? [];
 }
 
@@ -448,7 +444,7 @@ function recentSince(query: IDiscoverQuery): number {
  * Whether `a` and `b` are versions of one work, as a preprint and its article: the same title, but for case, accents
  * and punctuation, and first authors who share a name. The year is not compared, a preprint's being often earlier.
  */
-function sameWork(a: Pick<IFoundArticle, 'title' | 'authors'>, b: Pick<IFoundArticle, 'title' | 'authors'>): boolean {
+export function sameWork(a: Pick<IFoundArticle, 'title' | 'authors'>, b: Pick<IFoundArticle, 'title' | 'authors'>): boolean {
 	if (titleWords(a.title).join(' ') !== titleWords(b.title).join(' ')) {
 		return false;
 	}
@@ -687,6 +683,7 @@ function openLiteratureRadar(accessor: ServicesAccessor, mode: PageMode): void {
 	const webviewWorkbenchService = accessor.get(IWebviewWorkbenchService);
 	const requestService = accessor.get(IRequestService);
 	const secretStorageService = accessor.get(ISecretStorageService);
+	const providers = new ProviderRequests(requestService, secretStorageService, CALL_SITE);
 	const storageService = accessor.get(IStorageService);
 	const journalScoresService = accessor.get(IJournalScoresService);
 	const commandService = accessor.get(ICommandService);
@@ -746,8 +743,8 @@ function openLiteratureRadar(accessor: ServicesAccessor, mode: PageMode): void {
 		webviewInput.webview.postMessage({
 			command: 'state',
 			keys: {
-				openAlex: !!await secretStorageService.get(KEYS.openAlex.secretKey),
-				semanticScholar: !!await secretStorageService.get(KEYS.semanticScholar.secretKey),
+				openAlex: !!await secretStorageService.get(KEYS.openAlex.credential.secretKey),
+				semanticScholar: !!await secretStorageService.get(KEYS.semanticScholar.credential.secretKey),
 			},
 			sjr: journalScoresService.getMetricsSources().includes('SCImago'),
 			selected: getSelected(),
@@ -778,10 +775,9 @@ function openLiteratureRadar(accessor: ServicesAccessor, mode: PageMode): void {
 		if (!id) {
 			return undefined;
 		}
-		const key = await secretStorageService.get(CREDENTIALS.openAlex.secretKey);
 		try {
-			const context = await requestService.request({ type: 'GET', url: `https://api.openalex.org/works/${id}?select=${OPENALEX_SAVE_SELECT}${key ? `&api_key=${encodeURIComponent(key)}` : ''}`, timeout: 30000, callSite: CALL_SITE }, CancellationToken.None);
-			return isSuccess(context) ? await asJson<IOpenAlexWork>(context) ?? undefined : undefined;
+			const context = await providers.ask(KEYS.openAlex, { url: `https://api.openalex.org/works/${id}?select=${OPENALEX_SAVE_SELECT}` });
+			return context && isSuccess(context) ? await asJson<IOpenAlexWork>(context) ?? undefined : undefined;
 		} catch {
 			return undefined;
 		}
@@ -1000,45 +996,9 @@ function openLiteratureRadar(accessor: ServicesAccessor, mode: PageMode): void {
 	};
 	disposables.add(journalScoresService.onDidChange(() => postState()));
 
-	/**
-	 * A request to Semantic Scholar, with the user's key if any, asked `attempts` times, each a little later, while it is
-	 * busy: its pool shared by everyone without a key, or the key's own rate.
-	 */
-	const askSemanticScholar = async (url: string, data?: string, attempts = 2, abandoned?: () => boolean): Promise<IRequestContext | undefined> => {
-		const key = await secretStorageService.get(KEYS.semanticScholar.secretKey);
-		const headers: Record<string, string> = {};
-		if (data) {
-			headers['Content-Type'] = 'application/json';
-		}
-		if (key) {
-			headers['x-api-key'] = key;
-		}
-		for (let attempt = 1; attempt <= attempts; attempt++) {
-			try {
-				const context = await requestService.request({
-					type: data ? 'POST' : 'GET',
-					url,
-					data,
-					headers,
-					timeout: 30000,
-					callSite: CALL_SITE,
-				}, CancellationToken.None);
-				if (context.res.statusCode !== 429) {
-					return context;
-				}
-			} catch {
-				// Its answers asking to wait lack the header that lets the page read them: the request fails as if not reached
-			}
-			// Asked to wait: 2, 4, 8 seconds before the next attempt
-			if (attempt < attempts) {
-				await timeout(1000 * 2 ** attempt);
-				if (abandoned?.()) {
-					return undefined;
-				}
-			}
-		}
-		return undefined;
-	};
+	/** A request to Semantic Scholar, with the user's key if any, asked `attempts` times, each a little later, while it is busy. */
+	const askSemanticScholar = (url: string, data?: string, attempts?: number, abandoned?: () => boolean): Promise<IRequestContext | undefined> =>
+		providers.ask(KEYS.semanticScholar, { url, data, attempts, abandoned });
 
 	/** Semantic Scholar's paper, citations and influential citations of the works with `dois`, by DOI; undefined when it cannot be reached. */
 	const getSemanticScholarCounts = async (dois: readonly string[], attempts?: number, abandoned?: () => boolean): Promise<Map<string, { paperId: string; cited: number; influential?: number }> | undefined> => {
@@ -1086,16 +1046,15 @@ function openLiteratureRadar(accessor: ServicesAccessor, mode: PageMode): void {
 	 * OpenAlex's articles with `dois`, by DOI, a hundred to a request: those Semantic Scholar alone listed, often
 	 * articles whose publisher gives OpenAlex no abstract to search; undefined when it cannot be reached.
 	 */
-	const getOpenAlexArticles = async (dois: readonly string[], key: string | undefined, since: number): Promise<Map<string, IFoundArticle> | undefined> => {
+	const getOpenAlexArticles = async (dois: readonly string[], since: number): Promise<Map<string, IFoundArticle> | undefined> => {
 		// A comma parts OpenAlex's filters and a bar its alternatives
 		const asked = dois.filter(doi => !/[,|]/.test(doi));
 		const articles = new Map<string, IFoundArticle>();
 		try {
 			for (let start = 0; start < asked.length; start += 100) {
 				const filter = `doi:${asked.slice(start, start + 100).join('|')}`;
-				const url = `https://api.openalex.org/works?filter=${encodeURIComponent(filter)}&per_page=100&select=${OPENALEX_SELECT}${key ? `&api_key=${encodeURIComponent(key)}` : ''}`;
-				const context = await requestService.request({ type: 'GET', url, timeout: 30000, callSite: CALL_SITE }, CancellationToken.None);
-				const answer = isSuccess(context) ? await asJson<{ results?: IOpenAlexWork[] }>(context) : undefined;
+				const context = await providers.ask(KEYS.openAlex, { url: `https://api.openalex.org/works?filter=${encodeURIComponent(filter)}&per_page=100&select=${OPENALEX_SELECT}` });
+				const answer = context && isSuccess(context) ? await asJson<{ results?: IOpenAlexWork[] }>(context) : undefined;
 				if (!answer?.results) {
 					return undefined;
 				}
@@ -1122,7 +1081,6 @@ function openLiteratureRadar(accessor: ServicesAccessor, mode: PageMode): void {
 		const doi = id.startsWith('openalex:') || id.startsWith('s2:') ? undefined : id;
 		const openAlexUrl = id.startsWith('openalex:') ? `https://api.openalex.org/works/${encodeURIComponent(id.slice('openalex:'.length))}` : doi ? `https://api.openalex.org/works/doi:${encodeURIComponent(doi)}` : undefined;
 		const semanticScholarUrl = id.startsWith('s2:') ? `https://api.semanticscholar.org/graph/v1/paper/${encodeURIComponent(id.slice('s2:'.length))}` : doi ? `https://api.semanticscholar.org/graph/v1/paper/DOI:${encodeURIComponent(doi)}` : undefined;
-		const key = await secretStorageService.get(CREDENTIALS.openAlex.secretKey);
 		// The text, null for none, undefined when not reached
 		const ask = async <T>(url: string | undefined, request: (url: string) => Promise<IRequestContext | undefined>, text: (answer: T) => string | undefined): Promise<string | null | undefined> => {
 			if (!url) {
@@ -1141,7 +1099,7 @@ function openLiteratureRadar(accessor: ServicesAccessor, mode: PageMode): void {
 		};
 		const [openAlex, semanticScholar] = await Promise.all([
 			ask<Pick<IOpenAlexWork, 'abstract_inverted_index'>>(openAlexUrl,
-				url => requestService.request({ type: 'GET', url: `${url}?select=abstract_inverted_index${key ? `&api_key=${encodeURIComponent(key)}` : ''}`, timeout: 30000, callSite: CALL_SITE }, CancellationToken.None),
+				url => providers.ask(KEYS.openAlex, { url: `${url}?select=abstract_inverted_index` }),
 				work => work.abstract_inverted_index ? invertedText(work.abstract_inverted_index) : undefined),
 			ask<{ abstract?: string | null }>(semanticScholarUrl, url => askSemanticScholar(`${url}?fields=abstract`), paper => paper.abstract || undefined),
 		]);
@@ -1181,15 +1139,15 @@ function openLiteratureRadar(accessor: ServicesAccessor, mode: PageMode): void {
 	 * whose title and first author are the same, the published version first. `stop` when OpenAlex cannot be reached or
 	 * asks to wait, its budget used up.
 	 */
-	const findByTitle = async (article: IDiscoveredArticle, key: string | undefined, since: number): Promise<IFoundArticle | undefined | 'stop'> => {
+	const findByTitle = async (article: IDiscoveredArticle, since: number): Promise<IFoundArticle | undefined | 'stop'> => {
 		const words = titleWords(article.title).join(' ');
 		if (!words) {
 			return undefined;
 		}
-		const url = `https://api.openalex.org/works?filter=${encodeURIComponent(`title.search:${words}`)}&per_page=10&select=${OPENALEX_SELECT}${key ? `&api_key=${encodeURIComponent(key)}` : ''}`;
+		const url = `https://api.openalex.org/works?filter=${encodeURIComponent(`title.search:${words}`)}&per_page=10&select=${OPENALEX_SELECT}`;
 		try {
-			const context = await requestService.request({ type: 'GET', url, timeout: 30000, callSite: CALL_SITE }, CancellationToken.None);
-			const answer = isSuccess(context) ? await asJson<{ results?: IOpenAlexWork[] }>(context) : undefined;
+			const context = await providers.ask(KEYS.openAlex, { url });
+			const answer = context && isSuccess(context) ? await asJson<{ results?: IOpenAlexWork[] }>(context) : undefined;
 			if (!answer?.results) {
 				return 'stop';
 			}
@@ -1211,11 +1169,10 @@ function openLiteratureRadar(accessor: ServicesAccessor, mode: PageMode): void {
 		if (!asked.length) {
 			return [];
 		}
-		const key = await secretStorageService.get(KEYS.openAlex.secretKey);
 		const since = new Date().getFullYear() - IMPORT_RECENT_YEARS + 1;
 		importStatus(localize('import.lookingUpDois', "Looking up {0} references in OpenAlex...", asked.length));
 		const dois = asked.flatMap(article => article.doi ? [article.doi] : []);
-		const byDoi = dois.length ? await getOpenAlexArticles(dois, key, since) : new Map<string, IFoundArticle>();
+		const byDoi = dois.length ? await getOpenAlexArticles(dois, since) : new Map<string, IFoundArticle>();
 		const notes: string[] = [];
 		const byTitle = new Map<string, IFoundArticle>();
 		// Those not looked up: all when OpenAlex could not be reached, else those after it stopped answering
@@ -1230,7 +1187,7 @@ function openLiteratureRadar(accessor: ServicesAccessor, mode: PageMode): void {
 					continue;
 				}
 				importStatus(localize('import.lookingUpTitles', "Looking up by title in OpenAlex: {0} of {1}...", index + 1, titled.length));
-				const found = await findByTitle(article, key, since);
+				const found = await findByTitle(article, since);
 				if (found === 'stop') {
 					unchecked.add(article.id);
 				} else if (found) {
@@ -1366,18 +1323,21 @@ function openLiteratureRadar(accessor: ServicesAccessor, mode: PageMode): void {
 		webviewInput.webview.postMessage({ command: 'imported', message: notes.join(' '), error: failed });
 	};
 
-	const searchOpenAlex = async (query: IDiscoverQuery, key: string | undefined): Promise<IndexAnswer & { readonly budget?: number }> => {
+	const searchOpenAlex = async (query: IDiscoverQuery): Promise<IndexAnswer & { readonly budget?: number }> => {
 		const since = recentSince(query);
-		const url = `https://api.openalex.org/works?filter=${encodeURIComponent(openAlexFilter(query))}&sort=cited_by_count:desc&per_page=${LISTED}&select=${OPENALEX_SELECT}${key ? `&api_key=${encodeURIComponent(key)}` : ''}`;
+		const url = `https://api.openalex.org/works?filter=${encodeURIComponent(openAlexFilter(query))}&sort=cited_by_count:desc&per_page=${LISTED}&select=${OPENALEX_SELECT}`;
 		try {
-			const context = await requestService.request({ type: 'GET', url, timeout: 30000, callSite: CALL_SITE }, CancellationToken.None);
+			const context = await providers.ask(KEYS.openAlex, { url });
+			if (!context) {
+				return { problem: localize('discover.openAlexNotReached', "OpenAlex could not be reached, or refused the search.") };
+			}
 			// What is left of the day's budget, as a share of it, both of which OpenAlex gives in dollars
 			const left = Number(context.res.headers['x-ratelimit-remaining-usd']);
 			const limit = Number(context.res.headers['x-ratelimit-limit-usd']);
 			const budget = left >= 0 && limit > 0 ? Math.min(left / limit, 1) : undefined;
 			if (context.res.statusCode === 429) {
 				return {
-					problem: key
+					problem: await providers.key(KEYS.openAlex)
 						? localize('discover.keyBudgetUsed', "Your OpenAlex key has used up its budget for today. It starts again tomorrow.")
 						: localize('discover.budgetUsed', "The free budget of OpenAlex, shared with everyone on your network, is used up for today. It starts again tomorrow; a free key of your own has a budget of its own."),
 				};
@@ -1473,14 +1433,13 @@ function openLiteratureRadar(accessor: ServicesAccessor, mode: PageMode): void {
 	};
 
 	/** OpenAlex's id of the cited work, by its DOI when the page has none: its citing works are filtered by it. */
-	const citedOpenAlexId = async (cites: ICitedWork, key: string | undefined): Promise<string | undefined> => {
+	const citedOpenAlexId = async (cites: ICitedWork): Promise<string | undefined> => {
 		if (cites.openAlexId || !cites.doi) {
 			return cites.openAlexId;
 		}
 		try {
-			const url = `https://api.openalex.org/works/doi:${encodeURIComponent(cites.doi)}?select=id${key ? `&api_key=${encodeURIComponent(key)}` : ''}`;
-			const context = await requestService.request({ type: 'GET', url, timeout: 30000, callSite: CALL_SITE }, CancellationToken.None);
-			const work = isSuccess(context) ? await asJson<Pick<IOpenAlexWork, 'id'>>(context) : undefined;
+			const context = await providers.ask(KEYS.openAlex, { url: `https://api.openalex.org/works/doi:${encodeURIComponent(cites.doi)}?select=id` });
+			const work = context && isSuccess(context) ? await asJson<Pick<IOpenAlexWork, 'id'>>(context) : undefined;
 			return work?.id ? openAlexIdOf(work as IOpenAlexWork) : undefined;
 		} catch {
 			return undefined;
@@ -1494,15 +1453,16 @@ function openLiteratureRadar(accessor: ServicesAccessor, mode: PageMode): void {
 	const search = async (asked: IDiscoverQuery) => {
 		const id = ++searches;
 		reconcileSources = undefined;
-		const key = await secretStorageService.get(CREDENTIALS.openAlex.secretKey);
+		// With a key of the user's, OpenAlex's budget is theirs: the page tells what is left of the shared one only
+		const openAlexKeyed = !!await providers.key(KEYS.openAlex);
 		const cites = asked.cites && asked.sources !== 'semanticScholar'
-			? await Promise.all(asked.cites.map(async version => ({ ...version, openAlexId: await citedOpenAlexId(version, key) })))
+			? await Promise.all(asked.cites.map(async version => ({ ...version, openAlexId: await citedOpenAlexId(version) })))
 			: asked.cites;
 		const openAlexId = cites?.some(version => version.openAlexId);
 		const query: IDiscoverQuery = { ...asked, cites };
 		const openAlexUnknown: IndexAnswer = { problem: localize('discover.openAlexUnknown', "OpenAlex has no record of this work, or could not be reached.") };
 		const [openAlex, semanticScholar] = await Promise.all([
-			query.sources === 'semanticScholar' ? undefined : cites && !openAlexId ? openAlexUnknown : searchOpenAlex(query, key),
+			query.sources === 'semanticScholar' ? undefined : cites && !openAlexId ? openAlexUnknown : searchOpenAlex(query),
 			query.sources === 'openAlex' ? undefined : cites ? searchCitingSemanticScholar(query, cites) : searchSemanticScholar(query),
 		]);
 		if (searches !== id) {
@@ -1529,7 +1489,7 @@ function openLiteratureRadar(accessor: ServicesAccessor, mode: PageMode): void {
 			// The indexes that gave nothing this time, whose columns the page shows marked
 			const unavailable: KeyIndex[] = [...(openAlex && hasKey(openAlex, { problem: true }) ? ['openAlex' as const] : []), ...(semanticScholar && hasKey(semanticScholar, { problem: true }) ? ['semanticScholar' as const] : [])];
 			// The notification, not the page, tells what a key would change
-			const semanticScholarKeyless = !await secretStorageService.get(KEYS.semanticScholar.secretKey);
+			const semanticScholarKeyless = !await secretStorageService.get(KEYS.semanticScholar.credential.secretKey);
 			const keyAdvice = unavailable.includes('semanticScholar') && semanticScholarKeyless;
 			if (searches !== id) {
 				return;
@@ -1628,7 +1588,7 @@ function openLiteratureRadar(accessor: ServicesAccessor, mode: PageMode): void {
 					notesNow.push(localize('discover.inJournals', "{0} of them in the journals chosen.", kept.toLocaleString()));
 				}
 				const budget = openAlex && hasKey(openAlex, { articles: true }) ? openAlex.budget : undefined;
-				if (budget !== undefined && !key) {
+				if (budget !== undefined && !openAlexKeyed) {
 					notesNow.push(localize('discover.budget', "Left of OpenAlex's shared budget today: {0}%.", Math.round(budget * 100)));
 				}
 				tellProblems(told, keyAdviceNow);
@@ -1716,7 +1676,7 @@ function openLiteratureRadar(accessor: ServicesAccessor, mode: PageMode): void {
 			/** Whether `index` answered for the works with `dois`; Semantic Scholar asked four times, as it asks to wait at busy times. */
 			const ask = async (index: KeyIndex, dois: readonly string[]): Promise<boolean> => {
 				if (index === 'openAlex') {
-					const found = await getOpenAlexArticles(dois, key, recentSince(query));
+					const found = await getOpenAlexArticles(dois, recentSince(query));
 					found?.forEach((article, doi) => fromOpenAlex.set(doi, article));
 					return !!found;
 				}
@@ -1753,9 +1713,9 @@ function openLiteratureRadar(accessor: ServicesAccessor, mode: PageMode): void {
 		});
 		if (key !== undefined) {
 			if (key.trim()) {
-				await secretStorageService.set(KEYS[index].secretKey, key.trim());
+				await secretStorageService.set(KEYS[index].credential.secretKey, key.trim());
 			} else {
-				await secretStorageService.delete(KEYS[index].secretKey);
+				await secretStorageService.delete(KEYS[index].credential.secretKey);
 			}
 			await postState();
 		}
@@ -1782,7 +1742,7 @@ function openLiteratureRadar(accessor: ServicesAccessor, mode: PageMode): void {
 				break;
 			case 'getKey':
 				if (KEYS[message.index]) {
-					await commandService.executeCommand(OPEN_LINK_COMMAND_ID, KEYS[message.index].page);
+					await commandService.executeCommand(OPEN_LINK_COMMAND_ID, KEYS[message.index].keyPage);
 				}
 				break;
 			case 'rows':
@@ -2112,7 +2072,7 @@ function pageHtml(mode: PageMode, rows: number): string {
 		</div>
 		<div class="sortNote" id="sortNote">${text.sortedByCited}</div>
 		<div id="pagerAbove"></div>
-		<table id="resultsTable">
+		<table id="resultsTable" class="stickyHead">
 			<thead id="resultsHead"></thead>
 			<tbody id="items"></tbody>
 		</table>
@@ -2148,6 +2108,7 @@ function pageHtml(mode: PageMode, rows: number): string {
 	<style>
 		${voiceButtonsCss}
 		${rowsChoiceCss}
+		${stickyHeadCss}
 		* { box-sizing: border-box; }
 		body { font-family: var(--vscode-font-family); font-size: 13px; margin: 0; color: var(--vscode-foreground); background-color: var(--vscode-editor-background); }
 		.container { max-width: 1200px; margin: 0 auto; padding: 24px; }
@@ -2181,9 +2142,12 @@ function pageHtml(mode: PageMode, rows: number): string {
 		button.removeArticle:hover { color: var(--vscode-foreground); }
 		.actionBar { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 8px 0; }
 		/* The actions on the ticked articles in one row, as wide as the page, each as wide as the others */
-		#actionBar { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; }
+		#actionBar { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
+		/* The actions on the ticked articles look as the code buttons below a panel's Example Code */
+		#actionBar > button.action { font-size: 11px; padding: 4px 10px; border-radius: 4px; box-shadow: inset 0 0 0 1px var(--vscode-button-background); opacity: 0.7; }
+		#actionBar > button.action:not(:disabled):hover, #actionBar > button.action.current { opacity: 1; }
+		#actionBar > button.action:disabled { opacity: 0.35; }
 		/* The arrow of an action that leaves the page, drawn here as \\curvearrowright: the system fonts draw it oddly */
-		#snowball { white-space: nowrap; }
 		.leaves { width: 1.3em; height: 1em; vertical-align: -0.12em; margin-right: 4px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 		/* One action blue: the first at first, then the last enabled one the pointer was on */
 		.actionBar > button.action.current, #importPane button.action.current, #removeConfirm > button.action.current { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
@@ -2219,6 +2183,10 @@ function pageHtml(mode: PageMode, rows: number): string {
 		th.group { text-align: center; color: var(--vscode-foreground); }
 		th.sortable:hover { color: var(--vscode-foreground); }
 		th.number, td.number { text-align: right; }
+		/* The counts' headings in two lines when the page is narrow, rather than the articles' titles in many */
+		#resultsTable th.number { white-space: normal; }
+		/* The line under an index stops short of the next, so that the columns under each are seen to be its own */
+		#resultsTable th.group { border-bottom: none; box-shadow: none; background-image: linear-gradient(var(--vscode-widget-border), var(--vscode-widget-border)); background-size: calc(100% - 16px) 1px; background-position: center bottom; background-repeat: no-repeat; }
 		td { padding: 6px 8px; border-bottom: 1px solid var(--vscode-widget-border); vertical-align: top; }
 		td.number { white-space: nowrap; font-variant-numeric: tabular-nums; }
 		td.journal { max-width: 240px; }
@@ -2667,7 +2635,7 @@ ${mode === 'import' ? importForm : searchForm}
 			}
 			th.className = (column.sortable ? 'sortable' : '') + (column.number ? ' number' : '') + (unavailable.includes(column.index) ? ' unavailable' : '');
 			const sorted = sort.column === column.id || sort.column === 'cited' && (column.id === 'citedOpenAlex' || column.id === 'citedSemanticScholar');
-			th.textContent = format(column.label, recentYears) + (sorted ? (sort.descending ? ' \\u2193' : ' \\u2191') : '');
+			th.textContent = format(column.label, recentYears) + (sorted ? (sort.descending ? '\\u00a0\\u2193' : '\\u00a0\\u2191') : '');
 			if (column.hint) {
 				th.title = format(column.hint, recentYears);
 			}

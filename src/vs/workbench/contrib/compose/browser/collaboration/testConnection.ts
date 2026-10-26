@@ -129,7 +129,10 @@ function pageHtml(): string {
 		details code { font-family: var(--vscode-editor-font-family); }
 		#summary { font-size: 14px; padding: 10px 12px; border-left: 3px solid var(--vscode-focusBorder); background: var(--vscode-textBlockQuote-background); }
 		.buttons { display: flex; gap: 8px; margin: 12px 0; }
-		button { font: inherit; padding: 4px 12px; border: none; border-radius: 2px; cursor: pointer; color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
+		button { font: inherit; padding: 4px 12px; border: none; box-shadow: inset 0 0 0 1px var(--vscode-button-background); border-radius: 2px; cursor: pointer; color: var(--vscode-button-foreground); background: var(--vscode-button-background); font-size: 11px; }
+		/* As the code buttons below a panel's Example Code: dimmed until pointed at, the blue ones not */
+		button.secondary { opacity: 0.7; }
+		button.secondary:not(:disabled):hover { opacity: 1; }
 		button:hover { background: var(--vscode-button-hoverBackground); }
 		button.secondary { color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); }
 		button:disabled { opacity: 0.5; cursor: default; }

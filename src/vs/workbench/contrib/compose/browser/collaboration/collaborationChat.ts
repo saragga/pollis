@@ -187,7 +187,9 @@ export function chatPageHtml(): string {
 		button.icon.primary:hover { background: var(--vscode-button-hoverBackground); }
 		button.icon.primary.idle { opacity: 0.4; }
 		body.dragging .composer { outline: 2px dashed var(--vscode-focusBorder); outline-offset: 2px; }
-		button { font: inherit; padding: 4px 12px; border: none; border-radius: 2px; cursor: pointer; color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); white-space: nowrap; }
+		button { font: inherit; padding: 4px 12px; border: none; box-shadow: inset 0 0 0 1px var(--vscode-button-background); border-radius: 2px; cursor: pointer; color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); white-space: nowrap; font-size: 11px; opacity: 0.7; }
+		/* As the code buttons below a panel's Example Code: dimmed until pointed at, the blue one not */
+		button:not(:disabled):hover, button.current, button.primary { opacity: 1; }
 		button:hover { background: var(--vscode-button-secondaryHoverBackground); }
 		button.primary { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
 		button.primary:hover { background: var(--vscode-button-hoverBackground); }

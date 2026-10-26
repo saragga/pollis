@@ -16,7 +16,7 @@ import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
 import { ICitationCount, ReferenceLibrary, referenceVenue } from '../../model/browser/common/referenceLibrary.js';
 import { OPEN_LINK_COMMAND_ID } from '../../monitor/browser/openLink.js';
-import { FEWEST_ROWS, rowsChoiceCss, rowsChoiceScript, storedRows, storeRows } from '../../model/browser/webviews/webviewPager.js';
+import { FEWEST_ROWS, rowsChoiceCss, rowsChoiceScript, stickyHeadCss, stickyHeadScript, storedRows, storeRows } from '../../model/browser/webviews/webviewPager.js';
 
 // Compose > Browse References: every work in PollisReferences (all_references), those of Pollis, those the user saved
 // from Discover Literature or added to a panel, and the user's corrections, with their versions, latest citation counts and
@@ -298,6 +298,7 @@ function pageHtml(rows: number): string {
 	<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';">
 	<style>
 		${rowsChoiceCss}
+		${stickyHeadCss}
 		* { box-sizing: border-box; }
 		body { font-family: var(--vscode-font-family); font-size: 13px; margin: 0; color: var(--vscode-foreground); background-color: var(--vscode-editor-background); }
 		.container { max-width: 1200px; margin: 0 auto; padding: 24px; }
@@ -309,7 +310,9 @@ function pageHtml(rows: number): string {
 		input[type="text"], select { font: inherit; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, var(--vscode-widget-border)); border-radius: 2px; padding: 4px 6px; }
 		input:focus, select:focus { outline: 1px solid var(--vscode-focusBorder); outline-offset: -1px; }
 		input#search { width: 360px; max-width: 100%; }
-		button.action { font: inherit; color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); border: none; border-radius: 2px; padding: 4px 12px; cursor: pointer; }
+		button.action { font: inherit; color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); border: none; box-shadow: inset 0 0 0 1px var(--vscode-button-background); border-radius: 2px; padding: 4px 12px; cursor: pointer; font-size: 11px; opacity: 0.7; }
+		/* As the code buttons below a panel's Example Code: dimmed until pointed at, the blue one not */
+		button.action:not(:disabled):hover, button.action.current, button.action.primary { opacity: 1; }
 		button.action:hover { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
 		/* As tall as the search field and the select beside them */
 		.toolbar > button.action { align-self: stretch; }
@@ -353,7 +356,7 @@ function pageHtml(rows: number): string {
 <div class="container">
 	<h1>${text.title}</h1>
 	<p class="subtitle">${text.intro}</p>
-	<div class="toolbar">
+	<div class="toolbar stickyBand" id="toolbar">
 		<input type="text" id="search" placeholder="${text.searchHint}" aria-label="${text.search}" spellcheck="false" autocomplete="off">
 		<select id="origin" aria-label="${text.show}">
 			<option value="all">${text.all}</option>
@@ -366,7 +369,7 @@ function pageHtml(rows: number): string {
 		<span class="countNote" id="countNote"></span>
 	</div>
 	<div class="pager" id="pagerTop" hidden></div>
-	<table id="table">
+	<table id="table" class="stickyHead">
 		<colgroup><col class="year"><col class="work"><col class="key"><col class="counts"><col class="origin"><col class="panels"><col class="actions"></colgroup>
 		<thead><tr><th class="sortable" data-sort="year" title="${text.sortHint}">${text.year}</th><th class="sortable" data-sort="work" title="${text.sortHint}">${text.work}</th><th class="sortable" data-sort="key" title="${text.sortHint}">${text.key}</th><th class="sortable" data-sort="counts" title="${text.countsSortHint}">${text.counts}</th><th class="sortable" data-sort="origin" title="${text.sortHint}">${text.origin}</th><th>${text.panels}</th><th></th></tr></thead>
 		<tbody id="rows"></tbody>
@@ -381,10 +384,12 @@ function pageHtml(rows: number): string {
 	// The rows of a page, as the user chose them: 0 for all
 	let rows = ${rows};
 	${rowsChoiceScript()}
+	${stickyHeadScript()}
 	// Yours first, then corrections, then those of Pollis
 	const ORIGIN_ORDER = { user: 0, corrected: 1, pollis: 2 };
 	let works = [];
 	let page = 0;
+	stickBand(document.getElementById('toolbar'), document.getElementById('table'));
 	// The column the works are sorted by, and whether reversed; none at first: yours, corrections, then those of Pollis
 	let sortColumn;
 	let sortDescending = false;

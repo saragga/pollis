@@ -1028,7 +1028,9 @@ const PAGE_STYLE = `
 		.intro { margin: 0 0 12px 0; line-height: 1.4; max-width: 900px; }
 		.small { font-size: 12px; }
 		.actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px 0; }
-		button.action { font: inherit; color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); border: none; border-radius: 2px; padding: 4px 12px; cursor: pointer; }
+		button.action { font: inherit; color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); border: none; box-shadow: inset 0 0 0 1px var(--vscode-button-background); border-radius: 2px; padding: 4px 12px; cursor: pointer; font-size: 11px; opacity: 0.7; }
+		/* As the code buttons below a panel's Example Code: dimmed until pointed at, the blue one not */
+		button.action:not(:disabled):hover, button.action.current, button.action.primary { opacity: 1; }
 		button.action:hover { background: var(--vscode-button-secondaryHoverBackground); }
 		button.action:disabled { cursor: default; opacity: 0.6; }
 ${AGENT_BADGE_CSS}

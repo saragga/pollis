@@ -85,3 +85,24 @@ export function rowsChoiceScript(): string {
 		return choice;
 	}`;
 }
+
+/**
+ * CSS of a table whose headings stay at the top of the page while its rows scroll under them, with a
+ * `.stickyBand` above them, such as the line that filters the rows, staying too. The headings stay as one, however
+ * many rows they have; their line is a shadow, since the border of a heading stays behind with its table.
+ */
+export const stickyHeadCss = `.stickyBand { position: sticky; top: 0; z-index: 2; padding: 4px 0; background-color: var(--vscode-editor-background); }
+table.stickyHead thead { position: sticky; top: var(--stickyBand, 0px); z-index: 1; }
+table.stickyHead th { background-color: var(--vscode-editor-background); border-bottom: none; box-shadow: inset 0 -1px var(--vscode-widget-border); }`;
+
+/**
+ * The script of a table with sticky headings: `stickBand(band, table)` keeps the headings of `table` just under
+ * `band`, however tall it grows.
+ */
+export function stickyHeadScript(): string {
+	return `function stickBand(band, table) {
+		const place = () => table.style.setProperty('--stickyBand', band.offsetHeight + 'px');
+		new ResizeObserver(place).observe(band);
+		place();
+	}`;
+}

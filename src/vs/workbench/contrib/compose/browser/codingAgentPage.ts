@@ -190,7 +190,7 @@ function pageHtml(): string {
 		.warning { color: var(--vscode-editorWarning-foreground); margin-left: 10px; }
 		.link { color: var(--vscode-textLink-foreground); cursor: pointer; background: none; border: none; padding: 0; font: inherit; }
 		.link:hover { text-decoration: underline; }
-		button.action { font: inherit; padding: 3px 12px; border: none; border-radius: 2px; cursor: pointer; color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
+		button.action { font: inherit; padding: 3px 12px; border: none; box-shadow: inset 0 0 0 1px var(--vscode-button-background); border-radius: 2px; cursor: pointer; color: var(--vscode-button-foreground); background: var(--vscode-button-background); font-size: 11px; }
 		button.action:hover { background: var(--vscode-button-hoverBackground); }
 		button.action:disabled { cursor: default; color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); }
 		.row { display: flex; gap: 8px; max-width: 700px; }
