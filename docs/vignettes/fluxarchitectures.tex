@@ -1,0 +1,31 @@
+% The box on FluxArchitectures.jl, \input into LSTNet.tex. Compared by reading FluxArchitectures 0.2.6 (src/LSTnet.jl,
+% src/shared/Sequentialize.jl, src/dataloader.jl, examples/Example_LSTNet.jl; last commit 22 November 2023) against
+% the authors' models/LSTNet.py, main.py and utils.py (15 October 2026)
+\begin{pbox}[breakable]{Why not FluxArchitectures.jl?}
+A registered Julia package already has a model called LSTNet: \fn{LSTnet} in FluxArchitectures.jl
+(S.~Dobberschütz), which Pollis uses in its neural time-series panel. It follows the idea of the paper, not the
+authors' code, and it is a different model:
+
+\begin{valuetable}{@{}lXX@{}}
+\textbf{} & \textbf{Authors' code (and this package)} & \textbf{FluxArchitectures \fn{LSTnet}}\\\midrule
+Forecasts & all $m$ series at once (\fn{Linear} to $m$ outputs) & one series, the first column (\fn{Dense} to 1)\\
+Convolution & kernel of 6 time steps across all series, sliding along the 168-step window & kernel as long as the
+  whole window: one vector per sample\\
+The GRU runs over & the 163 convolution outputs inside each window & consecutive samples, carrying its state from one
+  sample to the next\\
+GRU activation & tanh (PyTorch's \fn{nn.GRU}) & ReLU, as in Section 3.3 of the paper\\
+Skip component & a second GRU over the skip periods, one run per phase; final states concatenated & one GRU fed the
+  hidden state from $p$ steps back\\
+Autoregressive part & the last 24 values of each series, the same weights for every series & the last time step only,
+  one weight per series, summed into one output\\
+Dropout & 0.2 & none\\
+Scaling & each series divided by its largest absolute value & $z$-scores over the whole series, with no
+  training/validation/test split\\
+Training & L1 loss on the rescaled data, batches of 128, gradient norm clipped at 10 & mean squared error, the whole
+  sample in one batch (the package's example)\\
+\end{valuetable}
+
+Since it forecasts a single series, it cannot give Table 2, whose RSE and CORR are taken over all series, and the
+cross-tests of this package cannot be run on it: its weights have other shapes, so there is nothing to load the
+authors' weights into. It requires Flux 0.13 and Zygote older than 0.6.44.
+\end{pbox}

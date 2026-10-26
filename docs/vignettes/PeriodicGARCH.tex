@@ -1,0 +1,83 @@
+% Pollis New Methods: volatility (periodic GARCH) — draft 1 (11 October 2026)
+% Compile with: latexmk -pdf nm_volatility.tex && latexmk -c
+\input{newmethods_style}
+
+\begin{document}
+
+\nmhead{Volatility}
+  {Periodic GARCH: volatility with a calendar dummy}
+  {Does a shock after a weekend feed into tomorrow's risk as much as any other? Bollerslev and Ghysels (1996), reproduced.}
+
+\factsheet
+  {\nmcite{bollerslev1996}{Bollerslev and Ghysels (1996)}, \emph{Journal of Business \& Economic Statistics}, Table 2 (p.\,146): the 1,974 daily
+   Deutsche mark / British pound returns of 1984--1991, with the paper's non-trading-day dummy (PollisDatasets \fn{bg96}).}
+  {a dummy in the variance equation of a GARCH model, and the periodic GARCH model. ARCHModels.jl fits GARCH(1,1) only.}
+  {\browse{Periodic GARCH: volatility with a calendar dummy}{pgarch}}
+  {32 of 42 printed values to every digit, most of the rest in the last digit. Plain GARCH agrees with ARCHModels.jl to
+   about $10^{-13}$.}
+
+\nmsection{The problem}
+Volatility is not the same every day. After a weekend or a holiday, news has piled up while markets were shut; a
+GARCH(1,1) treats that day like any other. \nmcite{bollerslev1996}{Bollerslev and Ghysels (1996)} let the model change with a calendar dummy $s(t)$: the
+mean, the level the variance returns to, and how much a shock feeds into the next day's variance can all differ when
+$s(t) = 1$. The idea carries over to any periodic calendar: days of the week, months, trading sessions.
+
+\nmsection{The method}
+The mean is $\mu + \mu_1 s(t)$ and the conditional variance (p.\,146, eq.\ 14 and the note to Table 2) is
+\[ \sigma^2_t = \omega + \omega_1 s_t + (\alpha + \alpha_1 s_t)\,(\varepsilon^2_{t-1} - \omega - \omega_1 s_{t-1})
+   + \beta\,(\sigma^2_{t-1} - \omega - \omega_1 s_{t-1}). \]
+$\omega + \omega_1 s(t)$ is the level the variance returns to, $\omega_1$ the extra variance when $s(t) = 1$, and $\alpha_1$
+how much less, or more, a shock on such a day feeds forward. With $\alpha_1 = 0$ it is GARCH(1,1) with a dummy; with
+$\omega_1 = \alpha_1 = \mu_1 = 0$, plain GARCH(1,1). \fn{pgarch} maximises the Gaussian likelihood and reports quasi-maximum
+likelihood (sandwich) standard errors; any parameter can be held at zero. \fn{diagnostics} gives every statistic of
+Table 2: information criteria, skewness and kurtosis of the standardised residuals, the statistics of \nmcite{ljung1978}{Ljung and Box (1978)} on them and on
+their squares at 20 lags, and the paper's three loss functions.
+
+\nmsection{What the tests show}
+\begin{valuetable}{@{}lXl@{}}
+\textbf{Test} & \textbf{What is compared} & \textbf{Agreement}\\\midrule
+ARCHModels.jl & plain GARCH(1,1): estimates, robust s.e., log likelihood & to about $10^{-13}$\\
+Table 2, col.\,5 & GARCH(1,1) with the dummy: 19 values & 16 to every digit, 3 in the last\\
+Table 2, col.\,6 & P-GARCH(1,1): coefficients & every coefficient to 3 decimals\\
+Table 2, col.\,6 & P-GARCH(1,1): s.e., SIC & 4 in the last digit\\
+Table 2, col.\,6 & skewness $b_3$, kurtosis $b_4$ & $-.43$, 5.63 vs $-.46$, 5.87 (open)\\
+\end{valuetable}
+
+The last-digit differences, side by side (Julia against the paper):
+\begin{itemize}
+  \item Column 5: s.e.\ of the dummy .023 vs .022; $b_3$ $-.43$ vs $-.44$; $b_4$ 5.88 vs 5.89.
+  \item Column 6: s.e.\ of $\omega$ .171 vs .169, of $\omega_1$ .027 vs .026, of $\alpha$ .042 vs .043; SIC $-2212.8$ vs $-2212.9$.
+    These are what numerical Hessians of two programs give.
+\end{itemize}
+
+\nmsection{The economic result, reproduced}
+On ordinary days shocks persist almost indefinitely: $\alpha + \beta = 1.0006$, which rounds to 1.001 against the paper's
+1.000. After a non-trading day they die out much faster: $\alpha + \alpha_1 + \beta = .889$, as published. A Monday's shock
+feeds less into Tuesday's variance, so the periodic model's volatility jumps less after weekends than plain GARCH's;
+the notebook's example plots both over 1989--1990.
+
+\nmsection{Still open}
+The skewness and kurtosis of column 6: $-.43$ and 5.63 here against $-.46$ and 5.87 in print, while the Q statistics, MSE,
+HMSE and log likelihood of the same standardised residuals all agree. The paper may compute $b_3$ and $b_4$ on a different
+sample or residual definition. Not explained.
+
+\nmsection{Further considerations}
+\begin{itemize}
+  \item \textbf{Several seasons.} The paper's general P-GARCH lets every parameter cycle with the calendar (five weekdays,
+    twelve months). The notebook's single dummy is the case Table 2 tests; the general case needs one more index and no new
+    ideas, and should come with a test of its own before it is offered.
+  \item \textbf{Upstream.} A regressor in the variance equation is the missing piece in ARCHModels.jl; the dummy model
+    is that plus a constraint. Column 5 is a ready-made test for such a contribution.
+  \item \textbf{Asymmetry.} Calendar effects and leverage (EGARCH, GJR) are often studied together; a periodic GJR model
+    would need a published table with its data before it becomes a new method here.
+\end{itemize}
+
+\nmsection{References}
+{\footnotesize
+\nmref{bollerslev1996}{Bollerslev, T. and Ghysels, E. (1996). Periodic autoregressive conditional heteroscedasticity. \emph{Journal of Business \& Economic Statistics} 14(2), 139--151. \nmdoi{10.1080/07350015.1996.10524640}}
+\nmref{ljung1978}{Ljung, G.\,M. and Box, G.\,E.\,P. (1978). On a measure of lack of fit in time series models. \emph{Biometrika} 65(2), 297--303.}
+\nmref{data}{Data: the returns as distributed with ARCHModels.jl, and the non-trading-day dummy as distributed with the R package rugarch (\fn{dmbp}).}
+}
+
+\nmcredit
+\end{document}

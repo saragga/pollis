@@ -1,0 +1,119 @@
+% Pollis New Methods: panel econometrics (random-effects variance estimators) — draft 1 (11 October 2026)
+% Compile with: latexmk -pdf nm_panel_econometrics.tex && latexmk -c
+\input{newmethods_style}
+
+\begin{document}
+
+\nmhead{Panel Econometrics}
+  {Random effects: WALHUS, AMEMIYA, Swamy-Arora and the nested model}
+  {Five ways to split a panel's error variance, written from one rule and tested against the tables of \nmcite{baltagi2005}{Baltagi (2005)}}
+
+\factsheet
+  {\nmcite{baltagi2005}{Baltagi (2005)}, \emph{Econometric Analysis of Panel Data}, 3rd ed.: Tables 2.1, 2.5, 2.6, 3.1, 3.6, 3.7 and 9.4.
+   The investment data of \nmcite{grunfeld1958}{Grunfeld (1958)}, the OECD gasoline data of \nmcite{baltagigriffin1983}{Baltagi and Griffin (1983)} and the public capital data of \nmcite{munnell1990}{Munnell (1990)} (PollisDatasets).}
+  {Wallace-Hussain (WALHUS), Amemiya (AMEMIYA), the two-way Swamy-Arora, and the estimators of the nested model
+   (states within regions). Julia packages offer the one-way Swamy-Arora at most; R's plm has the rest.}
+  {\browse{WALHUS, AMEMIYA, Swamy-Arora and nested error components}{panelre}}
+  {288 of 298 printed values to every digit. R's plm agrees with Julia to its 7 printed significant digits wherever
+   both use the same convention.}
+
+\nmsection{The problem}
+A random-effects panel regression is a GLS regression whose weights depend on the variances of the error components:
+an individual effect, perhaps a time effect or a nested effect, and the remainder. The estimators differ only in how they
+estimate those variances before GLS, and the choice moves the standard errors and sometimes the coefficients. A textbook
+that prints a row for each estimator cannot be followed in a language that has one of them.
+
+\nmsection{One rule for all the estimators}
+Let $e = My$ be residuals, where $M$ removes the regressors, so $e = Mu$ whatever the coefficients. A sum of squares
+$q = e'Ae$ has the exact expectation
+\[ \mathrm{E}(q) = \textstyle\sum_c \sigma_c^2 \,\mathrm{tr}(M'AM\,Z_cZ_c'), \]
+with $Z_c$ the incidence matrix of component $c$. With as many sums of squares as components, equating each to its
+expectation gives the variances. This is how \nmcite{baltagi2005}{Baltagi (2005)} defines the unbalanced estimators (Section 9.2.1, eqs.\ 9.16--9.21),
+and in balanced panels it gives the familiar formulas. The estimators are then only choices of residuals:
+\begin{itemize}
+  \item \textbf{WALHUS}, \nmcite{wallace1969}{Wallace and Hussain (1969)}: OLS residuals in every sum of squares.
+  \item \textbf{AMEMIYA}, \nmcite{amemiya1971}{Amemiya (1971)}, and \nmcite{wansbeek1989}{Wansbeek and Kapteyn (1989)} when unbalanced: the residuals of the Within regression.
+  \item \textbf{SWAR}, \nmcite{swamy1972}{Swamy and Arora (1972)}: each sum of squares from its own regression, Within or Between.
+  \item \textbf{HFB}, Henderson's method III, \nmcite{henderson1953}{Henderson (1953)}, as in \nmcite{fuller1974}{Fuller and Battese (1974)}: reductions in the sum of squares as the nested dummies are added.
+  \item \textbf{MIVQUE}, \nmcite{rao1971}{Rao (1971)}, with a prior guess of the variances.
+\end{itemize}
+A negative variance is set to zero, as in Tables 3.1 and 3.7. Writing the rule once, rather than five sets of formulas,
+is what made the nested, unbalanced case as easy as the one-way case.
+
+\nmsection{What the tests show}
+\begin{valuetable}{@{}lXl@{}}
+\textbf{Table} & \textbf{Model and data} & \textbf{Agreement}\\\midrule
+2.1, p.\,21 & Grunfeld, one-way: all estimators & every printed digit\\
+2.5, p.\,24 & Gasoline, one-way: WALHUS, AMEMIYA & every printed digit\\
+2.5, p.\,24 & Gasoline, one-way: SWAR & variances agree; price $-.420$ vs $-.402$ (see below)\\
+2.6, p.\,25 & Public capital, one-way & every printed digit\\
+3.1, p.\,43 & Grunfeld, two-way & every printed digit\\
+3.6, p.\,46 & Gasoline, two-way & every printed digit\\
+3.7, p.\,47 & Public capital, two-way & every printed digit\\
+9.4, p.\,182 & Public capital, nested: WH, WK, SA, MV1, MV2 & every printed digit\\
+9.4, p.\,182 & nested: HFB & six values in the last digit\\
+\end{valuetable}
+The MLE and REML columns of Table 9.4 also agree to every printed digit; they are fitted with MixedModels.jl and check
+the data and the model. The EViews output Baltagi reprints for WALHUS in Table 2.2 is matched to every digit EViews prints:
+$\sigma_\mu = 87.358027$ and $\sigma_\nu = 53.745175$ here, against 87.35803 and 53.74518.
+
+\nmsection{What the replication found}
+\nmsub{The book uses two conventions, and both had to be matched}
+The standard errors of the two-way tables (3.1, 3.6, 3.7) are scaled by the residual variance of the transformed
+regression, as EViews does; those of the one-way tables and Table 9.4 are not. With one convention for all, about a third
+of the standard errors differ in the last digit. And the sums of squares are equated to their exact expectations, not
+divided by the traces of eqs.\ (2.21)--(2.22): this gives AMEMIYA's remainder SWAR's divisor $N(T-1)-K$, which is why the two
+share $\sigma_\nu = 52.77$ in Table 2.1.
+
+\nmsub{R's plm does not reproduce the book's WALHUS and AMEMIYA}
+plm divides by traces, so for one-way WALHUS it gives $\sigma_\mu = .078$ against Baltagi's .082 on the public capital data,
+and 75.43 against 87.36 on Grunfeld. In the two-way models it divides the between sums of squares by $N$ and $T$ rather than
+$N-1$ and $T-1$. Julia reproduces plm exactly with plm's conventions (\fn{divisors = :trace}, \fn{scale = true}), and the
+book exactly with the exact expectations: the two programs differ by a definition, not by an error.
+
+\nmsub{A probable misprint in Table 2.5}
+For SWAR on the gasoline data, the variances agree ($\rho = .82$, $\sigma_\mu = .196$, $\sigma_\nu = .092$), but the price
+coefficient is $-.420$ here against $-.402$ in print. R's plm gives $-.4204$, as Julia does. The printed value looks like
+transposed digits.
+
+\nmsection{Still open}
+\begin{itemize}
+  \item \textbf{One standard error in Table 2.5.} With the two-way scaling, Julia's SWAR standard errors are .059, .040 and
+    .026 against .059, .042 and .026; plm gives .059, .040 and .0255. The .042 is not explained.
+  \item \textbf{HFB in Table 9.4}, in the last digit: intercept 2.088 vs 2.084, log K .271 vs .272, log L .744 vs .743,
+    its standard error .151 vs .150, $\sigma_\mu^2$ .0027 vs .0029, $\sigma_\nu^2$ .0046 vs .0044. The fitting-constants
+    reductions follow Section 9.2.1; \nmcite{bsj2001}{Baltagi, Song and Jung (2001)} define the nested version, which may order them differently.
+  \item \textbf{MV3.} The book does not give the MIVQUE priors. Priors $(0,0,1)$ and $(1,1,1)$ reproduce MV1 and MV2
+    exactly; no prior tried reproduces MV3 (the closest gives $\sigma_\mu^2$ .0018 against .0017), so MV3 is not tested.
+\end{itemize}
+
+\nmsection{Further considerations}
+\begin{itemize}
+  \item \textbf{A note for users of panel software.} Two programs can both be ``right'' and still disagree in the second
+    significant digit: the divisor and the scaling of the standard errors are conventions, and a replication has to name them.
+    The notebook makes both explicit options, so either convention can be chosen deliberately.
+  \item \textbf{Upstream.} The single quadratic-form rule is small and general enough to be offered to a Julia panel-data
+    package, with these tables as its tests.
+  \item \textbf{Next.} The \nmcite{bsj2001}{Baltagi, Song and Jung (2001)} nested HFB, to close the last-digit gap; the unbalanced two-way model;
+    and the estimator of \nmcite{hausman1981}{Hausman and Taylor (1981)}, also in Baltagi's chapters and also missing in Julia.
+\end{itemize}
+
+\nmsection{References}
+{\footnotesize
+\nmref{amemiya1971}{Amemiya, T. (1971). The estimation of the variances in a variance-components model. \emph{International Economic Review} 12(1), 1--13.}
+\nmref{baltagi2005}{Baltagi, B.\,H. (2005). \emph{Econometric Analysis of Panel Data}, 3rd ed. Wiley.}
+\nmref{baltagigriffin1983}{Baltagi, B.\,H. and Griffin, J.\,M. (1983). Gasoline demand in the OECD: an application of pooling and testing procedures. \emph{European Economic Review} 22(2), 117--137.}
+\nmref{bsj2001}{Baltagi, B.\,H., Song, S.\,H. and Jung, B.\,C. (2001). The unbalanced nested error component regression model. \emph{Journal of Econometrics} 101(2), 357--381. \nmdoi{10.1016/S0304-4076(00)00089-0}}
+\nmref{fuller1974}{Fuller, W.\,A. and Battese, G.\,E. (1974). Estimation of linear models with crossed-error structure. \emph{Journal of Econometrics} 2(1), 67--78.}
+\nmref{grunfeld1958}{Grunfeld, Y. (1958). \emph{The Determinants of Corporate Investment}. PhD thesis, University of Chicago.}
+\nmref{hausman1981}{Hausman, J.\,A. and Taylor, W.\,E. (1981). Panel data and unobservable individual effects. \emph{Econometrica} 49(6), 1377--1398.}
+\nmref{henderson1953}{Henderson, C.\,R. (1953). Estimation of variance and covariance components. \emph{Biometrics} 9(2), 226--252.}
+\nmref{munnell1990}{Munnell, A.\,H. (1990). How does public infrastructure affect regional economic performance? \emph{New England Economic Review}, September/October, 11--32.}
+\nmref{rao1971}{Rao, C.\,R. (1971). Minimum variance quadratic unbiased estimation of variance components. \emph{Journal of Multivariate Analysis} 1(4), 445--456.}
+\nmref{swamy1972}{Swamy, P.\,A.\,V.\,B. and Arora, S.\,S. (1972). The exact finite sample properties of the estimators of coefficients in the error components regression models. \emph{Econometrica} 40(2), 261--275.}
+\nmref{wallace1969}{Wallace, T.\,D. and Hussain, A. (1969). The use of error components models in combining cross section with time series data. \emph{Econometrica} 37(1), 55--72.}
+\nmref{wansbeek1989}{Wansbeek, T. and Kapteyn, A. (1989). Estimation of the error-components model with incomplete panels. \emph{Journal of Econometrics} 41(3), 341--361.}
+}
+
+\nmcredit
+\end{document}

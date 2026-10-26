@@ -1,0 +1,93 @@
+% Pollis New Methods: survival analysis (Cox model with Breslow's ties) — draft 1 (11 October 2026)
+% Compile with: latexmk -pdf nm_survival.tex && latexmk -c
+\input{newmethods_style}
+
+\begin{document}
+
+\nmhead{Survival Analysis}
+  {The Cox model with Breslow's ties, and its predicted survival}
+  {The Mayo Clinic model for primary biliary cirrhosis, reproduced from the 1989 paper.}
+
+\factsheet
+  {\nmcite{dickson1989}{Dickson, Grambsch, Fleming, Fisher and Langworthy (1989)}, \emph{Hepatology}: Table 2 (both models) and Table 4 (baseline
+   survival, years 1--7). The 418 Mayo patients as \nmcite{fleming1991}{Fleming and Harrington (1991)} published them (PollisDatasets \fn{pbc}).}
+  {Breslow's rule for tied deaths, and the predicted survival curve of a patient from a fitted Cox model. Survival.jl uses
+   Efron's rule and does not predict survival curves.}
+  {\browse{The Cox model with Breslow's ties, and its predicted survival}{cox}}
+  {the initial model and all seven years of predicted survival to every printed digit; 41 of 53 values in all. With
+   Survival.jl's Efron ties, only 1 to 3 decimals.}
+
+\nmsection{The problem}
+When several patients die on the same day, the partial likelihood of \nmcite{cox1972}{Cox (1972)} needs a rule for the tie. Survival.jl uses the rule of
+\nmcite{efron1977}{Efron (1977)}. Much of the published literature, and the SAS, BMDP and early S software it was computed with, used that of \nmcite{breslow1974}{Breslow (1974)},
+so its coefficients cannot be reproduced in Julia. A model that cannot be reproduced cannot be checked, updated or applied
+to new patients with confidence. And a clinical model is used through its predictions: ``what is this patient's chance of
+surviving five years?'', which Survival.jl does not compute.
+
+\nmsection{The method}
+\nmsub{Breslow's ties}
+All patients who die on the same day share one risk set: each death contributes
+$\eta_i - \log \sum_{j \in R(t_i)} e^{\eta_j}$, with $\eta = X\beta$. \fn{cox} maximises it by Newton's method with exact
+derivatives from ForwardDiff, and returns coefficients, standard errors from the inverse information, Wald chi-squares and
+the likelihood ratio chi-square.
+\nmsub{Predicted survival}
+A patient with risk score $R = X\beta$ has $S(t, R) = S_0(t)^{\exp(R - c)}$, $c$ the mean risk score. The $S_0$ of \nmcite{kalbfleisch1980}{Kalbfleisch and
+Prentice (1980)} is a product, over the days with deaths, of factors $\alpha$, each the root of
+$\sum_{\text{deaths}} w/(1-\alpha^w) = \sum_{\text{at risk}} w$ with $w = \exp(R - c)$; \fn{survival} finds each root by bisection.
+
+\nmsection{What the tests show}
+\begin{valuetable}{@{}lXl@{}}
+\textbf{Test} & \textbf{What is compared} & \textbf{Agreement}\\\midrule
+Survival.jl & data without ties: Breslow is then Cox & 6 decimals or more\\
+Table 2, initial & 312 trial patients: all 20 values & every printed digit\\
+Table 2, final & 418 patients & last digit in 6 values (see below)\\
+Table 2 & likelihood ratio chi-square & 199.13 vs 199.2 (open)\\
+Table 4 & $S_0(t)$, years 1 to 7 & every printed digit\\
+Efron (Survival.jl) & Table 2, for contrast & only 1 to 3 decimals\\
+\end{valuetable}
+The contrast in the last row is the point: on the same data, with the same covariates, the only difference between a fit
+that reproduces the paper and one that does not is the rule for ties.
+
+\nmsub{The final model, in the last digit}
+Log bilirubin 0.8706 vs 0.8707, log prothrombin time 2.379 vs 2.380, and four chi-squares by 0.01 or 0.02. The paper
+estimated missing values for 16 declined patients with regressions fitted to the 90 complete ones (p.\,3); the public file
+lacks only two prothrombin times, so the regression here is simpler. Setting those two times to anything from 9 to 13 seconds
+moves the coefficients in the third decimal, gaps of this size. The initial model, which needs no estimated values, agrees
+throughout.
+
+\nmsub{The paper's two patients}
+A 52-year-old with bilirubin 0.5, albumin 4.5, prothrombin time 10.1 and no edema: the paper gives a 96\% chance of
+surviving 5 years. One with bilirubin 13.9, albumin 2.8, prothrombin time 13.8 and edema treated with diuretics: 43\% of
+surviving 1 year. The notebook draws both curves from the final model.
+
+\nmsection{Still open}
+\begin{itemize}
+  \item \textbf{The likelihood ratio chi-square}, 199.13 against 199.2, although every coefficient and standard error it comes
+    from agrees. Not explained.
+  \item \textbf{The one-sample log-rank test} the paper used to validate the model on 106 patients (p.\,5) is not included:
+    its groups use a biopsy variable that is not in the public data, and their sizes are not given, so there are no expected
+    results to test against.
+\end{itemize}
+
+\nmsection{Further considerations}
+\begin{itemize}
+  \item \textbf{Ties matter more than they seem.} Survival data recorded in days, months or years are full of ties; the
+    choice between Breslow and Efron is a convention of the software, and a reader of an older paper has to know which was used.
+  \item \textbf{Upstream.} A \fn{ties} option and a \fn{predict} for survival curves in Survival.jl would make every
+    Breslow-era model in the literature reproducible in Julia. Tables 2 and 4 are ready-made tests.
+  \item \textbf{Next.} Time-varying covariates (the Mayo model was later updated for repeated visits), stratification,
+    and confidence bands for $S(t, R)$, each with a published table to test it.
+\end{itemize}
+
+\nmsection{References}
+{\footnotesize
+\nmref{breslow1974}{Breslow, N. (1974). Covariance analysis of censored survival data. \emph{Biometrics} 30(1), 89--99.}
+\nmref{cox1972}{Cox, D.\,R. (1972). Regression models and life-tables. \emph{Journal of the Royal Statistical Society, Series B} 34(2), 187--220.}
+\nmref{dickson1989}{Dickson, E.\,R., Grambsch, P.\,M., Fleming, T.\,R., Fisher, L.\,D. and Langworthy, A. (1989). Prognosis in primary biliary cirrhosis: model for decision making. \emph{Hepatology} 10(1), 1--7. \nmdoi{10.1002/hep.1840100102}}
+\nmref{efron1977}{Efron, B. (1977). The efficiency of Cox's likelihood function for censored data. \emph{Journal of the American Statistical Association} 72(359), 557--565.}
+\nmref{fleming1991}{Fleming, T.\,R. and Harrington, D.\,P. (1991). \emph{Counting Processes and Survival Analysis}. Wiley. Appendix D.}
+\nmref{kalbfleisch1980}{Kalbfleisch, J.\,D. and Prentice, R.\,L. (1980). \emph{The Statistical Analysis of Failure Time Data}. Wiley.}
+}
+
+\nmcredit
+\end{document}

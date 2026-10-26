@@ -1,0 +1,89 @@
+% Pollis New Methods: random forests (out-of-bag error and permutation importance) — draft 1 (11 October 2026)
+% Compile with: latexmk -pdf nm_random_forests.tex && latexmk -c
+\input{newmethods_style}
+
+\begin{document}
+
+\nmhead{Random Forests}
+  {Out-of-bag error and variable importance for random forests}
+  {Breiman's own measures of a forest, tested against his Table 2 on 19 data sets.}
+
+\factsheet
+  {\nmcite{breiman2001}{Breiman (2001)}, \emph{Random forests}, \emph{Machine Learning}: Table 2 (p.\,11) and Section 10 (pp.\,19--21).
+   14 real data sets from PollisDatasets, four simulated as Breiman did, and the zip-code digits of \nmcite{hastie2009}{Hastie, Tibshirani and Friedman (2009)}
+   (downloaded only if the user agrees).}
+  {the out-of-bag error and permutation importance. DecisionTree.jl grows forests, but has neither.}
+  {\browse{Out-of-bag error and variable importance for random forests}{oob}}
+  {34 of 38 Selection and Single input errors within simulation noise of Table 2; importance picks the inputs Breiman's did.}
+
+\nmsection{The problem}
+A random forest grows each tree on a bootstrap sample, so about a third of the cases are left out of each tree. \nmcite{breiman2001}{Breiman (2001)} used
+these out-of-bag cases twice: to estimate the forest's error without a test set, and to measure how much the forest relies on
+each input. Both are cited constantly and computed differently by different libraries. Breiman's values are averages of 100
+random runs, so the test is statistical: a Julia average, with its standard error, against his.
+
+\nmsection{The method}
+\nmsub{Forest-RI and the out-of-bag error}
+Forest-RI (p.\,9) grows each tree on a bootstrap sample of the training cases, splitting at each node on the best of $F$
+inputs drawn at random, by the Gini criterion of \nmcite{breiman1984}{Breiman, Friedman, Olshen and Stone (1984)}, unpruned; the forest votes. Run down only the trees that did not see them, the
+out-of-bag cases give the forest's \textbf{out-of-bag error} (Section 3.1), and the error of each tree alone, Table 2's
+``One tree''. \fn{forest} returns the trees and both errors; \fn{classify} runs cases down a tree without recursion, since the
+deepest trees overflow the stack of DecisionTree.jl's recursive \fn{apply\_tree}.
+\nmsub{Permutation importance}
+Permute input $m$ among the out-of-bag cases of each tree and run them down again: the percent increase in the out-of-bag
+error measures how much the forest relies on $m$ (Section 10).
+
+\nmsection{What the tests show}
+Breiman grew two forests per data set, with $F = 1$ and $F = \mathrm{int}(\log_2 M + 1)$, and took the test error of the one
+with the lower \emph{out-of-bag} error: the \textbf{Selection} column. \textbf{Single input} is the test error with $F = 1$.
+A value is \emph{within noise} when the two averages differ by less than two standard errors of a difference ($\sqrt2$ s.e.).
+\begin{valuetable}{@{}lXl@{}}
+\textbf{Test} & \textbf{What is compared} & \textbf{Within noise}\\\midrule
+Table 2, Selection & test error of the forest chosen by out-of-bag error & 17 of 19\\
+Table 2, Single input & test error of the forest with $F = 1$ & 17 of 19\\
+Table 2, One tree & out-of-bag error of single trees & 7 of 19\\
+Section 10 & errors of forests on the inputs importance picks & 4 of 5\\
+\end{valuetable}
+
+\nmsub{Where they differ}
+Liver Selection 27.3 vs 25.1 (2.0 s.e.); twonorm Single input 3.7 vs 3.9 (2.1 s.e.); ringnorm Selection 4.4 vs 4.9 and Single
+input 4.3 vs 4.9 (2.4 and 4.7 s.e.). Both ringnorm values are lower than Breiman's.
+
+One tree: most differ by about one point (pima 31.9 vs 33.1, liver 39.3 vs 40.6), and vowel by more, 36.1 vs 30.4. The test is
+strict there: each value averages 100 trees over 100 runs, so the standard errors are small, and small differences between
+DecisionTree.jl's tree code and Breiman's (tie-breaking, split points) show as several standard errors.
+
+\nmsub{Importance picks the same inputs}
+On diabetes, importance ranks input 2 (plasma glucose) first, as Breiman's Figure 4 does. Forests on the inputs it picks give
+29.9 / 24.0 / 30.2 (input 2 / all eight / 2 and 8) against 29.7 / 23.1 / 29.4, within noise, and 28.1 vs 26.4 for inputs 2
+and 6 (2.4 s.e.). On the 1984 House votes, input 4 (freezing physicians' fees) comes first, as in Figure 6, and a forest on it
+alone errs 4.7\% against 4.3\%, within noise.
+
+\nmsection{Still open}
+\begin{itemize}
+  \item \textbf{Ringnorm and twonorm.} The forests are below Breiman on these two simulated sets, and arc-fs (its own document)
+    shows the same small gap on the same two sets. A gap shared by two methods points to how the trees are grown, or to the
+    generators, which follow the description in \nmcite{breiman1998}{Breiman (1998)}, p.\,7. Not explained.
+  \item \textbf{One tree}, about one point off on most data sets: a difference in the single trees, not in the forests' votes.
+\end{itemize}
+
+\nmsection{Further considerations}
+\begin{itemize}
+  \item \textbf{Replicating random results.} Every run has its own seed, so the results do not depend on the number of
+    threads, and every comparison carries its standard error: a disagreement is a number of standard errors, not a judgement.
+  \item \textbf{Upstream.} Out-of-bag error and permutation importance are small additions to DecisionTree.jl, and Table 2
+    is a ready-made benchmark for them.
+  \item \textbf{Next.} Breiman's third use of out-of-bag cases, proximities (for outliers and missing values), and his
+    regression forests (Section 11), each tested against his tables.
+\end{itemize}
+
+\nmsection{References}
+{\footnotesize
+\nmref{breiman1998}{Breiman, L. (1998). Arcing classifiers. \emph{The Annals of Statistics} 26(3), 801--849. \nmdoi{10.1214/aos/1024691079}}
+\nmref{breiman2001}{Breiman, L. (2001). Random forests. \emph{Machine Learning} 45(1), 5--32. \nmdoi{10.1023/A:1010933404324}}
+\nmref{breiman1984}{Breiman, L., Friedman, J.\,H., Olshen, R.\,A. and Stone, C.\,J. (1984). \emph{Classification and Regression Trees}. Wadsworth.}
+\nmref{hastie2009}{Hastie, T., Tibshirani, R. and Friedman, J. (2009). \emph{The Elements of Statistical Learning}, 2nd ed. Springer: the zip-code data.}
+}
+
+\nmcredit
+\end{document}
