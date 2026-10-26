@@ -1,0 +1,370 @@
+% Pollis AI+ brochure — draft 1 (9 October 2026): Pollis and AI working together
+% Compile with: latexmk -pdf pollis_ai_brochure.tex
+\documentclass[10pt,a4paper]{article}
+
+\usepackage[a4paper,left=17mm,right=17mm,top=15mm,bottom=17mm,footskip=8mm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[default,semibold]{sourcesanspro}
+\usepackage{microtype}
+\usepackage{graphicx}
+\usepackage[table]{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{positioning,calc,arrows.meta}
+\usepackage[most]{tcolorbox}
+\usepackage{fontawesome5}
+\usepackage{tabularx}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{qrcode}
+\usepackage[hidelinks]{hyperref}
+
+\graphicspath{{images/}}
+
+% ---------------------------------------------------------------- placeholders
+% Change these in one place. Placeholders print in orange so they are easy to spot.
+\newcommand{\todo}[1]{\textcolor{orange}{\textbf{[#1]}}}
+\newcommand{\downloadlink}{\href{https://github.com/saragga/pollis/releases/latest}{github.com/saragga/pollis/releases/latest}}
+\newcommand{\contactemail}{\href{mailto:contact@pollis.org}{contact@pollis.org}}
+\newcommand{\brochuredate}{16 October 2026}
+\newcommand{\sourcelink}{github.com/saragga/pollis}
+
+% ---------------------------------------------------------------- colours
+\definecolor{navy}{HTML}{1C3A5E}
+\definecolor{pblue}{HTML}{3B78B5}
+\definecolor{amber}{HTML}{F2B33D}
+\definecolor{deepamber}{HTML}{D9902A}
+\definecolor{cream}{HTML}{FFF3D6}
+\definecolor{pale}{HTML}{EEF3F9}
+\definecolor{ink}{HTML}{2A2F36}
+\definecolor{logonavy}{HTML}{173D63}
+\definecolor{logodark}{HTML}{C98A1E}
+\definecolor{logoamber}{HTML}{F2B446}
+\definecolor{logocream}{HTML}{FEEFD2}
+\definecolor{soft}{HTML}{5E6773}
+\color{ink}
+
+% ---------------------------------------------------------------- layout helpers
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{4pt}
+\setlist{nosep,leftmargin=*,itemsep=2pt}
+
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+\fancyfoot[L]{\footnotesize\color{soft}\textbf{Pollis}\enspace Bright Insights through Statistical Learning, Simulation and Optimisation}
+\fancyfoot[R]{\footnotesize\color{soft}\thepage}
+
+% The Pollis logo, redrawn so it prints sharply at any size
+\newcommand{\pollislogo}[1]{%
+  % geometry traced from the 512 x 512 logo file
+  \begin{tikzpicture}[x=#1/512,y=-#1/512,baseline=(current bounding box.center)]
+    \fill[logonavy] (0,0) rectangle (512,512);
+    \fill[logodark] (36,422) -- (104,256) -- (172,422) -- cycle;
+    \fill[logoamber] (104,422) -- (203,180) -- (302,422) -- cycle;
+    \fill[logocream] (203,422) -- (339,89) -- (476,422) -- cycle;
+  \end{tikzpicture}}
+
+% Page heading: kicker, title, one-line promise
+\newcommand{\pageheading}[3]{%
+  {\color{deepamber}\small\bfseries\MakeUppercase{#1}}\par\vspace{1pt}
+  {\color{navy}\fontsize{22}{26}\selectfont\bfseries #2}\par\vspace{3pt}
+  {\color{soft}\large #3}\par\vspace{6pt}}
+
+\newcommand{\subhead}[1]{{\color{navy}\large\bfseries #1}\par\vspace{2pt}}
+
+% Text boxes
+\newtcolorbox{pbox}[2][]{enhanced, colback=pale, colframe=amber, boxrule=0pt,
+  leftrule=3pt, sharp corners, left=7pt, right=7pt, top=6pt, bottom=6pt,
+  fontupper=\small\raggedright, before upper={{\color{navy}\normalsize\bfseries #2}\par\smallskip}, #1}
+\newtcolorbox{nbox}[2][]{enhanced, colback=navy, colframe=navy, boxrule=0pt,
+  sharp corners, left=8pt, right=8pt, top=7pt, bottom=7pt, coltext=white,
+  fontupper=\small, before upper={{\color{amber}\normalsize\bfseries #2}\par\smallskip}, #1}
+
+% Screenshot frame
+\newcommand{\shot}[2][\linewidth]{%
+  \tcbox[enhanced, colback=black, colframe=black!70, boxrule=0.4pt, arc=2pt,
+    left=0pt,right=0pt,top=0pt,bottom=0pt, boxsep=0pt]{\includegraphics[width=\dimexpr#1-1pt\relax]{#2}}}
+\newcommand{\shotcap}[1]{{\footnotesize\color{soft}#1\par}}
+% A list icon, centred in a fixed width so icons of different widths line up
+\newcommand{\listicon}[1]{\makebox[1.25em][c]{\color{deepamber}#1}}
+
+% Numbered markers for the annotated panel
+\newcommand{\mk}[1]{\tikz[baseline=(c.base)]\node[circle, fill=amber, text=navy,
+  font=\footnotesize\bfseries, inner sep=1.2pt, minimum size=4.2mm](c){#1};}
+
+\newcommand{\status}[1]{\hfill{\footnotesize\color{soft}#1}}
+
+\begin{document}
+
+% =====================================================================
+% PAGE 1 — POLLIS AI+ AND THE AI COMPANION
+% =====================================================================
+\thispagestyle{empty}
+\begin{minipage}[c]{24mm}\pollislogo{22mm}\end{minipage}%
+\begin{minipage}[c]{0.84\linewidth}
+  {\color{navy}\fontsize{40}{42}\selectfont\bfseries Pollis AI+}\par\vspace{2pt}
+  {\color{navy}\Large Pollis and AI, working together}
+\end{minipage}
+
+\vspace{7mm}
+{\color{navy}\fontsize{26}{30}\selectfont\bfseries New methods,\\ with the answers already in hand.}\par\vspace{3mm}
+{\color{deepamber}\Large An AI companion writes the method you are missing;\\ Pollis has the reference values ready to test it.}
+
+\vspace{6mm}
+\begin{minipage}{0.92\linewidth}
+AI is \textbf{off by default}, and Pollis works fully without it: every panel, notebook and workflow
+runs without AI. Pollis AI+ is for those who want AI beside them, and it builds on what makes
+Pollis trustworthy in the first place: results checked against published values.
+\end{minipage}
+
+\vspace{6mm}
+\begin{pbox}{The AI companion: creating new methods \status{available}}
+Sometimes the method you need is not in Julia yet. Baltagi's panel-data textbook, for example,
+estimates Munnell's public capital data with the Wallace-Hussain and Amemiya random-effects
+estimators, which R has and Julia does not. A coding agent can write them in minutes;
+\textbf{checking} them is the slow part. Pollis makes the check part of the starting point.
+\begin{enumerate}[label={\color{amber}\bfseries\arabic*}, leftmargin=5mm, itemsep=3pt, topsep=4pt]
+  \item \textbf{Name the method and its source:} the article, its data, and the tables of results it publishes.
+  \item \textbf{Pollis sets up the tests} before any code is written: every published value becomes a test.
+  \item \textbf{Your coding agent writes the method} and runs the tests until they pass.
+  \item \textbf{You see every number} beside the published one: full value, rounded, published,
+    ``same to 3 decimals''. Never just ``it matches''.
+  \item \textbf{Keep it:} a tested Julia package with its vignette, ready to publish in the Pollis registry.
+\end{enumerate}
+The nine methods on page 4 were made this way, with Claude Code, in \textbf{Compose › New Methods}.
+\end{pbox}
+
+\vspace{4mm}
+\begin{minipage}[t]{0.485\linewidth}\vspace{0pt}
+\begin{pbox}[equal height group=ai1]{Where the reference values come from}
+\begin{itemize}[leftmargin=1.7em]
+  \item[\listicon{\faBook}] \textbf{Classic papers and textbooks,} the same ones Pollis's workflows replicate.
+  \item[\listicon{\faCheckDouble}] \textbf{Certified datasets} with reference results to many digits.
+  \item[\listicon{\faBalanceScale}] \textbf{The same method in R and Python,} when no published value exists.
+\end{itemize}
+\end{pbox}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.485\linewidth}\vspace{0pt}
+\begin{pbox}[equal height group=ai1]{Why the tests come first}
+Rewriting a method in another language is no check: the same formulas give the same mistakes.
+Published values are written by others, checked by referees and used by many. With them in place,
+code written by an agent is held to the same standard as code written by an expert.
+\end{pbox}
+\end{minipage}
+
+\newpage
+% =====================================================================
+% PAGE 2 — MORE WAYS AI WORKS WITH POLLIS
+% =====================================================================
+\pageheading{Pollis AI+}{More ways to work with AI.}
+  {Your choice of tools, always optional.}
+
+\begin{pbox}{AI extensions of your choice \status{available}}
+\begin{minipage}[t]{0.56\linewidth}\vspace{0pt}
+Add the AI assistants you prefer: the most installed ones on Open VSX are one click away,
+in the Extensions view.
+\end{minipage}\hfill
+\begin{minipage}[t]{0.38\linewidth}\vspace{0pt}
+\shot{images/shot_extensions.png}
+\end{minipage}
+\end{pbox}
+
+\vspace{2mm}
+\begin{pbox}{Pollis Agents: panels and toolboxes from a request \status{available}}
+Ask for a panel, or a whole toolbox, in plain words. A coding agent of your choice, any command-line agent
+or a model running on your own computer, writes it in Pollis's panel format, checks it and packages it to share.
+\end{pbox}
+
+\vspace{2mm}
+\begin{pbox}{Your coding agent, in the cloud or on your computer \status{available}}
+Choose Claude Code, Codex or OpenCode, with the provider's models or with a model running
+on your own computer through Ollama, LM Studio, llama.cpp or, on a Mac, Apple MLX. A local model costs nothing
+and your code never leaves your computer. Everything an agent does is marked with an Agent badge, since it costs tokens.
+\textbf{Model Routing} picks a lighter or a stronger model for each kind of task.
+\end{pbox}
+
+\vspace{2mm}
+\begin{pbox}{MCP Servers: official data for your agent \status{available}}
+\textbf{Compose › MCP Servers} adds official data servers to your coding agent, starting with the Federal Reserve
+Bank of St.\ Louis's FRED: your agent searches the economic series and reads their notes and values while you talk.
+You sign in once, in the agent; Pollis holds no tokens.
+\end{pbox}
+
+\vspace{2mm}
+\begin{pbox}{Polish a report \status{available}}
+Pollis turns a notebook into a LaTeX report or slides on its own, with no agent. Your coding agent can then
+polish the draft into a finished document, with sections, tables, captions and citations, using the numbers
+Pollis already computed: it writes the words, not the results.
+\end{pbox}
+
+\vspace{2mm}
+\begin{pbox}{Agents in Compose \status{planned}}
+\begin{itemize}[leftmargin=1.7em]
+  \item[\listicon{\faBalanceScale}] \textbf{Correctness:} when Julia, R and Python disagree on a result, an agent looks for the reason.
+  \item[\listicon{\faStopwatch}] \textbf{Horse Races:} an agent speeds up a slow function and shows the timings before and after.
+  \item[\listicon{\faUserFriends}] \textbf{Collaboration:} invite your own agent to a session, from your computer. It joins as a named participant, sees only the chat and what is shared, answers in the chat and can share its own version. You pay its tokens, or nothing with a local model, and it does not count towards the five people. Each participant reads the chat in their own language, translated on their own computer, so nobody pays for the others' translation.
+  \item[\listicon{\faMicrophone}] \textbf{Voice Link:} talk to your own agent from your phone, on the road (page 3).
+  \item[\listicon{\faGraduationCap}] \textbf{Practice:} an AI tutor gives hints and explains; teachers ask their agent for a first draft of new exercises, whose answers Pollis computes in Julia.
+\end{itemize}
+\end{pbox}
+
+\vspace{2mm}
+\begin{nbox}{In one line}
+Pollis works without AI; with AI+, an agent writes the code and published results check it.
+\end{nbox}
+
+\newpage
+% =====================================================================
+% PAGE 3 — VOICE LINK: YOUR AGENT, ON THE ROAD
+% =====================================================================
+\pageheading{Pollis AI+}{Voice Link: your own agent, on the road.}
+  {Think aloud while you drive; your agent works on your computer.}
+
+\begin{pbox}{Voice Link \status{planned}}
+The best ideas often come away from the desk: driving to work, you see how to improve an analysis, or what to
+try next. With Voice Link you just say it. Your phone joins a Pollis session with your own computer, at home or in the
+office, and your coding agent there takes the idea further with Pollis while you keep driving. By the time you
+arrive, the work is done and waiting for you, and you have already heard what it found.
+\end{pbox}
+
+\vspace{4mm}
+\begin{minipage}[t]{0.485\linewidth}\vspace{0pt}
+\begin{pbox}[equal height group=vl1]{How it works}
+\begin{enumerate}[label={\color{amber}\bfseries\arabic*}, leftmargin=5mm, itemsep=3pt, topsep=2pt]
+  \item \textbf{You speak.} Your phone turns your words into text and sends them, enciphered, to your computer.
+  \item \textbf{Your agent works} with Pollis: it opens the panels, runs the workflows and the Julia code it needs.
+  \item \textbf{It writes it down:} a dated note of what it did and found, saved in your Pollis Workspace.
+  \item \textbf{You hear the answer:} a short summary that your phone reads aloud.
+  \item \textbf{You go on talking:} a follow-up, a new idea, or ``leave it for when I arrive''.
+\end{enumerate}
+\end{pbox}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.485\linewidth}\vspace{0pt}
+\begin{pbox}[equal height group=vl1]{Hands-free, eyes on the road}
+\begin{itemize}[leftmargin=1.7em]
+  \item[\listicon{\faMicrophone}] \textbf{Voice in, voice out:} nothing to read and nothing to tap while you drive.
+  \item[\listicon{\faQrcode}] \textbf{Your phone, paired once} with your computer by a QR code, and unpaired whenever you wish.
+  \item[\listicon{\faLock}] \textbf{Enciphered} from your phone to your computer, as in every Pollis session.
+  \item[\listicon{\faShield*}] \textbf{The agent works only through Pollis:} panels, workflows and Julia; it does not run commands on your computer.
+  \item[\listicon{\faHome}] \textbf{With a local model,} your work never leaves your computer and the answers cost nothing.
+\end{itemize}
+\end{pbox}
+\end{minipage}
+
+\vspace{4mm}
+\begin{pbox}{Why your own agent answers better than any chat}
+A chat app on your phone knows nothing about your work: it can only give a general answer. Your agent at home
+sits in the middle of it. In your Pollis Workspace it finds your analyses, the panels and workflows you chose,
+your own menus, and your own panels, workflows and reports, \textbf{structured and linked by you}. So it answers
+about \emph{your} data and \emph{your} question, and it builds on what you have already done instead of starting
+again. And its numbers are not a model's guesses: Pollis computes them in Julia, checked as everywhere else.
+The agent writes the words, not the results.
+\end{pbox}
+
+\vspace{4mm}
+\begin{pbox}{One idea, three places}
+Voice Link is a Collaboration session, so others can join it: you on the road, your agent at home, and a colleague
+at their own computer, following the conversation, sharing code and adding ideas of their own. Their agent can join
+too. Pollis keeps it all in one place, ready for whoever picks it up next.
+\end{pbox}
+
+\vspace{4mm}
+\begin{nbox}{In one line}
+A chat answers anyone; with Voice Link, your own agent answers you, from your own work, with numbers Pollis computed.
+\end{nbox}
+
+\newpage
+% =====================================================================
+% PAGE 3 — NEW METHODS FOR CLASSIC PAPERS, MADE WITH AI
+% =====================================================================
+\pageheading{Pollis AI+}{New methods for classic papers, made with AI.}
+  {Each one tested against the paper it was written for.}
+
+Pollis's workflows replicate classic papers. Where a paper used a method that Julia does not have, Claude Code
+wrote it, and the paper's own tables, or its authors' code, tested it. Each method is a Julia package in the Pollis
+registry, with a vignette that puts every published value beside Julia's: \textbf{Compose › New Methods › Browse Methods}.
+
+\vspace{3mm}
+\newcommand{\methodcard}[5]{%
+  \begin{pbox}[equal height group=#1, fontupper=\small\raggedright]{#2}
+  {\color{soft}#3}\par\smallskip
+  \textbf{Missing in Julia:} #4\par\smallskip
+  \textbf{Result:} #5
+  \end{pbox}}
+\newcommand{\cardcol}{\begin{minipage}[t]{0.320\linewidth}\vspace{0pt}}
+\cardcol
+\methodcard{nm1}{Panel random effects}
+  {Baltagi, \emph{Econometric Analysis of Panel Data}, Tables 2.1--3.7 and 9.4; Grunfeld, gasoline and public capital data.}
+  {the Wallace-Hussain, Amemiya, two-way Swamy-Arora and nested estimators, which R's plm has.}
+  {288 of 298 printed values to every digit. R's plm agrees to 7 significant digits.}
+\end{minipage}\hfill
+\cardcol
+\methodcard{nm1}{Periodic GARCH}
+  {Bollerslev and Ghysels (1996), Table 2; daily exchange-rate returns.}
+  {GARCH with a calendar dummy in the variance, and the periodic model.}
+  {32 of 42 printed values to every digit, most of the rest in the last digit. Plain GARCH agrees with ARCHModels.jl to 12 decimals.}
+\end{minipage}\hfill
+\cardcol
+\methodcard{nm1}{The Cox model with Breslow's ties}
+  {Dickson et al. (1989), Tables 2 and 4; the Mayo Clinic primary biliary cirrhosis data.}
+  {Breslow's rule for tied deaths, and predicted survival curves.}
+  {the initial model and all seven years of predicted survival to every digit; 41 of 53 values in all. With Efron's ties, only 1 to 3 decimals.}
+\end{minipage}
+
+\vspace{3mm}
+\cardcol
+\methodcard{nm2}{Bootstrap and influence for GLMs}
+  {Dalal, Fowlkes and Hoadley (1989); the Challenger O-ring data.}
+  {the parametric bootstrap and delta-beta influence for binomial models.}
+  {every published value, from the coefficients to the interval at 30\,°F: (1.27, 5.95) for ``about (1, 6)''.}
+\end{minipage}\hfill
+\cardcol
+\methodcard{nm2}{Out-of-bag random forests}
+  {Breiman (2001), Table 2 and Section 10; 19 data sets.}
+  {out-of-bag error and permutation importance of inputs.}
+  {34 of 38 forest error rates within simulation noise of the published ones.}
+\end{minipage}\hfill
+\cardcol
+\methodcard{nm2}{Arcing classifiers (arc-fs)}
+  {Breiman (1998), the AdaBoost column; 20 data sets.}
+  {arc-fs, and CART trees pruned by cost complexity.}
+  {18 of 20 test errors within simulation noise of the published ones.}
+\end{minipage}
+
+\vspace{3mm}
+\cardcol
+\methodcard{nm3}{Propensity score matching}
+  {Dehejia and Wahba (1999), Tables 1 and 3, with the replies of Smith and Todd (2005) and Dehejia (2005); LaLonde's NSW data.}
+  {the propensity score methods of R's MatchIt, Matching and cobalt.}
+  {123 of 145 printed values to every digit, the other 22 in the last.}
+\end{minipage}\hfill
+\cardcol
+\methodcard{nm3}{Threshold autoregression}
+  {Tong and Lim (1980), eqs.\ 9.1--9.3 and Figs.\ 8, 10 and 12; the Canadian lynx and sunspot data.}
+  {the SETAR model, its identification by AIC, and its limit cycles.}
+  {68 of 70 printed values to every digit, the other two in the last.}
+\end{minipage}\hfill
+\cardcol
+\methodcard{nm3}{LSTNet}
+  {Lai et al.\ (2018), Table 2, and the authors' PyTorch code; Exchange-Rate data.}
+  {LSTNet-Skip as the authors' code has it.}
+  {with the same weights, the authors' forecasts to $1.8\times10^{-7}$. Exchange-Rate at horizon 3: RSE 0.0256 and CORR 0.9706, against 0.0226 and 0.9735.}
+\end{minipage}
+
+\vspace{4mm}
+\begin{nbox}{Where they disagree, you see it}
+Every vignette says, in \emph{What the tests show} and \emph{Still open}, which values do not agree, by how much, and why if known.
+One table entry looks like a misprint, with R's plm on Julia's side; one standard error is still unexplained.
+The tests can only be as good as the papers, and the gaps are part of the result.
+\end{nbox}
+
+\vfill
+\begin{minipage}[b]{0.70\linewidth}\small\color{soft}
+\textcopyright\ 2026 Antonio Saragga Seabra\enspace·\enspace Licensed under \href{https://creativecommons.org/licenses/by-sa/4.0/}{CC BY-SA 4.0}\enspace·\enspace Draft, \brochuredate
+\end{minipage}\hfill
+\begin{minipage}[b]{0.26\linewidth}\raggedleft\small
+\pollislogo{9mm}\par\vspace{2pt}
+\faEnvelope\ \contactemail
+\end{minipage}
+
+\end{document}

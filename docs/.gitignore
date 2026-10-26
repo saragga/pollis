@@ -1,0 +1,13 @@
+# LaTeX build files, and the documents built (their copies live in src/vs/workbench/browser/media)
+*.aux
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.toc
+*.synctex.gz
+/tour/pollis_tour.pdf
+/guide/pollis_guide.pdf
+/ai-tour/pollis_ai_tour.pdf
+/ai-brochure/pollis_ai_brochure.pdf
+/workflows/workflow_data_packages.pdf
