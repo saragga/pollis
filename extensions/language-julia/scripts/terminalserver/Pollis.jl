@@ -48,4 +48,54 @@ function add(Pkg::Module, to_add, forks)
 	Pkg.add([!(name in forks) && (isempty(link) || registered(name)) ? Pkg.PackageSpec(name = name) : Pkg.PackageSpec(url = link) for (name, link) in to_add])
 end
 
+const REPL_ID = Base.PkgId(Base.UUID("3fa0cd96-eef1-5676-8a61-b3b8758bbffb"), "REPL")
+
+"""
+    Pollis.run_first(example, step)
+
+What a Next Step sends to the Julia REPL when the Code Example of its tab has not run there yet, or
+has changed since: run the Code Example, then the Next Step, which uses its results. Each statement
+runs in `Main` as if typed at the REPL, its value shown unless it ends with `;`. When the Code Example
+stops with an error, the error is shown and the Next Step does not run.
+"""
+function run_first(example::AbstractString, step::AbstractString)
+	printstyled("Running the Code Example first, so that this Next Step can use its results…\n"; color = :cyan)
+	if !run_statements(example, "Code Example")
+		printstyled("The Next Step did not run, since the Code Example stopped with an error.\n"; color = :red)
+		return nothing
+	end
+	printstyled("Running the Next Step…\n"; color = :cyan)
+	run_statements(step, "Next Step")
+	return nothing
+end
+
+"""Runs each statement of `code` in `Main` as the REPL would; shows the first error and returns false at it."""
+function run_statements(code::AbstractString, name::AbstractString)
+	REPL = get(Base.loaded_modules, REPL_ID, nothing)
+	position = 1
+	while position <= ncodeunits(code)
+		statement, next = Meta.parse(code, position; filename = name)
+		text = code[position:prevind(code, next)]
+		# The line the statement starts on, for the errors: after the line breaks before it.
+		line = count('\n', SubString(code, 1, prevind(code, position))) + count('\n', text[1:length(text) - length(lstrip(text))]) + 1
+		position = next
+		statement === nothing && continue
+		try
+			# The REPL's soft scope, so that a loop at top level assigns the globals it names.
+			REPL === nothing || (statement = Base.invokelatest(REPL.softscope, statement))
+			value = Base.invokelatest(Core.eval, Main, Expr(:toplevel, LineNumberNode(line, Symbol(name)), statement))
+			value === nothing || (REPL !== nothing && Base.invokelatest(REPL.ends_with_semicolon, text)) || Base.invokelatest(display, value)
+		catch error
+			# The backtrace up to the statement, without the frames of Pollis that ran it.
+			trace = stacktrace(catch_backtrace())
+			cut = something(findfirst(frame -> frame.func === :run_statements, trace), length(trace) + 1)
+			printstyled(stderr, "ERROR: "; color = :red, bold = true)
+			Base.invokelatest(showerror, stderr, error, trace[1:max(cut - 2, 0)])
+			println(stderr)
+			return false
+		end
+	end
+	return true
+end
+
 end

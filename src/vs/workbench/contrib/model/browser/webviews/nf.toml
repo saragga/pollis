@@ -21,6 +21,10 @@ url = "https://www.youtube.com/playlist?list=PLUAq6xQKFgGr39PiyrPk_C9dhBKvWcjUA"
 name = "Bijectors.jl"
 github = "https://github.com/TuringLang/Bijectors.jl"
 
+[[packages]]
+name = "PollisDatasets.jl"
+github = "https://github.com/Trumpingtons/PollisDatasets.jl"
+
 [requires]
 packages = ["Plots.jl", "Distributions.jl"]
 
@@ -165,7 +169,7 @@ purpose = "Rank-transform each margin, then let the flow fit the copula density"
 [[inputs]]
 id = "xvar"
 label = "Input data"
-tooltip = "D x n data matrix: D variables, n samples (one sample per column)."
+tooltip = "D x n data matrix: D variables, n samples (one sample per column). The default, X, is the Wine data from PollisDatasets: 13 chemical measurements of 161 wines, standardised, with every tenth wine kept aside as X_test and three of those as X_new."
 default = "X"
 
 [[inputs]]
@@ -186,8 +190,8 @@ label = "Copula c(u)"
 [[inputs]]
 id = "input-dim"
 label = "input_dim"
-tooltip = "Dimensionality D of the random vector x. The flow learns the full joint density p(x_1, ..., x_D)."
-default = "8"
+tooltip = "Dimensionality D of the random vector x. The flow learns the full joint density p(x_1, ..., x_D). The default, 13, matches the Wine measurements in the default X."
+default = "13"
 newRow = true
 
 [[inputs]]
@@ -277,7 +281,17 @@ return s;
 model = "realnvp"
 code = '''
 using Flux, Statistics
+{{?xvar=X}} using PollisDatasets
 {{?target=copula}} using Distributions
+
+{{?xvar=X}} w = dataset("wine");  # 178 wines from three cultivars; datasetinfo("wine") describes the columns
+{{?xvar=X}} W = reduce(hcat, collect(values(w))[2:end]);  # 178 x 13: the chemical measurements, cultivar left out
+{{?xvar=X}} held = 10:10:178;  # every tenth wine kept aside as test data
+{{?xvar=X}} W_train = W[setdiff(axes(W, 1), held), :];
+{{?xvar=X}} mu, sd = mean(W_train, dims=1), std(W_train, dims=1);
+{{?xvar=X}} X = permutedims((W_train .- mu) ./ sd);  # 13 x 161, standardised, one wine per column
+{{?xvar=X}} X_test = permutedims((W[held, :] .- mu) ./ sd);  # the 17 held-out wines, on the training scale
+{{?xvar=X}} X_new = X_test[:, 1:3];  # three of them, as new points for Log-Density
 
 input_dim   = {{input-dim}}  # dimensionality of x
 num_flows   = {{num-flows}}  # affine coupling layers
@@ -340,7 +354,17 @@ end
 model = "maf"
 code = '''
 using Flux, Statistics
+{{?xvar=X}} using PollisDatasets
 {{?target=copula}} using Distributions
+
+{{?xvar=X}} w = dataset("wine");  # 178 wines from three cultivars; datasetinfo("wine") describes the columns
+{{?xvar=X}} W = reduce(hcat, collect(values(w))[2:end]);  # 178 x 13: the chemical measurements, cultivar left out
+{{?xvar=X}} held = 10:10:178;  # every tenth wine kept aside as test data
+{{?xvar=X}} W_train = W[setdiff(axes(W, 1), held), :];
+{{?xvar=X}} mu, sd = mean(W_train, dims=1), std(W_train, dims=1);
+{{?xvar=X}} X = permutedims((W_train .- mu) ./ sd);  # 13 x 161, standardised, one wine per column
+{{?xvar=X}} X_test = permutedims((W[held, :] .- mu) ./ sd);  # the 17 held-out wines, on the training scale
+{{?xvar=X}} X_new = X_test[:, 1:3];  # three of them, as new points for Log-Density
 
 input_dim   = {{input-dim}}  # dimensionality of x
 num_flows   = {{num-flows}}  # autoregressive steps
@@ -406,7 +430,17 @@ end
 model = "nsf"
 code = '''
 using Flux, Bijectors, Statistics
+{{?xvar=X}} using PollisDatasets
 {{?target=copula}} using Distributions
+
+{{?xvar=X}} w = dataset("wine");  # 178 wines from three cultivars; datasetinfo("wine") describes the columns
+{{?xvar=X}} W = reduce(hcat, collect(values(w))[2:end]);  # 178 x 13: the chemical measurements, cultivar left out
+{{?xvar=X}} held = 10:10:178;  # every tenth wine kept aside as test data
+{{?xvar=X}} W_train = W[setdiff(axes(W, 1), held), :];
+{{?xvar=X}} mu, sd = mean(W_train, dims=1), std(W_train, dims=1);
+{{?xvar=X}} X = permutedims((W_train .- mu) ./ sd);  # 13 x 161, standardised, one wine per column
+{{?xvar=X}} X_test = permutedims((W[held, :] .- mu) ./ sd);  # the 17 held-out wines, on the training scale
+{{?xvar=X}} X_new = X_test[:, 1:3];  # three of them, as new points for Log-Density
 
 input_dim   = {{input-dim}}  # dimensionality of x
 num_flows   = {{num-flows}}  # spline coupling layers

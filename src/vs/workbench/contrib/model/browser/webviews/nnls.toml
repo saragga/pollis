@@ -28,7 +28,7 @@ description = "Solve an NNLS problem and inspect the solution"
 name = "Algorithm Comparison"
 file = "nnls/tutorial-02-algorithms.ipynb"
 bundled = true
-description = "Compare pivot, FNNLS, ADMM, and block-pivot solvers"
+description = "Compare the pivot, NNLS, FNNLS and block-pivot solvers"
 
 [[notebookSections.notebooks]]
 name = "Applications"
@@ -66,6 +66,15 @@ name = "Decision Guide"
 file = "nnls/decision-guide.md"
 bundled = true
 
+[[wikis]]
+separator = true
+label = "Solvers"
+
+[[wikis]]
+name = "Algorithms"
+file = "nnls/algorithms.md"
+bundled = true
+
 [[references]]
 separator = true
 label = "Original Papers (from packages)"
@@ -84,7 +93,7 @@ text = "Solves the constrained least squares problem: minimise ||Ax − b||² su
 detail = ""
 
 [[bullets]]
-text = "Five solver algorithms: :pivot (Lawson–Hanson, default), :fnnls (fast dense), :admm (large sparse), :blockpivot (batch), :nnls (classic)"
+text = "Four solver algorithms: :pivot (Kim–Park block pivoting, default), :nnls (Lawson–Hanson, classic), :fnnls (Bro–De Jong, fast dense), :pivot with variant :comb (block pivoting for many right-hand sides)"
 detail = ""
 
 [[bullets]]
@@ -98,19 +107,19 @@ detail = ""
 [[inputs]]
 id = "A"
 label = "Matrix A"
-tooltip = "m × n coefficient matrix. Each column is a predictor; each row is an observation."
+tooltip = "m × n coefficient matrix. Each column is a predictor; each row is an observation. The default simulates spectral unmixing: 8 known component spectra over 60 wavelengths, overlapping peaks, so that unconstrained least squares gives negative amounts."
 default = "A"
 
 [[inputs]]
 id = "b"
 label = "Vector b"
-tooltip = "Response vector of length m. Pass a matrix (m × k) to solve k systems simultaneously."
+tooltip = "Response vector of length m. Pass a matrix (m × k) to solve k systems simultaneously. The default is a measured spectrum made of components 2, 5 and 7 of A in amounts 2, 1 and 0.5, plus noise: the solution should recover them."
 default = "b"
 
 [[inputs]]
 id = "alg"
 label = "Algorithm"
-tooltip = "Solver algorithm: :pivot (Lawson–Hanson, default), :fnnls (fast, dense), :admm (large sparse), :blockpivot (batch NMF), :nnls (classic)."
+tooltip = "Solver algorithm: :pivot (block principal pivoting of Kim and Park, default), :nnls (the classic active set of Lawson and Hanson), :fnnls (the fast active set of Bro and De Jong, dense), or :pivot with variant :comb (block pivoting that groups right-hand sides sharing a passive set, for a matrix b as in NMF)."
 kind = "select"
 default = "pivot"
 
@@ -127,24 +136,27 @@ value = "fnnls"
 label = ":fnnls"
 
 [[inputs.options]]
-value = "admm"
-label = ":admm"
-
-[[inputs.options]]
-value = "blockpivot"
-label = ":blockpivot"
+value = "pivot, variant = :comb"
+label = ":pivot, variant :comb"
 
 [[codeBranches]]
 model = "main"
 code = '''
 using NonNegLeastSquares
 using LinearAlgebra: norm
+{{?A=A}} {{?b=b}} using Random
+
+{{?A=A}} A = [exp(-((w - c) / 6)^2) for w in 1:60, c in 5:7:54]  # simulated unmixing: 8 known component spectra over 60 wavelengths, each a peak centred at c (60 x 8)
+{{?A=A}} {{?b=b}} Random.seed!(1)
+{{?A=A}} {{?b=b}} x_true = [0, 2.0, 0, 0, 1.0, 0, 0.5, 0]  # the true mixture: components 2, 5 and 7
+{{?A=A}} {{?b=b}} b = A * x_true .+ 0.02 .* randn(60)  # the measured spectrum, with noise. Replace A and b with your own.
 
 x = nonneg_lsq({{A}}, {{b}}; alg = :{{alg}})  # minimise ||A*x - b||^2 subject to x >= 0
 
 println("Solution x:  ", x)  # non-negative solution vector
 println("Residual:    ", norm({{A}} * x - {{b}}))  # Euclidean residual norm
 println("Nonzeros:    ", sum(x .> 0))  # number of strictly positive components
+{{?A=A}} {{?b=b}} println("True x:      ", x_true)  # the mixture the spectrum was made from
 '''
 
 [[actionGroups]]

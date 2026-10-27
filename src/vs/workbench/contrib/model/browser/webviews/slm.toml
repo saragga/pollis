@@ -16,6 +16,10 @@ github = "https://github.com/JuliaText/TextAnalysis.jl"
 name = "Languages.jl"
 github = "https://github.com/JuliaText/Languages.jl"
 
+[[packages]]
+name = "PollisDatasets.jl"
+github = "https://github.com/Trumpingtons/PollisDatasets.jl"
+
 [requires]
 packages = ["TextAnalysis.jl", "Languages.jl"]
 
@@ -146,7 +150,7 @@ detail = "probability of each word given the two preceding words; P(w | w−₁,
 [[inputs]]
 id = "corpus"
 label = "Corpus"
-tooltip = "Array of text documents to train on, e.g. docs = [\"first text\", \"second text\"]"
+tooltip = "Array of text documents to train on, e.g. docs = [\"first text\", \"second text\"]. The default, corpus, is The Pollis Guide from PollisDatasets, one document per section, every tenth section held out as test_tokens; its example also defines new_sentence and context for the Predict actions."
 default = "corpus"
 
 [[inputs]]
@@ -159,6 +163,14 @@ default = "1"
 model = "unigram"
 code = '''
 using TextAnalysis, Languages
+{{?corpus=corpus}} using PollisDatasets
+
+{{?corpus=corpus}} guide  = dataset("pollis_guide").text;  # The Pollis Guide, one document per section; datasetinfo("pollis_guide") describes it
+{{?corpus=corpus}} corpus = guide[setdiff(1:end, 10:10:end)];  # trained on 117 sections. Replace it with your own vector of strings.
+{{?corpus=corpus}} held   = Corpus([StringDocument(d) for d in guide[10:10:end]]); prepare!(held, strip_punctuation | strip_case)
+{{?corpus=corpus}} test_tokens  = vcat([tokens(d) for d in held]...);  # every tenth section held out, for Perplexity, OOV Rate and Compare Smoothing
+{{?corpus=corpus}} new_sentence = ["open", "the", "panel", "and", "run", "the", "code"];  # for Sentence Probability
+{{?corpus=corpus}} context      = "the";  # the word Next Word Prediction continues
 
 crps = Corpus([StringDocument(d) for d in {{corpus}}])  # build corpus from documents
 prepare!(crps, strip_punctuation | strip_case)  # normalise text
@@ -174,6 +186,14 @@ prob(w)  = (get(unigrams, w, 0) + {{k}}) / (N + {{k}} * V)  # Add-k smoothing
 model = "bigram"
 code = '''
 using TextAnalysis, Languages
+{{?corpus=corpus}} using PollisDatasets
+
+{{?corpus=corpus}} guide  = dataset("pollis_guide").text;  # The Pollis Guide, one document per section; datasetinfo("pollis_guide") describes it
+{{?corpus=corpus}} corpus = guide[setdiff(1:end, 10:10:end)];  # trained on 117 sections. Replace it with your own vector of strings.
+{{?corpus=corpus}} held   = Corpus([StringDocument(d) for d in guide[10:10:end]]); prepare!(held, strip_punctuation | strip_case)
+{{?corpus=corpus}} test_tokens  = vcat([tokens(d) for d in held]...);  # every tenth section held out, for Perplexity, OOV Rate and Compare Smoothing
+{{?corpus=corpus}} new_sentence = ["open", "the", "panel", "and", "run", "the", "code"];  # for Sentence Probability
+{{?corpus=corpus}} context      = "the";  # the word Next Word Prediction continues
 
 crps    = Corpus([StringDocument(d) for d in {{corpus}}])  # build corpus from documents
 prepare!(crps, strip_punctuation | strip_case)  # normalise text
@@ -188,6 +208,14 @@ V        = length(unigrams)  # vocabulary size
 model = "trigram"
 code = '''
 using TextAnalysis, Languages
+{{?corpus=corpus}} using PollisDatasets
+
+{{?corpus=corpus}} guide  = dataset("pollis_guide").text;  # The Pollis Guide, one document per section; datasetinfo("pollis_guide") describes it
+{{?corpus=corpus}} corpus = guide[setdiff(1:end, 10:10:end)];  # trained on 117 sections. Replace it with your own vector of strings.
+{{?corpus=corpus}} held   = Corpus([StringDocument(d) for d in guide[10:10:end]]); prepare!(held, strip_punctuation | strip_case)
+{{?corpus=corpus}} test_tokens  = vcat([tokens(d) for d in held]...);  # every tenth section held out, for Perplexity, OOV Rate and Compare Smoothing
+{{?corpus=corpus}} new_sentence = ["open", "the", "panel", "and", "run", "the", "code"];  # for Sentence Probability
+{{?corpus=corpus}} context      = "the";  # the word Next Word Prediction continues
 
 crps     = Corpus([StringDocument(d) for d in {{corpus}}])  # build corpus from documents
 prepare!(crps, strip_punctuation | strip_case)  # normalise text
@@ -324,16 +352,17 @@ id = "compare-smoothing"
 label = "Compare Smoothing"
 desc = "MLE vs Laplace vs Add-k perplexity"
 code = '''
-using TextAnalysis, Languages
+using TextAnalysis, Languages, Statistics
 
 crps     = Corpus([StringDocument(d) for d in {{corpus}}])  # training corpus
 prepare!(crps, strip_punctuation | strip_case)  # normalise
 toks     = vcat([tokens(d) for d in crps]...)  # training tokens
 unigrams = ngrams(NGramDocument(join(toks, " "), 1))  # unigram counts
 N = sum(values(unigrams)); V = length(unigrams)  # size and vocabulary
-pp_mle    = perplexity(unigrams, test_tokens, 0, N, V)  # MLE perplexity (k=0)
-pp_laplace = perplexity(unigrams, test_tokens, 1, N, V)  # Laplace perplexity (k=1)
-pp_addk   = perplexity(unigrams, test_tokens, {{k}}, N, V)  # Add-k perplexity
+addk_perplexity(k) = 2^(-mean(log2((get(unigrams, w, 0) + k) / (N + k * V)) for w in test_tokens))  # test-set perplexity under add-k smoothing
+pp_mle     = addk_perplexity(0)  # MLE perplexity (k=0): infinite once a test word is unseen in training
+pp_laplace = addk_perplexity(1)  # Laplace perplexity (k=1)
+pp_addk    = addk_perplexity({{k}})  # Add-k perplexity
 '''
 
 [[actionGroups]]

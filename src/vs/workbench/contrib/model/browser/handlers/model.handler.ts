@@ -218,6 +218,42 @@ export async function sendToJuliaRepl(code: string, commandService: ICommandServ
 	return true;
 }
 
+/** The Code Examples the Julia REPL has run, in its current session (`language-julia.replSession`, new at each restart). */
+let replExamples = { session: 0, codes: new Set<string>() };
+
+/**
+ * The code to send for a `runCode` message. A Next Step sends the Code Example of its tab as `setup`,
+ * since it uses its results: a new file, notebook or Pluto notebook, which starts empty, gets the
+ * example and then the step; the Julia REPL gets a `Pollis.run_first` call (Pollis.jl), which runs the
+ * example, then the step, and stops if the example fails, unless this REPL session has run the example
+ * as it is now. The webview is told when the example goes first, to say so. A message without `setup`
+ * is a Code Example itself, recorded when it goes to the REPL.
+ */
+export async function withExampleFirst(msg: { code: string; setup?: string; target: string }, webview: { postMessage(message: unknown): void }, commandService: ICommandService): Promise<string> {
+	if (msg.target !== 'juliaRepl') {
+		if (!msg.setup) { return msg.code; }
+		webview.postMessage({ command: 'exampleFirst', target: msg.target });
+		return `${msg.setup}\n\n${msg.code}`;
+	}
+	// Started now, so that the session is the one the code goes to (a restart is a new session).
+	if (!await commandService.executeCommand<boolean>('language-julia.startREPL')) { return msg.code; }
+	const session = await commandService.executeCommand<number>('language-julia.replSession') ?? 0;
+	if (replExamples.session !== session) { replExamples = { session, codes: new Set() }; }
+	if (!msg.setup) {
+		replExamples.codes.add(msg.code);
+		return msg.code;
+	}
+	if (replExamples.codes.has(msg.setup)) { return msg.code; }
+	replExamples.codes.add(msg.setup);
+	webview.postMessage({ command: 'exampleFirst', target: msg.target });
+	return `Pollis.run_first(${juliaRawString(msg.setup)}, ${juliaRawString(msg.code)})`;
+}
+
+/** `text` as a Julia `raw"..."` literal: each quote escaped, and the backslashes before it or at the end doubled. */
+function juliaRawString(text: string): string {
+	return 'raw"' + text.replace(/(?<slashes>\\*)"/g, '$<slashes>$<slashes>\\"').replace(/(?<slashes>\\+)$/, '$<slashes>$<slashes>') + '"';
+}
+
 /**
  * The `Pollis.packages(...)` call (Pollis.jl, defined in every Pollis REPL and notebook kernel) that
  * installs whichever of the packages the running Julia cannot load, and does nothing when all are

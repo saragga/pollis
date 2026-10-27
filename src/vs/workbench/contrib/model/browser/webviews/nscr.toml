@@ -74,6 +74,30 @@ name = "Decision Guide"
 file = "nscr/decision-guide.md"
 bundled = true
 
+[[wikis]]
+separator = true
+label = "Methods"
+
+[[wikis]]
+name = "Net Survival Estimators"
+file = "nscr/estimators.md"
+bundled = true
+
+[[wikis]]
+name = "Crude Mortality"
+file = "nscr/crude-mortality.md"
+bundled = true
+
+[[wikis]]
+name = "Graffeo's Test"
+file = "nscr/graffeo-test.md"
+bundled = true
+
+[[wikis]]
+name = "Rate Tables"
+file = "nscr/rate-tables.md"
+bundled = true
+
 [[models]]
 id = "cif"
 label = "Crude Mortality"
@@ -157,8 +181,9 @@ models = ["lr"]
 model = "cif"
 code = '''
 using NetSurvival, RateTables, Tables
+pkgversion(NetSurvival) < v"0.1.2" && error("This panel needs NetSurvival 0.1.2 or later, and $(pkgversion(NetSurvival)) is installed: run ] up NetSurvival, then restart Julia")
 
-tbl  = Tables.columntable({{data}})  # any Tables.jl source, read as named vectors
+tbl  =Tables.columntable({{data}})  # any Tables.jl source, read as named vectors
 rt   = {{expected}}  # population mortality rate table
 T    = Float64.(tbl.{{time}})  # follow-up time, days
 D    = Bool.(tbl.{{event}})  # true = death observed, false = censored
@@ -183,8 +208,9 @@ Mo, Me, Mp = cm.Mₒ, cm.Mₑ, cm.Mₚ  # all causes, disease, other causes
 model = "ns"
 code = '''
 using NetSurvival, RateTables, Tables
+pkgversion(NetSurvival) < v"0.1.2" && error("This panel needs NetSurvival 0.1.2 or later, and $(pkgversion(NetSurvival)) is installed: run ] up NetSurvival, then restart Julia")
 
-tbl  = Tables.columntable({{data}})  # any Tables.jl source, read as named vectors
+tbl  =Tables.columntable({{data}})  # any Tables.jl source, read as named vectors
 rt   = {{expected}}  # population mortality rate table
 T    = Float64.(tbl.{{time}})  # follow-up time, days
 D    = Bool.(tbl.{{event}})  # true = death observed, false = censored
@@ -208,8 +234,9 @@ ci = confint(est; level=0.05)  # 95% pointwise intervals
 model = "lr"
 code = '''
 using NetSurvival, RateTables, Tables
+pkgversion(NetSurvival) < v"0.1.2" && error("This panel needs NetSurvival 0.1.2 or later, and $(pkgversion(NetSurvival)) is installed: run ] up NetSurvival, then restart Julia")
 
-tbl  = Tables.columntable({{data}})  # any Tables.jl source, read as named vectors
+tbl  =Tables.columntable({{data}})  # any Tables.jl source, read as named vectors
 rt   = {{expected}}  # population mortality rate table
 T    = Float64.(tbl.{{time}})  # follow-up time, days
 D    = Bool.(tbl.{{event}})  # true = death observed, false = censored

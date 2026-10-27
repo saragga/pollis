@@ -25,7 +25,7 @@ import { generateTokensCSSForColorMap } from '../../../../../editor/common/langu
 import { IFileService } from '../../../../../platform/files/common/files.js';
 import { IPathService } from '../../../../services/path/common/pathService.js';
 import { IWorkspaceContextService } from '../../../../../platform/workspace/common/workspace.js';
-import { openWikiByFile, openNotebookByFile, openInBrowser, autoSelectJuliaKernel, createPackageStatusWiring, createExampleCodeWiring, createCustomCopyWiring, createReferenceWiring, createVideoWiring, sendToJuliaRepl } from './model.handler.js';
+import { openWikiByFile, openNotebookByFile, openInBrowser, autoSelectJuliaKernel, createPackageStatusWiring, createExampleCodeWiring, createCustomCopyWiring, createReferenceWiring, createVideoWiring, sendToJuliaRepl, withExampleFirst } from './model.handler.js';
 import { hasKey } from '../../../../../base/common/types.js';
 
 export function registerCvizWebviewHandlers(
@@ -109,7 +109,7 @@ export function registerCvizWebviewHandlers(
 				await openWikiByFile(msg.target, cvizData.wikis, openerService, editorService, commandService);
 				break;
 			case 'runCode': {
-				const code = pkgStatus.withPackageCheck(msg.code, msg.target);
+				const code = pkgStatus.withPackageCheck(await withExampleFirst(msg, webviewInput.webview, commandService), msg.target);
 				if (msg.target === 'newFile') {
 					const input: IUntitledTextResourceEditorInput = {
 						resource: undefined,

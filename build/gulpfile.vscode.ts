@@ -33,6 +33,7 @@ import { compileNonNativeExtensionsBuildTask, compileNativeExtensionsBuildTask, 
 import { copyCodiconsTask } from './lib/compilation.ts';
 import { getCopilotExcludeFilter, copyCopilotNativeDeps } from './lib/copilot.ts';
 import { lanceStream, thinDuckDB } from './pollis/duckdb.ts';
+import { llamaCppStream } from './pollis/llamacpp.ts';
 import type { EmbeddedProductInfo } from './lib/embeddedType.ts';
 import { useEsbuildTranspile } from './buildConfig.ts';
 import { promisify } from 'util';
@@ -118,7 +119,7 @@ const vscodeResourceIncludes = [
 	// Compose workflows (with their LaTeX templates), new methods and published benchmarks (notebook + step functions), the reports script and instructions, and the Practice exercises and their script
 	'out-build/vs/workbench/contrib/compose/browser/media/workflows/**/*.{ipynb,jl,tex,bib}',
 	'out-build/vs/workbench/contrib/compose/browser/media/content.toml',
-	'out-build/vs/workbench/contrib/compose/browser/media/methods/**/*.{ipynb,jl,toml,csv,md,tex,pdf}',
+	'out-build/vs/workbench/contrib/compose/browser/media/methods/**/*.{ipynb,jl,toml,csv,md,tex,bib,png,jpg}',
 	'out-build/vs/workbench/contrib/compose/browser/media/correctness/**/*.{ipynb,jl,dat}',
 	'out-build/vs/workbench/contrib/compose/browser/media/reports/*.{md,jl}',
 	'out-build/vs/workbench/contrib/compose/browser/media/practice/**/*.{toml,jl}',
@@ -502,7 +503,8 @@ function packageTask(platform: string, arch: string, sourceFolderName: string, d
 			documents,
 			sources,
 			deps,
-			lanceStream(platform, arch)
+			lanceStream(platform, arch),
+			llamaCppStream(platform, arch)
 		];
 		if (packageSubJsonStream) {
 			mergeStreams.push(packageSubJsonStream);
@@ -873,3 +875,6 @@ gulp.task('vscode-translations-import', function () {
 
 // Pollis: the Lance extension of DuckDB for a development build, in .build/duckdb/ (build/pollis/duckdb.ts)
 gulp.task(task.define('fetch-duckdb-lance', () => lanceStream(process.platform, process.arch).pipe(vfs.dest('.build'))));
+
+// Pollis: llama-server for a development build, in .build/llama.cpp/ (build/pollis/llamacpp.ts)
+gulp.task(task.define('fetch-llama-cpp', () => llamaCppStream(process.platform, process.arch).pipe(vfs.dest('.build'))));

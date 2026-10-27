@@ -219,29 +219,29 @@ purpose = "Jump-robust integrated variance and jump testing"
 [[inputs]]
 id = "open"
 label = "Open"
-tooltip = "Julia vector of daily opening prices."
-default = "open"
+tooltip = "Julia vector of daily opening prices. The example uses the S&P 500 since 20 January 2025 from PollisDatasets."
+default = "opens"
 models = ["gk", "rs", "yz"]
 
 [[inputs]]
 id = "high"
 label = "High"
 tooltip = "Julia vector of daily high prices."
-default = "high"
+default = "highs"
 models = ["park", "gk", "rs", "yz"]
 
 [[inputs]]
 id = "low"
 label = "Low"
 tooltip = "Julia vector of daily low prices."
-default = "low"
+default = "lows"
 models = ["park", "gk", "rs", "yz"]
 
 [[inputs]]
 id = "close"
 label = "Close"
 tooltip = "Julia vector of daily closing prices."
-default = "close"
+default = "closes"
 models = ["gk", "rs", "yz"]
 
 [[inputs]]
@@ -254,7 +254,7 @@ models = ["yz"]
 [[inputs]]
 id = "price"
 label = "Price"
-tooltip = "Julia vector of intraday prices on a regular high-frequency grid (e.g. 1- or 5-minute bars for one trading day)."
+tooltip = "Julia vector of intraday prices on a regular high-frequency grid (e.g. 1- or 5-minute bars for one trading day). The example simulates one day of 1-minute prices with a true daily volatility of 1%, microstructure noise and a 1% jump."
 default = "price"
 models = ["rv", "tsv", "bpv"]
 
@@ -354,6 +354,11 @@ return s;
 [[codeBranches]]
 model = "park"
 code = '''
+{{?high=highs}} using PollisDatasets, Dates
+{{?high=highs}} spx = dataset("sp500"); days = spx.date .>= Date(2025, 1, 20)  # S&P 500 daily bars since 20 January 2025, the tariff shock of April 2025 included
+{{?high=highs}} highs = spx.high[days]  # Replace highs with your own daily high prices.
+{{?high=highs}} {{?low=lows}} lows = spx.low[days]  # Replace lows with your own daily low prices.
+
 function parkinson_volatility(high, low)
     n = length(high)
     log_hl = log.(high ./ low)
@@ -366,6 +371,13 @@ sigma = parkinson_volatility({{high}}, {{low}})  # daily volatility
 [[codeBranches]]
 model = "gk"
 code = '''
+{{?open=opens}} using PollisDatasets, Dates
+{{?open=opens}} spx = dataset("sp500"); days = spx.date .>= Date(2025, 1, 20)  # S&P 500 daily bars since 20 January 2025, the tariff shock of April 2025 included
+{{?open=opens}} opens = spx.open[days]  # Replace opens with your own daily open prices.
+{{?open=opens}} {{?high=highs}} highs = spx.high[days]  # Replace highs with your own daily high prices.
+{{?open=opens}} {{?low=lows}} lows = spx.low[days]  # Replace lows with your own daily low prices.
+{{?open=opens}} {{?close=closes}} closes = spx.close[days]  # Replace closes with your own daily close prices.
+
 function garman_klass_volatility(open, high, low, close)
     n = length(open)
     log_hl = log.(high ./ low)
@@ -380,6 +392,13 @@ sigma = garman_klass_volatility({{open}}, {{high}}, {{low}}, {{close}})  # daily
 [[codeBranches]]
 model = "rs"
 code = '''
+{{?open=opens}} using PollisDatasets, Dates
+{{?open=opens}} spx = dataset("sp500"); days = spx.date .>= Date(2025, 1, 20)  # S&P 500 daily bars since 20 January 2025, the tariff shock of April 2025 included
+{{?open=opens}} opens = spx.open[days]  # Replace opens with your own daily open prices.
+{{?open=opens}} {{?high=highs}} highs = spx.high[days]  # Replace highs with your own daily high prices.
+{{?open=opens}} {{?low=lows}} lows = spx.low[days]  # Replace lows with your own daily low prices.
+{{?open=opens}} {{?close=closes}} closes = spx.close[days]  # Replace closes with your own daily close prices.
+
 function rogers_satchell_volatility(open, high, low, close)
     n = length(open)
     log_hc = log.(high ./ close)
@@ -397,6 +416,12 @@ sigma = rogers_satchell_volatility({{open}}, {{high}}, {{low}}, {{close}})  # da
 model = "yz"
 code = '''
 using Statistics
+{{?open=opens}} using PollisDatasets, Dates
+{{?open=opens}} spx = dataset("sp500"); days = spx.date .>= Date(2025, 1, 20)  # S&P 500 daily bars since 20 January 2025, the tariff shock of April 2025 included
+{{?open=opens}} opens = spx.open[days]  # Replace opens with your own daily open prices.
+{{?open=opens}} {{?high=highs}} highs = spx.high[days]  # Replace highs with your own daily high prices.
+{{?open=opens}} {{?low=lows}} lows = spx.low[days]  # Replace lows with your own daily low prices.
+{{?open=opens}} {{?close=closes}} closes = spx.close[days]  # Replace closes with your own daily close prices.
 
 function yang_zhang_volatility(open, high, low, close; k = nothing)
     # Align all series after the overnight lag shift
@@ -431,6 +456,12 @@ sigma = yang_zhang_volatility({{open}}, {{high}}, {{low}}, {{close}}; k = {{k}})
 [[codeBranches]]
 model = "rv"
 code = '''
+{{?price=price}} using Random
+{{?price=price}} rng = Xoshiro(7); minutes = 390  # one trading day of 1-minute bars, simulated
+{{?price=price}} logp = log(100) .+ cumsum(0.01 / sqrt(minutes) .* randn(rng, minutes))  # efficient log price, true daily volatility 1%
+{{?price=price}} logp[240:end] .-= 0.01  # a 1% drop at minute 240: a jump
+{{?price=price}} price = exp.(logp .+ 0.0002 .* randn(rng, minutes))  # observed with 2-basis-point microstructure noise. Replace price with your own intraday prices.
+
 function realized_volatility(price)
     log_r = diff(log.(price))
     return sqrt(sum(log_r.^2))
@@ -442,6 +473,12 @@ sigma = realized_volatility({{price}})  # daily realized volatility
 [[codeBranches]]
 model = "tsv"
 code = '''
+{{?price=price}} using Random
+{{?price=price}} rng = Xoshiro(7); minutes = 390  # one trading day of 1-minute bars, simulated
+{{?price=price}} logp = log(100) .+ cumsum(0.01 / sqrt(minutes) .* randn(rng, minutes))  # efficient log price, true daily volatility 1%
+{{?price=price}} logp[240:end] .-= 0.01  # a 1% drop at minute 240: a jump
+{{?price=price}} price = exp.(logp .+ 0.0002 .* randn(rng, minutes))  # observed with 2-basis-point microstructure noise. Replace price with your own intraday prices.
+
 function two_scales_volatility(price; K=5)
     log_r = diff(log.(price))
     n = length(log_r)  # number of returns (not prices)
@@ -470,6 +507,12 @@ sigma = two_scales_volatility({{price}}; K = {{nsub}})  # noise-corrected daily 
 [[codeBranches]]
 model = "bpv"
 code = '''
+{{?price=price}} using Random
+{{?price=price}} rng = Xoshiro(7); minutes = 390  # one trading day of 1-minute bars, simulated
+{{?price=price}} logp = log(100) .+ cumsum(0.01 / sqrt(minutes) .* randn(rng, minutes))  # efficient log price, true daily volatility 1%
+{{?price=price}} logp[240:end] .-= 0.01  # a 1% drop at minute 240: a jump
+{{?price=price}} price = exp.(logp .+ 0.0002 .* randn(rng, minutes))  # observed with 2-basis-point microstructure noise. Replace price with your own intraday prices.
+
 r   = diff(log.({{price}}))
 
 BPV = (pi / 2) * sum(abs.(r[2:end]) .* abs.(r[1:end-1]))  # pi/2 = 1/mu1^2 makes it estimate the integrated variance

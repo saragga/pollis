@@ -108,7 +108,7 @@ detail = ""
 id = "data"
 models = ["fit"]
 label = "Block maxima series"
-tooltip = "Vector of block maxima (e.g., annual maxima of daily losses), defined before running, e.g. maxima = [maximum(b) for b in blocks]. The GEV is fitted to this series; with few blocks (under about 50) the shape xi is poorly determined."
+tooltip = "Vector of block maxima (e.g., annual maxima of daily losses), e.g. maxima = [maximum(b) for b in blocks]. The GEV is fitted to this series; with few blocks (under about 50) the shape xi is poorly determined. The default is the annual maximum sea levels at Port Pirie, South Australia, 1923-1987 (65 years, in metres), the first example of Coles (2001), shipped with Extremes.jl: its shape xi is close to 0 (Gumbel)."
 default = "maxima"
 
 [[inputs]]
@@ -177,6 +177,7 @@ default = "500"
 model = "fit"
 code = '''
 using Extremes, Distributions, Statistics
+{{?data=maxima}} maxima = Extremes.dataset("portpirie").SeaLevel  # annual maximum sea levels (m) at Port Pirie, 1923-1987 (Coles 2001). Replace maxima with your own block maxima.
 y = {{data}}  # block maxima, e.g. annual maxima of daily losses
 {{?method=mle}} fm = gevfit(y)  # maximum likelihood
 {{?method=pwm}} fm = gevfitpwm(y)  # probability-weighted moments
@@ -219,6 +220,7 @@ label = "Diagnose"
 
 [[actionGroups.actions]]
 id = "fit_diagnostics"
+models = ["fit"]
 label = "Fit Diagnostics"
 desc = "PP plot and QQ plot of the maximum likelihood GEV fit: points on the red line mean a good fit"
 code = '''
@@ -237,6 +239,7 @@ plot(p1, p2; layout = (1,2), size = (800, 400))
 
 [[actionGroups.actions]]
 id = "return_level_plot"
+models = ["fit"]
 label = "Return Level Plot"
 desc = "Fitted return levels with 95% delta-method intervals against the return period (log scale), with the data at their empirical return periods"
 code = '''
@@ -258,6 +261,7 @@ label = "Interpret"
 
 [[actionGroups.actions]]
 id = "tail_behaviour"
+models = ["fit"]
 label = "Tail Behaviour"
 desc = "Classify the tail from the 95% interval for the shape xi (heavy, bounded, or not distinguishable from Gumbel), and the chance that a block maximum exceeds the largest one observed"
 code = '''

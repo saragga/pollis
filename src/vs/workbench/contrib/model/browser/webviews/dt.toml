@@ -16,6 +16,10 @@ github = "https://github.com/bensadeghi/DecisionTree.jl"
 name = "ModalDecisionTrees.jl"
 github = "https://github.com/aclai-lab/ModalDecisionTrees.jl"
 
+[[packages]]
+name = "PollisDatasets.jl"
+github = "https://github.com/Trumpingtons/PollisDatasets.jl"
+
 [requires]
 packages = ["Plots.jl", "CounterfactualExplanations.jl", "MLJ.jl"]
 
@@ -109,7 +113,7 @@ label = "Regression"
 [[inputs]]
 id = "xvar"
 label = "Train Feature Matrix"
-tooltip = "n_samples x n_features feature matrix used for training"
+tooltip = "n_samples x n_features feature matrix used for training. The default, X_train, is the Wine data from PollisDatasets: 161 wines, with every tenth wine kept aside as X_test. Classification predicts the cultivar from the 13 chemical measurements; regression predicts the alcohol content from the other 12."
 default = "X_train"
 
 [[inputs]]
@@ -177,6 +181,14 @@ return s;
 model = "dt"
 code = '''
 using DecisionTree
+{{?xvar=X_train}} using PollisDatasets
+
+{{?xvar=X_train}} w = dataset("wine");  # 178 wines from three cultivars; datasetinfo("wine") describes the columns
+{{?xvar=X_train}} held  = 10:10:178;  # every tenth wine kept aside as test data
+{{?xvar=X_train}} train = setdiff(1:178, held);
+{{?xvar=X_train}} target = "{{task}}" == "classification" ? :cultivar : :alcohol;  # classification: the cultivar; regression: the alcohol content
+{{?xvar=X_train}} W = reduce(hcat, [w[c] for c in keys(w) if c != :cultivar && c != target]);  # the other chemical measurements
+{{?xvar=X_train}} X_train, y_train, X_test, y_test = W[train, :], w[target][train], W[held, :], w[target][held];
 
 {{?task=classification}} model = DecisionTreeClassifier(max_depth={{maxdepth}}, min_samples_leaf={{minleaf}})  # CART classifier
 {{?task=regression}} model = DecisionTreeRegressor(max_depth={{maxdepth}}, min_samples_leaf={{minleaf}})  # CART regressor
@@ -191,6 +203,16 @@ y_hat_test  = predict(model, {{xtest}})  # test predictions
 model = "modal"
 code = '''
 using MLJ, ModalDecisionTrees
+{{?xvar=X_train}} using PollisDatasets
+
+{{?xvar=X_train}} w = dataset("wine");  # 178 wines from three cultivars; datasetinfo("wine") describes the columns
+{{?xvar=X_train}} held  = 10:10:178;  # every tenth wine kept aside as test data
+{{?xvar=X_train}} train = setdiff(1:178, held);
+{{?xvar=X_train}} cols = collect(keys(w))[2:end];  # the 13 chemical measurements
+{{?xvar=X_train}} W = reduce(hcat, [w[c] for c in cols]);
+{{?xvar=X_train}} X_train, X_test = MLJ.table(W[train, :]; names=cols), MLJ.table(W[held, :]; names=cols);
+{{?xvar=X_train}} cultivar = coerce(string.(w.cultivar), Multiclass);  # the cultivar of each wine, as text: ModalDecisionTrees predicts string labels
+{{?xvar=X_train}} y_train, y_test = cultivar[train], cultivar[held];
 
 # X: a table with one row per instance; a column may hold a whole series per instance (a Vector), which the modal splits reason over
 y     = coerce({{yvar}}, Multiclass)  # class labels
@@ -242,7 +264,7 @@ id = "confusion"
 label = "Confusion Matrix"
 desc = "Cross-tabulate predicted against true classes on the test set"
 code = '''
-{{?model=dt}} cm = confusion_matrix(y_test, y_hat_test)  # y_test: held-out labels
+{{?model=dt}} cm = DecisionTree.confusion_matrix(y_test, y_hat_test)  # y_test: held-out labels
 {{?model=dt}} cm.accuracy, cm.kappa
 {{?model=modal}} cm = MLJ.confusion_matrix(y_hat_test, coerce(y_test, Multiclass))  # y_test: held-out labels
 {{?model=modal}} cm, accuracy(y_hat_test, coerce(y_test, Multiclass))
@@ -269,8 +291,9 @@ id = "proba"
 label = "Class Probabilities"
 desc = "Leaf class frequencies for each test sample instead of a hard label"
 code = '''
-{{?model=dt}} P = predict_proba(model, {{xtest}})  # one row per sample, one column per class
+{{?model=dt}} {{?task=classification}} P = predict_proba(model, {{xtest}})  # one row per sample, one column per class
 {{?model=modal}} P = pdf(predict(mach, {{xtest}}), levels(y))  # one row per sample, one column per class
+{{?model=dt}} {{?task=regression}} # A regression tree has no class probabilities: its leaves hold mean values
 '''
 
 [[actionGroups]]
@@ -315,15 +338,16 @@ id = "counterfactual"
 label = "Counterfactual Explanations"
 desc = "Find minimal feature changes that flip the prediction: algorithmic recourse (CounterfactualExplanations.jl, Feature Tweak generator for trees)"
 code = '''
-{{?model=dt}} using CounterfactualExplanations, DecisionTree  # loading DecisionTree activates the tree extension
-{{?model=dt}} using CounterfactualExplanations.Models: fit_model, predict_label
+{{?model=dt}} {{?task=classification}} using CounterfactualExplanations, DecisionTree  # loading DecisionTree activates the tree extension
+{{?model=dt}} {{?task=classification}} using CounterfactualExplanations.Models: fit_model, predict_label
 
-{{?model=dt}} data = CounterfactualData(Float32.(transpose({{xvar}})), {{yvar}})  # CounterfactualExplanations wants features x samples
-{{?model=dt}} M = fit_model(data, :DecisionTree; max_depth={{maxdepth}}, min_samples_leaf={{minleaf}})  # the same tree, fitted through the package
-{{?model=dt}} x = Float32.(transpose({{xtest}}[1:1, :]))  # sample to explain, as a column
-{{?model=dt}} factual = predict_label(M, data, x)[1]
-{{?model=dt}} target = first(filter(!=(factual), data.y_levels))  # any other class
-{{?model=dt}} ce = generate_counterfactual(x, target, data, M, FeatureTweakGenerator())  # a tree is not differentiable: Feature Tweak searches its split thresholds instead of gradients
-{{?model=dt}} counterfactual(ce)  # minimally altered input that flips the prediction
+{{?model=dt}} {{?task=classification}} data = CounterfactualData(Float32.(transpose({{xvar}})), {{yvar}})  # CounterfactualExplanations wants features x samples
+{{?model=dt}} {{?task=classification}} M = fit_model(data, :DecisionTreeModel; max_depth={{maxdepth}}, min_samples_leaf={{minleaf}})  # the same tree, fitted through the package
+{{?model=dt}} {{?task=classification}} x = Float32.(transpose({{xtest}}[1:1, :]))  # sample to explain, as a column
+{{?model=dt}} {{?task=classification}} factual = predict_label(M, data, x)[1]
+{{?model=dt}} {{?task=classification}} target = first(filter(!=(factual), data.y_levels))  # any other class
+{{?model=dt}} {{?task=classification}} ce = generate_counterfactual(x, target, data, M, FeatureTweakGenerator())  # a tree is not differentiable: Feature Tweak searches its split thresholds instead of gradients
+{{?model=dt}} {{?task=classification}} CounterfactualExplanations.counterfactual(ce)  # minimally altered input that flips the prediction
 {{?model=modal}} # No counterfactual generator in CounterfactualExplanations.jl supports modal decision trees
+{{?model=dt}} {{?task=regression}} # CounterfactualExplanations.jl supports classifiers only: switch Task to classification
 '''

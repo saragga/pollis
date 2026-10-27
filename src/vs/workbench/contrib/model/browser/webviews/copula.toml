@@ -262,13 +262,17 @@ label = "Pseudo-Observations"
 [[inputs]]
 id = "data"
 label = "Data"
-tooltip = ""
+tooltip = "A d x n matrix, one column per observation. The default simulates 500 observations from a Clayton copula with theta = 2 (Kendall's tau 0.5, dependence in the lower tail) and margins Normal(0, 1) and Normal(2, 0.5): the default Gaussian copula misses the lower tail, which Compare Copula Families and Tail Dependence show."
 default = "data"
 
 [[codeBranches]]
 model = "main"
 code = '''
 using Copulas, Distributions, Plots
+{{?data=data}} using Random
+
+{{?data=data}} Random.seed!(1)  # simulated: 500 observations from a Clayton copula (theta = 2) with margins Normal(0, 1) and Normal(2, 0.5)
+{{?data=data}} data = rand(SklarDist(ClaytonCopula(2, 2.0), (Normal(0, 1), Normal(2, 0.5))), 500)  # 2 x 500. Replace data with your own d x n matrix.
 
 {{?family=EmpiricalCopula|BetaCopula|BernsteinCopula|CheckerboardCopula|EmpiricalEVCopula}} copula = fit({{family}}, {{data}})  # fit empirical copula (data: d x n)
 {{?family!=EmpiricalCopula|BetaCopula|BernsteinCopula|CheckerboardCopula|EmpiricalEVCopula}} D = fit(CopulaModel, SklarDist{{{family}}, Tuple{{{marginals}}}}, {{data}}; copula_method={{method-select}}, sklar_method={{sklar-select}})  # fit Sklar distribution (data: d x n)
@@ -383,10 +387,10 @@ desc = "Refits the same marginals with Gaussian, Student-t, Clayton, Gumbel, Fra
 code = '''
 using Copulas, Distributions, StatsBase
 {{?family=EmpiricalCopula|BetaCopula|BernsteinCopula|CheckerboardCopula|EmpiricalEVCopula}} error("Choose a parametric family to compare families by AIC")
-fams = [GaussianCopula, TCopula, ClaytonCopula, GumbelCopula, FrankCopula, JoeCopula]
-res = map(fams) do F
+fams = ["Gaussian" => GaussianCopula, "Student-t" => TCopula, "Clayton" => ClaytonCopula, "Gumbel" => GumbelCopula, "Frank" => FrankCopula, "Joe" => JoeCopula]  # named here: the Archimedean families share one type name
+res = map(fams) do (name, F)
     M = try fit(CopulaModel, SklarDist{F, Tuple{{{marginals}}}}, {{data}}) catch; nothing end
-    (family = nameof(F), aic = M === nothing ? Inf : aic(M), bic = M === nothing ? Inf : bic(M))
+    (family = name, aic = M === nothing ? Inf : aic(M), bic = M === nothing ? Inf : bic(M))
 end
 foreach(r -> println(rpad(r.family, 16), " AIC = ", round(r.aic, digits=2), "   BIC = ", round(r.bic, digits=2)), sort(res, by = r -> r.aic))
 '''

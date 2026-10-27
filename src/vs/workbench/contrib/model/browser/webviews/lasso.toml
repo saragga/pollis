@@ -12,6 +12,10 @@ defaultModel = "lasso"
 name = "Lasso.jl"
 github = "https://github.com/JuliaStats/Lasso.jl"
 
+[[packages]]
+name = "PollisDatasets.jl"
+github = "https://github.com/Trumpingtons/PollisDatasets.jl"
+
 [requires]
 packages = ["Lasso.jl", "Bootstrap.jl", "GLM.jl", "Plots.jl"]
 
@@ -113,13 +117,13 @@ detail = "extracts latent components that maximise covariance between X and y; r
 id = "formula"
 label = "Formula (replace example with your own)"
 tooltip = "Julia formula using the @formula macro. Response goes left of ~, predictors right. E.g. y ~ x1 + x2 + x3."
-default = "y ~ x1 + x2"
+default = "mpg ~ cyl + disp + hp + drat + wt + qsec + vs + am + gear + carb"
 
 [[inputs]]
 id = "data"
 label = "Data variable"
-tooltip = "DataFrame containing all variables referenced in the formula. Column names must match formula symbols exactly."
-default = "df"
+tooltip = "Table containing all variables referenced in the formula, e.g. a NamedTuple of columns. Column names must match formula symbols exactly.\nThe default is Motor Trend Cars (mtcars) from PollisDatasets: fuel consumption and ten design variables of 32 cars."
+default = "cars"
 
 [[inputs]]
 id = "lambda"
@@ -136,7 +140,7 @@ default = "0.5"
 [[inputs]]
 id = "plsr-X"
 label = "Feature Matrix"
-tooltip = "n_samples × n_features matrix."
+tooltip = "n_samples × n_features matrix.\nThe default is the ten design variables of Motor Trend Cars (mtcars) from PollisDatasets, with miles per gallon as the response."
 default = "X_train"
 models = ["plsr"]
 
@@ -165,6 +169,9 @@ models = ["plsr"]
 model = "lasso"
 code = '''
 using Lasso
+{{?data=cars}} using PollisDatasets  # curated example datasets
+
+{{?data=cars}} cars = dataset("mtcars");  # fuel consumption and ten design variables of 32 cars (Henderson and Velleman 1981). Replace it with your own data.
 
 {{?lambda=}} model = fit(LassoModel, @formula({{formula}}), {{data}})
 {{?lambda!=}} model = fit(LassoModel, @formula({{formula}}), {{data}}; λ = [{{lambda}}])
@@ -175,6 +182,9 @@ println(coef(model))
 model = "enet"
 code = '''
 using Lasso
+{{?data=cars}} using PollisDatasets  # curated example datasets
+
+{{?data=cars}} cars = dataset("mtcars");  # fuel consumption and ten design variables of 32 cars (Henderson and Velleman 1981). Replace it with your own data.
 
 {{?lambda=}} model = fit(LassoModel, @formula({{formula}}), {{data}}; α = {{alpha}})
 {{?lambda!=}} model = fit(LassoModel, @formula({{formula}}), {{data}}; α = {{alpha}}, λ = [{{lambda}}])
@@ -185,6 +195,11 @@ println(coef(model))
 model = "plsr"
 code = '''
 using LinearAlgebra, Statistics
+{{?plsr-X=X_train}} using PollisDatasets  # curated example datasets
+
+{{?plsr-X=X_train}} cars = dataset("mtcars");  # fuel consumption and ten design variables of 32 cars (Henderson and Velleman 1981). Replace it with your own data.
+{{?plsr-X=X_train}} X_train = reduce(hcat, [float.(cars[k]) for k in (:cyl, :disp, :hp, :drat, :wt, :qsec, :vs, :am, :gear, :carb)]);  # the ten design variables, strongly correlated
+{{?plsr-X=X_train}} y_train = cars.mpg;  # miles per gallon
 
 X = Matrix{Float64}({{plsr-X}})                       # n_samples x n_features
 Y = Float64.(reshape({{plsr-y}}, size(X, 1), :))      # n_samples x n_targets
@@ -192,6 +207,7 @@ mx, my = mean(X, dims=1), mean(Y, dims=1)
 E, F = X .- mx, Y .- my
 W, P, Q = zeros(size(X, 2), 0), zeros(size(X, 2), 0), zeros(size(Y, 2), 0)
 for _ in 1:{{plsr-ncomp}}
+    global E, F, W, P, Q                              # the loop updates them, also when run as a file
     w = svd(transpose(E) * F).U[:, 1]                 # direction of maximal covariance with Y
     t = E * w; tt = dot(t, t)
     p, q = transpose(E) * t / tt, transpose(F) * t / tt
@@ -216,7 +232,7 @@ desc = "Every coefficient along the regularisation path against the L1 norm of t
 code = '''
 using Lasso, Plots
 {{?model=plsr}} error("These steps cover Lasso and Elastic Net")
-X, y = modelmatrix(model), response(model)
+X, y = modelmatrix(model.mf), response(model)  # the predictors, from the model frame (Lasso fits its own intercept)
 {{?model=lasso}} kw = ()
 {{?model=enet}} kw = (α = {{alpha}},)
 path = fit(LassoPath, X, y; kw...)
@@ -258,7 +274,7 @@ desc = "Refits on 100 bootstrap resamples and counts how often each predictor is
 code = '''
 using Lasso, Random
 {{?model=plsr}} error("These steps cover Lasso and Elastic Net")
-X, y = modelmatrix(model), response(model); nm = string.(vcat(coefnames(model)))
+X, y = modelmatrix(model.mf), response(model); nm = string.(vcat(coefnames(model)))
 {{?model=lasso}} kw = ()
 {{?model=enet}} kw = (α = {{alpha}},)
 rng = MersenneTwister(1); hits = zeros(size(X, 2))
@@ -277,7 +293,7 @@ code = '''
 using Lasso, Bootstrap, Statistics, Random
 {{?model=plsr}} error("These steps cover Lasso and Elastic Net")
 Random.seed!(1)  # Bootstrap.jl draws with the global RNG
-X, y = modelmatrix(model), response(model); nm = string.(vcat(coefnames(model)))
+X, y = modelmatrix(model.mf), response(model); nm = string.(vcat(coefnames(model)))
 {{?model=lasso}} kw = ()
 {{?model=enet}} kw = (α = {{alpha}},)
 p = size(X, 2)
@@ -301,7 +317,7 @@ desc = "5-fold cross-validated prediction error of the penalised model against o
 code = '''
 using Lasso, Random, Statistics
 {{?model=plsr}} error("These steps cover Lasso and Elastic Net")
-X, y = modelmatrix(model), response(model); n = length(y)
+X, y = modelmatrix(model.mf), response(model); n = length(y)
 {{?model=lasso}} kw = ()
 {{?model=enet}} kw = (α = {{alpha}},)
 fold = shuffle(MersenneTwister(1), repeat(1:5, cld(n, 5))[1:n])
@@ -338,7 +354,7 @@ desc = "The same path with the penalty chosen by AICc, BIC, 10-fold CV (minimum 
 code = '''
 using Lasso
 {{?model=plsr}} error("These steps cover Lasso and Elastic Net")
-X, y = modelmatrix(model), response(model); nm = string.(vcat(coefnames(model)))
+X, y = modelmatrix(model.mf), response(model); nm = string.(vcat(coefnames(model)))
 {{?model=lasso}} kw = ()
 {{?model=enet}} kw = (α = {{alpha}},)
 path = fit(LassoPath, X, y; kw...)
@@ -373,7 +389,7 @@ desc = "Selected predictors ranked by standardised coefficient (coefficient time
 code = '''
 using Lasso, Statistics
 {{?model=plsr}} error("These steps cover Lasso and Elastic Net")
-X = modelmatrix(model); nm = string.(vcat(coefnames(model))); b = coef(model)[end-length(nm)+1:end]
+X = modelmatrix(model.mf); nm = string.(vcat(coefnames(model))); b = coef(model)[end-length(nm)+1:end]
 s = b .* vec(std(X, dims=1))
 for j in sortperm(abs.(s), rev=true)
     b[j] == 0 || println(rpad(nm[j], 20), " coef = ", round(b[j], digits=4), "   standardised = ", round(s[j], digits=4))
@@ -389,5 +405,5 @@ code = '''
 using Lasso
 {{?model=plsr}} error("These steps cover Lasso and Elastic Net")
 println("R-squared: ", round(1 - deviance(model) / nulldeviance(model), digits=4))
-println("Non-zero coefficients: ", count(!=(0), coef(model)[coefnames(model) .!= "(Intercept)"]), " (excluding the intercept)   observations: ", nobs(model))
+println("Non-zero coefficients: ", count(!=(0), coef(model)[2:end]), " (excluding the intercept)   observations: ", nobs(model))
 '''

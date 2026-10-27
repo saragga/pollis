@@ -175,13 +175,13 @@ purpose = "Process typed column blocks one at a time, then combine the results"
 [[inputs]]
 id = "path"
 label = "File"
-tooltip = "Path to the delimited file, relative to the Julia working directory or absolute. Files ending in .gz are decompressed automatically when reading."
+tooltip = "Path to the delimited file, relative to the Julia working directory or absolute. Files ending in .gz are decompressed automatically when reading. With the default, data.csv, reading first writes the airquality example from PollisDatasets to data.csv, unless the working directory has a data.csv already."
 default = "data.csv"
 
 [[inputs]]
 id = "data"
 label = "Data"
-tooltip = "Variable name of the table to write: any Tables.jl source (e.g. a named tuple of vectors or a CSV.File)."
+tooltip = "Variable name of the table to write: any Tables.jl source (e.g. a named tuple of vectors or a CSV.File). The default, data, writes the airquality example from PollisDatasets."
 default = "data"
 models = ["write"]
 
@@ -326,6 +326,10 @@ model = "read"
 code = '''
 using CSV, Tables
 
+{{?path=data.csv}} using PollisDatasets  # curated example datasets
+{{?path=data.csv}} # Example file: Chambers et al. (1983), daily air quality in New York, May to September 1973, with empty fields for 44 missing readings, written to data.csv in the working directory unless a data.csv is there already. Replace "data.csv" with your own file.
+{{?path=data.csv}} isfile("data.csv") || CSV.write("data.csv", dataset("airquality"))
+
 opts = (
 {{?delim!=auto}}	delim = '{{delim}}',
 	header = {{header}},
@@ -344,6 +348,10 @@ model = "write"
 code = '''
 using CSV, Tables
 
+{{?data=data}} using PollisDatasets  # curated example datasets
+{{?data=data}} # Example data: Chambers et al. (1983), daily air quality in New York, May to September 1973, with 44 missing readings. Replace data with your own table.
+{{?data=data}} data = dataset("airquality");  # datasetinfo("airquality") describes the columns
+
 {{?delim=auto}}opts = (;)  # CSV.write uses commas by default
 {{?delim!=auto}}opts = (delim = '{{delim}}',)
 tbl = Tables.columntable({{data}})  # named tuple of column vectors, from any Tables.jl source
@@ -355,6 +363,10 @@ println("Wrote ", length(first(tbl)), " rows x ", length(tbl), " columns to {{pa
 model = "rows"
 code = '''
 using CSV, Tables
+
+{{?path=data.csv}} using PollisDatasets  # curated example datasets
+{{?path=data.csv}} # Example file: Chambers et al. (1983), daily air quality in New York, May to September 1973, with empty fields for 44 missing readings, written to data.csv in the working directory unless a data.csv is there already. Replace "data.csv" with your own file.
+{{?path=data.csv}} isfile("data.csv") || CSV.write("data.csv", dataset("airquality"))
 
 opts = (
 {{?delim!=auto}}	delim = '{{delim}}',
@@ -374,6 +386,10 @@ tbl = Tables.columntable(CSV.File("{{path}}"; opts..., limit=1000))  # typed sam
 model = "chunks"
 code = '''
 using CSV, Tables
+
+{{?path=data.csv}} using PollisDatasets  # curated example datasets
+{{?path=data.csv}} # Example file: Chambers et al. (1983), daily air quality in New York, May to September 1973, with empty fields for 44 missing readings, written to data.csv in the working directory unless a data.csv is there already. Replace "data.csv" with your own file.
+{{?path=data.csv}} isfile("data.csv") || CSV.write("data.csv", dataset("airquality"))
 
 opts = (
 {{?delim!=auto}}	delim = '{{delim}}',

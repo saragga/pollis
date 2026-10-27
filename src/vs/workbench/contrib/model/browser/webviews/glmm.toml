@@ -12,6 +12,10 @@ defaultModel = "main"
 name = "MixedModels.jl"
 github = "https://github.com/JuliaStats/MixedModels.jl"
 
+[[packages]]
+name = "PollisDatasets.jl"
+github = "https://github.com/Trumpingtons/PollisDatasets.jl"
+
 [requires]
 packages = ["MixedModels.jl", "Distributions.jl", "GLM.jl", "HypothesisTests.jl", "Plots.jl"]
 
@@ -166,8 +170,8 @@ label = "SqrtLink"
 [[inputs]]
 id = "data"
 label = "Data"
-tooltip = "DataFrame containing all variables referenced in the formula. Column names must match the formula symbols exactly."
-default = "df"
+tooltip = "Table containing all variables referenced in the formula (any Tables.jl table). Column names must match the formula symbols exactly.\nThe default is a simulated table from PollisDatasets: a 0/1 outcome y, predictors x1 and x2, and 40 groups; datasetinfo(\"sim_glmm\") shows the true model."
+default = 'dataset("sim_glmm")'
 
 [[inputs]]
 id = "group"
@@ -185,12 +189,16 @@ default = "(1|group)"
 model = "main"
 code = '''
 using MixedModels  # mixed-effects models
+{{?data=dataset("sim_glmm")}} using PollisDatasets  # curated example datasets
+
+{{?data=dataset("sim_glmm")}} data = {{data}}  # simulated: logit P(y = 1) = -0.5 + x1 - 1.5 x2 + u[group], u ~ N(0, 0.8^2). Replace it with your own table.
+{{?data!=dataset("sim_glmm")}} data = {{data}}  # the table holding the formula's columns
 
 {{?family!=NegativeBinomial}} fam = {{family}}()
 {{?family=NegativeBinomial}} fam = MixedModels.GLM.Distributions.NegativeBinomial()  # not exported by MixedModels
 {{?link=canonical}} lk = MixedModels.GLM.canonicallink(fam)
 {{?link!=canonical}} lk = MixedModels.GLM.{{link}}()
-model = fit(MixedModel, @formula({{formula}} + {{re}}), {{data}}, fam, lk)  # random effects: {{re}}
+model = fit(MixedModel, @formula({{formula}} + {{re}}), data, fam, lk)  # random effects: {{re}}
 
 println(model)  # model summary
 println(VarCorr(model))  # variance components
@@ -252,7 +260,7 @@ desc = "Pearson chi-square over residual degrees of freedom: well above 1 for a 
 code = '''
 using GLM, Distributions
 y, mu = response(model), fitted(model)
-pr = (y .- mu) ./ sqrt.(GLM.glmvar.(Distribution(model)(), mu))  # Pearson residuals
+pr = (y .- mu) ./ sqrt.(GLM.glmvar.(fam, mu))  # Pearson residuals
 ratio = sum(abs2, pr) / dof_residual(model)
 println("Pearson chi2 / df = ", round(ratio, digits=3), ratio > 1.5 ? "  -> overdispersed" : "  -> no strong sign of overdispersion")
 all(in((0, 1)), y) && println("Note: for 0/1 (Bernoulli) data a single observation cannot be overdispersed, so this ratio carries no information")
@@ -319,7 +327,7 @@ label = "Against a GLM Without Random Effects"
 desc = "Likelihood ratio test of the random intercept against the same GLM without grouping, with AIC and BIC for both"
 code = '''
 using GLM
-g = glm(@formula({{formula}}), {{data}}, fam, lk)  # no random effects
+g = glm(@formula({{formula}}), data, fam, lk)  # no random effects
 display(MixedModels.likelihoodratiotest(g, model))
 println("Note: the random-intercept variance is tested on its boundary (0), so the chi-square p-value is conservative: roughly halve it")
 println("AIC: GLM ", round(aic(g), digits=2), "  GLMM ", round(aic(model), digits=2))
@@ -331,7 +339,7 @@ id = "quadrature"
 label = "Laplace vs Adaptive Quadrature"
 desc = "Refits with 9-point adaptive Gauss-Hermite quadrature: if the estimates move, the default Laplace approximation is not accurate enough"
 code = '''
-mq = fit(MixedModel, @formula({{formula}} + {{re}}), {{data}}, fam, lk; nAGQ=9)  # nAGQ > 1 needs a single scalar random-effects term such as (1|g)
+mq = fit(MixedModel, @formula({{formula}} + {{re}}), data, fam, lk; nAGQ=9)  # nAGQ > 1 needs a single scalar random-effects term such as (1|g)
 foreach((n, a, b) -> println(rpad(n, 20), " Laplace = ", round(a, digits=4), "   AGQ(9) = ", round(b, digits=4)), coefnames(model), fixef(model), fixef(mq))
 println("Deviance: Laplace ", round(deviance(model), digits=3), "   AGQ(9) ", round(deviance(mq), digits=3))
 '''

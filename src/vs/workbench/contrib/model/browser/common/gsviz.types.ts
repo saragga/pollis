@@ -19,7 +19,7 @@ export type GsvizWebviewMessage =
 	| { command: 'openNotebook'; target: string }
 	| { command: 'openWiki'; target: string }
 	| { command: 'openUrl'; url: string }
-	| { command: 'runCode'; target: 'newFile' | 'juliaRepl' | 'notebook' | 'pluto'; code: string }
+	| { command: 'runCode'; target: 'newFile' | 'juliaRepl' | 'notebook' | 'pluto'; code: string; setup?: string }
 	| { command: 'colorize'; code: string; target?: 'main' | 'panel' }
 	| { command: 'openReference'; id: string }
 	| { command: 'installPackages' };

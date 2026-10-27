@@ -38,7 +38,7 @@ const pollisMenus: ReadonlySet<string> = new Set([
  * Holds the active Pollis View. The menu service asks it which menu bar items to show and
  * rebuilds every menu when it changes.
  */
-export const MenuViewFilter = new class {
+class MenuViewFilterImpl {
 
 	private _filter: IMenuViewFilter | undefined;
 
@@ -85,4 +85,6 @@ export const MenuViewFilter = new class {
 		const show = this._filter?.show;
 		return !show || scope !== 'pollis' || shownByAncestor || show.has(id);
 	}
-};
+}
+
+export const MenuViewFilter = new MenuViewFilterImpl();

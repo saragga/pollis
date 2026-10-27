@@ -43,6 +43,8 @@ export interface SpecMenu {
 	readonly inline?: boolean;
 	readonly order?: number;
 	readonly items: SpecItem[];
+	/** The toolbox's documentation: LaTeX sources, the main file relative to the spec. */
+	readonly documents?: { readonly title: string; readonly description?: string; readonly source: string }[];
 }
 
 /** What the script found in Pollis about one menu entry. */

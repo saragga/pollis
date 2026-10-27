@@ -16,6 +16,10 @@ github = "https://github.com/JuliaML/LIBSVM.jl"
 name = "OnlineStats.jl"
 github = "https://github.com/joshday/OnlineStats.jl"
 
+[[packages]]
+name = "PollisDatasets.jl"
+github = "https://github.com/Trumpingtons/PollisDatasets.jl"
+
 # Further packages the examples use: checked by the install indicator, not listed on the Powered-by line
 [requires]
 packages = ["Distributions.jl", "Plots.jl"]
@@ -172,7 +176,7 @@ purpose = "Detect small, sustained shifts in the mean as they happen"
 [[inputs]]
 id = "train"
 label = "Training Data"
-tooltip = "Clean training data containing only normal observations, as an n x p matrix, e.g. X_train"
+tooltip = "Clean training data containing only normal observations, as an n x p matrix, e.g. X_train\nThe default trains on wines of two cultivars from the Wine Recognition data in PollisDatasets and tests on held-out wines of those cultivars and on every wine of the third, the novel ones."
 default = "X_train"
 models = ["ocsvm", "gauss"]
 
@@ -200,7 +204,7 @@ models = ["gauss"]
 [[inputs]]
 id = "baseline"
 label = "Baseline"
-tooltip = "Clean in-control series used to estimate the normal mean and standard deviation, e.g. x_baseline"
+tooltip = "Clean in-control series used to estimate the normal mean and standard deviation, e.g. x_baseline\nThe default is the Nile's annual flow at Aswan in PollisDatasets: the years 1871-1890 as the baseline, and the whole series, which fell around 1898, monitored."
 default = "x_baseline"
 models = ["cusum"]
 
@@ -264,6 +268,14 @@ return s;
 model = "ocsvm"
 code = '''
 using LIBSVM, Statistics
+{{?train=X_train}} using PollisDatasets  # curated example datasets
+
+{{?train=X_train}} w = dataset("wine");  # 178 Italian wines of three cultivars (Aeberhard and Forina 1992). Replace it with your own data.
+{{?train=X_train}} feats = [:flavanoids; :color_intensity; [k for k in keys(w) if !(k in (:cultivar, :flavanoids, :color_intensity))]];  # 13 measurements, the two plotted first
+{{?train=X_train}} X = reduce(hcat, [float.(w[k]) for k in feats]);  # wines in rows
+{{?train=X_train}} known = findall(w.cultivar .!= 3); held = known[5:5:end];  # cultivars 1 and 2 are normal; every fifth such wine held out
+{{?train=X_train}} X_train = X[setdiff(known, held), :];  # train on normal wines only
+{{?train=X_train}} X_test = X[[held; findall(w.cultivar .== 3)], :];  # the held-out normal wines, then all of cultivar 3, never seen in training
 
 mu, sd = mean({{train}}, dims=1), std({{train}}, dims=1)
 Ztrain = permutedims(({{train}} .- mu) ./ sd)  # standardise; LIBSVM expects observations in columns
@@ -280,6 +292,14 @@ println("Novel points: ", sum(is_novel), " of ", length(is_novel))
 model = "gauss"
 code = '''
 using Statistics, LinearAlgebra, Distributions
+{{?train=X_train}} using PollisDatasets  # curated example datasets
+
+{{?train=X_train}} w = dataset("wine");  # 178 Italian wines of three cultivars (Aeberhard and Forina 1992). Replace it with your own data.
+{{?train=X_train}} feats = [:flavanoids; :color_intensity; [k for k in keys(w) if !(k in (:cultivar, :flavanoids, :color_intensity))]];  # 13 measurements, the two plotted first
+{{?train=X_train}} X = reduce(hcat, [float.(w[k]) for k in feats]);  # wines in rows
+{{?train=X_train}} known = findall(w.cultivar .!= 3); held = known[5:5:end];  # cultivars 1 and 2 are normal; every fifth such wine held out
+{{?train=X_train}} X_train = X[setdiff(known, held), :];  # train on normal wines only
+{{?train=X_train}} X_test = X[[held; findall(w.cultivar .== 3)], :];  # the held-out normal wines, then all of cultivar 3, never seen in training
 
 mu     = vec(mean({{train}}, dims=1))  # training mean vector
 SigInv = inv(cov({{train}}))  # inverse training covariance
@@ -294,6 +314,11 @@ println("Novel points: ", sum(is_novel), " of ", length(is_novel))
 model = "cusum"
 code = '''
 using Statistics
+{{?baseline=x_baseline}} using PollisDatasets  # curated example datasets
+
+{{?baseline=x_baseline}} nile = dataset("nile");  # annual flow of the Nile at Aswan, 1871-1970, which fell around 1898 (Cobb 1978). Replace it with your own data.
+{{?baseline=x_baseline}} x_baseline = nile.flow[nile.year .<= 1890];  # 1871-1890, before the change
+{{?baseline=x_baseline}} x_new = nile.flow;  # the whole series, monitored year by year
 
 mu0, sigma0 = mean({{baseline}}), std({{baseline}})  # in-control mean and standard deviation
 z = ({{series}} .- mu0) ./ sigma0  # standardised series

@@ -641,6 +641,25 @@ registerAction2(class extends Action2 {
 	}
 });
 
+registerAction2(class extends Action2 {
+	constructor() {
+		super({
+			id: 'pollis.action.openDrillDownLiteratureRadar',
+			title: {
+				...localize2('openDrillDownLiteratureRadar', "Drill-down: Literature Radar"),
+				mnemonicTitle: localize({ key: 'miDrillDownLiteratureRadar', comment: ['&& denotes a mnemonic'] }, "Drill-down: &&Literature Radar"),
+			},
+			category: Categories.Help,
+			f1: true,
+			menu: { id: MenubarHelpDocumentationMenu, group: '0_pollis', order: 6 }
+		});
+	}
+
+	run(accessor: ServicesAccessor): Promise<void> {
+		return openDocument(accessor, 'pollis-drilldown-literature-radar.pdf', localize('openDrillDownLiteratureRadar', "Drill-down: Literature Radar"));
+	}
+});
+
 registerHelpLink({
 	id: 'pollis.action.openCodeOssDocumentation',
 	title: localize2('openCodeOssDocumentation', "Code - OSS Documentation"),

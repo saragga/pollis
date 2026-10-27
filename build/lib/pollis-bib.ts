@@ -113,7 +113,7 @@ const PANEL_CONTRIBUTIONS = ['model/browser/model.contribution.ts', 'explore/bro
  * `commands/<id>.command.ts` (or to call that file's own opening function), directly or through a function of the
  * same file that does. A command registered some other way is not found.
  */
-function panelCommands(repoRoot: string): Map<string, string[]> {
+export function panelCommands(repoRoot: string): Map<string, string[]> {
 	const contribDir = path.join(repoRoot, 'src/vs/workbench/contrib');
 	const commands = new Map<string, string[]>();
 	for (const file of PANEL_CONTRIBUTIONS) {

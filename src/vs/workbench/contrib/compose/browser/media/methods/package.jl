@@ -4,10 +4,12 @@
 # --register URL as well, a pushed package that also meets the Pollis registry rules (a name of at least
 # 5 characters, a usage example, a docstring for every exported name) is registered in the registry at URL
 # (LocalRegistry.jl). The rules are checked, and reported, every time. A registered package with a vignette
-# (vignette/NAME.pdf) also gets an entry in Vignettes.toml at the registry's root, the list that
-# Help > Documentation > Package Vignettes shows. With --no-tests, the tests are written but not run, to push or
+# (vignette/NAME.tex) also gets an entry in Vignettes.toml at the registry's root, the list that
+# Help > Documentation > Packages shows. With --no-tests, the tests are written but not run, to push or
 # register packages already tested and unchanged since. A package with a vignette also carries
-# vignette/Vignette.toml, its entry, which Help > Documentation > Package Vignettes reads once the package is installed.
+# vignette/Vignette.toml, its entry, which Help > Documentation > Packages reads once the package is installed.
+# A vignette is its LaTeX sources (.tex, .bib) and its resources/ folder (images and the like), with no PDF: Pollis
+# compiles it, with PollisTeX, on the computer where it is read.
 #
 #   julia package.jl PACKAGES_FOLDER METHOD_FOLDER... [--no-tests] [--push OWNER [--register REGISTRY_URL]]
 #
@@ -167,8 +169,8 @@ function readme(name, method)
 	end
 	usage = strip(get(method, "usage", ""))
 	isempty(usage) || push!(lines, "## Usage", "", "```julia", usage, "```", "")
-	pdf = joinpath(method["folder"], "vignette", "$name.pdf")
-	isfile(pdf) && push!(lines, "## Vignette", "", "[$(vignette_title(method))](vignette/$name.pdf)", "")
+	tex = joinpath(method["folder"], "vignette", "$name.tex")
+	isfile(tex) && push!(lines, "## Vignette", "", "[$(vignette_title(method))](vignette/$name.tex), its LaTeX source: Pollis compiles it in Help > Documentation > Packages.", "")
 	license = get(method, "license", "")
 	isempty(license) || push!(lines, "## License", "", "$license (see [LICENSE](LICENSE)).", "")
 	push!(lines, "## Tests", "", "The tests compute the published tables below from their data and check every printed value, rounded to the digits printed:", "")
@@ -193,10 +195,11 @@ end
 
 """
 The entry of a package's vignette: in Vignettes.toml at the root of the registry, with links on GitHub, and in
-the package's vignette/Vignette.toml, with the PDF's file name. Each value on one line: Pollis reads both with
-its own TOML reader, which keeps escapes such as \\n.
+the package's vignette/Vignette.toml. Its source is the main file of the vignette, NAME.tex in the package's
+vignette/ folder, which Pollis compiles. Each value on one line: Pollis reads both with its own TOML reader, which
+keeps escapes such as \\n.
 """
-function vignette_entry(name, method, repository, pdf)
+function vignette_entry(name, method, repository)
 	return Dict(k => strip(replace(v, r"\s+" => " ")) for (k, v) in (
 		"title" => vignette_title(method),
 		"method" => get(method, "title", name),
@@ -209,7 +212,7 @@ function vignette_entry(name, method, repository, pdf)
 		"topic" => get(method, "topic", ""),
 		"license" => get(method, "license", ""),
 		"repository" => repository,
-		"pdf" => pdf,
+		"source" => "$name.tex",
 	))
 end
 
@@ -244,19 +247,21 @@ function package(packages, folder, owner)
 		mkpath(dirname(target))
 		cp(joinpath(folder, path), target; force = true)
 	end
-	# The vignette: its LaTeX sources and PDF, not LaTeX's working files
-	if isfile(joinpath(folder, "vignette", "$name.pdf"))
+	# The vignette: its LaTeX sources and resources, not its PDF or LaTeX's working files
+	if isfile(joinpath(folder, "vignette", "$name.tex"))
 		mkpath(joinpath(root, "vignette"))
 		for file in readdir(joinpath(folder, "vignette"))
-			splitext(file)[2] in (".tex", ".bib", ".pdf") && cp(joinpath(folder, "vignette", file), joinpath(root, "vignette", file))
+			splitext(file)[2] in (".tex", ".bib") && cp(joinpath(folder, "vignette", file), joinpath(root, "vignette", file))
 		end
+		resources = joinpath(folder, "vignette", "resources")
+		isdir(resources) && cp(resources, joinpath(root, "vignette", "resources"))
 	end
 	# The vignette's entry, for the list of installed vignettes
-	if isfile(joinpath(root, "vignette", "$name.pdf"))
+	if isfile(joinpath(root, "vignette", "$name.tex"))
 		open(joinpath(root, "vignette", "Vignette.toml"), "w") do io
 			println(io, "# The vignette of $name.jl, written by Pollis (Compose > New Methods > Package and Publish) and shown in")
-			println(io, "# Help > Documentation > Package Vignettes once the package is installed.\n")
-			TOML.print(io, vignette_entry(name, method, owner === nothing ? "" : "https://github.com/$owner/$name.jl", "$name.pdf"); sorted = true)
+			println(io, "# Help > Documentation > Packages once the package is installed.\n")
+			TOML.print(io, vignette_entry(name, method, owner === nothing ? "" : "https://github.com/$owner/$name.jl"); sorted = true)
 		end
 	end
 	# The license, when method.toml names one: the MIT License, or another whose text is the method folder's LICENSE
@@ -307,7 +312,7 @@ end
 
 """
 Adds or updates the package's entry in Vignettes.toml at the root of the registry at a URL, and pushes it:
-the list of published vignettes that Help > Documentation > Package Vignettes shows.
+the list of published vignettes that Help > Documentation > Packages shows.
 """
 function list_vignette(registry, name, method, owner)
 	mktempdir() do clone
@@ -315,10 +320,10 @@ function list_vignette(registry, name, method, owner)
 		file = joinpath(clone, "Vignettes.toml")
 		vignettes = isfile(file) ? TOML.parsefile(file) : Dict{String, Any}()
 		repository = "https://github.com/$owner/$name.jl"
-		vignettes[name] = vignette_entry(name, method, repository, "$repository/blob/main/vignette/$name.pdf")
+		vignettes[name] = vignette_entry(name, method, repository)
 		open(file, "w") do io
 			println(io, "# The vignettes of the packages in this registry, one table per package, written by Pollis")
-			println(io, "# (Compose > New Methods > Package and Publish) and shown in Help > Documentation > Package Vignettes.\n")
+			println(io, "# (Compose > New Methods > Package and Publish) and shown in Help > Documentation > Packages.\n")
 			TOML.print(io, vignettes; sorted = true)
 		end
 		cd(clone) do
@@ -369,7 +374,7 @@ function main(args)
 			if registry !== nothing
 				if isempty(problems)
 					register(root, registry)
-					isfile(joinpath(root, "vignette", "$name.pdf")) && list_vignette(registry, name, method, owner)
+					isfile(joinpath(root, "vignette", "$name.tex")) && list_vignette(registry, name, method, owner)
 				else
 					println("$name: not registered.")
 				end

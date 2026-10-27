@@ -205,7 +205,7 @@ purpose = "Many correlated variables"
 [[inputs]]
 id = "data"
 label = "Data"
-tooltip = "Variable name of your dataset: any Tables.jl source (e.g. a named tuple of vectors or a CSV.File). Rows are observations in their natural order; Interpolate and LOCF / NOCB fill along that order."
+tooltip = "Variable name of your dataset: any Tables.jl source (e.g. a named tuple of vectors or a CSV.File). Rows are observations in their natural order; Interpolate and LOCF / NOCB fill along that order. The default, data, runs on the airquality example from PollisDatasets: daily New York air quality in 1973, with missing ozone and solar radiation readings."
 default = "data"
 
 [[inputs]]
@@ -355,7 +355,10 @@ model = "drop"
 code = '''
 using Impute, Tables
 
-tbl = Tables.columntable({{data}})  # named tuple of column vectors, from any Tables.jl source
+{{?data=data}} using PollisDatasets  # curated example datasets
+{{?data=data}} # Example data: Chambers et al. (1983), daily air quality in New York, May to September 1973, in time order; 37 ozone and 7 solar radiation readings missing. Replace data with your own table.
+{{?data=data}} data = dataset("airquality");  # datasetinfo("airquality") describes the columns
+tbl = map(c -> nonmissingtype(eltype(c)) <: Integer ? float.(c) : c, Tables.columntable({{data}}))  # integer columns as Float64, so that means and interpolations fit; named tuple of column vectors, from any Tables.jl source
 {{?target=obs}}method = x -> Impute.dropobs(x)  # keep only the complete rows
 {{?target=vars}}method = x -> Impute.dropvars(x)  # keep only the complete columns
 result = method(tbl)
@@ -369,7 +372,10 @@ code = '''
 using Impute, Tables, Statistics
 {{?statistic=mode}}using StatsBase
 
-tbl = Tables.columntable({{data}})  # named tuple of column vectors, from any Tables.jl source
+{{?data=data}} using PollisDatasets  # curated example datasets
+{{?data=data}} # Example data: Chambers et al. (1983), daily air quality in New York, May to September 1973, in time order; 37 ozone and 7 solar radiation readings missing. Replace data with your own table.
+{{?data=data}} data = dataset("airquality");  # datasetinfo("airquality") describes the columns
+tbl = map(c -> nonmissingtype(eltype(c)) <: Integer ? float.(c) : c, Tables.columntable({{data}}))  # integer columns as Float64, so that means and interpolations fit; named tuple of column vectors, from any Tables.jl source
 method = x -> Impute.substitute(x; statistic={{statistic}})  # per-column {{statistic}} of the observed values
 result = method(tbl)
 println("Missing cells before: ", count(ismissing, Tables.matrix(tbl)), ", after: ", count(ismissing, Tables.matrix(result)))
@@ -380,7 +386,10 @@ model = "interp"
 code = '''
 using Impute, Tables
 
-tbl = Tables.columntable({{data}})  # rows in their natural (time) order
+{{?data=data}} using PollisDatasets  # curated example datasets
+{{?data=data}} # Example data: Chambers et al. (1983), daily air quality in New York, May to September 1973, in time order; 37 ozone and 7 solar radiation readings missing. Replace data with your own table.
+{{?data=data}} data = dataset("airquality");  # datasetinfo("airquality") describes the columns
+tbl = map(c -> nonmissingtype(eltype(c)) <: Integer ? float.(c) : c, Tables.columntable({{data}}))  # integer columns as Float64, so that means and interpolations fit; rows in their natural (time) order
 method = x -> Impute.interp(x)  # linear interpolation between the neighbouring observed values
 result = method(tbl)
 println("Missing cells before: ", count(ismissing, Tables.matrix(tbl)), ", after: ", count(ismissing, Tables.matrix(result)))  # leading and trailing gaps remain
@@ -391,7 +400,10 @@ model = "locf"
 code = '''
 using Impute, Tables
 
-tbl = Tables.columntable({{data}})  # rows in their natural (time) order
+{{?data=data}} using PollisDatasets  # curated example datasets
+{{?data=data}} # Example data: Chambers et al. (1983), daily air quality in New York, May to September 1973, in time order; 37 ozone and 7 solar radiation readings missing. Replace data with your own table.
+{{?data=data}} data = dataset("airquality");  # datasetinfo("airquality") describes the columns
+tbl = map(c -> nonmissingtype(eltype(c)) <: Integer ? float.(c) : c, Tables.columntable({{data}}))  # integer columns as Float64, so that means and interpolations fit; rows in their natural (time) order
 {{?direction=locf}}method = x -> Impute.locf(x)  # carry the last observation forward
 {{?direction=nocb}}method = x -> Impute.nocb(x)  # carry the next observation backward
 result = method(tbl)
@@ -403,7 +415,10 @@ model = "svd"
 code = '''
 using Impute, Tables
 
-tbl = Tables.columntable({{data}})  # all columns must be numeric
+{{?data=data}} using PollisDatasets  # curated example datasets
+{{?data=data}} # Example data: Chambers et al. (1983), daily air quality in New York, May to September 1973, in time order; 37 ozone and 7 solar radiation readings missing. Replace data with your own table.
+{{?data=data}} data = dataset("airquality");  # datasetinfo("airquality") describes the columns
+tbl = map(c -> nonmissingtype(eltype(c)) <: Integer ? float.(c) : c, Tables.columntable({{data}}))  # integer columns as Float64, so that means and interpolations fit; all columns must be numeric
 method = x -> Tables.columntable(Tables.table(Impute.svd(Matrix{Union{Float64, Missing}}(Tables.matrix(x)); rank={{rank}}); header=collect(keys(x))))  # rank-{{rank}} matrix completion
 result = method(tbl)
 println("Missing cells before: ", count(ismissing, Tables.matrix(tbl)), ", after: ", count(ismissing, Tables.matrix(result)))

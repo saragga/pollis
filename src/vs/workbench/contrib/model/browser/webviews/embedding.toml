@@ -16,6 +16,10 @@ github = "https://github.com/lejon/TSne.jl"
 name = "UMAP.jl"
 github = "https://github.com/dillondaudert/UMAP.jl"
 
+[[packages]]
+name = "PollisDatasets.jl"
+github = "https://github.com/Trumpingtons/PollisDatasets.jl"
+
 [requires]
 packages = ["Plots.jl", "Distances.jl"]
 
@@ -93,7 +97,7 @@ purpose = "Match a fuzzy k-NN graph with a low-dimensional one by cross-entropy"
 [[inputs]]
 id = "X"
 label = "Feature Matrix"
-tooltip = "n_samples × n_features matrix, one row per observation. Standardise the columns first when they are on different scales."
+tooltip = "n_samples × n_features matrix, one row per observation. Standardise the columns first when they are on different scales. The default, X_train, is the Wine data from PollisDatasets: 161 wines by 13 chemical measurements, standardised, with every tenth wine kept aside as X_new. Its example also gives labels, the cultivar of each wine, for Label Overlay."
 default = "X_train"
 
 [[inputs]]
@@ -164,6 +168,16 @@ return s;
 model = "tsne"
 code = '''
 using TSne, Distances, Statistics, Random
+{{?X=X_train}} using PollisDatasets
+
+{{?X=X_train}} w = dataset("wine");  # 178 wines from three cultivars; datasetinfo("wine") describes the columns
+{{?X=X_train}} W = reduce(hcat, collect(values(w))[2:end]);  # 178 x 13: the chemical measurements, cultivar left out
+{{?X=X_train}} held = 10:10:178;  # every tenth wine kept aside as new data
+{{?X=X_train}} W_train = W[setdiff(axes(W, 1), held), :];
+{{?X=X_train}} mu, sd = mean(W_train, dims=1), std(W_train, dims=1);
+{{?X=X_train}} X_train = (W_train .- mu) ./ sd;  # standardised: the measurements are on very different scales
+{{?X=X_train}} X_new = (W[held, :] .- mu) ./ sd;  # the held-out wines, on the training scale
+{{?X=X_train}} labels = w.cultivar[setdiff(axes(W, 1), held)];  # the cultivar of each training wine, for Label Overlay
 
 X = {{X}}  # n x p feature matrix, one row per observation
 d = {{d}}  # embedding dimensions
@@ -195,19 +209,29 @@ trustworthiness(Y)
 model = "umap"
 code = '''
 using UMAP, Distances, Statistics, Random
+{{?X=X_train}} using PollisDatasets
+
+{{?X=X_train}} w = dataset("wine");  # 178 wines from three cultivars; datasetinfo("wine") describes the columns
+{{?X=X_train}} W = reduce(hcat, collect(values(w))[2:end]);  # 178 x 13: the chemical measurements, cultivar left out
+{{?X=X_train}} held = 10:10:178;  # every tenth wine kept aside as new data
+{{?X=X_train}} W_train = W[setdiff(axes(W, 1), held), :];
+{{?X=X_train}} mu, sd = mean(W_train, dims=1), std(W_train, dims=1);
+{{?X=X_train}} X_train = (W_train .- mu) ./ sd;  # standardised: the measurements are on very different scales
+{{?X=X_train}} X_new = (W[held, :] .- mu) ./ sd;  # the held-out wines, on the training scale
+{{?X=X_train}} labels = w.cultivar[setdiff(axes(W, 1), held)];  # the cultivar of each training wine, for Label Overlay
 
 X  = {{X}}  # n x p feature matrix, one row per observation
 d  = {{d}}  # embedding dimensions
 Xt = permutedims(X)  # UMAP.jl expects features x samples
 
 fit_umap(nn) = UMAP.fit(Xt, d; n_neighbors=nn, min_dist={{mindist}})  # fuzzy k-NN graph, then cross-entropy layout
-embed(nn) = permutedims(reduce(hcat, fit_umap(nn).embedding))  # n x d (the embedding is a list of points)
+embed(nn) = permutedims(fit_umap(nn).embedding)  # n x d (UMAP returns d x n)
 grid = [5, 10, 15, 30, 50]  # n_neighbors values compared by the sweep action
 par  = {{nn}}
 
 Random.seed!(1)  # the layout starts from a random (spectral + noise) initialisation
 model = fit_umap(par)
-Y = permutedims(reduce(hcat, model.embedding))  # n x d embedding
+Y = permutedims(model.embedding)  # n x d embedding
 
 function trustworthiness(Y, m=10)  # share of embedding neighbours that were also near in X (1 = perfect)
     n  = size(X, 1)
@@ -300,7 +324,7 @@ id = "embed-new"
 label = "Embed New Data"
 desc = "UMAP places new points with its fitted graph; t-SNE has no mapping, so new points are rebuilt from their 10 nearest training points"
 code = '''
-{{?model=umap}} Y_new = permutedims(reduce(hcat, UMAP.transform(model, permutedims(X_new)).embedding))  # X_new: same columns as X; n_new x d
+{{?model=umap}} Y_new = permutedims(UMAP.transform(model, permutedims(X_new)).embedding)  # X_new: same columns as X; n_new x d
 {{?model=tsne}} using LinearAlgebra
 {{?model=tsne}} function place(x, m=10)
 {{?model=tsne}}     nb = sortperm(vec(pairwise(Euclidean(), permutedims(x), X, dims=1)))[1:m]

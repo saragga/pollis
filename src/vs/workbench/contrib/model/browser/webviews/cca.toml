@@ -12,6 +12,10 @@ defaultModel = "cca"
 name = "MultivariateStats.jl"
 github = "https://juliastats.org/MultivariateStats.jl/stable/"
 
+[[packages]]
+name = "PollisDatasets.jl"
+github = "https://github.com/Trumpingtons/PollisDatasets.jl"
+
 [requires]
 packages = ["Plots.jl", "Distributions.jl"]
 
@@ -126,7 +130,7 @@ purpose = "Pairs of directions with maximal covariance (PLS-SVD)"
 [[inputs]]
 id = "X"
 label = "X (n × p)"
-tooltip = "First data matrix: n observations × p variables, one row per observation."
+tooltip = "First data matrix: n observations × p variables, one row per observation. The default, X_train, is the Wine data from PollisDatasets: 161 wines by their 7 phenolic and colour measurements, with Y_train their 6 other chemical measurements; every tenth wine is kept aside as X_new and Y_new."
 default = "X_train"
 
 [[inputs]]
@@ -205,6 +209,14 @@ return s + '<line x1="6" y1="30" x2="6" y2="61" stroke="currentColor" stroke-wid
 model = "cca"
 code = '''
 using MultivariateStats, Statistics
+{{?X=X_train}} using PollisDatasets
+
+{{?X=X_train}} w = dataset("wine");  # 178 wines from three cultivars; datasetinfo("wine") describes the columns
+{{?X=X_train}} phenolic = [:total_phenols, :flavanoids, :nonflavanoid_phenols, :proanthocyanins, :color_intensity, :hue, :od280_od315];  # the phenolic and colour measurements
+{{?X=X_train}} other    = [:alcohol, :malic_acid, :ash, :alcalinity_of_ash, :magnesium, :proline];  # the other chemical measurements
+{{?X=X_train}} held, train = 10:10:178, setdiff(1:178, 10:10:178);  # every tenth wine kept aside as new data
+{{?X=X_train}} X_train, X_new = reduce(hcat, [w[c][train] for c in phenolic]), reduce(hcat, [w[c][held] for c in phenolic]);
+{{?X=X_train}} Y_train, Y_new = reduce(hcat, [w[c][train] for c in other]), reduce(hcat, [w[c][held] for c in other]);
 
 X = {{X}}  # n x p, one row per observation
 Y = {{Y}}  # n x q, same rows as X
@@ -225,6 +237,14 @@ rho    = [cor(Zx[:, j], Zy[:, j]) for j in 1:k]  # correlation of each variate p
 model = "rcca"
 code = '''
 using LinearAlgebra, Statistics
+{{?X=X_train}} using PollisDatasets
+
+{{?X=X_train}} w = dataset("wine");  # 178 wines from three cultivars; datasetinfo("wine") describes the columns
+{{?X=X_train}} phenolic = [:total_phenols, :flavanoids, :nonflavanoid_phenols, :proanthocyanins, :color_intensity, :hue, :od280_od315];  # the phenolic and colour measurements
+{{?X=X_train}} other    = [:alcohol, :malic_acid, :ash, :alcalinity_of_ash, :magnesium, :proline];  # the other chemical measurements
+{{?X=X_train}} held, train = 10:10:178, setdiff(1:178, 10:10:178);  # every tenth wine kept aside as new data
+{{?X=X_train}} X_train, X_new = reduce(hcat, [w[c][train] for c in phenolic]), reduce(hcat, [w[c][held] for c in phenolic]);
+{{?X=X_train}} Y_train, Y_new = reduce(hcat, [w[c][train] for c in other]), reduce(hcat, [w[c][held] for c in other]);
 
 X = {{X}}  # n x p, one row per observation
 Y = {{Y}}  # n x q, same rows as X
@@ -253,6 +273,14 @@ rho    = [cor(Zx[:, j], Zy[:, j]) for j in 1:k]  # correlation of each variate p
 model = "pls"
 code = '''
 using LinearAlgebra, Statistics
+{{?X=X_train}} using PollisDatasets
+
+{{?X=X_train}} w = dataset("wine");  # 178 wines from three cultivars; datasetinfo("wine") describes the columns
+{{?X=X_train}} phenolic = [:total_phenols, :flavanoids, :nonflavanoid_phenols, :proanthocyanins, :color_intensity, :hue, :od280_od315];  # the phenolic and colour measurements
+{{?X=X_train}} other    = [:alcohol, :malic_acid, :ash, :alcalinity_of_ash, :magnesium, :proline];  # the other chemical measurements
+{{?X=X_train}} held, train = 10:10:178, setdiff(1:178, 10:10:178);  # every tenth wine kept aside as new data
+{{?X=X_train}} X_train, X_new = reduce(hcat, [w[c][train] for c in phenolic]), reduce(hcat, [w[c][held] for c in phenolic]);
+{{?X=X_train}} Y_train, Y_new = reduce(hcat, [w[c][train] for c in other]), reduce(hcat, [w[c][held] for c in other]);
 
 X = {{X}}  # n x p, one row per observation
 Y = {{Y}}  # n x q, same rows as X

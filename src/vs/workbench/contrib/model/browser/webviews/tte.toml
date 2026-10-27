@@ -174,8 +174,8 @@ model = "km"
 code = '''
 using Survival, PollisDatasets  # curated example datasets
 
-# Example data: Kalbfleisch and Prentice (1980), survival in days of 137 veterans with advanced lung cancer in a trial of two chemotherapies. Replace it with your own table.
-{{data}} = dataset("veteran");  # datasetinfo("veteran") describes the columns; status 1 = died, 0 = censored
+{{?data=data}} # Example data: Kalbfleisch and Prentice (1980), survival in days of 137 veterans with advanced lung cancer in a trial of two chemotherapies. Replace data with your own table.
+{{?data=data}} data = dataset("veteran");  # datasetinfo("veteran") describes the columns; status 1 = died, 0 = censored
 
 km = fit(KaplanMeier, {{data}}.{{time}}, {{data}}.{{event}})  # Kaplan-Meier estimator
 '''
@@ -185,8 +185,8 @@ model = "na"
 code = '''
 using Survival, PollisDatasets  # curated example datasets
 
-# Example data: Kalbfleisch and Prentice (1980), survival in days of 137 veterans with advanced lung cancer in a trial of two chemotherapies. Replace it with your own table.
-{{data}} = dataset("veteran");  # datasetinfo("veteran") describes the columns; status 1 = died, 0 = censored
+{{?data=data}} # Example data: Kalbfleisch and Prentice (1980), survival in days of 137 veterans with advanced lung cancer in a trial of two chemotherapies. Replace data with your own table.
+{{?data=data}} data = dataset("veteran");  # datasetinfo("veteran") describes the columns; status 1 = died, 0 = censored
 
 na = fit(NelsonAalen, {{data}}.{{time}}, {{data}}.{{event}})  # Nelson-Aalen estimator
 '''
@@ -196,8 +196,8 @@ model = "aj"
 code = '''
 using LSurvival, PollisDatasets  # curated example datasets
 
-# Example data: Kalbfleisch and Prentice (1980), survival in days of 137 veterans with advanced lung cancer in a trial of two chemotherapies. It has one cause, death, so the incidence is 1 minus Kaplan-Meier: replace it with your own table, causes coded 1, 2, ...
-{{data}} = dataset("veteran");  # datasetinfo("veteran") describes the columns; status 1 = died, 0 = censored
+{{?data=data}} # Example data: Kalbfleisch and Prentice (1980), survival in days of 137 veterans with advanced lung cancer in a trial of two chemotherapies. It has one cause, death, so the incidence is 1 minus Kaplan-Meier: replace data with your own table, causes coded 1, 2, ...
+{{?data=data}} data = dataset("veteran");  # datasetinfo("veteran") describes the columns; status 1 = died, 0 = censored
 
 aj = aalen_johansen({{data}}.{{time}}, {{data}}.{{event}})  # event coded 0 = censored, 1, 2, ... = cause
 println("Causes: ", aj.R.eventtypes[2:end])
@@ -209,8 +209,8 @@ model = "cox"
 code = '''
 using Survival, StatsBase, StatsModels, PollisDatasets  # StatsBase: coeftable; StatsModels: @formula; curated example datasets
 
-# Example data: Kalbfleisch and Prentice (1980), survival in days of 137 veterans with advanced lung cancer in a trial of two chemotherapies. Replace it with your own table.
-{{data}} = dataset("veteran");  # datasetinfo("veteran") describes the columns; status 1 = died, 0 = censored
+{{?data=data}} # Example data: Kalbfleisch and Prentice (1980), survival in days of 137 veterans with advanced lung cancer in a trial of two chemotherapies. Replace data with your own table.
+{{?data=data}} data = dataset("veteran");  # datasetinfo("veteran") describes the columns; status 1 = died, 0 = censored
 
 model = coxph(@formula(EventTime({{time}}, {{event}}) ~ {{covariates}}), {{data}})  # fit Cox proportional hazards
 coeftable(model)  # estimated coefficients
@@ -221,10 +221,12 @@ model = "aft"
 code = '''
 using LSurvival, PollisDatasets  # curated example datasets
 
-# Example data: Kalbfleisch and Prentice (1980), survival in days of 137 veterans with advanced lung cancer in a trial of two chemotherapies. Replace it with your own table.
-{{data}} = dataset("veteran");  # datasetinfo("veteran") describes the columns; status 1 = died, 0 = censored
+{{?data=data}} # Example data: Kalbfleisch and Prentice (1980), survival in days of 137 veterans with advanced lung cancer in a trial of two chemotherapies. Replace data with your own table.
+{{?data=data}} data = dataset("veteran");  # datasetinfo("veteran") describes the columns; status 1 = died, 0 = censored
 
-model = survreg(@formula(Surv({{time}}, {{event}}) ~ {{covariates}}), {{data}}, dist=LSurvival.{{dist}}())  # fit AFT model
+{{?dist=Lognormal|Weibull|Exponential|Gamma}} model = survreg(@formula(Surv({{time}}, {{event}}) ~ {{covariates}}), {{data}}, dist=LSurvival.{{dist}}())  # fit AFT model
+{{?dist=GGamma}} weibull = survreg(@formula(Surv({{time}}, {{event}}) ~ {{covariates}}), {{data}}, dist=LSurvival.Weibull())  # the generalised gamma's kappa = 0 case: LSurvival's own start, kappa = -10, does not converge
+{{?dist=GGamma}} model = survreg(@formula(Surv({{time}}, {{event}}) ~ {{covariates}}), {{data}}, dist=LSurvival.GGamma(), start=vcat(LSurvival.params(weibull), 0.0))  # fit AFT model, from the Weibull's estimates
 coeftable(model)  # estimated coefficients
 '''
 
@@ -382,7 +384,7 @@ desc = "Cox PH: likelihood ratio test against the model with no covariates, plus
 code = '''
 using Survival, Distributions, Plots
 {{?model=aj}} error("Available for Kaplan-Meier, Nelson-Aalen, Cox PH and AFT")
-{{?model=aft}} println("AIC = ", round(aic(model), digits=2), "   log-likelihood = ", round(loglikelihood(model), digits=3), "   intercept-only = ", round(nullloglikelihood(model), digits=3))
+{{?model=aft}} println("AIC = ", round(-2 * loglikelihood(model) + 2 * length(LSurvival.params(model)), digits=2), "   log-likelihood = ", round(loglikelihood(model), digits=3), "   intercept-only = ", round(nullloglikelihood(model), digits=3))  # AIC counting every parameter: see the Diagnostics wiki
 {{?model=cox}} LR = 2 * (loglikelihood(model) - nullloglikelihood(model))
 {{?model=cox}} println("LR = ", round(LR, digits=3), "  df = ", dof(model), "  p = ", round(ccdf(Chisq(dof(model)), LR), digits=5))
 {{?model=cox}} println("AIC = ", round(-2 * loglikelihood(model) + 2 * dof(model), digits=2))

@@ -16,6 +16,10 @@ github = "https://github.com/JuliaStats/GLM.jl"
 name = "CalibrationErrors.jl"
 github = "https://github.com/devmotion/CalibrationErrors.jl"
 
+[[packages]]
+name = "PollisDatasets.jl"
+github = "https://github.com/Trumpingtons/PollisDatasets.jl"
+
 [requires]
 packages = ["GLM.jl", "CalibrationErrors.jl", "Optim.jl", "Plots.jl"]
 
@@ -105,7 +109,7 @@ detail = "single-parameter logit rescaling for neural networks; minimises NLL ov
 [[inputs]]
 id = "scores"
 label = "Raw Scores / Logits"
-tooltip = "Vector of uncalibrated classifier scores or logits from the validation set. For Platt/Isotonic use probability scores; for Temperature use raw logits."
+tooltip = "Vector of uncalibrated classifier scores or logits from the validation set. For Platt/Isotonic use probability scores; for Temperature use raw logits.\nThe default is a simulated classifier's output from PollisDatasets: datasetinfo(\"sim_clf\") shows how it was made."
 default = "scores_val"
 
 [[inputs]]
@@ -118,17 +122,28 @@ default = "y_val"
 model = "platt"
 code = '''
 using GLM
+{{?scores=scores_val}} using PollisDatasets  # curated example datasets
+
+{{?scores=scores_val}} d = dataset("sim_clf");  # simulated: 1000 held-out cases, one in five positive; datasetinfo("sim_clf") shows how they were made
+{{?scores=scores_val}} y_val = d.y .== "yes";  # true labels as Bool. Replace them with your own.
+{{?scores=scores_val}} scores_val = d.score;  # the classifier's probabilities of "yes"
 
 tbl = (score = {{scores}}, y = {{y}})  # validation scores and labels as a Tables.jl column table
 
 platt = glm(@formula(y ~ score), tbl, Binomial(), LogitLink())  # logistic regression on raw scores
 
-cal_probs = predict(platt, tbl)  # calibrated probabilities
+cal_probs = Float64.(predict(platt, tbl))  # calibrated probabilities (predict allows missing values; there are none)
 '''
 
 [[codeBranches]]
 model = "isotonic"
 code = '''
+{{?scores=scores_val}} using PollisDatasets  # curated example datasets
+
+{{?scores=scores_val}} d = dataset("sim_clf");  # simulated: 1000 held-out cases, one in five positive; datasetinfo("sim_clf") shows how they were made
+{{?scores=scores_val}} y_val = d.y .== "yes";  # true labels as Bool. Replace them with your own.
+{{?scores=scores_val}} scores_val = d.score;  # the classifier's probabilities of "yes"
+
 function pav(scores, labels)  # Pool Adjacent Violators: the least-squares non-decreasing fit of labels on scores
     idx = sortperm(scores)  # sort by score ascending
     means, sizes = Float64[], Int[]  # one entry per pooled block
@@ -153,6 +168,11 @@ cal_probs = pav({{scores}}, {{y}})  # calibrated probabilities
 model = "temperature"
 code = '''
 using Optim
+{{?scores=scores_val}} using PollisDatasets  # curated example datasets
+
+{{?scores=scores_val}} d = dataset("sim_clf");  # simulated: 1000 held-out cases, one in five positive; datasetinfo("sim_clf") shows how they were made
+{{?scores=scores_val}} y_val = d.y .== "yes";  # true labels as Bool. Replace them with your own.
+{{?scores=scores_val}} scores_val = log.(d.score ./ (1 .- d.score));  # the classifier's logits: its probabilities of "yes" on the log-odds scale
 
 logits = {{scores}}  # raw pre-sigmoid logits from the model
 

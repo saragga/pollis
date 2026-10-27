@@ -299,7 +299,7 @@ models = ["multivariate"]
 [[inputs]]
 id = "x"
 label = "x"
-tooltip = ""
+tooltip = "The sample, a vector of numbers (for the time series tests, the series in time order). With the default x, the code example loads example data chosen for the selected test; the comment above it names the source."
 default = "x"
 models = ["parametric",  "nonparametric",  "timeseries",  "multivariate"]
 when = "test=one-sample-t-test|two-sample-t-test|welch-t-test|one-sample-z-test|two-sample-z-test|f-test|ks-one-sample-test|ks-two-sample-test|sign-test|wilcoxon-signed-rank|mann-whitney-u-test|anderson-darling-test|wald-wolfowitz-test|shapiro-wilk-test|permutation-test|augmented-dickey-fuller|ljung-box|box-pierce|jarque-bera|correlation-test"
@@ -315,7 +315,7 @@ when = "test=one-sample-t-test|one-sample-z-test|sign-test|wilcoxon-signed-rank"
 [[inputs]]
 id = "y"
 label = "y"
-tooltip = ""
+tooltip = "The second sample, a vector of numbers (for the correlation test, paired with x). With the defaults x and y, the code example loads example data chosen for the selected test."
 default = "y"
 models = ["parametric",  "nonparametric",  "multivariate"]
 when = "test=two-sample-t-test|welch-t-test|two-sample-z-test|f-test|ks-two-sample-test|mann-whitney-u-test|wald-wolfowitz-test|permutation-test|correlation-test"
@@ -331,7 +331,7 @@ when = "test=one-sample-z-test"
 [[inputs]]
 id = "grp1"
 label = "groups"
-tooltip = ""
+tooltip = "Three or more samples, comma-separated vectors. The default x, y, z loads the sepal lengths of the three iris species (Fisher 1936)."
 default = "x, y, z"
 models = ["parametric",  "nonparametric"]
 when = "test=one-way-anova|levene-s-test|brown-forsythe-test|kruskal-wallis-test|fligner-killeen-test"
@@ -339,7 +339,7 @@ when = "test=one-way-anova|levene-s-test|brown-forsythe-test|kruskal-wallis-test
 [[inputs]]
 id = "obs"
 label = "observed"
-tooltip = ""
+tooltip = "A vector of observed counts, one per category. The default loads Mendel's 556 peas for the chi-squared test, and 600 simulated rolls of a loaded die for the power-divergence and likelihood-ratio tests, which test equal probabilities."
 default = "observed"
 models = ["parametric"]
 when = "test=chi-squared-test|power-divergence-test|multinomial-lr-test"
@@ -347,7 +347,7 @@ when = "test=chi-squared-test|power-divergence-test|multinomial-lr-test"
 [[inputs]]
 id = "exp"
 label = "expected"
-tooltip = ""
+tooltip = "The expected counts or ratios, one per category; they are rescaled to proportions. The default is Mendel's 9:3:3:1."
 default = "expected"
 models = ["parametric"]
 when = "test=chi-squared-test"
@@ -363,7 +363,7 @@ when = "test=power-divergence-test"
 [[inputs]]
 id = "k"
 label = "k"
-tooltip = ""
+tooltip = "The number of successes. The default k and n load the females among the penguins whose sex was recorded (Palmer penguins)."
 default = "k"
 models = ["nonparametric"]
 when = "test=binomial-test"
@@ -371,7 +371,7 @@ when = "test=binomial-test"
 [[inputs]]
 id = "n"
 label = "n"
-tooltip = ""
+tooltip = "The number of trials."
 default = "n"
 models = ["nonparametric"]
 when = "test=binomial-test"
@@ -387,7 +387,7 @@ when = "test=binomial-test"
 [[inputs]]
 id = "a"
 label = "a"
-tooltip = ""
+tooltip = "Top-left cell of the 2 x 2 table [a b; c d]. The defaults a, b, c, d load Fisher's lady tasting tea: 3, 1, 1, 3."
 default = "a"
 models = ["nonparametric"]
 when = "test=fisher-exact-test"
@@ -427,8 +427,8 @@ when = "test=ks-one-sample-test|anderson-darling-test"
 [[inputs]]
 id = "f"
 label = "statistic"
-tooltip = ""
-default = "(a,b)->mean(a)-mean(b)"
+tooltip = "A function of one sample, such as mean or median: the test compares f(x) - f(y) with its value in every relabelling of the pooled sample."
+default = "mean"
 models = ["nonparametric"]
 when = "test=permutation-test"
 
@@ -459,7 +459,7 @@ when = "test=ljung-box|box-pierce"
 [[inputs]]
 id = "fitted"
 label = "model"
-tooltip = ""
+tooltip = "A fitted GLM.jl regression model; the test uses its regressors and residuals. The default model fits a straight-line trend to the Mauna Loa CO2 series."
 default = "model"
 models = ["timeseries"]
 when = "test=durbin-watson|breusch-godfrey|white-test"
@@ -467,7 +467,7 @@ when = "test=durbin-watson|breusch-godfrey|white-test"
 [[inputs]]
 id = "e1"
 label = "e1"
-tooltip = ""
+tooltip = "Forecast errors of the first model (for Clark-West, the smaller, nested one). The defaults e1 and e2 load one-year-ahead forecast errors of the Nile flow: the historical mean against an AR(1)."
 default = "e1"
 models = ["timeseries"]
 when = "test=clark-west|diebold-mariano"
@@ -475,7 +475,7 @@ when = "test=clark-west|diebold-mariano"
 [[inputs]]
 id = "e2"
 label = "e2"
-tooltip = ""
+tooltip = "Forecast errors of the second model (for Clark-West, the larger one), as many as e1."
 default = "e2"
 models = ["timeseries"]
 when = "test=clark-west|diebold-mariano"
@@ -491,7 +491,7 @@ when = "test=clark-west"
 [[inputs]]
 id = "X"
 label = "X"
-tooltip = ""
+tooltip = "A data matrix, one observation per row and one variable per column. The default loads each sleep-study driver's change in reaction time to day 5 and to day 9."
 default = "X"
 models = ["multivariate"]
 when = "test=hotelling-s-t"
@@ -507,7 +507,7 @@ when = "test=hotelling-s-t"
 [[inputs]]
 id = "grp2"
 label = "groups"
-tooltip = ""
+tooltip = "Two data matrices, comma-separated, with the same variables in their columns. The default X1, X2 loads the four measurements of setosa and versicolor irises."
 default = "X1, X2"
 models = ["multivariate"]
 when = "test=equality-of-covariance"
@@ -517,6 +517,28 @@ model = "parametric"
 code = '''
 using HypothesisTests
 {{?test=one-sample-z-test}} using Statistics
+{{?x=x}} {{?test=one-sample-t-test}} # Example data: Belenky et al. (2003), the change in mean reaction time (ms) of 18 drivers from day 0 to day 9 of sleep restricted to 3 hours a night; mu0 = 0 asks whether the restriction slowed them. Replace x with your own sample.
+{{?x=x}} {{?test=one-sample-t-test}} using PollisDatasets
+{{?x=x}} {{?test=one-sample-t-test}} study = dataset("sleepstudy"); rt = Dict((study.subject[i], study.days[i]) => study.reaction[i] for i in eachindex(study.reaction));
+{{?x=x}} {{?test=one-sample-t-test}} x = [rt[(i, 9)] - rt[(i, 0)] for i in unique(study.subject)];
+{{?x=x}} {{?test=one-sample-z-test}} # Example data: simulated, 40 draws from a normal distribution with mean 0.5 and the known standard deviation 1 (sigma) that the z-test assumes. Replace x with your own sample.
+{{?x=x}} {{?test=one-sample-z-test}} using Random
+{{?x=x}} {{?test=one-sample-z-test}} x = randn(Xoshiro(42), 40) .+ 0.5;
+{{?x=x}} {{?test=two-sample-t-test|welch-t-test|two-sample-z-test|f-test}} # Example data: Henderson and Velleman (1981), Motor Trend 1974, miles per gallon of the 19 cars with automatic (x) and the 13 with manual (y) transmissions. Replace x and y with your own samples.
+{{?x=x}} {{?test=two-sample-t-test|welch-t-test|two-sample-z-test|f-test}} using PollisDatasets
+{{?x=x}} {{?test=two-sample-t-test|welch-t-test|two-sample-z-test|f-test}} cars = dataset("mtcars");
+{{?x=x}} {{?test=two-sample-t-test|welch-t-test|two-sample-z-test|f-test}} x = cars.mpg[cars.am .== 0];
+{{?x=x}} {{?y=y}} {{?test=two-sample-t-test|welch-t-test|two-sample-z-test|f-test}} y = cars.mpg[cars.am .== 1];
+{{?grp1=x, y, z}} {{?test=one-way-anova|levene-s-test|brown-forsythe-test}} # Example data: Fisher (1936), sepal length (cm) of 50 irises of each species: setosa (x), versicolor (y) and virginica (z). Replace x, y, z with your own groups.
+{{?grp1=x, y, z}} {{?test=one-way-anova|levene-s-test|brown-forsythe-test}} using PollisDatasets
+{{?grp1=x, y, z}} {{?test=one-way-anova|levene-s-test|brown-forsythe-test}} flowers = dataset("iris");
+{{?grp1=x, y, z}} {{?test=one-way-anova|levene-s-test|brown-forsythe-test}} x, y, z = (flowers.sepal_length[flowers.species .== sp] for sp in ("setosa", "versicolor", "virginica"));
+{{?obs=observed}} {{?test=chi-squared-test}} observed = [315, 108, 101, 32];  # Example data: Mendel (1866), 556 pea seeds: round yellow, round green, wrinkled yellow, wrinkled green. Replace it with your own counts.
+{{?obs=observed}} {{?exp=expected}} {{?test=chi-squared-test}} expected = [9, 3, 3, 1];  # the 9:3:3:1 ratio his theory predicts. Replace it with your own expected counts or ratios.
+{{?obs=observed}} {{?test=power-divergence-test|multinomial-lr-test}} # Example data: simulated, 600 rolls of a die loaded so that a six comes up a quarter of the time; the test asks whether all six faces are equally likely. Replace observed with your own counts.
+{{?obs=observed}} {{?test=power-divergence-test|multinomial-lr-test}} using Random
+{{?obs=observed}} {{?test=power-divergence-test|multinomial-lr-test}} rng = Xoshiro(1); rolls = [rand(rng) < 0.1 ? 6 : rand(rng, 1:6) for _ in 1:600];
+{{?obs=observed}} {{?test=power-divergence-test|multinomial-lr-test}} observed = [count(==(face), rolls) for face in 1:6];
 {{?test=one-sample-t-test}} result = OneSampleTTest({{x}}, {{mu01}})
 {{?test=two-sample-t-test}} result = EqualVarianceTTest({{x}}, {{y}})
 {{?test=welch-t-test}} result = UnequalVarianceTTest({{x}}, {{y}})
@@ -537,8 +559,36 @@ println("p-value:        ", pvalue(result))
 [[codeBranches]]
 model = "nonparametric"
 code = '''
-{{?test!=shapiro-wilk-test}} using HypothesisTests
-{{?test=shapiro-wilk-test}} using ShapiroWilk
+using HypothesisTests
+{{?test=ks-one-sample-test|anderson-darling-test}} using Distributions  # the reference distribution
+{{?test=permutation-test}} using Statistics  # the default statistic, mean
+{{?k=k}} {{?test=binomial-test}} # Example data: Gorman et al. (2014), Palmer penguins, the females (k) among the 333 penguins whose sex was recorded (n); p0 = 0.5 asks whether the sexes are balanced. Replace k and n with your own counts.
+{{?k=k}} {{?test=binomial-test}} using PollisDatasets
+{{?k=k}} {{?test=binomial-test}} sex = dataset("penguins").sex;
+{{?k=k}} {{?test=binomial-test}} k = count(isequal("female"), sex);
+{{?k=k}} {{?n=n}} {{?test=binomial-test}} n = count(!ismissing, sex);
+{{?a=a}} {{?b=b}} {{?c=c}} {{?d=d}} {{?test=fisher-exact-test}} a, b, c, d = 3, 1, 1, 3;  # Example data: Fisher (1935), the lady tasting tea. Rows: the 4 cups with milk poured first, the 4 with tea first; columns: her guess, milk first or tea first. Replace a, b, c, d with your own 2 x 2 counts.
+{{?x=x}} {{?test=ks-one-sample-test|anderson-darling-test|shapiro-wilk-test}} # Example data: Härdle (1991), the 272 waiting times (minutes) between eruptions of the Old Faithful geyser, standardised to mean 0 and standard deviation 1: with two peaks they are far from normal. Estimating the mean and standard deviation from the data makes the KS and Anderson-Darling p-values conservative. Replace x with your own sample.
+{{?x=x}} {{?test=ks-one-sample-test|anderson-darling-test|shapiro-wilk-test}} using PollisDatasets, Statistics
+{{?x=x}} {{?test=ks-one-sample-test|anderson-darling-test|shapiro-wilk-test}} waiting = Float64.(dataset("faithful").waiting);
+{{?x=x}} {{?test=ks-one-sample-test|anderson-darling-test|shapiro-wilk-test}} x = (waiting .- mean(waiting)) ./ std(waiting);
+{{?x=x}} {{?test=ks-two-sample-test|mann-whitney-u-test|wald-wolfowitz-test}} # Example data: Henderson and Velleman (1981), Motor Trend 1974, weights (1000 lb) of the 19 cars with automatic (x) and the 13 with manual (y) transmissions. Replace x and y with your own samples.
+{{?x=x}} {{?test=ks-two-sample-test|mann-whitney-u-test|wald-wolfowitz-test}} using PollisDatasets
+{{?x=x}} {{?test=ks-two-sample-test|mann-whitney-u-test|wald-wolfowitz-test}} cars = dataset("mtcars");
+{{?x=x}} {{?test=ks-two-sample-test|mann-whitney-u-test|wald-wolfowitz-test}} x = cars.wt[cars.am .== 0];
+{{?x=x}} {{?y=y}} {{?test=ks-two-sample-test|mann-whitney-u-test|wald-wolfowitz-test}} y = cars.wt[cars.am .== 1];
+{{?x=x}} {{?test=sign-test|wilcoxon-signed-rank}} # Example data: Belenky et al. (2003), the change in mean reaction time (ms) of 18 drivers from day 0 to day 9 of sleep restricted to 3 hours a night; mu0 = 0 asks whether the restriction slowed them. Replace x with your own sample.
+{{?x=x}} {{?test=sign-test|wilcoxon-signed-rank}} using PollisDatasets
+{{?x=x}} {{?test=sign-test|wilcoxon-signed-rank}} study = dataset("sleepstudy"); rt = Dict((study.subject[i], study.days[i]) => study.reaction[i] for i in eachindex(study.reaction));
+{{?x=x}} {{?test=sign-test|wilcoxon-signed-rank}} x = [rt[(i, 9)] - rt[(i, 0)] for i in unique(study.subject)];
+{{?grp1=x, y, z}} {{?test=kruskal-wallis-test|fligner-killeen-test}} # Example data: Fisher (1936), sepal length (cm) of 50 irises of each species: setosa (x), versicolor (y) and virginica (z). Replace x, y, z with your own groups.
+{{?grp1=x, y, z}} {{?test=kruskal-wallis-test|fligner-killeen-test}} using PollisDatasets
+{{?grp1=x, y, z}} {{?test=kruskal-wallis-test|fligner-killeen-test}} flowers = dataset("iris");
+{{?grp1=x, y, z}} {{?test=kruskal-wallis-test|fligner-killeen-test}} x, y, z = (flowers.sepal_length[flowers.species .== sp] for sp in ("setosa", "versicolor", "virginica"));
+{{?x=x}} {{?test=permutation-test}} # Example data: simulated, 5 measurements from each of two normal populations whose means differ by 1.5. The exact test goes through all 10! = 3,628,800 orderings of the pooled values, so it suits only very small samples. Replace x and y with your own samples.
+{{?x=x}} {{?test=permutation-test}} using Random
+{{?x=x}} {{?test=permutation-test}} rng = Xoshiro(1); x = randn(rng, 5) .+ 1.5;
+{{?x=x}} {{?y=y}} {{?test=permutation-test}} y = randn(rng, 5);
 {{?test=binomial-test}} result = BinomialTest({{k}}, {{n}}, {{p0}})
 {{?test=fisher-exact-test}} result = FisherExactTest({{a}}, {{b}}, {{c}}, {{d}})
 {{?test=ks-one-sample-test}} result = ExactOneSampleKSTest({{x}}, {{dist}})
@@ -549,8 +599,8 @@ code = '''
 {{?test=kruskal-wallis-test}} result = KruskalWallisTest({{grp1}})
 {{?test=anderson-darling-test}} result = OneSampleADTest({{x}}, {{dist}})
 {{?test=fligner-killeen-test}} result = FlignerKilleenTest({{grp1}})
-{{?test=wald-wolfowitz-test}} result = WaldWolfowitzTest({{x}}, {{y}})
-{{?test=shapiro-wilk-test}} result = shapiro_test({{x}})
+{{?test=wald-wolfowitz-test}} result = WaldWolfowitzTest([i <= length({{x}}) for i in sortperm(vcat({{x}}, {{y}}))])  # runs of x and y in the pooled sample sorted by value
+{{?test=shapiro-wilk-test}} result = ShapiroWilkTest({{x}})
 {{?test=permutation-test}} result = ExactPermutationTest({{x}}, {{y}}, {{f}})
 display(result)  # full report, including the test statistic
 println("p-value:        ", pvalue(result))
@@ -561,6 +611,23 @@ println("p-value:        ", pvalue(result))
 model = "timeseries"
 code = '''
 using HypothesisTests
+{{?x=x}} {{?test=augmented-dickey-fuller}} # Example data: Federal Reserve H.15, the daily 10-year US Treasury yield (%), January 1962 to October 2026: does it wander like a random walk? Replace x with your own series.
+{{?x=x}} {{?test=augmented-dickey-fuller}} using PollisDatasets
+{{?x=x}} {{?test=augmented-dickey-fuller}} x = dataset("dgs10").yield;
+{{?x=x}} {{?test=ljung-box|box-pierce}} # Example data: Elton and Nicholson (1942), the log of the annual lynx trappings in the Mackenzie River district, 1821-1934, with a cycle of about ten years. Replace x with your own series.
+{{?x=x}} {{?test=ljung-box|box-pierce}} using PollisDatasets
+{{?x=x}} {{?test=ljung-box|box-pierce}} x = log.(dataset("lynxmackenzie").lynx);
+{{?x=x}} {{?test=jarque-bera}} # Example data: Yahoo! Finance via Kaggle, daily log returns of GameStop, February 2002 to May 2024, with the short squeeze of January 2021 in its tails. Replace x with your own series.
+{{?x=x}} {{?test=jarque-bera}} using PollisDatasets
+{{?x=x}} {{?test=jarque-bera}} x = diff(log.(dataset("gamestop").adj_close));
+{{?fitted=model}} {{?test=durbin-watson|breusch-godfrey|white-test}} # Example data: NOAA, monthly mean CO2 (ppm) at Mauna Loa, March 1958 to August 2026, with a straight-line trend fitted by least squares: the seasonal cycle and the curvature the line misses stay in the residuals. Replace model with your own fitted GLM.jl model.
+{{?fitted=model}} {{?test=durbin-watson|breusch-godfrey|white-test}} using PollisDatasets, GLM
+{{?fitted=model}} {{?test=durbin-watson|breusch-godfrey|white-test}} model = lm(@formula(average ~ decimal_date), dataset("co2"));
+{{?e1=e1}} {{?test=clark-west|diebold-mariano}} # Example data: Cobb (1978), the annual flow of the Nile at Aswan, 1871-1970, forecast one year ahead for 1901-1970: e1 are the errors of the historical mean (the smaller, nested model), e2 those of an AR(1) refitted by least squares each year. Replace e1 and e2 with your own forecast errors.
+{{?e1=e1}} {{?test=clark-west|diebold-mariano}} using PollisDatasets, Statistics
+{{?e1=e1}} {{?test=clark-west|diebold-mariano}} flow = Float64.(dataset("nile").flow);
+{{?e1=e1}} {{?test=clark-west|diebold-mariano}} e1 = [flow[t + 1] - mean(flow[1:t]) for t in 30:99];
+{{?e1=e1}} {{?e2=e2}} {{?test=clark-west|diebold-mariano}} e2 = [(b = [ones(t - 1) flow[1:t - 1]] \ flow[2:t]; flow[t + 1] - b[1] - b[2] * flow[t]) for t in 30:99];
 {{?test=augmented-dickey-fuller}} result = ADFTest({{x}}, {{det}}, {{lags1}})
 {{?test=durbin-watson}} result = DurbinWatsonTest(modelmatrix({{fitted}}), residuals({{fitted}}))  # regressors and residuals of the fitted model
 {{?test=ljung-box}} result = LjungBoxTest({{x}}, {{lags2}})
@@ -578,6 +645,19 @@ println("p-value:        ", pvalue(result))
 model = "multivariate"
 code = '''
 using HypothesisTests
+{{?X=X}} {{?test=hotelling-s-t}} # Example data: Belenky et al. (2003), for each of 18 drivers the change in mean reaction time (ms) from day 0 to day 5 and to day 9 of sleep restricted to 3 hours a night, one driver per row; mu0 = [0.0, 0.0] asks whether either changed. Replace X with your own n x p matrix.
+{{?X=X}} {{?test=hotelling-s-t}} using PollisDatasets
+{{?X=X}} {{?test=hotelling-s-t}} study = dataset("sleepstudy"); rt = Dict((study.subject[i], study.days[i]) => study.reaction[i] for i in eachindex(study.reaction));
+{{?X=X}} {{?test=hotelling-s-t}} X = [rt[(i, day)] - rt[(i, 0)] for i in unique(study.subject), day in (5, 9)];
+{{?grp2=X1, X2}} {{?test=equality-of-covariance}} # Example data: Fisher (1936), the four sepal and petal measurements (cm) of 50 setosa (X1) and 50 versicolor (X2) irises, one flower per row. Replace X1, X2 with your own matrices.
+{{?grp2=X1, X2}} {{?test=equality-of-covariance}} using PollisDatasets
+{{?grp2=X1, X2}} {{?test=equality-of-covariance}} flowers = dataset("iris"); M = hcat(flowers.sepal_length, flowers.sepal_width, flowers.petal_length, flowers.petal_width);
+{{?grp2=X1, X2}} {{?test=equality-of-covariance}} X1 = M[flowers.species .== "setosa", :]; X2 = M[flowers.species .== "versicolor", :];
+{{?x=x}} {{?test=correlation-test}} # Example data: Galton (1886), the midparent heights (x) and adult heights (y) in inches of 934 children of 205 families. Replace x and y with your own paired samples.
+{{?x=x}} {{?test=correlation-test}} using PollisDatasets
+{{?x=x}} {{?test=correlation-test}} heights = dataset("galton");
+{{?x=x}} {{?test=correlation-test}} x = heights.midparent_height;
+{{?x=x}} {{?y=y}} {{?test=correlation-test}} y = heights.child_height;
 {{?test=hotelling-s-t}} result = OneSampleHotellingT2Test({{X}}, {{mu02}})
 {{?test=equality-of-covariance}} result = BartlettTest({{grp2}})  # two data matrices, observations in rows
 {{?test=correlation-test}} result = CorrelationTest({{x}}, {{y}})
@@ -692,7 +772,7 @@ using HypothesisTests, Random, Plots
 {{?test=kruskal-wallis-test}} testfun = s -> KruskalWallisTest(s...)
 {{?test=anderson-darling-test}} testfun = s -> OneSampleADTest(s[1], {{dist}})
 {{?test=fligner-killeen-test}} testfun = s -> FlignerKilleenTest(s...)
-{{?test=wald-wolfowitz-test}} testfun = s -> WaldWolfowitzTest(s[1], s[2])
+{{?test=wald-wolfowitz-test}} testfun = s -> WaldWolfowitzTest([i <= length(s[1]) for i in sortperm(vcat(s[1], s[2]))])
 {{?test=shapiro-wilk-test|permutation-test}} error("Resampled power is too slow or unavailable for this test: try the t-test or Mann-Whitney equivalent")
 rng = MersenneTwister(1); mult = [0.5, 1, 1.5, 2, 3]
 pw = [count(_ -> pvalue(testfun([rand(rng, s, max(3, round(Int, m * length(s)))) for s in samples])) < 0.05, 1:500) / 500 for m in mult]

@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Event } from '../../../../base/common/event.js';
+import { URI } from '../../../../base/common/uri.js';
 import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
 
 /** The command that opens the page where the user chooses a toolbox's panels, given the extension id. */
@@ -31,6 +32,17 @@ export interface IToolboxPanelInfo {
 	readonly keys: readonly string[];
 }
 
+/** A document of an installed toolbox, for Help > Documentation > Toolboxes: LaTeX sources Pollis compiles. */
+export interface IToolboxDocumentInfo {
+	readonly title: string;
+	/** What it covers, in a sentence or two. */
+	readonly description?: string;
+	/** The folder of its sources: the main .tex, its .bib files and a resources/ folder. */
+	readonly folder: URI;
+	/** The main file's name, without .tex. */
+	readonly name: string;
+}
+
 /** A place in the menus: a menu, and the group and order in it that set the position. */
 export interface IToolboxPlace {
 	/** A menu id, or {@link TOOLBOX_MENU} for a panel in its toolbox's own menu. */
@@ -53,7 +65,10 @@ export interface IToolboxInfo {
 	readonly extensionId: string;
 	readonly id: string;
 	readonly title: string;
+	/** The extension's version. */
+	readonly version: string;
 	readonly panels: readonly IToolboxPanelInfo[];
+	readonly documents: readonly IToolboxDocumentInfo[];
 	/** The default places: the toolbox's menu at the end of Extend, with every panel in. */
 	readonly defaultPlacement: IToolboxPlacement;
 	/** The places the toolbox is in: the ones the user published, else the default ones. */

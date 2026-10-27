@@ -156,7 +156,7 @@ models = ["nuts"]
 [[inputs]]
 id = "nuts-data"
 label = "Data Variable"
-tooltip = "Name of the observed data vector passed to the model."
+tooltip = "Name of the observed data vector passed to the model. The default simulates 100 draws from Normal(mu = 1, sigma = 2), so the posterior means of mu and sigma should come out near 1 and 2."
 default = "y"
 models = ["nuts"]
 
@@ -198,7 +198,7 @@ models = ["hmc"]
 [[inputs]]
 id = "hmc-data"
 label = "Data Variable"
-tooltip = "Name of the observed data vector passed to the model."
+tooltip = "Name of the observed data vector passed to the model. The default simulates 100 draws from Normal(mu = 1, sigma = 2), so the posterior means of mu and sigma should come out near 1 and 2."
 default = "y"
 models = ["hmc"]
 
@@ -219,15 +219,15 @@ models = ["hmc"]
 [[inputs]]
 id = "hmc-eps"
 label = "Step Size (epsilon)"
-tooltip = "Leapfrog integrator step size."
-default = "0.05"
+tooltip = "Leapfrog integrator step size. HMC does not adapt it: too large a step for the starting point and a chain rejects every proposal and stays stuck (R-hat well above 1.01). The default 0.01 is safe for the example data from any starting point; 0.02 already leaves some chains stuck."
+default = "0.01"
 models = ["hmc"]
 
 [[inputs]]
 id = "hmc-L"
 label = "Leapfrog Steps (L)"
-tooltip = "Number of leapfrog steps per HMC proposal."
-default = "10"
+tooltip = "Number of leapfrog steps per HMC proposal: step size x steps is how far a proposal travels. With step size 0.01, 30 steps mix well on the example data; fewer steps move slowly, giving a low effective sample size."
+default = "30"
 models = ["hmc"]
 
 [[inputs]]
@@ -240,7 +240,7 @@ models = ["mh"]
 [[inputs]]
 id = "mh-data"
 label = "Data Variable"
-tooltip = "Name of the observed data vector passed to the model."
+tooltip = "Name of the observed data vector passed to the model. The default simulates 100 draws from Normal(mu = 1, sigma = 2), so the posterior means of mu and sigma should come out near 1 and 2."
 default = "y"
 models = ["mh"]
 
@@ -262,6 +262,10 @@ models = ["mh"]
 model = "nuts"
 code = '''
 using Turing, MCMCChains  # probabilistic programming and chain diagnostics
+{{?nuts-data=y}} using Random
+
+{{?nuts-data=y}} Random.seed!(1)  # simulated: 100 draws from Normal(mu = 1, sigma = 2), which the posterior should recover
+{{?nuts-data=y}} y = rand(Normal(1, 2), 100)  # Replace y with your own data vector.
 
 @model function {{nuts-model}}({{nuts-data}})  # define probabilistic model: replace priors and likelihood as needed
     mu    ~ Normal(0, 1)
@@ -279,6 +283,10 @@ summarystats(chain)  # mean, std, and R-hat convergence diagnostic per parameter
 model = "hmc"
 code = '''
 using Turing, MCMCChains  # probabilistic programming and chain diagnostics
+{{?hmc-data=y}} using Random
+
+{{?hmc-data=y}} Random.seed!(1)  # simulated: 100 draws from Normal(mu = 1, sigma = 2), which the posterior should recover
+{{?hmc-data=y}} y = rand(Normal(1, 2), 100)  # Replace y with your own data vector.
 
 @model function {{hmc-model}}({{hmc-data}})  # define probabilistic model: replace priors and likelihood as needed
     mu    ~ Normal(0, 1)
@@ -288,7 +296,7 @@ end
 
 model = {{hmc-model}}({{hmc-data}})  # instantiate model with observed data
 
-chain = sample(model, HMC({{hmc-eps}}, {{hmc-L}}), MCMCThreads(), {{hmc-n}}, {{hmc-chains}}; chain_type=MCMCChains.Chains)  # HMC: step size {{hmc-eps}}, {{hmc-L}} leapfrog steps, {{hmc-chains}} parallel chains
+chain = sample(model, HMC({{hmc-eps}}, {{hmc-L}}), MCMCThreads(), {{hmc-n}}, {{hmc-chains}}; chain_type=MCMCChains.Chains, discard_initial=100)  # HMC: step size {{hmc-eps}}, {{hmc-L}} leapfrog steps, {{hmc-chains}} parallel chains; no warm-up, so the first 100 draws, from the random starting point on, are dropped
 summarystats(chain)  # mean, std, and R-hat convergence diagnostic per parameter
 '''
 
@@ -296,6 +304,10 @@ summarystats(chain)  # mean, std, and R-hat convergence diagnostic per parameter
 model = "mh"
 code = '''
 using Turing, MCMCChains  # probabilistic programming and chain diagnostics
+{{?mh-data=y}} using Random
+
+{{?mh-data=y}} Random.seed!(1)  # simulated: 100 draws from Normal(mu = 1, sigma = 2), which the posterior should recover
+{{?mh-data=y}} y = rand(Normal(1, 2), 100)  # Replace y with your own data vector.
 
 @model function {{mh-model}}({{mh-data}})  # define probabilistic model: replace priors and likelihood as needed
     mu    ~ Normal(0, 1)
@@ -305,7 +317,7 @@ end
 
 model = {{mh-model}}({{mh-data}})  # instantiate model with observed data
 
-chain = sample(model, MH(), MCMCThreads(), {{mh-n}}, {{mh-chains}}; chain_type=MCMCChains.Chains)  # Metropolis-Hastings: gradient-free, {{mh-chains}} parallel chains
+chain = sample(model, MH(), MCMCThreads(), {{mh-n}}, {{mh-chains}}; chain_type=MCMCChains.Chains, discard_initial=100)  # Metropolis-Hastings: gradient-free, {{mh-chains}} parallel chains; no warm-up, so the first 100 draws are dropped
 summarystats(chain)  # mean, std, and R-hat convergence diagnostic per parameter
 '''
 
@@ -318,9 +330,9 @@ id = "trace-plot"
 label = "Trace Plot"
 desc = "Plot sampled parameter values over MCMC iterations"
 code = '''
-using Plots  # plotting library
+using StatsPlots  # statistics and plotting: holds the plot recipes of MCMCChains
 
-plot(chain)  # trace plots for all parameters across all chains
+plot(chain)  # trace plots and densities for all parameters across all chains
 '''
 
 [[actionGroups.actions]]
@@ -410,8 +422,8 @@ using Turing, MCMCChains  # probabilistic programming and chain diagnostics
 chain_nuts = sample(model, NUTS(500, 0.65), 1000; chain_type=MCMCChains.Chains)  # No-U-Turn Sampler
 chain_mh   = sample(model, MH(), 2000; chain_type=MCMCChains.Chains)  # Metropolis-Hastings
 
-println("NUTS ESS: ", ess_rhat(chain_nuts))  # compare effective sample size
-println("MH ESS:   ", ess_rhat(chain_mh))  # compare effective sample size
+println("NUTS:"); display(ess_rhat(chain_nuts))  # effective sample size and R-hat per parameter
+println("Metropolis-Hastings:"); display(ess_rhat(chain_mh))  # far fewer effective draws from twice as many
 '''
 
 [[actionGroups.actions]]

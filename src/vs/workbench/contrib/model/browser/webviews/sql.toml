@@ -206,7 +206,7 @@ models = ["import", "save"]
 [[inputs]]
 id = "file"
 label = "File"
-tooltip = "Path of the file to import, relative to the Julia working directory or absolute. Compressed files ending in .gz are read directly."
+tooltip = "Path of the file to import, relative to the Julia working directory or absolute. Compressed files ending in .gz are read directly. With the default, data.csv, the code first writes the airquality example from PollisDatasets to data.csv, unless the working directory has a data.csv already."
 default = "data.csv"
 models = ["import"]
 
@@ -233,7 +233,7 @@ label = "JSON (read_json)"
 [[inputs]]
 id = "data"
 label = "Data"
-tooltip = "Variable name of the Julia table to save: any Tables.jl source, e.g. a named tuple of vectors, a CSV.File or a query result."
+tooltip = "Variable name of the Julia table to save: any Tables.jl source, e.g. a named tuple of vectors, a CSV.File or a query result. The default, tbl, saves the airquality example from PollisDatasets."
 default = "tbl"
 models = ["save"]
 
@@ -290,12 +290,13 @@ label = "JSON"
 [[inputs]]
 id = "sql"
 label = "SQL"
-tooltip = "SELECT statement to run. Tables of the built-in database are listed in the Databases view."
+tooltip = "SELECT statement to run. Tables of the built-in databases are listed in the Databases view: the PollisDatasets as PollisDatasets.<id>. The default queries the Palmer penguins (Gorman, Williams and Fraser 2014), heaviest first. Replace it with your own query."
 kind = "textarea"
 default = '''
-SELECT *
-FROM data
-LIMIT 1000
+SELECT species, island, bill_length_mm, flipper_length_mm, body_mass_g
+FROM PollisDatasets.penguins
+WHERE body_mass_g IS NOT NULL
+ORDER BY body_mass_g DESC
 '''
 models = ["query", "export"]
 newRow = true
@@ -361,9 +362,8 @@ code = '''
 isdefined(Main, :PollisDB) && PollisDB.install()  # DuckDB is built into Pollis
 using DuckDB, DBInterface, Tables
 
-if !isdefined(Main, :{{con}})  # connect once, to the built-in database, as the Databases view does
-	{{con}} = DBInterface.connect(DuckDB.DB, ":memory:")
-	isdefined(Main, :PollisDB) && PollisDB.register("pollis", {{con}}; name = "PollisDatasets")  # loads the PollisDatasets
+if !isdefined(Main, :{{con}})  # connect once, to the built-in databases, as the Databases view does
+	{{con}} = isdefined(Main, :PollisDB) ? PollisDB.connect(; name = "Pollis") : DBInterface.connect(DuckDB.DB, ":memory:")  # attaches PollisDatasets, PollisRSS, PollisJournals and PollisReferences, read-only
 end
 
 sql = raw"""
@@ -388,6 +388,10 @@ using DuckDB, DBInterface, Tables
 if isdefined(Main, :{{owncon}})  # running it again: close the earlier connection first
 	isdefined(Main, :PollisDB) ? PollisDB.disconnect({{owncon}}) : DBInterface.close!({{owncon}})
 end
+
+{{?file=data.csv}} using CSV, PollisDatasets  # curated example datasets
+{{?file=data.csv}} # Example file: Chambers et al. (1983), daily air quality in New York, May to September 1973, written to data.csv in the working directory unless a data.csv is there already. Replace "data.csv" with your own file.
+{{?file=data.csv}} isfile("data.csv") || CSV.write("data.csv", dataset("airquality"))
 
 {{owncon}} = DBInterface.connect(DuckDB.DB, "{{database}}")  # creates the file if it does not exist
 {{?mode=replace}}DBInterface.execute({{owncon}}, "CREATE OR REPLACE TABLE {{table}} AS SELECT * FROM {{reader}}('{{file}}')")
@@ -418,6 +422,10 @@ if isdefined(Main, :{{owncon}})  # running it again: close the earlier connectio
 	isdefined(Main, :PollisDB) ? PollisDB.disconnect({{owncon}}) : DBInterface.close!({{owncon}})
 end
 
+{{?data=tbl}} using PollisDatasets  # curated example datasets
+{{?data=tbl}} # Example data: Chambers et al. (1983), daily air quality in New York, May to September 1973, with 44 missing readings. Replace tbl with your own table.
+{{?data=tbl}} tbl = dataset("airquality");  # datasetinfo("airquality") describes the columns
+
 {{owncon}} = DBInterface.connect(DuckDB.DB, "{{database}}")  # creates the file if it does not exist
 DuckDB.register_table({{owncon}}, Tables.columntable({{data}}), "julia_data")  # a view of the Julia columns, not a copy
 {{?mode=replace}}DBInterface.execute({{owncon}}, "CREATE OR REPLACE TABLE {{table}} AS SELECT * FROM julia_data")
@@ -441,9 +449,8 @@ code = '''
 isdefined(Main, :PollisDB) && PollisDB.install()  # DuckDB is built into Pollis
 using DuckDB, DBInterface, Tables
 
-if !isdefined(Main, :{{con}})  # connect once, to the built-in database, as the Databases view does
-	{{con}} = DBInterface.connect(DuckDB.DB, ":memory:")
-	isdefined(Main, :PollisDB) && PollisDB.register("pollis", {{con}}; name = "PollisDatasets")  # loads the PollisDatasets
+if !isdefined(Main, :{{con}})  # connect once, to the built-in databases, as the Databases view does
+	{{con}} = isdefined(Main, :PollisDB) ? PollisDB.connect(; name = "Pollis") : DBInterface.connect(DuckDB.DB, ":memory:")  # attaches PollisDatasets, PollisRSS, PollisJournals and PollisReferences, read-only
 end
 
 sql = raw"""

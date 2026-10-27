@@ -17,6 +17,8 @@ import { ICommandService } from '../../../../platform/commands/common/commands.j
 import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
 import { IFileService } from '../../../../platform/files/common/files.js';
 import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
+import { INotificationService } from '../../../../platform/notification/common/notification.js';
+import { IProgressService, ProgressLocation } from '../../../../platform/progress/common/progress.js';
 import { asText, IRequestService, isSuccess } from '../../../../platform/request/common/request.js';
 import { IPathService } from '../../../services/path/common/pathService.js';
 import { parseToml, TomlValue } from '../../model/browser/common/tomlPanelData.js';
@@ -27,14 +29,20 @@ import { vignettesIndex } from './newMethods.js';
 import { OPEN_LINK_COMMAND_ID } from '../../monitor/browser/openLink.js';
 import { voiceButtonsCss, voiceButtonsHtml, voiceButtonsScript } from '../../model/browser/webviews/webviewScaffold.js';
 
-// Help > Documentation > Package Vignettes: a vignette belongs to its package, as in R. Installed: the vignettes of the
+// Help > Documentation > Packages, the Package Vignettes page: a vignette belongs to its package, as in R. Installed: the vignettes of the
 // Julia packages installed on this computer (~/.julia/packages/NAME/SLUG/vignette/Vignette.toml, which Package and
 // Publish (media/methods/package.jl) writes into every package with a vignette), read without an Internet
 // connection, as the packages' documentation. In the Registry: the list in Vignettes.toml at the root of the Pollis
-// registry, which Package and Publish adds to on registration, to choose which packages to install. A vignette
-// opens in the integrated browser.
+// registry, which Package and Publish adds to on registration, to choose which packages to install. A package carries
+// its vignette's LaTeX sources, not a PDF: Pollis compiles the vignette with PollisTeX the first time it is opened
+// (the Julia extension's command language-julia.pollisCompileVignette, scripts/terminalserver/compile_vignette.jl),
+// from the installed package's vignette/ folder, or from the package's repository on GitHub for one in the registry,
+// into ~/.pollis/documents/vignettes/NAME-VERSION.pdf, and opens it in the integrated browser. A vignette published
+// before, with a PDF and no sources, opens its PDF.
 
 export const VIGNETTES_COMMAND_ID = 'pollis.documentation.vignettes';
+
+const COMPILE_VIGNETTE_COMMAND_ID = 'language-julia.pollisCompileVignette';
 
 /** A vignette: a table of Vignettes.toml in the registry, or the vignette/Vignette.toml of an installed package. */
 interface IVignette {
@@ -50,13 +58,17 @@ interface IVignette {
 	readonly topic: string;
 	readonly license: string;
 	readonly repository: string;
-	/** The PDF: a link on GitHub in the registry, the file's URI for an installed package. */
+	/** The main LaTeX file of the vignette, NAME.tex in the package's vignette/ folder. */
+	readonly source: string;
+	/** The vignette/ folder of an installed package, its URI; empty in the registry. */
+	readonly folder: string;
+	/** The PDF of a vignette published with one: a link on GitHub in the registry, the file's URI for an installed package. */
 	readonly pdf: string;
 }
 
 type VignettesMessage =
 	| { readonly command: 'ready' | 'refresh' }
-	| { readonly command: 'open'; readonly pdf: string }
+	| { readonly command: 'open'; readonly package: string; readonly installed: boolean }
 	| { readonly command: 'link'; readonly url: string };
 
 /** A vignette from a table of a Vignettes.toml; the PDF as written in it. */
@@ -74,6 +86,8 @@ function vignette(name: string, table: TomlValue): IVignette {
 		topic: text('topic'),
 		license: text('license'),
 		repository: text('repository'),
+		source: /^[A-Za-z0-9_-]+\.tex$/.test(text('source')) ? text('source') : '',
+		folder: '',
 		pdf: text('pdf'),
 	};
 }
@@ -86,12 +100,12 @@ function byTitle(a: IVignette, b: IVignette): number {
 	return a.title.localeCompare(b.title);
 }
 
-/** The vignettes listed in the registry's Vignettes.toml, those with a package, a title and links on GitHub. */
+/** The vignettes listed in the registry's Vignettes.toml, those with a package, a title, a repository on GitHub and their sources there, or a PDF. */
 function registryVignettes(content: string): IVignette[] {
 	return Object.entries(parseToml(content))
 		.filter((entry): entry is [string, TomlValue] => isTable(entry[1]))
 		.map(([name, table]) => vignette(name, table))
-		.filter(entry => entry.title && entry.pdf.startsWith('https://github.com/') && entry.repository.startsWith('https://github.com/'))
+		.filter(entry => entry.title && entry.repository.startsWith('https://github.com/') && (entry.source || entry.pdf.startsWith('https://github.com/')))
 		.sort(byTitle);
 }
 
@@ -110,7 +124,7 @@ function compareVersions(a: string, b: string): number {
 
 /**
  * The vignettes of the packages installed in the Julia depot, ~/.julia/packages/NAME/SLUG: those whose
- * vignette/Vignette.toml names a PDF beside it. Of a package installed in several versions, the newest.
+ * vignette/Vignette.toml names its source beside it, or a PDF. Of a package installed in several versions, the newest.
  */
 async function installedVignettes(fileService: IFileService, pathService: IPathService): Promise<IVignette[]> {
 	const packages = joinPath(pathService.userHome({ preferLocal: true }), '.julia', 'packages');
@@ -131,8 +145,15 @@ async function installedVignettes(fileService: IFileService, pathService: IPathS
 			try {
 				const table = parseToml((await fileService.readFile(joinPath(version, 'vignette', 'Vignette.toml'))).value.toString());
 				const entry = vignette('', table);
-				const pdf = joinPath(version, 'vignette', entry.pdf);
-				return entry.title && entry.pdf && !entry.pdf.includes('/') && await fileService.exists(pdf) ? { ...entry, pdf: pdf.toString() } : undefined;
+				const folder = joinPath(version, 'vignette');
+				if (!entry.title) {
+					return undefined;
+				}
+				if (entry.source && await fileService.exists(joinPath(folder, entry.source))) {
+					return { ...entry, folder: folder.toString(), pdf: '' };
+				}
+				const pdf = joinPath(folder, entry.pdf);
+				return entry.pdf && !entry.pdf.includes('/') && await fileService.exists(pdf) ? { ...entry, pdf: pdf.toString() } : undefined;
 			} catch {
 				return undefined;
 			}
@@ -153,6 +174,8 @@ async function openVignettesPage(accessor: ServicesAccessor): Promise<void> {
 	const requestService = accessor.get(IRequestService);
 	const configurationService = accessor.get(IConfigurationService);
 	const commandService = accessor.get(ICommandService);
+	const progressService = accessor.get(IProgressService);
+	const notificationService = accessor.get(INotificationService);
 
 	if (openPage && !openPage.isDisposed()) {
 		webviewWorkbenchService.revealWebview(openPage, openPage.group ?? -1, false);
@@ -214,14 +237,49 @@ async function openVignettesPage(accessor: ServicesAccessor): Promise<void> {
 		webviewInput.webview.postMessage({ command: 'registry', vignettes: registry, registry: url, error });
 	};
 
+	// A vignette's PDF: compiled from its sources the first time, then the copy compiled
+	const openVignette = async (entry: IVignette) => {
+		if (!entry.source) {
+			commandService.executeCommand(BrowserViewCommandId.Open, entry.pdf.startsWith('file:') ? URI.parse(entry.pdf).toString(true) : entry.pdf);
+			return;
+		}
+		const pdf = joinPath(pathService.userHome({ preferLocal: true }), '.pollis', 'documents', 'vignettes', `${entry.package}-${entry.version || 'latest'}.pdf`);
+		if (!await fileService.exists(pdf)) {
+			let answer: { pdf?: string; error?: string } | undefined;
+			await progressService.withProgress({ location: ProgressLocation.Window, title: localize('vignettes.compiling', "Compiling the vignette of {0}", `${entry.package}.jl`) }, async () => {
+				try {
+					answer = await commandService.executeCommand(COMPILE_VIGNETTE_COMMAND_ID, {
+						source: entry.folder ? URI.parse(entry.folder).fsPath : entry.repository,
+						name: entry.source.replace(/\.tex$/, ''),
+						pdf: pdf.fsPath,
+					});
+				} catch {
+					// The Julia extension is disabled, or not activated yet
+				}
+			});
+			if (!answer?.pdf) {
+				notificationService.error(answer?.error === 'noJulia'
+					? localize('vignettes.needsJulia', "Julia is needed to compile the vignette of {0}, with PollisTeX.", `${entry.package}.jl`)
+					: answer?.error && answer.error !== 'failed'
+						? localize('vignettes.compileError', "Could not compile the vignette of {0}: {1}", `${entry.package}.jl`, answer.error)
+						: localize('vignettes.compileFailed', "Could not compile the vignette of {0}: Julia stopped, or has not started yet.", `${entry.package}.jl`));
+				return;
+			}
+		}
+		commandService.executeCommand(BrowserViewCommandId.Open, pdf.toString(true));
+	};
+
 	disposables.add(webviewInput.webview.onMessage(async (e: { message: VignettesMessage }) => {
 		const message = e.message;
 		const known = [...installed, ...registry];
 		if (message.command === 'ready' || message.command === 'refresh') {
 			sendInstalled();
 			sendRegistry();
-		} else if (message.command === 'open' && known.some(entry => entry.pdf === message.pdf)) {
-			commandService.executeCommand(BrowserViewCommandId.Open, message.pdf.startsWith('file:') ? URI.parse(message.pdf).toString(true) : message.pdf);
+		} else if (message.command === 'open') {
+			const entry = (message.installed ? installed : registry).find(entry => entry.package === message.package);
+			if (entry) {
+				openVignette(entry);
+			}
 		} else if (message.command === 'link' && known.some(entry => entry.repository === message.url || entry.article === message.url) && /^https?:\/\//.test(message.url)) {
 			commandService.executeCommand(OPEN_LINK_COMMAND_ID, message.url);
 		}
@@ -236,10 +294,10 @@ function pageHtml(): string {
 		search: localize('vignettes.search', "Search vignettes"),
 		allTopics: localize('vignettes.allTopics', "All topics"),
 		installed: localize('vignettes.installed', "Installed"),
-		installedIntro: localize('vignettes.installedIntro', "The vignettes of the Julia packages installed on this computer. They open without an Internet connection."),
+		installedIntro: localize('vignettes.installedIntro', "The vignettes of the Julia packages installed on this computer. Pollis compiles a vignette from its LaTeX sources, with PollisTeX, the first time it is opened."),
 		installedEmpty: localize('vignettes.installedEmpty', "No installed package has a vignette yet. Install a package from the registry below and its vignette appears here."),
 		registry: localize('vignettes.registry', "In the Registry"),
-		registryIntro: localize('vignettes.registryIntro', "The vignettes of the packages in the Pollis registry, to choose which packages to install. Reading this list needs an Internet connection."),
+		registryIntro: localize('vignettes.registryIntro', "The vignettes of the packages in the Pollis registry, to choose which packages to install. Reading this list, and a vignette's sources on GitHub, needs an Internet connection."),
 		registryEmpty: localize('vignettes.registryEmpty', "No vignettes in the registry yet."),
 		loading: localize('vignettes.loading', "Reading the list of vignettes in the registry..."),
 		failed: localize('vignettes.failed', "Could not read the list of vignettes in the registry:"),
@@ -348,7 +406,7 @@ function pageHtml(): string {
 		const row = element('tr');
 		const name = cell(row, 'name');
 		const title = element('div', 'title', vignette.title);
-		title.addEventListener('click', () => vscode.postMessage({ command: 'open', pdf: vignette.pdf }));
+		title.addEventListener('click', () => vscode.postMessage({ command: 'open', package: vignette.package, installed: !inRegistry }));
 		if (inRegistry && installed && installed.some(other => other.package === vignette.package)) {
 			title.appendChild(element('span', 'badge', TEXT.isInstalled));
 		}
@@ -434,12 +492,12 @@ registerAction2(class extends Action2 {
 			id: VIGNETTES_COMMAND_ID,
 			title: {
 				...localize2('vignettes.action', "Package Vignettes"),
-				mnemonicTitle: localize({ key: 'miVignettes', comment: ['&& denotes a mnemonic'] }, "&&Package Vignettes"),
+				mnemonicTitle: localize({ key: 'miVignettes', comment: ['&& denotes a mnemonic'] }, "&&Packages"),
 			},
 			category: Categories.Help,
 			f1: true,
-			// Help > Documentation, defined in workbench/browser/actions/helpActions.ts, last, after the Drill-down documents
-			menu: { id: MenuId.for('MenubarHelpDocumentationMenu'), group: '0_pollis', order: 6 },
+			// Help > Documentation > Packages, defined in workbench/browser/actions/helpActions.ts, below a separator after the Drill-down documents
+			menu: { id: MenuId.for('MenubarHelpDocumentationMenu'), group: '1_packages', order: 1 },
 		});
 	}
 	run(accessor: ServicesAccessor): Promise<void> {

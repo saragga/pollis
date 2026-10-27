@@ -332,7 +332,9 @@ kept when Pollis is updated.
 
 \subhead{Next Steps}
 Visualise, Diagnose, Predict, Compare, Interpret: examples that carry on from the Example Code, using its
-results. Next Steps opens once you have run or sent the Example Code of the tab (the \ui{?} beside it says so).
+results. A Next Step runs the Example Code of the tab first when the Julia REPL has not run it yet, or it has
+changed since, and stops there if the Example Code fails; \ui{Send to Editor}, \ui{Send to Notebook} and
+\ui{Send to Pluto} put the Example Code before it.
 Its examples have the same buttons, and can be edited and restored in the same way.
 
 \subhead{Learn More}
@@ -351,7 +353,6 @@ and check that the variables and options still suit your question.
 \end{caution}
 
 \begin{trouble}
-\textbf{Next Steps is dimmed} & Run or send the Example Code of this tab first. \\
 \textbf{An error that a package is not found} & Use \ui{Julia REPL} or \ui{Send to Notebook}, which install it, or \ui{Install} on the \ui{Powered by:} line. \\
 \textbf{The send buttons are greyed out} & Finish editing (\ui{Save} or \ui{Cancel}); an added tab needs some code first. \\
 \end{trouble}
@@ -590,6 +591,8 @@ A toolbox can go in \ui{Explore}, \ui{Model}, \ui{Simulate}, \ui{Optimise} or th
 \newpage
 To change them later, choose \ui{Edit} on the toolbox in the \ui{Installed} section, or \ui{Toolbox
 Panels...} in the Command Palette (\ui{Compose: Toolbox Panels...}). To remove a toolbox, choose \ui{Uninstall} on it in the same section.
+A toolbox can bring its own documentation: \ui{Help > Documentation > Toolboxes} lists the documents of
+the toolboxes you installed, and Pollis compiles one the first time you open it.
 
 \subhead{Make a toolbox}
 A teacher can package the panels of a course as one toolbox and give it to the students. This is done by
@@ -798,7 +801,7 @@ organization, and the GitHub CLI, \texttt{gh}, signed in; Pollis asks first: \em
 \ui{Compose > Methods > Browse Methods} lists yours, \ui{In Progress} and \ui{Published by You},
 then the \ui{Library} of nine methods by Pollis, from arc-fs to threshold autoregression: click one to open
 your own copy. \ui{Delete} and \ui{Delete Empty Methods} move folders to the Trash. \ui{Help >
-Documentation > Package Vignettes} lists the vignettes of installed packages (they open offline) and, with the
+Documentation > Packages} lists the vignettes of installed packages (they open offline) and, with the
 Internet, those \ui{In the Registry}.
 
 \begin{caution}{The agent steps cost tokens}
@@ -852,7 +855,7 @@ Add the Pollis registry once, then add packages by name, in the Julia REPL's pac
 \texttt{pkg> add ThresholdAR}}
 
 \smallskip
-\ui{Help > Documentation > Package Vignettes} opens the vignettes of the packages you installed.
+\ui{Help > Documentation > Packages} opens the vignettes of the packages you installed.
 
 \newpage
 \subhead{Packages behind panels and features}

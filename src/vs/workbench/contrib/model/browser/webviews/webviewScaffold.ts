@@ -199,10 +199,8 @@ export function buildWebviewHtml(parts: WebviewParts): string {
 		.section-toggle:hover { text-decoration: underline; }
 		.section-toggle .illus-chevron { display: inline-flex; transition: transform 0.15s; flex-shrink: 0; }
 		.section.collapsed .section-toggle .illus-chevron { transform: rotate(-90deg); }
-		/* Next Steps is locked (dimmed, closed, with a ? explaining why) until the Code Example of the tab has been run or sent. */
-		.section.locked .section-toggle { color: var(--vscode-disabledForeground); cursor: default; }
-		.section.locked .section-toggle:hover { text-decoration: none; }
-		.section:not(.locked) .next-lock-tip { display: none; }
+		/* The line a Next Step shows while it runs or sends the Code Example of its tab first. */
+		.panel-run-note { margin-top: 6px; font-size: 12px; color: var(--vscode-descriptionForeground); }
 		.section.collapsed .section-body { display: none; }
 		.section-body { padding: 6px 0 0 0; }
 		/* Key Points (.methods-list), Next Steps / Learn More (.column-list) and the Explore intro
@@ -510,7 +508,7 @@ ${parts.inputsHtml ? `\t\t<div class="scaffold-inputs" id="scaffold-inputs">\n${
 		<div class="bottom-layout">
 			<div class="left-strip">
 				<div class="section collapsed" id="sec-next">
-				<button class="section-toggle"><span class="illus-chevron"><svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M7.976 10.072l-4.054-4.014-.92.92 4.49 4.45.978.01 4.525-4.46-.918-.92-4.101 4.014z"/></svg></span>Next Steps<span class="tooltip-icon next-lock-tip" data-tip="Run the Code Example of this tab first (Julia REPL, or Copy or send it to an editor or notebook): the Next Steps examples use its results.">?</span></button>
+				<button class="section-toggle"><span class="illus-chevron"><svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M7.976 10.072l-4.054-4.014-.92.92 4.49 4.45.978.01 4.525-4.46-.918-.92-4.101 4.014z"/></svg></span>Next Steps</button>
 				<div class="section-body">
 				<ul class="column-list">
 ${parts.nextStepsHtml ?? `					<li><button class="list-btn panel-toggle" id="btn-viz">${nextStepIcon('visualise')}Visualise</button></li>
@@ -950,25 +948,7 @@ ${parts.setModelExtraJs ?? ''}			document.querySelectorAll('#model-group .toggle
 			renderIllustration();
 			updateCodePreview();
 			refreshActionList();
-			updateNextStepsLock();
 		}
-
-		// Next Steps stays locked in a tab until its Code Example has been run or sent: the examples use its results.
-		var ranModels = (vscode.getState() || {}).ranModels || {};
-		function updateNextStepsLock() {
-			var locked = !ranModels[currentModel];
-			var section = document.getElementById('sec-next');
-			section.classList.toggle('locked', locked);
-			if (locked) { section.classList.add('collapsed'); }
-		}
-		SEND_BUTTONS.forEach(function(id) {
-			document.getElementById(id).addEventListener('click', function() {
-				ranModels[currentModel] = true;
-				vscode.setState(Object.assign({}, vscode.getState() || {}, { ranModels: ranModels }));
-				updateNextStepsLock();
-			});
-		});
-		updateNextStepsLock();
 
 		document.getElementById('model-group').addEventListener('click', function(e) {
 			var btn = e.target.closest('[data-model]');
@@ -1166,7 +1146,8 @@ ${parts.setModelExtraJs ?? ''}			document.querySelectorAll('#model-group .toggle
 				+ '<button class="code-action-btn" data-act="pluto">Send to Pluto</button>'
 				+ '</span>'
 				+ '</div>'
-				+ '</div>';
+				+ '</div>'
+				+ '<div class="panel-run-note" id="panel-run-note" hidden></div>';
 			// The generated example is the default; a saved (customised) one replaces it.
 			var box = document.getElementById('panel-code');
 			currentPanelPlainCode = null;                       // so extractCode reads the freshly-built DOM
@@ -1222,9 +1203,24 @@ ${parts.setModelExtraJs ?? ''}			document.querySelectorAll('#model-group .toggle
 						setTimeout(function() { b.textContent = 'Copy'; }, 2000);
 					});
 				} else {
-					vscode.postMessage({ command: 'runCode', target: act, code: code });
+					// The Code Example of the tab goes with it, since the step uses its results: the host
+					// puts it first unless the Julia REPL session has run it as it is now ('exampleFirst').
+					vscode.postMessage({ command: 'runCode', target: act, code: code, setup: extractCode() });
 				}
 			});
+		}
+
+		// Shown for a few seconds when the host puts the Code Example before a Next Step.
+		var panelRunNoteTimer;
+		function showPanelRunNote(target) {
+			var note = document.getElementById('panel-run-note');
+			if (!note) { return; }
+			note.textContent = target === 'juliaRepl'
+				? 'Running the Code Example first, so that this Next Step can use its results\\u2026'
+				: 'The Code Example comes first, so that this Next Step can use its results.';
+			note.hidden = false;
+			clearTimeout(panelRunNoteTimer);
+			panelRunNoteTimer = setTimeout(function() { note.hidden = true; }, 6000);
 		}
 
 		// ── Editable Next Steps examples ─────────────────────────────────────
@@ -1832,7 +1828,7 @@ ${parts.nextStepsWiringJs ?? `		document.getElementById('btn-viz').addEventListe
 		document.querySelectorAll('.section-toggle').forEach(function(t) {
 			t.addEventListener('click', function() {
 				var section = t.closest('.section');
-				if (!section.classList.contains('locked')) { section.classList.toggle('collapsed'); }
+				section.classList.toggle('collapsed');
 			});
 		});
 		${voiceButtonsScript}
@@ -1986,6 +1982,7 @@ ${parts.nextStepsWiringJs ?? `		document.getElementById('btn-viz').addEventListe
 			var msg = event.data;
 			if (!msg) { return; }
 			if (msg.command === 'apiKeyStatus') { renderApiKeyStatus(msg); }
+			if (msg.command === 'exampleFirst') { showPanelRunNote(msg.target); }
 			if (msg.command === 'packageLinks') {
 				var container = document.getElementById('package-links');
 				container.innerHTML = '';

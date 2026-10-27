@@ -163,20 +163,24 @@ detail = "exact least squares from sufficient statistics; updates beta and stand
 [[inputs]]
 id = "data"
 label = "Data stream"
-tooltip = "Vector or iterator of observations. Can be processed in a single pass with fit! or flushed observation by observation."
+tooltip = "Vector or iterator of observations. Can be processed in a single pass with fit! or flushed observation by observation. The default simulates 10,000 draws from Exponential(1), a skewed stream whose true mean (1), variance (1), median (0.693), skewness (2) and excess kurtosis (6) the online estimates should approach; on the Linear Regression tab it is the response y = 1 + 2x + noise."
 default = "data"
 
 [[inputs]]
 id = "X"
 models = ["linreg"]
 label = "Covariate matrix (X)"
-tooltip = "Design matrix (T x k) paired row-by-row with the response vector. Include a column of ones for the intercept."
+tooltip = "Design matrix (T x k) paired row-by-row with the response vector. Include a column of ones for the intercept. The default simulates 10,000 rows: a column of ones and one standard normal predictor."
 default = "X"
 
 [[codeBranches]]
 model = "desc"
 code = '''
 using OnlineStats
+{{?data=data}} using Random
+
+{{?data=data}} Random.seed!(1)  # simulated: a stream of 10,000 draws from Exponential(1), whose mean and variance are 1, median log(2) = 0.693, skewness 2 and excess kurtosis 6
+{{?data=data}} data = randexp(10_000)  # Replace data with your own stream of observations.
 
 o = Series(Mean(), Variance(), Extrema())  # bundle multiple stats into one pass
 fit!(o, {{data}})  # update all stats in a single pass
@@ -190,6 +194,10 @@ println("Extrema:  ", value(o[3]))  # running min and max
 model = "quantile"
 code = '''
 using OnlineStats
+{{?data=data}} using Random
+
+{{?data=data}} Random.seed!(1)  # simulated: a stream of 10,000 draws from Exponential(1), whose mean and variance are 1, median log(2) = 0.693, skewness 2 and excess kurtosis 6
+{{?data=data}} data = randexp(10_000)  # Replace data with your own stream of observations.
 
 o = P2Quantile(0.5)  # online median via P-squared algorithm
 fit!(o, {{data}})  # update quantile estimate
@@ -204,18 +212,27 @@ fit!(qs, {{data}})  # update all quartile estimators
 model = "hist"
 code = '''
 using OnlineStats
+{{?data=data}} using Random
+
+{{?data=data}} Random.seed!(1)  # simulated: a stream of 10,000 draws from Exponential(1), whose mean and variance are 1, median log(2) = 0.693, skewness 2 and excess kurtosis 6
+{{?data=data}} data = randexp(10_000)  # Replace data with your own stream of observations.
 
 o = KHist(20)  # adaptive histogram with up to 20 bins
 fit!(o, {{data}})  # update histogram as data arrives
 
 println(value(o))  # bin edges and counts
-println(OnlineStats.pdf(o, 0.0))  # density estimate at a given point
+println(OnlineStats.pdf(o, 1.0))  # density estimate at a given point (for the default stream, the true density at 1 is exp(-1) = 0.368)
 '''
 
 [[codeBranches]]
 model = "linreg"
 code = '''
 using OnlineStats
+{{?X=X}} {{?data=data}} using Random
+
+{{?X=X}} {{?data=data}} Random.seed!(1)  # simulated: y = 1 + 2x + noise, so the coefficients should come out near [1, 2]
+{{?X=X}} X = [ones(10_000) randn(10_000)]  # an intercept column and one predictor
+{{?X=X}} {{?data=data}} data = X * [1.0, 2.0] .+ randn(10_000)  # the response stream. Replace X and data with your own.
 
 o = LinReg(size({{X}}, 2))  # online regression: k = number of predictors
 fit!(o, zip(eachrow({{X}}), {{data}}))  # stream (x_t, y_t) pairs row by row
@@ -304,6 +321,7 @@ label = "Predict"
 
 [[actionGroups.actions]]
 id = "predict-linreg"
+models = ["linreg"]
 label = "Regression Predictions"
 desc = "Use the online regression model to predict responses for new covariates"
 code = '''
@@ -319,6 +337,7 @@ println("Prediction: ", predict(o, x_new))  # out-of-sample prediction
 
 [[actionGroups.actions]]
 id = "stream-predict"
+models = ["linreg"]
 label = "Rolling Predictions"
 desc = "Update the regression model and produce predictions simultaneously as data streams in"
 code = '''
@@ -395,6 +414,7 @@ println("Extrema:  ", value(o[4]))  # min and max
 
 [[actionGroups.actions]]
 id = "regression-coefs"
+models = ["linreg"]
 label = "Regression Coefficients"
 desc = "Extract and display the coefficient estimates (exact OLS from the running sufficient statistics)"
 code = '''

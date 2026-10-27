@@ -30,7 +30,7 @@ import { IPathService } from '../../../services/path/common/pathService.js';
 import { parseToml, TomlValue } from '../../model/browser/common/tomlPanelData.js';
 
 // New and updated Pollis content between releases: the replications and the published benchmarks.
-// (Vignettes come with their packages: Help > Documentation > Package Vignettes, vignettesPage.ts.) The content repository holds content.toml, a list of every entry
+// (Vignettes come with their packages: Help > Documentation > Packages, vignettesPage.ts.) The content repository holds content.toml, a list of every entry
 // with the dates it was added and last updated, the Pollis version it needs and its files with their SHA-256,
 // and the files, in KIND/ID/. Pollis ships the same list (media/content.toml) as it was at the release:
 // an entry of the repository updated after the shipped one, or not shipped at all, is downloaded into

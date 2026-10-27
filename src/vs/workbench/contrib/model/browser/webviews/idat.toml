@@ -192,19 +192,19 @@ purpose = "Smooth spline fit with controllable smoothing, derivatives and integr
 [[inputs]]
 id = "xs"
 label = "Knots (xs)"
-tooltip = "Sorted vector of knot positions. Linear and Dierckx accept irregular spacing. Cubic Spline and B-Spline assume uniform spacing, so the code places length(ys) evenly spaced knots between the first and last xs."
+tooltip = "Sorted vector of knot positions. Linear and Dierckx accept irregular spacing. Cubic Spline and B-Spline assume uniform spacing, so the code places length(ys) evenly spaced knots between the first and last xs. The default, 11 knots from 0 to 5 in steps of 0.5, goes with the values of sin(x) at them."
 default = "xs"
 
 [[inputs]]
 id = "ys"
 label = "Values (ys)"
-tooltip = "Vector of data values at the knot positions, the same length as xs."
+tooltip = "Vector of data values at the knot positions, the same length as xs. The default takes them from a known function, sin(x), so the interpolated values can be checked against the truth."
 default = "ys"
 
 [[inputs]]
 id = "xq"
 label = "Query"
-tooltip = "Point or vector of points at which to evaluate the interpolant, e.g. 2.5 or range(0, 5; length=200)."
+tooltip = "Point or vector of points at which to evaluate the interpolant, e.g. 2.5 or range(0, 5; length=200). The default, [0.25, 1.75, 3.25, 4.75], lies halfway between knots, where the interpolation error is largest."
 default = "xq"
 
 [[inputs]]
@@ -370,9 +370,14 @@ model = "linear"
 code = '''
 using Interpolations
 
+{{?xs=xs}} xs = collect(0.0:0.5:5.0)  # 11 evenly spaced knots on [0, 5]. Replace xs, ys and xq with your own.
+{{?ys=ys}} ys = sin.({{xs}})  # simulated: the values of a known function, sin(x), so that the interpolation error can be seen
+{{?xq=xq}} xq = [0.25, 1.75, 3.25, 4.75]  # query points halfway between knots, where the error is largest
+
 itp = linear_interpolation({{xs}}, {{ys}}; extrapolation_bc={{extrap}})  # piecewise linear, irregular knots allowed
 yq  = itp.({{xq}})
 println("Interpolated values: ", round.(yq, sigdigits=4))
+{{?ys=ys}} println("True sin(x):         ", round.(sin.({{xq}}), sigdigits=4))  # the function the knots were taken from
 '''
 
 [[codeBranches]]
@@ -380,10 +385,15 @@ model = "cspline"
 code = '''
 using Interpolations
 
+{{?xs=xs}} xs = collect(0.0:0.5:5.0)  # 11 evenly spaced knots on [0, 5]. Replace xs, ys and xq with your own.
+{{?ys=ys}} ys = sin.({{xs}})  # simulated: the values of a known function, sin(x), so that the interpolation error can be seen
+{{?xq=xq}} xq = [0.25, 1.75, 3.25, 4.75]  # query points halfway between knots, where the error is largest
+
 knots = range(first({{xs}}), last({{xs}}); length=length({{ys}}))  # cubic_spline_interpolation needs uniformly spaced knots
 itp   = cubic_spline_interpolation(knots, {{ys}}; bc={{bc}}, extrapolation_bc=Flat())
 yq    = itp.({{xq}})
 println("Interpolated values: ", round.(yq, sigdigits=4))
+{{?ys=ys}} println("True sin(x):         ", round.(sin.({{xq}}), sigdigits=4))  # the function the knots were taken from
 '''
 
 [[codeBranches]]
@@ -391,10 +401,15 @@ model = "bspline"
 code = '''
 using Interpolations
 
+{{?xs=xs}} xs = collect(0.0:0.5:5.0)  # 11 evenly spaced knots on [0, 5]. Replace xs, ys and xq with your own.
+{{?ys=ys}} ys = sin.({{xs}})  # simulated: the values of a known function, sin(x), so that the interpolation error can be seen
+{{?xq=xq}} xq = [0.25, 1.75, 3.25, 4.75]  # query points halfway between knots, where the error is largest
+
 knots = range(first({{xs}}), last({{xs}}); length=length({{ys}}))  # B-splines live on a regular grid
 itp   = extrapolate(scale(interpolate({{ys}}, BSpline({{degree}})), knots), Flat())  # scale maps grid indices to xs
 yq    = itp.({{xq}})
 println("Interpolated values: ", round.(yq, sigdigits=4))
+{{?ys=ys}} println("True sin(x):         ", round.(sin.({{xq}}), sigdigits=4))  # the function the knots were taken from
 '''
 
 [[codeBranches]]
@@ -402,9 +417,14 @@ model = "dierckx"
 code = '''
 using Dierckx
 
+{{?xs=xs}} xs = collect(0.0:0.5:5.0)  # 11 evenly spaced knots on [0, 5]. Replace xs, ys and xq with your own.
+{{?ys=ys}} ys = sin.({{xs}})  # simulated: the values of a known function, sin(x), so that the interpolation error can be seen
+{{?xq=xq}} xq = [0.25, 1.75, 3.25, 4.75]  # query points halfway between knots, where the error is largest
+
 itp = Spline1D({{xs}}, {{ys}}; k={{k}}, s={{s}})  # s = 0 passes through every knot
 yq  = itp.({{xq}})
 println("Interpolated values: ", round.(yq, sigdigits=4))
+{{?ys=ys}} println("True sin(x):         ", round.(sin.({{xq}}), sigdigits=4))  # the function the knots were taken from
 '''
 
 [[actionGroups]]

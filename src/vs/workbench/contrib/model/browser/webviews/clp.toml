@@ -16,6 +16,10 @@ github = "https://github.com/JuliaStats/Clustering.jl"
 name = "BetaML.jl"
 github = "https://github.com/sylvaticus/BetaML.jl"
 
+[[packages]]
+name = "PollisDatasets.jl"
+github = "https://github.com/Trumpingtons/PollisDatasets.jl"
+
 [requires]
 packages = ["Plots.jl", "Distances.jl", "DecisionTree.jl"]
 
@@ -220,7 +224,7 @@ purpose = "Cluster the leading eigenvectors of the graph Laplacian"
 [[inputs]]
 id = "X"
 label = "Feature Matrix"
-tooltip = "n_samples × n_features matrix of input features (one row per observation). Standardise the columns first when they are on different scales."
+tooltip = "n_samples × n_features matrix of input features (one row per observation). Standardise the columns first when they are on different scales. The default, X_train, is the Wine data from PollisDatasets: 161 wines by 13 chemical measurements, standardised, with every tenth wine kept aside as X_new."
 default = "X_train"
 
 [[inputs]]
@@ -255,8 +259,8 @@ models = ["fcm"]
 [[inputs]]
 id = "eps"
 label = "epsilon"
-tooltip = "Neighbourhood radius. Points within epsilon of each other are neighbours. Read it off the knee of the k-distance plot (Choosing k or Epsilon action)."
-default = "0.5"
+tooltip = "Neighbourhood radius. Points within epsilon of each other are neighbours. Read it off the knee of the k-distance plot (Choosing k or Epsilon action). The default suits the standardised Wine data, whose 13 features put neighbours about 2 apart."
+default = "2.4"
 newRow = true
 models = ["dbscan"]
 
@@ -345,6 +349,15 @@ return s;
 model = "km"
 code = '''
 using Clustering, Statistics
+{{?X=X_train}} using PollisDatasets
+
+{{?X=X_train}} w = dataset("wine");  # 178 wines from three cultivars; datasetinfo("wine") describes the columns
+{{?X=X_train}} W = reduce(hcat, collect(values(w))[2:end]);  # 178 x 13: the chemical measurements, cultivar left out
+{{?X=X_train}} held = 10:10:178;  # every tenth wine kept aside as new data
+{{?X=X_train}} W_train = W[setdiff(axes(W, 1), held), :];
+{{?X=X_train}} mu, sd = mean(W_train, dims=1), std(W_train, dims=1);
+{{?X=X_train}} X_train = (W_train .- mu) ./ sd;  # standardised: the measurements are on very different scales
+{{?X=X_train}} X_new = (W[held, :] .- mu) ./ sd;  # the held-out wines, on the training scale
 
 X  = {{X}}  # n x p feature matrix, one row per observation
 Xt = permutedims(X)  # Clustering.jl expects p x n (one column per observation)
@@ -363,6 +376,15 @@ centers = result.centers  # p x k centroids
 model = "kmed"
 code = '''
 using Clustering, Distances, Statistics
+{{?X=X_train}} using PollisDatasets
+
+{{?X=X_train}} w = dataset("wine");  # 178 wines from three cultivars; datasetinfo("wine") describes the columns
+{{?X=X_train}} W = reduce(hcat, collect(values(w))[2:end]);  # 178 x 13: the chemical measurements, cultivar left out
+{{?X=X_train}} held = 10:10:178;  # every tenth wine kept aside as new data
+{{?X=X_train}} W_train = W[setdiff(axes(W, 1), held), :];
+{{?X=X_train}} mu, sd = mean(W_train, dims=1), std(W_train, dims=1);
+{{?X=X_train}} X_train = (W_train .- mu) ./ sd;  # standardised: the measurements are on very different scales
+{{?X=X_train}} X_new = (W[held, :] .- mu) ./ sd;  # the held-out wines, on the training scale
 
 X  = {{X}}  # n x p feature matrix, one row per observation
 Xt = permutedims(X)  # Clustering.jl expects p x n (one column per observation)
@@ -382,6 +404,15 @@ medoids = result.medoids  # row indices of the representative observations
 model = "fcm"
 code = '''
 using Clustering, Statistics
+{{?X=X_train}} using PollisDatasets
+
+{{?X=X_train}} w = dataset("wine");  # 178 wines from three cultivars; datasetinfo("wine") describes the columns
+{{?X=X_train}} W = reduce(hcat, collect(values(w))[2:end]);  # 178 x 13: the chemical measurements, cultivar left out
+{{?X=X_train}} held = 10:10:178;  # every tenth wine kept aside as new data
+{{?X=X_train}} W_train = W[setdiff(axes(W, 1), held), :];
+{{?X=X_train}} mu, sd = mean(W_train, dims=1), std(W_train, dims=1);
+{{?X=X_train}} X_train = (W_train .- mu) ./ sd;  # standardised: the measurements are on very different scales
+{{?X=X_train}} X_new = (W[held, :] .- mu) ./ sd;  # the held-out wines, on the training scale
 
 X  = {{X}}  # n x p feature matrix, one row per observation
 Xt = permutedims(X)  # Clustering.jl expects p x n (one column per observation)
@@ -402,6 +433,15 @@ centers     = result.centers  # p x k cluster centres
 model = "dbscan"
 code = '''
 using Clustering, Statistics
+{{?X=X_train}} using PollisDatasets
+
+{{?X=X_train}} w = dataset("wine");  # 178 wines from three cultivars; datasetinfo("wine") describes the columns
+{{?X=X_train}} W = reduce(hcat, collect(values(w))[2:end]);  # 178 x 13: the chemical measurements, cultivar left out
+{{?X=X_train}} held = 10:10:178;  # every tenth wine kept aside as new data
+{{?X=X_train}} W_train = W[setdiff(axes(W, 1), held), :];
+{{?X=X_train}} mu, sd = mean(W_train, dims=1), std(W_train, dims=1);
+{{?X=X_train}} X_train = (W_train .- mu) ./ sd;  # standardised: the measurements are on very different scales
+{{?X=X_train}} X_new = (W[held, :] .- mu) ./ sd;  # the held-out wines, on the training scale
 
 X  = {{X}}  # n x p feature matrix, one row per observation
 Xt = permutedims(X)  # Clustering.jl expects p x n (one column per observation)
@@ -419,7 +459,17 @@ count(==(0), labels)  # number of noise points
 [[codeBranches]]
 model = "gmm"
 code = '''
-using BetaML, Statistics
+using Clustering, Distances, Statistics
+using BetaML: GaussianMixtureClusterer, fit!, predict  # only these: BetaML also exports a pairwise of its own
+{{?X=X_train}} using PollisDatasets
+
+{{?X=X_train}} w = dataset("wine");  # 178 wines from three cultivars; datasetinfo("wine") describes the columns
+{{?X=X_train}} W = reduce(hcat, collect(values(w))[2:end]);  # 178 x 13: the chemical measurements, cultivar left out
+{{?X=X_train}} held = 10:10:178;  # every tenth wine kept aside as new data
+{{?X=X_train}} W_train = W[setdiff(axes(W, 1), held), :];
+{{?X=X_train}} mu, sd = mean(W_train, dims=1), std(W_train, dims=1);
+{{?X=X_train}} X_train = (W_train .- mu) ./ sd;  # standardised: the measurements are on very different scales
+{{?X=X_train}} X_new = (W[held, :] .- mu) ./ sd;  # the held-out wines, on the training scale
 
 X  = {{X}}  # n x p feature matrix, one row per observation
 Xt = permutedims(X)  # Clustering.jl expects p x n (one column per observation)
@@ -443,6 +493,15 @@ labels = map(argmax, eachrow(probs))  # most probable component
 model = "spectral"
 code = '''
 using Clustering, Distances, LinearAlgebra, Statistics
+{{?X=X_train}} using PollisDatasets
+
+{{?X=X_train}} w = dataset("wine");  # 178 wines from three cultivars; datasetinfo("wine") describes the columns
+{{?X=X_train}} W = reduce(hcat, collect(values(w))[2:end]);  # 178 x 13: the chemical measurements, cultivar left out
+{{?X=X_train}} held = 10:10:178;  # every tenth wine kept aside as new data
+{{?X=X_train}} W_train = W[setdiff(axes(W, 1), held), :];
+{{?X=X_train}} mu, sd = mean(W_train, dims=1), std(W_train, dims=1);
+{{?X=X_train}} X_train = (W_train .- mu) ./ sd;  # standardised: the measurements are on very different scales
+{{?X=X_train}} X_new = (W[held, :] .- mu) ./ sd;  # the held-out wines, on the training scale
 
 X  = {{X}}  # n x p feature matrix, one row per observation
 Xt = permutedims(X)  # Clustering.jl expects p x n (one column per observation)
@@ -634,7 +693,7 @@ code = '''
 using DecisionTree
 
 tree = DecisionTreeClassifier(max_depth=3)
-fit!(tree, X, labels)
+DecisionTree.fit!(tree, X, labels)  # qualified: BetaML (Gaussian Mixture) has its own fit! and predict
 print_tree(tree)  # feature thresholds that separate the clusters
-mean(predict(tree, X) .== labels)  # fidelity: share of observations the rules place correctly
+mean(DecisionTree.predict(tree, X) .== labels)  # fidelity: share of observations the rules place correctly
 '''

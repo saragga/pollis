@@ -9,7 +9,7 @@
 //   node build/pollis/makeExtension.ts <spec.toml> [--overwrite]
 //
 // Writes toolboxes/<name>/: package.json (the pollisToolboxes contribution), panels/<id>.toml,
-// wiki/<id>/, notebooks/<id>/, icon.png and a README.md to finish by hand (its "What it covers"
+// wiki/<id>/, notebooks/<id>/, docs/<document>/, icon.png and a README.md to finish by hand (its "What it covers"
 // column). Then `node build/pollis/packageToolboxes.ts` packages it with the other toolboxes.
 // With mode = "copy" (the default) every panel is an independent copy: panel id <prefix>.<id>,
 // command pollis.<name>.<id>, and its wiki and notebook folders <prefix>.<folder> (the TOML's
@@ -42,6 +42,13 @@
 //   group = "1_models"                     optional, default "1_panels"
 //   order = 1                              optional, default: the position in the list
 //
+//   [[menu.documents]]                     optional: the toolbox's documentation, in Help > Documentation > Toolboxes
+//   title = "Finance Toolbox Guide"
+//   description = "..."                    optional, a sentence or two
+//   source = "guide/finance.tex"           the main .tex file, relative to the spec; its folder's .tex and .bib
+//                                          files and its resources/ folder are copied to docs/<main file's name>/,
+//                                          and Pollis compiles the document with PollisTeX when it is first opened
+//
 // Only scaffold panels can be packaged: a panel whose template passes its own JavaScript or CSS
 // (illustrationOverrideJs, extraCss...) has code, and a data-only extension cannot hold code.
 
@@ -67,6 +74,20 @@ function copyFolder(from: string, to: string): number {
 	}
 	fs.cpSync(from, to, { recursive: true });
 	return fs.readdirSync(to, { recursive: true }).length;
+}
+
+/** Copies a document's sources, the folder's top-level .tex and .bib files and its resources/ folder, as compile_vignette.jl reads them. */
+function copyDocument(source: string, to: string): number {
+	const from = path.dirname(source);
+	fs.mkdirSync(to, { recursive: true });
+	let files = 0;
+	for (const entry of fs.readdirSync(from, { withFileTypes: true })) {
+		if (entry.isFile() && /\.(tex|bib)$/.test(entry.name)) {
+			fs.copyFileSync(path.join(from, entry.name), path.join(to, entry.name));
+			files++;
+		}
+	}
+	return files + copyFolder(path.join(from, 'resources'), path.join(to, 'resources'));
 }
 
 function main(): void {
@@ -104,6 +125,8 @@ function main(): void {
 	const seen = new Set<string>();
 	const toolboxes = [];
 	const readmeRows: string[] = [];
+	const documentRows: string[] = [];
+	const documentNames = new Set<string>();
 	const removals: string[] = [];
 	for (const menu of menus) {
 		if (!menu.id || !menu.title) {
@@ -168,12 +191,36 @@ function main(): void {
 		if (!panels.length) {
 			fail(`the menu ${menu.id} has no [[menu.items]]`);
 		}
+		const documents = [];
+		for (const document of menu.documents ?? []) {
+			if (!document.title || !document.source) {
+				fail(`every [[menu.documents]] of ${menu.id} needs a title and a source`);
+			}
+			const source = path.resolve(path.dirname(specFile), document.source);
+			const documentName = path.basename(source, '.tex');
+			if (!/^[A-Za-z0-9_-]+\.tex$/.test(path.basename(source)) || !fs.existsSync(source)) {
+				fail(`the document ${document.title} names ${document.source}, which is not a .tex file that exists`);
+			}
+			if (documentNames.has(documentName)) {
+				fail(`two documents have the main file ${documentName}.tex`);
+			}
+			documentNames.add(documentName);
+			const files = copyDocument(source, path.join(folder, 'docs', documentName));
+			console.log(`docs/${documentName}: ${document.title} (${files} files)`);
+			documents.push({
+				title: document.title,
+				...(document.description ? { description: document.description } : {}),
+				source: `docs/${documentName}/${documentName}.tex`,
+			});
+			documentRows.push(`- **${document.title}**${document.description ? `: ${document.description}` : ''}`);
+		}
 		toolboxes.push({
 			id: menu.id,
 			title: menu.title,
 			...(menu.inline ? { inline: true } : {}),
 			...(menu.order !== undefined ? { order: menu.order } : {}),
 			panels,
+			...(documents.length ? { documents } : {}),
 		});
 	}
 
@@ -208,6 +255,7 @@ function main(): void {
 		'|---|---|---|',
 		...readmeRows,
 		'',
+		...(documentRows.length ? ['## Documentation', '', 'In **Help > Documentation > Toolboxes**, compiled from its LaTeX sources the first time it is opened:', '', ...documentRows, ''] : []),
 		'## Requirements',
 		'',
 		'Julia. Each panel lists the Julia packages it uses on its Powered by line and offers to install the missing ones.',

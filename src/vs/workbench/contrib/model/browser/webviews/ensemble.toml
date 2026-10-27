@@ -22,11 +22,17 @@ github = "https://github.com/dmlc/XGBoost.jl"
 
 [[packages]]
 name = "NeuroTreeModels.jl"
-github = "https://github.com/Evovest/NeuroTreeModels.jl"
+# Fork of Evovest/NeuroTreeModels.jl that renames Metrics.eval to evaluate (as Evovest/NeuroTreeModels.jl#18 does), so that it precompiles on Julia 1.12 and later, and that fits and predicts on any Tables.jl table, making a classifier's target categorical
+github = "https://github.com/Trumpingtons/NeuroTreeModels.jl"
+fork = true
 
 [[packages]]
 name = "SIRUS.jl"
 github = "https://github.com/rikhuijzer/SIRUS.jl"
+
+[[packages]]
+name = "PollisDatasets.jl"
+github = "https://github.com/Trumpingtons/PollisDatasets.jl"
 
 [requires]
 packages = ["Plots.jl", "Tables.jl", "MLJ.jl"]
@@ -216,7 +222,7 @@ label = "Regression"
 [[inputs]]
 id = "X"
 label = "Train Feature Matrix"
-tooltip = "n_samples × n_features matrix of input features used to train the ensemble."
+tooltip = "n_samples × n_features matrix of input features used to train the ensemble. The default, X_train, is the Wine data from PollisDatasets: 161 wines, with every tenth wine kept aside as X_test and three of those as X_new. Classification predicts the cultivar from the 13 chemical measurements; regression predicts the alcohol content from the other 12."
 default = "X_train"
 
 [[inputs]]
@@ -316,6 +322,15 @@ return '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.5"
 model = "rf"
 code = '''
 using DecisionTree, Statistics
+{{?X=X_train}} using PollisDatasets
+
+{{?X=X_train}} w = dataset("wine");  # 178 wines from three cultivars; datasetinfo("wine") describes the columns
+{{?X=X_train}} held  = 10:10:178;  # every tenth wine kept aside as test data
+{{?X=X_train}} train = setdiff(1:178, held);
+{{?X=X_train}} target = "{{task}}" == "classification" ? :cultivar : :alcohol;  # classification: the cultivar; regression: the alcohol content
+{{?X=X_train}} W = reduce(hcat, [w[c] for c in keys(w) if c != :cultivar && c != target]);  # the other chemical measurements
+{{?X=X_train}} X_train, y_train, X_test, y_test = W[train, :], w[target][train], W[held, :], w[target][held];
+{{?X=X_train}} X_new = W[held[1:3], :];  # three of the held-out wines, as new samples for Predict New
 
 X, y           = {{X}}, {{y}}  # training features (n x p) and target
 X_test, y_test = {{X_test}}, {{y_test}}  # held-out features and target
@@ -341,6 +356,15 @@ yhat(X) = predict(model, X)  # majority vote or mean over the trees
 model = "gbt"
 code = '''
 using EvoTrees, Statistics
+{{?X=X_train}} using PollisDatasets
+
+{{?X=X_train}} w = dataset("wine");  # 178 wines from three cultivars; datasetinfo("wine") describes the columns
+{{?X=X_train}} held  = 10:10:178;  # every tenth wine kept aside as test data
+{{?X=X_train}} train = setdiff(1:178, held);
+{{?X=X_train}} target = "{{task}}" == "classification" ? :cultivar : :alcohol;  # classification: the cultivar; regression: the alcohol content
+{{?X=X_train}} W = reduce(hcat, [w[c] for c in keys(w) if c != :cultivar && c != target]);  # the other chemical measurements
+{{?X=X_train}} X_train, y_train, X_test, y_test = W[train, :], w[target][train], W[held, :], w[target][held];
+{{?X=X_train}} X_new = W[held[1:3], :];  # three of the held-out wines, as new samples for Predict New
 
 X, y           = {{X}}, {{y}}  # training features (n x p) and target
 X_test, y_test = {{X_test}}, {{y_test}}  # held-out features and target
@@ -368,6 +392,15 @@ model = EvoTrees.fit(config; x_train=X, y_train=y)  # each round fits a tree to 
 model = "xgb"
 code = '''
 using XGBoost, Statistics
+{{?X=X_train}} using PollisDatasets
+
+{{?X=X_train}} w = dataset("wine");  # 178 wines from three cultivars; datasetinfo("wine") describes the columns
+{{?X=X_train}} held  = 10:10:178;  # every tenth wine kept aside as test data
+{{?X=X_train}} train = setdiff(1:178, held);
+{{?X=X_train}} target = "{{task}}" == "classification" ? :cultivar : :alcohol;  # classification: the cultivar; regression: the alcohol content
+{{?X=X_train}} W = reduce(hcat, [w[c] for c in keys(w) if c != :cultivar && c != target]);  # the other chemical measurements
+{{?X=X_train}} X_train, y_train, X_test, y_test = W[train, :], w[target][train], W[held, :], w[target][held];
+{{?X=X_train}} X_new = W[held[1:3], :];  # three of the held-out wines, as new samples for Predict New
 
 X, y           = {{X}}, {{y}}  # training features (n x p) and target
 X_test, y_test = {{X_test}}, {{y_test}}  # held-out features and target
@@ -395,6 +428,15 @@ eta       = {{eta}}  # learning rate (shrinkage)
 model = "ddt"
 code = '''
 using NeuroTreeModels, Tables, Statistics
+{{?X=X_train}} using PollisDatasets
+
+{{?X=X_train}} w = dataset("wine");  # 178 wines from three cultivars; datasetinfo("wine") describes the columns
+{{?X=X_train}} held  = 10:10:178;  # every tenth wine kept aside as test data
+{{?X=X_train}} train = setdiff(1:178, held);
+{{?X=X_train}} target = "{{task}}" == "classification" ? :cultivar : :alcohol;  # classification: the cultivar; regression: the alcohol content
+{{?X=X_train}} W = reduce(hcat, [w[c] for c in keys(w) if c != :cultivar && c != target]);  # the other chemical measurements
+{{?X=X_train}} X_train, y_train, X_test, y_test = W[train, :], w[target][train], W[held, :], w[target][held];
+{{?X=X_train}} X_new = W[held[1:3], :];  # three of the held-out wines, as new samples for Predict New
 
 X, y           = {{X}}, {{y}}  # training features (n x p) and target
 X_test, y_test = {{X_test}}, {{y_test}}  # held-out features and target
@@ -406,11 +448,13 @@ features = Symbol.(:Column, 1:size(X, 2))
 table(X) = Tables.columntable(Tables.table(X))  # Tables.jl column table (Column1, Column2, ...)
 {{?task=classification}} config = NeuroTreeClassifier(depth=max_depth, ntrees=ntrees, lr=0.05)
 {{?task=regression}} config = NeuroTreeRegressor(depth=max_depth, ntrees=ntrees, lr=0.05)
-model = NeuroTreeModels.fit(config, merge(table(X), (target = y,)); target_name=:target, feature_names=features)  # gradient descent on soft trees
+{{?task=classification}} model = NeuroTreeModels.fit(config, merge(table(X), (target = y,)); target_name=:target, feature_names=features)  # gradient descent on soft trees
+{{?task=regression}} y_mean, y_sd = mean(y), std(y)  # the network starts near 0: it learns the standardised target, then is scaled back
+{{?task=regression}} model = NeuroTreeModels.fit(config, merge(table(X), (target = (y .- y_mean) ./ y_sd,)); target_name=:target, feature_names=features)  # gradient descent on soft trees
 
 {{?task=classification}} proba(X) = model(table(X))  # n x classes
 {{?task=classification}} yhat(X) = classes[argmax.(eachrow(proba(X)))]
-{{?task=regression}} yhat(X) = model(table(X))
+{{?task=regression}} yhat(X) = y_mean .+ y_sd .* model(table(X))
 
 {{?task=classification}} score(X) = proba(X)[:, end]  # probability of the last class, explained by the Interpret actions
 {{?task=regression}} score(X) = yhat(X)
@@ -538,12 +582,12 @@ label = "Interpret"
 [[actionGroups.actions]]
 id = "importance"
 label = "Built-in Feature Importance"
-desc = "The library's own importance: impurity decrease (forests) or split gain (boosting)"
+desc = "The library's own importance: impurity decrease (forests), split gain (boosting) or mean absolute gradient (deep trees)"
 code = '''
 {{?model=rf}} imp = impurity_importance(model)  # mean decrease in impurity per feature
 {{?model=gbt}} imp = last.(EvoTrees.importance(model))  # total split gain per feature
 {{?model=xgb}} imp = importance(bst, "gain")  # gain per feature
-{{?model=ddt}} imp = NeuroTreeModels.importance(model)  # importance per feature
+{{?model=ddt}} imp = NeuroTreeModels.importance(model, table(X))  # mean absolute gradient per feature, times its standard deviation
 '''
 
 [[actionGroups.actions]]

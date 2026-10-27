@@ -10,7 +10,13 @@ defaultModel = "main"
 
 [[packages]]
 name = "TopicModelsVB.jl"
-github = "https://github.com/ericproffitt/TopicModelsVB.jl"
+# Fork of ericproffitt/TopicModelsVB.jl accepting Distributions 0.25 and precompiling on Julia 1.13, with predict fixed for fLDA and fCTM (upstream pull request 42); back to upstream once a fixed version is registered
+github = "https://github.com/Trumpingtons/TopicModelsVB.jl"
+fork = true
+
+[[packages]]
+name = "PollisDatasets.jl"
+github = "https://github.com/Trumpingtons/PollisDatasets.jl"
 
 [requires]
 packages = ["TopicModelsVB.jl"]
@@ -118,13 +124,13 @@ detail = "variational Bayes implementation of CTPF, LDA, fLDA, CTM and Focused C
 [[inputs]]
 id = "corpus"
 label = "Corpus"
-tooltip = "Array of text documents (one per item), e.g. docs = [\"first doc\", \"second doc\"]"
+tooltip = "Array of text documents (one per item), e.g. docs = [\"first doc\", \"second doc\"]. The default, corpus, is the text of The Pollis Guide from PollisDatasets, one document per section."
 default = "corpus"
 
 [[inputs]]
 id = "ratings"
 label = "Ratings"
-tooltip = "Sparse user-item rating matrix; rows = users, cols = items (documents)"
+tooltip = "Sparse user-item rating matrix; rows = users, cols = items (documents). The default, ratings, is simulated: 50 readers rating about one section in twelve from 1 to 5."
 default = "ratings"
 
 [[inputs]]
@@ -143,6 +149,12 @@ default = "1000"
 model = "main"
 code = '''
 using TopicModelsVB
+{{?corpus=corpus}} using PollisDatasets
+
+{{?corpus=corpus}} corpus = dataset("pollis_guide").text;  # The Pollis Guide, one document per section; datasetinfo("pollis_guide") describes it. Replace it with your own vector of strings.
+{{?ratings=ratings}} using Random, SparseArrays
+{{?ratings=ratings}} Random.seed!(1)
+{{?ratings=ratings}} ratings = Matrix(sprand(50, length({{corpus}}), 0.08, n -> rand(1:5, n)));  # simulated: 50 readers, each rating about one document in twelve from 1 to 5. Replace it with your own ratings.
 
 R     = {{ratings}}  # users x documents, positive integer ratings, 0 = unrated
 docs  = {{corpus}}

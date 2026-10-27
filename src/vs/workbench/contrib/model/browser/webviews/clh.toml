@@ -16,6 +16,10 @@ github = "https://github.com/JuliaStats/Clustering.jl"
 name = "Distances.jl"
 github = "https://github.com/JuliaStats/Distances.jl"
 
+[[packages]]
+name = "PollisDatasets.jl"
+github = "https://github.com/Trumpingtons/PollisDatasets.jl"
+
 [requires]
 packages = ["Plots.jl", "StatsPlots.jl", "DecisionTree.jl"]
 
@@ -78,6 +82,13 @@ bundled = true
 name = "Cophenetic Correlation"
 file = "cluster-hierarchical/cophenetic.md"
 bundled = true
+
+[[references]]
+separator = true
+label = "Data"
+
+[[references]]
+key = "AF1992a"
 
 [[models]]
 id = "ward"
@@ -227,6 +238,15 @@ return s;
 model = "ward"
 code = '''
 using Clustering, Distances, Statistics
+{{?X=X_train}} using PollisDatasets
+
+{{?X=X_train}} w = dataset("wine");  # 178 wines from three cultivars; datasetinfo("wine") describes the columns
+{{?X=X_train}} W = reduce(hcat, collect(values(w))[2:end]);  # 178 x 13: the chemical measurements, cultivar left out
+{{?X=X_train}} held = 10:10:178;  # every tenth wine kept aside as new data
+{{?X=X_train}} W_train = W[setdiff(axes(W, 1), held), :];
+{{?X=X_train}} mu, sd = mean(W_train, dims=1), std(W_train, dims=1);
+{{?X=X_train}} X_train = (W_train .- mu) ./ sd;  # standardised: the measurements are on very different scales
+{{?X=X_train}} X_new = (W[held, :] .- mu) ./ sd;  # the held-out wines, on the training scale
 
 X = {{X}}  # n x p feature matrix, one row per observation
 k = {{k}}  # number of flat clusters
@@ -242,6 +262,15 @@ labels = cutree(hc, k=k)  # cut the dendrogram into k flat clusters
 model = "complete"
 code = '''
 using Clustering, Distances, Statistics
+{{?X=X_train}} using PollisDatasets
+
+{{?X=X_train}} w = dataset("wine");  # 178 wines from three cultivars; datasetinfo("wine") describes the columns
+{{?X=X_train}} W = reduce(hcat, collect(values(w))[2:end]);  # 178 x 13: the chemical measurements, cultivar left out
+{{?X=X_train}} held = 10:10:178;  # every tenth wine kept aside as new data
+{{?X=X_train}} W_train = W[setdiff(axes(W, 1), held), :];
+{{?X=X_train}} mu, sd = mean(W_train, dims=1), std(W_train, dims=1);
+{{?X=X_train}} X_train = (W_train .- mu) ./ sd;  # standardised: the measurements are on very different scales
+{{?X=X_train}} X_new = (W[held, :] .- mu) ./ sd;  # the held-out wines, on the training scale
 
 X = {{X}}  # n x p feature matrix, one row per observation
 k = {{k}}  # number of flat clusters
@@ -257,6 +286,15 @@ labels = cutree(hc, k=k)  # cut the dendrogram into k flat clusters
 model = "average"
 code = '''
 using Clustering, Distances, Statistics
+{{?X=X_train}} using PollisDatasets
+
+{{?X=X_train}} w = dataset("wine");  # 178 wines from three cultivars; datasetinfo("wine") describes the columns
+{{?X=X_train}} W = reduce(hcat, collect(values(w))[2:end]);  # 178 x 13: the chemical measurements, cultivar left out
+{{?X=X_train}} held = 10:10:178;  # every tenth wine kept aside as new data
+{{?X=X_train}} W_train = W[setdiff(axes(W, 1), held), :];
+{{?X=X_train}} mu, sd = mean(W_train, dims=1), std(W_train, dims=1);
+{{?X=X_train}} X_train = (W_train .- mu) ./ sd;  # standardised: the measurements are on very different scales
+{{?X=X_train}} X_new = (W[held, :] .- mu) ./ sd;  # the held-out wines, on the training scale
 
 X = {{X}}  # n x p feature matrix, one row per observation
 k = {{k}}  # number of flat clusters
@@ -272,6 +310,15 @@ labels = cutree(hc, k=k)  # cut the dendrogram into k flat clusters
 model = "single"
 code = '''
 using Clustering, Distances, Statistics
+{{?X=X_train}} using PollisDatasets
+
+{{?X=X_train}} w = dataset("wine");  # 178 wines from three cultivars; datasetinfo("wine") describes the columns
+{{?X=X_train}} W = reduce(hcat, collect(values(w))[2:end]);  # 178 x 13: the chemical measurements, cultivar left out
+{{?X=X_train}} held = 10:10:178;  # every tenth wine kept aside as new data
+{{?X=X_train}} W_train = W[setdiff(axes(W, 1), held), :];
+{{?X=X_train}} mu, sd = mean(W_train, dims=1), std(W_train, dims=1);
+{{?X=X_train}} X_train = (W_train .- mu) ./ sd;  # standardised: the measurements are on very different scales
+{{?X=X_train}} X_new = (W[held, :] .- mu) ./ sd;  # the held-out wines, on the training scale
 
 X = {{X}}  # n x p feature matrix, one row per observation
 k = {{k}}  # number of flat clusters

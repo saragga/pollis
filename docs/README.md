@@ -9,11 +9,12 @@ The LaTeX sources of the documents in Help > Documentation. Pollis ships these s
 | `ai-tour/pollis_ai_tour.tex` | `pollis-ai-tour.pdf` (A Tour of Pollis AI+) |
 | `ai-brochure/pollis_ai_brochure.tex` | `pollis-ai-brochure.pdf` (Pollis AI+) |
 | `workflows/workflow_data_packages.tex` | `pollis-drilldown-data-packages.pdf` (Drill-down: Data Packages) |
+| `workflows/workflow_literature_radar.tex` | `pollis-drilldown-literature-radar.pdf` (Drill-down: Literature Radar) |
 
 `workflows/replication_flowchart.pdf`, a figure of the Tour and the Guide, is not kept here either: it is built from `replication_flowchart.tex` before them.
 
 ## Package vignettes
 
-`vignettes/` holds the LaTeX sources of the package vignettes in Help > Documentation > Package Vignettes, all set in `newmethods_style.tex`. Build with `tectonic <Package>.tex` there (XeTeX, as for every Pollis document), and copy `<Package>.tex` and `<Package>.pdf` to `src/vs/workbench/contrib/compose/browser/media/methods/<Package>/vignette/`, from which they ship and are copied into the published package. LSTNet's also needs `divergence.tex` and `fluxarchitectures.tex`, which it inputs.
+`vignettes/` holds the LaTeX sources of the package vignettes in Help > Documentation > Packages, all set in `newmethods_style.tex`. Copy `<Package>.tex` (and any images, in a `resources/` folder) to `src/vs/workbench/contrib/compose/browser/media/methods/<Package>/vignette/`, from which Package and Publish copies them into the published package. Packages carry no PDF: Help > Documentation > Packages compiles a vignette with PollisTeX (XeTeX, as for every Pollis document) the first time it is opened. To check one here, build it with `tectonic <Package>.tex`; the PDF is git-ignored. LSTNet's also needs `divergence.tex` and `fluxarchitectures.tex`, which it inputs.
 
 `dp_event_studies.tex` is the draft vignette of PollisEventStudies.jl (Domain Packages), not shipped yet.

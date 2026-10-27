@@ -12,6 +12,10 @@ defaultModel = "isomap"
 name = "ManifoldLearning.jl"
 github = "https://github.com/wildart/ManifoldLearning.jl"
 
+[[packages]]
+name = "PollisDatasets.jl"
+github = "https://github.com/Trumpingtons/PollisDatasets.jl"
+
 [requires]
 packages = ["Plots.jl", "Distances.jl"]
 
@@ -116,7 +120,7 @@ purpose = "Diffusion distance of a random walk on the data; t sets the scale"
 [[inputs]]
 id = "X"
 label = "Feature Matrix"
-tooltip = "n_samples × n_features matrix, one row per observation. ManifoldLearning.jl expects features × samples, so the code transposes it."
+tooltip = "n_samples × n_features matrix, one row per observation. ManifoldLearning.jl expects features × samples, so the code transposes it. The default, X_train, is the Wine data from PollisDatasets: 161 wines by 13 chemical measurements, standardised, with every tenth wine kept aside as X_new."
 default = "X_train"
 
 [[inputs]]
@@ -191,6 +195,15 @@ return s;
 model = "isomap"
 code = '''
 using ManifoldLearning, Distances, Statistics
+{{?X=X_train}} using PollisDatasets
+
+{{?X=X_train}} w = dataset("wine");  # 178 wines from three cultivars; datasetinfo("wine") describes the columns
+{{?X=X_train}} W = reduce(hcat, collect(values(w))[2:end]);  # 178 x 13: the chemical measurements, cultivar left out
+{{?X=X_train}} held = 10:10:178;  # every tenth wine kept aside as new data
+{{?X=X_train}} W_train = W[setdiff(axes(W, 1), held), :];
+{{?X=X_train}} mu, sd = mean(W_train, dims=1), std(W_train, dims=1);
+{{?X=X_train}} X_train = (W_train .- mu) ./ sd;  # standardised: the measurements are on very different scales
+{{?X=X_train}} X_new = (W[held, :] .- mu) ./ sd;  # the held-out wines, on the training scale
 
 X  = {{X}}  # n x p feature matrix, one row per observation
 d  = {{d}}  # embedding dimensions
@@ -226,6 +239,15 @@ trustworthiness(Y)
 model = "lle"
 code = '''
 using ManifoldLearning, Distances, Statistics
+{{?X=X_train}} using PollisDatasets
+
+{{?X=X_train}} w = dataset("wine");  # 178 wines from three cultivars; datasetinfo("wine") describes the columns
+{{?X=X_train}} W = reduce(hcat, collect(values(w))[2:end]);  # 178 x 13: the chemical measurements, cultivar left out
+{{?X=X_train}} held = 10:10:178;  # every tenth wine kept aside as new data
+{{?X=X_train}} W_train = W[setdiff(axes(W, 1), held), :];
+{{?X=X_train}} mu, sd = mean(W_train, dims=1), std(W_train, dims=1);
+{{?X=X_train}} X_train = (W_train .- mu) ./ sd;  # standardised: the measurements are on very different scales
+{{?X=X_train}} X_new = (W[held, :] .- mu) ./ sd;  # the held-out wines, on the training scale
 
 X  = {{X}}  # n x p feature matrix, one row per observation
 d  = {{d}}  # embedding dimensions
@@ -234,10 +256,13 @@ Xt = permutedims(X)  # ManifoldLearning.jl expects features x samples
 
 embed(k) = permutedims(predict(fit(LLE, Xt; k=k, maxoutdim=d)))  # local reconstruction weights, then the embedding that keeps them
 grid = [5, 8, 10, 15, 20, 30]  # neighbourhood sizes compared by the Choosing action
+kept = vertices(fit(LLE, Xt; k=k, maxoutdim=d))  # LLE embeds only the largest connected part of the k-NN graph
+X, Xt = X[kept, :], Xt[:, kept]  # the points it leaves out are dropped, so the rows of X match the embedding
 Y = embed(k)  # n x d embedding
 
 function trustworthiness(Y, m=10)  # share of embedding neighbours that were also near in X (1 = perfect)
     n  = size(X, 1)
+    size(Y, 1) == n || return NaN  # this k left some points out of the embedding
     Dx = pairwise(Euclidean(), X, dims=1)
     Dy = pairwise(Euclidean(), Y, dims=1)
     penalty = 0.0
@@ -256,6 +281,15 @@ trustworthiness(Y)
 model = "dm"
 code = '''
 using LinearAlgebra, Distances, Statistics
+{{?X=X_train}} using PollisDatasets
+
+{{?X=X_train}} w = dataset("wine");  # 178 wines from three cultivars; datasetinfo("wine") describes the columns
+{{?X=X_train}} W = reduce(hcat, collect(values(w))[2:end]);  # 178 x 13: the chemical measurements, cultivar left out
+{{?X=X_train}} held = 10:10:178;  # every tenth wine kept aside as new data
+{{?X=X_train}} W_train = W[setdiff(axes(W, 1), held), :];
+{{?X=X_train}} mu, sd = mean(W_train, dims=1), std(W_train, dims=1);
+{{?X=X_train}} X_train = (W_train .- mu) ./ sd;  # standardised: the measurements are on very different scales
+{{?X=X_train}} X_new = (W[held, :] .- mu) ./ sd;  # the held-out wines, on the training scale
 
 X  = {{X}}  # n x p feature matrix, one row per observation
 d  = {{d}}  # embedding dimensions

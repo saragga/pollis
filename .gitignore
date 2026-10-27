@@ -52,6 +52,7 @@ dist
 # TOML-generated webview data files
 src/vs/workbench/contrib/model/browser/webviews/*.data.ts
 src/vs/workbench/contrib/monitor/browser/rssCatalogue.data.ts
+src/vs/workbench/contrib/compose/browser/panelWikis.data.ts
 
 # Internal review reports (not part of Pollis)
 /internal-reports/

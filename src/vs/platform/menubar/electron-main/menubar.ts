@@ -482,6 +482,8 @@ export class Menubar extends Disposable {
 		}));
 
 		const actions = [about];
+		// Pollis: Check for Updates... (or where an update has got to) after About, as in VS Code
+		actions.push(...this.getUpdateMenuItems());
 
 		if (preferences) {
 			actions.push(...[

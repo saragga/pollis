@@ -50,6 +50,9 @@ let g_terminal: vscode.Terminal = null
 const POLLIS_WINDOW = randomUUID()
 
 export let g_connection: rpc.MessageConnection = undefined
+// POLLIS: counts the connections of Julia REPLs, so that the Pollis panels can tell a new REPL (a restart) from
+// the one that ran their Code Example (see withExampleFirst in model.handler.ts).
+let g_replSession = 0
 export let g_replDebugPipename: string | undefined = undefined
 
 let g_terminal_is_persistent: boolean = false
@@ -650,6 +653,7 @@ function startREPLMsgServer(pipename: string, juliaExecutable?: JuliaExecutable)
             new rpc.StreamMessageReader(socket),
             new rpc.StreamMessageWriter(socket)
         )
+        g_replSession++
 
         g_connection.onNotification(new rpc.NotificationType('connected'), () => connected.notify())
         g_connection.listen()
@@ -1465,6 +1469,7 @@ export function activate(
         registerCommand('language-julia.connectREPL', connectREPL),
         registerCommand('language-julia.stopREPL', stopREPL),
         registerCommand('language-julia.restartREPL', restartREPL),
+        registerCommand('language-julia.replSession', async () => isConnected() ? g_replSession : 0),
         registerCommand('language-julia.disconnectREPL', disconnectREPL),
         registerCommand('language-julia.selectBlock', selectJuliaBlock),
         registerCommand('language-julia.executeCodeBlockOrSelection', evaluateBlockOrSelection),

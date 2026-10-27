@@ -12,6 +12,10 @@ defaultModel = "pca"
 name = "MultivariateStats.jl"
 github = "https://github.com/JuliaStats/MultivariateStats.jl"
 
+[[packages]]
+name = "PollisDatasets.jl"
+github = "https://github.com/Trumpingtons/PollisDatasets.jl"
+
 [requires]
 packages = ["Plots.jl"]
 
@@ -116,7 +120,7 @@ purpose = "Shared variance through loadings; each variable keeps its own noise v
 [[inputs]]
 id = "X"
 label = "Feature Matrix"
-tooltip = "n_samples × n_features matrix, one row per observation. MultivariateStats.jl works with features × samples, so the code transposes it."
+tooltip = "n_samples × n_features matrix, one row per observation. MultivariateStats.jl works with features × samples, so the code transposes it. The default, X_train, is the Wine data from PollisDatasets: 161 wines by 13 chemical measurements, standardised, with every tenth wine kept aside as X_new."
 default = "X_train"
 
 [[inputs]]
@@ -188,6 +192,15 @@ return s + '<line x1="17" y1="35" x2="33" y2="56" stroke="currentColor" stroke-w
 model = "pca"
 code = '''
 using MultivariateStats, Statistics
+{{?X=X_train}} using PollisDatasets
+
+{{?X=X_train}} w = dataset("wine");  # 178 wines from three cultivars; datasetinfo("wine") describes the columns
+{{?X=X_train}} W = reduce(hcat, collect(values(w))[2:end]);  # 178 x 13: the chemical measurements, cultivar left out
+{{?X=X_train}} held = 10:10:178;  # every tenth wine kept aside as new data
+{{?X=X_train}} W_train = W[setdiff(axes(W, 1), held), :];
+{{?X=X_train}} mu, sd = mean(W_train, dims=1), std(W_train, dims=1);
+{{?X=X_train}} X_train = (W_train .- mu) ./ sd;  # standardised: the measurements are on very different scales
+{{?X=X_train}} X_new = (W[held, :] .- mu) ./ sd;  # the held-out wines, on the training scale
 
 X  = {{X}}  # n x p feature matrix, one row per observation
 k  = {{k}}  # number of components or factors
@@ -211,6 +224,15 @@ explained
 model = "kpca"
 code = '''
 using MultivariateStats, Statistics, LinearAlgebra
+{{?X=X_train}} using PollisDatasets
+
+{{?X=X_train}} w = dataset("wine");  # 178 wines from three cultivars; datasetinfo("wine") describes the columns
+{{?X=X_train}} W = reduce(hcat, collect(values(w))[2:end]);  # 178 x 13: the chemical measurements, cultivar left out
+{{?X=X_train}} held = 10:10:178;  # every tenth wine kept aside as new data
+{{?X=X_train}} W_train = W[setdiff(axes(W, 1), held), :];
+{{?X=X_train}} mu, sd = mean(W_train, dims=1), std(W_train, dims=1);
+{{?X=X_train}} X_train = (W_train .- mu) ./ sd;  # standardised: the measurements are on very different scales
+{{?X=X_train}} X_new = (W[held, :] .- mu) ./ sd;  # the held-out wines, on the training scale
 
 X  = {{X}}  # n x p feature matrix, one row per observation
 k  = {{k}}  # number of components or factors
@@ -236,6 +258,15 @@ explained
 model = "fa"
 code = '''
 using MultivariateStats, Statistics
+{{?X=X_train}} using PollisDatasets
+
+{{?X=X_train}} w = dataset("wine");  # 178 wines from three cultivars; datasetinfo("wine") describes the columns
+{{?X=X_train}} W = reduce(hcat, collect(values(w))[2:end]);  # 178 x 13: the chemical measurements, cultivar left out
+{{?X=X_train}} held = 10:10:178;  # every tenth wine kept aside as new data
+{{?X=X_train}} W_train = W[setdiff(axes(W, 1), held), :];
+{{?X=X_train}} mu, sd = mean(W_train, dims=1), std(W_train, dims=1);
+{{?X=X_train}} X_train = (W_train .- mu) ./ sd;  # standardised: the measurements are on very different scales
+{{?X=X_train}} X_new = (W[held, :] .- mu) ./ sd;  # the held-out wines, on the training scale
 
 X  = {{X}}  # n x p feature matrix, one row per observation
 k  = {{k}}  # number of components or factors

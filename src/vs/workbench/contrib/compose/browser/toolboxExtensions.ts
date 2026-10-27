@@ -7,7 +7,7 @@ import { localize } from '../../../../nls.js';
 import { Barrier } from '../../../../base/common/async.js';
 import { Emitter } from '../../../../base/common/event.js';
 import { Disposable, DisposableStore, MutableDisposable } from '../../../../base/common/lifecycle.js';
-import { joinPath, isEqualOrParent } from '../../../../base/common/resources.js';
+import { basename, dirname, joinPath, isEqualOrParent } from '../../../../base/common/resources.js';
 import { hasKey } from '../../../../base/common/types.js';
 import { URI } from '../../../../base/common/uri.js';
 import { MenuId, MenuRegistry } from '../../../../platform/actions/common/actions.js';
@@ -24,7 +24,7 @@ import { IScaffoldPanel, openScaffoldWebview } from '../../model/browser/command
 import { registerExternalFolder } from '../../model/browser/common/customCopyFileSystem.js';
 import { parseToml, tomlToPanelData } from '../../model/browser/common/tomlPanelData.js';
 import { buildScaffoldHtml } from '../../model/browser/webviews/scaffoldParts.js';
-import { IToolboxInfo, IToolboxPanelsService, IToolboxPlace, IToolboxPlacement, TOOLBOX_END_GROUP, TOOLBOX_MENU, TOOLBOX_SUBMENU_PREFIX } from '../common/toolboxPanels.js';
+import { IToolboxDocumentInfo, IToolboxInfo, IToolboxPanelsService, IToolboxPlace, IToolboxPlacement, TOOLBOX_END_GROUP, TOOLBOX_MENU, TOOLBOX_SUBMENU_PREFIX } from '../common/toolboxPanels.js';
 
 /** A panel of a toolbox contributed by an extension. */
 interface IToolboxPanelContribution {
@@ -59,6 +59,16 @@ interface IToolboxContribution {
 	/** The order among the toolboxes at the end of Extend. */
 	readonly order?: number;
 	readonly panels: IToolboxPanelContribution[];
+	/** Its documentation, in Help > Documentation > Toolboxes. */
+	readonly documents?: IToolboxDocumentContribution[];
+}
+
+/** A document of a toolbox: LaTeX sources that Pollis compiles with PollisTeX the first time the document is opened. */
+interface IToolboxDocumentContribution {
+	readonly title: string;
+	readonly description?: string;
+	/** The main .tex file, relative to the extension folder; its .bib files and resources/ folder go beside it. */
+	readonly source: string;
 }
 
 const toolboxesExtensionPoint = ExtensionsRegistry.registerExtensionPoint<IToolboxContribution[]>({
@@ -92,6 +102,19 @@ const toolboxesExtensionPoint = ExtensionsRegistry.registerExtensionPoint<IToolb
 						},
 					},
 				},
+				documents: {
+					type: 'array',
+					description: localize('pollisToolboxes.documents', "The toolbox's documentation, listed in Help > Documentation > Toolboxes. Pollis compiles each document from its LaTeX sources the first time it is opened."),
+					items: {
+						type: 'object',
+						required: ['title', 'source'],
+						properties: {
+							title: { type: 'string', description: localize('pollisToolboxes.document.title', "The document's title.") },
+							description: { type: 'string', description: localize('pollisToolboxes.document.description', "What the document covers, in a sentence or two.") },
+							source: { type: 'string', description: localize('pollisToolboxes.document.source', "The document's main .tex file, relative to the extension folder, for example docs/guide.tex. Its .bib files and a resources/ folder of images go beside it.") },
+						},
+					},
+				},
 			},
 		},
 	},
@@ -102,7 +125,9 @@ interface ILoadedToolbox {
 	readonly extensionId: string;
 	readonly toolbox: IToolboxContribution;
 	readonly location: URI;
+	readonly version: string;
 	readonly panels: readonly { readonly contribution: IToolboxPanelContribution; readonly panel: IScaffoldPanel }[];
+	readonly documents: readonly IToolboxDocumentInfo[];
 }
 
 /**
@@ -189,6 +214,8 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 					extensionId: loaded.extensionId,
 					id: loaded.toolbox.id,
 					title: loaded.toolbox.title,
+					version: loaded.version,
+					documents: loaded.documents,
 					panels: loaded.panels.map(({ contribution, panel }) => ({
 						id: contribution.id,
 						command: contribution.command,
@@ -248,7 +275,16 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 						this.logService.error(`Pollis toolbox ${toolbox.id}: cannot read panel ${contribution.id} (${toml.toString()})`, error);
 					}
 				}
-				loaded.push({ extensionId: ExtensionIdentifier.toKey(extension.description.identifier), toolbox, location, panels });
+				const documents: IToolboxDocumentInfo[] = [];
+				for (const document of toolbox.documents ?? []) {
+					const source = joinPath(location, document.source);
+					if (!isEqualOrParent(source, location) || !/^[A-Za-z0-9_-]+\.tex$/.test(basename(source))) {
+						extension.collector.error(localize('pollisToolboxes.documentSource', "The source of document {0} ({1}) must be a .tex file inside the extension folder.", document.title, document.source));
+						continue;
+					}
+					documents.push({ title: document.title, description: document.description, folder: dirname(source), name: basename(source).slice(0, -'.tex'.length) });
+				}
+				loaded.push({ extensionId: ExtensionIdentifier.toKey(extension.description.identifier), toolbox, location, version: extension.description.version, panels, documents });
 			}
 		}
 		if (generation !== this.generation) {

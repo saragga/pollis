@@ -333,6 +333,25 @@
 			"open_access": true
 		},
 		{
+			"key": "AF1992a",
+			"type": "misc",
+			"title": "Wine",
+			"authors": [
+				"Aeberhard, Stefan",
+				"Forina, M."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1992,
+			"publisher": "UCI Machine Learning Repository",
+			"doi": "10.24432/C5PC7J",
+			"url": "https://archive.ics.uci.edu/dataset/109/wine",
+			"source": "datacite",
+			"retrieved": "2026-10-26",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "AGK2019a",
 			"type": "techreport",
 			"title": "Benchmarking Global Optimizers",
@@ -24028,6 +24047,17 @@
 			],
 			"keys": [
 				"BKLSA...2020a"
+			]
+		},
+		{
+			"id": "clh",
+			"title": "Hierarchical Clustering",
+			"description": "Ward · Complete · Average · Single",
+			"commands": [
+				"chiara.statistics.cl.hierarchical"
+			],
+			"keys": [
+				"AF1992a"
 			]
 		},
 		{

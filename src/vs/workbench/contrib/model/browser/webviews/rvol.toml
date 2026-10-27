@@ -365,6 +365,14 @@ model = "ctc"
 code = '''
 using RangeVol
 
+{{?open=open}} using Random
+{{?open=open}} Random.seed!(1)  # simulated: log price a Brownian motion with 20% annual volatility, a fifth of the daily variance overnight
+{{?open=open}} n, m, s2 = 500, 390, 0.20^2 / 252;  # 500 days of 390 one-minute prices; true daily variance
+{{?open=open}} gap, step = sqrt(0.2s2) .* randn(n), sqrt(0.8s2 / m) .* randn(m, n);  # overnight and one-minute log-returns
+{{?open=open}} path = cumsum(vcat(zeros(1, n), step), dims=1);  # each day's log price from its open
+{{?open=open}} logO = log(100) .+ cumsum(gap) .+ vcat(0, cumsum(path[end, :])[1:end-1]);  # opens: previous close plus the gap
+{{?open=open}} open, high, low, close = exp.(logO), exp.(logO .+ vec(maximum(path, dims=1))), exp.(logO .+ vec(minimum(path, dims=1))), exp.(logO .+ path[end, :]);  # replace them with your own prices
+
 O, H, L, C = Float64.({{open}}), Float64.({{high}}), Float64.({{low}}), Float64.({{close}})
 T = {{periods}}  # trading periods per year
 est(O, H, L, C; T=1) = close_to_close(C; trading_periods=T)  # std of daily log-returns; uses closes only
@@ -377,6 +385,14 @@ sigma = est(O, H, L, C; T=T)
 model = "park"
 code = '''
 using RangeVol
+
+{{?open=open}} using Random
+{{?open=open}} Random.seed!(1)  # simulated: log price a Brownian motion with 20% annual volatility, a fifth of the daily variance overnight
+{{?open=open}} n, m, s2 = 500, 390, 0.20^2 / 252;  # 500 days of 390 one-minute prices; true daily variance
+{{?open=open}} gap, step = sqrt(0.2s2) .* randn(n), sqrt(0.8s2 / m) .* randn(m, n);  # overnight and one-minute log-returns
+{{?open=open}} path = cumsum(vcat(zeros(1, n), step), dims=1);  # each day's log price from its open
+{{?open=open}} logO = log(100) .+ cumsum(gap) .+ vcat(0, cumsum(path[end, :])[1:end-1]);  # opens: previous close plus the gap
+{{?open=open}} open, high, low, close = exp.(logO), exp.(logO .+ vec(maximum(path, dims=1))), exp.(logO .+ vec(minimum(path, dims=1))), exp.(logO .+ path[end, :]);  # replace them with your own prices
 
 O, H, L, C = Float64.({{open}}), Float64.({{high}}), Float64.({{low}}), Float64.({{close}})
 T = {{periods}}  # trading periods per year
@@ -391,6 +407,14 @@ model = "gk"
 code = '''
 using RangeVol
 
+{{?open=open}} using Random
+{{?open=open}} Random.seed!(1)  # simulated: log price a Brownian motion with 20% annual volatility, a fifth of the daily variance overnight
+{{?open=open}} n, m, s2 = 500, 390, 0.20^2 / 252;  # 500 days of 390 one-minute prices; true daily variance
+{{?open=open}} gap, step = sqrt(0.2s2) .* randn(n), sqrt(0.8s2 / m) .* randn(m, n);  # overnight and one-minute log-returns
+{{?open=open}} path = cumsum(vcat(zeros(1, n), step), dims=1);  # each day's log price from its open
+{{?open=open}} logO = log(100) .+ cumsum(gap) .+ vcat(0, cumsum(path[end, :])[1:end-1]);  # opens: previous close plus the gap
+{{?open=open}} open, high, low, close = exp.(logO), exp.(logO .+ vec(maximum(path, dims=1))), exp.(logO .+ vec(minimum(path, dims=1))), exp.(logO .+ path[end, :]);  # replace them with your own prices
+
 O, H, L, C = Float64.({{open}}), Float64.({{high}}), Float64.({{low}}), Float64.({{close}})
 T = {{periods}}  # trading periods per year
 est(O, H, L, C; T=1) = garman_klass(O, H, L, C; trading_periods=T)  # range plus open-to-close; assumes no drift and no gaps
@@ -403,6 +427,14 @@ sigma = est(O, H, L, C; T=T)
 model = "rs"
 code = '''
 using RangeVol
+
+{{?open=open}} using Random
+{{?open=open}} Random.seed!(1)  # simulated: log price a Brownian motion with 20% annual volatility, a fifth of the daily variance overnight
+{{?open=open}} n, m, s2 = 500, 390, 0.20^2 / 252;  # 500 days of 390 one-minute prices; true daily variance
+{{?open=open}} gap, step = sqrt(0.2s2) .* randn(n), sqrt(0.8s2 / m) .* randn(m, n);  # overnight and one-minute log-returns
+{{?open=open}} path = cumsum(vcat(zeros(1, n), step), dims=1);  # each day's log price from its open
+{{?open=open}} logO = log(100) .+ cumsum(gap) .+ vcat(0, cumsum(path[end, :])[1:end-1]);  # opens: previous close plus the gap
+{{?open=open}} open, high, low, close = exp.(logO), exp.(logO .+ vec(maximum(path, dims=1))), exp.(logO .+ vec(minimum(path, dims=1))), exp.(logO .+ path[end, :]);  # replace them with your own prices
 
 O, H, L, C = Float64.({{open}}), Float64.({{high}}), Float64.({{low}}), Float64.({{close}})
 T = {{periods}}  # trading periods per year
@@ -417,6 +449,14 @@ model = "gkyz"
 code = '''
 using RangeVol
 
+{{?open=open}} using Random
+{{?open=open}} Random.seed!(1)  # simulated: log price a Brownian motion with 20% annual volatility, a fifth of the daily variance overnight
+{{?open=open}} n, m, s2 = 500, 390, 0.20^2 / 252;  # 500 days of 390 one-minute prices; true daily variance
+{{?open=open}} gap, step = sqrt(0.2s2) .* randn(n), sqrt(0.8s2 / m) .* randn(m, n);  # overnight and one-minute log-returns
+{{?open=open}} path = cumsum(vcat(zeros(1, n), step), dims=1);  # each day's log price from its open
+{{?open=open}} logO = log(100) .+ cumsum(gap) .+ vcat(0, cumsum(path[end, :])[1:end-1]);  # opens: previous close plus the gap
+{{?open=open}} open, high, low, close = exp.(logO), exp.(logO .+ vec(maximum(path, dims=1))), exp.(logO .+ vec(minimum(path, dims=1))), exp.(logO .+ path[end, :]);  # replace them with your own prices
+
 O, H, L, C = Float64.({{open}}), Float64.({{high}}), Float64.({{low}}), Float64.({{close}})
 T = {{periods}}  # trading periods per year
 est(O, H, L, C; T=1) = garman_klass_yang_zhang(O, H, L, C; trading_periods=T)  # Garman-Klass plus the overnight jump
@@ -430,6 +470,14 @@ model = "yz"
 code = '''
 using RangeVol
 
+{{?open=open}} using Random
+{{?open=open}} Random.seed!(1)  # simulated: log price a Brownian motion with 20% annual volatility, a fifth of the daily variance overnight
+{{?open=open}} n, m, s2 = 500, 390, 0.20^2 / 252;  # 500 days of 390 one-minute prices; true daily variance
+{{?open=open}} gap, step = sqrt(0.2s2) .* randn(n), sqrt(0.8s2 / m) .* randn(m, n);  # overnight and one-minute log-returns
+{{?open=open}} path = cumsum(vcat(zeros(1, n), step), dims=1);  # each day's log price from its open
+{{?open=open}} logO = log(100) .+ cumsum(gap) .+ vcat(0, cumsum(path[end, :])[1:end-1]);  # opens: previous close plus the gap
+{{?open=open}} open, high, low, close = exp.(logO), exp.(logO .+ vec(maximum(path, dims=1))), exp.(logO .+ vec(minimum(path, dims=1))), exp.(logO .+ path[end, :]);  # replace them with your own prices
+
 O, H, L, C = Float64.({{open}}), Float64.({{high}}), Float64.({{low}}), Float64.({{close}})
 T = {{periods}}  # trading periods per year
 est(O, H, L, C; T=1) = yang_zhang(O, H, L, C; trading_periods=T)  # robust to drift and overnight gaps
@@ -442,6 +490,14 @@ sigma = est(O, H, L, C; T=T)
 model = "abd"
 code = '''
 using RangeVol, Statistics
+
+{{?open=open}} using Random
+{{?open=open}} Random.seed!(1)  # simulated: log price a Brownian motion with 20% annual volatility, a fifth of the daily variance overnight
+{{?open=open}} n, m, s2 = 500, 390, 0.20^2 / 252;  # 500 days of 390 one-minute prices; true daily variance
+{{?open=open}} gap, step = sqrt(0.2s2) .* randn(n), sqrt(0.8s2 / m) .* randn(m, n);  # overnight and one-minute log-returns
+{{?open=open}} path = cumsum(vcat(zeros(1, n), step), dims=1);  # each day's log price from its open
+{{?open=open}} logO = log(100) .+ cumsum(gap) .+ vcat(0, cumsum(path[end, :])[1:end-1]);  # opens: previous close plus the gap
+{{?open=open}} open, high, low, close = exp.(logO), exp.(logO .+ vec(maximum(path, dims=1))), exp.(logO .+ vec(minimum(path, dims=1))), exp.(logO .+ path[end, :]);  # replace them with your own prices
 
 O, H, L, C = Float64.({{open}}), Float64.({{high}}), Float64.({{low}}), Float64.({{close}})
 T = {{periods}}  # trading periods per year

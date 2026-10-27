@@ -26,7 +26,7 @@ import { generateTokensCSSForColorMap } from '../../../../../editor/common/langu
 import { Event } from '../../../../../base/common/event.js';
 import { IUntitledTextResourceEditorInput } from '../../../../common/editor.js';
 import { CellEditType, CellKind } from '../../../notebook/common/notebookCommon.js';
-import { openWikiByFile, openNotebookByFile, openInBrowser, autoSelectJuliaKernel, createPackageStatusWiring, createExampleCodeWiring, createCustomCopyWiring, createReferenceWiring, createVideoWiring, createApiKeyWiring, IApiKeyProvider, sendToJuliaRepl } from './model.handler.js';
+import { openWikiByFile, openNotebookByFile, openInBrowser, autoSelectJuliaKernel, createPackageStatusWiring, createExampleCodeWiring, createCustomCopyWiring, createReferenceWiring, createVideoWiring, createApiKeyWiring, IApiKeyProvider, sendToJuliaRepl, withExampleFirst } from './model.handler.js';
 import { hasKey } from '../../../../../base/common/types.js';
 import { ADD_ALERT_COMMAND_ID } from '../../../monitor/browser/alertsPage.js';
 
@@ -35,7 +35,7 @@ type ScaffoldWebviewMessage =
 	| { command: 'openNotebook'; target: string }
 	| { command: 'openWiki'; target: string }
 	| { command: 'openUrl'; url: string }
-	| { command: 'runCode'; target: 'newFile' | 'juliaRepl' | 'notebook' | 'pluto'; code: string }
+	| { command: 'runCode'; target: 'newFile' | 'juliaRepl' | 'notebook' | 'pluto'; code: string; setup?: string }
 	| { command: 'colorize'; code: string; target?: string }
 	| { command: 'installPackages' }
 	| { command: 'addAlert'; symbol: string; kind: 'quote' | 'filings' | 'fred' | 'ecb' | 'imf' | 'worldBank' }
@@ -128,7 +128,7 @@ export function registerScaffoldWebviewHandlers(
 				await openWikiByFile(msg.target, data.wikis, openerService, editorService, commandService);
 				break;
 			case 'runCode': {
-				const code = pkgStatus.withPackageCheck(msg.code, msg.target);
+				const code = pkgStatus.withPackageCheck(await withExampleFirst(msg, webviewInput.webview, commandService), msg.target);
 				if (msg.target === 'newFile') {
 					const input: IUntitledTextResourceEditorInput = {
 						resource: undefined,

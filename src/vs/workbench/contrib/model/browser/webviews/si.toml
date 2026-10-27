@@ -188,13 +188,13 @@ purpose = "Output-error model, plant dynamics decoupled from noise model"
 [[inputs]]
 id = "y"
 label = "Output data (y)"
-tooltip = "Measured output signal (n x 1 vector). Must be sampled at constant rate h."
+tooltip = "Measured output signal (n x 1 vector). Must be sampled at constant rate h. The default simulates 1000 samples of a known second-order plant, y(t) = 1.5 y(t-1) - 0.7 y(t-2) + u(t-1) + 0.5 u(t-2) + e(t), so that the identified model can be checked against it: ARX with na = nb = 2 should recover these coefficients."
 default = "y"
 
 [[inputs]]
 id = "u"
 label = "Input data (u)"
-tooltip = "Measured input signal (n x 1 for SISO, n x m for MIMO). Use a persistently exciting signal for accurate identification."
+tooltip = "Measured input signal (n x 1 for SISO, n x m for MIMO). Use a persistently exciting signal for accurate identification. The default is a random binary signal of +1 and -1, which excites every frequency."
 default = "u"
 
 [[inputs]]
@@ -256,6 +256,12 @@ models = ["n4sid"]
 model = "arx"
 code = '''
 using ControlSystemIdentification, ControlSystems, LinearAlgebra, Plots  # SI toolbox
+{{?y=y}} {{?u=u}} using Random
+
+{{?y=y}} {{?u=u}} Random.seed!(1)  # simulated: a known second-order plant, y(t) = 1.5 y(t-1) - 0.7 y(t-2) + u(t-1) + 0.5 u(t-2) + e(t), poles 0.75 +/- 0.37i
+{{?y=y}} {{?u=u}} u = sign.(randn(1000))  # a random binary input of 1000 samples, persistently exciting
+{{?y=y}} {{?u=u}} y = zeros(1000); noise = 0.1 .* randn(1000)  # output and white noise (sd 0.1)
+{{?y=y}} {{?u=u}} for t in 3:1000; y[t] = 1.5y[t-1] - 0.7y[t-2] + u[t-1] + 0.5u[t-2] + noise[t]; end  # Replace y and u with your own measured output and input.
 
 data = iddata({{y}}, {{u}}, {{h}})  # create identification dataset
 ntr = round(Int, 0.7 * length(data))  # first 70% for estimation, last 30% held out for validation
@@ -286,6 +292,12 @@ bodeplot(model)  # Bode plot of frequency response
 model = "armax"
 code = '''
 using ControlSystemIdentification, ControlSystems, LinearAlgebra, Plots  # SI toolbox
+{{?y=y}} {{?u=u}} using Random
+
+{{?y=y}} {{?u=u}} Random.seed!(1)  # simulated: a known second-order plant, y(t) = 1.5 y(t-1) - 0.7 y(t-2) + u(t-1) + 0.5 u(t-2) + e(t), poles 0.75 +/- 0.37i
+{{?y=y}} {{?u=u}} u = sign.(randn(1000))  # a random binary input of 1000 samples, persistently exciting
+{{?y=y}} {{?u=u}} y = zeros(1000); noise = 0.1 .* randn(1000)  # output and white noise (sd 0.1)
+{{?y=y}} {{?u=u}} for t in 3:1000; y[t] = 1.5y[t-1] - 0.7y[t-2] + u[t-1] + 0.5u[t-2] + noise[t]; end  # Replace y and u with your own measured output and input.
 
 data = iddata({{y}}, {{u}}, {{h}})  # create identification dataset
 ntr = round(Int, 0.7 * length(data))  # first 70% for estimation, last 30% held out for validation
@@ -322,6 +334,12 @@ bodeplot(model)  # Bode plot of frequency response
 model = "n4sid"
 code = '''
 using ControlSystemIdentification, ControlSystems, Plots  # SI toolbox
+{{?y=y}} {{?u=u}} using Random
+
+{{?y=y}} {{?u=u}} Random.seed!(1)  # simulated: a known second-order plant, y(t) = 1.5 y(t-1) - 0.7 y(t-2) + u(t-1) + 0.5 u(t-2) + e(t), poles 0.75 +/- 0.37i
+{{?y=y}} {{?u=u}} u = sign.(randn(1000))  # a random binary input of 1000 samples, persistently exciting
+{{?y=y}} {{?u=u}} y = zeros(1000); noise = 0.1 .* randn(1000)  # output and white noise (sd 0.1)
+{{?y=y}} {{?u=u}} for t in 3:1000; y[t] = 1.5y[t-1] - 0.7y[t-2] + u[t-1] + 0.5u[t-2] + noise[t]; end  # Replace y and u with your own measured output and input.
 
 data = iddata({{y}}, {{u}}, {{h}})  # create identification dataset
 ntr = round(Int, 0.7 * length(data))  # first 70% for estimation, last 30% held out for validation
@@ -341,6 +359,12 @@ bodeplot(model)  # Bode plot of frequency response
 model = "oe"
 code = '''
 using ControlSystemIdentification, ControlSystems, Plots  # SI toolbox
+{{?y=y}} {{?u=u}} using Random
+
+{{?y=y}} {{?u=u}} Random.seed!(1)  # simulated: a known second-order plant, y(t) = 1.5 y(t-1) - 0.7 y(t-2) + u(t-1) + 0.5 u(t-2) + e(t), poles 0.75 +/- 0.37i
+{{?y=y}} {{?u=u}} u = sign.(randn(1000))  # a random binary input of 1000 samples, persistently exciting
+{{?y=y}} {{?u=u}} y = zeros(1000); noise = 0.1 .* randn(1000)  # output and white noise (sd 0.1)
+{{?y=y}} {{?u=u}} for t in 3:1000; y[t] = 1.5y[t-1] - 0.7y[t-2] + u[t-1] + 0.5u[t-2] + noise[t]; end  # Replace y and u with your own measured output and input.
 
 data = iddata({{y}}, {{u}}, {{h}})  # create identification dataset
 ntr = round(Int, 0.7 * length(data))  # first 70% for estimation, last 30% held out for validation
@@ -512,5 +536,5 @@ using ControlSystemIdentification, ControlSystems, Plots  # SI + control + plott
 {{?model=arx}} println(arx(dtr, {{na}}, {{nb}}; inputdelay = {{nk}}, stochastic = true))  # coefficients as mean +/- std (MonteCarloMeasurements particles)
 m = div(length(dtr), 2)
 halves = [fitm(dtr[1:m]), fitm(dtr[m+1:end])]  # split-sample refits
-bodeplot([model; halves]; label = ["all estimation data" "first half" "second half"])
+bodeplot([model, halves...]; label = ["all estimation data" "first half" "second half"])
 '''

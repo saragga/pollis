@@ -17,6 +17,10 @@ name = "OutlierDetectionNeighbors.jl"
 github = "https://github.com/OutlierDetectionJL/OutlierDetectionNeighbors.jl"
 
 # Further packages the examples use: checked by the install indicator, not listed on the Powered-by line
+[[packages]]
+name = "PollisDatasets.jl"
+github = "https://github.com/Trumpingtons/PollisDatasets.jl"
+
 [requires]
 packages = ["Plots.jl", "StatsBase.jl"]
 
@@ -186,7 +190,7 @@ purpose = "Angle variance degrades less than distances as dimension grows"
 [[inputs]]
 id = "data"
 label = "Data (X)"
-tooltip = "Numeric matrix with observations in rows and features in columns (n x p). The detectors expect observations in columns, so the code passes permutedims(X)."
+tooltip = "Numeric matrix with observations in rows and features in columns (n x p). The detectors expect observations in columns, so the code passes permutedims(X). The default, X, is the Wine data from PollisDatasets: 161 wines by 13 chemical measurements, standardised, with every tenth wine kept aside as X_new."
 default = "X"
 
 [[inputs]]
@@ -300,6 +304,15 @@ return s;
 model = "knn"
 code = '''
 using OutlierDetection, OutlierDetectionNeighbors, Statistics
+{{?data=X}} using PollisDatasets
+
+{{?data=X}} w = dataset("wine");  # 178 wines from three cultivars; datasetinfo("wine") describes the columns
+{{?data=X}} W = reduce(hcat, collect(values(w))[2:end]);  # 178 x 13: the chemical measurements, cultivar left out
+{{?data=X}} held = 10:10:178;  # every tenth wine kept aside as new data
+{{?data=X}} W_train = W[setdiff(axes(W, 1), held), :];
+{{?data=X}} mu, sd = mean(W_train, dims=1), std(W_train, dims=1);
+{{?data=X}} X = (W_train .- mu) ./ sd;  # standardised: distances would otherwise be dominated by proline, in the hundreds
+{{?data=X}} X_new = (W[held, :] .- mu) ./ sd;  # the held-out wines, on the training scale
 
 detector = KNNDetector(k={{k}}, reduction=:{{reduction}})  # distance to the k nearest neighbours
 model, scores = OutlierDetection.fit(detector, permutedims({{data}}); verbosity=0)  # observations in columns
@@ -313,6 +326,15 @@ println("Outliers detected: ", length(outliers))
 model = "lof"
 code = '''
 using OutlierDetection, OutlierDetectionNeighbors, Statistics
+{{?data=X}} using PollisDatasets
+
+{{?data=X}} w = dataset("wine");  # 178 wines from three cultivars; datasetinfo("wine") describes the columns
+{{?data=X}} W = reduce(hcat, collect(values(w))[2:end]);  # 178 x 13: the chemical measurements, cultivar left out
+{{?data=X}} held = 10:10:178;  # every tenth wine kept aside as new data
+{{?data=X}} W_train = W[setdiff(axes(W, 1), held), :];
+{{?data=X}} mu, sd = mean(W_train, dims=1), std(W_train, dims=1);
+{{?data=X}} X = (W_train .- mu) ./ sd;  # standardised: distances would otherwise be dominated by proline, in the hundreds
+{{?data=X}} X_new = (W[held, :] .- mu) ./ sd;  # the held-out wines, on the training scale
 
 detector = LOFDetector(k={{k}})  # local reachability density relative to the neighbours
 model, scores = OutlierDetection.fit(detector, permutedims({{data}}); verbosity=0)  # observations in columns
@@ -326,6 +348,15 @@ println("Outliers detected: ", length(outliers))
 model = "cof"
 code = '''
 using OutlierDetection, OutlierDetectionNeighbors, Statistics
+{{?data=X}} using PollisDatasets
+
+{{?data=X}} w = dataset("wine");  # 178 wines from three cultivars; datasetinfo("wine") describes the columns
+{{?data=X}} W = reduce(hcat, collect(values(w))[2:end]);  # 178 x 13: the chemical measurements, cultivar left out
+{{?data=X}} held = 10:10:178;  # every tenth wine kept aside as new data
+{{?data=X}} W_train = W[setdiff(axes(W, 1), held), :];
+{{?data=X}} mu, sd = mean(W_train, dims=1), std(W_train, dims=1);
+{{?data=X}} X = (W_train .- mu) ./ sd;  # standardised: distances would otherwise be dominated by proline, in the hundreds
+{{?data=X}} X_new = (W[held, :] .- mu) ./ sd;  # the held-out wines, on the training scale
 
 detector = COFDetector(k={{k}})  # average chaining distance relative to the neighbours
 model, scores = OutlierDetection.fit(detector, permutedims({{data}}); verbosity=0)  # observations in columns
@@ -339,6 +370,15 @@ println("Outliers detected: ", length(outliers))
 model = "abod"
 code = '''
 using OutlierDetection, OutlierDetectionNeighbors, Statistics
+{{?data=X}} using PollisDatasets
+
+{{?data=X}} w = dataset("wine");  # 178 wines from three cultivars; datasetinfo("wine") describes the columns
+{{?data=X}} W = reduce(hcat, collect(values(w))[2:end]);  # 178 x 13: the chemical measurements, cultivar left out
+{{?data=X}} held = 10:10:178;  # every tenth wine kept aside as new data
+{{?data=X}} W_train = W[setdiff(axes(W, 1), held), :];
+{{?data=X}} mu, sd = mean(W_train, dims=1), std(W_train, dims=1);
+{{?data=X}} X = (W_train .- mu) ./ sd;  # standardised: distances would otherwise be dominated by proline, in the hundreds
+{{?data=X}} X_new = (W[held, :] .- mu) ./ sd;  # the held-out wines, on the training scale
 
 detector = ABODDetector(k={{k}}, enhanced={{enhanced}})  # inverted variance of angles to pairs of neighbours
 model, scores = OutlierDetection.fit(detector, permutedims({{data}}); verbosity=0)  # observations in columns

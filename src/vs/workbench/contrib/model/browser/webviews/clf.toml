@@ -12,6 +12,10 @@ defaultModel = "metrics"
 name = "MLJ.jl"
 github = "https://github.com/alan-turing-institute/MLJ.jl"
 
+[[packages]]
+name = "PollisDatasets.jl"
+github = "https://github.com/Trumpingtons/PollisDatasets.jl"
+
 [requires]
 packages = ["MLJ.jl", "Plots.jl", "StatsBase.jl"]
 
@@ -76,7 +80,7 @@ detail = "receiver operating characteristic curve, AUC and optimal Youden thresh
 [[inputs]]
 id = "ytrue"
 label = "True Labels"
-tooltip = "n-element categorical vector of true class labels. Must match the length of the predicted labels or score vector."
+tooltip = "n-element categorical vector of true class labels. Must match the length of the predicted labels or score vector.\nThe default is a simulated classifier's output from PollisDatasets: datasetinfo(\"sim_clf\") shows how it was made."
 default = "y"
 
 [[inputs]]
@@ -97,6 +101,10 @@ models = ["roc"]
 model = "metrics"
 code = '''
 using MLJ
+{{?ytrue=y}} using PollisDatasets  # curated example datasets
+
+{{?ytrue=y}} d = dataset("sim_clf");  # simulated: 1000 held-out cases, one in five positive; datasetinfo("sim_clf") shows how they were made
+{{?ytrue=y}} y, yhat, scores = d.y, d.yhat, d.score;  # true labels, predictions at 0.5, scores for "yes". Replace them with your own.
 
 y_raw     = {{ytrue}}  # ground truth labels (two classes)
 pos_class = last(sort(unique(y_raw)))  # positive class; set it explicitly, for example pos_class = "default"
@@ -124,6 +132,10 @@ println("MCC:       ", round(mcc, digits=3))
 model = "roc"
 code = '''
 using MLJ
+{{?ytrue=y}} using PollisDatasets  # curated example datasets
+
+{{?ytrue=y}} d = dataset("sim_clf");  # simulated: 1000 held-out cases, one in five positive; datasetinfo("sim_clf") shows how they were made
+{{?ytrue=y}} y, yhat, scores = d.y, d.yhat, d.score;  # true labels, predictions at 0.5, scores for "yes". Replace them with your own.
 
 y_raw     = {{ytrue}}  # ground truth labels (two classes)
 pos_class = last(sort(unique(y_raw)))  # positive class: the scores must be the predicted probabilities (or scores) of THIS class; set it explicitly if needed

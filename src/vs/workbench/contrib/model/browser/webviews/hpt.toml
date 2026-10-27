@@ -16,6 +16,10 @@ github = "https://github.com/alan-turing-institute/MLJ.jl"
 name = "TreeParzen.jl"
 github = "https://github.com/IQVIA-ML/TreeParzen.jl"
 
+[[packages]]
+name = "PollisDatasets.jl"
+github = "https://github.com/Trumpingtons/PollisDatasets.jl"
+
 [requires]
 packages = ["MLJ.jl", "TreeParzen.jl", "Plots.jl"]
 
@@ -117,7 +121,7 @@ default = "accuracy"
 [[inputs]]
 id = "X"
 label = "Feature Matrix"
-tooltip = "n_samples × n_features matrix or table of input features passed to the machine."
+tooltip = "n_samples × n_features matrix or table of input features passed to the machine. The default, X_train, is the Wine data from PollisDatasets: 178 wines by 13 chemical measurements, with their cultivar as y_train. With the default model, DecisionTreeClassifier, the ranges tune max_depth and min_purity_increase; for another model, replace :param1 and :param2 with its hyperparameters."
 default = "X_train"
 
 [[inputs]]
@@ -157,12 +161,19 @@ models = ["bayesian"]
 model = "grid"
 code = '''
 using MLJ
+{{?X=X_train}} using PollisDatasets
+
+{{?X=X_train}} w = dataset("wine");  # 178 wines from three cultivars; datasetinfo("wine") describes the columns
+{{?X=X_train}} X_train = w[filter(!=(:cultivar), keys(w))];  # the 13 chemical measurements, as a table
+{{?X=X_train}} y_train = coerce(w.cultivar, Multiclass);  # the cultivar of each wine, the class to predict
 
 {{learner}} = @load {{learner}} pkg={{pkg}} verbosity=0  # import the model type from its package
 model  = {{learner}}()  # instantiate with defaults
 
-r1 = range(model, :param1, values=[v1, v2, v3])  # discrete hyperparameter range
-r2 = range(model, :param2, lower=0.01, upper=1.0, scale=:log)  # continuous log-scale range
+{{?learner=DecisionTreeClassifier}} r1 = range(model, :max_depth, values=[2, 3, 4, 5, 6])  # discrete: the depth of the tree
+{{?learner=DecisionTreeClassifier}} r2 = range(model, :min_purity_increase, lower=0.001, upper=0.3, scale=:log)  # continuous log-scale: the smallest impurity gain worth a split
+{{?learner!=DecisionTreeClassifier}} r1 = range(model, :param1, values=[v1, v2, v3])  # discrete hyperparameter range
+{{?learner!=DecisionTreeClassifier}} r2 = range(model, :param2, lower=0.01, upper=1.0, scale=:log)  # continuous log-scale range
 
 tuned = TunedModel(
     model      = model,  # 
@@ -183,12 +194,19 @@ rep  = report(mach)  # full tuning history
 model = "random"
 code = '''
 using MLJ
+{{?X=X_train}} using PollisDatasets
+
+{{?X=X_train}} w = dataset("wine");  # 178 wines from three cultivars; datasetinfo("wine") describes the columns
+{{?X=X_train}} X_train = w[filter(!=(:cultivar), keys(w))];  # the 13 chemical measurements, as a table
+{{?X=X_train}} y_train = coerce(w.cultivar, Multiclass);  # the cultivar of each wine, the class to predict
 
 {{learner}} = @load {{learner}} pkg={{pkg}} verbosity=0  # import the model type from its package
 model  = {{learner}}()  # instantiate with defaults
 
-r1 = range(model, :param1, lower=v_lo, upper=v_hi)  # continuous uniform range
-r2 = range(model, :param2, values=[v1, v2, v3])  # discrete range
+{{?learner=DecisionTreeClassifier}} r1 = range(model, :min_purity_increase, lower=0.0, upper=0.3)  # continuous uniform: the smallest impurity gain worth a split
+{{?learner=DecisionTreeClassifier}} r2 = range(model, :max_depth, values=[2, 3, 4, 5, 6])  # discrete: the depth of the tree
+{{?learner!=DecisionTreeClassifier}} r1 = range(model, :param1, lower=v_lo, upper=v_hi)  # continuous uniform range
+{{?learner!=DecisionTreeClassifier}} r2 = range(model, :param2, values=[v1, v2, v3])  # discrete range
 
 tuned = TunedModel(
     model      = model,  # 
@@ -209,14 +227,23 @@ best = fitted_params(mach).best_model  # best configuration
 model = "bayesian"
 code = '''
 using MLJ, TreeParzen
+{{?X=X_train}} using PollisDatasets
+
+{{?X=X_train}} w = dataset("wine");  # 178 wines from three cultivars; datasetinfo("wine") describes the columns
+{{?X=X_train}} X_train = w[filter(!=(:cultivar), keys(w))];  # the 13 chemical measurements, as a table
+{{?X=X_train}} y_train = coerce(w.cultivar, Multiclass);  # the cultivar of each wine, the class to predict
 
 {{learner}} = @load {{learner}} pkg={{pkg}} verbosity=0  # import the model type from its package
 model  = {{learner}}()  # instantiate with defaults
 
-space = Dict(
-    :param1 => HP.Choice(:param1, [v1, v2, v3]),  # discrete candidates
-    :param2 => HP.LogUniform(:param2, log(0.01), log(1.0)),  # continuous log-scale range (bounds as logs)
-)
+{{?learner=DecisionTreeClassifier}} space = Dict(
+{{?learner=DecisionTreeClassifier}}     :max_depth => HP.Choice(:max_depth, [2, 3, 4, 5, 6]),  # discrete candidates: the depth of the tree
+{{?learner=DecisionTreeClassifier}}     :min_purity_increase => HP.LogUniform(:min_purity_increase, log(0.001), log(0.3)),  # continuous log-scale range (bounds as logs)
+{{?learner=DecisionTreeClassifier}} )
+{{?learner!=DecisionTreeClassifier}} space = Dict(
+{{?learner!=DecisionTreeClassifier}}     :param1 => HP.Choice(:param1, [v1, v2, v3]),  # discrete candidates
+{{?learner!=DecisionTreeClassifier}}     :param2 => HP.LogUniform(:param2, log(0.01), log(1.0)),  # continuous log-scale range (bounds as logs)
+{{?learner!=DecisionTreeClassifier}} )
 
 tuned = TunedModel(
     model      = model,  # 
@@ -244,12 +271,13 @@ desc = "CV score plotted against each hyperparameter individually; reveals sensi
 code = '''
 using MLJ, Plots
 
-r = range(model, :param1, lower=lo, upper=hi)  # hyperparameter to sweep
+{{?learner=DecisionTreeClassifier}} r = range(model, :max_depth, lower=1, upper=10)  # hyperparameter to sweep
+{{?learner!=DecisionTreeClassifier}} r = range(model, :param1, lower=lo, upper=hi)  # hyperparameter to sweep
 curve = learning_curve(model, {{X}}, {{y}};  # 
     range=r, resampling=CV(nfolds={{cv}}), measure={{measure}})  # 
 
 plot(curve.parameter_values, curve.measurements,  # 
-    xlabel="param1", ylabel=string({{measure}}), legend=false)  # tuning curve
+    xlabel=string(r.field), ylabel=string({{measure}}), legend=false)  # tuning curve
 '''
 
 [[actionGroups.actions]]

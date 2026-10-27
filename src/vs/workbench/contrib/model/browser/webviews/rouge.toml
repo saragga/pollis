@@ -24,6 +24,10 @@ github = "https://github.com/juliangehring/Bootstrap.jl"
 name = "Plots.jl"
 github = "https://github.com/JuliaPlots/Plots.jl"
 
+[[packages]]
+name = "PollisDatasets.jl"
+github = "https://github.com/Trumpingtons/PollisDatasets.jl"
+
 [requires]
 packages = ["TextAnalysis.jl", "HypothesisTests.jl", "Bootstrap.jl", "Plots.jl"]
 
@@ -155,7 +159,7 @@ detail = "paired over documents: t-test and Wilcoxon signed-rank (HypothesisTest
 [[inputs]]
 id = "candidates"
 label = "Candidates (System A)"
-tooltip = "A vector of strings: the summary written by the system for each document. Example: summaries = [\"the bank raised rates\", ...]."
+tooltip = "A vector of strings: the summary written by the system for each document. Example: summaries = [\"the bank raised rates\", ...]. The default, summaries, comes from The Pollis Guide in PollisDatasets: for each of its 19 topics, the first sentence of every section; gold is the topic's introduction and summaries_b the last sentence of every section."
 default = "summaries"
 
 [[inputs]]
@@ -220,6 +224,15 @@ default = "[\"replace with a reference summary\"]"
 model = "rouge1"
 code = '''
 using TextAnalysis, Statistics  # rouge_n, rouge_l_sentence, rouge_l_summary, Score, average; mean, median
+{{?candidates=summaries}} using PollisDatasets
+
+{{?candidates=summaries}} guide  = dataset("pollis_guide");  # The Pollis Guide, one row per section; datasetinfo("pollis_guide") describes it
+{{?candidates=summaries}} topics = unique(guide.topic);  # 19 topics, each a document to summarise
+{{?candidates=summaries}} sentences(x) = split(x, r"(?<=[.!?])\s+")
+{{?candidates=summaries}} sections(t)  = guide.text[(guide.topic .== t) .& (guide.section .!= t)]  # a topic's sections, without its introduction
+{{?candidates=summaries}} gold        = [guide.text[findfirst(==(t), guide.section)] for t in topics];  # reference: the topic's introduction, written by the author
+{{?candidates=summaries}} summaries   = [join(first.(sentences.(sections(t))), " ") for t in topics];  # System A: the first sentence of each section (the lead baseline)
+{{?candidates=summaries}} summaries_b = [join(last.(sentences.(sections(t))), " ") for t in topics];  # System B: the last sentence of each section. Replace all three with your own.
 
 # TextAnalysis matches tokens case-sensitively, so both sides are lowercased
 as_refs(r) = r isa AbstractString ? [lowercase(r)] : lowercase.(r)  # one or several references per document
@@ -241,6 +254,15 @@ println("Macro average over ", length(scores), " documents: ", average(scores))
 model = "rouge2"
 code = '''
 using TextAnalysis, Statistics  # rouge_n, rouge_l_sentence, rouge_l_summary, Score, average; mean, median
+{{?candidates=summaries}} using PollisDatasets
+
+{{?candidates=summaries}} guide  = dataset("pollis_guide");  # The Pollis Guide, one row per section; datasetinfo("pollis_guide") describes it
+{{?candidates=summaries}} topics = unique(guide.topic);  # 19 topics, each a document to summarise
+{{?candidates=summaries}} sentences(x) = split(x, r"(?<=[.!?])\s+")
+{{?candidates=summaries}} sections(t)  = guide.text[(guide.topic .== t) .& (guide.section .!= t)]  # a topic's sections, without its introduction
+{{?candidates=summaries}} gold        = [guide.text[findfirst(==(t), guide.section)] for t in topics];  # reference: the topic's introduction, written by the author
+{{?candidates=summaries}} summaries   = [join(first.(sentences.(sections(t))), " ") for t in topics];  # System A: the first sentence of each section (the lead baseline)
+{{?candidates=summaries}} summaries_b = [join(last.(sentences.(sections(t))), " ") for t in topics];  # System B: the last sentence of each section. Replace all three with your own.
 
 # TextAnalysis matches tokens case-sensitively, so both sides are lowercased
 as_refs(r) = r isa AbstractString ? [lowercase(r)] : lowercase.(r)  # one or several references per document
@@ -262,6 +284,15 @@ println("Macro average over ", length(scores), " documents: ", average(scores))
 model = "rougel"
 code = '''
 using TextAnalysis, Statistics  # rouge_n, rouge_l_sentence, rouge_l_summary, Score, average; mean, median
+{{?candidates=summaries}} using PollisDatasets
+
+{{?candidates=summaries}} guide  = dataset("pollis_guide");  # The Pollis Guide, one row per section; datasetinfo("pollis_guide") describes it
+{{?candidates=summaries}} topics = unique(guide.topic);  # 19 topics, each a document to summarise
+{{?candidates=summaries}} sentences(x) = split(x, r"(?<=[.!?])\s+")
+{{?candidates=summaries}} sections(t)  = guide.text[(guide.topic .== t) .& (guide.section .!= t)]  # a topic's sections, without its introduction
+{{?candidates=summaries}} gold        = [guide.text[findfirst(==(t), guide.section)] for t in topics];  # reference: the topic's introduction, written by the author
+{{?candidates=summaries}} summaries   = [join(first.(sentences.(sections(t))), " ") for t in topics];  # System A: the first sentence of each section (the lead baseline)
+{{?candidates=summaries}} summaries_b = [join(last.(sentences.(sections(t))), " ") for t in topics];  # System B: the last sentence of each section. Replace all three with your own.
 
 # TextAnalysis matches tokens case-sensitively, so both sides are lowercased
 as_refs(r) = r isa AbstractString ? [lowercase(r)] : lowercase.(r)  # one or several references per document
@@ -283,6 +314,15 @@ println("Macro average over ", length(scores), " documents: ", average(scores))
 model = "rougelsum"
 code = '''
 using TextAnalysis, Statistics  # rouge_n, rouge_l_sentence, rouge_l_summary, Score, average; mean, median
+{{?candidates=summaries}} using PollisDatasets
+
+{{?candidates=summaries}} guide  = dataset("pollis_guide");  # The Pollis Guide, one row per section; datasetinfo("pollis_guide") describes it
+{{?candidates=summaries}} topics = unique(guide.topic);  # 19 topics, each a document to summarise
+{{?candidates=summaries}} sentences(x) = split(x, r"(?<=[.!?])\s+")
+{{?candidates=summaries}} sections(t)  = guide.text[(guide.topic .== t) .& (guide.section .!= t)]  # a topic's sections, without its introduction
+{{?candidates=summaries}} gold        = [guide.text[findfirst(==(t), guide.section)] for t in topics];  # reference: the topic's introduction, written by the author
+{{?candidates=summaries}} summaries   = [join(first.(sentences.(sections(t))), " ") for t in topics];  # System A: the first sentence of each section (the lead baseline)
+{{?candidates=summaries}} summaries_b = [join(last.(sentences.(sections(t))), " ") for t in topics];  # System B: the last sentence of each section. Replace all three with your own.
 
 # TextAnalysis matches tokens case-sensitively, so both sides are lowercased
 as_refs(r) = r isa AbstractString ? [lowercase(r)] : lowercase.(r)  # one or several references per document

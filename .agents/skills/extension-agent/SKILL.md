@@ -36,6 +36,7 @@ order = 1
 
 - **Origin**: each `[[menu.items]]` names a menu entry by its `command` (or the panel by `panel = "<id>"`). If the user names entries by their menu titles, find the command ids in the `*.contribution.ts` files (`appendMenuItem` blocks) and say which you chose.
 - **Destination**: a toolbox does not choose its menu. Its submenu goes at the end of Extend, and the user can move it, or any of its panels, to another menu with the toolbox's Edit button. `inline = true` puts the entries straight into Extend without a submenu; `order` sets the order among the toolboxes there, and each item's `group` and `order` the order inside the submenu.
+- **Documentation** (optional): `[[menu.documents]]` with `title`, `description` and `source`, the main `.tex` file relative to the spec. The script copies its folder's `.tex` and `.bib` files and its `resources/` folder to `docs/<main file's name>/` and lists the document in the contribution's `documents`; Pollis shows it in **Help > Documentation > Toolboxes** and compiles it with PollisTeX the first time it is opened. Write the sources for XeTeX (`fontspec`, no shell escape).
 - **Mode**: `copy` makes independent copies and leaves Pollis unchanged: panel id `<prefix>.<id>`, command `pollis.<name>.<panel id>`, and the wiki and notebook folders the copy ships renamed `<prefix>.<folder>`, with the TOML's `file` entries rewritten (`renameMaterialFolders` in `panelResolver.ts`; `prefix` in `[extension]`, default the name without `pollis-toolbox-`). `move` keeps the ids, the command ids and the folder names, and the panels must then be removed from Pollis.
 
 ## Steps
@@ -50,7 +51,7 @@ order = 1
 5. **Check**:
    - `npm run compile-check-ts-native` when Pollis code changed (move mode);
    - `node build/pollis/packageToolboxes.ts`: the new `.vsix` is written;
-   - `unzip -l .build/toolboxes/<name>-<version>.vsix`: package.json, panels/, wiki/, notebooks/, README.md, icon.png.
+   - `unzip -l .build/toolboxes/<name>-<version>.vsix`: package.json, panels/, wiki/, notebooks/, docs/ (when it has documents), README.md, icon.png.
 6. **Report**: the panels, where they go, anything left out and why, the checks. Publishing is done by the user (force-push to the `dist` branch of Trumpingtons/pollis-toolboxes, steps at the top of `build/pollis/packageToolboxes.ts`); do not push it. Do not commit unless asked.
 
 ## Rules

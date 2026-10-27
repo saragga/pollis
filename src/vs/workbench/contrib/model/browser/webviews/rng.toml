@@ -222,8 +222,8 @@ when = "operation=int_range"
 [[inputs]]
 id = "collection"
 label = "Collection"
-tooltip = ""
-default = "v"
+tooltip = "The vector to shuffle. The default is the integers 1 to 10; replace it with your own vector, e.g. a list of participants to assign at random."
+default = "collect(1:10)"
 when = "operation=shuffle"
 
 [[codeBranches]]

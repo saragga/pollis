@@ -12,6 +12,10 @@ defaultModel = "linear"
 name = "CovarianceEstimation.jl"
 github = "https://mateuszbaran.github.io/CovarianceEstimation.jl/stable/"
 
+[[packages]]
+name = "PollisDatasets.jl"
+github = "https://github.com/Trumpingtons/PollisDatasets.jl"
+
 [requires]
 packages = ["CovarianceEstimation.jl", "Plots.jl", "Distributions.jl"]
 
@@ -178,7 +182,7 @@ purpose = "Robust midcovariance that down-weights observations far from the medi
 [[inputs]]
 id = "X"
 label = "X (n × p)"
-tooltip = "Data matrix: n observations × p features. CovarianceEstimation.jl uses the standard Julia convention (rows = observations), so no transposing is needed."
+tooltip = "Data matrix: n observations × p features. CovarianceEstimation.jl uses the standard Julia convention (rows = observations), so no transposing is needed. The default, X_train, is the Wine data from PollisDatasets: 161 wines by 13 chemical measurements, standardised, with every tenth wine kept aside as X_new."
 default = "X_train"
 
 [[inputs]]
@@ -305,6 +309,15 @@ return s + '<circle cx="44" cy="28" r="2.4" fill="none" stroke="currentColor" st
 model = "linear"
 code = '''
 using CovarianceEstimation, LinearAlgebra, Statistics, Random
+{{?X=X_train}} using PollisDatasets
+
+{{?X=X_train}} w = dataset("wine");  # 178 wines from three cultivars; datasetinfo("wine") describes the columns
+{{?X=X_train}} W = reduce(hcat, collect(values(w))[2:end]);  # 178 x 13: the chemical measurements, cultivar left out
+{{?X=X_train}} held = 10:10:178;  # every tenth wine kept aside as new data
+{{?X=X_train}} W_train = W[setdiff(axes(W, 1), held), :];
+{{?X=X_train}} mu, sd = mean(W_train, dims=1), std(W_train, dims=1);
+{{?X=X_train}} X_train = (W_train .- mu) ./ sd;  # standardised: the measurements are on very different scales
+{{?X=X_train}} X_new = (W[held, :] .- mu) ./ sd;  # the held-out wines, on the training scale
 
 X = {{X}}  # n x p data matrix, rows = observations
 n, p = size(X)
@@ -332,6 +345,15 @@ end
 model = "nonlinear"
 code = '''
 using CovarianceEstimation, LinearAlgebra, Statistics, Random
+{{?X=X_train}} using PollisDatasets
+
+{{?X=X_train}} w = dataset("wine");  # 178 wines from three cultivars; datasetinfo("wine") describes the columns
+{{?X=X_train}} W = reduce(hcat, collect(values(w))[2:end]);  # 178 x 13: the chemical measurements, cultivar left out
+{{?X=X_train}} held = 10:10:178;  # every tenth wine kept aside as new data
+{{?X=X_train}} W_train = W[setdiff(axes(W, 1), held), :];
+{{?X=X_train}} mu, sd = mean(W_train, dims=1), std(W_train, dims=1);
+{{?X=X_train}} X_train = (W_train .- mu) ./ sd;  # standardised: the measurements are on very different scales
+{{?X=X_train}} X_new = (W[held, :] .- mu) ./ sd;  # the held-out wines, on the training scale
 
 X = {{X}}  # n x p data matrix, rows = observations
 n, p = size(X)
@@ -359,11 +381,20 @@ end
 model = "woodbury"
 code = '''
 using CovarianceEstimation, LinearAlgebra, Statistics, Random
+{{?X=X_train}} using PollisDatasets
+
+{{?X=X_train}} w = dataset("wine");  # 178 wines from three cultivars; datasetinfo("wine") describes the columns
+{{?X=X_train}} W = reduce(hcat, collect(values(w))[2:end]);  # 178 x 13: the chemical measurements, cultivar left out
+{{?X=X_train}} held = 10:10:178;  # every tenth wine kept aside as new data
+{{?X=X_train}} W_train = W[setdiff(axes(W, 1), held), :];
+{{?X=X_train}} mu, sd = mean(W_train, dims=1), std(W_train, dims=1);
+{{?X=X_train}} X_train = (W_train .- mu) ./ sd;  # standardised: the measurements are on very different scales
+{{?X=X_train}} X_new = (W[held, :] .- mu) ./ sd;  # the held-out wines, on the training scale
 
 X = {{X}}  # n x p data matrix, rows = observations
 n, p = size(X)
 
-estimator = WoodburyEstimator({{rank}})  # low-rank plus diagonal structured estimator
+estimator = WoodburyEstimator(NormLossCov(:L2, 1), {{rank}})  # low-rank plus diagonal (spiked) estimator; eigenvalues shrunk for the Frobenius loss on the error
 
 estimate(A) = Matrix(Symmetric(Matrix(cov(estimator, A))))  # dense symmetric p x p estimate
 S        = estimate(X)
@@ -386,6 +417,15 @@ end
 model = "biweight"
 code = '''
 using CovarianceEstimation, LinearAlgebra, Statistics, Random
+{{?X=X_train}} using PollisDatasets
+
+{{?X=X_train}} w = dataset("wine");  # 178 wines from three cultivars; datasetinfo("wine") describes the columns
+{{?X=X_train}} W = reduce(hcat, collect(values(w))[2:end]);  # 178 x 13: the chemical measurements, cultivar left out
+{{?X=X_train}} held = 10:10:178;  # every tenth wine kept aside as new data
+{{?X=X_train}} W_train = W[setdiff(axes(W, 1), held), :];
+{{?X=X_train}} mu, sd = mean(W_train, dims=1), std(W_train, dims=1);
+{{?X=X_train}} X_train = (W_train .- mu) ./ sd;  # standardised: the measurements are on very different scales
+{{?X=X_train}} X_new = (W[held, :] .- mu) ./ sd;  # the held-out wines, on the training scale
 
 X = {{X}}  # n x p data matrix, rows = observations
 n, p = size(X)

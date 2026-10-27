@@ -10,7 +10,13 @@ defaultModel = "ctm"
 
 [[packages]]
 name = "TopicModelsVB.jl"
-github = "https://github.com/ericproffitt/TopicModelsVB.jl"
+# Fork of ericproffitt/TopicModelsVB.jl accepting Distributions 0.25 and precompiling on Julia 1.13, with predict fixed for fLDA and fCTM (upstream pull request 42); back to upstream once a fixed version is registered
+github = "https://github.com/Trumpingtons/TopicModelsVB.jl"
+fork = true
+
+[[packages]]
+name = "PollisDatasets.jl"
+github = "https://github.com/Trumpingtons/PollisDatasets.jl"
 
 [requires]
 packages = ["TopicModelsVB.jl", "GraphPlot.jl", "Graphs.jl", "Plots.jl"]
@@ -127,7 +133,7 @@ detail = "variational Bayes implementation of LDA, fLDA, CTM, Focused CTM and CT
 [[inputs]]
 id = "corpus"
 label = "Corpus"
-tooltip = "Array of text documents, e.g. docs = [\"first doc\", \"second doc\"]"
+tooltip = "Array of text documents, e.g. docs = [\"first doc\", \"second doc\"]. The default, corpus, is the text of The Pollis Guide from PollisDatasets, one document per section."
 default = "corpus"
 
 [[inputs]]
@@ -146,6 +152,9 @@ default = "1000"
 model = "ctm"
 code = '''
 using TopicModelsVB
+{{?corpus=corpus}} using PollisDatasets
+
+{{?corpus=corpus}} corpus = dataset("pollis_guide").text;  # The Pollis Guide, one document per section; datasetinfo("pollis_guide") describes it. Replace it with your own vector of strings.
 
 docs  = {{corpus}}  # vector of strings, one per document
 words = [split(lowercase(replace(d, r"[^A-Za-z ]" => " "))) for d in docs]  # lowercase words, punctuation stripped
@@ -165,6 +174,9 @@ topicdist(model, 1)  # topic proportions of document 1 (sums to 1)
 model = "fctm"
 code = '''
 using TopicModelsVB
+{{?corpus=corpus}} using PollisDatasets
+
+{{?corpus=corpus}} corpus = dataset("pollis_guide").text;  # The Pollis Guide, one document per section; datasetinfo("pollis_guide") describes it. Replace it with your own vector of strings.
 
 docs  = {{corpus}}  # vector of strings, one per document
 words = [split(lowercase(replace(d, r"[^A-Za-z ]" => " "))) for d in docs]  # lowercase words, punctuation stripped
@@ -244,7 +256,9 @@ train = Corpus(docs=corp.docs[setdiff(eachindex(corp.docs), test)], vocab=corp.v
 held  = filter(d -> length(d.terms) >= 2, corp.docs[test])  # held-out documents with at least two distinct words
 
 function heldout_perplexity(model, held)  # document completion: infer each topic mix from half the words, score the other half
-    obs = Corpus(docs=[Document(terms=d.terms[1:2:end], counts=d.counts[1:2:end]) for d in held], vocab=model.corp.vocab)
+    seen(d) = [i for i in 1:2:length(d.terms) if sum(model.beta[:, d.terms[i]]) > 0]  # the observed half, without the words absent from the training documents, whose zero topic weight would break predict
+    held = filter(d -> !isempty(seen(d)), held)
+    obs = Corpus(docs=[Document(terms=d.terms[seen(d)], counts=d.counts[seen(d)]) for d in held], vocab=model.corp.vocab)
     fit = predict(obs, model)  # topic proportions of the held-out documents, topics fixed
     ll, n = 0.0, 0
     for (j, d) in enumerate(held)
@@ -359,7 +373,9 @@ train = Corpus(docs=corp.docs[setdiff(eachindex(corp.docs), test)], vocab=corp.v
 held  = filter(d -> length(d.terms) >= 2, corp.docs[test])  # held-out documents with at least two distinct words
 
 function heldout_perplexity(model, held)  # document completion: infer each topic mix from half the words, score the other half
-    obs = Corpus(docs=[Document(terms=d.terms[1:2:end], counts=d.counts[1:2:end]) for d in held], vocab=model.corp.vocab)
+    seen(d) = [i for i in 1:2:length(d.terms) if sum(model.beta[:, d.terms[i]]) > 0]  # the observed half, without the words absent from the training documents, whose zero topic weight would break predict
+    held = filter(d -> !isempty(seen(d)), held)
+    obs = Corpus(docs=[Document(terms=d.terms[seen(d)], counts=d.counts[seen(d)]) for d in held], vocab=model.corp.vocab)
     fit = predict(obs, model)  # topic proportions of the held-out documents, topics fixed
     ll, n = 0.0, 0
     for (j, d) in enumerate(held)
@@ -416,7 +432,9 @@ function umass(model, corp; n=10)  # UMass coherence of each topic from document
 end
 
 function heldout_perplexity(model, held)  # document completion: infer each topic mix from half the words, score the other half
-    obs = Corpus(docs=[Document(terms=d.terms[1:2:end], counts=d.counts[1:2:end]) for d in held], vocab=model.corp.vocab)
+    seen(d) = [i for i in 1:2:length(d.terms) if sum(model.beta[:, d.terms[i]]) > 0]  # the observed half, without the words absent from the training documents, whose zero topic weight would break predict
+    held = filter(d -> !isempty(seen(d)), held)
+    obs = Corpus(docs=[Document(terms=d.terms[seen(d)], counts=d.counts[seen(d)]) for d in held], vocab=model.corp.vocab)
     fit = predict(obs, model)  # topic proportions of the held-out documents, topics fixed
     ll, n = 0.0, 0
     for (j, d) in enumerate(held)

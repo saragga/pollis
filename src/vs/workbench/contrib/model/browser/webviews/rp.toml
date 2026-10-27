@@ -16,6 +16,10 @@ github = "https://github.com/JuliaStats/Statistics.jl"
 name = "StatsBase.jl"
 github = "https://github.com/JuliaStats/StatsBase.jl"
 
+[[packages]]
+name = "PollisDatasets.jl"
+github = "https://github.com/Trumpingtons/PollisDatasets.jl"
+
 [requires]
 packages = ["Statistics.jl", "StatsBase.jl", "Distributions.jl", "Plots.jl"]
 
@@ -77,7 +81,7 @@ detail = "mean absolute percentage error; scale-free relative error expressed as
 [[inputs]]
 id = "yhat"
 label = "Predicted Values"
-tooltip = "Vector of model predictions ŷ (n_samples). Produced by predict(mach, X_test) or equivalent."
+tooltip = "Vector of model predictions ŷ (n_samples). Produced by predict(mach, X_test) or equivalent.\nThe default predicts the alcohol of the Wine Recognition wines in PollisDatasets from their 12 other measurements by least squares, holding out every tenth wine."
 default = "y_hat"
 
 [[inputs]]
@@ -102,6 +106,14 @@ default = "p"
 model = "main"
 code = '''
 using Statistics
+{{?yhat=y_hat}} using PollisDatasets  # curated example datasets
+
+{{?yhat=y_hat}} w = dataset("wine");  # 178 Italian wines (Aeberhard and Forina 1992). Replace it with your own data.
+{{?yhat=y_hat}} feats = [k for k in keys(w) if !(k in (:cultivar, :alcohol))];  # the 12 other measurements predict alcohol
+{{?yhat=y_hat}} X = [ones(length(w.alcohol)) reduce(hcat, [float.(w[k]) for k in feats])];  # intercept and predictors
+{{?yhat=y_hat}} held = 10:10:length(w.alcohol); train = setdiff(eachindex(w.alcohol), held);  # every tenth wine held out
+{{?yhat=y_hat}} y_train, y_test = w.alcohol[train], w.alcohol[held];
+{{?yhat=y_hat}} beta = X[train, :] \ y_train; y_hat = X[held, :] * beta; p = length(feats);  # least squares fit, test predictions
 
 n         = length({{y}})  # number of observations
 residuals = {{y}} .- {{yhat}}  # raw residuals
@@ -155,7 +167,7 @@ observed    = sort(std_res)  # sorted sample quantiles
 scatter(theoretical, observed;
     xlabel="Theoretical Quantiles", ylabel="Sample Quantiles",
     title="Normal Q-Q Plot of Residuals", label=nothing, markersize=3)
-plot!(extrema(theoretical), extrema(theoretical); color=:red, label="reference")
+plot!(collect(extrema(theoretical)), collect(extrema(theoretical)); color=:red, label="reference")  # the y = x line
 '''
 
 [[actionGroups]]

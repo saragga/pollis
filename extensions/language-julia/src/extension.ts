@@ -16,6 +16,7 @@ import { JuliaNotebookFeature } from './notebook/notebookFeature'
 import * as openpackagedirectory from './openpackagedirectory'
 import * as packagepath from './packagepath'
 import * as pollisDuckDB from './pollisDuckDB'
+import * as pollisDocuments from './pollisDocuments'
 import * as pollisHiddenJulia from './pollisHiddenJulia'
 import * as smallcommands from './smallcommands'
 import * as telemetry from './telemetry'
@@ -105,6 +106,8 @@ export async function activate(context: vscode.ExtensionContext) {
 
         // POLLIS: OnlineStats.jl for the alerts on statistical conditions, PollisEventStudies.jl for the event studies.
         pollisHiddenJulia.activate(context, executableFeature)
+        // POLLIS: the package vignettes, compiled with PollisTeX when Help > Documentation > Packages opens one.
+        pollisDocuments.activate(context, executableFeature)
 
         t = performance.now()
         openpackagedirectory.activate(context)

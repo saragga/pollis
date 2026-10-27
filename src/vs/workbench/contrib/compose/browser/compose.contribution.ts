@@ -19,6 +19,8 @@ import './modelRoutingPage.js';
 import './pollisContent.js';
 import './pollisUpdate.js';
 import './vignettesPage.js';
+import './toolboxDocumentsPage.js';
+import './panelWikisPage.js';
 import { LOCAL_MODEL_RUNNERS_COMMAND_ID } from './localModelRunnersPage.js';
 import './mcpServersPage.js';
 import { MCP_SERVERS_COMMAND_ID } from '../common/mcpServers.js';

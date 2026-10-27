@@ -12,6 +12,10 @@ defaultModel = "kf"
 name = "LowLevelParticleFilters.jl"
 github = "https://github.com/baggepinnen/LowLevelParticleFilters.jl"
 
+[[packages]]
+name = "PollisDatasets.jl"
+github = "https://github.com/Trumpingtons/PollisDatasets.jl"
+
 [requires]
 packages = ["LowLevelParticleFilters.jl", "BenchmarkTools.jl", "Distributions.jl", "Plots.jl", "StaticArrays.jl", "StatsBase.jl"]
 
@@ -181,8 +185,8 @@ purpose = "Combines sample-based flexibility of particle filters with the analyt
 id = "nx"
 models = ["kf", "ekf", "ukf", "pf"]
 label = "state dimension nx"
-tooltip = "Dimension of the latent state vector x_t. For a 2D position-velocity model, nx = 4."
-default = "2"
+tooltip = "Dimension of the latent state vector x_t. For a 2D position-velocity model, nx = 4. The default examples, the Nile and the nonlinear growth model, have one state."
+default = "1"
 
 [[inputs]]
 id = "ny"
@@ -242,17 +246,31 @@ default = "1000"
 
 [[inputs]]
 id = "q-scale"
-models = ["kf", "ekf", "ukf", "pf", "rbf"]
+models = ["kf", "rbf"]
 label = "Q scale"
-tooltip = ""
-default = "0.1"
+tooltip = "Process noise variance: Q = scale x I. The default, 0.05, is the Nile local level model's (Durbin and Koopman 2001), for the standardised flow."
+default = "0.05"
 
 [[inputs]]
 id = "r-scale"
-models = ["kf", "ekf", "ukf", "pf", "rbf"]
+models = ["kf", "rbf"]
 label = "R scale"
-tooltip = ""
-default = "0.1"
+tooltip = "Measurement noise variance: R = scale x I. The default, 0.5, is the Nile local level model's (Durbin and Koopman 2001), for the standardised flow."
+default = "0.5"
+
+[[inputs]]
+id = "q-scale-nl"
+models = ["ekf", "ukf", "pf"]
+label = "Q scale"
+tooltip = "Process noise variance: Q = scale x I. The default, 10, is that of the nonlinear growth model of Gordon, Salmond and Smith (1993)."
+default = "10"
+
+[[inputs]]
+id = "r-scale-nl"
+models = ["ekf", "ukf", "pf"]
+label = "R scale"
+tooltip = "Measurement noise variance: R = scale x I. The default, 1, is that of the nonlinear growth model of Gordon, Salmond and Smith (1993)."
+default = "1"
 
 [[inputs]]
 id = "mu0"
@@ -272,22 +290,22 @@ default = "I"
 id = "data"
 models = ["kf", "ekf", "ukf", "pf", "rbf"]
 label = "data variable"
-tooltip = "Named tuple or struct with fields .u (inputs) and .y (observations), one entry per time step."
-default = "df"
+tooltip = "Named tuple or struct with fields .u (inputs) and .y (observations), one entry per time step.\nThe default is, for the Kalman filter, the Nile's annual flow at Aswan from PollisDatasets, standardised; for the other filters, data simulated from the model they filter."
+default = "obs"
 
 [[inputs]]
 id = "dyn-expr"
 models = ["ekf", "ukf", "pf"]
 label = "dynamics f(x,u,p,t)"
-tooltip = ""
-default = "x  # replace with your dynamics"
+tooltip = "The state transition, returning a vector of length nx. The default is the nonlinear growth model of Gordon, Salmond and Smith (1993), the standard test of nonlinear filters; t is the time step, from 0."
+default = "[x[1] / 2 + 25x[1] / (1 + x[1]^2) + 8cos(1.2t)]  # replace with your dynamics"
 
 [[inputs]]
 id = "meas-expr"
 models = ["ekf", "ukf", "pf"]
 label = "measurement h(x,u,p,t)"
-tooltip = ""
-default = "x[1:ny]  # replace with measurement"
+tooltip = "The measurement, returning a vector of length ny. The default, x^2/20, is that of Gordon, Salmond and Smith (1993): it loses the sign of x, which an extended Kalman filter cannot recover."
+default = "[x[1]^2 / 20]  # replace with your measurement"
 
 [[inputs]]
 id = "rbf-dyn-expr"
@@ -307,8 +325,13 @@ models = ["rbf"]
 model = "kf"
 code = '''
 using LowLevelParticleFilters, LinearAlgebra, Distributions  # filtering, I, MvNormal
+{{?data=obs}} using PollisDatasets  # curated example datasets
 
 const nx, ny, nu = {{nx}}, {{ny}}, {{nu}}  # state / obs / input dimensions
+
+{{?data=obs}} nile = dataset("nile");  # annual flow of the Nile at Aswan, 1871-1970 (Durbin and Koopman 2001). Replace it with your own data.
+{{?data=obs}} z = (nile.flow .- mean(nile.flow)) ./ std(nile.flow);  # standardised, so the default noise scales suit it
+{{?data=obs}} obs = (u = [zeros(nu) for _ in z], y = [[v] for v in z]);  # no inputs, one measurement a year (ny = 1)
 
 F  = Matrix(I, nx, nx)  # state transition matrix
 B  = zeros(nx, nu)  # input matrix
@@ -328,6 +351,7 @@ sol = forward_trajectory(kf, {{data}}.u, {{data}}.y)  # run forward pass (u, y: 
 model = "ekf"
 code = '''
 using LowLevelParticleFilters, LinearAlgebra, Distributions  # filtering, I, MvNormal
+{{?data=obs}} using Random
 
 const nx, ny, nu = {{nx}}, {{ny}}, {{nu}}  # state / obs / input dimensions
 
@@ -339,11 +363,14 @@ function measurement(x, u, p, t)  # nonlinear measurement h(x,u,p,t)
     {{meas-expr}}
 end
 
-Q  = {{q-scale}} * Matrix(I, nx, nx)  # process noise covariance
-R  = {{r-scale}} * Matrix(I, ny, ny)  # measurement noise covariance
+Q  = {{q-scale-nl}} * Matrix(I, nx, nx)  # process noise covariance
+R  = {{r-scale-nl}} * Matrix(I, ny, ny)  # measurement noise covariance
 x0 = MvNormal({{mu0}}, {{sigma0}})  # initial state x0 ~ N(mu0, Sigma0)
 
 ekf = ExtendedKalmanFilter(dynamics, measurement, Q, R, x0; nu)  # build EKF (Jacobians by ForwardDiff)
+
+{{?data=obs}} Random.seed!(1); xs, us, ys = simulate(ekf, [zeros(nu) for _ in 1:100]);  # simulated: 100 steps of the model above, with its noise. Replace obs with your own data.
+{{?data=obs}} obs = (u = us, y = ys);
 
 sol = forward_trajectory(ekf, {{data}}.u, {{data}}.y)  # run forward pass (u, y: vectors of vectors)
 (log_likelihood = sol.ll, final_state = sol.xt[end], final_covariance = sol.Rt[end])  # filtered x(T|T) and its covariance
@@ -353,6 +380,7 @@ sol = forward_trajectory(ekf, {{data}}.u, {{data}}.y)  # run forward pass (u, y:
 model = "ukf"
 code = '''
 using LowLevelParticleFilters, LinearAlgebra, Distributions  # filtering, I, MvNormal
+{{?data=obs}} using Random
 
 const nx, ny, nu = {{nx}}, {{ny}}, {{nu}}  # state / obs / input dimensions
 
@@ -364,11 +392,14 @@ function measurement(x, u, p, t)  # nonlinear measurement h(x,u,p,t)
     {{meas-expr}}
 end
 
-Q  = {{q-scale}} * Matrix(I, nx, nx)  # process noise covariance
-R  = {{r-scale}} * Matrix(I, ny, ny)  # measurement noise covariance
+Q  = {{q-scale-nl}} * Matrix(I, nx, nx)  # process noise covariance
+R  = {{r-scale-nl}} * Matrix(I, ny, ny)  # measurement noise covariance
 x0 = MvNormal({{mu0}}, {{sigma0}})  # initial state x0 ~ N(mu0, Sigma0)
 
 ukf = UnscentedKalmanFilter(dynamics, measurement, Q, R, x0; nu, ny)  # build UKF (ny is a required keyword)
+
+{{?data=obs}} Random.seed!(1); xs, us, ys = simulate(ukf, [zeros(nu) for _ in 1:100]);  # simulated: 100 steps of the model above, with its noise. Replace obs with your own data.
+{{?data=obs}} obs = (u = us, y = ys);
 
 sol = forward_trajectory(ukf, {{data}}.u, {{data}}.y)  # run forward pass (u, y: vectors of vectors)
 (log_likelihood = sol.ll, final_state = sol.xt[end], final_covariance = sol.Rt[end])  # filtered x(T|T) and its covariance
@@ -378,6 +409,7 @@ sol = forward_trajectory(ukf, {{data}}.u, {{data}}.y)  # run forward pass (u, y:
 model = "pf"
 code = '''
 using LowLevelParticleFilters, LinearAlgebra, Distributions  # filtering, I, MvNormal
+{{?data=obs}} using Random
 
 const nx, ny, nu = {{nx}}, {{ny}}, {{nu}}  # state / obs / input dimensions
 
@@ -391,11 +423,14 @@ function measurement(x, u, p, t)  # measurement function; the filter scores y wi
     {{meas-expr}}
 end
 
-noise_dist = MvNormal(zeros(nx), {{q-scale}} * I)  # process noise distribution
-meas_dist  = MvNormal(zeros(ny), {{r-scale}} * I)  # measurement noise distribution
+noise_dist = MvNormal(zeros(nx), {{q-scale-nl}} * I)  # process noise distribution
+meas_dist  = MvNormal(zeros(ny), {{r-scale-nl}} * I)  # measurement noise distribution
 x0         = MvNormal({{mu0}}, {{sigma0}})  # initial state distribution
 
 pf = ParticleFilter(N, dynamics, measurement, noise_dist, meas_dist, x0)  # bootstrap particle filter
+
+{{?data=obs}} Random.seed!(1); xs, us, ys = simulate(pf, [zeros(nu) for _ in 1:100]);  # simulated: 100 steps of the model above, with its noise. Replace obs with your own data.
+{{?data=obs}} obs = (u = us, y = ys);
 
 sol = forward_trajectory(pf, {{data}}.u, {{data}}.y)  # run forward pass (u, y: vectors of vectors)
 (log_likelihood = sol.ll, final_state = mean_trajectory(sol)[end, :])  # weighted particle mean at time T
@@ -405,6 +440,7 @@ sol = forward_trajectory(pf, {{data}}.u, {{data}}.y)  # run forward pass (u, y: 
 model = "rbf"
 code = '''
 using LowLevelParticleFilters, LinearAlgebra  # filtering, I
+{{?data=obs}} using Random
 using LowLevelParticleFilters: SimpleMvNormal  # Gaussian from a mean and a covariance matrix (not exported)
 
 const nnl, nl, ny, nu = {{nnl}}, {{nl}}, {{ny-rbf}}, {{nu-rbf}}  # nonlinear / linear / obs / input dimensions
@@ -435,6 +471,9 @@ kf_l = KalmanFilter(Al, Bl, C, 0, R1l, R2, d0l; ny, nu)  # linear substate: one 
 mm = RBMeasurementModel(g, R2, ny)  # g and the measurement noise
 signals = SignalNames(x = [["xn$i" for i in 1:nnl]; ["xl$i" for i in 1:nl]], u = ["u$i" for i in 1:nu], y = ["y$i" for i in 1:ny], name = "RBPF")  # names is a required keyword
 rbf = RBPF(N, kf_l, fn, mm, R1n, d0n; An, nu, names = signals)  # Rao-Blackwellised (marginalised) particle filter
+
+{{?data=obs}} Random.seed!(1); xs, us, ys = simulate(rbf, [zeros(nu) for _ in 1:100]);  # simulated: 100 steps of the model above, with its noise. Replace obs with your own data.
+{{?data=obs}} obs = (u = us, y = ys);
 
 sol = forward_trajectory(rbf, {{data}}.u, {{data}}.y)  # run forward pass (u, y: vectors of vectors)
 (log_likelihood = sol.ll, final_state = mean_trajectory(sol)[end, :])  # weighted mean of [xn; xl] at time T

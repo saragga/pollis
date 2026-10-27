@@ -1,0 +1,2 @@
+# Pollis compiles each vignette from its LaTeX sources on the computer where it is read: no PDFs here
+*/vignette/*.pdf

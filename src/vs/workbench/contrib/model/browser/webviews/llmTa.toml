@@ -20,6 +20,10 @@ github = "https://github.com/svilupp/PromptingTools.jl"
 name = "StatisticalMeasures.jl"
 github = "https://github.com/JuliaAI/StatisticalMeasures.jl"
 
+[[packages]]
+name = "PollisDatasets.jl"
+github = "https://github.com/Trumpingtons/PollisDatasets.jl"
+
 [requires]
 packages = ["LLMTextAnalysis.jl", "PromptingTools.jl", "StatisticalMeasures.jl", "Plots.jl"]
 
@@ -186,7 +190,7 @@ detail = "accuracy and Cohen kappa against a hand-labelled sample and between tw
 [[inputs]]
 id = "texts"
 label = "Documents"
-tooltip = "A vector of strings, one per document. Example: texts = readlines(\"corpus.txt\") or texts = [\"doc1...\", \"doc2...\"]."
+tooltip = "A vector of strings, one per document. Example: texts = readlines(\"corpus.txt\") or texts = [\"doc1...\", \"doc2...\"]. The default, texts, is The Pollis Guide from PollisDatasets, one document per section."
 default = "texts"
 
 [[inputs]]
@@ -277,8 +281,8 @@ label = "Mistral"
 [[inputs]]
 id = "embed-ollama"
 label = "Embedding Model"
-tooltip = "Any embedding model pulled into Ollama. Examples: embeddinggemma, nomic-embed-text, mxbai-embed-large."
-default = ""
+tooltip = "Any embedding model pulled into Ollama. The default, embeddinggemma-2:270m, is small and fast (ollama pull embeddinggemma-2:270m); nomic-embed-text is a good alternative. Others: mxbai-embed-large."
+default = "embeddinggemma-2:270m"
 when = "embed-provider=ollama"
 
 [[inputs]]
@@ -367,14 +371,14 @@ when = "chat-provider2=mistral"
 [[inputs]]
 id = "tags"
 label = "Tags"
-tooltip = "A vector of tag strings, without commas or semicolons. Any number of tags may apply to a document. Example: tags = [\"finance\", \"technology\", \"health\", \"politics\"]."
+tooltip = "A vector of tag strings, without commas or semicolons. Any number of tags may apply to a document. Example: tags = [\"finance\", \"technology\", \"health\", \"politics\"]. The default, tags, is a set of six chosen for the Guide."
 default = "tags"
 models = ["tag"]
 
 [[inputs]]
 id = "categories"
 label = "Categories"
-tooltip = "A vector of mutually exclusive category strings. Each document gets exactly one. Example: categories = [\"positive\", \"negative\", \"neutral\"]."
+tooltip = "A vector of mutually exclusive category strings. Each document gets exactly one. Example: categories = [\"positive\", \"negative\", \"neutral\"]. The default, categories, is a set of four chosen for the Guide."
 default = "categories"
 models = ["classify"]
 
@@ -388,7 +392,7 @@ models = ["topics"]
 [[inputs]]
 id = "question"
 label = "Question"
-tooltip = "A natural-language question about the corpus, as a Julia string. The most similar chunks are passed to the LLM as context. Example: \"What are the main risks mentioned across these reports?\"."
+tooltip = "A natural-language question about the corpus, as a Julia string. The most similar chunks are passed to the LLM as context. Example: \"What are the main risks mentioned across these reports?\". The default, question, asks about the Guide."
 default = "question"
 models = ["qa"]
 
@@ -423,6 +427,7 @@ default = "\"replace with a new document or question\""
 model = "tag"
 code = '''
 using PromptingTools  # aigenerate, aiembed and the model registry
+{{?texts=texts}} using PollisDatasets
 PT = PromptingTools
 
 # Register each model name with its provider, so any current model works (the built-in model list of PromptingTools is older)
@@ -444,6 +449,9 @@ emb = (; model = emb_model)  # passed to every embedding call
 tokens(msgs) = sum(m -> sum(m.tokens), msgs)  # prompt + reply tokens, comparable across providers
 
 using StatisticalMeasures  # confusion matrices, accuracy, Cohen kappa
+
+{{?texts=texts}} texts = dataset("pollis_guide").text;  # The Pollis Guide, one document per section; datasetinfo("pollis_guide") describes it. Replace it with your own vector of strings.
+{{?tags=tags}} tags = ["installation", "data", "finance", "AI", "collaboration", "publishing"];  # any number may apply to a section
 
 docs     = {{texts}}  # one string per document
 tag_list = {{tags}}  # candidate tags; any number may apply to a document
@@ -474,6 +482,7 @@ println("LLM tokens: ", tokens(msgs), " (", round(Int, tokens(msgs) / length(doc
 model = "classify"
 code = '''
 using PromptingTools  # aigenerate, aiembed and the model registry
+{{?texts=texts}} using PollisDatasets
 PT = PromptingTools
 
 # Register each model name with its provider, so any current model works (the built-in model list of PromptingTools is older)
@@ -495,6 +504,9 @@ emb = (; model = emb_model)  # passed to every embedding call
 tokens(msgs) = sum(m -> sum(m.tokens), msgs)  # prompt + reply tokens, comparable across providers
 
 using StatisticalMeasures  # confusion matrices, accuracy, Cohen kappa
+
+{{?texts=texts}} texts = dataset("pollis_guide").text;  # The Pollis Guide, one document per section; datasetinfo("pollis_guide") describes it. Replace it with your own vector of strings.
+{{?categories=categories}} categories = ["using Pollis", "research workflow", "data source", "reference"];  # one per section
 
 docs = {{texts}}  # one string per document
 cats = {{categories}}  # mutually exclusive categories
@@ -522,6 +534,7 @@ println("LLM tokens: ", tokens(msgs), " (", round(Int, tokens(msgs) / length(doc
 model = "topics"
 code = '''
 using PromptingTools  # aigenerate, aiembed and the model registry
+{{?texts=texts}} using PollisDatasets
 PT = PromptingTools
 
 # Register each model name with its provider, so any current model works (the built-in model list of PromptingTools is older)
@@ -545,6 +558,8 @@ tokens(msgs) = sum(m -> sum(m.tokens), msgs)  # prompt + reply tokens, comparabl
 
 using LLMTextAnalysis  # build_index, build_clusters!
 
+{{?texts=texts}} texts = dataset("pollis_guide").text;  # The Pollis Guide, one document per section; datasetinfo("pollis_guide") describes it. Replace it with your own vector of strings.
+
 docs = {{texts}}  # one string per document
 k    = {{k}}  # number of topics
 
@@ -567,6 +582,7 @@ end
 model = "qa"
 code = '''
 using PromptingTools  # aigenerate, aiembed and the model registry
+{{?texts=texts}} using PollisDatasets
 PT = PromptingTools
 
 # Register each model name with its provider, so any current model works (the built-in model list of PromptingTools is older)
@@ -590,6 +606,9 @@ tokens(msgs) = sum(m -> sum(m.tokens), msgs)  # prompt + reply tokens, comparabl
 
 using LinearAlgebra, SparseArrays, Unicode  # these load RAGTools
 RT = PromptingTools.Experimental.RAGTools
+
+{{?texts=texts}} texts = dataset("pollis_guide").text;  # The Pollis Guide, one document per section; datasetinfo("pollis_guide") describes it. Replace it with your own vector of strings.
+{{?question=question}} question = "How do I get alerts when a company files with the SEC?";
 
 docs  = {{texts}}  # one string per document
 top_n = {{top-n}}  # chunks passed to the LLM as context

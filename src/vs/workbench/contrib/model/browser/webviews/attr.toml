@@ -12,13 +12,17 @@ defaultModel = "attract"
 name = "Attractors.jl"
 github = "https://github.com/JuliaDynamics/Attractors.jl"
 
+[[packages]]
+name = "BifurcationKit.jl"
+github = "https://github.com/bifurcationkit/BifurcationKit.jl"
+
 [[packages.videos]]
 title = "Julia in Academia"
 description = "Overview of Julia for academic and scientific computing"
 url = "https://www.youtube.com/watch?v=wPFPT-Ech2c"
 
 [requires]
-packages = ["Attractors.jl", "DynamicalSystems.jl", "FractalDimensions.jl", "GLMakie.jl"]
+packages = ["Attractors.jl", "BifurcationKit.jl", "DynamicalSystems.jl", "FractalDimensions.jl", "GLMakie.jl"]
 
 [[notebookSections]]
 label = ""
@@ -52,8 +56,13 @@ file = "dyn-attr/overview.md"
 bundled = true
 
 [[wikis]]
-name = "Assumptions"
-file = "dyn-attr/assumptions.md"
+name = "The Lorenz System"
+file = "dyn-attr/lorenz.md"
+bundled = true
+
+[[wikis]]
+name = "Grid and Settings"
+file = "dyn-attr/settings.md"
 bundled = true
 
 [[wikis]]
@@ -145,25 +154,25 @@ detail = "classify every grid point by the attractor it converges to and compute
 
 [[bullets]]
 text = "Bifurcation Diagrams"
-detail = "trace how attractors and their basins evolve as a system parameter varies using global continuation"
+detail = "trace the equilibria as a system parameter varies, with their stability and the pitchfork and Hopf points where it changes, by numerical continuation with BifurcationKit"
 
 [[inputs]]
 id = "u0"
 label = "Initial state (u0)"
-tooltip = "Starting point for the system. Used as the seed for the attractor mapper and basin classifier."
-default = "u0"
+tooltip = "Starting point of the Lorenz system, a vector (x, y, z). The default [1.0, 0.0, 0.0] is Lorenz's own starting point, near the origin."
+default = "[1.0, 0.0, 0.0]"
 
 [[inputs]]
 id = "p"
 label = "Parameters (p)"
-tooltip = "System parameter tuple. Lorenz: (10.0, 28.0, 2.667). Henon: (1.4, 0.3)."
-default = "p"
+tooltip = "Parameters of the Lorenz system, a vector [sigma, rho, beta]. The default [10.0, 28.0, 8/3] gives Lorenz's classic chaotic attractor; rho = 20 gives two stable fixed points instead. The Bifurcation tab keeps sigma and beta and varies rho from 0.5 to 35."
+default = "[10.0, 28.0, 8/3]"
 
 [[inputs]]
 id = "N"
 label = "Grid resolution (N)"
-tooltip = "Number of grid points per dimension for the basin/attractor mapper. Higher values give finer resolution at greater computational cost."
-default = "20"
+tooltip = "Number of grid points per dimension for the basin/attractor mapper. Higher values give finer resolution at greater computational cost. The Bifurcation tab does not use a grid."
+default = "30"
 
 [[codeBranches]]
 model = "attract"
@@ -211,7 +220,7 @@ println("Basin fractions: ", fracs)  # relative size of each basin
 [[codeBranches]]
 model = "bifur"
 code = '''
-using DynamicalSystems, Attractors
+using BifurcationKit
 
 function lorenz!(du, u, p, t)  # Lorenz system (sigma, rho, beta), in place
     du[1] = p[1] * (u[2] - u[1])
@@ -219,19 +228,18 @@ function lorenz!(du, u, p, t)  # Lorenz system (sigma, rho, beta), in place
     du[3] = u[1] * u[2] - p[3] * u[3]
     return nothing
 end
+lorenz(u, p) = (du = similar(u, promote_type(eltype(u), eltype(p))); lorenz!(du, u, p, 0.0); du)  # its vector field, as BifurcationKit wants it
 
-ds = CoupledODEs(lorenz!, {{u0}}, {{p}})  # define system
-grid = (range(-30, 30; length={{N}}), range(-30, 30; length={{N}}), range(0, 60; length={{N}}))  # search grid
-mapper = BasinMapRecurrences(ds, grid; consecutive_recurrences = 1000, attractor_locate_steps = 1000)  # mapper
+p = {{p}}  # sigma and beta are kept; rho is varied
+prob = BifurcationProblem(lorenz, zeros(3), [p[1], 0.5, p[3]], (@optic _[2]);  # the origin, an equilibrium for every rho, at rho = 0.5
+    record_from_solution = (u, p; k...) -> (x = u[1], z = u[3]))  # what is kept of each equilibrium
+opts = ContinuationPar(p_min = 0.0, p_max = 35.0, ds = 0.01, dsmax = 0.25, max_steps = 1000,
+    detect_bifurcation = 3, n_inversion = 6, nev = 3)  # locate bifurcation points precisely
 
-prange = range(20.0, 35.0; length=30)  # parameter sweep range for rho
-pidx   = 2  # index of rho in parameter tuple
-pcurve = [Dict(pidx => rho) for rho in prange]  # one parameter setting per step
-ics = RandomICsSampler(100, HRectangle({{u0}} .- 5, {{u0}} .+ 5), 1234)  # 100 random initial conditions near u0
-
-cont_alg = AttractorSeedContinueMatch(mapper)  # seed-based continuation
-gco = global_continuation(cont_alg, pcurve, ics)  # trace attractors vs parameter
-fracs_cont, attractors_cont = gco.fractions, gco.attractors
+origin = continuation(prob, PALC(), opts)  # the origin as rho grows: a pitchfork at rho = 1
+wings = continuation(origin, 1, opts; bothside = true)  # switch at the pitchfork onto C+ and C-: a Hopf where they lose stability
+println(origin)  # bifurcation points on the origin
+println(wings)  # bifurcation points on C+ and C-
 '''
 
 [[actionGroups]]
@@ -275,18 +283,31 @@ end
 [[actionGroups.actions]]
 id = "bifurcation-diagram"
 label = "Bifurcation Diagram"
-desc = "Show how attractor basin fractions evolve as a parameter is varied"
+desc = "Plot the equilibria against rho, stable solid and unstable dashed, with the pitchfork and Hopf points marked"
 code = '''
-using DynamicalSystems, Attractors, GLMakie
+using BifurcationKit, GLMakie
 
-ds = CoupledODEs(lorenz!, {{u0}}, {{p}})
-grid = (range(-30, 30; length={{N}}), range(-30, 30; length={{N}}), range(0, 60; length={{N}}))  # grid
-mapper = BasinMapRecurrences(ds, grid; consecutive_recurrences = 1000, attractor_locate_steps = 1000)  # mapper
-prange = range(20.0, 35.0; length=20)  # parameter range
-ics = RandomICsSampler(100, grid, 1)  # 100 random initial conditions in the grid box
-fracs_cont = global_continuation(AttractorSeedContinueMatch(mapper), [Dict(2 => rho) for rho in prange], ics).fractions  # continuation
+lorenz(u, p) = [p[1] * (u[2] - u[1]), u[1] * (p[2] - u[3]) - u[2], u[1] * u[2] - p[3] * u[3]]  # Lorenz vector field (sigma, rho, beta)
+p = {{p}}  # sigma and beta are kept; rho is varied
+prob = BifurcationProblem(lorenz, zeros(3), [p[1], 0.5, p[3]], (@optic _[2]); record_from_solution = (u, p; k...) -> (x = u[1], z = u[3]))
+opts = ContinuationPar(p_min = 0.0, p_max = 35.0, ds = 0.01, dsmax = 0.25, max_steps = 1000, detect_bifurcation = 3, n_inversion = 6, nev = 3)
+origin = continuation(prob, PALC(), opts)  # the origin
+wings = continuation(origin, 1, opts; bothside = true)  # C+ and C-, from the pitchfork
 
-plot_basins_curves(fracs_cont, prange)  # basin fraction vs parameter
+fig = Figure()
+ax = Axis(fig[1, 1]; xlabel = "rho", ylabel = "x at the equilibrium", title = "Equilibria of the Lorenz system")
+for br in (origin, wings)
+    rho, x, stable = br.branch.param, br.branch.x, br.branch.stable
+    lines!(ax, rho, ifelse.(stable, x, NaN); color = :steelblue, linewidth = 2)  # stable: solid
+    lines!(ax, rho, ifelse.(stable, NaN, x); color = :steelblue, linestyle = :dash)  # unstable: dashed
+end
+for (br, kind, label, colour) in ((origin, :bp, " pitchfork", :black), (wings, :hopf, " Hopf", :red))
+    for sp in filter(sp -> sp.type == kind, br.specialpoint)
+        scatter!(ax, [sp.param], [sp.printsol.x]; color = colour, markersize = 12)  # the bifurcation point
+        text!(ax, sp.param, sp.printsol.x; text = label, align = (:left, :bottom))
+    end
+end
+fig
 '''
 
 [[actionGroups]]
@@ -344,9 +365,13 @@ for p_i in [p_before, p_after]
     ds = CoupledODEs(lorenz!, {{u0}}, p_i)
     grid = (range(-30, 30; length={{N}}), range(-30, 30; length={{N}}), range(0, 60; length={{N}}))  # grid
     mapper = BasinMapRecurrences(ds, grid; consecutive_recurrences = 1000, attractor_locate_steps = 1000)
-    basins_fractions(mapper, RandomICsSampler(200, grid, 1))  # map initial conditions first: the mapper only knows the attractors it has met
-    att = extract_attractors(mapper)  # attractors found
-    println("p=", p_i, " -> ", length(att), " attractor(s)")  # count attractors
+    att = try
+        basins_fractions(mapper, RandomICsSampler(200, grid, 1))  # map initial conditions first: the mapper only knows the attractors it has met
+        extract_attractors(mapper)  # attractors found
+    catch
+        nothing  # two attractors met in one grid cell
+    end
+    println("p=", p_i, " -> ", att === nothing ? "attractors too close for the grid: try a larger N" : "$(length(att)) attractor(s)")  # count attractors
 end
 '''
 
@@ -363,9 +388,13 @@ for rho in prange
     ds = CoupledODEs(lorenz!, {{u0}}, (10.0, rho, 8/3))
     grid = (range(-30, 30; length={{N}}), range(-30, 30; length={{N}}), range(0, 60; length={{N}}))  # grid
     mapper = BasinMapRecurrences(ds, grid; consecutive_recurrences = 1000, attractor_locate_steps = 1000)
-    basins_fractions(mapper, RandomICsSampler(200, grid, 1))  # map initial conditions first: the mapper only knows the attractors it has met
-    att = extract_attractors(mapper)  # attractors found
-    println("rho=", rho, ": ", length(att), " attractor(s)")  # detect transition
+    att = try
+        basins_fractions(mapper, RandomICsSampler(200, grid, 1))  # map initial conditions first: the mapper only knows the attractors it has met
+        extract_attractors(mapper)  # attractors found
+    catch
+        nothing  # two attractors met in one grid cell: likeliest where chaos and the fixed points coexist, rho about 23-25
+    end
+    println("rho=", rho, ": ", att === nothing ? "attractors too close for the grid: try a larger N" : "$(length(att)) attractor(s)")  # detect transition
 end
 '''
 

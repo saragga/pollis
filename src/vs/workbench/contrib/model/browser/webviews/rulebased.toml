@@ -157,7 +157,7 @@ purpose = "If-then rules scored by support, confidence, coverage and lift"
 [[inputs]]
 id = "df"
 label = "Transactions Table"
-tooltip = "Any Tables.jl source in long format, one row per (transaction, item) pair, with columns Transaction and Item (e.g. a NamedTuple of columns or a CSV.File)."
+tooltip = "Any Tables.jl source in long format, one row per (transaction, item) pair, with columns Transaction and Item (e.g. a NamedTuple of columns or a CSV.File). The default, df, runs on the groceries example from PollisDatasets: 9835 baskets of a grocery outlet."
 default = "df"
 
 [[inputs]]
@@ -188,14 +188,14 @@ label = "FP-Max (maximal)"
 [[inputs]]
 id = "support"
 label = "min_support"
-tooltip = "Minimum fraction of transactions (0-1) that must contain an itemset. Lower values find rarer patterns but grow the output quickly."
-default = "0.1"
+tooltip = "Minimum fraction of transactions (0-1) that must contain an itemset. Lower values find rarer patterns but grow the output quickly. The default, 0.01, suits the Groceries example, where only eight single items reach 0.1."
+default = "0.01"
 
 [[inputs]]
 id = "confidence"
 label = "min_confidence"
-tooltip = "Minimum conditional probability P(consequent | antecedent) for a rule to be kept (0-1)."
-default = "0.5"
+tooltip = "Minimum conditional probability P(consequent | antecedent) for a rule to be kept (0-1). RuleMiner grows longer rules only from shorter rules that pass this threshold, so a high value can lose strong long rules: on the Groceries example, 0.5 finds none, while the default, 0.2, finds all 15 rules with confidence 0.5 or more."
+default = "0.2"
 models = ["rules"]
 
 [miniCharts]
@@ -238,6 +238,11 @@ using RuleMiner
 
 using SparseArrays, Tables
 
+{{?df=df}} using PollisDatasets  # curated example datasets
+{{?df=df}} # Example data: Hahsler, Hornik and Reutterer (2006), one month of a grocery outlet's sales, 9835 baskets of 169 product categories. Replace df with your own table.
+{{?df=df}} groceries = dataset("groceries")  # long format, columns transaction and item
+{{?df=df}} df = (Transaction = groceries.transaction, Item = groceries.item)
+
 t = Tables.columntable({{df}})  # long format: one row per (transaction, item) pair
 ids, items = string.(t.Transaction), string.(t.Item)
 linekeys, colkeys = unique(ids), sort(unique(items))
@@ -255,6 +260,11 @@ code = '''
 using RuleMiner
 
 using SparseArrays, Tables
+
+{{?df=df}} using PollisDatasets  # curated example datasets
+{{?df=df}} # Example data: Hahsler, Hornik and Reutterer (2006), one month of a grocery outlet's sales, 9835 baskets of 169 product categories. Replace df with your own table.
+{{?df=df}} groceries = dataset("groceries")  # long format, columns transaction and item
+{{?df=df}} df = (Transaction = groceries.transaction, Item = groceries.item)
 
 t = Tables.columntable({{df}})  # long format: one row per (transaction, item) pair
 ids, items = string.(t.Transaction), string.(t.Item)
@@ -309,7 +319,7 @@ desc = "Number of frequent itemsets as min_support falls, to pick a readable thr
 code = '''
 using Tables, Plots
 
-thresholds = [0.3, 0.2, 0.1, 0.05, 0.02]
+thresholds = [0.2, 0.1, 0.05, 0.02, 0.01]
 counts = [length(Tables.columntable(fpgrowth(txns, s)).Support) for s in thresholds]
 plot(thresholds, counts, xflip=true, yscale=:log10, marker=:circle, xlabel="min_support", ylabel="itemsets", legend=false)
 '''
@@ -337,7 +347,7 @@ code = '''
 using Tables
 
 r = Tables.columntable(apriori(txns, {{support}}, {{confidence}}))
-basket = ["bread", "milk"]  # items already in the basket
+basket = ["other vegetables", "yogurt"]  # items already in the basket, from the Groceries example: use items of your own data
 hits = [i for i in eachindex(r.LHS) if issubset(r.LHS[i], basket) && !(r.RHS[i] in basket)]
 unique(r.RHS[hits[sortperm(r.Confidence[hits], rev=true)]])
 '''
@@ -354,8 +364,8 @@ code = '''
 using Tables
 
 for f in (eclat, fpgrowth)
-	t = @elapsed out = f(txns, {{support}})
-	println(rpad(string(f), 10), round(t, digits=3), " s  ", length(Tables.columntable(out).Support), " itemsets")
+	seconds = @elapsed out = f(txns, {{support}})
+	println(rpad(string(f), 10), round(seconds, digits=3), " s  ", length(Tables.columntable(out).Support), " itemsets")
 end
 '''
 
@@ -366,8 +376,8 @@ desc = "How much the closed and maximal summaries shrink the frequent itemsets"
 code = '''
 using Tables
 
-n(x) = length(Tables.columntable(x).Support)
-(all = n(fpgrowth(txns, {{support}})), closed = n(fpclose(txns, {{support}})), maximal = n(fpmax(txns, {{support}})))
+itemset_count(x) = length(Tables.columntable(x).Support)
+(all = itemset_count(fpgrowth(txns, {{support}})), closed = itemset_count(fpclose(txns, {{support}})), maximal = itemset_count(fpmax(txns, {{support}})))
 '''
 
 [[actionGroups]]
