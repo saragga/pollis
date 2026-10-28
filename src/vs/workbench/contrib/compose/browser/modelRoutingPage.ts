@@ -269,6 +269,8 @@ function pageHtml(): string {
 		input, select { font-family: var(--vscode-font-family); font-size: 12px; padding: 4px 6px; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, var(--vscode-widget-border)); border-radius: 2px; }
 		select { color: var(--vscode-dropdown-foreground); background: var(--vscode-dropdown-background); border-color: var(--vscode-dropdown-border, var(--vscode-widget-border)); }
 		select.overridden { color: var(--vscode-textLink-foreground); }
+		/* The tiers of the tasks, all as wide as the cells of the table above, whatever their names */
+		#tasks select { width: 170px; }
 		input:focus, select:focus { outline: 1px solid var(--vscode-focusBorder); }
 		th.taskName { width: 30%; } th.menu { width: 22%; } th.runsOn { width: 24%; }
 	</style>

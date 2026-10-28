@@ -165,7 +165,8 @@ Questions and problems: \ui{Help > Report Issue}, or \contactemail.
 {\color{deepamber}\bfseries 10} & Agent Skills\\
 {\color{deepamber}\bfseries 12} & MCP Servers\\
 {\color{deepamber}\bfseries 14} & Orchestration\\
-{\color{deepamber}\bfseries 16} & The Whole Picture
+{\color{deepamber}\bfseries 16} & Ask Pollis\\
+{\color{deepamber}\bfseries 18} & The Whole Picture
 \end{tabular}
 \end{tcolorbox}
 \end{minipage}
@@ -411,7 +412,7 @@ to tag or classify, and in Q\&A the passages found. With llama.cpp for both, not
 once the models are downloaded.
 \end{caution}
 
-\seealso{Language Models, page 2.\quad Local Models, page 4.}
+\seealso{Language Models, page 2.\quad Local Models, page 4.\quad Ask Pollis, page 16.}
 
 % =====================================================================
 % PAGES 8–9 — CODING AGENTS AND HARNESSES
@@ -715,7 +716,94 @@ the panel validator.
 \seealso{Language Models, page 2.\quad Coding Agents and Harnesses, page 8.}
 
 % =====================================================================
-% PAGES 16–17 — THE WHOLE PICTURE
+% PAGES 16–17 — ASK POLLIS
+% =====================================================================
+\topic{Ask Pollis}{Help > Ask Pollis}{Questions about Pollis, answered from its own documents: retrieval-augmented generation at work, and the models that do it compared.}
+
+\subhead{Ask, and see where the answer comes from}
+\ui{Help > Ask Pollis} takes a question in your own words, such as \emph{how do I make a cheap model do the small
+jobs?}, and answers from Pollis' own documents: the Tour, the Guide, A Tour of Pollis AI+, Pollis AI+, the
+drill-downs, the panel wikis, the package vignettes, and the documents and panel wikis of the toolboxes you installed,
+whose passages come when a toolbox is installed and go when it is removed. After each statement, a number such as
+\textbf{[1]} names the passage it rests on, and \ui{Open} shows that passage in its document. A follow-up question is read with the
+conversation so far, and the answer is in the language of the question. When the documents do not answer, Ask
+Pollis says so.
+
+\subhead{RAG on Pollis' own documents}
+Ask Pollis is the retrieval-augmented generation of page 6. The documents are cut once into passages of about 250
+words, between one and two thousand of them, and kept in a DuckDB file with two indexes: their words, and their
+embeddings. Each question is searched both ways, and the two lists are merged:
+\begin{center}
+\begin{tikzpicture}[node distance=4mm and 7mm]
+  \node[box=19mm] (q) {\textbf{Question}};
+  \node[hot=30mm, above right=1mm and 9mm of q] (words) {\textbf{By words}\\{\scriptsize exact names: menus, settings}};
+  \node[hot=30mm, below right=1mm and 9mm of q] (meaning) {\textbf{By meaning}\\{\scriptsize the embedding model:\\other words, other languages}};
+  \node[box=24mm, right=40mm of q] (best) {\textbf{The best 8}\\{\scriptsize passages, merged}};
+  \node[hot=24mm, right=of best] (chat) {\textbf{Chat model}\\{\scriptsize reads them, answers}};
+  \draw[flow] (q) -- (words);
+  \draw[flow] (q) -- (meaning);
+  \draw[flow] (words) -- (best);
+  \draw[flow] (meaning) -- (best);
+  \draw[flow] (best) -- (chat);
+\end{tikzpicture}
+\end{center}
+The search by words finds \setting{pollis.agents.tierCells} or \emph{Snowball Search Map} exactly; the search by
+meaning finds the passage on the Light tier for a question that has none of its words, and the English passage for
+a question in Portuguese.
+
+\subhead{Two models, on your computer}
+\begin{center}\small\renewcommand{\arraystretch}{1.3}
+\begin{tabularx}{\linewidth}{@{}>{\bfseries}llX@{}}
+\textbf{Model} & \textbf{Default} & \textbf{Does}\\\hline
+Embedding & EmbeddingGemma 2, 0.31 GB & turns each passage, and each question, into 768 numbers\\
+Chat & Qwen3.5 4B, 2.74 GB & reads the question and the 8 passages, and writes the answer\\
+\end{tabularx}
+\end{center}
+Both run with the llama.cpp that comes with Pollis, downloaded the first time, and any other local model can take
+their place. The embedding model is the one of LLM Text Analysis, so it is downloaded once for both. A cloud model,
+Claude or GPT, can write the answers instead, with your own key; the passages are still found on your computer.
+
+\newpage
+\subhead{Compare Models}
+Which chat model should answer? A small one is quicker, a larger one better, a cloud one better still, at a price.
+\ui{Compare Models}, on the Ask Pollis page, answers with figures, for the models you choose: Qwen3.5 0.8B, 4B and 9B
+on your computer, say, against Claude Sonnet. Every model is given the same questions, the same passages and the same
+instruction, so that only the model differs, and the local models run one at a time.
+\begin{pairs}[0.24]
+One Question & each model's answer side by side, with its sources and the seconds it took.\\
+Test Set & many questions: made from the documents by a model, Claude Sonnet by default, one for each of 40
+  passages, with the answer; or your own, kept from Ask Pollis with \ui{Add to the Test Set}.\\
+The figures & for each model, the mean score, its five parts, the answers not scored, the seconds and the tokens per
+  answer. Every run is kept, to set beside a later one.\\
+\end{pairs}
+
+\subhead{The judge}
+A \emph{judge} is a model that reads a question, the passages and an answer, and rates the answer from 1 to 5: how
+relevant, complete, clear and helpful it is, and how consistent with the passages. Pollis judges with RAGTools.jl,
+the same package as the Q\&A of LLM Text Analysis. The judge is Claude Sonnet by default, and can be any chat model;
+a small local model judges poorly.
+\begin{note}{A judge has a family}
+A judge may favour the answers of its own family: Claude those of Claude. A run can be scored by two judges, such as
+Claude Sonnet and GPT-5.5, side by side; where they agree, the figures can be trusted more.
+\end{note}
+
+\subhead{The search, measured too}
+For a question made from a passage, the run checks whether that passage was among the eight found. That depends on
+the embedding model, not on the chat model, so it compares embedding models: choose several, and each gets its line.
+
+\begin{caution}{What leaves your computer}
+With local models only, and a local judge, nothing. With a cloud model or judge, what it answers or judges from: the
+instruction, the question and the passages, which are Pollis' documents; and, to make a test set, its 40 passages.
+\end{caution}
+
+\begin{note}{Not available yet}
+Ask Pollis and Compare Models are not in Pollis yet; they come in a coming release.
+\end{note}
+
+\seealso{Local Models, page 4.\quad Embedding and Chat Models, page 6.}
+
+% =====================================================================
+% PAGES 18–19 — THE WHOLE PICTURE
 % =====================================================================
 \topic{The Whole Picture}{Compose}{How the pieces fit together, and the words to know.}
 
@@ -752,7 +840,7 @@ beside the published ones.
 Language model (LLM) & A program that continues text, one token at a time; page 2.\\
 Chat model & A language model that writes text: answers, labels, summaries; page 6.\\
 Embedding model & A model that turns a text into a list of numbers, close for texts of similar meaning; page 6.\\
-RAG & Retrieval-augmented generation: the closest passages, found by embeddings, given to a chat model to answer from.\\
+RAG & Retrieval-augmented generation: the closest passages, found by embeddings, given to a chat model to answer from; pages 6 and 16.\\
 Token & A word or part of a word: what models read and write, and what cloud models charge for.\\
 Context window & What a model can read at once: the request, files, the conversation so far.\\
 Knowledge cutoff & The date after which a model knows nothing, unless it is told.\\
@@ -769,6 +857,7 @@ Agent skill & Written know-how for one task, which the agent reads when it needs
 MCP server & A server of tools an agent can use, through the Model Context Protocol; page 12.\\
 Orchestration & Arranging several models or agents, each on the part it does best; page 14.\\
 Tier & In Model Tasks and Routing, Light, Standard, Strong or one of your own: a cell of its table, an agent on a model, that a kind of task runs on.\\
+Judge & A model that reads a question, the passages and an answer, and rates the answer; page 16.\\
 \end{pairs}
 
 \end{document}

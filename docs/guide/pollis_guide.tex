@@ -169,7 +169,8 @@ Questions and problems: \ui{Help > Report Issue}, or \contactemail.
 {\color{deepamber}\bfseries 36} & Literature Radar\\
 {\color{deepamber}\bfseries 38} & Snowball Search Map\\
 {\color{deepamber}\bfseries 40} & Built-in Databases\\
-{\color{deepamber}\bfseries 42} & Appendix: Reference Keys
+{\color{deepamber}\bfseries 42} & Ask Pollis\\
+{\color{deepamber}\bfseries 44} & Appendix: Reference Keys
 \end{tabular}
 \end{tcolorbox}
 \end{minipage}
@@ -622,7 +623,7 @@ The list of toolboxes and their files come from GitHub. Once installed, a toolbo
 \textbf{A panel cannot go in a toolbox} & Some Pollis panels have code of their own and are marked not portable; the agent says which. \\
 \end{trouble}
 
-\seealso{Customisation, page 8.\quad Orchestration, page 34.}
+\seealso{Customisation, page 8.\quad Orchestration, page 34.\quad Ask Pollis, page 42.}
 
 % =====================================================================
 % PAGE 13 — REPLICATION, METHODS AND WORKFLOWS (OVERVIEW)
@@ -1968,7 +1969,85 @@ The works you saved from Literature Radar, with their latest OpenAlex count:
 \seealso{Data and Databases, page 6.\quad RSS Feeds, page 22.}
 
 % =====================================================================
-% PAGES 42–43 — APPENDIX: REFERENCE KEYS
+% PAGES 42–43 — ASK POLLIS
+% =====================================================================
+\topic{Ask Pollis}{Help > Ask Pollis}{Asking about Pollis, or a toolbox you installed, in your own words, and an answer from their documents, with its sources; and choosing the model that answers.}
+
+\ui{Help > Ask Pollis} answers questions about Pollis from its own documents, with a model on your computer.
+It does not search the internet, and it does not answer from what a model happens to know: every statement
+comes from a passage of a document, and you can open that passage.
+
+\subhead{Ask a question}
+\begin{enumerate}[label=\arabic*.]
+  \item Choose \ui{Help > Ask Pollis}. The first time, Pollis downloads two models, 3 GB in all, and reads its
+    documents, in the background, for a few minutes; you can go on working meanwhile.
+  \item Type a question in your own words, such as \emph{How do I make a cheap model do the small jobs?}, in
+    English or in another language, and press Enter. The answer comes in the language of the question.
+  \item After each statement, a number such as \ui{[1]} names its source. Under \ui{Sources}, each source has
+    its document and section, and \ui{Open} shows the passage in its document, in the internal browser.
+  \item Ask a follow-up, such as \emph{and for Codex?}: it is read with the conversation so far.
+    \ui{New Conversation} starts again.
+\end{enumerate}
+When the documents do not answer, Ask Pollis says so, and lists the passages that came closest.
+
+\subhead{What it reads}
+The Tour, this Guide, A Tour of Pollis AI+, Pollis AI+, the drill-downs, the panel wikis that are written
+(not the stubs), the vignettes of the Pollis packages, and the documents and panel wikis of the toolboxes you
+installed. So a question about a toolbox's panels is answered from that toolbox's own documents, with the
+toolbox's name beside each of its sources. A toolbox's passages come when it is installed, and go when it is
+removed; a new Pollis, a wiki written or a vignette compiled brings their passages up to date, in the
+background.
+
+\subhead{Answer With}
+\ui{Answer With} chooses the model that writes the answer: \ui{This Computer}, Qwen3.5 4B unless you choose
+another local chat model with the model picker beside it, or a cloud model, Claude Haiku or Sonnet, GPT-5.4 mini or
+GPT-5.5, with your own key. The passages are always found on your computer; a cloud model is sent the
+question, the conversation and the eight passages, which are Pollis' documents, and nothing else.
+
+\newpage
+\subhead{Compare Models}
+\ui{Compare Models}, on the Ask Pollis page, sets the models you choose against each other on the same
+questions, the same passages and the same instruction: local models of different sizes, say, against Claude
+Sonnet.
+\begin{itemize}
+  \item \ui{One Question}: the answers side by side, each with its sources and seconds; \ui{Score These} has
+    them scored.
+  \item \ui{Test Set}: \ui{Make Questions} writes 40 questions, each from a passage, with Claude Sonnet unless
+    you choose another model; \ui{Add to the Test Set}, under an answer of Ask Pollis, keeps a question of
+    your own. \ui{Run} answers them all with each model, one local model at a time.
+\end{itemize}
+A \emph{judge}, Claude Sonnet unless you choose another, rates each answer from 1 to 5 on relevance,
+completeness, clarity, consistency with the passages and helpfulness. Choose two judges, such as Claude Sonnet
+and GPT-5.5, since a judge may favour its own family. For each model you see the mean score and its five
+parts, the answers not scored, and the seconds and tokens per answer; for each embedding model, how often the
+passage a question came from was found. Every run is kept, to set beside a later one.
+
+\subhead{Settings}
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}lX@{}}
+\setting{pollis.ask.answerWith} & \ui{This Computer}, or the cloud model chosen in \ui{Answer With}.\\
+\setting{pollis.ask.chatModel} & The chat model on this computer; Qwen3.5 4B unless you change it.\\
+\setting{pollis.ask.embeddingModel} & The model that finds passages by meaning; EmbeddingGemma 2 unless you change it.\\
+\setting{pollis.ask.compare.judges} & The judges of Compare Models, one or two.\\
+\setting{pollis.ask.compare.questionsBy} & The model that writes the questions of a test set.\\
+\end{tabularx}
+\end{center}
+
+\begin{trouble}
+\textbf{\emph{Pollis is still reading its documents}} & Expected the first time, and after a new Pollis or another embedding model: wait a few minutes. \\
+\textbf{A toolbox's questions are not answered} & Its documents are read in the background once it is installed; a toolbox without written wikis has little to read. \\
+\textbf{The answer has no sources} & The documents do not answer it. Ask in other words, or use the names of the menus and settings. \\
+\textbf{\emph{No key for \ldots}} & Add the provider's key, or answer with \ui{This Computer}. \\
+\end{trouble}
+
+\begin{note}{Not available yet}
+Ask Pollis and Compare Models are not in Pollis yet; they come in a coming release.
+\end{note}
+
+\seealso{Toolboxes, page 10.\quad Orchestration, page 34.}
+
+% =====================================================================
+% PAGES 44–45 — APPENDIX: REFERENCE KEYS
 % =====================================================================
 \topic{Appendix: Reference Keys}{pollis.bib · Compose > Reports}{How every work cited in Pollis is kept once, and how to write its key from the work in front of you.}
 
